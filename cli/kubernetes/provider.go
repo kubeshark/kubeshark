@@ -1,58 +1,98 @@
 package kubernetes
 
 import (
+	_ "bytes"
 	"context"
 	"fmt"
+	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+	_ "k8s.io/client-go/tools/portforward"
 	"k8s.io/client-go/util/homedir"
 	"path/filepath"
 )
 
-type kubernetesProvider struct {
-	clientSet *kubernetes.Clientset
+type Provider struct {
+	clientSet        *kubernetes.Clientset
 	kubernetesConfig clientcmd.ClientConfig
+	clientConfig     restclient.Config
+	Namespace        string
 }
 
-func New(kubeConfigPath string) *kubernetesProvider {
+func NewProvider(kubeConfigPath string, overrideNamespace string) *Provider {
 	kubernetesConfig := loadKubernetesConfiguration(kubeConfigPath)
 	restClientConfig, err := kubernetesConfig.ClientConfig()
 	if err != nil {
 		panic(err.Error())
 	}
-	clientSet := getClientAndConfig(restClientConfig)
-	return &kubernetesProvider{clientSet: clientSet, kubernetesConfig: kubernetesConfig}
+	clientSet := getClientSet(restClientConfig)
+
+	var namespace string
+	if len(overrideNamespace) > 0 {
+		namespace = overrideNamespace
+	} else {
+		configuredNamespace, _, err := kubernetesConfig.Namespace()
+		if err != nil {
+			panic(err)
+		}
+		namespace = configuredNamespace
+	}
+
+	return &Provider{
+		clientSet:        clientSet,
+		kubernetesConfig: kubernetesConfig,
+		clientConfig:     *restClientConfig,
+		Namespace:        namespace,
+	}
 }
 
-func (provider *kubernetesProvider) GetPodWatcher(ctx context.Context) watch.Interface {
-	watcher, err := provider.clientSet.CoreV1().Pods(provider.getCurrentNamespace()).Watch(ctx, metav1.ListOptions{Watch: true})
+func (provider *Provider) GetPodWatcher(ctx context.Context) watch.Interface {
+	watcher, err := provider.clientSet.CoreV1().Pods(provider.Namespace).Watch(ctx, metav1.ListOptions{Watch: true})
 	if err != nil {
 		panic(err.Error())
 	}
 	return watcher
 }
 
-func (provider *kubernetesProvider) GetPods() {
-	namespace := provider.getCurrentNamespace()
-	pods, err := provider.clientSet.CoreV1().Pods(namespace).List(context.TODO(), metav1.ListOptions{})
+func (provider *Provider) GetPods(ctx context.Context) {
+	pods, err := provider.clientSet.CoreV1().Pods(provider.Namespace).List(ctx, metav1.ListOptions{})
 	if err != nil {
 		panic(err.Error())
 	}
-	fmt.Printf("There are %d pods in namespace %s\n", len(pods.Items), namespace)
+	fmt.Printf("There are %d pods in Namespace %s\n", len(pods.Items), provider.Namespace)
 }
 
-func (provider *kubernetesProvider) getCurrentNamespace() string {
-	namespace, _, err := provider.kubernetesConfig.Namespace()
-	if err != nil {
-		panic(err.Error())
+func (provider *Provider) CreatePod(ctx context.Context, podName string, podImage string) (*core.Pod, error) {
+	pod := &core.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      podName,
+			Namespace: provider.Namespace,
+		},
+		Spec: core.PodSpec{
+			Containers: []core.Container{
+				{
+					Name:            podName,
+					Image:           podImage,
+					ImagePullPolicy: core.PullAlways,
+				},
+			},
+			TerminationGracePeriodSeconds: new(int64),
+		},
 	}
-	return namespace
+	return provider.clientSet.CoreV1().Pods(provider.Namespace).Create(ctx, pod, metav1.CreateOptions{})
 }
 
-func getClientAndConfig(config *restclient.Config) *kubernetes.Clientset {
+func (provider *Provider) RemovePod(ctx context.Context, podName string) {
+	err := provider.clientSet.CoreV1().Pods(provider.Namespace).Delete(ctx, podName, metav1.DeleteOptions{})
+	if err != nil {
+		panic(err)
+	}
+}
+
+func getClientSet(config *restclient.Config) *kubernetes.Clientset {
 	clientSet, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		panic(err.Error())
