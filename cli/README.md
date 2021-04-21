@@ -15,7 +15,7 @@ There are some extra flags defined in code that will show up in `./main --help`,
 
 ## Installation
 Make sure you have go v1.16 installed.
-1. cd to `mizu/cli`
+1. cd to `mizu/cmd`
 2. Run `go mod download` (may take a moment)
 3. Run `go build main.go`
 
