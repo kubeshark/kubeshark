@@ -86,10 +86,7 @@ func (provider *Provider) CreatePod(ctx context.Context, podName string, podImag
 }
 
 func (provider *Provider) RemovePod(ctx context.Context, podName string) {
-	err := provider.clientSet.CoreV1().Pods(provider.Namespace).Delete(ctx, podName, metav1.DeleteOptions{})
-	if err != nil {
-		panic(err)
-	}
+	provider.clientSet.CoreV1().Pods(provider.Namespace).Delete(ctx, podName, metav1.DeleteOptions{})
 }
 
 func getClientSet(config *restclient.Config) *kubernetes.Clientset {
