@@ -19,7 +19,7 @@ func init() {
 			return rootCmd.Help()
 		}
 
-		regex := regexp.MustCompile(args[0]) // MustCompile panics if expression cant be compiled into regex
+		regex := regexp.MustCompile(args[0]) // TODO: show proper error message when this fails
 		mizu.Run(regex)
 		return nil
 	}
