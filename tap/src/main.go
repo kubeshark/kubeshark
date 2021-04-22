@@ -5,11 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/google/martian/har"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"os"
 )
-
 
 func main() {
 	FILEPATH := "/Users/roeegadot/Downloads/testing.har"
@@ -29,7 +29,7 @@ func main() {
 	}
 
 	for _, entry := range inputHar.Log.Entries {
-		saveHarToDb(*entry)
+		saveHarToDb(*entry, "service", "source")
 	}
 
 }
@@ -44,23 +44,16 @@ func getGormDB() *gorm.DB {
 	return db
 }
 
-func saveHarToDb(entry har.Entry) {
+func saveHarToDb(entry har.Entry, serviceName string, source string) {
 	a, _ := json.Marshal(entry)
 	mizuEntry := MizuEntry{
-		EntryId: NewObjectID().Hex(),
-		// simple way to store it and not convert to bytes
-		Entry: string(a),
-		Url: (&entry).Request.URL,
-		Method: (&entry).Request.Method,
-		Status: (&entry).Response.Status,
-		Source: "",
-		Service: "MyService",
+		EntryId: primitive.NewObjectID().Hex(),
+		Entry:   string(a), // simple way to store it and not convert to bytes
+		Url:     entry.Request.URL,
+		Method:  entry.Request.Method,
+		Status:  entry.Response.Status,
+		Source:  source,
+		Service: serviceName,
 	}
-
-	if err := mizuEntry.Create(getGormDB()); err != nil {
-		fmt.Print(err)
-		panic("cannot create")
-	}
+	getGormDB().Create(&mizuEntry)
 }
-
-
