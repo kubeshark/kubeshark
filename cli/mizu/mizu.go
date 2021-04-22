@@ -25,10 +25,11 @@ func Run(podRegex *regexp.Regexp) {
 
 	go createPodAndPortForward(ctx, kubernetesProvider, cancel, podName) //TODO convert this to job for built in pod ttl or have the running app handle this
 	go watchPodsForTapping(ctx, kubernetesProvider, cancel, podRegex)
-	waitForFinish(ctx, cancel)
+	waitForFinish(ctx, cancel) //block until exit signal or error
 
 	// TODO handle incoming traffic from tapper using a channel
 
+	//cleanup
 	fmt.Printf("\nremoving pod %s\n", podName)
 	removalCtx, _ := context.WithTimeout(context.Background(), 2 * time.Second)
 	kubernetesProvider.RemovePod(removalCtx, podName)
