@@ -14,7 +14,7 @@
 There are some extra flags defined in code that will show up in `./main --help`, these are non functional stubs for now
 
 ## Installation
-Make sure you have go v1.16 installed.
+Make sure your go version is at least 1.11
 1. cd to `mizu/cli`
 2. Run `go mod download` (may take a moment)
 3. Run `go build main.go`
