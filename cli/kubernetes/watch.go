@@ -9,9 +9,6 @@ import (
 	"k8s.io/apimachinery/pkg/watch"
 )
 
-// FilteredWatch starts listening to Kubernetes events and emits modified
-// containers/pods. The first result is targets added, the second is targets
-// removed
 func FilteredWatch(ctx context.Context, watcher watch.Interface, podFilter *regexp.Regexp) (chan *corev1.Pod, chan *corev1.Pod, chan *corev1.Pod, chan error) {
 	addedChan := make(chan *corev1.Pod)
 	modifiedChan := make(chan *corev1.Pod)
