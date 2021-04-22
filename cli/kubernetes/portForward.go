@@ -2,6 +2,7 @@ package kubernetes
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"k8s.io/apimachinery/pkg/util/httpstream"
 	"k8s.io/client-go/tools/portforward"
@@ -15,7 +16,7 @@ type PortForward struct {
 	stopChan chan struct{}
 }
 
-func NewPortForward(kubernetesProvider *Provider, namespace string, podName string, localPort uint16, podPort uint16) (*PortForward, error) {
+func NewPortForward(kubernetesProvider *Provider, namespace string, podName string, localPort uint16, podPort uint16, cancel context.CancelFunc) (*PortForward, error) {
 	dialer := getHttpDialer(kubernetesProvider, namespace, podName)
 	stopChan, readyChan := make(chan struct{}, 1), make(chan struct{}, 1)
 	out, errOut := new(bytes.Buffer), new(bytes.Buffer)
@@ -24,10 +25,13 @@ func NewPortForward(kubernetesProvider *Provider, namespace string, podName stri
 	if err != nil {
 		return nil, err
 	}
-	go forwarder.ForwardPorts()
-	//if err != nil {
-	//	return nil, err
-	//}
+    go func () {
+    	err = forwarder.ForwardPorts() // this is blocking
+    	if err != nil {
+    		fmt.Printf("kubernetes port-forwarding error: %s", err)
+    		cancel()
+		}
+	}()
 	return &PortForward{stopChan: stopChan}, nil
 }
 

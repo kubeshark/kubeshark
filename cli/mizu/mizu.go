@@ -78,7 +78,7 @@ func createPodAndPortForward(ctx context.Context, kubernetesProvider *kubernetes
 			if modifiedPod.Status.Phase == "Running" && !isPodReady {
 				isPodReady = true
 				var err error
-				portForward, err = kubernetes.NewPortForward(kubernetesProvider, kubernetesProvider.Namespace, podName, config.Configuration.DashboardPort, 80)
+				portForward, err = kubernetes.NewPortForward(kubernetesProvider, kubernetesProvider.Namespace, podName, config.Configuration.DashboardPort, 80, cancel)
 				if !config.Configuration.NoDashboard {
 					fmt.Printf("Dashboard is now available at http://localhost:%d\n", config.Configuration.DashboardPort)
 				}

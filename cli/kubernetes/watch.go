@@ -24,6 +24,7 @@ func FilteredWatch(ctx context.Context, watcher watch.Interface, podFilter *rege
 
 				if e.Object == nil {
 					errorChan <- errors.New("kubernetes pod watch failed")
+					return
 				}
 
 				pod := e.Object.(*corev1.Pod)
