@@ -90,7 +90,7 @@ func createPodAndPortForward(ctx context.Context, kubernetesProvider *kubernetes
 
 		case <- time.After(10 * time.Second):
 			if !isPodReady {
-				fmt.Printf("error: %s pod was not ready in time!", podName)
+				fmt.Printf("error: %s pod was not ready in time", podName)
 				cancel()
 			}
 
