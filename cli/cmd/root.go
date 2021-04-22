@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"github.com/spf13/cobra"
 	"github.com/up9inc/mizu/cli/config"
 	"github.com/up9inc/mizu/cli/mizu"
@@ -19,7 +20,11 @@ func init() {
 			return rootCmd.Help()
 		}
 
-		regex := regexp.MustCompile(args[0]) // TODO: show proper error message when this fails
+		regex, err := regexp.Compile(args[0])
+		if err != nil {
+			fmt.Printf("%s is not a valid regex %s", args[0], err)
+			return nil
+		}
 		mizu.Run(regex)
 		return nil
 	}
