@@ -1,8 +1,7 @@
 package main
 
 import (
-	"github.com/jinzhu/gorm"
-	"github.com/google/martian/har"
+	"gorm.io/gorm"
 )
 
 
@@ -10,11 +9,11 @@ import (
 // gen:qs
 type MizuEntry struct {
 	gorm.Model
-	// The Entry itself
-	Entry har.Entry `json:"entry,omitempty"`
+	// The Entry itself (as string)
+	Entry string `json:"entry,omitempty"`
 	//TODO: here we will add fields we need to query for
 
-	EntryId ObjectID `json:"entryId"`
+	EntryId string `json:"entryId"`
 	Url string `json:"url"`
 	Method string `json:"method"`
 	Status int `json:"status"`

@@ -5,17 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/google/martian/har"
-	"github.com/jinzhu/gorm"
-	// "gorm.io/driver/sqlite"
-	 _ "github.com/jinzhu/gorm/dialects/sqlite"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 	"os"
 )
 
-func check(e error) {
-	if e != nil {
-		panic(e)
-	}
-}
 
 func main() {
 	FILEPATH := "/Users/roeegadot/Downloads/testing.har"
@@ -41,24 +35,32 @@ func main() {
 }
 
 func getGormDB() *gorm.DB {
-	db, _ := gorm.Open("sqlite", "roee.db")
+	db, _ := gorm.Open(sqlite.Open("gorm.db"), &gorm.Config{})
+
+	migErr := db.AutoMigrate(&MizuEntry{})
+	if migErr != nil {
+		panic("Cannot run migration")
+	}
 	return db
 }
 
 func saveHarToDb(entry har.Entry) {
-	entryData := entry
+	a, _ := json.Marshal(entry)
 	mizuEntry := MizuEntry{
-		EntryId: NewObjectID(),
-		Entry: entryData,
-		Url: entryData.Request.URL,
-		Method: entryData.Request.Method,
-		Status: entryData.Response.Status,
+		EntryId: NewObjectID().Hex(),
+		// simple way to store it and not convert to bytes
+		Entry: string(a),
+		Url: (&entry).Request.URL,
+		Method: (&entry).Request.Method,
+		Status: (&entry).Response.Status,
 		Source: "",
 		Service: "MyService",
 	}
 
 	if err := mizuEntry.Create(getGormDB()); err != nil {
+		fmt.Print(err)
 		panic("cannot create")
 	}
 }
+
 
