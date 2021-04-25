@@ -1,4 +1,4 @@
-package main
+package utils
 
 import (
 	"bufio"
@@ -8,10 +8,11 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+	"mizuserver/src/pkg/models"
 	"os"
 )
 
-func main() {
+func testHarSavingToDBFromFile() {
 	FILEPATH := "/Users/roeegadot/Downloads/testing.har"
 	file, err := os.Open(FILEPATH)
 	if err != nil {
@@ -34,26 +35,22 @@ func main() {
 
 }
 
-func getGormDB() *gorm.DB {
-	db, _ := gorm.Open(sqlite.Open("gorm.db"), &gorm.Config{})
-
-	migErr := db.AutoMigrate(&MizuEntry{})
-	if migErr != nil {
-		panic("Cannot run migration")
-	}
+func getGormDB(databaseFilePath string) *gorm.DB {
+	db, _ := gorm.Open(sqlite.Open(databaseFilePath), &gorm.Config{})
+	_ = db.AutoMigrate(&models.MizuEntry{}) // this will ensure table is created
 	return db
 }
 
 func saveHarToDb(entry har.Entry, serviceName string, source string) {
-	a, _ := json.Marshal(entry)
-	mizuEntry := MizuEntry{
+	entryBytes, _ := json.Marshal(entry)
+	mizuEntry := models.MizuEntry{
 		EntryId: primitive.NewObjectID().Hex(),
-		Entry:   string(a), // simple way to store it and not convert to bytes
+		Entry:   string(entryBytes), // simple way to store it and not convert to bytes
 		Url:     entry.Request.URL,
 		Method:  entry.Request.Method,
 		Status:  entry.Response.Status,
 		Source:  source,
 		Service: serviceName,
 	}
-	getGormDB().Create(&mizuEntry)
+	getGormDB("entries.db").Create(&mizuEntry)
 }

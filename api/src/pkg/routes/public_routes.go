@@ -8,11 +8,13 @@ import (
 
 // PublicRoutes func for describe group of public routes.
 func PublicRoutes(a *fiber.App) {
+	controllers.GenerateData()
+
 	// Create routes group.
 	route := a.Group("/api")
 
 	// Routes for GET method:
-	route.Get("/entries", controllers.GetBooks)   // get list of all books
-	route.Get("/entries/:id", controllers.GetBook) // get one book by ID
+	route.Get("/entries", controllers.GetEntries)        // get list of all books
+	route.Get("/entries/:entryId", controllers.GetEntry) // get one book by ID
 
 }
