@@ -1,4 +1,4 @@
-module github.com/up9inc/k8s-resolver
+module github.com/up9inc/mizu/resolver
 
 go 1.16
 

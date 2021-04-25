@@ -32,6 +32,14 @@ func (resolver *Resolver) Start(ctx context.Context) {
 	}
 }
 
+func (resolver *Resolver) Resolve(name string) *string {
+	resolvedName, isFound := resolver.nameMap[name]
+	if !isFound {
+		return nil
+	}
+	return &resolvedName
+}
+
 func (resolver *Resolver) watchPods(ctx context.Context) error {
 	// empty namespace makes the client watch all namespaces
 	watcher, err := resolver.clientSet.CoreV1().Pods("").Watch(ctx, metav1.ListOptions{Watch: true})
@@ -131,10 +139,10 @@ func (resolver *Resolver) watchServices(ctx context.Context) error {
 func (resolver *Resolver) saveResolvedName(key string, resolved string, eventType watch.EventType) {
 	if eventType == watch.Deleted {
 		delete(resolver.nameMap, key)
-		fmt.Printf("setting %s=nil\n", key)
+		// fmt.Printf("setting %s=nil\n", key)
 	} else {
 		resolver.nameMap[key] = resolved
-		fmt.Printf("setting %s=%s\n", key, resolved)
+		// fmt.Printf("setting %s=%s\n", key, resolved)
 	}
 }
 
