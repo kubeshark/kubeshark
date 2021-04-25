@@ -13,12 +13,10 @@ import (
 )
 
 func NewFromInCluster(errOut chan error) (*Resolver, error) {
-	// creates the in-cluster config
 	config, err := restclient.InClusterConfig()
 	if err != nil {
 		return nil, err
 	}
-	// creates the clientset
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		return nil, err
