@@ -51,17 +51,17 @@ for {
 }
 ```
 
-### In cluster
-use the function `NewFromInCluster(errOut chan error)`
+### In cluster authentication
+Create resolver using the function `NewFromInCluster(errOut chan error)`
 
-### Out of cluster
-use the function `NewFromOutOfCluster(kubeConfigPath string, errOut chan error)`
+### Out of cluster authentication
+Create resolver using the function `NewFromOutOfCluster(kubeConfigPath string, errOut chan error)`
 
 the `kubeConfigPath` param is optional, pass an empty string `""` for resolver to auto locate the default kubeconfig file
 
 ### Error handling
 Please ensure there is always a thread reading from the `errOut` channel, not doing so will result in the resolver threads getting blocked and the resolver will fail to update.
 
-Also note that any error you receive through this channel does not necessarily mean that resolver is no longer running. the resolver will infinitely retry watching k8s resources.
+Also note that any error you receive through this channel does not necessarily mean that resolver is no longer running. the resolver will infinitely retry watching k8s resources until the provided context is cancelled.
 
 
