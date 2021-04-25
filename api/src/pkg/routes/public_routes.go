@@ -8,7 +8,7 @@ import (
 
 // PublicRoutes func for describe group of public routes.
 func PublicRoutes(a *fiber.App) {
-	controllers.GenerateData()
+	//controllers.GenerateData()
 
 	// Create routes group.
 	route := a.Group("/api")

@@ -9,16 +9,16 @@ import (
 	"syscall"
 )
 
-/// starts the server with a graceful shutdown
+// StartServer starts the server with a graceful shutdown
 func StartServer(app *fiber.App) {
-	sigs := make(chan os.Signal, 2)
-	signal.Notify(sigs,
+	signals := make(chan os.Signal, 2)
+	signal.Notify(signals,
 		os.Interrupt,  	  // this catch ctrl + c
 		syscall.SIGTSTP,  // this catch ctrl + z
 	)
 
 	go func() {
-		_ = <-sigs
+		_ = <-signals
 		fmt.Println("Shutting down...")
 		_ = app.Shutdown()
 	}()
@@ -26,5 +26,12 @@ func StartServer(app *fiber.App) {
 	// Run server.
 	if err := app.Listen(":8899"); err != nil {
 		log.Printf("Oops... Server is not running! Reason: %v", err)
+	}
+}
+
+
+func CheckErr(e error) {
+	if e != nil {
+		panic(e)
 	}
 }
