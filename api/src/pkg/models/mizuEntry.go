@@ -6,6 +6,7 @@ import (
 
 type MizuEntry struct {
 	gorm.Model
+	// TODO: map id to _id?
 	Entry       string `json:"entry,omitempty" gorm:"column:entry"`
 	EntryId     string `json:"entryId" gorm:"column:entryId"`
 	Url         string `json:"url" gorm:"column:url"`
@@ -18,12 +19,12 @@ type MizuEntry struct {
 }
 
 type BaseEntryDetails struct {
-	Id          string `json:"id,omitempty"`
-	EntryId     string `json:"entryId,omitempty"`
+	Id          string `json:"id,omitempty"` // TODO: can be removed
+	EntryId     string `json:"entryId,omitempty" gorm:"column:entryId"`
 	Url         string `json:"url,omitempty"`
-	ServiceName string `json:"serviceName,omitempty"`
+	ServiceName string `json:"serviceName,omitempty" gorm:"column:serviceName"`
 	Path        string `json:"path,omitempty"`
-	StatusCode  int    `json:"statusCode,omitempty"`
+	Status      int    `json:"status,omitempty"`
 	Method      string `json:"method,omitempty"`
 	Timestamp   int64  `json:"timestamp,omitempty"`
 }

@@ -49,7 +49,7 @@ func SaveHarToDb(entry har.Entry, source string) {
 		Source:      source,
 		Timestamp:   entry.StartedDateTime.Unix(),
 	}
-	database.EntriesCollection.Create(&mizuEntry)
+	database.EntriesTable.Create(&mizuEntry)
 }
 
 func getServiceNameFromUrl(inputUrl string) (string, string) {

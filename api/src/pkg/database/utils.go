@@ -11,8 +11,8 @@ const (
 )
 
 var (
-	DB = initDataBase(DBPath)
-	EntriesCollection = DB.Table("mizu_entries")
+	DB           = initDataBase(DBPath)
+	EntriesTable = DB.Table("mizu_entries")
 )
 
 func initDataBase(databasePath string) *gorm.DB {
