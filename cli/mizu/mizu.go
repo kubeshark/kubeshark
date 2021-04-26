@@ -36,7 +36,7 @@ func Run(podRegex *regexp.Regexp) {
 }
 
 func watchPodsForTapping(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc, podRegex *regexp.Regexp) {
-	added, _, removed, errorChan := kubernetes.FilteredWatch(ctx, kubernetesProvider.GetPodWatcher(ctx), podRegex)
+	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, kubernetesProvider.GetPodWatcher(ctx), podRegex)
 	for {
 		select {
 		case newTarget := <- added:
@@ -44,6 +44,9 @@ func watchPodsForTapping(ctx context.Context, kubernetesProvider *kubernetes.Pro
 
 		case removedTarget := <- removed:
 			fmt.Printf("-%s\n", removedTarget.Name)
+
+		case <- modified:
+			continue
 
 		case <- errorChan:
 			cancel()
