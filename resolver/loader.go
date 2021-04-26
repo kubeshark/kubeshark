@@ -55,3 +55,7 @@ func NewFromOutOfCluster(kubeConfigPath string, errOut chan error) (*Resolver, e
 
 	return &Resolver{clientConfig: clientConfig, clientSet: clientset, nameMap: make(map[string]string), errOut: errOut}, nil
 }
+
+func NewFromExisting(clientConfig *restclient.Config, clientSet *kubernetes.Clientset, errOut chan error) *Resolver {
+	return &Resolver{clientConfig: clientConfig, clientSet: clientSet, nameMap: make(map[string]string), errOut: errOut}
+}
