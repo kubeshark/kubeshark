@@ -34,10 +34,7 @@ func GetEntries(c *fiber.Ctx) error {
 		})
 	}
 
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"error":   false,
-		"entries": baseEntries,
-	})
+	return c.Status(fiber.StatusOK).JSON(baseEntries)
 }
 
 func GetEntry(c *fiber.Ctx) error {
@@ -51,8 +48,5 @@ func GetEntry(c *fiber.Ctx) error {
 	unmarshallErr := json.Unmarshal([]byte(entryData.Entry), &fullEntry)
 	utils.CheckErr(unmarshallErr)
 
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"error": false,
-		"msg":   fullEntry,
-	})
+	return c.Status(fiber.StatusOK).JSON(fullEntry)
 }
