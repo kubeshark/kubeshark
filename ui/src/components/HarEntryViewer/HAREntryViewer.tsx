@@ -2,13 +2,11 @@ import React, {useState} from 'react';
 import styles from './HAREntryViewer.module.sass';
 import Tabs from "../Tabs";
 import {HAREntryTableSection, HAREntryBodySection} from "./HAREntrySections";
-import useToggle from "../../hooks/use-toggle";
 
 const MIME_TYPE_KEY = 'mimeType';
 
-
 const HAREntryDisplay: React.FC<any> = ({entry, isCollapsed: initialIsCollapsed, isResponseMocked}) => {
-    const {request, response, timings: {receive}} = entry;
+    const {request, response} = entry;
     const { url, postData} = request;
 
     const TABS = [
@@ -20,14 +18,13 @@ const HAREntryDisplay: React.FC<any> = ({entry, isCollapsed: initialIsCollapsed,
     ];
 
     const [currentTab, setCurrentTab] = useState(TABS[0].tab);
-    const [isCollapsed, toggleCollapsed] = useToggle(initialIsCollapsed);
 
     return <div className={styles.harEntry}>
 
-        {!isCollapsed && <div className={styles.body}>
+        {!initialIsCollapsed && <div className={styles.body}>
             <div className={styles.bodyHeader}>
                 <Tabs tabs={TABS} currentTab={currentTab} onChange={setCurrentTab} leftAligned/>
-                <a className={styles.endpointURL} href={url} target='_blank'>{url}</a>
+                <a className={styles.endpointURL} href={url} target='_blank' rel="noreferrer">{url}</a>
             </div>
             {
                 currentTab === TABS[0].tab && <React.Fragment>

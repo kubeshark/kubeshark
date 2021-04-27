@@ -75,7 +75,7 @@ const Tabs: React.FC<Props> = ({classes={}, tabs, currentTab, onChange, leftAlig
     return <div className={`${_classes.root} ${leftAligned ? _classes.tabsAlignLeft : ''}`}>
         {tabs.filter((tab) => !tab.hidden).map(({tab, disabled, disabledMessage, highlight, badge}, index) => {
             const active = currentTab === tab;
-            const tabLink = <a
+            const tabLink = <span
                 key={tab}
                 className={`${_classes.tab} ${active ? _classes.active : ''} ${disabled ? _classes.disabled : ''} ${highlight ? _classes.highlight : ''} ${dark ? 'dark' : ''}`}
                 onClick={() => !disabled && onChange(tab)}
@@ -83,7 +83,7 @@ const Tabs: React.FC<Props> = ({classes={}, tabs, currentTab, onChange, leftAlig
                 {tab}
 
                 {React.isValidElement(badge) && badge}
-            </a>;
+            </span>;
 
             return <span key={tab}>
                 {disabled && disabledMessage ? <Tooltip title={disabledMessage} isSimple>{tabLink}</Tooltip> : tabLink}
