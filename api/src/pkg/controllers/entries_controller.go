@@ -24,13 +24,13 @@ func GetEntries(c *fiber.Ctx) error {
 	baseEntries := make([]models.BaseEntryDetails, 0)
 	for _, entry := range entries {
 		baseEntries = append(baseEntries, models.BaseEntryDetails{
-			Id: entry.EntryId,
-			Url: entry.Url,
-			Service: entry.Service,
-			Path: entry.Path,
-			Status: entry.Status,
-			Method: entry.Method,
-			Timestamp: entry.Timestamp,
+			Id:         entry.EntryId,
+			Url:        entry.Url,
+			Service:    entry.Service,
+			Path:       entry.Path,
+			StatusCode: entry.Status,
+			Method:     entry.Method,
+			Timestamp:  entry.Timestamp,
 		})
 	}
 
@@ -39,7 +39,6 @@ func GetEntries(c *fiber.Ctx) error {
 		"entries": baseEntries,
 	})
 }
-
 
 func GetEntry(c *fiber.Ctx) error {
 	var entryData models.EntryData

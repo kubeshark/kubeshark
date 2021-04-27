@@ -18,13 +18,13 @@ type MizuEntry struct {
 }
 
 type BaseEntryDetails struct {
-	Id        string `json:"id,omitempty"`
-	Url       string `json:"url,omitempty"`
-	Service   string `json:"service,omitempty"`
-	Path      string `json:"path,omitempty"`
-	Status    int    `json:"status,omitempty"`
-	Method    string `json:"method,omitempty"`
-	Timestamp int64  `json:"timestamp,omitempty"`
+	Id         string `json:"id,omitempty"`
+	Url        string `json:"url,omitempty"`
+	Service    string `json:"service,omitempty"`
+	Path       string `json:"path,omitempty"`
+	StatusCode int    `json:"statusCode,omitempty"`
+	Method     string `json:"method,omitempty"`
+	Timestamp  int64  `json:"timestamp,omitempty"`
 }
 
 type EntryData struct {
