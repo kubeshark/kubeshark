@@ -1,3 +1,7 @@
+install:
+	go build -o bin/main main.go
+	cp bin/main /usr/local/bin/mizu
+
 build:
 	go build -o bin/main main.go
 
