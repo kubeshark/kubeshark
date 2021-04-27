@@ -11,7 +11,7 @@ interface HAREntryViewLineProps {
 }
 
 const HAREntryViewLine: React.FC<HAREntryViewLineProps> = ({label, value}) => {
-    return label && value && <tr className={styles.dataLine}>
+    return (label && value && <tr className={styles.dataLine}>
                 <td className={styles.dataKey}>{label}</td>
                 <td>
                     <FancyTextDisplay
@@ -22,7 +22,7 @@ const HAREntryViewLine: React.FC<HAREntryViewLineProps> = ({label, value}) => {
                         displayIconOnMouseOver={true}
                     />
                 </td>
-            </tr> || null;
+            </tr>) || null;
 }
 
 

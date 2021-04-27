@@ -1,11 +1,11 @@
 import React, {useEffect, useState} from "react";
-import {HarFilters} from "./HarFilters";
+// import {HarFilters} from "./HarFilters";
 import {HarEntriesList} from "./HarEntriesList";
-import {Box, makeStyles} from "@material-ui/core";
+import {makeStyles} from "@material-ui/core";
 import "./style/HarPage.sass";
 import styles from './style/HarEntriesList.module.sass';
 import {HAREntryDetailed} from "./HarEntryDetailed";
-import {HarPaging} from "./HarPaging";
+// import {HarPaging} from "./HarPaging";
 
 const useLayoutStyles = makeStyles(() => ({
     details: {
