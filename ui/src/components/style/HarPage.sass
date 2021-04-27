@@ -1,0 +1,71 @@
+.HarPage
+    width: 100%
+    display: flex
+    flex-direction: column
+    border-radius: 8px
+    overflow: hidden
+    flex-grow: 1
+    height: calc(100vh - 100px)
+
+.HarPage-Header
+    display: flex
+    height: 2.5%
+    justify-content: space-between
+    align-items: center
+    padding: 18px 15px
+
+.HarPage-Header-Image
+    width: 22px
+    height: 22px
+
+.HarPage-Header-Text
+    margin-left: 10px
+    font-family: 'Source Sans Pro', serif
+    font-size: 14px
+    font-weight: bold
+    color: #f7f9fc
+
+.HarPage-Header-Actions
+    margin-left: auto
+
+.HarPage-Header-Actions-Image
+    width: 22px
+    height: 22px
+    cursor: pointer
+    padding-right: 1.2vw
+    margin-left: auto
+    transform: translate(0 ,25%)
+
+.HarPage-Viewer
+    height: 96.5%
+    overflow: auto
+
+    > iframe
+        width: 100%
+        height: 96.5%
+        display: block
+        overflow-y: auto
+
+.harContent
+    box-sizing: border-box
+    height: calc(100% - 60px)
+    overflow: scroll
+
+.HarPage-Container
+    display: flex
+    flex-grow: 1
+    overflow: hidden
+
+.HarPage-ListContainer
+    display: flex
+    flex-grow: 1
+    overflow: hidden
+    padding: 0 24px
+    flex-direction: column
+
+.HarPage-DetailContainer
+    //flex-grow: 1
+    width: 45vw
+    background-color: #171c30
+    flex: 0 0 50%
+    padding: 12px 24px

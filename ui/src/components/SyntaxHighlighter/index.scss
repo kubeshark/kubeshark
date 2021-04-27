@@ -1,0 +1,37 @@
+.highlighterContainer {
+    &.fitScreen {
+        pre {
+            max-height: 90vh;
+            overflow: auto;
+        }
+    }
+
+    pre {
+        code {
+            font-size: 0.75rem;
+
+            &:first-child {
+                margin-right: 0.75rem;
+                background: rgb(41, 48, 83);
+
+                .react-syntax-highlighter-line-number {
+                    color: rgb(98, 126, 247);
+                }
+            }
+
+            &:last-child {
+                display: block;
+            }
+        }
+    }
+}
+
+.wrapped{
+    pre {
+        code {
+            &:last-child {
+                white-space: pre-wrap!important
+            }
+        }
+    }
+}
