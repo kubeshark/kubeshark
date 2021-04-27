@@ -11,10 +11,10 @@ const (
 )
 
 var (
-	DB           = initDataBase(DBPath)
+	DB = initDataBase(DBPath)
 )
 
-func GetEntriesTable() *gorm.DB{
+func GetEntriesTable() *gorm.DB {
 	return DB.Table("mizu_entries")
 }
 

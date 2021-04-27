@@ -1,11 +1,11 @@
 package models
 
-import (
-	"gorm.io/gorm"
-)
+import "time"
 
 type MizuEntry struct {
-	gorm.Model
+	ID        uint `gorm:"primarykey"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
 	Entry     string `json:"entry,omitempty" gorm:"column:entry"`
 	EntryId   string `json:"entryId" gorm:"column:entryId"`
 	Url       string `json:"url" gorm:"column:url"`

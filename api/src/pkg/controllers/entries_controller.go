@@ -50,3 +50,14 @@ func GetEntry(c *fiber.Ctx) error {
 
 	return c.Status(fiber.StatusOK).JSON(fullEntry)
 }
+
+
+func DeleteAllEntries(c *fiber.Ctx) error {
+	database.GetEntriesTable().
+		Where("1 = 1").
+		Delete(&models.MizuEntry{})
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"msg": "Success",
+	})
+}
