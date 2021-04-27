@@ -28,7 +28,7 @@ const HarEntryTitle: React.FC<any> = ({har}) => {
 
     const {log: {entries}} = har;
     const {response, request, timings: {receive}} = entries[0];
-    const {method, url, postData} = request;
+    const {method, url} = request;
     const {status, statusText, bodySize} = response;
 
 
@@ -47,8 +47,6 @@ const HarEntryTitle: React.FC<any> = ({har}) => {
 
 export const HAREntryDetailed: React.FC<HarEntryDetailedProps> = ({classes, harEntry}) => {
     const har = singleEntryToHAR(harEntry);
-    // const contractVirtualizationStore = useContractVirtualizationStore();
-    // const contractVirtualizationDemoEnabled = useFeature('contractVirtualizationDemo');
 
     return <>
         {har && <HarEntryTitle har={har}/>}
@@ -56,11 +54,7 @@ export const HAREntryDetailed: React.FC<HarEntryDetailedProps> = ({classes, harE
             {har && <HAREntryViewer
                 harObject={har}
                 className={classes?.root ?? styles.har}
-                // isResponseMocked={contractVirtualizationDemoEnabled && contractVirtualizationStore.virtualServices.value.indexOf(har?.log?.entries[0]?.service) > -1}
-                // showTitle={!extendedTitle}
             />}
-            {/*{(harEntry?.isLoading) && <LoadingIndicator className={styles.loader}/>}*/}
-            {/*{(harEntry?.isError) && <div>Error loading HAR entry</div>}*/}
         </>
     </>
 };

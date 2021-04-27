@@ -28,7 +28,7 @@ const CollapsibleContainer: React.FC<Props> = ({title, children, isExpanded, onC
             onClick={(e) => {
                 if (onClick) {
                     onClick(e)
-                    if (passiveOnClick != true)
+                    if (passiveOnClick !== true)
                         return;
                 }
                 _setExpanded(!_isExpanded)

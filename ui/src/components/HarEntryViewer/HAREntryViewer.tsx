@@ -3,16 +3,13 @@ import styles from './HAREntryViewer.module.sass';
 import Tabs from "../Tabs";
 import {HAREntryTableSection, HAREntryBodySection} from "./HAREntrySections";
 import useToggle from "../../hooks/use-toggle";
-import {formatSize} from "../utils";
 
-const CONTENT_TYPE_KEY = 'content-type';
 const MIME_TYPE_KEY = 'mimeType';
 
 
-const HAREntryDisplay: React.FC<any> = ({entry, isCollapsed: initialIsCollapsed, isResponseMocked, showTitle}) => {
+const HAREntryDisplay: React.FC<any> = ({entry, isCollapsed: initialIsCollapsed, isResponseMocked}) => {
     const {request, response, timings: {receive}} = entry;
-    const {method, url, postData} = request;
-    const {status, statusText, bodySize} = response;
+    const { url, postData} = request;
 
     const TABS = [
         {tab: 'request'},
