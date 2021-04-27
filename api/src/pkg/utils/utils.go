@@ -32,6 +32,7 @@ func StartServer(app *fiber.App) {
 
 func CheckErr(e error) {
 	if e != nil {
-		panic(e)
+		log.Printf("%v", e)
+		//panic(e)
 	}
 }

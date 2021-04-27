@@ -39,17 +39,17 @@ func SaveHarToDb(entry har.Entry, source string) {
 	entryBytes, _ := json.Marshal(entry)
 	serviceName, urlPath := getServiceNameFromUrl(entry.Request.URL)
 	mizuEntry := models.MizuEntry{
-		EntryId:     primitive.NewObjectID().Hex(),
-		Entry:       string(entryBytes), // simple way to store it and not convert to bytes
-		ServiceName: serviceName,
-		Url:         entry.Request.URL,
-		Path:        urlPath,
-		Method:      entry.Request.Method,
-		Status:      entry.Response.Status,
-		Source:      source,
-		Timestamp:   entry.StartedDateTime.Unix(),
+		EntryId:   primitive.NewObjectID().Hex(),
+		Entry:     string(entryBytes), // simple way to store it and not convert to bytes
+		Service:   serviceName,
+		Url:       entry.Request.URL,
+		Path:      urlPath,
+		Method:    entry.Request.Method,
+		Status:    entry.Response.Status,
+		Source:    source,
+		Timestamp: entry.StartedDateTime.Unix(),
 	}
-	database.EntriesTable.Create(&mizuEntry)
+	database.GetEntriesTable().Create(&mizuEntry)
 }
 
 func getServiceNameFromUrl(inputUrl string) (string, string) {

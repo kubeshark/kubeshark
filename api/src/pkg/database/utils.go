@@ -12,8 +12,11 @@ const (
 
 var (
 	DB           = initDataBase(DBPath)
-	EntriesTable = DB.Table("mizu_entries")
 )
+
+func GetEntriesTable() *gorm.DB{
+	return DB.Table("mizu_entries")
+}
 
 func initDataBase(databasePath string) *gorm.DB {
 	temp, _ := gorm.Open(sqlite.Open(databasePath), &gorm.Config{})
