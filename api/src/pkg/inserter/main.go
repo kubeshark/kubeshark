@@ -19,7 +19,7 @@ import (
 )
 
 
-func IsEmpty(name string) (bool) {
+func IsEmpty(name string) bool {
 	f, err := os.Open(name)
 	if err != nil {
 		return false
@@ -58,7 +58,6 @@ func StartReadingFiles(workingDir string) {
 		utils.CheckErr(decErr)
 
 		for _, entry := range inputHar.Log.Entries 	{
-			fmt.Printf("Entry inserted")
 			SaveHarToDb(*entry, "")
 		}
 		rmErr := os.Remove(inputFilePath)
