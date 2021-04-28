@@ -17,7 +17,8 @@ help: ## This help.
 
 # Variables and lists
 TS_SUFFIX="$(shell date '+%s')"
-
+DOCKER_IMG="up9inc/mizu"
+DOCKER_TAG="latest"
 
 ui: ## build UI
 	@(cd ui; npm i ; npm run build; )
@@ -27,6 +28,7 @@ cli: # build CLI
 	@(cd cli; echo "building cli" )
 
 api: ## build API server
+	@(echo "building API server .." )
 	@(cd api; go build -o build/apiserver main.go)
 	@ls -l api/build
 
@@ -36,19 +38,21 @@ tap: ## build tap binary
 
 docker: ## build Docker image 
 	@(echo "building docker image" )
+	docker build -t ${DOCKER_IMG}:${DOCKER_TAG} api
+	docker images ${DOCKER_IMG}
 
 publish: ## build and publish Mizu docker image & CLI
 	@echo "publishing Docker image .. "
 	@echo "publishing CLI .. "
 
 
-clean: clean-api clean-cli clean-ui clean-docker ## Clean all build artifacts
+clean: clean-ui clean-api clean-cli clean-docker ## Clean all build artifacts
 
 clean-ui: 
-	@(cd ui; rm -rf build ; echo "ui cleanup done" )
+	@(rm -rf ui/build ; echo "UI cleanup done" )
 
 clean-api: 
-	@(cd api; rm -rf build ; echo "api cleanup done" )
+	@(rm -rf api/build ; echo "api cleanup done" )
 
 clean-cli: 
 	@(echo "CLI cleanup - NOT IMPLEMENTED YET " )
