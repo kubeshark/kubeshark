@@ -14,3 +14,4 @@ LICENSE
 .git/
 .github/
 build/
+**/node_modules/

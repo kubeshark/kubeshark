@@ -41,6 +41,7 @@ func StartReadingFiles(workingDir string) {
 		utils.CheckErr(decErr)
 
 		for _, entry := range inputHar.Log.Entries {
+			time.Sleep(time.Millisecond * 250)
 			SaveHarToDb(*entry, "")
 		}
 		rmErr := os.Remove(inputFilePath)
