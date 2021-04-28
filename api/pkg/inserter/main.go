@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"github.com/antoniodipinto/ikisocket"
 	"github.com/google/martian/har"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"io"
@@ -17,7 +18,6 @@ import (
 	"sort"
 	"time"
 )
-
 
 func IsEmpty(name string) bool {
 	f, err := os.Open(name)
@@ -57,7 +57,7 @@ func StartReadingFiles(workingDir string) {
 		decErr := json.NewDecoder(bufio.NewReader(file)).Decode(&inputHar)
 		utils.CheckErr(decErr)
 
-		for _, entry := range inputHar.Log.Entries 	{
+		for _, entry := range inputHar.Log.Entries {
 			SaveHarToDb(*entry, "")
 		}
 		rmErr := os.Remove(inputFilePath)
@@ -69,8 +69,9 @@ func StartReadingFiles(workingDir string) {
 func SaveHarToDb(entry har.Entry, source string) {
 	entryBytes, _ := json.Marshal(entry)
 	serviceName, urlPath := getServiceNameFromUrl(entry.Request.URL)
+	entryId := primitive.NewObjectID().Hex()
 	mizuEntry := models.MizuEntry{
-		EntryId:   primitive.NewObjectID().Hex(),
+		EntryId:   entryId,
 		Entry:     string(entryBytes), // simple way to store it and not convert to bytes
 		Service:   serviceName,
 		Url:       entry.Request.URL,
@@ -81,6 +82,19 @@ func SaveHarToDb(entry har.Entry, source string) {
 		Timestamp: entry.StartedDateTime.Unix(),
 	}
 	database.GetEntriesTable().Create(&mizuEntry)
+
+	baseEntry := &models.BaseEntryDetails{
+		Id:         entryId,
+		Url:        entry.Request.URL,
+		Service:    serviceName,
+		Path:       urlPath,
+		StatusCode: entry.Response.Status,
+		Method:     entry.Request.Method,
+		Timestamp:  entry.StartedDateTime.Unix(),
+	}
+	baseEntryBytes, _ := json.Marshal(&baseEntry)
+	ikisocket.Broadcast(baseEntryBytes)
+
 }
 
 func getServiceNameFromUrl(inputUrl string) (string, string) {
