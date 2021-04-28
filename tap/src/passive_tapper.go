@@ -91,7 +91,7 @@ var dumpToHar = flag.Bool("hardump", false, "Dump traffic to har files")
 var harOutputDir = flag.String("hardir", "output", "Directory in which to store output har files")
 var harEntriesPerFile = flag.Int("harentriesperfile", 200, "Number of max number of har entries to store in each file")
 
-var reqResMatcher = createResponseRequestMatcher()  // global
+var reqResMatcher = createResponseRequestMatcher() // global
 var statsTracker = StatsTracker{}
 
 // global

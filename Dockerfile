@@ -16,10 +16,10 @@ RUN go build -ldflags="-s -w" -o passivetapper .
 # Move to api working directory (/api-build).
 WORKDIR ../api-build
 
-COPY go.mod go.sum ./
+COPY api/go.mod api/go.sum ./
 RUN go mod download
 # Copy and build api code
-COPY . .
+COPY api .
 RUN go build -ldflags="-s -w" -o apiserver .
 
 FROM alpine:3.13.5
@@ -32,7 +32,7 @@ WORKDIR /app
 COPY --from=builder ["/api-build/apiserver", "."]
 COPY --from=builder ["/tap-build/passivetapper", "."]
 
-COPY scripts/multi-runner.sh ./
+COPY api/scripts/multi-runner.sh ./
 
 # this script runs both apiserver and passivetapper and exits either if one of them exits, preventing a scenario where the container runs without one process
 CMD "./multi-runner.sh"

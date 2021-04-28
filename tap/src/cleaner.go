@@ -20,7 +20,7 @@ type Cleaner struct {
 	cleanPeriod       time.Duration
 	connectionTimeout time.Duration
 	stats             CleanerStats
-	statsMutex	  sync.Mutex
+	statsMutex        sync.Mutex
 }
 
 func (cl *Cleaner) clean() {

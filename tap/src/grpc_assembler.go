@@ -43,7 +43,7 @@ func (fbs *fragmentsByStream) appendFrame(streamID uint32, frame http2.Frame) {
 		if existingFragment, ok := (*fbs)[streamID]; ok {
 			existingDataLen := len(existingFragment.data)
 			// Never save more than maxHTTP2DataLen bytes
-			numBytesToAppend := int(math.Min(float64(maxHTTP2DataLen - existingDataLen), float64(newDataLen)))
+			numBytesToAppend := int(math.Min(float64(maxHTTP2DataLen- existingDataLen), float64(newDataLen)))
 
 			existingFragment.data = append(existingFragment.data, frame.Data()[:numBytesToAppend]...)
 		} else {
@@ -77,7 +77,7 @@ func createGrpcAssembler(b *bufio.Reader) GrpcAssembler {
 
 type GrpcAssembler struct {
 	fragmentsByStream fragmentsByStream
-	framer *http2.Framer
+	framer            *http2.Framer
 }
 
 func (ga *GrpcAssembler) readMessage() (uint32, interface{}, string, error) {
@@ -112,15 +112,15 @@ func (ga *GrpcAssembler) readMessage() (uint32, interface{}, string, error) {
 	var messageHTTP1 interface{}
 	if _, ok := headersHTTP1[":method"]; ok {
 		messageHTTP1 = http.Request{
-			Header: headersHTTP1,
-			Proto: protoHTTP2,
+			Header:     headersHTTP1,
+			Proto:      protoHTTP2,
 			ProtoMajor: protoMajorHTTP2,
 			ProtoMinor: protoMinorHTTP2,
 		}
 	} else if _, ok := headersHTTP1[":status"]; ok {
 		messageHTTP1 = http.Response{
-			Header: headersHTTP1,
-			Proto: protoHTTP2,
+			Header:     headersHTTP1,
+			Proto:      protoHTTP2,
 			ProtoMajor: protoMajorHTTP2,
 			ProtoMinor: protoMinorHTTP2,
 		}
