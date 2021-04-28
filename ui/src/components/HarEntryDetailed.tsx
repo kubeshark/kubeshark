@@ -12,7 +12,9 @@ const useStyles = makeStyles(() => ({
         minHeight: 46,
         maxHeight: 46,
         alignItems: 'center',
-        marginBottom: 8
+        marginBottom: 8,
+        padding: 5,
+        paddingBottom: 0
     }
 }));
 

@@ -31,6 +31,7 @@ WORKDIR /app
 # Copy binary and config files from /build to root folder of scratch container.
 COPY --from=builder ["/api-build/apiserver", "."]
 COPY --from=builder ["/tap-build/passivetapper", "."]
+
 COPY scripts/multi-runner.sh ./
 
 # this script runs both apiserver and passivetapper and exits either if one of them exits, preventing a scenario where the container runs without one process
