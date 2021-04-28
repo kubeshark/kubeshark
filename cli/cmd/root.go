@@ -36,6 +36,8 @@ func init() {
 	rootCmd.Flags().StringVarP(&config.Configuration.Namespace, "namespace", "n", "", "Namespace selector")
 	rootCmd.Flags().BoolVarP(&config.Configuration.AllNamespaces, "all-namespaces", "A", false, "Select all namespaces")
 	rootCmd.Flags().StringVarP(&config.Configuration.KubeConfigPath, "kubeconfig", "k", "", "Path to kubeconfig file")
+	rootCmd.Flags().StringVarP(&config.Configuration.MizuImage, "mizu-image", "", "gcr.io/up9-docker-hub/mizu/develop/v1", "Custom image for mizu collector")
+	rootCmd.Flags().Uint16VarP(&config.Configuration.MizuPodPort, "mizu-port", "", 8899, "Port which mizu cli will attempt to forward from the mizu collector pod")
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
