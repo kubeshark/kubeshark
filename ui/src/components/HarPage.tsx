@@ -5,7 +5,6 @@ import {makeStyles} from "@material-ui/core";
 import "./style/HarPage.sass";
 import styles from './style/HarEntriesList.module.sass';
 import {HAREntryDetailed} from "./HarEntryDetailed";
-// import {HarPaging} from "./HarPaging";
 import useWebSocket from 'react-use-websocket';
 
 const useLayoutStyles = makeStyles(() => ({
@@ -20,6 +19,8 @@ const useLayoutStyles = makeStyles(() => ({
         display: 'flex',
         overflowY: 'auto',
         height: "calc(100% - 58px)",
+        padding: 5,
+        paddingBottom: 0
     }
 }));
 
@@ -31,27 +32,15 @@ export const HarPage: React.FC = () => {
     const [focusedEntryId, setFocusedEntryId] = useState(null);
     const [selectedHarEntry, setSelectedHarEntry] = useState(null);
 
-    const socketUrl = 'ws://localhost:8899/ws/1';
-    const {
-        sendMessage,
-        sendJsonMessage,
-        lastMessage,
-        lastJsonMessage,
-        readyState,
-        getWebSocket
-    } = useWebSocket(socketUrl, {
-        onOpen: () => console.log('opened'),
-        //Will attempt to reconnect on all close events, such as server shutting down
-        shouldReconnect: (closeEvent) => true,
-    });
-
-    console.log(lastMessage?.data);
+    const socketUrl = 'ws://localhost:8899/ws';
+    const {lastMessage} = useWebSocket(socketUrl, {shouldReconnect: (closeEvent) => true});
 
     useEffect(() => {
-        fetch("http://localhost:8899/api/entries")
-            .then(response => response.json())
-            .then(data => {setEntries(data); setFocusedEntryId(data[0]?.id)});
-    }, []);
+        if(!lastMessage?.data) return;
+        const entry = JSON.parse(lastMessage.data);
+        if(!focusedEntryId) setFocusedEntryId(entry.id)
+        setEntries([...entries, entry])
+    },[lastMessage?.data])
 
     useEffect(() => {
         if(!focusedEntryId) return;
@@ -67,16 +56,11 @@ export const HarPage: React.FC = () => {
                     {/*<HarFilters />*/}
                     <div className={styles.container}>
                         <HarEntriesList entries={entries} focusedEntryId={focusedEntryId} setFocusedEntryId={setFocusedEntryId}/>
-                        {/*<Box flexGrow={0} flexShrink={0}>*/}
-                        {/*    {!harStore.data.isFirstLoading &&*/}
-                        {/*    <HarPaging showPageNumber />*/}
-                        {/*    }*/}
-                        {/*</Box>*/}
                     </div>
                 </div>
-                <div className={classes.details}>
+                {selectedHarEntry && <div className={classes.details}>
                     <HAREntryDetailed harEntry={selectedHarEntry} classes={{root: classes.harViewer}}/>
-                </div>
+                </div>}
             </div>
         </div>
     )
