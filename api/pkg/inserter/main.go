@@ -1,4 +1,4 @@
-package api
+package inserter
 
 import (
 	"bufio"
@@ -6,22 +6,50 @@ import (
 	"fmt"
 	"github.com/google/martian/har"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"mizuserver/src/pkg/database"
-	"mizuserver/src/pkg/models"
-	"mizuserver/src/pkg/utils"
+	"io"
+	"io/fs"
+	"mizuserver/pkg/database"
+	"mizuserver/pkg/models"
+	"mizuserver/pkg/utils"
 	"net/url"
 	"os"
 	"path"
 	"sort"
+	"time"
 )
 
-func TestHarSavingFromFolder(inputDir string) {
-	dir, _ := os.Open(inputDir)
-	dirFiles, _ := dir.Readdir(-1)
-	sort.Sort(utils.ByModTime(dirFiles))
 
-	for _, fileInfo := range dirFiles {
-		inputFilePath := path.Join(inputDir, fileInfo.Name())
+func IsEmpty(name string) bool {
+	f, err := os.Open(name)
+	if err != nil {
+		return false
+	}
+	defer f.Close()
+
+	_, err = f.Readdirnames(1) // Or f.Readdir(1)
+	if err == io.EOF {
+		return true
+	}
+	return false // Either not empty or error, suits both cases
+}
+
+func StartReadingFiles(workingDir string) {
+	err := os.MkdirAll(workingDir, fs.ModeDir)
+	utils.CheckErr(err)
+
+	for true {
+		if IsEmpty(workingDir) {
+			fmt.Printf("Waiting for new files\n")
+			time.Sleep(5 * time.Second)
+			continue
+		}
+
+		dir, _ := os.Open(workingDir)
+		dirFiles, _ := dir.Readdir(-1)
+		sort.Sort(utils.ByModTime(dirFiles))
+
+		fileInfo := dirFiles[0]
+		inputFilePath := path.Join(workingDir, fileInfo.Name())
 		file, err := os.Open(inputFilePath)
 		utils.CheckErr(err)
 
@@ -29,10 +57,13 @@ func TestHarSavingFromFolder(inputDir string) {
 		decErr := json.NewDecoder(bufio.NewReader(file)).Decode(&inputHar)
 		utils.CheckErr(decErr)
 
-		for _, entry := range inputHar.Log.Entries {
+		for _, entry := range inputHar.Log.Entries 	{
 			SaveHarToDb(*entry, "")
 		}
+		rmErr := os.Remove(inputFilePath)
+		utils.CheckErr(rmErr)
 	}
+
 }
 
 func SaveHarToDb(entry har.Entry, source string) {

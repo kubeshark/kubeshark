@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/martian/har"
-	"mizuserver/src/pkg/database"
-	"mizuserver/src/pkg/models"
-	"mizuserver/src/pkg/utils"
+	"mizuserver/pkg/database"
+	"mizuserver/pkg/models"
+	"mizuserver/pkg/utils"
 	"strconv"
 )
 

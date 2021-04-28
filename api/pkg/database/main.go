@@ -3,7 +3,7 @@ package database
 import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
-	"mizuserver/src/pkg/models"
+	"mizuserver/pkg/models"
 )
 
 const (

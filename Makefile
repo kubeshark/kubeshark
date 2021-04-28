@@ -27,7 +27,8 @@ cli: # build CLI
 	@(cd cli; echo "building cli" )
 
 api: ## build API server
-	@(cd api; echo "building api" )
+	@(cd api; go build -o build/apiserver main.go)
+	@ls -l api/build
 
 docker: ## build Docker image 
 	@(echo "building docker image" )
@@ -43,7 +44,7 @@ clean-ui:
 	@(cd ui; rm -rf build ; echo "ui cleanup done" )
 
 clean-api: 
-	@(echo "API cleanup - NOT IMPLEMENTED YET " )
+	@(cd api; rm -rf build ; echo "api cleanup done" )
 
 clean-cli: 
 	@(echo "CLI cleanup - NOT IMPLEMENTED YET " )
