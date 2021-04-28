@@ -44,7 +44,7 @@ clean-ui:
 	@(cd ui; rm -rf build ; echo "ui cleanup done" )
 
 clean-api: 
-	@(echo "API cleanup - NOT IMPLEMENTED YET " )
+	@(cd api; rm -rf build ; echo "api cleanup done" )
 
 clean-cli: 
 	@(echo "CLI cleanup - NOT IMPLEMENTED YET " )
