@@ -6,6 +6,7 @@ import "./style/HarPage.sass";
 import styles from './style/HarEntriesList.module.sass';
 import {HAREntryDetailed} from "./HarEntryDetailed";
 // import {HarPaging} from "./HarPaging";
+import useWebSocket from 'react-use-websocket';
 
 const useLayoutStyles = makeStyles(() => ({
     details: {
@@ -29,6 +30,22 @@ export const HarPage: React.FC = () => {
     const [entries, setEntries] = useState([] as any);
     const [focusedEntryId, setFocusedEntryId] = useState(null);
     const [selectedHarEntry, setSelectedHarEntry] = useState(null);
+
+    const socketUrl = 'ws://localhost:8899/ws/1';
+    const {
+        sendMessage,
+        sendJsonMessage,
+        lastMessage,
+        lastJsonMessage,
+        readyState,
+        getWebSocket
+    } = useWebSocket(socketUrl, {
+        onOpen: () => console.log('opened'),
+        //Will attempt to reconnect on all close events, such as server shutting down
+        shouldReconnect: (closeEvent) => true,
+    });
+
+    console.log(lastMessage?.data);
 
     useEffect(() => {
         fetch("http://localhost:8899/api/entries")
