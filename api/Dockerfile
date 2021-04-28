@@ -1,26 +1,37 @@
 FROM golang:1.16-alpine AS builder
+# Set necessary environment variables needed for our image.
+ENV CGO_ENABLED=1 GOOS=linux GOARCH=amd64
 
-# Move to working directory (/build).
-WORKDIR /build
+RUN apk add libpcap-dev gcc g++ make
 
-# Copy and download dependency using go mod.
+# Move to tapper working directory (/tap-build).
+WORKDIR /tap-build
+
+COPY tap/go.mod tap/go.sum ./
+RUN go mod download
+# Copy and build tapper code
+COPY tap/src ./
+RUN go build -ldflags="-s -w" -o passivetapper .
+
+# Move to api working directory (/api-build).
+WORKDIR ../api-build
+
 COPY go.mod go.sum ./
 RUN go mod download
-
-# Copy the code into the container.
+# Copy and build api code
 COPY . .
-
-# Set necessary environmet variables needed for our image and build the API server.
-ENV CGO_ENABLED=0 GOOS=linux GOARCH=amd64
 RUN go build -ldflags="-s -w" -o apiserver .
 
-FROM scratch
+FROM alpine:3.13.5
+
+RUN apk add bash libpcap-dev
+
+WORKDIR /app
 
 # Copy binary and config files from /build to root folder of scratch container.
-COPY --from=builder ["/build/apiserver", "/"]
+COPY --from=builder ["/api-build/apiserver", "."]
+COPY --from=builder ["/tap-build/passivetapper", "."]
+COPY scripts/multi-runner.sh ./
 
-# Export necessary port.
-EXPOSE 5000
-
-# Command to run when starting the container.
-ENTRYPOINT ["/apiserver"]
+# this script runs both apiserver and passivetapper and exits either if one of them exits, preventing a scenario where the container runs without one process
+CMD "./multi-runner.sh"
