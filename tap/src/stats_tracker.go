@@ -9,8 +9,8 @@ type AppStats struct {
 }
 
 type StatsTracker struct {
-	stats      AppStats
-	statsMutex sync.Mutex
+	stats             AppStats
+	statsMutex	  sync.Mutex
 }
 
 func (st *StatsTracker) incMatchedMessages() {
