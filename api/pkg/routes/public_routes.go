@@ -2,11 +2,11 @@ package routes
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"mizuserver/src/pkg/controllers"
+	"mizuserver/pkg/controllers"
 )
 
-// PublicRoutes func for describe group of public routes.
-func PublicRoutes(fiberApp *fiber.App) {
+// EntriesRoutes func for describe group of public routes.
+func EntriesRoutes(fiberApp *fiber.App) {
 	routeGroup := fiberApp.Group("/api")
 
 	routeGroup.Get("/entries", controllers.GetEntries)        // get entries (base/thin entries)

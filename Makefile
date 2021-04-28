@@ -27,7 +27,8 @@ cli: # build CLI
 	@(cd cli; echo "building cli" )
 
 api: ## build API server
-	@(cd api; echo "building api" )
+	@(cd api; go build -o build/apiserver main.go)
+	@ls -l api/build
 
 docker: ## build Docker image 
 	@(echo "building docker image" )
