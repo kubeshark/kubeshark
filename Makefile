@@ -17,7 +17,8 @@ help: ## This help.
 
 # Variables and lists
 TS_SUFFIX="$(shell date '+%s')"
-
+DOCKER_IMG="up9inc/mizu"
+DOCKER_TAG="latest"
 
 ui: ## build UI
 	@(cd ui; npm i ; npm run build; )
@@ -27,11 +28,14 @@ cli: # build CLI
 	@(cd cli; echo "building cli" )
 
 api: ## build API server
+	@(echo "building API server .." )
 	@(cd api; go build -o build/apiserver main.go)
 	@ls -l api/build
 
 docker: ## build Docker image 
 	@(echo "building docker image" )
+	docker build -t ${DOCKER_IMG}:${DOCKER_TAG} api
+	docker images ${DOCKER_IMG}
 
 publish: ## build and publish Mizu docker image & CLI
 	@echo "publishing Docker image .. "
