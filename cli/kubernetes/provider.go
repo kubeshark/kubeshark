@@ -4,6 +4,7 @@ import (
 	_ "bytes"
 	"context"
 	"fmt"
+	"strings"
 
 	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -76,6 +77,12 @@ func (provider *Provider) CreateMizuPod(ctx context.Context, podName string, pod
 		panic(err.Error())
 	}
 
+	podIps := make([]string, len(tappedPod.Status.PodIPs))
+	for ii, podIp := range tappedPod.Status.PodIPs {
+		podIps[ii] = podIp.IP
+	}
+	podIpsString := strings.Join(podIps, ",")
+
 	privileged := true
 	pod := &core.Pod{
 		ObjectMeta: metav1.ObjectMeta{
@@ -96,6 +103,10 @@ func (provider *Provider) CreateMizuPod(ctx context.Context, podName string, pod
 						{
 							Name: "HOST_MODE",
 							Value: "1",
+						},
+						{
+							Name: "TAPPED_ADDRESSES",
+							Value: podIpsString,
 						},
 					},
 				},
