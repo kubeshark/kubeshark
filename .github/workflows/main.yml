@@ -9,15 +9,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      - name: Extract branch name
-        shell: bash
-        run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
-        id: extract_branch
       - name: Docker meta
         id: meta
         uses: crazy-max/ghaction-docker-meta@v2
         with:
-          images: gcr.io/up9-docker-hub/mizu/${{ steps.extract_branch.outputs.branch }}
+          images: gcr.io/up9-docker-hub/mizu/${GITHUB_REF#refs/heads/}
           tags: |
             type=sha
             type=raw,${{ github.sha }}
