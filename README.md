@@ -5,8 +5,8 @@ standalone web app traffic viewer for Kubernetes
 
 Download `mizu` for your platform as
 
-* for MacOS - `curl -o mizu https://static.up9.com/mizu/mizu-darwin-amd64`
-* for Linux - `curl -o mizu https://static.up9.com/mizu/mizu-linux-amd64`
+* for MacOS - `curl -o mizu https://static.up9.com/mizu/mizu-darwin-amd64 &&  chmod 755 mizu`
+* for Linux - `curl -o mizu https://static.up9.com/mizu/mizu-linux-amd64 && chmod 755 mizu
 
 ## Run
 
