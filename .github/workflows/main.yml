@@ -10,7 +10,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         name: checkout
-      - name: Login to DockerHub 
+      - name: build push docker image to gcr 
         uses: sendinblue/build-and-push-action@main
         with:
           image-name: 'mizu/${GITHUB_REF##*/}'
