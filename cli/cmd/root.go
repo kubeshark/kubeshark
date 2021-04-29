@@ -11,7 +11,7 @@ var (
 	rootCmd = &cobra.Command{}
 )
 func init() {
-	rootCmd.Use = "cmd pod-query"
+    rootCmd.Use = "mizu"
 	rootCmd.Short = "Tail HTTP traffic from multiple pods"
 	rootCmd.RunE = func(cmd *cobra.Command, args []string) error {
 		if len(args) != 0 {
@@ -32,6 +32,7 @@ func init() {
 	rootCmd.Flags().StringVarP(&config.Configuration.MizuImage, "mizu-image", "", "gcr.io/up9-docker-hub/mizu/develop:latest", "Custom image for mizu collector")
 	rootCmd.Flags().Uint16VarP(&config.Configuration.MizuPodPort, "mizu-port", "", 8899, "Port which mizu cli will attempt to forward from the mizu collector pod")
 	rootCmd.Flags().StringVarP(&config.Configuration.TappedPodName, "pod", "", "", "View traffic of this pod")
+    rootCmd.MarkFlagRequired("pod")
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
