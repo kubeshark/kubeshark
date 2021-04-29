@@ -15,7 +15,7 @@ func main() {
 
 	app := fiber.New()
 
-	var harDir = flag.String("hardir", "/tmp/mizuhars", "Directory in which to store output har files")
+	var harDir = flag.String("hardir", "input", "Directory in which we read har files from")
 	go inserter.StartReadingFiles(*harDir)  // process to read files and insert to DB
 
 
