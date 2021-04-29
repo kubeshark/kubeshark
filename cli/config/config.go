@@ -8,6 +8,8 @@ type Options struct {
 	Namespace        string
 	AllNamespaces    bool
 	KubeConfigPath   string
+	MizuImage        string
+	MizuPodPort      uint16
 }
 
 var Configuration = &Options{}
