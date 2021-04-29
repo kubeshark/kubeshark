@@ -8,6 +8,8 @@ jobs:
   docker:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v2
+        name: checkout
       - name: Login to DockerHub 
         uses: sendinblue/build-and-push-action@main
         with:
