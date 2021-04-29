@@ -13,12 +13,12 @@ jobs:
         id: meta
         uses: crazy-max/ghaction-docker-meta@v2
         with:
-          # list of Docker images to use as base name for tags
-          images: gcr.io/up9-docker-hub/mizu
-          # generate Docker tags based on the following events/attributes
+          images: |
+            gcr.io/up9-docker-hub/mizu/${GITHUB_REF##*/}
           tags: |
-            type=ref,event=branch
             type=sha
+            type=raw,${{GITHUB_SHA}}
+            type=raw,latest
       - name: Login to DockerHub  
         uses: docker/login-action@v1 
         with:
