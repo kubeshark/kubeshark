@@ -9,11 +9,15 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+      - name: Get base image name
+        shell: bash
+        run: echo "##[set-output name=image;]$(echo gcr.io/up9-docker-hub/mizu/${GITHUB_REF#refs/heads/})"
+        id: base_image_step
       - name: Docker meta
         id: meta
         uses: crazy-max/ghaction-docker-meta@v2
         with:
-          images: gcr.io/up9-docker-hub/mizu/${GITHUB_REF##*/}
+          images: ${{ steps.base_image_step.outputs.image }}
           tags: |
             type=sha
             type=raw,${{ github.sha }}
