@@ -7,7 +7,7 @@
 | flag                 | default          | purpose                                                                                                      |
 |----------------------|------------------|--------------------------------------------------------------------------------------------------------------|
 | `--no-dashboard`     | `false`          | Don't host the dashboard (not applicable at the moment)                                                      |
-| `--dashboard-port`   | `3000`           | local port that dashboard will be forwarded to                                                               |
+| `--dashboard-port`   | `8899`           | local port that dashboard will be forwarded to                                                               |
 | `--namespace`        |                  | use namespace different than the one found in kubeconfig                                                     |
 | `--kubeconfig`       |                  | Path to custom kubeconfig file                                                                               |
 

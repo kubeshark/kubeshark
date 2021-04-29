@@ -12,10 +12,6 @@ import (
 	"time"
 )
 
-var (
-	isPortForwarded = false
-)
-
 func Run(podRegex *regexp.Regexp) {
 	kubernetesProvider := kubernetes.NewProvider(config.Configuration.KubeConfigPath, config.Configuration.Namespace)
 	ctx, cancel := context.WithCancel(context.Background())
@@ -58,9 +54,7 @@ func watchPodsForTapping(ctx context.Context, kubernetesProvider *kubernetes.Pro
 }
 
 func createPodAndPortForward(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc, podName string) {
-	podImage := "kennethreitz/httpbin:latest"
-
-	pod, err := kubernetesProvider.CreatePod(ctx, podName, podImage)
+	pod, err := kubernetesProvider.CreatePod(ctx, podName, config.Configuration.MizuImage)
 	if err != nil {
 		fmt.Printf("error creating pod %s", err)
 		cancel()
@@ -82,7 +76,7 @@ func createPodAndPortForward(ctx context.Context, kubernetesProvider *kubernetes
 			if modifiedPod.Status.Phase == "Running" && !isPodReady {
 				isPodReady = true
 				var err error
-				portForward, err = kubernetes.NewPortForward(kubernetesProvider, kubernetesProvider.Namespace, podName, config.Configuration.DashboardPort, 80, cancel)
+				portForward, err = kubernetes.NewPortForward(kubernetesProvider, kubernetesProvider.Namespace, podName, config.Configuration.DashboardPort, config.Configuration.MizuPodPort, cancel)
 				if !config.Configuration.NoDashboard {
 					fmt.Printf("Dashboard is now available at http://localhost:%d\n", config.Configuration.DashboardPort)
 				}
@@ -92,7 +86,7 @@ func createPodAndPortForward(ctx context.Context, kubernetesProvider *kubernetes
 				}
 			}
 
-		case <- time.After(10 * time.Second):
+		case <- time.After(25 * time.Second):
 			if !isPodReady {
 				fmt.Printf("error: %s pod was not ready in time", podName)
 				cancel()

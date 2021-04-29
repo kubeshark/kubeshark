@@ -46,13 +46,13 @@ publish: ## build and publish Mizu docker image & CLI
 	@echo "publishing CLI .. "
 
 
-clean: clean-api clean-cli clean-ui clean-docker ## Clean all build artifacts
+clean: clean-ui clean-api clean-cli clean-docker ## Clean all build artifacts
 
 clean-ui: 
-	@(cd ui; rm -rf build ; echo "ui cleanup done" )
+	@(rm -rf ui/build ; echo "UI cleanup done" )
 
 clean-api: 
-	@(cd api; rm -rf build ; echo "api cleanup done" )
+	@(rm -rf api/build ; echo "api cleanup done" )
 
 clean-cli: 
 	@(echo "CLI cleanup - NOT IMPLEMENTED YET " )
