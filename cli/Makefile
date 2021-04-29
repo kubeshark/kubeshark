@@ -19,6 +19,3 @@ build-cr:
 clean: 
 	#go clean
 	rm -f ./bin/*
-
-run:
-	go run . ".*"
