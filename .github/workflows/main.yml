@@ -13,7 +13,7 @@ jobs:
         id: meta
         uses: crazy-max/ghaction-docker-meta@v2
         with:
-          images: gcr.io/up9-docker-hub/mizu/${{ github.head_ref##/ }}
+          images: gcr.io/up9-docker-hub/mizu/${{ github.ref }}
           tags: |
             type=sha
             type=raw,${{ github.sha }}
