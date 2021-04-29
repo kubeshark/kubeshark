@@ -70,7 +70,12 @@ func (provider *Provider) GetPods(ctx context.Context) {
 	fmt.Printf("There are %d pods in Namespace %s\n", len(pods.Items), provider.Namespace)
 }
 
-func (provider *Provider) CreatePod(ctx context.Context, podName string, podImage string) (*core.Pod, error) {
+func (provider *Provider) CreateMizuPod(ctx context.Context, podName string, podImage string, tappedPodName string) (*core.Pod, error) {
+	tappedPod, err := provider.clientSet.CoreV1().Pods(provider.Namespace).Get(ctx, tappedPodName, metav1.GetOptions{})
+	if err != nil {
+		panic(err.Error())
+	}
+
 	privileged := true
 	pod := &core.Pod{
 		ObjectMeta: metav1.ObjectMeta{
@@ -96,6 +101,7 @@ func (provider *Provider) CreatePod(ctx context.Context, podName string, podImag
 				},
 			},
 			TerminationGracePeriodSeconds: new(int64),
+			NodeSelector: map[string]string{"kubernetes.io/hostname": tappedPod.Spec.NodeName},
 		},
 	}
 	return provider.clientSet.CoreV1().Pods(provider.Namespace).Create(ctx, pod, metav1.CreateOptions{})

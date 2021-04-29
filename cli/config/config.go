@@ -10,6 +10,7 @@ type Options struct {
 	KubeConfigPath   string
 	MizuImage        string
 	MizuPodPort      uint16
+	TappedPodName	string
 }
 
 var Configuration = &Options{}
