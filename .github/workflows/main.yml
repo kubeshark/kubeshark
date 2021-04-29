@@ -1,0 +1,17 @@
+name: ci
+on:
+  push:
+    branches:
+      - 'feature/try_guthub_action'
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Login to DockerHub 
+        uses: sendinblue/build-and-push-action@main
+        with:
+          image-name: 'mizu/tst'
+          gcp-project-id: 'up9-docker-hub'
+          gcp-service-account-key: ${{ secrets.GCR_JSON_KEY }}
+          
