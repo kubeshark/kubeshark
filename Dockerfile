@@ -57,4 +57,3 @@ COPY api/scripts/multi-runner.sh ./
 
 # this script runs both apiserver and passivetapper and exits either if one of them exits, preventing a scenario where the container runs without one process
 CMD "./multi-runner.sh"
-
