@@ -54,7 +54,7 @@ func watchPodsForTapping(ctx context.Context, kubernetesProvider *kubernetes.Pro
 }
 
 func createPodAndPortForward(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc, podName string) {
-	pod, err := kubernetesProvider.CreatePod(ctx, podName, config.Configuration.MizuImage)
+	pod, err := kubernetesProvider.CreateMizuPod(ctx, podName, config.Configuration.MizuImage, config.Configuration.TappedPodName)
 	if err != nil {
 		fmt.Printf("error creating pod %s", err)
 		cancel()
