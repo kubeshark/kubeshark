@@ -3,7 +3,8 @@ on:
   push:
     branches:
       - 'feature/try_guthub_action'
-
+      - 'develop'
+      - 'main'
 jobs:
   docker:
     runs-on: ubuntu-latest
@@ -13,7 +14,7 @@ jobs:
       - name: Login to DockerHub 
         uses: sendinblue/build-and-push-action@main
         with:
-          image-name: 'mizu/tst'
+          image-name: 'mizu/${GITHUB_REF##*/}'
           gcp-project-id: 'up9-docker-hub'
           gcp-service-account-key: ${{ secrets.GCR_JSON_KEY }}
           
