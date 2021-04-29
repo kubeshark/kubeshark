@@ -2,7 +2,8 @@ name: ci
 on:
   push:
     branches:
-      - 'feature/try_guthub_action'
+      - 'develop'
+      - 'main'
 jobs:
   docker:
     runs-on: ubuntu-latest
