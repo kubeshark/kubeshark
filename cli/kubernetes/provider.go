@@ -87,6 +87,12 @@ func (provider *Provider) CreatePod(ctx context.Context, podName string, podImag
 					SecurityContext: &core.SecurityContext{
 						Privileged: &privileged, // must be privileged to get node level traffic
 					},
+					Env: []core.EnvVar{
+						{
+							Name: "HOST_MODE",
+							Value: "1",
+						},
+					},
 				},
 			},
 			TerminationGracePeriodSeconds: new(int64),
