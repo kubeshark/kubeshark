@@ -1,19 +1,39 @@
 name: ci
+
 on:
   push:
     branches:
-      - 'develop'
-      - 'main'
+      - 'feature/try_github_action'
 jobs:
   docker:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-        name: checkout
-      - name: build push docker image to gcr 
-        uses: sendinblue/build-and-push-action@main
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Docker meta
+        id: meta
+        uses: crazy-max/ghaction-docker-meta@v2
         with:
-          image-name: 'mizu/${GITHUB_REF##*/}'
-          gcp-project-id: 'up9-docker-hub'
-          gcp-service-account-key: ${{ secrets.GCR_JSON_KEY }}
-          
+          # list of Docker images to use as base name for tags
+          images: gcr.io/up9-docker-hub/mizu
+          # generate Docker tags based on the following events/attributes
+          tags: |
+            type=ref,event=branch
+            type=sha
+#       - name: Set up QEMU
+#         uses: docker/setup-qemu-action@v1
+#       - name: Set up Docker Buildx
+#         uses: docker/setup-buildx-action@v1
+      - name: Login to DockerHub  
+        uses: docker/login-action@v1 
+        with:
+          registry: gcr.io
+          username: _json_key
+          password: ${{ secrets.GCR_JSON_KEY }}
+      - name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}          
