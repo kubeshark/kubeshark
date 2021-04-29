@@ -18,7 +18,7 @@ import (
 )
 
 func StartReadingFiles(workingDir string) {
-	err := os.MkdirAll(workingDir, 777)
+	err := os.MkdirAll(workingDir, os.ModePerm)
 	utils.CheckErr(err)
 
 	for true {
