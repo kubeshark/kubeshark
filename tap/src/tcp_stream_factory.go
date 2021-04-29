@@ -84,6 +84,8 @@ func (factory *tcpStreamFactory) WaitGoRoutines() {
 }
 
 func (factory *tcpStreamFactory) shouldTap(dstIP string, dstPort int) bool {
+	return true  // TODO: this is only for checking it now
+
 	if hostMode {
 		return inArrayString(hostAppAddresses, fmt.Sprintf("%s:%d", dstIP, dstPort))
 	} else {
