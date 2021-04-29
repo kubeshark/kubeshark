@@ -9,10 +9,10 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
-	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/azure"
-	_ "k8s.io/client-go/plugin/pkg/client/auth/openstack"
+	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc"
+	_ "k8s.io/client-go/plugin/pkg/client/auth/openstack"
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	_ "k8s.io/client-go/tools/portforward"
@@ -71,17 +71,28 @@ func (provider *Provider) GetPods(ctx context.Context) {
 }
 
 func (provider *Provider) CreatePod(ctx context.Context, podName string, podImage string) (*core.Pod, error) {
+	privileged := true
 	pod := &core.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      podName,
 			Namespace: provider.Namespace,
 		},
 		Spec: core.PodSpec{
+			HostNetwork: true,  // very important to make passive tapper see traffic
 			Containers: []core.Container{
 				{
 					Name:            podName,
 					Image:           podImage,
 					ImagePullPolicy: core.PullAlways,
+					SecurityContext: &core.SecurityContext{
+						Privileged: &privileged, // must be privileged to get node level traffic
+					},
+					Env: []core.EnvVar{
+						{
+							Name: "HOST_MODE",
+							Value: "1",
+						},
+					},
 				},
 			},
 			TerminationGracePeriodSeconds: new(int64),
