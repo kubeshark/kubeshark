@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-func Run(podRegex *regexp.Regexp) {
+func Run() {
 	kubernetesProvider := kubernetes.NewProvider(config.Configuration.KubeConfigPath, config.Configuration.Namespace)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // cancel will be called when this function exits
@@ -20,7 +20,6 @@ func Run(podRegex *regexp.Regexp) {
 	podName := "mizu-collector"
 
 	go createPodAndPortForward(ctx, kubernetesProvider, cancel, podName) //TODO convert this to job for built in pod ttl or have the running app handle this
-	go watchPodsForTapping(ctx, kubernetesProvider, cancel, podRegex)
 	waitForFinish(ctx, cancel) //block until exit signal or error
 
 	// TODO handle incoming traffic from tapper using a channel

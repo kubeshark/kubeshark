@@ -1,11 +1,9 @@
 package cmd
 
 import (
-	"fmt"
 	"github.com/spf13/cobra"
 	"github.com/up9inc/mizu/cli/config"
 	"github.com/up9inc/mizu/cli/mizu"
-	"regexp"
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -16,16 +14,11 @@ func init() {
 	rootCmd.Use = "cmd pod-query"
 	rootCmd.Short = "Tail HTTP traffic from multiple pods"
 	rootCmd.RunE = func(cmd *cobra.Command, args []string) error {
-		if len(args) != 1 {
+		if len(args) != 0 {
 			return rootCmd.Help()
 		}
 
-		regex, err := regexp.Compile(args[0])
-		if err != nil {
-			fmt.Printf("%s is not a valid regex %s", args[0], err)
-			return nil
-		}
-		mizu.Run(regex)
+		mizu.Run()
 		return nil
 	}
 
