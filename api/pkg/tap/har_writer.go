@@ -40,10 +40,6 @@ type HarFile struct {
 }
 
 func NewEntry(request *http.Request, requestTime time.Time, response *http.Response, responseTime time.Time) (*har.Entry, error) {
-	// TODO: quick fix until TRA-3212 is implemented  
-	if request.URL == nil || request.Method == "" {
-		return nil, errors.New("Invalid request")
-	}
 	harRequest, err := har.NewRequest(request, true)
 	if err != nil {
 		SilentError("convert-request-to-har", "Failed converting request to HAR %s (%v,%+v)\n", err, err, err)
