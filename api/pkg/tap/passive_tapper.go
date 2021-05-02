@@ -29,6 +29,7 @@ import (
 	"github.com/google/gopacket/layers" // pulls in all layers decoders
 	"github.com/google/gopacket/pcap"
 	"github.com/google/gopacket/reassembly"
+	"github.com/google/martian/har"
 )
 
 const AppPortsEnvVar = "APP_PORTS"
@@ -198,7 +199,19 @@ func (c *Context) GetCaptureInfo() gopacket.CaptureInfo {
 	return c.CaptureInfo
 }
 
-func StartPassiveTapper() {
+func StartPassiveTapper() *har.Entry {
+	var harWriter *HarWriter
+	if *dumpToHar {
+		harWriter = NewHarWriter(*HarOutputDir, *harEntriesPerFile)
+		harWriterOutputChan = harWriter.OutputChan
+	}
+
+	go startPassiveTapper()
+
+	return harWriter.OutChan
+}
+
+func startPassiveTapper() {
 	defer util.Run()()
 	if *debug {
 		outputLevel = 2
@@ -311,13 +324,10 @@ func StartPassiveTapper() {
 		}
 	}
 
-	var harWriter *HarWriter
 	if *dumpToHar {
-		harWriter = NewHarWriter(*HarOutputDir, *harEntriesPerFile)
 		harWriter.Start()
 		defer harWriter.Stop()
 	}
-
 
 	var dec gopacket.Decoder
 	var ok bool

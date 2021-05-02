@@ -38,7 +38,7 @@ type HarFile struct {
 	entryCount int
 }
 
-func (f *HarFile) WriteEntry(request *http.Request, requestTime time.Time, response *http.Response, responseTime time.Time) {
+func NewEntry(request *http.Request, requestTime time.Time, response *http.Response, responseTime time.Time) *har.Entry {
 	// TODO: quick fix until TRA-3212 is implemented  
 	if request.URL == nil || request.Method == "" {
 		return
@@ -77,6 +77,10 @@ func (f *HarFile) WriteEntry(request *http.Request, requestTime time.Time, respo
 		},
 	}
 
+	return &harEntry
+}
+
+func (f *HarFile) WriteEntry(entry *har.Entry) {
 	harEntryJson, err := json.Marshal(harEntry)
 	if err != nil {
 		SilentError("har-entry-marshal", "Failed converting har entry object to JSON%s (%v,%+v)\n", err, err, err)
@@ -131,6 +135,7 @@ func NewHarWriter(outputDir string, maxEntries int) *HarWriter {
 		OutputDirPath: outputDir,
 		MaxEntries: maxEntries,
 		PairChan: make(chan *PairChanItem),
+		OutChan: make(chan *har.Entry, 1000),
 		currentFile: nil,
 		done: make(chan bool),
 	}
@@ -140,6 +145,7 @@ type HarWriter struct {
 	OutputDirPath string
 	MaxEntries int
 	PairChan chan *PairChanItem
+	OutChan chan *har.Entry
 	currentFile *HarFile
 	done chan bool
 }
@@ -160,14 +166,19 @@ func (hw *HarWriter) Start() {
 
 	go func() {
 		for pair := range hw.PairChan {
-			if hw.currentFile == nil {
-				hw.openNewFile()
-			}
+			if hw.OutputDirPath != "" {
+				if hw.currentFile == nil {
+					hw.openNewFile()
+				}
 
-			hw.currentFile.WriteEntry(pair.Request, pair.RequestTime, pair.Response, pair.ResponseTime)
+				harEntry := NewEntry(pair.Request, pair.RequestTime, pair.Response, pair.ResponseTime)
+				hw.currentFile.WriteEntry(harEntry)
 
-			if hw.currentFile.GetEntryCount() >= hw.MaxEntries {
-				hw.closeFile()
+				if hw.currentFile.GetEntryCount() >= hw.MaxEntries {
+					hw.closeFile()
+				}
+			} else {
+				hw.OutChan <- NewEntry(pair.Request, pair.RequestTime, pair.Response, pair.ResponseTime)
 			}
 		}
 

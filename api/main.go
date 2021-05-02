@@ -11,11 +11,12 @@ import (
 
 func main() {
 
-	go tap.StartPassiveTapper()
+	harOutputChannel := tap.StartPassiveTapper()
 
 	app := fiber.New()
 
-	go inserter.StartReadingFiles(*tap.HarOutputDir)  // process to read files and insert to DB
+	// process to read files / channel and insert to DB
+	go inserter.StartReadingFiles(harOutputChannel, tap.HarOutputDir)
 
 
 	middleware.FiberMiddleware(app) // Register Fiber's middleware for app.
