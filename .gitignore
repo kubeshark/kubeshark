@@ -16,6 +16,3 @@
 .idea/
 build
 *.db
-
-# Build directories
-build

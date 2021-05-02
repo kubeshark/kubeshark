@@ -1,10 +1,14 @@
 package mizu
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/up9inc/mizu/cli/config"
 	"github.com/up9inc/mizu/cli/kubernetes"
+	corev1 "k8s.io/api/core/v1"
+	"net/http"
 	"os"
 	"os/signal"
 	"regexp"
@@ -26,30 +30,35 @@ func Run() {
 
 	//cleanup
 	fmt.Printf("\nremoving pod %s\n", podName)
-	removalCtx, _ := context.WithTimeout(context.Background(), 2 * time.Second)
+	removalCtx, cancel := context.WithTimeout(context.Background(), 2 * time.Second)
+	defer cancel()
 	kubernetesProvider.RemovePod(removalCtx, podName)
 }
 
-func watchPodsForTapping(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc, podRegex *regexp.Regexp) {
-	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, kubernetesProvider.GetPodWatcher(ctx), podRegex)
-	for {
-		select {
-		case newTarget := <- added:
-			fmt.Printf("+%s\n", newTarget.Name)
+//func watchPodsForTapping(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc, podRegex *regexp.Regexp) {
+//	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, kubernetesProvider.GetPodWatcher(ctx), podRegex)
+//	for {
+//		select {
+//		case newTarget := <- added:
+//			fmt.Printf("+%s\n", newTarget.Name)
+//
+//		case removedTarget := <- removed:
+//			fmt.Printf("-%s\n", removedTarget.Name)
+//
+//		case <- modified:
+//			continue
+//
+//		case <- errorChan:
+//			cancel()
+//
+//		case <- ctx.Done():
+//			return
+//		}
+//	}
+//}
 
-		case removedTarget := <- removed:
-			fmt.Printf("-%s\n", removedTarget.Name)
-
-		case <- modified:
-			continue
-
-		case <- errorChan:
-			cancel()
-
-		case <- ctx.Done():
-			return
-		}
-	}
+type ChangeAddressesBody struct {
+	Addresses []string `json:"addresses"`
 }
 
 func createPodAndPortForward(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc, podName string) {
@@ -76,6 +85,9 @@ func createPodAndPortForward(ctx context.Context, kubernetesProvider *kubernetes
 				isPodReady = true
 				var err error
 				portForward, err = kubernetes.NewPortForward(kubernetesProvider, kubernetesProvider.Namespace, podName, config.Configuration.DashboardPort, config.Configuration.MizuPodPort, cancel)
+
+				sendAddressesToTapper(modifiedPod)
+
 				if !config.Configuration.NoDashboard {
 					fmt.Printf("Dashboard is now available at http://localhost:%d\n", config.Configuration.DashboardPort)
 				}
@@ -101,6 +113,24 @@ func createPodAndPortForward(ctx context.Context, kubernetesProvider *kubernetes
 			return
 		}
 	}
+}
+
+func sendAddressesToTapper(pod *corev1.Pod) {
+	addresses := getAddresses(pod)
+	data := &ChangeAddressesBody{
+		Addresses: addresses,
+	}
+	dataBytes, _ := json.Marshal(data)
+	bytesReader := bytes.NewReader(dataBytes)
+	_, _ = http.Post("http://localhost:8899/proxy/tapper", "application/json", bytesReader)
+}
+
+func getAddresses(tappedPod *corev1.Pod) []string {
+	podIps := make([]string, len(tappedPod.Status.PodIPs))
+	for ii, podIp := range tappedPod.Status.PodIPs {
+		podIps[ii] = podIp.IP
+	}
+	return podIps
 }
 
 func waitForFinish(ctx context.Context, cancel context.CancelFunc) {
