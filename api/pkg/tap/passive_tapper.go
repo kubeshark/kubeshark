@@ -6,7 +6,7 @@
 
 // The pcapdump binary implements a tcpdump-like command line tool with gopacket
 // using pcap as a backend data collection mechanism.
-package main
+package tap
 
 import (
 	"encoding/hex"
@@ -96,7 +96,7 @@ var memprofile = flag.String("memprofile", "", "Write memory profile")
 
 // output
 var dumpToHar = flag.Bool("hardump", false, "Dump traffic to har files")
-var harOutputDir = flag.String("hardir", "output", "Directory in which to store output har files")
+var HarOutputDir = flag.String("hardir", "output", "Directory in which to store output har files")
 var harEntriesPerFile = flag.Int("harentriesperfile", 200, "Number of max number of har entries to store in each file")
 
 var reqResMatcher = createResponseRequestMatcher()  // global
@@ -198,7 +198,7 @@ func (c *Context) GetCaptureInfo() gopacket.CaptureInfo {
 	return c.CaptureInfo
 }
 
-func main() {
+func StartPassiveTapper() {
 	defer util.Run()()
 	if *debug {
 		outputLevel = 2
@@ -313,7 +313,7 @@ func main() {
 
 	var harWriter *HarWriter
 	if *dumpToHar {
-		harWriter = NewHarWriter(*harOutputDir, *harEntriesPerFile)
+		harWriter = NewHarWriter(*HarOutputDir, *harEntriesPerFile)
 		harWriter.Start()
 		defer harWriter.Stop()
 	}

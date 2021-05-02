@@ -7,8 +7,13 @@ require (
 	github.com/djherbis/atime v1.0.0
 	github.com/fasthttp/websocket v1.4.3-beta.1 // indirect
 	github.com/gofiber/fiber/v2 v2.8.0
+	github.com/google/gopacket v1.1.19
 	github.com/google/martian v2.1.0+incompatible
+	github.com/gorilla/websocket v1.4.2
+	github.com/orcaman/concurrent-map v0.0.0-20210106121528-16402b402231
+	github.com/patrickmn/go-cache v2.1.0+incompatible
 	go.mongodb.org/mongo-driver v1.5.1
+	golang.org/x/net v0.0.0-20210421230115-4e50805a0758
 	gorm.io/driver/sqlite v1.1.4
 	gorm.io/gorm v1.21.8
 )
