@@ -38,7 +38,7 @@ tap: ## build tap binary
 
 docker: ## build Docker image 
 	@(echo "building docker image" )
-	docker build -t ${DOCKER_IMG}:${DOCKER_TAG} api
+	docker build -t ${DOCKER_IMG}:${DOCKER_TAG} .
 	docker images ${DOCKER_IMG}
 
 publish: ## build and publish Mizu docker image & CLI
