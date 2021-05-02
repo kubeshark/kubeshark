@@ -8,6 +8,7 @@ import (
 	"errors"
 	"math"
 	"net/http"
+	"net/url"
 
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/hpack"
@@ -112,6 +113,8 @@ func (ga *GrpcAssembler) readMessage() (uint32, interface{}, string, error) {
 	var messageHTTP1 interface{}
 	if _, ok := headersHTTP1[":method"]; ok {
 		messageHTTP1 = http.Request{
+			URL: &url.URL{},
+			Method: "POST",
 			Header: headersHTTP1,
 			Proto: protoHTTP2,
 			ProtoMajor: protoMajorHTTP2,
