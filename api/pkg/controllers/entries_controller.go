@@ -2,25 +2,48 @@ package controllers
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/martian/har"
 	"mizuserver/pkg/database"
 	"mizuserver/pkg/models"
 	"mizuserver/pkg/utils"
 	"strconv"
+	"strings"
+)
+
+const (
+	HardLimit = 200
 )
 
 func GetEntries(c *fiber.Ctx) error {
-	limit, e := strconv.Atoi(c.Query("limit", "100"))
+	limit, e := strconv.Atoi(c.Query("limit", "200"))
 	utils.CheckErr(e)
+	if limit > HardLimit {
+		limit = HardLimit
+	}
 
+	sortOption := c.Query("operator", "lt")
+	var sortingOperator string
+
+	if strings.ToLower(sortOption) == "gt" {
+		sortingOperator = ">"
+	} else if strings.ToLower(sortOption) == "lt" {
+		sortingOperator = "<"
+	} else {
+		fmt.Println("Unsupported")
+		return nil
+	}
+
+	timestamp := c.Query("timestamp")
 	var entries []models.MizuEntry
 	database.GetEntriesTable().
+		Where(fmt.Sprintf("timestamp %s %s",sortingOperator, timestamp)).
 		Omit("entry"). // remove the "big" entry field
 		Limit(limit).
 		Find(&entries)
 
-	// Convert to base entries
+	//	// Convert to base entries
 	baseEntries := make([]models.BaseEntryDetails, 0)
 	for _, entry := range entries {
 		baseEntries = append(baseEntries, models.BaseEntryDetails{
@@ -50,7 +73,6 @@ func GetEntry(c *fiber.Ctx) error {
 
 	return c.Status(fiber.StatusOK).JSON(fullEntry)
 }
-
 
 func DeleteAllEntries(c *fiber.Ctx) error {
 	database.GetEntriesTable().

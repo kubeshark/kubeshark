@@ -13,7 +13,7 @@ type MizuEntry struct {
 	Status    int    `json:"status" gorm:"column:status"`
 	Source    string `json:"source" gorm:"column:source"`
 	Service   string `json:"service" gorm:"column:service"`
-	Timestamp int64  `json:"timestamp" gorm:"column:timestamp"`
+	Timestamp int64  `json:"timestamp" gorm:"column:timestamp;index:"`
 	Path      string `json:"path" gorm:"column:path"`
 }
 
