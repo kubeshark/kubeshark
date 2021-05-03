@@ -29,6 +29,7 @@ import (
 	"github.com/google/gopacket/layers" // pulls in all layers decoders
 	"github.com/google/gopacket/pcap"
 	"github.com/google/gopacket/reassembly"
+	"github.com/google/martian/har"
 )
 
 const AppPortsEnvVar = "APP_PORTS"
@@ -96,7 +97,7 @@ var memprofile = flag.String("memprofile", "", "Write memory profile")
 
 // output
 var dumpToHar = flag.Bool("hardump", false, "Dump traffic to har files")
-var HarOutputDir = flag.String("hardir", "output", "Directory in which to store output har files")
+var HarOutputDir = flag.String("hardir", "", "Directory in which to store output har files")
 var harEntriesPerFile = flag.Int("harentriesperfile", 200, "Number of max number of har entries to store in each file")
 
 var reqResMatcher = createResponseRequestMatcher()  // global
@@ -198,7 +199,22 @@ func (c *Context) GetCaptureInfo() gopacket.CaptureInfo {
 	return c.CaptureInfo
 }
 
-func StartPassiveTapper() {
+func StartPassiveTapper() chan *har.Entry {
+	var harWriter *HarWriter
+	if *dumpToHar {
+		harWriter = NewHarWriter(*HarOutputDir, *harEntriesPerFile)
+	}
+
+	go startPassiveTapper(harWriter)
+
+	if harWriter != nil {
+		return harWriter.OutChan
+	}
+
+	return nil
+}
+
+func startPassiveTapper(harWriter *HarWriter) {
 	defer util.Run()()
 	if *debug {
 		outputLevel = 2
@@ -311,13 +327,10 @@ func StartPassiveTapper() {
 		}
 	}
 
-	var harWriter *HarWriter
 	if *dumpToHar {
-		harWriter = NewHarWriter(*HarOutputDir, *harEntriesPerFile)
 		harWriter.Start()
 		defer harWriter.Stop()
 	}
-
 
 	var dec gopacket.Decoder
 	var ok bool

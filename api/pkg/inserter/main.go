@@ -17,7 +17,15 @@ import (
 	"time"
 )
 
-func StartReadingFiles(workingDir string) {
+func StartReadingFiles(harChannel chan *har.Entry, workingDir *string) {
+	if workingDir != nil && *workingDir != "" {
+		startReadingFiles(*workingDir)
+	} else {
+		startReadingSChan(harChannel)
+	}
+}
+
+func startReadingFiles(workingDir string) {
 	err := os.MkdirAll(workingDir, os.ModePerm)
 	utils.CheckErr(err)
 
@@ -46,6 +54,12 @@ func StartReadingFiles(workingDir string) {
 		}
 		rmErr := os.Remove(inputFilePath)
 		utils.CheckErr(rmErr)
+	}
+}
+
+func startReadingSChan(harChannel chan *har.Entry) {
+	for entry := range harChannel {
+		SaveHarToDb(*entry, "")
 	}
 }
 
