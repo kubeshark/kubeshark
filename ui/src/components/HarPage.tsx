@@ -89,7 +89,7 @@ export const HarPage: React.FC = () => {
                 <div className="HarPage-ListContainer">
                     {/*<HarFilters />*/}
                     <div className={styles.container}>
-                        <HarEntriesList entries={entries} setEntries={setEntries} focusedEntryId={focusedEntryId} setFocusedEntryId={setFocusedEntryId}/>
+                        <HarEntriesList entries={entries} setEntries={setEntries} focusedEntryId={focusedEntryId} setFocusedEntryId={setFocusedEntryId} connectionOpen={connectionOpen}/>
                     </div>
                 </div>
                 <div className={classes.details}>
