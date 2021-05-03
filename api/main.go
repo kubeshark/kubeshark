@@ -1,6 +1,8 @@
 package main
 
 import (
+	"flag"
+
 	"github.com/gofiber/fiber/v2"
 	"mizuserver/pkg/inserter"
 	"mizuserver/pkg/middleware"
@@ -10,6 +12,7 @@ import (
 )
 
 func main() {
+	flag.Parse()
 
 	harOutputChannel := tap.StartPassiveTapper()
 
