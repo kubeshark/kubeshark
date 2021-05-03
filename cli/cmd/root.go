@@ -14,6 +14,10 @@ func init() {
     rootCmd.Use = "mizu"
 	rootCmd.Short = "Tail HTTP traffic from multiple pods"
 	rootCmd.RunE = func(cmd *cobra.Command, args []string) error {
+		if len(args) != 0 {
+			return rootCmd.Help()
+		}
+		
 		mizu.Run()
 		return nil
 	}
