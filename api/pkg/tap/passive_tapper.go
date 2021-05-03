@@ -199,19 +199,22 @@ func (c *Context) GetCaptureInfo() gopacket.CaptureInfo {
 	return c.CaptureInfo
 }
 
-func StartPassiveTapper() *har.Entry {
+func StartPassiveTapper() chan *har.Entry {
 	var harWriter *HarWriter
 	if *dumpToHar {
 		harWriter = NewHarWriter(*HarOutputDir, *harEntriesPerFile)
-		harWriterOutputChan = harWriter.OutputChan
 	}
 
-	go startPassiveTapper()
+	go startPassiveTapper(harWriter)
 
-	return harWriter.OutChan
+	if harWriter != nil {
+		return harWriter.OutChan
+	}
+
+	return nil
 }
 
-func startPassiveTapper() {
+func startPassiveTapper(harWriter *HarWriter) {
 	defer util.Run()()
 	if *debug {
 		outputLevel = 2

@@ -17,35 +17,36 @@ import (
 	"time"
 )
 
-func StartReadingFiles(harChannel *har.Entry, workingDir *string) {
-	if workingDir != nil {
-		err := os.MkdirAll(*workingDir, os.ModePerm)
-		utils.CheckErr(err)
+func StartReadingFiles(harChannel chan *har.Entry, workingDir *string) {
+	if workingDir != nil && *workingDir != "" {
+		startReadingFiles(*workingDir)
+	} else {
+		startReadingSChan(harChannel)
 	}
+}
+
+func startReadingFiles(workingDir string) {
+	err := os.MkdirAll(workingDir, os.ModePerm)
+	utils.CheckErr(err)
 
 	for true {
-		var inputHar *har.HAR
+		dir, _ := os.Open(workingDir)
+		dirFiles, _ := dir.Readdir(-1)
+		sort.Sort(utils.ByModTime(dirFiles))
 
-		if workingDir != nil {
-			dir, _ := os.Open(workingDir)
-			dirFiles, _ := dir.Readdir(-1)
-			sort.Sort(utils.ByModTime(dirFiles))
-
-			if len(dirFiles) == 0{
-				fmt.Printf("Waiting for new files\n")
-				time.Sleep(3 * time.Second)
-				continue
-			}
-			fileInfo := dirFiles[0]
-			inputFilePath := path.Join(workingDir, fileInfo.Name())
-			file, err := os.Open(inputFilePath)
-			utils.CheckErr(err)
-
-			decErr := json.NewDecoder(bufio.NewReader(file)).Decode(*inputHar)
-			utils.CheckErr(decErr)
-		} else {
-			inputHar = <- harChannel
+		if len(dirFiles) == 0{
+			fmt.Printf("Waiting for new files\n")
+			time.Sleep(3 * time.Second)
+			continue
 		}
+		fileInfo := dirFiles[0]
+		inputFilePath := path.Join(workingDir, fileInfo.Name())
+		file, err := os.Open(inputFilePath)
+		utils.CheckErr(err)
+
+		var inputHar har.HAR
+		decErr := json.NewDecoder(bufio.NewReader(file)).Decode(&inputHar)
+		utils.CheckErr(decErr)
 
 		for _, entry := range inputHar.Log.Entries {
 			time.Sleep(time.Millisecond * 250)
@@ -53,6 +54,12 @@ func StartReadingFiles(harChannel *har.Entry, workingDir *string) {
 		}
 		rmErr := os.Remove(inputFilePath)
 		utils.CheckErr(rmErr)
+	}
+}
+
+func startReadingSChan(harChannel chan *har.Entry) {
+	for entry := range harChannel {
+		SaveHarToDb(*entry, "")
 	}
 }
 
