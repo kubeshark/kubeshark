@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"encoding/json"
-	"flag"
 	"fmt"
 	"log"
 	"net/http"
@@ -200,7 +199,6 @@ func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 }
 
 func startOutputServer(port string, messageCallback func([]byte)) {
-	flag.Parse()
 	hub = newHub(messageCallback)
 	go hub.run()
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
