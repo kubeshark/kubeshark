@@ -1,11 +1,12 @@
-import React, {useEffect, useState} from "react";
+import React, {useEffect, useRef, useState} from "react";
 // import {HarFilters} from "./HarFilters";
 import {HarEntriesList} from "./HarEntriesList";
 import {makeStyles} from "@material-ui/core";
 import "./style/HarPage.sass";
 import styles from './style/HarEntriesList.module.sass';
 import {HAREntryDetailed} from "./HarEntryDetailed";
-import useWebSocket from 'react-use-websocket';
+import playIcon from './assets/play.svg';
+import pauseIcon from './assets/pause.svg';
 
 const useLayoutStyles = makeStyles(() => ({
     details: {
@@ -33,23 +34,31 @@ export const HarPage: React.FC = () => {
     const [focusedEntryId, setFocusedEntryId] = useState(null);
     const [selectedHarEntry, setSelectedHarEntry] = useState(null);
     const [connectionOpen, setConnectionOpen] = useState(false);
+    const ws = useRef(null);
 
-    const socketUrl = 'ws://localhost:8899/ws';
-    const {lastMessage} = useWebSocket(socketUrl, {
-        onOpen: () => setConnectionOpen(true),
-        onClose: () => setConnectionOpen(false),
-        shouldReconnect: (closeEvent) => true});
+    const openWebSocket = () => {
+        ws.current = new WebSocket("ws://localhost:8899/ws");
+        ws.current.onopen = () => setConnectionOpen(true);
+        ws.current.onclose = () => setConnectionOpen(false);
+    }
+
+    if(ws.current) {
+        ws.current.onmessage = e => {
+            if(!e?.data) return;
+            const entry = JSON.parse(e.data);
+            if(!focusedEntryId) setFocusedEntryId(entry.id)
+            let newEntries = [...entries];
+            if(entries.length === 1000) {
+                newEntries = newEntries.splice(1)
+            }
+            setEntries([...newEntries, entry])
+        }
+    }
 
     useEffect(() => {
-        if(!lastMessage?.data) return;
-        const entry = JSON.parse(lastMessage.data);
-        if(!focusedEntryId) setFocusedEntryId(entry.id)
-        let newEntries = [...entries];
-        if(entries.length === 1000) {
-            newEntries = newEntries.splice(1)
-        }
-        setEntries([...newEntries, entry])
-    },[lastMessage?.data])
+        openWebSocket();
+    }, []);
+
 
     useEffect(() => {
         if(!focusedEntryId) return;
@@ -59,9 +68,18 @@ export const HarPage: React.FC = () => {
             .then(data => setSelectedHarEntry(data));
     },[focusedEntryId])
 
+    const toggleConnection = () => {
+        if(connectionOpen) {
+            ws.current.close();
+        } else {
+            openWebSocket();
+        }
+    }
+
     return (
         <div className="HarPage">
-            <div style={{padding: "0 24px 24px 24px"}}>
+            <div style={{padding: "0 24px 24px 24px", display: "flex", alignItems: "center"}}>
+                <img style={{cursor: "pointer", marginRight: 15, height: 20}} alt="pause" src={connectionOpen ? pauseIcon : playIcon} onClick={toggleConnection}/>
                 <div className="connectionText">
                     {connectionOpen ? "connected, waiting for traffic" : "not connected"}
                     <div className={connectionOpen ? "greenIndicator" : "redIndicator"}/>
@@ -71,7 +89,7 @@ export const HarPage: React.FC = () => {
                 <div className="HarPage-ListContainer">
                     {/*<HarFilters />*/}
                     <div className={styles.container}>
-                        <HarEntriesList entries={entries} focusedEntryId={focusedEntryId} setFocusedEntryId={setFocusedEntryId}/>
+                        <HarEntriesList entries={entries} setEntries={setEntries} focusedEntryId={focusedEntryId} setFocusedEntryId={setFocusedEntryId}/>
                     </div>
                 </div>
                 <div className={classes.details}>
