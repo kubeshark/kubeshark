@@ -1,4 +1,4 @@
-package main
+package tap
 
 import (
 	"fmt"
@@ -84,10 +84,13 @@ func (factory *tcpStreamFactory) WaitGoRoutines() {
 }
 
 func (factory *tcpStreamFactory) shouldTap(dstIP string, dstPort int) bool {
-	return true  // TODO: this is only for checking it now
-
 	if hostMode {
-		return inArrayString(hostAppAddresses, fmt.Sprintf("%s:%d", dstIP, dstPort))
+		if inArrayString(hostAppAddresses, fmt.Sprintf("%s:%d", dstIP, dstPort)) == true {
+			return true
+		} else if inArrayString(hostAppAddresses, dstIP) == true {
+			return true
+		}
+		return false
 	} else {
 		isTappedPort := dstPort == 80 || (appPorts != nil && (inArrayInt(appPorts, dstPort)))
 		if !isTappedPort {

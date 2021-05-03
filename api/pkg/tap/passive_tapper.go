@@ -6,7 +6,7 @@
 
 // The pcapdump binary implements a tcpdump-like command line tool with gopacket
 // using pcap as a backend data collection mechanism.
-package main
+package tap
 
 import (
 	"encoding/hex"
@@ -54,6 +54,13 @@ func parseAppPorts(appPortsList string) []int {
 	return ports
 }
 
+func parseHostAppAddresses(hostAppAddressesString string) []string {
+	if len(hostAppAddressesString) == 0 {
+		return []string{}
+	}
+	return strings.Split(hostAppAddressesString, ",")
+}
+
 var maxcount = flag.Int("c", -1, "Only grab this many packets, then exit")
 var decoder = flag.String("decoder", "", "Name of the decoder to use (default: guess from capture)")
 var statsevery = flag.Int("stats", 60, "Output statistics every N seconds")
@@ -83,12 +90,13 @@ var tstype = flag.String("timestamp_type", "", "Type of timestamps to use")
 var promisc = flag.Bool("promisc", true, "Set promiscuous mode")
 var anydirection = flag.Bool("anydirection", false, "Capture http requests to other hosts")
 var staleTimeoutSeconds = flag.Int("staletimout", 120, "Max time in seconds to keep connections which don't transmit data")
+var hostAppAddressesString = flag.String("targets", "", "Comma separated list of ip:ports to tap")
 
 var memprofile = flag.String("memprofile", "", "Write memory profile")
 
 // output
 var dumpToHar = flag.Bool("hardump", false, "Dump traffic to har files")
-var harOutputDir = flag.String("hardir", "output", "Directory in which to store output har files")
+var HarOutputDir = flag.String("hardir", "output", "Directory in which to store output har files")
 var harEntriesPerFile = flag.Int("harentriesperfile", 200, "Number of max number of har entries to store in each file")
 
 var reqResMatcher = createResponseRequestMatcher()  // global
@@ -190,7 +198,7 @@ func (c *Context) GetCaptureInfo() gopacket.CaptureInfo {
 	return c.CaptureInfo
 }
 
-func main() {
+func StartPassiveTapper() {
 	defer util.Run()()
 	if *debug {
 		outputLevel = 2
@@ -217,6 +225,8 @@ func main() {
 	} else {
 		appPorts = parseAppPorts(appPortsStr)
 	}
+	hostAppAddresses = parseHostAppAddresses(*hostAppAddressesString)
+	fmt.Println("Filtering for the following addresses:", hostAppAddresses)
 	tapOutputPort := os.Getenv(TapOutPortEnvVar)
 	if tapOutputPort == "" {
 		fmt.Println("Received empty/no WEB_SOCKET_PORT env var! falling back to port 8080")
@@ -303,7 +313,7 @@ func main() {
 
 	var harWriter *HarWriter
 	if *dumpToHar {
-		harWriter = NewHarWriter(*harOutputDir, *harEntriesPerFile)
+		harWriter = NewHarWriter(*HarOutputDir, *harEntriesPerFile)
 		harWriter.Start()
 		defer harWriter.Stop()
 	}
