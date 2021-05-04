@@ -84,11 +84,7 @@ export const HarPage: React.FC = () => {
     },[focusedEntryId])
 
     const toggleConnection = () => {
-        if(connection === ConnectionStatus.Connected) {
-            setConnection(ConnectionStatus.Paused);
-        } else {
-            setConnection(ConnectionStatus.Connected);
-        }
+        setConnection(connection === ConnectionStatus.Connected ? ConnectionStatus.Paused : ConnectionStatus.Connected );
     }
 
     const getConnectionStatusClass = () => {

@@ -58,7 +58,7 @@ export const HarEntriesList: React.FC<HarEntriesListProps> = ({entries, setEntri
                     } else {
                         scrollTo = document.getElementById(entries[0].id);
                     }
-                    let newEntries = [...data, ...entries];
+                    const newEntries = [...data, ...entries];
                     if(newEntries.length >= 1000) {
                         newEntries.splice(1000);
                     }
