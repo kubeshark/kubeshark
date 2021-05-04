@@ -47,7 +47,7 @@ func NewEntry(request *http.Request, requestTime time.Time, response *http.Respo
 	}
 
 	// Martian copies http.Request.URL.String() to har.Request.URL.
-	// According to the spec, the URL field needs to be the absolute URL.
+	// However, according to the HAR spec, the URL field needs to be the absolute URL.
 	harRequest.URL = fmt.Sprintf("http://%s%s", request.Host, request.URL)
 
 	harResponse, err := har.NewResponse(response, true)
