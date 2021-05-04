@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/google/martian/har"
@@ -46,14 +48,27 @@ func NewEntry(request *http.Request, requestTime time.Time, response *http.Respo
 		return nil, errors.New("Failed converting request to HAR")
 	}
 
-	// Martian copies http.Request.URL.String() to har.Request.URL.
-	// However, according to the HAR spec, the URL field needs to be the absolute URL.
-	harRequest.URL = fmt.Sprintf("http://%s%s", request.Host, request.URL)
-
 	harResponse, err := har.NewResponse(response, true)
 	if err != nil {
 		SilentError("convert-response-to-har", "Failed converting response to HAR %s (%v,%+v)\n", err, err, err)
 		return nil, errors.New("Failed converting response to HAR")
+	}
+
+	if harRequest.PostData != nil && strings.HasPrefix(harRequest.PostData.MimeType, "application/grpc") {
+		// Force HTTP/2 gRPC into HAR template
+
+		harRequest.URL = fmt.Sprintf("%s://%s%s", request.Header.Get(":scheme"), request.Header.Get(":authority"), request.Header.Get(":path"))
+
+		status, err := strconv.Atoi(response.Header.Get(":status"))
+		if err != nil {
+			SilentError("convert-response-status-for-har", "Failed converting status to int %s (%v,%+v)\n", err, err, err)
+			return nil, errors.New("Failed converting response status to int for HAR")
+		}
+		harResponse.Status = status
+	} else {
+		// Martian copies http.Request.URL.String() to har.Request.URL, which usually contains the path.
+		// However, according to the HAR spec, the URL field needs to be the absolute URL.
+		harRequest.URL = fmt.Sprintf("http://%s%s", request.Host, request.URL)
 	}
 
 	totalTime := responseTime.Sub(requestTime).Round(time.Millisecond).Milliseconds()
