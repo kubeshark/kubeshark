@@ -6,9 +6,11 @@ import (
 	"encoding/base64"
 	"encoding/binary"
 	"errors"
+	"io"
 	"math"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/hpack"
@@ -119,6 +121,8 @@ func (ga *GrpcAssembler) readMessage() (uint32, interface{}, string, error) {
 			Proto: protoHTTP2,
 			ProtoMajor: protoMajorHTTP2,
 			ProtoMinor: protoMinorHTTP2,
+			Body: io.NopCloser(strings.NewReader(dataString)),
+			ContentLength: int64(len(dataString)),
 		}
 	} else if _, ok := headersHTTP1[":status"]; ok {
 		messageHTTP1 = http.Response{
@@ -126,6 +130,8 @@ func (ga *GrpcAssembler) readMessage() (uint32, interface{}, string, error) {
 			Proto: protoHTTP2,
 			ProtoMajor: protoMajorHTTP2,
 			ProtoMinor: protoMinorHTTP2,
+			Body: io.NopCloser(strings.NewReader(dataString)),
+			ContentLength: int64(len(dataString)),
 		}
 	} else {
 		return 0, nil, "", errors.New("Failed to assemble stream: neither a request nor a message")
