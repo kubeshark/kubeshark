@@ -31,19 +31,8 @@ func WebSocketRoutes(app *fiber.App) {
 
 	app.Get("/ws", ikisocket.New(func(kws *ikisocket.Websocket) {
 		// kws.Broadcast([]byte(fmt.Sprintf("New user connected: %s and UUID: %s", userId, kws.UUID)), true)
-		//kws.Emit([]byte(fmt.Sprintf("Hello user with UUID: %s", kws.UUID)))
+		// kws.Emit([]byte(fmt.Sprintf("Hello user with UUID: %s", kws.UUID)))
 		kws.SetAttribute("user_id", kws.UUID)
-
-		//var result struct {
-		//	timestamp int64
-		//}
-		//database.GetEntriesTable().Select("timestamp").Order("timestamp asc").Limit(1).Select(&result)
-		//firstEntryData := map[string]string{
-		//	"message": "connect",
-		//	"firstTimestamp": strconv.to(result.timestamp),
-		//}
-		//data, _ := json.Marshal(firstEntryData)
-		//kws.Emit(data)
 	}))
 
 	ikisocket.On(ikisocket.EventMessage, webSocketMessage)

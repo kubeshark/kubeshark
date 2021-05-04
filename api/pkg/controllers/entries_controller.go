@@ -93,14 +93,3 @@ func DeleteAllEntries(c *fiber.Ctx) error {
 		"msg": "Success",
 	})
 }
-
-func GetGeneralStats(c *fiber.Ctx) error {
-	sqlQuery := "SELECT count(*) as count, min(timestamp) as min, max(timestamp) as max from mizu_entries"
-	var result struct{
-		Count int
-		Min int
-		Max int
-	}
-	database.GetEntriesTable().Raw(sqlQuery, map[string]string{}, &result)
-	return c.Status(fiber.StatusOK).JSON(&result)
-}
