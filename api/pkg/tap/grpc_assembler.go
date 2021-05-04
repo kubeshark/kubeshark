@@ -1,4 +1,17 @@
-package main
+package tap
+
+import (
+	"bufio"
+	"bytes"
+	"encoding/base64"
+	"encoding/binary"
+	"errors"
+	"golang.org/x/net/http2"
+	"golang.org/x/net/http2/hpack"
+	"math"
+	"net/http"
+)
+main
 
 import (
 	"bufio"
