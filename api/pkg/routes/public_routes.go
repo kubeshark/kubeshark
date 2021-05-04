@@ -13,5 +13,5 @@ func EntriesRoutes(fiberApp *fiber.App) {
 	routeGroup.Get("/entries/:entryId", controllers.GetEntry) // get single (full) entry
 
 	routeGroup.Get("/resetDB", controllers.DeleteAllEntries) // get single (full) entry
-
+	routeGroup.Get("/general", controllers.GetGeneralStats) // get single (full) entry
 }

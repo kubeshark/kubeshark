@@ -25,26 +25,38 @@ func GetEntries(c *fiber.Ctx) error {
 
 	sortOption := c.Query("operator", "lt")
 	var sortingOperator string
-
+	var ordering string
 	if strings.ToLower(sortOption) == "gt" {
 		sortingOperator = ">"
+		ordering = "asc"
 	} else if strings.ToLower(sortOption) == "lt" {
 		sortingOperator = "<"
+		ordering = "desc"
 	} else {
 		fmt.Println("Unsupported")
 		return nil
 	}
 
-	timestamp := c.Query("timestamp")
+	timestamp, e := strconv.Atoi(c.Query("timestamp", "-1"))
+	utils.CheckErr(e)
+
+	fmt.Println(timestamp)
+	fmt.Println(sortingOperator)
 	var entries []models.MizuEntry
+
 	database.GetEntriesTable().
-		Where(fmt.Sprintf("timestamp %s %s",sortingOperator, timestamp)).
+		Order(fmt.Sprintf("timestamp %s", ordering)).
+		Where(fmt.Sprintf("timestamp %s %v",sortingOperator, timestamp)).
 		Omit("entry"). // remove the "big" entry field
 		Limit(limit).
 		Find(&entries)
 
+	if len(entries) > 0 && ordering == "desc"{
+		utils.ReverseSlice(entries)
+	}
+
 	//	// Convert to base entries
-	baseEntries := make([]models.BaseEntryDetails, 0)
+	baseEntries := make([]models.BaseEntryDetails, 0, limit)
 	for _, entry := range entries {
 		baseEntries = append(baseEntries, models.BaseEntryDetails{
 			Id:         entry.EntryId,
@@ -82,4 +94,15 @@ func DeleteAllEntries(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"msg": "Success",
 	})
+}
+
+func GetGeneralStats(c *fiber.Ctx) error {
+	sqlQuery := "SELECT count(*) as count, min(timestamp) as min, max(timestamp) as max from mizu_entries"
+	var result struct{
+		Count int
+		Min int
+		Max int
+	}
+	database.GetEntriesTable().Raw(sqlQuery, map[string]string{}, &result)
+	return c.Status(fiber.StatusOK).JSON(&result)
 }

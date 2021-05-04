@@ -76,7 +76,7 @@ func SaveHarToDb(entry har.Entry, source string) {
 		Method:    entry.Request.Method,
 		Status:    entry.Response.Status,
 		Source:    source,
-		Timestamp: entry.StartedDateTime.Unix(),
+		Timestamp: entry.StartedDateTime.UnixNano() / int64(time.Millisecond),
 	}
 	database.GetEntriesTable().Create(&mizuEntry)
 
@@ -87,7 +87,7 @@ func SaveHarToDb(entry har.Entry, source string) {
 		Path:       urlPath,
 		StatusCode: entry.Response.Status,
 		Method:     entry.Request.Method,
-		Timestamp:  entry.StartedDateTime.Unix(),
+		Timestamp:  entry.StartedDateTime.UnixNano() / int64(time.Millisecond),
 	}
 	baseEntryBytes, _ := json.Marshal(&baseEntry)
 	ikisocket.Broadcast(baseEntryBytes)
