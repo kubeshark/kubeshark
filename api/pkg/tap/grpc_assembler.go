@@ -9,6 +9,7 @@ import (
 	"io"
 	"math"
 	"net/http"
+	"net/textproto"
 	"net/url"
 	"strings"
 
@@ -65,6 +66,18 @@ func (fbs *fragmentsByStream) pop(streamID uint32) ([]hpack.HeaderField, []byte)
 	headers := (*fbs)[streamID].headers
 	data := (*fbs)[streamID].data
 	delete((*fbs), streamID)
+
+	// Convert headers to canonical names, e.g. content-type -> Content-Type
+	// Otherwise, header.Get never returns any value.
+	// This is a weird thing to do beccause:
+	// 1. HTTP/1 headers are case incensitive, the implementation of net/http/header shouldn't case about case, but it does.
+	// 2. HTTP/2 headers are lowercase. By converting them we are not adhering to the spec.
+	// On the other hand, functions that rely on searching through the headers (like converting to har) have to be
+	// able to search through the headers.
+	for ii, header := range headers {
+		headers[ii].Name = textproto.CanonicalMIMEHeaderKey(header.Name)
+	}
+
 	return headers, data
 }
 
