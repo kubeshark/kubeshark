@@ -40,8 +40,6 @@ func GetEntries(c *fiber.Ctx) error {
 	timestamp, e := strconv.Atoi(c.Query("timestamp", "-1"))
 	utils.CheckErr(e)
 
-	fmt.Println(timestamp)
-	fmt.Println(sortingOperator)
 	var entries []models.MizuEntry
 
 	database.GetEntriesTable().
@@ -55,7 +53,7 @@ func GetEntries(c *fiber.Ctx) error {
 		utils.ReverseSlice(entries)
 	}
 
-	//	// Convert to base entries
+	// Convert to base entries
 	baseEntries := make([]models.BaseEntryDetails, 0, limit)
 	for _, entry := range entries {
 		baseEntries = append(baseEntries, models.BaseEntryDetails{
