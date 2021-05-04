@@ -12,6 +12,8 @@ interface HarEntriesListProps {
     connectionOpen: boolean;
     noMoreDataTop: boolean;
     setNoMoreDataTop: (flag: boolean) => void;
+    noMoreDataBottom: boolean;
+    setNoMoreDataBottom: (flag: boolean) => void;
 }
 
 enum FetchOperator {
@@ -19,14 +21,10 @@ enum FetchOperator {
     GT = "gt"
 }
 
-export const HarEntriesList: React.FC<HarEntriesListProps> = ({entries, setEntries, focusedEntryId, setFocusedEntryId, connectionOpen, noMoreDataTop, setNoMoreDataTop}) => {
+export const HarEntriesList: React.FC<HarEntriesListProps> = ({entries, setEntries, focusedEntryId, setFocusedEntryId, connectionOpen, noMoreDataTop, setNoMoreDataTop, noMoreDataBottom, setNoMoreDataBottom}) => {
 
     const [loadMoreTop, setLoadMoreTop] = useState(false);
     const [isLoadingTop, setIsLoadingTop] = useState(false);
-
-    const [loadMoreBottom, setLoadMoreBottom] = useState(false);
-    const [isLoadingBottom, setIsLoadingBottom] = useState(false);
-    const [noMoreDataBottom, setNoMoreDataBottom] = useState(false);
 
     useEffect(() => {
         if(loadMoreTop && !connectionOpen && !noMoreDataTop)
@@ -34,18 +32,9 @@ export const HarEntriesList: React.FC<HarEntriesListProps> = ({entries, setEntri
     }, [loadMoreTop, connectionOpen, noMoreDataTop]);
 
     useEffect(() => {
-        if(loadMoreBottom && !connectionOpen && !noMoreDataBottom)
-            fetchData(FetchOperator.GT);
-    }, [loadMoreBottom, connectionOpen, noMoreDataBottom]);
-
-    useEffect(() => {
         const list = document.getElementById('list').firstElementChild;
         list.addEventListener('scroll', (e) => {
             const el: any = e.target;
-
-            if(el.scrollTop + el.clientHeight === el.scrollHeight) {
-                setLoadMoreBottom(true);
-            }
             if(el.scrollTop === 0) {
                 setLoadMoreTop(true);
             }
@@ -57,8 +46,6 @@ export const HarEntriesList: React.FC<HarEntriesListProps> = ({entries, setEntri
         const timestamp = operator === FetchOperator.LT ? entries[0].timestamp : entries[entries.length - 1].timestamp;
         if(operator === FetchOperator.LT)
             setIsLoadingTop(true);
-        else
-            setIsLoadingBottom(true);
 
         fetch(`http://localhost:8899/api/entries?limit=50&operator=${operator}&timestamp=${timestamp}`)
             .then(response => response.json())
@@ -78,35 +65,26 @@ export const HarEntriesList: React.FC<HarEntriesListProps> = ({entries, setEntri
                     setEntries(newEntries);
                     setLoadMoreTop(false);
                     setIsLoadingTop(false)
+                    if(scrollTo) {
+                        scrollTo.scrollIntoView();
+                    }
                 }
 
                 if(operator === FetchOperator.GT) {
                     if(data.length === 0) {
                         setNoMoreDataBottom(true);
-                        scrollTo = document.getElementById("noMoreDataBottom");
-                    } else {
-                        scrollTo = document.getElementById(entries[entries.length - 1].id);
                     }
+                    scrollTo = document.getElementById(entries[entries.length -1].id);
                     let newEntries = [...entries, ...data];
                     if(newEntries.length >= 1000) {
                         setNoMoreDataTop(false);
-                        newEntries = newEntries.splice(1000);
+                        newEntries = newEntries.slice(-1000);
                     }
                     setEntries(newEntries);
-                    setLoadMoreBottom(false);
-                    setIsLoadingBottom(false)
+                    if(scrollTo) {
+                        scrollTo.scrollIntoView({behavior: "smooth"});
+                    }
                 }
-
-                scrollTo.scrollIntoView();
-
-
-                // const entry = entries[0];
-                // setEntries([...data, ...entries]);
-                // setLoadMoreTop(false);
-                // setIsLoadingTop(false)
-                // const element = data.length === 0 ? document.getElementById("noMoreDataTop") :  document.getElementById(entry.id);
-                // if(element)
-                //     element.scrollIntoView();
             });
     };
 
@@ -120,9 +98,10 @@ export const HarEntriesList: React.FC<HarEntriesListProps> = ({entries, setEntri
                                                      entry={entry}
                                                      setFocusedEntryId={setFocusedEntryId}
                                                      isSelected={focusedEntryId === entry.id}/>)}
-                        {noMoreDataBottom && !connectionOpen && <div id="noMoreDataBottom" style={{textAlign: "center", fontWeight: 600, marginTop: 10, color: "rgba(255,255,255,0.75)"}}>No more data available</div>}
+                        {!connectionOpen && !noMoreDataBottom && <div style={{width: "100%", display: "flex", justifyContent: "center", marginTop: 12, fontWeight: 600, color: "rgba(255,255,255,0.75)"}}>
+                            <div className={styles.styledButton} onClick={() => fetchData(FetchOperator.GT)}>Fetch more entries</div>
+                        </div>}
                     </ScrollableFeed>
-                    {isLoadingBottom && <div style={{display: "flex", justifyContent: "center", marginTop: 10}}><img alt="spinner" src={spinner} style={{height: 25}}/></div>}
                 </div>
 
                 {entries?.length > 0 && <div className={styles.footer}>
