@@ -2,26 +2,61 @@ package controllers
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/martian/har"
 	"mizuserver/pkg/database"
 	"mizuserver/pkg/models"
 	"mizuserver/pkg/utils"
 	"strconv"
+	"strings"
+)
+
+const (
+	HardLimit = 200
 )
 
 func GetEntries(c *fiber.Ctx) error {
-	limit, e := strconv.Atoi(c.Query("limit", "100"))
+	limit, e := strconv.Atoi(c.Query("limit", "200"))
+	utils.CheckErr(e)
+	if limit > HardLimit {
+		limit = HardLimit
+	}
+
+	sortOption := c.Query("operator", "lt")
+	var sortingOperator string
+	var ordering string
+	if strings.ToLower(sortOption) == "gt" {
+		sortingOperator = ">"
+		ordering = "asc"
+	} else if strings.ToLower(sortOption) == "lt" {
+		sortingOperator = "<"
+		ordering = "desc"
+	} else {
+		fmt.Println("Unsupported")
+		return nil
+	}
+
+	timestamp, e := strconv.Atoi(c.Query("timestamp", "-1"))
 	utils.CheckErr(e)
 
+	fmt.Println(timestamp)
+	fmt.Println(sortingOperator)
 	var entries []models.MizuEntry
+
 	database.GetEntriesTable().
+		Order(fmt.Sprintf("timestamp %s", ordering)).
+		Where(fmt.Sprintf("timestamp %s %v",sortingOperator, timestamp)).
 		Omit("entry"). // remove the "big" entry field
 		Limit(limit).
 		Find(&entries)
 
-	// Convert to base entries
-	baseEntries := make([]models.BaseEntryDetails, 0)
+	if len(entries) > 0 && ordering == "desc"{
+		utils.ReverseSlice(entries)
+	}
+
+	//	// Convert to base entries
+	baseEntries := make([]models.BaseEntryDetails, 0, limit)
 	for _, entry := range entries {
 		baseEntries = append(baseEntries, models.BaseEntryDetails{
 			Id:         entry.EntryId,
@@ -51,7 +86,6 @@ func GetEntry(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(fullEntry)
 }
 
-
 func DeleteAllEntries(c *fiber.Ctx) error {
 	database.GetEntriesTable().
 		Where("1 = 1").
@@ -60,4 +94,15 @@ func DeleteAllEntries(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"msg": "Success",
 	})
+}
+
+func GetGeneralStats(c *fiber.Ctx) error {
+	sqlQuery := "SELECT count(*) as count, min(timestamp) as min, max(timestamp) as max from mizu_entries"
+	var result struct{
+		Count int
+		Min int
+		Max int
+	}
+	database.GetEntriesTable().Raw(sqlQuery, map[string]string{}, &result)
+	return c.Status(fiber.StatusOK).JSON(&result)
 }
