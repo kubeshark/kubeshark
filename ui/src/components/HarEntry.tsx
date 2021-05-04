@@ -33,7 +33,7 @@ export const HarEntry: React.FC<HAREntryProps> = ({entry, setFocusedEntryId, isS
                     {entry.service}
                 </div>
             </div>
-            <div className={styles.timestamp}>{new Date(+entry.timestamp*1000)?.toLocaleString()}</div>
+            <div className={styles.timestamp}>{new Date(+entry.timestamp)?.toLocaleString()}</div>
         </div>
     </>
 };

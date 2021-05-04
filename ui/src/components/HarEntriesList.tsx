@@ -10,75 +10,124 @@ interface HarEntriesListProps {
     focusedEntryId: string;
     setFocusedEntryId: (id: string) => void;
     connectionOpen: boolean;
+    noMoreDataTop: boolean;
+    setNoMoreDataTop: (flag: boolean) => void;
 }
 
-export const HarEntriesList: React.FC<HarEntriesListProps> = ({entries, setEntries, focusedEntryId, setFocusedEntryId, connectionOpen}) => {
+enum FetchOperator {
+    LT = "lt",
+    GT = "gt"
+}
 
-    const [loadMore, setLoadMore] = useState(false);
-    const [isLoading, setIsLoading] = useState(false);
-    const [topEntry, setTopEntry] = useState(null);
-    const [noMoreData, setNoMoreData] = useState(false);
+export const HarEntriesList: React.FC<HarEntriesListProps> = ({entries, setEntries, focusedEntryId, setFocusedEntryId, connectionOpen, noMoreDataTop, setNoMoreDataTop}) => {
+
+    const [loadMoreTop, setLoadMoreTop] = useState(false);
+    const [isLoadingTop, setIsLoadingTop] = useState(false);
+
+    const [loadMoreBottom, setLoadMoreBottom] = useState(false);
+    const [isLoadingBottom, setIsLoadingBottom] = useState(false);
+    const [noMoreDataBottom, setNoMoreDataBottom] = useState(false);
 
     useEffect(() => {
-        if(loadMore && !connectionOpen && !noMoreData)
-            fetchData();
-    }, [loadMore, connectionOpen, noMoreData]);
+        if(loadMoreTop && !connectionOpen && !noMoreDataTop)
+            fetchData(FetchOperator.LT);
+    }, [loadMoreTop, connectionOpen, noMoreDataTop]);
 
     useEffect(() => {
-        const element = noMoreData ? document.getElementById("noMoreData") :  document.getElementById(topEntry?.id);
-        if(element)
-            element.scrollIntoView();
-    },[loadMore])
-
+        if(loadMoreBottom && !connectionOpen && !noMoreDataBottom)
+            fetchData(FetchOperator.GT);
+    }, [loadMoreBottom, connectionOpen, noMoreDataBottom]);
 
     useEffect(() => {
         const list = document.getElementById('list').firstElementChild;
         list.addEventListener('scroll', (e) => {
             const el: any = e.target;
-            // console.log(el.scrollTop);
-            // console.log(el.clientHeight);
-            // console.log(el.scrollHeight);
-            // if(el.scrollTop + el.clientHeight === el.scrollHeight) { // scroll down
-            //     setLoadMore(true);
-            // }
+
+            if(el.scrollTop + el.clientHeight === el.scrollHeight) {
+                setLoadMoreBottom(true);
+            }
             if(el.scrollTop === 0) {
-                setLoadMore(true);
+                setLoadMoreTop(true);
             }
         });
     }, []);
 
-    const fetchData = () => {
-        setTopEntry(entries[0]);
-        setIsLoading(true);
-        fetch(`http://localhost:8899/api/entries?limit=20&operator=lt&timestamp=${entries[0].timestamp}`)
+    const fetchData = async (operator) => {
+
+        const timestamp = operator === FetchOperator.LT ? entries[0].timestamp : entries[entries.length - 1].timestamp;
+        if(operator === FetchOperator.LT)
+            setIsLoadingTop(true);
+        else
+            setIsLoadingBottom(true);
+
+        fetch(`http://localhost:8899/api/entries?limit=50&operator=${operator}&timestamp=${timestamp}`)
             .then(response => response.json())
             .then((data: any[]) => {
-                if(data.length === 0) {
-                    setNoMoreData(true);
+                let scrollTo;
+                if(operator === FetchOperator.LT) {
+                    if(data.length === 0) {
+                        setNoMoreDataTop(true);
+                        scrollTo = document.getElementById("noMoreDataTop");
+                    } else {
+                        scrollTo = document.getElementById(entries[0].id);
+                    }
+                    let newEntries = [...data, ...entries];
+                    if(newEntries.length >= 1000) {
+                        newEntries.splice(1000);
+                    }
+                    setEntries(newEntries);
+                    setLoadMoreTop(false);
+                    setIsLoadingTop(false)
                 }
-                setEntries([...data, ...entries]);
-                setLoadMore(false);
-                setIsLoading(false)
+
+                if(operator === FetchOperator.GT) {
+                    if(data.length === 0) {
+                        setNoMoreDataBottom(true);
+                        scrollTo = document.getElementById("noMoreDataBottom");
+                    } else {
+                        scrollTo = document.getElementById(entries[entries.length - 1].id);
+                    }
+                    let newEntries = [...entries, ...data];
+                    if(newEntries.length >= 1000) {
+                        setNoMoreDataTop(false);
+                        newEntries = newEntries.splice(1000);
+                    }
+                    setEntries(newEntries);
+                    setLoadMoreBottom(false);
+                    setIsLoadingBottom(false)
+                }
+
+                scrollTo.scrollIntoView();
+
+
+                // const entry = entries[0];
+                // setEntries([...data, ...entries]);
+                // setLoadMoreTop(false);
+                // setIsLoadingTop(false)
+                // const element = data.length === 0 ? document.getElementById("noMoreDataTop") :  document.getElementById(entry.id);
+                // if(element)
+                //     element.scrollIntoView();
             });
     };
 
     return <>
             <div className={styles.list}>
                 <div id="list" className={styles.list}>
-                    {isLoading && <div style={{display: "flex", justifyContent: "center", marginBottom: 10}}><img alt="spinner" src={spinner} style={{height: 25}}/></div>}
+                    {isLoadingTop && <div style={{display: "flex", justifyContent: "center", marginBottom: 10}}><img alt="spinner" src={spinner} style={{height: 25}}/></div>}
                     <ScrollableFeed>
-                        {noMoreData && !connectionOpen && <div id="noMoreData" style={{textAlign: "center", fontWeight: 600, color: "rgba(255,255,255,0.75)"}}>No more data available</div>}
+                        {noMoreDataTop && !connectionOpen && <div id="noMoreDataTop" style={{textAlign: "center", fontWeight: 600, color: "rgba(255,255,255,0.75)"}}>No more data available</div>}
                         {entries?.map(entry => <HarEntry key={entry.id}
                                                      entry={entry}
                                                      setFocusedEntryId={setFocusedEntryId}
                                                      isSelected={focusedEntryId === entry.id}/>)}
+                        {noMoreDataBottom && !connectionOpen && <div id="noMoreDataBottom" style={{textAlign: "center", fontWeight: 600, marginTop: 10, color: "rgba(255,255,255,0.75)"}}>No more data available</div>}
                     </ScrollableFeed>
-
+                    {isLoadingBottom && <div style={{display: "flex", justifyContent: "center", marginTop: 10}}><img alt="spinner" src={spinner} style={{height: 25}}/></div>}
                 </div>
 
                 {entries?.length > 0 && <div className={styles.footer}>
                     <div><b>{entries?.length}</b> requests</div>
-                    <div>Started listening at <span style={{marginRight: 5, fontWeight: 600, fontSize: 13}}>{new Date(+entries[0].timestamp*1000)?.toLocaleString()}</span></div>
+                    <div>Started listening at <span style={{marginRight: 5, fontWeight: 600, fontSize: 13}}>{new Date(+entries[0].timestamp)?.toLocaleString()}</span></div>
                 </div>}
             </div>
     </>;

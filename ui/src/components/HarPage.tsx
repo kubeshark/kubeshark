@@ -26,6 +26,12 @@ const useLayoutStyles = makeStyles(() => ({
     }
 }));
 
+enum ConnectionStatus {
+    Closed,
+    Connection,
+    Paused
+}
+
 export const HarPage: React.FC = () => {
 
     const classes = useLayoutStyles();
@@ -34,6 +40,8 @@ export const HarPage: React.FC = () => {
     const [focusedEntryId, setFocusedEntryId] = useState(null);
     const [selectedHarEntry, setSelectedHarEntry] = useState(null);
     const [connectionOpen, setConnectionOpen] = useState(false);
+    const [noMoreDataTop, setNoMoreDataTop] = useState(false);
+
     const ws = useRef(null);
 
     const openWebSocket = () => {
@@ -49,7 +57,8 @@ export const HarPage: React.FC = () => {
             if(!focusedEntryId) setFocusedEntryId(entry.id)
             let newEntries = [...entries];
             if(entries.length === 1000) {
-                newEntries = newEntries.splice(1)
+                newEntries = newEntries.splice(1);
+                setNoMoreDataTop(false);
             }
             setEntries([...newEntries, entry])
         }
@@ -89,7 +98,7 @@ export const HarPage: React.FC = () => {
                 <div className="HarPage-ListContainer">
                     {/*<HarFilters />*/}
                     <div className={styles.container}>
-                        <HarEntriesList entries={entries} setEntries={setEntries} focusedEntryId={focusedEntryId} setFocusedEntryId={setFocusedEntryId} connectionOpen={connectionOpen}/>
+                        <HarEntriesList entries={entries} setEntries={setEntries} focusedEntryId={focusedEntryId} setFocusedEntryId={setFocusedEntryId} connectionOpen={connectionOpen} noMoreDataTop={noMoreDataTop} setNoMoreDataTop={setNoMoreDataTop}/>
                     </div>
                 </div>
                 <div className={classes.details}>
