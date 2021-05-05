@@ -3,10 +3,6 @@ package controllers
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/go-playground/locales/en"
-	ut "github.com/go-playground/universal-translator"
-	"github.com/go-playground/validator/v10"
-	et "github.com/go-playground/validator/v10/translations/en"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/martian/har"
 	"mizuserver/pkg/database"
@@ -17,39 +13,21 @@ import (
 const (
 	OrderDesc = "desc"
 	OrderAsc  = "asc"
+	LT        = "lt"
+	GT        = "gt"
 )
 
-var operatorToSymbolMapping = map[string]string {
-	"lt": "<",
-	"gt": ">",
-}
-
-var operatorToOrderMapping = map[string]string {
-	"lt": OrderDesc,
-	"gt": OrderAsc,
-}
-
-
-func translateError(err error, trans ut.Translator) (errs []string) {
-	if err == nil {
-		return nil
+var (
+	operatorToSymbolMapping = map[string]string{
+		LT: "<",
+		GT: ">",
 	}
-	validatorErrs := err.(validator.ValidationErrors)
-	for _, e := range validatorErrs {
-		translatedErr := fmt.Errorf(e.Translate(trans)).Error()
-		errs = append(errs, translatedErr)
+	operatorToOrderMapping = map[string]string{
+		LT: OrderDesc,
+		GT: OrderAsc,
 	}
-	return errs
-}
+)
 
-func getValidator() (*validator.Validate, ut.Translator) {
-	validate := validator.New()
-	english := en.New()
-	uni := ut.New(english, english)
-	trans, _ := uni.GetTranslator("en")
-	_ = et.RegisterDefaultTranslations(validate, trans)
-	return validate, trans
-}
 
 func GetEntries(c *fiber.Ctx) error {
 	entriesFilter := new(models.EntriesFilter)
@@ -58,11 +36,9 @@ func GetEntries(c *fiber.Ctx) error {
 		return err
 	}
 
-	validate, trans := getValidator()
-	err := validate.Struct(entriesFilter)
+	err := utils.Validate(entriesFilter)
 	if err != nil {
-		errs := translateError(err, trans)
-		return c.Status(fiber.StatusBadRequest).JSON(errs)
+		return c.Status(fiber.StatusBadRequest).JSON(err)
 	}
 
 	order := operatorToOrderMapping[entriesFilter.Operator]
