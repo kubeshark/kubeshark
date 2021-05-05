@@ -68,7 +68,13 @@ func NewEntry(request *http.Request, requestTime time.Time, response *http.Respo
 	} else {
 		// Martian copies http.Request.URL.String() to har.Request.URL, which usually contains the path.
 		// However, according to the HAR spec, the URL field needs to be the absolute URL.
-		harRequest.URL = fmt.Sprintf("http://%s%s", request.Host, request.URL)
+		var scheme string
+		if request.URL.Scheme != "" {
+			scheme = request.URL.Scheme
+		} else {
+			scheme = "http"
+		}
+		harRequest.URL = fmt.Sprintf("%s://%s%s", scheme, request.Host, request.URL)
 	}
 
 	totalTime := responseTime.Sub(requestTime).Round(time.Millisecond).Milliseconds()
