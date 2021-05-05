@@ -76,12 +76,12 @@ export const HAREntryBodySection: React.FC<HAREntryBodySectionProps> = ({
         const chunk = body.slice(0, MAXIMUM_BYTES_TO_HIGHLIGHT);
         const bodyBuf = encoding === 'base64' ? atob(chunk) : chunk;
 
-        if (jsonLikeFormats.some(format => content?.mimeType?.indexOf(format) > -1)) {
-            try {
+        try {
+            if (jsonLikeFormats.some(format => content?.mimeType?.indexOf(format) > -1)) {
                 return JSON.stringify(JSON.parse(bodyBuf), null, 2);
-            } catch (error) {
-                console.error(error);
             }
+        } catch (error) {
+            console.error(error);
         }
         return bodyBuf;
     }
