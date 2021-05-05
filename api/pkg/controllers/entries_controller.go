@@ -16,40 +16,53 @@ const (
 	HardLimit = 200
 )
 
+func getSortAndOrder(operator string) (string, string) {
+	var sort, order string
+	if strings.ToLower(operator) == "gt" {
+		sort = ">"
+		order = "asc"
+	} else if strings.ToLower(operator) == "lt" {
+		sort = "<"
+		order = "desc"
+	} else {
+		fmt.Println("Unsupported sort option")
+		return "", ""
+	}
+	return sort, order
+
+}
 func GetEntries(c *fiber.Ctx) error {
 	limit, e := strconv.Atoi(c.Query("limit", "200"))
 	utils.CheckErr(e)
 	if limit > HardLimit {
+		fmt.Printf("Limit is greater than hard limit - using hard limit, requestedLimit: %v, hard: %v", limit, HardLimit)
 		limit = HardLimit
 	}
 
-	sortOption := c.Query("operator", "lt")
-	var sortingOperator string
-	var ordering string
-	if strings.ToLower(sortOption) == "gt" {
-		sortingOperator = ">"
-		ordering = "asc"
-	} else if strings.ToLower(sortOption) == "lt" {
-		sortingOperator = "<"
-		ordering = "desc"
-	} else {
-		fmt.Println("Unsupported")
-		return nil
+	operator, order := getSortAndOrder(c.Query("operator", "lt"))
+	if operator == "" || order == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"msg": "invalid operator",
+		})
 	}
-
 	timestamp, e := strconv.Atoi(c.Query("timestamp", "-1"))
+	if timestamp < 0 {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"msg": "invalid timestamp",
+		})
+	}
 	utils.CheckErr(e)
 
 	var entries []models.MizuEntry
-
 	database.GetEntriesTable().
-		Order(fmt.Sprintf("timestamp %s", ordering)).
-		Where(fmt.Sprintf("timestamp %s %v",sortingOperator, timestamp)).
+		Order(fmt.Sprintf("timestamp %s", order)).
+		Where(fmt.Sprintf("timestamp %s %v", operator, timestamp)).
 		Omit("entry"). // remove the "big" entry field
 		Limit(limit).
 		Find(&entries)
 
-	if len(entries) > 0 && ordering == "desc"{
+	if len(entries) > 0 && order == "desc" {
+		// the entries always order from oldest to newest so we should revers
 		utils.ReverseSlice(entries)
 	}
 
@@ -92,4 +105,16 @@ func DeleteAllEntries(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"msg": "Success",
 	})
+
+}
+
+func GetGeneralStats(c *fiber.Ctx) error {
+	sqlQuery := "SELECT count(*) as count, min(timestamp) as min, max(timestamp) as max from mizu_entries"
+	var result struct {
+		Count int
+		Min   int
+		Max   int
+	}
+	database.GetEntriesTable().Raw(sqlQuery).Scan(&result)
+	return c.Status(fiber.StatusOK).JSON(&result)
 }
