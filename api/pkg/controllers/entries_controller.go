@@ -15,33 +15,35 @@ import (
 const (
 	HardLimit = 200
 )
-
-func GetEntries(c *fiber.Ctx) error {
-	limit, e := strconv.Atoi(c.Query("limit", "200"))
-	utils.CheckErr(e)
-	if limit > HardLimit {
-		limit = HardLimit
-	}
-
-	sortOption := c.Query("operator", "lt")
-	var sortingOperator string
-	var ordering string
-	if strings.ToLower(sortOption) == "gt" {
+func getSortAndOrder(operator string) (string, string) {
+	var sortingOperator, ordering string
+	if strings.ToLower(operator) == "gt" {
 		sortingOperator = ">"
 		ordering = "asc"
-	} else if strings.ToLower(sortOption) == "lt" {
+	} else if strings.ToLower(operator) == "lt" {
 		sortingOperator = "<"
 		ordering = "desc"
 	} else {
-		fmt.Println("Unsupported")
-		return nil
+		fmt.Println("Unsupported sort option")
+		return "", ""
+	}
+	return sortingOperator, ordering
+
+}
+func GetEntries(c *fiber.Ctx) error {
+	limit, e := strconv.Atoi(c.Query("limit", "200"));
+	utils.CheckErr(e)
+	if limit > HardLimit {
+		fmt.Printf("Limit is greater than hard limit - using hard limit, requestedLimit: %v, hard: %v", limit ,HardLimit)
+		limit = HardLimit
 	}
 
+
+	sortingOperator, ordering := getSortAndOrder(c.Query("operator", "lt"))
 	timestamp, e := strconv.Atoi(c.Query("timestamp", "-1"))
 	utils.CheckErr(e)
 
 	var entries []models.MizuEntry
-
 	database.GetEntriesTable().
 		Order(fmt.Sprintf("timestamp %s", ordering)).
 		Where(fmt.Sprintf("timestamp %s %v",sortingOperator, timestamp)).
@@ -92,4 +94,16 @@ func DeleteAllEntries(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"msg": "Success",
 	})
+
+}
+
+func GetGeneralStats(c *fiber.Ctx) error {
+	sqlQuery := "SELECT count(*) as count, min(timestamp) as min, max(timestamp) as max from mizu_entries"
+	var result struct {
+		Count int
+		Min int
+		Max int
+	}
+	database.GetEntriesTable().Raw(sqlQuery).Scan(&result)
+	return c.Status(fiber.StatusOK).JSON(&result)
 }

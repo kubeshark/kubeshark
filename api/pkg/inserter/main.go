@@ -21,7 +21,7 @@ func StartReadingFiles(harChannel chan *har.Entry, workingDir *string) {
 	if workingDir != nil && *workingDir != "" {
 		startReadingFiles(*workingDir)
 	} else {
-		startReadingSChan(harChannel)
+		startReadingChannel(harChannel)
 	}
 }
 
@@ -50,20 +50,20 @@ func startReadingFiles(workingDir string) {
 
 		for _, entry := range inputHar.Log.Entries {
 			time.Sleep(time.Millisecond * 250)
-			SaveHarToDb(*entry, "")
+			saveHarToDb(*entry, "")
 		}
 		rmErr := os.Remove(inputFilePath)
 		utils.CheckErr(rmErr)
 	}
 }
 
-func startReadingSChan(harChannel chan *har.Entry) {
+func startReadingChannel(harChannel chan *har.Entry) {
 	for entry := range harChannel {
-		SaveHarToDb(*entry, "")
+		saveHarToDb(*entry, "")
 	}
 }
 
-func SaveHarToDb(entry har.Entry, source string) {
+func saveHarToDb(entry har.Entry, source string) {
 	entryBytes, _ := json.Marshal(entry)
 	serviceName, urlPath := getServiceNameFromUrl(entry.Request.URL)
 	entryId := primitive.NewObjectID().Hex()
