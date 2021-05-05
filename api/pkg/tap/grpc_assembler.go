@@ -6,8 +6,11 @@ import (
 	"encoding/base64"
 	"encoding/binary"
 	"errors"
+	"io"
 	"math"
 	"net/http"
+	"net/url"
+	"strings"
 
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/hpack"
@@ -62,6 +65,7 @@ func (fbs *fragmentsByStream) pop(streamID uint32) ([]hpack.HeaderField, []byte)
 	headers := (*fbs)[streamID].headers
 	data := (*fbs)[streamID].data
 	delete((*fbs), streamID)
+
 	return headers, data
 }
 
@@ -100,9 +104,11 @@ func (ga *GrpcAssembler) readMessage() (uint32, interface{}, string, error) {
 
 	headers, data := ga.fragmentsByStream.pop(streamID)
 
+	// Note: header keys are converted by http.Header.Set to canonical names, e.g. content-type -> Content-Type.
+	// By converting the keys we violate the HTTP/2 specification, which state that all headers must be lowercase.
 	headersHTTP1 := make(http.Header)
 	for _, header := range headers {
-		headersHTTP1[header.Name] = []string{header.Value}
+		headersHTTP1.Add(header.Name, header.Value)
 	}
 	dataString := base64.StdEncoding.EncodeToString(data)
 
@@ -112,10 +118,14 @@ func (ga *GrpcAssembler) readMessage() (uint32, interface{}, string, error) {
 	var messageHTTP1 interface{}
 	if _, ok := headersHTTP1[":method"]; ok {
 		messageHTTP1 = http.Request{
+			URL: &url.URL{},
+			Method: "POST",
 			Header: headersHTTP1,
 			Proto: protoHTTP2,
 			ProtoMajor: protoMajorHTTP2,
 			ProtoMinor: protoMinorHTTP2,
+			Body: io.NopCloser(strings.NewReader(dataString)),
+			ContentLength: int64(len(dataString)),
 		}
 	} else if _, ok := headersHTTP1[":status"]; ok {
 		messageHTTP1 = http.Response{
@@ -123,6 +133,8 @@ func (ga *GrpcAssembler) readMessage() (uint32, interface{}, string, error) {
 			Proto: protoHTTP2,
 			ProtoMajor: protoMajorHTTP2,
 			ProtoMinor: protoMinorHTTP2,
+			Body: io.NopCloser(strings.NewReader(dataString)),
+			ContentLength: int64(len(dataString)),
 		}
 	} else {
 		return 0, nil, "", errors.New("Failed to assemble stream: neither a request nor a message")
