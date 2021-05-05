@@ -3,71 +3,85 @@ package controllers
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/go-playground/locales/en"
+	ut "github.com/go-playground/universal-translator"
+	"github.com/go-playground/validator/v10"
+	et "github.com/go-playground/validator/v10/translations/en"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/martian/har"
 	"mizuserver/pkg/database"
 	"mizuserver/pkg/models"
 	"mizuserver/pkg/utils"
-	"strconv"
-	"strings"
 )
 
 const (
-	HardLimit = 200
+	OrderDesc = "desc"
+	OrderAsc  = "asc"
 )
 
-func getSortAndOrder(operator string) (string, string) {
-	var sort, order string
-	if strings.ToLower(operator) == "gt" {
-		sort = ">"
-		order = "asc"
-	} else if strings.ToLower(operator) == "lt" {
-		sort = "<"
-		order = "desc"
-	} else {
-		fmt.Println("Unsupported sort option")
-		return "", ""
-	}
-	return sort, order
-
+var operatorToSymbolMapping = map[string]string {
+	"lt": "<",
+	"gt": ">",
 }
+
+var operatorToOrderMapping = map[string]string {
+	"lt": OrderDesc,
+	"gt": OrderAsc,
+}
+
+
+func translateError(err error, trans ut.Translator) (errs []string) {
+	if err == nil {
+		return nil
+	}
+	validatorErrs := err.(validator.ValidationErrors)
+	for _, e := range validatorErrs {
+		translatedErr := fmt.Errorf(e.Translate(trans)).Error()
+		errs = append(errs, translatedErr)
+	}
+	return errs
+}
+
+func getValidator() (*validator.Validate, ut.Translator) {
+	validate := validator.New()
+	english := en.New()
+	uni := ut.New(english, english)
+	trans, _ := uni.GetTranslator("en")
+	_ = et.RegisterDefaultTranslations(validate, trans)
+	return validate, trans
+}
+
 func GetEntries(c *fiber.Ctx) error {
-	limit, e := strconv.Atoi(c.Query("limit", "200"))
-	utils.CheckErr(e)
-	if limit > HardLimit {
-		fmt.Printf("Limit is greater than hard limit - using hard limit, requestedLimit: %v, hard: %v", limit, HardLimit)
-		limit = HardLimit
+	entriesFilter := new(models.EntriesFilter)
+
+	if err := c.QueryParser(entriesFilter); err != nil {
+		return err
 	}
 
-	operator, order := getSortAndOrder(c.Query("operator", "lt"))
-	if operator == "" || order == "" {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"msg": "invalid operator",
-		})
+	validate, trans := getValidator()
+	err := validate.Struct(entriesFilter)
+	if err != nil {
+		errs := translateError(err, trans)
+		return c.Status(fiber.StatusBadRequest).JSON(errs)
 	}
-	timestamp, e := strconv.Atoi(c.Query("timestamp", "-1"))
-	if timestamp < 0 {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"msg": "invalid timestamp",
-		})
-	}
-	utils.CheckErr(e)
 
+	order := operatorToOrderMapping[entriesFilter.Operator]
+	operatorSymbol := operatorToSymbolMapping[entriesFilter.Operator]
 	var entries []models.MizuEntry
 	database.GetEntriesTable().
 		Order(fmt.Sprintf("timestamp %s", order)).
-		Where(fmt.Sprintf("timestamp %s %v", operator, timestamp)).
+		Where(fmt.Sprintf("timestamp %s %v", operatorSymbol, entriesFilter.Timestamp)).
 		Omit("entry"). // remove the "big" entry field
-		Limit(limit).
+		Limit(entriesFilter.Limit).
 		Find(&entries)
 
-	if len(entries) > 0 && order == "desc" {
+	if len(entries) > 0 && order == OrderDesc {
 		// the entries always order from oldest to newest so we should revers
 		utils.ReverseSlice(entries)
 	}
 
 	// Convert to base entries
-	baseEntries := make([]models.BaseEntryDetails, 0, limit)
+	baseEntries := make([]models.BaseEntryDetails, 0, entriesFilter.Limit)
 	for _, entry := range entries {
 		baseEntries = append(baseEntries, models.BaseEntryDetails{
 			Id:         entry.EntryId,

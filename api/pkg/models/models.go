@@ -30,3 +30,9 @@ type BaseEntryDetails struct {
 type EntryData struct {
 	Entry string `json:"entry,omitempty"`
 }
+
+type EntriesFilter struct {
+	Limit     int      `query:"limit" validate:"required,min=1,max=200"`
+	Operator  string   `query:"operator" validate:"required,oneof='lt' 'gt'"`
+	Timestamp int64    `query:"timestamp" validate:"required,min=1"`
+}
