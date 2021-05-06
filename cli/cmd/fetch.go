@@ -17,4 +17,3 @@ var fetchCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(fetchCmd)
 }
-
