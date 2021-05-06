@@ -6,10 +6,14 @@ require (
 	github.com/antoniodipinto/ikisocket v0.0.0-20210417133349-f1502512d69a
 	github.com/djherbis/atime v1.0.0
 	github.com/fasthttp/websocket v1.4.3-beta.1 // indirect
+	github.com/go-playground/locales v0.13.0 // indirect
+	github.com/go-playground/universal-translator v0.17.0 // indirect
+	github.com/go-playground/validator/v10 v10.5.0
 	github.com/gofiber/fiber/v2 v2.8.0
 	github.com/google/gopacket v1.1.19
 	github.com/google/martian v2.1.0+incompatible
 	github.com/gorilla/websocket v1.4.2
+	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/orcaman/concurrent-map v0.0.0-20210106121528-16402b402231
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	go.mongodb.org/mongo-driver v1.5.1
