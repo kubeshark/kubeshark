@@ -2,23 +2,24 @@ package main
 
 import (
 	"flag"
+
 	"github.com/gofiber/fiber/v2"
 	"mizuserver/pkg/inserter"
 	"mizuserver/pkg/middleware"
 	"mizuserver/pkg/routes"
+	"mizuserver/pkg/tap"
 	"mizuserver/pkg/utils"
 )
 
-
-
 func main() {
+	flag.Parse()
+
+	harOutputChannel := tap.StartPassiveTapper()
 
 	app := fiber.New()
 
-	var harDir = flag.String("hardir", "input", "Directory in which we read har files from")
-	flag.Parse()
-
-	go inserter.StartReadingFiles(*harDir)  // process to read files and insert to DB
+	// process to read files / channel and insert to DB
+	go inserter.StartReadingFiles(harOutputChannel, tap.HarOutputDir)
 
 
 	middleware.FiberMiddleware(app) // Register Fiber's middleware for app.

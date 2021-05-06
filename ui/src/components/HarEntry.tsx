@@ -23,7 +23,7 @@ interface HAREntryProps {
 export const HarEntry: React.FC<HAREntryProps> = ({entry, setFocusedEntryId, isSelected}) => {
 
     return <>
-        <div className={`${styles.row} ${isSelected ? styles.rowSelected : ''}`} onClick={() => setFocusedEntryId(entry.id)}>
+        <div id={entry.id} className={`${styles.row} ${isSelected ? styles.rowSelected : ''}`} onClick={() => setFocusedEntryId(entry.id)}>
             {entry.statusCode && <div>
                 <StatusCode statusCode={entry.statusCode}/>
             </div>}
@@ -33,7 +33,7 @@ export const HarEntry: React.FC<HAREntryProps> = ({entry, setFocusedEntryId, isS
                     {entry.service}
                 </div>
             </div>
-            <div className={styles.timestamp}>{new Date(+entry.timestamp*1000)?.toLocaleString()}</div>
+            <div className={styles.timestamp}>{new Date(+entry.timestamp)?.toLocaleString()}</div>
         </div>
     </>
 };

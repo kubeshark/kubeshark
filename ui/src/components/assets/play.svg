@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" id="play" width="158" height="158" viewBox="0 0 158 158">
+    <defs>
+        <style>
+            .cls-1{fill:#1b2036}.cls-2{fill:#fff}
+        </style>
+    </defs>
+    <path id="Icon_material-play-circle-filled" d="M79.133 3a76.133 76.133 0 1 0 76.133 76.133A76.161 76.161 0 0 0 79.133 3zM63.906 113.393v-68.52l45.68 34.26z" class="cls-1" data-name="Icon material-play-circle-filled" transform="translate(.457 -.133)"/>
+    <path id="Icon_material-play-circle-outline" d="M66.2 117.55L113.6 82 66.2 46.45zM82 3a79 79 0 1 0 79 79A79.029 79.029 0 0 0 82 3zm0 142.2A63.2 63.2 0 1 1 145.2 82 63.284 63.284 0 0 1 82 145.2z" class="cls-2" data-name="Icon material-play-circle-outline" transform="translate(-3 -3)"/>
+</svg>
