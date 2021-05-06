@@ -1,5 +1,5 @@
 import React, {useEffect, useRef, useState} from "react";
-// import {HarFilters} from "./HarFilters";
+import {HarFilters} from "./HarFilters";
 import {HarEntriesList} from "./HarEntriesList";
 import {makeStyles} from "@material-ui/core";
 import "./style/HarPage.sass";
@@ -43,6 +43,10 @@ export const HarPage: React.FC = () => {
     const [noMoreDataTop, setNoMoreDataTop] = useState(false);
     const [noMoreDataBottom, setNoMoreDataBottom] = useState(false);
 
+    const [methodsFilter, setMethodsFilter] = useState([]);
+    const [statusFilter, setStatusFilter] = useState([]);
+    const [pathFilter, setPathFilter] = useState("");
+
     const ws = useRef(null);
 
     const openWebSocket = () => {
@@ -53,7 +57,6 @@ export const HarPage: React.FC = () => {
 
     if(ws.current) {
         ws.current.onmessage = e => {
-            console.log(connection);
             if(!e?.data) return;
             const entry = JSON.parse(e.data);
             if(connection === ConnectionStatus.Paused) {
@@ -98,18 +101,35 @@ export const HarPage: React.FC = () => {
         }
     }
 
+    const getConnectionTitle = () => {
+        switch (connection) {
+            case ConnectionStatus.Paused:
+                return "traffic paused";
+            case ConnectionStatus.Connected:
+                return "connected, waiting for traffic"
+            default:
+                return "not connected";
+        }
+    }
+
     return (
         <div className="HarPage">
             <div style={{padding: "0 24px 24px 24px", display: "flex", alignItems: "center"}}>
                 <img style={{cursor: "pointer", marginRight: 15, height: 20}} alt="pause" src={connection === ConnectionStatus.Connected ? pauseIcon : playIcon} onClick={toggleConnection}/>
                 <div className="connectionText">
-                    {connection === ConnectionStatus.Connected ? "connected, waiting for traffic" : "not connected"}
+                    {getConnectionTitle()}
                     <div className={getConnectionStatusClass()}/>
                 </div>
             </div>
             {entries.length > 0 && <div className="HarPage-Container">
                 <div className="HarPage-ListContainer">
-                    {/*<HarFilters />*/}
+                    <HarFilters methodsFilter={methodsFilter}
+                                setMethodsFilter={setMethodsFilter}
+                                statusFilter={statusFilter}
+                                setStatusFilter={setStatusFilter}
+                                pathFilter={pathFilter}
+                                setPathFilter={setPathFilter}
+                    />
                     <div className={styles.container}>
                         <HarEntriesList entries={entries}
                                         setEntries={setEntries}
@@ -119,7 +139,11 @@ export const HarPage: React.FC = () => {
                                         noMoreDataBottom={noMoreDataBottom}
                                         setNoMoreDataBottom={setNoMoreDataBottom}
                                         noMoreDataTop={noMoreDataTop}
-                                        setNoMoreDataTop={setNoMoreDataTop}/>
+                                        setNoMoreDataTop={setNoMoreDataTop}
+                                        methodsFilter={methodsFilter}
+                                        statusFilter={statusFilter}
+                                        pathFilter={pathFilter}
+                        />
                     </div>
                 </div>
                 <div className={classes.details}>
