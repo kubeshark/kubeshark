@@ -1,7 +1,6 @@
 package config
 
 type Options struct {
-	DisplayVersion   bool
 	Quiet            bool
 	NoDashboard      bool
 	DashboardPort    uint16

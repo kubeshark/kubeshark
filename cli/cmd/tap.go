@@ -27,7 +27,6 @@ var tapCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(tapCmd)
 
-	tapCmd.Flags().BoolVarP(&config.Configuration.DisplayVersion, "version", "v", false, "Print the version and exit")
 	tapCmd.Flags().BoolVarP(&config.Configuration.Quiet, "quiet", "q", false, "No stdout output")
 	tapCmd.Flags().BoolVarP(&config.Configuration.NoDashboard, "no-dashboard", "", false, "Dont host a dashboard")
 	tapCmd.Flags().Uint16VarP(&config.Configuration.DashboardPort, "dashboard-port", "p", 8899, "Provide a custom port for the dashboard webserver")
