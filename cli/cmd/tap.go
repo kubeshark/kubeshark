@@ -11,7 +11,9 @@ import (
 
 var tapCmd = &cobra.Command{
 	Use:   "tap",
-	Short: "Tail HTTP traffic from multiple pods",
+	Short: "Record ingoing traffic of a kubernetes pod",
+	Long: `Record the ingoing traffic of a kubernetes pod.
+ Supported protocols are HTTP and gRPC.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if len(args) != 0 {
 			return errors.New("Unexpected number of arguments")
