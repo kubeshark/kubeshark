@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"errors"
+	"fmt"
 
 	"github.com/spf13/cobra"
 )
@@ -10,7 +10,8 @@ var fetchCmd = &cobra.Command{
 	Use:   "fetch",
 	Short: "Download recorded traffic",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return errors.New("Not implemented")
+		fmt.Println("Not implemented")
+		return nil
 	},
 }
 
