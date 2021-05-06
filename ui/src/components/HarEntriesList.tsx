@@ -1,5 +1,5 @@
 import {HarEntry} from "./HarEntry";
-import React, {useCallback, useEffect, useMemo, useState} from "react";
+import React, {useEffect, useMemo, useState} from "react";
 import styles from './style/HarEntriesList.module.sass';
 import spinner from './assets/spinner.svg';
 import ScrollableFeed from "react-scrollable-feed";
@@ -30,19 +30,32 @@ export const HarEntriesList: React.FC<HarEntriesListProps> = ({entries, setEntri
     const [loadMoreTop, setLoadMoreTop] = useState(false);
     const [isLoadingTop, setIsLoadingTop] = useState(false);
 
-    const filterEntries = useCallback((entry) => {
+    useEffect(() => {
+        if(loadMoreTop && !connectionOpen && !noMoreDataTop)
+            fetchData(FetchOperator.LT);
+    }, [loadMoreTop, connectionOpen, noMoreDataTop]);
+
+    useEffect(() => {
+        const list = document.getElementById('list').firstElementChild;
+        list.addEventListener('scroll', (e) => {
+            const el: any = e.target;
+            if(el.scrollTop === 0) {
+                setLoadMoreTop(true);
+            } else {
+                setLoadMoreTop(false);
+            }
+        });
+    }, []);
+
+    const filterEntries = (entry) => {
         if(methodsFilter.length > 0 && !methodsFilter.includes(entry.method.toLowerCase())) return;
         if(pathFilter && entry.path.toLowerCase().indexOf(pathFilter) === -1) return;
         if(statusFilter.includes(StatusType.SUCCESS) && entry.statusCode >= 400) return;
         if(statusFilter.includes(StatusType.ERROR) && entry.statusCode < 400) return;
         return entry;
-    },[methodsFilter, pathFilter, statusFilter]);
+    }
 
-    const filteredEntries = useMemo(() => {
-        return entries.filter(filterEntries);
-    },[entries, filterEntries])
-
-    const fetchData = useCallback(async (operator, firstEntryTimestamp?, lastEntryTimestamp?) => {
+    const fetchData = async (operator, firstEntryTimestamp?, lastEntryTimestamp?) => {
 
         const timestamp = operator === FetchOperator.LT ? (firstEntryTimestamp ?? entries[0].timestamp) : (lastEntryTimestamp ?? entries[entries.length - 1].timestamp);
         if(operator === FetchOperator.LT)
@@ -57,61 +70,50 @@ export const HarEntriesList: React.FC<HarEntriesListProps> = ({entries, setEntri
                         setNoMoreDataTop(true);
                         scrollTo = document.getElementById("noMoreDataTop");
                     } else {
-                        scrollTo = document.getElementById(filteredEntries?.[0]?.id);
-                        const newEntries = [...data, ...entries];
-                        if(newEntries.length >= 1000) {
-                            newEntries.splice(1000);
-                        }
-                        setEntries(newEntries);
                         if(data.filter(filterEntries).length === 0) {
                             fetchData(operator, data[0].timestamp);
                             return;
                         }
+                        scrollTo = document.getElementById(filteredEntries?.[0]?.id);
                     }
+                    const newEntries = [...data, ...entries];
+                    if(newEntries.length >= 1000) {
+                        newEntries.splice(1000);
+                    }
+                    setEntries(newEntries);
                     setLoadMoreTop(false);
                     setIsLoadingTop(false)
                     if(scrollTo) {
                         scrollTo.scrollIntoView();
                     }
-                } else if(operator === FetchOperator.GT) {
+                }
+
+                if(operator === FetchOperator.GT) {
                     if(data.length === 0) {
                         setNoMoreDataBottom(true);
                     } else {
-                        scrollTo = document.getElementById(filteredEntries?.[filteredEntries.length -1]?.id);
-                        let newEntries = [...entries, ...data];
-                        if(newEntries.length >= 1000) {
-                            setNoMoreDataTop(false);
-                            newEntries = newEntries.slice(-1000);
-                        }
-                        setEntries(newEntries);
                         if(data.filter(filterEntries).length === 0) {
                             fetchData(operator, null, data[data.length-1].timestamp);
                             return;
                         }
                     }
+                    scrollTo = document.getElementById(filteredEntries?.[filteredEntries.length -1].id);
+                    let newEntries = [...entries, ...data];
+                    if(newEntries.length >= 1000) {
+                        setNoMoreDataTop(false);
+                        newEntries = newEntries.slice(-1000);
+                    }
+                    setEntries(newEntries);
                     if(scrollTo) {
                         scrollTo.scrollIntoView({behavior: "smooth"});
                     }
                 }
             });
-    },[entries, filterEntries, filteredEntries, setEntries, setNoMoreDataBottom, setNoMoreDataTop]);
+    };
 
-    useEffect(() => {
-        if(loadMoreTop && !connectionOpen && !noMoreDataTop)
-            fetchData(FetchOperator.LT);
-    }, [loadMoreTop, connectionOpen, noMoreDataTop, fetchData]);
-
-    useEffect(() => {
-        const list = document.getElementById('list').firstElementChild;
-        list.addEventListener('scroll', (e) => {
-            const el: any = e.target;
-            if(el.scrollTop === 0) {
-                setLoadMoreTop(true);
-            } else {
-                setLoadMoreTop(false);
-            }
-        });
-    }, []);
+    const filteredEntries = useMemo(() => {
+        return entries.filter(filterEntries);
+    },[entries, methodsFilter, pathFilter, statusFilter])
 
     return <>
             <div className={styles.list}>
