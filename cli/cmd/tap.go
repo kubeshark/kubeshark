@@ -31,7 +31,7 @@ var tapCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(tapCmd)
 
-	tapCmd.Flags().BoolVarP(&config.Configuration.Quiet, "quiet", "q", false, "No stdout output")
+	// tapCmd.Flags().BoolVarP(&config.Configuration.Quiet, "quiet", "q", false, "No stdout output")
 	tapCmd.Flags().BoolVarP(&config.Configuration.NoGUI, "no-gui", "", false, "Do not open web interface")
 	tapCmd.Flags().Uint16VarP(&config.Configuration.GuiPort, "gui-port", "p", 8899, "Provide a custom port for the web interface webserver")
 	tapCmd.Flags().StringVarP(&config.Configuration.Namespace, "namespace", "n", "", "Namespace selector")
