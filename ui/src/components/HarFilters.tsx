@@ -1,17 +1,24 @@
-import React, {useEffect} from "react";
+import React from "react";
 import styles from './style/HarFilters.module.sass';
 import {HARFilterSelect} from "./HARFilterSelect";
 import {TextField} from "@material-ui/core";
+import {ALL_KEY} from "./Select";
 
-export const HarFilters: React.FC = () => {
+interface HarFiltersProps {
+    methodsFilter: Array<string>;
+    setMethodsFilter: (methods: Array<string>) => void;
+    statusFilter: Array<string>;
+    setStatusFilter: (methods: Array<string>) => void;
+    pathFilter: string
+    setPathFilter: (val: string) => void;
+}
+
+export const HarFilters: React.FC<HarFiltersProps> = ({methodsFilter, setMethodsFilter, statusFilter, setStatusFilter, pathFilter, setPathFilter}) => {
 
     return <div className={styles.container}>
-        <ServiceFilter/>
-        <MethodFilter/>
-        <StatusTypesFilter/>
-        <SourcesFilter/>
-        <FetchModeFilter/>
-        <PathFilter/>
+        <MethodFilter methodsFilter={methodsFilter} setMethodsFilter={setMethodsFilter}/>
+        <StatusTypesFilter statusFilter={statusFilter} setStatusFilter={setStatusFilter}/>
+        <PathFilter pathFilter={pathFilter} setPathFilter={setPathFilter}/>
     </div>;
 };
 
@@ -23,77 +30,6 @@ const FilterContainer: React.FC = ({children}) => {
     </div>;
 };
 
-const ServiceFilter: React.FC = () => {
-    const providerIds = []; //todo
-    const selectedServices = []; //todo
-
-    return <FilterContainer>
-        <HARFilterSelect
-            items={providerIds}
-            value={selectedServices}
-            onChange={(val) => {
-                //todo: harStore.updateFilter({toggleService: val})
-            }}
-            allowMultiple={true}
-            label={"Services"}
-            transformDisplay={_toUpperCase}
-        />
-    </FilterContainer>
-
-};
-
-const BROWSER_SOURCE = "_BROWSER_";
-
-const SourcesFilter: React.FC = () => {
-
-    const sources = []; //todo
-    const selectedSource = null; //todo
-
-    useEffect(() => {
-        //todo: fetch sources
-    }, []);
-
-    return <FilterContainer>
-        <HARFilterSelect
-            items={sources}
-            value={selectedSource}
-            onChange={(val) => {
-                //todo: harStore.updateFilter({toggleSource: val});
-            }}
-            allowMultiple={true}
-            label={"Sources"}
-            transformDisplay={item => item === BROWSER_SOURCE ? "BROWSER" : item.toUpperCase()}
-        />
-    </FilterContainer>
-
-};
-
-enum HARFetchMode {
-    UP_TO_REVISION = "Up to revision",
-    ALL = "All",
-    QUEUED = "Unprocessed"
-}
-
-const FetchModeFilter: React.FC = () => {
-
-    const selectedHarFetchMode = null;
-
-    return <FilterContainer>
-        <HARFilterSelect
-            items={Object.values(HARFetchMode)}
-            value={selectedHarFetchMode}
-            onChange={(val) => {
-                // selectedModelStore.har.setHarFetchMode(val);
-                // selectedModelStore.har.data.reset();
-                // selectedModelStore.har.data.fetch();
-                //todo
-            }}
-            label={"Processed"}
-        />
-    </FilterContainer>
-
-};
-
 enum HTTPMethod {
     GET = "get",
     PUT = "put",
@@ -103,58 +39,80 @@ enum HTTPMethod {
     PATCH = "patch"
 }
 
-const MethodFilter: React.FC = () => {
+interface MethodFilterProps {
+    methodsFilter: Array<string>;
+    setMethodsFilter: (methods: Array<string>) => void;
+}
 
-    const selectedMethods = [];
+const MethodFilter: React.FC<MethodFilterProps> = ({methodsFilter, setMethodsFilter}) => {
+
+    const methodClicked = (val) => {
+        if(val === ALL_KEY) {
+            setMethodsFilter([]);
+            return;
+        }
+        if(methodsFilter.includes(val)) {
+            setMethodsFilter(methodsFilter.filter(method => method !== val))
+        } else {
+            setMethodsFilter([...methodsFilter, val]);
+        }
+    }
 
     return <FilterContainer>
         <HARFilterSelect
             items={Object.values(HTTPMethod)}
             allowMultiple={true}
-            value={selectedMethods}
-            onChange={(val) => {
-                // harStore.updateFilter({toggleMethod: val}) todo
-            }}
+            value={methodsFilter}
+            onChange={(val) => methodClicked(val)}
             transformDisplay={_toUpperCase}
             label={"Methods"}
         />
     </FilterContainer>;
 };
 
-enum StatusType {
+export enum StatusType {
     SUCCESS = "success",
     ERROR = "error"
 }
 
-const StatusTypesFilter: React.FC = () => {
+interface StatusTypesFilterProps {
+    statusFilter: Array<string>;
+    setStatusFilter: (methods: Array<string>) => void;
+}
 
-    const selectedStatusTypes = [];
+const StatusTypesFilter: React.FC<StatusTypesFilterProps> = ({statusFilter, setStatusFilter}) => {
+
+    const statusClicked = (val) => {
+        if(val === ALL_KEY) {
+            setStatusFilter([]);
+            return;
+        }
+        setStatusFilter([val]);
+    }
 
     return <FilterContainer>
         <HARFilterSelect
             items={Object.values(StatusType)}
             allowMultiple={true}
-            value={selectedStatusTypes}
-            onChange={(val) => {
-                // harStore.updateFilter({toggleStatusType: val}) todo
-            }}
+            value={statusFilter}
+            onChange={(val) => statusClicked(val)}
             transformDisplay={_toUpperCase}
             label="Status"
         />
     </FilterContainer>;
 };
 
-// TODO path search is inclusive of the qs -> we want to avoid this - TRA-1681
-const PathFilter: React.FC = () => {
+interface PathFilterProps {
+    pathFilter: string;
+    setPathFilter: (val: string) => void;
+}
 
-    const onFilterChange = (value) => {
-        // harStore.updateFilter({setPathSearch: value}); todo
-    }
+const PathFilter: React.FC<PathFilterProps> = ({pathFilter, setPathFilter}) => {
 
     return <FilterContainer>
         <div className={styles.filterLabel}>Path</div>
         <div>
-            <TextField variant="outlined" className={styles.filterText} style={{minWidth: '150px'}} onKeyDown={(e: any) => e.key === "Enter" && onFilterChange(e.target.value)}/>
+            <TextField value={pathFilter} variant="outlined" className={styles.filterText} style={{minWidth: '150px'}} onChange={(e: any) => setPathFilter(e.target.value)}/>
         </div>
     </FilterContainer>;
 };
