@@ -10,16 +10,20 @@ import (
 )
 
 var tapCmd = &cobra.Command{
-	Use:   "tap",
+	Use:   "tap [PODNAME]",
 	Short: "Record ingoing traffic of a kubernetes pod",
 	Long: `Record the ingoing traffic of a kubernetes pod.
  Supported protocols are HTTP and gRPC.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if len(args) != 0 {
+		if len(args) == 0 {
+			return errors.New("PODNAME argument is required")
+		} else if len(args) > 1 {
 			return errors.New("Unexpected number of arguments")
 		}
 
-		mizu.Run()
+		podName := args[0]
+
+		mizu.Run(podName)
 		return nil
 	},
 }
@@ -35,9 +39,4 @@ func init() {
 	tapCmd.Flags().StringVarP(&config.Configuration.KubeConfigPath, "kubeconfig", "k", "", "Path to kubeconfig file")
 	tapCmd.Flags().StringVarP(&config.Configuration.MizuImage, "mizu-image", "", "gcr.io/up9-docker-hub/mizu/develop:latest", "Custom image for mizu collector")
 	tapCmd.Flags().Uint16VarP(&config.Configuration.MizuPodPort, "mizu-port", "", 8899, "Port which mizu cli will attempt to forward from the mizu collector pod")
-	tapCmd.Flags().StringVarP(&config.Configuration.TappedPodName, "pod", "", "", "View traffic of this pod")
-	err := tapCmd.MarkFlagRequired("pod")
-	if err != nil {
-		panic(err)
-	}
 }
