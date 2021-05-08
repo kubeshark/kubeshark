@@ -1,4 +1,4 @@
-package utils
+package validation
 
 import (
 	"fmt"
@@ -14,25 +14,22 @@ func Validate(object interface{}) (errs []string){
 	return translateError(err, trans)
 }
 
-func translateError(err error, trans ut.Translator) (errs []string) {
+func translateError(err error, trans *ut.Translator) (errs []string) {
 	if err == nil {
 		return nil
 	}
 	validatorErrs := err.(validator.ValidationErrors)
 	for _, e := range validatorErrs {
-		translatedErr := fmt.Errorf(e.Translate(trans)).Error()
+		translatedErr := fmt.Errorf(e.Translate(*trans)).Error()
 		errs = append(errs, translatedErr)
 	}
 	return errs
 }
 
-func getValidator() (*validator.Validate, ut.Translator) {
-
+func getValidator() (*validator.Validate, *ut.Translator) {
 	validate := validator.New()
-
 	english := en.New()
-	uni := ut.New(english, english)
-	trans, _ := uni.GetTranslator("en")
+	trans, _ := ut.New(english, english).GetTranslator("en")
 	_ = et.RegisterDefaultTranslations(validate, trans)
-	return validate, trans
+	return validate, &trans
 }
