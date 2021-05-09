@@ -4,6 +4,7 @@ on:
     branches:
       - 'develop'
       - 'main'
+      - 'feature/cli_makefile'
 jobs:
   docker:
     runs-on: ubuntu-latest
@@ -36,3 +37,12 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}          
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@master
+        with:
+          service_account_key: ${{ secrets.GCR_JSON_KEY }}
+          export_default_credentials: true
+      - name: Use gcloud CLI
+        run: gcloud info
+      - name: Build and Push CLI
+        run: make push-cli
