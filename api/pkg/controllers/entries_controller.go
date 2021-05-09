@@ -8,6 +8,7 @@ import (
 	"mizuserver/pkg/database"
 	"mizuserver/pkg/models"
 	"mizuserver/pkg/utils"
+	"mizuserver/pkg/validation"
 )
 
 const (
@@ -30,13 +31,12 @@ var (
 
 
 func GetEntries(c *fiber.Ctx) error {
-	entriesFilter := new(models.EntriesFilter)
+	entriesFilter := &models.EntriesFilter{}
 
 	if err := c.QueryParser(entriesFilter); err != nil {
-		return err
+		return c.Status(fiber.StatusBadRequest).JSON(err)
 	}
-
-	err := utils.Validate(entriesFilter)
+	err := validation.Validate(entriesFilter)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(err)
 	}
