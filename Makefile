@@ -17,8 +17,6 @@ help: ## This help.
 
 # Variables and lists
 TS_SUFFIX="$(shell date '+%s')"
-DOCKER_IMG="up9inc/mizu"
-DOCKER_TAG="latest"
 
 ui: ## build UI
 	@(cd ui; npm i ; npm run build; )
@@ -38,8 +36,7 @@ tap: ## build tap binary
 
 docker: ## build Docker image 
 	@(echo "building docker image" )
-	docker build -t ${DOCKER_IMG}:${DOCKER_TAG} .
-	docker images ${DOCKER_IMG}
+	./build-push-featurebranch.sh
 
 publish: ## build and publish Mizu docker image & CLI
 	@echo "publishing Docker image .. "
