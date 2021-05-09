@@ -7,7 +7,7 @@ REPOSITORY=gcr.io/$GCP_PROJECT
 GIT_BRANCH=$(git branch | grep \* | cut -d ' ' -f2 | tr '[:upper:]' '[:lower:]')
 DOCKER_TAGGED_BUILD=$REPOSITORY/$SERVER_NAME/$GIT_BRANCH:latest
 
-if [ "$GIT_BRANCH" = 'develop' -o "$GIT_BRANCH" = 'master' ]
+if [ "$GIT_BRANCH" = 'develop' -o "$GIT_BRANCH" = 'master' -o "$GIT_BRANCH" = 'main' ]
 then
   echo "Pushing to $GIT_BRANCH is allowed only via CI"
   exit 1
