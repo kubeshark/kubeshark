@@ -29,7 +29,6 @@ var (
 	}
 )
 
-
 func GetEntries(c *fiber.Ctx) error {
 	entriesFilter := &models.EntriesFilter{}
 
@@ -67,6 +66,7 @@ func GetEntries(c *fiber.Ctx) error {
 			StatusCode: entry.Status,
 			Method:     entry.Method,
 			Timestamp:  entry.Timestamp,
+			Source:     entry.Source,
 		})
 	}
 

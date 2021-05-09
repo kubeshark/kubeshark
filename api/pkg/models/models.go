@@ -20,6 +20,7 @@ type MizuEntry struct {
 type BaseEntryDetails struct {
 	Id         string `json:"id,omitempty"`
 	Url        string `json:"url,omitempty"`
+	Source     string `json:"source,omitempty"`
 	Service    string `json:"service,omitempty"`
 	Path       string `json:"path,omitempty"`
 	StatusCode int    `json:"statusCode,omitempty"`
@@ -32,7 +33,7 @@ type EntryData struct {
 }
 
 type EntriesFilter struct {
-	Limit     int      `query:"limit" validate:"required,min=1,max=200"`
-	Operator  string   `query:"operator" validate:"required,oneof='lt' 'gt'"`
-	Timestamp int64    `query:"timestamp" validate:"required,min=1"`
+	Limit     int    `query:"limit" validate:"required,min=1,max=200"`
+	Operator  string `query:"operator" validate:"required,oneof='lt' 'gt'"`
+	Timestamp int64  `query:"timestamp" validate:"required,min=1"`
 }

@@ -14,10 +14,11 @@ import (
 	"os"
 	"path"
 	"sort"
+	"strings"
 	"time"
 )
 
-func StartReadingFiles(harChannel chan *har.Entry, workingDir *string) {
+func StartReadingEntries(harChannel chan *har.Entry, workingDir *string) {
 	if workingDir != nil && *workingDir != "" {
 		startReadingFiles(*workingDir)
 	} else {
@@ -50,7 +51,7 @@ func startReadingFiles(workingDir string) {
 
 		for _, entry := range inputHar.Log.Entries {
 			time.Sleep(time.Millisecond * 250)
-			saveHarToDb(*entry, "")
+			saveHarToDb(*entry)
 		}
 		rmErr := os.Remove(inputFilePath)
 		utils.CheckErr(rmErr)
@@ -59,13 +60,14 @@ func startReadingFiles(workingDir string) {
 
 func startReadingChannel(harChannel chan *har.Entry) {
 	for entry := range harChannel {
-		saveHarToDb(*entry, "")
+		saveHarToDb(*entry)
 	}
 }
 
-func saveHarToDb(entry har.Entry, source string) {
+func saveHarToDb(entry har.Entry) {
 	entryBytes, _ := json.Marshal(entry)
 	serviceName, urlPath := getServiceNameFromUrl(entry.Request.URL)
+	source := getSourceNameFromHeaders(entry.Request.Headers)
 	entryId := primitive.NewObjectID().Hex()
 	mizuEntry := models.MizuEntry{
 		EntryId:   entryId,
@@ -87,6 +89,7 @@ func saveHarToDb(entry har.Entry, source string) {
 		Path:       urlPath,
 		StatusCode: entry.Response.Status,
 		Method:     entry.Request.Method,
+		Source: 	source,
 		Timestamp:  entry.StartedDateTime.UnixNano() / int64(time.Millisecond),
 	}
 	baseEntryBytes, _ := json.Marshal(&baseEntry)
@@ -94,6 +97,14 @@ func saveHarToDb(entry har.Entry, source string) {
 
 }
 
+func getSourceNameFromHeaders(requestHeaders []har.Header) string{
+	for _, header := range requestHeaders {
+		if strings.ToLower(header.Name) == "x-up9-source" {
+			return header.Value
+		}
+	}
+	return ""
+}
 func getServiceNameFromUrl(inputUrl string) (string, string) {
 	parsed, err := url.Parse(inputUrl)
 	utils.CheckErr(err)
