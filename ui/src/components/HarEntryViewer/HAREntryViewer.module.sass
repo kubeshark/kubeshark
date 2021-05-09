@@ -1,0 +1,57 @@
+.harEntry
+    font-family: "Source Sans Pro", Lucida Grande, Tahoma, sans-serif
+    height: 100%
+    width: 100%
+
+    h3,
+    h4
+        font-family: "Source Sans Pro", Lucida Grande, Tahoma, sans-serif
+
+    .header
+        background-color: rgb(55, 65, 111)
+        padding: 0.5rem .75rem .65rem .75rem
+        border-top-left-radius: 0.25rem
+        border-top-right-radius: 0.25rem
+        display: flex
+        font-size: .75rem
+        align-items: center
+        .description
+            min-width: 25rem
+            display: flex
+            align-items: center
+            justify-content: space-between
+            .method
+                padding: 0 .25rem
+                font-size: 0.75rem
+                font-weight: bold
+                border-radius: 0.25rem
+                border: 0.0625rem solid rgba(255, 255, 255, 0.16)
+                margin-right: .5rem
+            > span
+                margin-left: .5rem
+        .timing
+            border-left: 1px solid #627ef7
+            margin-left: .3rem
+            padding-left: .3rem
+            color: #627ef7
+
+    .headerClickable
+        cursor: pointer
+        &:hover
+            background: lighten(rgb(55, 65, 111), 10%)
+        border-top-left-radius: 0
+        border-top-right-radius: 0
+
+    .body
+        background: #090b14
+        color: rgb(18, 19, 27)
+        .bodyHeader
+            padding: 0 1rem
+        .endpointURL
+            font-size: .75rem
+            display: block
+            color: #627ef7
+            text-decoration: none
+            font-weight: 600
+            margin-bottom: .5rem
+            overflow-wrap: anywhere
