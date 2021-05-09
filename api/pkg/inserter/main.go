@@ -2,10 +2,12 @@ package inserter
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/antoniodipinto/ikisocket"
 	"github.com/google/martian/har"
+	"github.com/up9inc/mizu/resolver"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"mizuserver/pkg/database"
 	"mizuserver/pkg/models"
@@ -16,6 +18,28 @@ import (
 	"sort"
 	"time"
 )
+
+var k8sResolver *resolver.Resolver
+
+func init() {
+	errOut := make(chan error, 100)
+	res, err := resolver.NewFromOutOfCluster("", errOut)
+	if err != nil {
+		fmt.Printf("error creating k8s resolver %s", err)
+	}
+	ctx := context.Background()
+	res.Start(ctx)
+	go func() {
+		for {
+			select {
+			case err := <- errOut:
+				fmt.Printf("name resolving error %s", err)
+			}
+		}
+	}()
+
+	k8sResolver = res
+}
 
 func StartReadingFiles(harChannel chan *har.Entry, workingDir *string) {
 	if workingDir != nil && *workingDir != "" {
@@ -77,6 +101,8 @@ func saveHarToDb(entry har.Entry, source string) {
 		Status:    entry.Response.Status,
 		Source:    source,
 		Timestamp: entry.StartedDateTime.UnixNano() / int64(time.Millisecond),
+		ResolvedSource: k8sResolver.Resolve(source),
+		ResolvedDestination: k8sResolver.Resolve(serviceName),
 	}
 	database.GetEntriesTable().Create(&mizuEntry)
 
