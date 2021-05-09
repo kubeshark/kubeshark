@@ -25,11 +25,11 @@ func NewPortForward(kubernetesProvider *Provider, namespace string, podName stri
 	if err != nil {
 		return nil, err
 	}
-    go func () {
-    	err = forwarder.ForwardPorts() // this is blocking
-    	if err != nil {
-    		fmt.Printf("kubernetes port-forwarding error: %s", err)
-    		cancel()
+	go func() {
+		err = forwarder.ForwardPorts() // this is blocking
+		if err != nil {
+			fmt.Printf("kubernetes port-forwarding error: %s", err)
+			cancel()
 		}
 	}()
 	return &PortForward{stopChan: stopChan}, nil

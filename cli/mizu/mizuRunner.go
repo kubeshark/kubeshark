@@ -16,14 +16,14 @@ import (
 	"time"
 )
 
-func Run() {
+func Run(tappedPodName string) {
 	kubernetesProvider := kubernetes.NewProvider(config.Configuration.KubeConfigPath, config.Configuration.Namespace)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // cancel will be called when this function exits
 
 	podName := "mizu-collector"
 
-	go createPodAndPortForward(ctx, kubernetesProvider, cancel, podName) //TODO convert this to job for built in pod ttl or have the running app handle this
+	go createPodAndPortForward(ctx, kubernetesProvider, cancel, podName, tappedPodName) //TODO convert this to job for built in pod ttl or have the running app handle this
 	waitForFinish(ctx, cancel) //block until exit signal or error
 
 	// TODO handle incoming traffic from tapper using a channel
@@ -61,8 +61,8 @@ type ChangeAddressesBody struct {
 	Addresses []string `json:"addresses"`
 }
 
-func createPodAndPortForward(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc, podName string) {
-	pod, err := kubernetesProvider.CreateMizuPod(ctx, podName, config.Configuration.MizuImage, config.Configuration.TappedPodName)
+func createPodAndPortForward(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc, podName string, tappedPodName string) {
+	pod, err := kubernetesProvider.CreateMizuPod(ctx, podName, config.Configuration.MizuImage, tappedPodName)
 	if err != nil {
 		fmt.Printf("error creating pod %s", err)
 		cancel()
@@ -84,13 +84,12 @@ func createPodAndPortForward(ctx context.Context, kubernetesProvider *kubernetes
 			if modifiedPod.Status.Phase == "Running" && !isPodReady {
 				isPodReady = true
 				var err error
-				portForward, err = kubernetes.NewPortForward(kubernetesProvider, kubernetesProvider.Namespace, podName, config.Configuration.DashboardPort, config.Configuration.MizuPodPort, cancel)
 
-				sendAddressesToTapper(modifiedPod)
+        portForward, err = kubernetes.NewPortForward(kubernetesProvider, kubernetesProvider.Namespace, podName, config.Configuration.GuiPort, config.Configuration.MizuPodPort, cancel)
+				if !config.Configuration.NoGUI {
+					fmt.Printf("Web interface is now available at http://localhost:%d\n", config.Configuration.GuiPort)
 
-				if !config.Configuration.NoDashboard {
-					fmt.Printf("Dashboard is now available at http://localhost:%d\n", config.Configuration.DashboardPort)
-				}
+        sendAddressesToTapper(modifiedPod)
 				if err != nil {
 					fmt.Printf("error forwarding port to pod %s\n", err)
 					cancel()

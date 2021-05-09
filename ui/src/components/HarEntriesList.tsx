@@ -1,8 +1,9 @@
 import {HarEntry} from "./HarEntry";
-import React, {useEffect, useState} from "react";
+import React, {useCallback, useEffect, useMemo, useState} from "react";
 import styles from './style/HarEntriesList.module.sass';
 import spinner from './assets/spinner.svg';
 import ScrollableFeed from "react-scrollable-feed";
+import {StatusType} from "./HarFilters";
 
 interface HarEntriesListProps {
     entries: any[];
@@ -14,6 +15,9 @@ interface HarEntriesListProps {
     setNoMoreDataTop: (flag: boolean) => void;
     noMoreDataBottom: boolean;
     setNoMoreDataBottom: (flag: boolean) => void;
+    methodsFilter: Array<string>;
+    statusFilter: Array<string>;
+    pathFilter: string
 }
 
 enum FetchOperator {
@@ -21,15 +25,10 @@ enum FetchOperator {
     GT = "gt"
 }
 
-export const HarEntriesList: React.FC<HarEntriesListProps> = ({entries, setEntries, focusedEntryId, setFocusedEntryId, connectionOpen, noMoreDataTop, setNoMoreDataTop, noMoreDataBottom, setNoMoreDataBottom}) => {
+export const HarEntriesList: React.FC<HarEntriesListProps> = ({entries, setEntries, focusedEntryId, setFocusedEntryId, connectionOpen, noMoreDataTop, setNoMoreDataTop, noMoreDataBottom, setNoMoreDataBottom, methodsFilter, statusFilter, pathFilter}) => {
 
     const [loadMoreTop, setLoadMoreTop] = useState(false);
     const [isLoadingTop, setIsLoadingTop] = useState(false);
-
-    useEffect(() => {
-        if(loadMoreTop && !connectionOpen && !noMoreDataTop)
-            fetchData(FetchOperator.LT);
-    }, [loadMoreTop, connectionOpen, noMoreDataTop]);
 
     useEffect(() => {
         const list = document.getElementById('list').firstElementChild;
@@ -37,75 +36,96 @@ export const HarEntriesList: React.FC<HarEntriesListProps> = ({entries, setEntri
             const el: any = e.target;
             if(el.scrollTop === 0) {
                 setLoadMoreTop(true);
+            } else {
+                setLoadMoreTop(false);
             }
         });
     }, []);
 
-    const fetchData = async (operator) => {
+    const filterEntries = useCallback((entry) => {
+        if(methodsFilter.length > 0 && !methodsFilter.includes(entry.method.toLowerCase())) return;
+        if(pathFilter && entry.path?.toLowerCase()?.indexOf(pathFilter) === -1) return;
+        if(statusFilter.includes(StatusType.SUCCESS) && entry.statusCode >= 400) return;
+        if(statusFilter.includes(StatusType.ERROR) && entry.statusCode < 400) return;
+        return entry;
+    },[methodsFilter, pathFilter, statusFilter])
 
-        const timestamp = operator === FetchOperator.LT ? entries[0].timestamp : entries[entries.length - 1].timestamp;
-        if(operator === FetchOperator.LT)
-            setIsLoadingTop(true);
+    const filteredEntries = useMemo(() => {
+        return entries.filter(filterEntries);
+    },[entries, filterEntries])
 
-        fetch(`http://localhost:8899/api/entries?limit=50&operator=${operator}&timestamp=${timestamp}`)
-            .then(response => response.json())
-            .then((data: any[]) => {
-                let scrollTo;
-                if(operator === FetchOperator.LT) {
-                    if(data.length === 0) {
-                        setNoMoreDataTop(true);
-                        scrollTo = document.getElementById("noMoreDataTop");
-                    } else {
-                        scrollTo = document.getElementById(entries[0].id);
-                    }
-                    const newEntries = [...data, ...entries];
-                    if(newEntries.length >= 1000) {
-                        newEntries.splice(1000);
-                    }
-                    setEntries(newEntries);
-                    setLoadMoreTop(false);
-                    setIsLoadingTop(false)
-                    if(scrollTo) {
-                        scrollTo.scrollIntoView();
-                    }
-                }
+    const fetchData = async (operator, timestamp) => {
+        const response = await fetch(`http://localhost:8899/api/entries?limit=50&operator=${operator}&timestamp=${timestamp}`);
+        return await response.json();
+    }
 
-                if(operator === FetchOperator.GT) {
-                    if(data.length === 0) {
-                        setNoMoreDataBottom(true);
-                    }
-                    scrollTo = document.getElementById(entries[entries.length -1].id);
-                    let newEntries = [...entries, ...data];
-                    if(newEntries.length >= 1000) {
-                        setNoMoreDataTop(false);
-                        newEntries = newEntries.slice(-1000);
-                    }
-                    setEntries(newEntries);
-                    if(scrollTo) {
-                        scrollTo.scrollIntoView({behavior: "smooth"});
-                    }
-                }
-            });
-    };
+    const getOldEntries = useCallback(async () => {
+        setIsLoadingTop(true);
+        const data = await fetchData(FetchOperator.LT, entries[0].timestamp);
+        setLoadMoreTop(false);
+
+        let scrollTo;
+        if(data.length === 0) {
+            setNoMoreDataTop(true);
+            scrollTo = document.getElementById("noMoreDataTop");
+        } else {
+            scrollTo = document.getElementById(filteredEntries?.[0]?.id);
+        }
+        setIsLoadingTop(false);
+        const newEntries = [...data, ...entries];
+        if(newEntries.length >= 1000) {
+            newEntries.splice(1000);
+        }
+        setEntries(newEntries);
+
+        if(scrollTo) {
+            scrollTo.scrollIntoView();
+        }
+    },[setLoadMoreTop, setIsLoadingTop, entries, setEntries, filteredEntries, setNoMoreDataTop])
+
+    useEffect(() => {
+        if(!loadMoreTop || connectionOpen || noMoreDataTop) return;
+        getOldEntries();
+    }, [loadMoreTop, connectionOpen, noMoreDataTop, getOldEntries]);
+
+    const getNewEntries = async () => {
+        const data = await fetchData(FetchOperator.GT, entries[entries.length - 1].timestamp);
+        let scrollTo;
+        if(data.length === 0) {
+            setNoMoreDataBottom(true);
+        }
+        scrollTo = document.getElementById(filteredEntries?.[filteredEntries.length -1]?.id);
+        let newEntries = [...entries, ...data];
+        if(newEntries.length >= 1000) {
+            setNoMoreDataTop(false);
+            newEntries = newEntries.slice(-1000);
+        }
+        setEntries(newEntries);
+        if(scrollTo) {
+            scrollTo.scrollIntoView({behavior: "smooth"});
+        }
+    }
 
     return <>
             <div className={styles.list}>
                 <div id="list" className={styles.list}>
-                    {isLoadingTop && <div style={{display: "flex", justifyContent: "center", marginBottom: 10}}><img alt="spinner" src={spinner} style={{height: 25}}/></div>}
+                    {isLoadingTop && <div className={styles.spinnerContainer}>
+                        <img alt="spinner" src={spinner} style={{height: 25}}/>
+                    </div>}
                     <ScrollableFeed>
-                        {noMoreDataTop && !connectionOpen && <div id="noMoreDataTop" style={{textAlign: "center", fontWeight: 600, color: "rgba(255,255,255,0.75)"}}>No more data available</div>}
-                        {entries?.map(entry => <HarEntry key={entry.id}
+                        {noMoreDataTop && !connectionOpen && <div id="noMoreDataTop" className={styles.noMoreDataAvailable}>No more data available</div>}
+                        {filteredEntries.map(entry => <HarEntry key={entry.id}
                                                      entry={entry}
                                                      setFocusedEntryId={setFocusedEntryId}
                                                      isSelected={focusedEntryId === entry.id}/>)}
-                        {!connectionOpen && !noMoreDataBottom && <div style={{width: "100%", display: "flex", justifyContent: "center", marginTop: 12, fontWeight: 600, color: "rgba(255,255,255,0.75)"}}>
-                            <div className={styles.styledButton} onClick={() => fetchData(FetchOperator.GT)}>Fetch more entries</div>
+                        {!connectionOpen && !noMoreDataBottom && <div className={styles.fetchButtonContainer}>
+                            <div className={styles.styledButton} onClick={() => getNewEntries()}>Fetch more entries</div>
                         </div>}
                     </ScrollableFeed>
                 </div>
 
                 {entries?.length > 0 && <div className={styles.footer}>
-                    <div><b>{entries?.length}</b> requests</div>
+                    <div><b>{filteredEntries?.length !== entries.length && `${filteredEntries?.length} / `} {entries?.length}</b> requests</div>
                     <div>Started listening at <span style={{marginRight: 5, fontWeight: 600, fontSize: 13}}>{new Date(+entries[0].timestamp)?.toLocaleString()}</span></div>
                 </div>}
             </div>

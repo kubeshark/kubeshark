@@ -16,6 +16,124 @@ body
 code
   font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace
 
+.uppercase
+  text-transform: uppercase
+
+/****
+ * Button
+ ***/
+button
+  span
+    line-height: 1
+  &:not(.MuiFab-root)
+    &.MuiButtonBase-root
+      box-sizing: border-box
+      font-weight: 500
+      line-height: 1
+      border-radius: 20px
+      letter-spacing: 0.02857em
+      text-transform: uppercase
+      img:not(.custom)
+        max-width: 13px
+        max-height: 13px
+
+    &.tiny
+      min-width: 0
+
+/****
+ * Select
+ ***/
+.select
+  display: flex
+  align-items: center
+  justify-content: flex-start
+  color: white
+  .MuiInput-underline
+    &::before,
+    &::after
+      display: none
+      content: ''
+
+    .MuiSelect-root
+      &.MuiSelect-select
+        border-radius: 20px
+        cursor: pointer
+        min-width: 2rem
+        font-weight: normal
+        border: solid 0
+        padding: 3px 16px 4px 12px
+
+    .MuiInputBase-input
+      border-radius: 20px
+      background-color: rgba(255, 255, 255, 0.06)
+      cursor: pointer
+      padding-top: 0
+      padding-bottom: 0
+      font-size: 12px
+      font-weight: normal
+      font-stretch: normal
+      font-style: normal
+      letter-spacing: normal
+      text-align: left
+      line-height: 1.25
+      min-height: initial
+      &:focus
+        background-color: rgba(255, 255, 255, 0.06) !important
+    .MuiSelect-icon
+      top: 50%
+      transform: translateY(-50%)
+      right: 5px
+      position: absolute
+      pointer-events: none
+      &.MuiSelect-iconOpen
+        transform: translateY(-50%) rotate(180deg)
+
+  .ellipsis
+    display: block
+    overflow: hidden
+    white-space: nowrap
+    width: 100px
+    text-overflow: ellipsis
+    color: white
+
+  .selectLabel
+    margin-right: 8px
+
+  &.labelOnTop
+    flex-direction: column
+    align-items: flex-start
+    .selectLabel
+      margin-right: 0
+      margin-bottom: 4px
+
+/****
+ * Paper/List/Menu list
+ ***/
+.MuiPaper-root
+  background-color: #344073 !important
+  &.MuiPaper-rounded
+    border-radius: 4px
+
+  .MuiList-root
+    padding: 0
+    &.MuiMenu-list
+      border-radius: 4px
+      box-shadow: 0 10px 20px 0 rgba(0, 0, 0, 0.5)
+      color: #a0b2ff
+      .MuiListItem-root
+        &.MuiMenuItem-root
+          padding: 14px
+          font-size: 11px
+          font-weight: 600
+          font-stretch: normal
+          font-style: normal
+          line-height: 1.25
+          &:not(:last-child)
+            border-bottom: 1px solid rgb(53, 65, 114)
+          &.Mui-selected
+            background-color: #3f519a6e
+            color: white
+
 // scroll-bar css
 
 ::-webkit-scrollbar
