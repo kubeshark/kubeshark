@@ -17,7 +17,8 @@ help: ## This help.
 
 # Variables and lists
 TS_SUFFIX="$(shell date '+%s')"
-BUCKET_PATH=static.up9.io/mizu
+GIT_BRANCH="$(shell git branch | grep \* | cut -d ' ' -f2 | tr '[:upper:]' '[:lower:]' | tr '/' '_')"
+BUCKET_PATH=static.up9.io/mizu/$(GIT_BRANCH)
 
 ui: ## build UI
 	@(cd ui; npm i ; npm run build; )
