@@ -12,6 +12,8 @@ import (
 	"time"
 )
 
+const Version = "0.1.0"
+
 func Run(tappedPodName string) {
 	kubernetesProvider := kubernetes.NewProvider(config.Configuration.KubeConfigPath, config.Configuration.Namespace)
 	ctx, cancel := context.WithCancel(context.Background())
@@ -19,7 +21,8 @@ func Run(tappedPodName string) {
 
 	podName := "mizu-collector"
 
-	go createPodAndPortForward(ctx, kubernetesProvider, cancel, podName, tappedPodName) //TODO convert this to job for built in pod ttl or have the running app handle this
+	createRBACIfNecessary(ctx, kubernetesProvider, cancel)
+	go createPodAndPortForward(ctx, kubernetesProvider, cancel, podName, kubernetes.MizuResourcesNamespace, tappedPodName) //TODO convert this to job for built in pod ttl or have the running app handle this
 	waitForFinish(ctx, cancel) //block until exit signal or error
 
 	// TODO handle incoming traffic from tapper using a channel
@@ -31,7 +34,7 @@ func Run(tappedPodName string) {
 }
 
 func watchPodsForTapping(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc, podRegex *regexp.Regexp) {
-	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, kubernetesProvider.GetPodWatcher(ctx), podRegex)
+	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, kubernetesProvider.GetPodWatcher(ctx, kubernetesProvider.Namespace), podRegex)
 	for {
 		select {
 		case newTarget := <- added:
@@ -52,7 +55,7 @@ func watchPodsForTapping(ctx context.Context, kubernetesProvider *kubernetes.Pro
 	}
 }
 
-func createPodAndPortForward(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc, podName string, tappedPodName string) {
+func createPodAndPortForward(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc, podName string, namespace string, tappedPodName string) {
 	pod, err := kubernetesProvider.CreateMizuPod(ctx, podName, config.Configuration.MizuImage, tappedPodName)
 	if err != nil {
 		fmt.Printf("error creating pod %s", err)
@@ -60,7 +63,7 @@ func createPodAndPortForward(ctx context.Context, kubernetesProvider *kubernetes
 		return
 	}
 	podExactRegex := regexp.MustCompile(fmt.Sprintf("^%s$", pod.Name))
-	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, kubernetesProvider.GetPodWatcher(ctx), podExactRegex)
+	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, kubernetesProvider.GetPodWatcher(ctx, namespace), podExactRegex)
 	isPodReady := false
 	var portForward *kubernetes.PortForward
 	for {
@@ -75,7 +78,7 @@ func createPodAndPortForward(ctx context.Context, kubernetesProvider *kubernetes
 			if modifiedPod.Status.Phase == "Running" && !isPodReady {
 				isPodReady = true
 				var err error
-				portForward, err = kubernetes.NewPortForward(kubernetesProvider, kubernetesProvider.Namespace, podName, config.Configuration.GuiPort, config.Configuration.MizuPodPort, cancel)
+				portForward, err = kubernetes.NewPortForward(kubernetesProvider, namespace, podName, config.Configuration.GuiPort, config.Configuration.MizuPodPort, cancel)
 				fmt.Printf("Web interface is now available at http://localhost:%d\n", config.Configuration.GuiPort)
 				if err != nil {
 					fmt.Printf("error forwarding port to pod %s\n", err)
@@ -96,6 +99,23 @@ func createPodAndPortForward(ctx context.Context, kubernetesProvider *kubernetes
 			if portForward != nil {
 				portForward.Stop()
 			}
+			return
+		}
+	}
+}
+
+func createRBACIfNecessary(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
+	mizuRBACExists, err := kubernetesProvider.DoesMizuRBACExist(ctx)
+	if err != nil {
+		fmt.Printf("error checking rbac %v", err)
+		cancel()
+		return
+	}
+	if !mizuRBACExists {
+		err := kubernetesProvider.CreateMizuRBAC(ctx, Version)
+		if err != nil {
+			fmt.Printf("error creating rbac %v", err)
+			cancel()
 			return
 		}
 	}

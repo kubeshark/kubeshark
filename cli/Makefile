@@ -1,5 +1,5 @@
 install:
-	go build install mizu.go
+	go install mizu.go
 
 build:
 	go build -o bin/mizu mizu.go
@@ -16,6 +16,6 @@ build-cr:
 	@#GOOS=linux GOARCH=arm64 go build -o bin/mizu-linux-arm64 mizu.go
 	@#GOOS=windows GOARCH=arm64 go build -o bin/mizu-windows-arm64 mizu.go
 
-clean: 
+clean:
 	#go clean
 	rm -f ./bin/*

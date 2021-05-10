@@ -23,7 +23,7 @@ var k8sResolver *resolver.Resolver
 
 func init() {
 	errOut := make(chan error, 100)
-	res, err := resolver.NewFromOutOfCluster("/home/rami/.kube/config", errOut)
+	res, err := resolver.NewFromInCluster(errOut)
 	if err != nil {
 		fmt.Printf("error creating k8s resolver %s", err)
 		return
