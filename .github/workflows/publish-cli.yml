@@ -1,0 +1,19 @@
+name: ci
+on:
+  push:
+    branches:
+      - 'develop'
+      - 'main'
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@master
+        with:
+          service_account_key: ${{ secrets.GCR_JSON_KEY }}
+          export_default_credentials: true
+      - name: Build and Push CLI
+        run: make push-cli
