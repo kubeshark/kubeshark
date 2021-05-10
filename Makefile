@@ -17,33 +17,43 @@ help: ## This help.
 
 # Variables and lists
 TS_SUFFIX="$(shell date '+%s')"
-DOCKER_IMG="up9inc/mizu"
-DOCKER_TAG="latest"
+GIT_BRANCH="$(shell git branch | grep \* | cut -d ' ' -f2 | tr '[:upper:]' '[:lower:]' | tr '/' '_')"
+BUCKET_PATH=static.up9.io/mizu/$(GIT_BRANCH)
 
 ui: ## build UI
 	@(cd ui; npm i ; npm run build; )
 	@ls -l ui/build  
 
 cli: # build CLI
-	@(cd cli; echo "building cli" )
+	@echo "building cli"; cd cli && $(MAKE) build
 
 api: ## build API server
 	@(echo "building API server .." )
 	@(cd api; go build -o build/apiserver main.go)
 	@ls -l api/build
 
-tap: ## build tap binary
-	@(cd tap; go build -o build/tap ./src)
-	@ls -l tap/build
+#tap: ## build tap binary
+#	@(cd tap; go build -o build/tap ./src)
+#	@ls -l tap/build
 
 docker: ## build Docker image 
 	@(echo "building docker image" )
-	docker build -t ${DOCKER_IMG}:${DOCKER_TAG} .
-	docker images ${DOCKER_IMG}
+	docker build -t up9inc/mizu:latest .
+	#./build-push-featurebranch.sh
 
-publish: ## build and publish Mizu docker image & CLI
+push: push-docker push-cli ## build and publish Mizu docker image & CLI
+
+push-docker: 
 	@echo "publishing Docker image .. "
+	./build-push-featurebranch.sh
+
+push-cli:
 	@echo "publishing CLI .. "
+	@cd cli; $(MAKE) build-all
+	@echo "publishing file ${OUTPUT_FILE} .."
+	#gsutil mv gs://${BUCKET_PATH}/${OUTPUT_FILE} gs://${BUCKET_PATH}/${OUTPUT_FILE}.${SUFFIX}
+	gsutil cp -r ./cli/bin/* gs://${BUCKET_PATH}/
+	gsutil setmeta -r -h "Cache-Control:public, max-age=30" gs://${BUCKET_PATH}/\*
 
 
 clean: clean-ui clean-api clean-cli clean-docker ## Clean all build artifacts
@@ -55,10 +65,7 @@ clean-api:
 	@(rm -rf api/build ; echo "api cleanup done" )
 
 clean-cli: 
-	@(echo "CLI cleanup - NOT IMPLEMENTED YET " )
-
-clean-tap:
-	@(cd tap; rm -rf build ; echo "tap cleanup done")
+	@(cd cli; make clean ; echo "CLI cleanup done" )
 
 clean-docker: 
 	@(echo "DOCKER cleanup - NOT IMPLEMENTED YET " )

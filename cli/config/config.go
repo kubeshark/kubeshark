@@ -1,7 +1,6 @@
 package config
 
 type Options struct {
-	NoGUI          bool
 	GuiPort        uint16
 	Namespace      string
 	KubeConfigPath string

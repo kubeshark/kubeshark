@@ -2,6 +2,7 @@ package inserter
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/antoniodipinto/ikisocket"
@@ -9,6 +10,8 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"mizuserver/pkg/database"
 	"mizuserver/pkg/models"
+	"mizuserver/pkg/resolver"
+	"mizuserver/pkg/tap"
 	"mizuserver/pkg/utils"
 	"net/url"
 	"os"
@@ -17,7 +20,30 @@ import (
 	"time"
 )
 
-func StartReadingFiles(harChannel chan *har.Entry, workingDir *string) {
+var k8sResolver *resolver.Resolver
+
+func init() {
+	errOut := make(chan error, 100)
+	res, err := resolver.NewFromInCluster(errOut)
+	if err != nil {
+		fmt.Printf("error creating k8s resolver %s", err)
+		return
+	}
+	ctx := context.Background()
+	res.Start(ctx)
+	go func() {
+		for {
+			select {
+			case err := <- errOut:
+				fmt.Printf("name resolving error %s", err)
+			}
+		}
+	}()
+
+	k8sResolver = res
+}
+
+func StartReadingEntries(harChannel chan *tap.OutputChannelItem, workingDir *string) {
 	if workingDir != nil && *workingDir != "" {
 		startReadingFiles(*workingDir)
 	} else {
@@ -34,7 +60,7 @@ func startReadingFiles(workingDir string) {
 		dirFiles, _ := dir.Readdir(-1)
 		sort.Sort(utils.ByModTime(dirFiles))
 
-		if len(dirFiles) == 0{
+		if len(dirFiles) == 0 {
 			fmt.Printf("Waiting for new files\n")
 			time.Sleep(3 * time.Second)
 			continue
@@ -50,52 +76,54 @@ func startReadingFiles(workingDir string) {
 
 		for _, entry := range inputHar.Log.Entries {
 			time.Sleep(time.Millisecond * 250)
-			saveHarToDb(*entry, "")
+			saveHarToDb(entry, fileInfo.Name())
 		}
 		rmErr := os.Remove(inputFilePath)
 		utils.CheckErr(rmErr)
 	}
 }
 
-func startReadingChannel(harChannel chan *har.Entry) {
-	for entry := range harChannel {
-		saveHarToDb(*entry, "")
+func startReadingChannel(outputItems chan *tap.OutputChannelItem) {
+	for item := range outputItems {
+		saveHarToDb(item.HarEntry, item.RequestSenderIp)
 	}
 }
 
-func saveHarToDb(entry har.Entry, source string) {
+func saveHarToDb(entry *har.Entry, sender string) {
 	entryBytes, _ := json.Marshal(entry)
-	serviceName, urlPath := getServiceNameFromUrl(entry.Request.URL)
+	serviceName, urlPath, serviceHostName := getServiceNameFromUrl(entry.Request.URL)
 	entryId := primitive.NewObjectID().Hex()
+	var (
+		resolvedSource *string
+		resolvedDestination *string
+	)
+	if k8sResolver != nil {
+		resolvedSource = k8sResolver.Resolve(sender)
+		resolvedDestination = k8sResolver.Resolve(serviceHostName)
+	}
 	mizuEntry := models.MizuEntry{
-		EntryId:   entryId,
-		Entry:     string(entryBytes), // simple way to store it and not convert to bytes
-		Service:   serviceName,
-		Url:       entry.Request.URL,
-		Path:      urlPath,
-		Method:    entry.Request.Method,
-		Status:    entry.Response.Status,
-		Source:    source,
-		Timestamp: entry.StartedDateTime.UnixNano() / int64(time.Millisecond),
+		EntryId:         entryId,
+		Entry:           string(entryBytes), // simple way to store it and not convert to bytes
+		Service:         serviceName,
+		Url:             entry.Request.URL,
+		Path:            urlPath,
+		Method:          entry.Request.Method,
+		Status:          entry.Response.Status,
+		RequestSenderIp: sender,
+		Timestamp:       entry.StartedDateTime.UnixNano() / int64(time.Millisecond),
+		ResolvedSource: resolvedSource,
+		ResolvedDestination: resolvedDestination,
 	}
 	database.GetEntriesTable().Create(&mizuEntry)
 
-	baseEntry := &models.BaseEntryDetails{
-		Id:         entryId,
-		Url:        entry.Request.URL,
-		Service:    serviceName,
-		Path:       urlPath,
-		StatusCode: entry.Response.Status,
-		Method:     entry.Request.Method,
-		Timestamp:  entry.StartedDateTime.UnixNano() / int64(time.Millisecond),
-	}
+	baseEntry := utils.GetResolvedBaseEntry(mizuEntry)
 	baseEntryBytes, _ := json.Marshal(&baseEntry)
 	ikisocket.Broadcast(baseEntryBytes)
-
 }
 
-func getServiceNameFromUrl(inputUrl string) (string, string) {
+func getServiceNameFromUrl(inputUrl string) (string, string, string) {
 	parsed, err := url.Parse(inputUrl)
 	utils.CheckErr(err)
-	return fmt.Sprintf("%s://%s", parsed.Scheme, parsed.Host), parsed.Path
+	return fmt.Sprintf("%s://%s", parsed.Scheme, parsed.Host), parsed.Path, parsed.Host
 }
+

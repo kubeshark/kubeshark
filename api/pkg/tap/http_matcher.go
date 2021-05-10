@@ -30,13 +30,15 @@ type messageBody struct {
 }
 
 type httpMessage struct {
-	IsRequest   bool
-	Headers     []headerKeyVal `json:"headers"`
-	HTTPVersion string         `json:"httpVersion"`
-	Body        messageBody    `json:"body"`
-	captureTime time.Time
-	orig        interface {}
+	IsRequest       bool
+	Headers         []headerKeyVal `json:"headers"`
+	HTTPVersion     string         `json:"httpVersion"`
+	Body            messageBody    `json:"body"`
+	captureTime     time.Time
+	orig            interface {}
+	requestSenderIp string
 }
+
 
 // Key is {client_addr}:{client_port}->{dest_addr}:{dest_port}
 type requestResponseMatcher struct {
@@ -58,7 +60,7 @@ func (matcher *requestResponseMatcher) registerRequest(ident string, request *ht
 		{Key: "x-up9-destination", Value: split[1] + ":" + split[3]},
 	}
 
-	requestHTTPMessage := requestToMessage(request, captureTime, body, &messageExtraHeaders, isHTTP2)
+	requestHTTPMessage := requestToMessage(request, captureTime, body, &messageExtraHeaders, isHTTP2, split[0])
 
 	if response, found := matcher.openMessagesMap.Pop(key); found {
 		// Type assertion always succeeds because all of the map's values are of httpMessage type
@@ -109,7 +111,7 @@ func (matcher *requestResponseMatcher) preparePair(requestHTTPMessage *httpMessa
 	}
 }
 
-func requestToMessage(request *http.Request, captureTime time.Time, body string, messageExtraHeaders *[]headerKeyVal, isHTTP2 bool) httpMessage {
+func requestToMessage(request *http.Request, captureTime time.Time, body string, messageExtraHeaders *[]headerKeyVal, isHTTP2 bool, requestSenderIp string) httpMessage {
 	messageHeaders := make([]headerKeyVal, 0)
 
 	for key, value := range request.Header {
@@ -132,12 +134,13 @@ func requestToMessage(request *http.Request, captureTime time.Time, body string,
 	requestBody := messageBody{Truncated: false, AsBytes: body}
 
 	return httpMessage{
-		IsRequest:   true,
-		Headers:     messageHeaders,
-		HTTPVersion: httpVersion,
-		Body:        requestBody,
-		captureTime: captureTime,
-		orig:        request,
+		IsRequest:       true,
+		Headers:         messageHeaders,
+		HTTPVersion:     httpVersion,
+		Body:            requestBody,
+		captureTime:     captureTime,
+		orig:            request,
+		requestSenderIp: requestSenderIp,
 	}
 }
 
