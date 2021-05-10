@@ -11,7 +11,6 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
-	"strings"
 	"sync"
 	"time"
 )
@@ -50,15 +49,6 @@ type httpReader struct {
 	grpcAssembler GrpcAssembler
 	messageCount  uint
 	harWriter     *HarWriter
-}
-
-func extractSenderFromRequestHeaders(headers []headerKeyVal) string{
-	for _, header := range headers {
-		if strings.ToLower(header.Key) == "x-up9-source"{
-			return header.Value
-		}
-	}
-	return ""
 }
 
 func (h *httpReader) Read(p []byte) (int, error) {
@@ -151,7 +141,7 @@ func (h *httpReader) handleHTTP2Stream() error {
 				reqResPair.HttpBufferedTrace.Request.captureTime,
 				reqResPair.HttpBufferedTrace.Response.orig.(*http.Response),
 				reqResPair.HttpBufferedTrace.Response.captureTime,
-				extractSenderFromRequestHeaders(reqResPair.HttpBufferedTrace.Request.Headers),
+				reqResPair.HttpBufferedTrace.Request.requestSenderIp,
 			)
 		} else {
 			jsonStr, err := json.Marshal(reqResPair)
@@ -198,7 +188,7 @@ func (h *httpReader) handleHTTP1ClientStream(b *bufio.Reader) error {
 				reqResPair.HttpBufferedTrace.Request.captureTime,
 				reqResPair.HttpBufferedTrace.Response.orig.(*http.Response),
 				reqResPair.HttpBufferedTrace.Response.captureTime,
-				extractSenderFromRequestHeaders(reqResPair.HttpBufferedTrace.Request.Headers),
+				reqResPair.HttpBufferedTrace.Request.requestSenderIp,
 			)
 		} else {
 			jsonStr, err := json.Marshal(reqResPair)
@@ -266,7 +256,7 @@ func (h *httpReader) handleHTTP1ServerStream(b *bufio.Reader) error {
 				reqResPair.HttpBufferedTrace.Request.captureTime,
 				reqResPair.HttpBufferedTrace.Response.orig.(*http.Response),
 				reqResPair.HttpBufferedTrace.Response.captureTime,
-				extractSenderFromRequestHeaders(reqResPair.HttpBufferedTrace.Request.Headers),
+				reqResPair.HttpBufferedTrace.Request.requestSenderIp,
 			)
 		} else {
 			jsonStr, err := json.Marshal(reqResPair)

@@ -60,7 +60,7 @@ func startReadingFiles(workingDir string) {
 
 func startReadingChannel(outputItems chan *tap.OutputChannelItem) {
 	for item := range outputItems {
-		saveHarToDb(item.HarEntry, item.Sender)
+		saveHarToDb(item.HarEntry, item.RequestSenderIp)
 	}
 }
 
@@ -69,27 +69,27 @@ func saveHarToDb(entry *har.Entry, sender string) {
 	serviceName, urlPath := getServiceNameFromUrl(entry.Request.URL)
 	entryId := primitive.NewObjectID().Hex()
 	mizuEntry := models.MizuEntry{
-		EntryId:   entryId,
-		Entry:     string(entryBytes), // simple way to store it and not convert to bytes
-		Service:   serviceName,
-		Url:       entry.Request.URL,
-		Path:      urlPath,
-		Method:    entry.Request.Method,
-		Status:    entry.Response.Status,
-		Sender:    sender,
-		Timestamp: entry.StartedDateTime.UnixNano() / int64(time.Millisecond),
+		EntryId:         entryId,
+		Entry:           string(entryBytes), // simple way to store it and not convert to bytes
+		Service:         serviceName,
+		Url:             entry.Request.URL,
+		Path:            urlPath,
+		Method:          entry.Request.Method,
+		Status:          entry.Response.Status,
+		RequestSenderIp: sender,
+		Timestamp:       entry.StartedDateTime.UnixNano() / int64(time.Millisecond),
 	}
 	database.GetEntriesTable().Create(&mizuEntry)
 
 	baseEntry := &models.BaseEntryDetails{
-		Id:         entryId,
-		Url:        entry.Request.URL,
-		Service:    serviceName,
-		Path:       urlPath,
-		StatusCode: entry.Response.Status,
-		Method:     entry.Request.Method,
-		Sender:     sender,
-		Timestamp:  entry.StartedDateTime.UnixNano() / int64(time.Millisecond),
+		Id:              entryId,
+		Url:             entry.Request.URL,
+		Service:         serviceName,
+		Path:            urlPath,
+		StatusCode:      entry.Response.Status,
+		Method:          entry.Request.Method,
+		RequestSenderIp: sender,
+		Timestamp:       entry.StartedDateTime.UnixNano() / int64(time.Millisecond),
 	}
 	baseEntryBytes, _ := json.Marshal(&baseEntry)
 	ikisocket.Broadcast(baseEntryBytes)

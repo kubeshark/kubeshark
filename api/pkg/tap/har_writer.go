@@ -18,11 +18,11 @@ const readPermission = 0644
 const tempFilenamePrefix = "har_writer"
 
 type PairChanItem struct {
-	Request      *http.Request
-	RequestTime  time.Time
-	Response     *http.Response
-	ResponseTime time.Time
-	Sender string
+	Request         *http.Request
+	RequestTime     time.Time
+	Response        *http.Response
+	ResponseTime    time.Time
+	RequestSenderIp string
 }
 
 func openNewHarFile(filename string) *HarFile {
@@ -161,8 +161,8 @@ func NewHarWriter(outputDir string, maxEntries int) *HarWriter {
 }
 
 type OutputChannelItem struct {
-	HarEntry *har.Entry
-	Sender string
+	HarEntry        *har.Entry
+	RequestSenderIp string
 }
 
 type HarWriter struct {
@@ -174,13 +174,13 @@ type HarWriter struct {
 	done chan bool
 }
 
-func (hw *HarWriter) WritePair(request *http.Request, requestTime time.Time, response *http.Response, responseTime time.Time, sender string) {
+func (hw *HarWriter) WritePair(request *http.Request, requestTime time.Time, response *http.Response, responseTime time.Time, requestSenderIp string) {
 	hw.PairChan <- &PairChanItem{
-		Request: request,
-		RequestTime: requestTime,
-		Response: response,
-		ResponseTime: responseTime,
-		Sender: sender,
+		Request:         request,
+		RequestTime:     requestTime,
+		Response:        response,
+		ResponseTime:    responseTime,
+		RequestSenderIp: requestSenderIp,
 	}
 }
 
@@ -210,8 +210,8 @@ func (hw *HarWriter) Start() {
 				}
 			} else {
 				hw.OutChan <- &OutputChannelItem{
-					HarEntry: harEntry,
-					Sender: pair.Sender,
+					HarEntry:        harEntry,
+					RequestSenderIp: pair.RequestSenderIp,
 				}
 			}
 		}
