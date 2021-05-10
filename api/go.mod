@@ -3,7 +3,6 @@ module mizuserver
 go 1.16
 
 require (
-	github.com/up9inc/mizu/resolver v0.0.0
 	github.com/antoniodipinto/ikisocket v0.0.0-20210417133349-f1502512d69a
 	github.com/djherbis/atime v1.0.0
 	github.com/fasthttp/websocket v1.4.3-beta.1 // indirect
@@ -22,6 +21,7 @@ require (
 	golang.org/x/net v0.0.0-20210421230115-4e50805a0758
 	gorm.io/driver/sqlite v1.1.4
 	gorm.io/gorm v1.21.8
+	k8s.io/api v0.21.0 // indirect
+	k8s.io/apimachinery v0.21.0
+	k8s.io/client-go v0.21.0
 )
-
-replace github.com/up9inc/mizu/resolver => ../resolver

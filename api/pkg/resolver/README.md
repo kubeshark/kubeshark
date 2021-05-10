@@ -1,3 +1,5 @@
+<!--
+(NOT RELEVANT CURRENTLY)
 ## Installation
 To be able to import this package, you must add `replace github.com/up9inc/mizu/resolver => ../resolver` to the end of your `go.mod` file 
 
@@ -22,7 +24,7 @@ replace github.com/up9inc/mizu/resolver => ../resolver
 ```
 
 Now you will be able to import `github.com/up9inc/mizu/resolver` in any `.go` file
-
+-->
 ## Usage
 
 ### Full example
