@@ -1,4 +1,4 @@
-name: ci
+name: publish-docker
 on:
   push:
     branches:
