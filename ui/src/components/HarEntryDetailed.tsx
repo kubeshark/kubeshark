@@ -42,7 +42,7 @@ const HarEntryTitle: React.FC<any> = ({har}) => {
             <EndpointPath method={method} path={url}/>
         </div>
         <div style={{margin: "0 24px", opacity: 0.5}}>{formatSize(bodySize)}</div>
-        <div style={{marginRight: 24}}>{status} {statusText}</div>
+        <div style={{marginRight: 24, opacity: 0.5}}>{status} {statusText}</div>
         <div style={{opacity: 0.5}}>{Math.round(receive)}ms</div>
     </div>;
 };

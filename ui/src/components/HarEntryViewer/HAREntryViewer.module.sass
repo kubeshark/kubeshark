@@ -1,3 +1,5 @@
+@import "../style/variables.module"
+
 .harEntry
     font-family: "Source Sans Pro", Lucida Grande, Tahoma, sans-serif
     height: 100%
@@ -33,7 +35,7 @@
             border-left: 1px solid #627ef7
             margin-left: .3rem
             padding-left: .3rem
-            color: #627ef7
+            //color: #627ef7
 
     .headerClickable
         cursor: pointer
@@ -43,15 +45,17 @@
         border-top-right-radius: 0
 
     .body
-        background: #090b14
-        color: rgb(18, 19, 27)
+        background: $main-background-color
+        color: $blue-gray
+        border-radius: 4px
+        padding: 10px
         .bodyHeader
             padding: 0 1rem
         .endpointURL
             font-size: .75rem
             display: block
-            color: #627ef7
+            color: $blue-color
             text-decoration: none
-            font-weight: 600
             margin-bottom: .5rem
             overflow-wrap: anywhere
+            padding: 5px 0

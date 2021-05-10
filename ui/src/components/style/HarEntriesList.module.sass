@@ -1,3 +1,5 @@
+@import "variables.module"
+
 .list
   overflow: scroll
   display: flex
@@ -12,12 +14,11 @@
   overflow: hidden
   flex-grow: 1
   padding-top: 20px
-  background-color: #090b14
 
 .footer
   display: flex
   justify-content: space-between
-  border-top: 1px solid rgba(255,255,255,0.5)
+  border-top: 2px solid rgba(255,255,255,0.5)
   align-items: center
   padding-top: 10px
   margin-right: 15px
@@ -45,8 +46,7 @@
 .noMoreDataAvailable
   text-align: center
   font-weight: 600
-  color: rgba(255,255,255,0.75)
-
+  color: $secondary-font-color
 .fetchButtonContainer
   width: 100%
   display: flex

@@ -1,3 +1,5 @@
+@import 'src/components/style/variables.module'
+
 html,
 body
   height: 100%
@@ -65,7 +67,7 @@ button
 
     .MuiInputBase-input
       border-radius: 20px
-      background-color: rgba(255, 255, 255, 0.06)
+      background-color: $main-background-color
       cursor: pointer
       padding-top: 0
       padding-bottom: 0
@@ -78,7 +80,7 @@ button
       line-height: 1.25
       min-height: initial
       &:focus
-        background-color: rgba(255, 255, 255, 0.06) !important
+        //background-color: rgba(255, 255, 255, 0.06) !important
     .MuiSelect-icon
       top: 50%
       transform: translateY(-50%)
@@ -94,7 +96,6 @@ button
     white-space: nowrap
     width: 100px
     text-overflow: ellipsis
-    color: white
 
   .selectLabel
     margin-right: 8px
@@ -137,14 +138,15 @@ button
 // scroll-bar css
 
 ::-webkit-scrollbar
-  width: 8px
+  width: 6px
 
 ::-webkit-scrollbar-thumb
-  background-color: #272d44
-  border-radius: 16px
+  background-color: $light-blue-color
+  border-radius: 10px
 
 ::-webkit-scrollbar-button
   display: none
 
 ::-webkit-scrollbar-corner
   display: none
+

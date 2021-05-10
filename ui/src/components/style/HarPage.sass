@@ -1,11 +1,18 @@
+@import 'variables.module.scss'
+
 .HarPage
     width: 100%
     display: flex
     flex-direction: column
-    border-radius: 8px
     overflow: hidden
     flex-grow: 1
     height: calc(100vh - 100px)
+
+    .harPageHeader
+        padding: 24px
+        display: flex
+        align-items: center
+        background-color: $header-background-color
 
 .HarPage-Header
     display: flex
@@ -55,13 +62,13 @@
     display: flex
     flex-grow: 1
     overflow: hidden
-    background-color: #090b14
+    background-color: $data-background-color
 
 .HarPage-ListContainer
     display: flex
     flex-grow: 1
     overflow: hidden
-    padding: 0 24px
+    padding-left: 24px
     flex-direction: column
 
 .HarPage-DetailContainer
@@ -71,34 +78,36 @@
     flex: 0 0 50%
     padding: 12px 24px
 
-.greenIndicator
-    height: 10px
-    width: 10px
-    background-color: #1acd37
+.indicatorContainer
     border-radius: 50%
-    box-shadow: 0 0 3px 3px #1acd3787
+    padding: 2px
     margin-left: 10px
 
-.redIndicator
-    height: 10px
-    width: 10px
-    background-color: #ff3a30
+.indicator
+    height: 8px
+    width: 8px
     border-radius: 50%
-    box-shadow: 0 0 3px 3px #ff3a3073
-    margin-left: 10px
+
+.greenIndicatorContainer
+    border: 2px #6fcf9770 solid
+
+.greenIndicator
+    background-color: #27AE60
+
+.orangeIndicatorContainer
+    border: 2px #fabd5970 solid
 
 .orangeIndicator
     background-color: #ffb530
-    height: 10px
-    width: 10px
-    border-radius: 50%
-    box-shadow: 0 0 3px 3px #ffb33073
-    margin-left: 10px
 
+.redIndicatorContainer
+    border: 2px #ff3a3045 solid
+
+.redIndicator
+    background-color: #ff3a30
 
 .connectionText
     display: flex
     align-items: center
     height: 17px
     font-size: 16px
-    color: rgba(255,255,255,0.75)
