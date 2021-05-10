@@ -12,8 +12,6 @@ import (
 	"time"
 )
 
-const Version = "0.1.0"
-
 func Run(tappedPodName string) {
 	kubernetesProvider := kubernetes.NewProvider(config.Configuration.KubeConfigPath, config.Configuration.Namespace)
 	ctx, cancel := context.WithCancel(context.Background())
