@@ -5,6 +5,9 @@ FOLDER=$(GOOS).$(GOARCH)
 
 help: ## This help.
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	
+install:
+	go install mizu.go
 
 build:	## build mizu CLI binary (select platform via GOOS / GOARCH env variables)
 	go build -o bin/$(FOLDER)/mizu mizu.go

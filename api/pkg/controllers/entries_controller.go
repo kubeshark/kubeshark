@@ -58,16 +58,7 @@ func GetEntries(c *fiber.Ctx) error {
 	// Convert to base entries
 	baseEntries := make([]models.BaseEntryDetails, 0, entriesFilter.Limit)
 	for _, entry := range entries {
-		baseEntries = append(baseEntries, models.BaseEntryDetails{
-			Id:              entry.EntryId,
-			Url:             entry.Url,
-			Service:         entry.Service,
-			Path:            entry.Path,
-			StatusCode:      entry.Status,
-			Method:          entry.Method,
-			Timestamp:       entry.Timestamp,
-			RequestSenderIp: entry.RequestSenderIp,
-		})
+		baseEntries = append(baseEntries, utils.GetResolvedBaseEntry(entry))
 	}
 
 	return c.Status(fiber.StatusOK).JSON(baseEntries)
@@ -76,13 +67,17 @@ func GetEntries(c *fiber.Ctx) error {
 func GetEntry(c *fiber.Ctx) error {
 	var entryData models.EntryData
 	database.GetEntriesTable().
-		Select("entry").
+		Select("entry", "resolvedDestination").
 		Where(map[string]string{"entryId": c.Params("entryId")}).
 		First(&entryData)
 
 	var fullEntry har.Entry
 	unmarshallErr := json.Unmarshal([]byte(entryData.Entry), &fullEntry)
 	utils.CheckErr(unmarshallErr)
+
+	if entryData.ResolvedDestination != nil {
+		fullEntry.Request.URL = utils.SetHostname(fullEntry.Request.URL, *entryData.ResolvedDestination)
+	}
 
 	return c.Status(fiber.StatusOK).JSON(fullEntry)
 }

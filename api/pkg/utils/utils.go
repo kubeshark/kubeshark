@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"log"
+	"mizuserver/pkg/models"
+	"net/url"
 	"os"
 	"os/signal"
 	"reflect"
@@ -46,5 +48,36 @@ func CheckErr(e error) {
 	if e != nil {
 		log.Printf("%v", e)
 		//panic(e)
+	}
+}
+
+
+func SetHostname(address, newHostname string) string {
+	replacedUrl, err := url.Parse(address)
+	if err != nil{
+		log.Printf("error replacing hostname to %s in address %s, returning original %v",newHostname, address, err)
+		return address
+	}
+	replacedUrl.Host = newHostname
+	return replacedUrl.String()
+
+}
+
+func GetResolvedBaseEntry(entry models.MizuEntry) models.BaseEntryDetails {
+	entryUrl := entry.Url
+	service := entry.Service
+	if entry.ResolvedDestination != nil {
+		entryUrl = SetHostname(entryUrl, *entry.ResolvedDestination)
+		service = SetHostname(service, *entry.ResolvedDestination)
+	}
+	return models.BaseEntryDetails{
+		Id:         entry.EntryId,
+		Url:        entryUrl,
+		Service:    service,
+		Path:       entry.Path,
+		StatusCode: entry.Status,
+		Method:     entry.Method,
+		Timestamp:  entry.Timestamp,
+		RequestSenderIp: entry.RequestSenderIp,
 	}
 }

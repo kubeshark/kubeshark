@@ -15,6 +15,8 @@ type MizuEntry struct {
 	Service         string `json:"service" gorm:"column:service"`
 	Timestamp       int64  `json:"timestamp" gorm:"column:timestamp"`
 	Path            string `json:"path" gorm:"column:path"`
+	ResolvedSource *string `json:"resolvedSource,omitempty" gorm:"column:resolvedSource"`
+	ResolvedDestination *string `json:"resolvedDestination,omitempty" gorm:"column:resolvedDestination"`
 }
 
 type BaseEntryDetails struct {
@@ -30,6 +32,7 @@ type BaseEntryDetails struct {
 
 type EntryData struct {
 	Entry string `json:"entry,omitempty"`
+	ResolvedDestination *string `json:"resolvedDestination,omitempty" gorm:"column:resolvedDestination"`
 }
 
 type EntriesFilter struct {
