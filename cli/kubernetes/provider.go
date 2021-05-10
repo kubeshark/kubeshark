@@ -32,7 +32,6 @@ type Provider struct {
 
 const (
 	serviceAccountName     = "mizu-service-account"
-	MizuResourcesNamespace = "default"
 )
 
 func NewProvider(kubeConfigPath string, overrideNamespace string) *Provider {
@@ -70,16 +69,16 @@ func (provider *Provider) GetPodWatcher(ctx context.Context, namespace string) w
 	return watcher
 }
 
-func (provider *Provider) GetPods(ctx context.Context) {
-	pods, err := provider.clientSet.CoreV1().Pods(provider.Namespace).List(ctx, metav1.ListOptions{})
+func (provider *Provider) GetPods(ctx context.Context, namespace string) {
+	pods, err := provider.clientSet.CoreV1().Pods(namespace).List(ctx, metav1.ListOptions{})
 	if err != nil {
 		panic(err.Error())
 	}
-	fmt.Printf("There are %d pods in Namespace %s\n", len(pods.Items), provider.Namespace)
+	fmt.Printf("There are %d pods in Namespace %s\n", len(pods.Items), namespace)
 }
 
-func (provider *Provider) CreateMizuPod(ctx context.Context, podName string, podImage string, tappedPodName string) (*core.Pod, error) {
-	tappedPod, err := provider.clientSet.CoreV1().Pods(provider.Namespace).Get(ctx, tappedPodName, metav1.GetOptions{})
+func (provider *Provider) CreateMizuPod(ctx context.Context, namespace string, podName string, podImage string, tappedPodNamespace string, tappedPodName string) (*core.Pod, error) {
+	tappedPod, err := provider.clientSet.CoreV1().Pods(tappedPodNamespace).Get(ctx, tappedPodName, metav1.GetOptions{})
 	if err != nil {
 		panic(err.Error())
 	}
@@ -94,7 +93,7 @@ func (provider *Provider) CreateMizuPod(ctx context.Context, podName string, pod
 	pod := &core.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      podName,
-			Namespace: MizuResourcesNamespace,
+			Namespace: namespace,
 		},
 		Spec: core.PodSpec{
 			HostNetwork: true,  // very important to make passive tapper see traffic
@@ -123,11 +122,11 @@ func (provider *Provider) CreateMizuPod(ctx context.Context, podName string, pod
 			NodeSelector: map[string]string{"kubernetes.io/hostname": tappedPod.Spec.NodeName},
 		},
 	}
-	return provider.clientSet.CoreV1().Pods(MizuResourcesNamespace).Create(ctx, pod, metav1.CreateOptions{})
+	return provider.clientSet.CoreV1().Pods(namespace).Create(ctx, pod, metav1.CreateOptions{})
 }
 
-func (provider *Provider) DoesMizuRBACExist(ctx context.Context) (bool, error){
-	serviceAccount, err := provider.clientSet.CoreV1().ServiceAccounts(MizuResourcesNamespace).Get(ctx, serviceAccountName, metav1.GetOptions{})
+func (provider *Provider) DoesMizuRBACExist(ctx context.Context, namespace string) (bool, error){
+	serviceAccount, err := provider.clientSet.CoreV1().ServiceAccounts(namespace).Get(ctx, serviceAccountName, metav1.GetOptions{})
 
 	var statusError *k8serrors.StatusError
 	if errors.As(err, &statusError) {
@@ -142,13 +141,13 @@ func (provider *Provider) DoesMizuRBACExist(ctx context.Context) (bool, error){
 	return serviceAccount != nil, nil
 }
 
-func (provider *Provider) CreateMizuRBAC(ctx context.Context, version string) error {
+func (provider *Provider) CreateMizuRBAC(ctx context.Context, namespace string ,version string) error {
 	clusterRoleName := "mizu-cluster-role"
 
 	serviceAccount := &core.ServiceAccount{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      serviceAccountName,
-			Namespace: MizuResourcesNamespace,
+			Namespace: namespace,
 			Labels:    map[string]string{"mizu-cli-version": version},
 		},
 	}
@@ -179,11 +178,11 @@ func (provider *Provider) CreateMizuRBAC(ctx context.Context, version string) er
 			{
 				Kind:      "ServiceAccount",
 				Name:      serviceAccountName,
-				Namespace: MizuResourcesNamespace,
+				Namespace: namespace,
 			},
 		},
 	}
-	_, err := provider.clientSet.CoreV1().ServiceAccounts(MizuResourcesNamespace).Create(ctx, serviceAccount, metav1.CreateOptions{})
+	_, err := provider.clientSet.CoreV1().ServiceAccounts(namespace).Create(ctx, serviceAccount, metav1.CreateOptions{})
 	if err != nil {
 		return err
 	}
@@ -198,8 +197,8 @@ func (provider *Provider) CreateMizuRBAC(ctx context.Context, version string) er
 	return nil
 }
 
-func (provider *Provider) RemovePod(ctx context.Context, podName string) {
-	provider.clientSet.CoreV1().Pods(MizuResourcesNamespace).Delete(ctx, podName, metav1.DeleteOptions{})
+func (provider *Provider) RemovePod(ctx context.Context, namespace string, podName string) {
+	provider.clientSet.CoreV1().Pods(namespace).Delete(ctx, podName, metav1.DeleteOptions{})
 }
 
 func getClientSet(config *restclient.Config) *kubernetes.Clientset {

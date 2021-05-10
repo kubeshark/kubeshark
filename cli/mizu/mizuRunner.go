@@ -20,7 +20,7 @@ func Run(tappedPodName string) {
 	podName := "mizu-collector"
 
 	createRBACIfNecessary(ctx, kubernetesProvider, cancel)
-	go createPodAndPortForward(ctx, kubernetesProvider, cancel, podName, kubernetes.MizuResourcesNamespace, tappedPodName) //TODO convert this to job for built in pod ttl or have the running app handle this
+	go createPodAndPortForward(ctx, kubernetesProvider, cancel, podName, MizuResourcesNamespace, tappedPodName) //TODO convert this to job for built in pod ttl or have the running app handle this
 	waitForFinish(ctx, cancel) //block until exit signal or error
 
 	// TODO handle incoming traffic from tapper using a channel
@@ -28,7 +28,7 @@ func Run(tappedPodName string) {
 	//cleanup
 	fmt.Printf("\nremoving pod %s\n", podName)
 	removalCtx, _ := context.WithTimeout(context.Background(), 2 * time.Second)
-	kubernetesProvider.RemovePod(removalCtx, podName)
+	kubernetesProvider.RemovePod(removalCtx, MizuResourcesNamespace, podName)
 }
 
 func watchPodsForTapping(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc, podRegex *regexp.Regexp) {
@@ -54,7 +54,7 @@ func watchPodsForTapping(ctx context.Context, kubernetesProvider *kubernetes.Pro
 }
 
 func createPodAndPortForward(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc, podName string, namespace string, tappedPodName string) {
-	pod, err := kubernetesProvider.CreateMizuPod(ctx, podName, config.Configuration.MizuImage, tappedPodName)
+	pod, err := kubernetesProvider.CreateMizuPod(ctx, MizuResourcesNamespace, podName, config.Configuration.MizuImage, kubernetesProvider.Namespace, tappedPodName)
 	if err != nil {
 		fmt.Printf("error creating pod %s", err)
 		cancel()
@@ -103,14 +103,14 @@ func createPodAndPortForward(ctx context.Context, kubernetesProvider *kubernetes
 }
 
 func createRBACIfNecessary(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
-	mizuRBACExists, err := kubernetesProvider.DoesMizuRBACExist(ctx)
+	mizuRBACExists, err := kubernetesProvider.DoesMizuRBACExist(ctx, MizuResourcesNamespace)
 	if err != nil {
 		fmt.Printf("error checking rbac %v", err)
 		cancel()
 		return
 	}
 	if !mizuRBACExists {
-		err := kubernetesProvider.CreateMizuRBAC(ctx, Version)
+		err := kubernetesProvider.CreateMizuRBAC(ctx, MizuResourcesNamespace, Version)
 		if err != nil {
 			fmt.Printf("error creating rbac %v", err)
 			cancel()
