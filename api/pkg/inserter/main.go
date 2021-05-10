@@ -9,16 +9,16 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"mizuserver/pkg/database"
 	"mizuserver/pkg/models"
+	"mizuserver/pkg/tap"
 	"mizuserver/pkg/utils"
 	"net/url"
 	"os"
 	"path"
 	"sort"
-	"strings"
 	"time"
 )
 
-func StartReadingEntries(harChannel chan *har.Entry, workingDir *string) {
+func StartReadingEntries(harChannel chan *tap.OutputChannelItem, workingDir *string) {
 	if workingDir != nil && *workingDir != "" {
 		startReadingFiles(*workingDir)
 	} else {
@@ -35,7 +35,7 @@ func startReadingFiles(workingDir string) {
 		dirFiles, _ := dir.Readdir(-1)
 		sort.Sort(utils.ByModTime(dirFiles))
 
-		if len(dirFiles) == 0{
+		if len(dirFiles) == 0 {
 			fmt.Printf("Waiting for new files\n")
 			time.Sleep(3 * time.Second)
 			continue
@@ -51,23 +51,22 @@ func startReadingFiles(workingDir string) {
 
 		for _, entry := range inputHar.Log.Entries {
 			time.Sleep(time.Millisecond * 250)
-			saveHarToDb(*entry)
+			saveHarToDb(entry, fileInfo.Name())
 		}
 		rmErr := os.Remove(inputFilePath)
 		utils.CheckErr(rmErr)
 	}
 }
 
-func startReadingChannel(harChannel chan *har.Entry) {
-	for entry := range harChannel {
-		saveHarToDb(*entry)
+func startReadingChannel(outputItems chan *tap.OutputChannelItem) {
+	for item := range outputItems {
+		saveHarToDb(item.HarEntry, item.Sender)
 	}
 }
 
-func saveHarToDb(entry har.Entry) {
+func saveHarToDb(entry *har.Entry, sender string) {
 	entryBytes, _ := json.Marshal(entry)
 	serviceName, urlPath := getServiceNameFromUrl(entry.Request.URL)
-	source := getSourceNameFromHeaders(entry.Request.Headers)
 	entryId := primitive.NewObjectID().Hex()
 	mizuEntry := models.MizuEntry{
 		EntryId:   entryId,
@@ -77,7 +76,7 @@ func saveHarToDb(entry har.Entry) {
 		Path:      urlPath,
 		Method:    entry.Request.Method,
 		Status:    entry.Response.Status,
-		Source:    source,
+		Sender:    sender,
 		Timestamp: entry.StartedDateTime.UnixNano() / int64(time.Millisecond),
 	}
 	database.GetEntriesTable().Create(&mizuEntry)
@@ -89,7 +88,7 @@ func saveHarToDb(entry har.Entry) {
 		Path:       urlPath,
 		StatusCode: entry.Response.Status,
 		Method:     entry.Request.Method,
-		Source: 	source,
+		Sender:     sender,
 		Timestamp:  entry.StartedDateTime.UnixNano() / int64(time.Millisecond),
 	}
 	baseEntryBytes, _ := json.Marshal(&baseEntry)
@@ -97,14 +96,6 @@ func saveHarToDb(entry har.Entry) {
 
 }
 
-func getSourceNameFromHeaders(requestHeaders []har.Header) string{
-	for _, header := range requestHeaders {
-		if strings.ToLower(header.Name) == "x-up9-source" {
-			return header.Value
-		}
-	}
-	return ""
-}
 func getServiceNameFromUrl(inputUrl string) (string, string) {
 	parsed, err := url.Parse(inputUrl)
 	utils.CheckErr(err)

@@ -11,7 +11,7 @@ type MizuEntry struct {
 	Url       string `json:"url" gorm:"column:url"`
 	Method    string `json:"method" gorm:"column:method"`
 	Status    int    `json:"status" gorm:"column:status"`
-	Source    string `json:"source" gorm:"column:source"`
+	Sender    string `json:"sender" gorm:"column:sender"`
 	Service   string `json:"service" gorm:"column:service"`
 	Timestamp int64  `json:"timestamp" gorm:"column:timestamp"`
 	Path      string `json:"path" gorm:"column:path"`
@@ -20,7 +20,7 @@ type MizuEntry struct {
 type BaseEntryDetails struct {
 	Id         string `json:"id,omitempty"`
 	Url        string `json:"url,omitempty"`
-	Source     string `json:"source,omitempty"`
+	Sender     string `json:"sender,omitempty"`
 	Service    string `json:"service,omitempty"`
 	Path       string `json:"path,omitempty"`
 	StatusCode int    `json:"statusCode,omitempty"`

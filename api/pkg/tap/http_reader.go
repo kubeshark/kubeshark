@@ -11,6 +11,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 )
@@ -34,7 +35,7 @@ func (tid *tcpID) String() string {
 /* httpReader gets reads from a channel of bytes of tcp payload, and parses it into HTTP/1 requests and responses.
  * The payload is written to the channel by a tcpStream object that is dedicated to one tcp connection.
  * An httpReader object is unidirectional: it parses either a client stream or a server stream.
- * Implemets io.Reader interface (Read)
+ * Implements io.Reader interface (Read)
  */
 type httpReader struct {
 	ident         string
@@ -49,6 +50,15 @@ type httpReader struct {
 	grpcAssembler GrpcAssembler
 	messageCount  uint
 	harWriter     *HarWriter
+}
+
+func extractSenderFromRequestHeaders(headers []headerKeyVal) string{
+	for _, header := range headers {
+		if strings.ToLower(header.Key) == "x-up9-source"{
+			return header.Value
+		}
+	}
+	return ""
 }
 
 func (h *httpReader) Read(p []byte) (int, error) {
@@ -80,13 +90,16 @@ func (h *httpReader) run(wg *sync.WaitGroup) {
 	}
 
 	if h.isHTTP2 {
-		prepareHTTP2Connection(b, h.isClient)
+		err := prepareHTTP2Connection(b, h.isClient)
+		if err != nil {
+			SilentError("HTTP/2-Prepare-Connection-After-Check", "stream %s error: %s (%v,%+v)\n", h.ident, err, err, err)
+		}
 		h.grpcAssembler = createGrpcAssembler(b)
 	}
 
 	for true {
 		if h.isHTTP2 {
-			err := h.handleHTTP2Stream(b)
+			err := h.handleHTTP2Stream()
 			if err == io.EOF || err == io.ErrUnexpectedEOF {
 				break
 			} else if err != nil {
@@ -113,11 +126,11 @@ func (h *httpReader) run(wg *sync.WaitGroup) {
 	}
 }
 
-func (h *httpReader) handleHTTP2Stream(b *bufio.Reader) error {
-	streamID, messageHTTP1, body, error := h.grpcAssembler.readMessage()
+func (h *httpReader) handleHTTP2Stream() error {
+	streamID, messageHTTP1, body, err := h.grpcAssembler.readMessage()
 	h.messageCount++
-	if error != nil {
-		return error
+	if err != nil {
+		return err
 	}
 
 	var reqResPair *envoyMessageWrapper
@@ -138,15 +151,14 @@ func (h *httpReader) handleHTTP2Stream(b *bufio.Reader) error {
 				reqResPair.HttpBufferedTrace.Request.captureTime,
 				reqResPair.HttpBufferedTrace.Response.orig.(*http.Response),
 				reqResPair.HttpBufferedTrace.Response.captureTime,
+				extractSenderFromRequestHeaders(reqResPair.HttpBufferedTrace.Request.Headers),
 			)
 		} else {
 			jsonStr, err := json.Marshal(reqResPair)
-
-			broadcastReqResPair(jsonStr)
-
 			if err != nil {
 				return err
 			}
+			broadcastReqResPair(jsonStr)
 		}
 	}
 
@@ -167,7 +179,9 @@ func (h *httpReader) handleHTTP1ClientStream(b *bufio.Reader) error {
 	} else if h.hexdump {
 		Info("Body(%d/0x%x)\n%s\n", len(body), len(body), hex.Dump(body))
 	}
-	req.Body.Close()
+	if err := req.Body.Close(); err != nil {
+		SilentError("HTTP-request-body-close", "stream %s Failed to close request body: %s\n", h.ident, err)
+	}
 	encoding := req.Header["Content-Encoding"]
 	bodyStr, err := readBody(body, encoding)
 	if err != nil {
@@ -184,15 +198,14 @@ func (h *httpReader) handleHTTP1ClientStream(b *bufio.Reader) error {
 				reqResPair.HttpBufferedTrace.Request.captureTime,
 				reqResPair.HttpBufferedTrace.Response.orig.(*http.Response),
 				reqResPair.HttpBufferedTrace.Response.captureTime,
+				extractSenderFromRequestHeaders(reqResPair.HttpBufferedTrace.Request.Headers),
 			)
 		} else {
 			jsonStr, err := json.Marshal(reqResPair)
-
-			broadcastReqResPair(jsonStr)
-
 			if err != nil {
 				SilentError("HTTP-marshal", "stream %s Error convert request response to json: %s\n", h.ident, err)
 			}
+			broadcastReqResPair(jsonStr)
 		}
 	}
 
@@ -226,7 +239,9 @@ func (h *httpReader) handleHTTP1ServerStream(b *bufio.Reader) error {
 	if h.hexdump {
 		Info("Body(%d/0x%x)\n%s\n", len(body), len(body), hex.Dump(body))
 	}
-	res.Body.Close()
+	if err := res.Body.Close(); err != nil {
+		SilentError("HTTP-response-body-close", "HTTP/%s: failed to close body(parsed len:%d): %s\n", h.ident, s, err)
+	}
 	sym := ","
 	if res.ContentLength > 0 && res.ContentLength != int64(s) {
 		sym = "!="
@@ -251,15 +266,14 @@ func (h *httpReader) handleHTTP1ServerStream(b *bufio.Reader) error {
 				reqResPair.HttpBufferedTrace.Request.captureTime,
 				reqResPair.HttpBufferedTrace.Response.orig.(*http.Response),
 				reqResPair.HttpBufferedTrace.Response.captureTime,
+				extractSenderFromRequestHeaders(reqResPair.HttpBufferedTrace.Request.Headers),
 			)
 		} else {
 			jsonStr, err := json.Marshal(reqResPair)
-
-			broadcastReqResPair(jsonStr)
-
 			if err != nil {
 				SilentError("HTTP-marshal", "stream %s Error convert request response to json: %s\n", h.ident, err)
 			}
+			broadcastReqResPair(jsonStr)
 		}
 	}
 

@@ -29,11 +29,10 @@ import (
 	"github.com/google/gopacket/layers" // pulls in all layers decoders
 	"github.com/google/gopacket/pcap"
 	"github.com/google/gopacket/reassembly"
-	"github.com/google/martian/har"
 )
 
 const AppPortsEnvVar = "APP_PORTS"
-const TapOutPortEnvVar = "WEB_SOCKET_PORT"
+const OutPortEnvVar = "WEB_SOCKET_PORT"
 const maxHTTP2DataLenEnvVar = "HTTP2_DATA_SIZE_LIMIT"
 const hostModeEnvVar = "HOST_MODE"
 // default is 1MB, more than the max size accepted by collector and traffic-dumper
@@ -199,7 +198,7 @@ func (c *Context) GetCaptureInfo() gopacket.CaptureInfo {
 	return c.CaptureInfo
 }
 
-func StartPassiveTapper() chan *har.Entry {
+func StartPassiveTapper() chan *OutputChannelItem {
 	var harWriter *HarWriter
 	if *dumpToHar {
 		harWriter = NewHarWriter(*HarOutputDir, *harEntriesPerFile)
@@ -243,7 +242,7 @@ func startPassiveTapper(harWriter *HarWriter) {
 	}
 	hostAppAddresses = parseHostAppAddresses(*hostAppAddressesString)
 	fmt.Println("Filtering for the following addresses:", hostAppAddresses)
-	tapOutputPort := os.Getenv(TapOutPortEnvVar)
+	tapOutputPort := os.Getenv(OutPortEnvVar)
 	if tapOutputPort == "" {
 		fmt.Println("Received empty/no WEB_SOCKET_PORT env var! falling back to port 8080")
 		tapOutputPort = "8080"
@@ -297,15 +296,15 @@ func startPassiveTapper(harWriter *HarWriter) {
 		// just call pcap.OpenLive if you want a simple handle.
 		inactive, err := pcap.NewInactiveHandle(*iface)
 		if err != nil {
-			log.Fatal("could not create: %v", err)
+			log.Fatalf("could not create: %v", err)
 		}
 		defer inactive.CleanUp()
 		if err = inactive.SetSnapLen(*snaplen); err != nil {
-			log.Fatal("could not set snap length: %v", err)
+			log.Fatalf("could not set snap length: %v", err)
 		} else if err = inactive.SetPromisc(*promisc); err != nil {
-			log.Fatal("could not set promisc mode: %v", err)
+			log.Fatalf("could not set promisc mode: %v", err)
 		} else if err = inactive.SetTimeout(time.Second); err != nil {
-			log.Fatal("could not set timeout: %v", err)
+			log.Fatalf("could not set timeout: %v", err)
 		}
 		if *tstype != "" {
 			if t, err := pcap.TimestampSourceFromString(*tstype); err != nil {
@@ -334,12 +333,12 @@ func startPassiveTapper(harWriter *HarWriter) {
 
 	var dec gopacket.Decoder
 	var ok bool
-	decoder_name := *decoder
-	if decoder_name == "" {
-		decoder_name = fmt.Sprintf("%s", handle.LinkType())
+	decoderName := *decoder
+	if decoderName == "" {
+		decoderName = fmt.Sprintf("%s", handle.LinkType())
 	}
-	if dec, ok = gopacket.DecodersByLayerName[decoder_name]; !ok {
-		log.Fatalln("No decoder named", decoder_name)
+	if dec, ok = gopacket.DecodersByLayerName[decoderName]; !ok {
+		log.Fatalln("No decoder named", decoderName)
 	}
 	source := gopacket.NewPacketSource(handle, dec)
 	source.Lazy = *lazy
@@ -526,7 +525,7 @@ func startPassiveTapper(harWriter *HarWriter) {
 	fmt.Printf(" overlap packets:\t%d\n", stats.overlapPackets)
 	fmt.Printf(" overlap bytes:\t\t%d\n", stats.overlapBytes)
 	fmt.Printf("Errors: %d\n", nErrors)
-	for e, _ := range errorsMap {
+	for e := range errorsMap {
 		fmt.Printf(" %s:\t\t%d\n", e, errorsMap[e])
 	}
 }

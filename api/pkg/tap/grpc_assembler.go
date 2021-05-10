@@ -64,7 +64,7 @@ func (fbs *fragmentsByStream) appendFrame(streamID uint32, frame http2.Frame) {
 func (fbs *fragmentsByStream) pop(streamID uint32) ([]hpack.HeaderField, []byte) {
 	headers := (*fbs)[streamID].headers
 	data := (*fbs)[streamID].data
-	delete((*fbs), streamID)
+	delete(*fbs, streamID)
 
 	return headers, data
 }
@@ -193,7 +193,7 @@ func checkIsHTTP2ServerStream(b *bufio.Reader) (bool, error) {
 
 	// Check server connection preface (a settings frame)
 	frameHeader := http2.FrameHeader{
-		Length:   (uint32(buf[0])<<16 | uint32(buf[1])<<8 | uint32(buf[2])),
+		Length:   uint32(buf[0])<<16 | uint32(buf[1])<<8 | uint32(buf[2]),
 		Type:     http2.FrameType(buf[3]),
 		Flags:    http2.Flags(buf[4]),
 		StreamID: binary.BigEndian.Uint32(buf[5:]) & (1<<31 - 1),
