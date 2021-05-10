@@ -78,5 +78,6 @@ func GetResolvedBaseEntry(entry models.MizuEntry) models.BaseEntryDetails {
 		StatusCode: entry.Status,
 		Method:     entry.Method,
 		Timestamp:  entry.Timestamp,
+		RequestSenderIp: entry.RequestSenderIp,
 	}
 }

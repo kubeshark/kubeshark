@@ -1,4 +1,4 @@
-name: ci
+name: publish-docker
 on:
   push:
     branches:
@@ -23,8 +23,8 @@ jobs:
             type=sha
             type=raw,${{ github.sha }}
             type=raw,latest
-      - name: Login to DockerHub  
-        uses: docker/login-action@v1 
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
         with:
           registry: gcr.io
           username: _json_key
@@ -35,4 +35,5 @@ jobs:
           context: .
           push: true
           tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}          
+          labels: ${{ steps.meta.outputs.labels }}
+

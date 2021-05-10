@@ -1,21 +1,30 @@
+FOLDER=$(GOOS).$(GOARCH)
+
+.PHONY: help
+.DEFAULT_GOAL := help
+
+help: ## This help.
+	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	
 install:
 	go install mizu.go
 
-build:
-	go build -o bin/mizu mizu.go
+build:	## build mizu CLI binary (select platform via GOOS / GOARCH env variables)
+	go build -o bin/$(FOLDER)/mizu mizu.go
 
-build-cr:
+build-all:  ## build for all supported platforms
 	@echo "Compiling for every OS and Platform"
-	@echo ""
-	GOOS=darwin GOARCH=amd64 go build -o bin/mizu-darwin-amd64 mizu.go
-	GOOS=linux GOARCH=amd64 go build -o bin/mizu-linux-amd64 mizu.go
-	@#GOOS=windows GOARCH=amd64 go build -o bin/mizu-windows-amd64.exe mizu.go
-	@#GOOS=linux GOARCH=386 go build -o bin/mizu-linux-386 mizu.go
-	@#GOOS=windows GOARCH=386 go build -o bin/mizu-windows-386.exe mizu.go
-	@#GOOS=darwin GOARCH=arm64 go build -o bin/mizu-darwin-arm64 mizu.go
-	@#GOOS=linux GOARCH=arm64 go build -o bin/mizu-linux-arm64 mizu.go
-	@#GOOS=windows GOARCH=arm64 go build -o bin/mizu-windows-arm64 mizu.go
+	@$(MAKE) build GOOS=darwin GOARCH=amd64
+	@$(MAKE) build GOOS=linux GOARCH=amd64
+	@# $(MAKE) GOOS=windows GOARCH=amd64
+	@# $(MAKE) GOOS=linux GOARCH=386
+	@# $(MAKE) GOOS=windows GOARCH=386
+	@# $(MAKE) GOOS=darwin GOARCH=arm64
+	@# $(MAKE) GOOS=linux GOARCH=arm64
+	@# $(MAKE) GOOS=windows GOARCH=arm64
+	@echo "---------"
+	@find ./bin -ls
 
-clean:
-	#go clean
-	rm -f ./bin/*
+clean: ## clean all build artifacts
+	go clean
+	rm -rf ./bin/*

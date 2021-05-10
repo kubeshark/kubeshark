@@ -29,7 +29,6 @@ var (
 	}
 )
 
-
 func GetEntries(c *fiber.Ctx) error {
 	entriesFilter := &models.EntriesFilter{}
 
