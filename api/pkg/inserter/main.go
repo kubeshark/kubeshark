@@ -11,7 +11,7 @@ import (
 	"mizuserver/pkg/database"
 	"mizuserver/pkg/models"
 	"mizuserver/pkg/resolver"
-	mizuserver/pkg/tap"
+	"mizuserver/pkg/tap"
 	"mizuserver/pkg/utils"
 	"net/url"
 	"os"
@@ -98,7 +98,7 @@ func saveHarToDb(entry *har.Entry, sender string) {
 		resolvedDestination *string
 	)
 	if k8sResolver != nil {
-		resolvedSource = k8sResolver.Resolve(source)
+		resolvedSource = k8sResolver.Resolve(sender)
 		resolvedDestination = k8sResolver.Resolve(serviceHostName)
 	}
 	mizuEntry := models.MizuEntry{
