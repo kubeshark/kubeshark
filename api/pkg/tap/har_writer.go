@@ -18,10 +18,11 @@ const readPermission = 0644
 const tempFilenamePrefix = "har_writer"
 
 type PairChanItem struct {
-	Request      *http.Request
-	RequestTime  time.Time
-	Response     *http.Response
-	ResponseTime time.Time
+	Request         *http.Request
+	RequestTime     time.Time
+	Response        *http.Response
+	ResponseTime    time.Time
+	RequestSenderIp string
 }
 
 func openNewHarFile(filename string) *HarFile {
@@ -153,27 +154,33 @@ func NewHarWriter(outputDir string, maxEntries int) *HarWriter {
 		OutputDirPath: outputDir,
 		MaxEntries: maxEntries,
 		PairChan: make(chan *PairChanItem),
-		OutChan: make(chan *har.Entry, 1000),
+		OutChan: make(chan *OutputChannelItem, 1000),
 		currentFile: nil,
 		done: make(chan bool),
 	}
+}
+
+type OutputChannelItem struct {
+	HarEntry        *har.Entry
+	RequestSenderIp string
 }
 
 type HarWriter struct {
 	OutputDirPath string
 	MaxEntries int
 	PairChan chan *PairChanItem
-	OutChan chan *har.Entry
+	OutChan chan *OutputChannelItem
 	currentFile *HarFile
 	done chan bool
 }
 
-func (hw *HarWriter) WritePair(request *http.Request, requestTime time.Time, response *http.Response, responseTime time.Time) {
+func (hw *HarWriter) WritePair(request *http.Request, requestTime time.Time, response *http.Response, responseTime time.Time, requestSenderIp string) {
 	hw.PairChan <- &PairChanItem{
-		Request: request,
-		RequestTime: requestTime,
-		Response: response,
-		ResponseTime: responseTime,
+		Request:         request,
+		RequestTime:     requestTime,
+		Response:        response,
+		ResponseTime:    responseTime,
+		RequestSenderIp: requestSenderIp,
 	}
 }
 
@@ -202,7 +209,10 @@ func (hw *HarWriter) Start() {
 					hw.closeFile()
 				}
 			} else {
-				hw.OutChan <- harEntry
+				hw.OutChan <- &OutputChannelItem{
+					HarEntry:        harEntry,
+					RequestSenderIp: pair.RequestSenderIp,
+				}
 			}
 		}
 
@@ -229,7 +239,10 @@ func (hw *HarWriter) closeFile() {
 	hw.currentFile = nil
 
 	filename := buildFilename(hw.OutputDirPath, time.Now())
-	os.Rename(tmpFilename, filename)
+	err := os.Rename(tmpFilename, filename)
+	if err != nil {
+		SilentError("Rename-file", "cannot rename file: %s (%v,%+v)\n", err, err, err)
+	}
 }
 
 func buildFilename(dir string, t time.Time) string {

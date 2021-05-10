@@ -9,6 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"mizuserver/pkg/database"
 	"mizuserver/pkg/models"
+	"mizuserver/pkg/tap"
 	"mizuserver/pkg/utils"
 	"net/url"
 	"os"
@@ -17,7 +18,7 @@ import (
 	"time"
 )
 
-func StartReadingFiles(harChannel chan *har.Entry, workingDir *string) {
+func StartReadingEntries(harChannel chan *tap.OutputChannelItem, workingDir *string) {
 	if workingDir != nil && *workingDir != "" {
 		startReadingFiles(*workingDir)
 	} else {
@@ -34,7 +35,7 @@ func startReadingFiles(workingDir string) {
 		dirFiles, _ := dir.Readdir(-1)
 		sort.Sort(utils.ByModTime(dirFiles))
 
-		if len(dirFiles) == 0{
+		if len(dirFiles) == 0 {
 			fmt.Printf("Waiting for new files\n")
 			time.Sleep(3 * time.Second)
 			continue
@@ -50,44 +51,45 @@ func startReadingFiles(workingDir string) {
 
 		for _, entry := range inputHar.Log.Entries {
 			time.Sleep(time.Millisecond * 250)
-			saveHarToDb(*entry, "")
+			saveHarToDb(entry, fileInfo.Name())
 		}
 		rmErr := os.Remove(inputFilePath)
 		utils.CheckErr(rmErr)
 	}
 }
 
-func startReadingChannel(harChannel chan *har.Entry) {
-	for entry := range harChannel {
-		saveHarToDb(*entry, "")
+func startReadingChannel(outputItems chan *tap.OutputChannelItem) {
+	for item := range outputItems {
+		saveHarToDb(item.HarEntry, item.RequestSenderIp)
 	}
 }
 
-func saveHarToDb(entry har.Entry, source string) {
+func saveHarToDb(entry *har.Entry, sender string) {
 	entryBytes, _ := json.Marshal(entry)
 	serviceName, urlPath := getServiceNameFromUrl(entry.Request.URL)
 	entryId := primitive.NewObjectID().Hex()
 	mizuEntry := models.MizuEntry{
-		EntryId:   entryId,
-		Entry:     string(entryBytes), // simple way to store it and not convert to bytes
-		Service:   serviceName,
-		Url:       entry.Request.URL,
-		Path:      urlPath,
-		Method:    entry.Request.Method,
-		Status:    entry.Response.Status,
-		Source:    source,
-		Timestamp: entry.StartedDateTime.UnixNano() / int64(time.Millisecond),
+		EntryId:         entryId,
+		Entry:           string(entryBytes), // simple way to store it and not convert to bytes
+		Service:         serviceName,
+		Url:             entry.Request.URL,
+		Path:            urlPath,
+		Method:          entry.Request.Method,
+		Status:          entry.Response.Status,
+		RequestSenderIp: sender,
+		Timestamp:       entry.StartedDateTime.UnixNano() / int64(time.Millisecond),
 	}
 	database.GetEntriesTable().Create(&mizuEntry)
 
 	baseEntry := &models.BaseEntryDetails{
-		Id:         entryId,
-		Url:        entry.Request.URL,
-		Service:    serviceName,
-		Path:       urlPath,
-		StatusCode: entry.Response.Status,
-		Method:     entry.Request.Method,
-		Timestamp:  entry.StartedDateTime.UnixNano() / int64(time.Millisecond),
+		Id:              entryId,
+		Url:             entry.Request.URL,
+		Service:         serviceName,
+		Path:            urlPath,
+		StatusCode:      entry.Response.Status,
+		Method:          entry.Request.Method,
+		RequestSenderIp: sender,
+		Timestamp:       entry.StartedDateTime.UnixNano() / int64(time.Millisecond),
 	}
 	baseEntryBytes, _ := json.Marshal(&baseEntry)
 	ikisocket.Broadcast(baseEntryBytes)

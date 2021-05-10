@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-
 	"github.com/gofiber/fiber/v2"
 	"mizuserver/pkg/inserter"
 	"mizuserver/pkg/middleware"
@@ -19,8 +18,7 @@ func main() {
 	app := fiber.New()
 
 	// process to read files / channel and insert to DB
-	go inserter.StartReadingFiles(harOutputChannel, tap.HarOutputDir)
-
+	go inserter.StartReadingEntries(harOutputChannel, tap.HarOutputDir)
 
 	middleware.FiberMiddleware(app) // Register Fiber's middleware for app.
 	app.Static("/", "./site")
