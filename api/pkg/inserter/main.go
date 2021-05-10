@@ -23,9 +23,10 @@ var k8sResolver *resolver.Resolver
 
 func init() {
 	errOut := make(chan error, 100)
-	res, err := resolver.NewFromOutOfCluster("", errOut)
+	res, err := resolver.NewFromOutOfCluster("/home/rami/.kube/config", errOut)
 	if err != nil {
 		fmt.Printf("error creating k8s resolver %s", err)
+		return
 	}
 	ctx := context.Background()
 	res.Start(ctx)
@@ -89,8 +90,16 @@ func startReadingChannel(harChannel chan *har.Entry) {
 
 func saveHarToDb(entry har.Entry, source string) {
 	entryBytes, _ := json.Marshal(entry)
-	serviceName, urlPath := getServiceNameFromUrl(entry.Request.URL)
+	serviceName, urlPath, serviceHostName := getServiceNameFromUrl(entry.Request.URL)
 	entryId := primitive.NewObjectID().Hex()
+	var (
+		resolvedSource *string
+		resolvedDestination *string
+	)
+	if k8sResolver != nil {
+		resolvedSource = k8sResolver.Resolve(source)
+		resolvedDestination = k8sResolver.Resolve(serviceHostName)
+	}
 	mizuEntry := models.MizuEntry{
 		EntryId:   entryId,
 		Entry:     string(entryBytes), // simple way to store it and not convert to bytes
@@ -101,27 +110,19 @@ func saveHarToDb(entry har.Entry, source string) {
 		Status:    entry.Response.Status,
 		Source:    source,
 		Timestamp: entry.StartedDateTime.UnixNano() / int64(time.Millisecond),
-		ResolvedSource: k8sResolver.Resolve(source),
-		ResolvedDestination: k8sResolver.Resolve(serviceName),
+		ResolvedSource: resolvedSource,
+		ResolvedDestination: resolvedDestination,
 	}
 	database.GetEntriesTable().Create(&mizuEntry)
 
-	baseEntry := &models.BaseEntryDetails{
-		Id:         entryId,
-		Url:        entry.Request.URL,
-		Service:    serviceName,
-		Path:       urlPath,
-		StatusCode: entry.Response.Status,
-		Method:     entry.Request.Method,
-		Timestamp:  entry.StartedDateTime.UnixNano() / int64(time.Millisecond),
-	}
+	baseEntry := utils.GetResolvedBaseEntry(mizuEntry)
 	baseEntryBytes, _ := json.Marshal(&baseEntry)
 	ikisocket.Broadcast(baseEntryBytes)
-
 }
 
-func getServiceNameFromUrl(inputUrl string) (string, string) {
+func getServiceNameFromUrl(inputUrl string) (string, string, string) {
 	parsed, err := url.Parse(inputUrl)
 	utils.CheckErr(err)
-	return fmt.Sprintf("%s://%s", parsed.Scheme, parsed.Host), parsed.Path
+	return fmt.Sprintf("%s://%s", parsed.Scheme, parsed.Host), parsed.Path, parsed.Host
 }
+
