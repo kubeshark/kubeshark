@@ -4,7 +4,6 @@ on:
     branches:
       - 'develop'
       - 'main'
-      - 'feature/cli_makefile'
 jobs:
   docker:
     runs-on: ubuntu-latest
