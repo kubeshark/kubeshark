@@ -105,13 +105,13 @@ func createPodAndPortForward(ctx context.Context, kubernetesProvider *kubernetes
 func createRBACIfNecessary(ctx context.Context, kubernetesProvider *kubernetes.Provider) bool {
 	mizuRBACExists, err := kubernetesProvider.DoesMizuRBACExist(ctx, MizuResourcesNamespace)
 	if err != nil {
-		fmt.Printf("warning: could not ensure mizu rbac resources exist %v", err)
+		fmt.Printf("warning: could not ensure mizu rbac resources exist %v\n", err)
 		return false
 	}
 	if !mizuRBACExists {
 		err := kubernetesProvider.CreateMizuRBAC(ctx, MizuResourcesNamespace, Version)
 		if err != nil {
-			fmt.Printf("warning: could not create mizu rbac resources %v", err)
+			fmt.Printf("warning: could not create mizu rbac resources %v\n", err)
 			return false
 		}
 	}
