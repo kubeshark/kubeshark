@@ -7,4 +7,5 @@ var (
 
 const (
 	MizuResourcesNamespace = "default"
+	TapperDaemonSetName = "mizu-tapper-daemon-set"
 )

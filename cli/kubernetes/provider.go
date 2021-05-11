@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	core "k8s.io/api/core/v1"
+	apps "k8s.io/api/apps/v1"
 	rbac "k8s.io/api/rbac/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -202,6 +203,20 @@ func (provider *Provider) CreateMizuRBAC(ctx context.Context, namespace string ,
 
 func (provider *Provider) RemovePod(ctx context.Context, namespace string, podName string) {
 	provider.clientSet.CoreV1().Pods(namespace).Delete(ctx, podName, metav1.DeleteOptions{})
+}
+
+func (provider *Provider) createMizuTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, collectorPodName string) {
+	daemonSet := apps.DaemonSet{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: daemonSetName,
+			Namespace: namespace,
+		},
+		Spec: apps.DaemonSetSpec{
+			Template: core.PodTemplateSpec{
+
+			},
+		},
+	}
 }
 
 func getClientSet(config *restclient.Config) *kubernetes.Clientset {
