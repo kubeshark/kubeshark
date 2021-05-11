@@ -1,7 +1,6 @@
 export const highlighterStyle = {
     "code[class*=\"language-\"]": {
         "color": "#494677",
-        "textShadow": "0 1px rgba(0, 0, 0, 0.3)",
         "fontFamily": "Inconsolata, Monaco, Consolas, 'Courier New', Courier, monospace",
         "direction": "ltr",
         "textAlign": "left",
@@ -20,7 +19,6 @@ export const highlighterStyle = {
     },
     "pre[class*=\"language-\"]": {
         "color": "#494677",
-        "textShadow": "0 1px rgba(0, 0, 0, 0.3)",
         "fontFamily": "Inconsolata, Monaco, Consolas, 'Courier New', Courier, monospace",
         "direction": "ltr",
         "textAlign": "left",
