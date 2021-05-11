@@ -77,7 +77,7 @@ func (provider *Provider) GetPods(ctx context.Context, namespace string) {
 	fmt.Printf("There are %d pods in Namespace %s\n", len(pods.Items), namespace)
 }
 
-func (provider *Provider) CreateMizuPod(ctx context.Context, namespace string, podName string, podImage string, tappedPodNamespace string, tappedPodName string) (*core.Pod, error) {
+func (provider *Provider) CreateMizuPod(ctx context.Context, namespace string, podName string, podImage string, tappedPodNamespace string, tappedPodName string, linkServiceAccount bool) (*core.Pod, error) {
 	tappedPod, err := provider.clientSet.CoreV1().Pods(tappedPodNamespace).Get(ctx, tappedPodName, metav1.GetOptions{})
 	if err != nil {
 		panic(err.Error())
@@ -117,10 +117,13 @@ func (provider *Provider) CreateMizuPod(ctx context.Context, namespace string, p
 					},
 				},
 			},
-			ServiceAccountName: serviceAccountName,
 			TerminationGracePeriodSeconds: new(int64),
 			NodeSelector: map[string]string{"kubernetes.io/hostname": tappedPod.Spec.NodeName},
 		},
+	}
+	//pod will crash if a non existent service account name is defined in spec
+	if linkServiceAccount {
+		pod.Spec.ServiceAccountName = serviceAccountName
 	}
 	return provider.clientSet.CoreV1().Pods(namespace).Create(ctx, pod, metav1.CreateOptions{})
 }
