@@ -62,8 +62,8 @@ button
         cursor: pointer
         min-width: 2rem
         font-weight: normal
-        border: solid 0
         padding: 3px 16px 4px 12px
+        border: 1px solid #BCC6DD
 
     .MuiInputBase-input
       border-radius: 20px
@@ -79,8 +79,6 @@ button
       text-align: left
       line-height: 1.25
       min-height: initial
-      &:focus
-        //background-color: rgba(255, 255, 255, 0.06) !important
     .MuiSelect-icon
       top: 50%
       transform: translateY(-50%)
@@ -111,7 +109,9 @@ button
  * Paper/List/Menu list
  ***/
 .MuiPaper-root
-  background-color: #344073 !important
+  margin-top: 5px
+  color: $blue-gray
+  border: 1px solid #BCC6DD
   &.MuiPaper-rounded
     border-radius: 4px
 
@@ -120,20 +120,16 @@ button
     &.MuiMenu-list
       border-radius: 4px
       box-shadow: 0 10px 20px 0 rgba(0, 0, 0, 0.5)
-      color: #a0b2ff
       .MuiListItem-root
         &.MuiMenuItem-root
           padding: 14px
           font-size: 11px
-          font-weight: 600
           font-stretch: normal
           font-style: normal
           line-height: 1.25
-          &:not(:last-child)
-            border-bottom: 1px solid rgb(53, 65, 114)
           &.Mui-selected
-            background-color: #3f519a6e
-            color: white
+            font-weight: 600
+            background-color: $data-background-color
 
 // scroll-bar css
 
