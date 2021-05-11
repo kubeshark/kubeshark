@@ -11,7 +11,7 @@ var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Print version info",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		fmt.Printf("mizu version %s\n", mizu.Version)
+		fmt.Printf("%s %s\n", mizu.Version, mizu.GitCommitHash)
 		return nil
 	},
 }
