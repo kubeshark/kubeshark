@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -151,6 +152,14 @@ func (resolver *Resolver) infiniteErrorHandleRetryFunc(ctx context.Context, fun 
 		err := fun(ctx)
 		if err != nil {
 			resolver.errOut <- err
+
+			var statusError *k8serrors.StatusError
+			if errors.As(err, &statusError) {
+				if statusError.ErrStatus.Reason == metav1.StatusReasonForbidden {
+					fmt.Printf("Resolver loop encountered permission error, aborting event listening - %v\n", err)
+					return
+				}
+			}
 		}
 		if ctx.Err() != nil { // context was cancelled or errored
 			return

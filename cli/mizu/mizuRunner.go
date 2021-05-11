@@ -109,7 +109,7 @@ func createRBACIfNecessary(ctx context.Context, kubernetesProvider *kubernetes.P
 		return false
 	}
 	if !mizuRBACExists {
-		err := kubernetesProvider.CreateMizuRBAC(ctx, MizuResourcesNamespace, Version)
+		err := kubernetesProvider.CreateMizuRBAC(ctx, MizuResourcesNamespace, fmt.Sprintf("%s::%s", Version, GitCommitHash))
 		if err != nil {
 			fmt.Printf("warning: could not create mizu rbac resources %v\n", err)
 			return false
