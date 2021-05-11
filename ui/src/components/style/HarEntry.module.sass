@@ -1,6 +1,8 @@
+@import 'variables.module'
+
 .row
   display: flex
-  background: #1c2133
+  background: $main-background-color
   min-height: 46px
   max-height: 46px
   align-items: center
@@ -8,7 +10,7 @@
   border-radius: 4px
   cursor: pointer
   border: solid 1px transparent
-  margin-right: 5px
+  margin-right: 10px
   &:not(:first-child)
     margin-top: 10px
 
@@ -16,14 +18,16 @@
     border: solid 1px lighten(#4253a5, 20%)
 
 .rowSelected
-  background: #293053
-  border: 1px #ffffff61 solid
+  border: 1px $blue-color solid
+  border-left: 5px $blue-color solid
+  margin-left: 10px
+  margin-right: 3px
 
 .service
   text-overflow: ellipsis
   overflow: hidden
   white-space: nowrap
-  color: rgba(255, 255, 255, 0.5)
+  color: $secondary-font-color
   padding-left: 4px
   padding-top: 3px
   padding-right: 10px
@@ -32,13 +36,12 @@
 
 .timestamp
   font-size: 12px
-  color: rgba(255, 255, 255, 0.5)
+  color: $secondary-font-color
   padding-left: 8px
   padding-right: 8px
   flex-shrink: 0
 
 .endpointServiceContainer
-  color: white
   display: flex
   flex-direction: column
   overflow: hidden

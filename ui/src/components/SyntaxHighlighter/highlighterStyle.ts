@@ -1,7 +1,6 @@
-export const up9Style = {
+export const highlighterStyle = {
     "code[class*=\"language-\"]": {
-        "color": "#fff",
-        "textShadow": "0 1px rgba(0, 0, 0, 0.3)",
+        "color": "#494677",
         "fontFamily": "Inconsolata, Monaco, Consolas, 'Courier New', Courier, monospace",
         "direction": "ltr",
         "textAlign": "left",
@@ -19,8 +18,7 @@ export const up9Style = {
         "hyphens": "none"
     },
     "pre[class*=\"language-\"]": {
-        "color": "#fff",
-        "textShadow": "0 1px rgba(0, 0, 0, 0.3)",
+        "color": "#494677",
         "fontFamily": "Inconsolata, Monaco, Consolas, 'Courier New', Courier, monospace",
         "direction": "ltr",
         "textAlign": "left",
@@ -39,10 +37,10 @@ export const up9Style = {
         "margin": ".5em 0",
         "overflow": "auto",
         "borderRadius": "0.3em",
-        "background": "rgb(38, 46, 77)"
+        "background": "#F7F9FC"
     },
     ":not(pre) > code[class*=\"language-\"]": {
-        "background": "rgb(38, 46, 77)",
+        "background": "#F7F9FC",
         "padding": ".1em",
         "borderRadius": ".3em"
     },
@@ -50,16 +48,16 @@ export const up9Style = {
         "color": "#5d6aa0"
     },
     "prolog": {
-        "color": "#fff"
+        "color": "#494677"
     },
     "doctype": {
-        "color": "#fff"
+        "color": "#494677"
     },
     "cdata": {
-        "color": "#fff"
+        "color": "#494677"
     },
     "punctuation": {
-        "color": "#fff"
+        "color": "#494677"
     },
     ".namespace": {
         "Opacity": ".7"

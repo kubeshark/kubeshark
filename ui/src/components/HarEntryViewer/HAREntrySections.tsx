@@ -110,7 +110,7 @@ export const HAREntryBodySection: React.FC<HAREntryBodySectionProps> = ({
                 <div style={{paddingTop: 3}}>
                     <Checkbox checked={isWrapped} onToggle={() => {}}/>
                 </div>
-                <span style={{marginLeft: '.5rem', color: "white"}}>Wrap text</span>
+                <span style={{marginLeft: '.5rem'}}>Wrap text</span>
             </div>
 
             <SyntaxHighlighter

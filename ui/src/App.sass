@@ -1,9 +1,12 @@
+@import 'components/style/variables.module'
+
 .mizuApp
-  background-color: #111629
+  background-color: $main-background-color
+  color: $font-color
   width: 100%
 
   .header
-    height: 100px
+    height: 80px
     display: flex
     align-items: center
     padding-left: 24px
@@ -12,8 +15,12 @@
       font-size: 45px
       letter-spacing: 2px
 
+      img
+        height: 40px
+
     .description
       margin-left: 10px
-      color: rgba(255,255,255,0.5)
-      padding-top: 15px
-      font-size: 16px
+      padding-top: 10px
+      font-size: 14px
+      font-weight: bold
+      color: $light-blue-color

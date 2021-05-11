@@ -1,6 +1,6 @@
 import React from 'react';
 import {Prism as SyntaxHighlighterContainer} from 'react-syntax-highlighter';
-import {up9Style} from './highlighterStyle'
+import {highlighterStyle} from './highlighterStyle'
 import './index.scss';
 
 interface Props {
@@ -14,7 +14,7 @@ interface Props {
 
 export const SyntaxHighlighter: React.FC<Props> = ({
                                                 code,
-                                                style = up9Style,
+                                                style = highlighterStyle,
                                                 showLineNumbers = true,
                                                 className,
                                                 language = 'python',
