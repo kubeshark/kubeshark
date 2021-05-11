@@ -121,7 +121,7 @@ func (provider *Provider) CreateMizuPod(ctx context.Context, namespace string, p
 			NodeSelector: map[string]string{"kubernetes.io/hostname": tappedPod.Spec.NodeName},
 		},
 	}
-	//pod will crash if a non existent service account name is defined in spec
+	//define the service account only when it exists to prevent pod crash
 	if linkServiceAccount {
 		pod.Spec.ServiceAccountName = serviceAccountName
 	}
