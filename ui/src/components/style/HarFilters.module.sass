@@ -1,3 +1,5 @@
+@import "variables.module"
+
 .container
     display: flex
     flex-direction: row
@@ -6,6 +8,8 @@
     overflow-y: hidden
     overflow-x: auto
     padding: .5rem 0
+    border-bottom: 1px solid #BCC6DD
+    margin-right: 20px
 
 .filterLabel
     color: #8f9bb2
@@ -24,9 +28,9 @@
 .filterText
   input
     padding: 4px 12px
-    background: #171922
+    background: $main-background-color
     border-radius: 12px
     font-size: 12px
-    color: white
+    border: 1px solid #BCC6DD
   fieldset
     border: none
