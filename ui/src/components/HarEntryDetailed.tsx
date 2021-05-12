@@ -30,7 +30,6 @@ const HarEntryTitle: React.FC<any> = ({har}) => {
 
     const {log: {entries}} = har;
     const {response, request, timings: {receive}} = entries[0];
-    const {method, url} = request;
     const {status, statusText, bodySize} = response;
 
 
@@ -39,7 +38,7 @@ const HarEntryTitle: React.FC<any> = ({har}) => {
             <StatusCode statusCode={status}/>
         </div>}
         <div style={{flexGrow: 1, overflow: 'hidden'}}>
-            <EndpointPath method={method} path={url}/>
+            <EndpointPath method={request?.method} path={request?.url}/>
         </div>
         <div style={{margin: "0 24px", opacity: 0.5}}>{formatSize(bodySize)}</div>
         <div style={{marginRight: 24, opacity: 0.5}}>{status} {statusText}</div>

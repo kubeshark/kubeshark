@@ -7,7 +7,6 @@ const MIME_TYPE_KEY = 'mimeType';
 
 const HAREntryDisplay: React.FC<any> = ({entry, isCollapsed: initialIsCollapsed, isResponseMocked}) => {
     const {request, response} = entry;
-    const { url, postData} = request;
 
     const TABS = [
         {tab: 'request'},
@@ -24,7 +23,7 @@ const HAREntryDisplay: React.FC<any> = ({entry, isCollapsed: initialIsCollapsed,
         {!initialIsCollapsed && <div className={styles.body}>
             <div className={styles.bodyHeader}>
                 <Tabs tabs={TABS} currentTab={currentTab} onChange={setCurrentTab} leftAligned/>
-                <a className={styles.endpointURL} href={url} target='_blank' rel="noreferrer">{url}</a>
+                {request?.url && <a className={styles.endpointURL} href={request.url} target='_blank' rel="noreferrer">{request.url}</a>}
             </div>
             {
                 currentTab === TABS[0].tab && <React.Fragment>
@@ -32,7 +31,7 @@ const HAREntryDisplay: React.FC<any> = ({entry, isCollapsed: initialIsCollapsed,
 
                     <HAREntryTableSection title={'Cookies'} arrayToIterate={request.cookies}/>
 
-                    {postData && <HAREntryBodySection content={postData} encoding={postData.comment} contentType={postData[MIME_TYPE_KEY]}/>}
+                    {request?.postData && <HAREntryBodySection content={request.postData} encoding={request.postData.comment} contentType={request.postData[MIME_TYPE_KEY]}/>}
 
                     <HAREntryTableSection title={'Query'} arrayToIterate={request.queryString}/>
                 </React.Fragment>
