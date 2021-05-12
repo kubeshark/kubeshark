@@ -12,56 +12,78 @@ import (
 	"time"
 )
 
-func Run(tappedPodName string) {
+func Run(podRegexQuery *regexp.Regexp) {
 	kubernetesProvider := kubernetes.NewProvider(config.Configuration.KubeConfigPath, config.Configuration.Namespace)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // cancel will be called when this function exits
 
-	podName := "mizu-collector"
-
-	mizuServiceAccountExists := createRBACIfNecessary(ctx, kubernetesProvider)
-	go createPodAndPortForward(ctx, kubernetesProvider, cancel, podName, MizuResourcesNamespace, tappedPodName, mizuServiceAccountExists) //TODO convert this to job for built in pod ttl or have the running app handle this
-	waitForFinish(ctx, cancel) //block until exit signal or error
+	nodeToTappedPodIPMap, err := getNodeHostToTappedPodIpsMap(ctx, kubernetesProvider, podRegexQuery)
+	if err != nil {
+		cleanUpMizuResources(kubernetesProvider)
+		return
+	}
+	err = createMizuResources(ctx, kubernetesProvider, nodeToTappedPodIPMap)
+	if err != nil {
+		cleanUpMizuResources(kubernetesProvider)
+		return
+	}
+	go portForwardApiPod(ctx, kubernetesProvider, cancel) //TODO convert this to job for built in pod ttl or have the running app handle this
+	waitForFinish(ctx, cancel)                                                                                                                //block until exit signal or error
 
 	// TODO handle incoming traffic from tapper using a channel
 
 	//cleanup
-	fmt.Printf("\nremoving pod %s\n", podName)
-	removalCtx, _ := context.WithTimeout(context.Background(), 2 * time.Second)
-	kubernetesProvider.RemovePod(removalCtx, MizuResourcesNamespace, podName)
+	fmt.Printf("\nRemoving mizu resources\n")
+	cleanUpMizuResources(kubernetesProvider)
 }
 
-func watchPodsForTapping(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc, podRegex *regexp.Regexp) {
-	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, kubernetesProvider.GetPodWatcher(ctx, kubernetesProvider.Namespace), podRegex)
-	for {
-		select {
-		case newTarget := <- added:
-			fmt.Printf("+%s\n", newTarget.Name)
-
-		case removedTarget := <- removed:
-			fmt.Printf("-%s\n", removedTarget.Name)
-
-		case <- modified:
-			continue
-
-		case <- errorChan:
-			cancel()
-
-		case <- ctx.Done():
-			return
-		}
-	}
-}
-
-func createPodAndPortForward(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc, podName string, namespace string, tappedPodName string, linkServiceAccount bool) {
-	pod, err := kubernetesProvider.CreateMizuPod(ctx, MizuResourcesNamespace, podName, config.Configuration.MizuImage, kubernetesProvider.Namespace, tappedPodName, linkServiceAccount)
+func createMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, nodeToTappedPodIPMap map[string][]string) error {
+	mizuServiceAccountExists := createRBACIfNecessary(ctx, kubernetesProvider)
+	aggregatorPod, err := kubernetesProvider.CreateMizuAggregatorPod(ctx, MizuResourcesNamespace, aggregatorPodName, config.Configuration.MizuImage, kubernetesProvider.Namespace, mizuServiceAccountExists)
 	if err != nil {
-		fmt.Printf("error creating pod %s", err)
-		cancel()
-		return
+		fmt.Printf("Error creating mizu collector pod: %v\n", err)
+		return err
 	}
-	podExactRegex := regexp.MustCompile(fmt.Sprintf("^%s$", pod.Name))
-	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, kubernetesProvider.GetPodWatcher(ctx, namespace), podExactRegex)
+	err = kubernetesProvider.CreateMizuTapperDaemonSet(ctx, MizuResourcesNamespace, TapperDaemonSetName, config.Configuration.MizuImage, tapperPodName, aggregatorPod.Status.PodIP, nodeToTappedPodIPMap)
+	if err != nil {
+		fmt.Printf("Error creating mizu tapper daemonset: %v\n", err)
+		return err
+	}
+	return nil
+}
+
+func cleanUpMizuResources(kubernetesProvider *kubernetes.Provider) {
+	removalCtx, _ := context.WithTimeout(context.Background(), 5 * time.Second)
+	kubernetesProvider.RemovePod(removalCtx, MizuResourcesNamespace, aggregatorPodName)
+	kubernetesProvider.RemoveDaemonSet(removalCtx, MizuResourcesNamespace, TapperDaemonSetName)
+}
+
+// will be relevant in the future
+//func watchPodsForTapping(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc, podRegex *regexp.Regexp) {
+//	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, kubernetesProvider.GetPodWatcher(ctx, kubernetesProvider.Namespace), podRegex)
+//	for {
+//		select {
+//		case newTarget := <- added:
+//			fmt.Printf("+%s\n", newTarget.Name)
+//
+//		case removedTarget := <- removed:
+//			fmt.Printf("-%s\n", removedTarget.Name)
+//
+//		case <- modified:
+//			continue
+//
+//		case <- errorChan:
+//			cancel()
+//
+//		case <- ctx.Done():
+//			return
+//		}
+//	}
+//}
+
+func portForwardApiPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
+	podExactRegex := regexp.MustCompile(fmt.Sprintf("^%s$", aggregatorPodName))
+	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, kubernetesProvider.GetPodWatcher(ctx, MizuResourcesNamespace), podExactRegex)
 	isPodReady := false
 	var portForward *kubernetes.PortForward
 	for {
@@ -69,14 +91,14 @@ func createPodAndPortForward(ctx context.Context, kubernetesProvider *kubernetes
 		case <- added:
 			continue
 		case <- removed:
-			fmt.Printf("%s removed\n", podName)
+			fmt.Printf("%s removed\n", aggregatorPodName)
 			cancel()
 			return
 		case modifiedPod := <- modified:
 			if modifiedPod.Status.Phase == "Running" && !isPodReady {
 				isPodReady = true
 				var err error
-				portForward, err = kubernetes.NewPortForward(kubernetesProvider, namespace, podName, config.Configuration.GuiPort, config.Configuration.MizuPodPort, cancel)
+				portForward, err = kubernetes.NewPortForward(kubernetesProvider, MizuResourcesNamespace, aggregatorPodName, config.Configuration.GuiPort, config.Configuration.MizuPodPort, cancel)
 				fmt.Printf("Web interface is now available at http://localhost:%d\n", config.Configuration.GuiPort)
 				if err != nil {
 					fmt.Printf("error forwarding port to pod %s\n", err)
@@ -86,7 +108,7 @@ func createPodAndPortForward(ctx context.Context, kubernetesProvider *kubernetes
 
 		case <- time.After(25 * time.Second):
 			if !isPodReady {
-				fmt.Printf("error: %s pod was not ready in time", podName)
+				fmt.Printf("error: %s pod was not ready in time", aggregatorPodName)
 				cancel()
 			}
 
@@ -120,6 +142,23 @@ func createRBACIfNecessary(ctx context.Context, kubernetesProvider *kubernetes.P
 		}
 	}
 	return true
+}
+
+func getNodeHostToTappedPodIpsMap(ctx context.Context, kubernetesProvider *kubernetes.Provider, regex *regexp.Regexp) (map[string][]string, error) {
+	matchingPods, err := kubernetesProvider.GetAllPodsMatchingRegex(ctx, regex)
+	if err != nil {
+		return nil, err
+	}
+	nodeToTappedPodIPMap := make(map[string][]string, 0)
+	for _, pod := range matchingPods {
+		existingList := nodeToTappedPodIPMap[pod.Spec.NodeName]
+		if existingList == nil {
+			nodeToTappedPodIPMap[pod.Spec.NodeName] = []string {pod.Status.PodIP}
+		} else {
+			nodeToTappedPodIPMap[pod.Spec.NodeName] = append(nodeToTappedPodIPMap[pod.Spec.NodeName], pod.Status.PodIP)
+		}
+	}
+	return nodeToTappedPodIPMap, nil
 }
 
 func waitForFinish(ctx context.Context, cancel context.CancelFunc) {
