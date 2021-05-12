@@ -71,7 +71,7 @@ export const HAREntryBodySection: React.FC<HAREntryBodySectionProps> = ({
     const MAXIMUM_BYTES_TO_HIGHLIGHT = 10000; // The maximum of chars to highlight in body, in case the response can be megabytes
     const supportedLanguages = [['html', 'html'], ['json', 'json'], ['application/grpc', 'json']]; // [[indicator, languageToUse],...]
     const jsonLikeFormats = ['json'];
-    const binaryFormats = ['application/grpc'];
+    const protobufFormats = ['application/grpc'];
     const [isWrapped, setIsWrapped] = useState(false);
 
     const formatTextBody = (body): string => {
@@ -81,7 +81,7 @@ export const HAREntryBodySection: React.FC<HAREntryBodySectionProps> = ({
         try {
             if (jsonLikeFormats.some(format => content?.mimeType?.indexOf(format) > -1)) {
                 return JSON.stringify(JSON.parse(bodyBuf), null, 2);
-            } else if (binaryFormats.some(format => content?.mimeType?.indexOf(format) > -1)) {
+            } else if (protobufFormats.some(format => content?.mimeType?.indexOf(format) > -1)) {
                 // Replace all non printable characters (ASCII)
                 const protobufDecoder = new ProtobufDecoder(bodyBuf, true);
                 return JSON.stringify(protobufDecoder.decode().toSimple(), null, 2);
