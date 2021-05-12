@@ -4,6 +4,7 @@ import {SyntaxHighlighter} from "../SyntaxHighlighter/index";
 import CollapsibleContainer from "../CollapsibleContainer";
 import FancyTextDisplay from "../FancyTextDisplay";
 import Checkbox from "../Checkbox";
+import ProtobufDecoder from "protobuf-decoder";
 
 interface HAREntryViewLineProps {
     label: string;
@@ -82,7 +83,8 @@ export const HAREntryBodySection: React.FC<HAREntryBodySectionProps> = ({
                 return JSON.stringify(JSON.parse(bodyBuf), null, 2);
             } else if (binaryFormats.some(format => content?.mimeType?.indexOf(format) > -1)) {
                 // Replace all non printable characters (ASCII)
-                return atob(bodyBuf).replace(/[^ -~]/g, '.')
+                const protobufDecoder = new ProtobufDecoder(bodyBuf, true);
+                return JSON.stringify(protobufDecoder.decode().toSimple(), null, 2);
             }
         } catch (error) {
             console.error(error);
