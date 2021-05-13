@@ -34,7 +34,7 @@ func init() {
 	go func() {
 		for {
 			select {
-			case err := <- errOut:
+			case err := <-errOut:
 				fmt.Printf("name resolving error %s", err)
 			}
 		}
@@ -94,7 +94,7 @@ func saveHarToDb(entry *har.Entry, sender string) {
 	serviceName, urlPath, serviceHostName := getServiceNameFromUrl(entry.Request.URL)
 	entryId := primitive.NewObjectID().Hex()
 	var (
-		resolvedSource *string
+		resolvedSource      *string
 		resolvedDestination *string
 	)
 	if k8sResolver != nil {
@@ -102,23 +102,27 @@ func saveHarToDb(entry *har.Entry, sender string) {
 		resolvedDestination = k8sResolver.Resolve(serviceHostName)
 	}
 	mizuEntry := models.MizuEntry{
-		EntryId:         entryId,
-		Entry:           string(entryBytes), // simple way to store it and not convert to bytes
-		Service:         serviceName,
-		Url:             entry.Request.URL,
-		Path:            urlPath,
-		Method:          entry.Request.Method,
-		Status:          entry.Response.Status,
-		RequestSenderIp: sender,
-		Timestamp:       entry.StartedDateTime.UnixNano() / int64(time.Millisecond),
-		ResolvedSource: resolvedSource,
+		EntryId:             entryId,
+		Entry:               string(entryBytes), // simple way to store it and not convert to bytes
+		Service:             serviceName,
+		Url:                 entry.Request.URL,
+		Path:                urlPath,
+		Method:              entry.Request.Method,
+		Status:              entry.Response.Status,
+		RequestSenderIp:     sender,
+		Timestamp:           entry.StartedDateTime.UnixNano() / int64(time.Millisecond),
+		ResolvedSource:      resolvedSource,
 		ResolvedDestination: resolvedDestination,
 	}
 	database.GetEntriesTable().Create(&mizuEntry)
 
 	baseEntry := utils.GetResolvedBaseEntry(mizuEntry)
-	baseEntryBytes, _ := json.Marshal(&baseEntry)
-	ikisocket.Broadcast(baseEntryBytes)
+	messageToSend := models.WebSocketMessage{
+		MessageType: "entry",
+		Data:        &baseEntry,
+	}
+	messageBytes, _ := json.Marshal(&messageToSend)
+	ikisocket.Broadcast(messageBytes)
 }
 
 func getServiceNameFromUrl(inputUrl string) (string, string, string) {

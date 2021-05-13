@@ -40,3 +40,9 @@ type EntriesFilter struct {
 	Operator  string `query:"operator" validate:"required,oneof='lt' 'gt'"`
 	Timestamp int64  `query:"timestamp" validate:"required,min=1"`
 }
+
+
+type WebSocketMessage struct {
+	MessageType string      `json:"messageType,omitempty"`
+	Data        interface{} `json:"data,omitempty"`
+}
