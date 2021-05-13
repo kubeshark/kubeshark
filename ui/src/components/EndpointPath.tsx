@@ -10,6 +10,6 @@ interface EndpointPathProps {
 export const EndpointPath: React.FC<EndpointPathProps> = ({method, path}) => {
     return <div className={styles.container}>
         {method && <span className={`${miscStyles.protocol} ${miscStyles.method}`}>{method}</span>}
-        <div title={path} className={styles.path}>{path}</div>
+        {path && <div title={path} className={styles.path}>{path}</div>}
     </div>
 };

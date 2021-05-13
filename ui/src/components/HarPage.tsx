@@ -7,20 +7,22 @@ import styles from './style/HarEntriesList.module.sass';
 import {HAREntryDetailed} from "./HarEntryDetailed";
 import playIcon from './assets/play.svg';
 import pauseIcon from './assets/pause.svg';
+import variables from './style/variables.module.scss';
 
 const useLayoutStyles = makeStyles(() => ({
     details: {
         flex: "0 0 50%",
         width: "45vw",
         padding: "12px 24px",
-        backgroundColor: "#090b14",
-        borderLeft: "2px #11162a solid"
+        borderRadius: 4,
+        marginTop: 15,
+        background: variables.headerBackgoundColor
     },
 
     harViewer: {
         display: 'flex',
         overflowY: 'auto',
-        height: "calc(100% - 58px)",
+        height: "calc(100% - 70px)",
         padding: 5,
         paddingBottom: 0
     }
@@ -90,14 +92,15 @@ export const HarPage: React.FC = () => {
         setConnection(connection === ConnectionStatus.Connected ? ConnectionStatus.Paused : ConnectionStatus.Connected );
     }
 
-    const getConnectionStatusClass = () => {
+    const getConnectionStatusClass = (isContainer) => {
+        const container = isContainer ? "Container" : "";
         switch (connection) {
             case ConnectionStatus.Paused:
-                return "orangeIndicator";
+                return "orangeIndicator" + container;
             case ConnectionStatus.Connected:
-                return "greenIndicator"
+                return "greenIndicator" + container;
             default:
-                return "redIndicator";
+                return "redIndicator" + container;
         }
     }
 
@@ -114,11 +117,13 @@ export const HarPage: React.FC = () => {
 
     return (
         <div className="HarPage">
-            <div style={{padding: "0 24px 24px 24px", display: "flex", alignItems: "center"}}>
-                <img style={{cursor: "pointer", marginRight: 15, height: 20}} alt="pause" src={connection === ConnectionStatus.Connected ? pauseIcon : playIcon} onClick={toggleConnection}/>
+            <div className="harPageHeader">
+                <img style={{cursor: "pointer", marginRight: 15, height: 30}} alt="pause" src={connection === ConnectionStatus.Connected ? pauseIcon : playIcon} onClick={toggleConnection}/>
                 <div className="connectionText">
                     {getConnectionTitle()}
-                    <div className={getConnectionStatusClass()}/>
+                    <div className={"indicatorContainer " + getConnectionStatusClass(true)}>
+                        <div className={"indicator " +  getConnectionStatusClass(false)} />
+                    </div>
                 </div>
             </div>
             {entries.length > 0 && <div className="HarPage-Container">
