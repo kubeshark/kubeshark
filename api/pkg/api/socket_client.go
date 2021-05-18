@@ -16,8 +16,7 @@ func ConnectToSocketServer(address string) (*websocket.Conn, error) {
 }
 
 func PipeChannelToSocket(connection *websocket.Conn, messageDataChannel chan *tap.OutputChannelItem) {
-	for {
-		messageData := <- messageDataChannel
+	for messageData := range messageDataChannel {
 		marshaledData, err := json.Marshal(messageData)
 		if err != nil {
 			fmt.Printf("error converting message to json %v", err)
