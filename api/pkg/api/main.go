@@ -42,7 +42,7 @@ func init() {
 	k8sResolver = res
 }
 
-func StartReadingEntries(harChannel chan *tap.OutputChannelItem, workingDir *string) {
+func StartReadingEntries(harChannel <-chan *tap.OutputChannelItem, workingDir *string) {
 	if workingDir != nil && *workingDir != "" {
 		startReadingFiles(*workingDir)
 	} else {
@@ -82,7 +82,7 @@ func startReadingFiles(workingDir string) {
 	}
 }
 
-func startReadingChannel(outputItems chan *tap.OutputChannelItem) {
+func startReadingChannel(outputItems <-chan *tap.OutputChannelItem) {
 	if outputItems == nil {
 		panic("Channel of captured messages is nil")
 	}

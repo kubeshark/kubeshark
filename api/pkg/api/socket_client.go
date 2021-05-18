@@ -15,7 +15,7 @@ func ConnectToSocketServer(address string) (*websocket.Conn, error) {
 	return connection, nil
 }
 
-func PipeChannelToSocket(connection *websocket.Conn, messageDataChannel chan *tap.OutputChannelItem) {
+func PipeChannelToSocket(connection *websocket.Conn, messageDataChannel <-chan *tap.OutputChannelItem) {
 	if connection == nil {
 		panic("Websocket connection is nil")
 	}
