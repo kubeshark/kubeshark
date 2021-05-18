@@ -233,7 +233,7 @@ func (provider *Provider) CreateMizuTapperDaemonSet(ctx context.Context, namespa
 					SecurityContext: &core.SecurityContext{
 						Privileged: &privileged, // must be privileged to get node level traffic
 					},
-					Command: []string {"./mizuagent", "-i", "any", "--tap", "--aggregator-address", fmt.Sprintf("ws://%s/wsTapper", aggregatorPodIp)},
+					Command: []string {"./mizuagent", "-i", "any", "--tap", "--hardump", "--aggregator-address", fmt.Sprintf("ws://%s/wsTapper", aggregatorPodIp)},
 					Env: []core.EnvVar{
 						{
 							Name: "HOST_MODE",
