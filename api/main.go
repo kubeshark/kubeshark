@@ -11,6 +11,7 @@ import (
 	"mizuserver/pkg/tap"
 	"mizuserver/pkg/utils"
 	"os"
+	"os/signal"
 )
 
 var shouldTap = flag.Bool("tap", false, "Run in tapper mode without API")
@@ -52,6 +53,12 @@ func main() {
 		go api.StartReadingEntries(api.SocketHarOutChannel, nil)
 		hostApi()
 	}
+
+	signalChan := make(chan os.Signal, 1)
+	signal.Notify(signalChan, os.Interrupt)
+	<-signalChan
+
+	fmt.Println("Exiting")
 }
 
 func hostApi() {
