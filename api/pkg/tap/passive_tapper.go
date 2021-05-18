@@ -1,4 +1,4 @@
-// Copyright 2012 Google, Inc. All rights reserved.
+// Copyright 2012 Google, Inc. All rights reserved.hostAppAddressesString
 //
 // Use of this source code is governed by a BSD-style license
 // that can be found in the LICENSE file in the root of the source
@@ -134,7 +134,7 @@ var nErrors uint
 var appPorts []int            // global
 var ownIps []string           //global
 var hostMode bool             //global
-var hostAppAddresses []string //global
+var HostAppAddresses []string //global
 
 /* minOutputLevel: Error will be printed only if outputLevel is above this value
  * t:              key for errorsMap (counting errors)
@@ -240,8 +240,8 @@ func startPassiveTapper(harWriter *HarWriter) {
 	} else {
 		appPorts = parseAppPorts(appPortsStr)
 	}
-	hostAppAddresses = parseHostAppAddresses(*hostAppAddressesString)
-	fmt.Println("Filtering for the following addresses:", hostAppAddresses)
+	//HostAppAddresses = parseHostAppAddresses(*hostAppAddressesString)
+	fmt.Println("Filtering for the following addresses:", HostAppAddresses)
 	tapOutputPort := os.Getenv(OutPortEnvVar)
 	if tapOutputPort == "" {
 		fmt.Println("Received empty/no WEB_SOCKET_PORT env var! falling back to port 8080")
@@ -275,7 +275,7 @@ func startPassiveTapper(harWriter *HarWriter) {
 				appPorts = *parsedMessage.Ports
 			} else if parsedMessage.MessageType == "setAddresses" {
 				Debug("Got message from collector. Type: %s, IPs: %v\n", parsedMessage.MessageType, parsedMessage.Addresses)
-				hostAppAddresses = *parsedMessage.Addresses
+				HostAppAddresses = *parsedMessage.Addresses
 			}
 		} else {
 			Error("Collector-Message-Parsing", "Error parsing message from collector: %s (%v,%+v)\n", err, err, err)

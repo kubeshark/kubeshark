@@ -42,7 +42,7 @@ func WebSocketClose(ep *ikisocket.EventPayload) {
 }
 
 func WebSocketError(ep *ikisocket.EventPayload) {
-	fmt.Println(fmt.Sprintf("Socket error - Socket uuid : %s", ep.Kws.GetStringAttribute("user_id")))
+	fmt.Println(fmt.Sprintf("Socket error - Socket uuid : %s %v", ep.SocketUUID, ep.Error))
 }
 
 func WebSocketMessage(ep *ikisocket.EventPayload) {

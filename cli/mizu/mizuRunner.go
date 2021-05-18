@@ -39,12 +39,17 @@ func Run(podRegexQuery *regexp.Regexp) {
 
 func createMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, nodeToTappedPodIPMap map[string][]string) error {
 	mizuServiceAccountExists := createRBACIfNecessary(ctx, kubernetesProvider)
-	aggregatorPod, err := kubernetesProvider.CreateMizuAggregatorPod(ctx, MizuResourcesNamespace, aggregatorPodName, config.Configuration.MizuImage, kubernetesProvider.Namespace, mizuServiceAccountExists)
+	_, err := kubernetesProvider.CreateMizuAggregatorPod(ctx, MizuResourcesNamespace, aggregatorPodName, config.Configuration.MizuImage, mizuServiceAccountExists)
 	if err != nil {
 		fmt.Printf("Error creating mizu collector pod: %v\n", err)
 		return err
 	}
-	err = kubernetesProvider.CreateMizuTapperDaemonSet(ctx, MizuResourcesNamespace, TapperDaemonSetName, config.Configuration.MizuImage, tapperPodName, aggregatorPod.Status.PodIP, nodeToTappedPodIPMap)
+	aggregatorService, err := kubernetesProvider.CreateService(ctx, MizuResourcesNamespace, aggregatorPodName, aggregatorPodName)
+	if err != nil {
+		fmt.Printf("Error creating mizu collector service: %v\n", err)
+		return err
+	}
+	err = kubernetesProvider.CreateMizuTapperDaemonSet(ctx, MizuResourcesNamespace, TapperDaemonSetName, config.Configuration.MizuImage, tapperPodName, fmt.Sprintf("%s.%s.svc.cluster.local", aggregatorService.Name, aggregatorService.Namespace), nodeToTappedPodIPMap, mizuServiceAccountExists)
 	if err != nil {
 		fmt.Printf("Error creating mizu tapper daemonset: %v\n", err)
 		return err
@@ -55,6 +60,7 @@ func createMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Pro
 func cleanUpMizuResources(kubernetesProvider *kubernetes.Provider) {
 	removalCtx, _ := context.WithTimeout(context.Background(), 5 * time.Second)
 	kubernetesProvider.RemovePod(removalCtx, MizuResourcesNamespace, aggregatorPodName)
+	kubernetesProvider.RemoveService(removalCtx, MizuResourcesNamespace, aggregatorPodName)
 	kubernetesProvider.RemoveDaemonSet(removalCtx, MizuResourcesNamespace, TapperDaemonSetName)
 }
 
