@@ -1,11 +1,10 @@
-package inserter
+package api
 
 import (
 	"bufio"
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/antoniodipinto/ikisocket"
 	"github.com/google/martian/har"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"mizuserver/pkg/database"
@@ -118,7 +117,7 @@ func saveHarToDb(entry *har.Entry, sender string) {
 
 	baseEntry := utils.GetResolvedBaseEntry(mizuEntry)
 	baseEntryBytes, _ := json.Marshal(&baseEntry)
-	ikisocket.Broadcast(baseEntryBytes)
+	broadcastToBrowserClients(baseEntryBytes)
 }
 
 func getServiceNameFromUrl(inputUrl string) (string, string, string) {
@@ -126,4 +125,3 @@ func getServiceNameFromUrl(inputUrl string) (string, string, string) {
 	utils.CheckErr(err)
 	return fmt.Sprintf("%s://%s", parsed.Scheme, parsed.Host), parsed.Path, parsed.Host
 }
-
