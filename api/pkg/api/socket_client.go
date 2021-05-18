@@ -16,6 +16,14 @@ func ConnectToSocketServer(address string) (*websocket.Conn, error) {
 }
 
 func PipeChannelToSocket(connection *websocket.Conn, messageDataChannel chan *tap.OutputChannelItem) {
+	if connection == nil {
+		panic("Websocket connection is nil")
+	}
+
+	if messageDataChannel == nil {
+		panic("Channel of captured messages is nil")
+	}
+
 	for messageData := range messageDataChannel {
 		marshaledData, err := json.Marshal(messageData)
 		if err != nil {

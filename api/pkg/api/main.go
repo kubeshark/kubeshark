@@ -83,6 +83,10 @@ func startReadingFiles(workingDir string) {
 }
 
 func startReadingChannel(outputItems chan *tap.OutputChannelItem) {
+	if outputItems == nil {
+		panic("Channel of captured messages is nil")
+	}
+
 	for item := range outputItems {
 		saveHarToDb(item.HarEntry, item.RequestSenderIp)
 	}
