@@ -5,12 +5,18 @@ import (
 	"fmt"
 	"github.com/antoniodipinto/ikisocket"
 	"mizuserver/pkg/tap"
+	"mizuserver/pkg/routes"
 )
 
 var browserClientSocketUUIDs = make([]string, 0)
-var SocketHarOutChannel = make(chan *tap.OutputChannelItem, 1000)
 
-func WebSocketConnect(ep *ikisocket.EventPayload) {
+type RoutesEventHandlers struct {
+	routes.EventHandlers
+	SocketHarOutChannel chan *tap.OutputChannelItem
+}
+
+
+func (h *RoutesEventHandlers) WebSocketConnect(ep *ikisocket.EventPayload) {
 	if ep.Kws.GetAttribute("is_tapper") == true {
 		fmt.Println(fmt.Sprintf("Websocket Connection event - Tapper connected: %s", ep.SocketUUID))
 	} else {
@@ -19,7 +25,7 @@ func WebSocketConnect(ep *ikisocket.EventPayload) {
 	}
 }
 
-func WebSocketDisconnect(ep *ikisocket.EventPayload) {
+func (h *RoutesEventHandlers) WebSocketDisconnect(ep *ikisocket.EventPayload) {
 	if ep.Kws.GetAttribute("is_tapper") == true {
 		fmt.Println(fmt.Sprintf("Disconnection event - Tapper connected: %s", ep.SocketUUID))
 	} else {
@@ -32,7 +38,7 @@ func broadcastToBrowserClients(message []byte) {
 	ikisocket.EmitToList(browserClientSocketUUIDs, message)
 }
 
-func WebSocketClose(ep *ikisocket.EventPayload) {
+func (h *RoutesEventHandlers) WebSocketClose(ep *ikisocket.EventPayload) {
 	if ep.Kws.GetAttribute("is_tapper") == true {
 		fmt.Println(fmt.Sprintf("Websocket Close event - Tapper connected: %s", ep.SocketUUID))
 	} else {
@@ -41,18 +47,18 @@ func WebSocketClose(ep *ikisocket.EventPayload) {
 	}
 }
 
-func WebSocketError(ep *ikisocket.EventPayload) {
+func (h *RoutesEventHandlers) WebSocketError(ep *ikisocket.EventPayload) {
 	fmt.Println(fmt.Sprintf("Socket error - Socket uuid : %s %v", ep.SocketUUID, ep.Error))
 }
 
-func WebSocketMessage(ep *ikisocket.EventPayload) {
+func (h *RoutesEventHandlers) WebSocketMessage(ep *ikisocket.EventPayload) {
 	if ep.Kws.GetAttribute("is_tapper") == true {
 		var tapOutput tap.OutputChannelItem
 		err := json.Unmarshal(ep.Data, &tapOutput)
 		if err != nil {
 			fmt.Printf("Could not unmarshal message received from tapper websocket %v", err)
 		} else {
-			SocketHarOutChannel <- &tapOutput
+			h.SocketHarOutChannel <- &tapOutput
 		}
 	} else {
 		fmt.Println("Received Web socket message from non tapper websocket, no handler is defined for this message")
@@ -60,7 +66,7 @@ func WebSocketMessage(ep *ikisocket.EventPayload) {
 }
 
 func removeSocketUUIDFromBrowserSlice(uuidToRemove string) {
-	newUUIDSlice := make([]string, 0)
+	newUUIDSlice := make([]string, 0, len(browserClientSocketUUIDs))
 	for _, uuid := range browserClientSocketUUIDs {
 		if uuid != uuidToRemove {
 			newUUIDSlice = append(newUUIDSlice, uuid)

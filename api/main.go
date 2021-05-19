@@ -73,7 +73,10 @@ func hostApi() {
 		return c.SendString("Hello, World 👋!")
 	})
 
-	routes.WebSocketRoutes(app)
+	eventHandlers := RoutesEventHandlers{
+		SocketHarOutChannel: make(chan *tap.OutputChannelItem, 1000),
+	}
+	routes.WebSocketRoutes(app, eventHandlers)
 	routes.EntriesRoutes(app)
 	routes.NotFoundRoute(app)
 

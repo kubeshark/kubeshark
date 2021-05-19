@@ -3,11 +3,17 @@ package routes
 import (
 	"github.com/antoniodipinto/ikisocket"
 	"github.com/gofiber/fiber/v2"
-	"mizuserver/pkg/api"
 )
 
-func WebSocketRoutes(app *fiber.App) {
+type EventHandlers interface {
+	WebSocketConnect(ep *ikisocket.EventPayload)
+	WebSocketDisconnect(ep *ikisocket.EventPayload)
+	WebSocketClose(ep *ikisocket.EventPayload)
+	WebSocketError(ep *ikisocket.EventPayload)
+	WebSocketMessage(ep *ikisocket.EventPayload)
+}
 
+func WebSocketRoutes(app *fiber.App, eventHandlers EventHandlers) {
 	app.Get("/ws", ikisocket.New(func(kws *ikisocket.Websocket) {
 		kws.SetAttribute("is_tapper", false)
 	}))
@@ -17,9 +23,9 @@ func WebSocketRoutes(app *fiber.App) {
 		kws.SetAttribute("is_tapper", true)
 	}))
 
-	ikisocket.On(ikisocket.EventMessage, api.WebSocketMessage)
-	ikisocket.On(ikisocket.EventConnect, api.WebSocketConnect)
-	ikisocket.On(ikisocket.EventDisconnect, api.WebSocketDisconnect)
-	ikisocket.On(ikisocket.EventClose, api.WebSocketClose) // This event is called when the server disconnects the user actively with .Close() method
-	ikisocket.On(ikisocket.EventError, api.WebSocketError) // On error event
+	ikisocket.On(ikisocket.EventMessage, eventHandlers.WebSocketMessage)
+	ikisocket.On(ikisocket.EventConnect, eventHandlers.WebSocketConnect)
+	ikisocket.On(ikisocket.EventDisconnect, eventHandlers.WebSocketDisconnect)
+	ikisocket.On(ikisocket.EventClose, eventHandlers.WebSocketClose) // This event is called when the server disconnects the user actively with .Close() method
+	ikisocket.On(ikisocket.EventError, eventHandlers.WebSocketError) // On error event
 }
