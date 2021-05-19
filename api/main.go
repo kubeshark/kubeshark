@@ -32,7 +32,7 @@ func main() {
 	if *standalone {
 		harOutputChannel := tap.StartPassiveTapper()
 		go api.StartReadingEntries(harOutputChannel, tap.HarOutputDir)
-		hostApi()
+		hostApi(nil)
 	} else if *shouldTap {
 		if *aggregatorAddress == "" {
 			panic("Aggregator address must be provided with --aggregator-address when using --tap")
@@ -50,8 +50,9 @@ func main() {
 		}
 		go api.PipeChannelToSocket(socketConnection, harOutputChannel)
 	} else if *aggregator {
-		go api.StartReadingEntries(api.SocketHarOutChannel, nil)
-		hostApi()
+		socketHarOutChannel := make(chan *tap.OutputChannelItem, 1000)
+		go api.StartReadingEntries(socketHarOutChannel, nil)
+		hostApi(socketHarOutChannel)
 	}
 
 	signalChan := make(chan os.Signal, 1)
@@ -61,7 +62,7 @@ func main() {
 	fmt.Println("Exiting")
 }
 
-func hostApi() {
+func hostApi(socketHarOutputChannel chan<- *tap.OutputChannelItem) {
 	app := fiber.New()
 
 
@@ -72,11 +73,10 @@ func hostApi() {
 	app.Get("/echo", func(c *fiber.Ctx) error {
 		return c.SendString("Hello, World 👋!")
 	})
-
-	eventHandlers := RoutesEventHandlers{
-		SocketHarOutChannel: make(chan *tap.OutputChannelItem, 1000),
+	eventHandlers := api.RoutesEventHandlers{
+		SocketHarOutChannel: socketHarOutputChannel,
 	}
-	routes.WebSocketRoutes(app, eventHandlers)
+	routes.WebSocketRoutes(app, &eventHandlers)
 	routes.EntriesRoutes(app)
 	routes.NotFoundRoute(app)
 

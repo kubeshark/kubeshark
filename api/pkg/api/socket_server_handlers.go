@@ -4,15 +4,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/antoniodipinto/ikisocket"
-	"mizuserver/pkg/tap"
 	"mizuserver/pkg/routes"
+	"mizuserver/pkg/tap"
 )
 
 var browserClientSocketUUIDs = make([]string, 0)
 
 type RoutesEventHandlers struct {
 	routes.EventHandlers
-	SocketHarOutChannel chan *tap.OutputChannelItem
+	SocketHarOutChannel chan<- *tap.OutputChannelItem
 }
 
 
@@ -52,7 +52,7 @@ func (h *RoutesEventHandlers) WebSocketError(ep *ikisocket.EventPayload) {
 }
 
 func (h *RoutesEventHandlers) WebSocketMessage(ep *ikisocket.EventPayload) {
-	if ep.Kws.GetAttribute("is_tapper") == true {
+	if ep.Kws.GetAttribute("is_tapper") == true && h.SocketHarOutChannel != nil{
 		var tapOutput tap.OutputChannelItem
 		err := json.Unmarshal(ep.Data, &tapOutput)
 		if err != nil {
@@ -61,7 +61,7 @@ func (h *RoutesEventHandlers) WebSocketMessage(ep *ikisocket.EventPayload) {
 			h.SocketHarOutChannel <- &tapOutput
 		}
 	} else {
-		fmt.Println("Received Web socket message from non tapper websocket, no handler is defined for this message")
+		fmt.Println("Received Web socket message, unable to handle message")
 	}
 }
 
