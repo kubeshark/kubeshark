@@ -48,10 +48,13 @@ func PipeChannelToSocket(connection *websocket.Conn, messageDataChannel <-chan *
 		marshaledData, err := json.Marshal(messageData)
 		if err != nil {
 			fmt.Printf("error converting message to json %s, (%v,%+v)\n", err, err, err)
+			continue
 		}
+
 		err = connection.WriteMessage(websocket.TextMessage, marshaledData)
 		if err != nil {
 			fmt.Printf("error sending message through socket server %s, (%v,%+v)\n", err, err, err)
+			continue
 		}
 	}
 }
