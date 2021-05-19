@@ -49,7 +49,7 @@ func PipeChannelToSocket(connection *websocket.Conn, messageDataChannel <-chan *
 		if err != nil {
 			fmt.Printf("error converting message to json %v", err)
 		}
-		err = connection.WriteMessage(1, marshaledData)
+		err = connection.WriteMessage(websocket.TextMessage, marshaledData)
 		if err != nil {
 			fmt.Printf("error sending message through socket server %v", err)
 		}
