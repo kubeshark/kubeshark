@@ -13,7 +13,7 @@ func WebSocketRoutes(app *fiber.App) {
 	}))
 
 	app.Get("/wsTapper", ikisocket.New(func(kws *ikisocket.Websocket) {
-		//tapper clients are handled differently, they don't need to receive new message broadcasts
+		// Tapper clients are handled differently, they don't need to receive new message broadcasts.
 		kws.SetAttribute("is_tapper", true)
 	}))
 
