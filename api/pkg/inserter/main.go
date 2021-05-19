@@ -117,11 +117,8 @@ func saveHarToDb(entry *har.Entry, sender string) {
 	database.GetEntriesTable().Create(&mizuEntry)
 
 	baseEntry := utils.GetResolvedBaseEntry(mizuEntry)
-	messageToSend := models.WebSocketMessage{
-		MessageType: "entry",
-		Data:        &baseEntry,
-	}
-	messageBytes, _ := json.Marshal(&messageToSend)
+	messageToSend := models.CreateBaseEntryWebSocketMessage(&baseEntry)
+	messageBytes, _ := json.Marshal(messageToSend)
 	ikisocket.Broadcast(messageBytes)
 }
 
