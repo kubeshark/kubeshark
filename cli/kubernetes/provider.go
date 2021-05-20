@@ -200,16 +200,16 @@ func (provider *Provider) CreateMizuRBAC(ctx context.Context, namespace string ,
 	return nil
 }
 
-func (provider *Provider) RemovePod(ctx context.Context, namespace string, podName string) {
-	provider.clientSet.CoreV1().Pods(namespace).Delete(ctx, podName, metav1.DeleteOptions{})
+func (provider *Provider) RemovePod(ctx context.Context, namespace string, podName string) error {
+	return provider.clientSet.CoreV1().Pods(namespace).Delete(ctx, podName, metav1.DeleteOptions{})
 }
 
-func (provider *Provider) RemoveService(ctx context.Context, namespace string, serviceName string) {
-	provider.clientSet.CoreV1().Services(namespace).Delete(ctx, serviceName, metav1.DeleteOptions{})
+func (provider *Provider) RemoveService(ctx context.Context, namespace string, serviceName string) error {
+	return provider.clientSet.CoreV1().Services(namespace).Delete(ctx, serviceName, metav1.DeleteOptions{})
 }
 
-func (provider *Provider) RemoveDaemonSet(ctx context.Context, namespace string, daemonSetName string) {
-	provider.clientSet.AppsV1().DaemonSets(namespace).Delete(ctx, daemonSetName, metav1.DeleteOptions{})
+func (provider *Provider) RemoveDaemonSet(ctx context.Context, namespace string, daemonSetName string) error {
+	return provider.clientSet.AppsV1().DaemonSets(namespace).Delete(ctx, daemonSetName, metav1.DeleteOptions{})
 }
 
 func (provider *Provider) CreateMizuTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, aggregatorPodIp string, nodeToTappedPodIPMap map[string][]string, linkServiceAccount bool) error {

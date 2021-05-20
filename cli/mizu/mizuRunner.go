@@ -59,9 +59,15 @@ func createMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Pro
 
 func cleanUpMizuResources(kubernetesProvider *kubernetes.Provider) {
 	removalCtx, _ := context.WithTimeout(context.Background(), 5 * time.Second)
-	kubernetesProvider.RemovePod(removalCtx, MizuResourcesNamespace, aggregatorPodName)
-	kubernetesProvider.RemoveService(removalCtx, MizuResourcesNamespace, aggregatorPodName)
-	kubernetesProvider.RemoveDaemonSet(removalCtx, MizuResourcesNamespace, TapperDaemonSetName)
+	if err := kubernetesProvider.RemovePod(removalCtx, MizuResourcesNamespace, aggregatorPodName); err != nil {
+		fmt.Printf("Error removing Pod %s in namespace %s: %s (%v,%+v)\n", aggregatorPodName, MizuResourcesNamespace, err, err, err);
+	}
+	if err := kubernetesProvider.RemoveService(removalCtx, MizuResourcesNamespace, aggregatorPodName); err != nil {
+		fmt.Printf("Error removing Service %s in namespace %s: %s (%v,%+v)\n", aggregatorPodName, MizuResourcesNamespace, err, err, err);
+	}
+	if err := kubernetesProvider.RemoveDaemonSet(removalCtx, MizuResourcesNamespace, TapperDaemonSetName); err != nil {
+		fmt.Printf("Error removing DaemonSet %s in namespace %s: %s (%v,%+v)\n", TapperDaemonSetName, MizuResourcesNamespace, err, err, err);
+	}
 }
 
 // will be relevant in the future
