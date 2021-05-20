@@ -18,11 +18,7 @@ func Run(podRegexQuery *regexp.Regexp) {
 	defer cancel() // cancel will be called when this function exits
 	defer cleanUpMizuResources(kubernetesProvider)
 
-	nodeToTappedPodIPMap, err := getNodeHostToTappedPodIpsMap(ctx, kubernetesProvider, podRegexQuery)
-	if err != nil {
-		return
-	}
-	err = createMizuResources(ctx, kubernetesProvider, nodeToTappedPodIPMap)
+	err = createMizuResources(ctx, kubernetesProvider, nodeToTappedPodIPMap, podRegexQuery)
 	if err != nil {
 		return
 	}
@@ -32,23 +28,43 @@ func Run(podRegexQuery *regexp.Regexp) {
 	// TODO handle incoming traffic from tapper using a channel
 }
 
-func createMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, nodeToTappedPodIPMap map[string][]string) error {
+func createMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, podRegexQuery *regexp.Regexp) error {
+	if err := createMizuAggregator(ctx, kubernetesProvider); err != nil {
+		return err
+	}
+
+	if err := createMizuTappers(ctx, kubernetesProvider, podRegexQuery); err != nil {
+		return err
+	}
+}
+
+func createMizuAggregator(ctx context.Context, kubernetesProvider *kubernetes.Provider) error {
 	mizuServiceAccountExists := createRBACIfNecessary(ctx, kubernetesProvider)
 	_, err := kubernetesProvider.CreateMizuAggregatorPod(ctx, MizuResourcesNamespace, aggregatorPodName, config.Configuration.MizuImage, mizuServiceAccountExists)
 	if err != nil {
 		fmt.Printf("Error creating mizu collector pod: %v\n", err)
 		return err
 	}
+
 	aggregatorService, err := kubernetesProvider.CreateService(ctx, MizuResourcesNamespace, aggregatorPodName, aggregatorPodName)
 	if err != nil {
 		fmt.Printf("Error creating mizu collector service: %v\n", err)
 		return err
 	}
+}
+
+func createMizuTappers(ctx context.Context, kubernetesProvider *kubernetes.Provider, podRegexQuery *regexp.Regexp) {
+	nodeToTappedPodIPMap, err := getNodeHostToTappedPodIpsMap(ctx, kubernetesProvider, podRegexQuery)
+	if err != nil {
+		return err
+	}
+
 	err = kubernetesProvider.CreateMizuTapperDaemonSet(ctx, MizuResourcesNamespace, TapperDaemonSetName, config.Configuration.MizuImage, tapperPodName, fmt.Sprintf("%s.%s.svc.cluster.local", aggregatorService.Name, aggregatorService.Namespace), nodeToTappedPodIPMap, mizuServiceAccountExists)
 	if err != nil {
 		fmt.Printf("Error creating mizu tapper daemonset: %v\n", err)
 		return err
 	}
+
 	return nil
 }
 
