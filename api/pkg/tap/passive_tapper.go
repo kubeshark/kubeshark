@@ -134,7 +134,7 @@ var nErrors uint
 var appPorts []int            // global
 var ownIps []string           //global
 var hostMode bool             //global
-var hostAppAddresses []string //global
+var HostAppAddresses []string //global
 
 /* minOutputLevel: Error will be printed only if outputLevel is above this value
  * t:              key for errorsMap (counting errors)
@@ -198,7 +198,7 @@ func (c *Context) GetCaptureInfo() gopacket.CaptureInfo {
 	return c.CaptureInfo
 }
 
-func StartPassiveTapper() chan *OutputChannelItem {
+func StartPassiveTapper() <-chan *OutputChannelItem {
 	var harWriter *HarWriter
 	if *dumpToHar {
 		harWriter = NewHarWriter(*HarOutputDir, *harEntriesPerFile)
@@ -240,8 +240,6 @@ func startPassiveTapper(harWriter *HarWriter) {
 	} else {
 		appPorts = parseAppPorts(appPortsStr)
 	}
-	hostAppAddresses = parseHostAppAddresses(*hostAppAddressesString)
-	fmt.Println("Filtering for the following addresses:", hostAppAddresses)
 	tapOutputPort := os.Getenv(OutPortEnvVar)
 	if tapOutputPort == "" {
 		fmt.Println("Received empty/no WEB_SOCKET_PORT env var! falling back to port 8080")
@@ -275,7 +273,8 @@ func startPassiveTapper(harWriter *HarWriter) {
 				appPorts = *parsedMessage.Ports
 			} else if parsedMessage.MessageType == "setAddresses" {
 				Debug("Got message from collector. Type: %s, IPs: %v\n", parsedMessage.MessageType, parsedMessage.Addresses)
-				hostAppAddresses = *parsedMessage.Addresses
+				HostAppAddresses = *parsedMessage.Addresses
+				Info("Filtering for the following addresses: %s\n", HostAppAddresses)
 			}
 		} else {
 			Error("Collector-Message-Parsing", "Error parsing message from collector: %s (%v,%+v)\n", err, err, err)
