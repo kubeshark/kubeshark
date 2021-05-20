@@ -18,12 +18,16 @@ func Run(podRegexQuery *regexp.Regexp) {
 	defer cancel() // cancel will be called when this function exits
 	defer cleanUpMizuResources(kubernetesProvider)
 
-	err = createMizuResources(ctx, kubernetesProvider, nodeToTappedPodIPMap, podRegexQuery)
-	if err != nil {
+	if err := createMizuResources(ctx, kubernetesProvider, podRegexQuery); err != nil {
 		return
 	}
+
 	go portForwardApiPod(ctx, kubernetesProvider, cancel) //TODO convert this to job for built in pod ttl or have the running app handle this
-	waitForFinish(ctx, cancel)                                                                                                                //block until exit signal or error
+	go watchPodsForTapping(ctx, kubernetesProvider, cancel, podRegexQuery)
+
+	//block until exit signal or error
+	waitForFinish(ctx, cancel)
+
 
 	// TODO handle incoming traffic from tapper using a channel
 }
@@ -36,6 +40,8 @@ func createMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Pro
 	if err := createMizuTappers(ctx, kubernetesProvider, podRegexQuery); err != nil {
 		return err
 	}
+
+	return nil
 }
 
 func createMizuAggregator(ctx context.Context, kubernetesProvider *kubernetes.Provider) error {
@@ -51,9 +57,11 @@ func createMizuAggregator(ctx context.Context, kubernetesProvider *kubernetes.Pr
 		fmt.Printf("Error creating mizu collector service: %v\n", err)
 		return err
 	}
+
+	return nil
 }
 
-func createMizuTappers(ctx context.Context, kubernetesProvider *kubernetes.Provider, podRegexQuery *regexp.Regexp) {
+func createMizuTappers(ctx context.Context, kubernetesProvider *kubernetes.Provider, podRegexQuery *regexp.Regexp) error {
 	nodeToTappedPodIPMap, err := getNodeHostToTappedPodIpsMap(ctx, kubernetesProvider, podRegexQuery)
 	if err != nil {
 		return err
@@ -83,28 +91,36 @@ func cleanUpMizuResources(kubernetesProvider *kubernetes.Provider) {
 	}
 }
 
-// will be relevant in the future
-//func watchPodsForTapping(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc, podRegex *regexp.Regexp) {
-//	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, kubernetesProvider.GetPodWatcher(ctx, kubernetesProvider.Namespace), podRegex)
-//	for {
-//		select {
-//		case newTarget := <- added:
-//			fmt.Printf("+%s\n", newTarget.Name)
-//
-//		case removedTarget := <- removed:
-//			fmt.Printf("-%s\n", removedTarget.Name)
-//
-//		case <- modified:
-//			continue
-//
-//		case <- errorChan:
-//			cancel()
-//
-//		case <- ctx.Done():
-//			return
-//		}
-//	}
-//}
+func watchPodsForTapping(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc, podRegex *regexp.Regexp) {
+	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, kubernetesProvider.GetPodWatcher(ctx, kubernetesProvider.Namespace), podRegex)
+	for {
+		select {
+		case newTarget := <- added:
+			fmt.Printf("+%s\n", newTarget.Name)
+			if err := createMizuTappers(ctx, kubernetesProvider, podRegex); err != nil {
+				fmt.Println("Error updating daemonset: %s (%v,%+v)\n", err, err, err)
+				cancel()
+			}
+
+		case removedTarget := <- removed:
+			fmt.Printf("-%s\n", removedTarget.Name)
+			if err := createMizuTappers(ctx, kubernetesProvider, podRegex); err != nil {
+				fmt.Println("Error updating daemonset: %s (%v,%+v)\n", err, err, err)
+				cancel()
+			}
+
+		case <- modified:
+			continue
+
+		case <- errorChan:
+			// TODO: Does this also perform cleanup?
+			cancel()
+
+		case <- ctx.Done():
+			return
+		}
+	}
+}
 
 func portForwardApiPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
 	podExactRegex := regexp.MustCompile(fmt.Sprintf("^%s$", aggregatorPodName))
