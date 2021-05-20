@@ -16,25 +16,20 @@ func Run(podRegexQuery *regexp.Regexp) {
 	kubernetesProvider := kubernetes.NewProvider(config.Configuration.KubeConfigPath, config.Configuration.Namespace)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // cancel will be called when this function exits
+	defer cleanUpMizuResources(kubernetesProvider)
 
 	nodeToTappedPodIPMap, err := getNodeHostToTappedPodIpsMap(ctx, kubernetesProvider, podRegexQuery)
 	if err != nil {
-		cleanUpMizuResources(kubernetesProvider)
 		return
 	}
 	err = createMizuResources(ctx, kubernetesProvider, nodeToTappedPodIPMap)
 	if err != nil {
-		cleanUpMizuResources(kubernetesProvider)
 		return
 	}
 	go portForwardApiPod(ctx, kubernetesProvider, cancel) //TODO convert this to job for built in pod ttl or have the running app handle this
 	waitForFinish(ctx, cancel)                                                                                                                //block until exit signal or error
 
 	// TODO handle incoming traffic from tapper using a channel
-
-	//cleanup
-	fmt.Printf("\nRemoving mizu resources\n")
-	cleanUpMizuResources(kubernetesProvider)
 }
 
 func createMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, nodeToTappedPodIPMap map[string][]string) error {
@@ -58,6 +53,8 @@ func createMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Pro
 }
 
 func cleanUpMizuResources(kubernetesProvider *kubernetes.Provider) {
+	fmt.Printf("\nRemoving mizu resources\n")
+
 	removalCtx, _ := context.WithTimeout(context.Background(), 5 * time.Second)
 	if err := kubernetesProvider.RemovePod(removalCtx, MizuResourcesNamespace, aggregatorPodName); err != nil {
 		fmt.Printf("Error removing Pod %s in namespace %s: %s (%v,%+v)\n", aggregatorPodName, MizuResourcesNamespace, err, err, err);
