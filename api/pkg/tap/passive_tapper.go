@@ -240,8 +240,6 @@ func startPassiveTapper(harWriter *HarWriter) {
 	} else {
 		appPorts = parseAppPorts(appPortsStr)
 	}
-	//HostAppAddresses = parseHostAppAddresses(*hostAppAddressesString)
-	fmt.Println("Filtering for the following addresses:", HostAppAddresses)
 	tapOutputPort := os.Getenv(OutPortEnvVar)
 	if tapOutputPort == "" {
 		fmt.Println("Received empty/no WEB_SOCKET_PORT env var! falling back to port 8080")
@@ -276,6 +274,7 @@ func startPassiveTapper(harWriter *HarWriter) {
 			} else if parsedMessage.MessageType == "setAddresses" {
 				Debug("Got message from collector. Type: %s, IPs: %v\n", parsedMessage.MessageType, parsedMessage.Addresses)
 				HostAppAddresses = *parsedMessage.Addresses
+				Info("Filtering for the following addresses: %s\n", HostAppAddresses)
 			}
 		} else {
 			Error("Collector-Message-Parsing", "Error parsing message from collector: %s (%v,%+v)\n", err, err, err)

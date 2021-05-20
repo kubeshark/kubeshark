@@ -41,6 +41,7 @@ func main() {
 		tapTargets := getTapTargets()
 		if tapTargets != nil {
 			tap.HostAppAddresses = tapTargets
+			fmt.Println("Filtering for the following addresses:", tap.HostAppAddresses)
 		}
 
 		harOutputChannel := tap.StartPassiveTapper()
