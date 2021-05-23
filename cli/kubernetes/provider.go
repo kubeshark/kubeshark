@@ -214,7 +214,7 @@ func (provider *Provider) RemoveDaemonSet(ctx context.Context, namespace string,
 	return provider.clientSet.AppsV1().DaemonSets(namespace).Delete(ctx, daemonSetName, metav1.DeleteOptions{})
 }
 
-func (provider *Provider) CreateMizuTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, aggregatorPodIp string, nodeToTappedPodIPMap map[string][]string, linkServiceAccount bool) error {
+func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, aggregatorPodIp string, nodeToTappedPodIPMap map[string][]string, linkServiceAccount bool) error {
 	nodeToTappedPodIPMapJsonStr, err := json.Marshal(nodeToTappedPodIPMap)
 	if err != nil {
 		return err
@@ -282,7 +282,7 @@ func (provider *Provider) CreateMizuTapperDaemonSet(ctx context.Context, namespa
 			Template: podTemplate,
 		},
 	}
-	_, err = provider.clientSet.AppsV1().DaemonSets(namespace).Create(ctx, &daemonSet, metav1.CreateOptions{})
+	_, err = provider.clientSet.AppsV1().DaemonSets(namespace).Apply(ctx, &daemonSet, metav1.ApplyOptions{})
 	return err
 }
 

@@ -75,7 +75,7 @@ func createMizuTappers(ctx context.Context, kubernetesProvider *kubernetes.Provi
 		return err
 	}
 
-	err = kubernetesProvider.CreateMizuTapperDaemonSet(ctx, MizuResourcesNamespace, TapperDaemonSetName, config.Configuration.MizuImage, tapperPodName, fmt.Sprintf("%s.%s.svc.cluster.local", aggregatorService.Name, aggregatorService.Namespace), nodeToTappedPodIPMap, mizuServiceAccountExists)
+	err = kubernetesProvider.ApplyMizuTapperDaemonSet(ctx, MizuResourcesNamespace, TapperDaemonSetName, config.Configuration.MizuImage, tapperPodName, fmt.Sprintf("%s.%s.svc.cluster.local", aggregatorService.Name, aggregatorService.Namespace), nodeToTappedPodIPMap, mizuServiceAccountExists)
 	if err != nil {
 		fmt.Printf("Error creating mizu tapper daemonset: %v\n", err)
 		return err
