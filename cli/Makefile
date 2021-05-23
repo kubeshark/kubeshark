@@ -1,5 +1,6 @@
 FOLDER=$(GOOS).$(GOARCH)
 COMMIT_HASH=$(shell git rev-parse HEAD)
+GIT_BRANCH=$(shell git branch --show-current)
 
 .PHONY: help
 .DEFAULT_GOAL := help
@@ -11,7 +12,7 @@ install:
 	go install mizu.go
 
 build:	## build mizu CLI binary (select platform via GOOS / GOARCH env variables)
-	go build -ldflags="-X 'github.com/up9inc/mizu/cli/mizu.GitCommitHash=$(COMMIT_HASH)'" -o bin/$(FOLDER)/mizu mizu.go
+	go build -ldflags="-X 'github.com/up9inc/mizu/cli/mizu.GitCommitHash=$(COMMIT_HASH)' -X 'github.com/up9inc/mizu/cli/mizu.Branch=$(GIT_BRANCH)'" -o bin/$(FOLDER)/mizu mizu.go
 
 build-all:  ## build for all supported platforms
 	@echo "Compiling for every OS and Platform"
