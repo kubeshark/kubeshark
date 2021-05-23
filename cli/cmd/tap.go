@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"errors"
+	"fmt"
+	"regexp"
 
 	"github.com/spf13/cobra"
 
@@ -10,20 +12,25 @@ import (
 )
 
 var tapCmd = &cobra.Command{
-	Use:   "tap [PODNAME]",
+	Use:   "tap [POD REGEX]",
 	Short: "Record ingoing traffic of a kubernetes pod",
 	Long: `Record the ingoing traffic of a kubernetes pod.
  Supported protocols are HTTP and gRPC.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if len(args) == 0 {
-			return errors.New("PODNAME argument is required")
+			return errors.New("POD REGEX argument is required")
 		} else if len(args) > 1 {
 			return errors.New("Unexpected number of arguments")
 		}
 
-		podName := args[0]
+		regex, err := regexp.Compile(args[0])
+		if err != nil {
 
-		mizu.Run(podName)
+			return errors.New(fmt.Sprintf("%s is not a valid regex %s", args[0], err))
+			return nil
+		}
+
+		mizu.Run(regex)
 		return nil
 	},
 }

@@ -1,11 +1,10 @@
-package inserter
+package api
 
 import (
 	"bufio"
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/antoniodipinto/ikisocket"
 	"github.com/google/martian/har"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"mizuserver/pkg/database"
@@ -43,7 +42,7 @@ func init() {
 	k8sResolver = res
 }
 
-func StartReadingEntries(harChannel chan *tap.OutputChannelItem, workingDir *string) {
+func StartReadingEntries(harChannel <-chan *tap.OutputChannelItem, workingDir *string) {
 	if workingDir != nil && *workingDir != "" {
 		startReadingFiles(*workingDir)
 	} else {
@@ -83,7 +82,11 @@ func startReadingFiles(workingDir string) {
 	}
 }
 
-func startReadingChannel(outputItems chan *tap.OutputChannelItem) {
+func startReadingChannel(outputItems <-chan *tap.OutputChannelItem) {
+	if outputItems == nil {
+		panic("Channel of captured messages is nil")
+	}
+
 	for item := range outputItems {
 		saveHarToDb(item.HarEntry, item.RequestSenderIp)
 	}
@@ -118,8 +121,8 @@ func saveHarToDb(entry *har.Entry, sender string) {
 
 	baseEntry := utils.GetResolvedBaseEntry(mizuEntry)
 	messageToSend := models.CreateBaseEntryWebSocketMessage(&baseEntry)
-	messageBytes, _ := json.Marshal(messageToSend)
-	ikisocket.Broadcast(messageBytes)
+	baseEntryBytes, _ := json.Marshal(&messageToSend)
+	broadcastToBrowserClients(baseEntryBytes)
 }
 
 func getServiceNameFromUrl(inputUrl string) (string, string, string) {
@@ -127,4 +130,3 @@ func getServiceNameFromUrl(inputUrl string) (string, string, string) {
 	utils.CheckErr(err)
 	return fmt.Sprintf("%s://%s", parsed.Scheme, parsed.Host), parsed.Path, parsed.Host
 }
-
