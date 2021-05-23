@@ -1,7 +1,7 @@
 # creates image in which mizu api is remotely debuggable using delve
 FROM node:14-slim AS site-build
 
-WORKDIR /ui-build
+WORKDIR /app/ui-build
 
 COPY ui .
 RUN npm i
@@ -15,14 +15,16 @@ ENV CGO_ENABLED=1 GOOS=linux GOARCH=amd64
 RUN apk add libpcap-dev gcc g++ make
 
 # Move to api working directory (/api-build).
-WORKDIR /api-build
+WORKDIR /app/api-build
 
 COPY api/go.mod api/go.sum ./
+COPY shared/go.mod shared/go.mod ../shared/
 RUN go mod download
 # cheap trick to make the build faster (As long as go.mod wasn't changes)
 RUN go list -f '{{.Path}}@{{.Version}}' -m all | sed 1d | grep -e 'go-cache' -e 'sqlite' | xargs go get
 
 # Copy and build api code
+COPY shared ../shared
 COPY api .
 RUN go build -gcflags="all=-N -l" -o mizuagent .
 
@@ -33,8 +35,8 @@ RUN apk add bash libpcap-dev tcpdump
 WORKDIR /app
 
 # Copy binary and config files from /build to root folder of scratch container.
-COPY --from=builder ["/api-build/mizuagent", "."]
-COPY --from=site-build ["/ui-build/build", "site"]
+COPY --from=builder ["/app/api-build/mizuagent", "."]
+COPY --from=site-build ["/app/ui-build/build", "site"]
 
 # install remote debugging tool
 RUN go get github.com/go-delve/delve/cmd/dlv

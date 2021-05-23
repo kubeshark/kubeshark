@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/antoniodipinto/ikisocket"
+	"github.com/up9inc/mizu/shared"
+	"mizuserver/pkg/controllers"
 	"mizuserver/pkg/routes"
 	"mizuserver/pkg/tap"
 )
@@ -52,6 +54,8 @@ func (h *RoutesEventHandlers) WebSocketError(ep *ikisocket.EventPayload) {
 }
 
 func (h *RoutesEventHandlers) WebSocketMessage(ep *ikisocket.EventPayload) {
+	fmt.Println("Received socket message")
+	//TODO: singular flow for unmarshalling messages, tapper messages should use ControlSocketMessage (Which should be renamed)
 	if ep.Kws.GetAttribute("is_tapper") == true && h.SocketHarOutChannel != nil{
 		var tapOutput tap.OutputChannelItem
 		err := json.Unmarshal(ep.Data, &tapOutput)
@@ -61,7 +65,22 @@ func (h *RoutesEventHandlers) WebSocketMessage(ep *ikisocket.EventPayload) {
 			h.SocketHarOutChannel <- &tapOutput
 		}
 	} else {
-		fmt.Println("Received Web socket message, unable to handle message")
+		var controlMessage shared.ControlSocketMessage
+		err := json.Unmarshal(ep.Data, &controlMessage)
+		if err != nil {
+			fmt.Printf("Could not unmarshal message received from tapper websocket %v\n", err)
+		} else {
+			if controlMessage.MessageType == shared.TAPPING_STATUS_MESSAGE_TYPE {
+				tappingUpdateData, ok := controlMessage.Data.(*shared.TapStatus)
+				if ok {
+					controllers.TapStatus = tappingUpdateData
+				} else {
+					fmt.Printf("Could not cast tap status socket message")
+				}
+			} else {
+				fmt.Printf("Received socket message of type %s for which no handlers are defined", controlMessage.MessageType)
+			}
+		}
 	}
 }
 
