@@ -99,14 +99,14 @@ func watchPodsForTapping(ctx context.Context, kubernetesProvider *kubernetes.Pro
 		case newTarget := <- added:
 			fmt.Printf("+%s\n", newTarget.Name)
 			if err := createMizuTappers(ctx, kubernetesProvider, podRegex); err != nil {
-				fmt.Println("Error updating daemonset: %s (%v,%+v)\n", err, err, err)
+				fmt.Printf("Error updating daemonset: %s (%v,%+v)\n", err, err, err)
 				cancel()
 			}
 
 		case removedTarget := <- removed:
 			fmt.Printf("-%s\n", removedTarget.Name)
 			if err := createMizuTappers(ctx, kubernetesProvider, podRegex); err != nil {
-				fmt.Println("Error updating daemonset: %s (%v,%+v)\n", err, err, err)
+				fmt.Printf("Error updating daemonset: %s (%v,%+v)\n", err, err, err)
 				cancel()
 			}
 
