@@ -25,9 +25,7 @@ var tapCmd = &cobra.Command{
 
 		regex, err := regexp.Compile(args[0])
 		if err != nil {
-
 			return errors.New(fmt.Sprintf("%s is not a valid regex %s", args[0], err))
-			return nil
 		}
 
 		mizu.Run(regex)
@@ -41,6 +39,6 @@ func init() {
 	tapCmd.Flags().Uint16VarP(&config.Configuration.GuiPort, "gui-port", "p", 8899, "Provide a custom port for the web interface webserver")
 	tapCmd.Flags().StringVarP(&config.Configuration.Namespace, "namespace", "n", "", "Namespace selector")
 	tapCmd.Flags().StringVarP(&config.Configuration.KubeConfigPath, "kubeconfig", "k", "", "Path to kubeconfig file")
-	tapCmd.Flags().StringVarP(&config.Configuration.MizuImage, "mizu-image", "", "gcr.io/up9-docker-hub/mizu/develop:latest", "Custom image for mizu collector")
+	tapCmd.Flags().StringVarP(&config.Configuration.MizuImage, "mizu-image", "", fmt.Sprintf("gcr.io/up9-docker-hub/mizu/%s:latest", mizu.Branch), "Custom image for mizu collector")
 	tapCmd.Flags().Uint16VarP(&config.Configuration.MizuPodPort, "mizu-port", "", 8899, "Port which mizu cli will attempt to forward from the mizu collector pod")
 }
