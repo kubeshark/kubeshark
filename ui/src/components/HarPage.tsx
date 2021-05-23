@@ -60,18 +60,29 @@ export const HarPage: React.FC = () => {
     if(ws.current) {
         ws.current.onmessage = e => {
             if(!e?.data) return;
-            const entry = JSON.parse(e.data);
-            if(connection === ConnectionStatus.Paused) {
-                setNoMoreDataBottom(false)
-                return;
+            const message = JSON.parse(e.data);
+
+            switch (message.messageType) {
+                case "entry":
+                    const entry = message.data
+                    if(connection === ConnectionStatus.Paused) {
+                        setNoMoreDataBottom(false)
+                        return;
+                    }
+                    if(!focusedEntryId) setFocusedEntryId(entry.id)
+                    let newEntries = [...entries];
+                    if(entries.length === 1000) {
+                        newEntries = newEntries.splice(1);
+                        setNoMoreDataTop(false);
+                    }
+                    setEntries([...newEntries, entry])
+                    break
+                case "updateStatus":
+                    console.log("not implemented yet")
+                    break
+                default:
+                    console.error(`unsupported websocket message type, Got: ${message.messageType}`)
             }
-            if(!focusedEntryId) setFocusedEntryId(entry.id)
-            let newEntries = [...entries];
-            if(entries.length === 1000) {
-                newEntries = newEntries.splice(1);
-                setNoMoreDataTop(false);
-            }
-            setEntries([...newEntries, entry])
         }
     }
 

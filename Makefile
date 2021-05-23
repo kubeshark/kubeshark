@@ -38,8 +38,7 @@ api: ## build API server
 
 docker: ## build Docker image 
 	@(echo "building docker image" )
-	docker build -t up9inc/mizu:latest .
-	#./build-push-featurebranch.sh
+	./build-push-featurebranch.sh
 
 push: push-docker push-cli ## build and publish Mizu docker image & CLI
 
