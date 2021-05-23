@@ -6,6 +6,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+
+	"path/filepath"
+	"regexp"
+
 	apps "k8s.io/api/apps/v1"
 	core "k8s.io/api/core/v1"
 	rbac "k8s.io/api/rbac/v1"
@@ -22,8 +26,6 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	_ "k8s.io/client-go/tools/portforward"
 	"k8s.io/client-go/util/homedir"
-	"path/filepath"
-	"regexp"
 )
 
 type Provider struct {

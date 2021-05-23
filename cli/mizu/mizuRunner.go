@@ -3,13 +3,14 @@ package mizu
 import (
 	"context"
 	"fmt"
-	"github.com/up9inc/mizu/cli/config"
-	"github.com/up9inc/mizu/cli/kubernetes"
 	"os"
 	"os/signal"
 	"regexp"
 	"syscall"
 	"time"
+
+	"github.com/up9inc/mizu/cli/config"
+	"github.com/up9inc/mizu/cli/kubernetes"
 )
 
 func Run(podRegexQuery *regexp.Regexp) {
