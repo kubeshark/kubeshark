@@ -9,9 +9,14 @@ import (
 	"syscall"
 	"time"
 
+	core "k8s.io/api/core/v1"
+
 	"github.com/up9inc/mizu/cli/config"
 	"github.com/up9inc/mizu/cli/kubernetes"
 )
+
+var mizuServiceAccountExists bool
+var aggregatorService *core.Service
 
 func Run(podRegexQuery *regexp.Regexp) {
 	kubernetesProvider := kubernetes.NewProvider(config.Configuration.KubeConfigPath, config.Configuration.Namespace)
@@ -46,14 +51,16 @@ func createMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Pro
 }
 
 func createMizuAggregator(ctx context.Context, kubernetesProvider *kubernetes.Provider) error {
-	mizuServiceAccountExists := createRBACIfNecessary(ctx, kubernetesProvider)
-	_, err := kubernetesProvider.CreateMizuAggregatorPod(ctx, MizuResourcesNamespace, aggregatorPodName, config.Configuration.MizuImage, mizuServiceAccountExists)
+	var err error
+
+	mizuServiceAccountExists = createRBACIfNecessary(ctx, kubernetesProvider)
+	_, err = kubernetesProvider.CreateMizuAggregatorPod(ctx, MizuResourcesNamespace, aggregatorPodName, config.Configuration.MizuImage, mizuServiceAccountExists)
 	if err != nil {
 		fmt.Printf("Error creating mizu collector pod: %v\n", err)
 		return err
 	}
 
-	aggregatorService, err := kubernetesProvider.CreateService(ctx, MizuResourcesNamespace, aggregatorPodName, aggregatorPodName)
+	aggregatorService, err = kubernetesProvider.CreateService(ctx, MizuResourcesNamespace, aggregatorPodName, aggregatorPodName)
 	if err != nil {
 		fmt.Printf("Error creating mizu collector service: %v\n", err)
 		return err
