@@ -1,8 +1,6 @@
 package controllers
 
 import (
-	"archive/zip"
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/gofiber/fiber/v2"
@@ -89,7 +87,7 @@ func GetHAR(c *fiber.Ctx) error {
 		utils.ReverseSlice(entries)
 	}
 
-	retObj := map[string]*har.HAR{}
+	harsObject := map[string]*har.HAR{}
 
 	for _, entryData := range entries {
 		harEntryObject := []byte(entryData.Entry)
@@ -98,12 +96,12 @@ func GetHAR(c *fiber.Ctx) error {
 		_ = json.Unmarshal(harEntryObject, &harEntry)
 
 		sourceOfEntry := *entryData.ResolvedSource
-		if harOfSource, ok := retObj[sourceOfEntry]; ok {
+		if harOfSource, ok := harsObject[sourceOfEntry]; ok {
 			harOfSource.Log.Entries = append(harOfSource.Log.Entries, &harEntry)
 		} else {
 			var entriesHar []*har.Entry
 			entriesHar = append(entriesHar, &harEntry)
-			retObj[sourceOfEntry] = &har.HAR{
+			harsObject[sourceOfEntry] = &har.HAR{
 				Log: &har.Log{
 					Version: "1.2",
 					Creator: &har.Creator{
@@ -116,24 +114,13 @@ func GetHAR(c *fiber.Ctx) error {
 		}
 	}
 
-	buffer := zipData(retObj)
-	return c.Status(fiber.StatusOK).SendStream(buffer)
-}
-
-func zipData(files map[string]*har.HAR) *bytes.Buffer {
-	// Create a buffer to write our archive to.
-	buf := new(bytes.Buffer)
-	// Create a new zip archive.
-	zipWriter := zip.NewWriter(buf)
-	defer func() { _ = zipWriter.Close() }()
-
-	for fileName, fileData := range files {
-		zipFile, _ := zipWriter.Create(fileName + ".json")
-		fileDataBytes, _ := json.Marshal(fileData)
-		_, _ = zipFile.Write(fileDataBytes)
+	retObj := map[string][]byte{}
+	for k, v := range harsObject {
+		bytesData, _ := json.Marshal(v)
+		retObj[k] = bytesData
 	}
-
-	return buf
+	buffer := utils.ZipData(retObj)
+	return c.Status(fiber.StatusOK).SendStream(buffer)
 }
 
 func GetEntry(c *fiber.Ctx) error {
