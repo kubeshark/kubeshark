@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
-	"github.com/up9inc/mizu/cli/bl"
 )
 
 type MizuFetchOptions struct {
@@ -11,11 +10,12 @@ type MizuFetchOptions struct {
 }
 
 var mizuFetchOptions = MizuFetchOptions{}
+
 var fetchCmd = &cobra.Command{
 	Use:   "fetch",
 	Short: "Download recorded traffic to files",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		bl.RunMizuFetch()
+		RunMizuFetch(&mizuFetchOptions)
 		return nil
 	},
 }
@@ -24,5 +24,5 @@ func init() {
 	rootCmd.AddCommand(fetchCmd)
 
 	fetchCmd.Flags().Uint16VarP(&mizuFetchOptions.Limit, "limit", "l", 1000, "Provide a custom limit for entries to fetch")
-	fetchCmd.Flags().StringVarP(&mizuFetchOptions.Directory, "directory", "d", ".", "Provide a custom limit for entries to fetch")
+	fetchCmd.Flags().StringVarP(&mizuFetchOptions.Directory, "directory", "d", ".", "Provide a custom directory for fetched entries")
 }

@@ -1,9 +1,8 @@
-package bl
+package cmd
 
 import (
 	"context"
 	"fmt"
-	"github.com/up9inc/mizu/cli/cmd"
 	"github.com/up9inc/mizu/cli/kubernetes"
 	"github.com/up9inc/mizu/cli/mizu"
 	"os"
@@ -13,7 +12,7 @@ import (
 	"time"
 )
 
-func RunMizuTap(podRegexQuery *regexp.Regexp, tappingOptions *cmd.MizuTapOptions) {
+func RunMizuTap(podRegexQuery *regexp.Regexp, tappingOptions *MizuTapOptions) {
 	kubernetesProvider := kubernetes.NewProvider(tappingOptions.KubeConfigPath, tappingOptions.Namespace)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // cancel will be called when this function exits
@@ -38,7 +37,7 @@ func RunMizuTap(podRegexQuery *regexp.Regexp, tappingOptions *cmd.MizuTapOptions
 	cleanUpMizuResources(kubernetesProvider)
 }
 
-func createMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, nodeToTappedPodIPMap map[string][]string, tappingOptions *cmd.MizuTapOptions) error {
+func createMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, nodeToTappedPodIPMap map[string][]string, tappingOptions *MizuTapOptions) error {
 	mizuServiceAccountExists := createRBACIfNecessary(ctx, kubernetesProvider)
 	_, err := kubernetesProvider.CreateMizuAggregatorPod(ctx, mizu.ResourcesNamespace, mizu.AggregatorPodName, tappingOptions.MizuImage, mizuServiceAccountExists)
 	if err != nil {
@@ -94,7 +93,7 @@ func cleanUpMizuResources(kubernetesProvider *kubernetes.Provider) {
 //	}
 //}
 
-func portForwardApiPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc, tappingOptions *cmd.MizuTapOptions) {
+func portForwardApiPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc, tappingOptions *MizuTapOptions) {
 	podExactRegex := regexp.MustCompile(fmt.Sprintf("^%s$", mizu.AggregatorPodName))
 	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, kubernetesProvider.GetPodWatcher(ctx, mizu.ResourcesNamespace), podExactRegex)
 	isPodReady := false

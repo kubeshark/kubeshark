@@ -3,7 +3,6 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	"github.com/up9inc/mizu/cli/bl"
 	"github.com/up9inc/mizu/cli/mizu"
 	"regexp"
 
@@ -38,7 +37,7 @@ var tapCmd = &cobra.Command{
 			return errors.New(fmt.Sprintf("%s is not a valid regex %s", args[0], err))
 		}
 
-		bl.RunMizuTap(regex, mizuTapOptions)
+		RunMizuTap(regex, mizuTapOptions)
 		return nil
 	},
 }

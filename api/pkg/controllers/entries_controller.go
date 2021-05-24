@@ -125,13 +125,14 @@ func zipData(files map[string]*har.HAR) *bytes.Buffer {
 	buf := new(bytes.Buffer)
 	// Create a new zip archive.
 	zipWriter := zip.NewWriter(buf)
+	defer func() { _ = zipWriter.Close() }()
+
 	for fileName, fileData := range files {
 		zipFile, _ := zipWriter.Create(fileName + ".json")
 		fileDataBytes, _ := json.Marshal(fileData)
-		zipFile.Write(fileDataBytes)
+		_, _ = zipFile.Write(fileDataBytes)
 	}
-	// Make sure to check the error on Close.
-	zipWriter.Close()
+
 	return buf
 }
 
