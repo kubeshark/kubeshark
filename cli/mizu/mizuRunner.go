@@ -205,7 +205,7 @@ func syncApiStatus(ctx context.Context, cancel context.CancelFunc, namespace str
 		case <- ctx.Done():
 			return
 		default:
-			err = controlSocket.SendNewTappedPodsListMessage(namespace, currentlyTappedPods)
+			err = controlSocket.SendNewTappedPodsListMessage(currentlyTappedPods)
 			if err != nil {
 				fmt.Printf("error Sending message via control socket %s\n", err)
 			}

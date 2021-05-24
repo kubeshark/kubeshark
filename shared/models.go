@@ -1,21 +1,35 @@
 package shared
 
-type ControlSocketMessageType string
-
+type WebSocketMessageType string
 const (
-	TAPPING_STATUS_MESSAGE_TYPE ControlSocketMessageType = "tappingStatus"
+	WebSocketMessageTypeEntry        WebSocketMessageType = "entry"
+	WebSocketMessageTypeTappedEntry        WebSocketMessageType = "tappedEntry"
+	WebSocketMessageTypeUpdateStatus WebSocketMessageType = "status"
 )
 
-type MizuSocketMessage struct {
-	MessageType ControlSocketMessageType `json:"messageType"`
-	Data        interface{} `json:"data"`
+type WebSocketMessageMetadata struct {
+	MessageType WebSocketMessageType `json:"messageType,omitempty"`
+}
+
+type WebSocketStatusMessage struct {
+	*WebSocketMessageMetadata
+	TappingStatus TapStatus `json:"tappingStatus"`
 }
 
 type TapStatus struct {
-	Namespace string `json:"namespace"`
 	Pods      []PodInfo `json:"pods"`
 }
 
 type PodInfo struct {
+	Namespace string `json:"namespace"`
 	Name string `json:"name"`
+}
+
+func CreateWebSocketStatusMessage(tappingStatus TapStatus) WebSocketStatusMessage {
+	return WebSocketStatusMessage{
+		WebSocketMessageMetadata: &WebSocketMessageMetadata{
+			MessageType: WebSocketMessageTypeUpdateStatus,
+		},
+		TappingStatus: tappingStatus,
+	}
 }

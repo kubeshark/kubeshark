@@ -21,13 +21,13 @@ func CreateControlSocket(socketServerAddress string) (*ControlSocket, error) {
 	}
 }
 
-func (controlSocket *ControlSocket) SendNewTappedPodsListMessage(namespace string, pods []core.Pod) error {
+func (controlSocket *ControlSocket) SendNewTappedPodsListMessage(pods []core.Pod) error {
 	podInfos := make([]shared.PodInfo, 0)
 	for _, pod := range pods {
-		podInfos = append(podInfos, shared.PodInfo{Name: pod.Name})
+		podInfos = append(podInfos, shared.PodInfo{Name: pod.Name, Namespace: pod.Namespace})
 	}
-	tapStatus := shared.TapStatus{Namespace: namespace, Pods: podInfos}
-	socketMessage := shared.MizuSocketMessage{MessageType: shared.TAPPING_STATUS_MESSAGE_TYPE, Data: tapStatus}
+	tapStatus := shared.TapStatus{Pods: podInfos}
+	socketMessage := shared.CreateWebSocketStatusMessage(tapStatus)
 
 	jsonMessage, err := json.Marshal(socketMessage)
 	if err != nil {
