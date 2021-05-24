@@ -81,7 +81,6 @@ export const HarPage: React.FC = () => {
                     setEntries([...newEntries, entry])
                     break
                 case "status":
-                    console.log('status update', message);
                     setApiStatus(message.tappingStatus);
                     break
                 default:
