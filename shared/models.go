@@ -4,9 +4,10 @@ type ControlSocketMessageType string
 
 const (
 	TAPPING_STATUS_MESSAGE_TYPE ControlSocketMessageType = "tappingStatus"
+	TAPPED_MESSAGE_TYPE ControlSocketMessageType = "tappedMessage"
 )
 
-type ControlSocketMessage struct {
+type MizuSocketMessage struct {
 	MessageType ControlSocketMessageType `json:"messageType"`
 	Data        interface{} `json:"data"`
 }
@@ -19,4 +20,3 @@ type TapStatus struct {
 type PodInfo struct {
 	Name string `json:"name"`
 }
-

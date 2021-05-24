@@ -26,7 +26,7 @@ func (controlSocket *ControlSocket) SendNewTappedPodsListMessage(namespace strin
 		podInfos = append(podInfos, shared.PodInfo{Name: pod.Name})
 	}
 	tapStatus := shared.TapStatus{Namespace: namespace, Pods: podInfos}
-	socketMessage := shared.ControlSocketMessage{MessageType: shared.TAPPING_STATUS_MESSAGE_TYPE, Data: tapStatus}
+	socketMessage := shared.MizuSocketMessage{MessageType: shared.TAPPING_STATUS_MESSAGE_TYPE, Data: tapStatus}
 
 	jsonMessage, err := json.Marshal(socketMessage)
 	if err != nil {

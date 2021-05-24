@@ -107,7 +107,11 @@ func pipeChannelToSocket(connection *websocket.Conn, messageDataChannel <-chan *
 	}
 
 	for messageData := range messageDataChannel {
-		marshaledData, err := json.Marshal(messageData)
+		socketMessage := shared.MizuSocketMessage{
+			MessageType: shared.TAPPED_MESSAGE_TYPE,
+			Data: messageData,
+		}
+		marshaledData, err := json.Marshal(socketMessage)
 		if err != nil {
 			fmt.Printf("error converting message to json %s, (%v,%+v)\n", err, err, err)
 			continue

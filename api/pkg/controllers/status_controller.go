@@ -5,7 +5,7 @@ import (
 	"github.com/up9inc/mizu/shared"
 )
 
-var TapStatus *shared.TapStatus
+var TapStatus shared.TapStatus
 
 func GetTappingStatus(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(TapStatus)

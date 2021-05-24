@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/antoniodipinto/ikisocket"
+	"github.com/mitchellh/mapstructure"
 	"github.com/up9inc/mizu/shared"
 	"mizuserver/pkg/controllers"
 	"mizuserver/pkg/routes"
@@ -54,32 +55,25 @@ func (h *RoutesEventHandlers) WebSocketError(ep *ikisocket.EventPayload) {
 }
 
 func (h *RoutesEventHandlers) WebSocketMessage(ep *ikisocket.EventPayload) {
-	fmt.Println("Received socket message")
-	//TODO: singular flow for unmarshalling messages, tapper messages should use ControlSocketMessage (Which should be renamed)
-	if ep.Kws.GetAttribute("is_tapper") == true && h.SocketHarOutChannel != nil{
+	var socketMessage shared.MizuSocketMessage
+	err := json.Unmarshal(ep.Data, &socketMessage)
+	if err != nil {
+		fmt.Printf("Could not unmarshal websocket message %v\n", err)
+	} else if socketMessage.MessageType == shared.TAPPED_MESSAGE_TYPE {
 		var tapOutput tap.OutputChannelItem
-		err := json.Unmarshal(ep.Data, &tapOutput)
+		err := mapstructure.Decode(socketMessage.Data, &tapOutput)
 		if err != nil {
-			fmt.Printf("Could not unmarshal message received from tapper websocket %v", err)
+			fmt.Printf("Could not decode map of message type %s %v", shared.TAPPED_MESSAGE_TYPE, err)
 		} else {
 			h.SocketHarOutChannel <- &tapOutput
 		}
-	} else {
-		var controlMessage shared.ControlSocketMessage
-		err := json.Unmarshal(ep.Data, &controlMessage)
+	} else if socketMessage.MessageType == shared.TAPPING_STATUS_MESSAGE_TYPE {
+		var tapStatus shared.TapStatus
+		err := mapstructure.Decode(socketMessage.Data, &tapStatus)
 		if err != nil {
-			fmt.Printf("Could not unmarshal message received from tapper websocket %v\n", err)
+			fmt.Printf("Could not decode map of message type %s %v", shared.TAPPING_STATUS_MESSAGE_TYPE, err)
 		} else {
-			if controlMessage.MessageType == shared.TAPPING_STATUS_MESSAGE_TYPE {
-				tappingUpdateData, ok := controlMessage.Data.(*shared.TapStatus)
-				if ok {
-					controllers.TapStatus = tappingUpdateData
-				} else {
-					fmt.Printf("Could not cast tap status socket message")
-				}
-			} else {
-				fmt.Printf("Received socket message of type %s for which no handlers are defined", controlMessage.MessageType)
-			}
+			controllers.TapStatus = tapStatus
 		}
 	}
 }

@@ -41,4 +41,4 @@ COPY --from=site-build ["/app/ui-build/build", "site"]
 # install remote debugging tool
 RUN go get github.com/go-delve/delve/cmd/dlv
 
-CMD ["sh", "-c", "dlv --headless=true --listen=:2345 --log --api-version=2 --accept-multiclient exec ./mizuagent -- -i any -hardump -targets ${TAPPED_ADDRESSES}"]
+CMD ["sh", "-c", "dlv --headless=true --listen=:2345 --log --api-version=2 --accept-multiclient exec ./mizuagent -- --aggregator"]
