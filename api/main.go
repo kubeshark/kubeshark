@@ -9,6 +9,7 @@ import (
 	"github.com/up9inc/mizu/shared"
 	"mizuserver/pkg/api"
 	"mizuserver/pkg/middleware"
+	"mizuserver/pkg/models"
 	"mizuserver/pkg/routes"
 	"mizuserver/pkg/tap"
 	"mizuserver/pkg/utils"
@@ -107,7 +108,8 @@ func pipeChannelToSocket(connection *websocket.Conn, messageDataChannel <-chan *
 	}
 
 	for messageData := range messageDataChannel {
-		marshaledData, err := json.Marshal(messageData)
+		websocketMessage := models.CreateWebsocketTappedEntryMessage(messageData)
+		marshaledData, err := json.Marshal(websocketMessage)
 		if err != nil {
 			fmt.Printf("error converting message to json %s, (%v,%+v)\n", err, err, err)
 			continue

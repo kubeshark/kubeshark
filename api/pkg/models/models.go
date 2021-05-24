@@ -1,6 +1,8 @@
 package models
 
 import (
+	"github.com/up9inc/mizu/shared"
+	"mizuserver/pkg/tap"
 	"time"
 )
 
@@ -43,40 +45,30 @@ type EntriesFilter struct {
 	Timestamp int64  `query:"timestamp" validate:"required,min=1"`
 }
 
+type WebSocketEntryMessage struct {
+	*shared.WebSocketMessageMetadata
+	Data *BaseEntryDetails `json:"data,omitempty"`
+}
 
-
-type WebSocketMessageType string
-const (
-	WebSocketMessageTypeEntry        WebSocketMessageType = "entry"
-	// WebSocketMessageTypeUpdateStatus WebSocketMessageType = "status"
-)
+type WebSocketTappedEntryMessage struct {
+	*shared.WebSocketMessageMetadata
+	Data *tap.OutputChannelItem
+}
 
 func CreateBaseEntryWebSocketMessage(base *BaseEntryDetails) *WebSocketEntryMessage {
 	return &WebSocketEntryMessage{
-		WebSocketMessageMetadata: &WebSocketMessageMetadata{
-			MessageType: WebSocketMessageTypeEntry,
+		WebSocketMessageMetadata: &shared.WebSocketMessageMetadata{
+			MessageType: shared.WebSocketMessageTypeEntry,
 		},
 		Data: base,
 	}
 }
 
-//func CreateWebSocketStatusMessage() *WebSocketStatusMessage {
-//	return &WebSocketEntryMessage{
-//		WebSocketMessageMetadata: &WebSocketMessageMetadata{
-//			MessageType: WebSocketMessageTypeUpdateStatus,
-//		}
-//	}
-//}
-
-type WebSocketEntryMessage struct {
-	*WebSocketMessageMetadata
-	Data *BaseEntryDetails `json:"data,omitempty"`
-}
-
-type WebSocketStatusMessage struct {
-	*WebSocketMessageMetadata
-}
-
-type WebSocketMessageMetadata struct {
-	MessageType WebSocketMessageType `json:"messageType,omitempty"`
+func CreateWebsocketTappedEntryMessage(base *tap.OutputChannelItem) *WebSocketTappedEntryMessage {
+	return &WebSocketTappedEntryMessage{
+		WebSocketMessageMetadata: &shared.WebSocketMessageMetadata{
+			MessageType: shared.WebSocketMessageTypeTappedEntry,
+		},
+		Data: base,
+	}
 }
