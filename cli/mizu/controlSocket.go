@@ -5,6 +5,7 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/up9inc/mizu/shared"
 	core "k8s.io/api/core/v1"
+	"time"
 )
 
 type ControlSocket struct {
@@ -12,7 +13,7 @@ type ControlSocket struct {
 }
 
 func CreateControlSocket(socketServerAddress string) (*ControlSocket, error) {
-	connection, err := shared.ConnectToSocketServer(socketServerAddress)
+	connection, err := shared.ConnectToSocketServer(socketServerAddress, 30, 2 * time.Second, true)
 	if err != nil {
 		return nil, err
 	} else {

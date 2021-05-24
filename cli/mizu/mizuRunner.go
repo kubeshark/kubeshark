@@ -13,6 +13,8 @@ import (
 	"time"
 )
 
+var currentlyTappedPods []core.Pod
+
 func Run(podRegexQuery *regexp.Regexp) {
 	kubernetesProvider := kubernetes.NewProvider(config.Configuration.KubeConfigPath, config.Configuration.Namespace)
 	ctx, cancel := context.WithCancel(context.Background())
@@ -23,6 +25,7 @@ func Run(podRegexQuery *regexp.Regexp) {
 		fmt.Printf("Error getting pods to tap %v\n", err)
 		return
 	}
+	currentlyTappedPods = matchingPods
 
 	nodeToTappedPodIPMap, err := getNodeHostToTappedPodIpsMap(ctx, kubernetesProvider, matchingPods)
 	if err != nil {
@@ -35,18 +38,7 @@ func Run(podRegexQuery *regexp.Regexp) {
 		return
 	}
 	go portForwardApiPod(ctx, kubernetesProvider, cancel) //TODO convert this to job for built in pod ttl or have the running app handle this
-
-	controlSocket, err := CreateControlSocket(fmt.Sprintf("ws://localhost:%d/ws", config.Configuration.GuiPort))
-	if err != nil {
-		fmt.Printf("error establishing control socket connection %s\n", err)
-		cancel()
-	}
-	time.Sleep(2 * time.Second)
-	err = controlSocket.SendNewTappedPodsListMessage(kubernetesProvider.Namespace, matchingPods)
-	if err != nil {
-		fmt.Printf("error Sending message via control socket %s\n", err)
-	}
-
+	go syncApiStatus(ctx, cancel, kubernetesProvider.Namespace)
 	waitForFinish(ctx, cancel)                                                                                                                //block until exit signal or error
 
 	// TODO handle incoming traffic from tapper using a channel
@@ -199,4 +191,26 @@ func waitForFinish(ctx context.Context, cancel context.CancelFunc) {
 	case <- sigChan:
 		cancel()
 	}
+}
+
+func syncApiStatus(ctx context.Context, cancel context.CancelFunc, namespace string) {
+	controlSocket, err := CreateControlSocket(fmt.Sprintf("ws://localhost:%d/ws", config.Configuration.GuiPort))
+	if err != nil {
+		fmt.Printf("error establishing control socket connection %s\n", err)
+		cancel()
+	}
+
+	for {
+		select {
+		case <- ctx.Done():
+			return
+		default:
+			err = controlSocket.SendNewTappedPodsListMessage(namespace, currentlyTappedPods)
+			if err != nil {
+				fmt.Printf("error Sending message via control socket %s\n", err)
+			}
+			time.Sleep(5 * time.Second)
+		}
+	}
+
 }
