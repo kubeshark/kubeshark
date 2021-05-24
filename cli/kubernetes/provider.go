@@ -93,7 +93,7 @@ func (provider *Provider) CreateMizuAggregatorPod(ctx context.Context, namespace
 					Name:            podName,
 					Image:           podImage,
 					ImagePullPolicy: core.PullAlways,
-					Command: []string {"./mizuagent", "--aggregator"},
+					//Command: []string {"./mizuagent", "--aggregator"},
 					Env: []core.EnvVar{
 						{
 							Name: "HOST_MODE",

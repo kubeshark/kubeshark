@@ -55,18 +55,28 @@ func (h *RoutesEventHandlers) WebSocketError(ep *ikisocket.EventPayload) {
 }
 
 func (h *RoutesEventHandlers) WebSocketMessage(ep *ikisocket.EventPayload) {
+	if ep.Kws.GetAttribute("is_tapper") == true && h.SocketHarOutChannel != nil {
+		h.handleTapperMessage(ep)
+	} else {
+		h.handleControlMessage(ep)
+	}
+}
+
+func (h *RoutesEventHandlers) handleTapperMessage(ep *ikisocket.EventPayload) {
+	var tapOutput tap.OutputChannelItem
+	err := json.Unmarshal(ep.Data, &tapOutput)
+	if err != nil {
+		fmt.Printf("Could not unmarshal message received from tapper websocket %v", err)
+	} else {
+		h.SocketHarOutChannel <- &tapOutput
+	}
+}
+
+func (h *RoutesEventHandlers) handleControlMessage(ep *ikisocket.EventPayload) {
 	var socketMessage shared.MizuSocketMessage
 	err := json.Unmarshal(ep.Data, &socketMessage)
 	if err != nil {
 		fmt.Printf("Could not unmarshal websocket message %v\n", err)
-	} else if socketMessage.MessageType == shared.TAPPED_MESSAGE_TYPE {
-		var tapOutput tap.OutputChannelItem
-		err := mapstructure.Decode(socketMessage.Data, &tapOutput)
-		if err != nil {
-			fmt.Printf("Could not decode map of message type %s %v", shared.TAPPED_MESSAGE_TYPE, err)
-		} else {
-			h.SocketHarOutChannel <- &tapOutput
-		}
 	} else if socketMessage.MessageType == shared.TAPPING_STATUS_MESSAGE_TYPE {
 		var tapStatus shared.TapStatus
 		err := mapstructure.Decode(socketMessage.Data, &tapStatus)
