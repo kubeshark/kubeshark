@@ -1,6 +1,8 @@
 package controllers
 
 import (
+	"archive/zip"
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/gofiber/fiber/v2"
@@ -62,6 +64,75 @@ func GetEntries(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusOK).JSON(baseEntries)
+}
+
+func GetHAR(c *fiber.Ctx) error {
+	entriesFilter := &models.HarFetchRequestBody{}
+	order := OrderDesc
+	if err := c.QueryParser(entriesFilter); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(err)
+	}
+	err := validation.Validate(entriesFilter)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(err)
+	}
+
+	var entries []models.MizuEntry
+	database.GetEntriesTable().
+		Order(fmt.Sprintf("timestamp %s", order)).
+		// Where(fmt.Sprintf("timestamp %s %v", operatorSymbol, entriesFilter.Timestamp)).
+		Limit(1000).
+		Find(&entries)
+
+	if len(entries) > 0 {
+		// the entries always order from oldest to newest so we should revers
+		utils.ReverseSlice(entries)
+	}
+
+	retObj := map[string]*har.HAR{}
+
+	for _, entryData := range entries {
+		harEntryObject := []byte(entryData.Entry)
+
+		var harEntry har.Entry
+		_ = json.Unmarshal(harEntryObject, &harEntry)
+
+		sourceOfEntry := *entryData.ResolvedSource
+		if harOfSource, ok := retObj[sourceOfEntry]; ok {
+			harOfSource.Log.Entries = append(harOfSource.Log.Entries, &harEntry)
+		} else {
+			var entriesHar []*har.Entry
+			entriesHar = append(entriesHar, &harEntry)
+			retObj[sourceOfEntry] = &har.HAR{
+				Log: &har.Log{
+					Version: "1.2",
+					Creator: &har.Creator{
+						Name:    "mizu",
+						Version: "0.0.1",
+					},
+					Entries: entriesHar,
+				},
+			}
+		}
+	}
+
+	buffer := zipData(retObj)
+	return c.Status(fiber.StatusOK).SendStream(buffer)
+}
+
+func zipData(files map[string]*har.HAR) *bytes.Buffer {
+	// Create a buffer to write our archive to.
+	buf := new(bytes.Buffer)
+	// Create a new zip archive.
+	zipWriter := zip.NewWriter(buf)
+	for fileName, fileData := range files {
+		zipFile, _ := zipWriter.Create(fileName + ".json")
+		fileDataBytes, _ := json.Marshal(fileData)
+		zipFile.Write(fileDataBytes)
+	}
+	// Make sure to check the error on Close.
+	zipWriter.Close()
+	return buf
 }
 
 func GetEntry(c *fiber.Ctx) error {
