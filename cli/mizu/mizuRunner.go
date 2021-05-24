@@ -34,7 +34,6 @@ func Run(podRegexQuery *regexp.Regexp) {
 	//block until exit signal or error
 	waitForFinish(ctx, cancel)
 
-
 	// TODO handle incoming traffic from tapper using a channel
 }
 
