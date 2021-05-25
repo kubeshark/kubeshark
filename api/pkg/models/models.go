@@ -1,6 +1,7 @@
 package models
 
 import (
+	"encoding/json"
 	"github.com/up9inc/mizu/shared"
 	"mizuserver/pkg/tap"
 	"time"
@@ -60,20 +61,22 @@ type WebSocketTappedEntryMessage struct {
 	Data *tap.OutputChannelItem
 }
 
-func CreateBaseEntryWebSocketMessage(base *BaseEntryDetails) *WebSocketEntryMessage {
-	return &WebSocketEntryMessage{
+func CreateBaseEntryWebSocketMessage(base *BaseEntryDetails) ([]byte, error) {
+	message := &WebSocketEntryMessage{
 		WebSocketMessageMetadata: &shared.WebSocketMessageMetadata{
 			MessageType: shared.WebSocketMessageTypeEntry,
 		},
 		Data: base,
 	}
+	return json.Marshal(message)
 }
 
-func CreateWebsocketTappedEntryMessage(base *tap.OutputChannelItem) *WebSocketTappedEntryMessage {
-	return &WebSocketTappedEntryMessage{
+func CreateWebsocketTappedEntryMessage(base *tap.OutputChannelItem) ([]byte, error) {
+	message := &WebSocketTappedEntryMessage{
 		WebSocketMessageMetadata: &shared.WebSocketMessageMetadata{
 			MessageType: shared.WebSocketMessageTypeTappedEntry,
 		},
 		Data: base,
 	}
+	return json.Marshal(message)
 }

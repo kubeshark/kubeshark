@@ -59,22 +59,25 @@ func (h *RoutesEventHandlers) WebSocketMessage(ep *ikisocket.EventPayload) {
 	err := json.Unmarshal(ep.Data, &socketMessageBase)
 	if err != nil {
 		fmt.Printf("Could not unmarshal websocket message %v\n", err)
-	} else if socketMessageBase.MessageType == shared.WebSocketMessageTypeTappedEntry {
-		var tappedEntryMessage models.WebSocketTappedEntryMessage
-		err := json.Unmarshal(ep.Data, &tappedEntryMessage)
-		if err != nil {
-			fmt.Printf("Could not unmarshal message of message type %s %v", socketMessageBase.MessageType, err)
-		} else {
-			h.SocketHarOutChannel <- tappedEntryMessage.Data
-		}
-	} else if socketMessageBase.MessageType == shared.WebSocketMessageTypeUpdateStatus {
-		var statusMessage shared.WebSocketStatusMessage
-		err := json.Unmarshal(ep.Data, &statusMessage)
-		if err != nil {
-			fmt.Printf("Could not unmarshal message of message type %s %v", socketMessageBase.MessageType, err)
-		} else {
-			controllers.TapStatus = statusMessage.TappingStatus
-			broadcastToBrowserClients(ep.Data)
+	} else {
+		switch socketMessageBase.MessageType {
+		case shared.WebSocketMessageTypeTappedEntry:
+			var tappedEntryMessage models.WebSocketTappedEntryMessage
+			err := json.Unmarshal(ep.Data, &tappedEntryMessage)
+			if err != nil {
+				fmt.Printf("Could not unmarshal message of message type %s %v", socketMessageBase.MessageType, err)
+			} else {
+				h.SocketHarOutChannel <- tappedEntryMessage.Data
+			}
+		case shared.WebSocketMessageTypeUpdateStatus:
+			var statusMessage shared.WebSocketStatusMessage
+			err := json.Unmarshal(ep.Data, &statusMessage)
+			if err != nil {
+				fmt.Printf("Could not unmarshal message of message type %s %v", socketMessageBase.MessageType, err)
+			} else {
+				controllers.TapStatus = statusMessage.TappingStatus
+				broadcastToBrowserClients(ep.Data)
+			}
 		}
 	}
 }
