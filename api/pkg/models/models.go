@@ -45,10 +45,15 @@ type EntriesFilter struct {
 	Timestamp int64  `query:"timestamp" validate:"required,min=1"`
 }
 
+type HarFetchRequestBody struct {
+	Limit     int    `query:"limit" validate:"max=5000"`
+}
+
 type WebSocketEntryMessage struct {
 	*shared.WebSocketMessageMetadata
 	Data *BaseEntryDetails `json:"data,omitempty"`
 }
+
 
 type WebSocketTappedEntryMessage struct {
 	*shared.WebSocketMessageMetadata
