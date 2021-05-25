@@ -211,7 +211,7 @@ func syncApiStatus(ctx context.Context, cancel context.CancelFunc, tappingOption
 			if err != nil {
 				fmt.Printf("error Sending message via control socket %s\n", err)
 			}
-			time.Sleep(5 * time.Second)
+			time.Sleep(10 * time.Second)
 		}
 	}
 
