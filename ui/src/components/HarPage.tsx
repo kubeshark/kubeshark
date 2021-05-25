@@ -172,7 +172,7 @@ export const HarPage: React.FC = () => {
                     {selectedHarEntry && <HAREntryDetailed harEntry={selectedHarEntry} classes={{root: classes.harViewer}}/>}
                 </div>
             </div>}
-            {apiStatus && <StatusBar tappingStatus={apiStatus}/>}
+            {apiStatus?.pods != null && <StatusBar tappingStatus={apiStatus}/>}
         </div>
     )
 };
