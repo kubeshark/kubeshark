@@ -1,6 +1,9 @@
 package models
 
 import (
+	"encoding/json"
+	"github.com/up9inc/mizu/shared"
+	"mizuserver/pkg/tap"
 	"time"
 )
 
@@ -47,40 +50,33 @@ type HarFetchRequestBody struct {
 	Limit     int    `query:"limit" validate:"max=5000"`
 }
 
-
-
-type WebSocketMessageType string
-const (
-	WebSocketMessageTypeEntry        WebSocketMessageType = "entry"
-	// WebSocketMessageTypeUpdateStatus WebSocketMessageType = "status"
-)
-
-func CreateBaseEntryWebSocketMessage(base *BaseEntryDetails) *WebSocketEntryMessage {
-	return &WebSocketEntryMessage{
-		WebSocketMessageMetadata: &WebSocketMessageMetadata{
-			MessageType: WebSocketMessageTypeEntry,
-		},
-		Data: base,
-	}
-}
-
-//func CreateWebSocketStatusMessage() *WebSocketStatusMessage {
-//	return &WebSocketEntryMessage{
-//		WebSocketMessageMetadata: &WebSocketMessageMetadata{
-//			MessageType: WebSocketMessageTypeUpdateStatus,
-//		}
-//	}
-//}
-
 type WebSocketEntryMessage struct {
-	*WebSocketMessageMetadata
+	*shared.WebSocketMessageMetadata
 	Data *BaseEntryDetails `json:"data,omitempty"`
 }
 
-type WebSocketStatusMessage struct {
-	*WebSocketMessageMetadata
+
+type WebSocketTappedEntryMessage struct {
+	*shared.WebSocketMessageMetadata
+	Data *tap.OutputChannelItem
 }
 
-type WebSocketMessageMetadata struct {
-	MessageType WebSocketMessageType `json:"messageType,omitempty"`
+func CreateBaseEntryWebSocketMessage(base *BaseEntryDetails) ([]byte, error) {
+	message := &WebSocketEntryMessage{
+		WebSocketMessageMetadata: &shared.WebSocketMessageMetadata{
+			MessageType: shared.WebSocketMessageTypeEntry,
+		},
+		Data: base,
+	}
+	return json.Marshal(message)
+}
+
+func CreateWebsocketTappedEntryMessage(base *tap.OutputChannelItem) ([]byte, error) {
+	message := &WebSocketTappedEntryMessage{
+		WebSocketMessageMetadata: &shared.WebSocketMessageMetadata{
+			MessageType: shared.WebSocketMessageTypeTappedEntry,
+		},
+		Data: base,
+	}
+	return json.Marshal(message)
 }

@@ -5,8 +5,11 @@ import (
 	"flag"
 	"fmt"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gorilla/websocket"
+	"github.com/up9inc/mizu/shared"
 	"mizuserver/pkg/api"
 	"mizuserver/pkg/middleware"
+	"mizuserver/pkg/models"
 	"mizuserver/pkg/routes"
 	"mizuserver/pkg/tap"
 	"mizuserver/pkg/utils"
@@ -45,11 +48,11 @@ func main() {
 		}
 
 		harOutputChannel := tap.StartPassiveTapper()
-		socketConnection, err := api.ConnectToSocketServer(*aggregatorAddress)
+		socketConnection, err := shared.ConnectToSocketServer(*aggregatorAddress, shared.DEFAULT_SOCKET_RETRIES, shared.DEFAULT_SOCKET_RETRY_SLEEP_TIME, false)
 		if err != nil {
 			panic(fmt.Sprintf("Error connecting to socket server at %s %v", *aggregatorAddress, err))
 		}
-		go api.PipeChannelToSocket(socketConnection, harOutputChannel)
+		go pipeChannelToSocket(socketConnection, harOutputChannel)
 	} else if *aggregator {
 		socketHarOutChannel := make(chan *tap.OutputChannelItem, 1000)
 		go api.StartReadingEntries(socketHarOutChannel, nil)
@@ -93,4 +96,28 @@ func getTapTargets() []string {
 		panic(fmt.Sprintf("env var value of %s is invalid! must be map[string][]string %v", tappedAddressesPerNodeDict, err))
 	}
 	return tappedAddressesPerNodeDict[nodeName]
+}
+
+func pipeChannelToSocket(connection *websocket.Conn, messageDataChannel <-chan *tap.OutputChannelItem) {
+	if connection == nil {
+		panic("Websocket connection is nil")
+	}
+
+	if messageDataChannel == nil {
+		panic("Channel of captured messages is nil")
+	}
+
+	for messageData := range messageDataChannel {
+		marshaledData, err := models.CreateWebsocketTappedEntryMessage(messageData)
+		if err != nil {
+			fmt.Printf("error converting message to json %s, (%v,%+v)\n", err, err, err)
+			continue
+		}
+
+		err = connection.WriteMessage(websocket.TextMessage, marshaledData)
+		if err != nil {
+			fmt.Printf("error sending message through socket server %s, (%v,%+v)\n", err, err, err)
+			continue
+		}
+	}
 }

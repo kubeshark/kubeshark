@@ -4,6 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/antoniodipinto/ikisocket"
+	"github.com/up9inc/mizu/shared"
+	"mizuserver/pkg/controllers"
+	"mizuserver/pkg/models"
 	"mizuserver/pkg/routes"
 	"mizuserver/pkg/tap"
 )
@@ -52,18 +55,33 @@ func (h *RoutesEventHandlers) WebSocketError(ep *ikisocket.EventPayload) {
 }
 
 func (h *RoutesEventHandlers) WebSocketMessage(ep *ikisocket.EventPayload) {
-	if ep.Kws.GetAttribute("is_tapper") == true && h.SocketHarOutChannel != nil{
-		var tapOutput tap.OutputChannelItem
-		err := json.Unmarshal(ep.Data, &tapOutput)
-		if err != nil {
-			fmt.Printf("Could not unmarshal message received from tapper websocket %v", err)
-		} else {
-			h.SocketHarOutChannel <- &tapOutput
-		}
+	var socketMessageBase shared.WebSocketMessageMetadata
+	err := json.Unmarshal(ep.Data, &socketMessageBase)
+	if err != nil {
+		fmt.Printf("Could not unmarshal websocket message %v\n", err)
 	} else {
-		fmt.Println("Received Web socket message, unable to handle message")
+		switch socketMessageBase.MessageType {
+		case shared.WebSocketMessageTypeTappedEntry:
+			var tappedEntryMessage models.WebSocketTappedEntryMessage
+			err := json.Unmarshal(ep.Data, &tappedEntryMessage)
+			if err != nil {
+				fmt.Printf("Could not unmarshal message of message type %s %v", socketMessageBase.MessageType, err)
+			} else {
+				h.SocketHarOutChannel <- tappedEntryMessage.Data
+			}
+		case shared.WebSocketMessageTypeUpdateStatus:
+			var statusMessage shared.WebSocketStatusMessage
+			err := json.Unmarshal(ep.Data, &statusMessage)
+			if err != nil {
+				fmt.Printf("Could not unmarshal message of message type %s %v", socketMessageBase.MessageType, err)
+			} else {
+				controllers.TapStatus = statusMessage.TappingStatus
+				broadcastToBrowserClients(ep.Data)
+			}
+		}
 	}
 }
+
 
 func removeSocketUUIDFromBrowserSlice(uuidToRemove string) {
 	newUUIDSlice := make([]string, 0, len(browserClientSocketUUIDs))

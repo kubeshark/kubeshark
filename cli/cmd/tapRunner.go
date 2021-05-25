@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/up9inc/mizu/cli/kubernetes"
+	core "k8s.io/api/core/v1"
 	"github.com/up9inc/mizu/cli/mizu"
 	"os"
 	"os/signal"
@@ -12,12 +13,22 @@ import (
 	"time"
 )
 
+var currentlyTappedPods []core.Pod
+
 func RunMizuTap(podRegexQuery *regexp.Regexp, tappingOptions *MizuTapOptions) {
 	kubernetesProvider := kubernetes.NewProvider(tappingOptions.KubeConfigPath, tappingOptions.Namespace)
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // cancel will be called when this function exits
 
-	nodeToTappedPodIPMap, err := getNodeHostToTappedPodIpsMap(ctx, kubernetesProvider, podRegexQuery)
+	matchingPods, err := kubernetesProvider.GetAllPodsMatchingRegex(ctx, podRegexQuery)
+	if err != nil {
+		fmt.Printf("Error getting pods to tap %v\n", err)
+		return
+	}
+	currentlyTappedPods = matchingPods
+
+	nodeToTappedPodIPMap, err := getNodeHostToTappedPodIpsMap(ctx, kubernetesProvider, matchingPods)
 	if err != nil {
 		cleanUpMizuResources(kubernetesProvider)
 		return
@@ -27,8 +38,10 @@ func RunMizuTap(podRegexQuery *regexp.Regexp, tappingOptions *MizuTapOptions) {
 		cleanUpMizuResources(kubernetesProvider)
 		return
 	}
+
 	go portForwardApiPod(ctx, kubernetesProvider, cancel, tappingOptions) //TODO convert this to job for built in pod ttl or have the running app handle this
-	waitForFinish(ctx, cancel)                                            //block until exit signal or error
+	go syncApiStatus(ctx, cancel, tappingOptions)
+	waitForFinish(ctx, cancel)                                                                                                                //block until exit signal or error
 
 	// TODO handle incoming traffic from tapper using a channel
 
@@ -156,13 +169,9 @@ func createRBACIfNecessary(ctx context.Context, kubernetesProvider *kubernetes.P
 	return true
 }
 
-func getNodeHostToTappedPodIpsMap(ctx context.Context, kubernetesProvider *kubernetes.Provider, regex *regexp.Regexp) (map[string][]string, error) {
-	matchingPods, err := kubernetesProvider.GetAllPodsMatchingRegex(ctx, regex)
-	if err != nil {
-		return nil, err
-	}
+func getNodeHostToTappedPodIpsMap(ctx context.Context, kubernetesProvider *kubernetes.Provider, tappedPods []core.Pod) (map[string][]string, error) {
 	nodeToTappedPodIPMap := make(map[string][]string, 0)
-	for _, pod := range matchingPods {
+	for _, pod := range tappedPods {
 		existingList := nodeToTappedPodIPMap[pod.Spec.NodeName]
 		if existingList == nil {
 			nodeToTappedPodIPMap[pod.Spec.NodeName] = []string {pod.Status.PodIP}
@@ -186,4 +195,24 @@ func waitForFinish(ctx context.Context, cancel context.CancelFunc) {
 	}
 }
 
+func syncApiStatus(ctx context.Context, cancel context.CancelFunc, tappingOptions *MizuTapOptions) {
+	controlSocket, err := mizu.CreateControlSocket(fmt.Sprintf("ws://localhost:%d/ws", tappingOptions.GuiPort))
+	if err != nil {
+		fmt.Printf("error establishing control socket connection %s\n", err)
+		cancel()
+	}
 
+	for {
+		select {
+		case <- ctx.Done():
+			return
+		default:
+			err = controlSocket.SendNewTappedPodsListMessage(currentlyTappedPods)
+			if err != nil {
+				fmt.Printf("error Sending message via control socket %s\n", err)
+			}
+			time.Sleep(5 * time.Second)
+		}
+	}
+
+}

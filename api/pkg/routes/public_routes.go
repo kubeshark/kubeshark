@@ -15,4 +15,6 @@ func EntriesRoutes(fiberApp *fiber.App) {
 	routeGroup.Get("/har", controllers.GetHAR)
 	routeGroup.Get("/resetDB", controllers.DeleteAllEntries)     // get single (full) entry
 	routeGroup.Get("/generalStats", controllers.GetGeneralStats) // get general stats about entries in DB
+
+	routeGroup.Get("/tapStatus", controllers.GetTappingStatus) // get tapping status
 }

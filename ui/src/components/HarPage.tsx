@@ -8,6 +8,7 @@ import {HAREntryDetailed} from "./HarEntryDetailed";
 import playIcon from './assets/play.svg';
 import pauseIcon from './assets/pause.svg';
 import variables from './style/variables.module.scss';
+import {StatusBar} from "./StatusBar";
 
 const useLayoutStyles = makeStyles(() => ({
     details: {
@@ -49,6 +50,8 @@ export const HarPage: React.FC = () => {
     const [statusFilter, setStatusFilter] = useState([]);
     const [pathFilter, setPathFilter] = useState("");
 
+    const [apiStatus, setApiStatus] = useState(null);
+
     const ws = useRef(null);
 
     const openWebSocket = () => {
@@ -77,8 +80,8 @@ export const HarPage: React.FC = () => {
                     }
                     setEntries([...newEntries, entry])
                     break
-                case "updateStatus":
-                    console.log("not implemented yet")
+                case "status":
+                    setApiStatus(message.tappingStatus);
                     break
                 default:
                     console.error(`unsupported websocket message type, Got: ${message.messageType}`)
@@ -88,6 +91,9 @@ export const HarPage: React.FC = () => {
 
     useEffect(() => {
         openWebSocket();
+        fetch(`http://localhost:8899/api/tapStatus`)
+            .then(response => response.json())
+            .then(data => setApiStatus(data));
     }, []);
 
 
@@ -166,6 +172,7 @@ export const HarPage: React.FC = () => {
                     {selectedHarEntry && <HAREntryDetailed harEntry={selectedHarEntry} classes={{root: classes.harViewer}}/>}
                 </div>
             </div>}
+            {apiStatus?.pods != null && <StatusBar tappingStatus={apiStatus}/>}
         </div>
     )
 };
