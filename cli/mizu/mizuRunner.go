@@ -12,11 +12,16 @@ import (
 	core "k8s.io/api/core/v1"
 
 	"github.com/up9inc/mizu/cli/config"
+	"github.com/up9inc/mizu/cli/debounce"
 	"github.com/up9inc/mizu/cli/kubernetes"
 )
 
 var mizuServiceAccountExists bool
 var aggregatorService *core.Service
+
+const (
+	updateTappersDelay = 5 * time.Second
+)
 
 func Run(podRegexQuery *regexp.Regexp) {
 	kubernetesProvider := kubernetes.NewProvider(config.Configuration.KubeConfigPath, config.Configuration.Namespace)
@@ -100,30 +105,34 @@ func cleanUpMizuResources(kubernetesProvider *kubernetes.Provider) {
 
 func watchPodsForTapping(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc, podRegex *regexp.Regexp) {
 	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, kubernetesProvider.GetPodWatcher(ctx, kubernetesProvider.Namespace), podRegex)
+
+	restartTappers := func() {
+		if err := createMizuTappers(ctx, kubernetesProvider, podRegex); err != nil {
+			fmt.Printf("Error updating daemonset: %s (%v,%+v)\n", err, err, err)
+			cancel()
+		}
+	}
+	restartTappersDebouncer := debounce.NewDebouncer(updateTappersDelay, restartTappers)
+
 	for {
 		select {
 		case newTarget := <- added:
 			fmt.Printf("+%s\n", newTarget.Name)
-			go func() {
-				time.Sleep(5 * time.Second)
-				if err := createMizuTappers(ctx, kubernetesProvider, podRegex); err != nil {
-					fmt.Printf("Error updating daemonset: %s (%v,%+v)\n", err, err, err)
-					cancel()
-				}
-			}()
 
 		case removedTarget := <- removed:
 			fmt.Printf("-%s\n", removedTarget.Name)
-			go func() {
-				time.Sleep(5 * time.Second)
-				if err := createMizuTappers(ctx, kubernetesProvider, podRegex); err != nil {
-					fmt.Printf("Error updating daemonset: %s (%v,%+v)\n", err, err, err)
-					cancel()
-				}
-			}()
+			restartTappersDebouncer.SetOn()
 
-		case <- modified:
-			continue
+		case modifiedTarget := <- modified:
+			// Act only if the modified pod has already obtained an IP address.
+			// After filtering for IPs, on a normal pod restart this includes the following events:
+			// - Pod deletion
+			// - Pod reaches start state
+			// - Pod reaches ready state
+			// Ready/unready transitions might also trigger this event.
+			if modifiedTarget.Status.PodIP != "" {
+				restartTappersDebouncer.SetOn()
+			}
 
 		case <- errorChan:
 			// TODO: Does this also perform cleanup?
