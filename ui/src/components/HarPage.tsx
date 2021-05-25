@@ -50,7 +50,7 @@ export const HarPage: React.FC = () => {
     const [statusFilter, setStatusFilter] = useState([]);
     const [pathFilter, setPathFilter] = useState("");
 
-    const [apiStatus, setApiStatus] = useState(null);
+    const [tappingStatus, setTappingStatus] = useState(null);
 
     const ws = useRef(null);
 
@@ -81,7 +81,7 @@ export const HarPage: React.FC = () => {
                     setEntries([...newEntries, entry])
                     break
                 case "status":
-                    setApiStatus(message.tappingStatus);
+                    setTappingStatus(message.tappingStatus);
                     break
                 default:
                     console.error(`unsupported websocket message type, Got: ${message.messageType}`)
@@ -93,7 +93,7 @@ export const HarPage: React.FC = () => {
         openWebSocket();
         fetch(`http://localhost:8899/api/tapStatus`)
             .then(response => response.json())
-            .then(data => setApiStatus(data));
+            .then(data => setTappingStatus(data));
     }, []);
 
 
@@ -172,7 +172,7 @@ export const HarPage: React.FC = () => {
                     {selectedHarEntry && <HAREntryDetailed harEntry={selectedHarEntry} classes={{root: classes.harViewer}}/>}
                 </div>
             </div>}
-            {apiStatus?.pods != null && <StatusBar tappingStatus={apiStatus}/>}
+            {tappingStatus?.pods != null && <StatusBar tappingStatus={tappingStatus}/>}
         </div>
     )
 };

@@ -65,7 +65,7 @@ func (h *RoutesEventHandlers) WebSocketMessage(ep *ikisocket.EventPayload) {
 			var tappedEntryMessage models.WebSocketTappedEntryMessage
 			err := json.Unmarshal(ep.Data, &tappedEntryMessage)
 			if err != nil {
-				fmt.Printf("Could not unmarshal message of message type %s %v", socketMessageBase.MessageType, err)
+				fmt.Printf("Could not unmarshal message of message type %s %v\n", socketMessageBase.MessageType, err)
 			} else {
 				h.SocketHarOutChannel <- tappedEntryMessage.Data
 			}
@@ -73,11 +73,13 @@ func (h *RoutesEventHandlers) WebSocketMessage(ep *ikisocket.EventPayload) {
 			var statusMessage shared.WebSocketStatusMessage
 			err := json.Unmarshal(ep.Data, &statusMessage)
 			if err != nil {
-				fmt.Printf("Could not unmarshal message of message type %s %v", socketMessageBase.MessageType, err)
+				fmt.Printf("Could not unmarshal message of message type %s %v\n", socketMessageBase.MessageType, err)
 			} else {
 				controllers.TapStatus = statusMessage.TappingStatus
 				broadcastToBrowserClients(ep.Data)
 			}
+		default:
+			fmt.Printf("Received socket message of type %s for which no handlers are defined", socketMessageBase.MessageType)
 		}
 	}
 }
