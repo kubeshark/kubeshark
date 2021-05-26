@@ -61,6 +61,7 @@ func Unzip(reader *zip.Reader, dest string) error {
 			_ = os.MkdirAll(path, f.Mode())
 		} else {
 			_ = os.MkdirAll(filepath.Dir(path), f.Mode())
+            fmt.Print("writing HAR file [ ", path, " ] .. ")
 			f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
 			if err != nil {
 				return err
@@ -69,6 +70,7 @@ func Unzip(reader *zip.Reader, dest string) error {
 				if err := f.Close(); err != nil {
 					panic(err)
 				}
+                fmt.Println(" done")
 			}()
 
 			_, err = io.Copy(f, rc)
