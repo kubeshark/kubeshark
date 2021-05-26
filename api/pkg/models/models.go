@@ -1,21 +1,26 @@
 package models
 
-import "time"
+import (
+	"encoding/json"
+	"github.com/up9inc/mizu/shared"
+	"mizuserver/pkg/tap"
+	"time"
+)
 
 type MizuEntry struct {
-	ID              uint `gorm:"primarykey"`
-	CreatedAt       time.Time
-	UpdatedAt       time.Time
-	Entry           string `json:"entry,omitempty" gorm:"column:entry"`
-	EntryId         string `json:"entryId" gorm:"column:entryId"`
-	Url             string `json:"url" gorm:"column:url"`
-	Method          string `json:"method" gorm:"column:method"`
-	Status          int    `json:"status" gorm:"column:status"`
-	RequestSenderIp string `json:"requestSenderIp" gorm:"column:requestSenderIp"`
-	Service         string `json:"service" gorm:"column:service"`
-	Timestamp       int64  `json:"timestamp" gorm:"column:timestamp"`
-	Path            string `json:"path" gorm:"column:path"`
-	ResolvedSource *string `json:"resolvedSource,omitempty" gorm:"column:resolvedSource"`
+	ID                  uint `gorm:"primarykey"`
+	CreatedAt           time.Time
+	UpdatedAt           time.Time
+	Entry               string  `json:"entry,omitempty" gorm:"column:entry"`
+	EntryId             string  `json:"entryId" gorm:"column:entryId"`
+	Url                 string  `json:"url" gorm:"column:url"`
+	Method              string  `json:"method" gorm:"column:method"`
+	Status              int     `json:"status" gorm:"column:status"`
+	RequestSenderIp     string  `json:"requestSenderIp" gorm:"column:requestSenderIp"`
+	Service             string  `json:"service" gorm:"column:service"`
+	Timestamp           int64   `json:"timestamp" gorm:"column:timestamp"`
+	Path                string  `json:"path" gorm:"column:path"`
+	ResolvedSource      *string `json:"resolvedSource,omitempty" gorm:"column:resolvedSource"`
 	ResolvedDestination *string `json:"resolvedDestination,omitempty" gorm:"column:resolvedDestination"`
 }
 
@@ -31,7 +36,7 @@ type BaseEntryDetails struct {
 }
 
 type EntryData struct {
-	Entry string `json:"entry,omitempty"`
+	Entry               string  `json:"entry,omitempty"`
 	ResolvedDestination *string `json:"resolvedDestination,omitempty" gorm:"column:resolvedDestination"`
 }
 
@@ -39,4 +44,39 @@ type EntriesFilter struct {
 	Limit     int    `query:"limit" validate:"required,min=1,max=200"`
 	Operator  string `query:"operator" validate:"required,oneof='lt' 'gt'"`
 	Timestamp int64  `query:"timestamp" validate:"required,min=1"`
+}
+
+type HarFetchRequestBody struct {
+	Limit     int    `query:"limit" validate:"max=5000"`
+}
+
+type WebSocketEntryMessage struct {
+	*shared.WebSocketMessageMetadata
+	Data *BaseEntryDetails `json:"data,omitempty"`
+}
+
+
+type WebSocketTappedEntryMessage struct {
+	*shared.WebSocketMessageMetadata
+	Data *tap.OutputChannelItem
+}
+
+func CreateBaseEntryWebSocketMessage(base *BaseEntryDetails) ([]byte, error) {
+	message := &WebSocketEntryMessage{
+		WebSocketMessageMetadata: &shared.WebSocketMessageMetadata{
+			MessageType: shared.WebSocketMessageTypeEntry,
+		},
+		Data: base,
+	}
+	return json.Marshal(message)
+}
+
+func CreateWebsocketTappedEntryMessage(base *tap.OutputChannelItem) ([]byte, error) {
+	message := &WebSocketTappedEntryMessage{
+		WebSocketMessageMetadata: &shared.WebSocketMessageMetadata{
+			MessageType: shared.WebSocketMessageTypeTappedEntry,
+		},
+		Data: base,
+	}
+	return json.Marshal(message)
 }

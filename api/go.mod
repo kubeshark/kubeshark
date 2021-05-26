@@ -16,6 +16,7 @@ require (
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/orcaman/concurrent-map v0.0.0-20210106121528-16402b402231
 	github.com/patrickmn/go-cache v2.1.0+incompatible
+	github.com/up9inc/mizu/shared v0.0.0
 	go.mongodb.org/mongo-driver v1.5.1
 	golang.org/x/net v0.0.0-20210421230115-4e50805a0758
 	gorm.io/driver/sqlite v1.1.4
@@ -24,3 +25,5 @@ require (
 	k8s.io/apimachinery v0.21.0
 	k8s.io/client-go v0.21.0
 )
+
+replace github.com/up9inc/mizu/shared v0.0.0 => ../shared
