@@ -6,7 +6,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	apps "k8s.io/api/apps/v1"
+
+	"path/filepath"
+	"regexp"
+
+	applyconfapp "k8s.io/client-go/applyconfigurations/apps/v1"
+	applyconfmeta "k8s.io/client-go/applyconfigurations/meta/v1"
+	applyconfcore "k8s.io/client-go/applyconfigurations/core/v1"
 	core "k8s.io/api/core/v1"
 	rbac "k8s.io/api/rbac/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
@@ -22,8 +28,6 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	_ "k8s.io/client-go/tools/portforward"
 	"k8s.io/client-go/util/homedir"
-	"path/filepath"
-	"regexp"
 )
 
 type Provider struct {
@@ -34,7 +38,8 @@ type Provider struct {
 }
 
 const (
-	serviceAccountName     = "mizu-service-account"
+	serviceAccountName = "mizu-service-account"
+	fieldManagerName   = "mizu-manager"
 )
 
 func NewProvider(kubeConfigPath string, overrideNamespace string) *Provider {
@@ -104,6 +109,7 @@ func (provider *Provider) CreateMizuAggregatorPod(ctx context.Context, namespace
 			},
 			DNSPolicy: "ClusterFirstWithHostNet",
 			TerminationGracePeriodSeconds: new(int64),
+			// Affinity: TODO: define node selector for all relevant nodes for this mizu instance
 		},
 	}
 	//define the service account only when it exists to prevent pod crash
@@ -212,75 +218,50 @@ func (provider *Provider) RemoveDaemonSet(ctx context.Context, namespace string,
 	return provider.clientSet.AppsV1().DaemonSets(namespace).Delete(ctx, daemonSetName, metav1.DeleteOptions{})
 }
 
-func (provider *Provider) CreateMizuTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, aggregatorPodIp string, nodeToTappedPodIPMap map[string][]string, linkServiceAccount bool) error {
+func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, aggregatorPodIp string, nodeToTappedPodIPMap map[string][]string, linkServiceAccount bool) error {
 	nodeToTappedPodIPMapJsonStr, err := json.Marshal(nodeToTappedPodIPMap)
 	if err != nil {
 		return err
 	}
 
 	privileged := true
-	podTemplate := core.PodTemplateSpec{
-		ObjectMeta: metav1.ObjectMeta{
-			Labels: map[string]string{"app": tapperPodName},
-		},
-		Spec:       core.PodSpec{
-			HostNetwork: true,  // very important to make passive tapper see traffic
-			Containers: []core.Container{
-				{
-					Name:            tapperPodName,
-					Image:           podImage,
-					ImagePullPolicy: core.PullAlways,
-					SecurityContext: &core.SecurityContext{
-						Privileged: &privileged, // must be privileged to get node level traffic
-					},
-					Command: []string {"./mizuagent", "-i", "any", "--tap", "--hardump", "--aggregator-address", fmt.Sprintf("ws://%s/wsTapper", aggregatorPodIp)},
-					Env: []core.EnvVar{
-						{
-							Name: "HOST_MODE",
-							Value: "1",
-						},
-						{
-							Name: "AGGREGATOR_ADDRESS",
-							Value: aggregatorPodIp,
-						},
-						{
-							Name: "TAPPED_ADDRESSES_PER_HOST",
-							Value: string(nodeToTappedPodIPMapJsonStr),
-						},
-						{
-							Name: "NODE_NAME",
-							ValueFrom: &core.EnvVarSource{
-								FieldRef: &core.ObjectFieldSelector {
-									APIVersion: "v1",
-									FieldPath: "spec.nodeName",
-								},
-							},
-						},
-					},
-				},
-			},
-			DNSPolicy: "ClusterFirstWithHostNet",
-			TerminationGracePeriodSeconds: new(int64),
-			// Affinity: TODO: define node selector for all relevant nodes for this mizu instance
-		},
-	}
+	agentContainer := applyconfcore.Container()
+	agentContainer.WithName(tapperPodName)
+	agentContainer.WithImage(podImage)
+	agentContainer.WithImagePullPolicy(core.PullAlways)
+	agentContainer.WithSecurityContext(applyconfcore.SecurityContext().WithPrivileged(privileged))
+	agentContainer.WithCommand("./mizuagent", "-i", "any", "--tap", "--hardump", "--aggregator-address", fmt.Sprintf("ws://%s/wsTapper", aggregatorPodIp))
+	agentContainer.WithEnv(
+		applyconfcore.EnvVar().WithName("HOST_MODE").WithValue("1"),
+		applyconfcore.EnvVar().WithName("AGGREGATOR_ADDRESS").WithValue(aggregatorPodIp),
+		applyconfcore.EnvVar().WithName("TAPPED_ADDRESSES_PER_HOST").WithValue(string(nodeToTappedPodIPMapJsonStr)),
+	)
+	agentContainer.WithEnv(
+		applyconfcore.EnvVar().WithName("NODE_NAME").WithValueFrom(
+			applyconfcore.EnvVarSource().WithFieldRef(
+				applyconfcore.ObjectFieldSelector().WithAPIVersion("v1").WithFieldPath("spec.nodeName"),
+			),
+		),
+	)
+
+	podSpec := applyconfcore.PodSpec().WithHostNetwork(true).WithDNSPolicy("ClusterFirstWithHostNet").WithTerminationGracePeriodSeconds(0)
 	if linkServiceAccount {
-		podTemplate.Spec.ServiceAccountName = serviceAccountName
+		podSpec.WithServiceAccountName(serviceAccountName)
 	}
-	labelSelector := metav1.LabelSelector{
-		MatchLabels: map[string]string{"app": tapperPodName},
-	}
-	daemonSet := apps.DaemonSet{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: daemonSetName,
-			Namespace: namespace,
-		},
-		Spec: apps.DaemonSetSpec{
-			Selector: &labelSelector,
-			Template: podTemplate,
-		},
-	}
-	_, err = provider.clientSet.AppsV1().DaemonSets(namespace).Create(ctx, &daemonSet, metav1.CreateOptions{})
+	podSpec.WithContainers(agentContainer)
+
+
+	podTemplate := applyconfcore.PodTemplateSpec()
+	podTemplate.WithLabels(map[string]string{"app": tapperPodName})
+	podTemplate.WithSpec(podSpec)
+
+	labelSelector := applyconfmeta.LabelSelector()
+	labelSelector.WithMatchLabels(map[string]string{"app": tapperPodName})
+
+	daemonSet := applyconfapp.DaemonSet(daemonSetName, namespace)
+	daemonSet.WithSpec(applyconfapp.DaemonSetSpec().WithSelector(labelSelector).WithTemplate(podTemplate))
+
+	_, err = provider.clientSet.AppsV1().DaemonSets(namespace).Apply(ctx, daemonSet, metav1.ApplyOptions{FieldManager: fieldManagerName})
 	return err
 }
 
