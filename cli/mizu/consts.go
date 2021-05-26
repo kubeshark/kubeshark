@@ -7,5 +7,8 @@ var (
 )
 
 const (
-	MizuResourcesNamespace = "default"
+	ResourcesNamespace  = "default"
+	TapperDaemonSetName = "mizu-tapper-daemon-set"
+	AggregatorPodName   = "mizu-collector"
+	TapperPodName       = "mizu-tapper"
 )

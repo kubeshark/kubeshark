@@ -1,11 +1,10 @@
-package inserter
+package api
 
 import (
 	"bufio"
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/antoniodipinto/ikisocket"
 	"github.com/google/martian/har"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"mizuserver/pkg/database"
@@ -34,7 +33,7 @@ func init() {
 	go func() {
 		for {
 			select {
-			case err := <- errOut:
+			case err := <-errOut:
 				fmt.Printf("name resolving error %s", err)
 			}
 		}
@@ -43,7 +42,7 @@ func init() {
 	k8sResolver = res
 }
 
-func StartReadingEntries(harChannel chan *tap.OutputChannelItem, workingDir *string) {
+func StartReadingEntries(harChannel <-chan *tap.OutputChannelItem, workingDir *string) {
 	if workingDir != nil && *workingDir != "" {
 		startReadingFiles(*workingDir)
 	} else {
@@ -83,7 +82,11 @@ func startReadingFiles(workingDir string) {
 	}
 }
 
-func startReadingChannel(outputItems chan *tap.OutputChannelItem) {
+func startReadingChannel(outputItems <-chan *tap.OutputChannelItem) {
+	if outputItems == nil {
+		panic("Channel of captured messages is nil")
+	}
+
 	for item := range outputItems {
 		saveHarToDb(item.HarEntry, item.RequestSenderIp)
 	}
@@ -94,7 +97,7 @@ func saveHarToDb(entry *har.Entry, sender string) {
 	serviceName, urlPath, serviceHostName := getServiceNameFromUrl(entry.Request.URL)
 	entryId := primitive.NewObjectID().Hex()
 	var (
-		resolvedSource *string
+		resolvedSource      *string
 		resolvedDestination *string
 	)
 	if k8sResolver != nil {
@@ -102,23 +105,23 @@ func saveHarToDb(entry *har.Entry, sender string) {
 		resolvedDestination = k8sResolver.Resolve(serviceHostName)
 	}
 	mizuEntry := models.MizuEntry{
-		EntryId:         entryId,
-		Entry:           string(entryBytes), // simple way to store it and not convert to bytes
-		Service:         serviceName,
-		Url:             entry.Request.URL,
-		Path:            urlPath,
-		Method:          entry.Request.Method,
-		Status:          entry.Response.Status,
-		RequestSenderIp: sender,
-		Timestamp:       entry.StartedDateTime.UnixNano() / int64(time.Millisecond),
-		ResolvedSource: resolvedSource,
+		EntryId:             entryId,
+		Entry:               string(entryBytes), // simple way to store it and not convert to bytes
+		Service:             serviceName,
+		Url:                 entry.Request.URL,
+		Path:                urlPath,
+		Method:              entry.Request.Method,
+		Status:              entry.Response.Status,
+		RequestSenderIp:     sender,
+		Timestamp:           entry.StartedDateTime.UnixNano() / int64(time.Millisecond),
+		ResolvedSource:      resolvedSource,
 		ResolvedDestination: resolvedDestination,
 	}
 	database.GetEntriesTable().Create(&mizuEntry)
 
 	baseEntry := utils.GetResolvedBaseEntry(mizuEntry)
-	baseEntryBytes, _ := json.Marshal(&baseEntry)
-	ikisocket.Broadcast(baseEntryBytes)
+	baseEntryBytes, _ := models.CreateBaseEntryWebSocketMessage(&baseEntry)
+	broadcastToBrowserClients(baseEntryBytes)
 }
 
 func getServiceNameFromUrl(inputUrl string) (string, string, string) {
@@ -126,4 +129,3 @@ func getServiceNameFromUrl(inputUrl string) (string, string, string) {
 	utils.CheckErr(err)
 	return fmt.Sprintf("%s://%s", parsed.Scheme, parsed.Host), parsed.Path, parsed.Host
 }
-

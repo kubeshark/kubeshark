@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"log"
@@ -43,14 +44,12 @@ func ReverseSlice(data interface{}) {
 	}
 }
 
-
 func CheckErr(e error) {
 	if e != nil {
 		log.Printf("%v", e)
 		//panic(e)
 	}
 }
-
 
 func SetHostname(address, newHostname string) string {
 	replacedUrl, err := url.Parse(address)
@@ -80,4 +79,9 @@ func GetResolvedBaseEntry(entry models.MizuEntry) models.BaseEntryDetails {
 		Timestamp:  entry.Timestamp,
 		RequestSenderIp: entry.RequestSenderIp,
 	}
+}
+
+func GetBytesFromStruct(v interface{}) []byte{
+	a, _ := json.Marshal(v)
+	return a
 }

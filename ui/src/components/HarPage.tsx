@@ -8,6 +8,7 @@ import {HAREntryDetailed} from "./HarEntryDetailed";
 import playIcon from './assets/play.svg';
 import pauseIcon from './assets/pause.svg';
 import variables from './style/variables.module.scss';
+import {StatusBar} from "./StatusBar";
 
 const useLayoutStyles = makeStyles(() => ({
     details: {
@@ -49,6 +50,8 @@ export const HarPage: React.FC = () => {
     const [statusFilter, setStatusFilter] = useState([]);
     const [pathFilter, setPathFilter] = useState("");
 
+    const [tappingStatus, setTappingStatus] = useState(null);
+
     const ws = useRef(null);
 
     const openWebSocket = () => {
@@ -60,23 +63,37 @@ export const HarPage: React.FC = () => {
     if(ws.current) {
         ws.current.onmessage = e => {
             if(!e?.data) return;
-            const entry = JSON.parse(e.data);
-            if(connection === ConnectionStatus.Paused) {
-                setNoMoreDataBottom(false)
-                return;
+            const message = JSON.parse(e.data);
+
+            switch (message.messageType) {
+                case "entry":
+                    const entry = message.data
+                    if(connection === ConnectionStatus.Paused) {
+                        setNoMoreDataBottom(false)
+                        return;
+                    }
+                    if(!focusedEntryId) setFocusedEntryId(entry.id)
+                    let newEntries = [...entries];
+                    if(entries.length === 1000) {
+                        newEntries = newEntries.splice(1);
+                        setNoMoreDataTop(false);
+                    }
+                    setEntries([...newEntries, entry])
+                    break
+                case "status":
+                    setTappingStatus(message.tappingStatus);
+                    break
+                default:
+                    console.error(`unsupported websocket message type, Got: ${message.messageType}`)
             }
-            if(!focusedEntryId) setFocusedEntryId(entry.id)
-            let newEntries = [...entries];
-            if(entries.length === 1000) {
-                newEntries = newEntries.splice(1);
-                setNoMoreDataTop(false);
-            }
-            setEntries([...newEntries, entry])
         }
     }
 
     useEffect(() => {
         openWebSocket();
+        fetch(`http://localhost:8899/api/tapStatus`)
+            .then(response => response.json())
+            .then(data => setTappingStatus(data));
     }, []);
 
 
@@ -155,6 +172,7 @@ export const HarPage: React.FC = () => {
                     {selectedHarEntry && <HAREntryDetailed harEntry={selectedHarEntry} classes={{root: classes.harViewer}}/>}
                 </div>
             </div>}
+            {tappingStatus?.pods != null && <StatusBar tappingStatus={tappingStatus}/>}
         </div>
     )
 };

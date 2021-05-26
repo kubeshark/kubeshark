@@ -64,6 +64,65 @@ func GetEntries(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(baseEntries)
 }
 
+func GetHAR(c *fiber.Ctx) error {
+	entriesFilter := &models.HarFetchRequestBody{}
+	order := OrderDesc
+	if err := c.QueryParser(entriesFilter); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(err)
+	}
+	err := validation.Validate(entriesFilter)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(err)
+	}
+
+	var entries []models.MizuEntry
+	database.GetEntriesTable().
+		Order(fmt.Sprintf("timestamp %s", order)).
+		// Where(fmt.Sprintf("timestamp %s %v", operatorSymbol, entriesFilter.Timestamp)).
+		Limit(1000).
+		Find(&entries)
+
+	if len(entries) > 0 {
+		// the entries always order from oldest to newest so we should revers
+		utils.ReverseSlice(entries)
+	}
+
+	harsObject := map[string]*har.HAR{}
+
+	for _, entryData := range entries {
+		harEntryObject := []byte(entryData.Entry)
+
+		var harEntry har.Entry
+		_ = json.Unmarshal(harEntryObject, &harEntry)
+
+		sourceOfEntry := *entryData.ResolvedSource
+		if harOfSource, ok := harsObject[sourceOfEntry]; ok {
+			harOfSource.Log.Entries = append(harOfSource.Log.Entries, &harEntry)
+		} else {
+			var entriesHar []*har.Entry
+			entriesHar = append(entriesHar, &harEntry)
+			harsObject[sourceOfEntry] = &har.HAR{
+				Log: &har.Log{
+					Version: "1.2",
+					Creator: &har.Creator{
+						Name:    "mizu",
+						Version: "0.0.1",
+					},
+					Entries: entriesHar,
+				},
+			}
+		}
+	}
+
+	retObj := map[string][]byte{}
+	for k, v := range harsObject {
+		bytesData, _ := json.Marshal(v)
+		retObj[k] = bytesData
+	}
+	buffer := utils.ZipData(retObj)
+	return c.Status(fiber.StatusOK).SendStream(buffer)
+}
+
 func GetEntry(c *fiber.Ctx) error {
 	var entryData models.EntryData
 	database.GetEntriesTable().
