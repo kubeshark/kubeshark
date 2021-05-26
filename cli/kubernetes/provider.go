@@ -38,7 +38,8 @@ type Provider struct {
 }
 
 const (
-	serviceAccountName     = "mizu-service-account"
+	serviceAccountName = "mizu-service-account"
+	fieldManagerName   = "mizu-manager"
 )
 
 func NewProvider(kubeConfigPath string, overrideNamespace string) *Provider {
@@ -260,7 +261,7 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	daemonSet := applyconfapp.DaemonSet(daemonSetName, namespace)
 	daemonSet.WithSpec(applyconfapp.DaemonSetSpec().WithSelector(labelSelector).WithTemplate(podTemplate))
 
-	_, err = provider.clientSet.AppsV1().DaemonSets(namespace).Apply(ctx, daemonSet, metav1.ApplyOptions{FieldManager: "hello"})
+	_, err = provider.clientSet.AppsV1().DaemonSets(namespace).Apply(ctx, daemonSet, metav1.ApplyOptions{FieldManager: fieldManagerName})
 	return err
 }
 
