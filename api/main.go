@@ -52,7 +52,9 @@ func main() {
 		if err != nil {
 			panic(fmt.Sprintf("Error connecting to socket server at %s %v", *aggregatorAddress, err))
 		}
-		go pipeChannelToSocket(socketConnection, harOutputChannel)
+		filteredHarChannel := make(chan *tap.OutputChannelItem)
+		go filterHarHeaders(harOutputChannel, filteredHarChannel)
+		go pipeChannelToSocket(socketConnection, filteredHarChannel)
 	} else if *aggregator {
 		socketHarOutChannel := make(chan *tap.OutputChannelItem, 1000)
 		go api.StartReadingEntries(socketHarOutChannel, nil)
@@ -96,6 +98,14 @@ func getTapTargets() []string {
 		panic(fmt.Sprintf("env var value of %s is invalid! must be map[string][]string %v", tappedAddressesPerNodeDict, err))
 	}
 	return tappedAddressesPerNodeDict[nodeName]
+}
+
+func filterHarHeaders(inChannel <- chan *tap.OutputChannelItem, outChannel chan *tap.OutputChannelItem) {
+	for {
+		message := <- inChannel
+		utils.FilterSensitiveInfoFromHarRequest(message)
+		outChannel <- message
+	}
 }
 
 func pipeChannelToSocket(connection *websocket.Conn, messageDataChannel <-chan *tap.OutputChannelItem) {
