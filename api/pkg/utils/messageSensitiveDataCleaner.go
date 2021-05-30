@@ -7,7 +7,6 @@ import (
 	"mizuserver/pkg/tap"
 	"net/url"
 	"strings"
-
 )
 
 func FilterSensitiveInfoFromHarRequest(harOutputItem *tap.OutputChannelItem) {
@@ -87,6 +86,7 @@ func filterJsonMap(jsonMap map[string] interface{}) {
 	}
 }
 
+// replaces sensitive query params in url string (http://service/api?userId=bob&password=123&type=login -> http://service/api?userId=[REDACTED]&password=[REDACTED]&type=login)
 func filterUrl(originalUrl string) string {
 	parsedUrl, err := url.Parse(originalUrl)
 	if err != nil {
