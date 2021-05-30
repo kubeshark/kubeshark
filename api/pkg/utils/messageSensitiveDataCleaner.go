@@ -14,6 +14,9 @@ func FilterSensitiveInfoFromHarRequest(harOutputItem *tap.OutputChannelItem) {
 	filterHarHeaders(harOutputItem.HarEntry.Request.Headers)
 	filterHarHeaders(harOutputItem.HarEntry.Response.Headers)
 
+	harOutputItem.HarEntry.Request.Cookies = nil
+	harOutputItem.HarEntry.Response.Cookies = nil
+
 	harOutputItem.HarEntry.Request.URL = filterUrl(harOutputItem.HarEntry.Request.URL)
 	for i, queryString := range harOutputItem.HarEntry.Request.QueryString {
 		if isFieldNameSensitive(queryString.Name) {
