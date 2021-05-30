@@ -34,7 +34,9 @@ func main() {
 
 	if *standalone {
 		harOutputChannel := tap.StartPassiveTapper()
-		go api.StartReadingEntries(harOutputChannel, tap.HarOutputDir)
+		filteredHarChannel := make(chan *tap.OutputChannelItem)
+		go filterHarHeaders(harOutputChannel, filteredHarChannel)
+		go api.StartReadingEntries(filteredHarChannel, nil)
 		hostApi(nil)
 	} else if *shouldTap {
 		if *aggregatorAddress == "" {

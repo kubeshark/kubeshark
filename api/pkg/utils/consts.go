@@ -6,4 +6,4 @@ var personallyIdentifiableDataFields = []string {"token", "authorization", "auth
 												 "bearer", "clientid", "clientsecret", "redirecturi", "phonenumber",
 												 "zip", "zipcode", "address", "country", "city", "state", "residence",
                                                  "name", "firstname", "lastname", "suffix", "middlename", "fname", "lname",
-                                                 "mname", "date", "birthday", "birthday", "bday", "sender", "receiver"}
+                                                 "mname", "birthday", "birthday", "birthdate", "bday", "sender", "receiver"}
