@@ -16,6 +16,7 @@ import (
 	"mizuserver/pkg/utils"
 	"os"
 	"os/signal"
+	"regexp"
 )
 
 var shouldTap = flag.Bool("tap", false, "Run in tapper mode without API")
@@ -25,6 +26,7 @@ var aggregatorAddress = flag.String("aggregator-address", "", "Address of mizu c
 
 const nodeNameEnvVar = "NODE_NAME"
 const tappedAddressesPerNodeDictEnvVar = "TAPPED_ADDRESSES_PER_HOST"
+const plainTextRegexesEnvVar = "PLAINTEXT_REGEXES"
 
 func main() {
 	flag.Parse()
@@ -98,14 +100,36 @@ func getTapTargets() []string {
 	var tappedAddressesPerNodeDict map[string][]string
 	err := json.Unmarshal([]byte(os.Getenv(tappedAddressesPerNodeDictEnvVar)), &tappedAddressesPerNodeDict)
 	if err != nil {
-		panic(fmt.Sprintf("env var value of %s is invalid! must be map[string][]string %v", tappedAddressesPerNodeDict, err))
+		panic(fmt.Sprintf("env var %s's value of %s is invalid! must be map[string][]string %v", tappedAddressesPerNodeDictEnvVar, tappedAddressesPerNodeDict, err))
 	}
 	return tappedAddressesPerNodeDict[nodeName]
 }
 
+func getFilteringOptions() *sensitiveDataFiltering.FilteringOptions {
+	regexJsonArr := os.Getenv(plainTextRegexesEnvVar)
+	if regexJsonArr == "" {
+		return nil
+	}
+	var regexStrSlice []string
+	err := json.Unmarshal([]byte(regexJsonArr), &regexStrSlice)
+	if err != nil {
+		panic(fmt.Sprintf("env var %s's value of %s is invalid! must be []string %v", plainTextRegexesEnvVar, regexJsonArr, err))
+	}
+
+	parsedRegexSlice := make([]regexp.Regexp, 0)
+	for _, regexStr := range regexStrSlice {
+		regex, err := regexp.Compile(regexStr)
+		if err != nil {
+			panic(fmt.Sprintf("env var %s's value of %s is invalid! must be []string %v", plainTextRegexesEnvVar, regexJsonArr, err))
+		}
+		parsedRegexSlice = append(parsedRegexSlice, *regex)
+	}
+	return &sensitiveDataFiltering.FilteringOptions{PlainTextFilterRegexes: parsedRegexSlice}
+}
+
 func filterHarHeaders(inChannel <- chan *tap.OutputChannelItem, outChannel chan *tap.OutputChannelItem) {
 	for message := range inChannel {
-		sensitiveDataFiltering.FilterSensitiveInfoFromHarRequest(message)
+		sensitiveDataFiltering.FilterSensitiveInfoFromHarRequest(message, nil)
 		outChannel <- message
 	}
 }

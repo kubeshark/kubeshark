@@ -4,6 +4,7 @@ go 1.16
 
 require (
 	github.com/antoniodipinto/ikisocket v0.0.0-20210417133349-f1502512d69a
+	github.com/beevik/etree v1.1.0
 	github.com/djherbis/atime v1.0.0
 	github.com/fasthttp/websocket v1.4.3-beta.1 // indirect
 	github.com/go-playground/locales v0.13.0

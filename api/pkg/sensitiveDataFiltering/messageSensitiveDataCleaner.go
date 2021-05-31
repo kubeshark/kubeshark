@@ -3,13 +3,20 @@ package sensitiveDataFiltering
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/google/martian/har"
 	"mizuserver/pkg/tap"
 	"net/url"
+	"regexp"
 	"strings"
+
+	"github.com/beevik/etree"
+	"github.com/google/martian/har"
 )
 
-func FilterSensitiveInfoFromHarRequest(harOutputItem *tap.OutputChannelItem) {
+type FilteringOptions struct {
+	PlainTextFilterRegexes []regexp.Regexp
+}
+
+func FilterSensitiveInfoFromHarRequest(harOutputItem *tap.OutputChannelItem, options *FilteringOptions) {
 	filterHarHeaders(harOutputItem.HarEntry.Request.Headers)
 	filterHarHeaders(harOutputItem.HarEntry.Response.Headers)
 
@@ -24,13 +31,15 @@ func FilterSensitiveInfoFromHarRequest(harOutputItem *tap.OutputChannelItem) {
 	}
 
 	if harOutputItem.HarEntry.Request.PostData != nil {
-		filteredRequestBody, err := filterHttpBody([]byte(harOutputItem.HarEntry.Request.PostData.Text))
+		requestContentType := getContentTypeHeaderValue(harOutputItem.HarEntry.Request.Headers)
+		filteredRequestBody, err := filterHttpBody([]byte(harOutputItem.HarEntry.Request.PostData.Text), requestContentType, options)
 		if err == nil {
 			harOutputItem.HarEntry.Request.PostData.Text = string(filteredRequestBody)
 		}
 	}
 	if harOutputItem.HarEntry.Response.Content != nil {
-		filteredResponseBody, err := filterHttpBody(harOutputItem.HarEntry.Response.Content.Text)
+		responseContentType := getContentTypeHeaderValue(harOutputItem.HarEntry.Response.Headers)
+		filteredResponseBody, err := filterHttpBody(harOutputItem.HarEntry.Response.Content.Text, responseContentType, options)
 		if err == nil {
 			harOutputItem.HarEntry.Response.Content.Text = filteredResponseBody
 		}
@@ -43,6 +52,15 @@ func filterHarHeaders(headers []har.Header) {
 			headers[i].Value = maskedFieldPlaceholderValue
 		}
 	}
+}
+
+func getContentTypeHeaderValue(headers []har.Header) string {
+	for _, header := range headers {
+		if strings.ToLower(header.Name) == "content-type" {
+			return header.Value
+		}
+	}
+	return ""
 }
 
 func isFieldNameSensitive(fieldName string) bool {
@@ -60,7 +78,63 @@ func isFieldNameSensitive(fieldName string) bool {
 	return false
 }
 
-func filterHttpBody(bytes []byte) ([]byte, error){
+func filterHttpBody(bytes []byte, contentType string, options *FilteringOptions) ([]byte, error) {
+	mimeType := strings.Split(contentType, ";")[0]
+	switch strings.ToLower(mimeType) {
+	case "application/json":
+		return filterJsonBody(bytes)
+	case "text/html":
+		fallthrough
+	case "application/xhtml+xml":
+		fallthrough
+	case "text/xml":
+		fallthrough
+	case "application/xml":
+		return filterXmlEtree(bytes)
+	case "text/plain":
+		if options != nil && options.PlainTextFilterRegexes != nil {
+			return filterPlainText(bytes, options), nil
+		}
+	}
+	return bytes, nil
+}
+
+func filterPlainText(bytes []byte, options *FilteringOptions) []byte {
+	for _, regex := range options.PlainTextFilterRegexes {
+		bytes = regex.ReplaceAll(bytes, []byte(maskedFieldPlaceholderValue))
+	}
+	return bytes
+}
+
+func filterXmlEtree(bytes []byte) ([]byte, error) {
+	xmlDoc := etree.NewDocument()
+	err := xmlDoc.ReadFromBytes(bytes)
+	if err != nil {
+		return nil, err
+	} else {
+		filterXmlElement(xmlDoc.Root())
+	}
+	return xmlDoc.WriteToBytes()
+}
+
+func filterXmlElement(element *etree.Element) {
+	for i, attribute := range element.Attr {
+		if isFieldNameSensitive(attribute.Key) {
+			element.Attr[i].Value = maskedFieldPlaceholderValue
+		}
+	}
+	if element.ChildElements() == nil || len(element.ChildElements()) == 0 {
+		if isFieldNameSensitive(element.Tag) {
+			element.SetText(maskedFieldPlaceholderValue)
+		}
+	} else {
+		for _, element := range element.ChildElements() {
+			filterXmlElement(element)
+		}
+	}
+}
+
+func filterJsonBody(bytes []byte) ([]byte, error) {
 	var bodyJsonMap map[string] interface{}
 	err := json.Unmarshal(bytes ,&bodyJsonMap)
 	if err != nil {
