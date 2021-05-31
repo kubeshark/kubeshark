@@ -11,6 +11,7 @@ import (
 	"mizuserver/pkg/middleware"
 	"mizuserver/pkg/models"
 	"mizuserver/pkg/routes"
+	"mizuserver/pkg/sensitiveDataFiltering"
 	"mizuserver/pkg/tap"
 	"mizuserver/pkg/utils"
 	"os"
@@ -34,7 +35,9 @@ func main() {
 
 	if *standalone {
 		harOutputChannel := tap.StartPassiveTapper()
-		go api.StartReadingEntries(harOutputChannel, tap.HarOutputDir)
+		filteredHarChannel := make(chan *tap.OutputChannelItem)
+		go filterHarHeaders(harOutputChannel, filteredHarChannel)
+		go api.StartReadingEntries(filteredHarChannel, nil)
 		hostApi(nil)
 	} else if *shouldTap {
 		if *aggregatorAddress == "" {
@@ -52,7 +55,9 @@ func main() {
 		if err != nil {
 			panic(fmt.Sprintf("Error connecting to socket server at %s %v", *aggregatorAddress, err))
 		}
-		go pipeChannelToSocket(socketConnection, harOutputChannel)
+		filteredHarChannel := make(chan *tap.OutputChannelItem)
+		go filterHarHeaders(harOutputChannel, filteredHarChannel)
+		go pipeChannelToSocket(socketConnection, filteredHarChannel)
 	} else if *aggregator {
 		socketHarOutChannel := make(chan *tap.OutputChannelItem, 1000)
 		go api.StartReadingEntries(socketHarOutChannel, nil)
@@ -96,6 +101,13 @@ func getTapTargets() []string {
 		panic(fmt.Sprintf("env var value of %s is invalid! must be map[string][]string %v", tappedAddressesPerNodeDict, err))
 	}
 	return tappedAddressesPerNodeDict[nodeName]
+}
+
+func filterHarHeaders(inChannel <- chan *tap.OutputChannelItem, outChannel chan *tap.OutputChannelItem) {
+	for message := range inChannel {
+		sensitiveDataFiltering.FilterSensitiveInfoFromHarRequest(message)
+		outChannel <- message
+	}
 }
 
 func pipeChannelToSocket(connection *websocket.Conn, messageDataChannel <-chan *tap.OutputChannelItem) {
