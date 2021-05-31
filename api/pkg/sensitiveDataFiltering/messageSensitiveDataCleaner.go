@@ -1,4 +1,4 @@
-package utils
+package sensitiveDataFiltering
 
 import (
 	"encoding/json"
@@ -90,7 +90,7 @@ func filterJsonMap(jsonMap map[string] interface{}) {
 func filterUrl(originalUrl string) string {
 	parsedUrl, err := url.Parse(originalUrl)
 	if err != nil {
-		return originalUrl
+		return fmt.Sprintf("http://%s", maskedFieldPlaceholderValue)
 	} else {
 		if len(parsedUrl.RawQuery) > 0 {
 			newQueryArgs := make([]string, 0)

@@ -11,6 +11,7 @@ import (
 	"mizuserver/pkg/middleware"
 	"mizuserver/pkg/models"
 	"mizuserver/pkg/routes"
+	"mizuserver/pkg/sensitiveDataFiltering"
 	"mizuserver/pkg/tap"
 	"mizuserver/pkg/utils"
 	"os"
@@ -103,9 +104,8 @@ func getTapTargets() []string {
 }
 
 func filterHarHeaders(inChannel <- chan *tap.OutputChannelItem, outChannel chan *tap.OutputChannelItem) {
-	for {
-		message := <- inChannel
-		utils.FilterSensitiveInfoFromHarRequest(message)
+	for message := range inChannel {
+		sensitiveDataFiltering.FilterSensitiveInfoFromHarRequest(message)
 		outChannel <- message
 	}
 }
