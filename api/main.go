@@ -34,7 +34,7 @@ func main() {
 	if *standalone {
 		harOutputChannel := tap.StartPassiveTapper()
 		filteredHarChannel := make(chan *tap.OutputChannelItem)
-		go filterHarHeaders(harOutputChannel, filteredHarChannel, getFilteringOptions())
+		go filterHarHeaders(harOutputChannel, filteredHarChannel, getTrafficFilteringOptions())
 		go api.StartReadingEntries(filteredHarChannel, nil)
 		hostApi(nil)
 	} else if *shouldTap {
@@ -58,7 +58,7 @@ func main() {
 		socketHarOutChannel := make(chan *tap.OutputChannelItem, 1000)
 		filteredHarChannel := make(chan *tap.OutputChannelItem)
 		go api.StartReadingEntries(filteredHarChannel, nil)
-		go filterHarHeaders(socketHarOutChannel, filteredHarChannel, getFilteringOptions())
+		go filterHarHeaders(socketHarOutChannel, filteredHarChannel, getTrafficFilteringOptions())
 		hostApi(socketHarOutChannel)
 	}
 
@@ -101,21 +101,21 @@ func getTapTargets() []string {
 	return tappedAddressesPerNodeDict[nodeName]
 }
 
-func getFilteringOptions() *shared.FilteringOptions {
+func getTrafficFilteringOptions() *shared.TrafficFilteringOptions {
 	filteringOptionsJson := os.Getenv(shared.MizuFilteringOptionsEnvVar)
 	if filteringOptionsJson == "" {
 		return nil
 	}
-	var filteringOptions shared.FilteringOptions
+	var filteringOptions shared.TrafficFilteringOptions
 	err := json.Unmarshal([]byte(filteringOptionsJson), &filteringOptions)
 	if err != nil {
-		panic(fmt.Sprintf("env var %s's value of %s is invalid! json must match the shared.FilteringOptions struct %v", shared.MizuFilteringOptionsEnvVar, filteringOptionsJson, err))
+		panic(fmt.Sprintf("env var %s's value of %s is invalid! json must match the shared.TrafficFilteringOptions struct %v", shared.MizuFilteringOptionsEnvVar, filteringOptionsJson, err))
 	}
 
 	return &filteringOptions
 }
 
-func filterHarHeaders(inChannel <- chan *tap.OutputChannelItem, outChannel chan *tap.OutputChannelItem, filterOptions *shared.FilteringOptions) {
+func filterHarHeaders(inChannel <- chan *tap.OutputChannelItem, outChannel chan *tap.OutputChannelItem, filterOptions *shared.TrafficFilteringOptions) {
 	for message := range inChannel {
 		sensitiveDataFiltering.FilterSensitiveInfoFromHarRequest(message, filterOptions)
 		outChannel <- message

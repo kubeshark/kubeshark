@@ -62,7 +62,7 @@ func RunMizuTap(podRegexQuery *regexp.Regexp, tappingOptions *MizuTapOptions) {
 	// TODO handle incoming traffic from tapper using a channel
 }
 
-func createMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, nodeToTappedPodIPMap map[string][]string, tappingOptions *MizuTapOptions, mizuApiFilteringOptions *shared.FilteringOptions) error {
+func createMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, nodeToTappedPodIPMap map[string][]string, tappingOptions *MizuTapOptions, mizuApiFilteringOptions *shared.TrafficFilteringOptions) error {
 	if err := createMizuAggregator(ctx, kubernetesProvider, tappingOptions, mizuApiFilteringOptions); err != nil {
 		return err
 	}
@@ -74,7 +74,7 @@ func createMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Pro
 	return nil
 }
 
-func createMizuAggregator(ctx context.Context, kubernetesProvider *kubernetes.Provider, tappingOptions *MizuTapOptions, mizuApiFilteringOptions *shared.FilteringOptions) error {
+func createMizuAggregator(ctx context.Context, kubernetesProvider *kubernetes.Provider, tappingOptions *MizuTapOptions, mizuApiFilteringOptions *shared.TrafficFilteringOptions) error {
 	var err error
 
 	mizuServiceAccountExists = createRBACIfNecessary(ctx, kubernetesProvider)
@@ -93,7 +93,7 @@ func createMizuAggregator(ctx context.Context, kubernetesProvider *kubernetes.Pr
 	return nil
 }
 
-func getMizuApiFilteringOptions(tappingOptions *MizuTapOptions) (*shared.FilteringOptions, error) {
+func getMizuApiFilteringOptions(tappingOptions *MizuTapOptions) (*shared.TrafficFilteringOptions, error) {
 	if tappingOptions.PlainTextFilterRegexes == nil || len(tappingOptions.PlainTextFilterRegexes) == 0 {
 		return nil, nil
 	}
@@ -108,7 +108,7 @@ func getMizuApiFilteringOptions(tappingOptions *MizuTapOptions) (*shared.Filteri
 		compiledRegexSlice = append(compiledRegexSlice, compiledRegex)
 	}
 
-	return &shared.FilteringOptions{PlainTextFilterRegexes: compiledRegexSlice}, nil
+	return &shared.TrafficFilteringOptions{PlainTextMaskingRegexes: compiledRegexSlice}, nil
 }
 
 func createMizuTappers(ctx context.Context, kubernetesProvider *kubernetes.Provider, nodeToTappedPodIPMap map[string][]string, tappingOptions *MizuTapOptions) error {

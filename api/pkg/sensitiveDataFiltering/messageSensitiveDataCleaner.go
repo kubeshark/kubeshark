@@ -12,7 +12,7 @@ import (
 	"github.com/google/martian/har"
 )
 
-func FilterSensitiveInfoFromHarRequest(harOutputItem *tap.OutputChannelItem, options *shared.FilteringOptions) {
+func FilterSensitiveInfoFromHarRequest(harOutputItem *tap.OutputChannelItem, options *shared.TrafficFilteringOptions) {
 	filterHarHeaders(harOutputItem.HarEntry.Request.Headers)
 	filterHarHeaders(harOutputItem.HarEntry.Response.Headers)
 
@@ -74,7 +74,7 @@ func isFieldNameSensitive(fieldName string) bool {
 	return false
 }
 
-func filterHttpBody(bytes []byte, contentType string, options *shared.FilteringOptions) ([]byte, error) {
+func filterHttpBody(bytes []byte, contentType string, options *shared.TrafficFilteringOptions) ([]byte, error) {
 	mimeType := strings.Split(contentType, ";")[0]
 	switch strings.ToLower(mimeType) {
 	case "application/json":
@@ -88,15 +88,15 @@ func filterHttpBody(bytes []byte, contentType string, options *shared.FilteringO
 	case "application/xml":
 		return filterXmlEtree(bytes)
 	case "text/plain":
-		if options != nil && options.PlainTextFilterRegexes != nil {
+		if options != nil && options.PlainTextMaskingRegexes != nil {
 			return filterPlainText(bytes, options), nil
 		}
 	}
 	return bytes, nil
 }
 
-func filterPlainText(bytes []byte, options *shared.FilteringOptions) []byte {
-	for _, regex := range options.PlainTextFilterRegexes {
+func filterPlainText(bytes []byte, options *shared.TrafficFilteringOptions) []byte {
+	for _, regex := range options.PlainTextMaskingRegexes {
 		bytes = regex.ReplaceAll(bytes, []byte(maskedFieldPlaceholderValue))
 	}
 	return bytes

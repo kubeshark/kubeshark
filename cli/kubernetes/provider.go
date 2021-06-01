@@ -86,7 +86,7 @@ func (provider *Provider) GetPods(ctx context.Context, namespace string) {
 	fmt.Printf("There are %d pods in Namespace %s\n", len(pods.Items), namespace)
 }
 
-func (provider *Provider) CreateMizuAggregatorPod(ctx context.Context, namespace string, podName string, podImage string, linkServiceAccount bool, mizuApiFilteringOptions *shared.FilteringOptions) (*core.Pod, error) {
+func (provider *Provider) CreateMizuAggregatorPod(ctx context.Context, namespace string, podName string, podImage string, linkServiceAccount bool, mizuApiFilteringOptions *shared.TrafficFilteringOptions) (*core.Pod, error) {
 	marshaledFilteringOptions, err := json.Marshal(mizuApiFilteringOptions)
 	if err != nil {
 		return nil, err
