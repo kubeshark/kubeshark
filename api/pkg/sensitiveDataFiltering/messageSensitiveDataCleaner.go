@@ -3,13 +3,13 @@ package sensitiveDataFiltering
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/up9inc/mizu/shared"
 	"mizuserver/pkg/tap"
 	"net/url"
 	"strings"
 
 	"github.com/beevik/etree"
 	"github.com/google/martian/har"
+	"github.com/up9inc/mizu/shared"
 )
 
 func FilterSensitiveInfoFromHarRequest(harOutputItem *tap.OutputChannelItem, options *shared.TrafficFilteringOptions) {
