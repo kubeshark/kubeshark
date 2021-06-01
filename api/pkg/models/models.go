@@ -48,7 +48,7 @@ type EntriesFilter struct {
 }
 
 type HarFetchRequestBody struct {
-	Limit     int    `query:"limit" validate:"max=5000"`
+	Limit     int    `query:"limit"`
 }
 
 type WebSocketEntryMessage struct {
