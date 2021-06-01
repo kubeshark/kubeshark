@@ -6,19 +6,20 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/up9inc/mizu/shared"
 
 	"path/filepath"
 	"regexp"
 
-	applyconfapp "k8s.io/client-go/applyconfigurations/apps/v1"
-	applyconfmeta "k8s.io/client-go/applyconfigurations/meta/v1"
-	applyconfcore "k8s.io/client-go/applyconfigurations/core/v1"
 	core "k8s.io/api/core/v1"
 	rbac "k8s.io/api/rbac/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/watch"
+	applyconfapp "k8s.io/client-go/applyconfigurations/apps/v1"
+	applyconfcore "k8s.io/client-go/applyconfigurations/core/v1"
+	applyconfmeta "k8s.io/client-go/applyconfigurations/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/azure"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
@@ -85,7 +86,11 @@ func (provider *Provider) GetPods(ctx context.Context, namespace string) {
 	fmt.Printf("There are %d pods in Namespace %s\n", len(pods.Items), namespace)
 }
 
-func (provider *Provider) CreateMizuAggregatorPod(ctx context.Context, namespace string, podName string, podImage string, linkServiceAccount bool) (*core.Pod, error) {
+func (provider *Provider) CreateMizuAggregatorPod(ctx context.Context, namespace string, podName string, podImage string, linkServiceAccount bool, mizuApiFilteringOptions *shared.FilteringOptions) (*core.Pod, error) {
+	marshaledFilteringOptions, err := json.Marshal(mizuApiFilteringOptions)
+	if err != nil {
+		return nil, err
+	}
 	pod := &core.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      podName,
@@ -101,8 +106,12 @@ func (provider *Provider) CreateMizuAggregatorPod(ctx context.Context, namespace
 					Command: []string {"./mizuagent", "--aggregator"},
 					Env: []core.EnvVar{
 						{
-							Name: "HOST_MODE",
+							Name: shared.HostModeEnvVar,
 							Value: "1",
+						},
+						{
+							Name: shared.MizuFilteringOptionsEnvVar,
+							Value: string(marshaledFilteringOptions),
 						},
 					},
 				},
@@ -232,12 +241,11 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	agentContainer.WithSecurityContext(applyconfcore.SecurityContext().WithPrivileged(privileged))
 	agentContainer.WithCommand("./mizuagent", "-i", "any", "--tap", "--hardump", "--aggregator-address", fmt.Sprintf("ws://%s/wsTapper", aggregatorPodIp))
 	agentContainer.WithEnv(
-		applyconfcore.EnvVar().WithName("HOST_MODE").WithValue("1"),
-		applyconfcore.EnvVar().WithName("AGGREGATOR_ADDRESS").WithValue(aggregatorPodIp),
-		applyconfcore.EnvVar().WithName("TAPPED_ADDRESSES_PER_HOST").WithValue(string(nodeToTappedPodIPMapJsonStr)),
+		applyconfcore.EnvVar().WithName(shared.HostModeEnvVar).WithValue("1"),
+		applyconfcore.EnvVar().WithName(shared.TappedAddressesPerNodeDictEnvVar).WithValue(string(nodeToTappedPodIPMapJsonStr)),
 	)
 	agentContainer.WithEnv(
-		applyconfcore.EnvVar().WithName("NODE_NAME").WithValueFrom(
+		applyconfcore.EnvVar().WithName(shared.NodeNameEnvVar).WithValueFrom(
 			applyconfcore.EnvVarSource().WithFieldRef(
 				applyconfcore.ObjectFieldSelector().WithAPIVersion("v1").WithFieldPath("spec.nodeName"),
 			),

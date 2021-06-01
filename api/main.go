@@ -16,7 +16,6 @@ import (
 	"mizuserver/pkg/utils"
 	"os"
 	"os/signal"
-	"regexp"
 )
 
 var shouldTap = flag.Bool("tap", false, "Run in tapper mode without API")
@@ -24,9 +23,6 @@ var aggregator = flag.Bool("aggregator", false, "Run in aggregator mode with API
 var standalone = flag.Bool("standalone", false, "Run in standalone tapper and API mode")
 var aggregatorAddress = flag.String("aggregator-address", "", "Address of mizu collector for tapping")
 
-const nodeNameEnvVar = "NODE_NAME"
-const tappedAddressesPerNodeDictEnvVar = "TAPPED_ADDRESSES_PER_HOST"
-const plainTextRegexesEnvVar = "PLAINTEXT_REGEXES"
 
 func main() {
 	flag.Parse()
@@ -38,7 +34,7 @@ func main() {
 	if *standalone {
 		harOutputChannel := tap.StartPassiveTapper()
 		filteredHarChannel := make(chan *tap.OutputChannelItem)
-		go filterHarHeaders(harOutputChannel, filteredHarChannel)
+		go filterHarHeaders(harOutputChannel, filteredHarChannel, getFilteringOptions())
 		go api.StartReadingEntries(filteredHarChannel, nil)
 		hostApi(nil)
 	} else if *shouldTap {
@@ -57,12 +53,12 @@ func main() {
 		if err != nil {
 			panic(fmt.Sprintf("Error connecting to socket server at %s %v", *aggregatorAddress, err))
 		}
-		filteredHarChannel := make(chan *tap.OutputChannelItem)
-		go filterHarHeaders(harOutputChannel, filteredHarChannel)
-		go pipeChannelToSocket(socketConnection, filteredHarChannel)
+		go pipeChannelToSocket(socketConnection, harOutputChannel)
 	} else if *aggregator {
 		socketHarOutChannel := make(chan *tap.OutputChannelItem, 1000)
-		go api.StartReadingEntries(socketHarOutChannel, nil)
+		filteredHarChannel := make(chan *tap.OutputChannelItem)
+		go api.StartReadingEntries(filteredHarChannel, nil)
+		go filterHarHeaders(socketHarOutChannel, filteredHarChannel, getFilteringOptions())
 		hostApi(socketHarOutChannel)
 	}
 
@@ -96,40 +92,32 @@ func hostApi(socketHarOutputChannel chan<- *tap.OutputChannelItem) {
 
 
 func getTapTargets() []string {
-	nodeName := os.Getenv(nodeNameEnvVar)
+	nodeName := os.Getenv(shared.NodeNameEnvVar)
 	var tappedAddressesPerNodeDict map[string][]string
-	err := json.Unmarshal([]byte(os.Getenv(tappedAddressesPerNodeDictEnvVar)), &tappedAddressesPerNodeDict)
+	err := json.Unmarshal([]byte(os.Getenv(shared.TappedAddressesPerNodeDictEnvVar)), &tappedAddressesPerNodeDict)
 	if err != nil {
-		panic(fmt.Sprintf("env var %s's value of %s is invalid! must be map[string][]string %v", tappedAddressesPerNodeDictEnvVar, tappedAddressesPerNodeDict, err))
+		panic(fmt.Sprintf("env var %s's value of %s is invalid! must be map[string][]string %v", shared.TappedAddressesPerNodeDictEnvVar, tappedAddressesPerNodeDict, err))
 	}
 	return tappedAddressesPerNodeDict[nodeName]
 }
 
-func getFilteringOptions() *sensitiveDataFiltering.FilteringOptions {
-	regexJsonArr := os.Getenv(plainTextRegexesEnvVar)
-	if regexJsonArr == "" {
+func getFilteringOptions() *shared.FilteringOptions {
+	filteringOptionsJson := os.Getenv(shared.MizuFilteringOptionsEnvVar)
+	if filteringOptionsJson == "" {
 		return nil
 	}
-	var regexStrSlice []string
-	err := json.Unmarshal([]byte(regexJsonArr), &regexStrSlice)
+	var filteringOptions shared.FilteringOptions
+	err := json.Unmarshal([]byte(filteringOptionsJson), &filteringOptions)
 	if err != nil {
-		panic(fmt.Sprintf("env var %s's value of %s is invalid! must be []string %v", plainTextRegexesEnvVar, regexJsonArr, err))
+		panic(fmt.Sprintf("env var %s's value of %s is invalid! json must match the shared.FilteringOptions struct %v", shared.MizuFilteringOptionsEnvVar, filteringOptionsJson, err))
 	}
 
-	parsedRegexSlice := make([]regexp.Regexp, 0)
-	for _, regexStr := range regexStrSlice {
-		regex, err := regexp.Compile(regexStr)
-		if err != nil {
-			panic(fmt.Sprintf("env var %s's value of %s is invalid! must be []string %v", plainTextRegexesEnvVar, regexJsonArr, err))
-		}
-		parsedRegexSlice = append(parsedRegexSlice, *regex)
-	}
-	return &sensitiveDataFiltering.FilteringOptions{PlainTextFilterRegexes: parsedRegexSlice}
+	return &filteringOptions
 }
 
-func filterHarHeaders(inChannel <- chan *tap.OutputChannelItem, outChannel chan *tap.OutputChannelItem) {
+func filterHarHeaders(inChannel <- chan *tap.OutputChannelItem, outChannel chan *tap.OutputChannelItem, filterOptions *shared.FilteringOptions) {
 	for message := range inChannel {
-		sensitiveDataFiltering.FilterSensitiveInfoFromHarRequest(message, nil)
+		sensitiveDataFiltering.FilterSensitiveInfoFromHarRequest(message, filterOptions)
 		outChannel <- message
 	}
 }

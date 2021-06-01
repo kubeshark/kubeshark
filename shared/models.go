@@ -33,3 +33,7 @@ func CreateWebSocketStatusMessage(tappingStatus TapStatus) WebSocketStatusMessag
 		TappingStatus: tappingStatus,
 	}
 }
+
+type FilteringOptions struct {
+	PlainTextFilterRegexes []*SerializableRegexp
+}

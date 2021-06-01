@@ -3,20 +3,16 @@ package sensitiveDataFiltering
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/up9inc/mizu/shared"
 	"mizuserver/pkg/tap"
 	"net/url"
-	"regexp"
 	"strings"
 
 	"github.com/beevik/etree"
 	"github.com/google/martian/har"
 )
 
-type FilteringOptions struct {
-	PlainTextFilterRegexes []regexp.Regexp
-}
-
-func FilterSensitiveInfoFromHarRequest(harOutputItem *tap.OutputChannelItem, options *FilteringOptions) {
+func FilterSensitiveInfoFromHarRequest(harOutputItem *tap.OutputChannelItem, options *shared.FilteringOptions) {
 	filterHarHeaders(harOutputItem.HarEntry.Request.Headers)
 	filterHarHeaders(harOutputItem.HarEntry.Response.Headers)
 
@@ -78,7 +74,7 @@ func isFieldNameSensitive(fieldName string) bool {
 	return false
 }
 
-func filterHttpBody(bytes []byte, contentType string, options *FilteringOptions) ([]byte, error) {
+func filterHttpBody(bytes []byte, contentType string, options *shared.FilteringOptions) ([]byte, error) {
 	mimeType := strings.Split(contentType, ";")[0]
 	switch strings.ToLower(mimeType) {
 	case "application/json":
@@ -99,7 +95,7 @@ func filterHttpBody(bytes []byte, contentType string, options *FilteringOptions)
 	return bytes, nil
 }
 
-func filterPlainText(bytes []byte, options *FilteringOptions) []byte {
+func filterPlainText(bytes []byte, options *shared.FilteringOptions) []byte {
 	for _, regex := range options.PlainTextFilterRegexes {
 		bytes = regex.ReplaceAll(bytes, []byte(maskedFieldPlaceholderValue))
 	}

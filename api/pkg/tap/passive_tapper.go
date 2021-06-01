@@ -13,6 +13,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"github.com/up9inc/mizu/shared"
 	"log"
 	"os"
 	"os/signal"
@@ -34,7 +35,6 @@ import (
 const AppPortsEnvVar = "APP_PORTS"
 const OutPortEnvVar = "WEB_SOCKET_PORT"
 const maxHTTP2DataLenEnvVar = "HTTP2_DATA_SIZE_LIMIT"
-const hostModeEnvVar = "HOST_MODE"
 // default is 1MB, more than the max size accepted by collector and traffic-dumper
 const maxHTTP2DataLenDefault = 1 * 1024 * 1024
 const cleanPeriod = time.Second * 10
@@ -258,7 +258,7 @@ func startPassiveTapper(harWriter *HarWriter) {
 			maxHTTP2DataLen = convertedInt
 		}
 	}
-	hostMode = os.Getenv(hostModeEnvVar) == "1"
+	hostMode = os.Getenv(shared.HostModeEnvVar) == "1"
 
 	fmt.Printf("App Ports: %v\n", appPorts)
 	fmt.Printf("Tap output websocket port: %s\n", tapOutputPort)
