@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"github.com/up9inc/mizu/shared"
 	"os"
 	"os/signal"
 	"regexp"
@@ -26,6 +27,10 @@ const (
 var currentlyTappedPods []core.Pod
 
 func RunMizuTap(podRegexQuery *regexp.Regexp, tappingOptions *MizuTapOptions) {
+	mizuApiFilteringOptions, err := getMizuApiFilteringOptions(tappingOptions)
+	if err != nil {
+		return
+	}
 	kubernetesProvider := kubernetes.NewProvider(tappingOptions.KubeConfigPath, tappingOptions.Namespace)
 
 	defer cleanUpMizuResources(kubernetesProvider)
@@ -43,7 +48,7 @@ func RunMizuTap(podRegexQuery *regexp.Regexp, tappingOptions *MizuTapOptions) {
 		return
 	}
 
-	if err := createMizuResources(ctx, kubernetesProvider, nodeToTappedPodIPMap, tappingOptions); err != nil {
+	if err := createMizuResources(ctx, kubernetesProvider, nodeToTappedPodIPMap, tappingOptions, mizuApiFilteringOptions); err != nil {
 		return
 	}
 
@@ -57,8 +62,8 @@ func RunMizuTap(podRegexQuery *regexp.Regexp, tappingOptions *MizuTapOptions) {
 	// TODO handle incoming traffic from tapper using a channel
 }
 
-func createMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, nodeToTappedPodIPMap map[string][]string, tappingOptions *MizuTapOptions) error {
-	if err := createMizuAggregator(ctx, kubernetesProvider, tappingOptions); err != nil {
+func createMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, nodeToTappedPodIPMap map[string][]string, tappingOptions *MizuTapOptions, mizuApiFilteringOptions *shared.TrafficFilteringOptions) error {
+	if err := createMizuAggregator(ctx, kubernetesProvider, tappingOptions, mizuApiFilteringOptions); err != nil {
 		return err
 	}
 
@@ -69,11 +74,11 @@ func createMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Pro
 	return nil
 }
 
-func createMizuAggregator(ctx context.Context, kubernetesProvider *kubernetes.Provider, tappingOptions *MizuTapOptions) error {
+func createMizuAggregator(ctx context.Context, kubernetesProvider *kubernetes.Provider, tappingOptions *MizuTapOptions, mizuApiFilteringOptions *shared.TrafficFilteringOptions) error {
 	var err error
 
 	mizuServiceAccountExists = createRBACIfNecessary(ctx, kubernetesProvider)
-	_, err = kubernetesProvider.CreateMizuAggregatorPod(ctx, mizu.ResourcesNamespace, mizu.AggregatorPodName, tappingOptions.MizuImage, mizuServiceAccountExists)
+	_, err = kubernetesProvider.CreateMizuAggregatorPod(ctx, mizu.ResourcesNamespace, mizu.AggregatorPodName, tappingOptions.MizuImage, mizuServiceAccountExists, mizuApiFilteringOptions)
 	if err != nil {
 		fmt.Printf("Error creating mizu collector pod: %v\n", err)
 		return err
@@ -86,6 +91,24 @@ func createMizuAggregator(ctx context.Context, kubernetesProvider *kubernetes.Pr
 	}
 
 	return nil
+}
+
+func getMizuApiFilteringOptions(tappingOptions *MizuTapOptions) (*shared.TrafficFilteringOptions, error) {
+	if tappingOptions.PlainTextFilterRegexes == nil || len(tappingOptions.PlainTextFilterRegexes) == 0 {
+		return nil, nil
+	}
+
+	compiledRegexSlice := make([]*shared.SerializableRegexp, 0)
+	for _, regexStr := range tappingOptions.PlainTextFilterRegexes {
+		compiledRegex, err := shared.CompileRegexToSerializableRegexp(regexStr)
+		if err != nil {
+			fmt.Printf("Regex %s is invalid: %v", regexStr, err)
+			return nil, err
+		}
+		compiledRegexSlice = append(compiledRegexSlice, compiledRegex)
+	}
+
+	return &shared.TrafficFilteringOptions{PlainTextMaskingRegexes: compiledRegexSlice}, nil
 }
 
 func createMizuTappers(ctx context.Context, kubernetesProvider *kubernetes.Provider, nodeToTappedPodIPMap map[string][]string, tappingOptions *MizuTapOptions) error {
