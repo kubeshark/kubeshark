@@ -107,7 +107,7 @@ func GetHARs(c *fiber.Ctx) error {
 					Creator: &models.ExtendedCreator{
 						Creator: &har.Creator{
 							Name:    "mizu",
-							Version: "0.0.1",
+							Version: "0.0.2",
 						},
 						Source: sourceOfEntry,
 					},

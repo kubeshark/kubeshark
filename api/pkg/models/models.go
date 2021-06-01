@@ -100,5 +100,5 @@ type ExtendedLog struct {
 
 type ExtendedCreator struct {
 	*har.Creator
-	Source         string `json:"_source,omitempty"`
+	Source         string `json:"_source"`
 }
