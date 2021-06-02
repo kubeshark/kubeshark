@@ -1,6 +1,6 @@
 FOLDER=$(GOOS).$(GOARCH)
 COMMIT_HASH=$(shell git rev-parse HEAD)
-GIT_BRANCH=$(shell git branch --show-current)
+GIT_BRANCH=$(shell git branch --show-current | tr '[:upper:]' '[:lower:]')
 
 .PHONY: help
 .DEFAULT_GOAL := help

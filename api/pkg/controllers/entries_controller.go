@@ -64,7 +64,7 @@ func GetEntries(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(baseEntries)
 }
 
-func GetHAR(c *fiber.Ctx) error {
+func GetHARs(c *fiber.Ctx) error {
 	entriesFilter := &models.HarFetchRequestBody{}
 	order := OrderDesc
 	if err := c.QueryParser(entriesFilter); err != nil {
@@ -87,7 +87,7 @@ func GetHAR(c *fiber.Ctx) error {
 		utils.ReverseSlice(entries)
 	}
 
-	harsObject := map[string]*har.HAR{}
+	harsObject := map[string]*models.ExtendedHAR{}
 
 	for _, entryData := range entries {
 		harEntryObject := []byte(entryData.Entry)
@@ -101,12 +101,15 @@ func GetHAR(c *fiber.Ctx) error {
 		} else {
 			var entriesHar []*har.Entry
 			entriesHar = append(entriesHar, &harEntry)
-			harsObject[sourceOfEntry] = &har.HAR{
-				Log: &har.Log{
+			harsObject[sourceOfEntry] = &models.ExtendedHAR{
+				Log: &models.ExtendedLog{
 					Version: "1.2",
-					Creator: &har.Creator{
-						Name:    "mizu",
-						Version: "0.0.1",
+					Creator: &models.ExtendedCreator{
+						Creator: &har.Creator{
+							Name:    "mizu",
+							Version: "0.0.2",
+						},
+						Source: sourceOfEntry,
 					},
 					Entries: entriesHar,
 				},

@@ -2,6 +2,7 @@ package models
 
 import (
 	"encoding/json"
+	"github.com/google/martian/har"
 	"github.com/up9inc/mizu/shared"
 	"mizuserver/pkg/tap"
 	"time"
@@ -47,7 +48,7 @@ type EntriesFilter struct {
 }
 
 type HarFetchRequestBody struct {
-	Limit     int    `query:"limit" validate:"max=5000"`
+	Limit     int    `query:"limit"`
 }
 
 type WebSocketEntryMessage struct {
@@ -79,4 +80,25 @@ func CreateWebsocketTappedEntryMessage(base *tap.OutputChannelItem) ([]byte, err
 		Data: base,
 	}
 	return json.Marshal(message)
+}
+
+
+// ExtendedHAR is the top level object of a HAR log.
+type ExtendedHAR struct {
+	Log *ExtendedLog `json:"log"`
+}
+
+// ExtendedLog is the HAR HTTP request and response log.
+type ExtendedLog struct {
+	// Version number of the HAR format.
+	Version string `json:"version"`
+	// Creator holds information about the log creator application.
+	Creator *ExtendedCreator `json:"creator"`
+	// Entries is a list containing requests and responses.
+	Entries []*har.Entry `json:"entries"`
+}
+
+type ExtendedCreator struct {
+	*har.Creator
+	Source         string `json:"_source"`
 }

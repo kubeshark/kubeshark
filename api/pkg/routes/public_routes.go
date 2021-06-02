@@ -12,7 +12,7 @@ func EntriesRoutes(fiberApp *fiber.App) {
 	routeGroup.Get("/entries", controllers.GetEntries)        // get entries (base/thin entries)
 	routeGroup.Get("/entries/:entryId", controllers.GetEntry) // get single (full) entry
 
-	routeGroup.Get("/har", controllers.GetHAR)
+	routeGroup.Get("/har", controllers.GetHARs)
 	routeGroup.Get("/resetDB", controllers.DeleteAllEntries)     // get single (full) entry
 	routeGroup.Get("/generalStats", controllers.GetGeneralStats) // get general stats about entries in DB
 
