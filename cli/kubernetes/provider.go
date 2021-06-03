@@ -116,7 +116,7 @@ func (provider *Provider) CreateMizuAggregatorPod(ctx context.Context, namespace
 					},
 				},
 			},
-			DNSPolicy: "ClusterFirstWithHostNet",
+			DNSPolicy: core.DNSClusterFirstWithHostNet,
 			TerminationGracePeriodSeconds: new(int64),
 			// Affinity: TODO: define node selector for all relevant nodes for this mizu instance
 		},
@@ -252,7 +252,7 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 		),
 	)
 
-	podSpec := applyconfcore.PodSpec().WithHostNetwork(true).WithDNSPolicy("ClusterFirstWithHostNet").WithTerminationGracePeriodSeconds(0)
+	podSpec := applyconfcore.PodSpec().WithHostNetwork(true).WithDNSPolicy(core.DNSClusterFirstWithHostNet).WithTerminationGracePeriodSeconds(0)
 	if linkServiceAccount {
 		podSpec.WithServiceAccountName(serviceAccountName)
 	}
