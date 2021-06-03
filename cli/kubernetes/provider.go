@@ -252,7 +252,10 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 		),
 	)
 
-	podSpec := applyconfcore.PodSpec().WithHostNetwork(true).WithDNSPolicy(core.DNSClusterFirstWithHostNet).WithTerminationGracePeriodSeconds(0)
+	podSpec := applyconfcore.PodSpec()
+	podSpec.WithHostNetwork(true)
+	podSpec.WithDNSPolicy(core.DNSClusterFirstWithHostNet)
+	podSpec.WithTerminationGracePeriodSeconds(0)
 	if linkServiceAccount {
 		podSpec.WithServiceAccountName(serviceAccountName)
 	}
