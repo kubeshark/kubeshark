@@ -269,6 +269,13 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	affinity := applyconfcore.Affinity()
 	affinity.WithNodeAffinity(nodeAffinity)
 
+	noExecuteToleration := applyconfcore.Toleration()
+	noExecuteToleration.WithOperator(core.TolerationOpExists)
+	noExecuteToleration.WithEffect(core.TaintEffectNoExecute)
+	noScheduleToleration := applyconfcore.Toleration()
+	noScheduleToleration.WithOperator(core.TolerationOpExists)
+	noScheduleToleration.WithEffect(core.TaintEffectNoSchedule)
+
 	podSpec := applyconfcore.PodSpec()
 	podSpec.WithHostNetwork(true)
 	podSpec.WithDNSPolicy(core.DNSClusterFirstWithHostNet)
@@ -278,6 +285,7 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	}
 	podSpec.WithContainers(agentContainer)
 	podSpec.WithAffinity(affinity)
+	podSpec.WithTolerations(noExecuteToleration, noScheduleToleration)
 
 	podTemplate := applyconfcore.PodTemplateSpec()
 	podTemplate.WithLabels(map[string]string{"app": tapperPodName})
