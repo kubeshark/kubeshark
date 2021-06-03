@@ -116,7 +116,7 @@ func (provider *Provider) CreateMizuAggregatorPod(ctx context.Context, namespace
 					},
 				},
 			},
-			DNSPolicy: "ClusterFirstWithHostNet",
+			DNSPolicy: core.DNSClusterFirstWithHostNet,
 			TerminationGracePeriodSeconds: new(int64),
 			// Affinity: TODO: define node selector for all relevant nodes for this mizu instance
 		},
@@ -252,12 +252,40 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 		),
 	)
 
-	podSpec := applyconfcore.PodSpec().WithHostNetwork(true).WithDNSPolicy("ClusterFirstWithHostNet").WithTerminationGracePeriodSeconds(0)
+	nodeNames := make([]string, 0, len(nodeToTappedPodIPMap))
+	for nodeName := range nodeToTappedPodIPMap {
+		nodeNames = append(nodeNames, nodeName)
+	}
+	nodeSelectorRequirement := applyconfcore.NodeSelectorRequirement()
+	nodeSelectorRequirement.WithKey("kubernetes.io/hostname")
+	nodeSelectorRequirement.WithOperator(core.NodeSelectorOpIn)
+	nodeSelectorRequirement.WithValues(nodeNames...)
+	nodeSelectorTerm := applyconfcore.NodeSelectorTerm()
+	nodeSelectorTerm.WithMatchExpressions(nodeSelectorRequirement)
+	nodeSelector := applyconfcore.NodeSelector()
+	nodeSelector.WithNodeSelectorTerms(nodeSelectorTerm)
+	nodeAffinity := applyconfcore.NodeAffinity()
+	nodeAffinity.WithRequiredDuringSchedulingIgnoredDuringExecution(nodeSelector)
+	affinity := applyconfcore.Affinity()
+	affinity.WithNodeAffinity(nodeAffinity)
+
+	noExecuteToleration := applyconfcore.Toleration()
+	noExecuteToleration.WithOperator(core.TolerationOpExists)
+	noExecuteToleration.WithEffect(core.TaintEffectNoExecute)
+	noScheduleToleration := applyconfcore.Toleration()
+	noScheduleToleration.WithOperator(core.TolerationOpExists)
+	noScheduleToleration.WithEffect(core.TaintEffectNoSchedule)
+
+	podSpec := applyconfcore.PodSpec()
+	podSpec.WithHostNetwork(true)
+	podSpec.WithDNSPolicy(core.DNSClusterFirstWithHostNet)
+	podSpec.WithTerminationGracePeriodSeconds(0)
 	if linkServiceAccount {
 		podSpec.WithServiceAccountName(serviceAccountName)
 	}
 	podSpec.WithContainers(agentContainer)
-
+	podSpec.WithAffinity(affinity)
+	podSpec.WithTolerations(noExecuteToleration, noScheduleToleration)
 
 	podTemplate := applyconfcore.PodTemplateSpec()
 	podTemplate.WithLabels(map[string]string{"app": tapperPodName})
