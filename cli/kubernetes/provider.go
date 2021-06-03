@@ -258,7 +258,6 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	}
 	podSpec.WithContainers(agentContainer)
 
-
 	podTemplate := applyconfcore.PodTemplateSpec()
 	podTemplate.WithLabels(map[string]string{"app": tapperPodName})
 	podTemplate.WithSpec(podSpec)
