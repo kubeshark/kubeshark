@@ -252,6 +252,23 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 		),
 	)
 
+	nodeNames := make([]string, 0, len(nodeToTappedPodIPMap))
+	for nodeName := range nodeToTappedPodIPMap {
+		nodeNames = append(nodeNames, nodeName)
+	}
+	nodeSelectorRequirement := applyconfcore.NodeSelectorRequirement()
+	nodeSelectorRequirement.WithKey("kubernetes.io/hostname")
+	nodeSelectorRequirement.WithOperator(core.NodeSelectorOpIn)
+	nodeSelectorRequirement.WithValues(nodeNames...)
+	nodeSelectorTerm := applyconfcore.NodeSelectorTerm()
+	nodeSelectorTerm.WithMatchExpressions(nodeSelectorRequirement)
+	nodeSelector := applyconfcore.NodeSelector()
+	nodeSelector.WithNodeSelectorTerms(nodeSelectorTerm)
+	nodeAffinity := applyconfcore.NodeAffinity()
+	nodeAffinity.WithRequiredDuringSchedulingIgnoredDuringExecution(nodeSelector)
+	affinity := applyconfcore.Affinity()
+	affinity.WithNodeAffinity(nodeAffinity)
+
 	podSpec := applyconfcore.PodSpec()
 	podSpec.WithHostNetwork(true)
 	podSpec.WithDNSPolicy(core.DNSClusterFirstWithHostNet)
@@ -260,6 +277,7 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 		podSpec.WithServiceAccountName(serviceAccountName)
 	}
 	podSpec.WithContainers(agentContainer)
+	podSpec.WithAffinity(affinity)
 
 	podTemplate := applyconfcore.PodTemplateSpec()
 	podTemplate.WithLabels(map[string]string{"app": tapperPodName})
