@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-
 	"path/filepath"
 	"regexp"
 
@@ -95,7 +94,7 @@ func (provider *Provider) CreateMizuAggregatorPod(ctx context.Context, namespace
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      podName,
 			Namespace: namespace,
-			Labels: map[string]string{"app": podName},
+			Labels:    map[string]string{"app": podName},
 		},
 		Spec: core.PodSpec{
 			Containers: []core.Container{
@@ -103,20 +102,20 @@ func (provider *Provider) CreateMizuAggregatorPod(ctx context.Context, namespace
 					Name:            podName,
 					Image:           podImage,
 					ImagePullPolicy: core.PullAlways,
-					Command: []string {"./mizuagent", "--aggregator"},
+					Command:         []string{"./mizuagent", "--aggregator"},
 					Env: []core.EnvVar{
 						{
-							Name: shared.HostModeEnvVar,
+							Name:  shared.HostModeEnvVar,
 							Value: "1",
 						},
 						{
-							Name: shared.MizuFilteringOptionsEnvVar,
+							Name:  shared.MizuFilteringOptionsEnvVar,
 							Value: string(marshaledFilteringOptions),
 						},
 					},
 				},
 			},
-			DNSPolicy: core.DNSClusterFirstWithHostNet,
+			DNSPolicy:                     core.DNSClusterFirstWithHostNet,
 			TerminationGracePeriodSeconds: new(int64),
 			// Affinity: TODO: define node selector for all relevant nodes for this mizu instance
 		},
@@ -131,19 +130,19 @@ func (provider *Provider) CreateMizuAggregatorPod(ctx context.Context, namespace
 func (provider *Provider) CreateService(ctx context.Context, namespace string, serviceName string, appLabelValue string) (*core.Service, error) {
 	service := core.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: serviceName,
+			Name:      serviceName,
 			Namespace: namespace,
 		},
 		Spec: core.ServiceSpec{
-			Ports: []core.ServicePort {{TargetPort: intstr.FromInt(8899), Port: 80}},
-			Type: core.ServiceTypeClusterIP,
+			Ports:    []core.ServicePort{{TargetPort: intstr.FromInt(8899), Port: 80}},
+			Type:     core.ServiceTypeClusterIP,
 			Selector: map[string]string{"app": appLabelValue},
 		},
 	}
 	return provider.clientSet.CoreV1().Services(namespace).Create(ctx, &service, metav1.CreateOptions{})
 }
 
-func (provider *Provider) DoesMizuRBACExist(ctx context.Context, namespace string) (bool, error){
+func (provider *Provider) DoesMizuRBACExist(ctx context.Context, namespace string) (bool, error) {
 	serviceAccount, err := provider.clientSet.CoreV1().ServiceAccounts(namespace).Get(ctx, serviceAccountName, metav1.GetOptions{})
 
 	var statusError *k8serrors.StatusError
@@ -159,7 +158,22 @@ func (provider *Provider) DoesMizuRBACExist(ctx context.Context, namespace strin
 	return serviceAccount != nil, nil
 }
 
-func (provider *Provider) CreateMizuRBAC(ctx context.Context, namespace string ,version string) error {
+func (provider *Provider) DoesServicesExist(ctx context.Context, namespace string, serviceName string) (bool, error) {
+	service, err := provider.clientSet.CoreV1().Services(namespace).Get(ctx, serviceName, metav1.GetOptions{})
+
+	var statusError *k8serrors.StatusError
+	if errors.As(err, &statusError) {
+		if statusError.ErrStatus.Reason == metav1.StatusReasonNotFound {
+			return false, nil
+		}
+	}
+	if err != nil {
+		return false, err
+	}
+	return service != nil, nil
+}
+
+func (provider *Provider) CreateMizuRBAC(ctx context.Context, namespace string, version string) error {
 	clusterRoleName := "mizu-cluster-role"
 
 	serviceAccount := &core.ServiceAccount{
@@ -171,25 +185,25 @@ func (provider *Provider) CreateMizuRBAC(ctx context.Context, namespace string ,
 	}
 	clusterRole := &rbac.ClusterRole{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: clusterRoleName,
+			Name:   clusterRoleName,
 			Labels: map[string]string{"mizu-cli-version": version},
 		},
 		Rules: []rbac.PolicyRule{
 			{
-				APIGroups: []string {"", "extensions", "apps"},
-				Resources: []string {"pods", "services", "endpoints"},
-				Verbs: []string {"list", "get", "watch"},
+				APIGroups: []string{"", "extensions", "apps"},
+				Resources: []string{"pods", "services", "endpoints"},
+				Verbs:     []string{"list", "get", "watch"},
 			},
 		},
 	}
 	clusterRoleBinding := &rbac.ClusterRoleBinding{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "mizu-cluster-role-binding",
+			Name:   "mizu-cluster-role-binding",
 			Labels: map[string]string{"mizu-cli-version": version},
 		},
 		RoleRef: rbac.RoleRef{
-			Name: clusterRoleName,
-			Kind: "ClusterRole",
+			Name:     clusterRoleName,
+			Kind:     "ClusterRole",
 			APIGroup: "rbac.authorization.k8s.io",
 		},
 		Subjects: []rbac.Subject{
