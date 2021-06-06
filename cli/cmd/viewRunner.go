@@ -2,12 +2,9 @@ package cmd
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"github.com/up9inc/mizu/cli/kubernetes"
 	"github.com/up9inc/mizu/cli/mizu"
-	k8serrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"net/http"
 )
 
@@ -17,14 +14,13 @@ func runMizuView() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	_, err := kubernetesProvider.ClientSet.CoreV1().Services(mizu.ResourcesNamespace).Get(ctx, mizu.AggregatorPodName, metav1.GetOptions{})
-	var statusError *k8serrors.StatusError
-	if errors.As(err, &statusError) {
-		if statusError.ErrStatus.Reason == metav1.StatusReasonNotFound {
-			fmt.Printf("The %s service not found\n", mizu.AggregatorPodName)
-			return
-		}
+	exists, err := kubernetesProvider.DoesServicesExist(ctx, mizu.ResourcesNamespace, mizu.AggregatorPodName)
+	if err != nil {
 		panic(err)
+	}
+	if !exists {
+		fmt.Printf("The %s service not found\n", mizu.AggregatorPodName)
+		return
 	}
 
 	_, err = http.Get("http://localhost:8899/")
