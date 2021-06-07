@@ -66,15 +66,15 @@ func (matcher *requestResponseMatcher) registerRequest(ident string, request *ht
 		// Type assertion always succeeds because all of the map's values are of httpMessage type
 		responseHTTPMessage := response.(*httpMessage)
 		if responseHTTPMessage.IsRequest {
-			SilentError("Request-Duplicate", "Got duplicate request with same identifier\n")
+			SilentError("Request-Duplicate", "Got duplicate request with same identifier")
 			return nil
 		}
-		Debug("Matched open Response for %s\n", key)
+		Debug("Matched open Response for %s", key)
 		return matcher.preparePair(&requestHTTPMessage, responseHTTPMessage)
 	}
 
 	matcher.openMessagesMap.Set(key, &requestHTTPMessage)
-	Debug("Registered open Request for %s\n", key)
+	Debug("Registered open Request for %s", key)
 	return nil
 }
 
@@ -88,15 +88,15 @@ func (matcher *requestResponseMatcher) registerResponse(ident string, response *
 		// Type assertion always succeeds because all of the map's values are of httpMessage type
 		requestHTTPMessage := request.(*httpMessage)
 		if !requestHTTPMessage.IsRequest {
-			SilentError("Response-Duplicate", "Got duplicate response with same identifier\n")
+			SilentError("Response-Duplicate", "Got duplicate response with same identifier")
 			return nil
 		}
-		Debug("Matched open Request for %s\n", key)
+		Debug("Matched open Request for %s", key)
 		return matcher.preparePair(requestHTTPMessage, &responseHTTPMessage)
 	}
 
 	matcher.openMessagesMap.Set(key, &responseHTTPMessage)
-	Debug("Registered open Response for %s\n", key)
+	Debug("Registered open Response for %s", key)
 	return nil
 }
 

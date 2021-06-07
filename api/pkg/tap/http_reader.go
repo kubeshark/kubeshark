@@ -73,7 +73,7 @@ func (h *httpReader) run(wg *sync.WaitGroup) {
 	b := bufio.NewReader(h)
 
 	if isHTTP2, err := checkIsHTTP2Connection(b, h.isClient); err != nil {
-		SilentError("HTTP/2-Prepare-Connection", "stream %s Failed to check if client is HTTP/2: %s (%v,%+v)\n", h.ident, err, err, err)
+		SilentError("HTTP/2-Prepare-Connection", "stream %s Failed to check if client is HTTP/2: %s (%v,%+v)", h.ident, err, err, err)
 		// Do something?
 	} else {
 		h.isHTTP2 = isHTTP2
@@ -82,7 +82,7 @@ func (h *httpReader) run(wg *sync.WaitGroup) {
 	if h.isHTTP2 {
 		err := prepareHTTP2Connection(b, h.isClient)
 		if err != nil {
-			SilentError("HTTP/2-Prepare-Connection-After-Check", "stream %s error: %s (%v,%+v)\n", h.ident, err, err, err)
+			SilentError("HTTP/2-Prepare-Connection-After-Check", "stream %s error: %s (%v,%+v)", h.ident, err, err, err)
 		}
 		h.grpcAssembler = createGrpcAssembler(b)
 	}
@@ -93,7 +93,7 @@ func (h *httpReader) run(wg *sync.WaitGroup) {
 			if err == io.EOF || err == io.ErrUnexpectedEOF {
 				break
 			} else if err != nil {
-				SilentError("HTTP/2", "stream %s error: %s (%v,%+v)\n", h.ident, err, err, err)
+				SilentError("HTTP/2", "stream %s error: %s (%v,%+v)", h.ident, err, err, err)
 				continue
 			}
 		} else if h.isClient {
@@ -101,7 +101,7 @@ func (h *httpReader) run(wg *sync.WaitGroup) {
 			if err == io.EOF || err == io.ErrUnexpectedEOF {
 				break
 			} else if err != nil {
-				SilentError("HTTP-request", "stream %s Request error: %s (%v,%+v)\n", h.ident, err, err, err)
+				SilentError("HTTP-request", "stream %s Request error: %s (%v,%+v)", h.ident, err, err, err)
 				continue
 			}
 		} else {
@@ -109,7 +109,7 @@ func (h *httpReader) run(wg *sync.WaitGroup) {
 			if err == io.EOF || err == io.ErrUnexpectedEOF {
 				break
 			} else if err != nil {
-				SilentError("HTTP-response", "stream %s Response error: %s (%v,%+v)\n", h.ident, err, err, err)
+				SilentError("HTTP-response", "stream %s Response error: %s (%v,%+v)", h.ident, err, err, err)
 				continue
 			}
 		}
@@ -165,19 +165,19 @@ func (h *httpReader) handleHTTP1ClientStream(b *bufio.Reader) error {
 	req.Body = io.NopCloser(bytes.NewBuffer(body)) // rewind
 	s := len(body)
 	if err != nil {
-		SilentError("HTTP-request-body", "stream %s Got body err: %s\n", h.ident, err)
+		SilentError("HTTP-request-body", "stream %s Got body err: %s", h.ident, err)
 	} else if h.hexdump {
-		Info("Body(%d/0x%x)\n%s\n", len(body), len(body), hex.Dump(body))
+		Info("Body(%d/0x%x) - %s", len(body), len(body), hex.Dump(body))
 	}
 	if err := req.Body.Close(); err != nil {
-		SilentError("HTTP-request-body-close", "stream %s Failed to close request body: %s\n", h.ident, err)
+		SilentError("HTTP-request-body-close", "stream %s Failed to close request body: %s", h.ident, err)
 	}
 	encoding := req.Header["Content-Encoding"]
 	bodyStr, err := readBody(body, encoding)
 	if err != nil {
-		SilentError("HTTP-request-body-decode", "stream %s Failed to decode body: %s\n", h.ident, err)
+		SilentError("HTTP-request-body-decode", "stream %s Failed to decode body: %s", h.ident, err)
 	}
-	Info("HTTP/%s Request: %s %s (Body:%d)\n", h.ident, req.Method, req.URL, s)
+	Info("HTTP/%s Request: %s %s (Body:%d)", h.ident, req.Method, req.URL, s)
 
 	ident := fmt.Sprintf("%s->%s %s->%s %d", h.tcpID.srcIP, h.tcpID.dstIP, h.tcpID.srcPort, h.tcpID.dstPort, h.messageCount)
 	reqResPair := reqResMatcher.registerRequest(ident, req, h.captureTime, bodyStr, false)
@@ -193,7 +193,7 @@ func (h *httpReader) handleHTTP1ClientStream(b *bufio.Reader) error {
 		} else {
 			jsonStr, err := json.Marshal(reqResPair)
 			if err != nil {
-				SilentError("HTTP-marshal", "stream %s Error convert request response to json: %s\n", h.ident, err)
+				SilentError("HTTP-marshal", "stream %s Error convert request response to json: %s", h.ident, err)
 			}
 			broadcastReqResPair(jsonStr)
 		}
@@ -224,13 +224,13 @@ func (h *httpReader) handleHTTP1ServerStream(b *bufio.Reader) error {
 	res.Body = io.NopCloser(bytes.NewBuffer(body)) // rewind
 	s := len(body)
 	if err != nil {
-		SilentError("HTTP-response-body", "HTTP/%s: failed to get body(parsed len:%d): %s\n", h.ident, s, err)
+		SilentError("HTTP-response-body", "HTTP/%s: failed to get body(parsed len:%d): %s", h.ident, s, err)
 	}
 	if h.hexdump {
-		Info("Body(%d/0x%x)\n%s\n", len(body), len(body), hex.Dump(body))
+		Info("Body(%d/0x%x) - %s", len(body), len(body), hex.Dump(body))
 	}
 	if err := res.Body.Close(); err != nil {
-		SilentError("HTTP-response-body-close", "HTTP/%s: failed to close body(parsed len:%d): %s\n", h.ident, s, err)
+		SilentError("HTTP-response-body-close", "HTTP/%s: failed to close body(parsed len:%d): %s", h.ident, s, err)
 	}
 	sym := ","
 	if res.ContentLength > 0 && res.ContentLength != int64(s) {
@@ -241,10 +241,10 @@ func (h *httpReader) handleHTTP1ServerStream(b *bufio.Reader) error {
 		contentType = []string{http.DetectContentType(body)}
 	}
 	encoding := res.Header["Content-Encoding"]
-	Info("HTTP/%s Response: %s URL:%s (%d%s%d%s) -> %s\n", h.ident, res.Status, req, res.ContentLength, sym, s, contentType, encoding)
+	Info("HTTP/%s Response: %s URL:%s (%d%s%d%s) -> %s", h.ident, res.Status, req, res.ContentLength, sym, s, contentType, encoding)
 	bodyStr, err := readBody(body, encoding)
 	if err != nil {
-		SilentError("HTTP-response-body-decode", "stream %s Failed to decode body: %s\n", h.ident, err)
+		SilentError("HTTP-response-body-decode", "stream %s Failed to decode body: %s", h.ident, err)
 	}
 
 	ident := fmt.Sprintf("%s->%s %s->%s %d", h.tcpID.dstIP, h.tcpID.srcIP, h.tcpID.dstPort, h.tcpID.srcPort, h.messageCount)
@@ -261,7 +261,7 @@ func (h *httpReader) handleHTTP1ServerStream(b *bufio.Reader) error {
 		} else {
 			jsonStr, err := json.Marshal(reqResPair)
 			if err != nil {
-				SilentError("HTTP-marshal", "stream %s Error convert request response to json: %s\n", h.ident, err)
+				SilentError("HTTP-marshal", "stream %s Error convert request response to json: %s", h.ident, err)
 			}
 			broadcastReqResPair(jsonStr)
 		}
@@ -277,7 +277,7 @@ func readBody(bodyBytes []byte, encoding []string) (string, error) {
 	if len(encoding) > 0 && (encoding[0] == "gzip" || encoding[0] == "deflate") {
 		bodyBuffer, err = gzip.NewReader(bodyBuffer)
 		if err != nil {
-			SilentError("HTTP-gunzip", "Failed to gzip decode: %s\n", err)
+			SilentError("HTTP-gunzip", "Failed to gzip decode: %s", err)
 			return "", err
 		}
 	}

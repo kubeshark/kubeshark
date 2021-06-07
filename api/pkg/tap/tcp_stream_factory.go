@@ -21,11 +21,11 @@ type tcpStreamFactory struct {
 }
 
 func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.TCP, ac reassembly.AssemblerContext) reassembly.Stream {
-	Debug("* NEW: %s %s\n", net, transport)
+	Debug("* NEW: %s %s", net, transport)
 	fsmOptions := reassembly.TCPSimpleFSMOptions{
 		SupportMissingEstablishment: *allowmissinginit,
 	}
-	Debug("Current App Ports: %v\n", appPorts)
+	Debug("Current App Ports: %v", appPorts)
 	dstIp := net.Dst().String()
 	dstPort := int(tcp.DstPort)
 

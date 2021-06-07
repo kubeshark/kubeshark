@@ -46,7 +46,7 @@ func parseAppPorts(appPortsList string) []int {
 	for _, portStr := range strings.Split(appPortsList, ",") {
 		parsedInt, parseError := strconv.Atoi(portStr)
 		if parseError != nil {
-			fmt.Println("Provided app port ", portStr, " is not a valid number!")
+			log.Printf("Provided app port %v is not a valid number!", portStr)
 		} else {
 			ports = append(ports, parsedInt)
 		}
@@ -138,7 +138,7 @@ var HostAppAddresses []string //global
 
 /* minOutputLevel: Error will be printed only if outputLevel is above this value
  * t:              key for errorsMap (counting errors)
- * s, a:           arguments fmt.Printf
+ * s, a:           arguments log.Printf
  * Note:           Too bad for perf that a... is evaluated
  */
 func logError(minOutputLevel int, t string, s string, a ...interface{}) {
@@ -149,7 +149,7 @@ func logError(minOutputLevel int, t string, s string, a ...interface{}) {
 	errorsMapMutex.Unlock()
 	if outputLevel >= minOutputLevel {
 		formatStr := fmt.Sprintf("%s: %s", t, s)
-		fmt.Printf(formatStr, a...)
+		log.Printf(formatStr, a...)
 	}
 }
 func Error(t string, s string, a ...interface{}) {
@@ -160,12 +160,12 @@ func SilentError(t string, s string, a ...interface{}) {
 }
 func Info(s string, a ...interface{}) {
 	if outputLevel >= 1 {
-		fmt.Printf(s, a...)
+		log.Printf(s, a...)
 	}
 }
 func Debug(s string, a ...interface{}) {
 	if outputLevel >= 2 {
-		fmt.Printf(s, a...)
+		log.Printf(s, a...)
 	}
 }
 
@@ -187,9 +187,8 @@ func inArrayString(arr []string, valueToCheck string) bool {
 	return false
 }
 
-/*
- * The assembler context
- */
+// Context
+// The assembler context
 type Context struct {
 	CaptureInfo gopacket.CaptureInfo
 }
@@ -214,6 +213,8 @@ func StartPassiveTapper() <-chan *OutputChannelItem {
 }
 
 func startPassiveTapper(harWriter *HarWriter) {
+	log.SetFlags(log.LstdFlags | log.LUTC | log.Lshortfile)
+
 	defer util.Run()()
 	if *debug {
 		outputLevel = 2
@@ -226,8 +227,8 @@ func startPassiveTapper(harWriter *HarWriter) {
 
 	if localhostIPs, err := getLocalhostIPs(); err != nil {
 		// TODO: think this over
-		fmt.Println("Failed to get self IP addresses")
-		Error("Getting-Self-Address", "Error getting self ip address: %s (%v,%+v)\n", err, err, err)
+		log.Println("Failed to get self IP addresses")
+		Error("Getting-Self-Address", "Error getting self ip address: %s (%v,%+v)", err, err, err)
 		ownIps = make([]string, 0)
 	} else {
 		ownIps = localhostIPs
@@ -235,33 +236,33 @@ func startPassiveTapper(harWriter *HarWriter) {
 
 	appPortsStr := os.Getenv(AppPortsEnvVar)
 	if appPortsStr == "" {
-		fmt.Println("Received empty/no APP_PORTS env var! only listening to http on port 80!")
+		log.Println("Received empty/no APP_PORTS env var! only listening to http on port 80!")
 		appPorts = make([]int, 0)
 	} else {
 		appPorts = parseAppPorts(appPortsStr)
 	}
 	tapOutputPort := os.Getenv(OutPortEnvVar)
 	if tapOutputPort == "" {
-		fmt.Println("Received empty/no WEB_SOCKET_PORT env var! falling back to port 8080")
+		log.Println("Received empty/no WEB_SOCKET_PORT env var! falling back to port 8080")
 		tapOutputPort = "8080"
 	}
 	envVal := os.Getenv(maxHTTP2DataLenEnvVar)
 	if envVal == "" {
-		fmt.Println("Received empty/no HTTP2_DATA_SIZE_LIMIT env var! falling back to", maxHTTP2DataLenDefault)
+		log.Println("Received empty/no HTTP2_DATA_SIZE_LIMIT env var! falling back to", maxHTTP2DataLenDefault)
 		maxHTTP2DataLen = maxHTTP2DataLenDefault
 	} else {
 		if convertedInt, err := strconv.Atoi(envVal); err != nil {
-			fmt.Println("Received invalid HTTP2_DATA_SIZE_LIMIT env var! falling back to", maxHTTP2DataLenDefault)
+			log.Println("Received invalid HTTP2_DATA_SIZE_LIMIT env var! falling back to", maxHTTP2DataLenDefault)
 			maxHTTP2DataLen = maxHTTP2DataLenDefault
 		} else {
-			fmt.Println("Received HTTP2_DATA_SIZE_LIMIT env var:", maxHTTP2DataLenDefault)
+			log.Println("Received HTTP2_DATA_SIZE_LIMIT env var:", maxHTTP2DataLenDefault)
 			maxHTTP2DataLen = convertedInt
 		}
 	}
 	hostMode = os.Getenv(shared.HostModeEnvVar) == "1"
 
-	fmt.Printf("App Ports: %v\n", appPorts)
-	fmt.Printf("Tap output websocket port: %s\n", tapOutputPort)
+	log.Printf("App Ports: %v", appPorts)
+	log.Printf("Tap output websocket port: %s", tapOutputPort)
 
 	var onCollectorMessage = func(message []byte) {
 		var parsedMessage CollectorMessage
@@ -269,15 +270,15 @@ func startPassiveTapper(harWriter *HarWriter) {
 		if err == nil {
 
 			if parsedMessage.MessageType == "setPorts" {
-				Debug("Got message from collector. Type: %s, Ports: %v\n", parsedMessage.MessageType, parsedMessage.Ports)
+				Debug("Got message from collector. Type: %s, Ports: %v", parsedMessage.MessageType, parsedMessage.Ports)
 				appPorts = *parsedMessage.Ports
 			} else if parsedMessage.MessageType == "setAddresses" {
-				Debug("Got message from collector. Type: %s, IPs: %v\n", parsedMessage.MessageType, parsedMessage.Addresses)
+				Debug("Got message from collector. Type: %s, IPs: %v", parsedMessage.MessageType, parsedMessage.Addresses)
 				HostAppAddresses = *parsedMessage.Addresses
-				Info("Filtering for the following addresses: %s\n", HostAppAddresses)
+				Info("Filtering for the following addresses: %s", HostAppAddresses)
 			}
 		} else {
-			Error("Collector-Message-Parsing", "Error parsing message from collector: %s (%v,%+v)\n", err, err, err)
+			Error("Collector-Message-Parsing", "Error parsing message from collector: %s (%v,%+v)", err, err, err)
 		}
 	}
 
@@ -287,7 +288,7 @@ func startPassiveTapper(harWriter *HarWriter) {
 	var err error
 	if *fname != "" {
 		if handle, err = pcap.OpenOffline(*fname); err != nil {
-			log.Fatal("PCAP OpenOffline error:", err)
+			log.Fatalf("PCAP OpenOffline error: %v", err)
 		}
 	} else {
 		// This is a little complicated because we want to allow all possible options
@@ -313,15 +314,15 @@ func startPassiveTapper(harWriter *HarWriter) {
 			}
 		}
 		if handle, err = inactive.Activate(); err != nil {
-			log.Fatal("PCAP Activate error:", err)
+			log.Fatalf("PCAP Activate error: %v", err)
 		}
 		defer handle.Close()
 	}
 	if len(flag.Args()) > 0 {
 		bpffilter := strings.Join(flag.Args(), " ")
-		Info("Using BPF filter %q\n", bpffilter)
+		Info("Using BPF filter %q", bpffilter)
 		if err = handle.SetBPFFilter(bpffilter); err != nil {
-			log.Fatal("BPF filter error:", err)
+			log.Fatalf("BPF filter error: %v", err)
 		}
 	}
 
@@ -342,7 +343,7 @@ func startPassiveTapper(harWriter *HarWriter) {
 	source := gopacket.NewPacketSource(handle, dec)
 	source.Lazy = *lazy
 	source.NoCopy = true
-	Info("Starting to read packets\n")
+	Info("Starting to read packets")
 	count := 0
 	bytes := int64(0)
 	start := time.Now()
@@ -378,7 +379,7 @@ func startPassiveTapper(harWriter *HarWriter) {
 			errorMapLen := len(errorsMap)
 			errorsSummery := fmt.Sprintf("%v", errorsMap)
 			errorsMapMutex.Unlock()
-			fmt.Printf("Processed %v packets (%v bytes) in %v (errors: %v, errTypes:%v)\nErrors Summary: %s\n",
+			log.Printf("Processed %v packets (%v bytes) in %v (errors: %v, errTypes:%v) - Errors Summary: %s",
 				count,
 				bytes,
 				time.Since(start),
@@ -390,8 +391,8 @@ func startPassiveTapper(harWriter *HarWriter) {
 			// At this moment
 			memStats := runtime.MemStats{}
 			runtime.ReadMemStats(&memStats)
-			fmt.Printf(
-				"mem: %d, goroutines: %d, unmatched messages: %d\n",
+			log.Printf(
+				"mem: %d, goroutines: %d, unmatched messages: %d",
 				memStats.HeapAlloc,
 				runtime.NumGoroutine(),
 				reqResMatcher.openMessagesMap.Count(),
@@ -400,8 +401,8 @@ func startPassiveTapper(harWriter *HarWriter) {
 			// Since the last print
 			cleanStats := cleaner.dumpStats()
 			appStats := statsTracker.dumpStats()
-			fmt.Printf(
-				"flushed connections %d, closed connections: %d, deleted messages: %d, matched messages: %d\n",
+			log.Printf(
+				"flushed connections %d, closed connections: %d, deleted messages: %d, matched messages: %d",
 				cleanStats.flushed,
 				cleanStats.closed,
 				cleanStats.deleted,
@@ -412,11 +413,11 @@ func startPassiveTapper(harWriter *HarWriter) {
 
 	for packet := range source.Packets() {
 		count++
-		Debug("PACKET #%d\n", count)
+		Debug("PACKET #%d", count)
 		data := packet.Data()
 		bytes += int64(len(data))
 		if *hexdumppkt {
-			Debug("Packet content (%d/0x%x)\n%s\n", len(data), len(data), hex.Dump(data))
+			Debug("Packet content (%d/0x%x) - %s", len(data), len(data), hex.Dump(data))
 		}
 
 		// defrag the IPv4 packet if required
@@ -431,18 +432,18 @@ func startPassiveTapper(harWriter *HarWriter) {
 			if err != nil {
 				log.Fatalln("Error while de-fragmenting", err)
 			} else if newip4 == nil {
-				Debug("Fragment...\n")
+				Debug("Fragment...")
 				continue // packet fragment, we don't have whole packet yet.
 			}
 			if newip4.Length != l {
 				stats.ipdefrag++
-				Debug("Decoding re-assembled packet: %s\n", newip4.NextLayerType())
+				Debug("Decoding re-assembled packet: %s", newip4.NextLayerType())
 				pb, ok := packet.(gopacket.PacketBuilder)
 				if !ok {
-					panic("Not a PacketBuilder")
+					log.Panic("Not a PacketBuilder")
 				}
 				nextDecoder := newip4.NextLayerType()
-				nextDecoder.Decode(newip4.Payload, pb)
+				_ = nextDecoder.Decode(newip4.Payload, pb)
 			}
 		}
 
@@ -459,7 +460,7 @@ func startPassiveTapper(harWriter *HarWriter) {
 				CaptureInfo: packet.Metadata().CaptureInfo,
 			}
 			stats.totalsz += len(tcp.Payload)
-			//fmt.Println(packet.NetworkLayer().NetworkFlow().Src(), ":", tcp.SrcPort, " -> ", packet.NetworkLayer().NetworkFlow().Dst(), ":", tcp.DstPort)
+			// log.Println(packet.NetworkLayer().NetworkFlow().Src(), ":", tcp.SrcPort, " -> ", packet.NetworkLayer().NetworkFlow().Dst(), ":", tcp.DstPort)
 			assemblerMutex.Lock()
 			assembler.AssembleWithContext(packet.NetworkLayer().NetworkFlow(), tcp, &c)
 			assemblerMutex.Unlock()
@@ -470,11 +471,11 @@ func startPassiveTapper(harWriter *HarWriter) {
 			errorsMapMutex.Lock()
 			errorMapLen := len(errorsMap)
 			errorsMapMutex.Unlock()
-			fmt.Fprintf(os.Stderr, "Processed %v packets (%v bytes) in %v (errors: %v, errTypes:%v)\n", count, bytes, time.Since(start), nErrors, errorMapLen)
+			_, _ = log.Printf(os.Stderr, "Processed %v packets (%v bytes) in %v (errors: %v, errTypes:%v)", count, bytes, time.Since(start), nErrors, errorMapLen)
 		}
 		select {
 		case <-signalChan:
-			fmt.Fprintf(os.Stderr, "\nCaught SIGINT: aborting\n")
+			_, _ = log.Printf(os.Stderr, "\nCaught SIGINT: aborting")
 			done = true
 		default:
 			// NOP: continue
@@ -497,34 +498,34 @@ func startPassiveTapper(harWriter *HarWriter) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		pprof.WriteHeapProfile(f)
-		f.Close()
+		_ = pprof.WriteHeapProfile(f)
+		_ = f.Close()
 	}
 
 	streamFactory.WaitGoRoutines()
 	assemblerMutex.Lock()
-	Debug("%s\n", assembler.Dump())
+	Debug("%s", assembler.Dump())
 	assemblerMutex.Unlock()
 	if !*nodefrag {
-		fmt.Printf("IPdefrag:\t\t%d\n", stats.ipdefrag)
+		log.Printf("IPdefrag:\t\t%d", stats.ipdefrag)
 	}
-	fmt.Printf("TCP stats:\n")
-	fmt.Printf(" missed bytes:\t\t%d\n", stats.missedBytes)
-	fmt.Printf(" total packets:\t\t%d\n", stats.pkt)
-	fmt.Printf(" rejected FSM:\t\t%d\n", stats.rejectFsm)
-	fmt.Printf(" rejected Options:\t%d\n", stats.rejectOpt)
-	fmt.Printf(" reassembled bytes:\t%d\n", stats.sz)
-	fmt.Printf(" total TCP bytes:\t%d\n", stats.totalsz)
-	fmt.Printf(" conn rejected FSM:\t%d\n", stats.rejectConnFsm)
-	fmt.Printf(" reassembled chunks:\t%d\n", stats.reassembled)
-	fmt.Printf(" out-of-order packets:\t%d\n", stats.outOfOrderPackets)
-	fmt.Printf(" out-of-order bytes:\t%d\n", stats.outOfOrderBytes)
-	fmt.Printf(" biggest-chunk packets:\t%d\n", stats.biggestChunkPackets)
-	fmt.Printf(" biggest-chunk bytes:\t%d\n", stats.biggestChunkBytes)
-	fmt.Printf(" overlap packets:\t%d\n", stats.overlapPackets)
-	fmt.Printf(" overlap bytes:\t\t%d\n", stats.overlapBytes)
-	fmt.Printf("Errors: %d\n", nErrors)
+	log.Printf("TCP stats:")
+	log.Printf(" missed bytes:\t\t%d", stats.missedBytes)
+	log.Printf(" total packets:\t\t%d", stats.pkt)
+	log.Printf(" rejected FSM:\t\t%d", stats.rejectFsm)
+	log.Printf(" rejected Options:\t%d", stats.rejectOpt)
+	log.Printf(" reassembled bytes:\t%d", stats.sz)
+	log.Printf(" total TCP bytes:\t%d", stats.totalsz)
+	log.Printf(" conn rejected FSM:\t%d", stats.rejectConnFsm)
+	log.Printf(" reassembled chunks:\t%d", stats.reassembled)
+	log.Printf(" out-of-order packets:\t%d", stats.outOfOrderPackets)
+	log.Printf(" out-of-order bytes:\t%d", stats.outOfOrderBytes)
+	log.Printf(" biggest-chunk packets:\t%d", stats.biggestChunkPackets)
+	log.Printf(" biggest-chunk bytes:\t%d", stats.biggestChunkBytes)
+	log.Printf(" overlap packets:\t%d", stats.overlapPackets)
+	log.Printf(" overlap bytes:\t\t%d", stats.overlapBytes)
+	log.Printf("Errors: %d", nErrors)
 	for e := range errorsMap {
-		fmt.Printf(" %s:\t\t%d\n", e, errorsMap[e])
+		log.Printf(" %s:\t\t%d", e, errorsMap[e])
 	}
 }
