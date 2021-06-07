@@ -11,3 +11,5 @@ require (
 	github.com/up9inc/mizu/shared v0.0.0
 	golang.org/x/net v0.0.0-20210525063256-abc453219eb5
 )
+
+replace github.com/up9inc/mizu/shared v0.0.0 => ../shared
