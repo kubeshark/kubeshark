@@ -475,11 +475,11 @@ func startPassiveTapper(harWriter *HarWriter) {
 			errorsMapMutex.Lock()
 			errorMapLen := len(errorsMap)
 			errorsMapMutex.Unlock()
-			_, _ = log.Printf(os.Stderr, "Processed %v packets (%v bytes) in %v (errors: %v, errTypes:%v)", count, bytes, time.Since(start), nErrors, errorMapLen)
+			log.Printf("Processed %v packets (%v bytes) in %v (errors: %v, errTypes:%v)", count, bytes, time.Since(start), nErrors, errorMapLen)
 		}
 		select {
 		case <-signalChan:
-			_, _ = log.Printf(os.Stderr, "\nCaught SIGINT: aborting")
+			log.Printf("Caught SIGINT: aborting")
 			done = true
 		default:
 			// NOP: continue
