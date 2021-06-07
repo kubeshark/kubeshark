@@ -2,6 +2,8 @@ package sensitiveDataFiltering
 
 import (
 	"encoding/json"
+	"encoding/xml"
+	"errors"
 	"fmt"
 	"mizuserver/pkg/tap"
 	"net/url"
@@ -103,6 +105,9 @@ func filterPlainText(bytes []byte, options *shared.TrafficFilteringOptions) []by
 }
 
 func filterXmlEtree(bytes []byte) ([]byte, error) {
+	if !IsValidXML(bytes) {
+		return nil, errors.New("Invalid XML")
+	}
 	xmlDoc := etree.NewDocument()
 	err := xmlDoc.ReadFromBytes(bytes)
 	if err != nil {
@@ -111,6 +116,10 @@ func filterXmlEtree(bytes []byte) ([]byte, error) {
 		filterXmlElement(xmlDoc.Root())
 	}
 	return xmlDoc.WriteToBytes()
+}
+
+func IsValidXML(data []byte) bool {
+	return xml.Unmarshal(data, new(interface{})) == nil
 }
 
 func filterXmlElement(element *etree.Element) {
