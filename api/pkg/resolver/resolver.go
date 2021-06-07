@@ -33,12 +33,12 @@ func (resolver *Resolver) Start(ctx context.Context) {
 	}
 }
 
-func (resolver *Resolver) Resolve(name string) *string {
+func (resolver *Resolver) Resolve(name string) string {
 	resolvedName, isFound := resolver.nameMap[name]
 	if !isFound {
-		return nil
+		return ""
 	}
-	return &resolvedName
+	return resolvedName
 }
 
 func (resolver *Resolver) watchPods(ctx context.Context) error {

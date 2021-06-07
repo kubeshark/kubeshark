@@ -97,8 +97,8 @@ func saveHarToDb(entry *har.Entry, sender string) {
 	serviceName, urlPath, serviceHostName := getServiceNameFromUrl(entry.Request.URL)
 	entryId := primitive.NewObjectID().Hex()
 	var (
-		resolvedSource      *string
-		resolvedDestination *string
+		resolvedSource      string
+		resolvedDestination string
 	)
 	if k8sResolver != nil {
 		resolvedSource = k8sResolver.Resolve(sender)

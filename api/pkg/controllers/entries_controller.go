@@ -90,12 +90,10 @@ func GetHARs(c *fiber.Ctx) error {
 	harsObject := map[string]*models.ExtendedHAR{}
 
 	for _, entryData := range entries {
-		harEntryObject := []byte(entryData.Entry)
-
 		var harEntry har.Entry
-		_ = json.Unmarshal(harEntryObject, &harEntry)
+		_ = json.Unmarshal([]byte(entryData.Entry), &harEntry)
 
-		sourceOfEntry := *entryData.ResolvedSource
+		sourceOfEntry := entryData.ResolvedSource
 		if harOfSource, ok := harsObject[sourceOfEntry]; ok {
 			harOfSource.Log.Entries = append(harOfSource.Log.Entries, &harEntry)
 		} else {
@@ -137,8 +135,8 @@ func GetEntry(c *fiber.Ctx) error {
 	unmarshallErr := json.Unmarshal([]byte(entryData.Entry), &fullEntry)
 	utils.CheckErr(unmarshallErr)
 
-	if entryData.ResolvedDestination != nil {
-		fullEntry.Request.URL = utils.SetHostname(fullEntry.Request.URL, *entryData.ResolvedDestination)
+	if entryData.ResolvedDestination != "" {
+		fullEntry.Request.URL = utils.SetHostname(fullEntry.Request.URL, entryData.ResolvedDestination)
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fullEntry)

@@ -65,9 +65,9 @@ func SetHostname(address, newHostname string) string {
 func GetResolvedBaseEntry(entry models.MizuEntry) models.BaseEntryDetails {
 	entryUrl := entry.Url
 	service := entry.Service
-	if entry.ResolvedDestination != nil {
-		entryUrl = SetHostname(entryUrl, *entry.ResolvedDestination)
-		service = SetHostname(service, *entry.ResolvedDestination)
+	if entry.ResolvedDestination != "" {
+		entryUrl = SetHostname(entryUrl, entry.ResolvedDestination)
+		service = SetHostname(service, entry.ResolvedDestination)
 	}
 	return models.BaseEntryDetails{
 		Id:         entry.EntryId,
