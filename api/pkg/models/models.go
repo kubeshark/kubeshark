@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"github.com/google/martian/har"
 	"github.com/up9inc/mizu/shared"
-	"mizuserver/pkg/tap"
+	"github.com/up9inc/mizu/tap"
 	"time"
 )
 

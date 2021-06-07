@@ -3,7 +3,7 @@ package sensitiveDataFiltering
 import (
 	"encoding/json"
 	"fmt"
-	"mizuserver/pkg/tap"
+	"github.com/up9inc/mizu/tap"
 	"net/url"
 	"strings"
 

@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"github.com/antoniodipinto/ikisocket"
 	"github.com/up9inc/mizu/shared"
+	"github.com/up9inc/mizu/tap"
 	"mizuserver/pkg/controllers"
 	"mizuserver/pkg/models"
 	"mizuserver/pkg/routes"
-	"mizuserver/pkg/tap"
 )
 
 var browserClientSocketUUIDs = make([]string, 0)
