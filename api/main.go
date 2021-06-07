@@ -26,13 +26,15 @@ var aggregatorAddress = flag.String("aggregator-address", "", "Address of mizu c
 
 func main() {
 	flag.Parse()
+	hostMode := os.Getenv(shared.HostModeEnvVar) == "1"
+	tapOpts = &tap.TapOpts{hostMode: hostMode}
 
 	if !*shouldTap && !*aggregator && !*standalone{
 		panic("One of the flags --tap, --api or --standalone must be provided")
 	}
 
 	if *standalone {
-		harOutputChannel := tap.StartPassiveTapper()
+		harOutputChannel := tap.StartPassiveTapper(tapOpts)
 		filteredHarChannel := make(chan *tap.OutputChannelItem)
 		go filterHarHeaders(harOutputChannel, filteredHarChannel, getTrafficFilteringOptions())
 		go api.StartReadingEntries(filteredHarChannel, nil)
@@ -48,7 +50,7 @@ func main() {
 			fmt.Println("Filtering for the following addresses:", tap.HostAppAddresses)
 		}
 
-		harOutputChannel := tap.StartPassiveTapper()
+		harOutputChannel := tap.StartPassiveTapper(tapOpts)
 		socketConnection, err := shared.ConnectToSocketServer(*aggregatorAddress, shared.DEFAULT_SOCKET_RETRIES, shared.DEFAULT_SOCKET_RETRY_SLEEP_TIME, false)
 		if err != nil {
 			panic(fmt.Sprintf("Error connecting to socket server at %s %v", *aggregatorAddress, err))

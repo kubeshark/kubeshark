@@ -13,7 +13,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/up9inc/mizu/shared"
 	"log"
 	"os"
 	"os/signal"
@@ -121,6 +120,10 @@ var stats struct {
 	overlapPackets      int
 }
 
+type TapOpts struct {
+	hostMode bool
+}
+
 type CollectorMessage struct {
 	MessageType string
 	Ports *[]int `json:"ports,omitempty"`
@@ -197,7 +200,9 @@ func (c *Context) GetCaptureInfo() gopacket.CaptureInfo {
 	return c.CaptureInfo
 }
 
-func StartPassiveTapper() <-chan *OutputChannelItem {
+func StartPassiveTapper(opts *TapOpts) <-chan *OutputChannelItem {
+	hostMode = opts.hostMode
+
 	var harWriter *HarWriter
 	if *dumpToHar {
 		harWriter = NewHarWriter(*HarOutputDir, *harEntriesPerFile)
@@ -259,7 +264,6 @@ func startPassiveTapper(harWriter *HarWriter) {
 			maxHTTP2DataLen = convertedInt
 		}
 	}
-	hostMode = os.Getenv(shared.HostModeEnvVar) == "1"
 
 	log.Printf("App Ports: %v", appPorts)
 	log.Printf("Tap output websocket port: %s", tapOutputPort)
