@@ -31,7 +31,8 @@ func RunMizuTap(podRegexQuery *regexp.Regexp, tappingOptions *MizuTapOptions) {
 	if err != nil {
 		return
 	}
-	kubernetesProvider := kubernetes.NewProvider(tappingOptions.KubeConfigPath, tappingOptions.Namespace)
+
+	kubernetesProvider := kubernetes.NewProvider(tappingOptions.KubeConfigPath)
 
 	defer cleanUpMizuResources(kubernetesProvider)
 	ctx, cancel := context.WithCancel(context.Background())
@@ -145,7 +146,7 @@ func cleanUpMizuResources(kubernetesProvider *kubernetes.Provider) {
 }
 
 func watchPodsForTapping(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc, podRegex *regexp.Regexp, tappingOptions *MizuTapOptions) {
-	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, kubernetesProvider.GetPodWatcher(ctx, kubernetesProvider.Namespace), podRegex)
+	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, kubernetesProvider.GetPodWatcher(ctx, mizu.K8sAllNamespaces), podRegex)
 
 	restartTappers := func() {
 		if matchingPods, err := kubernetesProvider.GetAllPodsMatchingRegex(ctx, podRegex); err != nil {

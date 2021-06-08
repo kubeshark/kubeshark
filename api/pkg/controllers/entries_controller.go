@@ -94,12 +94,13 @@ func GetHARs(c *fiber.Ctx) error {
 		_ = json.Unmarshal([]byte(entryData.Entry), &harEntry)
 
 		sourceOfEntry := entryData.ResolvedSource
-		if harOfSource, ok := harsObject[sourceOfEntry]; ok {
+		fileName := fmt.Sprintf("%s.har", sourceOfEntry)
+		if harOfSource, ok := harsObject[fileName]; ok {
 			harOfSource.Log.Entries = append(harOfSource.Log.Entries, &harEntry)
 		} else {
 			var entriesHar []*har.Entry
 			entriesHar = append(entriesHar, &harEntry)
-			harsObject[sourceOfEntry] = &models.ExtendedHAR{
+			harsObject[fileName] = &models.ExtendedHAR{
 				Log: &models.ExtendedLog{
 					Version: "1.2",
 					Creator: &models.ExtendedCreator{
