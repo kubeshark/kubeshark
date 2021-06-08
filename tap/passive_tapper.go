@@ -53,13 +53,6 @@ func parseAppPorts(appPortsList string) []int {
 	return ports
 }
 
-func parseHostAppAddresses(hostAppAddressesString string) []string {
-	if len(hostAppAddressesString) == 0 {
-		return []string{}
-	}
-	return strings.Split(hostAppAddressesString, ",")
-}
-
 var maxcount = flag.Int("c", -1, "Only grab this many packets, then exit")
 var decoder = flag.String("decoder", "", "Name of the decoder to use (default: guess from capture)")
 var statsevery = flag.Int("stats", 60, "Output statistics every N seconds")
@@ -89,7 +82,6 @@ var tstype = flag.String("timestamp_type", "", "Type of timestamps to use")
 var promisc = flag.Bool("promisc", true, "Set promiscuous mode")
 var anydirection = flag.Bool("anydirection", false, "Capture http requests to other hosts")
 var staleTimeoutSeconds = flag.Int("staletimout", 120, "Max time in seconds to keep connections which don't transmit data")
-var hostAppAddressesString = flag.String("targets", "", "Comma separated list of ip:ports to tap")
 
 var memprofile = flag.String("memprofile", "", "Write memory profile")
 
