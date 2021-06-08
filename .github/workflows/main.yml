@@ -3,7 +3,8 @@ name: Releases
 on: 
   push:
     branches:
-      - my-temp-release-check
+      - develop
+#       - my-temp-release-check
 
 jobs:
   build:
@@ -12,25 +13,9 @@ jobs:
     - uses: actions/checkout@v2
     - name: Build CLI
       run: cd cli && make build-all
-    - uses: ncipollo/release-action@v1
-      with:
-        artifacts: "cli/bin/**"
-        token: ${{ secrets.GITHUB_TOKEN }}
-        commit: my-temp-release-check
-        tag: v0.0.2
-# name: Release
-# on:
-#   push:
-#     branches: 
-#       - my-temp-release-check
-# jobs:
-#   build:
-#     runs-on: ubuntu-latest
-#     steps:
-#       - uses: actions/checkout@v2
-#       - name: GH Release
-#         uses: softprops/action-gh-release@v0.1.5
-#         with:
-#           name: ${GITHUB_SHA}
-#           files: |
-#             - cli/bin/**
+#     - uses: ncipollo/release-action@v1
+#       with:
+#         token: ${{ secrets.GITHUB_TOKEN }}
+#         artifacts: "cli/bin/**/"            ## ??
+#         commit: my-temp-release-check       ## ?? 
+#         tag: v0.0.2                         ## TODO: get it from a variable or function ? (should include branch name and sem ver)
