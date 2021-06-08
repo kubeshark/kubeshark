@@ -121,7 +121,7 @@ var stats struct {
 }
 
 type TapOpts struct {
-	hostMode bool
+	HostMode bool
 }
 
 type CollectorMessage struct {
@@ -201,7 +201,7 @@ func (c *Context) GetCaptureInfo() gopacket.CaptureInfo {
 }
 
 func StartPassiveTapper(opts *TapOpts) <-chan *OutputChannelItem {
-	hostMode = opts.hostMode
+	hostMode = opts.HostMode
 
 	var harWriter *HarWriter
 	if *dumpToHar {

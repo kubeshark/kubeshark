@@ -27,7 +27,7 @@ var aggregatorAddress = flag.String("aggregator-address", "", "Address of mizu c
 func main() {
 	flag.Parse()
 	hostMode := os.Getenv(shared.HostModeEnvVar) == "1"
-	tapOpts = &tap.TapOpts{hostMode: hostMode}
+	tapOpts = &tap.TapOpts{HostMode: hostMode}
 
 	if !*shouldTap && !*aggregator && !*standalone{
 		panic("One of the flags --tap, --api or --standalone must be provided")
