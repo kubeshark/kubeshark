@@ -227,6 +227,7 @@ func (hw *HarWriter) Start() {
 func (hw *HarWriter) Stop() {
 	close(hw.PairChan)
 	<-hw.done
+	close(hw.OutChan)
 }
 
 func (hw *HarWriter) openNewFile() {
