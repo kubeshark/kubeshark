@@ -58,6 +58,11 @@ func NewProvider(kubeConfigPath string) *Provider {
 	}
 }
 
+func (provider *Provider) CurrentNamespace() string {
+	ns, _, _ := provider.kubernetesConfig.Namespace()
+	return ns
+}
+
 func (provider *Provider) GetPodWatcher(ctx context.Context, namespace string) watch.Interface {
 	watcher, err := provider.clientSet.CoreV1().Pods(namespace).Watch(ctx, metav1.ListOptions{Watch: true})
 	if err != nil {

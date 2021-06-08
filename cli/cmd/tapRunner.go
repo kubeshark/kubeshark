@@ -44,7 +44,7 @@ func RunMizuTap(podRegexQuery *regexp.Regexp, tappingOptions *MizuTapOptions) {
 		currentlyTappedPods = matchingPods
 	}
 
-	nodeToTappedPodIPMap, err := getNodeHostToTappedPodIpsMap(ctx, kubernetesProvider, currentlyTappedPods)
+	nodeToTappedPodIPMap, err := getNodeHostToTappedPodIpsMap(currentlyTappedPods)
 	if err != nil {
 		return
 	}
@@ -146,7 +146,7 @@ func cleanUpMizuResources(kubernetesProvider *kubernetes.Provider) {
 }
 
 func watchPodsForTapping(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc, podRegex *regexp.Regexp, tappingOptions *MizuTapOptions) {
-	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, kubernetesProvider.GetPodWatcher(ctx, mizu.K8sAllNamespaces), podRegex)
+	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, kubernetesProvider.GetPodWatcher(ctx, getNamespace(tappingOptions, kubernetesProvider)), podRegex)
 
 	restartTappers := func() {
 		if matchingPods, err := kubernetesProvider.GetAllPodsMatchingRegex(ctx, podRegex); err != nil {
@@ -156,7 +156,7 @@ func watchPodsForTapping(ctx context.Context, kubernetesProvider *kubernetes.Pro
 			currentlyTappedPods = matchingPods
 		}
 
-		nodeToTappedPodIPMap, err := getNodeHostToTappedPodIpsMap(ctx, kubernetesProvider, currentlyTappedPods)
+		nodeToTappedPodIPMap, err := getNodeHostToTappedPodIpsMap(currentlyTappedPods)
 		if err != nil {
 			fmt.Printf("Error building node to ips map: %s (%v,%+v)\n", err, err, err)
 			cancel()
@@ -262,7 +262,7 @@ func createRBACIfNecessary(ctx context.Context, kubernetesProvider *kubernetes.P
 	return true
 }
 
-func getNodeHostToTappedPodIpsMap(ctx context.Context, kubernetesProvider *kubernetes.Provider, tappedPods []core.Pod) (map[string][]string, error) {
+func getNodeHostToTappedPodIpsMap(tappedPods []core.Pod) (map[string][]string, error) {
 	nodeToTappedPodIPMap := make(map[string][]string, 0)
 	for _, pod := range tappedPods {
 		existingList := nodeToTappedPodIPMap[pod.Spec.NodeName]
@@ -308,4 +308,14 @@ func syncApiStatus(ctx context.Context, cancel context.CancelFunc, tappingOption
 		}
 	}
 
+}
+
+func getNamespace(tappingOptions *MizuTapOptions, kubernetesProvider *kubernetes.Provider) string{
+	if tappingOptions.AllNamespaces {
+		return ""
+	} else if len(tappingOptions.Namespace) > 0 {
+		return tappingOptions.Namespace
+	} else {
+		return kubernetesProvider.CurrentNamespace()
+	}
 }
