@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/up9inc/mizu/cli/mizu"
 	"path/filepath"
 	"regexp"
 
@@ -42,7 +43,7 @@ const (
 	fieldManagerName   = "mizu-manager"
 )
 
-func NewProvider(kubeConfigPath string, overrideNamespace string) *Provider {
+func NewProvider(kubeConfigPath string) *Provider {
 	kubernetesConfig := loadKubernetesConfiguration(kubeConfigPath)
 	restClientConfig, err := kubernetesConfig.ClientConfig()
 	if err != nil {
@@ -50,23 +51,16 @@ func NewProvider(kubeConfigPath string, overrideNamespace string) *Provider {
 	}
 	clientSet := getClientSet(restClientConfig)
 
-	var namespace string
-	if len(overrideNamespace) > 0 {
-		namespace = overrideNamespace
-	} else {
-		configuredNamespace, _, err := kubernetesConfig.Namespace()
-		if err != nil {
-			panic(err)
-		}
-		namespace = configuredNamespace
-	}
-
 	return &Provider{
 		clientSet:        clientSet,
 		kubernetesConfig: kubernetesConfig,
 		clientConfig:     *restClientConfig,
-		Namespace:        namespace,
 	}
+}
+
+func (provider *Provider) CurrentNamespace() string {
+	ns, _, _ := provider.kubernetesConfig.Namespace()
+	return ns
 }
 
 func (provider *Provider) GetPodWatcher(ctx context.Context, namespace string) watch.Interface {
@@ -75,14 +69,6 @@ func (provider *Provider) GetPodWatcher(ctx context.Context, namespace string) w
 		panic(err.Error())
 	}
 	return watcher
-}
-
-func (provider *Provider) GetPods(ctx context.Context, namespace string) {
-	pods, err := provider.clientSet.CoreV1().Pods(namespace).List(ctx, metav1.ListOptions{})
-	if err != nil {
-		panic(err.Error())
-	}
-	fmt.Printf("There are %d pods in Namespace %s\n", len(pods.Items), namespace)
 }
 
 func (provider *Provider) CreateMizuAggregatorPod(ctx context.Context, namespace string, podName string, podImage string, linkServiceAccount bool, mizuApiFilteringOptions *shared.TrafficFilteringOptions) (*core.Pod, error) {
@@ -316,7 +302,7 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 }
 
 func (provider *Provider) GetAllPodsMatchingRegex(ctx context.Context, regex *regexp.Regexp) ([]core.Pod, error) {
-	pods, err := provider.clientSet.CoreV1().Pods("").List(ctx, metav1.ListOptions{})
+	pods, err := provider.clientSet.CoreV1().Pods(mizu.K8sAllNamespaces).List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}

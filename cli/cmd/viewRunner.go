@@ -9,7 +9,7 @@ import (
 )
 
 func runMizuView() {
-	kubernetesProvider := kubernetes.NewProvider("", "")
+	kubernetesProvider := kubernetes.NewProvider("")
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
