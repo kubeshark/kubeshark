@@ -10,11 +10,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
+    - name: Build CLI
+      run: cd cli && make build-all
     - uses: ncipollo/release-action@v1
       with:
         artifacts: "cli/bin/**"
         token: ${{ secrets.GITHUB_TOKEN }}
-        commmit: my-temp-release-check
+        commit: my-temp-release-check
         tag: v0.0.1
 # name: Release
 # on:
