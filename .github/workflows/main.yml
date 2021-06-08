@@ -1,0 +1,16 @@
+name: Release
+on:
+  push:
+    branches: 
+      - my-temp-release-check
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: GH Release
+        uses: softprops/action-gh-release@v0.1.5
+        with:
+          name: ${GITHUB_SHA}
+          files: |
+            - cli/bin/**
