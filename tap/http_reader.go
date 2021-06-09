@@ -6,7 +6,6 @@ import (
 	"compress/gzip"
 	b64 "encoding/base64"
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -135,6 +134,8 @@ func (h *httpReader) handleHTTP2Stream() error {
 	}
 
 	if reqResPair != nil {
+		statsTracker.incMatchedMessages()
+
 		if h.harWriter != nil {
 			h.harWriter.WritePair(
 				reqResPair.HttpBufferedTrace.Request.orig.(*http.Request),
@@ -143,12 +144,6 @@ func (h *httpReader) handleHTTP2Stream() error {
 				reqResPair.HttpBufferedTrace.Response.captureTime,
 				reqResPair.HttpBufferedTrace.Request.requestSenderIp,
 			)
-		} else {
-			jsonStr, err := json.Marshal(reqResPair)
-			if err != nil {
-				return err
-			}
-			broadcastReqResPair(jsonStr)
 		}
 	}
 
@@ -182,6 +177,8 @@ func (h *httpReader) handleHTTP1ClientStream(b *bufio.Reader) error {
 	ident := fmt.Sprintf("%s->%s %s->%s %d", h.tcpID.srcIP, h.tcpID.dstIP, h.tcpID.srcPort, h.tcpID.dstPort, h.messageCount)
 	reqResPair := reqResMatcher.registerRequest(ident, req, h.captureTime, bodyStr, false)
 	if reqResPair != nil {
+		statsTracker.incMatchedMessages()
+
 		if h.harWriter != nil {
 			h.harWriter.WritePair(
 				reqResPair.HttpBufferedTrace.Request.orig.(*http.Request),
@@ -190,12 +187,6 @@ func (h *httpReader) handleHTTP1ClientStream(b *bufio.Reader) error {
 				reqResPair.HttpBufferedTrace.Response.captureTime,
 				reqResPair.HttpBufferedTrace.Request.requestSenderIp,
 			)
-		} else {
-			jsonStr, err := json.Marshal(reqResPair)
-			if err != nil {
-				SilentError("HTTP-marshal", "stream %s Error convert request response to json: %s", h.ident, err)
-			}
-			broadcastReqResPair(jsonStr)
 		}
 	}
 
@@ -250,6 +241,8 @@ func (h *httpReader) handleHTTP1ServerStream(b *bufio.Reader) error {
 	ident := fmt.Sprintf("%s->%s %s->%s %d", h.tcpID.dstIP, h.tcpID.srcIP, h.tcpID.dstPort, h.tcpID.srcPort, h.messageCount)
 	reqResPair := reqResMatcher.registerResponse(ident, res, h.captureTime, bodyStr, false)
 	if reqResPair != nil {
+		statsTracker.incMatchedMessages()
+
 		if h.harWriter != nil {
 			h.harWriter.WritePair(
 				reqResPair.HttpBufferedTrace.Request.orig.(*http.Request),
@@ -258,12 +251,6 @@ func (h *httpReader) handleHTTP1ServerStream(b *bufio.Reader) error {
 				reqResPair.HttpBufferedTrace.Response.captureTime,
 				reqResPair.HttpBufferedTrace.Request.requestSenderIp,
 			)
-		} else {
-			jsonStr, err := json.Marshal(reqResPair)
-			if err != nil {
-				SilentError("HTTP-marshal", "stream %s Error convert request response to json: %s", h.ident, err)
-			}
-			broadcastReqResPair(jsonStr)
 		}
 	}
 

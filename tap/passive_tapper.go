@@ -10,7 +10,6 @@ package tap
 
 import (
 	"encoding/hex"
-	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
@@ -32,12 +31,10 @@ import (
 )
 
 const AppPortsEnvVar = "APP_PORTS"
-const OutPortEnvVar = "WEB_SOCKET_PORT"
 const maxHTTP2DataLenEnvVar = "HTTP2_DATA_SIZE_LIMIT"
 // default is 1MB, more than the max size accepted by collector and traffic-dumper
 const maxHTTP2DataLenDefault = 1 * 1024 * 1024
 const cleanPeriod = time.Second * 10
-const outboundThrottleCacheExpiryPeriod = time.Minute * 15
 var remoteOnlyOutboundPorts = []int { 80, 443 }
 
 func parseAppPorts(appPortsList string) []int {
@@ -192,24 +189,25 @@ func (c *Context) GetCaptureInfo() gopacket.CaptureInfo {
 	return c.CaptureInfo
 }
 
-func StartPassiveTapper(opts *TapOpts) <-chan *OutputChannelItem {
+func StartPassiveTapper(opts *TapOpts) (<-chan *OutputChannelItem, <-chan *OutboundLink) {
 	hostMode = opts.HostMode
 
 	var harWriter *HarWriter
 	if *dumpToHar {
 		harWriter = NewHarWriter(*HarOutputDir, *harEntriesPerFile)
 	}
+	outboundLinkWriter := NewOutboundLinkWriter()
 
-	go startPassiveTapper(harWriter)
+	go startPassiveTapper(harWriter, outboundLinkWriter)
 
 	if harWriter != nil {
-		return harWriter.OutChan
+		return harWriter.OutChan, outboundLinkWriter.OutChan
 	}
 
-	return nil
+	return nil, outboundLinkWriter.OutChan
 }
 
-func startPassiveTapper(harWriter *HarWriter) {
+func startPassiveTapper(harWriter *HarWriter, outboundLinkWriter *OutboundLinkWriter) {
 	log.SetFlags(log.LstdFlags | log.LUTC | log.Lshortfile)
 
 	defer util.Run()()
@@ -238,11 +236,6 @@ func startPassiveTapper(harWriter *HarWriter) {
 	} else {
 		appPorts = parseAppPorts(appPortsStr)
 	}
-	tapOutputPort := os.Getenv(OutPortEnvVar)
-	if tapOutputPort == "" {
-		log.Println("Received empty/no WEB_SOCKET_PORT env var! falling back to port 8080")
-		tapOutputPort = "8080"
-	}
 	envVal := os.Getenv(maxHTTP2DataLenEnvVar)
 	if envVal == "" {
 		log.Println("Received empty/no HTTP2_DATA_SIZE_LIMIT env var! falling back to", maxHTTP2DataLenDefault)
@@ -258,27 +251,6 @@ func startPassiveTapper(harWriter *HarWriter) {
 	}
 
 	log.Printf("App Ports: %v", appPorts)
-	log.Printf("Tap output websocket port: %s", tapOutputPort)
-
-	var onCollectorMessage = func(message []byte) {
-		var parsedMessage CollectorMessage
-		err := json.Unmarshal(message, &parsedMessage)
-		if err == nil {
-
-			if parsedMessage.MessageType == "setPorts" {
-				Debug("Got message from collector. Type: %s, Ports: %v", parsedMessage.MessageType, parsedMessage.Ports)
-				appPorts = *parsedMessage.Ports
-			} else if parsedMessage.MessageType == "setAddresses" {
-				Debug("Got message from collector. Type: %s, IPs: %v", parsedMessage.MessageType, parsedMessage.Addresses)
-				HostAppAddresses = *parsedMessage.Addresses
-				Info("Filtering for the following addresses: %s", HostAppAddresses)
-			}
-		} else {
-			Error("Collector-Message-Parsing", "Error parsing message from collector: %s (%v,%+v)", err, err, err)
-		}
-	}
-
-	go startOutputServer(tapOutputPort, onCollectorMessage)
 
 	var handle *pcap.Handle
 	var err error
@@ -326,6 +298,7 @@ func startPassiveTapper(harWriter *HarWriter) {
 		harWriter.Start()
 		defer harWriter.Stop()
 	}
+	defer outboundLinkWriter.Stop()
 
 	var dec gopacket.Decoder
 	var ok bool
@@ -345,7 +318,12 @@ func startPassiveTapper(harWriter *HarWriter) {
 	start := time.Now()
 	defragger := ip4defrag.NewIPv4Defragmenter()
 
-	streamFactory := &tcpStreamFactory{doHTTP: !*nohttp, harWriter: harWriter}
+	streamFactory := &tcpStreamFactory{
+		doHTTP: !*nohttp,
+		harWriter: harWriter,
+		outbountLinkWriter: outboundLinkWriter,
+
+	}
 	streamPool := reassembly.NewStreamPool(streamFactory)
 	assembler := reassembly.NewAssembler(streamPool)
 	var assemblerMutex sync.Mutex

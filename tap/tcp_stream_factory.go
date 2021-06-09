@@ -15,9 +15,10 @@ import (
  * Generates a new tcp stream for each new tcp connection. Closes the stream when the connection closes.
  */
 type tcpStreamFactory struct {
-	wg        sync.WaitGroup
-	doHTTP    bool
-	harWriter *HarWriter
+	wg                 sync.WaitGroup
+	doHTTP             bool
+	harWriter          *HarWriter
+	outbountLinkWriter *OutboundLinkWriter
 }
 
 func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.TCP, ac reassembly.AssemblerContext) reassembly.Stream {
@@ -30,7 +31,7 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.T
 	dstPort := int(tcp.DstPort)
 
 	if factory.shouldNotifyOnOutboundLink(dstIp, dstPort) {
-		broadcastOutboundLink(net.Src().String(), dstIp, dstPort)
+		factory.outbountLinkWriter.WriteOutboundLink(net.Src().String(), dstIp, dstPort)
 	}
 	isHTTP := factory.shouldTap(dstIp, dstPort)
 	stream := &tcpStream{
