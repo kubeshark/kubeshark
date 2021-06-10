@@ -1,9 +1,12 @@
 package mizu
 
 var (
-	Version       = "v0.0.1"
-	Branch        = "develop"
-	GitCommitHash = "" // this var is overridden using ldflags in makefile when building
+	CalVer         = "YYYY.MM.DD.HH.mm.ss" // this var is overridden using ldflags in makefile when building
+	Branch         = "develop"
+	GitCommitHash  = "" // this var is overridden using ldflags in makefile when building
+	BuiltTimeUTC   = "" // this var is overridden using ldflags in makefile when building
+	BuildTimestamp = "" // this var is overridden using ldflags in makefile when building
+	RBACVersion    = "v1"
 )
 
 const (
