@@ -4,8 +4,6 @@ on:
   push:
     branches:
      - my-temp-release-check
-    # - develop
-    # - master
 
 jobs:
   build:
@@ -20,31 +18,10 @@ jobs:
           echo "##[set-output name=build_timestamp;]$(echo $(date +%s))"
         id: version_parameters
       - name: Build CLI
-        run: cd cli && make build-all CAL_VER=${steps.version_parameters.outputs.cal_ver} BUILD_TIME_UTC=${steps.version_parameters.outputs.build_time_utc} BUILD_TIMESTAMP=${steps.version_parameters.outputs.build_timestamp}
+        run: cd cli && make build-all CAL_VER=$(steps.version_parameters.outputs.cal_ver) BUILD_TIME_UTC=$(steps.version_parameters.outputs.build_time_utc) BUILD_TIMESTAMP=$(steps.version_parameters.outputs.build_timestamp)
      - uses: ncipollo/release-action@v1
        with:
          token: ${{ secrets.GITHUB_TOKEN }}
          artifacts: "cli/bin/**/"
          commit: my-temp-release-check
          tag: v0.0.1
-
-#name: release
-#on:
-#  push:
-#    branches:
-#      - feature/har_file_names
-##      - 'develop'
-##      - 'main'
-#jobs:
-#  docker:
-#    runs-on: ubuntu-latest
-#    steps:
-#      - name: Checkout
-#        uses: actions/checkout@v2
-#      - name: Set up Cloud SDK
-#        uses: google-github-actions/setup-gcloud@master
-#        with:
-#          service_account_key: ${{ secrets.GCR_JSON_KEY }}
-#          export_default_credentials: true
-#      - name: Build and Push CLI
-#        run: make push-cli
