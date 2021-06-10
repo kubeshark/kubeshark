@@ -23,7 +23,7 @@ install:
 	go install mizu.go
 
 build:	## build mizu CLI binary (select platform via GOOS / GOARCH env variables)
-	go build -ldflags="-X 'github.com/up9inc/mizu/cli/mizu.GitCommitHash=$(COMMIT_HASH)' -X 'github.com/up9inc/mizu/cli/mizu.Branch=$(GIT_BRANCH)' -X 'github.com/up9inc/mizu/cli/mizu.CalVer=$(CAL_VER)' -X 'github.com/up9inc/mizu/cli/mizu.BuildTimestamp=$(BUILD_TIMESTAMP)' -X 'github.com/up9inc/mizu/cli/mizu.BuiltTimeUTC=$(BUILD_TIME_UTC)'" -o bin/$(FOLDER)/mizu mizu.go
+	go build -ldflags="-X 'github.com/up9inc/mizu/cli/mizu.GitCommitHash=$(COMMIT_HASH)' -X 'github.com/up9inc/mizu/cli/mizu.Branch=$(GIT_BRANCH)' -X 'github.com/up9inc/mizu/cli/mizu.CalVer=$(CAL_VER)' -X 'github.com/up9inc/mizu/cli/mizu.BuildTimestamp=$(BUILD_TIMESTAMP)' -X 'github.com/up9inc/mizu/cli/mizu.BuiltTimeUTC=$(BUILD_TIME_UTC)'" -o bin/mizu_$(FOLDER) mizu.go
 
 build-all:  ## build for all supported platforms
 	@echo "Compiling for every OS and Platform"
