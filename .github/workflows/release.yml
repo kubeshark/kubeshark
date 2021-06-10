@@ -19,7 +19,7 @@ jobs:
           echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
         id: version_parameters
       - name: Build CLI
-        run: cd cli && make build-all CAL_VER=${{ steps.version_parameters.outputs.cal_ver }} BUILD_TIME_UTC=${{ steps.version_parameters.outputs.build_time_utc }} BUILD_TIMESTAMP=${{ steps.version_parameters.outputs.build_timestamp }}
+        run: cd cli && make build-all CAL_VER='${{ steps.version_parameters.outputs.cal_ver }}' BUILD_TIME_UTC='${{ steps.version_parameters.outputs.build_time_utc }}' BUILD_TIMESTAMP='${{ steps.version_parameters.outputs.build_timestamp }}'
       - uses: ncipollo/release-action@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}

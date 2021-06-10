@@ -1,5 +1,5 @@
 FOLDER=$(GOOS).$(GOARCH)
-# COMMIT_HASH=$(shell git rev-parse HEAD)
+COMMIT_HASH=$(shell git rev-parse HEAD)
 GIT_BRANCH=$(shell git branch --show-current | tr '[:upper:]' '[:lower:]')
 GIT_VERSION=$(shell git branch --show-current | tr '[:upper:]' '[:lower:]')
 BUILD_TIMESTAMP=$(shell date +%s)
