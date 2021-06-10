@@ -142,7 +142,7 @@ func (h *httpReader) handleHTTP2Stream() error {
 				reqResPair.HttpBufferedTrace.Request.captureTime,
 				reqResPair.HttpBufferedTrace.Response.orig.(*http.Response),
 				reqResPair.HttpBufferedTrace.Response.captureTime,
-				reqResPair.HttpBufferedTrace.Request.requestSenderIp,
+				&reqResPair.HttpBufferedTrace.Request.connection,
 			)
 		}
 	}
@@ -185,7 +185,7 @@ func (h *httpReader) handleHTTP1ClientStream(b *bufio.Reader) error {
 				reqResPair.HttpBufferedTrace.Request.captureTime,
 				reqResPair.HttpBufferedTrace.Response.orig.(*http.Response),
 				reqResPair.HttpBufferedTrace.Response.captureTime,
-				reqResPair.HttpBufferedTrace.Request.requestSenderIp,
+				&reqResPair.HttpBufferedTrace.Request.connection,
 			)
 		}
 	}
@@ -249,7 +249,7 @@ func (h *httpReader) handleHTTP1ServerStream(b *bufio.Reader) error {
 				reqResPair.HttpBufferedTrace.Request.captureTime,
 				reqResPair.HttpBufferedTrace.Response.orig.(*http.Response),
 				reqResPair.HttpBufferedTrace.Response.captureTime,
-				reqResPair.HttpBufferedTrace.Request.requestSenderIp,
+				&reqResPair.HttpBufferedTrace.Request.connection,
 			)
 		}
 	}

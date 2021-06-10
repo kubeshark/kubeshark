@@ -29,6 +29,13 @@ type messageBody struct {
 	AsBytes   string `json:"as_bytes"`
 }
 
+type Connection struct {
+	ClientIP   string
+	ClientPort string
+	ServerIP   string
+	ServerPort string
+}
+
 type httpMessage struct {
 	IsRequest       bool
 	Headers         []headerKeyVal `json:"headers"`
@@ -36,7 +43,7 @@ type httpMessage struct {
 	Body            messageBody    `json:"body"`
 	captureTime     time.Time
 	orig            interface {}
-	requestSenderIp string
+	connection       Connection
 }
 
 
@@ -60,7 +67,14 @@ func (matcher *requestResponseMatcher) registerRequest(ident string, request *ht
 		{Key: "x-up9-destination", Value: split[1] + ":" + split[3]},
 	}
 
-	requestHTTPMessage := requestToMessage(request, captureTime, body, &messageExtraHeaders, isHTTP2, split[0])
+	connection := &Connection{
+		ClientIP:   split[0],
+		ClientPort: split[2],
+		ServerIP:   split[1],
+		ServerPort: split[3],
+	}
+
+	requestHTTPMessage := requestToMessage(request, captureTime, body, &messageExtraHeaders, isHTTP2, connection)
 
 	if response, found := matcher.openMessagesMap.Pop(key); found {
 		// Type assertion always succeeds because all of the map's values are of httpMessage type
@@ -111,7 +125,7 @@ func (matcher *requestResponseMatcher) preparePair(requestHTTPMessage *httpMessa
 	}
 }
 
-func requestToMessage(request *http.Request, captureTime time.Time, body string, messageExtraHeaders *[]headerKeyVal, isHTTP2 bool, requestSenderIp string) httpMessage {
+func requestToMessage(request *http.Request, captureTime time.Time, body string, messageExtraHeaders *[]headerKeyVal, isHTTP2 bool, connection *Connection) httpMessage {
 	messageHeaders := make([]headerKeyVal, 0)
 
 	for key, value := range request.Header {
@@ -140,7 +154,7 @@ func requestToMessage(request *http.Request, captureTime time.Time, body string,
 		Body:            requestBody,
 		captureTime:     captureTime,
 		orig:            request,
-		requestSenderIp: requestSenderIp,
+		connection:      *connection,
 	}
 }
 
