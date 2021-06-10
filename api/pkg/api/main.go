@@ -88,9 +88,17 @@ func startReadingChannel(outputItems <-chan *tap.OutputChannelItem) {
 	}
 
 	for item := range outputItems {
-		saveHarToDb(item.HarEntry, item.RequestSenderIp)
+		saveHarToDb(item.HarEntry, item.Connection.ClientIP)
 	}
 }
+
+func StartReadingOutbound(outboundLinkChannel <-chan *tap.OutboundLink) {
+	// tcpStreamFactory will block on write to channel. Empty channel to unblock.
+	// TODO: Make write to channel optional.
+	for range outboundLinkChannel {
+	}
+}
+
 
 func saveHarToDb(entry *har.Entry, sender string) {
 	entryBytes, _ := json.Marshal(entry)
