@@ -17,7 +17,7 @@ jobs:
 #          echo "##[set-output name=build_timestamp;]$(echo $(date +%s))"
         id: version_parameters
       - name: Build CLI
-        run: cd cli && make build-all CAL_VER=${steps.version_parameters.outputs.cal_ver} # BUILD_TIME_UTC=${steps.version_parameters.outputs.build_time_utc} BUILD_TIMESTAMP=${steps.version_parameters.outputs.build_timestamp}
+        run: cd cli && make build-all CAL_VER=${{ steps.version_parameters.outputs.cal_ver }} # BUILD_TIME_UTC=${steps.version_parameters.outputs.build_time_utc} BUILD_TIMESTAMP=${steps.version_parameters.outputs.build_timestamp}
       - uses: ncipollo/release-action@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
