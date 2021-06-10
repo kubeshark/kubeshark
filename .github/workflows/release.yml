@@ -12,15 +12,17 @@ jobs:
       - uses: actions/checkout@v2
       - name: Get base image name
         shell: bash
-        run: echo "##[set-output name=cal_ver;]$(echo $(date +'%Y.%m.%d'))"
-#          echo "##[set-output name=build_time_utc;]$(echo $(date -u))"
-#          echo "##[set-output name=build_timestamp;]$(echo $(date +%s))"
+        run: |
+          echo "##[set-output name=cal_ver;]$(echo $(date +'%Y.%m.%d'))"
+          echo "##[set-output name=build_time_utc;]$(echo $(date -u))"
+          echo "##[set-output name=build_timestamp;]$(echo $(date +%s))"
+          echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/}"
         id: version_parameters
       - name: Build CLI
-        run: cd cli && make build-all CAL_VER=${{ steps.version_parameters.outputs.cal_ver }} # BUILD_TIME_UTC=${steps.version_parameters.outputs.build_time_utc} BUILD_TIMESTAMP=${steps.version_parameters.outputs.build_timestamp}
+        run: cd cli && make build-all CAL_VER=${{ steps.version_parameters.outputs.cal_ver }} BUILD_TIME_UTC=${{ steps.version_parameters.outputs.build_time_utc }} BUILD_TIMESTAMP=${{ steps.version_parameters.outputs.build_timestamp }}
       - uses: ncipollo/release-action@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          artifacts: "cli/bin/**/"
-          commit: my-temp-release-check
-          tag: v0.0.1
+          artifacts: "cli/bin/**"
+          commit: ${{ steps.version_parameters.outputs.branch }}
+          tag: ${{ steps.version_parameters.outputs.cal_ver }}
