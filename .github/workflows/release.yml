@@ -3,7 +3,7 @@ name: Release
 on:
   push:
     branches:
-     - my-temp-release-check
+      - my-temp-release-check
 
 jobs:
   build:
@@ -19,9 +19,9 @@ jobs:
         id: version_parameters
       - name: Build CLI
         run: cd cli && make build-all CAL_VER=$(steps.version_parameters.outputs.cal_ver) BUILD_TIME_UTC=$(steps.version_parameters.outputs.build_time_utc) BUILD_TIMESTAMP=$(steps.version_parameters.outputs.build_timestamp)
-     - uses: ncipollo/release-action@v1
-       with:
-         token: ${{ secrets.GITHUB_TOKEN }}
-         artifacts: "cli/bin/**/"
-         commit: my-temp-release-check
-         tag: v0.0.1
+      - uses: ncipollo/release-action@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          artifacts: "cli/bin/**/"
+          commit: my-temp-release-check
+          tag: v0.0.1
