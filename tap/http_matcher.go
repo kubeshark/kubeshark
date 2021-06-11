@@ -3,7 +3,6 @@ package tap
 import (
 	"fmt"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 
@@ -15,20 +14,6 @@ type requestResponsePair struct {
 	Response httpMessage `json:"response"`
 }
 
-type envoyMessageWrapper struct {
-	HttpBufferedTrace requestResponsePair `json:"http_buffered_trace"`
-}
-
-type headerKeyVal struct {
-	Key   string `json:"key"`
-	Value string `json:"value"`
-}
-
-type messageBody struct {
-	Truncated bool   `json:"truncated"`
-	AsBytes   string `json:"as_bytes"`
-}
-
 type Connection struct {
 	ClientIP   string
 	ClientPort string
@@ -37,10 +22,7 @@ type Connection struct {
 }
 
 type httpMessage struct {
-	IsRequest       bool
-	Headers         []headerKeyVal `json:"headers"`
-	HTTPVersion     string         `json:"httpVersion"`
-	Body            messageBody    `json:"body"`
+	isRequest       bool
 	captureTime     time.Time
 	orig            interface {}
 	connection       Connection
@@ -58,14 +40,9 @@ func createResponseRequestMatcher() requestResponseMatcher {
 	return *newMatcher
 }
 
-func (matcher *requestResponseMatcher) registerRequest(ident string, request *http.Request, captureTime time.Time, body string, isHTTP2 bool) *envoyMessageWrapper {
+func (matcher *requestResponseMatcher) registerRequest(ident string, request *http.Request, captureTime time.Time) *requestResponsePair {
 	split := splitIdent(ident)
 	key := genKey(split)
-
-	messageExtraHeaders := []headerKeyVal{
-		{Key: "x-up9-source", Value: split[0]},
-		{Key: "x-up9-destination", Value: split[1] + ":" + split[3]},
-	}
 
 	connection := &Connection{
 		ClientIP:   split[0],
@@ -74,12 +51,17 @@ func (matcher *requestResponseMatcher) registerRequest(ident string, request *ht
 		ServerPort: split[3],
 	}
 
-	requestHTTPMessage := requestToMessage(request, captureTime, body, &messageExtraHeaders, isHTTP2, connection)
+	requestHTTPMessage := httpMessage{
+		isRequest:       true,
+		captureTime:     captureTime,
+		orig:            request,
+		connection:      *connection,
+	}
 
 	if response, found := matcher.openMessagesMap.Pop(key); found {
 		// Type assertion always succeeds because all of the map's values are of httpMessage type
 		responseHTTPMessage := response.(*httpMessage)
-		if responseHTTPMessage.IsRequest {
+		if responseHTTPMessage.isRequest {
 			SilentError("Request-Duplicate", "Got duplicate request with same identifier")
 			return nil
 		}
@@ -92,16 +74,20 @@ func (matcher *requestResponseMatcher) registerRequest(ident string, request *ht
 	return nil
 }
 
-func (matcher *requestResponseMatcher) registerResponse(ident string, response *http.Response, captureTime time.Time, body string, isHTTP2 bool) *envoyMessageWrapper {
+func (matcher *requestResponseMatcher) registerResponse(ident string, response *http.Response, captureTime time.Time) *requestResponsePair {
 	split := splitIdent(ident)
 	key := genKey(split)
 
-	responseHTTPMessage := responseToMessage(response, captureTime, body, isHTTP2)
+	responseHTTPMessage := httpMessage{
+		isRequest:   false,
+		captureTime: captureTime,
+		orig:        response,
+	}
 
 	if request, found := matcher.openMessagesMap.Pop(key); found {
 		// Type assertion always succeeds because all of the map's values are of httpMessage type
 		requestHTTPMessage := request.(*httpMessage)
-		if !requestHTTPMessage.IsRequest {
+		if !requestHTTPMessage.isRequest {
 			SilentError("Response-Duplicate", "Got duplicate response with same identifier")
 			return nil
 		}
@@ -114,82 +100,11 @@ func (matcher *requestResponseMatcher) registerResponse(ident string, response *
 	return nil
 }
 
-func (matcher *requestResponseMatcher) preparePair(requestHTTPMessage *httpMessage, responseHTTPMessage *httpMessage) *envoyMessageWrapper {
-	matcher.addDuration(requestHTTPMessage, responseHTTPMessage)
-
-	return &envoyMessageWrapper{
-		HttpBufferedTrace: requestResponsePair{
-			Request:  *requestHTTPMessage,
-			Response: *responseHTTPMessage,
-		},
+func (matcher *requestResponseMatcher) preparePair(requestHTTPMessage *httpMessage, responseHTTPMessage *httpMessage) *requestResponsePair {
+	return &requestResponsePair{
+		Request:  *requestHTTPMessage,
+		Response: *responseHTTPMessage,
 	}
-}
-
-func requestToMessage(request *http.Request, captureTime time.Time, body string, messageExtraHeaders *[]headerKeyVal, isHTTP2 bool, connection *Connection) httpMessage {
-	messageHeaders := make([]headerKeyVal, 0)
-
-	for key, value := range request.Header {
-		messageHeaders = append(messageHeaders, headerKeyVal{Key: key, Value: value[0]})
-	}
-
-	if !isHTTP2 {
-		messageHeaders = append(messageHeaders, headerKeyVal{Key: ":method", Value: request.Method})
-		messageHeaders = append(messageHeaders, headerKeyVal{Key: ":path", Value: request.RequestURI})
-		messageHeaders = append(messageHeaders, headerKeyVal{Key: ":authority", Value: request.Host})
-		messageHeaders = append(messageHeaders, headerKeyVal{Key: ":scheme", Value: "http"})
-	}
-
-	messageHeaders = append(messageHeaders, headerKeyVal{Key: "x-request-start", Value: fmt.Sprintf("%.3f", float64(captureTime.UnixNano()) / float64(1000000000))})
-
-	messageHeaders = append(messageHeaders, *messageExtraHeaders...)
-
-	httpVersion := request.Proto
-
-	requestBody := messageBody{Truncated: false, AsBytes: body}
-
-	return httpMessage{
-		IsRequest:       true,
-		Headers:         messageHeaders,
-		HTTPVersion:     httpVersion,
-		Body:            requestBody,
-		captureTime:     captureTime,
-		orig:            request,
-		connection:      *connection,
-	}
-}
-
-func responseToMessage(response *http.Response, captureTime time.Time, body string, isHTTP2 bool) httpMessage {
-	messageHeaders := make([]headerKeyVal, 0)
-
-	for key, value := range response.Header {
-		messageHeaders = append(messageHeaders, headerKeyVal{Key: key, Value: value[0]})
-	}
-
-	if !isHTTP2 {
-		messageHeaders = append(messageHeaders, headerKeyVal{Key: ":status", Value: strconv.Itoa(response.StatusCode)})
-	}
-
-	httpVersion := response.Proto
-
-	requestBody := messageBody{Truncated: false, AsBytes: body}
-
-	return httpMessage{
-		IsRequest:   false,
-		Headers:     messageHeaders,
-		HTTPVersion: httpVersion,
-		Body:        requestBody,
-		captureTime: captureTime,
-		orig:        response,
-	}
-}
-
-func (matcher *requestResponseMatcher) addDuration(requestHTTPMessage *httpMessage, responseHTTPMessage *httpMessage) {
-	durationMs := float64(responseHTTPMessage.captureTime.UnixNano() / 1000000) - float64(requestHTTPMessage.captureTime.UnixNano() / 1000000)
-	if durationMs < 1 {
-		durationMs = 1
-	}
-
-	responseHTTPMessage.Headers  = append(responseHTTPMessage.Headers, headerKeyVal{Key: "x-up9-duration-ms", Value: fmt.Sprintf("%.0f", durationMs)})
 }
 
 func splitIdent(ident string) []string {
