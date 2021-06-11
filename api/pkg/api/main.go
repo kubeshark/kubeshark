@@ -88,7 +88,7 @@ func startReadingChannel(outputItems <-chan *tap.OutputChannelItem) {
 	}
 
 	for item := range outputItems {
-		saveHarToDb(item.HarEntry, item.Connection.ClientIP)
+		saveHarToDb(item.HarEntry, item.ConnectionID.ClientIP)
 	}
 }
 
