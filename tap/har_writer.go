@@ -24,7 +24,7 @@ type PairChanItem struct {
 	Response        *http.Response
 	ResponseTime    time.Time
 	RequestSenderIp string
-	Connection      *Connection
+	ConnectionID    *ConnectionID
 }
 
 func openNewHarFile(filename string) *HarFile {
@@ -163,8 +163,8 @@ func NewHarWriter(outputDir string, maxEntries int) *HarWriter {
 }
 
 type OutputChannelItem struct {
-	HarEntry   *har.Entry
-	Connection *Connection
+	HarEntry     *har.Entry
+	ConnectionID *ConnectionID
 }
 
 type HarWriter struct {
@@ -176,13 +176,13 @@ type HarWriter struct {
 	done chan bool
 }
 
-func (hw *HarWriter) WritePair(request *http.Request, requestTime time.Time, response *http.Response, responseTime time.Time, connection *Connection) {
+func (hw *HarWriter) WritePair(request *http.Request, requestTime time.Time, response *http.Response, responseTime time.Time, connectionID *ConnectionID) {
 	hw.PairChan <- &PairChanItem{
 		Request:      request,
 		RequestTime:  requestTime,
 		Response:     response,
 		ResponseTime: responseTime,
-		Connection:   connection,
+		ConnectionID:   connectionID,
 	}
 }
 
@@ -213,7 +213,7 @@ func (hw *HarWriter) Start() {
 			} else {
 				hw.OutChan <- &OutputChannelItem{
 					HarEntry:   harEntry,
-					Connection: pair.Connection,
+					ConnectionID: pair.ConnectionID,
 				}
 			}
 		}
