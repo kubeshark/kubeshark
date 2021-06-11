@@ -26,7 +26,7 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.T
 	fsmOptions := reassembly.TCPSimpleFSMOptions{
 		SupportMissingEstablishment: *allowmissinginit,
 	}
-	Debug("Current App Ports: %v", appPorts)
+	Debug("Current App Ports: %v", gSettings.filterPorts)
 	dstIp := net.Dst().String()
 	dstPort := int(tcp.DstPort)
 
@@ -86,14 +86,14 @@ func (factory *tcpStreamFactory) WaitGoRoutines() {
 
 func (factory *tcpStreamFactory) shouldTap(dstIP string, dstPort int) bool {
 	if hostMode {
-		if inArrayString(HostAppAddresses, fmt.Sprintf("%s:%d", dstIP, dstPort)) == true {
+		if inArrayString(gSettings.filterIpAddresses, fmt.Sprintf("%s:%d", dstIP, dstPort)) == true {
 			return true
-		} else if inArrayString(HostAppAddresses, dstIP) == true {
+		} else if inArrayString(gSettings.filterIpAddresses, dstIP) == true {
 			return true
 		}
 		return false
 	} else {
-		isTappedPort := dstPort == 80 || (appPorts != nil && (inArrayInt(appPorts, dstPort)))
+		isTappedPort := dstPort == 80 || (gSettings.filterPorts != nil && (inArrayInt(gSettings.filterPorts, dstPort)))
 		if !isTappedPort {
 			return false
 		}

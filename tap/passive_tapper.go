@@ -113,20 +113,12 @@ type TapOpts struct {
 	HostMode bool
 }
 
-type CollectorMessage struct {
-	MessageType string
-	Ports *[]int `json:"ports,omitempty"`
-	Addresses *[]string `json:"addresses,omitempty"`
-}
-
 var outputLevel int
 var errorsMap map[string]uint
 var errorsMapMutex sync.Mutex
 var nErrors uint
-var appPorts []int            // global
-var ownIps []string           //global
-var hostMode bool             //global
-var HostAppAddresses []string //global
+var ownIps []string           // global
+var hostMode bool             // global
 
 /* minOutputLevel: Error will be printed only if outputLevel is above this value
  * t:              key for errorsMap (counting errors)
@@ -230,12 +222,14 @@ func startPassiveTapper(harWriter *HarWriter, outboundLinkWriter *OutboundLinkWr
 	}
 
 	appPortsStr := os.Getenv(AppPortsEnvVar)
+	var appPorts []int
 	if appPortsStr == "" {
 		log.Println("Received empty/no APP_PORTS env var! only listening to http on port 80!")
 		appPorts = make([]int, 0)
 	} else {
 		appPorts = parseAppPorts(appPortsStr)
 	}
+	SetFilterPorts(appPorts)
 	envVal := os.Getenv(maxHTTP2DataLenEnvVar)
 	if envVal == "" {
 		log.Println("Received empty/no HTTP2_DATA_SIZE_LIMIT env var! falling back to", maxHTTP2DataLenDefault)
@@ -250,7 +244,7 @@ func startPassiveTapper(harWriter *HarWriter, outboundLinkWriter *OutboundLinkWr
 		}
 	}
 
-	log.Printf("App Ports: %v", appPorts)
+	log.Printf("App Ports: %v", gSettings.filterPorts)
 
 	var handle *pcap.Handle
 	var err error
