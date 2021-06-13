@@ -34,7 +34,7 @@ type tcpStream struct {
 func (t *tcpStream) Accept(tcp *layers.TCP, ci gopacket.CaptureInfo, dir reassembly.TCPFlowDirection, nextSeq reassembly.Sequence, start *bool, ac reassembly.AssemblerContext) bool {
 	// FSM
 	if !t.tcpstate.CheckState(tcp, dir) {
-		//SilentError("FSM", "%s: Packet rejected by FSM (state:%s)", t.ident, t.tcpstate.String())
+		SilentError("FSM-rejection", "%s: Packet rejected by FSM (state:%s)", t.ident, t.tcpstate.String())
 		stats.rejectFsm++
 		if !t.fsmerr {
 			t.fsmerr = true
@@ -47,7 +47,7 @@ func (t *tcpStream) Accept(tcp *layers.TCP, ci gopacket.CaptureInfo, dir reassem
 	// Options
 	err := t.optchecker.Accept(tcp, ci, dir, nextSeq, start)
 	if err != nil {
-		//SilentError("OptionChecker", "%s: Packet rejected by OptionChecker: %s", t.ident, err)
+		SilentError("OptionChecker-rejection", "%s: Packet rejected by OptionChecker: %s", t.ident, err)
 		stats.rejectOpt++
 		if !*nooptcheck {
 			return false
