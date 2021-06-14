@@ -14,7 +14,7 @@ type requestResponsePair struct {
 	Response httpMessage `json:"response"`
 }
 
-type ConnectionID struct {
+type ConnectionInfo struct {
 	ClientIP   string
 	ClientPort string
 	ServerIP   string
@@ -22,10 +22,10 @@ type ConnectionID struct {
 }
 
 type httpMessage struct {
-	isRequest    bool
-	captureTime  time.Time
-	orig         interface{}
-	connectionID ConnectionID
+	isRequest      bool
+	captureTime    time.Time
+	orig           interface{}
+	connectionInfo ConnectionInfo
 }
 
 
@@ -44,7 +44,7 @@ func (matcher *requestResponseMatcher) registerRequest(ident string, request *ht
 	split := splitIdent(ident)
 	key := genKey(split)
 
-	connectionID := &ConnectionID{
+	connectionInfo := &ConnectionInfo{
 		ClientIP:   split[0],
 		ClientPort: split[2],
 		ServerIP:   split[1],
@@ -52,10 +52,10 @@ func (matcher *requestResponseMatcher) registerRequest(ident string, request *ht
 	}
 
 	requestHTTPMessage := httpMessage{
-		isRequest:       true,
-		captureTime:     captureTime,
-		orig:            request,
-		connectionID:      *connectionID,
+		isRequest:      true,
+		captureTime:    captureTime,
+		orig:           request,
+		connectionInfo: *connectionInfo,
 	}
 
 	if response, found := matcher.openMessagesMap.Pop(key); found {
