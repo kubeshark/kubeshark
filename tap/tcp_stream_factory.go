@@ -86,9 +86,9 @@ func (factory *tcpStreamFactory) WaitGoRoutines() {
 
 func (factory *tcpStreamFactory) shouldTap(dstIP string, dstPort int) bool {
 	if hostMode {
-		if inArrayString(gSettings.filterIpAddresses, fmt.Sprintf("%s:%d", dstIP, dstPort)) == true {
+		if inArrayString(gSettings.filterAuthorities, fmt.Sprintf("%s:%d", dstIP, dstPort)) == true {
 			return true
-		} else if inArrayString(gSettings.filterIpAddresses, dstIP) == true {
+		} else if inArrayString(gSettings.filterAuthorities, dstIP) == true {
 			return true
 		}
 		return false

@@ -49,8 +49,8 @@ func main() {
 
 		tapTargets := getTapTargets()
 		if tapTargets != nil {
-			tap.SetFilterIPs(tapTargets)
-			fmt.Println("Filtering for the following addresses:", tap.GetFilterIPs())
+			tap.SetFilterAuthorities(tapTargets)
+			fmt.Println("Filtering for the following authorities:", tap.GetFilterIPs())
 		}
 
 		harOutputChannel, outboundLinkOutputChannel := tap.StartPassiveTapper(tapOpts)

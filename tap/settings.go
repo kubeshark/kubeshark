@@ -2,12 +2,12 @@ package tap
 
 type globalSettings struct {
 	filterPorts       []int
-	filterIpAddresses []string
+	filterAuthorities []string
 }
 
 var gSettings = &globalSettings{
 	filterPorts:       []int{},
-	filterIpAddresses: []string{},
+	filterAuthorities: []string{},
 }
 
 func SetFilterPorts(ports []int) {
@@ -20,12 +20,12 @@ func GetFilterPorts() []int {
 	return ports
 }
 
-func SetFilterIPs(ipAddresses []string) {
-	gSettings.filterIpAddresses = ipAddresses
+func SetFilterAuthorities(ipAddresses []string) {
+	gSettings.filterAuthorities = ipAddresses
 }
 
 func GetFilterIPs() []string {
-	addresses := make([]string, len(gSettings.filterIpAddresses))
-	copy(addresses, gSettings.filterIpAddresses)
+	addresses := make([]string, len(gSettings.filterAuthorities))
+	copy(addresses, gSettings.filterAuthorities)
 	return addresses
 }
