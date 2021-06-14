@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -23,12 +24,13 @@ type PairChanItem struct {
 	Response        *http.Response
 	ResponseTime    time.Time
 	RequestSenderIp string
+	ConnectionInfo  *ConnectionInfo
 }
 
 func openNewHarFile(filename string) *HarFile {
 	file, err := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, readPermission)
 	if err != nil {
-		panic(fmt.Sprintf("Failed to open output file: %s (%v,%+v)", err, err, err))
+		log.Panicf("Failed to open output file: %s (%v,%+v)", err, err, err)
 	}
 
 	harFile := HarFile{file: file, entryCount: 0}
@@ -45,13 +47,13 @@ type HarFile struct {
 func NewEntry(request *http.Request, requestTime time.Time, response *http.Response, responseTime time.Time) (*har.Entry, error) {
 	harRequest, err := har.NewRequest(request, true)
 	if err != nil {
-		SilentError("convert-request-to-har", "Failed converting request to HAR %s (%v,%+v)\n", err, err, err)
+		SilentError("convert-request-to-har", "Failed converting request to HAR %s (%v,%+v)", err, err, err)
 		return nil, errors.New("Failed converting request to HAR")
 	}
 
 	harResponse, err := har.NewResponse(response, true)
 	if err != nil {
-		SilentError("convert-response-to-har", "Failed converting response to HAR %s (%v,%+v)\n", err, err, err)
+		SilentError("convert-response-to-har", "Failed converting response to HAR %s (%v,%+v)", err, err, err)
 		return nil, errors.New("Failed converting response to HAR")
 	}
 
@@ -62,7 +64,7 @@ func NewEntry(request *http.Request, requestTime time.Time, response *http.Respo
 
 		status, err := strconv.Atoi(response.Header.Get(":status"))
 		if err != nil {
-			SilentError("convert-response-status-for-har", "Failed converting status to int %s (%v,%+v)\n", err, err, err)
+			SilentError("convert-response-status-for-har", "Failed converting status to int %s (%v,%+v)", err, err, err)
 			return nil, errors.New("Failed converting response status to int for HAR")
 		}
 		harResponse.Status = status
@@ -102,7 +104,7 @@ func NewEntry(request *http.Request, requestTime time.Time, response *http.Respo
 func (f *HarFile) WriteEntry(harEntry *har.Entry) {
 	harEntryJson, err := json.Marshal(harEntry)
 	if err != nil {
-		SilentError("har-entry-marshal", "Failed converting har entry object to JSON%s (%v,%+v)\n", err, err, err)
+		SilentError("har-entry-marshal", "Failed converting har entry object to JSON%s (%v,%+v)", err, err, err)
 		return
 	}
 
@@ -116,7 +118,7 @@ func (f *HarFile) WriteEntry(harEntry *har.Entry) {
 	harEntryString := append([]byte(separator), harEntryJson...)
 
 	if _, err := f.file.Write(harEntryString); err != nil {
-		panic(fmt.Sprintf("Failed to write to output file: %s (%v,%+v)", err, err, err))
+		log.Panicf("Failed to write to output file: %s (%v,%+v)", err, err, err)
 	}
 
 	f.entryCount++
@@ -131,21 +133,21 @@ func (f *HarFile) Close() {
 
 	err := f.file.Close()
 	if err != nil {
-		panic(fmt.Sprintf("Failed to close output file: %s (%v,%+v)", err, err, err))
+		log.Panicf("Failed to close output file: %s (%v,%+v)", err, err, err)
 	}
 }
 
 func (f*HarFile) writeHeader() {
 	header := []byte(`{"log": {"version": "1.2", "creator": {"name": "Mizu", "version": "0.0.1"}, "entries": [`)
 	if _, err := f.file.Write(header); err != nil {
-		panic(fmt.Sprintf("Failed to write header to output file: %s (%v,%+v)", err, err, err))
+		log.Panicf("Failed to write header to output file: %s (%v,%+v)", err, err, err)
 	}
 }
 
 func (f*HarFile) writeTrailer() {
 	trailer := []byte("]}}")
 	if _, err := f.file.Write(trailer); err != nil {
-		panic(fmt.Sprintf("Failed to write trailer to output file: %s (%v,%+v)", err, err, err))
+		log.Panicf("Failed to write trailer to output file: %s (%v,%+v)", err, err, err)
 	}
 }
 
@@ -161,8 +163,8 @@ func NewHarWriter(outputDir string, maxEntries int) *HarWriter {
 }
 
 type OutputChannelItem struct {
-	HarEntry        *har.Entry
-	RequestSenderIp string
+	HarEntry       *har.Entry
+	ConnectionInfo *ConnectionInfo
 }
 
 type HarWriter struct {
@@ -174,20 +176,20 @@ type HarWriter struct {
 	done chan bool
 }
 
-func (hw *HarWriter) WritePair(request *http.Request, requestTime time.Time, response *http.Response, responseTime time.Time, requestSenderIp string) {
+func (hw *HarWriter) WritePair(request *http.Request, requestTime time.Time, response *http.Response, responseTime time.Time, connectionInfo *ConnectionInfo) {
 	hw.PairChan <- &PairChanItem{
-		Request:         request,
-		RequestTime:     requestTime,
-		Response:        response,
-		ResponseTime:    responseTime,
-		RequestSenderIp: requestSenderIp,
+		Request:        request,
+		RequestTime:    requestTime,
+		Response:       response,
+		ResponseTime:   responseTime,
+		ConnectionInfo: connectionInfo,
 	}
 }
 
 func (hw *HarWriter) Start() {
 	if hw.OutputDirPath != "" {
 		if err := os.MkdirAll(hw.OutputDirPath, os.ModePerm); err != nil {
-			panic(fmt.Sprintf("Failed to create output directory: %s (%v,%+v)", err, err, err))
+			log.Panicf("Failed to create output directory: %s (%v,%+v)", err, err, err)
 		}
 	}
 
@@ -210,8 +212,8 @@ func (hw *HarWriter) Start() {
 				}
 			} else {
 				hw.OutChan <- &OutputChannelItem{
-					HarEntry:        harEntry,
-					RequestSenderIp: pair.RequestSenderIp,
+					HarEntry:       harEntry,
+					ConnectionInfo: pair.ConnectionInfo,
 				}
 			}
 		}
@@ -226,6 +228,7 @@ func (hw *HarWriter) Start() {
 func (hw *HarWriter) Stop() {
 	close(hw.PairChan)
 	<-hw.done
+	close(hw.OutChan)
 }
 
 func (hw *HarWriter) openNewFile() {
@@ -241,7 +244,7 @@ func (hw *HarWriter) closeFile() {
 	filename := buildFilename(hw.OutputDirPath, time.Now())
 	err := os.Rename(tmpFilename, filename)
 	if err != nil {
-		SilentError("Rename-file", "cannot rename file: %s (%v,%+v)\n", err, err, err)
+		SilentError("Rename-file", "cannot rename file: %s (%v,%+v)", err, err, err)
 	}
 }
 

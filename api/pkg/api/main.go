@@ -6,11 +6,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/google/martian/har"
+	"github.com/up9inc/mizu/tap"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"mizuserver/pkg/database"
 	"mizuserver/pkg/models"
 	"mizuserver/pkg/resolver"
-	"mizuserver/pkg/tap"
 	"mizuserver/pkg/utils"
 	"net/url"
 	"os"
@@ -88,9 +88,17 @@ func startReadingChannel(outputItems <-chan *tap.OutputChannelItem) {
 	}
 
 	for item := range outputItems {
-		saveHarToDb(item.HarEntry, item.RequestSenderIp)
+		saveHarToDb(item.HarEntry, item.ConnectionInfo.ClientIP)
 	}
 }
+
+func StartReadingOutbound(outboundLinkChannel <-chan *tap.OutboundLink) {
+	// tcpStreamFactory will block on write to channel. Empty channel to unblock.
+	// TODO: Make write to channel optional.
+	for range outboundLinkChannel {
+	}
+}
+
 
 func saveHarToDb(entry *har.Entry, sender string) {
 	entryBytes, _ := json.Marshal(entry)

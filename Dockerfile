@@ -18,12 +18,14 @@ WORKDIR /app/api-build
 
 COPY api/go.mod api/go.sum ./
 COPY shared/go.mod shared/go.mod ../shared/
+COPY tap/go.mod tap/go.mod ../tap/
 RUN go mod download
 # cheap trick to make the build faster (As long as go.mod wasn't changes)
 RUN go list -f '{{.Path}}@{{.Version}}' -m all | sed 1d | grep -e 'go-cache' -e 'sqlite' | xargs go get
 
 # Copy and build api code
 COPY shared ../shared
+COPY tap ../tap
 COPY api .
 RUN go build -ldflags="-s -w" -o mizuagent .
 

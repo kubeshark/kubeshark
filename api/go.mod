@@ -18,6 +18,7 @@ require (
 	github.com/orcaman/concurrent-map v0.0.0-20210106121528-16402b402231
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/up9inc/mizu/shared v0.0.0
+	github.com/up9inc/mizu/tap v0.0.0
 	go.mongodb.org/mongo-driver v1.5.1
 	golang.org/x/net v0.0.0-20210421230115-4e50805a0758
 	gorm.io/driver/sqlite v1.1.4
@@ -28,3 +29,4 @@ require (
 )
 
 replace github.com/up9inc/mizu/shared v0.0.0 => ../shared
+replace github.com/up9inc/mizu/tap v0.0.0 => ../tap

@@ -5,7 +5,7 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
-	"mizuserver/pkg/tap"
+	"github.com/up9inc/mizu/tap"
 	"net/url"
 	"strings"
 

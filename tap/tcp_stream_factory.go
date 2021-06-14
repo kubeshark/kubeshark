@@ -15,22 +15,23 @@ import (
  * Generates a new tcp stream for each new tcp connection. Closes the stream when the connection closes.
  */
 type tcpStreamFactory struct {
-	wg        sync.WaitGroup
-	doHTTP    bool
-	harWriter *HarWriter
+	wg                 sync.WaitGroup
+	doHTTP             bool
+	harWriter          *HarWriter
+	outbountLinkWriter *OutboundLinkWriter
 }
 
 func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.TCP, ac reassembly.AssemblerContext) reassembly.Stream {
-	Debug("* NEW: %s %s\n", net, transport)
+	Debug("* NEW: %s %s", net, transport)
 	fsmOptions := reassembly.TCPSimpleFSMOptions{
 		SupportMissingEstablishment: *allowmissinginit,
 	}
-	Debug("Current App Ports: %v\n", appPorts)
+	Debug("Current App Ports: %v", gSettings.filterPorts)
 	dstIp := net.Dst().String()
 	dstPort := int(tcp.DstPort)
 
 	if factory.shouldNotifyOnOutboundLink(dstIp, dstPort) {
-		broadcastOutboundLink(net.Src().String(), dstIp, dstPort)
+		factory.outbountLinkWriter.WriteOutboundLink(net.Src().String(), dstIp, dstPort)
 	}
 	isHTTP := factory.shouldTap(dstIp, dstPort)
 	stream := &tcpStream{
@@ -85,14 +86,14 @@ func (factory *tcpStreamFactory) WaitGoRoutines() {
 
 func (factory *tcpStreamFactory) shouldTap(dstIP string, dstPort int) bool {
 	if hostMode {
-		if inArrayString(HostAppAddresses, fmt.Sprintf("%s:%d", dstIP, dstPort)) == true {
+		if inArrayString(gSettings.filterAuthorities, fmt.Sprintf("%s:%d", dstIP, dstPort)) == true {
 			return true
-		} else if inArrayString(HostAppAddresses, dstIP) == true {
+		} else if inArrayString(gSettings.filterAuthorities, dstIP) == true {
 			return true
 		}
 		return false
 	} else {
-		isTappedPort := dstPort == 80 || (appPorts != nil && (inArrayInt(appPorts, dstPort)))
+		isTappedPort := dstPort == 80 || (gSettings.filterPorts != nil && (inArrayInt(gSettings.filterPorts, dstPort)))
 		if !isTappedPort {
 			return false
 		}

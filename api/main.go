@@ -7,12 +7,12 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gorilla/websocket"
 	"github.com/up9inc/mizu/shared"
+	"github.com/up9inc/mizu/tap"
 	"mizuserver/pkg/api"
 	"mizuserver/pkg/middleware"
 	"mizuserver/pkg/models"
 	"mizuserver/pkg/routes"
 	"mizuserver/pkg/sensitiveDataFiltering"
-	"mizuserver/pkg/tap"
 	"mizuserver/pkg/utils"
 	"os"
 	"os/signal"
@@ -26,16 +26,21 @@ var aggregatorAddress = flag.String("aggregator-address", "", "Address of mizu c
 
 func main() {
 	flag.Parse()
+	hostMode := os.Getenv(shared.HostModeEnvVar) == "1"
+	tapOpts := &tap.TapOpts{HostMode: hostMode}
 
 	if !*shouldTap && !*aggregator && !*standalone{
 		panic("One of the flags --tap, --api or --standalone must be provided")
 	}
 
 	if *standalone {
-		harOutputChannel := tap.StartPassiveTapper()
+		harOutputChannel, outboundLinkOutputChannel := tap.StartPassiveTapper(tapOpts)
 		filteredHarChannel := make(chan *tap.OutputChannelItem)
+
 		go filterHarHeaders(harOutputChannel, filteredHarChannel, getTrafficFilteringOptions())
 		go api.StartReadingEntries(filteredHarChannel, nil)
+		go api.StartReadingOutbound(outboundLinkOutputChannel)
+
 		hostApi(nil)
 	} else if *shouldTap {
 		if *aggregatorAddress == "" {
@@ -44,21 +49,26 @@ func main() {
 
 		tapTargets := getTapTargets()
 		if tapTargets != nil {
-			tap.HostAppAddresses = tapTargets
-			fmt.Println("Filtering for the following addresses:", tap.HostAppAddresses)
+			tap.SetFilterAuthorities(tapTargets)
+			fmt.Println("Filtering for the following authorities:", tap.GetFilterIPs())
 		}
 
-		harOutputChannel := tap.StartPassiveTapper()
+		harOutputChannel, outboundLinkOutputChannel := tap.StartPassiveTapper(tapOpts)
+
 		socketConnection, err := shared.ConnectToSocketServer(*aggregatorAddress, shared.DEFAULT_SOCKET_RETRIES, shared.DEFAULT_SOCKET_RETRY_SLEEP_TIME, false)
 		if err != nil {
 			panic(fmt.Sprintf("Error connecting to socket server at %s %v", *aggregatorAddress, err))
 		}
+
 		go pipeChannelToSocket(socketConnection, harOutputChannel)
+		go api.StartReadingOutbound(outboundLinkOutputChannel)
 	} else if *aggregator {
 		socketHarOutChannel := make(chan *tap.OutputChannelItem, 1000)
 		filteredHarChannel := make(chan *tap.OutputChannelItem)
+
 		go api.StartReadingEntries(filteredHarChannel, nil)
 		go filterHarHeaders(socketHarOutChannel, filteredHarChannel, getTrafficFilteringOptions())
+
 		hostApi(socketHarOutChannel)
 	}
 
