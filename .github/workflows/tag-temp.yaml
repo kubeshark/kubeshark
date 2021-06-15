@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Tag
-        uses: K-Phoen/semver-release-action@master
+        uses: ChorusOne/semver-release-action@workaround-for-org-errors
         with:
           release_branch: my-temp-release-check
           release_strategy: tag
