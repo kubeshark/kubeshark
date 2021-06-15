@@ -1,0 +1,19 @@
+# .github/workflows/release.yml
+name: Release
+
+on:
+  push:
+    branches:
+      - my-temp-release-check
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Tag
+        uses: K-Phoen/semver-release-action@master
+        with:
+          release_branch: my-temp-release-check
+          release_strategy: tag
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
