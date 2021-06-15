@@ -1,5 +1,4 @@
-# .github/workflows/release.yml
-name: Release
+name: Tag
 
 on:
   push:
@@ -11,9 +10,29 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Tag
-        uses: ChorusOne/semver-release-action@workaround-for-org-errors
+        uses: krogon/semver-release-action@master
         with:
           release_branch: my-temp-release-check
           release_strategy: tag
+          default_increment: patch
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+# name: Tag
+
+# on:
+#   push:
+#     branches:
+#       - my-temp-release-check
+
+# jobs:
+#   build:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Tag
+#         uses: ChorusOne/semver-release-action@workaround-for-org-errors
+#         with:
+#           release_branch: my-temp-release-check
+#           release_strategy: tag
+#         env:
+#           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
