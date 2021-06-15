@@ -16,7 +16,8 @@ import (
 )
 
 const readPermission = 0644
-const tempFilenamePrefix = "har_writer"
+const harFilenameSuffix = ".har"
+const tempFilenameSuffix = ".har.tmp"
 
 type PairChanItem struct {
 	Request         *http.Request
@@ -232,7 +233,7 @@ func (hw *HarWriter) Stop() {
 }
 
 func (hw *HarWriter) openNewFile() {
-	filename := filepath.Join(os.TempDir(), fmt.Sprintf("%s_%d", tempFilenamePrefix, time.Now().UnixNano()))
+	filename := buildFilename(hw.OutputDirPath, time.Now(), tempFilenameSuffix)
 	hw.currentFile = openNewHarFile(filename)
 }
 
@@ -241,15 +242,15 @@ func (hw *HarWriter) closeFile() {
 	tmpFilename := hw.currentFile.file.Name()
 	hw.currentFile = nil
 
-	filename := buildFilename(hw.OutputDirPath, time.Now())
+	filename := buildFilename(hw.OutputDirPath, time.Now(), harFilenameSuffix)
 	err := os.Rename(tmpFilename, filename)
 	if err != nil {
 		SilentError("Rename-file", "cannot rename file: %s (%v,%+v)", err, err, err)
 	}
 }
 
-func buildFilename(dir string, t time.Time) string {
+func buildFilename(dir string, t time.Time, suffix string) string {
 	// (epoch time in nanoseconds)__(YYYY_Month_DD__hh-mm-ss).har
-	filename := fmt.Sprintf("%d__%s.har", t.UnixNano(), t.Format("2006_Jan_02__15-04-05"))
+	filename := fmt.Sprintf("%d__%s%s", t.UnixNano(), t.Format("2006_Jan_02__15-04-05"), suffix)
 	return filepath.Join(dir, filename)
 }
