@@ -59,6 +59,7 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.T
 			hexdump:  *hexdump,
 			parent:   stream,
 			isClient: true,
+			isOutgoing: props.isOutgoing,
 			harWriter: factory.harWriter,
 		}
 		stream.server = httpReader{
@@ -72,6 +73,7 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.T
 			},
 			hexdump: *hexdump,
 			parent:  stream,
+			isOutgoing: props.isOutgoing,
 			harWriter: factory.harWriter,
 		}
 		factory.wg.Add(2)
@@ -89,23 +91,23 @@ func (factory *tcpStreamFactory) WaitGoRoutines() {
 func (factory *tcpStreamFactory) getStreamProps(srcIP string, dstIP string, dstPort int) *streamProps {
 	if hostMode {
 		if inArrayString(gSettings.filterAuthorities, fmt.Sprintf("%s:%d", dstIP, dstPort)) == true {
-			return &streamProps{isTapTarget: true}
+			return &streamProps{isTapTarget: true, isOutgoing: false}
 		} else if inArrayString(gSettings.filterAuthorities, dstIP) == true {
-			return &streamProps{isTapTarget: true}
+			return &streamProps{isTapTarget: true, isOutgoing: false}
 		} else if *anydirection && inArrayString(gSettings.filterAuthorities, srcIP) == true {
-			return &streamProps{isTapTarget: true}
+			return &streamProps{isTapTarget: true, isOutgoing: true}
 		}
 		return &streamProps{isTapTarget: false}
 	} else {
 		isTappedPort := dstPort == 80 || (gSettings.filterPorts != nil && (inArrayInt(gSettings.filterPorts, dstPort)))
 		if !isTappedPort {
-			return &streamProps{isTapTarget: false}
+			return &streamProps{isTapTarget: false, isOutgoing: false}
 		}
 
 		isOutgoing := !inArrayString(ownIps, dstIP)
 
 		if !*anydirection && isOutgoing {
-			return &streamProps{isTapTarget: false}
+			return &streamProps{isTapTarget: false, isOutgoing: isOutgoing}
 		}
 
 		return &streamProps{isTapTarget: true}
@@ -122,5 +124,6 @@ func (factory *tcpStreamFactory) shouldNotifyOnOutboundLink(dstIP string, dstPor
 
 type streamProps struct {
 	isTapTarget bool
+	isOutgoing bool
 }
 

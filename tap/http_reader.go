@@ -29,6 +29,7 @@ type ConnectionInfo struct {
 	ClientPort string
 	ServerIP   string
 	ServerPort string
+	IsOutgoing bool
 }
 
 func (tid *tcpID) String() string {
@@ -45,6 +46,7 @@ type httpReader struct {
 	tcpID         tcpID
 	isClient      bool
 	isHTTP2       bool
+	isOutgoing    bool
 	msgQueue      chan httpReaderDataMsg // Channel of captured reassembled tcp payload
 	data          []byte
 	captureTime   time.Time
@@ -152,6 +154,7 @@ func (h *httpReader) handleHTTP2Stream() error {
 					ClientPort: h.tcpID.srcPort,
 					ServerIP:   h.tcpID.dstIP,
 					ServerPort: h.tcpID.dstPort,
+					IsOutgoing: h.isOutgoing,
 				},
 			)
 		}
@@ -196,6 +199,7 @@ func (h *httpReader) handleHTTP1ClientStream(b *bufio.Reader) error {
 					ClientPort: h.tcpID.srcPort,
 					ServerIP:   h.tcpID.dstIP,
 					ServerPort: h.tcpID.dstPort,
+					IsOutgoing: h.isOutgoing,
 				},
 			)
 		}
@@ -261,6 +265,7 @@ func (h *httpReader) handleHTTP1ServerStream(b *bufio.Reader) error {
 					ClientPort: h.tcpID.srcPort,
 					ServerIP:   h.tcpID.dstIP,
 					ServerPort: h.tcpID.dstPort,
+					IsOutgoing: h.isOutgoing,
 				},
 			)
 		}
