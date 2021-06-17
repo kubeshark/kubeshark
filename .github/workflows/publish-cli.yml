@@ -15,5 +15,20 @@ jobs:
         with:
           service_account_key: ${{ secrets.GCR_JSON_KEY }}
           export_default_credentials: true
+      - name: Get base image name
+        shell: bash
+        run: |
+          echo "##[set-output name=cal_ver;]$(echo $(date +'%y.%m.%d'))"
+          echo "##[set-output name=build_time_utc;]$(echo $(date -u))"
+          echo "##[set-output name=build_timestamp;]$(echo $(date +%s))"
+          echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
+        id: version_parameters
       - name: Build and Push CLI
-        run: make push-cli
+        run: make push-cli CAL_VER='${{ steps.version_parameters.outputs.cal_ver }}' BUILD_TIME_UTC='${{ steps.version_parameters.outputs.build_time_utc }}' BUILD_TIMESTAMP='${{ steps.version_parameters.outputs.build_timestamp }}'
+      - if: github.ref == 'refs/heads/main'
+        uses: ncipollo/release-action@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          artifacts: "cli/bin/*"
+          commit: ${{ steps.version_parameters.outputs.branch }}
+          tag: ${{ steps.version_parameters.outputs.cal_ver }}
