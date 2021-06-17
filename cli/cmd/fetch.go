@@ -5,8 +5,10 @@ import (
 )
 
 type MizuFetchOptions struct {
-	Limit        uint16
-	Directory	 string
+	FromTimestamp uint64
+	ToTimestamp   uint64
+	Directory     string
+	MizuPort      uint
 }
 
 var mizuFetchOptions = MizuFetchOptions{}
@@ -23,6 +25,8 @@ var fetchCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(fetchCmd)
 
-	fetchCmd.Flags().Uint16VarP(&mizuFetchOptions.Limit, "limit", "l", 1000, "Provide a custom limit for entries to fetch")
 	fetchCmd.Flags().StringVarP(&mizuFetchOptions.Directory, "directory", "d", ".", "Provide a custom directory for fetched entries")
+	fetchCmd.Flags().Uint64Var(&mizuFetchOptions.FromTimestamp, "from", 0, "Custom start timestamp for fetched entries")
+	fetchCmd.Flags().Uint64Var(&mizuFetchOptions.ToTimestamp, "to", 0, "Custom end timestamp fetched entries")
+	fetchCmd.Flags().UintVarP(&mizuFetchOptions.MizuPort, "port", "p", 8899, "Custom port for mizu")
 }

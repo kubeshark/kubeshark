@@ -9,6 +9,7 @@ import (
 	"mizuserver/pkg/models"
 	"mizuserver/pkg/utils"
 	"mizuserver/pkg/validation"
+	"time"
 )
 
 const (
@@ -74,12 +75,17 @@ func GetHARs(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(err)
 	}
-
+	var timestampFrom, timestampTo int64
+	if entriesFilter.TimestampFrom < 0 {
+		timestampFrom = 0
+	}
+	if entriesFilter.TimestampTo <= 0 {
+		timestampTo = time.Now().UnixNano() / int64(time.Millisecond)
+	}
 	var entries []models.MizuEntry
 	database.GetEntriesTable().
+		Where(fmt.Sprintf("timestamp BETWEEN %v AND %v", timestampFrom, timestampTo)).
 		Order(fmt.Sprintf("timestamp %s", order)).
-		// Where(fmt.Sprintf("timestamp %s %v", operatorSymbol, entriesFilter.Timestamp)).
-		Limit(1000).
 		Find(&entries)
 
 	if len(entries) > 0 {
