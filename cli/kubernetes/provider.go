@@ -238,7 +238,7 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	agentContainer.WithImage(podImage)
 	agentContainer.WithImagePullPolicy(core.PullAlways)
 	agentContainer.WithSecurityContext(applyconfcore.SecurityContext().WithPrivileged(privileged))
-	agentContainer.WithCommand("./mizuagent", "-i", "any", "--tap", "--hardump", "--aggregator-address", fmt.Sprintf("ws://%s/wsTapper", aggregatorPodIp))
+	agentContainer.WithCommand("./mizuagent", "-i", "any", "--tap", "--anydirection", "--hardump", "--aggregator-address", fmt.Sprintf("ws://%s/wsTapper", aggregatorPodIp))
 	agentContainer.WithEnv(
 		applyconfcore.EnvVar().WithName(shared.HostModeEnvVar).WithValue("1"),
 		applyconfcore.EnvVar().WithName(shared.TappedAddressesPerNodeDictEnvVar).WithValue(string(nodeToTappedPodIPMapJsonStr)),
