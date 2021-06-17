@@ -24,6 +24,13 @@ type tcpID struct {
 	dstPort string
 }
 
+type ConnectionInfo struct {
+	ClientIP   string
+	ClientPort string
+	ServerIP   string
+	ServerPort string
+}
+
 func (tid *tcpID) String() string {
 	return fmt.Sprintf("%s->%s %s->%s", tid.srcIP, tid.dstIP, tid.srcPort, tid.dstPort)
 }
@@ -140,7 +147,12 @@ func (h *httpReader) handleHTTP2Stream() error {
 				reqResPair.Request.captureTime,
 				reqResPair.Response.orig.(*http.Response),
 				reqResPair.Response.captureTime,
-				&reqResPair.Request.connectionInfo,
+				&ConnectionInfo{
+					ClientIP:   h.tcpID.srcIP,
+					ClientPort: h.tcpID.srcPort,
+					ServerIP:   h.tcpID.dstIP,
+					ServerPort: h.tcpID.dstPort,
+				},
 			)
 		}
 	}
@@ -179,7 +191,12 @@ func (h *httpReader) handleHTTP1ClientStream(b *bufio.Reader) error {
 				reqResPair.Request.captureTime,
 				reqResPair.Response.orig.(*http.Response),
 				reqResPair.Response.captureTime,
-				&reqResPair.Request.connectionInfo,
+				&ConnectionInfo{
+					ClientIP:   h.tcpID.srcIP,
+					ClientPort: h.tcpID.srcPort,
+					ServerIP:   h.tcpID.dstIP,
+					ServerPort: h.tcpID.dstPort,
+				},
 			)
 		}
 	}
@@ -239,7 +256,12 @@ func (h *httpReader) handleHTTP1ServerStream(b *bufio.Reader) error {
 				reqResPair.Request.captureTime,
 				reqResPair.Response.orig.(*http.Response),
 				reqResPair.Response.captureTime,
-				&reqResPair.Request.connectionInfo,
+				&ConnectionInfo{
+					ClientIP:   h.tcpID.srcIP,
+					ClientPort: h.tcpID.srcPort,
+					ServerIP:   h.tcpID.dstIP,
+					ServerPort: h.tcpID.dstPort,
+				},
 			)
 		}
 	}
