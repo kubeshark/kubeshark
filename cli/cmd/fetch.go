@@ -5,8 +5,8 @@ import (
 )
 
 type MizuFetchOptions struct {
-	FromTimestamp uint64
-	ToTimestamp   uint64
+	FromTimestamp int64
+	ToTimestamp   int64
 	Directory     string
 	MizuPort      uint
 }
@@ -26,7 +26,7 @@ func init() {
 	rootCmd.AddCommand(fetchCmd)
 
 	fetchCmd.Flags().StringVarP(&mizuFetchOptions.Directory, "directory", "d", ".", "Provide a custom directory for fetched entries")
-	fetchCmd.Flags().Uint64Var(&mizuFetchOptions.FromTimestamp, "from", 0, "Custom start timestamp for fetched entries")
-	fetchCmd.Flags().Uint64Var(&mizuFetchOptions.ToTimestamp, "to", 0, "Custom end timestamp fetched entries")
+	fetchCmd.Flags().Int64Var(&mizuFetchOptions.FromTimestamp, "from", 0, "Custom start timestamp for fetched entries")
+	fetchCmd.Flags().Int64Var(&mizuFetchOptions.ToTimestamp, "to", 0, "Custom end timestamp fetched entries")
 	fetchCmd.Flags().UintVarP(&mizuFetchOptions.MizuPort, "port", "p", 8899, "Custom port for mizu")
 }

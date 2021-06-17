@@ -48,8 +48,8 @@ type EntriesFilter struct {
 }
 
 type HarFetchRequestBody struct {
-	TimestampFrom int64 `query:"from"`
-	TimestampTo   int64 `query:"to"`
+	From int64 `query:"from"`
+	To   int64 `query:"to"`
 }
 
 type WebSocketEntryMessage struct {

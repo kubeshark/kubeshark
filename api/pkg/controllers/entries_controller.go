@@ -1,6 +1,8 @@
 package controllers
 
 import (
+	"bytes"
+	"compress/zlib"
 	"encoding/json"
 	"fmt"
 	"github.com/gofiber/fiber/v2"
@@ -75,13 +77,20 @@ func GetHARs(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(err)
 	}
+
 	var timestampFrom, timestampTo int64
-	if entriesFilter.TimestampFrom < 0 {
+
+	if entriesFilter.From < 0 {
 		timestampFrom = 0
+	} else {
+		timestampFrom = entriesFilter.From
 	}
-	if entriesFilter.TimestampTo <= 0 {
+	if entriesFilter.To <= 0 {
 		timestampTo = time.Now().UnixNano() / int64(time.Millisecond)
+	} else {
+		timestampTo = entriesFilter.To
 	}
+
 	var entries []models.MizuEntry
 	database.GetEntriesTable().
 		Where(fmt.Sprintf("timestamp BETWEEN %v AND %v", timestampFrom, timestampTo)).
@@ -129,6 +138,57 @@ func GetHARs(c *fiber.Ctx) error {
 	}
 	buffer := utils.ZipData(retObj)
 	return c.Status(fiber.StatusOK).SendStream(buffer)
+}
+
+func GetFullEntries(c *fiber.Ctx) error {
+	entriesFilter := &models.HarFetchRequestBody{}
+	order := OrderDesc
+	if err := c.QueryParser(entriesFilter); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(err)
+	}
+	err := validation.Validate(entriesFilter)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(err)
+	}
+
+	var timestampFrom, timestampTo int64
+
+	if entriesFilter.From < 0 {
+		timestampFrom = 0
+	} else {
+		timestampFrom = entriesFilter.From
+	}
+	if entriesFilter.To <= 0 {
+		timestampTo = time.Now().UnixNano() / int64(time.Millisecond)
+	} else {
+		timestampTo = entriesFilter.To
+	}
+
+	var entries []models.MizuEntry
+	database.GetEntriesTable().
+		Where(fmt.Sprintf("timestamp BETWEEN %v AND %v", timestampFrom, timestampTo)).
+		Order(fmt.Sprintf("timestamp %s", order)).
+		Find(&entries)
+
+	if len(entries) > 0 {
+		// the entries always order from oldest to newest so we should revers
+		utils.ReverseSlice(entries)
+	}
+
+	harsArray := make([]har.Entry, 0)
+	for _, entryData := range entries {
+		var harEntry har.Entry
+		_ = json.Unmarshal([]byte(entryData.Entry), &harEntry)
+		harsArray = append(harsArray, harEntry)
+	}
+
+	var in bytes.Buffer
+	w := zlib.NewWriter(&in)
+	harBytes, _ := json.Marshal(harsArray)
+	_, _= w.Write(harBytes)
+	_ = w.Close()
+
+	return c.Status(fiber.StatusOK).Send(harBytes)
 }
 
 func GetEntry(c *fiber.Ctx) error {
