@@ -12,15 +12,15 @@ type MizuEntry struct {
 	ID                  uint `gorm:"primarykey"`
 	CreatedAt           time.Time
 	UpdatedAt           time.Time
-	Entry               string  `json:"entry,omitempty" gorm:"column:entry"`
-	EntryId             string  `json:"entryId" gorm:"column:entryId"`
-	Url                 string  `json:"url" gorm:"column:url"`
-	Method              string  `json:"method" gorm:"column:method"`
-	Status              int     `json:"status" gorm:"column:status"`
-	RequestSenderIp     string  `json:"requestSenderIp" gorm:"column:requestSenderIp"`
-	Service             string  `json:"service" gorm:"column:service"`
-	Timestamp           int64   `json:"timestamp" gorm:"column:timestamp"`
-	Path                string  `json:"path" gorm:"column:path"`
+	Entry               string `json:"entry,omitempty" gorm:"column:entry"`
+	EntryId             string `json:"entryId" gorm:"column:entryId"`
+	Url                 string `json:"url" gorm:"column:url"`
+	Method              string `json:"method" gorm:"column:method"`
+	Status              int    `json:"status" gorm:"column:status"`
+	RequestSenderIp     string `json:"requestSenderIp" gorm:"column:requestSenderIp"`
+	Service             string `json:"service" gorm:"column:service"`
+	Timestamp           int64  `json:"timestamp" gorm:"column:timestamp"`
+	Path                string `json:"path" gorm:"column:path"`
 	ResolvedSource      string `json:"resolvedSource,omitempty" gorm:"column:resolvedSource"`
 	ResolvedDestination string `json:"resolvedDestination,omitempty" gorm:"column:resolvedDestination"`
 }
@@ -37,7 +37,7 @@ type BaseEntryDetails struct {
 }
 
 type EntryData struct {
-	Entry               string  `json:"entry,omitempty"`
+	Entry               string `json:"entry,omitempty"`
 	ResolvedDestination string `json:"resolvedDestination,omitempty" gorm:"column:resolvedDestination"`
 }
 
@@ -48,14 +48,14 @@ type EntriesFilter struct {
 }
 
 type HarFetchRequestBody struct {
-	Limit     int    `query:"limit"`
+	From int64 `query:"from"`
+	To   int64 `query:"to"`
 }
 
 type WebSocketEntryMessage struct {
 	*shared.WebSocketMessageMetadata
 	Data *BaseEntryDetails `json:"data,omitempty"`
 }
-
 
 type WebSocketTappedEntryMessage struct {
 	*shared.WebSocketMessageMetadata
@@ -82,7 +82,6 @@ func CreateWebsocketTappedEntryMessage(base *tap.OutputChannelItem) ([]byte, err
 	return json.Marshal(message)
 }
 
-
 // ExtendedHAR is the top level object of a HAR log.
 type ExtendedHAR struct {
 	Log *ExtendedLog `json:"log"`
@@ -100,5 +99,5 @@ type ExtendedLog struct {
 
 type ExtendedCreator struct {
 	*har.Creator
-	Source         string `json:"_source"`
+	Source string `json:"_source"`
 }
