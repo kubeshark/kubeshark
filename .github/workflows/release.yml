@@ -3,8 +3,7 @@ name: Release
 on:
   push:
     branches:
-      - develop
-      - main
+      - my-temp-release-check
 
 jobs:
   build:
