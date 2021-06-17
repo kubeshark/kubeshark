@@ -12,6 +12,7 @@ interface HAREntry {
     url?: string;
     isCurrentRevision?: boolean;
     timestamp: Date;
+	isOutgoing?: boolean;
 }
 
 interface HAREntryProps {
@@ -23,7 +24,7 @@ interface HAREntryProps {
 export const HarEntry: React.FC<HAREntryProps> = ({entry, setFocusedEntryId, isSelected}) => {
 
     return <>
-        <div id={entry.id} className={`${styles.row} ${isSelected ? styles.rowSelected : ''}`} onClick={() => setFocusedEntryId(entry.id)}>
+		<div id={entry.id} className={`${styles.row} ${isSelected ? styles.rowSelected : ''} ${entry.isOutgoing ? styles.rowOutgoing : ''}`} onClick={() => setFocusedEntryId(entry.id)}>
             {entry.statusCode && <div>
                 <StatusCode statusCode={entry.statusCode}/>
             </div>}
