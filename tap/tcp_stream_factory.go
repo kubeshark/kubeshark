@@ -27,13 +27,14 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.T
 		SupportMissingEstablishment: *allowmissinginit,
 	}
 	Debug("Current App Ports: %v", gSettings.filterPorts)
+	srcIp := net.Src().String()
 	dstIp := net.Dst().String()
 	dstPort := int(tcp.DstPort)
 
 	if factory.shouldNotifyOnOutboundLink(dstIp, dstPort) {
 		factory.outbountLinkWriter.WriteOutboundLink(net.Src().String(), dstIp, dstPort)
 	}
-	isHTTP := factory.shouldTap(dstIp, dstPort)
+	isHTTP := factory.shouldTap(srcIp, dstIp, dstPort)
 	stream := &tcpStream{
 		net:        net,
 		transport:  transport,
@@ -84,11 +85,13 @@ func (factory *tcpStreamFactory) WaitGoRoutines() {
 	factory.wg.Wait()
 }
 
-func (factory *tcpStreamFactory) shouldTap(dstIP string, dstPort int) bool {
+func (factory *tcpStreamFactory) shouldTap(srcIP string, dstIP string, dstPort int) bool {
 	if hostMode {
 		if inArrayString(gSettings.filterAuthorities, fmt.Sprintf("%s:%d", dstIP, dstPort)) == true {
 			return true
 		} else if inArrayString(gSettings.filterAuthorities, dstIP) == true {
+			return true
+		} else if *anydirection && inArrayString(gSettings.filterAuthorities, srcIP) == true {
 			return true
 		}
 		return false
