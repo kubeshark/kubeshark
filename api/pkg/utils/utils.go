@@ -78,6 +78,7 @@ func GetResolvedBaseEntry(entry models.MizuEntry) models.BaseEntryDetails {
 		Method:          entry.Method,
 		Timestamp:       entry.Timestamp,
 		RequestSenderIp: entry.RequestSenderIp,
+		IsOutgoing:      entry.IsOutgoing,
 	}
 }
 
