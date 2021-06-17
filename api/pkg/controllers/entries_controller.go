@@ -1,8 +1,6 @@
 package controllers
 
 import (
-	"bytes"
-	"compress/zlib"
 	"encoding/json"
 	"fmt"
 	"github.com/gofiber/fiber/v2"
@@ -175,20 +173,13 @@ func GetFullEntries(c *fiber.Ctx) error {
 		utils.ReverseSlice(entries)
 	}
 
-	harsArray := make([]har.Entry, 0)
+	entriesArray := make([]har.Entry, 0)
 	for _, entryData := range entries {
 		var harEntry har.Entry
 		_ = json.Unmarshal([]byte(entryData.Entry), &harEntry)
-		harsArray = append(harsArray, harEntry)
+		entriesArray = append(entriesArray, harEntry)
 	}
-
-	var in bytes.Buffer
-	w := zlib.NewWriter(&in)
-	harBytes, _ := json.Marshal(harsArray)
-	_, _= w.Write(harBytes)
-	_ = w.Close()
-
-	return c.Status(fiber.StatusOK).Send(harBytes)
+	return c.Status(fiber.StatusOK).JSON(entriesArray)
 }
 
 func GetEntry(c *fiber.Ctx) error {
