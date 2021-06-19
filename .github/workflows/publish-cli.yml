@@ -2,9 +2,8 @@ name: public-cli
 on:
   push:
     branches:
-      - 'my-temp-release-check'
-#      - 'develop'
-#      - 'main'
+      - 'develop'
+      - 'main'
 jobs:
   docker:
     runs-on: ubuntu-latest
@@ -16,21 +15,18 @@ jobs:
         with:
           service_account_key: ${{ secrets.GCR_JSON_KEY }}
           export_default_credentials: true
-
       - uses: haya14busa/action-cond@v1
         id: condval
         with:
           cond: ${{ github.ref == 'refs/heads/main' }}
           if_true: "patch"
           if_false: "prepatch"
-
       - name: Auto Increment Semver Action
         uses: MCKanpolat/auto-semver-action@1.0.5
         id: versioning
         with:
           releaseType: ${{ steps.condval.outputs.value }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Get base image name
         shell: bash
         run: |
@@ -41,7 +37,6 @@ jobs:
       - name: Build and Push CLI
         run: make push-cli SEM_VER='${{ steps.versioning.outputs.version }}' BUILD_TIME_UTC='${{ steps.version_parameters.outputs.build_time_utc }}' BUILD_TIMESTAMP='${{ steps.version_parameters.outputs.build_timestamp }}'
       - name: publish
-      #  if: github.ref == 'refs/heads/main'
         uses: ncipollo/release-action@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
