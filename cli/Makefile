@@ -5,14 +5,6 @@ GIT_VERSION=$(shell git branch --show-current | tr '[:upper:]' '[:lower:]')
 BUILD_TIMESTAMP=$(shell date +%s)
 BUILD_TIME_UTC=$(shell date -u)
 
-ifeq ($(GIT_BRANCH), master)
-	# SECONDS_SINCE_START_OF_DAY=$(shell echo $(( $(date -u '+%-H * 3600 + %-M * 60 + %-S') ))) # TODO: in case we do more than once a day
-	CAL_VER=$(shell date +'%y.%m.%d')
-else
-	CAL_VER=$(shell date +'%y.%m.%d.%H.%M.%S')
-endif
-
-
 .PHONY: help
 .DEFAULT_GOAL := help
 
@@ -25,9 +17,9 @@ install:
 build:	## build mizu CLI binary (select platform via GOOS / GOARCH env variables)
 	go build -ldflags="-X 'github.com/up9inc/mizu/cli/mizu.GitCommitHash=$(COMMIT_HASH)' \
 					   -X 'github.com/up9inc/mizu/cli/mizu.Branch=$(GIT_BRANCH)' \
-					   -X 'github.com/up9inc/mizu/cli/mizu.CalVer=$(CAL_VER)' \
 					   -X 'github.com/up9inc/mizu/cli/mizu.BuildTimestamp=$(BUILD_TIMESTAMP)' \
-					   -X 'github.com/up9inc/mizu/cli/mizu.BuildTimeUTC=$(BUILD_TIME_UTC)'" \
+					   -X 'github.com/up9inc/mizu/cli/mizu.BuildTimeUTC=$(BUILD_TIME_UTC)' \
+					   -X 'github.com/up9inc/mizu/cli/mizu.SemVer=$(SEM_VER)'" \
 					   -o bin/mizu_$(FOLDER) mizu.go
 
 build-all:  ## build for all supported platforms
