@@ -1,4 +1,4 @@
-FOLDER=$(GOOS)_$(GOARCH)
+SUFFIX=$(GOOS)_$(GOARCH)
 COMMIT_HASH=$(shell git rev-parse HEAD)
 GIT_BRANCH=$(shell git branch --show-current | tr '[:upper:]' '[:lower:]')
 GIT_VERSION=$(shell git branch --show-current | tr '[:upper:]' '[:lower:]')
@@ -18,10 +18,12 @@ build:	## build mizu CLI binary (select platform via GOOS / GOARCH env variables
 					   -X 'github.com/up9inc/mizu/cli/mizu.Branch=$(GIT_BRANCH)' \
 					   -X 'github.com/up9inc/mizu/cli/mizu.BuildTimestamp=$(BUILD_TIMESTAMP)' \
 					   -X 'github.com/up9inc/mizu/cli/mizu.SemVer=$(SEM_VER)'" \
-					   -o bin/mizu_$(FOLDER) mizu.go && echo 'checksum for ${FOLDER}\n\t my check sum' >> bin/checksums.txt
+					   -o bin/mizu_$(SUFFIX) mizu.go 
+	(cd bin; shasum -a 256 mizu_${SUFFIX} >> checksums.txt )
 
 build-all:  ## build for all supported platforms
 	@echo "Compiling for every OS and Platform"
+	@echo "SHA256 checksums for compiled binaries, run shasum -a 256 -c mizu_OS_ARCH to verify" >  bin/checksums.txt
 	@$(MAKE) build GOOS=darwin GOARCH=amd64
 	@$(MAKE) build GOOS=linux GOARCH=amd64
 	@# $(MAKE) GOOS=windows GOARCH=amd64
