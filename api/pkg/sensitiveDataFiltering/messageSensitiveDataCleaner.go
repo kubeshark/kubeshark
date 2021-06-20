@@ -15,8 +15,8 @@ import (
 )
 
 func FilterSensitiveInfoFromHarRequest(harOutputItem *tap.OutputChannelItem, options *shared.TrafficFilteringOptions) {
-	filterHarHeaders(harOutputItem.HarEntry.Request.Headers)
-	filterHarHeaders(harOutputItem.HarEntry.Response.Headers)
+	harOutputItem.HarEntry.Request.Headers = filterHarHeaders(harOutputItem.HarEntry.Request.Headers)
+	harOutputItem.HarEntry.Response.Headers = filterHarHeaders(harOutputItem.HarEntry.Response.Headers)
 
 	harOutputItem.HarEntry.Request.Cookies = make([]har.Cookie, 0, 0)
 	harOutputItem.HarEntry.Response.Cookies = make([]har.Cookie, 0, 0)
@@ -44,12 +44,19 @@ func FilterSensitiveInfoFromHarRequest(harOutputItem *tap.OutputChannelItem, opt
 	}
 }
 
-func filterHarHeaders(headers []har.Header) {
+func filterHarHeaders(headers []har.Header) []har.Header {
+	newHeaders := make([]har.Header, 0)
 	for i, header := range headers {
-		if isFieldNameSensitive(header.Name) {
+		if strings.ToLower(header.Name) == "cookie" {
+			continue
+		} else if isFieldNameSensitive(header.Name) {
+			newHeaders = append(newHeaders, har.Header{Name: header.Name, Value: maskedFieldPlaceholderValue})
 			headers[i].Value = maskedFieldPlaceholderValue
+		} else {
+			newHeaders = append(newHeaders, header)
 		}
 	}
+	return newHeaders
 }
 
 func getContentTypeHeaderValue(headers []har.Header) string {
