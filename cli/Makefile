@@ -23,7 +23,7 @@ build:	## build mizu CLI binary (select platform via GOOS / GOARCH env variables
 
 build-all:  ## build for all supported platforms
 	@echo "Compiling for every OS and Platform"
-	@mkdir -p bin && echo "SHA256 checksums available for compiled binaries \n\nRun \`shasum -a 256 -c mizu_OS_ARCH.sha256\` to verify\n\n" >  bin/checksums.md
+	@mkdir -p bin && echo "SHA256 checksums available for compiled binaries \n\nRun \`shasum -a 256 -c mizu_OS_ARCH.sha256\` to verify\n\n" >  bin/README.md
 	@$(MAKE) build GOOS=darwin GOARCH=amd64
 	@$(MAKE) build GOOS=linux GOARCH=amd64
 	@# $(MAKE) GOOS=windows GOARCH=amd64
