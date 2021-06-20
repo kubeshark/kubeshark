@@ -39,7 +39,7 @@ jobs:
         uses: ncipollo/release-action@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          artifacts: "cli/bin/*/*"
+          artifacts: "cli/bin/*"
           commit: ${{ steps.version_parameters.outputs.branch }}
           tag: ${{ steps.versioning.outputs.version }}
           prerelease: ${{ github.ref != 'refs/heads/main' }}

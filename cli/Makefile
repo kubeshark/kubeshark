@@ -20,7 +20,7 @@ build:	## build mizu CLI binary (select platform via GOOS / GOARCH env variables
 					   -X 'github.com/up9inc/mizu/cli/mizu.BuildTimestamp=$(BUILD_TIMESTAMP)' \
 					   -X 'github.com/up9inc/mizu/cli/mizu.BuildTimeUTC=$(BUILD_TIME_UTC)' \
 					   -X 'github.com/up9inc/mizu/cli/mizu.SemVer=$(SEM_VER)'" \
-					   -o bin/$(FOLDER)/mizu mizu.go && echo 'checksum for ${FOLDER}\n\t my check sum' >> bin/checksums.txt
+					   -o bin/mizu_$(FOLDER) mizu.go && echo 'checksum for ${FOLDER}\n\t my check sum' >> bin/checksums.txt
 
 build-all:  ## build for all supported platforms
 	@echo "Compiling for every OS and Platform"
