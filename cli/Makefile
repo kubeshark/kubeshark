@@ -3,7 +3,6 @@ COMMIT_HASH=$(shell git rev-parse HEAD)
 GIT_BRANCH=$(shell git branch --show-current | tr '[:upper:]' '[:lower:]')
 GIT_VERSION=$(shell git branch --show-current | tr '[:upper:]' '[:lower:]')
 BUILD_TIMESTAMP=$(shell date +%s)
-BUILD_TIME_UTC=$(shell date -u)
 
 .PHONY: help
 .DEFAULT_GOAL := help
@@ -18,7 +17,6 @@ build:	## build mizu CLI binary (select platform via GOOS / GOARCH env variables
 	go build -ldflags="-X 'github.com/up9inc/mizu/cli/mizu.GitCommitHash=$(COMMIT_HASH)' \
 					   -X 'github.com/up9inc/mizu/cli/mizu.Branch=$(GIT_BRANCH)' \
 					   -X 'github.com/up9inc/mizu/cli/mizu.BuildTimestamp=$(BUILD_TIMESTAMP)' \
-					   -X 'github.com/up9inc/mizu/cli/mizu.BuildTimeUTC=$(BUILD_TIME_UTC)' \
 					   -X 'github.com/up9inc/mizu/cli/mizu.SemVer=$(SEM_VER)'" \
 					   -o bin/mizu_$(FOLDER) mizu.go && echo 'checksum for ${FOLDER}\n\t my check sum' >> bin/checksums.txt
 

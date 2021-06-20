@@ -2,7 +2,8 @@ name: public-cli
 on:
   push:
     branches:
-      - my-temp-release-check
+      - develop
+      - main
 jobs:
   docker:
     runs-on: ubuntu-latest
@@ -29,12 +30,11 @@ jobs:
       - name: Get base image name
         shell: bash
         run: |
-          echo "##[set-output name=build_time_utc;]$(echo $(date -u))"
           echo "##[set-output name=build_timestamp;]$(echo $(date +%s))"
           echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
         id: version_parameters
       - name: Build and Push CLI
-        run: make push-cli SEM_VER='${{ steps.versioning.outputs.version }}' BUILD_TIME_UTC='${{ steps.version_parameters.outputs.build_time_utc }}' BUILD_TIMESTAMP='${{ steps.version_parameters.outputs.build_timestamp }}'
+        run: make push-cli SEM_VER='${{ steps.versioning.outputs.version }}' BUILD_TIMESTAMP='${{ steps.version_parameters.outputs.build_timestamp }}'
       - name: publish
         uses: ncipollo/release-action@v1
         with:

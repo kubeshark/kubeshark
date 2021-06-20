@@ -3,6 +3,8 @@ package cmd
 import (
 	"fmt"
 	"github.com/up9inc/mizu/cli/mizu"
+	"strconv"
+	"time"
 
 	"github.com/spf13/cobra"
 )
@@ -19,8 +21,9 @@ var versionCmd = &cobra.Command{
 	Short: "Print version info",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if mizuVersionOptions.DebugInfo {
+			timeStampInt, _ := strconv.ParseInt(mizu.BuildTimestamp, 10, 0)
 			fmt.Printf("Version: %s \nBranch: %s (%s) \n", mizu.SemVer, mizu.Branch, mizu.GitCommitHash)
-			fmt.Printf("Build Time: %s (%s)\n", mizu.BuildTimestamp, mizu.BuildTimeUTC)
+			fmt.Printf("Build Time: %s (%s)\n", mizu.BuildTimestamp,  time.Unix(timeStampInt, 0))
 
 		} else {
 			fmt.Printf("Version: %s (%s)\n", mizu.SemVer, mizu.Branch)
