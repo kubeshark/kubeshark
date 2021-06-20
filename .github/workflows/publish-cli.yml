@@ -4,6 +4,7 @@ on:
     branches:
       - develop
       - main
+      - my-temp-release-check
 jobs:
   docker:
     runs-on: ubuntu-latest
@@ -19,8 +20,8 @@ jobs:
         id: condval
         with:
           cond: ${{ github.ref == 'refs/heads/main' }}
-          if_true: "patch"
-          if_false: "prepatch"
+          if_true: "minor"
+          if_false: "patch"
       - name: Auto Increment Semver Action
         uses: MCKanpolat/auto-semver-action@1.0.5
         id: versioning
