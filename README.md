@@ -34,14 +34,35 @@ Pick one from the [Releases](https://github.com/up9inc/mizu/releases) page.
 
 To tap specific pod - 
 ``` 
- $ kubectl get pods | grep front-end
+ $ kubectl get pods 
  NAME                            READY   STATUS    RESTARTS   AGE
  front-end-649fc5fd6-kqbtn       2/2     Running   0          7m
- $ mizu tap front-end-649fc5fd6-kqbtn
+ ..
+ 
+ $ ./mizu tap front-end-649fc5fd6-kqbtn
  +front-end-649fc5fd6-kqbtn
  Web interface is now available at http://localhost:8899
  ^C
+ Removing mizu resources
 ```
+
+To tap multiple pods using regex -
+``` 
+ $ kubectl get pods 
+ NAME                            READY   STATUS    RESTARTS   AGE
+ carts-66c77f5fbb-fq65r          2/2     Running   0          20m 
+ catalogue-5f4cb7cf5-7zrmn       2/2     Running   0          20m
+ front-end-649fc5fd6-kqbtn       2/2     Running   0          20m
+ ..
+ 
+ $ ./mizu tap "^ca.*"
+ +catalogue-5f4cb7cf5-7zrmn
+ +carts-db-6cf9486c87-xfknf
+ Web interface is now available at http://localhost:8899
+ ^C
+ Removing mizu resources
+```
+
 
 
 
