@@ -10,10 +10,7 @@ Download `mizu` for your platform and operating system
 * for MacOS - Intel 
 `curl -Lo mizu https://github.com/up9inc/mizu/releases/latest/download/mizu_darwin_amd64 && chmod 755 mizu`
 
-* for MacOS - Apple Silicon
- `curl -Lo mizu https://github.com/up9inc/mizu/releases/latest/download/mizu_darwin_arm64 && chmod 755 mizu`
- 
-* for Linux - Intel 64bit
+* for Linux - Intel
  `curl -Lo mizu https://github.com/up9inc/mizu/releases/latest/download/mizu_linux_amd64 && chmod 755 mizu` 
 
 
