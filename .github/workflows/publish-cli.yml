@@ -4,7 +4,6 @@ on:
     branches:
       - develop
       - main
-      - my-temp-release-check
 jobs:
   docker:
     runs-on: ubuntu-latest

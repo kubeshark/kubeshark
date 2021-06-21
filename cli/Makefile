@@ -29,7 +29,7 @@ build-all:  ## build for all supported platforms
 	@# $(MAKE) GOOS=windows GOARCH=amd64
 	@# $(MAKE) GOOS=linux GOARCH=386
 	@# $(MAKE) GOOS=windows GOARCH=386
-	@# $(MAKE) GOOS=darwin GOARCH=arm64
+	@$(MAKE) GOOS=darwin GOARCH=arm64
 	@# $(MAKE) GOOS=linux GOARCH=arm64
 	@# $(MAKE) GOOS=windows GOARCH=arm64
 	@echo "---------"
