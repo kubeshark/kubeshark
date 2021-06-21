@@ -26,7 +26,7 @@ build-all:  ## build for all supported platforms
 	@mkdir -p bin && echo "SHA256 checksums available for compiled binaries \n\nRun \`shasum -a 256 -c mizu_OS_ARCH.sha256\` to verify\n\n" >  bin/README.md
 	@$(MAKE) build GOOS=darwin GOARCH=amd64
 	@$(MAKE) build GOOS=linux GOARCH=amd64
-	@$(MAKE) build GOOS=darwin GOARCH=arm64
+	@# $(MAKE) build GOOS=darwin GOARCH=arm64
 	@# $(MAKE) GOOS=windows GOARCH=amd64
 	@# $(MAKE) GOOS=linux GOARCH=386
 	@# $(MAKE) GOOS=windows GOARCH=386
