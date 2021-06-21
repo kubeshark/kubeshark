@@ -38,7 +38,8 @@ func RunMizuTap(podRegexQuery *regexp.Regexp, tappingOptions *MizuTapOptions) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // cancel will be called when this function exits
 
-	if matchingPods, err := kubernetesProvider.GetAllPodsMatchingRegex(ctx, podRegexQuery); err != nil {
+	targetNamespace := getNamespace(tappingOptions, kubernetesProvider)
+	if matchingPods, err := kubernetesProvider.GetAllPodsMatchingRegex(ctx, podRegexQuery, targetNamespace); err != nil {
 		return
 	} else {
 		currentlyTappedPods = matchingPods
@@ -146,10 +147,12 @@ func cleanUpMizuResources(kubernetesProvider *kubernetes.Provider) {
 }
 
 func watchPodsForTapping(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc, podRegex *regexp.Regexp, tappingOptions *MizuTapOptions) {
-	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, kubernetesProvider.GetPodWatcher(ctx, getNamespace(tappingOptions, kubernetesProvider)), podRegex)
+	targetNamespace := getNamespace(tappingOptions, kubernetesProvider)
+
+	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, kubernetesProvider.GetPodWatcher(ctx, targetNamespace), podRegex)
 
 	restartTappers := func() {
-		if matchingPods, err := kubernetesProvider.GetAllPodsMatchingRegex(ctx, podRegex); err != nil {
+		if matchingPods, err := kubernetesProvider.GetAllPodsMatchingRegex(ctx, podRegex, targetNamespace); err != nil {
 			fmt.Printf("Error getting pods by regex: %s (%v,%+v)\n", err, err, err)
 			cancel()
 		} else {
