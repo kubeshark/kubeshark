@@ -130,13 +130,28 @@ func (h *httpReader) handleHTTP2Stream() error {
 	}
 
 	var reqResPair *requestResponsePair
+	var connectionInfo *ConnectionInfo
 
 	switch messageHTTP1 := messageHTTP1.(type) {
 	case http.Request:
 		ident := fmt.Sprintf("%s->%s %s->%s %d", h.tcpID.srcIP, h.tcpID.dstIP, h.tcpID.srcPort, h.tcpID.dstPort, streamID)
+		connectionInfo = &ConnectionInfo{
+			ClientIP:   h.tcpID.srcIP,
+			ClientPort: h.tcpID.srcPort,
+			ServerIP:   h.tcpID.dstIP,
+			ServerPort: h.tcpID.dstPort,
+			IsOutgoing: h.isOutgoing,
+		}
 		reqResPair = reqResMatcher.registerRequest(ident, &messageHTTP1, h.captureTime)
 	case http.Response:
 		ident := fmt.Sprintf("%s->%s %s->%s %d", h.tcpID.dstIP, h.tcpID.srcIP, h.tcpID.dstPort, h.tcpID.srcPort, streamID)
+		connectionInfo = &ConnectionInfo{
+			ClientIP:   h.tcpID.dstIP,
+			ClientPort: h.tcpID.dstPort,
+			ServerIP:   h.tcpID.srcIP,
+			ServerPort: h.tcpID.srcPort,
+			IsOutgoing: h.isOutgoing,
+		}
 		reqResPair = reqResMatcher.registerResponse(ident, &messageHTTP1, h.captureTime)
 	}
 
@@ -149,13 +164,7 @@ func (h *httpReader) handleHTTP2Stream() error {
 				reqResPair.Request.captureTime,
 				reqResPair.Response.orig.(*http.Response),
 				reqResPair.Response.captureTime,
-				&ConnectionInfo{
-					ClientIP:   h.tcpID.srcIP,
-					ClientPort: h.tcpID.srcPort,
-					ServerIP:   h.tcpID.dstIP,
-					ServerPort: h.tcpID.dstPort,
-					IsOutgoing: h.isOutgoing,
-				},
+				connectionInfo,
 			)
 		}
 	}
@@ -261,10 +270,10 @@ func (h *httpReader) handleHTTP1ServerStream(b *bufio.Reader) error {
 				reqResPair.Response.orig.(*http.Response),
 				reqResPair.Response.captureTime,
 				&ConnectionInfo{
-					ClientIP:   h.tcpID.srcIP,
-					ClientPort: h.tcpID.srcPort,
-					ServerIP:   h.tcpID.dstIP,
-					ServerPort: h.tcpID.dstPort,
+					ClientIP:   h.tcpID.dstIP,
+					ClientPort: h.tcpID.dstPort,
+					ServerIP:   h.tcpID.srcIP,
+					ServerPort: h.tcpID.srcPort,
 					IsOutgoing: h.isOutgoing,
 				},
 			)
