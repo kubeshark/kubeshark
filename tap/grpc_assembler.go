@@ -84,14 +84,14 @@ type GrpcAssembler struct {
 	framer *http2.Framer
 }
 
-func (ga *GrpcAssembler) readMessage() (uint32, interface{}, string, error) {
+func (ga *GrpcAssembler) readMessage() (uint32, interface{}, error) {
 	// Exactly one Framer is used for each half connection.
 	// (Instead of creating a new Framer for each ReadFrame operation)
 	// This is needed in order to decompress the headers,
 	// because the compression context is updated with each requests/response.
 	frame, err := ga.framer.ReadFrame()
 	if err != nil {
-		return 0, nil, "", err
+		return 0, nil, err
 	}
 
 	streamID := frame.Header().StreamID
@@ -99,7 +99,7 @@ func (ga *GrpcAssembler) readMessage() (uint32, interface{}, string, error) {
 	ga.fragmentsByStream.appendFrame(streamID, frame)
 
 	if !(ga.isStreamEnd(frame)) {
-		return 0, nil, "", nil
+		return 0, nil, nil
 	}
 
 	headers, data := ga.fragmentsByStream.pop(streamID)
@@ -137,10 +137,10 @@ func (ga *GrpcAssembler) readMessage() (uint32, interface{}, string, error) {
 			ContentLength: int64(len(dataString)),
 		}
 	} else {
-		return 0, nil, "", errors.New("Failed to assemble stream: neither a request nor a message")
+		return 0, nil, errors.New("Failed to assemble stream: neither a request nor a message")
 	}
 
-	return streamID, messageHTTP1, dataString, nil
+	return streamID, messageHTTP1, nil
 }
 
 func (ga *GrpcAssembler) isStreamEnd(frame http2.Frame) bool {

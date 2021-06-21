@@ -9,6 +9,7 @@ import (
 	"mizuserver/pkg/models"
 	"mizuserver/pkg/utils"
 	"mizuserver/pkg/validation"
+	"time"
 )
 
 const (
@@ -64,7 +65,7 @@ func GetEntries(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(baseEntries)
 }
 
-func GetHAR(c *fiber.Ctx) error {
+func GetHARs(c *fiber.Ctx) error {
 	entriesFilter := &models.HarFetchRequestBody{}
 	order := OrderDesc
 	if err := c.QueryParser(entriesFilter); err != nil {
@@ -75,11 +76,23 @@ func GetHAR(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(err)
 	}
 
+	var timestampFrom, timestampTo int64
+
+	if entriesFilter.From < 0 {
+		timestampFrom = 0
+	} else {
+		timestampFrom = entriesFilter.From
+	}
+	if entriesFilter.To <= 0 {
+		timestampTo = time.Now().UnixNano() / int64(time.Millisecond)
+	} else {
+		timestampTo = entriesFilter.To
+	}
+
 	var entries []models.MizuEntry
 	database.GetEntriesTable().
+		Where(fmt.Sprintf("timestamp BETWEEN %v AND %v", timestampFrom, timestampTo)).
 		Order(fmt.Sprintf("timestamp %s", order)).
-		// Where(fmt.Sprintf("timestamp %s %v", operatorSymbol, entriesFilter.Timestamp)).
-		Limit(1000).
 		Find(&entries)
 
 	if len(entries) > 0 {
@@ -87,26 +100,28 @@ func GetHAR(c *fiber.Ctx) error {
 		utils.ReverseSlice(entries)
 	}
 
-	harsObject := map[string]*har.HAR{}
+	harsObject := map[string]*models.ExtendedHAR{}
 
 	for _, entryData := range entries {
-		harEntryObject := []byte(entryData.Entry)
-
 		var harEntry har.Entry
-		_ = json.Unmarshal(harEntryObject, &harEntry)
+		_ = json.Unmarshal([]byte(entryData.Entry), &harEntry)
 
-		sourceOfEntry := *entryData.ResolvedSource
-		if harOfSource, ok := harsObject[sourceOfEntry]; ok {
+		sourceOfEntry := entryData.ResolvedSource
+		fileName := fmt.Sprintf("%s.har", sourceOfEntry)
+		if harOfSource, ok := harsObject[fileName]; ok {
 			harOfSource.Log.Entries = append(harOfSource.Log.Entries, &harEntry)
 		} else {
 			var entriesHar []*har.Entry
 			entriesHar = append(entriesHar, &harEntry)
-			harsObject[sourceOfEntry] = &har.HAR{
-				Log: &har.Log{
+			harsObject[fileName] = &models.ExtendedHAR{
+				Log: &models.ExtendedLog{
 					Version: "1.2",
-					Creator: &har.Creator{
-						Name:    "mizu",
-						Version: "0.0.1",
+					Creator: &models.ExtendedCreator{
+						Creator: &har.Creator{
+							Name:    "mizu",
+							Version: "0.0.2",
+						},
+						Source: sourceOfEntry,
 					},
 					Entries: entriesHar,
 				},
@@ -123,6 +138,50 @@ func GetHAR(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).SendStream(buffer)
 }
 
+func GetFullEntries(c *fiber.Ctx) error {
+	entriesFilter := &models.HarFetchRequestBody{}
+	order := OrderDesc
+	if err := c.QueryParser(entriesFilter); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(err)
+	}
+	err := validation.Validate(entriesFilter)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(err)
+	}
+
+	var timestampFrom, timestampTo int64
+
+	if entriesFilter.From < 0 {
+		timestampFrom = 0
+	} else {
+		timestampFrom = entriesFilter.From
+	}
+	if entriesFilter.To <= 0 {
+		timestampTo = time.Now().UnixNano() / int64(time.Millisecond)
+	} else {
+		timestampTo = entriesFilter.To
+	}
+
+	var entries []models.MizuEntry
+	database.GetEntriesTable().
+		Where(fmt.Sprintf("timestamp BETWEEN %v AND %v", timestampFrom, timestampTo)).
+		Order(fmt.Sprintf("timestamp %s", order)).
+		Find(&entries)
+
+	if len(entries) > 0 {
+		// the entries always order from oldest to newest so we should revers
+		utils.ReverseSlice(entries)
+	}
+
+	entriesArray := make([]har.Entry, 0)
+	for _, entryData := range entries {
+		var harEntry har.Entry
+		_ = json.Unmarshal([]byte(entryData.Entry), &harEntry)
+		entriesArray = append(entriesArray, harEntry)
+	}
+	return c.Status(fiber.StatusOK).JSON(entriesArray)
+}
+
 func GetEntry(c *fiber.Ctx) error {
 	var entryData models.EntryData
 	database.GetEntriesTable().
@@ -134,8 +193,8 @@ func GetEntry(c *fiber.Ctx) error {
 	unmarshallErr := json.Unmarshal([]byte(entryData.Entry), &fullEntry)
 	utils.CheckErr(unmarshallErr)
 
-	if entryData.ResolvedDestination != nil {
-		fullEntry.Request.URL = utils.SetHostname(fullEntry.Request.URL, *entryData.ResolvedDestination)
+	if entryData.ResolvedDestination != "" {
+		fullEntry.Request.URL = utils.SetHostname(fullEntry.Request.URL, entryData.ResolvedDestination)
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fullEntry)

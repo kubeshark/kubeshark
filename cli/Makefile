@@ -1,6 +1,8 @@
-FOLDER=$(GOOS).$(GOARCH)
+SUFFIX=$(GOOS)_$(GOARCH)
 COMMIT_HASH=$(shell git rev-parse HEAD)
-GIT_BRANCH=$(shell git branch --show-current)
+GIT_BRANCH=$(shell git branch --show-current | tr '[:upper:]' '[:lower:]')
+GIT_VERSION=$(shell git branch --show-current | tr '[:upper:]' '[:lower:]')
+BUILD_TIMESTAMP=$(shell date +%s)
 
 .PHONY: help
 .DEFAULT_GOAL := help
@@ -12,16 +14,22 @@ install:
 	go install mizu.go
 
 build:	## build mizu CLI binary (select platform via GOOS / GOARCH env variables)
-	go build -ldflags="-X 'github.com/up9inc/mizu/cli/mizu.GitCommitHash=$(COMMIT_HASH)' -X 'github.com/up9inc/mizu/cli/mizu.Branch=$(GIT_BRANCH)'" -o bin/$(FOLDER)/mizu mizu.go
+	go build -ldflags="-X 'github.com/up9inc/mizu/cli/mizu.GitCommitHash=$(COMMIT_HASH)' \
+					   -X 'github.com/up9inc/mizu/cli/mizu.Branch=$(GIT_BRANCH)' \
+					   -X 'github.com/up9inc/mizu/cli/mizu.BuildTimestamp=$(BUILD_TIMESTAMP)' \
+					   -X 'github.com/up9inc/mizu/cli/mizu.SemVer=$(SEM_VER)'" \
+					   -o bin/mizu_$(SUFFIX) mizu.go 
+	(cd bin && shasum -a 256 mizu_${SUFFIX} > mizu_${SUFFIX}.sha256)
 
 build-all:  ## build for all supported platforms
 	@echo "Compiling for every OS and Platform"
+	@mkdir -p bin && echo "SHA256 checksums available for compiled binaries \n\nRun \`shasum -a 256 -c mizu_OS_ARCH.sha256\` to verify\n\n" >  bin/README.md
 	@$(MAKE) build GOOS=darwin GOARCH=amd64
 	@$(MAKE) build GOOS=linux GOARCH=amd64
 	@# $(MAKE) GOOS=windows GOARCH=amd64
 	@# $(MAKE) GOOS=linux GOARCH=386
 	@# $(MAKE) GOOS=windows GOARCH=386
-	@# $(MAKE) GOOS=darwin GOARCH=arm64
+	@$(MAKE) GOOS=darwin GOARCH=arm64
 	@# $(MAKE) GOOS=linux GOARCH=arm64
 	@# $(MAKE) GOOS=windows GOARCH=arm64
 	@echo "---------"

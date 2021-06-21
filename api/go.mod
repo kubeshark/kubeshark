@@ -4,6 +4,7 @@ go 1.16
 
 require (
 	github.com/antoniodipinto/ikisocket v0.0.0-20210417133349-f1502512d69a
+	github.com/beevik/etree v1.1.0
 	github.com/djherbis/atime v1.0.0
 	github.com/fasthttp/websocket v1.4.3-beta.1 // indirect
 	github.com/go-playground/locales v0.13.0
@@ -17,6 +18,7 @@ require (
 	github.com/orcaman/concurrent-map v0.0.0-20210106121528-16402b402231
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/up9inc/mizu/shared v0.0.0
+	github.com/up9inc/mizu/tap v0.0.0
 	go.mongodb.org/mongo-driver v1.5.1
 	golang.org/x/net v0.0.0-20210421230115-4e50805a0758
 	gorm.io/driver/sqlite v1.1.4
@@ -27,3 +29,4 @@ require (
 )
 
 replace github.com/up9inc/mizu/shared v0.0.0 => ../shared
+replace github.com/up9inc/mizu/tap v0.0.0 => ../tap

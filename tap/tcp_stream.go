@@ -34,7 +34,7 @@ type tcpStream struct {
 func (t *tcpStream) Accept(tcp *layers.TCP, ci gopacket.CaptureInfo, dir reassembly.TCPFlowDirection, nextSeq reassembly.Sequence, start *bool, ac reassembly.AssemblerContext) bool {
 	// FSM
 	if !t.tcpstate.CheckState(tcp, dir) {
-		//SilentError("FSM", "%s: Packet rejected by FSM (state:%s)\n", t.ident, t.tcpstate.String())
+		SilentError("FSM-rejection", "%s: Packet rejected by FSM (state:%s)", t.ident, t.tcpstate.String())
 		stats.rejectFsm++
 		if !t.fsmerr {
 			t.fsmerr = true
@@ -47,7 +47,7 @@ func (t *tcpStream) Accept(tcp *layers.TCP, ci gopacket.CaptureInfo, dir reassem
 	// Options
 	err := t.optchecker.Accept(tcp, ci, dir, nextSeq, start)
 	if err != nil {
-		//SilentError("OptionChecker", "%s: Packet rejected by OptionChecker: %s\n", t.ident, err)
+		SilentError("OptionChecker-rejection", "%s: Packet rejected by OptionChecker: %s", t.ident, err)
 		stats.rejectOpt++
 		if !*nooptcheck {
 			return false
@@ -58,10 +58,10 @@ func (t *tcpStream) Accept(tcp *layers.TCP, ci gopacket.CaptureInfo, dir reassem
 	if *checksum {
 		c, err := tcp.ComputeChecksum()
 		if err != nil {
-			SilentError("ChecksumCompute", "%s: Got error computing checksum: %s\n", t.ident, err)
+			SilentError("ChecksumCompute", "%s: Got error computing checksum: %s", t.ident, err)
 			accept = false
 		} else if c != 0x0 {
-			SilentError("Checksum", "%s: Invalid checksum: 0x%x\n", t.ident, c)
+			SilentError("Checksum", "%s: Invalid checksum: 0x%x", t.ident, c)
 			accept = false
 		}
 	}
@@ -95,7 +95,7 @@ func (t *tcpStream) ReassembledSG(sg reassembly.ScatterGather, ac reassembly.Ass
 	if sgStats.OverlapBytes != 0 && sgStats.OverlapPackets == 0 {
 		// In the original example this was handled with panic().
 		// I don't know what this error means or how to handle it properly.
-		SilentError("Invalid-Overlap", "bytes:%d, pkts:%d\n", sgStats.OverlapBytes, sgStats.OverlapPackets)
+		SilentError("Invalid-Overlap", "bytes:%d, pkts:%d", sgStats.OverlapBytes, sgStats.OverlapPackets)
 	}
 	stats.overlapBytes += sgStats.OverlapBytes
 	stats.overlapPackets += sgStats.OverlapPackets
@@ -106,7 +106,7 @@ func (t *tcpStream) ReassembledSG(sg reassembly.ScatterGather, ac reassembly.Ass
 	} else {
 		ident = fmt.Sprintf("%v %v(%s): ", t.net.Reverse(), t.transport.Reverse(), dir)
 	}
-	Debug("%s: SG reassembled packet with %d bytes (start:%v,end:%v,skip:%d,saved:%d,nb:%d,%d,overlap:%d,%d)\n", ident, length, start, end, skip, saved, sgStats.Packets, sgStats.Chunks, sgStats.OverlapBytes, sgStats.OverlapPackets)
+	Debug("%s: SG reassembled packet with %d bytes (start:%v,end:%v,skip:%d,saved:%d,nb:%d,%d,overlap:%d,%d)", ident, length, start, end, skip, saved, sgStats.Packets, sgStats.Chunks, sgStats.OverlapBytes, sgStats.OverlapPackets)
 	if skip == -1 && *allowmissinginit {
 		// this is allowed
 	} else if skip != 0 {
@@ -125,18 +125,18 @@ func (t *tcpStream) ReassembledSG(sg reassembly.ScatterGather, ac reassembly.Ass
 		}
 		dnsSize := binary.BigEndian.Uint16(data[:2])
 		missing := int(dnsSize) - len(data[2:])
-		Debug("dnsSize: %d, missing: %d\n", dnsSize, missing)
+		Debug("dnsSize: %d, missing: %d", dnsSize, missing)
 		if missing > 0 {
-			Info("Missing some bytes: %d\n", missing)
+			Info("Missing some bytes: %d", missing)
 			sg.KeepFrom(0)
 			return
 		}
 		p := gopacket.NewDecodingLayerParser(layers.LayerTypeDNS, dns)
 		err := p.DecodeLayers(data[2:], &decoded)
 		if err != nil {
-			SilentError("DNS-parser", "Failed to decode DNS: %v\n", err)
+			SilentError("DNS-parser", "Failed to decode DNS: %v", err)
 		} else {
-			Debug("DNS: %s\n", gopacket.LayerDump(dns))
+			Debug("DNS: %s", gopacket.LayerDump(dns))
 		}
 		if len(data) > 2+int(dnsSize) {
 			sg.KeepFrom(2 + int(dnsSize))
@@ -144,7 +144,7 @@ func (t *tcpStream) ReassembledSG(sg reassembly.ScatterGather, ac reassembly.Ass
 	} else if t.isHTTP {
 		if length > 0 {
 			if *hexdump {
-				Debug("Feeding http with:\n%s", hex.Dump(data))
+				Debug("Feeding http with:%s", hex.Dump(data))
 			}
 			// This is where we pass the reassembled information onwards
 			// This channel is read by an httpReader object
@@ -158,7 +158,7 @@ func (t *tcpStream) ReassembledSG(sg reassembly.ScatterGather, ac reassembly.Ass
 }
 
 func (t *tcpStream) ReassemblyComplete(ac reassembly.AssemblerContext) bool {
-	Debug("%s: Connection closed\n", t.ident)
+	Debug("%s: Connection closed", t.ident)
 	if t.isHTTP {
 		close(t.client.msgQueue)
 		close(t.server.msgQueue)

@@ -3,10 +3,7 @@ package tap
 import (
 	"bufio"
 	"bytes"
-	"compress/gzip"
-	b64 "encoding/base64"
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -73,7 +70,7 @@ func (h *httpReader) run(wg *sync.WaitGroup) {
 	b := bufio.NewReader(h)
 
 	if isHTTP2, err := checkIsHTTP2Connection(b, h.isClient); err != nil {
-		SilentError("HTTP/2-Prepare-Connection", "stream %s Failed to check if client is HTTP/2: %s (%v,%+v)\n", h.ident, err, err, err)
+		SilentError("HTTP/2-Prepare-Connection", "stream %s Failed to check if client is HTTP/2: %s (%v,%+v)", h.ident, err, err, err)
 		// Do something?
 	} else {
 		h.isHTTP2 = isHTTP2
@@ -82,7 +79,7 @@ func (h *httpReader) run(wg *sync.WaitGroup) {
 	if h.isHTTP2 {
 		err := prepareHTTP2Connection(b, h.isClient)
 		if err != nil {
-			SilentError("HTTP/2-Prepare-Connection-After-Check", "stream %s error: %s (%v,%+v)\n", h.ident, err, err, err)
+			SilentError("HTTP/2-Prepare-Connection-After-Check", "stream %s error: %s (%v,%+v)", h.ident, err, err, err)
 		}
 		h.grpcAssembler = createGrpcAssembler(b)
 	}
@@ -93,7 +90,7 @@ func (h *httpReader) run(wg *sync.WaitGroup) {
 			if err == io.EOF || err == io.ErrUnexpectedEOF {
 				break
 			} else if err != nil {
-				SilentError("HTTP/2", "stream %s error: %s (%v,%+v)\n", h.ident, err, err, err)
+				SilentError("HTTP/2", "stream %s error: %s (%v,%+v)", h.ident, err, err, err)
 				continue
 			}
 		} else if h.isClient {
@@ -101,7 +98,7 @@ func (h *httpReader) run(wg *sync.WaitGroup) {
 			if err == io.EOF || err == io.ErrUnexpectedEOF {
 				break
 			} else if err != nil {
-				SilentError("HTTP-request", "stream %s Request error: %s (%v,%+v)\n", h.ident, err, err, err)
+				SilentError("HTTP-request", "stream %s Request error: %s (%v,%+v)", h.ident, err, err, err)
 				continue
 			}
 		} else {
@@ -109,7 +106,7 @@ func (h *httpReader) run(wg *sync.WaitGroup) {
 			if err == io.EOF || err == io.ErrUnexpectedEOF {
 				break
 			} else if err != nil {
-				SilentError("HTTP-response", "stream %s Response error: %s (%v,%+v)\n", h.ident, err, err, err)
+				SilentError("HTTP-response", "stream %s Response error: %s (%v,%+v)", h.ident, err, err, err)
 				continue
 			}
 		}
@@ -117,38 +114,34 @@ func (h *httpReader) run(wg *sync.WaitGroup) {
 }
 
 func (h *httpReader) handleHTTP2Stream() error {
-	streamID, messageHTTP1, body, err := h.grpcAssembler.readMessage()
+	streamID, messageHTTP1, err := h.grpcAssembler.readMessage()
 	h.messageCount++
 	if err != nil {
 		return err
 	}
 
-	var reqResPair *envoyMessageWrapper
+	var reqResPair *requestResponsePair
 
 	switch messageHTTP1 := messageHTTP1.(type) {
 	case http.Request:
 		ident := fmt.Sprintf("%s->%s %s->%s %d", h.tcpID.srcIP, h.tcpID.dstIP, h.tcpID.srcPort, h.tcpID.dstPort, streamID)
-		reqResPair = reqResMatcher.registerRequest(ident, &messageHTTP1, h.captureTime, body, true)
+		reqResPair = reqResMatcher.registerRequest(ident, &messageHTTP1, h.captureTime)
 	case http.Response:
 		ident := fmt.Sprintf("%s->%s %s->%s %d", h.tcpID.dstIP, h.tcpID.srcIP, h.tcpID.dstPort, h.tcpID.srcPort, streamID)
-		reqResPair = reqResMatcher.registerResponse(ident, &messageHTTP1, h.captureTime, body, true)
+		reqResPair = reqResMatcher.registerResponse(ident, &messageHTTP1, h.captureTime)
 	}
 
 	if reqResPair != nil {
+		statsTracker.incMatchedMessages()
+
 		if h.harWriter != nil {
 			h.harWriter.WritePair(
-				reqResPair.HttpBufferedTrace.Request.orig.(*http.Request),
-				reqResPair.HttpBufferedTrace.Request.captureTime,
-				reqResPair.HttpBufferedTrace.Response.orig.(*http.Response),
-				reqResPair.HttpBufferedTrace.Response.captureTime,
-				reqResPair.HttpBufferedTrace.Request.requestSenderIp,
+				reqResPair.Request.orig.(*http.Request),
+				reqResPair.Request.captureTime,
+				reqResPair.Response.orig.(*http.Response),
+				reqResPair.Response.captureTime,
+				&reqResPair.Request.connectionInfo,
 			)
-		} else {
-			jsonStr, err := json.Marshal(reqResPair)
-			if err != nil {
-				return err
-			}
-			broadcastReqResPair(jsonStr)
 		}
 	}
 
@@ -165,37 +158,29 @@ func (h *httpReader) handleHTTP1ClientStream(b *bufio.Reader) error {
 	req.Body = io.NopCloser(bytes.NewBuffer(body)) // rewind
 	s := len(body)
 	if err != nil {
-		SilentError("HTTP-request-body", "stream %s Got body err: %s\n", h.ident, err)
+		SilentError("HTTP-request-body", "stream %s Got body err: %s", h.ident, err)
 	} else if h.hexdump {
-		Info("Body(%d/0x%x)\n%s\n", len(body), len(body), hex.Dump(body))
+		Info("Body(%d/0x%x) - %s", len(body), len(body), hex.Dump(body))
 	}
 	if err := req.Body.Close(); err != nil {
-		SilentError("HTTP-request-body-close", "stream %s Failed to close request body: %s\n", h.ident, err)
+		SilentError("HTTP-request-body-close", "stream %s Failed to close request body: %s", h.ident, err)
 	}
 	encoding := req.Header["Content-Encoding"]
-	bodyStr, err := readBody(body, encoding)
-	if err != nil {
-		SilentError("HTTP-request-body-decode", "stream %s Failed to decode body: %s\n", h.ident, err)
-	}
-	Info("HTTP/%s Request: %s %s (Body:%d)\n", h.ident, req.Method, req.URL, s)
+	Info("HTTP/1 Request: %s %s %s (Body:%d) -> %s", h.ident, req.Method, req.URL, s, encoding)
 
 	ident := fmt.Sprintf("%s->%s %s->%s %d", h.tcpID.srcIP, h.tcpID.dstIP, h.tcpID.srcPort, h.tcpID.dstPort, h.messageCount)
-	reqResPair := reqResMatcher.registerRequest(ident, req, h.captureTime, bodyStr, false)
+	reqResPair := reqResMatcher.registerRequest(ident, req, h.captureTime)
 	if reqResPair != nil {
+		statsTracker.incMatchedMessages()
+
 		if h.harWriter != nil {
 			h.harWriter.WritePair(
-				reqResPair.HttpBufferedTrace.Request.orig.(*http.Request),
-				reqResPair.HttpBufferedTrace.Request.captureTime,
-				reqResPair.HttpBufferedTrace.Response.orig.(*http.Response),
-				reqResPair.HttpBufferedTrace.Response.captureTime,
-				reqResPair.HttpBufferedTrace.Request.requestSenderIp,
+				reqResPair.Request.orig.(*http.Request),
+				reqResPair.Request.captureTime,
+				reqResPair.Response.orig.(*http.Response),
+				reqResPair.Response.captureTime,
+				&reqResPair.Request.connectionInfo,
 			)
-		} else {
-			jsonStr, err := json.Marshal(reqResPair)
-			if err != nil {
-				SilentError("HTTP-marshal", "stream %s Error convert request response to json: %s\n", h.ident, err)
-			}
-			broadcastReqResPair(jsonStr)
 		}
 	}
 
@@ -224,13 +209,13 @@ func (h *httpReader) handleHTTP1ServerStream(b *bufio.Reader) error {
 	res.Body = io.NopCloser(bytes.NewBuffer(body)) // rewind
 	s := len(body)
 	if err != nil {
-		SilentError("HTTP-response-body", "HTTP/%s: failed to get body(parsed len:%d): %s\n", h.ident, s, err)
+		SilentError("HTTP-response-body", "HTTP/%s: failed to get body(parsed len:%d): %s", h.ident, s, err)
 	}
 	if h.hexdump {
-		Info("Body(%d/0x%x)\n%s\n", len(body), len(body), hex.Dump(body))
+		Info("Body(%d/0x%x) - %s", len(body), len(body), hex.Dump(body))
 	}
 	if err := res.Body.Close(); err != nil {
-		SilentError("HTTP-response-body-close", "HTTP/%s: failed to close body(parsed len:%d): %s\n", h.ident, s, err)
+		SilentError("HTTP-response-body-close", "HTTP/%s: failed to close body(parsed len:%d): %s", h.ident, s, err)
 	}
 	sym := ","
 	if res.ContentLength > 0 && res.ContentLength != int64(s) {
@@ -241,54 +226,23 @@ func (h *httpReader) handleHTTP1ServerStream(b *bufio.Reader) error {
 		contentType = []string{http.DetectContentType(body)}
 	}
 	encoding := res.Header["Content-Encoding"]
-	Info("HTTP/%s Response: %s URL:%s (%d%s%d%s) -> %s\n", h.ident, res.Status, req, res.ContentLength, sym, s, contentType, encoding)
-	bodyStr, err := readBody(body, encoding)
-	if err != nil {
-		SilentError("HTTP-response-body-decode", "stream %s Failed to decode body: %s\n", h.ident, err)
-	}
+	Info("HTTP/1 Response: %s %s URL:%s (%d%s%d%s) -> %s", h.ident, res.Status, req, res.ContentLength, sym, s, contentType, encoding)
 
 	ident := fmt.Sprintf("%s->%s %s->%s %d", h.tcpID.dstIP, h.tcpID.srcIP, h.tcpID.dstPort, h.tcpID.srcPort, h.messageCount)
-	reqResPair := reqResMatcher.registerResponse(ident, res, h.captureTime, bodyStr, false)
+	reqResPair := reqResMatcher.registerResponse(ident, res, h.captureTime)
 	if reqResPair != nil {
+		statsTracker.incMatchedMessages()
+
 		if h.harWriter != nil {
 			h.harWriter.WritePair(
-				reqResPair.HttpBufferedTrace.Request.orig.(*http.Request),
-				reqResPair.HttpBufferedTrace.Request.captureTime,
-				reqResPair.HttpBufferedTrace.Response.orig.(*http.Response),
-				reqResPair.HttpBufferedTrace.Response.captureTime,
-				reqResPair.HttpBufferedTrace.Request.requestSenderIp,
+				reqResPair.Request.orig.(*http.Request),
+				reqResPair.Request.captureTime,
+				reqResPair.Response.orig.(*http.Response),
+				reqResPair.Response.captureTime,
+				&reqResPair.Request.connectionInfo,
 			)
-		} else {
-			jsonStr, err := json.Marshal(reqResPair)
-			if err != nil {
-				SilentError("HTTP-marshal", "stream %s Error convert request response to json: %s\n", h.ident, err)
-			}
-			broadcastReqResPair(jsonStr)
 		}
 	}
 
 	return nil
-}
-
-func readBody(bodyBytes []byte, encoding []string) (string, error) {
-	var bodyBuffer io.Reader
-	bodyBuffer = bytes.NewBuffer(bodyBytes)
-	var err error
-	if len(encoding) > 0 && (encoding[0] == "gzip" || encoding[0] == "deflate") {
-		bodyBuffer, err = gzip.NewReader(bodyBuffer)
-		if err != nil {
-			SilentError("HTTP-gunzip", "Failed to gzip decode: %s\n", err)
-			return "", err
-		}
-	}
-	if _, ok := bodyBuffer.(*gzip.Reader); ok {
-		err = bodyBuffer.(*gzip.Reader).Close()
-		if err != nil {
-			return "", err
-		}
-	}
-
-	buf := new(bytes.Buffer)
-	_, err = buf.ReadFrom(bodyBuffer)
-	return b64.StdEncoding.EncodeToString(buf.Bytes()), err
 }

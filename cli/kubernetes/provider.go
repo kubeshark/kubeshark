@@ -6,19 +6,19 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-
 	"path/filepath"
 	"regexp"
 
-	applyconfapp "k8s.io/client-go/applyconfigurations/apps/v1"
-	applyconfmeta "k8s.io/client-go/applyconfigurations/meta/v1"
-	applyconfcore "k8s.io/client-go/applyconfigurations/core/v1"
+	"github.com/up9inc/mizu/shared"
 	core "k8s.io/api/core/v1"
 	rbac "k8s.io/api/rbac/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/watch"
+	applyconfapp "k8s.io/client-go/applyconfigurations/apps/v1"
+	applyconfcore "k8s.io/client-go/applyconfigurations/core/v1"
+	applyconfmeta "k8s.io/client-go/applyconfigurations/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/azure"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
@@ -42,7 +42,7 @@ const (
 	fieldManagerName   = "mizu-manager"
 )
 
-func NewProvider(kubeConfigPath string, overrideNamespace string) *Provider {
+func NewProvider(kubeConfigPath string) *Provider {
 	kubernetesConfig := loadKubernetesConfiguration(kubeConfigPath)
 	restClientConfig, err := kubernetesConfig.ClientConfig()
 	if err != nil {
@@ -50,23 +50,16 @@ func NewProvider(kubeConfigPath string, overrideNamespace string) *Provider {
 	}
 	clientSet := getClientSet(restClientConfig)
 
-	var namespace string
-	if len(overrideNamespace) > 0 {
-		namespace = overrideNamespace
-	} else {
-		configuredNamespace, _, err := kubernetesConfig.Namespace()
-		if err != nil {
-			panic(err)
-		}
-		namespace = configuredNamespace
-	}
-
 	return &Provider{
 		clientSet:        clientSet,
 		kubernetesConfig: kubernetesConfig,
 		clientConfig:     *restClientConfig,
-		Namespace:        namespace,
 	}
+}
+
+func (provider *Provider) CurrentNamespace() string {
+	ns, _, _ := provider.kubernetesConfig.Namespace()
+	return ns
 }
 
 func (provider *Provider) GetPodWatcher(ctx context.Context, namespace string) watch.Interface {
@@ -77,20 +70,16 @@ func (provider *Provider) GetPodWatcher(ctx context.Context, namespace string) w
 	return watcher
 }
 
-func (provider *Provider) GetPods(ctx context.Context, namespace string) {
-	pods, err := provider.clientSet.CoreV1().Pods(namespace).List(ctx, metav1.ListOptions{})
+func (provider *Provider) CreateMizuAggregatorPod(ctx context.Context, namespace string, podName string, podImage string, linkServiceAccount bool, mizuApiFilteringOptions *shared.TrafficFilteringOptions) (*core.Pod, error) {
+	marshaledFilteringOptions, err := json.Marshal(mizuApiFilteringOptions)
 	if err != nil {
-		panic(err.Error())
+		return nil, err
 	}
-	fmt.Printf("There are %d pods in Namespace %s\n", len(pods.Items), namespace)
-}
-
-func (provider *Provider) CreateMizuAggregatorPod(ctx context.Context, namespace string, podName string, podImage string, linkServiceAccount bool) (*core.Pod, error) {
 	pod := &core.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      podName,
 			Namespace: namespace,
-			Labels: map[string]string{"app": podName},
+			Labels:    map[string]string{"app": podName},
 		},
 		Spec: core.PodSpec{
 			Containers: []core.Container{
@@ -98,16 +87,20 @@ func (provider *Provider) CreateMizuAggregatorPod(ctx context.Context, namespace
 					Name:            podName,
 					Image:           podImage,
 					ImagePullPolicy: core.PullAlways,
-					Command: []string {"./mizuagent", "--aggregator"},
+					Command:         []string{"./mizuagent", "--aggregator"},
 					Env: []core.EnvVar{
 						{
-							Name: "HOST_MODE",
+							Name:  shared.HostModeEnvVar,
 							Value: "1",
+						},
+						{
+							Name:  shared.MizuFilteringOptionsEnvVar,
+							Value: string(marshaledFilteringOptions),
 						},
 					},
 				},
 			},
-			DNSPolicy: "ClusterFirstWithHostNet",
+			DNSPolicy:                     core.DNSClusterFirstWithHostNet,
 			TerminationGracePeriodSeconds: new(int64),
 			// Affinity: TODO: define node selector for all relevant nodes for this mizu instance
 		},
@@ -122,19 +115,19 @@ func (provider *Provider) CreateMizuAggregatorPod(ctx context.Context, namespace
 func (provider *Provider) CreateService(ctx context.Context, namespace string, serviceName string, appLabelValue string) (*core.Service, error) {
 	service := core.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: serviceName,
+			Name:      serviceName,
 			Namespace: namespace,
 		},
 		Spec: core.ServiceSpec{
-			Ports: []core.ServicePort {{TargetPort: intstr.FromInt(8899), Port: 80}},
-			Type: core.ServiceTypeClusterIP,
+			Ports:    []core.ServicePort{{TargetPort: intstr.FromInt(8899), Port: 80}},
+			Type:     core.ServiceTypeClusterIP,
 			Selector: map[string]string{"app": appLabelValue},
 		},
 	}
 	return provider.clientSet.CoreV1().Services(namespace).Create(ctx, &service, metav1.CreateOptions{})
 }
 
-func (provider *Provider) DoesMizuRBACExist(ctx context.Context, namespace string) (bool, error){
+func (provider *Provider) DoesMizuRBACExist(ctx context.Context, namespace string) (bool, error) {
 	serviceAccount, err := provider.clientSet.CoreV1().ServiceAccounts(namespace).Get(ctx, serviceAccountName, metav1.GetOptions{})
 
 	var statusError *k8serrors.StatusError
@@ -150,7 +143,22 @@ func (provider *Provider) DoesMizuRBACExist(ctx context.Context, namespace strin
 	return serviceAccount != nil, nil
 }
 
-func (provider *Provider) CreateMizuRBAC(ctx context.Context, namespace string ,version string) error {
+func (provider *Provider) DoesServicesExist(ctx context.Context, namespace string, serviceName string) (bool, error) {
+	service, err := provider.clientSet.CoreV1().Services(namespace).Get(ctx, serviceName, metav1.GetOptions{})
+
+	var statusError *k8serrors.StatusError
+	if errors.As(err, &statusError) {
+		if statusError.ErrStatus.Reason == metav1.StatusReasonNotFound {
+			return false, nil
+		}
+	}
+	if err != nil {
+		return false, err
+	}
+	return service != nil, nil
+}
+
+func (provider *Provider) CreateMizuRBAC(ctx context.Context, namespace string, version string) error {
 	clusterRoleName := "mizu-cluster-role"
 
 	serviceAccount := &core.ServiceAccount{
@@ -162,25 +170,25 @@ func (provider *Provider) CreateMizuRBAC(ctx context.Context, namespace string ,
 	}
 	clusterRole := &rbac.ClusterRole{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: clusterRoleName,
+			Name:   clusterRoleName,
 			Labels: map[string]string{"mizu-cli-version": version},
 		},
 		Rules: []rbac.PolicyRule{
 			{
-				APIGroups: []string {"", "extensions", "apps"},
-				Resources: []string {"pods", "services", "endpoints"},
-				Verbs: []string {"list", "get", "watch"},
+				APIGroups: []string{"", "extensions", "apps"},
+				Resources: []string{"pods", "services", "endpoints"},
+				Verbs:     []string{"list", "get", "watch"},
 			},
 		},
 	}
 	clusterRoleBinding := &rbac.ClusterRoleBinding{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "mizu-cluster-role-binding",
+			Name:   "mizu-cluster-role-binding",
 			Labels: map[string]string{"mizu-cli-version": version},
 		},
 		RoleRef: rbac.RoleRef{
-			Name: clusterRoleName,
-			Kind: "ClusterRole",
+			Name:     clusterRoleName,
+			Kind:     "ClusterRole",
 			APIGroup: "rbac.authorization.k8s.io",
 		},
 		Subjects: []rbac.Subject{
@@ -232,24 +240,51 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	agentContainer.WithSecurityContext(applyconfcore.SecurityContext().WithPrivileged(privileged))
 	agentContainer.WithCommand("./mizuagent", "-i", "any", "--tap", "--hardump", "--aggregator-address", fmt.Sprintf("ws://%s/wsTapper", aggregatorPodIp))
 	agentContainer.WithEnv(
-		applyconfcore.EnvVar().WithName("HOST_MODE").WithValue("1"),
-		applyconfcore.EnvVar().WithName("AGGREGATOR_ADDRESS").WithValue(aggregatorPodIp),
-		applyconfcore.EnvVar().WithName("TAPPED_ADDRESSES_PER_HOST").WithValue(string(nodeToTappedPodIPMapJsonStr)),
+		applyconfcore.EnvVar().WithName(shared.HostModeEnvVar).WithValue("1"),
+		applyconfcore.EnvVar().WithName(shared.TappedAddressesPerNodeDictEnvVar).WithValue(string(nodeToTappedPodIPMapJsonStr)),
 	)
 	agentContainer.WithEnv(
-		applyconfcore.EnvVar().WithName("NODE_NAME").WithValueFrom(
+		applyconfcore.EnvVar().WithName(shared.NodeNameEnvVar).WithValueFrom(
 			applyconfcore.EnvVarSource().WithFieldRef(
 				applyconfcore.ObjectFieldSelector().WithAPIVersion("v1").WithFieldPath("spec.nodeName"),
 			),
 		),
 	)
 
-	podSpec := applyconfcore.PodSpec().WithHostNetwork(true).WithDNSPolicy("ClusterFirstWithHostNet").WithTerminationGracePeriodSeconds(0)
+	nodeNames := make([]string, 0, len(nodeToTappedPodIPMap))
+	for nodeName := range nodeToTappedPodIPMap {
+		nodeNames = append(nodeNames, nodeName)
+	}
+	nodeSelectorRequirement := applyconfcore.NodeSelectorRequirement()
+	nodeSelectorRequirement.WithKey("kubernetes.io/hostname")
+	nodeSelectorRequirement.WithOperator(core.NodeSelectorOpIn)
+	nodeSelectorRequirement.WithValues(nodeNames...)
+	nodeSelectorTerm := applyconfcore.NodeSelectorTerm()
+	nodeSelectorTerm.WithMatchExpressions(nodeSelectorRequirement)
+	nodeSelector := applyconfcore.NodeSelector()
+	nodeSelector.WithNodeSelectorTerms(nodeSelectorTerm)
+	nodeAffinity := applyconfcore.NodeAffinity()
+	nodeAffinity.WithRequiredDuringSchedulingIgnoredDuringExecution(nodeSelector)
+	affinity := applyconfcore.Affinity()
+	affinity.WithNodeAffinity(nodeAffinity)
+
+	noExecuteToleration := applyconfcore.Toleration()
+	noExecuteToleration.WithOperator(core.TolerationOpExists)
+	noExecuteToleration.WithEffect(core.TaintEffectNoExecute)
+	noScheduleToleration := applyconfcore.Toleration()
+	noScheduleToleration.WithOperator(core.TolerationOpExists)
+	noScheduleToleration.WithEffect(core.TaintEffectNoSchedule)
+
+	podSpec := applyconfcore.PodSpec()
+	podSpec.WithHostNetwork(true)
+	podSpec.WithDNSPolicy(core.DNSClusterFirstWithHostNet)
+	podSpec.WithTerminationGracePeriodSeconds(0)
 	if linkServiceAccount {
 		podSpec.WithServiceAccountName(serviceAccountName)
 	}
 	podSpec.WithContainers(agentContainer)
-
+	podSpec.WithAffinity(affinity)
+	podSpec.WithTolerations(noExecuteToleration, noScheduleToleration)
 
 	podTemplate := applyconfcore.PodTemplateSpec()
 	podTemplate.WithLabels(map[string]string{"app": tapperPodName})
@@ -265,8 +300,8 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	return err
 }
 
-func (provider *Provider) GetAllPodsMatchingRegex(ctx context.Context, regex *regexp.Regexp) ([]core.Pod, error) {
-	pods, err := provider.clientSet.CoreV1().Pods("").List(ctx, metav1.ListOptions{})
+func (provider *Provider) GetAllPodsMatchingRegex(ctx context.Context, regex *regexp.Regexp, namespace string) ([]core.Pod, error) {
+	pods, err := provider.clientSet.CoreV1().Pods(namespace).List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}

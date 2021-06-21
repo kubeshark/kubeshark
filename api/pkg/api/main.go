@@ -5,18 +5,20 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/google/martian/har"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"mizuserver/pkg/database"
 	"mizuserver/pkg/models"
 	"mizuserver/pkg/resolver"
-	"mizuserver/pkg/tap"
 	"mizuserver/pkg/utils"
 	"net/url"
 	"os"
 	"path"
 	"sort"
+	"strings"
 	"time"
+
+	"github.com/google/martian/har"
+	"github.com/up9inc/mizu/tap"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 var k8sResolver *resolver.Resolver
@@ -57,14 +59,21 @@ func startReadingFiles(workingDir string) {
 	for true {
 		dir, _ := os.Open(workingDir)
 		dirFiles, _ := dir.Readdir(-1)
-		sort.Sort(utils.ByModTime(dirFiles))
 
-		if len(dirFiles) == 0 {
+		var harFiles []os.FileInfo
+		for _, fileInfo := range dirFiles {
+			if strings.HasSuffix(fileInfo.Name(), ".har") {
+				harFiles = append(harFiles, fileInfo)
+			}
+		}
+		sort.Sort(utils.ByModTime(harFiles))
+
+		if len(harFiles) == 0 {
 			fmt.Printf("Waiting for new files\n")
 			time.Sleep(3 * time.Second)
 			continue
 		}
-		fileInfo := dirFiles[0]
+		fileInfo := harFiles[0]
 		inputFilePath := path.Join(workingDir, fileInfo.Name())
 		file, err := os.Open(inputFilePath)
 		utils.CheckErr(err)
@@ -88,17 +97,25 @@ func startReadingChannel(outputItems <-chan *tap.OutputChannelItem) {
 	}
 
 	for item := range outputItems {
-		saveHarToDb(item.HarEntry, item.RequestSenderIp)
+		saveHarToDb(item.HarEntry, item.ConnectionInfo.ClientIP)
 	}
 }
+
+func StartReadingOutbound(outboundLinkChannel <-chan *tap.OutboundLink) {
+	// tcpStreamFactory will block on write to channel. Empty channel to unblock.
+	// TODO: Make write to channel optional.
+	for range outboundLinkChannel {
+	}
+}
+
 
 func saveHarToDb(entry *har.Entry, sender string) {
 	entryBytes, _ := json.Marshal(entry)
 	serviceName, urlPath, serviceHostName := getServiceNameFromUrl(entry.Request.URL)
 	entryId := primitive.NewObjectID().Hex()
 	var (
-		resolvedSource      *string
-		resolvedDestination *string
+		resolvedSource      string
+		resolvedDestination string
 	)
 	if k8sResolver != nil {
 		resolvedSource = k8sResolver.Resolve(sender)

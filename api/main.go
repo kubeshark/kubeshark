@@ -7,11 +7,12 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gorilla/websocket"
 	"github.com/up9inc/mizu/shared"
+	"github.com/up9inc/mizu/tap"
 	"mizuserver/pkg/api"
 	"mizuserver/pkg/middleware"
 	"mizuserver/pkg/models"
 	"mizuserver/pkg/routes"
-	"mizuserver/pkg/tap"
+	"mizuserver/pkg/sensitiveDataFiltering"
 	"mizuserver/pkg/utils"
 	"os"
 	"os/signal"
@@ -22,19 +23,24 @@ var aggregator = flag.Bool("aggregator", false, "Run in aggregator mode with API
 var standalone = flag.Bool("standalone", false, "Run in standalone tapper and API mode")
 var aggregatorAddress = flag.String("aggregator-address", "", "Address of mizu collector for tapping")
 
-const nodeNameEnvVar = "NODE_NAME"
-const tappedAddressesPerNodeDictEnvVar = "TAPPED_ADDRESSES_PER_HOST"
 
 func main() {
 	flag.Parse()
+	hostMode := os.Getenv(shared.HostModeEnvVar) == "1"
+	tapOpts := &tap.TapOpts{HostMode: hostMode}
 
 	if !*shouldTap && !*aggregator && !*standalone{
 		panic("One of the flags --tap, --api or --standalone must be provided")
 	}
 
 	if *standalone {
-		harOutputChannel := tap.StartPassiveTapper()
-		go api.StartReadingEntries(harOutputChannel, tap.HarOutputDir)
+		harOutputChannel, outboundLinkOutputChannel := tap.StartPassiveTapper(tapOpts)
+		filteredHarChannel := make(chan *tap.OutputChannelItem)
+
+		go filterHarHeaders(harOutputChannel, filteredHarChannel, getTrafficFilteringOptions())
+		go api.StartReadingEntries(filteredHarChannel, nil)
+		go api.StartReadingOutbound(outboundLinkOutputChannel)
+
 		hostApi(nil)
 	} else if *shouldTap {
 		if *aggregatorAddress == "" {
@@ -43,19 +49,26 @@ func main() {
 
 		tapTargets := getTapTargets()
 		if tapTargets != nil {
-			tap.HostAppAddresses = tapTargets
-			fmt.Println("Filtering for the following addresses:", tap.HostAppAddresses)
+			tap.SetFilterAuthorities(tapTargets)
+			fmt.Println("Filtering for the following authorities:", tap.GetFilterIPs())
 		}
 
-		harOutputChannel := tap.StartPassiveTapper()
+		harOutputChannel, outboundLinkOutputChannel := tap.StartPassiveTapper(tapOpts)
+
 		socketConnection, err := shared.ConnectToSocketServer(*aggregatorAddress, shared.DEFAULT_SOCKET_RETRIES, shared.DEFAULT_SOCKET_RETRY_SLEEP_TIME, false)
 		if err != nil {
 			panic(fmt.Sprintf("Error connecting to socket server at %s %v", *aggregatorAddress, err))
 		}
+
 		go pipeChannelToSocket(socketConnection, harOutputChannel)
+		go api.StartReadingOutbound(outboundLinkOutputChannel)
 	} else if *aggregator {
 		socketHarOutChannel := make(chan *tap.OutputChannelItem, 1000)
-		go api.StartReadingEntries(socketHarOutChannel, nil)
+		filteredHarChannel := make(chan *tap.OutputChannelItem)
+
+		go api.StartReadingEntries(filteredHarChannel, nil)
+		go filterHarHeaders(socketHarOutChannel, filteredHarChannel, getTrafficFilteringOptions())
+
 		hostApi(socketHarOutChannel)
 	}
 
@@ -89,13 +102,34 @@ func hostApi(socketHarOutputChannel chan<- *tap.OutputChannelItem) {
 
 
 func getTapTargets() []string {
-	nodeName := os.Getenv(nodeNameEnvVar)
+	nodeName := os.Getenv(shared.NodeNameEnvVar)
 	var tappedAddressesPerNodeDict map[string][]string
-	err := json.Unmarshal([]byte(os.Getenv(tappedAddressesPerNodeDictEnvVar)), &tappedAddressesPerNodeDict)
+	err := json.Unmarshal([]byte(os.Getenv(shared.TappedAddressesPerNodeDictEnvVar)), &tappedAddressesPerNodeDict)
 	if err != nil {
-		panic(fmt.Sprintf("env var value of %s is invalid! must be map[string][]string %v", tappedAddressesPerNodeDict, err))
+		panic(fmt.Sprintf("env var %s's value of %s is invalid! must be map[string][]string %v", shared.TappedAddressesPerNodeDictEnvVar, tappedAddressesPerNodeDict, err))
 	}
 	return tappedAddressesPerNodeDict[nodeName]
+}
+
+func getTrafficFilteringOptions() *shared.TrafficFilteringOptions {
+	filteringOptionsJson := os.Getenv(shared.MizuFilteringOptionsEnvVar)
+	if filteringOptionsJson == "" {
+		return nil
+	}
+	var filteringOptions shared.TrafficFilteringOptions
+	err := json.Unmarshal([]byte(filteringOptionsJson), &filteringOptions)
+	if err != nil {
+		panic(fmt.Sprintf("env var %s's value of %s is invalid! json must match the shared.TrafficFilteringOptions struct %v", shared.MizuFilteringOptionsEnvVar, filteringOptionsJson, err))
+	}
+
+	return &filteringOptions
+}
+
+func filterHarHeaders(inChannel <- chan *tap.OutputChannelItem, outChannel chan *tap.OutputChannelItem, filterOptions *shared.TrafficFilteringOptions) {
+	for message := range inChannel {
+		sensitiveDataFiltering.FilterSensitiveInfoFromHarRequest(message, filterOptions)
+		outChannel <- message
+	}
 }
 
 func pipeChannelToSocket(connection *websocket.Conn, messageDataChannel <-chan *tap.OutputChannelItem) {
