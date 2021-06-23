@@ -147,3 +147,7 @@ func getServiceNameFromUrl(inputUrl string) (string, string, string) {
 	utils.CheckErr(err)
 	return fmt.Sprintf("%s://%s", parsed.Scheme, parsed.Host), parsed.Path, parsed.Host
 }
+
+func CheckIsServiceIP(address string) bool {
+	return k8sResolver.CheckIsServiceIP(address)
+}
