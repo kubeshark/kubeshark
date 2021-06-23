@@ -2,6 +2,8 @@ import React from "react";
 import styles from './style/HarEntry.module.sass';
 import StatusCode from "./StatusCode";
 import {EndpointPath} from "./EndpointPath";
+import incomingIcon from "./assets/incoming-traffic.svg"
+import outgoingIcon from "./assets/outgoing-traffic.svg"
 
 interface HAREntry {
     method?: string,
@@ -24,7 +26,7 @@ interface HAREntryProps {
 export const HarEntry: React.FC<HAREntryProps> = ({entry, setFocusedEntryId, isSelected}) => {
 
     return <>
-		<div id={entry.id} className={`${styles.row} ${isSelected ? styles.rowSelected : ''} ${entry.isOutgoing ? styles.rowOutgoing : ''}`} onClick={() => setFocusedEntryId(entry.id)}>
+        <div id={entry.id} className={`${styles.row} ${isSelected ? styles.rowSelected : ''}`} onClick={() => setFocusedEntryId(entry.id)}>
             {entry.statusCode && <div>
                 <StatusCode statusCode={entry.statusCode}/>
             </div>}
@@ -34,6 +36,7 @@ export const HarEntry: React.FC<HAREntryProps> = ({entry, setFocusedEntryId, isS
                     {entry.service}
                 </div>
             </div>
+            <img className={entry.isOutgoing ? styles.outgoingIconContainer : styles.incomingIconContainer} alt={entry.isOutgoing ? "outgoing" : "incoming"} src={entry.isOutgoing ? outgoingIcon : incomingIcon}/>
             <div className={styles.timestamp}>{new Date(+entry.timestamp)?.toLocaleString()}</div>
         </div>
     </>
