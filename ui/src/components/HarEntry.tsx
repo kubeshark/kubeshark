@@ -2,7 +2,7 @@ import React from "react";
 import styles from './style/HarEntry.module.sass';
 import StatusCode from "./StatusCode";
 import {EndpointPath} from "./EndpointPath";
-import incomingIcon from "./assets/incoming-traffic.svg"
+import ingoingIcon from "./assets/ingoing-traffic.svg"
 import outgoingIcon from "./assets/outgoing-traffic.svg"
 
 interface HAREntry {
@@ -42,8 +42,8 @@ export const HarEntry: React.FC<HAREntryProps> = ({entry, setFocusedEntryId, isS
                         <img src={outgoingIcon} alt="outgoing" title="outgoing"/>
                     </div>
                     :
-                    <div className={styles.incomingIcon}>
-                        <img src={incomingIcon} alt="incoming" title="incoming"/>
+                    <div className={styles.ingoingIcon}>
+                        <img src={ingoingIcon} alt="ingoing" title="ingoing"/>
                     </div>
                 }
             </div>
