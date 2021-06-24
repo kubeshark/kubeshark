@@ -39,11 +39,11 @@ export const HarEntry: React.FC<HAREntryProps> = ({entry, setFocusedEntryId, isS
             <div className={styles.directionContainer}>
                 {entry.isOutgoing ?
                     <div className={styles.outgoingIcon}>
-                        <img src={outgoingIcon} alt="outgoing" title="outgoing"/>
+                        <img src={outgoingIcon} alt="outgoing traffic" title="outgoing"/>
                     </div>
                     :
                     <div className={styles.ingoingIcon}>
-                        <img src={ingoingIcon} alt="ingoing" title="ingoing"/>
+                        <img src={ingoingIcon} alt="ingoing traffic" title="ingoing"/>
                     </div>
                 }
             </div>
