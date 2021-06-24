@@ -66,10 +66,12 @@ func main() {
 		go api.StartReadingOutbound(outboundLinkOutputChannel)
 	} else if *aggregator {
 		socketHarOutChannel := make(chan *tap.OutputChannelItem, 1000)
-		filteredHarChannel := make(chan *tap.OutputChannelItem)
+		filteredHarChannel0 := make(chan *tap.OutputChannelItem)
+		filteredHarChannel1 := make(chan *tap.OutputChannelItem)
 
-		go api.StartReadingEntries(filteredHarChannel, nil)
-		go filterHarHeaders(socketHarOutChannel, filteredHarChannel, getTrafficFilteringOptions())
+		go api.StartReadingEntries(filteredHarChannel1, nil)
+		go filterServices(socketHarOutChannel, filteredHarChannel0, getTrafficFilteringOptions())
+		go filterHarHeaders(filteredHarChannel0, filteredHarChannel1, getTrafficFilteringOptions())
 
 		hostApi(socketHarOutChannel)
 	}
