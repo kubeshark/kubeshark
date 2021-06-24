@@ -23,6 +23,7 @@ type MizuEntry struct {
 	Path                string `json:"path" gorm:"column:path"`
 	ResolvedSource      string `json:"resolvedSource,omitempty" gorm:"column:resolvedSource"`
 	ResolvedDestination string `json:"resolvedDestination,omitempty" gorm:"column:resolvedDestination"`
+	IsOutgoing          bool   `json:"isOutgoing,omitempty" gorm:"column:isOutgoing"`
 }
 
 type BaseEntryDetails struct {
@@ -34,6 +35,7 @@ type BaseEntryDetails struct {
 	StatusCode      int    `json:"statusCode,omitempty"`
 	Method          string `json:"method,omitempty"`
 	Timestamp       int64  `json:"timestamp,omitempty"`
+	IsOutgoing      bool   `json:"isOutgoing,omitempty"`
 }
 
 type EntryData struct {

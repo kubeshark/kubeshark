@@ -70,14 +70,15 @@ func GetResolvedBaseEntry(entry models.MizuEntry) models.BaseEntryDetails {
 		service = SetHostname(service, entry.ResolvedDestination)
 	}
 	return models.BaseEntryDetails{
-		Id:         entry.EntryId,
-		Url:        entryUrl,
-		Service:    service,
-		Path:       entry.Path,
-		StatusCode: entry.Status,
-		Method:     entry.Method,
-		Timestamp:  entry.Timestamp,
+		Id:              entry.EntryId,
+		Url:             entryUrl,
+		Service:         service,
+		Path:            entry.Path,
+		StatusCode:      entry.Status,
+		Method:          entry.Method,
+		Timestamp:       entry.Timestamp,
 		RequestSenderIp: entry.RequestSenderIp,
+		IsOutgoing:      entry.IsOutgoing,
 	}
 }
 
