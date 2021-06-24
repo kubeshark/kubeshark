@@ -35,12 +35,10 @@ func main() {
 
 	if *standalone {
 		harOutputChannel, outboundLinkOutputChannel := tap.StartPassiveTapper(tapOpts)
-		filteredHarChannel0 := make(chan *tap.OutputChannelItem)
-		filteredHarChannel1 := make(chan *tap.OutputChannelItem)
+		filteredHarChannel := make(chan *tap.OutputChannelItem)
 
-		go filterServices(harOutputChannel, filteredHarChannel0, getTrafficFilteringOptions())
-		go filterHarHeaders(filteredHarChannel0, filteredHarChannel1, getTrafficFilteringOptions())
-		go api.StartReadingEntries(filteredHarChannel1, nil)
+		go filterHarHeaders(harOutputChannel, filteredHarChannel, getTrafficFilteringOptions())
+		go api.StartReadingEntries(filteredHarChannel, nil)
 		go api.StartReadingOutbound(outboundLinkOutputChannel)
 
 		hostApi(nil)
@@ -66,12 +64,10 @@ func main() {
 		go api.StartReadingOutbound(outboundLinkOutputChannel)
 	} else if *aggregator {
 		socketHarOutChannel := make(chan *tap.OutputChannelItem, 1000)
-		filteredHarChannel0 := make(chan *tap.OutputChannelItem)
-		filteredHarChannel1 := make(chan *tap.OutputChannelItem)
+		filteredHarChannel := make(chan *tap.OutputChannelItem)
 
-		go filterServices(socketHarOutChannel, filteredHarChannel0, getTrafficFilteringOptions())
-		go filterHarHeaders(filteredHarChannel0, filteredHarChannel1, getTrafficFilteringOptions())
-		go api.StartReadingEntries(filteredHarChannel1, nil)
+		go filterHarHeaders(socketHarOutChannel, filteredHarChannel, getTrafficFilteringOptions())
+		go api.StartReadingEntries(filteredHarChannel, nil)
 
 		hostApi(socketHarOutChannel)
 	}
@@ -129,19 +125,14 @@ func getTrafficFilteringOptions() *shared.TrafficFilteringOptions {
 	return &filteringOptions
 }
 
-func filterServices(inChannel <- chan *tap.OutputChannelItem, outChannel chan *tap.OutputChannelItem, filterOptions *shared.TrafficFilteringOptions) {
+func filterHarHeaders(inChannel <- chan *tap.OutputChannelItem, outChannel chan *tap.OutputChannelItem, filterOptions *shared.TrafficFilteringOptions) {
 	for message := range inChannel {
 		if api.CheckIsServiceIP(message.ConnectionInfo.ServerIP) {
 			continue
 		}
 
-		outChannel <- message
-	}
-}
-
-func filterHarHeaders(inChannel <- chan *tap.OutputChannelItem, outChannel chan *tap.OutputChannelItem, filterOptions *shared.TrafficFilteringOptions) {
-	for message := range inChannel {
 		sensitiveDataFiltering.FilterSensitiveInfoFromHarRequest(message, filterOptions)
+
 		outChannel <- message
 	}
 }
