@@ -226,7 +226,7 @@ func (provider *Provider) RemoveDaemonSet(ctx context.Context, namespace string,
 	return provider.clientSet.AppsV1().DaemonSets(namespace).Delete(ctx, daemonSetName, metav1.DeleteOptions{})
 }
 
-func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, aggregatorPodIp string, nodeToTappedPodIPMap map[string][]string, linkServiceAccount bool, direction string) error {
+func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, aggregatorPodIp string, nodeToTappedPodIPMap map[string][]string, linkServiceAccount bool, tapOutgoing bool) error {
 	nodeToTappedPodIPMapJsonStr, err := json.Marshal(nodeToTappedPodIPMap)
 	if err != nil {
 		return err
@@ -239,7 +239,7 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 		"--hardump",
 		"--aggregator-address", fmt.Sprintf("ws://%s/wsTapper", aggregatorPodIp),
 	}
-	if direction == "any" {
+	if tapOutgoing {
 		mizuCmd = append(mizuCmd, "--anydirection")
 	}
 

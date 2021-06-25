@@ -3,8 +3,10 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	"github.com/up9inc/mizu/cli/mizu"
 	"regexp"
+	"strings"
+
+	"github.com/up9inc/mizu/cli/mizu"
 
 	"github.com/spf13/cobra"
 )
@@ -17,11 +19,12 @@ type MizuTapOptions struct {
 	MizuImage              string
 	MizuPodPort            uint16
 	PlainTextFilterRegexes []string
-	Direction              string
+	TapOutgoing            bool
 }
 
 
 var mizuTapOptions = &MizuTapOptions{}
+var direction string
 
 var tapCmd = &cobra.Command{
 	Use:   "tap [POD REGEX]",
@@ -40,8 +43,13 @@ var tapCmd = &cobra.Command{
 			return errors.New(fmt.Sprintf("%s is not a valid regex %s", args[0], err))
 		}
 
-		if mizuTapOptions.Direction != "in" && mizuTapOptions.Direction != "any" {
-			return errors.New(fmt.Sprintf("%s is not a valid value for flag --direction. Acceptable values are in/any.", mizuTapOptions.Direction))
+		directionLowerCase = strings.ToLower(direction)
+		if directionLowerCase == "any" {
+			mizuTapOptions.TapOutgoing = true
+		} else if directionLowerCase == "in" {
+			mizuTapOptions.TapOutgoing = false
+		} else {
+			return errors.New(fmt.Sprintf("%s is not a valid value for flag --direction. Acceptable values are in/any.", direction))
 		}
 
 		RunMizuTap(regex, mizuTapOptions)
@@ -59,5 +67,5 @@ func init() {
 	tapCmd.Flags().StringVarP(&mizuTapOptions.MizuImage, "mizu-image", "", fmt.Sprintf("gcr.io/up9-docker-hub/mizu/%s:latest", mizu.Branch), "Custom image for mizu collector")
 	tapCmd.Flags().Uint16VarP(&mizuTapOptions.MizuPodPort, "mizu-port", "", 8899, "Port which mizu cli will attempt to forward from the mizu collector pod")
 	tapCmd.Flags().StringArrayVarP(&mizuTapOptions.PlainTextFilterRegexes, "regex-masking", "r", nil, "List of regex expressions that are used to filter matching values from text/plain http bodies")
-	tapCmd.Flags().StringVarP(&mizuTapOptions.Direction, "direction", "", "in", "Record traffic that goes in this direction (relative to the tapped pod): in/any")
+	tapCmd.Flags().StringVarP(direction, "direction", "", "in", "Record traffic that goes in this direction (relative to the tapped pod): in/any")
 }
