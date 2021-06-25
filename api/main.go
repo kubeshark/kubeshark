@@ -127,7 +127,7 @@ func getTrafficFilteringOptions() *shared.TrafficFilteringOptions {
 
 func filterHarHeaders(inChannel <- chan *tap.OutputChannelItem, outChannel chan *tap.OutputChannelItem, filterOptions *shared.TrafficFilteringOptions) {
 	for message := range inChannel {
-		if api.CheckIsServiceIP(message.ConnectionInfo.ServerIP) {
+		if message.ConnectionInfo.IsOutgoing && api.CheckIsServiceIP(message.ConnectionInfo.ServerIP) {
 			continue
 		}
 
