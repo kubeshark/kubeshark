@@ -222,7 +222,7 @@ func (provider *Provider) RemoveService(ctx context.Context, namespace string, s
 }
 
 func (provider *Provider) RemoveDaemonSet(ctx context.Context, namespace string, daemonSetName string) error {
-	if isApplied, err := provider.IsDaemonSetApplied(ctx, namespace, daemonSetName);
+	if isApplied, err := provider.CheckDaemonSetExists(ctx, namespace, daemonSetName);
 	err != nil {
 		return err
 	} else if isApplied {
@@ -232,7 +232,7 @@ func (provider *Provider) RemoveDaemonSet(ctx context.Context, namespace string,
 	return provider.clientSet.AppsV1().DaemonSets(namespace).Delete(ctx, daemonSetName, metav1.DeleteOptions{})
 }
 
-func (provider *Provider) IsDaemonSetApplied(ctx context.Context, namespace string, daemonSetName string) (bool, error) {
+func (provider *Provider) CheckDaemonSetExists(ctx context.Context, namespace string, daemonSetName string) (bool, error) {
 	listOptions := metav1.ListOptions{
 		FieldSelector: fmt.Sprintf("metadata.name=%s", daemonSetName),
 		Limit: 1,
