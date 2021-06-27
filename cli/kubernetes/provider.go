@@ -214,10 +214,24 @@ func (provider *Provider) CreateMizuRBAC(ctx context.Context, namespace string, 
 }
 
 func (provider *Provider) RemovePod(ctx context.Context, namespace string, podName string) error {
+	if isApplied, err := provider.CheckPodExists(ctx, namespace, daemonSetName);
+	err != nil {
+		return err
+	} else if isApplied {
+		return nil
+	}
+
 	return provider.clientSet.CoreV1().Pods(namespace).Delete(ctx, podName, metav1.DeleteOptions{})
 }
 
 func (provider *Provider) RemoveService(ctx context.Context, namespace string, serviceName string) error {
+	if isApplied, err := provider.CheckServiceExists(ctx, namespace, daemonSetName);
+	err != nil {
+		return err
+	} else if isApplied {
+		return nil
+	}
+
 	return provider.clientSet.CoreV1().Services(namespace).Delete(ctx, serviceName, metav1.DeleteOptions{})
 }
 
@@ -232,17 +246,51 @@ func (provider *Provider) RemoveDaemonSet(ctx context.Context, namespace string,
 	return provider.clientSet.AppsV1().DaemonSets(namespace).Delete(ctx, daemonSetName, metav1.DeleteOptions{})
 }
 
-func (provider *Provider) CheckDaemonSetExists(ctx context.Context, namespace string, daemonSetName string) (bool, error) {
+func (provider *Provider) CheckPodExists(ctx context.Context, namespace string, name string) (bool, error) {
 	listOptions := metav1.ListOptions{
-		FieldSelector: fmt.Sprintf("metadata.name=%s", daemonSetName),
+		FieldSelector: fmt.Sprintf("metadata.name=%s", name),
 		Limit: 1,
 	}
-	daemonSets, err := provider.clientSet.AppsV1().DaemonSets(namespace).List(ctx, listOptions)
+	resourceList, err := provider.clientSet.CoreV1().Pods(namespace).List(ctx, listOptions)
 	if err != nil {
 		return false, err
 	}
 
-	if len(daemonSets.Items) > 0 {
+	if len(resourceList.Items) > 0 {
+		return true, nil
+	}
+
+	return false, nil
+}
+
+func (provider *Provider) CheckServiceSetExists(ctx context.Context, namespace string, name string) (bool, error) {
+	listOptions := metav1.ListOptions{
+		FieldSelector: fmt.Sprintf("metadata.name=%s", name),
+		Limit: 1,
+	}
+	resourceList, err := provider.clientSet.CoreV1().Services(namespace).List(ctx, listOptions)
+	if err != nil {
+		return false, err
+	}
+
+	if len(resourceList.Items) > 0 {
+		return true, nil
+	}
+
+	return false, nil
+}
+
+func (provider *Provider) CheckDaemonSetExists(ctx context.Context, namespace string, name string) (bool, error) {
+	listOptions := metav1.ListOptions{
+		FieldSelector: fmt.Sprintf("metadata.name=%s", name),
+		Limit: 1,
+	}
+	resourceList, err := provider.clientSet.AppsV1().DaemonSets(namespace).List(ctx, listOptions)
+	if err != nil {
+		return false, err
+	}
+
+	if len(resourceList.Items) > 0 {
 		return true, nil
 	}
 
