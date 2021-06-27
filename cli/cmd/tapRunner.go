@@ -3,12 +3,13 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"github.com/up9inc/mizu/shared"
 	"os"
 	"os/signal"
 	"regexp"
 	"syscall"
 	"time"
+
+	"github.com/up9inc/mizu/shared"
 
 	core "k8s.io/api/core/v1"
 
