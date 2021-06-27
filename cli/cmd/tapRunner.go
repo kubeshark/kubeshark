@@ -139,7 +139,7 @@ func updateMizuTappers(ctx context.Context, kubernetesProvider *kubernetes.Provi
 			fmt.Sprintf("%s.%s.svc.cluster.local", aggregatorService.Name, aggregatorService.Namespace),
 			nodeToTappedPodIPMap,
 			mizuServiceAccountExists,
-			tappingOptions.Direction,
+			tappingOptions.TapOutgoing,
 		); err != nil {
 			fmt.Printf("Error creating mizu tapper daemonset: %v\n", err)
 			return err

@@ -297,7 +297,7 @@ func (provider *Provider) CheckDaemonSetExists(ctx context.Context, namespace st
 	return false, nil
 }
 
-func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, aggregatorPodIp string, nodeToTappedPodIPMap map[string][]string, linkServiceAccount bool, direction string) error {
+func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, aggregatorPodIp string, nodeToTappedPodIPMap map[string][]string, linkServiceAccount bool, tapOutgoing bool) error {
 	if len(nodeToTappedPodIPMap) == 0 {
 		return fmt.Errorf("Daemon set %s must tap at least 1 pod", daemonSetName)
 	}
@@ -314,7 +314,7 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 		"--hardump",
 		"--aggregator-address", fmt.Sprintf("ws://%s/wsTapper", aggregatorPodIp),
 	}
-	if direction == "any" {
+	if tapOutgoing {
 		mizuCmd = append(mizuCmd, "--anydirection")
 	}
 
