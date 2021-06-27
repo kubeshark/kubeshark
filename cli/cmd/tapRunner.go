@@ -113,19 +113,26 @@ func getMizuApiFilteringOptions(tappingOptions *MizuTapOptions) (*shared.Traffic
 }
 
 func createMizuTappers(ctx context.Context, kubernetesProvider *kubernetes.Provider, nodeToTappedPodIPMap map[string][]string, tappingOptions *MizuTapOptions) error {
-	if err := kubernetesProvider.ApplyMizuTapperDaemonSet(
-		ctx,
-		mizu.ResourcesNamespace,
-		mizu.TapperDaemonSetName,
-		tappingOptions.MizuImage,
-		mizu.TapperPodName,
-		fmt.Sprintf("%s.%s.svc.cluster.local", aggregatorService.Name, aggregatorService.Namespace),
-		nodeToTappedPodIPMap,
-		mizuServiceAccountExists,
-		tappingOptions.Direction,
-	); err != nil {
-		fmt.Printf("Error creating mizu tapper daemonset: %v\n", err)
-		return err
+	if len(nodeToTappedPodIPMap) > 0 {
+		if err := kubernetesProvider.ApplyMizuTapperDaemonSet(
+			ctx,
+			mizu.ResourcesNamespace,
+			mizu.TapperDaemonSetName,
+			tappingOptions.MizuImage,
+			mizu.TapperPodName,
+			fmt.Sprintf("%s.%s.svc.cluster.local", aggregatorService.Name, aggregatorService.Namespace),
+			nodeToTappedPodIPMap,
+			mizuServiceAccountExists,
+			tappingOptions.Direction,
+		); err != nil {
+			fmt.Printf("Error creating mizu tapper daemonset: %v\n", err)
+			return err
+		}
+	} else {
+		if err := kubernetesProvider.RemoveDaemonSet(ctx, mizu.ResourcesNamespace, mizu.TapperDaemonSetName); err != nil {
+			fmt.Printf("Error deleting mizu tapper daemonset: %v\n", err)
+			return err
+		}
 	}
 
 	return nil
