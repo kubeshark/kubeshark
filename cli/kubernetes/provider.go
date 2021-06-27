@@ -226,6 +226,10 @@ func (provider *Provider) RemoveDaemonSet(ctx context.Context, namespace string,
 }
 
 func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, aggregatorPodIp string, nodeToTappedPodIPMap map[string][]string, linkServiceAccount bool, direction string) error {
+	if len(nodeToTappedPodIPMap) == 0 {
+		return fmt.Errorf("Daemon set %s must tap at least 1 pod", daemonSetName)
+	}
+
 	nodeToTappedPodIPMapJsonStr, err := json.Marshal(nodeToTappedPodIPMap)
 	if err != nil {
 		return err
