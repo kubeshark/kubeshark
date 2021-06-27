@@ -217,7 +217,7 @@ func (provider *Provider) RemovePod(ctx context.Context, namespace string, podNa
 	if isApplied, err := provider.CheckPodExists(ctx, namespace, daemonSetName);
 	err != nil {
 		return err
-	} else if isApplied {
+	} else if !isApplied {
 		return nil
 	}
 
@@ -228,7 +228,7 @@ func (provider *Provider) RemoveService(ctx context.Context, namespace string, s
 	if isApplied, err := provider.CheckServiceExists(ctx, namespace, daemonSetName);
 	err != nil {
 		return err
-	} else if isApplied {
+	} else if !isApplied {
 		return nil
 	}
 
@@ -239,7 +239,7 @@ func (provider *Provider) RemoveDaemonSet(ctx context.Context, namespace string,
 	if isApplied, err := provider.CheckDaemonSetExists(ctx, namespace, daemonSetName);
 	err != nil {
 		return err
-	} else if isApplied {
+	} else if !isApplied {
 		return nil
 	}
 
