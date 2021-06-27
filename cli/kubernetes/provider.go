@@ -222,7 +222,31 @@ func (provider *Provider) RemoveService(ctx context.Context, namespace string, s
 }
 
 func (provider *Provider) RemoveDaemonSet(ctx context.Context, namespace string, daemonSetName string) error {
+	if isApplied, err := provider.IsDaemonSetApplied(ctx, namespace, daemonSetName);
+	err != nil {
+		return err
+	} else if isApplied {
+		return nil
+	}
+
 	return provider.clientSet.AppsV1().DaemonSets(namespace).Delete(ctx, daemonSetName, metav1.DeleteOptions{})
+}
+
+func (provider *Provider) IsDaemonSetApplied(ctx context.Context, namespace string, daemonSetName string) (bool, error) {
+	listOptions := metav1.ListOptions{
+		FieldSelector: fmt.Sprintf("metadata.name=%s", daemonSetName),
+		Limit: 1,
+	}
+	daemonSets, err := provider.clientSet.AppsV1().DaemonSets(namespace).List(ctx, listOptions)
+	if err != nil {
+		return false, err
+	}
+
+	if len(daemonSets.Items) > 0 {
+		return true, nil
+	}
+
+	return false, nil
 }
 
 func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, aggregatorPodIp string, nodeToTappedPodIPMap map[string][]string, linkServiceAccount bool, direction string) error {
