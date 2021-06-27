@@ -37,7 +37,7 @@ func main() {
 		harOutputChannel, outboundLinkOutputChannel := tap.StartPassiveTapper(tapOpts)
 		filteredHarChannel := make(chan *tap.OutputChannelItem)
 
-		go filterHarHeaders(harOutputChannel, filteredHarChannel, getTrafficFilteringOptions())
+		go filterHarItems(harOutputChannel, filteredHarChannel, getTrafficFilteringOptions())
 		go api.StartReadingEntries(filteredHarChannel, nil)
 		go api.StartReadingOutbound(outboundLinkOutputChannel)
 
@@ -66,7 +66,7 @@ func main() {
 		socketHarOutChannel := make(chan *tap.OutputChannelItem, 1000)
 		filteredHarChannel := make(chan *tap.OutputChannelItem)
 
-		go filterHarHeaders(socketHarOutChannel, filteredHarChannel, getTrafficFilteringOptions())
+		go filterHarItems(socketHarOutChannel, filteredHarChannel, getTrafficFilteringOptions())
 		go api.StartReadingEntries(filteredHarChannel, nil)
 
 		hostApi(socketHarOutChannel)
@@ -125,7 +125,7 @@ func getTrafficFilteringOptions() *shared.TrafficFilteringOptions {
 	return &filteringOptions
 }
 
-func filterHarHeaders(inChannel <- chan *tap.OutputChannelItem, outChannel chan *tap.OutputChannelItem, filterOptions *shared.TrafficFilteringOptions) {
+func filterHarItems(inChannel <- chan *tap.OutputChannelItem, outChannel chan *tap.OutputChannelItem, filterOptions *shared.TrafficFilteringOptions) {
 	for message := range inChannel {
 		if message.ConnectionInfo.IsOutgoing && api.CheckIsServiceIP(message.ConnectionInfo.ServerIP) {
 			continue
