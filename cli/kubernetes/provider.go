@@ -214,7 +214,7 @@ func (provider *Provider) CreateMizuRBAC(ctx context.Context, namespace string, 
 }
 
 func (provider *Provider) RemovePod(ctx context.Context, namespace string, podName string) error {
-	if isFound, err := provider.CheckPodExists(ctx, namespace, daemonSetName);
+	if isFound, err := provider.CheckPodExists(ctx, namespace, podName);
 	err != nil {
 		return err
 	} else if !isFound {
@@ -225,7 +225,7 @@ func (provider *Provider) RemovePod(ctx context.Context, namespace string, podNa
 }
 
 func (provider *Provider) RemoveService(ctx context.Context, namespace string, serviceName string) error {
-	if isFound, err := provider.CheckServiceExists(ctx, namespace, daemonSetName);
+	if isFound, err := provider.CheckServiceExists(ctx, namespace, serviceName);
 	err != nil {
 		return err
 	} else if !isFound {
@@ -263,7 +263,7 @@ func (provider *Provider) CheckPodExists(ctx context.Context, namespace string, 
 	return false, nil
 }
 
-func (provider *Provider) CheckServiceSetExists(ctx context.Context, namespace string, name string) (bool, error) {
+func (provider *Provider) CheckServiceExists(ctx context.Context, namespace string, name string) (bool, error) {
 	listOptions := metav1.ListOptions{
 		FieldSelector: fmt.Sprintf("metadata.name=%s", name),
 		Limit: 1,
