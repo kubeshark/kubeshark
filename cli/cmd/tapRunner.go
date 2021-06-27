@@ -46,6 +46,22 @@ func RunMizuTap(podRegexQuery *regexp.Regexp, tappingOptions *MizuTapOptions) {
 		currentlyTappedPods = matchingPods
 	}
 
+	var namespacesStr string
+	if targetNamespace != "" {
+		namespacesStr = fmt.Sprintf("namespace \"%s\"", targetNamespace)
+	} else {
+		namespacesStr = "all namespaces"
+	}
+	fmt.Printf("Tapping pods in %s\n", namespacesStr)
+
+	if len(currentlyTappedPods) == 0 {
+		var suggestionStr string
+		if targetNamespace != "" {
+			suggestionStr = "\nSelect a different namespace with -n or tap all namespaces with -A"
+		}
+		fmt.Printf("Did not find any pods matching the regex argument%s\n\n", suggestionStr)
+	}
+
 	nodeToTappedPodIPMap, err := getNodeHostToTappedPodIpsMap(currentlyTappedPods)
 	if err != nil {
 		return
