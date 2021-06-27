@@ -102,7 +102,6 @@ func (provider *Provider) CreateMizuAggregatorPod(ctx context.Context, namespace
 			},
 			DNSPolicy:                     core.DNSClusterFirstWithHostNet,
 			TerminationGracePeriodSeconds: new(int64),
-			// Affinity: TODO: define node selector for all relevant nodes for this mizu instance
 		},
 	}
 	//define the service account only when it exists to prevent pod crash
