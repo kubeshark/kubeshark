@@ -214,10 +214,10 @@ func (provider *Provider) CreateMizuRBAC(ctx context.Context, namespace string, 
 }
 
 func (provider *Provider) RemovePod(ctx context.Context, namespace string, podName string) error {
-	if isApplied, err := provider.CheckPodExists(ctx, namespace, daemonSetName);
+	if isFound, err := provider.CheckPodExists(ctx, namespace, daemonSetName);
 	err != nil {
 		return err
-	} else if !isApplied {
+	} else if !isFound {
 		return nil
 	}
 
@@ -225,10 +225,10 @@ func (provider *Provider) RemovePod(ctx context.Context, namespace string, podNa
 }
 
 func (provider *Provider) RemoveService(ctx context.Context, namespace string, serviceName string) error {
-	if isApplied, err := provider.CheckServiceExists(ctx, namespace, daemonSetName);
+	if isFound, err := provider.CheckServiceExists(ctx, namespace, daemonSetName);
 	err != nil {
 		return err
-	} else if !isApplied {
+	} else if !isFound {
 		return nil
 	}
 
@@ -236,10 +236,10 @@ func (provider *Provider) RemoveService(ctx context.Context, namespace string, s
 }
 
 func (provider *Provider) RemoveDaemonSet(ctx context.Context, namespace string, daemonSetName string) error {
-	if isApplied, err := provider.CheckDaemonSetExists(ctx, namespace, daemonSetName);
+	if isFound, err := provider.CheckDaemonSetExists(ctx, namespace, daemonSetName);
 	err != nil {
 		return err
-	} else if !isApplied {
+	} else if !isFound {
 		return nil
 	}
 
