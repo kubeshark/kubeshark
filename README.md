@@ -13,13 +13,6 @@ curl -Lo mizu \
 https://github.com/up9inc/mizu/releases/latest/download/mizu_darwin_amd64 \
 && chmod 755 mizu
 ```
-
-* for MacOS - Apple Silicon
-```
-curl -Lo mizu \
-https://github.com/up9inc/mizu/releases/latest/download/mizu_darwin_arm64 \
-&& chmod 755 mizu
-```
  
 * for Linux - Intel 64bit
 ```
@@ -27,7 +20,6 @@ curl -Lo mizu \
 https://github.com/up9inc/mizu/releases/latest/download/mizu_linux_amd64 \
 && chmod 755 mizu
 ``` 
-
 
 SHA256 checksums are available on the [Releases](https://github.com/up9inc/mizu/releases) page.
 

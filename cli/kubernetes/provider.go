@@ -102,7 +102,6 @@ func (provider *Provider) CreateMizuAggregatorPod(ctx context.Context, namespace
 			},
 			DNSPolicy:                     core.DNSClusterFirstWithHostNet,
 			TerminationGracePeriodSeconds: new(int64),
-			// Affinity: TODO: define node selector for all relevant nodes for this mizu instance
 		},
 	}
 	//define the service account only when it exists to prevent pod crash
@@ -215,21 +214,108 @@ func (provider *Provider) CreateMizuRBAC(ctx context.Context, namespace string, 
 }
 
 func (provider *Provider) RemovePod(ctx context.Context, namespace string, podName string) error {
+	if isFound, err := provider.CheckPodExists(ctx, namespace, podName);
+	err != nil {
+		return err
+	} else if !isFound {
+		return nil
+	}
+
 	return provider.clientSet.CoreV1().Pods(namespace).Delete(ctx, podName, metav1.DeleteOptions{})
 }
 
 func (provider *Provider) RemoveService(ctx context.Context, namespace string, serviceName string) error {
+	if isFound, err := provider.CheckServiceExists(ctx, namespace, serviceName);
+	err != nil {
+		return err
+	} else if !isFound {
+		return nil
+	}
+
 	return provider.clientSet.CoreV1().Services(namespace).Delete(ctx, serviceName, metav1.DeleteOptions{})
 }
 
 func (provider *Provider) RemoveDaemonSet(ctx context.Context, namespace string, daemonSetName string) error {
+	if isFound, err := provider.CheckDaemonSetExists(ctx, namespace, daemonSetName);
+	err != nil {
+		return err
+	} else if !isFound {
+		return nil
+	}
+
 	return provider.clientSet.AppsV1().DaemonSets(namespace).Delete(ctx, daemonSetName, metav1.DeleteOptions{})
 }
 
-func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, aggregatorPodIp string, nodeToTappedPodIPMap map[string][]string, linkServiceAccount bool) error {
+func (provider *Provider) CheckPodExists(ctx context.Context, namespace string, name string) (bool, error) {
+	listOptions := metav1.ListOptions{
+		FieldSelector: fmt.Sprintf("metadata.name=%s", name),
+		Limit: 1,
+	}
+	resourceList, err := provider.clientSet.CoreV1().Pods(namespace).List(ctx, listOptions)
+	if err != nil {
+		return false, err
+	}
+
+	if len(resourceList.Items) > 0 {
+		return true, nil
+	}
+
+	return false, nil
+}
+
+func (provider *Provider) CheckServiceExists(ctx context.Context, namespace string, name string) (bool, error) {
+	listOptions := metav1.ListOptions{
+		FieldSelector: fmt.Sprintf("metadata.name=%s", name),
+		Limit: 1,
+	}
+	resourceList, err := provider.clientSet.CoreV1().Services(namespace).List(ctx, listOptions)
+	if err != nil {
+		return false, err
+	}
+
+	if len(resourceList.Items) > 0 {
+		return true, nil
+	}
+
+	return false, nil
+}
+
+func (provider *Provider) CheckDaemonSetExists(ctx context.Context, namespace string, name string) (bool, error) {
+	listOptions := metav1.ListOptions{
+		FieldSelector: fmt.Sprintf("metadata.name=%s", name),
+		Limit: 1,
+	}
+	resourceList, err := provider.clientSet.AppsV1().DaemonSets(namespace).List(ctx, listOptions)
+	if err != nil {
+		return false, err
+	}
+
+	if len(resourceList.Items) > 0 {
+		return true, nil
+	}
+
+	return false, nil
+}
+
+func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, aggregatorPodIp string, nodeToTappedPodIPMap map[string][]string, linkServiceAccount bool, tapOutgoing bool) error {
+	if len(nodeToTappedPodIPMap) == 0 {
+		return fmt.Errorf("Daemon set %s must tap at least 1 pod", daemonSetName)
+	}
+
 	nodeToTappedPodIPMapJsonStr, err := json.Marshal(nodeToTappedPodIPMap)
 	if err != nil {
 		return err
+	}
+
+	mizuCmd := []string{
+		"./mizuagent",
+		"-i", "any",
+		"--tap",
+		"--hardump",
+		"--aggregator-address", fmt.Sprintf("ws://%s/wsTapper", aggregatorPodIp),
+	}
+	if tapOutgoing {
+		mizuCmd = append(mizuCmd, "--anydirection")
 	}
 
 	privileged := true
@@ -238,7 +324,7 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	agentContainer.WithImage(podImage)
 	agentContainer.WithImagePullPolicy(core.PullAlways)
 	agentContainer.WithSecurityContext(applyconfcore.SecurityContext().WithPrivileged(privileged))
-	agentContainer.WithCommand("./mizuagent", "-i", "any", "--tap", "--hardump", "--aggregator-address", fmt.Sprintf("ws://%s/wsTapper", aggregatorPodIp))
+	agentContainer.WithCommand(mizuCmd...)
 	agentContainer.WithEnv(
 		applyconfcore.EnvVar().WithName(shared.HostModeEnvVar).WithValue("1"),
 		applyconfcore.EnvVar().WithName(shared.TappedAddressesPerNodeDictEnvVar).WithValue(string(nodeToTappedPodIPMapJsonStr)),

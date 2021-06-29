@@ -20,6 +20,7 @@ type Resolver struct {
 	clientConfig  *restclient.Config
 	clientSet *kubernetes.Clientset
 	nameMap map[string]string
+	serviceMap map[string]string
 	isStarted bool
 	errOut chan error
 }
@@ -39,6 +40,11 @@ func (resolver *Resolver) Resolve(name string) string {
 		return ""
 	}
 	return resolvedName
+}
+
+func (resolver *Resolver) CheckIsServiceIP(address string) bool {
+	_, isFound := resolver.serviceMap[address]
+	return isFound
 }
 
 func (resolver *Resolver) watchPods(ctx context.Context) error {
@@ -124,6 +130,7 @@ func (resolver *Resolver) watchServices(ctx context.Context) error {
 			serviceHostname := fmt.Sprintf("%s.%s", service.Name, service.Namespace)
 			if service.Spec.ClusterIP != "" && service.Spec.ClusterIP != kubClientNullString {
 				resolver.saveResolvedName(service.Spec.ClusterIP, serviceHostname, event.Type)
+				resolver.saveServiceIP(service.Spec.ClusterIP, serviceHostname, event.Type)
 			}
 			if service.Status.LoadBalancer.Ingress != nil {
 				for _, ingress := range service.Status.LoadBalancer.Ingress {
@@ -144,6 +151,14 @@ func (resolver *Resolver) saveResolvedName(key string, resolved string, eventTyp
 	} else {
 		resolver.nameMap[key] = resolved
 		// fmt.Printf("setting %s=%s\n", key, resolved)
+	}
+}
+
+func (resolver *Resolver) saveServiceIP(key string, resolved string, eventType watch.EventType) {
+	if eventType == watch.Deleted {
+		delete(resolver.serviceMap, key)
+	} else {
+		resolver.serviceMap[key] = resolved
 	}
 }
 

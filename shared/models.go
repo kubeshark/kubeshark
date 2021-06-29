@@ -3,7 +3,7 @@ package shared
 type WebSocketMessageType string
 const (
 	WebSocketMessageTypeEntry        WebSocketMessageType = "entry"
-	WebSocketMessageTypeTappedEntry        WebSocketMessageType = "tappedEntry"
+	WebSocketMessageTypeTappedEntry  WebSocketMessageType = "tappedEntry"
 	WebSocketMessageTypeUpdateStatus WebSocketMessageType = "status"
 )
 

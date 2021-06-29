@@ -2,6 +2,8 @@ import React from "react";
 import styles from './style/HarEntry.module.sass';
 import StatusCode from "./StatusCode";
 import {EndpointPath} from "./EndpointPath";
+import ingoingIcon from "./assets/ingoing-traffic.svg"
+import outgoingIcon from "./assets/outgoing-traffic.svg"
 
 interface HAREntry {
     method?: string,
@@ -12,6 +14,7 @@ interface HAREntry {
     url?: string;
     isCurrentRevision?: boolean;
     timestamp: Date;
+	isOutgoing?: boolean;
 }
 
 interface HAREntryProps {
@@ -32,6 +35,17 @@ export const HarEntry: React.FC<HAREntryProps> = ({entry, setFocusedEntryId, isS
                 <div className={styles.service}>
                     {entry.service}
                 </div>
+            </div>
+            <div className={styles.directionContainer}>
+                {entry.isOutgoing ?
+                    <div className={styles.outgoingIcon}>
+                        <img src={outgoingIcon} alt="outgoing traffic" title="outgoing"/>
+                    </div>
+                    :
+                    <div className={styles.ingoingIcon}>
+                        <img src={ingoingIcon} alt="ingoing traffic" title="ingoing"/>
+                    </div>
+                }
             </div>
             <div className={styles.timestamp}>{new Date(+entry.timestamp)?.toLocaleString()}</div>
         </div>
