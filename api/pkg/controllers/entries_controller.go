@@ -144,9 +144,8 @@ func GetHARs(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).SendStream(buffer)
 }
 
-func uploadEntriesImpl(token string, model string) {
-	baseUrl := "igorgov-dev.dev.testr.io"
-	sleepTime := int64(time.Second * 10)
+func uploadEntriesImpl(token string, model string, envPrefix string) {
+	sleepTime := time.Second * 10
 
 	var timestampFrom int64 = 0
 
@@ -165,11 +164,12 @@ func uploadEntriesImpl(token string, model string) {
 
 			var in bytes.Buffer
 			w := zlib.NewWriter(&in)
-			w.Write(body)
-			w.Close()
+			_, _ = w.Write(body)
+			_ = w.Close()
 			reqBody := ioutil.NopCloser(bytes.NewReader(in.Bytes()))
 
-			postUrl, _ := url.Parse("https://traffic." + baseUrl + "/dumpTrafficBulk/" + model)
+			postUrl, _ := url.Parse("https://traffic." + envPrefix + "/dumpTrafficBulk/" + model)
+			fmt.Println(postUrl)
 			req := &http.Request{
 				Method: "POST",
 				URL:    postUrl,
@@ -184,12 +184,15 @@ func uploadEntriesImpl(token string, model string) {
 			if postErr != nil {
 				log.Fatal(postErr)
 			}
+
+			fmt.Printf("Finish uploading %v entries to %s\n", len(entriesArray), postUrl)
+
 		} else {
 			fmt.Println("Nothing to upload")
 		}
 
-		fmt.Println("Sleeping for " + string(sleepTime) + "seconds...")
-		time.Sleep(time.Duration(sleepTime))
+		fmt.Printf("Sleeping for %v...\n", sleepTime)
+		time.Sleep(sleepTime)
 		timestampFrom = timestampTo
 	}
 }
@@ -202,7 +205,7 @@ func UploadEntries(c *fiber.Ctx) error {
 	if err := validation.Validate(entriesFilter); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(err)
 	}
-	go uploadEntriesImpl(entriesFilter.Token, entriesFilter.Model)
+	go uploadEntriesImpl(entriesFilter.Token, entriesFilter.Model, entriesFilter.Dest)
 	return c.Status(fiber.StatusOK).SendString("OK")
 }
 

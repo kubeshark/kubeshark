@@ -74,7 +74,7 @@ func RunMizuTap(podRegexQuery *regexp.Regexp, tappingOptions *MizuTapOptions) {
 		return
 	}
 
-	go portForwardApiPod(ctx, kubernetesProvider, cancel, tappingOptions) // TODO convert this to job for built in pod ttl or have the running app handle this
+	go portForwardApiPod(ctx, kubernetesProvider, cancel, tappingOptions, ) // TODO convert this to job for built in pod ttl or have the running app handle this
 	go watchPodsForTapping(ctx, kubernetesProvider, cancel, podRegexQuery, tappingOptions)
 	go syncApiStatus(ctx, cancel, tappingOptions)
 
@@ -275,13 +275,12 @@ func portForwardApiPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 				fmt.Printf("Web interface is now available at http://localhost:%d\n", tappingOptions.GuiPort)
 
 				if tappingOptions.Analyze {
-					baseUrl := "igorgov-dev.dev.testr.io"
-					token := CreateAnonymousToken(baseUrl)
-					_, err := http.Get("http://localhost:8899/api/uploadEntries")
+					token := CreateAnonymousToken(tappingOptions.AnalyzeDestination)
+					_, err := http.Get(fmt.Sprintf("http://localhost:8899/api/uploadEntries?token=%s&model=%s&dest=%s", token.Token, token.Model, tappingOptions.AnalyzeDestination))
 					if err != nil {
 						fmt.Println(err)
 					}
-					fmt.Println("https://" + baseUrl + "/share/" + token.Token)
+					fmt.Println("https://" + tappingOptions.AnalyzeDestination + "/share/" + token.Token)
 				}
 
 				if err != nil {
