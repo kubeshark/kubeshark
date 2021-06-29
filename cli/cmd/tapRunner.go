@@ -2,7 +2,10 @@ package cmd
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
 	"os"
 	"os/signal"
 	"regexp"
@@ -77,6 +80,32 @@ func RunMizuTap(podRegexQuery *regexp.Regexp, tappingOptions *MizuTapOptions) {
 
 	//block until exit signal or error
 	waitForFinish(ctx, cancel)
+}
+
+type guestToken struct {
+	Token string `json:"token"`
+	Model string `json:"model"`
+}
+
+func CreateAnonymousToken(baseUrl string) guestToken {
+	resp, httpErr := http.Get("https://trcc." + baseUrl + "/anonymous/token")
+	if httpErr != nil {
+		fmt.Println(httpErr)
+	}
+
+	body, ioErr := ioutil.ReadAll(resp.Body)
+	resp.Body.Close()
+	if ioErr != nil {
+		fmt.Println(ioErr)
+	}
+	token := guestToken{}
+	jsonErr := json.Unmarshal(body, &token)
+	if jsonErr != nil {
+		fmt.Println(jsonErr)
+	}
+	fmt.Println("Token:", token.Token, "model:", token.Model)
+
+	return token
 }
 
 func createMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, nodeToTappedPodIPMap map[string][]string, tappingOptions *MizuTapOptions, mizuApiFilteringOptions *shared.TrafficFilteringOptions) error {
@@ -244,6 +273,17 @@ func portForwardApiPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 				var err error
 				portForward, err = kubernetes.NewPortForward(kubernetesProvider, mizu.ResourcesNamespace, mizu.AggregatorPodName, tappingOptions.GuiPort, tappingOptions.MizuPodPort, cancel)
 				fmt.Printf("Web interface is now available at http://localhost:%d\n", tappingOptions.GuiPort)
+
+				if tappingOptions.Analyze {
+					baseUrl := "igorgov-dev.dev.testr.io"
+					token := CreateAnonymousToken(baseUrl)
+					_, err := http.Get("http://localhost:8899/api/uploadEntries")
+					if err != nil {
+						fmt.Println(err)
+					}
+					fmt.Println("https://" + baseUrl + "/share/" + token.Token)
+				}
+
 				if err != nil {
 					fmt.Printf("error forwarding port to pod %s\n", err)
 					cancel()

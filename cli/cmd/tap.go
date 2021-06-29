@@ -15,13 +15,13 @@ type MizuTapOptions struct {
 	GuiPort                uint16
 	Namespace              string
 	AllNamespaces          bool
+	Analyze                bool
 	KubeConfigPath         string
 	MizuImage              string
 	MizuPodPort            uint16
 	PlainTextFilterRegexes []string
 	TapOutgoing            bool
 }
-
 
 var mizuTapOptions = &MizuTapOptions{}
 var direction string
@@ -30,7 +30,7 @@ var tapCmd = &cobra.Command{
 	Use:   "tap [POD REGEX]",
 	Short: "Record ingoing traffic of a kubernetes pod",
 	Long: `Record the ingoing traffic of a kubernetes pod.
- Supported protocols are HTTP and gRPC.`,
+Supported protocols are HTTP and gRPC.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if len(args) == 0 {
 			return errors.New("POD REGEX argument is required")
@@ -62,6 +62,7 @@ func init() {
 
 	tapCmd.Flags().Uint16VarP(&mizuTapOptions.GuiPort, "gui-port", "p", 8899, "Provide a custom port for the web interface webserver")
 	tapCmd.Flags().StringVarP(&mizuTapOptions.Namespace, "namespace", "n", "", "Namespace selector")
+	tapCmd.Flags().BoolVarP(&mizuTapOptions.Analyze, "analyze", "", false, "Analyze traffic")
 	tapCmd.Flags().BoolVarP(&mizuTapOptions.AllNamespaces, "all-namespaces", "A", false, "Tap all namespaces")
 	tapCmd.Flags().StringVarP(&mizuTapOptions.KubeConfigPath, "kube-config", "k", "", "Path to kube-config file")
 	tapCmd.Flags().StringVarP(&mizuTapOptions.MizuImage, "mizu-image", "", fmt.Sprintf("gcr.io/up9-docker-hub/mizu/%s:latest", mizu.Branch), "Custom image for mizu collector")

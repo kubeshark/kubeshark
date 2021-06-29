@@ -1,14 +1,20 @@
 package controllers
 
 import (
+	"bytes"
+	"compress/zlib"
 	"encoding/json"
 	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/martian/har"
+	"io/ioutil"
+	"log"
 	"mizuserver/pkg/database"
 	"mizuserver/pkg/models"
 	"mizuserver/pkg/utils"
 	"mizuserver/pkg/validation"
+	"net/http"
+	"net/url"
 	"time"
 )
 
@@ -138,9 +144,70 @@ func GetHARs(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).SendStream(buffer)
 }
 
+func uploadEntriesImpl(token string, model string) {
+	baseUrl := "igorgov-dev.dev.testr.io"
+	sleepTime := int64(time.Second * 10)
+
+	var timestampFrom int64 = 0
+
+	for {
+		timestampTo := time.Now().UnixNano() / int64(time.Millisecond)
+		fmt.Printf("Getting entries from %v, to %v\n", timestampFrom, timestampTo)
+		entriesArray := getEntriesFromDb(timestampFrom, timestampTo)
+
+		if len(entriesArray) > 0 {
+			fmt.Printf("About to upload %v entries\n", len(entriesArray))
+
+			body, jMarshalErr := json.Marshal(entriesArray)
+			if jMarshalErr != nil {
+				log.Fatal(jMarshalErr)
+			}
+
+			var in bytes.Buffer
+			w := zlib.NewWriter(&in)
+			w.Write(body)
+			w.Close()
+			reqBody := ioutil.NopCloser(bytes.NewReader(in.Bytes()))
+
+			postUrl, _ := url.Parse("https://traffic." + baseUrl + "/dumpTrafficBulk/" + model)
+			req := &http.Request{
+				Method: "POST",
+				URL:    postUrl,
+				Header: map[string][]string{
+					"Content-Encoding": {"deflate"},
+					"Content-Type":     {"application/octet-stream"},
+					"Guest-Auth":       {token},
+				},
+				Body: reqBody,
+			}
+			_, postErr := http.DefaultClient.Do(req)
+			if postErr != nil {
+				log.Fatal(postErr)
+			}
+		} else {
+			fmt.Println("Nothing to upload")
+		}
+
+		fmt.Println("Sleeping for " + string(sleepTime) + "seconds...")
+		time.Sleep(time.Duration(sleepTime))
+		timestampFrom = timestampTo
+	}
+}
+
+func UploadEntries(c *fiber.Ctx) error {
+	entriesFilter := &models.UploadEntriesRequestBody{}
+	if err := c.QueryParser(entriesFilter); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(err)
+	}
+	if err := validation.Validate(entriesFilter); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(err)
+	}
+	go uploadEntriesImpl(entriesFilter.Token, entriesFilter.Model)
+	return c.Status(fiber.StatusOK).SendString("OK")
+}
+
 func GetFullEntries(c *fiber.Ctx) error {
 	entriesFilter := &models.HarFetchRequestBody{}
-	order := OrderDesc
 	if err := c.QueryParser(entriesFilter); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(err)
 	}
@@ -162,6 +229,12 @@ func GetFullEntries(c *fiber.Ctx) error {
 		timestampTo = entriesFilter.To
 	}
 
+	entriesArray := getEntriesFromDb(timestampFrom, timestampTo)
+	return c.Status(fiber.StatusOK).JSON(entriesArray)
+}
+
+func getEntriesFromDb(timestampFrom int64, timestampTo int64) []har.Entry {
+	order := OrderDesc
 	var entries []models.MizuEntry
 	database.GetEntriesTable().
 		Where(fmt.Sprintf("timestamp BETWEEN %v AND %v", timestampFrom, timestampTo)).
@@ -179,7 +252,7 @@ func GetFullEntries(c *fiber.Ctx) error {
 		_ = json.Unmarshal([]byte(entryData.Entry), &harEntry)
 		entriesArray = append(entriesArray, harEntry)
 	}
-	return c.Status(fiber.StatusOK).JSON(entriesArray)
+	return entriesArray
 }
 
 func GetEntry(c *fiber.Ctx) error {
