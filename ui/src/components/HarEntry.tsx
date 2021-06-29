@@ -62,13 +62,9 @@ export const HarEntry: React.FC<HAREntryProps> = ({entry, setFocusedEntryId, isS
             </div>
             <div className={styles.directionContainer}>
                 {entry.isOutgoing ?
-                    <div className={styles.outgoingIcon}>
-                        <img src={outgoingIcon} alt="outgoing traffic" title="outgoing"/>
-                    </div>
+                    <img src={outgoingIcon} alt="outgoing traffic" title="outgoing"/>
                     :
-                    <div className={styles.ingoingIcon}>
-                        <img src={ingoingIcon} alt="ingoing traffic" title="ingoing"/>
-                    </div>
+                    <img src={ingoingIcon} alt="ingoing traffic" title="ingoing"/>
                 }
             </div>
             <div className={styles.timestamp}>{new Date(+entry.timestamp)?.toLocaleString()}</div>
