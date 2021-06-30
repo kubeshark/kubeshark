@@ -16,7 +16,7 @@ type MizuTapOptions struct {
 	Namespace              string
 	AllNamespaces          bool
 	Analyze                bool
-	AnalyzeDestination    string
+	AnalyzeDestination     string
 	KubeConfigPath         string
 	MizuImage              string
 	MizuPodPort            uint16
@@ -63,7 +63,7 @@ func init() {
 
 	tapCmd.Flags().Uint16VarP(&mizuTapOptions.GuiPort, "gui-port", "p", 8899, "Provide a custom port for the web interface webserver")
 	tapCmd.Flags().StringVarP(&mizuTapOptions.Namespace, "namespace", "n", "", "Namespace selector")
-	tapCmd.Flags().BoolVar(&mizuTapOptions.Analyze, "analyze", false, "Analyze traffic")
+	tapCmd.Flags().BoolVar(&mizuTapOptions.Analyze, "analyze", false, "Uploads traffic to UP9 cloud for further analysis")
 	tapCmd.Flags().StringVar(&mizuTapOptions.AnalyzeDestination, "dest", "up9.app", "Destination environment")
 	tapCmd.Flags().BoolVarP(&mizuTapOptions.AllNamespaces, "all-namespaces", "A", false, "Tap all namespaces")
 	tapCmd.Flags().StringVarP(&mizuTapOptions.KubeConfigPath, "kube-config", "k", "", "Path to kube-config file")
