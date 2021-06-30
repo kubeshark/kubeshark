@@ -2,7 +2,9 @@ package cmd
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"os"
 	"os/signal"
 	"regexp"
@@ -71,12 +73,40 @@ func RunMizuTap(podRegexQuery *regexp.Regexp, tappingOptions *MizuTapOptions) {
 		return
 	}
 
-	go portForwardApiPod(ctx, kubernetesProvider, cancel, tappingOptions) // TODO convert this to job for built in pod ttl or have the running app handle this
+	go portForwardApiPod(ctx, kubernetesProvider, cancel, tappingOptions, ) // TODO convert this to job for built in pod ttl or have the running app handle this
 	go watchPodsForTapping(ctx, kubernetesProvider, cancel, podRegexQuery, tappingOptions)
 	go syncApiStatus(ctx, cancel, tappingOptions)
 
 	//block until exit signal or error
 	waitForFinish(ctx, cancel)
+}
+
+type GuestToken struct {
+	Token string `json:"token"`
+	Model string `json:"model"`
+}
+
+
+func getGuestToken(url string, target *GuestToken) error {
+	resp, err := http.Get(url)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	return json.NewDecoder(resp.Body).Decode(target)
+}
+
+func CreateAnonymousToken(envPrefix string) (*GuestToken, error) {
+	tokenUrl := fmt.Sprintf("https://trcc.%v/anonymous/token", envPrefix)
+	token := &GuestToken{}
+	if err := getGuestToken(tokenUrl, token); err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+
+	fmt.Println("Token:", token.Token, "model:", token.Model)
+	return token, nil
 }
 
 func createMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, nodeToTappedPodIPMap map[string][]string, tappingOptions *MizuTapOptions, mizuApiFilteringOptions *shared.TrafficFilteringOptions) error {
@@ -241,12 +271,21 @@ func portForwardApiPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 		case modifiedPod := <-modified:
 			if modifiedPod.Status.Phase == "Running" && !isPodReady {
 				isPodReady = true
-				var err error
-				portForward, err = kubernetes.NewPortForward(kubernetesProvider, mizu.ResourcesNamespace, mizu.AggregatorPodName, tappingOptions.GuiPort, tappingOptions.MizuPodPort, cancel)
-				fmt.Printf("Web interface is now available at http://localhost:%d\n", tappingOptions.GuiPort)
-				if err != nil {
-					fmt.Printf("error forwarding port to pod %s\n", err)
+				var portForwardCreateError error
+				if portForward, portForwardCreateError = kubernetes.NewPortForward(kubernetesProvider, mizu.ResourcesNamespace, mizu.AggregatorPodName, tappingOptions.GuiPort, tappingOptions.MizuPodPort, cancel); portForwardCreateError != nil {
+					fmt.Printf("error forwarding port to pod %s\n", portForwardCreateError)
 					cancel()
+				} else {
+					fmt.Printf("Web interface is now available at http://localhost:%d\n", tappingOptions.GuiPort)
+
+					if tappingOptions.Analyze {
+						token, _ := CreateAnonymousToken(tappingOptions.AnalyzeDestination)
+						if _, err := http.Get(fmt.Sprintf("http://localhost:%d/api/uploadEntries?token=%s&model=%s&dest=%s", tappingOptions.GuiPort, token.Token, token.Model, tappingOptions.AnalyzeDestination)); err != nil {
+							fmt.Println(err)
+						} else {
+							fmt.Println("https://" + tappingOptions.AnalyzeDestination + "/share/" + token.Token)
+						}
+					}
 				}
 			}
 

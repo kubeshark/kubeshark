@@ -49,6 +49,12 @@ type EntriesFilter struct {
 	Timestamp int64  `query:"timestamp" validate:"required,min=1"`
 }
 
+type UploadEntriesRequestBody struct {
+	Token string `query:"token"`
+	Model string `query:"model"`
+	Dest  string `query:"dest"`
+}
+
 type HarFetchRequestBody struct {
 	From int64 `query:"from"`
 	To   int64 `query:"to"`
