@@ -168,10 +168,10 @@ func uploadEntriesImpl(token string, model string, envPrefix string) {
 			_ = w.Close()
 			reqBody := ioutil.NopCloser(bytes.NewReader(in.Bytes()))
 
-			postUrl, _ := url.Parse("https://traffic." + envPrefix + "/dumpTrafficBulk/" + model)
+			postUrl, _ := url.Parse(fmt.Sprintf("https://traffic.%s/dumpTrafficBulk/%s", envPrefix, model))
 			fmt.Println(postUrl)
 			req := &http.Request{
-				Method: "POST",
+				Method: http.MethodPost,
 				URL:    postUrl,
 				Header: map[string][]string{
 					"Content-Encoding": {"deflate"},
@@ -184,7 +184,6 @@ func uploadEntriesImpl(token string, model string, envPrefix string) {
 			if postErr != nil {
 				log.Fatal(postErr)
 			}
-
 			fmt.Printf("Finish uploading %v entries to %s\n", len(entriesArray), postUrl)
 
 		} else {
