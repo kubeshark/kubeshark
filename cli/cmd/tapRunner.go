@@ -73,7 +73,7 @@ func RunMizuTap(podRegexQuery *regexp.Regexp, tappingOptions *MizuTapOptions) {
 		return
 	}
 
-	go portForwardApiPod(ctx, kubernetesProvider, cancel, tappingOptions, ) // TODO convert this to job for built in pod ttl or have the running app handle this
+	go portForwardApiPod(ctx, kubernetesProvider, cancel, tappingOptions) // TODO convert this to job for built in pod ttl or have the running app handle this
 	go watchPodsForTapping(ctx, kubernetesProvider, cancel, podRegexQuery, tappingOptions)
 	go syncApiStatus(ctx, cancel, tappingOptions)
 
@@ -85,7 +85,6 @@ type GuestToken struct {
 	Token string `json:"token"`
 	Model string `json:"model"`
 }
-
 
 func getGuestToken(url string, target *GuestToken) error {
 	resp, err := http.Get(url)
@@ -104,8 +103,6 @@ func CreateAnonymousToken(envPrefix string) (*GuestToken, error) {
 		fmt.Println(err)
 		return nil, err
 	}
-
-	fmt.Println("Token:", token.Token, "model:", token.Model)
 	return token, nil
 }
 
@@ -283,6 +280,7 @@ func portForwardApiPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 						if _, err := http.Get(fmt.Sprintf("http://localhost:%d/api/uploadEntries?token=%s&model=%s&dest=%s", tappingOptions.GuiPort, token.Token, token.Model, tappingOptions.AnalyzeDestination)); err != nil {
 							fmt.Println(err)
 						} else {
+							fmt.Println("Staring to upload and analyze the data, it may take a few minutes")
 							fmt.Println("https://" + tappingOptions.AnalyzeDestination + "/share/" + token.Token)
 						}
 					}
