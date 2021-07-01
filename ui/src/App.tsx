@@ -15,7 +15,7 @@ const App = () => {
         <ThemeProvider theme={Theme}>
             <div className="mizuApp">
                 <div className="header">
-                    <div>
+                    <div style={{display: "flex", alignItems: "center"}}>
                         <div className="title"><img src={logo} alt="logo"/></div>
                         <div className="description">Traffic viewer for Kubernetes</div>
                     </div>
