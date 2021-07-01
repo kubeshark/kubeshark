@@ -254,7 +254,7 @@ func portForwardApiPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 						if _, err := http.Get(fmt.Sprintf("http://localhost:%d/api/uploadEntries?dest=%s", tappingOptions.GuiPort, tappingOptions.AnalyzeDestination)); err != nil {
 							fmt.Println(err)
 						} else {
-							fmt.Printf(mizu.Yellow, "Traffic is uploading to UP9 cloud for further analsys")
+							fmt.Printf(mizu.Purple, "Traffic is uploading to UP9 cloud for further analsys")
 							fmt.Println()
 						}
 					}
