@@ -200,10 +200,10 @@ func watchPodsForTapping(ctx context.Context, kubernetesProvider *kubernetes.Pro
 	for {
 		select {
 		case newTarget := <-added:
-			fmt.Printf("+%s\n", newTarget.Name)
+			fmt.Printf(mizu.Green, fmt.Sprintf("+%s\n", newTarget.Name))
 
 		case removedTarget := <-removed:
-			fmt.Printf("-%s\n", removedTarget.Name)
+			fmt.Printf(mizu.Red, fmt.Sprintf("-%s\n", removedTarget.Name))
 			restartTappersDebouncer.SetOn()
 
 		case modifiedTarget := <-modified:
@@ -249,10 +249,12 @@ func portForwardApiPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 					cancel()
 				} else {
 					fmt.Printf("Web interface is now available at http://localhost:%d\n", tappingOptions.GuiPort)
-					time.Sleep(6 * time.Second)
 					if tappingOptions.Analyze {
 						if _, err := http.Get(fmt.Sprintf("http://localhost:%d/api/uploadEntries?dest=%s", tappingOptions.GuiPort, tappingOptions.AnalyzeDestination)); err != nil {
 							fmt.Println(err)
+						} else {
+							fmt.Printf(mizu.Yellow, "Traffic is uploading to UP9 cloud for further analsys")
+							fmt.Println()
 						}
 					}
 				}

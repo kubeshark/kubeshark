@@ -19,9 +19,9 @@ type WebSocketAnalyzeStatusMessage struct {
 }
 
 type AnalyzeStatus struct {
-	IsAnalyzing   bool `json:"isAnalyzing"`
+	IsAnalyzing   bool   `json:"isAnalyzing"`
 	RemoteUrl     string `json:"remoteUrl"`
-	IsRemoteReady bool `json:"isRemoteReady"`
+	IsRemoteReady bool   `json:"isRemoteReady"`
 }
 
 type WebSocketStatusMessage struct {

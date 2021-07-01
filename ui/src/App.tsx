@@ -1,10 +1,9 @@
 import React, {useState} from 'react';
-import {HarPage} from "./components/HarPage";
 import './App.sass';
 import logo from './components/assets/Mizu.svg';
-import {Button} from "@material-ui/core";
+import {Button, ThemeProvider} from "@material-ui/core";
 import Theme from './style/mui.theme';
-import { ThemeProvider } from '@material-ui/core';
+import {HarPage} from "./components/HarPage";
 
 
 const App = () => {
@@ -20,13 +19,19 @@ const App = () => {
                         <div className="description">Traffic viewer for Kubernetes</div>
                     </div>
                     <div>
-                        {analyzeStatus?.isAnalyzing && null}
-                        <Button variant="contained" color="primary" disabled={!analyzeStatus?.isRemoteReady} onClick={() => {
-                            window.open(analyzeStatus?.remoteUrl)
-                        }}>
-                            Go to UP9
-                        </Button>
-
+                        {!analyzeStatus?.isAnalyzing &&
+                        <div title={!analyzeStatus?.isRemoteReady ? "Analysis is not ready yet" : "Go To see further analysis"}>
+                            <Button
+                                variant="contained"
+                                color="primary"
+                                disabled={analyzeStatus?.isRemoteReady}
+                                onClick={() => {
+                                    window.open(analyzeStatus?.remoteUrl)
+                                }}>
+                                Analysis Results
+                            </Button>
+                        </div>
+                        }
                     </div>
                 </div>
                 <HarPage setAnalyzeStatus={setAnalyzeStatus}/>
