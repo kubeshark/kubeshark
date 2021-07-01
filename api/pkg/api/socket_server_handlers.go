@@ -117,5 +117,3 @@ func removeSocketUUIDFromBrowserSlice(uuidToRemove string) {
 	}
 	browserClientSocketUUIDs = newUUIDSlice
 }
-
-
