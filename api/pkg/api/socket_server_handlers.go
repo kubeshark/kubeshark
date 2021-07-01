@@ -38,7 +38,7 @@ func updateAnalyzeStatus() {
 
 		jsonMessage, _ := json.Marshal(socketMessage)
 		broadcastToBrowserClients(jsonMessage)
-		time.Sleep(10 * time.Second)
+		time.Sleep(5 * time.Second)
 	}
 }
 
