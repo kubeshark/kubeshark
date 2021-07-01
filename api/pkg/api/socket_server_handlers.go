@@ -21,13 +21,13 @@ type RoutesEventHandlers struct {
 }
 
 func init() {
-	go updateWhenModelReady()
+	go updateAnalyzeStatus()
 }
 
-func updateWhenModelReady() {
+func updateAnalyzeStatus() {
 	for {
 		if !controllers.IsAnalyzing {
-			time.Sleep(10 * time.Second)
+			time.Sleep(5 * time.Second)
 		}
 		analyzeStatus := &shared.AnalyzeStatus{
 			IsAnalyzing:   controllers.IsAnalyzing,
