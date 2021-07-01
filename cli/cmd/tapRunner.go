@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
@@ -81,30 +80,6 @@ func RunMizuTap(podRegexQuery *regexp.Regexp, tappingOptions *MizuTapOptions) {
 	waitForFinish(ctx, cancel)
 }
 
-type GuestToken struct {
-	Token string `json:"token"`
-	Model string `json:"model"`
-}
-
-func getGuestToken(url string, target *GuestToken) error {
-	resp, err := http.Get(url)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	return json.NewDecoder(resp.Body).Decode(target)
-}
-
-func CreateAnonymousToken(envPrefix string) (*GuestToken, error) {
-	tokenUrl := fmt.Sprintf("https://trcc.%v/anonymous/token", envPrefix)
-	token := &GuestToken{}
-	if err := getGuestToken(tokenUrl, token); err != nil {
-		fmt.Println(err)
-		return nil, err
-	}
-	return token, nil
-}
 
 func createMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, nodeToTappedPodIPMap map[string][]string, tappingOptions *MizuTapOptions, mizuApiFilteringOptions *shared.TrafficFilteringOptions) error {
 	if err := createMizuAggregator(ctx, kubernetesProvider, tappingOptions, mizuApiFilteringOptions); err != nil {
@@ -225,10 +200,10 @@ func watchPodsForTapping(ctx context.Context, kubernetesProvider *kubernetes.Pro
 	for {
 		select {
 		case newTarget := <-added:
-			fmt.Printf("+%s\n", newTarget.Name)
+			fmt.Printf(mizu.Green, fmt.Sprintf("+%s\n", newTarget.Name))
 
 		case removedTarget := <-removed:
-			fmt.Printf("-%s\n", removedTarget.Name)
+			fmt.Printf(mizu.Red, fmt.Sprintf("-%s\n", removedTarget.Name))
 			restartTappersDebouncer.SetOn()
 
 		case modifiedTarget := <-modified:
@@ -274,14 +249,13 @@ func portForwardApiPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 					cancel()
 				} else {
 					fmt.Printf("Web interface is now available at http://localhost:%d\n", tappingOptions.GuiPort)
-
+					time.Sleep(time.Second * 5) // Waiting to be sure port forwarding finished
 					if tappingOptions.Analyze {
-						token, _ := CreateAnonymousToken(tappingOptions.AnalyzeDestination)
-						if _, err := http.Get(fmt.Sprintf("http://localhost:%d/api/uploadEntries?token=%s&model=%s&dest=%s", tappingOptions.GuiPort, token.Token, token.Model, tappingOptions.AnalyzeDestination)); err != nil {
+						if _, err := http.Get(fmt.Sprintf("http://localhost:%d/api/uploadEntries?dest=%s", tappingOptions.GuiPort, tappingOptions.AnalyzeDestination)); err != nil {
 							fmt.Println(err)
 						} else {
-							fmt.Println("Staring to upload and analyze the data, it may take a few minutes")
-							fmt.Println("https://" + tappingOptions.AnalyzeDestination + "/share/" + token.Token)
+							fmt.Printf(mizu.Yellow, "Traffic is uploading to UP9 cloud for further analsys")
+							fmt.Println()
 						}
 					}
 				}

@@ -20,4 +20,5 @@ func EntriesRoutes(fiberApp *fiber.App) {
 	routeGroup.Get("/generalStats", controllers.GetGeneralStats) // get general stats about entries in DB
 
 	routeGroup.Get("/tapStatus", controllers.GetTappingStatus) // get tapping status
+	routeGroup.Get("/analyzeStatus", controllers.AnalyzeInformation)
 }

@@ -50,8 +50,6 @@ type EntriesFilter struct {
 }
 
 type UploadEntriesRequestBody struct {
-	Token string `query:"token"`
-	Model string `query:"model"`
 	Dest  string `query:"dest"`
 }
 
