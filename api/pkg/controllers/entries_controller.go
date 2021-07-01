@@ -134,7 +134,6 @@ func UploadEntries(c *fiber.Ctx) error {
 	}
 
 	token, _ := up9.CreateAnonymousToken(uploadRequestBody.Dest)
-
 	go up9.UploadEntriesImpl(token.Token, token.Model, uploadRequestBody.Dest)
 	return c.Status(fiber.StatusOK).SendString("OK")
 }

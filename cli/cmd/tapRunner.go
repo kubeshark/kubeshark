@@ -249,6 +249,7 @@ func portForwardApiPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 					cancel()
 				} else {
 					fmt.Printf("Web interface is now available at http://localhost:%d\n", tappingOptions.GuiPort)
+					time.Sleep(time.Second * 5) // Waiting to be sure port forwarding finished
 					if tappingOptions.Analyze {
 						if _, err := http.Get(fmt.Sprintf("http://localhost:%d/api/uploadEntries?dest=%s", tappingOptions.GuiPort, tappingOptions.AnalyzeDestination)); err != nil {
 							fmt.Println(err)

@@ -98,12 +98,17 @@ var analyzeInformation = &AnalyzeInformation{}
 func GetAnalyzeInfo() *shared.AnalyzeStatus {
 	return &shared.AnalyzeStatus{
 		IsAnalyzing:   analyzeInformation.IsAnalyzing,
-		RemoteUrl:     GetRemoteUrl(analyzeInformation.AnalyzeDestination, analyzeInformation.AnalyzedModel),
+		RemoteUrl:     GetRemoteUrl(analyzeInformation.AnalyzeDestination, analyzeInformation.AnalyzeToken),
 		IsRemoteReady: CheckIfModelReady(analyzeInformation.AnalyzeDestination, analyzeInformation.AnalyzedModel, analyzeInformation.AnalyzeToken),
 	}
 }
 
 func UploadEntriesImpl(token string, model string, envPrefix string) {
+	analyzeInformation.IsAnalyzing = true
+	analyzeInformation.AnalyzedModel = model
+	analyzeInformation.AnalyzeToken = token
+	analyzeInformation.AnalyzeDestination = envPrefix
+
 	sleepTime := time.Second * 10
 
 	var timestampFrom int64 = 0

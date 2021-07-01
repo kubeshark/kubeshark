@@ -19,12 +19,12 @@ const App = () => {
                         <div className="description">Traffic viewer for Kubernetes</div>
                     </div>
                     <div>
-                        {!analyzeStatus?.isAnalyzing &&
+                        {analyzeStatus?.isAnalyzing &&
                         <div title={!analyzeStatus?.isRemoteReady ? "Analysis is not ready yet" : "Go To see further analysis"}>
                             <Button
                                 variant="contained"
                                 color="primary"
-                                disabled={analyzeStatus?.isRemoteReady}
+                                disabled={!analyzeStatus?.isRemoteReady}
                                 onClick={() => {
                                     window.open(analyzeStatus?.remoteUrl)
                                 }}>
