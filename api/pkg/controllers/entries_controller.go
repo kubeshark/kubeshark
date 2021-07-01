@@ -14,7 +14,6 @@ import (
 	"mizuserver/pkg/utils"
 	"mizuserver/pkg/validation"
 	"net/http"
-	"net/url"
 	"time"
 )
 
@@ -35,6 +34,20 @@ var (
 		GT: OrderAsc,
 	}
 )
+
+var (
+	IsAnalyzing        = false
+	AnalyzedModel      = ""
+	AnalyzeToken       = ""
+	AnalyzeDestination = ""
+)
+
+func resetAnalyzeFields() {
+	IsAnalyzing = false
+	AnalyzedModel = ""
+	AnalyzeToken = ""
+	AnalyzeDestination = ""
+}
 
 func GetEntries(c *fiber.Ctx) error {
 	entriesFilter := &models.EntriesFilter{}
@@ -149,6 +162,11 @@ func uploadEntriesImpl(token string, model string, envPrefix string) {
 
 	var timestampFrom int64 = 0
 
+	IsAnalyzing = true
+	AnalyzedModel = model
+	AnalyzeToken = token
+	AnalyzeDestination = envPrefix
+
 	for {
 		timestampTo := time.Now().UnixNano() / int64(time.Millisecond)
 		fmt.Printf("Getting entries from %v, to %v\n", timestampFrom, timestampTo)
@@ -159,6 +177,8 @@ func uploadEntriesImpl(token string, model string, envPrefix string) {
 
 			body, jMarshalErr := json.Marshal(entriesArray)
 			if jMarshalErr != nil {
+				resetAnalyzeFields()
+				fmt.Println("Stopping analyzing")
 				log.Fatal(jMarshalErr)
 			}
 
@@ -168,11 +188,9 @@ func uploadEntriesImpl(token string, model string, envPrefix string) {
 			_ = w.Close()
 			reqBody := ioutil.NopCloser(bytes.NewReader(in.Bytes()))
 
-			postUrl, _ := url.Parse(fmt.Sprintf("https://traffic.%s/dumpTrafficBulk/%s", envPrefix, model))
-			fmt.Println(postUrl)
 			req := &http.Request{
 				Method: http.MethodPost,
-				URL:    postUrl,
+				URL:    utils.GetTrafficDumpUrl(envPrefix, model),
 				Header: map[string][]string{
 					"Content-Encoding": {"deflate"},
 					"Content-Type":     {"application/octet-stream"},
@@ -180,11 +198,13 @@ func uploadEntriesImpl(token string, model string, envPrefix string) {
 				},
 				Body: reqBody,
 			}
-			_, postErr := http.DefaultClient.Do(req)
-			if postErr != nil {
+
+			if _, postErr := http.DefaultClient.Do(req); postErr != nil {
+				resetAnalyzeFields()
+				fmt.Println("Stopping analyzing")
 				log.Fatal(postErr)
 			}
-			fmt.Printf("Finish uploading %v entries to %s\n", len(entriesArray), postUrl)
+			fmt.Printf("Finish uploading %v entries to %s\n", len(entriesArray), utils.GetTrafficDumpUrl(envPrefix, model))
 
 		} else {
 			fmt.Println("Nothing to upload")
@@ -197,14 +217,20 @@ func uploadEntriesImpl(token string, model string, envPrefix string) {
 }
 
 func UploadEntries(c *fiber.Ctx) error {
-	entriesFilter := &models.UploadEntriesRequestBody{}
-	if err := c.QueryParser(entriesFilter); err != nil {
+	uploadRequestBody := &models.UploadEntriesRequestBody{}
+	if err := c.QueryParser(uploadRequestBody); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(err)
 	}
-	if err := validation.Validate(entriesFilter); err != nil {
+	if err := validation.Validate(uploadRequestBody); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(err)
 	}
-	go uploadEntriesImpl(entriesFilter.Token, entriesFilter.Model, entriesFilter.Dest)
+	if IsAnalyzing {
+		return c.Status(fiber.StatusBadRequest).SendString("Cannot analyze, mizu is already analyzing")
+	}
+
+	token, _ := utils.CreateAnonymousToken(uploadRequestBody.Dest)
+
+	go uploadEntriesImpl(token.Token, token.Model, uploadRequestBody.Dest)
 	return c.Status(fiber.StatusOK).SendString("OK")
 }
 

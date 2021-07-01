@@ -9,6 +9,8 @@ import (
 	"mizuserver/pkg/controllers"
 	"mizuserver/pkg/models"
 	"mizuserver/pkg/routes"
+	"mizuserver/pkg/utils"
+	"time"
 )
 
 var browserClientSocketUUIDs = make([]string, 0)
@@ -18,6 +20,27 @@ type RoutesEventHandlers struct {
 	SocketHarOutChannel chan<- *tap.OutputChannelItem
 }
 
+func init() {
+	go updateWhenModelReady()
+}
+
+func updateWhenModelReady() {
+	for {
+		if !controllers.IsAnalyzing {
+			time.Sleep(10 * time.Second)
+		}
+		analyzeStatus := &shared.AnalyzeStatus{
+			IsAnalyzing:   controllers.IsAnalyzing,
+			RemoteUrl:     utils.GetRemoteUrl(controllers.AnalyzeDestination, controllers.AnalyzeToken),
+			IsRemoteReady: utils.CheckIfModelReady(controllers.AnalyzeDestination, controllers.AnalyzedModel, controllers.AnalyzeToken),
+		}
+		socketMessage := shared.CreateWebSocketMessageTypeAnalyzeStatus(*analyzeStatus)
+
+		jsonMessage, _ := json.Marshal(socketMessage)
+		broadcastToBrowserClients(jsonMessage)
+		time.Sleep(10 * time.Second)
+	}
+}
 
 func (h *RoutesEventHandlers) WebSocketConnect(ep *ikisocket.EventPayload) {
 	if ep.Kws.GetAttribute("is_tapper") == true {
@@ -94,3 +117,5 @@ func removeSocketUUIDFromBrowserSlice(uuidToRemove string) {
 	}
 	browserClientSocketUUIDs = newUUIDSlice
 }
+
+
