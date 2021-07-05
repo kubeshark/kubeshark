@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"log"
 	"mizuserver/pkg/database"
+	"mizuserver/pkg/models"
 	"net/http"
 	"net/url"
 	"time"
@@ -119,9 +120,16 @@ func UploadEntriesImpl(token string, model string, envPrefix string) {
 		entriesArray := database.GetEntriesFromDb(timestampFrom, timestampTo)
 
 		if len(entriesArray) > 0 {
-			fmt.Printf("About to upload %v entries\n", len(entriesArray))
 
-			body, jMarshalErr := json.Marshal(entriesArray)
+			fullEntriesExtra := make([]models.FullEntryDetailsExtra, 0)
+			for _, data := range entriesArray {
+				var harEntry models.FullEntryDetailsExtra
+				_ = models.GetEntry(&data, &harEntry)
+				fullEntriesExtra = append(fullEntriesExtra, harEntry)
+			}
+			fmt.Printf("About to upload %v entries\n", len(fullEntriesExtra))
+
+			body, jMarshalErr := json.Marshal(fullEntriesExtra)
 			if jMarshalErr != nil {
 				analyzeInformation.Reset()
 				fmt.Println("Stopping analyzing")
