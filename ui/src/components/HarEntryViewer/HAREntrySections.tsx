@@ -5,6 +5,7 @@ import CollapsibleContainer from "../CollapsibleContainer";
 import FancyTextDisplay from "../FancyTextDisplay";
 import Checkbox from "../Checkbox";
 import ProtobufDecoder from "protobuf-decoder";
+var jp = require('jsonpath');
 
 interface HAREntryViewLineProps {
     label: string;
@@ -141,6 +142,143 @@ export const HAREntryTableSection: React.FC<HAREntrySectionProps> = ({title, arr
                         </tbody>
                     </table>
                 </HAREntrySectionContainer> : <span/>
+        }
+    </React.Fragment>
+}
+
+
+
+interface HAREntryPolicySectionProps {
+    service: string,
+    title: string,
+    response: any,
+    latency?: number,
+    arrayToIterate: any[],
+}
+
+
+interface HAREntryPolicySectionCollapsibleTitleProps {
+    label: string;
+    matched: string;
+    isExpanded: boolean;
+}
+
+const HAREntryPolicySectionCollapsibleTitle: React.FC<HAREntryPolicySectionCollapsibleTitleProps> = ({label, matched, isExpanded}) => {
+    return <div className={styles.title}>
+        <span className={`${styles.button} ${isExpanded ? styles.expanded : ''}`}>
+            {isExpanded ? '-' : '+'}
+        </span>
+        <span>
+            <tr className={styles.dataLine}>
+            <td className={styles.dataKey}>{label}</td>
+            <td className={styles.dataKey}>{matched}</td>
+            </tr>
+        </span>
+    </div>
+}
+
+interface HAREntryPolicySectionContainerProps {
+    label: string;
+    matched: string;
+    children?: any;
+}
+
+export const HAREntryPolicySectionContainer: React.FC<HAREntryPolicySectionContainerProps> = ({label, matched, children}) => {
+    const [expanded, setExpanded] = useState(false);
+    return <CollapsibleContainer
+        className={styles.collapsibleContainer}
+        isExpanded={expanded}
+        onClick={() => setExpanded(!expanded)}
+        title={<HAREntryPolicySectionCollapsibleTitle label={label} matched={matched} isExpanded={expanded}/>}
+    >
+        {children}
+    </CollapsibleContainer>
+}
+
+export const HAREntryTablePolicySection: React.FC<HAREntryPolicySectionProps> = ({service, title, response, latency, arrayToIterate}) => {
+    const base64ToJson = response.content.mimeType === "application/json; charset=utf-8" ? JSON.parse(Buffer.from(response.content.text, "base64").toString()) : {};
+    return <React.Fragment>
+        {
+            arrayToIterate && arrayToIterate.length > 0 ?
+                <>
+                <HAREntrySectionContainer title={title}>
+                    <table>
+                        <tbody>
+                            {arrayToIterate.map(({rule, matched}, index) => {
+                                    return (
+                                        // <HAREntryViewLine key={index} label={rule.Name} value={matched}/>
+                                        <HAREntryPolicySectionContainer key={index} label={rule.Name} matched={matched && (rule.Type === 'latency' ? rule.Latency > latency : true)? "Matched" : "Not Matched"}>
+                                            {
+                                                rule.Type === 'header' ?
+                                                <>
+                                                    <span className={styles.dataValue}>Rule definition <b>{matched ? 'matched' : 'not matched'}</b> on key <b>{rule.Key}</b> with value <b>{rule.Value}</b></span>
+                                                    {
+                                                        rule.Path != "" ? 
+                                                        <tr className={styles.dataValue}>Path: <b>{rule.Path}</b></tr>
+                                                        : null
+                                                    }
+                                                    {
+                                                        rule.Service != "" ? 
+                                                        <tr className={styles.dataValue}>Service: <b>{service}</b></tr>
+                                                        : null
+                                                    }
+                                                </>
+                                                : rule.Type === 'json' ?
+                                                <>
+                                                    <span className={styles.dataValue}>Rule definition <b>{matched ? 'matched' : 'not matched'}</b> on key <b>{rule.Key}</b> with value <b>{rule.Value}</b></span>
+                                                    {
+                                                        rule.Path != "" ? 
+                                                        <tr className={styles.dataValue}>Path: <b>{rule.Path}</b></tr>
+                                                        : null
+                                                    }
+                                                    {
+                                                        rule.Service != "" ? 
+                                                        <tr className={styles.dataValue}>Service: <b>{service}</b></tr>
+                                                        : null
+                                                    }
+                                                    <tr className={styles.blueColor}>Expected: {rule.Value}</tr>
+                                                    { matched  && response.content.mimeType === "application/json; charset=utf-8"?
+                                                        <tr className={styles.latencyMatched}>Received: {jp.query(base64ToJson, rule.Key)}</tr>
+                                                       :
+                                                       <tr className={styles.latencyNotMatched}>Received: {jp.query(base64ToJson, rule.Key)}</tr>
+                                                    } 
+                                                </>
+                                                : rule.Type === 'latency' ?
+                                                <>
+                                                    {
+                                                        rule.Path != "" ? 
+                                                        <tr className={styles.dataValue}>Path: <b>{rule.Path}</b></tr>
+                                                        : null
+                                                    }
+                                                    {
+                                                        rule.Service != "" ? 
+                                                        <tr className={styles.dataValue}>Service: <b>{service}</b></tr>
+                                                        : null
+                                                    }
+                                                    <tr className={styles.blueColor}>Expected: {rule.Latency} ms</tr>
+                                                    {
+                                                        latency <= rule.Latency ?
+                                                            <tr className={styles.blueColor}>Received: {latency} ms</tr>
+                                                        : <tr className={styles.blueColor}>Received: {latency} ms</tr>
+                                                    }
+                                                </>
+                                                :
+                                                <>
+                                                </>
+                                                }
+                                            {/* <tr className={styles.dataKey}>Latency expected: {rule.Latency} ms</tr>
+                                            <tr className={styles.latencyNotMatched}>Latency received: {latency} ms</tr> */}
+                                            
+                                        </HAREntryPolicySectionContainer>
+                                    )
+                                }
+                            )
+                            }
+                        </tbody>
+                    </table>
+                </HAREntrySectionContainer>
+                                            
+                </> : <span/>
         }
     </React.Fragment>
 }

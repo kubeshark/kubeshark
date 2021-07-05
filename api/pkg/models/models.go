@@ -2,10 +2,11 @@ package models
 
 import (
 	"encoding/json"
+	"time"
+
 	"github.com/google/martian/har"
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/tap"
-	"time"
 )
 
 type MizuEntry struct {
@@ -41,6 +42,7 @@ type BaseEntryDetails struct {
 type EntryData struct {
 	Entry               string `json:"entry,omitempty"`
 	ResolvedDestination string `json:"resolvedDestination,omitempty" gorm:"column:resolvedDestination"`
+	Service             string `json:"service,omitempty"`
 }
 
 type EntriesFilter struct {
@@ -50,7 +52,7 @@ type EntriesFilter struct {
 }
 
 type UploadEntriesRequestBody struct {
-	Dest  string `query:"dest"`
+	Dest string `query:"dest"`
 }
 
 type HarFetchRequestBody struct {
@@ -106,4 +108,10 @@ type ExtendedLog struct {
 type ExtendedCreator struct {
 	*har.Creator
 	Source string `json:"_source"`
+}
+
+type FullEntryWithPolicy struct {
+	RulesMatched []shared.RulesMatched `json:"rulesMatched,omitempty"`
+	Entry        har.Entry             `json:"entry"`
+	Service      string                `json:"service"`
 }

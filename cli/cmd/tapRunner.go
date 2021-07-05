@@ -3,6 +3,8 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -32,6 +34,16 @@ func RunMizuTap(podRegexQuery *regexp.Regexp, tappingOptions *MizuTapOptions) {
 	mizuApiFilteringOptions, err := getMizuApiFilteringOptions(tappingOptions)
 	if err != nil {
 		return
+	}
+
+	var mizuValidationRules string
+	if tappingOptions.EnforcePolicyFile != "" {
+		mizuValidationRules, err = readValidationRules(tappingOptions.EnforcePolicyFile)
+		if err != nil {
+			log.Fatalf("error: %v", err)
+		}
+	} else {
+		mizuValidationRules = ""
 	}
 
 	kubernetesProvider := kubernetes.NewProvider(tappingOptions.KubeConfigPath)
@@ -68,7 +80,7 @@ func RunMizuTap(podRegexQuery *regexp.Regexp, tappingOptions *MizuTapOptions) {
 		return
 	}
 
-	if err := createMizuResources(ctx, kubernetesProvider, nodeToTappedPodIPMap, tappingOptions, mizuApiFilteringOptions); err != nil {
+	if err := createMizuResources(ctx, kubernetesProvider, nodeToTappedPodIPMap, tappingOptions, mizuApiFilteringOptions, mizuValidationRules); err != nil {
 		return
 	}
 
@@ -80,8 +92,15 @@ func RunMizuTap(podRegexQuery *regexp.Regexp, tappingOptions *MizuTapOptions) {
 	waitForFinish(ctx, cancel)
 }
 
+func readValidationRules(file string) (string, error) {
+	content, err := ioutil.ReadFile(file)
+	if err != nil {
+		return "", err
+	}
+	return string(content), nil
+}
 
-func createMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, nodeToTappedPodIPMap map[string][]string, tappingOptions *MizuTapOptions, mizuApiFilteringOptions *shared.TrafficFilteringOptions) error {
+func createMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, nodeToTappedPodIPMap map[string][]string, tappingOptions *MizuTapOptions, mizuApiFilteringOptions *shared.TrafficFilteringOptions, mizuValidationRules string) error {
 	if err := createMizuAggregator(ctx, kubernetesProvider, tappingOptions, mizuApiFilteringOptions); err != nil {
 		return err
 	}
@@ -90,6 +109,18 @@ func createMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Pro
 		return err
 	}
 
+	if err := cretaMizuConfigmap(ctx, kubernetesProvider, mizuValidationRules); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func cretaMizuConfigmap(ctx context.Context, kubernetesProvider *kubernetes.Provider, data string) error {
+	err := kubernetesProvider.ApplyConfigMap(ctx, mizu.ResourcesNamespace, mizu.ConfigMapName, data)
+	if err != nil {
+		fmt.Printf("Error creating mizu configmap: %v\n", err)
+	}
 	return nil
 }
 
@@ -168,6 +199,9 @@ func cleanUpMizuResources(kubernetesProvider *kubernetes.Provider) {
 	}
 	if err := kubernetesProvider.RemoveDaemonSet(removalCtx, mizu.ResourcesNamespace, mizu.TapperDaemonSetName); err != nil {
 		fmt.Printf("Error removing DaemonSet %s in namespace %s: %s (%v,%+v)\n", mizu.TapperDaemonSetName, mizu.ResourcesNamespace, err, err, err)
+	}
+	if err := kubernetesProvider.RemoveConfigMap(removalCtx, mizu.ResourcesNamespace, mizu.ConfigMapName); err != nil {
+		fmt.Printf("Error removing ConfigMap %s in namespace %s: %s (%v,%+v)\n", mizu.ConfigMapName, mizu.ResourcesNamespace, err, err, err)
 	}
 }
 

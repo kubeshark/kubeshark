@@ -40,6 +40,7 @@ type Provider struct {
 const (
 	serviceAccountName = "mizu-service-account"
 	fieldManagerName   = "mizu-manager"
+	configMapName      = "mizu-policy"
 )
 
 func NewProvider(kubeConfigPath string) *Provider {
@@ -75,6 +76,8 @@ func (provider *Provider) CreateMizuAggregatorPod(ctx context.Context, namespace
 	if err != nil {
 		return nil, err
 	}
+	configMapVolumeName := &core.ConfigMapVolumeSource{}
+	configMapVolumeName.Name = configMapName
 	pod := &core.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      podName,
@@ -88,6 +91,12 @@ func (provider *Provider) CreateMizuAggregatorPod(ctx context.Context, namespace
 					Image:           podImage,
 					ImagePullPolicy: core.PullAlways,
 					Command:         []string{"./mizuagent", "--aggregator"},
+					VolumeMounts: []core.VolumeMount{
+						{
+							Name:      configMapName,
+							MountPath: "/app/enforce-policy",
+						},
+					},
 					Env: []core.EnvVar{
 						{
 							Name:  shared.HostModeEnvVar,
@@ -97,6 +106,14 @@ func (provider *Provider) CreateMizuAggregatorPod(ctx context.Context, namespace
 							Name:  shared.MizuFilteringOptionsEnvVar,
 							Value: string(marshaledFilteringOptions),
 						},
+					},
+				},
+			},
+			Volumes: []core.Volume{
+				{
+					Name: configMapName,
+					VolumeSource: core.VolumeSource{
+						ConfigMap: configMapVolumeName,
 					},
 				},
 			},
@@ -214,8 +231,7 @@ func (provider *Provider) CreateMizuRBAC(ctx context.Context, namespace string, 
 }
 
 func (provider *Provider) RemovePod(ctx context.Context, namespace string, podName string) error {
-	if isFound, err := provider.CheckPodExists(ctx, namespace, podName);
-	err != nil {
+	if isFound, err := provider.CheckPodExists(ctx, namespace, podName); err != nil {
 		return err
 	} else if !isFound {
 		return nil
@@ -225,8 +241,7 @@ func (provider *Provider) RemovePod(ctx context.Context, namespace string, podNa
 }
 
 func (provider *Provider) RemoveService(ctx context.Context, namespace string, serviceName string) error {
-	if isFound, err := provider.CheckServiceExists(ctx, namespace, serviceName);
-	err != nil {
+	if isFound, err := provider.CheckServiceExists(ctx, namespace, serviceName); err != nil {
 		return err
 	} else if !isFound {
 		return nil
@@ -236,8 +251,7 @@ func (provider *Provider) RemoveService(ctx context.Context, namespace string, s
 }
 
 func (provider *Provider) RemoveDaemonSet(ctx context.Context, namespace string, daemonSetName string) error {
-	if isFound, err := provider.CheckDaemonSetExists(ctx, namespace, daemonSetName);
-	err != nil {
+	if isFound, err := provider.CheckDaemonSetExists(ctx, namespace, daemonSetName); err != nil {
 		return err
 	} else if !isFound {
 		return nil
@@ -246,10 +260,19 @@ func (provider *Provider) RemoveDaemonSet(ctx context.Context, namespace string,
 	return provider.clientSet.AppsV1().DaemonSets(namespace).Delete(ctx, daemonSetName, metav1.DeleteOptions{})
 }
 
+func (provider *Provider) RemoveConfigMap(ctx context.Context, namespace string, configMapName string) error {
+	if isFound, err := provider.CheckConfigMapExists(ctx, namespace, configMapName); err != nil {
+		return err
+	} else if !isFound {
+		return nil
+	}
+	return provider.clientSet.CoreV1().ConfigMaps(namespace).Delete(ctx, configMapName, metav1.DeleteOptions{})
+}
+
 func (provider *Provider) CheckPodExists(ctx context.Context, namespace string, name string) (bool, error) {
 	listOptions := metav1.ListOptions{
 		FieldSelector: fmt.Sprintf("metadata.name=%s", name),
-		Limit: 1,
+		Limit:         1,
 	}
 	resourceList, err := provider.clientSet.CoreV1().Pods(namespace).List(ctx, listOptions)
 	if err != nil {
@@ -266,7 +289,7 @@ func (provider *Provider) CheckPodExists(ctx context.Context, namespace string, 
 func (provider *Provider) CheckServiceExists(ctx context.Context, namespace string, name string) (bool, error) {
 	listOptions := metav1.ListOptions{
 		FieldSelector: fmt.Sprintf("metadata.name=%s", name),
-		Limit: 1,
+		Limit:         1,
 	}
 	resourceList, err := provider.clientSet.CoreV1().Services(namespace).List(ctx, listOptions)
 	if err != nil {
@@ -283,7 +306,7 @@ func (provider *Provider) CheckServiceExists(ctx context.Context, namespace stri
 func (provider *Provider) CheckDaemonSetExists(ctx context.Context, namespace string, name string) (bool, error) {
 	listOptions := metav1.ListOptions{
 		FieldSelector: fmt.Sprintf("metadata.name=%s", name),
-		Limit: 1,
+		Limit:         1,
 	}
 	resourceList, err := provider.clientSet.AppsV1().DaemonSets(namespace).List(ctx, listOptions)
 	if err != nil {
@@ -295,6 +318,41 @@ func (provider *Provider) CheckDaemonSetExists(ctx context.Context, namespace st
 	}
 
 	return false, nil
+}
+
+func (provider *Provider) CheckConfigMapExists(ctx context.Context, namespace string, name string) (bool, error) {
+	listOptions := metav1.ListOptions{
+		FieldSelector: fmt.Sprintf("metadata.name=%s", name),
+		Limit:         1,
+	}
+	resourceList, err := provider.clientSet.CoreV1().ConfigMaps(namespace).List(ctx, listOptions)
+	if err != nil {
+		return false, err
+	}
+
+	if len(resourceList.Items) > 0 {
+		return true, nil
+	}
+
+	return false, nil
+}
+
+func (provider *Provider) ApplyConfigMap(ctx context.Context, namespace string, configMapName string, data string) error {
+	configMapData := make(map[string]string, 0)
+	configMapData["enforce-policy.yaml"] = data
+	configMap := &core.ConfigMap{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "ConfigMap",
+			APIVersion: "v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      configMapName,
+			Namespace: namespace,
+		},
+		Data: configMapData,
+	}
+	_, err := provider.clientSet.CoreV1().ConfigMaps(namespace).Create(ctx, configMap, metav1.CreateOptions{})
+	return err
 }
 
 func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, aggregatorPodIp string, nodeToTappedPodIPMap map[string][]string, linkServiceAccount bool, tapOutgoing bool) error {
