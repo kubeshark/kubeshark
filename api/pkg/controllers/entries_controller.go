@@ -40,10 +40,11 @@ func GetEntries(c *fiber.Ctx) error {
 		utils.ReverseSlice(entries)
 	}
 
-	// Convert to base entries
-	baseEntries := make([]models.BaseEntryDetails, 0, entriesFilter.Limit)
-	for _, entry := range entries {
-		baseEntries = append(baseEntries, utils.GetResolvedBaseEntry(entry))
+	baseEntries := make([]models.BaseEntryDetails, 0)
+	for _, data := range entries {
+		var harEntry models.BaseEntryDetails
+		_ = models.GetEntry(&data, &harEntry)
+		baseEntries = append(baseEntries, harEntry)
 	}
 
 	return c.Status(fiber.StatusOK).JSON(baseEntries)
@@ -174,7 +175,14 @@ func GetFullEntries(c *fiber.Ctx) error {
 	}
 
 	entriesArray := database.GetEntriesFromDb(timestampFrom, timestampTo)
-	return c.Status(fiber.StatusOK).JSON(entriesArray)
+	result := make([]models.FullEntryDetails, 0)
+	for _, data := range entriesArray {
+		var harEntry models.FullEntryDetails
+		_ = models.GetEntry(&data, &harEntry)
+		result = append(result, harEntry)
+	}
+
+	return c.Status(fiber.StatusOK).JSON(result)
 }
 
 func GetEntry(c *fiber.Ctx) error {

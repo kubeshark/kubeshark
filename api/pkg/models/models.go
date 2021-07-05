@@ -5,8 +5,17 @@ import (
 	"github.com/google/martian/har"
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/tap"
+	"mizuserver/pkg/utils"
 	"time"
 )
+
+type IEntry interface {
+	UnmarshalData(*MizuEntry) error
+}
+
+func GetEntry(r *MizuEntry, v IEntry) error {
+	return v.UnmarshalData(r)
+}
 
 type MizuEntry struct {
 	ID                  uint `gorm:"primarykey"`
@@ -38,6 +47,53 @@ type BaseEntryDetails struct {
 	IsOutgoing      bool   `json:"isOutgoing,omitempty"`
 }
 
+type FullEntryDetails struct {
+	har.Entry
+}
+
+type FullEntryDetailsExtra struct {
+	har.Entry
+}
+
+func (bed *BaseEntryDetails) UnmarshalData(entry *MizuEntry) error {
+	entryUrl := entry.Url
+	service := entry.Service
+	if entry.ResolvedDestination != "" {
+		entryUrl = utils.SetHostname(entryUrl, entry.ResolvedDestination)
+		service = utils.SetHostname(service, entry.ResolvedDestination)
+	}
+	bed.Id = entry.EntryId
+	bed.Url = entryUrl
+	bed.Service = service
+	bed.Path = entry.Path
+	bed.StatusCode = entry.Status
+	bed.Method = entry.Method
+	bed.Timestamp = entry.Timestamp
+	bed.RequestSenderIp = entry.RequestSenderIp
+	bed.IsOutgoing = entry.IsOutgoing
+	return nil
+}
+
+func (fed *FullEntryDetails) UnmarshalData(entry *MizuEntry) error {
+	_ = json.Unmarshal([]byte(entry.Entry), &fed.Entry)
+	return nil
+}
+
+func (fedex *FullEntryDetailsExtra) UnmarshalData(entry *MizuEntry) error {
+	_ = json.Unmarshal([]byte(entry.Entry), &fedex.Entry)
+
+	if entry.ResolvedSource != "" {
+		fedex.Entry.Request.Headers = append(fedex.Request.Headers, har.Header{Name: "x-mizu-source", Value: entry.ResolvedSource})
+	}
+	if entry.ResolvedDestination != "" {
+		fedex.Entry.Request.Headers = append(fedex.Request.Headers, har.Header{Name: "x-mizu-destination", Value: entry.ResolvedDestination})
+	}
+
+	return nil
+}
+
+
+
 type EntryData struct {
 	Entry               string `json:"entry,omitempty"`
 	ResolvedDestination string `json:"resolvedDestination,omitempty" gorm:"column:resolvedDestination"`
@@ -50,7 +106,7 @@ type EntriesFilter struct {
 }
 
 type UploadEntriesRequestBody struct {
-	Dest  string `query:"dest"`
+	Dest string `query:"dest"`
 }
 
 type HarFetchRequestBody struct {
