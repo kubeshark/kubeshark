@@ -137,9 +137,9 @@ func saveHarToDb(entry *har.Entry, sender string, isOutgoing bool) {
 	}
 	database.GetEntriesTable().Create(&mizuEntry)
 
-	var baseEntry *models.BaseEntryDetails
-	_ = models.GetEntry(&mizuEntry, baseEntry)
-	baseEntryBytes, _ := models.CreateBaseEntryWebSocketMessage(baseEntry)
+	baseEntry := models.BaseEntryDetails{}
+	_ = models.GetEntry(&mizuEntry, &baseEntry)
+	baseEntryBytes, _ := models.CreateBaseEntryWebSocketMessage(&baseEntry)
 	broadcastToBrowserClients(baseEntryBytes)
 }
 

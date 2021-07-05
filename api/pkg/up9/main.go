@@ -123,7 +123,7 @@ func UploadEntriesImpl(token string, model string, envPrefix string) {
 
 			fullEntriesExtra := make([]models.FullEntryDetailsExtra, 0)
 			for _, data := range entriesArray {
-				var harEntry models.FullEntryDetailsExtra
+				harEntry := models.FullEntryDetailsExtra{}
 				_ = models.GetEntry(&data, &harEntry)
 				fullEntriesExtra = append(fullEntriesExtra, harEntry)
 			}

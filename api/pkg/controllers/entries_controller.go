@@ -42,7 +42,7 @@ func GetEntries(c *fiber.Ctx) error {
 
 	baseEntries := make([]models.BaseEntryDetails, 0)
 	for _, data := range entries {
-		var harEntry models.BaseEntryDetails
+		harEntry := models.BaseEntryDetails{}
 		_ = models.GetEntry(&data, &harEntry)
 		baseEntries = append(baseEntries, harEntry)
 	}
@@ -177,7 +177,7 @@ func GetFullEntries(c *fiber.Ctx) error {
 	entriesArray := database.GetEntriesFromDb(timestampFrom, timestampTo)
 	result := make([]models.FullEntryDetails, 0)
 	for _, data := range entriesArray {
-		var harEntry models.FullEntryDetails
+		harEntry := models.FullEntryDetails{}
 		_ = models.GetEntry(&data, &harEntry)
 		result = append(result, harEntry)
 	}
