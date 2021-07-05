@@ -10,6 +10,7 @@ import (
 	"mizuserver/pkg/up9"
 	"mizuserver/pkg/utils"
 	"mizuserver/pkg/validation"
+	"strings"
 	"time"
 )
 
@@ -88,9 +89,17 @@ func GetHARs(c *fiber.Ctx) error {
 	for _, entryData := range entries {
 		var harEntry har.Entry
 		_ = json.Unmarshal([]byte(entryData.Entry), &harEntry)
+		if entryData.ResolvedDestination != "" {
+			harEntry.Request.URL = utils.SetHostname(harEntry.Request.URL, entryData.ResolvedDestination)
+		}
 
 		sourceOfEntry := entryData.ResolvedSource
-		fileName := fmt.Sprintf("%s.har", sourceOfEntry)
+		if sourceOfEntry != "" {
+			// naively assumes the proper service source is http
+			sourceOfEntry = fmt.Sprintf("http://%s", sourceOfEntry)
+		}
+		//replace / from the file name cause they end up creating a corrupted folder
+		fileName := fmt.Sprintf("%s.har", strings.ReplaceAll(sourceOfEntry, "/", "_"))
 		if harOfSource, ok := harsObject[fileName]; ok {
 			harOfSource.Log.Entries = append(harOfSource.Log.Entries, &harEntry)
 		} else {
@@ -104,10 +113,13 @@ func GetHARs(c *fiber.Ctx) error {
 							Name:    "mizu",
 							Version: "0.0.2",
 						},
-						Source: sourceOfEntry,
 					},
 					Entries: entriesHar,
 				},
+			}
+			// leave undefined when no source is present, otherwise modeler assumes source is empty string ""
+			if sourceOfEntry != "" {
+				harsObject[fileName].Log.Creator.Source = sourceOfEntry
 			}
 		}
 	}
