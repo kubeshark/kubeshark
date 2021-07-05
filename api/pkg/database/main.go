@@ -63,6 +63,14 @@ func GetEntriesFromDb(timestampFrom int64, timestampTo int64) []har.Entry {
 	for _, entryData := range entries {
 		var harEntry har.Entry
 		_ = json.Unmarshal([]byte(entryData.Entry), &harEntry)
+
+		if entryData.ResolvedSource != "" {
+			harEntry.Request.Headers = append(harEntry.Request.Headers, har.Header{Name: "x-mizu-source", Value: entryData.ResolvedSource})
+		}
+		if entryData.ResolvedDestination != "" {
+			harEntry.Request.Headers = append(harEntry.Request.Headers, har.Header{Name: "x-mizu-destination", Value: entryData.ResolvedDestination})
+		}
+
 		entriesArray = append(entriesArray, harEntry)
 	}
 	return entriesArray
