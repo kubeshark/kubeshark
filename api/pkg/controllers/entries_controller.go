@@ -93,13 +93,16 @@ func GetHARs(c *fiber.Ctx) error {
 			harEntry.Request.URL = utils.SetHostname(harEntry.Request.URL, entryData.ResolvedDestination)
 		}
 
+		var fileName string
 		sourceOfEntry := entryData.ResolvedSource
 		if sourceOfEntry != "" {
 			// naively assumes the proper service source is http
 			sourceOfEntry = fmt.Sprintf("http://%s", sourceOfEntry)
+			//replace / from the file name cause they end up creating a corrupted folder
+			fileName = fmt.Sprintf("%s.har", strings.ReplaceAll(sourceOfEntry, "/", "_"))
+		} else {
+			fileName = "unknown_source.har"
 		}
-		//replace / from the file name cause they end up creating a corrupted folder
-		fileName := fmt.Sprintf("%s.har", strings.ReplaceAll(sourceOfEntry, "/", "_"))
 		if harOfSource, ok := harsObject[fileName]; ok {
 			harOfSource.Log.Entries = append(harOfSource.Log.Entries, &harEntry)
 		} else {
@@ -119,7 +122,7 @@ func GetHARs(c *fiber.Ctx) error {
 			}
 			// leave undefined when no source is present, otherwise modeler assumes source is empty string ""
 			if sourceOfEntry != "" {
-				harsObject[fileName].Log.Creator.Source = sourceOfEntry
+				harsObject[fileName].Log.Creator.Source = &sourceOfEntry
 			}
 		}
 	}
