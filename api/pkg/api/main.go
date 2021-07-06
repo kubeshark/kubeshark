@@ -85,7 +85,14 @@ func startReadingFiles(workingDir string) {
 
 		for _, entry := range inputHar.Log.Entries {
 			time.Sleep(time.Millisecond * 250)
-			saveHarToDb(entry, fileInfo.Name(), false)
+			connectionInfo := &tap.ConnectionInfo{
+				ClientIP: fileInfo.Name(),
+				ClientPort: "",
+				ServerIP: "",
+				ServerPort: "",
+				IsOutgoing: false,
+			}
+			saveHarToDb(entry, connectionInfo)
 		}
 		rmErr := os.Remove(inputFilePath)
 		utils.CheckErr(rmErr)
@@ -98,7 +105,7 @@ func startReadingChannel(outputItems <-chan *tap.OutputChannelItem) {
 	}
 
 	for item := range outputItems {
-		saveHarToDb(item.HarEntry, item.ConnectionInfo.ClientIP, item.ConnectionInfo.IsOutgoing)
+		saveHarToDb(item.HarEntry, item.ConnectionInfo)
 	}
 }
 
@@ -110,7 +117,7 @@ func StartReadingOutbound(outboundLinkChannel <-chan *tap.OutboundLink) {
 }
 
 
-func saveHarToDb(entry *har.Entry, sender string, isOutgoing bool) {
+func saveHarToDb(entry *har.Entry, connectionInfo *tap.ConnectionInfo) {
 	entryBytes, _ := json.Marshal(entry)
 	serviceName, urlPath, serviceHostName := getServiceNameFromUrl(entry.Request.URL)
 	entryId := primitive.NewObjectID().Hex()
@@ -119,7 +126,7 @@ func saveHarToDb(entry *har.Entry, sender string, isOutgoing bool) {
 		resolvedDestination string
 	)
 	if k8sResolver != nil {
-		resolvedSource = k8sResolver.Resolve(sender)
+		resolvedSource = k8sResolver.Resolve(connectionInfo.ClientIP)
 		resolvedDestination = k8sResolver.Resolve(serviceHostName)
 	}
 	mizuEntry := models.MizuEntry{
@@ -130,11 +137,11 @@ func saveHarToDb(entry *har.Entry, sender string, isOutgoing bool) {
 		Path:                urlPath,
 		Method:              entry.Request.Method,
 		Status:              entry.Response.Status,
-		RequestSenderIp:     sender,
+		RequestSenderIp:     connectionInfo.ClientIP,
 		Timestamp:           entry.StartedDateTime.UnixNano() / int64(time.Millisecond),
 		ResolvedSource:      resolvedSource,
 		ResolvedDestination: resolvedDestination,
-		IsOutgoing:          isOutgoing,
+		IsOutgoing:          connectionInfo.IsOutgoing,
 	}
 	database.GetEntriesTable().Create(&mizuEntry)
 
