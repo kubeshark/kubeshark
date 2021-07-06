@@ -23,6 +23,8 @@ type MizuEntry struct {
 	Path                string `json:"path" gorm:"column:path"`
 	ResolvedSource      string `json:"resolvedSource,omitempty" gorm:"column:resolvedSource"`
 	ResolvedDestination string `json:"resolvedDestination,omitempty" gorm:"column:resolvedDestination"`
+	OriginalSource      string `json:"originalSource,omitempty" gorm:"column:originalSource"`
+	OriginalDestination string `json:"originalDestination,omitempty" gorm:"column:originalDestination"`
 	IsOutgoing          bool   `json:"isOutgoing,omitempty" gorm:"column:isOutgoing"`
 }
 

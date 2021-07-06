@@ -86,9 +86,9 @@ func startReadingFiles(workingDir string) {
 		for _, entry := range inputHar.Log.Entries {
 			time.Sleep(time.Millisecond * 250)
 			connectionInfo := &tap.ConnectionInfo{
-				ClientIP: fileInfo.Name(),
+				ClientIP:   fileInfo.Name(),
 				ClientPort: "",
-				ServerIP: "",
+				ServerIP:   "",
 				ServerPort: "",
 				IsOutgoing: false,
 			}
@@ -116,19 +116,23 @@ func StartReadingOutbound(outboundLinkChannel <-chan *tap.OutboundLink) {
 	}
 }
 
-
 func saveHarToDb(entry *har.Entry, connectionInfo *tap.ConnectionInfo) {
-	entryBytes, _ := json.Marshal(entry)
-	serviceName, urlPath := getServiceNameFromUrl(entry.Request.URL)
 	entryId := primitive.NewObjectID().Hex()
 	var (
 		resolvedSource      string
 		resolvedDestination string
+		originalSource      string
+		originalDestination string
 	)
 	if k8sResolver != nil {
+		originalSource = connectionInfo.ClientIP
+		originalDestination = fmt.Sprintf("%s:%s", connectionInfo.ServerIP, connectionInfo.ServerPort)
 		resolvedSource = k8sResolver.Resolve(connectionInfo.ClientIP)
-		resolvedDestination = k8sResolver.Resolve(fmt.Sprintf("%s:%s", connectionInfo.ServerIP, connectionInfo.ServerPort))
+		resolvedDestination = k8sResolver.Resolve(originalDestination)
+		entry.Request.URL = utils.SetHostname(entry.Request.URL, resolvedDestination)
 	}
+	entryBytes, _ := json.Marshal(entry)
+	serviceName, urlPath := getServiceNameFromUrl(entry.Request.URL)
 	mizuEntry := models.MizuEntry{
 		EntryId:             entryId,
 		Entry:               string(entryBytes), // simple way to store it and not convert to bytes
@@ -142,10 +146,12 @@ func saveHarToDb(entry *har.Entry, connectionInfo *tap.ConnectionInfo) {
 		ResolvedSource:      resolvedSource,
 		ResolvedDestination: resolvedDestination,
 		IsOutgoing:          connectionInfo.IsOutgoing,
+		OriginalSource:      originalSource,
+		OriginalDestination: originalDestination,
 	}
 	database.GetEntriesTable().Create(&mizuEntry)
 
-	baseEntry := utils.GetResolvedBaseEntry(mizuEntry)
+	baseEntry := utils.GetBaseEntry(mizuEntry)
 	baseEntryBytes, _ := models.CreateBaseEntryWebSocketMessage(&baseEntry)
 	broadcastToBrowserClients(baseEntryBytes)
 }

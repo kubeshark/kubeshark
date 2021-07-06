@@ -43,7 +43,7 @@ func GetEntries(c *fiber.Ctx) error {
 	// Convert to base entries
 	baseEntries := make([]models.BaseEntryDetails, 0, entriesFilter.Limit)
 	for _, entry := range entries {
-		baseEntries = append(baseEntries, utils.GetResolvedBaseEntry(entry))
+		baseEntries = append(baseEntries, utils.GetBaseEntry(entry))
 	}
 
 	return c.Status(fiber.StatusOK).JSON(baseEntries)
