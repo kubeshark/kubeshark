@@ -119,7 +119,7 @@ func StartReadingOutbound(outboundLinkChannel <-chan *tap.OutboundLink) {
 
 func saveHarToDb(entry *har.Entry, connectionInfo *tap.ConnectionInfo) {
 	entryBytes, _ := json.Marshal(entry)
-	serviceName, urlPath, serviceHostName := getServiceNameFromUrl(entry.Request.URL)
+	serviceName, urlPath := getServiceNameFromUrl(entry.Request.URL)
 	entryId := primitive.NewObjectID().Hex()
 	var (
 		resolvedSource      string
@@ -127,7 +127,7 @@ func saveHarToDb(entry *har.Entry, connectionInfo *tap.ConnectionInfo) {
 	)
 	if k8sResolver != nil {
 		resolvedSource = k8sResolver.Resolve(connectionInfo.ClientIP)
-		resolvedDestination = k8sResolver.Resolve(serviceHostName)
+		resolvedDestination = k8sResolver.Resolve(fmt.Sprintf("%s:%s", connectionInfo.ServerIP, connectionInfo.ServerPort))
 	}
 	mizuEntry := models.MizuEntry{
 		EntryId:             entryId,
@@ -150,10 +150,10 @@ func saveHarToDb(entry *har.Entry, connectionInfo *tap.ConnectionInfo) {
 	broadcastToBrowserClients(baseEntryBytes)
 }
 
-func getServiceNameFromUrl(inputUrl string) (string, string, string) {
+func getServiceNameFromUrl(inputUrl string) (string, string) {
 	parsed, err := url.Parse(inputUrl)
 	utils.CheckErr(err)
-	return fmt.Sprintf("%s://%s", parsed.Scheme, parsed.Host), parsed.Path, parsed.Host
+	return fmt.Sprintf("%s://%s", parsed.Scheme, parsed.Host), parsed.Path
 }
 
 func CheckIsServiceIP(address string) bool {
