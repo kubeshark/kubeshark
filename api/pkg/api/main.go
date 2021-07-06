@@ -121,13 +121,11 @@ func saveHarToDb(entry *har.Entry, connectionInfo *tap.ConnectionInfo) {
 	var (
 		resolvedSource      string
 		resolvedDestination string
-		originalSource      string
-		originalDestination string
+		originalSource      = connectionInfo.ClientIP
+		originalDestination = fmt.Sprintf("%s:%s", connectionInfo.ServerIP, connectionInfo.ServerPort)
 	)
 	if k8sResolver != nil {
-		originalSource = connectionInfo.ClientIP
-		originalDestination = fmt.Sprintf("%s:%s", connectionInfo.ServerIP, connectionInfo.ServerPort)
-		resolvedSource = k8sResolver.Resolve(connectionInfo.ClientIP)
+		resolvedSource = k8sResolver.Resolve(originalSource)
 		resolvedDestination = k8sResolver.Resolve(originalDestination)
 		entry.Request.URL = utils.SetHostname(entry.Request.URL, resolvedDestination)
 	}
