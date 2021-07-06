@@ -5,10 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"mizuserver/pkg/database"
-	"mizuserver/pkg/models"
-	"mizuserver/pkg/resolver"
-	"mizuserver/pkg/utils"
 	"net/url"
 	"os"
 	"path"
@@ -19,6 +15,11 @@ import (
 	"github.com/google/martian/har"
 	"github.com/up9inc/mizu/tap"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+
+	"mizuserver/pkg/database"
+	"mizuserver/pkg/models"
+	"mizuserver/pkg/resolver"
+	"mizuserver/pkg/utils"
 )
 
 var k8sResolver *resolver.Resolver
