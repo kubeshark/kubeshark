@@ -7,27 +7,11 @@ import (
 	"github.com/google/martian/har"
 	"mizuserver/pkg/database"
 	"mizuserver/pkg/models"
+	"mizuserver/pkg/up9"
 	"mizuserver/pkg/utils"
 	"mizuserver/pkg/validation"
+	"strings"
 	"time"
-)
-
-const (
-	OrderDesc = "desc"
-	OrderAsc  = "asc"
-	LT        = "lt"
-	GT        = "gt"
-)
-
-var (
-	operatorToSymbolMapping = map[string]string{
-		LT: "<",
-		GT: ">",
-	}
-	operatorToOrderMapping = map[string]string{
-		LT: OrderDesc,
-		GT: OrderAsc,
-	}
 )
 
 func GetEntries(c *fiber.Ctx) error {
@@ -41,8 +25,8 @@ func GetEntries(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(err)
 	}
 
-	order := operatorToOrderMapping[entriesFilter.Operator]
-	operatorSymbol := operatorToSymbolMapping[entriesFilter.Operator]
+	order := database.OperatorToOrderMapping[entriesFilter.Operator]
+	operatorSymbol := database.OperatorToSymbolMapping[entriesFilter.Operator]
 	var entries []models.MizuEntry
 	database.GetEntriesTable().
 		Order(fmt.Sprintf("timestamp %s", order)).
@@ -51,7 +35,7 @@ func GetEntries(c *fiber.Ctx) error {
 		Limit(entriesFilter.Limit).
 		Find(&entries)
 
-	if len(entries) > 0 && order == OrderDesc {
+	if len(entries) > 0 && order == database.OrderDesc {
 		// the entries always order from oldest to newest so we should revers
 		utils.ReverseSlice(entries)
 	}
@@ -67,7 +51,7 @@ func GetEntries(c *fiber.Ctx) error {
 
 func GetHARs(c *fiber.Ctx) error {
 	entriesFilter := &models.HarFetchRequestBody{}
-	order := OrderDesc
+	order := database.OrderDesc
 	if err := c.QueryParser(entriesFilter); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(err)
 	}
@@ -105,9 +89,20 @@ func GetHARs(c *fiber.Ctx) error {
 	for _, entryData := range entries {
 		var harEntry har.Entry
 		_ = json.Unmarshal([]byte(entryData.Entry), &harEntry)
+		if entryData.ResolvedDestination != "" {
+			harEntry.Request.URL = utils.SetHostname(harEntry.Request.URL, entryData.ResolvedDestination)
+		}
 
+		var fileName string
 		sourceOfEntry := entryData.ResolvedSource
-		fileName := fmt.Sprintf("%s.har", sourceOfEntry)
+		if sourceOfEntry != "" {
+			// naively assumes the proper service source is http
+			sourceOfEntry = fmt.Sprintf("http://%s", sourceOfEntry)
+			//replace / from the file name cause they end up creating a corrupted folder
+			fileName = fmt.Sprintf("%s.har", strings.ReplaceAll(sourceOfEntry, "/", "_"))
+		} else {
+			fileName = "unknown_source.har"
+		}
 		if harOfSource, ok := harsObject[fileName]; ok {
 			harOfSource.Log.Entries = append(harOfSource.Log.Entries, &harEntry)
 		} else {
@@ -121,10 +116,13 @@ func GetHARs(c *fiber.Ctx) error {
 							Name:    "mizu",
 							Version: "0.0.2",
 						},
-						Source: sourceOfEntry,
 					},
 					Entries: entriesHar,
 				},
+			}
+			// leave undefined when no source is present, otherwise modeler assumes source is empty string ""
+			if sourceOfEntry != "" {
+				harsObject[fileName].Log.Creator.Source = &sourceOfEntry
 			}
 		}
 	}
@@ -138,9 +136,25 @@ func GetHARs(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).SendStream(buffer)
 }
 
+func UploadEntries(c *fiber.Ctx) error {
+	uploadRequestBody := &models.UploadEntriesRequestBody{}
+	if err := c.QueryParser(uploadRequestBody); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(err)
+	}
+	if err := validation.Validate(uploadRequestBody); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(err)
+	}
+	if up9.GetAnalyzeInfo().IsAnalyzing {
+		return c.Status(fiber.StatusBadRequest).SendString("Cannot analyze, mizu is already analyzing")
+	}
+
+	token, _ := up9.CreateAnonymousToken(uploadRequestBody.Dest)
+	go up9.UploadEntriesImpl(token.Token, token.Model, uploadRequestBody.Dest)
+	return c.Status(fiber.StatusOK).SendString("OK")
+}
+
 func GetFullEntries(c *fiber.Ctx) error {
 	entriesFilter := &models.HarFetchRequestBody{}
-	order := OrderDesc
 	if err := c.QueryParser(entriesFilter); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(err)
 	}
@@ -162,23 +176,7 @@ func GetFullEntries(c *fiber.Ctx) error {
 		timestampTo = entriesFilter.To
 	}
 
-	var entries []models.MizuEntry
-	database.GetEntriesTable().
-		Where(fmt.Sprintf("timestamp BETWEEN %v AND %v", timestampFrom, timestampTo)).
-		Order(fmt.Sprintf("timestamp %s", order)).
-		Find(&entries)
-
-	if len(entries) > 0 {
-		// the entries always order from oldest to newest so we should revers
-		utils.ReverseSlice(entries)
-	}
-
-	entriesArray := make([]har.Entry, 0)
-	for _, entryData := range entries {
-		var harEntry har.Entry
-		_ = json.Unmarshal([]byte(entryData.Entry), &harEntry)
-		entriesArray = append(entriesArray, harEntry)
-	}
+	entriesArray := database.GetEntriesFromDb(timestampFrom, timestampTo)
 	return c.Status(fiber.StatusOK).JSON(entriesArray)
 }
 

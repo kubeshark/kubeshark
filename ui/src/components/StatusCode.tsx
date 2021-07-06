@@ -1,7 +1,7 @@
 import React from "react";
 import styles from './style/StatusCode.module.sass';
 
-enum StatusCodeClassification {
+export enum StatusCodeClassification {
     SUCCESS = "success",
     FAILURE = "failure",
     NEUTRAL = "neutral"
@@ -14,6 +14,12 @@ interface HAREntryProps {
 
 const StatusCode: React.FC<HAREntryProps> = ({statusCode}) => {
 
+    const classification = getClassification(statusCode)
+
+    return <span className={`${styles[classification]} ${styles.base}`}>{statusCode}</span>
+};
+
+export function getClassification(statusCode: number): string {
     let classification = StatusCodeClassification.NEUTRAL;
 
     if (statusCode >= 200 && statusCode <= 399) {
@@ -22,7 +28,7 @@ const StatusCode: React.FC<HAREntryProps> = ({statusCode}) => {
         classification = StatusCodeClassification.FAILURE;
     }
 
-    return <span className={`${styles[classification]} ${styles.base}`}>{statusCode}</span>
-};
+    return classification
+}
 
 export default StatusCode;

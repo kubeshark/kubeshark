@@ -9,6 +9,7 @@ import (
 	"mizuserver/pkg/controllers"
 	"mizuserver/pkg/models"
 	"mizuserver/pkg/routes"
+	"mizuserver/pkg/up9"
 )
 
 var browserClientSocketUUIDs = make([]string, 0)
@@ -18,6 +19,9 @@ type RoutesEventHandlers struct {
 	SocketHarOutChannel chan<- *tap.OutputChannelItem
 }
 
+func init() {
+	go up9.UpdateAnalyzeStatus(broadcastToBrowserClients)
+}
 
 func (h *RoutesEventHandlers) WebSocketConnect(ep *ikisocket.EventPayload) {
 	if ep.Kws.GetAttribute("is_tapper") == true {
@@ -83,7 +87,6 @@ func (h *RoutesEventHandlers) WebSocketMessage(ep *ikisocket.EventPayload) {
 		}
 	}
 }
-
 
 func removeSocketUUIDFromBrowserSlice(uuidToRemove string) {
 	newUUIDSlice := make([]string, 0, len(browserClientSocketUUIDs))

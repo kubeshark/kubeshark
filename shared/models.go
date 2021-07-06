@@ -1,14 +1,27 @@
 package shared
 
 type WebSocketMessageType string
+
 const (
-	WebSocketMessageTypeEntry        WebSocketMessageType = "entry"
-	WebSocketMessageTypeTappedEntry  WebSocketMessageType = "tappedEntry"
-	WebSocketMessageTypeUpdateStatus WebSocketMessageType = "status"
+	WebSocketMessageTypeEntry         WebSocketMessageType = "entry"
+	WebSocketMessageTypeTappedEntry   WebSocketMessageType = "tappedEntry"
+	WebSocketMessageTypeUpdateStatus  WebSocketMessageType = "status"
+	WebSocketMessageTypeAnalyzeStatus WebSocketMessageType = "analyzeStatus"
 )
 
 type WebSocketMessageMetadata struct {
 	MessageType WebSocketMessageType `json:"messageType,omitempty"`
+}
+
+type WebSocketAnalyzeStatusMessage struct {
+	*WebSocketMessageMetadata
+	AnalyzeStatus AnalyzeStatus `json:"analyzeStatus"`
+}
+
+type AnalyzeStatus struct {
+	IsAnalyzing   bool   `json:"isAnalyzing"`
+	RemoteUrl     string `json:"remoteUrl"`
+	IsRemoteReady bool   `json:"isRemoteReady"`
 }
 
 type WebSocketStatusMessage struct {
@@ -17,12 +30,12 @@ type WebSocketStatusMessage struct {
 }
 
 type TapStatus struct {
-	Pods      []PodInfo `json:"pods"`
+	Pods []PodInfo `json:"pods"`
 }
 
 type PodInfo struct {
 	Namespace string `json:"namespace"`
-	Name string `json:"name"`
+	Name      string `json:"name"`
 }
 
 func CreateWebSocketStatusMessage(tappingStatus TapStatus) WebSocketStatusMessage {
@@ -31,6 +44,15 @@ func CreateWebSocketStatusMessage(tappingStatus TapStatus) WebSocketStatusMessag
 			MessageType: WebSocketMessageTypeUpdateStatus,
 		},
 		TappingStatus: tappingStatus,
+	}
+}
+
+func CreateWebSocketMessageTypeAnalyzeStatus(analyzeStatus AnalyzeStatus) WebSocketAnalyzeStatusMessage {
+	return WebSocketAnalyzeStatusMessage{
+		WebSocketMessageMetadata: &WebSocketMessageMetadata{
+			MessageType: WebSocketMessageTypeAnalyzeStatus,
+		},
+		AnalyzeStatus: analyzeStatus,
 	}
 }
 

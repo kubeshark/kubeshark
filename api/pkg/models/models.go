@@ -49,6 +49,10 @@ type EntriesFilter struct {
 	Timestamp int64  `query:"timestamp" validate:"required,min=1"`
 }
 
+type UploadEntriesRequestBody struct {
+	Dest  string `query:"dest"`
+}
+
 type HarFetchRequestBody struct {
 	From int64 `query:"from"`
 	To   int64 `query:"to"`
@@ -101,5 +105,5 @@ type ExtendedLog struct {
 
 type ExtendedCreator struct {
 	*har.Creator
-	Source string `json:"_source"`
+	Source *string `json:"_source"`
 }

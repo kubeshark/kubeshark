@@ -35,7 +35,11 @@ enum ConnectionStatus {
     Paused
 }
 
-export const HarPage: React.FC = () => {
+interface HarPageProps {
+    setAnalyzeStatus: (status: any) => void;
+}
+
+export const HarPage: React.FC<HarPageProps> = ({setAnalyzeStatus}) => {
 
     const classes = useLayoutStyles();
 
@@ -60,21 +64,21 @@ export const HarPage: React.FC = () => {
         ws.current.onclose = () => setConnection(ConnectionStatus.Closed);
     }
 
-    if(ws.current) {
+    if (ws.current) {
         ws.current.onmessage = e => {
-            if(!e?.data) return;
+            if (!e?.data) return;
             const message = JSON.parse(e.data);
 
             switch (message.messageType) {
                 case "entry":
                     const entry = message.data
-                    if(connection === ConnectionStatus.Paused) {
+                    if (connection === ConnectionStatus.Paused) {
                         setNoMoreDataBottom(false)
                         return;
                     }
-                    if(!focusedEntryId) setFocusedEntryId(entry.id)
+                    if (!focusedEntryId) setFocusedEntryId(entry.id)
                     let newEntries = [...entries];
-                    if(entries.length === 1000) {
+                    if (entries.length === 1000) {
                         newEntries = newEntries.splice(1);
                         setNoMoreDataTop(false);
                     }
@@ -82,6 +86,9 @@ export const HarPage: React.FC = () => {
                     break
                 case "status":
                     setTappingStatus(message.tappingStatus);
+                    break
+                case "analyzeStatus":
+                    setAnalyzeStatus(message.analyzeStatus);
                     break
                 default:
                     console.error(`unsupported websocket message type, Got: ${message.messageType}`)
@@ -94,19 +101,23 @@ export const HarPage: React.FC = () => {
         fetch(`http://localhost:8899/api/tapStatus`)
             .then(response => response.json())
             .then(data => setTappingStatus(data));
+
+        fetch(`http://localhost:8899/api/analyzeStatus`)
+            .then(response => response.json())
+            .then(data => setAnalyzeStatus(data));
     }, []);
 
 
     useEffect(() => {
-        if(!focusedEntryId) return;
+        if (!focusedEntryId) return;
         setSelectedHarEntry(null)
         fetch(`http://localhost:8899/api/entries/${focusedEntryId}`)
             .then(response => response.json())
             .then(data => setSelectedHarEntry(data));
-    },[focusedEntryId])
+    }, [focusedEntryId])
 
     const toggleConnection = () => {
-        setConnection(connection === ConnectionStatus.Connected ? ConnectionStatus.Paused : ConnectionStatus.Connected );
+        setConnection(connection === ConnectionStatus.Connected ? ConnectionStatus.Paused : ConnectionStatus.Connected);
     }
 
     const getConnectionStatusClass = (isContainer) => {
@@ -135,11 +146,12 @@ export const HarPage: React.FC = () => {
     return (
         <div className="HarPage">
             <div className="harPageHeader">
-                <img style={{cursor: "pointer", marginRight: 15, height: 30}} alt="pause" src={connection === ConnectionStatus.Connected ? pauseIcon : playIcon} onClick={toggleConnection}/>
+                <img style={{cursor: "pointer", marginRight: 15, height: 30}} alt="pause"
+                     src={connection === ConnectionStatus.Connected ? pauseIcon : playIcon} onClick={toggleConnection}/>
                 <div className="connectionText">
                     {getConnectionTitle()}
                     <div className={"indicatorContainer " + getConnectionStatusClass(true)}>
-                        <div className={"indicator " +  getConnectionStatusClass(false)} />
+                        <div className={"indicator " + getConnectionStatusClass(false)}/>
                     </div>
                 </div>
             </div>
@@ -169,7 +181,8 @@ export const HarPage: React.FC = () => {
                     </div>
                 </div>
                 <div className={classes.details}>
-                    {selectedHarEntry && <HAREntryDetailed harEntry={selectedHarEntry} classes={{root: classes.harViewer}}/>}
+                    {selectedHarEntry &&
+                    <HAREntryDetailed harEntry={selectedHarEntry} classes={{root: classes.harViewer}}/>}
                 </div>
             </div>}
             {tappingStatus?.pods != null && <StatusBar tappingStatus={tappingStatus}/>}

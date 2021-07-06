@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"os"
 	"os/signal"
 	"regexp"
@@ -78,6 +79,7 @@ func RunMizuTap(podRegexQuery *regexp.Regexp, tappingOptions *MizuTapOptions) {
 	//block until exit signal or error
 	waitForFinish(ctx, cancel)
 }
+
 
 func createMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, nodeToTappedPodIPMap map[string][]string, tappingOptions *MizuTapOptions, mizuApiFilteringOptions *shared.TrafficFilteringOptions) error {
 	if err := createMizuAggregator(ctx, kubernetesProvider, tappingOptions, mizuApiFilteringOptions); err != nil {
@@ -198,10 +200,10 @@ func watchPodsForTapping(ctx context.Context, kubernetesProvider *kubernetes.Pro
 	for {
 		select {
 		case newTarget := <-added:
-			fmt.Printf("+%s\n", newTarget.Name)
+			fmt.Printf(mizu.Green, fmt.Sprintf("+%s\n", newTarget.Name))
 
 		case removedTarget := <-removed:
-			fmt.Printf("-%s\n", removedTarget.Name)
+			fmt.Printf(mizu.Red, fmt.Sprintf("-%s\n", removedTarget.Name))
 			restartTappersDebouncer.SetOn()
 
 		case modifiedTarget := <-modified:
@@ -241,12 +243,21 @@ func portForwardApiPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 		case modifiedPod := <-modified:
 			if modifiedPod.Status.Phase == "Running" && !isPodReady {
 				isPodReady = true
-				var err error
-				portForward, err = kubernetes.NewPortForward(kubernetesProvider, mizu.ResourcesNamespace, mizu.AggregatorPodName, tappingOptions.GuiPort, tappingOptions.MizuPodPort, cancel)
-				fmt.Printf("Web interface is now available at http://localhost:%d\n", tappingOptions.GuiPort)
-				if err != nil {
-					fmt.Printf("error forwarding port to pod %s\n", err)
+				var portForwardCreateError error
+				if portForward, portForwardCreateError = kubernetes.NewPortForward(kubernetesProvider, mizu.ResourcesNamespace, mizu.AggregatorPodName, tappingOptions.GuiPort, tappingOptions.MizuPodPort, cancel); portForwardCreateError != nil {
+					fmt.Printf("error forwarding port to pod %s\n", portForwardCreateError)
 					cancel()
+				} else {
+					fmt.Printf("Web interface is now available at http://localhost:%d\n", tappingOptions.GuiPort)
+					time.Sleep(time.Second * 5) // Waiting to be sure port forwarding finished
+					if tappingOptions.Analyze {
+						if _, err := http.Get(fmt.Sprintf("http://localhost:%d/api/uploadEntries?dest=%s", tappingOptions.GuiPort, tappingOptions.AnalyzeDestination)); err != nil {
+							fmt.Println(err)
+						} else {
+							fmt.Printf(mizu.Purple, "Traffic is uploading to UP9 cloud for further analsys")
+							fmt.Println()
+						}
+					}
 				}
 			}
 
