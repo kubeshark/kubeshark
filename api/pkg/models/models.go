@@ -76,6 +76,11 @@ func (bed *BaseEntryDetails) UnmarshalData(entry *MizuEntry) error {
 
 func (fed *FullEntryDetails) UnmarshalData(entry *MizuEntry) error {
 	_ = json.Unmarshal([]byte(entry.Entry), &fed.Entry)
+
+	if entry.ResolvedDestination != "" {
+		fed.Entry.Request.URL = utils.SetHostname(fed.Entry.Request.URL, entry.ResolvedDestination)
+	}
+
 	return nil
 }
 
@@ -87,6 +92,7 @@ func (fedex *FullEntryDetailsExtra) UnmarshalData(entry *MizuEntry) error {
 	}
 	if entry.ResolvedDestination != "" {
 		fedex.Entry.Request.Headers = append(fedex.Request.Headers, har.Header{Name: "x-mizu-destination", Value: entry.ResolvedDestination})
+		fedex.Entry.Request.URL = utils.SetHostname(fedex.Entry.Request.URL, entry.ResolvedDestination)
 	}
 
 	return nil

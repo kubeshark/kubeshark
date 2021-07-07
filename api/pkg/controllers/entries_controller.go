@@ -186,19 +186,13 @@ func GetFullEntries(c *fiber.Ctx) error {
 }
 
 func GetEntry(c *fiber.Ctx) error {
-	var entryData models.EntryData
+	var entryData *models.MizuEntry
 	database.GetEntriesTable().
-		Select("entry", "resolvedDestination").
 		Where(map[string]string{"entryId": c.Params("entryId")}).
 		First(&entryData)
 
-	var fullEntry har.Entry
-	unmarshallErr := json.Unmarshal([]byte(entryData.Entry), &fullEntry)
-	utils.CheckErr(unmarshallErr)
-
-	if entryData.ResolvedDestination != "" {
-		fullEntry.Request.URL = utils.SetHostname(fullEntry.Request.URL, entryData.ResolvedDestination)
-	}
+	var fullEntry models.FullEntryDetails
+	_ = models.GetEntry(entryData, &fullEntry)
 
 	return c.Status(fiber.StatusOK).JSON(fullEntry)
 }
