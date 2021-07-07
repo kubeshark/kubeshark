@@ -1,11 +1,9 @@
 package utils
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"log"
-	"mizuserver/pkg/models"
 	"net/url"
 	"os"
 	"os/signal"
@@ -60,29 +58,4 @@ func SetHostname(address, newHostname string) string {
 	replacedUrl.Host = newHostname
 	return replacedUrl.String()
 
-}
-
-func GetResolvedBaseEntry(entry models.MizuEntry) models.BaseEntryDetails {
-	entryUrl := entry.Url
-	service := entry.Service
-	if entry.ResolvedDestination != "" {
-		entryUrl = SetHostname(entryUrl, entry.ResolvedDestination)
-		service = SetHostname(service, entry.ResolvedDestination)
-	}
-	return models.BaseEntryDetails{
-		Id:              entry.EntryId,
-		Url:             entryUrl,
-		Service:         service,
-		Path:            entry.Path,
-		StatusCode:      entry.Status,
-		Method:          entry.Method,
-		Timestamp:       entry.Timestamp,
-		RequestSenderIp: entry.RequestSenderIp,
-		IsOutgoing:      entry.IsOutgoing,
-	}
-}
-
-func GetBytesFromStruct(v interface{}) []byte{
-	a, _ := json.Marshal(v)
-	return a
 }

@@ -40,10 +40,13 @@ func GetEntries(c *fiber.Ctx) error {
 		utils.ReverseSlice(entries)
 	}
 
-	// Convert to base entries
-	baseEntries := make([]models.BaseEntryDetails, 0, entriesFilter.Limit)
-	for _, entry := range entries {
-		baseEntries = append(baseEntries, utils.GetResolvedBaseEntry(entry))
+	baseEntries := make([]models.BaseEntryDetails, 0)
+	for _, data := range entries {
+		harEntry := models.BaseEntryDetails{}
+		if err := models.GetEntry(&data, &harEntry); err != nil {
+			continue
+		}
+		baseEntries = append(baseEntries, harEntry)
 	}
 
 	return c.Status(fiber.StatusOK).JSON(baseEntries)
@@ -177,24 +180,31 @@ func GetFullEntries(c *fiber.Ctx) error {
 	}
 
 	entriesArray := database.GetEntriesFromDb(timestampFrom, timestampTo)
-	return c.Status(fiber.StatusOK).JSON(entriesArray)
+	result := make([]models.FullEntryDetails, 0)
+	for _, data := range entriesArray {
+		harEntry := models.FullEntryDetails{}
+		if err := models.GetEntry(&data, &harEntry); err != nil {
+			continue
+		}
+		result = append(result, harEntry)
+	}
+
+	return c.Status(fiber.StatusOK).JSON(result)
 }
 
 func GetEntry(c *fiber.Ctx) error {
-	var entryData models.EntryData
+	var entryData models.MizuEntry
 	database.GetEntriesTable().
-		Select("entry", "resolvedDestination").
 		Where(map[string]string{"entryId": c.Params("entryId")}).
 		First(&entryData)
 
-	var fullEntry har.Entry
-	unmarshallErr := json.Unmarshal([]byte(entryData.Entry), &fullEntry)
-	utils.CheckErr(unmarshallErr)
-
-	if entryData.ResolvedDestination != "" {
-		fullEntry.Request.URL = utils.SetHostname(fullEntry.Request.URL, entryData.ResolvedDestination)
+	fullEntry := models.FullEntryDetails{}
+	if err := models.GetEntry(&entryData, &fullEntry); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": true,
+			"msg":   "Can't get entry details",
+		})
 	}
-
 	return c.Status(fiber.StatusOK).JSON(fullEntry)
 }
 
