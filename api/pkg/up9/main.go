@@ -124,7 +124,9 @@ func UploadEntriesImpl(token string, model string, envPrefix string) {
 			fullEntriesExtra := make([]models.FullEntryDetailsExtra, 0)
 			for _, data := range entriesArray {
 				harEntry := models.FullEntryDetailsExtra{}
-				_ = models.GetEntry(&data, &harEntry)
+				if err := models.GetEntry(&data, &harEntry); err != nil {
+					continue
+				}
 				fullEntriesExtra = append(fullEntriesExtra, harEntry)
 			}
 			fmt.Printf("About to upload %v entries\n", len(fullEntriesExtra))

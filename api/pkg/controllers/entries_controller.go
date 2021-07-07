@@ -43,7 +43,9 @@ func GetEntries(c *fiber.Ctx) error {
 	baseEntries := make([]models.BaseEntryDetails, 0)
 	for _, data := range entries {
 		harEntry := models.BaseEntryDetails{}
-		_ = models.GetEntry(&data, &harEntry)
+		if err := models.GetEntry(&data, &harEntry); err != nil {
+			continue
+		}
 		baseEntries = append(baseEntries, harEntry)
 	}
 
@@ -181,7 +183,9 @@ func GetFullEntries(c *fiber.Ctx) error {
 	result := make([]models.FullEntryDetails, 0)
 	for _, data := range entriesArray {
 		harEntry := models.FullEntryDetails{}
-		_ = models.GetEntry(&data, &harEntry)
+		if err := models.GetEntry(&data, &harEntry); err != nil {
+			continue
+		}
 		result = append(result, harEntry)
 	}
 
@@ -195,8 +199,12 @@ func GetEntry(c *fiber.Ctx) error {
 		First(&entryData)
 
 	fullEntry := models.FullEntryDetails{}
-	_ = models.GetEntry(&entryData, &fullEntry)
-
+	if err := models.GetEntry(&entryData, &fullEntry); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": true,
+			"msg":   "Can't get entry details",
+		})
+	}
 	return c.Status(fiber.StatusOK).JSON(fullEntry)
 }
 

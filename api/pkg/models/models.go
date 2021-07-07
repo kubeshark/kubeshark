@@ -9,11 +9,11 @@ import (
 	"time"
 )
 
-type IEntry interface {
+type DataUnmarshaler interface {
 	UnmarshalData(*MizuEntry) error
 }
 
-func GetEntry(r *MizuEntry, v IEntry) error {
+func GetEntry(r *MizuEntry, v DataUnmarshaler) error {
 	return v.UnmarshalData(r)
 }
 
@@ -75,17 +75,20 @@ func (bed *BaseEntryDetails) UnmarshalData(entry *MizuEntry) error {
 }
 
 func (fed *FullEntryDetails) UnmarshalData(entry *MizuEntry) error {
-	_ = json.Unmarshal([]byte(entry.Entry), &fed.Entry)
+	if err := json.Unmarshal([]byte(entry.Entry), &fed.Entry); err != nil {
+		return err
+	}
 
 	if entry.ResolvedDestination != "" {
 		fed.Entry.Request.URL = utils.SetHostname(fed.Entry.Request.URL, entry.ResolvedDestination)
 	}
-
 	return nil
 }
 
 func (fedex *FullEntryDetailsExtra) UnmarshalData(entry *MizuEntry) error {
-	_ = json.Unmarshal([]byte(entry.Entry), &fedex.Entry)
+	if err := json.Unmarshal([]byte(entry.Entry), &fedex.Entry); err != nil {
+		return err
+	}
 
 	if entry.ResolvedSource != "" {
 		fedex.Entry.Request.Headers = append(fedex.Request.Headers, har.Header{Name: "x-mizu-source", Value: entry.ResolvedSource})
@@ -94,7 +97,6 @@ func (fedex *FullEntryDetailsExtra) UnmarshalData(entry *MizuEntry) error {
 		fedex.Entry.Request.Headers = append(fedex.Request.Headers, har.Header{Name: "x-mizu-destination", Value: entry.ResolvedDestination})
 		fedex.Entry.Request.URL = utils.SetHostname(fedex.Entry.Request.URL, entry.ResolvedDestination)
 	}
-
 	return nil
 }
 

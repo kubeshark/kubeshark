@@ -146,7 +146,9 @@ func saveHarToDb(entry *har.Entry, connectionInfo *tap.ConnectionInfo) {
 	database.GetEntriesTable().Create(&mizuEntry)
 
 	baseEntry := models.BaseEntryDetails{}
-	_ = models.GetEntry(&mizuEntry, &baseEntry)
+	if err := models.GetEntry(&mizuEntry, &baseEntry); err != nil {
+		return
+	}
 	baseEntryBytes, _ := models.CreateBaseEntryWebSocketMessage(&baseEntry)
 	broadcastToBrowserClients(baseEntryBytes)
 }
