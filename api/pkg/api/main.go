@@ -5,10 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"mizuserver/pkg/database"
-	"mizuserver/pkg/models"
-	"mizuserver/pkg/resolver"
-	"mizuserver/pkg/utils"
 	"net/url"
 	"os"
 	"path"
@@ -19,6 +15,11 @@ import (
 	"github.com/google/martian/har"
 	"github.com/up9inc/mizu/tap"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+
+	"mizuserver/pkg/database"
+	"mizuserver/pkg/models"
+	"mizuserver/pkg/resolver"
+	"mizuserver/pkg/utils"
 )
 
 var k8sResolver *resolver.Resolver
@@ -84,7 +85,14 @@ func startReadingFiles(workingDir string) {
 
 		for _, entry := range inputHar.Log.Entries {
 			time.Sleep(time.Millisecond * 250)
-			saveHarToDb(entry, fileInfo.Name(), false)
+			connectionInfo := &tap.ConnectionInfo{
+				ClientIP: fileInfo.Name(),
+				ClientPort: "",
+				ServerIP: "",
+				ServerPort: "",
+				IsOutgoing: false,
+			}
+			saveHarToDb(entry, connectionInfo)
 		}
 		rmErr := os.Remove(inputFilePath)
 		utils.CheckErr(rmErr)
@@ -97,7 +105,7 @@ func startReadingChannel(outputItems <-chan *tap.OutputChannelItem) {
 	}
 
 	for item := range outputItems {
-		saveHarToDb(item.HarEntry, item.ConnectionInfo.ClientIP, item.ConnectionInfo.IsOutgoing)
+		saveHarToDb(item.HarEntry, item.ConnectionInfo)
 	}
 }
 
@@ -109,17 +117,17 @@ func StartReadingOutbound(outboundLinkChannel <-chan *tap.OutboundLink) {
 }
 
 
-func saveHarToDb(entry *har.Entry, sender string, isOutgoing bool) {
+func saveHarToDb(entry *har.Entry, connectionInfo *tap.ConnectionInfo) {
 	entryBytes, _ := json.Marshal(entry)
-	serviceName, urlPath, serviceHostName := getServiceNameFromUrl(entry.Request.URL)
+	serviceName, urlPath := getServiceNameFromUrl(entry.Request.URL)
 	entryId := primitive.NewObjectID().Hex()
 	var (
 		resolvedSource      string
 		resolvedDestination string
 	)
 	if k8sResolver != nil {
-		resolvedSource = k8sResolver.Resolve(sender)
-		resolvedDestination = k8sResolver.Resolve(serviceHostName)
+		resolvedSource = k8sResolver.Resolve(connectionInfo.ClientIP)
+		resolvedDestination = k8sResolver.Resolve(fmt.Sprintf("%s:%s", connectionInfo.ServerIP, connectionInfo.ServerPort))
 	}
 	mizuEntry := models.MizuEntry{
 		EntryId:             entryId,
@@ -129,11 +137,11 @@ func saveHarToDb(entry *har.Entry, sender string, isOutgoing bool) {
 		Path:                urlPath,
 		Method:              entry.Request.Method,
 		Status:              entry.Response.Status,
-		RequestSenderIp:     sender,
+		RequestSenderIp:     connectionInfo.ClientIP,
 		Timestamp:           entry.StartedDateTime.UnixNano() / int64(time.Millisecond),
 		ResolvedSource:      resolvedSource,
 		ResolvedDestination: resolvedDestination,
-		IsOutgoing:          isOutgoing,
+		IsOutgoing:          connectionInfo.IsOutgoing,
 	}
 	database.GetEntriesTable().Create(&mizuEntry)
 
@@ -143,10 +151,10 @@ func saveHarToDb(entry *har.Entry, sender string, isOutgoing bool) {
 	broadcastToBrowserClients(baseEntryBytes)
 }
 
-func getServiceNameFromUrl(inputUrl string) (string, string, string) {
+func getServiceNameFromUrl(inputUrl string) (string, string) {
 	parsed, err := url.Parse(inputUrl)
 	utils.CheckErr(err)
-	return fmt.Sprintf("%s://%s", parsed.Scheme, parsed.Host), parsed.Path, parsed.Host
+	return fmt.Sprintf("%s://%s", parsed.Scheme, parsed.Host), parsed.Path
 }
 
 func CheckIsServiceIP(address string) bool {

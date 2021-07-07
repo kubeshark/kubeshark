@@ -167,5 +167,5 @@ type ExtendedLog struct {
 
 type ExtendedCreator struct {
 	*har.Creator
-	Source string `json:"_source"`
+	Source *string `json:"_source"`
 }

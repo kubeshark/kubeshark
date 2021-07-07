@@ -1,5 +1,5 @@
 # 水 mizu
-standalone web app traffic viewer for Kubernetes
+A simple-yet-powerful API traffic viewer for Kubernetes to help you troubleshoot and debug your microservices. Think TCPDump and Chrome Dev Tools combined.
 
 ## Download
 
@@ -29,7 +29,7 @@ Pick one from the [Releases](https://github.com/up9inc/mizu/releases) page.
 ## How to run
 
 1. Find pod you'd like to tap to in your Kubernetes cluster
-2. Run `mizu PODNAME` or `mizu REGEX` 
+2. Run `mizu tap PODNAME` or `mizu tap REGEX` 
 3. Open browser on `http://localhost:8899` as instructed .. 
 4. Watch the WebAPI traffic flowing ..
 5. Type ^C to stop
