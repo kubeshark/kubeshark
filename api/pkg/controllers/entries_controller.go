@@ -186,13 +186,13 @@ func GetFullEntries(c *fiber.Ctx) error {
 }
 
 func GetEntry(c *fiber.Ctx) error {
-	var entryData *models.MizuEntry
+	var entryData models.MizuEntry
 	database.GetEntriesTable().
 		Where(map[string]string{"entryId": c.Params("entryId")}).
 		First(&entryData)
 
-	var fullEntry models.FullEntryDetails
-	_ = models.GetEntry(entryData, &fullEntry)
+	fullEntry := models.FullEntryDetails{}
+	_ = models.GetEntry(&entryData, &fullEntry)
 
 	return c.Status(fiber.StatusOK).JSON(fullEntry)
 }
