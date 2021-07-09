@@ -2,8 +2,8 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/antoniodipinto/ikisocket"
+	"github.com/romana/rlog"
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/tap"
 	"mizuserver/pkg/controllers"
@@ -25,18 +25,18 @@ func init() {
 
 func (h *RoutesEventHandlers) WebSocketConnect(ep *ikisocket.EventPayload) {
 	if ep.Kws.GetAttribute("is_tapper") == true {
-		fmt.Println(fmt.Sprintf("Websocket Connection event - Tapper connected: %s", ep.SocketUUID))
+		rlog.Infof("Websocket Connection event - Tapper connected: %s", ep.SocketUUID)
 	} else {
-		fmt.Println(fmt.Sprintf("Websocket Connection event - Browser socket connected: %s", ep.SocketUUID))
+		rlog.Infof("Websocket Connection event - Browser socket connected: %s", ep.SocketUUID)
 		browserClientSocketUUIDs = append(browserClientSocketUUIDs, ep.SocketUUID)
 	}
 }
 
 func (h *RoutesEventHandlers) WebSocketDisconnect(ep *ikisocket.EventPayload) {
 	if ep.Kws.GetAttribute("is_tapper") == true {
-		fmt.Println(fmt.Sprintf("Disconnection event - Tapper connected: %s", ep.SocketUUID))
+		rlog.Infof("Disconnection event - Tapper connected: %s", ep.SocketUUID)
 	} else {
-		fmt.Println(fmt.Sprintf("Disconnection event - Browser socket connected: %s", ep.SocketUUID))
+		rlog.Infof("Disconnection event - Browser socket connected: %s", ep.SocketUUID)
 		removeSocketUUIDFromBrowserSlice(ep.SocketUUID)
 	}
 }
@@ -47,29 +47,29 @@ func broadcastToBrowserClients(message []byte) {
 
 func (h *RoutesEventHandlers) WebSocketClose(ep *ikisocket.EventPayload) {
 	if ep.Kws.GetAttribute("is_tapper") == true {
-		fmt.Println(fmt.Sprintf("Websocket Close event - Tapper connected: %s", ep.SocketUUID))
+		rlog.Infof("Websocket Close event - Tapper connected: %s", ep.SocketUUID)
 	} else {
-		fmt.Println(fmt.Sprintf("Websocket  Close event - Browser socket connected: %s", ep.SocketUUID))
+		rlog.Infof("Websocket  Close event - Browser socket connected: %s", ep.SocketUUID)
 		removeSocketUUIDFromBrowserSlice(ep.SocketUUID)
 	}
 }
 
 func (h *RoutesEventHandlers) WebSocketError(ep *ikisocket.EventPayload) {
-	fmt.Println(fmt.Sprintf("Socket error - Socket uuid : %s %v", ep.SocketUUID, ep.Error))
+	rlog.Infof("Socket error - Socket uuid : %s %v", ep.SocketUUID, ep.Error)
 }
 
 func (h *RoutesEventHandlers) WebSocketMessage(ep *ikisocket.EventPayload) {
 	var socketMessageBase shared.WebSocketMessageMetadata
 	err := json.Unmarshal(ep.Data, &socketMessageBase)
 	if err != nil {
-		fmt.Printf("Could not unmarshal websocket message %v\n", err)
+		rlog.Infof("Could not unmarshal websocket message %v\n", err)
 	} else {
 		switch socketMessageBase.MessageType {
 		case shared.WebSocketMessageTypeTappedEntry:
 			var tappedEntryMessage models.WebSocketTappedEntryMessage
 			err := json.Unmarshal(ep.Data, &tappedEntryMessage)
 			if err != nil {
-				fmt.Printf("Could not unmarshal message of message type %s %v\n", socketMessageBase.MessageType, err)
+				rlog.Infof("Could not unmarshal message of message type %s %v\n", socketMessageBase.MessageType, err)
 			} else {
 				h.SocketHarOutChannel <- tappedEntryMessage.Data
 			}
@@ -77,13 +77,13 @@ func (h *RoutesEventHandlers) WebSocketMessage(ep *ikisocket.EventPayload) {
 			var statusMessage shared.WebSocketStatusMessage
 			err := json.Unmarshal(ep.Data, &statusMessage)
 			if err != nil {
-				fmt.Printf("Could not unmarshal message of message type %s %v\n", socketMessageBase.MessageType, err)
+				rlog.Infof("Could not unmarshal message of message type %s %v\n", socketMessageBase.MessageType, err)
 			} else {
 				controllers.TapStatus = statusMessage.TappingStatus
 				broadcastToBrowserClients(ep.Data)
 			}
 		default:
-			fmt.Printf("Received socket message of type %s for which no handlers are defined", socketMessageBase.MessageType)
+			rlog.Infof("Received socket message of type %s for which no handlers are defined", socketMessageBase.MessageType)
 		}
 	}
 }

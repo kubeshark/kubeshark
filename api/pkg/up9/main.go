@@ -5,6 +5,7 @@ import (
 	"compress/zlib"
 	"encoding/json"
 	"fmt"
+	"github.com/romana/rlog"
 	"github.com/up9inc/mizu/shared"
 	"io/ioutil"
 	"log"
@@ -43,7 +44,7 @@ func CreateAnonymousToken(envPrefix string) (*GuestToken, error) {
 	tokenUrl := fmt.Sprintf("https://trcc.%v/anonymous/token", envPrefix)
 	token := &GuestToken{}
 	if err := getGuestToken(tokenUrl, token); err != nil {
-		fmt.Println(err)
+		rlog.Infof("%s", err)
 		return nil, err
 	}
 	return token, nil
@@ -116,7 +117,7 @@ func UploadEntriesImpl(token string, model string, envPrefix string) {
 
 	for {
 		timestampTo := time.Now().UnixNano() / int64(time.Millisecond)
-		fmt.Printf("Getting entries from %v, to %v\n", timestampFrom, timestampTo)
+		rlog.Infof("Getting entries from %v, to %v\n", timestampFrom, timestampTo)
 		entriesArray := database.GetEntriesFromDb(timestampFrom, timestampTo)
 
 		if len(entriesArray) > 0 {
@@ -129,12 +130,12 @@ func UploadEntriesImpl(token string, model string, envPrefix string) {
 				}
 				fullEntriesExtra = append(fullEntriesExtra, harEntry)
 			}
-			fmt.Printf("About to upload %v entries\n", len(fullEntriesExtra))
+			rlog.Infof("About to upload %v entries\n", len(fullEntriesExtra))
 
 			body, jMarshalErr := json.Marshal(fullEntriesExtra)
 			if jMarshalErr != nil {
 				analyzeInformation.Reset()
-				fmt.Println("Stopping analyzing")
+				rlog.Infof("Stopping analyzing")
 				log.Fatal(jMarshalErr)
 			}
 
@@ -157,16 +158,16 @@ func UploadEntriesImpl(token string, model string, envPrefix string) {
 
 			if _, postErr := http.DefaultClient.Do(req); postErr != nil {
 				analyzeInformation.Reset()
-				log.Println("Stopping analyzing")
+				rlog.Info("Stopping analyzing")
 				log.Fatal(postErr)
 			}
-			fmt.Printf("Finish uploading %v entries to %s\n", len(entriesArray), GetTrafficDumpUrl(envPrefix, model))
+			rlog.Infof("Finish uploading %v entries to %s\n", len(entriesArray), GetTrafficDumpUrl(envPrefix, model))
 
 		} else {
-			fmt.Println("Nothing to upload")
+			rlog.Infof("Nothing to upload")
 		}
 
-		fmt.Printf("Sleeping for %v...\n", sleepTime)
+		rlog.Infof("Sleeping for %v...\n", sleepTime)
 		time.Sleep(sleepTime)
 		timestampFrom = timestampTo
 	}
