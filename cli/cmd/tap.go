@@ -22,6 +22,7 @@ type MizuTapOptions struct {
 	MizuPodPort            uint16
 	PlainTextFilterRegexes []string
 	TapOutgoing            bool
+	ServiceType            string
 }
 
 var mizuTapOptions = &MizuTapOptions{}
@@ -71,4 +72,5 @@ func init() {
 	tapCmd.Flags().Uint16VarP(&mizuTapOptions.MizuPodPort, "mizu-port", "", 8899, "Port which mizu cli will attempt to forward from the mizu collector pod")
 	tapCmd.Flags().StringArrayVarP(&mizuTapOptions.PlainTextFilterRegexes, "regex-masking", "r", nil, "List of regex expressions that are used to filter matching values from text/plain http bodies")
 	tapCmd.Flags().StringVarP(&direction, "direction", "", "in", "Record traffic that goes in this direction (relative to the tapped pod): in/any")
+	tapCmd.Flags().StringVarP(&mizuTapOptions.ServiceType, "service-type", "", "ClusterIP", "Set a service type for mizu collector's kubernetes service")
 }
