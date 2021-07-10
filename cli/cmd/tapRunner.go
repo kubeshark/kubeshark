@@ -243,11 +243,13 @@ func portForwardApiPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 			return
 		case modifiedPod := <-modified:
 			if modifiedPod.Status.Phase == "Running" && !isPodReady {
-				fmt.Println("Pod is running!")
-				err := kubernetes.StartProxy(ctx, kubernetesProvider, tappingOptions.GuiPort, mizu.ResourcesNamespace, mizu.AggregatorPodName)
-				if err != nil {
-					fmt.Printf("Error starting k8s proxy %v\n", err)
-				}
+				go func() {
+					err := kubernetes.StartProxy(ctx, kubernetesProvider, tappingOptions.GuiPort, mizu.ResourcesNamespace, mizu.AggregatorPodName)
+					if err != nil {
+						fmt.Printf("Error starting k8s proxy %v\n", err)
+					}
+				}()
+
 				isPodReady = true
 				//var portForwardCreateError error
 				//if portForward, portForwardCreateError = kubernetes.NewPortForward(kubernetesProvider, mizu.ResourcesNamespace, fmt.Sprintf(mizu.AggregatorPodName), tappingOptions.GuiPort, tappingOptions.MizuPodPort, cancel); portForwardCreateError != nil {
