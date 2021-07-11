@@ -21,5 +21,4 @@ func EntriesRoutes(fiberApp *fiber.App) {
 
 	routeGroup.Get("/tapStatus", controllers.GetTappingStatus) // get tapping status
 	routeGroup.Get("/analyzeStatus", controllers.AnalyzeInformation)
-
 }

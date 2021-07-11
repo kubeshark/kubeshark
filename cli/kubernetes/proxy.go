@@ -28,8 +28,7 @@ func StartProxy(kubernetesProvider *Provider, mizuPort uint16, mizuNamespace str
 	mux.Handle(k8sProxyApiPrefix, proxyHandler)
 	//work around to make static resources available to the dashboard (all .svgs will not load without this)
 	mux.Handle("/static/", getRerouteHttpHandler(proxyHandler, mizuProxiedUrl))
-
-	//l, err := server.Listen("127.0.0.1", int(mizuPort))
+	
 	l, err := net.Listen("tcp", fmt.Sprintf("%s:%d", "127.0.0.1", int(mizuPort)))
 	if err != nil {
 		return err

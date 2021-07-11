@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"os"
 	"os/signal"
 	"regexp"
@@ -74,7 +75,6 @@ func RunMizuTap(podRegexQuery *regexp.Regexp, tappingOptions *MizuTapOptions) {
 	go portForwardApiPod(ctx, kubernetesProvider, cancel, tappingOptions) // TODO convert this to job for built in pod ttl or have the running app handle this
 	go watchPodsForTapping(ctx, kubernetesProvider, cancel, podRegexQuery, tappingOptions)
 	go syncApiStatus(ctx, cancel, tappingOptions)
-	//go spamHealthcheck(ctx, tappingOptions)
 
 	//block until exit signal or error
 	waitForFinish(ctx, cancel)
@@ -248,8 +248,18 @@ func portForwardApiPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 						cancel()
 					}
 				}()
-				fmt.Printf("Mizu is available at  http://%s\n", kubernetes.GetMizuCollectorProxiesHostAndPath(tappingOptions.GuiPort, mizu.ResourcesNamespace, mizu.AggregatorPodName))
+				mizuProxiedUrl := kubernetes.GetMizuCollectorProxiesHostAndPath(tappingOptions.GuiPort, mizu.ResourcesNamespace, mizu.AggregatorPodName)
+				fmt.Printf("Mizu is available at  http://%s\n", mizuProxiedUrl)
 
+				time.Sleep(time.Second * 5) // Waiting to be sure the proxy is ready
+				if tappingOptions.Analyze {
+					if _, err := http.Get(fmt.Sprintf("http://%s/api/uploadEntries?dest=%s", mizuProxiedUrl, tappingOptions.AnalyzeDestination)); err != nil {
+						fmt.Println(err)
+					} else {
+						fmt.Printf(mizu.Purple, "Traffic is uploading to UP9 cloud for further analsys")
+						fmt.Println()
+					}
+				}
 				isPodReady = true
 			}
 
