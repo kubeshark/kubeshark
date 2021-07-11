@@ -4,6 +4,8 @@ import (
 	"archive/zip"
 	"bytes"
 	"fmt"
+	"github.com/up9inc/mizu/cli/kubernetes"
+	"github.com/up9inc/mizu/cli/mizu"
 	"io"
 	"io/ioutil"
 	"log"
@@ -14,7 +16,8 @@ import (
 )
 
 func RunMizuFetch(fetch *MizuFetchOptions) {
-	resp, err := http.Get(fmt.Sprintf("http://localhost:%v/api/har?from=%v&to=%v", fetch.MizuPort, fetch.FromTimestamp, fetch.ToTimestamp))
+	mizuProxiedUrl := kubernetes.GetMizuCollectorProxiedHostAndPath(fetch.MizuPort, mizu.ResourcesNamespace, mizu.AggregatorPodName)
+	resp, err := http.Get(fmt.Sprintf("http://%s/api/har?from=%v&to=%v", mizuProxiedUrl, fetch.FromTimestamp, fetch.ToTimestamp))
 	if err != nil {
 		log.Fatal(err)
 	}
