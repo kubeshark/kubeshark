@@ -3,7 +3,9 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"os/signal"
 	"regexp"
@@ -79,7 +81,6 @@ func RunMizuTap(podRegexQuery *regexp.Regexp, tappingOptions *MizuTapOptions) {
 	//block until exit signal or error
 	waitForFinish(ctx, cancel)
 }
-
 
 func createMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, nodeToTappedPodIPMap map[string][]string, tappingOptions *MizuTapOptions, mizuApiFilteringOptions *shared.TrafficFilteringOptions) error {
 	if err := createMizuAggregator(ctx, kubernetesProvider, tappingOptions, mizuApiFilteringOptions); err != nil {
@@ -254,8 +255,13 @@ func portForwardApiPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 
 				time.Sleep(time.Second * 5) // Waiting to be sure the proxy is ready
 				if tappingOptions.Analyze {
-					if _, err := http.Get(fmt.Sprintf("http://%s/api/uploadEntries?dest=%s", mizuProxiedUrl, tappingOptions.AnalyzeDestination)); err != nil {
-						fmt.Println(err)
+					url_path := fmt.Sprintf("http://localhost:%d/api/uploadEntries?dest=%s", tappingOptions.GuiPort, url.QueryEscape(tappingOptions.AnalyzeDestination))
+					u, err := url.ParseRequestURI(url_path)
+					if err != nil {
+						log.Fatal(fmt.Sprintf("Failed parsing the URL %v\n", err))
+					}
+					if _, err := http.Get(u.String()); err != nil {
+						fmt.Printf("error sending upload entries req %v, type: %T \n", err, err)
 					} else {
 						fmt.Printf(mizu.Purple, "Traffic is uploading to UP9 cloud for further analsys")
 						fmt.Println()
