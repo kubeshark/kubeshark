@@ -19,7 +19,7 @@ func StartProxy(kubernetesProvider *Provider, mizuPort uint16, mizuNamespace str
 		RejectMethods: proxy.MakeRegexpArrayOrDie(proxy.DefaultMethodRejectRE),
 	}
 
-	mizuProxiedUrl := GetMizuCollectorProxiesHostAndPath(mizuPort, mizuNamespace, mizuServiceName)
+	mizuProxiedUrl := GetMizuCollectorProxiedHostAndPath(mizuPort, mizuNamespace, mizuServiceName)
 	proxyHandler, err := proxy.NewProxyHandler(k8sProxyApiPrefix, filter, &kubernetesProvider.clientConfig, time.Second * 2)
 	if err != nil {
 		return err
@@ -28,7 +28,7 @@ func StartProxy(kubernetesProvider *Provider, mizuPort uint16, mizuNamespace str
 	mux.Handle(k8sProxyApiPrefix, proxyHandler)
 	//work around to make static resources available to the dashboard (all .svgs will not load without this)
 	mux.Handle("/static/", getRerouteHttpHandler(proxyHandler, mizuProxiedUrl))
-	
+
 	l, err := net.Listen("tcp", fmt.Sprintf("%s:%d", "127.0.0.1", int(mizuPort)))
 	if err != nil {
 		return err
@@ -40,7 +40,7 @@ func StartProxy(kubernetesProvider *Provider, mizuPort uint16, mizuNamespace str
 	return server.Serve(l)
 }
 
-func GetMizuCollectorProxiesHostAndPath(mizuPort uint16, mizuNamespace string, mizuServiceName string) string {
+func GetMizuCollectorProxiedHostAndPath(mizuPort uint16, mizuNamespace string, mizuServiceName string) string {
 	return fmt.Sprintf("localhost:%d/api/v1/namespaces/%s/services/%s:80/proxy", mizuPort, mizuNamespace, mizuServiceName)
 }
 
