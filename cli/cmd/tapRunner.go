@@ -3,7 +3,6 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"os"
 	"os/signal"
 	"regexp"
@@ -232,7 +231,6 @@ func portForwardApiPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 	podExactRegex := regexp.MustCompile(fmt.Sprintf("^%s$", mizu.AggregatorPodName))
 	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, kubernetesProvider.GetPodWatcher(ctx, mizu.ResourcesNamespace), podExactRegex)
 	isPodReady := false
-	var portForward *kubernetes.PortForward
 	for {
 		select {
 		case <-added:
@@ -244,29 +242,16 @@ func portForwardApiPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 		case modifiedPod := <-modified:
 			if modifiedPod.Status.Phase == "Running" && !isPodReady {
 				go func() {
-					err := kubernetes.StartProxy(ctx, kubernetesProvider, tappingOptions.GuiPort, mizu.ResourcesNamespace, mizu.AggregatorPodName)
+					err := kubernetes.StartProxy(kubernetesProvider, tappingOptions.GuiPort, mizu.ResourcesNamespace, mizu.AggregatorPodName)
 					if err != nil {
 						fmt.Printf("Error starting k8s proxy %v\n", err)
+						cancel()
+					} else {
+						fmt.Printf("Mizu is available at  http://%s\n", kubernetes.GetMizuCollectorProxiesHostAndPath(tappingOptions.GuiPort, mizu.ResourcesNamespace, mizu.AggregatorPodName))
 					}
 				}()
 
 				isPodReady = true
-				//var portForwardCreateError error
-				//if portForward, portForwardCreateError = kubernetes.NewPortForward(kubernetesProvider, mizu.ResourcesNamespace, fmt.Sprintf(mizu.AggregatorPodName), tappingOptions.GuiPort, tappingOptions.MizuPodPort, cancel); portForwardCreateError != nil {
-				//	fmt.Printf("error forwarding port to pod %s\n", portForwardCreateError)
-				//	cancel()
-				//} else {
-				//	fmt.Printf("Web interface is now available at http://localhost:%d\n", tappingOptions.GuiPort)
-				//	time.Sleep(time.Second * 5) // Waiting to be sure port forwarding finished
-				//	if tappingOptions.Analyze {
-				//		if _, err := http.Get(fmt.Sprintf("http://localhost:%d/api/uploadEntries?dest=%s", tappingOptions.GuiPort, tappingOptions.AnalyzeDestination)); err != nil {
-				//			fmt.Println(err)
-				//		} else {
-				//			fmt.Printf(mizu.Purple, "Traffic is uploading to UP9 cloud for further analsys")
-				//			fmt.Println()
-				//		}
-				//	}
-				//}
 			}
 
 		case <-time.After(25 * time.Second):
@@ -279,16 +264,9 @@ func portForwardApiPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 			cancel()
 
 		case <-ctx.Done():
-			if portForward != nil {
-				portForward.Stop()
-			}
 			return
 		}
 	}
-}
-
-func printMizuReadyMessages(tappingOptions *MizuTapOptions) {
-
 }
 
 func createRBACIfNecessary(ctx context.Context, kubernetesProvider *kubernetes.Provider) bool {
@@ -334,7 +312,7 @@ func waitForFinish(ctx context.Context, cancel context.CancelFunc) {
 }
 
 func syncApiStatus(ctx context.Context, cancel context.CancelFunc, tappingOptions *MizuTapOptions) {
-	controlSocket, err := mizu.CreateControlSocket(fmt.Sprintf("ws://localhost:%d/ws", tappingOptions.GuiPort))
+	controlSocket, err := mizu.CreateControlSocket(fmt.Sprintf("ws://%s/ws", kubernetes.GetMizuCollectorProxiesHostAndPath(tappingOptions.GuiPort, mizu.ResourcesNamespace, mizu.AggregatorPodName)))
 	if err != nil {
 		fmt.Printf("error establishing control socket connection %s\n", err)
 		cancel()
@@ -353,21 +331,6 @@ func syncApiStatus(ctx context.Context, cancel context.CancelFunc, tappingOption
 		}
 	}
 
-}
-
-func spamHealthcheck(ctx context.Context, tappingOptions *MizuTapOptions) {
-	for {
-		select {
-		case <- ctx.Done():
-			return
-		default:
-			_, err := http.Get(fmt.Sprintf("http://localhost:%d/health", tappingOptions.GuiPort))
-			if err != nil {
-				fmt.Printf("Error sending healthcheck %v\n", err)
-			}
-		}
-		time.Sleep(1 * time.Second)
-	}
 }
 
 func getNamespace(tappingOptions *MizuTapOptions, kubernetesProvider *kubernetes.Provider) string {
