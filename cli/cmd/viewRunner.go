@@ -8,7 +8,7 @@ import (
 	"net/http"
 )
 
-func runMizuView() {
+func runMizuView(mizuViewOptions *MizuViewOptions) {
 	kubernetesProvider := kubernetes.NewProvider("")
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -23,11 +23,17 @@ func runMizuView() {
 		return
 	}
 
-	_, err = http.Get("http://localhost:8899/")
+	mizuProxiedUrl := kubernetes.GetMizuCollectorProxiesHostAndPath(mizuViewOptions.GuiPort, mizu.ResourcesNamespace, mizu.AggregatorPodName)
+	_, err = http.Get(fmt.Sprintf("http://%s/", mizuProxiedUrl))
 	if err == nil {
-		fmt.Printf("Found a running service %s and open port 8899\n", mizu.AggregatorPodName)
+		fmt.Printf("Found a running service %s and open port %d\n", mizu.AggregatorPodName, mizuViewOptions.GuiPort)
 		return
 	}
-	fmt.Printf("Found service %s, creating port forwarding to 8899\n", mizu.AggregatorPodName)
-	portForwardApiPod(ctx, kubernetesProvider, cancel, &MizuTapOptions{GuiPort: 8899, MizuPodPort: 8899})
+	fmt.Printf("Found service %s, creating k8s proxy\n", mizu.AggregatorPodName)
+
+	fmt.Printf("Mizu is available at  http://%s\n", kubernetes.GetMizuCollectorProxiesHostAndPath(mizuViewOptions.GuiPort, mizu.ResourcesNamespace, mizu.AggregatorPodName))
+	err = kubernetes.StartProxy(kubernetesProvider, mizuViewOptions.GuiPort, mizu.ResourcesNamespace, mizu.AggregatorPodName)
+	if err != nil {
+		fmt.Printf("Error occured while running k8s proxy %v\n", err)
+	}
 }

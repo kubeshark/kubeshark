@@ -103,7 +103,7 @@ func createMizuAggregator(ctx context.Context, kubernetesProvider *kubernetes.Pr
 		return err
 	}
 
-	aggregatorService, err = kubernetesProvider.CreateService(ctx, mizu.ResourcesNamespace, mizu.AggregatorPodName, mizu.AggregatorPodName, tappingOptions.ServiceType)
+	aggregatorService, err = kubernetesProvider.CreateService(ctx, mizu.ResourcesNamespace, mizu.AggregatorPodName, mizu.AggregatorPodName)
 	if err != nil {
 		fmt.Printf("Error creating mizu collector service: %v\n", err)
 		return err
@@ -244,12 +244,11 @@ func portForwardApiPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 				go func() {
 					err := kubernetes.StartProxy(kubernetesProvider, tappingOptions.GuiPort, mizu.ResourcesNamespace, mizu.AggregatorPodName)
 					if err != nil {
-						fmt.Printf("Error starting k8s proxy %v\n", err)
+						fmt.Printf("Error occured while running k8s proxy %v\n", err)
 						cancel()
-					} else {
-						fmt.Printf("Mizu is available at  http://%s\n", kubernetes.GetMizuCollectorProxiesHostAndPath(tappingOptions.GuiPort, mizu.ResourcesNamespace, mizu.AggregatorPodName))
 					}
 				}()
+				fmt.Printf("Mizu is available at  http://%s\n", kubernetes.GetMizuCollectorProxiesHostAndPath(tappingOptions.GuiPort, mizu.ResourcesNamespace, mizu.AggregatorPodName))
 
 				isPodReady = true
 			}

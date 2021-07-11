@@ -111,7 +111,7 @@ func (provider *Provider) CreateMizuAggregatorPod(ctx context.Context, namespace
 	return provider.clientSet.CoreV1().Pods(namespace).Create(ctx, pod, metav1.CreateOptions{})
 }
 
-func (provider *Provider) CreateService(ctx context.Context, namespace string, serviceName string, appLabelValue string, serviceType string) (*core.Service, error) {
+func (provider *Provider) CreateService(ctx context.Context, namespace string, serviceName string, appLabelValue string) (*core.Service, error) {
 	service := core.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      serviceName,
@@ -119,7 +119,7 @@ func (provider *Provider) CreateService(ctx context.Context, namespace string, s
 		},
 		Spec: core.ServiceSpec{
 			Ports:    []core.ServicePort{{TargetPort: intstr.FromInt(8899), Port: 80}},
-			Type:     core.ServiceType(serviceType),
+			Type:     core.ServiceTypeClusterIP,
 			Selector: map[string]string{"app": appLabelValue},
 		},
 	}
