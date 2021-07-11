@@ -241,6 +241,7 @@ func portForwardApiPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 			return
 		case modifiedPod := <-modified:
 			if modifiedPod.Status.Phase == "Running" && !isPodReady {
+				isPodReady = true
 				go func() {
 					err := kubernetes.StartProxy(kubernetesProvider, tappingOptions.GuiPort, mizu.ResourcesNamespace, mizu.AggregatorPodName)
 					if err != nil {
@@ -260,7 +261,6 @@ func portForwardApiPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 						fmt.Println()
 					}
 				}
-				isPodReady = true
 			}
 
 		case <-time.After(25 * time.Second):
