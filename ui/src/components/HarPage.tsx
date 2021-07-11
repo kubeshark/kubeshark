@@ -39,6 +39,28 @@ interface HarPageProps {
     setAnalyzeStatus: (status: any) => void;
 }
 
+const isKubeProxy = () => {
+    return window.location.href.indexOf("/api/v1/namespaces/") > -1;
+}
+
+const getMizuApiUrl = () => {
+    if (isKubeProxy()) {
+        return window.location.href;
+    }
+    return window.location.origin;
+};
+
+const getMizuWebsocketUrl = () => {
+    if (isKubeProxy()) {
+        return `ws://${window.location.href.replace(`${window.location.protocol}//`, "")}ws`;
+    }
+    return `ws://${window.location.host}/ws`;
+}
+
+
+const mizuApiUrl = getMizuApiUrl();
+const mizuWebsocketUrl = getMizuWebsocketUrl();
+
 export const HarPage: React.FC<HarPageProps> = ({setAnalyzeStatus}) => {
 
     const classes = useLayoutStyles();
@@ -59,7 +81,7 @@ export const HarPage: React.FC<HarPageProps> = ({setAnalyzeStatus}) => {
     const ws = useRef(null);
 
     const openWebSocket = () => {
-        ws.current = new WebSocket("ws://localhost:8899/ws");
+        ws.current = new WebSocket(mizuWebsocketUrl);
         ws.current.onopen = () => setConnection(ConnectionStatus.Connected);
         ws.current.onclose = () => setConnection(ConnectionStatus.Closed);
     }
@@ -98,11 +120,11 @@ export const HarPage: React.FC<HarPageProps> = ({setAnalyzeStatus}) => {
 
     useEffect(() => {
         openWebSocket();
-        fetch(`http://localhost:8899/api/tapStatus`)
+        fetch(`${mizuApiUrl}/api/tapStatus`)
             .then(response => response.json())
             .then(data => setTappingStatus(data));
 
-        fetch(`http://localhost:8899/api/analyzeStatus`)
+        fetch(`${mizuApiUrl}/api/analyzeStatus`)
             .then(response => response.json())
             .then(data => setAnalyzeStatus(data));
     }, []);
@@ -111,7 +133,7 @@ export const HarPage: React.FC<HarPageProps> = ({setAnalyzeStatus}) => {
     useEffect(() => {
         if (!focusedEntryId) return;
         setSelectedHarEntry(null)
-        fetch(`http://localhost:8899/api/entries/${focusedEntryId}`)
+        fetch(`${mizuApiUrl}/api/entries/${focusedEntryId}`)
             .then(response => response.json())
             .then(data => setSelectedHarEntry(data));
     }, [focusedEntryId])
