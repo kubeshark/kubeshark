@@ -33,6 +33,7 @@ type MizuEntry struct {
 	ResolvedSource      string `json:"resolvedSource,omitempty" gorm:"column:resolvedSource"`
 	ResolvedDestination string `json:"resolvedDestination,omitempty" gorm:"column:resolvedDestination"`
 	IsOutgoing          bool   `json:"isOutgoing,omitempty" gorm:"column:isOutgoing"`
+	EstimatedSizeBytes           int `json:"-" gorm:"column:estimatedSizeBytes"`
 }
 
 type BaseEntryDetails struct {

@@ -3,10 +3,10 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"github.com/up9inc/mizu/cli/debounce"
 	"github.com/up9inc/mizu/cli/kubernetes"
 	"github.com/up9inc/mizu/cli/mizu"
 	"github.com/up9inc/mizu/shared"
+	"github.com/up9inc/mizu/shared/debounce"
 	core "k8s.io/api/core/v1"
 	"log"
 	"net/http"

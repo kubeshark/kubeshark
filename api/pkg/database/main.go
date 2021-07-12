@@ -39,6 +39,7 @@ func GetEntriesTable() *gorm.DB {
 }
 
 func initDataBase(databasePath string) *gorm.DB {
+	go StartEnforcingDatabaseSize( 10 * 1000 * 1000)
 	temp, _ := gorm.Open(sqlite.Open(databasePath), &gorm.Config{})
 	_ = temp.AutoMigrate(&models.MizuEntry{}) // this will ensure table is created
 	return temp

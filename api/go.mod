@@ -23,6 +23,7 @@ require (
 	k8s.io/api v0.21.0
 	k8s.io/apimachinery v0.21.0
 	k8s.io/client-go v0.21.0
+	github.com/fsnotify/fsnotify v1.4.9
 )
 
 replace github.com/up9inc/mizu/shared v0.0.0 => ../shared
