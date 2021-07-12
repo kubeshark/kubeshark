@@ -106,7 +106,7 @@ func (t *tcpStream) ReassembledSG(sg reassembly.ScatterGather, ac reassembly.Ass
 	} else {
 		ident = fmt.Sprintf("%v %v(%s): ", t.net.Reverse(), t.transport.Reverse(), dir)
 	}
-	Debug("%s: SG reassembled packet with %d bytes (start:%v,end:%v,skip:%d,saved:%d,nb:%d,%d,overlap:%d,%d)", ident, length, start, end, skip, saved, sgStats.Packets, sgStats.Chunks, sgStats.OverlapBytes, sgStats.OverlapPackets)
+	Trace("%s: SG reassembled packet with %d bytes (start:%v,end:%v,skip:%d,saved:%d,nb:%d,%d,overlap:%d,%d)", ident, length, start, end, skip, saved, sgStats.Packets, sgStats.Chunks, sgStats.OverlapBytes, sgStats.OverlapPackets)
 	if skip == -1 && *allowmissinginit {
 		// this is allowed
 	} else if skip != 0 {
@@ -125,9 +125,9 @@ func (t *tcpStream) ReassembledSG(sg reassembly.ScatterGather, ac reassembly.Ass
 		}
 		dnsSize := binary.BigEndian.Uint16(data[:2])
 		missing := int(dnsSize) - len(data[2:])
-		Debug("dnsSize: %d, missing: %d", dnsSize, missing)
+		Trace("dnsSize: %d, missing: %d", dnsSize, missing)
 		if missing > 0 {
-			Info("Missing some bytes: %d", missing)
+			Debug("Missing some bytes: %d", missing)
 			sg.KeepFrom(0)
 			return
 		}
@@ -136,7 +136,7 @@ func (t *tcpStream) ReassembledSG(sg reassembly.ScatterGather, ac reassembly.Ass
 		if err != nil {
 			SilentError("DNS-parser", "Failed to decode DNS: %v", err)
 		} else {
-			Debug("DNS: %s", gopacket.LayerDump(dns))
+			Trace("DNS: %s", gopacket.LayerDump(dns))
 		}
 		if len(data) > 2+int(dnsSize) {
 			sg.KeepFrom(2 + int(dnsSize))
@@ -144,7 +144,7 @@ func (t *tcpStream) ReassembledSG(sg reassembly.ScatterGather, ac reassembly.Ass
 	} else if t.isHTTP {
 		if length > 0 {
 			if *hexdump {
-				Debug("Feeding http with:%s", hex.Dump(data))
+				Trace("Feeding http with:%s", hex.Dump(data))
 			}
 			// This is where we pass the reassembled information onwards
 			// This channel is read by an httpReader object
@@ -158,7 +158,7 @@ func (t *tcpStream) ReassembledSG(sg reassembly.ScatterGather, ac reassembly.Ass
 }
 
 func (t *tcpStream) ReassemblyComplete(ac reassembly.AssemblerContext) bool {
-	Debug("%s: Connection closed", t.ident)
+	Trace("%s: Connection closed", t.ident)
 	if t.isHTTP {
 		close(t.client.msgQueue)
 		close(t.server.msgQueue)

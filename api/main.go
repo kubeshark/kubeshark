@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gorilla/websocket"
+	"github.com/romana/rlog"
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/tap"
 	"mizuserver/pkg/api"
@@ -50,7 +51,7 @@ func main() {
 		tapTargets := getTapTargets()
 		if tapTargets != nil {
 			tap.SetFilterAuthorities(tapTargets)
-			fmt.Println("Filtering for the following authorities:", tap.GetFilterIPs())
+			rlog.Info("Filtering for the following authorities:", tap.GetFilterIPs())
 		}
 
 		harOutputChannel, outboundLinkOutputChannel := tap.StartPassiveTapper(tapOpts)
@@ -76,7 +77,7 @@ func main() {
 	signal.Notify(signalChan, os.Interrupt)
 	<-signalChan
 
-	fmt.Println("Exiting")
+	rlog.Info("Exiting")
 }
 
 func hostApi(socketHarOutputChannel chan<- *tap.OutputChannelItem) {
@@ -149,13 +150,13 @@ func pipeChannelToSocket(connection *websocket.Conn, messageDataChannel <-chan *
 	for messageData := range messageDataChannel {
 		marshaledData, err := models.CreateWebsocketTappedEntryMessage(messageData)
 		if err != nil {
-			fmt.Printf("error converting message to json %s, (%v,%+v)\n", err, err, err)
+			rlog.Infof("error converting message to json %s, (%v,%+v)\n", err, err, err)
 			continue
 		}
 
 		err = connection.WriteMessage(websocket.TextMessage, marshaledData)
 		if err != nil {
-			fmt.Printf("error sending message through socket server %s, (%v,%+v)\n", err, err, err)
+			rlog.Infof("error sending message through socket server %s, (%v,%+v)\n", err, err, err)
 			continue
 		}
 	}

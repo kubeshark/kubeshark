@@ -13,6 +13,7 @@ func EntriesRoutes(fiberApp *fiber.App) {
 	routeGroup.Get("/entries/:entryId", controllers.GetEntry) // get single (full) entry
 	routeGroup.Get("/exportEntries", controllers.GetFullEntries)
 	routeGroup.Get("/uploadEntries", controllers.UploadEntries)
+	routeGroup.Get("/resolving", controllers.GetCurrentResolvingInformation)
 
 	routeGroup.Get("/har", controllers.GetHARs)
 

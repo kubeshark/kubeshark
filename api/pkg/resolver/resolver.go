@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/romana/rlog"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 
 	corev1 "k8s.io/api/core/v1"
@@ -40,6 +41,10 @@ func (resolver *Resolver) Resolve(name string) string {
 		return ""
 	}
 	return resolvedName
+}
+
+func (resolver *Resolver) GetMap() map[string]string {
+	return resolver.nameMap
 }
 
 func (resolver *Resolver) CheckIsServiceIP(address string) bool {
@@ -147,10 +152,10 @@ func (resolver *Resolver) watchServices(ctx context.Context) error {
 func (resolver *Resolver) saveResolvedName(key string, resolved string, eventType watch.EventType) {
 	if eventType == watch.Deleted {
 		delete(resolver.nameMap, key)
-		// fmt.Printf("setting %s=nil\n", key)
+		rlog.Infof("setting %s=nil\n", key)
 	} else {
 		resolver.nameMap[key] = resolved
-		// fmt.Printf("setting %s=%s\n", key, resolved)
+		rlog.Infof("setting %s=%s\n", key, resolved)
 	}
 }
 
@@ -171,7 +176,7 @@ func (resolver *Resolver) infiniteErrorHandleRetryFunc(ctx context.Context, fun 
 			var statusError *k8serrors.StatusError
 			if errors.As(err, &statusError) {
 				if statusError.ErrStatus.Reason == metav1.StatusReasonForbidden {
-					fmt.Printf("Resolver loop encountered permission error, aborting event listening - %v\n", err)
+					rlog.Infof("Resolver loop encountered permission error, aborting event listening - %v\n", err)
 					return
 				}
 			}

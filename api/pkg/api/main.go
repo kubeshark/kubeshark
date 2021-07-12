@@ -5,16 +5,17 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/google/martian/har"
+	"github.com/romana/rlog"
+	"github.com/up9inc/mizu/tap"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"mizuserver/pkg/holder"
 	"net/url"
 	"os"
 	"path"
 	"sort"
 	"strings"
 	"time"
-
-	"github.com/google/martian/har"
-	"github.com/up9inc/mizu/tap"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"mizuserver/pkg/database"
 	"mizuserver/pkg/models"
@@ -28,7 +29,7 @@ func init() {
 	errOut := make(chan error, 100)
 	res, err := resolver.NewFromInCluster(errOut)
 	if err != nil {
-		fmt.Printf("error creating k8s resolver %s", err)
+		rlog.Infof("error creating k8s resolver %s", err)
 		return
 	}
 	ctx := context.Background()
@@ -37,12 +38,13 @@ func init() {
 		for {
 			select {
 			case err := <-errOut:
-				fmt.Printf("name resolving error %s", err)
+				rlog.Infof("name resolving error %s", err)
 			}
 		}
 	}()
 
 	k8sResolver = res
+	holder.SetResolver(res)
 }
 
 func StartReadingEntries(harChannel <-chan *tap.OutputChannelItem, workingDir *string) {
@@ -70,7 +72,7 @@ func startReadingFiles(workingDir string) {
 		sort.Sort(utils.ByModTime(harFiles))
 
 		if len(harFiles) == 0 {
-			fmt.Printf("Waiting for new files\n")
+			rlog.Infof("Waiting for new files\n")
 			time.Sleep(3 * time.Second)
 			continue
 		}
@@ -126,9 +128,24 @@ func saveHarToDb(entry *har.Entry, connectionInfo *tap.ConnectionInfo) {
 		resolvedDestination string
 	)
 	if k8sResolver != nil {
-		resolvedSource = k8sResolver.Resolve(connectionInfo.ClientIP)
-		resolvedDestination = k8sResolver.Resolve(fmt.Sprintf("%s:%s", connectionInfo.ServerIP, connectionInfo.ServerPort))
+		unresolvedSource := connectionInfo.ClientIP
+		resolvedSource = k8sResolver.Resolve(unresolvedSource)
+		if resolvedSource == "" {
+			rlog.Debug("Cannot find resolved name to source: %s\n", unresolvedSource)
+			if os.Getenv("SKIP_NOT_RESOLVED_SOURCE") == "1" {
+				return
+			}
+		}
+		unresolvedDestination := fmt.Sprintf("%s:%s", connectionInfo.ServerIP, connectionInfo.ServerPort)
+		resolvedDestination = k8sResolver.Resolve(unresolvedDestination)
+		if resolvedDestination == "" {
+			rlog.Debug("Cannot find resolved name to dest: %s\n", unresolvedDestination)
+			if os.Getenv("SKIP_NOT_RESOLVED_DEST") == "1" {
+				return
+			}
+		}
 	}
+
 	mizuEntry := models.MizuEntry{
 		EntryId:             entryId,
 		Entry:               string(entryBytes), // simple way to store it and not convert to bytes

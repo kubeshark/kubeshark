@@ -49,12 +49,12 @@ func (matcher *requestResponseMatcher) registerRequest(ident string, request *ht
 			SilentError("Request-Duplicate", "Got duplicate request with same identifier")
 			return nil
 		}
-		Debug("Matched open Response for %s", key)
+		Trace("Matched open Response for %s", key)
 		return matcher.preparePair(&requestHTTPMessage, responseHTTPMessage)
 	}
 
 	matcher.openMessagesMap.Set(key, &requestHTTPMessage)
-	Debug("Registered open Request for %s", key)
+	Trace("Registered open Request for %s", key)
 	return nil
 }
 
@@ -75,12 +75,12 @@ func (matcher *requestResponseMatcher) registerResponse(ident string, response *
 			SilentError("Response-Duplicate", "Got duplicate response with same identifier")
 			return nil
 		}
-		Debug("Matched open Request for %s", key)
+		Trace("Matched open Request for %s", key)
 		return matcher.preparePair(requestHTTPMessage, &responseHTTPMessage)
 	}
 
 	matcher.openMessagesMap.Set(key, &responseHTTPMessage)
-	Debug("Registered open Response for %s", key)
+	Trace("Registered open Response for %s", key)
 	return nil
 }
 
