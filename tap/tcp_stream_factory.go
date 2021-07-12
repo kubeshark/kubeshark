@@ -23,11 +23,11 @@ type tcpStreamFactory struct {
 }
 
 func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.TCP, ac reassembly.AssemblerContext) reassembly.Stream {
-	rlog.Debug("* NEW: %s %s", net, transport)
+	rlog.Debugf("* NEW: %s %s", net, transport)
 	fsmOptions := reassembly.TCPSimpleFSMOptions{
 		SupportMissingEstablishment: *allowmissinginit,
 	}
-	rlog.Debug("Current App Ports: %v", gSettings.filterPorts)
+	rlog.Debugf("Current App Ports: %v", gSettings.filterPorts)
 	srcIp := net.Src().String()
 	dstIp := net.Dst().String()
 	dstPort := int(tcp.DstPort)
@@ -92,31 +92,31 @@ func (factory *tcpStreamFactory) WaitGoRoutines() {
 func (factory *tcpStreamFactory) getStreamProps(srcIP string, dstIP string, dstPort int) *streamProps {
 	if hostMode {
 		if inArrayString(gSettings.filterAuthorities, fmt.Sprintf("%s:%d", dstIP, dstPort)) == true {
-			rlog.Debug("getStreamProps %s", fmt.Sprintf("+ host1 %s:%d", dstIP, dstPort))
+			rlog.Debugf("getStreamProps %s", fmt.Sprintf("+ host1 %s:%d", dstIP, dstPort))
 			return &streamProps{isTapTarget: true, isOutgoing: false}
 		} else if inArrayString(gSettings.filterAuthorities, dstIP) == true {
-			rlog.Debug("getStreamProps %s", fmt.Sprintf("+ host2 %s", dstIP))
+			rlog.Debugf("getStreamProps %s", fmt.Sprintf("+ host2 %s", dstIP))
 			return &streamProps{isTapTarget: true, isOutgoing: false}
 		} else if *anydirection && inArrayString(gSettings.filterAuthorities, srcIP) == true {
-			rlog.Debug("getStreamProps %s", fmt.Sprintf("+ host3 %s", srcIP))
+			rlog.Debugf("getStreamProps %s", fmt.Sprintf("+ host3 %s", srcIP))
 			return &streamProps{isTapTarget: true, isOutgoing: true}
 		}
 		return &streamProps{isTapTarget: false}
 	} else {
 		isTappedPort := dstPort == 80 || (gSettings.filterPorts != nil && (inArrayInt(gSettings.filterPorts, dstPort)))
 		if !isTappedPort {
-			rlog.Debug("getStreamProps %s", fmt.Sprintf("- notHost1 %d", dstPort))
+			rlog.Debugf("getStreamProps %s", fmt.Sprintf("- notHost1 %d", dstPort))
 			return &streamProps{isTapTarget: false, isOutgoing: false}
 		}
 
 		isOutgoing := !inArrayString(ownIps, dstIP)
 
 		if !*anydirection && isOutgoing {
-			rlog.Debug("getStreamProps %s", fmt.Sprintf("- notHost2"))
+			rlog.Debugf("getStreamProps %s", fmt.Sprintf("- notHost2"))
 			return &streamProps{isTapTarget: false, isOutgoing: isOutgoing}
 		}
 
-		rlog.Debug("getStreamProps %s", fmt.Sprintf("+ notHost3 %s -> %s:%d", srcIP, dstIP, dstPort))
+		rlog.Debugf("getStreamProps %s", fmt.Sprintf("+ notHost3 %s -> %s:%d", srcIP, dstIP, dstPort))
 		return &streamProps{isTapTarget: true}
 	}
 }

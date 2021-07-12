@@ -213,7 +213,7 @@ func startPassiveTapper(harWriter *HarWriter, outboundLinkWriter *OutboundLinkWr
 	if localhostIPs, err := getLocalhostIPs(); err != nil {
 		// TODO: think this over
 		rlog.Info("Failed to get self IP addresses")
-		rlog.Error("Getting-Self-Address", "Error getting self ip address: %s (%v,%+v)", err, err, err)
+		rlog.Errorf("Getting-Self-Address", "Error getting self ip address: %s (%v,%+v)", err, err, err)
 		ownIps = make([]string, 0)
 	} else {
 		ownIps = localhostIPs
@@ -230,14 +230,14 @@ func startPassiveTapper(harWriter *HarWriter, outboundLinkWriter *OutboundLinkWr
 	SetFilterPorts(appPorts)
 	envVal := os.Getenv(maxHTTP2DataLenEnvVar)
 	if envVal == "" {
-		rlog.Info("Received empty/no HTTP2_DATA_SIZE_LIMIT env var! falling back to", maxHTTP2DataLenDefault)
+		rlog.Infof("Received empty/no HTTP2_DATA_SIZE_LIMIT env var! falling back to %v", maxHTTP2DataLenDefault)
 		maxHTTP2DataLen = maxHTTP2DataLenDefault
 	} else {
 		if convertedInt, err := strconv.Atoi(envVal); err != nil {
-			rlog.Info("Received invalid HTTP2_DATA_SIZE_LIMIT env var! falling back to", maxHTTP2DataLenDefault)
+			rlog.Infof("Received invalid HTTP2_DATA_SIZE_LIMIT env var! falling back to %v", maxHTTP2DataLenDefault)
 			maxHTTP2DataLen = maxHTTP2DataLenDefault
 		} else {
-			rlog.Info("Received HTTP2_DATA_SIZE_LIMIT env var:", maxHTTP2DataLenDefault)
+			rlog.Infof("Received HTTP2_DATA_SIZE_LIMIT env var: %v", maxHTTP2DataLenDefault)
 			maxHTTP2DataLen = convertedInt
 		}
 	}
@@ -379,11 +379,11 @@ func startPassiveTapper(harWriter *HarWriter, outboundLinkWriter *OutboundLinkWr
 
 	for packet := range source.Packets() {
 		count++
-		rlog.Debug("PACKET #%d", count)
+		rlog.Debugf("PACKET #%d", count)
 		data := packet.Data()
 		bytes += int64(len(data))
 		if *hexdumppkt {
-			rlog.Debug("Packet content (%d/0x%x) - %s", len(data), len(data), hex.Dump(data))
+			rlog.Debugf("Packet content (%d/0x%x) - %s", len(data), len(data), hex.Dump(data))
 		}
 
 		// defrag the IPv4 packet if required
@@ -398,12 +398,12 @@ func startPassiveTapper(harWriter *HarWriter, outboundLinkWriter *OutboundLinkWr
 			if err != nil {
 				log.Fatalln("Error while de-fragmenting", err)
 			} else if newip4 == nil {
-				rlog.Debug("Fragment...")
+				rlog.Debugf("Fragment...")
 				continue // packet fragment, we don't have whole packet yet.
 			}
 			if newip4.Length != l {
 				stats.ipdefrag++
-				rlog.Debug("Decoding re-assembled packet: %s", newip4.NextLayerType())
+				rlog.Debugf("Decoding re-assembled packet: %s", newip4.NextLayerType())
 				pb, ok := packet.(gopacket.PacketBuilder)
 				if !ok {
 					log.Panic("Not a PacketBuilder")
@@ -426,7 +426,7 @@ func startPassiveTapper(harWriter *HarWriter, outboundLinkWriter *OutboundLinkWr
 				CaptureInfo: packet.Metadata().CaptureInfo,
 			}
 			stats.totalsz += len(tcp.Payload)
-			rlog.Debug(packet.NetworkLayer().NetworkFlow().Src(), ":", tcp.SrcPort, " -> ", packet.NetworkLayer().NetworkFlow().Dst(), ":", tcp.DstPort)
+			rlog.Debugf(packet.NetworkLayer().NetworkFlow().Src(), ":", tcp.SrcPort, " -> ", packet.NetworkLayer().NetworkFlow().Dst(), ":", tcp.DstPort)
 			assemblerMutex.Lock()
 			assembler.AssembleWithContext(packet.NetworkLayer().NetworkFlow(), tcp, &c)
 			assemblerMutex.Unlock()
@@ -454,7 +454,7 @@ func startPassiveTapper(harWriter *HarWriter, outboundLinkWriter *OutboundLinkWr
 	assemblerMutex.Lock()
 	closed := assembler.FlushAll()
 	assemblerMutex.Unlock()
-	rlog.Debug("Final flush: %d closed", closed)
+	rlog.Debugf("Final flush: %d closed", closed)
 	if outputLevel >= 2 {
 		streamPool.Dump()
 	}
@@ -470,7 +470,7 @@ func startPassiveTapper(harWriter *HarWriter, outboundLinkWriter *OutboundLinkWr
 
 	streamFactory.WaitGoRoutines()
 	assemblerMutex.Lock()
-	rlog.Debug("%s", assembler.Dump())
+	rlog.Debugf("%s", assembler.Dump())
 	assemblerMutex.Unlock()
 	if !*nodefrag {
 		log.Printf("IPdefrag:\t\t%d", stats.ipdefrag)

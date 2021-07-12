@@ -97,6 +97,10 @@ func (provider *Provider) CreateMizuAggregatorPod(ctx context.Context, namespace
 							Name:  shared.MizuFilteringOptionsEnvVar,
 							Value: string(marshaledFilteringOptions),
 						},
+						{
+							Name:  "RLOG_LOG_LEVEL",
+							Value: "DEBUG",
+						},
 					},
 				},
 			},
@@ -328,6 +332,7 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	agentContainer.WithEnv(
 		applyconfcore.EnvVar().WithName(shared.HostModeEnvVar).WithValue("1"),
 		applyconfcore.EnvVar().WithName(shared.TappedAddressesPerNodeDictEnvVar).WithValue(string(nodeToTappedPodIPMapJsonStr)),
+		applyconfcore.EnvVar().WithName("RLOG_LOG_LEVEL").WithValue("INFO"),
 	)
 	agentContainer.WithEnv(
 		applyconfcore.EnvVar().WithName(shared.NodeNameEnvVar).WithValueFrom(
