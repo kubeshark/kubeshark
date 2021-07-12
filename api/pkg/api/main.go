@@ -131,7 +131,7 @@ func saveHarToDb(entry *har.Entry, connectionInfo *tap.ConnectionInfo) {
 		unresolvedSource := connectionInfo.ClientIP
 		resolvedSource = k8sResolver.Resolve(unresolvedSource)
 		if resolvedSource == "" {
-			rlog.Debug("Cannot find resolved name to source: %s\n", unresolvedSource)
+			rlog.Debugf("Cannot find resolved name to source: %s\n", unresolvedSource)
 			if os.Getenv("SKIP_NOT_RESOLVED_SOURCE") == "1" {
 				return
 			}
@@ -139,7 +139,7 @@ func saveHarToDb(entry *har.Entry, connectionInfo *tap.ConnectionInfo) {
 		unresolvedDestination := fmt.Sprintf("%s:%s", connectionInfo.ServerIP, connectionInfo.ServerPort)
 		resolvedDestination = k8sResolver.Resolve(unresolvedDestination)
 		if resolvedDestination == "" {
-			rlog.Debug("Cannot find resolved name to dest: %s\n", unresolvedDestination)
+			rlog.Debugf("Cannot find resolved name to dest: %s\n", unresolvedDestination)
 			if os.Getenv("SKIP_NOT_RESOLVED_DEST") == "1" {
 				return
 			}

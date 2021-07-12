@@ -51,7 +51,7 @@ func main() {
 		tapTargets := getTapTargets()
 		if tapTargets != nil {
 			tap.SetFilterAuthorities(tapTargets)
-			rlog.Info("Filtering for the following authorities:", tap.GetFilterIPs())
+			rlog.Infof("Filtering for the following authorities: %v", tap.GetFilterIPs())
 		}
 
 		harOutputChannel, outboundLinkOutputChannel := tap.StartPassiveTapper(tapOpts)
