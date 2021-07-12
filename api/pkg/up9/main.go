@@ -12,9 +12,9 @@ import (
 	"mizuserver/pkg/models"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 )
-
 
 const (
 	AnalyzeCheckSleepTime = 5 * time.Second
@@ -40,7 +40,10 @@ func getGuestToken(url string, target *GuestToken) error {
 }
 
 func CreateAnonymousToken(envPrefix string) (*GuestToken, error) {
-	tokenUrl := fmt.Sprintf("https://trcc.%v/anonymous/token", envPrefix)
+	tokenUrl := fmt.Sprintf("https://trcc.%s/anonymous/token", envPrefix)
+	if strings.HasPrefix(envPrefix, "http") {
+		tokenUrl = fmt.Sprintf("%s/api/token", envPrefix)
+	}
 	token := &GuestToken{}
 	if err := getGuestToken(tokenUrl, token); err != nil {
 		fmt.Println(err)
@@ -76,7 +79,11 @@ func CheckIfModelReady(analyzeDestination string, analyzeModel string, analyzeTo
 }
 
 func GetTrafficDumpUrl(analyzeDestination string, analyzeModel string) *url.URL {
-	postUrl, _ := url.Parse(fmt.Sprintf("https://traffic.%s/dumpTrafficBulk/%s", analyzeDestination, analyzeModel))
+	strUrl := fmt.Sprintf("https://traffic.%s/dumpTrafficBulk/%s", analyzeDestination, analyzeModel)
+	if strings.HasPrefix(analyzeDestination, "http") {
+		strUrl = fmt.Sprintf("%s/api/workspace/dumpTrafficBulk", analyzeDestination)
+	}
+	postUrl, _ := url.Parse(strUrl)
 	return postUrl
 }
 

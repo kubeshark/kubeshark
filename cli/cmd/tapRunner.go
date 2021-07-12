@@ -3,20 +3,19 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"github.com/up9inc/mizu/cli/debounce"
+	"github.com/up9inc/mizu/cli/kubernetes"
+	"github.com/up9inc/mizu/cli/mizu"
+	"github.com/up9inc/mizu/shared"
+	core "k8s.io/api/core/v1"
+	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"os/signal"
 	"regexp"
 	"syscall"
 	"time"
-
-	"github.com/up9inc/mizu/shared"
-
-	core "k8s.io/api/core/v1"
-
-	"github.com/up9inc/mizu/cli/debounce"
-	"github.com/up9inc/mizu/cli/kubernetes"
-	"github.com/up9inc/mizu/cli/mizu"
 )
 
 var mizuServiceAccountExists bool
@@ -79,7 +78,6 @@ func RunMizuTap(podRegexQuery *regexp.Regexp, tappingOptions *MizuTapOptions) {
 	//block until exit signal or error
 	waitForFinish(ctx, cancel)
 }
-
 
 func createMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, nodeToTappedPodIPMap map[string][]string, tappingOptions *MizuTapOptions, mizuApiFilteringOptions *shared.TrafficFilteringOptions) error {
 	if err := createMizuAggregator(ctx, kubernetesProvider, tappingOptions, mizuApiFilteringOptions); err != nil {
@@ -254,10 +252,15 @@ func portForwardApiPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 
 				time.Sleep(time.Second * 5) // Waiting to be sure the proxy is ready
 				if tappingOptions.Analyze {
-					if _, err := http.Get(fmt.Sprintf("http://%s/api/uploadEntries?dest=%s", mizuProxiedUrl, tappingOptions.AnalyzeDestination)); err != nil {
-						fmt.Println(err)
+					url_path := fmt.Sprintf("http://%s/api/uploadEntries?dest=%s", mizuProxiedUrl, tappingOptions.AnalyzeDestination)
+					u, err := url.ParseRequestURI(url_path)
+					if err != nil {
+						log.Fatal(fmt.Sprintf("Failed parsing the URL %v\n", err))
+					}
+					if response, err := http.Get(u.String()); err != nil && response.StatusCode != 200 {
+						fmt.Printf("error sending upload entries req %v\n", err)
 					} else {
-						fmt.Printf(mizu.Purple, "Traffic is uploading to UP9 cloud for further analsys")
+						fmt.Printf(mizu.Purple, "Traffic is uploading to UP9 for further analsys")
 						fmt.Println()
 					}
 				}
