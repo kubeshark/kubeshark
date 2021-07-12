@@ -3,6 +3,11 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"github.com/up9inc/mizu/cli/debounce"
+	"github.com/up9inc/mizu/cli/kubernetes"
+	"github.com/up9inc/mizu/cli/mizu"
+	"github.com/up9inc/mizu/shared"
+	core "k8s.io/api/core/v1"
 	"log"
 	"net/http"
 	"net/url"
@@ -11,14 +16,6 @@ import (
 	"regexp"
 	"syscall"
 	"time"
-
-	"github.com/up9inc/mizu/shared"
-
-	core "k8s.io/api/core/v1"
-
-	"github.com/up9inc/mizu/cli/debounce"
-	"github.com/up9inc/mizu/cli/kubernetes"
-	"github.com/up9inc/mizu/cli/mizu"
 )
 
 var mizuServiceAccountExists bool
@@ -263,7 +260,7 @@ func portForwardApiPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 					if _, err := http.Get(u.String()); err != nil {
 						fmt.Printf("error sending upload entries req %v, type: %T \n", err, err)
 					} else {
-						fmt.Printf(mizu.Purple, "Traffic is uploading to UP9 cloud for further analsys")
+						fmt.Printf(mizu.Purple, "Traffic is uploading to UP9 for further analsys")
 						fmt.Println()
 					}
 				}
