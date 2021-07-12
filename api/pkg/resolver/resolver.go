@@ -45,13 +45,6 @@ func (resolver *Resolver) Resolve(name string) string {
 
 func (resolver *Resolver) GetMap() map[string]string {
 	return resolver.nameMap
-	//map[string]map[string]string {
-	//result := map[string]map[string]string{}
-	//
-	//result["nameMap"] = resolver.nameMap
-	//result["serviceMap"] = resolver.serviceMap
-	//
-	//return result
 }
 
 func (resolver *Resolver) CheckIsServiceIP(address string) bool {

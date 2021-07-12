@@ -136,8 +136,6 @@ func logError(minOutputLevel int, t string, s string, a ...interface{}) {
 	if outputLevel >= minOutputLevel {
 		formatStr := fmt.Sprintf("*ERROR* %s: %s", t, s)
 		rlog.Infof(formatStr, a...)
-	//	formatStr := fmt.Sprintf("%s: %s", t, s)
-	//	log.Printf(formatStr, a...)
 	}
 }
 func Error(t string, s string, a ...interface{}) {
@@ -147,15 +145,9 @@ func SilentError(t string, s string, a ...interface{}) {
 	logError(2, t, s, a...)
 }
 func Debug(s string, a ...interface{}) {
-	//if outputLevel >= 1 {
-	//	log.Printf(s, a...)
-	//}
 	rlog.Debugf(s, a...)
 }
 func Trace(s string, a ...interface{}) {
-	//if outputLevel >= 2 {
-	//	log.Printf(s, a...)
-	//}
 	rlog.Tracef(1, s, a...)
 }
 
@@ -434,7 +426,7 @@ func startPassiveTapper(harWriter *HarWriter, outboundLinkWriter *OutboundLinkWr
 				CaptureInfo: packet.Metadata().CaptureInfo,
 			}
 			stats.totalsz += len(tcp.Payload)
-			// rlog.Debug(packet.NetworkLayer().NetworkFlow().Src(), ":", tcp.SrcPort, " -> ", packet.NetworkLayer().NetworkFlow().Dst(), ":", tcp.DstPort)
+			rlog.Debug(packet.NetworkLayer().NetworkFlow().Src(), ":", tcp.SrcPort, " -> ", packet.NetworkLayer().NetworkFlow().Dst(), ":", tcp.DstPort)
 			assemblerMutex.Lock()
 			assembler.AssembleWithContext(packet.NetworkLayer().NetworkFlow(), tcp, &c)
 			assemblerMutex.Unlock()

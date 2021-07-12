@@ -150,7 +150,7 @@ func pipeChannelToSocket(connection *websocket.Conn, messageDataChannel <-chan *
 	for messageData := range messageDataChannel {
 		marshaledData, err := models.CreateWebsocketTappedEntryMessage(messageData)
 		if err != nil {
-			rlog.Info("error converting message to json %s, (%v,%+v)\n", err, err, err)
+			rlog.Infof("error converting message to json %s, (%v,%+v)\n", err, err, err)
 			continue
 		}
 
