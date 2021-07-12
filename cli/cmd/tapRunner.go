@@ -258,7 +258,7 @@ func portForwardApiPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 						log.Fatal(fmt.Sprintf("Failed parsing the URL %v\n", err))
 					}
 					if _, err := http.Get(u.String()); err != nil {
-						fmt.Printf("error sending upload entries req %v, type: %T \n", err, err)
+						fmt.Printf("error sending upload entries req %v\n", err)
 					} else {
 						fmt.Printf(mizu.Purple, "Traffic is uploading to UP9 for further analsys")
 						fmt.Println()
