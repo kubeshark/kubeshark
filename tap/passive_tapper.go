@@ -134,8 +134,8 @@ func logError(minOutputLevel int, t string, s string, a ...interface{}) {
 	errorsMapMutex.Unlock()
 
 	if outputLevel >= minOutputLevel {
-		formatStr := fmt.Sprintf("*ERROR* %s: %s", t, s)
-		rlog.Infof(formatStr, a...)
+		formatStr := fmt.Sprintf("%s: %s", t, s)
+		rlog.Errorf(formatStr, a...)
 	}
 }
 func Error(t string, s string, a ...interface{}) {
