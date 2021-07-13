@@ -21,6 +21,7 @@ type MizuTapOptions struct {
 	MizuImage              string
 	PlainTextFilterRegexes []string
 	TapOutgoing            bool
+	SleepIntervalSec       uint16
 }
 
 var mizuTapOptions = &MizuTapOptions{}
@@ -64,6 +65,7 @@ func init() {
 	tapCmd.Flags().StringVarP(&mizuTapOptions.Namespace, "namespace", "n", "", "Namespace selector")
 	tapCmd.Flags().BoolVar(&mizuTapOptions.Analyze, "analyze", false, "Uploads traffic to UP9 for further analysis (Beta)")
 	tapCmd.Flags().StringVar(&mizuTapOptions.AnalyzeDestination, "dest", "up9.app", "Destination environment")
+	tapCmd.Flags().Uint16VarP(&mizuTapOptions.SleepIntervalSec, "upload-interval", "", 10, "Interval in seconds for uploading data to UP9")
 	tapCmd.Flags().BoolVarP(&mizuTapOptions.AllNamespaces, "all-namespaces", "A", false, "Tap all namespaces")
 	tapCmd.Flags().StringVarP(&mizuTapOptions.KubeConfigPath, "kube-config", "k", "", "Path to kube-config file")
 	tapCmd.Flags().StringVarP(&mizuTapOptions.MizuImage, "mizu-image", "", fmt.Sprintf("gcr.io/up9-docker-hub/mizu/%s:latest", mizu.Branch), "Custom image for mizu collector")
