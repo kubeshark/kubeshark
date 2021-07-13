@@ -5,7 +5,7 @@ import {makeStyles} from "@material-ui/core";
 import "./style/HarPage.sass";
 import styles from './style/HarEntriesList.module.sass';
 import {HAREntryDetailed} from "./HarEntryDetailed";
-import playIcon from './assets/play.svg';
+import playIcon from './assets/run.svg';
 import pauseIcon from './assets/pause.svg';
 import variables from './style/variables.module.scss';
 import {StatusBar} from "./StatusBar";
@@ -135,6 +135,7 @@ export const HarPage: React.FC<HarPageProps> = ({setAnalyzeStatus}) => {
         fetch(`${mizuApiUrl}/api/analyzeStatus`)
             .then(response => response.json())
             .then(data => setAnalyzeStatus(data));
+        // eslint-disable-next-line
     }, []);
 
 

@@ -1,9 +1,10 @@
 import React, {useState} from 'react';
 import './App.sass';
-import logo from './components/assets/Mizu.svg';
-import {Button, makeStyles} from "@material-ui/core";
+import logo from './components/assets/Mizu-logo.svg';
+import {Button} from "@material-ui/core";
 import {HarPage} from "./components/HarPage";
 import Tooltip from "./components/Tooltip";
+import {makeStyles} from "@material-ui/core/styles";
 
 
 const useStyles = makeStyles(() => ({
