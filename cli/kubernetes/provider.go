@@ -377,7 +377,7 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	if err != nil {
 		return errors.New("invalid cpu request for tapper container")
 	}
-	memRequests, err := resource.ParseQuantity("100Mi")
+	memRequests, err := resource.ParseQuantity("50Mi")
 	if err != nil {
 		return errors.New("invalid memory request for tapper container")
 	}
