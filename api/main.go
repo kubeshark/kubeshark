@@ -17,6 +17,7 @@ import (
 	"mizuserver/pkg/utils"
 	"os"
 	"os/signal"
+	"strings"
 )
 
 var shouldTap = flag.Bool("tap", false, "Run in tapper mode without API")
@@ -126,9 +127,15 @@ func getTrafficFilteringOptions() *shared.TrafficFilteringOptions {
 	return &filteringOptions
 }
 
+var userAgentsToFilter = []string{"kube-probe", "prometheus"}
+
 func filterHarItems(inChannel <- chan *tap.OutputChannelItem, outChannel chan *tap.OutputChannelItem, filterOptions *shared.TrafficFilteringOptions) {
 	for message := range inChannel {
 		if message.ConnectionInfo.IsOutgoing && api.CheckIsServiceIP(message.ConnectionInfo.ServerIP) {
+			continue
+		}
+		// TODO: move this to tappers
+		if filterOptions.HideHealthChecks && isHealthCheckByUserAgent(message) {
 			continue
 		}
 
@@ -136,6 +143,20 @@ func filterHarItems(inChannel <- chan *tap.OutputChannelItem, outChannel chan *t
 
 		outChannel <- message
 	}
+}
+
+func isHealthCheckByUserAgent(message *tap.OutputChannelItem) bool {
+	for _, header := range message.HarEntry.Request.Headers {
+		if strings.ToLower(header.Name) == "user-agent" {
+			for _, userAgent := range userAgentsToFilter {
+				if strings.Contains(strings.ToLower(header.Value), userAgent) {
+					return true
+				}
+				return false
+			}
+		}
+	}
+	return false
 }
 
 func pipeChannelToSocket(connection *websocket.Conn, messageDataChannel <-chan *tap.OutputChannelItem) {

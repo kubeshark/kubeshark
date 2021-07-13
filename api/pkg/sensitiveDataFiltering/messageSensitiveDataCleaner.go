@@ -15,8 +15,8 @@ import (
 )
 
 func FilterSensitiveInfoFromHarRequest(harOutputItem *tap.OutputChannelItem, options *shared.TrafficFilteringOptions) {
-	harOutputItem.HarEntry.Request.Headers = filterHarHeaders(harOutputItem.HarEntry.Request.Headers)
-	harOutputItem.HarEntry.Response.Headers = filterHarHeaders(harOutputItem.HarEntry.Response.Headers)
+	//harOutputItem.HarEntry.Request.Headers = filterHarHeaders(harOutputItem.HarEntry.Request.Headers)
+	//harOutputItem.HarEntry.Response.Headers = filterHarHeaders(harOutputItem.HarEntry.Response.Headers)
 
 	harOutputItem.HarEntry.Request.Cookies = make([]har.Cookie, 0, 0)
 	harOutputItem.HarEntry.Response.Cookies = make([]har.Cookie, 0, 0)

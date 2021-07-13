@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"regexp"
+	"strconv"
 
 	"github.com/up9inc/mizu/shared"
 	core "k8s.io/api/core/v1"
@@ -70,7 +71,7 @@ func (provider *Provider) GetPodWatcher(ctx context.Context, namespace string) w
 	return watcher
 }
 
-func (provider *Provider) CreateMizuAggregatorPod(ctx context.Context, namespace string, podName string, podImage string, linkServiceAccount bool, mizuApiFilteringOptions *shared.TrafficFilteringOptions) (*core.Pod, error) {
+func (provider *Provider) CreateMizuAggregatorPod(ctx context.Context, namespace string, podName string, podImage string, linkServiceAccount bool, mizuApiFilteringOptions *shared.TrafficFilteringOptions, maxEntriesDBSizeBytes int64) (*core.Pod, error) {
 	marshaledFilteringOptions, err := json.Marshal(mizuApiFilteringOptions)
 	if err != nil {
 		return nil, err
@@ -96,6 +97,10 @@ func (provider *Provider) CreateMizuAggregatorPod(ctx context.Context, namespace
 						{
 							Name:  shared.MizuFilteringOptionsEnvVar,
 							Value: string(marshaledFilteringOptions),
+						},
+						{
+							Name:  shared.MaxEntriesDBSizeByteSEnvVar,
+							Value: strconv.FormatInt(maxEntriesDBSizeBytes, 10),
 						},
 					},
 				},

@@ -5,4 +5,5 @@ const (
 	HostModeEnvVar = "HOST_MODE"
 	NodeNameEnvVar = "NODE_NAME"
 	TappedAddressesPerNodeDictEnvVar = "TAPPED_ADDRESSES_PER_HOST"
+	MaxEntriesDBSizeByteSEnvVar = "MAX_ENTRIES_DB_BYTES"
 )

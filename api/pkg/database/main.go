@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 	"mizuserver/pkg/models"
 	"mizuserver/pkg/utils"
 )
@@ -12,9 +13,7 @@ const (
 	DBPath = "./entries.db"
 )
 
-var (
-	DB = initDataBase(DBPath)
-)
+ var DB *gorm.DB
 
 const (
 	OrderDesc = "desc"
@@ -34,13 +33,19 @@ var (
 	}
 )
 
+func init() {
+	DB = initDataBase(DBPath)
+	go StartEnforcingDatabaseSize()
+}
+
 func GetEntriesTable() *gorm.DB {
 	return DB.Table("mizu_entries")
 }
 
 func initDataBase(databasePath string) *gorm.DB {
-	go StartEnforcingDatabaseSize( 10 * 1000 * 1000)
-	temp, _ := gorm.Open(sqlite.Open(databasePath), &gorm.Config{})
+	temp, _ := gorm.Open(sqlite.Open(databasePath), &gorm.Config{
+		Logger: logger.Default.LogMode(logger.Silent),
+	})
 	_ = temp.AutoMigrate(&models.MizuEntry{}) // this will ensure table is created
 	return temp
 }
