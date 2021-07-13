@@ -112,8 +112,8 @@ func pruneOldEntries(currentFileSize int64) {
 		GetEntriesTable().Where(entryIdsToRemove).Delete(models.MizuEntry{})
 		// VACUUM causes sqlite to shrink the db file after rows have been deleted, the db file will not shrink without this
 		DB.Exec("VACUUM")
-		fmt.Printf("Removed %d rows and cleared %s bytes", len(entryIdsToRemove), shared.BytesToHumanReadable(bytesToBeRemoved))
+		fmt.Printf("Removed %d rows and cleared %s bytes\n", len(entryIdsToRemove), shared.BytesToHumanReadable(bytesToBeRemoved))
 	} else {
-		fmt.Printf("Found no rows to remove when pruning")
+		fmt.Println("Found no rows to remove when pruning")
 	}
 }
