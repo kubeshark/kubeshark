@@ -340,7 +340,7 @@ func syncApiStatus(ctx context.Context, cancel context.CancelFunc, tappingOption
 		default:
 			err = controlSocket.SendNewTappedPodsListMessage(currentlyTappedPods)
 			if err != nil {
-				fmt.Printf("error Sending message via control socket %v, error: %s\n", controlSocketStr, err)
+				rlog.Debugf("error Sending message via control socket %v, error: %s\n", controlSocketStr, err)
 			}
 			time.Sleep(10 * time.Second)
 		}
