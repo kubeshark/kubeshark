@@ -36,7 +36,7 @@ func getGuestToken(url string, target *GuestToken) error {
 		return err
 	}
 	defer resp.Body.Close()
-
+	rlog.Debugf("Got token from the server, starting to json decode... status code: %v", resp.StatusCode)
 	return json.NewDecoder(resp.Body).Decode(target)
 }
 
@@ -47,7 +47,7 @@ func CreateAnonymousToken(envPrefix string) (*GuestToken, error) {
 	}
 	token := &GuestToken{}
 	if err := getGuestToken(tokenUrl, token); err != nil {
-		rlog.Infof("%s", err)
+		rlog.Infof("Failed to get token, %s", err)
 		return nil, err
 	}
 	return token, nil
