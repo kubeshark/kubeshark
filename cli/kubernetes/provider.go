@@ -77,11 +77,11 @@ func (provider *Provider) CreateMizuAggregatorPod(ctx context.Context, namespace
 		return nil, err
 	}
 
-	cpuRequests, err := resource.ParseQuantity("500m")
+	cpuRequests, err := resource.ParseQuantity("50m")
 	if err != nil {
 		return nil, errors.New("invalid cpu request for aggregator container")
 	}
-	memRequests, err := resource.ParseQuantity("1024Mi")
+	memRequests, err := resource.ParseQuantity("50Mi")
 	if err != nil {
 		return nil, errors.New("invalid memory request for aggregator container")
 	}
@@ -365,11 +365,11 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 			),
 		),
 	)
-	cpuRequests, err := resource.ParseQuantity("750m")
+	cpuRequests, err := resource.ParseQuantity("50m")
 	if err != nil {
 		return errors.New("invalid cpu request for tapper container")
 	}
-	memRequests, err := resource.ParseQuantity("512Mi")
+	memRequests, err := resource.ParseQuantity("100Mi")
 	if err != nil {
 		return errors.New("invalid memory request for tapper container")
 	}
