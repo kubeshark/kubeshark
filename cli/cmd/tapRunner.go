@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"github.com/romana/rlog"
 	"github.com/up9inc/mizu/cli/kubernetes"
 	"github.com/up9inc/mizu/cli/mizu"
 	"github.com/up9inc/mizu/shared"
@@ -252,11 +253,12 @@ func portForwardApiPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 
 				time.Sleep(time.Second * 5) // Waiting to be sure the proxy is ready
 				if tappingOptions.Analyze {
-					url_path := fmt.Sprintf("http://%s/api/uploadEntries?dest=%s", mizuProxiedUrl, tappingOptions.AnalyzeDestination)
+					url_path := fmt.Sprintf("http://%s/api/uploadEntries?dest=%s", mizuProxiedUrl, url.QueryEscape(tappingOptions.AnalyzeDestination))
 					u, err := url.ParseRequestURI(url_path)
 					if err != nil {
 						log.Fatal(fmt.Sprintf("Failed parsing the URL %v\n", err))
 					}
+					rlog.Debugf("Sending get request to %v\n", u.String())
 					if response, err := http.Get(u.String()); err != nil && response.StatusCode != 200 {
 						fmt.Printf("error sending upload entries req %v\n", err)
 					} else {
@@ -324,7 +326,8 @@ func waitForFinish(ctx context.Context, cancel context.CancelFunc) {
 }
 
 func syncApiStatus(ctx context.Context, cancel context.CancelFunc, tappingOptions *MizuTapOptions) {
-	controlSocket, err := mizu.CreateControlSocket(fmt.Sprintf("ws://%s/ws", kubernetes.GetMizuCollectorProxiedHostAndPath(tappingOptions.GuiPort, mizu.ResourcesNamespace, mizu.AggregatorPodName)))
+	controlSocketStr := fmt.Sprintf("ws://%s/ws", kubernetes.GetMizuCollectorProxiedHostAndPath(tappingOptions.GuiPort, mizu.ResourcesNamespace, mizu.AggregatorPodName))
+	controlSocket, err := mizu.CreateControlSocket(controlSocketStr)
 	if err != nil {
 		fmt.Printf("error establishing control socket connection %s\n", err)
 		cancel()
@@ -337,7 +340,7 @@ func syncApiStatus(ctx context.Context, cancel context.CancelFunc, tappingOption
 		default:
 			err = controlSocket.SendNewTappedPodsListMessage(currentlyTappedPods)
 			if err != nil {
-				fmt.Printf("error Sending message via control socket %s\n", err)
+				rlog.Debugf("error Sending message via control socket %v, error: %s\n", controlSocketStr, err)
 			}
 			time.Sleep(10 * time.Second)
 		}

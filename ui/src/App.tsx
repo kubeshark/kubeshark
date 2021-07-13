@@ -1,6 +1,6 @@
 import React, {useState} from 'react';
 import './App.sass';
-import logo from './components/assets/Mizu.svg';
+import logo from './components/assets/Mizu-logo.svg';
 import {Button} from "@material-ui/core";
 import {HarPage} from "./components/HarPage";
 

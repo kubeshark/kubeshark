@@ -15,6 +15,7 @@ import (
 	rbac "k8s.io/api/rbac/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	resource "k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/watch"
 	applyconfapp "k8s.io/client-go/applyconfigurations/apps/v1"
@@ -76,6 +77,24 @@ func (provider *Provider) CreateMizuAggregatorPod(ctx context.Context, namespace
 	if err != nil {
 		return nil, err
 	}
+
+	cpuLimit, err := resource.ParseQuantity("750")
+	if err != nil {
+		return nil, errors.New("invalid cpu limit for aggregator container")
+	}
+	memLimit, err := resource.ParseQuantity("512Mi")
+	if err != nil {
+		return nil, errors.New("invalid memory limit for aggregator container")
+	}
+	cpuRequests, err := resource.ParseQuantity("50m")
+	if err != nil {
+		return nil, errors.New("invalid cpu request for aggregator container")
+	}
+	memRequests, err := resource.ParseQuantity("50Mi")
+	if err != nil {
+		return nil, errors.New("invalid memory request for aggregator container")
+	}
+
 	pod := &core.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      podName,
@@ -101,6 +120,16 @@ func (provider *Provider) CreateMizuAggregatorPod(ctx context.Context, namespace
 						{
 							Name:  shared.MaxEntriesDBSizeByteSEnvVar,
 							Value: strconv.FormatInt(maxEntriesDBSizeBytes, 10),
+						},
+					},
+					Resources: core.ResourceRequirements{
+						Limits: core.ResourceList{
+							"cpu": cpuLimit,
+							"memory": memLimit,
+						},
+						Requests: core.ResourceList{
+							"cpu": cpuRequests,
+							"memory": memRequests,
 						},
 					},
 				},
@@ -341,6 +370,32 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 			),
 		),
 	)
+	cpuLimit, err := resource.ParseQuantity("500m")
+	if err != nil {
+		return errors.New("invalid cpu limit for tapper container")
+	}
+	memLimit, err := resource.ParseQuantity("1Gi")
+	if err != nil {
+		return errors.New("invalid memory limit for tapper container")
+	}
+	cpuRequests, err := resource.ParseQuantity("50m")
+	if err != nil {
+		return errors.New("invalid cpu request for tapper container")
+	}
+	memRequests, err := resource.ParseQuantity("50Mi")
+	if err != nil {
+		return errors.New("invalid memory request for tapper container")
+	}
+	agentResourceLimits := core.ResourceList{
+		"cpu": cpuLimit,
+		"memory": memLimit,
+	}
+	agentResourceRequests := core.ResourceList{
+		"cpu": cpuRequests,
+		"memory": memRequests,
+	}
+	agentResources := applyconfcore.ResourceRequirements().WithRequests(agentResourceRequests).WithLimits(agentResourceLimits)
+	agentContainer.WithResources(agentResources)
 
 	nodeNames := make([]string, 0, len(nodeToTappedPodIPMap))
 	for nodeName := range nodeToTappedPodIPMap {

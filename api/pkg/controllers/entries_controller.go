@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/martian/har"
+	"github.com/romana/rlog"
 	"mizuserver/pkg/database"
 	"mizuserver/pkg/models"
 	"mizuserver/pkg/up9"
@@ -140,6 +141,8 @@ func GetHARs(c *fiber.Ctx) error {
 }
 
 func UploadEntries(c *fiber.Ctx) error {
+	rlog.Debugf("Upload entries - started\n")
+
 	uploadRequestBody := &models.UploadEntriesRequestBody{}
 	if err := c.QueryParser(uploadRequestBody); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(err)
@@ -150,8 +153,12 @@ func UploadEntries(c *fiber.Ctx) error {
 	if up9.GetAnalyzeInfo().IsAnalyzing {
 		return c.Status(fiber.StatusBadRequest).SendString("Cannot analyze, mizu is already analyzing")
 	}
-
-	token, _ := up9.CreateAnonymousToken(uploadRequestBody.Dest)
+	rlog.Debugf("Upload entries - creating token. dest %s\n", uploadRequestBody.Dest)
+	token, err := up9.CreateAnonymousToken(uploadRequestBody.Dest)
+	if err != nil {
+		return c.Status(fiber.StatusServiceUnavailable).SendString("Can't get token")
+	}
+	rlog.Infof("Upload entries - uploading. token: %s model: %s\n", token.Token, token.Model)
 	go up9.UploadEntriesImpl(token.Token, token.Model, uploadRequestBody.Dest)
 	return c.Status(fiber.StatusOK).SendString("OK")
 }
