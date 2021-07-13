@@ -112,13 +112,13 @@ func GetAnalyzeInfo() *shared.AnalyzeStatus {
 	}
 }
 
-func UploadEntriesImpl(token string, model string, envPrefix string) {
+func UploadEntriesImpl(token string, model string, envPrefix string, sleepIntervalSec int) {
 	analyzeInformation.IsAnalyzing = true
 	analyzeInformation.AnalyzedModel = model
 	analyzeInformation.AnalyzeToken = token
 	analyzeInformation.AnalyzeDestination = envPrefix
 
-	sleepTime := time.Second * 10
+	sleepTime := time.Second * time.Duration(sleepIntervalSec)
 
 	var timestampFrom int64 = 0
 

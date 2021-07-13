@@ -159,7 +159,7 @@ func UploadEntries(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusServiceUnavailable).SendString("Can't get token")
 	}
 	rlog.Infof("Upload entries - uploading. token: %s model: %s\n", token.Token, token.Model)
-	go up9.UploadEntriesImpl(token.Token, token.Model, uploadRequestBody.Dest)
+	go up9.UploadEntriesImpl(token.Token, token.Model, uploadRequestBody.Dest, uploadRequestBody.sleepIntervalSec)
 	return c.Status(fiber.StatusOK).SendString("OK")
 }
 
