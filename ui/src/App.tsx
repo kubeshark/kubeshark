@@ -1,13 +1,39 @@
 import React, {useState} from 'react';
 import './App.sass';
 import logo from './components/assets/Mizu.svg';
-import {Button} from "@material-ui/core";
+import {Button, makeStyles} from "@material-ui/core";
 import {HarPage} from "./components/HarPage";
+import Tooltip from "./components/Tooltip";
 
+
+const useStyles = makeStyles(() => ({
+    tooltip: {
+        backgroundColor: "#3868dc",
+        color: "white",
+        fontSize: 13,
+    },
+}));
 
 const App = () => {
 
+    const classes = useStyles();
+
     const [analyzeStatus, setAnalyzeStatus] = useState(null);
+
+        const analysisMessage = analyzeStatus?.isRemoteReady ?
+        <span>
+            Analysis is available <br />
+            Uploaded {analyzeStatus?.sentCount} messages
+        </span> :
+        analyzeStatus?.sentCount > 0 ?
+            <span>
+                    Uploaded {analyzeStatus?.sentCount} message <br />
+                    It is normally take few minutes to get first analysis results
+            </span> :
+            <span>
+                    0 messages sent <br />
+                    Analysis will start once messages will be uploaded
+            </span>
 
     return (
         <div className="mizuApp">
@@ -16,10 +42,10 @@ const App = () => {
                     <div className="title"><img src={logo} alt="logo"/></div>
                     <div className="description">Traffic viewer for Kubernetes</div>
                 </div>
-                <div>
-                    {analyzeStatus?.isAnalyzing &&
-                    <div
-                        title={!analyzeStatus?.isRemoteReady ? "Analysis is not ready yet" : "Go To see further analysis"}>
+                {analyzeStatus?.isAnalyzing &&
+                <Tooltip title={analysisMessage} isSimple classes={classes}>
+                    <div>
+
                         <Button
                             variant="contained"
                             color="primary"
@@ -30,8 +56,8 @@ const App = () => {
                             Analysis
                         </Button>
                     </div>
-                    }
-                </div>
+                </Tooltip>
+                }
             </div>
             <HarPage setAnalyzeStatus={setAnalyzeStatus}/>
         </div>

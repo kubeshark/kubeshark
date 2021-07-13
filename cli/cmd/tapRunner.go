@@ -252,9 +252,9 @@ func portForwardApiPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 				fmt.Printf("Mizu is available at  http://%s\n", mizuProxiedUrl)
 
 				time.Sleep(time.Second * 5) // Waiting to be sure the proxy is ready
-				if tappingOptions.Analyze {
-					url_path := fmt.Sprintf("http://%s/api/uploadEntries?dest=%s", mizuProxiedUrl, url.QueryEscape(tappingOptions.AnalyzeDestination))
-					u, err := url.ParseRequestURI(url_path)
+				if tappingOptions.Analysis {
+					urlPath := fmt.Sprintf("http://%s/api/uploadEntries?dest=%s", mizuProxiedUrl, url.QueryEscape(tappingOptions.AnalysisDestination))
+					u, err := url.ParseRequestURI(urlPath)
 					if err != nil {
 						log.Fatal(fmt.Sprintf("Failed parsing the URL %v\n", err))
 					}

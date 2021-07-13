@@ -43,9 +43,15 @@ const isKubeProxy = () => {
     return window.location.href.indexOf("/api/v1/namespaces/") > -1;
 }
 
+const isLocalDevelopment = () => {
+    return window.location.href.indexOf(":3000") > -1;
+}
+
 const getMizuApiUrl = () => {
     if (isKubeProxy()) {
         return window.location.href;
+    } else if (isLocalDevelopment) {
+        return "http://localhost:8899/api/v1/namespaces/default/services/mizu-collector:80/proxy"
     }
     return window.location.origin;
 };
@@ -53,6 +59,8 @@ const getMizuApiUrl = () => {
 const getMizuWebsocketUrl = () => {
     if (isKubeProxy()) {
         return `ws://${window.location.href.replace(`${window.location.protocol}//`, "")}ws`;
+    } else if (isLocalDevelopment()) {
+        return `ws:///localhost:8899/api/v1/namespaces/default/services/mizu-collector:80/proxy/ws`
     }
     return `ws://${window.location.host}/ws`;
 }
