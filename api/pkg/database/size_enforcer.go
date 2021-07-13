@@ -76,7 +76,6 @@ func checkFileSize(maxSizeBytes int64) {
 	if err != nil {
 		fmt.Printf("Error checking %s file size: %v\n", DBPath, err)
 	} else {
-		fmt.Printf("Checking if %s is > %s", shared.BytesToHumanReadable(fileStat.Size()), shared.BytesToHumanReadable(maxSizeBytes))
 		if fileStat.Size() > maxSizeBytes {
 			pruneOldEntries(fileStat.Size())
 		}
