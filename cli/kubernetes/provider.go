@@ -77,14 +77,6 @@ func (provider *Provider) CreateMizuAggregatorPod(ctx context.Context, namespace
 		return nil, err
 	}
 
-	cpuRequests, err := resource.ParseQuantity("50m")
-	if err != nil {
-		return nil, errors.New("invalid cpu request for aggregator container")
-	}
-	memRequests, err := resource.ParseQuantity("50Mi")
-	if err != nil {
-		return nil, errors.New("invalid memory request for aggregator container")
-	}
 	cpuLimit, err := resource.ParseQuantity("750")
 	if err != nil {
 		return nil, errors.New("invalid cpu limit for aggregator container")
@@ -92,6 +84,14 @@ func (provider *Provider) CreateMizuAggregatorPod(ctx context.Context, namespace
 	memLimit, err := resource.ParseQuantity("512Mi")
 	if err != nil {
 		return nil, errors.New("invalid memory limit for aggregator container")
+	}
+	cpuRequests, err := resource.ParseQuantity("50m")
+	if err != nil {
+		return nil, errors.New("invalid cpu request for aggregator container")
+	}
+	memRequests, err := resource.ParseQuantity("50Mi")
+	if err != nil {
+		return nil, errors.New("invalid memory request for aggregator container")
 	}
 
 	pod := &core.Pod{
@@ -118,13 +118,13 @@ func (provider *Provider) CreateMizuAggregatorPod(ctx context.Context, namespace
 						},
 					},
 					Resources: core.ResourceRequirements{
-						Requests: core.ResourceList{
-							"cpu": cpuRequests,
-							"memory": memRequests,
-						},
 						Limits: core.ResourceList{
 							"cpu": cpuLimit,
 							"memory": memLimit,
+						},
+						Requests: core.ResourceList{
+							"cpu": cpuRequests,
+							"memory": memRequests,
 						},
 					},
 				},
@@ -365,14 +365,6 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 			),
 		),
 	)
-	cpuRequests, err := resource.ParseQuantity("50m")
-	if err != nil {
-		return errors.New("invalid cpu request for tapper container")
-	}
-	memRequests, err := resource.ParseQuantity("100Mi")
-	if err != nil {
-		return errors.New("invalid memory request for tapper container")
-	}
 	cpuLimit, err := resource.ParseQuantity("500m")
 	if err != nil {
 		return errors.New("invalid cpu limit for tapper container")
@@ -381,13 +373,21 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	if err != nil {
 		return errors.New("invalid memory limit for tapper container")
 	}
-	agentResourceRequests := core.ResourceList{
-		"cpu": cpuRequests,
-		"memory": memRequests,
+	cpuRequests, err := resource.ParseQuantity("50m")
+	if err != nil {
+		return errors.New("invalid cpu request for tapper container")
+	}
+	memRequests, err := resource.ParseQuantity("100Mi")
+	if err != nil {
+		return errors.New("invalid memory request for tapper container")
 	}
 	agentResourceLimits := core.ResourceList{
 		"cpu": cpuLimit,
 		"memory": memLimit,
+	}
+	agentResourceRequests := core.ResourceList{
+		"cpu": cpuRequests,
+		"memory": memRequests,
 	}
 	agentResources := applyconfcore.ResourceRequirements().WithRequests(agentResourceRequests).WithLimits(agentResourceLimits)
 	agentContainer.WithResources(agentResources)
