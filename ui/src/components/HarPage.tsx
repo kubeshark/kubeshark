@@ -127,6 +127,7 @@ export const HarPage: React.FC<HarPageProps> = ({setAnalyzeStatus}) => {
         fetch(`${mizuApiUrl}/api/analyzeStatus`)
             .then(response => response.json())
             .then(data => setAnalyzeStatus(data));
+        // eslint-disable-next-line
     }, []);
 
 
