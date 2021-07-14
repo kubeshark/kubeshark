@@ -23,7 +23,7 @@ func runMizuView(mizuViewOptions *MizuViewOptions) {
 		return
 	}
 
-	mizuProxiedUrl := kubernetes.GetMizuCollectorProxiedHostAndPath(mizuViewOptions.GuiPort, mizu.ResourcesNamespace, mizu.AggregatorPodName)
+	mizuProxiedUrl := kubernetes.GetMizuCollectorProxiedHostAndPath(mizuViewOptions.GuiPort)
 	_, err = http.Get(fmt.Sprintf("http://%s/", mizuProxiedUrl))
 	if err == nil {
 		fmt.Printf("Found a running service %s and open port %d\n", mizu.AggregatorPodName, mizuViewOptions.GuiPort)
@@ -31,7 +31,7 @@ func runMizuView(mizuViewOptions *MizuViewOptions) {
 	}
 	fmt.Printf("Found service %s, creating k8s proxy\n", mizu.AggregatorPodName)
 
-	fmt.Printf("Mizu is available at  http://%s\n", kubernetes.GetMizuCollectorProxiedHostAndPath(mizuViewOptions.GuiPort, mizu.ResourcesNamespace, mizu.AggregatorPodName))
+	fmt.Printf("Mizu is available at  http://%s\n", kubernetes.GetMizuCollectorProxiedHostAndPath(mizuViewOptions.GuiPort))
 	err = kubernetes.StartProxy(kubernetesProvider, mizuViewOptions.GuiPort, mizu.ResourcesNamespace, mizu.AggregatorPodName)
 	if err != nil {
 		fmt.Printf("Error occured while running k8s proxy %v\n", err)
