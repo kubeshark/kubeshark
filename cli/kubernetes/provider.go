@@ -77,7 +77,7 @@ func (provider *Provider) CreateMizuAggregatorPod(ctx context.Context, namespace
 		return nil, err
 	}
 
-	cpuLimit, err := resource.ParseQuantity("750")
+	cpuLimit, err := resource.ParseQuantity("750m")
 	if err != nil {
 		return nil, errors.New("invalid cpu limit for aggregator container")
 	}
