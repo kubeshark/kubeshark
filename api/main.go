@@ -149,8 +149,8 @@ func isHealthCheckByUserAgent(message *tap.OutputChannelItem) bool {
 				if strings.Contains(strings.ToLower(header.Value), userAgent) {
 					return true
 				}
-				return false
 			}
+			return false
 		}
 	}
 	return false
