@@ -253,7 +253,7 @@ func portForwardApiPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 
 				time.Sleep(time.Second * 5) // Waiting to be sure the proxy is ready
 				if tappingOptions.Analysis {
-					urlPath := fmt.Sprintf("http://%s/api/uploadEntries?dest=%s", mizuProxiedUrl, url.QueryEscape(tappingOptions.AnalysisDestination))
+					urlPath := fmt.Sprintf("http://%s/api/uploadEntries?dest=%s&interval=%v", mizuProxiedUrl, url.QueryEscape(tappingOptions.AnalysisDestination), tappingOptions.SleepIntervalSec)
 					u, err := url.ParseRequestURI(urlPath)
 
 					if err != nil {
