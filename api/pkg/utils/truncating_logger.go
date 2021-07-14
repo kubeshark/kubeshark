@@ -23,21 +23,21 @@ func (truncatingLogger *TruncatingLogger) Info(_ context.Context, message string
 	if truncatingLogger.LogLevel < logger.Info {
 		return
 	}
-	fmt.Printf("gorm info: %.50s\n", message)
+	fmt.Printf("gorm info: %.150s\n", message)
 }
 
 func (truncatingLogger *TruncatingLogger) Warn(_ context.Context, message string, __ ...interface{}) {
 	if truncatingLogger.LogLevel < logger.Warn {
 		return
 	}
-	fmt.Printf("gorm warning: %.50s\n", message)
+	fmt.Printf("gorm warning: %.150s\n", message)
 }
 
 func (truncatingLogger *TruncatingLogger) Error(_ context.Context, message string, __ ...interface{}) {
 	if truncatingLogger.LogLevel < logger.Error {
 		return
 	}
-	fmt.Printf("gorm error: %.50s\n", message)
+	fmt.Printf("gorm error: %.150s\n", message)
 }
 
 func (truncatingLogger *TruncatingLogger) Trace(ctx context.Context, begin time.Time, fc func() (string, int64), err error) {
