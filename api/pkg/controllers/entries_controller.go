@@ -150,10 +150,6 @@ func UploadEntries(c *fiber.Ctx) error {
 	if err := validation.Validate(uploadRequestBody); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(err)
 	}
-	fmt.Println("---a---")
-	fmt.Println(uploadRequestBody)
-	fmt.Println("---b---")
-
 	if up9.GetAnalyzeInfo().IsAnalyzing {
 		return c.Status(fiber.StatusBadRequest).SendString("Cannot analyze, mizu is already analyzing")
 	}

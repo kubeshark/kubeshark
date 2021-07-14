@@ -10,6 +10,7 @@ import (
 )
 
 const k8sProxyApiPrefix = "/"
+const mizuServicePort = 80
 
 func StartProxy(kubernetesProvider *Provider, mizuPort uint16, mizuNamespace string, mizuServiceName string) error {
 	filter := &proxy.FilterServer{
@@ -39,10 +40,8 @@ func StartProxy(kubernetesProvider *Provider, mizuPort uint16, mizuNamespace str
 	return server.Serve(l)
 }
 
-const mizuServicePort = 80
-
 func getMizuCollectorProxiedHostAndPath(mizuNamespace string, mizuServiceName string) string {
-	return fmt.Sprintf("/api/v1/namespaces/%s/services/%s:%v/proxy/", mizuNamespace, mizuServiceName, mizuServicePort)
+	return fmt.Sprintf("/api/v1/namespaces/%s/services/%s:%d/proxy/", mizuNamespace, mizuServiceName, mizuServicePort)
 }
 
 func GetMizuCollectorProxiedHostAndPath(mizuPort uint16) string {

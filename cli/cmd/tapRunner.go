@@ -261,7 +261,6 @@ func portForwardApiPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 					}
 					rlog.Debugf("Sending get request to %v\n", u.String())
 					if response, err := http.Get(u.String()); err != nil || response.StatusCode != 200 {
-						fmt.Printf(u.String())
 						fmt.Printf("error sending upload entries req, status code: %v, err: %v\n", response.StatusCode, err)
 					} else {
 						fmt.Printf(mizu.Purple, "Traffic is uploading to UP9 for further analsys")
