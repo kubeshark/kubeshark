@@ -3,6 +3,7 @@ package uiUtils
 import (
 	"bufio"
 	"fmt"
+	"github.com/up9inc/mizu/cli/mizu"
 	"log"
 	"os"
 	"strings"
@@ -11,7 +12,7 @@ import (
 func AskForConfirmation(s string) bool {
 	reader := bufio.NewReader(os.Stdin)
 
-	fmt.Printf("%s ", s)
+	fmt.Printf(mizu.Magenta, s)
 
 	response, err := reader.ReadString('\n')
 	if err != nil {

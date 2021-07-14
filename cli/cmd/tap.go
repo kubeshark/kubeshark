@@ -29,7 +29,7 @@ var mizuTapOptions = &MizuTapOptions{}
 var direction string
 var regex *regexp.Regexp
 
-const analyzeMessageToConfirm = `NOTE: running mizu with --analyze flag will upload recorded traffic
+const analysisMessageToConfirm = `NOTE: running mizu with --analysis flag will upload recorded traffic
 to UP9 cloud for further analysis and enriched presentation options.
 `
 
@@ -65,9 +65,9 @@ Supported protocols are HTTP and gRPC.`,
 		}
 
 		if mizuTapOptions.Analysis {
-			fmt.Printf(mizu.Magenta, analyzeMessageToConfirm)
+			fmt.Printf(analysisMessageToConfirm)
 			if !uiUtils.AskForConfirmation("Would you like to proceed [y/n]: ") {
-				fmt.Println("You can always run without analysis, aborting")
+				fmt.Println("You can always run mizu without analysis, aborting")
 				os.Exit(0)
 			}
 		}

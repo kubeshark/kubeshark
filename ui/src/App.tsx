@@ -21,19 +21,47 @@ const App = () => {
 
     const [analyzeStatus, setAnalyzeStatus] = useState(null);
 
-        const analysisMessage = analyzeStatus?.isRemoteReady ?
+    const analysisMessage = analyzeStatus?.isRemoteReady ?
         <span>
-            Analysis is available <br />
-            Uploaded {analyzeStatus?.sentCount} messages
+            <table>
+                <tr>
+                    <td>Status</td>
+                    <td><b>Available</b></td>
+                </tr>
+                <tr>
+                    <td>Messages</td>
+                    <td><b>{analyzeStatus?.sentCount}</b></td>
+                </tr>
+            </table>
         </span> :
         analyzeStatus?.sentCount > 0 ?
             <span>
-                    Uploaded {analyzeStatus?.sentCount} message <br />
-                    It is normally take few minutes to get first analysis results
+                <table>
+                    <tr>
+                        <td>Status</td>
+                        <td><b>Processing</b></td>
+                    </tr>
+                    <tr>
+                        <td>Messages</td>
+                        <td><b>{analyzeStatus?.sentCount}</b></td>
+                    </tr>
+                    <tr>
+                        <td colSpan={2}> Please allow a few minutes for the analysis to complete</td>
+                    </tr>
+                </table>
             </span> :
             <span>
-                    0 messages sent <br />
-                    Analysis will start once messages will be uploaded
+                <table>
+                    <tr>
+                        <td>Status</td>
+                        <td><b>Waiting for traffic</b></td>
+                    </tr>
+                    <tr>
+                        <td>Messages</td>
+                        <td><b>{analyzeStatus?.sentCount}</b></td>
+                    </tr>
+                </table>
+
             </span>
 
     return (
