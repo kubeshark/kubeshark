@@ -249,11 +249,11 @@ func portForwardApiPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 					}
 				}()
 				mizuProxiedUrl := kubernetes.GetMizuCollectorProxiedHostAndPath(tappingOptions.GuiPort)
-				fmt.Printf("Mizu is available at  http://%s\n", mizuProxiedUrl)
+				fmt.Printf("Mizu is available at http://%s\n", mizuProxiedUrl)
 
 				time.Sleep(time.Second * 5) // Waiting to be sure the proxy is ready
 				if tappingOptions.Analysis {
-					urlPath := fmt.Sprintf("http://%s/api/uploadEntries?dest=%s&interval=%v", mizuProxiedUrl, url.QueryEscape(tappingOptions.AnalysisDestination), tappingOptions.SleepIntervalSec)	
+					urlPath := fmt.Sprintf("http://%s/api/uploadEntries?dest=%s&interval=%v", mizuProxiedUrl, url.QueryEscape(tappingOptions.AnalysisDestination), tappingOptions.SleepIntervalSec)
 					u, err := url.ParseRequestURI(urlPath)
 
 					if err != nil {
@@ -261,6 +261,7 @@ func portForwardApiPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 					}
 					rlog.Debugf("Sending get request to %v\n", u.String())
 					if response, err := http.Get(u.String()); err != nil || response.StatusCode != 200 {
+						fmt.Printf(u.String())
 						fmt.Printf("error sending upload entries req, status code: %v, err: %v\n", response.StatusCode, err)
 					} else {
 						fmt.Printf(mizu.Purple, "Traffic is uploading to UP9 for further analsys")
