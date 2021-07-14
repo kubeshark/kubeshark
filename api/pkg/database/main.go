@@ -7,6 +7,7 @@ import (
 	"gorm.io/gorm/logger"
 	"mizuserver/pkg/models"
 	"mizuserver/pkg/utils"
+	"time"
 )
 
 const (
@@ -44,7 +45,7 @@ func GetEntriesTable() *gorm.DB {
 
 func initDataBase(databasePath string) *gorm.DB {
 	temp, _ := gorm.Open(sqlite.Open(databasePath), &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Silent),
+		Logger: &utils.TruncatingLogger{LogLevel: logger.Warn, SlowThreshold: 500 * time.Millisecond},
 	})
 	_ = temp.AutoMigrate(&models.MizuEntry{}) // this will ensure table is created
 	return temp

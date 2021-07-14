@@ -1,4 +1,4 @@
-package shared
+package units
 
 import "github.com/docker/go-units"
 

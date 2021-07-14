@@ -3,7 +3,7 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	"github.com/up9inc/mizu/shared"
+	"github.com/up9inc/mizu/shared/units"
 	"regexp"
 	"strings"
 
@@ -50,12 +50,13 @@ Supported protocols are HTTP and gRPC.`,
 			return errors.New(fmt.Sprintf("%s is not a valid regex %s", args[0], err))
 		}
 
-		mizuTapOptions.MaxEntriesDBSizeBytes, err = shared.HumanReadableToBytes(humanMaxEntriesDBSize)
+		mizuTapOptions.MaxEntriesDBSizeBytes = 200 * 1000 * 1000
+		mizuTapOptions.MaxEntriesDBSizeBytes, err = units.HumanReadableToBytes(humanMaxEntriesDBSize)
 		if err != nil {
 			return errors.New(fmt.Sprintf("Could not parse --max-entries-db-size value %s", humanMaxEntriesDBSize))
 		} else if cmd.Flags().Changed(maxEntriesDBSizeFlagName) {
 			// We're parsing human readable file sizes here so its best to be unambiguous
-			fmt.Printf("Setting max entries db size to %s\n", shared.BytesToHumanReadable(mizuTapOptions.MaxEntriesDBSizeBytes))
+			fmt.Printf("Setting max entries db size to %s\n", units.BytesToHumanReadable(mizuTapOptions.MaxEntriesDBSizeBytes))
 		}
 
 		directionLowerCase := strings.ToLower(direction)

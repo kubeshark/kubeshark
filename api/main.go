@@ -131,7 +131,7 @@ func filterHarItems(inChannel <-chan *tap.OutputChannelItem, outChannel chan *ta
 		if message.ConnectionInfo.IsOutgoing && api.CheckIsServiceIP(message.ConnectionInfo.ServerIP) {
 			continue
 		}
-		// TODO: move this to tappers
+		// TODO: move this to tappers https://up9.atlassian.net/browse/TRA-3441
 		if filterOptions.HideHealthChecks && isHealthCheckByUserAgent(message) {
 			continue
 		}

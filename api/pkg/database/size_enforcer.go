@@ -5,6 +5,7 @@ import (
 	"github.com/fsnotify/fsnotify"
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/debounce"
+	"github.com/up9inc/mizu/shared/units"
 	"log"
 	"mizuserver/pkg/models"
 	"os"
@@ -13,19 +14,18 @@ import (
 )
 
 const percentageOfMaxSizeBytesToPrune = 15
-const defaultMaxDatabaseSizeBytes = 200 * 1000 * 1000
+const defaultMaxDatabaseSizeBytes int64 = 200 * 1000 * 1000
 
 func StartEnforcingDatabaseSize() {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
-		log.Printf("Error creating filesystem watcher for db size enforcement: %v\n", err) // TODO: make fatal
+		log.Fatalf("Error creating filesystem watcher for db size enforcement: %v\n", err)
 		return
 	}
-	defer watcher.Close()
 
 	maxEntriesDBByteSize, err := getMaxEntriesDBByteSize()
 	if err != nil {
-		log.Printf("Error parsing max db size: %v\n", err) // TODO: make fatal
+		log.Fatalf("Error parsing max db size: %v\n", err)
 		return
 	}
 
@@ -33,7 +33,6 @@ func StartEnforcingDatabaseSize() {
 		checkFileSize(maxEntriesDBByteSize)
 	})
 
-	done := make(chan bool)
 	go func() {
 		for {
 			select {
@@ -41,7 +40,7 @@ func StartEnforcingDatabaseSize() {
 				if !ok {
 					return // closed channel
 				}
-				if event.Op&fsnotify.Write == fsnotify.Write {
+				if event.Op == fsnotify.Write {
 					checkFileSizeDebouncer.SetOn()
 				}
 			case err, ok := <-watcher.Errors:
@@ -55,13 +54,12 @@ func StartEnforcingDatabaseSize() {
 
 	err = watcher.Add(DBPath)
 	if err != nil {
-		log.Printf("Error adding %s to filesystem watcher for db size enforcement: %v\n", DBPath, err) //TODO: make fatal
+		log.Fatalf("Error adding %s to filesystem watcher for db size enforcement: %v\n", DBPath, err)
 	}
-	<-done
 }
 
 func getMaxEntriesDBByteSize() (int64, error) {
-	maxEntriesDBByteSize := int64(defaultMaxDatabaseSizeBytes)
+	maxEntriesDBByteSize := defaultMaxDatabaseSizeBytes
 	var err error
 
 	maxEntriesDBSizeByteSEnvVarValue := os.Getenv(shared.MaxEntriesDBSizeByteSEnvVar)
@@ -112,7 +110,7 @@ func pruneOldEntries(currentFileSize int64) {
 		GetEntriesTable().Where(entryIdsToRemove).Delete(models.MizuEntry{})
 		// VACUUM causes sqlite to shrink the db file after rows have been deleted, the db file will not shrink without this
 		DB.Exec("VACUUM")
-		fmt.Printf("Removed %d rows and cleared %s bytes\n", len(entryIdsToRemove), shared.BytesToHumanReadable(bytesToBeRemoved))
+		fmt.Printf("Removed %d rows and cleared %s\n", len(entryIdsToRemove), units.BytesToHumanReadable(bytesToBeRemoved))
 	} else {
 		fmt.Println("Found no rows to remove when pruning")
 	}
