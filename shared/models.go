@@ -22,6 +22,7 @@ type AnalyzeStatus struct {
 	IsAnalyzing   bool   `json:"isAnalyzing"`
 	RemoteUrl     string `json:"remoteUrl"`
 	IsRemoteReady bool   `json:"isRemoteReady"`
+	SentCount     int    `json:"sentCount"`
 }
 
 type WebSocketStatusMessage struct {

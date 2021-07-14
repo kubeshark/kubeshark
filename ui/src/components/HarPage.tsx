@@ -39,22 +39,16 @@ interface HarPageProps {
     setAnalyzeStatus: (status: any) => void;
 }
 
-const isKubeProxy = () => {
-    return window.location.href.indexOf("/api/v1/namespaces/") > -1;
-}
+const mizuAPIPathPrefix = "/mizu";
 
+
+// When working locally (with npm run start) we need to change the PORT 
 const getMizuApiUrl = () => {
-    if (isKubeProxy()) {
-        return window.location.href;
-    }
-    return window.location.origin;
+    return `${window.location.origin}${mizuAPIPathPrefix}`;
 };
 
 const getMizuWebsocketUrl = () => {
-    if (isKubeProxy()) {
-        return `ws://${window.location.href.replace(`${window.location.protocol}//`, "")}ws`;
-    }
-    return `ws://${window.location.host}/ws`;
+    return `ws://${window.location.host}${mizuAPIPathPrefix}/ws`;
 }
 
 

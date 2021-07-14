@@ -90,6 +90,7 @@ func GetTrafficDumpUrl(analyzeDestination string, analyzeModel string) *url.URL 
 
 type AnalyzeInformation struct {
 	IsAnalyzing        bool
+	SentCount          int
 	AnalyzedModel      string
 	AnalyzeToken       string
 	AnalyzeDestination string
@@ -100,6 +101,7 @@ func (info *AnalyzeInformation) Reset() {
 	info.AnalyzedModel = ""
 	info.AnalyzeToken = ""
 	info.AnalyzeDestination = ""
+	info.SentCount = 0
 }
 
 var analyzeInformation = &AnalyzeInformation{}
@@ -109,6 +111,7 @@ func GetAnalyzeInfo() *shared.AnalyzeStatus {
 		IsAnalyzing:   analyzeInformation.IsAnalyzing,
 		RemoteUrl:     GetRemoteUrl(analyzeInformation.AnalyzeDestination, analyzeInformation.AnalyzeToken),
 		IsRemoteReady: CheckIfModelReady(analyzeInformation.AnalyzeDestination, analyzeInformation.AnalyzedModel, analyzeInformation.AnalyzeToken),
+		SentCount:     analyzeInformation.SentCount,
 	}
 }
 
@@ -117,6 +120,7 @@ func UploadEntriesImpl(token string, model string, envPrefix string, sleepInterv
 	analyzeInformation.AnalyzedModel = model
 	analyzeInformation.AnalyzeToken = token
 	analyzeInformation.AnalyzeDestination = envPrefix
+	analyzeInformation.SentCount = 0
 
 	sleepTime := time.Second * time.Duration(sleepIntervalSec)
 
@@ -168,6 +172,7 @@ func UploadEntriesImpl(token string, model string, envPrefix string, sleepInterv
 				rlog.Info("Stopping analyzing")
 				log.Fatal(postErr)
 			}
+			analyzeInformation.SentCount += len(entriesArray)
 			rlog.Infof("Finish uploading %v entries to %s\n", len(entriesArray), GetTrafficDumpUrl(envPrefix, model))
 
 		} else {
