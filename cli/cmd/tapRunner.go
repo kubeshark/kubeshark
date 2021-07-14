@@ -255,12 +255,13 @@ func portForwardApiPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 				if tappingOptions.Analysis {
 					urlPath := fmt.Sprintf("http://%s/api/uploadEntries?dest=%s", mizuProxiedUrl, url.QueryEscape(tappingOptions.AnalysisDestination))
 					u, err := url.ParseRequestURI(urlPath)
+
 					if err != nil {
 						log.Fatal(fmt.Sprintf("Failed parsing the URL %v\n", err))
 					}
 					rlog.Debugf("Sending get request to %v\n", u.String())
-					if response, err := http.Get(u.String()); err != nil && response.StatusCode != 200 {
-						fmt.Printf("error sending upload entries req %v\n", err)
+					if response, err := http.Get(u.String()); err != nil || response.StatusCode != 200 {
+						fmt.Printf("error sending upload entries req, status code: %v, err: %v\n", response.StatusCode, err)
 					} else {
 						fmt.Printf(mizu.Purple, "Traffic is uploading to UP9 for further analsys")
 						fmt.Println()
