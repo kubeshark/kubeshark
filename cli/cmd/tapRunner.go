@@ -81,6 +81,10 @@ func RunMizuTap(podRegexQuery *regexp.Regexp, tappingOptions *MizuTapOptions) {
 }
 
 func createMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, nodeToTappedPodIPMap map[string][]string, tappingOptions *MizuTapOptions, mizuApiFilteringOptions *shared.TrafficFilteringOptions) error {
+	if err := createMizuNamespace(ctx, kubernetesProvider); err != nil {
+		return err
+	}
+
 	if err := createMizuAggregator(ctx, kubernetesProvider, tappingOptions, mizuApiFilteringOptions); err != nil {
 		return err
 	}
@@ -90,6 +94,15 @@ func createMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Pro
 	}
 
 	return nil
+}
+
+func createMizuNamespace(ctx context.Context, kubernetesProvider *kubernetes.Provider) error {
+	_, err := kubernetesProvider.CreateNamespace(ctx, mizu.ResourcesNamespace)
+	if err != nil {
+		fmt.Printf("Error creating Namespace %s: %v\n", mizu.ResourcesNamespace, err)
+	}
+
+	return err
 }
 
 func createMizuAggregator(ctx context.Context, kubernetesProvider *kubernetes.Provider, tappingOptions *MizuTapOptions, mizuApiFilteringOptions *shared.TrafficFilteringOptions) error {
@@ -159,14 +172,8 @@ func cleanUpMizuResources(kubernetesProvider *kubernetes.Provider) {
 	fmt.Printf("\nRemoving mizu resources\n")
 
 	removalCtx, _ := context.WithTimeout(context.Background(), 5*time.Second)
-	if err := kubernetesProvider.RemovePod(removalCtx, mizu.ResourcesNamespace, mizu.AggregatorPodName); err != nil {
-		fmt.Printf("Error removing Pod %s in namespace %s: %s (%v,%+v)\n", mizu.AggregatorPodName, mizu.ResourcesNamespace, err, err, err)
-	}
-	if err := kubernetesProvider.RemoveService(removalCtx, mizu.ResourcesNamespace, mizu.AggregatorPodName); err != nil {
-		fmt.Printf("Error removing Service %s in namespace %s: %s (%v,%+v)\n", mizu.AggregatorPodName, mizu.ResourcesNamespace, err, err, err)
-	}
-	if err := kubernetesProvider.RemoveDaemonSet(removalCtx, mizu.ResourcesNamespace, mizu.TapperDaemonSetName); err != nil {
-		fmt.Printf("Error removing DaemonSet %s in namespace %s: %s (%v,%+v)\n", mizu.TapperDaemonSetName, mizu.ResourcesNamespace, err, err, err)
+	if err := kubernetesProvider.RemoveNamespace(removalCtx, mizu.ResourcesNamespace); err != nil {
+		fmt.Printf("Error removing Namespace s %s: %s (%v,%+v)\n", mizu.ResourcesNamespace, err, err, err)
 	}
 }
 

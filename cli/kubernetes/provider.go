@@ -13,8 +13,8 @@ import (
 	core "k8s.io/api/core/v1"
 	rbac "k8s.io/api/rbac/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	resource "k8s.io/apimachinery/pkg/api/resource"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/watch"
 	applyconfapp "k8s.io/client-go/applyconfigurations/apps/v1"
@@ -69,6 +69,15 @@ func (provider *Provider) GetPodWatcher(ctx context.Context, namespace string) w
 		panic(err.Error())
 	}
 	return watcher
+}
+
+func (provider *Provider) CreateNamespace(ctx context.Context, name string) (*core.Namespace, error) {
+	namespaceSpec := &core.Namespace{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+	}
+	return provider.clientSet.CoreV1().Namespaces().Create(ctx, namespaceSpec, metav1.CreateOptions{})
 }
 
 func (provider *Provider) CreateMizuAggregatorPod(ctx context.Context, namespace string, podName string, podImage string, linkServiceAccount bool, mizuApiFilteringOptions *shared.TrafficFilteringOptions) (*core.Pod, error) {
@@ -242,6 +251,17 @@ func (provider *Provider) CreateMizuRBAC(ctx context.Context, namespace string, 
 	return nil
 }
 
+func (provider *Provider) RemoveNamespace(ctx context.Context, name string) error {
+	if isFound, err := provider.CheckNamespaceExists(ctx, name);
+	err != nil {
+		return err
+	} else if !isFound {
+		return nil
+	}
+
+	return provider.clientSet.CoreV1().Namespaces().Delete(ctx, name, metav1.DeleteOptions{})
+}
+
 func (provider *Provider) RemovePod(ctx context.Context, namespace string, podName string) error {
 	if isFound, err := provider.CheckPodExists(ctx, namespace, podName);
 	err != nil {
@@ -273,6 +293,23 @@ func (provider *Provider) RemoveDaemonSet(ctx context.Context, namespace string,
 	}
 
 	return provider.clientSet.AppsV1().DaemonSets(namespace).Delete(ctx, daemonSetName, metav1.DeleteOptions{})
+}
+
+func (provider *Provider) CheckNamespaceExists(ctx context.Context, namespace string) (bool, error) {
+	listOptions := metav1.ListOptions{
+		FieldSelector: fmt.Sprintf("metadata.name=%s", namespace),
+		Limit: 1,
+	}
+	resourceList, err := provider.clientSet.CoreV1().Namespaces().List(ctx, listOptions)
+	if err != nil {
+		return false, err
+	}
+
+	if len(resourceList.Items) > 0 {
+		return true, nil
+	}
+
+	return false, nil
 }
 
 func (provider *Provider) CheckPodExists(ctx context.Context, namespace string, name string) (bool, error) {
