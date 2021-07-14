@@ -101,8 +101,6 @@ func (fedex *FullEntryDetailsExtra) UnmarshalData(entry *MizuEntry) error {
 	return nil
 }
 
-
-
 type EntryData struct {
 	Entry               string `json:"entry,omitempty"`
 	ResolvedDestination string `json:"resolvedDestination,omitempty" gorm:"column:resolvedDestination"`
@@ -115,7 +113,8 @@ type EntriesFilter struct {
 }
 
 type UploadEntriesRequestBody struct {
-	Dest string `query:"dest"`
+	Dest             string `query:"dest"`
+	SleepIntervalSec int    `query:"interval"`
 }
 
 type HarFetchRequestBody struct {

@@ -141,7 +141,7 @@ func GetHARs(c *fiber.Ctx) error {
 }
 
 func UploadEntries(c *fiber.Ctx) error {
-	rlog.Debugf("Upload entries - started\n")
+	rlog.Infof("Upload entries - started\n")
 
 	uploadRequestBody := &models.UploadEntriesRequestBody{}
 	if err := c.QueryParser(uploadRequestBody); err != nil {
@@ -153,13 +153,13 @@ func UploadEntries(c *fiber.Ctx) error {
 	if up9.GetAnalyzeInfo().IsAnalyzing {
 		return c.Status(fiber.StatusBadRequest).SendString("Cannot analyze, mizu is already analyzing")
 	}
-	rlog.Debugf("Upload entries - creating token. dest %s\n", uploadRequestBody.Dest)
+	rlog.Infof("Upload entries - creating token. dest %s\n", uploadRequestBody.Dest)
 	token, err := up9.CreateAnonymousToken(uploadRequestBody.Dest)
 	if err != nil {
 		return c.Status(fiber.StatusServiceUnavailable).SendString("Can't get token")
 	}
 	rlog.Infof("Upload entries - uploading. token: %s model: %s\n", token.Token, token.Model)
-	go up9.UploadEntriesImpl(token.Token, token.Model, uploadRequestBody.Dest)
+	go up9.UploadEntriesImpl(token.Token, token.Model, uploadRequestBody.Dest, uploadRequestBody.SleepIntervalSec)
 	return c.Status(fiber.StatusOK).SendString("OK")
 }
 

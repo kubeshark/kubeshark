@@ -36,7 +36,7 @@ func getGuestToken(url string, target *GuestToken) error {
 		return err
 	}
 	defer resp.Body.Close()
-	rlog.Debugf("Got token from the server, starting to json decode... status code: %v", resp.StatusCode)
+	rlog.Infof("Got token from the server, starting to json decode... status code: %v", resp.StatusCode)
 	return json.NewDecoder(resp.Body).Decode(target)
 }
 
@@ -112,13 +112,13 @@ func GetAnalyzeInfo() *shared.AnalyzeStatus {
 	}
 }
 
-func UploadEntriesImpl(token string, model string, envPrefix string) {
+func UploadEntriesImpl(token string, model string, envPrefix string, sleepIntervalSec int) {
 	analyzeInformation.IsAnalyzing = true
 	analyzeInformation.AnalyzedModel = model
 	analyzeInformation.AnalyzeToken = token
 	analyzeInformation.AnalyzeDestination = envPrefix
 
-	sleepTime := time.Second * 10
+	sleepTime := time.Second * time.Duration(sleepIntervalSec)
 
 	var timestampFrom int64 = 0
 
