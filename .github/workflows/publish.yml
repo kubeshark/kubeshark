@@ -4,7 +4,6 @@ on:
     branches:
       - 'develop'
       - 'main'
-      - 'feature/versioning'
 jobs:
   docker:
     runs-on: ubuntu-latest

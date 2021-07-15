@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/up9inc/mizu/shared"
+	"github.com/up9inc/mizu/shared/semver"
 	"net/http"
 	"net/url"
 )
@@ -27,14 +28,17 @@ func getApiVersion(port uint16) (string, error) {
 	return versionResponse.SemVer, nil
 }
 
-func CheckVersionCompatibility(port uint16) bool {
+func CheckVersionCompatibility(port uint16) (bool, error) {
 	apiSemVer, err := getApiVersion(port)
 	if err != nil {
-		return true
+		return false, err
 	}
-	if apiSemVer == SemVer {
-		return true
+
+	if semver.SemVersion(apiSemVer).Major() == semver.SemVersion(SemVer).Major() &&
+		semver.SemVersion(apiSemVer).Minor() == semver.SemVersion(SemVer).Minor() {
+		return true, nil
 	}
+
 	fmt.Printf(Red, fmt.Sprintf("cli version (%s) is not compatible with api version (%s)\n", SemVer, apiSemVer))
-	return false
+	return false, nil
 }
