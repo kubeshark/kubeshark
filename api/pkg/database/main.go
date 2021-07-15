@@ -12,11 +12,6 @@ import (
 
 const (
 	DBPath = "./entries.db"
-)
-
- var DB *gorm.DB
-
-const (
 	OrderDesc = "desc"
 	OrderAsc  = "asc"
 	LT        = "lt"
@@ -24,6 +19,8 @@ const (
 )
 
 var (
+	DB *gorm.DB
+	IsDBLocked = false
 	OperatorToSymbolMapping = map[string]string{
 		LT: "<",
 		GT: ">",
@@ -41,6 +38,13 @@ func init() {
 
 func GetEntriesTable() *gorm.DB {
 	return DB.Table("mizu_entries")
+}
+
+func CreateEntry(entry *models.MizuEntry) {
+	if IsDBLocked {
+		return
+	}
+	GetEntriesTable().Create(entry)
 }
 
 func initDataBase(databasePath string) *gorm.DB {
