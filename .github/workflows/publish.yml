@@ -4,7 +4,6 @@ on:
     branches:
       - 'develop'
       - 'main'
-      - 'feature/versioning'
 jobs:
   docker:
     runs-on: ubuntu-latest
@@ -65,14 +64,14 @@ jobs:
             BUILD_TIMESTAMP=${{ steps.version_parameters.outputs.build_timestamp }}
             GIT_BRANCH=${{ steps.version_parameters.outputs.branch }}
             COMMIT_HASH=${{ github.sha }}
-#      - name: Build and Push CLI
-#        run: make push-cli SEM_VER='${{ steps.versioning.outputs.version }}' BUILD_TIMESTAMP='${{ steps.version_parameters.outputs.build_timestamp }}'
-#      - name: publish
-#        uses: ncipollo/release-action@v1
-#        with:
-#          token: ${{ secrets.GITHUB_TOKEN }}
-#          artifacts: "cli/bin/*"
-#          commit: ${{ steps.version_parameters.outputs.branch }}
-#          tag: ${{ steps.versioning.outputs.version }}
-#          prerelease: ${{ github.ref != 'refs/heads/main' }}
-#          bodyFile: 'cli/bin/README.md'
+      - name: Build and Push CLI
+        run: make push-cli SEM_VER='${{ steps.versioning.outputs.version }}' BUILD_TIMESTAMP='${{ steps.version_parameters.outputs.build_timestamp }}'
+      - name: publish
+        uses: ncipollo/release-action@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          artifacts: "cli/bin/*"
+          commit: ${{ steps.version_parameters.outputs.branch }}
+          tag: ${{ steps.versioning.outputs.version }}
+          prerelease: ${{ github.ref != 'refs/heads/main' }}
+          bodyFile: 'cli/bin/README.md'

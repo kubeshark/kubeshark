@@ -33,10 +33,10 @@ COPY shared ../shared
 COPY tap ../tap
 COPY api .
 RUN go build -ldflags="-s -w \
-     -X 'mizuserver/version.GitCommitHash=${COMMIT_HASH}' \
-     -X 'mizuserver/version.Branch=${GIT_BRANCH}' \
-     -X 'mizuserver/version.BuildTimestamp=${BUILD_TIMESTAMP}' \
-     -X 'mizuserver/version.SemVer=${SEM_VER}'" -o mizuagent .
+     -X 'mizuserver/pkg/version.GitCommitHash=${COMMIT_HASH}' \
+     -X 'mizuserver/pkg/version.Branch=${GIT_BRANCH}' \
+     -X 'mizuserver/pkg/version.BuildTimestamp=${BUILD_TIMESTAMP}' \
+     -X 'mizuserver/pkg/version.SemVer=${SEM_VER}'" -o mizuagent .
 
 
 FROM alpine:3.13.5
