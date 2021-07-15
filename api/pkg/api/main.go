@@ -160,6 +160,7 @@ func saveHarToDb(entry *har.Entry, connectionInfo *tap.ConnectionInfo) {
 		ResolvedDestination: resolvedDestination,
 		IsOutgoing:          connectionInfo.IsOutgoing,
 	}
+	mizuEntry.EstimatedSizeBytes = getEstimatedEntrySizeBytes(mizuEntry)
 	database.GetEntriesTable().Create(&mizuEntry)
 
 	baseEntry := models.BaseEntryDetails{}
@@ -178,4 +179,23 @@ func getServiceNameFromUrl(inputUrl string) (string, string) {
 
 func CheckIsServiceIP(address string) bool {
 	return k8sResolver.CheckIsServiceIP(address)
+}
+
+// gives a rough estimate of the size this will take up in the db, good enough for maintaining db size limit accurately
+func getEstimatedEntrySizeBytes(mizuEntry models.MizuEntry) int {
+	sizeBytes := len(mizuEntry.Entry)
+	sizeBytes += len(mizuEntry.EntryId)
+	sizeBytes += len(mizuEntry.Service)
+	sizeBytes += len(mizuEntry.Url)
+	sizeBytes += len(mizuEntry.Method)
+	sizeBytes += len(mizuEntry.RequestSenderIp)
+	sizeBytes += len(mizuEntry.ResolvedDestination)
+	sizeBytes += len(mizuEntry.ResolvedSource)
+	sizeBytes += 8 // Status bytes (sqlite integer is always 8 bytes)
+	sizeBytes += 8 // Timestamp bytes
+	sizeBytes += 8 // SizeBytes bytes
+	sizeBytes += 1 // IsOutgoing bytes
+
+
+	return sizeBytes
 }
