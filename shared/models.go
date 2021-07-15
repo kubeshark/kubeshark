@@ -61,3 +61,8 @@ type TrafficFilteringOptions struct {
 	PlainTextMaskingRegexes []*SerializableRegexp
 	HideHealthChecks        bool
 }
+
+type VersionResponse struct {
+	SemVer string `json:"semver"`
+}
+

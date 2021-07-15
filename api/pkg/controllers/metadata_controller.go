@@ -2,13 +2,11 @@ package controllers
 
 import (
 	"github.com/gofiber/fiber/v2"
+	"github.com/up9inc/mizu/shared"
+	"mizuserver/pkg/version"
 )
 
-type VersionResponse struct {
-	SemVer string `json:"semver"`
-}
-
 func GetVersion(c *fiber.Ctx) error {
-	resp := VersionResponse{SemVer: "1.2.3"}
+	resp := shared.VersionResponse{SemVer: version.SemVer}
 	return c.Status(fiber.StatusOK).JSON(resp)
 }

@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
+	"github.com/up9inc/mizu/cli/mizu"
 )
 
 type MizuViewOptions struct {
@@ -14,9 +15,14 @@ var viewCmd = &cobra.Command{
 	Use:   "view",
 	Short: "Open GUI in browser",
 	RunE: func(cmd *cobra.Command, args []string) error {
+
+		if !mizu.CheckVersionCompatibility(mizuFetchOptions.MizuPort) {
+			return nil
+		}
 		runMizuView(mizuViewOptions)
 		return nil
 	},
+
 }
 
 func init() {
