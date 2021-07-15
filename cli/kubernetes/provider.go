@@ -15,6 +15,7 @@ import (
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	resource "k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/watch"
 	applyconfapp "k8s.io/client-go/applyconfigurations/apps/v1"
@@ -26,8 +27,10 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/openstack"
 	restclient "k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
 	_ "k8s.io/client-go/tools/portforward"
+	watchtools "k8s.io/client-go/tools/watch"
 	"k8s.io/client-go/util/homedir"
 )
 
@@ -61,6 +64,35 @@ func NewProvider(kubeConfigPath string) *Provider {
 func (provider *Provider) CurrentNamespace() string {
 	ns, _, _ := provider.kubernetesConfig.Namespace()
 	return ns
+}
+
+func (provider *Provider) WaitUtilNamespaceDeleted(ctx context.Context, name string) error {
+	fieldSelector := fmt.Sprintf("metadata.name=%s", name)
+	var limit int64 = 1
+	lw := &cache.ListWatch{
+		ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
+			options.FieldSelector = fieldSelector
+			options.Limit = limit
+			return provider.clientSet.CoreV1().Namespaces().List(ctx, options)
+		},
+		WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
+			options.FieldSelector = fieldSelector
+			options.Limit = limit
+			return provider.clientSet.CoreV1().Namespaces().Watch(ctx, options)
+		},
+	}
+	obj := &core.Namespace{}
+	var preconditionFunc watchtools.PreconditionFunc = nil
+	conditionFunc := func(e watch.Event) (bool, error) {
+		if e.Type == watch.Deleted {
+			return true, nil
+		}
+		return false, nil
+	}
+
+	_, err := watchtools.UntilWithSync(ctx, lw, obj, preconditionFunc, conditionFunc)
+
+	return err
 }
 
 func (provider *Provider) GetPodWatcher(ctx context.Context, namespace string) watch.Interface {

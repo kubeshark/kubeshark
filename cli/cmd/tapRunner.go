@@ -174,6 +174,11 @@ func cleanUpMizuResources(kubernetesProvider *kubernetes.Provider) {
 	removalCtx, _ := context.WithTimeout(context.Background(), 5*time.Second)
 	if err := kubernetesProvider.RemoveNamespace(removalCtx, mizu.ResourcesNamespace); err != nil {
 		fmt.Printf("Error removing Namespace s %s: %s (%v,%+v)\n", mizu.ResourcesNamespace, err, err, err)
+		return
+	}
+
+	if err := kubernetesProvider.WaitUtilNamespaceDeleted(removalCtx, mizu.ResourcesNamespace); err != nil {
+		fmt.Printf("Error removing Namespace s %s: %s (%v,%+v)\n", mizu.ResourcesNamespace, err, err, err)
 	}
 }
 
