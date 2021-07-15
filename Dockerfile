@@ -27,7 +27,11 @@ RUN go list -f '{{.Path}}@{{.Version}}' -m all | sed 1d | grep -e 'go-cache' -e 
 COPY shared ../shared
 COPY tap ../tap
 COPY api .
-RUN go build -ldflags="-s -w" -o mizuagent .
+RUN go build -ldflags="-s -w \
+     -X 'mizuserver/version.GitCommitHash=$(COMMIT_HASH)' \
+     -X 'mizuserver/version.Branch=$(GIT_BRANCH)' \
+     -X 'mizuserver/version.BuildTimestamp=$(BUILD_TIMESTAMP)' \
+     -X 'mizuserver/version.SemVer=$(SEM_VER)'" -o mizuagent .
 
 
 FROM alpine:3.13.5
