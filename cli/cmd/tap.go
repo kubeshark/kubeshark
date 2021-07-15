@@ -64,10 +64,8 @@ Supported protocols are HTTP and gRPC.`,
 		mizuTapOptions.MaxEntriesDBSizeBytes, parseHumanDataSizeErr = units.HumanReadableToBytes(humanMaxEntriesDBSize)
 		if parseHumanDataSizeErr != nil {
 			return errors.New(fmt.Sprintf("Could not parse --max-entries-db-size value %s", humanMaxEntriesDBSize))
-		} else if cmd.Flags().Changed(maxEntriesDBSizeFlagName) {
-			// We're parsing human readable file sizes here so its best to be unambiguous
-			fmt.Printf("Setting max entries db size to %s\n", units.BytesToHumanReadable(mizuTapOptions.MaxEntriesDBSizeBytes))
 		}
+		fmt.Printf("Mizu will store up to %s in traffic, old traffic will be cleared once the limit is reached.\n", units.BytesToHumanReadable(mizuTapOptions.MaxEntriesDBSizeBytes))
 
 		directionLowerCase := strings.ToLower(direction)
 		if directionLowerCase == "any" {

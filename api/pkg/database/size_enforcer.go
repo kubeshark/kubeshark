@@ -81,6 +81,10 @@ func checkFileSize(maxSizeBytes int64) {
 }
 
 func pruneOldEntries(currentFileSize int64) {
+	// sqlite locks the database while delete or VACUUM are running and sqlite is terrible at handling its own db lock while a lot of inserts are attempted, we prevent a significant bottleneck by handling the db lock ourselves here
+	IsDBLocked = true
+	defer func() {IsDBLocked = false}()
+
 	amountOfBytesToTrim := currentFileSize / (100 / percentageOfMaxSizeBytesToPrune)
 
 	rows, err := GetEntriesTable().Limit(10000).Order("id").Rows()
@@ -107,10 +111,6 @@ func pruneOldEntries(currentFileSize int64) {
 	}
 
 	if len(entryIdsToRemove) > 0 {
-		// sqlite locks the database while delete or VACUUM are running and sqlite is terrible at handling its own db lock while a lot of inserts are attempted, we prevent a significant bottleneck by handling the db lock ourselves here
-		IsDBLocked = true
-		defer func() {IsDBLocked = false}()
-
 		GetEntriesTable().Where(entryIdsToRemove).Delete(models.MizuEntry{})
 		// VACUUM causes sqlite to shrink the db file after rows have been deleted, the db file will not shrink without this
 		DB.Exec("VACUUM")
