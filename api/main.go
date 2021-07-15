@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gorilla/websocket"
 	"github.com/romana/rlog"
 	"github.com/up9inc/mizu/shared"
@@ -83,6 +84,11 @@ func main() {
 func hostApi(socketHarOutputChannel chan<- *tap.OutputChannelItem) {
 	app := fiber.New()
 
+	app.Use(cors.New(cors.Config{
+		AllowOrigins: "*",
+		AllowMethods: "*",
+		AllowHeaders: "*",
+	}))
 	middleware.FiberMiddleware(app) // Register Fiber's middleware for app.
 	app.Static("/", "./site")
 
