@@ -23,7 +23,9 @@ func getApiVersion(port uint16) (string, error) {
 	defer statusResp.Body.Close()
 
 	versionResponse := &shared.VersionResponse{}
-	_ = json.NewDecoder(statusResp.Body).Decode(&versionResponse)
+	if err := json.NewDecoder(statusResp.Body).Decode(&versionResponse); err != nil {
+		return "", err
+	}
 
 	return versionResponse.SemVer, nil
 }
