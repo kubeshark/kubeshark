@@ -9,6 +9,7 @@ import (
 	"github.com/up9inc/mizu/cli/mizu"
 	"github.com/up9inc/mizu/shared"
 	core "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"log"
 	"net/http"
 	"net/url"
@@ -173,12 +174,17 @@ func cleanUpMizuResources(kubernetesProvider *kubernetes.Provider) {
 
 	removalCtx, _ := context.WithTimeout(context.Background(), 5*time.Second)
 	if err := kubernetesProvider.RemoveNamespace(removalCtx, mizu.ResourcesNamespace); err != nil {
-		fmt.Printf("Error removing Namespace s %s: %s (%v,%+v)\n", mizu.ResourcesNamespace, err, err, err)
+		fmt.Printf("Error removing Namespace %s: %s (%v,%+v)\n", mizu.ResourcesNamespace, err, err, err)
 		return
 	}
 
 	if err := kubernetesProvider.WaitUtilNamespaceDeleted(removalCtx, mizu.ResourcesNamespace); err != nil {
-		fmt.Printf("Error removing Namespace s %s: %s (%v,%+v)\n", mizu.ResourcesNamespace, err, err, err)
+		switch err {
+		case wait.ErrWaitTimeout:
+			fmt.Printf("Timeout while removing Namespace %s\n", mizu.ResourcesNamespace)
+		default:
+			fmt.Printf("Error while waiting for Namespace %s to be deleted: %s (%v,%+v)\n", mizu.ResourcesNamespace, err, err, err)
+		}
 	}
 }
 
