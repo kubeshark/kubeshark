@@ -60,9 +60,11 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-        env:
-           SEM_VER: ${{ steps.versioning.outputs.version }}
-           BUILD_TIMESTAMP: ${{ steps.version_parameters.outputs.build_timestamp }}
+          build-args: |
+            SEM_VER=${{ steps.versioning.outputs.version }}
+            BUILD_TIMESTAMP=${{ steps.version_parameters.outputs.build_timestamp }}
+            GIT_BRANCH=${{ steps.version_parameters.outputs.branch }}
+            COMMIT_HASH=${{ github.sha }}
 #      - name: Build and Push CLI
 #        run: make push-cli SEM_VER='${{ steps.versioning.outputs.version }}' BUILD_TIMESTAMP='${{ steps.version_parameters.outputs.build_timestamp }}'
 #      - name: publish

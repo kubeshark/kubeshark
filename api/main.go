@@ -28,7 +28,7 @@ var standalone = flag.Bool("standalone", false, "Run in standalone tapper and AP
 var aggregatorAddress = flag.String("aggregator-address", "", "Address of mizu collector for tapping")
 
 func main() {
-	rlog.Infof("Version parameters are: %s %s %s %s",  version.Branch, version.SemVer, version.BuildTimestamp, version.BuildTimestamp)
+	rlog.Infof("Version parameters are: %s %s %s %s",  version.Branch, version.SemVer, version.GitCommitHash, version.BuildTimestamp)
 
 	flag.Parse()
 	hostMode := os.Getenv(shared.HostModeEnvVar) == "1"
