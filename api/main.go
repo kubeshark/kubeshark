@@ -16,7 +16,6 @@ import (
 	"mizuserver/pkg/routes"
 	"mizuserver/pkg/sensitiveDataFiltering"
 	"mizuserver/pkg/utils"
-	"mizuserver/pkg/version"
 	"os"
 	"os/signal"
 	"strings"
