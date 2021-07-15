@@ -50,7 +50,6 @@ Supported protocols are HTTP and gRPC.`,
 			return errors.New(fmt.Sprintf("%s is not a valid regex %s", args[0], err))
 		}
 
-		mizuTapOptions.MaxEntriesDBSizeBytes = 200 * 1000 * 1000
 		mizuTapOptions.MaxEntriesDBSizeBytes, err = units.HumanReadableToBytes(humanMaxEntriesDBSize)
 		if err != nil {
 			return errors.New(fmt.Sprintf("Could not parse --max-entries-db-size value %s", humanMaxEntriesDBSize))
