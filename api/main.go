@@ -16,6 +16,7 @@ import (
 	"mizuserver/pkg/routes"
 	"mizuserver/pkg/sensitiveDataFiltering"
 	"mizuserver/pkg/utils"
+	"mizuserver/pkg/version"
 	"os"
 	"os/signal"
 	"strings"
@@ -101,6 +102,7 @@ func hostApi(socketHarOutputChannel chan<- *tap.OutputChannelItem) {
 	}
 	routes.WebSocketRoutes(app, &eventHandlers)
 	routes.EntriesRoutes(app)
+	routes.MetadataRoutes(app)
 	routes.NotFoundRoute(app)
 
 	utils.StartServer(app)
