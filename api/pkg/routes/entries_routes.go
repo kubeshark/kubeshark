@@ -5,7 +5,7 @@ import (
 	"mizuserver/pkg/controllers"
 )
 
-// EntriesRoutes func for describe group of public routes.
+// EntriesRoutes defines the group of har entries routes.
 func EntriesRoutes(fiberApp *fiber.App) {
 	routeGroup := fiberApp.Group("/api")
 

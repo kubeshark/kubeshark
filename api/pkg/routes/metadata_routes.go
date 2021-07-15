@@ -5,7 +5,7 @@ import (
 	"mizuserver/pkg/controllers"
 )
 
-// EntriesRoutes func for describe group of public routes.
+// MetadataRoutes defines the group of metadata routes.
 func MetadataRoutes(fiberApp *fiber.App) {
 	routeGroup := fiberApp.Group("/metadata")
 
