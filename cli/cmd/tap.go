@@ -3,13 +3,13 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"github.com/spf13/cobra"
 	"github.com/up9inc/mizu/cli/mizu"
 	"github.com/up9inc/mizu/cli/uiUtils"
+	"github.com/up9inc/mizu/shared/units"
 	"os"
 	"regexp"
 	"strings"
-        "github.com/up9inc/mizu/shared/units"
-	"github.com/spf13/cobra"
 )
 
 type MizuTapOptions struct {
@@ -60,8 +60,9 @@ Supported protocols are HTTP and gRPC.`,
 			return errors.New(fmt.Sprintf("%s is not a valid regex %s", args[0], compileErr))
 		}
 
-		mizuTapOptions.MaxEntriesDBSizeBytes, err = units.HumanReadableToBytes(humanMaxEntriesDBSize)
-		if err != nil {
+		var parseHumanDataSizeErr error
+		mizuTapOptions.MaxEntriesDBSizeBytes, parseHumanDataSizeErr = units.HumanReadableToBytes(humanMaxEntriesDBSize)
+		if parseHumanDataSizeErr != nil {
 			return errors.New(fmt.Sprintf("Could not parse --max-entries-db-size value %s", humanMaxEntriesDBSize))
 		} else if cmd.Flags().Changed(maxEntriesDBSizeFlagName) {
 			// We're parsing human readable file sizes here so its best to be unambiguous
