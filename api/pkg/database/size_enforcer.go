@@ -81,6 +81,9 @@ func checkFileSize(maxSizeBytes int64) {
 }
 
 func pruneOldEntries(currentFileSize int64) {
+	IsDBLocked = true
+	defer func() {IsDBLocked = false}()
+
 	amountOfBytesToTrim := currentFileSize / (100 / percentageOfMaxSizeBytesToPrune)
 
 	rows, err := GetEntriesTable().Limit(10000).Order("id").Rows()

@@ -161,7 +161,7 @@ func saveHarToDb(entry *har.Entry, connectionInfo *tap.ConnectionInfo) {
 		IsOutgoing:          connectionInfo.IsOutgoing,
 	}
 	mizuEntry.EstimatedSizeBytes = getEstimatedEntrySizeBytes(mizuEntry)
-	database.GetEntriesTable().Create(&mizuEntry)
+	database.CreateEntry(&mizuEntry)
 
 	baseEntry := models.BaseEntryDetails{}
 	if err := models.GetEntry(&mizuEntry, &baseEntry); err != nil {
