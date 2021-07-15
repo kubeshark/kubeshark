@@ -65,7 +65,7 @@ Supported protocols are HTTP and gRPC.`,
 		if parseHumanDataSizeErr != nil {
 			return errors.New(fmt.Sprintf("Could not parse --max-entries-db-size value %s", humanMaxEntriesDBSize))
 		}
-		fmt.Printf("Mizu will store up to %s in traffic, old traffic will be cleared once the limit is reached.\n", units.BytesToHumanReadable(mizuTapOptions.MaxEntriesDBSizeBytes))
+		fmt.Printf("Mizu will store up to %s of traffic, old traffic will be cleared once the limit is reached.\n", units.BytesToHumanReadable(mizuTapOptions.MaxEntriesDBSizeBytes))
 
 		directionLowerCase := strings.ToLower(direction)
 		if directionLowerCase == "any" {
