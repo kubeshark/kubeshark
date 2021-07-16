@@ -3,22 +3,17 @@ package controllers
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"mizuserver/pkg/database"
 	"mizuserver/pkg/models"
 	"mizuserver/pkg/up9"
 	"mizuserver/pkg/utils"
 	"mizuserver/pkg/validation"
-	"reflect"
-	"regexp"
 	"strings"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/martian/har"
 	"github.com/up9inc/mizu/shared"
-	jsonpath "github.com/yalp/jsonpath"
-	yaml "gopkg.in/yaml.v2"
 )
 
 func GetEntries(c *fiber.Ctx) error {
@@ -50,7 +45,7 @@ func GetEntries(c *fiber.Ctx) error {
 	// Convert to base entries
 	baseEntries := make([]models.BaseEntryDetails, 0, entriesFilter.Limit)
 	for _, entry := range entries {
-		baseEntries = append(baseEntries, utils.GetResolvedBaseEntry(entry))
+		baseEntries = append(baseEntries, utils.GetResolvedBaseEntry(entry, ""))
 	}
 
 	return c.Status(fiber.StatusOK).JSON(baseEntries)
@@ -199,79 +194,12 @@ func GetEntry(c *fiber.Ctx) error {
 		fullEntry.Request.URL = utils.SetHostname(fullEntry.Request.URL, entryData.ResolvedDestination)
 	}
 
-	resultPolicyToSend := matchRequestPolicy(fullEntry, entryData.Service)
+	_, resultPolicyToSend := shared.MatchRequestPolicy(fullEntry, entryData.Service)
 	var fullEntryWithPolicy models.FullEntryWithPolicy
 	fullEntryWithPolicy.RulesMatched = resultPolicyToSend
 	fullEntryWithPolicy.Entry = fullEntry
 	fullEntryWithPolicy.Service = entryData.Service
 	return c.Status(fiber.StatusOK).JSON(fullEntryWithPolicy)
-}
-
-func matchRequestPolicy(fullEntry har.Entry, service string) []shared.RulesMatched {
-	enforcePolicy, _ := decodeEnforcePolicy()
-	var resultPolicyToSend []shared.RulesMatched
-	for _, value := range enforcePolicy.Rules {
-		if value.Type == "json" {
-			var bodyJsonMap interface{}
-			_ = json.Unmarshal(fullEntry.Response.Content.Text, &bodyJsonMap)
-			if !value.ValidatePath(fullEntry.Request.URL) || !value.ValidateService(service) {
-				continue
-			}
-			out, err := jsonpath.Read(bodyJsonMap, value.Key)
-			if err != nil {
-				continue
-			}
-			var matchValue bool
-			if reflect.TypeOf(out).Kind() == reflect.String {
-				matchValue, err = regexp.MatchString(value.Value, out.(string))
-			} else {
-				val := fmt.Sprint(out)
-				matchValue, err = regexp.MatchString(value.Value, val)
-			}
-			var result shared.RulesMatched
-			resultPolicyToSend = result.ReturnRulesMatchedObject(value, matchValue, resultPolicyToSend)
-		} else if value.Type == "header" {
-			for j := range fullEntry.Response.Headers {
-				if !value.ValidatePath(fullEntry.Request.URL) || !value.ValidateService(service) {
-					continue
-				}
-				matchKey, _ := regexp.MatchString(value.Key, fullEntry.Response.Headers[j].Name)
-				if matchKey {
-					matchValue, _ := regexp.MatchString(value.Value, fullEntry.Response.Headers[j].Value)
-					var result shared.RulesMatched
-					resultPolicyToSend = result.ReturnRulesMatchedObject(value, matchValue, resultPolicyToSend)
-				}
-			}
-		} else {
-
-			if !value.ValidatePath(fullEntry.Request.URL) || !value.ValidateService(service) {
-				continue
-			}
-			var result shared.RulesMatched
-			resultPolicyToSend = result.ReturnRulesMatchedObject(value, true, resultPolicyToSend)
-		}
-	}
-	return resultPolicyToSend
-}
-
-func decodeEnforcePolicy() (shared.RulesPolicy, error) {
-	content, err := ioutil.ReadFile("/app/enforce-policy/enforce-policy.yaml")
-	enforcePolicy := shared.RulesPolicy{}
-	if err != nil {
-		return enforcePolicy, err
-	}
-	err = yaml.Unmarshal([]byte(content), &enforcePolicy)
-	if err != nil {
-		return enforcePolicy, err
-	}
-	invalidIndex := enforcePolicy.ValidateRulesPolicy()
-	if len(invalidIndex) != 0 {
-		for i := range invalidIndex {
-			fmt.Println("only json, header and latency types are supported on rule")
-			enforcePolicy.RemoveNotValidPolicy(invalidIndex[i])
-		}
-	}
-	return enforcePolicy, nil
 }
 
 func DeleteAllEntries(c *fiber.Ctx) error {

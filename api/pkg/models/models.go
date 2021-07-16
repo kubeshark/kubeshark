@@ -37,6 +37,7 @@ type BaseEntryDetails struct {
 	Method          string `json:"method,omitempty"`
 	Timestamp       int64  `json:"timestamp,omitempty"`
 	IsOutgoing      bool   `json:"isOutgoing,omitempty"`
+	ApplicableRules string `json:"applicableRules,omitempty"`
 }
 
 type EntryData struct {
@@ -67,7 +68,8 @@ type WebSocketEntryMessage struct {
 
 type WebSocketTappedEntryMessage struct {
 	*shared.WebSocketMessageMetadata
-	Data *tap.OutputChannelItem
+	Data                  *tap.OutputChannelItem
+	PassedValidationRules string
 }
 
 func CreateBaseEntryWebSocketMessage(base *BaseEntryDetails) ([]byte, error) {
@@ -114,4 +116,10 @@ type FullEntryWithPolicy struct {
 	RulesMatched []shared.RulesMatched `json:"rulesMatched,omitempty"`
 	Entry        har.Entry             `json:"entry"`
 	Service      string                `json:"service"`
+}
+
+func RunValidationRulesState(fullEntry *har.Entry, service string) string {
+	numberOfRules, resultPolicyToSend := shared.MatchRequestPolicy(*fullEntry, service)
+	statusPolicyToSend := shared.PassedValidationRules(resultPolicyToSend, numberOfRules)
+	return statusPolicyToSend
 }

@@ -108,7 +108,6 @@ func StartReadingOutbound(outboundLinkChannel <-chan *tap.OutboundLink) {
 	}
 }
 
-
 func saveHarToDb(entry *har.Entry, sender string, isOutgoing bool) {
 	entryBytes, _ := json.Marshal(entry)
 	serviceName, urlPath, serviceHostName := getServiceNameFromUrl(entry.Request.URL)
@@ -137,7 +136,7 @@ func saveHarToDb(entry *har.Entry, sender string, isOutgoing bool) {
 	}
 	database.GetEntriesTable().Create(&mizuEntry)
 
-	baseEntry := utils.GetResolvedBaseEntry(mizuEntry)
+	baseEntry := utils.GetResolvedBaseEntry(mizuEntry, models.RunValidationRulesState(entry, serviceName))
 	baseEntryBytes, _ := models.CreateBaseEntryWebSocketMessage(&baseEntry)
 	broadcastToBrowserClients(baseEntryBytes)
 }

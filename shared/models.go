@@ -1,7 +1,15 @@
 package shared
 
 import (
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"reflect"
 	"regexp"
+
+	"github.com/google/martian/har"
+	jsonpath "github.com/yalp/jsonpath"
+	yaml "gopkg.in/yaml.v2"
 )
 
 type WebSocketMessageType string
@@ -145,4 +153,86 @@ func (rule RulePolicy) ValidateService(service string) bool {
 		}
 	}
 	return true
+}
+
+func MatchRequestPolicy(fullEntry har.Entry, service string) (int, []RulesMatched) {
+	enforcePolicy, _ := DecodeEnforcePolicy()
+	var resultPolicyToSend []RulesMatched
+	for _, value := range enforcePolicy.Rules {
+		if value.Type == "json" {
+			var bodyJsonMap interface{}
+			_ = json.Unmarshal(fullEntry.Response.Content.Text, &bodyJsonMap)
+			if !value.ValidatePath(fullEntry.Request.URL) || !value.ValidateService(service) {
+				continue
+			}
+			out, err := jsonpath.Read(bodyJsonMap, value.Key)
+			if err != nil {
+				continue
+			}
+			var matchValue bool
+			if reflect.TypeOf(out).Kind() == reflect.String {
+				matchValue, err = regexp.MatchString(value.Value, out.(string))
+			} else {
+				val := fmt.Sprint(out)
+				matchValue, err = regexp.MatchString(value.Value, val)
+			}
+			var result RulesMatched
+			resultPolicyToSend = result.ReturnRulesMatchedObject(value, matchValue, resultPolicyToSend)
+		} else if value.Type == "header" {
+			for j := range fullEntry.Response.Headers {
+				if !value.ValidatePath(fullEntry.Request.URL) || !value.ValidateService(service) {
+					continue
+				}
+				matchKey, _ := regexp.MatchString(value.Key, fullEntry.Response.Headers[j].Name)
+				if matchKey {
+					matchValue, _ := regexp.MatchString(value.Value, fullEntry.Response.Headers[j].Value)
+					var result RulesMatched
+					resultPolicyToSend = result.ReturnRulesMatchedObject(value, matchValue, resultPolicyToSend)
+				}
+			}
+		} else {
+
+			if !value.ValidatePath(fullEntry.Request.URL) || !value.ValidateService(service) {
+				continue
+			}
+			var result RulesMatched
+			resultPolicyToSend = result.ReturnRulesMatchedObject(value, true, resultPolicyToSend)
+		}
+	}
+	return len(enforcePolicy.Rules), resultPolicyToSend
+}
+
+func PassedValidationRules(rulesMatched []RulesMatched, numberOfRules int) string {
+	if len(rulesMatched) == 0 {
+		return ""
+	}
+	for _, rule := range rulesMatched {
+		if rule.Matched == false {
+			return "red"
+		}
+	}
+	if numberOfRules == len(rulesMatched) {
+		return "green"
+	}
+	return "red"
+}
+
+func DecodeEnforcePolicy() (RulesPolicy, error) {
+	content, err := ioutil.ReadFile("/app/enforce-policy/enforce-policy.yaml")
+	enforcePolicy := RulesPolicy{}
+	if err != nil {
+		return enforcePolicy, err
+	}
+	err = yaml.Unmarshal([]byte(content), &enforcePolicy)
+	if err != nil {
+		return enforcePolicy, err
+	}
+	invalidIndex := enforcePolicy.ValidateRulesPolicy()
+	if len(invalidIndex) != 0 {
+		for i := range invalidIndex {
+			fmt.Println("only json, header and latency types are supported on rule")
+			enforcePolicy.RemoveNotValidPolicy(invalidIndex[i])
+		}
+	}
+	return enforcePolicy, nil
 }

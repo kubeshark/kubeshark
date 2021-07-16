@@ -3,7 +3,6 @@ package utils
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/gofiber/fiber/v2"
 	"log"
 	"mizuserver/pkg/models"
 	"net/url"
@@ -11,14 +10,16 @@ import (
 	"os/signal"
 	"reflect"
 	"syscall"
+
+	"github.com/gofiber/fiber/v2"
 )
 
 // StartServer starts the server with a graceful shutdown
 func StartServer(app *fiber.App) {
 	signals := make(chan os.Signal, 2)
 	signal.Notify(signals,
-		os.Interrupt,  	  // this catch ctrl + c
-		syscall.SIGTSTP,  // this catch ctrl + z
+		os.Interrupt,    // this catch ctrl + c
+		syscall.SIGTSTP, // this catch ctrl + z
 	)
 
 	go func() {
@@ -53,8 +54,8 @@ func CheckErr(e error) {
 
 func SetHostname(address, newHostname string) string {
 	replacedUrl, err := url.Parse(address)
-	if err != nil{
-		log.Printf("error replacing hostname to %s in address %s, returning original %v",newHostname, address, err)
+	if err != nil {
+		log.Printf("error replacing hostname to %s in address %s, returning original %v", newHostname, address, err)
 		return address
 	}
 	replacedUrl.Host = newHostname
@@ -62,7 +63,7 @@ func SetHostname(address, newHostname string) string {
 
 }
 
-func GetResolvedBaseEntry(entry models.MizuEntry) models.BaseEntryDetails {
+func GetResolvedBaseEntry(entry models.MizuEntry, ApplicableRules string) models.BaseEntryDetails {
 	entryUrl := entry.Url
 	service := entry.Service
 	if entry.ResolvedDestination != "" {
@@ -79,10 +80,11 @@ func GetResolvedBaseEntry(entry models.MizuEntry) models.BaseEntryDetails {
 		Timestamp:       entry.Timestamp,
 		RequestSenderIp: entry.RequestSenderIp,
 		IsOutgoing:      entry.IsOutgoing,
+		ApplicableRules: ApplicableRules,
 	}
 }
 
-func GetBytesFromStruct(v interface{}) []byte{
+func GetBytesFromStruct(v interface{}) []byte {
 	a, _ := json.Marshal(v)
 	return a
 }
