@@ -10,8 +10,11 @@ var (
 
 const (
 	AggregatorPodName       = "mizu-collector"
+	ClusterRoleBindingsName = "mizu-cluster-role-binding"
+	ClusterRoleName         = "mizu-cluster-role"
 	K8sAllNamespaces        = ""
 	ResourcesNamespace      = "mizu"
+	ServiceAccountName      = "mizu-service-account"
 	TapperDaemonSetName     = "mizu-tapper-daemon-set"
 	TapperPodName           = "mizu-tapper"
 )

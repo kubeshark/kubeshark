@@ -42,7 +42,6 @@ type Provider struct {
 }
 
 const (
-	serviceAccountName = "mizu-service-account"
 	fieldManagerName   = "mizu-manager"
 )
 
@@ -112,7 +111,7 @@ func (provider *Provider) CreateNamespace(ctx context.Context, name string) (*co
 	return provider.clientSet.CoreV1().Namespaces().Create(ctx, namespaceSpec, metav1.CreateOptions{})
 }
 
-func (provider *Provider) CreateMizuAggregatorPod(ctx context.Context, namespace string, podName string, podImage string, linkServiceAccount bool, mizuApiFilteringOptions *shared.TrafficFilteringOptions) (*core.Pod, error) {
+func (provider *Provider) CreateMizuAggregatorPod(ctx context.Context, namespace string, podName string, podImage string, serviceAccountName string, mizuApiFilteringOptions *shared.TrafficFilteringOptions) (*core.Pod, error) {
 	marshaledFilteringOptions, err := json.Marshal(mizuApiFilteringOptions)
 	if err != nil {
 		return nil, err
@@ -175,7 +174,7 @@ func (provider *Provider) CreateMizuAggregatorPod(ctx context.Context, namespace
 		},
 	}
 	//define the service account only when it exists to prevent pod crash
-	if linkServiceAccount {
+	if serviceAccountName != "" {
 		pod.Spec.ServiceAccountName = serviceAccountName
 	}
 	return provider.clientSet.CoreV1().Pods(namespace).Create(ctx, pod, metav1.CreateOptions{})
@@ -196,7 +195,7 @@ func (provider *Provider) CreateService(ctx context.Context, namespace string, s
 	return provider.clientSet.CoreV1().Services(namespace).Create(ctx, &service, metav1.CreateOptions{})
 }
 
-func (provider *Provider) DoesMizuRBACExist(ctx context.Context, namespace string) (bool, error) {
+func (provider *Provider) DoesMizuRBACExist(ctx context.Context, namespace string, serviceAccountName string) (bool, error) {
 	serviceAccount, err := provider.clientSet.CoreV1().ServiceAccounts(namespace).Get(ctx, serviceAccountName, metav1.GetOptions{})
 
 	var statusError *k8serrors.StatusError
@@ -227,9 +226,7 @@ func (provider *Provider) DoesServicesExist(ctx context.Context, namespace strin
 	return service != nil, nil
 }
 
-func (provider *Provider) CreateMizuRBAC(ctx context.Context, namespace string, version string) error {
-	clusterRoleName := "mizu-cluster-role"
-
+func (provider *Provider) CreateMizuRBAC(ctx context.Context, namespace string, serviceAccountName string, clusterRoleName string, clusterRoleBindingsName string, version string) error {
 	serviceAccount := &core.ServiceAccount{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      serviceAccountName,
@@ -252,7 +249,7 @@ func (provider *Provider) CreateMizuRBAC(ctx context.Context, namespace string, 
 	}
 	clusterRoleBinding := &rbac.ClusterRoleBinding{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   "mizu-cluster-role-binding",
+			Name:   clusterRoleBindingsName,
 			Labels: map[string]string{"mizu-cli-version": version},
 		},
 		RoleRef: rbac.RoleRef{
@@ -395,7 +392,7 @@ func (provider *Provider) CheckDaemonSetExists(ctx context.Context, namespace st
 	return false, nil
 }
 
-func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, aggregatorPodIp string, nodeToTappedPodIPMap map[string][]string, linkServiceAccount bool, tapOutgoing bool) error {
+func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, aggregatorPodIp string, nodeToTappedPodIPMap map[string][]string, serviceAccountName string, tapOutgoing bool) error {
 	if len(nodeToTappedPodIPMap) == 0 {
 		return fmt.Errorf("Daemon set %s must tap at least 1 pod", daemonSetName)
 	}
@@ -489,7 +486,7 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	podSpec.WithHostNetwork(true)
 	podSpec.WithDNSPolicy(core.DNSClusterFirstWithHostNet)
 	podSpec.WithTerminationGracePeriodSeconds(0)
-	if linkServiceAccount {
+	if serviceAccountName != "" {
 		podSpec.WithServiceAccountName(serviceAccountName)
 	}
 	podSpec.WithContainers(agentContainer)

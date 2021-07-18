@@ -110,7 +110,13 @@ func createMizuAggregator(ctx context.Context, kubernetesProvider *kubernetes.Pr
 	var err error
 
 	mizuServiceAccountExists = createRBACIfNecessary(ctx, kubernetesProvider)
-	_, err = kubernetesProvider.CreateMizuAggregatorPod(ctx, mizu.ResourcesNamespace, mizu.AggregatorPodName, tappingOptions.MizuImage, mizuServiceAccountExists, mizuApiFilteringOptions)
+	var serviceAccountName string
+	if mizuServiceAccountExists {
+		serviceAccountName = mizu.ServiceAccountName
+	} else {
+		serviceAccountName = ""
+	}
+	_, err = kubernetesProvider.CreateMizuAggregatorPod(ctx, mizu.ResourcesNamespace, mizu.AggregatorPodName, tappingOptions.MizuImage, serviceAccountName, mizuApiFilteringOptions)
 	if err != nil {
 		fmt.Printf("Error creating mizu collector pod: %v\n", err)
 		return err
@@ -145,6 +151,13 @@ func getMizuApiFilteringOptions(tappingOptions *MizuTapOptions) (*shared.Traffic
 
 func updateMizuTappers(ctx context.Context, kubernetesProvider *kubernetes.Provider, nodeToTappedPodIPMap map[string][]string, tappingOptions *MizuTapOptions) error {
 	if len(nodeToTappedPodIPMap) > 0 {
+		var serviceAccountName string
+		if mizuServiceAccountExists {
+			serviceAccountName = mizu.ServiceAccountName
+		} else {
+			serviceAccountName = ""
+		}
+
 		if err := kubernetesProvider.ApplyMizuTapperDaemonSet(
 			ctx,
 			mizu.ResourcesNamespace,
@@ -153,7 +166,7 @@ func updateMizuTappers(ctx context.Context, kubernetesProvider *kubernetes.Provi
 			mizu.TapperPodName,
 			fmt.Sprintf("%s.%s.svc.cluster.local", aggregatorService.Name, aggregatorService.Namespace),
 			nodeToTappedPodIPMap,
-			mizuServiceAccountExists,
+			serviceAccountName,
 			tappingOptions.TapOutgoing,
 		); err != nil {
 			fmt.Printf("Error creating mizu tapper daemonset: %v\n", err)
@@ -302,13 +315,13 @@ func portForwardApiPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 }
 
 func createRBACIfNecessary(ctx context.Context, kubernetesProvider *kubernetes.Provider) bool {
-	mizuRBACExists, err := kubernetesProvider.DoesMizuRBACExist(ctx, mizu.ResourcesNamespace)
+	mizuRBACExists, err := kubernetesProvider.DoesMizuRBACExist(ctx, mizu.ResourcesNamespace, mizu.ServiceAccountName)
 	if err != nil {
 		fmt.Printf("warning: could not ensure mizu rbac resources exist %v\n", err)
 		return false
 	}
 	if !mizuRBACExists {
-		err := kubernetesProvider.CreateMizuRBAC(ctx, mizu.ResourcesNamespace, mizu.RBACVersion)
+		err := kubernetesProvider.CreateMizuRBAC(ctx, mizu.ResourcesNamespace, mizu.ServiceAccountName, mizu.ClusterRoleName, mizu.ClusterRoleBindingsName, mizu.RBACVersion)
 		if err != nil {
 			fmt.Printf("warning: could not create mizu rbac resources %v\n", err)
 			return false
