@@ -5,7 +5,9 @@ import (
 	"flag"
 	"fmt"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gorilla/websocket"
+	"github.com/romana/rlog"
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/tap"
 	"mizuserver/pkg/api"
@@ -16,6 +18,7 @@ import (
 	"mizuserver/pkg/utils"
 	"os"
 	"os/signal"
+	"strings"
 )
 
 var shouldTap = flag.Bool("tap", false, "Run in tapper mode without API")
@@ -23,13 +26,12 @@ var aggregator = flag.Bool("aggregator", false, "Run in aggregator mode with API
 var standalone = flag.Bool("standalone", false, "Run in standalone tapper and API mode")
 var aggregatorAddress = flag.String("aggregator-address", "", "Address of mizu collector for tapping")
 
-
 func main() {
 	flag.Parse()
 	hostMode := os.Getenv(shared.HostModeEnvVar) == "1"
 	tapOpts := &tap.TapOpts{HostMode: hostMode}
 
-	if !*shouldTap && !*aggregator && !*standalone{
+	if !*shouldTap && !*aggregator && !*standalone {
 		panic("One of the flags --tap, --api or --standalone must be provided")
 	}
 
@@ -50,7 +52,7 @@ func main() {
 		tapTargets := getTapTargets()
 		if tapTargets != nil {
 			tap.SetFilterAuthorities(tapTargets)
-			fmt.Println("Filtering for the following authorities:", tap.GetFilterIPs())
+			rlog.Infof("Filtering for the following authorities: %v", tap.GetFilterIPs())
 		}
 
 		harOutputChannel, outboundLinkOutputChannel := tap.StartPassiveTapper(tapOpts)
@@ -76,13 +78,17 @@ func main() {
 	signal.Notify(signalChan, os.Interrupt)
 	<-signalChan
 
-	fmt.Println("Exiting")
+	rlog.Info("Exiting")
 }
 
 func hostApi(socketHarOutputChannel chan<- *tap.OutputChannelItem) {
 	app := fiber.New()
 
-
+	app.Use(cors.New(cors.Config{
+		AllowOrigins: "*",
+		AllowMethods: "*",
+		AllowHeaders: "*",
+	}))
 	middleware.FiberMiddleware(app) // Register Fiber's middleware for app.
 	app.Static("/", "./site")
 
@@ -95,11 +101,11 @@ func hostApi(socketHarOutputChannel chan<- *tap.OutputChannelItem) {
 	}
 	routes.WebSocketRoutes(app, &eventHandlers)
 	routes.EntriesRoutes(app)
+	routes.MetadataRoutes(app)
 	routes.NotFoundRoute(app)
 
 	utils.StartServer(app)
 }
-
 
 func getTapTargets() []string {
 	nodeName := os.Getenv(shared.NodeNameEnvVar)
@@ -125,9 +131,15 @@ func getTrafficFilteringOptions() *shared.TrafficFilteringOptions {
 	return &filteringOptions
 }
 
-func filterHarItems(inChannel <- chan *tap.OutputChannelItem, outChannel chan *tap.OutputChannelItem, filterOptions *shared.TrafficFilteringOptions) {
+var userAgentsToFilter = []string{"kube-probe", "prometheus"}
+
+func filterHarItems(inChannel <-chan *tap.OutputChannelItem, outChannel chan *tap.OutputChannelItem, filterOptions *shared.TrafficFilteringOptions) {
 	for message := range inChannel {
 		if message.ConnectionInfo.IsOutgoing && api.CheckIsServiceIP(message.ConnectionInfo.ServerIP) {
+			continue
+		}
+		// TODO: move this to tappers https://up9.atlassian.net/browse/TRA-3441
+		if filterOptions.HideHealthChecks && isHealthCheckByUserAgent(message) {
 			continue
 		}
 
@@ -135,6 +147,20 @@ func filterHarItems(inChannel <- chan *tap.OutputChannelItem, outChannel chan *t
 
 		outChannel <- message
 	}
+}
+
+func isHealthCheckByUserAgent(message *tap.OutputChannelItem) bool {
+	for _, header := range message.HarEntry.Request.Headers {
+		if strings.ToLower(header.Name) == "user-agent" {
+			for _, userAgent := range userAgentsToFilter {
+				if strings.Contains(strings.ToLower(header.Value), userAgent) {
+					return true
+				}
+			}
+			return false
+		}
+	}
+	return false
 }
 
 func pipeChannelToSocket(connection *websocket.Conn, messageDataChannel <-chan *tap.OutputChannelItem) {
@@ -149,13 +175,13 @@ func pipeChannelToSocket(connection *websocket.Conn, messageDataChannel <-chan *
 	for messageData := range messageDataChannel {
 		marshaledData, err := models.CreateWebsocketTappedEntryMessage(messageData)
 		if err != nil {
-			fmt.Printf("error converting message to json %s, (%v,%+v)\n", err, err, err)
+			rlog.Infof("error converting message to json %s, (%v,%+v)\n", err, err, err)
 			continue
 		}
 
 		err = connection.WriteMessage(websocket.TextMessage, marshaledData)
 		if err != nil {
-			fmt.Printf("error sending message through socket server %s, (%v,%+v)\n", err, err, err)
+			rlog.Infof("error sending message through socket server %s, (%v,%+v)\n", err, err, err)
 			continue
 		}
 	}

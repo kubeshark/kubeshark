@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/martian/har"
+	"github.com/romana/rlog"
 	"mizuserver/pkg/database"
 	"mizuserver/pkg/models"
 	"mizuserver/pkg/up9"
@@ -40,10 +41,13 @@ func GetEntries(c *fiber.Ctx) error {
 		utils.ReverseSlice(entries)
 	}
 
-	// Convert to base entries
-	baseEntries := make([]models.BaseEntryDetails, 0, entriesFilter.Limit)
-	for _, entry := range entries {
-		baseEntries = append(baseEntries, utils.GetResolvedBaseEntry(entry))
+	baseEntries := make([]models.BaseEntryDetails, 0)
+	for _, data := range entries {
+		harEntry := models.BaseEntryDetails{}
+		if err := models.GetEntry(&data, &harEntry); err != nil {
+			continue
+		}
+		baseEntries = append(baseEntries, harEntry)
 	}
 
 	return c.Status(fiber.StatusOK).JSON(baseEntries)
@@ -137,6 +141,8 @@ func GetHARs(c *fiber.Ctx) error {
 }
 
 func UploadEntries(c *fiber.Ctx) error {
+	rlog.Infof("Upload entries - started\n")
+
 	uploadRequestBody := &models.UploadEntriesRequestBody{}
 	if err := c.QueryParser(uploadRequestBody); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(err)
@@ -147,9 +153,13 @@ func UploadEntries(c *fiber.Ctx) error {
 	if up9.GetAnalyzeInfo().IsAnalyzing {
 		return c.Status(fiber.StatusBadRequest).SendString("Cannot analyze, mizu is already analyzing")
 	}
-
-	token, _ := up9.CreateAnonymousToken(uploadRequestBody.Dest)
-	go up9.UploadEntriesImpl(token.Token, token.Model, uploadRequestBody.Dest)
+	rlog.Infof("Upload entries - creating token. dest %s\n", uploadRequestBody.Dest)
+	token, err := up9.CreateAnonymousToken(uploadRequestBody.Dest)
+	if err != nil {
+		return c.Status(fiber.StatusServiceUnavailable).SendString("Can't get token")
+	}
+	rlog.Infof("Upload entries - uploading. token: %s model: %s\n", token.Token, token.Model)
+	go up9.UploadEntriesImpl(token.Token, token.Model, uploadRequestBody.Dest, uploadRequestBody.SleepIntervalSec)
 	return c.Status(fiber.StatusOK).SendString("OK")
 }
 
@@ -177,24 +187,31 @@ func GetFullEntries(c *fiber.Ctx) error {
 	}
 
 	entriesArray := database.GetEntriesFromDb(timestampFrom, timestampTo)
-	return c.Status(fiber.StatusOK).JSON(entriesArray)
+	result := make([]models.FullEntryDetails, 0)
+	for _, data := range entriesArray {
+		harEntry := models.FullEntryDetails{}
+		if err := models.GetEntry(&data, &harEntry); err != nil {
+			continue
+		}
+		result = append(result, harEntry)
+	}
+
+	return c.Status(fiber.StatusOK).JSON(result)
 }
 
 func GetEntry(c *fiber.Ctx) error {
-	var entryData models.EntryData
+	var entryData models.MizuEntry
 	database.GetEntriesTable().
-		Select("entry", "resolvedDestination").
 		Where(map[string]string{"entryId": c.Params("entryId")}).
 		First(&entryData)
 
-	var fullEntry har.Entry
-	unmarshallErr := json.Unmarshal([]byte(entryData.Entry), &fullEntry)
-	utils.CheckErr(unmarshallErr)
-
-	if entryData.ResolvedDestination != "" {
-		fullEntry.Request.URL = utils.SetHostname(fullEntry.Request.URL, entryData.ResolvedDestination)
+	fullEntry := models.FullEntryDetails{}
+	if err := models.GetEntry(&entryData, &fullEntry); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": true,
+			"msg":   "Can't get entry details",
+		})
 	}
-
 	return c.Status(fiber.StatusOK).JSON(fullEntry)
 }
 

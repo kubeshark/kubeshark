@@ -14,6 +14,7 @@ require (
 	github.com/google/martian v2.1.0+incompatible
 	github.com/gorilla/websocket v1.4.2
 	github.com/leodido/go-urn v1.2.1 // indirect
+	github.com/romana/rlog v0.0.0-20171115192701-f018bc92e7d7
 	github.com/up9inc/mizu/shared v0.0.0
 	github.com/up9inc/mizu/tap v0.0.0
 	go.mongodb.org/mongo-driver v1.5.1
@@ -22,6 +23,7 @@ require (
 	k8s.io/api v0.21.0
 	k8s.io/apimachinery v0.21.0
 	k8s.io/client-go v0.21.0
+	github.com/fsnotify/fsnotify v1.4.9
 )
 
 replace github.com/up9inc/mizu/shared v0.0.0 => ../shared

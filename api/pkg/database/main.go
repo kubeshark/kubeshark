@@ -1,24 +1,17 @@
 package database
 
 import (
-	"encoding/json"
 	"fmt"
-	"github.com/google/martian/har"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 	"mizuserver/pkg/models"
 	"mizuserver/pkg/utils"
+	"time"
 )
 
 const (
 	DBPath = "./entries.db"
-)
-
-var (
-	DB = initDataBase(DBPath)
-)
-
-const (
 	OrderDesc = "desc"
 	OrderAsc  = "asc"
 	LT        = "lt"
@@ -26,6 +19,8 @@ const (
 )
 
 var (
+	DB *gorm.DB
+	IsDBLocked = false
 	OperatorToSymbolMapping = map[string]string{
 		LT: "<",
 		GT: ">",
@@ -36,17 +31,32 @@ var (
 	}
 )
 
+func init() {
+	DB = initDataBase(DBPath)
+	go StartEnforcingDatabaseSize()
+}
+
 func GetEntriesTable() *gorm.DB {
 	return DB.Table("mizu_entries")
 }
 
+func CreateEntry(entry *models.MizuEntry) {
+	if IsDBLocked {
+		return
+	}
+	GetEntriesTable().Create(entry)
+}
+
 func initDataBase(databasePath string) *gorm.DB {
-	temp, _ := gorm.Open(sqlite.Open(databasePath), &gorm.Config{})
+	temp, _ := gorm.Open(sqlite.Open(databasePath), &gorm.Config{
+		Logger: &utils.TruncatingLogger{LogLevel: logger.Warn, SlowThreshold: 500 * time.Millisecond},
+	})
 	_ = temp.AutoMigrate(&models.MizuEntry{}) // this will ensure table is created
 	return temp
 }
 
-func GetEntriesFromDb(timestampFrom int64, timestampTo int64) []har.Entry {
+
+func GetEntriesFromDb(timestampFrom int64, timestampTo int64) []models.MizuEntry {
 	order := OrderDesc
 	var entries []models.MizuEntry
 	GetEntriesTable().
@@ -58,21 +68,6 @@ func GetEntriesFromDb(timestampFrom int64, timestampTo int64) []har.Entry {
 		// the entries always order from oldest to newest so we should revers
 		utils.ReverseSlice(entries)
 	}
-
-	entriesArray := make([]har.Entry, 0)
-	for _, entryData := range entries {
-		var harEntry har.Entry
-		_ = json.Unmarshal([]byte(entryData.Entry), &harEntry)
-
-		if entryData.ResolvedSource != "" {
-			harEntry.Request.Headers = append(harEntry.Request.Headers, har.Header{Name: "x-mizu-source", Value: entryData.ResolvedSource})
-		}
-		if entryData.ResolvedDestination != "" {
-			harEntry.Request.Headers = append(harEntry.Request.Headers, har.Header{Name: "x-mizu-destination", Value: entryData.ResolvedDestination})
-		}
-
-		entriesArray = append(entriesArray, harEntry)
-	}
-	return entriesArray
+	return entries
 }
 

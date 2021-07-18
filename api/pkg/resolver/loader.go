@@ -10,6 +10,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/homedir"
 	"path/filepath"
+	"os"
 )
 
 func NewFromInCluster(errOut chan error) (*Resolver, error) {
@@ -26,8 +27,13 @@ func NewFromInCluster(errOut chan error) (*Resolver, error) {
 
 func NewFromOutOfCluster(kubeConfigPath string, errOut chan error) (*Resolver, error) {
 	if kubeConfigPath == "" {
-		home := homedir.HomeDir()
-		kubeConfigPath = filepath.Join(home, ".kube", "config")
+		env := os.Getenv("KUBECONFIG") 
+		if env != "" {
+			kubeConfigPath = env
+		} else {
+			home := homedir.HomeDir()
+			kubeConfigPath = filepath.Join(home, ".kube", "config")
+		}
 	}
 
 	configPathList := filepath.SplitList(kubeConfigPath)

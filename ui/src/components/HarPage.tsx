@@ -5,7 +5,7 @@ import {makeStyles} from "@material-ui/core";
 import "./style/HarPage.sass";
 import styles from './style/HarEntriesList.module.sass';
 import {HAREntryDetailed} from "./HarEntryDetailed";
-import playIcon from './assets/play.svg';
+import playIcon from './assets/run.svg';
 import pauseIcon from './assets/pause.svg';
 import variables from './style/variables.module.scss';
 import {StatusBar} from "./StatusBar";
@@ -39,6 +39,22 @@ interface HarPageProps {
     setAnalyzeStatus: (status: any) => void;
 }
 
+const mizuAPIPathPrefix = "/mizu";
+
+
+// When working locally (with npm run start) we need to change the PORT 
+const getMizuApiUrl = () => {
+    return `${window.location.origin}${mizuAPIPathPrefix}`;
+};
+
+const getMizuWebsocketUrl = () => {
+    return `ws://${window.location.host}${mizuAPIPathPrefix}/ws`;
+}
+
+
+const mizuApiUrl = getMizuApiUrl();
+const mizuWebsocketUrl = getMizuWebsocketUrl();
+
 export const HarPage: React.FC<HarPageProps> = ({setAnalyzeStatus}) => {
 
     const classes = useLayoutStyles();
@@ -59,7 +75,7 @@ export const HarPage: React.FC<HarPageProps> = ({setAnalyzeStatus}) => {
     const ws = useRef(null);
 
     const openWebSocket = () => {
-        ws.current = new WebSocket("ws://localhost:8899/ws");
+        ws.current = new WebSocket(mizuWebsocketUrl);
         ws.current.onopen = () => setConnection(ConnectionStatus.Connected);
         ws.current.onclose = () => setConnection(ConnectionStatus.Closed);
     }
@@ -98,20 +114,21 @@ export const HarPage: React.FC<HarPageProps> = ({setAnalyzeStatus}) => {
 
     useEffect(() => {
         openWebSocket();
-        fetch(`http://localhost:8899/api/tapStatus`)
+        fetch(`${mizuApiUrl}/api/tapStatus`)
             .then(response => response.json())
             .then(data => setTappingStatus(data));
 
-        fetch(`http://localhost:8899/api/analyzeStatus`)
+        fetch(`${mizuApiUrl}/api/analyzeStatus`)
             .then(response => response.json())
             .then(data => setAnalyzeStatus(data));
+        // eslint-disable-next-line
     }, []);
 
 
     useEffect(() => {
         if (!focusedEntryId) return;
         setSelectedHarEntry(null)
-        fetch(`http://localhost:8899/api/entries/${focusedEntryId}`)
+        fetch(`${mizuApiUrl}/api/entries/${focusedEntryId}`)
             .then(response => response.json())
             .then(data => setSelectedHarEntry(data));
     }, [focusedEntryId])
