@@ -315,13 +315,13 @@ func portForwardApiPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 }
 
 func createRBACIfNecessary(ctx context.Context, kubernetesProvider *kubernetes.Provider) bool {
-	mizuRBACExists, err := kubernetesProvider.DoesMizuRBACExist(ctx, mizu.ResourcesNamespace, mizu.ServiceAccountName)
+	mizuRBACExists, err := kubernetesProvider.DoesServiceAccountExist(ctx, mizu.ResourcesNamespace, mizu.ServiceAccountName)
 	if err != nil {
 		fmt.Printf("warning: could not ensure mizu rbac resources exist %v\n", err)
 		return false
 	}
 	if !mizuRBACExists {
-		err := kubernetesProvider.CreateMizuRBAC(ctx, mizu.ResourcesNamespace, mizu.ServiceAccountName, mizu.ClusterRoleName, mizu.ClusterRoleBindingsName, mizu.RBACVersion)
+		err := kubernetesProvider.CreateMizuRBAC(ctx, mizu.ResourcesNamespace, mizu.ServiceAccountName, mizu.ClusterRoleName, mizu.ClusterRoleBindingName, mizu.RBACVersion)
 		if err != nil {
 			fmt.Printf("warning: could not create mizu rbac resources %v\n", err)
 			return false

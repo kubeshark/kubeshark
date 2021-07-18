@@ -195,7 +195,7 @@ func (provider *Provider) CreateService(ctx context.Context, namespace string, s
 	return provider.clientSet.CoreV1().Services(namespace).Create(ctx, &service, metav1.CreateOptions{})
 }
 
-func (provider *Provider) DoesMizuRBACExist(ctx context.Context, namespace string, serviceAccountName string) (bool, error) {
+func (provider *Provider) DoesServiceAccountExist(ctx context.Context, namespace string, serviceAccountName string) (bool, error) {
 	serviceAccount, err := provider.clientSet.CoreV1().ServiceAccounts(namespace).Get(ctx, serviceAccountName, metav1.GetOptions{})
 
 	var statusError *k8serrors.StatusError
@@ -226,7 +226,7 @@ func (provider *Provider) DoesServicesExist(ctx context.Context, namespace strin
 	return service != nil, nil
 }
 
-func (provider *Provider) CreateMizuRBAC(ctx context.Context, namespace string, serviceAccountName string, clusterRoleName string, clusterRoleBindingsName string, version string) error {
+func (provider *Provider) CreateMizuRBAC(ctx context.Context, namespace string, serviceAccountName string, clusterRoleName string, clusterRoleBindingName string, version string) error {
 	serviceAccount := &core.ServiceAccount{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      serviceAccountName,
@@ -249,7 +249,7 @@ func (provider *Provider) CreateMizuRBAC(ctx context.Context, namespace string, 
 	}
 	clusterRoleBinding := &rbac.ClusterRoleBinding{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   clusterRoleBindingsName,
+			Name:   clusterRoleBindingName,
 			Labels: map[string]string{"mizu-cli-version": version},
 		},
 		RoleRef: rbac.RoleRef{
@@ -324,9 +324,9 @@ func (provider *Provider) RemoveDaemonSet(ctx context.Context, namespace string,
 	return provider.clientSet.AppsV1().DaemonSets(namespace).Delete(ctx, daemonSetName, metav1.DeleteOptions{})
 }
 
-func (provider *Provider) CheckNamespaceExists(ctx context.Context, namespace string) (bool, error) {
+func (provider *Provider) CheckNamespaceExists(ctx context.Context, name string) (bool, error) {
 	listOptions := metav1.ListOptions{
-		FieldSelector: fmt.Sprintf("metadata.name=%s", namespace),
+		FieldSelector: fmt.Sprintf("metadata.name=%s", name),
 		Limit: 1,
 	}
 	resourceList, err := provider.clientSet.CoreV1().Namespaces().List(ctx, listOptions)
