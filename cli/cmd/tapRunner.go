@@ -191,6 +191,11 @@ func cleanUpMizuResources(kubernetesProvider *kubernetes.Provider) {
 		return
 	}
 
+	if err := kubernetesProvider.RemoveNonNamespacedResources(removalCtx, mizu.ClusterRoleName, mizu.ClusterRoleBindingName); err != nil {
+		fmt.Printf("Error removing non-namespaced resources: %s (%v,%+v)\n", err, err, err)
+		return
+	}
+
 	if err := kubernetesProvider.WaitUtilNamespaceDeleted(removalCtx, mizu.ResourcesNamespace); err != nil {
 		switch err {
 		case wait.ErrWaitTimeout:

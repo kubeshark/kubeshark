@@ -291,6 +291,40 @@ func (provider *Provider) RemoveNamespace(ctx context.Context, name string) erro
 	return provider.clientSet.CoreV1().Namespaces().Delete(ctx, name, metav1.DeleteOptions{})
 }
 
+func (provider *Provider) RemoveNonNamespacedResources(ctx context.Context, clusterRoleName string, clusterRoleBindingName string) error {
+	if err := provider.RemoveClusterRole(ctx, clusterRoleName); err != nil {
+		return err
+	}
+
+	if err := provider.RemoveClusterRoleBinding(ctx, clusterRoleBindingName); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (provider *Provider) RemoveClusterRole(ctx context.Context, name string) error {
+	if isFound, err := provider.CheckClusterRoleExists(ctx, name);
+	err != nil {
+		return err
+	} else if !isFound {
+		return nil
+	}
+
+	return provider.clientSet.RbacV1().ClusterRoles().Delete(ctx, name, metav1.DeleteOptions{})
+}
+
+func (provider *Provider) RemoveClusterRoleBinding(ctx context.Context, name string) error {
+	if isFound, err := provider.CheckClusterRoleBindingExists(ctx, name);
+	err != nil {
+		return err
+	} else if !isFound {
+		return nil
+	}
+
+	return provider.clientSet.RbacV1().ClusterRoleBindings().Delete(ctx, name, metav1.DeleteOptions{})
+}
+
 func (provider *Provider) RemovePod(ctx context.Context, namespace string, podName string) error {
 	if isFound, err := provider.CheckPodExists(ctx, namespace, podName);
 	err != nil {
@@ -330,6 +364,40 @@ func (provider *Provider) CheckNamespaceExists(ctx context.Context, name string)
 		Limit: 1,
 	}
 	resourceList, err := provider.clientSet.CoreV1().Namespaces().List(ctx, listOptions)
+	if err != nil {
+		return false, err
+	}
+
+	if len(resourceList.Items) > 0 {
+		return true, nil
+	}
+
+	return false, nil
+}
+
+func (provider *Provider) CheckClusterRoleExists(ctx context.Context, name string) (bool, error) {
+	listOptions := metav1.ListOptions{
+		FieldSelector: fmt.Sprintf("metadata.name=%s", name),
+		Limit: 1,
+	}
+	resourceList, err := provider.clientSet.RbacV1().ClusterRoles().List(ctx, listOptions)
+	if err != nil {
+		return false, err
+	}
+
+	if len(resourceList.Items) > 0 {
+		return true, nil
+	}
+
+	return false, nil
+}
+
+func (provider *Provider) CheckClusterRoleBindingExists(ctx context.Context, name string) (bool, error) {
+	listOptions := metav1.ListOptions{
+		FieldSelector: fmt.Sprintf("metadata.name=%s", name),
+		Limit: 1,
+	}
+	resourceList, err := provider.clientSet.RbacV1().ClusterRoleBindings().List(ctx, listOptions)
 	if err != nil {
 		return false, err
 	}
