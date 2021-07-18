@@ -9,11 +9,11 @@ var (
 )
 
 const (
-	ResourcesNamespace  = "mizu"
-	TapperDaemonSetName = "mizu-tapper-daemon-set"
-	AggregatorPodName   = "mizu-collector"
-	TapperPodName       = "mizu-tapper"
-	K8sAllNamespaces    = ""
+	AggregatorPodName       = "mizu-collector"
+	K8sAllNamespaces        = ""
+	ResourcesNamespace      = "mizu"
+	TapperDaemonSetName     = "mizu-tapper-daemon-set"
+	TapperPodName           = "mizu-tapper"
 )
 
 const (
