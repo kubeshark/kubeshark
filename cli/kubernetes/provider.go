@@ -80,8 +80,18 @@ func (provider *Provider) WaitUtilNamespaceDeleted(ctx context.Context, name str
 			return provider.clientSet.CoreV1().Namespaces().Watch(ctx, options)
 		},
 	}
-	obj := &core.Namespace{}
-	var preconditionFunc watchtools.PreconditionFunc = nil
+
+	var preconditionFunc watchtools.PreconditionFunc = func(store cache.Store) (bool, error) {
+		_, exists, err := store.Get(&core.Namespace{ObjectMeta: metav1.ObjectMeta{Name: name}})
+		if err != nil {
+			return false, err
+		}
+		if exists {
+			return false, nil
+		}
+		return true, nil
+	}
+
 	conditionFunc := func(e watch.Event) (bool, error) {
 		if e.Type == watch.Deleted {
 			return true, nil
@@ -89,6 +99,7 @@ func (provider *Provider) WaitUtilNamespaceDeleted(ctx context.Context, name str
 		return false, nil
 	}
 
+	obj := &core.Namespace{}
 	_, err := watchtools.UntilWithSync(ctx, lw, obj, preconditionFunc, conditionFunc)
 
 	return err
