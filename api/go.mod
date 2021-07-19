@@ -3,14 +3,15 @@ module mizuserver
 go 1.16
 
 require (
-	github.com/antoniodipinto/ikisocket v0.0.0-20210417133349-f1502512d69a
+	github.com/antoniodipinto/ikisocket v0.0.0-20210719130628-946ce6188452
 	github.com/beevik/etree v1.1.0
 	github.com/djherbis/atime v1.0.0
 	github.com/fasthttp/websocket v1.4.3-beta.1 // indirect
+	github.com/fsnotify/fsnotify v1.4.9
 	github.com/go-playground/locales v0.13.0
 	github.com/go-playground/universal-translator v0.17.0
 	github.com/go-playground/validator/v10 v10.5.0
-	github.com/gofiber/fiber/v2 v2.8.0
+	github.com/gofiber/fiber/v2 v2.10.0
 	github.com/google/martian v2.1.0+incompatible
 	github.com/gorilla/websocket v1.4.2
 	github.com/leodido/go-urn v1.2.1 // indirect
@@ -23,9 +24,10 @@ require (
 	k8s.io/api v0.21.0
 	k8s.io/apimachinery v0.21.0
 	k8s.io/client-go v0.21.0
-	github.com/fsnotify/fsnotify v1.4.9
 )
 
 replace github.com/up9inc/mizu/shared v0.0.0 => ../shared
 
 replace github.com/up9inc/mizu/tap v0.0.0 => ../tap
+
+replace github.com/antoniodipinto/ikisocket v0.0.0-20210719130628-946ce6188452 => github.com/up9inc/ikisocket v0.0.0-20210719130628-946ce6188452
