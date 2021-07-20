@@ -6,7 +6,7 @@ import (
 )
 
 type MizuViewOptions struct {
-	GuiPort                uint16
+	GuiPort uint16
 }
 
 var mizuViewOptions = &MizuViewOptions{}
@@ -15,6 +15,7 @@ var viewCmd = &cobra.Command{
 	Use:   "view",
 	Short: "Open GUI in browser",
 	RunE: func(cmd *cobra.Command, args []string) error {
+		go mizu.ReportRun("view", mizuFetchOptions)
 		if isCompatible, err := mizu.CheckVersionCompatibility(mizuFetchOptions.MizuPort); err != nil {
 			return err
 		} else if !isCompatible {
@@ -23,7 +24,6 @@ var viewCmd = &cobra.Command{
 		runMizuView(mizuViewOptions)
 		return nil
 	},
-
 }
 
 func init() {
