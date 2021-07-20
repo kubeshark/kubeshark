@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"regexp"
+	"strconv"
 
 	"github.com/up9inc/mizu/shared"
 	core "k8s.io/api/core/v1"
@@ -122,13 +123,13 @@ func (provider *Provider) CreateNamespace(ctx context.Context, name string) (*co
 	return provider.clientSet.CoreV1().Namespaces().Create(ctx, namespaceSpec, metav1.CreateOptions{})
 }
 
-func (provider *Provider) CreateMizuAggregatorPod(ctx context.Context, namespace string, podName string, podImage string, serviceAccountName string, mizuApiFilteringOptions *shared.TrafficFilteringOptions) (*core.Pod, error) {
+func (provider *Provider) CreateMizuAggregatorPod(ctx context.Context, namespace string, podName string, podImage string, serviceAccountName string, mizuApiFilteringOptions *shared.TrafficFilteringOptions, maxEntriesDBSizeBytes int64) (*core.Pod, error) {
 	marshaledFilteringOptions, err := json.Marshal(mizuApiFilteringOptions)
 	if err != nil {
 		return nil, err
 	}
 
-	cpuLimit, err := resource.ParseQuantity("750")
+	cpuLimit, err := resource.ParseQuantity("750m")
 	if err != nil {
 		return nil, errors.New("invalid cpu limit for aggregator container")
 	}
@@ -166,6 +167,10 @@ func (provider *Provider) CreateMizuAggregatorPod(ctx context.Context, namespace
 						{
 							Name:  shared.MizuFilteringOptionsEnvVar,
 							Value: string(marshaledFilteringOptions),
+						},
+						{
+							Name:  shared.MaxEntriesDBSizeByteSEnvVar,
+							Value: strconv.FormatInt(maxEntriesDBSizeBytes, 10),
 						},
 					},
 					Resources: core.ResourceRequirements{

@@ -36,7 +36,7 @@ func getGuestToken(url string, target *GuestToken) error {
 		return err
 	}
 	defer resp.Body.Close()
-	rlog.Debugf("Got token from the server, starting to json decode... status code: %v", resp.StatusCode)
+	rlog.Infof("Got token from the server, starting to json decode... status code: %v", resp.StatusCode)
 	return json.NewDecoder(resp.Body).Decode(target)
 }
 
@@ -90,6 +90,7 @@ func GetTrafficDumpUrl(analyzeDestination string, analyzeModel string) *url.URL 
 
 type AnalyzeInformation struct {
 	IsAnalyzing        bool
+	SentCount          int
 	AnalyzedModel      string
 	AnalyzeToken       string
 	AnalyzeDestination string
@@ -100,6 +101,7 @@ func (info *AnalyzeInformation) Reset() {
 	info.AnalyzedModel = ""
 	info.AnalyzeToken = ""
 	info.AnalyzeDestination = ""
+	info.SentCount = 0
 }
 
 var analyzeInformation = &AnalyzeInformation{}
@@ -109,16 +111,18 @@ func GetAnalyzeInfo() *shared.AnalyzeStatus {
 		IsAnalyzing:   analyzeInformation.IsAnalyzing,
 		RemoteUrl:     GetRemoteUrl(analyzeInformation.AnalyzeDestination, analyzeInformation.AnalyzeToken),
 		IsRemoteReady: CheckIfModelReady(analyzeInformation.AnalyzeDestination, analyzeInformation.AnalyzedModel, analyzeInformation.AnalyzeToken),
+		SentCount:     analyzeInformation.SentCount,
 	}
 }
 
-func UploadEntriesImpl(token string, model string, envPrefix string) {
+func UploadEntriesImpl(token string, model string, envPrefix string, sleepIntervalSec int) {
 	analyzeInformation.IsAnalyzing = true
 	analyzeInformation.AnalyzedModel = model
 	analyzeInformation.AnalyzeToken = token
 	analyzeInformation.AnalyzeDestination = envPrefix
+	analyzeInformation.SentCount = 0
 
-	sleepTime := time.Second * 10
+	sleepTime := time.Second * time.Duration(sleepIntervalSec)
 
 	var timestampFrom int64 = 0
 
@@ -168,6 +172,7 @@ func UploadEntriesImpl(token string, model string, envPrefix string) {
 				rlog.Info("Stopping analyzing")
 				log.Fatal(postErr)
 			}
+			analyzeInformation.SentCount += len(entriesArray)
 			rlog.Infof("Finish uploading %v entries to %s\n", len(entriesArray), GetTrafficDumpUrl(envPrefix, model))
 
 		} else {

@@ -4,19 +4,14 @@ import (
 	"fmt"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 	"mizuserver/pkg/models"
 	"mizuserver/pkg/utils"
+	"time"
 )
 
 const (
 	DBPath = "./entries.db"
-)
-
-var (
-	DB = initDataBase(DBPath)
-)
-
-const (
 	OrderDesc = "desc"
 	OrderAsc  = "asc"
 	LT        = "lt"
@@ -24,6 +19,8 @@ const (
 )
 
 var (
+	DB *gorm.DB
+	IsDBLocked = false
 	OperatorToSymbolMapping = map[string]string{
 		LT: "<",
 		GT: ">",
@@ -34,12 +31,26 @@ var (
 	}
 )
 
+func init() {
+	DB = initDataBase(DBPath)
+	go StartEnforcingDatabaseSize()
+}
+
 func GetEntriesTable() *gorm.DB {
 	return DB.Table("mizu_entries")
 }
 
+func CreateEntry(entry *models.MizuEntry) {
+	if IsDBLocked {
+		return
+	}
+	GetEntriesTable().Create(entry)
+}
+
 func initDataBase(databasePath string) *gorm.DB {
-	temp, _ := gorm.Open(sqlite.Open(databasePath), &gorm.Config{})
+	temp, _ := gorm.Open(sqlite.Open(databasePath), &gorm.Config{
+		Logger: &utils.TruncatingLogger{LogLevel: logger.Warn, SlowThreshold: 500 * time.Millisecond},
+	})
 	_ = temp.AutoMigrate(&models.MizuEntry{}) // this will ensure table is created
 	return temp
 }

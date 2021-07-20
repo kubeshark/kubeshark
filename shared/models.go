@@ -22,6 +22,7 @@ type AnalyzeStatus struct {
 	IsAnalyzing   bool   `json:"isAnalyzing"`
 	RemoteUrl     string `json:"remoteUrl"`
 	IsRemoteReady bool   `json:"isRemoteReady"`
+	SentCount     int    `json:"sentCount"`
 }
 
 type WebSocketStatusMessage struct {
@@ -58,4 +59,10 @@ func CreateWebSocketMessageTypeAnalyzeStatus(analyzeStatus AnalyzeStatus) WebSoc
 
 type TrafficFilteringOptions struct {
 	PlainTextMaskingRegexes []*SerializableRegexp
+	HideHealthChecks        bool
 }
+
+type VersionResponse struct {
+	SemVer string `json:"semver"`
+}
+

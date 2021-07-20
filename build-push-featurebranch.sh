@@ -14,7 +14,7 @@ then
 fi
 
 echo "building $DOCKER_TAGGED_BUILD"
-docker build -t "$DOCKER_TAGGED_BUILD" .
+docker build -t "$DOCKER_TAGGED_BUILD" --build-arg SEM_VER=${SEM_VER} --build-arg BUILD_TIMESTAMP=${BUILD_TIMESTAMP} --build-arg GIT_BRANCH=${GIT_BRANCH} --build-arg COMMIT_HASH=${COMMIT_HASH} .
 
 echo pushing to "$REPOSITORY"
 docker push "$DOCKER_TAGGED_BUILD"

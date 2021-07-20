@@ -1,9 +1,11 @@
 package tap
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -46,10 +48,25 @@ type HarFile struct {
 }
 
 func NewEntry(request *http.Request, requestTime time.Time, response *http.Response, responseTime time.Time) (*har.Entry, error) {
-	harRequest, err := har.NewRequest(request, true)
+	harRequest, err := har.NewRequest(request, false)
 	if err != nil {
 		SilentError("convert-request-to-har", "Failed converting request to HAR %s (%v,%+v)", err, err, err)
 		return nil, errors.New("Failed converting request to HAR")
+	}
+
+	// For requests with multipart/form-data or application/x-www-form-urlencoded Content-Type,
+	// martian/har will parse the request body and place the parameters in harRequest.PostData.Params
+	// instead of harRequest.PostData.Text (as the HAR spec requires it).
+	// Mizu currently only looks at PostData.Text. Therefore, instead of letting martian/har set the content of
+	// PostData, always copy the request body to PostData.Text.
+	if (request.ContentLength > 0) {
+		reqBody, err := ioutil.ReadAll(request.Body)
+		if err != nil {
+			SilentError("read-request-body", "Failed converting request to HAR %s (%v,%+v)", err, err, err)
+			return nil, errors.New("Failed reading request body")
+		}
+		request.Body = ioutil.NopCloser(bytes.NewReader(reqBody))
+		harRequest.PostData.Text = string(reqBody)
 	}
 
 	harResponse, err := har.NewResponse(response, true)

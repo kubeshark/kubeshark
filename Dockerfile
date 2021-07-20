@@ -23,11 +23,20 @@ RUN go mod download
 # cheap trick to make the build faster (As long as go.mod wasn't changes)
 RUN go list -f '{{.Path}}@{{.Version}}' -m all | sed 1d | grep -e 'go-cache' -e 'sqlite' | xargs go get
 
+ARG COMMIT_HASH
+ARG GIT_BRANCH
+ARG BUILD_TIMESTAMP
+ARG SEM_VER
+
 # Copy and build api code
 COPY shared ../shared
 COPY tap ../tap
 COPY api .
-RUN go build -ldflags="-s -w" -o mizuagent .
+RUN go build -ldflags="-s -w \
+     -X 'mizuserver/pkg/version.GitCommitHash=${COMMIT_HASH}' \
+     -X 'mizuserver/pkg/version.Branch=${GIT_BRANCH}' \
+     -X 'mizuserver/pkg/version.BuildTimestamp=${BUILD_TIMESTAMP}' \
+     -X 'mizuserver/pkg/version.SemVer=${SEM_VER}'" -o mizuagent .
 
 
 FROM alpine:3.13.5
