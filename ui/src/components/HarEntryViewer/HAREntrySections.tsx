@@ -207,7 +207,7 @@ export const HAREntryTablePolicySection: React.FC<HAREntryPolicySectionProps> = 
                             {arrayToIterate.map(({rule, matched}, index) => {
                                     return (
                                         // <HAREntryViewLine key={index} label={rule.Name} value={matched}/>
-                                        <HAREntryPolicySectionContainer key={index} label={rule.Name} matched={matched && (rule.Type === 'latency' ? rule.Latency > latency : true)? "Matched" : "Not Matched"}>
+                                        <HAREntryPolicySectionContainer key={index} label={rule.Name} matched={matched && (rule.Type === 'latency' ? rule.Latency > latency : true)? "Success" : "Failure"}>
                                             {
                                                 rule.Type === 'header' ?
                                                 <>

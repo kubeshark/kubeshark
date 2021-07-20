@@ -19,6 +19,7 @@ interface HAREntry {
     isCurrentRevision?: boolean;
     timestamp: Date;
 	isOutgoing?: boolean;
+    applicableRules: string;
 }
 
 interface HAREntryProps {
@@ -29,6 +30,7 @@ interface HAREntryProps {
 
 export const HarEntry: React.FC<HAREntryProps> = ({entry, setFocusedEntryId, isSelected}) => {
     const classification = getClassification(entry.statusCode)
+    console.log(entry)
     let ingoingIcon;
     let outgoingIcon;
     switch(classification) {
@@ -50,7 +52,7 @@ export const HarEntry: React.FC<HAREntryProps> = ({entry, setFocusedEntryId, isS
     }
 
     return <>
-        <div id={entry.id} className={`${styles.row} ${isSelected ? styles.rowSelected : ''}`} onClick={() => setFocusedEntryId(entry.id)}>
+        <div id={entry.id} className={`${styles.row} ${isSelected ? styles.rowSelected : entry.applicableRules === "red" ? styles.ruleFailureRow : entry.applicableRules === "green" ? styles.ruleSuccessRow : ""}`} onClick={() => setFocusedEntryId(entry.id)}>
             {entry.statusCode && <div>
                 <StatusCode statusCode={entry.statusCode}/>
             </div>}
