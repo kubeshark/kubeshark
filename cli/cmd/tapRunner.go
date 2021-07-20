@@ -25,6 +25,7 @@ var aggregatorService *core.Service
 
 const (
 	updateTappersDelay = 5 * time.Second
+	cleanupTimeout     = time.Minute
 )
 
 var currentlyTappedPods []core.Pod
@@ -185,12 +186,8 @@ func updateMizuTappers(ctx context.Context, kubernetesProvider *kubernetes.Provi
 func cleanUpMizuResources(kubernetesProvider *kubernetes.Provider) {
 	fmt.Printf("\nRemoving mizu resources\n")
 
-	removalCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	removalCtx, cancel := context.WithTimeout(context.Background(), cleanupTimeout)
 	defer cancel()
-	// Call cancel if a terminating signal was received
-	go func() {
-		waitForFinish(removalCtx, cancel)
-	}()
 
 	if err := kubernetesProvider.RemoveNamespace(removalCtx, mizu.ResourcesNamespace); err != nil {
 		fmt.Printf("Error removing Namespace %s: %s (%v,%+v)\n", mizu.ResourcesNamespace, err, err, err)
@@ -201,6 +198,11 @@ func cleanUpMizuResources(kubernetesProvider *kubernetes.Provider) {
 		fmt.Printf("Error removing non-namespaced resources: %s (%v,%+v)\n", err, err, err)
 		return
 	}
+
+	// Call cancel if a terminating signal was received. Allows user to skip the wait.
+	go func() {
+		waitForFinish(removalCtx, cancel)
+	}()
 
 	if err := kubernetesProvider.WaitUtilNamespaceDeleted(removalCtx, mizu.ResourcesNamespace); err != nil {
 		switch {
