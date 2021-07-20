@@ -28,6 +28,9 @@ func RunMizuTapDemo(demoOptions *MizuDemoOptions) {
 	go callMizuDemo(ctx, cancel, dir, demoOptions)
 	if demoOptions.Analyze {
 		go analyze(demoOptions)
+		fmt.Printf(mizu.Purple, "mizu tap \"carts-[0-9].*|payment.*|shipping.*|user-[0-9].*\" -n sock-shop --analyze\n")
+	} else {
+		fmt.Printf(mizu.Purple, "mizu tap \"carts-[0-9].*|payment.*|shipping.*|user-[0-9].*\" -n sock-shop\n")
 	}
 	fmt.Println("Mizu will be available on http://localhost:8899 in a few seconds")
 	sigChan := make(chan os.Signal, 1)
