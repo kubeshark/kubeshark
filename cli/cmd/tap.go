@@ -31,8 +31,8 @@ var mizuTapOptions = &MizuTapOptions{}
 var direction string
 var humanMaxEntriesDBSize string
 var regex *regexp.Regexp
-const maxEntriesDBSizeFlagName = "max-entries-db-size"
 
+const maxEntriesDBSizeFlagName = "max-entries-db-size"
 
 const analysisMessageToConfirm = `NOTE: running mizu with --analysis flag will upload recorded traffic
 to UP9 cloud for further analysis and enriched presentation options.
@@ -44,6 +44,7 @@ var tapCmd = &cobra.Command{
 	Long: `Record the ingoing traffic of a kubernetes pod.
 Supported protocols are HTTP and gRPC.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
+		go mizu.ReportRun("tap", mizuTapOptions)
 		RunMizuTap(regex, mizuTapOptions)
 		return nil
 	},
