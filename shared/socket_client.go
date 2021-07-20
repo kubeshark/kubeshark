@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	DEFAULT_SOCKET_RETRIES = 3
+	DEFAULT_SOCKET_RETRIES          = 3
 	DEFAULT_SOCKET_RETRY_SLEEP_TIME = time.Second * 10
 )
 

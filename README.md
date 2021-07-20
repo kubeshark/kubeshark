@@ -26,6 +26,49 @@ SHA256 checksums are available on the [Releases](https://github.com/up9inc/mizu/
 ### Development (unstable) build
 Pick one from the [Releases](https://github.com/up9inc/mizu/releases) page.
 
+## Prerequisites
+1. Set `KUBECONFIG` environment variable to your kubernetes configuration. If this is not set, mizu assumes that configuration is at `${HOME}/.kube/config`
+2. mizu needs following permissions on your kubernetes cluster to run
+```
+- apiGroups:
+  - ""
+  - apps
+  resources:
+  - pods
+  - services
+  verbs:
+  - list
+  - get
+  - create
+  - delete
+- apiGroups:
+  - ""
+  - apps
+  resources:
+  - daemonsets
+  verbs:
+  - list
+  - get
+  - create
+  - patch
+  - delete
+```
+3. Optionally, for resolving traffic ip to kubernetes service name, mizu needs below permissions
+```
+- apiGroups:
+  - ""
+  - apps
+  - "rbac.authorization.k8s.io"
+  resources:
+  - clusterroles
+  - clusterrolebindings
+  - serviceaccounts
+  verbs:
+  - get
+  - create
+  - delete
+```
+
 ## How to run
 
 1. Find pod you'd like to tap to in your Kubernetes cluster

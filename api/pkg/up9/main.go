@@ -5,6 +5,7 @@ import (
 	"compress/zlib"
 	"encoding/json"
 	"fmt"
+	"github.com/romana/rlog"
 	"github.com/up9inc/mizu/shared"
 	"io/ioutil"
 	"log"
@@ -12,9 +13,9 @@ import (
 	"mizuserver/pkg/models"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 )
-
 
 const (
 	AnalyzeCheckSleepTime = 5 * time.Second
@@ -35,15 +36,18 @@ func getGuestToken(url string, target *GuestToken) error {
 		return err
 	}
 	defer resp.Body.Close()
-
+	rlog.Infof("Got token from the server, starting to json decode... status code: %v", resp.StatusCode)
 	return json.NewDecoder(resp.Body).Decode(target)
 }
 
 func CreateAnonymousToken(envPrefix string) (*GuestToken, error) {
-	tokenUrl := fmt.Sprintf("https://trcc.%v/anonymous/token", envPrefix)
+	tokenUrl := fmt.Sprintf("https://trcc.%s/anonymous/token", envPrefix)
+	if strings.HasPrefix(envPrefix, "http") {
+		tokenUrl = fmt.Sprintf("%s/api/token", envPrefix)
+	}
 	token := &GuestToken{}
 	if err := getGuestToken(tokenUrl, token); err != nil {
-		fmt.Println(err)
+		rlog.Infof("Failed to get token, %s", err)
 		return nil, err
 	}
 	return token, nil
@@ -76,12 +80,17 @@ func CheckIfModelReady(analyzeDestination string, analyzeModel string, analyzeTo
 }
 
 func GetTrafficDumpUrl(analyzeDestination string, analyzeModel string) *url.URL {
-	postUrl, _ := url.Parse(fmt.Sprintf("https://traffic.%s/dumpTrafficBulk/%s", analyzeDestination, analyzeModel))
+	strUrl := fmt.Sprintf("https://traffic.%s/dumpTrafficBulk/%s", analyzeDestination, analyzeModel)
+	if strings.HasPrefix(analyzeDestination, "http") {
+		strUrl = fmt.Sprintf("%s/api/workspace/dumpTrafficBulk", analyzeDestination)
+	}
+	postUrl, _ := url.Parse(strUrl)
 	return postUrl
 }
 
 type AnalyzeInformation struct {
 	IsAnalyzing        bool
+	SentCount          int
 	AnalyzedModel      string
 	AnalyzeToken       string
 	AnalyzeDestination string
@@ -92,6 +101,7 @@ func (info *AnalyzeInformation) Reset() {
 	info.AnalyzedModel = ""
 	info.AnalyzeToken = ""
 	info.AnalyzeDestination = ""
+	info.SentCount = 0
 }
 
 var analyzeInformation = &AnalyzeInformation{}
@@ -101,22 +111,24 @@ func GetAnalyzeInfo() *shared.AnalyzeStatus {
 		IsAnalyzing:   analyzeInformation.IsAnalyzing,
 		RemoteUrl:     GetRemoteUrl(analyzeInformation.AnalyzeDestination, analyzeInformation.AnalyzeToken),
 		IsRemoteReady: CheckIfModelReady(analyzeInformation.AnalyzeDestination, analyzeInformation.AnalyzedModel, analyzeInformation.AnalyzeToken),
+		SentCount:     analyzeInformation.SentCount,
 	}
 }
 
-func UploadEntriesImpl(token string, model string, envPrefix string) {
+func UploadEntriesImpl(token string, model string, envPrefix string, sleepIntervalSec int) {
 	analyzeInformation.IsAnalyzing = true
 	analyzeInformation.AnalyzedModel = model
 	analyzeInformation.AnalyzeToken = token
 	analyzeInformation.AnalyzeDestination = envPrefix
+	analyzeInformation.SentCount = 0
 
-	sleepTime := time.Second * 10
+	sleepTime := time.Second * time.Duration(sleepIntervalSec)
 
 	var timestampFrom int64 = 0
 
 	for {
 		timestampTo := time.Now().UnixNano() / int64(time.Millisecond)
-		fmt.Printf("Getting entries from %v, to %v\n", timestampFrom, timestampTo)
+		rlog.Infof("Getting entries from %v, to %v\n", timestampFrom, timestampTo)
 		entriesArray := database.GetEntriesFromDb(timestampFrom, timestampTo)
 
 		if len(entriesArray) > 0 {
@@ -129,12 +141,12 @@ func UploadEntriesImpl(token string, model string, envPrefix string) {
 				}
 				fullEntriesExtra = append(fullEntriesExtra, harEntry)
 			}
-			fmt.Printf("About to upload %v entries\n", len(fullEntriesExtra))
+			rlog.Infof("About to upload %v entries\n", len(fullEntriesExtra))
 
 			body, jMarshalErr := json.Marshal(fullEntriesExtra)
 			if jMarshalErr != nil {
 				analyzeInformation.Reset()
-				fmt.Println("Stopping analyzing")
+				rlog.Infof("Stopping analyzing")
 				log.Fatal(jMarshalErr)
 			}
 
@@ -157,16 +169,17 @@ func UploadEntriesImpl(token string, model string, envPrefix string) {
 
 			if _, postErr := http.DefaultClient.Do(req); postErr != nil {
 				analyzeInformation.Reset()
-				log.Println("Stopping analyzing")
+				rlog.Info("Stopping analyzing")
 				log.Fatal(postErr)
 			}
-			fmt.Printf("Finish uploading %v entries to %s\n", len(entriesArray), GetTrafficDumpUrl(envPrefix, model))
+			analyzeInformation.SentCount += len(entriesArray)
+			rlog.Infof("Finish uploading %v entries to %s\n", len(entriesArray), GetTrafficDumpUrl(envPrefix, model))
 
 		} else {
-			fmt.Println("Nothing to upload")
+			rlog.Infof("Nothing to upload")
 		}
 
-		fmt.Printf("Sleeping for %v...\n", sleepTime)
+		rlog.Infof("Sleeping for %v...\n", sleepTime)
 		time.Sleep(sleepTime)
 		timestampFrom = timestampTo
 	}

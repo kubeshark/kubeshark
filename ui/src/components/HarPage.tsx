@@ -5,7 +5,7 @@ import {makeStyles} from "@material-ui/core";
 import "./style/HarPage.sass";
 import styles from './style/HarEntriesList.module.sass';
 import {HAREntryDetailed} from "./HarEntryDetailed";
-import playIcon from './assets/play.svg';
+import playIcon from './assets/run.svg';
 import pauseIcon from './assets/pause.svg';
 import variables from './style/variables.module.scss';
 import {StatusBar} from "./StatusBar";
@@ -39,22 +39,16 @@ interface HarPageProps {
     setAnalyzeStatus: (status: any) => void;
 }
 
-const isKubeProxy = () => {
-    return window.location.href.indexOf("/api/v1/namespaces/") > -1;
-}
+const mizuAPIPathPrefix = "/mizu";
 
+
+// When working locally (with npm run start) we need to change the PORT 
 const getMizuApiUrl = () => {
-    if (isKubeProxy()) {
-        return window.location.href;
-    }
-    return window.location.origin;
+    return `${window.location.origin}${mizuAPIPathPrefix}`;
 };
 
 const getMizuWebsocketUrl = () => {
-    if (isKubeProxy()) {
-        return `ws://${window.location.href.replace(`${window.location.protocol}//`, "")}ws`;
-    }
-    return `ws://${window.location.host}/ws`;
+    return `ws://${window.location.host}${mizuAPIPathPrefix}/ws`;
 }
 
 
@@ -127,6 +121,7 @@ export const HarPage: React.FC<HarPageProps> = ({setAnalyzeStatus}) => {
         fetch(`${mizuApiUrl}/api/analyzeStatus`)
             .then(response => response.json())
             .then(data => setAnalyzeStatus(data));
+        // eslint-disable-next-line
     }, []);
 
 

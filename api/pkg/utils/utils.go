@@ -1,8 +1,8 @@
 package utils
 
 import (
-	"fmt"
 	"github.com/gofiber/fiber/v2"
+	"github.com/romana/rlog"
 	"log"
 	"net/url"
 	"os"
@@ -21,7 +21,7 @@ func StartServer(app *fiber.App) {
 
 	go func() {
 		_ = <-signals
-		fmt.Println("Shutting down...")
+		rlog.Infof("Shutting down...")
 		_ = app.Shutdown()
 	}()
 

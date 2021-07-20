@@ -5,7 +5,7 @@ import (
 	"mizuserver/pkg/controllers"
 )
 
-// EntriesRoutes func for describe group of public routes.
+// EntriesRoutes defines the group of har entries routes.
 func EntriesRoutes(fiberApp *fiber.App) {
 	routeGroup := fiberApp.Group("/api")
 
@@ -13,6 +13,7 @@ func EntriesRoutes(fiberApp *fiber.App) {
 	routeGroup.Get("/entries/:entryId", controllers.GetEntry) // get single (full) entry
 	routeGroup.Get("/exportEntries", controllers.GetFullEntries)
 	routeGroup.Get("/uploadEntries", controllers.UploadEntries)
+	routeGroup.Get("/resolving", controllers.GetCurrentResolvingInformation)
 
 	routeGroup.Get("/har", controllers.GetHARs)
 

@@ -3,20 +3,20 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"github.com/romana/rlog"
+	"github.com/up9inc/mizu/cli/kubernetes"
+	"github.com/up9inc/mizu/cli/mizu"
+	"github.com/up9inc/mizu/shared"
+	"github.com/up9inc/mizu/shared/debounce"
+	core "k8s.io/api/core/v1"
+	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"os/signal"
 	"regexp"
 	"syscall"
 	"time"
-
-	"github.com/up9inc/mizu/shared"
-
-	core "k8s.io/api/core/v1"
-
-	"github.com/up9inc/mizu/cli/debounce"
-	"github.com/up9inc/mizu/cli/kubernetes"
-	"github.com/up9inc/mizu/cli/mizu"
 )
 
 var mizuServiceAccountExists bool
@@ -80,7 +80,6 @@ func RunMizuTap(podRegexQuery *regexp.Regexp, tappingOptions *MizuTapOptions) {
 	waitForFinish(ctx, cancel)
 }
 
-
 func createMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, nodeToTappedPodIPMap map[string][]string, tappingOptions *MizuTapOptions, mizuApiFilteringOptions *shared.TrafficFilteringOptions) error {
 	if err := createMizuAggregator(ctx, kubernetesProvider, tappingOptions, mizuApiFilteringOptions); err != nil {
 		return err
@@ -97,7 +96,7 @@ func createMizuAggregator(ctx context.Context, kubernetesProvider *kubernetes.Pr
 	var err error
 
 	mizuServiceAccountExists = createRBACIfNecessary(ctx, kubernetesProvider)
-	_, err = kubernetesProvider.CreateMizuAggregatorPod(ctx, mizu.ResourcesNamespace, mizu.AggregatorPodName, tappingOptions.MizuImage, mizuServiceAccountExists, mizuApiFilteringOptions)
+	_, err = kubernetesProvider.CreateMizuAggregatorPod(ctx, mizu.ResourcesNamespace, mizu.AggregatorPodName, tappingOptions.MizuImage, mizuServiceAccountExists, mizuApiFilteringOptions, tappingOptions.MaxEntriesDBSizeBytes)
 	if err != nil {
 		fmt.Printf("Error creating mizu collector pod: %v\n", err)
 		return err
@@ -113,21 +112,21 @@ func createMizuAggregator(ctx context.Context, kubernetesProvider *kubernetes.Pr
 }
 
 func getMizuApiFilteringOptions(tappingOptions *MizuTapOptions) (*shared.TrafficFilteringOptions, error) {
-	if tappingOptions.PlainTextFilterRegexes == nil || len(tappingOptions.PlainTextFilterRegexes) == 0 {
-		return nil, nil
-	}
+	var compiledRegexSlice []*shared.SerializableRegexp
 
-	compiledRegexSlice := make([]*shared.SerializableRegexp, 0)
-	for _, regexStr := range tappingOptions.PlainTextFilterRegexes {
-		compiledRegex, err := shared.CompileRegexToSerializableRegexp(regexStr)
-		if err != nil {
-			fmt.Printf("Regex %s is invalid: %v", regexStr, err)
-			return nil, err
+	if tappingOptions.PlainTextFilterRegexes != nil && len(tappingOptions.PlainTextFilterRegexes) > 0 {
+		compiledRegexSlice = make([]*shared.SerializableRegexp, 0)
+		for _, regexStr := range tappingOptions.PlainTextFilterRegexes {
+			compiledRegex, err := shared.CompileRegexToSerializableRegexp(regexStr)
+			if err != nil {
+				fmt.Printf("Regex %s is invalid: %v", regexStr, err)
+				return nil, err
+			}
+			compiledRegexSlice = append(compiledRegexSlice, compiledRegex)
 		}
-		compiledRegexSlice = append(compiledRegexSlice, compiledRegex)
 	}
 
-	return &shared.TrafficFilteringOptions{PlainTextMaskingRegexes: compiledRegexSlice}, nil
+	return &shared.TrafficFilteringOptions{PlainTextMaskingRegexes: compiledRegexSlice, HideHealthChecks: tappingOptions.HideHealthChecks}, nil
 }
 
 func updateMizuTappers(ctx context.Context, kubernetesProvider *kubernetes.Provider, nodeToTappedPodIPMap map[string][]string, tappingOptions *MizuTapOptions) error {
@@ -249,15 +248,22 @@ func portForwardApiPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 						cancel()
 					}
 				}()
-				mizuProxiedUrl := kubernetes.GetMizuCollectorProxiedHostAndPath(tappingOptions.GuiPort, mizu.ResourcesNamespace, mizu.AggregatorPodName)
-				fmt.Printf("Mizu is available at  http://%s\n", mizuProxiedUrl)
+				mizuProxiedUrl := kubernetes.GetMizuCollectorProxiedHostAndPath(tappingOptions.GuiPort)
+				fmt.Printf("Mizu is available at http://%s\n", mizuProxiedUrl)
 
 				time.Sleep(time.Second * 5) // Waiting to be sure the proxy is ready
-				if tappingOptions.Analyze {
-					if _, err := http.Get(fmt.Sprintf("http://%s/api/uploadEntries?dest=%s", mizuProxiedUrl, tappingOptions.AnalyzeDestination)); err != nil {
-						fmt.Println(err)
+				if tappingOptions.Analysis {
+					urlPath := fmt.Sprintf("http://%s/api/uploadEntries?dest=%s&interval=%v", mizuProxiedUrl, url.QueryEscape(tappingOptions.AnalysisDestination), tappingOptions.SleepIntervalSec)
+					u, err := url.ParseRequestURI(urlPath)
+
+					if err != nil {
+						log.Fatal(fmt.Sprintf("Failed parsing the URL %v\n", err))
+					}
+					rlog.Debugf("Sending get request to %v\n", u.String())
+					if response, err := http.Get(u.String()); err != nil || response.StatusCode != 200 {
+						fmt.Printf("error sending upload entries req, status code: %v, err: %v\n", response.StatusCode, err)
 					} else {
-						fmt.Printf(mizu.Purple, "Traffic is uploading to UP9 cloud for further analsys")
+						fmt.Printf(mizu.Purple, "Traffic is uploading to UP9 for further analsys")
 						fmt.Println()
 					}
 				}
@@ -321,7 +327,8 @@ func waitForFinish(ctx context.Context, cancel context.CancelFunc) {
 }
 
 func syncApiStatus(ctx context.Context, cancel context.CancelFunc, tappingOptions *MizuTapOptions) {
-	controlSocket, err := mizu.CreateControlSocket(fmt.Sprintf("ws://%s/ws", kubernetes.GetMizuCollectorProxiedHostAndPath(tappingOptions.GuiPort, mizu.ResourcesNamespace, mizu.AggregatorPodName)))
+	controlSocketStr := fmt.Sprintf("ws://%s/ws", kubernetes.GetMizuCollectorProxiedHostAndPath(tappingOptions.GuiPort))
+	controlSocket, err := mizu.CreateControlSocket(controlSocketStr)
 	if err != nil {
 		fmt.Printf("error establishing control socket connection %s\n", err)
 		cancel()
@@ -334,7 +341,7 @@ func syncApiStatus(ctx context.Context, cancel context.CancelFunc, tappingOption
 		default:
 			err = controlSocket.SendNewTappedPodsListMessage(currentlyTappedPods)
 			if err != nil {
-				fmt.Printf("error Sending message via control socket %s\n", err)
+				rlog.Debugf("error Sending message via control socket %v, error: %s\n", controlSocketStr, err)
 			}
 			time.Sleep(10 * time.Second)
 		}
