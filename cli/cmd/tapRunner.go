@@ -268,6 +268,9 @@ func portForwardApiPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 	isPodReady := false
 	for {
 		select {
+		case <-ctx.Done():
+			return
+
 		case <-added:
 			continue
 		case <-removed:
@@ -312,9 +315,6 @@ func portForwardApiPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 
 		case <-errorChan:
 			cancel()
-
-		case <-ctx.Done():
-			return
 		}
 	}
 }
