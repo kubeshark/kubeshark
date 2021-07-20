@@ -1,7 +1,11 @@
 package main
 
-import "github.com/up9inc/mizu/cli/cmd"
+import (
+	"fmt"
+	"github.com/up9inc/mizu/cli/cmd"
+)
 
 func main() {
+	fmt.Println("Running mizu...")
 	cmd.Execute()
 }
