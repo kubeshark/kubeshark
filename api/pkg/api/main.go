@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"net/url"
 	"os"
 	"path"
@@ -45,15 +46,15 @@ func init() {
 	k8sResolver = res
 }
 
-func StartReadingEntries(harChannel <-chan *tap.OutputChannelItem, workingDir *string) {
+func StartReadingEntries(harChannel <-chan *tap.OutputChannelItem, workingDir *string, demo bool) {
 	if workingDir != nil && *workingDir != "" {
-		startReadingFiles(*workingDir)
+		startReadingFiles(*workingDir, demo)
 	} else {
 		startReadingChannel(harChannel)
 	}
 }
 
-func startReadingFiles(workingDir string) {
+func startReadingFiles(workingDir string, infiniteLoad bool) {
 	err := os.MkdirAll(workingDir, os.ModePerm)
 	utils.CheckErr(err)
 
@@ -84,18 +85,20 @@ func startReadingFiles(workingDir string) {
 		utils.CheckErr(decErr)
 
 		for _, entry := range inputHar.Log.Entries {
-			time.Sleep(time.Millisecond * 250)
+			time.Sleep(time.Millisecond * time.Duration(rand.Intn(1000)))
 			connectionInfo := &tap.ConnectionInfo{
-				ClientIP: fileInfo.Name(),
+				ClientIP:   fileInfo.Name(),
 				ClientPort: "",
-				ServerIP: "",
+				ServerIP:   "",
 				ServerPort: "",
 				IsOutgoing: false,
 			}
 			saveHarToDb(entry, connectionInfo)
 		}
-		rmErr := os.Remove(inputFilePath)
-		utils.CheckErr(rmErr)
+		if !infiniteLoad {
+			rmErr := os.Remove(inputFilePath)
+			utils.CheckErr(rmErr)
+		}
 	}
 }
 
@@ -115,7 +118,6 @@ func StartReadingOutbound(outboundLinkChannel <-chan *tap.OutboundLink) {
 	for range outboundLinkChannel {
 	}
 }
-
 
 func saveHarToDb(entry *har.Entry, connectionInfo *tap.ConnectionInfo) {
 	entryBytes, _ := json.Marshal(entry)

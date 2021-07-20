@@ -4,10 +4,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/gofiber/fiber/v2"
-	"github.com/gorilla/websocket"
-	"github.com/up9inc/mizu/shared"
-	"github.com/up9inc/mizu/tap"
 	"mizuserver/pkg/api"
 	"mizuserver/pkg/middleware"
 	"mizuserver/pkg/models"
@@ -16,29 +12,33 @@ import (
 	"mizuserver/pkg/utils"
 	"os"
 	"os/signal"
+
+	"github.com/gofiber/fiber/v2"
+	"github.com/gorilla/websocket"
+	"github.com/up9inc/mizu/shared"
+	"github.com/up9inc/mizu/tap"
 )
 
 var shouldTap = flag.Bool("tap", false, "Run in tapper mode without API")
 var aggregator = flag.Bool("aggregator", false, "Run in aggregator mode with API")
+var demo = flag.Bool("demo", false, "Run in Demo mode with API")
 var standalone = flag.Bool("standalone", false, "Run in standalone tapper and API mode")
 var aggregatorAddress = flag.String("aggregator-address", "", "Address of mizu collector for tapping")
-
 
 func main() {
 	flag.Parse()
 	hostMode := os.Getenv(shared.HostModeEnvVar) == "1"
 	tapOpts := &tap.TapOpts{HostMode: hostMode}
 
-	if !*shouldTap && !*aggregator && !*standalone{
+	if !*shouldTap && !*aggregator && !*standalone {
 		panic("One of the flags --tap, --api or --standalone must be provided")
 	}
-
 	if *standalone {
 		harOutputChannel, outboundLinkOutputChannel := tap.StartPassiveTapper(tapOpts)
 		filteredHarChannel := make(chan *tap.OutputChannelItem)
 
 		go filterHarItems(harOutputChannel, filteredHarChannel, getTrafficFilteringOptions())
-		go api.StartReadingEntries(filteredHarChannel, nil)
+		go api.StartReadingEntries(filteredHarChannel, nil, false)
 		go api.StartReadingOutbound(outboundLinkOutputChannel)
 
 		hostApi(nil)
@@ -67,7 +67,12 @@ func main() {
 		filteredHarChannel := make(chan *tap.OutputChannelItem)
 
 		go filterHarItems(socketHarOutChannel, filteredHarChannel, getTrafficFilteringOptions())
-		go api.StartReadingEntries(filteredHarChannel, nil)
+		if *demo {
+			workdir := "./hars"
+			go api.StartReadingEntries(filteredHarChannel, &workdir, true)
+		} else {
+			go api.StartReadingEntries(filteredHarChannel, nil, false)
+		}
 
 		hostApi(socketHarOutChannel)
 	}
@@ -81,7 +86,6 @@ func main() {
 
 func hostApi(socketHarOutputChannel chan<- *tap.OutputChannelItem) {
 	app := fiber.New()
-
 
 	middleware.FiberMiddleware(app) // Register Fiber's middleware for app.
 	app.Static("/", "./site")
@@ -99,7 +103,6 @@ func hostApi(socketHarOutputChannel chan<- *tap.OutputChannelItem) {
 
 	utils.StartServer(app)
 }
-
 
 func getTapTargets() []string {
 	nodeName := os.Getenv(shared.NodeNameEnvVar)
@@ -125,7 +128,7 @@ func getTrafficFilteringOptions() *shared.TrafficFilteringOptions {
 	return &filteringOptions
 }
 
-func filterHarItems(inChannel <- chan *tap.OutputChannelItem, outChannel chan *tap.OutputChannelItem, filterOptions *shared.TrafficFilteringOptions) {
+func filterHarItems(inChannel <-chan *tap.OutputChannelItem, outChannel chan *tap.OutputChannelItem, filterOptions *shared.TrafficFilteringOptions) {
 	for message := range inChannel {
 		if message.ConnectionInfo.IsOutgoing && api.CheckIsServiceIP(message.ConnectionInfo.ServerIP) {
 			continue
