@@ -10,7 +10,6 @@ import (
 	"github.com/romana/rlog"
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/tap"
-	"log"
 	"mizuserver/pkg/api"
 	"mizuserver/pkg/middleware"
 	"mizuserver/pkg/models"
@@ -19,7 +18,6 @@ import (
 	"mizuserver/pkg/utils"
 	"os"
 	"os/signal"
-	"runtime/pprof"
 	"strings"
 )
 
@@ -67,12 +65,6 @@ func main() {
 		go pipeChannelToSocket(socketConnection, harOutputChannel)
 		go api.StartReadingOutbound(outboundLinkOutputChannel)
 	} else if *aggregator {
-		f, err := os.Create("/app/profile.pprof")
-		if err != nil {
-			log.Fatal(err)
-		}
-		fmt.Println("Starting profiling4")
-		pprof.StartCPUProfile(f)
 		socketHarOutChannel := make(chan *tap.OutputChannelItem, 1000)
 		filteredHarChannel := make(chan *tap.OutputChannelItem)
 
@@ -85,7 +77,6 @@ func main() {
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, os.Interrupt)
 	<-signalChan
-
 	rlog.Info("Exiting")
 }
 
