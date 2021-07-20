@@ -8,7 +8,7 @@ import (
 	"net/http"
 )
 
-var TELEMETRY_URL = "https://us-east4-up9-prod.cloudfunctions.net/mizu-telemetry"
+const TELEMETRY_URL = "https://us-east4-up9-prod.cloudfunctions.net/mizu-telemetry"
 
 func ReportRun(cmd string, args interface{}) {
 	if Branch != "main" {
