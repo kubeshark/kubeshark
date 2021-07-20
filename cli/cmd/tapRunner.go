@@ -185,7 +185,13 @@ func updateMizuTappers(ctx context.Context, kubernetesProvider *kubernetes.Provi
 func cleanUpMizuResources(kubernetesProvider *kubernetes.Provider) {
 	fmt.Printf("\nRemoving mizu resources\n")
 
-	removalCtx, _ := context.WithTimeout(context.Background(), 5*time.Second)
+	removalCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	// Call cancel if a terminating signal was received
+	go func() {
+		waitForFinish(removalCtx, cancel)
+	}()
+
 	if err := kubernetesProvider.RemoveNamespace(removalCtx, mizu.ResourcesNamespace); err != nil {
 		fmt.Printf("Error removing Namespace %s: %s (%v,%+v)\n", mizu.ResourcesNamespace, err, err, err)
 		return
@@ -197,8 +203,10 @@ func cleanUpMizuResources(kubernetesProvider *kubernetes.Provider) {
 	}
 
 	if err := kubernetesProvider.WaitUtilNamespaceDeleted(removalCtx, mizu.ResourcesNamespace); err != nil {
-		switch err {
-		case wait.ErrWaitTimeout:
+		switch {
+		case removalCtx.Err() == context.Canceled:
+			// Do nothing. User interrupted the wait.
+		case err == wait.ErrWaitTimeout:
 			fmt.Printf("Timeout while removing Namespace %s\n", mizu.ResourcesNamespace)
 		default:
 			fmt.Printf("Error while waiting for Namespace %s to be deleted: %s (%v,%+v)\n", mizu.ResourcesNamespace, err, err, err)
