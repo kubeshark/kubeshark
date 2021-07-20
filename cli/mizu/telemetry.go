@@ -8,7 +8,7 @@ import (
 	"net/http"
 )
 
-const TELEMETRY_URL = "https://us-east4-up9-prod.cloudfunctions.net/mizu-telemetry"
+const telemetryUrl = "https://us-east4-up9-prod.cloudfunctions.net/mizu-telemetry"
 
 func ReportRun(cmd string, args interface{}) {
 	if Branch != "main" {
@@ -22,7 +22,7 @@ func ReportRun(cmd string, args interface{}) {
 
 	jsonValue, _ := json.Marshal(argsMap)
 
-	if resp, err := http.Post(TELEMETRY_URL, "application/json", bytes.NewBuffer(jsonValue)); err != nil {
+	if resp, err := http.Post(telemetryUrl, "application/json", bytes.NewBuffer(jsonValue)); err != nil {
 		rlog.Debugf("error sending telemtry err: %v, response %v", err, resp)
 	} else {
 		rlog.Debugf("Successfully reported telemetry")
