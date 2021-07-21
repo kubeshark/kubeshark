@@ -14,8 +14,8 @@ import (
 	core "k8s.io/api/core/v1"
 	rbac "k8s.io/api/rbac/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	resource "k8s.io/apimachinery/pkg/api/resource"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/watch"
 	applyconfapp "k8s.io/client-go/applyconfigurations/apps/v1"
@@ -118,7 +118,7 @@ func (provider *Provider) CreateMizuAggregatorPod(ctx context.Context, namespace
 							Value: string(marshaledFilteringOptions),
 						},
 						{
-							Name:  shared.MaxEntriesDBSizeByteSEnvVar,
+							Name:  shared.MaxEntriesDBSizeBytesEnvVar,
 							Value: strconv.FormatInt(maxEntriesDBSizeBytes, 10),
 						},
 					},
