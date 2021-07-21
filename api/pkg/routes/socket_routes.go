@@ -1,31 +1,70 @@
 package routes
 
 import (
-	"github.com/antoniodipinto/ikisocket"
-	"github.com/gofiber/fiber/v2"
+	"fmt"
+	"github.com/gin-gonic/gin"
+	"github.com/gorilla/websocket"
+	"net/http"
+	"sync"
 )
 
 type EventHandlers interface {
-	WebSocketConnect(ep *ikisocket.EventPayload)
-	WebSocketDisconnect(ep *ikisocket.EventPayload)
-	WebSocketClose(ep *ikisocket.EventPayload)
-	WebSocketError(ep *ikisocket.EventPayload)
-	WebSocketMessage(ep *ikisocket.EventPayload)
+	WebSocketConnect(socketId int, isTapper bool)
+	WebSocketDisconnect(socketId int, isTapper bool)
+	WebSocketMessage(socketId int, message []byte)
 }
 
-func WebSocketRoutes(app *fiber.App, eventHandlers EventHandlers) {
-	app.Get("/ws", ikisocket.New(func(kws *ikisocket.Websocket) {
-		kws.SetAttribute("is_tapper", false)
-	}))
+var websocketUpgrader = websocket.Upgrader{
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
+}
 
-	app.Get("/wsTapper", ikisocket.New(func(kws *ikisocket.Websocket) {
-		// Tapper clients are handled differently, they don't need to receive new message broadcasts.
-		kws.SetAttribute("is_tapper", true)
-	}))
+var websocketIdsLock = sync.Mutex{}
+var connectedWebsockets map[int]*websocket.Conn
+var connectedWebsocketIdCounter = 0
 
-	ikisocket.On(ikisocket.EventMessage, eventHandlers.WebSocketMessage)
-	ikisocket.On(ikisocket.EventConnect, eventHandlers.WebSocketConnect)
-	ikisocket.On(ikisocket.EventDisconnect, eventHandlers.WebSocketDisconnect)
-	ikisocket.On(ikisocket.EventClose, eventHandlers.WebSocketClose) // This event is called when the server disconnects the user actively with .Close() method
-	ikisocket.On(ikisocket.EventError, eventHandlers.WebSocketError) // On error event
+func init() {
+	websocketUpgrader.CheckOrigin = func(r *http.Request) bool { return true } // like cors for web socket
+	connectedWebsockets = make(map[int]*websocket.Conn, 0)
+}
+
+func WebSocketRoutes(app *gin.Engine, eventHandlers EventHandlers) {
+	app.GET("/ws", func(c *gin.Context) {
+		websocketHandler(c.Writer, c.Request, eventHandlers, false)
+	})
+	app.GET("/wsTapper", func(c *gin.Context) {
+		websocketHandler(c.Writer, c.Request, eventHandlers, true)
+	})
+}
+
+func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers EventHandlers, isTapper bool) {
+	conn, err := websocketUpgrader.Upgrade(w, r, nil)
+	if err != nil {
+		fmt.Println("Failed to set websocket upgrade: %+v", err)
+		return
+	}
+
+	websocketIdsLock.Lock()
+
+	connectedWebsocketIdCounter++
+	socketId := connectedWebsocketIdCounter
+	connectedWebsockets[socketId] = conn
+
+	websocketIdsLock.Unlock()
+
+	defer func() {
+		connectedWebsockets[socketId] = nil
+		eventHandlers.WebSocketDisconnect(socketId, isTapper)
+	}()
+
+	eventHandlers.WebSocketConnect(socketId, isTapper)
+
+	for {
+		_, msg, err := conn.ReadMessage()
+		if err != nil {
+			fmt.Printf("Conn err: %v\n", err)
+			break
+		}
+		eventHandlers.WebSocketMessage(socketId, msg)
+	}
 }

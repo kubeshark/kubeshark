@@ -24,10 +24,11 @@ require (
 	k8s.io/api v0.21.0
 	k8s.io/apimachinery v0.21.0
 	k8s.io/client-go v0.21.0
+
+	github.com/gin-gonic/gin v1.7.2
+	github.com/gorilla/websocket v1.4.2
 )
 
 replace github.com/up9inc/mizu/shared v0.0.0 => ../shared
 
 replace github.com/up9inc/mizu/tap v0.0.0 => ../tap
-
-replace github.com/antoniodipinto/ikisocket v0.0.0-20210719130628-946ce6188452 => github.com/up9inc/ikisocket v0.0.0-20210719130628-946ce6188452
