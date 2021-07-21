@@ -149,9 +149,9 @@ func UnzipSite(src string, dest string) ([]string, error) {
 }
 
 func allowExecutable(dir string) {
-	if err := os.Chmod(dir, 0755); err != nil {
-		log.Fatalln(err)
-	}
+	// if err := os.Chmod(dir, 0755); err != nil {
+	// 	log.Fatalln(err)
+	// }
 }
 
 func callMizuDemo(ctx context.Context, cancel context.CancelFunc, dir string, demoOptions *MizuDemoOptions) {
