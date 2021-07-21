@@ -66,14 +66,6 @@ jobs:
             COMMIT_HASH=${{ github.sha }}
       - name: Build and Push CLI
         run: make push-cli SEM_VER='${{ steps.versioning.outputs.version }}' BUILD_TIMESTAMP='${{ steps.version_parameters.outputs.build_timestamp }}'
-      - shell: bash
-          run: |
-            expr '${{ steps.versioning.outputs.version }}' > version.txt
-      - name: Upload version artifact
-          uses: actions/upload-artifact@v2
-          with:
-            name: version
-            path: version.txt
       - name: publish
         uses: ncipollo/release-action@v1
         with:
@@ -83,3 +75,10 @@ jobs:
           tag: ${{ steps.versioning.outputs.version }}
           prerelease: ${{ github.ref != 'refs/heads/main' }}
           bodyFile: 'cli/bin/README.md'
+      - shell: bash
+          run: echo '${{ steps.versioning.outputs.version }}' >> version.txt
+      - name: Upload version artifact
+          uses: actions/upload-artifact@v2
+          with:
+            name: version
+            path: version.txt
