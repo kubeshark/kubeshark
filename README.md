@@ -138,6 +138,8 @@ Pick one from the [Releases](https://github.com/up9inc/mizu/releases) page.
   - delete
 ```
 
+See `examples/roles` for example `clusterroles`. 
+
 ## How to run
 
 1. Find pod you'd like to tap to in your Kubernetes cluster
