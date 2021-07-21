@@ -3,6 +3,7 @@ module github.com/up9inc/mizu/cli
 go 1.16
 
 require (
+	github.com/google/go-github/v37 v37.0.0
 	github.com/gorilla/websocket v1.4.2
 	github.com/romana/rlog v0.0.0-20171115192701-f018bc92e7d7
 	github.com/spf13/cobra v1.1.3
