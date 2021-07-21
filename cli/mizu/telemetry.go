@@ -15,15 +15,21 @@ func ReportRun(cmd string, args interface{}) {
 		rlog.Debugf("reporting only on main branch")
 		return
 	}
-
 	argsBytes, _ := json.Marshal(args)
-	argsMap := map[string]string{"telemetry_type": "mizu_execution", "cmd": cmd, "args": string(argsBytes), "component": "mizu_cli"}
+	argsMap := map[string]string{
+		"telemetry_type": "execution",
+		"cmd":            cmd,
+		"args":           string(argsBytes),
+		"component":      "mizu_cli",
+		"BuildTimestamp": BuildTimestamp,
+		"version":        SemVer}
 	argsMap["message"] = fmt.Sprintf("mizu %v - %v", argsMap["cmd"], string(argsBytes))
 
 	jsonValue, _ := json.Marshal(argsMap)
 
-	if resp, err := http.Post(telemetryUrl, "application/json", bytes.NewBuffer(jsonValue)); err != nil {
-		rlog.Debugf("error sending telemtry err: %v, response %v", err, resp)
+	if resp, err := http.Post(telemetryUrl,
+		"application/json", bytes.NewBuffer(jsonValue)); err != nil {
+		rlog.Debugf("error sending telemetry err: %v, response %v", err, resp)
 	} else {
 		rlog.Debugf("Successfully reported telemetry")
 	}
