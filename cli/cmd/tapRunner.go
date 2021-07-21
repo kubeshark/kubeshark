@@ -72,6 +72,7 @@ func RunMizuTap(podRegexQuery *regexp.Regexp, tappingOptions *MizuTapOptions) {
 		return
 	}
 
+	mizu.CheckNewerVersion()
 	go portForwardApiPod(ctx, kubernetesProvider, cancel, tappingOptions) // TODO convert this to job for built in pod ttl or have the running app handle this
 	go watchPodsForTapping(ctx, kubernetesProvider, cancel, podRegexQuery, tappingOptions)
 	go syncApiStatus(ctx, cancel, tappingOptions)
@@ -270,7 +271,7 @@ func portForwardApiPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 				}
 			}
 
-		case <- timeAfter:
+		case <-timeAfter:
 			if !isPodReady {
 				fmt.Printf("error: %s pod was not ready in time", mizu.AggregatorPodName)
 				cancel()
