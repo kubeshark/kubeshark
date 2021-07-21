@@ -12,6 +12,7 @@ import (
 	"os/exec"
 	"os/signal"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"syscall"
 	"time"
@@ -36,10 +37,8 @@ func RunMizuTapDemo(demoOptions *MizuDemoOptions) {
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 
-	// block until ctx cancel is called or termination signal is received
 	select {
 	case <-ctx.Done():
-		fmt.Println("Stopping")
 		break
 	case <-sigChan:
 		cleanUpDemoResources(dir)
@@ -65,7 +64,10 @@ func removeFile(file string) {
 }
 
 func downloadMizuDemo(dir string) {
-	mizuApiURL := "https://storage.googleapis.com/up9-mizu-demo-mode/apiserver.zip"
+	if runtime.GOOS != "darwin" && runtime.GOOS != "linux" {
+		panic("Platform not supported")
+	}
+	mizuApiURL := fmt.Sprintf("https://storage.googleapis.com/up9-mizu-demo-mode/apiserver-%s.zip", "darwin")
 	siteFileURL := "https://storage.googleapis.com/up9-mizu-demo-mode/site.zip"
 	harsURL := "https://storage.googleapis.com/up9-mizu-demo-mode/hars.zip"
 
@@ -85,27 +87,21 @@ func downloadMizuDemo(dir string) {
 
 func DownloadFile(filepath string, url string) error {
 
-	// Get the data
 	resp, err := http.Get(url)
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
-
-	// Create the file
 	out, err := os.Create(filepath)
 	if err != nil {
 		return err
 	}
 	defer out.Close()
-
-	// Write the body to file
 	_, err = io.Copy(out, resp.Body)
 	return err
 }
 
 func UnzipSite(src string, dest string) ([]string, error) {
-
 	var filenames []string
 
 	r, err := zip.OpenReader(src)
@@ -116,10 +112,7 @@ func UnzipSite(src string, dest string) ([]string, error) {
 
 	for _, f := range r.File {
 
-		// Store filename/path for returning and using later on
 		fpath := filepath.Join(dest, f.Name)
-
-		// Check for ZipSlip. More Info: http://bit.ly/2MsjAWE
 		if !strings.HasPrefix(fpath, filepath.Clean(dest)+string(os.PathSeparator)) {
 			return filenames, fmt.Errorf("%s: illegal file path", fpath)
 		}
@@ -127,12 +120,9 @@ func UnzipSite(src string, dest string) ([]string, error) {
 		filenames = append(filenames, fpath)
 
 		if f.FileInfo().IsDir() {
-			// Make Folder
 			os.MkdirAll(fpath, os.ModePerm)
 			continue
 		}
-
-		// Make File
 		if err = os.MkdirAll(filepath.Dir(fpath), os.ModePerm); err != nil {
 			return filenames, err
 		}
@@ -148,8 +138,6 @@ func UnzipSite(src string, dest string) ([]string, error) {
 		}
 
 		_, err = io.Copy(outFile, rc)
-
-		// Close the file without defer to close before next iteration of loop
 		outFile.Close()
 		rc.Close()
 
