@@ -142,7 +142,9 @@ func filterHarItems(inChannel <-chan *tap.OutputChannelItem, outChannel chan *ta
 			continue
 		}
 
-		sensitiveDataFiltering.FilterSensitiveInfoFromHarRequest(message, filterOptions)
+		if !filterOptions.DisableRedaction {
+			sensitiveDataFiltering.FilterSensitiveInfoFromHarRequest(message, filterOptions)
+		}
 
 		outChannel <- message
 	}

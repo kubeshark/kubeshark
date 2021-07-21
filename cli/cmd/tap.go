@@ -25,6 +25,7 @@ type MizuTapOptions struct {
 	HideHealthChecks       bool
 	MaxEntriesDBSizeBytes  int64
 	SleepIntervalSec       uint16
+	DisableRedaction       bool
 }
 
 var mizuTapOptions = &MizuTapOptions{}
@@ -102,4 +103,5 @@ func init() {
 	tapCmd.Flags().StringVarP(&direction, "direction", "", "in", "Record traffic that goes in this direction (relative to the tapped pod): in/any")
 	tapCmd.Flags().BoolVar(&mizuTapOptions.HideHealthChecks, "hide-healthchecks", false, "hides requests with kube-probe or prometheus user-agent headers")
 	tapCmd.Flags().StringVarP(&humanMaxEntriesDBSize, maxEntriesDBSizeFlagName, "", "200MB", "override the default max entries db size of 200mb")
+	tapCmd.Flags().BoolVar(&mizuTapOptions.DisableRedaction, "no-redact", false, "Disables redaction of potentially sensitive request/response headers and body values")
 }
