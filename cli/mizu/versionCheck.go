@@ -53,8 +53,7 @@ func CheckNewerVersion() {
 	rlog.Debugf("Checking for newer version...")
 	start := time.Now()
 	client := github.NewClient(nil)
-	//latestRelease, _, _ := client.Repositories.GetLatestRelease(context.Background(), "up9inc", "mizu")
-	latestRelease, _, err := client.Repositories.GetRelease(context.Background(), "up9inc", "mizu", 46525830)
+	latestRelease, _, err := client.Repositories.GetLatestRelease(context.Background(), "up9inc", "mizu")
 	if err != nil {
 		rlog.Debugf("Failed to get latest release")
 		return
