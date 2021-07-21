@@ -67,7 +67,7 @@ func downloadMizuDemo(dir string) {
 	if runtime.GOOS != "darwin" && runtime.GOOS != "linux" {
 		panic("Platform not supported")
 	}
-	mizuApiURL := fmt.Sprintf("https://storage.googleapis.com/up9-mizu-demo-mode/apiserver-%s.zip", "darwin")
+	mizuApiURL := fmt.Sprintf("https://storage.googleapis.com/up9-mizu-demo-mode/apiserver-%s.zip", runtime.GOOS)
 	siteFileURL := "https://storage.googleapis.com/up9-mizu-demo-mode/site.zip"
 	harsURL := "https://storage.googleapis.com/up9-mizu-demo-mode/hars.zip"
 
