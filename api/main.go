@@ -77,6 +77,7 @@ func main() {
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, os.Interrupt)
 	<-signalChan
+
 	rlog.Info("Exiting")
 }
 
