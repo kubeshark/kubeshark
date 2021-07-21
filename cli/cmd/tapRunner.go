@@ -195,9 +195,11 @@ func cleanUpMizuResources(kubernetesProvider *kubernetes.Provider) {
 		return
 	}
 
-	if err := kubernetesProvider.RemoveNonNamespacedResources(removalCtx, mizu.ClusterRoleName, mizu.ClusterRoleBindingName); err != nil {
-		fmt.Printf("Error removing non-namespaced resources: %s (%v,%+v)\n", err, err, err)
-		return
+	if mizuServiceAccountExists {
+		if err := kubernetesProvider.RemoveNonNamespacedResources(removalCtx, mizu.ClusterRoleName, mizu.ClusterRoleBindingName); err != nil {
+			fmt.Printf("Error removing non-namespaced resources: %s (%v,%+v)\n", err, err, err)
+			return
+		}
 	}
 
 	// Call cancel if a terminating signal was received. Allows user to skip the wait.
