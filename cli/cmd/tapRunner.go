@@ -75,6 +75,7 @@ func RunMizuTap(podRegexQuery *regexp.Regexp, tappingOptions *MizuTapOptions) {
 		return
 	}
 
+	mizu.CheckNewerVersion()
 	go portForwardApiPod(ctx, kubernetesProvider, cancel, tappingOptions) // TODO convert this to job for built in pod ttl or have the running app handle this
 	go watchPodsForTapping(ctx, kubernetesProvider, cancel, podRegexQuery, tappingOptions)
 	go syncApiStatus(ctx, cancel, tappingOptions)
@@ -148,7 +149,7 @@ func getMizuApiFilteringOptions(tappingOptions *MizuTapOptions) (*shared.Traffic
 		}
 	}
 
-	return &shared.TrafficFilteringOptions{PlainTextMaskingRegexes: compiledRegexSlice, HideHealthChecks: tappingOptions.HideHealthChecks}, nil
+	return &shared.TrafficFilteringOptions{PlainTextMaskingRegexes: compiledRegexSlice, HideHealthChecks: tappingOptions.HideHealthChecks, DisableRedaction: tappingOptions.DisableRedaction}, nil
 }
 
 func updateMizuTappers(ctx context.Context, kubernetesProvider *kubernetes.Provider, nodeToTappedPodIPMap map[string][]string, tappingOptions *MizuTapOptions) error {
@@ -279,6 +280,7 @@ func portForwardApiPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 	podExactRegex := regexp.MustCompile(fmt.Sprintf("^%s$", mizu.AggregatorPodName))
 	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, kubernetesProvider.GetPodWatcher(ctx, mizu.ResourcesNamespace), podExactRegex)
 	isPodReady := false
+	timeAfter := time.After(25 * time.Second)
 	for {
 		select {
 		case <-ctx.Done():
@@ -321,7 +323,7 @@ func portForwardApiPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 				}
 			}
 
-		case <-time.After(25 * time.Second):
+		case <-timeAfter:
 			if !isPodReady {
 				fmt.Printf("error: %s pod was not ready in time", mizu.AggregatorPodName)
 				cancel()

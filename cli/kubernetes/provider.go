@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -47,6 +48,9 @@ const (
 )
 
 func NewProvider(kubeConfigPath string) *Provider {
+	if kubeConfigPath == "" {
+		kubeConfigPath = os.Getenv("KUBECONFIG")
+	}
 	kubernetesConfig := loadKubernetesConfiguration(kubeConfigPath)
 	restClientConfig, err := kubernetesConfig.ClientConfig()
 	if err != nil {
@@ -169,17 +173,17 @@ func (provider *Provider) CreateMizuAggregatorPod(ctx context.Context, namespace
 							Value: string(marshaledFilteringOptions),
 						},
 						{
-							Name:  shared.MaxEntriesDBSizeByteSEnvVar,
+							Name:  shared.MaxEntriesDBSizeBytesEnvVar,
 							Value: strconv.FormatInt(maxEntriesDBSizeBytes, 10),
 						},
 					},
 					Resources: core.ResourceRequirements{
 						Limits: core.ResourceList{
-							"cpu": cpuLimit,
+							"cpu":    cpuLimit,
 							"memory": memLimit,
 						},
 						Requests: core.ResourceList{
-							"cpu": cpuRequests,
+							"cpu":    cpuRequests,
 							"memory": memRequests,
 						},
 					},
@@ -342,8 +346,7 @@ func (provider *Provider) RemoveClusterRoleBinding(ctx context.Context, name str
 }
 
 func (provider *Provider) RemovePod(ctx context.Context, namespace string, podName string) error {
-	if isFound, err := provider.CheckPodExists(ctx, namespace, podName);
-	err != nil {
+	if isFound, err := provider.CheckPodExists(ctx, namespace, podName); err != nil {
 		return err
 	} else if !isFound {
 		return nil
@@ -353,8 +356,7 @@ func (provider *Provider) RemovePod(ctx context.Context, namespace string, podNa
 }
 
 func (provider *Provider) RemoveService(ctx context.Context, namespace string, serviceName string) error {
-	if isFound, err := provider.CheckServiceExists(ctx, namespace, serviceName);
-	err != nil {
+	if isFound, err := provider.CheckServiceExists(ctx, namespace, serviceName); err != nil {
 		return err
 	} else if !isFound {
 		return nil
@@ -364,8 +366,7 @@ func (provider *Provider) RemoveService(ctx context.Context, namespace string, s
 }
 
 func (provider *Provider) RemoveDaemonSet(ctx context.Context, namespace string, daemonSetName string) error {
-	if isFound, err := provider.CheckDaemonSetExists(ctx, namespace, daemonSetName);
-	err != nil {
+	if isFound, err := provider.CheckDaemonSetExists(ctx, namespace, daemonSetName); err != nil {
 		return err
 	} else if !isFound {
 		return nil
@@ -428,7 +429,7 @@ func (provider *Provider) CheckClusterRoleBindingExists(ctx context.Context, nam
 func (provider *Provider) CheckPodExists(ctx context.Context, namespace string, name string) (bool, error) {
 	listOptions := metav1.ListOptions{
 		FieldSelector: fmt.Sprintf("metadata.name=%s", name),
-		Limit: 1,
+		Limit:         1,
 	}
 	resourceList, err := provider.clientSet.CoreV1().Pods(namespace).List(ctx, listOptions)
 	if err != nil {
@@ -445,7 +446,7 @@ func (provider *Provider) CheckPodExists(ctx context.Context, namespace string, 
 func (provider *Provider) CheckServiceExists(ctx context.Context, namespace string, name string) (bool, error) {
 	listOptions := metav1.ListOptions{
 		FieldSelector: fmt.Sprintf("metadata.name=%s", name),
-		Limit: 1,
+		Limit:         1,
 	}
 	resourceList, err := provider.clientSet.CoreV1().Services(namespace).List(ctx, listOptions)
 	if err != nil {
@@ -462,7 +463,7 @@ func (provider *Provider) CheckServiceExists(ctx context.Context, namespace stri
 func (provider *Provider) CheckDaemonSetExists(ctx context.Context, namespace string, name string) (bool, error) {
 	listOptions := metav1.ListOptions{
 		FieldSelector: fmt.Sprintf("metadata.name=%s", name),
-		Limit: 1,
+		Limit:         1,
 	}
 	resourceList, err := provider.clientSet.AppsV1().DaemonSets(namespace).List(ctx, listOptions)
 	if err != nil {
@@ -532,11 +533,11 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 		return errors.New("invalid memory request for tapper container")
 	}
 	agentResourceLimits := core.ResourceList{
-		"cpu": cpuLimit,
+		"cpu":    cpuLimit,
 		"memory": memLimit,
 	}
 	agentResourceRequests := core.ResourceList{
-		"cpu": cpuRequests,
+		"cpu":    cpuRequests,
 		"memory": memRequests,
 	}
 	agentResources := applyconfcore.ResourceRequirements().WithRequests(agentResourceRequests).WithLimits(agentResourceLimits)

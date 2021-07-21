@@ -62,7 +62,7 @@ func getMaxEntriesDBByteSize() (int64, error) {
 	maxEntriesDBByteSize := defaultMaxDatabaseSizeBytes
 	var err error
 
-	maxEntriesDBSizeByteSEnvVarValue := os.Getenv(shared.MaxEntriesDBSizeByteSEnvVar)
+	maxEntriesDBSizeByteSEnvVarValue := os.Getenv(shared.MaxEntriesDBSizeBytesEnvVar)
 	if maxEntriesDBSizeByteSEnvVarValue != "" {
 		maxEntriesDBByteSize, err = strconv.ParseInt(maxEntriesDBSizeByteSEnvVarValue, 10, 64)
 	}
