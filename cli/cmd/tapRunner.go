@@ -44,6 +44,7 @@ func RunMizuTap(podRegexQuery *regexp.Regexp, tappingOptions *MizuTapOptions) {
 
 	targetNamespace := getNamespace(tappingOptions, kubernetesProvider)
 	if matchingPods, err := kubernetesProvider.GetAllPodsMatchingRegex(ctx, podRegexQuery, targetNamespace); err != nil {
+		fmt.Printf("Error listing pods: %v", err)
 		return
 	} else {
 		currentlyTappedPods = matchingPods
