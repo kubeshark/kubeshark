@@ -8,7 +8,7 @@ SHELL=/bin/bash
 # HELP
 # This will output the help for each task
 # thanks to https://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
-.PHONY: help ui api cli tap docker
+.PHONY: help ui agent cli tap docker
 
 help: ## This help.
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -27,10 +27,10 @@ ui: ## build UI
 cli: # build CLI
 	@echo "building cli"; cd cli && $(MAKE) build
 
-api: ## build API server
-	@(echo "building API server .." )
-	@(cd api; go build -o build/apiserver main.go)
-	@ls -l api/build
+agent: ## build mizuagent server
+	@(echo "building mizu agent .." )
+	@(cd agent; go build -o build/mizuagent main.go)
+	@ls -l agent/build
 
 #tap: ## build tap binary
 #	@(cd tap; go build -o build/tap ./src)
@@ -55,13 +55,13 @@ push-cli:
 	gsutil setmeta -r -h "Cache-Control:public, max-age=30" gs://${BUCKET_PATH}/\*
 
 
-clean: clean-ui clean-api clean-cli clean-docker ## Clean all build artifacts
+clean: clean-ui clean-agent clean-cli clean-docker ## Clean all build artifacts
 
 clean-ui: 
 	@(rm -rf ui/build ; echo "UI cleanup done" )
 
-clean-api: 
-	@(rm -rf api/build ; echo "api cleanup done" )
+clean-agent: 
+	@(rm -rf agent/build ; echo "agent cleanup done" )
 
 clean-cli: 
 	@(cd cli; make clean ; echo "CLI cleanup done" )

@@ -22,7 +22,7 @@ import (
 )
 
 var mizuServiceAccountExists bool
-var aggregatorService *core.Service
+var apiServerService *core.Service
 
 const (
 	updateTappersDelay = 5 * time.Second
@@ -100,7 +100,7 @@ func createMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Pro
 		return err
 	}
 
-	if err := createMizuAggregator(ctx, kubernetesProvider, tappingOptions, mizuApiFilteringOptions); err != nil {
+	if err := createMizuApiServer(ctx, kubernetesProvider, tappingOptions, mizuApiFilteringOptions); err != nil {
 		return err
 	}
 
@@ -120,7 +120,7 @@ func createMizuNamespace(ctx context.Context, kubernetesProvider *kubernetes.Pro
 	return err
 }
 
-func createMizuAggregator(ctx context.Context, kubernetesProvider *kubernetes.Provider, tappingOptions *MizuTapOptions, mizuApiFilteringOptions *shared.TrafficFilteringOptions) error {
+func createMizuApiServer(ctx context.Context, kubernetesProvider *kubernetes.Provider, tappingOptions *MizuTapOptions, mizuApiFilteringOptions *shared.TrafficFilteringOptions) error {
 	var err error
 
 	mizuServiceAccountExists = createRBACIfNecessary(ctx, kubernetesProvider)
@@ -130,15 +130,15 @@ func createMizuAggregator(ctx context.Context, kubernetesProvider *kubernetes.Pr
 	} else {
 		serviceAccountName = ""
 	}
-	_, err = kubernetesProvider.CreateMizuAggregatorPod(ctx, mizu.ResourcesNamespace, mizu.AggregatorPodName, tappingOptions.MizuImage, serviceAccountName, mizuApiFilteringOptions, tappingOptions.MaxEntriesDBSizeBytes)
+	_, err = kubernetesProvider.CreateMizuApiServerPod(ctx, mizu.ResourcesNamespace, mizu.ApiServerPodName, tappingOptions.MizuImage, serviceAccountName, mizuApiFilteringOptions, tappingOptions.MaxEntriesDBSizeBytes)
 	if err != nil {
-		fmt.Printf("Error creating mizu collector pod: %v\n", err)
+		fmt.Printf("Error creating mizu %s pod: %v\n", mizu.ApiServerPodName, err)
 		return err
 	}
 
-	aggregatorService, err = kubernetesProvider.CreateService(ctx, mizu.ResourcesNamespace, mizu.AggregatorPodName, mizu.AggregatorPodName)
+	apiServerService, err = kubernetesProvider.CreateService(ctx, mizu.ResourcesNamespace, mizu.ApiServerPodName, mizu.ApiServerPodName)
 	if err != nil {
-		fmt.Printf("Error creating mizu collector service: %v\n", err)
+		fmt.Printf("Error creating mizu %s service: %v\n", mizu.ApiServerPodName,  err)
 		return err
 	}
 
@@ -178,7 +178,7 @@ func updateMizuTappers(ctx context.Context, kubernetesProvider *kubernetes.Provi
 			mizu.TapperDaemonSetName,
 			tappingOptions.MizuImage,
 			mizu.TapperPodName,
-			fmt.Sprintf("%s.%s.svc.cluster.local", aggregatorService.Name, aggregatorService.Namespace),
+			fmt.Sprintf("%s.%s.svc.cluster.local", apiServerService.Name, apiServerService.Namespace),
 			nodeToTappedPodIPMap,
 			serviceAccountName,
 			tappingOptions.TapOutgoing,
@@ -288,7 +288,7 @@ func watchPodsForTapping(ctx context.Context, kubernetesProvider *kubernetes.Pro
 }
 
 func portForwardApiPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc, tappingOptions *MizuTapOptions) {
-	podExactRegex := regexp.MustCompile(fmt.Sprintf("^%s$", mizu.AggregatorPodName))
+	podExactRegex := regexp.MustCompile(fmt.Sprintf("^%s$", mizu.ApiServerPodName))
 	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, kubernetesProvider.GetPodWatcher(ctx, mizu.ResourcesNamespace), podExactRegex)
 	isPodReady := false
 	timeAfter := time.After(25 * time.Second)
@@ -300,20 +300,20 @@ func portForwardApiPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 		case <-added:
 			continue
 		case <-removed:
-			fmt.Printf("%s removed\n", mizu.AggregatorPodName)
+			fmt.Printf("%s removed\n", mizu.ApiServerPodName)
 			cancel()
 			return
 		case modifiedPod := <-modified:
 			if modifiedPod.Status.Phase == "Running" && !isPodReady {
 				isPodReady = true
 				go func() {
-					err := kubernetes.StartProxy(kubernetesProvider, tappingOptions.GuiPort, mizu.ResourcesNamespace, mizu.AggregatorPodName)
+					err := kubernetes.StartProxy(kubernetesProvider, tappingOptions.GuiPort, mizu.ResourcesNamespace, mizu.ApiServerPodName)
 					if err != nil {
 						fmt.Printf("Error occured while running k8s proxy %v\n", err)
 						cancel()
 					}
 				}()
-				mizuProxiedUrl := kubernetes.GetMizuCollectorProxiedHostAndPath(tappingOptions.GuiPort)
+				mizuProxiedUrl := kubernetes.GetMizuApiServerProxiedHostAndPath(tappingOptions.GuiPort)
 				fmt.Printf("Mizu is available at http://%s\n", mizuProxiedUrl)
 
 				time.Sleep(time.Second * 5) // Waiting to be sure the proxy is ready
@@ -336,7 +336,7 @@ func portForwardApiPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 
 		case <-timeAfter:
 			if !isPodReady {
-				fmt.Printf("error: %s pod was not ready in time", mizu.AggregatorPodName)
+				fmt.Printf("error: %s pod was not ready in time", mizu.ApiServerPodName)
 				cancel()
 			}
 
@@ -389,7 +389,7 @@ func waitForFinish(ctx context.Context, cancel context.CancelFunc) {
 }
 
 func syncApiStatus(ctx context.Context, cancel context.CancelFunc, tappingOptions *MizuTapOptions) {
-	controlSocketStr := fmt.Sprintf("ws://%s/ws", kubernetes.GetMizuCollectorProxiedHostAndPath(tappingOptions.GuiPort))
+	controlSocketStr := fmt.Sprintf("ws://%s/ws", kubernetes.GetMizuApiServerProxiedHostAndPath(tappingOptions.GuiPort))
 	controlSocket, err := mizu.CreateControlSocket(controlSocketStr)
 	if err != nil {
 		fmt.Printf("error establishing control socket connection %s\n", err)

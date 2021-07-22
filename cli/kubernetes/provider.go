@@ -124,7 +124,7 @@ func (provider *Provider) CreateNamespace(ctx context.Context, name string) (*co
 	return provider.clientSet.CoreV1().Namespaces().Create(ctx, namespaceSpec, metav1.CreateOptions{})
 }
 
-func (provider *Provider) CreateMizuAggregatorPod(ctx context.Context, namespace string, podName string, podImage string, serviceAccountName string, mizuApiFilteringOptions *shared.TrafficFilteringOptions, maxEntriesDBSizeBytes int64) (*core.Pod, error) {
+func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, namespace string, podName string, podImage string, serviceAccountName string, mizuApiFilteringOptions *shared.TrafficFilteringOptions, maxEntriesDBSizeBytes int64) (*core.Pod, error) {
 	marshaledFilteringOptions, err := json.Marshal(mizuApiFilteringOptions)
 	if err != nil {
 		return nil, err
@@ -132,19 +132,19 @@ func (provider *Provider) CreateMizuAggregatorPod(ctx context.Context, namespace
 
 	cpuLimit, err := resource.ParseQuantity("750m")
 	if err != nil {
-		return nil, errors.New("invalid cpu limit for aggregator container")
+		return nil, errors.New(fmt.Sprintf("invalid cpu limit for %s container", podName))
 	}
 	memLimit, err := resource.ParseQuantity("512Mi")
 	if err != nil {
-		return nil, errors.New("invalid memory limit for aggregator container")
+		return nil, errors.New(fmt.Sprintf("invalid memory limit for %s container", podName))
 	}
 	cpuRequests, err := resource.ParseQuantity("50m")
 	if err != nil {
-		return nil, errors.New("invalid cpu request for aggregator container")
+		return nil, errors.New(fmt.Sprintf("invalid cpu request for %s container", podName))
 	}
 	memRequests, err := resource.ParseQuantity("50Mi")
 	if err != nil {
-		return nil, errors.New("invalid memory request for aggregator container")
+		return nil, errors.New(fmt.Sprintf("invalid memory request for %s container", podName))
 	}
 
 	pod := &core.Pod{
@@ -159,7 +159,7 @@ func (provider *Provider) CreateMizuAggregatorPod(ctx context.Context, namespace
 					Name:            podName,
 					Image:           podImage,
 					ImagePullPolicy: core.PullAlways,
-					Command:         []string{"./mizuagent", "--aggregator"},
+					Command:         []string{"./mizuagent", "--api-server"},
 					Env: []core.EnvVar{
 						{
 							Name:  shared.HostModeEnvVar,
@@ -471,7 +471,7 @@ func (provider *Provider) CheckDaemonSetExists(ctx context.Context, namespace st
 	return false, nil
 }
 
-func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, aggregatorPodIp string, nodeToTappedPodIPMap map[string][]string, serviceAccountName string, tapOutgoing bool) error {
+func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, apiServerPodIp string, nodeToTappedPodIPMap map[string][]string, serviceAccountName string, tapOutgoing bool) error {
 	if len(nodeToTappedPodIPMap) == 0 {
 		return fmt.Errorf("Daemon set %s must tap at least 1 pod", daemonSetName)
 	}
@@ -486,7 +486,7 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 		"-i", "any",
 		"--tap",
 		"--hardump",
-		"--aggregator-address", fmt.Sprintf("ws://%s/wsTapper", aggregatorPodIp),
+		"--api-server-address", fmt.Sprintf("ws://%s/wsTapper", apiServerPodIp),
 	}
 	if tapOutgoing {
 		mizuCmd = append(mizuCmd, "--anydirection")
@@ -512,19 +512,19 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	)
 	cpuLimit, err := resource.ParseQuantity("500m")
 	if err != nil {
-		return errors.New("invalid cpu limit for tapper container")
+		return errors.New(fmt.Sprintf("invalid cpu limit for %s container", tapperPodName))
 	}
 	memLimit, err := resource.ParseQuantity("1Gi")
 	if err != nil {
-		return errors.New("invalid memory limit for tapper container")
+		return errors.New(fmt.Sprintf("invalid memory limit for %s container", tapperPodName))
 	}
 	cpuRequests, err := resource.ParseQuantity("50m")
 	if err != nil {
-		return errors.New("invalid cpu request for tapper container")
+		return errors.New(fmt.Sprintf("invalid cpu request for %s container", tapperPodName))
 	}
 	memRequests, err := resource.ParseQuantity("50Mi")
 	if err != nil {
-		return errors.New("invalid memory request for tapper container")
+		return errors.New(fmt.Sprintf("invalid memory request for %s container", tapperPodName))
 	}
 	agentResourceLimits := core.ResourceList{
 		"cpu":    cpuLimit,
