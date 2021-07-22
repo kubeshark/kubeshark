@@ -121,13 +121,13 @@ func createMizuApiServer(ctx context.Context, kubernetesProvider *kubernetes.Pro
 	}
 	_, err = kubernetesProvider.CreateMizuApiServerPod(ctx, mizu.ResourcesNamespace, mizu.ApiServerPodName, tappingOptions.MizuImage, serviceAccountName, mizuApiFilteringOptions, tappingOptions.MaxEntriesDBSizeBytes)
 	if err != nil {
-		fmt.Printf("Error creating mizu collector pod: %v\n", err)
+		fmt.Printf("Error creating mizu %s pod: %v\n", mizu.ApiServerPodName, err)
 		return err
 	}
 
 	apiServerService, err = kubernetesProvider.CreateService(ctx, mizu.ResourcesNamespace, mizu.ApiServerPodName, mizu.ApiServerPodName)
 	if err != nil {
-		fmt.Printf("Error creating mizu collector service: %v\n", err)
+		fmt.Printf("Error creating mizu %s service: %v\n", mizu.ApiServerPodName,  err)
 		return err
 	}
 
@@ -302,7 +302,7 @@ func portForwardApiPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 						cancel()
 					}
 				}()
-				mizuProxiedUrl := kubernetes.GetMizuCollectorProxiedHostAndPath(tappingOptions.GuiPort)
+				mizuProxiedUrl := kubernetes.GetMizuApiServerProxiedHostAndPath(tappingOptions.GuiPort)
 				fmt.Printf("Mizu is available at http://%s\n", mizuProxiedUrl)
 
 				time.Sleep(time.Second * 5) // Waiting to be sure the proxy is ready
@@ -378,7 +378,7 @@ func waitForFinish(ctx context.Context, cancel context.CancelFunc) {
 }
 
 func syncApiStatus(ctx context.Context, cancel context.CancelFunc, tappingOptions *MizuTapOptions) {
-	controlSocketStr := fmt.Sprintf("ws://%s/ws", kubernetes.GetMizuCollectorProxiedHostAndPath(tappingOptions.GuiPort))
+	controlSocketStr := fmt.Sprintf("ws://%s/ws", kubernetes.GetMizuApiServerProxiedHostAndPath(tappingOptions.GuiPort))
 	controlSocket, err := mizu.CreateControlSocket(controlSocketStr)
 	if err != nil {
 		fmt.Printf("error establishing control socket connection %s\n", err)

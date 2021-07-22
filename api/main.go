@@ -24,7 +24,7 @@ import (
 var shouldTap = flag.Bool("tap", false, "Run in tapper mode without API")
 var apiServer = flag.Bool("api-server", false, "Run in API-Server mode with API")
 var standalone = flag.Bool("standalone", false, "Run in standalone tapper and API mode")
-var apiServerAddress = flag.String("api-server-address", "", "Address of mizu collector for tapping")
+var apiServerAddress = flag.String("api-server-address", "", "Address of mizu API-Server")
 
 func main() {
 	flag.Parse()
