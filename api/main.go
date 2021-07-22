@@ -22,9 +22,9 @@ import (
 )
 
 var shouldTap = flag.Bool("tap", false, "Run in tapper mode without API")
-var apiServer = flag.Bool("api-server", false, "Run in API-Server mode with API")
+var apiServer = flag.Bool("api-server", false, "Run in API server mode with API")
 var standalone = flag.Bool("standalone", false, "Run in standalone tapper and API mode")
-var apiServerAddress = flag.String("api-server-address", "", "Address of mizu API-Server")
+var apiServerAddress = flag.String("api-server-address", "", "Address of mizu API server")
 
 func main() {
 	flag.Parse()
@@ -46,7 +46,7 @@ func main() {
 		hostApi(nil)
 	} else if *shouldTap {
 		if *apiServerAddress == "" {
-			panic("API-Server address must be provided with --api-server-address when using --tap")
+			panic("API server address must be provided with --api-server-address when using --tap")
 		}
 
 		tapTargets := getTapTargets()
