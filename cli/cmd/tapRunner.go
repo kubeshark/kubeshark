@@ -9,6 +9,7 @@ import (
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/debounce"
 	core "k8s.io/api/core/v1"
+	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"log"
 	"net/http"
@@ -36,7 +37,17 @@ func RunMizuTap(podRegexQuery *regexp.Regexp, tappingOptions *MizuTapOptions) {
 		return
 	}
 
-	kubernetesProvider := kubernetes.NewProvider(tappingOptions.KubeConfigPath)
+	kubernetesProvider, err := kubernetes.NewProvider(tappingOptions.KubeConfigPath)
+	if err != nil {
+		if clientcmd.IsEmptyConfig(err) {
+			fmt.Printf(mizu.Red, "Couldn't find the kube config file, or file is empty. Try adding '--kube-config=<path to kube config file>'\n")
+			return
+		}
+		if clientcmd.IsConfigurationInvalid(err) {
+			fmt.Printf(mizu.Red, "Invalid kube config file. Try using a different config with '--kube-config=<path to kube config file>'\n")
+			return
+		}
+	}
 
 	defer cleanUpMizuResources(kubernetesProvider)
 	ctx, cancel := context.WithCancel(context.Background())

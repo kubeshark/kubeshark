@@ -17,7 +17,6 @@ import (
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	resource "k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/watch"
 	applyconfapp "k8s.io/client-go/applyconfigurations/apps/v1"
@@ -29,7 +28,6 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/openstack"
 	restclient "k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
 	_ "k8s.io/client-go/tools/portforward"
 	watchtools "k8s.io/client-go/tools/watch"
@@ -47,14 +45,11 @@ const (
 	fieldManagerName   = "mizu-manager"
 )
 
-func NewProvider(kubeConfigPath string) *Provider {
-	if kubeConfigPath == "" {
-		kubeConfigPath = os.Getenv("KUBECONFIG")
-	}
+func NewProvider(kubeConfigPath string) (*Provider, error) {
 	kubernetesConfig := loadKubernetesConfiguration(kubeConfigPath)
 	restClientConfig, err := kubernetesConfig.ClientConfig()
 	if err != nil {
-		panic(err.Error())
+		return nil, err
 	}
 	clientSet := getClientSet(restClientConfig)
 
@@ -62,7 +57,7 @@ func NewProvider(kubeConfigPath string) *Provider {
 		clientSet:        clientSet,
 		kubernetesConfig: kubernetesConfig,
 		clientConfig:     *restClientConfig,
-	}
+	}, nil
 }
 
 func (provider *Provider) CurrentNamespace() string {
@@ -615,6 +610,10 @@ func getClientSet(config *restclient.Config) *kubernetes.Clientset {
 }
 
 func loadKubernetesConfiguration(kubeConfigPath string) clientcmd.ClientConfig {
+	if kubeConfigPath == "" {
+		kubeConfigPath = os.Getenv("KUBECONFIG")
+	}
+
 	if kubeConfigPath == "" {
 		home := homedir.HomeDir()
 		kubeConfigPath = filepath.Join(home, ".kube", "config")
