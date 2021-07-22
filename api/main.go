@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"github.com/romana/rlog"
@@ -83,16 +84,21 @@ func hostApi(socketHarOutputChannel chan<- *tap.OutputChannelItem) {
 	app := gin.Default()
 
 	app.Use(CORSMiddleware())
-	app.Static("/", "./site")
-
 	app.GET("/echo", func(c *gin.Context) {
 		c.String(http.StatusOK, "Hello, World 👋!")
 	})
 
-	//routes.WebSocketRoutes(app, &eventHandlers)
+	eventHandlers := api.RoutesEventHandlers{
+		SocketHarOutChannel: socketHarOutputChannel,
+	}
+
+	app.Use(static.ServeRoot("/", "./site"))
+
+	routes.WebSocketRoutes(app, &eventHandlers)
 	routes.EntriesRoutes(app)
 	routes.MetadataRoutes(app)
 	routes.NotFoundRoute(app)
+	//app.Static("/", "./site")
 
 	utils.StartServer(app)
 }
