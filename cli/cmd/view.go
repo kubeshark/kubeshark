@@ -6,7 +6,8 @@ import (
 )
 
 type MizuViewOptions struct {
-	GuiPort uint16
+	GuiPort        uint16
+	KubeConfigPath string
 }
 
 var mizuViewOptions = &MizuViewOptions{}
@@ -15,8 +16,8 @@ var viewCmd = &cobra.Command{
 	Use:   "view",
 	Short: "Open GUI in browser",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		go mizu.ReportRun("view", mizuFetchOptions)
-		if isCompatible, err := mizu.CheckVersionCompatibility(mizuFetchOptions.MizuPort); err != nil {
+		go mizu.ReportRun("view", mizuViewOptions)
+		if isCompatible, err := mizu.CheckVersionCompatibility(mizuViewOptions.GuiPort); err != nil {
 			return err
 		} else if !isCompatible {
 			return nil
@@ -30,5 +31,5 @@ func init() {
 	rootCmd.AddCommand(viewCmd)
 
 	viewCmd.Flags().Uint16VarP(&mizuViewOptions.GuiPort, "gui-port", "p", 8899, "Provide a custom port for the web interface webserver")
-
+	viewCmd.Flags().StringVarP(&mizuViewOptions.KubeConfigPath, "kube-config", "k", "", "Path to kube-config file")
 }

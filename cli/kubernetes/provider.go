@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/tools/cache"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -17,7 +19,6 @@ import (
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	resource "k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/watch"
 	applyconfapp "k8s.io/client-go/applyconfigurations/apps/v1"
@@ -29,7 +30,6 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/openstack"
 	restclient "k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
 	_ "k8s.io/client-go/tools/portforward"
 	watchtools "k8s.io/client-go/tools/watch"
@@ -44,17 +44,14 @@ type Provider struct {
 }
 
 const (
-	fieldManagerName   = "mizu-manager"
+	fieldManagerName = "mizu-manager"
 )
 
-func NewProvider(kubeConfigPath string) *Provider {
-	if kubeConfigPath == "" {
-		kubeConfigPath = os.Getenv("KUBECONFIG")
-	}
+func NewProvider(kubeConfigPath string) (*Provider, error) {
 	kubernetesConfig := loadKubernetesConfiguration(kubeConfigPath)
 	restClientConfig, err := kubernetesConfig.ClientConfig()
 	if err != nil {
-		panic(err.Error())
+		return nil, err
 	}
 	clientSet := getClientSet(restClientConfig)
 
@@ -62,7 +59,7 @@ func NewProvider(kubeConfigPath string) *Provider {
 		clientSet:        clientSet,
 		kubernetesConfig: kubernetesConfig,
 		clientConfig:     *restClientConfig,
-	}
+	}, nil
 }
 
 func (provider *Provider) CurrentNamespace() string {
@@ -301,8 +298,7 @@ func (provider *Provider) CreateMizuRBAC(ctx context.Context, namespace string, 
 }
 
 func (provider *Provider) RemoveNamespace(ctx context.Context, name string) error {
-	if isFound, err := provider.CheckNamespaceExists(ctx, name);
-	err != nil {
+	if isFound, err := provider.CheckNamespaceExists(ctx, name); err != nil {
 		return err
 	} else if !isFound {
 		return nil
@@ -324,8 +320,7 @@ func (provider *Provider) RemoveNonNamespacedResources(ctx context.Context, clus
 }
 
 func (provider *Provider) RemoveClusterRole(ctx context.Context, name string) error {
-	if isFound, err := provider.CheckClusterRoleExists(ctx, name);
-	err != nil {
+	if isFound, err := provider.CheckClusterRoleExists(ctx, name); err != nil {
 		return err
 	} else if !isFound {
 		return nil
@@ -335,8 +330,7 @@ func (provider *Provider) RemoveClusterRole(ctx context.Context, name string) er
 }
 
 func (provider *Provider) RemoveClusterRoleBinding(ctx context.Context, name string) error {
-	if isFound, err := provider.CheckClusterRoleBindingExists(ctx, name);
-	err != nil {
+	if isFound, err := provider.CheckClusterRoleBindingExists(ctx, name); err != nil {
 		return err
 	} else if !isFound {
 		return nil
@@ -378,7 +372,7 @@ func (provider *Provider) RemoveDaemonSet(ctx context.Context, namespace string,
 func (provider *Provider) CheckNamespaceExists(ctx context.Context, name string) (bool, error) {
 	listOptions := metav1.ListOptions{
 		FieldSelector: fmt.Sprintf("metadata.name=%s", name),
-		Limit: 1,
+		Limit:         1,
 	}
 	resourceList, err := provider.clientSet.CoreV1().Namespaces().List(ctx, listOptions)
 	if err != nil {
@@ -395,7 +389,7 @@ func (provider *Provider) CheckNamespaceExists(ctx context.Context, name string)
 func (provider *Provider) CheckClusterRoleExists(ctx context.Context, name string) (bool, error) {
 	listOptions := metav1.ListOptions{
 		FieldSelector: fmt.Sprintf("metadata.name=%s", name),
-		Limit: 1,
+		Limit:         1,
 	}
 	resourceList, err := provider.clientSet.RbacV1().ClusterRoles().List(ctx, listOptions)
 	if err != nil {
@@ -412,7 +406,7 @@ func (provider *Provider) CheckClusterRoleExists(ctx context.Context, name strin
 func (provider *Provider) CheckClusterRoleBindingExists(ctx context.Context, name string) (bool, error) {
 	listOptions := metav1.ListOptions{
 		FieldSelector: fmt.Sprintf("metadata.name=%s", name),
-		Limit: 1,
+		Limit:         1,
 	}
 	resourceList, err := provider.clientSet.RbacV1().ClusterRoleBindings().List(ctx, listOptions)
 	if err != nil {
@@ -615,6 +609,10 @@ func getClientSet(config *restclient.Config) *kubernetes.Clientset {
 }
 
 func loadKubernetesConfiguration(kubeConfigPath string) clientcmd.ClientConfig {
+	if kubeConfigPath == "" {
+		kubeConfigPath = os.Getenv("KUBECONFIG")
+	}
+
 	if kubeConfigPath == "" {
 		home := homedir.HomeDir()
 		kubeConfigPath = filepath.Join(home, ".kube", "config")
