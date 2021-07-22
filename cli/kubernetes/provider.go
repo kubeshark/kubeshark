@@ -17,6 +17,7 @@ import (
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	resource "k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/watch"
 	applyconfapp "k8s.io/client-go/applyconfigurations/apps/v1"
@@ -28,8 +29,10 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/openstack"
 	restclient "k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
 	_ "k8s.io/client-go/tools/portforward"
+	watchtools "k8s.io/client-go/tools/watch"
 	"k8s.io/client-go/util/homedir"
 )
 
@@ -41,7 +44,6 @@ type Provider struct {
 }
 
 const (
-	serviceAccountName = "mizu-service-account"
 	fieldManagerName   = "mizu-manager"
 )
 
@@ -68,6 +70,46 @@ func (provider *Provider) CurrentNamespace() string {
 	return ns
 }
 
+func (provider *Provider) WaitUtilNamespaceDeleted(ctx context.Context, name string) error {
+	fieldSelector := fmt.Sprintf("metadata.name=%s", name)
+	var limit int64 = 1
+	lw := &cache.ListWatch{
+		ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
+			options.FieldSelector = fieldSelector
+			options.Limit = limit
+			return provider.clientSet.CoreV1().Namespaces().List(ctx, options)
+		},
+		WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
+			options.FieldSelector = fieldSelector
+			options.Limit = limit
+			return provider.clientSet.CoreV1().Namespaces().Watch(ctx, options)
+		},
+	}
+
+	var preconditionFunc watchtools.PreconditionFunc = func(store cache.Store) (bool, error) {
+		_, exists, err := store.Get(&core.Namespace{ObjectMeta: metav1.ObjectMeta{Name: name}})
+		if err != nil {
+			return false, err
+		}
+		if exists {
+			return false, nil
+		}
+		return true, nil
+	}
+
+	conditionFunc := func(e watch.Event) (bool, error) {
+		if e.Type == watch.Deleted {
+			return true, nil
+		}
+		return false, nil
+	}
+
+	obj := &core.Namespace{}
+	_, err := watchtools.UntilWithSync(ctx, lw, obj, preconditionFunc, conditionFunc)
+
+	return err
+}
+
 func (provider *Provider) GetPodWatcher(ctx context.Context, namespace string) watch.Interface {
 	watcher, err := provider.clientSet.CoreV1().Pods(namespace).Watch(ctx, metav1.ListOptions{Watch: true})
 	if err != nil {
@@ -76,7 +118,16 @@ func (provider *Provider) GetPodWatcher(ctx context.Context, namespace string) w
 	return watcher
 }
 
-func (provider *Provider) CreateMizuAggregatorPod(ctx context.Context, namespace string, podName string, podImage string, linkServiceAccount bool, mizuApiFilteringOptions *shared.TrafficFilteringOptions, maxEntriesDBSizeBytes int64) (*core.Pod, error) {
+func (provider *Provider) CreateNamespace(ctx context.Context, name string) (*core.Namespace, error) {
+	namespaceSpec := &core.Namespace{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+	}
+	return provider.clientSet.CoreV1().Namespaces().Create(ctx, namespaceSpec, metav1.CreateOptions{})
+}
+
+func (provider *Provider) CreateMizuAggregatorPod(ctx context.Context, namespace string, podName string, podImage string, serviceAccountName string, mizuApiFilteringOptions *shared.TrafficFilteringOptions, maxEntriesDBSizeBytes int64) (*core.Pod, error) {
 	marshaledFilteringOptions, err := json.Marshal(mizuApiFilteringOptions)
 	if err != nil {
 		return nil, err
@@ -143,7 +194,7 @@ func (provider *Provider) CreateMizuAggregatorPod(ctx context.Context, namespace
 		},
 	}
 	//define the service account only when it exists to prevent pod crash
-	if linkServiceAccount {
+	if serviceAccountName != "" {
 		pod.Spec.ServiceAccountName = serviceAccountName
 	}
 	return provider.clientSet.CoreV1().Pods(namespace).Create(ctx, pod, metav1.CreateOptions{})
@@ -164,7 +215,7 @@ func (provider *Provider) CreateService(ctx context.Context, namespace string, s
 	return provider.clientSet.CoreV1().Services(namespace).Create(ctx, &service, metav1.CreateOptions{})
 }
 
-func (provider *Provider) DoesMizuRBACExist(ctx context.Context, namespace string) (bool, error) {
+func (provider *Provider) DoesServiceAccountExist(ctx context.Context, namespace string, serviceAccountName string) (bool, error) {
 	serviceAccount, err := provider.clientSet.CoreV1().ServiceAccounts(namespace).Get(ctx, serviceAccountName, metav1.GetOptions{})
 
 	var statusError *k8serrors.StatusError
@@ -195,9 +246,7 @@ func (provider *Provider) DoesServicesExist(ctx context.Context, namespace strin
 	return service != nil, nil
 }
 
-func (provider *Provider) CreateMizuRBAC(ctx context.Context, namespace string, version string) error {
-	clusterRoleName := "mizu-cluster-role"
-
+func (provider *Provider) CreateMizuRBAC(ctx context.Context, namespace string, serviceAccountName string, clusterRoleName string, clusterRoleBindingName string, version string) error {
 	serviceAccount := &core.ServiceAccount{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      serviceAccountName,
@@ -220,7 +269,7 @@ func (provider *Provider) CreateMizuRBAC(ctx context.Context, namespace string, 
 	}
 	clusterRoleBinding := &rbac.ClusterRoleBinding{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   "mizu-cluster-role-binding",
+			Name:   clusterRoleBindingName,
 			Labels: map[string]string{"mizu-cli-version": version},
 		},
 		RoleRef: rbac.RoleRef{
@@ -251,6 +300,51 @@ func (provider *Provider) CreateMizuRBAC(ctx context.Context, namespace string, 
 	return nil
 }
 
+func (provider *Provider) RemoveNamespace(ctx context.Context, name string) error {
+	if isFound, err := provider.CheckNamespaceExists(ctx, name);
+	err != nil {
+		return err
+	} else if !isFound {
+		return nil
+	}
+
+	return provider.clientSet.CoreV1().Namespaces().Delete(ctx, name, metav1.DeleteOptions{})
+}
+
+func (provider *Provider) RemoveNonNamespacedResources(ctx context.Context, clusterRoleName string, clusterRoleBindingName string) error {
+	if err := provider.RemoveClusterRole(ctx, clusterRoleName); err != nil {
+		return err
+	}
+
+	if err := provider.RemoveClusterRoleBinding(ctx, clusterRoleBindingName); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (provider *Provider) RemoveClusterRole(ctx context.Context, name string) error {
+	if isFound, err := provider.CheckClusterRoleExists(ctx, name);
+	err != nil {
+		return err
+	} else if !isFound {
+		return nil
+	}
+
+	return provider.clientSet.RbacV1().ClusterRoles().Delete(ctx, name, metav1.DeleteOptions{})
+}
+
+func (provider *Provider) RemoveClusterRoleBinding(ctx context.Context, name string) error {
+	if isFound, err := provider.CheckClusterRoleBindingExists(ctx, name);
+	err != nil {
+		return err
+	} else if !isFound {
+		return nil
+	}
+
+	return provider.clientSet.RbacV1().ClusterRoleBindings().Delete(ctx, name, metav1.DeleteOptions{})
+}
+
 func (provider *Provider) RemovePod(ctx context.Context, namespace string, podName string) error {
 	if isFound, err := provider.CheckPodExists(ctx, namespace, podName); err != nil {
 		return err
@@ -279,6 +373,57 @@ func (provider *Provider) RemoveDaemonSet(ctx context.Context, namespace string,
 	}
 
 	return provider.clientSet.AppsV1().DaemonSets(namespace).Delete(ctx, daemonSetName, metav1.DeleteOptions{})
+}
+
+func (provider *Provider) CheckNamespaceExists(ctx context.Context, name string) (bool, error) {
+	listOptions := metav1.ListOptions{
+		FieldSelector: fmt.Sprintf("metadata.name=%s", name),
+		Limit: 1,
+	}
+	resourceList, err := provider.clientSet.CoreV1().Namespaces().List(ctx, listOptions)
+	if err != nil {
+		return false, err
+	}
+
+	if len(resourceList.Items) > 0 {
+		return true, nil
+	}
+
+	return false, nil
+}
+
+func (provider *Provider) CheckClusterRoleExists(ctx context.Context, name string) (bool, error) {
+	listOptions := metav1.ListOptions{
+		FieldSelector: fmt.Sprintf("metadata.name=%s", name),
+		Limit: 1,
+	}
+	resourceList, err := provider.clientSet.RbacV1().ClusterRoles().List(ctx, listOptions)
+	if err != nil {
+		return false, err
+	}
+
+	if len(resourceList.Items) > 0 {
+		return true, nil
+	}
+
+	return false, nil
+}
+
+func (provider *Provider) CheckClusterRoleBindingExists(ctx context.Context, name string) (bool, error) {
+	listOptions := metav1.ListOptions{
+		FieldSelector: fmt.Sprintf("metadata.name=%s", name),
+		Limit: 1,
+	}
+	resourceList, err := provider.clientSet.RbacV1().ClusterRoleBindings().List(ctx, listOptions)
+	if err != nil {
+		return false, err
+	}
+
+	if len(resourceList.Items) > 0 {
+		return true, nil
+	}
+
+	return false, nil
 }
 
 func (provider *Provider) CheckPodExists(ctx context.Context, namespace string, name string) (bool, error) {
@@ -332,7 +477,7 @@ func (provider *Provider) CheckDaemonSetExists(ctx context.Context, namespace st
 	return false, nil
 }
 
-func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, aggregatorPodIp string, nodeToTappedPodIPMap map[string][]string, linkServiceAccount bool, tapOutgoing bool) error {
+func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, aggregatorPodIp string, nodeToTappedPodIPMap map[string][]string, serviceAccountName string, tapOutgoing bool) error {
 	if len(nodeToTappedPodIPMap) == 0 {
 		return fmt.Errorf("Daemon set %s must tap at least 1 pod", daemonSetName)
 	}
@@ -426,7 +571,7 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	podSpec.WithHostNetwork(true)
 	podSpec.WithDNSPolicy(core.DNSClusterFirstWithHostNet)
 	podSpec.WithTerminationGracePeriodSeconds(0)
-	if linkServiceAccount {
+	if serviceAccountName != "" {
 		podSpec.WithServiceAccountName(serviceAccountName)
 	}
 	podSpec.WithContainers(agentContainer)

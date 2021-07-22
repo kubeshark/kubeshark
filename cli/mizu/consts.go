@@ -9,11 +9,14 @@ var (
 )
 
 const (
-	ResourcesNamespace  = "default"
-	TapperDaemonSetName = "mizu-tapper-daemon-set"
-	AggregatorPodName   = "mizu-collector"
-	TapperPodName       = "mizu-tapper"
-	K8sAllNamespaces    = ""
+	AggregatorPodName      = "mizu-collector"
+	ClusterRoleBindingName = "mizu-cluster-role-binding"
+	ClusterRoleName        = "mizu-cluster-role"
+	K8sAllNamespaces       = ""
+	ResourcesNamespace     = "mizu"
+	ServiceAccountName     = "mizu-service-account"
+	TapperDaemonSetName    = "mizu-tapper-daemon-set"
+	TapperPodName          = "mizu-tapper"
 )
 
 const (

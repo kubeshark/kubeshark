@@ -29,45 +29,116 @@ Pick one from the [Releases](https://github.com/up9inc/mizu/releases) page.
 ## Prerequisites
 1. Set `KUBECONFIG` environment variable to your kubernetes configuration. If this is not set, mizu assumes that configuration is at `${HOME}/.kube/config`
 2. mizu needs following permissions on your kubernetes cluster to run
-```
+
+```yaml
 - apiGroups:
   - ""
-  - apps
   resources:
   - pods
-  - services
   verbs:
   - list
-  - get
+  - watch
   - create
-  - delete
 - apiGroups:
   - ""
+  resources:
+  - services
+  verbs:
+  - create
+- apiGroups:
   - apps
   resources:
   - daemonsets
   verbs:
-  - list
-  - get
   - create
   - patch
+- apiGroups:
+  - ""
+  resources:
+  - namespaces
+  verbs:
+  - list
+  - watch
+  - create
   - delete
+- apiGroups:
+  - ""
+  resources:
+  - services/proxy
+  verbs:
+  - get
 ```
 3. Optionally, for resolving traffic ip to kubernetes service name, mizu needs below permissions
-```
+
+```yaml
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - get
+- apiGroups:
+  - ""
+  resources:
+  - services
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - apps
+  - extensions
+  resources:
+  - pods
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - apps
+  - extensions
+  resources:
+  - services
+  verbs:
+  - get
+  - list
+  - watch
 - apiGroups:
   - ""
   - apps
-  - "rbac.authorization.k8s.io"
+  - extensions
   resources:
-  - clusterroles
-  - clusterrolebindings
+  - endpoints
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
   - serviceaccounts
   verbs:
   - get
   - create
+- apiGroups:
+  - rbac.authorization.k8s.io
+  resources:
+  - clusterroles
+  verbs:
+  - list
+  - create
+  - delete
+- apiGroups:
+  - rbac.authorization.k8s.io
+  resources:
+  - clusterrolebindings
+  verbs:
+  - list
+  - create
   - delete
 ```
+
+See `examples/roles` for example `clusterroles`. 
 
 ## How to run
 
