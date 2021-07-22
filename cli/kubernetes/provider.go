@@ -135,19 +135,19 @@ func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, namespace 
 
 	cpuLimit, err := resource.ParseQuantity("750m")
 	if err != nil {
-		return nil, errors.New("invalid cpu limit for apiServer container")
+		return nil, errors.New(fmt.Sprintf("invalid cpu limit for %s container", podName))
 	}
 	memLimit, err := resource.ParseQuantity("512Mi")
 	if err != nil {
-		return nil, errors.New("invalid memory limit for apiServer container")
+		return nil, errors.New(fmt.Sprintf("invalid memory limit for %s container", podName))
 	}
 	cpuRequests, err := resource.ParseQuantity("50m")
 	if err != nil {
-		return nil, errors.New("invalid cpu request for apiServer container")
+		return nil, errors.New(fmt.Sprintf("invalid cpu request for %s container", podName))
 	}
 	memRequests, err := resource.ParseQuantity("50Mi")
 	if err != nil {
-		return nil, errors.New("invalid memory request for apiServer container")
+		return nil, errors.New(fmt.Sprintf("invalid memory request for %s container", podName))
 	}
 
 	pod := &core.Pod{
@@ -518,19 +518,19 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	)
 	cpuLimit, err := resource.ParseQuantity("500m")
 	if err != nil {
-		return errors.New("invalid cpu limit for tapper container")
+		return errors.New(fmt.Sprintf("invalid cpu limit for %s container", tapperPodName))
 	}
 	memLimit, err := resource.ParseQuantity("1Gi")
 	if err != nil {
-		return errors.New("invalid memory limit for tapper container")
+		return errors.New(fmt.Sprintf("invalid memory limit for %s container", tapperPodName))
 	}
 	cpuRequests, err := resource.ParseQuantity("50m")
 	if err != nil {
-		return errors.New("invalid cpu request for tapper container")
+		return errors.New(fmt.Sprintf("invalid cpu request for %s container", tapperPodName))
 	}
 	memRequests, err := resource.ParseQuantity("50Mi")
 	if err != nil {
-		return errors.New("invalid memory request for tapper container")
+		return errors.New(fmt.Sprintf("invalid memory request for %s container", tapperPodName))
 	}
 	agentResourceLimits := core.ResourceList{
 		"cpu":    cpuLimit,
