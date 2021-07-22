@@ -45,4 +45,4 @@ COPY --from=site-build ["/app/ui-build/build", "site"]
 RUN go get github.com/go-delve/delve/cmd/dlv
 
 ENTRYPOINT "/app/mizuagent"
-#CMD ["sh", "-c", "dlv --headless=true --listen=:2345 --log --api-version=2 --accept-multiclient exec ./mizuagent -- --aggregator"]
+#CMD ["sh", "-c", "dlv --headless=true --listen=:2345 --log --api-version=2 --accept-multiclient exec ./mizuagent -- --api-server"]
