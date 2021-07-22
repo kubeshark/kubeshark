@@ -21,17 +21,18 @@ import (
 	"time"
 )
 
-var mizuServiceAccountExists bool
-var apiServerService *core.Service
-
 const (
 	updateTappersDelay = 5 * time.Second
 	cleanupTimeout     = time.Minute
 )
 
-var currentlyTappedPods []core.Pod
+type tapCmdBL struct {
+	mizuServiceAccountExists bool
+	apiServerService *core.Service
+	currentlyTappedPods []core.Pod
+}
 
-func RunMizuTap(podRegexQuery *regexp.Regexp, tappingOptions *MizuTapOptions) {
+func (bl *tapCmdBL) RunMizuTap(podRegexQuery *regexp.Regexp, tappingOptions *MizuTapOptions) {
 	mizuApiFilteringOptions, err := getMizuApiFilteringOptions(tappingOptions)
 	if err != nil {
 		return
@@ -49,7 +50,7 @@ func RunMizuTap(podRegexQuery *regexp.Regexp, tappingOptions *MizuTapOptions) {
 		}
 	}
 
-	defer cleanUpMizuResources(kubernetesProvider)
+	defer bl.cleanUpMizuResources(kubernetesProvider)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // cancel will be called when this function exits
 
@@ -58,7 +59,7 @@ func RunMizuTap(podRegexQuery *regexp.Regexp, tappingOptions *MizuTapOptions) {
 		fmt.Printf("Error listing pods: %v", err)
 		return
 	} else {
-		currentlyTappedPods = matchingPods
+		bl.currentlyTappedPods = matchingPods
 	}
 
 	var namespacesStr string
@@ -69,7 +70,7 @@ func RunMizuTap(podRegexQuery *regexp.Regexp, tappingOptions *MizuTapOptions) {
 	}
 	fmt.Printf("Tapping pods in %s\n", namespacesStr)
 
-	if len(currentlyTappedPods) == 0 {
+	if len(bl.currentlyTappedPods) == 0 {
 		var suggestionStr string
 		if targetNamespace != mizu.K8sAllNamespaces {
 			suggestionStr = "\nSelect a different namespace with -n or tap all namespaces with -A"
@@ -77,34 +78,34 @@ func RunMizuTap(podRegexQuery *regexp.Regexp, tappingOptions *MizuTapOptions) {
 		fmt.Printf("Did not find any pods matching the regex argument%s\n", suggestionStr)
 	}
 
-	nodeToTappedPodIPMap, err := getNodeHostToTappedPodIpsMap(currentlyTappedPods)
+	nodeToTappedPodIPMap, err := getNodeHostToTappedPodIpsMap(bl.currentlyTappedPods)
 	if err != nil {
 		return
 	}
 
-	if err := createMizuResources(ctx, kubernetesProvider, nodeToTappedPodIPMap, tappingOptions, mizuApiFilteringOptions); err != nil {
+	if err := bl.createMizuResources(ctx, kubernetesProvider, nodeToTappedPodIPMap, tappingOptions, mizuApiFilteringOptions); err != nil {
 		return
 	}
 
 	mizu.CheckNewerVersion()
 	go portForwardApiPod(ctx, kubernetesProvider, cancel, tappingOptions) // TODO convert this to job for built in pod ttl or have the running app handle this
-	go watchPodsForTapping(ctx, kubernetesProvider, cancel, podRegexQuery, tappingOptions)
-	go syncApiStatus(ctx, cancel, tappingOptions)
+	go bl.watchPodsForTapping(ctx, kubernetesProvider, cancel, podRegexQuery, tappingOptions)
+	go bl.syncApiStatus(ctx, cancel, tappingOptions)
 
 	//block until exit signal or error
 	waitForFinish(ctx, cancel)
 }
 
-func createMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, nodeToTappedPodIPMap map[string][]string, tappingOptions *MizuTapOptions, mizuApiFilteringOptions *shared.TrafficFilteringOptions) error {
+func (bl *tapCmdBL) createMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, nodeToTappedPodIPMap map[string][]string, tappingOptions *MizuTapOptions, mizuApiFilteringOptions *shared.TrafficFilteringOptions) error {
 	if err := createMizuNamespace(ctx, kubernetesProvider); err != nil {
 		return err
 	}
 
-	if err := createMizuApiServer(ctx, kubernetesProvider, tappingOptions, mizuApiFilteringOptions); err != nil {
+	if err := bl.createMizuApiServer(ctx, kubernetesProvider, tappingOptions, mizuApiFilteringOptions); err != nil {
 		return err
 	}
 
-	if err := updateMizuTappers(ctx, kubernetesProvider, nodeToTappedPodIPMap, tappingOptions); err != nil {
+	if err := bl.updateMizuTappers(ctx, kubernetesProvider, nodeToTappedPodIPMap, tappingOptions); err != nil {
 		return err
 	}
 
@@ -120,12 +121,12 @@ func createMizuNamespace(ctx context.Context, kubernetesProvider *kubernetes.Pro
 	return err
 }
 
-func createMizuApiServer(ctx context.Context, kubernetesProvider *kubernetes.Provider, tappingOptions *MizuTapOptions, mizuApiFilteringOptions *shared.TrafficFilteringOptions) error {
+func (bl *tapCmdBL) createMizuApiServer(ctx context.Context, kubernetesProvider *kubernetes.Provider, tappingOptions *MizuTapOptions, mizuApiFilteringOptions *shared.TrafficFilteringOptions) error {
 	var err error
 
-	mizuServiceAccountExists = createRBACIfNecessary(ctx, kubernetesProvider)
+	bl.mizuServiceAccountExists = createRBACIfNecessary(ctx, kubernetesProvider)
 	var serviceAccountName string
-	if mizuServiceAccountExists {
+	if bl.mizuServiceAccountExists {
 		serviceAccountName = mizu.ServiceAccountName
 	} else {
 		serviceAccountName = ""
@@ -136,7 +137,7 @@ func createMizuApiServer(ctx context.Context, kubernetesProvider *kubernetes.Pro
 		return err
 	}
 
-	apiServerService, err = kubernetesProvider.CreateService(ctx, mizu.ResourcesNamespace, mizu.ApiServerPodName, mizu.ApiServerPodName)
+	bl.apiServerService, err = kubernetesProvider.CreateService(ctx, mizu.ResourcesNamespace, mizu.ApiServerPodName, mizu.ApiServerPodName)
 	if err != nil {
 		fmt.Printf("Error creating mizu %s service: %v\n", mizu.ApiServerPodName,  err)
 		return err
@@ -163,10 +164,10 @@ func getMizuApiFilteringOptions(tappingOptions *MizuTapOptions) (*shared.Traffic
 	return &shared.TrafficFilteringOptions{PlainTextMaskingRegexes: compiledRegexSlice, HideHealthChecks: tappingOptions.HideHealthChecks, DisableRedaction: tappingOptions.DisableRedaction}, nil
 }
 
-func updateMizuTappers(ctx context.Context, kubernetesProvider *kubernetes.Provider, nodeToTappedPodIPMap map[string][]string, tappingOptions *MizuTapOptions) error {
+func (bl *tapCmdBL) updateMizuTappers(ctx context.Context, kubernetesProvider *kubernetes.Provider, nodeToTappedPodIPMap map[string][]string, tappingOptions *MizuTapOptions) error {
 	if len(nodeToTappedPodIPMap) > 0 {
 		var serviceAccountName string
-		if mizuServiceAccountExists {
+		if bl.mizuServiceAccountExists {
 			serviceAccountName = mizu.ServiceAccountName
 		} else {
 			serviceAccountName = ""
@@ -178,7 +179,7 @@ func updateMizuTappers(ctx context.Context, kubernetesProvider *kubernetes.Provi
 			mizu.TapperDaemonSetName,
 			tappingOptions.MizuImage,
 			mizu.TapperPodName,
-			fmt.Sprintf("%s.%s.svc.cluster.local", apiServerService.Name, apiServerService.Namespace),
+			fmt.Sprintf("%s.%s.svc.cluster.local", bl.apiServerService.Name, bl.apiServerService.Namespace),
 			nodeToTappedPodIPMap,
 			serviceAccountName,
 			tappingOptions.TapOutgoing,
@@ -196,7 +197,7 @@ func updateMizuTappers(ctx context.Context, kubernetesProvider *kubernetes.Provi
 	return nil
 }
 
-func cleanUpMizuResources(kubernetesProvider *kubernetes.Provider) {
+func (bl *tapCmdBL) cleanUpMizuResources(kubernetesProvider *kubernetes.Provider) {
 	fmt.Printf("\nRemoving mizu resources\n")
 
 	removalCtx, cancel := context.WithTimeout(context.Background(), cleanupTimeout)
@@ -207,7 +208,7 @@ func cleanUpMizuResources(kubernetesProvider *kubernetes.Provider) {
 		return
 	}
 
-	if mizuServiceAccountExists {
+	if bl.mizuServiceAccountExists {
 		if err := kubernetesProvider.RemoveNonNamespacedResources(removalCtx, mizu.ClusterRoleName, mizu.ClusterRoleBindingName); err != nil {
 			fmt.Printf("Error removing non-namespaced resources: %s (%v,%+v)\n", err, err, err)
 			return
@@ -231,7 +232,7 @@ func cleanUpMizuResources(kubernetesProvider *kubernetes.Provider) {
 	}
 }
 
-func watchPodsForTapping(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc, podRegex *regexp.Regexp, tappingOptions *MizuTapOptions) {
+func (bl *tapCmdBL) watchPodsForTapping(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc, podRegex *regexp.Regexp, tappingOptions *MizuTapOptions) {
 	targetNamespace := getNamespace(tappingOptions, kubernetesProvider)
 
 	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, kubernetesProvider.GetPodWatcher(ctx, targetNamespace), podRegex)
@@ -241,16 +242,16 @@ func watchPodsForTapping(ctx context.Context, kubernetesProvider *kubernetes.Pro
 			fmt.Printf("Error getting pods by regex: %s (%v,%+v)\n", err, err, err)
 			cancel()
 		} else {
-			currentlyTappedPods = matchingPods
+			bl.currentlyTappedPods = matchingPods
 		}
 
-		nodeToTappedPodIPMap, err := getNodeHostToTappedPodIpsMap(currentlyTappedPods)
+		nodeToTappedPodIPMap, err := getNodeHostToTappedPodIpsMap(bl.currentlyTappedPods)
 		if err != nil {
 			fmt.Printf("Error building node to ips map: %s (%v,%+v)\n", err, err, err)
 			cancel()
 		}
 
-		if err := updateMizuTappers(ctx, kubernetesProvider, nodeToTappedPodIPMap, tappingOptions); err != nil {
+		if err := bl.updateMizuTappers(ctx, kubernetesProvider, nodeToTappedPodIPMap, tappingOptions); err != nil {
 			fmt.Printf("Error updating daemonset: %s (%v,%+v)\n", err, err, err)
 			cancel()
 		}
@@ -388,7 +389,7 @@ func waitForFinish(ctx context.Context, cancel context.CancelFunc) {
 	}
 }
 
-func syncApiStatus(ctx context.Context, cancel context.CancelFunc, tappingOptions *MizuTapOptions) {
+func (bl *tapCmdBL) syncApiStatus(ctx context.Context, cancel context.CancelFunc, tappingOptions *MizuTapOptions) {
 	controlSocketStr := fmt.Sprintf("ws://%s/ws", kubernetes.GetMizuApiServerProxiedHostAndPath(tappingOptions.GuiPort))
 	controlSocket, err := mizu.CreateControlSocket(controlSocketStr)
 	if err != nil {
@@ -401,7 +402,7 @@ func syncApiStatus(ctx context.Context, cancel context.CancelFunc, tappingOption
 		case <-ctx.Done():
 			return
 		default:
-			err = controlSocket.SendNewTappedPodsListMessage(currentlyTappedPods)
+			err = controlSocket.SendNewTappedPodsListMessage(bl.currentlyTappedPods)
 			if err != nil {
 				rlog.Debugf("error Sending message via control socket %v, error: %s\n", controlSocketStr, err)
 			}
