@@ -1,5 +1,5 @@
-# mizu API server
-API server for MIZU
+# mizu agent
+Agent for MIZU (API server and tapper)
 Basic APIs:
 * /fetch - retrieve traffic data
 * /stats - retrieve statistics of collected data
