@@ -9,7 +9,7 @@ var (
 )
 
 const (
-	AggregatorPodName      = "mizu-collector"
+	ApiServerPodName       = "mizu-api-server"
 	ClusterRoleBindingName = "mizu-cluster-role-binding"
 	ClusterRoleName        = "mizu-cluster-role"
 	K8sAllNamespaces       = ""
