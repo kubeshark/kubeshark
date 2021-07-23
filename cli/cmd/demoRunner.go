@@ -149,9 +149,9 @@ func UnzipSite(src string, dest string) ([]string, error) {
 }
 
 func allowExecutable(dir string) {
-	// if err := os.Chmod(dir, 0755); err != nil {
-	// 	log.Fatalln(err)
-	// }
+	if err := os.Chmod(dir, 0755); err != nil {
+		log.Fatalln(err)
+	}
 }
 
 func callMizuDemo(ctx context.Context, cancel context.CancelFunc, dir string, demoOptions *MizuDemoOptions) {
@@ -169,10 +169,11 @@ func callMizuDemo(ctx context.Context, cancel context.CancelFunc, dir string, de
 func analyze(demoOptions *MizuDemoOptions) {
 	mizuProxiedUrl := getMizuCollectorProxiedHostAndPath(demoOptions.GuiPort)
 	for {
-		if _, err := http.Get(fmt.Sprintf("http://%s/api/uploadEntries?dest=%s", mizuProxiedUrl, demoOptions.AnalyzeDestination)); err != nil {
+		response, err := http.Get(fmt.Sprintf("http://%s/api/uploadEntries?dest=%s&interval=10", mizuProxiedUrl, demoOptions.AnalyzeDestination))
+		if err != nil || response.StatusCode != 200 {
 			fmt.Printf(mizu.Red, "Mizu Not running, waiting 10 seconds before trying again\n")
 		} else {
-			fmt.Printf(mizu.Purple, "Traffic is uploading to UP9 cloud for further analsys")
+			fmt.Printf(mizu.Purple, "Traffic is uploading to UP9 cloud for further analsys\n")
 			break
 		}
 		time.Sleep(10 * time.Second)

@@ -88,7 +88,10 @@ func startReadingFiles(workingDir string, infiniteLoad bool) {
 		utils.CheckErr(decErr)
 
 		for _, entry := range inputHar.Log.Entries {
-			time.Sleep(time.Millisecond * time.Duration(rand.Intn(1000)))
+			if infiniteLoad {
+				entry.StartedDateTime = time.Now().Add(400 * time.Millisecond)
+			}
+			time.Sleep(time.Millisecond * time.Duration(rand.Intn(300)))
 			connectionInfo := &tap.ConnectionInfo{
 				ClientIP:   fileInfo.Name(),
 				ClientPort: "",
