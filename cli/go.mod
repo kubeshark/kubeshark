@@ -8,6 +8,7 @@ require (
 	github.com/romana/rlog v0.0.0-20171115192701-f018bc92e7d7
 	github.com/spf13/cobra v1.1.3
 	github.com/up9inc/mizu/shared v0.0.0
+	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 	k8s.io/api v0.21.2
 	k8s.io/apimachinery v0.21.2
 	k8s.io/client-go v0.21.2
