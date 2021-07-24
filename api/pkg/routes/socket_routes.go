@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -19,6 +20,7 @@ type EventHandlers interface {
 type SocketConnection struct {
 	connection *websocket.Conn
 	lock *sync.Mutex
+	connected bool
 }
 
 var websocketUpgrader = websocket.Upgrader{
@@ -55,7 +57,7 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 
 	connectedWebsocketIdCounter++
 	socketId := connectedWebsocketIdCounter
-	connectedWebsockets[socketId] = &SocketConnection{connection: conn, lock: &sync.Mutex{}}
+	connectedWebsockets[socketId] = &SocketConnection{connection: conn, lock: &sync.Mutex{}, connected: true}
 
 	websocketIdsLock.Unlock()
 
@@ -81,22 +83,27 @@ var db = debounce.NewDebouncer(time.Second * 5, func() {
 })
 
 func SendToSocket(socketId int, message []byte) error {
-	var sent = false
 	socketObj := connectedWebsockets[socketId]
-	time.AfterFunc(time.Second * 30, func() {
+	if socketObj == nil {
+		return errors.New("Socket is disconnected")
+	}
+
+	var sent = false
+	time.AfterFunc(time.Second * 5, func() {
 		if !sent {
-			fmt.Printf("Write to socket id %d timed out after 30s, closing the socket\n", socketId)
-			err := socketObj.connection.Close()
-			if err != nil {
-				fmt.Printf("Error closing connection for socket id %d:%v\n", socketId, err)
-			}
-		} else {
-			db.SetOn()
+			fmt.Println("Socket timed out")
+			connectedWebsockets[socketId] = nil
 		}
 	})
+
 	socketObj.lock.Lock() // gorilla socket panics from concurrent writes to a single socket
-	writeRes := socketObj.connection.WriteMessage(1, message)
+	err := socketObj.connection.WriteMessage(1, message)
 	socketObj.lock.Unlock()
+
+	if err != nil {
+		fmt.Printf("writeRes = %v\n", err)
+	}
+
 	sent = true
-	return writeRes
+	return err
 }
