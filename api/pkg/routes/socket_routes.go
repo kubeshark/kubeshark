@@ -20,7 +20,8 @@ type EventHandlers interface {
 type SocketConnection struct {
 	connection *websocket.Conn
 	lock *sync.Mutex
-	connected bool
+	eventHandlers EventHandlers
+	isTapper bool
 }
 
 var websocketUpgrader = websocket.Upgrader{
@@ -57,13 +58,12 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 
 	connectedWebsocketIdCounter++
 	socketId := connectedWebsocketIdCounter
-	connectedWebsockets[socketId] = &SocketConnection{connection: conn, lock: &sync.Mutex{}, connected: true}
+	connectedWebsockets[socketId] = &SocketConnection{connection: conn, lock: &sync.Mutex{}, eventHandlers: eventHandlers, isTapper: isTapper}
 
 	websocketIdsLock.Unlock()
 
 	defer func() {
-		connectedWebsockets[socketId] = nil
-		eventHandlers.WebSocketDisconnect(socketId, isTapper)
+		socketCleanup(socketId, connectedWebsockets[socketId])
 	}()
 
 	eventHandlers.WebSocketConnect(socketId, isTapper)
@@ -76,6 +76,19 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 		}
 		eventHandlers.WebSocketMessage(socketId, msg)
 	}
+}
+
+func socketCleanup(socketId int, socketConnection *SocketConnection) {
+	err := socketConnection.connection.Close()
+	if err != nil {
+		fmt.Printf("Error closing socket connection for socket id %d: %v\n", socketId, err)
+	}
+
+	websocketIdsLock.Lock()
+	connectedWebsockets[socketId] = nil
+	websocketIdsLock.Unlock()
+
+	socketConnection.eventHandlers.WebSocketDisconnect(socketId, socketConnection.isTapper)
 }
 
 var db = debounce.NewDebouncer(time.Second * 5, func() {
@@ -92,7 +105,7 @@ func SendToSocket(socketId int, message []byte) error {
 	time.AfterFunc(time.Second * 5, func() {
 		if !sent {
 			fmt.Println("Socket timed out")
-			connectedWebsockets[socketId] = nil
+			socketCleanup(socketId, socketObj)
 		}
 	})
 
