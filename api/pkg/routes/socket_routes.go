@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
+	"github.com/up9inc/mizu/shared/debounce"
 	"net/http"
 	"sync"
+	"time"
 )
 
 type EventHandlers interface {
@@ -14,18 +16,23 @@ type EventHandlers interface {
 	WebSocketMessage(socketId int, message []byte)
 }
 
+type SocketConnection struct {
+	connection *websocket.Conn
+	lock *sync.Mutex
+}
+
 var websocketUpgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
 }
 
 var websocketIdsLock = sync.Mutex{}
-var connectedWebsockets map[int]*websocket.Conn
+var connectedWebsockets map[int]*SocketConnection
 var connectedWebsocketIdCounter = 0
 
 func init() {
 	websocketUpgrader.CheckOrigin = func(r *http.Request) bool { return true } // like cors for web socket
-	connectedWebsockets = make(map[int]*websocket.Conn, 0)
+	connectedWebsockets = make(map[int]*SocketConnection, 0)
 }
 
 func WebSocketRoutes(app *gin.Engine, eventHandlers EventHandlers) {
@@ -48,7 +55,7 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 
 	connectedWebsocketIdCounter++
 	socketId := connectedWebsocketIdCounter
-	connectedWebsockets[socketId] = conn
+	connectedWebsockets[socketId] = &SocketConnection{connection: conn, lock: &sync.Mutex{}}
 
 	websocketIdsLock.Unlock()
 
@@ -67,4 +74,29 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 		}
 		eventHandlers.WebSocketMessage(socketId, msg)
 	}
+}
+
+var db = debounce.NewDebouncer(time.Second * 5, func() {
+	fmt.Println("Successfully sent to socket")
+})
+
+func SendToSocket(socketId int, message []byte) error {
+	var sent = false
+	socketObj := connectedWebsockets[socketId]
+	time.AfterFunc(time.Second * 30, func() {
+		if !sent {
+			fmt.Printf("Write to socket id %d timed out after 30s, closing the socket\n", socketId)
+			err := socketObj.connection.Close()
+			if err != nil {
+				fmt.Printf("Error closing connection for socket id %d:%v\n", socketId, err)
+			}
+		} else {
+			db.SetOn()
+		}
+	})
+	socketObj.lock.Lock() // gorilla socket panics from concurrent writes to a single socket
+	writeRes := socketObj.connection.WriteMessage(1, message)
+	socketObj.lock.Unlock()
+	sent = true
+	return writeRes
 }

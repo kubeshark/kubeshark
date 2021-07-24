@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/romana/rlog"
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/tap"
@@ -47,10 +48,15 @@ func (h *RoutesEventHandlers) WebSocketDisconnect(socketId int, isTapper bool) {
 }
 
 func broadcastToBrowserClients(message []byte) {
-	//ikisocket.EmitToList(browserClientSocketUUIDs, message)
+	for _, socketId := range browserClientSocketUUIDs {
+		err := routes.SendToSocket(socketId, message)
+		if err != nil {
+			fmt.Printf("error sending message to socket id %d: %v", socketId, err)
+		}
+	}
 }
 
-func (h *RoutesEventHandlers) WebSocketMessage(message []byte) {
+func (h *RoutesEventHandlers) WebSocketMessage(_ int, message []byte) {
 	var socketMessageBase shared.WebSocketMessageMetadata
 	err := json.Unmarshal(message, &socketMessageBase)
 	if err != nil {

@@ -32,6 +32,7 @@ func StartServer(app *gin.Engine) {
 		rlog.Infof("Shutting down...")
 		ctx, _ := context.WithTimeout(context.Background(), 5*time.Second)
 		_ = srv.Shutdown(ctx)
+		os.Exit(0)
 	}()
 
 	// Run server.
