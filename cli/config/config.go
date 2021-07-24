@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/romana/rlog"
 	"github.com/up9inc/mizu/cli/mizu"
+	"github.com/up9inc/mizu/cli/uiUtils"
 	"gopkg.in/yaml.v3"
 	"io/ioutil"
 	"os"
@@ -22,6 +23,7 @@ type CommandLineFlag struct {
 	CommandLineName   string
 	YamlHierarchyName string
 	DefaultValue      interface{}
+	Type              reflect.Kind
 }
 
 var CommandLineValues []string
@@ -37,16 +39,20 @@ var allowedSetFlags = []CommandLineFlag{
 		CommandLineName:   "dest",
 		YamlHierarchyName: ConfigurationKeyAnalyzingDestination,
 		DefaultValue:      "up9.app",
+		Type:              reflect.String,
+		// TODO: maybe add short description that we can show
 	},
 	{
 		CommandLineName:   "uploadInterval",
 		YamlHierarchyName: ConfigurationKeyUploadInterval,
 		DefaultValue:      10,
+		Type:              reflect.Int,
 	},
 	{
 		CommandLineName:   "mizuImage",
 		YamlHierarchyName: ConfigurationKeyMizuImage,
 		DefaultValue:      fmt.Sprintf("gcr.io/up9-docker-hub/mizu/%s:%s", mizu.Branch, mizu.SemVer),
+		Type:              reflect.String,
 	},
 }
 
@@ -90,7 +96,8 @@ func MergeAllSettings() error {
 		fmt.Printf(mizu.Red, "Invalid commanad argument\n")
 		return err2
 	}
-	rlog.Infof("Merged all settings successfully\n Final config: %v", configObj)
+	finalConfigPrettified, _ := uiUtils.PrettyJson(configObj)
+	rlog.Debugf("Merged all settings successfully\n Final config: %v", finalConfigPrettified)
 	return nil
 }
 
@@ -148,22 +155,26 @@ func mergeCommandLineFlags() error {
 			return errors.New(fmt.Sprintf("invalid set argument %s", e))
 		}
 		setFlagKey, argumentValue := split[0], split[1]
-		argumentNameInConfig, err := flagFromAllowed(setFlagKey)
+		argumentNameInConfig, expectedType, err := flagFromAllowed(setFlagKey)
 		if err != nil {
 			return err
+		}
+		argumentType := reflect.ValueOf(argumentValue).Kind()
+		if argumentType != expectedType {
+			return errors.New(fmt.Sprintf("Invalid value for argument %s (should be type %s but got %s", setFlagKey, expectedType, argumentType))
 		}
 		configObj[argumentNameInConfig] = argumentValue
 	}
 	return nil
 }
 
-func flagFromAllowed(setFlagKey string) (string, error) {
+func flagFromAllowed(setFlagKey string) (string, reflect.Kind, error) {
 	for _, allowedFlag := range allowedSetFlags {
 		if strings.ToLower(allowedFlag.CommandLineName) == strings.ToLower(setFlagKey) {
-			return allowedFlag.YamlHierarchyName, nil
+			return allowedFlag.YamlHierarchyName, allowedFlag.Type, nil
 		}
 	}
-	return "", errors.New(fmt.Sprintf("invalid set argument %s", setFlagKey))
+	return "", reflect.Invalid, errors.New(fmt.Sprintf("invalid set argument %s", setFlagKey))
 }
 
 func validateSettingsFileKey(settingsFileKey string) {
@@ -174,4 +185,29 @@ func validateSettingsFileKey(settingsFileKey string) {
 	}
 	fmt.Printf("Invalid settings file. Exit, %v", settingsFileKey)
 	os.Exit(1)
+}
+
+func addToConfigObj(key string, value interface{}, configObj map[string]interface{}) {
+	typ := reflect.TypeOf(value).Kind()
+	if typ == reflect.Int || typ == reflect.String || typ == reflect.Slice {
+		if strings.Contains(key, ".") {
+			split := strings.SplitN(key, ".", 2)
+			firstLevelKey := split[0]
+			if _, ok := configObj[firstLevelKey]; !ok {
+				configObj[firstLevelKey] = map[string]interface{}{}
+			}
+			addToConfigObj(split[1], value, configObj[firstLevelKey].(map[string]interface{}))
+		} else {
+			configObj[key] = value
+		}
+	}
+}
+
+func GetTemplateConfig() string {
+	templateConfig := map[string]interface{}{}
+	for _, allowedFlag := range allowedSetFlags {
+		addToConfigObj(allowedFlag.YamlHierarchyName, allowedFlag.DefaultValue, templateConfig)
+	}
+	prettifiedConfig, _ := uiUtils.PrettyYaml(templateConfig)
+	return prettifiedConfig
 }

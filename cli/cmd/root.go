@@ -6,6 +6,7 @@ import (
 	"github.com/romana/rlog"
 	"github.com/spf13/cobra"
 	"github.com/up9inc/mizu/cli/config"
+	"github.com/up9inc/mizu/cli/uiUtils"
 	"os"
 )
 
@@ -25,6 +26,8 @@ Further info is available at https://github.com/up9inc/mizu`,
 			rlog.Infof("Invalid config, Exit %s", err)
 			return errors.New(fmt.Sprintf("%v", err))
 		}
+		prettifiedConfig, _ := uiUtils.PrettyJson(config.GetConfig())
+		rlog.Debugf("Final Config: %s", prettifiedConfig)
 		return nil
 	},
 }
