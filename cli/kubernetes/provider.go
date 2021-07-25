@@ -360,7 +360,7 @@ func (provider *Provider) RemovePod(ctx context.Context, namespace string, podNa
 }
 
 func (provider *Provider) RemoveService(ctx context.Context, namespace string, serviceName string) error {
-	if isFound, err := provider.CheckServiceExists(ctx, namespace, serviceName); err != nil {
+	if isFound, err := provider.DoesServicesExist(ctx, namespace, serviceName); err != nil {
 		return err
 	} else if !isFound {
 		return nil
@@ -436,23 +436,6 @@ func (provider *Provider) CheckPodExists(ctx context.Context, namespace string, 
 		Limit:         1,
 	}
 	resourceList, err := provider.clientSet.CoreV1().Pods(namespace).List(ctx, listOptions)
-	if err != nil {
-		return false, err
-	}
-
-	if len(resourceList.Items) > 0 {
-		return true, nil
-	}
-
-	return false, nil
-}
-
-func (provider *Provider) CheckServiceExists(ctx context.Context, namespace string, name string) (bool, error) {
-	listOptions := metav1.ListOptions{
-		FieldSelector: fmt.Sprintf("metadata.name=%s", name),
-		Limit:         1,
-	}
-	resourceList, err := provider.clientSet.CoreV1().Services(namespace).List(ctx, listOptions)
 	if err != nil {
 		return false, err
 	}
