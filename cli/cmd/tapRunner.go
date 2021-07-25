@@ -32,21 +32,26 @@ type tapCmdBL struct {
 	currentlyTappedPods      []core.Pod
 	flags                    *MizuTapOptions
 	mizuServiceAccountExists bool
+	isOwnNamespace           bool
 	resourcesNamespace       string
 }
 
 func NewtapCmdBL(flags *MizuTapOptions) *tapCmdBL {
 	var (
+		isOwnNamespace bool
 		resourcesNamespace string
 	)
 	if flags.MizuNamespace != "" {
+		isOwnNamespace = false
 		resourcesNamespace = flags.MizuNamespace
 	} else {
+		isOwnNamespace = true
 		resourcesNamespace = mizu.ResourcesDefaultNamespace
 	}
 
 	return &tapCmdBL{
 		flags: flags,
+		isOwnNamespace: isOwnNamespace,
 		resourcesNamespace: resourcesNamespace,
 	}
 }
@@ -116,8 +121,10 @@ func (bl *tapCmdBL) RunMizuTap(podRegexQuery *regexp.Regexp) {
 }
 
 func (bl *tapCmdBL) createMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, nodeToTappedPodIPMap map[string][]string, mizuApiFilteringOptions *shared.TrafficFilteringOptions) error {
-	if err := createMizuNamespace(ctx, kubernetesProvider, bl.resourcesNamespace); err != nil {
-		return err
+	if bl.isOwnNamespace {
+		if err := bl.createMizuNamespace(ctx, kubernetesProvider); err != nil {
+			return err
+		}
 	}
 
 	if err := bl.createMizuApiServer(ctx, kubernetesProvider, mizuApiFilteringOptions); err != nil {
@@ -131,10 +138,10 @@ func (bl *tapCmdBL) createMizuResources(ctx context.Context, kubernetesProvider 
 	return nil
 }
 
-func createMizuNamespace(ctx context.Context, kubernetesProvider *kubernetes.Provider, namespace string) error {
-	_, err := kubernetesProvider.CreateNamespace(ctx, namespace)
+func (bl *tapCmdBL) createMizuNamespace(ctx context.Context, kubernetesProvider *kubernetes.Provider) error {
+	_, err := kubernetesProvider.CreateNamespace(ctx, bl.resourcesNamespace)
 	if err != nil {
-		fmt.Printf("Error creating Namespace %s: %v\n", namespace, err)
+		fmt.Printf("Error creating Namespace %s: %v\n", bl.resourcesNamespace, err)
 	}
 
 	return err
@@ -222,26 +229,51 @@ func (bl *tapCmdBL) cleanUpMizuResources(kubernetesProvider *kubernetes.Provider
 	removalCtx, cancel := context.WithTimeout(context.Background(), cleanupTimeout)
 	defer cancel()
 
-	if err := kubernetesProvider.RemoveNamespace(removalCtx, bl.resourcesNamespace); err != nil {
-		fmt.Printf("Error removing Namespace %s: %s (%v,%+v)\n", bl.resourcesNamespace, err, err, err)
-		return
+	if bl.isOwnNamespace {
+		if err := kubernetesProvider.RemoveNamespace(removalCtx, bl.resourcesNamespace); err != nil {
+			fmt.Printf("Error removing Namespace %s: %s (%v,%+v)\n", bl.resourcesNamespace, err, err, err)
+			return
+		}
+	} else {
+		if err := kubernetesProvider.RemovePod(removalCtx, bl.resourcesNamespace, mizu.ApiServerPodName); err != nil {
+			fmt.Printf("Error removing Pod %s in namespace %s: %s (%v,%+v)\n", mizu.ApiServerPodName, bl.resourcesNamespace, err, err, err)
+		}
+
+		if err := kubernetesProvider.RemoveService(removalCtx, bl.resourcesNamespace, mizu.ApiServerPodName); err != nil {
+			fmt.Printf("Error removing Service %s in namespace %s: %s (%v,%+v)\n", mizu.ApiServerPodName, bl.resourcesNamespace, err, err, err)
+		}
+
+		if err := kubernetesProvider.RemoveDaemonSet(removalCtx, bl.resourcesNamespace, mizu.TapperDaemonSetName); err != nil {
+			fmt.Printf("Error removing DaemonSet %s in namespace %s: %s (%v,%+v)\n", mizu.TapperDaemonSetName, bl.resourcesNamespace, err, err, err)
+		}
 	}
 
 	if bl.mizuServiceAccountExists {
+		if err := kubernetesProvider.RemoveServicAccount(removalCtx, bl.resourcesNamespace, mizu.ServiceAccountName); err != nil {
+			fmt.Printf("Error removing Service Account %s in namespace %s: %s (%v,%+v)\n", mizu.ServiceAccountName, bl.resourcesNamespace, err, err, err)
+			return
+		}
+
 		if err := kubernetesProvider.RemoveNonNamespacedResources(removalCtx, mizu.ClusterRoleName, mizu.ClusterRoleBindingName); err != nil {
 			fmt.Printf("Error removing non-namespaced resources: %s (%v,%+v)\n", err, err, err)
 			return
 		}
 	}
 
+	if bl.isOwnNamespace {
+		bl.waitUntilNamespaceDeleted(removalCtx, cancel, kubernetesProvider)
+	}
+}
+
+func (bl *tapCmdBL) waitUntilNamespaceDeleted(ctx context.Context, cancel context.CancelFunc, kubernetesProvider *kubernetes.Provider) {
 	// Call cancel if a terminating signal was received. Allows user to skip the wait.
 	go func() {
-		waitForFinish(removalCtx, cancel)
+		waitForFinish(ctx, cancel)
 	}()
 
-	if err := kubernetesProvider.WaitUtilNamespaceDeleted(removalCtx, bl.resourcesNamespace); err != nil {
+	if err := kubernetesProvider.WaitUtilNamespaceDeleted(ctx, bl.resourcesNamespace); err != nil {
 		switch {
-		case removalCtx.Err() == context.Canceled:
+		case ctx.Err() == context.Canceled:
 			// Do nothing. User interrupted the wait.
 		case err == wait.ErrWaitTimeout:
 			fmt.Printf("Timeout while removing Namespace %s\n", bl.resourcesNamespace)

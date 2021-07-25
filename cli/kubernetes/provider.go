@@ -339,6 +339,16 @@ func (provider *Provider) RemoveClusterRoleBinding(ctx context.Context, name str
 	return provider.clientSet.RbacV1().ClusterRoleBindings().Delete(ctx, name, metav1.DeleteOptions{})
 }
 
+func (provider *Provider) RemoveServicAccount(ctx context.Context, namespace string, name string) error {
+	if isFound, err := provider.DoesServiceAccountExist(ctx, namespace, name); err != nil {
+		return err
+	} else if !isFound {
+		return nil
+	}
+
+	return provider.clientSet.CoreV1().ServiceAccounts(namespace).Delete(ctx, name, metav1.DeleteOptions{})
+}
+
 func (provider *Provider) RemovePod(ctx context.Context, namespace string, podName string) error {
 	if isFound, err := provider.CheckPodExists(ctx, namespace, podName); err != nil {
 		return err
