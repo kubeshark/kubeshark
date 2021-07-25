@@ -1,9 +1,8 @@
-package config
+package mizu
 
 import (
 	"errors"
 	"fmt"
-	"github.com/up9inc/mizu/cli/mizu"
 	"github.com/up9inc/mizu/cli/uiUtils"
 	"gopkg.in/yaml.v3"
 	"io/ioutil"
@@ -50,7 +49,7 @@ var allowedSetFlags = []CommandLineFlag{
 	{
 		CommandLineName:   "mizuImage",
 		YamlHierarchyName: ConfigurationKeyMizuImage,
-		DefaultValue:      fmt.Sprintf("gcr.io/up9-docker-hub/mizu/%s:%s", mizu.Branch, mizu.SemVer),
+		DefaultValue:      fmt.Sprintf("gcr.io/up9-docker-hub/mizu/%s:%s", Branch, SemVer),
 		Type:              reflect.String,
 	},
 }
@@ -68,11 +67,11 @@ func GetString(key string) string {
 
 func GetInt(key string) int {
 	stringVal := GetString(key)
-	mizu.Log.Debugf("Found string value %v", stringVal)
+	Log.Debugf("Found string value %v", stringVal)
 
 	val, err := strconv.Atoi(stringVal)
 	if err != nil {
-		mizu.Log.Warningf("Invalid value %v for key %s", val, key)
+		Log.Warningf("Invalid value %v for key %s", val, key)
 		os.Exit(1)
 	}
 	return val
@@ -83,32 +82,32 @@ func GetConfig() interface{} {
 }
 
 func MergeAllSettings() error {
-	mizu.Log.Debugf("Merging default values")
+	Log.Debugf("Merging default values")
 	mergeDefaultValues()
-	mizu.Log.Debugf("Merging settings file values")
+	Log.Debugf("Merging settings file values")
 	if err1 := mergeSettingsFileSettings(); err1 != nil {
-		fmt.Printf(mizu.Red, "Invalid settings file\n")
+		Log.Infof(fmt.Sprintf(Red, "Invalid settings file\n"))
 		return err1
 	}
-	mizu.Log.Debugf("Merging command line values")
+	Log.Debugf("Merging command line values")
 	if err2 := mergeCommandLineFlags(); err2 != nil {
-		fmt.Printf(mizu.Red, "Invalid commanad argument\n")
+		Log.Infof(fmt.Sprintf(Red, "Invalid commanad argument\n"))
 		return err2
 	}
 	finalConfigPrettified, _ := uiUtils.PrettyJson(configObj)
-	mizu.Log.Debugf("Merged all settings successfully\n Final config: %v", finalConfigPrettified)
+	Log.Debugf("Merged all settings successfully\n Final config: %v", finalConfigPrettified)
 	return nil
 }
 
 func mergeDefaultValues() {
 	for _, allowedFlag := range allowedSetFlags {
-		mizu.Log.Debugf("Setting %v to %v", allowedFlag.YamlHierarchyName, allowedFlag.DefaultValue)
+		Log.Debugf("Setting %v to %v", allowedFlag.YamlHierarchyName, allowedFlag.DefaultValue)
 		configObj[allowedFlag.YamlHierarchyName] = allowedFlag.DefaultValue
 	}
 }
 
 func mergeSettingsFileSettings() error {
-	mizu.Log.Debugf("Merging mizu settings file flags")
+	Log.Debugf("Merging mizu settings file flags")
 	home, homeDirErr := os.UserHomeDir()
 	if homeDirErr != nil {
 		return nil
@@ -144,7 +143,7 @@ func addToConfig(prefix string, value interface{}) {
 }
 
 func mergeCommandLineFlags() error {
-	mizu.Log.Debugf("Merging Command line flags")
+	Log.Debugf("Merging Command line flags")
 	for _, e := range CommandLineValues {
 		if !strings.Contains(e, separator) {
 			return errors.New(fmt.Sprintf("invalid set argument %s", e))
@@ -182,7 +181,7 @@ func validateSettingsFileKey(settingsFileKey string) {
 			return
 		}
 	}
-	fmt.Printf("Invalid settings file. Exit, %v", settingsFileKey)
+	Log.Info(fmt.Sprintf("Unknown argument: %s. Exit", settingsFileKey))
 	os.Exit(1)
 }
 

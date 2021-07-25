@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/spf13/cobra"
-	"github.com/up9inc/mizu/cli/config"
 	"github.com/up9inc/mizu/cli/mizu"
 	"github.com/up9inc/mizu/cli/uiUtils"
 	"github.com/up9inc/mizu/shared/units"
@@ -53,9 +52,9 @@ Supported protocols are HTTP and gRPC.`,
 	},
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 		mizu.Log.Info("Getting params")
-		mizuTapOptions.AnalysisDestination = config.GetString(config.ConfigurationKeyAnalyzingDestination)
-		mizuTapOptions.SleepIntervalSec = uint16(config.GetInt(config.ConfigurationKeyUploadInterval))
-		mizuTapOptions.MizuImage = config.GetString(config.ConfigurationKeyMizuImage)
+		mizuTapOptions.AnalysisDestination = mizu.GetString(mizu.ConfigurationKeyAnalyzingDestination)
+		mizuTapOptions.SleepIntervalSec = uint16(mizu.GetInt(mizu.ConfigurationKeyUploadInterval))
+		mizuTapOptions.MizuImage = mizu.GetString(mizu.ConfigurationKeyMizuImage)
 		mizu.Log.Infof(uiUtils.PrettyJson(mizuTapOptions))
 
 
