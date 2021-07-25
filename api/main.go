@@ -83,7 +83,6 @@ func main() {
 func hostApi(socketHarOutputChannel chan<- *tap.OutputChannelItem) {
 	app := gin.Default()
 
-	app.Use(CORSMiddleware())
 	app.GET("/echo", func(c *gin.Context) {
 		c.String(http.StatusOK, "Hello, World 👋!")
 	})
@@ -93,12 +92,12 @@ func hostApi(socketHarOutputChannel chan<- *tap.OutputChannelItem) {
 	}
 
 	app.Use(static.ServeRoot("/", "./site"))
+	app.Use(CORSMiddleware()) // This has to be called after the static middleware, does not work if its called before
 
 	routes.WebSocketRoutes(app, &eventHandlers)
 	routes.EntriesRoutes(app)
 	routes.MetadataRoutes(app)
 	routes.NotFoundRoute(app)
-	//app.Static("/", "./site")
 
 	utils.StartServer(app)
 }
