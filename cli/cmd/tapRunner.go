@@ -3,14 +3,6 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"github.com/romana/rlog"
-	"github.com/up9inc/mizu/cli/kubernetes"
-	"github.com/up9inc/mizu/cli/mizu"
-	"github.com/up9inc/mizu/shared"
-	"github.com/up9inc/mizu/shared/debounce"
-	core "k8s.io/api/core/v1"
-	"k8s.io/client-go/tools/clientcmd"
-	"k8s.io/apimachinery/pkg/util/wait"
 	"log"
 	"net/http"
 	"net/url"
@@ -19,6 +11,15 @@ import (
 	"regexp"
 	"syscall"
 	"time"
+
+	"github.com/romana/rlog"
+	"github.com/up9inc/mizu/cli/kubernetes"
+	"github.com/up9inc/mizu/cli/mizu"
+	"github.com/up9inc/mizu/shared"
+	"github.com/up9inc/mizu/shared/debounce"
+	core "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 const (
