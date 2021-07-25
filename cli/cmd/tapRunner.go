@@ -22,15 +22,15 @@ import (
 )
 
 const (
-	updateTappersDelay = 5 * time.Second
 	cleanupTimeout     = time.Minute
+	updateTappersDelay = 5 * time.Second
 )
 
 type tapCmdBL struct {
-	flags                    *MizuTapOptions
-	mizuServiceAccountExists bool
 	apiServerService         *core.Service
 	currentlyTappedPods      []core.Pod
+	flags                    *MizuTapOptions
+	mizuServiceAccountExists bool
 }
 
 func NewtapCmdBL(flags *MizuTapOptions) *tapCmdBL {
