@@ -1,25 +1,25 @@
 package routes
 
 import (
-	"github.com/gofiber/fiber/v2"
+	"github.com/gin-gonic/gin"
 	"mizuserver/pkg/controllers"
 )
 
 // EntriesRoutes defines the group of har entries routes.
-func EntriesRoutes(fiberApp *fiber.App) {
-	routeGroup := fiberApp.Group("/api")
+func EntriesRoutes(ginApp *gin.Engine) {
+	routeGroup := ginApp.Group("/api")
 
-	routeGroup.Get("/entries", controllers.GetEntries)        // get entries (base/thin entries)
-	routeGroup.Get("/entries/:entryId", controllers.GetEntry) // get single (full) entry
-	routeGroup.Get("/exportEntries", controllers.GetFullEntries)
-	routeGroup.Get("/uploadEntries", controllers.UploadEntries)
-	routeGroup.Get("/resolving", controllers.GetCurrentResolvingInformation)
+	routeGroup.GET("/entries", controllers.GetEntries)        // get entries (base/thin entries)
+	routeGroup.GET("/entries/:entryId", controllers.GetEntry) // get single (full) entry
+	routeGroup.GET("/exportEntries", controllers.GetFullEntries)
+	routeGroup.GET("/uploadEntries", controllers.UploadEntries)
+	routeGroup.GET("/resolving", controllers.GetCurrentResolvingInformation)
 
-	routeGroup.Get("/har", controllers.GetHARs)
+	routeGroup.GET("/har", controllers.GetHARs)
 
-	routeGroup.Get("/resetDB", controllers.DeleteAllEntries)     // get single (full) entry
-	routeGroup.Get("/generalStats", controllers.GetGeneralStats) // get general stats about entries in DB
+	routeGroup.GET("/resetDB", controllers.DeleteAllEntries)     // get single (full) entry
+	routeGroup.GET("/generalStats", controllers.GetGeneralStats) // get general stats about entries in DB
 
-	routeGroup.Get("/tapStatus", controllers.GetTappingStatus) // get tapping status
-	routeGroup.Get("/analyzeStatus", controllers.AnalyzeInformation)
+	routeGroup.GET("/tapStatus", controllers.GetTappingStatus) // get tapping status
+	routeGroup.GET("/analyzeStatus", controllers.AnalyzeInformation)
 }

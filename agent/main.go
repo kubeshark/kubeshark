@@ -4,17 +4,18 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gin-contrib/static"
+	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"github.com/romana/rlog"
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/tap"
 	"mizuserver/pkg/api"
-	"mizuserver/pkg/middleware"
 	"mizuserver/pkg/models"
 	"mizuserver/pkg/routes"
 	"mizuserver/pkg/sensitiveDataFiltering"
 	"mizuserver/pkg/utils"
+	"net/http"
 	"os"
 	"os/signal"
 	"strings"
@@ -81,24 +82,41 @@ func main() {
 }
 
 func hostApi(socketHarOutputChannel chan<- *tap.OutputChannelItem) {
-	app := fiber.New()
+	app := gin.Default()
 
-	middleware.FiberMiddleware(app) // Register Fiber's middleware for app.
-	app.Static("/", "./site")
-
-	//Simple route to know server is running
-	app.Get("/echo", func(c *fiber.Ctx) error {
-		return c.SendString("Hello, World 👋!")
+	app.GET("/echo", func(c *gin.Context) {
+		c.String(http.StatusOK, "Hello, World 👋!")
 	})
+
 	eventHandlers := api.RoutesEventHandlers{
 		SocketHarOutChannel: socketHarOutputChannel,
 	}
+
+	app.Use(static.ServeRoot("/", "./site"))
+	app.Use(CORSMiddleware()) // This has to be called after the static middleware, does not work if its called before
+
 	routes.WebSocketRoutes(app, &eventHandlers)
 	routes.EntriesRoutes(app)
 	routes.MetadataRoutes(app)
 	routes.NotFoundRoute(app)
 
 	utils.StartServer(app)
+}
+
+func CORSMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
+		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
+		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT")
+
+		if c.Request.Method == "OPTIONS" {
+			c.AbortWithStatus(204)
+			return
+		}
+
+		c.Next()
+	}
 }
 
 func getTapTargets() []string {

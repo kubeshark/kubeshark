@@ -3,7 +3,7 @@ package controllers
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gin-gonic/gin"
 	"github.com/google/martian/har"
 	"github.com/romana/rlog"
 	"mizuserver/pkg/database"
@@ -11,19 +11,20 @@ import (
 	"mizuserver/pkg/up9"
 	"mizuserver/pkg/utils"
 	"mizuserver/pkg/validation"
+	"net/http"
 	"strings"
 	"time"
 )
 
-func GetEntries(c *fiber.Ctx) error {
+func GetEntries(c *gin.Context) {
 	entriesFilter := &models.EntriesFilter{}
 
-	if err := c.QueryParser(entriesFilter); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(err)
+	if err := c.BindQuery(entriesFilter); err != nil {
+		c.JSON(http.StatusBadRequest, err)
 	}
 	err := validation.Validate(entriesFilter)
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(err)
+		c.JSON(http.StatusBadRequest, err)
 	}
 
 	order := database.OperatorToOrderMapping[entriesFilter.Operator]
@@ -50,18 +51,18 @@ func GetEntries(c *fiber.Ctx) error {
 		baseEntries = append(baseEntries, harEntry)
 	}
 
-	return c.Status(fiber.StatusOK).JSON(baseEntries)
+	c.JSON(http.StatusOK, baseEntries)
 }
 
-func GetHARs(c *fiber.Ctx) error {
+func GetHARs(c *gin.Context) {
 	entriesFilter := &models.HarFetchRequestBody{}
 	order := database.OrderDesc
-	if err := c.QueryParser(entriesFilter); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(err)
+	if err := c.BindQuery(entriesFilter); err != nil {
+		c.JSON(http.StatusBadRequest, err)
 	}
 	err := validation.Validate(entriesFilter)
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(err)
+		c.JSON(http.StatusBadRequest, err)
 	}
 
 	var timestampFrom, timestampTo int64
@@ -137,40 +138,45 @@ func GetHARs(c *fiber.Ctx) error {
 		retObj[k] = bytesData
 	}
 	buffer := utils.ZipData(retObj)
-	return c.Status(fiber.StatusOK).SendStream(buffer)
+	c.Data(http.StatusOK, "application/octet-stream", buffer.Bytes())
 }
 
-func UploadEntries(c *fiber.Ctx) error {
+func UploadEntries(c *gin.Context) {
 	rlog.Infof("Upload entries - started\n")
 
 	uploadRequestBody := &models.UploadEntriesRequestBody{}
-	if err := c.QueryParser(uploadRequestBody); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(err)
+	if err := c.BindQuery(uploadRequestBody); err != nil {
+		c.JSON(http.StatusBadRequest, err)
+		return
 	}
 	if err := validation.Validate(uploadRequestBody); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(err)
+		c.JSON(http.StatusBadRequest, err)
+		return
 	}
 	if up9.GetAnalyzeInfo().IsAnalyzing {
-		return c.Status(fiber.StatusBadRequest).SendString("Cannot analyze, mizu is already analyzing")
+		c.String(http.StatusBadRequest, "Cannot analyze, mizu is already analyzing")
+		return
 	}
+
 	rlog.Infof("Upload entries - creating token. dest %s\n", uploadRequestBody.Dest)
 	token, err := up9.CreateAnonymousToken(uploadRequestBody.Dest)
 	if err != nil {
-		return c.Status(fiber.StatusServiceUnavailable).SendString("Can't get token")
+		c.String(http.StatusServiceUnavailable, "Cannot analyze, mizu is already analyzing")
+		return
 	}
 	rlog.Infof("Upload entries - uploading. token: %s model: %s\n", token.Token, token.Model)
 	go up9.UploadEntriesImpl(token.Token, token.Model, uploadRequestBody.Dest, uploadRequestBody.SleepIntervalSec)
-	return c.Status(fiber.StatusOK).SendString("OK")
+	c.String(http.StatusOK, "OK")
 }
 
-func GetFullEntries(c *fiber.Ctx) error {
+func GetFullEntries(c *gin.Context) {
 	entriesFilter := &models.HarFetchRequestBody{}
-	if err := c.QueryParser(entriesFilter); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(err)
+	if err := c.BindQuery(entriesFilter); err != nil {
+		c.JSON(http.StatusBadRequest, err)
 	}
 	err := validation.Validate(entriesFilter)
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(err)
+		c.JSON(http.StatusBadRequest, err)
 	}
 
 	var timestampFrom, timestampTo int64
@@ -195,38 +201,37 @@ func GetFullEntries(c *fiber.Ctx) error {
 		}
 		result = append(result, harEntry)
 	}
-
-	return c.Status(fiber.StatusOK).JSON(result)
+	c.JSON(http.StatusOK, result)
 }
 
-func GetEntry(c *fiber.Ctx) error {
+func GetEntry(c *gin.Context) {
 	var entryData models.MizuEntry
 	database.GetEntriesTable().
-		Where(map[string]string{"entryId": c.Params("entryId")}).
+		Where(map[string]string{"entryId": c.Param("entryId")}).
 		First(&entryData)
 
 	fullEntry := models.FullEntryDetails{}
 	if err := models.GetEntry(&entryData, &fullEntry); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+		c.JSON(http.StatusInternalServerError, map[string]interface{}{
 			"error": true,
 			"msg":   "Can't get entry details",
 		})
 	}
-	return c.Status(fiber.StatusOK).JSON(fullEntry)
+	c.JSON(http.StatusOK, fullEntry)
 }
 
-func DeleteAllEntries(c *fiber.Ctx) error {
+func DeleteAllEntries(c *gin.Context) {
 	database.GetEntriesTable().
 		Where("1 = 1").
 		Delete(&models.MizuEntry{})
 
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+	c.JSON(http.StatusOK, map[string]string{
 		"msg": "Success",
 	})
 
 }
 
-func GetGeneralStats(c *fiber.Ctx) error {
+func GetGeneralStats(c *gin.Context) {
 	sqlQuery := "SELECT count(*) as count, min(timestamp) as min, max(timestamp) as max from mizu_entries"
 	var result struct {
 		Count int
@@ -234,5 +239,5 @@ func GetGeneralStats(c *fiber.Ctx) error {
 		Max   int
 	}
 	database.GetEntriesTable().Raw(sqlQuery).Scan(&result)
-	return c.Status(fiber.StatusOK).JSON(&result)
+	c.JSON(http.StatusOK, result)
 }
