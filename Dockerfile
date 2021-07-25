@@ -13,10 +13,10 @@ ENV CGO_ENABLED=1 GOOS=linux GOARCH=amd64
 
 RUN apk add libpcap-dev gcc g++ make
 
-# Move to api working directory (/api-build).
-WORKDIR /app/api-build
+# Move to agent working directory (/agent-build).
+WORKDIR /app/agent-build
 
-COPY api/go.mod api/go.sum ./
+COPY agent/go.mod agent/go.sum ./
 COPY shared/go.mod shared/go.mod ../shared/
 COPY tap/go.mod tap/go.mod ../tap/
 RUN go mod download
@@ -28,10 +28,10 @@ ARG GIT_BRANCH
 ARG BUILD_TIMESTAMP
 ARG SEM_VER
 
-# Copy and build api code
+# Copy and build agent code
 COPY shared ../shared
 COPY tap ../tap
-COPY api .
+COPY agent .
 RUN go build -ldflags="-s -w \
      -X 'mizuserver/pkg/version.GitCommitHash=${COMMIT_HASH}' \
      -X 'mizuserver/pkg/version.Branch=${GIT_BRANCH}' \
@@ -45,10 +45,10 @@ RUN apk add bash libpcap-dev tcpdump
 WORKDIR /app
 
 # Copy binary and config files from /build to root folder of scratch container.
-COPY --from=builder ["/app/api-build/mizuagent", "."]
+COPY --from=builder ["/app/agent-build/mizuagent", "."]
 COPY --from=site-build ["/app/ui-build/build", "site"]
 
-COPY api/start.sh .
+COPY agent/start.sh .
 
 # this script runs both apiserver and passivetapper and exits either if one of them exits, preventing a scenario where the container runs without one process
 ENTRYPOINT "/app/mizuagent"

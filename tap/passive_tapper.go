@@ -33,8 +33,7 @@ import (
 
 const AppPortsEnvVar = "APP_PORTS"
 const maxHTTP2DataLenEnvVar = "HTTP2_DATA_SIZE_LIMIT"
-// default is 1MB, more than the max size accepted by collector and traffic-dumper
-const maxHTTP2DataLenDefault = 1 * 1024 * 1024
+const maxHTTP2DataLenDefault = 1 * 1024 * 1024 // 1MB
 const cleanPeriod = time.Second * 10
 var remoteOnlyOutboundPorts = []int { 80, 443 }
 
