@@ -327,8 +327,7 @@ func portForwardApiPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 					if response, err := http.Get(u.String()); err != nil || response.StatusCode != 200 {
 						mizu.Log.Infof("error sending upload entries req, status code: %v, err: %v\n", response.StatusCode, err)
 					} else {
-						mizu.Log.Infof(mizu.Purple, "Traffic is uploading to UP9 for further analsys")
-						mizu.Log.Info()
+						mizu.Log.Infof(mizu.Purple, "Traffic is uploading to UP9 for further analysis\n")
 					}
 				}
 			}
