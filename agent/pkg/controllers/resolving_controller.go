@@ -1,11 +1,12 @@
 package controllers
 
 import (
-	"github.com/gofiber/fiber/v2"
+	"github.com/gin-gonic/gin"
 	"mizuserver/pkg/holder"
+	"net/http"
 )
 
-func GetCurrentResolvingInformation(c *fiber.Ctx) error {
-	return c.Status(fiber.StatusOK).JSON(holder.GetResolver().GetMap())
+func GetCurrentResolvingInformation(c *gin.Context) {
+	c.JSON(http.StatusOK, holder.GetResolver().GetMap())
 }
 

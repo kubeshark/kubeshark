@@ -1,12 +1,15 @@
 package routes
 
-import "github.com/gofiber/fiber/v2"
+import (
+	"github.com/gin-gonic/gin"
+	"net/http"
+)
 
 // NotFoundRoute defines the 404 Error route.
-func NotFoundRoute(fiberApp *fiber.App) {
-	fiberApp.Use(
-		func(c *fiber.Ctx) error {
-			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+func NotFoundRoute(app *gin.Engine) {
+	app.Use(
+		func(c *gin.Context) {
+			c.JSON(http.StatusNotFound, map[string]interface{}{
 				"error": true,
 				"msg":   "sorry, endpoint is not found",
 			})
