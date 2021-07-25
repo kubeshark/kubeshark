@@ -3,7 +3,6 @@ package config
 import (
 	"errors"
 	"fmt"
-	"github.com/romana/rlog"
 	"github.com/up9inc/mizu/cli/mizu"
 	"github.com/up9inc/mizu/cli/uiUtils"
 	"gopkg.in/yaml.v3"
@@ -69,11 +68,11 @@ func GetString(key string) string {
 
 func GetInt(key string) int {
 	stringVal := GetString(key)
-	rlog.Debug("Found string value %v", stringVal)
+	mizu.Log.Debugf("Found string value %v", stringVal)
 
 	val, err := strconv.Atoi(stringVal)
 	if err != nil {
-		rlog.Warnf("Invalid value %v for key %s", val, key)
+		mizu.Log.Warningf("Invalid value %v for key %s", val, key)
 		os.Exit(1)
 	}
 	return val
@@ -84,32 +83,32 @@ func GetConfig() interface{} {
 }
 
 func MergeAllSettings() error {
-	rlog.Debugf("Merging default values")
+	mizu.Log.Debugf("Merging default values")
 	mergeDefaultValues()
-	rlog.Debugf("Merging settings file values")
+	mizu.Log.Debugf("Merging settings file values")
 	if err1 := mergeSettingsFileSettings(); err1 != nil {
 		fmt.Printf(mizu.Red, "Invalid settings file\n")
 		return err1
 	}
-	rlog.Debugf("Merging command line values")
+	mizu.Log.Debugf("Merging command line values")
 	if err2 := mergeCommandLineFlags(); err2 != nil {
 		fmt.Printf(mizu.Red, "Invalid commanad argument\n")
 		return err2
 	}
 	finalConfigPrettified, _ := uiUtils.PrettyJson(configObj)
-	rlog.Debugf("Merged all settings successfully\n Final config: %v", finalConfigPrettified)
+	mizu.Log.Debugf("Merged all settings successfully\n Final config: %v", finalConfigPrettified)
 	return nil
 }
 
 func mergeDefaultValues() {
 	for _, allowedFlag := range allowedSetFlags {
-		rlog.Debugf("Setting %v to %v", allowedFlag.YamlHierarchyName, allowedFlag.DefaultValue)
+		mizu.Log.Debugf("Setting %v to %v", allowedFlag.YamlHierarchyName, allowedFlag.DefaultValue)
 		configObj[allowedFlag.YamlHierarchyName] = allowedFlag.DefaultValue
 	}
 }
 
 func mergeSettingsFileSettings() error {
-	rlog.Debug("Merging mizu settings file flags")
+	mizu.Log.Debugf("Merging mizu settings file flags")
 	home, homeDirErr := os.UserHomeDir()
 	if homeDirErr != nil {
 		return nil
@@ -145,7 +144,7 @@ func addToConfig(prefix string, value interface{}) {
 }
 
 func mergeCommandLineFlags() error {
-	rlog.Debug("Merging Command line flags")
+	mizu.Log.Debugf("Merging Command line flags")
 	for _, e := range CommandLineValues {
 		if !strings.Contains(e, separator) {
 			return errors.New(fmt.Sprintf("invalid set argument %s", e))

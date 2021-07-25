@@ -3,7 +3,6 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	"github.com/romana/rlog"
 	"github.com/spf13/cobra"
 	"github.com/up9inc/mizu/cli/config"
 	"github.com/up9inc/mizu/cli/mizu"
@@ -53,11 +52,11 @@ Supported protocols are HTTP and gRPC.`,
 
 	},
 	PreRunE: func(cmd *cobra.Command, args []string) error {
-		rlog.Info("Getting params")
+		mizu.Log.Info("Getting params")
 		mizuTapOptions.AnalysisDestination = config.GetString(config.ConfigurationKeyAnalyzingDestination)
 		mizuTapOptions.SleepIntervalSec = uint16(config.GetInt(config.ConfigurationKeyUploadInterval))
 		mizuTapOptions.MizuImage = config.GetString(config.ConfigurationKeyMizuImage)
-		rlog.Info(uiUtils.PrettyJson(mizuTapOptions))
+		mizu.Log.Infof(uiUtils.PrettyJson(mizuTapOptions))
 
 
 		if len(args) == 0 {
