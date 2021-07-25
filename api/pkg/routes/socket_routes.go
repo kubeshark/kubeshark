@@ -113,10 +113,6 @@ func SendToSocket(socketId int, message []byte) error {
 	err := socketObj.connection.WriteMessage(1, message)
 	socketObj.lock.Unlock()
 
-	if err != nil {
-		fmt.Printf("writeRes = %v\n", err)
-	}
-
 	sent = true
 	return err
 }
