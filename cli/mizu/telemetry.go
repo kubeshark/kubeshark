@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/romana/rlog"
 	"net/http"
 )
 
@@ -12,7 +11,7 @@ const telemetryUrl = "https://us-east4-up9-prod.cloudfunctions.net/mizu-telemetr
 
 func ReportRun(cmd string, args interface{}) {
 	if Branch != "main" {
-		rlog.Debugf("reporting only on main branch")
+		Log.Debugf("reporting only on main branch")
 		return
 	}
 	argsBytes, _ := json.Marshal(args)
@@ -29,8 +28,8 @@ func ReportRun(cmd string, args interface{}) {
 
 	if resp, err := http.Post(telemetryUrl,
 		"application/json", bytes.NewBuffer(jsonValue)); err != nil {
-		rlog.Debugf("error sending telemetry err: %v, response %v", err, resp)
+		Log.Debugf("error sending telemetry err: %v, response %v", err, resp)
 	} else {
-		rlog.Debugf("Successfully reported telemetry")
+		Log.Debugf("Successfully reported telemetry")
 	}
 }

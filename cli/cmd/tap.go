@@ -67,7 +67,7 @@ Supported protocols are HTTP and gRPC.`,
 		if parseHumanDataSizeErr != nil {
 			return errors.New(fmt.Sprintf("Could not parse --max-entries-db-size value %s", humanMaxEntriesDBSize))
 		}
-		fmt.Printf("Mizu will store up to %s of traffic, old traffic will be cleared once the limit is reached.\n", units.BytesToHumanReadable(mizuTapOptions.MaxEntriesDBSizeBytes))
+		mizu.Log.Infof("Mizu will store up to %s of traffic, old traffic will be cleared once the limit is reached.\n", units.BytesToHumanReadable(mizuTapOptions.MaxEntriesDBSizeBytes))
 
 		directionLowerCase := strings.ToLower(direction)
 		if directionLowerCase == "any" {
@@ -79,9 +79,9 @@ Supported protocols are HTTP and gRPC.`,
 		}
 
 		if mizuTapOptions.Analysis {
-			fmt.Printf(analysisMessageToConfirm)
+			mizu.Log.Infof(analysisMessageToConfirm)
 			if !uiUtils.AskForConfirmation("Would you like to proceed [y/n]: ") {
-				fmt.Println("You can always run mizu without analysis, aborting")
+				mizu.Log.Infof("You can always run mizu without analysis, aborting")
 				os.Exit(0)
 			}
 		}
