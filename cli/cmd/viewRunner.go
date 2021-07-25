@@ -13,11 +13,11 @@ func runMizuView(mizuViewOptions *MizuViewOptions) {
 	kubernetesProvider, err := kubernetes.NewProvider(mizuViewOptions.KubeConfigPath)
 	if err != nil {
 		if clientcmd.IsEmptyConfig(err) {
-			fmt.Printf(mizu.Red, "Couldn't find the kube config file, or file is empty. Try adding '--kube-config=<path to kube config file>'\n")
+			mizu.Log.Infof("Couldn't find the kube config file, or file is empty. Try adding '--kube-config=<path to kube config file>'\n")
 			return
 		}
 		if clientcmd.IsConfigurationInvalid(err) {
-			fmt.Printf(mizu.Red, "Invalid kube config file. Try using a different config with '--kube-config=<path to kube config file>'\n")
+			mizu.Log.Infof(mizu.Red, "Invalid kube config file. Try using a different config with '--kube-config=<path to kube config file>'\n")
 			return
 		}
 	}
@@ -30,21 +30,21 @@ func runMizuView(mizuViewOptions *MizuViewOptions) {
 		panic(err)
 	}
 	if !exists {
-		fmt.Printf("The %s service not found\n", mizu.ApiServerPodName)
+		mizu.Log.Infof("The %s service not found\n", mizu.ApiServerPodName)
 		return
 	}
 
 	mizuProxiedUrl := kubernetes.GetMizuApiServerProxiedHostAndPath(mizuViewOptions.GuiPort)
 	_, err = http.Get(fmt.Sprintf("http://%s/", mizuProxiedUrl))
 	if err == nil {
-		fmt.Printf("Found a running service %s and open port %d\n", mizu.ApiServerPodName, mizuViewOptions.GuiPort)
+		mizu.Log.Infof("Found a running service %s and open port %d\n", mizu.ApiServerPodName, mizuViewOptions.GuiPort)
 		return
 	}
-	fmt.Printf("Found service %s, creating k8s proxy\n", mizu.ApiServerPodName)
+	mizu.Log.Infof("Found service %s, creating k8s proxy\n", mizu.ApiServerPodName)
 
-	fmt.Printf("Mizu is available at  http://%s\n", kubernetes.GetMizuApiServerProxiedHostAndPath(mizuViewOptions.GuiPort))
+	mizu.Log.Infof("Mizu is available at  http://%s\n", kubernetes.GetMizuApiServerProxiedHostAndPath(mizuViewOptions.GuiPort))
 	err = kubernetes.StartProxy(kubernetesProvider, mizuViewOptions.GuiPort, mizu.ResourcesNamespace, mizu.ApiServerPodName)
 	if err != nil {
-		fmt.Printf("Error occured while running k8s proxy %v\n", err)
+		mizu.Log.Infof("Error occured while running k8s proxy %v\n", err)
 	}
 }

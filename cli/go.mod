@@ -5,7 +5,7 @@ go 1.16
 require (
 	github.com/google/go-github/v37 v37.0.0
 	github.com/gorilla/websocket v1.4.2
-	github.com/romana/rlog v0.0.0-20171115192701-f018bc92e7d7
+	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/spf13/cobra v1.1.3
 	github.com/up9inc/mizu/shared v0.0.0
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
