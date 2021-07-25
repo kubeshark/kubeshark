@@ -20,6 +20,7 @@ type MizuTapOptions struct {
 	AnalysisDestination    string
 	KubeConfigPath         string
 	MizuImage              string
+	MizuNamespace          string
 	PlainTextFilterRegexes []string
 	TapOutgoing            bool
 	HideHealthChecks       bool
@@ -101,6 +102,7 @@ func init() {
 	tapCmd.Flags().BoolVarP(&mizuTapOptions.AllNamespaces, "all-namespaces", "A", false, "Tap all namespaces")
 	tapCmd.Flags().StringVarP(&mizuTapOptions.KubeConfigPath, "kube-config", "k", "", "Path to kube-config file")
 	tapCmd.Flags().StringVarP(&mizuTapOptions.MizuImage, "mizu-image", "", fmt.Sprintf("gcr.io/up9-docker-hub/mizu/%s:%s", mizu.Branch, mizu.SemVer), "Custom image for mizu API server")
+	tapCmd.Flags().StringVarP(&mizuTapOptions.MizuNamespace, "mizu-namespace", "", "", "A existing namespace in which to install mizu resources. If not passed, create a temporary namespace \"mizu\" for this purpose.")
 	tapCmd.Flags().StringArrayVarP(&mizuTapOptions.PlainTextFilterRegexes, "regex-masking", "r", nil, "List of regex expressions that are used to filter matching values from text/plain http bodies")
 	tapCmd.Flags().StringVarP(&direction, "direction", "", "in", "Record traffic that goes in this direction (relative to the tapped pod): in/any")
 	tapCmd.Flags().BoolVar(&mizuTapOptions.HideHealthChecks, "hide-healthchecks", false, "hides requests with kube-probe or prometheus user-agent headers")

@@ -9,14 +9,14 @@ var (
 )
 
 const (
-	ApiServerPodName       = "mizu-api-server"
-	ClusterRoleBindingName = "mizu-cluster-role-binding"
-	ClusterRoleName        = "mizu-cluster-role"
-	K8sAllNamespaces       = ""
-	ResourcesNamespace     = "mizu"
-	ServiceAccountName     = "mizu-service-account"
-	TapperDaemonSetName    = "mizu-tapper-daemon-set"
-	TapperPodName          = "mizu-tapper"
+	ApiServerPodName          = "mizu-api-server"
+	ClusterRoleBindingName    = "mizu-cluster-role-binding"
+	ClusterRoleName           = "mizu-cluster-role"
+	K8sAllNamespaces          = ""
+	ResourcesDefaultNamespace = "mizu"
+	ServiceAccountName        = "mizu-service-account"
+	TapperDaemonSetName       = "mizu-tapper-daemon-set"
+	TapperPodName             = "mizu-tapper"
 )
 
 const (

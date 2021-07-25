@@ -25,7 +25,7 @@ func runMizuView(mizuViewOptions *MizuViewOptions) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	exists, err := kubernetesProvider.DoesServicesExist(ctx, mizu.ResourcesNamespace, mizu.ApiServerPodName)
+	exists, err := kubernetesProvider.DoesServicesExist(ctx, mizu.ResourcesDefaultNamespace, mizu.ApiServerPodName)
 	if err != nil {
 		panic(err)
 	}
@@ -43,7 +43,7 @@ func runMizuView(mizuViewOptions *MizuViewOptions) {
 	fmt.Printf("Found service %s, creating k8s proxy\n", mizu.ApiServerPodName)
 
 	fmt.Printf("Mizu is available at  http://%s\n", kubernetes.GetMizuApiServerProxiedHostAndPath(mizuViewOptions.GuiPort))
-	err = kubernetes.StartProxy(kubernetesProvider, mizuViewOptions.GuiPort, mizu.ResourcesNamespace, mizu.ApiServerPodName)
+	err = kubernetes.StartProxy(kubernetesProvider, mizuViewOptions.GuiPort, mizu.ResourcesDefaultNamespace, mizu.ApiServerPodName)
 	if err != nil {
 		fmt.Printf("Error occured while running k8s proxy %v\n", err)
 	}

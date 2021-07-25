@@ -31,10 +31,23 @@ type tapCmdBL struct {
 	currentlyTappedPods      []core.Pod
 	flags                    *MizuTapOptions
 	mizuServiceAccountExists bool
+	resourcesNamespace       string
 }
 
 func NewtapCmdBL(flags *MizuTapOptions) *tapCmdBL {
-	return &tapCmdBL{flags: flags}
+	var (
+		resourcesNamespace string
+	)
+	if flags.MizuNamespace != "" {
+		resourcesNamespace = flags.MizuNamespace
+	} else {
+		resourcesNamespace = mizu.ResourcesDefaultNamespace
+	}
+
+	return &tapCmdBL{
+		flags: flags,
+		resourcesNamespace: resourcesNamespace,
+	}
 }
 
 func (bl *tapCmdBL) RunMizuTap(podRegexQuery *regexp.Regexp) {
@@ -102,7 +115,7 @@ func (bl *tapCmdBL) RunMizuTap(podRegexQuery *regexp.Regexp) {
 }
 
 func (bl *tapCmdBL) createMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, nodeToTappedPodIPMap map[string][]string, mizuApiFilteringOptions *shared.TrafficFilteringOptions) error {
-	if err := createMizuNamespace(ctx, kubernetesProvider); err != nil {
+	if err := createMizuNamespace(ctx, kubernetesProvider, bl.resourcesNamespace); err != nil {
 		return err
 	}
 
@@ -117,10 +130,10 @@ func (bl *tapCmdBL) createMizuResources(ctx context.Context, kubernetesProvider 
 	return nil
 }
 
-func createMizuNamespace(ctx context.Context, kubernetesProvider *kubernetes.Provider) error {
-	_, err := kubernetesProvider.CreateNamespace(ctx, mizu.ResourcesNamespace)
+func createMizuNamespace(ctx context.Context, kubernetesProvider *kubernetes.Provider, namespace string) error {
+	_, err := kubernetesProvider.CreateNamespace(ctx, namespace)
 	if err != nil {
-		fmt.Printf("Error creating Namespace %s: %v\n", mizu.ResourcesNamespace, err)
+		fmt.Printf("Error creating Namespace %s: %v\n", namespace, err)
 	}
 
 	return err
@@ -129,20 +142,20 @@ func createMizuNamespace(ctx context.Context, kubernetesProvider *kubernetes.Pro
 func (bl *tapCmdBL) createMizuApiServer(ctx context.Context, kubernetesProvider *kubernetes.Provider, mizuApiFilteringOptions *shared.TrafficFilteringOptions) error {
 	var err error
 
-	bl.mizuServiceAccountExists = createRBACIfNecessary(ctx, kubernetesProvider)
+	bl.mizuServiceAccountExists = bl.createRBACIfNecessary(ctx, kubernetesProvider)
 	var serviceAccountName string
 	if bl.mizuServiceAccountExists {
 		serviceAccountName = mizu.ServiceAccountName
 	} else {
 		serviceAccountName = ""
 	}
-	_, err = kubernetesProvider.CreateMizuApiServerPod(ctx, mizu.ResourcesNamespace, mizu.ApiServerPodName, bl.flags.MizuImage, serviceAccountName, mizuApiFilteringOptions, bl.flags.MaxEntriesDBSizeBytes)
+	_, err = kubernetesProvider.CreateMizuApiServerPod(ctx, bl.resourcesNamespace, mizu.ApiServerPodName, bl.flags.MizuImage, serviceAccountName, mizuApiFilteringOptions, bl.flags.MaxEntriesDBSizeBytes)
 	if err != nil {
 		fmt.Printf("Error creating mizu %s pod: %v\n", mizu.ApiServerPodName, err)
 		return err
 	}
 
-	bl.apiServerService, err = kubernetesProvider.CreateService(ctx, mizu.ResourcesNamespace, mizu.ApiServerPodName, mizu.ApiServerPodName)
+	bl.apiServerService, err = kubernetesProvider.CreateService(ctx, bl.resourcesNamespace, mizu.ApiServerPodName, mizu.ApiServerPodName)
 	if err != nil {
 		fmt.Printf("Error creating mizu %s service: %v\n", mizu.ApiServerPodName,  err)
 		return err
@@ -180,7 +193,7 @@ func (bl *tapCmdBL) updateMizuTappers(ctx context.Context, kubernetesProvider *k
 
 		if err := kubernetesProvider.ApplyMizuTapperDaemonSet(
 			ctx,
-			mizu.ResourcesNamespace,
+			bl.resourcesNamespace,
 			mizu.TapperDaemonSetName,
 			bl.flags.MizuImage,
 			mizu.TapperPodName,
@@ -193,7 +206,7 @@ func (bl *tapCmdBL) updateMizuTappers(ctx context.Context, kubernetesProvider *k
 			return err
 		}
 	} else {
-		if err := kubernetesProvider.RemoveDaemonSet(ctx, mizu.ResourcesNamespace, mizu.TapperDaemonSetName); err != nil {
+		if err := kubernetesProvider.RemoveDaemonSet(ctx, bl.resourcesNamespace, mizu.TapperDaemonSetName); err != nil {
 			fmt.Printf("Error deleting mizu tapper daemonset: %v\n", err)
 			return err
 		}
@@ -208,8 +221,8 @@ func (bl *tapCmdBL) cleanUpMizuResources(kubernetesProvider *kubernetes.Provider
 	removalCtx, cancel := context.WithTimeout(context.Background(), cleanupTimeout)
 	defer cancel()
 
-	if err := kubernetesProvider.RemoveNamespace(removalCtx, mizu.ResourcesNamespace); err != nil {
-		fmt.Printf("Error removing Namespace %s: %s (%v,%+v)\n", mizu.ResourcesNamespace, err, err, err)
+	if err := kubernetesProvider.RemoveNamespace(removalCtx, bl.resourcesNamespace); err != nil {
+		fmt.Printf("Error removing Namespace %s: %s (%v,%+v)\n", bl.resourcesNamespace, err, err, err)
 		return
 	}
 
@@ -225,14 +238,14 @@ func (bl *tapCmdBL) cleanUpMizuResources(kubernetesProvider *kubernetes.Provider
 		waitForFinish(removalCtx, cancel)
 	}()
 
-	if err := kubernetesProvider.WaitUtilNamespaceDeleted(removalCtx, mizu.ResourcesNamespace); err != nil {
+	if err := kubernetesProvider.WaitUtilNamespaceDeleted(removalCtx, bl.resourcesNamespace); err != nil {
 		switch {
 		case removalCtx.Err() == context.Canceled:
 			// Do nothing. User interrupted the wait.
 		case err == wait.ErrWaitTimeout:
-			fmt.Printf("Timeout while removing Namespace %s\n", mizu.ResourcesNamespace)
+			fmt.Printf("Timeout while removing Namespace %s\n", bl.resourcesNamespace)
 		default:
-			fmt.Printf("Error while waiting for Namespace %s to be deleted: %s (%v,%+v)\n", mizu.ResourcesNamespace, err, err, err)
+			fmt.Printf("Error while waiting for Namespace %s to be deleted: %s (%v,%+v)\n", bl.resourcesNamespace, err, err, err)
 		}
 	}
 }
@@ -295,7 +308,7 @@ func (bl *tapCmdBL) watchPodsForTapping(ctx context.Context, kubernetesProvider 
 
 func (bl *tapCmdBL) portForwardApiPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
 	podExactRegex := regexp.MustCompile(fmt.Sprintf("^%s$", mizu.ApiServerPodName))
-	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, kubernetesProvider.GetPodWatcher(ctx, mizu.ResourcesNamespace), podExactRegex)
+	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, kubernetesProvider.GetPodWatcher(ctx, bl.resourcesNamespace), podExactRegex)
 	isPodReady := false
 	timeAfter := time.After(25 * time.Second)
 	for {
@@ -313,7 +326,7 @@ func (bl *tapCmdBL) portForwardApiPod(ctx context.Context, kubernetesProvider *k
 			if modifiedPod.Status.Phase == "Running" && !isPodReady {
 				isPodReady = true
 				go func() {
-					err := kubernetes.StartProxy(kubernetesProvider, bl.flags.GuiPort, mizu.ResourcesNamespace, mizu.ApiServerPodName)
+					err := kubernetes.StartProxy(kubernetesProvider, bl.flags.GuiPort, bl.resourcesNamespace, mizu.ApiServerPodName)
 					if err != nil {
 						fmt.Printf("Error occured while running k8s proxy %v\n", err)
 						cancel()
@@ -352,14 +365,14 @@ func (bl *tapCmdBL) portForwardApiPod(ctx context.Context, kubernetesProvider *k
 	}
 }
 
-func createRBACIfNecessary(ctx context.Context, kubernetesProvider *kubernetes.Provider) bool {
-	mizuRBACExists, err := kubernetesProvider.DoesServiceAccountExist(ctx, mizu.ResourcesNamespace, mizu.ServiceAccountName)
+func (bl *tapCmdBL) createRBACIfNecessary(ctx context.Context, kubernetesProvider *kubernetes.Provider) bool {
+	mizuRBACExists, err := kubernetesProvider.DoesServiceAccountExist(ctx, bl.resourcesNamespace, mizu.ServiceAccountName)
 	if err != nil {
 		fmt.Printf("warning: could not ensure mizu rbac resources exist %v\n", err)
 		return false
 	}
 	if !mizuRBACExists {
-		err := kubernetesProvider.CreateMizuRBAC(ctx, mizu.ResourcesNamespace, mizu.ServiceAccountName, mizu.ClusterRoleName, mizu.ClusterRoleBindingName, mizu.RBACVersion)
+		err := kubernetesProvider.CreateMizuRBAC(ctx, bl.resourcesNamespace, mizu.ServiceAccountName, mizu.ClusterRoleName, mizu.ClusterRoleBindingName, mizu.RBACVersion)
 		if err != nil {
 			fmt.Printf("warning: could not create mizu rbac resources %v\n", err)
 			return false
