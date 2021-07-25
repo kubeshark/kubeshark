@@ -89,7 +89,7 @@ func startReadingFiles(workingDir string, infiniteLoad bool) {
 
 		for _, entry := range inputHar.Log.Entries {
 			if infiniteLoad {
-				entry.StartedDateTime = time.Now().Add(400 * time.Millisecond)
+				entry.StartedDateTime = time.Now().Add(20 * time.Millisecond)
 			}
 			time.Sleep(time.Millisecond * time.Duration(rand.Intn(300)))
 			connectionInfo := &tap.ConnectionInfo{
