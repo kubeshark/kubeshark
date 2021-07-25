@@ -113,8 +113,8 @@ type EntriesFilter struct {
 }
 
 type UploadEntriesRequestBody struct {
-	Dest             string `query:"dest"`
-	SleepIntervalSec int    `query:"interval"`
+	Dest             string `form:"dest"`
+	SleepIntervalSec int    `form:"interval"`
 }
 
 type HarFetchRequestBody struct {

@@ -147,17 +147,22 @@ func UploadEntries(c *gin.Context) {
 	uploadRequestBody := &models.UploadEntriesRequestBody{}
 	if err := c.BindQuery(uploadRequestBody); err != nil {
 		c.JSON(http.StatusBadRequest, err)
+		return
 	}
 	if err := validation.Validate(uploadRequestBody); err != nil {
 		c.JSON(http.StatusBadRequest, err)
+		return
 	}
 	if up9.GetAnalyzeInfo().IsAnalyzing {
 		c.String(http.StatusBadRequest, "Cannot analyze, mizu is already analyzing")
+		return
 	}
+
 	rlog.Infof("Upload entries - creating token. dest %s\n", uploadRequestBody.Dest)
 	token, err := up9.CreateAnonymousToken(uploadRequestBody.Dest)
 	if err != nil {
 		c.String(http.StatusServiceUnavailable, "Cannot analyze, mizu is already analyzing")
+		return
 	}
 	rlog.Infof("Upload entries - uploading. token: %s model: %s\n", token.Token, token.Model)
 	go up9.UploadEntriesImpl(token.Token, token.Model, uploadRequestBody.Dest, uploadRequestBody.SleepIntervalSec)
