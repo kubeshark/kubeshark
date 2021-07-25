@@ -9,8 +9,6 @@ import (
 	"github.com/up9inc/mizu/cli/uiUtils"
 )
 
-var verbose bool
-
 var rootCmd = &cobra.Command{
 	Use:   "mizu",
 	Short: "A web traffic viewer for kubernetes",
@@ -29,7 +27,6 @@ Further info is available at https://github.com/up9inc/mizu`,
 
 func init() {
 	rootCmd.PersistentFlags().StringSliceVar(&config.CommandLineValues, "set", []string{}, "Override values using --set")
-	rootCmd.PersistentFlags().BoolVar(&verbose, "verbose", false, "Verbose logging")
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
