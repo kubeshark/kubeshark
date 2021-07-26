@@ -170,7 +170,7 @@ const HAREntryPolicySectionCollapsibleTitle: React.FC<HAREntryPolicySectionColla
         </span>
         <span>
             <tr className={styles.dataLine}>
-            <td className={`${styles.dataKey} ${matched === 'Success' ? styles.rulesTitleSuccess : styles.rulesTitleFailure}`}>{label}</td>
+            <td className={`${styles.dataKey} ${styles.rulesTitleSuccess}`}>{label}</td>
             <td className={`${styles.dataKey} ${matched === 'Success' ? styles.rulesMatchedSuccess : styles.rulesMatchedFailure}`}>{matched}</td>
             </tr>
         </span>
@@ -205,13 +205,13 @@ export const HAREntryTablePolicySection: React.FC<HAREntryPolicySectionProps> = 
                     <table>
                         <tbody>
                             {arrayToIterate.map(({rule, matched}, index) => {
-                                console.log('rule',rule);
+                                
                                 
                                     return (
                                         // <HAREntryViewLine key={index} label={rule.Name} value={matched}/>
                                         <HAREntryPolicySectionContainer key={index} label={rule.Name} matched={matched && (rule.Type === 'latency' ? rule.Latency > latency : true)? "Success" : "Failure"}>
                                             {
-                                                // rule.Type === 'header' ?
+                                                
                                                 <>
                                                     {
                                                         rule.Key != "" ? 
@@ -220,79 +220,37 @@ export const HAREntryTablePolicySection: React.FC<HAREntryPolicySectionProps> = 
                                                     }
                                                     {
                                                         rule.Latency != "" ? 
-                                                        <tr className={styles.dataValue}><td>Latency:</td> <td><b>{rule.Latency}</b></td></tr>
+                                                        <tr className={styles.dataValue}><td><b>Latency:</b></td> <td>{rule.Latency}</td></tr>
                                                         : null
                                                     }
                                                     {
                                                         rule.Method != "" ? 
-                                                        <tr className={styles.dataValue}><td>Method:</td> <td><b>{rule.Method}</b></td></tr>
+                                                        <tr className={styles.dataValue}><td><b>Method:</b></td> <td>{rule.Method}</td></tr>
                                                         : null
                                                     }
                                                     {
                                                         rule.Path != "" ? 
-                                                        <tr className={styles.dataValue}><td>Path:</td> <td><b>{rule.Path}</b></td></tr>
+                                                        <tr className={styles.dataValue}><td><b>Path:</b></td> <td>{rule.Path}</td></tr>
                                                         : null
                                                     }
                                                     {
                                                         rule.Service != "" ? 
-                                                        <tr className={styles.dataValue}><td>Service:</td> <td><b>{service}</b></td></tr>
+                                                        <tr className={styles.dataValue}><td><b>Service:</b></td> <td>{service}</td></tr>
                                                         : null
                                                     }
                                                     {
                                                         rule.Type != "" ? 
-                                                        <tr className={styles.dataValue}><td>Type:</td> <td><b>{rule.Type}</b></td></tr>
+                                                        <tr className={styles.dataValue}><td><b>Type:</b></td> <td>{rule.Type}</td></tr>
                                                         : null
                                                     }
                                                     {
                                                         rule.Value != "" ? 
-                                                        <tr className={styles.dataValue}><td>Value:</td> <td><b>{rule.Value}</b></td></tr>
+                                                        <tr className={styles.dataValue}><td><b>Value:</b></td> <td>{rule.Value}</td></tr>
                                                         : null
                                                     }
                                                 </>
-                                                // : rule.Type === 'json' ?
-                                                // <>
-                                                //     {
-                                                //         rule.Path != "" ? 
-                                                //         <tr className={styles.dataValue}>Path: <b>{rule.Path}</b></tr>
-                                                //         : null
-                                                //     }
-                                                //     {
-                                                //         rule.Service != "" ? 
-                                                //         <tr className={styles.dataValue}>Service: <b>{service}</b></tr>
-                                                //         : null
-                                                //     }
-                                                //     <tr className={styles.blueColor}>Expected: {rule.Value}</tr>
-                                                //     { matched  && response.content.mimeType === "application/json; charset=utf-8"?
-                                                //         <tr className={styles.latencyMatched}>Received: {jp.query(base64ToJson, rule.Key)}</tr>
-                                                //        :
-                                                //        <tr className={styles.latencyNotMatched}>Received: {jp.query(base64ToJson, rule.Key)}</tr>
-                                                //     } 
-                                                // </>
-                                                // : rule.Type === 'latency' ?
-                                                // <>
-                                                //     {
-                                                //         rule.Path != "" ? 
-                                                //         <tr className={styles.dataValue}>Path: <b>{rule.Path}</b></tr>
-                                                //         : null
-                                                //     }
-                                                //     {
-                                                //         rule.Service != "" ? 
-                                                //         <tr className={styles.dataValue}>Service: <b>{service}</b></tr>
-                                                //         : null
-                                                //     }
-                                                //     <tr className={styles.blueColor}>Expected: {rule.Latency} ms</tr>
-                                                //     {
-                                                //         latency <= rule.Latency ?
-                                                //             <tr className={styles.blueColor}>Received: {latency} ms</tr>
-                                                //         : <tr className={styles.blueColor}>Received: {latency} ms</tr>
-                                                //     }
-                                                // </>
-                                                // :
-                                                // <>
-                                                // </>
-                                                }
-                                            {/* <tr className={styles.dataKey}>Latency expected: {rule.Latency} ms</tr>
-                                            <tr className={styles.latencyNotMatched}>Latency received: {latency} ms</tr> */}
+                                            }
+                                           
                                             
                                         </HAREntryPolicySectionContainer>
                                     )
