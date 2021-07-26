@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/google/go-github/v37/github"
+	"github.com/up9inc/mizu/cli/uiUtils"
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/semver"
 	"io/ioutil"
@@ -44,7 +45,7 @@ func CheckVersionCompatibility(port uint16) (bool, error) {
 		return true, nil
 	}
 
-	Log.Infof(Red, fmt.Sprintf("cli version (%s) is not compatible with api version (%s)\n", SemVer, apiSemVer))
+	Log.Infof(uiUtils.Red, fmt.Sprintf("cli version (%s) is not compatible with api version (%s)\n", SemVer, apiSemVer))
 	return false, nil
 }
 
@@ -86,6 +87,6 @@ func CheckNewerVersion() {
 	gitHubVersion = gitHubVersion[:len(gitHubVersion)-1]
 	Log.Debugf("Finished version validation, took %v", time.Since(start))
 	if SemVer < gitHubVersion {
-		Log.Infof(Yellow, fmt.Sprintf("Update available! %v -> %v (%v)\n", SemVer, gitHubVersion, *latestRelease.HTMLURL))
+		Log.Infof(uiUtils.Yellow, fmt.Sprintf("Update available! %v -> %v (%v)\n", SemVer, gitHubVersion, *latestRelease.HTMLURL))
 	}
 }

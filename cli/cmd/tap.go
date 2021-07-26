@@ -35,8 +35,8 @@ var regex *regexp.Regexp
 
 const maxEntriesDBSizeFlagName = "max-entries-db-size"
 
-const analysisMessageToConfirm = `NOTE: running mizu with --analysis flag will upload recorded traffic
-to UP9 cloud for further analysis and enriched presentation options.
+const analysisMessageToConfirm = `NOTE: running mizu with --analysis flag will upload recorded traffic 
+for further analysis and enriched presentation options.
 `
 
 var tapCmd = &cobra.Command{
@@ -48,8 +48,16 @@ Supported protocols are HTTP and gRPC.`,
 		go mizu.ReportRun("tap", mizuTapOptions)
 		RunMizuTap(regex, mizuTapOptions)
 		return nil
+
 	},
 	PreRunE: func(cmd *cobra.Command, args []string) error {
+		mizu.Log.Info("Getting params")
+		mizuTapOptions.AnalysisDestination = mizu.GetString(mizu.ConfigurationKeyAnalyzingDestination)
+		mizuTapOptions.SleepIntervalSec = uint16(mizu.GetInt(mizu.ConfigurationKeyUploadInterval))
+		mizuTapOptions.MizuImage = mizu.GetString(mizu.ConfigurationKeyMizuImage)
+		mizu.Log.Infof(uiUtils.PrettyJson(mizuTapOptions))
+
+
 		if len(args) == 0 {
 			return errors.New("POD REGEX argument is required")
 		} else if len(args) > 1 {
@@ -95,11 +103,8 @@ func init() {
 	tapCmd.Flags().Uint16VarP(&mizuTapOptions.GuiPort, "gui-port", "p", 8899, "Provide a custom port for the web interface webserver")
 	tapCmd.Flags().StringVarP(&mizuTapOptions.Namespace, "namespace", "n", "", "Namespace selector")
 	tapCmd.Flags().BoolVar(&mizuTapOptions.Analysis, "analysis", false, "Uploads traffic to UP9 for further analysis (Beta)")
-	tapCmd.Flags().StringVar(&mizuTapOptions.AnalysisDestination, "dest", "up9.app", "Destination environment")
-	tapCmd.Flags().Uint16VarP(&mizuTapOptions.SleepIntervalSec, "upload-interval", "", 10, "Interval in seconds for uploading data to UP9")
 	tapCmd.Flags().BoolVarP(&mizuTapOptions.AllNamespaces, "all-namespaces", "A", false, "Tap all namespaces")
 	tapCmd.Flags().StringVarP(&mizuTapOptions.KubeConfigPath, "kube-config", "k", "", "Path to kube-config file")
-	tapCmd.Flags().StringVarP(&mizuTapOptions.MizuImage, "mizu-image", "", fmt.Sprintf("gcr.io/up9-docker-hub/mizu/%s:%s", mizu.Branch, mizu.SemVer), "Custom image for mizu API server")
 	tapCmd.Flags().StringArrayVarP(&mizuTapOptions.PlainTextFilterRegexes, "regex-masking", "r", nil, "List of regex expressions that are used to filter matching values from text/plain http bodies")
 	tapCmd.Flags().StringVarP(&direction, "direction", "", "in", "Record traffic that goes in this direction (relative to the tapped pod): in/any")
 	tapCmd.Flags().BoolVar(&mizuTapOptions.HideHealthChecks, "hide-healthchecks", false, "hides requests with kube-probe or prometheus user-agent headers")

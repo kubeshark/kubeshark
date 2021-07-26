@@ -26,8 +26,7 @@ func ReportRun(cmd string, args interface{}) {
 
 	jsonValue, _ := json.Marshal(argsMap)
 
-	if resp, err := http.Post(telemetryUrl,
-		"application/json", bytes.NewBuffer(jsonValue)); err != nil {
+	if resp, err := http.Post(telemetryUrl, "application/json", bytes.NewBuffer(jsonValue)); err != nil {
 		Log.Debugf("error sending telemetry err: %v, response %v", err, resp)
 	} else {
 		Log.Debugf("Successfully reported telemetry")
