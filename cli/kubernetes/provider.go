@@ -6,13 +6,21 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
 	"path/filepath"
 	"regexp"
+	"strconv"
+
+	"github.com/up9inc/mizu/cli/mizu"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/tools/cache"
+	"k8s.io/client-go/util/homedir"
 
 	"github.com/up9inc/mizu/shared"
 	core "k8s.io/api/core/v1"
 	rbac "k8s.io/api/rbac/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
+	resource "k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/watch"
@@ -27,7 +35,7 @@ import (
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	_ "k8s.io/client-go/tools/portforward"
-	"k8s.io/client-go/util/homedir"
+	watchtools "k8s.io/client-go/tools/watch"
 )
 
 type Provider struct {
@@ -38,16 +46,15 @@ type Provider struct {
 }
 
 const (
-	serviceAccountName = "mizu-service-account"
-	fieldManagerName   = "mizu-manager"
-	configMapName      = "mizu-policy"
+	fieldManagerName = "mizu-manager"
+	configMapName    = "mizu-policy"
 )
 
-func NewProvider(kubeConfigPath string) *Provider {
+func NewProvider(kubeConfigPath string) (*Provider, error) {
 	kubernetesConfig := loadKubernetesConfiguration(kubeConfigPath)
 	restClientConfig, err := kubernetesConfig.ClientConfig()
 	if err != nil {
-		panic(err.Error())
+		return nil, err
 	}
 	clientSet := getClientSet(restClientConfig)
 
@@ -55,12 +62,52 @@ func NewProvider(kubeConfigPath string) *Provider {
 		clientSet:        clientSet,
 		kubernetesConfig: kubernetesConfig,
 		clientConfig:     *restClientConfig,
-	}
+	}, nil
 }
 
 func (provider *Provider) CurrentNamespace() string {
 	ns, _, _ := provider.kubernetesConfig.Namespace()
 	return ns
+}
+
+func (provider *Provider) WaitUtilNamespaceDeleted(ctx context.Context, name string) error {
+	fieldSelector := fmt.Sprintf("metadata.name=%s", name)
+	var limit int64 = 1
+	lw := &cache.ListWatch{
+		ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
+			options.FieldSelector = fieldSelector
+			options.Limit = limit
+			return provider.clientSet.CoreV1().Namespaces().List(ctx, options)
+		},
+		WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
+			options.FieldSelector = fieldSelector
+			options.Limit = limit
+			return provider.clientSet.CoreV1().Namespaces().Watch(ctx, options)
+		},
+	}
+
+	var preconditionFunc watchtools.PreconditionFunc = func(store cache.Store) (bool, error) {
+		_, exists, err := store.Get(&core.Namespace{ObjectMeta: metav1.ObjectMeta{Name: name}})
+		if err != nil {
+			return false, err
+		}
+		if exists {
+			return false, nil
+		}
+		return true, nil
+	}
+
+	conditionFunc := func(e watch.Event) (bool, error) {
+		if e.Type == watch.Deleted {
+			return true, nil
+		}
+		return false, nil
+	}
+
+	obj := &core.Namespace{}
+	_, err := watchtools.UntilWithSync(ctx, lw, obj, preconditionFunc, conditionFunc)
+
+	return err
 }
 
 func (provider *Provider) GetPodWatcher(ctx context.Context, namespace string) watch.Interface {
@@ -71,13 +118,40 @@ func (provider *Provider) GetPodWatcher(ctx context.Context, namespace string) w
 	return watcher
 }
 
-func (provider *Provider) CreateMizuAggregatorPod(ctx context.Context, namespace string, podName string, podImage string, linkServiceAccount bool, mizuApiFilteringOptions *shared.TrafficFilteringOptions) (*core.Pod, error) {
+func (provider *Provider) CreateNamespace(ctx context.Context, name string) (*core.Namespace, error) {
+	namespaceSpec := &core.Namespace{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+	}
+	return provider.clientSet.CoreV1().Namespaces().Create(ctx, namespaceSpec, metav1.CreateOptions{})
+}
+
+func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, namespace string, podName string, podImage string, serviceAccountName string, mizuApiFilteringOptions *shared.TrafficFilteringOptions, maxEntriesDBSizeBytes int64) (*core.Pod, error) {
 	marshaledFilteringOptions, err := json.Marshal(mizuApiFilteringOptions)
 	if err != nil {
 		return nil, err
 	}
 	configMapVolumeName := &core.ConfigMapVolumeSource{}
 	configMapVolumeName.Name = configMapName
+
+	cpuLimit, err := resource.ParseQuantity("750m")
+	if err != nil {
+		return nil, errors.New(fmt.Sprintf("invalid cpu limit for %s container", podName))
+	}
+	memLimit, err := resource.ParseQuantity("512Mi")
+	if err != nil {
+		return nil, errors.New(fmt.Sprintf("invalid memory limit for %s container", podName))
+	}
+	cpuRequests, err := resource.ParseQuantity("50m")
+	if err != nil {
+		return nil, errors.New(fmt.Sprintf("invalid cpu request for %s container", podName))
+	}
+	memRequests, err := resource.ParseQuantity("50Mi")
+	if err != nil {
+		return nil, errors.New(fmt.Sprintf("invalid memory request for %s container", podName))
+	}
+
 	pod := &core.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      podName,
@@ -90,13 +164,13 @@ func (provider *Provider) CreateMizuAggregatorPod(ctx context.Context, namespace
 					Name:            podName,
 					Image:           podImage,
 					ImagePullPolicy: core.PullAlways,
-					Command:         []string{"./mizuagent", "--aggregator"},
 					VolumeMounts: []core.VolumeMount{
 						{
 							Name:      configMapName,
 							MountPath: "/app/enforce-policy",
 						},
 					},
+					Command: []string{"./mizuagent", "--api-server"},
 					Env: []core.EnvVar{
 						{
 							Name:  shared.HostModeEnvVar,
@@ -105,6 +179,20 @@ func (provider *Provider) CreateMizuAggregatorPod(ctx context.Context, namespace
 						{
 							Name:  shared.MizuFilteringOptionsEnvVar,
 							Value: string(marshaledFilteringOptions),
+						},
+						{
+							Name:  shared.MaxEntriesDBSizeBytesEnvVar,
+							Value: strconv.FormatInt(maxEntriesDBSizeBytes, 10),
+						},
+					},
+					Resources: core.ResourceRequirements{
+						Limits: core.ResourceList{
+							"cpu":    cpuLimit,
+							"memory": memLimit,
+						},
+						Requests: core.ResourceList{
+							"cpu":    cpuRequests,
+							"memory": memRequests,
 						},
 					},
 				},
@@ -122,7 +210,7 @@ func (provider *Provider) CreateMizuAggregatorPod(ctx context.Context, namespace
 		},
 	}
 	//define the service account only when it exists to prevent pod crash
-	if linkServiceAccount {
+	if serviceAccountName != "" {
 		pod.Spec.ServiceAccountName = serviceAccountName
 	}
 	return provider.clientSet.CoreV1().Pods(namespace).Create(ctx, pod, metav1.CreateOptions{})
@@ -143,7 +231,7 @@ func (provider *Provider) CreateService(ctx context.Context, namespace string, s
 	return provider.clientSet.CoreV1().Services(namespace).Create(ctx, &service, metav1.CreateOptions{})
 }
 
-func (provider *Provider) DoesMizuRBACExist(ctx context.Context, namespace string) (bool, error) {
+func (provider *Provider) DoesServiceAccountExist(ctx context.Context, namespace string, serviceAccountName string) (bool, error) {
 	serviceAccount, err := provider.clientSet.CoreV1().ServiceAccounts(namespace).Get(ctx, serviceAccountName, metav1.GetOptions{})
 
 	var statusError *k8serrors.StatusError
@@ -174,9 +262,7 @@ func (provider *Provider) DoesServicesExist(ctx context.Context, namespace strin
 	return service != nil, nil
 }
 
-func (provider *Provider) CreateMizuRBAC(ctx context.Context, namespace string, version string) error {
-	clusterRoleName := "mizu-cluster-role"
-
+func (provider *Provider) CreateMizuRBAC(ctx context.Context, namespace string, serviceAccountName string, clusterRoleName string, clusterRoleBindingName string, version string) error {
 	serviceAccount := &core.ServiceAccount{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      serviceAccountName,
@@ -199,7 +285,7 @@ func (provider *Provider) CreateMizuRBAC(ctx context.Context, namespace string, 
 	}
 	clusterRoleBinding := &rbac.ClusterRoleBinding{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   "mizu-cluster-role-binding",
+			Name:   clusterRoleBindingName,
 			Labels: map[string]string{"mizu-cli-version": version},
 		},
 		RoleRef: rbac.RoleRef{
@@ -228,6 +314,48 @@ func (provider *Provider) CreateMizuRBAC(ctx context.Context, namespace string, 
 		return err
 	}
 	return nil
+}
+
+func (provider *Provider) RemoveNamespace(ctx context.Context, name string) error {
+	if isFound, err := provider.CheckNamespaceExists(ctx, name); err != nil {
+		return err
+	} else if !isFound {
+		return nil
+	}
+
+	return provider.clientSet.CoreV1().Namespaces().Delete(ctx, name, metav1.DeleteOptions{})
+}
+
+func (provider *Provider) RemoveNonNamespacedResources(ctx context.Context, clusterRoleName string, clusterRoleBindingName string) error {
+	if err := provider.RemoveClusterRole(ctx, clusterRoleName); err != nil {
+		return err
+	}
+
+	if err := provider.RemoveClusterRoleBinding(ctx, clusterRoleBindingName); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (provider *Provider) RemoveClusterRole(ctx context.Context, name string) error {
+	if isFound, err := provider.CheckClusterRoleExists(ctx, name); err != nil {
+		return err
+	} else if !isFound {
+		return nil
+	}
+
+	return provider.clientSet.RbacV1().ClusterRoles().Delete(ctx, name, metav1.DeleteOptions{})
+}
+
+func (provider *Provider) RemoveClusterRoleBinding(ctx context.Context, name string) error {
+	if isFound, err := provider.CheckClusterRoleBindingExists(ctx, name); err != nil {
+		return err
+	} else if !isFound {
+		return nil
+	}
+
+	return provider.clientSet.RbacV1().ClusterRoleBindings().Delete(ctx, name, metav1.DeleteOptions{})
 }
 
 func (provider *Provider) RemovePod(ctx context.Context, namespace string, podName string) error {
@@ -267,6 +395,57 @@ func (provider *Provider) RemoveConfigMap(ctx context.Context, namespace string,
 		return nil
 	}
 	return provider.clientSet.CoreV1().ConfigMaps(namespace).Delete(ctx, configMapName, metav1.DeleteOptions{})
+}
+
+func (provider *Provider) CheckNamespaceExists(ctx context.Context, name string) (bool, error) {
+	listOptions := metav1.ListOptions{
+		FieldSelector: fmt.Sprintf("metadata.name=%s", name),
+		Limit:         1,
+	}
+	resourceList, err := provider.clientSet.CoreV1().Namespaces().List(ctx, listOptions)
+	if err != nil {
+		return false, err
+	}
+
+	if len(resourceList.Items) > 0 {
+		return true, nil
+	}
+
+	return false, nil
+}
+
+func (provider *Provider) CheckClusterRoleExists(ctx context.Context, name string) (bool, error) {
+	listOptions := metav1.ListOptions{
+		FieldSelector: fmt.Sprintf("metadata.name=%s", name),
+		Limit:         1,
+	}
+	resourceList, err := provider.clientSet.RbacV1().ClusterRoles().List(ctx, listOptions)
+	if err != nil {
+		return false, err
+	}
+
+	if len(resourceList.Items) > 0 {
+		return true, nil
+	}
+
+	return false, nil
+}
+
+func (provider *Provider) CheckClusterRoleBindingExists(ctx context.Context, name string) (bool, error) {
+	listOptions := metav1.ListOptions{
+		FieldSelector: fmt.Sprintf("metadata.name=%s", name),
+		Limit:         1,
+	}
+	resourceList, err := provider.clientSet.RbacV1().ClusterRoleBindings().List(ctx, listOptions)
+	if err != nil {
+		return false, err
+	}
+
+	if len(resourceList.Items) > 0 {
+		return true, nil
+	}
+
+	return false, nil
 }
 
 func (provider *Provider) CheckPodExists(ctx context.Context, namespace string, name string) (bool, error) {
@@ -355,7 +534,7 @@ func (provider *Provider) ApplyConfigMap(ctx context.Context, namespace string, 
 	return err
 }
 
-func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, aggregatorPodIp string, nodeToTappedPodIPMap map[string][]string, linkServiceAccount bool, tapOutgoing bool) error {
+func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, apiServerPodIp string, nodeToTappedPodIPMap map[string][]string, serviceAccountName string, tapOutgoing bool) error {
 	if len(nodeToTappedPodIPMap) == 0 {
 		return fmt.Errorf("Daemon set %s must tap at least 1 pod", daemonSetName)
 	}
@@ -370,7 +549,7 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 		"-i", "any",
 		"--tap",
 		"--hardump",
-		"--aggregator-address", fmt.Sprintf("ws://%s/wsTapper", aggregatorPodIp),
+		"--api-server-address", fmt.Sprintf("ws://%s/wsTapper", apiServerPodIp),
 	}
 	if tapOutgoing {
 		mizuCmd = append(mizuCmd, "--anydirection")
@@ -394,6 +573,32 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 			),
 		),
 	)
+	cpuLimit, err := resource.ParseQuantity("500m")
+	if err != nil {
+		return errors.New(fmt.Sprintf("invalid cpu limit for %s container", tapperPodName))
+	}
+	memLimit, err := resource.ParseQuantity("1Gi")
+	if err != nil {
+		return errors.New(fmt.Sprintf("invalid memory limit for %s container", tapperPodName))
+	}
+	cpuRequests, err := resource.ParseQuantity("50m")
+	if err != nil {
+		return errors.New(fmt.Sprintf("invalid cpu request for %s container", tapperPodName))
+	}
+	memRequests, err := resource.ParseQuantity("50Mi")
+	if err != nil {
+		return errors.New(fmt.Sprintf("invalid memory request for %s container", tapperPodName))
+	}
+	agentResourceLimits := core.ResourceList{
+		"cpu":    cpuLimit,
+		"memory": memLimit,
+	}
+	agentResourceRequests := core.ResourceList{
+		"cpu":    cpuRequests,
+		"memory": memRequests,
+	}
+	agentResources := applyconfcore.ResourceRequirements().WithRequests(agentResourceRequests).WithLimits(agentResourceLimits)
+	agentContainer.WithResources(agentResources)
 
 	nodeNames := make([]string, 0, len(nodeToTappedPodIPMap))
 	for nodeName := range nodeToTappedPodIPMap {
@@ -423,7 +628,7 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	podSpec.WithHostNetwork(true)
 	podSpec.WithDNSPolicy(core.DNSClusterFirstWithHostNet)
 	podSpec.WithTerminationGracePeriodSeconds(0)
-	if linkServiceAccount {
+	if serviceAccountName != "" {
 		podSpec.WithServiceAccountName(serviceAccountName)
 	}
 	podSpec.WithContainers(agentContainer)
@@ -468,10 +673,15 @@ func getClientSet(config *restclient.Config) *kubernetes.Clientset {
 
 func loadKubernetesConfiguration(kubeConfigPath string) clientcmd.ClientConfig {
 	if kubeConfigPath == "" {
+		kubeConfigPath = os.Getenv("KUBECONFIG")
+	}
+
+	if kubeConfigPath == "" {
 		home := homedir.HomeDir()
 		kubeConfigPath = filepath.Join(home, ".kube", "config")
 	}
 
+	mizu.Log.Debugf("Using kube config %s", kubeConfigPath)
 	configPathList := filepath.SplitList(kubeConfigPath)
 	configLoadingRules := &clientcmd.ClientConfigLoadingRules{}
 	if len(configPathList) <= 1 {

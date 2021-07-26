@@ -5,10 +5,11 @@ import {makeStyles} from "@material-ui/core";
 import "./style/HarPage.sass";
 import styles from './style/HarEntriesList.module.sass';
 import {HAREntryDetailed} from "./HarEntryDetailed";
-import playIcon from './assets/play.svg';
+import playIcon from './assets/run.svg';
 import pauseIcon from './assets/pause.svg';
 import variables from './style/variables.module.scss';
 import {StatusBar} from "./StatusBar";
+import Api, {MizuWebsocketURL} from "../helpers/api";
 
 const useLayoutStyles = makeStyles(() => ({
     details: {
@@ -39,6 +40,8 @@ interface HarPageProps {
     setAnalyzeStatus: (status: any) => void;
 }
 
+const api = new Api();
+
 export const HarPage: React.FC<HarPageProps> = ({setAnalyzeStatus}) => {
 
     const classes = useLayoutStyles();
@@ -59,7 +62,7 @@ export const HarPage: React.FC<HarPageProps> = ({setAnalyzeStatus}) => {
     const ws = useRef(null);
 
     const openWebSocket = () => {
-        ws.current = new WebSocket("ws://localhost:8899/ws");
+        ws.current = new WebSocket(MizuWebsocketURL);
         ws.current.onopen = () => setConnection(ConnectionStatus.Connected);
         ws.current.onclose = () => setConnection(ConnectionStatus.Closed);
     }
@@ -97,23 +100,32 @@ export const HarPage: React.FC<HarPageProps> = ({setAnalyzeStatus}) => {
     }
 
     useEffect(() => {
-        openWebSocket();
-        fetch(`http://localhost:8899/api/tapStatus`)
-            .then(response => response.json())
-            .then(data => setTappingStatus(data));
-
-        fetch(`http://localhost:8899/api/analyzeStatus`)
-            .then(response => response.json())
-            .then(data => setAnalyzeStatus(data));
+        (async () => {
+            openWebSocket();
+            try{
+                const tapStatusResponse = await api.tapStatus();
+                setTappingStatus(tapStatusResponse);
+                const analyzeStatusResponse = await api.analyzeStatus();
+                setAnalyzeStatus(analyzeStatusResponse);
+            } catch (error) {
+                console.error(error);
+            }
+        })()
+        // eslint-disable-next-line
     }, []);
 
 
     useEffect(() => {
         if (!focusedEntryId) return;
-        setSelectedHarEntry(null)
-        fetch(`http://localhost:8899/api/entries/${focusedEntryId}`)
-            .then(response => response.json())
-            .then(data => setSelectedHarEntry(data));
+        setSelectedHarEntry(null);
+        (async () => {
+            try {
+                const entryData = await api.getEntry(focusedEntryId);
+                setSelectedHarEntry(entryData);
+            } catch (error) {
+                console.error(error);
+            }
+        })()
     }, [focusedEntryId])
 
     const toggleConnection = () => {

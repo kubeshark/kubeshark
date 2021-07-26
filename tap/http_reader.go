@@ -184,13 +184,13 @@ func (h *httpReader) handleHTTP1ClientStream(b *bufio.Reader) error {
 	if err != nil {
 		SilentError("HTTP-request-body", "stream %s Got body err: %s", h.ident, err)
 	} else if h.hexdump {
-		Info("Body(%d/0x%x) - %s", len(body), len(body), hex.Dump(body))
+		Debug("Body(%d/0x%x) - %s", len(body), len(body), hex.Dump(body))
 	}
 	if err := req.Body.Close(); err != nil {
 		SilentError("HTTP-request-body-close", "stream %s Failed to close request body: %s", h.ident, err)
 	}
 	encoding := req.Header["Content-Encoding"]
-	Info("HTTP/1 Request: %s %s %s (Body:%d) -> %s", h.ident, req.Method, req.URL, s, encoding)
+	Debug("HTTP/1 Request: %s %s %s (Body:%d) -> %s", h.ident, req.Method, req.URL, s, encoding)
 
 	ident := fmt.Sprintf("%s->%s %s->%s %d", h.tcpID.srcIP, h.tcpID.dstIP, h.tcpID.srcPort, h.tcpID.dstPort, h.messageCount)
 	reqResPair := reqResMatcher.registerRequest(ident, req, h.captureTime)
@@ -242,7 +242,7 @@ func (h *httpReader) handleHTTP1ServerStream(b *bufio.Reader) error {
 		SilentError("HTTP-response-body", "HTTP/%s: failed to get body(parsed len:%d): %s", h.ident, s, err)
 	}
 	if h.hexdump {
-		Info("Body(%d/0x%x) - %s", len(body), len(body), hex.Dump(body))
+		Debug("Body(%d/0x%x) - %s", len(body), len(body), hex.Dump(body))
 	}
 	if err := res.Body.Close(); err != nil {
 		SilentError("HTTP-response-body-close", "HTTP/%s: failed to close body(parsed len:%d): %s", h.ident, s, err)
@@ -256,7 +256,7 @@ func (h *httpReader) handleHTTP1ServerStream(b *bufio.Reader) error {
 		contentType = []string{http.DetectContentType(body)}
 	}
 	encoding := res.Header["Content-Encoding"]
-	Info("HTTP/1 Response: %s %s URL:%s (%d%s%d%s) -> %s", h.ident, res.Status, req, res.ContentLength, sym, s, contentType, encoding)
+	Debug("HTTP/1 Response: %s %s URL:%s (%d%s%d%s) -> %s", h.ident, res.Status, req, res.ContentLength, sym, s, contentType, encoding)
 
 	ident := fmt.Sprintf("%s->%s %s->%s %d", h.tcpID.dstIP, h.tcpID.srcIP, h.tcpID.dstPort, h.tcpID.srcPort, h.messageCount)
 	reqResPair := reqResMatcher.registerResponse(ident, res, h.captureTime)
