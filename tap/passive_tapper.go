@@ -429,6 +429,25 @@ func startPassiveTapper(harWriter *HarWriter, outboundLinkWriter *OutboundLinkWr
 			assemblerMutex.Lock()
 			assembler.AssembleWithContext(packet.NetworkLayer().NetworkFlow(), tcp, &c)
 			assemblerMutex.Unlock()
+
+			if IsPacketTLSClientHello(tcp.Payload) {
+
+			}
+		}
+		ssl := packet.Layer(layers.LayerTypeLinuxSLL)
+		if ssl != nil {
+			ssl := ssl.(*layers.LinuxSLL)
+			if ssl != nil {
+
+
+			}
+		}
+		tls := packet.Layer(layers.LayerTypeTLS)
+		if tls != nil {
+			tls := tls.(*layers.TLS)
+			if tls != nil {
+
+			}
 		}
 
 		done := *maxcount > 0 && count >= *maxcount
