@@ -68,12 +68,12 @@ func GetInt(key string) int {
 	return val
 }
 
-func InitSettings(commandLineValues []string) error {
+func InitConfig(commandLineValues []string) error {
 	Log.Debugf("Merging default values")
 	mergeDefaultValues()
-	Log.Debugf("Merging settings file values")
-	if err1 := mergeSettingsFileSettings(); err1 != nil {
-		Log.Infof(fmt.Sprintf(uiUtils.Red, "Invalid settings file\n"))
+	Log.Debugf("Merging config file values")
+	if err1 := mergeConfigFile(); err1 != nil {
+		Log.Infof(fmt.Sprintf(uiUtils.Red, "Invalid config file\n"))
 		return err1
 	}
 	Log.Debugf("Merging command line values")
@@ -82,7 +82,7 @@ func InitSettings(commandLineValues []string) error {
 		return err2
 	}
 	finalConfigPrettified, _ := uiUtils.PrettyJson(configObj)
-	Log.Debugf("Merged all settings successfully\n Final config: %v", finalConfigPrettified)
+	Log.Debugf("Merged all config successfully\n Final config: %v", finalConfigPrettified)
 	return nil
 }
 
@@ -114,8 +114,8 @@ func mergeDefaultValues() {
 	}
 }
 
-func mergeSettingsFileSettings() error {
-	Log.Debugf("Merging mizu settings file flags")
+func mergeConfigFile() error {
+	Log.Debugf("Merging mizu config file values")
 	home, homeDirErr := os.UserHomeDir()
 	if homeDirErr != nil {
 		return nil
@@ -141,7 +141,7 @@ func mergeSettingsFileSettings() error {
 func addToConfig(prefix string, value interface{}) {
 	typ := reflect.TypeOf(value).Kind()
 	if typ == reflect.Int || typ == reflect.String || typ == reflect.Slice {
-		validateSettingsFileKey(prefix)
+		validateConfigFileKey(prefix)
 		configObj[prefix] = value
 	} else if typ == reflect.Map {
 		for k1, v1 := range value.(map[string]interface{}) {
@@ -183,13 +183,13 @@ func flagFromAllowed(setFlagKey string) (string, reflect.Kind, error) {
 	return "", reflect.Invalid, errors.New(fmt.Sprintf("invalid set argument %s", setFlagKey))
 }
 
-func validateSettingsFileKey(settingsFileKey string) {
+func validateConfigFileKey(configFileKey string) {
 	for _, allowedFlag := range allowedSetFlags {
-		if allowedFlag.YamlHierarchyName == settingsFileKey {
+		if allowedFlag.YamlHierarchyName == configFileKey {
 			return
 		}
 	}
-	Log.Info(fmt.Sprintf("Unknown argument: %s. Exit", settingsFileKey))
+	Log.Info(fmt.Sprintf("Unknown argument: %s. Exit", configFileKey))
 	os.Exit(1)
 }
 
