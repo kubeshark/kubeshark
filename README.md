@@ -1,5 +1,5 @@
 ![Mizu: The API Traffic Viewer for Kubernetes](assets/mizu-logo.svg)
-# API Traffic Viewer for Kubernetes
+# The API Traffic Viewer for Kubernetes
 
 A simple-yet-powerful API traffic viewer for Kubernetes to help you troubleshoot and debug your microservices. Think TCPDump and Chrome Dev Tools combined.
 
