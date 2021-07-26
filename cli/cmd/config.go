@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/spf13/cobra"
 	"github.com/up9inc/mizu/cli/mizu"
+	"github.com/up9inc/mizu/cli/uiUtils"
 	"os"
 )
 
@@ -17,7 +18,7 @@ var configCmd = &cobra.Command{
 		if outputFileName != "" {
 			data := []byte(template)
 			_ = os.WriteFile(outputFileName, data, 0644)
-			mizu.Log.Infof(fmt.Sprintf("Template File written to %s", outputFileName))
+			mizu.Log.Infof(fmt.Sprintf("Template File written to %s", fmt.Sprintf(uiUtils.Purple, outputFileName)))
 		} else {
 			mizu.Log.Debugf("Writing template config.\n%v", template)
 			fmt.Printf("%v", template)
