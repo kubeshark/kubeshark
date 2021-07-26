@@ -24,8 +24,6 @@ type CommandLineFlag struct {
 	Type              reflect.Kind
 }
 
-var CommandLineValues []string
-
 const (
 	ConfigurationKeyAnalyzingDestination = "tap.dest"
 	ConfigurationKeyUploadInterval       = "tap.uploadInterval"
@@ -70,7 +68,7 @@ func GetInt(key string) int {
 	return val
 }
 
-func MergeAllSettings() error {
+func InitSettings(commandLineValues []string) error {
 	Log.Debugf("Merging default values")
 	mergeDefaultValues()
 	Log.Debugf("Merging settings file values")
@@ -79,7 +77,7 @@ func MergeAllSettings() error {
 		return err1
 	}
 	Log.Debugf("Merging command line values")
-	if err2 := mergeCommandLineFlags(); err2 != nil {
+	if err2 := mergeCommandLineFlags(commandLineValues); err2 != nil {
 		Log.Infof(fmt.Sprintf(uiUtils.Red, "Invalid commanad argument\n"))
 		return err2
 	}
@@ -152,9 +150,9 @@ func addToConfig(prefix string, value interface{}) {
 	}
 }
 
-func mergeCommandLineFlags() error {
+func mergeCommandLineFlags(commandLineValues []string) error {
 	Log.Debugf("Merging Command line flags")
-	for _, e := range CommandLineValues {
+	for _, e := range commandLineValues {
 		if !strings.Contains(e, separator) {
 			return errors.New(fmt.Sprintf("invalid set argument %s", e))
 		}

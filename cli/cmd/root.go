@@ -7,13 +7,15 @@ import (
 	"github.com/up9inc/mizu/cli/mizu"
 )
 
+var commandLineFlags []string
+
 var rootCmd = &cobra.Command{
 	Use:   "mizu",
 	Short: "A web traffic viewer for kubernetes",
 	Long: `A web traffic viewer for kubernetes
 Further info is available at https://github.com/up9inc/mizu`,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-		if err := mizu.MergeAllSettings(); err != nil {
+		if err := mizu.InitSettings(commandLineFlags); err != nil {
 			mizu.Log.Errorf("Invalid config, Exit %s", err)
 			return errors.New(fmt.Sprintf("%v", err))
 		}
@@ -24,7 +26,7 @@ Further info is available at https://github.com/up9inc/mizu`,
 }
 
 func init() {
-	rootCmd.PersistentFlags().StringSliceVar(&mizu.CommandLineValues, "set", []string{}, "Override values using --set")
+	rootCmd.PersistentFlags().StringSliceVar(&commandLineFlags, "set", []string{}, "Override values using --set")
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.

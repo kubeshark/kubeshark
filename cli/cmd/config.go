@@ -17,9 +17,10 @@ var configCmd = &cobra.Command{
 		if outputFileName != "" {
 			data := []byte(template)
 			_ = os.WriteFile(outputFileName, data, 0644)
-			fmt.Println(fmt.Sprintf("Template File written to %s", outputFileName))
+			mizu.Log.Infof(fmt.Sprintf("Template File written to %s", outputFileName))
 		} else {
-			fmt.Println(template)
+			mizu.Log.Debugf("Writing template config.\n%v", template)
+			fmt.Printf("%v", template)
 		}
 		return nil
 	},
