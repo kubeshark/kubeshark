@@ -35,9 +35,7 @@ var regex *regexp.Regexp
 
 const maxEntriesDBSizeFlagName = "max-entries-db-size"
 
-const analysisMessageToConfirm = `NOTE: running mizu with --analysis flag will upload recorded traffic 
-for further analysis and enriched presentation options.
-`
+const analysisMessageToConfirm = `NOTE: running mizu with --analysis flag will upload recorded traffic for further analysis and enriched presentation options.`
 
 var tapCmd = &cobra.Command{
 	Use:   "tap [POD REGEX]",
@@ -51,11 +49,11 @@ Supported protocols are HTTP and gRPC.`,
 
 	},
 	PreRunE: func(cmd *cobra.Command, args []string) error {
-		mizu.Log.Info("Getting params")
+		mizu.Log.Debugf("Getting params")
 		mizuTapOptions.AnalysisDestination = mizu.GetString(mizu.ConfigurationKeyAnalyzingDestination)
 		mizuTapOptions.SleepIntervalSec = uint16(mizu.GetInt(mizu.ConfigurationKeyUploadInterval))
 		mizuTapOptions.MizuImage = mizu.GetString(mizu.ConfigurationKeyMizuImage)
-		mizu.Log.Infof(uiUtils.PrettyJson(mizuTapOptions))
+		mizu.Log.Debugf(uiUtils.PrettyJson(mizuTapOptions))
 
 
 		if len(args) == 0 {
