@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/spf13/cobra"
 	"github.com/up9inc/mizu/cli/mizu"
-	"github.com/up9inc/mizu/cli/uiUtils"
 )
 
 var rootCmd = &cobra.Command{
@@ -18,7 +17,7 @@ Further info is available at https://github.com/up9inc/mizu`,
 			mizu.Log.Errorf("Invalid config, Exit %s", err)
 			return errors.New(fmt.Sprintf("%v", err))
 		}
-		prettifiedConfig, _ := uiUtils.PrettyJson(mizu.GetConfig())
+		prettifiedConfig := mizu.GetConfigStr()
 		mizu.Log.Debugf("Final Config: %s", prettifiedConfig)
 		return nil
 	},
@@ -31,6 +30,5 @@ func init() {
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the tapCmd.
 func Execute() {
-	mizu.Log.Debugf("Executing Root command")
 	cobra.CheckErr(rootCmd.Execute())
 }

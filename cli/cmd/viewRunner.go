@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/up9inc/mizu/cli/kubernetes"
 	"github.com/up9inc/mizu/cli/mizu"
+	"github.com/up9inc/mizu/cli/uiUtils"
 	"k8s.io/client-go/tools/clientcmd"
 	"net/http"
 )
@@ -17,7 +18,7 @@ func runMizuView(mizuViewOptions *MizuViewOptions) {
 			return
 		}
 		if clientcmd.IsConfigurationInvalid(err) {
-			mizu.Log.Infof(mizu.Red, "Invalid kube config file. Try using a different config with '--kube-config=<path to kube config file>'\n")
+			mizu.Log.Infof(uiUtils.Red, "Invalid kube config file. Try using a different config with '--kube-config=<path to kube config file>'\n")
 			return
 		}
 	}

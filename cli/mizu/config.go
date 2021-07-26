@@ -29,7 +29,7 @@ var CommandLineValues []string
 const (
 	ConfigurationKeyAnalyzingDestination = "tap.dest"
 	ConfigurationKeyUploadInterval       = "tap.uploadInterval"
-	ConfigurationKeyMizuImage            = "tap.mizuImage"
+	ConfigurationKeyMizuImage            = "mizuImage"
 )
 
 var allowedSetFlags = []CommandLineFlag{
@@ -54,15 +54,8 @@ var allowedSetFlags = []CommandLineFlag{
 	},
 }
 
-func GetValueFromMergedConfig(key string) interface{} {
-	if a, ok := configObj[key]; ok {
-		return a
-	}
-	return nil
-}
-
 func GetString(key string) string {
-	return fmt.Sprintf("%v", GetValueFromMergedConfig(key))
+	return fmt.Sprintf("%v", getValueFromMergedConfig(key))
 }
 
 func GetInt(key string) int {
@@ -77,25 +70,42 @@ func GetInt(key string) int {
 	return val
 }
 
-func GetConfig() interface{} {
-	return configObj
-}
-
 func MergeAllSettings() error {
 	Log.Debugf("Merging default values")
 	mergeDefaultValues()
 	Log.Debugf("Merging settings file values")
 	if err1 := mergeSettingsFileSettings(); err1 != nil {
-		Log.Infof(fmt.Sprintf(Red, "Invalid settings file\n"))
+		Log.Infof(fmt.Sprintf(uiUtils.Red, "Invalid settings file\n"))
 		return err1
 	}
 	Log.Debugf("Merging command line values")
 	if err2 := mergeCommandLineFlags(); err2 != nil {
-		Log.Infof(fmt.Sprintf(Red, "Invalid commanad argument\n"))
+		Log.Infof(fmt.Sprintf(uiUtils.Red, "Invalid commanad argument\n"))
 		return err2
 	}
 	finalConfigPrettified, _ := uiUtils.PrettyJson(configObj)
 	Log.Debugf("Merged all settings successfully\n Final config: %v", finalConfigPrettified)
+	return nil
+}
+
+func GetTemplateConfig() string {
+	templateConfig := map[string]interface{}{}
+	for _, allowedFlag := range allowedSetFlags {
+		addToConfigObj(allowedFlag.YamlHierarchyName, allowedFlag.DefaultValue, templateConfig)
+	}
+	prettifiedConfig, _ := uiUtils.PrettyYaml(templateConfig)
+	return prettifiedConfig
+}
+
+func GetConfigStr() string {
+	val, _ := uiUtils.PrettyYaml(configObj)
+	return val
+}
+
+func getValueFromMergedConfig(key string) interface{} {
+	if a, ok := configObj[key]; ok {
+		return a
+	}
 	return nil
 }
 
@@ -112,7 +122,7 @@ func mergeSettingsFileSettings() error {
 	if homeDirErr != nil {
 		return nil
 	}
-	reader, openErr := os.Open(path.Join(home, ".mizu"))
+	reader, openErr := os.Open(path.Join(home, ".mizu", "config.yaml"))
 	if openErr != nil {
 		return nil
 	}
@@ -201,11 +211,3 @@ func addToConfigObj(key string, value interface{}, configObj map[string]interfac
 	}
 }
 
-func GetTemplateConfig() string {
-	templateConfig := map[string]interface{}{}
-	for _, allowedFlag := range allowedSetFlags {
-		addToConfigObj(allowedFlag.YamlHierarchyName, allowedFlag.DefaultValue, templateConfig)
-	}
-	prettifiedConfig, _ := uiUtils.PrettyYaml(templateConfig)
-	return prettifiedConfig
-}

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/up9inc/mizu/cli/kubernetes"
 	"github.com/up9inc/mizu/cli/mizu"
+	"github.com/up9inc/mizu/cli/uiUtils"
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/debounce"
 	core "k8s.io/api/core/v1"
@@ -39,11 +40,11 @@ func RunMizuTap(podRegexQuery *regexp.Regexp, tappingOptions *MizuTapOptions) {
 	kubernetesProvider, err := kubernetes.NewProvider(tappingOptions.KubeConfigPath)
 	if err != nil {
 		if clientcmd.IsEmptyConfig(err) {
-			mizu.Log.Infof(mizu.Red, "Couldn't find the kube config file, or file is empty. Try adding '--kube-config=<path to kube config file>'\n")
+			mizu.Log.Infof(uiUtils.Red, "Couldn't find the kube config file, or file is empty. Try adding '--kube-config=<path to kube config file>'\n")
 			return
 		}
 		if clientcmd.IsConfigurationInvalid(err) {
-			mizu.Log.Infof(mizu.Red, "Invalid kube config file. Try using a different config with '--kube-config=<path to kube config file>'\n")
+			mizu.Log.Infof(uiUtils.Red, "Invalid kube config file. Try using a different config with '--kube-config=<path to kube config file>'\n")
 			return
 		}
 	}
@@ -259,10 +260,10 @@ func watchPodsForTapping(ctx context.Context, kubernetesProvider *kubernetes.Pro
 	for {
 		select {
 		case newTarget := <-added:
-			mizu.Log.Infof(mizu.Green, fmt.Sprintf("+%s\n", newTarget.Name))
+			mizu.Log.Infof(uiUtils.Green, fmt.Sprintf("+%s\n", newTarget.Name))
 
 		case removedTarget := <-removed:
-			mizu.Log.Infof(mizu.Red, fmt.Sprintf("-%s\n", removedTarget.Name))
+			mizu.Log.Infof(uiUtils.Red, fmt.Sprintf("-%s\n", removedTarget.Name))
 			restartTappersDebouncer.SetOn()
 
 		case modifiedTarget := <-modified:
@@ -327,7 +328,7 @@ func portForwardApiPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 					if response, err := http.Get(u.String()); err != nil || response.StatusCode != 200 {
 						mizu.Log.Infof("error sending upload entries req, status code: %v, err: %v\n", response.StatusCode, err)
 					} else {
-						mizu.Log.Infof(mizu.Purple, "Traffic is uploading to UP9 for further analysis\n")
+						mizu.Log.Infof(uiUtils.Purple, "Traffic is uploading to UP9 for further analysis\n")
 					}
 				}
 			}
