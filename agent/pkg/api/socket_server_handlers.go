@@ -3,14 +3,14 @@ package api
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/romana/rlog"
-	"github.com/up9inc/mizu/shared"
-	"github.com/up9inc/mizu/tap"
 	"mizuserver/pkg/controllers"
 	"mizuserver/pkg/models"
 	"mizuserver/pkg/routes"
-	"mizuserver/pkg/up9"
 	"sync"
+
+	"github.com/romana/rlog"
+	"github.com/up9inc/mizu/shared"
+	"github.com/up9inc/mizu/tap"
 )
 
 var browserClientSocketUUIDs = make([]int, 0)
@@ -22,7 +22,7 @@ type RoutesEventHandlers struct {
 }
 
 func init() {
-	go up9.UpdateAnalyzeStatus(broadcastToBrowserClients)
+	// go up9.UpdateAnalyzeStatus(broadcastToBrowserClients)
 }
 
 func (h *RoutesEventHandlers) WebSocketConnect(socketId int, isTapper bool) {
