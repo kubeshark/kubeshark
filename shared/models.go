@@ -214,9 +214,6 @@ func PassedValidationRules(rulesMatched []RulesMatched, numberOfRules int) strin
 			return "red"
 		}
 	}
-	if numberOfRules == len(rulesMatched) {
-		return "green"
-	}
 	return "red"
 }
 
