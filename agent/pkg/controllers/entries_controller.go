@@ -15,8 +15,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/martian/har"
 	"github.com/romana/rlog"
-
-	"github.com/google/martian/har"
 	"github.com/up9inc/mizu/shared"
 )
 
@@ -223,10 +221,10 @@ func GetEntry(c *gin.Context) {
 		})
 	}
 
-	_, resultPolicyToSend := shared.MatchRequestPolicy(fullEntry, entryData.Service)
+	_, resultPolicyToSend := shared.MatchRequestPolicy(fullEntry.Entry, entryData.Service)
 	var fullEntryWithPolicy models.FullEntryWithPolicy
 	fullEntryWithPolicy.RulesMatched = resultPolicyToSend
-	fullEntryWithPolicy.Entry = fullEntry
+	fullEntryWithPolicy.Entry = fullEntry.Entry
 	fullEntryWithPolicy.Service = entryData.Service
 	c.JSON(http.StatusOK, fullEntryWithPolicy)
 }
