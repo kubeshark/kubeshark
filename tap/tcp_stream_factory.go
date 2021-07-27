@@ -2,8 +2,9 @@ package tap
 
 import (
 	"fmt"
-	"github.com/romana/rlog"
 	"sync"
+
+	"github.com/romana/rlog"
 
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers" // pulls in all layers decoders
@@ -36,12 +37,14 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.T
 		factory.outbountLinkWriter.WriteOutboundLink(net.Src().String(), dstIp, dstPort)
 	}
 	props := factory.getStreamProps(srcIp, dstIp, dstPort)
-	isHTTP := props.isTapTarget
+	isHTTP := tcp.SrcPort == 80 || tcp.DstPort == 80 // TODO: revert this
+	isAMQP := tcp.SrcPort == 5672 || tcp.DstPort == 5672
 	stream := &tcpStream{
 		net:        net,
 		transport:  transport,
 		isDNS:      tcp.SrcPort == 53 || tcp.DstPort == 53,
 		isHTTP:     isHTTP && factory.doHTTP,
+		isAMQP:     isAMQP,
 		reversed:   tcp.SrcPort == 80,
 		tcpstate:   reassembly.NewTCPSimpleFSM(fsmOptions),
 		ident:      fmt.Sprintf("%s:%s", net, transport),
@@ -57,11 +60,11 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.T
 				srcPort: transport.Src().String(),
 				dstPort: transport.Dst().String(),
 			},
-			hexdump:  *hexdump,
-			parent:   stream,
-			isClient: true,
+			hexdump:    *hexdump,
+			parent:     stream,
+			isClient:   true,
 			isOutgoing: props.isOutgoing,
-			harWriter: factory.harWriter,
+			harWriter:  factory.harWriter,
 		}
 		stream.server = httpReader{
 			msgQueue: make(chan httpReaderDataMsg),
@@ -72,10 +75,10 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.T
 				srcPort: transport.Dst().String(),
 				dstPort: transport.Src().String(),
 			},
-			hexdump: *hexdump,
-			parent:  stream,
+			hexdump:    *hexdump,
+			parent:     stream,
 			isOutgoing: props.isOutgoing,
-			harWriter: factory.harWriter,
+			harWriter:  factory.harWriter,
 		}
 		factory.wg.Add(2)
 		// Start reading from channels stream.client.bytes and stream.server.bytes
@@ -131,6 +134,5 @@ func (factory *tcpStreamFactory) shouldNotifyOnOutboundLink(dstIP string, dstPor
 
 type streamProps struct {
 	isTapTarget bool
-	isOutgoing bool
+	isOutgoing  bool
 }
-

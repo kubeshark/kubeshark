@@ -18,8 +18,8 @@ type httpReaderDataMsg struct {
 }
 
 type tcpID struct {
-	srcIP string
-	dstIP string
+	srcIP   string
+	dstIP   string
 	srcPort string
 	dstPort string
 }

@@ -23,6 +23,7 @@ type tcpStream struct {
 	net, transport gopacket.Flow
 	isDNS          bool
 	isHTTP         bool
+	isAMQP         bool
 	reversed       bool
 	client         httpReader
 	server         httpReader

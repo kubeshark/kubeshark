@@ -12,7 +12,6 @@ import (
 	"encoding/hex"
 	"flag"
 	"fmt"
-	"github.com/romana/rlog"
 	"log"
 	"os"
 	"os/signal"
@@ -22,6 +21,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/romana/rlog"
 
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/examples/util"
@@ -35,7 +36,8 @@ const AppPortsEnvVar = "APP_PORTS"
 const maxHTTP2DataLenEnvVar = "HTTP2_DATA_SIZE_LIMIT"
 const maxHTTP2DataLenDefault = 1 * 1024 * 1024 // 1MB
 const cleanPeriod = time.Second * 10
-var remoteOnlyOutboundPorts = []int { 80, 443 }
+
+var remoteOnlyOutboundPorts = []int{80, 443}
 
 func parseAppPorts(appPortsList string) []int {
 	ports := make([]int, 0)
@@ -55,10 +57,10 @@ var decoder = flag.String("decoder", "", "Name of the decoder to use (default: g
 var statsevery = flag.Int("stats", 60, "Output statistics every N seconds")
 var lazy = flag.Bool("lazy", false, "If true, do lazy decoding")
 var nodefrag = flag.Bool("nodefrag", false, "If true, do not do IPv4 defrag")
-var checksum = flag.Bool("checksum", false, "Check TCP checksum")  // global
-var nooptcheck = flag.Bool("nooptcheck", true, "Do not check TCP options (useful to ignore MSS on captures with TSO)")  // global
-var ignorefsmerr = flag.Bool("ignorefsmerr", true, "Ignore TCP FSM errors")  // global
-var allowmissinginit = flag.Bool("allowmissinginit", true, "Support streams without SYN/SYN+ACK/ACK sequence")  // global
+var checksum = flag.Bool("checksum", false, "Check TCP checksum")                                                      // global
+var nooptcheck = flag.Bool("nooptcheck", true, "Do not check TCP options (useful to ignore MSS on captures with TSO)") // global
+var ignorefsmerr = flag.Bool("ignorefsmerr", true, "Ignore TCP FSM errors")                                            // global
+var allowmissinginit = flag.Bool("allowmissinginit", true, "Support streams without SYN/SYN+ACK/ACK sequence")         // global
 var verbose = flag.Bool("verbose", false, "Be verbose")
 var debug = flag.Bool("debug", false, "Display debug information")
 var quiet = flag.Bool("quiet", false, "Be quiet regarding errors")
@@ -68,11 +70,11 @@ var nohttp = flag.Bool("nohttp", false, "Disable HTTP parsing")
 var output = flag.String("output", "", "Path to create file for HTTP 200 OK responses")
 var writeincomplete = flag.Bool("writeincomplete", false, "Write incomplete response")
 
-var hexdump = flag.Bool("dump", false, "Dump HTTP request/response as hex")  // global
+var hexdump = flag.Bool("dump", false, "Dump HTTP request/response as hex") // global
 var hexdumppkt = flag.Bool("dumppkt", false, "Dump packet as hex")
 
 // capture
-var iface = flag.String("i", "en0", "Interface to read packets from")
+var iface = flag.String("i", "eth0", "Interface to read packets from")
 var fname = flag.String("r", "", "Filename to read from, overrides -i")
 var snaplen = flag.Int("s", 65536, "Snap length (number of bytes max to read per packet")
 var tstype = flag.String("timestamp_type", "", "Type of timestamps to use")
@@ -87,7 +89,7 @@ var dumpToHar = flag.Bool("hardump", false, "Dump traffic to har files")
 var HarOutputDir = flag.String("hardir", "", "Directory in which to store output har files")
 var harEntriesPerFile = flag.Int("harentriesperfile", 200, "Number of max number of har entries to store in each file")
 
-var reqResMatcher = createResponseRequestMatcher()  // global
+var reqResMatcher = createResponseRequestMatcher() // global
 var statsTracker = StatsTracker{}
 
 // global
@@ -117,8 +119,8 @@ var outputLevel int
 var errorsMap map[string]uint
 var errorsMapMutex sync.Mutex
 var nErrors uint
-var ownIps []string           // global
-var hostMode bool             // global
+var ownIps []string // global
+var hostMode bool   // global
 
 /* minOutputLevel: Error will be printed only if outputLevel is above this value
  * t:              key for errorsMap (counting errors)
@@ -197,6 +199,9 @@ func StartPassiveTapper(opts *TapOpts) (<-chan *OutputChannelItem, <-chan *Outbo
 }
 
 func startPassiveTapper(harWriter *HarWriter, outboundLinkWriter *OutboundLinkWriter) {
+	os.Setenv("RLOG_LOG_LEVEL", "DEBUG") // TODO: revert this `$ export RLOG_LOG_LEVEL=DEBUG` not working for some reason
+	rlog.UpdateEnv()
+
 	log.SetFlags(log.LstdFlags | log.LUTC | log.Lshortfile)
 
 	defer util.Run()()
@@ -310,10 +315,9 @@ func startPassiveTapper(harWriter *HarWriter, outboundLinkWriter *OutboundLinkWr
 	defragger := ip4defrag.NewIPv4Defragmenter()
 
 	streamFactory := &tcpStreamFactory{
-		doHTTP: !*nohttp,
-		harWriter: harWriter,
+		doHTTP:             !*nohttp,
+		harWriter:          harWriter,
 		outbountLinkWriter: outboundLinkWriter,
-
 	}
 	streamPool := reassembly.NewStreamPool(streamFactory)
 	assembler := reassembly.NewAssembler(streamPool)
@@ -324,10 +328,10 @@ func startPassiveTapper(harWriter *HarWriter, outboundLinkWriter *OutboundLinkWr
 
 	staleConnectionTimeout := time.Second * time.Duration(*staleTimeoutSeconds)
 	cleaner := Cleaner{
-		assembler: assembler,
-		assemblerMutex: &assemblerMutex,
-		matcher: &reqResMatcher,
-		cleanPeriod: cleanPeriod,
+		assembler:         assembler,
+		assemblerMutex:    &assemblerMutex,
+		matcher:           &reqResMatcher,
+		cleanPeriod:       cleanPeriod,
 		connectionTimeout: staleConnectionTimeout,
 	}
 	cleaner.start()
