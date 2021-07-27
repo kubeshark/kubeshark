@@ -26,6 +26,7 @@ var tapperMode = flag.Bool("tap", false, "Run in tapper mode without API")
 var apiServerMode = flag.Bool("api-server", false, "Run in API server mode with API")
 var standaloneMode = flag.Bool("standalone", false, "Run in standalone tapper and API mode")
 var apiServerAddress = flag.String("api-server-address", "", "Address of mizu API server")
+var namespace = flag.String("namespace", "", "Resolve IPs if they belong to resources in this namespace (default is all)")
 
 func main() {
 	flag.Parse()
@@ -37,6 +38,8 @@ func main() {
 	}
 
 	if *standaloneMode {
+		api.StartResolving(*namespace)
+
 		harOutputChannel, outboundLinkOutputChannel := tap.StartPassiveTapper(tapOpts)
 		filteredHarChannel := make(chan *tap.OutputChannelItem)
 
@@ -66,6 +69,8 @@ func main() {
 		go pipeChannelToSocket(socketConnection, harOutputChannel)
 		go api.StartReadingOutbound(outboundLinkOutputChannel)
 	} else if *apiServerMode {
+		api.StartResolving(*namespace)
+
 		socketHarOutChannel := make(chan *tap.OutputChannelItem, 1000)
 		filteredHarChannel := make(chan *tap.OutputChannelItem)
 
