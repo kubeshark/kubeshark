@@ -55,7 +55,6 @@ Supported protocols are HTTP and gRPC.`,
 		mizuTapOptions.MizuImage = mizu.GetString(mizu.ConfigurationKeyMizuImage)
 		mizu.Log.Debugf(uiUtils.PrettyJson(mizuTapOptions))
 
-
 		if len(args) == 0 {
 			return errors.New("POD REGEX argument is required")
 		} else if len(args) > 1 {
@@ -73,7 +72,7 @@ Supported protocols are HTTP and gRPC.`,
 		if parseHumanDataSizeErr != nil {
 			return errors.New(fmt.Sprintf("Could not parse --max-entries-db-size value %s", humanMaxEntriesDBSize))
 		}
-		mizu.Log.Infof("Mizu will store up to %s of traffic, old traffic will be cleared once the limit is reached.\n", units.BytesToHumanReadable(mizuTapOptions.MaxEntriesDBSizeBytes))
+		mizu.Log.Infof("Mizu will store up to %s of traffic, old traffic will be cleared once the limit is reached.", units.BytesToHumanReadable(mizuTapOptions.MaxEntriesDBSizeBytes))
 
 		directionLowerCase := strings.ToLower(direction)
 		if directionLowerCase == "any" {
