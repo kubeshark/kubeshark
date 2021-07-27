@@ -14,6 +14,8 @@ const (
 	ClusterRoleName           = "mizu-cluster-role"
 	K8sAllNamespaces          = ""
 	ResourcesDefaultNamespace = "mizu"
+	RoleBindingName           = "mizu-role-binding"
+	RoleName                  = "mizu-role"
 	ServiceAccountName        = "mizu-service-account"
 	TapperDaemonSetName       = "mizu-tapper-daemon-set"
 	TapperPodName             = "mizu-tapper"

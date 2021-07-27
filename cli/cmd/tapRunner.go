@@ -254,9 +254,19 @@ func (bl *tapCmdBL) cleanUpMizuResources(kubernetesProvider *kubernetes.Provider
 			return
 		}
 
-		if err := kubernetesProvider.RemoveNonNamespacedResources(removalCtx, mizu.ClusterRoleName, mizu.ClusterRoleBindingName); err != nil {
-			fmt.Printf("Error removing non-namespaced resources: %s (%v,%+v)\n", err, err, err)
-			return
+		if bl.isOwnNamespace {
+			if err := kubernetesProvider.RemoveNonNamespacedResources(removalCtx, mizu.ClusterRoleName, mizu.ClusterRoleBindingName); err != nil {
+				fmt.Printf("Error removing non-namespaced resources: %s (%v,%+v)\n", err, err, err)
+				return
+			}
+		} else {
+			if err := kubernetesProvider.RemoveRole(removalCtx, bl.resourcesNamespace, mizu.RoleName); err != nil {
+				fmt.Printf("Error removing Role %s in namespace %s: %s (%v,%+v)\n", mizu.RoleName, bl.resourcesNamespace, err, err, err)
+			}
+
+			if err := kubernetesProvider.RemoveRoleBinding(removalCtx, bl.resourcesNamespace, mizu.RoleBindingName); err != nil {
+				fmt.Printf("Error removing RoleBinding %s in namespace %s: %s (%v,%+v)\n", mizu.RoleBindingName, bl.resourcesNamespace, err, err, err)
+			}
 		}
 	}
 
@@ -405,10 +415,18 @@ func (bl *tapCmdBL) createRBACIfNecessary(ctx context.Context, kubernetesProvide
 		return false
 	}
 	if !mizuRBACExists {
-		err := kubernetesProvider.CreateMizuRBAC(ctx, bl.resourcesNamespace, mizu.ServiceAccountName, mizu.ClusterRoleName, mizu.ClusterRoleBindingName, mizu.RBACVersion)
-		if err != nil {
-			fmt.Printf("warning: could not create mizu rbac resources %v\n", err)
-			return false
+		if bl.isOwnNamespace {
+			err := kubernetesProvider.CreateMizuRBAC(ctx, bl.resourcesNamespace, mizu.ServiceAccountName, mizu.ClusterRoleName, mizu.ClusterRoleBindingName, mizu.RBACVersion)
+			if err != nil {
+				fmt.Printf("warning: could not create mizu rbac resources %v\n", err)
+				return false
+			}
+		} else {
+			err := kubernetesProvider.CreateMizuRBACNamespaceRestricted(ctx, bl.resourcesNamespace, mizu.ServiceAccountName, mizu.RoleName, mizu.RoleBindingName, mizu.RBACVersion)
+			if err != nil {
+				fmt.Printf("warning: could not create mizu rbac resources %v\n", err)
+				return false
+			}
 		}
 	}
 	return true

@@ -297,6 +297,60 @@ func (provider *Provider) CreateMizuRBAC(ctx context.Context, namespace string, 
 	return nil
 }
 
+func (provider *Provider) CreateMizuRBACNamespaceRestricted(ctx context.Context, namespace string, serviceAccountName string, roleName string, roleBindingName string, version string) error {
+	serviceAccount := &core.ServiceAccount{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      serviceAccountName,
+			Namespace: namespace,
+			Labels:    map[string]string{"mizu-cli-version": version},
+		},
+	}
+	role := &rbac.Role{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:   roleName,
+			Labels: map[string]string{"mizu-cli-version": version},
+		},
+		Rules: []rbac.PolicyRule{
+			{
+				APIGroups: []string{"", "extensions", "apps"},
+				Resources: []string{"pods", "services", "endpoints"},
+				Verbs:     []string{"list", "get", "watch"},
+			},
+		},
+	}
+	roleBinding := &rbac.RoleBinding{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:   roleBindingName,
+			Labels: map[string]string{"mizu-cli-version": version},
+		},
+		RoleRef: rbac.RoleRef{
+			Name:     roleName,
+			Kind:     "Role",
+			APIGroup: "rbac.authorization.k8s.io",
+		},
+		Subjects: []rbac.Subject{
+			{
+				Kind:      "ServiceAccount",
+				Name:      serviceAccountName,
+				Namespace: namespace,
+			},
+		},
+	}
+	_, err := provider.clientSet.CoreV1().ServiceAccounts(namespace).Create(ctx, serviceAccount, metav1.CreateOptions{})
+	if err != nil {
+		return err
+	}
+	_, err = provider.clientSet.RbacV1().Roles(namespace).Create(ctx, role, metav1.CreateOptions{})
+	if err != nil {
+		return err
+	}
+	_, err = provider.clientSet.RbacV1().RoleBindings(namespace).Create(ctx, roleBinding, metav1.CreateOptions{})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (provider *Provider) RemoveNamespace(ctx context.Context, name string) error {
 	if isFound, err := provider.CheckNamespaceExists(ctx, name); err != nil {
 		return err
@@ -337,6 +391,26 @@ func (provider *Provider) RemoveClusterRoleBinding(ctx context.Context, name str
 	}
 
 	return provider.clientSet.RbacV1().ClusterRoleBindings().Delete(ctx, name, metav1.DeleteOptions{})
+}
+
+func (provider *Provider) RemoveRoleBinding(ctx context.Context, namespace string, name string) error {
+	if isFound, err := provider.CheckRoleBindingExists(ctx, namespace, name); err != nil {
+		return err
+	} else if !isFound {
+		return nil
+	}
+
+	return provider.clientSet.RbacV1().RoleBindings(namespace).Delete(ctx, name, metav1.DeleteOptions{})
+}
+
+func (provider *Provider) RemoveRole(ctx context.Context, namespace string, name string) error {
+	if isFound, err := provider.CheckRoleExists(ctx, namespace, name); err != nil {
+		return err
+	} else if !isFound {
+		return nil
+	}
+
+	return provider.clientSet.RbacV1().Roles(namespace).Delete(ctx, name, metav1.DeleteOptions{})
 }
 
 func (provider *Provider) RemoveServicAccount(ctx context.Context, namespace string, name string) error {
@@ -419,6 +493,40 @@ func (provider *Provider) CheckClusterRoleBindingExists(ctx context.Context, nam
 		Limit:         1,
 	}
 	resourceList, err := provider.clientSet.RbacV1().ClusterRoleBindings().List(ctx, listOptions)
+	if err != nil {
+		return false, err
+	}
+
+	if len(resourceList.Items) > 0 {
+		return true, nil
+	}
+
+	return false, nil
+}
+
+func (provider *Provider) CheckRoleBindingExists(ctx context.Context, namespace string, name string) (bool, error) {
+	listOptions := metav1.ListOptions{
+		FieldSelector: fmt.Sprintf("metadata.name=%s", name),
+		Limit:         1,
+	}
+	resourceList, err := provider.clientSet.RbacV1().RoleBindings(namespace).List(ctx, listOptions)
+	if err != nil {
+		return false, err
+	}
+
+	if len(resourceList.Items) > 0 {
+		return true, nil
+	}
+
+	return false, nil
+}
+
+func (provider *Provider) CheckRoleExists(ctx context.Context, namespace string, name string) (bool, error) {
+	listOptions := metav1.ListOptions{
+		FieldSelector: fmt.Sprintf("metadata.name=%s", name),
+		Limit:         1,
+	}
+	resourceList, err := provider.clientSet.RbacV1().Roles(namespace).List(ctx, listOptions)
 	if err != nil {
 		return false, err
 	}
