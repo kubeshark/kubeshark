@@ -183,8 +183,8 @@ type FullEntryWithPolicy struct {
 	Service      string                `json:"service"`
 }
 
-func RunValidationRulesState(fullEntry *har.Entry, service string) string {
-	numberOfRules, resultPolicyToSend := shared.MatchRequestPolicy(*fullEntry, service)
+func RunValidationRulesState(harEntry *har.Entry, service string) string {
+	numberOfRules, resultPolicyToSend := shared.MatchRequestPolicy(*harEntry, service)
 	statusPolicyToSend := shared.PassedValidationRules(resultPolicyToSend, numberOfRules)
 	return statusPolicyToSend
 }

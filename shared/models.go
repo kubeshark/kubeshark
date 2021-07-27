@@ -158,14 +158,14 @@ func (rule RulePolicy) ValidateService(service string) bool {
 	return true
 }
 
-func MatchRequestPolicy(fullEntry har.Entry, service string) (int, []RulesMatched) {
+func MatchRequestPolicy(harEntry har.Entry, service string) (int, []RulesMatched) {
 	enforcePolicy, _ := DecodeEnforcePolicy()
 	var resultPolicyToSend []RulesMatched
 	for _, value := range enforcePolicy.Rules {
 		if value.Type == "json" {
 			var bodyJsonMap interface{}
-			_ = json.Unmarshal(fullEntry.Response.Content.Text, &bodyJsonMap)
-			if !value.ValidatePath(fullEntry.Request.URL) || !value.ValidateService(service) {
+			_ = json.Unmarshal(harEntry.Response.Content.Text, &bodyJsonMap)
+			if !value.ValidatePath(harEntry.Request.URL) || !value.ValidateService(service) {
 				continue
 			}
 			out, err := jsonpath.Read(bodyJsonMap, value.Key)
@@ -182,20 +182,20 @@ func MatchRequestPolicy(fullEntry har.Entry, service string) (int, []RulesMatche
 			var result RulesMatched
 			resultPolicyToSend = result.ReturnRulesMatchedObject(value, matchValue, resultPolicyToSend)
 		} else if value.Type == "header" {
-			for j := range fullEntry.Response.Headers {
-				if !value.ValidatePath(fullEntry.Request.URL) || !value.ValidateService(service) {
+			for j := range harEntry.Response.Headers {
+				if !value.ValidatePath(harEntry.Request.URL) || !value.ValidateService(service) {
 					continue
 				}
-				matchKey, _ := regexp.MatchString(value.Key, fullEntry.Response.Headers[j].Name)
+				matchKey, _ := regexp.MatchString(value.Key, harEntry.Response.Headers[j].Name)
 				if matchKey {
-					matchValue, _ := regexp.MatchString(value.Value, fullEntry.Response.Headers[j].Value)
+					matchValue, _ := regexp.MatchString(value.Value, harEntry.Response.Headers[j].Value)
 					var result RulesMatched
 					resultPolicyToSend = result.ReturnRulesMatchedObject(value, matchValue, resultPolicyToSend)
 				}
 			}
 		} else {
 
-			if !value.ValidatePath(fullEntry.Request.URL) || !value.ValidateService(service) {
+			if !value.ValidatePath(harEntry.Request.URL) || !value.ValidateService(service) {
 				continue
 			}
 			var result RulesMatched
