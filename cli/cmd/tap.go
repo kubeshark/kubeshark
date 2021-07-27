@@ -85,7 +85,7 @@ Supported protocols are HTTP and gRPC.`,
 
 		if mizuTapOptions.Analysis {
 			mizu.Log.Infof(analysisMessageToConfirm)
-			if !uiUtils.AskForConfirmation("Would you like to proceed [y/n]: ") {
+			if !uiUtils.AskForConfirmation("Would you like to proceed [Y/n]: ") {
 				mizu.Log.Infof("You can always run mizu without analysis, aborting")
 				os.Exit(0)
 			}
