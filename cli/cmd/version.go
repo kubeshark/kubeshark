@@ -20,11 +20,11 @@ var versionCmd = &cobra.Command{
 		go mizu.ReportRun("version", mizuVersionOptions)
 		if mizuVersionOptions.DebugInfo {
 			timeStampInt, _ := strconv.ParseInt(mizu.BuildTimestamp, 10, 0)
-			mizu.Log.Infof("Version: %s \nBranch: %s (%s) \n", mizu.SemVer, mizu.Branch, mizu.GitCommitHash)
-			mizu.Log.Infof("Build Time: %s (%s)\n", mizu.BuildTimestamp, time.Unix(timeStampInt, 0))
+			mizu.Log.Infof("Version: %s \nBranch: %s (%s)", mizu.SemVer, mizu.Branch, mizu.GitCommitHash)
+			mizu.Log.Infof("Build Time: %s (%s)", mizu.BuildTimestamp, time.Unix(timeStampInt, 0))
 
 		} else {
-			mizu.Log.Infof("Version: %s (%s)\n", mizu.SemVer, mizu.Branch)
+			mizu.Log.Infof("Version: %s (%s)", mizu.SemVer, mizu.Branch)
 		}
 		return nil
 	},
