@@ -19,6 +19,7 @@ interface HAREntry {
     isCurrentRevision?: boolean;
     timestamp: Date;
 	isOutgoing?: boolean;
+    latency: number;
     applicableRules: string;
 }
 
@@ -30,7 +31,6 @@ interface HAREntryProps {
 
 export const HarEntry: React.FC<HAREntryProps> = ({entry, setFocusedEntryId, isSelected}) => {
     const classification = getClassification(entry.statusCode)
-    console.log(entry)
     let ingoingIcon;
     let outgoingIcon;
     switch(classification) {
@@ -50,9 +50,21 @@ export const HarEntry: React.FC<HAREntryProps> = ({entry, setFocusedEntryId, isS
             break;
         }
     }
-
+    let backgroundColor = "";
+    if (entry.applicableRules === "red") {
+        backgroundColor = styles.ruleFailureRow
+    } else if (entry.applicableRules === "green") {
+        backgroundColor = styles.ruleSuccessRow
+    } else if (/^-?[\d.]+(?:e-?\d+)?$/.test(entry.applicableRules)) {
+        const latency = Number(entry.applicableRules)
+        if (latency > entry.latency) {
+            backgroundColor = styles.ruleSuccessRow
+        } else {
+            backgroundColor = styles.ruleFailureRow
+        }
+    }
     return <>
-        <div id={entry.id} className={`${styles.row} ${isSelected ? styles.rowSelected : entry.applicableRules === "red" ? styles.ruleFailureRow : entry.applicableRules === "green" ? styles.ruleSuccessRow : ""}`} onClick={() => setFocusedEntryId(entry.id)}>
+        <div id={entry.id} className={`${styles.row} ${isSelected ? styles.rowSelected : backgroundColor}`} onClick={() => setFocusedEntryId(entry.id)}>
             {entry.statusCode && <div>
                 <StatusCode statusCode={entry.statusCode}/>
             </div>}

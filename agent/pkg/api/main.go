@@ -168,6 +168,7 @@ func saveHarToDb(entry *har.Entry, connectionInfo *tap.ConnectionInfo) {
 		return
 	}
 	baseEntry.ApplicableRules = models.RunValidationRulesState(entry, serviceName)
+	baseEntry.Latency = entry.Timings.Receive
 	baseEntryBytes, _ := models.CreateBaseEntryWebSocketMessage(&baseEntry)
 	broadcastToBrowserClients(baseEntryBytes)
 }

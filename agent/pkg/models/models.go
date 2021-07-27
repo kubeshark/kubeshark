@@ -48,6 +48,7 @@ type BaseEntryDetails struct {
 	Method          string `json:"method,omitempty"`
 	Timestamp       int64  `json:"timestamp,omitempty"`
 	IsOutgoing      bool   `json:"isOutgoing,omitempty"`
+	Latency         int64  `json:"latency,omitempty"`
 	ApplicableRules string `json:"applicableRules,omitempty"`
 }
 

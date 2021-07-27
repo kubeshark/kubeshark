@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"reflect"
 	"regexp"
+	"strings"
 
 	"github.com/google/martian/har"
 	jsonpath "github.com/yalp/jsonpath"
@@ -212,6 +213,11 @@ func PassedValidationRules(rulesMatched []RulesMatched, numberOfRules int) strin
 	for _, rule := range rulesMatched {
 		if rule.Matched == false {
 			return "red"
+		}
+	}
+	for _, rule := range rulesMatched {
+		if strings.ToLower(rule.Rule.Type) == "latency" {
+			return fmt.Sprint(rule.Rule.Latency)
 		}
 	}
 	return "green"
