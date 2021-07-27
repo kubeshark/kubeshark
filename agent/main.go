@@ -22,9 +22,9 @@ import (
 	"github.com/up9inc/mizu/tap"
 )
 
-var shouldTap = flag.Bool("tap", false, "Run in tapper mode without API")
-var apiServer = flag.Bool("api-server", false, "Run in API server mode with API")
-var standalone = flag.Bool("standalone", false, "Run in standalone tapper and API mode")
+var tapperMode = flag.Bool("tap", false, "Run in tapper mode without API")
+var apiServerMode = flag.Bool("api-server", false, "Run in API server mode with API")
+var standaloneMode = flag.Bool("standalone", false, "Run in standalone tapper and API mode")
 var apiServerAddress = flag.String("api-server-address", "", "Address of mizu API server")
 
 func main() {
@@ -32,11 +32,11 @@ func main() {
 	hostMode := os.Getenv(shared.HostModeEnvVar) == "1"
 	tapOpts := &tap.TapOpts{HostMode: hostMode}
 
-	if !*shouldTap && !*apiServer && !*standalone {
+	if !*tapperMode && !*apiServerMode && !*standaloneMode {
 		panic("One of the flags --tap, --api or --standalone must be provided")
 	}
 
-	if *standalone {
+	if *standaloneMode {
 		harOutputChannel, outboundLinkOutputChannel := tap.StartPassiveTapper(tapOpts)
 		filteredHarChannel := make(chan *tap.OutputChannelItem)
 
@@ -45,7 +45,7 @@ func main() {
 		go api.StartReadingOutbound(outboundLinkOutputChannel)
 
 		hostApi(nil)
-	} else if *shouldTap {
+	} else if *tapperMode {
 		if *apiServerAddress == "" {
 			panic("API server address must be provided with --api-server-address when using --tap")
 		}
@@ -65,7 +65,7 @@ func main() {
 
 		go pipeChannelToSocket(socketConnection, harOutputChannel)
 		go api.StartReadingOutbound(outboundLinkOutputChannel)
-	} else if *apiServer {
+	} else if *apiServerMode {
 		socketHarOutChannel := make(chan *tap.OutputChannelItem, 1000)
 		filteredHarChannel := make(chan *tap.OutputChannelItem)
 
