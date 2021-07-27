@@ -4,12 +4,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/cors"
-	"github.com/gorilla/websocket"
-	"github.com/romana/rlog"
-	"github.com/up9inc/mizu/shared"
-	"github.com/up9inc/mizu/tap"
 	"mizuserver/pkg/api"
 	"mizuserver/pkg/middleware"
 	"mizuserver/pkg/models"
@@ -19,6 +13,13 @@ import (
 	"os"
 	"os/signal"
 	"strings"
+
+	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gorilla/websocket"
+	"github.com/romana/rlog"
+	"github.com/up9inc/mizu/shared"
+	"github.com/up9inc/mizu/tap"
 )
 
 var shouldTap = flag.Bool("tap", false, "Run in tapper mode without API")
