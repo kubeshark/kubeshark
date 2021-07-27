@@ -214,7 +214,7 @@ func PassedValidationRules(rulesMatched []RulesMatched, numberOfRules int) strin
 			return "red"
 		}
 	}
-	return "red"
+	return "green"
 }
 
 func DecodeEnforcePolicy() (RulesPolicy, error) {
