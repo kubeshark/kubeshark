@@ -139,7 +139,7 @@ func logError(minOutputLevel int, t string, s string, a ...interface{}) {
 		rlog.Errorf(formatStr, a...)
 	}
 }
-func Error(t string, s string, a ...interface{}) {
+func MError(t string, s string, a ...interface{}) {
 	logError(0, t, s, a...)
 }
 func SilentError(t string, s string, a ...interface{}) {
