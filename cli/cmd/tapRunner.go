@@ -157,7 +157,17 @@ func (bl *tapCmdBL) createMizuApiServer(ctx context.Context, kubernetesProvider 
 	} else {
 		serviceAccountName = ""
 	}
-	_, err = kubernetesProvider.CreateMizuApiServerPod(ctx, bl.resourcesNamespace, mizu.ApiServerPodName, bl.flags.MizuImage, serviceAccountName, mizuApiFilteringOptions, bl.flags.MaxEntriesDBSizeBytes)
+
+	opts := &kubernetes.ApiServerOptions{
+		Namespace: bl.resourcesNamespace,
+		PodName: mizu.ApiServerPodName,
+		PodImage: bl.flags.MizuImage,
+		ServiceAccountName: serviceAccountName,
+		IsNamespaceRestricted: !bl.isOwnNamespace,
+		MizuApiFilteringOptions: mizuApiFilteringOptions,
+		MaxEntriesDBSizeBytes: bl.flags.MaxEntriesDBSizeBytes,
+	}
+	_, err = kubernetesProvider.CreateMizuApiServerPod(ctx, opts)
 	if err != nil {
 		fmt.Printf("Error creating mizu %s pod: %v\n", mizu.ApiServerPodName, err)
 		return err

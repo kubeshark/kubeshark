@@ -124,42 +124,57 @@ func (provider *Provider) CreateNamespace(ctx context.Context, name string) (*co
 	return provider.clientSet.CoreV1().Namespaces().Create(ctx, namespaceSpec, metav1.CreateOptions{})
 }
 
-func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, namespace string, podName string, podImage string, serviceAccountName string, mizuApiFilteringOptions *shared.TrafficFilteringOptions, maxEntriesDBSizeBytes int64) (*core.Pod, error) {
-	marshaledFilteringOptions, err := json.Marshal(mizuApiFilteringOptions)
+type ApiServerOptions struct {
+	Namespace               string
+	PodName                 string
+	PodImage                string
+	ServiceAccountName      string
+	IsNamespaceRestricted   bool
+	MizuApiFilteringOptions *shared.TrafficFilteringOptions
+	MaxEntriesDBSizeBytes   int64
+}
+
+func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, opts *ApiServerOptions) (*core.Pod, error) {
+	marshaledFilteringOptions, err := json.Marshal(opts.MizuApiFilteringOptions)
 	if err != nil {
 		return nil, err
 	}
 
 	cpuLimit, err := resource.ParseQuantity("750m")
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("invalid cpu limit for %s container", podName))
+		return nil, errors.New(fmt.Sprintf("invalid cpu limit for %s container", opts.PodName))
 	}
 	memLimit, err := resource.ParseQuantity("512Mi")
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("invalid memory limit for %s container", podName))
+		return nil, errors.New(fmt.Sprintf("invalid memory limit for %s container", opts.PodName))
 	}
 	cpuRequests, err := resource.ParseQuantity("50m")
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("invalid cpu request for %s container", podName))
+		return nil, errors.New(fmt.Sprintf("invalid cpu request for %s container", opts.PodName))
 	}
 	memRequests, err := resource.ParseQuantity("50Mi")
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("invalid memory request for %s container", podName))
+		return nil, errors.New(fmt.Sprintf("invalid memory request for %s container", opts.PodName))
+	}
+
+	command := []string{"./mizuagent", "--api-server"}
+	if opts.IsNamespaceRestricted {
+		command = append(command, "--namespace", opts.Namespace)
 	}
 
 	pod := &core.Pod{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      podName,
-			Namespace: namespace,
-			Labels:    map[string]string{"app": podName},
+			Name:      opts.PodName,
+			Namespace: opts.Namespace,
+			Labels:    map[string]string{"app": opts.PodName},
 		},
 		Spec: core.PodSpec{
 			Containers: []core.Container{
 				{
-					Name:            podName,
-					Image:           podImage,
+					Name:            opts.PodName,
+					Image:           opts.PodImage,
 					ImagePullPolicy: core.PullAlways,
-					Command:         []string{"./mizuagent", "--api-server"},
+					Command:         command,
 					Env: []core.EnvVar{
 						{
 							Name:  shared.HostModeEnvVar,
@@ -171,7 +186,7 @@ func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, namespace 
 						},
 						{
 							Name:  shared.MaxEntriesDBSizeBytesEnvVar,
-							Value: strconv.FormatInt(maxEntriesDBSizeBytes, 10),
+							Value: strconv.FormatInt(opts.MaxEntriesDBSizeBytes, 10),
 						},
 					},
 					Resources: core.ResourceRequirements{
@@ -191,10 +206,10 @@ func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, namespace 
 		},
 	}
 	//define the service account only when it exists to prevent pod crash
-	if serviceAccountName != "" {
-		pod.Spec.ServiceAccountName = serviceAccountName
+	if opts.ServiceAccountName != "" {
+		pod.Spec.ServiceAccountName = opts.ServiceAccountName
 	}
-	return provider.clientSet.CoreV1().Pods(namespace).Create(ctx, pod, metav1.CreateOptions{})
+	return provider.clientSet.CoreV1().Pods(opts.Namespace).Create(ctx, pod, metav1.CreateOptions{})
 }
 
 func (provider *Provider) CreateService(ctx context.Context, namespace string, serviceName string, appLabelValue string) (*core.Service, error) {
