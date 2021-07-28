@@ -5,6 +5,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/google/martian/har"
+	"github.com/romana/rlog"
+	"github.com/up9inc/mizu/tap"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"mizuserver/pkg/holder"
 	"net/url"
 	"os"
@@ -12,11 +16,6 @@ import (
 	"sort"
 	"strings"
 	"time"
-
-	"github.com/google/martian/har"
-	"github.com/romana/rlog"
-	"github.com/up9inc/mizu/tap"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"mizuserver/pkg/database"
 	"mizuserver/pkg/models"
@@ -89,9 +88,9 @@ func startReadingFiles(workingDir string) {
 		for _, entry := range inputHar.Log.Entries {
 			time.Sleep(time.Millisecond * 250)
 			connectionInfo := &tap.ConnectionInfo{
-				ClientIP:   fileInfo.Name(),
+				ClientIP: fileInfo.Name(),
 				ClientPort: "",
-				ServerIP:   "",
+				ServerIP: "",
 				ServerPort: "",
 				IsOutgoing: false,
 			}
@@ -198,5 +197,9 @@ func getEstimatedEntrySizeBytes(mizuEntry models.MizuEntry) int {
 	sizeBytes += 8 // SizeBytes bytes
 	sizeBytes += 1 // IsOutgoing bytes
 
+<<<<<<< HEAD:agent/pkg/api/main.go
+=======
+
+>>>>>>> 50e404f51e8f43e785fababed3be20f8de6c6712:api/pkg/api/main.go
 	return sizeBytes
 }

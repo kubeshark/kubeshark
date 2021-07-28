@@ -3,14 +3,15 @@ package api
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/romana/rlog"
-	"github.com/up9inc/mizu/shared"
-	"github.com/up9inc/mizu/tap"
 	"mizuserver/pkg/controllers"
 	"mizuserver/pkg/models"
 	"mizuserver/pkg/routes"
 	"mizuserver/pkg/up9"
 	"sync"
+
+	"github.com/romana/rlog"
+	"github.com/up9inc/mizu/shared"
+	"github.com/up9inc/mizu/tap"
 )
 
 var browserClientSocketUUIDs = make([]int, 0)
@@ -27,9 +28,9 @@ func init() {
 
 func (h *RoutesEventHandlers) WebSocketConnect(socketId int, isTapper bool) {
 	if isTapper {
-		rlog.Infof("Websocket Connection event - Tapper connected: %s", socketId)
+		rlog.Infof("Websocket event - Tapper connected, socket ID: %d", socketId)
 	} else {
-		rlog.Infof("Websocket Connection event - Browser socket connected: %s", socketId)
+		rlog.Infof("Websocket event - Browser socket connected, socket ID: %d", socketId)
 		socketListLock.Lock()
 		browserClientSocketUUIDs = append(browserClientSocketUUIDs, socketId)
 		socketListLock.Unlock()
@@ -38,9 +39,9 @@ func (h *RoutesEventHandlers) WebSocketConnect(socketId int, isTapper bool) {
 
 func (h *RoutesEventHandlers) WebSocketDisconnect(socketId int, isTapper bool) {
 	if isTapper {
-		rlog.Infof("Disconnection event - Tapper connected: %s", socketId)
+		rlog.Infof("Websocket event - Tapper disconnected, socket ID:  %d", socketId)
 	} else {
-		rlog.Infof("Disconnection event - Browser socket connected: %s", socketId)
+		rlog.Infof("Websocket event - Browser socket disconnected, socket ID:  %d", socketId)
 		socketListLock.Lock()
 		removeSocketUUIDFromBrowserSlice(socketId)
 		socketListLock.Unlock()
@@ -52,7 +53,7 @@ func broadcastToBrowserClients(message []byte) {
 		go func(socketId int) {
 			err := routes.SendToSocket(socketId, message)
 			if err != nil {
-				fmt.Printf("error sending message to socket id %d: %v", socketId, err)
+				fmt.Printf("error sending message to socket ID %d: %v", socketId, err)
 			}
 		}(socketId)
 

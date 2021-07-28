@@ -246,3 +246,7 @@ func DecodeEnforcePolicy() (RulesPolicy, error) {
 type VersionResponse struct {
 	SemVer string `json:"semver"`
 }
+
+type VersionResponse struct {
+	SemVer string `json:"semver"`
+}
