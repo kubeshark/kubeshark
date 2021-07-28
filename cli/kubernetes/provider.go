@@ -623,7 +623,7 @@ func (provider *Provider) GetAllPodsMatchingRegex(ctx context.Context, regex *re
 			matchingPods = append(matchingPods, pod)
 		}
 	}
-	return matchingPods, err
+	return matchingPods, nil
 }
 
 func getClientSet(config *restclient.Config) *kubernetes.Clientset {
