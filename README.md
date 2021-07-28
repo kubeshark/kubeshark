@@ -202,7 +202,7 @@ Pick one from the [Releases](https://github.com/up9inc/mizu/releases) page.
   - watch
 ```
 
-4. Alternatively, in order to restrict mizu to one namespace only (with `--mizu-namespace <namespace>`, mizu needs the following permissions in that namespace:
+4. Alternatively, in order to restrict mizu to one namespace only (by setting `agent.namespace` in the config file), mizu needs the following permissions in that namespace:
 
 ```yaml
 - apiGroups:

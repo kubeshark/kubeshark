@@ -27,27 +27,34 @@ type CommandLineFlag struct {
 const (
 	ConfigurationKeyAnalyzingDestination = "tap.dest"
 	ConfigurationKeyUploadInterval       = "tap.uploadInterval"
-	ConfigurationKeyMizuImage            = "mizuImage"
+	ConfigurationKeyAgentImage           = "agent.image"
+	ConfigurationKeyAgentNamespace       = "agent.namespace"
 )
 
 var allowedSetFlags = []CommandLineFlag{
 	{
-		CommandLineName:   "dest",
+		CommandLineName:   ConfigurationKeyAnalyzingDestination,
 		YamlHierarchyName: ConfigurationKeyAnalyzingDestination,
 		DefaultValue:      "up9.app",
 		Type:              reflect.String,
 		// TODO: maybe add short description that we can show
 	},
 	{
-		CommandLineName:   "uploadInterval",
+		CommandLineName:   ConfigurationKeyUploadInterval,
 		YamlHierarchyName: ConfigurationKeyUploadInterval,
 		DefaultValue:      10,
 		Type:              reflect.Int,
 	},
 	{
-		CommandLineName:   "mizuImage",
-		YamlHierarchyName: ConfigurationKeyMizuImage,
+		CommandLineName:   ConfigurationKeyAgentImage,
+		YamlHierarchyName: ConfigurationKeyAgentImage,
 		DefaultValue:      fmt.Sprintf("gcr.io/up9-docker-hub/mizu/%s:%s", Branch, SemVer),
+		Type:              reflect.String,
+	},
+	{
+		CommandLineName:   ConfigurationKeyAgentNamespace,
+		YamlHierarchyName: ConfigurationKeyAgentNamespace,
+		DefaultValue:      "",
 		Type:              reflect.String,
 	},
 }
