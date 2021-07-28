@@ -4,7 +4,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/google/gopacket/reassembly"
+	"github.com/google/gopacket/tcpassembly"
 )
 
 type CleanerStats struct {
@@ -14,20 +14,20 @@ type CleanerStats struct {
 }
 
 type Cleaner struct {
-	assembler         *reassembly.Assembler
+	assembler         *tcpassembly.Assembler
 	assemblerMutex    *sync.Mutex
 	matcher           *requestResponseMatcher
 	cleanPeriod       time.Duration
 	connectionTimeout time.Duration
 	stats             CleanerStats
-	statsMutex	  sync.Mutex
+	statsMutex        sync.Mutex
 }
 
 func (cl *Cleaner) clean() {
 	startCleanTime := time.Now()
 
 	cl.assemblerMutex.Lock()
-	flushed, closed := cl.assembler.FlushCloseOlderThan(startCleanTime.Add(-cl.connectionTimeout))
+	flushed, closed := cl.assembler.FlushOlderThan(startCleanTime.Add(-cl.connectionTimeout))
 	cl.assemblerMutex.Unlock()
 
 	deleted := cl.matcher.deleteOlderThan(startCleanTime.Add(-cl.connectionTimeout))
@@ -55,7 +55,7 @@ func (cl *Cleaner) dumpStats() CleanerStats {
 
 	stats := CleanerStats{
 		flushed: cl.stats.flushed,
-		closed : cl.stats.closed,
+		closed:  cl.stats.closed,
 		deleted: cl.stats.deleted,
 	}
 

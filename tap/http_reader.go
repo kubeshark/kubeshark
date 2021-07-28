@@ -214,9 +214,9 @@ func (h *httpReader) handleHTTP1ClientStream(b *bufio.Reader) error {
 		}
 	}
 
-	h.parent.Lock()
-	h.parent.urls = append(h.parent.urls, req.URL.String())
-	h.parent.Unlock()
+	// h.parent.Lock()
+	// h.parent.urls = append(h.parent.urls, req.URL.String())
+	// h.parent.Unlock()
 
 	return nil
 }
@@ -225,13 +225,13 @@ func (h *httpReader) handleHTTP1ServerStream(b *bufio.Reader) error {
 	res, err := http.ReadResponse(b, nil)
 	h.messageCount++
 	var req string
-	h.parent.Lock()
-	if len(h.parent.urls) == 0 {
-		req = fmt.Sprintf("<no-request-seen>")
-	} else {
-		req, h.parent.urls = h.parent.urls[0], h.parent.urls[1:]
-	}
-	h.parent.Unlock()
+	// h.parent.Lock()
+	// if len(h.parent.urls) == 0 {
+	// 	req = fmt.Sprintf("<no-request-seen>")
+	// } else {
+	// 	req, h.parent.urls = h.parent.urls[0], h.parent.urls[1:]
+	// }
+	// h.parent.Unlock()
 	if err != nil {
 		return err
 	}
