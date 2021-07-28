@@ -40,24 +40,24 @@ func StartProxy(kubernetesProvider *Provider, mizuPort uint16, mizuNamespace str
 	return server.Serve(l)
 }
 
-func getMizuCollectorProxiedHostAndPath(mizuNamespace string, mizuServiceName string) string {
+func getMizuApiServerProxiedHostAndPath(mizuNamespace string, mizuServiceName string) string {
 	return fmt.Sprintf("/api/v1/namespaces/%s/services/%s:%d/proxy/", mizuNamespace, mizuServiceName, mizuServicePort)
 }
 
-func GetMizuCollectorProxiedHostAndPath(mizuPort uint16) string {
+func GetMizuApiServerProxiedHostAndPath(mizuPort uint16) string {
 	return fmt.Sprintf("localhost:%d/mizu", mizuPort)
 }
 
 func getRerouteHttpHandlerMizuAPI(proxyHandler http.Handler, mizuNamespace string, mizuServiceName string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		r.URL.Path = strings.Replace(r.URL.Path, "/mizu/", getMizuCollectorProxiedHostAndPath(mizuNamespace, mizuServiceName), 1)
+		r.URL.Path = strings.Replace(r.URL.Path, "/mizu/", getMizuApiServerProxiedHostAndPath(mizuNamespace, mizuServiceName), 1)
 		proxyHandler.ServeHTTP(w, r)
 	})
 }
 
 func getRerouteHttpHandlerMizuStatic(proxyHandler http.Handler, mizuNamespace string, mizuServiceName string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		r.URL.Path = strings.Replace(r.URL.Path, "/static/", fmt.Sprintf("%s/static/", getMizuCollectorProxiedHostAndPath(mizuNamespace, mizuServiceName)), 1)
+		r.URL.Path = strings.Replace(r.URL.Path, "/static/", fmt.Sprintf("%s/static/", getMizuApiServerProxiedHostAndPath(mizuNamespace, mizuServiceName)), 1)
 		proxyHandler.ServeHTTP(w, r)
 	})
 }

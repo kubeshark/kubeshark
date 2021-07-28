@@ -3,18 +3,16 @@ module mizuserver
 go 1.16
 
 require (
-	github.com/antoniodipinto/ikisocket v0.0.0-20210719144512-dce3f3fbbd04
 	github.com/beevik/etree v1.1.0
 	github.com/djherbis/atime v1.0.0
-	github.com/fasthttp/websocket v1.4.3-beta.1 // indirect
 	github.com/fsnotify/fsnotify v1.4.9
+	github.com/gin-contrib/static v0.0.1
+	github.com/gin-gonic/gin v1.7.2
 	github.com/go-playground/locales v0.13.0
 	github.com/go-playground/universal-translator v0.17.0
 	github.com/go-playground/validator/v10 v10.5.0
-	github.com/gofiber/fiber/v2 v2.10.0
 	github.com/google/martian v2.1.0+incompatible
 	github.com/gorilla/websocket v1.4.2
-	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/romana/rlog v0.0.0-20171115192701-f018bc92e7d7
 	github.com/up9inc/mizu/shared v0.0.0
 	github.com/up9inc/mizu/tap v0.0.0

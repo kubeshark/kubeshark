@@ -5,17 +5,17 @@ import (
 	"flag"
 	"fmt"
 	"mizuserver/pkg/api"
-	"mizuserver/pkg/middleware"
 	"mizuserver/pkg/models"
 	"mizuserver/pkg/routes"
 	"mizuserver/pkg/sensitiveDataFiltering"
 	"mizuserver/pkg/utils"
+	"net/http"
 	"os"
 	"os/signal"
 	"strings"
 
-	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gin-contrib/static"
+	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"github.com/romana/rlog"
 	"github.com/up9inc/mizu/shared"
@@ -23,17 +23,17 @@ import (
 )
 
 var shouldTap = flag.Bool("tap", false, "Run in tapper mode without API")
-var aggregator = flag.Bool("aggregator", false, "Run in aggregator mode with API")
 var demo = flag.Bool("demo", false, "Run in Demo mode with API")
+var apiServer = flag.Bool("api-server", false, "Run in API server mode with API")
 var standalone = flag.Bool("standalone", false, "Run in standalone tapper and API mode")
-var aggregatorAddress = flag.String("aggregator-address", "", "Address of mizu collector for tapping")
+var apiServerAddress = flag.String("api-server-address", "", "Address of mizu API server")
 
 func main() {
 	flag.Parse()
 	hostMode := os.Getenv(shared.HostModeEnvVar) == "1"
 	tapOpts := &tap.TapOpts{HostMode: hostMode}
 
-	if !*shouldTap && !*aggregator && !*standalone {
+	if !*shouldTap && !*apiServer && !*standalone {
 		panic("One of the flags --tap, --api or --standalone must be provided")
 	}
 	if *standalone {
@@ -46,8 +46,8 @@ func main() {
 
 		hostApi(nil)
 	} else if *shouldTap {
-		if *aggregatorAddress == "" {
-			panic("Aggregator address must be provided with --aggregator-address when using --tap")
+		if *apiServerAddress == "" {
+			panic("API server address must be provided with --api-server-address when using --tap")
 		}
 
 		tapTargets := getTapTargets()
@@ -58,14 +58,14 @@ func main() {
 
 		harOutputChannel, outboundLinkOutputChannel := tap.StartPassiveTapper(tapOpts)
 
-		socketConnection, err := shared.ConnectToSocketServer(*aggregatorAddress, shared.DEFAULT_SOCKET_RETRIES, shared.DEFAULT_SOCKET_RETRY_SLEEP_TIME, false)
+		socketConnection, err := shared.ConnectToSocketServer(*apiServerAddress, shared.DEFAULT_SOCKET_RETRIES, shared.DEFAULT_SOCKET_RETRY_SLEEP_TIME, false)
 		if err != nil {
-			panic(fmt.Sprintf("Error connecting to socket server at %s %v", *aggregatorAddress, err))
+			panic(fmt.Sprintf("Error connecting to socket server at %s %v", *apiServerAddress, err))
 		}
 
 		go pipeChannelToSocket(socketConnection, harOutputChannel)
 		go api.StartReadingOutbound(outboundLinkOutputChannel)
-	} else if *aggregator {
+	} else if *apiServer {
 		socketHarOutChannel := make(chan *tap.OutputChannelItem, 1000)
 		filteredHarChannel := make(chan *tap.OutputChannelItem)
 
@@ -88,29 +88,41 @@ func main() {
 }
 
 func hostApi(socketHarOutputChannel chan<- *tap.OutputChannelItem) {
-	app := fiber.New()
+	app := gin.Default()
 
-	app.Use(cors.New(cors.Config{
-		AllowOrigins: "*",
-		AllowMethods: "*",
-		AllowHeaders: "*",
-	}))
-	middleware.FiberMiddleware(app) // Register Fiber's middleware for app.
-	app.Static("/", "./site")
-
-	//Simple route to know server is running
-	app.Get("/echo", func(c *fiber.Ctx) error {
-		return c.SendString("Hello, World 👋!")
+	app.GET("/echo", func(c *gin.Context) {
+		c.String(http.StatusOK, "Hello, World 👋!")
 	})
+
 	eventHandlers := api.RoutesEventHandlers{
 		SocketHarOutChannel: socketHarOutputChannel,
 	}
+
+	app.Use(static.ServeRoot("/", "./site"))
+	app.Use(CORSMiddleware()) // This has to be called after the static middleware, does not work if its called before
+
 	routes.WebSocketRoutes(app, &eventHandlers)
 	routes.EntriesRoutes(app)
 	routes.MetadataRoutes(app)
 	routes.NotFoundRoute(app)
 
 	utils.StartServer(app)
+}
+
+func CORSMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
+		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
+		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT")
+
+		if c.Request.Method == "OPTIONS" {
+			c.AbortWithStatus(204)
+			return
+		}
+
+		c.Next()
+	}
 }
 
 func getTapTargets() []string {

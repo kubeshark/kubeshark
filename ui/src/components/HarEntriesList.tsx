@@ -4,6 +4,7 @@ import styles from './style/HarEntriesList.module.sass';
 import spinner from './assets/spinner.svg';
 import ScrollableFeed from "react-scrollable-feed";
 import {StatusType} from "./HarFilters";
+import Api from "../helpers/api";
 
 interface HarEntriesListProps {
     entries: any[];
@@ -24,6 +25,8 @@ enum FetchOperator {
     LT = "lt",
     GT = "gt"
 }
+
+const api = new Api();
 
 export const HarEntriesList: React.FC<HarEntriesListProps> = ({entries, setEntries, focusedEntryId, setFocusedEntryId, connectionOpen, noMoreDataTop, setNoMoreDataTop, noMoreDataBottom, setNoMoreDataBottom, methodsFilter, statusFilter, pathFilter}) => {
 
@@ -54,14 +57,9 @@ export const HarEntriesList: React.FC<HarEntriesListProps> = ({entries, setEntri
         return entries.filter(filterEntries);
     },[entries, filterEntries])
 
-    const fetchData = async (operator, timestamp) => {
-        const response = await fetch(`http://localhost:8899/api/entries?limit=50&operator=${operator}&timestamp=${timestamp}`);
-        return await response.json();
-    }
-
     const getOldEntries = useCallback(async () => {
         setIsLoadingTop(true);
-        const data = await fetchData(FetchOperator.LT, entries[0].timestamp);
+        const data = await api.fetchEntries(FetchOperator.LT, entries[0].timestamp);
         setLoadMoreTop(false);
 
         let scrollTo;
@@ -89,7 +87,7 @@ export const HarEntriesList: React.FC<HarEntriesListProps> = ({entries, setEntri
     }, [loadMoreTop, connectionOpen, noMoreDataTop, getOldEntries]);
 
     const getNewEntries = async () => {
-        const data = await fetchData(FetchOperator.GT, entries[entries.length - 1].timestamp);
+        const data = await api.fetchEntries(FetchOperator.GT, entries[entries.length - 1].timestamp);
         let scrollTo;
         if(data.length === 0) {
             setNoMoreDataBottom(true);

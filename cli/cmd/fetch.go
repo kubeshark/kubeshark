@@ -18,7 +18,7 @@ var fetchCmd = &cobra.Command{
 	Use:   "fetch",
 	Short: "Download recorded traffic to files",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		go mizu.ReportRun("tap", mizuTapOptions)
+		go mizu.ReportRun("fetch", mizuTapOptions)
 		if isCompatible, err := mizu.CheckVersionCompatibility(mizuFetchOptions.MizuPort); err != nil {
 			return err
 		} else if !isCompatible {

@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/google/go-github/v37/github"
-	"github.com/romana/rlog"
+	"github.com/up9inc/mizu/cli/uiUtils"
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/semver"
 	"io/ioutil"
@@ -45,17 +45,17 @@ func CheckVersionCompatibility(port uint16) (bool, error) {
 		return true, nil
 	}
 
-	fmt.Printf(Red, fmt.Sprintf("cli version (%s) is not compatible with api version (%s)\n", SemVer, apiSemVer))
+	Log.Infof(uiUtils.Red, fmt.Sprintf("cli version (%s) is not compatible with api version (%s)", SemVer, apiSemVer))
 	return false, nil
 }
 
 func CheckNewerVersion() {
-	rlog.Debugf("Checking for newer version...")
+	Log.Debugf("Checking for newer version...")
 	start := time.Now()
 	client := github.NewClient(nil)
 	latestRelease, _, err := client.Repositories.GetLatestRelease(context.Background(), "up9inc", "mizu")
 	if err != nil {
-		rlog.Debugf("Failed to get latest release")
+		Log.Debugf("Failed to get latest release")
 		return
 	}
 
@@ -67,26 +67,26 @@ func CheckNewerVersion() {
 		}
 	}
 	if versionFileUrl == "" {
-		rlog.Debugf("Version file not found in the latest release")
+		Log.Debugf("Version file not found in the latest release")
 		return
 	}
 
 	res, err := http.Get(versionFileUrl)
 	if err != nil {
-		rlog.Debugf("http.Get version asset -> %v", err)
+		Log.Debugf("http.Get version asset -> %v", err)
 		return
 	}
 
 	data, err := ioutil.ReadAll(res.Body)
 	res.Body.Close()
 	if err != nil {
-		rlog.Debugf("ioutil.ReadAll -> %v", err)
+		Log.Debugf("ioutil.ReadAll -> %v", err)
 		return
 	}
 	gitHubVersion := string(data)
 	gitHubVersion = gitHubVersion[:len(gitHubVersion)-1]
-	rlog.Debugf("Finished version validation, took %v", time.Since(start))
+	Log.Debugf("Finished version validation, took %v", time.Since(start))
 	if SemVer < gitHubVersion {
-		fmt.Printf(Yellow, fmt.Sprintf("Update available! %v -> %v (%v)\n", SemVer, gitHubVersion, *latestRelease.HTMLURL))
+		Log.Infof(uiUtils.Yellow, fmt.Sprintf("Update available! %v -> %v (%v)", SemVer, gitHubVersion, *latestRelease.HTMLURL))
 	}
 }

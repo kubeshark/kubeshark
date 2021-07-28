@@ -29,12 +29,14 @@ export const StatusBar: React.FC<Props> = ({tappingStatus}) => {
         <div className="podsCount">{`Tapping ${amountOfPods} ${pluralize('pod', amountOfPods)} in ${pluralize('namespace', uniqueNamespaces.length)} ${uniqueNamespaces.join(", ")}`}</div>
         {expandedBar && <div style={{marginTop: 20}}>
             <table>
-                <tr>
-                    <th>Pod name</th>
-                    <th>Namespace</th>
-                </tr>
+                <thead>
+                    <tr>
+                        <th>Pod name</th>
+                        <th>Namespace</th>
+                    </tr>
+                </thead>
                 <tbody>
-                    {tappingStatus.pods.map(pod => <tr>
+                    {tappingStatus.pods.map(pod => <tr key={pod.name}>
                         <td>{pod.name}</td>
                         <td>{pod.namespace}</td>
                     </tr>)}
