@@ -6,8 +6,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/up9inc/mizu/cli/mizu"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/cache"
+	"k8s.io/client-go/util/homedir"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -33,7 +35,6 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	_ "k8s.io/client-go/tools/portforward"
 	watchtools "k8s.io/client-go/tools/watch"
-	"k8s.io/client-go/util/homedir"
 )
 
 type Provider struct {
@@ -734,6 +735,7 @@ func loadKubernetesConfiguration(kubeConfigPath string) clientcmd.ClientConfig {
 		kubeConfigPath = filepath.Join(home, ".kube", "config")
 	}
 
+	mizu.Log.Debugf("Using kube config %s", kubeConfigPath)
 	configPathList := filepath.SplitList(kubeConfigPath)
 	configLoadingRules := &clientcmd.ClientConfigLoadingRules{}
 	if len(configPathList) <= 1 {

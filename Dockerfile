@@ -50,5 +50,8 @@ COPY --from=site-build ["/app/ui-build/build", "site"]
 
 COPY agent/start.sh .
 
+# gin-gonic runs in debug mode without this
+ENV GIN_MODE=release
+
 # this script runs both apiserver and passivetapper and exits either if one of them exits, preventing a scenario where the container runs without one process
 ENTRYPOINT "/app/mizuagent"

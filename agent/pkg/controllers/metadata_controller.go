@@ -1,12 +1,13 @@
 package controllers
 
 import (
-	"github.com/gofiber/fiber/v2"
+	"github.com/gin-gonic/gin"
 	"github.com/up9inc/mizu/shared"
 	"mizuserver/pkg/version"
+	"net/http"
 )
 
-func GetVersion(c *fiber.Ctx) error {
+func GetVersion(c *gin.Context) {
 	resp := shared.VersionResponse{SemVer: version.SemVer}
-	return c.Status(fiber.StatusOK).JSON(resp)
+	c.JSON(http.StatusOK, resp)
 }
