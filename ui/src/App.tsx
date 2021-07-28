@@ -1,10 +1,12 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import './App.sass';
 import logo from './components/assets/Mizu-logo.svg';
-import {Button} from "@material-ui/core";
+import {Button, Snackbar} from "@material-ui/core";
 import {HarPage} from "./components/HarPage";
 import Tooltip from "./components/Tooltip";
 import {makeStyles} from "@material-ui/core/styles";
+import MuiAlert from '@material-ui/lab/Alert';
+import Api from "./helpers/api";
 
 
 const useStyles = makeStyles(() => ({
@@ -15,11 +17,40 @@ const useStyles = makeStyles(() => ({
     },
 }));
 
+const api = new Api();
+
 const App = () => {
 
     const classes = useStyles();
 
     const [analyzeStatus, setAnalyzeStatus] = useState(null);
+    const [showTLSWarning, setShowTLSWarning] = useState(false);
+    const [userDismissedTLSWarning, setUserDismissedTLSWarning] = useState(false);
+    const [addressesWithTLS, setAddressesWithTLS] = useState(new Set());
+
+    useEffect(() => {
+        (async () => {
+            const recentTLSLinks = await api.getRecentTLSLinks();
+
+            if (recentTLSLinks?.length > 0) {
+                for (const tlsDestAddress of recentTLSLinks) {
+                    addressesWithTLS.add(tlsDestAddress)
+                }
+                setAddressesWithTLS(new Set(addressesWithTLS));
+                setShowTLSWarning(true);
+            }
+
+        })();
+    }, []);
+
+    const onTLSDetected = (destAddress: string) => {
+        addressesWithTLS.add(destAddress);
+        setAddressesWithTLS(new Set(addressesWithTLS));
+
+        if (!userDismissedTLSWarning) {
+          setShowTLSWarning(true);
+        }
+    };
 
     const analysisMessage = analyzeStatus?.isRemoteReady ?
         <span>
@@ -88,7 +119,12 @@ const App = () => {
                 </Tooltip>
                 }
             </div>
-            <HarPage setAnalyzeStatus={setAnalyzeStatus}/>
+            <HarPage setAnalyzeStatus={setAnalyzeStatus} onTLSDetected={onTLSDetected}/>
+            <Snackbar open={showTLSWarning && !userDismissedTLSWarning}>
+                <MuiAlert elevation={6} variant="filled" onClose={() => setUserDismissedTLSWarning(true)} severity="warning">
+                    Mizu is detecting TLS traffic{addressesWithTLS.size ? ` (directed to ${Array.from(addressesWithTLS).join(", ")})` : ''}, this type of traffic will not be displayed.
+                </MuiAlert>
+            </Snackbar>
         </div>
     );
 }

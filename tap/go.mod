@@ -8,4 +8,5 @@ require (
 	github.com/orcaman/concurrent-map v0.0.0-20210106121528-16402b402231
 	github.com/romana/rlog v0.0.0-20171115192701-f018bc92e7d7
 	golang.org/x/net v0.0.0-20210421230115-4e50805a0758
+	github.com/bradleyfalzon/tlsx v0.0.0-20170624122154-28fd0e59bac4
 )

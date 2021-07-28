@@ -430,24 +430,20 @@ func startPassiveTapper(harWriter *HarWriter, outboundLinkWriter *OutboundLinkWr
 			assembler.AssembleWithContext(packet.NetworkLayer().NetworkFlow(), tcp, &c)
 			assemblerMutex.Unlock()
 
-			if IsPacketTLSClientHello(tcp.Payload) {
+			sourceIP := packet.NetworkLayer().NetworkFlow().Src().String()
+			destinationIP := packet.NetworkLayer().NetworkFlow().Dst().String()
+			destinationPort := int(tcp.DstPort)
 
+			if streamFactory.getStreamProps(sourceIP, destinationIP, destinationPort).isTapTarget {
+				fmt.Printf("%s -> %s:%d isTapTarget:%t", sourceIP, destinationIP, destinationPort, streamFactory.getStreamProps(sourceIP, destinationIP, destinationPort).isTapTarget)
+				if IsTLSHandshakePacket(tcp.Payload) {
+					serverName, err := ExtractServerNameFromTLSClientHelloPacket(tcp.Payload)
+					if err == nil {
+						streamFactory.outbountLinkWriter.WriteOutboundLink(sourceIP, destinationIP, destinationPort, serverName, TLSProtocol)
+					}
+				}
 			}
-		}
-		ssl := packet.Layer(layers.LayerTypeLinuxSLL)
-		if ssl != nil {
-			ssl := ssl.(*layers.LinuxSLL)
-			if ssl != nil {
 
-
-			}
-		}
-		tls := packet.Layer(layers.LayerTypeTLS)
-		if tls != nil {
-			tls := tls.(*layers.TLS)
-			if tls != nil {
-
-			}
 		}
 
 		done := *maxcount > 0 && count >= *maxcount

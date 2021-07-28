@@ -1,24 +1,28 @@
 package tap
 
 import (
-	"encoding/binary"
+	"github.com/bradleyfalzon/tlsx"
+	"github.com/google/gopacket"
+	"github.com/google/gopacket/layers"
 )
 
-func IsPacketTLSClientHello(tcpPayload []byte) bool {
-	if tcpPayload != nil && len(tcpPayload) > 200 {
-		if tcpPayload[0] == 22 && tcpPayload[1] == 3 && tcpPayload[2] == 1 && tcpPayload[5] == 1{
-			recordSize := binary.BigEndian.Uint16([]byte {tcpPayload[3], tcpPayload[4]})
-			if recordSize == uint16(len(tcpPayload) - 5) {
-				handShakeSize := binary.BigEndian.Uint16([]byte {tcpPayload[7], tcpPayload[8]})
-				if handShakeSize == uint16(len(tcpPayload) - 9) {
-					return true
-				}
-			}
+func ExtractServerNameFromTLSClientHelloPacket(tcpPayload []byte) (string, error){
+	clientHello := tlsx.ClientHello{}
+	err := clientHello.Unmarshall(tcpPayload)
+	if err != nil {
+		return "", err
+	}
+	return clientHello.SNI, nil
+}
+
+func IsTLSHandshakePacket(tcpPayload []byte) bool {
+	tlsPacket := gopacket.NewPacket(tcpPayload, layers.LayerTypeTLS, gopacket.Default)
+
+	if tlsPacket != nil && tlsPacket.Layer(layers.LayerTypeTLS) != nil {
+		tlsLayer := tlsPacket.Layer(layers.LayerTypeTLS).(*layers.TLS)
+		if tlsLayer != nil && len(tlsLayer.Handshake) > 0 && tlsLayer.Handshake[0].ContentType == layers.TLSHandshake {
+			return true
 		}
 	}
 	return false
-}
-
-func ExtractServerNameFromTLSClientHello(tcpPayload []byte)  {
-	//todo: iterate over packet bytes, checking dynamic length parts until you react the
 }

@@ -33,7 +33,7 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.T
 	dstPort := int(tcp.DstPort)
 
 	if factory.shouldNotifyOnOutboundLink(dstIp, dstPort) {
-		factory.outbountLinkWriter.WriteOutboundLink(net.Src().String(), dstIp, dstPort)
+		factory.outbountLinkWriter.WriteOutboundLink(net.Src().String(), dstIp, dstPort, "", "")
 	}
 	props := factory.getStreamProps(srcIp, dstIp, dstPort)
 	isHTTP := props.isTapTarget
