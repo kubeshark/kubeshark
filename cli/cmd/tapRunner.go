@@ -18,6 +18,7 @@ import (
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/debounce"
 	core "k8s.io/api/core/v1"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/tools/clientcmd"
 )
@@ -80,7 +81,11 @@ func (bl *tapCmdBL) RunMizuTap(podRegexQuery *regexp.Regexp) {
 
 	targetNamespace := bl.getNamespace(kubernetesProvider)
 	if matchingPods, err := kubernetesProvider.GetAllPodsMatchingRegex(ctx, podRegexQuery, targetNamespace); err != nil {
-		mizu.Log.Infof("Error listing pods: %v", err)
+		if k8serrors.IsForbidden(err) {
+			mizu.Log.Infof(formatPermissionsError(err))
+		} else {
+			mizu.Log.Infof("Error listing pods: \"%v\" \"%v\"", err)
+		}
 		return
 	} else {
 		bl.currentlyTappedPods = matchingPods
@@ -498,4 +503,9 @@ func (bl *tapCmdBL) getNamespace(kubernetesProvider *kubernetes.Provider) string
 	} else {
 		return kubernetesProvider.CurrentNamespace()
 	}
+}
+
+func formatPermissionsError(err error) string {
+	text := fmt.Sprintf("Insufficient permissions: %s. Supply the required permission or limit mizu to one namespace by setting agent.namespace in the config file.", err)
+	return fmt.Sprintf(uiUtils.Error, text)
 }
