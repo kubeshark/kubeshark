@@ -281,6 +281,10 @@ func watchPodsForTapping(ctx context.Context, kubernetesProvider *kubernetes.Pro
 			mizu.Log.Infof("Error updating daemonset: %s (%v,%+v)", err, err, err)
 			cancel()
 		}
+		if err := updateMizuTappers(ctx, kubernetesProvider, nodeToTappedPodIPMap, tappingOptions); err != nil {
+			mizu.Log.Infof("Error updating daemonset: %s (%v,%+v)", err, err, err)
+			cancel()
+		}
 	}
 	restartTappersDebouncer := debounce.NewDebouncer(updateTappersDelay, restartTappers)
 

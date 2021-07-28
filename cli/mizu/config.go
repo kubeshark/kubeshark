@@ -3,14 +3,15 @@ package mizu
 import (
 	"errors"
 	"fmt"
-	"github.com/up9inc/mizu/cli/uiUtils"
-	"gopkg.in/yaml.v3"
 	"io/ioutil"
 	"os"
 	"path"
 	"reflect"
 	"strconv"
 	"strings"
+
+	"github.com/up9inc/mizu/cli/uiUtils"
+	"gopkg.in/yaml.v3"
 )
 
 const separator = "="
@@ -208,4 +209,3 @@ func addToConfigObj(key string, value interface{}, configObj map[string]interfac
 		}
 	}
 }
-

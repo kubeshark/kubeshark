@@ -4,14 +4,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/google/go-github/v37/github"
-	"github.com/up9inc/mizu/cli/uiUtils"
-	"github.com/up9inc/mizu/shared"
-	"github.com/up9inc/mizu/shared/semver"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/google/go-github/v37/github"
+	"github.com/up9inc/mizu/cli/uiUtils"
+	"github.com/up9inc/mizu/shared"
+	"github.com/up9inc/mizu/shared/semver"
 )
 
 func getApiVersion(port uint16) (string, error) {
@@ -87,10 +88,6 @@ func CheckNewerVersion() {
 	gitHubVersion = gitHubVersion[:len(gitHubVersion)-1]
 	Log.Debugf("Finished version validation, took %v", time.Since(start))
 	if SemVer < gitHubVersion {
-<<<<<<< HEAD
-		Log.Infof(uiUtils.Yellow, fmt.Sprintf("Update available! %v -> %v (%v)\n", SemVer, gitHubVersion, *latestRelease.HTMLURL))
-=======
 		Log.Infof(uiUtils.Yellow, fmt.Sprintf("Update available! %v -> %v (%v)", SemVer, gitHubVersion, *latestRelease.HTMLURL))
->>>>>>> 50e404f51e8f43e785fababed3be20f8de6c6712
 	}
 }
