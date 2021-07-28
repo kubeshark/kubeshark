@@ -39,19 +39,24 @@ Pick one from the [Releases](https://github.com/up9inc/mizu/releases) page.
   - list
   - watch
   - create
+  - delete
 - apiGroups:
   - ""
   resources:
   - services
   verbs:
+  - get
   - create
+  - delete
 - apiGroups:
   - apps
   resources:
   - daemonsets
   verbs:
+  - list
   - create
   - patch
+  - delete
 - apiGroups:
   - ""
   resources:
@@ -68,7 +73,8 @@ Pick one from the [Releases](https://github.com/up9inc/mizu/releases) page.
   verbs:
   - get
 ```
-3. Optionally, for resolving traffic ip to kubernetes service name, mizu needs below permissions
+
+3. Optionally, for resolving traffic IP to kubernetes service name, mizu needs below permissions
 
 ```yaml
 - apiGroups:
@@ -77,6 +83,10 @@ Pick one from the [Releases](https://github.com/up9inc/mizu/releases) page.
   - pods
   verbs:
   - get
+  - list
+  - watch
+  - create
+  - delete
 - apiGroups:
   - ""
   resources:
@@ -85,6 +95,72 @@ Pick one from the [Releases](https://github.com/up9inc/mizu/releases) page.
   - get
   - list
   - watch
+  - create
+  - delete
+- apiGroups:
+  - apps
+  resources:
+  - daemonsets
+  verbs:
+  - list
+  - create
+  - patch
+  - delete
+- apiGroups:
+  - ""
+  resources:
+  - namespaces
+  verbs:
+  - list
+  - watch
+  - create
+  - delete
+- apiGroups:
+  - ""
+  resources:
+  - services/proxy
+  verbs:
+  - get
+- apiGroups:
+  - ""
+  resources:
+  - serviceaccounts
+  verbs:
+  - get
+  - create
+  - delete
+- apiGroups:
+  - rbac.authorization.k8s.io
+  resources:
+  - clusterroles
+  verbs:
+  - list
+  - create
+  - delete
+- apiGroups:
+  - rbac.authorization.k8s.io
+  resources:
+  - clusterrolebindings
+  verbs:
+  - list
+  - create
+  - delete
+- apiGroups:
+  - rbac.authorization.k8s.io
+  resources:
+  - roles
+  verbs:
+  - list
+  - create
+  - delete
+- apiGroups:
+  - rbac.authorization.k8s.io
+  resources:
+  - rolebindings
+  verbs:
+  - list
+  - create
+  - delete
 - apiGroups:
   - apps
   - extensions
@@ -113,6 +189,83 @@ Pick one from the [Releases](https://github.com/up9inc/mizu/releases) page.
   - get
   - list
   - watch
+```
+
+4. Alternatively, in order to restrict mizu to one namespace only (with `--mizu-namespace <namespace>`, mizu needs the following permissions in that namespace:
+
+```yaml
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - list
+  - watch
+  - create
+  - delete
+- apiGroups:
+  - ""
+  resources:
+  - services
+  verbs:
+  - get
+  - create
+  - delete
+- apiGroups:
+  - apps
+  resources:
+  - daemonsets
+  verbs:
+  - list
+  - create
+  - patch
+  - delete
+- apiGroups:
+  - ""
+  resources:
+  - services/proxy
+  verbs:
+  - get
+```
+
+5. To restrict mizu to one namespace while also resolving IPs, mizu needs the following permissions in that namespace:
+
+```yaml
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - delete
+- apiGroups:
+  - ""
+  resources:
+  - services
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - delete
+- apiGroups:
+  - apps
+  resources:
+  - daemonsets
+  verbs:
+  - list
+  - create
+  - patch
+  - delete
+- apiGroups:
+  - ""
+  resources:
+  - services/proxy
+  verbs:
+  - get
 - apiGroups:
   - ""
   resources:
@@ -120,10 +273,11 @@ Pick one from the [Releases](https://github.com/up9inc/mizu/releases) page.
   verbs:
   - get
   - create
+  - delete
 - apiGroups:
   - rbac.authorization.k8s.io
   resources:
-  - clusterroles
+  - roles
   verbs:
   - list
   - create
@@ -131,11 +285,39 @@ Pick one from the [Releases](https://github.com/up9inc/mizu/releases) page.
 - apiGroups:
   - rbac.authorization.k8s.io
   resources:
-  - clusterrolebindings
+  - rolebindings
   verbs:
   - list
   - create
   - delete
+- apiGroups:
+  - apps
+  - extensions
+  resources:
+  - pods
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - apps
+  - extensions
+  resources:
+  - services
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  - apps
+  - extensions
+  resources:
+  - endpoints
+  verbs:
+  - get
+  - list
+  - watch
 ```
 
 See `examples/roles` for example `clusterroles`. 
