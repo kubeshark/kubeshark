@@ -45,7 +45,7 @@ var tapCmd = &cobra.Command{
 Supported protocols are HTTP and gRPC.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		go mizu.ReportRun("tap", mizuTapOptions)
-		bl := NewtapCmdBL(mizuTapOptions)
+		bl := NewTapCmdBL(mizuTapOptions)
 		bl.RunMizuTap(regex)
 		return nil
 

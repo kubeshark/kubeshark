@@ -36,7 +36,7 @@ type tapCmdBL struct {
 	resourcesNamespace       string
 }
 
-func NewtapCmdBL(flags *MizuTapOptions) *tapCmdBL {
+func NewTapCmdBL(flags *MizuTapOptions) *tapCmdBL {
 	var (
 		isOwnNamespace bool
 		resourcesNamespace string
