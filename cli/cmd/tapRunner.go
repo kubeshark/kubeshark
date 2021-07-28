@@ -259,17 +259,17 @@ func (bl *tapCmdBL) cleanUpMizuResources(kubernetesProvider *kubernetes.Provider
 	}
 
 	if bl.mizuServiceAccountExists {
-		if err := kubernetesProvider.RemoveServicAccount(removalCtx, bl.resourcesNamespace, mizu.ServiceAccountName); err != nil {
-			fmt.Printf("Error removing Service Account %s in namespace %s: %s (%v,%+v)\n", mizu.ServiceAccountName, bl.resourcesNamespace, err, err, err)
-			return
-		}
-
 		if bl.isOwnNamespace {
 			if err := kubernetesProvider.RemoveNonNamespacedResources(removalCtx, mizu.ClusterRoleName, mizu.ClusterRoleBindingName); err != nil {
 				fmt.Printf("Error removing non-namespaced resources: %s (%v,%+v)\n", err, err, err)
 				return
 			}
 		} else {
+			if err := kubernetesProvider.RemoveServicAccount(removalCtx, bl.resourcesNamespace, mizu.ServiceAccountName); err != nil {
+				fmt.Printf("Error removing Service Account %s in namespace %s: %s (%v,%+v)\n", mizu.ServiceAccountName, bl.resourcesNamespace, err, err, err)
+				return
+			}
+
 			if err := kubernetesProvider.RemoveRole(removalCtx, bl.resourcesNamespace, mizu.RoleName); err != nil {
 				fmt.Printf("Error removing Role %s in namespace %s: %s (%v,%+v)\n", mizu.RoleName, bl.resourcesNamespace, err, err, err)
 			}
