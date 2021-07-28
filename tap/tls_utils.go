@@ -6,7 +6,7 @@ import (
 	"github.com/google/gopacket/layers"
 )
 
-func ExtractServerNameFromTLSClientHelloPacket(tcpPayload []byte) (string, error){
+func ExtractServerNameFromTLSClientHelloPacket(tcpPayload []byte) (string, error) {
 	clientHello := tlsx.ClientHello{}
 	err := clientHello.Unmarshall(tcpPayload)
 	if err != nil {
