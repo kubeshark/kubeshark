@@ -17,7 +17,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/up9inc/mizu/cli/mizu"
+	"github.com/up9inc/mizu/cli/uiUtils"
 )
 
 func RunMizuTapDemo(demoOptions *MizuDemoOptions) {
@@ -29,9 +29,9 @@ func RunMizuTapDemo(demoOptions *MizuDemoOptions) {
 	go callMizuDemo(ctx, cancel, dir, demoOptions)
 	if demoOptions.Analyze {
 		go analyze(demoOptions)
-		fmt.Printf(mizu.Purple, "mizu tap \"carts-[0-9].*|payment.*|shipping.*|user-[0-9].*\" -n sock-shop --analyze\n")
+		fmt.Printf(uiUtils.Purple, "mizu tap \"catalogue-.*|carts-[0-9].*|payment.*|shipping.*|user-[0-9].*\" -n sock-shop --analyze\n")
 	} else {
-		fmt.Printf(mizu.Purple, "mizu tap \"carts-[0-9].*|payment.*|shipping.*|user-[0-9].*\" -n sock-shop\n")
+		fmt.Printf(uiUtils.Purple, "mizu tap \"catalogue-.*|carts-[0-9].*|payment.*|shipping.*|user-[0-9].*\" -n sock-shop\n")
 	}
 	fmt.Println("Mizu will be available on http://localhost:8899 in a few seconds")
 	sigChan := make(chan os.Signal, 1)
@@ -171,9 +171,9 @@ func analyze(demoOptions *MizuDemoOptions) {
 	for {
 		response, err := http.Get(fmt.Sprintf("http://%s/api/uploadEntries?dest=%s&interval=10", mizuProxiedUrl, demoOptions.AnalyzeDestination))
 		if err != nil || response.StatusCode != 200 {
-			fmt.Printf(mizu.Red, "Mizu Not running, waiting 10 seconds before trying again\n")
+			fmt.Printf(uiUtils.Red, "Mizu Not running, waiting 10 seconds before trying again\n")
 		} else {
-			fmt.Printf(mizu.Purple, "Traffic is uploading to UP9 cloud for further analsys\n")
+			fmt.Printf(uiUtils.Purple, "Traffic is uploading to UP9 cloud for further analsys\n")
 			break
 		}
 		time.Sleep(10 * time.Second)
