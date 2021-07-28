@@ -33,5 +33,5 @@ func init() {
 
 	viewCmd.Flags().Uint16VarP(&mizuViewOptions.GuiPort, "gui-port", "p", 8899, "Provide a custom port for the web interface webserver")
 	viewCmd.Flags().StringVarP(&mizuViewOptions.KubeConfigPath, "kube-config", "k", "", "Path to kube-config file")
-	viewCmd.Flags().StringVarP(&mizuViewOptions.MizuNamespace, "mizu-namespace", "", "", "A existing namespace in which to install mizu resources. If not passed, create a temporary namespace \"mizu\" for this purpose.")
+	viewCmd.Flags().StringVarP(&mizuViewOptions.MizuNamespace, "mizu-namespace", "", "", "An existing namespace in which to install mizu resources. If not passed, create a temporary namespace \"mizu\" for this purpose.")
 }
