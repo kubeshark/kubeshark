@@ -3,13 +3,15 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	"github.com/spf13/cobra"
-	"github.com/up9inc/mizu/cli/mizu"
-	"github.com/up9inc/mizu/cli/uiUtils"
-	"github.com/up9inc/mizu/shared/units"
 	"os"
 	"regexp"
 	"strings"
+
+	"github.com/spf13/cobra"
+	"github.com/up9inc/mizu/cli/errormessage"
+	"github.com/up9inc/mizu/cli/mizu"
+	"github.com/up9inc/mizu/cli/uiUtils"
+	"github.com/up9inc/mizu/shared/units"
 )
 
 type MizuTapOptions struct {
@@ -67,7 +69,7 @@ Supported protocols are HTTP and gRPC.`,
 		var compileErr error
 		regex, compileErr = regexp.Compile(args[0])
 		if compileErr != nil {
-			return errors.New(fmt.Sprintf("%s is not a valid regex %s", args[0], compileErr))
+			return errormessage.FormatError(compileErr)
 		}
 
 		var parseHumanDataSizeErr error
