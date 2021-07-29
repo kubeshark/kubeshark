@@ -23,6 +23,7 @@ import (
 )
 
 var tapperMode = flag.Bool("tap", false, "Run in tapper mode without API")
+var demoMode = flag.Bool("demo", false, "Run in Demo mode with API")
 var apiServerMode = flag.Bool("api-server", false, "Run in API server mode with API")
 var standaloneMode = flag.Bool("standalone", false, "Run in standalone tapper and API mode")
 var apiServerAddress = flag.String("api-server-address", "", "Address of mizu API server")
@@ -44,7 +45,7 @@ func main() {
 		filteredHarChannel := make(chan *tap.OutputChannelItem)
 
 		go filterHarItems(harOutputChannel, filteredHarChannel, getTrafficFilteringOptions())
-		go api.StartReadingEntries(filteredHarChannel, nil)
+		go api.StartReadingEntries(filteredHarChannel, nil, false)
 		go api.StartReadingOutbound(outboundLinkOutputChannel)
 
 		hostApi(nil)
@@ -75,7 +76,12 @@ func main() {
 		filteredHarChannel := make(chan *tap.OutputChannelItem)
 
 		go filterHarItems(socketHarOutChannel, filteredHarChannel, getTrafficFilteringOptions())
-		go api.StartReadingEntries(filteredHarChannel, nil)
+		if *demoMode {
+			workdir := "./hars"
+			go api.StartReadingEntries(filteredHarChannel, &workdir, true)
+		} else {
+			go api.StartReadingEntries(filteredHarChannel, nil, false)
+		}
 
 		hostApi(socketHarOutChannel)
 	}

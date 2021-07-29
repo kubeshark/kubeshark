@@ -10,6 +10,11 @@ import (
 const telemetryUrl = "https://us-east4-up9-prod.cloudfunctions.net/mizu-telemetry"
 
 func ReportRun(cmd string, args interface{}) {
+	if !GetBool(ConfigurationKeyTelemetry) {
+		Log.Debugf("not reporting due to config value")
+		return
+	}
+
 	if Branch != "main" {
 		Log.Debugf("reporting only on main branch")
 		return
