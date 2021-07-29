@@ -21,13 +21,13 @@ type CommandLineFlag struct {
 	CommandLineName   string
 	YamlHierarchyName string
 	DefaultValue      interface{}
-	Type              reflect.Kind
 }
 
 const (
 	ConfigurationKeyAnalyzingDestination = "tap.dest"
 	ConfigurationKeyUploadInterval       = "tap.uploadInterval"
 	ConfigurationKeyMizuImage            = "mizuImage"
+	ConfigurationKeyTelemetry            = "telemetry"
 )
 
 var allowedSetFlags = []CommandLineFlag{
@@ -35,25 +35,39 @@ var allowedSetFlags = []CommandLineFlag{
 		CommandLineName:   "dest",
 		YamlHierarchyName: ConfigurationKeyAnalyzingDestination,
 		DefaultValue:      "up9.app",
-		Type:              reflect.String,
 		// TODO: maybe add short description that we can show
 	},
 	{
 		CommandLineName:   "uploadInterval",
 		YamlHierarchyName: ConfigurationKeyUploadInterval,
 		DefaultValue:      10,
-		Type:              reflect.Int,
 	},
 	{
 		CommandLineName:   "mizuImage",
 		YamlHierarchyName: ConfigurationKeyMizuImage,
 		DefaultValue:      fmt.Sprintf("gcr.io/up9-docker-hub/mizu/%s:%s", Branch, SemVer),
-		Type:              reflect.String,
+	},
+	{
+		CommandLineName:   "telemetry",
+		YamlHierarchyName: ConfigurationKeyTelemetry,
+		DefaultValue:      true,
 	},
 }
 
 func GetString(key string) string {
 	return fmt.Sprintf("%v", getValueFromMergedConfig(key))
+}
+
+func GetBool(key string) bool {
+	stringVal := GetString(key)
+	Log.Debugf("Found string value %v", stringVal)
+
+	val, err := strconv.ParseBool(stringVal)
+	if err != nil {
+		Log.Warningf(uiUtils.Red, fmt.Sprintf( "Invalid value %v for key %s, expected bool", stringVal, key))
+		os.Exit(1)
+	}
+	return val
 }
 
 func GetInt(key string) int {
@@ -62,7 +76,7 @@ func GetInt(key string) int {
 
 	val, err := strconv.Atoi(stringVal)
 	if err != nil {
-		Log.Warningf("Invalid value %v for key %s", val, key)
+		Log.Warningf(uiUtils.Red, fmt.Sprintf("Invalid value %v for key %s, expected int", stringVal, key))
 		os.Exit(1)
 	}
 	return val
@@ -140,13 +154,13 @@ func mergeConfigFile() error {
 
 func addToConfig(prefix string, value interface{}) {
 	typ := reflect.TypeOf(value).Kind()
-	if typ == reflect.Int || typ == reflect.String || typ == reflect.Slice {
-		validateConfigFileKey(prefix)
-		configObj[prefix] = value
-	} else if typ == reflect.Map {
+	if typ == reflect.Map {
 		for k1, v1 := range value.(map[string]interface{}) {
 			addToConfig(fmt.Sprintf("%s.%s", prefix, k1), v1)
 		}
+	} else {
+		validateConfigFileKey(prefix)
+		configObj[prefix] = value
 	}
 }
 
@@ -161,26 +175,23 @@ func mergeCommandLineFlags(commandLineValues []string) error {
 			return errors.New(fmt.Sprintf("invalid set argument %s", e))
 		}
 		setFlagKey, argumentValue := split[0], split[1]
-		argumentNameInConfig, expectedType, err := flagFromAllowed(setFlagKey)
+		argumentNameInConfig, err := flagFromAllowed(setFlagKey)
 		if err != nil {
 			return err
 		}
-		argumentType := reflect.ValueOf(argumentValue).Kind()
-		if argumentType != expectedType {
-			return errors.New(fmt.Sprintf("Invalid value for argument %s (should be type %s but got %s", setFlagKey, expectedType, argumentType))
-		}
+
 		configObj[argumentNameInConfig] = argumentValue
 	}
 	return nil
 }
 
-func flagFromAllowed(setFlagKey string) (string, reflect.Kind, error) {
+func flagFromAllowed(setFlagKey string) (string, error) {
 	for _, allowedFlag := range allowedSetFlags {
 		if strings.ToLower(allowedFlag.CommandLineName) == strings.ToLower(setFlagKey) {
-			return allowedFlag.YamlHierarchyName, allowedFlag.Type, nil
+			return allowedFlag.YamlHierarchyName, nil
 		}
 	}
-	return "", reflect.Invalid, errors.New(fmt.Sprintf("invalid set argument %s", setFlagKey))
+	return "", errors.New(fmt.Sprintf("invalid set argument %s", setFlagKey))
 }
 
 func validateConfigFileKey(configFileKey string) {
@@ -195,7 +206,7 @@ func validateConfigFileKey(configFileKey string) {
 
 func addToConfigObj(key string, value interface{}, configObj map[string]interface{}) {
 	typ := reflect.TypeOf(value).Kind()
-	if typ == reflect.Int || typ == reflect.String || typ == reflect.Slice {
+	if typ != reflect.Map {
 		if strings.Contains(key, ".") {
 			split := strings.SplitN(key, ".", 2)
 			firstLevelKey := split[0]
@@ -208,4 +219,3 @@ func addToConfigObj(key string, value interface{}, configObj map[string]interfac
 		}
 	}
 }
-
