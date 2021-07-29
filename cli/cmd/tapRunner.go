@@ -146,7 +146,11 @@ func (bl *tapCmdBL) createMizuNamespace(ctx context.Context, kubernetesProvider 
 func (bl *tapCmdBL) createMizuApiServer(ctx context.Context, kubernetesProvider *kubernetes.Provider, mizuApiFilteringOptions *shared.TrafficFilteringOptions) error {
 	var err error
 
-	bl.mizuServiceAccountExists = bl.createRBACIfNecessary(ctx, kubernetesProvider)
+	bl.mizuServiceAccountExists, err = bl.createRBACIfNecessary(ctx, kubernetesProvider)
+	if err != nil {
+		mizu.Log.Infof(uiUtils.Warning, fmt.Sprintf("Failed to ensure the permissions required for IP resolving. Mizu will not resolve target IPs to names. error: %v", errormessage.FormatError(err)))
+	}
+
 	var serviceAccountName string
 	if bl.mizuServiceAccountExists {
 		serviceAccountName = mizu.ServiceAccountName
@@ -394,7 +398,7 @@ func (bl *tapCmdBL) portForwardApiPod(ctx context.Context, kubernetesProvider *k
 
 		case <-timeAfter:
 			if !isPodReady {
-				mizu.Log.Infof(uiUtils.Error, fmt.Sprintf("error: %s pod was not ready in time", mizu.ApiServerPodName))
+				mizu.Log.Infof(uiUtils.Error, fmt.Sprintf("%s pod was not ready in time", mizu.ApiServerPodName))
 				cancel()
 			}
 
@@ -404,28 +408,25 @@ func (bl *tapCmdBL) portForwardApiPod(ctx context.Context, kubernetesProvider *k
 	}
 }
 
-func (bl *tapCmdBL) createRBACIfNecessary(ctx context.Context, kubernetesProvider *kubernetes.Provider) bool {
+func (bl *tapCmdBL) createRBACIfNecessary(ctx context.Context, kubernetesProvider *kubernetes.Provider) (bool, error) {
 	mizuRBACExists, err := kubernetesProvider.DoesServiceAccountExist(ctx, bl.resourcesNamespace, mizu.ServiceAccountName)
 	if err != nil {
-		mizu.Log.Infof(uiUtils.Warning, fmt.Sprintf("warning: could not ensure mizu rbac resources exist %v", err))
-		return false
+		return false, err
 	}
 	if !mizuRBACExists {
 		if bl.isOwnNamespace {
 			err := kubernetesProvider.CreateMizuRBAC(ctx, bl.resourcesNamespace, mizu.ServiceAccountName, mizu.ClusterRoleName, mizu.ClusterRoleBindingName, mizu.RBACVersion)
 			if err != nil {
-				mizu.Log.Infof(uiUtils.Warning, fmt.Sprintf("warning: could not create mizu rbac resources %v", err))
-				return false
+				return false, err
 			}
 		} else {
 			err := kubernetesProvider.CreateMizuRBACNamespaceRestricted(ctx, bl.resourcesNamespace, mizu.ServiceAccountName, mizu.RoleName, mizu.RoleBindingName, mizu.RBACVersion)
 			if err != nil {
-				mizu.Log.Infof(uiUtils.Warning, fmt.Sprintf("warning: could not create mizu rbac resources %v", err))
-				return false
+				return false, err
 			}
 		}
 	}
-	return true
+	return true, nil
 }
 
 func getNodeHostToTappedPodIpsMap(tappedPods []core.Pod) map[string][]string {
