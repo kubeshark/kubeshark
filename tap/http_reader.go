@@ -74,7 +74,14 @@ func (h *httpReader) Read(p []byte) (int, error) {
 	return l, nil
 }
 
+// TODO: Replaced HTTP reader with AMQP reader. Merge the two readers together.
 func (h *httpReader) run(wg *sync.WaitGroup) {
+	b := bufio.NewReader(h)
+	r := reader{r: b}
+	r.Read()
+}
+
+func (h *httpReader) run1(wg *sync.WaitGroup) {
 	defer wg.Done()
 	b := bufio.NewReader(h)
 
