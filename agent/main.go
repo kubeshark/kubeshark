@@ -4,12 +4,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/gin-contrib/static"
-	"github.com/gin-gonic/gin"
-	"github.com/gorilla/websocket"
-	"github.com/romana/rlog"
-	"github.com/up9inc/mizu/shared"
-	"github.com/up9inc/mizu/tap"
 	"mizuserver/pkg/api"
 	"mizuserver/pkg/models"
 	"mizuserver/pkg/routes"
@@ -19,9 +13,17 @@ import (
 	"os"
 	"os/signal"
 	"strings"
+
+	"github.com/gin-contrib/static"
+	"github.com/gin-gonic/gin"
+	"github.com/gorilla/websocket"
+	"github.com/romana/rlog"
+	"github.com/up9inc/mizu/shared"
+	"github.com/up9inc/mizu/tap"
 )
 
 var shouldTap = flag.Bool("tap", false, "Run in tapper mode without API")
+var demo = flag.Bool("demo", false, "Run in Demo mode with API")
 var apiServer = flag.Bool("api-server", false, "Run in API server mode with API")
 var standalone = flag.Bool("standalone", false, "Run in standalone tapper and API mode")
 var apiServerAddress = flag.String("api-server-address", "", "Address of mizu API server")
@@ -34,13 +36,12 @@ func main() {
 	if !*shouldTap && !*apiServer && !*standalone {
 		panic("One of the flags --tap, --api or --standalone must be provided")
 	}
-
 	if *standalone {
 		harOutputChannel, outboundLinkOutputChannel := tap.StartPassiveTapper(tapOpts)
 		filteredHarChannel := make(chan *tap.OutputChannelItem)
 
 		go filterHarItems(harOutputChannel, filteredHarChannel, getTrafficFilteringOptions())
-		go api.StartReadingEntries(filteredHarChannel, nil)
+		go api.StartReadingEntries(filteredHarChannel, nil, false)
 		go api.StartReadingOutbound(outboundLinkOutputChannel)
 
 		hostApi(nil)
@@ -69,7 +70,12 @@ func main() {
 		filteredHarChannel := make(chan *tap.OutputChannelItem)
 
 		go filterHarItems(socketHarOutChannel, filteredHarChannel, getTrafficFilteringOptions())
-		go api.StartReadingEntries(filteredHarChannel, nil)
+		if *demo {
+			workdir := "./hars"
+			go api.StartReadingEntries(filteredHarChannel, &workdir, true)
+		} else {
+			go api.StartReadingEntries(filteredHarChannel, nil, false)
+		}
 
 		hostApi(socketHarOutChannel)
 	}
