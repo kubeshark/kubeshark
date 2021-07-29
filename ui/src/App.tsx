@@ -33,10 +33,7 @@ const App = () => {
             const recentTLSLinks = await api.getRecentTLSLinks();
 
             if (recentTLSLinks?.length > 0) {
-                for (const tlsDestAddress of recentTLSLinks) {
-                    addressesWithTLS.add(tlsDestAddress)
-                }
-                setAddressesWithTLS(new Set(addressesWithTLS));
+                setAddressesWithTLS(new Set([...addressesWithTLS, ...recentTLSLinks]));
                 setShowTLSWarning(true);
             }
 

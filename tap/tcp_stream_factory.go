@@ -57,11 +57,12 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.T
 				srcPort: transport.Src().String(),
 				dstPort: transport.Dst().String(),
 			},
-			hexdump:    *hexdump,
-			parent:     stream,
-			isClient:   true,
-			isOutgoing: props.isOutgoing,
-			harWriter:  factory.harWriter,
+			hexdump:            *hexdump,
+			parent:             stream,
+			isClient:           true,
+			isOutgoing:         props.isOutgoing,
+			harWriter:          factory.harWriter,
+			outboundLinkWriter: factory.outbountLinkWriter,
 		}
 		stream.server = httpReader{
 			msgQueue: make(chan httpReaderDataMsg),
@@ -72,10 +73,11 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.T
 				srcPort: transport.Dst().String(),
 				dstPort: transport.Src().String(),
 			},
-			hexdump:    *hexdump,
-			parent:     stream,
-			isOutgoing: props.isOutgoing,
-			harWriter:  factory.harWriter,
+			hexdump:            *hexdump,
+			parent:             stream,
+			isOutgoing:         props.isOutgoing,
+			harWriter:          factory.harWriter,
+			outboundLinkWriter: factory.outbountLinkWriter,
 		}
 		factory.wg.Add(2)
 		// Start reading from channels stream.client.bytes and stream.server.bytes
