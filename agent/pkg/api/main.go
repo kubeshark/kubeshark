@@ -5,7 +5,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"math/rand"
+	"github.com/google/martian/har"
+	"github.com/romana/rlog"
+	"github.com/up9inc/mizu/tap"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"mizuserver/pkg/holder"
 	"net/url"
 	"os"
@@ -13,11 +16,6 @@ import (
 	"sort"
 	"strings"
 	"time"
-
-	"github.com/google/martian/har"
-	"github.com/romana/rlog"
-	"github.com/up9inc/mizu/tap"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"mizuserver/pkg/database"
 	"mizuserver/pkg/models"
@@ -49,15 +47,15 @@ func init() {
 	holder.SetResolver(res)
 }
 
-func StartReadingEntries(harChannel <-chan *tap.OutputChannelItem, workingDir *string, demo bool) {
+func StartReadingEntries(harChannel <-chan *tap.OutputChannelItem, workingDir *string) {
 	if workingDir != nil && *workingDir != "" {
-		startReadingFiles(*workingDir, demo)
+		startReadingFiles(*workingDir)
 	} else {
 		startReadingChannel(harChannel)
 	}
 }
 
-func startReadingFiles(workingDir string, infiniteLoad bool) {
+func startReadingFiles(workingDir string) {
 	err := os.MkdirAll(workingDir, os.ModePerm)
 	utils.CheckErr(err)
 
@@ -88,23 +86,18 @@ func startReadingFiles(workingDir string, infiniteLoad bool) {
 		utils.CheckErr(decErr)
 
 		for _, entry := range inputHar.Log.Entries {
-			if infiniteLoad {
-				entry.StartedDateTime = time.Now().Add(20 * time.Millisecond)
-			}
-			time.Sleep(time.Millisecond * time.Duration(rand.Intn(300)))
+			time.Sleep(time.Millisecond * 250)
 			connectionInfo := &tap.ConnectionInfo{
-				ClientIP:   fileInfo.Name(),
+				ClientIP: fileInfo.Name(),
 				ClientPort: "",
-				ServerIP:   "",
+				ServerIP: "",
 				ServerPort: "",
 				IsOutgoing: false,
 			}
 			saveHarToDb(entry, connectionInfo)
 		}
-		if !infiniteLoad {
-			rmErr := os.Remove(inputFilePath)
-			utils.CheckErr(rmErr)
-		}
+		rmErr := os.Remove(inputFilePath)
+		utils.CheckErr(rmErr)
 	}
 }
 
@@ -124,6 +117,7 @@ func StartReadingOutbound(outboundLinkChannel <-chan *tap.OutboundLink) {
 	for range outboundLinkChannel {
 	}
 }
+
 
 func saveHarToDb(entry *har.Entry, connectionInfo *tap.ConnectionInfo) {
 	entryBytes, _ := json.Marshal(entry)
@@ -201,6 +195,7 @@ func getEstimatedEntrySizeBytes(mizuEntry models.MizuEntry) int {
 	sizeBytes += 8 // Timestamp bytes
 	sizeBytes += 8 // SizeBytes bytes
 	sizeBytes += 1 // IsOutgoing bytes
+
 
 	return sizeBytes
 }
