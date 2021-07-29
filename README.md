@@ -56,7 +56,6 @@ Pick one from the [Releases](https://github.com/up9inc/mizu/releases) page.
   resources:
   - services
   verbs:
-  - get
   - create
   - delete
 - apiGroups:
@@ -64,7 +63,6 @@ Pick one from the [Releases](https://github.com/up9inc/mizu/releases) page.
   resources:
   - daemonsets
   verbs:
-  - list
   - create
   - patch
   - delete
@@ -73,6 +71,7 @@ Pick one from the [Releases](https://github.com/up9inc/mizu/releases) page.
   resources:
   - namespaces
   verbs:
+  - get
   - list
   - watch
   - create
@@ -113,7 +112,6 @@ Pick one from the [Releases](https://github.com/up9inc/mizu/releases) page.
   resources:
   - daemonsets
   verbs:
-  - list
   - create
   - patch
   - delete
@@ -122,6 +120,7 @@ Pick one from the [Releases](https://github.com/up9inc/mizu/releases) page.
   resources:
   - namespaces
   verbs:
+  - get
   - list
   - watch
   - create
@@ -145,7 +144,7 @@ Pick one from the [Releases](https://github.com/up9inc/mizu/releases) page.
   resources:
   - clusterroles
   verbs:
-  - list
+  - get
   - create
   - delete
 - apiGroups:
@@ -153,7 +152,7 @@ Pick one from the [Releases](https://github.com/up9inc/mizu/releases) page.
   resources:
   - clusterrolebindings
   verbs:
-  - list
+  - get
   - create
   - delete
 - apiGroups:
@@ -161,7 +160,7 @@ Pick one from the [Releases](https://github.com/up9inc/mizu/releases) page.
   resources:
   - roles
   verbs:
-  - list
+  - get
   - create
   - delete
 - apiGroups:
@@ -169,7 +168,7 @@ Pick one from the [Releases](https://github.com/up9inc/mizu/releases) page.
   resources:
   - rolebindings
   verbs:
-  - list
+  - get
   - create
   - delete
 - apiGroups:
@@ -210,6 +209,7 @@ Pick one from the [Releases](https://github.com/up9inc/mizu/releases) page.
   resources:
   - pods
   verbs:
+  - get
   - list
   - watch
   - create
@@ -227,7 +227,7 @@ Pick one from the [Releases](https://github.com/up9inc/mizu/releases) page.
   resources:
   - daemonsets
   verbs:
-  - list
+  - get
   - create
   - patch
   - delete
@@ -267,7 +267,7 @@ Pick one from the [Releases](https://github.com/up9inc/mizu/releases) page.
   resources:
   - daemonsets
   verbs:
-  - list
+  - get
   - create
   - patch
   - delete
@@ -290,7 +290,7 @@ Pick one from the [Releases](https://github.com/up9inc/mizu/releases) page.
   resources:
   - roles
   verbs:
-  - list
+  - get
   - create
   - delete
 - apiGroups:
@@ -298,7 +298,7 @@ Pick one from the [Releases](https://github.com/up9inc/mizu/releases) page.
   resources:
   - rolebindings
   verbs:
-  - list
+  - get
   - create
   - delete
 - apiGroups:
