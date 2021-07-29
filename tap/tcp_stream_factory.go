@@ -2,13 +2,12 @@ package tap
 
 import (
 	"fmt"
+	"github.com/romana/rlog"
 	"sync"
 
-	"github.com/romana/rlog"
-
-	"github.com/google/gopacket" // pulls in all layers decoders
-	"github.com/google/gopacket/tcpassembly"
-	"github.com/google/gopacket/tcpassembly/tcpreader"
+	"github.com/google/gopacket"
+	"github.com/google/gopacket/layers" // pulls in all layers decoders
+	"github.com/google/gopacket/reassembly"
 )
 
 /*
@@ -23,23 +22,67 @@ type tcpStreamFactory struct {
 	outbountLinkWriter *OutboundLinkWriter
 }
 
-func (factory *tcpStreamFactory) New(net, transport gopacket.Flow) tcpassembly.Stream {
+func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.TCP, ac reassembly.AssemblerContext) reassembly.Stream {
 	rlog.Debugf("* NEW: %s %s", net, transport)
-	rlog.Debugf("Current App Ports: %v", gSettings.filterPorts)
-
-	// if factory.shouldNotifyOnOutboundLink(dstIp, dstPort) {
-	// 	factory.outbountLinkWriter.WriteOutboundLink(net.Src().String(), dstIp, dstPort)
-	// }
-	// props := factory.getStreamProps(srcIp, dstIp, dstPort)
-	hstream := &tcpStream{
-		net:       net,
-		transport: transport,
-		r:         tcpreader.NewReaderStream(),
+	fsmOptions := reassembly.TCPSimpleFSMOptions{
+		SupportMissingEstablishment: *allowmissinginit,
 	}
-	go hstream.run() // Important... we must guarantee that data from the reader stream is read.
+	rlog.Debugf("Current App Ports: %v", gSettings.filterPorts)
+	srcIp := net.Src().String()
+	dstIp := net.Dst().String()
+	dstPort := int(tcp.DstPort)
 
-	// ReaderStream implements tcpassembly.Stream, so we can return a pointer to it.
-	return &hstream.r
+	if factory.shouldNotifyOnOutboundLink(dstIp, dstPort) {
+		factory.outbountLinkWriter.WriteOutboundLink(net.Src().String(), dstIp, dstPort)
+	}
+	props := factory.getStreamProps(srcIp, dstIp, dstPort)
+	isHTTP := props.isTapTarget
+	stream := &tcpStream{
+		net:        net,
+		transport:  transport,
+		isDNS:      tcp.SrcPort == 53 || tcp.DstPort == 53,
+		isHTTP:     isHTTP && factory.doHTTP,
+		reversed:   tcp.SrcPort == 80,
+		tcpstate:   reassembly.NewTCPSimpleFSM(fsmOptions),
+		ident:      fmt.Sprintf("%s:%s", net, transport),
+		optchecker: reassembly.NewTCPOptionCheck(),
+	}
+	if stream.isHTTP {
+		stream.client = httpReader{
+			msgQueue: make(chan httpReaderDataMsg),
+			ident:    fmt.Sprintf("%s %s", net, transport),
+			tcpID: tcpID{
+				srcIP:   net.Src().String(),
+				dstIP:   net.Dst().String(),
+				srcPort: transport.Src().String(),
+				dstPort: transport.Dst().String(),
+			},
+			hexdump:  *hexdump,
+			parent:   stream,
+			isClient: true,
+			isOutgoing: props.isOutgoing,
+			harWriter: factory.harWriter,
+		}
+		stream.server = httpReader{
+			msgQueue: make(chan httpReaderDataMsg),
+			ident:    fmt.Sprintf("%s %s", net.Reverse(), transport.Reverse()),
+			tcpID: tcpID{
+				srcIP:   net.Dst().String(),
+				dstIP:   net.Src().String(),
+				srcPort: transport.Dst().String(),
+				dstPort: transport.Src().String(),
+			},
+			hexdump: *hexdump,
+			parent:  stream,
+			isOutgoing: props.isOutgoing,
+			harWriter: factory.harWriter,
+		}
+		factory.wg.Add(2)
+		// Start reading from channels stream.client.bytes and stream.server.bytes
+		go stream.client.run(&factory.wg)
+		go stream.server.run(&factory.wg)
+	}
+	return stream
 }
 
 func (factory *tcpStreamFactory) WaitGoRoutines() {
@@ -88,10 +131,6 @@ func (factory *tcpStreamFactory) shouldNotifyOnOutboundLink(dstIP string, dstPor
 
 type streamProps struct {
 	isTapTarget bool
-	isOutgoing  bool
+	isOutgoing bool
 }
 
-func (h *tcpStream) run() {
-	r := reader{&h.r}
-	r.Read()
-}
