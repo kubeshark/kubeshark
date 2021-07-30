@@ -3,16 +3,17 @@ package controllers
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/gin-gonic/gin"
+	"github.com/google/martian/har"
+	"github.com/romana/rlog"
 	"mizuserver/pkg/database"
 	"mizuserver/pkg/models"
+	"mizuserver/pkg/up9"
 	"mizuserver/pkg/utils"
 	"mizuserver/pkg/validation"
 	"net/http"
 	"strings"
 	"time"
-
-	"github.com/gin-gonic/gin"
-	"github.com/google/martian/har"
 )
 
 func GetEntries(c *gin.Context) {
@@ -141,6 +142,31 @@ func GetHARs(c *gin.Context) {
 }
 
 func UploadEntries(c *gin.Context) {
+	rlog.Infof("Upload entries - started\n")
+
+	uploadRequestBody := &models.UploadEntriesRequestBody{}
+	if err := c.BindQuery(uploadRequestBody); err != nil {
+		c.JSON(http.StatusBadRequest, err)
+		return
+	}
+	if err := validation.Validate(uploadRequestBody); err != nil {
+		c.JSON(http.StatusBadRequest, err)
+		return
+	}
+	if up9.GetAnalyzeInfo().IsAnalyzing {
+		c.String(http.StatusBadRequest, "Cannot analyze, mizu is already analyzing")
+		return
+	}
+
+	rlog.Infof("Upload entries - creating token. dest %s\n", uploadRequestBody.Dest)
+	token, err := up9.CreateAnonymousToken(uploadRequestBody.Dest)
+	if err != nil {
+		c.String(http.StatusServiceUnavailable, "Cannot analyze, mizu is already analyzing")
+		return
+	}
+	rlog.Infof("Upload entries - uploading. token: %s model: %s\n", token.Token, token.Model)
+	go up9.UploadEntriesImpl(token.Token, token.Model, uploadRequestBody.Dest, uploadRequestBody.SleepIntervalSec)
+	c.String(http.StatusOK, "OK")
 }
 
 func GetFullEntries(c *gin.Context) {
