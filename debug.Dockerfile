@@ -19,6 +19,7 @@ WORKDIR /app/agent-build
 
 COPY agent/go.mod agent/go.sum ./
 COPY shared/go.mod shared/go.mod ../shared/
+COPY amqp/go.mod amqp/go.mod ../amqp/
 COPY tap/go.mod tap/go.mod ../tap/
 
 RUN go mod download

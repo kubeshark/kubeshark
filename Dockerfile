@@ -18,6 +18,7 @@ WORKDIR /app/agent-build
 
 COPY agent/go.mod agent/go.sum ./
 COPY shared/go.mod shared/go.mod ../shared/
+COPY amqp/go.mod amqp/go.mod ../amqp/
 COPY tap/go.mod tap/go.mod ../tap/
 RUN go mod download
 # cheap trick to make the build faster (As long as go.mod wasn't changes)
@@ -30,6 +31,7 @@ ARG SEM_VER
 
 # Copy and build agent code
 COPY shared ../shared
+COPY amqp ../amqp
 COPY tap ../tap
 COPY agent .
 RUN go build -ldflags="-s -w \

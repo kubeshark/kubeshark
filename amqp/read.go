@@ -3,7 +3,7 @@
 // license that can be found in the LICENSE file.
 // Source code and contact info at http://github.com/streadway/amqp
 
-package tap
+package amqp
 
 import (
 	"bytes"
@@ -17,10 +17,10 @@ import (
 Reads a frame from an input stream and returns an interface that can be cast into
 one of the following:
 
-   methodFrame
+   MethodFrame
    PropertiesFrame
-   bodyFrame
-   heartbeatFrame
+   BodyFrame
+   HeartbeatFrame
 
 2.3.5  frame Details
 
@@ -43,10 +43,10 @@ In realistic implementations where performance is a concern, we would use
 
 “gathering reads” to avoid doing three separate system calls to read a frame.
 */
-func (r *reader) ReadFrame() (frame frame, err error) {
+func (r *AmqpReader) ReadFrame() (frame frame, err error) {
 	var scratch [7]byte
 
-	if _, err = io.ReadFull(r.r, scratch[:7]); err != nil {
+	if _, err = io.ReadFull(r.R, scratch[:7]); err != nil {
 		return
 	}
 
@@ -79,7 +79,7 @@ func (r *reader) ReadFrame() (frame frame, err error) {
 		return nil, ErrFrame
 	}
 
-	if _, err = io.ReadFull(r.r, scratch[:1]); err != nil {
+	if _, err = io.ReadFull(r.R, scratch[:1]); err != nil {
 		return nil, err
 	}
 
@@ -331,96 +331,96 @@ func hasProperty(mask uint16, prop int) bool {
 	return int(mask)&prop > 0
 }
 
-func (r *reader) parseHeaderFrame(channel uint16, size uint32) (frame frame, err error) {
-	hf := &headerFrame{
+func (r *AmqpReader) parseHeaderFrame(channel uint16, size uint32) (frame frame, err error) {
+	hf := &HeaderFrame{
 		ChannelId: channel,
 	}
 
-	if err = binary.Read(r.r, binary.BigEndian, &hf.ClassId); err != nil {
+	if err = binary.Read(r.R, binary.BigEndian, &hf.ClassId); err != nil {
 		return
 	}
 
-	if err = binary.Read(r.r, binary.BigEndian, &hf.weight); err != nil {
+	if err = binary.Read(r.R, binary.BigEndian, &hf.weight); err != nil {
 		return
 	}
 
-	if err = binary.Read(r.r, binary.BigEndian, &hf.Size); err != nil {
+	if err = binary.Read(r.R, binary.BigEndian, &hf.Size); err != nil {
 		return
 	}
 
 	var flags uint16
 
-	if err = binary.Read(r.r, binary.BigEndian, &flags); err != nil {
+	if err = binary.Read(r.R, binary.BigEndian, &flags); err != nil {
 		return
 	}
 
 	if hasProperty(flags, flagContentType) {
-		if hf.Properties.ContentType, err = readShortstr(r.r); err != nil {
+		if hf.Properties.ContentType, err = readShortstr(r.R); err != nil {
 			return
 		}
 	}
 	if hasProperty(flags, flagContentEncoding) {
-		if hf.Properties.ContentEncoding, err = readShortstr(r.r); err != nil {
+		if hf.Properties.ContentEncoding, err = readShortstr(r.R); err != nil {
 			return
 		}
 	}
 	if hasProperty(flags, flagHeaders) {
-		if hf.Properties.Headers, err = readTable(r.r); err != nil {
+		if hf.Properties.Headers, err = readTable(r.R); err != nil {
 			return
 		}
 	}
 	if hasProperty(flags, flagDeliveryMode) {
-		if err = binary.Read(r.r, binary.BigEndian, &hf.Properties.DeliveryMode); err != nil {
+		if err = binary.Read(r.R, binary.BigEndian, &hf.Properties.DeliveryMode); err != nil {
 			return
 		}
 	}
 	if hasProperty(flags, flagPriority) {
-		if err = binary.Read(r.r, binary.BigEndian, &hf.Properties.Priority); err != nil {
+		if err = binary.Read(r.R, binary.BigEndian, &hf.Properties.Priority); err != nil {
 			return
 		}
 	}
 	if hasProperty(flags, flagCorrelationId) {
-		if hf.Properties.CorrelationId, err = readShortstr(r.r); err != nil {
+		if hf.Properties.CorrelationId, err = readShortstr(r.R); err != nil {
 			return
 		}
 	}
 	if hasProperty(flags, flagReplyTo) {
-		if hf.Properties.ReplyTo, err = readShortstr(r.r); err != nil {
+		if hf.Properties.ReplyTo, err = readShortstr(r.R); err != nil {
 			return
 		}
 	}
 	if hasProperty(flags, flagExpiration) {
-		if hf.Properties.Expiration, err = readShortstr(r.r); err != nil {
+		if hf.Properties.Expiration, err = readShortstr(r.R); err != nil {
 			return
 		}
 	}
 	if hasProperty(flags, flagMessageId) {
-		if hf.Properties.MessageId, err = readShortstr(r.r); err != nil {
+		if hf.Properties.MessageId, err = readShortstr(r.R); err != nil {
 			return
 		}
 	}
 	if hasProperty(flags, flagTimestamp) {
-		if hf.Properties.Timestamp, err = readTimestamp(r.r); err != nil {
+		if hf.Properties.Timestamp, err = readTimestamp(r.R); err != nil {
 			return
 		}
 	}
 	if hasProperty(flags, flagType) {
-		if hf.Properties.Type, err = readShortstr(r.r); err != nil {
+		if hf.Properties.Type, err = readShortstr(r.R); err != nil {
 			return
 		}
 	}
 	if hasProperty(flags, flagUserId) {
-		if hf.Properties.UserId, err = readShortstr(r.r); err != nil {
+		if hf.Properties.UserId, err = readShortstr(r.R); err != nil {
 			return
 		}
 	}
 	if hasProperty(flags, flagAppId) {
-		if hf.Properties.AppId, err = readShortstr(r.r); err != nil {
+		if hf.Properties.AppId, err = readShortstr(r.R); err != nil {
 			return
 		}
 	}
 	if hasProperty(flags, flagReserved1) {
-		if hf.Properties.reserved1, err = readShortstr(r.r); err != nil {
+		if hf.Properties.reserved1, err = readShortstr(r.R); err != nil {
 			return
 		}
 	}
@@ -428,13 +428,13 @@ func (r *reader) parseHeaderFrame(channel uint16, size uint32) (frame frame, err
 	return hf, nil
 }
 
-func (r *reader) parseBodyFrame(channel uint16, size uint32) (frame frame, err error) {
-	bf := &bodyFrame{
+func (r *AmqpReader) parseBodyFrame(channel uint16, size uint32) (frame frame, err error) {
+	bf := &BodyFrame{
 		ChannelId: channel,
 		Body:      make([]byte, size),
 	}
 
-	if _, err = io.ReadFull(r.r, bf.Body); err != nil {
+	if _, err = io.ReadFull(r.R, bf.Body); err != nil {
 		return nil, err
 	}
 
@@ -443,8 +443,8 @@ func (r *reader) parseBodyFrame(channel uint16, size uint32) (frame frame, err e
 
 var errHeartbeatPayload = errors.New("Heartbeats should not have a payload")
 
-func (r *reader) parseHeartbeatFrame(channel uint16, size uint32) (frame frame, err error) {
-	hf := &heartbeatFrame{
+func (r *AmqpReader) parseHeartbeatFrame(channel uint16, size uint32) (frame frame, err error) {
+	hf := &HeartbeatFrame{
 		ChannelId: channel,
 	}
 

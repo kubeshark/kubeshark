@@ -3,7 +3,7 @@
 // license that can be found in the LICENSE file.
 // Source code and contact info at http://github.com/streadway/amqp
 
-package tap
+package amqp
 
 import (
 	"bufio"
@@ -27,7 +27,7 @@ func (w *writer) WriteFrame(frame frame) (err error) {
 	return
 }
 
-func (f *methodFrame) write(w io.Writer) (err error) {
+func (f *MethodFrame) write(w io.Writer) (err error) {
 	var payload bytes.Buffer
 
 	if f.Method == nil {
@@ -54,7 +54,7 @@ func (f *methodFrame) write(w io.Writer) (err error) {
 // Heartbeat
 //
 // Payload is empty
-func (f *heartbeatFrame) write(w io.Writer) (err error) {
+func (f *HeartbeatFrame) write(w io.Writer) (err error) {
 	return writeFrame(w, frameHeartbeat, f.ChannelId, []byte{})
 }
 
@@ -65,7 +65,7 @@ func (f *heartbeatFrame) write(w io.Writer) (err error) {
 // +----------+--------+-----------+----------------+------------- - -
 //    short     short    long long       short        remainder...
 //
-func (f *headerFrame) write(w io.Writer) (err error) {
+func (f *HeaderFrame) write(w io.Writer) (err error) {
 	var payload bytes.Buffer
 	var zeroTime time.Time
 
@@ -203,7 +203,7 @@ func (f *headerFrame) write(w io.Writer) (err error) {
 //
 // Payload is one byterange from the full body who's size is declared in the
 // Header frame
-func (f *bodyFrame) write(w io.Writer) (err error) {
+func (f *BodyFrame) write(w io.Writer) (err error) {
 	return writeFrame(w, frameBody, f.ChannelId, f.Body)
 }
 

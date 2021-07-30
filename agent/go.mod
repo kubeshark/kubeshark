@@ -16,6 +16,7 @@ require (
 	github.com/romana/rlog v0.0.0-20171115192701-f018bc92e7d7
 	github.com/up9inc/mizu/shared v0.0.0
 	github.com/up9inc/mizu/tap v0.0.0
+    github.com/up9inc/mizu/amqp v0.0.0
 	go.mongodb.org/mongo-driver v1.5.1
 	gorm.io/driver/sqlite v1.1.4
 	gorm.io/gorm v1.21.8
@@ -27,3 +28,5 @@ require (
 replace github.com/up9inc/mizu/shared v0.0.0 => ../shared
 
 replace github.com/up9inc/mizu/tap v0.0.0 => ../tap
+
+replace github.com/up9inc/mizu/amqp v0.0.0 => ../amqp

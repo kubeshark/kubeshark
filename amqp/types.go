@@ -3,7 +3,7 @@
 // license that can be found in the LICENSE file.
 // Source code and contact info at http://github.com/streadway/amqp
 
-package tap
+package amqp
 
 import (
 	"fmt"
@@ -84,7 +84,7 @@ func (e Error) Error() string {
 }
 
 // Used by header frames to capture routing and header information
-type properties struct {
+type Properties struct {
 	ContentType     string    // MIME content type
 	ContentEncoding string    // MIME content encoding
 	Headers         Table     // Application or header exchange table
@@ -267,7 +267,7 @@ func (set *tagSet) Pop() interface{} {
 	return val
 }
 
-type message interface {
+type Message interface {
 	id() (uint16, uint16)
 	wait() bool
 	read(io.Reader) error
@@ -275,9 +275,9 @@ type message interface {
 }
 
 type messageWithContent interface {
-	message
-	getContent() (properties, []byte)
-	setContent(properties, []byte)
+	Message
+	getContent() (Properties, []byte)
+	setContent(Properties, []byte)
 }
 
 /*
@@ -310,8 +310,8 @@ type frame interface {
 	channel() uint16
 }
 
-type reader struct {
-	r io.Reader
+type AmqpReader struct {
+	R io.Reader
 }
 
 type writer struct {
@@ -352,14 +352,14 @@ Method frame bodies are constructed as a list of AMQP data fields (bits,
 integers, strings and string tables).  The marshalling code is trivially
 generated directly from the protocol specifications, and can be very rapid.
 */
-type methodFrame struct {
+type MethodFrame struct {
 	ChannelId uint16
 	ClassId   uint16
 	MethodId  uint16
-	Method    message
+	Method    Message
 }
 
-func (f *methodFrame) channel() uint16 { return f.ChannelId }
+func (f *MethodFrame) channel() uint16 { return f.ChannelId }
 
 /*
 Heartbeating is a technique designed to undo one of TCP/IP's features, namely
@@ -370,11 +370,11 @@ Since heartbeating can be done at a low level, we implement this as a special
 type of frame that peers exchange at the transport level, rather than as a
 class method.
 */
-type heartbeatFrame struct {
+type HeartbeatFrame struct {
 	ChannelId uint16
 }
 
-func (f *heartbeatFrame) channel() uint16 { return f.ChannelId }
+func (f *HeartbeatFrame) channel() uint16 { return f.ChannelId }
 
 /*
 Certain methods (such as Basic.Publish, Basic.Deliver, etc.) are formally
@@ -395,15 +395,15 @@ never marshalled or encoded.  We place the content properties in their own
 frame so that recipients can selectively discard contents they do not want to
 process
 */
-type headerFrame struct {
+type HeaderFrame struct {
 	ChannelId  uint16
 	ClassId    uint16
 	weight     uint16
 	Size       uint64
-	Properties properties
+	Properties Properties
 }
 
-func (f *headerFrame) channel() uint16 { return f.ChannelId }
+func (f *HeaderFrame) channel() uint16 { return f.ChannelId }
 
 /*
 Content is the application data we carry from client-to-client via the AMQP
@@ -420,9 +420,9 @@ might see something like this:
 		[method]
 		...
 */
-type bodyFrame struct {
+type BodyFrame struct {
 	ChannelId uint16
 	Body      []byte
 }
 
-func (f *bodyFrame) channel() uint16 { return f.ChannelId }
+func (f *BodyFrame) channel() uint16 { return f.ChannelId }

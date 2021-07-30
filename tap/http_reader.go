@@ -10,6 +10,8 @@ import (
 	"net/http"
 	"sync"
 	"time"
+
+	"github.com/up9inc/mizu/amqp"
 )
 
 type httpReaderDataMsg struct {
@@ -77,7 +79,7 @@ func (h *httpReader) Read(p []byte) (int, error) {
 // TODO: Replaced HTTP reader with AMQP reader. Merge the two readers together.
 func (h *httpReader) run(wg *sync.WaitGroup) {
 	b := bufio.NewReader(h)
-	r := reader{r: b}
+	r := newAmqpReader{amqp.AmqpReader{R: b}}
 	r.Read()
 }
 
