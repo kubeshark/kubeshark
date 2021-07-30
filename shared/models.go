@@ -58,12 +58,11 @@ func CreateWebSocketMessageTypeAnalyzeStatus(analyzeStatus AnalyzeStatus) WebSoc
 }
 
 type TrafficFilteringOptions struct {
-	PlainTextMaskingRegexes []*SerializableRegexp
-	HideHealthChecks        bool
-	DisableRedaction        bool
+	PlainTextMaskingRegexes      []*SerializableRegexp
+	DisableRedaction             bool
+	HealthChecksUserAgentHeaders []string
 }
 
 type VersionResponse struct {
 	SemVer string `json:"semver"`
 }
-

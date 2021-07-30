@@ -143,15 +143,13 @@ func getTrafficFilteringOptions() *shared.TrafficFilteringOptions {
 	return &filteringOptions
 }
 
-var userAgentsToFilter = []string{"kube-probe", "prometheus"}
-
 func filterHarItems(inChannel <-chan *tap.OutputChannelItem, outChannel chan *tap.OutputChannelItem, filterOptions *shared.TrafficFilteringOptions) {
 	for message := range inChannel {
 		if message.ConnectionInfo.IsOutgoing && api.CheckIsServiceIP(message.ConnectionInfo.ServerIP) {
 			continue
 		}
 		// TODO: move this to tappers https://up9.atlassian.net/browse/TRA-3441
-		if filterOptions.HideHealthChecks && isHealthCheckByUserAgent(message) {
+		if isHealthCheckByUserAgent(message, filterOptions.HealthChecksUserAgentHeaders) {
 			continue
 		}
 
@@ -163,11 +161,11 @@ func filterHarItems(inChannel <-chan *tap.OutputChannelItem, outChannel chan *ta
 	}
 }
 
-func isHealthCheckByUserAgent(message *tap.OutputChannelItem) bool {
+func isHealthCheckByUserAgent(message *tap.OutputChannelItem, userAgentsToIgnore []string) bool {
 	for _, header := range message.HarEntry.Request.Headers {
 		if strings.ToLower(header.Name) == "user-agent" {
-			for _, userAgent := range userAgentsToFilter {
-				if strings.Contains(strings.ToLower(header.Value), userAgent) {
+			for _, userAgent := range userAgentsToIgnore {
+				if strings.Contains(strings.ToLower(header.Value), strings.ToLower(userAgent)) {
 					return true
 				}
 			}

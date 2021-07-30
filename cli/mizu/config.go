@@ -24,10 +24,11 @@ type CommandLineFlag struct {
 }
 
 const (
-	ConfigurationKeyAnalyzingDestination = "tap.dest"
-	ConfigurationKeyUploadInterval       = "tap.uploadInterval"
-	ConfigurationKeyMizuImage            = "mizuImage"
-	ConfigurationKeyTelemetry            = "telemetry"
+	ConfigurationKeyAnalyzingDestination        = "tap.dest"
+	ConfigurationKeyUploadInterval              = "tap.uploadInterval"
+	ConfigurationKeyMizuImage                   = "mizuImage"
+	ConfigurationKeyTelemetry                   = "telemetry"
+	ConfigurationKeyHealthCheckUserAgentHeaders = "tap.healthCheckUserAgentHeaders"
 )
 
 var allowedSetFlags = []CommandLineFlag{
@@ -52,6 +53,15 @@ var allowedSetFlags = []CommandLineFlag{
 		YamlHierarchyName: ConfigurationKeyTelemetry,
 		DefaultValue:      true,
 	},
+	{
+		CommandLineName:   "healthCheckUserAgentHeaders",
+		YamlHierarchyName: ConfigurationKeyHealthCheckUserAgentHeaders,
+		DefaultValue:      []string{"kube-probe", "prometheus"},
+	},
+}
+
+func GetList(key string) []string {
+	return getValueFromMergedConfig(key).([]string)
 }
 
 func GetString(key string) string {
@@ -64,7 +74,7 @@ func GetBool(key string) bool {
 
 	val, err := strconv.ParseBool(stringVal)
 	if err != nil {
-		Log.Warningf(uiUtils.Red, fmt.Sprintf( "Invalid value %v for key %s, expected bool", stringVal, key))
+		Log.Warningf(uiUtils.Red, fmt.Sprintf("Invalid value %v for key %s, expected bool", stringVal, key))
 		os.Exit(1)
 	}
 	return val

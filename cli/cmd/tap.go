@@ -22,7 +22,6 @@ type MizuTapOptions struct {
 	MizuImage              string
 	PlainTextFilterRegexes []string
 	TapOutgoing            bool
-	HideHealthChecks       bool
 	MaxEntriesDBSizeBytes  int64
 	SleepIntervalSec       uint16
 	DisableRedaction       bool
@@ -104,7 +103,6 @@ func init() {
 	tapCmd.Flags().StringVarP(&mizuTapOptions.KubeConfigPath, "kube-config", "k", "", "Path to kube-config file")
 	tapCmd.Flags().StringArrayVarP(&mizuTapOptions.PlainTextFilterRegexes, "regex-masking", "r", nil, "List of regex expressions that are used to filter matching values from text/plain http bodies")
 	tapCmd.Flags().StringVarP(&direction, "direction", "", "in", "Record traffic that goes in this direction (relative to the tapped pod): in/any")
-	tapCmd.Flags().BoolVar(&mizuTapOptions.HideHealthChecks, "hide-healthchecks", false, "hides requests with kube-probe or prometheus user-agent headers")
 	tapCmd.Flags().StringVarP(&humanMaxEntriesDBSize, maxEntriesDBSizeFlagName, "", "200MB", "override the default max entries db size of 200mb")
 	tapCmd.Flags().BoolVar(&mizuTapOptions.DisableRedaction, "no-redact", false, "Disables redaction of potentially sensitive request/response headers and body values")
 }

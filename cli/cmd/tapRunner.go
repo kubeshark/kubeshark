@@ -160,7 +160,11 @@ func getMizuApiFilteringOptions(tappingOptions *MizuTapOptions) (*shared.Traffic
 		}
 	}
 
-	return &shared.TrafficFilteringOptions{PlainTextMaskingRegexes: compiledRegexSlice, HideHealthChecks: tappingOptions.HideHealthChecks, DisableRedaction: tappingOptions.DisableRedaction}, nil
+	return &shared.TrafficFilteringOptions{
+		PlainTextMaskingRegexes: compiledRegexSlice,
+		DisableRedaction: tappingOptions.DisableRedaction,
+		HealthChecksUserAgentHeaders: mizu.GetList(mizu.ConfigurationKeyHealthCheckUserAgentHeaders),
+	}, nil
 }
 
 func updateMizuTappers(ctx context.Context, kubernetesProvider *kubernetes.Provider, nodeToTappedPodIPMap map[string][]string, tappingOptions *MizuTapOptions) error {
@@ -309,7 +313,7 @@ func portForwardApiPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 				go func() {
 					err := kubernetes.StartProxy(kubernetesProvider, tappingOptions.GuiPort, mizu.ResourcesNamespace, mizu.ApiServerPodName)
 					if err != nil {
-						mizu.Log.Infof("Error occured while running k8s proxy %v", err)
+						mizu.Log.Infof("Error occurred while running k8s proxy %v", err)
 						cancel()
 					}
 				}()
