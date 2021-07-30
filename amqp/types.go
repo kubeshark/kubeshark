@@ -310,7 +310,7 @@ type frame interface {
 	channel() uint16
 }
 
-type AmqpReader struct {
+type Reader struct {
 	R io.Reader
 }
 

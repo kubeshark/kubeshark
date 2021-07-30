@@ -190,11 +190,11 @@ func printEventBasicConsume(eventBasicConsume amqp.BasicConsume) {
 	)
 }
 
-type newAmqpReader struct {
-	r amqp.AmqpReader
+type AmqpReader struct {
+	r amqp.Reader
 }
 
-func (r *newAmqpReader) Read() error {
+func (r *AmqpReader) Read() error {
 	var remaining int
 	var header *amqp.HeaderFrame
 	var body []byte

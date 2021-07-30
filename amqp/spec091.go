@@ -2738,7 +2738,7 @@ func (msg *confirmSelectOk) read(r io.Reader) (err error) {
 	return
 }
 
-func (r *AmqpReader) parseMethodFrame(channel uint16, size uint32) (f frame, err error) {
+func (r *Reader) parseMethodFrame(channel uint16, size uint32) (f frame, err error) {
 	mf := &MethodFrame{
 		ChannelId: channel,
 	}
