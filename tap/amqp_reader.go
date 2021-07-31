@@ -86,10 +86,9 @@ var txMethodMap = map[int]string{
 	31: "tx rollback-ok",
 }
 
-func printEventBasicPublish(eventBasicPublish amqp.BasicPublish) {
+func printEventBasicPublish(eventBasicPublish *amqp.BasicPublish) {
 	fmt.Printf(
-		"[%s] Exchange: %s, RoutingKey: %s, Mandatory: %t, Immediate: %t, Properties: %v, Body: %s\n",
-		basicMethodMap[40],
+		"Exchange: %s, RoutingKey: %s, Mandatory: %t, Immediate: %t, Properties: %v, Body: %s\n",
 		eventBasicPublish.Exchange,
 		eventBasicPublish.RoutingKey,
 		eventBasicPublish.Mandatory,
@@ -99,10 +98,9 @@ func printEventBasicPublish(eventBasicPublish amqp.BasicPublish) {
 	)
 }
 
-func printEventBasicDeliver(eventBasicDeliver amqp.BasicDeliver) {
+func printEventBasicDeliver(eventBasicDeliver *amqp.BasicDeliver) {
 	fmt.Printf(
-		"[%s] ConsumerTag: %s, DeliveryTag: %d, Redelivered: %t, Exchange: %s, RoutingKey: %s, Properties: %v, Body: %s\n",
-		basicMethodMap[60],
+		"ConsumerTag: %s, DeliveryTag: %d, Redelivered: %t, Exchange: %s, RoutingKey: %s, Properties: %v, Body: %s\n",
 		eventBasicDeliver.ConsumerTag,
 		eventBasicDeliver.DeliveryTag,
 		eventBasicDeliver.Redelivered,
@@ -113,10 +111,9 @@ func printEventBasicDeliver(eventBasicDeliver amqp.BasicDeliver) {
 	)
 }
 
-func printEventQueueDeclare(eventQueueDeclare amqp.QueueDeclare) {
+func printEventQueueDeclare(eventQueueDeclare *amqp.QueueDeclare) {
 	fmt.Printf(
-		"[%s] Queue: %s, Passive: %t, Durable: %t, AutoDelete: %t, Exclusive: %t, NoWait: %t, Arguments: %v\n",
-		queueMethodMap[10],
+		"Queue: %s, Passive: %t, Durable: %t, AutoDelete: %t, Exclusive: %t, NoWait: %t, Arguments: %v\n",
 		eventQueueDeclare.Queue,
 		eventQueueDeclare.Passive,
 		eventQueueDeclare.Durable,
@@ -127,10 +124,9 @@ func printEventQueueDeclare(eventQueueDeclare amqp.QueueDeclare) {
 	)
 }
 
-func printEventExchangeDeclare(eventExchangeDeclare amqp.ExchangeDeclare) {
+func printEventExchangeDeclare(eventExchangeDeclare *amqp.ExchangeDeclare) {
 	fmt.Printf(
-		"[%s] Exchange: %s, Type: %s, Passive: %t, Durable: %t, AutoDelete: %t, Internal: %t, NoWait: %t, Arguments: %v\n",
-		exchangeMethodMap[10],
+		"Exchange: %s, Type: %s, Passive: %t, Durable: %t, AutoDelete: %t, Internal: %t, NoWait: %t, Arguments: %v\n",
 		eventExchangeDeclare.Exchange,
 		eventExchangeDeclare.Type,
 		eventExchangeDeclare.Passive,
@@ -142,10 +138,9 @@ func printEventExchangeDeclare(eventExchangeDeclare amqp.ExchangeDeclare) {
 	)
 }
 
-func printEventConnectionStart(eventConnectionStart amqp.ConnectionStart) {
+func printEventConnectionStart(eventConnectionStart *amqp.ConnectionStart) {
 	fmt.Printf(
-		"[%s] Version: %d.%d, ServerProperties: %v, Mechanisms: %s, Locales: %s\n",
-		connectionMethodMap[10],
+		"Version: %d.%d, ServerProperties: %v, Mechanisms: %s, Locales: %s\n",
 		eventConnectionStart.VersionMajor,
 		eventConnectionStart.VersionMinor,
 		eventConnectionStart.ServerProperties,
@@ -154,10 +149,9 @@ func printEventConnectionStart(eventConnectionStart amqp.ConnectionStart) {
 	)
 }
 
-func printEventConnectionClose(eventConnectionClose amqp.ConnectionClose) {
+func printEventConnectionClose(eventConnectionClose *amqp.ConnectionClose) {
 	fmt.Printf(
-		"[%s] ReplyCode: %d, ReplyText: %s, ClassId: %d, MethodId: %d\n",
-		connectionMethodMap[50],
+		"ReplyCode: %d, ReplyText: %s, ClassId: %d, MethodId: %d\n",
 		eventConnectionClose.ReplyCode,
 		eventConnectionClose.ReplyText,
 		eventConnectionClose.ClassId,
@@ -165,10 +159,9 @@ func printEventConnectionClose(eventConnectionClose amqp.ConnectionClose) {
 	)
 }
 
-func printEventQueueBind(eventQueueBind amqp.QueueBind) {
+func printEventQueueBind(eventQueueBind *amqp.QueueBind) {
 	fmt.Printf(
-		"[%s] Queue: %s, Exchange: %s, RoutingKey: %s, NoWait: %t, Arguments: %v\n",
-		queueMethodMap[20],
+		"Queue: %s, Exchange: %s, RoutingKey: %s, NoWait: %t, Arguments: %v\n",
 		eventQueueBind.Queue,
 		eventQueueBind.Exchange,
 		eventQueueBind.RoutingKey,
@@ -177,10 +170,9 @@ func printEventQueueBind(eventQueueBind amqp.QueueBind) {
 	)
 }
 
-func printEventBasicConsume(eventBasicConsume amqp.BasicConsume) {
+func printEventBasicConsume(eventBasicConsume *amqp.BasicConsume) {
 	fmt.Printf(
-		"[%s] Queue: %s, ConsumerTag: %s, NoLocal: %t, NoAck: %t, Exclusive: %t, NoWait: %t, Arguments: %v\n",
-		basicMethodMap[20],
+		"Queue: %s, ConsumerTag: %s, NoLocal: %t, NoAck: %t, Exclusive: %t, NoWait: %t, Arguments: %v\n",
 		eventBasicConsume.Queue,
 		eventBasicConsume.ConsumerTag,
 		eventBasicConsume.NoLocal,
@@ -189,6 +181,41 @@ func printEventBasicConsume(eventBasicConsume amqp.BasicConsume) {
 		eventBasicConsume.NoWait,
 		eventBasicConsume.Arguments,
 	)
+}
+
+type EventAMQP struct {
+	Type            string
+	Method          amqp.Message
+	ConnectionStart *amqp.ConnectionStart
+	ConnectionClose *amqp.ConnectionClose
+	QueueDeclare    *amqp.QueueDeclare
+	QueueBind       *amqp.QueueBind
+	ExchangeDeclare *amqp.ExchangeDeclare
+	BasicPublish    *amqp.BasicPublish
+	BasicDeliver    *amqp.BasicDeliver
+	BasicConsume    *amqp.BasicConsume
+}
+
+func (e *EventAMQP) Print() {
+	fmt.Printf("[%s] ", e.Type)
+	switch e.Method.(type) {
+	case *amqp.ConnectionStart:
+		printEventConnectionStart(e.ConnectionStart)
+	case *amqp.ConnectionClose:
+		printEventConnectionClose(e.ConnectionClose)
+	case *amqp.QueueDeclare:
+		printEventQueueDeclare(e.QueueDeclare)
+	case *amqp.QueueBind:
+		printEventQueueBind(e.QueueBind)
+	case *amqp.ExchangeDeclare:
+		printEventExchangeDeclare(e.ExchangeDeclare)
+	case *amqp.BasicPublish:
+		printEventBasicPublish(e.BasicPublish)
+	case *amqp.BasicDeliver:
+		printEventBasicDeliver(e.BasicDeliver)
+	case *amqp.BasicConsume:
+		printEventBasicConsume(e.BasicConsume)
+	}
 }
 
 type amqpReader struct{}
@@ -203,10 +230,11 @@ func (h *amqpReader) run(b *bufio.Reader) {
 }
 
 func (r *amqpParser) Parse() error {
-	fmt.Println("Parse is called")
 	var remaining int
 	var header *amqp.HeaderFrame
 	var body []byte
+
+	eventAMQP := &EventAMQP{}
 
 	eventBasicPublish := &amqp.BasicPublish{
 		Exchange:   "",
@@ -261,21 +289,24 @@ func (r *amqpParser) Parse() error {
 			switch lastMethodFrameMessage.(type) {
 			case *amqp.BasicPublish:
 				eventBasicPublish.Body = f.Body
-				printEventBasicPublish(*eventBasicPublish)
+				eventAMQP.Print()
 			case *amqp.BasicDeliver:
 				eventBasicDeliver.Body = f.Body
-				printEventBasicDeliver(*eventBasicDeliver)
+				eventAMQP.Print()
 			default:
 			}
 
 		case *amqp.MethodFrame:
 			lastMethodFrameMessage = f.Method
+			eventAMQP.Method = f.Method
 			switch m := f.Method.(type) {
 			case *amqp.BasicPublish:
 				eventBasicPublish.Exchange = m.Exchange
 				eventBasicPublish.RoutingKey = m.RoutingKey
 				eventBasicPublish.Mandatory = m.Mandatory
 				eventBasicPublish.Immediate = m.Immediate
+				eventAMQP.Type = basicMethodMap[40]
+				eventAMQP.BasicPublish = eventBasicPublish
 
 			case *amqp.QueueBind:
 				eventQueueBind := &amqp.QueueBind{
@@ -285,7 +316,9 @@ func (r *amqpParser) Parse() error {
 					NoWait:     m.NoWait,
 					Arguments:  m.Arguments,
 				}
-				printEventQueueBind(*eventQueueBind)
+				eventAMQP.Type = queueMethodMap[20]
+				eventAMQP.QueueBind = eventQueueBind
+				eventAMQP.Print()
 
 			case *amqp.BasicConsume:
 				eventBasicConsume := &amqp.BasicConsume{
@@ -297,7 +330,9 @@ func (r *amqpParser) Parse() error {
 					NoWait:      m.NoWait,
 					Arguments:   m.Arguments,
 				}
-				printEventBasicConsume(*eventBasicConsume)
+				eventAMQP.Type = basicMethodMap[20]
+				eventAMQP.BasicConsume = eventBasicConsume
+				eventAMQP.Print()
 
 			case *amqp.BasicDeliver:
 				eventBasicDeliver.ConsumerTag = m.ConsumerTag
@@ -305,6 +340,8 @@ func (r *amqpParser) Parse() error {
 				eventBasicDeliver.Redelivered = m.Redelivered
 				eventBasicDeliver.Exchange = m.Exchange
 				eventBasicDeliver.RoutingKey = m.RoutingKey
+				eventAMQP.Type = basicMethodMap[60]
+				eventAMQP.BasicDeliver = eventBasicDeliver
 
 			case *amqp.QueueDeclare:
 				eventQueueDeclare := &amqp.QueueDeclare{
@@ -316,7 +353,9 @@ func (r *amqpParser) Parse() error {
 					NoWait:     m.NoWait,
 					Arguments:  m.Arguments,
 				}
-				printEventQueueDeclare(*eventQueueDeclare)
+				eventAMQP.Type = queueMethodMap[10]
+				eventAMQP.QueueDeclare = eventQueueDeclare
+				eventAMQP.Print()
 
 			case *amqp.ExchangeDeclare:
 				eventExchangeDeclare := &amqp.ExchangeDeclare{
@@ -329,7 +368,9 @@ func (r *amqpParser) Parse() error {
 					NoWait:     m.NoWait,
 					Arguments:  m.Arguments,
 				}
-				printEventExchangeDeclare(*eventExchangeDeclare)
+				eventAMQP.Type = exchangeMethodMap[10]
+				eventAMQP.ExchangeDeclare = eventExchangeDeclare
+				eventAMQP.Print()
 
 			case *amqp.ConnectionStart:
 				eventConnectionStart := &amqp.ConnectionStart{
@@ -339,7 +380,9 @@ func (r *amqpParser) Parse() error {
 					Mechanisms:       m.Mechanisms,
 					Locales:          m.Locales,
 				}
-				printEventConnectionStart(*eventConnectionStart)
+				eventAMQP.Type = connectionMethodMap[10]
+				eventAMQP.ConnectionStart = eventConnectionStart
+				eventAMQP.Print()
 
 			case *amqp.ConnectionClose:
 				eventConnectionClose := &amqp.ConnectionClose{
@@ -348,7 +391,9 @@ func (r *amqpParser) Parse() error {
 					ClassId:   m.ClassId,
 					MethodId:  m.MethodId,
 				}
-				printEventConnectionClose(*eventConnectionClose)
+				eventAMQP.Type = connectionMethodMap[50]
+				eventAMQP.ConnectionClose = eventConnectionClose
+				eventAMQP.Print()
 
 			default:
 
