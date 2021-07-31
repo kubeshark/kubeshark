@@ -30,6 +30,12 @@ type PairChanItem struct {
 	ConnectionInfo  *ConnectionInfo
 }
 
+type AMQPChanItem struct {
+	Payload         *EventAMQP
+	RequestSenderIp string
+	ConnectionInfo  *ConnectionInfo
+}
+
 func openNewHarFile(filename string) *HarFile {
 	file, err := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, readPermission)
 	if err != nil {
@@ -174,6 +180,7 @@ func NewHarWriter(outputDir string, maxEntries int) *HarWriter {
 		OutputDirPath: outputDir,
 		MaxEntries:    maxEntries,
 		PairChan:      make(chan *PairChanItem),
+		AMQPChan:      make(chan *AMQPChanItem),
 		OutChan:       make(chan *OutputChannelItem, 1000),
 		currentFile:   nil,
 		done:          make(chan bool),
@@ -190,6 +197,7 @@ type HarWriter struct {
 	OutputDirPath string
 	MaxEntries    int
 	PairChan      chan *PairChanItem
+	AMQPChan      chan *AMQPChanItem
 	OutChan       chan *OutputChannelItem
 	currentFile   *HarFile
 	done          chan bool
@@ -201,6 +209,14 @@ func (hw *HarWriter) WritePair(request *http.Request, requestTime time.Time, res
 		RequestTime:    requestTime,
 		Response:       response,
 		ResponseTime:   responseTime,
+		ConnectionInfo: connectionInfo,
+	}
+}
+
+func (hw *HarWriter) WriteAMQP(payload *EventAMQP, connectionInfo *ConnectionInfo) {
+	// FIXME: For some reason this send is blocking but the `WritePair` above not.
+	hw.AMQPChan <- &AMQPChanItem{
+		Payload:        payload,
 		ConnectionInfo: connectionInfo,
 	}
 }
@@ -237,6 +253,13 @@ func (hw *HarWriter) Start() {
 			}
 		}
 
+		for amqp := range hw.AMQPChan {
+			hw.OutChan <- &OutputChannelItem{
+				EventAMQP:      amqp.Payload,
+				ConnectionInfo: amqp.ConnectionInfo,
+			}
+		}
+
 		if hw.currentFile != nil {
 			hw.closeFile()
 		}
@@ -246,6 +269,7 @@ func (hw *HarWriter) Start() {
 
 func (hw *HarWriter) Stop() {
 	close(hw.PairChan)
+	close(hw.AMQPChan)
 	<-hw.done
 	close(hw.OutChan)
 }

@@ -218,23 +218,40 @@ func (e *EventAMQP) Print() {
 	}
 }
 
-type amqpReader struct{}
+func (e *EventAMQP) Write(harWriter *HarWriter, connectionInfo *ConnectionInfo) {
+	if harWriter != nil {
+		harWriter.WriteAMQP(e, connectionInfo)
+	}
+}
 
-type amqpParser struct {
-	r amqp.Reader
+type amqpReader struct {
+	r          amqp.Reader
+	ident      string
+	tcpID      tcpID
+	parent     *tcpStream
+	isClient   bool
+	isOutgoing bool
+	harWriter  *HarWriter
 }
 
 func (h *amqpReader) run(b *bufio.Reader) {
-	r := amqpParser{amqp.Reader{R: b}}
-	r.Parse()
+	h.r = amqp.Reader{R: b}
+	h.Parse()
 }
 
-func (r *amqpParser) Parse() error {
+func (h *amqpReader) Parse() error {
 	var remaining int
 	var header *amqp.HeaderFrame
 	var body []byte
 
 	eventAMQP := &EventAMQP{}
+	connectionInfo := &ConnectionInfo{
+		ClientIP:   h.tcpID.srcIP,
+		ClientPort: h.tcpID.srcPort,
+		ServerIP:   h.tcpID.dstIP,
+		ServerPort: h.tcpID.dstPort,
+		IsOutgoing: h.isOutgoing,
+	}
 
 	eventBasicPublish := &amqp.BasicPublish{
 		Exchange:   "",
@@ -258,7 +275,7 @@ func (r *amqpParser) Parse() error {
 	var lastMethodFrameMessage amqp.Message
 
 	for {
-		frame, err := r.r.ReadFrame()
+		frame, err := h.r.ReadFrame()
 		if err == io.EOF {
 			// We must read until we see an EOF... very important!
 			return nil
@@ -290,9 +307,11 @@ func (r *amqpParser) Parse() error {
 			case *amqp.BasicPublish:
 				eventBasicPublish.Body = f.Body
 				eventAMQP.Print()
+				eventAMQP.Write(h.harWriter, connectionInfo)
 			case *amqp.BasicDeliver:
 				eventBasicDeliver.Body = f.Body
 				eventAMQP.Print()
+				eventAMQP.Write(h.harWriter, connectionInfo)
 			default:
 			}
 
@@ -319,6 +338,7 @@ func (r *amqpParser) Parse() error {
 				eventAMQP.Type = queueMethodMap[20]
 				eventAMQP.QueueBind = eventQueueBind
 				eventAMQP.Print()
+				eventAMQP.Write(h.harWriter, connectionInfo)
 
 			case *amqp.BasicConsume:
 				eventBasicConsume := &amqp.BasicConsume{
@@ -333,6 +353,7 @@ func (r *amqpParser) Parse() error {
 				eventAMQP.Type = basicMethodMap[20]
 				eventAMQP.BasicConsume = eventBasicConsume
 				eventAMQP.Print()
+				eventAMQP.Write(h.harWriter, connectionInfo)
 
 			case *amqp.BasicDeliver:
 				eventBasicDeliver.ConsumerTag = m.ConsumerTag
@@ -356,6 +377,7 @@ func (r *amqpParser) Parse() error {
 				eventAMQP.Type = queueMethodMap[10]
 				eventAMQP.QueueDeclare = eventQueueDeclare
 				eventAMQP.Print()
+				eventAMQP.Write(h.harWriter, connectionInfo)
 
 			case *amqp.ExchangeDeclare:
 				eventExchangeDeclare := &amqp.ExchangeDeclare{
@@ -371,6 +393,7 @@ func (r *amqpParser) Parse() error {
 				eventAMQP.Type = exchangeMethodMap[10]
 				eventAMQP.ExchangeDeclare = eventExchangeDeclare
 				eventAMQP.Print()
+				eventAMQP.Write(h.harWriter, connectionInfo)
 
 			case *amqp.ConnectionStart:
 				eventConnectionStart := &amqp.ConnectionStart{
@@ -383,6 +406,7 @@ func (r *amqpParser) Parse() error {
 				eventAMQP.Type = connectionMethodMap[10]
 				eventAMQP.ConnectionStart = eventConnectionStart
 				eventAMQP.Print()
+				eventAMQP.Write(h.harWriter, connectionInfo)
 
 			case *amqp.ConnectionClose:
 				eventConnectionClose := &amqp.ConnectionClose{
@@ -394,6 +418,7 @@ func (r *amqpParser) Parse() error {
 				eventAMQP.Type = connectionMethodMap[50]
 				eventAMQP.ConnectionClose = eventConnectionClose
 				eventAMQP.Print()
+				eventAMQP.Write(h.harWriter, connectionInfo)
 
 			default:
 
