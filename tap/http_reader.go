@@ -8,7 +8,6 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
-	"sync"
 	"time"
 )
 
@@ -47,9 +46,6 @@ type httpReader struct {
 	isClient      bool
 	isHTTP2       bool
 	isOutgoing    bool
-	msgQueue      chan httpReaderDataMsg // Channel of captured reassembled tcp payload
-	data          []byte
-	captureTime   time.Time
 	hexdump       bool
 	parent        *tcpStream
 	grpcAssembler GrpcAssembler
@@ -57,27 +53,7 @@ type httpReader struct {
 	harWriter     *HarWriter
 }
 
-func (h *httpReader) Read(p []byte) (int, error) {
-	var msg httpReaderDataMsg
-	ok := true
-	for ok && len(h.data) == 0 {
-		msg, ok = <-h.msgQueue
-		h.data = msg.bytes
-		h.captureTime = msg.timestamp
-	}
-	if !ok || len(h.data) == 0 {
-		return 0, io.EOF
-	}
-
-	l := copy(p, h.data)
-	h.data = h.data[l:]
-	return l, nil
-}
-
-func (h *httpReader) run(wg *sync.WaitGroup) {
-	defer wg.Done()
-	b := bufio.NewReader(h)
-
+func (h *httpReader) run(b *bufio.Reader, captureTime time.Time) {
 	if isHTTP2, err := checkIsHTTP2Connection(b, h.isClient); err != nil {
 		SilentError("HTTP/2-Prepare-Connection", "stream %s Failed to check if client is HTTP/2: %s (%v,%+v)", h.ident, err, err, err)
 		// Do something?
@@ -95,7 +71,7 @@ func (h *httpReader) run(wg *sync.WaitGroup) {
 
 	for true {
 		if h.isHTTP2 {
-			err := h.handleHTTP2Stream()
+			err := h.handleHTTP2Stream(captureTime)
 			if err == io.EOF || err == io.ErrUnexpectedEOF {
 				break
 			} else if err != nil {
@@ -103,7 +79,7 @@ func (h *httpReader) run(wg *sync.WaitGroup) {
 				continue
 			}
 		} else if h.isClient {
-			err := h.handleHTTP1ClientStream(b)
+			err := h.handleHTTP1ClientStream(b, captureTime)
 			if err == io.EOF || err == io.ErrUnexpectedEOF {
 				break
 			} else if err != nil {
@@ -111,7 +87,7 @@ func (h *httpReader) run(wg *sync.WaitGroup) {
 				continue
 			}
 		} else {
-			err := h.handleHTTP1ServerStream(b)
+			err := h.handleHTTP1ServerStream(b, captureTime)
 			if err == io.EOF || err == io.ErrUnexpectedEOF {
 				break
 			} else if err != nil {
@@ -122,7 +98,7 @@ func (h *httpReader) run(wg *sync.WaitGroup) {
 	}
 }
 
-func (h *httpReader) handleHTTP2Stream() error {
+func (h *httpReader) handleHTTP2Stream(captureTime time.Time) error {
 	streamID, messageHTTP1, err := h.grpcAssembler.readMessage()
 	h.messageCount++
 	if err != nil {
@@ -142,7 +118,7 @@ func (h *httpReader) handleHTTP2Stream() error {
 			ServerPort: h.tcpID.dstPort,
 			IsOutgoing: h.isOutgoing,
 		}
-		reqResPair = reqResMatcher.registerRequest(ident, &messageHTTP1, h.captureTime)
+		reqResPair = reqResMatcher.registerRequest(ident, &messageHTTP1, captureTime)
 	case http.Response:
 		ident := fmt.Sprintf("%s->%s %s->%s %d", h.tcpID.dstIP, h.tcpID.srcIP, h.tcpID.dstPort, h.tcpID.srcPort, streamID)
 		connectionInfo = &ConnectionInfo{
@@ -152,7 +128,7 @@ func (h *httpReader) handleHTTP2Stream() error {
 			ServerPort: h.tcpID.srcPort,
 			IsOutgoing: h.isOutgoing,
 		}
-		reqResPair = reqResMatcher.registerResponse(ident, &messageHTTP1, h.captureTime)
+		reqResPair = reqResMatcher.registerResponse(ident, &messageHTTP1, captureTime)
 	}
 
 	if reqResPair != nil {
@@ -172,7 +148,7 @@ func (h *httpReader) handleHTTP2Stream() error {
 	return nil
 }
 
-func (h *httpReader) handleHTTP1ClientStream(b *bufio.Reader) error {
+func (h *httpReader) handleHTTP1ClientStream(b *bufio.Reader, captureTime time.Time) error {
 	req, err := http.ReadRequest(b)
 	h.messageCount++
 	if err != nil {
@@ -193,7 +169,7 @@ func (h *httpReader) handleHTTP1ClientStream(b *bufio.Reader) error {
 	Debug("HTTP/1 Request: %s %s %s (Body:%d) -> %s", h.ident, req.Method, req.URL, s, encoding)
 
 	ident := fmt.Sprintf("%s->%s %s->%s %d", h.tcpID.srcIP, h.tcpID.dstIP, h.tcpID.srcPort, h.tcpID.dstPort, h.messageCount)
-	reqResPair := reqResMatcher.registerRequest(ident, req, h.captureTime)
+	reqResPair := reqResMatcher.registerRequest(ident, req, captureTime)
 	if reqResPair != nil {
 		statsTracker.incMatchedMessages()
 
@@ -214,24 +190,24 @@ func (h *httpReader) handleHTTP1ClientStream(b *bufio.Reader) error {
 		}
 	}
 
-	// h.parent.Lock()
-	// h.parent.urls = append(h.parent.urls, req.URL.String())
-	// h.parent.Unlock()
+	// h.tcpStream.Lock()
+	// h.tcpStream.urls = append(h.tcpStream.urls, req.URL.String())
+	// h.tcpStream.Unlock()
 
 	return nil
 }
 
-func (h *httpReader) handleHTTP1ServerStream(b *bufio.Reader) error {
+func (h *httpReader) handleHTTP1ServerStream(b *bufio.Reader, captureTime time.Time) error {
 	res, err := http.ReadResponse(b, nil)
 	h.messageCount++
 	var req string
-	// h.parent.Lock()
-	// if len(h.parent.urls) == 0 {
+	// h.tcpStream.Lock()
+	// if len(h.tcpStream.urls) == 0 {
 	// 	req = fmt.Sprintf("<no-request-seen>")
 	// } else {
-	// 	req, h.parent.urls = h.parent.urls[0], h.parent.urls[1:]
+	// 	req, h.tcpStream.urls = h.tcpStream.urls[0], h.tcpStream.urls[1:]
 	// }
-	// h.parent.Unlock()
+	// h.tcpStream.Unlock()
 	if err != nil {
 		return err
 	}
@@ -259,7 +235,7 @@ func (h *httpReader) handleHTTP1ServerStream(b *bufio.Reader) error {
 	Debug("HTTP/1 Response: %s %s URL:%s (%d%s%d%s) -> %s", h.ident, res.Status, req, res.ContentLength, sym, s, contentType, encoding)
 
 	ident := fmt.Sprintf("%s->%s %s->%s %d", h.tcpID.dstIP, h.tcpID.srcIP, h.tcpID.dstPort, h.tcpID.srcPort, h.messageCount)
-	reqResPair := reqResMatcher.registerResponse(ident, res, h.captureTime)
+	reqResPair := reqResMatcher.registerResponse(ident, res, captureTime)
 	if reqResPair != nil {
 		statsTracker.incMatchedMessages()
 

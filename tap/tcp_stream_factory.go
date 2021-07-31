@@ -1,14 +1,24 @@
 package tap
 
 import (
+	"bufio"
 	"fmt"
+	"io"
 	"sync"
+	"time"
 
 	"github.com/romana/rlog"
 
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers" // pulls in all layers decoders
 	"github.com/google/gopacket/reassembly"
+)
+
+type protocol int
+
+const (
+	HTTP protocol = iota
+	AQMP
 )
 
 /*
@@ -21,6 +31,42 @@ type tcpStreamFactory struct {
 	doHTTP             bool
 	harWriter          *HarWriter
 	outbountLinkWriter *OutboundLinkWriter
+}
+
+type superReader struct {
+	protocol    protocol
+	httpReader  httpReader
+	amqpReader  amqpReader
+	msgQueue    chan httpReaderDataMsg // Channel of captured reassembled tcp payload
+	data        []byte
+	captureTime time.Time
+}
+
+func (h *superReader) Read(p []byte) (int, error) {
+	var msg httpReaderDataMsg
+	ok := true
+	for ok && len(h.data) == 0 {
+		msg, ok = <-h.msgQueue
+		h.data = msg.bytes
+		h.captureTime = msg.timestamp
+	}
+	if !ok || len(h.data) == 0 {
+		return 0, io.EOF
+	}
+
+	l := copy(p, h.data)
+	h.data = h.data[l:]
+	return l, nil
+}
+
+func (h *superReader) run(wg *sync.WaitGroup) {
+	defer wg.Done()
+	b := bufio.NewReader(h)
+	if h.protocol == AQMP {
+		h.amqpReader.run(b)
+	} else if h.protocol == HTTP {
+		h.httpReader.run(b, h.captureTime)
+	}
 }
 
 func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.TCP, ac reassembly.AssemblerContext) reassembly.Stream {
@@ -50,40 +96,54 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.T
 		optchecker: reassembly.NewTCPOptionCheck(),
 	}
 	if stream.isAMQP {
-		x := amqpReaderIO{
-			msgQueue: make(chan httpReaderDataMsg),
+		stream.client = superReader{
+			protocol:   AQMP,
+			msgQueue:   make(chan httpReaderDataMsg),
+			amqpReader: amqpReader{},
 		}
-		factory.wg.Add(1)
-		go x.run(&factory.wg)
+		stream.server = superReader{
+			protocol:   AQMP,
+			msgQueue:   make(chan httpReaderDataMsg),
+			amqpReader: amqpReader{},
+		}
+		factory.wg.Add(2)
+		go stream.client.run(&factory.wg)
+		go stream.server.run(&factory.wg)
 	} else if stream.isHTTP {
-		stream.client = httpReader{
+		stream.client = superReader{
+			protocol: HTTP,
 			msgQueue: make(chan httpReaderDataMsg),
-			ident:    fmt.Sprintf("%s %s", net, transport),
-			tcpID: tcpID{
-				srcIP:   net.Src().String(),
-				dstIP:   net.Dst().String(),
-				srcPort: transport.Src().String(),
-				dstPort: transport.Dst().String(),
+			httpReader: httpReader{
+				ident: fmt.Sprintf("%s %s", net, transport),
+				tcpID: tcpID{
+					srcIP:   net.Src().String(),
+					dstIP:   net.Dst().String(),
+					srcPort: transport.Src().String(),
+					dstPort: transport.Dst().String(),
+				},
+				hexdump:    *hexdump,
+				parent:     stream,
+				isClient:   true,
+				isOutgoing: props.isOutgoing,
+				harWriter:  factory.harWriter,
 			},
-			hexdump:    *hexdump,
-			parent:     stream,
-			isClient:   true,
-			isOutgoing: props.isOutgoing,
-			harWriter:  factory.harWriter,
 		}
-		stream.server = httpReader{
+		stream.server = superReader{
+			protocol: HTTP,
 			msgQueue: make(chan httpReaderDataMsg),
-			ident:    fmt.Sprintf("%s %s", net.Reverse(), transport.Reverse()),
-			tcpID: tcpID{
-				srcIP:   net.Dst().String(),
-				dstIP:   net.Src().String(),
-				srcPort: transport.Dst().String(),
-				dstPort: transport.Src().String(),
+			httpReader: httpReader{
+				ident: fmt.Sprintf("%s %s", net.Reverse(), transport.Reverse()),
+				tcpID: tcpID{
+					srcIP:   net.Dst().String(),
+					dstIP:   net.Src().String(),
+					srcPort: transport.Dst().String(),
+					dstPort: transport.Src().String(),
+				},
+				hexdump:    *hexdump,
+				parent:     stream,
+				isOutgoing: props.isOutgoing,
+				harWriter:  factory.harWriter,
 			},
-			hexdump:    *hexdump,
-			parent:     stream,
-			isOutgoing: props.isOutgoing,
-			harWriter:  factory.harWriter,
 		}
 		factory.wg.Add(2)
 		// Start reading from channels stream.client.bytes and stream.server.bytes

@@ -4,8 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"sync"
-	"time"
 
 	"github.com/up9inc/mizu/amqp"
 )
@@ -193,41 +191,18 @@ func printEventBasicConsume(eventBasicConsume amqp.BasicConsume) {
 	)
 }
 
-type amqpReaderIO struct {
-	msgQueue    chan httpReaderDataMsg // Channel of captured reassembled tcp payload
-	data        []byte
-	captureTime time.Time
-}
+type amqpReader struct{}
 
-type amqpReader struct {
+type amqpParser struct {
 	r amqp.Reader
 }
 
-func (h *amqpReaderIO) run(wg *sync.WaitGroup) {
-	defer wg.Done()
-	b := bufio.NewReader(h)
-	r := amqpReader{amqp.Reader{R: b}}
+func (h *amqpReader) run(b *bufio.Reader) {
+	r := amqpParser{amqp.Reader{R: b}}
 	r.Parse()
 }
 
-func (h *amqpReaderIO) Read(p []byte) (int, error) {
-	var msg httpReaderDataMsg
-	ok := true
-	for ok && len(h.data) == 0 {
-		msg, ok = <-h.msgQueue
-		h.data = msg.bytes
-		h.captureTime = msg.timestamp
-	}
-	if !ok || len(h.data) == 0 {
-		return 0, io.EOF
-	}
-
-	l := copy(p, h.data)
-	h.data = h.data[l:]
-	return l, nil
-}
-
-func (r *amqpReader) Parse() error {
+func (r *amqpParser) Parse() error {
 	fmt.Println("Parse is called")
 	var remaining int
 	var header *amqp.HeaderFrame

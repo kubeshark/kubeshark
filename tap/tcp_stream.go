@@ -25,8 +25,8 @@ type tcpStream struct {
 	isHTTP         bool
 	isAMQP         bool
 	reversed       bool
-	client         httpReader
-	server         httpReader
+	client         superReader
+	server         superReader
 	urls           []string
 	ident          string
 	sync.Mutex
