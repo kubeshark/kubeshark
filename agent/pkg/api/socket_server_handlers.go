@@ -6,8 +6,8 @@ import (
 	"github.com/romana/rlog"
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/tap"
-	"mizuserver/pkg/controllers"
 	"mizuserver/pkg/models"
+	"mizuserver/pkg/providers"
 	"mizuserver/pkg/routes"
 	"mizuserver/pkg/up9"
 	"sync"
@@ -80,12 +80,43 @@ func (h *RoutesEventHandlers) WebSocketMessage(_ int, message []byte) {
 			if err != nil {
 				rlog.Infof("Could not unmarshal message of message type %s %v\n", socketMessageBase.MessageType, err)
 			} else {
-				controllers.TapStatus = statusMessage.TappingStatus
+				providers.TapStatus.Pods = statusMessage.TappingStatus.Pods
 				broadcastToBrowserClients(message)
+			}
+		case shared.WebsocketMessageTypeOutboundLink:
+			var outboundLinkMessage models.WebsocketOutboundLinkMessage
+			err := json.Unmarshal(message, &outboundLinkMessage)
+			if err != nil {
+				rlog.Infof("Could not unmarshal message of message type %s %v\n", socketMessageBase.MessageType, err)
+			} else {
+				handleTLSLink(outboundLinkMessage)
 			}
 		default:
 			rlog.Infof("Received socket message of type %s for which no handlers are defined", socketMessageBase.MessageType)
 		}
+	}
+}
+
+func handleTLSLink(outboundLinkMessage models.WebsocketOutboundLinkMessage) {
+	resolvedName := k8sResolver.Resolve(outboundLinkMessage.Data.DstIP)
+	if resolvedName != "" {
+		outboundLinkMessage.Data.DstIP = resolvedName
+	} else if outboundLinkMessage.Data.SuggestedResolvedName != "" {
+		outboundLinkMessage.Data.DstIP = outboundLinkMessage.Data.SuggestedResolvedName
+	}
+	cacheKey := fmt.Sprintf("%s -> %s:%d", outboundLinkMessage.Data.Src, outboundLinkMessage.Data.DstIP, outboundLinkMessage.Data.DstPort)
+	_, isInCache := providers.RecentTLSLinks.Get(cacheKey)
+	if isInCache {
+		return
+	} else {
+		providers.RecentTLSLinks.SetDefault(cacheKey, outboundLinkMessage.Data)
+	}
+	marshaledMessage, err := json.Marshal(outboundLinkMessage)
+	if err != nil {
+		rlog.Errorf("Error marshaling outbound link message for broadcasting: %v", err)
+	} else {
+		fmt.Printf("Broadcasting outboundlink message %s\n", string(marshaledMessage))
+		broadcastToBrowserClients(marshaledMessage)
 	}
 }
 

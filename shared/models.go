@@ -7,6 +7,7 @@ const (
 	WebSocketMessageTypeTappedEntry   WebSocketMessageType = "tappedEntry"
 	WebSocketMessageTypeUpdateStatus  WebSocketMessageType = "status"
 	WebSocketMessageTypeAnalyzeStatus WebSocketMessageType = "analyzeStatus"
+	WebsocketMessageTypeOutboundLink  WebSocketMessageType = "outboundLink"
 )
 
 type WebSocketMessageMetadata struct {
@@ -31,12 +32,20 @@ type WebSocketStatusMessage struct {
 }
 
 type TapStatus struct {
-	Pods []PodInfo `json:"pods"`
+	Pods     []PodInfo `json:"pods"`
+	TLSLinks []TLSLinkInfo `json:"tlsLinks"`
 }
 
 type PodInfo struct {
 	Namespace string `json:"namespace"`
 	Name      string `json:"name"`
+}
+
+type TLSLinkInfo struct {
+	SourceIP                string `json:"sourceIP"`
+	DestinationAddress      string `json:"destinationAddress"`
+	ResolvedDestinationName string `json:"resolvedDestinationName"`
+	ResolvedSourceName      string `json:"resolvedSourceName"`
 }
 
 func CreateWebSocketStatusMessage(tappingStatus TapStatus) WebSocketStatusMessage {

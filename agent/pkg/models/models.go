@@ -132,6 +132,11 @@ type WebSocketTappedEntryMessage struct {
 	Data *tap.OutputChannelItem
 }
 
+type WebsocketOutboundLinkMessage struct {
+	*shared.WebSocketMessageMetadata
+	Data *tap.OutboundLink
+}
+
 func CreateBaseEntryWebSocketMessage(base *BaseEntryDetails) ([]byte, error) {
 	message := &WebSocketEntryMessage{
 		WebSocketMessageMetadata: &shared.WebSocketMessageMetadata{
@@ -146,6 +151,16 @@ func CreateWebsocketTappedEntryMessage(base *tap.OutputChannelItem) ([]byte, err
 	message := &WebSocketTappedEntryMessage{
 		WebSocketMessageMetadata: &shared.WebSocketMessageMetadata{
 			MessageType: shared.WebSocketMessageTypeTappedEntry,
+		},
+		Data: base,
+	}
+	return json.Marshal(message)
+}
+
+func CreateWebsocketOutboundLinkMessage(base *tap.OutboundLink) ([]byte, error) {
+	message := &WebsocketOutboundLinkMessage{
+		WebSocketMessageMetadata: &shared.WebSocketMessageMetadata{
+			MessageType: shared.WebsocketMessageTypeOutboundLink,
 		},
 		Data: base,
 	}

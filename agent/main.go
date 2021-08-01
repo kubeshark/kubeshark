@@ -62,8 +62,8 @@ func main() {
 			panic(fmt.Sprintf("Error connecting to socket server at %s %v", *apiServerAddress, err))
 		}
 
-		go pipeChannelToSocket(socketConnection, harOutputChannel)
-		go api.StartReadingOutbound(outboundLinkOutputChannel)
+		go pipeTapChannelToSocket(socketConnection, harOutputChannel)
+		go pipeOutboundLinksChannelToSocket(socketConnection, outboundLinkOutputChannel)
 	} else if *apiServer {
 		socketHarOutChannel := make(chan *tap.OutputChannelItem, 1000)
 		filteredHarChannel := make(chan *tap.OutputChannelItem)
@@ -177,7 +177,7 @@ func isHealthCheckByUserAgent(message *tap.OutputChannelItem) bool {
 	return false
 }
 
-func pipeChannelToSocket(connection *websocket.Conn, messageDataChannel <-chan *tap.OutputChannelItem) {
+func pipeTapChannelToSocket(connection *websocket.Conn, messageDataChannel <-chan *tap.OutputChannelItem) {
 	if connection == nil {
 		panic("Websocket connection is nil")
 	}
@@ -197,6 +197,24 @@ func pipeChannelToSocket(connection *websocket.Conn, messageDataChannel <-chan *
 		if err != nil {
 			rlog.Infof("error sending message through socket server %s, (%v,%+v)\n", err, err, err)
 			continue
+		}
+	}
+}
+
+func pipeOutboundLinksChannelToSocket(connection *websocket.Conn, outboundLinkChannel <-chan *tap.OutboundLink) {
+	for outboundLink := range outboundLinkChannel {
+		if outboundLink.SuggestedProtocol == tap.TLSProtocol {
+			marshaledData, err := models.CreateWebsocketOutboundLinkMessage(outboundLink)
+			if err != nil {
+				rlog.Infof("Error converting outbound link to json %s, (%v,%+v)", err, err, err)
+				continue
+			}
+
+			err = connection.WriteMessage(websocket.TextMessage, marshaledData)
+			if err != nil {
+				rlog.Infof("error sending outbound link message through socket server %s, (%v,%+v)", err, err, err)
+				continue
+			}
 		}
 	}
 }
