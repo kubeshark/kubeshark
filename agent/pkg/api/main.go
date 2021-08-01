@@ -114,7 +114,11 @@ func startReadingChannel(outputItems <-chan *tap.OutputChannelItem) {
 	}
 
 	for item := range outputItems {
-		saveHarToDb(item.HarEntry, item.ConnectionInfo)
+		if item.HarEntry != nil {
+			saveHarToDb(item.HarEntry, item.ConnectionInfo)
+		} else if item.EventAMQP != nil {
+			saveAMQPToDb(item.EventAMQP, item.ConnectionInfo)
+		}
 	}
 }
 
@@ -215,7 +219,10 @@ func saveAMQPToDb(eventAMQP *tap.EventAMQP, connectionInfo *tap.ConnectionInfo) 
 	mizuAMQP.EstimatedSizeBytes = getEstimatedAMQPSizeBytes(mizuAMQP)
 	// database.CreateEntry(&mizuAMQP)
 
-	baseAMQP := models.BaseAMQPDetails{}
+	baseAMQP := models.BaseAMQPDetails{
+		Id:     entryId,
+		Method: eventAMQP.Type,
+	}
 	// if err := models.GetEntry(&mizuAMQP, &baseAMQP); err != nil {
 	// 	return
 	// }

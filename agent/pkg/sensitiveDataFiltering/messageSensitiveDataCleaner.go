@@ -5,9 +5,10 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
-	"github.com/up9inc/mizu/tap"
 	"net/url"
 	"strings"
+
+	"github.com/up9inc/mizu/tap"
 
 	"github.com/beevik/etree"
 	"github.com/google/martian/har"
@@ -15,6 +16,9 @@ import (
 )
 
 func FilterSensitiveInfoFromHarRequest(harOutputItem *tap.OutputChannelItem, options *shared.TrafficFilteringOptions) {
+	if harOutputItem.HarEntry == nil {
+		return
+	}
 	harOutputItem.HarEntry.Request.Headers = filterHarHeaders(harOutputItem.HarEntry.Request.Headers)
 	harOutputItem.HarEntry.Response.Headers = filterHarHeaders(harOutputItem.HarEntry.Response.Headers)
 
@@ -147,8 +151,8 @@ func filterXmlElement(element *etree.Element) {
 }
 
 func filterJsonBody(bytes []byte) ([]byte, error) {
-	var bodyJsonMap map[string] interface{}
-	err := json.Unmarshal(bytes ,&bodyJsonMap)
+	var bodyJsonMap map[string]interface{}
+	err := json.Unmarshal(bytes, &bodyJsonMap)
 	if err != nil {
 		return nil, err
 	}
@@ -156,12 +160,12 @@ func filterJsonBody(bytes []byte) ([]byte, error) {
 	return json.Marshal(bodyJsonMap)
 }
 
-func filterJsonMap(jsonMap map[string] interface{}) {
+func filterJsonMap(jsonMap map[string]interface{}) {
 	for key, value := range jsonMap {
 		if value == nil {
 			return
 		}
-		nestedMap, isNested := value.(map[string] interface{})
+		nestedMap, isNested := value.(map[string]interface{})
 		if isNested {
 			filterJsonMap(nestedMap)
 		} else {
@@ -183,7 +187,7 @@ func filterUrl(originalUrl string) string {
 			for urlQueryParamName, urlQueryParamValues := range parsedUrl.Query() {
 				newValues := urlQueryParamValues
 				if isFieldNameSensitive(urlQueryParamName) {
-					newValues = []string {maskedFieldPlaceholderValue}
+					newValues = []string{maskedFieldPlaceholderValue}
 				}
 				for _, paramValue := range newValues {
 					newQueryArgs = append(newQueryArgs, fmt.Sprintf("%s=%s", urlQueryParamName, paramValue))
