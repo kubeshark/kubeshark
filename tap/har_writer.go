@@ -265,6 +265,20 @@ func (hw *HarWriter) Start() {
 		}
 		hw.done <- true
 	}()
+
+	go func() {
+		for amqp := range hw.AMQPChan {
+			hw.OutChan <- &OutputChannelItem{
+				EventAMQP:      amqp.Payload,
+				ConnectionInfo: amqp.ConnectionInfo,
+			}
+		}
+
+		if hw.currentFile != nil {
+			hw.closeFile()
+		}
+		hw.done <- true
+	}()
 }
 
 func (hw *HarWriter) Stop() {

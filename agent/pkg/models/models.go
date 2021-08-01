@@ -2,11 +2,12 @@ package models
 
 import (
 	"encoding/json"
+	"mizuserver/pkg/utils"
+	"time"
+
 	"github.com/google/martian/har"
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/tap"
-	"mizuserver/pkg/utils"
-	"time"
 )
 
 type DataUnmarshaler interface {
@@ -33,7 +34,20 @@ type MizuEntry struct {
 	ResolvedSource      string `json:"resolvedSource,omitempty" gorm:"column:resolvedSource"`
 	ResolvedDestination string `json:"resolvedDestination,omitempty" gorm:"column:resolvedDestination"`
 	IsOutgoing          bool   `json:"isOutgoing,omitempty" gorm:"column:isOutgoing"`
-	EstimatedSizeBytes           int `json:"-" gorm:"column:estimatedSizeBytes"`
+	EstimatedSizeBytes  int    `json:"-" gorm:"column:estimatedSizeBytes"`
+}
+
+type MizuAMQP struct {
+	EntryId             string `json:"entryId" gorm:"column:entryId"`
+	CreatedAt           time.Time
+	UpdatedAt           time.Time
+	Entry               string `json:"entry,omitempty" gorm:"column:entry"`
+	Method              string `json:"method" gorm:"column:method"`
+	RequestSenderIp     string `json:"requestSenderIp" gorm:"column:requestSenderIp"`
+	ResolvedSource      string `json:"resolvedSource,omitempty" gorm:"column:resolvedSource"`
+	ResolvedDestination string `json:"resolvedDestination,omitempty" gorm:"column:resolvedDestination"`
+	IsOutgoing          bool   `json:"isOutgoing,omitempty" gorm:"column:isOutgoing"`
+	EstimatedSizeBytes  int    `json:"-" gorm:"column:estimatedSizeBytes"`
 }
 
 type BaseEntryDetails struct {
@@ -46,6 +60,11 @@ type BaseEntryDetails struct {
 	Method          string `json:"method,omitempty"`
 	Timestamp       int64  `json:"timestamp,omitempty"`
 	IsOutgoing      bool   `json:"isOutgoing,omitempty"`
+}
+
+type BaseAMQPDetails struct {
+	Id     string `json:"id,omitempty"`
+	Method string `json:"method,omitempty"`
 }
 
 type FullEntryDetails struct {
@@ -127,6 +146,11 @@ type WebSocketEntryMessage struct {
 	Data *BaseEntryDetails `json:"data,omitempty"`
 }
 
+type WebSocketAMQPMessage struct {
+	*shared.WebSocketMessageMetadata
+	Data *BaseAMQPDetails `json:"data,omitempty"`
+}
+
 type WebSocketTappedEntryMessage struct {
 	*shared.WebSocketMessageMetadata
 	Data *tap.OutputChannelItem
@@ -134,6 +158,16 @@ type WebSocketTappedEntryMessage struct {
 
 func CreateBaseEntryWebSocketMessage(base *BaseEntryDetails) ([]byte, error) {
 	message := &WebSocketEntryMessage{
+		WebSocketMessageMetadata: &shared.WebSocketMessageMetadata{
+			MessageType: shared.WebSocketMessageTypeEntry,
+		},
+		Data: base,
+	}
+	return json.Marshal(message)
+}
+
+func CreateBaseAMQPWebSocketMessage(base *BaseAMQPDetails) ([]byte, error) {
+	message := &WebSocketAMQPMessage{
 		WebSocketMessageMetadata: &shared.WebSocketMessageMetadata{
 			MessageType: shared.WebSocketMessageTypeEntry,
 		},
