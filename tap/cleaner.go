@@ -1,6 +1,8 @@
 package tap
 
 import (
+	"log"
+	"runtime"
 	"sync"
 	"time"
 
@@ -26,11 +28,19 @@ type Cleaner struct {
 func (cl *Cleaner) clean() {
 	startCleanTime := time.Now()
 
+	memStats := runtime.MemStats{}
+	runtime.ReadMemStats(&memStats)
+	log.Printf("Before %d, %d, %d", memStats.Sys, memStats.StackSys, memStats.HeapSys)
+
 	cl.assemblerMutex.Lock()
 	flushed, closed := cl.assembler.FlushCloseOlderThan(startCleanTime.Add(-cl.connectionTimeout))
 	cl.assemblerMutex.Unlock()
 
 	deleted := cl.matcher.deleteOlderThan(startCleanTime.Add(-cl.connectionTimeout))
+
+	memStatsAfter := runtime.MemStats{}
+	runtime.ReadMemStats(&memStatsAfter)
+	log.Printf("After %d, %d, %d", memStatsAfter.Sys, memStatsAfter.StackSys, memStatsAfter.HeapSys)
 
 	cl.statsMutex.Lock()
 	cl.stats.flushed += flushed
