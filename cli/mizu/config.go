@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/creasty/defaults"
 	"github.com/spf13/pflag"
+	"github.com/up9inc/mizu/cli/mizu/configStructs"
 	"github.com/up9inc/mizu/cli/uiUtils"
 	"gopkg.in/yaml.v3"
 	"io/ioutil"
@@ -15,9 +16,12 @@ import (
 	"strings"
 )
 
-const separator = "="
+const (
+	Separator = "="
+	SetCommandName = "set"
+)
 
-var Config = ConfigStruct{}
+var Config = configStructs.ConfigStruct{}
 
 func InitConfig() error {
 	if err := defaults.Set(&Config); err != nil {
@@ -44,7 +48,7 @@ func InitFlag(f *pflag.Flag) {
 		return
 	}
 
-	if f.Name == "set" {
+	if f.Name == SetCommandName {
 		if setError := mergeSetFlag(sliceValue.GetSlice()); setError != nil {
 			Log.Infof(fmt.Sprintf(uiUtils.Red, "Invalid set argument"))
 		}
@@ -89,11 +93,11 @@ func mergeSetFlag(setValues []string) error {
 	configElem := reflect.ValueOf(&Config).Elem()
 
 	for _, setValue := range setValues {
-		if !strings.Contains(setValue, separator) {
+		if !strings.Contains(setValue, Separator) {
 			return errors.New(fmt.Sprintf("invalid set argument %s", setValue))
 		}
 
-		split := strings.SplitN(setValue, separator, 2)
+		split := strings.SplitN(setValue, Separator, 2)
 		if len(split) != 2 {
 			return errors.New(fmt.Sprintf("invalid set argument %s", setValue))
 		}

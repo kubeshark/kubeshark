@@ -5,6 +5,7 @@ import (
 	"github.com/creasty/defaults"
 	"github.com/spf13/cobra"
 	"github.com/up9inc/mizu/cli/mizu"
+	"github.com/up9inc/mizu/cli/mizu/configStructs"
 	"github.com/up9inc/mizu/cli/uiUtils"
 	"os"
 )
@@ -51,18 +52,18 @@ Supported protocols are HTTP and gRPC.`,
 func init() {
 	rootCmd.AddCommand(tapCmd)
 
-	defaultTapConfig := mizu.TapConfig{}
+	defaultTapConfig := configStructs.TapConfig{}
 	defaults.Set(&defaultTapConfig)
 
-	tapCmd.Flags().Uint16P("gui-port", "p", defaultTapConfig.GuiPort, "Provide a custom port for the web interface webserver")
-	tapCmd.Flags().StringP("namespace", "n", defaultTapConfig.Namespace, "Namespace selector")
-	tapCmd.Flags().Bool("analysis", defaultTapConfig.Analysis, "Uploads traffic to UP9 for further analysis (Beta)")
-	tapCmd.Flags().BoolP("all-namespaces", "A", defaultTapConfig.AllNamespaces, "Tap all namespaces")
-	tapCmd.Flags().StringP("kube-config", "k", defaultTapConfig.KubeConfigPath, "Path to kube-config file")
-	tapCmd.Flags().StringArrayP("regex-masking", "r", defaultTapConfig.PlainTextFilterRegexes, "List of regex expressions that are used to filter matching values from text/plain http bodies")
-	tapCmd.Flags().Bool("hide-healthchecks", defaultTapConfig.HideHealthChecks, "hides requests with kube-probe or prometheus user-agent headers")
-	tapCmd.Flags().Bool("no-redact", defaultTapConfig.DisableRedaction, "Disables redaction of potentially sensitive request/response headers and body values")
-	tapCmd.Flags().String("max-entries-db-size", defaultTapConfig.HumanMaxEntriesDBSize, "override the default max entries db size of 200mb")
-	tapCmd.Flags().String("direction", defaultTapConfig.Direction, "Record traffic that goes in this direction (relative to the tapped pod): in/any")
-	tapCmd.Flags().Bool("pods-preview", defaultTapConfig.TappedPodsPreview, "Preview a list of all tapped pods")
+	tapCmd.Flags().Uint16P(configStructs.GuiPortTapName, "p", defaultTapConfig.GuiPort, "Provide a custom port for the web interface webserver")
+	tapCmd.Flags().StringP(configStructs.NamespaceTapName, "n", defaultTapConfig.Namespace, "Namespace selector")
+	tapCmd.Flags().Bool(configStructs.AnalysisTapName, defaultTapConfig.Analysis, "Uploads traffic to UP9 for further analysis (Beta)")
+	tapCmd.Flags().BoolP(configStructs.AllNamespacesTapName, "A", defaultTapConfig.AllNamespaces, "Tap all namespaces")
+	tapCmd.Flags().StringP(configStructs.KubeConfigPathTapName, "k", defaultTapConfig.KubeConfigPath, "Path to kube-config file")
+	tapCmd.Flags().StringArrayP(configStructs.PlainTextFilterRegexesTapName, "r", defaultTapConfig.PlainTextFilterRegexes, "List of regex expressions that are used to filter matching values from text/plain http bodies")
+	tapCmd.Flags().Bool(configStructs.HideHealthChecksTapName, defaultTapConfig.HideHealthChecks, "hides requests with kube-probe or prometheus user-agent headers")
+	tapCmd.Flags().Bool(configStructs.DisableRedactionTapName, defaultTapConfig.DisableRedaction, "Disables redaction of potentially sensitive request/response headers and body values")
+	tapCmd.Flags().String(configStructs.HumanMaxEntriesDBSizeTapName, defaultTapConfig.HumanMaxEntriesDBSize, "override the default max entries db size of 200mb")
+	tapCmd.Flags().String(configStructs.DirectionTapName, defaultTapConfig.Direction, "Record traffic that goes in this direction (relative to the tapped pod): in/any")
+	tapCmd.Flags().Bool(configStructs.TappedPodsPreviewTapName, defaultTapConfig.TappedPodsPreview, "Preview a list of all tapped pods")
 }

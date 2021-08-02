@@ -4,6 +4,7 @@ import (
 	"github.com/creasty/defaults"
 	"github.com/spf13/cobra"
 	"github.com/up9inc/mizu/cli/mizu"
+	"github.com/up9inc/mizu/cli/mizu/configStructs"
 )
 
 var fetchCmd = &cobra.Command{
@@ -26,11 +27,11 @@ var fetchCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(fetchCmd)
 
-	defaultFetchConfig := mizu.FetchConfig{}
+	defaultFetchConfig := configStructs.FetchConfig{}
 	defaults.Set(&defaultFetchConfig)
 
-	fetchCmd.Flags().StringP("directory", "d", defaultFetchConfig.Directory, "Provide a custom directory for fetched entries")
-	fetchCmd.Flags().Int("from", defaultFetchConfig.FromTimestamp, "Custom start timestamp for fetched entries")
-	fetchCmd.Flags().Int("to", defaultFetchConfig.ToTimestamp, "Custom end timestamp fetched entries")
-	fetchCmd.Flags().Uint16P("port", "p", defaultFetchConfig.MizuPort, "Custom port for mizu")
+	fetchCmd.Flags().StringP(configStructs.DirectoryFetchName, "d", defaultFetchConfig.Directory, "Provide a custom directory for fetched entries")
+	fetchCmd.Flags().Int(configStructs.FromTimestampFetchName, defaultFetchConfig.FromTimestamp, "Custom start timestamp for fetched entries")
+	fetchCmd.Flags().Int(configStructs.ToTimestampFetchName, defaultFetchConfig.ToTimestamp, "Custom end timestamp fetched entries")
+	fetchCmd.Flags().Uint16P(configStructs.MizuPortFetchName, "p", defaultFetchConfig.MizuPort, "Custom port for mizu")
 }

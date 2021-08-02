@@ -1,4 +1,4 @@
-package mizu
+package configStructs
 
 import (
 	"errors"
@@ -8,22 +8,24 @@ import (
 	"strings"
 )
 
-type ConfigStruct struct {
-	Tap       TapConfig     `yaml:"tap"`
-	Fetch     FetchConfig   `yaml:"fetch"`
-	Version   VersionConfig `yaml:"version"`
-	View      ViewConfig    `yaml:"view"`
-	MizuImage string        `yaml:"mizu-image"`
-	Telemetry bool          `yaml:"telemetry" default:"true"`
-}
-
-func (config *ConfigStruct) SetDefaults() {
-	config.MizuImage = fmt.Sprintf("gcr.io/up9-docker-hub/mizu/%s:%s", Branch, SemVer)
-}
+const (
+	GuiPortTapName                = "gui-port"
+	NamespaceTapName              = "namespace"
+	AnalysisTapName               = "analysis"
+	AllNamespacesTapName          = "all-namespaces"
+	KubeConfigPathTapName         = "kube-config"
+	PlainTextFilterRegexesTapName = "regex-masking"
+	HideHealthChecksTapName       = "hide-healthchecks"
+	DisableRedactionTapName       = "no-redact"
+	HumanMaxEntriesDBSizeTapName  = "max-entries-db-size"
+	DirectionTapName              = "direction"
+	TappedPodsPreviewTapName      = "pods-preview"
+)
 
 type TapConfig struct {
 	AnalysisDestination    string   `yaml:"dest" default:"up9.app"`
 	SleepIntervalSec       int      `yaml:"upload-interval" default:"10"`
+	PodRegexStr            string   `yaml:"regex" default:".*"`
 	GuiPort                uint16   `yaml:"gui-port" default:"8899"`
 	Namespace              string   `yaml:"namespace"`
 	Analysis               bool     `yaml:"analysis" default:"false"`
@@ -34,8 +36,7 @@ type TapConfig struct {
 	DisableRedaction       bool     `yaml:"no-redact" default:"false"`
 	HumanMaxEntriesDBSize  string   `yaml:"max-entries-db-size" default:"200MB"`
 	Direction              string   `yaml:"direction" default:"in"`
-	PodRegexStr            string   `yaml:"regex" default:".*"`
-	TappedPodsPreview      bool     `yaml:"pods-preview" default:".*"`
+	TappedPodsPreview      bool     `yaml:"pods-preview" default:"false"`
 }
 
 func (config *TapConfig) PodRegex() *regexp.Regexp {
@@ -65,29 +66,13 @@ func (config *TapConfig) Validate() error {
 
 	_, parseHumanDataSizeErr := units.HumanReadableToBytes(config.HumanMaxEntriesDBSize)
 	if parseHumanDataSizeErr != nil {
-		return errors.New(fmt.Sprintf("Could not parse --max-entries-db-size value %s", config.HumanMaxEntriesDBSize))
+		return errors.New(fmt.Sprintf("Could not parse --%s value %s", HumanMaxEntriesDBSizeTapName, config.HumanMaxEntriesDBSize))
 	}
 
 	directionLowerCase := strings.ToLower(config.Direction)
 	if directionLowerCase != "any" && directionLowerCase != "in" {
-		return errors.New(fmt.Sprintf("%s is not a valid value for flag --direction. Acceptable values are in/any.", config.Direction))
+		return errors.New(fmt.Sprintf("%s is not a valid value for flag --%s. Acceptable values are in/any.", config.Direction, DirectionTapName))
 	}
 
 	return nil
-}
-
-type FetchConfig struct {
-	Directory     string `yaml:"directory" default:"."`
-	FromTimestamp int    `yaml:"from" default:"0"`
-	ToTimestamp   int    `yaml:"to" default:"0"`
-	MizuPort      uint16 `yaml:"port" default:"8899"`
-}
-
-type VersionConfig struct {
-	DebugInfo bool `yaml:"debug" default:"false"`
-}
-
-type ViewConfig struct {
-	GuiPort        uint16 `yaml:"gui-port" default:"8899"`
-	KubeConfigPath string `yaml:"kube-config"`
 }

@@ -23,7 +23,7 @@ Further info is available at https://github.com/up9inc/mizu`,
 }
 
 func init() {
-	rootCmd.PersistentFlags().StringSlice("set", []string{}, "Override values using --set")
+	rootCmd.PersistentFlags().StringSlice(mizu.SetCommandName, []string{}, fmt.Sprintf("Override values using --%s", mizu.SetCommandName))
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.

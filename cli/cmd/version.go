@@ -4,6 +4,7 @@ import (
 	"github.com/creasty/defaults"
 	"github.com/spf13/cobra"
 	"github.com/up9inc/mizu/cli/mizu"
+	"github.com/up9inc/mizu/cli/mizu/configStructs"
 	"strconv"
 	"time"
 )
@@ -30,9 +31,9 @@ var versionCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(versionCmd)
 
-	defaultVersionConfig := mizu.VersionConfig{}
+	defaultVersionConfig := configStructs.VersionConfig{}
 	defaults.Set(&defaultVersionConfig)
 
-	versionCmd.Flags().BoolP("debug", "d", defaultVersionConfig.DebugInfo, "Provide all information about version")
+	versionCmd.Flags().BoolP(configStructs.DebugInfoVersionName, "d", defaultVersionConfig.DebugInfo, "Provide all information about version")
 
 }
