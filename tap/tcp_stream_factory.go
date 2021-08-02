@@ -33,7 +33,7 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.T
 	dstPort := int(tcp.DstPort)
 
 	if factory.shouldNotifyOnOutboundLink(dstIp, dstPort) {
-		factory.outbountLinkWriter.WriteOutboundLink(net.Src().String(), dstIp, dstPort)
+		factory.outbountLinkWriter.WriteOutboundLink(net.Src().String(), dstIp, dstPort, "", "")
 	}
 	props := factory.getStreamProps(srcIp, dstIp, dstPort)
 	isHTTP := props.isTapTarget
@@ -57,11 +57,12 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.T
 				srcPort: transport.Src().String(),
 				dstPort: transport.Dst().String(),
 			},
-			hexdump:  *hexdump,
-			parent:   stream,
-			isClient: true,
-			isOutgoing: props.isOutgoing,
-			harWriter: factory.harWriter,
+			hexdump:            *hexdump,
+			parent:             stream,
+			isClient:           true,
+			isOutgoing:         props.isOutgoing,
+			harWriter:          factory.harWriter,
+			outboundLinkWriter: factory.outbountLinkWriter,
 		}
 		stream.server = httpReader{
 			msgQueue: make(chan httpReaderDataMsg),
@@ -72,10 +73,11 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.T
 				srcPort: transport.Dst().String(),
 				dstPort: transport.Src().String(),
 			},
-			hexdump: *hexdump,
-			parent:  stream,
-			isOutgoing: props.isOutgoing,
-			harWriter: factory.harWriter,
+			hexdump:            *hexdump,
+			parent:             stream,
+			isOutgoing:         props.isOutgoing,
+			harWriter:          factory.harWriter,
+			outboundLinkWriter: factory.outbountLinkWriter,
 		}
 		factory.wg.Add(2)
 		// Start reading from channels stream.client.bytes and stream.server.bytes
@@ -131,6 +133,5 @@ func (factory *tcpStreamFactory) shouldNotifyOnOutboundLink(dstIP string, dstPor
 
 type streamProps struct {
 	isTapTarget bool
-	isOutgoing bool
+	isOutgoing  bool
 }
-
