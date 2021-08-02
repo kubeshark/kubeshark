@@ -1,5 +1,13 @@
 package shared
 
+import (
+	"fmt"
+	"io/ioutil"
+	"strings"
+
+	yaml "gopkg.in/yaml.v3"
+)
+
 type WebSocketMessageType string
 
 const (
@@ -74,4 +82,77 @@ type TrafficFilteringOptions struct {
 
 type VersionResponse struct {
 	SemVer string `json:"semver"`
+}
+
+type RulesPolicy struct {
+	Rules []RulePolicy `yaml:"rules"`
+}
+
+type RulePolicy struct {
+	Type    string `yaml:"type"`
+	Service string `yaml:"service"`
+	Path    string `yaml:"path"`
+	Method  string `yaml:"method"`
+	Key     string `yaml:"key"`
+	Value   string `yaml:"value"`
+	Latency int64  `yaml:"latency"`
+	Name    string `yaml:"name"`
+}
+
+func (r *RulePolicy) validateType() bool {
+	permitedTypes := []string{"json", "header", "latency"}
+	_, found := Find(permitedTypes, r.Type)
+	if !found {
+		fmt.Printf("\nRule with name %s will be ignored. Err: only json, header and latency types are supported on rule definition.\n", r.Name)
+	}
+	if strings.ToLower(r.Type) == "latency" {
+		if r.Latency == 0 {
+			fmt.Printf("\nRule with name %s will be ignored. Err: when type=latency, the field Latency should be specified and have a value >= 1\n\n", r.Name)
+			found = false
+		}
+	}
+	return found
+}
+
+func (rules *RulesPolicy) ValidateRulesPolicy() []int {
+	invalidIndex := make([]int, 0)
+	for i := range rules.Rules {
+		validated := rules.Rules[i].validateType()
+		if !validated {
+			invalidIndex = append(invalidIndex, i)
+		}
+	}
+	return invalidIndex
+}
+
+func (rules *RulesPolicy) RemoveRule(idx int) {
+	rules.Rules = append(rules.Rules[:idx], rules.Rules[idx+1:]...)
+}
+
+func Find(slice []string, val string) (int, bool) {
+	for i, item := range slice {
+		if item == val {
+			return i, true
+		}
+	}
+	return -1, false
+}
+
+func DecodeEnforcePolicy(path string) (RulesPolicy, error) {
+	content, err := ioutil.ReadFile(path)
+	enforcePolicy := RulesPolicy{}
+	if err != nil {
+		return enforcePolicy, err
+	}
+	err = yaml.Unmarshal([]byte(content), &enforcePolicy)
+	if err != nil {
+		return enforcePolicy, err
+	}
+	invalidIndex := enforcePolicy.ValidateRulesPolicy()
+	if len(invalidIndex) != 0 {
+		for i := range invalidIndex {
+			enforcePolicy.RemoveRule(invalidIndex[i])
+		}
+	}
+	return enforcePolicy, nil
 }

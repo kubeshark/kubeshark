@@ -219,7 +219,7 @@ func GetEntry(c *gin.Context) {
 		})
 	}
 	var fullEntryWithPolicy models.FullEntryWithPolicy
-	fullEntryWithPolicy.UnmarshalData(entryData, fullEntry.Entry)
+	fullEntryWithPolicy.FillResultPolicy(entryData, fullEntry.Entry)
 	c.JSON(http.StatusOK, fullEntryWithPolicy)
 }
 

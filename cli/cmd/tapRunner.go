@@ -3,7 +3,6 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
@@ -18,6 +17,7 @@ import (
 	"github.com/up9inc/mizu/cli/uiUtils"
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/debounce"
+	yaml "gopkg.in/yaml.v3"
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/tools/clientcmd"
@@ -109,11 +109,13 @@ func RunMizuTap(podRegexQuery *regexp.Regexp, tappingOptions *MizuTapOptions) {
 }
 
 func readValidationRules(file string) (string, error) {
-	content, err := ioutil.ReadFile(file)
+	// content, err := ioutil.ReadFile(file)
+	rules, err := shared.DecodeEnforcePolicy(file)
 	if err != nil {
 		return "", err
 	}
-	return string(content), nil
+	newContent, _ := yaml.Marshal(&rules)
+	return string(newContent), nil
 }
 
 func createMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, nodeToTappedPodIPMap map[string][]string, tappingOptions *MizuTapOptions, mizuApiFilteringOptions *shared.TrafficFilteringOptions, mizuValidationRules string) error {

@@ -13,19 +13,17 @@ require (
 	github.com/go-playground/validator/v10 v10.5.0
 	github.com/google/martian v2.1.0+incompatible
 	github.com/gorilla/websocket v1.4.2
+	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/romana/rlog v0.0.0-20171115192701-f018bc92e7d7
 	github.com/up9inc/mizu/shared v0.0.0
 	github.com/up9inc/mizu/tap v0.0.0
-	github.com/yalp/jsonpath v0.0.0-20180802001716-5cc68e5049a0 // indirect
+	github.com/yalp/jsonpath v0.0.0-20180802001716-5cc68e5049a0
 	go.mongodb.org/mongo-driver v1.5.1
-	gopkg.in/yaml.v2 v2.4.0 // indirect
-	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c // indirect
 	gorm.io/driver/sqlite v1.1.4
 	gorm.io/gorm v1.21.8
 	k8s.io/api v0.21.0
 	k8s.io/apimachinery v0.21.0
 	k8s.io/client-go v0.21.0
-	github.com/patrickmn/go-cache v2.1.0+incompatible
 )
 
 replace github.com/up9inc/mizu/shared v0.0.0 => ../shared

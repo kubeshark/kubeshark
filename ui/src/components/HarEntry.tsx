@@ -56,21 +56,14 @@ export const HarEntry: React.FC<HAREntryProps> = ({entry, setFocusedEntryId, isS
         }
     }
     let backgroundColor = "";
+    if ('status' in entry.rules) {
+        backgroundColor = entry.rules.status ? styles.ruleSuccessRow : styles.ruleFailureRow
+    }
     if ('latency' in entry.rules) {
         if (entry.rules.latency !== -1) {
-            const latency = entry.rules.latency
-            if (latency > entry.latency) {
-                backgroundColor = styles.ruleSuccessRow
-            } else {
-                backgroundColor = styles.ruleFailureRow
-            }
-        } else if (!entry.rules.status) {
-            backgroundColor = styles.ruleFailureRow
-        } else if (entry.rules.status) {
-            backgroundColor = styles.ruleSuccessRow
+            backgroundColor = entry.rules.latency >= entry.latency ? styles.ruleSuccessRow : styles.ruleFailureRow
         }
     }
-    
     return <>
         <div id={entry.id} className={`${styles.row} ${isSelected ? styles.rowSelected : backgroundColor}`} onClick={() => setFocusedEntryId(entry.id)}>
             {entry.statusCode && <div>

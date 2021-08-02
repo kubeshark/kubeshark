@@ -167,7 +167,6 @@ func saveHarToDb(entry *har.Entry, connectionInfo *tap.ConnectionInfo) {
 	if err := models.GetEntry(&mizuEntry, &baseEntry); err != nil {
 		return
 	}
-	// _ = models.RunValidationRulesState(*entry, serviceName)
 	baseEntry.Rules = models.RunValidationRulesState(*entry, serviceName)
 	baseEntry.Latency = entry.Timings.Receive
 	baseEntryBytes, _ := models.CreateBaseEntryWebSocketMessage(&baseEntry)

@@ -54,13 +54,15 @@ type BaseEntryDetails struct {
 }
 
 type ApplicableRules struct {
-	Latency int64 `json:"latency"`
+	Latency int64 `json:"latency,omitempty"`
 	Status  bool  `json:"status,omitempty"`
 }
 
-func (ar *ApplicableRules) UnmarshalData(status bool, latency int64) {
+func NewApplicableRules(status bool, latency int64) ApplicableRules {
+	ar := ApplicableRules{}
 	ar.Status = status
 	ar.Latency = latency
+	return ar
 }
 
 type FullEntryDetails struct {
@@ -203,7 +205,7 @@ type FullEntryWithPolicy struct {
 	Service      string               `json:"service"`
 }
 
-func (fewp *FullEntryWithPolicy) UnmarshalData(entry MizuEntry, harEntry har.Entry) {
+func (fewp *FullEntryWithPolicy) FillResultPolicy(entry MizuEntry, harEntry har.Entry) {
 	_, resultPolicyToSend := rules.MatchRequestPolicy(harEntry, entry.Service)
 	fewp.Entry = harEntry
 	fewp.RulesMatched = resultPolicyToSend
@@ -213,7 +215,6 @@ func (fewp *FullEntryWithPolicy) UnmarshalData(entry MizuEntry, harEntry har.Ent
 func RunValidationRulesState(harEntry har.Entry, service string) ApplicableRules {
 	numberOfRules, resultPolicyToSend := rules.MatchRequestPolicy(harEntry, service)
 	statusPolicyToSend, latency := rules.PassedValidationRules(resultPolicyToSend, numberOfRules)
-	ar := ApplicableRules{}
-	ar.UnmarshalData(statusPolicyToSend, latency)
+	ar := NewApplicableRules(statusPolicyToSend, latency)
 	return ar
 }
