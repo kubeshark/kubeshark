@@ -10,8 +10,8 @@ import (
 	"net/http"
 )
 
-func runMizuView(mizuViewOptions *MizuViewOptions) {
-	kubernetesProvider, err := kubernetes.NewProvider(mizuViewOptions.KubeConfigPath)
+func runMizuView() {
+	kubernetesProvider, err := kubernetes.NewProvider(mizu.Config.View.KubeConfigPath)
 	if err != nil {
 		if clientcmd.IsEmptyConfig(err) {
 			mizu.Log.Infof("Couldn't find the kube config file, or file is empty. Try adding '--kube-config=<path to kube config file>'")
@@ -35,16 +35,16 @@ func runMizuView(mizuViewOptions *MizuViewOptions) {
 		return
 	}
 
-	mizuProxiedUrl := kubernetes.GetMizuApiServerProxiedHostAndPath(mizuViewOptions.GuiPort)
+	mizuProxiedUrl := kubernetes.GetMizuApiServerProxiedHostAndPath(mizu.Config.View.GuiPort)
 	_, err = http.Get(fmt.Sprintf("http://%s/", mizuProxiedUrl))
 	if err == nil {
-		mizu.Log.Infof("Found a running service %s and open port %d", mizu.ApiServerPodName, mizuViewOptions.GuiPort)
+		mizu.Log.Infof("Found a running service %s and open port %d", mizu.ApiServerPodName, mizu.Config.View.GuiPort)
 		return
 	}
 	mizu.Log.Infof("Found service %s, creating k8s proxy", mizu.ApiServerPodName)
 
-	mizu.Log.Infof("Mizu is available at  http://%s\n", kubernetes.GetMizuApiServerProxiedHostAndPath(mizuViewOptions.GuiPort))
-	err = kubernetes.StartProxy(kubernetesProvider, mizuViewOptions.GuiPort, mizu.ResourcesNamespace, mizu.ApiServerPodName)
+	mizu.Log.Infof("Mizu is available at  http://%s\n", kubernetes.GetMizuApiServerProxiedHostAndPath(mizu.Config.View.GuiPort))
+	err = kubernetes.StartProxy(kubernetesProvider, mizu.Config.View.GuiPort, mizu.ResourcesNamespace, mizu.ApiServerPodName)
 	if err != nil {
 		mizu.Log.Infof("Error occured while running k8s proxy %v", err)
 	}
