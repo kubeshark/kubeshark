@@ -208,7 +208,6 @@ export const HAREntryTablePolicySection: React.FC<HAREntryPolicySectionProps> = 
                                 
                                 
                                     return (
-                                        // <HAREntryViewLine key={index} label={rule.Name} value={matched}/>
                                         <HAREntryPolicySectionContainer key={index} label={rule.Name} matched={matched && (rule.Type === 'latency' ? rule.Latency > latency : true)? "Success" : "Failure"}>
                                             {
                                                 
