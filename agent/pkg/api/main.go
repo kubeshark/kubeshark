@@ -21,6 +21,7 @@ import (
 	"mizuserver/pkg/database"
 	"mizuserver/pkg/models"
 	"mizuserver/pkg/resolver"
+	"mizuserver/pkg/rules"
 	"mizuserver/pkg/utils"
 )
 
@@ -167,7 +168,7 @@ func saveHarToDb(entry *har.Entry, connectionInfo *tap.ConnectionInfo) {
 	if err := models.GetEntry(&mizuEntry, &baseEntry); err != nil {
 		return
 	}
-	baseEntry.ApplicableRules = models.RunValidationRulesState(entry, serviceName)
+	baseEntry.ApplicableRules = rules.RunValidationRulesState(entry, serviceName)
 	baseEntry.Latency = entry.Timings.Receive
 	baseEntryBytes, _ := models.CreateBaseEntryWebSocketMessage(&baseEntry)
 	broadcastToBrowserClients(baseEntryBytes)

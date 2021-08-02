@@ -15,7 +15,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/martian/har"
 	"github.com/romana/rlog"
-	"github.com/up9inc/mizu/shared"
+	"github.com/up9inc/mizu/agent/pkg/models"
 )
 
 func GetEntries(c *gin.Context) {
@@ -209,7 +209,6 @@ func GetFullEntries(c *gin.Context) {
 func GetEntry(c *gin.Context) {
 	var entryData models.MizuEntry
 	database.GetEntriesTable().
-		Select("entry", "resolvedDestination", "service").
 		Where(map[string]string{"entryId": c.Param("entryId")}).
 		First(&entryData)
 
@@ -220,12 +219,8 @@ func GetEntry(c *gin.Context) {
 			"msg":   "Can't get entry details",
 		})
 	}
-
-	_, resultPolicyToSend := shared.MatchRequestPolicy(fullEntry.Entry, entryData.Service)
 	var fullEntryWithPolicy models.FullEntryWithPolicy
-	fullEntryWithPolicy.RulesMatched = resultPolicyToSend
-	fullEntryWithPolicy.Entry = fullEntry.Entry
-	fullEntryWithPolicy.Service = entryData.Service
+	fullEntryWithPolicy.UnmarshalData(entryData, fullEntry.Entry)
 	c.JSON(http.StatusOK, fullEntryWithPolicy)
 }
 

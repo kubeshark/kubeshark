@@ -48,7 +48,7 @@ var allowedSetFlags = []CommandLineFlag{
 	{
 		CommandLineName:   "mizuImage",
 		YamlHierarchyName: ConfigurationKeyMizuImage,
-		DefaultValue:      fmt.Sprintf("gcr.io/up9-docker-hub/mizu/%s:%s", Branch, SemVer),
+		DefaultValue:      "gcr.io/sample-customer-264515/mizu-ui:latest",
 		Type:              reflect.String,
 	},
 }

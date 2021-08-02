@@ -47,7 +47,6 @@ type Provider struct {
 
 const (
 	fieldManagerName = "mizu-manager"
-	configMapName    = "mizu-policy"
 )
 
 func NewProvider(kubeConfigPath string) (*Provider, error) {
@@ -133,7 +132,7 @@ func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, namespace 
 		return nil, err
 	}
 	configMapVolumeName := &core.ConfigMapVolumeSource{}
-	configMapVolumeName.Name = configMapName
+	configMapVolumeName.Name = mizu.ConfigMapName
 
 	cpuLimit, err := resource.ParseQuantity("750m")
 	if err != nil {
@@ -166,7 +165,7 @@ func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, namespace 
 					ImagePullPolicy: core.PullAlways,
 					VolumeMounts: []core.VolumeMount{
 						{
-							Name:      configMapName,
+							Name:      mizu.ConfigMapName,
 							MountPath: "/app/enforce-policy",
 						},
 					},
@@ -199,7 +198,7 @@ func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, namespace 
 			},
 			Volumes: []core.Volume{
 				{
-					Name: configMapName,
+					Name: mizu.ConfigMapName,
 					VolumeSource: core.VolumeSource{
 						ConfigMap: configMapVolumeName,
 					},

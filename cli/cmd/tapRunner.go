@@ -43,7 +43,8 @@ func RunMizuTap(podRegexQuery *regexp.Regexp, tappingOptions *MizuTapOptions) {
 	if tappingOptions.EnforcePolicyFile != "" {
 		mizuValidationRules, err = readValidationRules(tappingOptions.EnforcePolicyFile)
 		if err != nil {
-			log.Fatalf("error: %v", err)
+			mizu.Log.Infof("error: %v", err)
+			return
 		}
 	} else {
 		mizuValidationRules = ""
@@ -128,14 +129,14 @@ func createMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Pro
 		return err
 	}
 
-	if err := cretaMizuConfigmap(ctx, kubernetesProvider, mizuValidationRules); err != nil {
+	if err := createMizuConfigmap(ctx, kubernetesProvider, mizuValidationRules); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func cretaMizuConfigmap(ctx context.Context, kubernetesProvider *kubernetes.Provider, data string) error {
+func createMizuConfigmap(ctx context.Context, kubernetesProvider *kubernetes.Provider, data string) error {
 	err := kubernetesProvider.ApplyConfigMap(ctx, mizu.ResourcesNamespace, mizu.ConfigMapName, data)
 	if err != nil {
 		fmt.Printf("Error creating mizu configmap: %v\n", err)
@@ -278,7 +279,7 @@ func watchPodsForTapping(ctx context.Context, kubernetesProvider *kubernetes.Pro
 
 		nodeToTappedPodIPMap, err := getNodeHostToTappedPodIpsMap(currentlyTappedPods)
 		if err != nil {
-			mizu.Log.Infof("Error updating daemonset: %s (%v,%+v)", err, err, err)
+			mizu.Log.Infof("Error building node to ips map: %s (%v,%+v)", err, err, err)
 			cancel()
 		}
 		if err := updateMizuTappers(ctx, kubernetesProvider, nodeToTappedPodIPMap, tappingOptions); err != nil {

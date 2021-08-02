@@ -3,6 +3,7 @@ package models
 import (
 	"encoding/json"
 
+	"mizuserver/pkg/rules"
 	"mizuserver/pkg/utils"
 	"time"
 
@@ -39,17 +40,27 @@ type MizuEntry struct {
 }
 
 type BaseEntryDetails struct {
-	Id              string `json:"id,omitempty"`
-	Url             string `json:"url,omitempty"`
-	RequestSenderIp string `json:"requestSenderIp,omitempty"`
-	Service         string `json:"service,omitempty"`
-	Path            string `json:"path,omitempty"`
-	StatusCode      int    `json:"statusCode,omitempty"`
-	Method          string `json:"method,omitempty"`
-	Timestamp       int64  `json:"timestamp,omitempty"`
-	IsOutgoing      bool   `json:"isOutgoing,omitempty"`
-	Latency         int64  `json:"latency,omitempty"`
-	ApplicableRules string `json:"applicableRules,omitempty"`
+	Id              string          `json:"id,omitempty"`
+	Url             string          `json:"url,omitempty"`
+	RequestSenderIp string          `json:"requestSenderIp,omitempty"`
+	Service         string          `json:"service,omitempty"`
+	Path            string          `json:"path,omitempty"`
+	StatusCode      int             `json:"statusCode,omitempty"`
+	Method          string          `json:"method,omitempty"`
+	Timestamp       int64           `json:"timestamp,omitempty"`
+	IsOutgoing      bool            `json:"isOutgoing,omitempty"`
+	Latency         int64           `json:"latency,omitempty"`
+	ApplicableRules ApplicableRules `json:"rules,omitempty"`
+}
+
+type ApplicableRules struct {
+	Latency int64 `json:"latency,omitempty"`
+	Status  bool  `json:"status,omitempty"`
+}
+
+func (ar *ApplicableRules) UnmarshalData(status bool, latency int64) {
+	ar.Status = status
+	ar.Latency = latency
 }
 
 type FullEntryDetails struct {
@@ -103,12 +114,6 @@ func (fedex *FullEntryDetailsExtra) UnmarshalData(entry *MizuEntry) error {
 		fedex.Entry.Request.URL = utils.SetHostname(fedex.Entry.Request.URL, entry.ResolvedDestination)
 	}
 	return nil
-}
-
-type EntryData struct {
-	Entry               string `json:"entry,omitempty"`
-	ResolvedDestination string `json:"resolvedDestination,omitempty" gorm:"column:resolvedDestination"`
-	Service             string `json:"service,omitempty"`
 }
 
 type EntriesFilter struct {
@@ -179,13 +184,22 @@ type ExtendedCreator struct {
 }
 
 type FullEntryWithPolicy struct {
-	RulesMatched []shared.RulesMatched `json:"rulesMatched,omitempty"`
-	Entry        har.Entry             `json:"entry"`
-	Service      string                `json:"service"`
+	RulesMatched []rules.RulesMatched `json:"rulesMatched,omitempty"`
+	Entry        har.Entry            `json:"entry"`
+	Service      string               `json:"service"`
 }
 
-func RunValidationRulesState(harEntry *har.Entry, service string) string {
-	numberOfRules, resultPolicyToSend := shared.MatchRequestPolicy(*harEntry, service)
-	statusPolicyToSend := shared.PassedValidationRules(resultPolicyToSend, numberOfRules)
-	return statusPolicyToSend
+func (fewp *FullEntryWithPolicy) UnmarshalData(entry *MizuEntry, harEntry har.Entry) {
+	_, resultPolicyToSend := rules.MatchRequestPolicy(harEntry, entry.Service)
+	fewp.Entry = harEntry
+	fewp.RulesMatched = resultPolicyToSend
+	fewp.Service = entry.Service
+}
+
+func RunValidationRulesState(harEntry har.Entry, service string) ApplicableRules {
+	numberOfRules, resultPolicyToSend := rules.MatchRequestPolicy(harEntry, service)
+	statusPolicyToSend, latency := rules.PassedValidationRules(resultPolicyToSend, numberOfRules)
+	ar := ApplicableRules{}
+	ar.UnmarshalData(statusPolicyToSend, latency)
+	return ar
 }
