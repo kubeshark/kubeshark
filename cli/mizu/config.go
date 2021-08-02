@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/creasty/defaults"
 	"github.com/spf13/pflag"
-	"github.com/up9inc/mizu/cli/mizu/configStructs"
 	"github.com/up9inc/mizu/cli/uiUtils"
 	"gopkg.in/yaml.v3"
 	"io/ioutil"
@@ -21,7 +20,7 @@ const (
 	SetCommandName = "set"
 )
 
-var Config = configStructs.ConfigStruct{}
+var Config = ConfigStruct{}
 
 func InitConfig() error {
 	if err := defaults.Set(&Config); err != nil {
