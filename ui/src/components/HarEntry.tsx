@@ -36,7 +36,6 @@ interface HAREntryProps {
 
 export const HarEntry: React.FC<HAREntryProps> = ({entry, setFocusedEntryId, isSelected}) => {
     const classification = getClassification(entry.statusCode)
-    console.log(entry)
     let ingoingIcon;
     let outgoingIcon;
     switch(classification) {
