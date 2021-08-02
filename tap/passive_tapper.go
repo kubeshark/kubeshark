@@ -317,6 +317,10 @@ func startPassiveTapper(harWriter *HarWriter, outboundLinkWriter *OutboundLinkWr
 	}
 	streamPool := reassembly.NewStreamPool(streamFactory)
 	assembler := reassembly.NewAssembler(streamPool)
+
+	assembler.AssemblerOptions.MaxBufferedPagesTotal = 10000
+	assembler.AssemblerOptions.MaxBufferedPagesPerConnection = 10000
+
 	var assemblerMutex sync.Mutex
 
 	signalChan := make(chan os.Signal, 1)
