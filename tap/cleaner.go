@@ -22,31 +22,28 @@ type Cleaner struct {
 	cleanPeriod       time.Duration
 	connectionTimeout time.Duration
 	stats             CleanerStats
-	statsMutex	  sync.Mutex
+	statsMutex        sync.Mutex
 }
 
 func (cl *Cleaner) clean() {
-	log.Printf("cleaning - new with flush all")
-
 	startCleanTime := time.Now()
 
 	memStats := runtime.MemStats{}
 	runtime.ReadMemStats(&memStats)
-	log.Printf("Before %d, %d, %d", memStats.Sys, memStats.StackSys, memStats.HeapSys)
 
 	cl.assemblerMutex.Lock()
-	// flushed, closed := cl.assembler.FlushCloseOlderThan(startCleanTime.Add(-cl.connectionTimeout))
-	closed := cl.assembler.FlushAll()
+	log.Printf("Before %s", cl.assembler.Dump())
+	flushed, closed := cl.assembler.FlushCloseOlderThan(startCleanTime.Add(-cl.connectionTimeout))
 	cl.assemblerMutex.Unlock()
 
 	deleted := cl.matcher.deleteOlderThan(startCleanTime.Add(-cl.connectionTimeout))
 
 	memStatsAfter := runtime.MemStats{}
 	runtime.ReadMemStats(&memStatsAfter)
-	log.Printf("After %d, %d, %d", memStatsAfter.Sys, memStatsAfter.StackSys, memStatsAfter.HeapSys)
 
 	cl.statsMutex.Lock()
-	// cl.stats.flushed += flushed
+	log.Printf("After %s", cl.assembler.Dump())
+	cl.stats.flushed += flushed
 	cl.stats.closed += closed
 	cl.stats.deleted += deleted
 	cl.statsMutex.Unlock()
@@ -68,7 +65,7 @@ func (cl *Cleaner) dumpStats() CleanerStats {
 
 	stats := CleanerStats{
 		flushed: cl.stats.flushed,
-		closed : cl.stats.closed,
+		closed:  cl.stats.closed,
 		deleted: cl.stats.deleted,
 	}
 
