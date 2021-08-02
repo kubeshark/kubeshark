@@ -376,6 +376,33 @@ func startPassiveTapper(harWriter *HarWriter, outboundLinkWriter *OutboundLinkWr
 		}
 	}()
 
+	go func() {
+		rlog.Info("Profiling is on")
+
+		if err := os.Mkdir("/app/pprof", 0777); err != nil {
+			log.Fatal("could not create directory for profile: ", err)
+		}
+
+		for true {
+			time.Sleep(time.Minute)
+			t := time.Now()
+
+			filename := fmt.Sprintf("/app/pprof/%s__mem.prof", t.Format("15_04_05"))
+
+			rlog.Info("Writing memory profile to %s\n", filename)
+
+			f, err := os.Create(filename)
+			if err != nil {
+				log.Fatal("could not create memory profile: ", err)
+			}
+			defer f.Close() // error handling omitted for example
+			runtime.GC() // get up-to-date statistics
+			if err := pprof.WriteHeapProfile(f); err != nil {
+				log.Fatal("could not write memory profile: ", err)
+			}
+		}
+	}()
+
 	for packet := range source.Packets() {
 		count++
 		rlog.Debugf("PACKET #%d", count)
