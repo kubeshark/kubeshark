@@ -54,7 +54,7 @@ func RunMizuTap() {
 	defer cancel() // cancel will be called when this function exits
 
 	targetNamespace := getNamespace(kubernetesProvider)
-	if matchingPods, err := kubernetesProvider.GetAllPodsMatchingRegex(ctx, mizu.Config.Tap.PodRegex, targetNamespace); err != nil {
+	if matchingPods, err := kubernetesProvider.GetAllPodsMatchingRegex(ctx, mizu.Config.Tap.PodRegex(), targetNamespace); err != nil {
 		mizu.Log.Infof("Error listing pods: %v", err)
 		return
 	} else {
@@ -137,7 +137,7 @@ func createMizuApiServer(ctx context.Context, kubernetesProvider *kubernetes.Pro
 	} else {
 		serviceAccountName = ""
 	}
-	_, err = kubernetesProvider.CreateMizuApiServerPod(ctx, mizu.ResourcesNamespace, mizu.ApiServerPodName, mizu.Config.MizuImage, serviceAccountName, mizuApiFilteringOptions, mizu.Config.Tap.MaxEntriesDBSizeBytes)
+	_, err = kubernetesProvider.CreateMizuApiServerPod(ctx, mizu.ResourcesNamespace, mizu.ApiServerPodName, mizu.Config.MizuImage, serviceAccountName, mizuApiFilteringOptions, mizu.Config.Tap.MaxEntriesDBSizeBytes())
 	if err != nil {
 		mizu.Log.Infof("Error creating mizu %s pod: %v", mizu.ApiServerPodName, err)
 		return err
@@ -188,7 +188,7 @@ func updateMizuTappers(ctx context.Context, kubernetesProvider *kubernetes.Provi
 			fmt.Sprintf("%s.%s.svc.cluster.local", apiServerService.Name, apiServerService.Namespace),
 			nodeToTappedPodIPMap,
 			serviceAccountName,
-			mizu.Config.Tap.TapOutgoing,
+			mizu.Config.Tap.TapOutgoing(),
 		); err != nil {
 			mizu.Log.Infof("Error creating mizu tapper daemonset: %v", err)
 			return err
@@ -241,10 +241,10 @@ func cleanUpMizuResources(kubernetesProvider *kubernetes.Provider) {
 func watchPodsForTapping(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
 	targetNamespace := getNamespace(kubernetesProvider)
 
-	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, kubernetesProvider.GetPodWatcher(ctx, targetNamespace), mizu.Config.Tap.PodRegex)
+	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, kubernetesProvider.GetPodWatcher(ctx, targetNamespace), mizu.Config.Tap.PodRegex())
 
 	restartTappers := func() {
-		if matchingPods, err := kubernetesProvider.GetAllPodsMatchingRegex(ctx, mizu.Config.Tap.PodRegex, targetNamespace); err != nil {
+		if matchingPods, err := kubernetesProvider.GetAllPodsMatchingRegex(ctx, mizu.Config.Tap.PodRegex(), targetNamespace); err != nil {
 			mizu.Log.Infof("Error getting pods by regex: %s (%v,%+v)", err, err, err)
 			cancel()
 		} else {

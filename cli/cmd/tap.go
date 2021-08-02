@@ -2,15 +2,11 @@ package cmd
 
 import (
 	"errors"
-	"fmt"
 	"github.com/creasty/defaults"
 	"github.com/spf13/cobra"
 	"github.com/up9inc/mizu/cli/mizu"
 	"github.com/up9inc/mizu/cli/uiUtils"
-	"github.com/up9inc/mizu/shared/units"
 	"os"
-	"regexp"
-	"strings"
 )
 
 const analysisMessageToConfirm = `NOTE: running mizu with --analysis flag will upload recorded traffic for further analysis and enriched presentation options.`
@@ -34,27 +30,11 @@ Supported protocols are HTTP and gRPC.`,
 			return errors.New("unexpected number of arguments")
 		}
 
-		var compileErr error
-		mizu.Config.Tap.PodRegex, compileErr = regexp.Compile(mizu.Config.Tap.PodRegexStr)
-		if compileErr != nil {
-			return errors.New(fmt.Sprintf("%s is not a valid regex %s", mizu.Config.Tap.PodRegexStr, compileErr))
+		if err := mizu.Config.Tap.Validate(); err != nil {
+			return err
 		}
 
-		var parseHumanDataSizeErr error
-		mizu.Config.Tap.MaxEntriesDBSizeBytes, parseHumanDataSizeErr = units.HumanReadableToBytes(mizu.Config.Tap.HumanMaxEntriesDBSize)
-		if parseHumanDataSizeErr != nil {
-			return errors.New(fmt.Sprintf("Could not parse --max-entries-db-size value %s", mizu.Config.Tap.HumanMaxEntriesDBSize))
-		}
-		mizu.Log.Infof("Mizu will store up to %s of traffic, old traffic will be cleared once the limit is reached.", units.BytesToHumanReadable(mizu.Config.Tap.MaxEntriesDBSizeBytes))
-
-		directionLowerCase := strings.ToLower(mizu.Config.Tap.Direction)
-		if directionLowerCase == "any" {
-			mizu.Config.Tap.TapOutgoing = true
-		} else if directionLowerCase == "in" {
-			mizu.Config.Tap.TapOutgoing = false
-		} else {
-			return errors.New(fmt.Sprintf("%s is not a valid value for flag --direction. Acceptable values are in/any.", mizu.Config.Tap.Direction))
-		}
+		mizu.Log.Infof("Mizu will store up to %s of traffic, old traffic will be cleared once the limit is reached.", mizu.Config.Tap.HumanMaxEntriesDBSize)
 
 		if mizu.Config.Tap.Analysis {
 			mizu.Log.Infof(analysisMessageToConfirm)
@@ -63,6 +43,7 @@ Supported protocols are HTTP and gRPC.`,
 				os.Exit(0)
 			}
 		}
+
 		return nil
 	},
 }

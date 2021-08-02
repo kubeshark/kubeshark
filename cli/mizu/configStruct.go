@@ -1,8 +1,11 @@
 package mizu
 
 import (
+	"errors"
 	"fmt"
+	"github.com/up9inc/mizu/shared/units"
 	"regexp"
+	"strings"
 )
 
 type ConfigStruct struct {
@@ -30,12 +33,47 @@ type TapConfig struct {
 	HideHealthChecks       bool     `yaml:"hide-healthchecks" default:"false"`
 	DisableRedaction       bool     `yaml:"no-redact" default:"false"`
 	HumanMaxEntriesDBSize  string   `yaml:"max-entries-db-size" default:"200MB"`
-	MaxEntriesDBSizeBytes  int64
-	Direction              string `yaml:"direction" default:"in"`
-	TapOutgoing            bool
-	PodRegexStr            string `yaml:"regex" default:".*"`
-	PodRegex               *regexp.Regexp
-	TappedPodsPreview      bool `yaml:"pods-preview" default:".*"`
+	Direction              string   `yaml:"direction" default:"in"`
+	PodRegexStr            string   `yaml:"regex" default:".*"`
+	TappedPodsPreview      bool     `yaml:"pods-preview" default:".*"`
+}
+
+func (config *TapConfig) PodRegex() *regexp.Regexp {
+	podRegex, _ := regexp.Compile(config.PodRegexStr)
+	return podRegex
+}
+
+func (config *TapConfig) TapOutgoing() bool {
+	directionLowerCase := strings.ToLower(config.Direction)
+	if directionLowerCase == "any" {
+		return true
+	}
+
+	return false
+}
+
+func (config *TapConfig) MaxEntriesDBSizeBytes() int64 {
+	maxEntriesDBSizeBytes, _ := units.HumanReadableToBytes(config.HumanMaxEntriesDBSize)
+	return maxEntriesDBSizeBytes
+}
+
+func (config *TapConfig) Validate() error {
+	_, compileErr := regexp.Compile(config.PodRegexStr)
+	if compileErr != nil {
+		return errors.New(fmt.Sprintf("%s is not a valid regex %s", config.PodRegexStr, compileErr))
+	}
+
+	_, parseHumanDataSizeErr := units.HumanReadableToBytes(config.HumanMaxEntriesDBSize)
+	if parseHumanDataSizeErr != nil {
+		return errors.New(fmt.Sprintf("Could not parse --max-entries-db-size value %s", config.HumanMaxEntriesDBSize))
+	}
+
+	directionLowerCase := strings.ToLower(config.Direction)
+	if directionLowerCase != "any" && directionLowerCase != "in" {
+		return errors.New(fmt.Sprintf("%s is not a valid value for flag --direction. Acceptable values are in/any.", config.Direction))
+	}
+
+	return nil
 }
 
 type FetchConfig struct {
