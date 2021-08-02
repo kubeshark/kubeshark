@@ -86,9 +86,10 @@ func RunMizuTap(podRegexQuery *regexp.Regexp, tappingOptions *MizuTapOptions) {
 		return
 	}
 
+	urlReadyChan := make(chan string)
 	mizu.CheckNewerVersion()
-	go portForwardApiPod(ctx, kubernetesProvider, cancel, tappingOptions) // TODO convert this to job for built in pod ttl or have the running app handle this
-	go watchPodsForTapping(ctx, kubernetesProvider, cancel, podRegexQuery, tappingOptions)
+	go portForwardApiPod(ctx, kubernetesProvider, cancel, tappingOptions, urlReadyChan) // TODO convert this to job for built in pod ttl or have the running app handle this
+	go watchPodsForTapping(ctx, kubernetesProvider, cancel, podRegexQuery, tappingOptions, urlReadyChan)
 	go syncApiStatus(ctx, cancel, tappingOptions)
 
 	//block until exit signal or error
@@ -231,7 +232,7 @@ func cleanUpMizuResources(kubernetesProvider *kubernetes.Provider) {
 	}
 }
 
-func watchPodsForTapping(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc, podRegex *regexp.Regexp, tappingOptions *MizuTapOptions) {
+func watchPodsForTapping(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc, podRegex *regexp.Regexp, tappingOptions *MizuTapOptions, urlReadyChan chan string) {
 	targetNamespace := getNamespace(tappingOptions, kubernetesProvider)
 
 	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, kubernetesProvider.GetPodWatcher(ctx, targetNamespace), podRegex)
@@ -257,18 +258,18 @@ func watchPodsForTapping(ctx context.Context, kubernetesProvider *kubernetes.Pro
 	}
 	restartTappersDebouncer := debounce.NewDebouncer(updateTappersDelay, restartTappers)
 	timer := time.AfterFunc(time.Second*10, func() {
-		mizuProxiedUrl := kubernetes.GetMizuApiServerProxiedHostAndPath(tappingOptions.GuiPort)
-		mizu.Log.Infof("Mizu is available at http://%s", mizuProxiedUrl)
+		mizu.Log.Debugf("Waiting for URL...")
+		mizu.Log.Infof("Mizu is available at http://%s", <-urlReadyChan)
 	})
 
 	for {
 		select {
 		case newTarget := <-added:
 			mizu.Log.Infof(uiUtils.Green, fmt.Sprintf("+%s", newTarget.Name))
-			timer.Reset(time.Second * 5)
+			timer.Reset(time.Second * 2)
 		case removedTarget := <-removed:
 			mizu.Log.Infof(uiUtils.Red, fmt.Sprintf("-%s", removedTarget.Name))
-			timer.Reset(time.Second * 5)
+			timer.Reset(time.Second * 2)
 			restartTappersDebouncer.SetOn()
 		case modifiedTarget := <-modified:
 			// Act only if the modified pod has already obtained an IP address.
@@ -291,7 +292,7 @@ func watchPodsForTapping(ctx context.Context, kubernetesProvider *kubernetes.Pro
 	}
 }
 
-func portForwardApiPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc, tappingOptions *MizuTapOptions) {
+func portForwardApiPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc, tappingOptions *MizuTapOptions, urlReadyChan chan string) {
 	podExactRegex := regexp.MustCompile(fmt.Sprintf("^%s$", mizu.ApiServerPodName))
 	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, kubernetesProvider.GetPodWatcher(ctx, mizu.ResourcesNamespace), podExactRegex)
 	isPodReady := false
@@ -315,15 +316,16 @@ func portForwardApiPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 					if err != nil {
 						mizu.Log.Infof("Error occurred while running k8s proxy %v", err)
 						cancel()
-						return
 					}
-					requestForAnalysis(tappingOptions)
 				}()
 			}
+			urlReadyChan <- kubernetes.GetMizuApiServerProxiedHostAndPath(tappingOptions.GuiPort)
+			time.Sleep(time.Second * 5) // Waiting to be sure the proxy is ready
+			requestForAnalysis(tappingOptions)
 
 		case <-timeAfter:
 			if !isPodReady {
-				mizu.Log.Infof("error: %s pod was not ready in time", mizu.ApiServerPodName)
+				mizu.Log.Errorf("error: %s pod was not ready in time", mizu.ApiServerPodName)
 				cancel()
 			}
 
