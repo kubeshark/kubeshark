@@ -99,6 +99,9 @@ func MatchRequestPolicy(harEntry har.Entry, service string) (int, []RulesMatched
 			_ = json.Unmarshal(harEntry.Response.Content.Text, &bodyJsonMap)
 			out, _ := jsonpath.Read(bodyJsonMap, rule.Key)
 			var matchValue bool
+			if out == nil {
+				continue
+			}
 			if reflect.TypeOf(out).Kind() == reflect.String {
 				matchValue, _ = regexp.MatchString(rule.Value, out.(string))
 			} else {

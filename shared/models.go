@@ -32,7 +32,7 @@ type WebSocketStatusMessage struct {
 }
 
 type TapStatus struct {
-	Pods     []PodInfo `json:"pods"`
+	Pods     []PodInfo     `json:"pods"`
 	TLSLinks []TLSLinkInfo `json:"tlsLinks"`
 }
 
@@ -70,4 +70,8 @@ type TrafficFilteringOptions struct {
 	PlainTextMaskingRegexes []*SerializableRegexp
 	HideHealthChecks        bool
 	DisableRedaction        bool
+}
+
+type VersionResponse struct {
+	SemVer string `json:"semver"`
 }

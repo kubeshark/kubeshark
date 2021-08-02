@@ -15,7 +15,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/martian/har"
 	"github.com/romana/rlog"
-	"github.com/up9inc/mizu/agent/pkg/models"
 )
 
 func GetEntries(c *gin.Context) {

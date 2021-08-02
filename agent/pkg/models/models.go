@@ -50,11 +50,11 @@ type BaseEntryDetails struct {
 	Timestamp       int64           `json:"timestamp,omitempty"`
 	IsOutgoing      bool            `json:"isOutgoing,omitempty"`
 	Latency         int64           `json:"latency,omitempty"`
-	ApplicableRules ApplicableRules `json:"rules,omitempty"`
+	Rules           ApplicableRules `json:"rules,omitempty"`
 }
 
 type ApplicableRules struct {
-	Latency int64 `json:"latency,omitempty"`
+	Latency int64 `json:"latency"`
 	Status  bool  `json:"status,omitempty"`
 }
 
@@ -139,8 +139,7 @@ type WebSocketEntryMessage struct {
 
 type WebSocketTappedEntryMessage struct {
 	*shared.WebSocketMessageMetadata
-	Data                  *tap.OutputChannelItem
-	PassedValidationRules string
+	Data *tap.OutputChannelItem
 }
 
 type WebsocketOutboundLinkMessage struct {
@@ -204,7 +203,7 @@ type FullEntryWithPolicy struct {
 	Service      string               `json:"service"`
 }
 
-func (fewp *FullEntryWithPolicy) UnmarshalData(entry *MizuEntry, harEntry har.Entry) {
+func (fewp *FullEntryWithPolicy) UnmarshalData(entry MizuEntry, harEntry har.Entry) {
 	_, resultPolicyToSend := rules.MatchRequestPolicy(harEntry, entry.Service)
 	fewp.Entry = harEntry
 	fewp.RulesMatched = resultPolicyToSend
