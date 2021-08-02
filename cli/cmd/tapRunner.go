@@ -77,6 +77,13 @@ func RunMizuTap() {
 		mizu.Log.Infof("Did not find any pods matching the regex argument%s", suggestionStr)
 	}
 
+	if mizu.Config.Tap.TappedPodsPreview {
+		for _, tappedPod := range currentlyTappedPods {
+			mizu.Log.Infof(uiUtils.Green, fmt.Sprintf("+%s", tappedPod.Name))
+		}
+		return
+	}
+
 	nodeToTappedPodIPMap, err := getNodeHostToTappedPodIpsMap(currentlyTappedPods)
 	if err != nil {
 		return

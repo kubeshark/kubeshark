@@ -35,6 +35,7 @@ type TapConfig struct {
 	TapOutgoing            bool
 	PodRegexStr            string `yaml:"regex" default:".*"`
 	PodRegex               *regexp.Regexp
+	TappedPodsPreview      bool `yaml:"pods-preview" default:".*"`
 }
 
 type FetchConfig struct {

@@ -83,4 +83,5 @@ func init() {
 	tapCmd.Flags().Bool("no-redact", defaultTapConfig.DisableRedaction, "Disables redaction of potentially sensitive request/response headers and body values")
 	tapCmd.Flags().String("max-entries-db-size", defaultTapConfig.HumanMaxEntriesDBSize, "override the default max entries db size of 200mb")
 	tapCmd.Flags().String("direction", defaultTapConfig.Direction, "Record traffic that goes in this direction (relative to the tapped pod): in/any")
+	tapCmd.Flags().Bool("pods-preview", defaultTapConfig.TappedPodsPreview, "Preview a list of all tapped pods")
 }
