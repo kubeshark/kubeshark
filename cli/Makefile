@@ -13,7 +13,7 @@ help: ## This help.
 install:
 	go install mizu.go
 
-build:	## build mizu CLI binary (select platform via GOOS / GOARCH env variables)
+build: ## Build mizu CLI binary (select platform via GOOS / GOARCH env variables).
 	go build -ldflags="-X 'github.com/up9inc/mizu/cli/mizu.GitCommitHash=$(COMMIT_HASH)' \
 					   -X 'github.com/up9inc/mizu/cli/mizu.Branch=$(GIT_BRANCH)' \
 					   -X 'github.com/up9inc/mizu/cli/mizu.BuildTimestamp=$(BUILD_TIMESTAMP)' \
@@ -21,7 +21,7 @@ build:	## build mizu CLI binary (select platform via GOOS / GOARCH env variables
 					   -o bin/mizu_$(SUFFIX) mizu.go 
 	(cd bin && shasum -a 256 mizu_${SUFFIX} > mizu_${SUFFIX}.sha256)
 
-build-all:  ## build for all supported platforms
+build-all: ## Build for all supported platforms.
 	@echo "Compiling for every OS and Platform"
 	@mkdir -p bin && echo "SHA256 checksums available for compiled binaries \n\nRun \`shasum -a 256 -c mizu_OS_ARCH.sha256\` to verify\n\n" >  bin/README.md
 	@$(MAKE) build GOOS=darwin GOARCH=amd64
@@ -35,6 +35,6 @@ build-all:  ## build for all supported platforms
 	@echo "---------"
 	@find ./bin -ls
 
-clean: ## clean all build artifacts
+clean: ## Clean all build artifacts.
 	go clean
 	rm -rf ./bin/*

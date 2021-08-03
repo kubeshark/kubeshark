@@ -93,9 +93,10 @@ func RunMizuTap() {
 		return
 	}
 
+	urlReadyChan := make(chan string)
 	mizu.CheckNewerVersion()
-	go portForwardApiPod(ctx, kubernetesProvider, cancel) // TODO convert this to job for built in pod ttl or have the running app handle this
-	go watchPodsForTapping(ctx, kubernetesProvider, cancel)
+	go portForwardApiPod(ctx, kubernetesProvider, cancel, urlReadyChan) // TODO convert this to job for built in pod ttl or have the running app handle this
+	go watchPodsForTapping(ctx, kubernetesProvider, cancel, urlReadyChan)
 	go syncApiStatus(ctx, cancel)
 
 	//block until exit signal or error
@@ -238,7 +239,7 @@ func cleanUpMizuResources(kubernetesProvider *kubernetes.Provider) {
 	}
 }
 
-func watchPodsForTapping(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
+func watchPodsForTapping(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc, urlReadyChan chan string) {
 	targetNamespace := getNamespace(kubernetesProvider)
 
 	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, kubernetesProvider.GetPodWatcher(ctx, targetNamespace), mizu.Config.Tap.PodRegex())
@@ -263,16 +264,20 @@ func watchPodsForTapping(ctx context.Context, kubernetesProvider *kubernetes.Pro
 		}
 	}
 	restartTappersDebouncer := debounce.NewDebouncer(updateTappersDelay, restartTappers)
+	timer := time.AfterFunc(time.Second*10, func() {
+		mizu.Log.Debugf("Waiting for URL...")
+		mizu.Log.Infof("Mizu is available at http://%s", <-urlReadyChan)
+	})
 
 	for {
 		select {
 		case newTarget := <-added:
 			mizu.Log.Infof(uiUtils.Green, fmt.Sprintf("+%s", newTarget.Name))
-
+			timer.Reset(time.Second * 2)
 		case removedTarget := <-removed:
 			mizu.Log.Infof(uiUtils.Red, fmt.Sprintf("-%s", removedTarget.Name))
+			timer.Reset(time.Second * 2)
 			restartTappersDebouncer.SetOn()
-
 		case modifiedTarget := <-modified:
 			// Act only if the modified pod has already obtained an IP address.
 			// After filtering for IPs, on a normal pod restart this includes the following events:
@@ -294,16 +299,16 @@ func watchPodsForTapping(ctx context.Context, kubernetesProvider *kubernetes.Pro
 	}
 }
 
-func portForwardApiPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
+func portForwardApiPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc, urlReadyChan chan string) {
 	podExactRegex := regexp.MustCompile(fmt.Sprintf("^%s$", mizu.ApiServerPodName))
 	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, kubernetesProvider.GetPodWatcher(ctx, mizu.ResourcesNamespace), podExactRegex)
 	isPodReady := false
 	timeAfter := time.After(25 * time.Second)
+
 	for {
 		select {
 		case <-ctx.Done():
 			return
-
 		case <-added:
 			continue
 		case <-removed:
@@ -316,39 +321,45 @@ func portForwardApiPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 				go func() {
 					err := kubernetes.StartProxy(kubernetesProvider, mizu.Config.Tap.GuiPort, mizu.ResourcesNamespace, mizu.ApiServerPodName)
 					if err != nil {
-						mizu.Log.Infof("Error occured while running k8s proxy %v", err)
+						mizu.Log.Infof("Error occurred while running k8s proxy %v", err)
 						cancel()
 					}
 				}()
-				mizuProxiedUrl := kubernetes.GetMizuApiServerProxiedHostAndPath(mizu.Config.Tap.GuiPort)
-				mizu.Log.Infof("Mizu is available at http://%s", mizuProxiedUrl)
-
-				time.Sleep(time.Second * 5) // Waiting to be sure the proxy is ready
-				if mizu.Config.Tap.Analysis {
-					urlPath := fmt.Sprintf("http://%s/api/uploadEntries?dest=%s&interval=%v", mizuProxiedUrl, url.QueryEscape(mizu.Config.Tap.AnalysisDestination), mizu.Config.Tap.SleepIntervalSec)
-					u, err := url.ParseRequestURI(urlPath)
-
-					if err != nil {
-						log.Fatal(fmt.Sprintf("Failed parsing the URL %v\n", err))
-					}
-					mizu.Log.Debugf("Sending get request to %v", u.String())
-					if response, err := http.Get(u.String()); err != nil || response.StatusCode != 200 {
-						mizu.Log.Infof("error sending upload entries req, status code: %v, err: %v", response.StatusCode, err)
-					} else {
-						mizu.Log.Infof(uiUtils.Purple, "Traffic is uploading to UP9 for further analysis")
-					}
-				}
 			}
 
+			urlReadyChan <- kubernetes.GetMizuApiServerProxiedHostAndPath(mizu.Config.Tap.GuiPort)
+			time.Sleep(time.Second * 5) // Waiting to be sure the proxy is ready
+			requestForAnalysis()
 		case <-timeAfter:
 			if !isPodReady {
-				mizu.Log.Infof("error: %s pod was not ready in time", mizu.ApiServerPodName)
+				mizu.Log.Errorf("error: %s pod was not ready in time", mizu.ApiServerPodName)
 				cancel()
 			}
-
 		case <-errorChan:
 			cancel()
 		}
+	}
+}
+
+func requestForAnalysis() {
+	if !mizu.Config.Tap.Analysis {
+		return
+	}
+
+	mizuProxiedUrl := kubernetes.GetMizuApiServerProxiedHostAndPath(mizu.Config.Tap.GuiPort)
+	urlPath := fmt.Sprintf("http://%s/api/uploadEntries?dest=%s&interval=%v", mizuProxiedUrl, url.QueryEscape(mizu.Config.Tap.AnalysisDestination), mizu.Config.Tap.SleepIntervalSec)
+	u, parseErr := url.ParseRequestURI(urlPath)
+	if parseErr != nil {
+		log.Fatal(fmt.Sprintf("Failed parsing the URL %v\n", parseErr))
+	}
+
+	mizu.Log.Debugf("Sending get request to %v", u.String())
+	if response, requestErr := http.Get(u.String()); requestErr != nil {
+		mizu.Log.Infof("error sending upload entries req, err: %v", requestErr)
+	} else if response.StatusCode != 200 {
+		mizu.Log.Infof("error sending upload entries req, status code: %v", response.StatusCode)
+	} else {
+		mizu.Log.Infof(uiUtils.Purple, "Traffic is uploading to UP9 for further analysis")
 	}
 }
 
@@ -414,7 +425,6 @@ func syncApiStatus(ctx context.Context, cancel context.CancelFunc) {
 			time.Sleep(10 * time.Second)
 		}
 	}
-
 }
 
 func getNamespace(kubernetesProvider *kubernetes.Provider) string {

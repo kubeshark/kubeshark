@@ -20,14 +20,14 @@ TS_SUFFIX="$(shell date '+%s')"
 GIT_BRANCH="$(shell git branch | grep \* | cut -d ' ' -f2 | tr '[:upper:]' '[:lower:]' | tr '/' '_')"
 BUCKET_PATH=static.up9.io/mizu/$(GIT_BRANCH)
 
-ui: ## build UI
+ui: ## Build UI.
 	@(cd ui; npm i ; npm run build; )
 	@ls -l ui/build  
 
-cli: # build CLI
+cli: ## Build CLI.
 	@echo "building cli"; cd cli && $(MAKE) build
 
-agent: ## build mizuagent server
+agent: ## Build agent.
 	@(echo "building mizu agent .." )
 	@(cd agent; go build -o build/mizuagent main.go)
 	@ls -l agent/build
@@ -36,17 +36,17 @@ agent: ## build mizuagent server
 #	@(cd tap; go build -o build/tap ./src)
 #	@ls -l tap/build
 
-docker: ## build Docker image 
+docker: ## Build Docker image.
 	@(echo "building docker image" )
 	./build-push-featurebranch.sh
 
-push: push-docker push-cli ## build and publish Mizu docker image & CLI
+push: push-docker push-cli ## Build and publish agent docker image & CLI.
 
-push-docker: 
+push-docker: ## Build and publish agent docker image.
 	@echo "publishing Docker image .. "
 	./build-push-featurebranch.sh
 
-push-cli:
+push-cli: ## Build and publish CLI.
 	@echo "publishing CLI .. "
 	@cd cli; $(MAKE) build-all
 	@echo "publishing file ${OUTPUT_FILE} .."
@@ -55,17 +55,17 @@ push-cli:
 	gsutil setmeta -r -h "Cache-Control:public, max-age=30" gs://${BUCKET_PATH}/\*
 
 
-clean: clean-ui clean-agent clean-cli clean-docker ## Clean all build artifacts
+clean: clean-ui clean-agent clean-cli clean-docker ## Clean all build artifacts.
 
-clean-ui: 
+clean-ui: ## Clean UI.
 	@(rm -rf ui/build ; echo "UI cleanup done" )
 
-clean-agent: 
+clean-agent: ## Clean agent.
 	@(rm -rf agent/build ; echo "agent cleanup done" )
 
-clean-cli: 
+clean-cli:  ## Clean CLI.
 	@(cd cli; make clean ; echo "CLI cleanup done" )
 
-clean-docker: 
+clean-docker:
 	@(echo "DOCKER cleanup - NOT IMPLEMENTED YET " )
 
