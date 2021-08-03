@@ -6,10 +6,11 @@ import (
 )
 
 const (
-	MaxBufferedPagesTotal                     = "MAX_BUFFERED_PAGES_TOTAL"
-	MaxBufferedPagesPerConnection             = "MAX_BUFFERED_PAGES_PER_CONNECTION"
-	MaxBufferedPagesTotalDefaultValue         = "10000"
-	MaxBufferedPagesPerConnectionDefaultValue = "10000"
+	MemoryProfilingEnabledEnvVarName          = "MEMORY_PROFILING_ENABLED"
+	MaxBufferedPagesTotalEnvVarName           = "MAX_BUFFERED_PAGES_TOTAL"
+	MaxBufferedPagesPerConnectionEnvVarName   = "MAX_BUFFERED_PAGES_PER_CONNECTION"
+	MaxBufferedPagesTotalDefaultValue         = 5000
+	MaxBufferedPagesPerConnectionDefaultValue = 5000
 )
 
 type globalSettings struct {
@@ -43,30 +44,21 @@ func GetFilterIPs() []string {
 }
 
 func GetMaxBufferedPagesTotal() int {
-	valueFromEnv, err := strconv.Atoi(getFromEnvWithDefault(MaxBufferedPagesTotal, MaxBufferedPagesTotalDefaultValue))
+	valueFromEnv, err := strconv.Atoi(os.Getenv(MaxBufferedPagesTotalEnvVarName))
 	if err != nil {
-		return 0
+		return MaxBufferedPagesTotalDefaultValue
 	}
 	return valueFromEnv
 }
 
 func GetMaxBufferedPagesPerConnection() int {
-	valueFromEnv, err := strconv.Atoi(getFromEnvWithDefault(MaxBufferedPagesPerConnection, MaxBufferedPagesPerConnectionDefaultValue))
+	valueFromEnv, err := strconv.Atoi(os.Getenv(MaxBufferedPagesPerConnectionEnvVarName))
 	if err != nil {
-		return 0
+		return MaxBufferedPagesPerConnectionDefaultValue
 	}
 	return valueFromEnv
 }
 
 func GetMemoryProfilingEnabled() bool {
-	return os.Getenv("MEMORY_PROFILING_ENABLED") == "1"
+	return os.Getenv(MemoryProfilingEnabledEnvVarName) == "1"
 }
-
-func getFromEnvWithDefault(key string, fallback string) string {
-	value, exists := os.LookupEnv(key)
-	if !exists {
-		value = fallback
-	}
-	return value
-}
-

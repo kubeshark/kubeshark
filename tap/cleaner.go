@@ -2,7 +2,6 @@ package tap
 
 import (
 	"github.com/romana/rlog"
-	"runtime"
 	"sync"
 	"time"
 
@@ -28,18 +27,12 @@ type Cleaner struct {
 func (cl *Cleaner) clean() {
 	startCleanTime := time.Now()
 
-	memStats := runtime.MemStats{}
-	runtime.ReadMemStats(&memStats)
-
 	cl.assemblerMutex.Lock()
 	rlog.Debugf("Assembler Stats before cleaning %s", cl.assembler.Dump())
 	flushed, closed := cl.assembler.FlushCloseOlderThan(startCleanTime.Add(-cl.connectionTimeout))
 	cl.assemblerMutex.Unlock()
 
 	deleted := cl.matcher.deleteOlderThan(startCleanTime.Add(-cl.connectionTimeout))
-
-	memStatsAfter := runtime.MemStats{}
-	runtime.ReadMemStats(&memStatsAfter)
 
 	cl.statsMutex.Lock()
 	rlog.Debugf("Assembler Stats after cleaning %s", cl.assembler.Dump())
