@@ -8,8 +8,8 @@ import (
 const (
 	MaxBufferedPagesTotal                     = "MAX_BUFFERED_PAGES_TOTAL"
 	MaxBufferedPagesPerConnection             = "MAX_BUFFERED_PAGES_PER_CONNECTION"
-	MaxBufferedPagesTotalDefaultValue         = "100000"
-	MaxBufferedPagesPerConnectionDefaultValue = "100000"
+	MaxBufferedPagesTotalDefaultValue         = "10000"
+	MaxBufferedPagesPerConnectionDefaultValue = "10000"
 )
 
 type globalSettings struct {
