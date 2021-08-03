@@ -79,7 +79,7 @@ func RunMizuTap() {
 
 	if mizu.Config.Tap.TappedPodsPreview {
 		for _, tappedPod := range currentlyTappedPods {
-			mizu.Log.Infof(uiUtils.Green, fmt.Sprintf("+%s", tappedPod.Name))
+			mizu.Log.Infof(tappedPod.Name)
 		}
 		return
 	}
