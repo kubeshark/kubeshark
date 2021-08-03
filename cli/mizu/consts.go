@@ -17,4 +17,5 @@ const (
 	ServiceAccountName     = "mizu-service-account"
 	TapperDaemonSetName    = "mizu-tapper-daemon-set"
 	TapperPodName          = "mizu-tapper"
+	MizuFolderName         = ".mizu"
 )

@@ -53,7 +53,7 @@ func mergeConfigFile() error {
 		return homeDirErr
 	}
 
-	reader, openErr := os.Open(path.Join(home, ".mizu", "config.yaml"))
+	reader, openErr := os.Open(path.Join(home, MizuFolderName, "config.yaml"))
 	if openErr != nil {
 		return openErr
 	}

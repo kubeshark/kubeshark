@@ -15,9 +15,9 @@ var format = logging.MustStringFormatter(
 
 func InitLogger() {
 	homeDirPath, _ := os.UserHomeDir()
-	mizuDirPath := path.Join(homeDirPath, ".mizu")
+	mizuDirPath := path.Join(homeDirPath, MizuFolderName)
 	if err := os.MkdirAll(mizuDirPath, os.ModePerm); err != nil {
-		panic(fmt.Sprintf("Failed creating .mizu dir: %v, err %v", mizuDirPath, err))
+		panic(fmt.Sprintf("Failed creating mizu dir: %v, err %v", mizuDirPath, err))
 	}
 	logPath := path.Join(mizuDirPath, "log.log")
 	f, err := os.OpenFile(logPath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
