@@ -235,8 +235,6 @@ func watchPodsForTapping(ctx context.Context, kubernetesProvider *kubernetes.Pro
 
 	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, kubernetesProvider.GetPodWatcher(ctx, targetNamespace), podRegex)
 
-	var firstRestartOccurred = false
-
 	restartTappers := func() {
 		if err := updateCurrentlyTappedPods(kubernetesProvider, ctx, podRegex, targetNamespace); err != nil {
 			mizu.Log.Infof("Error getting pods by regex: %s (%v,%+v)", err, err, err)
@@ -253,15 +251,12 @@ func watchPodsForTapping(ctx context.Context, kubernetesProvider *kubernetes.Pro
 			mizu.Log.Infof("Error updating daemonset: %s (%v,%+v)", err, err, err)
 			cancel()
 		}
-
-		if !firstRestartOccurred {
-			mizu.Log.Infof("Mizu is available at http://%s", <-urlReadyChan)
-			firstRestartOccurred = true
-		}
-
-
 	}
 	restartTappersDebouncer := debounce.NewDebouncer(updateTappersDelay, restartTappers)
+
+	go func() {
+		mizu.Log.Infof("Mizu is available at http://%s", <-urlReadyChan)
+	}()
 
 	for {
 		select {
@@ -307,36 +302,28 @@ func updateCurrentlyTappedPods(kubernetesProvider *kubernetes.Provider, ctx cont
 }
 
 func getPodArrayDiff(oldPods []core.Pod, newPods []core.Pod) (added []core.Pod, removed []core.Pod) {
-	added = make([]core.Pod, 0)
-	removed = make([]core.Pod, 0)
-
-	for _, oldPod := range oldPods {
-		var found = false
-		for _, newPod := range newPods {
-			if oldPod.UID == newPod.UID {
-				found = true
-				break
-			}
-		}
-		if !found {
-			removed = append(removed, oldPod)
-		}
-	}
-
-	for _, newPod := range newPods {
-		var found = false
-		for _, oldPod := range oldPods {
-			if newPod.UID == oldPod.UID {
-				found = true
-				break
-			}
-		}
-		if !found {
-			added = append(added, newPod)
-		}
-	}
+	added = getMissingPods(newPods, oldPods)
+	removed = getMissingPods(oldPods, newPods)
 
 	return added, removed
+}
+
+//returns pods present in pods1 array and missing in pods2 array
+func getMissingPods(pods1 []core.Pod, pods2 []core.Pod) []core.Pod {
+	missingPods := make([]core.Pod, 0)
+	for _, pod1 := range pods1 {
+		var found = false
+		for _, pod2 := range pods2 {
+			if pod1.UID == pod2.UID {
+				found = true
+				break
+			}
+		}
+		if !found {
+			missingPods = append(missingPods, pod1)
+		}
+	}
+	return missingPods
 }
 
 func portForwardApiPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc, tappingOptions *MizuTapOptions, urlReadyChan chan string) {
@@ -348,7 +335,6 @@ func portForwardApiPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 		select {
 		case <-ctx.Done():
 			return
-
 		case <-added:
 			continue
 		case <-removed:
