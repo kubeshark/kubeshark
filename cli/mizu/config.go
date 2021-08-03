@@ -111,9 +111,10 @@ func mergeSetFlag(setValues []string) error {
 func mergeFlagValue(currentElem reflect.Value, flagKey string, flagValue string) {
 	for i := 0; i < currentElem.NumField(); i++ {
 		currentField := currentElem.Type().Field(i)
+		currentFieldByName := currentElem.FieldByName(currentField.Name)
 
 		if currentField.Type.Kind() == reflect.Struct {
-			mergeFlagValue(currentElem.FieldByName(currentField.Name), flagKey, flagValue)
+			mergeFlagValue(currentFieldByName, flagKey, flagValue)
 			continue
 		}
 
@@ -121,30 +122,55 @@ func mergeFlagValue(currentElem reflect.Value, flagKey string, flagValue string)
 			continue
 		}
 
+		var flagValueKind reflect.Kind
+		switch kind := currentField.Type.Kind(); kind {
+		case reflect.Slice:
+			flagValueKind = currentField.Type.Elem().Kind()
+		default:
+			flagValueKind = kind
+		}
+
+		parsedValue, err := getParsedValue(flagValueKind, flagValue)
+		if err != nil {
+			Log.Warningf(uiUtils.Red, fmt.Sprintf("Invalid value %v for key %s, expected %s", flagValue, flagKey, flagValueKind))
+			return
+		}
+
 		switch currentField.Type.Kind() {
-		case reflect.String:
-			currentElem.FieldByName(currentField.Name).SetString(flagValue)
-		case reflect.Bool:
-			boolArgumentValue, err := strconv.ParseBool(flagValue)
-			if err != nil {
-				Log.Warningf(uiUtils.Red, fmt.Sprintf("Invalid value %v for key %s, expected bool", flagValue, flagKey))
-			} else {
-				currentElem.FieldByName(currentField.Name).SetBool(boolArgumentValue)
-			}
-		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-			intArgumentValue, err := strconv.ParseInt(flagValue, 10, 64)
-			if err != nil {
-				Log.Warningf(uiUtils.Red, fmt.Sprintf("Invalid value %v for key %s, expected int", flagValue, flagKey))
-			} else {
-				currentElem.FieldByName(currentField.Name).SetInt(intArgumentValue)
-			}
-		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-			uintArgumentValue, err := strconv.ParseUint(flagValue, 10, 64)
-			if err != nil {
-				Log.Warningf(uiUtils.Red, fmt.Sprintf("Invalid value %v for key %s, expected uint", flagValue, flagKey))
-			} else {
-				currentElem.FieldByName(currentField.Name).SetUint(uintArgumentValue)
-			}
+		case reflect.Slice:
+			currentFieldByName.Set(reflect.Append(currentFieldByName, parsedValue))
+		default:
+			currentFieldByName.Set(parsedValue)
 		}
 	}
+}
+
+func getParsedValue(kind reflect.Kind, value string) (reflect.Value, error) {
+	switch kind {
+	case reflect.String:
+		return reflect.ValueOf(value), nil
+	case reflect.Bool:
+		boolArgumentValue, err := strconv.ParseBool(value)
+		if err != nil {
+			break
+		}
+
+		return reflect.ValueOf(boolArgumentValue), nil
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		intArgumentValue, err := strconv.ParseInt(value, 10, 64)
+		if err != nil {
+			break
+		}
+
+		return reflect.ValueOf(intArgumentValue), nil
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		uintArgumentValue, err := strconv.ParseUint(value, 10, 64)
+		if err != nil {
+			break
+		}
+
+		return reflect.ValueOf(uintArgumentValue), nil
+	}
+
+	return reflect.ValueOf(nil), errors.New("value to parse does not match type")
 }
