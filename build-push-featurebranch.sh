@@ -15,15 +15,9 @@ then
   exit 1
 fi
 
-DOCKER_TAG_FIRST="${DOCKER_TAGGED_BUILDS[0]}"
-echo "building $DOCKER_TAG_FIRST"
-docker build -t "$DOCKER_TAG_FIRST" --build-arg SEM_VER=${SEM_VER} --build-arg BUILD_TIMESTAMP=${BUILD_TIMESTAMP} --build-arg GIT_BRANCH=${GIT_BRANCH} --build-arg COMMIT_HASH=${COMMIT_HASH} .
-
-for DOCKER_TAG in "${DOCKER_TAGGED_BUILDS[@]:1}"
-do
-        echo "tagging as $DOCKER_TAG"
-        docker tag "$DOCKER_TAG_FIRST" "$DOCKER_TAG"
-done
+echo "building ${DOCKER_TAGGED_BUILDS[@]}"
+DOCKER_TAGS_ARGS=$(echo ${DOCKER_TAGGED_BUILDS[@]/#/-t }) # "-t FIRST_TAG -t SECOND_TAG ..."
+docker build $DOCKER_TAGS_ARGS --build-arg SEM_VER=${SEM_VER} --build-arg BUILD_TIMESTAMP=${BUILD_TIMESTAMP} --build-arg GIT_BRANCH=${GIT_BRANCH} --build-arg COMMIT_HASH=${COMMIT_HASH} .
 
 for DOCKER_TAG in "${DOCKER_TAGGED_BUILDS[@]}"
 do
