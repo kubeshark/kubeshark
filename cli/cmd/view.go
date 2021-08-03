@@ -11,8 +11,6 @@ var viewCmd = &cobra.Command{
 	Use:   "view",
 	Short: "Open GUI in browser",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		cmd.Flags().Visit(mizu.InitFlag)
-
 		go mizu.ReportRun("view", mizu.Config.View)
 		if isCompatible, err := mizu.CheckVersionCompatibility(mizu.Config.View.GuiPort); err != nil {
 			return err

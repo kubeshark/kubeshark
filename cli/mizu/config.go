@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/creasty/defaults"
+	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/up9inc/mizu/cli/uiUtils"
 	"gopkg.in/yaml.v3"
@@ -22,7 +23,7 @@ const (
 
 var Config = ConfigStruct{}
 
-func InitConfig() error {
+func InitConfig(cmd *cobra.Command) error {
 	if err := defaults.Set(&Config); err != nil {
 		return err
 	}
@@ -32,31 +33,12 @@ func InitConfig() error {
 		return err
 	}
 
+	cmd.Flags().Visit(initFlag)
+
 	finalConfigPrettified, _ := uiUtils.PrettyJson(Config)
 	Log.Debugf("Merged all config successfully\n Final config: %v", finalConfigPrettified)
 
 	return nil
-}
-
-func InitFlag(f *pflag.Flag) {
-	configElem := reflect.ValueOf(&Config).Elem()
-
-	sliceValue, isSliceValue := f.Value.(pflag.SliceValue)
-	if !isSliceValue {
-		mergeFlagValue(configElem, f.Name, f.Value.String())
-		return
-	}
-
-	if f.Name == SetCommandName {
-		if setError := mergeSetFlag(sliceValue.GetSlice()); setError != nil {
-			Log.Infof(fmt.Sprintf(uiUtils.Red, "Invalid set argument"))
-		}
-		return
-	}
-
-	for _, value := range sliceValue.GetSlice() {
-		mergeFlagValue(configElem, f.Name, value)
-	}
 }
 
 func GetTemplateConfig() string {
@@ -86,6 +68,25 @@ func mergeConfigFile() error {
 	}
 
 	return nil
+}
+
+func initFlag(f *pflag.Flag) {
+	configElem := reflect.ValueOf(&Config).Elem()
+
+	sliceValue, isSliceValue := f.Value.(pflag.SliceValue)
+	if !isSliceValue {
+		mergeFlagValue(configElem, f.Name, f.Value.String())
+		return
+	}
+
+	if f.Name == SetCommandName {
+		if setError := mergeSetFlag(sliceValue.GetSlice()); setError != nil {
+			Log.Infof(fmt.Sprintf(uiUtils.Red, "Invalid set argument"))
+		}
+		return
+	}
+
+	mergeFlagValues(configElem, f.Name, sliceValue.GetSlice())
 }
 
 func mergeSetFlag(setValues []string) error {
@@ -122,13 +123,7 @@ func mergeFlagValue(currentElem reflect.Value, flagKey string, flagValue string)
 			continue
 		}
 
-		var flagValueKind reflect.Kind
-		switch kind := currentField.Type.Kind(); kind {
-		case reflect.Slice:
-			flagValueKind = currentField.Type.Elem().Kind()
-		default:
-			flagValueKind = kind
-		}
+		flagValueKind := currentField.Type.Kind()
 
 		parsedValue, err := getParsedValue(flagValueKind, flagValue)
 		if err != nil {
@@ -136,12 +131,38 @@ func mergeFlagValue(currentElem reflect.Value, flagKey string, flagValue string)
 			return
 		}
 
-		switch currentField.Type.Kind() {
-		case reflect.Slice:
-			currentFieldByName.Set(reflect.Append(currentFieldByName, parsedValue))
-		default:
-			currentFieldByName.Set(parsedValue)
+		currentFieldByName.Set(parsedValue)
+	}
+}
+
+func mergeFlagValues(currentElem reflect.Value, flagKey string, flagValues []string) {
+	for i := 0; i < currentElem.NumField(); i++ {
+		currentField := currentElem.Type().Field(i)
+		currentFieldByName := currentElem.FieldByName(currentField.Name)
+
+		if currentField.Type.Kind() == reflect.Struct {
+			mergeFlagValues(currentFieldByName, flagKey, flagValues)
+			continue
 		}
+
+		if currentField.Tag.Get("yaml") != flagKey {
+			continue
+		}
+
+		flagValueKind := currentField.Type.Elem().Kind()
+
+		parsedValues := reflect.MakeSlice(reflect.SliceOf(currentField.Type.Elem()), 0, 0)
+		for _, flagValue := range flagValues {
+			parsedValue, err := getParsedValue(flagValueKind, flagValue)
+			if err != nil {
+				Log.Warningf(uiUtils.Red, fmt.Sprintf("Invalid value %v for key %s, expected %s", flagValue, flagKey, flagValueKind))
+				return
+			}
+
+			parsedValues = reflect.Append(parsedValues, parsedValue)
+		}
+
+		currentFieldByName.Set(parsedValues)
 	}
 }
 

@@ -13,7 +13,7 @@ var rootCmd = &cobra.Command{
 	Long: `A web traffic viewer for kubernetes
 Further info is available at https://github.com/up9inc/mizu`,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-		if err := mizu.InitConfig(); err != nil {
+		if err := mizu.InitConfig(cmd); err != nil {
 			mizu.Log.Errorf("Invalid config, Exit %s", err)
 			return errors.New(fmt.Sprintf("%v", err))
 		}

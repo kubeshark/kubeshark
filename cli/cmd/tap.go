@@ -23,8 +23,6 @@ Supported protocols are HTTP and gRPC.`,
 		return nil
 	},
 	PreRunE: func(cmd *cobra.Command, args []string) error {
-		cmd.Flags().Visit(mizu.InitFlag)
-
 		if len(args) == 1 {
 			mizu.Config.Tap.PodRegexStr = args[0]
 		} else if len(args) > 1 {

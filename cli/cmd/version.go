@@ -13,8 +13,6 @@ var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Print version info",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		cmd.Flags().Visit(mizu.InitFlag)
-
 		go mizu.ReportRun("version", mizu.Config.Version)
 		if mizu.Config.Version.DebugInfo {
 			timeStampInt, _ := strconv.ParseInt(mizu.BuildTimestamp, 10, 0)

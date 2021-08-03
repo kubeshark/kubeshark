@@ -14,8 +14,6 @@ var configCmd = &cobra.Command{
 	Use:   "config",
 	Short: "Generate example config file to stdout",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		cmd.Flags().Visit(mizu.InitFlag)
-
 		template := mizu.GetTemplateConfig()
 		if outputFileName != "" {
 			data := []byte(template)
