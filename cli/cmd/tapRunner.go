@@ -59,6 +59,10 @@ func RunMizuTap() {
 		return
 	}
 
+	if mizu.Config.Tap.DryRun {
+		return
+	}
+
 	urlReadyChan := make(chan string)
 	go func() {
 		mizu.Log.Infof("Mizu is available at http://%s", <-urlReadyChan)
@@ -78,10 +82,6 @@ func RunMizuTap() {
 			suggestionStr = "\nSelect a different namespace with -n or tap all namespaces with -A"
 		}
 		mizu.Log.Infof("Did not find any pods matching the regex argument%s", suggestionStr)
-	}
-
-	if mizu.Config.Tap.TappedPodsPreview {
-		return
 	}
 
 	nodeToTappedPodIPMap, err := getNodeHostToTappedPodIpsMap(currentlyTappedPods)

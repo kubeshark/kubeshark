@@ -19,7 +19,7 @@ const (
 	DisableRedactionTapName       = "no-redact"
 	HumanMaxEntriesDBSizeTapName  = "max-entries-db-size"
 	DirectionTapName              = "direction"
-	TappedPodsPreviewTapName      = "pods-preview"
+	DryRunTapName                 = "dry-run"
 )
 
 type TapConfig struct {
@@ -36,7 +36,7 @@ type TapConfig struct {
 	DisableRedaction       bool     `yaml:"no-redact" default:"false"`
 	HumanMaxEntriesDBSize  string   `yaml:"max-entries-db-size" default:"200MB"`
 	Direction              string   `yaml:"direction" default:"in"`
-	TappedPodsPreview      bool     `yaml:"pods-preview" default:"false"`
+	DryRun                 bool     `yaml:"dry-run" default:"false"`
 }
 
 func (config *TapConfig) PodRegex() *regexp.Regexp {
