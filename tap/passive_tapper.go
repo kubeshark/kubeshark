@@ -326,8 +326,8 @@ func startPassiveTapper(harWriter *HarWriter, outboundLinkWriter *OutboundLinkWr
 	streamPool := reassembly.NewStreamPool(streamFactory)
 	assembler := reassembly.NewAssembler(streamPool)
 
-	maxBufferedPagesTotal, _ := strconv.Atoi(getEnv("MAX_BUFFERED_PAGES_TOTAL", "10000"))
-	maxBufferedPagesPerConnection, _ := strconv.Atoi(getEnv("MAX_BUFFERED_PAGES_PER_CONNECTION", "10000"))
+	maxBufferedPagesTotal, _ := strconv.Atoi(getEnv("MAX_BUFFERED_PAGES_TOTAL", "0"))
+	maxBufferedPagesPerConnection, _ := strconv.Atoi(getEnv("MAX_BUFFERED_PAGES_PER_CONNECTION", "0"))
 	assembler.AssemblerOptions.MaxBufferedPagesTotal = maxBufferedPagesTotal
 	assembler.AssemblerOptions.MaxBufferedPagesPerConnection = maxBufferedPagesPerConnection
 
