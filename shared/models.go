@@ -66,3 +66,4 @@ type TrafficFilteringOptions struct {
 type VersionResponse struct {
 	SemVer string `json:"semver"`
 }
+

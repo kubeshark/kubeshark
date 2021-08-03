@@ -3,13 +3,12 @@ package routes
 import (
 	"errors"
 	"fmt"
-	"net/http"
-	"sync"
-	"time"
-
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"github.com/up9inc/mizu/shared/debounce"
+	"net/http"
+	"sync"
+	"time"
 )
 
 type EventHandlers interface {
@@ -19,10 +18,10 @@ type EventHandlers interface {
 }
 
 type SocketConnection struct {
-	connection    *websocket.Conn
-	lock          *sync.Mutex
+	connection *websocket.Conn
+	lock *sync.Mutex
 	eventHandlers EventHandlers
-	isTapper      bool
+	isTapper bool
 }
 
 var websocketUpgrader = websocket.Upgrader{
@@ -92,7 +91,7 @@ func socketCleanup(socketId int, socketConnection *SocketConnection) {
 	socketConnection.eventHandlers.WebSocketDisconnect(socketId, socketConnection.isTapper)
 }
 
-var db = debounce.NewDebouncer(time.Second*5, func() {
+var db = debounce.NewDebouncer(time.Second * 5, func() {
 	fmt.Println("Successfully sent to socket")
 })
 
@@ -103,7 +102,7 @@ func SendToSocket(socketId int, message []byte) error {
 	}
 
 	var sent = false
-	time.AfterFunc(time.Second*5, func() {
+	time.AfterFunc(time.Second * 5, func() {
 		if !sent {
 			fmt.Println("Socket timed out")
 			socketCleanup(socketId, socketObj)

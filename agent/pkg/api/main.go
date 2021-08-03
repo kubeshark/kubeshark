@@ -114,11 +114,7 @@ func startReadingChannel(outputItems <-chan *tap.OutputChannelItem) {
 	}
 
 	for item := range outputItems {
-		if item.HarEntry != nil {
-			saveHarToDb(item.HarEntry, item.ConnectionInfo)
-		} else if item.EventAMQP != nil {
-			saveAMQPToDb(item.EventAMQP, item.ConnectionInfo)
-		}
+		saveHarToDb(item.HarEntry, item.ConnectionInfo)
 	}
 }
 
@@ -181,55 +177,6 @@ func saveHarToDb(entry *har.Entry, connectionInfo *tap.ConnectionInfo) {
 	broadcastToBrowserClients(baseEntryBytes)
 }
 
-func saveAMQPToDb(eventAMQP *tap.EventAMQP, connectionInfo *tap.ConnectionInfo) {
-	entryBytes, _ := json.Marshal(eventAMQP)
-	entryId := primitive.NewObjectID().Hex()
-	var (
-		resolvedSource      string
-		resolvedDestination string
-	)
-	if k8sResolver != nil {
-		unresolvedSource := connectionInfo.ClientIP
-		resolvedSource = k8sResolver.Resolve(unresolvedSource)
-		if resolvedSource == "" {
-			rlog.Debugf("Cannot find resolved name to source: %s\n", unresolvedSource)
-			if os.Getenv("SKIP_NOT_RESOLVED_SOURCE") == "1" {
-				return
-			}
-		}
-		unresolvedDestination := fmt.Sprintf("%s:%s", connectionInfo.ServerIP, connectionInfo.ServerPort)
-		resolvedDestination = k8sResolver.Resolve(unresolvedDestination)
-		if resolvedDestination == "" {
-			rlog.Debugf("Cannot find resolved name to dest: %s\n", unresolvedDestination)
-			if os.Getenv("SKIP_NOT_RESOLVED_DEST") == "1" {
-				return
-			}
-		}
-	}
-
-	mizuAMQP := models.MizuAMQP{
-		EntryId:             entryId,
-		Entry:               string(entryBytes), // simple way to store it and not convert to bytes
-		Method:              eventAMQP.Type,
-		RequestSenderIp:     connectionInfo.ClientIP,
-		ResolvedSource:      resolvedSource,
-		ResolvedDestination: resolvedDestination,
-		IsOutgoing:          connectionInfo.IsOutgoing,
-	}
-	mizuAMQP.EstimatedSizeBytes = getEstimatedAMQPSizeBytes(mizuAMQP)
-	// database.CreateEntry(&mizuAMQP)
-
-	baseAMQP := models.BaseAMQPDetails{
-		Id:     entryId,
-		Method: eventAMQP.Type,
-	}
-	// if err := models.GetEntry(&mizuAMQP, &baseAMQP); err != nil {
-	// 	return
-	// }
-	baseAMQPBytes, _ := models.CreateBaseAMQPWebSocketMessage(&baseAMQP)
-	broadcastToBrowserClients(baseAMQPBytes)
-}
-
 func getServiceNameFromUrl(inputUrl string) (string, string) {
 	parsed, err := url.Parse(inputUrl)
 	utils.CheckErr(err)
@@ -250,21 +197,6 @@ func getEstimatedEntrySizeBytes(mizuEntry models.MizuEntry) int {
 	sizeBytes += len(mizuEntry.RequestSenderIp)
 	sizeBytes += len(mizuEntry.ResolvedDestination)
 	sizeBytes += len(mizuEntry.ResolvedSource)
-	sizeBytes += 8 // Status bytes (sqlite integer is always 8 bytes)
-	sizeBytes += 8 // Timestamp bytes
-	sizeBytes += 8 // SizeBytes bytes
-	sizeBytes += 1 // IsOutgoing bytes
-
-	return sizeBytes
-}
-
-func getEstimatedAMQPSizeBytes(mizuAMQP models.MizuAMQP) int {
-	sizeBytes := len(mizuAMQP.Entry)
-	sizeBytes += len(mizuAMQP.EntryId)
-	sizeBytes += len(mizuAMQP.Method)
-	sizeBytes += len(mizuAMQP.RequestSenderIp)
-	sizeBytes += len(mizuAMQP.ResolvedDestination)
-	sizeBytes += len(mizuAMQP.ResolvedSource)
 	sizeBytes += 8 // Status bytes (sqlite integer is always 8 bytes)
 	sizeBytes += 8 // Timestamp bytes
 	sizeBytes += 8 // SizeBytes bytes

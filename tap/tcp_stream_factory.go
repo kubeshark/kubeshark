@@ -97,35 +97,14 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.T
 	}
 	if stream.isAMQP {
 		stream.client = superReader{
-			protocol: AQMP,
-			msgQueue: make(chan httpReaderDataMsg),
-			amqpReader: amqpReader{
-				ident: fmt.Sprintf("%s %s", net, transport),
-				tcpID: tcpID{
-					srcIP:   net.Src().String(),
-					dstIP:   net.Dst().String(),
-					srcPort: transport.Src().String(),
-					dstPort: transport.Dst().String(),
-				},
-				parent:    stream,
-				isClient:  true,
-				harWriter: factory.harWriter,
-			},
+			protocol:   AQMP,
+			msgQueue:   make(chan httpReaderDataMsg),
+			amqpReader: amqpReader{},
 		}
 		stream.server = superReader{
-			protocol: AQMP,
-			msgQueue: make(chan httpReaderDataMsg),
-			amqpReader: amqpReader{
-				ident: fmt.Sprintf("%s %s", net.Reverse(), transport.Reverse()),
-				tcpID: tcpID{
-					srcIP:   net.Dst().String(),
-					dstIP:   net.Src().String(),
-					srcPort: transport.Dst().String(),
-					dstPort: transport.Src().String(),
-				},
-				parent:    stream,
-				harWriter: factory.harWriter,
-			},
+			protocol:   AQMP,
+			msgQueue:   make(chan httpReaderDataMsg),
+			amqpReader: amqpReader{},
 		}
 		factory.wg.Add(2)
 		go stream.client.run(&factory.wg)

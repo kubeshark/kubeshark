@@ -2,9 +2,8 @@ package shared
 
 import (
 	"fmt"
-	"time"
-
 	"github.com/gorilla/websocket"
+	"time"
 )
 
 const (
