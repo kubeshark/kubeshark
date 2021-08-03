@@ -322,7 +322,7 @@ func portForwardApiPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 	podExactRegex := regexp.MustCompile(fmt.Sprintf("^%s$", mizu.ApiServerPodName))
 	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, kubernetesProvider.GetPodWatcher(ctx, mizu.ResourcesNamespace), podExactRegex)
 	isPodReady := false
-	timeAfter := time.After(360 * time.Second)
+	timeAfter := time.After(25 * time.Second)
 	for {
 		select {
 		case <-ctx.Done():
