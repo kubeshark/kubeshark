@@ -29,7 +29,7 @@ func InitConfig(cmd *cobra.Command) error {
 	}
 
 	if err := mergeConfigFile(); err != nil {
-		Log.Infof(fmt.Sprintf(uiUtils.Red, "Invalid config file"))
+		Log.Infof(uiUtils.Red, "Invalid config file")
 		return err
 	}
 
@@ -81,7 +81,7 @@ func initFlag(f *pflag.Flag) {
 
 	if f.Name == SetCommandName {
 		if setError := mergeSetFlag(sliceValue.GetSlice()); setError != nil {
-			Log.Infof(fmt.Sprintf(uiUtils.Red, "Invalid set argument"))
+			Log.Infof(uiUtils.Red, "Invalid set argument")
 		}
 		return
 	}
