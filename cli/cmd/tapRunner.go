@@ -11,7 +11,6 @@ import (
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/tools/clientcmd"
-	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -381,14 +380,14 @@ func requestForAnalysis() {
 	urlPath := fmt.Sprintf("http://%s/api/uploadEntries?dest=%s&interval=%v", mizuProxiedUrl, url.QueryEscape(mizu.Config.Tap.AnalysisDestination), mizu.Config.Tap.SleepIntervalSec)
 	u, parseErr := url.ParseRequestURI(urlPath)
 	if parseErr != nil {
-		log.Fatal(fmt.Sprintf("Failed parsing the URL %v\n", parseErr))
+		mizu.Log.Fatal("Failed parsing the URL (consider changing the analysis dest URL), err: %v", parseErr)
 	}
 
 	mizu.Log.Debugf("Sending get request to %v", u.String())
 	if response, requestErr := http.Get(u.String()); requestErr != nil {
-		mizu.Log.Infof("error sending upload entries req, err: %v", requestErr)
+		mizu.Log.Errorf("Failed to notify agent for analysis, err: %v", requestErr)
 	} else if response.StatusCode != 200 {
-		mizu.Log.Infof("error sending upload entries req, status code: %v", response.StatusCode)
+		mizu.Log.Errorf("Failed to notify agent for analysis, status code: %v", response.StatusCode)
 	} else {
 		mizu.Log.Infof(uiUtils.Purple, "Traffic is uploading to UP9 for further analysis")
 	}
