@@ -63,7 +63,7 @@ clean-ui: ## Clean UI.
 clean-agent: ## Clean agent.
 	@(rm -rf agent/build ; echo "agent cleanup done" )
 
-clean-cli:  ## Clean cli.
+clean-cli:  ## Clean CLI.
 	@(cd cli; make clean ; echo "CLI cleanup done" )
 
 clean-docker:
