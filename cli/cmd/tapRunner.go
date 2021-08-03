@@ -58,6 +58,11 @@ func RunMizuTap(podRegexQuery *regexp.Regexp, tappingOptions *MizuTapOptions) {
 		mizu.Log.Infof("Error listing pods: %v", err)
 		return
 	}
+	urlReadyChan := make(chan string)
+	go func() {
+		mizu.Log.Infof("Mizu is available at http://%s", <-urlReadyChan)
+	}()
+
 
 	var namespacesStr string
 	if targetNamespace != mizu.K8sAllNamespaces {
@@ -84,10 +89,9 @@ func RunMizuTap(podRegexQuery *regexp.Regexp, tappingOptions *MizuTapOptions) {
 		return
 	}
 
-	urlReadyChan := make(chan string)
 	mizu.CheckNewerVersion()
 	go portForwardApiPod(ctx, kubernetesProvider, cancel, tappingOptions, urlReadyChan) // TODO convert this to job for built in pod ttl or have the running app handle this
-	go watchPodsForTapping(ctx, kubernetesProvider, cancel, podRegexQuery, tappingOptions, urlReadyChan)
+	go watchPodsForTapping(ctx, kubernetesProvider, cancel, podRegexQuery, tappingOptions)
 	go syncApiStatus(ctx, cancel, tappingOptions)
 
 	//block until exit signal or error
@@ -230,7 +234,7 @@ func cleanUpMizuResources(kubernetesProvider *kubernetes.Provider) {
 	}
 }
 
-func watchPodsForTapping(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc, podRegex *regexp.Regexp, tappingOptions *MizuTapOptions, urlReadyChan chan string) {
+func watchPodsForTapping(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc, podRegex *regexp.Regexp, tappingOptions *MizuTapOptions) {
 	targetNamespace := getNamespace(tappingOptions, kubernetesProvider)
 
 	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, kubernetesProvider.GetPodWatcher(ctx, targetNamespace), podRegex)
@@ -253,10 +257,6 @@ func watchPodsForTapping(ctx context.Context, kubernetesProvider *kubernetes.Pro
 		}
 	}
 	restartTappersDebouncer := debounce.NewDebouncer(updateTappersDelay, restartTappers)
-
-	go func() {
-		mizu.Log.Infof("Mizu is available at http://%s", <-urlReadyChan)
-	}()
 
 	for {
 		select {

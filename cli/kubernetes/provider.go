@@ -594,7 +594,7 @@ func (provider *Provider) GetAllRunningPodsMatchingRegex(ctx context.Context, re
 	}
 	matchingPods := make([]core.Pod, 0)
 	for _, pod := range pods.Items {
-		if regex.MatchString(pod.Name) && IsPodRunning(&pod) {
+		if regex.MatchString(pod.Name) && isPodRunning(&pod) {
 			matchingPods = append(matchingPods, pod)
 		}
 	}
@@ -636,6 +636,6 @@ func loadKubernetesConfiguration(kubeConfigPath string) clientcmd.ClientConfig {
 	)
 }
 
-func IsPodRunning(pod *core.Pod) bool {
+func isPodRunning(pod *core.Pod) bool {
 	return pod.Status.Phase == core.PodRunning
 }
