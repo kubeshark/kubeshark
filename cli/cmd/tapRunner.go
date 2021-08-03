@@ -335,6 +335,7 @@ func portForwardApiPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 		select {
 		case <-ctx.Done():
 			return
+
 		case <-added:
 			continue
 		case <-removed:
