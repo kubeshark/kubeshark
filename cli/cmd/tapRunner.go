@@ -109,7 +109,6 @@ func RunMizuTap(podRegexQuery *regexp.Regexp, tappingOptions *MizuTapOptions) {
 }
 
 func readValidationRules(file string) (string, error) {
-	// content, err := ioutil.ReadFile(file)
 	rules, err := shared.DecodeEnforcePolicy(file)
 	if err != nil {
 		return "", err
@@ -325,7 +324,7 @@ func portForwardApiPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 	podExactRegex := regexp.MustCompile(fmt.Sprintf("^%s$", mizu.ApiServerPodName))
 	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, kubernetesProvider.GetPodWatcher(ctx, mizu.ResourcesNamespace), podExactRegex)
 	isPodReady := false
-	timeAfter := time.After(25 * time.Second)
+	timeAfter := time.After(360 * time.Second)
 	for {
 		select {
 		case <-ctx.Done():

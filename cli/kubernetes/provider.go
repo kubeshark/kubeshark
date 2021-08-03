@@ -530,6 +530,12 @@ func (provider *Provider) ApplyConfigMap(ctx context.Context, namespace string, 
 		Data: configMapData,
 	}
 	_, err := provider.clientSet.CoreV1().ConfigMaps(namespace).Create(ctx, configMap, metav1.CreateOptions{})
+	var statusError *k8serrors.StatusError
+	if errors.As(err, &statusError) {
+		if statusError.ErrStatus.Reason == metav1.StatusReasonForbidden {
+			return fmt.Errorf("User not authorized to create configmap, --test-rules will be ignored")
+		}
+	}
 	return err
 }
 
