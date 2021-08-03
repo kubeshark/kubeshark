@@ -54,11 +54,9 @@ func RunMizuTap(podRegexQuery *regexp.Regexp, tappingOptions *MizuTapOptions) {
 	defer cancel() // cancel will be called when this function exits
 
 	targetNamespace := getNamespace(tappingOptions, kubernetesProvider)
-	if matchingPods, err := kubernetesProvider.GetAllPodsMatchingRegex(ctx, podRegexQuery, targetNamespace); err != nil {
+	if err := updateCurrentlyTappedPods(kubernetesProvider, ctx, podRegexQuery, targetNamespace); err != nil {
 		mizu.Log.Infof("Error listing pods: %v", err)
 		return
-	} else {
-		currentlyTappedPods = matchingPods
 	}
 
 	var namespacesStr string
@@ -237,12 +235,12 @@ func watchPodsForTapping(ctx context.Context, kubernetesProvider *kubernetes.Pro
 
 	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, kubernetesProvider.GetPodWatcher(ctx, targetNamespace), podRegex)
 
+	var firstRestartOccurred = false
+
 	restartTappers := func() {
-		if matchingPods, err := kubernetesProvider.GetAllPodsMatchingRegex(ctx, podRegex, targetNamespace); err != nil {
+		if err := updateCurrentlyTappedPods(kubernetesProvider, ctx, podRegex, targetNamespace); err != nil {
 			mizu.Log.Infof("Error getting pods by regex: %s (%v,%+v)", err, err, err)
 			cancel()
-		} else {
-			currentlyTappedPods = matchingPods
 		}
 
 		nodeToTappedPodIPMap, err := getNodeHostToTappedPodIpsMap(currentlyTappedPods)
@@ -255,21 +253,21 @@ func watchPodsForTapping(ctx context.Context, kubernetesProvider *kubernetes.Pro
 			mizu.Log.Infof("Error updating daemonset: %s (%v,%+v)", err, err, err)
 			cancel()
 		}
+
+		if !firstRestartOccurred {
+			mizu.Log.Infof("Mizu is available at http://%s", <-urlReadyChan)
+			firstRestartOccurred = true
+		}
+
+
 	}
 	restartTappersDebouncer := debounce.NewDebouncer(updateTappersDelay, restartTappers)
-	timer := time.AfterFunc(time.Second*10, func() {
-		mizu.Log.Debugf("Waiting for URL...")
-		mizu.Log.Infof("Mizu is available at http://%s", <-urlReadyChan)
-	})
 
 	for {
 		select {
-		case newTarget := <-added:
-			mizu.Log.Infof(uiUtils.Green, fmt.Sprintf("+%s", newTarget.Name))
-			timer.Reset(time.Second * 2)
-		case removedTarget := <-removed:
-			mizu.Log.Infof(uiUtils.Red, fmt.Sprintf("-%s", removedTarget.Name))
-			timer.Reset(time.Second * 2)
+		case <-added:
+			restartTappersDebouncer.SetOn()
+		case <-removed:
 			restartTappersDebouncer.SetOn()
 		case modifiedTarget := <-modified:
 			// Act only if the modified pod has already obtained an IP address.
@@ -290,6 +288,56 @@ func watchPodsForTapping(ctx context.Context, kubernetesProvider *kubernetes.Pro
 			return
 		}
 	}
+}
+
+func updateCurrentlyTappedPods(kubernetesProvider *kubernetes.Provider, ctx context.Context, podRegex *regexp.Regexp, targetNamespace string) error {
+	if matchingPods, err := kubernetesProvider.GetAllRunningPodsMatchingRegex(ctx, podRegex, targetNamespace); err != nil {
+		mizu.Log.Infof("Error getting pods by regex: %s (%v,%+v)", err, err, err)
+		return err
+	} else {
+		addedPods, removedPods := getPodArrayDiff(currentlyTappedPods, matchingPods)
+		for _, addedPod := range addedPods {
+			mizu.Log.Infof(uiUtils.Green, fmt.Sprintf("+%s", addedPod.Name))
+		}
+		for _, removedPod := range removedPods {
+			mizu.Log.Infof(uiUtils.Red, fmt.Sprintf("-%s", removedPod.Name))
+		}
+		currentlyTappedPods = matchingPods
+	}
+	return nil
+}
+
+func getPodArrayDiff(oldPods []core.Pod, newPods []core.Pod) (added []core.Pod, removed []core.Pod) {
+	added = make([]core.Pod, 0)
+	removed = make([]core.Pod, 0)
+
+	for _, oldPod := range oldPods {
+		var found = false
+		for _, newPod := range newPods {
+			if oldPod.UID == newPod.UID {
+				found = true
+				break
+			}
+		}
+		if !found {
+			removed = append(removed, oldPod)
+		}
+	}
+
+	for _, newPod := range newPods {
+		var found = false
+		for _, oldPod := range oldPods {
+			if newPod.UID == oldPod.UID {
+				found = true
+				break
+			}
+		}
+		if !found {
+			added = append(added, newPod)
+		}
+	}
+
+	return added, removed
 }
 
 func portForwardApiPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc, tappingOptions *MizuTapOptions, urlReadyChan chan string) {
