@@ -8,17 +8,17 @@ import (
 	"io/ioutil"
 )
 
-var outputFileName string
+var regenerateFile bool
 
 var configCmd = &cobra.Command{
 	Use:   "config",
 	Short: "Generate example config file to stdout",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		template := mizu.GetTemplateConfig()
-		if outputFileName != "" {
+		if regenerateFile {
 			data := []byte(template)
-			_ = ioutil.WriteFile(outputFileName, data, 0644)
-			mizu.Log.Infof(fmt.Sprintf("Template File written to %s", fmt.Sprintf(uiUtils.Purple, outputFileName)))
+			_ = ioutil.WriteFile(mizu.GetConfigFilePath(), data, 0644)
+			mizu.Log.Infof(fmt.Sprintf("Template File written to %s", fmt.Sprintf(uiUtils.Purple, mizu.GetConfigFilePath())))
 		} else {
 			mizu.Log.Debugf("Writing template config.\n%v", template)
 			fmt.Printf("%v", template)
@@ -29,6 +29,5 @@ var configCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(configCmd)
-
-	configCmd.Flags().StringVarP(&outputFileName, "file", "f", "", "Save content to local file")
+	configCmd.Flags().BoolVarP(&regenerateFile, "file", "f", false, "Save content to local file")
 }

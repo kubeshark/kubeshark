@@ -53,6 +53,14 @@ func RunMizuTap() {
 	defer cancel() // cancel will be called when this function exits
 
 	targetNamespace := getNamespace(kubernetesProvider)
+	var namespacesStr string
+	if targetNamespace != mizu.K8sAllNamespaces {
+		namespacesStr = fmt.Sprintf("namespace \"%s\"", targetNamespace)
+	} else {
+		namespacesStr = "all namespaces"
+	}
+	mizu.Log.Infof("Tapping pods in %s", namespacesStr)
+
 	if err := updateCurrentlyTappedPods(kubernetesProvider, ctx, targetNamespace); err != nil {
 		mizu.Log.Infof("Error listing pods: %v", err)
 		return
@@ -66,14 +74,6 @@ func RunMizuTap() {
 	go func() {
 		mizu.Log.Infof("Mizu is available at http://%s", <-urlReadyChan)
 	}()
-
-	var namespacesStr string
-	if targetNamespace != mizu.K8sAllNamespaces {
-		namespacesStr = fmt.Sprintf("namespace \"%s\"", targetNamespace)
-	} else {
-		namespacesStr = "all namespaces"
-	}
-	mizu.Log.Infof("Tapping pods in %s", namespacesStr)
 
 	if len(currentlyTappedPods) == 0 {
 		var suggestionStr string
@@ -334,18 +334,19 @@ func portForwardApiPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, kubernetesProvider.GetPodWatcher(ctx, mizu.ResourcesNamespace), podExactRegex)
 	isPodReady := false
 	timeAfter := time.After(25 * time.Second)
-
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		case <-added:
+			mizu.Log.Debugf("Got agent pod added event")
 			continue
 		case <-removed:
 			mizu.Log.Infof("%s removed", mizu.ApiServerPodName)
 			cancel()
 			return
 		case modifiedPod := <-modified:
+			mizu.Log.Debugf("Got agent pod modified event, status phase: %v", modifiedPod.Status.Phase)
 			if modifiedPod.Status.Phase == "Running" && !isPodReady {
 				isPodReady = true
 				go func() {
@@ -355,17 +356,17 @@ func portForwardApiPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 						cancel()
 					}
 				}()
+				urlReadyChan <- kubernetes.GetMizuApiServerProxiedHostAndPath(mizu.Config.Tap.GuiPort)
+				time.Sleep(time.Second * 5) // Waiting to be sure the proxy is ready
+				requestForAnalysis()
 			}
-
-			urlReadyChan <- kubernetes.GetMizuApiServerProxiedHostAndPath(mizu.Config.Tap.GuiPort)
-			time.Sleep(time.Second * 5) // Waiting to be sure the proxy is ready
-			requestForAnalysis()
 		case <-timeAfter:
 			if !isPodReady {
-				mizu.Log.Errorf("error: %s pod was not ready in time", mizu.ApiServerPodName)
+				mizu.Log.Errorf("Error: %s pod was not ready in time", mizu.ApiServerPodName)
 				cancel()
 			}
 		case <-errorChan:
+			mizu.Log.Debugf("[ERROR] Agent creation, watching %v namespace", mizu.ResourcesNamespace)
 			cancel()
 		}
 	}
@@ -443,6 +444,8 @@ func syncApiStatus(ctx context.Context, cancel context.CancelFunc) {
 		cancel()
 	}
 
+	updateInterval := 10 * time.Second
+	mizu.Log.Debugf("Start sending tapped pods list every %v seconds via control socket %v", updateInterval.Seconds(), controlSocketStr)
 	for {
 		select {
 		case <-ctx.Done():
@@ -452,7 +455,7 @@ func syncApiStatus(ctx context.Context, cancel context.CancelFunc) {
 			if err != nil {
 				mizu.Log.Debugf("error Sending message via control socket %v, error: %s", controlSocketStr, err)
 			}
-			time.Sleep(10 * time.Second)
+			time.Sleep(updateInterval)
 		}
 	}
 }
