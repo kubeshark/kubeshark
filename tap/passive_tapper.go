@@ -197,12 +197,35 @@ func StartPassiveTapper(opts *TapOpts) (<-chan *OutputChannelItem, <-chan *Outbo
 	return nil, outboundLinkWriter.OutChan
 }
 
-func getFromEnvWithDefault(key string, fallback string) string {
-	value, exists := os.LookupEnv(key)
-	if !exists {
-		value = fallback
-	}
-	return value
+func startMemoryProfiler() {
+	dirname := "/app/pprof"
+	rlog.Info("Profiling is on, results will be written to %s", dirname)
+	go func() {
+		if _, err := os.Stat(dirname); os.IsNotExist(err) {
+			if err := os.Mkdir(dirname, 0777); err != nil {
+				log.Fatal("could not create directory for profile: ", err)
+			}
+		}
+
+		for true {
+			time.Sleep(time.Minute)
+			t := time.Now()
+
+			filename := fmt.Sprintf("%s/%s__mem.prof", dirname, t.Format("15_04_05"))
+
+			rlog.Info("Writing memory profile to %s\n", filename)
+
+			f, err := os.Create(filename)
+			if err != nil {
+				log.Fatal("could not create memory profile: ", err)
+			}
+			defer f.Close() // error handling omitted for example
+			runtime.GC()    // get up-to-date statistics
+			if err := pprof.WriteHeapProfile(f); err != nil {
+				log.Fatal("could not write memory profile: ", err)
+			}
+		}
+	}()
 }
 
 func startPassiveTapper(harWriter *HarWriter, outboundLinkWriter *OutboundLinkWriter) {
@@ -326,8 +349,8 @@ func startPassiveTapper(harWriter *HarWriter, outboundLinkWriter *OutboundLinkWr
 	streamPool := reassembly.NewStreamPool(streamFactory)
 	assembler := reassembly.NewAssembler(streamPool)
 
-	maxBufferedPagesTotal, _ := strconv.Atoi(getFromEnvWithDefault("MAX_BUFFERED_PAGES_TOTAL", "10000"))
-	maxBufferedPagesPerConnection, _ := strconv.Atoi(getFromEnvWithDefault("MAX_BUFFERED_PAGES_PER_CONNECTION", "10000"))
+	maxBufferedPagesTotal := GetMaxBufferedPagesPerConnection()
+	maxBufferedPagesPerConnection := GetMaxBufferedPagesTotal()
 	rlog.Infof("Assembler options: maxBufferedPagesTotal=%d, maxBufferedPagesPerConnection=%d", maxBufferedPagesTotal, maxBufferedPagesPerConnection)
 	assembler.AssemblerOptions.MaxBufferedPagesTotal = maxBufferedPagesTotal
 	assembler.AssemblerOptions.MaxBufferedPagesPerConnection = maxBufferedPagesPerConnection
@@ -391,35 +414,8 @@ func startPassiveTapper(harWriter *HarWriter, outboundLinkWriter *OutboundLinkWr
 		}
 	}()
 
-	if os.Getenv("MEMORY_PROFILING_ENABLED") == "1" {
-		dirname := "/app/pprof"
-		rlog.Info("Profiling is on, results will be written to %s", dirname)
-		go func() {
-			if _, err := os.Stat(dirname); os.IsNotExist(err) {
-				if err := os.Mkdir(dirname, 0777); err != nil {
-					log.Fatal("could not create directory for profile: ", err)
-				}
-			}
-
-			for true {
-				time.Sleep(time.Minute)
-				t := time.Now()
-
-				filename := fmt.Sprintf("%s/%s__mem.prof", dirname, t.Format("15_04_05"))
-
-				rlog.Info("Writing memory profile to %s\n", filename)
-
-				f, err := os.Create(filename)
-				if err != nil {
-					log.Fatal("could not create memory profile: ", err)
-				}
-				defer f.Close() // error handling omitted for example
-				runtime.GC()    // get up-to-date statistics
-				if err := pprof.WriteHeapProfile(f); err != nil {
-					log.Fatal("could not write memory profile: ", err)
-				}
-			}
-		}()
+	if GetMemoryProfilingEnabled() {
+		startMemoryProfiler()
 	}
 
 	for packet := range source.Packets() {
