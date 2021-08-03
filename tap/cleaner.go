@@ -1,6 +1,7 @@
 package tap
 
 import (
+	"github.com/romana/rlog"
 	"sync"
 	"time"
 
@@ -20,19 +21,21 @@ type Cleaner struct {
 	cleanPeriod       time.Duration
 	connectionTimeout time.Duration
 	stats             CleanerStats
-	statsMutex	  sync.Mutex
+	statsMutex        sync.Mutex
 }
 
 func (cl *Cleaner) clean() {
 	startCleanTime := time.Now()
 
 	cl.assemblerMutex.Lock()
+	rlog.Debugf("Assembler Stats before cleaning %s", cl.assembler.Dump())
 	flushed, closed := cl.assembler.FlushCloseOlderThan(startCleanTime.Add(-cl.connectionTimeout))
 	cl.assemblerMutex.Unlock()
 
 	deleted := cl.matcher.deleteOlderThan(startCleanTime.Add(-cl.connectionTimeout))
 
 	cl.statsMutex.Lock()
+	rlog.Debugf("Assembler Stats after cleaning %s", cl.assembler.Dump())
 	cl.stats.flushed += flushed
 	cl.stats.closed += closed
 	cl.stats.deleted += deleted
@@ -55,7 +58,7 @@ func (cl *Cleaner) dumpStats() CleanerStats {
 
 	stats := CleanerStats{
 		flushed: cl.stats.flushed,
-		closed : cl.stats.closed,
+		closed:  cl.stats.closed,
 		deleted: cl.stats.deleted,
 	}
 
