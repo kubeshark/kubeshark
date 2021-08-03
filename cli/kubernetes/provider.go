@@ -587,14 +587,14 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	return err
 }
 
-func (provider *Provider) GetAllPodsMatchingRegex(ctx context.Context, regex *regexp.Regexp, namespace string) ([]core.Pod, error) {
+func (provider *Provider) GetAllRunningPodsMatchingRegex(ctx context.Context, regex *regexp.Regexp, namespace string) ([]core.Pod, error) {
 	pods, err := provider.clientSet.CoreV1().Pods(namespace).List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
 	matchingPods := make([]core.Pod, 0)
 	for _, pod := range pods.Items {
-		if regex.MatchString(pod.Name) {
+		if regex.MatchString(pod.Name) && isPodRunning(&pod) {
 			matchingPods = append(matchingPods, pod)
 		}
 	}
@@ -634,4 +634,8 @@ func loadKubernetesConfiguration(kubeConfigPath string) clientcmd.ClientConfig {
 			CurrentContext: contextName,
 		},
 	)
+}
+
+func isPodRunning(pod *core.Pod) bool {
+	return pod.Status.Phase == core.PodRunning
 }
