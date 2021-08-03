@@ -1,7 +1,7 @@
 package tap
 
 import (
-	"log"
+	"github.com/romana/rlog"
 	"runtime"
 	"sync"
 	"time"
@@ -32,7 +32,7 @@ func (cl *Cleaner) clean() {
 	runtime.ReadMemStats(&memStats)
 
 	cl.assemblerMutex.Lock()
-	log.Printf("Before %s", cl.assembler.Dump())
+	rlog.Debugf("Assembler Stats before cleaning %s", cl.assembler.Dump())
 	flushed, closed := cl.assembler.FlushCloseOlderThan(startCleanTime.Add(-cl.connectionTimeout))
 	cl.assemblerMutex.Unlock()
 
@@ -42,7 +42,7 @@ func (cl *Cleaner) clean() {
 	runtime.ReadMemStats(&memStatsAfter)
 
 	cl.statsMutex.Lock()
-	log.Printf("After %s", cl.assembler.Dump())
+	rlog.Debugf("Assembler Stats after cleaning %s", cl.assembler.Dump())
 	cl.stats.flushed += flushed
 	cl.stats.closed += closed
 	cl.stats.deleted += deleted
