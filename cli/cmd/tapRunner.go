@@ -266,7 +266,6 @@ func watchPodsForTapping(ctx context.Context, kubernetesProvider *kubernetes.Pro
 	for {
 		select {
 		case <-added:
-			restartTappersDebouncer.SetOn()
 		case <-removed:
 			restartTappersDebouncer.SetOn()
 		case modifiedTarget := <-modified:
