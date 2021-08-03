@@ -197,7 +197,7 @@ func StartPassiveTapper(opts *TapOpts) (<-chan *OutputChannelItem, <-chan *Outbo
 	return nil, outboundLinkWriter.OutChan
 }
 
-func getEnv(key string, fallback string) string {
+func getFromEnvWithDefault(key string, fallback string) string {
 	value, exists := os.LookupEnv(key)
 	if !exists {
 		value = fallback
@@ -326,8 +326,8 @@ func startPassiveTapper(harWriter *HarWriter, outboundLinkWriter *OutboundLinkWr
 	streamPool := reassembly.NewStreamPool(streamFactory)
 	assembler := reassembly.NewAssembler(streamPool)
 
-	maxBufferedPagesTotal, _ := strconv.Atoi(getEnv("MAX_BUFFERED_PAGES_TOTAL", "10000"))
-	maxBufferedPagesPerConnection, _ := strconv.Atoi(getEnv("MAX_BUFFERED_PAGES_PER_CONNECTION", "10000"))
+	maxBufferedPagesTotal, _ := strconv.Atoi(getFromEnvWithDefault("MAX_BUFFERED_PAGES_TOTAL", "10000"))
+	maxBufferedPagesPerConnection, _ := strconv.Atoi(getFromEnvWithDefault("MAX_BUFFERED_PAGES_PER_CONNECTION", "10000"))
 	rlog.Infof("Assembler options: maxBufferedPagesTotal=%d, maxBufferedPagesPerConnection=%d", maxBufferedPagesTotal, maxBufferedPagesPerConnection)
 	assembler.AssemblerOptions.MaxBufferedPagesTotal = maxBufferedPagesTotal
 	assembler.AssemblerOptions.MaxBufferedPagesPerConnection = maxBufferedPagesPerConnection
