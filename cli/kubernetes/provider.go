@@ -133,6 +133,8 @@ func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, namespace 
 	}
 	configMapVolumeName := &core.ConfigMapVolumeSource{}
 	configMapVolumeName.Name = mizu.ConfigMapName
+	configMapOptional := true
+	configMapVolumeName.Optional = &configMapOptional
 
 	cpuLimit, err := resource.ParseQuantity("750m")
 	if err != nil {
@@ -516,6 +518,9 @@ func (provider *Provider) CheckConfigMapExists(ctx context.Context, namespace st
 }
 
 func (provider *Provider) ApplyConfigMap(ctx context.Context, namespace string, configMapName string, data string) error {
+	if data == "" {
+		return nil
+	}
 	configMapData := make(map[string]string, 0)
 	configMapData["enforce-policy.yaml"] = data
 	configMap := &core.ConfigMap{

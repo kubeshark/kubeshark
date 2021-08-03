@@ -46,8 +46,6 @@ func RunMizuTap(podRegexQuery *regexp.Regexp, tappingOptions *MizuTapOptions) {
 			mizu.Log.Infof("error: %v", err)
 			return
 		}
-	} else {
-		mizuValidationRules = ""
 	}
 
 	kubernetesProvider, err := kubernetes.NewProvider(tappingOptions.KubeConfigPath)
