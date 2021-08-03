@@ -15,9 +15,9 @@ import (
 	"strings"
 )
 
-func RunMizuFetch(fetch *MizuFetchOptions) {
-	mizuProxiedUrl := kubernetes.GetMizuApiServerProxiedHostAndPath(fetch.MizuPort)
-	resp, err := http.Get(fmt.Sprintf("http://%s/api/har?from=%v&to=%v", mizuProxiedUrl, fetch.FromTimestamp, fetch.ToTimestamp))
+func RunMizuFetch() {
+	mizuProxiedUrl := kubernetes.GetMizuApiServerProxiedHostAndPath(mizu.Config.Fetch.MizuPort)
+	resp, err := http.Get(fmt.Sprintf("http://%s/api/har?from=%v&to=%v", mizuProxiedUrl, mizu.Config.Fetch.FromTimestamp, mizu.Config.Fetch.ToTimestamp))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -33,8 +33,8 @@ func RunMizuFetch(fetch *MizuFetchOptions) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	_ = Unzip(zipReader, fetch.Directory)
 
+	_ = Unzip(zipReader, mizu.Config.Fetch.Directory)
 }
 
 func Unzip(reader *zip.Reader, dest string) error {
