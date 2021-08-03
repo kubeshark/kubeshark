@@ -5,6 +5,7 @@ SERVER_NAME=mizu
 GCP_PROJECT=up9-docker-hub
 REPOSITORY=gcr.io/$GCP_PROJECT
 GIT_BRANCH=$(git branch | grep \* | cut -d ' ' -f2 | tr '[:upper:]' '[:lower:]')
+SEM_VER=${SEM_VER=0.0.0}
 DOCKER_TAGGED_BUILD=$REPOSITORY/$SERVER_NAME/$GIT_BRANCH:latest
 
 if [ "$GIT_BRANCH" = 'develop' -o "$GIT_BRANCH" = 'master' -o "$GIT_BRANCH" = 'main' ]
