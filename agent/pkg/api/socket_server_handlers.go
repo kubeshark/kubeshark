@@ -8,7 +8,6 @@ import (
 	"github.com/up9inc/mizu/tap"
 	"mizuserver/pkg/models"
 	"mizuserver/pkg/providers"
-	"mizuserver/pkg/routes"
 	"mizuserver/pkg/up9"
 	"sync"
 )
@@ -17,12 +16,12 @@ var browserClientSocketUUIDs = make([]int, 0)
 var socketListLock = sync.Mutex{}
 
 type RoutesEventHandlers struct {
-	routes.EventHandlers
+	EventHandlers
 	SocketHarOutChannel chan<- *tap.OutputChannelItem
 }
 
 func init() {
-	go up9.UpdateAnalyzeStatus(broadcastToBrowserClients)
+	go up9.UpdateAnalyzeStatus(BroadcastToBrowserClients)
 }
 
 func (h *RoutesEventHandlers) WebSocketConnect(socketId int, isTapper bool) {
@@ -47,15 +46,14 @@ func (h *RoutesEventHandlers) WebSocketDisconnect(socketId int, isTapper bool) {
 	}
 }
 
-func broadcastToBrowserClients(message []byte) {
+func BroadcastToBrowserClients(message []byte) {
 	for _, socketId := range browserClientSocketUUIDs {
 		go func(socketId int) {
-			err := routes.SendToSocket(socketId, message)
+			err := SendToSocket(socketId, message)
 			if err != nil {
 				fmt.Printf("error sending message to socket ID %d: %v", socketId, err)
 			}
 		}(socketId)
-
 	}
 }
 
@@ -81,7 +79,7 @@ func (h *RoutesEventHandlers) WebSocketMessage(_ int, message []byte) {
 				rlog.Infof("Could not unmarshal message of message type %s %v\n", socketMessageBase.MessageType, err)
 			} else {
 				providers.TapStatus.Pods = statusMessage.TappingStatus.Pods
-				broadcastToBrowserClients(message)
+				BroadcastToBrowserClients(message)
 			}
 		case shared.WebsocketMessageTypeOutboundLink:
 			var outboundLinkMessage models.WebsocketOutboundLinkMessage
@@ -116,7 +114,7 @@ func handleTLSLink(outboundLinkMessage models.WebsocketOutboundLinkMessage) {
 		rlog.Errorf("Error marshaling outbound link message for broadcasting: %v", err)
 	} else {
 		fmt.Printf("Broadcasting outboundlink message %s\n", string(marshaledMessage))
-		broadcastToBrowserClients(marshaledMessage)
+		BroadcastToBrowserClients(marshaledMessage)
 	}
 }
 

@@ -1,7 +1,9 @@
 package cmd
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/up9inc/mizu/cli/kubernetes"
 	"github.com/up9inc/mizu/cli/mizu"
@@ -237,21 +239,33 @@ func cleanUpMizuResources(kubernetesProvider *kubernetes.Provider) {
 	}
 }
 
+func reportTappedPods() {
+	mizuProxiedUrl := kubernetes.GetMizuApiServerProxiedHostAndPath(mizu.Config.Fetch.MizuPort)
+	tappedPodsUrl := fmt.Sprintf("http://%s/status/tappedPods", mizuProxiedUrl)
+
+	podInfos := make([]shared.PodInfo, 0)
+	for _, pod := range currentlyTappedPods {
+		podInfos = append(podInfos, shared.PodInfo{Name: pod.Name, Namespace: pod.Namespace})
+	}
+	tapStatus := shared.TapStatus{Pods: podInfos}
+
+	if jsonValue, err := json.Marshal(tapStatus); err != nil {
+		mizu.Log.Debugf("[ERROR] failed Marshal the tapped pods %v", err)
+	} else {
+		if response, err := http.Post(tappedPodsUrl, "application/json", bytes.NewBuffer(jsonValue)); err != nil {
+			mizu.Log.Debugf("[ERROR] failed sending to API server the tapped pods %v", err)
+		} else if response.StatusCode != 200 {
+			mizu.Log.Debugf("[ERROR] failed sending to API server the tapped pods, response status code %v", response.StatusCode)
+		} else {
+			mizu.Log.Debugf("Reported to server API about %d taped pods successfully", len(podInfos))
+		}
+	}
+}
+
 func watchPodsForTapping(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
 	targetNamespace := getNamespace(kubernetesProvider)
 	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, kubernetesProvider.GetPodWatcher(ctx, targetNamespace), mizu.Config.Tap.PodRegex())
 
-	controlSocketStr := fmt.Sprintf("ws://%s/ws", kubernetes.GetMizuApiServerProxiedHostAndPath(mizu.Config.Tap.GuiPort))
-	controlSocket, err := mizu.CreateControlSocket(controlSocketStr)
-	if err != nil {
-		mizu.Log.Infof("error establishing control socket connection %s", err)
-		cancel()
-	}
-	mizu.Log.Debugf("Control socket created %s", controlSocketStr)
-	err = controlSocket.SendNewTappedPodsListMessage(currentlyTappedPods)
-	if err != nil {
-		mizu.Log.Debugf("error Sending message via control socket %v, error: %s", controlSocketStr, err)
-	}
 	restartTappers := func() {
 		err, changeFound := updateCurrentlyTappedPods(kubernetesProvider, ctx, targetNamespace)
 		if err != nil {
@@ -264,10 +278,7 @@ func watchPodsForTapping(ctx context.Context, kubernetesProvider *kubernetes.Pro
 			return
 		}
 
-		err = controlSocket.SendNewTappedPodsListMessage(currentlyTappedPods)
-		if err != nil {
-			mizu.Log.Debugf("error Sending message via control socket %v, error: %s", controlSocketStr, err)
-		}
+		reportTappedPods()
 
 		nodeToTappedPodIPMap, err := getNodeHostToTappedPodIpsMap(currentlyTappedPods)
 		if err != nil {
@@ -388,6 +399,7 @@ func createProxyToApiServerPod(ctx context.Context, kubernetesProvider *kubernet
 				mizu.Log.Infof("Mizu is available at http://%s\n", kubernetes.GetMizuApiServerProxiedHostAndPath(mizu.Config.Tap.GuiPort))
 				time.Sleep(time.Second * 5) // Waiting to be sure the proxy is ready
 				requestForAnalysis()
+				reportTappedPods()
 			}
 		case <-timeAfter:
 			if !isPodReady {

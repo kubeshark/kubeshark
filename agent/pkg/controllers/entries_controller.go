@@ -8,6 +8,7 @@ import (
 	"github.com/romana/rlog"
 	"mizuserver/pkg/database"
 	"mizuserver/pkg/models"
+	"mizuserver/pkg/providers"
 	"mizuserver/pkg/up9"
 	"mizuserver/pkg/utils"
 	"mizuserver/pkg/validation"
@@ -240,4 +241,16 @@ func GetGeneralStats(c *gin.Context) {
 	}
 	database.GetEntriesTable().Raw(sqlQuery).Scan(&result)
 	c.JSON(http.StatusOK, result)
+}
+
+func GetTappingStatus(c *gin.Context) {
+	c.JSON(http.StatusOK, providers.TapStatus)
+}
+
+func AnalyzeInformation(c *gin.Context) {
+	c.JSON(http.StatusOK, up9.GetAnalyzeInfo())
+}
+
+func GetRecentTLSLinks(c *gin.Context) {
+	c.JSON(http.StatusOK, providers.GetAllRecentTLSAddresses())
 }
