@@ -73,7 +73,6 @@ func RunMizuTap() {
 			suggestionStr = "\nSelect a different namespace with -n or tap all namespaces with -A"
 		}
 		mizu.Log.Infof("Did not find any pods matching the regex argument%s", suggestionStr)
-		return
 	}
 
 	if mizu.Config.Tap.DryRun {
