@@ -59,7 +59,7 @@ func RunMizuTap() {
 	} else {
 		namespacesStr = "all namespaces"
 	}
-	go mizu.CheckNewerVersion()
+	mizu.CheckNewerVersion()
 	mizu.Log.Infof("Tapping pods in %s", namespacesStr)
 
 	if err, _ := updateCurrentlyTappedPods(kubernetesProvider, ctx, targetNamespace); err != nil {

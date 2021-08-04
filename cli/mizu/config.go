@@ -30,7 +30,7 @@ func InitConfig(cmd *cobra.Command) error {
 
 	if err := mergeConfigFile(); err != nil {
 		Log.Errorf("Could not load config file, error %v", err)
-		Log.Fatalf("You can regenerate the file using `mizu config -f` or just remove it %v", GetConfigFilePath())
+		Log.Fatalf("You can regenerate the file using `mizu config -r` or just remove it %v", GetConfigFilePath())
 	}
 
 	cmd.Flags().Visit(initFlag)
