@@ -69,8 +69,8 @@ func RunMizuTap() {
 	targetNamespaces := getNamespaces(kubernetesProvider)
 
 	var namespacesStr string
-	if !contains(targetNamespaces, mizu.K8sAllNamespaces) {
-		namespacesStr = fmt.Sprintf("namespaces \"%s\"", strings.Join(targetNamespaces, ", "))
+	if !mizu.Contains(targetNamespaces, mizu.K8sAllNamespaces) {
+		namespacesStr = fmt.Sprintf("namespaces \"%s\"", strings.Join(targetNamespaces, "\", \""))
 	} else {
 		namespacesStr = "all namespaces"
 	}
@@ -84,7 +84,7 @@ func RunMizuTap() {
 
 	if len(state.currentlyTappedPods) == 0 {
 		var suggestionStr string
-		if !contains(targetNamespaces, mizu.K8sAllNamespaces) {
+		if !mizu.Contains(targetNamespaces, mizu.K8sAllNamespaces) {
 			suggestionStr = ". Select a different namespace with -n or tap all namespaces with -A"
 		}
 		mizu.Log.Warningf(uiUtils.Warning, fmt.Sprintf("Did not find any pods matching the regex argument%s", suggestionStr))
