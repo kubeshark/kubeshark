@@ -3,17 +3,18 @@ package mizu
 import (
 	"errors"
 	"fmt"
-	"github.com/creasty/defaults"
-	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
-	"github.com/up9inc/mizu/cli/uiUtils"
-	"gopkg.in/yaml.v3"
 	"io/ioutil"
 	"os"
 	"path"
 	"reflect"
 	"strconv"
 	"strings"
+
+	"github.com/creasty/defaults"
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
+	"github.com/up9inc/mizu/cli/uiUtils"
+	"gopkg.in/yaml.v3"
 )
 
 const (

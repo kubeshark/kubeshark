@@ -6,21 +6,19 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/up9inc/mizu/cli/mizu"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/client-go/tools/cache"
-	"k8s.io/client-go/util/homedir"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strconv"
 
+	"github.com/up9inc/mizu/cli/mizu"
 	"github.com/up9inc/mizu/shared"
 	core "k8s.io/api/core/v1"
 	rbac "k8s.io/api/rbac/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	resource "k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/watch"
 	applyconfapp "k8s.io/client-go/applyconfigurations/apps/v1"
@@ -32,9 +30,11 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/openstack"
 	restclient "k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
 	_ "k8s.io/client-go/tools/portforward"
 	watchtools "k8s.io/client-go/tools/watch"
+	"k8s.io/client-go/util/homedir"
 )
 
 type Provider struct {
@@ -140,6 +140,10 @@ func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, opts *ApiS
 	if err != nil {
 		return nil, err
 	}
+	configMapVolumeName := &core.ConfigMapVolumeSource{}
+	configMapVolumeName.Name = mizu.ConfigMapName
+	configMapOptional := true
+	configMapVolumeName.Optional = &configMapOptional
 
 	cpuLimit, err := resource.ParseQuantity("750m")
 	if err != nil {
@@ -175,7 +179,13 @@ func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, opts *ApiS
 					Name:            opts.PodName,
 					Image:           opts.PodImage,
 					ImagePullPolicy: core.PullAlways,
-					Command:         command,
+					VolumeMounts: []core.VolumeMount{
+						{
+							Name:      mizu.ConfigMapName,
+							MountPath: shared.RulePolicyPath,
+						},
+					},
+					Command: command,
 					Env: []core.EnvVar{
 						{
 							Name:  shared.HostModeEnvVar,
@@ -199,6 +209,14 @@ func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, opts *ApiS
 							"cpu":    cpuRequests,
 							"memory": memRequests,
 						},
+					},
+				},
+			},
+			Volumes: []core.Volume{
+				{
+					Name: mizu.ConfigMapName,
+					VolumeSource: core.VolumeSource{
+						ConfigMap: configMapVolumeName,
 					},
 				},
 			},
@@ -233,8 +251,13 @@ func (provider *Provider) DoesServiceAccountExist(ctx context.Context, namespace
 	return provider.doesResourceExist(serviceAccount, err)
 }
 
-func (provider *Provider) DoesServicesExist(ctx context.Context, namespace string, serviceName string) (bool, error) {
-	resource, err := provider.clientSet.CoreV1().Services(namespace).Get(ctx, serviceName, metav1.GetOptions{})
+func (provider *Provider) DoesConfigMapExist(ctx context.Context, namespace string, name string) (bool, error) {
+	resource, err := provider.clientSet.CoreV1().ConfigMaps(namespace).Get(ctx, name, metav1.GetOptions{})
+	return provider.doesResourceExist(resource, err)
+}
+
+func (provider *Provider) DoesServicesExist(ctx context.Context, namespace string, name string) (bool, error) {
+	resource, err := provider.clientSet.CoreV1().Services(namespace).Get(ctx, name, metav1.GetOptions{})
 	return provider.doesResourceExist(resource, err)
 }
 
@@ -477,6 +500,16 @@ func (provider *Provider) RemovePod(ctx context.Context, namespace string, podNa
 	return provider.clientSet.CoreV1().Pods(namespace).Delete(ctx, podName, metav1.DeleteOptions{})
 }
 
+func (provider *Provider) RemoveConfigMap(ctx context.Context, namespace string, configMapName string) error {
+	if isFound, err := provider.DoesConfigMapExist(ctx, namespace, configMapName); err != nil {
+		return err
+	} else if !isFound {
+		return nil
+	}
+
+	return provider.clientSet.CoreV1().ConfigMaps(namespace).Delete(ctx, configMapName, metav1.DeleteOptions{})
+}
+
 func (provider *Provider) RemoveService(ctx context.Context, namespace string, serviceName string) error {
 	if isFound, err := provider.DoesServicesExist(ctx, namespace, serviceName); err != nil {
 		return err
@@ -495,6 +528,33 @@ func (provider *Provider) RemoveDaemonSet(ctx context.Context, namespace string,
 	}
 
 	return provider.clientSet.AppsV1().DaemonSets(namespace).Delete(ctx, daemonSetName, metav1.DeleteOptions{})
+}
+
+func (provider *Provider) ApplyConfigMap(ctx context.Context, namespace string, configMapName string, data string) error {
+	if data == "" {
+		return nil
+	}
+	configMapData := make(map[string]string, 0)
+	configMapData[shared.RulePolicyFileName] = data
+	configMap := &core.ConfigMap{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "ConfigMap",
+			APIVersion: "v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      configMapName,
+			Namespace: namespace,
+		},
+		Data: configMapData,
+	}
+	_, err := provider.clientSet.CoreV1().ConfigMaps(namespace).Create(ctx, configMap, metav1.CreateOptions{})
+	var statusError *k8serrors.StatusError
+	if errors.As(err, &statusError) {
+		if statusError.ErrStatus.Reason == metav1.StatusReasonForbidden {
+			return fmt.Errorf("User not authorized to create configmap, --test-rules will be ignored")
+		}
+	}
+	return err
 }
 
 func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, apiServerPodIp string, nodeToTappedPodIPMap map[string][]string, serviceAccountName string, tapOutgoing bool) error {

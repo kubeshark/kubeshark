@@ -3,9 +3,10 @@ package configStructs
 import (
 	"errors"
 	"fmt"
-	"github.com/up9inc/mizu/shared/units"
 	"regexp"
 	"strings"
+
+	"github.com/up9inc/mizu/shared/units"
 )
 
 const (
@@ -20,6 +21,7 @@ const (
 	HumanMaxEntriesDBSizeTapName  = "max-entries-db-size"
 	DirectionTapName              = "direction"
 	DryRunTapName                 = "dry-run"
+	EnforcePolicyFile             = "test-rules"
 )
 
 type TapConfig struct {
@@ -37,6 +39,7 @@ type TapConfig struct {
 	HumanMaxEntriesDBSize  string   `yaml:"max-entries-db-size" default:"200MB"`
 	Direction              string   `yaml:"direction" default:"in"`
 	DryRun                 bool     `yaml:"dry-run" default:"false"`
+	EnforcePolicyFile      string   `yaml:"test-rules"`
 }
 
 func (config *TapConfig) PodRegex() *regexp.Regexp {

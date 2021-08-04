@@ -5,10 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/google/martian/har"
-	"github.com/romana/rlog"
-	"github.com/up9inc/mizu/tap"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"mizuserver/pkg/holder"
 	"net/url"
 	"os"
@@ -16,6 +12,11 @@ import (
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/google/martian/har"
+	"github.com/romana/rlog"
+	"github.com/up9inc/mizu/tap"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"mizuserver/pkg/database"
 	"mizuserver/pkg/models"
@@ -166,6 +167,8 @@ func saveHarToDb(entry *har.Entry, connectionInfo *tap.ConnectionInfo) {
 	if err := models.GetEntry(&mizuEntry, &baseEntry); err != nil {
 		return
 	}
+	baseEntry.Rules = models.RunValidationRulesState(*entry, serviceName)
+	baseEntry.Latency = entry.Timings.Receive
 	baseEntryBytes, _ := models.CreateBaseEntryWebSocketMessage(&baseEntry)
 	BroadcastToBrowserClients(baseEntryBytes)
 }

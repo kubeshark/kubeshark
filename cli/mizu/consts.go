@@ -24,6 +24,7 @@ const (
 	ServiceAccountName        = "mizu-service-account"
 	TapperDaemonSetName       = "mizu-tapper-daemon-set"
 	TapperPodName             = "mizu-tapper"
+	ConfigMapName             = "mizu-policy"
 )
 
 func getMizuFolderPath() string {
