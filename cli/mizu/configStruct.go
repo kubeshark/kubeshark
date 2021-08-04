@@ -2,6 +2,7 @@ package mizu
 
 import (
 	"fmt"
+
 	"github.com/up9inc/mizu/cli/mizu/configStructs"
 )
 

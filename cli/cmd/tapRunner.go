@@ -5,15 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/up9inc/mizu/cli/kubernetes"
-	"github.com/up9inc/mizu/cli/mizu"
-	"github.com/up9inc/mizu/cli/uiUtils"
-	"github.com/up9inc/mizu/shared"
-	"github.com/up9inc/mizu/shared/debounce"
-	core "k8s.io/api/core/v1"
-	errors "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/client-go/tools/clientcmd"
 	"net/http"
 	"net/url"
 	"os"
@@ -21,6 +12,17 @@ import (
 	"regexp"
 	"syscall"
 	"time"
+
+	"github.com/up9inc/mizu/cli/kubernetes"
+	"github.com/up9inc/mizu/cli/mizu"
+	"github.com/up9inc/mizu/cli/uiUtils"
+	"github.com/up9inc/mizu/shared"
+	"github.com/up9inc/mizu/shared/debounce"
+	yaml "gopkg.in/yaml.v3"
+	core "k8s.io/api/core/v1"
+	errors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 var mizuServiceAccountExists bool
@@ -37,6 +39,14 @@ func RunMizuTap() {
 	mizuApiFilteringOptions, err := getMizuApiFilteringOptions()
 	if err != nil {
 		return
+	}
+	var mizuValidationRules string
+	if mizu.Config.Tap.EnforcePolicyFile != "" {
+		mizuValidationRules, err = readValidationRules(mizu.Config.Tap.EnforcePolicyFile)
+		if err != nil {
+			mizu.Log.Infof("error: %v", err)
+			return
+		}
 	}
 
 	kubernetesProvider, err := kubernetes.NewProvider(mizu.Config.Tap.KubeConfigPath)
@@ -87,7 +97,7 @@ func RunMizuTap() {
 		return
 	}
 
-	if err := createMizuResources(ctx, kubernetesProvider, nodeToTappedPodIPMap, mizuApiFilteringOptions); err != nil {
+	if err := createMizuResources(ctx, kubernetesProvider, nodeToTappedPodIPMap, mizuApiFilteringOptions, mizuValidationRules); err != nil {
 		return
 	}
 
@@ -98,7 +108,16 @@ func RunMizuTap() {
 	waitForFinish(ctx, cancel)
 }
 
-func createMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, nodeToTappedPodIPMap map[string][]string, mizuApiFilteringOptions *shared.TrafficFilteringOptions) error {
+func readValidationRules(file string) (string, error) {
+	rules, err := shared.DecodeEnforcePolicy(file)
+	if err != nil {
+		return "", err
+	}
+	newContent, _ := yaml.Marshal(&rules)
+	return string(newContent), nil
+}
+
+func createMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, nodeToTappedPodIPMap map[string][]string, mizuApiFilteringOptions *shared.TrafficFilteringOptions, mizuValidationRules string) error {
 	if err := createMizuNamespace(ctx, kubernetesProvider); err != nil {
 		return err
 	}
@@ -111,6 +130,18 @@ func createMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Pro
 		return err
 	}
 
+	if err := createMizuConfigmap(ctx, kubernetesProvider, mizuValidationRules); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func createMizuConfigmap(ctx context.Context, kubernetesProvider *kubernetes.Provider, data string) error {
+	err := kubernetesProvider.ApplyConfigMap(ctx, mizu.ResourcesNamespace, mizu.ConfigMapName, data)
+	if err != nil {
+		fmt.Printf("Error creating mizu configmap: %v\n", err)
+	}
 	return nil
 }
 
@@ -285,7 +316,6 @@ func watchPodsForTapping(ctx context.Context, kubernetesProvider *kubernetes.Pro
 			mizu.Log.Errorf("Error building node to ips map: %s (%v,%+v)", err, err, err)
 			cancel()
 		}
-
 		if err := updateMizuTappers(ctx, kubernetesProvider, nodeToTappedPodIPMap); err != nil {
 			mizu.Log.Errorf("Error updating daemonset: %s (%v,%+v)", err, err, err)
 			cancel()

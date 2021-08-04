@@ -4,14 +4,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/google/go-github/v37/github"
-	"github.com/up9inc/mizu/cli/uiUtils"
-	"github.com/up9inc/mizu/shared"
-	"github.com/up9inc/mizu/shared/semver"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/google/go-github/v37/github"
+	"github.com/up9inc/mizu/cli/uiUtils"
+	"github.com/up9inc/mizu/shared"
+	"github.com/up9inc/mizu/shared/semver"
 )
 
 func getApiVersion(port uint16) (string, error) {

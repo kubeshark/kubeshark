@@ -3,9 +3,6 @@ package controllers
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/google/martian/har"
-	"github.com/romana/rlog"
 	"mizuserver/pkg/database"
 	"mizuserver/pkg/models"
 	"mizuserver/pkg/providers"
@@ -15,6 +12,10 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/google/martian/har"
+	"github.com/romana/rlog"
 )
 
 func GetEntries(c *gin.Context) {
@@ -218,7 +219,14 @@ func GetEntry(c *gin.Context) {
 			"msg":   "Can't get entry details",
 		})
 	}
-	c.JSON(http.StatusOK, fullEntry)
+	fullEntryWithPolicy := models.FullEntryWithPolicy{}
+	if err := models.GetEntry(&entryData, &fullEntryWithPolicy); err != nil {
+		c.JSON(http.StatusInternalServerError, map[string]interface{}{
+			"error": true,
+			"msg":   "Can't get entry details",
+		})
+	}
+	c.JSON(http.StatusOK, fullEntryWithPolicy)
 }
 
 func DeleteAllEntries(c *gin.Context) {

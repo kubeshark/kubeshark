@@ -6,14 +6,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/up9inc/mizu/cli/mizu"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/client-go/tools/cache"
-	"k8s.io/client-go/util/homedir"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strconv"
+
+	"github.com/up9inc/mizu/cli/mizu"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/tools/cache"
+	"k8s.io/client-go/util/homedir"
 
 	"github.com/up9inc/mizu/shared"
 	core "k8s.io/api/core/v1"
@@ -130,6 +131,10 @@ func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, namespace 
 	if err != nil {
 		return nil, err
 	}
+	configMapVolumeName := &core.ConfigMapVolumeSource{}
+	configMapVolumeName.Name = mizu.ConfigMapName
+	configMapOptional := true
+	configMapVolumeName.Optional = &configMapOptional
 
 	cpuLimit, err := resource.ParseQuantity("750m")
 	if err != nil {
@@ -160,7 +165,13 @@ func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, namespace 
 					Name:            podName,
 					Image:           podImage,
 					ImagePullPolicy: core.PullAlways,
-					Command:         []string{"./mizuagent", "--api-server"},
+					VolumeMounts: []core.VolumeMount{
+						{
+							Name:      mizu.ConfigMapName,
+							MountPath: shared.RulePolicyPath,
+						},
+					},
+					Command: []string{"./mizuagent", "--api-server"},
 					Env: []core.EnvVar{
 						{
 							Name:  shared.HostModeEnvVar,
@@ -184,6 +195,14 @@ func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, namespace 
 							"cpu":    cpuRequests,
 							"memory": memRequests,
 						},
+					},
+				},
+			},
+			Volumes: []core.Volume{
+				{
+					Name: mizu.ConfigMapName,
+					VolumeSource: core.VolumeSource{
+						ConfigMap: configMapVolumeName,
 					},
 				},
 			},
@@ -370,6 +389,15 @@ func (provider *Provider) RemoveDaemonSet(ctx context.Context, namespace string,
 	return provider.clientSet.AppsV1().DaemonSets(namespace).Delete(ctx, daemonSetName, metav1.DeleteOptions{})
 }
 
+func (provider *Provider) RemoveConfigMap(ctx context.Context, namespace string, configMapName string) error {
+	if isFound, err := provider.CheckConfigMapExists(ctx, namespace, configMapName); err != nil {
+		return err
+	} else if !isFound {
+		return nil
+	}
+	return provider.clientSet.CoreV1().ConfigMaps(namespace).Delete(ctx, configMapName, metav1.DeleteOptions{})
+}
+
 func (provider *Provider) CheckNamespaceExists(ctx context.Context, name string) (bool, error) {
 	listOptions := metav1.ListOptions{
 		FieldSelector: fmt.Sprintf("metadata.name=%s", name),
@@ -470,6 +498,50 @@ func (provider *Provider) CheckDaemonSetExists(ctx context.Context, namespace st
 	}
 
 	return false, nil
+}
+
+func (provider *Provider) CheckConfigMapExists(ctx context.Context, namespace string, name string) (bool, error) {
+	listOptions := metav1.ListOptions{
+		FieldSelector: fmt.Sprintf("metadata.name=%s", name),
+		Limit:         1,
+	}
+	resourceList, err := provider.clientSet.CoreV1().ConfigMaps(namespace).List(ctx, listOptions)
+	if err != nil {
+		return false, err
+	}
+
+	if len(resourceList.Items) > 0 {
+		return true, nil
+	}
+
+	return false, nil
+}
+
+func (provider *Provider) ApplyConfigMap(ctx context.Context, namespace string, configMapName string, data string) error {
+	if data == "" {
+		return nil
+	}
+	configMapData := make(map[string]string, 0)
+	configMapData[shared.RulePolicyFileName] = data
+	configMap := &core.ConfigMap{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "ConfigMap",
+			APIVersion: "v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      configMapName,
+			Namespace: namespace,
+		},
+		Data: configMapData,
+	}
+	_, err := provider.clientSet.CoreV1().ConfigMaps(namespace).Create(ctx, configMap, metav1.CreateOptions{})
+	var statusError *k8serrors.StatusError
+	if errors.As(err, &statusError) {
+		if statusError.ErrStatus.Reason == metav1.StatusReasonForbidden {
+			return fmt.Errorf("User not authorized to create configmap, --test-rules will be ignored")
+		}
+	}
+	return err
 }
 
 func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, apiServerPodIp string, nodeToTappedPodIPMap map[string][]string, serviceAccountName string, tapOutgoing bool) error {

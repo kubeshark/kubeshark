@@ -72,7 +72,6 @@ export const HarPage: React.FC<HarPageProps> = ({setAnalyzeStatus, onTLSDetected
         ws.current.onmessage = e => {
             if (!e?.data) return;
             const message = JSON.parse(e.data);
-
             switch (message.messageType) {
                 case "entry":
                     const entry = message.data

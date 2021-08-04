@@ -3,11 +3,12 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"net/http"
+
 	"github.com/up9inc/mizu/cli/kubernetes"
 	"github.com/up9inc/mizu/cli/mizu"
 	"github.com/up9inc/mizu/cli/uiUtils"
 	"k8s.io/client-go/tools/clientcmd"
-	"net/http"
 )
 
 func runMizuView() {
