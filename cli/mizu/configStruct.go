@@ -14,6 +14,7 @@ type ConfigStruct struct {
 	MizuImage     string                      `yaml:"mizu-image"`
 	MizuNamespace string                      `yaml:"mizu-namespace"`
 	Telemetry     bool                        `yaml:"telemetry" default:"true"`
+	DumpLogs  bool                        `yaml:"dump-logs" default:"false"`
 }
 
 func (config *ConfigStruct) SetDefaults() {

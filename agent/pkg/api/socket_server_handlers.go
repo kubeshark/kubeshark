@@ -52,7 +52,7 @@ func BroadcastToBrowserClients(message []byte) {
 		go func(socketId int) {
 			err := SendToSocket(socketId, message)
 			if err != nil {
-				fmt.Printf("error sending message to socket ID %d: %v", socketId, err)
+				rlog.Errorf("error sending message to socket ID %d: %v", socketId, err)
 			}
 		}(socketId)
 	}
@@ -114,7 +114,7 @@ func handleTLSLink(outboundLinkMessage models.WebsocketOutboundLinkMessage) {
 	if err != nil {
 		rlog.Errorf("Error marshaling outbound link message for broadcasting: %v", err)
 	} else {
-		fmt.Printf("Broadcasting outboundlink message %s\n", string(marshaledMessage))
+		rlog.Errorf("Broadcasting outboundlink message %s", string(marshaledMessage))
 		BroadcastToBrowserClients(marshaledMessage)
 	}
 }
