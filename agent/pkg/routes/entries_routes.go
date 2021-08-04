@@ -22,4 +22,5 @@ func EntriesRoutes(ginApp *gin.Engine) {
 
 	routeGroup.GET("/tapStatus", controllers.GetTappingStatus) // get tapping status
 	routeGroup.GET("/analyzeStatus", controllers.AnalyzeInformation)
+	routeGroup.GET("/recentTLSLinks", controllers.GetRecentTLSLinks)
 }

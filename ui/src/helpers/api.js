@@ -42,4 +42,9 @@ export default class Api {
         const response = await this.client.get(`/entries?limit=50&operator=${operator}&timestamp=${timestamp}`);
         return response.data;
     }
+
+    getRecentTLSLinks = async () => {
+        const response = await this.client.get("/recentTLSLinks");
+        return response.data;
+    }
 }

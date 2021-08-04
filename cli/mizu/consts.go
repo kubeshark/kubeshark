@@ -1,5 +1,10 @@
 package mizu
 
+import (
+	"os"
+	"path"
+)
+
 var (
 	SemVer         = "0.0.1"
 	Branch         = "develop"
@@ -20,3 +25,11 @@ const (
 	TapperDaemonSetName       = "mizu-tapper-daemon-set"
 	TapperPodName             = "mizu-tapper"
 )
+
+func getMizuFolderPath() string {
+	home, homeDirErr := os.UserHomeDir()
+	if homeDirErr != nil {
+		return ""
+	}
+	return path.Join(home, ".mizu")
+}

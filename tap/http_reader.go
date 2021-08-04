@@ -5,12 +5,16 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
+	"github.com/bradleyfalzon/tlsx"
 	"io"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 	"sync"
 	"time"
 )
+
+const checkTLSPacketAmount = 100
 
 type httpReaderDataMsg struct {
 	bytes     []byte
@@ -18,8 +22,8 @@ type httpReaderDataMsg struct {
 }
 
 type tcpID struct {
-	srcIP string
-	dstIP string
+	srcIP   string
+	dstIP   string
 	srcPort string
 	dstPort string
 }
@@ -42,28 +46,44 @@ func (tid *tcpID) String() string {
  * Implements io.Reader interface (Read)
  */
 type httpReader struct {
-	ident         string
-	tcpID         tcpID
-	isClient      bool
-	isHTTP2       bool
-	isOutgoing    bool
-	msgQueue      chan httpReaderDataMsg // Channel of captured reassembled tcp payload
-	data          []byte
-	captureTime   time.Time
-	hexdump       bool
-	parent        *tcpStream
-	grpcAssembler GrpcAssembler
-	messageCount  uint
-	harWriter     *HarWriter
+	ident              string
+	tcpID              tcpID
+	isClient           bool
+	isHTTP2            bool
+	isOutgoing         bool
+	msgQueue           chan httpReaderDataMsg // Channel of captured reassembled tcp payload
+	data               []byte
+	captureTime        time.Time
+	hexdump            bool
+	parent             *tcpStream
+	grpcAssembler      GrpcAssembler
+	messageCount       uint
+	harWriter          *HarWriter
+	packetsSeen        uint
+	outboundLinkWriter *OutboundLinkWriter
 }
 
 func (h *httpReader) Read(p []byte) (int, error) {
 	var msg httpReaderDataMsg
+
 	ok := true
 	for ok && len(h.data) == 0 {
 		msg, ok = <-h.msgQueue
 		h.data = msg.bytes
+
 		h.captureTime = msg.timestamp
+		if len(h.data) > 0 {
+			h.packetsSeen += 1
+		}
+		if h.packetsSeen < checkTLSPacketAmount && len(msg.bytes) > 5 { // packets with less than 5 bytes cause tlsx to panic
+			clientHello := tlsx.ClientHello{}
+			err := clientHello.Unmarshall(msg.bytes)
+			if err == nil {
+				fmt.Printf("Detected TLS client hello with SNI %s\n", clientHello.SNI)
+				numericPort, _ := strconv.Atoi(h.tcpID.dstPort)
+				h.outboundLinkWriter.WriteOutboundLink(h.tcpID.srcIP, h.tcpID.dstIP, numericPort, clientHello.SNI, TLSProtocol)
+			}
+		}
 	}
 	if !ok || len(h.data) == 0 {
 		return 0, io.EOF

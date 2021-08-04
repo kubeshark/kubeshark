@@ -498,6 +498,8 @@ func (provider *Provider) RemoveDaemonSet(ctx context.Context, namespace string,
 }
 
 func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, apiServerPodIp string, nodeToTappedPodIPMap map[string][]string, serviceAccountName string, tapOutgoing bool) error {
+	mizu.Log.Debugf("Applying %d tapper deamonsets, ns: %s, daemonSetName: %s, podImage: %s, tapperPodName: %s", len(nodeToTappedPodIPMap), namespace, daemonSetName, podImage, tapperPodName)
+
 	if len(nodeToTappedPodIPMap) == 0 {
 		return fmt.Errorf("Daemon set %s must tap at least 1 pod", daemonSetName)
 	}
@@ -518,12 +520,11 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 		mizuCmd = append(mizuCmd, "--anydirection")
 	}
 
-	privileged := true
 	agentContainer := applyconfcore.Container()
 	agentContainer.WithName(tapperPodName)
 	agentContainer.WithImage(podImage)
 	agentContainer.WithImagePullPolicy(core.PullAlways)
-	agentContainer.WithSecurityContext(applyconfcore.SecurityContext().WithPrivileged(privileged))
+	agentContainer.WithSecurityContext(applyconfcore.SecurityContext().WithPrivileged(true))
 	agentContainer.WithCommand(mizuCmd...)
 	agentContainer.WithEnv(
 		applyconfcore.EnvVar().WithName(shared.HostModeEnvVar).WithValue("1"),
@@ -612,14 +613,14 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	return err
 }
 
-func (provider *Provider) GetAllPodsMatchingRegex(ctx context.Context, regex *regexp.Regexp, namespace string) ([]core.Pod, error) {
+func (provider *Provider) GetAllRunningPodsMatchingRegex(ctx context.Context, regex *regexp.Regexp, namespace string) ([]core.Pod, error) {
 	pods, err := provider.clientSet.CoreV1().Pods(namespace).List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
 	matchingPods := make([]core.Pod, 0)
 	for _, pod := range pods.Items {
-		if regex.MatchString(pod.Name) {
+		if regex.MatchString(pod.Name) && isPodRunning(&pod) {
 			matchingPods = append(matchingPods, pod)
 		}
 	}
@@ -659,4 +660,8 @@ func loadKubernetesConfiguration(kubeConfigPath string) clientcmd.ClientConfig {
 			CurrentContext: contextName,
 		},
 	)
+}
+
+func isPodRunning(pod *core.Pod) bool {
+	return pod.Status.Phase == core.PodRunning
 }

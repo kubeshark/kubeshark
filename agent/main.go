@@ -4,6 +4,12 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"github.com/gin-contrib/static"
+	"github.com/gin-gonic/gin"
+	"github.com/gorilla/websocket"
+	"github.com/romana/rlog"
+	"github.com/up9inc/mizu/shared"
+	"github.com/up9inc/mizu/tap"
 	"mizuserver/pkg/api"
 	"mizuserver/pkg/models"
 	"mizuserver/pkg/routes"
@@ -13,17 +19,9 @@ import (
 	"os"
 	"os/signal"
 	"strings"
-
-	"github.com/gin-contrib/static"
-	"github.com/gin-gonic/gin"
-	"github.com/gorilla/websocket"
-	"github.com/romana/rlog"
-	"github.com/up9inc/mizu/shared"
-	"github.com/up9inc/mizu/tap"
 )
 
 var tapperMode = flag.Bool("tap", false, "Run in tapper mode without API")
-var demoMode = flag.Bool("demo", false, "Run in Demo mode with API")
 var apiServerMode = flag.Bool("api-server", false, "Run in API server mode with API")
 var standaloneMode = flag.Bool("standalone", false, "Run in standalone tapper and API mode")
 var apiServerAddress = flag.String("api-server-address", "", "Address of mizu API server")
@@ -45,7 +43,7 @@ func main() {
 		filteredHarChannel := make(chan *tap.OutputChannelItem)
 
 		go filterHarItems(harOutputChannel, filteredHarChannel, getTrafficFilteringOptions())
-		go api.StartReadingEntries(filteredHarChannel, nil, false)
+		go api.StartReadingEntries(filteredHarChannel, nil)
 		go api.StartReadingOutbound(outboundLinkOutputChannel)
 
 		hostApi(nil)
@@ -67,8 +65,8 @@ func main() {
 			panic(fmt.Sprintf("Error connecting to socket server at %s %v", *apiServerAddress, err))
 		}
 
-		go pipeChannelToSocket(socketConnection, harOutputChannel)
-		go api.StartReadingOutbound(outboundLinkOutputChannel)
+		go pipeTapChannelToSocket(socketConnection, harOutputChannel)
+		go pipeOutboundLinksChannelToSocket(socketConnection, outboundLinkOutputChannel)
 	} else if *apiServerMode {
 		api.StartResolving(*namespace)
 
@@ -76,12 +74,7 @@ func main() {
 		filteredHarChannel := make(chan *tap.OutputChannelItem)
 
 		go filterHarItems(socketHarOutChannel, filteredHarChannel, getTrafficFilteringOptions())
-		if *demoMode {
-			workdir := "./hars"
-			go api.StartReadingEntries(filteredHarChannel, &workdir, true)
-		} else {
-			go api.StartReadingEntries(filteredHarChannel, nil, false)
-		}
+		go api.StartReadingEntries(filteredHarChannel, nil)
 
 		hostApi(socketHarOutChannel)
 	}
@@ -97,7 +90,7 @@ func hostApi(socketHarOutputChannel chan<- *tap.OutputChannelItem) {
 	app := gin.Default()
 
 	app.GET("/echo", func(c *gin.Context) {
-		c.String(http.StatusOK, "Hello, World 👋!")
+		c.String(http.StatusOK, "Here is Mizu agent")
 	})
 
 	eventHandlers := api.RoutesEventHandlers{
@@ -107,9 +100,10 @@ func hostApi(socketHarOutputChannel chan<- *tap.OutputChannelItem) {
 	app.Use(static.ServeRoot("/", "./site"))
 	app.Use(CORSMiddleware()) // This has to be called after the static middleware, does not work if its called before
 
-	routes.WebSocketRoutes(app, &eventHandlers)
+	api.WebSocketRoutes(app, &eventHandlers)
 	routes.EntriesRoutes(app)
 	routes.MetadataRoutes(app)
+	routes.StatusRoutes(app)
 	routes.NotFoundRoute(app)
 
 	utils.StartServer(app)
@@ -189,7 +183,7 @@ func isHealthCheckByUserAgent(message *tap.OutputChannelItem) bool {
 	return false
 }
 
-func pipeChannelToSocket(connection *websocket.Conn, messageDataChannel <-chan *tap.OutputChannelItem) {
+func pipeTapChannelToSocket(connection *websocket.Conn, messageDataChannel <-chan *tap.OutputChannelItem) {
 	if connection == nil {
 		panic("Websocket connection is nil")
 	}
@@ -209,6 +203,24 @@ func pipeChannelToSocket(connection *websocket.Conn, messageDataChannel <-chan *
 		if err != nil {
 			rlog.Infof("error sending message through socket server %s, (%v,%+v)\n", err, err, err)
 			continue
+		}
+	}
+}
+
+func pipeOutboundLinksChannelToSocket(connection *websocket.Conn, outboundLinkChannel <-chan *tap.OutboundLink) {
+	for outboundLink := range outboundLinkChannel {
+		if outboundLink.SuggestedProtocol == tap.TLSProtocol {
+			marshaledData, err := models.CreateWebsocketOutboundLinkMessage(outboundLink)
+			if err != nil {
+				rlog.Infof("Error converting outbound link to json %s, (%v,%+v)", err, err, err)
+				continue
+			}
+
+			err = connection.WriteMessage(websocket.TextMessage, marshaledData)
+			if err != nil {
+				rlog.Infof("error sending outbound link message through socket server %s, (%v,%+v)", err, err, err)
+				continue
+			}
 		}
 	}
 }

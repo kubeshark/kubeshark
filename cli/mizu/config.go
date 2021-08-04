@@ -3,6 +3,9 @@ package mizu
 import (
 	"errors"
 	"fmt"
+	"github.com/creasty/defaults"
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 	"github.com/up9inc/mizu/cli/uiUtils"
 	"gopkg.in/yaml.v3"
 	"io/ioutil"
@@ -13,215 +16,184 @@ import (
 	"strings"
 )
 
-const separator = "="
-
-var configObj = map[string]interface{}{}
-
-type CommandLineFlag struct {
-	CommandLineName   string
-	YamlHierarchyName string
-	DefaultValue      interface{}
-}
-
 const (
-	ConfigurationKeyAnalyzingDestination = "tap.dest"
-	ConfigurationKeyUploadInterval       = "tap.uploadInterval"
-	ConfigurationKeyAgentImage           = "agent.image"
-	ConfigurationKeyAgentNamespace       = "agent.namespace"
-	ConfigurationKeyTelemetry            = "telemetry"
+	Separator      = "="
+	SetCommandName = "set"
 )
 
-var allowedSetFlags = []CommandLineFlag{
-	{
-		CommandLineName:   ConfigurationKeyAnalyzingDestination,
-		YamlHierarchyName: ConfigurationKeyAnalyzingDestination,
-		DefaultValue:      "up9.app",
-		// TODO: maybe add short description that we can show
-	},
-	{
-		CommandLineName:   ConfigurationKeyUploadInterval,
-		YamlHierarchyName: ConfigurationKeyUploadInterval,
-		DefaultValue:      10,
-	},
-	{
-		CommandLineName:   ConfigurationKeyAgentImage,
-		YamlHierarchyName: ConfigurationKeyAgentImage,
-		DefaultValue:      fmt.Sprintf("gcr.io/up9-docker-hub/mizu/%s:%s", Branch, SemVer),
-	},
-	{
-		CommandLineName:   ConfigurationKeyAgentNamespace,
-		YamlHierarchyName: ConfigurationKeyAgentNamespace,
-		DefaultValue:      "",
-	},
-	{
-		CommandLineName:   "telemetry",
-		YamlHierarchyName: ConfigurationKeyTelemetry,
-		DefaultValue:      true,
-	},
-}
+var Config = ConfigStruct{}
 
-func GetString(key string) string {
-	return fmt.Sprintf("%v", getValueFromMergedConfig(key))
-}
-
-func GetBool(key string) bool {
-	stringVal := GetString(key)
-	Log.Debugf("Found string value %v", stringVal)
-
-	val, err := strconv.ParseBool(stringVal)
-	if err != nil {
-		Log.Warningf(uiUtils.Red, fmt.Sprintf( "Invalid value %v for key %s, expected bool", stringVal, key))
-		os.Exit(1)
+func InitConfig(cmd *cobra.Command) error {
+	if err := defaults.Set(&Config); err != nil {
+		return err
 	}
-	return val
-}
 
-func GetInt(key string) int {
-	stringVal := GetString(key)
-	Log.Debugf("Found string value %v", stringVal)
+	if err := mergeConfigFile(); err != nil {
+		Log.Errorf("Could not load config file, error %v", err)
+		Log.Fatalf("You can regenerate the file using `mizu config -r` or just remove it %v", GetConfigFilePath())
+	}
 
-	val, err := strconv.Atoi(stringVal)
-	if err != nil {
-		Log.Warningf(uiUtils.Red, fmt.Sprintf("Invalid value %v for key %s, expected int", stringVal, key))
-		os.Exit(1)
-	}
-	return val
-}
+	cmd.Flags().Visit(initFlag)
 
-func InitConfig(commandLineValues []string) error {
-	Log.Debugf("Merging default values")
-	mergeDefaultValues()
-	Log.Debugf("Merging config file values")
-	if err1 := mergeConfigFile(); err1 != nil {
-		Log.Infof(fmt.Sprintf(uiUtils.Red, "Invalid config file\n"))
-		return err1
-	}
-	Log.Debugf("Merging command line values")
-	if err2 := mergeCommandLineFlags(commandLineValues); err2 != nil {
-		Log.Infof(fmt.Sprintf(uiUtils.Red, "Invalid commanad argument\n"))
-		return err2
-	}
-	finalConfigPrettified, _ := uiUtils.PrettyJson(configObj)
-	Log.Debugf("Merged all config successfully\n Final config: %v", finalConfigPrettified)
+	finalConfigPrettified, _ := uiUtils.PrettyJson(Config)
+	Log.Debugf("Init config finished\n Final config: %v", finalConfigPrettified)
+
 	return nil
 }
 
-func GetTemplateConfig() string {
-	templateConfig := map[string]interface{}{}
-	for _, allowedFlag := range allowedSetFlags {
-		addToConfigObj(allowedFlag.YamlHierarchyName, allowedFlag.DefaultValue, templateConfig)
+func GetConfigWithDefaults() (string, error) {
+	defaultConf := ConfigStruct{}
+	if err := defaults.Set(&defaultConf); err != nil {
+		return "", err
 	}
-	prettifiedConfig, _ := uiUtils.PrettyYaml(templateConfig)
-	return prettifiedConfig
+	return uiUtils.PrettyYaml(defaultConf)
 }
 
-func GetConfigStr() string {
-	val, _ := uiUtils.PrettyYaml(configObj)
-	return val
-}
-
-func getValueFromMergedConfig(key string) interface{} {
-	if a, ok := configObj[key]; ok {
-		return a
-	}
-	return nil
-}
-
-func mergeDefaultValues() {
-	for _, allowedFlag := range allowedSetFlags {
-		Log.Debugf("Setting %v to %v", allowedFlag.YamlHierarchyName, allowedFlag.DefaultValue)
-		configObj[allowedFlag.YamlHierarchyName] = allowedFlag.DefaultValue
-	}
+func GetConfigFilePath() string {
+	return path.Join(getMizuFolderPath(), "config.yaml")
 }
 
 func mergeConfigFile() error {
-	Log.Debugf("Merging mizu config file values")
-	home, homeDirErr := os.UserHomeDir()
-	if homeDirErr != nil {
-		return nil
-	}
-	reader, openErr := os.Open(path.Join(home, ".mizu", "config.yaml"))
+	reader, openErr := os.Open(GetConfigFilePath())
 	if openErr != nil {
 		return nil
 	}
+
 	buf, readErr := ioutil.ReadAll(reader)
 	if readErr != nil {
 		return readErr
 	}
-	m := make(map[string]interface{})
-	if err := yaml.Unmarshal(buf, &m); err != nil {
+
+	if err := yaml.Unmarshal(buf, &Config); err != nil {
 		return err
 	}
-	for k, v := range m {
-		addToConfig(k, v)
-	}
+	Log.Debugf("Found config file, merged to default options")
+
 	return nil
 }
 
-func addToConfig(prefix string, value interface{}) {
-	typ := reflect.TypeOf(value).Kind()
-	if typ == reflect.Map {
-		for k1, v1 := range value.(map[string]interface{}) {
-			addToConfig(fmt.Sprintf("%s.%s", prefix, k1), v1)
-		}
-	} else {
-		validateConfigFileKey(prefix)
-		configObj[prefix] = value
+func initFlag(f *pflag.Flag) {
+	configElem := reflect.ValueOf(&Config).Elem()
+
+	sliceValue, isSliceValue := f.Value.(pflag.SliceValue)
+	if !isSliceValue {
+		mergeFlagValue(configElem, f.Name, f.Value.String())
+		return
 	}
+
+	if f.Name == SetCommandName {
+		if setError := mergeSetFlag(sliceValue.GetSlice()); setError != nil {
+			Log.Infof(uiUtils.Red, "Invalid set argument")
+		}
+		return
+	}
+
+	mergeFlagValues(configElem, f.Name, sliceValue.GetSlice())
 }
 
-func mergeCommandLineFlags(commandLineValues []string) error {
-	Log.Debugf("Merging Command line flags")
-	for _, e := range commandLineValues {
-		if !strings.Contains(e, separator) {
-			return errors.New(fmt.Sprintf("invalid set argument %s", e))
+func mergeSetFlag(setValues []string) error {
+	configElem := reflect.ValueOf(&Config).Elem()
+
+	for _, setValue := range setValues {
+		if !strings.Contains(setValue, Separator) {
+			return errors.New(fmt.Sprintf("invalid set argument %s", setValue))
 		}
-		split := strings.SplitN(e, separator, 2)
+
+		split := strings.SplitN(setValue, Separator, 2)
 		if len(split) != 2 {
-			return errors.New(fmt.Sprintf("invalid set argument %s", e))
-		}
-		setFlagKey, argumentValue := split[0], split[1]
-		argumentNameInConfig, err := flagFromAllowed(setFlagKey)
-		if err != nil {
-			return err
+			return errors.New(fmt.Sprintf("invalid set argument %s", setValue))
 		}
 
-		configObj[argumentNameInConfig] = argumentValue
+		argumentKey, argumentValue := split[0], split[1]
+		mergeFlagValue(configElem, argumentKey, argumentValue)
 	}
+
 	return nil
 }
 
-func flagFromAllowed(setFlagKey string) (string, error) {
-	for _, allowedFlag := range allowedSetFlags {
-		if strings.ToLower(allowedFlag.CommandLineName) == strings.ToLower(setFlagKey) {
-			return allowedFlag.YamlHierarchyName, nil
-		}
-	}
-	return "", errors.New(fmt.Sprintf("invalid set argument %s", setFlagKey))
-}
+func mergeFlagValue(currentElem reflect.Value, flagKey string, flagValue string) {
+	for i := 0; i < currentElem.NumField(); i++ {
+		currentField := currentElem.Type().Field(i)
+		currentFieldByName := currentElem.FieldByName(currentField.Name)
 
-func validateConfigFileKey(configFileKey string) {
-	for _, allowedFlag := range allowedSetFlags {
-		if allowedFlag.YamlHierarchyName == configFileKey {
+		if currentField.Type.Kind() == reflect.Struct {
+			mergeFlagValue(currentFieldByName, flagKey, flagValue)
+			continue
+		}
+
+		if currentField.Tag.Get("yaml") != flagKey {
+			continue
+		}
+
+		flagValueKind := currentField.Type.Kind()
+
+		parsedValue, err := getParsedValue(flagValueKind, flagValue)
+		if err != nil {
+			Log.Warningf(uiUtils.Red, fmt.Sprintf("Invalid value %v for key %s, expected %s", flagValue, flagKey, flagValueKind))
 			return
 		}
+
+		currentFieldByName.Set(parsedValue)
 	}
-	Log.Info(fmt.Sprintf("Unknown argument: %s. Exit", configFileKey))
-	os.Exit(1)
 }
 
-func addToConfigObj(key string, value interface{}, configObj map[string]interface{}) {
-	typ := reflect.TypeOf(value).Kind()
-	if typ != reflect.Map {
-		if strings.Contains(key, ".") {
-			split := strings.SplitN(key, ".", 2)
-			firstLevelKey := split[0]
-			if _, ok := configObj[firstLevelKey]; !ok {
-				configObj[firstLevelKey] = map[string]interface{}{}
-			}
-			addToConfigObj(split[1], value, configObj[firstLevelKey].(map[string]interface{}))
-		} else {
-			configObj[key] = value
+func mergeFlagValues(currentElem reflect.Value, flagKey string, flagValues []string) {
+	for i := 0; i < currentElem.NumField(); i++ {
+		currentField := currentElem.Type().Field(i)
+		currentFieldByName := currentElem.FieldByName(currentField.Name)
+
+		if currentField.Type.Kind() == reflect.Struct {
+			mergeFlagValues(currentFieldByName, flagKey, flagValues)
+			continue
 		}
+
+		if currentField.Tag.Get("yaml") != flagKey {
+			continue
+		}
+
+		flagValueKind := currentField.Type.Elem().Kind()
+
+		parsedValues := reflect.MakeSlice(reflect.SliceOf(currentField.Type.Elem()), 0, 0)
+		for _, flagValue := range flagValues {
+			parsedValue, err := getParsedValue(flagValueKind, flagValue)
+			if err != nil {
+				Log.Warningf(uiUtils.Red, fmt.Sprintf("Invalid value %v for key %s, expected %s", flagValue, flagKey, flagValueKind))
+				return
+			}
+
+			parsedValues = reflect.Append(parsedValues, parsedValue)
+		}
+
+		currentFieldByName.Set(parsedValues)
 	}
+}
+
+func getParsedValue(kind reflect.Kind, value string) (reflect.Value, error) {
+	switch kind {
+	case reflect.String:
+		return reflect.ValueOf(value), nil
+	case reflect.Bool:
+		boolArgumentValue, err := strconv.ParseBool(value)
+		if err != nil {
+			break
+		}
+
+		return reflect.ValueOf(boolArgumentValue), nil
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		intArgumentValue, err := strconv.ParseInt(value, 10, 64)
+		if err != nil {
+			break
+		}
+
+		return reflect.ValueOf(intArgumentValue), nil
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		uintArgumentValue, err := strconv.ParseUint(value, 10, 64)
+		if err != nil {
+			break
+		}
+
+		return reflect.ValueOf(uintArgumentValue), nil
+	}
+
+	return reflect.ValueOf(nil), errors.New("value to parse does not match type")
 }
