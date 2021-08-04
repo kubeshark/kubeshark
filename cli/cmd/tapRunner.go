@@ -9,6 +9,7 @@ import (
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/debounce"
 	core "k8s.io/api/core/v1"
+	errors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/tools/clientcmd"
 	"net/http"
@@ -430,7 +431,7 @@ func createRBACIfNecessary(ctx context.Context, kubernetesProvider *kubernetes.P
 	}
 	if !mizuRBACExists {
 		err := kubernetesProvider.CreateMizuRBAC(ctx, mizu.ResourcesNamespace, mizu.ServiceAccountName, mizu.ClusterRoleName, mizu.ClusterRoleBindingName, mizu.RBACVersion)
-		if err != nil {
+		if err != nil && !errors.IsAlreadyExists(err) {
 			mizu.Log.Infof("warning: could not create mizu rbac resources %v", err)
 			return false
 		}
