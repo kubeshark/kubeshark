@@ -34,6 +34,6 @@ func InitLogger() {
 
 	logging.SetBackend(backend1Leveled, backend2Formatter)
 
-	Log.Debugf(" ===================== \n\n\n\n")
+	Log.Debugf("\n\n\n")
 	Log.Debugf("Running mizu version %v", SemVer)
 }
