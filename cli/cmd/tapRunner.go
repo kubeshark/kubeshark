@@ -34,6 +34,7 @@ type tapState struct {
 	apiServerService         *core.Service
 	currentlyTappedPods      []core.Pod
 	mizuServiceAccountExists bool
+	doNotRemoveConfigMap     bool
 }
 
 var state tapState
@@ -135,7 +136,10 @@ func createMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Pro
 	}
 
 	if err := createMizuConfigmap(ctx, kubernetesProvider, mizuValidationRules); err != nil {
-		mizu.Log.Warningf(uiUtils.Warning, "Failed to create resources required for policy validation. Mizu will not validate policy rules. error: %v\n", errormessage.FormatError(err))
+		mizu.Log.Warningf(uiUtils.Warning, fmt.Sprintf("Failed to create resources required for policy validation. Mizu will not validate policy rules. error: %v\n", errormessage.FormatError(err)))
+		state.doNotRemoveConfigMap = true
+	} else if mizuValidationRules == "" {
+		state.doNotRemoveConfigMap = true
 	}
 
 	return nil
@@ -263,8 +267,10 @@ func cleanUpMizuResources(kubernetesProvider *kubernetes.Provider) {
 			mizu.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error removing DaemonSet %s in namespace %s: %v", mizu.TapperDaemonSetName, mizu.Config.ResourcesNamespace(), errormessage.FormatError(err)))
 		}
 
-		if err := kubernetesProvider.RemoveConfigMap(removalCtx, mizu.Config.ResourcesNamespace(), mizu.ConfigMapName); err != nil {
-			mizu.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error removing ConfigMap %s in namespace %s: %v", mizu.ConfigMapName, mizu.Config.ResourcesNamespace(), errormessage.FormatError(err)))
+		if !state.doNotRemoveConfigMap {
+			if err := kubernetesProvider.RemoveConfigMap(removalCtx, mizu.Config.ResourcesNamespace(), mizu.ConfigMapName); err != nil {
+				mizu.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error removing ConfigMap %s in namespace %s: %v", mizu.ConfigMapName, mizu.Config.ResourcesNamespace(), errormessage.FormatError(err)))
+			}
 		}
 
 	}
