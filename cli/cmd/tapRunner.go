@@ -41,14 +41,14 @@ var state tapState
 func RunMizuTap() {
 	mizuApiFilteringOptions, err := getMizuApiFilteringOptions()
 	if err != nil {
-		mizu.Log.Infof(uiUtils.Error, fmt.Sprintf("Error parsing regex-masking: %v", errormessage.FormatError(err)))
+		mizu.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error parsing regex-masking: %v", errormessage.FormatError(err)))
 		return
 	}
 	var mizuValidationRules string
 	if mizu.Config.Tap.EnforcePolicyFile != "" {
 		mizuValidationRules, err = readValidationRules(mizu.Config.Tap.EnforcePolicyFile)
 		if err != nil {
-			mizu.Log.Infof("error: %v", err)
+			mizu.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error reading policy file: %v", errormessage.FormatError(err)))
 			return
 		}
 	}
@@ -56,11 +56,11 @@ func RunMizuTap() {
 	kubernetesProvider, err := kubernetes.NewProvider(mizu.Config.Tap.KubeConfigPath)
 	if err != nil {
 		if clientcmd.IsEmptyConfig(err) {
-			mizu.Log.Infof(uiUtils.Error, "Couldn't find the kube config file, or file is empty. Try adding '--kube-config=<path to kube config file>'\n")
+			mizu.Log.Errorf(uiUtils.Error, "Couldn't find the kube config file, or file is empty. Try adding '--kube-config=<path to kube config file>'\n")
 			return
 		}
 		if clientcmd.IsConfigurationInvalid(err) {
-			mizu.Log.Infof(uiUtils.Error, "Invalid kube config file. Try using a different config with '--kube-config=<path to kube config file>'\n")
+			mizu.Log.Errorf(uiUtils.Error, "Invalid kube config file. Try using a different config with '--kube-config=<path to kube config file>'\n")
 			return
 		}
 	}
@@ -80,7 +80,7 @@ func RunMizuTap() {
 	mizu.Log.Infof("Tapping pods in %s", namespacesStr)
 
 	if err, _ := updateCurrentlyTappedPods(kubernetesProvider, ctx, targetNamespace); err != nil {
-		mizu.Log.Infof(uiUtils.Error, fmt.Sprintf("Error getting pods by regex: %v", errormessage.FormatError(err)))
+		mizu.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error getting pods by regex: %v", errormessage.FormatError(err)))
 		return
 	}
 
@@ -89,7 +89,7 @@ func RunMizuTap() {
 		if targetNamespace != mizu.K8sAllNamespaces {
 			suggestionStr = ". Select a different namespace with -n or tap all namespaces with -A"
 		}
-		mizu.Log.Infof(uiUtils.Warning, fmt.Sprintf("Did not find any pods matching the regex argument%s", suggestionStr))
+		mizu.Log.Warningf(uiUtils.Warning, fmt.Sprintf("Did not find any pods matching the regex argument%s", suggestionStr))
 	}
 
 	if mizu.Config.Tap.DryRun {
@@ -99,7 +99,7 @@ func RunMizuTap() {
 	nodeToTappedPodIPMap := getNodeHostToTappedPodIpsMap(state.currentlyTappedPods)
 
 	if err := createMizuResources(ctx, kubernetesProvider, nodeToTappedPodIPMap, mizuApiFilteringOptions, mizuValidationRules); err != nil {
-		mizu.Log.Infof(uiUtils.Error, fmt.Sprintf("Error creating resources: %v", errormessage.FormatError(err)))
+		mizu.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error creating resources: %v", errormessage.FormatError(err)))
 		return
 	}
 
@@ -159,7 +159,7 @@ func createMizuApiServer(ctx context.Context, kubernetesProvider *kubernetes.Pro
 
 	state.mizuServiceAccountExists, err = createRBACIfNecessary(ctx, kubernetesProvider)
 	if err != nil {
-		mizu.Log.Infof(uiUtils.Warning, fmt.Sprintf("Failed to ensure the permissions required for IP resolving. Mizu will not resolve target IPs to names. error: %v", errormessage.FormatError(err)))
+		mizu.Log.Warningf(uiUtils.Warning, fmt.Sprintf("Failed to ensure the permissions required for IP resolving. Mizu will not resolve target IPs to names. error: %v", errormessage.FormatError(err)))
 	}
 
 	var serviceAccountName string
@@ -250,41 +250,41 @@ func cleanUpMizuResources(kubernetesProvider *kubernetes.Provider) {
 
 	if mizu.Config.IsOwnNamespace() {
 		if err := kubernetesProvider.RemoveNamespace(removalCtx, mizu.Config.ResourcesNamespace()); err != nil {
-			mizu.Log.Infof(uiUtils.Error, fmt.Sprintf("Error removing Namespace %s: %v", mizu.Config.ResourcesNamespace(), errormessage.FormatError(err)))
+			mizu.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error removing Namespace %s: %v", mizu.Config.ResourcesNamespace(), errormessage.FormatError(err)))
 			return
 		}
 	} else {
 		if err := kubernetesProvider.RemovePod(removalCtx, mizu.Config.ResourcesNamespace(), mizu.ApiServerPodName); err != nil {
-			mizu.Log.Infof(uiUtils.Error, fmt.Sprintf("Error removing Pod %s in namespace %s: %v", mizu.ApiServerPodName, mizu.Config.ResourcesNamespace(), errormessage.FormatError(err)))
+			mizu.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error removing Pod %s in namespace %s: %v", mizu.ApiServerPodName, mizu.Config.ResourcesNamespace(), errormessage.FormatError(err)))
 		}
 
 		if err := kubernetesProvider.RemoveService(removalCtx, mizu.Config.ResourcesNamespace(), mizu.ApiServerPodName); err != nil {
-			mizu.Log.Infof(uiUtils.Error, fmt.Sprintf("Error removing Service %s in namespace %s: %v", mizu.ApiServerPodName, mizu.Config.ResourcesNamespace(), errormessage.FormatError(err)))
+			mizu.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error removing Service %s in namespace %s: %v", mizu.ApiServerPodName, mizu.Config.ResourcesNamespace(), errormessage.FormatError(err)))
 		}
 
 		if err := kubernetesProvider.RemoveDaemonSet(removalCtx, mizu.Config.ResourcesNamespace(), mizu.TapperDaemonSetName); err != nil {
-			mizu.Log.Infof(uiUtils.Error, fmt.Sprintf("Error removing DaemonSet %s in namespace %s: %v", mizu.TapperDaemonSetName, mizu.Config.ResourcesNamespace(), errormessage.FormatError(err)))
+			mizu.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error removing DaemonSet %s in namespace %s: %v", mizu.TapperDaemonSetName, mizu.Config.ResourcesNamespace(), errormessage.FormatError(err)))
 		}
 	}
 
 	if state.mizuServiceAccountExists {
 		if mizu.Config.IsOwnNamespace() {
 			if err := kubernetesProvider.RemoveNonNamespacedResources(removalCtx, mizu.ClusterRoleName, mizu.ClusterRoleBindingName); err != nil {
-				mizu.Log.Infof(uiUtils.Error, fmt.Sprintf("Error removing non-namespaced resources: %v", errormessage.FormatError(err)))
+				mizu.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error removing non-namespaced resources: %v", errormessage.FormatError(err)))
 				return
 			}
 		} else {
 			if err := kubernetesProvider.RemoveServicAccount(removalCtx, mizu.Config.ResourcesNamespace(), mizu.ServiceAccountName); err != nil {
-				mizu.Log.Infof(uiUtils.Error, fmt.Sprintf("Error removing Service Account %s in namespace %s: %v", mizu.ServiceAccountName, mizu.Config.ResourcesNamespace(), errormessage.FormatError(err)))
+				mizu.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error removing Service Account %s in namespace %s: %v", mizu.ServiceAccountName, mizu.Config.ResourcesNamespace(), errormessage.FormatError(err)))
 				return
 			}
 
 			if err := kubernetesProvider.RemoveRole(removalCtx, mizu.Config.ResourcesNamespace(), mizu.RoleName); err != nil {
-				mizu.Log.Infof(uiUtils.Error, fmt.Sprintf("Error removing Role %s in namespace %s: %v", mizu.RoleName, mizu.Config.ResourcesNamespace(), errormessage.FormatError(err)))
+				mizu.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error removing Role %s in namespace %s: %v", mizu.RoleName, mizu.Config.ResourcesNamespace(), errormessage.FormatError(err)))
 			}
 
 			if err := kubernetesProvider.RemoveRoleBinding(removalCtx, mizu.Config.ResourcesNamespace(), mizu.RoleBindingName); err != nil {
-				mizu.Log.Infof(uiUtils.Error, fmt.Sprintf("Error removing RoleBinding %s in namespace %s: %v", mizu.RoleBindingName, mizu.Config.ResourcesNamespace(), errormessage.FormatError(err)))
+				mizu.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error removing RoleBinding %s in namespace %s: %v", mizu.RoleBindingName, mizu.Config.ResourcesNamespace(), errormessage.FormatError(err)))
 			}
 		}
 	}
@@ -305,9 +305,9 @@ func waitUntilNamespaceDeleted(ctx context.Context, cancel context.CancelFunc, k
 		case ctx.Err() == context.Canceled:
 			// Do nothing. User interrupted the wait.
 		case err == wait.ErrWaitTimeout:
-			mizu.Log.Infof(uiUtils.Error, fmt.Sprintf("Timeout while removing Namespace %s", mizu.Config.ResourcesNamespace()))
+			mizu.Log.Errorf(uiUtils.Error, fmt.Sprintf("Timeout while removing Namespace %s", mizu.Config.ResourcesNamespace()))
 		default:
-			mizu.Log.Infof(uiUtils.Error, fmt.Sprintf("Error while waiting for Namespace %s to be deleted: %v", mizu.Config.ResourcesNamespace(), errormessage.FormatError(err)))
+			mizu.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error while waiting for Namespace %s to be deleted: %v", mizu.Config.ResourcesNamespace(), errormessage.FormatError(err)))
 		}
 	}
 }
@@ -342,7 +342,7 @@ func watchPodsForTapping(ctx context.Context, kubernetesProvider *kubernetes.Pro
 	restartTappers := func() {
 		err, changeFound := updateCurrentlyTappedPods(kubernetesProvider, ctx, targetNamespace)
 		if err != nil {
-			mizu.Log.Infof(uiUtils.Error, fmt.Sprintf("Error getting pods by regex: %v", errormessage.FormatError(err)))
+			mizu.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error getting pods by regex: %v", errormessage.FormatError(err)))
 			cancel()
 		}
 
