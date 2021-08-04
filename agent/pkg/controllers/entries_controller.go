@@ -218,8 +218,13 @@ func GetEntry(c *gin.Context) {
 			"msg":   "Can't get entry details",
 		})
 	}
-	var fullEntryWithPolicy models.FullEntryWithPolicy
-	fullEntryWithPolicy.FillResultPolicy(entryData, fullEntry.Entry)
+	fullEntryWithPolicy := models.FullEntryWithPolicy{}
+	if err := models.GetEntry(&entryData, &fullEntryWithPolicy); err != nil {
+		c.JSON(http.StatusInternalServerError, map[string]interface{}{
+			"error": true,
+			"msg":   "Can't get entry details",
+		})
+	}
 	c.JSON(http.StatusOK, fullEntryWithPolicy)
 }
 

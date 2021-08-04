@@ -205,11 +205,15 @@ type FullEntryWithPolicy struct {
 	Service      string               `json:"service"`
 }
 
-func (fewp *FullEntryWithPolicy) FillResultPolicy(entry MizuEntry, harEntry har.Entry) {
-	_, resultPolicyToSend := rules.MatchRequestPolicy(harEntry, entry.Service)
-	fewp.Entry = harEntry
+func (fewp *FullEntryWithPolicy) UnmarshalData(entry *MizuEntry) error {
+	if err := json.Unmarshal([]byte(entry.Entry), &fewp.Entry); err != nil {
+		return err
+	}
+
+	_, resultPolicyToSend := rules.MatchRequestPolicy(fewp.Entry, entry.Service)
 	fewp.RulesMatched = resultPolicyToSend
 	fewp.Service = entry.Service
+	return nil
 }
 
 func RunValidationRulesState(harEntry har.Entry, service string) ApplicableRules {
