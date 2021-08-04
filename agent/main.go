@@ -95,9 +95,10 @@ func hostApi(socketHarOutputChannel chan<- *tap.OutputChannelItem) {
 	app.Use(static.ServeRoot("/", "./site"))
 	app.Use(CORSMiddleware()) // This has to be called after the static middleware, does not work if its called before
 
-	routes.WebSocketRoutes(app, &eventHandlers)
+	api.WebSocketRoutes(app, &eventHandlers)
 	routes.EntriesRoutes(app)
 	routes.MetadataRoutes(app)
+	routes.StatusRoutes(app)
 	routes.NotFoundRoute(app)
 
 	utils.StartServer(app)

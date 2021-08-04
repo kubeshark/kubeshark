@@ -88,9 +88,9 @@ func startReadingFiles(workingDir string) {
 		for _, entry := range inputHar.Log.Entries {
 			time.Sleep(time.Millisecond * 250)
 			connectionInfo := &tap.ConnectionInfo{
-				ClientIP: fileInfo.Name(),
+				ClientIP:   fileInfo.Name(),
 				ClientPort: "",
-				ServerIP: "",
+				ServerIP:   "",
 				ServerPort: "",
 				IsOutgoing: false,
 			}
@@ -117,7 +117,6 @@ func StartReadingOutbound(outboundLinkChannel <-chan *tap.OutboundLink) {
 	for range outboundLinkChannel {
 	}
 }
-
 
 func saveHarToDb(entry *har.Entry, connectionInfo *tap.ConnectionInfo) {
 	entryBytes, _ := json.Marshal(entry)
@@ -168,7 +167,7 @@ func saveHarToDb(entry *har.Entry, connectionInfo *tap.ConnectionInfo) {
 		return
 	}
 	baseEntryBytes, _ := models.CreateBaseEntryWebSocketMessage(&baseEntry)
-	broadcastToBrowserClients(baseEntryBytes)
+	BroadcastToBrowserClients(baseEntryBytes)
 }
 
 func getServiceNameFromUrl(inputUrl string) (string, string) {
@@ -195,7 +194,6 @@ func getEstimatedEntrySizeBytes(mizuEntry models.MizuEntry) int {
 	sizeBytes += 8 // Timestamp bytes
 	sizeBytes += 8 // SizeBytes bytes
 	sizeBytes += 1 // IsOutgoing bytes
-
 
 	return sizeBytes
 }
