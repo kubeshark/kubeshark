@@ -17,18 +17,6 @@ const (
 	kubClientNullString = "None"
 )
 
-type watchArgs interface {
-	Namespace() string
-}
-
-type resolverWatchArgs struct {
-	namespace string
-}
-
-func (rw *resolverWatchArgs) Namespace() string {
-	return rw.namespace
-}
-
 type Resolver struct {
 	clientConfig *restclient.Config
 	clientSet    *kubernetes.Clientset
@@ -42,12 +30,11 @@ type Resolver struct {
 func (resolver *Resolver) Start(ctx context.Context, namespace string) {
 	if !resolver.isStarted {
 		resolver.isStarted = true
+		resolver.namespace = namespace
 
-		args := &resolverWatchArgs{namespace: namespace}
-
-		go resolver.infiniteErrorHandleRetryFunc(ctx, resolver.watchServices, args)
-		go resolver.infiniteErrorHandleRetryFunc(ctx, resolver.watchEndpoints, args)
-		go resolver.infiniteErrorHandleRetryFunc(ctx, resolver.watchPods, args)
+		go resolver.infiniteErrorHandleRetryFunc(ctx, resolver.watchServices)
+		go resolver.infiniteErrorHandleRetryFunc(ctx, resolver.watchEndpoints)
+		go resolver.infiniteErrorHandleRetryFunc(ctx, resolver.watchPods)
 	}
 }
 
@@ -68,14 +55,9 @@ func (resolver *Resolver) CheckIsServiceIP(address string) bool {
 	return isFound
 }
 
-func (resolver *Resolver) watchPods(ctx context.Context, args interface{}) error {
-	parsedArgs, ok := args.(watchArgs)
-	if !ok {
-		return errors.New(fmt.Sprintf("watchPods received invalid arguments %s", args))
-	}
-
+func (resolver *Resolver) watchPods(ctx context.Context) error {
 	// empty namespace makes the client watch all namespaces
-	watcher, err := resolver.clientSet.CoreV1().Pods(parsedArgs.Namespace()).Watch(ctx, metav1.ListOptions{Watch: true})
+	watcher, err := resolver.clientSet.CoreV1().Pods(resolver.namespace).Watch(ctx, metav1.ListOptions{Watch: true})
 	if err != nil {
 		return err
 	}
@@ -96,14 +78,9 @@ func (resolver *Resolver) watchPods(ctx context.Context, args interface{}) error
 	}
 }
 
-func (resolver *Resolver) watchEndpoints(ctx context.Context, args interface{}) error {
-	parsedArgs, ok := args.(watchArgs)
-	if !ok {
-		return errors.New(fmt.Sprintf("watchEndpoints received invalid arguments %s", args))
-	}
-
+func (resolver *Resolver) watchEndpoints(ctx context.Context) error {
 	// empty namespace makes the client watch all namespaces
-	watcher, err := resolver.clientSet.CoreV1().Endpoints(parsedArgs.Namespace()).Watch(ctx, metav1.ListOptions{Watch: true})
+	watcher, err := resolver.clientSet.CoreV1().Endpoints(resolver.namespace).Watch(ctx, metav1.ListOptions{Watch: true})
 	if err != nil {
 		return err
 	}
@@ -144,14 +121,9 @@ func (resolver *Resolver) watchEndpoints(ctx context.Context, args interface{}) 
 	}
 }
 
-func (resolver *Resolver) watchServices(ctx context.Context, args interface{}) error {
-	parsedArgs, ok := args.(watchArgs)
-	if !ok {
-		return errors.New(fmt.Sprintf("watchServices received invalid arguments %s", args))
-	}
-
+func (resolver *Resolver) watchServices(ctx context.Context) error {
 	// empty namespace makes the client watch all namespaces
-	watcher, err := resolver.clientSet.CoreV1().Services(parsedArgs.Namespace()).Watch(ctx, metav1.ListOptions{Watch: true})
+	watcher, err := resolver.clientSet.CoreV1().Services(resolver.namespace).Watch(ctx, metav1.ListOptions{Watch: true})
 	if err != nil {
 		return err
 	}
@@ -198,9 +170,9 @@ func (resolver *Resolver) saveServiceIP(key string, resolved string, eventType w
 	}
 }
 
-func (resolver *Resolver) infiniteErrorHandleRetryFunc(ctx context.Context, fun func(ctx context.Context, args interface{}) error, args interface{}) {
+func (resolver *Resolver) infiniteErrorHandleRetryFunc(ctx context.Context, fun func(ctx context.Context) error) {
 	for {
-		err := fun(ctx, args)
+		err := fun(ctx)
 		if err != nil {
 			resolver.errOut <- err
 
