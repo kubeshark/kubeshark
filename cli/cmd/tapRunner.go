@@ -135,7 +135,7 @@ func createMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Pro
 	}
 
 	if err := createMizuConfigmap(ctx, kubernetesProvider, mizuValidationRules); err != nil {
-		return err
+		mizu.Log.Warningf(uiUtils.Warning, "Failed to create resources required for policy validation. Mizu will not validate policy rules. error: %v\n", errormessage.FormatError(err))
 	}
 
 	return nil
@@ -143,10 +143,7 @@ func createMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Pro
 
 func createMizuConfigmap(ctx context.Context, kubernetesProvider *kubernetes.Provider, data string) error {
 	err := kubernetesProvider.ApplyConfigMap(ctx, mizu.Config.ResourcesNamespace(), mizu.ConfigMapName, data)
-	if err != nil {
-		fmt.Printf("Error creating mizu configmap: %v\n", err)
-	}
-	return nil
+	return err
 }
 
 func createMizuNamespace(ctx context.Context, kubernetesProvider *kubernetes.Provider) error {
@@ -159,7 +156,7 @@ func createMizuApiServer(ctx context.Context, kubernetesProvider *kubernetes.Pro
 
 	state.mizuServiceAccountExists, err = createRBACIfNecessary(ctx, kubernetesProvider)
 	if err != nil {
-		mizu.Log.Warningf(uiUtils.Warning, fmt.Sprintf("Failed to ensure the permissions required for IP resolving. Mizu will not resolve target IPs to names. error: %v", errormessage.FormatError(err)))
+		mizu.Log.Warningf(uiUtils.Warning, fmt.Sprintf("Failed to ensure the resources required for IP resolving. Mizu will not resolve target IPs to names. error: %v", errormessage.FormatError(err)))
 	}
 
 	var serviceAccountName string
@@ -265,6 +262,11 @@ func cleanUpMizuResources(kubernetesProvider *kubernetes.Provider) {
 		if err := kubernetesProvider.RemoveDaemonSet(removalCtx, mizu.Config.ResourcesNamespace(), mizu.TapperDaemonSetName); err != nil {
 			mizu.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error removing DaemonSet %s in namespace %s: %v", mizu.TapperDaemonSetName, mizu.Config.ResourcesNamespace(), errormessage.FormatError(err)))
 		}
+
+		if err := kubernetesProvider.RemoveConfigMap(removalCtx, mizu.Config.ResourcesNamespace(), mizu.ConfigMapName); err != nil {
+			mizu.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error removing ConfigMap %s in namespace %s: %v", mizu.ConfigMapName, mizu.Config.ResourcesNamespace(), errormessage.FormatError(err)))
+		}
+
 	}
 
 	if state.mizuServiceAccountExists {
