@@ -41,9 +41,12 @@ func InitConfig(cmd *cobra.Command) error {
 	return nil
 }
 
-func GetTemplateConfig() string {
-	prettifiedConfig, _ := uiUtils.PrettyYaml(Config)
-	return prettifiedConfig
+func GetConfigWithDefaults() (string, error) {
+	defaultConf := ConfigStruct{}
+	if err := defaults.Set(&defaultConf); err != nil {
+		return "", err
+	}
+	return uiUtils.PrettyYaml(defaultConf)
 }
 
 func GetConfigFilePath() string {

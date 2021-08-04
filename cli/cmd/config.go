@@ -12,12 +12,19 @@ var regenerateFile bool
 
 var configCmd = &cobra.Command{
 	Use:   "config",
-	Short: "Generate example config file to stdout",
+	Short: "Generate config with default values",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		template := mizu.GetTemplateConfig()
+		template, err := mizu.GetConfigWithDefaults()
+		if err != nil {
+			mizu.Log.Errorf("Failed generating config with defaults %v", err)
+			return nil
+		}
 		if regenerateFile {
 			data := []byte(template)
-			_ = ioutil.WriteFile(mizu.GetConfigFilePath(), data, 0644)
+			if err := ioutil.WriteFile(mizu.GetConfigFilePath(), data, 0644); err != nil {
+				mizu.Log.Errorf("Failed writing config %v", err)
+				return nil
+			}
 			mizu.Log.Infof(fmt.Sprintf("Template File written to %s", fmt.Sprintf(uiUtils.Purple, mizu.GetConfigFilePath())))
 		} else {
 			mizu.Log.Debugf("Writing template config.\n%v", template)
@@ -29,5 +36,5 @@ var configCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(configCmd)
-	configCmd.Flags().BoolVarP(&regenerateFile, "file", "f", false, "Save content to local file")
+	configCmd.Flags().BoolVarP(&regenerateFile, "regenerate", "r", false, fmt.Sprintf("Regenerate the config file with default values %s", mizu.GetConfigFilePath()))
 }
