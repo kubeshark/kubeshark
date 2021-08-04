@@ -349,7 +349,7 @@ func reportTappedPods() {
 	}
 }
 
-func watchPodsForTapping(ctx context.Context, kubernetesProvider *kubernetes.Provider, targetNamespaces []string,  cancel context.CancelFunc) {
+func watchPodsForTapping(ctx context.Context, kubernetesProvider *kubernetes.Provider, targetNamespaces []string, cancel context.CancelFunc) {
 	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, kubernetesProvider, targetNamespaces, mizu.Config.Tap.PodRegex())
 
 	restartTappers := func() {
@@ -455,7 +455,7 @@ func getMissingPods(pods1 []core.Pod, pods2 []core.Pod) []core.Pod {
 
 func createProxyToApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
 	podExactRegex := regexp.MustCompile(fmt.Sprintf("^%s$", mizu.ApiServerPodName))
-	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, kubernetesProvider, []string {mizu.ResourcesNamespace}, podExactRegex)
+	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, kubernetesProvider, []string{mizu.ResourcesNamespace}, podExactRegex)
 	isPodReady := false
 	timeAfter := time.After(25 * time.Second)
 	for {
@@ -570,10 +570,10 @@ func waitForFinish(ctx context.Context, cancel context.CancelFunc) {
 
 func getNamespaces(kubernetesProvider *kubernetes.Provider) []string {
 	if mizu.Config.Tap.AllNamespaces {
-		return []string {mizu.K8sAllNamespaces}
+		return []string{mizu.K8sAllNamespaces}
 	} else if len(mizu.Config.Tap.Namespaces) > 0 {
 		return mizu.Config.Tap.Namespaces
 	} else {
-		return []string {kubernetesProvider.CurrentNamespace()}
+		return []string{kubernetesProvider.CurrentNamespace()}
 	}
 }
