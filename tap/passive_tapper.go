@@ -336,9 +336,7 @@ func startPassiveTapper(harWriter *HarWriter, outboundLinkWriter *OutboundLinkWr
 	source.Lazy = *lazy
 	source.NoCopy = true
 	rlog.Info("Starting to read packets")
-	count := 0
-	bytes := int64(0)
-	start := time.Now()
+	statsTracker.setStartTime(time.Now())
 	defragger := ip4defrag.NewIPv4Defragmenter()
 
 	streamFactory := &tcpStreamFactory{
@@ -383,9 +381,9 @@ func startPassiveTapper(harWriter *HarWriter, outboundLinkWriter *OutboundLinkWr
 			errorsSummery := fmt.Sprintf("%v", errorsMap)
 			errorsMapMutex.Unlock()
 			log.Printf("Processed %v packets (%v bytes) in %v (errors: %v, errTypes:%v) - Errors Summary: %s",
-				count,
-				bytes,
-				time.Since(start),
+				statsTracker.appStats.PacketsCount,
+				statsTracker.appStats.ProcessedBytes,
+				time.Since(statsTracker.appStats.StartTime),
 				nErrors,
 				errorMapLen,
 				errorsSummery,
@@ -403,13 +401,13 @@ func startPassiveTapper(harWriter *HarWriter, outboundLinkWriter *OutboundLinkWr
 
 			// Since the last print
 			cleanStats := cleaner.dumpStats()
-			appStats := statsTracker.dumpStats()
+			matchedMessages := statsTracker.dumpStats()
 			log.Printf(
 				"flushed connections %d, closed connections: %d, deleted messages: %d, matched messages: %d",
 				cleanStats.flushed,
 				cleanStats.closed,
 				cleanStats.deleted,
-				appStats.matchedMessages,
+				matchedMessages,
 			)
 		}
 	}()
@@ -419,10 +417,10 @@ func startPassiveTapper(harWriter *HarWriter, outboundLinkWriter *OutboundLinkWr
 	}
 
 	for packet := range source.Packets() {
-		count++
-		rlog.Debugf("PACKET #%d", count)
+		packetsCount := statsTracker.incPacketsCount()
+		rlog.Debugf("PACKET #%d", packetsCount)
 		data := packet.Data()
-		bytes += int64(len(data))
+		statsTracker.updateProcessedSize(int64(len(data)))
 		if *hexdumppkt {
 			rlog.Debugf("Packet content (%d/0x%x) - %s", len(data), len(data), hex.Dump(data))
 		}
@@ -473,12 +471,17 @@ func startPassiveTapper(harWriter *HarWriter, outboundLinkWriter *OutboundLinkWr
 			assemblerMutex.Unlock()
 		}
 
-		done := *maxcount > 0 && count >= *maxcount
+		done := *maxcount > 0 && statsTracker.appStats.PacketsCount >= *maxcount
 		if done {
 			errorsMapMutex.Lock()
 			errorMapLen := len(errorsMap)
 			errorsMapMutex.Unlock()
-			log.Printf("Processed %v packets (%v bytes) in %v (errors: %v, errTypes:%v)", count, bytes, time.Since(start), nErrors, errorMapLen)
+			log.Printf("Processed %v packets (%v bytes) in %v (errors: %v, errTypes:%v)",
+				statsTracker.appStats.PacketsCount,
+				statsTracker.appStats.ProcessedBytes,
+				time.Since(statsTracker.appStats.StartTime),
+				nErrors,
+				errorMapLen)
 		}
 		select {
 		case <-signalChan:
