@@ -387,22 +387,19 @@ func createProxyToApiServerPod(ctx context.Context, kubernetesProvider *kubernet
 			return
 		case modifiedPod := <-modified:
 			mizu.Log.Debugf("Got agent pod modified event, status phase: %v", modifiedPod.Status.Phase)
-			if modifiedPod.Status.Phase == core.PodRunning {
+			if modifiedPod.Status.Phase == core.PodRunning && !isPodReady {
+				isPodReady = true
+				go func() {
+					err := kubernetes.StartProxy(kubernetesProvider, mizu.Config.Tap.GuiPort, mizu.ResourcesNamespace, mizu.ApiServerPodName)
+					if err != nil {
+						mizu.Log.Errorf("Error occurred while running k8s proxy %v", err)
+						cancel()
+					}
+				}()
+				mizu.Log.Infof("Mizu is available at http://%s\n", kubernetes.GetMizuApiServerProxiedHostAndPath(mizu.Config.Tap.GuiPort))
+				time.Sleep(time.Second * 5) // Waiting to be sure the proxy is ready
+				requestForAnalysis()
 				reportTappedPods()
-				if !isPodReady {
-					isPodReady = true
-					go func() {
-						err := kubernetes.StartProxy(kubernetesProvider, mizu.Config.Tap.GuiPort, mizu.ResourcesNamespace, mizu.ApiServerPodName)
-						if err != nil {
-							mizu.Log.Errorf("Error occurred while running k8s proxy %v", err)
-							cancel()
-						}
-					}()
-					mizu.Log.Infof("Mizu is available at http://%s\n", kubernetes.GetMizuApiServerProxiedHostAndPath(mizu.Config.Tap.GuiPort))
-					time.Sleep(time.Second * 5) // Waiting to be sure the proxy is ready
-					requestForAnalysis()
-					reportTappedPods()
-				}
 			}
 		case <-timeAfter:
 			if !isPodReady {
