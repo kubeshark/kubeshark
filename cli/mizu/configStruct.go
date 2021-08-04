@@ -1,6 +1,8 @@
 package mizu
 
 import (
+	"fmt"
+
 	"github.com/up9inc/mizu/cli/mizu/configStructs"
 )
 
@@ -14,5 +16,5 @@ type ConfigStruct struct {
 }
 
 func (config *ConfigStruct) SetDefaults() {
-	config.MizuImage = "gcr.io/sample-customer-264515/mizu-ui:latest"
+	config.MizuImage = fmt.Sprintf("gcr.io/up9-docker-hub/mizu/%s:%s", Branch, SemVer)
 }
