@@ -6,4 +6,6 @@ const (
 	NodeNameEnvVar                   = "NODE_NAME"
 	TappedAddressesPerNodeDictEnvVar = "TAPPED_ADDRESSES_PER_HOST"
 	MaxEntriesDBSizeBytesEnvVar      = "MAX_ENTRIES_DB_BYTES"
+	RulePolicyPath                   = "/app/enforce-policy/"
+	RulePolicyFileName               = "enforce-policy.yaml"
 )

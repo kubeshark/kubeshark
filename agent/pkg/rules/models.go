@@ -42,7 +42,7 @@ func ValidateService(serviceFromRule string, service string) bool {
 }
 
 func MatchRequestPolicy(harEntry har.Entry, service string) (int, []RulesMatched) {
-	enforcePolicy, _ := shared.DecodeEnforcePolicy("/app/enforce-policy/enforce-policy.yaml")
+	enforcePolicy, _ := shared.DecodeEnforcePolicy(fmt.Sprintf("%s/%s", shared.RulePolicyPath, shared.RulePolicyFileName))
 	var resultPolicyToSend []RulesMatched
 	for _, rule := range enforcePolicy.Rules {
 		if !ValidatePath(rule.Path, harEntry.Request.URL) || !ValidateService(rule.Service, service) {

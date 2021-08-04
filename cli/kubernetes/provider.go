@@ -168,7 +168,7 @@ func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, namespace 
 					VolumeMounts: []core.VolumeMount{
 						{
 							Name:      mizu.ConfigMapName,
-							MountPath: "/app/enforce-policy",
+							MountPath: shared.RulePolicyPath,
 						},
 					},
 					Command: []string{"./mizuagent", "--api-server"},
@@ -522,7 +522,7 @@ func (provider *Provider) ApplyConfigMap(ctx context.Context, namespace string, 
 		return nil
 	}
 	configMapData := make(map[string]string, 0)
-	configMapData["enforce-policy.yaml"] = data
+	configMapData[shared.RulePolicyFileName] = data
 	configMap := &core.ConfigMap{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "ConfigMap",
