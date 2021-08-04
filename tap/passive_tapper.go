@@ -179,6 +179,10 @@ func (c *Context) GetCaptureInfo() gopacket.CaptureInfo {
 	return c.CaptureInfo
 }
 
+func GetStats() AppStats {
+	return statsTracker.appStats
+}
+
 func StartPassiveTapper(opts *TapOpts) (<-chan *OutputChannelItem, <-chan *OutboundLink) {
 	hostMode = opts.HostMode
 

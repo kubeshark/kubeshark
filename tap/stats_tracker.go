@@ -50,7 +50,3 @@ func (st *StatsTracker) dumpStats() int {
 	st.appStatsMutex.Unlock()
 	return matchedMessages
 }
-
-func (st *StatsTracker) GetStats() AppStats {
-	return st.appStats
-}
