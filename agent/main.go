@@ -85,7 +85,7 @@ func hostApi(socketHarOutputChannel chan<- *tap.OutputChannelItem) {
 	app := gin.Default()
 
 	app.GET("/echo", func(c *gin.Context) {
-		c.String(http.StatusOK, "Hello, World 👋!")
+		c.String(http.StatusOK, "Here is Mizu agent")
 	})
 
 	eventHandlers := api.RoutesEventHandlers{

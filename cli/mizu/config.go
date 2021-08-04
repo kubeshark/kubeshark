@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	Separator = "="
+	Separator      = "="
 	SetCommandName = "set"
 )
 
@@ -29,33 +29,34 @@ func InitConfig(cmd *cobra.Command) error {
 	}
 
 	if err := mergeConfigFile(); err != nil {
-		Log.Infof(uiUtils.Red, "Invalid config file")
-		return err
+		Log.Errorf("Could not load config file, error %v", err)
+		Log.Fatalf("You can regenerate the file using `mizu config -r` or just remove it %v", GetConfigFilePath())
 	}
 
 	cmd.Flags().Visit(initFlag)
 
 	finalConfigPrettified, _ := uiUtils.PrettyJson(Config)
-	Log.Debugf("Merged all config successfully\n Final config: %v", finalConfigPrettified)
+	Log.Debugf("Init config finished\n Final config: %v", finalConfigPrettified)
 
 	return nil
 }
 
-func GetTemplateConfig() string {
-	prettifiedConfig, _ := uiUtils.PrettyYaml(Config)
-	return prettifiedConfig
+func GetConfigWithDefaults() (string, error) {
+	defaultConf := ConfigStruct{}
+	if err := defaults.Set(&defaultConf); err != nil {
+		return "", err
+	}
+	return uiUtils.PrettyYaml(defaultConf)
+}
+
+func GetConfigFilePath() string {
+	return path.Join(getMizuFolderPath(), "config.yaml")
 }
 
 func mergeConfigFile() error {
-	Log.Debugf("Merging config file values")
-	home, homeDirErr := os.UserHomeDir()
-	if homeDirErr != nil {
-		return homeDirErr
-	}
-
-	reader, openErr := os.Open(path.Join(home, ".mizu", "config.yaml"))
+	reader, openErr := os.Open(GetConfigFilePath())
 	if openErr != nil {
-		return openErr
+		return nil
 	}
 
 	buf, readErr := ioutil.ReadAll(reader)
@@ -66,6 +67,7 @@ func mergeConfigFile() error {
 	if err := yaml.Unmarshal(buf, &Config); err != nil {
 		return err
 	}
+	Log.Debugf("Found config file, merged to default options")
 
 	return nil
 }

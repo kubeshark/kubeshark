@@ -473,6 +473,8 @@ func (provider *Provider) CheckDaemonSetExists(ctx context.Context, namespace st
 }
 
 func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, apiServerPodIp string, nodeToTappedPodIPMap map[string][]string, serviceAccountName string, tapOutgoing bool) error {
+	mizu.Log.Debugf("Applying %d tapper deamonsets, ns: %s, daemonSetName: %s, podImage: %s, tapperPodName: %s", len(nodeToTappedPodIPMap), namespace, daemonSetName, podImage, tapperPodName)
+
 	if len(nodeToTappedPodIPMap) == 0 {
 		return fmt.Errorf("Daemon set %s must tap at least 1 pod", daemonSetName)
 	}
@@ -493,12 +495,11 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 		mizuCmd = append(mizuCmd, "--anydirection")
 	}
 
-	privileged := true
 	agentContainer := applyconfcore.Container()
 	agentContainer.WithName(tapperPodName)
 	agentContainer.WithImage(podImage)
 	agentContainer.WithImagePullPolicy(core.PullAlways)
-	agentContainer.WithSecurityContext(applyconfcore.SecurityContext().WithPrivileged(privileged))
+	agentContainer.WithSecurityContext(applyconfcore.SecurityContext().WithPrivileged(true))
 	agentContainer.WithCommand(mizuCmd...)
 	agentContainer.WithEnv(
 		applyconfcore.EnvVar().WithName(shared.HostModeEnvVar).WithValue("1"),
