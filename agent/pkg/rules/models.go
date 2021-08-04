@@ -94,7 +94,7 @@ func MatchRequestPolicy(harEntry har.Entry, service string) (int, []RulesMatched
 
 func PassedValidationRules(rulesMatched []RulesMatched, numberOfRules int) (bool, int64) {
 	if len(rulesMatched) == 0 {
-		return false, -1
+		return false, 0
 	}
 	for _, rule := range rulesMatched {
 		if rule.Matched == false {

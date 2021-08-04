@@ -56,12 +56,11 @@ export const HarEntry: React.FC<HAREntryProps> = ({entry, setFocusedEntryId, isS
         }
     }
     let backgroundColor = "";
-    if ('status' in entry.rules) {
-        backgroundColor = entry.rules.status ? styles.ruleSuccessRow : styles.ruleFailureRow
-    }
     if ('latency' in entry.rules) {
         if (entry.rules.latency !== -1) {
             backgroundColor = entry.rules.latency >= entry.latency ? styles.ruleSuccessRow : styles.ruleFailureRow
+        } else {
+            backgroundColor = entry.rules.status ? styles.ruleSuccessRow : styles.ruleFailureRow
         }
     }
     return <>

@@ -10,7 +10,7 @@ import (
 const telemetryUrl = "https://us-east4-up9-prod.cloudfunctions.net/mizu-telemetry"
 
 func ReportRun(cmd string, args interface{}) {
-	if !GetBool(ConfigurationKeyTelemetry) {
+	if !Config.Telemetry {
 		Log.Debugf("not reporting due to config value")
 		return
 	}
