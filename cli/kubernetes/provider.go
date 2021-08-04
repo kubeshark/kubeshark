@@ -530,7 +530,7 @@ func (provider *Provider) RemoveDaemonSet(ctx context.Context, namespace string,
 	return provider.clientSet.AppsV1().DaemonSets(namespace).Delete(ctx, daemonSetName, metav1.DeleteOptions{})
 }
 
-func (provider *Provider) ApplyConfigMap(ctx context.Context, namespace string, configMapName string, data string) error {
+func (provider *Provider) CreateConfigMap(ctx context.Context, namespace string, configMapName string, data string) error {
 	if data == "" {
 		return nil
 	}

@@ -142,7 +142,7 @@ func createMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Pro
 }
 
 func createMizuConfigmap(ctx context.Context, kubernetesProvider *kubernetes.Provider, data string) error {
-	err := kubernetesProvider.ApplyConfigMap(ctx, mizu.Config.ResourcesNamespace(), mizu.ConfigMapName, data)
+	err := kubernetesProvider.CreateConfigMap(ctx, mizu.Config.ResourcesNamespace(), mizu.ConfigMapName, data)
 	return err
 }
 
