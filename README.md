@@ -201,7 +201,20 @@ Pick one from the [Releases](https://github.com/up9inc/mizu/releases) page.
   - watch
 ```
 
-4. Alternatively, in order to restrict mizu to one namespace only (by setting `agent.namespace` in the config file), mizu needs the following permissions in that namespace:
+4. Optionally, in order to use the policy rules validation feature, mizu requires the following additional permissions:
+
+```yaml
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - get
+  - create
+  - delete
+```
+
+5. Alternatively, in order to restrict mizu to one namespace only (by setting `agent.namespace` in the config file), mizu needs the following permissions in that namespace:
 
 ```yaml
 - apiGroups:
@@ -239,7 +252,7 @@ Pick one from the [Releases](https://github.com/up9inc/mizu/releases) page.
   - get
 ```
 
-5. To restrict mizu to one namespace while also resolving IPs, mizu needs the following permissions in that namespace:
+6. To restrict mizu to one namespace while also resolving IPs, mizu needs the following permissions in that namespace:
 
 ```yaml
 - apiGroups:
