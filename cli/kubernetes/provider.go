@@ -534,6 +534,7 @@ func (provider *Provider) CreateConfigMap(ctx context.Context, namespace string,
 	if data == "" {
 		return nil
 	}
+
 	configMapData := make(map[string]string, 0)
 	configMapData[shared.RulePolicyFileName] = data
 	configMap := &core.ConfigMap{
@@ -547,14 +548,11 @@ func (provider *Provider) CreateConfigMap(ctx context.Context, namespace string,
 		},
 		Data: configMapData,
 	}
-	_, err := provider.clientSet.CoreV1().ConfigMaps(namespace).Create(ctx, configMap, metav1.CreateOptions{})
-	var statusError *k8serrors.StatusError
-	if errors.As(err, &statusError) {
-		if statusError.ErrStatus.Reason == metav1.StatusReasonForbidden {
-			return fmt.Errorf("User not authorized to create configmap, --test-rules will be ignored")
-		}
+	if _, err := provider.clientSet.CoreV1().ConfigMaps(namespace).Create(ctx, configMap, metav1.CreateOptions{}); err != nil {
+		return err
 	}
-	return err
+
+	return nil
 }
 
 func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, apiServerPodIp string, nodeToTappedPodIPMap map[string][]string, serviceAccountName string, tapOutgoing bool) error {
