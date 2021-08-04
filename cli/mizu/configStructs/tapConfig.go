@@ -11,7 +11,7 @@ import (
 
 const (
 	GuiPortTapName                = "gui-port"
-	NamespaceTapName              = "namespace"
+	NamespacesTapName             = "namespaces"
 	AnalysisTapName               = "analysis"
 	AllNamespacesTapName          = "all-namespaces"
 	KubeConfigPathTapName         = "kube-config"
@@ -29,7 +29,7 @@ type TapConfig struct {
 	SleepIntervalSec       int      `yaml:"upload-interval" default:"10"`
 	PodRegexStr            string   `yaml:"regex" default:".*"`
 	GuiPort                uint16   `yaml:"gui-port" default:"8899"`
-	Namespace              string   `yaml:"namespace"`
+	Namespaces             []string `yaml:"namespaces"`
 	Analysis               bool     `yaml:"analysis" default:"false"`
 	AllNamespaces          bool     `yaml:"all-namespaces" default:"false"`
 	KubeConfigPath         string   `yaml:"kube-config"`
