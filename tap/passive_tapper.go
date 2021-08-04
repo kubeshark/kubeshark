@@ -51,7 +51,7 @@ func parseAppPorts(appPortsList string) []int {
 	return ports
 }
 
-var maxcount = flag.Int("c", -1, "Only grab this many packets, then exit")
+var maxcount = flag.Int64("c", -1, "Only grab this many packets, then exit")
 var decoder = flag.String("decoder", "", "Name of the decoder to use (default: guess from capture)")
 var statsevery = flag.Int("stats", 60, "Output statistics every N seconds")
 var lazy = flag.Bool("lazy", false, "If true, do lazy decoding")
@@ -175,12 +175,12 @@ type Context struct {
 	CaptureInfo gopacket.CaptureInfo
 }
 
-func (c *Context) GetCaptureInfo() gopacket.CaptureInfo {
-	return c.CaptureInfo
-}
-
 func GetStats() AppStats {
 	return statsTracker.appStats
+}
+
+func (c *Context) GetCaptureInfo() gopacket.CaptureInfo {
+	return c.CaptureInfo
 }
 
 func StartPassiveTapper(opts *TapOpts) (<-chan *OutputChannelItem, <-chan *OutboundLink) {
@@ -385,8 +385,8 @@ func startPassiveTapper(harWriter *HarWriter, outboundLinkWriter *OutboundLinkWr
 			errorsSummery := fmt.Sprintf("%v", errorsMap)
 			errorsMapMutex.Unlock()
 			log.Printf("Processed %v packets (%v bytes) in %v (errors: %v, errTypes:%v) - Errors Summary: %s",
-				statsTracker.appStats.PacketsCount,
-				statsTracker.appStats.ProcessedBytes,
+				statsTracker.appStats.TotalPacketsCount,
+				statsTracker.appStats.TotalProcessedBytes,
 				time.Since(statsTracker.appStats.StartTime),
 				nErrors,
 				errorMapLen,
@@ -475,14 +475,14 @@ func startPassiveTapper(harWriter *HarWriter, outboundLinkWriter *OutboundLinkWr
 			assemblerMutex.Unlock()
 		}
 
-		done := *maxcount > 0 && statsTracker.appStats.PacketsCount >= *maxcount
+		done := *maxcount > 0 && statsTracker.appStats.TotalPacketsCount >= *maxcount
 		if done {
 			errorsMapMutex.Lock()
 			errorMapLen := len(errorsMap)
 			errorsMapMutex.Unlock()
 			log.Printf("Processed %v packets (%v bytes) in %v (errors: %v, errTypes:%v)",
-				statsTracker.appStats.PacketsCount,
-				statsTracker.appStats.ProcessedBytes,
+				statsTracker.appStats.TotalPacketsCount,
+				statsTracker.appStats.TotalProcessedBytes,
 				time.Since(statsTracker.appStats.StartTime),
 				nErrors,
 				errorMapLen)
@@ -542,4 +542,5 @@ func startPassiveTapper(harWriter *HarWriter, outboundLinkWriter *OutboundLinkWr
 	for e := range errorsMap {
 		log.Printf(" %s:\t\t%d", e, errorsMap[e])
 	}
+	log.Printf("AppStats: %v", GetStats())
 }

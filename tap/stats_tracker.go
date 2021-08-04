@@ -6,36 +6,39 @@ import (
 )
 
 type AppStats struct {
-	MatchedMessages      int       `json:"matchedMessages"`
-	PacketsCount         int       `json:"packetsCount"`
-	ProcessedBytes       int64     `json:"processedBytes"`
 	StartTime            time.Time `json:"startTime"`
-	TotalMatchedMessages int       `json:"totalMatchedMessages"`
+	MatchedMessages      int       `json:"matchedMessages"`
+	TotalPacketsCount    int64     `json:"totalPacketsCount"`
+	TotalProcessedBytes  int64     `json:"totalProcessedBytes"`
+	TotalMatchedMessages int64     `json:"totalMatchedMessages"`
 }
 
 type StatsTracker struct {
-	appStats      AppStats
-	appStatsMutex sync.Mutex
+	appStats                AppStats
+	matchedMessagesMutex    sync.Mutex
+	totalPacketsCountMutex  sync.Mutex
+	totalProcessedSizeMutex sync.Mutex
 }
 
 func (st *StatsTracker) incMatchedMessages() {
-	st.appStatsMutex.Lock()
+	st.matchedMessagesMutex.Lock()
 	st.appStats.MatchedMessages++
-	st.appStatsMutex.Unlock()
+	st.appStats.TotalMatchedMessages++
+	st.matchedMessagesMutex.Unlock()
 }
 
-func (st *StatsTracker) incPacketsCount() int {
-	st.appStatsMutex.Lock()
-	st.appStats.PacketsCount++
-	currentPacketsCount := st.appStats.PacketsCount
-	st.appStatsMutex.Unlock()
+func (st *StatsTracker) incPacketsCount() int64 {
+	st.totalPacketsCountMutex.Lock()
+	st.appStats.TotalPacketsCount++
+	currentPacketsCount := st.appStats.TotalPacketsCount
+	st.totalPacketsCountMutex.Unlock()
 	return currentPacketsCount
 }
 
 func (st *StatsTracker) updateProcessedSize(size int64) {
-	st.appStatsMutex.Lock()
-	st.appStats.ProcessedBytes += size
-	st.appStatsMutex.Unlock()
+	st.totalProcessedSizeMutex.Lock()
+	st.appStats.TotalProcessedBytes += size
+	st.totalProcessedSizeMutex.Unlock()
 }
 
 func (st *StatsTracker) setStartTime(startTime time.Time) {
@@ -43,10 +46,10 @@ func (st *StatsTracker) setStartTime(startTime time.Time) {
 }
 
 func (st *StatsTracker) dumpStats() int {
-	st.appStatsMutex.Lock()
+	st.matchedMessagesMutex.Lock()
 	matchedMessages := st.appStats.MatchedMessages
-	st.appStats.TotalMatchedMessages += matchedMessages
 	st.appStats.MatchedMessages = 0
-	st.appStatsMutex.Unlock()
+	st.matchedMessagesMutex.Unlock()
+
 	return matchedMessages
 }
