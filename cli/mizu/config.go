@@ -38,7 +38,7 @@ func (config *ConfigStruct) Validate() error {
 	if config.IsNsRestrictedMode() {
 		if config.Tap.AllNamespaces || len(config.Tap.Namespaces) != 1 || config.Tap.Namespaces[0] != config.MizuResourcesNamespace {
 			return fmt.Errorf("Not supported mode. Mizu can't resolve IPs in other namespaces when running in namespace restricted mode.\n" +
-				"You can use the same namespace for --namespace and --mizu-resources-namespace")
+				"You can use the same namespace for --%s and --%s", configStructs.NamespacesTapName, MizuResourcesNamespaceConfigName)
 		}
 	}
 
@@ -105,7 +105,7 @@ func initFlag(f *pflag.Flag) {
 
 	if f.Name == SetCommandName {
 		if setError := mergeSetFlag(sliceValue.GetSlice()); setError != nil {
-			Log.Warningf(uiUtils.Red, fmt.Sprintf("Invalid set argument, error: %v", setError))
+			Log.Warningf(uiUtils.Red, fmt.Sprintf("%v", setError))
 		}
 		return
 	}
@@ -129,7 +129,7 @@ func mergeSetFlag(setValues []string) error {
 		argumentKey, argumentValue := split[0], split[1]
 
 		if !Contains(allowedSetFlags, argumentKey) {
-			return errors.New(fmt.Sprintf("invalid set key %s", argumentKey))
+			return errors.New(fmt.Sprintf("invalid set key %s, allowed set flags: \"%s\"", argumentKey, strings.Join(allowedSetFlags, "\", \"")))
 		}
 
 		mergeFlagValue(configElem, argumentKey, argumentValue)
