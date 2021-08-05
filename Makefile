@@ -33,13 +33,8 @@ agent: ## Build agent.
 	@(cd agent; go build -o build/mizuagent main.go)
 	@ls -l agent/build
 
-#tap: ## build tap binary
-#	@(cd tap; go build -o build/tap ./src)
-#	@ls -l tap/build
-
-docker: ## Build Docker image.
-	@(echo "building docker image" )
-	./build-push-featurebranch.sh
+docker: ## Build and publish agent docker image.
+	$(MAKE) push-docker
 
 push: push-docker push-cli ## Build and publish agent docker image & CLI.
 

@@ -12,16 +12,13 @@ import (
 	"strconv"
 
 	"github.com/up9inc/mizu/cli/mizu"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/client-go/tools/cache"
-	"k8s.io/client-go/util/homedir"
-
 	"github.com/up9inc/mizu/shared"
 	core "k8s.io/api/core/v1"
 	rbac "k8s.io/api/rbac/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	resource "k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/watch"
 	applyconfapp "k8s.io/client-go/applyconfigurations/apps/v1"
@@ -33,9 +30,11 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/openstack"
 	restclient "k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
 	_ "k8s.io/client-go/tools/portforward"
 	watchtools "k8s.io/client-go/tools/watch"
+	"k8s.io/client-go/util/homedir"
 )
 
 type Provider struct {
@@ -126,8 +125,18 @@ func (provider *Provider) CreateNamespace(ctx context.Context, name string) (*co
 	return provider.clientSet.CoreV1().Namespaces().Create(ctx, namespaceSpec, metav1.CreateOptions{})
 }
 
-func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, namespace string, podName string, podImage string, serviceAccountName string, mizuApiFilteringOptions *shared.TrafficFilteringOptions, maxEntriesDBSizeBytes int64) (*core.Pod, error) {
-	marshaledFilteringOptions, err := json.Marshal(mizuApiFilteringOptions)
+type ApiServerOptions struct {
+	Namespace               string
+	PodName                 string
+	PodImage                string
+	ServiceAccountName      string
+	IsNamespaceRestricted   bool
+	MizuApiFilteringOptions *shared.TrafficFilteringOptions
+	MaxEntriesDBSizeBytes   int64
+}
+
+func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, opts *ApiServerOptions) (*core.Pod, error) {
+	marshaledFilteringOptions, err := json.Marshal(opts.MizuApiFilteringOptions)
 	if err != nil {
 		return nil, err
 	}
@@ -138,32 +147,37 @@ func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, namespace 
 
 	cpuLimit, err := resource.ParseQuantity("750m")
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("invalid cpu limit for %s container", podName))
+		return nil, errors.New(fmt.Sprintf("invalid cpu limit for %s container", opts.PodName))
 	}
 	memLimit, err := resource.ParseQuantity("512Mi")
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("invalid memory limit for %s container", podName))
+		return nil, errors.New(fmt.Sprintf("invalid memory limit for %s container", opts.PodName))
 	}
 	cpuRequests, err := resource.ParseQuantity("50m")
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("invalid cpu request for %s container", podName))
+		return nil, errors.New(fmt.Sprintf("invalid cpu request for %s container", opts.PodName))
 	}
 	memRequests, err := resource.ParseQuantity("50Mi")
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("invalid memory request for %s container", podName))
+		return nil, errors.New(fmt.Sprintf("invalid memory request for %s container", opts.PodName))
+	}
+
+	command := []string{"./mizuagent", "--api-server"}
+	if opts.IsNamespaceRestricted {
+		command = append(command, "--namespace", opts.Namespace)
 	}
 
 	pod := &core.Pod{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      podName,
-			Namespace: namespace,
-			Labels:    map[string]string{"app": podName},
+			Name:      opts.PodName,
+			Namespace: opts.Namespace,
+			Labels:    map[string]string{"app": opts.PodName},
 		},
 		Spec: core.PodSpec{
 			Containers: []core.Container{
 				{
-					Name:            podName,
-					Image:           podImage,
+					Name:            opts.PodName,
+					Image:           opts.PodImage,
 					ImagePullPolicy: core.PullAlways,
 					VolumeMounts: []core.VolumeMount{
 						{
@@ -171,7 +185,7 @@ func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, namespace 
 							MountPath: shared.RulePolicyPath,
 						},
 					},
-					Command: []string{"./mizuagent", "--api-server"},
+					Command: command,
 					Env: []core.EnvVar{
 						{
 							Name:  shared.HostModeEnvVar,
@@ -183,7 +197,7 @@ func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, namespace 
 						},
 						{
 							Name:  shared.MaxEntriesDBSizeBytesEnvVar,
-							Value: strconv.FormatInt(maxEntriesDBSizeBytes, 10),
+							Value: strconv.FormatInt(opts.MaxEntriesDBSizeBytes, 10),
 						},
 					},
 					Resources: core.ResourceRequirements{
@@ -211,10 +225,10 @@ func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, namespace 
 		},
 	}
 	//define the service account only when it exists to prevent pod crash
-	if serviceAccountName != "" {
-		pod.Spec.ServiceAccountName = serviceAccountName
+	if opts.ServiceAccountName != "" {
+		pod.Spec.ServiceAccountName = opts.ServiceAccountName
 	}
-	return provider.clientSet.CoreV1().Pods(namespace).Create(ctx, pod, metav1.CreateOptions{})
+	return provider.clientSet.CoreV1().Pods(opts.Namespace).Create(ctx, pod, metav1.CreateOptions{})
 }
 
 func (provider *Provider) CreateService(ctx context.Context, namespace string, serviceName string, appLabelValue string) (*core.Service, error) {
@@ -234,7 +248,55 @@ func (provider *Provider) CreateService(ctx context.Context, namespace string, s
 
 func (provider *Provider) DoesServiceAccountExist(ctx context.Context, namespace string, serviceAccountName string) (bool, error) {
 	serviceAccount, err := provider.clientSet.CoreV1().ServiceAccounts(namespace).Get(ctx, serviceAccountName, metav1.GetOptions{})
+	return provider.doesResourceExist(serviceAccount, err)
+}
 
+func (provider *Provider) DoesConfigMapExist(ctx context.Context, namespace string, name string) (bool, error) {
+	resource, err := provider.clientSet.CoreV1().ConfigMaps(namespace).Get(ctx, name, metav1.GetOptions{})
+	return provider.doesResourceExist(resource, err)
+}
+
+func (provider *Provider) DoesServicesExist(ctx context.Context, namespace string, name string) (bool, error) {
+	resource, err := provider.clientSet.CoreV1().Services(namespace).Get(ctx, name, metav1.GetOptions{})
+	return provider.doesResourceExist(resource, err)
+}
+
+func (provider *Provider) DoesNamespaceExist(ctx context.Context, name string) (bool, error) {
+	resource, err := provider.clientSet.CoreV1().Namespaces().Get(ctx, name, metav1.GetOptions{})
+	return provider.doesResourceExist(resource, err)
+}
+
+func (provider *Provider) DoesClusterRoleExist(ctx context.Context, name string) (bool, error) {
+	resource, err := provider.clientSet.RbacV1().ClusterRoles().Get(ctx, name, metav1.GetOptions{})
+	return provider.doesResourceExist(resource, err)
+}
+
+func (provider *Provider) DoesClusterRoleBindingExist(ctx context.Context, name string) (bool, error) {
+	resource, err := provider.clientSet.RbacV1().ClusterRoleBindings().Get(ctx, name, metav1.GetOptions{})
+	return provider.doesResourceExist(resource, err)
+}
+
+func (provider *Provider) DoesRoleExist(ctx context.Context, namespace string, name string) (bool, error) {
+	resource, err := provider.clientSet.RbacV1().Roles(namespace).Get(ctx, name, metav1.GetOptions{})
+	return provider.doesResourceExist(resource, err)
+}
+
+func (provider *Provider) DoesRoleBindingExist(ctx context.Context, namespace string, name string) (bool, error) {
+	resource, err := provider.clientSet.RbacV1().RoleBindings(namespace).Get(ctx, name, metav1.GetOptions{})
+	return provider.doesResourceExist(resource, err)
+}
+
+func (provider *Provider) DoesPodExist(ctx context.Context, namespace string, name string) (bool, error) {
+	resource, err := provider.clientSet.CoreV1().Pods(namespace).Get(ctx, name, metav1.GetOptions{})
+	return provider.doesResourceExist(resource, err)
+}
+
+func (provider *Provider) DoesDaemonSetExist(ctx context.Context, namespace string, name string) (bool, error) {
+	resource, err := provider.clientSet.AppsV1().DaemonSets(namespace).Get(ctx, name, metav1.GetOptions{})
+	return provider.doesResourceExist(resource, err)
+}
+
+func (provider *Provider) doesResourceExist(resource interface{}, err error) (bool, error) {
 	var statusError *k8serrors.StatusError
 	if errors.As(err, &statusError) {
 		// expected behavior when resource does not exist
@@ -245,22 +307,7 @@ func (provider *Provider) DoesServiceAccountExist(ctx context.Context, namespace
 	if err != nil {
 		return false, err
 	}
-	return serviceAccount != nil, nil
-}
-
-func (provider *Provider) DoesServicesExist(ctx context.Context, namespace string, serviceName string) (bool, error) {
-	service, err := provider.clientSet.CoreV1().Services(namespace).Get(ctx, serviceName, metav1.GetOptions{})
-
-	var statusError *k8serrors.StatusError
-	if errors.As(err, &statusError) {
-		if statusError.ErrStatus.Reason == metav1.StatusReasonNotFound {
-			return false, nil
-		}
-	}
-	if err != nil {
-		return false, err
-	}
-	return service != nil, nil
+	return resource != nil, nil
 }
 
 func (provider *Provider) CreateMizuRBAC(ctx context.Context, namespace string, serviceAccountName string, clusterRoleName string, clusterRoleBindingName string, version string) error {
@@ -317,8 +364,62 @@ func (provider *Provider) CreateMizuRBAC(ctx context.Context, namespace string, 
 	return nil
 }
 
+func (provider *Provider) CreateMizuRBACNamespaceRestricted(ctx context.Context, namespace string, serviceAccountName string, roleName string, roleBindingName string, version string) error {
+	serviceAccount := &core.ServiceAccount{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      serviceAccountName,
+			Namespace: namespace,
+			Labels:    map[string]string{"mizu-cli-version": version},
+		},
+	}
+	role := &rbac.Role{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:   roleName,
+			Labels: map[string]string{"mizu-cli-version": version},
+		},
+		Rules: []rbac.PolicyRule{
+			{
+				APIGroups: []string{"", "extensions", "apps"},
+				Resources: []string{"pods", "services", "endpoints"},
+				Verbs:     []string{"list", "get", "watch"},
+			},
+		},
+	}
+	roleBinding := &rbac.RoleBinding{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:   roleBindingName,
+			Labels: map[string]string{"mizu-cli-version": version},
+		},
+		RoleRef: rbac.RoleRef{
+			Name:     roleName,
+			Kind:     "Role",
+			APIGroup: "rbac.authorization.k8s.io",
+		},
+		Subjects: []rbac.Subject{
+			{
+				Kind:      "ServiceAccount",
+				Name:      serviceAccountName,
+				Namespace: namespace,
+			},
+		},
+	}
+	_, err := provider.clientSet.CoreV1().ServiceAccounts(namespace).Create(ctx, serviceAccount, metav1.CreateOptions{})
+	if err != nil {
+		return err
+	}
+	_, err = provider.clientSet.RbacV1().Roles(namespace).Create(ctx, role, metav1.CreateOptions{})
+	if err != nil {
+		return err
+	}
+	_, err = provider.clientSet.RbacV1().RoleBindings(namespace).Create(ctx, roleBinding, metav1.CreateOptions{})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (provider *Provider) RemoveNamespace(ctx context.Context, name string) error {
-	if isFound, err := provider.CheckNamespaceExists(ctx, name); err != nil {
+	if isFound, err := provider.DoesNamespaceExist(ctx, name); err != nil {
 		return err
 	} else if !isFound {
 		return nil
@@ -340,7 +441,7 @@ func (provider *Provider) RemoveNonNamespacedResources(ctx context.Context, clus
 }
 
 func (provider *Provider) RemoveClusterRole(ctx context.Context, name string) error {
-	if isFound, err := provider.CheckClusterRoleExists(ctx, name); err != nil {
+	if isFound, err := provider.DoesClusterRoleExist(ctx, name); err != nil {
 		return err
 	} else if !isFound {
 		return nil
@@ -350,7 +451,7 @@ func (provider *Provider) RemoveClusterRole(ctx context.Context, name string) er
 }
 
 func (provider *Provider) RemoveClusterRoleBinding(ctx context.Context, name string) error {
-	if isFound, err := provider.CheckClusterRoleBindingExists(ctx, name); err != nil {
+	if isFound, err := provider.DoesClusterRoleBindingExist(ctx, name); err != nil {
 		return err
 	} else if !isFound {
 		return nil
@@ -359,8 +460,38 @@ func (provider *Provider) RemoveClusterRoleBinding(ctx context.Context, name str
 	return provider.clientSet.RbacV1().ClusterRoleBindings().Delete(ctx, name, metav1.DeleteOptions{})
 }
 
+func (provider *Provider) RemoveRoleBinding(ctx context.Context, namespace string, name string) error {
+	if isFound, err := provider.DoesRoleBindingExist(ctx, namespace, name); err != nil {
+		return err
+	} else if !isFound {
+		return nil
+	}
+
+	return provider.clientSet.RbacV1().RoleBindings(namespace).Delete(ctx, name, metav1.DeleteOptions{})
+}
+
+func (provider *Provider) RemoveRole(ctx context.Context, namespace string, name string) error {
+	if isFound, err := provider.DoesRoleExist(ctx, namespace, name); err != nil {
+		return err
+	} else if !isFound {
+		return nil
+	}
+
+	return provider.clientSet.RbacV1().Roles(namespace).Delete(ctx, name, metav1.DeleteOptions{})
+}
+
+func (provider *Provider) RemoveServicAccount(ctx context.Context, namespace string, name string) error {
+	if isFound, err := provider.DoesServiceAccountExist(ctx, namespace, name); err != nil {
+		return err
+	} else if !isFound {
+		return nil
+	}
+
+	return provider.clientSet.CoreV1().ServiceAccounts(namespace).Delete(ctx, name, metav1.DeleteOptions{})
+}
+
 func (provider *Provider) RemovePod(ctx context.Context, namespace string, podName string) error {
-	if isFound, err := provider.CheckPodExists(ctx, namespace, podName); err != nil {
+	if isFound, err := provider.DoesPodExist(ctx, namespace, podName); err != nil {
 		return err
 	} else if !isFound {
 		return nil
@@ -369,8 +500,18 @@ func (provider *Provider) RemovePod(ctx context.Context, namespace string, podNa
 	return provider.clientSet.CoreV1().Pods(namespace).Delete(ctx, podName, metav1.DeleteOptions{})
 }
 
+func (provider *Provider) RemoveConfigMap(ctx context.Context, namespace string, configMapName string) error {
+	if isFound, err := provider.DoesConfigMapExist(ctx, namespace, configMapName); err != nil {
+		return err
+	} else if !isFound {
+		return nil
+	}
+
+	return provider.clientSet.CoreV1().ConfigMaps(namespace).Delete(ctx, configMapName, metav1.DeleteOptions{})
+}
+
 func (provider *Provider) RemoveService(ctx context.Context, namespace string, serviceName string) error {
-	if isFound, err := provider.CheckServiceExists(ctx, namespace, serviceName); err != nil {
+	if isFound, err := provider.DoesServicesExist(ctx, namespace, serviceName); err != nil {
 		return err
 	} else if !isFound {
 		return nil
@@ -380,7 +521,7 @@ func (provider *Provider) RemoveService(ctx context.Context, namespace string, s
 }
 
 func (provider *Provider) RemoveDaemonSet(ctx context.Context, namespace string, daemonSetName string) error {
-	if isFound, err := provider.CheckDaemonSetExists(ctx, namespace, daemonSetName); err != nil {
+	if isFound, err := provider.DoesDaemonSetExist(ctx, namespace, daemonSetName); err != nil {
 		return err
 	} else if !isFound {
 		return nil
@@ -389,138 +530,11 @@ func (provider *Provider) RemoveDaemonSet(ctx context.Context, namespace string,
 	return provider.clientSet.AppsV1().DaemonSets(namespace).Delete(ctx, daemonSetName, metav1.DeleteOptions{})
 }
 
-func (provider *Provider) RemoveConfigMap(ctx context.Context, namespace string, configMapName string) error {
-	if isFound, err := provider.CheckConfigMapExists(ctx, namespace, configMapName); err != nil {
-		return err
-	} else if !isFound {
-		return nil
-	}
-	return provider.clientSet.CoreV1().ConfigMaps(namespace).Delete(ctx, configMapName, metav1.DeleteOptions{})
-}
-
-func (provider *Provider) CheckNamespaceExists(ctx context.Context, name string) (bool, error) {
-	listOptions := metav1.ListOptions{
-		FieldSelector: fmt.Sprintf("metadata.name=%s", name),
-		Limit:         1,
-	}
-	resourceList, err := provider.clientSet.CoreV1().Namespaces().List(ctx, listOptions)
-	if err != nil {
-		return false, err
-	}
-
-	if len(resourceList.Items) > 0 {
-		return true, nil
-	}
-
-	return false, nil
-}
-
-func (provider *Provider) CheckClusterRoleExists(ctx context.Context, name string) (bool, error) {
-	listOptions := metav1.ListOptions{
-		FieldSelector: fmt.Sprintf("metadata.name=%s", name),
-		Limit:         1,
-	}
-	resourceList, err := provider.clientSet.RbacV1().ClusterRoles().List(ctx, listOptions)
-	if err != nil {
-		return false, err
-	}
-
-	if len(resourceList.Items) > 0 {
-		return true, nil
-	}
-
-	return false, nil
-}
-
-func (provider *Provider) CheckClusterRoleBindingExists(ctx context.Context, name string) (bool, error) {
-	listOptions := metav1.ListOptions{
-		FieldSelector: fmt.Sprintf("metadata.name=%s", name),
-		Limit:         1,
-	}
-	resourceList, err := provider.clientSet.RbacV1().ClusterRoleBindings().List(ctx, listOptions)
-	if err != nil {
-		return false, err
-	}
-
-	if len(resourceList.Items) > 0 {
-		return true, nil
-	}
-
-	return false, nil
-}
-
-func (provider *Provider) CheckPodExists(ctx context.Context, namespace string, name string) (bool, error) {
-	listOptions := metav1.ListOptions{
-		FieldSelector: fmt.Sprintf("metadata.name=%s", name),
-		Limit:         1,
-	}
-	resourceList, err := provider.clientSet.CoreV1().Pods(namespace).List(ctx, listOptions)
-	if err != nil {
-		return false, err
-	}
-
-	if len(resourceList.Items) > 0 {
-		return true, nil
-	}
-
-	return false, nil
-}
-
-func (provider *Provider) CheckServiceExists(ctx context.Context, namespace string, name string) (bool, error) {
-	listOptions := metav1.ListOptions{
-		FieldSelector: fmt.Sprintf("metadata.name=%s", name),
-		Limit:         1,
-	}
-	resourceList, err := provider.clientSet.CoreV1().Services(namespace).List(ctx, listOptions)
-	if err != nil {
-		return false, err
-	}
-
-	if len(resourceList.Items) > 0 {
-		return true, nil
-	}
-
-	return false, nil
-}
-
-func (provider *Provider) CheckDaemonSetExists(ctx context.Context, namespace string, name string) (bool, error) {
-	listOptions := metav1.ListOptions{
-		FieldSelector: fmt.Sprintf("metadata.name=%s", name),
-		Limit:         1,
-	}
-	resourceList, err := provider.clientSet.AppsV1().DaemonSets(namespace).List(ctx, listOptions)
-	if err != nil {
-		return false, err
-	}
-
-	if len(resourceList.Items) > 0 {
-		return true, nil
-	}
-
-	return false, nil
-}
-
-func (provider *Provider) CheckConfigMapExists(ctx context.Context, namespace string, name string) (bool, error) {
-	listOptions := metav1.ListOptions{
-		FieldSelector: fmt.Sprintf("metadata.name=%s", name),
-		Limit:         1,
-	}
-	resourceList, err := provider.clientSet.CoreV1().ConfigMaps(namespace).List(ctx, listOptions)
-	if err != nil {
-		return false, err
-	}
-
-	if len(resourceList.Items) > 0 {
-		return true, nil
-	}
-
-	return false, nil
-}
-
-func (provider *Provider) ApplyConfigMap(ctx context.Context, namespace string, configMapName string, data string) error {
+func (provider *Provider) CreateConfigMap(ctx context.Context, namespace string, configMapName string, data string) error {
 	if data == "" {
 		return nil
 	}
+
 	configMapData := make(map[string]string, 0)
 	configMapData[shared.RulePolicyFileName] = data
 	configMap := &core.ConfigMap{
@@ -534,14 +548,11 @@ func (provider *Provider) ApplyConfigMap(ctx context.Context, namespace string, 
 		},
 		Data: configMapData,
 	}
-	_, err := provider.clientSet.CoreV1().ConfigMaps(namespace).Create(ctx, configMap, metav1.CreateOptions{})
-	var statusError *k8serrors.StatusError
-	if errors.As(err, &statusError) {
-		if statusError.ErrStatus.Reason == metav1.StatusReasonForbidden {
-			return fmt.Errorf("User not authorized to create configmap, --test-rules will be ignored")
-		}
+	if _, err := provider.clientSet.CoreV1().ConfigMaps(namespace).Create(ctx, configMap, metav1.CreateOptions{}); err != nil {
+		return err
 	}
-	return err
+
+	return nil
 }
 
 func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, apiServerPodIp string, nodeToTappedPodIPMap map[string][]string, serviceAccountName string, tapOutgoing bool) error {
@@ -671,7 +682,7 @@ func (provider *Provider) GetAllRunningPodsMatchingRegex(ctx context.Context, re
 			matchingPods = append(matchingPods, pod)
 		}
 	}
-	return matchingPods, err
+	return matchingPods, nil
 }
 
 func getClientSet(config *restclient.Config) *kubernetes.Clientset {

@@ -6,6 +6,7 @@ import (
 
 	"github.com/creasty/defaults"
 	"github.com/spf13/cobra"
+	"github.com/up9inc/mizu/cli/errormessage"
 	"github.com/up9inc/mizu/cli/mizu"
 	"github.com/up9inc/mizu/cli/mizu/configStructs"
 	"github.com/up9inc/mizu/cli/uiUtils"
@@ -31,7 +32,7 @@ Supported protocols are HTTP and gRPC.`,
 		}
 
 		if err := mizu.Config.Tap.Validate(); err != nil {
-			return err
+			return errormessage.FormatError(err)
 		}
 
 		mizu.Log.Infof("Mizu will store up to %s of traffic, old traffic will be cleared once the limit is reached.", mizu.Config.Tap.HumanMaxEntriesDBSize)

@@ -26,7 +26,7 @@ import (
 
 var k8sResolver *resolver.Resolver
 
-func init() {
+func StartResolving(namespace string) {
 	errOut := make(chan error, 100)
 	res, err := resolver.NewFromInCluster(errOut)
 	if err != nil {
@@ -34,7 +34,7 @@ func init() {
 		return
 	}
 	ctx := context.Background()
-	res.Start(ctx)
+	res.Start(ctx, namespace)
 	go func() {
 		for {
 			select {

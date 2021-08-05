@@ -18,17 +18,20 @@ const (
 )
 
 type Resolver struct {
-	clientConfig  *restclient.Config
-	clientSet *kubernetes.Clientset
-	nameMap map[string]string
-	serviceMap map[string]string
-	isStarted bool
-	errOut chan error
+	clientConfig *restclient.Config
+	clientSet    *kubernetes.Clientset
+	nameMap      map[string]string
+	serviceMap   map[string]string
+	isStarted    bool
+	errOut       chan error
+	namespace    string
 }
 
-func (resolver *Resolver) Start(ctx context.Context) {
+func (resolver *Resolver) Start(ctx context.Context, namespace string) {
 	if !resolver.isStarted {
 		resolver.isStarted = true
+		resolver.namespace = namespace
+
 		go resolver.infiniteErrorHandleRetryFunc(ctx, resolver.watchServices)
 		go resolver.infiniteErrorHandleRetryFunc(ctx, resolver.watchEndpoints)
 		go resolver.infiniteErrorHandleRetryFunc(ctx, resolver.watchPods)
@@ -54,7 +57,7 @@ func (resolver *Resolver) CheckIsServiceIP(address string) bool {
 
 func (resolver *Resolver) watchPods(ctx context.Context) error {
 	// empty namespace makes the client watch all namespaces
-	watcher, err := resolver.clientSet.CoreV1().Pods("").Watch(ctx, metav1.ListOptions{Watch: true})
+	watcher, err := resolver.clientSet.CoreV1().Pods(resolver.namespace).Watch(ctx, metav1.ListOptions{Watch: true})
 	if err != nil {
 		return err
 	}
@@ -77,7 +80,7 @@ func (resolver *Resolver) watchPods(ctx context.Context) error {
 
 func (resolver *Resolver) watchEndpoints(ctx context.Context) error {
 	// empty namespace makes the client watch all namespaces
-	watcher, err := resolver.clientSet.CoreV1().Endpoints("").Watch(ctx, metav1.ListOptions{Watch: true})
+	watcher, err := resolver.clientSet.CoreV1().Endpoints(resolver.namespace).Watch(ctx, metav1.ListOptions{Watch: true})
 	if err != nil {
 		return err
 	}
@@ -120,7 +123,7 @@ func (resolver *Resolver) watchEndpoints(ctx context.Context) error {
 
 func (resolver *Resolver) watchServices(ctx context.Context) error {
 	// empty namespace makes the client watch all namespaces
-	watcher, err := resolver.clientSet.CoreV1().Services("").Watch(ctx, metav1.ListOptions{Watch: true})
+	watcher, err := resolver.clientSet.CoreV1().Services(resolver.namespace).Watch(ctx, metav1.ListOptions{Watch: true})
 	if err != nil {
 		return err
 	}
