@@ -13,6 +13,7 @@ import (
 	"github.com/creasty/defaults"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+	"github.com/up9inc/mizu/cli/mizu/configStructs"
 	"github.com/up9inc/mizu/cli/uiUtils"
 	"gopkg.in/yaml.v3"
 )
@@ -21,6 +22,15 @@ const (
 	Separator      = "="
 	SetCommandName = "set"
 )
+
+var allowedSetFlags = []string{
+	AgentImageConfigName,
+	MizuResourcesNamespaceConfigName,
+	TelemetryConfigName,
+	DumpLogsConfigName,
+	configStructs.AnalysisDestinationTapName,
+	configStructs.SleepIntervalSecTapName,
+}
 
 var Config = ConfigStruct{}
 
@@ -95,7 +105,7 @@ func initFlag(f *pflag.Flag) {
 
 	if f.Name == SetCommandName {
 		if setError := mergeSetFlag(sliceValue.GetSlice()); setError != nil {
-			Log.Infof(uiUtils.Red, "Invalid set argument")
+			Log.Warningf(uiUtils.Red, fmt.Sprintf("Invalid set argument, error: %v", setError))
 		}
 		return
 	}
@@ -117,6 +127,11 @@ func mergeSetFlag(setValues []string) error {
 		}
 
 		argumentKey, argumentValue := split[0], split[1]
+
+		if !Contains(allowedSetFlags, argumentKey) {
+			return errors.New(fmt.Sprintf("invalid set key %s", argumentKey))
+		}
+
 		mergeFlagValue(configElem, argumentKey, argumentValue)
 	}
 

@@ -6,6 +6,13 @@ import (
 	"github.com/up9inc/mizu/cli/mizu/configStructs"
 )
 
+const (
+	AgentImageConfigName             = "agent-image"
+	MizuResourcesNamespaceConfigName = "mizu-resources-namespace"
+	TelemetryConfigName              = "telemetry"
+	DumpLogsConfigName               = "dump-logs"
+)
+
 type ConfigStruct struct {
 	Tap                    configStructs.TapConfig     `yaml:"tap"`
 	Fetch                  configStructs.FetchConfig   `yaml:"fetch"`
