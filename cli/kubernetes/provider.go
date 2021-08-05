@@ -527,6 +527,17 @@ func (provider *Provider) RemoveService(ctx context.Context, namespace string, s
 
 	return provider.clientSet.CoreV1().Services(namespace).Delete(ctx, serviceName, metav1.DeleteOptions{})
 }
+
+func (provider *Provider) RemoveDaemonSet(ctx context.Context, namespace string, daemonSetName string) error {
+	if isFound, err := provider.DoesDaemonSetExist(ctx, namespace, daemonSetName); err != nil {
+		return err
+	} else if !isFound {
+		return nil
+	}
+
+	return provider.clientSet.AppsV1().DaemonSets(namespace).Delete(ctx, daemonSetName, metav1.DeleteOptions{})
+}
+
 func (provider *Provider) CreateConfigMap(ctx context.Context, namespace string, configMapName string, data string) error {
 	if data == "" {
 		return nil
@@ -549,16 +560,6 @@ func (provider *Provider) CreateConfigMap(ctx context.Context, namespace string,
 		return err
 	}
 	return nil
-}
-
-func (provider *Provider) RemoveDaemonSet(ctx context.Context, namespace string, daemonSetName string) error {
-	if isFound, err := provider.DoesDaemonSetExist(ctx, namespace, daemonSetName); err != nil {
-		return err
-	} else if !isFound {
-		return nil
-	}
-
-	return provider.clientSet.AppsV1().DaemonSets(namespace).Delete(ctx, daemonSetName, metav1.DeleteOptions{})
 }
 
 func (provider *Provider) GetPods(ctx context.Context, namespace string) ([]shared.PodInfo, error) {
