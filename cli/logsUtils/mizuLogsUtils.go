@@ -12,13 +12,13 @@ import (
 )
 
 func DumpLogs(provider *kubernetes.Provider, ctx context.Context, filePath string) error {
-	pods, err := provider.GetPods(ctx, mizu.ResourcesNamespace)
+	pods, err := provider.GetPods(ctx, mizu.Config.ResourcesNamespace())
 	if err != nil {
 		return err
 	}
 
 	if len(pods) == 0 {
-		return fmt.Errorf("no pods found in namespace %s", mizu.ResourcesNamespace)
+		return fmt.Errorf("no pods found in namespace %s", mizu.Config.ResourcesNamespace())
 	}
 
 	newZipFile, err := os.Create(filePath)

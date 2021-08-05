@@ -527,6 +527,29 @@ func (provider *Provider) RemoveService(ctx context.Context, namespace string, s
 
 	return provider.clientSet.CoreV1().Services(namespace).Delete(ctx, serviceName, metav1.DeleteOptions{})
 }
+func (provider *Provider) CreateConfigMap(ctx context.Context, namespace string, configMapName string, data string) error {
+	if data == "" {
+		return nil
+	}
+
+	configMapData := make(map[string]string, 0)
+	configMapData[shared.RulePolicyFileName] = data
+	configMap := &core.ConfigMap{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "ConfigMap",
+			APIVersion: "v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      configMapName,
+			Namespace: namespace,
+		},
+		Data: configMapData,
+	}
+	if _, err := provider.clientSet.CoreV1().ConfigMaps(namespace).Create(ctx, configMap, metav1.CreateOptions{}); err != nil {
+		return err
+	}
+	return nil
+}
 
 func (provider *Provider) RemoveDaemonSet(ctx context.Context, namespace string, daemonSetName string) error {
 	if isFound, err := provider.DoesDaemonSetExist(ctx, namespace, daemonSetName); err != nil {
