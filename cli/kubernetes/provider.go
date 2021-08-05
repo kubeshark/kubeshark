@@ -562,7 +562,7 @@ func (provider *Provider) CreateConfigMap(ctx context.Context, namespace string,
 	return nil
 }
 
-func (provider *Provider) GetPods(ctx context.Context, namespace string) ([]shared.PodInfo, error) {
+func (provider *Provider) ListPods(ctx context.Context, namespace string) ([]shared.PodInfo, error) {
 	podInfos := make([]shared.PodInfo, 0)
 	listOptions := metav1.ListOptions{}
 	pods, err := provider.clientSet.CoreV1().Pods(namespace).List(ctx, listOptions)
