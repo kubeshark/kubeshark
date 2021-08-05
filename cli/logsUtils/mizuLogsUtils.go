@@ -9,16 +9,18 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"regexp"
 )
 
 func DumpLogs(provider *kubernetes.Provider, ctx context.Context, filePath string) error {
-	pods, err := provider.ListPods(ctx, mizu.Config.ResourcesNamespace())
+	podExactRegex := regexp.MustCompile(fmt.Sprintf("^mizu-"))
+	pods, err := provider.ListAllPodsMatchingRegex(ctx, podExactRegex, []string{mizu.Config.MizuResourcesNamespace})
 	if err != nil {
 		return err
 	}
 
 	if len(pods) == 0 {
-		return fmt.Errorf("no pods found in namespace %s", mizu.Config.ResourcesNamespace())
+		return fmt.Errorf("no pods found in namespace %s", mizu.Config.MizuResourcesNamespace)
 	}
 
 	newZipFile, err := os.Create(filePath)

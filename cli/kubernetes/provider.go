@@ -691,7 +691,7 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	return err
 }
 
-func (provider *Provider) GetAllRunningPodsMatchingRegex(ctx context.Context, regex *regexp.Regexp, namespaces []string) ([]core.Pod, error) {
+func (provider *Provider) ListAllPodsMatchingRegex(ctx context.Context, regex *regexp.Regexp, namespaces []string) ([]core.Pod, error) {
 	var pods []core.Pod
 	for _, namespace := range namespaces {
 		namespacePods, err := provider.clientSet.CoreV1().Pods(namespace).List(ctx, metav1.ListOptions{})
@@ -704,7 +704,22 @@ func (provider *Provider) GetAllRunningPodsMatchingRegex(ctx context.Context, re
 
 	matchingPods := make([]core.Pod, 0)
 	for _, pod := range pods {
-		if regex.MatchString(pod.Name) && isPodRunning(&pod) {
+		if regex.MatchString(pod.Name) {
+			matchingPods = append(matchingPods, pod)
+		}
+	}
+	return matchingPods, nil
+}
+
+func (provider *Provider) ListAllRunningPodsMatchingRegex(ctx context.Context, regex *regexp.Regexp, namespaces []string) ([]core.Pod, error) {
+	pods, err := provider.ListAllPodsMatchingRegex(ctx, regex, namespaces)
+	if err != nil {
+		return nil, err
+	}
+
+	matchingPods := make([]core.Pod, 0)
+	for _, pod := range pods {
+		if isPodRunning(&pod) {
 			matchingPods = append(matchingPods, pod)
 		}
 	}
