@@ -19,6 +19,7 @@ export const HarFilters: React.FC<HarFiltersProps> = ({methodsFilter, setMethods
         <MethodFilter methodsFilter={methodsFilter} setMethodsFilter={setMethodsFilter}/>
         <StatusTypesFilter statusFilter={statusFilter} setStatusFilter={setStatusFilter}/>
         <PathFilter pathFilter={pathFilter} setPathFilter={setPathFilter}/>
+        <BackToLive />
     </div>;
 };
 
@@ -116,4 +117,21 @@ const PathFilter: React.FC<PathFilterProps> = ({pathFilter, setPathFilter}) => {
         </div>
     </FilterContainer>;
 };
+
+const BackToLive = () => {
+    return (
+        <FilterContainer>
+            <div>
+                <button type="button" className={styles.btnLive} onClick={(_) => {
+                    const objDiv = document.getElementById("list");
+                    const list = objDiv.firstChild;
+                    if(list instanceof HTMLElement) {
+                        list.scrollTo({ top: list.scrollHeight, behavior: 'smooth' })
+                    }
+                   
+                }}>Live</button>
+            </div>
+        </FilterContainer>
+    )
+}
 

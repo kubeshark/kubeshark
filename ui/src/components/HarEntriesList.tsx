@@ -1,5 +1,5 @@
 import {HarEntry} from "./HarEntry";
-import React, {useCallback, useEffect, useMemo, useState} from "react";
+import React, {useCallback, useEffect, useMemo, useState,useRef} from "react";
 import styles from './style/HarEntriesList.module.sass';
 import spinner from './assets/spinner.svg';
 import ScrollableFeed from "react-scrollable-feed";
@@ -29,6 +29,8 @@ export const HarEntriesList: React.FC<HarEntriesListProps> = ({entries, setEntri
 
     const [loadMoreTop, setLoadMoreTop] = useState(false);
     const [isLoadingTop, setIsLoadingTop] = useState(false);
+
+    
 
     useEffect(() => {
         const list = document.getElementById('list').firstElementChild;

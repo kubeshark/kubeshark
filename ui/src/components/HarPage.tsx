@@ -70,7 +70,6 @@ export const HarPage: React.FC<HarPageProps> = ({setAnalyzeStatus}) => {
             const message = JSON.parse(e.data);
             switch (message.messageType) {
                 case "entry":
-                    console.log(message)
                     const entry = message.data
                     if (connection === ConnectionStatus.Paused) {
                         setNoMoreDataBottom(false)
