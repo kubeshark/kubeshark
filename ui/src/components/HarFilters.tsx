@@ -3,6 +3,7 @@ import styles from './style/HarFilters.module.sass';
 import {HARFilterSelect} from "./HARFilterSelect";
 import {TextField} from "@material-ui/core";
 import {ALL_KEY} from "./Select";
+import uninon from "./assets/union.svg";
 
 interface HarFiltersProps {
     methodsFilter: Array<string>;
@@ -11,15 +12,17 @@ interface HarFiltersProps {
     setStatusFilter: (methods: Array<string>) => void;
     pathFilter: string
     setPathFilter: (val: string) => void;
+    listEntryREF: any;
+    scrollableList: boolean;
 }
 
-export const HarFilters: React.FC<HarFiltersProps> = ({methodsFilter, setMethodsFilter, statusFilter, setStatusFilter, pathFilter, setPathFilter}) => {
+export const HarFilters: React.FC<HarFiltersProps> = ({methodsFilter, setMethodsFilter, statusFilter, setStatusFilter, pathFilter, setPathFilter,listEntryREF,scrollableList}) => {
 
     return <div className={styles.container}>
         <MethodFilter methodsFilter={methodsFilter} setMethodsFilter={setMethodsFilter}/>
         <StatusTypesFilter statusFilter={statusFilter} setStatusFilter={setStatusFilter}/>
         <PathFilter pathFilter={pathFilter} setPathFilter={setPathFilter}/>
-        <BackToLive />
+        <BackToLive listEntryREF={listEntryREF} scrollableList={scrollableList} />
     </div>;
 };
 
@@ -118,18 +121,18 @@ const PathFilter: React.FC<PathFilterProps> = ({pathFilter, setPathFilter}) => {
     </FilterContainer>;
 };
 
-const BackToLive = () => {
+
+const BackToLive = ({listEntryREF, scrollableList}) => {
     return (
         <FilterContainer>
-            <div>
-                <button type="button" className={styles.btnLive} onClick={(_) => {
-                    const objDiv = document.getElementById("list");
-                    const list = objDiv.firstChild;
+            <div className={styles.btnScrollWrapper}>
+                <button disabled={scrollableList} type="button" className={styles.btnLive} onClick={(_) => {
+                    const list = listEntryREF.current.firstChild;
                     if(list instanceof HTMLElement) {
                         list.scrollTo({ top: list.scrollHeight, behavior: 'smooth' })
                     }
                    
-                }}>Live</button>
+                }}><img src={uninon} /></button>
             </div>
         </FilterContainer>
     )

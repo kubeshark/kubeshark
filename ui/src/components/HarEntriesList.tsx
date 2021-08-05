@@ -17,7 +17,8 @@ interface HarEntriesListProps {
     setNoMoreDataBottom: (flag: boolean) => void;
     methodsFilter: Array<string>;
     statusFilter: Array<string>;
-    pathFilter: string
+    pathFilter: string;
+    listEntryREF: any
 }
 
 enum FetchOperator {
@@ -25,7 +26,7 @@ enum FetchOperator {
     GT = "gt"
 }
 
-export const HarEntriesList: React.FC<HarEntriesListProps> = ({entries, setEntries, focusedEntryId, setFocusedEntryId, connectionOpen, noMoreDataTop, setNoMoreDataTop, noMoreDataBottom, setNoMoreDataBottom, methodsFilter, statusFilter, pathFilter}) => {
+export const HarEntriesList: React.FC<HarEntriesListProps> = ({entries, setEntries, focusedEntryId, setFocusedEntryId, connectionOpen, noMoreDataTop, setNoMoreDataTop, noMoreDataBottom, setNoMoreDataBottom, methodsFilter, statusFilter, pathFilter,listEntryREF}) => {
 
     const [loadMoreTop, setLoadMoreTop] = useState(false);
     const [isLoadingTop, setIsLoadingTop] = useState(false);
@@ -110,7 +111,7 @@ export const HarEntriesList: React.FC<HarEntriesListProps> = ({entries, setEntri
 
     return <>
             <div className={styles.list}>
-                <div id="list" className={styles.list}>
+                <div id="list" ref={listEntryREF} className={styles.list}>
                     {isLoadingTop && <div className={styles.spinnerContainer}>
                         <img alt="spinner" src={spinner} style={{height: 25}}/>
                     </div>}

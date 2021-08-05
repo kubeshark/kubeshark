@@ -56,7 +56,10 @@ export const HarPage: React.FC<HarPageProps> = ({setAnalyzeStatus}) => {
 
     const [tappingStatus, setTappingStatus] = useState(null);
 
+    const [disableScrollList, setDisableScrollList] = useState(true);
+
     const ws = useRef(null);
+    const listEntry = useRef(null);
 
     const openWebSocket = () => {
         ws.current = new WebSocket("ws://localhost:8899/ws");
@@ -69,7 +72,7 @@ export const HarPage: React.FC<HarPageProps> = ({setAnalyzeStatus}) => {
             if (!e?.data) return;
             const message = JSON.parse(e.data);
             switch (message.messageType) {
-                case "entry":
+                case "entry":           
                     const entry = message.data
                     if (connection === ConnectionStatus.Paused) {
                         setNoMoreDataBottom(false)
@@ -82,6 +85,8 @@ export const HarPage: React.FC<HarPageProps> = ({setAnalyzeStatus}) => {
                         setNoMoreDataTop(false);
                     }
                     setEntries([...newEntries, entry])
+
+                    
                     break
                 case "status":
                     setTappingStatus(message.tappingStatus);
@@ -142,6 +147,10 @@ export const HarPage: React.FC<HarPageProps> = ({setAnalyzeStatus}) => {
         }
     }
 
+    const isScrollable = (element) => {
+        return element.scrollWidth > element.clientWidth || element.scrollHeight > element.clientHeight;
+    };
+
     return (
         <div className="HarPage">
             <div className="harPageHeader">
@@ -162,6 +171,8 @@ export const HarPage: React.FC<HarPageProps> = ({setAnalyzeStatus}) => {
                                 setStatusFilter={setStatusFilter}
                                 pathFilter={pathFilter}
                                 setPathFilter={setPathFilter}
+                                listEntryREF={listEntry}
+                                scrollableList={disableScrollList}
                     />
                     <div className={styles.container}>
                         <HarEntriesList entries={entries}
@@ -176,6 +187,8 @@ export const HarPage: React.FC<HarPageProps> = ({setAnalyzeStatus}) => {
                                         methodsFilter={methodsFilter}
                                         statusFilter={statusFilter}
                                         pathFilter={pathFilter}
+                                        listEntryREF={listEntry}
+                                       
                         />
                     </div>
                 </div>

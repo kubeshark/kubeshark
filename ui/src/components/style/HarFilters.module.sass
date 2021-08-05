@@ -35,9 +35,22 @@
   fieldset
     border: none
 
-.btnLive
-  padding: 4px 10px
-  border: none
-  background: #205cf5
-  color: white
-  font-family: "Source Sans Pro",Lucida Grande,Tahoma,sans-serif
+.btnScrollWrapper
+  flex-direction: unset
+  display: flex
+  height: 40px
+  .btnLive
+    padding: 4px 10px
+    border: none
+    background: #205cf5
+    color: white
+    align-self: flex-end
+    border-radius: 20px
+    cursor: pointer
+  .btnLive:disabled,
+  .btnLive[disabled]
+    background-color: #cccccc
+    color: #666666
+
+  img
+    height: 10px
