@@ -202,14 +202,70 @@ func getParsedValue(kind reflect.Kind, value string) (reflect.Value, error) {
 		}
 
 		return reflect.ValueOf(boolArgumentValue), nil
-	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+	case reflect.Int:
+		intArgumentValue, err := strconv.ParseInt(value, 10, 64)
+		if err != nil {
+			break
+		}
+
+		return reflect.ValueOf(int(intArgumentValue)), nil
+	case reflect.Int8:
+		intArgumentValue, err := strconv.ParseInt(value, 10, 8)
+		if err != nil {
+			break
+		}
+
+		return reflect.ValueOf(int8(intArgumentValue)), nil
+	case reflect.Int16:
+		intArgumentValue, err := strconv.ParseInt(value, 10, 16)
+		if err != nil {
+			break
+		}
+
+		return reflect.ValueOf(int16(intArgumentValue)), nil
+	case reflect.Int32:
+		intArgumentValue, err := strconv.ParseInt(value, 10, 32)
+		if err != nil {
+			break
+		}
+
+		return reflect.ValueOf(int32(intArgumentValue)), nil
+	case reflect.Int64:
 		intArgumentValue, err := strconv.ParseInt(value, 10, 64)
 		if err != nil {
 			break
 		}
 
 		return reflect.ValueOf(intArgumentValue), nil
-	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+	case reflect.Uint:
+		uintArgumentValue, err := strconv.ParseUint(value, 10, 64)
+		if err != nil {
+			break
+		}
+
+		return reflect.ValueOf(uint(uintArgumentValue)), nil
+	case reflect.Uint8:
+		uintArgumentValue, err := strconv.ParseUint(value, 10, 8)
+		if err != nil {
+			break
+		}
+
+		return reflect.ValueOf(uint8(uintArgumentValue)), nil
+	case reflect.Uint16:
+		uintArgumentValue, err := strconv.ParseUint(value, 10, 16)
+		if err != nil {
+			break
+		}
+
+		return reflect.ValueOf(uint16(uintArgumentValue)), nil
+	case reflect.Uint32:
+		uintArgumentValue, err := strconv.ParseUint(value, 10, 32)
+		if err != nil {
+			break
+		}
+
+		return reflect.ValueOf(uint32(uintArgumentValue)), nil
+	case reflect.Uint64:
 		uintArgumentValue, err := strconv.ParseUint(value, 10, 64)
 		if err != nil {
 			break
