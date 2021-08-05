@@ -27,10 +27,9 @@ type Resolver struct {
 	namespace    string
 }
 
-func (resolver *Resolver) Start(ctx context.Context, namespace string) {
+func (resolver *Resolver) Start(ctx context.Context) {
 	if !resolver.isStarted {
 		resolver.isStarted = true
-		resolver.namespace = namespace
 
 		go resolver.infiniteErrorHandleRetryFunc(ctx, resolver.watchServices)
 		go resolver.infiniteErrorHandleRetryFunc(ctx, resolver.watchEndpoints)

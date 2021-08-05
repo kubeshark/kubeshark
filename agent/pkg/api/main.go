@@ -28,13 +28,13 @@ var k8sResolver *resolver.Resolver
 
 func StartResolving(namespace string) {
 	errOut := make(chan error, 100)
-	res, err := resolver.NewFromInCluster(errOut)
+	res, err := resolver.NewFromInCluster(namespace, errOut)
 	if err != nil {
 		rlog.Infof("error creating k8s resolver %s", err)
 		return
 	}
 	ctx := context.Background()
-	res.Start(ctx, namespace)
+	res.Start(ctx)
 	go func() {
 		for {
 			select {
