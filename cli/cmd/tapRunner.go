@@ -11,6 +11,7 @@ import (
 	"os/signal"
 	"path"
 	"regexp"
+	"strings"
 	"syscall"
 	"time"
 
@@ -65,24 +66,25 @@ func RunMizuTap() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // cancel will be called when this function exits
 
-	targetNamespace := getNamespace(kubernetesProvider)
+	targetNamespaces := getNamespaces(kubernetesProvider)
+
 	var namespacesStr string
-	if targetNamespace != mizu.K8sAllNamespaces {
-		namespacesStr = fmt.Sprintf("namespace \"%s\"", targetNamespace)
+	if targetNamespaces[0] != mizu.K8sAllNamespaces {
+		namespacesStr = fmt.Sprintf("namespaces \"%s\"", strings.Join(targetNamespaces, "\", \""))
 	} else {
 		namespacesStr = "all namespaces"
 	}
 	mizu.CheckNewerVersion()
 	mizu.Log.Infof("Tapping pods in %s", namespacesStr)
 
-	if err, _ := updateCurrentlyTappedPods(kubernetesProvider, ctx, targetNamespace); err != nil {
+	if err, _ := updateCurrentlyTappedPods(kubernetesProvider, ctx, targetNamespaces); err != nil {
 		mizu.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error getting pods by regex: %v", errormessage.FormatError(err)))
 		return
 	}
 
 	if len(state.currentlyTappedPods) == 0 {
 		var suggestionStr string
-		if targetNamespace != mizu.K8sAllNamespaces {
+		if targetNamespaces[0] != mizu.K8sAllNamespaces {
 			suggestionStr = ". Select a different namespace with -n or tap all namespaces with -A"
 		}
 		mizu.Log.Warningf(uiUtils.Warning, fmt.Sprintf("Did not find any pods matching the regex argument%s", suggestionStr))
@@ -100,7 +102,7 @@ func RunMizuTap() {
 	}
 
 	go createProxyToApiServerPod(ctx, kubernetesProvider, cancel)
-	go watchPodsForTapping(ctx, kubernetesProvider, cancel)
+	go watchPodsForTapping(ctx, kubernetesProvider, targetNamespaces, cancel)
 
 	//block until exit signal or error
 	waitForFinish(ctx, cancel)
@@ -166,13 +168,13 @@ func createMizuApiServer(ctx context.Context, kubernetesProvider *kubernetes.Pro
 	}
 
 	opts := &kubernetes.ApiServerOptions{
-		Namespace: mizu.Config.ResourcesNamespace(),
-		PodName: mizu.ApiServerPodName,
-		PodImage: mizu.Config.MizuImage,
-		ServiceAccountName: serviceAccountName,
-		IsNamespaceRestricted: !mizu.Config.IsOwnNamespace(),
+		Namespace:               mizu.Config.ResourcesNamespace(),
+		PodName:                 mizu.ApiServerPodName,
+		PodImage:                mizu.Config.MizuImage,
+		ServiceAccountName:      serviceAccountName,
+		IsNamespaceRestricted:   !mizu.Config.IsOwnNamespace(),
 		MizuApiFilteringOptions: mizuApiFilteringOptions,
-		MaxEntriesDBSizeBytes: mizu.Config.Tap.MaxEntriesDBSizeBytes(),
+		MaxEntriesDBSizeBytes:   mizu.Config.Tap.MaxEntriesDBSizeBytes(),
 	}
 	_, err = kubernetesProvider.CreateMizuApiServerPod(ctx, opts)
 	if err != nil {
@@ -347,12 +349,11 @@ func reportTappedPods() {
 	}
 }
 
-func watchPodsForTapping(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
-	targetNamespace := getNamespace(kubernetesProvider)
-	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, kubernetesProvider.GetPodWatcher(ctx, targetNamespace), mizu.Config.Tap.PodRegex())
+func watchPodsForTapping(ctx context.Context, kubernetesProvider *kubernetes.Provider, targetNamespaces []string, cancel context.CancelFunc) {
+	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, kubernetesProvider, targetNamespaces, mizu.Config.Tap.PodRegex())
 
 	restartTappers := func() {
-		err, changeFound := updateCurrentlyTappedPods(kubernetesProvider, ctx, targetNamespace)
+		err, changeFound := updateCurrentlyTappedPods(kubernetesProvider, ctx, targetNamespaces)
 		if err != nil {
 			mizu.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error getting pods by regex: %v", errormessage.FormatError(err)))
 			cancel()
@@ -407,9 +408,9 @@ func watchPodsForTapping(ctx context.Context, kubernetesProvider *kubernetes.Pro
 	}
 }
 
-func updateCurrentlyTappedPods(kubernetesProvider *kubernetes.Provider, ctx context.Context, targetNamespace string) (error, bool) {
+func updateCurrentlyTappedPods(kubernetesProvider *kubernetes.Provider, ctx context.Context, targetNamespaces []string) (error, bool) {
 	changeFound := false
-	if matchingPods, err := kubernetesProvider.GetAllRunningPodsMatchingRegex(ctx, mizu.Config.Tap.PodRegex(), targetNamespace); err != nil {
+	if matchingPods, err := kubernetesProvider.GetAllRunningPodsMatchingRegex(ctx, mizu.Config.Tap.PodRegex(), targetNamespaces); err != nil {
 		return err, false
 	} else {
 		addedPods, removedPods := getPodArrayDiff(state.currentlyTappedPods, matchingPods)
@@ -454,7 +455,7 @@ func getMissingPods(pods1 []core.Pod, pods2 []core.Pod) []core.Pod {
 
 func createProxyToApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
 	podExactRegex := regexp.MustCompile(fmt.Sprintf("^%s$", mizu.ApiServerPodName))
-	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, kubernetesProvider.GetPodWatcher(ctx, mizu.Config.ResourcesNamespace()), podExactRegex)
+	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, kubernetesProvider, []string{mizu.Config.ResourcesNamespace()}, podExactRegex)
 	isPodReady := false
 	timeAfter := time.After(25 * time.Second)
 	for {
@@ -567,12 +568,12 @@ func waitForFinish(ctx context.Context, cancel context.CancelFunc) {
 	}
 }
 
-func getNamespace(kubernetesProvider *kubernetes.Provider) string {
+func getNamespaces(kubernetesProvider *kubernetes.Provider) []string {
 	if mizu.Config.Tap.AllNamespaces {
-		return mizu.K8sAllNamespaces
-	} else if len(mizu.Config.Tap.Namespace) > 0 {
-		return mizu.Config.Tap.Namespace
+		return []string{mizu.K8sAllNamespaces}
+	} else if len(mizu.Config.Tap.Namespaces) > 0 {
+		return mizu.Config.Tap.Namespaces
 	} else {
-		return kubernetesProvider.CurrentNamespace()
+		return []string{kubernetesProvider.CurrentNamespace()}
 	}
 }
