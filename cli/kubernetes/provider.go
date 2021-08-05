@@ -562,19 +562,6 @@ func (provider *Provider) CreateConfigMap(ctx context.Context, namespace string,
 	return nil
 }
 
-func (provider *Provider) ListPods(ctx context.Context, namespace string) ([]shared.PodInfo, error) {
-	podInfos := make([]shared.PodInfo, 0)
-	listOptions := metav1.ListOptions{}
-	pods, err := provider.clientSet.CoreV1().Pods(namespace).List(ctx, listOptions)
-	if err != nil {
-		return podInfos, fmt.Errorf("error getting pods in ns: %s, %w", namespace, err)
-	}
-	for _, pod := range pods.Items {
-		podInfos = append(podInfos, shared.PodInfo{Name: pod.Name, Namespace: pod.Namespace})
-	}
-	return podInfos, nil
-}
-
 func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, apiServerPodIp string, nodeToTappedPodIPMap map[string][]string, serviceAccountName string, tapOutgoing bool) error {
 	mizu.Log.Debugf("Applying %d tapper deamonsets, ns: %s, daemonSetName: %s, podImage: %s, tapperPodName: %s", len(nodeToTappedPodIPMap), namespace, daemonSetName, podImage, tapperPodName)
 
