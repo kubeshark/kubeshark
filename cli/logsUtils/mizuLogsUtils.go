@@ -12,7 +12,7 @@ import (
 )
 
 func DumpLogs(provider *kubernetes.Provider, ctx context.Context, filePath string) error {
-	pods, err := provider.GetPods(ctx, mizu.Config.ResourcesNamespace())
+	pods, err := provider.ListPods(ctx, mizu.Config.ResourcesNamespace())
 	if err != nil {
 		return err
 	}
