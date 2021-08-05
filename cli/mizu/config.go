@@ -13,6 +13,7 @@ import (
 	"github.com/creasty/defaults"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+	"github.com/up9inc/mizu/cli/mizu/configStructs"
 	"github.com/up9inc/mizu/cli/uiUtils"
 	"gopkg.in/yaml.v3"
 )
@@ -22,13 +23,22 @@ const (
 	SetCommandName = "set"
 )
 
+var allowedSetFlags = []string{
+	AgentImageConfigName,
+	MizuResourcesNamespaceConfigName,
+	TelemetryConfigName,
+	DumpLogsConfigName,
+	configStructs.AnalysisDestinationTapName,
+	configStructs.SleepIntervalSecTapName,
+}
+
 var Config = ConfigStruct{}
 
 func (config *ConfigStruct) Validate() error {
 	if config.IsNsRestrictedMode() {
 		if config.Tap.AllNamespaces || len(config.Tap.Namespaces) != 1 || config.Tap.Namespaces[0] != config.MizuResourcesNamespace {
 			return fmt.Errorf("Not supported mode. Mizu can't resolve IPs in other namespaces when running in namespace restricted mode.\n" +
-				"You can use the same namespace for --namespace and --mizu-resources-namespace")
+				"You can use the same namespace for --%s and --%s", configStructs.NamespacesTapName, MizuResourcesNamespaceConfigName)
 		}
 	}
 
@@ -95,7 +105,7 @@ func initFlag(f *pflag.Flag) {
 
 	if f.Name == SetCommandName {
 		if setError := mergeSetFlag(sliceValue.GetSlice()); setError != nil {
-			Log.Infof(uiUtils.Red, "Invalid set argument")
+			Log.Warningf(uiUtils.Red, fmt.Sprintf("%v", setError))
 		}
 		return
 	}
@@ -117,6 +127,11 @@ func mergeSetFlag(setValues []string) error {
 		}
 
 		argumentKey, argumentValue := split[0], split[1]
+
+		if !Contains(allowedSetFlags, argumentKey) {
+			return errors.New(fmt.Sprintf("invalid set flag name %s, allowed set flag names: \"%s\"", argumentKey, strings.Join(allowedSetFlags, "\", \"")))
+		}
+
 		mergeFlagValue(configElem, argumentKey, argumentValue)
 	}
 
@@ -141,7 +156,7 @@ func mergeFlagValue(currentElem reflect.Value, flagKey string, flagValue string)
 
 		parsedValue, err := getParsedValue(flagValueKind, flagValue)
 		if err != nil {
-			Log.Warningf(uiUtils.Red, fmt.Sprintf("Invalid value %v for key %s, expected %s", flagValue, flagKey, flagValueKind))
+			Log.Warningf(uiUtils.Red, fmt.Sprintf("Invalid value %v for flag name %s, expected %s", flagValue, flagKey, flagValueKind))
 			return
 		}
 
@@ -169,7 +184,7 @@ func mergeFlagValues(currentElem reflect.Value, flagKey string, flagValues []str
 		for _, flagValue := range flagValues {
 			parsedValue, err := getParsedValue(flagValueKind, flagValue)
 			if err != nil {
-				Log.Warningf(uiUtils.Red, fmt.Sprintf("Invalid value %v for key %s, expected %s", flagValue, flagKey, flagValueKind))
+				Log.Warningf(uiUtils.Red, fmt.Sprintf("Invalid value %v for flag name %s, expected %s", flagValue, flagKey, flagValueKind))
 				return
 			}
 

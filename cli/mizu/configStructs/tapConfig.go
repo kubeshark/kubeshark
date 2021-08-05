@@ -10,6 +10,8 @@ import (
 )
 
 const (
+	AnalysisDestinationTapName    = "dest"
+	SleepIntervalSecTapName       = "upload-interval"
 	GuiPortTapName                = "gui-port"
 	NamespacesTapName             = "namespaces"
 	AnalysisTapName               = "analysis"
