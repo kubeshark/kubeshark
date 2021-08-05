@@ -7,32 +7,20 @@ import (
 )
 
 type ConfigStruct struct {
-	Tap           configStructs.TapConfig     `yaml:"tap"`
-	Fetch         configStructs.FetchConfig   `yaml:"fetch"`
-	Version       configStructs.VersionConfig `yaml:"version"`
-	View          configStructs.ViewConfig    `yaml:"view"`
-	MizuImage     string                      `yaml:"mizu-image"`
-	MizuNamespace string                      `yaml:"mizu-namespace"`
-	Telemetry     bool                        `yaml:"telemetry" default:"true"`
-	DumpLogs  bool                        `yaml:"dump-logs" default:"false"`
+	Tap                    configStructs.TapConfig     `yaml:"tap"`
+	Fetch                  configStructs.FetchConfig   `yaml:"fetch"`
+	Version                configStructs.VersionConfig `yaml:"version"`
+	View                   configStructs.ViewConfig    `yaml:"view"`
+	AgentImage             string                      `yaml:"agent-image"`
+	MizuResourcesNamespace string                      `yaml:"mizu-resources-namespace" default:"mizu"`
+	Telemetry              bool                        `yaml:"telemetry" default:"true"`
+	DumpLogs               bool                        `yaml:"dump-logs" default:"false"`
 }
 
 func (config *ConfigStruct) SetDefaults() {
-	config.MizuImage = fmt.Sprintf("gcr.io/up9-docker-hub/mizu/%s:%s", Branch, SemVer)
+	config.AgentImage = fmt.Sprintf("gcr.io/up9-docker-hub/mizu/%s:%s", Branch, SemVer)
 }
 
-func (config *ConfigStruct) ResourcesNamespace() string {
-	if config.MizuNamespace == "" {
-		return ResourcesDefaultNamespace
-	}
-
-	return config.MizuNamespace
-}
-
-func (config *ConfigStruct) IsOwnNamespace() bool {
-	if config.MizuNamespace == "" {
-		return true
-	}
-
-	return false
+func (config *ConfigStruct) IsNsRestrictedMode() bool {
+	return config.MizuResourcesNamespace != "mizu" // Notice "mizu" string must match the default MizuResourcesNamespace
 }

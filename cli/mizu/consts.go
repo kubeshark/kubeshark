@@ -14,17 +14,16 @@ var (
 )
 
 const (
-	ApiServerPodName          = "mizu-api-server"
-	ClusterRoleBindingName    = "mizu-cluster-role-binding"
-	ClusterRoleName           = "mizu-cluster-role"
-	K8sAllNamespaces          = ""
-	ResourcesDefaultNamespace = "mizu"
-	RoleBindingName           = "mizu-role-binding"
-	RoleName                  = "mizu-role"
-	ServiceAccountName        = "mizu-service-account"
-	TapperDaemonSetName       = "mizu-tapper-daemon-set"
-	TapperPodName             = "mizu-tapper"
-	ConfigMapName             = "mizu-policy"
+	ApiServerPodName       = "mizu-api-server"
+	ClusterRoleBindingName = "mizu-cluster-role-binding"
+	ClusterRoleName        = "mizu-cluster-role"
+	K8sAllNamespaces       = ""
+	RoleBindingName        = "mizu-role-binding"
+	RoleName               = "mizu-role"
+	ServiceAccountName     = "mizu-service-account"
+	TapperDaemonSetName    = "mizu-tapper-daemon-set"
+	TapperPodName          = "mizu-tapper"
+	ConfigMapName          = "mizu-policy"
 )
 
 func GetMizuFolderPath() string {

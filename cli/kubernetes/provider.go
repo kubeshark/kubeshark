@@ -562,19 +562,6 @@ func (provider *Provider) CreateConfigMap(ctx context.Context, namespace string,
 	return nil
 }
 
-func (provider *Provider) ListPods(ctx context.Context, namespace string) ([]shared.PodInfo, error) {
-	podInfos := make([]shared.PodInfo, 0)
-	listOptions := metav1.ListOptions{}
-	pods, err := provider.clientSet.CoreV1().Pods(namespace).List(ctx, listOptions)
-	if err != nil {
-		return podInfos, fmt.Errorf("error getting pods in ns: %s, %w", namespace, err)
-	}
-	for _, pod := range pods.Items {
-		podInfos = append(podInfos, shared.PodInfo{Name: pod.Name, Namespace: pod.Namespace})
-	}
-	return podInfos, nil
-}
-
 func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, apiServerPodIp string, nodeToTappedPodIPMap map[string][]string, serviceAccountName string, tapOutgoing bool) error {
 	mizu.Log.Debugf("Applying %d tapper deamonsets, ns: %s, daemonSetName: %s, podImage: %s, tapperPodName: %s", len(nodeToTappedPodIPMap), namespace, daemonSetName, podImage, tapperPodName)
 
@@ -691,7 +678,7 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	return err
 }
 
-func (provider *Provider) GetAllRunningPodsMatchingRegex(ctx context.Context, regex *regexp.Regexp, namespaces []string) ([]core.Pod, error) {
+func (provider *Provider) ListAllPodsMatchingRegex(ctx context.Context, regex *regexp.Regexp, namespaces []string) ([]core.Pod, error) {
 	var pods []core.Pod
 	for _, namespace := range namespaces {
 		namespacePods, err := provider.clientSet.CoreV1().Pods(namespace).List(ctx, metav1.ListOptions{})
@@ -704,7 +691,22 @@ func (provider *Provider) GetAllRunningPodsMatchingRegex(ctx context.Context, re
 
 	matchingPods := make([]core.Pod, 0)
 	for _, pod := range pods {
-		if regex.MatchString(pod.Name) && isPodRunning(&pod) {
+		if regex.MatchString(pod.Name) {
+			matchingPods = append(matchingPods, pod)
+		}
+	}
+	return matchingPods, nil
+}
+
+func (provider *Provider) ListAllRunningPodsMatchingRegex(ctx context.Context, regex *regexp.Regexp, namespaces []string) ([]core.Pod, error) {
+	pods, err := provider.ListAllPodsMatchingRegex(ctx, regex, namespaces)
+	if err != nil {
+		return nil, err
+	}
+
+	matchingPods := make([]core.Pod, 0)
+	for _, pod := range pods {
+		if isPodRunning(&pod) {
 			matchingPods = append(matchingPods, pod)
 		}
 	}

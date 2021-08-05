@@ -24,6 +24,17 @@ const (
 
 var Config = ConfigStruct{}
 
+func (config *ConfigStruct) Validate() error {
+	if config.IsNsRestrictedMode() {
+		if config.Tap.AllNamespaces || len(config.Tap.Namespaces) != 1 || config.Tap.Namespaces[0] != config.MizuResourcesNamespace {
+			return fmt.Errorf("Not supported mode. Mizu can't resolve IPs in other namespaces when running in namespace restricted mode.\n" +
+				"You can use the same namespace for --namespace and --mizu-resources-namespace")
+		}
+	}
+
+	return nil
+}
+
 func InitConfig(cmd *cobra.Command) error {
 	if err := defaults.Set(&Config); err != nil {
 		return err
