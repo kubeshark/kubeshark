@@ -538,15 +538,6 @@ func (provider *Provider) RemoveDaemonSet(ctx context.Context, namespace string,
 	return provider.clientSet.AppsV1().DaemonSets(namespace).Delete(ctx, daemonSetName, metav1.DeleteOptions{})
 }
 
-func (provider *Provider) RemoveConfigMap(ctx context.Context, namespace string, configMapName string) error {
-	if isFound, err := provider.CheckConfigMapExists(ctx, namespace, configMapName); err != nil {
-		return err
-	} else if !isFound {
-		return nil
-	}
-	return provider.clientSet.CoreV1().ConfigMaps(namespace).Delete(ctx, configMapName, metav1.DeleteOptions{})
-}
-
 func (provider *Provider) CheckNamespaceExists(ctx context.Context, name string) (bool, error) {
 	listOptions := metav1.ListOptions{
 		FieldSelector: fmt.Sprintf("metadata.name=%s", name),
