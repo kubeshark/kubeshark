@@ -118,7 +118,7 @@ func readValidationRules(file string) (string, error) {
 }
 
 func createMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, nodeToTappedPodIPMap map[string][]string, mizuApiFilteringOptions *shared.TrafficFilteringOptions, mizuValidationRules string) error {
-	if mizu.Config.IsOwnNamespace() {
+	if !mizu.Config.IsNsRestrictedMode() {
 		if err := createMizuNamespace(ctx, kubernetesProvider); err != nil {
 			return err
 		}
@@ -172,7 +172,7 @@ func createMizuApiServer(ctx context.Context, kubernetesProvider *kubernetes.Pro
 		PodName:                 mizu.ApiServerPodName,
 		PodImage:                mizu.Config.AgentImage,
 		ServiceAccountName:      serviceAccountName,
-		IsNamespaceRestricted:   !mizu.Config.IsOwnNamespace(),
+		IsNamespaceRestricted:   mizu.Config.IsNsRestrictedMode(),
 		MizuApiFilteringOptions: mizuApiFilteringOptions,
 		MaxEntriesDBSizeBytes:   mizu.Config.Tap.MaxEntriesDBSizeBytes(),
 	}
@@ -255,7 +255,7 @@ func cleanUpMizuResources(kubernetesProvider *kubernetes.Provider) {
 
 	mizu.Log.Infof("\nRemoving mizu resources\n")
 
-	if mizu.Config.IsOwnNamespace() {
+	if !mizu.Config.IsNsRestrictedMode() {
 		if err := kubernetesProvider.RemoveNamespace(removalCtx, mizu.Config.MizuResourcesNamespace); err != nil {
 			mizu.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error removing Namespace %s: %v", mizu.Config.MizuResourcesNamespace, errormessage.FormatError(err)))
 			return
@@ -282,7 +282,7 @@ func cleanUpMizuResources(kubernetesProvider *kubernetes.Provider) {
 	}
 
 	if state.mizuServiceAccountExists {
-		if mizu.Config.IsOwnNamespace() {
+		if !mizu.Config.IsNsRestrictedMode() {
 			if err := kubernetesProvider.RemoveNonNamespacedResources(removalCtx, mizu.ClusterRoleName, mizu.ClusterRoleBindingName); err != nil {
 				mizu.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error removing non-namespaced resources: %v", errormessage.FormatError(err)))
 				return
@@ -303,7 +303,7 @@ func cleanUpMizuResources(kubernetesProvider *kubernetes.Provider) {
 		}
 	}
 
-	if mizu.Config.IsOwnNamespace() {
+	if !mizu.Config.IsNsRestrictedMode() {
 		waitUntilNamespaceDeleted(removalCtx, cancel, kubernetesProvider)
 	}
 }
@@ -527,7 +527,7 @@ func createRBACIfNecessary(ctx context.Context, kubernetesProvider *kubernetes.P
 		return false, err
 	}
 	if !mizuRBACExists {
-		if mizu.Config.IsOwnNamespace() {
+		if !mizu.Config.IsNsRestrictedMode() {
 			err := kubernetesProvider.CreateMizuRBAC(ctx, mizu.Config.MizuResourcesNamespace, mizu.ServiceAccountName, mizu.ClusterRoleName, mizu.ClusterRoleBindingName, mizu.RBACVersion)
 			if err != nil {
 				return false, err

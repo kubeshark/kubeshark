@@ -21,10 +21,6 @@ func (config *ConfigStruct) SetDefaults() {
 	config.AgentImage = fmt.Sprintf("gcr.io/up9-docker-hub/mizu/%s:%s", Branch, SemVer)
 }
 
-func (config *ConfigStruct) IsOwnNamespace() bool {
-	if config.MizuResourcesNamespace == "mizu" { // Notice "mizu" string must match the default MizuResourcesNamespace
-		return true
-	}
-
-	return false
+func (config *ConfigStruct) IsNsRestrictedMode() bool {
+	return config.MizuResourcesNamespace != "mizu" // Notice "mizu" string must match the default MizuResourcesNamespace
 }
