@@ -168,13 +168,13 @@ func createMizuApiServer(ctx context.Context, kubernetesProvider *kubernetes.Pro
 	}
 
 	opts := &kubernetes.ApiServerOptions{
-		Namespace: mizu.Config.ResourcesNamespace(),
-		PodName: mizu.ApiServerPodName,
-		PodImage: mizu.Config.MizuImage,
-		ServiceAccountName: serviceAccountName,
-		IsNamespaceRestricted: !mizu.Config.IsOwnNamespace(),
+		Namespace:               mizu.Config.ResourcesNamespace(),
+		PodName:                 mizu.ApiServerPodName,
+		PodImage:                mizu.Config.MizuImage,
+		ServiceAccountName:      serviceAccountName,
+		IsNamespaceRestricted:   !mizu.Config.IsOwnNamespace(),
 		MizuApiFilteringOptions: mizuApiFilteringOptions,
-		MaxEntriesDBSizeBytes: mizu.Config.Tap.MaxEntriesDBSizeBytes(),
+		MaxEntriesDBSizeBytes:   mizu.Config.Tap.MaxEntriesDBSizeBytes(),
 	}
 	_, err = kubernetesProvider.CreateMizuApiServerPod(ctx, opts)
 	if err != nil {
@@ -455,7 +455,7 @@ func getMissingPods(pods1 []core.Pod, pods2 []core.Pod) []core.Pod {
 
 func createProxyToApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
 	podExactRegex := regexp.MustCompile(fmt.Sprintf("^%s$", mizu.ApiServerPodName))
-	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, kubernetesProvider, []string{mizu.ResourcesNamespace}, podExactRegex)
+	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, kubernetesProvider, []string{mizu.Config.ResourcesNamespace()}, podExactRegex)
 	isPodReady := false
 	timeAfter := time.After(25 * time.Second)
 	for {
