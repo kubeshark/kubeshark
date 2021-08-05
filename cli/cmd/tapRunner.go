@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/up9inc/mizu/cli/fsUtils"
 	"net/http"
 	"net/url"
 	"os"
@@ -17,7 +18,6 @@ import (
 
 	"github.com/up9inc/mizu/cli/errormessage"
 	"github.com/up9inc/mizu/cli/kubernetes"
-	"github.com/up9inc/mizu/cli/logsUtils"
 	"github.com/up9inc/mizu/cli/mizu"
 	"github.com/up9inc/mizu/cli/uiUtils"
 	"github.com/up9inc/mizu/shared"
@@ -62,7 +62,6 @@ func RunMizuTap() {
 		return
 	}
 
-	defer cleanUpMizuResources(kubernetesProvider)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // cancel will be called when this function exits
 
@@ -96,6 +95,7 @@ func RunMizuTap() {
 
 	nodeToTappedPodIPMap := getNodeHostToTappedPodIpsMap(state.currentlyTappedPods)
 
+	defer cleanUpMizuResources(kubernetesProvider)
 	if err := createMizuResources(ctx, kubernetesProvider, nodeToTappedPodIPMap, mizuApiFilteringOptions, mizuValidationRules); err != nil {
 		mizu.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error creating resources: %v", errormessage.FormatError(err)))
 		return
@@ -248,7 +248,7 @@ func cleanUpMizuResources(kubernetesProvider *kubernetes.Provider) {
 	if mizu.Config.DumpLogs {
 		mizuDir := mizu.GetMizuFolderPath()
 		filePath = path.Join(mizuDir, fmt.Sprintf("mizu_logs_%s.zip", time.Now().Format("2006_01_02__15_04_05")))
-		if err := logsUtils.DumpLogs(kubernetesProvider, removalCtx, filePath); err != nil {
+		if err := fsUtils.DumpLogs(kubernetesProvider, removalCtx, filePath); err != nil {
 			mizu.Log.Errorf("Failed dump logs %v", err)
 		}
 	}
@@ -355,7 +355,7 @@ func watchPodsForTapping(ctx context.Context, kubernetesProvider *kubernetes.Pro
 	restartTappers := func() {
 		err, changeFound := updateCurrentlyTappedPods(kubernetesProvider, ctx, targetNamespaces)
 		if err != nil {
-			mizu.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error getting pods by regex: %v", errormessage.FormatError(err)))
+			mizu.Log.Errorf(uiUtils.Error, fmt.Sprintf("Failed to update currently tapped pods: %v", err))
 			cancel()
 		}
 
@@ -398,11 +398,15 @@ func watchPodsForTapping(ctx context.Context, kubernetesProvider *kubernetes.Pro
 				restartTappersDebouncer.SetOn()
 			}
 
-		case <-errorChan:
+		case err := <-errorChan:
+			mizu.Log.Debugf("Watching pods loop, got error %v, stopping restart tappers debouncer", err)
+			restartTappersDebouncer.Cancel()
 			// TODO: Does this also perform cleanup?
 			cancel()
 
 		case <-ctx.Done():
+			mizu.Log.Debugf("Watching pods loop, context done, stopping restart tappers debouncer")
+			restartTappersDebouncer.Cancel()
 			return
 		}
 	}
@@ -470,6 +474,10 @@ func createProxyToApiServerPod(ctx context.Context, kubernetesProvider *kubernet
 			cancel()
 			return
 		case modifiedPod := <-modified:
+			if modifiedPod == nil {
+				mizu.Log.Debugf("Got agent pod modified event, status phase: %v", modifiedPod.Status.Phase)
+				continue
+			}
 			mizu.Log.Debugf("Got agent pod modified event, status phase: %v", modifiedPod.Status.Phase)
 			if modifiedPod.Status.Phase == core.PodRunning && !isPodReady {
 				isPodReady = true
@@ -489,7 +497,7 @@ func createProxyToApiServerPod(ctx context.Context, kubernetesProvider *kubernet
 			}
 		case <-timeAfter:
 			if !isPodReady {
-				mizu.Log.Errorf(uiUtils.Error, fmt.Sprintf("%s pod was not ready in time", mizu.ApiServerPodName))
+				mizu.Log.Errorf(uiUtils.Error, "Mizu API server was not ready in time")
 				cancel()
 			}
 		case <-errorChan:

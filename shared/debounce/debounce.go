@@ -1,6 +1,7 @@
 package debounce
 
 import (
+	"fmt"
 	"time"
 )
 
@@ -13,9 +14,10 @@ func NewDebouncer(timeout time.Duration, callback func()) *Debouncer {
 
 type Debouncer struct {
 	callback func()
-	running bool
-	timeout time.Duration
-	timer *time.Timer
+	running  bool
+	canceled bool
+	timeout  time.Duration
+	timer    *time.Timer
 }
 
 func (d *Debouncer) setTimeout(timeout time.Duration) {
@@ -25,18 +27,28 @@ func (d *Debouncer) setTimeout(timeout time.Duration) {
 
 func (d *Debouncer) setCallback(callback func()) {
 	callbackWrapped := func() {
-		callback()
+		if !d.canceled {
+			callback()
+		}
 		d.running = false
 	}
 
 	d.callback = callbackWrapped
 }
 
-func (d *Debouncer) SetOn() {
+func (d *Debouncer) Cancel() {
+	d.canceled = true
+}
+
+func (d *Debouncer) SetOn() error {
+	if d.canceled {
+		return fmt.Errorf("debouncer cancelled")
+	}
 	if d.running == true {
-		return
+		return nil
 	}
 
 	d.running = true
 	d.timer = time.AfterFunc(d.timeout, d.callback)
+	return nil
 }

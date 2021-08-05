@@ -1,7 +1,6 @@
 package mizu
 
 import (
-	"fmt"
 	"github.com/op/go-logging"
 	"os"
 	"path"
@@ -21,7 +20,7 @@ func InitLogger() {
 	logPath := GetLogFilePath()
 	f, err := os.OpenFile(logPath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
-		panic(fmt.Sprintf("Failed mizu log file: %v, err %v", logPath, err))
+		Log.Infof("Failed to open mizu log file: %v, err %v", logPath, err)
 	}
 
 	fileLog := logging.NewLogBackend(f, "", 0)

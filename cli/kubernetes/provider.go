@@ -683,7 +683,7 @@ func (provider *Provider) ListAllPodsMatchingRegex(ctx context.Context, regex *r
 	for _, namespace := range namespaces {
 		namespacePods, err := provider.clientSet.CoreV1().Pods(namespace).List(ctx, metav1.ListOptions{})
 		if err != nil {
-			return nil, fmt.Errorf("failed to get pods in ns: %s, %w", namespace, err)
+			return nil, fmt.Errorf("failed to get pods in ns: [%s], %w", namespace, err)
 		}
 
 		pods = append(pods, namespacePods.Items...)
