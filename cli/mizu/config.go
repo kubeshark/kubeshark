@@ -129,7 +129,7 @@ func mergeSetFlag(setValues []string) error {
 		argumentKey, argumentValue := split[0], split[1]
 
 		if !Contains(allowedSetFlags, argumentKey) {
-			return errors.New(fmt.Sprintf("invalid set key %s, allowed set flags: \"%s\"", argumentKey, strings.Join(allowedSetFlags, "\", \"")))
+			return errors.New(fmt.Sprintf("invalid set flag name %s, allowed set flag names: \"%s\"", argumentKey, strings.Join(allowedSetFlags, "\", \"")))
 		}
 
 		mergeFlagValue(configElem, argumentKey, argumentValue)
@@ -156,7 +156,7 @@ func mergeFlagValue(currentElem reflect.Value, flagKey string, flagValue string)
 
 		parsedValue, err := getParsedValue(flagValueKind, flagValue)
 		if err != nil {
-			Log.Warningf(uiUtils.Red, fmt.Sprintf("Invalid value %v for key %s, expected %s", flagValue, flagKey, flagValueKind))
+			Log.Warningf(uiUtils.Red, fmt.Sprintf("Invalid value %v for flag name %s, expected %s", flagValue, flagKey, flagValueKind))
 			return
 		}
 
@@ -184,7 +184,7 @@ func mergeFlagValues(currentElem reflect.Value, flagKey string, flagValues []str
 		for _, flagValue := range flagValues {
 			parsedValue, err := getParsedValue(flagValueKind, flagValue)
 			if err != nil {
-				Log.Warningf(uiUtils.Red, fmt.Sprintf("Invalid value %v for key %s, expected %s", flagValue, flagKey, flagValueKind))
+				Log.Warningf(uiUtils.Red, fmt.Sprintf("Invalid value %v for flag name %s, expected %s", flagValue, flagKey, flagValueKind))
 				return
 			}
 
