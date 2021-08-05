@@ -27,7 +27,7 @@ const (
 	ConfigMapName             = "mizu-policy"
 )
 
-func getMizuFolderPath() string {
+func GetMizuFolderPath() string {
 	home, homeDirErr := os.UserHomeDir()
 	if homeDirErr != nil {
 		return ""

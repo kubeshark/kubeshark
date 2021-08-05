@@ -1,6 +1,7 @@
 package kubernetes
 
 import (
+	"bytes"
 	_ "bytes"
 	"context"
 	"encoding/json"
@@ -12,13 +13,17 @@ import (
 	"strconv"
 
 	"github.com/up9inc/mizu/cli/mizu"
+	"io"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/tools/cache"
+	"k8s.io/client-go/util/homedir"
+
 	"github.com/up9inc/mizu/shared"
 	core "k8s.io/api/core/v1"
 	rbac "k8s.io/api/rbac/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	resource "k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/watch"
 	applyconfapp "k8s.io/client-go/applyconfigurations/apps/v1"
@@ -30,11 +35,9 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/openstack"
 	restclient "k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
 	_ "k8s.io/client-go/tools/portforward"
 	watchtools "k8s.io/client-go/tools/watch"
-	"k8s.io/client-go/util/homedir"
 )
 
 type Provider struct {
@@ -52,7 +55,12 @@ func NewProvider(kubeConfigPath string) (*Provider, error) {
 	kubernetesConfig := loadKubernetesConfiguration(kubeConfigPath)
 	restClientConfig, err := kubernetesConfig.ClientConfig()
 	if err != nil {
-		return nil, err
+		if clientcmd.IsEmptyConfig(err) {
+			return nil, fmt.Errorf("Couldn't find the kube config file, or file is empty. Try adding '--kube-config=<path to kube config file>'\n")
+		}
+		if clientcmd.IsConfigurationInvalid(err) {
+			return nil, fmt.Errorf("Invalid kube config file. Try using a different config with '--kube-config=<path to kube config file>'\n")
+		}
 	}
 	clientSet := getClientSet(restClientConfig)
 
@@ -551,8 +559,20 @@ func (provider *Provider) CreateConfigMap(ctx context.Context, namespace string,
 	if _, err := provider.clientSet.CoreV1().ConfigMaps(namespace).Create(ctx, configMap, metav1.CreateOptions{}); err != nil {
 		return err
 	}
-
 	return nil
+}
+
+func (provider *Provider) ListPods(ctx context.Context, namespace string) ([]shared.PodInfo, error) {
+	podInfos := make([]shared.PodInfo, 0)
+	listOptions := metav1.ListOptions{}
+	pods, err := provider.clientSet.CoreV1().Pods(namespace).List(ctx, listOptions)
+	if err != nil {
+		return podInfos, fmt.Errorf("error getting pods in ns: %s, %w", namespace, err)
+	}
+	for _, pod := range pods.Items {
+		podInfos = append(podInfos, shared.PodInfo{Name: pod.Name, Namespace: pod.Namespace})
+	}
+	return podInfos, nil
 }
 
 func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, apiServerPodIp string, nodeToTappedPodIPMap map[string][]string, serviceAccountName string, tapOutgoing bool) error {
@@ -683,6 +703,22 @@ func (provider *Provider) GetAllRunningPodsMatchingRegex(ctx context.Context, re
 		}
 	}
 	return matchingPods, nil
+}
+
+func (provider *Provider) GetPodLogs(namespace string, podName string, ctx context.Context) (string, error) {
+	podLogOpts := core.PodLogOptions{}
+	req := provider.clientSet.CoreV1().Pods(namespace).GetLogs(podName, &podLogOpts)
+	podLogs, err := req.Stream(ctx)
+	if err != nil {
+		return "", fmt.Errorf("error opening log stream on ns: %s, pod: %s, %w", namespace, podName, err)
+	}
+	defer podLogs.Close()
+	buf := new(bytes.Buffer)
+	if _, err = io.Copy(buf, podLogs); err != nil {
+		return "", fmt.Errorf("error copy information from podLogs to buf, ns: %s, pod: %s, %w", namespace, podName, err)
+	}
+	str := buf.String()
+	return str, nil
 }
 
 func getClientSet(config *restclient.Config) *kubernetes.Clientset {

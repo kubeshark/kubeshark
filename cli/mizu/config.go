@@ -51,7 +51,7 @@ func GetConfigWithDefaults() (string, error) {
 }
 
 func GetConfigFilePath() string {
-	return path.Join(getMizuFolderPath(), "config.yaml")
+	return path.Join(GetMizuFolderPath(), "config.yaml")
 }
 
 func mergeConfigFile() error {

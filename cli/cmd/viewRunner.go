@@ -3,25 +3,16 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"net/http"
-
 	"github.com/up9inc/mizu/cli/kubernetes"
 	"github.com/up9inc/mizu/cli/mizu"
-	"github.com/up9inc/mizu/cli/uiUtils"
-	"k8s.io/client-go/tools/clientcmd"
+	"net/http"
 )
 
 func runMizuView() {
 	kubernetesProvider, err := kubernetes.NewProvider(mizu.Config.View.KubeConfigPath)
 	if err != nil {
-		if clientcmd.IsEmptyConfig(err) {
-			mizu.Log.Infof("Couldn't find the kube config file, or file is empty. Try adding '--kube-config=<path to kube config file>'")
-			return
-		}
-		if clientcmd.IsConfigurationInvalid(err) {
-			mizu.Log.Infof(uiUtils.Red, "Invalid kube config file. Try using a different config with '--kube-config=<path to kube config file>'")
-			return
-		}
+		mizu.Log.Error(err)
+		return
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())

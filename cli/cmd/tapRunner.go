@@ -9,12 +9,14 @@ import (
 	"net/url"
 	"os"
 	"os/signal"
+	"path"
 	"regexp"
 	"syscall"
 	"time"
 
 	"github.com/up9inc/mizu/cli/errormessage"
 	"github.com/up9inc/mizu/cli/kubernetes"
+	"github.com/up9inc/mizu/cli/logsUtils"
 	"github.com/up9inc/mizu/cli/mizu"
 	"github.com/up9inc/mizu/cli/uiUtils"
 	"github.com/up9inc/mizu/shared"
@@ -22,7 +24,6 @@ import (
 	yaml "gopkg.in/yaml.v3"
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/client-go/tools/clientcmd"
 )
 
 const (
@@ -56,14 +57,8 @@ func RunMizuTap() {
 
 	kubernetesProvider, err := kubernetes.NewProvider(mizu.Config.Tap.KubeConfigPath)
 	if err != nil {
-		if clientcmd.IsEmptyConfig(err) {
-			mizu.Log.Errorf(uiUtils.Error, "Couldn't find the kube config file, or file is empty. Try adding '--kube-config=<path to kube config file>'\n")
-			return
-		}
-		if clientcmd.IsConfigurationInvalid(err) {
-			mizu.Log.Errorf(uiUtils.Error, "Invalid kube config file. Try using a different config with '--kube-config=<path to kube config file>'\n")
-			return
-		}
+		mizu.Log.Error(err)
+		return
 	}
 
 	defer cleanUpMizuResources(kubernetesProvider)
@@ -244,10 +239,19 @@ func updateMizuTappers(ctx context.Context, kubernetesProvider *kubernetes.Provi
 }
 
 func cleanUpMizuResources(kubernetesProvider *kubernetes.Provider) {
-	mizu.Log.Infof("\nRemoving mizu resources\n")
 
 	removalCtx, cancel := context.WithTimeout(context.Background(), cleanupTimeout)
 	defer cancel()
+
+	if mizu.Config.DumpLogs {
+		mizuDir := mizu.GetMizuFolderPath()
+		filePath = path.Join(mizuDir, fmt.Sprintf("mizu_logs_%s.zip", time.Now().Format("2006_01_02__15_04_05")))
+		if err := logsUtils.DumpLogs(kubernetesProvider, removalCtx, filePath); err != nil {
+			mizu.Log.Errorf("Failed dump logs %v", err)
+		}
+	}
+
+	mizu.Log.Infof("\nRemoving mizu resources\n")
 
 	if mizu.Config.IsOwnNamespace() {
 		if err := kubernetesProvider.RemoveNamespace(removalCtx, mizu.Config.ResourcesNamespace()); err != nil {

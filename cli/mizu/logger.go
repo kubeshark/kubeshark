@@ -13,12 +13,12 @@ var format = logging.MustStringFormatter(
 	`%{time} %{level:.5s} ▶ %{pid} %{shortfile} %{shortfunc} ▶ %{message}`,
 )
 
+func GetLogFilePath() string {
+	return path.Join(GetMizuFolderPath(), "mizu_cli.log")
+}
+
 func InitLogger() {
-	mizuDirPath := getMizuFolderPath()
-	if err := os.MkdirAll(mizuDirPath, os.ModePerm); err != nil {
-		panic(fmt.Sprintf("Failed creating mizu dir: %v, err %v", mizuDirPath, err))
-	}
-	logPath := path.Join(mizuDirPath, "log.log")
+	logPath := GetLogFilePath()
 	f, err := os.OpenFile(logPath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		panic(fmt.Sprintf("Failed mizu log file: %v, err %v", logPath, err))
