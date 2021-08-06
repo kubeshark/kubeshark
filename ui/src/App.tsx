@@ -26,7 +26,7 @@ const App = () => {
     const [analyzeStatus, setAnalyzeStatus] = useState(null);
     const [showTLSWarning, setShowTLSWarning] = useState(false);
     const [userDismissedTLSWarning, setUserDismissedTLSWarning] = useState(false);
-    const [addressesWithTLS, setAddressesWithTLS] = useState(new Set());
+    const [addressesWithTLS, setAddressesWithTLS] = useState(new Set(['https://google.com','https://apple.com']));
 
     useEffect(() => {
         (async () => {
@@ -91,7 +91,7 @@ const App = () => {
                 </table>
 
             </span>
-
+      
     return (
         <div className="mizuApp">
             <div className="header">
@@ -117,9 +117,11 @@ const App = () => {
                 }
             </div>
             <HarPage setAnalyzeStatus={setAnalyzeStatus} onTLSDetected={onTLSDetected}/>
-            <Snackbar open={showTLSWarning && !userDismissedTLSWarning}>
+            <Snackbar open={true}>
                 <MuiAlert elevation={6} variant="filled" onClose={() => setUserDismissedTLSWarning(true)} severity="warning">
-                    Mizu is detecting TLS traffic{addressesWithTLS.size ? ` (directed to ${Array.from(addressesWithTLS).join(", ")})` : ''}, this type of traffic will not be displayed.
+                    Mizu is detecting TLS traffic, this type of traffic will not be displayed.
+
+                    {addressesWithTLS.size ?  <ul className="httpsDomains"> {Array.from(addressesWithTLS, item => <li>{item}</li>)} </ul>: ''}
                 </MuiAlert>
             </Snackbar>
         </div>
