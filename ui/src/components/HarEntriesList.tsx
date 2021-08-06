@@ -18,7 +18,8 @@ interface HarEntriesListProps {
     methodsFilter: Array<string>;
     statusFilter: Array<string>;
     pathFilter: string;
-    listEntryREF: any
+    listEntryREF: any;
+    onScrollEvent: any;
 }
 
 enum FetchOperator {
@@ -26,7 +27,7 @@ enum FetchOperator {
     GT = "gt"
 }
 
-export const HarEntriesList: React.FC<HarEntriesListProps> = ({entries, setEntries, focusedEntryId, setFocusedEntryId, connectionOpen, noMoreDataTop, setNoMoreDataTop, noMoreDataBottom, setNoMoreDataBottom, methodsFilter, statusFilter, pathFilter,listEntryREF}) => {
+export const HarEntriesList: React.FC<HarEntriesListProps> = ({entries, setEntries, focusedEntryId, setFocusedEntryId, connectionOpen, noMoreDataTop, setNoMoreDataTop, noMoreDataBottom, setNoMoreDataBottom, methodsFilter, statusFilter, pathFilter,listEntryREF,onScrollEvent}) => {
 
     const [loadMoreTop, setLoadMoreTop] = useState(false);
     const [isLoadingTop, setIsLoadingTop] = useState(false);
@@ -115,7 +116,7 @@ export const HarEntriesList: React.FC<HarEntriesListProps> = ({entries, setEntri
                     {isLoadingTop && <div className={styles.spinnerContainer}>
                         <img alt="spinner" src={spinner} style={{height: 25}}/>
                     </div>}
-                    <ScrollableFeed>
+                    <ScrollableFeed onScroll={(isAtBottom) => onScrollEvent(isAtBottom)}>
                         {noMoreDataTop && !connectionOpen && <div id="noMoreDataTop" className={styles.noMoreDataAvailable}>No more data available</div>}
                         {filteredEntries.map(entry => <HarEntry key={entry.id}
                                                      entry={entry}

@@ -85,8 +85,11 @@ export const HarPage: React.FC<HarPageProps> = ({setAnalyzeStatus}) => {
                         setNoMoreDataTop(false);
                     }
                     setEntries([...newEntries, entry])
-
-                    
+                    if(listEntry.current) {
+                        if(isScrollable(listEntry.current.firstChild)) {
+                            setDisableScrollList(false)
+                        }
+                    }
                     break
                 case "status":
                     setTappingStatus(message.tappingStatus);
@@ -151,6 +154,11 @@ export const HarPage: React.FC<HarPageProps> = ({setAnalyzeStatus}) => {
         return element.scrollWidth > element.clientWidth || element.scrollHeight > element.clientHeight;
     };
 
+    const onScrollEvent = (isAtBottom) => {
+        if(!isAtBottom) setDisableScrollList(false)
+        else setDisableScrollList(true)
+    }
+
     return (
         <div className="HarPage">
             <div className="harPageHeader">
@@ -188,6 +196,7 @@ export const HarPage: React.FC<HarPageProps> = ({setAnalyzeStatus}) => {
                                         statusFilter={statusFilter}
                                         pathFilter={pathFilter}
                                         listEntryREF={listEntry}
+                                        onScrollEvent={onScrollEvent}
                                        
                         />
                     </div>
