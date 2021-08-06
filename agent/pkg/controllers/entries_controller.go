@@ -3,17 +3,19 @@ package controllers
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/google/martian/har"
-	"github.com/romana/rlog"
 	"mizuserver/pkg/database"
 	"mizuserver/pkg/models"
+	"mizuserver/pkg/providers"
 	"mizuserver/pkg/up9"
 	"mizuserver/pkg/utils"
 	"mizuserver/pkg/validation"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/google/martian/har"
+	"github.com/romana/rlog"
 )
 
 func GetEntries(c *gin.Context) {
@@ -217,7 +219,14 @@ func GetEntry(c *gin.Context) {
 			"msg":   "Can't get entry details",
 		})
 	}
-	c.JSON(http.StatusOK, fullEntry)
+	fullEntryWithPolicy := models.FullEntryWithPolicy{}
+	if err := models.GetEntry(&entryData, &fullEntryWithPolicy); err != nil {
+		c.JSON(http.StatusInternalServerError, map[string]interface{}{
+			"error": true,
+			"msg":   "Can't get entry details",
+		})
+	}
+	c.JSON(http.StatusOK, fullEntryWithPolicy)
 }
 
 func DeleteAllEntries(c *gin.Context) {
@@ -240,4 +249,16 @@ func GetGeneralStats(c *gin.Context) {
 	}
 	database.GetEntriesTable().Raw(sqlQuery).Scan(&result)
 	c.JSON(http.StatusOK, result)
+}
+
+func GetTappingStatus(c *gin.Context) {
+	c.JSON(http.StatusOK, providers.TapStatus)
+}
+
+func AnalyzeInformation(c *gin.Context) {
+	c.JSON(http.StatusOK, up9.GetAnalyzeInfo())
+}
+
+func GetRecentTLSLinks(c *gin.Context) {
+	c.JSON(http.StatusOK, providers.GetAllRecentTLSAddresses())
 }

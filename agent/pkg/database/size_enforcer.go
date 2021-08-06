@@ -1,8 +1,8 @@
 package database
 
 import (
-	"fmt"
 	"github.com/fsnotify/fsnotify"
+	"github.com/romana/rlog"
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/debounce"
 	"github.com/up9inc/mizu/shared/units"
@@ -47,7 +47,7 @@ func StartEnforcingDatabaseSize() {
 				if !ok {
 					return // closed channel
 				}
-				fmt.Printf("filesystem watcher encountered error:%v\n", err)
+				rlog.Errorf("filesystem watcher encountered error:%v", err)
 			}
 		}
 	}()
@@ -72,7 +72,7 @@ func getMaxEntriesDBByteSize() (int64, error) {
 func checkFileSize(maxSizeBytes int64) {
 	fileStat, err := os.Stat(DBPath)
 	if err != nil {
-		fmt.Printf("Error checking %s file size: %v\n", DBPath, err)
+		rlog.Errorf("Error checking %s file size: %v", DBPath, err)
 	} else {
 		if fileStat.Size() > maxSizeBytes {
 			pruneOldEntries(fileStat.Size())
@@ -83,13 +83,13 @@ func checkFileSize(maxSizeBytes int64) {
 func pruneOldEntries(currentFileSize int64) {
 	// sqlite locks the database while delete or VACUUM are running and sqlite is terrible at handling its own db lock while a lot of inserts are attempted, we prevent a significant bottleneck by handling the db lock ourselves here
 	IsDBLocked = true
-	defer func() {IsDBLocked = false}()
+	defer func() { IsDBLocked = false }()
 
 	amountOfBytesToTrim := currentFileSize / (100 / percentageOfMaxSizeBytesToPrune)
 
 	rows, err := GetEntriesTable().Limit(10000).Order("id").Rows()
 	if err != nil {
-		fmt.Printf("Error getting 10000 first db rows: %v\n", err)
+		rlog.Errorf("Error getting 10000 first db rows: %v", err)
 		return
 	}
 
@@ -102,7 +102,7 @@ func pruneOldEntries(currentFileSize int64) {
 		var entry models.MizuEntry
 		err = DB.ScanRows(rows, &entry)
 		if err != nil {
-			fmt.Printf("Error scanning db row: %v\n", err)
+			rlog.Errorf("Error scanning db row: %v", err)
 			continue
 		}
 
@@ -114,8 +114,8 @@ func pruneOldEntries(currentFileSize int64) {
 		GetEntriesTable().Where(entryIdsToRemove).Delete(models.MizuEntry{})
 		// VACUUM causes sqlite to shrink the db file after rows have been deleted, the db file will not shrink without this
 		DB.Exec("VACUUM")
-		fmt.Printf("Removed %d rows and cleared %s\n", len(entryIdsToRemove), units.BytesToHumanReadable(bytesToBeRemoved))
+		rlog.Errorf("Removed %d rows and cleared %s", len(entryIdsToRemove), units.BytesToHumanReadable(bytesToBeRemoved))
 	} else {
-		fmt.Println("Found no rows to remove when pruning")
+		rlog.Error("Found no rows to remove when pruning")
 	}
 }

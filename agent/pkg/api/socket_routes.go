@@ -1,10 +1,10 @@
-package routes
+package api
 
 import (
 	"errors"
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
+	"github.com/romana/rlog"
 	"github.com/up9inc/mizu/shared/debounce"
 	"net/http"
 	"sync"
@@ -18,10 +18,10 @@ type EventHandlers interface {
 }
 
 type SocketConnection struct {
-	connection *websocket.Conn
-	lock *sync.Mutex
+	connection    *websocket.Conn
+	lock          *sync.Mutex
 	eventHandlers EventHandlers
-	isTapper bool
+	isTapper      bool
 }
 
 var websocketUpgrader = websocket.Upgrader{
@@ -50,7 +50,7 @@ func WebSocketRoutes(app *gin.Engine, eventHandlers EventHandlers) {
 func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers EventHandlers, isTapper bool) {
 	conn, err := websocketUpgrader.Upgrade(w, r, nil)
 	if err != nil {
-		fmt.Println("Failed to set websocket upgrade: %+v", err)
+		rlog.Errorf("Failed to set websocket upgrade: %v", err)
 		return
 	}
 
@@ -71,7 +71,7 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 	for {
 		_, msg, err := conn.ReadMessage()
 		if err != nil {
-			fmt.Printf("Conn err: %v\n", err)
+			rlog.Errorf("Error reading message, socket id: %d, error: %v", socketId, err)
 			break
 		}
 		eventHandlers.WebSocketMessage(socketId, msg)
@@ -81,7 +81,7 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 func socketCleanup(socketId int, socketConnection *SocketConnection) {
 	err := socketConnection.connection.Close()
 	if err != nil {
-		fmt.Printf("Error closing socket connection for socket id %d: %v\n", socketId, err)
+		rlog.Errorf("Error closing socket connection for socket id %d: %v\n", socketId, err)
 	}
 
 	websocketIdsLock.Lock()
@@ -91,8 +91,8 @@ func socketCleanup(socketId int, socketConnection *SocketConnection) {
 	socketConnection.eventHandlers.WebSocketDisconnect(socketId, socketConnection.isTapper)
 }
 
-var db = debounce.NewDebouncer(time.Second * 5, func() {
-	fmt.Println("Successfully sent to socket")
+var db = debounce.NewDebouncer(time.Second*5, func() {
+	rlog.Error("Successfully sent to socket")
 })
 
 func SendToSocket(socketId int, message []byte) error {
@@ -102,9 +102,9 @@ func SendToSocket(socketId int, message []byte) error {
 	}
 
 	var sent = false
-	time.AfterFunc(time.Second * 5, func() {
+	time.AfterFunc(time.Second*5, func() {
 		if !sent {
-			fmt.Println("Socket timed out")
+			rlog.Error("Socket timed out")
 			socketCleanup(socketId, socketObj)
 		}
 	})

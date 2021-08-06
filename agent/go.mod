@@ -13,9 +13,12 @@ require (
 	github.com/go-playground/validator/v10 v10.5.0
 	github.com/google/martian v2.1.0+incompatible
 	github.com/gorilla/websocket v1.4.2
+	github.com/orcaman/concurrent-map v0.0.0-20210106121528-16402b402231
+	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/romana/rlog v0.0.0-20171115192701-f018bc92e7d7
 	github.com/up9inc/mizu/shared v0.0.0
 	github.com/up9inc/mizu/tap v0.0.0
+	github.com/yalp/jsonpath v0.0.0-20180802001716-5cc68e5049a0
 	go.mongodb.org/mongo-driver v1.5.1
 	gorm.io/driver/sqlite v1.1.4
 	gorm.io/gorm v1.21.8

@@ -10,15 +10,11 @@ import (
 const telemetryUrl = "https://us-east4-up9-prod.cloudfunctions.net/mizu-telemetry"
 
 func ReportRun(cmd string, args interface{}) {
-	if !GetBool(ConfigurationKeyTelemetry) {
+	if !Config.Telemetry {
 		Log.Debugf("not reporting due to config value")
 		return
 	}
 
-	if Branch != "main" {
-		Log.Debugf("reporting only on main branch")
-		return
-	}
 	argsBytes, _ := json.Marshal(args)
 	argsMap := map[string]string{
 		"telemetry_type": "execution",
@@ -26,6 +22,7 @@ func ReportRun(cmd string, args interface{}) {
 		"args":           string(argsBytes),
 		"component":      "mizu_cli",
 		"BuildTimestamp": BuildTimestamp,
+		"Branch":         Branch,
 		"version":        SemVer}
 	argsMap["message"] = fmt.Sprintf("mizu %v - %v", argsMap["cmd"], string(argsBytes))
 

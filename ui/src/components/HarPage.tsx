@@ -38,11 +38,12 @@ enum ConnectionStatus {
 
 interface HarPageProps {
     setAnalyzeStatus: (status: any) => void;
+    onTLSDetected: (destAddress: string) => void;
 }
 
 const api = new Api();
 
-export const HarPage: React.FC<HarPageProps> = ({setAnalyzeStatus}) => {
+export const HarPage: React.FC<HarPageProps> = ({setAnalyzeStatus, onTLSDetected}) => {
 
     const classes = useLayoutStyles();
 
@@ -71,7 +72,6 @@ export const HarPage: React.FC<HarPageProps> = ({setAnalyzeStatus}) => {
         ws.current.onmessage = e => {
             if (!e?.data) return;
             const message = JSON.parse(e.data);
-
             switch (message.messageType) {
                 case "entry":
                     const entry = message.data
@@ -93,6 +93,9 @@ export const HarPage: React.FC<HarPageProps> = ({setAnalyzeStatus}) => {
                 case "analyzeStatus":
                     setAnalyzeStatus(message.analyzeStatus);
                     break
+                case "outboundLink":
+                    onTLSDetected(message.Data.DstIP);
+                    break;
                 default:
                     console.error(`unsupported websocket message type, Got: ${message.messageType}`)
             }

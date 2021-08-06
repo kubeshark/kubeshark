@@ -5,10 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/google/martian/har"
-	"github.com/romana/rlog"
-	"github.com/up9inc/mizu/tap"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"mizuserver/pkg/holder"
 	"net/url"
 	"os"
@@ -16,6 +12,11 @@ import (
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/google/martian/har"
+	"github.com/romana/rlog"
+	"github.com/up9inc/mizu/tap"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"mizuserver/pkg/database"
 	"mizuserver/pkg/models"
@@ -25,9 +26,9 @@ import (
 
 var k8sResolver *resolver.Resolver
 
-func init() {
+func StartResolving(namespace string) {
 	errOut := make(chan error, 100)
-	res, err := resolver.NewFromInCluster(errOut)
+	res, err := resolver.NewFromInCluster(errOut, namespace)
 	if err != nil {
 		rlog.Infof("error creating k8s resolver %s", err)
 		return
@@ -88,9 +89,9 @@ func startReadingFiles(workingDir string) {
 		for _, entry := range inputHar.Log.Entries {
 			time.Sleep(time.Millisecond * 250)
 			connectionInfo := &tap.ConnectionInfo{
-				ClientIP: fileInfo.Name(),
+				ClientIP:   fileInfo.Name(),
 				ClientPort: "",
-				ServerIP: "",
+				ServerIP:   "",
 				ServerPort: "",
 				IsOutgoing: false,
 			}
@@ -117,7 +118,6 @@ func StartReadingOutbound(outboundLinkChannel <-chan *tap.OutboundLink) {
 	for range outboundLinkChannel {
 	}
 }
-
 
 func saveHarToDb(entry *har.Entry, connectionInfo *tap.ConnectionInfo) {
 	entryBytes, _ := json.Marshal(entry)
@@ -167,8 +167,10 @@ func saveHarToDb(entry *har.Entry, connectionInfo *tap.ConnectionInfo) {
 	if err := models.GetEntry(&mizuEntry, &baseEntry); err != nil {
 		return
 	}
+	baseEntry.Rules = models.RunValidationRulesState(*entry, serviceName)
+	baseEntry.Latency = entry.Timings.Receive
 	baseEntryBytes, _ := models.CreateBaseEntryWebSocketMessage(&baseEntry)
-	broadcastToBrowserClients(baseEntryBytes)
+	BroadcastToBrowserClients(baseEntryBytes)
 }
 
 func getServiceNameFromUrl(inputUrl string) (string, string) {
@@ -195,7 +197,6 @@ func getEstimatedEntrySizeBytes(mizuEntry models.MizuEntry) int {
 	sizeBytes += 8 // Timestamp bytes
 	sizeBytes += 8 // SizeBytes bytes
 	sizeBytes += 1 // IsOutgoing bytes
-
 
 	return sizeBytes
 }

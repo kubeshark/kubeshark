@@ -4,14 +4,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/google/go-github/v37/github"
-	"github.com/up9inc/mizu/cli/uiUtils"
-	"github.com/up9inc/mizu/shared"
-	"github.com/up9inc/mizu/shared/semver"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/google/go-github/v37/github"
+	"github.com/up9inc/mizu/cli/uiUtils"
+	"github.com/up9inc/mizu/shared"
+	"github.com/up9inc/mizu/shared/semver"
 )
 
 func getApiVersion(port uint16) (string, error) {
@@ -55,7 +56,7 @@ func CheckNewerVersion() {
 	client := github.NewClient(nil)
 	latestRelease, _, err := client.Repositories.GetLatestRelease(context.Background(), "up9inc", "mizu")
 	if err != nil {
-		Log.Debugf("Failed to get latest release")
+		Log.Debugf("[ERROR] Failed to get latest release")
 		return
 	}
 
@@ -67,20 +68,20 @@ func CheckNewerVersion() {
 		}
 	}
 	if versionFileUrl == "" {
-		Log.Debugf("Version file not found in the latest release")
+		Log.Debugf("[ERROR] Version file not found in the latest release")
 		return
 	}
 
 	res, err := http.Get(versionFileUrl)
 	if err != nil {
-		Log.Debugf("http.Get version asset -> %v", err)
+		Log.Debugf("[ERROR] Failed to get the version file %v", err)
 		return
 	}
 
 	data, err := ioutil.ReadAll(res.Body)
 	res.Body.Close()
 	if err != nil {
-		Log.Debugf("ioutil.ReadAll -> %v", err)
+		Log.Debugf("[ERROR] Failed to read the version file -> %v", err)
 		return
 	}
 	gitHubVersion := string(data)

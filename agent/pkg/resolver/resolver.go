@@ -7,28 +7,32 @@ import (
 	"github.com/romana/rlog"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 
+	"github.com/orcaman/concurrent-map"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
 	restclient "k8s.io/client-go/rest"
 )
+
 const (
 	kubClientNullString = "None"
 )
 
 type Resolver struct {
-	clientConfig  *restclient.Config
-	clientSet *kubernetes.Clientset
-	nameMap map[string]string
-	serviceMap map[string]string
-	isStarted bool
-	errOut chan error
+	clientConfig *restclient.Config
+	clientSet    *kubernetes.Clientset
+	nameMap      cmap.ConcurrentMap
+	serviceMap   cmap.ConcurrentMap
+	isStarted    bool
+	errOut       chan error
+	namespace    string
 }
 
 func (resolver *Resolver) Start(ctx context.Context) {
 	if !resolver.isStarted {
 		resolver.isStarted = true
+
 		go resolver.infiniteErrorHandleRetryFunc(ctx, resolver.watchServices)
 		go resolver.infiniteErrorHandleRetryFunc(ctx, resolver.watchEndpoints)
 		go resolver.infiniteErrorHandleRetryFunc(ctx, resolver.watchPods)
@@ -36,97 +40,97 @@ func (resolver *Resolver) Start(ctx context.Context) {
 }
 
 func (resolver *Resolver) Resolve(name string) string {
-	resolvedName, isFound := resolver.nameMap[name]
+	resolvedName, isFound := resolver.nameMap.Get(name)
 	if !isFound {
 		return ""
 	}
-	return resolvedName
+	return resolvedName.(string)
 }
 
-func (resolver *Resolver) GetMap() map[string]string {
+func (resolver *Resolver) GetMap() cmap.ConcurrentMap {
 	return resolver.nameMap
 }
 
 func (resolver *Resolver) CheckIsServiceIP(address string) bool {
-	_, isFound := resolver.serviceMap[address]
+	_, isFound := resolver.serviceMap.Get(address)
 	return isFound
 }
 
 func (resolver *Resolver) watchPods(ctx context.Context) error {
 	// empty namespace makes the client watch all namespaces
-	watcher, err := resolver.clientSet.CoreV1().Pods("").Watch(ctx, metav1.ListOptions{Watch: true})
+	watcher, err := resolver.clientSet.CoreV1().Pods(resolver.namespace).Watch(ctx, metav1.ListOptions{Watch: true})
 	if err != nil {
 		return err
 	}
 	for {
 		select {
-			case event := <- watcher.ResultChan():
-				if event.Object == nil {
-					return errors.New("error in kubectl pod watch")
-				}
-				if event.Type == watch.Deleted {
-					pod := event.Object.(*corev1.Pod)
-					resolver.saveResolvedName(pod.Status.PodIP, "", event.Type)
-				}
-			case <- ctx.Done():
-				watcher.Stop()
-				return nil
+		case event := <-watcher.ResultChan():
+			if event.Object == nil {
+				return errors.New("error in kubectl pod watch")
+			}
+			if event.Type == watch.Deleted {
+				pod := event.Object.(*corev1.Pod)
+				resolver.saveResolvedName(pod.Status.PodIP, "", event.Type)
+			}
+		case <-ctx.Done():
+			watcher.Stop()
+			return nil
 		}
 	}
 }
 
 func (resolver *Resolver) watchEndpoints(ctx context.Context) error {
 	// empty namespace makes the client watch all namespaces
-	watcher, err := resolver.clientSet.CoreV1().Endpoints("").Watch(ctx, metav1.ListOptions{Watch: true})
+	watcher, err := resolver.clientSet.CoreV1().Endpoints(resolver.namespace).Watch(ctx, metav1.ListOptions{Watch: true})
 	if err != nil {
 		return err
 	}
 	for {
 		select {
-			case event := <- watcher.ResultChan():
-				if event.Object == nil {
-					return errors.New("error in kubectl endpoint watch")
-				}
-				endpoint := event.Object.(*corev1.Endpoints)
-				serviceHostname := fmt.Sprintf("%s.%s", endpoint.Name, endpoint.Namespace)
-				if endpoint.Subsets != nil {
-					for _, subset := range endpoint.Subsets {
-						var ports []int32
-						if subset.Ports != nil {
-							for _, portMapping := range subset.Ports {
-								if portMapping.Port > 0 {
-									ports = append(ports, portMapping.Port)
-								}
+		case event := <-watcher.ResultChan():
+			if event.Object == nil {
+				return errors.New("error in kubectl endpoint watch")
+			}
+			endpoint := event.Object.(*corev1.Endpoints)
+			serviceHostname := fmt.Sprintf("%s.%s", endpoint.Name, endpoint.Namespace)
+			if endpoint.Subsets != nil {
+				for _, subset := range endpoint.Subsets {
+					var ports []int32
+					if subset.Ports != nil {
+						for _, portMapping := range subset.Ports {
+							if portMapping.Port > 0 {
+								ports = append(ports, portMapping.Port)
 							}
 						}
-						if subset.Addresses != nil {
-							for _, address := range subset.Addresses {
-								resolver.saveResolvedName(address.IP, serviceHostname, event.Type)
-								for _, port := range ports {
-									ipWithPort := fmt.Sprintf("%s:%d", address.IP, port)
-									resolver.saveResolvedName(ipWithPort, serviceHostname, event.Type)
-								}
-							}
-						}
-
 					}
+					if subset.Addresses != nil {
+						for _, address := range subset.Addresses {
+							resolver.saveResolvedName(address.IP, serviceHostname, event.Type)
+							for _, port := range ports {
+								ipWithPort := fmt.Sprintf("%s:%d", address.IP, port)
+								resolver.saveResolvedName(ipWithPort, serviceHostname, event.Type)
+							}
+						}
+					}
+
 				}
-			case <- ctx.Done():
-				watcher.Stop()
-				return nil
+			}
+		case <-ctx.Done():
+			watcher.Stop()
+			return nil
 		}
 	}
 }
 
 func (resolver *Resolver) watchServices(ctx context.Context) error {
 	// empty namespace makes the client watch all namespaces
-	watcher, err := resolver.clientSet.CoreV1().Services("").Watch(ctx, metav1.ListOptions{Watch: true})
+	watcher, err := resolver.clientSet.CoreV1().Services(resolver.namespace).Watch(ctx, metav1.ListOptions{Watch: true})
 	if err != nil {
 		return err
 	}
 	for {
 		select {
-		case event := <- watcher.ResultChan():
+		case event := <-watcher.ResultChan():
 			if event.Object == nil {
 				return errors.New("error in kubectl service watch")
 			}
@@ -142,7 +146,7 @@ func (resolver *Resolver) watchServices(ctx context.Context) error {
 					resolver.saveResolvedName(ingress.IP, serviceHostname, event.Type)
 				}
 			}
-		case <- ctx.Done():
+		case <-ctx.Done():
 			watcher.Stop()
 			return nil
 		}
@@ -151,19 +155,19 @@ func (resolver *Resolver) watchServices(ctx context.Context) error {
 
 func (resolver *Resolver) saveResolvedName(key string, resolved string, eventType watch.EventType) {
 	if eventType == watch.Deleted {
-		delete(resolver.nameMap, key)
+		resolver.nameMap.Remove(key)
 		rlog.Infof("setting %s=nil\n", key)
 	} else {
-		resolver.nameMap[key] = resolved
+		resolver.nameMap.Set(key, resolved)
 		rlog.Infof("setting %s=%s\n", key, resolved)
 	}
 }
 
 func (resolver *Resolver) saveServiceIP(key string, resolved string, eventType watch.EventType) {
 	if eventType == watch.Deleted {
-		delete(resolver.serviceMap, key)
+		resolver.serviceMap.Remove(key)
 	} else {
-		resolver.serviceMap[key] = resolved
+		resolver.serviceMap.Set(key, resolved)
 	}
 }
 
@@ -186,4 +190,3 @@ func (resolver *Resolver) infiniteErrorHandleRetryFunc(ctx context.Context, fun 
 		}
 	}
 }
-
