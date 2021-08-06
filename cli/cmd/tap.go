@@ -65,7 +65,7 @@ func init() {
 	tapCmd.Flags().BoolP(configStructs.AllNamespacesTapName, "A", defaultTapConfig.AllNamespaces, "Tap all namespaces")
 	tapCmd.Flags().StringP(configStructs.KubeConfigPathTapName, "k", defaultTapConfig.KubeConfigPath, "Path to kube-config file")
 	tapCmd.Flags().StringArrayP(configStructs.PlainTextFilterRegexesTapName, "r", defaultTapConfig.PlainTextFilterRegexes, "List of regex expressions that are used to filter matching values from text/plain http bodies")
-	tapCmd.Flags().Bool(configStructs.HideHealthChecksTapName, defaultTapConfig.HideHealthChecks, "hides requests with kube-probe or prometheus user-agent headers")
+	tapCmd.Flags().StringArray(configStructs.IgnoredUserAgentsTapName, defaultTapConfig.HealthChecksUserAgentHeaders, "hides requests with kube-probe or prometheus user-agent headers")
 	tapCmd.Flags().Bool(configStructs.DisableRedactionTapName, defaultTapConfig.DisableRedaction, "Disables redaction of potentially sensitive request/response headers and body values")
 	tapCmd.Flags().String(configStructs.HumanMaxEntriesDBSizeTapName, defaultTapConfig.HumanMaxEntriesDBSize, "override the default max entries db size of 200mb")
 	tapCmd.Flags().String(configStructs.DirectionTapName, defaultTapConfig.Direction, "Record traffic that goes in this direction (relative to the tapped pod): in/any")
