@@ -27,21 +27,21 @@ const (
 )
 
 type TapConfig struct {
-	AnalysisDestination    string   `yaml:"dest" default:"up9.app"`
-	SleepIntervalSec       int      `yaml:"upload-interval" default:"10"`
-	PodRegexStr            string   `yaml:"regex" default:".*"`
-	GuiPort                uint16   `yaml:"gui-port" default:"8899"`
-	Namespaces             []string `yaml:"namespaces"`
-	Analysis               bool     `yaml:"analysis" default:"false"`
-	AllNamespaces          bool     `yaml:"all-namespaces" default:"false"`
-	KubeConfigPath         string   `yaml:"kube-config"`
-	PlainTextFilterRegexes []string `yaml:"regex-masking"`
-	HideHealthChecks       bool     `yaml:"hide-healthchecks" default:"false"`
-	DisableRedaction       bool     `yaml:"no-redact" default:"false"`
-	HumanMaxEntriesDBSize  string   `yaml:"max-entries-db-size" default:"200MB"`
-	Direction              string   `yaml:"direction" default:"in"`
-	DryRun                 bool     `yaml:"dry-run" default:"false"`
-	EnforcePolicyFile      string   `yaml:"test-rules"`
+	AnalysisDestination          string   `yaml:"dest" default:"up9.app"`
+	SleepIntervalSec             int      `yaml:"upload-interval" default:"10"`
+	PodRegexStr                  string   `yaml:"regex" default:".*"`
+	GuiPort                      uint16   `yaml:"gui-port" default:"8899"`
+	Namespaces                   []string `yaml:"namespaces"`
+	Analysis                     bool     `yaml:"analysis" default:"false"`
+	AllNamespaces                bool     `yaml:"all-namespaces" default:"false"`
+	KubeConfigPath               string   `yaml:"kube-config"`
+	PlainTextFilterRegexes       []string `yaml:"regex-masking"`
+	HealthChecksUserAgentHeaders []string `yaml:"ignored-user-agents" default:"[kube-probe, prometheus]"`
+	DisableRedaction             bool     `yaml:"no-redact" default:"false"`
+	HumanMaxEntriesDBSize        string   `yaml:"max-entries-db-size" default:"200MB"`
+	Direction                    string   `yaml:"direction" default:"in"`
+	DryRun                       bool     `yaml:"dry-run" default:"false"`
+	EnforcePolicyFile            string   `yaml:"test-rules"`
 }
 
 func (config *TapConfig) PodRegex() *regexp.Regexp {
