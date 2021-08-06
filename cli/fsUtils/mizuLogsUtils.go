@@ -18,7 +18,7 @@ func DumpLogs(provider *kubernetes.Provider, ctx context.Context, filePath strin
 	}
 
 	if len(pods) == 0 {
-		return fmt.Errorf("no pods found in namespace %s", mizu.Config.MizuResourcesNamespace)
+		return fmt.Errorf("no mizu pods found in namespace %s", mizu.Config.MizuResourcesNamespace)
 	}
 
 	newZipFile, err := os.Create(filePath)
@@ -49,7 +49,7 @@ func DumpLogs(provider *kubernetes.Provider, ctx context.Context, filePath strin
 		mizu.Log.Infof("Successfully added file %s", mizu.GetConfigFilePath())
 	}
 	if err := AddFileToZip(zipWriter, mizu.GetLogFilePath()); err != nil {
-		mizu.Log.Errorf("Failed write file, %v", err)
+		mizu.Log.Debugf("Failed write file, %v", err)
 	} else {
 		mizu.Log.Infof("Successfully added file %s", mizu.GetLogFilePath())
 	}
