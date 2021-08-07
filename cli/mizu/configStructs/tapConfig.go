@@ -18,7 +18,6 @@ const (
 	AllNamespacesTapName          = "all-namespaces"
 	KubeConfigPathTapName         = "kube-config"
 	PlainTextFilterRegexesTapName = "regex-masking"
-	IgnoredUserAgentTapName       = "ignored-user-agent"
 	DisableRedactionTapName       = "no-redact"
 	HumanMaxEntriesDBSizeTapName  = "max-entries-db-size"
 	DirectionTapName              = "direction"

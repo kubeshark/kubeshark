@@ -391,7 +391,7 @@ To tap multiple pods using regex -
 
 To filter requests by user-agent header (like health checks) we can configure filter list using configuration:
 
-Any request that match (contains) one of those values in the user-agent header will not be captured
+Any request that contains one of those values in the user-agent header will not be captured
 
 *Yaml configuration example inside (config.yaml):*
 ```
@@ -399,9 +399,4 @@ tap:
     ignored-user-agents: 
         - kube-probe	
         - prometheus
-```
-
-*Using command line flag:*
-```
- $ mizu tap "^ca.*" --set ignored-user-agent=kube-probe --set ignored-user-agent=prometheus 
 ```
