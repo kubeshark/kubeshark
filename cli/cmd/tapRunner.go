@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/up9inc/mizu/cli/fsUtils"
 	"github.com/up9inc/mizu/cli/goUtils"
+	"github.com/up9inc/mizu/cli/mizu/configStructs"
 	"net/http"
 	"net/url"
 	"os"
