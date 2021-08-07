@@ -18,7 +18,7 @@ const (
 	AllNamespacesTapName          = "all-namespaces"
 	KubeConfigPathTapName         = "kube-config"
 	PlainTextFilterRegexesTapName = "regex-masking"
-	IgnoredUserAgentsTapName      = "ignored-user-agent"
+	IgnoredUserAgentTapName       = "ignored-user-agent"
 	DisableRedactionTapName       = "no-redact"
 	HumanMaxEntriesDBSizeTapName  = "max-entries-db-size"
 	DirectionTapName              = "direction"
@@ -36,7 +36,7 @@ type TapConfig struct {
 	AllNamespaces                bool     `yaml:"all-namespaces" default:"false"`
 	KubeConfigPath               string   `yaml:"kube-config"`
 	PlainTextFilterRegexes       []string `yaml:"regex-masking"`
-	HealthChecksUserAgentHeaders []string `yaml:"ignored-user-agents" default:"[\"kube-probe\",\"prometheus\"]"`
+	HealthChecksUserAgentHeaders []string `yaml:"ignored-user-agents" default:"[]"`
 	DisableRedaction             bool     `yaml:"no-redact" default:"false"`
 	HumanMaxEntriesDBSize        string   `yaml:"max-entries-db-size" default:"200MB"`
 	Direction                    string   `yaml:"direction" default:"in"`
