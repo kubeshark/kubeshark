@@ -20,10 +20,13 @@ func runMizuView() {
 
 	exists, err := kubernetesProvider.DoesServicesExist(ctx, mizu.Config.MizuResourcesNamespace, mizu.ApiServerPodName)
 	if err != nil {
-		panic(err)
+		mizu.Log.Errorf("Failed to found mizu service %v", err)
+		cancel()
+		return
 	}
 	if !exists {
-		mizu.Log.Infof("The %s service not found", mizu.ApiServerPodName)
+		mizu.Log.Infof("%s service not found, you should run `mizu tap` command first", mizu.ApiServerPodName)
+		cancel()
 		return
 	}
 
@@ -33,11 +36,19 @@ func runMizuView() {
 		mizu.Log.Infof("Found a running service %s and open port %d", mizu.ApiServerPodName, mizu.Config.View.GuiPort)
 		return
 	}
-	mizu.Log.Infof("Found service %s, creating k8s proxy", mizu.ApiServerPodName)
+	mizu.Log.Debugf("Found service %s, creating k8s proxy", mizu.ApiServerPodName)
+
+	go startProxyReportErrorIfAny(kubernetesProvider, cancel)
 
 	mizu.Log.Infof("Mizu is available at  http://%s\n", kubernetes.GetMizuApiServerProxiedHostAndPath(mizu.Config.View.GuiPort))
-	err = kubernetes.StartProxy(kubernetesProvider, mizu.Config.View.GuiPort, mizu.Config.MizuResourcesNamespace, mizu.ApiServerPodName)
-	if err != nil {
-		mizu.Log.Errorf("Error occurred while running k8s proxy %v", err)
+	if isCompatible, err := mizu.CheckVersionCompatibility(mizu.Config.View.GuiPort); err != nil {
+		mizu.Log.Errorf("Failed to check versions compatibility %v", err)
+		cancel()
+		return
+	} else if !isCompatible {
+		cancel()
+		return
 	}
+
+	waitForFinish(ctx, cancel)
 }
