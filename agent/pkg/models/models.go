@@ -130,8 +130,8 @@ type UploadEntriesRequestBody struct {
 }
 
 type HarFetchRequestQuery struct {
-	From int64 `query:"from"`
-	To   int64 `query:"to"`
+	From int64 `form:"from"`
+	To   int64 `form:"to"`
 }
 
 type WebSocketEntryMessage struct {
