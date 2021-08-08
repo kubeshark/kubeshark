@@ -46,7 +46,7 @@ func CheckVersionCompatibility(port uint16) (bool, error) {
 		return true, nil
 	}
 
-	Log.Infof(uiUtils.Red, fmt.Sprintf("cli version (%s) is not compatible with api version (%s)", SemVer, apiSemVer))
+	Log.Errorf(uiUtils.Red, fmt.Sprintf("cli version (%s) is not compatible with api version (%s)", SemVer, apiSemVer))
 	return false, nil
 }
 

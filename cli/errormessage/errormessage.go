@@ -17,8 +17,12 @@ func FormatError(err error) error {
 	var errorNew error
 	if k8serrors.IsForbidden(err) {
 		errorNew = fmt.Errorf("insufficient permissions: %w. "+
-			"supply the required permission or control Mizu's access to namespaces by setting MizuResourcesNamespace "+
-			"in the config file or setting the tapped namespace with --%s %s=<NAMEPSACE>", err, mizu.SetCommandName, mizu.MizuResourcesNamespaceConfigName)
+			"supply the required permission or control Mizu's access to namespaces by setting %s "+
+			"in the config file or setting the tapped namespace with --%s %s=<NAMEPSACE>",
+			err,
+			mizu.MizuResourcesNamespaceConfigName,
+			mizu.SetCommandName,
+			mizu.MizuResourcesNamespaceConfigName)
 	} else if syntaxError, isSyntaxError := asRegexSyntaxError(err); isSyntaxError {
 		errorNew = fmt.Errorf("regex %s is invalid: %w", syntaxError.Expr, err)
 	} else {

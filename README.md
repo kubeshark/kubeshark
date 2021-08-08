@@ -14,9 +14,9 @@ A simple-yet-powerful API traffic viewer for Kubernetes to help you troubleshoot
 
 ## Download
 
-Download `mizu` for your platform and operating system
+Download Mizu for your platform and operating system
 
-### Latest stable release
+### Latest Stable Release
 
 * for MacOS - Intel 
 ```
@@ -34,12 +34,12 @@ https://github.com/up9inc/mizu/releases/latest/download/mizu_linux_amd64 \
 
 SHA256 checksums are available on the [Releases](https://github.com/up9inc/mizu/releases) page.
 
-### Development (unstable) build
+### Development (unstable) Build
 Pick one from the [Releases](https://github.com/up9inc/mizu/releases) page.
 
 ## Prerequisites
-1. Set `KUBECONFIG` environment variable to your kubernetes configuration. If this is not set, mizu assumes that configuration is at `${HOME}/.kube/config`
-2. mizu needs following permissions on your kubernetes cluster to run
+1. Set `KUBECONFIG` environment variable to your Kubernetes configuration. If this is not set, Mizu assumes that configuration is at `${HOME}/.kube/config`
+2. Mizu needs following permissions on your Kubernetes cluster to run
 
 ```yaml
 - apiGroups:
@@ -84,7 +84,7 @@ Pick one from the [Releases](https://github.com/up9inc/mizu/releases) page.
   - get
 ```
 
-3. Optionally, for resolving traffic IP to kubernetes service name, mizu needs below permissions
+3. Optionally, for resolving traffic IP to Kubernetes service name, Mizu needs below permissions
 
 ```yaml
 - apiGroups:
@@ -201,7 +201,7 @@ Pick one from the [Releases](https://github.com/up9inc/mizu/releases) page.
   - watch
 ```
 
-4. Optionally, in order to use the policy rules validation feature, mizu requires the following additional permissions:
+4. Optionally, in order to use the policy rules validation feature, Mizu requires the following additional permissions:
 
 ```yaml
 - apiGroups:
@@ -214,7 +214,7 @@ Pick one from the [Releases](https://github.com/up9inc/mizu/releases) page.
   - delete
 ```
 
-5. Alternatively, in order to restrict mizu to one namespace only (by setting `agent.namespace` in the config file), mizu needs the following permissions in that namespace:
+5. Alternatively, in order to restrict Mizu to one namespace only (by setting `agent.namespace` in the config file), Mizu needs the following permissions in that namespace:
 
 ```yaml
 - apiGroups:
@@ -252,7 +252,7 @@ Pick one from the [Releases](https://github.com/up9inc/mizu/releases) page.
   - get
 ```
 
-6. To restrict mizu to one namespace while also resolving IPs, mizu needs the following permissions in that namespace:
+6. To restrict Mizu to one namespace while also resolving IPs, Mizu needs the following permissions in that namespace:
 
 ```yaml
 - apiGroups:
@@ -346,7 +346,7 @@ Pick one from the [Releases](https://github.com/up9inc/mizu/releases) page.
 
 See `examples/roles` for example `clusterroles`. 
 
-## How to run
+## How to Run
 
 1. Find pods you'd like to tap to in your Kubernetes cluster
 2. Run `mizu tap PODNAME` or `mizu tap REGEX` 
@@ -404,3 +404,18 @@ Mizu has several undocumented flags which can be set by using --set flag (e.g., 
 * **telemetry**: Type - Boolean, Reports telemetry
 * **dump-logs**: Type - Boolean, At the end of the execution it creates a zip file with logs (in .mizu folder)
 * **kube-config-path**: Type - String, Setting the path to kube config (which isn't in standard path)
+
+## Advanced Usage
+
+### Namespace-Restricted Mode
+
+Some users have permission to only manage resources in one particular namespace assigned to them.
+By default `mizu tap` creates a new namespace `mizu` for all of its Kubernetes resources. In order to instead install
+Mizu in an existing namespace, set the `mizu-resources-namespace` config option.
+
+If `mizu-resources-namespace` is set to a value other than the default `mizu`, Mizu will operate in a
+Namespace-Restricted mode. It will only tap pods in `mizu-resources-namespace`. This way Mizu only requires permissions
+to the namespace set by `mizu-resources-namespace`. The user must set the tapped namespace to the same namespace by
+using the `--namespace` flag or by setting `tap.namespaces` in the config file.
+
+Setting `mizu-resources-namespace=mizu` resets Mizu to its default behavior.
