@@ -44,9 +44,10 @@ func runMizuView() {
 	if isCompatible, err := mizu.CheckVersionCompatibility(mizu.Config.View.GuiPort); err != nil {
 		mizu.Log.Errorf("Failed to check versions compatibility %v", err)
 		cancel()
+		return
 	} else if !isCompatible {
-		mizu.Log.Errorf("Mizu Cli and Mizu server not same version")
 		cancel()
+		return
 	}
 
 	waitForFinish(ctx, cancel)
