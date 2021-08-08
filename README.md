@@ -115,9 +115,9 @@ To generate a new config file with default values use `mizu config -r`
 
 Mizu has several undocumented flags which can be set by using --set flag (e.g., `mizu tap --set dump-logs=true`)
 * **mizu-resources-namespace**: Type - String, See [Namespace-Restricted Mode](#namespace-restricted-mode)
-* **telemetry**: Type - Boolean, Reports telemetry
 * **dump-logs**: Type - Boolean, At the end of the execution it creates a zip file with logs (in .mizu folder)
 * **kube-config-path**: Type - String, Setting the path to kube config (which isn't in standard path)
+
 
 ## Advanced Usage
 
@@ -133,3 +133,11 @@ to the namespace set by `mizu-resources-namespace`. The user must set the tapped
 using the `--namespace` flag or by setting `tap.namespaces` in the config file.
 
 Setting `mizu-resources-namespace=mizu` resets Mizu to its default behavior.
+
+### API Rules validation
+
+This feature allows you to define set of simple rules, and test the API against them.
+Such validation may test response for specific JSON fields, headers, etc.
+
+Please see [API RULES](docs/POLICY_RULES.md) page for more details and syntax.
+
