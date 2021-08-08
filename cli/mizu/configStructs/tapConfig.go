@@ -16,7 +16,6 @@ const (
 	NamespacesTapName             = "namespaces"
 	AnalysisTapName               = "analysis"
 	AllNamespacesTapName          = "all-namespaces"
-	KubeConfigPathTapName         = "kube-config"
 	PlainTextFilterRegexesTapName = "regex-masking"
 	HideHealthChecksTapName       = "hide-healthchecks"
 	DisableRedactionTapName       = "no-redact"
@@ -34,7 +33,6 @@ type TapConfig struct {
 	Namespaces             []string `yaml:"namespaces"`
 	Analysis               bool     `yaml:"analysis" default:"false"`
 	AllNamespaces          bool     `yaml:"all-namespaces" default:"false"`
-	KubeConfigPath         string   `yaml:"kube-config"`
 	PlainTextFilterRegexes []string `yaml:"regex-masking"`
 	HideHealthChecks       bool     `yaml:"hide-healthchecks" default:"false"`
 	DisableRedaction       bool     `yaml:"no-redact" default:"false"`

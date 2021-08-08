@@ -13,17 +13,14 @@ import (
 	"strconv"
 
 	"github.com/up9inc/mizu/cli/mizu"
-	"io"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/client-go/tools/cache"
-	"k8s.io/client-go/util/homedir"
-
 	"github.com/up9inc/mizu/shared"
+	"io"
 	core "k8s.io/api/core/v1"
 	rbac "k8s.io/api/rbac/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	resource "k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/watch"
 	applyconfapp "k8s.io/client-go/applyconfigurations/apps/v1"
@@ -35,9 +32,11 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/openstack"
 	restclient "k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
 	_ "k8s.io/client-go/tools/portforward"
 	watchtools "k8s.io/client-go/tools/watch"
+	"k8s.io/client-go/util/homedir"
 )
 
 type Provider struct {
@@ -358,15 +357,15 @@ func (provider *Provider) CreateMizuRBAC(ctx context.Context, namespace string, 
 		},
 	}
 	_, err := provider.clientSet.CoreV1().ServiceAccounts(namespace).Create(ctx, serviceAccount, metav1.CreateOptions{})
-	if err != nil {
+	if err != nil && !k8serrors.IsAlreadyExists(err) {
 		return err
 	}
 	_, err = provider.clientSet.RbacV1().ClusterRoles().Create(ctx, clusterRole, metav1.CreateOptions{})
-	if err != nil {
+	if err != nil && !k8serrors.IsAlreadyExists(err) {
 		return err
 	}
 	_, err = provider.clientSet.RbacV1().ClusterRoleBindings().Create(ctx, clusterRoleBinding, metav1.CreateOptions{})
-	if err != nil {
+	if err != nil && !k8serrors.IsAlreadyExists(err) {
 		return err
 	}
 	return nil
@@ -412,15 +411,15 @@ func (provider *Provider) CreateMizuRBACNamespaceRestricted(ctx context.Context,
 		},
 	}
 	_, err := provider.clientSet.CoreV1().ServiceAccounts(namespace).Create(ctx, serviceAccount, metav1.CreateOptions{})
-	if err != nil {
+	if err != nil && !k8serrors.IsAlreadyExists(err) {
 		return err
 	}
 	_, err = provider.clientSet.RbacV1().Roles(namespace).Create(ctx, role, metav1.CreateOptions{})
-	if err != nil {
+	if err != nil && !k8serrors.IsAlreadyExists(err) {
 		return err
 	}
 	_, err = provider.clientSet.RbacV1().RoleBindings(namespace).Create(ctx, roleBinding, metav1.CreateOptions{})
-	if err != nil {
+	if err != nil && !k8serrors.IsAlreadyExists(err) {
 		return err
 	}
 	return nil
@@ -683,7 +682,7 @@ func (provider *Provider) ListAllPodsMatchingRegex(ctx context.Context, regex *r
 	for _, namespace := range namespaces {
 		namespacePods, err := provider.clientSet.CoreV1().Pods(namespace).List(ctx, metav1.ListOptions{})
 		if err != nil {
-			return nil, fmt.Errorf("failed to get pods in ns: %s, %w", namespace, err)
+			return nil, fmt.Errorf("failed to get pods in ns: [%s], %w", namespace, err)
 		}
 
 		pods = append(pods, namespacePods.Items...)

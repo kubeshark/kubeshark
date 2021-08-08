@@ -11,6 +11,7 @@ const (
 	MizuResourcesNamespaceConfigName = "mizu-resources-namespace"
 	TelemetryConfigName              = "telemetry"
 	DumpLogsConfigName               = "dump-logs"
+	KubeConfigPathName               = "kube-config-path"
 )
 
 type ConfigStruct struct {
@@ -22,6 +23,7 @@ type ConfigStruct struct {
 	MizuResourcesNamespace string                      `yaml:"mizu-resources-namespace" default:"mizu"`
 	Telemetry              bool                        `yaml:"telemetry" default:"true"`
 	DumpLogs               bool                        `yaml:"dump-logs" default:"false"`
+	KubeConfigPath         string                      `yaml:"kube-config-path" default:""`
 }
 
 func (config *ConfigStruct) SetDefaults() {

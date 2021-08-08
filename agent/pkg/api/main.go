@@ -28,7 +28,7 @@ var k8sResolver *resolver.Resolver
 
 func StartResolving(namespace string) {
 	errOut := make(chan error, 100)
-	res, err := resolver.NewFromInCluster(namespace, errOut)
+	res, err := resolver.NewFromInCluster(errOut, namespace)
 	if err != nil {
 		rlog.Infof("error creating k8s resolver %s", err)
 		return

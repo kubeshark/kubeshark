@@ -2,10 +2,9 @@ package main
 
 import (
 	"github.com/up9inc/mizu/cli/cmd"
-	"github.com/up9inc/mizu/cli/mizu"
+	"github.com/up9inc/mizu/cli/goUtils"
 )
 
 func main() {
-	mizu.InitLogger()
-	cmd.Execute()
+	goUtils.HandleExcWrapper(cmd.Execute)
 }

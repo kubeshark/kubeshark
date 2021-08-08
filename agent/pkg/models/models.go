@@ -119,19 +119,19 @@ func (fedex *FullEntryDetailsExtra) UnmarshalData(entry *MizuEntry) error {
 }
 
 type EntriesFilter struct {
-	Limit     int    `query:"limit" validate:"required,min=1,max=200"`
-	Operator  string `query:"operator" validate:"required,oneof='lt' 'gt'"`
-	Timestamp int64  `query:"timestamp" validate:"required,min=1"`
+	Limit     int    `form:"limit" validate:"required,min=1,max=200"`
+	Operator  string `form:"operator" validate:"required,oneof='lt' 'gt'"`
+	Timestamp int64  `form:"timestamp" validate:"required,min=1"`
 }
 
-type UploadEntriesRequestBody struct {
+type UploadEntriesRequestQuery struct {
 	Dest             string `form:"dest"`
 	SleepIntervalSec int    `form:"interval"`
 }
 
-type HarFetchRequestBody struct {
-	From int64 `query:"from"`
-	To   int64 `query:"to"`
+type HarFetchRequestQuery struct {
+	From int64 `form:"from"`
+	To   int64 `form:"to"`
 }
 
 type WebSocketEntryMessage struct {

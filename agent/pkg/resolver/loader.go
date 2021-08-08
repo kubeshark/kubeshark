@@ -1,6 +1,7 @@
 package resolver
 
 import (
+	cmap "github.com/orcaman/concurrent-map"
 	"k8s.io/client-go/kubernetes"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/azure"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
@@ -9,7 +10,7 @@ import (
 	restclient "k8s.io/client-go/rest"
 )
 
-func NewFromInCluster(namespace string, errOut chan error) (*Resolver, error) {
+func NewFromInCluster(errOut chan error, namesapce string) (*Resolver, error) {
 	config, err := restclient.InClusterConfig()
 	if err != nil {
 		return nil, err
@@ -18,12 +19,5 @@ func NewFromInCluster(namespace string, errOut chan error) (*Resolver, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Resolver{
-		clientConfig: config,
-		clientSet: clientset,
-		nameMap: make(map[string]string),
-		serviceMap: make(map[string]string),
-		errOut: errOut,
-		namespace: namespace,
-	}, nil
+	return &Resolver{clientConfig: config, clientSet: clientset, nameMap: cmap.New(), serviceMap: cmap.New(), errOut: errOut, namespace: namesapce}, nil
 }

@@ -3,8 +3,8 @@ package cmd
 import (
 	"context"
 	"github.com/spf13/cobra"
+	"github.com/up9inc/mizu/cli/fsUtils"
 	"github.com/up9inc/mizu/cli/kubernetes"
-	"github.com/up9inc/mizu/cli/logsUtils"
 	"github.com/up9inc/mizu/cli/mizu"
 	"os"
 	"path"
@@ -32,7 +32,7 @@ var logsCmd = &cobra.Command{
 		}
 		mizu.Log.Debugf("Using file path %s", filePath)
 
-		if err := logsUtils.DumpLogs(kubernetesProvider, ctx, filePath); err != nil {
+		if err := fsUtils.DumpLogs(kubernetesProvider, ctx, filePath); err != nil {
 			mizu.Log.Errorf("Failed dump logs %v", err)
 		}
 
