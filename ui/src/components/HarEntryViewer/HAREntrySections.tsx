@@ -260,7 +260,7 @@ export const HAREntryTablePolicySection: React.FC<HAREntryPolicySectionProps> = 
                     </table>
                 </HAREntrySectionContainer>
                                             
-                </> : <span/>
+                </> : <span className={styles.noRules}>No rules could be applied to this request.</span>
         }
     </React.Fragment>
 }

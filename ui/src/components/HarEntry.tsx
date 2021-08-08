@@ -25,7 +25,8 @@ interface HAREntry {
 
 interface Rules {
     status: boolean;
-    latency: number
+    latency: number;
+    numberOfRules: number;
 }
 
 interface HAREntryProps {
@@ -36,6 +37,7 @@ interface HAREntryProps {
 
 export const HarEntry: React.FC<HAREntryProps> = ({entry, setFocusedEntryId, isSelected}) => {
     const classification = getClassification(entry.statusCode)
+    const numberOfRules = entry.rules.numberOfRules
     let ingoingIcon;
     let outgoingIcon;
     switch(classification) {
@@ -55,16 +57,36 @@ export const HarEntry: React.FC<HAREntryProps> = ({entry, setFocusedEntryId, isS
             break;
         }
     }
-    let backgroundColor = "";
-    if ('latency' in entry.rules) {
+    let additionalRulesProperties = "";
+    let ruleSuccess: boolean;
+    let rule = 'latency' in entry.rules
+    if (rule) {
         if (entry.rules.latency !== -1) {
-            backgroundColor = entry.rules.latency >= entry.latency ? styles.ruleSuccessRow : styles.ruleFailureRow
+            if (entry.rules.latency >= entry.latency) {
+                additionalRulesProperties = styles.ruleSuccessRow
+                ruleSuccess = true
+            } else {
+                additionalRulesProperties = styles.ruleFailureRow
+                ruleSuccess = false
+            }
+            if (isSelected) {
+                additionalRulesProperties += ` ${entry.rules.latency >= entry.latency ? styles.ruleSuccessRowSelected : styles.ruleFailureRowSelected}`
+            }
         } else {
-            backgroundColor = entry.rules.status ? styles.ruleSuccessRow : styles.ruleFailureRow
+            if (entry.rules.status) {
+                additionalRulesProperties = styles.ruleSuccessRow
+                ruleSuccess = true
+            } else {
+                additionalRulesProperties = styles.ruleFailureRow
+                ruleSuccess = false
+            }
+            if (isSelected) {
+                additionalRulesProperties += ` ${entry.rules.status ? styles.ruleSuccessRowSelected : styles.ruleFailureRowSelected}`
+            }
         }
     }
     return <>
-        <div id={entry.id} className={`${styles.row} ${isSelected ? styles.rowSelected : backgroundColor}`} onClick={() => setFocusedEntryId(entry.id)}>
+        <div id={entry.id} className={`${styles.row} ${isSelected && !rule ? styles.rowSelected : additionalRulesProperties} ` } onClick={() => setFocusedEntryId(entry.id)}>
             {entry.statusCode && <div>
                 <StatusCode statusCode={entry.statusCode}/>
             </div>}
@@ -74,6 +96,13 @@ export const HarEntry: React.FC<HAREntryProps> = ({entry, setFocusedEntryId, isS
                     {entry.service}
                 </div>
             </div>
+            {
+                rule ?
+                    <div className={`${ruleSuccess ? styles.ruleNumberTextSuccess : styles.ruleNumberTextFailure}`}>
+                        {`Rules (${numberOfRules})`}
+                    </div>
+                : ""
+            }
             <div className={styles.directionContainer}>
                 {entry.isOutgoing ?
                     <img src={outgoingIcon} alt="outgoing traffic" title="outgoing"/>
