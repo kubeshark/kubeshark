@@ -11,7 +11,7 @@ import (
 )
 
 func DumpLogs(provider *kubernetes.Provider, ctx context.Context, filePath string) error {
-	podExactRegex := regexp.MustCompile(fmt.Sprintf("^mizu-"))
+	podExactRegex := regexp.MustCompile("^" + mizu.MizuResourcesPrefix)
 	pods, err := provider.ListAllPodsMatchingRegex(ctx, podExactRegex, []string{mizu.Config.MizuResourcesNamespace})
 	if err != nil {
 		return err

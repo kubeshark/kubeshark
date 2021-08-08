@@ -419,7 +419,8 @@ func updateCurrentlyTappedPods(kubernetesProvider *kubernetes.Provider, ctx cont
 	if matchingPods, err := kubernetesProvider.ListAllRunningPodsMatchingRegex(ctx, mizu.Config.Tap.PodRegex(), targetNamespaces); err != nil {
 		return err, false
 	} else {
-		addedPods, removedPods := getPodArrayDiff(state.currentlyTappedPods, matchingPods)
+		podsToTap := excludeMizuPods(matchingPods)
+		addedPods, removedPods := getPodArrayDiff(state.currentlyTappedPods, podsToTap)
 		for _, addedPod := range addedPods {
 			changeFound = true
 			mizu.Log.Infof(uiUtils.Green, fmt.Sprintf("+%s", addedPod.Name))
@@ -428,10 +429,23 @@ func updateCurrentlyTappedPods(kubernetesProvider *kubernetes.Provider, ctx cont
 			changeFound = true
 			mizu.Log.Infof(uiUtils.Red, fmt.Sprintf("-%s", removedPod.Name))
 		}
-		state.currentlyTappedPods = matchingPods
+		state.currentlyTappedPods = podsToTap
 	}
 
 	return nil, changeFound
+}
+
+func excludeMizuPods(pods []core.Pod) []core.Pod {
+	mizuPrefixRegex := regexp.MustCompile("^" + mizu.MizuResourcesPrefix)
+
+	nonMizuPods := make([]core.Pod, 0)
+	for _, pod := range pods {
+		if !mizuPrefixRegex.MatchString(pod.Name) {
+			nonMizuPods = append(nonMizuPods, pod)
+		}
+	}
+
+	return nonMizuPods
 }
 
 func getPodArrayDiff(oldPods []core.Pod, newPods []core.Pod) (added []core.Pod, removed []core.Pod) {
