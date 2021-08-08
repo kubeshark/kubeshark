@@ -48,4 +48,6 @@ func runMizuView() {
 		mizu.Log.Errorf("Mizu Cli and Mizu server not same version")
 		cancel()
 	}
+
+	waitForFinish(ctx, cancel)
 }

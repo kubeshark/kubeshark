@@ -52,6 +52,7 @@ func StartProxy(kubernetesProvider *Provider, mizuPort uint16, mizuNamespace str
 	server := http.Server{
 		Handler: mux,
 	}
+	mizu.Log.Debugf("Start listening on port")
 	return server.Serve(l)
 }
 

@@ -484,8 +484,7 @@ func createProxyToApiServerPod(ctx context.Context, kubernetesProvider *kubernet
 			if modifiedPod.Status.Phase == core.PodRunning && !isPodReady {
 				isPodReady = true
 				go kubernetes.StartProxyReportErrorIfAny(kubernetesProvider, cancel)
-				mizuProxiedUrl := kubernetes.GetMizuApiServerProxiedHostAndPath(mizu.Config.Tap.GuiPort)
-				mizu.Log.Infof("Mizu is available at http://%s\n", mizuProxiedUrl)
+				mizu.Log.Infof("Mizu is available at http://%s\n", kubernetes.GetMizuApiServerProxiedHostAndPath(mizu.Config.Tap.GuiPort))
 				time.Sleep(time.Second * 5) // Waiting to be sure the proxy is ready
 				requestForAnalysis()
 				reportTappedPods()
