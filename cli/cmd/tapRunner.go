@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/up9inc/mizu/cli/fsUtils"
+	"github.com/up9inc/mizu/cli/goUtils"
+	"github.com/up9inc/mizu/cli/mizu/configStructs"
 	"net/http"
 	"net/url"
 	"os"
@@ -56,7 +58,7 @@ func RunMizuTap() {
 		}
 	}
 
-	kubernetesProvider, err := kubernetes.NewProvider(mizu.Config.Tap.KubeConfigPath)
+	kubernetesProvider, err := kubernetes.NewProvider(mizu.Config.KubeConfigPath)
 	if err != nil {
 		mizu.Log.Error(err)
 		return
@@ -101,8 +103,8 @@ func RunMizuTap() {
 		return
 	}
 
-	go createProxyToApiServerPod(ctx, kubernetesProvider, cancel)
-	go watchPodsForTapping(ctx, kubernetesProvider, targetNamespaces, cancel)
+	go goUtils.HandleExcWrapper(createProxyToApiServerPod, ctx, kubernetesProvider, cancel)
+	go goUtils.HandleExcWrapper(watchPodsForTapping, ctx, kubernetesProvider, targetNamespaces, cancel)
 
 	//block until exit signal or error
 	waitForFinish(ctx, cancel)
@@ -399,13 +401,13 @@ func watchPodsForTapping(ctx context.Context, kubernetesProvider *kubernetes.Pro
 			}
 
 		case err := <-errorChan:
-			mizu.Log.Debugf("Watching pods loop, got error %v, stopping restart tappers debouncer", err)
+			mizu.Log.Debugf("Watching pods loop, got error %v, stopping `restart tappers debouncer`", err)
 			restartTappersDebouncer.Cancel()
 			// TODO: Does this also perform cleanup?
 			cancel()
 
 		case <-ctx.Done():
-			mizu.Log.Debugf("Watching pods loop, context done, stopping restart tappers debouncer")
+			mizu.Log.Debugf("Watching pods loop, context done, stopping `restart tappers debouncer`")
 			restartTappersDebouncer.Cancel()
 			return
 		}
@@ -465,9 +467,10 @@ func createProxyToApiServerPod(ctx context.Context, kubernetesProvider *kubernet
 	for {
 		select {
 		case <-ctx.Done():
+			mizu.Log.Debugf("Watching API Server pod loop, ctx done")
 			return
 		case <-added:
-			mizu.Log.Debugf("Got agent pod added event")
+			mizu.Log.Debugf("Watching API Server pod loop, added")
 			continue
 		case <-removed:
 			mizu.Log.Infof("%s removed", mizu.ApiServerPodName)
@@ -475,16 +478,17 @@ func createProxyToApiServerPod(ctx context.Context, kubernetesProvider *kubernet
 			return
 		case modifiedPod := <-modified:
 			if modifiedPod == nil {
-				mizu.Log.Debugf("Got agent pod modified event, status phase: %v", modifiedPod.Status.Phase)
+				mizu.Log.Debugf("Watching API Server pod loop, modifiedPod with nil")
 				continue
 			}
-			mizu.Log.Debugf("Got agent pod modified event, status phase: %v", modifiedPod.Status.Phase)
+			mizu.Log.Debugf("Watching API Server pod loop, modified: %v", modifiedPod.Status.Phase)
 			if modifiedPod.Status.Phase == core.PodRunning && !isPodReady {
 				isPodReady = true
 				go func() {
 					err := kubernetes.StartProxy(kubernetesProvider, mizu.Config.Tap.GuiPort, mizu.Config.MizuResourcesNamespace, mizu.ApiServerPodName)
 					if err != nil {
-						mizu.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error occured while running k8s proxy %v", errormessage.FormatError(err)))
+						mizu.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error occured while running k8s proxy %v\n"+
+							"Try setting different port by using --%s", errormessage.FormatError(err), configStructs.GuiPortTapName))
 						cancel()
 					}
 				}()
@@ -530,21 +534,15 @@ func requestForAnalysis() {
 }
 
 func createRBACIfNecessary(ctx context.Context, kubernetesProvider *kubernetes.Provider) (bool, error) {
-	mizuRBACExists, err := kubernetesProvider.DoesServiceAccountExist(ctx, mizu.Config.MizuResourcesNamespace, mizu.ServiceAccountName)
-	if err != nil {
-		return false, err
-	}
-	if !mizuRBACExists {
-		if !mizu.Config.IsNsRestrictedMode() {
-			err := kubernetesProvider.CreateMizuRBAC(ctx, mizu.Config.MizuResourcesNamespace, mizu.ServiceAccountName, mizu.ClusterRoleName, mizu.ClusterRoleBindingName, mizu.RBACVersion)
-			if err != nil {
-				return false, err
-			}
-		} else {
-			err := kubernetesProvider.CreateMizuRBACNamespaceRestricted(ctx, mizu.Config.MizuResourcesNamespace, mizu.ServiceAccountName, mizu.RoleName, mizu.RoleBindingName, mizu.RBACVersion)
-			if err != nil {
-				return false, err
-			}
+	if !mizu.Config.IsNsRestrictedMode() {
+		err := kubernetesProvider.CreateMizuRBAC(ctx, mizu.Config.MizuResourcesNamespace, mizu.ServiceAccountName, mizu.ClusterRoleName, mizu.ClusterRoleBindingName, mizu.RBACVersion)
+		if err != nil {
+			return false, err
+		}
+	} else {
+		err := kubernetesProvider.CreateMizuRBACNamespaceRestricted(ctx, mizu.Config.MizuResourcesNamespace, mizu.ServiceAccountName, mizu.RoleName, mizu.RoleBindingName, mizu.RBACVersion)
+		if err != nil {
+			return false, err
 		}
 	}
 	return true, nil
