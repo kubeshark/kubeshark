@@ -388,3 +388,17 @@ To tap multiple pods using regex -
  ^C
 ```
 
+## Advanced Usage
+
+### Namespace-Restricted Mode
+
+Some users have permission to only manage resources in one particular namespace assigned to them.
+By default `mizu tap` creates a new namespace `mizu` for all of its Kubernetes resources. In order to instead install
+Mizu in an existing namespace, set the `mizu-resources-namespace` config option.
+
+If `mizu-resources-namespace` is set to a value other than the default `mizu`, Mizu will operate in a
+Namespace-Restricted mode. It will only tap pods in `mizu-resources-namespace`. This way Mizu only requires permissions
+to the namespace set by `mizu-resources-namespace`. The user must set the tapped namespace to the same namespace by
+using the `--namespace` flag or by setting `tap.namespaces` in the config file.
+
+Setting `mizu-resources-namespace=mizu` resets Mizu to its default behavior.
