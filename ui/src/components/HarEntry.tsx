@@ -19,6 +19,13 @@ interface HAREntry {
     isCurrentRevision?: boolean;
     timestamp: Date;
 	isOutgoing?: boolean;
+    latency: number;
+    rules: Rules;
+}
+
+interface Rules {
+    status: boolean;
+    latency: number
 }
 
 interface HAREntryProps {
@@ -48,9 +55,16 @@ export const HarEntry: React.FC<HAREntryProps> = ({entry, setFocusedEntryId, isS
             break;
         }
     }
-
+    let backgroundColor = "";
+    if ('latency' in entry.rules) {
+        if (entry.rules.latency !== -1) {
+            backgroundColor = entry.rules.latency >= entry.latency ? styles.ruleSuccessRow : styles.ruleFailureRow
+        } else {
+            backgroundColor = entry.rules.status ? styles.ruleSuccessRow : styles.ruleFailureRow
+        }
+    }
     return <>
-        <div id={entry.id} className={`${styles.row} ${isSelected ? styles.rowSelected : ''}`} onClick={() => setFocusedEntryId(entry.id)}>
+        <div id={entry.id} className={`${styles.row} ${isSelected ? styles.rowSelected : backgroundColor}`} onClick={() => setFocusedEntryId(entry.id)}>
             {entry.statusCode && <div>
                 <StatusCode statusCode={entry.statusCode}/>
             </div>}

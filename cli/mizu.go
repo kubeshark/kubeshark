@@ -1,7 +1,10 @@
 package main
 
-import "github.com/up9inc/mizu/cli/cmd"
+import (
+	"github.com/up9inc/mizu/cli/cmd"
+	"github.com/up9inc/mizu/cli/goUtils"
+)
 
 func main() {
-	cmd.Execute()
+	goUtils.HandleExcWrapper(cmd.Execute)
 }

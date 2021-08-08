@@ -1,32 +1,27 @@
 package cmd
 
 import (
-	"fmt"
-	"github.com/up9inc/mizu/cli/mizu"
 	"strconv"
 	"time"
 
+	"github.com/creasty/defaults"
 	"github.com/spf13/cobra"
+	"github.com/up9inc/mizu/cli/mizu"
+	"github.com/up9inc/mizu/cli/mizu/configStructs"
 )
-
-type MizuVersionOptions struct {
-	DebugInfo                bool
-}
-
-
-var mizuVersionOptions = &MizuVersionOptions{}
 
 var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Print version info",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if mizuVersionOptions.DebugInfo {
+		go mizu.ReportRun("version", mizu.Config.Version)
+		if mizu.Config.Version.DebugInfo {
 			timeStampInt, _ := strconv.ParseInt(mizu.BuildTimestamp, 10, 0)
-			fmt.Printf("Version: %s \nBranch: %s (%s) \n", mizu.SemVer, mizu.Branch, mizu.GitCommitHash)
-			fmt.Printf("Build Time: %s (%s)\n", mizu.BuildTimestamp,  time.Unix(timeStampInt, 0))
+			mizu.Log.Infof("Version: %s \nBranch: %s (%s)", mizu.SemVer, mizu.Branch, mizu.GitCommitHash)
+			mizu.Log.Infof("Build Time: %s (%s)", mizu.BuildTimestamp, time.Unix(timeStampInt, 0))
 
 		} else {
-			fmt.Printf("Version: %s (%s)\n", mizu.SemVer, mizu.Branch)
+			mizu.Log.Infof("Version: %s (%s)", mizu.SemVer, mizu.Branch)
 		}
 		return nil
 	},
@@ -35,6 +30,9 @@ var versionCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(versionCmd)
 
-	versionCmd.Flags().BoolVarP(&mizuVersionOptions.DebugInfo, "debug", "d", false, "Provide all information about version")
+	defaultVersionConfig := configStructs.VersionConfig{}
+	defaults.Set(&defaultVersionConfig)
+
+	versionCmd.Flags().BoolP(configStructs.DebugInfoVersionName, "d", defaultVersionConfig.DebugInfo, "Provide all information about version")
 
 }

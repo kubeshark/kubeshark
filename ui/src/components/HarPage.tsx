@@ -9,6 +9,7 @@ import playIcon from './assets/run.svg';
 import pauseIcon from './assets/pause.svg';
 import variables from './style/variables.module.scss';
 import {StatusBar} from "./StatusBar";
+import Api, {MizuWebsocketURL} from "../helpers/api";
 
 const useLayoutStyles = makeStyles(() => ({
     details: {
@@ -37,25 +38,12 @@ enum ConnectionStatus {
 
 interface HarPageProps {
     setAnalyzeStatus: (status: any) => void;
+    onTLSDetected: (destAddress: string) => void;
 }
 
-const mizuAPIPathPrefix = "/mizu";
+const api = new Api();
 
-
-// When working locally (with npm run start) we need to change the PORT 
-const getMizuApiUrl = () => {
-    return `${window.location.origin}${mizuAPIPathPrefix}`;
-};
-
-const getMizuWebsocketUrl = () => {
-    return `ws://${window.location.host}${mizuAPIPathPrefix}/ws`;
-}
-
-
-const mizuApiUrl = getMizuApiUrl();
-const mizuWebsocketUrl = getMizuWebsocketUrl();
-
-export const HarPage: React.FC<HarPageProps> = ({setAnalyzeStatus}) => {
+export const HarPage: React.FC<HarPageProps> = ({setAnalyzeStatus, onTLSDetected}) => {
 
     const classes = useLayoutStyles();
 
@@ -75,7 +63,7 @@ export const HarPage: React.FC<HarPageProps> = ({setAnalyzeStatus}) => {
     const ws = useRef(null);
 
     const openWebSocket = () => {
-        ws.current = new WebSocket(mizuWebsocketUrl);
+        ws.current = new WebSocket(MizuWebsocketURL);
         ws.current.onopen = () => setConnection(ConnectionStatus.Connected);
         ws.current.onclose = () => setConnection(ConnectionStatus.Closed);
     }
@@ -84,7 +72,6 @@ export const HarPage: React.FC<HarPageProps> = ({setAnalyzeStatus}) => {
         ws.current.onmessage = e => {
             if (!e?.data) return;
             const message = JSON.parse(e.data);
-
             switch (message.messageType) {
                 case "entry":
                     const entry = message.data
@@ -106,6 +93,9 @@ export const HarPage: React.FC<HarPageProps> = ({setAnalyzeStatus}) => {
                 case "analyzeStatus":
                     setAnalyzeStatus(message.analyzeStatus);
                     break
+                case "outboundLink":
+                    onTLSDetected(message.Data.DstIP);
+                    break;
                 default:
                     console.error(`unsupported websocket message type, Got: ${message.messageType}`)
             }
@@ -113,24 +103,32 @@ export const HarPage: React.FC<HarPageProps> = ({setAnalyzeStatus}) => {
     }
 
     useEffect(() => {
-        openWebSocket();
-        fetch(`${mizuApiUrl}/api/tapStatus`)
-            .then(response => response.json())
-            .then(data => setTappingStatus(data));
-
-        fetch(`${mizuApiUrl}/api/analyzeStatus`)
-            .then(response => response.json())
-            .then(data => setAnalyzeStatus(data));
+        (async () => {
+            openWebSocket();
+            try{
+                const tapStatusResponse = await api.tapStatus();
+                setTappingStatus(tapStatusResponse);
+                const analyzeStatusResponse = await api.analyzeStatus();
+                setAnalyzeStatus(analyzeStatusResponse);
+            } catch (error) {
+                console.error(error);
+            }
+        })()
         // eslint-disable-next-line
     }, []);
 
 
     useEffect(() => {
         if (!focusedEntryId) return;
-        setSelectedHarEntry(null)
-        fetch(`${mizuApiUrl}/api/entries/${focusedEntryId}`)
-            .then(response => response.json())
-            .then(data => setSelectedHarEntry(data));
+        setSelectedHarEntry(null);
+        (async () => {
+            try {
+                const entryData = await api.getEntry(focusedEntryId);
+                setSelectedHarEntry(entryData);
+            } catch (error) {
+                console.error(error);
+            }
+        })()
     }, [focusedEntryId])
 
     const toggleConnection = () => {

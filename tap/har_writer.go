@@ -43,7 +43,7 @@ func openNewHarFile(filename string) *HarFile {
 }
 
 type HarFile struct {
-	file *os.File
+	file       *os.File
 	entryCount int
 }
 
@@ -105,13 +105,13 @@ func NewEntry(request *http.Request, requestTime time.Time, response *http.Respo
 
 	harEntry := har.Entry{
 		StartedDateTime: time.Now().UTC(),
-		Time: totalTime,
-		Request: harRequest,
-		Response: harResponse,
-		Cache: &har.Cache{},
+		Time:            totalTime,
+		Request:         harRequest,
+		Response:        harResponse,
+		Cache:           &har.Cache{},
 		Timings: &har.Timings{
-			Send: -1,
-			Wait: -1,
+			Send:    -1,
+			Wait:    -1,
 			Receive: totalTime,
 		},
 	}
@@ -155,14 +155,14 @@ func (f *HarFile) Close() {
 	}
 }
 
-func (f*HarFile) writeHeader() {
+func (f *HarFile) writeHeader() {
 	header := []byte(`{"log": {"version": "1.2", "creator": {"name": "Mizu", "version": "0.0.1"}, "entries": [`)
 	if _, err := f.file.Write(header); err != nil {
 		log.Panicf("Failed to write header to output file: %s (%v,%+v)", err, err, err)
 	}
 }
 
-func (f*HarFile) writeTrailer() {
+func (f *HarFile) writeTrailer() {
 	trailer := []byte("]}}")
 	if _, err := f.file.Write(trailer); err != nil {
 		log.Panicf("Failed to write trailer to output file: %s (%v,%+v)", err, err, err)
@@ -172,26 +172,27 @@ func (f*HarFile) writeTrailer() {
 func NewHarWriter(outputDir string, maxEntries int) *HarWriter {
 	return &HarWriter{
 		OutputDirPath: outputDir,
-		MaxEntries: maxEntries,
-		PairChan: make(chan *PairChanItem),
-		OutChan: make(chan *OutputChannelItem, 1000),
-		currentFile: nil,
-		done: make(chan bool),
+		MaxEntries:    maxEntries,
+		PairChan:      make(chan *PairChanItem),
+		OutChan:       make(chan *OutputChannelItem, 1000),
+		currentFile:   nil,
+		done:          make(chan bool),
 	}
 }
 
 type OutputChannelItem struct {
-	HarEntry       *har.Entry
-	ConnectionInfo *ConnectionInfo
+	HarEntry               *har.Entry
+	ConnectionInfo         *ConnectionInfo
+	ValidationRulesChecker string
 }
 
 type HarWriter struct {
 	OutputDirPath string
-	MaxEntries int
-	PairChan chan *PairChanItem
-	OutChan chan *OutputChannelItem
-	currentFile *HarFile
-	done chan bool
+	MaxEntries    int
+	PairChan      chan *PairChanItem
+	OutChan       chan *OutputChannelItem
+	currentFile   *HarFile
+	done          chan bool
 }
 
 func (hw *HarWriter) WritePair(request *http.Request, requestTime time.Time, response *http.Response, responseTime time.Time, connectionInfo *ConnectionInfo) {
@@ -240,7 +241,7 @@ func (hw *HarWriter) Start() {
 			hw.closeFile()
 		}
 		hw.done <- true
-	} ()
+	}()
 }
 
 func (hw *HarWriter) Stop() {

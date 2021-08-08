@@ -33,10 +33,10 @@ import (
 
 const AppPortsEnvVar = "APP_PORTS"
 const maxHTTP2DataLenEnvVar = "HTTP2_DATA_SIZE_LIMIT"
-// default is 1MB, more than the max size accepted by collector and traffic-dumper
-const maxHTTP2DataLenDefault = 1 * 1024 * 1024
+const maxHTTP2DataLenDefault = 1 * 1024 * 1024 // 1MB
 const cleanPeriod = time.Second * 10
-var remoteOnlyOutboundPorts = []int { 80, 443 }
+
+var remoteOnlyOutboundPorts = []int{80, 443}
 
 func parseAppPorts(appPortsList string) []int {
 	ports := make([]int, 0)
@@ -51,15 +51,15 @@ func parseAppPorts(appPortsList string) []int {
 	return ports
 }
 
-var maxcount = flag.Int("c", -1, "Only grab this many packets, then exit")
+var maxcount = flag.Int64("c", -1, "Only grab this many packets, then exit")
 var decoder = flag.String("decoder", "", "Name of the decoder to use (default: guess from capture)")
 var statsevery = flag.Int("stats", 60, "Output statistics every N seconds")
 var lazy = flag.Bool("lazy", false, "If true, do lazy decoding")
 var nodefrag = flag.Bool("nodefrag", false, "If true, do not do IPv4 defrag")
-var checksum = flag.Bool("checksum", false, "Check TCP checksum")  // global
-var nooptcheck = flag.Bool("nooptcheck", true, "Do not check TCP options (useful to ignore MSS on captures with TSO)")  // global
-var ignorefsmerr = flag.Bool("ignorefsmerr", true, "Ignore TCP FSM errors")  // global
-var allowmissinginit = flag.Bool("allowmissinginit", true, "Support streams without SYN/SYN+ACK/ACK sequence")  // global
+var checksum = flag.Bool("checksum", false, "Check TCP checksum")                                                      // global
+var nooptcheck = flag.Bool("nooptcheck", true, "Do not check TCP options (useful to ignore MSS on captures with TSO)") // global
+var ignorefsmerr = flag.Bool("ignorefsmerr", true, "Ignore TCP FSM errors")                                            // global
+var allowmissinginit = flag.Bool("allowmissinginit", true, "Support streams without SYN/SYN+ACK/ACK sequence")         // global
 var verbose = flag.Bool("verbose", false, "Be verbose")
 var debug = flag.Bool("debug", false, "Display debug information")
 var quiet = flag.Bool("quiet", false, "Be quiet regarding errors")
@@ -69,7 +69,7 @@ var nohttp = flag.Bool("nohttp", false, "Disable HTTP parsing")
 var output = flag.String("output", "", "Path to create file for HTTP 200 OK responses")
 var writeincomplete = flag.Bool("writeincomplete", false, "Write incomplete response")
 
-var hexdump = flag.Bool("dump", false, "Dump HTTP request/response as hex")  // global
+var hexdump = flag.Bool("dump", false, "Dump HTTP request/response as hex") // global
 var hexdumppkt = flag.Bool("dumppkt", false, "Dump packet as hex")
 
 // capture
@@ -88,7 +88,7 @@ var dumpToHar = flag.Bool("hardump", false, "Dump traffic to har files")
 var HarOutputDir = flag.String("hardir", "", "Directory in which to store output har files")
 var harEntriesPerFile = flag.Int("harentriesperfile", 200, "Number of max number of har entries to store in each file")
 
-var reqResMatcher = createResponseRequestMatcher()  // global
+var reqResMatcher = createResponseRequestMatcher() // global
 var statsTracker = StatsTracker{}
 
 // global
@@ -118,8 +118,8 @@ var outputLevel int
 var errorsMap map[string]uint
 var errorsMapMutex sync.Mutex
 var nErrors uint
-var ownIps []string           // global
-var hostMode bool             // global
+var ownIps []string // global
+var hostMode bool   // global
 
 /* minOutputLevel: Error will be printed only if outputLevel is above this value
  * t:              key for errorsMap (counting errors)
@@ -175,6 +175,10 @@ type Context struct {
 	CaptureInfo gopacket.CaptureInfo
 }
 
+func GetStats() AppStats {
+	return statsTracker.appStats
+}
+
 func (c *Context) GetCaptureInfo() gopacket.CaptureInfo {
 	return c.CaptureInfo
 }
@@ -195,6 +199,37 @@ func StartPassiveTapper(opts *TapOpts) (<-chan *OutputChannelItem, <-chan *Outbo
 	}
 
 	return nil, outboundLinkWriter.OutChan
+}
+
+func startMemoryProfiler() {
+	dirname := "/app/pprof"
+	rlog.Info("Profiling is on, results will be written to %s", dirname)
+	go func() {
+		if _, err := os.Stat(dirname); os.IsNotExist(err) {
+			if err := os.Mkdir(dirname, 0777); err != nil {
+				log.Fatal("could not create directory for profile: ", err)
+			}
+		}
+
+		for true {
+			t := time.Now()
+
+			filename := fmt.Sprintf("%s/%s__mem.prof", dirname, t.Format("15_04_05"))
+
+			rlog.Info("Writing memory profile to %s\n", filename)
+
+			f, err := os.Create(filename)
+			if err != nil {
+				log.Fatal("could not create memory profile: ", err)
+			}
+			runtime.GC() // get up-to-date statistics
+			if err := pprof.WriteHeapProfile(f); err != nil {
+				log.Fatal("could not write memory profile: ", err)
+			}
+			_ = f.Close()
+			time.Sleep(time.Minute)
+		}
+	}()
 }
 
 func startPassiveTapper(harWriter *HarWriter, outboundLinkWriter *OutboundLinkWriter) {
@@ -305,19 +340,23 @@ func startPassiveTapper(harWriter *HarWriter, outboundLinkWriter *OutboundLinkWr
 	source.Lazy = *lazy
 	source.NoCopy = true
 	rlog.Info("Starting to read packets")
-	count := 0
-	bytes := int64(0)
-	start := time.Now()
+	statsTracker.setStartTime(time.Now())
 	defragger := ip4defrag.NewIPv4Defragmenter()
 
 	streamFactory := &tcpStreamFactory{
-		doHTTP: !*nohttp,
-		harWriter: harWriter,
+		doHTTP:             !*nohttp,
+		harWriter:          harWriter,
 		outbountLinkWriter: outboundLinkWriter,
-
 	}
 	streamPool := reassembly.NewStreamPool(streamFactory)
 	assembler := reassembly.NewAssembler(streamPool)
+
+	maxBufferedPagesTotal := GetMaxBufferedPagesPerConnection()
+	maxBufferedPagesPerConnection := GetMaxBufferedPagesTotal()
+	rlog.Infof("Assembler options: maxBufferedPagesTotal=%d, maxBufferedPagesPerConnection=%d", maxBufferedPagesTotal, maxBufferedPagesPerConnection)
+	assembler.AssemblerOptions.MaxBufferedPagesTotal = maxBufferedPagesTotal
+	assembler.AssemblerOptions.MaxBufferedPagesPerConnection = maxBufferedPagesPerConnection
+
 	var assemblerMutex sync.Mutex
 
 	signalChan := make(chan os.Signal, 1)
@@ -325,10 +364,10 @@ func startPassiveTapper(harWriter *HarWriter, outboundLinkWriter *OutboundLinkWr
 
 	staleConnectionTimeout := time.Second * time.Duration(*staleTimeoutSeconds)
 	cleaner := Cleaner{
-		assembler: assembler,
-		assemblerMutex: &assemblerMutex,
-		matcher: &reqResMatcher,
-		cleanPeriod: cleanPeriod,
+		assembler:         assembler,
+		assemblerMutex:    &assemblerMutex,
+		matcher:           &reqResMatcher,
+		cleanPeriod:       cleanPeriod,
 		connectionTimeout: staleConnectionTimeout,
 	}
 	cleaner.start()
@@ -346,9 +385,9 @@ func startPassiveTapper(harWriter *HarWriter, outboundLinkWriter *OutboundLinkWr
 			errorsSummery := fmt.Sprintf("%v", errorsMap)
 			errorsMapMutex.Unlock()
 			log.Printf("Processed %v packets (%v bytes) in %v (errors: %v, errTypes:%v) - Errors Summary: %s",
-				count,
-				bytes,
-				time.Since(start),
+				statsTracker.appStats.TotalPacketsCount,
+				statsTracker.appStats.TotalProcessedBytes,
+				time.Since(statsTracker.appStats.StartTime),
 				nErrors,
 				errorMapLen,
 				errorsSummery,
@@ -366,22 +405,26 @@ func startPassiveTapper(harWriter *HarWriter, outboundLinkWriter *OutboundLinkWr
 
 			// Since the last print
 			cleanStats := cleaner.dumpStats()
-			appStats := statsTracker.dumpStats()
+			matchedMessages := statsTracker.dumpStats()
 			log.Printf(
 				"flushed connections %d, closed connections: %d, deleted messages: %d, matched messages: %d",
 				cleanStats.flushed,
 				cleanStats.closed,
 				cleanStats.deleted,
-				appStats.matchedMessages,
+				matchedMessages,
 			)
 		}
 	}()
 
+	if GetMemoryProfilingEnabled() {
+		startMemoryProfiler()
+	}
+
 	for packet := range source.Packets() {
-		count++
-		rlog.Debugf("PACKET #%d", count)
+		packetsCount := statsTracker.incPacketsCount()
+		rlog.Debugf("PACKET #%d", packetsCount)
 		data := packet.Data()
-		bytes += int64(len(data))
+		statsTracker.updateProcessedSize(int64(len(data)))
 		if *hexdumppkt {
 			rlog.Debugf("Packet content (%d/0x%x) - %s", len(data), len(data), hex.Dump(data))
 		}
@@ -432,12 +475,17 @@ func startPassiveTapper(harWriter *HarWriter, outboundLinkWriter *OutboundLinkWr
 			assemblerMutex.Unlock()
 		}
 
-		done := *maxcount > 0 && count >= *maxcount
+		done := *maxcount > 0 && statsTracker.appStats.TotalPacketsCount >= *maxcount
 		if done {
 			errorsMapMutex.Lock()
 			errorMapLen := len(errorsMap)
 			errorsMapMutex.Unlock()
-			log.Printf("Processed %v packets (%v bytes) in %v (errors: %v, errTypes:%v)", count, bytes, time.Since(start), nErrors, errorMapLen)
+			log.Printf("Processed %v packets (%v bytes) in %v (errors: %v, errTypes:%v)",
+				statsTracker.appStats.TotalPacketsCount,
+				statsTracker.appStats.TotalProcessedBytes,
+				time.Since(statsTracker.appStats.StartTime),
+				nErrors,
+				errorMapLen)
 		}
 		select {
 		case <-signalChan:
@@ -494,4 +542,5 @@ func startPassiveTapper(harWriter *HarWriter, outboundLinkWriter *OutboundLinkWr
 	for e := range errorsMap {
 		log.Printf(" %s:\t\t%d", e, errorsMap[e])
 	}
+	log.Printf("AppStats: %v", GetStats())
 }

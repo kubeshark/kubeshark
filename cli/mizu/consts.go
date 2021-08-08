@@ -1,5 +1,10 @@
 package mizu
 
+import (
+	"os"
+	"path"
+)
+
 var (
 	SemVer         = "0.0.1"
 	Branch         = "develop"
@@ -9,20 +14,23 @@ var (
 )
 
 const (
-	ResourcesNamespace  = "default"
-	TapperDaemonSetName = "mizu-tapper-daemon-set"
-	AggregatorPodName   = "mizu-collector"
-	TapperPodName       = "mizu-tapper"
-	K8sAllNamespaces    = ""
+	MizuResourcesPrefix    = "mizu-"
+	ApiServerPodName       = MizuResourcesPrefix + "api-server"
+	ClusterRoleBindingName = MizuResourcesPrefix + "cluster-role-binding"
+	ClusterRoleName        = MizuResourcesPrefix + "cluster-role"
+	K8sAllNamespaces       = ""
+	RoleBindingName        = MizuResourcesPrefix + "role-binding"
+	RoleName               = MizuResourcesPrefix + "role"
+	ServiceAccountName     = MizuResourcesPrefix + "service-account"
+	TapperDaemonSetName    = MizuResourcesPrefix + "tapper-daemon-set"
+	TapperPodName          = MizuResourcesPrefix + "tapper"
+	ConfigMapName          = MizuResourcesPrefix + "policy"
 )
 
-const (
-	Black        = "\033[1;30m%s\033[0m"
-	Red          = "\033[1;31m%s\033[0m"
-	Green        = "\033[1;32m%s\033[0m"
-	Yellow       = "\033[1;33m%s\033[0m"
-	Purple       = "\033[1;34m%s\033[0m"
-	Magenta      = "\033[1;35m%s\033[0m"
-	Teal         = "\033[1;36m%s\033[0m"
-	White        = "\033[1;37m%s\033[0m"
-)
+func GetMizuFolderPath() string {
+	home, homeDirErr := os.UserHomeDir()
+	if homeDirErr != nil {
+		return ""
+	}
+	return path.Join(home, ".mizu")
+}

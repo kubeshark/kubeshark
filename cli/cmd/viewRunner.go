@@ -8,32 +8,47 @@ import (
 	"net/http"
 )
 
-func runMizuView(mizuViewOptions *MizuViewOptions) {
-	kubernetesProvider := kubernetes.NewProvider("")
+func runMizuView() {
+	kubernetesProvider, err := kubernetes.NewProvider(mizu.Config.View.KubeConfigPath)
+	if err != nil {
+		mizu.Log.Error(err)
+		return
+	}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	exists, err := kubernetesProvider.DoesServicesExist(ctx, mizu.ResourcesNamespace, mizu.AggregatorPodName)
+	exists, err := kubernetesProvider.DoesServicesExist(ctx, mizu.Config.MizuResourcesNamespace, mizu.ApiServerPodName)
 	if err != nil {
-		panic(err)
+		mizu.Log.Errorf("Failed to found mizu service %v", err)
+		cancel()
+		return
 	}
 	if !exists {
-		fmt.Printf("The %s service not found\n", mizu.AggregatorPodName)
+		mizu.Log.Infof("%s service not found, you should run `mizu tap` command first", mizu.ApiServerPodName)
+		cancel()
 		return
 	}
 
-	mizuProxiedUrl := kubernetes.GetMizuCollectorProxiedHostAndPath(mizuViewOptions.GuiPort)
+	mizuProxiedUrl := kubernetes.GetMizuApiServerProxiedHostAndPath(mizu.Config.View.GuiPort)
 	_, err = http.Get(fmt.Sprintf("http://%s/", mizuProxiedUrl))
 	if err == nil {
-		fmt.Printf("Found a running service %s and open port %d\n", mizu.AggregatorPodName, mizuViewOptions.GuiPort)
+		mizu.Log.Infof("Found a running service %s and open port %d", mizu.ApiServerPodName, mizu.Config.View.GuiPort)
 		return
 	}
-	fmt.Printf("Found service %s, creating k8s proxy\n", mizu.AggregatorPodName)
+	mizu.Log.Debugf("Found service %s, creating k8s proxy", mizu.ApiServerPodName)
 
-	fmt.Printf("Mizu is available at  http://%s\n", kubernetes.GetMizuCollectorProxiedHostAndPath(mizuViewOptions.GuiPort))
-	err = kubernetes.StartProxy(kubernetesProvider, mizuViewOptions.GuiPort, mizu.ResourcesNamespace, mizu.AggregatorPodName)
-	if err != nil {
-		fmt.Printf("Error occured while running k8s proxy %v\n", err)
+	go startProxyReportErrorIfAny(kubernetesProvider, cancel)
+
+	mizu.Log.Infof("Mizu is available at  http://%s\n", kubernetes.GetMizuApiServerProxiedHostAndPath(mizu.Config.View.GuiPort))
+	if isCompatible, err := mizu.CheckVersionCompatibility(mizu.Config.View.GuiPort); err != nil {
+		mizu.Log.Errorf("Failed to check versions compatibility %v", err)
+		cancel()
+		return
+	} else if !isCompatible {
+		cancel()
+		return
 	}
+
+	waitForFinish(ctx, cancel)
 }
