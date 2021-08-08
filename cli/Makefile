@@ -39,3 +39,6 @@ build-all: ## Build for all supported platforms.
 clean: ## Clean all build artifacts.
 	go clean
 	rm -rf ./bin/*
+
+test: ## Run cli tests.
+	@go test ./...
