@@ -86,7 +86,7 @@ export const HarEntry: React.FC<HAREntryProps> = ({entry, setFocusedEntryId, isS
         }
     }
     return <>
-        <div id={entry.id} className={`${styles.row} ${isSelected && !rule ? styles.rowSelected : additionalRulesProperties} ` } onClick={() => setFocusedEntryId(entry.id)}>
+        <div id={entry.id} className={`${styles.row} ${isSelected && !rule ? styles.rowSelected : additionalRulesProperties}`} onClick={() => setFocusedEntryId(entry.id)}>
             {entry.statusCode && <div>
                 <StatusCode statusCode={entry.statusCode}/>
             </div>}
