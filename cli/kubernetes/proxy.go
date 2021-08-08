@@ -1,12 +1,8 @@
 package kubernetes
 
 import (
-	"context"
 	"fmt"
-	"github.com/up9inc/mizu/cli/errormessage"
 	"github.com/up9inc/mizu/cli/mizu"
-	"github.com/up9inc/mizu/cli/mizu/configStructs"
-	"github.com/up9inc/mizu/cli/uiUtils"
 	"k8s.io/kubectl/pkg/proxy"
 	"net"
 	"net/http"
@@ -16,15 +12,6 @@ import (
 
 const k8sProxyApiPrefix = "/"
 const mizuServicePort = 80
-
-func StartProxyReportErrorIfAny(kubernetesProvider *Provider, cancel context.CancelFunc) {
-	err := StartProxy(kubernetesProvider, mizu.Config.Tap.GuiPort, mizu.Config.MizuResourcesNamespace, mizu.ApiServerPodName)
-	if err != nil {
-		mizu.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error occured while running k8s proxy %v\n"+
-			"Try setting different port by using --%s", errormessage.FormatError(err), configStructs.GuiPortTapName))
-		cancel()
-	}
-}
 
 func StartProxy(kubernetesProvider *Provider, mizuPort uint16, mizuNamespace string, mizuServiceName string) error {
 	mizu.Log.Debugf("Starting proxy. namespace: [%v], service name: [%s], port: [%v]", mizuNamespace, mizuServiceName, mizuPort)
@@ -52,7 +39,6 @@ func StartProxy(kubernetesProvider *Provider, mizuPort uint16, mizuNamespace str
 	server := http.Server{
 		Handler: mux,
 	}
-	mizu.Log.Debugf("Start listening on port")
 	return server.Serve(l)
 }
 

@@ -38,7 +38,7 @@ func runMizuView() {
 	}
 	mizu.Log.Debugf("Found service %s, creating k8s proxy", mizu.ApiServerPodName)
 
-	go kubernetes.StartProxyReportErrorIfAny(kubernetesProvider, cancel)
+	go startProxyReportErrorIfAny(kubernetesProvider, cancel)
 
 	mizu.Log.Infof("Mizu is available at  http://%s\n", kubernetes.GetMizuApiServerProxiedHostAndPath(mizu.Config.View.GuiPort))
 	if isCompatible, err := mizu.CheckVersionCompatibility(mizu.Config.View.GuiPort); err != nil {

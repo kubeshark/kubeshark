@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/up9inc/mizu/cli/fsUtils"
 	"github.com/up9inc/mizu/cli/goUtils"
+	"github.com/up9inc/mizu/cli/mizu/configStructs"
 	"net/http"
 	"net/url"
 	"os"
@@ -483,7 +484,7 @@ func createProxyToApiServerPod(ctx context.Context, kubernetesProvider *kubernet
 			mizu.Log.Debugf("Watching API Server pod loop, modified: %v", modifiedPod.Status.Phase)
 			if modifiedPod.Status.Phase == core.PodRunning && !isPodReady {
 				isPodReady = true
-				go kubernetes.StartProxyReportErrorIfAny(kubernetesProvider, cancel)
+				go startProxyReportErrorIfAny(kubernetesProvider, cancel)
 				mizu.Log.Infof("Mizu is available at http://%s\n", kubernetes.GetMizuApiServerProxiedHostAndPath(mizu.Config.Tap.GuiPort))
 				time.Sleep(time.Second * 5) // Waiting to be sure the proxy is ready
 				requestForAnalysis()
@@ -498,6 +499,15 @@ func createProxyToApiServerPod(ctx context.Context, kubernetesProvider *kubernet
 			mizu.Log.Debugf("[ERROR] Agent creation, watching %v namespace", mizu.Config.MizuResourcesNamespace)
 			cancel()
 		}
+	}
+}
+
+func startProxyReportErrorIfAny(kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
+	err := kubernetes.StartProxy(kubernetesProvider, mizu.Config.Tap.GuiPort, mizu.Config.MizuResourcesNamespace, mizu.ApiServerPodName)
+	if err != nil {
+		mizu.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error occured while running k8s proxy %v\n"+
+			"Try setting different port by using --%s", errormessage.FormatError(err), configStructs.GuiPortTapName))
+		cancel()
 	}
 }
 
