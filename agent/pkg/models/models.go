@@ -129,7 +129,7 @@ type UploadEntriesRequestBody struct {
 	SleepIntervalSec int    `form:"interval"`
 }
 
-type HarFetchRequestBody struct {
+type HarFetchRequestQuery struct {
 	From int64 `query:"from"`
 	To   int64 `query:"to"`
 }

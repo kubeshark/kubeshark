@@ -57,7 +57,7 @@ func GetEntries(c *gin.Context) {
 }
 
 func GetHARs(c *gin.Context) {
-	entriesFilter := &models.HarFetchRequestBody{}
+	entriesFilter := &models.HarFetchRequestQuery{}
 	order := database.OrderDesc
 	if err := c.BindQuery(entriesFilter); err != nil {
 		c.JSON(http.StatusBadRequest, err)
@@ -172,7 +172,7 @@ func UploadEntries(c *gin.Context) {
 }
 
 func GetFullEntries(c *gin.Context) {
-	entriesFilter := &models.HarFetchRequestBody{}
+	entriesFilter := &models.HarFetchRequestQuery{}
 	if err := c.BindQuery(entriesFilter); err != nil {
 		c.JSON(http.StatusBadRequest, err)
 	}
