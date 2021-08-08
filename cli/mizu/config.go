@@ -28,6 +28,7 @@ var allowedSetFlags = []string{
 	MizuResourcesNamespaceConfigName,
 	TelemetryConfigName,
 	DumpLogsConfigName,
+	KubeConfigPathName,
 	configStructs.AnalysisDestinationTapName,
 	configStructs.SleepIntervalSecTapName,
 }
@@ -51,8 +52,8 @@ func InitConfig(cmd *cobra.Command) error {
 	}
 
 	if err := mergeConfigFile(); err != nil {
-		Log.Errorf("Could not load config file, error %v", err)
-		Log.Fatalf("You can regenerate the file using `mizu config -r` or just remove it %v", GetConfigFilePath())
+		return fmt.Errorf("invalid config %w\n"+
+			"you can regenerate the file using `mizu config -r` or just remove it %v", err, GetConfigFilePath())
 	}
 
 	cmd.Flags().Visit(initFlag)

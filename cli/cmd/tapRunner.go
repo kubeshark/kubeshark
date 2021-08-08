@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/up9inc/mizu/cli/fsUtils"
+	"github.com/up9inc/mizu/cli/goUtils"
+	"github.com/up9inc/mizu/cli/mizu/configStructs"
 	"net/http"
 	"net/url"
 	"os"
@@ -56,7 +58,7 @@ func RunMizuTap() {
 		}
 	}
 
-	kubernetesProvider, err := kubernetes.NewProvider(mizu.Config.Tap.KubeConfigPath)
+	kubernetesProvider, err := kubernetes.NewProvider(mizu.Config.KubeConfigPath)
 	if err != nil {
 		mizu.Log.Error(err)
 		return
@@ -101,8 +103,8 @@ func RunMizuTap() {
 		return
 	}
 
-	go createProxyToApiServerPod(ctx, kubernetesProvider, cancel)
-	go watchPodsForTapping(ctx, kubernetesProvider, targetNamespaces, cancel)
+	go goUtils.HandleExcWrapper(createProxyToApiServerPod, ctx, kubernetesProvider, cancel)
+	go goUtils.HandleExcWrapper(watchPodsForTapping, ctx, kubernetesProvider, targetNamespaces, cancel)
 
 	//block until exit signal or error
 	waitForFinish(ctx, cancel)
@@ -331,7 +333,7 @@ func waitUntilNamespaceDeleted(ctx context.Context, cancel context.CancelFunc, k
 }
 
 func reportTappedPods() {
-	mizuProxiedUrl := kubernetes.GetMizuApiServerProxiedHostAndPath(mizu.Config.Fetch.MizuPort)
+	mizuProxiedUrl := kubernetes.GetMizuApiServerProxiedHostAndPath(mizu.Config.Tap.GuiPort)
 	tappedPodsUrl := fmt.Sprintf("http://%s/status/tappedPods", mizuProxiedUrl)
 
 	podInfos := make([]shared.PodInfo, 0)
@@ -403,13 +405,13 @@ func watchPodsForTapping(ctx context.Context, kubernetesProvider *kubernetes.Pro
 			}
 
 		case err := <-errorChan:
-			mizu.Log.Debugf("Watching pods loop, got error %v, stopping restart tappers debouncer", err)
+			mizu.Log.Debugf("Watching pods loop, got error %v, stopping `restart tappers debouncer`", err)
 			restartTappersDebouncer.Cancel()
 			// TODO: Does this also perform cleanup?
 			cancel()
 
 		case <-ctx.Done():
-			mizu.Log.Debugf("Watching pods loop, context done, stopping restart tappers debouncer")
+			mizu.Log.Debugf("Watching pods loop, context done, stopping `restart tappers debouncer`")
 			restartTappersDebouncer.Cancel()
 			return
 		}
@@ -421,7 +423,8 @@ func updateCurrentlyTappedPods(kubernetesProvider *kubernetes.Provider, ctx cont
 	if matchingPods, err := kubernetesProvider.ListAllRunningPodsMatchingRegex(ctx, mizu.Config.Tap.PodRegex(), targetNamespaces); err != nil {
 		return err, false
 	} else {
-		addedPods, removedPods := getPodArrayDiff(state.currentlyTappedPods, matchingPods)
+		podsToTap := excludeMizuPods(matchingPods)
+		addedPods, removedPods := getPodArrayDiff(state.currentlyTappedPods, podsToTap)
 		for _, addedPod := range addedPods {
 			changeFound = true
 			mizu.Log.Infof(uiUtils.Green, fmt.Sprintf("+%s", addedPod.Name))
@@ -430,10 +433,23 @@ func updateCurrentlyTappedPods(kubernetesProvider *kubernetes.Provider, ctx cont
 			changeFound = true
 			mizu.Log.Infof(uiUtils.Red, fmt.Sprintf("-%s", removedPod.Name))
 		}
-		state.currentlyTappedPods = matchingPods
+		state.currentlyTappedPods = podsToTap
 	}
 
 	return nil, changeFound
+}
+
+func excludeMizuPods(pods []core.Pod) []core.Pod {
+	mizuPrefixRegex := regexp.MustCompile("^" + mizu.MizuResourcesPrefix)
+
+	nonMizuPods := make([]core.Pod, 0)
+	for _, pod := range pods {
+		if !mizuPrefixRegex.MatchString(pod.Name) {
+			nonMizuPods = append(nonMizuPods, pod)
+		}
+	}
+
+	return nonMizuPods
 }
 
 func getPodArrayDiff(oldPods []core.Pod, newPods []core.Pod) (added []core.Pod, removed []core.Pod) {
@@ -469,9 +485,10 @@ func createProxyToApiServerPod(ctx context.Context, kubernetesProvider *kubernet
 	for {
 		select {
 		case <-ctx.Done():
+			mizu.Log.Debugf("Watching API Server pod loop, ctx done")
 			return
 		case <-added:
-			mizu.Log.Debugf("Got agent pod added event")
+			mizu.Log.Debugf("Watching API Server pod loop, added")
 			continue
 		case <-removed:
 			mizu.Log.Infof("%s removed", mizu.ApiServerPodName)
@@ -479,22 +496,14 @@ func createProxyToApiServerPod(ctx context.Context, kubernetesProvider *kubernet
 			return
 		case modifiedPod := <-modified:
 			if modifiedPod == nil {
-				mizu.Log.Debugf("Got agent pod modified event, status phase: %v", modifiedPod.Status.Phase)
+				mizu.Log.Debugf("Watching API Server pod loop, modifiedPod with nil")
 				continue
 			}
-			mizu.Log.Debugf("Got agent pod modified event, status phase: %v", modifiedPod.Status.Phase)
+			mizu.Log.Debugf("Watching API Server pod loop, modified: %v", modifiedPod.Status.Phase)
 			if modifiedPod.Status.Phase == core.PodRunning && !isPodReady {
 				isPodReady = true
-				go func() {
-					err := kubernetes.StartProxy(kubernetesProvider, mizu.Config.Tap.GuiPort, mizu.Config.MizuResourcesNamespace, mizu.ApiServerPodName)
-					if err != nil {
-						mizu.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error occured while running k8s proxy %v", errormessage.FormatError(err)))
-						cancel()
-					}
-				}()
-				mizuProxiedUrl := kubernetes.GetMizuApiServerProxiedHostAndPath(mizu.Config.Tap.GuiPort)
-				mizu.Log.Infof("Mizu is available at http://%s\n", mizuProxiedUrl)
-
+				go startProxyReportErrorIfAny(kubernetesProvider, cancel)
+				mizu.Log.Infof("Mizu is available at http://%s\n", kubernetes.GetMizuApiServerProxiedHostAndPath(mizu.Config.Tap.GuiPort))
 				time.Sleep(time.Second * 5) // Waiting to be sure the proxy is ready
 				requestForAnalysis()
 				reportTappedPods()
@@ -508,6 +517,15 @@ func createProxyToApiServerPod(ctx context.Context, kubernetesProvider *kubernet
 			mizu.Log.Debugf("[ERROR] Agent creation, watching %v namespace", mizu.Config.MizuResourcesNamespace)
 			cancel()
 		}
+	}
+}
+
+func startProxyReportErrorIfAny(kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
+	err := kubernetes.StartProxy(kubernetesProvider, mizu.Config.Tap.GuiPort, mizu.Config.MizuResourcesNamespace, mizu.ApiServerPodName)
+	if err != nil {
+		mizu.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error occured while running k8s proxy %v\n"+
+			"Try setting different port by using --%s", errormessage.FormatError(err), configStructs.GuiPortTapName))
+		cancel()
 	}
 }
 
@@ -534,21 +552,15 @@ func requestForAnalysis() {
 }
 
 func createRBACIfNecessary(ctx context.Context, kubernetesProvider *kubernetes.Provider) (bool, error) {
-	mizuRBACExists, err := kubernetesProvider.DoesServiceAccountExist(ctx, mizu.Config.MizuResourcesNamespace, mizu.ServiceAccountName)
-	if err != nil {
-		return false, err
-	}
-	if !mizuRBACExists {
-		if !mizu.Config.IsNsRestrictedMode() {
-			err := kubernetesProvider.CreateMizuRBAC(ctx, mizu.Config.MizuResourcesNamespace, mizu.ServiceAccountName, mizu.ClusterRoleName, mizu.ClusterRoleBindingName, mizu.RBACVersion)
-			if err != nil {
-				return false, err
-			}
-		} else {
-			err := kubernetesProvider.CreateMizuRBACNamespaceRestricted(ctx, mizu.Config.MizuResourcesNamespace, mizu.ServiceAccountName, mizu.RoleName, mizu.RoleBindingName, mizu.RBACVersion)
-			if err != nil {
-				return false, err
-			}
+	if !mizu.Config.IsNsRestrictedMode() {
+		err := kubernetesProvider.CreateMizuRBAC(ctx, mizu.Config.MizuResourcesNamespace, mizu.ServiceAccountName, mizu.ClusterRoleName, mizu.ClusterRoleBindingName, mizu.RBACVersion)
+		if err != nil {
+			return false, err
+		}
+	} else {
+		err := kubernetesProvider.CreateMizuRBACNamespaceRestricted(ctx, mizu.Config.MizuResourcesNamespace, mizu.ServiceAccountName, mizu.RoleName, mizu.RoleBindingName, mizu.RBACVersion)
+		if err != nil {
+			return false, err
 		}
 	}
 	return true, nil
