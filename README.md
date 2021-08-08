@@ -388,3 +388,19 @@ To tap multiple pods using regex -
  ^C
 ```
 
+## Configuration
+
+Mizu can work with config file which should be stored in ${HOME}/.mizu/config.yaml (macOS: ~/.mizu/config.yaml)
+In case no config file found, defaults will be used.
+In case of partial configuration defined, all other fields will be used with defaults.
+You can always override the defaults or config file with CLI flags.
+
+To get the default config params run `mizu config`
+
+To generate a new config file with default values use `mizu config -r`
+
+Mizu has several undocumented flags which can be set by using --set flag (e.g., `mizu tap --set dump-logs=true`)
+* **mizu-resources-namespace**: Type - String, See (reference to Nimrod section)
+* **telemetry**: Type - Boolean, Reports telemetry
+* **dump-logs**: Type - Boolean, At the end of the execution it creates a zip file with logs (in .mizu folder)
+* **kube-config-path**: Type - String, Setting the path to kube config (which isn't in standard path)

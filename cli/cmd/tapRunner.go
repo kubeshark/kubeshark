@@ -329,7 +329,7 @@ func waitUntilNamespaceDeleted(ctx context.Context, cancel context.CancelFunc, k
 }
 
 func reportTappedPods() {
-	mizuProxiedUrl := kubernetes.GetMizuApiServerProxiedHostAndPath(mizu.Config.Fetch.MizuPort)
+	mizuProxiedUrl := kubernetes.GetMizuApiServerProxiedHostAndPath(mizu.Config.Tap.GuiPort)
 	tappedPodsUrl := fmt.Sprintf("http://%s/status/tappedPods", mizuProxiedUrl)
 
 	podInfos := make([]shared.PodInfo, 0)

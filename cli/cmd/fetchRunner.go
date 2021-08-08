@@ -16,7 +16,7 @@ import (
 )
 
 func RunMizuFetch() {
-	mizuProxiedUrl := kubernetes.GetMizuApiServerProxiedHostAndPath(mizu.Config.Fetch.MizuPort)
+	mizuProxiedUrl := kubernetes.GetMizuApiServerProxiedHostAndPath(mizu.Config.Fetch.GuiPort)
 	resp, err := http.Get(fmt.Sprintf("http://%s/api/har?from=%v&to=%v", mizuProxiedUrl, mizu.Config.Fetch.FromTimestamp, mizu.Config.Fetch.ToTimestamp))
 	if err != nil {
 		log.Fatal(err)
