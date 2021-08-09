@@ -21,7 +21,7 @@ import (
 const (
 	Separator      = "="
 	SetCommandName = "set"
-	FlagNameTag    = "yaml"
+	FieldNameTag   = "yaml"
 	ReadonlyTag    = "readonly"
 )
 
@@ -150,7 +150,7 @@ func mergeFlagValue(currentElem reflect.Value, flagKey string, flagValue string)
 			continue
 		}
 
-		if currentField.Tag.Get(FlagNameTag) != flagKey {
+		if getFieldNameByTag(currentField) != flagKey {
 			continue
 		}
 
@@ -176,7 +176,7 @@ func mergeFlagValues(currentElem reflect.Value, flagKey string, flagValues []str
 			continue
 		}
 
-		if currentField.Tag.Get(FlagNameTag) != flagKey {
+		if getFieldNameByTag(currentField) != flagKey {
 			continue
 		}
 
@@ -195,6 +195,10 @@ func mergeFlagValues(currentElem reflect.Value, flagKey string, flagValues []str
 
 		currentFieldByName.Set(parsedValues)
 	}
+}
+
+func getFieldNameByTag(field reflect.StructField) string {
+	return strings.ReplaceAll(field.Tag.Get(FieldNameTag), ",omitempty", "")
 }
 
 func getParsedValue(kind reflect.Kind, value string) (reflect.Value, error) {
