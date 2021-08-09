@@ -17,8 +17,8 @@ const (
 	AnalysisTapName               = "analysis"
 	AllNamespacesTapName          = "all-namespaces"
 	PlainTextFilterRegexesTapName = "regex-masking"
-	HideHealthChecksTapName       = "hide-healthchecks"
 	DisableRedactionTapName       = "no-redact"
+	IgnoredUserAgentsTapName      = "ignored-user-agents"
 	HumanMaxEntriesDBSizeTapName  = "max-entries-db-size"
 	DirectionTapName              = "direction"
 	DryRunTapName                 = "dry-run"
@@ -26,20 +26,20 @@ const (
 )
 
 type TapConfig struct {
-	AnalysisDestination    string   `yaml:"dest" default:"up9.app"`
-	SleepIntervalSec       int      `yaml:"upload-interval" default:"10"`
-	PodRegexStr            string   `yaml:"regex" default:".*"`
-	GuiPort                uint16   `yaml:"gui-port" default:"8899"`
-	Namespaces             []string `yaml:"namespaces"`
-	Analysis               bool     `yaml:"analysis" default:"false"`
-	AllNamespaces          bool     `yaml:"all-namespaces" default:"false"`
-	PlainTextFilterRegexes []string `yaml:"regex-masking"`
-	HideHealthChecks       bool     `yaml:"hide-healthchecks" default:"false"`
-	DisableRedaction       bool     `yaml:"no-redact" default:"false"`
-	HumanMaxEntriesDBSize  string   `yaml:"max-entries-db-size" default:"200MB"`
-	Direction              string   `yaml:"direction" default:"in"`
-	DryRun                 bool     `yaml:"dry-run" default:"false"`
-	EnforcePolicyFile      string   `yaml:"test-rules"`
+	AnalysisDestination          string   `yaml:"dest" default:"up9.app"`
+	SleepIntervalSec             int      `yaml:"upload-interval" default:"10"`
+	PodRegexStr                  string   `yaml:"regex" default:".*"`
+	GuiPort                      uint16   `yaml:"gui-port" default:"8899"`
+	Namespaces                   []string `yaml:"namespaces"`
+	Analysis                     bool     `yaml:"analysis" default:"false"`
+	AllNamespaces                bool     `yaml:"all-namespaces" default:"false"`
+	PlainTextFilterRegexes       []string `yaml:"regex-masking"`
+	HealthChecksUserAgentHeaders []string `yaml:"ignored-user-agents" default:"[]"`
+	DisableRedaction             bool     `yaml:"no-redact" default:"false"`
+	HumanMaxEntriesDBSize        string   `yaml:"max-entries-db-size" default:"200MB"`
+	Direction                    string   `yaml:"direction" default:"in"`
+	DryRun                       bool     `yaml:"dry-run" default:"false"`
+	EnforcePolicyFile            string   `yaml:"test-rules"`
 }
 
 func (config *TapConfig) PodRegex() *regexp.Regexp {

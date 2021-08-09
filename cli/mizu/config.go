@@ -31,6 +31,7 @@ var allowedSetFlags = []string{
 	KubeConfigPathName,
 	configStructs.AnalysisDestinationTapName,
 	configStructs.SleepIntervalSecTapName,
+	configStructs.IgnoredUserAgentsTapName,
 }
 
 var Config = ConfigStruct{}

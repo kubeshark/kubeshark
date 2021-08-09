@@ -75,7 +75,7 @@ To tap all pods in current namespace -
 
 
 To tap specific pod - 
-``` 
+```bash
  $ kubectl get pods 
  NAME                            READY   STATUS    RESTARTS   AGE
  front-end-649fc5fd6-kqbtn       2/2     Running   0          7m
@@ -88,7 +88,7 @@ To tap specific pod -
 ```
 
 To tap multiple pods using regex - 
-``` 
+```bash
  $ kubectl get pods 
  NAME                            READY   STATUS    RESTARTS   AGE
  carts-66c77f5fbb-fq65r          2/2     Running   0          20m
@@ -133,3 +133,17 @@ to the namespace set by `mizu-resources-namespace`. The user must set the tapped
 using the `--namespace` flag or by setting `tap.namespaces` in the config file.
 
 Setting `mizu-resources-namespace=mizu` resets Mizu to its default behavior.
+
+### User agent filtering
+
+User-agent filtering (like health checks) - can be configured:
+
+Any request that contains one of those values in the user-agent header will not be captured
+
+```bash
+$ mizu tap "^ca.*" --set ignored-user-agents=kube-probe --set ignored-user-agents=prometheus
++carts-66c77f5fbb-fq65r
++catalogue-5f4cb7cf5-7zrmn
+Web interface is now available at http://localhost:8899
+^C
+```

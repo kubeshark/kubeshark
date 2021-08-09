@@ -207,7 +207,11 @@ func getMizuApiFilteringOptions() (*shared.TrafficFilteringOptions, error) {
 		}
 	}
 
-	return &shared.TrafficFilteringOptions{PlainTextMaskingRegexes: compiledRegexSlice, HideHealthChecks: mizu.Config.Tap.HideHealthChecks, DisableRedaction: mizu.Config.Tap.DisableRedaction}, nil
+	return &shared.TrafficFilteringOptions{
+		PlainTextMaskingRegexes:      compiledRegexSlice,
+		HealthChecksUserAgentHeaders: mizu.Config.Tap.HealthChecksUserAgentHeaders,
+		DisableRedaction:             mizu.Config.Tap.DisableRedaction,
+	}, nil
 }
 
 func updateMizuTappers(ctx context.Context, kubernetesProvider *kubernetes.Provider, nodeToTappedPodIPMap map[string][]string) error {
