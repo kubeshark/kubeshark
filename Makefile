@@ -65,3 +65,5 @@ clean-cli:  ## Clean CLI.
 clean-docker:
 	@(echo "DOCKER cleanup - NOT IMPLEMENTED YET " )
 
+test: ## Run tests.
+	@echo "running cli tests"; cd cli && $(MAKE) test
