@@ -4,6 +4,7 @@ import styles from './style/HarEntriesList.module.sass';
 import spinner from './assets/spinner.svg';
 import ScrollableFeed from "react-scrollable-feed";
 import {StatusType} from "./HarFilters";
+import uninon from "./assets/union.svg";
 
 interface HarEntriesListProps {
     entries: any[];
@@ -20,6 +21,7 @@ interface HarEntriesListProps {
     pathFilter: string;
     listEntryREF: any;
     onScrollEvent: any;
+    scrollableList: any;
 }
 
 enum FetchOperator {
@@ -27,7 +29,7 @@ enum FetchOperator {
     GT = "gt"
 }
 
-export const HarEntriesList: React.FC<HarEntriesListProps> = ({entries, setEntries, focusedEntryId, setFocusedEntryId, connectionOpen, noMoreDataTop, setNoMoreDataTop, noMoreDataBottom, setNoMoreDataBottom, methodsFilter, statusFilter, pathFilter,listEntryREF,onScrollEvent}) => {
+export const HarEntriesList: React.FC<HarEntriesListProps> = ({entries, setEntries, focusedEntryId, setFocusedEntryId, connectionOpen, noMoreDataTop, setNoMoreDataTop, noMoreDataBottom, setNoMoreDataBottom, methodsFilter, statusFilter, pathFilter,listEntryREF,onScrollEvent,scrollableList}) => {
 
     const [loadMoreTop, setLoadMoreTop] = useState(false);
     const [isLoadingTop, setIsLoadingTop] = useState(false);
@@ -116,7 +118,9 @@ export const HarEntriesList: React.FC<HarEntriesListProps> = ({entries, setEntri
                     {isLoadingTop && <div className={styles.spinnerContainer}>
                         <img alt="spinner" src={spinner} style={{height: 25}}/>
                     </div>}
-                    <ScrollableFeed onScroll={(isAtBottom) => onScrollEvent(isAtBottom)}>
+                    <ScrollableFeed 
+                    onScroll={(isAtBottom) => onScrollEvent(isAtBottom)}
+                    >
                         {noMoreDataTop && !connectionOpen && <div id="noMoreDataTop" className={styles.noMoreDataAvailable}>No more data available</div>}
                         {filteredEntries.map(entry => <HarEntry key={entry.id}
                                                      entry={entry}
@@ -126,6 +130,17 @@ export const HarEntriesList: React.FC<HarEntriesListProps> = ({entries, setEntri
                             <div className={styles.styledButton} onClick={() => getNewEntries()}>Fetch more entries</div>
                         </div>}
                     </ScrollableFeed>
+                    <button type="button" 
+                className={`${styles.btnLive} ${scrollableList ? styles.showButton : styles.hideButton}`} 
+                onClick={(_) => {
+                    
+                    
+                    const list = listEntryREF.current.firstChild;
+                    if(list instanceof HTMLElement) {
+                        list.scrollTo({ top: list.scrollHeight, behavior: 'smooth' })
+                    }
+                   
+                }}><img src={uninon} /></button>
                 </div>
 
                 {entries?.length > 0 && <div className={styles.footer}>

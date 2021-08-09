@@ -3,7 +3,7 @@ import styles from './style/HarFilters.module.sass';
 import {HARFilterSelect} from "./HARFilterSelect";
 import {TextField} from "@material-ui/core";
 import {ALL_KEY} from "./Select";
-import uninon from "./assets/union.svg";
+// import uninon from "./assets/union.svg";
 
 interface HarFiltersProps {
     methodsFilter: Array<string>;
@@ -22,7 +22,7 @@ export const HarFilters: React.FC<HarFiltersProps> = ({methodsFilter, setMethods
         <MethodFilter methodsFilter={methodsFilter} setMethodsFilter={setMethodsFilter}/>
         <StatusTypesFilter statusFilter={statusFilter} setStatusFilter={setStatusFilter}/>
         <PathFilter pathFilter={pathFilter} setPathFilter={setPathFilter}/>
-        <BackToLive listEntryREF={listEntryREF} scrollableList={scrollableList} />
+        {/* <BackToLive listEntryREF={listEntryREF} scrollableList={scrollableList} /> */}
     </div>;
 };
 
@@ -122,19 +122,19 @@ const PathFilter: React.FC<PathFilterProps> = ({pathFilter, setPathFilter}) => {
 };
 
 
-const BackToLive = ({listEntryREF, scrollableList}) => {
-    return (
-        <FilterContainer>
-            <div className={styles.btnScrollWrapper}>
-                <button disabled={scrollableList} type="button" className={styles.btnLive} onClick={(_) => {
-                    const list = listEntryREF.current.firstChild;
-                    if(list instanceof HTMLElement) {
-                        list.scrollTo({ top: list.scrollHeight, behavior: 'smooth' })
-                    }
+// const BackToLive = ({listEntryREF, scrollableList}) => {
+//     return (
+//         <FilterContainer>
+//             <div className={styles.btnScrollWrapper}>
+//                 <button disabled={scrollableList} type="button" className={styles.btnLive} onClick={(_) => {
+//                     const list = listEntryREF.current.firstChild;
+//                     if(list instanceof HTMLElement) {
+//                         list.scrollTo({ top: list.scrollHeight, behavior: 'smooth' })
+//                     }
                    
-                }}><img src={uninon} /></button>
-            </div>
-        </FilterContainer>
-    )
-}
+//                 }}><img src={uninon} /></button>
+//             </div>
+//         </FilterContainer>
+//     )
+// }
 

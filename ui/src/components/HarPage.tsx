@@ -56,7 +56,7 @@ export const HarPage: React.FC<HarPageProps> = ({setAnalyzeStatus}) => {
 
     const [tappingStatus, setTappingStatus] = useState(null);
 
-    const [disableScrollList, setDisableScrollList] = useState(true);
+    const [disableScrollList, setDisableScrollList] = useState(false);
 
     const ws = useRef(null);
     const listEntry = useRef(null);
@@ -87,7 +87,7 @@ export const HarPage: React.FC<HarPageProps> = ({setAnalyzeStatus}) => {
                     setEntries([...newEntries, entry])
                     if(listEntry.current) {
                         if(isScrollable(listEntry.current.firstChild)) {
-                            setDisableScrollList(false)
+                            setDisableScrollList(true)
                         }
                     }
                     break
@@ -155,8 +155,7 @@ export const HarPage: React.FC<HarPageProps> = ({setAnalyzeStatus}) => {
     };
 
     const onScrollEvent = (isAtBottom) => {
-        if(!isAtBottom) setDisableScrollList(false)
-        else setDisableScrollList(true)
+        isAtBottom ? setDisableScrollList(false) : setDisableScrollList(true)
     }
 
     return (
@@ -197,6 +196,7 @@ export const HarPage: React.FC<HarPageProps> = ({setAnalyzeStatus}) => {
                                         pathFilter={pathFilter}
                                         listEntryREF={listEntry}
                                         onScrollEvent={onScrollEvent}
+                                        scrollableList={disableScrollList}
                                        
                         />
                     </div>
