@@ -21,6 +21,8 @@ import (
 const (
 	Separator      = "="
 	SetCommandName = "set"
+	FlagNameTag    = "yaml"
+	ReadonlyTag    = "readonly"
 )
 
 var allowedSetFlags = []string{
@@ -71,8 +73,8 @@ func GetConfigWithDefaults() (string, error) {
 		return "", err
 	}
 
-	// TODO: change to generic solution
-	defaultConf.AgentImage = ""
+	configElem := reflect.ValueOf(&defaultConf).Elem()
+	setZeroForReadonlyFields(configElem)
 
 	return uiUtils.PrettyYaml(defaultConf)
 }
@@ -110,16 +112,14 @@ func initFlag(f *pflag.Flag) {
 	}
 
 	if f.Name == SetCommandName {
-		mergeSetFlag(sliceValue.GetSlice())
+		mergeSetFlag(configElem, sliceValue.GetSlice())
 		return
 	}
 
 	mergeFlagValues(configElem, f.Name, sliceValue.GetSlice())
 }
 
-func mergeSetFlag(setValues []string) {
-	configElem := reflect.ValueOf(&Config).Elem()
-
+func mergeSetFlag(configElem reflect.Value, setValues []string) {
 	for _, setValue := range setValues {
 		if !strings.Contains(setValue, Separator) {
 			Log.Warningf(uiUtils.Warning, fmt.Sprintf("Ignoring set argument %s (set argument format: <flag name>=<flag value>)", setValue))
@@ -150,7 +150,7 @@ func mergeFlagValue(currentElem reflect.Value, flagKey string, flagValue string)
 			continue
 		}
 
-		if currentField.Tag.Get("yaml") != flagKey {
+		if currentField.Tag.Get(FlagNameTag) != flagKey {
 			continue
 		}
 
@@ -176,7 +176,7 @@ func mergeFlagValues(currentElem reflect.Value, flagKey string, flagValues []str
 			continue
 		}
 
-		if currentField.Tag.Get("yaml") != flagKey {
+		if currentField.Tag.Get(FlagNameTag) != flagKey {
 			continue
 		}
 
@@ -281,4 +281,20 @@ func getParsedValue(kind reflect.Kind, value string) (reflect.Value, error) {
 	}
 
 	return reflect.ValueOf(nil), errors.New("value to parse does not match type")
+}
+
+func setZeroForReadonlyFields(currentElem reflect.Value) {
+	for i := 0; i < currentElem.NumField(); i++ {
+		currentField := currentElem.Type().Field(i)
+		currentFieldByName := currentElem.FieldByName(currentField.Name)
+
+		if currentField.Type.Kind() == reflect.Struct {
+			setZeroForReadonlyFields(currentFieldByName)
+			continue
+		}
+
+		if _, ok := currentField.Tag.Lookup(ReadonlyTag); ok {
+			currentFieldByName.Set(reflect.Zero(currentField.Type))
+		}
+	}
 }

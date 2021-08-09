@@ -19,7 +19,7 @@ type ConfigStruct struct {
 	Fetch                  configStructs.FetchConfig   `yaml:"fetch"`
 	Version                configStructs.VersionConfig `yaml:"version"`
 	View                   configStructs.ViewConfig    `yaml:"view"`
-	AgentImage             string                      `yaml:"agent-image,omitempty"`
+	AgentImage             string                      `yaml:"agent-image,omitempty" readonly:""`
 	MizuResourcesNamespace string                      `yaml:"mizu-resources-namespace" default:"mizu"`
 	Telemetry              bool                        `yaml:"telemetry" default:"true"`
 	DumpLogs               bool                        `yaml:"dump-logs" default:"false"`
