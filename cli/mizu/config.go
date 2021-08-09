@@ -69,6 +69,10 @@ func GetConfigWithDefaults() (string, error) {
 	if err := defaults.Set(&defaultConf); err != nil {
 		return "", err
 	}
+
+	// TODO: change to generic solution
+	defaultConf.AgentImage = ""
+
 	return uiUtils.PrettyYaml(defaultConf)
 }
 
