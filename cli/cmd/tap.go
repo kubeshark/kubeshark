@@ -2,13 +2,15 @@ package cmd
 
 import (
 	"errors"
+	"github.com/up9inc/mizu/cli/config"
+	"github.com/up9inc/mizu/cli/config/configStructs"
+	"github.com/up9inc/mizu/cli/logger"
+	"github.com/up9inc/mizu/cli/telemetry"
 	"os"
 
 	"github.com/creasty/defaults"
 	"github.com/spf13/cobra"
 	"github.com/up9inc/mizu/cli/errormessage"
-	"github.com/up9inc/mizu/cli/mizu"
-	"github.com/up9inc/mizu/cli/mizu/configStructs"
 	"github.com/up9inc/mizu/cli/uiUtils"
 )
 
@@ -20,31 +22,31 @@ var tapCmd = &cobra.Command{
 	Long: `Record the ingoing traffic of a kubernetes pod.
 Supported protocols are HTTP and gRPC.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		go mizu.ReportRun("tap", mizu.Config.Tap)
+		go telemetry.ReportRun("tap", config.Config.Tap)
 		RunMizuTap()
 		return nil
 	},
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 		if len(args) == 1 {
-			mizu.Config.Tap.PodRegexStr = args[0]
+			config.Config.Tap.PodRegexStr = args[0]
 		} else if len(args) > 1 {
 			return errors.New("unexpected number of arguments")
 		}
 
-		if err := mizu.Config.Validate(); err != nil {
+		if err := config.Config.Validate(); err != nil {
 			return errormessage.FormatError(err)
 		}
 
-		if err := mizu.Config.Tap.Validate(); err != nil {
+		if err := config.Config.Tap.Validate(); err != nil {
 			return errormessage.FormatError(err)
 		}
 
-		mizu.Log.Infof("Mizu will store up to %s of traffic, old traffic will be cleared once the limit is reached.", mizu.Config.Tap.HumanMaxEntriesDBSize)
+		logger.Log.Infof("Mizu will store up to %s of traffic, old traffic will be cleared once the limit is reached.", config.Config.Tap.HumanMaxEntriesDBSize)
 
-		if mizu.Config.Tap.Analysis {
-			mizu.Log.Infof(analysisMessageToConfirm)
+		if config.Config.Tap.Analysis {
+			logger.Log.Infof(analysisMessageToConfirm)
 			if !uiUtils.AskForConfirmation("Would you like to proceed [Y/n]: ") {
-				mizu.Log.Infof("You can always run mizu without analysis, aborting")
+				logger.Log.Infof("You can always run mizu without analysis, aborting")
 				os.Exit(0)
 			}
 		}

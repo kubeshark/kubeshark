@@ -1,17 +1,20 @@
-package mizu
+package telemetry
 
 import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/up9inc/mizu/cli/config"
+	"github.com/up9inc/mizu/cli/logger"
+	"github.com/up9inc/mizu/cli/mizu"
 	"net/http"
 )
 
 const telemetryUrl = "https://us-east4-up9-prod.cloudfunctions.net/mizu-telemetry"
 
 func ReportRun(cmd string, args interface{}) {
-	if !Config.Telemetry {
-		Log.Debugf("not reporting due to config value")
+	if !config.Config.Telemetry {
+		logger.Log.Debugf("not reporting due to config value")
 		return
 	}
 
@@ -25,16 +28,16 @@ func ReportRun(cmd string, args interface{}) {
 		"cmd":            cmd,
 		"args":           string(argsBytes),
 		"component":      "mizu_cli",
-		"BuildTimestamp": BuildTimestamp,
-		"Branch":         Branch,
-		"version":        SemVer}
+		"BuildTimestamp": mizu.BuildTimestamp,
+		"Branch":         mizu.Branch,
+		"version":        mizu.SemVer}
 	argsMap["message"] = fmt.Sprintf("mizu %v - %v", argsMap["cmd"], string(argsBytes))
 
 	jsonValue, _ := json.Marshal(argsMap)
 
 	if resp, err := http.Post(telemetryUrl, "application/json", bytes.NewBuffer(jsonValue)); err != nil {
-		Log.Debugf("error sending telemetry err: %v, response %v", err, resp)
+		logger.Log.Debugf("error sending telemetry err: %v, response %v", err, resp)
 	} else {
-		Log.Debugf("Successfully reported telemetry")
+		logger.Log.Debugf("Successfully reported telemetry")
 	}
 }

@@ -3,15 +3,16 @@ package cmd
 import (
 	"github.com/creasty/defaults"
 	"github.com/spf13/cobra"
-	"github.com/up9inc/mizu/cli/mizu"
-	"github.com/up9inc/mizu/cli/mizu/configStructs"
+	"github.com/up9inc/mizu/cli/config"
+	"github.com/up9inc/mizu/cli/config/configStructs"
+	"github.com/up9inc/mizu/cli/telemetry"
 )
 
 var viewCmd = &cobra.Command{
 	Use:   "view",
 	Short: "Open GUI in browser",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		go mizu.ReportRun("view", mizu.Config.View)
+		go telemetry.ReportRun("view", config.Config.View)
 		runMizuView()
 		return nil
 	},

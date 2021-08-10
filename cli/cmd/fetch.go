@@ -3,16 +3,18 @@ package cmd
 import (
 	"github.com/creasty/defaults"
 	"github.com/spf13/cobra"
-	"github.com/up9inc/mizu/cli/mizu"
-	"github.com/up9inc/mizu/cli/mizu/configStructs"
+	"github.com/up9inc/mizu/cli/config"
+	"github.com/up9inc/mizu/cli/config/configStructs"
+	"github.com/up9inc/mizu/cli/mizu/version"
+	"github.com/up9inc/mizu/cli/telemetry"
 )
 
 var fetchCmd = &cobra.Command{
 	Use:   "fetch",
 	Short: "Download recorded traffic to files",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		go mizu.ReportRun("fetch", mizu.Config.Fetch)
-		if isCompatible, err := mizu.CheckVersionCompatibility(mizu.Config.Fetch.GuiPort); err != nil {
+		go telemetry.ReportRun("fetch", config.Config.Fetch)
+		if isCompatible, err := version.CheckVersionCompatibility(config.Config.Fetch.GuiPort); err != nil {
 			return err
 		} else if !isCompatible {
 			return nil
