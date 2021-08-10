@@ -12,17 +12,14 @@ interface HarFiltersProps {
     setStatusFilter: (methods: Array<string>) => void;
     pathFilter: string
     setPathFilter: (val: string) => void;
-    listEntryREF: any;
-    scrollableList: boolean;
 }
 
-export const HarFilters: React.FC<HarFiltersProps> = ({methodsFilter, setMethodsFilter, statusFilter, setStatusFilter, pathFilter, setPathFilter,listEntryREF,scrollableList}) => {
+export const HarFilters: React.FC<HarFiltersProps> = ({methodsFilter, setMethodsFilter, statusFilter, setStatusFilter, pathFilter, setPathFilter}) => {
 
     return <div className={styles.container}>
         <MethodFilter methodsFilter={methodsFilter} setMethodsFilter={setMethodsFilter}/>
         <StatusTypesFilter statusFilter={statusFilter} setStatusFilter={setStatusFilter}/>
         <PathFilter pathFilter={pathFilter} setPathFilter={setPathFilter}/>
-        {/* <BackToLive listEntryREF={listEntryREF} scrollableList={scrollableList} /> */}
     </div>;
 };
 
@@ -121,20 +118,4 @@ const PathFilter: React.FC<PathFilterProps> = ({pathFilter, setPathFilter}) => {
     </FilterContainer>;
 };
 
-
-// const BackToLive = ({listEntryREF, scrollableList}) => {
-//     return (
-//         <FilterContainer>
-//             <div className={styles.btnScrollWrapper}>
-//                 <button disabled={scrollableList} type="button" className={styles.btnLive} onClick={(_) => {
-//                     const list = listEntryREF.current.firstChild;
-//                     if(list instanceof HTMLElement) {
-//                         list.scrollTo({ top: list.scrollHeight, behavior: 'smooth' })
-//                     }
-                   
-//                 }}><img src={uninon} /></button>
-//             </div>
-//         </FilterContainer>
-//     )
-// }
 

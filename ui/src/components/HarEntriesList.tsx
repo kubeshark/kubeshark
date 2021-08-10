@@ -20,8 +20,8 @@ interface HarEntriesListProps {
     statusFilter: Array<string>;
     pathFilter: string;
     listEntryREF: any;
-    onScrollEvent: any;
-    scrollableList: any;
+    onScrollEvent: (isAtBottom:boolean) => void;
+    scrollableList: boolean;
 }
 
 enum FetchOperator {
@@ -29,7 +29,7 @@ enum FetchOperator {
     GT = "gt"
 }
 
-export const HarEntriesList: React.FC<HarEntriesListProps> = ({entries, setEntries, focusedEntryId, setFocusedEntryId, connectionOpen, noMoreDataTop, setNoMoreDataTop, noMoreDataBottom, setNoMoreDataBottom, methodsFilter, statusFilter, pathFilter,listEntryREF,onScrollEvent,scrollableList}) => {
+export const HarEntriesList: React.FC<HarEntriesListProps> = ({entries, setEntries, focusedEntryId, setFocusedEntryId, connectionOpen, noMoreDataTop, setNoMoreDataTop, noMoreDataBottom, setNoMoreDataBottom, methodsFilter, statusFilter, pathFilter, listEntryREF, onScrollEvent, scrollableList}) => {
 
     const [loadMoreTop, setLoadMoreTop] = useState(false);
     const [isLoadingTop, setIsLoadingTop] = useState(false);
@@ -131,16 +131,14 @@ export const HarEntriesList: React.FC<HarEntriesListProps> = ({entries, setEntri
                         </div>}
                     </ScrollableFeed>
                     <button type="button" 
-                className={`${styles.btnLive} ${scrollableList ? styles.showButton : styles.hideButton}`} 
-                onClick={(_) => {
-                    
-                    
-                    const list = listEntryREF.current.firstChild;
-                    if(list instanceof HTMLElement) {
-                        list.scrollTo({ top: list.scrollHeight, behavior: 'smooth' })
-                    }
-                   
-                }}><img src={uninon} /></button>
+                        className={`${styles.btnLive} ${scrollableList ? styles.showButton : styles.hideButton}`} 
+                        onClick={(_) => {
+                            const list = listEntryREF.current.firstChild;
+                            if(list instanceof HTMLElement) {
+                                list.scrollTo({ top: list.scrollHeight, behavior: 'smooth' })
+                            }
+                        }}><img src={uninon} />
+                    </button>
                 </div>
 
                 {entries?.length > 0 && <div className={styles.footer}>

@@ -178,8 +178,6 @@ export const HarPage: React.FC<HarPageProps> = ({setAnalyzeStatus}) => {
                                 setStatusFilter={setStatusFilter}
                                 pathFilter={pathFilter}
                                 setPathFilter={setPathFilter}
-                                listEntryREF={listEntry}
-                                scrollableList={disableScrollList}
                     />
                     <div className={styles.container}>
                         <HarEntriesList entries={entries}
