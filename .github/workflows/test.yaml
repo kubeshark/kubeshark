@@ -18,6 +18,10 @@ jobs:
       - name: Build CLI
         run: make cli
 
+      - shell: bash
+        run: |
+          sudo apt-get install libpcap-dev
+
       - name: Build Agent
         run: make agent
 
