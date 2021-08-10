@@ -133,6 +133,7 @@ func mergeSetFlag(setValues []string) {
 
 		if !Contains(allowedSetFlags, argumentKey) {
 			Log.Warningf(uiUtils.Warning, fmt.Sprintf("Ignoring set argument %s, flag name must be one of the following: \"%s\"", setValue, strings.Join(allowedSetFlags, "\", \"")))
+			continue
 		}
 
 		mergeFlagValue(configElem, argumentKey, argumentValue)
