@@ -10,12 +10,15 @@ import (
 )
 
 const (
+	AnalysisDestinationTapName    = "dest"
+	SleepIntervalSecTapName       = "upload-interval"
 	GuiPortTapName                = "gui-port"
 	NamespacesTapName             = "namespaces"
 	AnalysisTapName               = "analysis"
 	AllNamespacesTapName          = "all-namespaces"
 	PlainTextFilterRegexesTapName = "regex-masking"
 	DisableRedactionTapName       = "no-redact"
+	IgnoredUserAgentsTapName      = "ignored-user-agents"
 	HumanMaxEntriesDBSizeTapName  = "max-entries-db-size"
 	DirectionTapName              = "direction"
 	DryRunTapName                 = "dry-run"

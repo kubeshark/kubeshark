@@ -114,6 +114,10 @@ You can always override the defaults or config file with CLI flags.
 To get the default config params run `mizu config` <br />
 To generate a new config file with default values use `mizu config -r`
 
+### Telemetry
+
+By default, mizu reports usage telemetry. It can be disabled by adding a line of telemetry: false in the ${HOME}/.mizu/config.yaml file
+
 ## Advanced Usage
 
 ### Namespace-Restricted Mode

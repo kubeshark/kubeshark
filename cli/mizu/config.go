@@ -25,6 +25,17 @@ const (
 	ReadonlyTag    = "readonly"
 )
 
+var allowedSetFlags = []string{
+	AgentImageConfigName,
+	MizuResourcesNamespaceConfigName,
+	TelemetryConfigName,
+	DumpLogsConfigName,
+	KubeConfigPathName,
+	configStructs.AnalysisDestinationTapName,
+	configStructs.SleepIntervalSecTapName,
+	configStructs.IgnoredUserAgentsTapName,
+}
+
 var Config = ConfigStruct{}
 
 func (config *ConfigStruct) Validate() error {
@@ -127,6 +138,11 @@ func mergeSetFlag(configElem reflect.Value, setValues []string) {
 	}
 
 	for argumentKey, argumentValues := range setMap {
+		if !Contains(allowedSetFlags, argumentKey) {
+			Log.Warningf(uiUtils.Warning, fmt.Sprintf("Ignoring set argument name \"%s\", flag name must be one of the following: \"%s\"", argumentKey, strings.Join(allowedSetFlags, "\", \"")))
+			continue
+		}
+
 		if len(argumentValues) > 1 {
 			mergeFlagValues(configElem, argumentKey, argumentValues)
 		} else {
@@ -152,7 +168,7 @@ func mergeFlagValue(currentElem reflect.Value, flagKey string, flagValue string)
 
 		parsedValue, err := getParsedValue(currentFieldKind, flagValue)
 		if err != nil {
-			Log.Warningf(uiUtils.Red, fmt.Sprintf("Invalid value %s for flag name %s, expected %s", flagValue, flagKey, currentFieldKind))
+			Log.Warningf(uiUtils.Warning, fmt.Sprintf("Invalid value %s for flag name %s, expected %s", flagValue, flagKey, currentFieldKind))
 			return
 		}
 
@@ -176,7 +192,7 @@ func mergeFlagValues(currentElem reflect.Value, flagKey string, flagValues []str
 		}
 
 		if currentFieldKind != reflect.Slice {
-			Log.Warningf(uiUtils.Red, fmt.Sprintf("Invalid values %s for flag name %s, expected %s", strings.Join(flagValues, ","), flagKey, currentFieldKind))
+			Log.Warningf(uiUtils.Warning, fmt.Sprintf("Invalid values %s for flag name %s, expected %s", strings.Join(flagValues, ","), flagKey, currentFieldKind))
 			return
 		}
 
@@ -186,7 +202,7 @@ func mergeFlagValues(currentElem reflect.Value, flagKey string, flagValues []str
 		for _, flagValue := range flagValues {
 			parsedValue, err := getParsedValue(flagValueKind, flagValue)
 			if err != nil {
-				Log.Warningf(uiUtils.Red, fmt.Sprintf("Invalid value %s for flag name %s, expected %s", flagValue, flagKey, flagValueKind))
+				Log.Warningf(uiUtils.Warning, fmt.Sprintf("Invalid value %s for flag name %s, expected %s", flagValue, flagKey, flagValueKind))
 				return
 			}
 
