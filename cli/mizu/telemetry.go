@@ -15,6 +15,10 @@ func ReportRun(cmd string, args interface{}) {
 		return
 	}
 
+	if Branch != "main" && Branch != "develop" {
+		Log.Debugf("not reporting telemetry on private branches")
+	}
+
 	argsBytes, _ := json.Marshal(args)
 	argsMap := map[string]string{
 		"telemetry_type": "execution",
