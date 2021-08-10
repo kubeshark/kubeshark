@@ -4,6 +4,20 @@
 This feature allows you to define set of simple rules, and test the API against them.
 Such validation may test response for specific JSON fields, headers, etc.
 
+## Examples
+
+
+Example 1: HTTP request (REST API call) that didn’t pass validation is highlighted in red
+
+![Simple UI](../assets/validation-example1.png)
+
+- - -
+
+
+Example 2: Details pane shows the validation rule details and whether it passed or failed
+
+![Simple UI](../assets/validation-example2.png)
+
 
 ## How to use
 To use this feature - create simple rules file (see details below) and pass this file as parameter to `mizu tap` command. For example, if rules are stored in file named `rules.yaml` — run the following command:
@@ -48,7 +62,7 @@ rules:
   service: "carts.*"
 ```
 
-### Dissecting:
+### Explanation:
 
 * First rule `holy-in-name-property`:
 
