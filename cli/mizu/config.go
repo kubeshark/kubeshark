@@ -25,17 +25,6 @@ const (
 	ReadonlyTag    = "readonly"
 )
 
-var allowedSetFlags = []string{
-	AgentImageConfigName,
-	MizuResourcesNamespaceConfigName,
-	TelemetryConfigName,
-	DumpLogsConfigName,
-	KubeConfigPathName,
-	configStructs.AnalysisDestinationTapName,
-	configStructs.SleepIntervalSecTapName,
-	configStructs.IgnoredUserAgentsTapName,
-}
-
 var Config = ConfigStruct{}
 
 func (config *ConfigStruct) Validate() error {
@@ -120,6 +109,8 @@ func initFlag(f *pflag.Flag) {
 }
 
 func mergeSetFlag(configElem reflect.Value, setValues []string) {
+	setMap := map[string][]string{}
+
 	for _, setValue := range setValues {
 		if !strings.Contains(setValue, Separator) {
 			Log.Warningf(uiUtils.Warning, fmt.Sprintf("Ignoring set argument %s (set argument format: <flag name>=<flag value>)", setValue))
@@ -132,11 +123,15 @@ func mergeSetFlag(configElem reflect.Value, setValues []string) {
 
 		argumentKey, argumentValue := split[0], split[1]
 
-		if !Contains(allowedSetFlags, argumentKey) {
-			Log.Warningf(uiUtils.Warning, fmt.Sprintf("Ignoring set argument %s, flag name must be one of the following: \"%s\"", setValue, strings.Join(allowedSetFlags, "\", \"")))
-		}
+		setMap[argumentKey] = append(setMap[argumentKey], argumentValue)
+	}
 
-		mergeFlagValue(configElem, argumentKey, argumentValue)
+	for argumentKey, argumentValues := range setMap {
+		if len(argumentValues) > 1 {
+			mergeFlagValues(configElem, argumentKey, argumentValues)
+		} else {
+			mergeFlagValue(configElem, argumentKey, argumentValues[0])
+		}
 	}
 }
 
@@ -144,8 +139,9 @@ func mergeFlagValue(currentElem reflect.Value, flagKey string, flagValue string)
 	for i := 0; i < currentElem.NumField(); i++ {
 		currentField := currentElem.Type().Field(i)
 		currentFieldByName := currentElem.FieldByName(currentField.Name)
+		currentFieldKind := currentField.Type.Kind()
 
-		if currentField.Type.Kind() == reflect.Struct {
+		if currentFieldKind == reflect.Struct {
 			mergeFlagValue(currentFieldByName, flagKey, flagValue)
 			continue
 		}
@@ -154,11 +150,9 @@ func mergeFlagValue(currentElem reflect.Value, flagKey string, flagValue string)
 			continue
 		}
 
-		flagValueKind := currentField.Type.Kind()
-
-		parsedValue, err := getParsedValue(flagValueKind, flagValue)
+		parsedValue, err := getParsedValue(currentFieldKind, flagValue)
 		if err != nil {
-			Log.Warningf(uiUtils.Red, fmt.Sprintf("Invalid value %v for flag name %s, expected %s", flagValue, flagKey, flagValueKind))
+			Log.Warningf(uiUtils.Red, fmt.Sprintf("Invalid value %s for flag name %s, expected %s", flagValue, flagKey, currentFieldKind))
 			return
 		}
 
@@ -170,8 +164,9 @@ func mergeFlagValues(currentElem reflect.Value, flagKey string, flagValues []str
 	for i := 0; i < currentElem.NumField(); i++ {
 		currentField := currentElem.Type().Field(i)
 		currentFieldByName := currentElem.FieldByName(currentField.Name)
+		currentFieldKind := currentField.Type.Kind()
 
-		if currentField.Type.Kind() == reflect.Struct {
+		if currentFieldKind == reflect.Struct {
 			mergeFlagValues(currentFieldByName, flagKey, flagValues)
 			continue
 		}
@@ -180,13 +175,18 @@ func mergeFlagValues(currentElem reflect.Value, flagKey string, flagValues []str
 			continue
 		}
 
+		if currentFieldKind != reflect.Slice {
+			Log.Warningf(uiUtils.Red, fmt.Sprintf("Invalid values %s for flag name %s, expected %s", strings.Join(flagValues, ","), flagKey, currentFieldKind))
+			return
+		}
+
 		flagValueKind := currentField.Type.Elem().Kind()
 
 		parsedValues := reflect.MakeSlice(reflect.SliceOf(currentField.Type.Elem()), 0, 0)
 		for _, flagValue := range flagValues {
 			parsedValue, err := getParsedValue(flagValueKind, flagValue)
 			if err != nil {
-				Log.Warningf(uiUtils.Red, fmt.Sprintf("Invalid value %v for flag name %s, expected %s", flagValue, flagKey, flagValueKind))
+				Log.Warningf(uiUtils.Red, fmt.Sprintf("Invalid value %s for flag name %s, expected %s", flagValue, flagKey, flagValueKind))
 				return
 			}
 
