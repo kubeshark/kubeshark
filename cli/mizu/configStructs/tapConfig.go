@@ -34,7 +34,7 @@ type TapConfig struct {
 	Analysis                     bool     `yaml:"analysis" default:"false"`
 	AllNamespaces                bool     `yaml:"all-namespaces" default:"false"`
 	PlainTextFilterRegexes       []string `yaml:"regex-masking"`
-	HealthChecksUserAgentHeaders []string `yaml:"ignored-user-agents" default:"[]"`
+	HealthChecksUserAgentHeaders []string `yaml:"ignored-user-agents"`
 	DisableRedaction             bool     `yaml:"no-redact" default:"false"`
 	HumanMaxEntriesDBSize        string   `yaml:"max-entries-db-size" default:"200MB"`
 	Direction                    string   `yaml:"direction" default:"in"`
