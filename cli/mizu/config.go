@@ -125,11 +125,13 @@ func mergeSetFlag(configElem reflect.Value, setValues []string) {
 	for _, setValue := range setValues {
 		if !strings.Contains(setValue, Separator) {
 			Log.Warningf(uiUtils.Warning, fmt.Sprintf("Ignoring set argument %s (set argument format: <flag name>=<flag value>)", setValue))
+			continue
 		}
 
 		split := strings.SplitN(setValue, Separator, 2)
 		if len(split) != 2 {
 			Log.Warningf(uiUtils.Warning, fmt.Sprintf("Ignoring set argument %s (set argument format: <flag name>=<flag value>)", setValue))
+			continue
 		}
 
 		argumentKey, argumentValue := split[0], split[1]
@@ -164,6 +166,11 @@ func mergeFlagValue(currentElem reflect.Value, flagKey string, flagValue string)
 
 		if getFieldNameByTag(currentField) != flagKey {
 			continue
+		}
+
+		if currentFieldKind == reflect.Slice {
+			mergeFlagValues(currentElem, flagKey, []string{flagValue})
+			return
 		}
 
 		parsedValue, err := getParsedValue(currentFieldKind, flagValue)
