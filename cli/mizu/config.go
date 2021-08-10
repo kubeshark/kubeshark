@@ -198,7 +198,7 @@ func mergeFlagValues(currentElem reflect.Value, flagKey string, flagValues []str
 }
 
 func getFieldNameByTag(field reflect.StructField) string {
-	return strings.ReplaceAll(field.Tag.Get(FieldNameTag), ",omitempty", "")
+	return strings.Split(field.Tag.Get(FieldNameTag), ",")[0]
 }
 
 func getParsedValue(kind reflect.Kind, value string) (reflect.Value, error) {
