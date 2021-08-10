@@ -2,16 +2,16 @@
 
 # The API Traffic Viewer for Kubernetes
 
-A simple-yet-powerful API traffic viewer for Kubernetes to help you troubleshoot and debug your microservices. Think TCPDump and Chrome Dev Tools combined.
+A simple-yet-powerful API traffic viewer for Kubernetes to help you troubleshoot and debug your microservices. Think TCPDump and Chrome Dev Tools combined
 
 ![Simple UI](assets/mizu-ui.png)
 
 ## Features
 
 - Simple and powerful CLI
-- Real time view of all HTTP requests, REST and gRPC API calls
+- Real-time view of all HTTP requests, REST and gRPC API calls
 - No installation or code instrumentation
-- Works completely on premises (on-prem)
+- Works completely on premises
 
 ## Download
 
@@ -33,10 +33,10 @@ https://github.com/up9inc/mizu/releases/latest/download/mizu_linux_amd64 \
 && chmod 755 mizu
 ``` 
 
-SHA256 checksums are available on the [Releases](https://github.com/up9inc/mizu/releases) page.
+SHA256 checksums are available on the [Releases](https://github.com/up9inc/mizu/releases) page
 
 ### Development (unstable) Build
-Pick one from the [Releases](https://github.com/up9inc/mizu/releases) page.
+Pick one from the [Releases](https://github.com/up9inc/mizu/releases) page
 
 ## Prerequisites
 1. Set `KUBECONFIG` environment variable to your Kubernetes configuration. If this is not set, Mizu assumes that configuration is at `${HOME}/.kube/config`
@@ -49,8 +49,8 @@ For detailed list of k8s permissions see [PERMISSIONS](PERMISSIONS.md) document
 
 1. Find pods you'd like to tap to in your Kubernetes cluster
 2. Run `mizu tap` or `mizu tap PODNAME`  
-3. Open browser on `http://localhost:8899/mizu` **or** as instructed in the CLI .. 
-4. Watch the API traffic flowing ..
+3. Open browser on `http://localhost:8899/mizu` **or** as instructed in the CLI
+4. Watch the API traffic flowing
 5. Type ^C to stop
 
 ## Examples
@@ -107,9 +107,9 @@ To tap multiple pods using regex -
 ## Configuration
 
 Mizu can work with config file which should be stored in ${HOME}/.mizu/config.yaml (macOS: ~/.mizu/config.yaml) <br />
-In case no config file found, defaults will be used. <br />
-In case of partial configuration defined, all other fields will be used with defaults. <br />
-You can always override the defaults or config file with CLI flags.
+In case no config file found, defaults will be used <br />
+In case of partial configuration defined, all other fields will be used with defaults <br />
+You can always override the defaults or config file with CLI flags
 
 To get the default config params run `mizu config` <br />
 To generate a new config file with default values use `mizu config -r`
@@ -122,16 +122,16 @@ By default, mizu reports usage telemetry. It can be disabled by adding a line of
 
 ### Namespace-Restricted Mode
 
-Some users have permission to only manage resources in one particular namespace assigned to them.
+Some users have permission to only manage resources in one particular namespace assigned to them
 By default `mizu tap` creates a new namespace `mizu` for all of its Kubernetes resources. In order to instead install
-Mizu in an existing namespace, set the `mizu-resources-namespace` config option.
+Mizu in an existing namespace, set the `mizu-resources-namespace` config option
 
 If `mizu-resources-namespace` is set to a value other than the default `mizu`, Mizu will operate in a
 Namespace-Restricted mode. It will only tap pods in `mizu-resources-namespace`. This way Mizu only requires permissions
 to the namespace set by `mizu-resources-namespace`. The user must set the tapped namespace to the same namespace by
-using the `--namespace` flag or by setting `tap.namespaces` in the config file.
+using the `--namespace` flag or by setting `tap.namespaces` in the config file
 
-Setting `mizu-resources-namespace=mizu` resets Mizu to its default behavior.
+Setting `mizu-resources-namespace=mizu` resets Mizu to its default behavior
 
 ### User agent filtering
 
