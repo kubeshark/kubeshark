@@ -32,7 +32,7 @@ func getFieldsWithReadonlyTag(currentElem reflect.Value, readonlyFields *[]strin
 		}
 
 		if _, ok := currentField.Tag.Lookup(mizu.ReadonlyTag); ok {
-			fieldNameByTag := strings.ReplaceAll(currentField.Tag.Get(mizu.FieldNameTag), ",omitempty", "")
+			fieldNameByTag := strings.Split(currentField.Tag.Get(mizu.FieldNameTag), ",")[0]
 			*readonlyFields = append(*readonlyFields, fieldNameByTag)
 		}
 	}
