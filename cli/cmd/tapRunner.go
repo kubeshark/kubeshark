@@ -70,7 +70,7 @@ func RunMizuTap() {
 	targetNamespaces := getNamespaces(kubernetesProvider)
 
 	var namespacesStr string
-	if targetNamespaces[0] != mizu.K8sAllNamespaces {
+	if !mizu.Contains(targetNamespaces, mizu.K8sAllNamespaces) {
 		namespacesStr = fmt.Sprintf("namespaces \"%s\"", strings.Join(targetNamespaces, "\", \""))
 	} else {
 		namespacesStr = "all namespaces"
@@ -85,7 +85,7 @@ func RunMizuTap() {
 
 	if len(state.currentlyTappedPods) == 0 {
 		var suggestionStr string
-		if targetNamespaces[0] != mizu.K8sAllNamespaces {
+		if !mizu.Contains(targetNamespaces, mizu.K8sAllNamespaces) {
 			suggestionStr = ". Select a different namespace with -n or tap all namespaces with -A"
 		}
 		mizu.Log.Warningf(uiUtils.Warning, fmt.Sprintf("Did not find any pods matching the regex argument%s", suggestionStr))
@@ -207,7 +207,11 @@ func getMizuApiFilteringOptions() (*shared.TrafficFilteringOptions, error) {
 		}
 	}
 
-	return &shared.TrafficFilteringOptions{PlainTextMaskingRegexes: compiledRegexSlice, HideHealthChecks: mizu.Config.Tap.HideHealthChecks, DisableRedaction: mizu.Config.Tap.DisableRedaction}, nil
+	return &shared.TrafficFilteringOptions{
+		PlainTextMaskingRegexes:      compiledRegexSlice,
+		HealthChecksUserAgentHeaders: mizu.Config.Tap.HealthChecksUserAgentHeaders,
+		DisableRedaction:             mizu.Config.Tap.DisableRedaction,
+	}, nil
 }
 
 func updateMizuTappers(ctx context.Context, kubernetesProvider *kubernetes.Provider, nodeToTappedPodIPMap map[string][]string) error {

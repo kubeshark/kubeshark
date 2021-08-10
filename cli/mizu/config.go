@@ -21,6 +21,8 @@ import (
 const (
 	Separator      = "="
 	SetCommandName = "set"
+	FieldNameTag   = "yaml"
+	ReadonlyTag    = "readonly"
 )
 
 var allowedSetFlags = []string{
@@ -31,6 +33,7 @@ var allowedSetFlags = []string{
 	KubeConfigPathName,
 	configStructs.AnalysisDestinationTapName,
 	configStructs.SleepIntervalSecTapName,
+	configStructs.IgnoredUserAgentsTapName,
 }
 
 var Config = ConfigStruct{}
@@ -69,6 +72,10 @@ func GetConfigWithDefaults() (string, error) {
 	if err := defaults.Set(&defaultConf); err != nil {
 		return "", err
 	}
+
+	configElem := reflect.ValueOf(&defaultConf).Elem()
+	setZeroForReadonlyFields(configElem)
+
 	return uiUtils.PrettyYaml(defaultConf)
 }
 
@@ -105,33 +112,44 @@ func initFlag(f *pflag.Flag) {
 	}
 
 	if f.Name == SetCommandName {
-		mergeSetFlag(sliceValue.GetSlice())
+		mergeSetFlag(configElem, sliceValue.GetSlice())
 		return
 	}
 
 	mergeFlagValues(configElem, f.Name, sliceValue.GetSlice())
 }
 
-func mergeSetFlag(setValues []string) {
-	configElem := reflect.ValueOf(&Config).Elem()
+func mergeSetFlag(configElem reflect.Value, setValues []string) {
+	setMap := map[string][]string{}
 
 	for _, setValue := range setValues {
 		if !strings.Contains(setValue, Separator) {
 			Log.Warningf(uiUtils.Warning, fmt.Sprintf("Ignoring set argument %s (set argument format: <flag name>=<flag value>)", setValue))
+			continue
 		}
 
 		split := strings.SplitN(setValue, Separator, 2)
 		if len(split) != 2 {
 			Log.Warningf(uiUtils.Warning, fmt.Sprintf("Ignoring set argument %s (set argument format: <flag name>=<flag value>)", setValue))
+			continue
 		}
 
 		argumentKey, argumentValue := split[0], split[1]
 
+		setMap[argumentKey] = append(setMap[argumentKey], argumentValue)
+	}
+
+	for argumentKey, argumentValues := range setMap {
 		if !Contains(allowedSetFlags, argumentKey) {
-			Log.Warningf(uiUtils.Warning, fmt.Sprintf("Ignoring set argument %s, flag name must be one of the following: \"%s\"", setValue, strings.Join(allowedSetFlags, "\", \"")))
+			Log.Warningf(uiUtils.Warning, fmt.Sprintf("Ignoring set argument name \"%s\", flag name must be one of the following: \"%s\"", argumentKey, strings.Join(allowedSetFlags, "\", \"")))
+			continue
 		}
 
-		mergeFlagValue(configElem, argumentKey, argumentValue)
+		if len(argumentValues) > 1 {
+			mergeFlagValues(configElem, argumentKey, argumentValues)
+		} else {
+			mergeFlagValue(configElem, argumentKey, argumentValues[0])
+		}
 	}
 }
 
@@ -139,21 +157,25 @@ func mergeFlagValue(currentElem reflect.Value, flagKey string, flagValue string)
 	for i := 0; i < currentElem.NumField(); i++ {
 		currentField := currentElem.Type().Field(i)
 		currentFieldByName := currentElem.FieldByName(currentField.Name)
+		currentFieldKind := currentField.Type.Kind()
 
-		if currentField.Type.Kind() == reflect.Struct {
+		if currentFieldKind == reflect.Struct {
 			mergeFlagValue(currentFieldByName, flagKey, flagValue)
 			continue
 		}
 
-		if currentField.Tag.Get("yaml") != flagKey {
+		if getFieldNameByTag(currentField) != flagKey {
 			continue
 		}
 
-		flagValueKind := currentField.Type.Kind()
+		if currentFieldKind == reflect.Slice {
+			mergeFlagValues(currentElem, flagKey, []string{flagValue})
+			return
+		}
 
-		parsedValue, err := getParsedValue(flagValueKind, flagValue)
+		parsedValue, err := getParsedValue(currentFieldKind, flagValue)
 		if err != nil {
-			Log.Warningf(uiUtils.Red, fmt.Sprintf("Invalid value %v for flag name %s, expected %s", flagValue, flagKey, flagValueKind))
+			Log.Warningf(uiUtils.Warning, fmt.Sprintf("Invalid value %s for flag name %s, expected %s", flagValue, flagKey, currentFieldKind))
 			return
 		}
 
@@ -165,14 +187,20 @@ func mergeFlagValues(currentElem reflect.Value, flagKey string, flagValues []str
 	for i := 0; i < currentElem.NumField(); i++ {
 		currentField := currentElem.Type().Field(i)
 		currentFieldByName := currentElem.FieldByName(currentField.Name)
+		currentFieldKind := currentField.Type.Kind()
 
-		if currentField.Type.Kind() == reflect.Struct {
+		if currentFieldKind == reflect.Struct {
 			mergeFlagValues(currentFieldByName, flagKey, flagValues)
 			continue
 		}
 
-		if currentField.Tag.Get("yaml") != flagKey {
+		if getFieldNameByTag(currentField) != flagKey {
 			continue
+		}
+
+		if currentFieldKind != reflect.Slice {
+			Log.Warningf(uiUtils.Warning, fmt.Sprintf("Invalid values %s for flag name %s, expected %s", strings.Join(flagValues, ","), flagKey, currentFieldKind))
+			return
 		}
 
 		flagValueKind := currentField.Type.Elem().Kind()
@@ -181,7 +209,7 @@ func mergeFlagValues(currentElem reflect.Value, flagKey string, flagValues []str
 		for _, flagValue := range flagValues {
 			parsedValue, err := getParsedValue(flagValueKind, flagValue)
 			if err != nil {
-				Log.Warningf(uiUtils.Red, fmt.Sprintf("Invalid value %v for flag name %s, expected %s", flagValue, flagKey, flagValueKind))
+				Log.Warningf(uiUtils.Warning, fmt.Sprintf("Invalid value %s for flag name %s, expected %s", flagValue, flagKey, flagValueKind))
 				return
 			}
 
@@ -190,6 +218,10 @@ func mergeFlagValues(currentElem reflect.Value, flagKey string, flagValues []str
 
 		currentFieldByName.Set(parsedValues)
 	}
+}
+
+func getFieldNameByTag(field reflect.StructField) string {
+	return strings.Split(field.Tag.Get(FieldNameTag), ",")[0]
 }
 
 func getParsedValue(kind reflect.Kind, value string) (reflect.Value, error) {
@@ -276,4 +308,20 @@ func getParsedValue(kind reflect.Kind, value string) (reflect.Value, error) {
 	}
 
 	return reflect.ValueOf(nil), errors.New("value to parse does not match type")
+}
+
+func setZeroForReadonlyFields(currentElem reflect.Value) {
+	for i := 0; i < currentElem.NumField(); i++ {
+		currentField := currentElem.Type().Field(i)
+		currentFieldByName := currentElem.FieldByName(currentField.Name)
+
+		if currentField.Type.Kind() == reflect.Struct {
+			setZeroForReadonlyFields(currentFieldByName)
+			continue
+		}
+
+		if _, ok := currentField.Tag.Lookup(ReadonlyTag); ok {
+			currentFieldByName.Set(reflect.Zero(currentField.Type))
+		}
+	}
 }

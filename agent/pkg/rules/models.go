@@ -3,6 +3,7 @@ package rules
 import (
 	"encoding/json"
 	"fmt"
+	"mizuserver/pkg/models"
 	"reflect"
 	"regexp"
 	"strings"
@@ -92,19 +93,35 @@ func MatchRequestPolicy(harEntry har.Entry, service string) (int, []RulesMatched
 	return len(enforcePolicy.Rules), resultPolicyToSend
 }
 
-func PassedValidationRules(rulesMatched []RulesMatched, numberOfRules int) (bool, int64) {
+func PassedValidationRules(rulesMatched []RulesMatched) models.ApplicableRules {
 	if len(rulesMatched) == 0 {
-		return false, 0
+		return models.ApplicableRules{
+			Status:        false,
+			Latency:       0,
+			NumberOfRules: 0,
+		}
 	}
 	for _, rule := range rulesMatched {
 		if rule.Matched == false {
-			return false, -1
+			return models.ApplicableRules{
+				Status:        false,
+				Latency:       -1,
+				NumberOfRules: len(rulesMatched),
+			}
 		}
 	}
 	for _, rule := range rulesMatched {
 		if strings.ToLower(rule.Rule.Type) == "latency" {
-			return true, rule.Rule.Latency
+			return models.ApplicableRules{
+				Status:        true,
+				Latency:       rule.Rule.Latency,
+				NumberOfRules: len(rulesMatched),
+			}
 		}
 	}
-	return true, -1
+	return models.ApplicableRules{
+		Status:        true,
+		Latency:       -1,
+		NumberOfRules: len(rulesMatched),
+	}
 }
