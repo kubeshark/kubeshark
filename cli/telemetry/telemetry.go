@@ -8,6 +8,7 @@ import (
 	"github.com/up9inc/mizu/cli/kubernetes"
 	"github.com/up9inc/mizu/cli/logger"
 	"github.com/up9inc/mizu/cli/mizu"
+	"io/ioutil"
 	"net/http"
 )
 
@@ -19,7 +20,7 @@ func ReportRun(cmd string, args interface{}) {
 	}
 
 	argsBytes, _ := json.Marshal(args)
-	argsMap := map[string]string {
+	argsMap := map[string]interface{}{
 		"telemetry_type": "execution",
 		"cmd":            cmd,
 		"args":           string(argsBytes),
@@ -28,7 +29,6 @@ func ReportRun(cmd string, args interface{}) {
 		"Branch":         mizu.Branch,
 		"version":        mizu.SemVer,
 	}
-	argsMap["message"] = fmt.Sprintf("mizu %v - %v", argsMap["cmd"], string(argsBytes))
 
 	if err := sentTelemetry(argsMap); err != nil {
 		logger.Log.Debugf("%v", err)
@@ -55,12 +55,29 @@ func ReportEntriesCount(mizuPort uint16) {
 		return
 	}
 
-	argsMap := map[string]string {
-		"telemetry_type": "execution",
-		"component":      "mizu_cli",
-		"BuildTimestamp": mizu.BuildTimestamp,
-		"Branch":         mizu.Branch,
-		"version":        mizu.SemVer,
+	defer func() { _ = response.Body.Close() }()
+
+	data, readErr := ioutil.ReadAll(response.Body)
+	if readErr != nil {
+		logger.Log.Debugf("failed to read general stats for telemetry, err: %v", readErr)
+		return
+	}
+
+	var generalStats map[string]interface{}
+	if parseErr := json.Unmarshal(data, &generalStats); parseErr != nil {
+		logger.Log.Debugf("failed to parse general stats for telemetry, err: %v", parseErr)
+		return
+	}
+
+	argsMap := map[string]interface{}{
+		"telemetry_type":        "APICalls",
+		"component":             "mizu_cli",
+		"Count":                 generalStats["EntriesCount"],
+		"FirstAPICallTimestamp": generalStats["FirstEntryTimestamp"],
+		"LastAPICallTimestamp":  generalStats["LastEntryTimestamp"],
+		"BuildTimestamp":        mizu.BuildTimestamp,
+		"Branch":                mizu.Branch,
+		"version":               mizu.SemVer,
 	}
 
 	if err := sentTelemetry(argsMap); err != nil {
@@ -68,7 +85,7 @@ func ReportEntriesCount(mizuPort uint16) {
 		return
 	}
 
-	logger.Log.Debugf("successfully reported telemetry of entries count")
+	logger.Log.Debugf("successfully reported telemetry of api calls")
 }
 
 func shouldRunTelemetry() bool {
@@ -83,7 +100,7 @@ func shouldRunTelemetry() bool {
 	return true
 }
 
-func sentTelemetry(argsMap map[string]string) error {
+func sentTelemetry(argsMap map[string]interface{}) error {
 	jsonValue, _ := json.Marshal(argsMap)
 
 	if resp, err := http.Post(telemetryUrl, "application/json", bytes.NewBuffer(jsonValue)); err != nil {
