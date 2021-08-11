@@ -2,7 +2,7 @@ package config
 
 import (
 	"fmt"
-	configStructs2 "github.com/up9inc/mizu/cli/config/configStructs"
+	"github.com/up9inc/mizu/cli/config/configStructs"
 	"github.com/up9inc/mizu/cli/mizu"
 )
 
@@ -15,15 +15,15 @@ const (
 )
 
 type ConfigStruct struct {
-	Tap                    configStructs2.TapConfig     `yaml:"tap"`
-	Fetch                  configStructs2.FetchConfig   `yaml:"fetch"`
-	Version                configStructs2.VersionConfig `yaml:"version"`
-	View                   configStructs2.ViewConfig    `yaml:"view"`
-	AgentImage             string                       `yaml:"agent-image,omitempty" readonly:""`
-	MizuResourcesNamespace string                       `yaml:"mizu-resources-namespace" default:"mizu"`
-	Telemetry              bool                         `yaml:"telemetry" default:"true"`
-	DumpLogs               bool                         `yaml:"dump-logs" default:"false"`
-	KubeConfigPath         string                       `yaml:"kube-config-path" default:""`
+	Tap                    configStructs.TapConfig     `yaml:"tap"`
+	Fetch                  configStructs.FetchConfig   `yaml:"fetch"`
+	Version                configStructs.VersionConfig `yaml:"version"`
+	View                   configStructs.ViewConfig    `yaml:"view"`
+	AgentImage             string                      `yaml:"agent-image,omitempty" readonly:""`
+	MizuResourcesNamespace string                      `yaml:"mizu-resources-namespace" default:"mizu"`
+	Telemetry              bool                        `yaml:"telemetry" default:"true"`
+	DumpLogs               bool                        `yaml:"dump-logs" default:"false"`
+	KubeConfigPath         string                      `yaml:"kube-config-path" default:""`
 }
 
 func (config *ConfigStruct) SetDefaults() {
