@@ -17,21 +17,17 @@ const telemetryUrl = "https://us-east4-up9-prod.cloudfunctions.net/mizu-telemetr
 func ReportRun(cmd string, args interface{}) {
 	if !shouldRunTelemetry() {
 		logger.Log.Debugf("not reporting telemetry")
+		return
 	}
 
 	argsBytes, _ := json.Marshal(args)
 	argsMap := map[string]interface{}{
-		"telemetryType":  "Execution",
-		"component":      "mizu_cli",
-		"buildTimestamp": mizu.BuildTimestamp,
-		"branch":         mizu.Branch,
-		"version":        mizu.SemVer,
-		"cmd":            cmd,
-		"args":           string(argsBytes),
+		"cmd":  cmd,
+		"args": string(argsBytes),
 	}
 
-	if err := sendTelemetry(argsMap); err != nil {
-		logger.Log.Debugf("%v", err)
+	if err := sendTelemetry("Execution", argsMap); err != nil {
+		logger.Log.Debug(err)
 		return
 	}
 
@@ -41,6 +37,7 @@ func ReportRun(cmd string, args interface{}) {
 func ReportAPICalls(mizuPort uint16) {
 	if !shouldRunTelemetry() {
 		logger.Log.Debugf("not reporting telemetry")
+		return
 	}
 
 	mizuProxiedUrl := kubernetes.GetMizuApiServerProxiedHostAndPath(mizuPort)
@@ -48,10 +45,10 @@ func ReportAPICalls(mizuPort uint16) {
 
 	response, requestErr := http.Get(generalStatsUrl)
 	if requestErr != nil {
-		logger.Log.Debugf("failed to get general stats for telemetry, err: %v", requestErr)
+		logger.Log.Debugf("ERROR: failed to get general stats for telemetry, err: %v", requestErr)
 		return
 	} else if response.StatusCode != 200 {
-		logger.Log.Debugf("failed to get general stats for telemetry, status code: %v", response.StatusCode)
+		logger.Log.Debugf("ERROR: failed to get general stats for telemetry, status code: %v", response.StatusCode)
 		return
 	}
 
@@ -59,29 +56,24 @@ func ReportAPICalls(mizuPort uint16) {
 
 	data, readErr := ioutil.ReadAll(response.Body)
 	if readErr != nil {
-		logger.Log.Debugf("failed to read general stats for telemetry, err: %v", readErr)
+		logger.Log.Debugf("ERROR: failed to read general stats for telemetry, err: %v", readErr)
 		return
 	}
 
 	var generalStats map[string]interface{}
 	if parseErr := json.Unmarshal(data, &generalStats); parseErr != nil {
-		logger.Log.Debugf("failed to parse general stats for telemetry, err: %v", parseErr)
+		logger.Log.Debugf("ERROR: failed to parse general stats for telemetry, err: %v", parseErr)
 		return
 	}
 
 	argsMap := map[string]interface{}{
-		"telemetryType":         "APICalls",
-		"component":             "mizu_cli",
-		"buildTimestamp":        mizu.BuildTimestamp,
-		"branch":                mizu.Branch,
-		"version":               mizu.SemVer,
 		"apiCallsCount":         generalStats["EntriesCount"],
 		"firstAPICallTimestamp": generalStats["FirstEntryTimestamp"],
 		"lastAPICallTimestamp":  generalStats["LastEntryTimestamp"],
 	}
 
-	if err := sendTelemetry(argsMap); err != nil {
-		logger.Log.Debugf("%v", err)
+	if err := sendTelemetry("APICalls", argsMap); err != nil {
+		logger.Log.Debug(err)
 		return
 	}
 
@@ -100,11 +92,17 @@ func shouldRunTelemetry() bool {
 	return true
 }
 
-func sendTelemetry(argsMap map[string]interface{}) error {
+func sendTelemetry(telemetryType string, argsMap map[string]interface{}) error {
+	argsMap["telemetryType"] = telemetryType
+	argsMap["component"] = "mizu_cli"
+	argsMap["buildTimestamp"] = mizu.BuildTimestamp
+	argsMap["branch"] = mizu.Branch
+	argsMap["version"] = mizu.SemVer
+
 	jsonValue, _ := json.Marshal(argsMap)
 
 	if resp, err := http.Post(telemetryUrl, "application/json", bytes.NewBuffer(jsonValue)); err != nil {
-		return fmt.Errorf("error sending telemetry err: %v, response %v", err, resp)
+		return fmt.Errorf("ERROR: failed sending telemetry, err: %v, response %v", err, resp)
 	}
 
 	return nil

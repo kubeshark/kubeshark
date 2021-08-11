@@ -11,13 +11,7 @@ type GeneralStats struct {
 	LastEntryTimestamp  int
 }
 
-var (
-	generalStats GeneralStats
-)
-
-func init() {
-	generalStats = GeneralStats{}
-}
+var generalStats = GeneralStats{}
 
 func ResetGeneralStats() {
 	generalStats = GeneralStats{}
