@@ -21,16 +21,16 @@ func ReportRun(cmd string, args interface{}) {
 
 	argsBytes, _ := json.Marshal(args)
 	argsMap := map[string]interface{}{
-		"telemetry_type": "execution",
+		"telemetryType":  "Execution",
+		"component":      "mizu_cli",
+		"buildTimestamp": mizu.BuildTimestamp,
+		"branch":         mizu.Branch,
+		"version":        mizu.SemVer,
 		"cmd":            cmd,
 		"args":           string(argsBytes),
-		"component":      "mizu_cli",
-		"BuildTimestamp": mizu.BuildTimestamp,
-		"Branch":         mizu.Branch,
-		"version":        mizu.SemVer,
 	}
 
-	if err := sentTelemetry(argsMap); err != nil {
+	if err := sendTelemetry(argsMap); err != nil {
 		logger.Log.Debugf("%v", err)
 		return
 	}
@@ -38,7 +38,7 @@ func ReportRun(cmd string, args interface{}) {
 	logger.Log.Debugf("successfully reported telemetry for cmd %v", cmd)
 }
 
-func ReportEntriesCount(mizuPort uint16) {
+func ReportAPICalls(mizuPort uint16) {
 	if !shouldRunTelemetry() {
 		logger.Log.Debugf("not reporting telemetry")
 	}
@@ -70,17 +70,17 @@ func ReportEntriesCount(mizuPort uint16) {
 	}
 
 	argsMap := map[string]interface{}{
-		"telemetry_type":        "APICalls",
+		"telemetryType":         "APICalls",
 		"component":             "mizu_cli",
-		"Count":                 generalStats["EntriesCount"],
-		"FirstAPICallTimestamp": generalStats["FirstEntryTimestamp"],
-		"LastAPICallTimestamp":  generalStats["LastEntryTimestamp"],
-		"BuildTimestamp":        mizu.BuildTimestamp,
-		"Branch":                mizu.Branch,
+		"buildTimestamp":        mizu.BuildTimestamp,
+		"branch":                mizu.Branch,
 		"version":               mizu.SemVer,
+		"apiCallsCount":         generalStats["EntriesCount"],
+		"firstAPICallTimestamp": generalStats["FirstEntryTimestamp"],
+		"lastAPICallTimestamp":  generalStats["LastEntryTimestamp"],
 	}
 
-	if err := sentTelemetry(argsMap); err != nil {
+	if err := sendTelemetry(argsMap); err != nil {
 		logger.Log.Debugf("%v", err)
 		return
 	}
@@ -100,7 +100,7 @@ func shouldRunTelemetry() bool {
 	return true
 }
 
-func sentTelemetry(argsMap map[string]interface{}) error {
+func sendTelemetry(argsMap map[string]interface{}) error {
 	jsonValue, _ := json.Marshal(argsMap)
 
 	if resp, err := http.Post(telemetryUrl, "application/json", bytes.NewBuffer(jsonValue)); err != nil {

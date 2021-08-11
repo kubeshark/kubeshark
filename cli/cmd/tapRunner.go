@@ -251,7 +251,7 @@ func updateMizuTappers(ctx context.Context, kubernetesProvider *kubernetes.Provi
 }
 
 func cleanUpMizu(kubernetesProvider *kubernetes.Provider) {
-	telemetry.ReportEntriesCount(config.Config.Tap.GuiPort)
+	telemetry.ReportAPICalls(config.Config.Tap.GuiPort)
 	cleanUpMizuResources(kubernetesProvider)
 }
 
