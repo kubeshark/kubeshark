@@ -5,6 +5,7 @@ import spinner from './assets/spinner.svg';
 import ScrollableFeed from "react-scrollable-feed";
 import {StatusType} from "./HarFilters";
 import Api from "../helpers/api";
+import uninon from "./assets/union.svg";
 
 interface HarEntriesListProps {
     entries: any[];
@@ -31,7 +32,7 @@ enum FetchOperator {
 
 const api = new Api();
 
-export const HarEntriesList: React.FC<HarEntriesListProps> = ({entries, setEntries, focusedEntryId, setFocusedEntryId, connectionOpen, noMoreDataTop, setNoMoreDataTop, noMoreDataBottom, setNoMoreDataBottom, methodsFilter, statusFilter, pathFilter}) => {
+export const HarEntriesList: React.FC<HarEntriesListProps> = ({entries, setEntries, focusedEntryId, setFocusedEntryId, connectionOpen, noMoreDataTop, setNoMoreDataTop, noMoreDataBottom, setNoMoreDataBottom, methodsFilter, statusFilter, pathFilter, listEntryREF, onScrollEvent, scrollableList}) => {
 
     const [loadMoreTop, setLoadMoreTop] = useState(false);
     const [isLoadingTop, setIsLoadingTop] = useState(false);

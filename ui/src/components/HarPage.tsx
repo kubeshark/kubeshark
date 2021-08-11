@@ -60,6 +60,8 @@ export const HarPage: React.FC<HarPageProps> = ({setAnalyzeStatus, onTLSDetected
 
     const [tappingStatus, setTappingStatus] = useState(null);
 
+    const [disableScrollList, setDisableScrollList] = useState(false);
+
     const ws = useRef(null);
 
     const listEntry = useRef(null);
