@@ -14,6 +14,7 @@ var fetchCmd = &cobra.Command{
 	Short: "Download recorded traffic to files",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		go telemetry.ReportRun("fetch", config.Config.Fetch)
+
 		if isCompatible, err := version.CheckVersionCompatibility(config.Config.Fetch.GuiPort); err != nil {
 			return err
 		} else if !isCompatible {

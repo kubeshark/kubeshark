@@ -18,6 +18,7 @@ var versionCmd = &cobra.Command{
 	Short: "Print version info",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		go telemetry.ReportRun("version", config.Config.Version)
+
 		if config.Config.Version.DebugInfo {
 			timeStampInt, _ := strconv.ParseInt(mizu.BuildTimestamp, 10, 0)
 			logger.Log.Infof("Version: %s \nBranch: %s (%s)", mizu.SemVer, mizu.Branch, mizu.GitCommitHash)

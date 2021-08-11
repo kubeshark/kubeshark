@@ -67,3 +67,4 @@ clean-docker:
 
 test: ## Run tests.
 	@echo "running cli tests"; cd cli && $(MAKE) test
+	@echo "running agent tests"; cd agent && $(MAKE) test

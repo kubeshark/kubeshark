@@ -11,6 +11,7 @@ import (
 	"github.com/up9inc/mizu/cli/mizu/fsUtils"
 	"github.com/up9inc/mizu/cli/mizu/goUtils"
 	"github.com/up9inc/mizu/cli/mizu/version"
+	"github.com/up9inc/mizu/cli/telemetry"
 	"net/http"
 	"net/url"
 	"os"
@@ -100,7 +101,7 @@ func RunMizuTap() {
 
 	nodeToTappedPodIPMap := getNodeHostToTappedPodIpsMap(state.currentlyTappedPods)
 
-	defer cleanUpMizuResources(kubernetesProvider)
+	defer cleanUpMizu(kubernetesProvider)
 	if err := createMizuResources(ctx, kubernetesProvider, nodeToTappedPodIPMap, mizuApiFilteringOptions, mizuValidationRules); err != nil {
 		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error creating resources: %v", errormessage.FormatError(err)))
 		return
@@ -249,8 +250,12 @@ func updateMizuTappers(ctx context.Context, kubernetesProvider *kubernetes.Provi
 	return nil
 }
 
-func cleanUpMizuResources(kubernetesProvider *kubernetes.Provider) {
+func cleanUpMizu(kubernetesProvider *kubernetes.Provider) {
+	telemetry.ReportEntriesCount(config.Config.Tap.GuiPort)
+	cleanUpMizuResources(kubernetesProvider)
+}
 
+func cleanUpMizuResources(kubernetesProvider *kubernetes.Provider) {
 	removalCtx, cancel := context.WithTimeout(context.Background(), cleanupTimeout)
 	defer cancel()
 
