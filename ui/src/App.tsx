@@ -11,7 +11,7 @@ import Api from "./helpers/api";
 
 const useStyles = makeStyles(() => ({
     tooltip: {
-        backgroundColor: "#386aaa8dc",
+        backgroundColor: "#3868dc",
         color: "white",
         fontSize: 13,
     },
