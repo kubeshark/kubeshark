@@ -116,7 +116,8 @@ To generate a new config file with default values use `mizu config -r`
 
 ### Telemetry
 
-By default, mizu reports usage telemetry. It can be disabled by adding a line of telemetry: false in the ${HOME}/.mizu/config.yaml file
+By default, mizu reports usage telemetry. It can be disabled by adding a line of `telemetry: false` in the `${HOME}/.mizu/config.yaml` file
+
 
 ## Advanced Usage
 
@@ -135,14 +136,22 @@ Setting `mizu-resources-namespace=mizu` resets Mizu to its default behavior
 
 ### User agent filtering
 
-User-agent filtering (like health checks) - can be configured:
+User-agent filtering (like health checks) - can be configured using command-line options:
 
-Any request that contains one of those values in the user-agent header will not be captured
-
-```bash
+```shell
 $ mizu tap "^ca.*" --set ignored-user-agents=kube-probe --set ignored-user-agents=prometheus
 +carts-66c77f5fbb-fq65r
 +catalogue-5f4cb7cf5-7zrmn
 Web interface is now available at http://localhost:8899
 ^C
+
 ```
+Any request that contains `User-Agent` header with one of the specified values (`kube-probe` or `prometheus`) will not be captured
+
+### API Rules validation
+
+This feature allows you to define set of simple rules, and test the API against them.
+Such validation may test response for specific JSON fields, headers, etc.
+
+Please see [API RULES](docs/POLICY_RULES.md) page for more details and syntax.
+
