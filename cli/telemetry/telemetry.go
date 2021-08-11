@@ -18,8 +18,8 @@ func ReportRun(cmd string, args interface{}) {
 		return
 	}
 
-	if Branch != "main" && Branch != "develop" {
-		Log.Debugf("not reporting telemetry on private branches")
+	if mizu.Branch != "main" && mizu.Branch != "develop" {
+		logger.Log.Debugf("not reporting telemetry on private branches")
 	}
 
 	argsBytes, _ := json.Marshal(args)
