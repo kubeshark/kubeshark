@@ -27,7 +27,7 @@ type ConfigStruct struct {
 }
 
 func (config *ConfigStruct) SetDefaults() {
-    config.AgentImage = fmt.Sprintf(“gcr.io/up9-docker-hub/mizu/%s:%s”, mizu.Branch, mizu.SemVer)
+	config.AgentImage = fmt.Sprintf("gcr.io/up9-docker-hub/mizu/%s:%s", mizu.Branch, mizu.SemVer)
 }
 
 func (config *ConfigStruct) IsNsRestrictedMode() bool {
