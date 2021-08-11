@@ -7,6 +7,7 @@ import (
 	"github.com/up9inc/mizu/cli/kubernetes"
 	"github.com/up9inc/mizu/cli/logger"
 	"github.com/up9inc/mizu/cli/mizu/fsUtils"
+	"github.com/up9inc/mizu/cli/telemetry"
 	"os"
 	"path"
 )
@@ -17,6 +18,8 @@ var logsCmd = &cobra.Command{
 	Use:   "logs",
 	Short: "Create a zip file with logs for Github issue or troubleshoot",
 	RunE: func(cmd *cobra.Command, args []string) error {
+		go telemetry.ReportRun("logs", config.Config)
+
 		kubernetesProvider, err := kubernetes.NewProvider(config.Config.View.KubeConfigPath)
 		if err != nil {
 			return nil
