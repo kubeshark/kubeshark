@@ -7,11 +7,7 @@ import (
 )
 
 const (
-	AgentImageConfigName             = "agent-image"
 	MizuResourcesNamespaceConfigName = "mizu-resources-namespace"
-	TelemetryConfigName              = "telemetry"
-	DumpLogsConfigName               = "dump-logs"
-	KubeConfigPathName               = "kube-config-path"
 )
 
 type ConfigStruct struct {
