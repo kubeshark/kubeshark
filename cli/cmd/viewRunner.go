@@ -3,46 +3,49 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"github.com/up9inc/mizu/cli/config"
 	"github.com/up9inc/mizu/cli/kubernetes"
+	"github.com/up9inc/mizu/cli/logger"
 	"github.com/up9inc/mizu/cli/mizu"
+	"github.com/up9inc/mizu/cli/mizu/version"
 	"net/http"
 )
 
 func runMizuView() {
-	kubernetesProvider, err := kubernetes.NewProvider(mizu.Config.View.KubeConfigPath)
+	kubernetesProvider, err := kubernetes.NewProvider(config.Config.View.KubeConfigPath)
 	if err != nil {
-		mizu.Log.Error(err)
+		logger.Log.Error(err)
 		return
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	exists, err := kubernetesProvider.DoesServicesExist(ctx, mizu.Config.MizuResourcesNamespace, mizu.ApiServerPodName)
+	exists, err := kubernetesProvider.DoesServicesExist(ctx, config.Config.MizuResourcesNamespace, mizu.ApiServerPodName)
 	if err != nil {
-		mizu.Log.Errorf("Failed to found mizu service %v", err)
+		logger.Log.Errorf("Failed to found mizu service %v", err)
 		cancel()
 		return
 	}
 	if !exists {
-		mizu.Log.Infof("%s service not found, you should run `mizu tap` command first", mizu.ApiServerPodName)
+		logger.Log.Infof("%s service not found, you should run `mizu tap` command first", mizu.ApiServerPodName)
 		cancel()
 		return
 	}
 
-	mizuProxiedUrl := kubernetes.GetMizuApiServerProxiedHostAndPath(mizu.Config.View.GuiPort)
+	mizuProxiedUrl := kubernetes.GetMizuApiServerProxiedHostAndPath(config.Config.View.GuiPort)
 	_, err = http.Get(fmt.Sprintf("http://%s/", mizuProxiedUrl))
 	if err == nil {
-		mizu.Log.Infof("Found a running service %s and open port %d", mizu.ApiServerPodName, mizu.Config.View.GuiPort)
+		logger.Log.Infof("Found a running service %s and open port %d", mizu.ApiServerPodName, config.Config.View.GuiPort)
 		return
 	}
-	mizu.Log.Debugf("Found service %s, creating k8s proxy", mizu.ApiServerPodName)
+	logger.Log.Debugf("Found service %s, creating k8s proxy", mizu.ApiServerPodName)
 
 	go startProxyReportErrorIfAny(kubernetesProvider, cancel)
 
-	mizu.Log.Infof("Mizu is available at  http://%s\n", kubernetes.GetMizuApiServerProxiedHostAndPath(mizu.Config.View.GuiPort))
-	if isCompatible, err := mizu.CheckVersionCompatibility(mizu.Config.View.GuiPort); err != nil {
-		mizu.Log.Errorf("Failed to check versions compatibility %v", err)
+	logger.Log.Infof("Mizu is available at  http://%s\n", kubernetes.GetMizuApiServerProxiedHostAndPath(config.Config.View.GuiPort))
+	if isCompatible, err := version.CheckVersionCompatibility(config.Config.View.GuiPort); err != nil {
+		logger.Log.Errorf("Failed to check versions compatibility %v", err)
 		cancel()
 		return
 	} else if !isCompatible {

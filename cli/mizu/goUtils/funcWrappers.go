@@ -1,7 +1,7 @@
 package goUtils
 
 import (
-	"github.com/up9inc/mizu/cli/mizu"
+	"github.com/up9inc/mizu/cli/logger"
 	"reflect"
 	"runtime/debug"
 )
@@ -10,7 +10,7 @@ func HandleExcWrapper(fn interface{}, params ...interface{}) (result []reflect.V
 	defer func() {
 		if panicMessage := recover(); panicMessage != nil {
 			stack := debug.Stack()
-			mizu.Log.Fatalf("Unhandled panic: %v\n stack: %s", panicMessage, stack)
+			logger.Log.Fatalf("Unhandled panic: %v\n stack: %s", panicMessage, stack)
 		}
 	}()
 	f := reflect.ValueOf(fn)

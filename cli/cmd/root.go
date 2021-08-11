@@ -3,8 +3,10 @@ package cmd
 import (
 	"fmt"
 	"github.com/spf13/cobra"
-	"github.com/up9inc/mizu/cli/fsUtils"
+	"github.com/up9inc/mizu/cli/config"
+	"github.com/up9inc/mizu/cli/logger"
 	"github.com/up9inc/mizu/cli/mizu"
+	"github.com/up9inc/mizu/cli/mizu/fsUtils"
 )
 
 var rootCmd = &cobra.Command{
@@ -14,11 +16,11 @@ var rootCmd = &cobra.Command{
 Further info is available at https://github.com/up9inc/mizu`,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		if err := fsUtils.EnsureDir(mizu.GetMizuFolderPath()); err != nil {
-			mizu.Log.Errorf("Failed to use mizu folder, %v", err)
+			logger.Log.Errorf("Failed to use mizu folder, %v", err)
 		}
-		mizu.InitLogger()
-		if err := mizu.InitConfig(cmd); err != nil {
-			mizu.Log.Fatal(err)
+		logger.InitLogger()
+		if err := config.InitConfig(cmd); err != nil {
+			logger.Log.Fatal(err)
 		}
 
 		return nil
@@ -26,7 +28,7 @@ Further info is available at https://github.com/up9inc/mizu`,
 }
 
 func init() {
-	rootCmd.PersistentFlags().StringSlice(mizu.SetCommandName, []string{}, fmt.Sprintf("Override values using --%s", mizu.SetCommandName))
+	rootCmd.PersistentFlags().StringSlice(config.SetCommandName, []string{}, fmt.Sprintf("Override values using --%s", config.SetCommandName))
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.

@@ -1,9 +1,9 @@
-package mizu
+package config
 
 import (
 	"fmt"
-
-	"github.com/up9inc/mizu/cli/mizu/configStructs"
+	"github.com/up9inc/mizu/cli/config/configStructs"
+	"github.com/up9inc/mizu/cli/mizu"
 )
 
 const (
@@ -27,7 +27,7 @@ type ConfigStruct struct {
 }
 
 func (config *ConfigStruct) SetDefaults() {
-	config.AgentImage = fmt.Sprintf("gcr.io/up9-docker-hub/mizu/%s:%s", Branch, SemVer)
+	config.AgentImage = fmt.Sprintf("gcr.io/up9-docker-hub/mizu/%s:%s", mizu.Branch, mizu.SemVer)
 }
 
 func (config *ConfigStruct) IsNsRestrictedMode() bool {
