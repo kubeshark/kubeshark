@@ -110,7 +110,7 @@ export const HarEntriesList: React.FC<HarEntriesListProps> = ({entries, setEntri
 
     return <>
             <div className={styles.list}>
-                <div id="list" className={styles.list}>
+                <div id="list" ref={listEntryREF} className={styles.list}>
                     {isLoadingTop && <div className={styles.spinnerContainer}>
                         <img alt="spinner" src={spinner} style={{height: 25}}/>
                     </div>}
