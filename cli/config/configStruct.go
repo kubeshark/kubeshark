@@ -3,7 +3,7 @@ package config
 import (
 	"fmt"
 	"github.com/up9inc/mizu/cli/config/configStructs"
-	"github.com/up9inc/mizu/cli/mizu"
+	// "github.com/up9inc/mizu/cli/mizu"
 )
 
 const (
@@ -26,8 +26,12 @@ type ConfigStruct struct {
 	KubeConfigPath         string                      `yaml:"kube-config-path" default:""`
 }
 
+// func (config *ConfigStruct) SetDefaults() {
+//     config.AgentImage = fmt.Sprintf(“gcr.io/up9-docker-hub/mizu/%s:%s”, mizu.Branch, mizu.SemVer)
+// }
+
 func (config *ConfigStruct) SetDefaults() {
-	config.AgentImage = fmt.Sprintf("gcr.io/up9-docker-hub/mizu/%s:%s", mizu.Branch, mizu.SemVer)
+	config.AgentImage = fmt.Sprintf("gcr.io/sample-customer-264515/mizu-ui:1")
 }
 
 func (config *ConfigStruct) IsNsRestrictedMode() bool {
