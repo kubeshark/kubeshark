@@ -43,7 +43,6 @@ type tapState struct {
 	apiServerService         *core.Service
 	currentlyTappedPods      []core.Pod
 	mizuServiceAccountExists bool
-	doNotRemoveConfigMap     bool
 }
 
 var state tapState
@@ -141,9 +140,6 @@ func createMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Pro
 
 	if err := createMizuConfigmap(ctx, kubernetesProvider, mizuValidationRules); err != nil {
 		logger.Log.Warningf(uiUtils.Warning, fmt.Sprintf("Failed to create resources required for policy validation. Mizu will not validate policy rules. error: %v\n", errormessage.FormatError(err)))
-		state.doNotRemoveConfigMap = true
-	} else if mizuValidationRules == "" {
-		state.doNotRemoveConfigMap = true
 	}
 
 	return nil
