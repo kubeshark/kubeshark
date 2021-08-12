@@ -22,8 +22,6 @@ export const RestEntryDetailsTitle: React.FC<any> = ({entryData}) => {
         <div style={{margin: "0 18px", opacity: 0.5}}>{formatSize(bodySize)}</div>
         <div style={{marginRight: 18, opacity: 0.5}}>{status} {statusText}</div>
         <div style={{marginRight: 18, opacity: 0.5}}>{Math.round(receive)}ms</div>
-        <div style={{opacity: 0.5}}>{'rulesMatched' in entries[0] ? entries[0].rulesMatched?.length : '0'} Rules
-            Applied
-        </div>
+        <div style={{opacity: 0.5}}>{'rulesMatched' in entries[0] ? entries[0].rulesMatched?.length : '0'} Rules Applied</div>
     </>
 }

@@ -15,7 +15,8 @@ export interface BaseEntry {
 
 interface Rules {
     status: boolean;
-    latency: number
+    latency: number;
+    numberOfRules: number;
 }
 
 interface EntryProps {
@@ -31,12 +32,27 @@ export enum EntryType {
 
 export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntry, isSelected}) => {
 
-    let backgroundColor = "";
-    if ('latency' in entry.rules) {
+    let additionalRulesProperties = "";
+    let rule = 'latency' in entry.rules
+    if (rule) {
         if (entry.rules.latency !== -1) {
-            backgroundColor = entry.rules.latency >= entry.latency ? styles.ruleSuccessRow : styles.ruleFailureRow
+            if (entry.rules.latency >= entry.latency) {
+                additionalRulesProperties = styles.ruleSuccessRow
+            } else {
+                additionalRulesProperties = styles.ruleFailureRow
+            }
+            if (isSelected) {
+                additionalRulesProperties += ` ${entry.rules.latency >= entry.latency ? styles.ruleSuccessRowSelected : styles.ruleFailureRowSelected}`
+            }
         } else {
-            backgroundColor = entry.rules.status ? styles.ruleSuccessRow : styles.ruleFailureRow
+            if (entry.rules.status) {
+                additionalRulesProperties = styles.ruleSuccessRow
+            } else {
+                additionalRulesProperties = styles.ruleFailureRow
+            }
+            if (isSelected) {
+                additionalRulesProperties += ` ${entry.rules.status ? styles.ruleSuccessRowSelected : styles.ruleFailureRowSelected}`
+            }
         }
     }
 
@@ -72,7 +88,7 @@ export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntry, isSelec
     }
 
     return <>
-        <div id={entry.id} className={`${styles.row} ${isSelected ? styles.rowSelected : backgroundColor}`}
+        <div id={entry.id} className={`${styles.row} ${isSelected ? styles.rowSelected : additionalRulesProperties}`}
              onClick={() => setFocusedEntry(entry)}>
             {entryIcon(entry) && <div style={{width: 80}}>{<img className={styles.icon} alt="icon" src={entryIcon(entry)}/>}</div>}
             {entryContent(entry)}

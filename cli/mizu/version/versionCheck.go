@@ -1,9 +1,11 @@
-package mizu
+package version
 
 import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/up9inc/mizu/cli/logger"
+	"github.com/up9inc/mizu/cli/mizu"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -41,22 +43,22 @@ func CheckVersionCompatibility(port uint16) (bool, error) {
 		return false, err
 	}
 
-	if semver.SemVersion(apiSemVer).Major() == semver.SemVersion(SemVer).Major() &&
-		semver.SemVersion(apiSemVer).Minor() == semver.SemVersion(SemVer).Minor() {
+	if semver.SemVersion(apiSemVer).Major() == semver.SemVersion(mizu.SemVer).Major() &&
+		semver.SemVersion(apiSemVer).Minor() == semver.SemVersion(mizu.SemVer).Minor() {
 		return true, nil
 	}
 
-	Log.Errorf(uiUtils.Red, fmt.Sprintf("cli version (%s) is not compatible with api version (%s)", SemVer, apiSemVer))
+	logger.Log.Errorf(uiUtils.Red, fmt.Sprintf("cli version (%s) is not compatible with api version (%s)", mizu.SemVer, apiSemVer))
 	return false, nil
 }
 
 func CheckNewerVersion() {
-	Log.Debugf("Checking for newer version...")
+	logger.Log.Debugf("Checking for newer version...")
 	start := time.Now()
 	client := github.NewClient(nil)
 	latestRelease, _, err := client.Repositories.GetLatestRelease(context.Background(), "up9inc", "mizu")
 	if err != nil {
-		Log.Debugf("[ERROR] Failed to get latest release")
+		logger.Log.Debugf("[ERROR] Failed to get latest release")
 		return
 	}
 
@@ -68,26 +70,26 @@ func CheckNewerVersion() {
 		}
 	}
 	if versionFileUrl == "" {
-		Log.Debugf("[ERROR] Version file not found in the latest release")
+		logger.Log.Debugf("[ERROR] Version file not found in the latest release")
 		return
 	}
 
 	res, err := http.Get(versionFileUrl)
 	if err != nil {
-		Log.Debugf("[ERROR] Failed to get the version file %v", err)
+		logger.Log.Debugf("[ERROR] Failed to get the version file %v", err)
 		return
 	}
 
 	data, err := ioutil.ReadAll(res.Body)
 	res.Body.Close()
 	if err != nil {
-		Log.Debugf("[ERROR] Failed to read the version file -> %v", err)
+		logger.Log.Debugf("[ERROR] Failed to read the version file -> %v", err)
 		return
 	}
 	gitHubVersion := string(data)
 	gitHubVersion = gitHubVersion[:len(gitHubVersion)-1]
-	Log.Debugf("Finished version validation, took %v", time.Since(start))
-	if SemVer < gitHubVersion {
-		Log.Infof(uiUtils.Yellow, fmt.Sprintf("Update available! %v -> %v (%v)", SemVer, gitHubVersion, *latestRelease.HTMLURL))
+	logger.Log.Debugf("Finished version validation, took %v", time.Since(start))
+	if mizu.SemVer < gitHubVersion {
+		logger.Log.Infof(uiUtils.Yellow, fmt.Sprintf("Update available! %v -> %v (%v)", mizu.SemVer, gitHubVersion, *latestRelease.HTMLURL))
 	}
 }

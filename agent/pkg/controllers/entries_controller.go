@@ -241,14 +241,7 @@ func DeleteAllEntries(c *gin.Context) {
 }
 
 func GetGeneralStats(c *gin.Context) {
-	sqlQuery := "SELECT count(*) as count, min(timestamp) as min, max(timestamp) as max from mizu_entries"
-	var result struct {
-		Count int
-		Min   int
-		Max   int
-	}
-	database.GetEntriesTable().Raw(sqlQuery).Scan(&result)
-	c.JSON(http.StatusOK, result)
+	c.JSON(http.StatusOK, providers.GetGeneralStats())
 }
 
 func GetTappingStatus(c *gin.Context) {

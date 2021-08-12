@@ -7,6 +7,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/up9inc/mizu/cli/config/configStructs"
+	"github.com/up9inc/mizu/cli/logger"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -142,7 +144,7 @@ type ApiServerOptions struct {
 	MaxEntriesDBSizeBytes   int64
 }
 
-func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, opts *ApiServerOptions) (*core.Pod, error) {
+func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, opts *ApiServerOptions, resources configStructs.Resources) (*core.Pod, error) {
 	marshaledFilteringOptions, err := json.Marshal(opts.MizuApiFilteringOptions)
 	if err != nil {
 		return nil, err
@@ -152,19 +154,19 @@ func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, opts *ApiS
 	configMapOptional := true
 	configMapVolumeName.Optional = &configMapOptional
 
-	cpuLimit, err := resource.ParseQuantity("750m")
+	cpuLimit, err := resource.ParseQuantity(resources.CpuLimit)
 	if err != nil {
 		return nil, errors.New(fmt.Sprintf("invalid cpu limit for %s container", opts.PodName))
 	}
-	memLimit, err := resource.ParseQuantity("512Mi")
+	memLimit, err := resource.ParseQuantity(resources.MemoryLimit)
 	if err != nil {
 		return nil, errors.New(fmt.Sprintf("invalid memory limit for %s container", opts.PodName))
 	}
-	cpuRequests, err := resource.ParseQuantity("50m")
+	cpuRequests, err := resource.ParseQuantity(resources.CpuRequests)
 	if err != nil {
 		return nil, errors.New(fmt.Sprintf("invalid cpu request for %s container", opts.PodName))
 	}
-	memRequests, err := resource.ParseQuantity("50Mi")
+	memRequests, err := resource.ParseQuantity(resources.MemoryRequests)
 	if err != nil {
 		return nil, errors.New(fmt.Sprintf("invalid memory request for %s container", opts.PodName))
 	}
@@ -561,8 +563,8 @@ func (provider *Provider) CreateConfigMap(ctx context.Context, namespace string,
 	return nil
 }
 
-func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, apiServerPodIp string, nodeToTappedPodIPMap map[string][]string, serviceAccountName string, tapOutgoing bool) error {
-	mizu.Log.Debugf("Applying %d tapper deamonsets, ns: %s, daemonSetName: %s, podImage: %s, tapperPodName: %s", len(nodeToTappedPodIPMap), namespace, daemonSetName, podImage, tapperPodName)
+func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, apiServerPodIp string, nodeToTappedPodIPMap map[string][]string, serviceAccountName string, tapOutgoing bool, resources configStructs.Resources) error {
+	logger.Log.Debugf("Applying %d tapper deamonsets, ns: %s, daemonSetName: %s, podImage: %s, tapperPodName: %s", len(nodeToTappedPodIPMap), namespace, daemonSetName, podImage, tapperPodName)
 
 	if len(nodeToTappedPodIPMap) == 0 {
 		return fmt.Errorf("Daemon set %s must tap at least 1 pod", daemonSetName)
@@ -600,19 +602,19 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 			),
 		),
 	)
-	cpuLimit, err := resource.ParseQuantity("500m")
+	cpuLimit, err := resource.ParseQuantity(resources.CpuLimit)
 	if err != nil {
 		return errors.New(fmt.Sprintf("invalid cpu limit for %s container", tapperPodName))
 	}
-	memLimit, err := resource.ParseQuantity("1Gi")
+	memLimit, err := resource.ParseQuantity(resources.MemoryLimit)
 	if err != nil {
 		return errors.New(fmt.Sprintf("invalid memory limit for %s container", tapperPodName))
 	}
-	cpuRequests, err := resource.ParseQuantity("50m")
+	cpuRequests, err := resource.ParseQuantity(resources.CpuRequests)
 	if err != nil {
 		return errors.New(fmt.Sprintf("invalid cpu request for %s container", tapperPodName))
 	}
-	memRequests, err := resource.ParseQuantity("50Mi")
+	memRequests, err := resource.ParseQuantity(resources.MemoryRequests)
 	if err != nil {
 		return errors.New(fmt.Sprintf("invalid memory request for %s container", tapperPodName))
 	}
@@ -745,7 +747,7 @@ func loadKubernetesConfiguration(kubeConfigPath string) clientcmd.ClientConfig {
 		kubeConfigPath = filepath.Join(home, ".kube", "config")
 	}
 
-	mizu.Log.Debugf("Using kube config %s", kubeConfigPath)
+	logger.Log.Debugf("Using kube config %s", kubeConfigPath)
 	configPathList := filepath.SplitList(kubeConfigPath)
 	configLoadingRules := &clientcmd.ClientConfigLoadingRules{}
 	if len(configPathList) <= 1 {

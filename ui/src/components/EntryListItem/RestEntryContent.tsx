@@ -26,6 +26,8 @@ interface RestEntryContentProps {
 
 export const RestEntryContent: React.FC<RestEntryContentProps> = ({entry}) => {
     const classification = getClassification(entry.statusCode)
+    const numberOfRules = entry.rules.numberOfRules
+
     let ingoingIcon;
     let outgoingIcon;
     switch (classification) {
@@ -45,6 +47,17 @@ export const RestEntryContent: React.FC<RestEntryContentProps> = ({entry}) => {
             break;
         }
     }
+
+    let ruleSuccess: boolean;
+    let rule = 'latency' in entry.rules
+    if (rule) {
+        if (entry.rules.latency !== -1) {
+            ruleSuccess = entry.rules.latency >= entry.latency;
+        } else {
+            ruleSuccess = entry.rules.status;
+        }
+    }
+
     return <>
         {entry.statusCode && <div>
             <StatusCode statusCode={entry.statusCode}/>
@@ -55,6 +68,9 @@ export const RestEntryContent: React.FC<RestEntryContentProps> = ({entry}) => {
                 {entry.service}
             </div>
         </div>
+        {rule && <div className={`${ruleSuccess ? styles.ruleNumberTextSuccess : styles.ruleNumberTextFailure}`}>
+                    {`Rules (${numberOfRules})`}
+                </div>}
         <div className={styles.directionContainer}>
             {entry.isOutgoing ?
                 <img src={outgoingIcon} alt="outgoing traffic" title="outgoing"/>

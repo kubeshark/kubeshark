@@ -4,8 +4,9 @@ import (
 	"archive/zip"
 	"bytes"
 	"fmt"
+	"github.com/up9inc/mizu/cli/config"
 	"github.com/up9inc/mizu/cli/kubernetes"
-	"github.com/up9inc/mizu/cli/mizu"
+	"github.com/up9inc/mizu/cli/logger"
 	"io"
 	"io/ioutil"
 	"log"
@@ -16,8 +17,8 @@ import (
 )
 
 func RunMizuFetch() {
-	mizuProxiedUrl := kubernetes.GetMizuApiServerProxiedHostAndPath(mizu.Config.Fetch.GuiPort)
-	resp, err := http.Get(fmt.Sprintf("http://%s/api/har?from=%v&to=%v", mizuProxiedUrl, mizu.Config.Fetch.FromTimestamp, mizu.Config.Fetch.ToTimestamp))
+	mizuProxiedUrl := kubernetes.GetMizuApiServerProxiedHostAndPath(config.Config.Fetch.GuiPort)
+	resp, err := http.Get(fmt.Sprintf("http://%s/api/har?from=%v&to=%v", mizuProxiedUrl, config.Config.Fetch.FromTimestamp, config.Config.Fetch.ToTimestamp))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -34,7 +35,7 @@ func RunMizuFetch() {
 		log.Fatal(err)
 	}
 
-	_ = Unzip(zipReader, mizu.Config.Fetch.Directory)
+	_ = Unzip(zipReader, config.Config.Fetch.Directory)
 }
 
 func Unzip(reader *zip.Reader, dest string) error {
@@ -64,7 +65,7 @@ func Unzip(reader *zip.Reader, dest string) error {
 			_ = os.MkdirAll(path, f.Mode())
 		} else {
 			_ = os.MkdirAll(filepath.Dir(path), f.Mode())
-			mizu.Log.Infof("writing HAR file [ %v ]", path)
+			logger.Log.Infof("writing HAR file [ %v ]", path)
 			f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
 			if err != nil {
 				return err
@@ -73,7 +74,7 @@ func Unzip(reader *zip.Reader, dest string) error {
 				if err := f.Close(); err != nil {
 					panic(err)
 				}
-				mizu.Log.Info(" done")
+				logger.Log.Info(" done")
 			}()
 
 			_, err = io.Copy(f, rc)

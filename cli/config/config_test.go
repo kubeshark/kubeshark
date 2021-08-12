@@ -1,7 +1,7 @@
-package mizu_test
+package config_test
 
 import (
-	"github.com/up9inc/mizu/cli/mizu"
+	"github.com/up9inc/mizu/cli/config"
 	"reflect"
 	"strings"
 	"testing"
@@ -10,13 +10,13 @@ import (
 func TestConfigWriteIgnoresReadonlyFields(t *testing.T) {
 	var readonlyFields []string
 
-	configElem := reflect.ValueOf(&mizu.ConfigStruct{}).Elem()
+	configElem := reflect.ValueOf(&config.ConfigStruct{}).Elem()
 	getFieldsWithReadonlyTag(configElem, &readonlyFields)
 
-	config, _ := mizu.GetConfigWithDefaults()
+	configWithDefaults, _ := config.GetConfigWithDefaults()
 	for _, readonlyField := range readonlyFields {
-		if strings.Contains(config, readonlyField) {
-			t.Errorf("unexpected result - readonly field: %v, config: %v", readonlyField, config)
+		if strings.Contains(configWithDefaults, readonlyField) {
+			t.Errorf("unexpected result - readonly field: %v, config: %v", readonlyField, configWithDefaults)
 		}
 	}
 }
@@ -31,8 +31,8 @@ func getFieldsWithReadonlyTag(currentElem reflect.Value, readonlyFields *[]strin
 			continue
 		}
 
-		if _, ok := currentField.Tag.Lookup(mizu.ReadonlyTag); ok {
-			fieldNameByTag := strings.Split(currentField.Tag.Get(mizu.FieldNameTag), ",")[0]
+		if _, ok := currentField.Tag.Lookup(config.ReadonlyTag); ok {
+			fieldNameByTag := strings.Split(currentField.Tag.Get(config.FieldNameTag), ",")[0]
 			*readonlyFields = append(*readonlyFields, fieldNameByTag)
 		}
 	}

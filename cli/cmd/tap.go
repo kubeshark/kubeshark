@@ -2,13 +2,15 @@ package cmd
 
 import (
 	"errors"
+	"github.com/up9inc/mizu/cli/config"
+	"github.com/up9inc/mizu/cli/config/configStructs"
+	"github.com/up9inc/mizu/cli/logger"
+	"github.com/up9inc/mizu/cli/telemetry"
 	"os"
 
 	"github.com/creasty/defaults"
 	"github.com/spf13/cobra"
 	"github.com/up9inc/mizu/cli/errormessage"
-	"github.com/up9inc/mizu/cli/mizu"
-	"github.com/up9inc/mizu/cli/mizu/configStructs"
 	"github.com/up9inc/mizu/cli/uiUtils"
 )
 
@@ -20,31 +22,31 @@ var tapCmd = &cobra.Command{
 	Long: `Record the ingoing traffic of a kubernetes pod.
 Supported protocols are HTTP and gRPC.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		go mizu.ReportRun("tap", mizu.Config.Tap)
+		go telemetry.ReportRun("tap", config.Config.Tap)
 		RunMizuTap()
 		return nil
 	},
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 		if len(args) == 1 {
-			mizu.Config.Tap.PodRegexStr = args[0]
+			config.Config.Tap.PodRegexStr = args[0]
 		} else if len(args) > 1 {
 			return errors.New("unexpected number of arguments")
 		}
 
-		if err := mizu.Config.Validate(); err != nil {
+		if err := config.Config.Validate(); err != nil {
 			return errormessage.FormatError(err)
 		}
 
-		if err := mizu.Config.Tap.Validate(); err != nil {
+		if err := config.Config.Tap.Validate(); err != nil {
 			return errormessage.FormatError(err)
 		}
 
-		mizu.Log.Infof("Mizu will store up to %s of traffic, old traffic will be cleared once the limit is reached.", mizu.Config.Tap.HumanMaxEntriesDBSize)
+		logger.Log.Infof("Mizu will store up to %s of traffic, old traffic will be cleared once the limit is reached.", config.Config.Tap.HumanMaxEntriesDBSize)
 
-		if mizu.Config.Tap.Analysis {
-			mizu.Log.Infof(analysisMessageToConfirm)
+		if config.Config.Tap.Analysis {
+			logger.Log.Infof(analysisMessageToConfirm)
 			if !uiUtils.AskForConfirmation("Would you like to proceed [Y/n]: ") {
-				mizu.Log.Infof("You can always run mizu without analysis, aborting")
+				logger.Log.Infof("You can always run mizu without analysis, aborting")
 				os.Exit(0)
 			}
 		}
@@ -60,10 +62,10 @@ func init() {
 	defaults.Set(&defaultTapConfig)
 
 	tapCmd.Flags().Uint16P(configStructs.GuiPortTapName, "p", defaultTapConfig.GuiPort, "Provide a custom port for the web interface webserver")
-	tapCmd.Flags().StringArrayP(configStructs.NamespacesTapName, "n", defaultTapConfig.Namespaces, "Namespaces selector")
+	tapCmd.Flags().StringSliceP(configStructs.NamespacesTapName, "n", defaultTapConfig.Namespaces, "Namespaces selector")
 	tapCmd.Flags().Bool(configStructs.AnalysisTapName, defaultTapConfig.Analysis, "Uploads traffic to UP9 for further analysis (Beta)")
 	tapCmd.Flags().BoolP(configStructs.AllNamespacesTapName, "A", defaultTapConfig.AllNamespaces, "Tap all namespaces")
-	tapCmd.Flags().StringArrayP(configStructs.PlainTextFilterRegexesTapName, "r", defaultTapConfig.PlainTextFilterRegexes, "List of regex expressions that are used to filter matching values from text/plain http bodies")
+	tapCmd.Flags().StringSliceP(configStructs.PlainTextFilterRegexesTapName, "r", defaultTapConfig.PlainTextFilterRegexes, "List of regex expressions that are used to filter matching values from text/plain http bodies")
 	tapCmd.Flags().Bool(configStructs.DisableRedactionTapName, defaultTapConfig.DisableRedaction, "Disables redaction of potentially sensitive request/response headers and body values")
 	tapCmd.Flags().String(configStructs.HumanMaxEntriesDBSizeTapName, defaultTapConfig.HumanMaxEntriesDBSize, "Override the default max entries db size")
 	tapCmd.Flags().String(configStructs.DirectionTapName, defaultTapConfig.Direction, "Record traffic that goes in this direction (relative to the tapped pod): in/any")

@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"mizuserver/pkg/holder"
+	"mizuserver/pkg/providers"
 	"net/url"
 	"os"
 	"path"
@@ -108,6 +109,7 @@ func startReadingChannel(outputItems <-chan *tap.OutputChannelItem) {
 	}
 
 	for item := range outputItems {
+		providers.EntryAdded()
 		saveHarToDb(item.HarEntry, item.ConnectionInfo)
 	}
 }

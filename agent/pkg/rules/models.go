@@ -92,19 +92,19 @@ func MatchRequestPolicy(harEntry har.Entry, service string) (int, []RulesMatched
 	return len(enforcePolicy.Rules), resultPolicyToSend
 }
 
-func PassedValidationRules(rulesMatched []RulesMatched, numberOfRules int) (bool, int64) {
+func PassedValidationRules(rulesMatched []RulesMatched, numberOfRules int) (bool, int64, int) {
 	if len(rulesMatched) == 0 {
-		return false, 0
+		return false, 0, 0
 	}
 	for _, rule := range rulesMatched {
 		if rule.Matched == false {
-			return false, -1
+			return false, -1, len(rulesMatched)
 		}
 	}
 	for _, rule := range rulesMatched {
 		if strings.ToLower(rule.Rule.Type) == "latency" {
-			return true, rule.Rule.Latency
+			return true, rule.Rule.Latency, len(rulesMatched)
 		}
 	}
-	return true, -1
+	return true, -1, len(rulesMatched)
 }
