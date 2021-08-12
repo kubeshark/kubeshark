@@ -1,6 +1,6 @@
-import miscStyles from "../style/misc.module.sass";
+import miscStyles from "./style/misc.module.sass";
 import React from "react";
-import styles from '../style/EndpointPath.module.sass';
+import styles from './style/EndpointPath.module.sass';
 
 interface EndpointPathProps {
     method: string,

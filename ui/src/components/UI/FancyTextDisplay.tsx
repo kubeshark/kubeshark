@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { CopyToClipboard } from 'react-copy-to-clipboard';
 import duplicateImg from "../assets/duplicate.svg";
-import '../style/FancyTextDisplay.sass';
+import './style/FancyTextDisplay.sass';
 
 interface Props {
     text: string | number,

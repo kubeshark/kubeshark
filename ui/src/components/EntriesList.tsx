@@ -9,8 +9,8 @@ import Api from "../helpers/api";
 interface HarEntriesListProps {
     entries: any[];
     setEntries: (entries: any[]) => void;
-    focusedEntryId: string;
-    setFocusedEntryId: (id: string) => void;
+    focusedEntry: any;
+    setFocusedEntry: (entry: any) => void;
     connectionOpen: boolean;
     noMoreDataTop: boolean;
     setNoMoreDataTop: (flag: boolean) => void;
@@ -28,7 +28,7 @@ enum FetchOperator {
 
 const api = new Api();
 
-export const EntriesList: React.FC<HarEntriesListProps> = ({entries, setEntries, focusedEntryId, setFocusedEntryId, connectionOpen, noMoreDataTop, setNoMoreDataTop, noMoreDataBottom, setNoMoreDataBottom, methodsFilter, statusFilter, pathFilter}) => {
+export const EntriesList: React.FC<HarEntriesListProps> = ({entries, setEntries, focusedEntry, setFocusedEntry, connectionOpen, noMoreDataTop, setNoMoreDataTop, noMoreDataBottom, setNoMoreDataBottom, methodsFilter, statusFilter, pathFilter}) => {
 
     const [loadMoreTop, setLoadMoreTop] = useState(false);
     const [isLoadingTop, setIsLoadingTop] = useState(false);
@@ -114,8 +114,8 @@ export const EntriesList: React.FC<HarEntriesListProps> = ({entries, setEntries,
                         {noMoreDataTop && !connectionOpen && <div id="noMoreDataTop" className={styles.noMoreDataAvailable}>No more data available</div>}
                         {filteredEntries.map(entry => <EntryItem key={entry.id}
                                                      entry={entry}
-                                                     setFocusedEntryId={setFocusedEntryId}
-                                                     isSelected={focusedEntryId === entry.id}/>)}
+                                                     setFocusedEntry = {setFocusedEntry}
+                                                     isSelected={focusedEntry.id === entry.id}/>)}
                         {!connectionOpen && !noMoreDataBottom && <div className={styles.fetchButtonContainer}>
                             <div className={styles.styledButton} onClick={() => getNewEntries()}>Fetch more entries</div>
                         </div>}

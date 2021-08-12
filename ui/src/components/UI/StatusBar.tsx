@@ -1,4 +1,4 @@
-import '../style/StatusBar.sass';
+import './style/StatusBar.sass';
 import React, {useState} from "react";
 
 export interface TappingStatusPod {

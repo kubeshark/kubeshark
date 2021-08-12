@@ -1,6 +1,6 @@
 import React from "react";
 import { MenuItem } from '@material-ui/core';
-import style from '../style/FilterSelect.module.sass';
+import style from './style/FilterSelect.module.sass';
 import { Select, SelectProps } from "./Select";
 
 interface HARFilterSelectProps extends SelectProps {

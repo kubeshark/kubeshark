@@ -1,7 +1,7 @@
-import {Entry} from "./EntryListItem";
+import {BaseEntry} from "./EntryListItem";
 import React from "react";
 
-export interface KafkaEntry extends Entry{
+export interface KafkaEntry extends BaseEntry{
 }
 
 interface KafkaEntryContentProps {

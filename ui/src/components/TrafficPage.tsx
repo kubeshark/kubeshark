@@ -4,10 +4,10 @@ import {EntriesList} from "./EntriesList";
 import {makeStyles} from "@material-ui/core";
 import "./style/TrafficPage.sass";
 import styles from './style/EntriesList.module.sass';
-import {EntryDetailed} from "./EntryDetailed";
+import {EntryDetailed} from "./EntryDetailed/EntryDetailed";
 import playIcon from './assets/run.svg';
 import pauseIcon from './assets/pause.svg';
-import variables from './style/variables.module.scss';
+import variables from '../variables.module.scss';
 import {StatusBar} from "./UI/StatusBar";
 import Api, {MizuWebsocketURL} from "../helpers/api";
 
@@ -48,7 +48,7 @@ export const TrafficPage: React.FC<HarPageProps> = ({setAnalyzeStatus, onTLSDete
     const classes = useLayoutStyles();
 
     const [entries, setEntries] = useState([] as any);
-    const [focusedEntryId, setFocusedEntryId] = useState(null);
+    const [focusedEntry, setFocusedEntry] = useState(null);
     const [selectedEntryData, setSelectedEntryData] = useState(null);
     const [connection, setConnection] = useState(ConnectionStatus.Closed);
     const [noMoreDataTop, setNoMoreDataTop] = useState(false);
@@ -79,7 +79,7 @@ export const TrafficPage: React.FC<HarPageProps> = ({setAnalyzeStatus, onTLSDete
                         setNoMoreDataBottom(false)
                         return;
                     }
-                    if (!focusedEntryId) setFocusedEntryId(entry.id)
+                    if (!focusedEntry) setFocusedEntry(entry)
                     let newEntries = [...entries];
                     if (entries.length === 1000) {
                         newEntries = newEntries.splice(1);
@@ -119,17 +119,17 @@ export const TrafficPage: React.FC<HarPageProps> = ({setAnalyzeStatus, onTLSDete
 
 
     useEffect(() => {
-        if (!focusedEntryId) return;
+        if (!focusedEntry) return;
         setSelectedEntryData(null);
         (async () => {
             try {
-                const entryData = await api.getEntry(focusedEntryId);
+                const entryData = await api.getEntry(focusedEntry.id);
                 setSelectedEntryData(entryData);
             } catch (error) {
                 console.error(error);
             }
         })()
-    }, [focusedEntryId])
+    }, [focusedEntry?.id])
 
     const toggleConnection = () => {
         setConnection(connection === ConnectionStatus.Connected ? ConnectionStatus.Paused : ConnectionStatus.Connected);
@@ -182,8 +182,8 @@ export const TrafficPage: React.FC<HarPageProps> = ({setAnalyzeStatus, onTLSDete
                     <div className={styles.container}>
                         <EntriesList entries={entries}
                                      setEntries={setEntries}
-                                     focusedEntryId={focusedEntryId}
-                                     setFocusedEntryId={setFocusedEntryId}
+                                     focusedEntry={focusedEntry}
+                                     setFocusedEntry={setFocusedEntry}
                                      connectionOpen={connection === ConnectionStatus.Connected}
                                      noMoreDataBottom={noMoreDataBottom}
                                      setNoMoreDataBottom={setNoMoreDataBottom}
@@ -196,7 +196,7 @@ export const TrafficPage: React.FC<HarPageProps> = ({setAnalyzeStatus, onTLSDete
                     </div>
                 </div>
                 <div className={classes.details}>
-                    {selectedEntryData && <EntryDetailed entryData={selectedEntryData} classes={{root: classes.harViewer}}/>}
+                    {selectedEntryData && <EntryDetailed entryData={selectedEntryData} entryType={focusedEntry?.type} classes={{root: classes.harViewer}}/>}
                 </div>
             </div>}
             {tappingStatus?.pods != null && <StatusBar tappingStatus={tappingStatus}/>}

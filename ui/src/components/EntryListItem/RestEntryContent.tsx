@@ -6,15 +6,11 @@ import ingoingIconFailure from "../assets/ingoing-traffic-failure.svg";
 import outgoingIconFailure from "../assets/outgoing-traffic-failure.svg";
 import ingoingIconNeutral from "../assets/ingoing-traffic-neutral.svg";
 import outgoingIconNeutral from "../assets/outgoing-traffic-neutral.svg";
-import styles from "../style/EntryListItem.module.sass";
+import styles from "./EntryListItem.module.sass";
 import {EndpointPath} from "../UI/EndpointPath";
-import {Entry} from "./EntryListItem";
+import {BaseEntry} from "./EntryListItem";
 
-interface RestEntryContentProps {
-    entry: RestEntry;
-}
-
-export interface RestEntry extends Entry{
+export interface RestEntry extends BaseEntry{
     method?: string,
     path: string,
     service: string,
@@ -22,6 +18,10 @@ export interface RestEntry extends Entry{
     url?: string;
     isCurrentRevision?: boolean;
     isOutgoing?: boolean;
+}
+
+interface RestEntryContentProps {
+    entry: RestEntry;
 }
 
 export const RestEntryContent: React.FC<RestEntryContentProps> = ({entry}) => {

@@ -1,11 +1,11 @@
 import React from "react";
-import styles from '../style/EntryListItem.module.sass';
+import styles from './EntryListItem.module.sass';
 import restIcon from '../assets/restIcon.svg';
 import kafkaIcon from '../assets/kafkaIcon.svg';
 import {RestEntry, RestEntryContent} from "./RestEntryContent";
 import {KafkaEntry} from "./KafkaEntryContent";
 
-export interface Entry {
+export interface BaseEntry {
     type: string;
     timestamp: Date;
     id: string;
@@ -20,16 +20,16 @@ interface Rules {
 
 interface EntryProps {
     entry: RestEntry | KafkaEntry;
-    setFocusedEntryId: (id: string) => void;
+    setFocusedEntry: (entry: RestEntry | KafkaEntry) => void;
     isSelected?: boolean;
 }
 
-enum EntryType {
+export enum EntryType {
     Rest = "rest",
     Kafka = "kafka"
 }
 
-export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, isSelected}) => {
+export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntry, isSelected}) => {
 
     let backgroundColor = "";
     if ('latency' in entry.rules) {
@@ -73,7 +73,7 @@ export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, isSel
 
     return <>
         <div id={entry.id} className={`${styles.row} ${isSelected ? styles.rowSelected : backgroundColor}`}
-             onClick={() => setFocusedEntryId(entry.id)}>
+             onClick={() => setFocusedEntry(entry)}>
             {entryIcon(entry) && <div style={{width: 80}}>{<img className={styles.icon} alt="icon" src={entryIcon(entry)}/>}</div>}
             {entryContent(entry)}
             <div className={styles.timestamp}>{new Date(+entry.timestamp)?.toLocaleString()}</div>
