@@ -1,7 +1,7 @@
 import Tooltip from "./Tooltip";
 import React from "react";
 import {makeStyles} from '@material-ui/core/styles';
-import variables from './style/variables.module.scss';
+import variables from '../style/variables.module.scss';
 
 interface Tab {
     tab: string,

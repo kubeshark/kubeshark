@@ -1,7 +1,7 @@
 import React, {useState} from 'react';
 import styles from './HAREntryViewer.module.sass';
-import Tabs from "../Tabs";
-import {HAREntryTableSection, HAREntryBodySection, HAREntryTablePolicySection} from "./HAREntrySections";
+import Tabs from "../UI/Tabs";
+import {TableSection, BodySection, HAREntryTablePolicySection} from "./EntrySections";
 
 const MIME_TYPE_KEY = 'mimeType';
 
@@ -30,21 +30,21 @@ const HAREntryDisplay: React.FC<any> = ({har, entry, isCollapsed: initialIsColla
             </div>
             {
                 currentTab === TABS[0].tab && <React.Fragment>
-                    <HAREntryTableSection title={'Headers'} arrayToIterate={request.headers}/>
+                    <TableSection title={'Headers'} arrayToIterate={request.headers}/>
 
-                    <HAREntryTableSection title={'Cookies'} arrayToIterate={request.cookies}/>
+                    <TableSection title={'Cookies'} arrayToIterate={request.cookies}/>
 
-                    {request?.postData && <HAREntryBodySection content={request.postData} encoding={request.postData.comment} contentType={request.postData[MIME_TYPE_KEY]}/>}
+                    {request?.postData && <BodySection content={request.postData} encoding={request.postData.comment} contentType={request.postData[MIME_TYPE_KEY]}/>}
 
-                    <HAREntryTableSection title={'Query'} arrayToIterate={request.queryString}/>
+                    <TableSection title={'Query'} arrayToIterate={request.queryString}/>
                 </React.Fragment>
             }
             {currentTab === TABS[1].tab && <React.Fragment>
-                <HAREntryTableSection title={'Headers'} arrayToIterate={response.headers}/>
+                <TableSection title={'Headers'} arrayToIterate={response.headers}/>
 
-                <HAREntryBodySection content={response.content} encoding={response.content?.encoding} contentType={response.content?.mimeType}/>
+                <BodySection content={response.content} encoding={response.content?.encoding} contentType={response.content?.mimeType}/>
 
-                <HAREntryTableSection title={'Cookies'} arrayToIterate={response.cookies}/>
+                <TableSection title={'Cookies'} arrayToIterate={response.cookies}/>
             </React.Fragment>}
             {currentTab === TABS[2].tab && <React.Fragment>
                 <HAREntryTablePolicySection service={har.log.entries[0].service} title={'Rule'} latency={receive} response={response} arrayToIterate={rulesMatched ? rulesMatched : []}/>

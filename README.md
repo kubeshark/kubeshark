@@ -148,3 +148,22 @@ $ mizu tap "^ca.*" --set ignored-user-agents=kube-probe --set ignored-user-agent
 Web interface is now available at http://localhost:8899
 ^C
 ```
+
+## How to Run local UI
+
+- run from mizu/agent `go run main.go --hars-read --hars-dir <folder>`
+
+- copy Har files into the folder from last command
+
+- change `MizuWebsocketURL` and `apiURL` in `api.js` file
+
+- run from mizu/ui - `npm run start`
+
+- open browser on `localhost:3000`
+
+
+
+
+
+
+

@@ -1,7 +1,7 @@
 import React, {useState} from "react";
-import collapsedImg from "./assets/collapsed.svg";
-import expandedImg from "./assets/expanded.svg";
-import "./style/CollapsibleContainer.sass";
+import collapsedImg from "../assets/collapsed.svg";
+import expandedImg from "../assets/expanded.svg";
+import "../style/CollapsibleContainer.sass";
 
 interface Props {
     title: string | React.ReactNode,

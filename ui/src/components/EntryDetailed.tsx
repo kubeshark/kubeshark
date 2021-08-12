@@ -1,10 +1,10 @@
 import React from "react";
-import {singleEntryToHAR} from "./utils";
-import styles from './style/HarEntryDetailed.module.sass';
+import {singleEntryToHAR} from "../helpers/utils";
+import styles from './style/EntryDetailed.module.sass';
 import HAREntryViewer from "./HarEntryViewer/HAREntryViewer";
 import {makeStyles} from "@material-ui/core";
-import StatusCode from "./StatusCode";
-import {EndpointPath} from "./EndpointPath";
+import StatusCode from "./UI/StatusCode";
+import {EndpointPath} from "./UI/EndpointPath";
 
 const useStyles = makeStyles(() => ({
     entryTitle: {
@@ -18,8 +18,8 @@ const useStyles = makeStyles(() => ({
     }
 }));
 
-interface HarEntryDetailedProps {
-    harEntry: any;
+interface EntryDetailedProps {
+    entryData: any;
     classes?: any;
 }
 
@@ -47,8 +47,8 @@ const HarEntryTitle: React.FC<any> = ({har}) => {
     </div>;
 };
 
-export const HAREntryDetailed: React.FC<HarEntryDetailedProps> = ({classes, harEntry}) => {
-    const har = singleEntryToHAR(harEntry);
+export const EntryDetailed: React.FC<EntryDetailedProps> = ({classes, entryData}) => {
+    const har = singleEntryToHAR(entryData);
 
     return <>
         {har && <HarEntryTitle har={har}/>}

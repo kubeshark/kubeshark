@@ -1,9 +1,9 @@
-import {HarEntry} from "./HarEntry";
+import {EntryItem} from "./EntryListItem/EntryListItem";
 import React, {useCallback, useEffect, useMemo, useState} from "react";
-import styles from './style/HarEntriesList.module.sass';
+import styles from './style/EntriesList.module.sass';
 import spinner from './assets/spinner.svg';
 import ScrollableFeed from "react-scrollable-feed";
-import {StatusType} from "./HarFilters";
+import {StatusType} from "./Filters";
 import Api from "../helpers/api";
 
 interface HarEntriesListProps {
@@ -28,7 +28,7 @@ enum FetchOperator {
 
 const api = new Api();
 
-export const HarEntriesList: React.FC<HarEntriesListProps> = ({entries, setEntries, focusedEntryId, setFocusedEntryId, connectionOpen, noMoreDataTop, setNoMoreDataTop, noMoreDataBottom, setNoMoreDataBottom, methodsFilter, statusFilter, pathFilter}) => {
+export const EntriesList: React.FC<HarEntriesListProps> = ({entries, setEntries, focusedEntryId, setFocusedEntryId, connectionOpen, noMoreDataTop, setNoMoreDataTop, noMoreDataBottom, setNoMoreDataBottom, methodsFilter, statusFilter, pathFilter}) => {
 
     const [loadMoreTop, setLoadMoreTop] = useState(false);
     const [isLoadingTop, setIsLoadingTop] = useState(false);
@@ -112,7 +112,7 @@ export const HarEntriesList: React.FC<HarEntriesListProps> = ({entries, setEntri
                     </div>}
                     <ScrollableFeed>
                         {noMoreDataTop && !connectionOpen && <div id="noMoreDataTop" className={styles.noMoreDataAvailable}>No more data available</div>}
-                        {filteredEntries.map(entry => <HarEntry key={entry.id}
+                        {filteredEntries.map(entry => <EntryItem key={entry.id}
                                                      entry={entry}
                                                      setFocusedEntryId={setFocusedEntryId}
                                                      isSelected={focusedEntryId === entry.id}/>)}

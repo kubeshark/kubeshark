@@ -1,5 +1,5 @@
 import React from "react";
-import styles from './style/StatusCode.module.sass';
+import styles from '../style/StatusCode.module.sass';
 
 export enum StatusCodeClassification {
     SUCCESS = "success",
