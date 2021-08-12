@@ -5,4 +5,4 @@ coverage:
         threshold: 1%
     patch:
       default:
-        if_ci_failed: ignore
+        if_ci_failed: success
