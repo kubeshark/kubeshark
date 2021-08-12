@@ -129,7 +129,7 @@ export const TrafficPage: React.FC<HarPageProps> = ({setAnalyzeStatus, onTLSDete
                 console.error(error);
             }
         })()
-    }, [focusedEntry?.id])
+    }, [focusedEntry])
 
     const toggleConnection = () => {
         setConnection(connection === ConnectionStatus.Connected ? ConnectionStatus.Paused : ConnectionStatus.Connected);

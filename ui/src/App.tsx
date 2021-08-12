@@ -38,6 +38,7 @@ const App = () => {
             }
 
         })();
+        // eslint-disable-next-line
     }, []);
 
     const onTLSDetected = (destAddress: string) => {
