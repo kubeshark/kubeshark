@@ -2,3 +2,4 @@
 # Each line is a file pattern followed by one or more owners.
 
 /ui/ @up9inc/frontend
+/ui/src/ @igorgov
