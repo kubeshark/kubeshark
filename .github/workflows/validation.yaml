@@ -44,7 +44,7 @@ jobs:
         run: make agent
 
   run-tests-cli:
-    name: Run tests cli
+    name: Run CLI tests
     runs-on: ubuntu-latest
     steps:
       - name: Set up Go 1.16
@@ -62,7 +62,7 @@ jobs:
         uses: codecov/codecov-action@v2
 
   run-tests-agent:
-    name: Run tests agent
+    name: Run Agent tests
     runs-on: ubuntu-latest
     steps:
       - name: Set up Go 1.16
