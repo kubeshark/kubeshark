@@ -42,19 +42,19 @@ func DumpLogs(provider *kubernetes.Provider, ctx context.Context, filePath strin
 		if err := AddStrToZip(zipWriter, logs, fmt.Sprintf("%s.%s.log", pod.Namespace, pod.Name)); err != nil {
 			logger.Log.Errorf("Failed write logs, %v", err)
 		} else {
-			logger.Log.Infof("Successfully added log length %d from pod: %s.%s", len(logs), pod.Namespace, pod.Name)
+			logger.Log.Debugf("Successfully added log length %d from pod: %s.%s", len(logs), pod.Namespace, pod.Name)
 		}
 	}
 	if err := AddFileToZip(zipWriter, config.GetConfigFilePath()); err != nil {
 		logger.Log.Debugf("Failed write file, %v", err)
 	} else {
-		logger.Log.Infof("Successfully added file %s", config.GetConfigFilePath())
+		logger.Log.Debugf("Successfully added file %s", config.GetConfigFilePath())
 	}
 	if err := AddFileToZip(zipWriter, logger.GetLogFilePath()); err != nil {
 		logger.Log.Debugf("Failed write file, %v", err)
 	} else {
-		logger.Log.Infof("Successfully added file %s", logger.GetLogFilePath())
+		logger.Log.Debugf("Successfully added file %s", logger.GetLogFilePath())
 	}
-	logger.Log.Infof("You can find the zip with all logs in %s\n", filePath)
+	logger.Log.Infof("You can find the zip file with all logs in %s\n", filePath)
 	return nil
 }
