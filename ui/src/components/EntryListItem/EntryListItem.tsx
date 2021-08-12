@@ -3,7 +3,7 @@ import styles from './EntryListItem.module.sass';
 import restIcon from '../assets/restIcon.svg';
 import kafkaIcon from '../assets/kafkaIcon.svg';
 import {RestEntry, RestEntryContent} from "./RestEntryContent";
-import {KafkaEntry} from "./KafkaEntryContent";
+import {KafkaEntry, KafkaEntryContent} from "./KafkaEntryContent";
 
 export interface BaseEntry {
     type: string;
@@ -20,7 +20,7 @@ interface Rules {
 }
 
 interface EntryProps {
-    entry: RestEntry | KafkaEntry;
+    entry: RestEntry | KafkaEntry | any;
     setFocusedEntry: (entry: RestEntry | KafkaEntry) => void;
     isSelected?: boolean;
 }
@@ -56,42 +56,28 @@ export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntry, isSelec
         }
     }
 
-    const entryContent = (entry) => {
-        let entryComponent;
-        switch (entry.type) {
-            case EntryType.Rest:
-                entryComponent = <RestEntryContent entry={entry}/>;
-                break;
-            default:
-                entryComponent = <RestEntryContent entry={entry}/>;
-                break;
-        }
-        return entryComponent;
-    }
+    let icon, content;
 
-    const entryIcon = (entry) => {
-        // if(entry.path.indexOf("items") > -1) return kafkaIcon;
-        // return restIcon;
-        let icon;
-        switch (entry.type) {
-            case EntryType.Rest:
-                icon = restIcon;
-                break;
-            case EntryType.Kafka:
-                icon = kafkaIcon;
-                break;
-            default:
-                icon = null;
-                break;
-        }
-        return icon;
+    switch (entry.type) {
+        case EntryType.Rest:
+            content = <RestEntryContent entry={entry}/>;
+            icon = restIcon;
+            break;
+        case EntryType.Kafka:
+            content = <KafkaEntryContent entry={entry}/>;
+            icon = kafkaIcon;
+            break;
+        default:
+            content = <RestEntryContent entry={entry}/>;
+            icon = restIcon;
+            break;
     }
 
     return <>
         <div id={entry.id} className={`${styles.row} ${isSelected ? styles.rowSelected : additionalRulesProperties}`}
              onClick={() => setFocusedEntry(entry)}>
-            {entryIcon(entry) && <div style={{width: 80}}>{<img className={styles.icon} alt="icon" src={entryIcon(entry)}/>}</div>}
-            {entryContent(entry)}
+            {icon && <div style={{width: 80}}>{<img className={styles.icon} alt="icon" src={icon}/>}</div>}
+            {content}
             <div className={styles.timestamp}>{new Date(+entry.timestamp)?.toLocaleString()}</div>
         </div>
     </>
