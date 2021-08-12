@@ -168,7 +168,3 @@ Please see [API RULES](docs/POLICY_RULES.md) page for more details and syntax.
 - run from mizu/ui - `npm run start`
 
 - open browser on `localhost:3000`
-
-
-
-
