@@ -111,6 +111,8 @@ func initFlag(f *pflag.Flag) {
 		return
 	}
 
+	logger.Log.Infof("test")
+
 	if f.Name == SetCommandName {
 		if err := mergeSetFlag(configElemValue, sliceValue.GetSlice()); err != nil {
 			logger.Log.Warningf(uiUtils.Warning, err)
