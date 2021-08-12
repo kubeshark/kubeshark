@@ -13,10 +13,10 @@ func TestConfigWriteIgnoresReadonlyFields(t *testing.T) {
 	configElem := reflect.ValueOf(&config.ConfigStruct{}).Elem()
 	getFieldsWithReadonlyTag(configElem, &readonlyFields)
 
-	config, _ := config.GetConfigWithDefaults()
+	configWithDefaults, _ := config.GetConfigWithDefaults()
 	for _, readonlyField := range readonlyFields {
-		if strings.Contains(config, readonlyField) {
-			t.Errorf("unexpected result - readonly field: %v, config: %v", readonlyField, config)
+		if strings.Contains(configWithDefaults, readonlyField) {
+			t.Errorf("unexpected result - readonly field: %v, config: %v", readonlyField, configWithDefaults)
 		}
 	}
 }
