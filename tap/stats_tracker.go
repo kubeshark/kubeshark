@@ -6,7 +6,7 @@ import (
 )
 
 type AppStats struct {
-	StartTime                time.Time `json:"startTime"`
+	StartTime                time.Time `json:"-"`
 	MatchedMessages          int       `json:"matchedMessages"`
 	TotalPacketsCount        int64     `json:"totalPacketsCount"`
 	TotalTcpPacketsCount     int64     `json:"totalTcpPacketsCount"`

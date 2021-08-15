@@ -10,9 +10,9 @@ package tap
 
 import (
 	"encoding/hex"
+	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/romana/rlog"
 	"log"
 	"os"
 	"os/signal"
@@ -22,6 +22,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/romana/rlog"
 
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/examples/util"
@@ -401,7 +403,8 @@ func startPassiveTapper(harWriter *HarWriter, outboundLinkWriter *OutboundLinkWr
 				cleanStats.deleted,
 				matchedMessages,
 			)
-			log.Printf("%+v", statsTracker.appStats)
+			appStatsJSON, _ := json.Marshal(statsTracker.appStats)
+			log.Printf("%v", string(appStatsJSON))
 
 			// reset stats
 			statsTracker = StatsTracker{}
