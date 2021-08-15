@@ -38,6 +38,10 @@ docker: ## Build and publish agent docker image.
 
 push: push-docker push-cli ## Build and publish agent docker image & CLI.
 
+build-docker: ## Build agent docker image.
+	@echo "publishing Docker image .. "
+	CI=true ./build-push-featurebranch.sh
+
 push-docker: ## Build and publish agent docker image.
 	@echo "publishing Docker image .. "
 	./build-push-featurebranch.sh
@@ -49,7 +53,6 @@ push-cli: ## Build and publish CLI.
 	#gsutil mv gs://${BUCKET_PATH}/${OUTPUT_FILE} gs://${BUCKET_PATH}/${OUTPUT_FILE}.${SUFFIX}
 	gsutil cp -r ./cli/bin/* gs://${BUCKET_PATH}/
 	gsutil setmeta -r -h "Cache-Control:public, max-age=30" gs://${BUCKET_PATH}/\*
-
 
 clean: clean-ui clean-agent clean-cli clean-docker ## Clean all build artifacts.
 
