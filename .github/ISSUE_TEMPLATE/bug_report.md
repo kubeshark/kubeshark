@@ -24,7 +24,7 @@ A clear and concise description of what you expected to happen.
 Upload logs:
 1. Run the mizu command with `--set dump-logs=true` (e.g `mizu tap --set dump-logs=true`) 
 2. Try to reproduce the issue
-3. CNTRL+C on terminal tab which runs mizu
+3. CTRL+C on terminal tab which runs mizu
 4. Upload the logs zip file from ~/.mizu/mizu_logs_**.zip
 
 **Screenshots**
