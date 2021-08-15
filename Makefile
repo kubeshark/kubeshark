@@ -38,10 +38,6 @@ docker: ## Build and publish agent docker image.
 
 push: push-docker push-cli ## Build and publish agent docker image & CLI.
 
-build-docker: ## Build agent docker image.
-	@echo "publishing Docker image .. "
-	CI=true ./build-push-featurebranch.sh
-
 push-docker: ## Build and publish agent docker image.
 	@echo "publishing Docker image .. "
 	./build-push-featurebranch.sh

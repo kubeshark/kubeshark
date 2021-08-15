@@ -96,10 +96,17 @@ jobs:
       - name: Try the cluster !
         run: kubectl get pods -A
 
-      - name: Build image
+      - name: Deploy httpbin
         run: |
-          export SHELL=/bin/bash
-          eval $(minikube -p minikube docker-env)
-          make build-docker
-          echo -n "verifying images:"
-          docker images
+          kubectl create namespace ns1
+          kubectl create deployment httpbin --image=kennethreitz/httpbin -n ns1
+          kubectl expose deployment httpbin --type=NodePort --port=80 -n ns1
+
+      - name: Test service URLs
+        run: |
+          minikube service list
+          minikube service example --url
+          echo "------------------opening the service------------------"
+          curl $(minikube service example --url)
+
+
