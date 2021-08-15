@@ -5,6 +5,7 @@ import spinner from './assets/spinner.svg';
 import ScrollableFeed from "react-scrollable-feed";
 import {StatusType} from "./Filters";
 import Api from "../helpers/api";
+import union from "./assets/union.svg";
 
 interface HarEntriesListProps {
     entries: any[];
@@ -19,6 +20,9 @@ interface HarEntriesListProps {
     methodsFilter: Array<string>;
     statusFilter: Array<string>;
     pathFilter: string
+    listEntryREF: any;
+    onScrollEvent: (isAtBottom:boolean) => void;
+    scrollableList: boolean;
 }
 
 enum FetchOperator {
@@ -28,7 +32,7 @@ enum FetchOperator {
 
 const api = new Api();
 
-export const EntriesList: React.FC<HarEntriesListProps> = ({entries, setEntries, focusedEntry, setFocusedEntry, connectionOpen, noMoreDataTop, setNoMoreDataTop, noMoreDataBottom, setNoMoreDataBottom, methodsFilter, statusFilter, pathFilter}) => {
+export const EntriesList: React.FC<HarEntriesListProps> = ({entries, setEntries, focusedEntry, setFocusedEntry, connectionOpen, noMoreDataTop, setNoMoreDataTop, noMoreDataBottom, setNoMoreDataBottom, methodsFilter, statusFilter, pathFilter, listEntryREF, onScrollEvent, scrollableList}) => {
 
     const [loadMoreTop, setLoadMoreTop] = useState(false);
     const [isLoadingTop, setIsLoadingTop] = useState(false);
@@ -106,11 +110,11 @@ export const EntriesList: React.FC<HarEntriesListProps> = ({entries, setEntries,
 
     return <>
             <div className={styles.list}>
-                <div id="list" className={styles.list}>
+                <div id="list" ref={listEntryREF} className={styles.list}>
                     {isLoadingTop && <div className={styles.spinnerContainer}>
                         <img alt="spinner" src={spinner} style={{height: 25}}/>
                     </div>}
-                    <ScrollableFeed>
+                    <ScrollableFeed onScroll={(isAtBottom) => onScrollEvent(isAtBottom)}>
                         {noMoreDataTop && !connectionOpen && <div id="noMoreDataTop" className={styles.noMoreDataAvailable}>No more data available</div>}
                         {filteredEntries.map(entry => <EntryItem key={entry.id}
                                                      entry={entry}
@@ -120,6 +124,15 @@ export const EntriesList: React.FC<HarEntriesListProps> = ({entries, setEntries,
                             <div className={styles.styledButton} onClick={() => getNewEntries()}>Fetch more entries</div>
                         </div>}
                     </ScrollableFeed>
+                    <button type="button" 
+                        className={`${styles.btnLive} ${scrollableList ? styles.showButton : styles.hideButton}`} 
+                        onClick={(_) => {
+                            const list = listEntryREF.current.firstChild;
+                            if(list instanceof HTMLElement) {
+                                list.scrollTo({ top: list.scrollHeight, behavior: 'smooth' })
+                            }
+                        }}><img alt="union" src={union} />
+                    </button>
                 </div>
 
                 {entries?.length > 0 && <div className={styles.footer}>
