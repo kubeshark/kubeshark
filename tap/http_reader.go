@@ -79,6 +79,7 @@ func (h *httpReader) Read(p []byte) (int, error) {
 			clientHello := tlsx.ClientHello{}
 			err := clientHello.Unmarshall(msg.bytes)
 			if err == nil {
+				statsTracker.incTlsConnectionsCount()
 				fmt.Printf("Detected TLS client hello with SNI %s\n", clientHello.SNI)
 				numericPort, _ := strconv.Atoi(h.tcpID.dstPort)
 				h.outboundLinkWriter.WriteOutboundLink(h.tcpID.srcIP, h.tcpID.dstIP, numericPort, clientHello.SNI, TLSProtocol)

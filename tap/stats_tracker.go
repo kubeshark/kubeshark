@@ -6,18 +6,24 @@ import (
 )
 
 type AppStats struct {
-	StartTime            time.Time `json:"startTime"`
-	MatchedMessages      int       `json:"matchedMessages"`
-	TotalPacketsCount    int64     `json:"totalPacketsCount"`
-	TotalProcessedBytes  int64     `json:"totalProcessedBytes"`
-	TotalMatchedMessages int64     `json:"totalMatchedMessages"`
+	StartTime                time.Time `json:"startTime"`
+	MatchedMessages          int       `json:"matchedMessages"`
+	TotalPacketsCount        int64     `json:"totalPacketsCount"`
+	TotalTcpPacketsCount     int64     `json:"totalTcpPacketsCount"`
+	TotalHttpPayloadsCount   int64     `json:"totalHttpPayloadsCount"`
+	TotalProcessedBytes      int64     `json:"totalProcessedBytes"`
+	TotalTlsConnectionsCount int64     `json:"totalTlsConnectionsCount"`
+	TotalMatchedMessages     int64     `json:"totalMatchedMessages"`
 }
 
 type StatsTracker struct {
-	appStats                AppStats
-	matchedMessagesMutex    sync.Mutex
-	totalPacketsCountMutex  sync.Mutex
-	totalProcessedSizeMutex sync.Mutex
+	appStats                      AppStats
+	matchedMessagesMutex          sync.Mutex
+	totalPacketsCountMutex        sync.Mutex
+	totalTcpPacketsCountMutex     sync.Mutex
+	totalHttpPayloadsCountMutex   sync.Mutex
+	totalTlsConnectionsCountMutex sync.Mutex
+	totalProcessedSizeMutex       sync.Mutex
 }
 
 func (st *StatsTracker) incMatchedMessages() {
@@ -33,6 +39,24 @@ func (st *StatsTracker) incPacketsCount() int64 {
 	currentPacketsCount := st.appStats.TotalPacketsCount
 	st.totalPacketsCountMutex.Unlock()
 	return currentPacketsCount
+}
+
+func (st *StatsTracker) incTcpPacketsCount() {
+	st.totalTcpPacketsCountMutex.Lock()
+	st.appStats.TotalTcpPacketsCount++
+	st.totalTcpPacketsCountMutex.Unlock()
+}
+
+func (st *StatsTracker) incHttpPayloadsCount() {
+	st.totalHttpPayloadsCountMutex.Lock()
+	st.appStats.TotalHttpPayloadsCount++
+	st.totalHttpPayloadsCountMutex.Unlock()
+}
+
+func (st *StatsTracker) incTlsConnectionsCount() {
+	st.totalTlsConnectionsCountMutex.Lock()
+	st.appStats.TotalTlsConnectionsCount++
+	st.totalTlsConnectionsCountMutex.Unlock()
 }
 
 func (st *StatsTracker) updateProcessedSize(size int64) {

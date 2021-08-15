@@ -374,14 +374,14 @@ func startPassiveTapper(harWriter *HarWriter, outboundLinkWriter *OutboundLinkWr
 			errorMapLen := len(errorsMap)
 			errorsSummery := fmt.Sprintf("%v", errorsMap)
 			errorsMapMutex.Unlock()
-			log.Printf("Processed %v packets (%v bytes) in %v (errors: %v, errTypes:%v) - Errors Summary: %s",
-				statsTracker.appStats.TotalPacketsCount,
-				statsTracker.appStats.TotalProcessedBytes,
+			log.Printf("%v (errors: %v, errTypes:%v) - Errors Summary: %s",
 				time.Since(statsTracker.appStats.StartTime),
 				nErrors,
 				errorMapLen,
 				errorsSummery,
 			)
+
+			log.Printf("%#v", statsTracker.appStats)
 
 			// At this moment
 			memStats := runtime.MemStats{}
@@ -448,6 +448,7 @@ func startPassiveTapper(harWriter *HarWriter, outboundLinkWriter *OutboundLinkWr
 
 		tcp := packet.Layer(layers.LayerTypeTCP)
 		if tcp != nil {
+			statsTracker.incTcpPacketsCount()
 			tcp := tcp.(*layers.TCP)
 			if *checksum {
 				err := tcp.SetNetworkLayerForChecksum(packet.NetworkLayer())
