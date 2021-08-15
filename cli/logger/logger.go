@@ -7,6 +7,19 @@ import (
 	"path"
 )
 
+type Level logging.Level
+
+// Log levels.
+const (
+	CRITICAL Level = Level(logging.CRITICAL)
+	ERROR    Level = Level(logging.ERROR)
+	WARNING  Level = Level(logging.WARNING)
+	NOTICE   Level = Level(logging.NOTICE)
+	INFO     Level = Level(logging.INFO)
+	DEBUG    Level = Level(logging.DEBUG)
+)
+
+
 var Log = logging.MustGetLogger("mizu_cli")
 
 var format = logging.MustStringFormatter(
@@ -36,4 +49,21 @@ func InitLogger() {
 
 	Log.Debugf("\n\n\n")
 	Log.Debugf("Running mizu version %v", mizu.SemVer)
+}
+
+func Logf(level Level, format string, args ...interface{}) {
+	switch level {
+	case CRITICAL:
+		Log.Criticalf(format, args)
+	case ERROR:
+		Log.Errorf(format, args)
+	case WARNING:
+		Log.Warningf(format, args)
+	case NOTICE:
+		Log.Noticef(format, args)
+	case INFO:
+		Log.Infof(format, args)
+	case DEBUG:
+		Log.Debugf(format, args)
+	}
 }
