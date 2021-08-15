@@ -65,8 +65,8 @@ clean-cli:  ## Clean CLI.
 clean-docker:
 	@(echo "DOCKER cleanup - NOT IMPLEMENTED YET " )
 
-test-cli: ## Run tests.
-	@echo "running cli tests"; cd cli && $(MAKE) test
+unit-test-cli: ## Run cli unit tests.
+	@echo "running cli unit tests"; cd cli && $(MAKE) unit-test
 
-test-agent: ## Run tests.
-	@echo "running agent tests"; cd agent && $(MAKE) test
+unit-test-agent: ## Run agent unit tests.
+	@echo "running agent unit tests"; cd agent && $(MAKE) unit-test
