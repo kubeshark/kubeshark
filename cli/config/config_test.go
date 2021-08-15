@@ -15,9 +15,11 @@ func TestConfigWriteIgnoresReadonlyFields(t *testing.T) {
 
 	configWithDefaults, _ := config.GetConfigWithDefaults()
 	for _, readonlyField := range readonlyFields {
-		if strings.Contains(configWithDefaults, readonlyField) {
-			t.Errorf("unexpected result - readonly field: %v, config: %v", readonlyField, configWithDefaults)
-		}
+		t.Run(readonlyField, func(t *testing.T) {
+			if strings.Contains(configWithDefaults, readonlyField) {
+				t.Errorf("unexpected result - readonly field: %v, config: %v", readonlyField, configWithDefaults)
+			}
+		})
 	}
 }
 

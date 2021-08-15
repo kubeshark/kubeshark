@@ -18,9 +18,7 @@ func TestEntryAddedCount(t *testing.T) {
 	tests := []int{1, 5, 10, 100, 500, 1000}
 
 	for _, entriesCount := range tests {
-		t.Run(fmt.Sprintf("EntriesCount%v", entriesCount), func(t *testing.T) {
-			t.Cleanup(providers.ResetGeneralStats)
-
+		t.Run(fmt.Sprintf("%d", entriesCount), func(t *testing.T) {
 			for i := 0; i < entriesCount; i++ {
 				providers.EntryAdded()
 			}
@@ -30,6 +28,8 @@ func TestEntryAddedCount(t *testing.T) {
 			if entriesStats.EntriesCount != entriesCount {
 				t.Errorf("unexpected result - expected: %v, actual: %v", entriesCount, entriesStats.EntriesCount)
 			}
+
+			t.Cleanup(providers.ResetGeneralStats)
 		})
 	}
 }

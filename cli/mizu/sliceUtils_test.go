@@ -7,76 +7,84 @@ import (
 
 func TestContainsExists(t *testing.T) {
 	tests := []struct {
-		slice         []string
-		containsValue string
-		expected      bool
+		Slice         []string
+		ContainsValue string
+		Expected      bool
 	}{
-		{slice: []string{"apple", "orange", "banana", "grapes"}, containsValue: "apple", expected: true},
-		{slice: []string{"apple", "orange", "banana", "grapes"}, containsValue: "orange", expected: true},
-		{slice: []string{"apple", "orange", "banana", "grapes"}, containsValue: "banana", expected: true},
-		{slice: []string{"apple", "orange", "banana", "grapes"}, containsValue: "grapes", expected: true},
+		{Slice: []string{"apple", "orange", "banana", "grapes"}, ContainsValue: "apple", Expected: true},
+		{Slice: []string{"apple", "orange", "banana", "grapes"}, ContainsValue: "orange", Expected: true},
+		{Slice: []string{"apple", "orange", "banana", "grapes"}, ContainsValue: "banana", Expected: true},
+		{Slice: []string{"apple", "orange", "banana", "grapes"}, ContainsValue: "grapes", Expected: true},
 	}
 
 	for _, test := range tests {
-		actual := mizu.Contains(test.slice, test.containsValue)
-		if actual != test.expected {
-			t.Errorf("unexpected result - expected: %v, actual: %v", test.expected, actual)
-		}
+		t.Run(test.ContainsValue, func(t *testing.T) {
+			actual := mizu.Contains(test.Slice, test.ContainsValue)
+			if actual != test.Expected {
+				t.Errorf("unexpected result - Expected: %v, actual: %v", test.Expected, actual)
+			}
+		})
 	}
 }
 
 func TestContainsNotExists(t *testing.T) {
 	tests := []struct {
-		slice         []string
-		containsValue string
-		expected      bool
+		Slice         []string
+		ContainsValue string
+		Expected      bool
 	}{
-		{slice: []string{"apple", "orange", "banana", "grapes"}, containsValue: "cat", expected: false},
-		{slice: []string{"apple", "orange", "banana", "grapes"}, containsValue: "dog", expected: false},
-		{slice: []string{"apple", "orange", "banana", "grapes"}, containsValue: "apples", expected: false},
-		{slice: []string{"apple", "orange", "banana", "grapes"}, containsValue: "rapes", expected: false},
+		{Slice: []string{"apple", "orange", "banana", "grapes"}, ContainsValue: "cat", Expected: false},
+		{Slice: []string{"apple", "orange", "banana", "grapes"}, ContainsValue: "dog", Expected: false},
+		{Slice: []string{"apple", "orange", "banana", "grapes"}, ContainsValue: "apples", Expected: false},
+		{Slice: []string{"apple", "orange", "banana", "grapes"}, ContainsValue: "rapes", Expected: false},
 	}
 
 	for _, test := range tests {
-		actual := mizu.Contains(test.slice, test.containsValue)
-		if actual != test.expected {
-			t.Errorf("unexpected result - expected: %v, actual: %v", test.expected, actual)
-		}
+		t.Run(test.ContainsValue, func(t *testing.T) {
+			actual := mizu.Contains(test.Slice, test.ContainsValue)
+			if actual != test.Expected {
+				t.Errorf("unexpected result - Expected: %v, actual: %v", test.Expected, actual)
+			}
+		})
 	}
 }
 
 func TestContainsEmptySlice(t *testing.T) {
 	tests := []struct {
-		slice         []string
-		containsValue string
-		expected      bool
+		Slice         []string
+		ContainsValue string
+		Expected      bool
 	}{
-		{slice: []string{}, containsValue: "cat", expected: false},
-		{slice: []string{}, containsValue: "dog", expected: false},
+		{Slice: []string{}, ContainsValue: "cat", Expected: false},
+		{Slice: []string{}, ContainsValue: "dog", Expected: false},
 	}
 
 	for _, test := range tests {
-		actual := mizu.Contains(test.slice, test.containsValue)
-		if actual != test.expected {
-			t.Errorf("unexpected result - expected: %v, actual: %v", test.expected, actual)
-		}
+		t.Run(test.ContainsValue, func(t *testing.T) {
+			actual := mizu.Contains(test.Slice, test.ContainsValue)
+			if actual != test.Expected {
+				t.Errorf("unexpected result - Expected: %v, actual: %v", test.Expected, actual)
+			}
+		})
 	}
 }
 
 func TestContainsNilSlice(t *testing.T) {
 	tests := []struct {
-		slice         []string
-		containsValue string
-		expected      bool
+		Slice         []string
+		ContainsValue string
+		Expected      bool
 	}{
-		{slice: nil, containsValue: "cat", expected: false},
-		{slice: nil, containsValue: "dog", expected: false},
+		{Slice: nil, ContainsValue: "cat", Expected: false},
+		{Slice: nil, ContainsValue: "dog", Expected: false},
 	}
 
 	for _, test := range tests {
-		actual := mizu.Contains(test.slice, test.containsValue)
-		if actual != test.expected {
-			t.Errorf("unexpected result - expected: %v, actual: %v", test.expected, actual)
-		}
+		t.Run(test.ContainsValue, func(t *testing.T) {
+			actual := mizu.Contains(test.Slice, test.ContainsValue)
+			if actual != test.Expected {
+				t.Errorf("unexpected result - Expected: %v, actual: %v", test.Expected, actual)
+			}
+		})
 	}
 }
