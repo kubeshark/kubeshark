@@ -381,8 +381,6 @@ func startPassiveTapper(harWriter *HarWriter, outboundLinkWriter *OutboundLinkWr
 				errorsSummery,
 			)
 
-			log.Printf("%#v", statsTracker.appStats)
-
 			// At this moment
 			memStats := runtime.MemStats{}
 			runtime.ReadMemStats(&memStats)
@@ -403,6 +401,11 @@ func startPassiveTapper(harWriter *HarWriter, outboundLinkWriter *OutboundLinkWr
 				cleanStats.deleted,
 				matchedMessages,
 			)
+			log.Printf("%+v", statsTracker.appStats)
+
+			// reset stats
+			statsTracker = StatsTracker{}
+			statsTracker.setStartTime(time.Now())
 		}
 	}()
 
