@@ -1,8 +1,6 @@
 coverage:
   status:
+    patch: false
     project:
       default:
         threshold: 1%
-    patch:
-      default:
-        if_ci_failed: success
