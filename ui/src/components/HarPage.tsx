@@ -60,7 +60,11 @@ export const HarPage: React.FC<HarPageProps> = ({setAnalyzeStatus, onTLSDetected
 
     const [tappingStatus, setTappingStatus] = useState(null);
 
+    const [disableScrollList, setDisableScrollList] = useState(false);
+
     const ws = useRef(null);
+
+    const listEntry = useRef(null);
 
     const openWebSocket = () => {
         ws.current = new WebSocket(MizuWebsocketURL);
@@ -86,6 +90,11 @@ export const HarPage: React.FC<HarPageProps> = ({setAnalyzeStatus, onTLSDetected
                         setNoMoreDataTop(false);
                     }
                     setEntries([...newEntries, entry])
+                    if(listEntry.current) {
+                        if(isScrollable(listEntry.current.firstChild)) {
+                            setDisableScrollList(true)
+                        }
+                    }
                     break
                 case "status":
                     setTappingStatus(message.tappingStatus);
@@ -158,6 +167,14 @@ export const HarPage: React.FC<HarPageProps> = ({setAnalyzeStatus, onTLSDetected
         }
     }
 
+    const onScrollEvent = (isAtBottom) => {
+        isAtBottom ? setDisableScrollList(false) : setDisableScrollList(true)
+    }
+    
+    const isScrollable = (element) => {
+        return element.scrollWidth > element.clientWidth || element.scrollHeight > element.clientHeight;
+    };
+
     return (
         <div className="HarPage">
             <div className="harPageHeader">
@@ -192,6 +209,9 @@ export const HarPage: React.FC<HarPageProps> = ({setAnalyzeStatus, onTLSDetected
                                         methodsFilter={methodsFilter}
                                         statusFilter={statusFilter}
                                         pathFilter={pathFilter}
+                                        listEntryREF={listEntry}
+                                        onScrollEvent={onScrollEvent}
+                                        scrollableList={disableScrollList}
                         />
                     </div>
                 </div>
