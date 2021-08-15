@@ -1,11 +1,11 @@
 import {EntryItem} from "./EntryListItem/EntryListItem";
-import React, {useCallback, useEffect, useMemo, useState} from "react";
+import React, {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import styles from './style/EntriesList.module.sass';
 import spinner from './assets/spinner.svg';
 import ScrollableFeed from "react-scrollable-feed";
 import {StatusType} from "./Filters";
 import Api from "../helpers/api";
-import union from "./assets/union.svg";
+import down from "./assets/downImg.svg";
 
 interface HarEntriesListProps {
     entries: any[];
@@ -36,7 +36,8 @@ export const EntriesList: React.FC<HarEntriesListProps> = ({entries, setEntries,
 
     const [loadMoreTop, setLoadMoreTop] = useState(false);
     const [isLoadingTop, setIsLoadingTop] = useState(false);
-
+    const scrollableRef = useRef(null);
+    
     useEffect(() => {
         const list = document.getElementById('list').firstElementChild;
         list.addEventListener('scroll', (e) => {
@@ -110,11 +111,11 @@ export const EntriesList: React.FC<HarEntriesListProps> = ({entries, setEntries,
 
     return <>
             <div className={styles.list}>
-                <div id="list" ref={listEntryREF} className={styles.list}>
+                <div id="list" ref={listEntryREF} className={styles.list} >
                     {isLoadingTop && <div className={styles.spinnerContainer}>
                         <img alt="spinner" src={spinner} style={{height: 25}}/>
                     </div>}
-                    <ScrollableFeed onScroll={(isAtBottom) => onScrollEvent(isAtBottom)}>
+                    <ScrollableFeed ref={scrollableRef} onScroll={(isAtBottom) => onScrollEvent(isAtBottom)}>
                         {noMoreDataTop && !connectionOpen && <div id="noMoreDataTop" className={styles.noMoreDataAvailable}>No more data available</div>}
                         {filteredEntries.map(entry => <EntryItem key={entry.id}
                                                      entry={entry}
@@ -126,12 +127,8 @@ export const EntriesList: React.FC<HarEntriesListProps> = ({entries, setEntries,
                     </ScrollableFeed>
                     <button type="button" 
                         className={`${styles.btnLive} ${scrollableList ? styles.showButton : styles.hideButton}`} 
-                        onClick={(_) => {
-                            const list = listEntryREF.current.firstChild;
-                            if(list instanceof HTMLElement) {
-                                list.scrollTo({ top: list.scrollHeight, behavior: 'smooth' })
-                            }
-                        }}><img alt="union" src={union} />
+                        onClick={(_) => scrollableRef.current.scrollToBottom()}>
+                        <img alt="down" src={down} />
                     </button>
                 </div>
 

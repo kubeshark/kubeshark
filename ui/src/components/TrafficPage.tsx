@@ -172,7 +172,7 @@ export const TrafficPage: React.FC<HarPageProps> = ({setAnalyzeStatus, onTLSDete
     }
     
     const isScrollable = (element) => {
-        return element.scrollWidth > element.clientWidth || element.scrollHeight > element.clientHeight;
+        return element.scrollHeight > element.clientHeight;
     };
 
     return (
