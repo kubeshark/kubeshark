@@ -17,11 +17,11 @@ type AppStats struct {
 
 type StatsTracker struct {
 	appStats                         AppStats
-	ProcessedBytesMutex              sync.Mutex
-	PacketsCountMutex                sync.Mutex
-	TcpPacketsCountMutex             sync.Mutex
-	ReassembledTcpPayloadsCountMutex sync.Mutex
-	TlsConnectionsCountMutex         sync.Mutex
+	processedBytesMutex              sync.Mutex
+	packetsCountMutex                sync.Mutex
+	tcpPacketsCountMutex             sync.Mutex
+	reassembledTcpPayloadsCountMutex sync.Mutex
+	tlsConnectionsCountMutex         sync.Mutex
 	matchedMessagesMutex             sync.Mutex
 }
 
@@ -32,35 +32,35 @@ func (st *StatsTracker) incMatchedMessages() {
 }
 
 func (st *StatsTracker) incPacketsCount() int64 {
-	st.PacketsCountMutex.Lock()
+	st.packetsCountMutex.Lock()
 	st.appStats.PacketsCount++
 	currentPacketsCount := st.appStats.PacketsCount
-	st.PacketsCountMutex.Unlock()
+	st.packetsCountMutex.Unlock()
 	return currentPacketsCount
 }
 
 func (st *StatsTracker) incTcpPacketsCount() {
-	st.TcpPacketsCountMutex.Lock()
+	st.tcpPacketsCountMutex.Lock()
 	st.appStats.TcpPacketsCount++
-	st.TcpPacketsCountMutex.Unlock()
+	st.tcpPacketsCountMutex.Unlock()
 }
 
 func (st *StatsTracker) incReassembledTcpPayloadsCount() {
-	st.ReassembledTcpPayloadsCountMutex.Lock()
+	st.reassembledTcpPayloadsCountMutex.Lock()
 	st.appStats.ReassembledTcpPayloadsCount++
-	st.ReassembledTcpPayloadsCountMutex.Unlock()
+	st.reassembledTcpPayloadsCountMutex.Unlock()
 }
 
 func (st *StatsTracker) incTlsConnectionsCount() {
-	st.TlsConnectionsCountMutex.Lock()
+	st.tlsConnectionsCountMutex.Lock()
 	st.appStats.TlsConnectionsCount++
-	st.TlsConnectionsCountMutex.Unlock()
+	st.tlsConnectionsCountMutex.Unlock()
 }
 
 func (st *StatsTracker) updateProcessedBytes(size int64) {
-	st.ProcessedBytesMutex.Lock()
+	st.processedBytesMutex.Lock()
 	st.appStats.ProcessedBytes += size
-	st.ProcessedBytesMutex.Unlock()
+	st.processedBytesMutex.Unlock()
 }
 
 func (st *StatsTracker) setStartTime(startTime time.Time) {
@@ -70,30 +70,30 @@ func (st *StatsTracker) setStartTime(startTime time.Time) {
 func (st *StatsTracker) dumpStats() *AppStats {
 	currentAppStats := &AppStats{StartTime: st.appStats.StartTime}
 
-	st.ProcessedBytesMutex.Lock()
+	st.processedBytesMutex.Lock()
 	currentAppStats.ProcessedBytes = st.appStats.ProcessedBytes
 	st.appStats.ProcessedBytes = 0
-	st.ProcessedBytesMutex.Unlock()
+	st.processedBytesMutex.Unlock()
 
-	st.PacketsCountMutex.Lock()
+	st.packetsCountMutex.Lock()
 	currentAppStats.PacketsCount = st.appStats.PacketsCount
 	st.appStats.PacketsCount = 0
-	st.PacketsCountMutex.Unlock()
+	st.packetsCountMutex.Unlock()
 
-	st.TcpPacketsCountMutex.Lock()
+	st.tcpPacketsCountMutex.Lock()
 	currentAppStats.TcpPacketsCount = st.appStats.TcpPacketsCount
 	st.appStats.TcpPacketsCount = 0
-	st.TcpPacketsCountMutex.Unlock()
+	st.tcpPacketsCountMutex.Unlock()
 
-	st.ReassembledTcpPayloadsCountMutex.Lock()
+	st.reassembledTcpPayloadsCountMutex.Lock()
 	currentAppStats.ReassembledTcpPayloadsCount = st.appStats.ReassembledTcpPayloadsCount
 	st.appStats.ReassembledTcpPayloadsCount = 0
-	st.ReassembledTcpPayloadsCountMutex.Unlock()
+	st.reassembledTcpPayloadsCountMutex.Unlock()
 
-	st.TlsConnectionsCountMutex.Lock()
+	st.tlsConnectionsCountMutex.Lock()
 	currentAppStats.TlsConnectionsCount = st.appStats.TlsConnectionsCount
 	st.appStats.TlsConnectionsCount = 0
-	st.TlsConnectionsCountMutex.Unlock()
+	st.tlsConnectionsCountMutex.Unlock()
 
 	st.matchedMessagesMutex.Lock()
 	currentAppStats.MatchedMessages = st.appStats.MatchedMessages
