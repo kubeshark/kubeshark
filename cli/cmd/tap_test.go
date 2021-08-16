@@ -19,7 +19,7 @@ func TestIntegrationTap(t *testing.T) {
 		t.Skip("skipping integration test")
 	}
 
-	mizu.Branch = "feature/testing"
+	mizu.Branch = "integration_tests"
 	mizu.SemVer = "0.0.0"
 
 	commandMock := cobra.Command{}
