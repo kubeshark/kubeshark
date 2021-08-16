@@ -12,16 +12,18 @@ import (
 	"encoding/hex"
 	"flag"
 	"fmt"
-	"github.com/romana/rlog"
 	"log"
 	"os"
 	"os/signal"
+	"plugin"
 	"runtime"
 	"runtime/pprof"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/romana/rlog"
 
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/examples/util"
@@ -88,7 +90,6 @@ var dumpToHar = flag.Bool("hardump", false, "Dump traffic to har files")
 var HarOutputDir = flag.String("hardir", "", "Directory in which to store output har files")
 var harEntriesPerFile = flag.Int("harentriesperfile", 200, "Number of max number of har entries to store in each file")
 
-var reqResMatcher = createResponseRequestMatcher() // global
 var statsTracker = StatsTracker{}
 
 // global
@@ -120,6 +121,17 @@ var errorsMapMutex sync.Mutex
 var nErrors uint
 var ownIps []string // global
 var hostMode bool   // global
+
+type Extension struct {
+	Name string
+	Path string
+	Plug *plugin.Plugin
+}
+
+var extensions []Extension // global
+
+type OutputChannelItem struct {
+}
 
 /* minOutputLevel: Error will be printed only if outputLevel is above this value
  * t:              key for errorsMap (counting errors)
@@ -186,19 +198,19 @@ func (c *Context) GetCaptureInfo() gopacket.CaptureInfo {
 func StartPassiveTapper(opts *TapOpts) (<-chan *OutputChannelItem, <-chan *OutboundLink) {
 	hostMode = opts.HostMode
 
-	var harWriter *HarWriter
-	if *dumpToHar {
-		harWriter = NewHarWriter(*HarOutputDir, *harEntriesPerFile)
-	}
-	outboundLinkWriter := NewOutboundLinkWriter()
+	// var harWriter *HarWriter
+	// if *dumpToHar {
+	// 	harWriter = NewHarWriter(*HarOutputDir, *harEntriesPerFile)
+	// }
+	// outboundLinkWriter := NewOutboundLinkWriter()
 
-	go startPassiveTapper(harWriter, outboundLinkWriter)
+	// go startPassiveTapper(harWriter, outboundLinkWriter)
 
-	if harWriter != nil {
-		return harWriter.OutChan, outboundLinkWriter.OutChan
-	}
+	// if harWriter != nil {
+	// 	return harWriter.OutChan, outboundLinkWriter.OutChan
+	// }
 
-	return nil, outboundLinkWriter.OutChan
+	return nil, nil
 }
 
 func startMemoryProfiler() {
@@ -232,7 +244,18 @@ func startMemoryProfiler() {
 	}()
 }
 
-func startPassiveTapper(harWriter *HarWriter, outboundLinkWriter *OutboundLinkWriter) {
+func loadExtensions() {
+	extension := &Extension{
+		Name: "http",
+		Path: "./extensions/http.so",
+	}
+	plug, _ := plugin.Open(extension.Path)
+	extension.Plug = plug
+}
+
+func startPassiveTapper(outboundLinkWriter *OutboundLinkWriter) {
+	loadExtensions()
+
 	log.SetFlags(log.LstdFlags | log.LUTC | log.Lshortfile)
 
 	defer util.Run()()
@@ -263,19 +286,19 @@ func startPassiveTapper(harWriter *HarWriter, outboundLinkWriter *OutboundLinkWr
 		appPorts = parseAppPorts(appPortsStr)
 	}
 	SetFilterPorts(appPorts)
-	envVal := os.Getenv(maxHTTP2DataLenEnvVar)
-	if envVal == "" {
-		rlog.Infof("Received empty/no HTTP2_DATA_SIZE_LIMIT env var! falling back to %v", maxHTTP2DataLenDefault)
-		maxHTTP2DataLen = maxHTTP2DataLenDefault
-	} else {
-		if convertedInt, err := strconv.Atoi(envVal); err != nil {
-			rlog.Infof("Received invalid HTTP2_DATA_SIZE_LIMIT env var! falling back to %v", maxHTTP2DataLenDefault)
-			maxHTTP2DataLen = maxHTTP2DataLenDefault
-		} else {
-			rlog.Infof("Received HTTP2_DATA_SIZE_LIMIT env var: %v", maxHTTP2DataLenDefault)
-			maxHTTP2DataLen = convertedInt
-		}
-	}
+	// envVal := os.Getenv(maxHTTP2DataLenEnvVar)
+	// if envVal == "" {
+	// 	rlog.Infof("Received empty/no HTTP2_DATA_SIZE_LIMIT env var! falling back to %v", maxHTTP2DataLenDefault)
+	// 	maxHTTP2DataLen = maxHTTP2DataLenDefault
+	// } else {
+	// 	if convertedInt, err := strconv.Atoi(envVal); err != nil {
+	// 		rlog.Infof("Received invalid HTTP2_DATA_SIZE_LIMIT env var! falling back to %v", maxHTTP2DataLenDefault)
+	// 		maxHTTP2DataLen = maxHTTP2DataLenDefault
+	// 	} else {
+	// 		rlog.Infof("Received HTTP2_DATA_SIZE_LIMIT env var: %v", maxHTTP2DataLenDefault)
+	// 		maxHTTP2DataLen = convertedInt
+	// 	}
+	// }
 
 	log.Printf("App Ports: %v", gSettings.filterPorts)
 
@@ -321,10 +344,10 @@ func startPassiveTapper(harWriter *HarWriter, outboundLinkWriter *OutboundLinkWr
 		}
 	}
 
-	if *dumpToHar {
-		harWriter.Start()
-		defer harWriter.Stop()
-	}
+	// if *dumpToHar {
+	// 	harWriter.Start()
+	// 	defer harWriter.Stop()
+	// }
 	defer outboundLinkWriter.Stop()
 
 	var dec gopacket.Decoder
@@ -344,8 +367,8 @@ func startPassiveTapper(harWriter *HarWriter, outboundLinkWriter *OutboundLinkWr
 	defragger := ip4defrag.NewIPv4Defragmenter()
 
 	streamFactory := &tcpStreamFactory{
-		doHTTP:             !*nohttp,
-		harWriter:          harWriter,
+		doHTTP: !*nohttp,
+		// harWriter:          harWriter,
 		outbountLinkWriter: outboundLinkWriter,
 	}
 	streamPool := reassembly.NewStreamPool(streamFactory)
@@ -366,7 +389,6 @@ func startPassiveTapper(harWriter *HarWriter, outboundLinkWriter *OutboundLinkWr
 	cleaner := Cleaner{
 		assembler:         assembler,
 		assemblerMutex:    &assemblerMutex,
-		matcher:           &reqResMatcher,
 		cleanPeriod:       cleanPeriod,
 		connectionTimeout: staleConnectionTimeout,
 	}
@@ -397,10 +419,9 @@ func startPassiveTapper(harWriter *HarWriter, outboundLinkWriter *OutboundLinkWr
 			memStats := runtime.MemStats{}
 			runtime.ReadMemStats(&memStats)
 			log.Printf(
-				"mem: %d, goroutines: %d, unmatched messages: %d",
+				"mem: %d, goroutines: %d",
 				memStats.HeapAlloc,
 				runtime.NumGoroutine(),
-				reqResMatcher.openMessagesMap.Count(),
 			)
 
 			// Since the last print

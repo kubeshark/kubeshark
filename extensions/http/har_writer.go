@@ -1,4 +1,4 @@
-package tap
+package main
 
 import (
 	"bytes"
@@ -12,10 +12,44 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/google/martian/har"
+	"github.com/romana/rlog"
 )
+
+var outputLevel int
+var errorsMap map[string]uint
+var errorsMapMutex sync.Mutex
+var nErrors uint
+var ownIps []string // global
+var hostMode bool   // global
+
+func logError(minOutputLevel int, t string, s string, a ...interface{}) {
+	errorsMapMutex.Lock()
+	nErrors++
+	nb, _ := errorsMap[t]
+	errorsMap[t] = nb + 1
+	errorsMapMutex.Unlock()
+
+	if outputLevel >= minOutputLevel {
+		formatStr := fmt.Sprintf("%s: %s", t, s)
+		rlog.Errorf(formatStr, a...)
+	}
+}
+func Error(t string, s string, a ...interface{}) {
+	logError(0, t, s, a...)
+}
+func SilentError(t string, s string, a ...interface{}) {
+	logError(2, t, s, a...)
+}
+func Debug(s string, a ...interface{}) {
+	rlog.Debugf(s, a...)
+}
+func Trace(s string, a ...interface{}) {
+	rlog.Tracef(1, s, a...)
+}
 
 const readPermission = 0644
 const harFilenameSuffix = ".har"
@@ -59,7 +93,7 @@ func NewEntry(request *http.Request, requestTime time.Time, response *http.Respo
 	// instead of harRequest.PostData.Text (as the HAR spec requires it).
 	// Mizu currently only looks at PostData.Text. Therefore, instead of letting martian/har set the content of
 	// PostData, always copy the request body to PostData.Text.
-	if (request.ContentLength > 0) {
+	if request.ContentLength > 0 {
 		reqBody, err := ioutil.ReadAll(request.Body)
 		if err != nil {
 			SilentError("read-request-body", "Failed converting request to HAR %s (%v,%+v)", err, err, err)

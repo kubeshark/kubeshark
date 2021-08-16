@@ -1,9 +1,10 @@
 package tap
 
 import (
-	"github.com/romana/rlog"
 	"sync"
 	"time"
+
+	"github.com/romana/rlog"
 
 	"github.com/google/gopacket/reassembly"
 )
@@ -17,7 +18,6 @@ type CleanerStats struct {
 type Cleaner struct {
 	assembler         *reassembly.Assembler
 	assemblerMutex    *sync.Mutex
-	matcher           *requestResponseMatcher
 	cleanPeriod       time.Duration
 	connectionTimeout time.Duration
 	stats             CleanerStats
@@ -32,13 +32,10 @@ func (cl *Cleaner) clean() {
 	flushed, closed := cl.assembler.FlushCloseOlderThan(startCleanTime.Add(-cl.connectionTimeout))
 	cl.assemblerMutex.Unlock()
 
-	deleted := cl.matcher.deleteOlderThan(startCleanTime.Add(-cl.connectionTimeout))
-
 	cl.statsMutex.Lock()
 	rlog.Debugf("Assembler Stats after cleaning %s", cl.assembler.Dump())
 	cl.stats.flushed += flushed
 	cl.stats.closed += closed
-	cl.stats.deleted += deleted
 	cl.statsMutex.Unlock()
 }
 

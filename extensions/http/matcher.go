@@ -1,4 +1,4 @@
-package tap
+package main
 
 import (
 	"fmt"
@@ -6,8 +6,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/orcaman/concurrent-map"
+	cmap "github.com/orcaman/concurrent-map"
 )
+
+var reqResMatcher = createResponseRequestMatcher() // global
 
 type requestResponsePair struct {
 	Request  httpMessage `json:"request"`
@@ -15,16 +17,14 @@ type requestResponsePair struct {
 }
 
 type httpMessage struct {
-	isRequest      bool
-	captureTime    time.Time
-	orig           interface{}
+	isRequest   bool
+	captureTime time.Time
+	orig        interface{}
 }
-
 
 // Key is {client_addr}:{client_port}->{dest_addr}:{dest_port}
 type requestResponseMatcher struct {
 	openMessagesMap cmap.ConcurrentMap
-
 }
 
 func createResponseRequestMatcher() requestResponseMatcher {
@@ -37,9 +37,9 @@ func (matcher *requestResponseMatcher) registerRequest(ident string, request *ht
 	key := genKey(split)
 
 	requestHTTPMessage := httpMessage{
-		isRequest:      true,
-		captureTime:    captureTime,
-		orig:           request,
+		isRequest:   true,
+		captureTime: captureTime,
+		orig:        request,
 	}
 
 	if response, found := matcher.openMessagesMap.Pop(key); found {
@@ -113,7 +113,7 @@ func (matcher *requestResponseMatcher) deleteOlderThan(t time.Time) int {
 	}
 
 	numDeleted := len(keysToPop)
-	
+
 	for _, key := range keysToPop {
 		_, _ = matcher.openMessagesMap.Pop(key)
 	}

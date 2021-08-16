@@ -24,8 +24,6 @@ type tcpStream struct {
 	isDNS          bool
 	isHTTP         bool
 	reversed       bool
-	client         httpReader
-	server         httpReader
 	urls           []string
 	ident          string
 	sync.Mutex
@@ -148,21 +146,21 @@ func (t *tcpStream) ReassembledSG(sg reassembly.ScatterGather, ac reassembly.Ass
 			}
 			// This is where we pass the reassembled information onwards
 			// This channel is read by an httpReader object
-			if dir == reassembly.TCPDirClientToServer && !t.reversed {
-				t.client.msgQueue <- httpReaderDataMsg{data, ac.GetCaptureInfo().Timestamp}
-			} else {
-				t.server.msgQueue <- httpReaderDataMsg{data, ac.GetCaptureInfo().Timestamp}
-			}
+			// if dir == reassembly.TCPDirClientToServer && !t.reversed {
+			// 	t.client.msgQueue <- httpReaderDataMsg{data, ac.GetCaptureInfo().Timestamp}
+			// } else {
+			// 	t.server.msgQueue <- httpReaderDataMsg{data, ac.GetCaptureInfo().Timestamp}
+			// }
 		}
 	}
 }
 
 func (t *tcpStream) ReassemblyComplete(ac reassembly.AssemblerContext) bool {
 	Trace("%s: Connection closed", t.ident)
-	if t.isHTTP {
-		close(t.client.msgQueue)
-		close(t.server.msgQueue)
-	}
+	// if t.isHTTP {
+	// 	close(t.client.msgQueue)
+	// 	close(t.server.msgQueue)
+	// }
 	// do not remove the connection to allow last ACK
 	return false
 }

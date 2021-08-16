@@ -2,8 +2,9 @@ package tap
 
 import (
 	"fmt"
-	"github.com/romana/rlog"
 	"sync"
+
+	"github.com/romana/rlog"
 
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers" // pulls in all layers decoders
@@ -18,7 +19,6 @@ import (
 type tcpStreamFactory struct {
 	wg                 sync.WaitGroup
 	doHTTP             bool
-	harWriter          *HarWriter
 	outbountLinkWriter *OutboundLinkWriter
 }
 
@@ -48,41 +48,41 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.T
 		optchecker: reassembly.NewTCPOptionCheck(),
 	}
 	if stream.isHTTP {
-		stream.client = httpReader{
-			msgQueue: make(chan httpReaderDataMsg),
-			ident:    fmt.Sprintf("%s %s", net, transport),
-			tcpID: tcpID{
-				srcIP:   net.Src().String(),
-				dstIP:   net.Dst().String(),
-				srcPort: transport.Src().String(),
-				dstPort: transport.Dst().String(),
-			},
-			hexdump:            *hexdump,
-			parent:             stream,
-			isClient:           true,
-			isOutgoing:         props.isOutgoing,
-			harWriter:          factory.harWriter,
-			outboundLinkWriter: factory.outbountLinkWriter,
-		}
-		stream.server = httpReader{
-			msgQueue: make(chan httpReaderDataMsg),
-			ident:    fmt.Sprintf("%s %s", net.Reverse(), transport.Reverse()),
-			tcpID: tcpID{
-				srcIP:   net.Dst().String(),
-				dstIP:   net.Src().String(),
-				srcPort: transport.Dst().String(),
-				dstPort: transport.Src().String(),
-			},
-			hexdump:            *hexdump,
-			parent:             stream,
-			isOutgoing:         props.isOutgoing,
-			harWriter:          factory.harWriter,
-			outboundLinkWriter: factory.outbountLinkWriter,
-		}
-		factory.wg.Add(2)
-		// Start reading from channels stream.client.bytes and stream.server.bytes
-		go stream.client.run(&factory.wg)
-		go stream.server.run(&factory.wg)
+		// stream.client = httpReader{
+		// 	msgQueue: make(chan httpReaderDataMsg),
+		// 	ident:    fmt.Sprintf("%s %s", net, transport),
+		// 	tcpID: tcpID{
+		// 		srcIP:   net.Src().String(),
+		// 		dstIP:   net.Dst().String(),
+		// 		srcPort: transport.Src().String(),
+		// 		dstPort: transport.Dst().String(),
+		// 	},
+		// 	hexdump:            *hexdump,
+		// 	parent:             stream,
+		// 	isClient:           true,
+		// 	isOutgoing:         props.isOutgoing,
+		// 	harWriter:          factory.harWriter,
+		// 	outboundLinkWriter: factory.outbountLinkWriter,
+		// }
+		// stream.server = httpReader{
+		// 	msgQueue: make(chan httpReaderDataMsg),
+		// 	ident:    fmt.Sprintf("%s %s", net.Reverse(), transport.Reverse()),
+		// 	tcpID: tcpID{
+		// 		srcIP:   net.Dst().String(),
+		// 		dstIP:   net.Src().String(),
+		// 		srcPort: transport.Dst().String(),
+		// 		dstPort: transport.Src().String(),
+		// 	},
+		// 	hexdump:            *hexdump,
+		// 	parent:             stream,
+		// 	isOutgoing:         props.isOutgoing,
+		// 	harWriter:          factory.harWriter,
+		// 	outboundLinkWriter: factory.outbountLinkWriter,
+		// }
+		// factory.wg.Add(2)
+		// // Start reading from channels stream.client.bytes and stream.server.bytes
+		// go stream.client.run(&factory.wg)
+		// go stream.server.run(&factory.wg)
 	}
 	return stream
 }

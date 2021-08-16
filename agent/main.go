@@ -4,21 +4,20 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"mizuserver/pkg/api"
+	"mizuserver/pkg/models"
+	"mizuserver/pkg/routes"
+	"mizuserver/pkg/utils"
+	"net/http"
+	"os"
+	"os/signal"
+
 	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"github.com/romana/rlog"
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/tap"
-	"mizuserver/pkg/api"
-	"mizuserver/pkg/models"
-	"mizuserver/pkg/routes"
-	"mizuserver/pkg/sensitiveDataFiltering"
-	"mizuserver/pkg/utils"
-	"net/http"
-	"os"
-	"os/signal"
-	"strings"
 )
 
 var tapperMode = flag.Bool("tap", false, "Run in tapper mode without API")
@@ -153,33 +152,33 @@ var userAgentsToFilter = []string{"kube-probe", "prometheus"}
 
 func filterHarItems(inChannel <-chan *tap.OutputChannelItem, outChannel chan *tap.OutputChannelItem, filterOptions *shared.TrafficFilteringOptions) {
 	for message := range inChannel {
-		if message.ConnectionInfo.IsOutgoing && api.CheckIsServiceIP(message.ConnectionInfo.ServerIP) {
-			continue
-		}
+		// if message.ConnectionInfo.IsOutgoing && api.CheckIsServiceIP(message.ConnectionInfo.ServerIP) {
+		// 	continue
+		// }
 		// TODO: move this to tappers https://up9.atlassian.net/browse/TRA-3441
 		if filterOptions.HideHealthChecks && isHealthCheckByUserAgent(message) {
 			continue
 		}
 
-		if !filterOptions.DisableRedaction {
-			sensitiveDataFiltering.FilterSensitiveInfoFromHarRequest(message, filterOptions)
-		}
+		// if !filterOptions.DisableRedaction {
+		// 	sensitiveDataFiltering.FilterSensitiveInfoFromHarRequest(message, filterOptions)
+		// }
 
 		outChannel <- message
 	}
 }
 
 func isHealthCheckByUserAgent(message *tap.OutputChannelItem) bool {
-	for _, header := range message.HarEntry.Request.Headers {
-		if strings.ToLower(header.Name) == "user-agent" {
-			for _, userAgent := range userAgentsToFilter {
-				if strings.Contains(strings.ToLower(header.Value), userAgent) {
-					return true
-				}
-			}
-			return false
-		}
-	}
+	// for _, header := range message.HarEntry.Request.Headers {
+	// 	if strings.ToLower(header.Name) == "user-agent" {
+	// 		for _, userAgent := range userAgentsToFilter {
+	// 			if strings.Contains(strings.ToLower(header.Value), userAgent) {
+	// 				return true
+	// 			}
+	// 		}
+	// 		return false
+	// 	}
+	// }
 	return false
 }
 

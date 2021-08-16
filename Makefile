@@ -65,3 +65,6 @@ clean-cli:  ## Clean CLI.
 clean-docker:
 	@(echo "DOCKER cleanup - NOT IMPLEMENTED YET " )
 
+http:
+	cd extensions/http && \
+	go build -buildmode=plugin -o ../http.so .

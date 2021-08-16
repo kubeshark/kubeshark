@@ -1,17 +1,18 @@
-package tap
+package main
 
 import (
 	"bufio"
 	"bytes"
 	"encoding/hex"
 	"fmt"
-	"github.com/bradleyfalzon/tlsx"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"strconv"
 	"sync"
 	"time"
+
+	"github.com/bradleyfalzon/tlsx"
 )
 
 const checkTLSPacketAmount = 100
@@ -41,7 +42,7 @@ func (tid *tcpID) String() string {
 }
 
 /* httpReader gets reads from a channel of bytes of tcp payload, and parses it into HTTP/1 requests and responses.
- * The payload is written to the channel by a tcpStream object that is dedicated to one tcp connection.
+ * The payload is written to the channel by a tap.TcpStream object that is dedicated to one tcp connection.
  * An httpReader object is unidirectional: it parses either a client stream or a server stream.
  * Implements io.Reader interface (Read)
  */
@@ -55,7 +56,6 @@ type httpReader struct {
 	data               []byte
 	captureTime        time.Time
 	hexdump            bool
-	parent             *tcpStream
 	grpcAssembler      GrpcAssembler
 	messageCount       uint
 	harWriter          *HarWriter
@@ -176,7 +176,7 @@ func (h *httpReader) handleHTTP2Stream() error {
 	}
 
 	if reqResPair != nil {
-		statsTracker.incMatchedMessages()
+		// statsTracker.incMatchedMessages()
 
 		if h.harWriter != nil {
 			h.harWriter.WritePair(
@@ -215,7 +215,7 @@ func (h *httpReader) handleHTTP1ClientStream(b *bufio.Reader) error {
 	ident := fmt.Sprintf("%s->%s %s->%s %d", h.tcpID.srcIP, h.tcpID.dstIP, h.tcpID.srcPort, h.tcpID.dstPort, h.messageCount)
 	reqResPair := reqResMatcher.registerRequest(ident, req, h.captureTime)
 	if reqResPair != nil {
-		statsTracker.incMatchedMessages()
+		// statsTracker.incMatchedMessages()
 
 		if h.harWriter != nil {
 			h.harWriter.WritePair(
@@ -234,9 +234,9 @@ func (h *httpReader) handleHTTP1ClientStream(b *bufio.Reader) error {
 		}
 	}
 
-	h.parent.Lock()
-	h.parent.urls = append(h.parent.urls, req.URL.String())
-	h.parent.Unlock()
+	// h.parent.Lock()
+	// h.parent.urls = append(h.parent.urls, req.URL.String())
+	// h.parent.Unlock()
 
 	return nil
 }
@@ -245,13 +245,13 @@ func (h *httpReader) handleHTTP1ServerStream(b *bufio.Reader) error {
 	res, err := http.ReadResponse(b, nil)
 	h.messageCount++
 	var req string
-	h.parent.Lock()
-	if len(h.parent.urls) == 0 {
-		req = fmt.Sprintf("<no-request-seen>")
-	} else {
-		req, h.parent.urls = h.parent.urls[0], h.parent.urls[1:]
-	}
-	h.parent.Unlock()
+	// h.parent.Lock()
+	// if len(h.parent.urls) == 0 {
+	// 	req = fmt.Sprintf("<no-request-seen>")
+	// } else {
+	// 	req, h.parent.urls = h.parent.urls[0], h.parent.urls[1:]
+	// }
+	// h.parent.Unlock()
 	if err != nil {
 		return err
 	}
@@ -281,7 +281,7 @@ func (h *httpReader) handleHTTP1ServerStream(b *bufio.Reader) error {
 	ident := fmt.Sprintf("%s->%s %s->%s %d", h.tcpID.dstIP, h.tcpID.srcIP, h.tcpID.dstPort, h.tcpID.srcPort, h.messageCount)
 	reqResPair := reqResMatcher.registerResponse(ident, res, h.captureTime)
 	if reqResPair != nil {
-		statsTracker.incMatchedMessages()
+		// statsTracker.incMatchedMessages()
 
 		if h.harWriter != nil {
 			h.harWriter.WritePair(
