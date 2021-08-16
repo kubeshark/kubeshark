@@ -12,7 +12,7 @@ type AppStats struct {
 	TcpPacketsCount             int64     `json:"tcpPacketsCount"`
 	ReassembledTcpPayloadsCount int64     `json:"reassembledTcpPayloadsCount"`
 	TlsConnectionsCount         int64     `json:"tlsConnectionsCount"`
-	MatchedMessages             int64     `json:"matchedMessages"`
+	MatchedPairs                int64     `json:"matchedPairs"`
 }
 
 type StatsTracker struct {
@@ -22,13 +22,13 @@ type StatsTracker struct {
 	tcpPacketsCountMutex             sync.Mutex
 	reassembledTcpPayloadsCountMutex sync.Mutex
 	tlsConnectionsCountMutex         sync.Mutex
-	matchedMessagesMutex             sync.Mutex
+	matchedPairsMutex                sync.Mutex
 }
 
-func (st *StatsTracker) incMatchedMessages() {
-	st.matchedMessagesMutex.Lock()
-	st.appStats.MatchedMessages++
-	st.matchedMessagesMutex.Unlock()
+func (st *StatsTracker) incMatchedPairs() {
+	st.matchedPairsMutex.Lock()
+	st.appStats.MatchedPairs++
+	st.matchedPairsMutex.Unlock()
 }
 
 func (st *StatsTracker) incPacketsCount() int64 {
@@ -95,10 +95,10 @@ func (st *StatsTracker) dumpStats() *AppStats {
 	st.appStats.TlsConnectionsCount = 0
 	st.tlsConnectionsCountMutex.Unlock()
 
-	st.matchedMessagesMutex.Lock()
-	currentAppStats.MatchedMessages = st.appStats.MatchedMessages
-	st.appStats.MatchedMessages = 0
-	st.matchedMessagesMutex.Unlock()
+	st.matchedPairsMutex.Lock()
+	currentAppStats.MatchedPairs = st.appStats.MatchedPairs
+	st.appStats.MatchedPairs = 0
+	st.matchedPairsMutex.Unlock()
 
 	return currentAppStats
 }
