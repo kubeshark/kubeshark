@@ -66,5 +66,5 @@ clean-docker:
 	@(echo "DOCKER cleanup - NOT IMPLEMENTED YET " )
 
 http:
-	cd extensions/http && \
+	cd tap/extensions/http && \
 	go build -buildmode=plugin -o ../http.so .
