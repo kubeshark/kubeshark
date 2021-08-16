@@ -395,20 +395,15 @@ func startPassiveTapper(harWriter *HarWriter, outboundLinkWriter *OutboundLinkWr
 
 			// Since the last print
 			cleanStats := cleaner.dumpStats()
-			matchedMessages := statsTracker.dumpStats()
 			log.Printf(
-				"flushed connections %d, closed connections: %d, deleted messages: %d, matched messages: %d",
+				"cleaner - flushed connections: %d, closed connections: %d, deleted messages: %d",
 				cleanStats.flushed,
 				cleanStats.closed,
 				cleanStats.deleted,
-				matchedMessages,
 			)
-			appStatsJSON, _ := json.Marshal(statsTracker.appStats)
-			log.Printf("%v", string(appStatsJSON))
-
-			// reset stats
-			statsTracker = StatsTracker{}
-			statsTracker.setStartTime(time.Now())
+			currentAppStats := statsTracker.dumpStats()
+			appStatsJSON, _ := json.Marshal(currentAppStats)
+			log.Printf("app stats - %v", string(appStatsJSON))
 		}
 	}()
 

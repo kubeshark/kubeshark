@@ -7,23 +7,23 @@ import (
 
 type AppStats struct {
 	StartTime                        time.Time `json:"-"`
-	MatchedMessages                  int       `json:"-"`
 	TotalProcessedBytes              int64     `json:"totalProcessedBytes"`
 	TotalPacketsCount                int64     `json:"totalPacketsCount"`
 	TotalTcpPacketsCount             int64     `json:"totalTcpPacketsCount"`
 	TotalReassembledTcpPayloadsCount int64     `json:"totalReassembledTcpPayloadsCount"`
 	TotalTlsConnectionsCount         int64     `json:"totalTlsConnectionsCount"`
+	MatchedMessages                  int       `json:"-"`
 	TotalMatchedMessages             int64     `json:"totalMatchedMessages"`
 }
 
 type StatsTracker struct {
 	appStats                              AppStats
-	matchedMessagesMutex                  sync.Mutex
 	totalProcessedSizeMutex               sync.Mutex
 	totalPacketsCountMutex                sync.Mutex
 	totalTcpPacketsCountMutex             sync.Mutex
 	totalReassembledTcpPayloadsCountMutex sync.Mutex
 	totalTlsConnectionsCountMutex         sync.Mutex
+	matchedMessagesMutex                  sync.Mutex
 }
 
 func (st *StatsTracker) incMatchedMessages() {
@@ -69,11 +69,40 @@ func (st *StatsTracker) setStartTime(startTime time.Time) {
 	st.appStats.StartTime = startTime
 }
 
-func (st *StatsTracker) dumpStats() int {
+func (st *StatsTracker) dumpStats() *AppStats {
+	currentAppStats := &AppStats{StartTime: st.appStats.StartTime}
+
+	st.totalProcessedSizeMutex.Lock()
+	currentAppStats.TotalProcessedBytes = st.appStats.TotalProcessedBytes
+	st.appStats.TotalProcessedBytes = 0
+	st.totalProcessedSizeMutex.Unlock()
+
+	st.totalPacketsCountMutex.Lock()
+	currentAppStats.TotalPacketsCount = st.appStats.TotalPacketsCount
+	st.appStats.TotalPacketsCount = 0
+	st.totalPacketsCountMutex.Unlock()
+
+	st.totalTcpPacketsCountMutex.Lock()
+	currentAppStats.TotalTcpPacketsCount = st.appStats.TotalTcpPacketsCount
+	st.appStats.TotalTcpPacketsCount = 0
+	st.totalTcpPacketsCountMutex.Unlock()
+
+	st.totalReassembledTcpPayloadsCountMutex.Lock()
+	currentAppStats.TotalReassembledTcpPayloadsCount = st.appStats.TotalReassembledTcpPayloadsCount
+	st.appStats.TotalReassembledTcpPayloadsCount = 0
+	st.totalReassembledTcpPayloadsCountMutex.Unlock()
+
+	st.totalTlsConnectionsCountMutex.Lock()
+	currentAppStats.TotalTlsConnectionsCount = st.appStats.TotalTlsConnectionsCount
+	st.appStats.TotalTlsConnectionsCount = 0
+	st.totalTlsConnectionsCountMutex.Unlock()
+
 	st.matchedMessagesMutex.Lock()
-	matchedMessages := st.appStats.MatchedMessages
+	currentAppStats.MatchedMessages = st.appStats.MatchedMessages
+	currentAppStats.TotalMatchedMessages = st.appStats.TotalMatchedMessages
 	st.appStats.MatchedMessages = 0
+	st.appStats.TotalMatchedMessages = 0
 	st.matchedMessagesMutex.Unlock()
 
-	return matchedMessages
+	return currentAppStats
 }
