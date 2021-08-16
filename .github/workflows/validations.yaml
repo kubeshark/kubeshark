@@ -87,10 +87,6 @@ jobs:
     name: Run CLI integration tests
     runs-on: ubuntu-latest
     steps:
-      - shell: bash
-        run: |
-          source ./test.sh
-
       - name: Set up Go 1.16
         uses: actions/setup-go@v2
         with:
@@ -98,6 +94,10 @@ jobs:
 
       - name: Check out code into the Go module directory
         uses: actions/checkout@v2
+
+      - shell: bash
+        run: |
+          source ./test.sh
 
       - name: Integration Test
         run: make integration-test-cli
