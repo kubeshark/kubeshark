@@ -6,7 +6,6 @@ import (
 	"github.com/up9inc/mizu/cli/cmd"
 	"github.com/up9inc/mizu/cli/config"
 	"github.com/up9inc/mizu/cli/logger"
-	"github.com/up9inc/mizu/cli/mizu"
 	"io/ioutil"
 	"net/http"
 	"syscall"
@@ -19,14 +18,12 @@ func TestIntegrationTap(t *testing.T) {
 		t.Skip("skipping integration test")
 	}
 
-	mizu.Branch = "integration_tests"
-	mizu.SemVer = "0.0.0"
-
 	commandMock := cobra.Command{}
 	if err := config.InitConfig(&commandMock); err != nil {
 		t.Errorf("error ")
 	}
 
+	config.Config.AgentImage = "ci:latest"
 	config.Config.Tap.Namespaces = []string{"mizu-tests"}
 	config.Config.Telemetry = false
 	go cmd.RunMizuTap()

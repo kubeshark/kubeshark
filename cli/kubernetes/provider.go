@@ -187,7 +187,7 @@ func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, opts *ApiS
 				{
 					Name:            opts.PodName,
 					Image:           opts.PodImage,
-					ImagePullPolicy: core.PullAlways,
+					ImagePullPolicy: core.PullNever,
 					VolumeMounts: []core.VolumeMount{
 						{
 							Name:      mizu.ConfigMapName,
@@ -588,7 +588,7 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	agentContainer := applyconfcore.Container()
 	agentContainer.WithName(tapperPodName)
 	agentContainer.WithImage(podImage)
-	agentContainer.WithImagePullPolicy(core.PullAlways)
+	agentContainer.WithImagePullPolicy(core.PullNever)
 	agentContainer.WithSecurityContext(applyconfcore.SecurityContext().WithPrivileged(true))
 	agentContainer.WithCommand(mizuCmd...)
 	agentContainer.WithEnv(

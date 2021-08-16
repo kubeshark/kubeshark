@@ -38,5 +38,8 @@ kubectl expose deployment httpbin --type=NodePort --port=80 -n mizu-tests
 echo "Starting proxy"
 kubectl proxy --port=8080 &
 
+echo "Setting minikube docker env"
+eval $(minikube docker-env)
+
 echo "Build agent image"
 make build-docker
