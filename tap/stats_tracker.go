@@ -6,24 +6,24 @@ import (
 )
 
 type AppStats struct {
-	StartTime                time.Time `json:"-"`
-	MatchedMessages          int       `json:"-"`
-	TotalPacketsCount        int64     `json:"totalPacketsCount"`
-	TotalTcpPacketsCount     int64     `json:"totalTcpPacketsCount"`
-	TotalHttpPayloadsCount   int64     `json:"totalHttpPayloadsCount"`
-	TotalProcessedBytes      int64     `json:"totalProcessedBytes"`
-	TotalTlsConnectionsCount int64     `json:"totalTlsConnectionsCount"`
-	TotalMatchedMessages     int64     `json:"totalMatchedMessages"`
+	StartTime                        time.Time `json:"-"`
+	MatchedMessages                  int       `json:"-"`
+	TotalProcessedBytes              int64     `json:"totalProcessedBytes"`
+	TotalPacketsCount                int64     `json:"totalPacketsCount"`
+	TotalTcpPacketsCount             int64     `json:"totalTcpPacketsCount"`
+	TotalReassembledTcpPayloadsCount int64     `json:"totalReassembledTcpPayloadsCount"`
+	TotalTlsConnectionsCount         int64     `json:"totalTlsConnectionsCount"`
+	TotalMatchedMessages             int64     `json:"totalMatchedMessages"`
 }
 
 type StatsTracker struct {
-	appStats                      AppStats
-	matchedMessagesMutex          sync.Mutex
-	totalPacketsCountMutex        sync.Mutex
-	totalTcpPacketsCountMutex     sync.Mutex
-	totalHttpPayloadsCountMutex   sync.Mutex
-	totalTlsConnectionsCountMutex sync.Mutex
-	totalProcessedSizeMutex       sync.Mutex
+	appStats                              AppStats
+	matchedMessagesMutex                  sync.Mutex
+	totalProcessedSizeMutex               sync.Mutex
+	totalPacketsCountMutex                sync.Mutex
+	totalTcpPacketsCountMutex             sync.Mutex
+	totalReassembledTcpPayloadsCountMutex sync.Mutex
+	totalTlsConnectionsCountMutex         sync.Mutex
 }
 
 func (st *StatsTracker) incMatchedMessages() {
@@ -47,10 +47,10 @@ func (st *StatsTracker) incTcpPacketsCount() {
 	st.totalTcpPacketsCountMutex.Unlock()
 }
 
-func (st *StatsTracker) incHttpPayloadsCount() {
-	st.totalHttpPayloadsCountMutex.Lock()
-	st.appStats.TotalHttpPayloadsCount++
-	st.totalHttpPayloadsCountMutex.Unlock()
+func (st *StatsTracker) incReassembledTcpPayloadsCount() {
+	st.totalReassembledTcpPayloadsCountMutex.Lock()
+	st.appStats.TotalReassembledTcpPayloadsCount++
+	st.totalReassembledTcpPayloadsCountMutex.Unlock()
 }
 
 func (st *StatsTracker) incTlsConnectionsCount() {
