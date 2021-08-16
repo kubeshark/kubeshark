@@ -28,7 +28,7 @@ func TestIntegrationTap(t *testing.T) {
 	config.Config.Telemetry = false
 	go cmd.RunMizuTap()
 
-	time.Sleep(20 * time.Second)
+	time.Sleep(30 * time.Second)
 
 	for i := 0; i < 100; i++ {
 		http.Get("http://localhost:8080/api/v1/namespaces/mizu-tests/services/httpbin/proxy/get")
