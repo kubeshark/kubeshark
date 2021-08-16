@@ -41,4 +41,7 @@ clean: ## Clean all build artifacts.
 	rm -rf ./bin/*
 
 unit-test: ## Run cli unit tests.
-	@go test ./... -coverpkg=./... -short -race -coverprofile=coverage.out -covermode=atomic
+	@go test ./... -short -coverpkg=./... -race -coverprofile=coverage.out -covermode=atomic
+
+integration-test: ## Run cli integration tests.
+	@go test ./... -run Integration -coverpkg=./... -race -coverprofile=coverage.out -covermode=atomic

@@ -83,30 +83,26 @@ jobs:
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2
 
-  deploy-minikube:
-    name: Deploy minikube
+  run-integration-tests-cli:
+    name: Run CLI integration tests
     runs-on: ubuntu-latest
     steps:
+      - shell: bash
+        run: |
+          source ./test.sh
+
+      - name: Set up Go 1.16
+        uses: actions/setup-go@v2
+        with:
+          go-version: '^1.16'
+
       - name: Check out code into the Go module directory
         uses: actions/checkout@v2
 
-      - name: Start minikube
-        uses: medyagh/setup-minikube@master
+      - name: Integration Test
+        run: make integration-test-cli
 
-      - name: Try the cluster !
-        run: kubectl get pods -A
-
-      - name: Deploy httpbin
-        run: |
-          kubectl create namespace ns1
-          kubectl create deployment httpbin --image=kennethreitz/httpbin -n ns1
-          kubectl expose deployment httpbin --type=NodePort --port=80 -n ns1
-
-      - name: Test service URLs
-        run: |
-          minikube service list
-          minikube service httpbin --url
-          echo "------------------opening the service------------------"
-          curl $(minikube service httpbin --url)
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v2
 
 

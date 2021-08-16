@@ -40,6 +40,10 @@ push: push-docker push-cli ## Build and publish agent docker image & CLI.
 
 push-docker: ## Build and publish agent docker image.
 	@echo "publishing Docker image .. "
+	PUSH='true' ./build-push-featurebranch.sh
+
+build-docker: ## Build agent docker image.
+	@echo "publishing Docker image .. "
 	./build-push-featurebranch.sh
 
 push-cli: ## Build and publish CLI.
@@ -69,3 +73,6 @@ unit-test-cli: ## Run cli unit tests.
 
 unit-test-agent: ## Run agent unit tests.
 	@echo "running agent unit tests"; cd agent && $(MAKE) unit-test
+
+integration-test-cli: ## Run cli integration tests.
+	@echo "running cli integration tests"; cd cli && $(MAKE) integration-test
