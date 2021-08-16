@@ -43,8 +43,8 @@ jobs:
       - name: Build Agent
         run: make agent
 
-  run-unit-tests-cli:
-    name: Run CLI unit tests
+  run-tests-cli:
+    name: Run CLI tests
     runs-on: ubuntu-latest
     steps:
       - name: Set up Go 1.16
@@ -55,14 +55,14 @@ jobs:
       - name: Check out code into the Go module directory
         uses: actions/checkout@v2
 
-      - name: Unit Test
-        run: make unit-test-cli
+      - name: Test
+        run: make test-cli
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2
 
-  run-unit-tests-agent:
-    name: Run Agent unit tests
+  run-tests-agent:
+    name: Run Agent tests
     runs-on: ubuntu-latest
     steps:
       - name: Set up Go 1.16
@@ -77,32 +77,8 @@ jobs:
         run: |
           sudo apt-get install libpcap-dev
 
-      - name: Unit Test
-        run: make unit-test-agent
+      - name: Test
+        run: make test-agent
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2
-
-  run-integration-tests-cli:
-    name: Run CLI integration tests
-    runs-on: ubuntu-latest
-    steps:
-      - name: Set up Go 1.16
-        uses: actions/setup-go@v2
-        with:
-          go-version: '^1.16'
-
-      - name: Check out code into the Go module directory
-        uses: actions/checkout@v2
-
-      - shell: bash
-        run: |
-          source ./test.sh
-
-      - name: Integration Test
-        run: make integration-test-cli
-
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v2
-
-

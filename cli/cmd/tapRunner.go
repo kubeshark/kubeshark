@@ -181,8 +181,10 @@ func createMizuApiServer(ctx context.Context, kubernetesProvider *kubernetes.Pro
 		IsNamespaceRestricted:   config.Config.IsNsRestrictedMode(),
 		MizuApiFilteringOptions: mizuApiFilteringOptions,
 		MaxEntriesDBSizeBytes:   config.Config.Tap.MaxEntriesDBSizeBytes(),
+		Resources:               config.Config.Tap.ApiServerResources,
+		ImagePullPolicy:         config.Config.ImagePullPolicy(),
 	}
-	_, err = kubernetesProvider.CreateMizuApiServerPod(ctx, opts, config.Config.Tap.ApiServerResources)
+	_, err = kubernetesProvider.CreateMizuApiServerPod(ctx, opts)
 	if err != nil {
 		return err
 	}
@@ -238,6 +240,7 @@ func updateMizuTappers(ctx context.Context, kubernetesProvider *kubernetes.Provi
 			serviceAccountName,
 			config.Config.Tap.TapOutgoing(),
 			config.Config.Tap.TapperResources,
+			config.Config.ImagePullPolicy(),
 		); err != nil {
 			return err
 		}

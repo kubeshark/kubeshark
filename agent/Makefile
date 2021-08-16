@@ -1,2 +1,2 @@
-unit-test: ## Run agent unit tests.
-	@go test ./... -short -coverpkg=./... -race -coverprofile=coverage.out -covermode=atomic
+test: ## Run agent tests.
+	@go test ./... -coverpkg=./... -race -coverprofile=coverage.out -covermode=atomic

@@ -42,4 +42,7 @@ echo "Setting minikube docker env"
 eval $(minikube docker-env)
 
 echo "Build agent image"
-make build-docker
+make ci-agent-docker
+
+echo "Build cli"
+make ci-cli

@@ -28,6 +28,9 @@ ui: ## Build UI.
 cli: ## Build CLI.
 	@echo "building cli"; cd cli && $(MAKE) build
 
+ci-cli: ## Build CLI for CI.
+	@echo "building cli"; cd cli && $(MAKE) build GIT_BRANCH=ci SUFFIX=ci
+
 agent: ## Build agent.
 	@(echo "building mizu agent .." )
 	@(cd agent; go build -o build/mizuagent main.go)
@@ -42,8 +45,8 @@ push-docker: ## Build and publish agent docker image.
 	@echo "publishing Docker image .. "
 	./build-push-featurebranch.sh
 
-build-docker: ## Build agent docker image.
-	@echo "build Docker image .. "
+ci-agent-docker: ## Build agent docker image for CI.
+	@echo "building Docker image .. "
 	CI='true' ./build-push-featurebranch.sh
 
 push-cli: ## Build and publish CLI.
@@ -68,11 +71,11 @@ clean-cli:  ## Clean CLI.
 clean-docker:
 	@(echo "DOCKER cleanup - NOT IMPLEMENTED YET " )
 
-unit-test-cli: ## Run cli unit tests.
-	@echo "running cli unit tests"; cd cli && $(MAKE) unit-test
+test-cli: ## Run cli tests.
+	@echo "running cli tests"; cd cli && $(MAKE) test
 
-unit-test-agent: ## Run agent unit tests.
-	@echo "running agent unit tests"; cd agent && $(MAKE) unit-test
+test-agent: ## Run agent tests.
+	@echo "running agent tests"; cd agent && $(MAKE) test
 
-integration-test-cli: ## Run cli integration tests.
-	@echo "running cli integration tests"; cd cli && $(MAKE) integration-test
+system-test: ## Run system tests.
+	@echo "running system tests"; cd tests && $(MAKE) test
