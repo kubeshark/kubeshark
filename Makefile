@@ -40,11 +40,11 @@ push: push-docker push-cli ## Build and publish agent docker image & CLI.
 
 push-docker: ## Build and publish agent docker image.
 	@echo "publishing Docker image .. "
-	PUSH='true' GIT_BRANCH='integration_tests' ./build-push-featurebranch.sh
+	PUSH='true' ./build-push-featurebranch.sh
 
 build-docker: ## Build agent docker image.
 	@echo "publishing Docker image .. "
-	./build-push-featurebranch.sh
+	GIT_BRANCH='integration_tests' ./build-push-featurebranch.sh
 
 push-cli: ## Build and publish CLI.
 	@echo "publishing CLI .. "
