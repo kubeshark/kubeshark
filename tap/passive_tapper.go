@@ -415,7 +415,7 @@ func startPassiveTapper(harWriter *HarWriter, outboundLinkWriter *OutboundLinkWr
 		packetsCount := statsTracker.incPacketsCount()
 		rlog.Debugf("PACKET #%d", packetsCount)
 		data := packet.Data()
-		statsTracker.updateProcessedSize(int64(len(data)))
+		statsTracker.updateProcessedBytes(int64(len(data)))
 		if *hexdumppkt {
 			rlog.Debugf("Packet content (%d/0x%x) - %s", len(data), len(data), hex.Dump(data))
 		}
@@ -467,14 +467,14 @@ func startPassiveTapper(harWriter *HarWriter, outboundLinkWriter *OutboundLinkWr
 			assemblerMutex.Unlock()
 		}
 
-		done := *maxcount > 0 && statsTracker.appStats.TotalPacketsCount >= *maxcount
+		done := *maxcount > 0 && statsTracker.appStats.PacketsCount >= *maxcount
 		if done {
 			errorsMapMutex.Lock()
 			errorMapLen := len(errorsMap)
 			errorsMapMutex.Unlock()
 			log.Printf("Processed %v packets (%v bytes) in %v (errors: %v, errTypes:%v)",
-				statsTracker.appStats.TotalPacketsCount,
-				statsTracker.appStats.TotalProcessedBytes,
+				statsTracker.appStats.PacketsCount,
+				statsTracker.appStats.ProcessedBytes,
 				time.Since(statsTracker.appStats.StartTime),
 				nErrors,
 				errorMapLen)
