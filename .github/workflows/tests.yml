@@ -3,7 +3,6 @@ on:
   pull_request:
     branches:
       - 'main'
-      - 'develop' #temp
   push:
     branches:
       - 'develop'
