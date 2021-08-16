@@ -26,7 +26,7 @@ const App = () => {
     const [analyzeStatus, setAnalyzeStatus] = useState(null);
     const [showTLSWarning, setShowTLSWarning] = useState(false);
     const [userDismissedTLSWarning, setUserDismissedTLSWarning] = useState(false);
-    const [addressesWithTLS, setAddressesWithTLS] = useState(new Set([]));
+    const [addressesWithTLS, setAddressesWithTLS] = useState(new Set());
 
     useEffect(() => {
         (async () => {
