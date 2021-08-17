@@ -6,7 +6,7 @@ type Extension struct {
 	Name      string
 	Path      string
 	Plug      *plugin.Plugin
-	Port      string
+	Ports     []string
 	Dissector Dissector
 }
 

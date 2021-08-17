@@ -15,11 +15,11 @@ type dissecting string
 
 func (g dissecting) Register(extension *api.Extension) {
 	fmt.Printf("extension: %v\n", extension)
-	extension.Port = "9092"
+	extension.Ports = []string{"9092"}
 }
 
 func (g dissecting) Ping() {
-	fmt.Printf("pong\n")
+	fmt.Printf("pong Kafka\n")
 }
 
 // exported as symbol named "Greeter"

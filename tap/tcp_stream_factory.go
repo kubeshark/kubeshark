@@ -26,10 +26,19 @@ type tcpStreamFactory struct {
 
 const checkTLSPacketAmount = 100
 
+func containsPort(ports []string, port string) bool {
+	for _, x := range ports {
+		if x == port {
+			return true
+		}
+	}
+	return false
+}
+
 func (h *tcpStream) run(wg *sync.WaitGroup) {
 	defer wg.Done()
 	for _, extension := range extensions {
-		if extension.Port == h.transport.Dst().String() {
+		if containsPort(extension.Ports, h.transport.Dst().String()) {
 			extension.Dissector.Ping()
 		}
 	}
