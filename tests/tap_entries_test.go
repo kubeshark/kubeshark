@@ -8,6 +8,10 @@ import (
 )
 
 func TestSystemTapEntriesCount(t *testing.T) {
+	if testing.Short() {
+		t.Skip("ignored system test")
+	}
+
 	tests := []int{1, 10, 20, 50, 100}
 
 	for _, entriesCount := range tests {
