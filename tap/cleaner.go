@@ -3,10 +3,6 @@ package tap
 import (
 	"sync"
 	"time"
-
-	"github.com/romana/rlog"
-
-	"github.com/google/gopacket/reassembly"
 )
 
 type CleanerStats struct {
@@ -16,7 +12,6 @@ type CleanerStats struct {
 }
 
 type Cleaner struct {
-	assembler         *reassembly.Assembler
 	assemblerMutex    *sync.Mutex
 	cleanPeriod       time.Duration
 	connectionTimeout time.Duration
@@ -25,18 +20,18 @@ type Cleaner struct {
 }
 
 func (cl *Cleaner) clean() {
-	startCleanTime := time.Now()
+	// startCleanTime := time.Now()
 
-	cl.assemblerMutex.Lock()
-	rlog.Debugf("Assembler Stats before cleaning %s", cl.assembler.Dump())
-	flushed, closed := cl.assembler.FlushCloseOlderThan(startCleanTime.Add(-cl.connectionTimeout))
-	cl.assemblerMutex.Unlock()
+	// cl.assemblerMutex.Lock()
+	// rlog.Debugf("Assembler Stats before cleaning %s", cl.assembler.Dump())
+	// flushed, closed := cl.assembler.FlushCloseOlderThan(startCleanTime.Add(-cl.connectionTimeout))
+	// cl.assemblerMutex.Unlock()
 
-	cl.statsMutex.Lock()
-	rlog.Debugf("Assembler Stats after cleaning %s", cl.assembler.Dump())
-	cl.stats.flushed += flushed
-	cl.stats.closed += closed
-	cl.statsMutex.Unlock()
+	// cl.statsMutex.Lock()
+	// rlog.Debugf("Assembler Stats after cleaning %s", cl.assembler.Dump())
+	// cl.stats.flushed += flushed
+	// cl.stats.closed += closed
+	// cl.statsMutex.Unlock()
 }
 
 func (cl *Cleaner) start() {
