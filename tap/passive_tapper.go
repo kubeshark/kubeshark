@@ -34,6 +34,7 @@ import (
 	"github.com/google/gopacket/layers" // pulls in all layers decoders
 	"github.com/google/gopacket/pcap"
 	"github.com/google/gopacket/reassembly"
+	"github.com/up9inc/mizu/tap/api"
 )
 
 const AppPortsEnvVar = "APP_PORTS"
@@ -122,20 +123,9 @@ var outputLevel int
 var errorsMap map[string]uint
 var errorsMapMutex sync.Mutex
 var nErrors uint
-var ownIps []string // global
-var hostMode bool   // global
-
-type Extension struct {
-	Name string
-	Path string
-	Plug *plugin.Plugin
-}
-
-type Greeter interface {
-	Greet()
-}
-
-var extensions []Extension // global
+var ownIps []string             // global
+var hostMode bool               // global
+var extensions []*api.Extension // global
 
 type OutputChannelItem struct {
 }
@@ -203,7 +193,6 @@ func (c *Context) GetCaptureInfo() gopacket.CaptureInfo {
 }
 
 func StartPassiveTapper(opts *TapOpts) (<-chan *OutputChannelItem, <-chan *OutboundLink) {
-	fmt.Printf("called StartPassiveTapper\n")
 	hostMode = opts.HostMode
 
 	// var harWriter *HarWriter
@@ -260,20 +249,23 @@ func loadExtensions() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	extensions = make([]*api.Extension, len(files))
 	for _, file := range files {
 		filename := file.Name()
 		log.Printf("Loading extension: %s\n", filename)
-		extension := &Extension{
+		extension := &api.Extension{
 			Name: strings.TrimSuffix(filename, filepath.Ext(filename)),
 			Path: path.Join(extensionsDir, filename),
 		}
 		plug, _ := plugin.Open(extension.Path)
 		extension.Plug = plug
-		symGreeter, _ := plug.Lookup("Greeter")
+		symDissector, _ := plug.Lookup("Dissector")
 
-		var greeter Greeter
-		greeter, _ = symGreeter.(Greeter)
-		greeter.Greet()
+		var dissector api.Dissector
+		dissector, _ = symDissector.(api.Dissector)
+		dissector.Register(extension)
+		fmt.Printf("returned extension: %v\n", extension)
+		_ = append(extensions, extension)
 	}
 }
 

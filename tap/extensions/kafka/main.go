@@ -1,18 +1,22 @@
 package main
 
 import (
+	"fmt"
 	"log"
+
+	"github.com/up9inc/mizu/tap/api"
 )
 
 func init() {
 	log.Println("Initializing Kafka extension.")
 }
 
-type greeting string
+type dissecting string
 
-func (g greeting) Greet() {
-	log.Println("Hello from Kafka extension.")
+func (g dissecting) Register(extension *api.Extension) {
+	fmt.Printf("extension: %v\n", extension)
+	extension.Port = 9092
 }
 
 // exported as symbol named "Greeter"
-var Greeter greeting
+var Dissector dissecting
