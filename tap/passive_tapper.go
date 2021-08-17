@@ -91,7 +91,7 @@ var dumpToHar = flag.Bool("hardump", false, "Dump traffic to har files")
 var HarOutputDir = flag.String("hardir", "", "Directory in which to store output har files")
 var harEntriesPerFile = flag.Int("harentriesperfile", 200, "Number of max number of har entries to store in each file")
 
-var filter = flag.String("f", "tcp and dst port 80", "BPF filter for pcap")
+var filter = flag.String("f", "tcp and (src port 80 or dst port 80)", "BPF filter for pcap")
 
 var statsTracker = StatsTracker{}
 

@@ -17,5 +17,5 @@ type Extension struct {
 type Dissector interface {
 	Register(*Extension)
 	Ping()
-	Dissect(b *bufio.Reader) interface{}
+	Dissect(b *bufio.Reader, isClient bool) interface{}
 }

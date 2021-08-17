@@ -29,12 +29,22 @@ func containsPort(ports []string, port string) bool {
 	return false
 }
 
-func (h *tcpStream) run() {
+func (h *tcpStream) clientRun() {
 	b := bufio.NewReader(&h.r)
 	for _, extension := range extensions {
 		if containsPort(extension.OutboundPorts, h.transport.Dst().String()) {
 			extension.Dissector.Ping()
-			extension.Dissector.Dissect(b)
+			extension.Dissector.Dissect(b, true)
+		}
+	}
+}
+
+func (h *tcpStream) serverRun() {
+	b := bufio.NewReader(&h.r)
+	for _, extension := range extensions {
+		if containsPort(extension.OutboundPorts, h.transport.Src().String()) {
+			extension.Dissector.Ping()
+			extension.Dissector.Dissect(b, false)
 		}
 	}
 }
@@ -47,7 +57,9 @@ func (h *tcpStreamFactory) New(net, transport gopacket.Flow) tcpassembly.Stream 
 		r:         tcpreader.NewReaderStream(),
 	}
 	if containsPort(allOutboundPorts, transport.Dst().String()) {
-		go stream.run()
+		go stream.clientRun()
+	} else if containsPort(allOutboundPorts, transport.Src().String()) {
+		go stream.serverRun()
 	}
 	return &stream.r
 }

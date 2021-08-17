@@ -23,7 +23,7 @@ func (g dissecting) Ping() {
 	log.Printf("pong AMQP\n")
 }
 
-func (g dissecting) Dissect(b *bufio.Reader) interface{} {
+func (g dissecting) Dissect(b *bufio.Reader, isClient bool) interface{} {
 	// TODO: Implement
 	return nil
 }

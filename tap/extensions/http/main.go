@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 
@@ -27,38 +28,32 @@ func (g dissecting) Ping() {
 	log.Printf("pong HTTP\n")
 }
 
-func DiscardBytesToFirstError(r io.Reader) (discarded int, err error) {
+func (g dissecting) Dissect(b *bufio.Reader, isClient bool) interface{} {
 	for {
-		n, e := r.Read(discardBuffer)
-		discarded += n
-		if e != nil {
-			return discarded, e
-		}
-	}
-}
-
-func DiscardBytesToEOF(r io.Reader) (discarded int) {
-	for {
-		n, e := DiscardBytesToFirstError(r)
-		discarded += n
-		if e == io.EOF {
-			return
-		}
-	}
-}
-
-func (g dissecting) Dissect(b *bufio.Reader) interface{} {
-	for {
-		req, err := http.ReadRequest(b)
-		if err == io.EOF {
-			// We must read until we see an EOF... very important!
-			return nil
-		} else if err != nil {
-			log.Println("Error reading stream:", err)
+		if isClient {
+			req, err := http.ReadRequest(b)
+			if err == io.EOF || err == io.ErrUnexpectedEOF {
+				// We must read until we see an EOF... very important!
+				return nil
+			} else if err != nil {
+				log.Println("Error reading stream:", err)
+			} else {
+				body, _ := ioutil.ReadAll(req.Body)
+				req.Body.Close()
+				log.Printf("Received request: %+v with body: %+v\n", req, body)
+			}
 		} else {
-			bodyBytes := DiscardBytesToEOF(req.Body)
-			req.Body.Close()
-			log.Println("Received request from stream:", req, "with", bodyBytes, "bytes in request body")
+			res, err := http.ReadResponse(b, nil)
+			if err == io.EOF || err == io.ErrUnexpectedEOF {
+				// We must read until we see an EOF... very important!
+				return nil
+			} else if err != nil {
+				log.Println("Error reading stream:", err)
+			} else {
+				body, _ := ioutil.ReadAll(res.Body)
+				res.Body.Close()
+				log.Printf("Received response: %+v with body: %+v\n", res, body)
+			}
 		}
 	}
 }
