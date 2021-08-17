@@ -45,9 +45,9 @@ push-docker: ## Build and publish agent docker image.
 	@echo "publishing Docker image .. "
 	./build-push-featurebranch.sh
 
-ci-agent-docker: ## Build agent docker image for CI.
-	@echo "building Docker image .. "
-	CI='true' ./build-push-featurebranch.sh
+build-docker-ci: ## Build agent docker image for CI.
+	@echo "building ci docker image .. "
+	./build-agent-ci.sh
 
 push-cli: ## Build and publish CLI.
 	@echo "publishing CLI .. "
@@ -71,11 +71,11 @@ clean-cli:  ## Clean CLI.
 clean-docker:
 	@(echo "DOCKER cleanup - NOT IMPLEMENTED YET " )
 
-test-cli: ## Run cli tests.
+test-cli:
 	@echo "running cli tests"; cd cli && $(MAKE) test
 
-test-agent: ## Run agent tests.
+test-agent:
 	@echo "running agent tests"; cd agent && $(MAKE) test
 
-system-test: ## Run system tests.
+system-test:
 	@echo "running system tests"; cd tests && $(MAKE) test
