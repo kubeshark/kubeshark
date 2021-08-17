@@ -1,14 +1,15 @@
-name: system tests
+name: acceptance tests
 on:
   pull_request:
     branches:
       - 'main'
+      - 'develop'
   push:
     branches:
       - 'develop'
 jobs:
-  run-system-tests:
-    name: Run system tests
+  run-acceptance-tests:
+    name: Run acceptance tests
     runs-on: ubuntu-latest
     steps:
       - name: Set up Go 1.16
@@ -19,9 +20,8 @@ jobs:
       - name: Check out code into the Go module directory
         uses: actions/checkout@v2
 
-      - shell: bash
-        run: |
-          source ./test-installations.sh
+      - name: Setup acceptance test
+        run: source ./setup.sh
 
       - name: Test
-        run: make system-test
+        run: make acceptance-test

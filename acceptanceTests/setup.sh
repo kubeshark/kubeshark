@@ -45,4 +45,4 @@ echo "Build agent image"
 make build-docker-ci
 
 echo "Build cli"
-make ci-cli
+make build-cli-ci
