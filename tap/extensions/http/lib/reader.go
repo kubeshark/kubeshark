@@ -60,7 +60,6 @@ type httpReader struct {
 	data               []byte
 	captureTime        time.Time
 	hexdump            bool
-	grpcAssembler      GrpcAssembler
 	messageCount       uint
 	harWriter          *HarWriter
 	packetsSeen        uint
@@ -102,20 +101,20 @@ func (h *httpReader) run(wg *sync.WaitGroup) {
 	defer wg.Done()
 	b := bufio.NewReader(h)
 
-	if isHTTP2, err := checkIsHTTP2Connection(b, h.isClient); err != nil {
-		SilentError("HTTP/2-Prepare-Connection", "stream %s Failed to check if client is HTTP/2: %s (%v,%+v)", h.ident, err, err, err)
-		// Do something?
-	} else {
-		h.isHTTP2 = isHTTP2
-	}
+	// if isHTTP2, err := checkIsHTTP2Connection(b, h.isClient); err != nil {
+	// 	SilentError("HTTP/2-Prepare-Connection", "stream %s Failed to check if client is HTTP/2: %s (%v,%+v)", h.ident, err, err, err)
+	// 	// Do something?
+	// } else {
+	// 	h.isHTTP2 = isHTTP2
+	// }
 
-	if h.isHTTP2 {
-		err := prepareHTTP2Connection(b, h.isClient)
-		if err != nil {
-			SilentError("HTTP/2-Prepare-Connection-After-Check", "stream %s error: %s (%v,%+v)", h.ident, err, err, err)
-		}
-		h.grpcAssembler = createGrpcAssembler(b)
-	}
+	// if h.isHTTP2 {
+	// 	err := prepareHTTP2Connection(b, h.isClient)
+	// 	if err != nil {
+	// 		SilentError("HTTP/2-Prepare-Connection-After-Check", "stream %s error: %s (%v,%+v)", h.ident, err, err, err)
+	// 	}
+	// 	h.grpcAssembler = createGrpcAssembler(b)
+	// }
 
 	for true {
 		if h.isHTTP2 {
@@ -147,51 +146,51 @@ func (h *httpReader) run(wg *sync.WaitGroup) {
 }
 
 func (h *httpReader) handleHTTP2Stream() error {
-	streamID, messageHTTP1, err := h.grpcAssembler.readMessage()
-	h.messageCount++
-	if err != nil {
-		return err
-	}
+	// streamID, messageHTTP1, err := h.grpcAssembler.readMessage()
+	// h.messageCount++
+	// if err != nil {
+	// 	return err
+	// }
 
-	var reqResPair *requestResponsePair
-	var connectionInfo *ConnectionInfo
+	// var reqResPair *requestResponsePair
+	// var connectionInfo *ConnectionInfo
 
-	switch messageHTTP1 := messageHTTP1.(type) {
-	case http.Request:
-		ident := fmt.Sprintf("%s->%s %s->%s %d", h.tcpID.srcIP, h.tcpID.dstIP, h.tcpID.srcPort, h.tcpID.dstPort, streamID)
-		connectionInfo = &ConnectionInfo{
-			ClientIP:   h.tcpID.srcIP,
-			ClientPort: h.tcpID.srcPort,
-			ServerIP:   h.tcpID.dstIP,
-			ServerPort: h.tcpID.dstPort,
-			IsOutgoing: h.isOutgoing,
-		}
-		reqResPair = reqResMatcher.registerRequest(ident, &messageHTTP1, h.captureTime)
-	case http.Response:
-		ident := fmt.Sprintf("%s->%s %s->%s %d", h.tcpID.dstIP, h.tcpID.srcIP, h.tcpID.dstPort, h.tcpID.srcPort, streamID)
-		connectionInfo = &ConnectionInfo{
-			ClientIP:   h.tcpID.dstIP,
-			ClientPort: h.tcpID.dstPort,
-			ServerIP:   h.tcpID.srcIP,
-			ServerPort: h.tcpID.srcPort,
-			IsOutgoing: h.isOutgoing,
-		}
-		reqResPair = reqResMatcher.registerResponse(ident, &messageHTTP1, h.captureTime)
-	}
+	// switch messageHTTP1 := messageHTTP1.(type) {
+	// case http.Request:
+	// 	ident := fmt.Sprintf("%s->%s %s->%s %d", h.tcpID.srcIP, h.tcpID.dstIP, h.tcpID.srcPort, h.tcpID.dstPort, streamID)
+	// 	connectionInfo = &ConnectionInfo{
+	// 		ClientIP:   h.tcpID.srcIP,
+	// 		ClientPort: h.tcpID.srcPort,
+	// 		ServerIP:   h.tcpID.dstIP,
+	// 		ServerPort: h.tcpID.dstPort,
+	// 		IsOutgoing: h.isOutgoing,
+	// 	}
+	// 	reqResPair = reqResMatcher.registerRequest(ident, &messageHTTP1, h.captureTime)
+	// case http.Response:
+	// 	ident := fmt.Sprintf("%s->%s %s->%s %d", h.tcpID.dstIP, h.tcpID.srcIP, h.tcpID.dstPort, h.tcpID.srcPort, streamID)
+	// 	connectionInfo = &ConnectionInfo{
+	// 		ClientIP:   h.tcpID.dstIP,
+	// 		ClientPort: h.tcpID.dstPort,
+	// 		ServerIP:   h.tcpID.srcIP,
+	// 		ServerPort: h.tcpID.srcPort,
+	// 		IsOutgoing: h.isOutgoing,
+	// 	}
+	// 	reqResPair = reqResMatcher.registerResponse(ident, &messageHTTP1, h.captureTime)
+	// }
 
-	if reqResPair != nil {
-		// statsTracker.incMatchedMessages()
+	// if reqResPair != nil {
+	// 	// statsTracker.incMatchedMessages()
 
-		if h.harWriter != nil {
-			h.harWriter.WritePair(
-				reqResPair.Request.orig.(*http.Request),
-				reqResPair.Request.captureTime,
-				reqResPair.Response.orig.(*http.Response),
-				reqResPair.Response.captureTime,
-				connectionInfo,
-			)
-		}
-	}
+	// 	if h.harWriter != nil {
+	// 		h.harWriter.WritePair(
+	// 			reqResPair.Request.orig.(*http.Request),
+	// 			reqResPair.Request.captureTime,
+	// 			reqResPair.Response.orig.(*http.Response),
+	// 			reqResPair.Response.captureTime,
+	// 			connectionInfo,
+	// 		)
+	// 	}
+	// }
 
 	return nil
 }
