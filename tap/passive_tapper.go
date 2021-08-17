@@ -254,7 +254,6 @@ func loadExtensions() {
 		filename := file.Name()
 		log.Printf("Loading extension: %s\n", filename)
 		extension := &api.Extension{
-			Name: strings.TrimSuffix(filename, filepath.Ext(filename)),
 			Path: path.Join(extensionsDir, filename),
 		}
 		plug, _ := plugin.Open(extension.Path)
@@ -265,7 +264,7 @@ func loadExtensions() {
 		dissector, _ = symDissector.(api.Dissector)
 		dissector.Register(extension)
 		extension.Dissector = dissector
-		fmt.Printf("returned extension: %v\n", extension)
+		log.Printf("Extension Properties: %+v\n", extension)
 		extensions[i] = extension
 	}
 }

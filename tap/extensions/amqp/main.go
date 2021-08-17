@@ -14,7 +14,7 @@ func init() {
 type dissecting string
 
 func (g dissecting) Register(extension *api.Extension) {
-	fmt.Printf("extension: %v\n", extension)
+	extension.Name = "amqp"
 	extension.Ports = []string{"5671", "5672"}
 }
 
