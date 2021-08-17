@@ -5,11 +5,24 @@ import (
 	"encoding/hex"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers" // pulls in all layers decoders
 	"github.com/google/gopacket/reassembly"
 )
+
+type tcpID struct {
+	srcIP   string
+	dstIP   string
+	srcPort string
+	dstPort string
+}
+
+type tcpReaderDataMsg struct {
+	bytes     []byte
+	timestamp time.Time
+}
 
 /* It's a connection (bidirectional)
  * Implements gopacket.reassembly.Stream interface (Accept, ReassembledSG, ReassemblyComplete)
@@ -26,6 +39,11 @@ type tcpStream struct {
 	reversed       bool
 	urls           []string
 	ident          string
+	data           []byte
+	msgQueue       chan tcpReaderDataMsg
+	captureTime    time.Time
+	packetsSeen    uint
+	tcpID          tcpID
 	sync.Mutex
 }
 
@@ -147,9 +165,9 @@ func (t *tcpStream) ReassembledSG(sg reassembly.ScatterGather, ac reassembly.Ass
 			// This is where we pass the reassembled information onwards
 			// This channel is read by an httpReader object
 			// if dir == reassembly.TCPDirClientToServer && !t.reversed {
-			// 	t.client.msgQueue <- httpReaderDataMsg{data, ac.GetCaptureInfo().Timestamp}
+			// 	t.client.msgQueue <- tcpReaderDataMsg{data, ac.GetCaptureInfo().Timestamp}
 			// } else {
-			// 	t.server.msgQueue <- httpReaderDataMsg{data, ac.GetCaptureInfo().Timestamp}
+			// 	t.server.msgQueue <- tcpReaderDataMsg{data, ac.GetCaptureInfo().Timestamp}
 			// }
 		}
 	}

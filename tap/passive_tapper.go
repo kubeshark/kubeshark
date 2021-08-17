@@ -250,7 +250,7 @@ func loadExtensions() {
 		log.Fatal(err)
 	}
 	extensions = make([]*api.Extension, len(files))
-	for _, file := range files {
+	for i, file := range files {
 		filename := file.Name()
 		log.Printf("Loading extension: %s\n", filename)
 		extension := &api.Extension{
@@ -264,8 +264,9 @@ func loadExtensions() {
 		var dissector api.Dissector
 		dissector, _ = symDissector.(api.Dissector)
 		dissector.Register(extension)
+		extension.Dissector = dissector
 		fmt.Printf("returned extension: %v\n", extension)
-		_ = append(extensions, extension)
+		extensions[i] = extension
 	}
 }
 

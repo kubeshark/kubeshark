@@ -2,10 +2,12 @@ package tap
 
 import (
 	"fmt"
+	"io"
 	"sync"
 
 	"github.com/romana/rlog"
 
+	"github.com/bradleyfalzon/tlsx"
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers" // pulls in all layers decoders
 	"github.com/google/gopacket/reassembly"
@@ -22,6 +24,51 @@ type tcpStreamFactory struct {
 	outbountLinkWriter *OutboundLinkWriter
 }
 
+const checkTLSPacketAmount = 100
+
+func (h *tcpStream) run(wg *sync.WaitGroup) {
+	defer wg.Done()
+	for _, extension := range extensions {
+		if extension.Port == h.transport.Dst().String() {
+			extension.Dissector.Ping()
+		}
+	}
+	// b := bufio.NewReader(h)
+	// fmt.Printf("b: %v\n", b)
+}
+
+func (h *tcpStream) Read(p []byte) (int, error) {
+	var msg tcpReaderDataMsg
+
+	ok := true
+	for ok && len(h.data) == 0 {
+		msg, ok = <-h.msgQueue
+		h.data = msg.bytes
+
+		h.captureTime = msg.timestamp
+		if len(h.data) > 0 {
+			h.packetsSeen += 1
+		}
+		if h.packetsSeen < checkTLSPacketAmount && len(msg.bytes) > 5 { // packets with less than 5 bytes cause tlsx to panic
+			clientHello := tlsx.ClientHello{}
+			err := clientHello.Unmarshall(msg.bytes)
+			if err == nil {
+				// statsTracker.incTlsConnectionsCount()
+				fmt.Printf("Detected TLS client hello with SNI %s\n", clientHello.SNI)
+				// numericPort, _ := strconv.Atoi(h.tcpID.dstPort)
+				// h.outboundLinkWriter.WriteOutboundLink(h.tcpID.srcIP, h.tcpID.dstIP, numericPort, clientHello.SNI, TLSProtocol)
+			}
+		}
+	}
+	if !ok || len(h.data) == 0 {
+		return 0, io.EOF
+	}
+
+	l := copy(p, h.data)
+	h.data = h.data[l:]
+	return l, nil
+}
+
 func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.TCP, ac reassembly.AssemblerContext) reassembly.Stream {
 	rlog.Debugf("* NEW: %s %s", net, transport)
 	fsmOptions := reassembly.TCPSimpleFSMOptions{
@@ -32,9 +79,9 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.T
 	dstIp := net.Dst().String()
 	dstPort := int(tcp.DstPort)
 
-	if factory.shouldNotifyOnOutboundLink(dstIp, dstPort) {
-		factory.outbountLinkWriter.WriteOutboundLink(net.Src().String(), dstIp, dstPort, "", "")
-	}
+	// if factory.shouldNotifyOnOutboundLink(dstIp, dstPort) {
+	// 	factory.outbountLinkWriter.WriteOutboundLink(net.Src().String(), dstIp, dstPort, "", "")
+	// }
 	props := factory.getStreamProps(srcIp, dstIp, dstPort)
 	isHTTP := props.isTapTarget
 	stream := &tcpStream{
@@ -47,43 +94,8 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.T
 		ident:      fmt.Sprintf("%s:%s", net, transport),
 		optchecker: reassembly.NewTCPOptionCheck(),
 	}
-	if stream.isHTTP {
-		// stream.client = httpReader{
-		// 	msgQueue: make(chan httpReaderDataMsg),
-		// 	ident:    fmt.Sprintf("%s %s", net, transport),
-		// 	tcpID: tcpID{
-		// 		srcIP:   net.Src().String(),
-		// 		dstIP:   net.Dst().String(),
-		// 		srcPort: transport.Src().String(),
-		// 		dstPort: transport.Dst().String(),
-		// 	},
-		// 	hexdump:            *hexdump,
-		// 	parent:             stream,
-		// 	isClient:           true,
-		// 	isOutgoing:         props.isOutgoing,
-		// 	harWriter:          factory.harWriter,
-		// 	outboundLinkWriter: factory.outbountLinkWriter,
-		// }
-		// stream.server = httpReader{
-		// 	msgQueue: make(chan httpReaderDataMsg),
-		// 	ident:    fmt.Sprintf("%s %s", net.Reverse(), transport.Reverse()),
-		// 	tcpID: tcpID{
-		// 		srcIP:   net.Dst().String(),
-		// 		dstIP:   net.Src().String(),
-		// 		srcPort: transport.Dst().String(),
-		// 		dstPort: transport.Src().String(),
-		// 	},
-		// 	hexdump:            *hexdump,
-		// 	parent:             stream,
-		// 	isOutgoing:         props.isOutgoing,
-		// 	harWriter:          factory.harWriter,
-		// 	outboundLinkWriter: factory.outbountLinkWriter,
-		// }
-		// factory.wg.Add(2)
-		// // Start reading from channels stream.client.bytes and stream.server.bytes
-		// go stream.client.run(&factory.wg)
-		// go stream.server.run(&factory.wg)
-	}
+	factory.wg.Add(1)
+	go stream.run(&factory.wg)
 	return stream
 }
 
