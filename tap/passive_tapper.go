@@ -12,6 +12,7 @@ import (
 	"encoding/hex"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/signal"
@@ -253,19 +254,27 @@ func startMemoryProfiler() {
 
 func loadExtensions() {
 	dir, _ := filepath.Abs(filepath.Dir(os.Args[0]))
-	abspath := path.Join(dir, "./extensions/http.so")
-	fmt.Printf("abspath: %v\n", abspath)
-	extension := &Extension{
-		Name: "http",
-		Path: abspath,
-	}
-	plug, _ := plugin.Open(extension.Path)
-	extension.Plug = plug
-	symGreeter, _ := plug.Lookup("Greeter")
+	extensionsDir := path.Join(dir, "./extensions/")
 
-	var greeter Greeter
-	greeter, _ = symGreeter.(Greeter)
-	greeter.Greet()
+	files, err := ioutil.ReadDir(extensionsDir)
+	if err != nil {
+		log.Fatal(err)
+	}
+	for _, file := range files {
+		filename := file.Name()
+		log.Printf("Loading extension: %s\n", filename)
+		extension := &Extension{
+			Name: strings.TrimSuffix(filename, filepath.Ext(filename)),
+			Path: path.Join(extensionsDir, filename),
+		}
+		plug, _ := plugin.Open(extension.Path)
+		extension.Plug = plug
+		symGreeter, _ := plug.Lookup("Greeter")
+
+		var greeter Greeter
+		greeter, _ = symGreeter.(Greeter)
+		greeter.Greet()
+	}
 }
 
 func startPassiveTapper(outboundLinkWriter *OutboundLinkWriter) {

@@ -5,13 +5,13 @@ import (
 )
 
 func init() {
-	log.Println("Initializing HTTP extension.")
+	log.Println("Initializing AMQP extension.")
 }
 
 type greeting string
 
 func (g greeting) Greet() {
-	log.Println("Hello from HTTP extension.")
+	log.Println("Hello from AMQP extension.")
 }
 
 // exported as symbol named "Greeter"
