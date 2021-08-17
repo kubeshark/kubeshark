@@ -4,9 +4,8 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
-
-	cmap "github.com/orcaman/concurrent-map"
 )
 
 var reqResMatcher = createResponseRequestMatcher() // global
@@ -24,11 +23,11 @@ type httpMessage struct {
 
 // Key is {client_addr}:{client_port}->{dest_addr}:{dest_port}
 type requestResponseMatcher struct {
-	openMessagesMap cmap.ConcurrentMap
+	openMessagesMap sync.Map
 }
 
 func createResponseRequestMatcher() requestResponseMatcher {
-	newMatcher := &requestResponseMatcher{openMessagesMap: cmap.New()}
+	newMatcher := &requestResponseMatcher{openMessagesMap: sync.Map{}}
 	return *newMatcher
 }
 
@@ -42,7 +41,7 @@ func (matcher *requestResponseMatcher) registerRequest(ident string, request *ht
 		orig:        request,
 	}
 
-	if response, found := matcher.openMessagesMap.Pop(key); found {
+	if response, found := matcher.openMessagesMap.LoadAndDelete(key); found {
 		// Type assertion always succeeds because all of the map's values are of httpMessage type
 		responseHTTPMessage := response.(*httpMessage)
 		if responseHTTPMessage.isRequest {
@@ -53,7 +52,7 @@ func (matcher *requestResponseMatcher) registerRequest(ident string, request *ht
 		return matcher.preparePair(&requestHTTPMessage, responseHTTPMessage)
 	}
 
-	matcher.openMessagesMap.Set(key, &requestHTTPMessage)
+	matcher.openMessagesMap.Store(key, &requestHTTPMessage)
 	Trace("Registered open Request for %s", key)
 	return nil
 }
@@ -68,7 +67,7 @@ func (matcher *requestResponseMatcher) registerResponse(ident string, response *
 		orig:        response,
 	}
 
-	if request, found := matcher.openMessagesMap.Pop(key); found {
+	if request, found := matcher.openMessagesMap.LoadAndDelete(key); found {
 		// Type assertion always succeeds because all of the map's values are of httpMessage type
 		requestHTTPMessage := request.(*httpMessage)
 		if !requestHTTPMessage.isRequest {
@@ -79,7 +78,7 @@ func (matcher *requestResponseMatcher) registerResponse(ident string, response *
 		return matcher.preparePair(requestHTTPMessage, &responseHTTPMessage)
 	}
 
-	matcher.openMessagesMap.Set(key, &responseHTTPMessage)
+	matcher.openMessagesMap.Store(key, &responseHTTPMessage)
 	Trace("Registered open Response for %s", key)
 	return nil
 }
@@ -102,21 +101,16 @@ func genKey(split []string) string {
 }
 
 func (matcher *requestResponseMatcher) deleteOlderThan(t time.Time) int {
-	keysToPop := make([]string, 0)
-	for item := range matcher.openMessagesMap.IterBuffered() {
-		// Map only contains values of type httpMessage
-		message, _ := item.Val.(*httpMessage)
+	numDeleted := 0
 
+	matcher.openMessagesMap.Range(func(key interface{}, value interface{}) bool {
+		message, _ := value.(*httpMessage)
 		if message.captureTime.Before(t) {
-			keysToPop = append(keysToPop, item.Key)
+			matcher.openMessagesMap.Delete(key)
+			numDeleted++
 		}
-	}
-
-	numDeleted := len(keysToPop)
-
-	for _, key := range keysToPop {
-		_, _ = matcher.openMessagesMap.Pop(key)
-	}
+		return true
+	})
 
 	return numDeleted
 }
