@@ -33,7 +33,7 @@ func (g dissecting) Ping() {
 	log.Printf("pong HTTP\n")
 }
 
-func (g dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID) interface{} {
+func (g dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID) *api.RequestResponsePair {
 	for {
 		if isClient {
 			requestCounter++
@@ -79,10 +79,11 @@ func (g dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID) in
 			)
 			reqResPair := reqResMatcher.registerResponse(ident, res, time.Now())
 			if reqResPair != nil {
-				log.Printf("YES REQRES MATCHED!\n")
+				return reqResPair
 			}
 		}
 	}
+	return nil
 }
 
 var Dissector dissecting

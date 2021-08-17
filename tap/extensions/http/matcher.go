@@ -6,20 +6,11 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/up9inc/mizu/tap/api"
 )
 
 var reqResMatcher = createResponseRequestMatcher() // global
-
-type requestResponsePair struct {
-	Request  httpMessage `json:"request"`
-	Response httpMessage `json:"response"`
-}
-
-type httpMessage struct {
-	isRequest   bool
-	captureTime time.Time
-	orig        interface{}
-}
 
 // Key is {client_addr}:{client_port}->{dest_addr}:{dest_port}
 type requestResponseMatcher struct {
@@ -31,21 +22,21 @@ func createResponseRequestMatcher() requestResponseMatcher {
 	return *newMatcher
 }
 
-func (matcher *requestResponseMatcher) registerRequest(ident string, request *http.Request, captureTime time.Time) *requestResponsePair {
+func (matcher *requestResponseMatcher) registerRequest(ident string, request *http.Request, captureTime time.Time) *api.RequestResponsePair {
 	split := splitIdent(ident)
 	key := genKey(split)
 	// fmt.Printf(">>> request key: %v\n", key)
 
-	requestHTTPMessage := httpMessage{
-		isRequest:   true,
-		captureTime: captureTime,
-		orig:        request,
+	requestHTTPMessage := api.GenericMessage{
+		IsRequest:   true,
+		CaptureTime: captureTime,
+		Orig:        request,
 	}
 
 	if response, found := matcher.openMessagesMap.LoadAndDelete(key); found {
-		// Type assertion always succeeds because all of the map's values are of httpMessage type
-		responseHTTPMessage := response.(*httpMessage)
-		if responseHTTPMessage.isRequest {
+		// Type assertion always succeeds because all of the map's values are of api.GenericMessage type
+		responseHTTPMessage := response.(*api.GenericMessage)
+		if responseHTTPMessage.IsRequest {
 			SilentError("Request-Duplicate", "Got duplicate request with same identifier")
 			return nil
 		}
@@ -58,21 +49,21 @@ func (matcher *requestResponseMatcher) registerRequest(ident string, request *ht
 	return nil
 }
 
-func (matcher *requestResponseMatcher) registerResponse(ident string, response *http.Response, captureTime time.Time) *requestResponsePair {
+func (matcher *requestResponseMatcher) registerResponse(ident string, response *http.Response, captureTime time.Time) *api.RequestResponsePair {
 	split := splitIdent(ident)
 	key := genKey(split)
 	// fmt.Printf(">>> response key: %v\n", key)
 
-	responseHTTPMessage := httpMessage{
-		isRequest:   false,
-		captureTime: captureTime,
-		orig:        response,
+	responseHTTPMessage := api.GenericMessage{
+		IsRequest:   false,
+		CaptureTime: captureTime,
+		Orig:        response,
 	}
 
 	if request, found := matcher.openMessagesMap.LoadAndDelete(key); found {
-		// Type assertion always succeeds because all of the map's values are of httpMessage type
-		requestHTTPMessage := request.(*httpMessage)
-		if !requestHTTPMessage.isRequest {
+		// Type assertion always succeeds because all of the map's values are of api.GenericMessage type
+		requestHTTPMessage := request.(*api.GenericMessage)
+		if !requestHTTPMessage.IsRequest {
 			SilentError("Response-Duplicate", "Got duplicate response with same identifier")
 			return nil
 		}
@@ -85,8 +76,8 @@ func (matcher *requestResponseMatcher) registerResponse(ident string, response *
 	return nil
 }
 
-func (matcher *requestResponseMatcher) preparePair(requestHTTPMessage *httpMessage, responseHTTPMessage *httpMessage) *requestResponsePair {
-	return &requestResponsePair{
+func (matcher *requestResponseMatcher) preparePair(requestHTTPMessage *api.GenericMessage, responseHTTPMessage *api.GenericMessage) *api.RequestResponsePair {
+	return &api.RequestResponsePair{
 		Request:  *requestHTTPMessage,
 		Response: *responseHTTPMessage,
 	}
@@ -106,8 +97,8 @@ func (matcher *requestResponseMatcher) deleteOlderThan(t time.Time) int {
 	numDeleted := 0
 
 	matcher.openMessagesMap.Range(func(key interface{}, value interface{}) bool {
-		message, _ := value.(*httpMessage)
-		if message.captureTime.Before(t) {
+		message, _ := value.(*api.GenericMessage)
+		if message.CaptureTime.Before(t) {
 			matcher.openMessagesMap.Delete(key)
 			numDeleted++
 		}

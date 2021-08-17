@@ -3,6 +3,7 @@ package api
 import (
 	"bufio"
 	"plugin"
+	"time"
 )
 
 type Extension struct {
@@ -29,8 +30,19 @@ type TcpID struct {
 	DstPort string
 }
 
+type GenericMessage struct {
+	IsRequest   bool
+	CaptureTime time.Time
+	Orig        interface{}
+}
+
+type RequestResponsePair struct {
+	Request  GenericMessage `json:"request"`
+	Response GenericMessage `json:"response"`
+}
+
 type Dissector interface {
 	Register(*Extension)
 	Ping()
-	Dissect(b *bufio.Reader, isClient bool, tcpID *TcpID) interface{}
+	Dissect(b *bufio.Reader, isClient bool, tcpID *TcpID) *RequestResponsePair
 }

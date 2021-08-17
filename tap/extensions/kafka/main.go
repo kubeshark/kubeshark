@@ -23,7 +23,7 @@ func (g dissecting) Ping() {
 	log.Printf("pong Kafka\n")
 }
 
-func (g dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID) interface{} {
+func (g dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID) *api.RequestResponsePair {
 	// TODO: Implement
 	return nil
 }

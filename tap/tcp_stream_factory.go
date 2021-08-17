@@ -3,6 +3,7 @@ package tap
 import (
 	"bufio"
 	"fmt"
+	"log"
 	"sync"
 
 	"github.com/romana/rlog"
@@ -45,13 +46,14 @@ func (h *tcpStream) serverRun(tcpID *api.TcpID) {
 	for _, extension := range extensions {
 		if containsPort(extension.OutboundPorts, h.transport.Src().String()) {
 			extension.Dissector.Ping()
-			extension.Dissector.Dissect(b, false, tcpID)
+			reqResPair := extension.Dissector.Dissect(b, false, tcpID)
+			log.Printf("reqResPair: %+v\n", reqResPair)
 		}
 	}
 }
 
 func (h *tcpStreamFactory) New(net, transport gopacket.Flow) tcpassembly.Stream {
-	fmt.Printf("* NEW: %s %s\n", net, transport)
+	log.Printf("* NEW: %s %s\n", net, transport)
 	stream := &tcpStream{
 		net:       net,
 		transport: transport,
