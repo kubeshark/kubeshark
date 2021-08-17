@@ -15,7 +15,8 @@ type dissecting string
 
 func (g dissecting) Register(extension *api.Extension) {
 	extension.Name = "kafka"
-	extension.Ports = []string{"9092"}
+	extension.OutboundPorts = []string{"9092"}
+	extension.InboundPorts = []string{}
 }
 
 func (g dissecting) Ping() {

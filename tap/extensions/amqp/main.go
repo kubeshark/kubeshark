@@ -15,7 +15,8 @@ type dissecting string
 
 func (g dissecting) Register(extension *api.Extension) {
 	extension.Name = "amqp"
-	extension.Ports = []string{"5671", "5672"}
+	extension.OutboundPorts = []string{"5671", "5672"}
+	extension.InboundPorts = []string{}
 }
 
 func (g dissecting) Ping() {

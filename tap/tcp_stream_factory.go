@@ -32,7 +32,7 @@ func containsPort(ports []string, port string) bool {
 func (h *tcpStream) run() {
 	b := bufio.NewReader(&h.r)
 	for _, extension := range extensions {
-		if containsPort(extension.Ports, h.transport.Dst().String()) {
+		if containsPort(extension.OutboundPorts, h.transport.Dst().String()) {
 			extension.Dissector.Ping()
 			extension.Dissector.Dissect(b)
 		}
@@ -46,7 +46,7 @@ func (h *tcpStreamFactory) New(net, transport gopacket.Flow) tcpassembly.Stream 
 		transport: transport,
 		r:         tcpreader.NewReaderStream(),
 	}
-	if transport.Dst().String() == "80" {
+	if containsPort(allOutboundPorts, transport.Dst().String()) {
 		go stream.run()
 	}
 	return &stream.r

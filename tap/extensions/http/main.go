@@ -19,7 +19,8 @@ type dissecting string
 
 func (g dissecting) Register(extension *api.Extension) {
 	extension.Name = "http"
-	extension.Ports = []string{"80", "8080", "443"}
+	extension.OutboundPorts = []string{"80", "8080", "443"}
+	extension.InboundPorts = []string{}
 }
 
 func (g dissecting) Ping() {

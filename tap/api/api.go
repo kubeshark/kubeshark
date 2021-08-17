@@ -6,11 +6,12 @@ import (
 )
 
 type Extension struct {
-	Name      string
-	Path      string
-	Plug      *plugin.Plugin
-	Ports     []string
-	Dissector Dissector
+	Name          string
+	Path          string
+	Plug          *plugin.Plugin
+	InboundPorts  []string
+	OutboundPorts []string
+	Dissector     Dissector
 }
 
 type Dissector interface {
