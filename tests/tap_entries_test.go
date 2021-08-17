@@ -1,14 +1,8 @@
 package tests
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"net/http"
-	"os"
 	"os/exec"
-	"path"
-	"syscall"
 	"testing"
 	"time"
 )
@@ -18,32 +12,19 @@ func TestSystemTapEntriesCount(t *testing.T) {
 
 	for _, entriesCount := range tests {
 		t.Run(fmt.Sprintf("%d", entriesCount), func(t *testing.T) {
-			dir, filePathErr := os.Getwd()
-			if filePathErr != nil {
-				t.Errorf("failed to get home dir, err: %v", filePathErr)
+			cliPath, cliPathErr := GetCliPath()
+			if cliPathErr != nil {
+				t.Errorf("failed to get cli path, err: %v", cliPathErr)
 				return
 			}
 
-			mizuPath := path.Join(dir, "../cli/bin/mizu_ci")
-			tapCommand := "tap"
-			setFlag := "--set"
-			namespaces := "tap.namespaces=mizu-tests"
-			agentImage := "agent-image=gcr.io/up9-docker-hub/mizu/ci:0.0.0"
-			imagePullPolicy := "image-pull-policy=Never"
-			telemetry := "telemetry=false"
-
-			cmd := exec.Command(mizuPath, tapCommand, setFlag, namespaces, setFlag, agentImage, setFlag, imagePullPolicy, setFlag, telemetry)
+			tapCmdArgs := GetDefaultTapCommandArgs()
+			cmd := exec.Command(cliPath, tapCmdArgs...)
 			t.Logf("running command: %v", cmd.String())
 
 			t.Cleanup(func() {
-				if err := cmd.Process.Signal(syscall.SIGQUIT); err != nil {
-					t.Logf("failed to signal tap process, err: %v", err)
-					return
-				}
-
-				if err := cmd.Wait(); err != nil {
-					t.Logf("failed to wait tap process, err: %v", err)
-					return
+				if err := CleanupCommand(cmd); err != nil {
+					t.Logf("failed to cleanup command, err: %v", err)
 				}
 			})
 
@@ -54,13 +35,10 @@ func TestSystemTapEntriesCount(t *testing.T) {
 
 			time.Sleep(30 * time.Second)
 
+			proxyUrl := "http://localhost:8080/api/v1/namespaces/mizu-tests/services/httpbin/proxy/get"
 			for i := 0; i < entriesCount; i++ {
-				response, requestErr := http.Get("http://localhost:8080/api/v1/namespaces/mizu-tests/services/httpbin/proxy/get")
-				if requestErr != nil {
-					t.Errorf("failed to send request, err: %v", requestErr)
-					return
-				} else if response.StatusCode != 200 {
-					t.Errorf("failed to send request, status code: %v", response.StatusCode)
+				if _, requestErr := ExecuteHttpRequest(proxyUrl); requestErr != nil {
+					t.Errorf("failed to send proxy request, err: %v", requestErr)
 					return
 				}
 			}
@@ -68,24 +46,15 @@ func TestSystemTapEntriesCount(t *testing.T) {
 			time.Sleep(5 * time.Second)
 
 			entriesUrl := fmt.Sprintf("http://localhost:8899/mizu/api/entries?limit=%v&operator=lt&timestamp=%v", entriesCount, time.Now().UnixNano())
-			response, requestErr := http.Get(entriesUrl)
+			requestResult, requestErr := ExecuteHttpRequest(entriesUrl)
 			if requestErr != nil {
 				t.Errorf("failed to get entries, err: %v", requestErr)
 				return
-			} else if response.StatusCode != 200 {
-				t.Errorf("failed to get entries, status code: %v", response.StatusCode)
-				return
 			}
 
-			data, readErr := ioutil.ReadAll(response.Body)
-			if readErr != nil {
-				t.Errorf("failed to read entries, err: %v", readErr)
-				return
-			}
-
-			var entries []interface{}
-			if parseErr := json.Unmarshal(data, &entries); parseErr != nil {
-				t.Errorf("failed to parse entries, err: %v", parseErr)
+			entries, ok := requestResult.([]interface{})
+			if !ok {
+				t.Errorf("invalid entries type")
 				return
 			}
 
