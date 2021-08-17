@@ -1,4 +1,4 @@
-package main
+package lib
 
 type OutboundLinkProtocol string
 

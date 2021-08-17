@@ -15,6 +15,8 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"path"
+	"path/filepath"
 	"plugin"
 	"runtime"
 	"runtime/pprof"
@@ -128,6 +130,10 @@ type Extension struct {
 	Plug *plugin.Plugin
 }
 
+type Greeter interface {
+	Greet()
+}
+
 var extensions []Extension // global
 
 type OutputChannelItem struct {
@@ -196,15 +202,16 @@ func (c *Context) GetCaptureInfo() gopacket.CaptureInfo {
 }
 
 func StartPassiveTapper(opts *TapOpts) (<-chan *OutputChannelItem, <-chan *OutboundLink) {
+	fmt.Printf("called StartPassiveTapper\n")
 	hostMode = opts.HostMode
 
 	// var harWriter *HarWriter
 	// if *dumpToHar {
 	// 	harWriter = NewHarWriter(*HarOutputDir, *harEntriesPerFile)
 	// }
-	// outboundLinkWriter := NewOutboundLinkWriter()
+	outboundLinkWriter := NewOutboundLinkWriter()
 
-	// go startPassiveTapper(harWriter, outboundLinkWriter)
+	go startPassiveTapper(outboundLinkWriter)
 
 	// if harWriter != nil {
 	// 	return harWriter.OutChan, outboundLinkWriter.OutChan
@@ -245,12 +252,20 @@ func startMemoryProfiler() {
 }
 
 func loadExtensions() {
+	dir, _ := filepath.Abs(filepath.Dir(os.Args[0]))
+	abspath := path.Join(dir, "./extensions/http.so")
+	fmt.Printf("abspath: %v\n", abspath)
 	extension := &Extension{
 		Name: "http",
-		Path: "./extensions/http.so",
+		Path: abspath,
 	}
 	plug, _ := plugin.Open(extension.Path)
 	extension.Plug = plug
+	symGreeter, _ := plug.Lookup("Greeter")
+
+	var greeter Greeter
+	greeter, _ = symGreeter.(Greeter)
+	greeter.Greet()
 }
 
 func startPassiveTapper(outboundLinkWriter *OutboundLinkWriter) {

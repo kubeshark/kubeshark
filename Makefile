@@ -23,7 +23,7 @@ export SEM_VER?=0.0.0
 
 ui: ## Build UI.
 	@(cd ui; npm i ; npm run build; )
-	@ls -l ui/build  
+	@ls -l ui/build
 
 cli: ## Build CLI.
 	@echo "building cli"; cd cli && $(MAKE) build
@@ -31,6 +31,7 @@ cli: ## Build CLI.
 agent: ## Build agent.
 	@(echo "building mizu agent .." )
 	@(cd agent; go build -o build/mizuagent main.go)
+	${MAKE} extensions
 	@ls -l agent/build
 
 docker: ## Build and publish agent docker image.
@@ -65,6 +66,11 @@ clean-cli:  ## Clean CLI.
 clean-docker:
 	@(echo "DOCKER cleanup - NOT IMPLEMENTED YET " )
 
-http:
+extensions: extension-http
+
+extension-http:
 	cd tap/extensions/http && \
 	go build -buildmode=plugin -o ../http.so .
+	cd ../../..
+	mkdir -p agent/build/extensions
+	cp tap/extensions/http.so agent/build/extensions

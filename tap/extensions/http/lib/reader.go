@@ -1,4 +1,4 @@
-package main
+package lib
 
 import (
 	"bufio"
@@ -35,6 +35,10 @@ type ConnectionInfo struct {
 	ServerIP   string
 	ServerPort string
 	IsOutgoing bool
+}
+
+func SomeExample() {
+	fmt.Println("Hello from SomeExample")
 }
 
 func (tid *tcpID) String() string {
