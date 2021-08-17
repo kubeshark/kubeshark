@@ -1,6 +1,9 @@
 package api
 
-import "plugin"
+import (
+	"bufio"
+	"plugin"
+)
 
 type Extension struct {
 	Name      string
@@ -13,4 +16,5 @@ type Extension struct {
 type Dissector interface {
 	Register(*Extension)
 	Ping()
+	Dissect(b *bufio.Reader) interface{}
 }

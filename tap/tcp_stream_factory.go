@@ -1,6 +1,7 @@
 package tap
 
 import (
+	"bufio"
 	"fmt"
 	"io"
 	"sync"
@@ -39,7 +40,9 @@ func (h *tcpStream) run(wg *sync.WaitGroup) {
 	defer wg.Done()
 	for _, extension := range extensions {
 		if containsPort(extension.Ports, h.transport.Dst().String()) {
+			b := bufio.NewReader(h)
 			extension.Dissector.Ping()
+			extension.Dissector.Dissect(b)
 		}
 	}
 	// b := bufio.NewReader(h)

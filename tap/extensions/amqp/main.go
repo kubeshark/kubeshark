@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"bufio"
 	"log"
 
 	"github.com/up9inc/mizu/tap/api"
@@ -19,7 +19,12 @@ func (g dissecting) Register(extension *api.Extension) {
 }
 
 func (g dissecting) Ping() {
-	fmt.Printf("pong AMQP\n")
+	log.Printf("pong AMQP\n")
+}
+
+func (g dissecting) Dissect(b *bufio.Reader) interface{} {
+	// TODO: Implement
+	return nil
 }
 
 // exported as symbol named "Greeter"

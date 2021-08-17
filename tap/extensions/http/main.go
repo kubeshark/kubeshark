@@ -1,8 +1,9 @@
 package main
 
 import (
-	"fmt"
+	"bufio"
 	"log"
+	"net/http"
 
 	"github.com/up9inc/mizu/tap/api"
 )
@@ -19,7 +20,14 @@ func (g dissecting) Register(extension *api.Extension) {
 }
 
 func (g dissecting) Ping() {
-	fmt.Printf("pong HTTP\n")
+	log.Printf("pong HTTP\n")
+}
+
+func (g dissecting) Dissect(b *bufio.Reader) interface{} {
+	log.Printf("called Dissect!")
+	req, _ := http.ReadRequest(b)
+	log.Printf("HTTP Request: %+v\n", req)
+	return nil
 }
 
 // exported as symbol named "Greeter"
