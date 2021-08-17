@@ -23,10 +23,9 @@ func (g dissecting) Ping() {
 	log.Printf("pong AMQP\n")
 }
 
-func (g dissecting) Dissect(b *bufio.Reader, isClient bool) interface{} {
+func (g dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID) interface{} {
 	// TODO: Implement
 	return nil
 }
 
-// exported as symbol named "Greeter"
 var Dissector dissecting

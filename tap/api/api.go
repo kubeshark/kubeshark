@@ -14,8 +14,23 @@ type Extension struct {
 	Dissector     Dissector
 }
 
+type ConnectionInfo struct {
+	ClientIP   string
+	ClientPort string
+	ServerIP   string
+	ServerPort string
+	IsOutgoing bool
+}
+
+type TcpID struct {
+	SrcIP   string
+	DstIP   string
+	SrcPort string
+	DstPort string
+}
+
 type Dissector interface {
 	Register(*Extension)
 	Ping()
-	Dissect(b *bufio.Reader, isClient bool) interface{}
+	Dissect(b *bufio.Reader, isClient bool, tcpID *TcpID) interface{}
 }

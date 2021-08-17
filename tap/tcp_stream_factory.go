@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/romana/rlog"
+	"github.com/up9inc/mizu/tap/api"
 
 	"github.com/google/gopacket" // pulls in all layers decoders
 	"github.com/google/gopacket/tcpassembly"
@@ -29,22 +30,22 @@ func containsPort(ports []string, port string) bool {
 	return false
 }
 
-func (h *tcpStream) clientRun() {
+func (h *tcpStream) clientRun(tcpID *api.TcpID) {
 	b := bufio.NewReader(&h.r)
 	for _, extension := range extensions {
 		if containsPort(extension.OutboundPorts, h.transport.Dst().String()) {
 			extension.Dissector.Ping()
-			extension.Dissector.Dissect(b, true)
+			extension.Dissector.Dissect(b, true, tcpID)
 		}
 	}
 }
 
-func (h *tcpStream) serverRun() {
+func (h *tcpStream) serverRun(tcpID *api.TcpID) {
 	b := bufio.NewReader(&h.r)
 	for _, extension := range extensions {
 		if containsPort(extension.OutboundPorts, h.transport.Src().String()) {
 			extension.Dissector.Ping()
-			extension.Dissector.Dissect(b, false)
+			extension.Dissector.Dissect(b, false, tcpID)
 		}
 	}
 }
@@ -56,10 +57,16 @@ func (h *tcpStreamFactory) New(net, transport gopacket.Flow) tcpassembly.Stream 
 		transport: transport,
 		r:         tcpreader.NewReaderStream(),
 	}
+	tcpID := &api.TcpID{
+		SrcIP:   net.Src().String(),
+		DstIP:   net.Dst().String(),
+		SrcPort: transport.Src().String(),
+		DstPort: transport.Dst().String(),
+	}
 	if containsPort(allOutboundPorts, transport.Dst().String()) {
-		go stream.clientRun()
+		go stream.clientRun(tcpID)
 	} else if containsPort(allOutboundPorts, transport.Src().String()) {
-		go stream.serverRun()
+		go stream.serverRun(tcpID)
 	}
 	return &stream.r
 }

@@ -2,19 +2,24 @@ package main
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/up9inc/mizu/tap/api"
 )
 
+var requestCounter uint
+var responseCounter uint
+
 func init() {
 	log.Println("Initializing HTTP extension.")
+	requestCounter = 0
+	responseCounter = 0
 }
-
-var discardBuffer = make([]byte, 4096)
 
 type dissecting string
 
@@ -28,12 +33,12 @@ func (g dissecting) Ping() {
 	log.Printf("pong HTTP\n")
 }
 
-func (g dissecting) Dissect(b *bufio.Reader, isClient bool) interface{} {
+func (g dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID) interface{} {
 	for {
 		if isClient {
+			requestCounter++
 			req, err := http.ReadRequest(b)
 			if err == io.EOF || err == io.ErrUnexpectedEOF {
-				// We must read until we see an EOF... very important!
 				return nil
 			} else if err != nil {
 				log.Println("Error reading stream:", err)
@@ -42,10 +47,20 @@ func (g dissecting) Dissect(b *bufio.Reader, isClient bool) interface{} {
 				req.Body.Close()
 				log.Printf("Received request: %+v with body: %+v\n", req, body)
 			}
+
+			ident := fmt.Sprintf(
+				"%s->%s %s->%s %d",
+				tcpID.SrcIP,
+				tcpID.DstIP,
+				tcpID.SrcPort,
+				tcpID.DstPort,
+				requestCounter,
+			)
+			reqResMatcher.registerRequest(ident, req, time.Now())
 		} else {
+			responseCounter++
 			res, err := http.ReadResponse(b, nil)
 			if err == io.EOF || err == io.ErrUnexpectedEOF {
-				// We must read until we see an EOF... very important!
 				return nil
 			} else if err != nil {
 				log.Println("Error reading stream:", err)
@@ -54,9 +69,20 @@ func (g dissecting) Dissect(b *bufio.Reader, isClient bool) interface{} {
 				res.Body.Close()
 				log.Printf("Received response: %+v with body: %+v\n", res, body)
 			}
+			ident := fmt.Sprintf(
+				"%s->%s %s->%s %d",
+				tcpID.DstIP,
+				tcpID.SrcIP,
+				tcpID.DstPort,
+				tcpID.SrcPort,
+				responseCounter,
+			)
+			reqResPair := reqResMatcher.registerResponse(ident, res, time.Now())
+			if reqResPair != nil {
+				log.Printf("YES REQRES MATCHED!\n")
+			}
 		}
 	}
 }
 
-// exported as symbol named "Greeter"
 var Dissector dissecting
