@@ -4,10 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
-	"net/http"
-	"time"
 
 	"github.com/up9inc/mizu/tap/api"
 )
@@ -25,67 +22,60 @@ type dissecting string
 
 const ExtensionName = "http"
 
-func (g dissecting) Register(extension *api.Extension) {
+func (d dissecting) Register(extension *api.Extension) {
 	extension.Name = ExtensionName
 	extension.OutboundPorts = []string{"80", "8080", "443"}
 	extension.InboundPorts = []string{}
 }
 
-func (g dissecting) Ping() {
+func (d dissecting) Ping() {
 	log.Printf("pong HTTP\n")
 }
 
-func (g dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID) *api.OutputChannelItem {
-	for {
-		if isClient {
-			requestCounter++
-			req, err := http.ReadRequest(b)
-			if err == io.EOF || err == io.ErrUnexpectedEOF {
-				return nil
-			} else if err != nil {
-				log.Println("Error reading stream:", err)
-			} else {
-				body, _ := ioutil.ReadAll(req.Body)
-				req.Body.Close()
-				log.Printf("Received request: %+v with body: %+v\n", req, body)
-			}
+func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, Emit func(item *api.OutputChannelItem)) {
+	ident := fmt.Sprintf("%s->%s:%s->%s", tcpID.SrcIP, tcpID.DstIP, tcpID.SrcPort, tcpID.DstPort)
+	isHTTP2, err := checkIsHTTP2Connection(b, isClient)
+	if err != nil {
+		SilentError("HTTP/2-Prepare-Connection", "stream %s Failed to check if client is HTTP/2: %s (%v,%+v)", ident, err, err, err)
+		// Do something?
+	}
 
-			ident := fmt.Sprintf(
-				"%s->%s %s->%s %d",
-				tcpID.SrcIP,
-				tcpID.DstIP,
-				tcpID.SrcPort,
-				tcpID.DstPort,
-				requestCounter,
-			)
-			reqResMatcher.registerRequest(ident, req, time.Now())
-		} else {
-			responseCounter++
-			res, err := http.ReadResponse(b, nil)
+	var grpcAssembler *GrpcAssembler
+	if isHTTP2 {
+		err := prepareHTTP2Connection(b, isClient)
+		if err != nil {
+			SilentError("HTTP/2-Prepare-Connection-After-Check", "stream %s error: %s (%v,%+v)", ident, err, err, err)
+		}
+		grpcAssembler = createGrpcAssembler(b)
+	}
+
+	for {
+		if isHTTP2 {
+			err = handleHTTP2Stream(grpcAssembler, tcpID, Emit)
 			if err == io.EOF || err == io.ErrUnexpectedEOF {
-				return nil
+				break
 			} else if err != nil {
-				log.Println("Error reading stream:", err)
-			} else {
-				body, _ := ioutil.ReadAll(res.Body)
-				res.Body.Close()
-				log.Printf("Received response: %+v with body: %+v\n", res, body)
+				SilentError("HTTP/2", "stream %s error: %s (%v,%+v)", ident, err, err, err)
+				continue
 			}
-			ident := fmt.Sprintf(
-				"%s->%s %s->%s %d",
-				tcpID.DstIP,
-				tcpID.SrcIP,
-				tcpID.DstPort,
-				tcpID.SrcPort,
-				responseCounter,
-			)
-			reqResPair := reqResMatcher.registerResponse(ident, res, time.Now())
-			if reqResPair != nil {
-				return reqResPair
+		} else if isClient {
+			err = handleHTTP1ClientStream(b, tcpID, Emit)
+			if err == io.EOF || err == io.ErrUnexpectedEOF {
+				break
+			} else if err != nil {
+				SilentError("HTTP-request", "stream %s Request error: %s (%v,%+v)", ident, err, err, err)
+				continue
+			}
+		} else {
+			err = handleHTTP1ServerStream(b, tcpID, Emit)
+			if err == io.EOF || err == io.ErrUnexpectedEOF {
+				break
+			} else if err != nil {
+				SilentError("HTTP-response", "stream %s Response error: %s (%v,%+v)", ident, err, err, err)
+				continue
 			}
 		}
 	}
-	return nil
 }
 
 var Dissector dissecting

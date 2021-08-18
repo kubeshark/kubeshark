@@ -51,5 +51,5 @@ type OutputChannelItem struct {
 type Dissector interface {
 	Register(*Extension)
 	Ping()
-	Dissect(b *bufio.Reader, isClient bool, tcpID *TcpID, callback func(reqResPair *RequestResponsePair))
+	Dissect(b *bufio.Reader, isClient bool, tcpID *TcpID, callback func(item *OutputChannelItem))
 }

@@ -11,13 +11,13 @@ import (
 	"github.com/up9inc/mizu/tap/api"
 )
 
-func handleHTTP2Stream(grpcAssembler *GrpcAssembler, tcpID *api.TcpID, Emit func(reqResPair *api.RequestResponsePair)) error {
+func handleHTTP2Stream(grpcAssembler *GrpcAssembler, tcpID *api.TcpID, Emit func(item *api.OutputChannelItem)) error {
 	streamID, messageHTTP1, err := grpcAssembler.readMessage()
 	if err != nil {
 		return err
 	}
 
-	var reqResPair *api.RequestResponsePair
+	var item *api.OutputChannelItem
 
 	switch messageHTTP1 := messageHTTP1.(type) {
 	case http.Request:
@@ -30,7 +30,7 @@ func handleHTTP2Stream(grpcAssembler *GrpcAssembler, tcpID *api.TcpID, Emit func
 			tcpID.DstPort,
 			streamID,
 		)
-		reqResPair = reqResMatcher.registerRequest(ident, &messageHTTP1, time.Now())
+		item = reqResMatcher.registerRequest(ident, &messageHTTP1, time.Now())
 	case http.Response:
 		responseCounter++
 		ident := fmt.Sprintf(
@@ -41,17 +41,17 @@ func handleHTTP2Stream(grpcAssembler *GrpcAssembler, tcpID *api.TcpID, Emit func
 			tcpID.SrcPort,
 			streamID,
 		)
-		reqResPair = reqResMatcher.registerResponse(ident, &messageHTTP1, time.Now())
+		item = reqResMatcher.registerResponse(ident, &messageHTTP1, time.Now())
 	}
 
-	if reqResPair != nil {
-		Emit(reqResPair)
+	if item != nil {
+		Emit(item)
 	}
 
 	return nil
 }
 
-func handleHTTP1ClientStream(b *bufio.Reader, tcpID *api.TcpID, Emit func(reqResPair *api.RequestResponsePair)) error {
+func handleHTTP1ClientStream(b *bufio.Reader, tcpID *api.TcpID, Emit func(item *api.OutputChannelItem)) error {
 	requestCounter++
 	req, err := http.ReadRequest(b)
 	if err != nil {
@@ -71,14 +71,14 @@ func handleHTTP1ClientStream(b *bufio.Reader, tcpID *api.TcpID, Emit func(reqRes
 		tcpID.DstPort,
 		requestCounter,
 	)
-	reqResPair := reqResMatcher.registerRequest(ident, req, time.Now())
-	if reqResPair != nil {
-		Emit(reqResPair)
+	item := reqResMatcher.registerRequest(ident, req, time.Now())
+	if item != nil {
+		Emit(item)
 	}
 	return nil
 }
 
-func handleHTTP1ServerStream(b *bufio.Reader, tcpID *api.TcpID, Emit func(reqResPair *api.RequestResponsePair)) error {
+func handleHTTP1ServerStream(b *bufio.Reader, tcpID *api.TcpID, Emit func(item *api.OutputChannelItem)) error {
 	responseCounter++
 	res, err := http.ReadResponse(b, nil)
 	if err != nil {
@@ -97,9 +97,9 @@ func handleHTTP1ServerStream(b *bufio.Reader, tcpID *api.TcpID, Emit func(reqRes
 		tcpID.SrcPort,
 		responseCounter,
 	)
-	reqResPair := reqResMatcher.registerResponse(ident, res, time.Now())
-	if reqResPair != nil {
-		Emit(reqResPair)
+	item := reqResMatcher.registerResponse(ident, res, time.Now())
+	if item != nil {
+		Emit(item)
 	}
 	return nil
 }

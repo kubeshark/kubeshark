@@ -15,7 +15,7 @@ import (
 
 type tcpStreamFactory struct {
 	outbountLinkWriter *OutboundLinkWriter
-	OutputChannelItem chan *api.OutputChannelItem
+	OutputChannelItem  chan *api.OutputChannelItem
 }
 
 const checkTLSPacketAmount = 100
@@ -29,10 +29,8 @@ func containsPort(ports []string, port string) bool {
 	return false
 }
 
-func Emit(reqResPair *api.RequestResponsePair) {
-	log.Printf("Emit reqResPair: %+v\n", reqResPair)
-	log.Printf("Emit reqResPair.Request.Orig: %v\n", reqResPair.Request.Orig)
-	log.Printf("Emit reqResPair.Response.Orig: %v\n", reqResPair.Response.Orig)
+func Emit(item *api.OutputChannelItem) {
+	log.Printf("Emit item: %+v\n", item)
 }
 
 func (h *tcpStream) clientRun(tcpID *api.TcpID) {

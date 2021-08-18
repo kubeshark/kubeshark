@@ -189,7 +189,7 @@ func (c *Context) GetCaptureInfo() gopacket.CaptureInfo {
 	return c.CaptureInfo
 }
 
-func StartPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem) () {
+func StartPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem) {
 	hostMode = opts.HostMode
 
 	if GetMemoryProfilingEnabled() {
