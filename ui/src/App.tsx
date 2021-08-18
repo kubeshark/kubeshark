@@ -120,7 +120,7 @@ const App = () => {
             <Snackbar open={showTLSWarning && !userDismissedTLSWarning}>
                 <MuiAlert classes={{ filledWarning: 'customWarningStyle' }} elevation={6} variant="filled" onClose={() => setUserDismissedTLSWarning(true)} severity="warning">
                     Mizu is detecting TLS traffic, this type of traffic will not be displayed.
-                    {addressesWithTLS.size ?  <ul className="httpsDomains"> {Array.from(addressesWithTLS, address => <li>{address}</li>)} </ul>: null}
+                    {addressesWithTLS.size > 0 && <ul className="httpsDomains"> {Array.from(addressesWithTLS, address => <li>{address}</li>)} </ul>}
                 </MuiAlert>
             </Snackbar>
         </div>
