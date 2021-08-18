@@ -51,8 +51,8 @@ func InitConfig(cmd *cobra.Command) error {
 	}
 
 	if err := mergeConfigFile(); err != nil {
-		return fmt.Errorf("invalid config %w\n"+
-			"you can regenerate the file using `mizu config -r` or just remove it %v", err, GetConfigFilePath())
+		return fmt.Errorf("invalid config, %w\n" +
+			"you can regenerate the file by removing it (%v) and using `mizu config -r`", err, GetConfigFilePath())
 	}
 
 	cmd.Flags().Visit(initFlag)

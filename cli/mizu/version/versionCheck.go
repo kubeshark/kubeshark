@@ -89,7 +89,10 @@ func CheckNewerVersion() {
 	gitHubVersion := string(data)
 	gitHubVersion = gitHubVersion[:len(gitHubVersion)-1]
 	logger.Log.Debugf("Finished version validation, took %v", time.Since(start))
-	if mizu.SemVer < gitHubVersion {
+
+	gitHubVersionSemVer := semver.SemVersion(gitHubVersion)
+	currentSemVer := semver.SemVersion(mizu.SemVer)
+	if gitHubVersionSemVer.GreaterThan(currentSemVer) {
 		logger.Log.Infof(uiUtils.Yellow, fmt.Sprintf("Update available! %v -> %v (%v)", mizu.SemVer, gitHubVersion, *latestRelease.HTMLURL))
 	}
 }
