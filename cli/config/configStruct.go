@@ -16,12 +16,14 @@ type ConfigStruct struct {
 	Fetch                  configStructs.FetchConfig   `yaml:"fetch"`
 	Version                configStructs.VersionConfig `yaml:"version"`
 	View                   configStructs.ViewConfig    `yaml:"view"`
+	Logs                   configStructs.LogsConfig    `yaml:"logs"`
+	Config                 configStructs.ConfigConfig  `yaml:"config,omitempty"`
 	AgentImage             string                      `yaml:"agent-image,omitempty" readonly:""`
 	ImagePullPolicyStr     string                      `yaml:"image-pull-policy" default:"Always"`
 	MizuResourcesNamespace string                      `yaml:"mizu-resources-namespace" default:"mizu"`
 	Telemetry              bool                        `yaml:"telemetry" default:"true"`
 	DumpLogs               bool                        `yaml:"dump-logs" default:"false"`
-	KubeConfigPath         string                      `yaml:"kube-config-path" default:""`
+	KubeConfigPath         string                      `yaml:"kube-config-path"`
 }
 
 func (config *ConfigStruct) SetDefaults() {

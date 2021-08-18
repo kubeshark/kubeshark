@@ -265,7 +265,7 @@ func cleanUpMizuResources(kubernetesProvider *kubernetes.Provider) {
 
 	if config.Config.DumpLogs {
 		mizuDir := mizu.GetMizuFolderPath()
-		filePath = path.Join(mizuDir, fmt.Sprintf("mizu_logs_%s.zip", time.Now().Format("2006_01_02__15_04_05")))
+		filePath := path.Join(mizuDir, fmt.Sprintf("mizu_logs_%s.zip", time.Now().Format("2006_01_02__15_04_05")))
 		if err := fsUtils.DumpLogs(kubernetesProvider, removalCtx, filePath); err != nil {
 			logger.Log.Errorf("Failed dump logs %v", err)
 		}
