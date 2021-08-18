@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/up9inc/mizu/cli/config/configStructs"
 	"github.com/up9inc/mizu/cli/mizu"
+	v1 "k8s.io/api/core/v1"
 )
 
 const (
@@ -16,6 +17,7 @@ type ConfigStruct struct {
 	Version                configStructs.VersionConfig `yaml:"version"`
 	View                   configStructs.ViewConfig    `yaml:"view"`
 	AgentImage             string                      `yaml:"agent-image,omitempty" readonly:""`
+	ImagePullPolicyStr     string                      `yaml:"image-pull-policy" default:"Always"`
 	MizuResourcesNamespace string                      `yaml:"mizu-resources-namespace" default:"mizu"`
 	Telemetry              bool                        `yaml:"telemetry" default:"true"`
 	DumpLogs               bool                        `yaml:"dump-logs" default:"false"`
@@ -24,6 +26,10 @@ type ConfigStruct struct {
 
 func (config *ConfigStruct) SetDefaults() {
 	config.AgentImage = fmt.Sprintf("gcr.io/up9-docker-hub/mizu/%s:%s", mizu.Branch, mizu.SemVer)
+}
+
+func (config *ConfigStruct) ImagePullPolicy() v1.PullPolicy {
+	return v1.PullPolicy(config.ImagePullPolicyStr)
 }
 
 func (config *ConfigStruct) IsNsRestrictedMode() bool {

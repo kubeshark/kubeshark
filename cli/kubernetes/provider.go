@@ -142,9 +142,11 @@ type ApiServerOptions struct {
 	IsNamespaceRestricted   bool
 	MizuApiFilteringOptions *shared.TrafficFilteringOptions
 	MaxEntriesDBSizeBytes   int64
+	Resources               configStructs.Resources
+	ImagePullPolicy         core.PullPolicy
 }
 
-func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, opts *ApiServerOptions, resources configStructs.Resources) (*core.Pod, error) {
+func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, opts *ApiServerOptions) (*core.Pod, error) {
 	marshaledFilteringOptions, err := json.Marshal(opts.MizuApiFilteringOptions)
 	if err != nil {
 		return nil, err
@@ -154,19 +156,19 @@ func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, opts *ApiS
 	configMapOptional := true
 	configMapVolumeName.Optional = &configMapOptional
 
-	cpuLimit, err := resource.ParseQuantity(resources.CpuLimit)
+	cpuLimit, err := resource.ParseQuantity(opts.Resources.CpuLimit)
 	if err != nil {
 		return nil, errors.New(fmt.Sprintf("invalid cpu limit for %s container", opts.PodName))
 	}
-	memLimit, err := resource.ParseQuantity(resources.MemoryLimit)
+	memLimit, err := resource.ParseQuantity(opts.Resources.MemoryLimit)
 	if err != nil {
 		return nil, errors.New(fmt.Sprintf("invalid memory limit for %s container", opts.PodName))
 	}
-	cpuRequests, err := resource.ParseQuantity(resources.CpuRequests)
+	cpuRequests, err := resource.ParseQuantity(opts.Resources.CpuRequests)
 	if err != nil {
 		return nil, errors.New(fmt.Sprintf("invalid cpu request for %s container", opts.PodName))
 	}
-	memRequests, err := resource.ParseQuantity(resources.MemoryRequests)
+	memRequests, err := resource.ParseQuantity(opts.Resources.MemoryRequests)
 	if err != nil {
 		return nil, errors.New(fmt.Sprintf("invalid memory request for %s container", opts.PodName))
 	}
@@ -187,7 +189,7 @@ func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, opts *ApiS
 				{
 					Name:            opts.PodName,
 					Image:           opts.PodImage,
-					ImagePullPolicy: core.PullAlways,
+					ImagePullPolicy: opts.ImagePullPolicy,
 					VolumeMounts: []core.VolumeMount{
 						{
 							Name:      mizu.ConfigMapName,
@@ -563,7 +565,7 @@ func (provider *Provider) CreateConfigMap(ctx context.Context, namespace string,
 	return nil
 }
 
-func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, apiServerPodIp string, nodeToTappedPodIPMap map[string][]string, serviceAccountName string, tapOutgoing bool, resources configStructs.Resources) error {
+func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, apiServerPodIp string, nodeToTappedPodIPMap map[string][]string, serviceAccountName string, tapOutgoing bool, resources configStructs.Resources, imagePullPolicy core.PullPolicy) error {
 	logger.Log.Debugf("Applying %d tapper deamonsets, ns: %s, daemonSetName: %s, podImage: %s, tapperPodName: %s", len(nodeToTappedPodIPMap), namespace, daemonSetName, podImage, tapperPodName)
 
 	if len(nodeToTappedPodIPMap) == 0 {
@@ -588,7 +590,7 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	agentContainer := applyconfcore.Container()
 	agentContainer.WithName(tapperPodName)
 	agentContainer.WithImage(podImage)
-	agentContainer.WithImagePullPolicy(core.PullAlways)
+	agentContainer.WithImagePullPolicy(imagePullPolicy)
 	agentContainer.WithSecurityContext(applyconfcore.SecurityContext().WithPrivileged(true))
 	agentContainer.WithCommand(mizuCmd...)
 	agentContainer.WithEnv(
