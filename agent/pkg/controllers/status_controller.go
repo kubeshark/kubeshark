@@ -30,3 +30,7 @@ func PostTappedPods(c *gin.Context) {
 		api.BroadcastToBrowserClients(jsonBytes)
 	}
 }
+
+func GetTappersCount(c *gin.Context) {
+	c.JSON(http.StatusOK, providers.TappersCount)
+}

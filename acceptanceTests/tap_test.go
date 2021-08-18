@@ -38,7 +38,10 @@ func TestTapAndFetch(t *testing.T) {
 				return
 			}
 
-			time.Sleep(30 * time.Second)
+			if err := WaitTapPodsReady(); err != nil {
+				t.Errorf("failed to start tap pods on time, err: %v", err)
+				return
+			}
 
 			proxyUrl := "http://localhost:8080/api/v1/namespaces/mizu-tests/services/httpbin/proxy/get"
 			for i := 0; i < entriesCount; i++ {
@@ -48,42 +51,43 @@ func TestTapAndFetch(t *testing.T) {
 				}
 			}
 
-			time.Sleep(5 * time.Second)
-			timestamp := time.Now().UnixNano() / int64(time.Millisecond)
+			entriesCheckFunc := func() error {
+				timestamp := time.Now().UnixNano() / int64(time.Millisecond)
 
-			entriesUrl := fmt.Sprintf("http://localhost:8899/mizu/api/entries?limit=%v&operator=lt&timestamp=%v", entriesCount, timestamp)
-			requestResult, requestErr := ExecuteHttpRequest(entriesUrl)
-			if requestErr != nil {
-				t.Errorf("failed to get entries, err: %v", requestErr)
-				return
+				entriesUrl := fmt.Sprintf("http://localhost:8899/mizu/api/entries?limit=%v&operator=lt&timestamp=%v", entriesCount, timestamp)
+				requestResult, requestErr := ExecuteHttpRequest(entriesUrl)
+				if requestErr != nil {
+					return fmt.Errorf("failed to get entries, err: %v", requestErr)
+				}
+
+				entries, ok := requestResult.([]interface{})
+				if !ok {
+					return fmt.Errorf("invalid entries type")
+				}
+
+				if len(entries) != entriesCount {
+					return fmt.Errorf("unexpected entries result - Expected: %v, actual: %v", entriesCount, len(entries))
+				}
+
+				entry, ok :=  entries[0].(map[string]interface{})
+				if !ok {
+					return fmt.Errorf("invalid entry type")
+				}
+
+				entryUrl := fmt.Sprintf("http://localhost:8899/mizu/api/entries/%v", entry["id"])
+				requestResult, requestErr = ExecuteHttpRequest(entryUrl)
+				if requestErr != nil {
+					return fmt.Errorf("failed to get entry, err: %v", requestErr)
+				}
+
+				if requestResult == nil {
+					return fmt.Errorf("unexpected nil entry result")
+				}
+
+				return nil
 			}
-
-			entries, ok := requestResult.([]interface{})
-			if !ok {
-				t.Errorf("invalid entries type")
-				return
-			}
-
-			if len(entries) != entriesCount {
-				t.Errorf("unexpected entries result - Expected: %v, actual: %v", entriesCount, len(entries))
-				return
-			}
-
-			entry, ok :=  entries[0].(map[string]interface{})
-			if !ok {
-				t.Errorf("invalid entry type")
-				return
-			}
-
-			entryUrl := fmt.Sprintf("http://localhost:8899/mizu/api/entries/%v", entry["id"])
-			requestResult, requestErr = ExecuteHttpRequest(entryUrl)
-			if requestErr != nil {
-				t.Errorf("failed to get entry, err: %v", requestErr)
-				return
-			}
-
-			if requestResult == nil {
-				t.Errorf("unexpected nil entry result")
+			if err := RetriesExecute(ShortRetriesCount, entriesCheckFunc); err != nil {
+				t.Errorf("%v", err)
 				return
 			}
 
@@ -91,33 +95,30 @@ func TestTapAndFetch(t *testing.T) {
 			fetchCmd := exec.Command(cliPath, fetchCmdArgs...)
 			t.Logf("running command: %v", fetchCmd.String())
 
-			t.Cleanup(func() {
-				if err := CleanupCommand(fetchCmd); err != nil {
-					t.Logf("failed to cleanup fetch command, err: %v", err)
-				}
-			})
-
 			if err := fetchCmd.Start(); err != nil {
 				t.Errorf("failed to start fetch command, err: %v", err)
 				return
 			}
 
-			time.Sleep(5 * time.Second)
+			harCheckFunc := func() error {
+				harBytes, readFileErr := ioutil.ReadFile("./unknown_source.har")
+				if readFileErr != nil {
+					return fmt.Errorf("failed to read har file, err: %v", readFileErr)
+				}
 
-			harBytes, readFileErr := ioutil.ReadFile("./unknown_source.har")
-			if readFileErr != nil {
-				t.Errorf("failed to read har file, err: %v", readFileErr)
-				return
+				harEntries, err := GetEntriesFromHarBytes(harBytes)
+				if err != nil {
+					return fmt.Errorf("failed to get entries from har, err: %v", err)
+				}
+
+				if len(harEntries) != entriesCount {
+					return fmt.Errorf("unexpected har entries result - Expected: %v, actual: %v", entriesCount, len(harEntries))
+				}
+
+				return nil
 			}
-
-			harEntries, err := GetEntriesFromHarBytes(harBytes)
-			if err != nil {
-				t.Errorf("failed to get entries from har, err: %v", err)
-				return
-			}
-
-			if len(harEntries) != entriesCount {
-				t.Errorf("unexpected har entries result - Expected: %v, actual: %v", entriesCount, len(harEntries))
+			if err := RetriesExecute(ShortRetriesCount, harCheckFunc); err != nil {
+				t.Errorf("%v", err)
 				return
 			}
 		})

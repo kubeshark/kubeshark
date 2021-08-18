@@ -10,6 +10,12 @@ import (
 	"os/exec"
 	"path"
 	"syscall"
+	"time"
+)
+
+const (
+	LongRetriesCount = 100
+	ShortRetriesCount = 5
 )
 
 func GetCliPath() (string, error) {
@@ -47,6 +53,46 @@ func GetDefaultFetchCommandArgs() []string {
 	defaultCmdArgs := GetDefaultCommandArgs()
 
 	return append([]string{tapCommand}, defaultCmdArgs...)
+}
+
+func RetriesExecute(retriesCount int, executeFunc func() error) error {
+	var lastError error
+
+	for i := 0; i < retriesCount; i++ {
+		if err := executeFunc(); err != nil {
+			lastError = err
+
+			time.Sleep(1 * time.Second)
+			continue
+		}
+
+		return nil
+	}
+
+	return fmt.Errorf("reached max retries count, retries count: %v, last err: %v", retriesCount, lastError)
+}
+
+func WaitTapPodsReady() error {
+	resolvingUrl := fmt.Sprintf("http://localhost:8899/mizu/status/tappersCount")
+	tapPodsReadyFunc := func() error {
+		requestResult, requestErr := ExecuteHttpRequest(resolvingUrl)
+		if requestErr != nil {
+			return requestErr
+		}
+
+		tappersCount, ok := requestResult.(float64)
+		if !ok {
+			return fmt.Errorf("invalid tappers count type")
+		}
+
+		if tappersCount == 0 {
+			return fmt.Errorf("no tappers running")
+		}
+
+		return nil
+	}
+
+	return RetriesExecute(LongRetriesCount, tapPodsReadyFunc)
 }
 
 func JsonBytesToInterface(jsonBytes []byte) (interface{}, error) {
@@ -97,14 +143,12 @@ func GetEntriesFromHarBytes(harBytes []byte) ([]interface{}, error){
 		return nil, errors.New("invalid har type")
 	}
 
-	harLogInterface := har["log"]
-	harLog, ok :=  harLogInterface.(map[string]interface{})
+	harLog, ok :=  har["log"].(map[string]interface{})
 	if !ok {
 		return nil, errors.New("invalid har log type")
 	}
 
-	harEntriesInterface := harLog["entries"]
-	harEntries, ok := harEntriesInterface.([]interface{})
+	harEntries, ok := harLog["entries"].([]interface{})
 	if !ok {
 		return nil, errors.New("invalid har entries type")
 	}
