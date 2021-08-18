@@ -2,7 +2,7 @@ package api
 
 import (
 	"bufio"
-	"fmt"
+	"log"
 	"plugin"
 	"time"
 )
@@ -29,6 +29,7 @@ type TcpID struct {
 	DstIP   string
 	SrcPort string
 	DstPort string
+	Ident   string
 }
 
 type GenericMessage struct {
@@ -64,9 +65,9 @@ type Emitter interface {
 }
 
 func (e *Emitting) Emit(item *OutputChannelItem) {
-	fmt.Printf("item: %+v\n", item)
-	fmt.Printf("item.Data: %+v\n", item.Data)
-	fmt.Printf("item.Data.Request.Orig: %v\n", item.Data.Request.Orig)
-	fmt.Printf("item.Data.Response.Orig: %v\n", item.Data.Response.Orig)
+	log.Printf("item: %+v\n", item)
+	log.Printf("item.Data: %+v\n", item.Data)
+	log.Printf("item.Data.Request.Orig: %v\n", item.Data.Request.Orig)
+	log.Printf("item.Data.Response.Orig: %v\n", item.Data.Response.Orig)
 	e.OutputChannel <- item
 }

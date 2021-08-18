@@ -65,6 +65,7 @@ func (h *tcpStreamFactory) New(net, transport gopacket.Flow) tcpassembly.Stream 
 		DstIP:   net.Dst().String(),
 		SrcPort: transport.Src().String(),
 		DstPort: transport.Dst().String(),
+		Ident:   fmt.Sprintf("%s:%s", net, transport),
 	}
 	if containsPort(allOutboundPorts, transport.Dst().String()) {
 		go stream.clientRun(tcpID, h.Emitter)
