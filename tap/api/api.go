@@ -2,6 +2,7 @@ package api
 
 import (
 	"bufio"
+	"fmt"
 	"plugin"
 	"time"
 )
@@ -51,5 +52,21 @@ type OutputChannelItem struct {
 type Dissector interface {
 	Register(*Extension)
 	Ping()
-	Dissect(b *bufio.Reader, isClient bool, tcpID *TcpID, callback func(item *OutputChannelItem))
+	Dissect(b *bufio.Reader, isClient bool, tcpID *TcpID, emitter Emitter)
+}
+
+type Emitting struct {
+	OutputChannel chan *OutputChannelItem
+}
+
+type Emitter interface {
+	Emit(item *OutputChannelItem)
+}
+
+func (e *Emitting) Emit(item *OutputChannelItem) {
+	fmt.Printf("item: %+v\n", item)
+	fmt.Printf("item.Data: %+v\n", item.Data)
+	fmt.Printf("item.Data.Request.Orig: %v\n", item.Data.Request.Orig)
+	fmt.Printf("item.Data.Response.Orig: %v\n", item.Data.Response.Orig)
+	e.OutputChannel <- item
 }

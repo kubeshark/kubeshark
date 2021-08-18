@@ -302,9 +302,13 @@ func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
 		log.Fatal(err)
 	}
 
+	var emitter api.Emitter = &api.Emitting{
+		OutputChannel: outputItems,
+	}
+
 	// Set up assembly
 	streamFactory := &tcpStreamFactory{
-		OutputChannelItem: outputItems,
+		Emitter: emitter,
 	}
 	streamPool := tcpassembly.NewStreamPool(streamFactory)
 	assembler := tcpassembly.NewAssembler(streamPool)

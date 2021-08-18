@@ -11,7 +11,7 @@ import (
 	"github.com/up9inc/mizu/tap/api"
 )
 
-func handleHTTP2Stream(grpcAssembler *GrpcAssembler, tcpID *api.TcpID, Emit func(item *api.OutputChannelItem)) error {
+func handleHTTP2Stream(grpcAssembler *GrpcAssembler, tcpID *api.TcpID, emitter api.Emitter) error {
 	streamID, messageHTTP1, err := grpcAssembler.readMessage()
 	if err != nil {
 		return err
@@ -45,13 +45,13 @@ func handleHTTP2Stream(grpcAssembler *GrpcAssembler, tcpID *api.TcpID, Emit func
 	}
 
 	if item != nil {
-		Emit(item)
+		emitter.Emit(item)
 	}
 
 	return nil
 }
 
-func handleHTTP1ClientStream(b *bufio.Reader, tcpID *api.TcpID, Emit func(item *api.OutputChannelItem)) error {
+func handleHTTP1ClientStream(b *bufio.Reader, tcpID *api.TcpID, emitter api.Emitter) error {
 	requestCounter++
 	req, err := http.ReadRequest(b)
 	if err != nil {
@@ -73,12 +73,12 @@ func handleHTTP1ClientStream(b *bufio.Reader, tcpID *api.TcpID, Emit func(item *
 	)
 	item := reqResMatcher.registerRequest(ident, req, time.Now())
 	if item != nil {
-		Emit(item)
+		emitter.Emit(item)
 	}
 	return nil
 }
 
-func handleHTTP1ServerStream(b *bufio.Reader, tcpID *api.TcpID, Emit func(item *api.OutputChannelItem)) error {
+func handleHTTP1ServerStream(b *bufio.Reader, tcpID *api.TcpID, emitter api.Emitter) error {
 	responseCounter++
 	res, err := http.ReadResponse(b, nil)
 	if err != nil {
@@ -99,7 +99,7 @@ func handleHTTP1ServerStream(b *bufio.Reader, tcpID *api.TcpID, Emit func(item *
 	)
 	item := reqResMatcher.registerResponse(ident, res, time.Now())
 	if item != nil {
-		Emit(item)
+		emitter.Emit(item)
 	}
 	return nil
 }

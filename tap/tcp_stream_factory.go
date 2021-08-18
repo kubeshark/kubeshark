@@ -15,7 +15,7 @@ import (
 
 type tcpStreamFactory struct {
 	outbountLinkWriter *OutboundLinkWriter
-	OutputChannelItem  chan *api.OutputChannelItem
+	Emitter            api.Emitter
 }
 
 const checkTLSPacketAmount = 100
@@ -33,22 +33,22 @@ func Emit(item *api.OutputChannelItem) {
 	log.Printf("Emit item: %+v\n", item)
 }
 
-func (h *tcpStream) clientRun(tcpID *api.TcpID) {
+func (h *tcpStream) clientRun(tcpID *api.TcpID, emitter api.Emitter) {
 	b := bufio.NewReader(&h.r)
 	for _, extension := range extensions {
 		if containsPort(extension.OutboundPorts, h.transport.Dst().String()) {
 			extension.Dissector.Ping()
-			extension.Dissector.Dissect(b, true, tcpID, Emit)
+			extension.Dissector.Dissect(b, true, tcpID, emitter)
 		}
 	}
 }
 
-func (h *tcpStream) serverRun(tcpID *api.TcpID) {
+func (h *tcpStream) serverRun(tcpID *api.TcpID, emitter api.Emitter) {
 	b := bufio.NewReader(&h.r)
 	for _, extension := range extensions {
 		if containsPort(extension.OutboundPorts, h.transport.Src().String()) {
 			extension.Dissector.Ping()
-			extension.Dissector.Dissect(b, false, tcpID, Emit)
+			extension.Dissector.Dissect(b, false, tcpID, emitter)
 		}
 	}
 }
@@ -67,9 +67,9 @@ func (h *tcpStreamFactory) New(net, transport gopacket.Flow) tcpassembly.Stream 
 		DstPort: transport.Dst().String(),
 	}
 	if containsPort(allOutboundPorts, transport.Dst().String()) {
-		go stream.clientRun(tcpID)
+		go stream.clientRun(tcpID, h.Emitter)
 	} else if containsPort(allOutboundPorts, transport.Src().String()) {
-		go stream.serverRun(tcpID)
+		go stream.serverRun(tcpID, h.Emitter)
 	}
 	return &stream.r
 }
