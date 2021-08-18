@@ -10,9 +10,9 @@ package tap
 
 import (
 	"encoding/hex"
+	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/romana/rlog"
 	"log"
 	"os"
 	"os/signal"
@@ -22,6 +22,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/romana/rlog"
 
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/examples/util"
@@ -374,9 +376,7 @@ func startPassiveTapper(harWriter *HarWriter, outboundLinkWriter *OutboundLinkWr
 			errorMapLen := len(errorsMap)
 			errorsSummery := fmt.Sprintf("%v", errorsMap)
 			errorsMapMutex.Unlock()
-			log.Printf("Processed %v packets (%v bytes) in %v (errors: %v, errTypes:%v) - Errors Summary: %s",
-				statsTracker.appStats.TotalPacketsCount,
-				statsTracker.appStats.TotalProcessedBytes,
+			log.Printf("%v (errors: %v, errTypes:%v) - Errors Summary: %s",
 				time.Since(statsTracker.appStats.StartTime),
 				nErrors,
 				errorMapLen,
@@ -395,14 +395,15 @@ func startPassiveTapper(harWriter *HarWriter, outboundLinkWriter *OutboundLinkWr
 
 			// Since the last print
 			cleanStats := cleaner.dumpStats()
-			matchedMessages := statsTracker.dumpStats()
 			log.Printf(
-				"flushed connections %d, closed connections: %d, deleted messages: %d, matched messages: %d",
+				"cleaner - flushed connections: %d, closed connections: %d, deleted messages: %d",
 				cleanStats.flushed,
 				cleanStats.closed,
 				cleanStats.deleted,
-				matchedMessages,
 			)
+			currentAppStats := statsTracker.dumpStats()
+			appStatsJSON, _ := json.Marshal(currentAppStats)
+			log.Printf("app stats - %v", string(appStatsJSON))
 		}
 	}()
 
@@ -414,7 +415,7 @@ func startPassiveTapper(harWriter *HarWriter, outboundLinkWriter *OutboundLinkWr
 		packetsCount := statsTracker.incPacketsCount()
 		rlog.Debugf("PACKET #%d", packetsCount)
 		data := packet.Data()
-		statsTracker.updateProcessedSize(int64(len(data)))
+		statsTracker.updateProcessedBytes(int64(len(data)))
 		if *hexdumppkt {
 			rlog.Debugf("Packet content (%d/0x%x) - %s", len(data), len(data), hex.Dump(data))
 		}
@@ -448,6 +449,7 @@ func startPassiveTapper(harWriter *HarWriter, outboundLinkWriter *OutboundLinkWr
 
 		tcp := packet.Layer(layers.LayerTypeTCP)
 		if tcp != nil {
+			statsTracker.incTcpPacketsCount()
 			tcp := tcp.(*layers.TCP)
 			if *checksum {
 				err := tcp.SetNetworkLayerForChecksum(packet.NetworkLayer())
@@ -465,14 +467,14 @@ func startPassiveTapper(harWriter *HarWriter, outboundLinkWriter *OutboundLinkWr
 			assemblerMutex.Unlock()
 		}
 
-		done := *maxcount > 0 && statsTracker.appStats.TotalPacketsCount >= *maxcount
+		done := *maxcount > 0 && statsTracker.appStats.PacketsCount >= *maxcount
 		if done {
 			errorsMapMutex.Lock()
 			errorMapLen := len(errorsMap)
 			errorsMapMutex.Unlock()
 			log.Printf("Processed %v packets (%v bytes) in %v (errors: %v, errTypes:%v)",
-				statsTracker.appStats.TotalPacketsCount,
-				statsTracker.appStats.TotalProcessedBytes,
+				statsTracker.appStats.PacketsCount,
+				statsTracker.appStats.ProcessedBytes,
 				time.Since(statsTracker.appStats.StartTime),
 				nErrors,
 				errorMapLen)

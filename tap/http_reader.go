@@ -79,6 +79,7 @@ func (h *httpReader) Read(p []byte) (int, error) {
 			clientHello := tlsx.ClientHello{}
 			err := clientHello.Unmarshall(msg.bytes)
 			if err == nil {
+				statsTracker.incTlsConnectionsCount()
 				fmt.Printf("Detected TLS client hello with SNI %s\n", clientHello.SNI)
 				numericPort, _ := strconv.Atoi(h.tcpID.dstPort)
 				h.outboundLinkWriter.WriteOutboundLink(h.tcpID.srcIP, h.tcpID.dstIP, numericPort, clientHello.SNI, TLSProtocol)
@@ -176,7 +177,7 @@ func (h *httpReader) handleHTTP2Stream() error {
 	}
 
 	if reqResPair != nil {
-		statsTracker.incMatchedMessages()
+		statsTracker.incMatchedPairs()
 
 		if h.harWriter != nil {
 			h.harWriter.WritePair(
@@ -215,7 +216,7 @@ func (h *httpReader) handleHTTP1ClientStream(b *bufio.Reader) error {
 	ident := fmt.Sprintf("%s->%s %s->%s %d", h.tcpID.srcIP, h.tcpID.dstIP, h.tcpID.srcPort, h.tcpID.dstPort, h.messageCount)
 	reqResPair := reqResMatcher.registerRequest(ident, req, h.captureTime)
 	if reqResPair != nil {
-		statsTracker.incMatchedMessages()
+		statsTracker.incMatchedPairs()
 
 		if h.harWriter != nil {
 			h.harWriter.WritePair(
@@ -281,7 +282,7 @@ func (h *httpReader) handleHTTP1ServerStream(b *bufio.Reader) error {
 	ident := fmt.Sprintf("%s->%s %s->%s %d", h.tcpID.dstIP, h.tcpID.srcIP, h.tcpID.dstPort, h.tcpID.srcPort, h.messageCount)
 	reqResPair := reqResMatcher.registerResponse(ident, res, h.captureTime)
 	if reqResPair != nil {
-		statsTracker.incMatchedMessages()
+		statsTracker.incMatchedPairs()
 
 		if h.harWriter != nil {
 			h.harWriter.WritePair(
