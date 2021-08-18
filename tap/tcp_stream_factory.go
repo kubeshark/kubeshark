@@ -28,12 +28,18 @@ func containsPort(ports []string, port string) bool {
 	return false
 }
 
+func Emit(reqResPair *api.RequestResponsePair) {
+	log.Printf("Emit reqResPair: %+v\n", reqResPair)
+	log.Printf("Emit reqResPair.Request.Orig: %v\n", reqResPair.Request.Orig)
+	log.Printf("Emit reqResPair.Response.Orig: %v\n", reqResPair.Response.Orig)
+}
+
 func (h *tcpStream) clientRun(tcpID *api.TcpID) {
 	b := bufio.NewReader(&h.r)
 	for _, extension := range extensions {
 		if containsPort(extension.OutboundPorts, h.transport.Dst().String()) {
 			extension.Dissector.Ping()
-			extension.Dissector.Dissect(b, true, tcpID)
+			extension.Dissector.Dissect(b, true, tcpID, Emit)
 		}
 	}
 }
@@ -43,7 +49,7 @@ func (h *tcpStream) serverRun(tcpID *api.TcpID) {
 	for _, extension := range extensions {
 		if containsPort(extension.OutboundPorts, h.transport.Src().String()) {
 			extension.Dissector.Ping()
-			extension.Dissector.Dissect(b, false, tcpID)
+			extension.Dissector.Dissect(b, false, tcpID, Emit)
 		}
 	}
 }

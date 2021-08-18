@@ -11,10 +11,10 @@ import (
 	"github.com/up9inc/mizu/tap/api"
 )
 
-func handleHTTP2Stream(grpcAssembler *GrpcAssembler, tcpID *api.TcpID) (*api.RequestResponsePair, error) {
+func handleHTTP2Stream(grpcAssembler *GrpcAssembler, tcpID *api.TcpID, Emit func(reqResPair *api.RequestResponsePair)) error {
 	streamID, messageHTTP1, err := grpcAssembler.readMessage()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	var reqResPair *api.RequestResponsePair
@@ -45,18 +45,18 @@ func handleHTTP2Stream(grpcAssembler *GrpcAssembler, tcpID *api.TcpID) (*api.Req
 	}
 
 	if reqResPair != nil {
-		return reqResPair, nil
+		Emit(reqResPair)
 	}
 
-	return nil, nil
+	return nil
 }
 
-func handleHTTP1ClientStream(b *bufio.Reader, tcpID *api.TcpID) (*api.RequestResponsePair, error) {
+func handleHTTP1ClientStream(b *bufio.Reader, tcpID *api.TcpID, Emit func(reqResPair *api.RequestResponsePair)) error {
 	requestCounter++
 	req, err := http.ReadRequest(b)
 	if err != nil {
 		log.Println("Error reading stream:", err)
-		return nil, err
+		return err
 	} else {
 		body, _ := ioutil.ReadAll(req.Body)
 		req.Body.Close()
@@ -73,17 +73,17 @@ func handleHTTP1ClientStream(b *bufio.Reader, tcpID *api.TcpID) (*api.RequestRes
 	)
 	reqResPair := reqResMatcher.registerRequest(ident, req, time.Now())
 	if reqResPair != nil {
-		fmt.Printf("reqResPair: %+v\n", reqResPair)
+		Emit(reqResPair)
 	}
-	return reqResPair, nil
+	return nil
 }
 
-func handleHTTP1ServerStream(b *bufio.Reader, tcpID *api.TcpID) (*api.RequestResponsePair, error) {
+func handleHTTP1ServerStream(b *bufio.Reader, tcpID *api.TcpID, Emit func(reqResPair *api.RequestResponsePair)) error {
 	responseCounter++
 	res, err := http.ReadResponse(b, nil)
 	if err != nil {
 		log.Println("Error reading stream:", err)
-		return nil, err
+		return err
 	} else {
 		body, _ := ioutil.ReadAll(res.Body)
 		res.Body.Close()
@@ -99,7 +99,7 @@ func handleHTTP1ServerStream(b *bufio.Reader, tcpID *api.TcpID) (*api.RequestRes
 	)
 	reqResPair := reqResMatcher.registerResponse(ident, res, time.Now())
 	if reqResPair != nil {
-		fmt.Printf("reqResPair: %+v\n", reqResPair)
+		Emit(reqResPair)
 	}
-	return reqResPair, nil
+	return nil
 }

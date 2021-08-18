@@ -20,17 +20,17 @@ func init() {
 
 type dissecting string
 
-func (g dissecting) Register(extension *api.Extension) {
+func (d dissecting) Register(extension *api.Extension) {
 	extension.Name = "http"
 	extension.OutboundPorts = []string{"80", "8080", "443"}
 	extension.InboundPorts = []string{}
 }
 
-func (g dissecting) Ping() {
+func (d dissecting) Ping() {
 	log.Printf("pong HTTP\n")
 }
 
-func (g dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID) *api.RequestResponsePair {
+func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, Emit func(reqResPair *api.RequestResponsePair)) {
 	ident := fmt.Sprintf("%s->%s:%s->%s", tcpID.SrcIP, tcpID.DstIP, tcpID.SrcPort, tcpID.DstPort)
 	isHTTP2, err := checkIsHTTP2Connection(b, isClient)
 	if err != nil {
@@ -47,11 +47,9 @@ func (g dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID) *a
 		grpcAssembler = createGrpcAssembler(b)
 	}
 
-	var reqResPair *api.RequestResponsePair
-
 	for {
 		if isHTTP2 {
-			reqResPair, err = handleHTTP2Stream(grpcAssembler, tcpID)
+			err = handleHTTP2Stream(grpcAssembler, tcpID, Emit)
 			if err == io.EOF || err == io.ErrUnexpectedEOF {
 				break
 			} else if err != nil {
@@ -59,7 +57,7 @@ func (g dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID) *a
 				continue
 			}
 		} else if isClient {
-			reqResPair, err = handleHTTP1ClientStream(b, tcpID)
+			err = handleHTTP1ClientStream(b, tcpID, Emit)
 			if err == io.EOF || err == io.ErrUnexpectedEOF {
 				break
 			} else if err != nil {
@@ -67,7 +65,7 @@ func (g dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID) *a
 				continue
 			}
 		} else {
-			reqResPair, err = handleHTTP1ServerStream(b, tcpID)
+			err = handleHTTP1ServerStream(b, tcpID, Emit)
 			if err == io.EOF || err == io.ErrUnexpectedEOF {
 				break
 			} else if err != nil {
@@ -76,7 +74,6 @@ func (g dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID) *a
 			}
 		}
 	}
-	return reqResPair
 }
 
 var Dissector dissecting
