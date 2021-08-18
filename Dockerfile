@@ -11,7 +11,7 @@ FROM golang:1.16-alpine AS builder
 # Set necessary environment variables needed for our image.
 ENV CGO_ENABLED=1 GOOS=linux GOARCH=amd64
 
-RUN apk add libpcap-dev gcc g++ make
+RUN apk add libpcap-dev gcc g++ make bash
 
 # Move to agent working directory (/agent-build).
 WORKDIR /app/agent-build
@@ -39,9 +39,8 @@ RUN go build -ldflags="-s -w \
      -X 'mizuserver/pkg/version.BuildTimestamp=${BUILD_TIMESTAMP}' \
      -X 'mizuserver/pkg/version.SemVer=${SEM_VER}'" -o mizuagent .
 
-## TODO: need to be changed to copy the build script ./build_extensions.sh and run it
-WORKDIR /app/agent-build/extensions
-COPY tap/extensions/*.so .
+COPY build_extensions.sh ..
+RUN cd .. && /bin/bash build_extensions.sh
 
 FROM alpine:3.13.5
 
@@ -50,7 +49,7 @@ WORKDIR /app
 
 # Copy binary and config files from /build to root folder of scratch container.
 COPY --from=builder ["/app/agent-build/mizuagent", "."]
-COPY --from=builder ["/app/agent-build/extensions", "extensions"]
+COPY --from=builder ["/app/agent/build/extensions", "extensions"]
 COPY --from=site-build ["/app/ui-build/build", "site"]
 
 # gin-gonic runs in debug mode without this
