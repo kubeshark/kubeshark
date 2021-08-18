@@ -33,6 +33,15 @@ func handleHTTP2Stream(grpcAssembler *GrpcAssembler, tcpID *api.TcpID, emitter a
 			streamID,
 		)
 		item = reqResMatcher.registerRequest(ident, &messageHTTP1, time.Now())
+		if item != nil {
+			item.ConnectionInfo = &api.ConnectionInfo{
+				ClientIP:   tcpID.SrcIP,
+				ClientPort: tcpID.SrcPort,
+				ServerIP:   tcpID.DstIP,
+				ServerPort: tcpID.DstPort,
+				IsOutgoing: true,
+			}
+		}
 	case http.Response:
 		responseCounter++
 		ident := fmt.Sprintf(
@@ -44,6 +53,15 @@ func handleHTTP2Stream(grpcAssembler *GrpcAssembler, tcpID *api.TcpID, emitter a
 			streamID,
 		)
 		item = reqResMatcher.registerResponse(ident, &messageHTTP1, time.Now())
+		if item != nil {
+			item.ConnectionInfo = &api.ConnectionInfo{
+				ClientIP:   tcpID.DstIP,
+				ClientPort: tcpID.DstPort,
+				ServerIP:   tcpID.SrcIP,
+				ServerPort: tcpID.SrcPort,
+				IsOutgoing: false,
+			}
+		}
 	}
 
 	if item != nil {
@@ -83,6 +101,13 @@ func handleHTTP1ClientStream(b *bufio.Reader, tcpID *api.TcpID, emitter api.Emit
 	)
 	item := reqResMatcher.registerRequest(ident, req, time.Now())
 	if item != nil {
+		item.ConnectionInfo = &api.ConnectionInfo{
+			ClientIP:   tcpID.SrcIP,
+			ClientPort: tcpID.SrcPort,
+			ServerIP:   tcpID.DstIP,
+			ServerPort: tcpID.DstPort,
+			IsOutgoing: true,
+		}
 		emitter.Emit(item)
 	}
 	return nil
@@ -128,6 +153,13 @@ func handleHTTP1ServerStream(b *bufio.Reader, tcpID *api.TcpID, emitter api.Emit
 	)
 	item := reqResMatcher.registerResponse(ident, res, time.Now())
 	if item != nil {
+		item.ConnectionInfo = &api.ConnectionInfo{
+			ClientIP:   tcpID.DstIP,
+			ClientPort: tcpID.DstPort,
+			ServerIP:   tcpID.SrcIP,
+			ServerPort: tcpID.SrcPort,
+			IsOutgoing: false,
+		}
 		emitter.Emit(item)
 	}
 	return nil
