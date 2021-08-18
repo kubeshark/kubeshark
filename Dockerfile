@@ -19,6 +19,7 @@ WORKDIR /app/agent-build
 COPY agent/go.mod agent/go.sum ./
 COPY shared/go.mod shared/go.mod ../shared/
 COPY tap/go.mod tap/go.mod ../tap/
+COPY tap/api ../tap/api
 RUN go mod download
 # cheap trick to make the build faster (As long as go.mod wasn't changes)
 RUN go list -f '{{.Path}}@{{.Version}}' -m all | sed 1d | grep -e 'go-cache' -e 'sqlite' | xargs go get
@@ -38,6 +39,9 @@ RUN go build -ldflags="-s -w \
      -X 'mizuserver/pkg/version.BuildTimestamp=${BUILD_TIMESTAMP}' \
      -X 'mizuserver/pkg/version.SemVer=${SEM_VER}'" -o mizuagent .
 
+## TODO: need to be changed to copy the build script ./build_extensions.sh and run it
+WORKDIR /app/agent-build/extensions
+COPY tap/extensions/*.so .
 
 FROM alpine:3.13.5
 
@@ -46,9 +50,8 @@ WORKDIR /app
 
 # Copy binary and config files from /build to root folder of scratch container.
 COPY --from=builder ["/app/agent-build/mizuagent", "."]
+COPY --from=builder ["/app/agent-build/extensions", "extensions"]
 COPY --from=site-build ["/app/ui-build/build", "site"]
-
-COPY agent/start.sh .
 
 # gin-gonic runs in debug mode without this
 ENV GIN_MODE=release

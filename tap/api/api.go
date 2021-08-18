@@ -41,8 +41,15 @@ type RequestResponsePair struct {
 	Response GenericMessage `json:"response"`
 }
 
+type OutputChannelItem struct {
+	Type           string
+	Timestamp      int64
+	ConnectionInfo *ConnectionInfo
+	Data           *RequestResponsePair
+}
+
 type Dissector interface {
 	Register(*Extension)
 	Ping()
-	Dissect(b *bufio.Reader, isClient bool, tcpID *TcpID, callback func(reqResPair *RequestResponsePair))
+	Dissect(b *bufio.Reader, isClient bool, tcpID *TcpID) *OutputChannelItem
 }

@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 	"strings"
 
-	yaml "gopkg.in/yaml.v3"
+	"gopkg.in/yaml.v3"
 )
 
 type WebSocketMessageType string

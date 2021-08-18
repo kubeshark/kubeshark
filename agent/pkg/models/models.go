@@ -1,7 +1,15 @@
 package models
 
 import (
+	"bytes"
 	"encoding/json"
+	"errors"
+	"fmt"
+	tapApi "github.com/up9inc/mizu/tap/api"
+	"io/ioutil"
+	"net/http"
+	"strconv"
+	"strings"
 
 	"mizuserver/pkg/rules"
 	"mizuserver/pkg/utils"
@@ -141,7 +149,7 @@ type WebSocketEntryMessage struct {
 
 type WebSocketTappedEntryMessage struct {
 	*shared.WebSocketMessageMetadata
-	Data *tap.OutputChannelItem
+	Data *tapApi.OutputChannelItem
 }
 
 type WebsocketOutboundLinkMessage struct {
@@ -159,7 +167,7 @@ func CreateBaseEntryWebSocketMessage(base *BaseEntryDetails) ([]byte, error) {
 	return json.Marshal(message)
 }
 
-func CreateWebsocketTappedEntryMessage(base *tap.OutputChannelItem) ([]byte, error) {
+func CreateWebsocketTappedEntryMessage(base *tapApi.OutputChannelItem) ([]byte, error) {
 	message := &WebSocketTappedEntryMessage{
 		WebSocketMessageMetadata: &shared.WebSocketMessageMetadata{
 			MessageType: shared.WebSocketMessageTypeTappedEntry,
@@ -221,4 +229,76 @@ func RunValidationRulesState(harEntry har.Entry, service string) ApplicableRules
 	statusPolicyToSend, latency := rules.PassedValidationRules(resultPolicyToSend, numberOfRules)
 	ar := NewApplicableRules(statusPolicyToSend, latency)
 	return ar
+}
+
+func NewEntry(request *http.Request, requestTime time.Time, response *http.Response, responseTime time.Time) (*har.Entry, error) {
+	harRequest, err := har.NewRequest(request, false)
+	if err != nil {
+		fmt.Printf("Failed converting request to HAR %s (%v,%+v)", err, err, err)
+		return nil, errors.New("failed converting request to HAR")
+	}
+
+	// For requests with multipart/form-data or application/x-www-form-urlencoded Content-Type,
+	// martian/har will parse the request body and place the parameters in harRequest.PostData.Params
+	// instead of harRequest.PostData.Text (as the HAR spec requires it).
+	// Mizu currently only looks at PostData.Text. Therefore, instead of letting martian/har set the content of
+	// PostData, always copy the request body to PostData.Text.
+	if request.ContentLength > 0 {
+		reqBody, err := ioutil.ReadAll(request.Body)
+		if err != nil {
+			fmt.Printf("Failed converting request to HAR %s (%v,%+v)", err, err, err)
+			return nil, errors.New("failed reading request body")
+		}
+		request.Body = ioutil.NopCloser(bytes.NewReader(reqBody))
+		harRequest.PostData.Text = string(reqBody)
+	}
+
+	harResponse, err := har.NewResponse(response, true)
+	if err != nil {
+		fmt.Printf("Failed converting response to HAR %s (%v,%+v)", err, err, err)
+		return nil, errors.New("failed converting response to HAR")
+	}
+
+	if harRequest.PostData != nil && strings.HasPrefix(harRequest.PostData.MimeType, "application/grpc") {
+		// Force HTTP/2 gRPC into HAR template
+
+		harRequest.URL = fmt.Sprintf("%s://%s%s", request.Header.Get(":scheme"), request.Header.Get(":authority"), request.Header.Get(":path"))
+
+		status, err := strconv.Atoi(response.Header.Get(":status"))
+		if err != nil {
+			fmt.Printf("Failed converting status to int %s (%v,%+v)", err, err, err)
+			return nil, errors.New("failed converting response status to int for HAR")
+		}
+		harResponse.Status = status
+	} else {
+		// Martian copies http.Request.URL.String() to har.Request.URL, which usually contains the path.
+		// However, according to the HAR spec, the URL field needs to be the absolute URL.
+		var scheme string
+		if request.URL.Scheme != "" {
+			scheme = request.URL.Scheme
+		} else {
+			scheme = "http"
+		}
+		harRequest.URL = fmt.Sprintf("%s://%s%s", scheme, request.Host, request.URL)
+	}
+
+	totalTime := responseTime.Sub(requestTime).Round(time.Millisecond).Milliseconds()
+	if totalTime < 1 {
+		totalTime = 1
+	}
+
+	harEntry := har.Entry{
+		StartedDateTime: time.Now().UTC(),
+		Time:            totalTime,
+		Request:         harRequest,
+		Response:        harResponse,
+		Cache:           &har.Cache{},
+		Timings: &har.Timings{
+			Send:    -1,
+			Wait:    -1,
+			Receive: totalTime,
+		},
+	}
+
+	return &harEntry, nil
 }

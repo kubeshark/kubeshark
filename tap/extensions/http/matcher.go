@@ -12,7 +12,7 @@ import (
 
 var reqResMatcher = createResponseRequestMatcher() // global
 
-// Key is {client_addr}:{client_port}->{dest_addr}:{dest_port}
+// Key is {client_addr}:{client_port}->{dest_addr}:{dest_port}_{incremental_counter}
 type requestResponseMatcher struct {
 	openMessagesMap sync.Map
 }
@@ -22,7 +22,7 @@ func createResponseRequestMatcher() requestResponseMatcher {
 	return *newMatcher
 }
 
-func (matcher *requestResponseMatcher) registerRequest(ident string, request *http.Request, captureTime time.Time) *api.RequestResponsePair {
+func (matcher *requestResponseMatcher) registerRequest(ident string, request *http.Request, captureTime time.Time) *api.OutputChannelItem {
 	split := splitIdent(ident)
 	key := genKey(split)
 	// fmt.Printf(">>> request key: %v\n", key)
@@ -49,7 +49,7 @@ func (matcher *requestResponseMatcher) registerRequest(ident string, request *ht
 	return nil
 }
 
-func (matcher *requestResponseMatcher) registerResponse(ident string, response *http.Response, captureTime time.Time) *api.RequestResponsePair {
+func (matcher *requestResponseMatcher) registerResponse(ident string, response *http.Response, captureTime time.Time) *api.OutputChannelItem {
 	split := splitIdent(ident)
 	key := genKey(split)
 	// fmt.Printf(">>> response key: %v\n", key)
@@ -76,10 +76,15 @@ func (matcher *requestResponseMatcher) registerResponse(ident string, response *
 	return nil
 }
 
-func (matcher *requestResponseMatcher) preparePair(requestHTTPMessage *api.GenericMessage, responseHTTPMessage *api.GenericMessage) *api.RequestResponsePair {
-	return &api.RequestResponsePair{
-		Request:  *requestHTTPMessage,
-		Response: *responseHTTPMessage,
+func (matcher *requestResponseMatcher) preparePair(requestHTTPMessage *api.GenericMessage, responseHTTPMessage *api.GenericMessage) *api.OutputChannelItem {
+	return &api.OutputChannelItem{
+		Type:           ExtensionName,
+		Timestamp:      time.Now().UnixNano() / int64(time.Millisecond),
+		ConnectionInfo: nil,
+		Data: &api.RequestResponsePair{
+			Request:  *requestHTTPMessage,
+			Response: *responseHTTPMessage,
+		},
 	}
 }
 

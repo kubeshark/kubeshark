@@ -13,18 +13,19 @@ func init() {
 
 type dissecting string
 
-func (d dissecting) Register(extension *api.Extension) {
+func (g dissecting) Register(extension *api.Extension) {
 	extension.Name = "kafka"
 	extension.OutboundPorts = []string{"9092"}
 	extension.InboundPorts = []string{}
 }
 
-func (d dissecting) Ping() {
+func (g dissecting) Ping() {
 	log.Printf("pong Kafka\n")
 }
 
-func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, callback func(reqResPair *api.RequestResponsePair)) {
+func (g dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID) *api.OutputChannelItem {
 	// TODO: Implement
+	return nil
 }
 
 var Dissector dissecting

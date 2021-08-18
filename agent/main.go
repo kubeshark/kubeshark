@@ -4,6 +4,13 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"github.com/gin-contrib/static"
+	"github.com/gin-gonic/gin"
+	"github.com/gorilla/websocket"
+	"github.com/romana/rlog"
+	"github.com/up9inc/mizu/shared"
+	"github.com/up9inc/mizu/tap"
+	tapApi "github.com/up9inc/mizu/tap/api"
 	"mizuserver/pkg/api"
 	"mizuserver/pkg/models"
 	"mizuserver/pkg/routes"
@@ -11,13 +18,6 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-
-	"github.com/gin-contrib/static"
-	"github.com/gin-gonic/gin"
-	"github.com/gorilla/websocket"
-	"github.com/romana/rlog"
-	"github.com/up9inc/mizu/shared"
-	"github.com/up9inc/mizu/tap"
 )
 
 var tapperMode = flag.Bool("tap", false, "Run in tapper mode without API")
@@ -38,12 +38,12 @@ func main() {
 	if *standaloneMode {
 		api.StartResolving(*namespace)
 
-		harOutputChannel, outboundLinkOutputChannel := tap.StartPassiveTapper(tapOpts)
-		filteredHarChannel := make(chan *tap.OutputChannelItem)
+		filteredOutputItemsChannel := make(chan *tapApi.OutputChannelItem)
+		tap.StartPassiveTapper(tapOpts, filteredOutputItemsChannel)
 
-		go filterHarItems(harOutputChannel, filteredHarChannel, getTrafficFilteringOptions())
-		go api.StartReadingEntries(filteredHarChannel, nil)
-		go api.StartReadingOutbound(outboundLinkOutputChannel)
+		// go filterHarItems(harOutputChannel, filteredOutputItemsChannel, getTrafficFilteringOptions())
+		go api.StartReadingEntries(filteredOutputItemsChannel, nil)
+		// go api.StartReadingOutbound(outboundLinkOutputChannel)
 
 		hostApi(nil)
 	} else if *tapperMode {
@@ -57,22 +57,23 @@ func main() {
 			rlog.Infof("Filtering for the following authorities: %v", tap.GetFilterIPs())
 		}
 
-		harOutputChannel, outboundLinkOutputChannel := tap.StartPassiveTapper(tapOpts)
-
+		// harOutputChannel, outboundLinkOutputChannel := tap.StartPassiveTapper(tapOpts)
+		filteredOutputItemsChannel := make(chan *tapApi.OutputChannelItem)
+		tap.StartPassiveTapper(tapOpts, filteredOutputItemsChannel)
 		socketConnection, err := shared.ConnectToSocketServer(*apiServerAddress, shared.DEFAULT_SOCKET_RETRIES, shared.DEFAULT_SOCKET_RETRY_SLEEP_TIME, false)
 		if err != nil {
 			panic(fmt.Sprintf("Error connecting to socket server at %s %v", *apiServerAddress, err))
 		}
 
-		go pipeTapChannelToSocket(socketConnection, harOutputChannel)
-		go pipeOutboundLinksChannelToSocket(socketConnection, outboundLinkOutputChannel)
+		go pipeTapChannelToSocket(socketConnection, filteredOutputItemsChannel)
+		// go pipeOutboundLinksChannelToSocket(socketConnection, outboundLinkOutputChannel)
 	} else if *apiServerMode {
 		api.StartResolving(*namespace)
 
-		socketHarOutChannel := make(chan *tap.OutputChannelItem, 1000)
-		filteredHarChannel := make(chan *tap.OutputChannelItem)
+		socketHarOutChannel := make(chan *tapApi.OutputChannelItem, 1000)
+		filteredHarChannel := make(chan *tapApi.OutputChannelItem)
 
-		go filterHarItems(socketHarOutChannel, filteredHarChannel, getTrafficFilteringOptions())
+		// go filterHarItems(socketHarOutChannel, filteredHarChannel, getTrafficFilteringOptions())
 		go api.StartReadingEntries(filteredHarChannel, nil)
 
 		hostApi(socketHarOutChannel)
@@ -85,7 +86,7 @@ func main() {
 	rlog.Info("Exiting")
 }
 
-func hostApi(socketHarOutputChannel chan<- *tap.OutputChannelItem) {
+func hostApi(socketHarOutputChannel chan<- *tapApi.OutputChannelItem) {
 	app := gin.Default()
 
 	app.GET("/echo", func(c *gin.Context) {
@@ -93,7 +94,7 @@ func hostApi(socketHarOutputChannel chan<- *tap.OutputChannelItem) {
 	})
 
 	eventHandlers := api.RoutesEventHandlers{
-		SocketHarOutChannel: socketHarOutputChannel,
+		SocketOutChannel: socketHarOutputChannel,
 	}
 
 	app.Use(static.ServeRoot("/", "./site"))
@@ -148,41 +149,41 @@ func getTrafficFilteringOptions() *shared.TrafficFilteringOptions {
 	return &filteringOptions
 }
 
-var userAgentsToFilter = []string{"kube-probe", "prometheus"}
+// var userAgentsToFilter = []string{"kube-probe", "prometheus"}
 
-func filterHarItems(inChannel <-chan *tap.OutputChannelItem, outChannel chan *tap.OutputChannelItem, filterOptions *shared.TrafficFilteringOptions) {
-	for message := range inChannel {
-		// if message.ConnectionInfo.IsOutgoing && api.CheckIsServiceIP(message.ConnectionInfo.ServerIP) {
-		// 	continue
-		// }
-		// TODO: move this to tappers https://up9.atlassian.net/browse/TRA-3441
-		if filterOptions.HideHealthChecks && isHealthCheckByUserAgent(message) {
-			continue
-		}
+//func filterHarItems(inChannel <-chan *tap.OutputChannelItem, outChannel chan *tap.OutputChannelItem, filterOptions *shared.TrafficFilteringOptions) {
+//	for message := range inChannel {
+//		if message.ConnectionInfo.IsOutgoing && api.CheckIsServiceIP(message.ConnectionInfo.ServerIP) {
+//			continue
+//		}
+//		// TODO: move this to tappers https://up9.atlassian.net/browse/TRA-3441
+//		if filterOptions.HideHealthChecks && isHealthCheckByUserAgent(message) {
+//			continue
+//		}
+//
+//		if !filterOptions.DisableRedaction {
+//			sensitiveDataFiltering.FilterSensitiveInfoFromHarRequest(message, filterOptions)
+//		}
+//
+//		outChannel <- message
+//	}
+//}
 
-		// if !filterOptions.DisableRedaction {
-		// 	sensitiveDataFiltering.FilterSensitiveInfoFromHarRequest(message, filterOptions)
-		// }
+//func isHealthCheckByUserAgent(message *tap.OutputChannelItem) bool {
+//	// for _, header := range message.HarEntry.Request.Headers {
+//	// 	if strings.ToLower(header.Name) == "user-agent" {
+//	// 		for _, userAgent := range userAgentsToFilter {
+//	// 			if strings.Contains(strings.ToLower(header.Value), userAgent) {
+//	// 				return true
+//	// 			}
+//	// 		}
+//	// 		return false
+//	// 	}
+//	// }
+//	return false
+//}
 
-		outChannel <- message
-	}
-}
-
-func isHealthCheckByUserAgent(message *tap.OutputChannelItem) bool {
-	// for _, header := range message.HarEntry.Request.Headers {
-	// 	if strings.ToLower(header.Name) == "user-agent" {
-	// 		for _, userAgent := range userAgentsToFilter {
-	// 			if strings.Contains(strings.ToLower(header.Value), userAgent) {
-	// 				return true
-	// 			}
-	// 		}
-	// 		return false
-	// 	}
-	// }
-	return false
-}
-
-func pipeTapChannelToSocket(connection *websocket.Conn, messageDataChannel <-chan *tap.OutputChannelItem) {
+func pipeTapChannelToSocket(connection *websocket.Conn, messageDataChannel <-chan *tapApi.OutputChannelItem) {
 	if connection == nil {
 		panic("Websocket connection is nil")
 	}

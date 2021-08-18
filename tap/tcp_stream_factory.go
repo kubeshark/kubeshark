@@ -15,6 +15,7 @@ import (
 
 type tcpStreamFactory struct {
 	outbountLinkWriter *OutboundLinkWriter
+	OutputChannelItem chan *api.OutputChannelItem
 }
 
 const checkTLSPacketAmount = 100

@@ -90,8 +90,7 @@ var memprofile = flag.String("memprofile", "", "Write memory profile")
 var dumpToHar = flag.Bool("hardump", false, "Dump traffic to har files")
 var HarOutputDir = flag.String("hardir", "", "Directory in which to store output har files")
 var harEntriesPerFile = flag.Int("harentriesperfile", 200, "Number of max number of har entries to store in each file")
-
-var filter = flag.String("f", "tcp and (src port 80 or dst port 80)", "BPF filter for pcap")
+var filter = flag.String("f", "tcp", "BPF filter for pcap")
 
 var statsTracker = StatsTracker{}
 
@@ -127,9 +126,6 @@ var hostMode bool               // global
 var extensions []*api.Extension // global
 var allOutboundPorts []string   // global
 var allInboundPorts []string    // global
-
-type OutputChannelItem struct {
-}
 
 /* minOutputLevel: Error will be printed only if outputLevel is above this value
  * t:              key for errorsMap (counting errors)
@@ -193,22 +189,14 @@ func (c *Context) GetCaptureInfo() gopacket.CaptureInfo {
 	return c.CaptureInfo
 }
 
-func StartPassiveTapper(opts *TapOpts) (<-chan *OutputChannelItem, <-chan *OutboundLink) {
+func StartPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem) () {
 	hostMode = opts.HostMode
 
-	// var harWriter *HarWriter
-	// if *dumpToHar {
-	// 	harWriter = NewHarWriter(*HarOutputDir, *harEntriesPerFile)
-	// }
-	outboundLinkWriter := NewOutboundLinkWriter()
+	if GetMemoryProfilingEnabled() {
+		startMemoryProfiler()
+	}
 
-	go startPassiveTapper(outboundLinkWriter)
-
-	// if harWriter != nil {
-	// 	return harWriter.OutChan, outboundLinkWriter.OutChan
-	// }
-
-	return nil, nil
+	go startPassiveTapper(outputItems)
 }
 
 func startMemoryProfiler() {
@@ -289,7 +277,7 @@ func loadExtensions() {
 	log.Printf("allInboundPorts: %v\n", allInboundPorts)
 }
 
-func startPassiveTapper(outboundLinkWriter *OutboundLinkWriter) {
+func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
 	loadExtensions()
 
 	log.SetFlags(log.LstdFlags | log.LUTC | log.Lshortfile)
@@ -315,7 +303,9 @@ func startPassiveTapper(outboundLinkWriter *OutboundLinkWriter) {
 	}
 
 	// Set up assembly
-	streamFactory := &tcpStreamFactory{}
+	streamFactory := &tcpStreamFactory{
+		OutputChannelItem: outputItems,
+	}
 	streamPool := tcpassembly.NewStreamPool(streamFactory)
 	assembler := tcpassembly.NewAssembler(streamPool)
 
