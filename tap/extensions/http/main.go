@@ -47,12 +47,11 @@ func (g dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID) *a
 		grpcAssembler = createGrpcAssembler(b)
 	}
 
+	var reqResPair *api.RequestResponsePair
+
 	for {
 		if isHTTP2 {
-			reqResPair, err := handleHTTP2Stream(grpcAssembler, tcpID)
-			if reqResPair != nil {
-				return reqResPair
-			}
+			reqResPair, err = handleHTTP2Stream(grpcAssembler, tcpID)
 			if err == io.EOF || err == io.ErrUnexpectedEOF {
 				break
 			} else if err != nil {
@@ -60,7 +59,7 @@ func (g dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID) *a
 				continue
 			}
 		} else if isClient {
-			err := handleHTTP1ClientStream(b, tcpID)
+			reqResPair, err = handleHTTP1ClientStream(b, tcpID)
 			if err == io.EOF || err == io.ErrUnexpectedEOF {
 				break
 			} else if err != nil {
@@ -68,10 +67,7 @@ func (g dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID) *a
 				continue
 			}
 		} else {
-			reqResPair, err := handleHTTP1ServerStream(b, tcpID)
-			if reqResPair != nil {
-				return reqResPair
-			}
+			reqResPair, err = handleHTTP1ServerStream(b, tcpID)
 			if err == io.EOF || err == io.ErrUnexpectedEOF {
 				break
 			} else if err != nil {
@@ -80,7 +76,7 @@ func (g dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID) *a
 			}
 		}
 	}
-	return nil
+	return reqResPair
 }
 
 var Dissector dissecting

@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"log"
-	"sync"
 
 	"github.com/romana/rlog"
 	"github.com/up9inc/mizu/tap/api"
@@ -15,8 +14,6 @@ import (
 )
 
 type tcpStreamFactory struct {
-	wg                 sync.WaitGroup
-	doHTTP             bool
 	outbountLinkWriter *OutboundLinkWriter
 }
 
@@ -46,8 +43,7 @@ func (h *tcpStream) serverRun(tcpID *api.TcpID) {
 	for _, extension := range extensions {
 		if containsPort(extension.OutboundPorts, h.transport.Src().String()) {
 			extension.Dissector.Ping()
-			reqResPair := extension.Dissector.Dissect(b, false, tcpID)
-			log.Printf("reqResPair: %+v\n", reqResPair)
+			extension.Dissector.Dissect(b, false, tcpID)
 		}
 	}
 }
@@ -71,10 +67,6 @@ func (h *tcpStreamFactory) New(net, transport gopacket.Flow) tcpassembly.Stream 
 		go stream.serverRun(tcpID)
 	}
 	return &stream.r
-}
-
-func (factory *tcpStreamFactory) WaitGoRoutines() {
-	factory.wg.Wait()
 }
 
 func (factory *tcpStreamFactory) getStreamProps(srcIP string, dstIP string, dstPort int) *streamProps {

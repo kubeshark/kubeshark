@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -52,13 +51,12 @@ func handleHTTP2Stream(grpcAssembler *GrpcAssembler, tcpID *api.TcpID) (*api.Req
 	return nil, nil
 }
 
-func handleHTTP1ClientStream(b *bufio.Reader, tcpID *api.TcpID) error {
+func handleHTTP1ClientStream(b *bufio.Reader, tcpID *api.TcpID) (*api.RequestResponsePair, error) {
 	requestCounter++
 	req, err := http.ReadRequest(b)
-	if err == io.EOF || err == io.ErrUnexpectedEOF {
-		return nil
-	} else if err != nil {
+	if err != nil {
 		log.Println("Error reading stream:", err)
+		return nil, err
 	} else {
 		body, _ := ioutil.ReadAll(req.Body)
 		req.Body.Close()
@@ -73,17 +71,19 @@ func handleHTTP1ClientStream(b *bufio.Reader, tcpID *api.TcpID) error {
 		tcpID.DstPort,
 		requestCounter,
 	)
-	reqResMatcher.registerRequest(ident, req, time.Now())
-	return err
+	reqResPair := reqResMatcher.registerRequest(ident, req, time.Now())
+	if reqResPair != nil {
+		fmt.Printf("reqResPair: %+v\n", reqResPair)
+	}
+	return reqResPair, nil
 }
 
 func handleHTTP1ServerStream(b *bufio.Reader, tcpID *api.TcpID) (*api.RequestResponsePair, error) {
 	responseCounter++
 	res, err := http.ReadResponse(b, nil)
-	if err == io.EOF || err == io.ErrUnexpectedEOF {
-		return nil, nil
-	} else if err != nil {
+	if err != nil {
 		log.Println("Error reading stream:", err)
+		return nil, err
 	} else {
 		body, _ := ioutil.ReadAll(res.Body)
 		res.Body.Close()
@@ -99,7 +99,7 @@ func handleHTTP1ServerStream(b *bufio.Reader, tcpID *api.TcpID) (*api.RequestRes
 	)
 	reqResPair := reqResMatcher.registerResponse(ident, res, time.Now())
 	if reqResPair != nil {
-		return reqResPair, nil
+		fmt.Printf("reqResPair: %+v\n", reqResPair)
 	}
-	return nil, err
+	return reqResPair, nil
 }
