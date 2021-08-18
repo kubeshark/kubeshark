@@ -54,16 +54,16 @@ func InitLogger() {
 func Logf(level Level, format string, args ...interface{}) {
 	switch level {
 	case CRITICAL:
-		Log.Criticalf(format, args)
+		Log.Criticalf(format, args...)
 	case ERROR:
-		Log.Errorf(format, args)
+		Log.Errorf(format, args...)
 	case WARNING:
-		Log.Warningf(format, args)
+		Log.Warningf(format, args...)
 	case NOTICE:
-		Log.Noticef(format, args)
+		Log.Noticef(format, args...)
 	case INFO:
-		Log.Infof(format, args)
+		Log.Infof(format, args...)
 	case DEBUG:
-		Log.Debugf(format, args)
+		Log.Debugf(format, args...)
 	}
 }
