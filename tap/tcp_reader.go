@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"log"
 	"strconv"
 	"sync"
 	"time"
@@ -103,7 +102,7 @@ func containsPort(ports []string, port string) bool {
 
 func (h *tcpReader) run(wg *sync.WaitGroup) {
 	defer wg.Done()
-	log.Printf("Called run h.isClient: %v\n", h.isClient)
+	// log.Printf("Called run h.isClient: %v\n", h.isClient)
 	b := bufio.NewReader(h)
 	if h.isClient {
 		extensions[1].Dissector.Dissect(b, h.isClient, h.tcpID, h.Emitter)

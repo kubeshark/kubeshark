@@ -2,7 +2,6 @@ package tap
 
 import (
 	"fmt"
-	"log"
 	"sync"
 
 	"github.com/romana/rlog"
@@ -26,7 +25,7 @@ type tcpStreamFactory struct {
 }
 
 func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.TCP, ac reassembly.AssemblerContext) reassembly.Stream {
-	log.Printf("* NEW: %s %s", net, transport)
+	rlog.Debugf("* NEW: %s %s", net, transport)
 	fsmOptions := reassembly.TCPSimpleFSMOptions{
 		SupportMissingEstablishment: *allowmissinginit,
 	}

@@ -2,11 +2,12 @@ package main
 
 import (
 	"fmt"
-	"github.com/romana/rlog"
 	"net/http"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/romana/rlog"
 
 	"github.com/up9inc/mizu/tap/api"
 )
@@ -31,7 +32,10 @@ func (matcher *requestResponseMatcher) registerRequest(ident string, request *ht
 	requestHTTPMessage := api.GenericMessage{
 		IsRequest:   true,
 		CaptureTime: captureTime,
-		Orig:        request,
+		Orig: HTTPPayload{
+			Type: "http_request",
+			Data: request,
+		},
 	}
 
 	if response, found := matcher.openMessagesMap.LoadAndDelete(key); found {
@@ -58,7 +62,10 @@ func (matcher *requestResponseMatcher) registerResponse(ident string, response *
 	responseHTTPMessage := api.GenericMessage{
 		IsRequest:   false,
 		CaptureTime: captureTime,
-		Orig:        response,
+		Orig: HTTPPayload{
+			Type: "http_response",
+			Data: response,
+		},
 	}
 
 	if request, found := matcher.openMessagesMap.LoadAndDelete(key); found {
