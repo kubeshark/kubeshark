@@ -84,13 +84,13 @@ func handleHTTP1ClientStream(b *bufio.Reader, tcpID *api.TcpID, emitter api.Emit
 	req.Body = io.NopCloser(bytes.NewBuffer(body)) // rewind
 	s := len(body)
 	if err != nil {
-		SilentError("HTTP-request-body", "stream %s Got body err: %s", tcpID.Ident, err)
+		rlog.Debugf("[HTTP-request-body] stream %s Got body err: %s", tcpID.Ident, err)
 	}
 	if err := req.Body.Close(); err != nil {
-		SilentError("HTTP-request-body-close", "stream %s Failed to close request body: %s", tcpID.Ident, err)
+		rlog.Debugf("[HTTP-request-body-close] stream %s Failed to close request body: %s", tcpID.Ident, err)
 	}
 	encoding := req.Header["Content-Encoding"]
-	Debug("HTTP/1 Request: %s %s %s (Body:%d) -> %s", tcpID.Ident, req.Method, req.URL, s, encoding)
+	rlog.Tracef(1, "HTTP/1 Request: %s %s %s (Body:%d) -> %s", tcpID.Ident, req.Method, req.URL, s, encoding)
 
 	ident := fmt.Sprintf(
 		"%s->%s %s->%s %d",
