@@ -4,6 +4,9 @@ on:
     branches:
       - 'develop'
       - 'main'
+concurrency:
+  group: mizu-publish-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   docker:
     runs-on: ubuntu-latest
