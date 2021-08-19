@@ -2,17 +2,15 @@ import * as axios from "axios";
 
 const mizuAPIPathPrefix = "/mizu";
 
-// When working locally (with npm run start) change to:
-// export const MizuWebsocketURL = `ws://localhost:8899${mizuAPIPathPrefix}/ws`;
-export const MizuWebsocketURL = `ws://${window.location.host}${mizuAPIPathPrefix}/ws`;
+// When working locally cp `cp .env.example .env`
+export const MizuWebsocketURL = process.env.REACT_APP_OVERRIDE_WS_URL ? process.env.REACT_APP_OVERRIDE_WS_URL : `ws://${window.location.host}${mizuAPIPathPrefix}/ws`;
 
 export default class Api {
 
     constructor() {
 
-        // When working locally (with npm run start) change to:
-        // const apiURL = `http://localhost:8899/${mizuAPIPathPrefix}/api/`;
-        const apiURL = `${window.location.origin}${mizuAPIPathPrefix}/api/`;
+        // When working locally cp `cp .env.example .env`
+        const apiURL = process.env.REACT_APP_OVERRIDE_API_URL ? process.env.REACT_APP_OVERRIDE_API_URL : `${window.location.origin}${mizuAPIPathPrefix}/api/`;
 
         this.client = axios.create({
             baseURL: apiURL,

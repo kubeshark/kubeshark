@@ -3,6 +3,7 @@ FROM node:14-slim AS site-build
 WORKDIR /app/ui-build
 
 COPY ui .
+RUN rm .env
 RUN npm i
 RUN npm run build
 
