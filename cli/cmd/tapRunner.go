@@ -10,7 +10,6 @@ import (
 	"github.com/up9inc/mizu/cli/logger"
 	"github.com/up9inc/mizu/cli/mizu/fsUtils"
 	"github.com/up9inc/mizu/cli/mizu/goUtils"
-	"github.com/up9inc/mizu/cli/mizu/version"
 	"github.com/up9inc/mizu/cli/telemetry"
 	"net/http"
 	"net/url"
@@ -79,7 +78,7 @@ func RunMizuTap() {
 	} else {
 		namespacesStr = "all namespaces"
 	}
-	version.CheckNewerVersion()
+
 	logger.Log.Infof("Tapping pods in %s", namespacesStr)
 
 	if err, _ := updateCurrentlyTappedPods(kubernetesProvider, ctx, targetNamespaces); err != nil {
