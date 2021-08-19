@@ -1,0 +1,20 @@
+# Mizu release _SEM_VER_
+
+Download Mizu for your platform
+
+**Mac** (on Intel chip)
+```
+curl -Lo mizu https://github.com/up9inc/mizu/releases/_SEM_VER_/download/mizu_darwin_amd64 && chmod 755 mizu
+```
+
+**Linux** 
+```
+curl -Lo mizu https://github.com/up9inc/mizu/releases/_SEM_VER_/download/mizu_linux_amd64 && chmod 755 mizu
+```
+
+
+### Checksums
+SHA256 checksums available for compiled binaries.
+Run `shasum -a 256 -c mizu_OS_ARCH.sha256` to verify.
+
+
