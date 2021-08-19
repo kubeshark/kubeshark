@@ -100,7 +100,7 @@ func sendTelemetry(telemetryType string, argsMap map[string]interface{}) error {
 	argsMap["branch"] = mizu.Branch
 	argsMap["version"] = mizu.SemVer
 
-	if machineId, err := machineid.ProtectedID("mizu"); err != nil {
+	if machineId, err := machineid.ProtectedID("mizu"); err == nil {
 		argsMap["machineId"] = machineId
 	}
 
