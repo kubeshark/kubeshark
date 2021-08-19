@@ -29,9 +29,9 @@ func init() {
 }
 
 func printNewVersionIfNeeded(versionChan chan string) {
-	msg1 := <-versionChan
-	if msg1 != "" {
-		logger.Log.Infof(uiUtils.Yellow, msg1)
+	versionMsg := <-versionChan
+	if versionMsg != "" {
+		logger.Log.Infof(uiUtils.Yellow, versionMsg)
 	}
 }
 
@@ -42,8 +42,10 @@ func Execute() {
 		logger.Log.Errorf("Failed to use mizu folder, %v", err)
 	}
 	logger.InitLogger()
+
 	versionChan := make(chan string)
 	defer printNewVersionIfNeeded(versionChan)
 	go version.CheckNewerVersion(versionChan)
+
 	cobra.CheckErr(rootCmd.Execute())
 }
