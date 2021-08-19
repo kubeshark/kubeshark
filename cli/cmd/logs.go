@@ -21,7 +21,8 @@ var logsCmd = &cobra.Command{
 
 		kubernetesProvider, err := kubernetes.NewProvider(config.Config.KubeConfigPath())
 		if err != nil {
-			return errormessage.FormatError(err)
+			logger.Log.Error(err)
+			return nil
 		}
 		ctx, _ := context.WithCancel(context.Background())
 
