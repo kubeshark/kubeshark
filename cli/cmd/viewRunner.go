@@ -13,7 +13,7 @@ import (
 )
 
 func runMizuView() {
-	kubernetesProvider, err := kubernetes.NewProvider(config.Config.KubeConfigPath)
+	kubernetesProvider, err := kubernetes.NewProvider(config.Config.KubeConfigPath())
 	if err != nil {
 		logger.Log.Error(err)
 		return

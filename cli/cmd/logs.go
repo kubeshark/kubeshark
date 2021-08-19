@@ -19,8 +19,9 @@ var logsCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		go telemetry.ReportRun("logs", config.Config.Logs)
 
-		kubernetesProvider, err := kubernetes.NewProvider(config.Config.KubeConfigPath)
+		kubernetesProvider, err := kubernetes.NewProvider(config.Config.KubeConfigPath())
 		if err != nil {
+			logger.Log.Error(err)
 			return nil
 		}
 		ctx, _ := context.WithCancel(context.Background())
