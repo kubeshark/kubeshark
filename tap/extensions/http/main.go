@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"github.com/romana/rlog"
 	"io"
 	"log"
 
@@ -36,7 +37,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, em
 	ident := fmt.Sprintf("%s->%s:%s->%s", tcpID.SrcIP, tcpID.DstIP, tcpID.SrcPort, tcpID.DstPort)
 	isHTTP2, err := checkIsHTTP2Connection(b, isClient)
 	if err != nil {
-		SilentError("HTTP/2-Prepare-Connection", "stream %s Failed to check if client is HTTP/2: %s (%v,%+v)", ident, err, err, err)
+		rlog.Debugf("[HTTP/2-Prepare-Connection] stream %s Failed to check if client is HTTP/2: %s (%v,%+v)", ident, err, err, err)
 		// Do something?
 	}
 
@@ -44,7 +45,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, em
 	if isHTTP2 {
 		err := prepareHTTP2Connection(b, isClient)
 		if err != nil {
-			SilentError("HTTP/2-Prepare-Connection-After-Check", "stream %s error: %s (%v,%+v)", ident, err, err, err)
+			rlog.Debugf("[HTTP/2-Prepare-Connection-After-Check] stream %s error: %s (%v,%+v)", ident, err, err, err)
 		}
 		grpcAssembler = createGrpcAssembler(b)
 	}
@@ -55,7 +56,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, em
 			if err == io.EOF || err == io.ErrUnexpectedEOF {
 				break
 			} else if err != nil {
-				SilentError("HTTP/2", "stream %s error: %s (%v,%+v)", ident, err, err, err)
+				rlog.Debugf("[HTTP/2] stream %s error: %s (%v,%+v)", ident, err, err, err)
 				continue
 			}
 		} else if isClient {
@@ -63,7 +64,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, em
 			if err == io.EOF || err == io.ErrUnexpectedEOF {
 				break
 			} else if err != nil {
-				SilentError("HTTP-request", "stream %s Request error: %s (%v,%+v)", ident, err, err, err)
+				rlog.Debugf("[HTTP-request] stream %s Request error: %s (%v,%+v)", ident, err, err, err)
 				continue
 			}
 		} else {
@@ -71,7 +72,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, em
 			if err == io.EOF || err == io.ErrUnexpectedEOF {
 				break
 			} else if err != nil {
-				SilentError("HTTP-response", "stream %s Response error: %s (%v,%+v)", ident, err, err, err)
+				rlog.Debugf("[HTTP-response], stream %s Response error: %s (%v,%+v)", ident, err, err, err)
 				continue
 			}
 		}

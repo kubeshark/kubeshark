@@ -3,10 +3,9 @@ package tap
 import (
 	"bufio"
 	"fmt"
-	"log"
-
 	"github.com/romana/rlog"
 	"github.com/up9inc/mizu/tap/api"
+	"log"
 
 	"github.com/google/gopacket" // pulls in all layers decoders
 	"github.com/google/gopacket/tcpassembly"
@@ -18,8 +17,6 @@ type tcpStreamFactory struct {
 	Emitter            api.Emitter
 }
 
-const checkTLSPacketAmount = 100
-
 func containsPort(ports []string, port string) bool {
 	for _, x := range ports {
 		if x == port {
@@ -29,6 +26,7 @@ func containsPort(ports []string, port string) bool {
 	return false
 }
 
+// TODO: remove?
 func Emit(item *api.OutputChannelItem) {
 	log.Printf("Emit item: %+v\n", item)
 }
@@ -67,6 +65,15 @@ func (h *tcpStreamFactory) New(net, transport gopacket.Flow) tcpassembly.Stream 
 		DstPort: transport.Dst().String(),
 		Ident:   fmt.Sprintf("%s:%s", net, transport),
 	}
+	//dstPort, _ := strconv.Atoi(transport.Dst().String())
+	//streamProps := h.getStreamProps(net.Src().String(), net.Dst().String(), dstPort)
+	//if streamProps.isTapTarget {
+	//
+	//}
+	//if h.shouldNotifyOnOutboundLink(net.Dst().String(), dstPort) {
+	//	h.outbountLinkWriter.WriteOutboundLink(net.Src().String(), net.Dst().String(), dstPort, "", "")
+	//}
+
 	if containsPort(allOutboundPorts, transport.Dst().String()) {
 		go stream.clientRun(tcpID, h.Emitter)
 	} else if containsPort(allOutboundPorts, transport.Src().String()) {

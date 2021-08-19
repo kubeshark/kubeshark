@@ -25,7 +25,7 @@ const protoHTTP2 = "HTTP/2.0"
 const protoMajorHTTP2 = 2
 const protoMinorHTTP2 = 0
 
-var maxHTTP2DataLen int = 1 * 1024 * 1024 // 1MB
+var maxHTTP2DataLen = 1 * 1024 * 1024 // 1MB
 
 type messageFragment struct {
 	headers []hpack.HeaderField
@@ -139,7 +139,7 @@ func (ga *GrpcAssembler) readMessage() (uint32, interface{}, error) {
 			ContentLength: int64(len(dataString)),
 		}
 	} else {
-		return 0, nil, errors.New("Failed to assemble stream: neither a request nor a message")
+		return 0, nil, errors.New("failed to assemble stream: neither a request nor a message")
 	}
 
 	return streamID, messageHTTP1, nil

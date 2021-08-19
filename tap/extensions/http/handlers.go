@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"github.com/romana/rlog"
 	"io"
 	"io/ioutil"
 	"log"
@@ -127,10 +128,10 @@ func handleHTTP1ServerStream(b *bufio.Reader, tcpID *api.TcpID, emitter api.Emit
 	res.Body = io.NopCloser(bytes.NewBuffer(body)) // rewind
 	s := len(body)
 	if err != nil {
-		SilentError("HTTP-response-body", "HTTP/%s: failed to get body(parsed len:%d): %s", tcpID.Ident, s, err)
+		rlog.Debugf("[HTTP-response-body] HTTP/%s: failed to get body(parsed len:%d): %s", tcpID.Ident, s, err)
 	}
 	if err := res.Body.Close(); err != nil {
-		SilentError("HTTP-response-body-close", "HTTP/%s: failed to close body(parsed len:%d): %s", tcpID.Ident, s, err)
+		rlog.Debugf("[HTTP-response-body-close] HTTP/%s: failed to close body(parsed len:%d): %s", tcpID.Ident, s, err)
 	}
 	sym := ","
 	if res.ContentLength > 0 && res.ContentLength != int64(s) {
@@ -141,7 +142,7 @@ func handleHTTP1ServerStream(b *bufio.Reader, tcpID *api.TcpID, emitter api.Emit
 		contentType = []string{http.DetectContentType(body)}
 	}
 	encoding := res.Header["Content-Encoding"]
-	Debug("HTTP/1 Response: %s %s URL:%s (%d%s%d%s) -> %s", tcpID.Ident, res.Status, req, res.ContentLength, sym, s, contentType, encoding)
+	rlog.Tracef(1, "HTTP/1 Response: %s %s URL:%s (%d%s%d%s) -> %s", tcpID.Ident, res.Status, req, res.ContentLength, sym, s, contentType, encoding)
 
 	ident := fmt.Sprintf(
 		"%s->%s %s->%s %d",
