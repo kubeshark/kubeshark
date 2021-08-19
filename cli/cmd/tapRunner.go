@@ -77,8 +77,8 @@ func RunMizuTap() {
 		if mizu.Contains(targetNamespaces, mizu.K8sAllNamespaces) || len(targetNamespaces) != 1 || !mizu.Contains(targetNamespaces, config.Config.MizuResourcesNamespace) {
 			logger.Log.Errorf("Not supported mode. Mizu can't resolve IPs in other namespaces when running in namespace restricted mode.\n"+
 				"You can use the same namespace for --%s and --%s", configStructs.NamespacesTapName, config.MizuResourcesNamespaceConfigName)
+			return
 		}
-		return
 	}
 
 	var namespacesStr string
