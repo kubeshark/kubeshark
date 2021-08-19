@@ -5,6 +5,9 @@ import (
 	"github.com/up9inc/mizu/cli/config/configStructs"
 	"github.com/up9inc/mizu/cli/mizu"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/client-go/util/homedir"
+	"os"
+	"path/filepath"
 )
 
 const (
@@ -23,7 +26,7 @@ type ConfigStruct struct {
 	MizuResourcesNamespace string                      `yaml:"mizu-resources-namespace" default:"mizu"`
 	Telemetry              bool                        `yaml:"telemetry" default:"true"`
 	DumpLogs               bool                        `yaml:"dump-logs" default:"false"`
-	KubeConfigPath         string                      `yaml:"kube-config-path"`
+	KubeConfigPathStr      string                      `yaml:"kube-config-path"`
 }
 
 func (config *ConfigStruct) SetDefaults() {
@@ -36,4 +39,18 @@ func (config *ConfigStruct) ImagePullPolicy() v1.PullPolicy {
 
 func (config *ConfigStruct) IsNsRestrictedMode() bool {
 	return config.MizuResourcesNamespace != "mizu" // Notice "mizu" string must match the default MizuResourcesNamespace
+}
+
+func (config *ConfigStruct) KubeConfigPath() string {
+	if config.KubeConfigPathStr != "" {
+		return config.KubeConfigPathStr
+	}
+
+	envKubeConfigPath := os.Getenv("KUBECONFIG")
+	if envKubeConfigPath != "" {
+		return envKubeConfigPath
+	}
+
+	home := homedir.HomeDir()
+	return filepath.Join(home, ".kube", "config")
 }

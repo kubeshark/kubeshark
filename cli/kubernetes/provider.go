@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"github.com/up9inc/mizu/cli/config/configStructs"
 	"github.com/up9inc/mizu/cli/logger"
-	"os"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -38,7 +37,6 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	_ "k8s.io/client-go/tools/portforward"
 	watchtools "k8s.io/client-go/tools/watch"
-	"k8s.io/client-go/util/homedir"
 )
 
 type Provider struct {
@@ -57,13 +55,23 @@ func NewProvider(kubeConfigPath string) (*Provider, error) {
 	restClientConfig, err := kubernetesConfig.ClientConfig()
 	if err != nil {
 		if clientcmd.IsEmptyConfig(err) {
-			return nil, fmt.Errorf("Couldn't find the kube config file, or file is empty. Try adding '--kube-config=<path to kube config file>'\n")
+			return nil, fmt.Errorf("couldn't find the kube config file, or file is empty (%s)\n" +
+				"you can set alternative kube config file path by adding the kube-config-path field to the mizu config file, err:  %w", kubeConfigPath, err)
 		}
 		if clientcmd.IsConfigurationInvalid(err) {
-			return nil, fmt.Errorf("Invalid kube config file. Try using a different config with '--kube-config=<path to kube config file>'\n")
+			return nil, fmt.Errorf("invalid kube config file (%s)\n" +
+				"you can set alternative kube config file path by adding the kube-config-path field to the mizu config file, err:  %w", kubeConfigPath, err)
 		}
+
+		return nil, fmt.Errorf("error while using kube config (%s)\n" +
+			"you can set alternative kube config file path by adding the kube-config-path field to the mizu config file, err:  %w", kubeConfigPath, err)
 	}
-	clientSet := getClientSet(restClientConfig)
+
+	clientSet, err := getClientSet(restClientConfig)
+	if err != nil {
+		return nil, fmt.Errorf("error while using kube config (%s)\n" +
+			"you can set alternative kube config file path by adding the kube-config-path field to the mizu config file, err:  %w", kubeConfigPath, err)
+	}
 
 	return &Provider{
 		clientSet:        clientSet,
@@ -731,24 +739,16 @@ func (provider *Provider) GetPodLogs(namespace string, podName string, ctx conte
 	return str, nil
 }
 
-func getClientSet(config *restclient.Config) *kubernetes.Clientset {
+func getClientSet(config *restclient.Config) (*kubernetes.Clientset, error) {
 	clientSet, err := kubernetes.NewForConfig(config)
 	if err != nil {
-		panic(err.Error())
+		return nil, err
 	}
-	return clientSet
+
+	return clientSet, nil
 }
 
 func loadKubernetesConfiguration(kubeConfigPath string) clientcmd.ClientConfig {
-	if kubeConfigPath == "" {
-		kubeConfigPath = os.Getenv("KUBECONFIG")
-	}
-
-	if kubeConfigPath == "" {
-		home := homedir.HomeDir()
-		kubeConfigPath = filepath.Join(home, ".kube", "config")
-	}
-
 	logger.Log.Debugf("Using kube config %s", kubeConfigPath)
 	configPathList := filepath.SplitList(kubeConfigPath)
 	configLoadingRules := &clientcmd.ClientConfigLoadingRules{}
