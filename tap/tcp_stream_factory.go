@@ -3,9 +3,11 @@ package tap
 import (
 	"bufio"
 	"fmt"
+	"log"
+	"strconv"
+
 	"github.com/romana/rlog"
 	"github.com/up9inc/mizu/tap/api"
-	"log"
 
 	"github.com/google/gopacket" // pulls in all layers decoders
 	"github.com/google/gopacket/tcpassembly"
@@ -24,11 +26,6 @@ func containsPort(ports []string, port string) bool {
 		}
 	}
 	return false
-}
-
-// TODO: remove?
-func Emit(item *api.OutputChannelItem) {
-	log.Printf("Emit item: %+v\n", item)
 }
 
 func (h *tcpStream) clientRun(tcpID *api.TcpID, emitter api.Emitter) {
@@ -65,20 +62,18 @@ func (h *tcpStreamFactory) New(net, transport gopacket.Flow) tcpassembly.Stream 
 		DstPort: transport.Dst().String(),
 		Ident:   fmt.Sprintf("%s:%s", net, transport),
 	}
-	//dstPort, _ := strconv.Atoi(transport.Dst().String())
-	//streamProps := h.getStreamProps(net.Src().String(), net.Dst().String(), dstPort)
-	//if streamProps.isTapTarget {
-	//
-	//}
+	dstPort, _ := strconv.Atoi(transport.Dst().String())
+	streamProps := h.getStreamProps(net.Src().String(), net.Dst().String(), dstPort)
+	if streamProps.isTapTarget {
+		if containsPort(allOutboundPorts, transport.Dst().String()) {
+			go stream.clientRun(tcpID, h.Emitter)
+		} else if containsPort(allOutboundPorts, transport.Src().String()) {
+			go stream.serverRun(tcpID, h.Emitter)
+		}
+	}
 	//if h.shouldNotifyOnOutboundLink(net.Dst().String(), dstPort) {
 	//	h.outbountLinkWriter.WriteOutboundLink(net.Src().String(), net.Dst().String(), dstPort, "", "")
 	//}
-
-	if containsPort(allOutboundPorts, transport.Dst().String()) {
-		go stream.clientRun(tcpID, h.Emitter)
-	} else if containsPort(allOutboundPorts, transport.Src().String()) {
-		go stream.serverRun(tcpID, h.Emitter)
-	}
 	return &stream.r
 }
 
@@ -96,12 +91,6 @@ func (factory *tcpStreamFactory) getStreamProps(srcIP string, dstIP string, dstP
 		}
 		return &streamProps{isTapTarget: false}
 	} else {
-		isTappedPort := dstPort == 80 || (gSettings.filterPorts != nil && (inArrayInt(gSettings.filterPorts, dstPort)))
-		if !isTappedPort {
-			rlog.Debugf("getStreamProps %s", fmt.Sprintf("- notHost1 %d", dstPort))
-			return &streamProps{isTapTarget: false, isOutgoing: false}
-		}
-
 		isOutgoing := !inArrayString(ownIps, dstIP)
 
 		if !*anydirection && isOutgoing {

@@ -286,6 +286,15 @@ func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
 	var handle *pcap.Handle
 	var err error
 
+	if localhostIPs, err := getLocalhostIPs(); err != nil {
+		// TODO: think this over
+		rlog.Info("Failed to get self IP addresses")
+		rlog.Errorf("Getting-Self-Address", "Error getting self ip address: %s (%v,%+v)", err, err, err)
+		ownIps = make([]string, 0)
+	} else {
+		ownIps = localhostIPs
+	}
+
 	// Set up pcap packet capture
 	if *fname != "" {
 		log.Printf("Reading from pcap dump %q", *fname)
