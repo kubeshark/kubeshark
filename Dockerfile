@@ -48,8 +48,6 @@ WORKDIR /app
 COPY --from=builder ["/app/agent-build/mizuagent", "."]
 COPY --from=site-build ["/app/ui-build/build", "site"]
 
-COPY agent/start.sh .
-
 # gin-gonic runs in debug mode without this
 ENV GIN_MODE=release
 

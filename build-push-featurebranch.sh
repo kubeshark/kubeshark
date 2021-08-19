@@ -1,12 +1,14 @@
 #!/bin/bash
 set -e
 
-SERVER_NAME=mizu
 GCP_PROJECT=up9-docker-hub
 REPOSITORY=gcr.io/$GCP_PROJECT
+SERVER_NAME=mizu
 GIT_BRANCH=$(git branch | grep \* | cut -d ' ' -f2 | tr '[:upper:]' '[:lower:]')
-SEM_VER=${SEM_VER=0.0.0}
+
 DOCKER_REPO=$REPOSITORY/$SERVER_NAME/$GIT_BRANCH
+SEM_VER=${SEM_VER=0.0.0}
+
 DOCKER_TAGGED_BUILDS=("$DOCKER_REPO:latest" "$DOCKER_REPO:$SEM_VER")
 
 if [ "$GIT_BRANCH" = 'develop' -o "$GIT_BRANCH" = 'master' -o "$GIT_BRANCH" = 'main' ]
@@ -21,6 +23,6 @@ docker build $DOCKER_TAGS_ARGS --build-arg SEM_VER=${SEM_VER} --build-arg BUILD_
 
 for DOCKER_TAG in "${DOCKER_TAGGED_BUILDS[@]}"
 do
-        echo pushing "$DOCKER_TAG"
-        docker push "$DOCKER_TAG"
+  echo pushing "$DOCKER_TAG"
+  docker push "$DOCKER_TAG"
 done

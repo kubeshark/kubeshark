@@ -26,3 +26,23 @@ func (v SemVersion) Patch() string {
 	_, _, patch := v.Breakdown()
 	return patch
 }
+
+func (v SemVersion) GreaterThan(v2 SemVersion) bool {
+	if v.Major() > v2.Major() {
+		return true
+	} else if v.Major() < v2.Major() {
+		return false
+	}
+
+	if v.Minor() > v2.Minor() {
+		return true
+	} else if v.Minor() < v2.Minor() {
+		return false
+	}
+
+	if v.Patch() > v2.Patch() {
+		return true
+	}
+
+	return false
+}

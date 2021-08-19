@@ -1,0 +1,35 @@
+@import 'src/variables.module'
+
+.statusBar
+    position: absolute
+    transform: translate(-50%, -3px)
+    left: 50%
+    z-index: 9999
+    min-width: 200px
+    background: $blue-color
+    color: rgba(255,255,255,0.75)
+    border-bottom-left-radius: 8px
+    border-bottom-right-radius: 8px
+    top: 0
+    padding: 2px 10px
+    font-size: 14px
+    transition: max-height 2s ease-out
+    width: auto
+    max-height: 32px
+    overflow: hidden
+
+    .podsCount
+        display: flex
+        justify-content: center
+        padding: 8px
+        font-weight: 600
+
+    th
+        text-align: left
+    td
+        padding-right: 15px
+        padding-top: 5px
+
+.expandedStatusBar
+    max-height: 100vh
+    padding-bottom: 15px
