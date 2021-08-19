@@ -4,13 +4,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/gin-contrib/static"
-	"github.com/gin-gonic/gin"
-	"github.com/gorilla/websocket"
-	"github.com/romana/rlog"
-	"github.com/up9inc/mizu/shared"
-	"github.com/up9inc/mizu/tap"
-	tapApi "github.com/up9inc/mizu/tap/api"
 	"mizuserver/pkg/api"
 	"mizuserver/pkg/models"
 	"mizuserver/pkg/routes"
@@ -18,6 +11,14 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+
+	"github.com/gin-contrib/static"
+	"github.com/gin-gonic/gin"
+	"github.com/gorilla/websocket"
+	"github.com/romana/rlog"
+	"github.com/up9inc/mizu/shared"
+	"github.com/up9inc/mizu/tap"
+	tapApi "github.com/up9inc/mizu/tap/api"
 )
 
 var tapperMode = flag.Bool("tap", false, "Run in tapper mode without API")
@@ -71,10 +72,11 @@ func main() {
 		api.StartResolving(*namespace)
 
 		socketHarOutChannel := make(chan *tapApi.OutputChannelItem, 1000)
-		filteredHarChannel := make(chan *tapApi.OutputChannelItem)
+		// TODO: filtered does not work
+		// filteredHarChannel := make(chan *tapApi.OutputChannelItem)
 
 		// go filterHarItems(socketHarOutChannel, filteredHarChannel, getTrafficFilteringOptions())
-		go api.StartReadingEntries(filteredHarChannel, nil)
+		go api.StartReadingEntries(socketHarOutChannel, nil)
 
 		hostApi(socketHarOutChannel)
 	}
