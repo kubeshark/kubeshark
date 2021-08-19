@@ -4,6 +4,8 @@ on:
     branches:
       - 'develop'
       - 'main'
+concurrency:
+  group: "mizu-publish"
 jobs:
   docker:
     runs-on: ubuntu-latest
