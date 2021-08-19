@@ -40,8 +40,7 @@ func runMizuView() {
 		logger.Log.Infof("Found a running service %s and open port %d", mizu.ApiServerPodName, config.Config.View.GuiPort)
 		return
 	}
-	logger.Log.Debugf("Found service %s, creating k8s proxy", mizu.ApiServerPodName)
-
+	logger.Log.Infof("Establishing connection to k8s cluster...")
 	go startProxyReportErrorIfAny(kubernetesProvider, cancel)
 
 	time.Sleep(time.Second * 5) // Waiting to be sure the proxy is ready
