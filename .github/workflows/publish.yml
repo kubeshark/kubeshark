@@ -1,12 +1,15 @@
 name: publish
+
 on:
   push:
     branches:
       - 'develop'
       - 'main'
+
 concurrency:
   group: mizu-publish-${{ github.ref }}
   cancel-in-progress: true
+
 jobs:
   docker:
     runs-on: ubuntu-latest
@@ -81,4 +84,3 @@ jobs:
           tag: ${{ steps.versioning.outputs.version }}
           prerelease: ${{ github.ref != 'refs/heads/main' }}
           bodyFile: 'cli/bin/README.md'
-

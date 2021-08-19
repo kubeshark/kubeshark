@@ -1,4 +1,5 @@
 name: acceptance tests
+
 on:
   pull_request:
     branches:
@@ -6,6 +7,11 @@ on:
   push:
     branches:
       - 'develop'
+
+concurrency:
+  group: mizu-acceptance-tests-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   run-acceptance-tests:
     name: Run acceptance tests
