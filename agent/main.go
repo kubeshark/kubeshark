@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"log"
 	"mizuserver/pkg/api"
 	"mizuserver/pkg/models"
 	"mizuserver/pkg/routes"
@@ -201,6 +202,9 @@ func pipeTapChannelToSocket(connection *websocket.Conn, messageDataChannel <-cha
 			continue
 		}
 
+		log.Printf("marshaledData: %s\n", marshaledData)
+		// NOTE: This is where the `*tapApi.OutputChannelItem` leaves the code
+		// and goes into the intermediate WebSocket.
 		err = connection.WriteMessage(websocket.TextMessage, marshaledData)
 		if err != nil {
 			rlog.Infof("error sending message through socket server %s, (%v,%+v)\n", err, err, err)

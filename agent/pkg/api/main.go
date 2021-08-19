@@ -5,16 +5,16 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"mizuserver/pkg/database"
 	"mizuserver/pkg/holder"
-	"net/http"
 	"net/url"
 	"os"
 	"path"
 	"sort"
 	"strings"
 	"time"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"github.com/google/martian/har"
 	"github.com/romana/rlog"
@@ -110,11 +110,14 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem) {
 	}
 
 	for item := range outputItems {
-		if harEntry, err := models.NewEntry(item.Data.Request.Orig.(*http.Request), item.Data.Request.CaptureTime, item.Data.Response.Orig.(*http.Response), item.Data.Response.CaptureTime); err == nil {
-			saveHarToDb(harEntry, item.ConnectionInfo)
-		} else {
-			rlog.Errorf("Error when creating HTTP entry")
-		}
+		fmt.Printf("item: %+v\n", item)
+		// NOTE: With this call, the incoming data is sent to the last WebSocket (that the web UI communicates).
+		handleItem(item)
+		// if harEntry, err := models.NewEntry(item.Data.Request.Orig.(*http.Request), item.Data.Request.CaptureTime, item.Data.Response.Orig.(*http.Response), item.Data.Response.CaptureTime); err == nil {
+		// 	saveHarToDb(harEntry, item.ConnectionInfo)
+		// } else {
+		// 	rlog.Errorf("Error when creating HTTP entry")
+		// }
 	}
 }
 
@@ -123,6 +126,15 @@ func StartReadingOutbound(outboundLinkChannel <-chan *tap.OutboundLink) {
 	// TODO: Make write to channel optional.
 	for range outboundLinkChannel {
 	}
+}
+
+func handleItem(item *tapApi.OutputChannelItem) {
+	baseEntry := models.BaseEntryDetails{
+		RequestSenderIp: item.ConnectionInfo.ClientIP,
+	}
+	baseEntryBytes, _ := models.CreateBaseEntryWebSocketMessage(&baseEntry)
+	// NOTE: This is where it's sent to the last WebSocket
+	BroadcastToBrowserClients(baseEntryBytes)
 }
 
 func saveHarToDb(entry *har.Entry, connectionInfo *tapApi.ConnectionInfo) {

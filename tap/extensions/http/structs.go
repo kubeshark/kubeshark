@@ -14,6 +14,7 @@ type HTTPPayloader interface {
 }
 
 func (h HTTPPayload) MarshalJSON() ([]byte, error) {
+	// TODO: Implement JSON marshaling for HTTP request and response
 	switch h.Type {
 	case "http_request":
 		return []byte("{\"val\": \"" + h.Type + "\"}"), nil
