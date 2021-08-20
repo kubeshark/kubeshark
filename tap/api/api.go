@@ -44,7 +44,7 @@ type RequestResponsePair struct {
 }
 
 type OutputChannelItem struct {
-	Type           string
+	Protocol       string
 	Timestamp      int64
 	ConnectionInfo *ConnectionInfo
 	Data           *RequestResponsePair

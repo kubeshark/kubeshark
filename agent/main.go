@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"mizuserver/pkg/api"
 	"mizuserver/pkg/models"
@@ -12,6 +13,9 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path"
+	"path/filepath"
+	"plugin"
 
 	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
@@ -28,8 +32,14 @@ var standaloneMode = flag.Bool("standalone", false, "Run in standalone tapper an
 var apiServerAddress = flag.String("api-server-address", "", "Address of mizu API server")
 var namespace = flag.String("namespace", "", "Resolve IPs if they belong to resources in this namespace (default is all)")
 
+var extensions []*tapApi.Extension             // global
+var extensionsMap map[string]*tapApi.Extension // global
+var allOutboundPorts []string                  // global
+var allInboundPorts []string                   // global
+
 func main() {
 	flag.Parse()
+	loadExtensions()
 	hostMode := os.Getenv(shared.HostModeEnvVar) == "1"
 	tapOpts := &tap.TapOpts{HostMode: hostMode}
 
@@ -41,10 +51,10 @@ func main() {
 		api.StartResolving(*namespace)
 
 		filteredOutputItemsChannel := make(chan *tapApi.OutputChannelItem)
-		tap.StartPassiveTapper(tapOpts, filteredOutputItemsChannel)
+		tap.StartPassiveTapper(tapOpts, filteredOutputItemsChannel, extensions)
 
 		// go filterHarItems(harOutputChannel, filteredOutputItemsChannel, getTrafficFilteringOptions())
-		go api.StartReadingEntries(filteredOutputItemsChannel, nil)
+		go api.StartReadingEntries(filteredOutputItemsChannel, nil, extensionsMap)
 		// go api.StartReadingOutbound(outboundLinkOutputChannel)
 
 		hostApi(nil)
@@ -61,7 +71,7 @@ func main() {
 
 		// harOutputChannel, outboundLinkOutputChannel := tap.StartPassiveTapper(tapOpts)
 		filteredOutputItemsChannel := make(chan *tapApi.OutputChannelItem)
-		tap.StartPassiveTapper(tapOpts, filteredOutputItemsChannel)
+		tap.StartPassiveTapper(tapOpts, filteredOutputItemsChannel, extensions)
 		socketConnection, err := shared.ConnectToSocketServer(*apiServerAddress, shared.DEFAULT_SOCKET_RETRIES, shared.DEFAULT_SOCKET_RETRY_SLEEP_TIME, false)
 		if err != nil {
 			panic(fmt.Sprintf("Error connecting to socket server at %s %v", *apiServerAddress, err))
@@ -77,7 +87,7 @@ func main() {
 		// filteredHarChannel := make(chan *tapApi.OutputChannelItem)
 
 		// go filterHarItems(socketHarOutChannel, filteredHarChannel, getTrafficFilteringOptions())
-		go api.StartReadingEntries(socketHarOutChannel, nil)
+		go api.StartReadingEntries(socketHarOutChannel, nil, extensionsMap)
 
 		hostApi(socketHarOutChannel)
 	}
@@ -87,6 +97,55 @@ func main() {
 	<-signalChan
 
 	rlog.Info("Exiting")
+}
+
+func mergeUnique(slice []string, merge []string) []string {
+	for _, i := range merge {
+		add := true
+		for _, ele := range slice {
+			if ele == i {
+				add = false
+			}
+		}
+		if add {
+			slice = append(slice, i)
+		}
+	}
+	return slice
+}
+
+func loadExtensions() {
+	dir, _ := filepath.Abs(filepath.Dir(os.Args[0]))
+	extensionsDir := path.Join(dir, "./extensions/")
+
+	files, err := ioutil.ReadDir(extensionsDir)
+	if err != nil {
+		log.Fatal(err)
+	}
+	extensions = make([]*tapApi.Extension, len(files))
+	extensionsMap = make(map[string]*tapApi.Extension)
+	for i, file := range files {
+		filename := file.Name()
+		log.Printf("Loading extension: %s\n", filename)
+		extension := &tapApi.Extension{
+			Path: path.Join(extensionsDir, filename),
+		}
+		plug, _ := plugin.Open(extension.Path)
+		extension.Plug = plug
+		symDissector, _ := plug.Lookup("Dissector")
+
+		var dissector tapApi.Dissector
+		dissector, _ = symDissector.(tapApi.Dissector)
+		dissector.Register(extension)
+		extension.Dissector = dissector
+		log.Printf("Extension Properties: %+v\n", extension)
+		extensions[i] = extension
+		extensionsMap[extension.Name] = extension
+		allOutboundPorts = mergeUnique(allOutboundPorts, extension.OutboundPorts)
+		allInboundPorts = mergeUnique(allInboundPorts, extension.InboundPorts)
+	}
+	log.Printf("allOutboundPorts: %v\n", allOutboundPorts)
+	log.Printf("allInboundPorts: %v\n", allInboundPorts)
 }
 
 func hostApi(socketHarOutputChannel chan<- *tapApi.OutputChannelItem) {

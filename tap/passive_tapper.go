@@ -12,13 +12,9 @@ import (
 	"encoding/hex"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"os/signal"
-	"path"
-	"path/filepath"
-	"plugin"
 	"runtime"
 	"runtime/pprof"
 	"strconv"
@@ -127,8 +123,6 @@ var nErrors uint
 var ownIps []string             // global
 var hostMode bool               // global
 var extensions []*api.Extension // global
-var allOutboundPorts []string   // global
-var allInboundPorts []string    // global
 
 /* minOutputLevel: Error will be printed only if outputLevel is above this value
  * t:              key for errorsMap (counting errors)
@@ -192,8 +186,9 @@ func (c *Context) GetCaptureInfo() gopacket.CaptureInfo {
 	return c.CaptureInfo
 }
 
-func StartPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem) {
+func StartPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem, extensionsRef []*api.Extension) {
 	hostMode = opts.HostMode
+	extensions = extensionsRef
 
 	if GetMemoryProfilingEnabled() {
 		startMemoryProfiler()
@@ -233,56 +228,7 @@ func startMemoryProfiler() {
 	}()
 }
 
-func MergeUnique(slice []string, merge []string) []string {
-	for _, i := range merge {
-		add := true
-		for _, ele := range slice {
-			if ele == i {
-				add = false
-			}
-		}
-		if add {
-			slice = append(slice, i)
-		}
-	}
-	return slice
-}
-
-func loadExtensions() {
-	dir, _ := filepath.Abs(filepath.Dir(os.Args[0]))
-	extensionsDir := path.Join(dir, "./extensions/")
-
-	files, err := ioutil.ReadDir(extensionsDir)
-	if err != nil {
-		log.Fatal(err)
-	}
-	extensions = make([]*api.Extension, len(files))
-	for i, file := range files {
-		filename := file.Name()
-		log.Printf("Loading extension: %s\n", filename)
-		extension := &api.Extension{
-			Path: path.Join(extensionsDir, filename),
-		}
-		plug, _ := plugin.Open(extension.Path)
-		extension.Plug = plug
-		symDissector, _ := plug.Lookup("Dissector")
-
-		var dissector api.Dissector
-		dissector, _ = symDissector.(api.Dissector)
-		dissector.Register(extension)
-		extension.Dissector = dissector
-		log.Printf("Extension Properties: %+v\n", extension)
-		extensions[i] = extension
-		allOutboundPorts = MergeUnique(allOutboundPorts, extension.OutboundPorts)
-		allInboundPorts = MergeUnique(allInboundPorts, extension.InboundPorts)
-	}
-	log.Printf("allOutboundPorts: %v\n", allOutboundPorts)
-	log.Printf("allInboundPorts: %v\n", allInboundPorts)
-}
-
 func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
-	loadExtensions()
-
 	log.SetFlags(log.LstdFlags | log.LUTC | log.Lshortfile)
 
 	defer util.Run()()

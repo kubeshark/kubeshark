@@ -51,11 +51,11 @@ func StartResolving(namespace string) {
 	holder.SetResolver(res)
 }
 
-func StartReadingEntries(harChannel <-chan *tapApi.OutputChannelItem, workingDir *string) {
+func StartReadingEntries(harChannel <-chan *tapApi.OutputChannelItem, workingDir *string, extensionsMap map[string]*tapApi.Extension) {
 	if workingDir != nil && *workingDir != "" {
 		startReadingFiles(*workingDir)
 	} else {
-		startReadingChannel(harChannel)
+		startReadingChannel(harChannel, extensionsMap)
 	}
 }
 
@@ -105,13 +105,15 @@ func startReadingFiles(workingDir string) {
 	}
 }
 
-func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem) {
+func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extensionsMap map[string]*tapApi.Extension) {
 	if outputItems == nil {
 		panic("Channel of captured messages is nil")
 	}
 
 	for item := range outputItems {
 		fmt.Printf("item: %+v\n", item)
+		extension := extensionsMap[item.Protocol]
+		fmt.Printf("extension: %+v\n", extension)
 		var req *http.Request
 		marshedReq, _ := json.Marshal(item.Data.Request.Orig)
 		json.Unmarshal(marshedReq, &req)

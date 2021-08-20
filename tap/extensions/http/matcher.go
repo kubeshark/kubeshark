@@ -86,7 +86,7 @@ func (matcher *requestResponseMatcher) registerResponse(ident string, response *
 
 func (matcher *requestResponseMatcher) preparePair(requestHTTPMessage *api.GenericMessage, responseHTTPMessage *api.GenericMessage) *api.OutputChannelItem {
 	return &api.OutputChannelItem{
-		Type:           ExtensionName,
+		Protocol:       ExtensionName,
 		Timestamp:      time.Now().UnixNano() / int64(time.Millisecond),
 		ConnectionInfo: nil,
 		Data: &api.RequestResponsePair{
