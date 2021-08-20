@@ -127,6 +127,10 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolve
 		Path:                request["url"].(string),
 		ResolvedSource:      resolvedSource,
 		ResolvedDestination: resolvedDestination,
+		SourceIp:            item.ConnectionInfo.ClientIP,
+		DestinationIp:       item.ConnectionInfo.ServerIP,
+		SourcePort:          item.ConnectionInfo.ClientPort,
+		DestinationPort:     item.ConnectionInfo.ServerPort,
 		IsOutgoing:          item.ConnectionInfo.IsOutgoing,
 	}
 }
@@ -138,10 +142,14 @@ func (d dissecting) Summarize(entry *api.MizuEntry) *api.BaseEntryDetails {
 		Url:             entry.Url,
 		RequestSenderIp: entry.RequestSenderIp,
 		Service:         entry.Service,
-		Path:            entry.Path,
+		Summary:         entry.Path,
 		StatusCode:      entry.Status,
 		Method:          entry.Method,
 		Timestamp:       entry.Timestamp,
+		SourceIp:        entry.SourceIp,
+		DestinationIp:   entry.DestinationIp,
+		SourcePort:      entry.SourcePort,
+		DestinationPort: entry.DestinationPort,
 		IsOutgoing:      entry.IsOutgoing,
 		Latency:         0,
 		Rules: api.ApplicableRules{

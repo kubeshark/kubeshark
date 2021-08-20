@@ -99,6 +99,10 @@ type MizuEntry struct {
 	Path                string `json:"path" gorm:"column:path"`
 	ResolvedSource      string `json:"resolvedSource,omitempty" gorm:"column:resolvedSource"`
 	ResolvedDestination string `json:"resolvedDestination,omitempty" gorm:"column:resolvedDestination"`
+	SourceIp            string `json:"sourceIp,omitempty" gorm:"column:sourceIp"`
+	DestinationIp       string `json:"destinationIp,omitempty" gorm:"column:destinationIp"`
+	SourcePort          string `json:"sourcePort,omitempty" gorm:"column:sourcePort"`
+	DestinationPort     string `json:"destinationPort,omitempty" gorm:"column:destinationPort"`
 	IsOutgoing          bool   `json:"isOutgoing,omitempty" gorm:"column:isOutgoing"`
 	EstimatedSizeBytes  int    `json:"-" gorm:"column:estimatedSizeBytes"`
 }
@@ -107,12 +111,16 @@ type BaseEntryDetails struct {
 	Id              string          `json:"id,omitempty"`
 	Protocol        Protocol        `json:"protocol,omitempty"`
 	Url             string          `json:"url,omitempty"`
-	RequestSenderIp string          `json:"requestSenderIp,omitempty"`
+	RequestSenderIp string          `json:"request_sender_ip,omitempty"`
 	Service         string          `json:"service,omitempty"`
-	Path            string          `json:"path,omitempty"`
-	StatusCode      int             `json:"statusCode,omitempty"`
+	Summary         string          `json:"summary,omitempty"`
+	StatusCode      int             `json:"status_code,omitempty"`
 	Method          string          `json:"method,omitempty"`
 	Timestamp       int64           `json:"timestamp,omitempty"`
+	SourceIp        string          `json:"source_ip,omitempty"`
+	DestinationIp   string          `json:"destination_ip,omitempty"`
+	SourcePort      string          `json:"source_port,omitempty"`
+	DestinationPort string          `json:"destination_port,omitempty"`
 	IsOutgoing      bool            `json:"isOutgoing,omitempty"`
 	Latency         int64           `json:"latency,omitempty"`
 	Rules           ApplicableRules `json:"rules,omitempty"`
@@ -133,7 +141,7 @@ func (bed *BaseEntryDetails) UnmarshalData(entry *MizuEntry) error {
 	bed.Id = entry.EntryId
 	bed.Url = entryUrl
 	bed.Service = service
-	bed.Path = entry.Path
+	bed.Summary = entry.Path
 	bed.StatusCode = entry.Status
 	bed.Method = entry.Method
 	bed.Timestamp = entry.Timestamp

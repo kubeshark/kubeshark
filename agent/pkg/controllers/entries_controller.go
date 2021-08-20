@@ -3,6 +3,7 @@ package controllers
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"mizuserver/pkg/database"
 	"mizuserver/pkg/models"
 	"mizuserver/pkg/providers"
@@ -221,7 +222,7 @@ func GetEntry(c *gin.Context) {
 			"msg":   "Can't get entry details",
 		})
 	}
-	fmt.Printf("entryData: %+v\n", entryData)
+	log.Printf("entryData: %+v\n", entryData)
 	// fullEntryWithPolicy := models.FullEntryWithPolicy{}
 	// if err := models.GetEntry(&entryData, &fullEntryWithPolicy); err != nil {
 	// 	c.JSON(http.StatusInternalServerError, map[string]interface{}{

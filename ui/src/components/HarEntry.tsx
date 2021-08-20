@@ -13,13 +13,16 @@ import outgoingIconNeutral from "./assets/outgoing-traffic-neutral.svg"
 interface HAREntry {
     protocol: ProtocolInterface,
     method?: string,
-    path: string,
+    summary: string,
     service: string,
     id: string,
-    statusCode?: number;
+    status_code?: number;
     url?: string;
-    isCurrentRevision?: boolean;
     timestamp: Date;
+    source_ip: string,
+    source_port: string,
+    destination_ip: string,
+    destination_port: string,
 	isOutgoing?: boolean;
     latency: number;
     rules: Rules;
@@ -37,7 +40,7 @@ interface HAREntryProps {
 }
 
 export const HarEntry: React.FC<HAREntryProps> = ({entry, setFocusedEntryId, isSelected}) => {
-    const classification = getClassification(entry.statusCode)
+    const classification = getClassification(entry.status_code)
     let ingoingIcon;
     let outgoingIcon;
     switch(classification) {
@@ -74,23 +77,29 @@ export const HarEntry: React.FC<HAREntryProps> = ({entry, setFocusedEntryId, isS
             style={{border: isSelected ? `1px ${entry.protocol.background_color} solid` : "1px transparent solid"}}
         >
             <Protocol protocol={entry.protocol}/>
-            {entry.statusCode && <div>
-                <StatusCode statusCode={entry.statusCode}/>
+            {entry.status_code && <div>
+                <StatusCode statusCode={entry.status_code}/>
             </div>}
             <div className={styles.endpointServiceContainer}>
-                <EndpointPath method={entry.method} path={entry.path}/>
+                <EndpointPath method={entry.method} path={entry.summary}/>
                 <div className={styles.service}>
-                    {entry.service}
+                    <span title="Service Name">{entry.service}</span>
                 </div>
             </div>
             <div className={styles.directionContainer}>
+                <span className={styles.port} title="Source Port">{entry.source_port}</span>
                 {entry.isOutgoing ?
-                    <img src={outgoingIcon} alt="outgoing traffic" title="outgoing"/>
+                    <img src={outgoingIcon} alt="Outgoing traffic" title="Outgoing"/>
                     :
-                    <img src={ingoingIcon} alt="ingoing traffic" title="ingoing"/>
+                    <img src={ingoingIcon} alt="Ingoing traffic" title="Ingoing"/>
                 }
+                <span className={styles.port} title="Destination Port">{entry.destination_port}</span>
             </div>
-            <div className={styles.timestamp}>{new Date(+entry.timestamp)?.toLocaleString()}</div>
+            <div className={styles.timestamp}>
+                <span title="Timestamp">
+                    {new Date(+entry.timestamp)?.toLocaleString()}
+                </span>
+            </div>
         </div>
     </>
 };

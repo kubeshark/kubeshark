@@ -16,7 +16,11 @@ const StatusCode: React.FC<HAREntryProps> = ({statusCode}) => {
 
     const classification = getClassification(statusCode)
 
-    return <span className={`${styles[classification]} ${styles.base}`}>{statusCode}</span>
+    return <span
+        title="Status Code"
+        className={`${styles[classification]} ${styles.base}`}>
+            {statusCode}
+    </span>
 };
 
 export function getClassification(statusCode: number): string {
