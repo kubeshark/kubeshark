@@ -52,7 +52,7 @@ func CheckVersionCompatibility(port uint16) (bool, error) {
 	return false, nil
 }
 
-func CheckNewerVersion() {
+func CheckNewerVersion(versionChan chan string) {
 	logger.Log.Debugf("Checking for newer version...")
 	start := time.Now()
 	client := github.NewClient(nil)
@@ -88,8 +88,13 @@ func CheckNewerVersion() {
 	}
 	gitHubVersion := string(data)
 	gitHubVersion = gitHubVersion[:len(gitHubVersion)-1]
-	logger.Log.Debugf("Finished version validation, took %v", time.Since(start))
-	if mizu.SemVer < gitHubVersion {
-		logger.Log.Infof(uiUtils.Yellow, fmt.Sprintf("Update available! %v -> %v (%v)", mizu.SemVer, gitHubVersion, *latestRelease.HTMLURL))
+
+	gitHubVersionSemVer := semver.SemVersion(gitHubVersion)
+	currentSemVer := semver.SemVersion(mizu.SemVer)
+	logger.Log.Debugf("Finished version validation, github version %v, current version %v, took %v", gitHubVersion, currentSemVer, time.Since(start))
+
+	if gitHubVersionSemVer.GreaterThan(currentSemVer) {
+		versionChan <- fmt.Sprintf("Update available! %v -> %v (%v)", mizu.SemVer, gitHubVersion, *latestRelease.HTMLURL)
 	}
+	versionChan <- ""
 }

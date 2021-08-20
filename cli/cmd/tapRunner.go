@@ -10,7 +10,6 @@ import (
 	"github.com/up9inc/mizu/cli/logger"
 	"github.com/up9inc/mizu/cli/mizu/fsUtils"
 	"github.com/up9inc/mizu/cli/mizu/goUtils"
-	"github.com/up9inc/mizu/cli/mizu/version"
 	"github.com/up9inc/mizu/cli/telemetry"
 	"net/http"
 	"net/url"
@@ -62,7 +61,7 @@ func RunMizuTap() {
 		}
 	}
 
-	kubernetesProvider, err := kubernetes.NewProvider(config.Config.KubeConfigPath)
+	kubernetesProvider, err := kubernetes.NewProvider(config.Config.KubeConfigPath())
 	if err != nil {
 		logger.Log.Error(err)
 		return
@@ -73,13 +72,21 @@ func RunMizuTap() {
 
 	targetNamespaces := getNamespaces(kubernetesProvider)
 
+	if config.Config.IsNsRestrictedMode() {
+		if len(targetNamespaces) != 1 || !mizu.Contains(targetNamespaces, config.Config.MizuResourcesNamespace) {
+			logger.Log.Errorf("Not supported mode. Mizu can't resolve IPs in other namespaces when running in namespace restricted mode.\n"+
+				"You can use the same namespace for --%s and --%s", configStructs.NamespacesTapName, config.MizuResourcesNamespaceConfigName)
+			return
+		}
+	}
+
 	var namespacesStr string
 	if !mizu.Contains(targetNamespaces, mizu.K8sAllNamespaces) {
 		namespacesStr = fmt.Sprintf("namespaces \"%s\"", strings.Join(targetNamespaces, "\", \""))
 	} else {
 		namespacesStr = "all namespaces"
 	}
-	version.CheckNewerVersion()
+
 	logger.Log.Infof("Tapping pods in %s", namespacesStr)
 
 	if err, _ := updateCurrentlyTappedPods(kubernetesProvider, ctx, targetNamespaces); err != nil {
@@ -265,7 +272,7 @@ func cleanUpMizuResources(kubernetesProvider *kubernetes.Provider) {
 
 	if config.Config.DumpLogs {
 		mizuDir := mizu.GetMizuFolderPath()
-		filePath = path.Join(mizuDir, fmt.Sprintf("mizu_logs_%s.zip", time.Now().Format("2006_01_02__15_04_05")))
+		filePath := path.Join(mizuDir, fmt.Sprintf("mizu_logs_%s.zip", time.Now().Format("2006_01_02__15_04_05")))
 		if err := fsUtils.DumpLogs(kubernetesProvider, removalCtx, filePath); err != nil {
 			logger.Log.Errorf("Failed dump logs %v", err)
 		}

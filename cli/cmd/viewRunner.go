@@ -9,10 +9,11 @@ import (
 	"github.com/up9inc/mizu/cli/mizu"
 	"github.com/up9inc/mizu/cli/mizu/version"
 	"net/http"
+	"time"
 )
 
 func runMizuView() {
-	kubernetesProvider, err := kubernetes.NewProvider(config.Config.View.KubeConfigPath)
+	kubernetesProvider, err := kubernetes.NewProvider(config.Config.KubeConfigPath())
 	if err != nil {
 		logger.Log.Error(err)
 		return
@@ -39,9 +40,10 @@ func runMizuView() {
 		logger.Log.Infof("Found a running service %s and open port %d", mizu.ApiServerPodName, config.Config.View.GuiPort)
 		return
 	}
-	logger.Log.Debugf("Found service %s, creating k8s proxy", mizu.ApiServerPodName)
-
+	logger.Log.Infof("Establishing connection to k8s cluster...")
 	go startProxyReportErrorIfAny(kubernetesProvider, cancel)
+
+	time.Sleep(time.Second * 5) // Waiting to be sure the proxy is ready
 
 	logger.Log.Infof("Mizu is available at  http://%s\n", kubernetes.GetMizuApiServerProxiedHostAndPath(config.Config.View.GuiPort))
 	if isCompatible, err := version.CheckVersionCompatibility(config.Config.View.GuiPort); err != nil {

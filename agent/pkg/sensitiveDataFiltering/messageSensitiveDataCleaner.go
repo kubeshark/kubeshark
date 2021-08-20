@@ -158,9 +158,11 @@ func filterJsonBody(bytes []byte) ([]byte, error) {
 
 func filterJsonMap(jsonMap map[string] interface{}) {
 	for key, value := range jsonMap {
+		// Do not replace nil values with maskedFieldPlaceholderValue
 		if value == nil {
-			return
+			continue
 		}
+
 		nestedMap, isNested := value.(map[string] interface{})
 		if isNested {
 			filterJsonMap(nestedMap)

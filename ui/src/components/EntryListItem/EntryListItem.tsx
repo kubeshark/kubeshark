@@ -74,7 +74,7 @@ export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntry, isSelec
     }
 
     return <>
-        <div id={entry.id} className={`${styles.row} ${isSelected ? styles.rowSelected : additionalRulesProperties}`}
+        <div id={entry.id} className={`${styles.row} ${isSelected && !rule ? styles.rowSelected : additionalRulesProperties}`}
              onClick={() => setFocusedEntry(entry)}>
             {icon && <div style={{width: 80}}>{<img className={styles.icon} alt="icon" src={icon}/>}</div>}
             {content}

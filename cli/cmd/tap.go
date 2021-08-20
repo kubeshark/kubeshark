@@ -33,10 +33,6 @@ Supported protocols are HTTP and gRPC.`,
 			return errors.New("unexpected number of arguments")
 		}
 
-		if err := config.Config.Validate(); err != nil {
-			return errormessage.FormatError(err)
-		}
-
 		if err := config.Config.Tap.Validate(); err != nil {
 			return errormessage.FormatError(err)
 		}

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/denisbrodbeck/machineid"
 	"github.com/up9inc/mizu/cli/config"
 	"github.com/up9inc/mizu/cli/kubernetes"
 	"github.com/up9inc/mizu/cli/logger"
@@ -98,6 +99,10 @@ func sendTelemetry(telemetryType string, argsMap map[string]interface{}) error {
 	argsMap["buildTimestamp"] = mizu.BuildTimestamp
 	argsMap["branch"] = mizu.Branch
 	argsMap["version"] = mizu.SemVer
+
+	if machineId, err := machineid.ProtectedID("mizu"); err == nil {
+		argsMap["machineId"] = machineId
+	}
 
 	jsonValue, _ := json.Marshal(argsMap)
 
