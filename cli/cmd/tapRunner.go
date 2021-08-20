@@ -1,35 +1,28 @@
 package cmd
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
+	"github.com/up9inc/mizu/cli/apiserver"
 	"github.com/up9inc/mizu/cli/config"
 	"github.com/up9inc/mizu/cli/config/configStructs"
+	"github.com/up9inc/mizu/cli/errormessage"
+	"github.com/up9inc/mizu/cli/kubernetes"
 	"github.com/up9inc/mizu/cli/logger"
+	"github.com/up9inc/mizu/cli/mizu"
 	"github.com/up9inc/mizu/cli/mizu/fsUtils"
 	"github.com/up9inc/mizu/cli/mizu/goUtils"
 	"github.com/up9inc/mizu/cli/telemetry"
-	"net/http"
-	"net/url"
-	"os"
-	"os/signal"
-	"path"
-	"regexp"
-	"strings"
-	"syscall"
-	"time"
-
-	"github.com/up9inc/mizu/cli/errormessage"
-	"github.com/up9inc/mizu/cli/kubernetes"
-	"github.com/up9inc/mizu/cli/mizu"
 	"github.com/up9inc/mizu/cli/uiUtils"
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/debounce"
 	yaml "gopkg.in/yaml.v3"
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
+	"path"
+	"regexp"
+	"strings"
+	"time"
 )
 
 const (
@@ -60,7 +53,6 @@ func RunMizuTap() {
 			return
 		}
 	}
-
 	kubernetesProvider, err := kubernetes.NewProvider(config.Config.KubeConfigPath())
 	if err != nil {
 		logger.Log.Error(err)
@@ -108,13 +100,13 @@ func RunMizuTap() {
 
 	nodeToTappedPodIPMap := getNodeHostToTappedPodIpsMap(state.currentlyTappedPods)
 
-	defer cleanUpMizu(kubernetesProvider)
+	defer finishMizuException(kubernetesProvider)
 	if err := createMizuResources(ctx, kubernetesProvider, nodeToTappedPodIPMap, mizuApiFilteringOptions, mizuValidationRules); err != nil {
 		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error creating resources: %v", errormessage.FormatError(err)))
 		return
 	}
 
-	go goUtils.HandleExcWrapper(createProxyToApiServerPod, ctx, kubernetesProvider, cancel)
+	go goUtils.HandleExcWrapper(watchApiServerPod, ctx, kubernetesProvider, cancel)
 	go goUtils.HandleExcWrapper(watchPodsForTapping, ctx, kubernetesProvider, targetNamespaces, cancel)
 
 	//block until exit signal or error
@@ -261,23 +253,26 @@ func updateMizuTappers(ctx context.Context, kubernetesProvider *kubernetes.Provi
 	return nil
 }
 
-func cleanUpMizu(kubernetesProvider *kubernetes.Provider) {
-	telemetry.ReportAPICalls(config.Config.Tap.GuiPort)
-	cleanUpMizuResources(kubernetesProvider)
-}
-
-func cleanUpMizuResources(kubernetesProvider *kubernetes.Provider) {
+func finishMizuException(kubernetesProvider *kubernetes.Provider) {
+	telemetry.ReportAPICalls()
 	removalCtx, cancel := context.WithTimeout(context.Background(), cleanupTimeout)
 	defer cancel()
+	dumpLogsIfNeeded(kubernetesProvider, removalCtx)
+	cleanUpMizuResources(kubernetesProvider, removalCtx, cancel)
+}
 
-	if config.Config.DumpLogs {
-		mizuDir := mizu.GetMizuFolderPath()
-		filePath := path.Join(mizuDir, fmt.Sprintf("mizu_logs_%s.zip", time.Now().Format("2006_01_02__15_04_05")))
-		if err := fsUtils.DumpLogs(kubernetesProvider, removalCtx, filePath); err != nil {
-			logger.Log.Errorf("Failed dump logs %v", err)
-		}
+func dumpLogsIfNeeded(kubernetesProvider *kubernetes.Provider, removalCtx context.Context) {
+	if !config.Config.DumpLogs {
+		return
 	}
+	mizuDir := mizu.GetMizuFolderPath()
+	filePath := path.Join(mizuDir, fmt.Sprintf("mizu_logs_%s.zip", time.Now().Format("2006_01_02__15_04_05")))
+	if err := fsUtils.DumpLogs(kubernetesProvider, removalCtx, filePath); err != nil {
+		logger.Log.Errorf("Failed dump logs %v", err)
+	}
+}
 
+func cleanUpMizuResources(kubernetesProvider *kubernetes.Provider, removalCtx context.Context, cancel context.CancelFunc) {
 	logger.Log.Infof("\nRemoving mizu resources\n")
 
 	if !config.Config.IsNsRestrictedMode() {
@@ -342,34 +337,11 @@ func waitUntilNamespaceDeleted(ctx context.Context, cancel context.CancelFunc, k
 	if err := kubernetesProvider.WaitUtilNamespaceDeleted(ctx, config.Config.MizuResourcesNamespace); err != nil {
 		switch {
 		case ctx.Err() == context.Canceled:
-			// Do nothing. User interrupted the wait.
+			logger.Log.Debugf("Do nothing. User interrupted the wait")
 		case err == wait.ErrWaitTimeout:
 			logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Timeout while removing Namespace %s", config.Config.MizuResourcesNamespace))
 		default:
 			logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error while waiting for Namespace %s to be deleted: %v", config.Config.MizuResourcesNamespace, errormessage.FormatError(err)))
-		}
-	}
-}
-
-func reportTappedPods() {
-	mizuProxiedUrl := kubernetes.GetMizuApiServerProxiedHostAndPath(config.Config.Tap.GuiPort)
-	tappedPodsUrl := fmt.Sprintf("http://%s/status/tappedPods", mizuProxiedUrl)
-
-	podInfos := make([]shared.PodInfo, 0)
-	for _, pod := range state.currentlyTappedPods {
-		podInfos = append(podInfos, shared.PodInfo{Name: pod.Name, Namespace: pod.Namespace})
-	}
-	tapStatus := shared.TapStatus{Pods: podInfos}
-
-	if jsonValue, err := json.Marshal(tapStatus); err != nil {
-		logger.Log.Debugf("[ERROR] failed Marshal the tapped pods %v", err)
-	} else {
-		if response, err := http.Post(tappedPodsUrl, "application/json", bytes.NewBuffer(jsonValue)); err != nil {
-			logger.Log.Debugf("[ERROR] failed sending to API server the tapped pods %v", err)
-		} else if response.StatusCode != 200 {
-			logger.Log.Debugf("[ERROR] failed sending to API server the tapped pods, response status code %v", response.StatusCode)
-		} else {
-			logger.Log.Debugf("Reported to server API about %d taped pods successfully", len(podInfos))
 		}
 	}
 }
@@ -389,7 +361,9 @@ func watchPodsForTapping(ctx context.Context, kubernetesProvider *kubernetes.Pro
 			return
 		}
 
-		reportTappedPods()
+		if err := apiserver.Provider.ReportTappedPods(state.currentlyTappedPods); err != nil {
+			logger.Log.Debugf("[Error] failed update tapped pods %v", err)
+		}
 
 		nodeToTappedPodIPMap := getNodeHostToTappedPodIpsMap(state.currentlyTappedPods)
 		if err != nil {
@@ -496,7 +470,7 @@ func getMissingPods(pods1 []core.Pod, pods2 []core.Pod) []core.Pod {
 	return missingPods
 }
 
-func createProxyToApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
+func watchApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
 	podExactRegex := regexp.MustCompile(fmt.Sprintf("^%s$", mizu.ApiServerPodName))
 	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, kubernetesProvider, []string{config.Config.MizuResourcesNamespace}, podExactRegex)
 	isPodReady := false
@@ -522,10 +496,17 @@ func createProxyToApiServerPod(ctx context.Context, kubernetesProvider *kubernet
 			if modifiedPod.Status.Phase == core.PodRunning && !isPodReady {
 				isPodReady = true
 				go startProxyReportErrorIfAny(kubernetesProvider, cancel)
-				logger.Log.Infof("Mizu is available at http://%s\n", kubernetes.GetMizuApiServerProxiedHostAndPath(config.Config.Tap.GuiPort))
-				time.Sleep(time.Second * 5) // Waiting to be sure the proxy is ready
-				requestForAnalysis()
-				reportTappedPods()
+
+				if err := apiserver.Provider.Init(GetApiServerUrl(), 20); err != nil {
+					logger.Log.Errorf(uiUtils.Error, "Couldn't connect to API server, check logs")
+					cancel()
+					break
+				}
+				logger.Log.Infof("Mizu is available at %s\n", GetApiServerUrl())
+				requestForAnalysisIfNeeded()
+				if err := apiserver.Provider.ReportTappedPods(state.currentlyTappedPods); err != nil {
+					logger.Log.Debugf("[Error] failed update tapped pods %v", err)
+				}
 			}
 		case <-timeAfter:
 			if !isPodReady {
@@ -539,34 +520,12 @@ func createProxyToApiServerPod(ctx context.Context, kubernetesProvider *kubernet
 	}
 }
 
-func startProxyReportErrorIfAny(kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
-	err := kubernetes.StartProxy(kubernetesProvider, config.Config.Tap.GuiPort, config.Config.MizuResourcesNamespace, mizu.ApiServerPodName)
-	if err != nil {
-		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error occured while running k8s proxy %v\n"+
-			"Try setting different port by using --%s", errormessage.FormatError(err), configStructs.GuiPortTapName))
-		cancel()
-	}
-}
-
-func requestForAnalysis() {
+func requestForAnalysisIfNeeded() {
 	if !config.Config.Tap.Analysis {
 		return
 	}
-
-	mizuProxiedUrl := kubernetes.GetMizuApiServerProxiedHostAndPath(config.Config.Tap.GuiPort)
-	urlPath := fmt.Sprintf("http://%s/api/uploadEntries?dest=%s&interval=%v", mizuProxiedUrl, url.QueryEscape(config.Config.Tap.AnalysisDestination), config.Config.Tap.SleepIntervalSec)
-	u, parseErr := url.ParseRequestURI(urlPath)
-	if parseErr != nil {
-		logger.Log.Fatal("Failed parsing the URL (consider changing the analysis dest URL), err: %v", parseErr)
-	}
-
-	logger.Log.Debugf("Sending get request to %v", u.String())
-	if response, requestErr := http.Get(u.String()); requestErr != nil {
-		logger.Log.Errorf("Failed to notify agent for analysis, err: %v", requestErr)
-	} else if response.StatusCode != 200 {
-		logger.Log.Errorf("Failed to notify agent for analysis, status code: %v", response.StatusCode)
-	} else {
-		logger.Log.Infof(uiUtils.Purple, "Traffic is uploading to UP9 for further analysis")
+	if err := apiserver.Provider.RequestAnalysis(config.Config.Tap.AnalysisDestination, config.Config.Tap.SleepIntervalSec); err != nil {
+		logger.Log.Debugf("[Error] failed requesting for analysis %v", err)
 	}
 }
 
@@ -596,19 +555,6 @@ func getNodeHostToTappedPodIpsMap(tappedPods []core.Pod) map[string][]string {
 		}
 	}
 	return nodeToTappedPodIPMap
-}
-
-func waitForFinish(ctx context.Context, cancel context.CancelFunc) {
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
-
-	// block until ctx cancel is called or termination signal is received
-	select {
-	case <-ctx.Done():
-		break
-	case <-sigChan:
-		cancel()
-	}
 }
 
 func getNamespaces(kubernetesProvider *kubernetes.Provider) []string {

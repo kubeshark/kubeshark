@@ -3,10 +3,13 @@ package cmd
 import (
 	"github.com/creasty/defaults"
 	"github.com/spf13/cobra"
+	"github.com/up9inc/mizu/cli/apiserver"
 	"github.com/up9inc/mizu/cli/config"
 	"github.com/up9inc/mizu/cli/config/configStructs"
+	"github.com/up9inc/mizu/cli/logger"
 	"github.com/up9inc/mizu/cli/mizu/version"
 	"github.com/up9inc/mizu/cli/telemetry"
+	"github.com/up9inc/mizu/cli/uiUtils"
 )
 
 var fetchCmd = &cobra.Command{
@@ -15,7 +18,12 @@ var fetchCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		go telemetry.ReportRun("fetch", config.Config.Fetch)
 
-		if isCompatible, err := version.CheckVersionCompatibility(config.Config.Fetch.GuiPort); err != nil {
+		if err := apiserver.Provider.Init(GetApiServerUrl(), 1); err != nil {
+			logger.Log.Errorf(uiUtils.Error, "Couldn't connect to API server, make sure one running")
+			return nil
+		}
+
+		if isCompatible, err := version.CheckVersionCompatibility(); err != nil {
 			return err
 		} else if !isCompatible {
 			return nil
