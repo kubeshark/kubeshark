@@ -3,11 +3,12 @@ package api
 import (
 	"encoding/json"
 	"fmt"
-	tapApi "github.com/up9inc/mizu/tap/api"
 	"mizuserver/pkg/models"
 	"mizuserver/pkg/providers"
 	"mizuserver/pkg/up9"
 	"sync"
+
+	tapApi "github.com/up9inc/mizu/tap/api"
 
 	"github.com/romana/rlog"
 	"github.com/up9inc/mizu/shared"
@@ -71,6 +72,7 @@ func (h *RoutesEventHandlers) WebSocketMessage(_ int, message []byte) {
 			if err != nil {
 				rlog.Infof("Could not unmarshal message of message type %s %v\n", socketMessageBase.MessageType, err)
 			} else {
+				// NOTE: This is where the message comes back from the intermediate WebSocket to code.
 				h.SocketOutChannel <- tappedEntryMessage.Data
 			}
 		case shared.WebSocketMessageTypeUpdateStatus:

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"mizuserver/pkg/database"
 	"mizuserver/pkg/holder"
+	"net/http"
 	"net/url"
 	"os"
 	"path"
@@ -111,13 +112,18 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem) {
 
 	for item := range outputItems {
 		fmt.Printf("item: %+v\n", item)
+		var req *http.Request
+		marshedReq, _ := json.Marshal(item.Data.Request.Orig)
+		json.Unmarshal(marshedReq, &req)
+		var res *http.Response
+		marshedRes, _ := json.Marshal(item.Data.Response.Orig)
+		json.Unmarshal(marshedRes, &res)
 		// NOTE: With this call, the incoming data is sent to the last WebSocket (that the web UI communicates).
-		handleItem(item)
-		// if harEntry, err := models.NewEntry(item.Data.Request.Orig.(*http.Request), item.Data.Request.CaptureTime, item.Data.Response.Orig.(*http.Response), item.Data.Response.CaptureTime); err == nil {
-		// 	saveHarToDb(harEntry, item.ConnectionInfo)
-		// } else {
-		// 	rlog.Errorf("Error when creating HTTP entry")
-		// }
+		if harEntry, err := models.NewEntry(req, item.Data.Request.CaptureTime, res, item.Data.Response.CaptureTime); err == nil {
+			saveHarToDb(harEntry, item.ConnectionInfo)
+		} else {
+			rlog.Errorf("Error when creating HTTP entry")
+		}
 	}
 }
 
@@ -126,15 +132,6 @@ func StartReadingOutbound(outboundLinkChannel <-chan *tap.OutboundLink) {
 	// TODO: Make write to channel optional.
 	for range outboundLinkChannel {
 	}
-}
-
-func handleItem(item *tapApi.OutputChannelItem) {
-	baseEntry := models.BaseEntryDetails{
-		RequestSenderIp: item.ConnectionInfo.ClientIP,
-	}
-	baseEntryBytes, _ := models.CreateBaseEntryWebSocketMessage(&baseEntry)
-	// NOTE: This is where it's sent to the last WebSocket
-	BroadcastToBrowserClients(baseEntryBytes)
 }
 
 func saveHarToDb(entry *har.Entry, connectionInfo *tapApi.ConnectionInfo) {

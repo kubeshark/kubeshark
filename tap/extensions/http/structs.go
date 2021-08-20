@@ -1,7 +1,13 @@
 package main
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
+	"net/http"
+
+	"github.com/google/martian/har"
+	"github.com/romana/rlog"
 )
 
 type HTTPPayload struct {
@@ -14,12 +20,21 @@ type HTTPPayloader interface {
 }
 
 func (h HTTPPayload) MarshalJSON() ([]byte, error) {
-	// TODO: Implement JSON marshaling for HTTP request and response
 	switch h.Type {
 	case "http_request":
-		return []byte("{\"val\": \"" + h.Type + "\"}"), nil
+		harRequest, err := har.NewRequest(h.Data.(*http.Request), false)
+		if err != nil {
+			rlog.Debugf("convert-request-to-har", "Failed converting request to HAR %s (%v,%+v)", err, err, err)
+			return nil, errors.New("Failed converting request to HAR")
+		}
+		return json.Marshal(harRequest)
 	case "http_response":
-		return []byte("{\"val\": \"" + h.Type + "\"}"), nil
+		harResponse, err := har.NewResponse(h.Data.(*http.Response), true)
+		if err != nil {
+			rlog.Debugf("convert-response-to-har", "Failed converting response to HAR %s (%v,%+v)", err, err, err)
+			return nil, errors.New("Failed converting response to HAR")
+		}
+		return json.Marshal(harResponse)
 	default:
 		panic(fmt.Sprintf("HTTP payload cannot be marshaled: %s\n", h.Type))
 	}
