@@ -48,27 +48,8 @@ type MizuEntry struct {
 	EstimatedSizeBytes  int    `json:"-" gorm:"column:estimatedSizeBytes"`
 }
 
-type BaseEntryDetails struct {
-	Id              string          `json:"id,omitempty"`
-	Url             string          `json:"url,omitempty"`
-	RequestSenderIp string          `json:"requestSenderIp,omitempty"`
-	Service         string          `json:"service,omitempty"`
-	Path            string          `json:"path,omitempty"`
-	StatusCode      int             `json:"statusCode,omitempty"`
-	Method          string          `json:"method,omitempty"`
-	Timestamp       int64           `json:"timestamp,omitempty"`
-	IsOutgoing      bool            `json:"isOutgoing,omitempty"`
-	Latency         int64           `json:"latency,omitempty"`
-	Rules           ApplicableRules `json:"rules,omitempty"`
-}
-
-type ApplicableRules struct {
-	Latency int64 `json:"latency,omitempty"`
-	Status  bool  `json:"status,omitempty"`
-}
-
-func NewApplicableRules(status bool, latency int64) ApplicableRules {
-	ar := ApplicableRules{}
+func NewApplicableRules(status bool, latency int64) tapApi.ApplicableRules {
+	ar := tapApi.ApplicableRules{}
 	ar.Status = status
 	ar.Latency = latency
 	return ar
@@ -82,24 +63,24 @@ type FullEntryDetailsExtra struct {
 	har.Entry
 }
 
-func (bed *BaseEntryDetails) UnmarshalData(entry *MizuEntry) error {
-	entryUrl := entry.Url
-	service := entry.Service
-	if entry.ResolvedDestination != "" {
-		entryUrl = utils.SetHostname(entryUrl, entry.ResolvedDestination)
-		service = utils.SetHostname(service, entry.ResolvedDestination)
-	}
-	bed.Id = entry.EntryId
-	bed.Url = entryUrl
-	bed.Service = service
-	bed.Path = entry.Path
-	bed.StatusCode = entry.Status
-	bed.Method = entry.Method
-	bed.Timestamp = entry.Timestamp
-	bed.RequestSenderIp = entry.RequestSenderIp
-	bed.IsOutgoing = entry.IsOutgoing
-	return nil
-}
+// func (bed *BaseEntryDetails) UnmarshalData(entry *MizuEntry) error {
+// 	entryUrl := entry.Url
+// 	service := entry.Service
+// 	if entry.ResolvedDestination != "" {
+// 		entryUrl = utils.SetHostname(entryUrl, entry.ResolvedDestination)
+// 		service = utils.SetHostname(service, entry.ResolvedDestination)
+// 	}
+// 	bed.Id = entry.EntryId
+// 	bed.Url = entryUrl
+// 	bed.Service = service
+// 	bed.Path = entry.Path
+// 	bed.StatusCode = entry.Status
+// 	bed.Method = entry.Method
+// 	bed.Timestamp = entry.Timestamp
+// 	bed.RequestSenderIp = entry.RequestSenderIp
+// 	bed.IsOutgoing = entry.IsOutgoing
+// 	return nil
+// }
 
 func (fed *FullEntryDetails) UnmarshalData(entry *MizuEntry) error {
 	if err := json.Unmarshal([]byte(entry.Entry), &fed.Entry); err != nil {
@@ -145,7 +126,7 @@ type HarFetchRequestBody struct {
 
 type WebSocketEntryMessage struct {
 	*shared.WebSocketMessageMetadata
-	Data *BaseEntryDetails `json:"data,omitempty"`
+	Data *tapApi.BaseEntryDetails `json:"data,omitempty"`
 }
 
 type WebSocketTappedEntryMessage struct {
@@ -158,7 +139,7 @@ type WebsocketOutboundLinkMessage struct {
 	Data *tap.OutboundLink
 }
 
-func CreateBaseEntryWebSocketMessage(base *BaseEntryDetails) ([]byte, error) {
+func CreateBaseEntryWebSocketMessage(base *tapApi.BaseEntryDetails) ([]byte, error) {
 	message := &WebSocketEntryMessage{
 		WebSocketMessageMetadata: &shared.WebSocketMessageMetadata{
 			MessageType: shared.WebSocketMessageTypeEntry,
@@ -225,7 +206,7 @@ func (fewp *FullEntryWithPolicy) UnmarshalData(entry *MizuEntry) error {
 	return nil
 }
 
-func RunValidationRulesState(harEntry har.Entry, service string) ApplicableRules {
+func RunValidationRulesState(harEntry har.Entry, service string) tapApi.ApplicableRules {
 	numberOfRules, resultPolicyToSend := rules.MatchRequestPolicy(harEntry, service)
 	statusPolicyToSend, latency := rules.PassedValidationRules(resultPolicyToSend, numberOfRules)
 	ar := NewApplicableRules(statusPolicyToSend, latency)

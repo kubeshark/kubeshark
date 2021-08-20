@@ -35,7 +35,7 @@ type TcpID struct {
 type GenericMessage struct {
 	IsRequest   bool
 	CaptureTime time.Time
-	Orig        interface{}
+	Payload     interface{}
 }
 
 type RequestResponsePair struct {
@@ -47,13 +47,14 @@ type OutputChannelItem struct {
 	Protocol       string
 	Timestamp      int64
 	ConnectionInfo *ConnectionInfo
-	Data           *RequestResponsePair
+	Pair           *RequestResponsePair
 }
 
 type Dissector interface {
 	Register(*Extension)
 	Ping()
 	Dissect(b *bufio.Reader, isClient bool, tcpID *TcpID, emitter Emitter)
+	Summarize(item *OutputChannelItem) *BaseEntryDetails
 }
 
 type Emitting struct {
@@ -66,8 +67,27 @@ type Emitter interface {
 
 func (e *Emitting) Emit(item *OutputChannelItem) {
 	log.Printf("item: %+v\n", item)
-	log.Printf("item.Data: %+v\n", item.Data)
-	log.Printf("item.Data.Request.Orig: %v\n", item.Data.Request.Orig)
-	log.Printf("item.Data.Response.Orig: %v\n", item.Data.Response.Orig)
+	log.Printf("item.Pair: %+v\n", item.Pair)
+	log.Printf("item.Pair.Request.Payload: %v\n", item.Pair.Request.Payload)
+	log.Printf("item.Pair.Response.Payload: %v\n", item.Pair.Response.Payload)
 	e.OutputChannel <- item
+}
+
+type BaseEntryDetails struct {
+	Id              string          `json:"id,omitempty"`
+	Url             string          `json:"url,omitempty"`
+	RequestSenderIp string          `json:"requestSenderIp,omitempty"`
+	Service         string          `json:"service,omitempty"`
+	Path            string          `json:"path,omitempty"`
+	StatusCode      int             `json:"statusCode,omitempty"`
+	Method          string          `json:"method,omitempty"`
+	Timestamp       int64           `json:"timestamp,omitempty"`
+	IsOutgoing      bool            `json:"isOutgoing,omitempty"`
+	Latency         int64           `json:"latency,omitempty"`
+	Rules           ApplicableRules `json:"rules,omitempty"`
+}
+
+type ApplicableRules struct {
+	Latency int64 `json:"latency,omitempty"`
+	Status  bool  `json:"status,omitempty"`
 }

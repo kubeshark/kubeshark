@@ -32,7 +32,7 @@ func (matcher *requestResponseMatcher) registerRequest(ident string, request *ht
 	requestHTTPMessage := api.GenericMessage{
 		IsRequest:   true,
 		CaptureTime: captureTime,
-		Orig: HTTPPayload{
+		Payload: HTTPPayload{
 			Type: "http_request",
 			Data: request,
 		},
@@ -62,7 +62,7 @@ func (matcher *requestResponseMatcher) registerResponse(ident string, response *
 	responseHTTPMessage := api.GenericMessage{
 		IsRequest:   false,
 		CaptureTime: captureTime,
-		Orig: HTTPPayload{
+		Payload: HTTPPayload{
 			Type: "http_response",
 			Data: response,
 		},
@@ -89,7 +89,7 @@ func (matcher *requestResponseMatcher) preparePair(requestHTTPMessage *api.Gener
 		Protocol:       ExtensionName,
 		Timestamp:      time.Now().UnixNano() / int64(time.Millisecond),
 		ConnectionInfo: nil,
-		Data: &api.RequestResponsePair{
+		Pair: &api.RequestResponsePair{
 			Request:  *requestHTTPMessage,
 			Response: *responseHTTPMessage,
 		},

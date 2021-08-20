@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"mizuserver/pkg/database"
 	"mizuserver/pkg/holder"
-	"net/http"
 	"net/url"
 	"os"
 	"path"
@@ -114,18 +113,22 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 		fmt.Printf("item: %+v\n", item)
 		extension := extensionsMap[item.Protocol]
 		fmt.Printf("extension: %+v\n", extension)
-		var req *http.Request
-		marshedReq, _ := json.Marshal(item.Data.Request.Orig)
-		json.Unmarshal(marshedReq, &req)
-		var res *http.Response
-		marshedRes, _ := json.Marshal(item.Data.Response.Orig)
-		json.Unmarshal(marshedRes, &res)
-		// NOTE: With this call, the incoming data is sent to the last WebSocket (that the web UI communicates).
-		if harEntry, err := models.NewEntry(req, item.Data.Request.CaptureTime, res, item.Data.Response.CaptureTime); err == nil {
-			saveHarToDb(harEntry, item.ConnectionInfo)
-		} else {
-			rlog.Errorf("Error when creating HTTP entry")
-		}
+		// var req *http.Request
+		// marshedReq, _ := json.Marshal(item.Data.Request.Orig)
+		// json.Unmarshal(marshedReq, &req)
+		// var res *http.Response
+		// marshedRes, _ := json.Marshal(item.Data.Response.Orig)
+		// json.Unmarshal(marshedRes, &res)
+		// // NOTE: With this call, the incoming data is sent to the last WebSocket (that the web UI communicates).
+		// if harEntry, err := models.NewEntry(req, item.Data.Request.CaptureTime, res, item.Data.Response.CaptureTime); err == nil {
+		// 	saveHarToDb(harEntry, item.ConnectionInfo)
+		// } else {
+		// 	rlog.Errorf("Error when creating HTTP entry")
+		// }
+		baseEntry := extension.Dissector.Summarize(item)
+		fmt.Printf("baseEntry: %+v\n", baseEntry)
+		baseEntryBytes, _ := models.CreateBaseEntryWebSocketMessage(baseEntry)
+		BroadcastToBrowserClients(baseEntryBytes)
 	}
 }
 
@@ -180,14 +183,14 @@ func saveHarToDb(entry *har.Entry, connectionInfo *tapApi.ConnectionInfo) {
 	mizuEntry.EstimatedSizeBytes = getEstimatedEntrySizeBytes(mizuEntry)
 	database.CreateEntry(&mizuEntry)
 
-	baseEntry := models.BaseEntryDetails{}
-	if err := models.GetEntry(&mizuEntry, &baseEntry); err != nil {
-		return
-	}
-	baseEntry.Rules = models.RunValidationRulesState(*entry, serviceName)
-	baseEntry.Latency = entry.Timings.Receive
-	baseEntryBytes, _ := models.CreateBaseEntryWebSocketMessage(&baseEntry)
-	BroadcastToBrowserClients(baseEntryBytes)
+	// baseEntry := models.BaseEntryDetails{}
+	// if err := models.GetEntry(&mizuEntry, &baseEntry); err != nil {
+	// 	return
+	// }
+	// baseEntry.Rules = models.RunValidationRulesState(*entry, serviceName)
+	// baseEntry.Latency = entry.Timings.Receive
+	// baseEntryBytes, _ := models.CreateBaseEntryWebSocketMessage(&baseEntry)
+	// BroadcastToBrowserClients(baseEntryBytes)
 }
 
 func getServiceNameFromUrl(inputUrl string) (string, string) {
