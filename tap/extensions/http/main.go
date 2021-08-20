@@ -15,6 +15,30 @@ import (
 var requestCounter uint
 var responseCounter uint
 
+var protocol api.Protocol = api.Protocol{
+	Name:            "http",
+	LongName:        "Hypertext Transfer Protocol -- HTTP/1.0",
+	Abbreviation:    "HTTP",
+	BackgroundColor: "#205cf5",
+	ForegroundColor: "#ffffff",
+	FontSize:        10,
+	ReferenceLink:   "https://www.ietf.org/rfc/rfc1945.txt",
+	OutboundPorts:   []string{"80", "8080", "443"},
+	InboundPorts:    []string{},
+}
+
+var http2Protocol api.Protocol = api.Protocol{
+	Name:            "http",
+	LongName:        "Hypertext Transfer Protocol Version 2 (HTTP/2)",
+	Abbreviation:    "HTTP/2",
+	BackgroundColor: "#244c5a",
+	ForegroundColor: "#ffffff",
+	FontSize:        10,
+	ReferenceLink:   "https://datatracker.ietf.org/doc/html/rfc7540",
+	OutboundPorts:   []string{"80", "8080", "443"},
+	InboundPorts:    []string{},
+}
+
 func init() {
 	log.Println("Initializing HTTP extension.")
 	requestCounter = 0
@@ -23,16 +47,12 @@ func init() {
 
 type dissecting string
 
-const ExtensionName = "http"
-
 func (d dissecting) Register(extension *api.Extension) {
-	extension.Name = ExtensionName
-	extension.OutboundPorts = []string{"80", "8080", "443"}
-	extension.InboundPorts = []string{}
+	extension.Protocol = protocol
 }
 
 func (d dissecting) Ping() {
-	log.Printf("pong HTTP\n")
+	log.Printf("pong %s\n", protocol.Name)
 }
 
 func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, emitter api.Emitter) {
@@ -114,6 +134,7 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolve
 func (d dissecting) Summarize(entry *api.MizuEntry) *api.BaseEntryDetails {
 	return &api.BaseEntryDetails{
 		Id:              entry.EntryId,
+		Protocol:        protocol,
 		Url:             entry.Url,
 		RequestSenderIp: entry.RequestSenderIp,
 		Service:         entry.Service,

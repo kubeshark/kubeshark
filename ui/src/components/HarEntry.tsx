@@ -1,6 +1,7 @@
 import React from "react";
 import styles from './style/HarEntry.module.sass';
 import StatusCode, {getClassification, StatusCodeClassification} from "./StatusCode";
+import Protocol, {ProtocolInterface} from "./Protocol"
 import {EndpointPath} from "./EndpointPath";
 import ingoingIconSuccess from "./assets/ingoing-traffic-success.svg"
 import ingoingIconFailure from "./assets/ingoing-traffic-failure.svg"
@@ -10,6 +11,7 @@ import outgoingIconFailure from "./assets/outgoing-traffic-failure.svg"
 import outgoingIconNeutral from "./assets/outgoing-traffic-neutral.svg"
 
 interface HAREntry {
+    protocol: ProtocolInterface,
     method?: string,
     path: string,
     service: string,
@@ -64,7 +66,14 @@ export const HarEntry: React.FC<HAREntryProps> = ({entry, setFocusedEntryId, isS
         }
     }
     return <>
-        <div id={entry.id} className={`${styles.row} ${isSelected ? styles.rowSelected : backgroundColor}`} onClick={() => setFocusedEntryId(entry.id)}>
+        <div
+            id={entry.id}
+            className={`${styles.row}
+            ${isSelected ? styles.rowSelected : backgroundColor}`}
+            onClick={() => setFocusedEntryId(entry.id)}
+            style={{border: isSelected ? `1px ${entry.protocol.background_color} solid` : "1px transparent solid"}}
+        >
+            <Protocol protocol={entry.protocol}/>
             {entry.statusCode && <div>
                 <StatusCode statusCode={entry.statusCode}/>
             </div>}

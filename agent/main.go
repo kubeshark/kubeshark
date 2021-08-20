@@ -140,9 +140,9 @@ func loadExtensions() {
 		extension.Dissector = dissector
 		log.Printf("Extension Properties: %+v\n", extension)
 		extensions[i] = extension
-		extensionsMap[extension.Name] = extension
-		allOutboundPorts = mergeUnique(allOutboundPorts, extension.OutboundPorts)
-		allInboundPorts = mergeUnique(allInboundPorts, extension.InboundPorts)
+		extensionsMap[extension.Protocol.Name] = extension
+		allOutboundPorts = mergeUnique(allOutboundPorts, extension.Protocol.OutboundPorts)
+		allInboundPorts = mergeUnique(allInboundPorts, extension.Protocol.InboundPorts)
 	}
 	log.Printf("allOutboundPorts: %v\n", allOutboundPorts)
 	log.Printf("allInboundPorts: %v\n", allInboundPorts)

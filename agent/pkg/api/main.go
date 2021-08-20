@@ -111,7 +111,7 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 
 	for item := range outputItems {
 		fmt.Printf("item: %+v\n", item)
-		extension := extensionsMap[item.Protocol]
+		extension := extensionsMap[item.Protocol.Name]
 		fmt.Printf("extension: %+v\n", extension)
 		// var req *http.Request
 		// marshedReq, _ := json.Marshal(item.Data.Request.Orig)

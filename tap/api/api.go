@@ -7,13 +7,23 @@ import (
 	"time"
 )
 
+type Protocol struct {
+	Name            string   `json:"name"`
+	LongName        string   `json:"long_name"`
+	Abbreviation    string   `json:"abbreviation"`
+	BackgroundColor string   `json:"background_color"`
+	ForegroundColor string   `json:"foreground_color"`
+	FontSize        int8     `json:"font_size"`
+	ReferenceLink   string   `json:"reference_link"`
+	OutboundPorts   []string `json:"outbound_ports"`
+	InboundPorts    []string `json:"inbound_ports"`
+}
+
 type Extension struct {
-	Name          string
-	Path          string
-	Plug          *plugin.Plugin
-	InboundPorts  []string
-	OutboundPorts []string
-	Dissector     Dissector
+	Protocol  Protocol
+	Path      string
+	Plug      *plugin.Plugin
+	Dissector Dissector
 }
 
 type ConnectionInfo struct {
@@ -44,7 +54,7 @@ type RequestResponsePair struct {
 }
 
 type OutputChannelItem struct {
-	Protocol       string
+	Protocol       Protocol
 	Timestamp      int64
 	ConnectionInfo *ConnectionInfo
 	Pair           *RequestResponsePair
@@ -95,6 +105,7 @@ type MizuEntry struct {
 
 type BaseEntryDetails struct {
 	Id              string          `json:"id,omitempty"`
+	Protocol        Protocol        `json:"protocol,omitempty"`
 	Url             string          `json:"url,omitempty"`
 	RequestSenderIp string          `json:"requestSenderIp,omitempty"`
 	Service         string          `json:"service,omitempty"`

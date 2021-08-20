@@ -4,12 +4,13 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"github.com/romana/rlog"
 	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/romana/rlog"
 
 	"github.com/up9inc/mizu/tap/api"
 )
@@ -66,6 +67,7 @@ func handleHTTP2Stream(grpcAssembler *GrpcAssembler, tcpID *api.TcpID, emitter a
 	}
 
 	if item != nil {
+		item.Protocol = http2Protocol
 		emitter.Emit(item)
 	}
 

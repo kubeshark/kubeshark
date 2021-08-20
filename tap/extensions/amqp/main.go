@@ -7,20 +7,30 @@ import (
 	"github.com/up9inc/mizu/tap/api"
 )
 
+var protocol api.Protocol = api.Protocol{
+	Name:            "amqp",
+	LongName:        "Advanced Message Queuing Protocol",
+	Abbreviation:    "AMQP",
+	BackgroundColor: "#ff6600",
+	ForegroundColor: "#ffffff",
+	FontSize:        10,
+	ReferenceLink:   "https://www.rabbitmq.com/amqp-0-9-1-reference.html",
+	OutboundPorts:   []string{"5671", "5672"},
+	InboundPorts:    []string{},
+}
+
 func init() {
-	log.Println("Initializing AMQP extension.")
+	log.Println("Initializing AMQP extension...")
 }
 
 type dissecting string
 
 func (d dissecting) Register(extension *api.Extension) {
-	extension.Name = "amqp"
-	extension.OutboundPorts = []string{"5671", "5672"}
-	extension.InboundPorts = []string{}
+	extension.Protocol = protocol
 }
 
 func (d dissecting) Ping() {
-	log.Printf("pong AMQP\n")
+	log.Printf("pong %s\n", protocol.Name)
 }
 
 func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, emitter api.Emitter) {

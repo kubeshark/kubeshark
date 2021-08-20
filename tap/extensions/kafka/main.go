@@ -7,20 +7,30 @@ import (
 	"github.com/up9inc/mizu/tap/api"
 )
 
+var protocol api.Protocol = api.Protocol{
+	Name:            "kafka",
+	LongName:        "Apache Kafka Protocol",
+	Abbreviation:    "KAFKA",
+	BackgroundColor: "#000000",
+	ForegroundColor: "#ffffff",
+	FontSize:        10,
+	ReferenceLink:   "https://kafka.apache.org/protocol",
+	OutboundPorts:   []string{"9092"},
+	InboundPorts:    []string{},
+}
+
 func init() {
-	log.Println("Initializing Kafka extension.")
+	log.Println("Initializing Kafka extension...")
 }
 
 type dissecting string
 
 func (d dissecting) Register(extension *api.Extension) {
-	extension.Name = "kafka"
-	extension.OutboundPorts = []string{"9092"}
-	extension.InboundPorts = []string{}
+	extension.Protocol = protocol
 }
 
 func (d dissecting) Ping() {
-	log.Printf("pong Kafka\n")
+	log.Printf("pong %s\n", protocol.Name)
 }
 
 func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, emitter api.Emitter) {
