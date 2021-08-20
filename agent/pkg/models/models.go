@@ -21,31 +21,8 @@ import (
 	"github.com/up9inc/mizu/tap"
 )
 
-type DataUnmarshaler interface {
-	UnmarshalData(*MizuEntry) error
-}
-
-func GetEntry(r *MizuEntry, v DataUnmarshaler) error {
+func GetEntry(r *tapApi.MizuEntry, v tapApi.DataUnmarshaler) error {
 	return v.UnmarshalData(r)
-}
-
-type MizuEntry struct {
-	ID                  uint `gorm:"primarykey"`
-	CreatedAt           time.Time
-	UpdatedAt           time.Time
-	Entry               string `json:"entry,omitempty" gorm:"column:entry"`
-	EntryId             string `json:"entryId" gorm:"column:entryId"`
-	Url                 string `json:"url" gorm:"column:url"`
-	Method              string `json:"method" gorm:"column:method"`
-	Status              int    `json:"status" gorm:"column:status"`
-	RequestSenderIp     string `json:"requestSenderIp" gorm:"column:requestSenderIp"`
-	Service             string `json:"service" gorm:"column:service"`
-	Timestamp           int64  `json:"timestamp" gorm:"column:timestamp"`
-	Path                string `json:"path" gorm:"column:path"`
-	ResolvedSource      string `json:"resolvedSource,omitempty" gorm:"column:resolvedSource"`
-	ResolvedDestination string `json:"resolvedDestination,omitempty" gorm:"column:resolvedDestination"`
-	IsOutgoing          bool   `json:"isOutgoing,omitempty" gorm:"column:isOutgoing"`
-	EstimatedSizeBytes  int    `json:"-" gorm:"column:estimatedSizeBytes"`
 }
 
 func NewApplicableRules(status bool, latency int64) tapApi.ApplicableRules {
@@ -63,26 +40,7 @@ type FullEntryDetailsExtra struct {
 	har.Entry
 }
 
-// func (bed *BaseEntryDetails) UnmarshalData(entry *MizuEntry) error {
-// 	entryUrl := entry.Url
-// 	service := entry.Service
-// 	if entry.ResolvedDestination != "" {
-// 		entryUrl = utils.SetHostname(entryUrl, entry.ResolvedDestination)
-// 		service = utils.SetHostname(service, entry.ResolvedDestination)
-// 	}
-// 	bed.Id = entry.EntryId
-// 	bed.Url = entryUrl
-// 	bed.Service = service
-// 	bed.Path = entry.Path
-// 	bed.StatusCode = entry.Status
-// 	bed.Method = entry.Method
-// 	bed.Timestamp = entry.Timestamp
-// 	bed.RequestSenderIp = entry.RequestSenderIp
-// 	bed.IsOutgoing = entry.IsOutgoing
-// 	return nil
-// }
-
-func (fed *FullEntryDetails) UnmarshalData(entry *MizuEntry) error {
+func (fed *FullEntryDetails) UnmarshalData(entry *tapApi.MizuEntry) error {
 	if err := json.Unmarshal([]byte(entry.Entry), &fed.Entry); err != nil {
 		return err
 	}
@@ -93,7 +51,7 @@ func (fed *FullEntryDetails) UnmarshalData(entry *MizuEntry) error {
 	return nil
 }
 
-func (fedex *FullEntryDetailsExtra) UnmarshalData(entry *MizuEntry) error {
+func (fedex *FullEntryDetailsExtra) UnmarshalData(entry *tapApi.MizuEntry) error {
 	if err := json.Unmarshal([]byte(entry.Entry), &fedex.Entry); err != nil {
 		return err
 	}
@@ -195,7 +153,7 @@ type FullEntryWithPolicy struct {
 	Service      string               `json:"service"`
 }
 
-func (fewp *FullEntryWithPolicy) UnmarshalData(entry *MizuEntry) error {
+func (fewp *FullEntryWithPolicy) UnmarshalData(entry *tapApi.MizuEntry) error {
 	if err := json.Unmarshal([]byte(entry.Entry), &fewp.Entry); err != nil {
 		return err
 	}

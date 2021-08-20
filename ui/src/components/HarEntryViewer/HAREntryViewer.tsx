@@ -6,7 +6,9 @@ import {HAREntryTableSection, HAREntryBodySection, HAREntryTablePolicySection} f
 const MIME_TYPE_KEY = 'mimeType';
 
 const HAREntryDisplay: React.FC<any> = ({har, entry, isCollapsed: initialIsCollapsed, isResponseMocked}) => {
-    const {request, response, timings: {receive}} = entry;
+    const {request, response} = JSON.parse(entry);
+    console.log('request:', request)
+    console.log('response:', response)
     const rulesMatched = har.log.entries[0].rulesMatched
     const TABS = [
         {tab: 'request'},
@@ -26,28 +28,28 @@ const HAREntryDisplay: React.FC<any> = ({har, entry, isCollapsed: initialIsColla
         {!initialIsCollapsed && <div className={styles.body}>
             <div className={styles.bodyHeader}>
                 <Tabs tabs={TABS} currentTab={currentTab} onChange={setCurrentTab} leftAligned/>
-                {request?.url && <a className={styles.endpointURL} href={request.url} target='_blank' rel="noreferrer">{request.url}</a>}
+                {request?.url && <a className={styles.endpointURL} href={request.payload.url} target='_blank' rel="noreferrer">{request.payload.url}</a>}
             </div>
             {
                 currentTab === TABS[0].tab && <React.Fragment>
-                    <HAREntryTableSection title={'Headers'} arrayToIterate={request.headers}/>
+                    <HAREntryTableSection title={'Headers'} arrayToIterate={request.payload.headers}/>
 
-                    <HAREntryTableSection title={'Cookies'} arrayToIterate={request.cookies}/>
+                    <HAREntryTableSection title={'Cookies'} arrayToIterate={request.payload.cookies}/>
 
-                    {request?.postData && <HAREntryBodySection content={request.postData} encoding={request.postData.comment} contentType={request.postData[MIME_TYPE_KEY]}/>}
+                    {request.payload?.postData && <HAREntryBodySection content={request.payload.postData} encoding={request.payload.postData.comment} contentType={request.payload.postData[MIME_TYPE_KEY]}/>}
 
-                    <HAREntryTableSection title={'Query'} arrayToIterate={request.queryString}/>
+                    <HAREntryTableSection title={'Query'} arrayToIterate={request.payload.queryString}/>
                 </React.Fragment>
             }
             {currentTab === TABS[1].tab && <React.Fragment>
-                <HAREntryTableSection title={'Headers'} arrayToIterate={response.headers}/>
+                <HAREntryTableSection title={'Headers'} arrayToIterate={response.payload.headers}/>
 
-                <HAREntryBodySection content={response.content} encoding={response.content?.encoding} contentType={response.content?.mimeType}/>
+                <HAREntryBodySection content={response.payload.content} encoding={response.payload.content?.encoding} contentType={response.payload.content?.mimeType}/>
 
-                <HAREntryTableSection title={'Cookies'} arrayToIterate={response.cookies}/>
+                <HAREntryTableSection title={'Cookies'} arrayToIterate={response.payload.cookies}/>
             </React.Fragment>}
             {currentTab === TABS[2].tab && <React.Fragment>
-                <HAREntryTablePolicySection service={har.log.entries[0].service} title={'Rule'} latency={receive} response={response} arrayToIterate={rulesMatched ? rulesMatched : []}/>
+                <HAREntryTablePolicySection service={har.log.entries[0].service} title={'Rule'} latency={0} response={response} arrayToIterate={rulesMatched ? rulesMatched : []}/>
             </React.Fragment>}
         </div>}
     </div>;

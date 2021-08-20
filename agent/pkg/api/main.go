@@ -125,8 +125,13 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 		// } else {
 		// 	rlog.Errorf("Error when creating HTTP entry")
 		// }
-		baseEntry := extension.Dissector.Summarize(item)
+		resolvedSource, resolvedDestionation := resolveIP(item.ConnectionInfo)
+		mizuEntry := extension.Dissector.Analyze(item, primitive.NewObjectID().Hex(), resolvedSource, resolvedDestionation)
+		baseEntry := extension.Dissector.Summarize(mizuEntry)
 		fmt.Printf("baseEntry: %+v\n", baseEntry)
+		fmt.Printf("mizuEntry: %+v\n", mizuEntry)
+		mizuEntry.EstimatedSizeBytes = getEstimatedEntrySizeBytes(mizuEntry)
+		database.CreateEntry(mizuEntry)
 		baseEntryBytes, _ := models.CreateBaseEntryWebSocketMessage(baseEntry)
 		BroadcastToBrowserClients(baseEntryBytes)
 	}
@@ -139,14 +144,7 @@ func StartReadingOutbound(outboundLinkChannel <-chan *tap.OutboundLink) {
 	}
 }
 
-func saveHarToDb(entry *har.Entry, connectionInfo *tapApi.ConnectionInfo) {
-	entryBytes, _ := json.Marshal(entry)
-	serviceName, urlPath := getServiceNameFromUrl(entry.Request.URL)
-	entryId := primitive.NewObjectID().Hex()
-	var (
-		resolvedSource      string
-		resolvedDestination string
-	)
+func resolveIP(connectionInfo *tapApi.ConnectionInfo) (resolvedSource string, resolvedDestination string) {
 	if k8sResolver != nil {
 		unresolvedSource := connectionInfo.ClientIP
 		resolvedSource = k8sResolver.Resolve(unresolvedSource)
@@ -165,32 +163,7 @@ func saveHarToDb(entry *har.Entry, connectionInfo *tapApi.ConnectionInfo) {
 			}
 		}
 	}
-
-	mizuEntry := models.MizuEntry{
-		EntryId:             entryId,
-		Entry:               string(entryBytes), // simple way to store it and not convert to bytes
-		Service:             serviceName,
-		Url:                 entry.Request.URL,
-		Path:                urlPath,
-		Method:              entry.Request.Method,
-		Status:              entry.Response.Status,
-		RequestSenderIp:     connectionInfo.ClientIP,
-		Timestamp:           entry.StartedDateTime.UnixNano() / int64(time.Millisecond),
-		ResolvedSource:      resolvedSource,
-		ResolvedDestination: resolvedDestination,
-		IsOutgoing:          connectionInfo.IsOutgoing,
-	}
-	mizuEntry.EstimatedSizeBytes = getEstimatedEntrySizeBytes(mizuEntry)
-	database.CreateEntry(&mizuEntry)
-
-	// baseEntry := models.BaseEntryDetails{}
-	// if err := models.GetEntry(&mizuEntry, &baseEntry); err != nil {
-	// 	return
-	// }
-	// baseEntry.Rules = models.RunValidationRulesState(*entry, serviceName)
-	// baseEntry.Latency = entry.Timings.Receive
-	// baseEntryBytes, _ := models.CreateBaseEntryWebSocketMessage(&baseEntry)
-	// BroadcastToBrowserClients(baseEntryBytes)
+	return resolvedSource, resolvedDestination
 }
 
 func getServiceNameFromUrl(inputUrl string) (string, string) {
@@ -204,7 +177,7 @@ func CheckIsServiceIP(address string) bool {
 }
 
 // gives a rough estimate of the size this will take up in the db, good enough for maintaining db size limit accurately
-func getEstimatedEntrySizeBytes(mizuEntry models.MizuEntry) int {
+func getEstimatedEntrySizeBytes(mizuEntry *tapApi.MizuEntry) int {
 	sizeBytes := len(mizuEntry.Entry)
 	sizeBytes += len(mizuEntry.EntryId)
 	sizeBytes += len(mizuEntry.Service)

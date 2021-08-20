@@ -33,9 +33,9 @@ type TcpID struct {
 }
 
 type GenericMessage struct {
-	IsRequest   bool
-	CaptureTime time.Time
-	Payload     interface{}
+	IsRequest   bool        `json:"is_request"`
+	CaptureTime time.Time   `json:"capture_time"`
+	Payload     interface{} `json:"payload"`
 }
 
 type RequestResponsePair struct {
@@ -54,7 +54,8 @@ type Dissector interface {
 	Register(*Extension)
 	Ping()
 	Dissect(b *bufio.Reader, isClient bool, tcpID *TcpID, emitter Emitter)
-	Summarize(item *OutputChannelItem) *BaseEntryDetails
+	Analyze(item *OutputChannelItem, entryId string, resolvedSource string, resolvedDestination string) *MizuEntry
+	Summarize(entry *MizuEntry) *BaseEntryDetails
 }
 
 type Emitting struct {
@@ -71,6 +72,25 @@ func (e *Emitting) Emit(item *OutputChannelItem) {
 	log.Printf("item.Pair.Request.Payload: %v\n", item.Pair.Request.Payload)
 	log.Printf("item.Pair.Response.Payload: %v\n", item.Pair.Response.Payload)
 	e.OutputChannel <- item
+}
+
+type MizuEntry struct {
+	ID                  uint `gorm:"primarykey"`
+	CreatedAt           time.Time
+	UpdatedAt           time.Time
+	Entry               string `json:"entry,omitempty" gorm:"column:entry"`
+	EntryId             string `json:"entryId" gorm:"column:entryId"`
+	Url                 string `json:"url" gorm:"column:url"`
+	Method              string `json:"method" gorm:"column:method"`
+	Status              int    `json:"status" gorm:"column:status"`
+	RequestSenderIp     string `json:"requestSenderIp" gorm:"column:requestSenderIp"`
+	Service             string `json:"service" gorm:"column:service"`
+	Timestamp           int64  `json:"timestamp" gorm:"column:timestamp"`
+	Path                string `json:"path" gorm:"column:path"`
+	ResolvedSource      string `json:"resolvedSource,omitempty" gorm:"column:resolvedSource"`
+	ResolvedDestination string `json:"resolvedDestination,omitempty" gorm:"column:resolvedDestination"`
+	IsOutgoing          bool   `json:"isOutgoing,omitempty" gorm:"column:isOutgoing"`
+	EstimatedSizeBytes  int    `json:"-" gorm:"column:estimatedSizeBytes"`
 }
 
 type BaseEntryDetails struct {
@@ -90,4 +110,23 @@ type BaseEntryDetails struct {
 type ApplicableRules struct {
 	Latency int64 `json:"latency,omitempty"`
 	Status  bool  `json:"status,omitempty"`
+}
+
+type DataUnmarshaler interface {
+	UnmarshalData(*MizuEntry) error
+}
+
+func (bed *BaseEntryDetails) UnmarshalData(entry *MizuEntry) error {
+	entryUrl := entry.Url
+	service := entry.Service
+	bed.Id = entry.EntryId
+	bed.Url = entryUrl
+	bed.Service = service
+	bed.Path = entry.Path
+	bed.StatusCode = entry.Status
+	bed.Method = entry.Method
+	bed.Timestamp = entry.Timestamp
+	bed.RequestSenderIp = entry.RequestSenderIp
+	bed.IsOutgoing = entry.IsOutgoing
+	return nil
 }

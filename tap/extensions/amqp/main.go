@@ -27,7 +27,12 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, em
 	// TODO: Implement
 }
 
-func (d dissecting) Summarize(item *api.OutputChannelItem) *api.BaseEntryDetails {
+func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolvedSource string, resolvedDestination string) *api.MizuEntry {
+	// TODO: Implement
+	return nil
+}
+
+func (d dissecting) Summarize(entry *api.MizuEntry) *api.BaseEntryDetails {
 	// TODO: Implement
 	return nil
 }

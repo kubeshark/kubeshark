@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -80,7 +81,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, em
 	}
 }
 
-func (d dissecting) Summarize(item *api.OutputChannelItem) *api.BaseEntryDetails {
+func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolvedSource string, resolvedDestination string) *api.MizuEntry {
 	fmt.Printf("pair.Request.Payload: %+v\n", item.Pair.Request.Payload)
 	fmt.Printf("item.Pair.Response.Payload: %+v\n", item.Pair.Response.Payload)
 	var host string
@@ -92,13 +93,40 @@ func (d dissecting) Summarize(item *api.OutputChannelItem) *api.BaseEntryDetails
 	}
 	request := item.Pair.Request.Payload.(map[string]interface{})
 	response := item.Pair.Response.Payload.(map[string]interface{})
+	entryBytes, _ := json.Marshal(item.Pair)
+	service := fmt.Sprintf("http://%s", host)
+	return &api.MizuEntry{
+		EntryId:             entryId,
+		Entry:               string(entryBytes),
+		Url:                 fmt.Sprintf("%s%s", service, request["url"].(string)),
+		Method:              request["method"].(string),
+		Status:              int(response["status"].(float64)),
+		RequestSenderIp:     item.ConnectionInfo.ClientIP,
+		Service:             service,
+		Timestamp:           item.Timestamp,
+		Path:                request["url"].(string),
+		ResolvedSource:      resolvedSource,
+		ResolvedDestination: resolvedDestination,
+		IsOutgoing:          item.ConnectionInfo.IsOutgoing,
+	}
+}
+
+func (d dissecting) Summarize(entry *api.MizuEntry) *api.BaseEntryDetails {
 	return &api.BaseEntryDetails{
-		Url:             fmt.Sprintf("http://%s%s", host, request["url"].(string)),
-		RequestSenderIp: item.ConnectionInfo.ClientIP,
-		Path:            request["url"].(string),
-		StatusCode:      int(response["status"].(float64)),
-		Method:          request["method"].(string),
-		Timestamp:       item.Timestamp,
+		Id:              entry.EntryId,
+		Url:             entry.Url,
+		RequestSenderIp: entry.RequestSenderIp,
+		Service:         entry.Service,
+		Path:            entry.Path,
+		StatusCode:      entry.Status,
+		Method:          entry.Method,
+		Timestamp:       entry.Timestamp,
+		IsOutgoing:      entry.IsOutgoing,
+		Latency:         0,
+		Rules: api.ApplicableRules{
+			Latency: 0,
+			Status:  false,
+		},
 	}
 }
 
