@@ -2,7 +2,9 @@
 
 # The API Traffic Viewer for Kubernetes
 
-A simple-yet-powerful API traffic viewer for Kubernetes to help you troubleshoot and debug your microservices. Think TCPDump and Chrome Dev Tools combined
+A simple-yet-powerful API traffic viewer for Kubernetes enabling you to view all API communication between microservices to help your debug and troubleshoot regressions.
+
+Think TCPDump and Chrome Dev Tools combined.
 
 ![Simple UI](assets/mizu-ui.png)
 
@@ -38,8 +40,10 @@ SHA256 checksums are available on the [Releases](https://github.com/up9inc/mizu/
 ### Development (unstable) Build
 Pick one from the [Releases](https://github.com/up9inc/mizu/releases) page
 
-## Prerequisites
-1. Set `KUBECONFIG` environment variable to your Kubernetes configuration. If this is not set, Mizu assumes that configuration is at `${HOME}/.kube/config`
+## Kubeconfig & Permissions
+While `mizu`most often works out of the box, you can influence its behavior:
+
+1. [OPTIONAL] Set `KUBECONFIG` environment variable to your Kubernetes configuration. If this is not set, Mizu assumes that configuration is at `${HOME}/.kube/config`
 2. `mizu` assumes user running the command has permissions to create resources (such as pods, services, namespaces) on your Kubernetes cluster (no worries - `mizu` resources are cleaned up upon termination)
 
 For detailed list of k8s permissions see [PERMISSIONS](PERMISSIONS.md) document
