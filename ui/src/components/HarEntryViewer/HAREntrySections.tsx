@@ -29,13 +29,14 @@ const HAREntryViewLine: React.FC<HAREntryViewLineProps> = ({label, value}) => {
 
 
 interface HAREntrySectionCollapsibleTitleProps {
-    title: string;
-    isExpanded: boolean;
+    title: string,
+    color: string,
+    isExpanded: boolean,
 }
 
-const HAREntrySectionCollapsibleTitle: React.FC<HAREntrySectionCollapsibleTitleProps> = ({title, isExpanded}) => {
+const HAREntrySectionCollapsibleTitle: React.FC<HAREntrySectionCollapsibleTitleProps> = ({title, color, isExpanded}) => {
     return <div className={styles.title}>
-        <span className={`${styles.button} ${isExpanded ? styles.expanded : ''}`}>
+        <span className={`${styles.button} ${isExpanded ? styles.expanded : ''}`} style={{backgroundColor: color}}>
             {isExpanded ? '-' : '+'}
         </span>
         <span>{title}</span>
@@ -43,32 +44,35 @@ const HAREntrySectionCollapsibleTitle: React.FC<HAREntrySectionCollapsibleTitleP
 }
 
 interface HAREntrySectionContainerProps {
-    title: string;
+    title: string,
+    color: string,
 }
 
-export const HAREntrySectionContainer: React.FC<HAREntrySectionContainerProps> = ({title, children}) => {
+export const HAREntrySectionContainer: React.FC<HAREntrySectionContainerProps> = ({title, color, children}) => {
     const [expanded, setExpanded] = useState(true);
     return <CollapsibleContainer
         className={styles.collapsibleContainer}
         isExpanded={expanded}
         onClick={() => setExpanded(!expanded)}
-        title={<HAREntrySectionCollapsibleTitle title={title} isExpanded={expanded}/>}
+        title={<HAREntrySectionCollapsibleTitle title={title} color={color} isExpanded={expanded}/>}
     >
         {children}
     </CollapsibleContainer>
 }
 
 interface HAREntryBodySectionProps {
-    content: any;
-    encoding?: string;
-    contentType?: string;
+    content: any,
+    color: string,
+    encoding?: string,
+    contentType?: string,
 }
 
 export const HAREntryBodySection: React.FC<HAREntryBodySectionProps> = ({
-                                                                            content,
-                                                                            encoding,
-                                                                            contentType,
-                                                                        }) => {
+    color,
+    content,
+    encoding,
+    contentType,
+}) => {
     const MAXIMUM_BYTES_TO_HIGHLIGHT = 10000; // The maximum of chars to highlight in body, in case the response can be megabytes
     const supportedLanguages = [['html', 'html'], ['json', 'json'], ['application/grpc', 'json']]; // [[indicator, languageToUse],...]
     const jsonLikeFormats = ['json'];
@@ -101,7 +105,7 @@ export const HAREntryBodySection: React.FC<HAREntryBodySectionProps> = ({
     }
 
     return <React.Fragment>
-        {content && content?.length > 0 && <HAREntrySectionContainer title='Body'>
+        {content && content?.length > 0 && <HAREntrySectionContainer title='Body' color={color}>
             <table>
                 <tbody>
                     <HAREntryViewLine label={'Mime type'} value={contentType}/>
@@ -127,14 +131,15 @@ export const HAREntryBodySection: React.FC<HAREntryBodySectionProps> = ({
 
 interface HAREntrySectionProps {
     title: string,
+    color: string,
     arrayToIterate: any[],
 }
 
-export const HAREntryTableSection: React.FC<HAREntrySectionProps> = ({title, arrayToIterate}) => {
+export const HAREntryTableSection: React.FC<HAREntrySectionProps> = ({title, color, arrayToIterate}) => {
     return <React.Fragment>
         {
             arrayToIterate && arrayToIterate.length > 0 ?
-                <HAREntrySectionContainer title={title}>
+                <HAREntrySectionContainer title={title} color={color}>
                     <table>
                         <tbody>
                             {arrayToIterate.map(({name, value}, index) => <HAREntryViewLine key={index} label={name}
@@ -151,6 +156,7 @@ export const HAREntryTableSection: React.FC<HAREntrySectionProps> = ({title, arr
 interface HAREntryPolicySectionProps {
     service: string,
     title: string,
+    color: string,
     response: any,
     latency?: number,
     arrayToIterate: any[],
@@ -195,13 +201,13 @@ export const HAREntryPolicySectionContainer: React.FC<HAREntryPolicySectionConta
     </CollapsibleContainer>
 }
 
-export const HAREntryTablePolicySection: React.FC<HAREntryPolicySectionProps> = ({service, title, response, latency, arrayToIterate}) => {
+export const HAREntryTablePolicySection: React.FC<HAREntryPolicySectionProps> = ({service, title, color, response, latency, arrayToIterate}) => {
     const base64ToJson = response.content.mimeType === "application/json; charset=utf-8" ? JSON.parse(Buffer.from(response.content.text, "base64").toString()) : {};
     return <React.Fragment>
         {
             arrayToIterate && arrayToIterate.length > 0 ?
                 <>
-                <HAREntrySectionContainer title={title}>
+                <HAREntrySectionContainer title={title} color={color}>
                     <table>
                         <tbody>
                             {arrayToIterate.map(({rule, matched}, index) => {

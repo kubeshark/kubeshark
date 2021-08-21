@@ -21,7 +21,7 @@ var protocol api.Protocol = api.Protocol{
 	Abbreviation:    "HTTP",
 	BackgroundColor: "#205cf5",
 	ForegroundColor: "#ffffff",
-	FontSize:        10,
+	FontSize:        12,
 	ReferenceLink:   "https://datatracker.ietf.org/doc/html/rfc2616",
 	OutboundPorts:   []string{"80", "8080", "443"},
 	InboundPorts:    []string{},
@@ -29,11 +29,11 @@ var protocol api.Protocol = api.Protocol{
 
 var http2Protocol api.Protocol = api.Protocol{
 	Name:            "http",
-	LongName:        "Hypertext Transfer Protocol Version 2 (HTTP/2)",
+	LongName:        "Hypertext Transfer Protocol Version 2 (HTTP/2) (gRPC)",
 	Abbreviation:    "HTTP/2",
 	BackgroundColor: "#244c5a",
 	ForegroundColor: "#ffffff",
-	FontSize:        10,
+	FontSize:        12,
 	ReferenceLink:   "https://datatracker.ietf.org/doc/html/rfc7540",
 	OutboundPorts:   []string{"80", "8080", "443"},
 	InboundPorts:    []string{},

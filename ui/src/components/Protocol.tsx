@@ -26,7 +26,7 @@ const Protocol: React.FC<ProtocolProps> = ({protocol, horizontal}) => {
                 style={{
                     backgroundColor: protocol.background_color,
                     color: protocol.foreground_color,
-                    fontSize: protocol.font_size * 1.3,
+                    fontSize: protocol.font_size * 1.1,
                 }}
                 title={protocol.abbreviation}
             >

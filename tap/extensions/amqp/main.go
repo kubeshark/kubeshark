@@ -13,7 +13,7 @@ var protocol api.Protocol = api.Protocol{
 	Abbreviation:    "AMQP",
 	BackgroundColor: "#ff6600",
 	ForegroundColor: "#ffffff",
-	FontSize:        10,
+	FontSize:        12,
 	ReferenceLink:   "https://www.rabbitmq.com/amqp-0-9-1-reference.html",
 	OutboundPorts:   []string{"5671", "5672"},
 	InboundPorts:    []string{},

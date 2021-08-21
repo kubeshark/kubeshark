@@ -89,9 +89,9 @@ export const HarEntry: React.FC<HAREntryProps> = ({entry, setFocusedEntryId, isS
             <div className={styles.directionContainer}>
                 <span className={styles.port} title="Source Port">{entry.source_port}</span>
                 {entry.isOutgoing ?
-                    <img src={outgoingIcon} alt="Outgoing traffic" title="Outgoing"/>
+                    <img src={outgoingIcon} alt="Ingoing traffic" title="Ingoing"/>
                     :
-                    <img src={ingoingIcon} alt="Ingoing traffic" title="Ingoing"/>
+                    <img src={ingoingIcon} alt="Outgoing traffic" title="Outgoing"/>
                 }
                 <span className={styles.port} title="Destination Port">{entry.destination_port}</span>
             </div>

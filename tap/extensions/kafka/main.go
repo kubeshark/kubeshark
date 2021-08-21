@@ -13,7 +13,7 @@ var protocol api.Protocol = api.Protocol{
 	Abbreviation:    "KAFKA",
 	BackgroundColor: "#000000",
 	ForegroundColor: "#ffffff",
-	FontSize:        10,
+	FontSize:        12,
 	ReferenceLink:   "https://kafka.apache.org/protocol",
 	OutboundPorts:   []string{"9092"},
 	InboundPorts:    []string{},
