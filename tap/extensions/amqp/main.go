@@ -106,7 +106,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, em
 				emitBasicPublish(*eventBasicPublish, connectionInfo, emitter)
 			case *BasicDeliver:
 				eventBasicDeliver.Body = f.Body
-				emitBasicDeliver(*eventBasicPublish, connectionInfo, emitter)
+				emitBasicDeliver(*eventBasicDeliver, connectionInfo, emitter)
 			default:
 			}
 
@@ -127,7 +127,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, em
 					NoWait:     m.NoWait,
 					Arguments:  m.Arguments,
 				}
-				printEventQueueBind(*eventQueueBind)
+				emitQueueBind(*eventQueueBind, connectionInfo, emitter)
 
 			case *BasicConsume:
 				eventBasicConsume := &BasicConsume{
@@ -228,6 +228,9 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolve
 	case connectionMethodMap[50]:
 		summary = reqDetails["ReplyText"].(string)
 		break
+	case queueMethodMap[20]:
+		summary = reqDetails["Queue"].(string)
+		break
 	}
 
 	return &api.MizuEntry{
@@ -302,6 +305,9 @@ func (d dissecting) Represent(entry string) ([]byte, error) {
 		break
 	case connectionMethodMap[50]:
 		repRequest = representConnectionClose(details)
+		break
+	case queueMethodMap[20]:
+		repRequest = representQueueBind(details)
 		break
 	}
 	// response := root["response"].(map[string]interface{})["payload"].(map[string]interface{})
