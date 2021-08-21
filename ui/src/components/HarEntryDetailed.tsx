@@ -77,10 +77,7 @@ export const HAREntryDetailed: React.FC<HarEntryDetailedProps> = ({classes, harE
         <HarEntryTitle protocol={harEntry.protocol} har={har}/>
         {har && <HarEntrySummary har={har}/>}
         <>
-            {har && <HAREntryViewer
-                harObject={har}
-                className={classes?.root ?? styles.har}
-            />}
+            {har && <HAREntryViewer representation={harEntry.representation}/>}
         </>
     </>
 };

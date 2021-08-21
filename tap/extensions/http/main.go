@@ -17,12 +17,12 @@ var responseCounter uint
 
 var protocol api.Protocol = api.Protocol{
 	Name:            "http",
-	LongName:        "Hypertext Transfer Protocol -- HTTP/1.0",
+	LongName:        "Hypertext Transfer Protocol -- HTTP/1.1",
 	Abbreviation:    "HTTP",
 	BackgroundColor: "#205cf5",
 	ForegroundColor: "#ffffff",
 	FontSize:        10,
-	ReferenceLink:   "https://www.ietf.org/rfc/rfc1945.txt",
+	ReferenceLink:   "https://datatracker.ietf.org/doc/html/rfc2616",
 	OutboundPorts:   []string{"80", "8080", "443"},
 	InboundPorts:    []string{},
 }
@@ -158,6 +158,136 @@ func (d dissecting) Summarize(entry *api.MizuEntry) *api.BaseEntryDetails {
 			Status:  false,
 		},
 	}
+}
+
+func representRequest(request map[string]interface{}) []interface{} {
+	repRequest := make([]interface{}, 0)
+
+	details, _ := json.Marshal([]map[string]string{
+		{
+			"name":  "Method",
+			"value": request["method"].(string),
+		},
+		{
+			"name":  "URL",
+			"value": request["url"].(string),
+		},
+		{
+			"name":  "Body Size",
+			"value": fmt.Sprintf("%g bytes", request["bodySize"].(float64)),
+		},
+	})
+	repRequest = append(repRequest, map[string]string{
+		"type":  "table",
+		"title": "Details",
+		"data":  string(details),
+	})
+
+	headers, _ := json.Marshal(request["headers"].([]interface{}))
+	repRequest = append(repRequest, map[string]string{
+		"type":  "table",
+		"title": "Headers",
+		"data":  string(headers),
+	})
+
+	cookies, _ := json.Marshal(request["cookies"].([]interface{}))
+	repRequest = append(repRequest, map[string]string{
+		"type":  "table",
+		"title": "Cookies",
+		"data":  string(cookies),
+	})
+
+	queryString, _ := json.Marshal(request["queryString"].([]interface{}))
+	repRequest = append(repRequest, map[string]string{
+		"type":  "table",
+		"title": "Query String",
+		"data":  string(queryString),
+	})
+
+	postData, _ := request["postData"].(map[string]interface{})
+	mimeType, _ := postData["mimeType"]
+	if mimeType == nil {
+		mimeType = "N/A"
+	}
+	text, _ := postData["text"]
+	if text != nil {
+		repRequest = append(repRequest, map[string]string{
+			"type":      "body",
+			"title":     "POST Data",
+			"encoding":  "base64", // FIXME: Does `request` have it?
+			"mime_type": mimeType.(string),
+			"data":      text.(string),
+		})
+	}
+
+	return repRequest
+}
+
+func representResponse(response map[string]interface{}) []interface{} {
+	repResponse := make([]interface{}, 0)
+
+	details, _ := json.Marshal([]map[string]string{
+		{
+			"name":  "Status",
+			"value": fmt.Sprintf("%g", response["status"].(float64)),
+		},
+		{
+			"name":  "Status Text",
+			"value": response["statusText"].(string),
+		},
+		{
+			"name":  "Body Size",
+			"value": fmt.Sprintf("%g bytes", response["bodySize"].(float64)),
+		},
+	})
+	repResponse = append(repResponse, map[string]string{
+		"type":  "table",
+		"title": "Details",
+		"data":  string(details),
+	})
+
+	headers, _ := json.Marshal(response["headers"].([]interface{}))
+	repResponse = append(repResponse, map[string]string{
+		"type":  "table",
+		"title": "Headers",
+		"data":  string(headers),
+	})
+
+	cookies, _ := json.Marshal(response["cookies"].([]interface{}))
+	repResponse = append(repResponse, map[string]string{
+		"type":  "table",
+		"title": "Cookies",
+		"data":  string(cookies),
+	})
+
+	content, _ := response["content"].(map[string]interface{})
+	mimeType, _ := content["mimeType"]
+	encoding, _ := content["encoding"]
+	text, _ := content["text"]
+	if text != nil {
+		repResponse = append(repResponse, map[string]string{
+			"type":      "body",
+			"title":     "Body",
+			"encoding":  encoding.(string),
+			"mime_type": mimeType.(string),
+			"data":      text.(string),
+		})
+	}
+
+	return repResponse
+}
+
+func (d dissecting) Represent(entry string) ([]byte, error) {
+	var root map[string]interface{}
+	json.Unmarshal([]byte(entry), &root)
+	representation := make(map[string]interface{}, 0)
+	request := root["request"].(map[string]interface{})["payload"].(map[string]interface{})
+	response := root["response"].(map[string]interface{})["payload"].(map[string]interface{})
+	repRequest := representRequest(request)
+	repResponse := representResponse(response)
+	representation["request"] = repRequest
+	representation["response"] = repResponse
+	return json.Marshal(representation)
 }
 
 var Dissector dissecting

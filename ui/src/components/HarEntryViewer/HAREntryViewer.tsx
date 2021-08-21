@@ -3,11 +3,34 @@ import styles from './HAREntryViewer.module.sass';
 import Tabs from "../Tabs";
 import {HAREntryTableSection, HAREntryBodySection, HAREntryTablePolicySection} from "./HAREntrySections";
 
-const MIME_TYPE_KEY = 'mimeType';
+const SectionsRepresentation: React.FC<any> = ({data}) => {
+    const sections = []
 
-const HAREntryDisplay: React.FC<any> = ({har, entry, isCollapsed: initialIsCollapsed, isResponseMocked}) => {
-    const {request, response} = JSON.parse(entry);
-    const rulesMatched = har.log.entries[0].rulesMatched
+    for (const [i, row] of data.entries()) {
+        switch (row.type) {
+            case "table":
+                sections.push(
+                    <HAREntryTableSection title={row.title} arrayToIterate={JSON.parse(row.data)}/>
+                )
+                break;
+            case "body":
+                sections.push(
+                    <HAREntryBodySection content={row.data} encoding={row.encoding} contentType={row.mime_type}/>
+                )
+                break;
+            default:
+                break;
+        }
+    }
+
+    return <>{sections}</>;
+}
+
+const AutoRepresentation: React.FC<any> = ({representation, isResponseMocked}) => {
+    console.log(representation)
+    const {request, response} = JSON.parse(representation);
+
+    const rulesMatched = []
     const TABS = [
         {tab: 'request'},
         {
@@ -22,50 +45,33 @@ const HAREntryDisplay: React.FC<any> = ({har, entry, isCollapsed: initialIsColla
     const [currentTab, setCurrentTab] = useState(TABS[0].tab);
 
     return <div className={styles.harEntry}>
-
-        {!initialIsCollapsed && <div className={styles.body}>
+        {<div className={styles.body}>
             <div className={styles.bodyHeader}>
                 <Tabs tabs={TABS} currentTab={currentTab} onChange={setCurrentTab} leftAligned/>
                 {request?.url && <a className={styles.endpointURL} href={request.payload.url} target='_blank' rel="noreferrer">{request.payload.url}</a>}
             </div>
-            {
-                currentTab === TABS[0].tab && <React.Fragment>
-                    <HAREntryTableSection title={'Headers'} arrayToIterate={request.payload.headers}/>
-
-                    <HAREntryTableSection title={'Cookies'} arrayToIterate={request.payload.cookies}/>
-
-                    {request.payload?.postData && <HAREntryBodySection content={request.payload.postData} encoding={request.payload.postData.comment} contentType={request.payload.postData[MIME_TYPE_KEY]}/>}
-
-                    <HAREntryTableSection title={'Query'} arrayToIterate={request.payload.queryString}/>
-                </React.Fragment>
-            }
+            {currentTab === TABS[0].tab && <React.Fragment>
+                <SectionsRepresentation data={request}/>
+            </React.Fragment>}
             {currentTab === TABS[1].tab && <React.Fragment>
-                <HAREntryTableSection title={'Headers'} arrayToIterate={response.payload.headers}/>
-
-                <HAREntryBodySection content={response.payload.content} encoding={response.payload.content?.encoding} contentType={response.payload.content?.mimeType}/>
-
-                <HAREntryTableSection title={'Cookies'} arrayToIterate={response.payload.cookies}/>
+                <SectionsRepresentation data={response}/>
             </React.Fragment>}
             {currentTab === TABS[2].tab && <React.Fragment>
-                <HAREntryTablePolicySection service={har.log.entries[0].service} title={'Rule'} latency={0} response={response} arrayToIterate={rulesMatched ? rulesMatched : []}/>
+                {// FIXME: Fix here
+                <HAREntryTablePolicySection service={representation.log.entries[0].service} title={'Rule'} latency={0} response={response} arrayToIterate={rulesMatched ? rulesMatched : []}/>}
             </React.Fragment>}
         </div>}
     </div>;
 }
 
 interface Props {
-    harObject: any;
-    className?: string;
+    representation: any;
     isResponseMocked?: boolean;
     showTitle?: boolean;
 }
 
-const HAREntryViewer: React.FC<Props> = ({harObject, className, isResponseMocked, showTitle=true}) => {
-    const {log: {entries}} = harObject;
-    const isCollapsed = entries.length > 1;
-    return <div className={`${className ? className : ''}`}>
-        {Object.keys(entries).map((entry: any, index) => <HAREntryDisplay har={harObject} isCollapsed={isCollapsed} key={index} entry={entries[entry].entry} isResponseMocked={isResponseMocked} showTitle={showTitle}/>)}
-    </div>
+const HAREntryViewer: React.FC<Props> = ({representation, isResponseMocked, showTitle=true}) => {
+    return <AutoRepresentation representation={representation} isResponseMocked={isResponseMocked} showTitle={showTitle}/>
 };
 
 export default HAREntryViewer;

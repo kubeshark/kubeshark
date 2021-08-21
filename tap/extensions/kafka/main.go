@@ -47,4 +47,9 @@ func (d dissecting) Summarize(entry *api.MizuEntry) *api.BaseEntryDetails {
 	return nil
 }
 
+func (d dissecting) Represent(entry string) ([]byte, error) {
+	// TODO: Implement
+	return nil, nil
+}
+
 var Dissector dissecting

@@ -236,9 +236,12 @@ func GetEntry(c *gin.Context) {
 	// 		"msg":   "Can't get entry details",
 	// 	})
 	// }
+	extension := extensionsMap[entryData.ProtocolName]
+	representation, _ := extension.Dissector.Represent(entryData.Entry)
 	c.JSON(http.StatusOK, tapApi.MizuEntryWrapper{
-		Protocol: extensionsMap[entryData.ProtocolName].Protocol,
-		Data:     entryData,
+		Protocol:       extension.Protocol,
+		Representation: string(representation),
+		Data:           entryData,
 	})
 }
 

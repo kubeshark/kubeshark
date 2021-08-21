@@ -80,9 +80,9 @@ export const HAREntryBodySection: React.FC<HAREntryBodySectionProps> = ({
         const bodyBuf = encoding === 'base64' ? atob(chunk) : chunk;
 
         try {
-            if (jsonLikeFormats.some(format => content?.mimeType?.indexOf(format) > -1)) {
+            if (jsonLikeFormats.some(format => contentType?.indexOf(format) > -1)) {
                 return JSON.stringify(JSON.parse(bodyBuf), null, 2);
-            } else if (protobufFormats.some(format => content?.mimeType?.indexOf(format) > -1)) {
+            } else if (protobufFormats.some(format => contentType?.indexOf(format) > -1)) {
                 // Replace all non printable characters (ASCII)
                 const protobufDecoder = new ProtobufDecoder(bodyBuf, true);
                 return JSON.stringify(protobufDecoder.decode().toSimple(), null, 2);
@@ -94,17 +94,17 @@ export const HAREntryBodySection: React.FC<HAREntryBodySectionProps> = ({
     }
 
     const getLanguage = (mimetype) => {
-        const chunk = content.text?.slice(0, 100);
+        const chunk = content?.slice(0, 100);
         if (chunk.indexOf('html') > 0 || chunk.indexOf('HTML') > 0) return supportedLanguages[0][1];
         const language = supportedLanguages.find(el => (mimetype + contentType).indexOf(el[0]) > -1);
         return language ? language[1] : 'default';
     }
 
     return <React.Fragment>
-        {content && content.text?.length > 0 && <HAREntrySectionContainer title='Body'>
+        {content && content?.length > 0 && <HAREntrySectionContainer title='Body'>
             <table>
                 <tbody>
-                    <HAREntryViewLine label={'Mime type'} value={content?.mimeType}/>
+                    <HAREntryViewLine label={'Mime type'} value={contentType}/>
                     <HAREntryViewLine label={'Encoding'} value={encoding}/>
                 </tbody>
             </table>
@@ -118,7 +118,7 @@ export const HAREntryBodySection: React.FC<HAREntryBodySectionProps> = ({
 
             <SyntaxHighlighter
                 isWrapped={isWrapped}
-                code={formatTextBody(content.text)}
+                code={formatTextBody(content)}
                 language={content?.mimeType ? getLanguage(content.mimeType) : 'default'}
             />
         </HAREntrySectionContainer>}
@@ -205,52 +205,47 @@ export const HAREntryTablePolicySection: React.FC<HAREntryPolicySectionProps> = 
                     <table>
                         <tbody>
                             {arrayToIterate.map(({rule, matched}, index) => {
-                                
-                                
                                     return (
                                         <HAREntryPolicySectionContainer key={index} label={rule.Name} matched={matched && (rule.Type === 'latency' ? rule.Latency >= latency : true)? "Success" : "Failure"}>
                                             {
-                                                
                                                 <>
                                                     {
-                                                        rule.Key != "" ? 
+                                                        rule.Key !== "" ?
                                                         <tr className={styles.dataValue}><td><b>Key</b>:</td><td>{rule.Key}</td></tr>
                                                         : null
                                                     }
                                                     {
-                                                        rule.Latency != "" ? 
+                                                        rule.Latency !== "" ?
                                                         <tr className={styles.dataValue}><td><b>Latency:</b></td> <td>{rule.Latency}</td></tr>
                                                         : null
                                                     }
                                                     {
-                                                        rule.Method != "" ? 
+                                                        rule.Method !== "" ?
                                                         <tr className={styles.dataValue}><td><b>Method:</b></td> <td>{rule.Method}</td></tr>
                                                         : null
                                                     }
                                                     {
-                                                        rule.Path != "" ? 
+                                                        rule.Path !== "" ?
                                                         <tr className={styles.dataValue}><td><b>Path:</b></td> <td>{rule.Path}</td></tr>
                                                         : null
                                                     }
                                                     {
-                                                        rule.Service != "" ? 
+                                                        rule.Service !== "" ?
                                                         <tr className={styles.dataValue}><td><b>Service:</b></td> <td>{service}</td></tr>
                                                         : null
                                                     }
                                                     {
-                                                        rule.Type != "" ? 
+                                                        rule.Type !== "" ?
                                                         <tr className={styles.dataValue}><td><b>Type:</b></td> <td>{rule.Type}</td></tr>
                                                         : null
                                                     }
                                                     {
-                                                        rule.Value != "" ? 
+                                                        rule.Value !== "" ?
                                                         <tr className={styles.dataValue}><td><b>Value:</b></td> <td>{rule.Value}</td></tr>
                                                         : null
                                                     }
                                                 </>
                                             }
-                                           
-                                            
                                         </HAREntryPolicySectionContainer>
                                     )
                                 }
@@ -259,7 +254,6 @@ export const HAREntryTablePolicySection: React.FC<HAREntryPolicySectionProps> = 
                         </tbody>
                     </table>
                 </HAREntrySectionContainer>
-                                            
                 </> : <span/>
         }
     </React.Fragment>

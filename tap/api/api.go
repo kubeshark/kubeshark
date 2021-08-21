@@ -66,6 +66,7 @@ type Dissector interface {
 	Dissect(b *bufio.Reader, isClient bool, tcpID *TcpID, emitter Emitter)
 	Analyze(item *OutputChannelItem, entryId string, resolvedSource string, resolvedDestination string) *MizuEntry
 	Summarize(entry *MizuEntry) *BaseEntryDetails
+	Represent(entry string) ([]byte, error)
 }
 
 type Emitting struct {
@@ -109,8 +110,9 @@ type MizuEntry struct {
 }
 
 type MizuEntryWrapper struct {
-	Protocol Protocol  `json:"protocol"`
-	Data     MizuEntry `json:"data"`
+	Protocol       Protocol  `json:"protocol"`
+	Representation string    `json:"representation"`
+	Data           MizuEntry `json:"data"`
 }
 
 type BaseEntryDetails struct {
