@@ -7,22 +7,22 @@ const SectionsRepresentation: React.FC<any> = ({data, color}) => {
     const sections = []
 
     if (data !== undefined) {
-        data.forEach((row) => {
+        for (const [i, row] of data.entries()) {
             switch (row.type) {
                 case "table":
                     sections.push(
-                        <HAREntryTableSection title={row.title} color={color} arrayToIterate={JSON.parse(row.data)}/>
+                        <HAREntryTableSection key={i} title={row.title} color={color} arrayToIterate={JSON.parse(row.data)}/>
                     )
                     break;
                 case "body":
                     sections.push(
-                        <HAREntryBodySection color={color} content={row.data} encoding={row.encoding} contentType={row.mime_type}/>
+                        <HAREntryBodySection key={i} color={color} content={row.data} encoding={row.encoding} contentType={row.mime_type}/>
                     )
                     break;
                 default:
                     break;
             }
-        });
+        }
     }
 
     return <>{sections}</>;

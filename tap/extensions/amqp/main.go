@@ -204,7 +204,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, em
 
 func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolvedSource string, resolvedDestination string) *api.MizuEntry {
 	request := item.Pair.Request.Payload.(map[string]interface{})
-	reqDetails := request["Details"].(map[string]interface{})
+	reqDetails := request["details"].(map[string]interface{})
 	entryBytes, _ := json.Marshal(item.Pair)
 	service := fmt.Sprintf("amqp")
 	return &api.MizuEntry{
@@ -212,19 +212,19 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolve
 		EntryId:             entryId,
 		Entry:               string(entryBytes),
 		Url:                 fmt.Sprintf("%s%s", service, reqDetails["Exchange"].(string)),
-		Method:              request["Method"].(string),
+		Method:              request["method"].(string),
 		Status:              0,
-		RequestSenderIp:     "",
+		RequestSenderIp:     item.ConnectionInfo.ClientIP,
 		Service:             service,
 		Timestamp:           item.Timestamp,
 		Path:                reqDetails["Exchange"].(string),
 		ResolvedSource:      resolvedSource,
 		ResolvedDestination: resolvedDestination,
-		SourceIp:            "",
-		DestinationIp:       "",
-		SourcePort:          "",
-		DestinationPort:     "",
-		IsOutgoing:          true,
+		SourceIp:            item.ConnectionInfo.ClientIP,
+		DestinationIp:       item.ConnectionInfo.ServerIP,
+		SourcePort:          item.ConnectionInfo.ClientPort,
+		DestinationPort:     item.ConnectionInfo.ServerPort,
+		IsOutgoing:          item.ConnectionInfo.IsOutgoing,
 	}
 
 }
@@ -260,9 +260,9 @@ func (d dissecting) Represent(entry string) ([]byte, error) {
 	request := root["request"].(map[string]interface{})["payload"].(map[string]interface{})
 	log.Printf("request: %+v\n", request)
 	var repRequest []interface{}
-	details := request["Details"].(map[string]interface{})
-	switch request["Method"].(string) {
-	case "Basic Publish":
+	details := request["details"].(map[string]interface{})
+	switch request["method"].(string) {
+	case basicMethodMap[40]:
 		repRequest = representBasicPublish(details)
 		break
 	}

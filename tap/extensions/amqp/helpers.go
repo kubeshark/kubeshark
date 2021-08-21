@@ -88,8 +88,9 @@ var txMethodMap = map[int]string{
 }
 
 type AMQPWrapper struct {
-	Method  string
-	Details interface{}
+	Method  string      `json:"method"`
+	Url     string      `json:"url"`
+	Details interface{} `json:"details"`
 }
 
 func emitBasicPublish(event BasicPublish, connectionInfo *api.ConnectionInfo, emitter api.Emitter) {
@@ -99,7 +100,8 @@ func emitBasicPublish(event BasicPublish, connectionInfo *api.ConnectionInfo, em
 		Payload: AMQPPayload{
 			Type: "basic_publish",
 			Data: &AMQPWrapper{
-				Method:  "Basic Publish",
+				Method:  basicMethodMap[40],
+				Url:     event.Exchange,
 				Details: event,
 			},
 		},
@@ -107,7 +109,7 @@ func emitBasicPublish(event BasicPublish, connectionInfo *api.ConnectionInfo, em
 	item := &api.OutputChannelItem{
 		Protocol:       protocol,
 		Timestamp:      time.Now().UnixNano() / int64(time.Millisecond),
-		ConnectionInfo: nil,
+		ConnectionInfo: connectionInfo,
 		Pair: &api.RequestResponsePair{
 			Request:  *request,
 			Response: api.GenericMessage{},
@@ -135,7 +137,7 @@ func representBasicPublish(event map[string]interface{}) []interface{} {
 	})
 	rep = append(rep, map[string]string{
 		"type":  "table",
-		"title": "Details",
+		"title": "details",
 		"data":  string(details),
 	})
 
