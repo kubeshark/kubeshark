@@ -5,7 +5,6 @@ import CollapsibleContainer from "../CollapsibleContainer";
 import FancyTextDisplay from "../FancyTextDisplay";
 import Checkbox from "../Checkbox";
 import ProtobufDecoder from "protobuf-decoder";
-var jp = require('jsonpath');
 
 interface HAREntryViewLineProps {
     label: string;
@@ -202,7 +201,7 @@ export const HAREntryPolicySectionContainer: React.FC<HAREntryPolicySectionConta
 }
 
 export const HAREntryTablePolicySection: React.FC<HAREntryPolicySectionProps> = ({service, title, color, response, latency, arrayToIterate}) => {
-    const base64ToJson = response.content.mimeType === "application/json; charset=utf-8" ? JSON.parse(Buffer.from(response.content.text, "base64").toString()) : {};
+    // const base64ToJson = response.content.mimeType === "application/json; charset=utf-8" ? JSON.parse(Buffer.from(response.content.text, "base64").toString()) : {};
     return <React.Fragment>
         {
             arrayToIterate && arrayToIterate.length > 0 ?

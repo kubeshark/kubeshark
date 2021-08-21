@@ -6,7 +6,7 @@ import {HAREntryTableSection, HAREntryBodySection, HAREntryTablePolicySection} f
 const SectionsRepresentation: React.FC<any> = ({data, color}) => {
     const sections = []
 
-    for (const [i, row] of data.entries()) {
+    data.forEach((row) => {
         switch (row.type) {
             case "table":
                 sections.push(
@@ -21,7 +21,7 @@ const SectionsRepresentation: React.FC<any> = ({data, color}) => {
             default:
                 break;
         }
-    }
+    });
 
     return <>{sections}</>;
 }

@@ -1,9 +1,8 @@
 import React from "react";
 import {singleEntryToHAR} from "./utils";
-import styles from './style/HarEntryDetailed.module.sass';
 import HAREntryViewer from "./HarEntryViewer/HAREntryViewer";
 import {makeStyles} from "@material-ui/core";
-import Protocol, {ProtocolInterface} from "./Protocol"
+import Protocol from "./Protocol"
 import StatusCode from "./StatusCode";
 import {EndpointPath} from "./EndpointPath";
 
