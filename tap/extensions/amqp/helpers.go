@@ -435,7 +435,7 @@ func representQueueDeclare(event map[string]interface{}) []interface{} {
 			"value": strconv.FormatBool(event["Exclusive"].(bool)),
 		},
 		{
-			"name":  "AutoDelete",
+			"name":  "Auto Delete",
 			"value": strconv.FormatBool(event["AutoDelete"].(bool)),
 		},
 		{
@@ -468,20 +468,87 @@ func representQueueDeclare(event map[string]interface{}) []interface{} {
 	return rep
 }
 
-func printEventExchangeDeclare(eventExchangeDeclare ExchangeDeclare) {
-	return
-	fmt.Printf(
-		"[%s] Exchange: %s, Type: %s, Passive: %t, Durable: %t, AutoDelete: %t, Internal: %t, NoWait: %t, Arguments: %v\n",
-		exchangeMethodMap[10],
-		eventExchangeDeclare.Exchange,
-		eventExchangeDeclare.Type,
-		eventExchangeDeclare.Passive,
-		eventExchangeDeclare.Durable,
-		eventExchangeDeclare.AutoDelete,
-		eventExchangeDeclare.Internal,
-		eventExchangeDeclare.NoWait,
-		eventExchangeDeclare.Arguments,
-	)
+func emitExchangeDeclare(event ExchangeDeclare, connectionInfo *api.ConnectionInfo, emitter api.Emitter) {
+	request := &api.GenericMessage{
+		IsRequest:   true,
+		CaptureTime: time.Now(),
+		Payload: AMQPPayload{
+			Type: "exchange_declare",
+			Data: &AMQPWrapper{
+				Method:  exchangeMethodMap[10],
+				Url:     event.Exchange,
+				Details: event,
+			},
+		},
+	}
+	item := &api.OutputChannelItem{
+		Protocol:       protocol,
+		Timestamp:      time.Now().UnixNano() / int64(time.Millisecond),
+		ConnectionInfo: connectionInfo,
+		Pair: &api.RequestResponsePair{
+			Request:  *request,
+			Response: api.GenericMessage{},
+		},
+	}
+	emitter.Emit(item)
+}
+
+func representExchangeDeclare(event map[string]interface{}) []interface{} {
+	rep := make([]interface{}, 0)
+
+	details, _ := json.Marshal([]map[string]string{
+		{
+			"name":  "Exchange",
+			"value": event["Exchange"].(string),
+		},
+		{
+			"name":  "Type",
+			"value": event["Type"].(string),
+		},
+		{
+			"name":  "Passive",
+			"value": strconv.FormatBool(event["Passive"].(bool)),
+		},
+		{
+			"name":  "Durable",
+			"value": strconv.FormatBool(event["Durable"].(bool)),
+		},
+		{
+			"name":  "Auto Delete",
+			"value": strconv.FormatBool(event["AutoDelete"].(bool)),
+		},
+		{
+			"name":  "Internal",
+			"value": strconv.FormatBool(event["Internal"].(bool)),
+		},
+		{
+			"name":  "NoWait",
+			"value": strconv.FormatBool(event["NoWait"].(bool)),
+		},
+	})
+	rep = append(rep, map[string]string{
+		"type":  "table",
+		"title": "Details",
+		"data":  string(details),
+	})
+
+	if event["Arguments"] != nil {
+		headers := make([]map[string]string, 0)
+		for name, value := range event["Arguments"].(map[string]interface{}) {
+			headers = append(headers, map[string]string{
+				"name":  name,
+				"value": value.(string),
+			})
+		}
+		headersMarshaled, _ := json.Marshal(headers)
+		rep = append(rep, map[string]string{
+			"type":  "table",
+			"title": "Arguments",
+			"data":  string(headersMarshaled),
+		})
+	}
+
+	return rep
 }
 
 func printEventConnectionStart(eventConnectionStart ConnectionStart) {

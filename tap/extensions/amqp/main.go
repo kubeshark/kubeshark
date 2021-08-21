@@ -171,7 +171,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, em
 					NoWait:     m.NoWait,
 					Arguments:  m.Arguments,
 				}
-				printEventExchangeDeclare(*eventExchangeDeclare)
+				emitExchangeDeclare(*eventExchangeDeclare, connectionInfo, emitter)
 
 			case *ConnectionStart:
 				eventConnectionStart := &ConnectionStart{
@@ -212,6 +212,7 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolve
 	switch request["method"] {
 	case basicMethodMap[40]:
 	case basicMethodMap[60]:
+	case exchangeMethodMap[10]:
 		summary = reqDetails["Exchange"].(string)
 	case queueMethodMap[10]:
 		summary = reqDetails["Queue"].(string)
@@ -280,6 +281,8 @@ func (d dissecting) Represent(entry string) ([]byte, error) {
 		repRequest = representBasicDeliver(details)
 	case queueMethodMap[10]:
 		repRequest = representQueueDeclare(details)
+	case exchangeMethodMap[10]:
+		repRequest = representExchangeDeclare(details)
 		break
 	}
 	// response := root["response"].(map[string]interface{})["payload"].(map[string]interface{})
