@@ -39,13 +39,12 @@ const HarEntryTitle: React.FC<any> = ({protocol, har}) => {
 
     const {log: {entries}} = har;
     const {response} = JSON.parse(entries[0].entry);
-    const {bodySize} = response.payload;
 
 
     return <div className={classes.entryTitle}>
         <Protocol protocol={protocol} horizontal={true}/>
         <div style={{right: "30px", position: "absolute", display: "flex"}}>
-            <div style={{margin: "0 18px", opacity: 0.5}}>{formatSize(bodySize)}</div>
+            {response.payload && <div style={{margin: "0 18px", opacity: 0.5}}>{formatSize(response.payload.bodySize)}</div>}
             <div style={{opacity: 0.5}}>{'rulesMatched' in entries[0] ? entries[0].rulesMatched?.length : '0'} Rules Applied</div>
         </div>
     </div>;
@@ -56,12 +55,11 @@ const HarEntrySummary: React.FC<any> = ({har}) => {
 
     const {log: {entries}} = har;
     const {response, request} = JSON.parse(entries[0].entry);
-    const {status} = response.payload;
 
 
     return <div className={classes.entrySummary}>
-        {status && <div style={{marginRight: 8}}>
-            <StatusCode statusCode={status}/>
+        {response.payload && <div style={{marginRight: 8}}>
+            <StatusCode statusCode={response.payload.status}/>
         </div>}
         <div style={{flexGrow: 1, overflow: 'hidden'}}>
             <EndpointPath method={request?.payload.method} path={request?.payload.url}/>

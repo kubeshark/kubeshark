@@ -2,6 +2,8 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 
@@ -10,7 +12,7 @@ import (
 
 var protocol api.Protocol = api.Protocol{
 	Name:            "amqp",
-	LongName:        "Advanced Message Queuing Protocol",
+	LongName:        "Advanced Message Queuing Protocol 0-9-1",
 	Abbreviation:    "AMQP",
 	BackgroundColor: "#ff6600",
 	ForegroundColor: "#ffffff",
@@ -39,6 +41,14 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, em
 	var remaining int
 	var header *HeaderFrame
 	var body []byte
+
+	connectionInfo := &api.ConnectionInfo{
+		ClientIP:   tcpID.SrcIP,
+		ClientPort: tcpID.SrcPort,
+		ServerIP:   tcpID.DstIP,
+		ServerPort: tcpID.DstPort,
+		IsOutgoing: true,
+	}
 
 	eventBasicPublish := &BasicPublish{
 		Exchange:   "",
@@ -94,6 +104,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, em
 			case *BasicPublish:
 				eventBasicPublish.Body = f.Body
 				printEventBasicPublish(*eventBasicPublish)
+				emitBasicPublish(*eventBasicPublish, connectionInfo, emitter)
 			case *BasicDeliver:
 				eventBasicDeliver.Body = f.Body
 				printEventBasicDeliver(*eventBasicDeliver)
@@ -193,18 +204,67 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, em
 }
 
 func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolvedSource string, resolvedDestination string) *api.MizuEntry {
-	// TODO: Implement
-	return nil
+	request := item.Pair.Request.Payload.(map[string]interface{})
+	reqDetails := request["Details"].(map[string]interface{})
+	entryBytes, _ := json.Marshal(item.Pair)
+	service := fmt.Sprintf("amqp")
+	return &api.MizuEntry{
+		ProtocolName:        protocol.Name,
+		EntryId:             entryId,
+		Entry:               string(entryBytes),
+		Url:                 fmt.Sprintf("%s%s", service, reqDetails["Exchange"].(string)),
+		Method:              request["Method"].(string),
+		Status:              0,
+		RequestSenderIp:     "",
+		Service:             service,
+		Timestamp:           item.Timestamp,
+		Path:                reqDetails["Exchange"].(string),
+		ResolvedSource:      resolvedSource,
+		ResolvedDestination: resolvedDestination,
+		SourceIp:            "",
+		DestinationIp:       "",
+		SourcePort:          "",
+		DestinationPort:     "",
+		IsOutgoing:          true,
+	}
+
 }
 
 func (d dissecting) Summarize(entry *api.MizuEntry) *api.BaseEntryDetails {
-	// TODO: Implement
-	return nil
+	return &api.BaseEntryDetails{
+		Id:              entry.EntryId,
+		Protocol:        protocol,
+		Url:             entry.Url,
+		RequestSenderIp: entry.RequestSenderIp,
+		Service:         entry.Service,
+		Summary:         entry.Path,
+		StatusCode:      entry.Status,
+		Method:          entry.Method,
+		Timestamp:       entry.Timestamp,
+		SourceIp:        entry.SourceIp,
+		DestinationIp:   entry.DestinationIp,
+		SourcePort:      entry.SourcePort,
+		DestinationPort: entry.DestinationPort,
+		IsOutgoing:      entry.IsOutgoing,
+		Latency:         0,
+		Rules: api.ApplicableRules{
+			Latency: 0,
+			Status:  false,
+		},
+	}
 }
 
 func (d dissecting) Represent(entry string) ([]byte, error) {
-	// TODO: Implement
-	return nil, nil
+	var root map[string]interface{}
+	json.Unmarshal([]byte(entry), &root)
+	representation := make(map[string]interface{}, 0)
+	// request := root["request"].(map[string]interface{})["payload"].(map[string]interface{})
+	// response := root["response"].(map[string]interface{})["payload"].(map[string]interface{})
+	// repRequest := representRequest(request)
+	// repResponse := representResponse(response)
+	// representation["request"] = repRequest
+	// representation["response"] = repResponse
+	return json.Marshal(representation)
 }
 
 var Dissector dissecting

@@ -1,6 +1,11 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+
+	"github.com/up9inc/mizu/tap/api"
+)
 
 var connectionMethodMap = map[int]string{
 	10: "connection start",
@@ -80,7 +85,37 @@ var txMethodMap = map[int]string{
 	31: "tx rollback-ok",
 }
 
+type AMQPWrapper struct {
+	Method  string
+	Details interface{}
+}
+
+func emitBasicPublish(eventBasicPublish BasicPublish, connectionInfo *api.ConnectionInfo, emitter api.Emitter) {
+	request := &api.GenericMessage{
+		IsRequest:   true,
+		CaptureTime: time.Now(),
+		Payload: AMQPPayload{
+			Type: "basic_publish",
+			Data: &AMQPWrapper{
+				Method:  "Basic Publish",
+				Details: eventBasicPublish,
+			},
+		},
+	}
+	item := &api.OutputChannelItem{
+		Protocol:       protocol,
+		Timestamp:      time.Now().UnixNano() / int64(time.Millisecond),
+		ConnectionInfo: nil,
+		Pair: &api.RequestResponsePair{
+			Request:  *request,
+			Response: api.GenericMessage{},
+		},
+	}
+	emitter.Emit(item)
+}
+
 func printEventBasicPublish(eventBasicPublish BasicPublish) {
+	return
 	fmt.Printf(
 		"[%s] Exchange: %s, RoutingKey: %s, Mandatory: %t, Immediate: %t, Properties: %v, Body: %s\n",
 		basicMethodMap[40],
@@ -94,6 +129,7 @@ func printEventBasicPublish(eventBasicPublish BasicPublish) {
 }
 
 func printEventBasicDeliver(eventBasicDeliver BasicDeliver) {
+	return
 	fmt.Printf(
 		"[%s] ConsumerTag: %s, DeliveryTag: %d, Redelivered: %t, Exchange: %s, RoutingKey: %s, Properties: %v, Body: %s\n",
 		basicMethodMap[60],
@@ -108,6 +144,7 @@ func printEventBasicDeliver(eventBasicDeliver BasicDeliver) {
 }
 
 func printEventQueueDeclare(eventQueueDeclare QueueDeclare) {
+	return
 	fmt.Printf(
 		"[%s] Queue: %s, Passive: %t, Durable: %t, AutoDelete: %t, Exclusive: %t, NoWait: %t, Arguments: %v\n",
 		queueMethodMap[10],
@@ -122,6 +159,7 @@ func printEventQueueDeclare(eventQueueDeclare QueueDeclare) {
 }
 
 func printEventExchangeDeclare(eventExchangeDeclare ExchangeDeclare) {
+	return
 	fmt.Printf(
 		"[%s] Exchange: %s, Type: %s, Passive: %t, Durable: %t, AutoDelete: %t, Internal: %t, NoWait: %t, Arguments: %v\n",
 		exchangeMethodMap[10],
@@ -137,6 +175,7 @@ func printEventExchangeDeclare(eventExchangeDeclare ExchangeDeclare) {
 }
 
 func printEventConnectionStart(eventConnectionStart ConnectionStart) {
+	return
 	fmt.Printf(
 		"[%s] Version: %d.%d, ServerProperties: %v, Mechanisms: %s, Locales: %s\n",
 		connectionMethodMap[10],
@@ -149,6 +188,7 @@ func printEventConnectionStart(eventConnectionStart ConnectionStart) {
 }
 
 func printEventConnectionClose(eventConnectionClose ConnectionClose) {
+	return
 	fmt.Printf(
 		"[%s] ReplyCode: %d, ReplyText: %s, ClassId: %d, MethodId: %d\n",
 		connectionMethodMap[50],
@@ -160,6 +200,7 @@ func printEventConnectionClose(eventConnectionClose ConnectionClose) {
 }
 
 func printEventQueueBind(eventQueueBind QueueBind) {
+	return
 	fmt.Printf(
 		"[%s] Queue: %s, Exchange: %s, RoutingKey: %s, NoWait: %t, Arguments: %v\n",
 		queueMethodMap[20],
@@ -172,6 +213,7 @@ func printEventQueueBind(eventQueueBind QueueBind) {
 }
 
 func printEventBasicConsume(eventBasicConsume BasicConsume) {
+	return
 	fmt.Printf(
 		"[%s] Queue: %s, ConsumerTag: %s, NoLocal: %t, NoAck: %t, Exclusive: %t, NoWait: %t, Arguments: %v\n",
 		basicMethodMap[20],

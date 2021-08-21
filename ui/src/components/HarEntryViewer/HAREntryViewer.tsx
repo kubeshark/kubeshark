@@ -6,22 +6,24 @@ import {HAREntryTableSection, HAREntryBodySection, HAREntryTablePolicySection} f
 const SectionsRepresentation: React.FC<any> = ({data, color}) => {
     const sections = []
 
-    data.forEach((row) => {
-        switch (row.type) {
-            case "table":
-                sections.push(
-                    <HAREntryTableSection title={row.title} color={color} arrayToIterate={JSON.parse(row.data)}/>
-                )
-                break;
-            case "body":
-                sections.push(
-                    <HAREntryBodySection color={color} content={row.data} encoding={row.encoding} contentType={row.mime_type}/>
-                )
-                break;
-            default:
-                break;
-        }
-    });
+    if (data !== undefined) {
+        data.forEach((row) => {
+            switch (row.type) {
+                case "table":
+                    sections.push(
+                        <HAREntryTableSection title={row.title} color={color} arrayToIterate={JSON.parse(row.data)}/>
+                    )
+                    break;
+                case "body":
+                    sections.push(
+                        <HAREntryBodySection color={color} content={row.data} encoding={row.encoding} contentType={row.mime_type}/>
+                    )
+                    break;
+                default:
+                    break;
+            }
+        });
+    }
 
     return <>{sections}</>;
 }
