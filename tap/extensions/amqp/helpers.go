@@ -1,7 +1,9 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/up9inc/mizu/tap/api"
@@ -90,7 +92,7 @@ type AMQPWrapper struct {
 	Details interface{}
 }
 
-func emitBasicPublish(eventBasicPublish BasicPublish, connectionInfo *api.ConnectionInfo, emitter api.Emitter) {
+func emitBasicPublish(event BasicPublish, connectionInfo *api.ConnectionInfo, emitter api.Emitter) {
 	request := &api.GenericMessage{
 		IsRequest:   true,
 		CaptureTime: time.Now(),
@@ -98,7 +100,7 @@ func emitBasicPublish(eventBasicPublish BasicPublish, connectionInfo *api.Connec
 			Type: "basic_publish",
 			Data: &AMQPWrapper{
 				Method:  "Basic Publish",
-				Details: eventBasicPublish,
+				Details: event,
 			},
 		},
 	}
@@ -114,18 +116,160 @@ func emitBasicPublish(eventBasicPublish BasicPublish, connectionInfo *api.Connec
 	emitter.Emit(item)
 }
 
-func printEventBasicPublish(eventBasicPublish BasicPublish) {
-	return
-	fmt.Printf(
-		"[%s] Exchange: %s, RoutingKey: %s, Mandatory: %t, Immediate: %t, Properties: %v, Body: %s\n",
-		basicMethodMap[40],
-		eventBasicPublish.Exchange,
-		eventBasicPublish.RoutingKey,
-		eventBasicPublish.Mandatory,
-		eventBasicPublish.Immediate,
-		eventBasicPublish.Properties,
-		eventBasicPublish.Body,
-	)
+func representBasicPublish(event map[string]interface{}) []interface{} {
+	rep := make([]interface{}, 0)
+
+	details, _ := json.Marshal([]map[string]string{
+		{
+			"name":  "Exchange",
+			"value": event["Exchange"].(string),
+		},
+		{
+			"name":  "Immediate",
+			"value": strconv.FormatBool(event["Immediate"].(bool)),
+		},
+		{
+			"name":  "Mandatory",
+			"value": strconv.FormatBool(event["Mandatory"].(bool)),
+		},
+	})
+	rep = append(rep, map[string]string{
+		"type":  "table",
+		"title": "Details",
+		"data":  string(details),
+	})
+
+	contentType := ""
+	contentEncoding := ""
+	deliveryMode := ""
+	priority := ""
+	correlationId := ""
+	replyTo := ""
+	expiration := ""
+	messageId := ""
+	timestamp := ""
+	_type := ""
+	userId := ""
+	appId := ""
+
+	properties := event["Properties"].(map[string]interface{})
+
+	if properties["ContentType"] != nil {
+		contentType = properties["ContentType"].(string)
+	}
+	if properties["ContentEncoding"] != nil {
+		contentEncoding = properties["ContentEncoding"].(string)
+	}
+	if properties["Delivery Mode"] != nil {
+		deliveryMode = fmt.Sprintf("%g", properties["DeliveryMode"].(float64))
+	}
+	if properties["Priority"] != nil {
+		priority = fmt.Sprintf("%g", properties["Priority"].(float64))
+	}
+	if properties["CorrelationId"] != nil {
+		correlationId = properties["CorrelationId"].(string)
+	}
+	if properties["ReplyTo"] != nil {
+		replyTo = properties["ReplyTo"].(string)
+	}
+	if properties["Expiration"] != nil {
+		expiration = properties["Expiration"].(string)
+	}
+	if properties["MessageId"] != nil {
+		messageId = properties["MessageId"].(string)
+	}
+	if properties["Timestamp"] != nil {
+		timestamp = properties["Timestamp"].(string)
+	}
+	if properties["Type"] != nil {
+		_type = properties["Type"].(string)
+	}
+	if properties["UserId"] != nil {
+		userId = properties["UserId"].(string)
+	}
+	if properties["AppId"] != nil {
+		appId = properties["AppId"].(string)
+	}
+
+	props, _ := json.Marshal([]map[string]string{
+		{
+			"name":  "Content Type",
+			"value": contentType,
+		},
+		{
+			"name":  "Content Encoding",
+			"value": contentEncoding,
+		},
+		{
+			"name":  "Delivery Mode",
+			"value": deliveryMode,
+		},
+		{
+			"name":  "Priority",
+			"value": priority,
+		},
+		{
+			"name":  "Correlation ID",
+			"value": correlationId,
+		},
+		{
+			"name":  "Reply To",
+			"value": replyTo,
+		},
+		{
+			"name":  "Expiration",
+			"value": expiration,
+		},
+		{
+			"name":  "Message ID",
+			"value": messageId,
+		},
+		{
+			"name":  "Timestamp",
+			"value": timestamp,
+		},
+		{
+			"name":  "Type",
+			"value": _type,
+		},
+		{
+			"name":  "User ID",
+			"value": userId,
+		},
+		{
+			"name":  "App ID",
+			"value": appId,
+		},
+	})
+	rep = append(rep, map[string]string{
+		"type":  "table",
+		"title": "Properties",
+		"data":  string(props),
+	})
+
+	headers := make([]map[string]string, 0)
+	for name, value := range properties["Headers"].(map[string]interface{}) {
+		headers = append(headers, map[string]string{
+			"name":  name,
+			"value": value.(string),
+		})
+	}
+	headersMarshaled, _ := json.Marshal(headers)
+	rep = append(rep, map[string]string{
+		"type":  "table",
+		"title": "Headers",
+		"data":  string(headersMarshaled),
+	})
+
+	rep = append(rep, map[string]string{
+		"type":      "body",
+		"title":     "Body",
+		"encoding":  contentEncoding,
+		"mime_type": contentType,
+		"data":      event["Body"].(string),
+	}) // FIXME: `Body` value seems wrong
+
+	return rep
 }
 
 func printEventBasicDeliver(eventBasicDeliver BasicDeliver) {

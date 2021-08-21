@@ -103,7 +103,6 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, em
 			switch lastMethodFrameMessage.(type) {
 			case *BasicPublish:
 				eventBasicPublish.Body = f.Body
-				printEventBasicPublish(*eventBasicPublish)
 				emitBasicPublish(*eventBasicPublish, connectionInfo, emitter)
 			case *BasicDeliver:
 				eventBasicDeliver.Body = f.Body
@@ -258,11 +257,19 @@ func (d dissecting) Represent(entry string) ([]byte, error) {
 	var root map[string]interface{}
 	json.Unmarshal([]byte(entry), &root)
 	representation := make(map[string]interface{}, 0)
-	// request := root["request"].(map[string]interface{})["payload"].(map[string]interface{})
+	request := root["request"].(map[string]interface{})["payload"].(map[string]interface{})
+	log.Printf("request: %+v\n", request)
+	var repRequest []interface{}
+	details := request["Details"].(map[string]interface{})
+	switch request["Method"].(string) {
+	case "Basic Publish":
+		repRequest = representBasicPublish(details)
+		break
+	}
 	// response := root["response"].(map[string]interface{})["payload"].(map[string]interface{})
 	// repRequest := representRequest(request)
 	// repResponse := representResponse(response)
-	// representation["request"] = repRequest
+	representation["request"] = repRequest
 	// representation["response"] = repResponse
 	return json.Marshal(representation)
 }
