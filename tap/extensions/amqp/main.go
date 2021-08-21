@@ -106,7 +106,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, em
 				emitBasicPublish(*eventBasicPublish, connectionInfo, emitter)
 			case *BasicDeliver:
 				eventBasicDeliver.Body = f.Body
-				printEventBasicDeliver(*eventBasicDeliver)
+				emitBasicDeliver(*eventBasicPublish, connectionInfo, emitter)
 			default:
 			}
 
@@ -264,6 +264,9 @@ func (d dissecting) Represent(entry string) ([]byte, error) {
 	switch request["method"].(string) {
 	case basicMethodMap[40]:
 		repRequest = representBasicPublish(details)
+		break
+	case basicMethodMap[60]:
+		repRequest = representBasicDeliver(details)
 		break
 	}
 	// response := root["response"].(map[string]interface{})["payload"].(map[string]interface{})

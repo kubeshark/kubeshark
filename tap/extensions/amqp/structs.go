@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 )
 
 type AMQPPayload struct {
@@ -16,10 +15,11 @@ type AMQPPayloader interface {
 }
 
 func (h AMQPPayload) MarshalJSON() ([]byte, error) {
-	switch h.Type {
-	case "basic_publish":
-		return json.Marshal(h.Data)
-	default:
-		panic(fmt.Sprintf("AMQP payload cannot be marshaled: %s\n", h.Type))
-	}
+	return json.Marshal(h.Data)
+	// switch h.Type {
+	// case "basic_publish":
+	// 	return json.Marshal(h.Data)
+	// default:
+	// 	panic(fmt.Sprintf("AMQP payload cannot be marshaled: %s\n", h.Type))
+	// }
 }
