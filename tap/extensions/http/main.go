@@ -116,6 +116,7 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolve
 	entryBytes, _ := json.Marshal(item.Pair)
 	service := fmt.Sprintf("http://%s", host)
 	return &api.MizuEntry{
+		ProtocolName:        protocol.Name,
 		EntryId:             entryId,
 		Entry:               string(entryBytes),
 		Url:                 fmt.Sprintf("%s%s", service, request["url"].(string)),

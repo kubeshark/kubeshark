@@ -7,8 +7,6 @@ const MIME_TYPE_KEY = 'mimeType';
 
 const HAREntryDisplay: React.FC<any> = ({har, entry, isCollapsed: initialIsCollapsed, isResponseMocked}) => {
     const {request, response} = JSON.parse(entry);
-    console.log('request:', request)
-    console.log('response:', response)
     const rulesMatched = har.log.entries[0].rulesMatched
     const TABS = [
         {tab: 'request'},

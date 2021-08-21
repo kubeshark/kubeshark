@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"mizuserver/pkg/api"
+	"mizuserver/pkg/controllers"
 	"mizuserver/pkg/models"
 	"mizuserver/pkg/routes"
 	"mizuserver/pkg/utils"
@@ -144,6 +145,7 @@ func loadExtensions() {
 		allOutboundPorts = mergeUnique(allOutboundPorts, extension.Protocol.OutboundPorts)
 		allInboundPorts = mergeUnique(allInboundPorts, extension.Protocol.InboundPorts)
 	}
+	controllers.InitExtensionsMap(extensionsMap)
 	log.Printf("allOutboundPorts: %v\n", allOutboundPorts)
 	log.Printf("allInboundPorts: %v\n", allInboundPorts)
 }

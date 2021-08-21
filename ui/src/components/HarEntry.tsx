@@ -76,7 +76,7 @@ export const HarEntry: React.FC<HAREntryProps> = ({entry, setFocusedEntryId, isS
             onClick={() => setFocusedEntryId(entry.id)}
             style={{border: isSelected ? `1px ${entry.protocol.background_color} solid` : "1px transparent solid"}}
         >
-            <Protocol protocol={entry.protocol}/>
+            <Protocol protocol={entry.protocol} horizontal={false}/>
             {entry.status_code && <div>
                 <StatusCode statusCode={entry.status_code}/>
             </div>}

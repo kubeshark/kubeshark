@@ -88,6 +88,7 @@ type MizuEntry struct {
 	ID                  uint `gorm:"primarykey"`
 	CreatedAt           time.Time
 	UpdatedAt           time.Time
+	ProtocolName        string `json:"protocol_key" gorm:"column:protocolKey"`
 	Entry               string `json:"entry,omitempty" gorm:"column:entry"`
 	EntryId             string `json:"entryId" gorm:"column:entryId"`
 	Url                 string `json:"url" gorm:"column:url"`
@@ -105,6 +106,11 @@ type MizuEntry struct {
 	DestinationPort     string `json:"destinationPort,omitempty" gorm:"column:destinationPort"`
 	IsOutgoing          bool   `json:"isOutgoing,omitempty" gorm:"column:isOutgoing"`
 	EstimatedSizeBytes  int    `json:"-" gorm:"column:estimatedSizeBytes"`
+}
+
+type MizuEntryWrapper struct {
+	Protocol Protocol  `json:"protocol"`
+	Data     MizuEntry `json:"data"`
 }
 
 type BaseEntryDetails struct {

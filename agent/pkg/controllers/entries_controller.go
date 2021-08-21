@@ -21,6 +21,12 @@ import (
 	tapApi "github.com/up9inc/mizu/tap/api"
 )
 
+var extensionsMap map[string]*tapApi.Extension // global
+
+func InitExtensionsMap(ref map[string]*tapApi.Extension) {
+	extensionsMap = ref
+}
+
 func GetEntries(c *gin.Context) {
 	entriesFilter := &models.EntriesFilter{}
 
@@ -230,7 +236,10 @@ func GetEntry(c *gin.Context) {
 	// 		"msg":   "Can't get entry details",
 	// 	})
 	// }
-	c.JSON(http.StatusOK, entryData)
+	c.JSON(http.StatusOK, tapApi.MizuEntryWrapper{
+		Protocol: extensionsMap[entryData.ProtocolName].Protocol,
+		Data:     entryData,
+	})
 }
 
 func DeleteAllEntries(c *gin.Context) {
