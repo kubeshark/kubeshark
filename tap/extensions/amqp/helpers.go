@@ -634,16 +634,59 @@ func representConnectionStart(event map[string]interface{}) []interface{} {
 	return rep
 }
 
-func printEventConnectionClose(eventConnectionClose ConnectionClose) {
-	return
-	fmt.Printf(
-		"[%s] ReplyCode: %d, ReplyText: %s, ClassId: %d, MethodId: %d\n",
-		connectionMethodMap[50],
-		eventConnectionClose.ReplyCode,
-		eventConnectionClose.ReplyText,
-		eventConnectionClose.ClassId,
-		eventConnectionClose.MethodId,
-	)
+func emitConnectionClose(event ConnectionClose, connectionInfo *api.ConnectionInfo, emitter api.Emitter) {
+	request := &api.GenericMessage{
+		IsRequest:   true,
+		CaptureTime: time.Now(),
+		Payload: AMQPPayload{
+			Type: "connection_close",
+			Data: &AMQPWrapper{
+				Method:  connectionMethodMap[50],
+				Url:     event.ReplyText,
+				Details: event,
+			},
+		},
+	}
+	item := &api.OutputChannelItem{
+		Protocol:       protocol,
+		Timestamp:      time.Now().UnixNano() / int64(time.Millisecond),
+		ConnectionInfo: connectionInfo,
+		Pair: &api.RequestResponsePair{
+			Request:  *request,
+			Response: api.GenericMessage{},
+		},
+	}
+	emitter.Emit(item)
+}
+
+func representConnectionClose(event map[string]interface{}) []interface{} {
+	rep := make([]interface{}, 0)
+
+	details, _ := json.Marshal([]map[string]string{
+		{
+			"name":  "Reply Code",
+			"value": fmt.Sprintf("%g", event["ReplyCode"].(float64)),
+		},
+		{
+			"name":  "Reply Text",
+			"value": event["ReplyText"].(string),
+		},
+		{
+			"name":  "Class ID",
+			"value": fmt.Sprintf("%g", event["ClassId"].(float64)),
+		},
+		{
+			"name":  "Method ID",
+			"value": fmt.Sprintf("%g", event["MethodId"].(float64)),
+		},
+	})
+	rep = append(rep, map[string]string{
+		"type":  "table",
+		"title": "Details",
+		"data":  string(details),
+	})
+
+	return rep
 }
 
 func printEventQueueBind(eventQueueBind QueueBind) {

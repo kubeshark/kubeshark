@@ -190,7 +190,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, em
 					ClassId:   m.ClassId,
 					MethodId:  m.MethodId,
 				}
-				printEventConnectionClose(*eventConnectionClose)
+				emitConnectionClose(*eventConnectionClose, connectionInfo, emitter)
 
 			default:
 
@@ -208,10 +208,14 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolve
 	entryBytes, _ := json.Marshal(item.Pair)
 	service := fmt.Sprintf("amqp")
 
-	var summary string
+	summary := ""
 	switch request["method"] {
 	case basicMethodMap[40]:
+		summary = reqDetails["Exchange"].(string)
+		break
 	case basicMethodMap[60]:
+		summary = reqDetails["Exchange"].(string)
+		break
 	case exchangeMethodMap[10]:
 		summary = reqDetails["Exchange"].(string)
 		break
@@ -220,6 +224,9 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolve
 		break
 	case connectionMethodMap[10]:
 		summary = fmt.Sprintf("%g.%g", reqDetails["VersionMajor"].(float64), reqDetails["VersionMinor"].(float64))
+		break
+	case connectionMethodMap[50]:
+		summary = reqDetails["ReplyText"].(string)
 		break
 	}
 
@@ -292,6 +299,9 @@ func (d dissecting) Represent(entry string) ([]byte, error) {
 		break
 	case connectionMethodMap[10]:
 		repRequest = representConnectionStart(details)
+		break
+	case connectionMethodMap[50]:
+		repRequest = representConnectionClose(details)
 		break
 	}
 	// response := root["response"].(map[string]interface{})["payload"].(map[string]interface{})
