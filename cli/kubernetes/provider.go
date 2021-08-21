@@ -12,9 +12,10 @@ import (
 	"regexp"
 	"strconv"
 
+	"io"
+
 	"github.com/up9inc/mizu/cli/mizu"
 	"github.com/up9inc/mizu/shared"
-	"io"
 	core "k8s.io/api/core/v1"
 	rbac "k8s.io/api/rbac/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
@@ -578,7 +579,7 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 		"-i", "any",
 		"--tap",
 		"--api-server-address", fmt.Sprintf("ws://%s/wsTapper", apiServerPodIp),
-		"--nodefrag"
+		"--nodefrag",
 	}
 	if tapOutgoing {
 		mizuCmd = append(mizuCmd, "--anydirection")
