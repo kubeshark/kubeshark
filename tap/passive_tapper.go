@@ -244,7 +244,7 @@ func startPassiveTapper(outputItems chan *api.OutputChannelItem, allExtensionPor
 	appPortsStr := os.Getenv(AppPortsEnvVar)
 	var appPorts []int
 	if appPortsStr == "" {
-		rlog.Info("Received empty/no APP_PORTS env var! only listening to ports: %v!", allExtensionPorts)
+		rlog.Info("Received empty/no APP_PORTS env var! only listening to ports:", allExtensionPorts)
 		appPorts = make([]int, 0)
 	} else {
 		appPorts = parseAppPorts(appPortsStr)
