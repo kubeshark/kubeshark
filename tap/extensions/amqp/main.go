@@ -139,7 +139,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, em
 					NoWait:      m.NoWait,
 					Arguments:   m.Arguments,
 				}
-				printEventBasicConsume(*eventBasicConsume)
+				emitBasicConsume(*eventBasicConsume, connectionInfo, emitter)
 
 			case *BasicDeliver:
 				eventBasicDeliver.ConsumerTag = m.ConsumerTag
@@ -231,6 +231,9 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolve
 	case queueMethodMap[20]:
 		summary = reqDetails["Queue"].(string)
 		break
+	case basicMethodMap[20]:
+		summary = reqDetails["Queue"].(string)
+		break
 	}
 
 	return &api.MizuEntry{
@@ -284,7 +287,7 @@ func (d dissecting) Represent(entry string) ([]byte, error) {
 	json.Unmarshal([]byte(entry), &root)
 	representation := make(map[string]interface{}, 0)
 	request := root["request"].(map[string]interface{})["payload"].(map[string]interface{})
-	log.Printf("request: %+v\n", request)
+	// log.Printf("request: %+v\n", request)
 	var repRequest []interface{}
 	details := request["details"].(map[string]interface{})
 	switch request["method"].(string) {
@@ -308,6 +311,9 @@ func (d dissecting) Represent(entry string) ([]byte, error) {
 		break
 	case queueMethodMap[20]:
 		repRequest = representQueueBind(details)
+		break
+	case basicMethodMap[20]:
+		repRequest = representBasicConsume(details)
 		break
 	}
 	// response := root["response"].(map[string]interface{})["payload"].(map[string]interface{})

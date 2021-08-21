@@ -760,17 +760,81 @@ func representQueueBind(event map[string]interface{}) []interface{} {
 	return rep
 }
 
-func printEventBasicConsume(eventBasicConsume BasicConsume) {
-	return
-	fmt.Printf(
-		"[%s] Queue: %s, ConsumerTag: %s, NoLocal: %t, NoAck: %t, Exclusive: %t, NoWait: %t, Arguments: %v\n",
-		basicMethodMap[20],
-		eventBasicConsume.Queue,
-		eventBasicConsume.ConsumerTag,
-		eventBasicConsume.NoLocal,
-		eventBasicConsume.NoAck,
-		eventBasicConsume.Exclusive,
-		eventBasicConsume.NoWait,
-		eventBasicConsume.Arguments,
-	)
+func emitBasicConsume(event BasicConsume, connectionInfo *api.ConnectionInfo, emitter api.Emitter) {
+	request := &api.GenericMessage{
+		IsRequest:   true,
+		CaptureTime: time.Now(),
+		Payload: AMQPPayload{
+			Type: "basic_consume",
+			Data: &AMQPWrapper{
+				Method:  basicMethodMap[20],
+				Url:     event.Queue,
+				Details: event,
+			},
+		},
+	}
+	item := &api.OutputChannelItem{
+		Protocol:       protocol,
+		Timestamp:      time.Now().UnixNano() / int64(time.Millisecond),
+		ConnectionInfo: connectionInfo,
+		Pair: &api.RequestResponsePair{
+			Request:  *request,
+			Response: api.GenericMessage{},
+		},
+	}
+	emitter.Emit(item)
+}
+
+func representBasicConsume(event map[string]interface{}) []interface{} {
+	rep := make([]interface{}, 0)
+
+	details, _ := json.Marshal([]map[string]string{
+		{
+			"name":  "Queue",
+			"value": event["Queue"].(string),
+		},
+		{
+			"name":  "Consumer Tag",
+			"value": event["ConsumerTag"].(string),
+		},
+		{
+			"name":  "No Local",
+			"value": strconv.FormatBool(event["NoLocal"].(bool)),
+		},
+		{
+			"name":  "No Ack",
+			"value": strconv.FormatBool(event["NoAck"].(bool)),
+		},
+		{
+			"name":  "Exclusive",
+			"value": strconv.FormatBool(event["Exclusive"].(bool)),
+		},
+		{
+			"name":  "NoWait",
+			"value": strconv.FormatBool(event["NoWait"].(bool)),
+		},
+	})
+	rep = append(rep, map[string]string{
+		"type":  "table",
+		"title": "Details",
+		"data":  string(details),
+	})
+
+	if event["Arguments"] != nil {
+		headers := make([]map[string]string, 0)
+		for name, value := range event["Arguments"].(map[string]interface{}) {
+			headers = append(headers, map[string]string{
+				"name":  name,
+				"value": value.(string),
+			})
+		}
+		headersMarshaled, _ := json.Marshal(headers)
+		rep = append(rep, map[string]string{
+			"type":  "table",
+			"title": "Arguments",
+			"data":  string(headersMarshaled),
+		})
+	}
+
+	return rep
 }
