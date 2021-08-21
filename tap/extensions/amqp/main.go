@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"strconv"
 
 	"github.com/up9inc/mizu/tap/api"
 )
@@ -223,7 +224,11 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolve
 		summary = reqDetails["Queue"].(string)
 		break
 	case connectionMethodMap[10]:
-		summary = fmt.Sprintf("%g.%g", reqDetails["VersionMajor"].(float64), reqDetails["VersionMinor"].(float64))
+		summary = fmt.Sprintf(
+			"%s.%s",
+			strconv.Itoa(int(reqDetails["VersionMajor"].(float64))),
+			strconv.Itoa(int(reqDetails["VersionMinor"].(float64))),
+		)
 		break
 	case connectionMethodMap[50]:
 		summary = reqDetails["ReplyText"].(string)

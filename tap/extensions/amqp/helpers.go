@@ -559,7 +559,7 @@ func emitConnectionStart(event ConnectionStart, connectionInfo *api.ConnectionIn
 			Type: "connection_start",
 			Data: &AMQPWrapper{
 				Method:  connectionMethodMap[10],
-				Url:     fmt.Sprintf("%s.%s", string(event.VersionMajor), string(event.VersionMinor)),
+				Url:     fmt.Sprintf("%d.%d", event.VersionMajor, event.VersionMinor),
 				Details: event,
 			},
 		},
