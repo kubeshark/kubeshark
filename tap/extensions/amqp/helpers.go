@@ -551,17 +551,87 @@ func representExchangeDeclare(event map[string]interface{}) []interface{} {
 	return rep
 }
 
-func printEventConnectionStart(eventConnectionStart ConnectionStart) {
-	return
-	fmt.Printf(
-		"[%s] Version: %d.%d, ServerProperties: %v, Mechanisms: %s, Locales: %s\n",
-		connectionMethodMap[10],
-		eventConnectionStart.VersionMajor,
-		eventConnectionStart.VersionMinor,
-		eventConnectionStart.ServerProperties,
-		eventConnectionStart.Mechanisms,
-		eventConnectionStart.Locales,
-	)
+func emitConnectionStart(event ConnectionStart, connectionInfo *api.ConnectionInfo, emitter api.Emitter) {
+	request := &api.GenericMessage{
+		IsRequest:   true,
+		CaptureTime: time.Now(),
+		Payload: AMQPPayload{
+			Type: "connection_start",
+			Data: &AMQPWrapper{
+				Method:  connectionMethodMap[10],
+				Url:     fmt.Sprintf("%s.%s", string(event.VersionMajor), string(event.VersionMinor)),
+				Details: event,
+			},
+		},
+	}
+	item := &api.OutputChannelItem{
+		Protocol:       protocol,
+		Timestamp:      time.Now().UnixNano() / int64(time.Millisecond),
+		ConnectionInfo: connectionInfo,
+		Pair: &api.RequestResponsePair{
+			Request:  *request,
+			Response: api.GenericMessage{},
+		},
+	}
+	emitter.Emit(item)
+}
+
+func representConnectionStart(event map[string]interface{}) []interface{} {
+	rep := make([]interface{}, 0)
+
+	details, _ := json.Marshal([]map[string]string{
+		{
+			"name":  "Version Major",
+			"value": fmt.Sprintf("%g", event["VersionMajor"].(float64)),
+		},
+		{
+			"name":  "Version Minor",
+			"value": fmt.Sprintf("%g", event["VersionMinor"].(float64)),
+		},
+		{
+			"name":  "Mechanisms",
+			"value": event["Mechanisms"].(string),
+		},
+		{
+			"name":  "Locales",
+			"value": event["Locales"].(string),
+		},
+	})
+	rep = append(rep, map[string]string{
+		"type":  "table",
+		"title": "Details",
+		"data":  string(details),
+	})
+
+	if event["ServerProperties"] != nil {
+		headers := make([]map[string]string, 0)
+		for name, value := range event["ServerProperties"].(map[string]interface{}) {
+			var outcome string
+			switch value.(type) {
+			case string:
+				outcome = value.(string)
+				break
+			case map[string]interface{}:
+				x, _ := json.Marshal(value)
+				outcome = string(x)
+				break
+			default:
+				panic("Unknown data type for the server property!")
+			}
+			headers = append(headers, map[string]string{
+				"name":  name,
+				"value": outcome,
+			})
+		}
+		headersMarshaled, _ := json.Marshal(headers)
+		rep = append(rep, map[string]string{
+			"type":  "table",
+			"title": "Server Properties",
+			"data":  string(headersMarshaled),
+		})
+	}
+
+	return rep
 }
 
 func printEventConnectionClose(eventConnectionClose ConnectionClose) {

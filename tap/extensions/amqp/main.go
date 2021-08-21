@@ -181,7 +181,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, em
 					Mechanisms:       m.Mechanisms,
 					Locales:          m.Locales,
 				}
-				printEventConnectionStart(*eventConnectionStart)
+				emitConnectionStart(*eventConnectionStart, connectionInfo, emitter)
 
 			case *ConnectionClose:
 				eventConnectionClose := &ConnectionClose{
@@ -214,8 +214,12 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolve
 	case basicMethodMap[60]:
 	case exchangeMethodMap[10]:
 		summary = reqDetails["Exchange"].(string)
+		break
 	case queueMethodMap[10]:
 		summary = reqDetails["Queue"].(string)
+		break
+	case connectionMethodMap[10]:
+		summary = fmt.Sprintf("%g.%g", reqDetails["VersionMajor"].(float64), reqDetails["VersionMinor"].(float64))
 		break
 	}
 
@@ -279,10 +283,15 @@ func (d dissecting) Represent(entry string) ([]byte, error) {
 		break
 	case basicMethodMap[60]:
 		repRequest = representBasicDeliver(details)
+		break
 	case queueMethodMap[10]:
 		repRequest = representQueueDeclare(details)
+		break
 	case exchangeMethodMap[10]:
 		repRequest = representExchangeDeclare(details)
+		break
+	case connectionMethodMap[10]:
+		repRequest = representConnectionStart(details)
 		break
 	}
 	// response := root["response"].(map[string]interface{})["payload"].(map[string]interface{})
