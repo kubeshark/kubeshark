@@ -34,8 +34,6 @@ import (
 )
 
 const AppPortsEnvVar = "APP_PORTS"
-const maxHTTP2DataLenEnvVar = "HTTP2_DATA_SIZE_LIMIT"
-const maxHTTP2DataLenDefault = 1 * 1024 * 1024 // 1MB
 const cleanPeriod = time.Second * 10
 
 var remoteOnlyOutboundPorts = []int{80, 443}
@@ -65,13 +63,6 @@ var allowmissinginit = flag.Bool("allowmissinginit", true, "Support streams with
 var verbose = flag.Bool("verbose", false, "Be verbose")
 var debug = flag.Bool("debug", false, "Display debug information")
 var quiet = flag.Bool("quiet", false, "Be quiet regarding errors")
-
-// http
-var nohttp = flag.Bool("nohttp", false, "Disable HTTP parsing")
-var output = flag.String("output", "", "Path to create file for HTTP 200 OK responses")
-var writeincomplete = flag.Bool("writeincomplete", false, "Write incomplete response")
-
-var hexdump = flag.Bool("dump", false, "Dump HTTP request/response as hex") // global
 var hexdumppkt = flag.Bool("dumppkt", false, "Dump packet as hex")
 
 // capture
@@ -80,7 +71,7 @@ var fname = flag.String("r", "", "Filename to read from, overrides -i")
 var snaplen = flag.Int("s", 65536, "Snap length (number of bytes max to read per packet")
 var tstype = flag.String("timestamp_type", "", "Type of timestamps to use")
 var promisc = flag.Bool("promisc", true, "Set promiscuous mode")
-var anydirection = flag.Bool("anydirection", false, "Capture http requests to other hosts")
+var anydirection = flag.Bool("anydirection", false, "Capture requests to other hosts")
 var staleTimeoutSeconds = flag.Int("staletimout", 120, "Max time in seconds to keep connections which don't transmit data")
 
 var memprofile = flag.String("memprofile", "", "Write memory profile")
@@ -186,7 +177,7 @@ func (c *Context) GetCaptureInfo() gopacket.CaptureInfo {
 	return c.CaptureInfo
 }
 
-func StartPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem, extensionsRef []*api.Extension) {
+func StartPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem, extensionsRef []*api.Extension, allExtensionPorts []string) {
 	hostMode = opts.HostMode
 	extensions = extensionsRef
 
@@ -194,7 +185,7 @@ func StartPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem, 
 		startMemoryProfiler()
 	}
 
-	go startPassiveTapper(outputItems)
+	go startPassiveTapper(outputItems, allExtensionPorts)
 }
 
 func startMemoryProfiler() {
@@ -228,7 +219,7 @@ func startMemoryProfiler() {
 	}()
 }
 
-func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
+func startPassiveTapper(outputItems chan *api.OutputChannelItem, allExtensionPorts []string) {
 	log.SetFlags(log.LstdFlags | log.LUTC | log.Lshortfile)
 
 	defer util.Run()()
@@ -253,25 +244,12 @@ func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
 	appPortsStr := os.Getenv(AppPortsEnvVar)
 	var appPorts []int
 	if appPortsStr == "" {
-		rlog.Info("Received empty/no APP_PORTS env var! only listening to http on port 80!")
+		rlog.Info("Received empty/no APP_PORTS env var! only listening to ports: %v!", allExtensionPorts)
 		appPorts = make([]int, 0)
 	} else {
 		appPorts = parseAppPorts(appPortsStr)
 	}
 	SetFilterPorts(appPorts)
-	// envVal := os.Getenv(maxHTTP2DataLenEnvVar)
-	// if envVal == "" {
-	// 	rlog.Infof("Received empty/no HTTP2_DATA_SIZE_LIMIT env var! falling back to %v", maxHTTP2DataLenDefault)
-	// 	maxHTTP2DataLen = maxHTTP2DataLenDefault
-	// } else {
-	// 	if convertedInt, err := strconv.Atoi(envVal); err != nil {
-	// 		rlog.Infof("Received invalid HTTP2_DATA_SIZE_LIMIT env var! falling back to %v", maxHTTP2DataLenDefault)
-	// 		maxHTTP2DataLen = maxHTTP2DataLenDefault
-	// 	} else {
-	// 		rlog.Infof("Received HTTP2_DATA_SIZE_LIMIT env var: %v", maxHTTP2DataLenDefault)
-	// 		maxHTTP2DataLen = convertedInt
-	// 	}
-	// }
 
 	log.Printf("App Ports: %v", gSettings.filterPorts)
 
@@ -344,8 +322,8 @@ func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
 	}
 
 	streamFactory := &tcpStreamFactory{
-		doHTTP:  !*nohttp,
-		Emitter: emitter,
+		AllExtensionPorts: allExtensionPorts,
+		Emitter:           emitter,
 	}
 	streamPool := reassembly.NewStreamPool(streamFactory)
 	assembler := reassembly.NewAssembler(streamPool)

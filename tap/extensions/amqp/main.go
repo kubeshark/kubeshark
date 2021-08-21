@@ -15,8 +15,7 @@ var protocol api.Protocol = api.Protocol{
 	ForegroundColor: "#ffffff",
 	FontSize:        12,
 	ReferenceLink:   "https://www.rabbitmq.com/amqp-0-9-1-reference.html",
-	OutboundPorts:   []string{"5671", "5672"},
-	InboundPorts:    []string{},
+	Ports:           []string{"5671", "5672"},
 }
 
 func init() {

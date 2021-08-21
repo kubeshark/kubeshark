@@ -15,8 +15,7 @@ type Protocol struct {
 	ForegroundColor string   `json:"foreground_color"`
 	FontSize        int8     `json:"font_size"`
 	ReferenceLink   string   `json:"reference_link"`
-	OutboundPorts   []string `json:"outbound_ports"`
-	InboundPorts    []string `json:"inbound_ports"`
+	Ports           []string `json:"outbound_ports"`
 }
 
 type Extension struct {

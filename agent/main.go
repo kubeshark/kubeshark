@@ -35,8 +35,7 @@ var namespace = flag.String("namespace", "", "Resolve IPs if they belong to reso
 
 var extensions []*tapApi.Extension             // global
 var extensionsMap map[string]*tapApi.Extension // global
-var allOutboundPorts []string                  // global
-var allInboundPorts []string                   // global
+var allExtensionPorts []string                 // global
 
 func main() {
 	flag.Parse()
@@ -52,7 +51,7 @@ func main() {
 		api.StartResolving(*namespace)
 
 		filteredOutputItemsChannel := make(chan *tapApi.OutputChannelItem)
-		tap.StartPassiveTapper(tapOpts, filteredOutputItemsChannel, extensions)
+		tap.StartPassiveTapper(tapOpts, filteredOutputItemsChannel, extensions, allExtensionPorts)
 
 		// go filterHarItems(harOutputChannel, filteredOutputItemsChannel, getTrafficFilteringOptions())
 		go api.StartReadingEntries(filteredOutputItemsChannel, nil, extensionsMap)
@@ -72,7 +71,7 @@ func main() {
 
 		// harOutputChannel, outboundLinkOutputChannel := tap.StartPassiveTapper(tapOpts)
 		filteredOutputItemsChannel := make(chan *tapApi.OutputChannelItem)
-		tap.StartPassiveTapper(tapOpts, filteredOutputItemsChannel, extensions)
+		tap.StartPassiveTapper(tapOpts, filteredOutputItemsChannel, extensions, allExtensionPorts)
 		socketConnection, err := shared.ConnectToSocketServer(*apiServerAddress, shared.DEFAULT_SOCKET_RETRIES, shared.DEFAULT_SOCKET_RETRY_SLEEP_TIME, false)
 		if err != nil {
 			panic(fmt.Sprintf("Error connecting to socket server at %s %v", *apiServerAddress, err))
@@ -142,12 +141,10 @@ func loadExtensions() {
 		log.Printf("Extension Properties: %+v\n", extension)
 		extensions[i] = extension
 		extensionsMap[extension.Protocol.Name] = extension
-		allOutboundPorts = mergeUnique(allOutboundPorts, extension.Protocol.OutboundPorts)
-		allInboundPorts = mergeUnique(allInboundPorts, extension.Protocol.InboundPorts)
+		allExtensionPorts = mergeUnique(allExtensionPorts, extension.Protocol.Ports)
 	}
 	controllers.InitExtensionsMap(extensionsMap)
-	log.Printf("allOutboundPorts: %v\n", allOutboundPorts)
-	log.Printf("allInboundPorts: %v\n", allInboundPorts)
+	log.Printf("All extension ports: %v\n", allExtensionPorts)
 }
 
 func hostApi(socketHarOutputChannel chan<- *tapApi.OutputChannelItem) {

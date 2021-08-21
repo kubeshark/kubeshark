@@ -14,7 +14,7 @@ import (
 
 const checkTLSPacketAmount = 100
 
-type httpReaderDataMsg struct {
+type tcpReaderDataMsg struct {
 	bytes     []byte
 	timestamp time.Time
 }
@@ -38,21 +38,19 @@ func (tid *tcpID) String() string {
 	return fmt.Sprintf("%s->%s %s->%s", tid.srcIP, tid.dstIP, tid.srcPort, tid.dstPort)
 }
 
-/* httpReader gets reads from a channel of bytes of tcp payload, and parses it into HTTP/1 requests and responses.
+/* tcpReader gets reads from a channel of bytes of tcp payload, and parses it into requests and responses.
  * The payload is written to the channel by a tcpStream object that is dedicated to one tcp connection.
- * An httpReader object is unidirectional: it parses either a client stream or a server stream.
+ * An tcpReader object is unidirectional: it parses either a client stream or a server stream.
  * Implements io.Reader interface (Read)
  */
 type tcpReader struct {
 	ident              string
 	tcpID              *api.TcpID
 	isClient           bool
-	isHTTP2            bool
 	isOutgoing         bool
-	msgQueue           chan httpReaderDataMsg // Channel of captured reassembled tcp payload
+	msgQueue           chan tcpReaderDataMsg // Channel of captured reassembled tcp payload
 	data               []byte
 	captureTime        time.Time
-	hexdump            bool
 	parent             *tcpStream
 	messageCount       uint
 	packetsSeen        uint
@@ -61,7 +59,7 @@ type tcpReader struct {
 }
 
 func (h *tcpReader) Read(p []byte) (int, error) {
-	var msg httpReaderDataMsg
+	var msg tcpReaderDataMsg
 
 	ok := true
 	for ok && len(h.data) == 0 {
@@ -102,24 +100,16 @@ func containsPort(ports []string, port string) bool {
 
 func (h *tcpReader) run(wg *sync.WaitGroup) {
 	defer wg.Done()
-	// log.Printf("Called run h.isClient: %v\n", h.isClient)
 	b := bufio.NewReader(h)
-	if h.isClient {
-		extensions[1].Dissector.Dissect(b, h.isClient, h.tcpID, h.Emitter)
-	} else {
-		extensions[1].Dissector.Dissect(b, h.isClient, h.tcpID, h.Emitter)
+	for _, extension := range extensions {
+		var port string
+		if h.isClient {
+			port = h.tcpID.DstPort
+		} else {
+			port = h.tcpID.SrcPort
+		}
+		if containsPort(extension.Protocol.Ports, port) {
+			extension.Dissector.Dissect(b, h.isClient, h.tcpID, h.Emitter)
+		}
 	}
-	// for _, extension := range extensions {
-	// 	var subjectPorts []string
-	// 	if h.isClient {
-	// 		subjectPorts = extension.OutboundPorts
-	// 	} else {
-	// 		subjectPorts = extension.InboundPorts
-	// 	}
-	// 	if containsPort(subjectPorts, "80") {
-	// 		extension.Dissector.Ping()
-	// 		fmt.Printf("h.isClient: %v\n", h.isClient)
-	// 		extension.Dissector.Dissect(b, h.isClient, h.tcpID, h.Emitter)
-	// 	}
-	// }
 }

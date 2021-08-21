@@ -23,8 +23,7 @@ var protocol api.Protocol = api.Protocol{
 	ForegroundColor: "#ffffff",
 	FontSize:        12,
 	ReferenceLink:   "https://datatracker.ietf.org/doc/html/rfc2616",
-	OutboundPorts:   []string{"80", "8080", "443"},
-	InboundPorts:    []string{},
+	Ports:           []string{"80", "8080"},
 }
 
 var http2Protocol api.Protocol = api.Protocol{
@@ -35,8 +34,7 @@ var http2Protocol api.Protocol = api.Protocol{
 	ForegroundColor: "#ffffff",
 	FontSize:        12,
 	ReferenceLink:   "https://datatracker.ietf.org/doc/html/rfc7540",
-	OutboundPorts:   []string{"80", "8080", "443"},
-	InboundPorts:    []string{},
+	Ports:           []string{"80", "8080"},
 }
 
 func init() {
