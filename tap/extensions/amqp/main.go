@@ -158,7 +158,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, em
 					NoWait:     m.NoWait,
 					Arguments:  m.Arguments,
 				}
-				printEventQueueDeclare(*eventQueueDeclare)
+				emitQueueDeclare(*eventQueueDeclare, connectionInfo, emitter)
 
 			case *ExchangeDeclare:
 				eventExchangeDeclare := &ExchangeDeclare{
@@ -207,17 +207,28 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolve
 	reqDetails := request["details"].(map[string]interface{})
 	entryBytes, _ := json.Marshal(item.Pair)
 	service := fmt.Sprintf("amqp")
+
+	var summary string
+	switch request["method"] {
+	case basicMethodMap[40]:
+	case basicMethodMap[60]:
+		summary = reqDetails["Exchange"].(string)
+	case queueMethodMap[10]:
+		summary = reqDetails["Queue"].(string)
+		break
+	}
+
 	return &api.MizuEntry{
 		ProtocolName:        protocol.Name,
 		EntryId:             entryId,
 		Entry:               string(entryBytes),
-		Url:                 fmt.Sprintf("%s%s", service, reqDetails["Exchange"].(string)),
+		Url:                 fmt.Sprintf("%s%s", service, summary),
 		Method:              request["method"].(string),
 		Status:              0,
 		RequestSenderIp:     item.ConnectionInfo.ClientIP,
 		Service:             service,
 		Timestamp:           item.Timestamp,
-		Path:                reqDetails["Exchange"].(string),
+		Path:                summary,
 		ResolvedSource:      resolvedSource,
 		ResolvedDestination: resolvedDestination,
 		SourceIp:            item.ConnectionInfo.ClientIP,
@@ -267,6 +278,8 @@ func (d dissecting) Represent(entry string) ([]byte, error) {
 		break
 	case basicMethodMap[60]:
 		repRequest = representBasicDeliver(details)
+	case queueMethodMap[10]:
+		repRequest = representQueueDeclare(details)
 		break
 	}
 	// response := root["response"].(map[string]interface{})["payload"].(map[string]interface{})

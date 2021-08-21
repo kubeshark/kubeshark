@@ -389,19 +389,83 @@ func representBasicDeliver(event map[string]interface{}) []interface{} {
 	return rep
 }
 
-func printEventQueueDeclare(eventQueueDeclare QueueDeclare) {
-	return
-	fmt.Printf(
-		"[%s] Queue: %s, Passive: %t, Durable: %t, AutoDelete: %t, Exclusive: %t, NoWait: %t, Arguments: %v\n",
-		queueMethodMap[10],
-		eventQueueDeclare.Queue,
-		eventQueueDeclare.Passive,
-		eventQueueDeclare.Durable,
-		eventQueueDeclare.AutoDelete,
-		eventQueueDeclare.Exclusive,
-		eventQueueDeclare.NoWait,
-		eventQueueDeclare.Arguments,
-	)
+func emitQueueDeclare(event QueueDeclare, connectionInfo *api.ConnectionInfo, emitter api.Emitter) {
+	request := &api.GenericMessage{
+		IsRequest:   true,
+		CaptureTime: time.Now(),
+		Payload: AMQPPayload{
+			Type: "queue_declare",
+			Data: &AMQPWrapper{
+				Method:  queueMethodMap[10],
+				Url:     event.Queue,
+				Details: event,
+			},
+		},
+	}
+	item := &api.OutputChannelItem{
+		Protocol:       protocol,
+		Timestamp:      time.Now().UnixNano() / int64(time.Millisecond),
+		ConnectionInfo: connectionInfo,
+		Pair: &api.RequestResponsePair{
+			Request:  *request,
+			Response: api.GenericMessage{},
+		},
+	}
+	emitter.Emit(item)
+}
+
+func representQueueDeclare(event map[string]interface{}) []interface{} {
+	rep := make([]interface{}, 0)
+
+	details, _ := json.Marshal([]map[string]string{
+		{
+			"name":  "Queue",
+			"value": event["Queue"].(string),
+		},
+		{
+			"name":  "Passive",
+			"value": strconv.FormatBool(event["Passive"].(bool)),
+		},
+		{
+			"name":  "Durable",
+			"value": strconv.FormatBool(event["Durable"].(bool)),
+		},
+		{
+			"name":  "Exclusive",
+			"value": strconv.FormatBool(event["Exclusive"].(bool)),
+		},
+		{
+			"name":  "AutoDelete",
+			"value": strconv.FormatBool(event["AutoDelete"].(bool)),
+		},
+		{
+			"name":  "NoWait",
+			"value": strconv.FormatBool(event["NoWait"].(bool)),
+		},
+	})
+	rep = append(rep, map[string]string{
+		"type":  "table",
+		"title": "Details",
+		"data":  string(details),
+	})
+
+	if event["Arguments"] != nil {
+		headers := make([]map[string]string, 0)
+		for name, value := range event["Arguments"].(map[string]interface{}) {
+			headers = append(headers, map[string]string{
+				"name":  name,
+				"value": value.(string),
+			})
+		}
+		headersMarshaled, _ := json.Marshal(headers)
+		rep = append(rep, map[string]string{
+			"type":  "table",
+			"title": "Arguments",
+			"data":  string(headersMarshaled),
+		})
+	}
+
+	return rep
 }
 
 func printEventExchangeDeclare(eventExchangeDeclare ExchangeDeclare) {
