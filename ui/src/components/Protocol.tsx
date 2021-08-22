@@ -9,7 +9,7 @@ export interface ProtocolInterface {
     foreground_color: string
     font_size: number
     reference_link: string
-    outbound_ports: string[]
+    ports: string[]
     inbound_ports: string
 }
 
@@ -26,7 +26,7 @@ const Protocol: React.FC<ProtocolProps> = ({protocol, horizontal}) => {
                 style={{
                     backgroundColor: protocol.background_color,
                     color: protocol.foreground_color,
-                    fontSize: protocol.font_size * 1.1,
+                    fontSize: 13,
                 }}
                 title={protocol.abbreviation}
             >

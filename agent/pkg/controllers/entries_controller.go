@@ -237,9 +237,9 @@ func GetEntry(c *gin.Context) {
 	// 	})
 	// }
 	extension := extensionsMap[entryData.ProtocolName]
-	representation, _ := extension.Dissector.Represent(entryData.Entry)
+	protocol, representation, _ := extension.Dissector.Represent(&entryData)
 	c.JSON(http.StatusOK, tapApi.MizuEntryWrapper{
-		Protocol:       extension.Protocol,
+		Protocol:       protocol,
 		Representation: string(representation),
 		Data:           entryData,
 	})

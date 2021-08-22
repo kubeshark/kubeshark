@@ -10,11 +10,12 @@ type Protocol struct {
 	Name            string   `json:"name"`
 	LongName        string   `json:"long_name"`
 	Abbreviation    string   `json:"abbreviation"`
+	Version         string   `json:"version"`
 	BackgroundColor string   `json:"background_color"`
 	ForegroundColor string   `json:"foreground_color"`
 	FontSize        int8     `json:"font_size"`
 	ReferenceLink   string   `json:"reference_link"`
-	Ports           []string `json:"outbound_ports"`
+	Ports           []string `json:"ports"`
 }
 
 type Extension struct {
@@ -64,7 +65,7 @@ type Dissector interface {
 	Dissect(b *bufio.Reader, isClient bool, tcpID *TcpID, emitter Emitter)
 	Analyze(item *OutputChannelItem, entryId string, resolvedSource string, resolvedDestination string) *MizuEntry
 	Summarize(entry *MizuEntry) *BaseEntryDetails
-	Represent(entry string) ([]byte, error)
+	Represent(entry *MizuEntry) (Protocol, []byte, error)
 }
 
 type Emitting struct {
@@ -84,6 +85,7 @@ type MizuEntry struct {
 	CreatedAt           time.Time
 	UpdatedAt           time.Time
 	ProtocolName        string `json:"protocol_key" gorm:"column:protocolKey"`
+	ProtocolVersion     string `json:"protocol_version" gorm:"column:protocolVersion"`
 	Entry               string `json:"entry,omitempty" gorm:"column:entry"`
 	EntryId             string `json:"entryId" gorm:"column:entryId"`
 	Url                 string `json:"url" gorm:"column:url"`

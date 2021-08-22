@@ -19,20 +19,22 @@ var protocol api.Protocol = api.Protocol{
 	Name:            "http",
 	LongName:        "Hypertext Transfer Protocol -- HTTP/1.1",
 	Abbreviation:    "HTTP",
+	Version:         "1.1",
 	BackgroundColor: "#205cf5",
 	ForegroundColor: "#ffffff",
 	FontSize:        12,
 	ReferenceLink:   "https://datatracker.ietf.org/doc/html/rfc2616",
-	Ports:           []string{"80", "8080"},
+	Ports:           []string{"80", "8080", "50051"},
 }
 
 var http2Protocol api.Protocol = api.Protocol{
 	Name:            "http",
 	LongName:        "Hypertext Transfer Protocol Version 2 (HTTP/2) (gRPC)",
 	Abbreviation:    "HTTP/2",
+	Version:         "2.0",
 	BackgroundColor: "#244c5a",
 	ForegroundColor: "#ffffff",
-	FontSize:        12,
+	FontSize:        11,
 	ReferenceLink:   "https://datatracker.ietf.org/doc/html/rfc7540",
 	Ports:           []string{"80", "8080"},
 }
@@ -113,6 +115,7 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolve
 	service := fmt.Sprintf("http://%s", host)
 	return &api.MizuEntry{
 		ProtocolName:        protocol.Name,
+		ProtocolVersion:     item.Protocol.Version,
 		EntryId:             entryId,
 		Entry:               string(entryBytes),
 		Url:                 fmt.Sprintf("%s%s", service, request["url"].(string)),
@@ -133,9 +136,15 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolve
 }
 
 func (d dissecting) Summarize(entry *api.MizuEntry) *api.BaseEntryDetails {
+	var p api.Protocol
+	if entry.ProtocolVersion == "2.0" {
+		p = http2Protocol
+	} else {
+		p = protocol
+	}
 	return &api.BaseEntryDetails{
 		Id:              entry.EntryId,
-		Protocol:        protocol,
+		Protocol:        p,
 		Url:             entry.Url,
 		RequestSenderIp: entry.RequestSenderIp,
 		Service:         entry.Service,
@@ -273,9 +282,15 @@ func representResponse(response map[string]interface{}) []interface{} {
 	return repResponse
 }
 
-func (d dissecting) Represent(entry string) ([]byte, error) {
+func (d dissecting) Represent(entry *api.MizuEntry) (api.Protocol, []byte, error) {
+	var p api.Protocol
+	if entry.ProtocolVersion == "2.0" {
+		p = http2Protocol
+	} else {
+		p = protocol
+	}
 	var root map[string]interface{}
-	json.Unmarshal([]byte(entry), &root)
+	json.Unmarshal([]byte(entry.Entry), &root)
 	representation := make(map[string]interface{}, 0)
 	request := root["request"].(map[string]interface{})["payload"].(map[string]interface{})
 	response := root["response"].(map[string]interface{})["payload"].(map[string]interface{})
@@ -283,7 +298,8 @@ func (d dissecting) Represent(entry string) ([]byte, error) {
 	repResponse := representResponse(response)
 	representation["request"] = repRequest
 	representation["response"] = repResponse
-	return json.Marshal(representation)
+	object, err := json.Marshal(representation)
+	return p, object, err
 }
 
 var Dissector dissecting

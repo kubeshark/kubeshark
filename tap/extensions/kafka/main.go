@@ -13,6 +13,7 @@ var _protocol api.Protocol = api.Protocol{
 	Name:            "kafka",
 	LongName:        "Apache Kafka Protocol",
 	Abbreviation:    "KAFKA",
+	Version:         "12",
 	BackgroundColor: "#000000",
 	ForegroundColor: "#ffffff",
 	FontSize:        11,
@@ -116,6 +117,7 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolve
 	entryBytes, _ := json.Marshal(item.Pair)
 	return &api.MizuEntry{
 		ProtocolName:        _protocol.Name,
+		ProtocolVersion:     _protocol.Version,
 		EntryId:             entryId,
 		Entry:               string(entryBytes),
 		Url:                 fmt.Sprintf("%s%s", service, summary),
@@ -159,9 +161,9 @@ func (d dissecting) Summarize(entry *api.MizuEntry) *api.BaseEntryDetails {
 	}
 }
 
-func (d dissecting) Represent(entry string) ([]byte, error) {
+func (d dissecting) Represent(entry *api.MizuEntry) (api.Protocol, []byte, error) {
 	var root map[string]interface{}
-	json.Unmarshal([]byte(entry), &root)
+	json.Unmarshal([]byte(entry.Entry), &root)
 	representation := make(map[string]interface{}, 0)
 	request := root["request"].(map[string]interface{})["payload"].(map[string]interface{})
 	response := root["response"].(map[string]interface{})["payload"].(map[string]interface{})
@@ -205,7 +207,8 @@ func (d dissecting) Represent(entry string) ([]byte, error) {
 
 	representation["request"] = repRequest
 	representation["response"] = repResponse
-	return json.Marshal(representation)
+	object, err := json.Marshal(representation)
+	return _protocol, object, err
 }
 
 var Dissector dissecting
