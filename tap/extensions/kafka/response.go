@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -15,19 +16,13 @@ type Response struct {
 	Payload       interface{}
 }
 
-func (res *Response) print() {
-	log.Printf("> Response [%d]\n", res.Size)
-	log.Printf("CorrelationID: %v\n", res.CorrelationID)
-	log.Printf("Payload: %+v\n", res.Payload)
-}
-
-func ReadResponse(r io.Reader, tcpID *api.TcpID) (err error) {
+func ReadResponse(r io.Reader, tcpID *api.TcpID, emitter api.Emitter) (err error) {
 	d := &decoder{reader: r, remain: 4}
 	size := d.readInt32()
 
 	if err = d.err; err != nil {
 		err = dontExpectEOF(err)
-		return
+		return err
 	}
 
 	d.remain = int(size)
@@ -41,14 +36,17 @@ func ReadResponse(r io.Reader, tcpID *api.TcpID) (err error) {
 
 	key := fmt.Sprintf(
 		"%s:%s->%s:%s::%d",
-		tcpID.SrcIP,
-		tcpID.SrcPort,
 		tcpID.DstIP,
 		tcpID.DstPort,
+		tcpID.SrcIP,
+		tcpID.SrcPort,
 		correlationID,
 	)
-	// fmt.Printf("key: %v\n", key)
 	reqResPair := reqResMatcher.registerResponse(key, response)
+	if reqResPair == nil {
+		d.discardAll()
+		return errors.New("Couldn't match a Kafka response to a Kafka request in 3 seconds!")
+	}
 	apiKey := reqResPair.Request.ApiKey
 	apiVersion := reqResPair.Request.ApiVersion
 
@@ -245,22 +243,23 @@ func ReadResponse(r io.Reader, tcpID *api.TcpID) (err error) {
 		break
 	}
 
-	reqResPair.print()
+	reqResPair.debug()
+	// emitter.Emit(item)
 
 	if i := int(apiKey); i < 0 || i >= len(apiTypes) {
 		err = fmt.Errorf("unsupported api key: %d", i)
-		return
+		return err
 	}
 
 	t := &apiTypes[apiKey]
 	if t == nil {
 		err = fmt.Errorf("unsupported api: %s", apiNames[apiKey])
-		return
+		return err
 	}
 
 	d.discardAll()
 
-	return
+	return nil
 }
 
 func WriteResponse(w io.Writer, apiVersion int16, correlationID int32, msg Message) error {

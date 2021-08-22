@@ -18,22 +18,13 @@ type Request struct {
 	Payload       interface{}
 }
 
-func (req *Request) print() {
-	log.Printf("> Request [%d]\n", req.Size)
-	log.Printf("ApiKey: %v\n", req.ApiKey)
-	log.Printf("ApiVersion: %v\n", req.ApiVersion)
-	log.Printf("CorrelationID: %v\n", req.CorrelationID)
-	log.Printf("ClientID: %v\n", req.ClientID)
-	log.Printf("Payload: %+v\n", req.Payload)
-}
-
 func ReadRequest(r io.Reader, tcpID *api.TcpID) (apiKey ApiKey, apiVersion int16, err error) {
 	d := &decoder{reader: r, remain: 4}
 	size := d.readInt32()
 
 	if err = d.err; err != nil {
 		err = dontExpectEOF(err)
-		return
+		return 0, 0, err
 	}
 
 	d.remain = int(size)
@@ -44,18 +35,18 @@ func ReadRequest(r io.Reader, tcpID *api.TcpID) (apiKey ApiKey, apiVersion int16
 
 	if i := int(apiKey); i < 0 || i >= len(apiTypes) {
 		err = fmt.Errorf("unsupported api key: %d", i)
-		return
+		return apiKey, 0, err
 	}
 
 	if err = d.err; err != nil {
 		err = dontExpectEOF(err)
-		return
+		return apiKey, 0, err
 	}
 
 	t := &apiTypes[apiKey]
 	if t == nil {
 		err = fmt.Errorf("unsupported api: %s", apiNames[apiKey])
-		return
+		return apiKey, 0, err
 	}
 
 	var payload interface{}
@@ -226,12 +217,11 @@ func ReadRequest(r io.Reader, tcpID *api.TcpID) (apiKey ApiKey, apiVersion int16
 		tcpID.DstPort,
 		correlationID,
 	)
-	// fmt.Printf("key: %v\n", key)
 	reqResMatcher.registerRequest(key, request)
 
 	d.discardAll()
 
-	return
+	return apiKey, apiVersion, nil
 }
 
 func WriteRequest(w io.Writer, apiVersion int16, correlationID int32, clientID string, msg Message) error {

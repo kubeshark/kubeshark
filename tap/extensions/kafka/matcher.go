@@ -3,9 +3,11 @@ package main
 import (
 	"log"
 	"sync"
+	"time"
 )
 
 var reqResMatcher = CreateResponseRequestMatcher() // global
+const maxTry int = 3000
 
 type RequestResponsePair struct {
 	Request  Request
@@ -27,17 +29,22 @@ func (matcher *requestResponseMatcher) registerRequest(key string, request *Requ
 		return matcher.preparePair(request, response.(*Response))
 	}
 
-	matcher.openMessagesMap.Store(key, &request)
+	matcher.openMessagesMap.Store(key, request)
 	return nil
 }
 
 func (matcher *requestResponseMatcher) registerResponse(key string, response *Response) *RequestResponsePair {
-	if request, found := matcher.openMessagesMap.LoadAndDelete(key); found {
-		return matcher.preparePair(request.(*Request), response)
+	try := 0
+	for {
+		try++
+		if try > maxTry {
+			return nil
+		}
+		if request, found := matcher.openMessagesMap.LoadAndDelete(key); found {
+			return matcher.preparePair(request.(*Request), response)
+		}
+		time.Sleep(1 * time.Millisecond)
 	}
-
-	matcher.openMessagesMap.Store(key, &response)
-	return nil
 }
 
 func (matcher *requestResponseMatcher) preparePair(request *Request, response *Response) *RequestResponsePair {
@@ -47,8 +54,19 @@ func (matcher *requestResponseMatcher) preparePair(request *Request, response *R
 	}
 }
 
-func (reqResPair *RequestResponsePair) print() {
-	log.Printf("----------------\n")
-	reqResPair.Request.print()
-	reqResPair.Response.print()
+func (reqResPair *RequestResponsePair) debug() {
+	req := reqResPair.Request
+	res := reqResPair.Response
+	log.Printf(
+		"\n----------------\n> Request [%d]\nApiKey: %v\nApiVersion: %v\nCorrelationID: %v\nClientID: %v\nPayload: %+v\n> Response [%d]\nCorrelationID: %v\nPayload: %+v\n",
+		req.Size,
+		req.ApiKey,
+		req.ApiVersion,
+		req.CorrelationID,
+		req.ClientID,
+		req.Payload,
+		res.Size,
+		res.CorrelationID,
+		res.Payload,
+	)
 }
