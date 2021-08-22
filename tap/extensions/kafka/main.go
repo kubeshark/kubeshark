@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 
 	"github.com/up9inc/mizu/tap/api"
@@ -40,11 +41,13 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, em
 		if isClient {
 			_, _, err := ReadRequest(b, tcpID)
 			if err != nil {
+				io.ReadAll(b)
 				break
 			}
 		} else {
 			err := ReadResponse(b, tcpID, emitter)
 			if err != nil {
+				io.ReadAll(b)
 				break
 			}
 		}

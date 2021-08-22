@@ -1,10 +1,8 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"io"
-	"log"
 	"reflect"
 
 	"github.com/up9inc/mizu/tap/api"
@@ -33,10 +31,6 @@ func ReadRequest(r io.Reader, tcpID *api.TcpID) (apiKey ApiKey, apiVersion int16
 	apiVersion = d.readInt16()
 	correlationID := d.readInt32()
 	clientID := d.readString()
-
-	if apiKey == UpdateMetadata {
-		return
-	}
 
 	if i := int(apiKey); i < 0 || i >= len(apiTypes) {
 		err = fmt.Errorf("unsupported api key: %d", i)
@@ -202,9 +196,7 @@ func ReadRequest(r io.Reader, tcpID *api.TcpID) (apiKey ApiKey, apiVersion int16
 		mt.(messageType).decode(d, valueOf(deleteTopicsRequest))
 		payload = deleteTopicsRequest
 	default:
-		msg := fmt.Sprintf("[WARNING] (Request) Not implemented: %s\n", apiKey)
-		log.Printf(msg)
-		return apiKey, 0, errors.New(msg)
+		return apiKey, 0, fmt.Errorf("(Request) Not implemented: %s", apiKey)
 	}
 
 	request := &Request{

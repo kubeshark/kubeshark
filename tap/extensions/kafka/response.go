@@ -1,10 +1,8 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"io"
-	"log"
 	"reflect"
 	"time"
 
@@ -45,10 +43,7 @@ func ReadResponse(r io.Reader, tcpID *api.TcpID, emitter api.Emitter) (err error
 	)
 	reqResPair := reqResMatcher.registerResponse(key, response)
 	if reqResPair == nil {
-		d.discardAll()
-		msg := "Couldn't match a Kafka response to a Kafka request in 3 seconds!"
-		log.Printf("[WARNING] %s\n", msg)
-		return errors.New(msg)
+		return fmt.Errorf("Couldn't match a Kafka response to a Kafka request in 3 seconds!")
 	}
 	apiKey := reqResPair.Request.ApiKey
 	apiVersion := reqResPair.Request.ApiVersion
@@ -242,9 +237,7 @@ func ReadResponse(r io.Reader, tcpID *api.TcpID, emitter api.Emitter) (err error
 		mt.(messageType).decode(d, valueOf(deleteTopicsResponse))
 		reqResPair.Response.Payload = deleteTopicsResponse
 	default:
-		msg := fmt.Sprintf("[WARNING] (Response) Not implemented: %s\n", apiKey)
-		log.Printf(msg)
-		return errors.New(msg)
+		return fmt.Errorf("(Response) Not implemented: %s", apiKey)
 	}
 
 	connectionInfo := &api.ConnectionInfo{
