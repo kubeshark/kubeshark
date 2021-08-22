@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -33,20 +34,24 @@ func ReadRequest(r io.Reader, tcpID *api.TcpID) (apiKey ApiKey, apiVersion int16
 	correlationID := d.readInt32()
 	clientID := d.readString()
 
+	if apiKey == UpdateMetadata {
+		return
+	}
+
 	if i := int(apiKey); i < 0 || i >= len(apiTypes) {
 		err = fmt.Errorf("unsupported api key: %d", i)
-		return apiKey, 0, err
+		return apiKey, apiVersion, err
 	}
 
 	if err = d.err; err != nil {
 		err = dontExpectEOF(err)
-		return apiKey, 0, err
+		return apiKey, apiVersion, err
 	}
 
 	t := &apiTypes[apiKey]
 	if t == nil {
 		err = fmt.Errorf("unsupported api: %s", apiNames[apiKey])
-		return apiKey, 0, err
+		return apiKey, apiVersion, err
 	}
 
 	var payload interface{}
@@ -197,8 +202,9 @@ func ReadRequest(r io.Reader, tcpID *api.TcpID) (apiKey ApiKey, apiVersion int16
 		mt.(messageType).decode(d, valueOf(deleteTopicsRequest))
 		payload = deleteTopicsRequest
 	default:
-		log.Printf("[WARNING] (Request) Not implemented: %s\n", apiKey)
-		break
+		msg := fmt.Sprintf("[WARNING] (Request) Not implemented: %s\n", apiKey)
+		log.Printf(msg)
+		return apiKey, 0, errors.New(msg)
 	}
 
 	request := &Request{

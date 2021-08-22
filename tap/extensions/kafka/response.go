@@ -242,8 +242,9 @@ func ReadResponse(r io.Reader, tcpID *api.TcpID, emitter api.Emitter) (err error
 		mt.(messageType).decode(d, valueOf(deleteTopicsResponse))
 		reqResPair.Response.Payload = deleteTopicsResponse
 	default:
-		log.Printf("[WARNING] (Response) Not implemented: %s\n", apiKey)
-		break
+		msg := fmt.Sprintf("[WARNING] (Response) Not implemented: %s\n", apiKey)
+		log.Printf(msg)
+		return errors.New(msg)
 	}
 
 	connectionInfo := &api.ConnectionInfo{

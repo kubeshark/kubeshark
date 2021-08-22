@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"strconv"
 	"sync"
 	"time"
 
@@ -75,8 +74,9 @@ func (h *tcpReader) Read(p []byte) (int, error) {
 			err := clientHello.Unmarshall(msg.bytes)
 			if err == nil {
 				fmt.Printf("Detected TLS client hello with SNI %s\n", clientHello.SNI)
-				numericPort, _ := strconv.Atoi(h.tcpID.DstPort)
-				h.outboundLinkWriter.WriteOutboundLink(h.tcpID.SrcIP, h.tcpID.DstIP, numericPort, clientHello.SNI, TLSProtocol)
+				// TODO: Throws `panic: runtime error: invalid memory address or nil pointer dereference` error.
+				// numericPort, _ := strconv.Atoi(h.tcpID.DstPort)
+				// h.outboundLinkWriter.WriteOutboundLink(h.tcpID.SrcIP, h.tcpID.DstIP, numericPort, clientHello.SNI, TLSProtocol)
 			}
 		}
 	}

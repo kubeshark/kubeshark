@@ -103,7 +103,7 @@ func (d *decoder) decodeCompactBytes(v value) {
 }
 
 func (d *decoder) decodeArray(v value, elemType reflect.Type, decodeElem decodeFunc) {
-	if n := d.readInt32(); n < 0 {
+	if n := d.readInt32(); n < 0 || n > 65535 {
 		v.setArray(array{})
 	} else {
 		a := makeArray(elemType, int(n))
@@ -115,7 +115,7 @@ func (d *decoder) decodeArray(v value, elemType reflect.Type, decodeElem decodeF
 }
 
 func (d *decoder) decodeCompactArray(v value, elemType reflect.Type, decodeElem decodeFunc) {
-	if n := d.readUnsignedVarInt(); n < 1 {
+	if n := d.readUnsignedVarInt(); n < 1 || n > 65535 {
 		v.setArray(array{})
 	} else {
 		a := makeArray(elemType, int(n-1))

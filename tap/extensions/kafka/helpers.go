@@ -221,7 +221,11 @@ func representApiVersionsResponse(data map[string]interface{}) []interface{} {
 	rep = representResponseHeader(data, rep)
 
 	payload := data["Payload"].(map[string]interface{})
-	apiKeys, _ := json.Marshal(payload["ApiKeys"].([]interface{}))
+	apiKeys := ""
+	if payload["TopicNames"] != nil {
+		x, _ := json.Marshal(payload["ApiKeys"].([]interface{}))
+		apiKeys = string(x)
+	}
 	throttleTimeMs := ""
 	if payload["ThrottleTimeMs"] != nil {
 		throttleTimeMs = fmt.Sprintf("%d", int(payload["ThrottleTimeMs"].(float64)))
@@ -233,7 +237,7 @@ func representApiVersionsResponse(data map[string]interface{}) []interface{} {
 		},
 		{
 			"name":  "ApiKeys",
-			"value": string(apiKeys),
+			"value": apiKeys,
 		},
 		{
 			"name":  "Throttle Time (ms)",
