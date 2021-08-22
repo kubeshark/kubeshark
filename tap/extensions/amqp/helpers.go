@@ -256,7 +256,7 @@ func representBasicPublish(event map[string]interface{}) []interface{} {
 	})
 
 	properties := event["Properties"].(map[string]interface{})
-	rep, contentType, contentEncoding := representProperties(properties, rep)
+	rep, contentType, _ := representProperties(properties, rep)
 
 	if properties["Headers"] != nil {
 		headers := make([]map[string]string, 0)
@@ -278,10 +278,10 @@ func representBasicPublish(event map[string]interface{}) []interface{} {
 		rep = append(rep, map[string]string{
 			"type":      "body",
 			"title":     "Body",
-			"encoding":  contentEncoding,
+			"encoding":  "base64",
 			"mime_type": contentType,
 			"data":      event["Body"].(string),
-		}) // FIXME: `Body` value seems wrong
+		})
 	}
 
 	return rep
@@ -333,7 +333,7 @@ func representBasicDeliver(event map[string]interface{}) []interface{} {
 	})
 
 	properties := event["Properties"].(map[string]interface{})
-	rep, contentType, contentEncoding := representProperties(properties, rep)
+	rep, contentType, _ := representProperties(properties, rep)
 
 	if properties["Headers"] != nil {
 		headers := make([]map[string]string, 0)
@@ -355,10 +355,10 @@ func representBasicDeliver(event map[string]interface{}) []interface{} {
 		rep = append(rep, map[string]string{
 			"type":      "body",
 			"title":     "Body",
-			"encoding":  contentEncoding,
+			"encoding":  "base64",
 			"mime_type": contentType,
 			"data":      event["Body"].(string),
-		}) // FIXME: `Body` value seems wrong
+		})
 	}
 
 	return rep
