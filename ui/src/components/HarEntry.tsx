@@ -61,32 +61,40 @@ export const HarEntry: React.FC<HAREntryProps> = ({entry, setFocusedEntryId, isS
             break;
         }
     }
-    let additionalRulesProperties = "";
-    let ruleSuccess: boolean;
+    // let additionalRulesProperties = "";
+    // let ruleSuccess: boolean;
     let rule = 'latency' in entry.rules
     if (rule) {
         if (entry.rules.latency !== -1) {
             if (entry.rules.latency >= entry.latency) {
-                additionalRulesProperties = styles.ruleSuccessRow
-                ruleSuccess = true
+                // additionalRulesProperties = styles.ruleSuccessRow
+                // ruleSuccess = true
             } else {
-                additionalRulesProperties = styles.ruleFailureRow
-                ruleSuccess = false
+                // additionalRulesProperties = styles.ruleFailureRow
+                // ruleSuccess = false
             }
             if (isSelected) {
-                additionalRulesProperties += ` ${entry.rules.latency >= entry.latency ? styles.ruleSuccessRowSelected : styles.ruleFailureRowSelected}`
+                // additionalRulesProperties += ` ${entry.rules.latency >= entry.latency ? styles.ruleSuccessRowSelected : styles.ruleFailureRowSelected}`
             }
         } else {
             if (entry.rules.status) {
-                additionalRulesProperties = styles.ruleSuccessRow
-                ruleSuccess = true
+                // additionalRulesProperties = styles.ruleSuccessRow
+                // ruleSuccess = true
             } else {
-                additionalRulesProperties = styles.ruleFailureRow
-                ruleSuccess = false
+                // additionalRulesProperties = styles.ruleFailureRow
+                // ruleSuccess = false
             }
             if (isSelected) {
-                additionalRulesProperties += ` ${entry.rules.status ? styles.ruleSuccessRowSelected : styles.ruleFailureRowSelected}`
+                // additionalRulesProperties += ` ${entry.rules.status ? styles.ruleSuccessRowSelected : styles.ruleFailureRowSelected}`
             }
+        }
+    }
+    let backgroundColor = "";
+    if ('latency' in entry.rules) {
+        if (entry.rules.latency !== -1) {
+            backgroundColor = entry.rules.latency >= entry.latency ? styles.ruleSuccessRow : styles.ruleFailureRow
+        } else {
+            backgroundColor = entry.rules.status ? styles.ruleSuccessRow : styles.ruleFailureRow
         }
     }
     return <>
@@ -107,13 +115,6 @@ export const HarEntry: React.FC<HAREntryProps> = ({entry, setFocusedEntryId, isS
                     <span title="Service Name">{entry.service}</span>
                 </div>
             </div>
-            {
-                rule ?
-                    <div className={`${ruleSuccess ? styles.ruleNumberTextSuccess : styles.ruleNumberTextFailure}`}>
-                        {`Rules (${numberOfRules})`}
-                    </div>
-                : ""
-            }
             <div className={styles.directionContainer}>
                 <span className={styles.port} title="Source Port">{entry.source_port}</span>
                 {entry.isOutgoing ?

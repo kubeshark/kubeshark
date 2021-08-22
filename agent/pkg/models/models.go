@@ -29,7 +29,7 @@ func NewApplicableRules(status bool, latency int64) tapApi.ApplicableRules {
 	ar := tapApi.ApplicableRules{}
 	ar.Status = status
 	ar.Latency = latency
-	ar.NumberOfRules = number
+	// ar.NumberOfRules = number
 	return ar
 }
 
@@ -168,7 +168,7 @@ func (fewp *FullEntryWithPolicy) UnmarshalData(entry *tapApi.MizuEntry) error {
 func RunValidationRulesState(harEntry har.Entry, service string) tapApi.ApplicableRules {
 	numberOfRules, resultPolicyToSend := rules.MatchRequestPolicy(harEntry, service)
 	statusPolicyToSend, latency, numberOfRules := rules.PassedValidationRules(resultPolicyToSend, numberOfRules)
-	ar := NewApplicableRules(statusPolicyToSend, latency, numberOfRules)
+	ar := NewApplicableRules(statusPolicyToSend, latency)
 	return ar
 }
 

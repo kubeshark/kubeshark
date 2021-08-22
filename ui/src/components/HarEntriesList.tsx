@@ -131,7 +131,7 @@ export const HarEntriesList: React.FC<HarEntriesListProps> = ({entries, setEntri
                             if(list instanceof HTMLElement) {
                                 list.scrollTo({ top: list.scrollHeight, behavior: 'smooth' })
                             }
-                        }}><img src={uninon} />
+                        }}><img alt="Union" src={uninon} />
                     </button>
                 </div>
 
