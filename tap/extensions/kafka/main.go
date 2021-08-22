@@ -33,10 +33,12 @@ func (d dissecting) Ping() {
 }
 
 func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, emitter api.Emitter) {
-	if isClient {
-		ReadRequest(b, tcpID)
-	} else {
-		ReadResponse(b, tcpID, emitter)
+	for {
+		if isClient {
+			ReadRequest(b, tcpID)
+		} else {
+			ReadResponse(b, tcpID, emitter)
+		}
 	}
 }
 

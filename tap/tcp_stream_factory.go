@@ -32,20 +32,20 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.T
 	rlog.Debugf("Current App Ports: %v", gSettings.filterPorts)
 	srcIp := net.Src().String()
 	dstIp := net.Dst().String()
-	dstPort := int(tcp.DstPort)
-	dstPortStr := transport.Dst().String()
+	srcPort := transport.Src().String()
+	dstPort := transport.Dst().String()
 
 	// if factory.shouldNotifyOnOutboundLink(dstIp, dstPort) {
 	// 	factory.outbountLinkWriter.WriteOutboundLink(net.Src().String(), dstIp, dstPort, "", "")
 	// }
-	props := factory.getStreamProps(srcIp, dstIp, dstPort, dstPortStr, factory.AllExtensionPorts)
+	props := factory.getStreamProps(srcIp, dstIp, srcPort, dstPort, factory.AllExtensionPorts)
 	isTapTarget := props.isTapTarget
 	stream := &tcpStream{
 		net:         net,
 		transport:   transport,
 		isDNS:       tcp.SrcPort == 53 || tcp.DstPort == 53,
 		isTapTarget: isTapTarget,
-		reversed:    tcp.SrcPort == 80,
+		reversed:    props.reversed,
 		tcpstate:    reassembly.NewTCPSimpleFSM(fsmOptions),
 		ident:       fmt.Sprintf("%s:%s", net, transport),
 		optchecker:  reassembly.NewTCPOptionCheck(),
@@ -55,10 +55,10 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.T
 			msgQueue: make(chan tcpReaderDataMsg),
 			ident:    fmt.Sprintf("%s %s", net, transport),
 			tcpID: &api.TcpID{
-				SrcIP:   net.Src().String(),
-				DstIP:   net.Dst().String(),
-				SrcPort: transport.Src().String(),
-				DstPort: dstPortStr,
+				SrcIP:   srcIp,
+				DstIP:   dstIp,
+				SrcPort: srcPort,
+				DstPort: dstPort,
 			},
 			parent:             stream,
 			isClient:           true,
@@ -92,35 +92,43 @@ func (factory *tcpStreamFactory) WaitGoRoutines() {
 	factory.wg.Wait()
 }
 
-func (factory *tcpStreamFactory) getStreamProps(srcIP string, dstIP string, dstPort int, dstPortStr string, allExtensionPorts []string) *streamProps {
+func (factory *tcpStreamFactory) getStreamProps(srcIP string, dstIP string, srcPort string, dstPort string, allExtensionPorts []string) *streamProps {
+	reversed := false
 	if hostMode {
-		if inArrayString(gSettings.filterAuthorities, fmt.Sprintf("%s:%d", dstIP, dstPort)) == true {
-			rlog.Debugf("getStreamProps %s", fmt.Sprintf("+ host1 %s:%d", dstIP, dstPort))
-			return &streamProps{isTapTarget: true, isOutgoing: false}
+		// TODO: Implement reversed for the `hostMode`
+		if inArrayString(gSettings.filterAuthorities, fmt.Sprintf("%s:%s", dstIP, dstPort)) == true {
+			rlog.Debugf("getStreamProps %s", fmt.Sprintf("+ host1 %s:%s", dstIP, dstPort))
+			return &streamProps{isTapTarget: true, isOutgoing: false, reversed: reversed}
 		} else if inArrayString(gSettings.filterAuthorities, dstIP) == true {
 			rlog.Debugf("getStreamProps %s", fmt.Sprintf("+ host2 %s", dstIP))
-			return &streamProps{isTapTarget: true, isOutgoing: false}
+			return &streamProps{isTapTarget: true, isOutgoing: false, reversed: reversed}
 		} else if *anydirection && inArrayString(gSettings.filterAuthorities, srcIP) == true {
 			rlog.Debugf("getStreamProps %s", fmt.Sprintf("+ host3 %s", srcIP))
-			return &streamProps{isTapTarget: true, isOutgoing: true}
+			return &streamProps{isTapTarget: true, isOutgoing: true, reversed: reversed}
 		}
-		return &streamProps{isTapTarget: false}
+		return &streamProps{isTapTarget: false, reversed: reversed}
 	} else {
-		isTappedPort := containsPort(allExtensionPorts, dstPortStr) || (gSettings.filterPorts != nil && (inArrayInt(gSettings.filterPorts, dstPort)))
+		// TODO: Bring back `filterPorts` as a string if it's really needed
+		// (gSettings.filterPorts != nil && (inArrayInt(gSettings.filterPorts, dstPort)))
+		isTappedPort := containsPort(allExtensionPorts, dstPort)
+		if !isTappedPort && containsPort(allExtensionPorts, srcPort) {
+			isTappedPort = true
+			reversed = true
+		}
 		if !isTappedPort {
-			rlog.Debugf("getStreamProps %s", fmt.Sprintf("- notHost1 %d", dstPort))
-			return &streamProps{isTapTarget: false, isOutgoing: false}
+			rlog.Debugf("getStreamProps %s", fmt.Sprintf("- notHost1 %s", dstPort))
+			return &streamProps{isTapTarget: false, isOutgoing: false, reversed: reversed}
 		}
 
 		isOutgoing := !inArrayString(ownIps, dstIP)
 
 		if !*anydirection && isOutgoing {
 			rlog.Debugf("getStreamProps %s", fmt.Sprintf("- notHost2"))
-			return &streamProps{isTapTarget: false, isOutgoing: isOutgoing}
+			return &streamProps{isTapTarget: false, isOutgoing: isOutgoing, reversed: reversed}
 		}
 
-		rlog.Debugf("getStreamProps %s", fmt.Sprintf("+ notHost3 %s -> %s:%d", srcIP, dstIP, dstPort))
-		return &streamProps{isTapTarget: true}
+		rlog.Debugf("getStreamProps %s", fmt.Sprintf("+ notHost3 %s -> %s:%s", srcIP, dstIP, dstPort))
+		return &streamProps{isTapTarget: true, reversed: reversed}
 	}
 }
 
@@ -135,4 +143,5 @@ func (factory *tcpStreamFactory) shouldNotifyOnOutboundLink(dstIP string, dstPor
 type streamProps struct {
 	isTapTarget bool
 	isOutgoing  bool
+	reversed    bool
 }

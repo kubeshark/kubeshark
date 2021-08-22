@@ -100,14 +100,14 @@ func containsPort(ports []string, port string) bool {
 
 func (h *tcpReader) run(wg *sync.WaitGroup) {
 	defer wg.Done()
+	var port string
+	if h.isClient {
+		port = h.tcpID.DstPort
+	} else {
+		port = h.tcpID.SrcPort
+	}
 	b := bufio.NewReader(h)
 	for _, extension := range extensions {
-		var port string
-		if h.isClient {
-			port = h.tcpID.DstPort
-		} else {
-			port = h.tcpID.SrcPort
-		}
 		if containsPort(extension.Protocol.Ports, port) {
 			extension.Dissector.Dissect(b, h.isClient, h.tcpID, h.Emitter)
 		}

@@ -45,7 +45,9 @@ func ReadResponse(r io.Reader, tcpID *api.TcpID, emitter api.Emitter) (err error
 	reqResPair := reqResMatcher.registerResponse(key, response)
 	if reqResPair == nil {
 		d.discardAll()
-		return errors.New("Couldn't match a Kafka response to a Kafka request in 3 seconds!")
+		msg := "Couldn't match a Kafka response to a Kafka request in 3 seconds!"
+		log.Printf("[WARNING] %s\n", msg)
+		return errors.New(msg)
 	}
 	apiKey := reqResPair.Request.ApiKey
 	apiVersion := reqResPair.Request.ApiVersion
