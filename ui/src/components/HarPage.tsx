@@ -1,14 +1,14 @@
 import React, {useEffect, useRef, useState} from "react";
-import {Filters} from "./Filters";
-import {EntriesList} from "./EntriesList";
+import {HarFilters} from "./HarFilters";
+import {HarEntriesList} from "./HarEntriesList";
 import {makeStyles} from "@material-ui/core";
-import "./style/TrafficPage.sass";
-import styles from './style/EntriesList.module.sass';
-import {EntryDetailed} from "./EntryDetailed/EntryDetailed";
+import "./style/HarPage.sass";
+import styles from './style/HarEntriesList.module.sass';
+import {HAREntryDetailed} from "./HarEntryDetailed";
 import playIcon from './assets/run.svg';
 import pauseIcon from './assets/pause.svg';
-import variables from '../variables.module.scss';
-import {StatusBar} from "./UI/StatusBar";
+import variables from './style/variables.module.scss';
+import {StatusBar} from "./StatusBar";
 import Api, {MizuWebsocketURL} from "../helpers/api";
 
 const useLayoutStyles = makeStyles(() => ({
@@ -43,13 +43,13 @@ interface HarPageProps {
 
 const api = new Api();
 
-export const TrafficPage: React.FC<HarPageProps> = ({setAnalyzeStatus, onTLSDetected}) => {
+export const HarPage: React.FC<HarPageProps> = ({setAnalyzeStatus, onTLSDetected}) => {
 
     const classes = useLayoutStyles();
 
     const [entries, setEntries] = useState([] as any);
-    const [focusedEntry, setFocusedEntry] = useState(null);
-    const [selectedEntryData, setSelectedEntryData] = useState(null);
+    const [focusedEntryId, setFocusedEntryId] = useState(null);
+    const [selectedHarEntry, setSelectedHarEntry] = useState(null);
     const [connection, setConnection] = useState(ConnectionStatus.Closed);
     const [noMoreDataTop, setNoMoreDataTop] = useState(false);
     const [noMoreDataBottom, setNoMoreDataBottom] = useState(false);
@@ -83,7 +83,7 @@ export const TrafficPage: React.FC<HarPageProps> = ({setAnalyzeStatus, onTLSDete
                         setNoMoreDataBottom(false)
                         return;
                     }
-                    if (!focusedEntry) setFocusedEntry(entry)
+                    if (!focusedEntryId) setFocusedEntryId(entry.id)
                     let newEntries = [...entries];
                     if (entries.length === 1000) {
                         newEntries = newEntries.splice(1);
@@ -128,17 +128,17 @@ export const TrafficPage: React.FC<HarPageProps> = ({setAnalyzeStatus, onTLSDete
 
 
     useEffect(() => {
-        if (!focusedEntry) return;
-        setSelectedEntryData(null);
+        if (!focusedEntryId) return;
+        setSelectedHarEntry(null);
         (async () => {
             try {
-                const entryData = await api.getEntry(focusedEntry.id);
-                setSelectedEntryData(entryData);
+                const entryData = await api.getEntry(focusedEntryId);
+                setSelectedHarEntry(entryData);
             } catch (error) {
                 console.error(error);
             }
         })()
-    }, [focusedEntry])
+    }, [focusedEntryId])
 
     const toggleConnection = () => {
         setConnection(connection === ConnectionStatus.Connected ? ConnectionStatus.Paused : ConnectionStatus.Connected);
@@ -172,7 +172,7 @@ export const TrafficPage: React.FC<HarPageProps> = ({setAnalyzeStatus, onTLSDete
     }
     
     const isScrollable = (element) => {
-        return element.scrollHeight > element.clientHeight;
+        return element.scrollWidth > element.clientWidth || element.scrollHeight > element.clientHeight;
     };
 
     return (
@@ -189,34 +189,35 @@ export const TrafficPage: React.FC<HarPageProps> = ({setAnalyzeStatus, onTLSDete
             </div>
             {entries.length > 0 && <div className="HarPage-Container">
                 <div className="HarPage-ListContainer">
-                    <Filters methodsFilter={methodsFilter}
-                             setMethodsFilter={setMethodsFilter}
-                             statusFilter={statusFilter}
-                             setStatusFilter={setStatusFilter}
-                             pathFilter={pathFilter}
-                             setPathFilter={setPathFilter}
+                    <HarFilters methodsFilter={methodsFilter}
+                                setMethodsFilter={setMethodsFilter}
+                                statusFilter={statusFilter}
+                                setStatusFilter={setStatusFilter}
+                                pathFilter={pathFilter}
+                                setPathFilter={setPathFilter}
                     />
                     <div className={styles.container}>
-                        <EntriesList entries={entries}
-                                     setEntries={setEntries}
-                                     focusedEntry={focusedEntry}
-                                     setFocusedEntry={setFocusedEntry}
-                                     connectionOpen={connection === ConnectionStatus.Connected}
-                                     noMoreDataBottom={noMoreDataBottom}
-                                     setNoMoreDataBottom={setNoMoreDataBottom}
-                                     noMoreDataTop={noMoreDataTop}
-                                     setNoMoreDataTop={setNoMoreDataTop}
-                                     methodsFilter={methodsFilter}
-                                     statusFilter={statusFilter}
-                                     pathFilter={pathFilter}
-                                     listEntryREF={listEntry}
-                                     onScrollEvent={onScrollEvent}
-                                     scrollableList={disableScrollList}
+                        <HarEntriesList entries={entries}
+                                        setEntries={setEntries}
+                                        focusedEntryId={focusedEntryId}
+                                        setFocusedEntryId={setFocusedEntryId}
+                                        connectionOpen={connection === ConnectionStatus.Connected}
+                                        noMoreDataBottom={noMoreDataBottom}
+                                        setNoMoreDataBottom={setNoMoreDataBottom}
+                                        noMoreDataTop={noMoreDataTop}
+                                        setNoMoreDataTop={setNoMoreDataTop}
+                                        methodsFilter={methodsFilter}
+                                        statusFilter={statusFilter}
+                                        pathFilter={pathFilter}
+                                        listEntryREF={listEntry}
+                                        onScrollEvent={onScrollEvent}
+                                        scrollableList={disableScrollList}
                         />
                     </div>
                 </div>
                 <div className={classes.details}>
-                    {selectedEntryData && <EntryDetailed entryData={selectedEntryData} entryType={focusedEntry?.type} classes={{root: classes.harViewer}}/>}
+                    {selectedHarEntry &&
+                    <HAREntryDetailed harEntry={selectedHarEntry} classes={{root: classes.harViewer}}/>}
                 </div>
             </div>}
             {tappingStatus?.pods != null && <StatusBar tappingStatus={tappingStatus}/>}

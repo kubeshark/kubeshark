@@ -1,8 +1,8 @@
 import React from "react";
-import styles from './style/Filters.module.sass';
-import {FilterSelect} from "./UI/FilterSelect";
+import styles from './style/HarFilters.module.sass';
+import {HARFilterSelect} from "./HARFilterSelect";
 import {TextField} from "@material-ui/core";
-import {ALL_KEY} from "./UI/Select";
+import {ALL_KEY} from "./Select";
 
 interface HarFiltersProps {
     methodsFilter: Array<string>;
@@ -13,7 +13,7 @@ interface HarFiltersProps {
     setPathFilter: (val: string) => void;
 }
 
-export const Filters: React.FC<HarFiltersProps> = ({methodsFilter, setMethodsFilter, statusFilter, setStatusFilter, pathFilter, setPathFilter}) => {
+export const HarFilters: React.FC<HarFiltersProps> = ({methodsFilter, setMethodsFilter, statusFilter, setStatusFilter, pathFilter, setPathFilter}) => {
 
     return <div className={styles.container}>
         <MethodFilter methodsFilter={methodsFilter} setMethodsFilter={setMethodsFilter}/>
@@ -59,7 +59,7 @@ const MethodFilter: React.FC<MethodFilterProps> = ({methodsFilter, setMethodsFil
     }
 
     return <FilterContainer>
-        <FilterSelect
+        <HARFilterSelect
             items={Object.values(HTTPMethod)}
             allowMultiple={true}
             value={methodsFilter}
@@ -91,7 +91,7 @@ const StatusTypesFilter: React.FC<StatusTypesFilterProps> = ({statusFilter, setS
     }
 
     return <FilterContainer>
-        <FilterSelect
+        <HARFilterSelect
             items={Object.values(StatusType)}
             allowMultiple={true}
             value={statusFilter}

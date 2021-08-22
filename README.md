@@ -150,7 +150,6 @@ Web interface is now available at http://localhost:8899
 ^C
 
 ```
-
 Any request that contains `User-Agent` header with one of the specified values (`kube-probe` or `prometheus`) will not be captured
 
 ### API Rules validation
@@ -160,15 +159,3 @@ Such validation may test response for specific JSON fields, headers, etc.
 
 Please see [API RULES](docs/POLICY_RULES.md) page for more details and syntax.
 
-
-## How to Run local UI
-
-- run from mizu/agent `go run main.go --hars-read --hars-dir <folder>`
-
-- copy Har files into the folder from last command
-
-- change `MizuWebsocketURL` and `apiURL` in `api.js` file
-
-- run from mizu/ui - `npm run start`
-
-- open browser on `localhost:3000`

@@ -26,17 +26,14 @@ var apiServerMode = flag.Bool("api-server", false, "Run in API server mode with 
 var standaloneMode = flag.Bool("standalone", false, "Run in standalone tapper and API mode")
 var apiServerAddress = flag.String("api-server-address", "", "Address of mizu API server")
 var namespace = flag.String("namespace", "", "Resolve IPs if they belong to resources in this namespace (default is all)")
-var harsReaderMode = flag.Bool("hars-read", false, "Run in hars-read mode")
-var harsDir = flag.String("hars-dir", "", "Directory to read hars from")
 
 func main() {
 	flag.Parse()
 	hostMode := os.Getenv(shared.HostModeEnvVar) == "1"
 	tapOpts := &tap.TapOpts{HostMode: hostMode}
 
-
-	if !*tapperMode && !*apiServerMode && !*standaloneMode && !*harsReaderMode{
-		panic("One of the flags --tap, --api or --standalone or --hars-read must be provided")
+	if !*tapperMode && !*apiServerMode && !*standaloneMode {
+		panic("One of the flags --tap, --api or --standalone must be provided")
 	}
 
 	if *standaloneMode {
@@ -80,13 +77,6 @@ func main() {
 		go api.StartReadingEntries(filteredHarChannel, nil)
 
 		hostApi(socketHarOutChannel)
-	} else if *harsReaderMode {
-		socketHarOutChannel := make(chan *tap.OutputChannelItem, 1000)
-		filteredHarChannel := make(chan *tap.OutputChannelItem)
-
-		go filterHarItems(socketHarOutChannel, filteredHarChannel, getTrafficFilteringOptions())
-		go api.StartReadingEntries(filteredHarChannel, harsDir)
-		hostApi(nil)
 	}
 
 	signalChan := make(chan os.Signal, 1)

@@ -1,17 +1,17 @@
-import {EntryItem} from "./EntryListItem/EntryListItem";
-import React, {useCallback, useEffect, useMemo, useRef, useState} from "react";
-import styles from './style/EntriesList.module.sass';
+import {HarEntry} from "./HarEntry";
+import React, {useCallback, useEffect, useMemo, useState} from "react";
+import styles from './style/HarEntriesList.module.sass';
 import spinner from './assets/spinner.svg';
 import ScrollableFeed from "react-scrollable-feed";
-import {StatusType} from "./Filters";
+import {StatusType} from "./HarFilters";
 import Api from "../helpers/api";
-import down from "./assets/downImg.svg";
+import uninon from "./assets/union.svg";
 
 interface HarEntriesListProps {
     entries: any[];
     setEntries: (entries: any[]) => void;
-    focusedEntry: any;
-    setFocusedEntry: (entry: any) => void;
+    focusedEntryId: string;
+    setFocusedEntryId: (id: string) => void;
     connectionOpen: boolean;
     noMoreDataTop: boolean;
     setNoMoreDataTop: (flag: boolean) => void;
@@ -32,12 +32,11 @@ enum FetchOperator {
 
 const api = new Api();
 
-export const EntriesList: React.FC<HarEntriesListProps> = ({entries, setEntries, focusedEntry, setFocusedEntry, connectionOpen, noMoreDataTop, setNoMoreDataTop, noMoreDataBottom, setNoMoreDataBottom, methodsFilter, statusFilter, pathFilter, listEntryREF, onScrollEvent, scrollableList}) => {
+export const HarEntriesList: React.FC<HarEntriesListProps> = ({entries, setEntries, focusedEntryId, setFocusedEntryId, connectionOpen, noMoreDataTop, setNoMoreDataTop, noMoreDataBottom, setNoMoreDataBottom, methodsFilter, statusFilter, pathFilter, listEntryREF, onScrollEvent, scrollableList}) => {
 
     const [loadMoreTop, setLoadMoreTop] = useState(false);
     const [isLoadingTop, setIsLoadingTop] = useState(false);
-    const scrollableRef = useRef(null);
-    
+
     useEffect(() => {
         const list = document.getElementById('list').firstElementChild;
         list.addEventListener('scroll', (e) => {
@@ -111,24 +110,28 @@ export const EntriesList: React.FC<HarEntriesListProps> = ({entries, setEntries,
 
     return <>
             <div className={styles.list}>
-                <div id="list" ref={listEntryREF} className={styles.list} >
+                <div id="list" ref={listEntryREF} className={styles.list}>
                     {isLoadingTop && <div className={styles.spinnerContainer}>
                         <img alt="spinner" src={spinner} style={{height: 25}}/>
                     </div>}
-                    <ScrollableFeed ref={scrollableRef} onScroll={(isAtBottom) => onScrollEvent(isAtBottom)}>
+                    <ScrollableFeed onScroll={(isAtBottom) => onScrollEvent(isAtBottom)}>
                         {noMoreDataTop && !connectionOpen && <div id="noMoreDataTop" className={styles.noMoreDataAvailable}>No more data available</div>}
-                        {filteredEntries.map(entry => <EntryItem key={entry.id}
+                        {filteredEntries.map(entry => <HarEntry key={entry.id}
                                                      entry={entry}
-                                                     setFocusedEntry = {setFocusedEntry}
-                                                     isSelected={focusedEntry.id === entry.id}/>)}
+                                                     setFocusedEntryId={setFocusedEntryId}
+                                                     isSelected={focusedEntryId === entry.id}/>)}
                         {!connectionOpen && !noMoreDataBottom && <div className={styles.fetchButtonContainer}>
                             <div className={styles.styledButton} onClick={() => getNewEntries()}>Fetch more entries</div>
                         </div>}
                     </ScrollableFeed>
                     <button type="button" 
                         className={`${styles.btnLive} ${scrollableList ? styles.showButton : styles.hideButton}`} 
-                        onClick={(_) => scrollableRef.current.scrollToBottom()}>
-                        <img alt="down" src={down} />
+                        onClick={(_) => {
+                            const list = listEntryREF.current.firstChild;
+                            if(list instanceof HTMLElement) {
+                                list.scrollTo({ top: list.scrollHeight, behavior: 'smooth' })
+                            }
+                        }}><img src={uninon} />
                     </button>
                 </div>
 

@@ -2,8 +2,8 @@ import React, {useEffect, useState} from 'react';
 import './App.sass';
 import logo from './components/assets/Mizu-logo.svg';
 import {Button, Snackbar} from "@material-ui/core";
-import {TrafficPage} from "./components/TrafficPage";
-import Tooltip from "./components/UI/Tooltip";
+import {HarPage} from "./components/HarPage";
+import Tooltip from "./components/Tooltip";
 import {makeStyles} from "@material-ui/core/styles";
 import MuiAlert from '@material-ui/lab/Alert';
 import Api from "./helpers/api";
@@ -38,7 +38,6 @@ const App = () => {
             }
 
         })();
-        // eslint-disable-next-line
     }, []);
 
     const onTLSDetected = (destAddress: string) => {
@@ -117,7 +116,7 @@ const App = () => {
                 </Tooltip>
                 }
             </div>
-            <TrafficPage setAnalyzeStatus={setAnalyzeStatus} onTLSDetected={onTLSDetected}/>
+            <HarPage setAnalyzeStatus={setAnalyzeStatus} onTLSDetected={onTLSDetected}/>
             <Snackbar open={showTLSWarning && !userDismissedTLSWarning}>
                 <MuiAlert elevation={6} variant="filled" onClose={() => setUserDismissedTLSWarning(true)} severity="warning">
                     Mizu is detecting TLS traffic{addressesWithTLS.size ? ` (directed to ${Array.from(addressesWithTLS).join(", ")})` : ''}, this type of traffic will not be displayed.
