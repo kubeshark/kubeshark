@@ -9,7 +9,7 @@ import (
 )
 
 func RunMizuFetch() {
-	if err := apiserver.Provider.Init(GetApiServerUrl(), 5); err != nil {
+	if err := apiserver.Provider.InitAndTestConnection(GetApiServerUrl(), 5); err != nil {
 		logger.Log.Errorf(uiUtils.Error, "Couldn't connect to API server, check logs")
 	}
 
@@ -19,5 +19,7 @@ func RunMizuFetch() {
 		return
 	}
 
-	_ = fsUtils.Unzip(zipReader, config.Config.Fetch.Directory)
+	if err := fsUtils.Unzip(zipReader, config.Config.Fetch.Directory); err != nil {
+		logger.Log.Debugf("[ERROR] failed unzip %v", err)
+	}
 }

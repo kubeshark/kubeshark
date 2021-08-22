@@ -100,7 +100,7 @@ func RunMizuTap() {
 
 	nodeToTappedPodIPMap := getNodeHostToTappedPodIpsMap(state.currentlyTappedPods)
 
-	defer finishMizuException(kubernetesProvider)
+	defer finishMizuExecution(kubernetesProvider)
 	if err := createMizuResources(ctx, kubernetesProvider, nodeToTappedPodIPMap, mizuApiFilteringOptions, mizuValidationRules); err != nil {
 		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error creating resources: %v", errormessage.FormatError(err)))
 		return
@@ -253,7 +253,7 @@ func updateMizuTappers(ctx context.Context, kubernetesProvider *kubernetes.Provi
 	return nil
 }
 
-func finishMizuException(kubernetesProvider *kubernetes.Provider) {
+func finishMizuExecution(kubernetesProvider *kubernetes.Provider) {
 	telemetry.ReportAPICalls()
 	removalCtx, cancel := context.WithTimeout(context.Background(), cleanupTimeout)
 	defer cancel()
@@ -497,7 +497,7 @@ func watchApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 				isPodReady = true
 				go startProxyReportErrorIfAny(kubernetesProvider, cancel)
 
-				if err := apiserver.Provider.Init(GetApiServerUrl(), 20); err != nil {
+				if err := apiserver.Provider.InitAndTestConnection(GetApiServerUrl(), 20); err != nil {
 					logger.Log.Errorf(uiUtils.Error, "Couldn't connect to API server, check logs")
 					cancel()
 					break

@@ -43,7 +43,7 @@ func runMizuView() {
 	logger.Log.Infof("Establishing connection to k8s cluster...")
 	go startProxyReportErrorIfAny(kubernetesProvider, cancel)
 
-	if err := apiserver.Provider.Init(GetApiServerUrl(), 10); err != nil {
+	if err := apiserver.Provider.InitAndTestConnection(GetApiServerUrl(), 10); err != nil {
 		logger.Log.Errorf(uiUtils.Error, "Couldn't connect to API server, check logs")
 		return
 	}

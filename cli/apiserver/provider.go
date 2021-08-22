@@ -22,7 +22,7 @@ type apiServerProvider struct {
 
 var Provider = apiServerProvider{}
 
-func (provider *apiServerProvider) Init(url string, retries int) error {
+func (provider *apiServerProvider) InitAndTestConnection(url string, retries int) error {
 	healthUrl := fmt.Sprintf("%s/", url)
 	retriesLeft := retries
 	for retriesLeft > 0 {
