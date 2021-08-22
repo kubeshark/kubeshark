@@ -2,43 +2,21 @@ package version
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
+	"github.com/up9inc/mizu/cli/apiserver"
 	"github.com/up9inc/mizu/cli/logger"
 	"github.com/up9inc/mizu/cli/mizu"
 	"io/ioutil"
 	"net/http"
-	"net/url"
 	"time"
 
 	"github.com/google/go-github/v37/github"
 	"github.com/up9inc/mizu/cli/uiUtils"
-	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/semver"
 )
 
-func getApiVersion(port uint16) (string, error) {
-	versionUrl, _ := url.Parse(fmt.Sprintf("http://localhost:%d/mizu/metadata/version", port))
-	req := &http.Request{
-		Method: http.MethodGet,
-		URL:    versionUrl,
-	}
-	statusResp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return "", err
-	}
-	defer statusResp.Body.Close()
-
-	versionResponse := &shared.VersionResponse{}
-	if err := json.NewDecoder(statusResp.Body).Decode(&versionResponse); err != nil {
-		return "", err
-	}
-
-	return versionResponse.SemVer, nil
-}
-
-func CheckVersionCompatibility(port uint16) (bool, error) {
-	apiSemVer, err := getApiVersion(port)
+func CheckVersionCompatibility() (bool, error) {
+	apiSemVer, err := apiserver.Provider.GetVersion()
 	if err != nil {
 		return false, err
 	}
