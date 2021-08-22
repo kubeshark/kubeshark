@@ -180,12 +180,26 @@ func (d dissecting) Represent(entry string) ([]byte, error) {
 	case ApiVersions:
 		repRequest = representApiVersionsRequest(reqDetails)
 		repResponse = representApiVersionsResponse(resDetails)
+		break
 	case Produce:
 		repRequest = representProduceRequest(reqDetails)
 		repResponse = representProduceResponse(resDetails)
+		break
 	case Fetch:
 		repRequest = representFetchRequest(reqDetails)
 		repResponse = representFetchResponse(resDetails)
+		break
+	case ListOffsets:
+		repRequest = representListOffsetsRequest(reqDetails)
+		repResponse = representListOffsetsResponse(resDetails)
+		break
+	case CreateTopics:
+		repRequest = representCreateTopicsRequest(reqDetails)
+		repResponse = representCreateTopicsResponse(resDetails)
+		break
+	case DeleteTopics:
+		repRequest = representDeleteTopicsRequest(reqDetails)
+		repResponse = representDeleteTopicsResponse(resDetails)
 		break
 	}
 

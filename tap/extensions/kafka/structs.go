@@ -939,7 +939,7 @@ type CreateTopicsResponseV7 struct {
 
 type DeleteTopicsRequestV0 struct {
 	TopicNames []string
-	TimemoutMs int32
+	TimeoutMs  int32
 }
 
 // DeleteTopics Request (Version: 6)
@@ -950,8 +950,8 @@ type DeleteTopicsRequestTopicV6 struct {
 }
 
 type DeleteTopicsRequestV6 struct {
-	Topics     []DeleteTopicsRequestTopicV6
-	TimemoutMs int32
+	Topics    []DeleteTopicsRequestTopicV6
+	TimeoutMs int32
 }
 
 // DeleteTopics Response (Version: 0)

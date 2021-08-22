@@ -449,3 +449,192 @@ func representFetchResponse(data map[string]interface{}) []interface{} {
 
 	return rep
 }
+
+func representListOffsetsRequest(data map[string]interface{}) []interface{} {
+	rep := make([]interface{}, 0)
+
+	rep = representRequestHeader(data, rep)
+
+	payload := data["Payload"].(map[string]interface{})
+	topics, _ := json.Marshal(payload["Topics"].([]interface{}))
+	repPayload, _ := json.Marshal([]map[string]string{
+		{
+			"name":  "Replica ID",
+			"value": fmt.Sprintf("%d", int(payload["ReplicaId"].(float64))),
+		},
+		{
+			"name":  "Topics",
+			"value": string(topics),
+		},
+	})
+	rep = append(rep, map[string]string{
+		"type":  "table",
+		"title": "Payload",
+		"data":  string(repPayload),
+	})
+
+	return rep
+}
+
+func representListOffsetsResponse(data map[string]interface{}) []interface{} {
+	rep := make([]interface{}, 0)
+
+	rep = representResponseHeader(data, rep)
+
+	payload := data["Payload"].(map[string]interface{})
+	topics, _ := json.Marshal(payload["Topics"].([]interface{}))
+	throttleTimeMs := ""
+	if payload["ThrottleTimeMs"] != nil {
+		throttleTimeMs = fmt.Sprintf("%d", int(payload["ThrottleTimeMs"].(float64)))
+	}
+	repPayload, _ := json.Marshal([]map[string]string{
+		{
+			"name":  "Throttle Time (ms)",
+			"value": throttleTimeMs,
+		},
+		{
+			"name":  "Topics",
+			"value": string(topics),
+		},
+	})
+	rep = append(rep, map[string]string{
+		"type":  "table",
+		"title": "Payload",
+		"data":  string(repPayload),
+	})
+
+	return rep
+}
+
+func representCreateTopicsRequest(data map[string]interface{}) []interface{} {
+	rep := make([]interface{}, 0)
+
+	rep = representRequestHeader(data, rep)
+
+	payload := data["Payload"].(map[string]interface{})
+	topics, _ := json.Marshal(payload["Topics"].([]interface{}))
+	validateOnly := ""
+	if payload["ValidateOnly"] != nil {
+		validateOnly = strconv.FormatBool(payload["ValidateOnly"].(bool))
+	}
+	repPayload, _ := json.Marshal([]map[string]string{
+		{
+			"name":  "Topics",
+			"value": string(topics),
+		},
+		{
+			"name":  "Timeout (ms)",
+			"value": fmt.Sprintf("%d", int(payload["TimeoutMs"].(float64))),
+		},
+		{
+			"name":  "Validate Only",
+			"value": validateOnly,
+		},
+	})
+	rep = append(rep, map[string]string{
+		"type":  "table",
+		"title": "Payload",
+		"data":  string(repPayload),
+	})
+
+	return rep
+}
+
+func representCreateTopicsResponse(data map[string]interface{}) []interface{} {
+	rep := make([]interface{}, 0)
+
+	rep = representResponseHeader(data, rep)
+
+	payload := data["Payload"].(map[string]interface{})
+	topics, _ := json.Marshal(payload["Topics"].([]interface{}))
+	throttleTimeMs := ""
+	if payload["ThrottleTimeMs"] != nil {
+		throttleTimeMs = fmt.Sprintf("%d", int(payload["ThrottleTimeMs"].(float64)))
+	}
+	repPayload, _ := json.Marshal([]map[string]string{
+		{
+			"name":  "Throttle Time (ms)",
+			"value": throttleTimeMs,
+		},
+		{
+			"name":  "Topics",
+			"value": string(topics),
+		},
+	})
+	rep = append(rep, map[string]string{
+		"type":  "table",
+		"title": "Payload",
+		"data":  string(repPayload),
+	})
+
+	return rep
+}
+
+func representDeleteTopicsRequest(data map[string]interface{}) []interface{} {
+	rep := make([]interface{}, 0)
+
+	rep = representRequestHeader(data, rep)
+
+	payload := data["Payload"].(map[string]interface{})
+	topics := ""
+	if payload["Topics"] != nil {
+		x, _ := json.Marshal(payload["Topics"].([]interface{}))
+		topics = string(x)
+	}
+	topicNames := ""
+	if payload["TopicNames"] != nil {
+		x, _ := json.Marshal(payload["TopicNames"].([]interface{}))
+		topicNames = string(x)
+	}
+	repPayload, _ := json.Marshal([]map[string]string{
+		{
+			"name":  "TopicNames",
+			"value": string(topicNames),
+		},
+		{
+			"name":  "Topics",
+			"value": string(topics),
+		},
+		{
+			"name":  "Timeout (ms)",
+			"value": fmt.Sprintf("%d", int(payload["TimeoutMs"].(float64))),
+		},
+	})
+	rep = append(rep, map[string]string{
+		"type":  "table",
+		"title": "Payload",
+		"data":  string(repPayload),
+	})
+
+	return rep
+}
+
+func representDeleteTopicsResponse(data map[string]interface{}) []interface{} {
+	rep := make([]interface{}, 0)
+
+	rep = representResponseHeader(data, rep)
+
+	payload := data["Payload"].(map[string]interface{})
+	responses, _ := json.Marshal(payload["Responses"].([]interface{}))
+	throttleTimeMs := ""
+	if payload["ThrottleTimeMs"] != nil {
+		throttleTimeMs = fmt.Sprintf("%d", int(payload["ThrottleTimeMs"].(float64)))
+	}
+	repPayload, _ := json.Marshal([]map[string]string{
+		{
+			"name":  "Throttle Time (ms)",
+			"value": throttleTimeMs,
+		},
+		{
+			"name":  "Responses",
+			"value": string(responses),
+		},
+	})
+	rep = append(rep, map[string]string{
+		"type":  "table",
+		"title": "Payload",
+		"data":  string(repPayload),
+	})
+
+	return rep
+}
