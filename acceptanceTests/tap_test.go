@@ -13,22 +13,22 @@ func TestTapAndFetch(t *testing.T) {
 		t.Skip("ignored acceptance test")
 	}
 
-	tests := []int{1, 100}
+	tests := []int{50}
 
 	for _, entriesCount := range tests {
 		t.Run(fmt.Sprintf("%d", entriesCount), func(t *testing.T) {
-			cliPath, cliPathErr := GetCliPath()
+			cliPath, cliPathErr := getCliPath()
 			if cliPathErr != nil {
 				t.Errorf("failed to get cli path, err: %v", cliPathErr)
 				return
 			}
 
-			tapCmdArgs := GetDefaultTapCommandArgs()
+			tapCmdArgs := getDefaultTapCommandArgs()
 			tapCmd := exec.Command(cliPath, tapCmdArgs...)
 			t.Logf("running command: %v", tapCmd.String())
 
 			t.Cleanup(func() {
-				if err := CleanupCommand(tapCmd); err != nil {
+				if err := cleanupCommand(tapCmd); err != nil {
 					t.Logf("failed to cleanup tap command, err: %v", err)
 				}
 			})
@@ -38,14 +38,14 @@ func TestTapAndFetch(t *testing.T) {
 				return
 			}
 
-			if err := WaitTapPodsReady(); err != nil {
+			if err := waitTapPodsReady(); err != nil {
 				t.Errorf("failed to start tap pods on time, err: %v", err)
 				return
 			}
 
 			proxyUrl := "http://localhost:8080/api/v1/namespaces/mizu-tests/services/httpbin/proxy/get"
 			for i := 0; i < entriesCount; i++ {
-				if _, requestErr := ExecuteHttpRequest(proxyUrl); requestErr != nil {
+				if _, requestErr := executeHttpRequest(proxyUrl); requestErr != nil {
 					t.Errorf("failed to send proxy request, err: %v", requestErr)
 					return
 				}
@@ -55,7 +55,7 @@ func TestTapAndFetch(t *testing.T) {
 				timestamp := time.Now().UnixNano() / int64(time.Millisecond)
 
 				entriesUrl := fmt.Sprintf("http://localhost:8899/mizu/api/entries?limit=%v&operator=lt&timestamp=%v", entriesCount, timestamp)
-				requestResult, requestErr := ExecuteHttpRequest(entriesUrl)
+				requestResult, requestErr := executeHttpRequest(entriesUrl)
 				if requestErr != nil {
 					return fmt.Errorf("failed to get entries, err: %v", requestErr)
 				}
@@ -65,8 +65,8 @@ func TestTapAndFetch(t *testing.T) {
 					return fmt.Errorf("invalid entries type")
 				}
 
-				if len(entries) != entriesCount {
-					return fmt.Errorf("unexpected entries result - Expected: %v, actual: %v", entriesCount, len(entries))
+				if len(entries) == 0 {
+					return fmt.Errorf("unexpected entries result - Expected more than 0 entries")
 				}
 
 				entry, ok :=  entries[0].(map[string]interface{})
@@ -75,7 +75,7 @@ func TestTapAndFetch(t *testing.T) {
 				}
 
 				entryUrl := fmt.Sprintf("http://localhost:8899/mizu/api/entries/%v", entry["id"])
-				requestResult, requestErr = ExecuteHttpRequest(entryUrl)
+				requestResult, requestErr = executeHttpRequest(entryUrl)
 				if requestErr != nil {
 					return fmt.Errorf("failed to get entry, err: %v", requestErr)
 				}
@@ -86,12 +86,12 @@ func TestTapAndFetch(t *testing.T) {
 
 				return nil
 			}
-			if err := RetriesExecute(ShortRetriesCount, entriesCheckFunc); err != nil {
+			if err := retriesExecute(ShortRetriesCount, entriesCheckFunc); err != nil {
 				t.Errorf("%v", err)
 				return
 			}
 
-			fetchCmdArgs := GetDefaultFetchCommandArgs()
+			fetchCmdArgs := getDefaultFetchCommandArgs()
 			fetchCmd := exec.Command(cliPath, fetchCmdArgs...)
 			t.Logf("running command: %v", fetchCmd.String())
 
@@ -106,18 +106,18 @@ func TestTapAndFetch(t *testing.T) {
 					return fmt.Errorf("failed to read har file, err: %v", readFileErr)
 				}
 
-				harEntries, err := GetEntriesFromHarBytes(harBytes)
+				harEntries, err := getEntriesFromHarBytes(harBytes)
 				if err != nil {
 					return fmt.Errorf("failed to get entries from har, err: %v", err)
 				}
 
-				if len(harEntries) != entriesCount {
-					return fmt.Errorf("unexpected har entries result - Expected: %v, actual: %v", entriesCount, len(harEntries))
+				if len(harEntries) == 0 {
+					return fmt.Errorf("unexpected har entries result - Expected more than 0 entries")
 				}
 
 				return nil
 			}
-			if err := RetriesExecute(ShortRetriesCount, harCheckFunc); err != nil {
+			if err := retriesExecute(ShortRetriesCount, harCheckFunc); err != nil {
 				t.Errorf("%v", err)
 				return
 			}
