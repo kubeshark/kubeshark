@@ -29,8 +29,6 @@ const SectionsRepresentation: React.FC<any> = ({data, color}) => {
 }
 
 const AutoRepresentation: React.FC<any> = ({representation, color, isResponseMocked}) => {
-    const {request, response} = JSON.parse(representation);
-
     const rulesMatched = []
     const TABS = [
         {tab: 'request'},
@@ -42,8 +40,14 @@ const AutoRepresentation: React.FC<any> = ({representation, color, isResponseMoc
             tab: 'Rules',
         },
     ];
-
     const [currentTab, setCurrentTab] = useState(TABS[0].tab);
+
+    // Don't fail even if `representation` is an empty string
+    if (representation.length === 0) {
+        return <></>;
+    }
+
+    const {request, response} = JSON.parse(representation);
 
     return <div className={styles.harEntry}>
         {<div className={styles.body}>

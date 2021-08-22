@@ -2,6 +2,8 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
+	"fmt"
 	"log"
 
 	"github.com/up9inc/mizu/tap/api"
@@ -13,7 +15,7 @@ var _protocol api.Protocol = api.Protocol{
 	Abbreviation:    "KAFKA",
 	BackgroundColor: "#000000",
 	ForegroundColor: "#ffffff",
-	FontSize:        12,
+	FontSize:        11,
 	ReferenceLink:   "https://kafka.apache.org/protocol",
 	Ports:           []string{"9092"},
 }
@@ -43,13 +45,117 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, em
 }
 
 func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolvedSource string, resolvedDestination string) *api.MizuEntry {
-	// TODO: Implement
-	return nil
+	request := item.Pair.Request.Payload.(map[string]interface{})
+	response := item.Pair.Response.Payload.(map[string]interface{})
+	entryBytes, _ := json.Marshal(item.Pair)
+	service := fmt.Sprintf("kafka")
+	apiKey := ApiKey(request["ApiKey"].(float64))
+
+	summary := ""
+	switch apiKey {
+	case Metadata:
+		_topics := request["Payload"].(map[string]interface{})["Topics"]
+		if _topics == nil {
+			break
+		}
+		topics := _topics.([]interface{})
+		for _, topic := range topics {
+			summary += fmt.Sprintf("%s, ", topic.(map[string]interface{})["Name"].(string))
+		}
+		if len(summary) > 0 {
+			summary = summary[:len(summary)-2]
+		}
+		break
+	case ApiVersions:
+		summary = request["ClientID"].(string)
+		break
+	case Produce:
+		topics := request["Payload"].(map[string]interface{})["TopicData"].([]interface{})
+		for _, topic := range topics {
+			summary += fmt.Sprintf("%s, ", topic.(map[string]interface{})["Topic"].(string))
+		}
+		if len(summary) > 0 {
+			summary = summary[:len(summary)-2]
+		}
+		break
+	case Fetch:
+		topics := request["Payload"].(map[string]interface{})["Topics"].([]interface{})
+		for _, topic := range topics {
+			summary += fmt.Sprintf("%s, ", topic.(map[string]interface{})["Topic"].(string))
+		}
+		if len(summary) > 0 {
+			summary = summary[:len(summary)-2]
+		}
+		break
+	case ListOffsets:
+		topics := request["Payload"].(map[string]interface{})["Topics"].([]interface{})
+		for _, topic := range topics {
+			summary += fmt.Sprintf("%s, ", topic.(map[string]interface{})["Name"].(string))
+		}
+		if len(summary) > 0 {
+			summary = summary[:len(summary)-2]
+		}
+		break
+	case CreateTopics:
+		topics := request["Payload"].(map[string]interface{})["Topics"].([]interface{})
+		for _, topic := range topics {
+			summary += fmt.Sprintf("%s, ", topic.(map[string]interface{})["Name"].(string))
+		}
+		if len(summary) > 0 {
+			summary = summary[:len(summary)-2]
+		}
+		break
+	case DeleteTopics:
+		topicNames := request["TopicNames"].([]string)
+		for _, name := range topicNames {
+			summary += fmt.Sprintf("%s, ", name)
+		}
+		break
+	}
+
+	return &api.MizuEntry{
+		ProtocolName:        _protocol.Name,
+		EntryId:             entryId,
+		Entry:               string(entryBytes),
+		Url:                 fmt.Sprintf("%s%s", service, summary),
+		Method:              apiNames[apiKey],
+		Status:              0,
+		RequestSenderIp:     item.ConnectionInfo.ClientIP,
+		Service:             service,
+		Timestamp:           item.Timestamp,
+		Path:                summary,
+		ResolvedSource:      resolvedSource,
+		ResolvedDestination: resolvedDestination,
+		SourceIp:            item.ConnectionInfo.ClientIP,
+		DestinationIp:       item.ConnectionInfo.ServerIP,
+		SourcePort:          item.ConnectionInfo.ClientPort,
+		DestinationPort:     item.ConnectionInfo.ServerPort,
+		IsOutgoing:          item.ConnectionInfo.IsOutgoing,
+	}
 }
 
 func (d dissecting) Summarize(entry *api.MizuEntry) *api.BaseEntryDetails {
-	// TODO: Implement
-	return nil
+	return &api.BaseEntryDetails{
+		Id:              entry.EntryId,
+		Protocol:        _protocol,
+		Url:             entry.Url,
+		RequestSenderIp: entry.RequestSenderIp,
+		Service:         entry.Service,
+		Summary:         entry.Path,
+		StatusCode:      entry.Status,
+		Method:          entry.Method,
+		Timestamp:       entry.Timestamp,
+		SourceIp:        entry.SourceIp,
+		DestinationIp:   entry.DestinationIp,
+		SourcePort:      entry.SourcePort,
+		DestinationPort: entry.DestinationPort,
+		IsOutgoing:      entry.IsOutgoing,
+		Latency:         0,
+		Rules: api.ApplicableRules{
+			Latency: 0,
+			Status:  false,
+		},
+	}
 }
 
 func (d dissecting) Represent(entry string) ([]byte, error) {

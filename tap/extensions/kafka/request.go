@@ -143,6 +143,7 @@ func ReadRequest(r io.Reader, tcpID *api.TcpID) (apiKey ApiKey, apiVersion int16
 		}
 		mt.(messageType).decode(d, valueOf(fetchRequest))
 		payload = fetchRequest
+		break
 	case ListOffsets:
 		var mt interface{}
 		var listOffsetsRequest interface{}

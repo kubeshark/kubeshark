@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"reflect"
+	"time"
 
 	"github.com/up9inc/mizu/tap/api"
 )
@@ -245,8 +246,40 @@ func ReadResponse(r io.Reader, tcpID *api.TcpID, emitter api.Emitter) (err error
 		break
 	}
 
-	reqResPair.debug()
-	// emitter.Emit(item)
+	// reqResPair.debug()
+
+	connectionInfo := &api.ConnectionInfo{
+		ClientIP:   tcpID.SrcIP,
+		ClientPort: tcpID.SrcPort,
+		ServerIP:   tcpID.DstIP,
+		ServerPort: tcpID.DstPort,
+		IsOutgoing: true,
+	}
+
+	item := &api.OutputChannelItem{
+		Protocol:       _protocol,
+		Timestamp:      time.Now().UnixNano() / int64(time.Millisecond),
+		ConnectionInfo: connectionInfo,
+		Pair: &api.RequestResponsePair{
+			Request: api.GenericMessage{
+				IsRequest:   true,
+				CaptureTime: time.Now(),
+				Payload: KafkaPayload{
+					Type: "kafka_request",
+					Data: reqResPair.Request,
+				},
+			},
+			Response: api.GenericMessage{
+				IsRequest:   false,
+				CaptureTime: time.Now(),
+				Payload: KafkaPayload{
+					Type: "kafka_response",
+					Data: reqResPair.Response,
+				},
+			},
+		},
+	}
+	emitter.Emit(item)
 
 	if i := int(apiKey); i < 0 || i >= len(apiTypes) {
 		err = fmt.Errorf("unsupported api key: %d", i)
