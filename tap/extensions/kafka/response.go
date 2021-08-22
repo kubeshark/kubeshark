@@ -6,7 +6,7 @@ import (
 	"log"
 	"reflect"
 
-	"github.com/google/gopacket"
+	"github.com/up9inc/mizu/tap/api"
 )
 
 type Response struct {
@@ -21,7 +21,7 @@ func (res *Response) print() {
 	log.Printf("Payload: %+v\n", res.Payload)
 }
 
-func ReadResponse(r io.Reader, net gopacket.Flow, transport gopacket.Flow) (err error) {
+func ReadResponse(r io.Reader, tcpID *api.TcpID) (err error) {
 	d := &decoder{reader: r, remain: 4}
 	size := d.readInt32()
 
@@ -41,10 +41,10 @@ func ReadResponse(r io.Reader, net gopacket.Flow, transport gopacket.Flow) (err 
 
 	key := fmt.Sprintf(
 		"%s:%s->%s:%s::%d",
-		net.Src().String(),
-		transport.Src().String(),
-		net.Dst().String(),
-		transport.Dst().String(),
+		tcpID.SrcIP,
+		tcpID.SrcPort,
+		tcpID.DstIP,
+		tcpID.DstPort,
 		correlationID,
 	)
 	// fmt.Printf("key: %v\n", key)

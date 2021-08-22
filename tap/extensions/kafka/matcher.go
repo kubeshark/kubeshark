@@ -2,8 +2,7 @@ package main
 
 import (
 	"log"
-
-	cmap "github.com/orcaman/concurrent-map"
+	"sync"
 )
 
 var reqResMatcher = CreateResponseRequestMatcher() // global
@@ -15,29 +14,29 @@ type RequestResponsePair struct {
 
 // Key is {client_addr}:{client_port}->{dest_addr}:{dest_port}::{correlation_id}
 type requestResponseMatcher struct {
-	openMessagesMap cmap.ConcurrentMap
+	openMessagesMap sync.Map
 }
 
 func CreateResponseRequestMatcher() requestResponseMatcher {
-	newMatcher := &requestResponseMatcher{openMessagesMap: cmap.New()}
+	newMatcher := &requestResponseMatcher{openMessagesMap: sync.Map{}}
 	return *newMatcher
 }
 
 func (matcher *requestResponseMatcher) registerRequest(key string, request *Request) *RequestResponsePair {
-	if response, found := matcher.openMessagesMap.Pop(key); found {
+	if response, found := matcher.openMessagesMap.LoadAndDelete(key); found {
 		return matcher.preparePair(request, response.(*Response))
 	}
 
-	matcher.openMessagesMap.Set(key, request)
+	matcher.openMessagesMap.Store(key, &request)
 	return nil
 }
 
 func (matcher *requestResponseMatcher) registerResponse(key string, response *Response) *RequestResponsePair {
-	if request, found := matcher.openMessagesMap.Pop(key); found {
+	if request, found := matcher.openMessagesMap.LoadAndDelete(key); found {
 		return matcher.preparePair(request.(*Request), response)
 	}
 
-	matcher.openMessagesMap.Set(key, response)
+	matcher.openMessagesMap.Store(key, &response)
 	return nil
 }
 

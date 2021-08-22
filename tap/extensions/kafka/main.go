@@ -7,7 +7,7 @@ import (
 	"github.com/up9inc/mizu/tap/api"
 )
 
-var protocol api.Protocol = api.Protocol{
+var _protocol api.Protocol = api.Protocol{
 	Name:            "kafka",
 	LongName:        "Apache Kafka Protocol",
 	Abbreviation:    "KAFKA",
@@ -25,11 +25,11 @@ func init() {
 type dissecting string
 
 func (d dissecting) Register(extension *api.Extension) {
-	extension.Protocol = protocol
+	extension.Protocol = _protocol
 }
 
 func (d dissecting) Ping() {
-	log.Printf("pong %s\n", protocol.Name)
+	log.Printf("pong %s\n", _protocol.Name)
 }
 
 func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, emitter api.Emitter) {
