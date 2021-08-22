@@ -177,3 +177,70 @@ func representMetadataResponse(data map[string]interface{}) []interface{} {
 
 	return rep
 }
+
+func representApiVersionsRequest(data map[string]interface{}) []interface{} {
+	rep := make([]interface{}, 0)
+
+	rep = representRequestHeader(data, rep)
+
+	payload := data["Payload"].(map[string]interface{})
+	clientSoftwareName := ""
+	clientSoftwareVersion := ""
+	if payload["ClientSoftwareName"] != nil {
+		clientSoftwareName = payload["ClientSoftwareName"].(string)
+	}
+	if payload["ClientSoftwareVersion"] != nil {
+		clientSoftwareVersion = payload["ClientSoftwareVersion"].(string)
+	}
+	repPayload, _ := json.Marshal([]map[string]string{
+		{
+			"name":  "Client Software Name",
+			"value": clientSoftwareName,
+		},
+		{
+			"name":  "Client Software Version",
+			"value": clientSoftwareVersion,
+		},
+	})
+	rep = append(rep, map[string]string{
+		"type":  "table",
+		"title": "Payload",
+		"data":  string(repPayload),
+	})
+
+	return rep
+}
+
+func representApiVersionsResponse(data map[string]interface{}) []interface{} {
+	rep := make([]interface{}, 0)
+
+	rep = representResponseHeader(data, rep)
+
+	payload := data["Payload"].(map[string]interface{})
+	apiKeys, _ := json.Marshal(payload["ApiKeys"].([]interface{}))
+	throttleTimeMs := ""
+	if payload["ThrottleTimeMs"] != nil {
+		throttleTimeMs = fmt.Sprintf("%d", int(payload["ThrottleTimeMs"].(float64)))
+	}
+	repPayload, _ := json.Marshal([]map[string]string{
+		{
+			"name":  "Error Code",
+			"value": fmt.Sprintf("%d", int(payload["ErrorCode"].(float64))),
+		},
+		{
+			"name":  "ApiKeys",
+			"value": string(apiKeys),
+		},
+		{
+			"name":  "Throttle Time (ms)",
+			"value": throttleTimeMs,
+		},
+	})
+	rep = append(rep, map[string]string{
+		"type":  "table",
+		"title": "Payload",
+		"data":  string(repPayload),
+	})
+
+	return rep
+}

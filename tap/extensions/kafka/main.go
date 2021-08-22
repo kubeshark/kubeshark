@@ -177,6 +177,10 @@ func (d dissecting) Represent(entry string) ([]byte, error) {
 		repRequest = representMetadataRequest(reqDetails)
 		repResponse = representMetadataResponse(resDetails)
 		break
+	case ApiVersions:
+		repRequest = representApiVersionsRequest(reqDetails)
+		repResponse = representApiVersionsResponse(resDetails)
+		break
 	}
 
 	representation["request"] = repRequest
