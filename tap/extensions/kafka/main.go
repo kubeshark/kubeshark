@@ -46,7 +46,6 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, em
 
 func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolvedSource string, resolvedDestination string) *api.MizuEntry {
 	request := item.Pair.Request.Payload.(map[string]interface{})
-	response := item.Pair.Response.Payload.(map[string]interface{})
 	entryBytes, _ := json.Marshal(item.Pair)
 	service := fmt.Sprintf("kafka")
 	apiKey := ApiKey(request["ApiKey"].(float64))
@@ -159,8 +158,28 @@ func (d dissecting) Summarize(entry *api.MizuEntry) *api.BaseEntryDetails {
 }
 
 func (d dissecting) Represent(entry string) ([]byte, error) {
-	// TODO: Implement
-	return nil, nil
+	var root map[string]interface{}
+	json.Unmarshal([]byte(entry), &root)
+	representation := make(map[string]interface{}, 0)
+	request := root["request"].(map[string]interface{})["payload"].(map[string]interface{})
+	response := root["response"].(map[string]interface{})["payload"].(map[string]interface{})
+	// fmt.Printf("\n\nrequest: %+v\n", request)
+	// fmt.Printf("response: %+v\n", response)
+
+	apiKey := ApiKey(request["ApiKey"].(float64))
+
+	var repRequest []interface{}
+	var repResponse []interface{}
+	switch apiKey {
+	case Metadata:
+		repRequest = representMetadataRequest(request)
+		repResponse = representMetadataResponse(response)
+		break
+	}
+
+	representation["request"] = repRequest
+	representation["response"] = repResponse
+	return json.Marshal(representation)
 }
 
 var Dissector dissecting
