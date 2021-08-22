@@ -249,26 +249,28 @@ func representRequest(request map[string]interface{}) []interface{} {
 		})
 	}
 
-	params, _ := json.Marshal(postData["params"].([]interface{}))
-	if len(params) > 0 {
-		if mimeType == "multipart/form-data" {
-			multipart, _ := json.Marshal([]map[string]string{
-				{
-					"name":  "Files",
-					"value": string(params),
-				},
-			})
-			repRequest = append(repRequest, map[string]string{
-				"type":  "table",
-				"title": "POST Data (multipart/form-data)",
-				"data":  string(multipart),
-			})
-		} else {
-			repRequest = append(repRequest, map[string]string{
-				"type":  "table",
-				"title": "POST Data (application/x-www-form-urlencoded)",
-				"data":  string(params),
-			})
+	if postData["params"] != nil {
+		params, _ := json.Marshal(postData["params"].([]interface{}))
+		if len(params) > 0 {
+			if mimeType == "multipart/form-data" {
+				multipart, _ := json.Marshal([]map[string]string{
+					{
+						"name":  "Files",
+						"value": string(params),
+					},
+				})
+				repRequest = append(repRequest, map[string]string{
+					"type":  "table",
+					"title": "POST Data (multipart/form-data)",
+					"data":  string(multipart),
+				})
+			} else {
+				repRequest = append(repRequest, map[string]string{
+					"type":  "table",
+					"title": "POST Data (application/x-www-form-urlencoded)",
+					"data":  string(params),
+				})
+			}
 		}
 	}
 
