@@ -39,6 +39,7 @@ func (provider *apiServerProvider) InitAndTestConnection(url string, retries int
 	}
 
 	if retriesLeft == 0 {
+		provider.isReady = false
 		return fmt.Errorf("couldn't reach the api server after %v retries", retries)
 	}
 	provider.url = url
