@@ -57,8 +57,8 @@ const HarEntrySummary: React.FC<any> = ({har}) => {
     const {response, request} = JSON.parse(entries[0].entry);
 
     return <div className={classes.entrySummary}>
-        {response?.payload && "status" in response.payload && <div style={{marginRight: 8}}>
-            <StatusCode statusCode={response.payload.status}/>
+        {response?.payload.details && "status" in response.payload.details && <div style={{marginRight: 8}}>
+            <StatusCode statusCode={response.payload.details.status}/>
         </div>}
         <div style={{flexGrow: 1, overflow: 'hidden'}}>
             <EndpointPath method={request?.payload.method} path={request?.payload.url}/>
