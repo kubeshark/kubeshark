@@ -180,6 +180,9 @@ func (d dissecting) Represent(entry string) ([]byte, error) {
 	case ApiVersions:
 		repRequest = representApiVersionsRequest(reqDetails)
 		repResponse = representApiVersionsResponse(resDetails)
+	case Produce:
+		repRequest = representProduceRequest(reqDetails)
+		repResponse = representProduceResponse(resDetails)
 		break
 	}
 
