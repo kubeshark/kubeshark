@@ -102,29 +102,43 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, em
 }
 
 func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolvedSource string, resolvedDestination string) *api.MizuEntry {
-	var host string
+	var host, scheme, authority, path, service string
 	for _, header := range item.Pair.Request.Payload.(map[string]interface{})["headers"].([]interface{}) {
 		h := header.(map[string]interface{})
 		if h["name"] == "Host" {
 			host = h["value"].(string)
 		}
+		if h["name"] == ":authority" {
+			authority = h["value"].(string)
+		}
+		if h["name"] == ":scheme" {
+			scheme = h["value"].(string)
+		}
+		if h["name"] == ":path" {
+			path = h["value"].(string)
+		}
 	}
 	request := item.Pair.Request.Payload.(map[string]interface{})
 	response := item.Pair.Response.Payload.(map[string]interface{})
 	entryBytes, _ := json.Marshal(item.Pair)
-	service := fmt.Sprintf("http://%s", host)
+	if item.Protocol.Version == "2.0" {
+		service = fmt.Sprintf("(gRPC) %s://%s", scheme, authority)
+	} else {
+		service = fmt.Sprintf("http://%s", host)
+		path = request["url"].(string)
+	}
 	return &api.MizuEntry{
 		ProtocolName:        protocol.Name,
 		ProtocolVersion:     item.Protocol.Version,
 		EntryId:             entryId,
 		Entry:               string(entryBytes),
-		Url:                 fmt.Sprintf("%s%s", service, request["url"].(string)),
+		Url:                 fmt.Sprintf("%s%s", service, path),
 		Method:              request["method"].(string),
 		Status:              int(response["status"].(float64)),
 		RequestSenderIp:     item.ConnectionInfo.ClientIP,
 		Service:             service,
 		Timestamp:           item.Timestamp,
-		Path:                request["url"].(string),
+		Path:                path,
 		ResolvedSource:      resolvedSource,
 		ResolvedDestination: resolvedDestination,
 		SourceIp:            item.ConnectionInfo.ClientIP,

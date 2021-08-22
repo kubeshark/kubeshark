@@ -77,7 +77,7 @@ export const HarEntry: React.FC<HAREntryProps> = ({entry, setFocusedEntryId, isS
             style={{border: isSelected ? `1px ${entry.protocol.background_color} solid` : "1px transparent solid"}}
         >
             <Protocol protocol={entry.protocol} horizontal={false}/>
-            {entry.status_code && <div>
+            {((entry.protocol.name === "http" && "status_code" in entry) || entry.status_code !== 0) && <div>
                 <StatusCode statusCode={entry.status_code}/>
             </div>}
             <div className={styles.endpointServiceContainer}>

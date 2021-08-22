@@ -118,7 +118,7 @@ type BaseEntryDetails struct {
 	RequestSenderIp string          `json:"request_sender_ip,omitempty"`
 	Service         string          `json:"service,omitempty"`
 	Summary         string          `json:"summary,omitempty"`
-	StatusCode      int             `json:"status_code,omitempty"`
+	StatusCode      int             `json:"status_code"`
 	Method          string          `json:"method,omitempty"`
 	Timestamp       int64           `json:"timestamp,omitempty"`
 	SourceIp        string          `json:"source_ip,omitempty"`

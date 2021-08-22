@@ -7,7 +7,6 @@ export enum StatusCodeClassification {
     NEUTRAL = "neutral"
 }
 
-
 interface HAREntryProps {
     statusCode: number
 }
@@ -26,9 +25,9 @@ const StatusCode: React.FC<HAREntryProps> = ({statusCode}) => {
 export function getClassification(statusCode: number): string {
     let classification = StatusCodeClassification.NEUTRAL;
 
-    if (statusCode >= 200 && statusCode <= 399) {
+    if ((statusCode >= 200 && statusCode <= 399) || statusCode === 0) {
         classification = StatusCodeClassification.SUCCESS;
-    } else if (statusCode >= 400) {
+    } else if (statusCode >= 400 || (statusCode >= 1 && statusCode <= 16)) {
         classification = StatusCodeClassification.FAILURE;
     }
 

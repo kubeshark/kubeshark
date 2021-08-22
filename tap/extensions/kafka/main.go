@@ -48,7 +48,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, em
 func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolvedSource string, resolvedDestination string) *api.MizuEntry {
 	request := item.Pair.Request.Payload.(map[string]interface{})
 	reqDetails := request["details"].(map[string]interface{})
-	service := fmt.Sprintf("kafka")
+	service := "kafka"
 	apiKey := ApiKey(reqDetails["ApiKey"].(float64))
 
 	summary := ""
