@@ -183,6 +183,9 @@ func (d dissecting) Represent(entry string) ([]byte, error) {
 	case Produce:
 		repRequest = representProduceRequest(reqDetails)
 		repResponse = representProduceResponse(resDetails)
+	case Fetch:
+		repRequest = representFetchRequest(reqDetails)
+		repResponse = representFetchResponse(resDetails)
 		break
 	}
 
