@@ -1,22 +1,25 @@
 ![Mizu: The API Traffic Viewer for Kubernetes](assets/mizu-logo.svg)
+
 # The API Traffic Viewer for Kubernetes
 
-A simple-yet-powerful API traffic viewer for Kubernetes to help you troubleshoot and debug your microservices. Think TCPDump and Chrome Dev Tools combined.
+A simple-yet-powerful API traffic viewer for Kubernetes enabling you to view all API communication between microservices to help your debug and troubleshoot regressions.
+
+Think TCPDump and Chrome Dev Tools combined.
 
 ![Simple UI](assets/mizu-ui.png)
 
 ## Features
 
 - Simple and powerful CLI
-- Real time view of all HTTP requests, REST and gRPC API calls
+- Real-time view of all HTTP requests, REST and gRPC API calls
 - No installation or code instrumentation
-- Works completely on premises (on-prem)
+- Works completely on premises
 
 ## Download
 
-Download `mizu` for your platform and operating system
+Download Mizu for your platform and operating system
 
-### Latest stable release
+### Latest Stable Release
 
 * for MacOS - Intel 
 ```
@@ -32,335 +35,52 @@ https://github.com/up9inc/mizu/releases/latest/download/mizu_linux_amd64 \
 && chmod 755 mizu
 ``` 
 
-SHA256 checksums are available on the [Releases](https://github.com/up9inc/mizu/releases) page.
+SHA256 checksums are available on the [Releases](https://github.com/up9inc/mizu/releases) page
 
-### Development (unstable) build
-Pick one from the [Releases](https://github.com/up9inc/mizu/releases) page.
+### Development (unstable) Build
+Pick one from the [Releases](https://github.com/up9inc/mizu/releases) page
 
-## Prerequisites
-1. Set `KUBECONFIG` environment variable to your kubernetes configuration. If this is not set, mizu assumes that configuration is at `${HOME}/.kube/config`
-2. mizu needs following permissions on your kubernetes cluster to run
+## Kubeconfig & Permissions
+While `mizu`most often works out of the box, you can influence its behavior:
 
-```yaml
-- apiGroups:
-  - ""
-  resources:
-  - pods
-  verbs:
-  - list
-  - watch
-  - create
-  - delete
-- apiGroups:
-  - ""
-  resources:
-  - services
-  verbs:
-  - create
-  - delete
-- apiGroups:
-  - apps
-  resources:
-  - daemonsets
-  verbs:
-  - create
-  - patch
-  - delete
-- apiGroups:
-  - ""
-  resources:
-  - namespaces
-  verbs:
-  - get
-  - list
-  - watch
-  - create
-  - delete
-- apiGroups:
-  - ""
-  resources:
-  - services/proxy
-  verbs:
-  - get
-```
+1. [OPTIONAL] Set `KUBECONFIG` environment variable to your Kubernetes configuration. If this is not set, Mizu assumes that configuration is at `${HOME}/.kube/config`
+2. `mizu` assumes user running the command has permissions to create resources (such as pods, services, namespaces) on your Kubernetes cluster (no worries - `mizu` resources are cleaned up upon termination)
 
-3. Optionally, for resolving traffic IP to kubernetes service name, mizu needs below permissions
+For detailed list of k8s permissions see [PERMISSIONS](PERMISSIONS.md) document
 
-```yaml
-- apiGroups:
-  - ""
-  resources:
-  - pods
-  verbs:
-  - get
-  - list
-  - watch
-  - create
-  - delete
-- apiGroups:
-  - ""
-  resources:
-  - services
-  verbs:
-  - get
-  - list
-  - watch
-  - create
-  - delete
-- apiGroups:
-  - apps
-  resources:
-  - daemonsets
-  verbs:
-  - create
-  - patch
-  - delete
-- apiGroups:
-  - ""
-  resources:
-  - namespaces
-  verbs:
-  - get
-  - list
-  - watch
-  - create
-  - delete
-- apiGroups:
-  - ""
-  resources:
-  - services/proxy
-  verbs:
-  - get
-- apiGroups:
-  - ""
-  resources:
-  - serviceaccounts
-  verbs:
-  - get
-  - create
-  - delete
-- apiGroups:
-  - rbac.authorization.k8s.io
-  resources:
-  - clusterroles
-  verbs:
-  - get
-  - create
-  - delete
-- apiGroups:
-  - rbac.authorization.k8s.io
-  resources:
-  - clusterrolebindings
-  verbs:
-  - get
-  - create
-  - delete
-- apiGroups:
-  - rbac.authorization.k8s.io
-  resources:
-  - roles
-  verbs:
-  - get
-  - create
-  - delete
-- apiGroups:
-  - rbac.authorization.k8s.io
-  resources:
-  - rolebindings
-  verbs:
-  - get
-  - create
-  - delete
-- apiGroups:
-  - apps
-  - extensions
-  resources:
-  - pods
-  verbs:
-  - get
-  - list
-  - watch
-- apiGroups:
-  - apps
-  - extensions
-  resources:
-  - services
-  verbs:
-  - get
-  - list
-  - watch
-- apiGroups:
-  - ""
-  - apps
-  - extensions
-  resources:
-  - endpoints
-  verbs:
-  - get
-  - list
-  - watch
-```
 
-4. Optionally, in order to use the policy rules validation feature, mizu requires the following additional permissions:
-
-```yaml
-- apiGroups:
-  - ""
-  resources:
-  - configmaps
-  verbs:
-  - get
-  - create
-  - delete
-```
-
-5. Alternatively, in order to restrict mizu to one namespace only (by setting `agent.namespace` in the config file), mizu needs the following permissions in that namespace:
-
-```yaml
-- apiGroups:
-  - ""
-  resources:
-  - pods
-  verbs:
-  - get
-  - list
-  - watch
-  - create
-  - delete
-- apiGroups:
-  - ""
-  resources:
-  - services
-  verbs:
-  - get
-  - create
-  - delete
-- apiGroups:
-  - apps
-  resources:
-  - daemonsets
-  verbs:
-  - get
-  - create
-  - patch
-  - delete
-- apiGroups:
-  - ""
-  resources:
-  - services/proxy
-  verbs:
-  - get
-```
-
-6. To restrict mizu to one namespace while also resolving IPs, mizu needs the following permissions in that namespace:
-
-```yaml
-- apiGroups:
-  - ""
-  resources:
-  - pods
-  verbs:
-  - get
-  - list
-  - watch
-  - create
-  - delete
-- apiGroups:
-  - ""
-  resources:
-  - services
-  verbs:
-  - get
-  - list
-  - watch
-  - create
-  - delete
-- apiGroups:
-  - apps
-  resources:
-  - daemonsets
-  verbs:
-  - get
-  - create
-  - patch
-  - delete
-- apiGroups:
-  - ""
-  resources:
-  - services/proxy
-  verbs:
-  - get
-- apiGroups:
-  - ""
-  resources:
-  - serviceaccounts
-  verbs:
-  - get
-  - create
-  - delete
-- apiGroups:
-  - rbac.authorization.k8s.io
-  resources:
-  - roles
-  verbs:
-  - get
-  - create
-  - delete
-- apiGroups:
-  - rbac.authorization.k8s.io
-  resources:
-  - rolebindings
-  verbs:
-  - get
-  - create
-  - delete
-- apiGroups:
-  - apps
-  - extensions
-  resources:
-  - pods
-  verbs:
-  - get
-  - list
-  - watch
-- apiGroups:
-  - apps
-  - extensions
-  resources:
-  - services
-  verbs:
-  - get
-  - list
-  - watch
-- apiGroups:
-  - ""
-  - apps
-  - extensions
-  resources:
-  - endpoints
-  verbs:
-  - get
-  - list
-  - watch
-```
-
-See `examples/roles` for example `clusterroles`. 
-
-## How to run
+## How to Run
 
 1. Find pods you'd like to tap to in your Kubernetes cluster
-2. Run `mizu tap PODNAME` or `mizu tap REGEX` 
-3. Open browser on `http://localhost:8899/mizu` **or** as instructed in the CLI .. 
-4. Watch the API traffic flowing ..
+2. Run `mizu tap` or `mizu tap PODNAME`  
+3. Open browser on `http://localhost:8899/mizu` **or** as instructed in the CLI
+4. Watch the API traffic flowing
 5. Type ^C to stop
 
 ## Examples
 
 Run `mizu help` for usage options
 
+To tap all pods in current namespace - 
+``` 
+ $ kubectl get pods 
+ NAME                            READY   STATUS    RESTARTS   AGE
+ carts-66c77f5fbb-fq65r          2/2     Running   0          20m
+ catalogue-5f4cb7cf5-7zrmn       2/2     Running   0          20m
+ front-end-649fc5fd6-kqbtn       2/2     Running   0          20m
+ ..
+
+ $ mizu tap
+ +carts-66c77f5fbb-fq65r
+ +catalogue-5f4cb7cf5-7zrmn
+ +front-end-649fc5fd6-kqbtn
+ Web interface is now available at http://localhost:8899
+ ^C
+```
+
 
 To tap specific pod - 
-``` 
+```bash
  $ kubectl get pods 
  NAME                            READY   STATUS    RESTARTS   AGE
  front-end-649fc5fd6-kqbtn       2/2     Running   0          7m
@@ -373,7 +93,7 @@ To tap specific pod -
 ```
 
 To tap multiple pods using regex - 
-``` 
+```bash
  $ kubectl get pods 
  NAME                            READY   STATUS    RESTARTS   AGE
  carts-66c77f5fbb-fq65r          2/2     Running   0          20m
@@ -387,4 +107,55 @@ To tap multiple pods using regex -
  Web interface is now available at http://localhost:8899
  ^C
 ```
+
+## Configuration
+
+Mizu can work with config file which should be stored in ${HOME}/.mizu/config.yaml (macOS: ~/.mizu/config.yaml) <br />
+In case no config file found, defaults will be used <br />
+In case of partial configuration defined, all other fields will be used with defaults <br />
+You can always override the defaults or config file with CLI flags
+
+To get the default config params run `mizu config` <br />
+To generate a new config file with default values use `mizu config -r`
+
+### Telemetry
+
+By default, mizu reports usage telemetry. It can be disabled by adding a line of `telemetry: false` in the `${HOME}/.mizu/config.yaml` file
+
+
+## Advanced Usage
+
+### Namespace-Restricted Mode
+
+Some users have permission to only manage resources in one particular namespace assigned to them
+By default `mizu tap` creates a new namespace `mizu` for all of its Kubernetes resources. In order to instead install
+Mizu in an existing namespace, set the `mizu-resources-namespace` config option
+
+If `mizu-resources-namespace` is set to a value other than the default `mizu`, Mizu will operate in a
+Namespace-Restricted mode. It will only tap pods in `mizu-resources-namespace`. This way Mizu only requires permissions
+to the namespace set by `mizu-resources-namespace`. The user must set the tapped namespace to the same namespace by
+using the `--namespace` flag or by setting `tap.namespaces` in the config file
+
+Setting `mizu-resources-namespace=mizu` resets Mizu to its default behavior
+
+### User agent filtering
+
+User-agent filtering (like health checks) - can be configured using command-line options:
+
+```shell
+$ mizu tap "^ca.*" --set ignored-user-agents=kube-probe --set ignored-user-agents=prometheus
++carts-66c77f5fbb-fq65r
++catalogue-5f4cb7cf5-7zrmn
+Web interface is now available at http://localhost:8899
+^C
+
+```
+Any request that contains `User-Agent` header with one of the specified values (`kube-probe` or `prometheus`) will not be captured
+
+### API Rules validation
+
+This feature allows you to define set of simple rules, and test the API against them.
+Such validation may test response for specific JSON fields, headers, etc.
+
+Please see [API RULES](docs/POLICY_RULES.md) page for more details and syntax.
 

@@ -3,41 +3,60 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"github.com/up9inc/mizu/cli/apiserver"
+	"github.com/up9inc/mizu/cli/config"
 	"github.com/up9inc/mizu/cli/kubernetes"
+	"github.com/up9inc/mizu/cli/logger"
 	"github.com/up9inc/mizu/cli/mizu"
+	"github.com/up9inc/mizu/cli/mizu/version"
+	"github.com/up9inc/mizu/cli/uiUtils"
 	"net/http"
 )
 
 func runMizuView() {
-	kubernetesProvider, err := kubernetes.NewProvider(mizu.Config.View.KubeConfigPath)
+	kubernetesProvider, err := kubernetes.NewProvider(config.Config.KubeConfigPath())
 	if err != nil {
-		mizu.Log.Error(err)
+		logger.Log.Error(err)
 		return
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	exists, err := kubernetesProvider.DoesServicesExist(ctx, mizu.Config.MizuResourcesNamespace, mizu.ApiServerPodName)
+	exists, err := kubernetesProvider.DoesServicesExist(ctx, config.Config.MizuResourcesNamespace, mizu.ApiServerPodName)
 	if err != nil {
-		panic(err)
+		logger.Log.Errorf("Failed to found mizu service %v", err)
+		cancel()
+		return
 	}
 	if !exists {
-		mizu.Log.Infof("The %s service not found", mizu.ApiServerPodName)
+		logger.Log.Infof("%s service not found, you should run `mizu tap` command first", mizu.ApiServerPodName)
+		cancel()
 		return
 	}
 
-	mizuProxiedUrl := kubernetes.GetMizuApiServerProxiedHostAndPath(mizu.Config.View.GuiPort)
-	_, err = http.Get(fmt.Sprintf("http://%s/", mizuProxiedUrl))
-	if err == nil {
-		mizu.Log.Infof("Found a running service %s and open port %d", mizu.ApiServerPodName, mizu.Config.View.GuiPort)
+	response, err := http.Get(fmt.Sprintf("%s/", GetApiServerUrl()))
+	if err == nil && response.StatusCode == 200 {
+		logger.Log.Infof("Found a running service %s and open port %d", mizu.ApiServerPodName, config.Config.View.GuiPort)
 		return
 	}
-	mizu.Log.Infof("Found service %s, creating k8s proxy", mizu.ApiServerPodName)
+	logger.Log.Infof("Establishing connection to k8s cluster...")
+	go startProxyReportErrorIfAny(kubernetesProvider, cancel)
 
-	mizu.Log.Infof("Mizu is available at  http://%s\n", kubernetes.GetMizuApiServerProxiedHostAndPath(mizu.Config.View.GuiPort))
-	err = kubernetes.StartProxy(kubernetesProvider, mizu.Config.View.GuiPort, mizu.Config.MizuResourcesNamespace, mizu.ApiServerPodName)
-	if err != nil {
-		mizu.Log.Errorf("Error occurred while running k8s proxy %v", err)
+	if err := apiserver.Provider.InitAndTestConnection(GetApiServerUrl(), 10); err != nil {
+		logger.Log.Errorf(uiUtils.Error, "Couldn't connect to API server, check logs")
+		return
 	}
+
+	logger.Log.Infof("Mizu is available at %s\n", GetApiServerUrl())
+	if isCompatible, err := version.CheckVersionCompatibility(); err != nil {
+		logger.Log.Errorf("Failed to check versions compatibility %v", err)
+		cancel()
+		return
+	} else if !isCompatible {
+		cancel()
+		return
+	}
+
+	waitForFinish(ctx, cancel)
 }

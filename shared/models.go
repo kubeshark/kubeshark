@@ -75,9 +75,9 @@ func CreateWebSocketMessageTypeAnalyzeStatus(analyzeStatus AnalyzeStatus) WebSoc
 }
 
 type TrafficFilteringOptions struct {
-	PlainTextMaskingRegexes []*SerializableRegexp
-	HideHealthChecks        bool
-	DisableRedaction        bool
+	HealthChecksUserAgentHeaders []string
+	PlainTextMaskingRegexes      []*SerializableRegexp
+	DisableRedaction             bool
 }
 
 type VersionResponse struct {

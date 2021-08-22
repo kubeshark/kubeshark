@@ -4,14 +4,18 @@ import (
 	"github.com/patrickmn/go-cache"
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/tap"
+	"sync"
 	"time"
 )
 
 const tlsLinkRetainmentTime = time.Minute * 15
 
 var (
-	TapStatus shared.TapStatus
+	TappersCount   int
+	TapStatus      shared.TapStatus
 	RecentTLSLinks = cache.New(tlsLinkRetainmentTime, tlsLinkRetainmentTime)
+
+	tappersCountLock = sync.Mutex{}
 )
 
 func GetAllRecentTLSAddresses() []string {
@@ -25,4 +29,16 @@ func GetAllRecentTLSAddresses() []string {
 	}
 
 	return recentTLSLinks
+}
+
+func TapperAdded() {
+	tappersCountLock.Lock()
+	TappersCount++
+	tappersCountLock.Unlock()
+}
+
+func TapperRemoved() {
+	tappersCountLock.Lock()
+	TappersCount--
+	tappersCountLock.Unlock()
 }

@@ -29,6 +29,7 @@ func NewApplicableRules(status bool, latency int64) tapApi.ApplicableRules {
 	ar := tapApi.ApplicableRules{}
 	ar.Status = status
 	ar.Latency = latency
+	ar.NumberOfRules = number
 	return ar
 }
 
@@ -67,19 +68,19 @@ func (fedex *FullEntryDetailsExtra) UnmarshalData(entry *tapApi.MizuEntry) error
 }
 
 type EntriesFilter struct {
-	Limit     int    `query:"limit" validate:"required,min=1,max=200"`
-	Operator  string `query:"operator" validate:"required,oneof='lt' 'gt'"`
-	Timestamp int64  `query:"timestamp" validate:"required,min=1"`
+	Limit     int    `form:"limit" validate:"required,min=1,max=200"`
+	Operator  string `form:"operator" validate:"required,oneof='lt' 'gt'"`
+	Timestamp int64  `form:"timestamp" validate:"required,min=1"`
 }
 
-type UploadEntriesRequestBody struct {
+type UploadEntriesRequestQuery struct {
 	Dest             string `form:"dest"`
 	SleepIntervalSec int    `form:"interval"`
 }
 
-type HarFetchRequestBody struct {
-	From int64 `query:"from"`
-	To   int64 `query:"to"`
+type HarFetchRequestQuery struct {
+	From int64 `form:"from"`
+	To   int64 `form:"to"`
 }
 
 type WebSocketEntryMessage struct {
@@ -166,8 +167,8 @@ func (fewp *FullEntryWithPolicy) UnmarshalData(entry *tapApi.MizuEntry) error {
 
 func RunValidationRulesState(harEntry har.Entry, service string) tapApi.ApplicableRules {
 	numberOfRules, resultPolicyToSend := rules.MatchRequestPolicy(harEntry, service)
-	statusPolicyToSend, latency := rules.PassedValidationRules(resultPolicyToSend, numberOfRules)
-	ar := NewApplicableRules(statusPolicyToSend, latency)
+	statusPolicyToSend, latency, numberOfRules := rules.PassedValidationRules(resultPolicyToSend, numberOfRules)
+	ar := NewApplicableRules(statusPolicyToSend, latency, numberOfRules)
 	return ar
 }
 

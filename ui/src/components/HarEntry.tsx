@@ -30,7 +30,8 @@ interface HAREntry {
 
 interface Rules {
     status: boolean;
-    latency: number
+    latency: number;
+    numberOfRules: number;
 }
 
 interface HAREntryProps {
@@ -60,12 +61,32 @@ export const HarEntry: React.FC<HAREntryProps> = ({entry, setFocusedEntryId, isS
             break;
         }
     }
-    let backgroundColor = "";
-    if ('latency' in entry.rules) {
+    let additionalRulesProperties = "";
+    let ruleSuccess: boolean;
+    let rule = 'latency' in entry.rules
+    if (rule) {
         if (entry.rules.latency !== -1) {
-            backgroundColor = entry.rules.latency >= entry.latency ? styles.ruleSuccessRow : styles.ruleFailureRow
+            if (entry.rules.latency >= entry.latency) {
+                additionalRulesProperties = styles.ruleSuccessRow
+                ruleSuccess = true
+            } else {
+                additionalRulesProperties = styles.ruleFailureRow
+                ruleSuccess = false
+            }
+            if (isSelected) {
+                additionalRulesProperties += ` ${entry.rules.latency >= entry.latency ? styles.ruleSuccessRowSelected : styles.ruleFailureRowSelected}`
+            }
         } else {
-            backgroundColor = entry.rules.status ? styles.ruleSuccessRow : styles.ruleFailureRow
+            if (entry.rules.status) {
+                additionalRulesProperties = styles.ruleSuccessRow
+                ruleSuccess = true
+            } else {
+                additionalRulesProperties = styles.ruleFailureRow
+                ruleSuccess = false
+            }
+            if (isSelected) {
+                additionalRulesProperties += ` ${entry.rules.status ? styles.ruleSuccessRowSelected : styles.ruleFailureRowSelected}`
+            }
         }
     }
     return <>
@@ -86,6 +107,13 @@ export const HarEntry: React.FC<HAREntryProps> = ({entry, setFocusedEntryId, isS
                     <span title="Service Name">{entry.service}</span>
                 </div>
             </div>
+            {
+                rule ?
+                    <div className={`${ruleSuccess ? styles.ruleNumberTextSuccess : styles.ruleNumberTextFailure}`}>
+                        {`Rules (${numberOfRules})`}
+                    </div>
+                : ""
+            }
             <div className={styles.directionContainer}>
                 <span className={styles.port} title="Source Port">{entry.source_port}</span>
                 {entry.isOutgoing ?

@@ -144,6 +144,7 @@ func (t *tcpStream) ReassembledSG(sg reassembly.ScatterGather, ac reassembly.Ass
 		if length > 0 {
 			// This is where we pass the reassembled information onwards
 			// This channel is read by an tcpReader object
+			statsTracker.incReassembledTcpPayloadsCount()
 			if dir == reassembly.TCPDirClientToServer && !t.reversed {
 				t.client.msgQueue <- tcpReaderDataMsg{data, ac.GetCaptureInfo().Timestamp}
 			} else {

@@ -1,7 +1,8 @@
-package mizu
+package logger
 
 import (
 	"github.com/op/go-logging"
+	"github.com/up9inc/mizu/cli/mizu"
 	"os"
 	"path"
 )
@@ -13,7 +14,7 @@ var format = logging.MustStringFormatter(
 )
 
 func GetLogFilePath() string {
-	return path.Join(GetMizuFolderPath(), "mizu_cli.log")
+	return path.Join(mizu.GetMizuFolderPath(), "mizu_cli.log")
 }
 
 func InitLogger() {
@@ -34,5 +35,5 @@ func InitLogger() {
 	logging.SetBackend(backend1Leveled, backend2Formatter)
 
 	Log.Debugf("\n\n\n")
-	Log.Debugf("Running mizu version %v", SemVer)
+	Log.Debugf("Running mizu version %v", mizu.SemVer)
 }

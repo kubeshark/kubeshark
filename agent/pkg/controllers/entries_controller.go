@@ -65,7 +65,7 @@ func GetEntries(c *gin.Context) {
 }
 
 func GetHARs(c *gin.Context) {
-	entriesFilter := &models.HarFetchRequestBody{}
+	entriesFilter := &models.HarFetchRequestQuery{}
 	order := database.OrderDesc
 	if err := c.BindQuery(entriesFilter); err != nil {
 		c.JSON(http.StatusBadRequest, err)
@@ -154,12 +154,12 @@ func GetHARs(c *gin.Context) {
 func UploadEntries(c *gin.Context) {
 	rlog.Infof("Upload entries - started\n")
 
-	uploadRequestBody := &models.UploadEntriesRequestBody{}
-	if err := c.BindQuery(uploadRequestBody); err != nil {
+	uploadParams := &models.UploadEntriesRequestQuery{}
+	if err := c.BindQuery(uploadParams); err != nil {
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
-	if err := validation.Validate(uploadRequestBody); err != nil {
+	if err := validation.Validate(uploadParams); err != nil {
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
@@ -168,19 +168,19 @@ func UploadEntries(c *gin.Context) {
 		return
 	}
 
-	rlog.Infof("Upload entries - creating token. dest %s\n", uploadRequestBody.Dest)
-	token, err := up9.CreateAnonymousToken(uploadRequestBody.Dest)
+	rlog.Infof("Upload entries - creating token. dest %s\n", uploadParams.Dest)
+	token, err := up9.CreateAnonymousToken(uploadParams.Dest)
 	if err != nil {
 		c.String(http.StatusServiceUnavailable, "Cannot analyze, mizu is already analyzing")
 		return
 	}
 	rlog.Infof("Upload entries - uploading. token: %s model: %s\n", token.Token, token.Model)
-	go up9.UploadEntriesImpl(token.Token, token.Model, uploadRequestBody.Dest, uploadRequestBody.SleepIntervalSec)
+	go up9.UploadEntriesImpl(token.Token, token.Model, uploadParams.Dest, uploadParams.SleepIntervalSec)
 	c.String(http.StatusOK, "OK")
 }
 
 func GetFullEntries(c *gin.Context) {
-	entriesFilter := &models.HarFetchRequestBody{}
+	entriesFilter := &models.HarFetchRequestQuery{}
 	if err := c.BindQuery(entriesFilter); err != nil {
 		c.JSON(http.StatusBadRequest, err)
 	}
@@ -257,14 +257,7 @@ func DeleteAllEntries(c *gin.Context) {
 }
 
 func GetGeneralStats(c *gin.Context) {
-	sqlQuery := "SELECT count(*) as count, min(timestamp) as min, max(timestamp) as max from mizu_entries"
-	var result struct {
-		Count int
-		Min   int
-		Max   int
-	}
-	database.GetEntriesTable().Raw(sqlQuery).Scan(&result)
-	c.JSON(http.StatusOK, result)
+	c.JSON(http.StatusOK, providers.GetGeneralStats())
 }
 
 func GetTappingStatus(c *gin.Context) {

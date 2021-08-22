@@ -3,9 +3,7 @@ package errormessage
 import (
 	"errors"
 	"fmt"
-
-	"github.com/up9inc/mizu/cli/mizu"
-
+	"github.com/up9inc/mizu/cli/config"
 	regexpsyntax "regexp/syntax"
 
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
@@ -17,8 +15,12 @@ func FormatError(err error) error {
 	var errorNew error
 	if k8serrors.IsForbidden(err) {
 		errorNew = fmt.Errorf("insufficient permissions: %w. "+
-			"supply the required permission or control Mizu's access to namespaces by setting MizuResourcesNamespace "+
-			"in the config file or setting the tapped namespace with --%s %s=<NAMEPSACE>", err, mizu.SetCommandName, mizu.MizuResourcesNamespaceConfigName)
+			"supply the required permission or control Mizu's access to namespaces by setting %s "+
+			"in the config file or setting the tapped namespace with --%s %s=<NAMEPSACE>",
+			err,
+			config.MizuResourcesNamespaceConfigName,
+			config.SetCommandName,
+			config.MizuResourcesNamespaceConfigName)
 	} else if syntaxError, isSyntaxError := asRegexSyntaxError(err); isSyntaxError {
 		errorNew = fmt.Errorf("regex %s is invalid: %w", syntaxError.Expr, err)
 	} else {

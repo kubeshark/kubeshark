@@ -1,95 +1,25 @@
 package cmd
 
 import (
-	"archive/zip"
-	"bytes"
-	"fmt"
-	"github.com/up9inc/mizu/cli/kubernetes"
-	"github.com/up9inc/mizu/cli/mizu"
-	"io"
-	"io/ioutil"
-	"log"
-	"net/http"
-	"os"
-	"path/filepath"
-	"strings"
+	"github.com/up9inc/mizu/cli/apiserver"
+	"github.com/up9inc/mizu/cli/config"
+	"github.com/up9inc/mizu/cli/logger"
+	"github.com/up9inc/mizu/cli/mizu/fsUtils"
+	"github.com/up9inc/mizu/cli/uiUtils"
 )
 
 func RunMizuFetch() {
-	mizuProxiedUrl := kubernetes.GetMizuApiServerProxiedHostAndPath(mizu.Config.Fetch.MizuPort)
-	resp, err := http.Get(fmt.Sprintf("http://%s/api/har?from=%v&to=%v", mizuProxiedUrl, mizu.Config.Fetch.FromTimestamp, mizu.Config.Fetch.ToTimestamp))
+	if err := apiserver.Provider.InitAndTestConnection(GetApiServerUrl(), 5); err != nil {
+		logger.Log.Errorf(uiUtils.Error, "Couldn't connect to API server, check logs")
+	}
+
+	zipReader, err := apiserver.Provider.GetHars(config.Config.Fetch.FromTimestamp, config.Config.Fetch.ToTimestamp)
 	if err != nil {
-		log.Fatal(err)
+		logger.Log.Errorf("Failed fetch data from API server %v", err)
+		return
 	}
 
-	defer func() { _ = resp.Body.Close() }()
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.Fatal(err)
+	if err := fsUtils.Unzip(zipReader, config.Config.Fetch.Directory); err != nil {
+		logger.Log.Debugf("[ERROR] failed unzip %v", err)
 	}
-
-	zipReader, err := zip.NewReader(bytes.NewReader(body), int64(len(body)))
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	_ = Unzip(zipReader, mizu.Config.Fetch.Directory)
-}
-
-func Unzip(reader *zip.Reader, dest string) error {
-	dest, _ = filepath.Abs(dest)
-	_ = os.MkdirAll(dest, os.ModePerm)
-
-	// Closure to address file descriptors issue with all the deferred .Close() methods
-	extractAndWriteFile := func(f *zip.File) error {
-		rc, err := f.Open()
-		if err != nil {
-			return err
-		}
-		defer func() {
-			if err := rc.Close(); err != nil {
-				panic(err)
-			}
-		}()
-
-		path := filepath.Join(dest, f.Name)
-
-		// Check for ZipSlip (Directory traversal)
-		if !strings.HasPrefix(path, filepath.Clean(dest)+string(os.PathSeparator)) {
-			return fmt.Errorf("illegal file path: %s", path)
-		}
-
-		if f.FileInfo().IsDir() {
-			_ = os.MkdirAll(path, f.Mode())
-		} else {
-			_ = os.MkdirAll(filepath.Dir(path), f.Mode())
-			mizu.Log.Infof("writing HAR file [ %v ]", path)
-			f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
-			if err != nil {
-				return err
-			}
-			defer func() {
-				if err := f.Close(); err != nil {
-					panic(err)
-				}
-				mizu.Log.Info(" done")
-			}()
-
-			_, err = io.Copy(f, rc)
-			if err != nil {
-				return err
-			}
-		}
-		return nil
-	}
-
-	for _, f := range reader.File {
-		err := extractAndWriteFile(f)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
 }

@@ -7,7 +7,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"os"
+	"github.com/up9inc/mizu/cli/config/configStructs"
+	"github.com/up9inc/mizu/cli/logger"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -37,7 +38,6 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	_ "k8s.io/client-go/tools/portforward"
 	watchtools "k8s.io/client-go/tools/watch"
-	"k8s.io/client-go/util/homedir"
 )
 
 type Provider struct {
@@ -56,13 +56,23 @@ func NewProvider(kubeConfigPath string) (*Provider, error) {
 	restClientConfig, err := kubernetesConfig.ClientConfig()
 	if err != nil {
 		if clientcmd.IsEmptyConfig(err) {
-			return nil, fmt.Errorf("Couldn't find the kube config file, or file is empty. Try adding '--kube-config=<path to kube config file>'\n")
+			return nil, fmt.Errorf("couldn't find the kube config file, or file is empty (%s)\n" +
+				"you can set alternative kube config file path by adding the kube-config-path field to the mizu config file, err:  %w", kubeConfigPath, err)
 		}
 		if clientcmd.IsConfigurationInvalid(err) {
-			return nil, fmt.Errorf("Invalid kube config file. Try using a different config with '--kube-config=<path to kube config file>'\n")
+			return nil, fmt.Errorf("invalid kube config file (%s)\n" +
+				"you can set alternative kube config file path by adding the kube-config-path field to the mizu config file, err:  %w", kubeConfigPath, err)
 		}
+
+		return nil, fmt.Errorf("error while using kube config (%s)\n" +
+			"you can set alternative kube config file path by adding the kube-config-path field to the mizu config file, err:  %w", kubeConfigPath, err)
 	}
-	clientSet := getClientSet(restClientConfig)
+
+	clientSet, err := getClientSet(restClientConfig)
+	if err != nil {
+		return nil, fmt.Errorf("error while using kube config (%s)\n" +
+			"you can set alternative kube config file path by adding the kube-config-path field to the mizu config file, err:  %w", kubeConfigPath, err)
+	}
 
 	return &Provider{
 		clientSet:        clientSet,
@@ -141,6 +151,8 @@ type ApiServerOptions struct {
 	IsNamespaceRestricted   bool
 	MizuApiFilteringOptions *shared.TrafficFilteringOptions
 	MaxEntriesDBSizeBytes   int64
+	Resources               configStructs.Resources
+	ImagePullPolicy         core.PullPolicy
 }
 
 func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, opts *ApiServerOptions) (*core.Pod, error) {
@@ -153,19 +165,19 @@ func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, opts *ApiS
 	configMapOptional := true
 	configMapVolumeName.Optional = &configMapOptional
 
-	cpuLimit, err := resource.ParseQuantity("750m")
+	cpuLimit, err := resource.ParseQuantity(opts.Resources.CpuLimit)
 	if err != nil {
 		return nil, errors.New(fmt.Sprintf("invalid cpu limit for %s container", opts.PodName))
 	}
-	memLimit, err := resource.ParseQuantity("512Mi")
+	memLimit, err := resource.ParseQuantity(opts.Resources.MemoryLimit)
 	if err != nil {
 		return nil, errors.New(fmt.Sprintf("invalid memory limit for %s container", opts.PodName))
 	}
-	cpuRequests, err := resource.ParseQuantity("50m")
+	cpuRequests, err := resource.ParseQuantity(opts.Resources.CpuRequests)
 	if err != nil {
 		return nil, errors.New(fmt.Sprintf("invalid cpu request for %s container", opts.PodName))
 	}
-	memRequests, err := resource.ParseQuantity("50Mi")
+	memRequests, err := resource.ParseQuantity(opts.Resources.MemoryRequests)
 	if err != nil {
 		return nil, errors.New(fmt.Sprintf("invalid memory request for %s container", opts.PodName))
 	}
@@ -186,7 +198,7 @@ func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, opts *ApiS
 				{
 					Name:            opts.PodName,
 					Image:           opts.PodImage,
-					ImagePullPolicy: core.PullAlways,
+					ImagePullPolicy: opts.ImagePullPolicy,
 					VolumeMounts: []core.VolumeMount{
 						{
 							Name:      mizu.ConfigMapName,
@@ -562,8 +574,8 @@ func (provider *Provider) CreateConfigMap(ctx context.Context, namespace string,
 	return nil
 }
 
-func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, apiServerPodIp string, nodeToTappedPodIPMap map[string][]string, serviceAccountName string, tapOutgoing bool) error {
-	mizu.Log.Debugf("Applying %d tapper deamonsets, ns: %s, daemonSetName: %s, podImage: %s, tapperPodName: %s", len(nodeToTappedPodIPMap), namespace, daemonSetName, podImage, tapperPodName)
+func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, apiServerPodIp string, nodeToTappedPodIPMap map[string][]string, serviceAccountName string, tapOutgoing bool, resources configStructs.Resources, imagePullPolicy core.PullPolicy) error {
+	logger.Log.Debugf("Applying %d tapper deamonsets, ns: %s, daemonSetName: %s, podImage: %s, tapperPodName: %s", len(nodeToTappedPodIPMap), namespace, daemonSetName, podImage, tapperPodName)
 
 	if len(nodeToTappedPodIPMap) == 0 {
 		return fmt.Errorf("Daemon set %s must tap at least 1 pod", daemonSetName)
@@ -588,7 +600,7 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	agentContainer := applyconfcore.Container()
 	agentContainer.WithName(tapperPodName)
 	agentContainer.WithImage(podImage)
-	agentContainer.WithImagePullPolicy(core.PullAlways)
+	agentContainer.WithImagePullPolicy(imagePullPolicy)
 	agentContainer.WithSecurityContext(applyconfcore.SecurityContext().WithPrivileged(true))
 	agentContainer.WithCommand(mizuCmd...)
 	agentContainer.WithEnv(
@@ -602,19 +614,19 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 			),
 		),
 	)
-	cpuLimit, err := resource.ParseQuantity("500m")
+	cpuLimit, err := resource.ParseQuantity(resources.CpuLimit)
 	if err != nil {
 		return errors.New(fmt.Sprintf("invalid cpu limit for %s container", tapperPodName))
 	}
-	memLimit, err := resource.ParseQuantity("1Gi")
+	memLimit, err := resource.ParseQuantity(resources.MemoryLimit)
 	if err != nil {
 		return errors.New(fmt.Sprintf("invalid memory limit for %s container", tapperPodName))
 	}
-	cpuRequests, err := resource.ParseQuantity("50m")
+	cpuRequests, err := resource.ParseQuantity(resources.CpuRequests)
 	if err != nil {
 		return errors.New(fmt.Sprintf("invalid cpu request for %s container", tapperPodName))
 	}
-	memRequests, err := resource.ParseQuantity("50Mi")
+	memRequests, err := resource.ParseQuantity(resources.MemoryRequests)
 	if err != nil {
 		return errors.New(fmt.Sprintf("invalid memory request for %s container", tapperPodName))
 	}
@@ -729,25 +741,17 @@ func (provider *Provider) GetPodLogs(namespace string, podName string, ctx conte
 	return str, nil
 }
 
-func getClientSet(config *restclient.Config) *kubernetes.Clientset {
+func getClientSet(config *restclient.Config) (*kubernetes.Clientset, error) {
 	clientSet, err := kubernetes.NewForConfig(config)
 	if err != nil {
-		panic(err.Error())
+		return nil, err
 	}
-	return clientSet
+
+	return clientSet, nil
 }
 
 func loadKubernetesConfiguration(kubeConfigPath string) clientcmd.ClientConfig {
-	if kubeConfigPath == "" {
-		kubeConfigPath = os.Getenv("KUBECONFIG")
-	}
-
-	if kubeConfigPath == "" {
-		home := homedir.HomeDir()
-		kubeConfigPath = filepath.Join(home, ".kube", "config")
-	}
-
-	mizu.Log.Debugf("Using kube config %s", kubeConfigPath)
+	logger.Log.Debugf("Using kube config %s", kubeConfigPath)
 	configPathList := filepath.SplitList(kubeConfigPath)
 	configLoadingRules := &clientcmd.ClientConfigLoadingRules{}
 	if len(configPathList) <= 1 {
