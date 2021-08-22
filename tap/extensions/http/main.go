@@ -100,8 +100,6 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, em
 }
 
 func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolvedSource string, resolvedDestination string) *api.MizuEntry {
-	fmt.Printf("pair.Request.Payload: %+v\n", item.Pair.Request.Payload)
-	fmt.Printf("item.Pair.Response.Payload: %+v\n", item.Pair.Response.Payload)
 	var host string
 	for _, header := range item.Pair.Request.Payload.(map[string]interface{})["headers"].([]interface{}) {
 		h := header.(map[string]interface{})

@@ -27,7 +27,6 @@ func createResponseRequestMatcher() requestResponseMatcher {
 func (matcher *requestResponseMatcher) registerRequest(ident string, request *http.Request, captureTime time.Time) *api.OutputChannelItem {
 	split := splitIdent(ident)
 	key := genKey(split)
-	// fmt.Printf(">>> request key: %v\n", key)
 
 	requestHTTPMessage := api.GenericMessage{
 		IsRequest:   true,
@@ -57,7 +56,6 @@ func (matcher *requestResponseMatcher) registerRequest(ident string, request *ht
 func (matcher *requestResponseMatcher) registerResponse(ident string, response *http.Response, captureTime time.Time) *api.OutputChannelItem {
 	split := splitIdent(ident)
 	key := genKey(split)
-	// fmt.Printf(">>> response key: %v\n", key)
 
 	responseHTTPMessage := api.GenericMessage{
 		IsRequest:   false,

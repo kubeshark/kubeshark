@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"sync"
 	"time"
 )
@@ -52,21 +51,4 @@ func (matcher *requestResponseMatcher) preparePair(request *Request, response *R
 		Request:  *request,
 		Response: *response,
 	}
-}
-
-func (reqResPair *RequestResponsePair) debug() {
-	req := reqResPair.Request
-	res := reqResPair.Response
-	log.Printf(
-		"\n----------------\n> Request [%d]\nApiKey: %v\nApiVersion: %v\nCorrelationID: %v\nClientID: %v\nPayload: %+v\n> Response [%d]\nCorrelationID: %v\nPayload: %+v\n",
-		req.Size,
-		req.ApiKey,
-		req.ApiVersion,
-		req.CorrelationID,
-		req.ClientID,
-		req.Payload,
-		res.Size,
-		res.CorrelationID,
-		res.Payload,
-	)
 }

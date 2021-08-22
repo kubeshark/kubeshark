@@ -200,7 +200,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, em
 			}
 
 		default:
-			// fmt.Printf("unexpected frame: %+v\n", f)
+			// log.Printf("unexpected frame: %+v\n", f)
 		}
 	}
 }
@@ -295,7 +295,6 @@ func (d dissecting) Represent(entry string) ([]byte, error) {
 	json.Unmarshal([]byte(entry), &root)
 	representation := make(map[string]interface{}, 0)
 	request := root["request"].(map[string]interface{})["payload"].(map[string]interface{})
-	// log.Printf("request: %+v\n", request)
 	var repRequest []interface{}
 	details := request["details"].(map[string]interface{})
 	switch request["method"].(string) {

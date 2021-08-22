@@ -2,7 +2,6 @@ package api
 
 import (
 	"bufio"
-	"log"
 	"plugin"
 	"time"
 )
@@ -77,10 +76,6 @@ type Emitter interface {
 }
 
 func (e *Emitting) Emit(item *OutputChannelItem) {
-	log.Printf("item: %+v\n", item)
-	log.Printf("item.Pair: %+v\n", item.Pair)
-	log.Printf("item.Pair.Request.Payload: %v\n", item.Pair.Request.Payload)
-	log.Printf("item.Pair.Response.Payload: %v\n", item.Pair.Response.Payload)
 	e.OutputChannel <- item
 }
 

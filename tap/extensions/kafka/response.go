@@ -246,8 +246,6 @@ func ReadResponse(r io.Reader, tcpID *api.TcpID, emitter api.Emitter) (err error
 		break
 	}
 
-	// reqResPair.debug()
-
 	connectionInfo := &api.ConnectionInfo{
 		ClientIP:   tcpID.SrcIP,
 		ClientPort: tcpID.SrcPort,

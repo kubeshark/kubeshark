@@ -110,26 +110,10 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 	}
 
 	for item := range outputItems {
-		fmt.Printf("item: %+v\n", item)
 		extension := extensionsMap[item.Protocol.Name]
-		fmt.Printf("extension: %+v\n", extension)
-		// var req *http.Request
-		// marshedReq, _ := json.Marshal(item.Data.Request.Orig)
-		// json.Unmarshal(marshedReq, &req)
-		// var res *http.Response
-		// marshedRes, _ := json.Marshal(item.Data.Response.Orig)
-		// json.Unmarshal(marshedRes, &res)
-		// // NOTE: With this call, the incoming data is sent to the last WebSocket (that the web UI communicates).
-		// if harEntry, err := models.NewEntry(req, item.Data.Request.CaptureTime, res, item.Data.Response.CaptureTime); err == nil {
-		// 	saveHarToDb(harEntry, item.ConnectionInfo)
-		// } else {
-		// 	rlog.Errorf("Error when creating HTTP entry")
-		// }
 		resolvedSource, resolvedDestionation := resolveIP(item.ConnectionInfo)
 		mizuEntry := extension.Dissector.Analyze(item, primitive.NewObjectID().Hex(), resolvedSource, resolvedDestionation)
 		baseEntry := extension.Dissector.Summarize(mizuEntry)
-		fmt.Printf("baseEntry: %+v\n", baseEntry)
-		fmt.Printf("mizuEntry: %+v\n", mizuEntry)
 		mizuEntry.EstimatedSizeBytes = getEstimatedEntrySizeBytes(mizuEntry)
 		database.CreateEntry(mizuEntry)
 		baseEntryBytes, _ := models.CreateBaseEntryWebSocketMessage(baseEntry)
