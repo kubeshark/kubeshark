@@ -103,7 +103,13 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, em
 
 func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolvedSource string, resolvedDestination string) *api.MizuEntry {
 	var host, scheme, authority, path, service string
-	for _, header := range item.Pair.Request.Payload.(map[string]interface{})["headers"].([]interface{}) {
+
+	request := item.Pair.Request.Payload.(map[string]interface{})
+	response := item.Pair.Response.Payload.(map[string]interface{})
+	reqDetails := request["details"].(map[string]interface{})
+	resDetails := response["details"].(map[string]interface{})
+
+	for _, header := range reqDetails["headers"].([]interface{}) {
 		h := header.(map[string]interface{})
 		if h["name"] == "Host" {
 			host = h["value"].(string)
@@ -118,23 +124,24 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolve
 			path = h["value"].(string)
 		}
 	}
-	request := item.Pair.Request.Payload.(map[string]interface{})
-	response := item.Pair.Response.Payload.(map[string]interface{})
-	entryBytes, _ := json.Marshal(item.Pair)
+
 	if item.Protocol.Version == "2.0" {
 		service = fmt.Sprintf("(gRPC) %s://%s", scheme, authority)
 	} else {
 		service = fmt.Sprintf("http://%s", host)
-		path = request["url"].(string)
+		path = reqDetails["url"].(string)
 	}
+
+	request["url"] = path
+	entryBytes, _ := json.Marshal(item.Pair)
 	return &api.MizuEntry{
 		ProtocolName:        protocol.Name,
 		ProtocolVersion:     item.Protocol.Version,
 		EntryId:             entryId,
 		Entry:               string(entryBytes),
 		Url:                 fmt.Sprintf("%s%s", service, path),
-		Method:              request["method"].(string),
-		Status:              int(response["status"].(float64)),
+		Method:              reqDetails["method"].(string),
+		Status:              int(resDetails["status"].(float64)),
 		RequestSenderIp:     item.ConnectionInfo.ClientIP,
 		Service:             service,
 		Timestamp:           item.Timestamp,
@@ -308,8 +315,10 @@ func (d dissecting) Represent(entry *api.MizuEntry) (api.Protocol, []byte, error
 	representation := make(map[string]interface{}, 0)
 	request := root["request"].(map[string]interface{})["payload"].(map[string]interface{})
 	response := root["response"].(map[string]interface{})["payload"].(map[string]interface{})
-	repRequest := representRequest(request)
-	repResponse := representResponse(response)
+	reqDetails := request["details"].(map[string]interface{})
+	resDetails := response["details"].(map[string]interface{})
+	repRequest := representRequest(reqDetails)
+	repResponse := representResponse(resDetails)
 	representation["request"] = repRequest
 	representation["response"] = repResponse
 	object, err := json.Marshal(representation)
