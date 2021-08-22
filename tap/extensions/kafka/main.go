@@ -46,14 +46,14 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, em
 
 func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolvedSource string, resolvedDestination string) *api.MizuEntry {
 	request := item.Pair.Request.Payload.(map[string]interface{})
-	entryBytes, _ := json.Marshal(item.Pair)
+	reqDetails := request["details"].(map[string]interface{})
 	service := fmt.Sprintf("kafka")
-	apiKey := ApiKey(request["ApiKey"].(float64))
+	apiKey := ApiKey(reqDetails["ApiKey"].(float64))
 
 	summary := ""
 	switch apiKey {
 	case Metadata:
-		_topics := request["Payload"].(map[string]interface{})["Topics"]
+		_topics := reqDetails["Payload"].(map[string]interface{})["Topics"]
 		if _topics == nil {
 			break
 		}
@@ -66,10 +66,10 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolve
 		}
 		break
 	case ApiVersions:
-		summary = request["ClientID"].(string)
+		summary = reqDetails["ClientID"].(string)
 		break
 	case Produce:
-		topics := request["Payload"].(map[string]interface{})["TopicData"].([]interface{})
+		topics := reqDetails["Payload"].(map[string]interface{})["TopicData"].([]interface{})
 		for _, topic := range topics {
 			summary += fmt.Sprintf("%s, ", topic.(map[string]interface{})["Topic"].(string))
 		}
@@ -78,7 +78,7 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolve
 		}
 		break
 	case Fetch:
-		topics := request["Payload"].(map[string]interface{})["Topics"].([]interface{})
+		topics := reqDetails["Payload"].(map[string]interface{})["Topics"].([]interface{})
 		for _, topic := range topics {
 			summary += fmt.Sprintf("%s, ", topic.(map[string]interface{})["Topic"].(string))
 		}
@@ -87,7 +87,7 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolve
 		}
 		break
 	case ListOffsets:
-		topics := request["Payload"].(map[string]interface{})["Topics"].([]interface{})
+		topics := reqDetails["Payload"].(map[string]interface{})["Topics"].([]interface{})
 		for _, topic := range topics {
 			summary += fmt.Sprintf("%s, ", topic.(map[string]interface{})["Name"].(string))
 		}
@@ -96,7 +96,7 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolve
 		}
 		break
 	case CreateTopics:
-		topics := request["Payload"].(map[string]interface{})["Topics"].([]interface{})
+		topics := reqDetails["Payload"].(map[string]interface{})["Topics"].([]interface{})
 		for _, topic := range topics {
 			summary += fmt.Sprintf("%s, ", topic.(map[string]interface{})["Name"].(string))
 		}
@@ -105,13 +105,15 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolve
 		}
 		break
 	case DeleteTopics:
-		topicNames := request["TopicNames"].([]string)
+		topicNames := reqDetails["TopicNames"].([]string)
 		for _, name := range topicNames {
 			summary += fmt.Sprintf("%s, ", name)
 		}
 		break
 	}
 
+	request["url"] = summary
+	entryBytes, _ := json.Marshal(item.Pair)
 	return &api.MizuEntry{
 		ProtocolName:        _protocol.Name,
 		EntryId:             entryId,
@@ -163,17 +165,17 @@ func (d dissecting) Represent(entry string) ([]byte, error) {
 	representation := make(map[string]interface{}, 0)
 	request := root["request"].(map[string]interface{})["payload"].(map[string]interface{})
 	response := root["response"].(map[string]interface{})["payload"].(map[string]interface{})
-	// fmt.Printf("\n\nrequest: %+v\n", request)
-	// fmt.Printf("response: %+v\n", response)
+	reqDetails := request["details"].(map[string]interface{})
+	resDetails := response["details"].(map[string]interface{})
 
-	apiKey := ApiKey(request["ApiKey"].(float64))
+	apiKey := ApiKey(reqDetails["ApiKey"].(float64))
 
 	var repRequest []interface{}
 	var repResponse []interface{}
 	switch apiKey {
 	case Metadata:
-		repRequest = representMetadataRequest(request)
-		repResponse = representMetadataResponse(response)
+		repRequest = representMetadataRequest(reqDetails)
+		repResponse = representMetadataResponse(resDetails)
 		break
 	}
 

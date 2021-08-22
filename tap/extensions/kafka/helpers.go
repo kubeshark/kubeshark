@@ -19,6 +19,12 @@ func (h KafkaPayload) MarshalJSON() ([]byte, error) {
 	return json.Marshal(h.Data)
 }
 
+type KafkaWrapper struct {
+	Method  string      `json:"method"`
+	Url     string      `json:"url"`
+	Details interface{} `json:"details"`
+}
+
 func representRequestHeader(data map[string]interface{}, rep []interface{}) []interface{} {
 	requestHeader, _ := json.Marshal([]map[string]string{
 		{

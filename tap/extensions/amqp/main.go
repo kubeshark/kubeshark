@@ -36,6 +36,8 @@ func (d dissecting) Ping() {
 	log.Printf("pong %s\n", protocol.Name)
 }
 
+const amqpRequest string = "amqp_request"
+
 func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, emitter api.Emitter) {
 	r := AmqpReader{b}
 
@@ -104,10 +106,10 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, em
 			switch lastMethodFrameMessage.(type) {
 			case *BasicPublish:
 				eventBasicPublish.Body = f.Body
-				emitBasicPublish(*eventBasicPublish, connectionInfo, emitter)
+				emitAMQP(*eventBasicPublish, amqpRequest, basicMethodMap[40], connectionInfo, emitter)
 			case *BasicDeliver:
 				eventBasicDeliver.Body = f.Body
-				emitBasicDeliver(*eventBasicDeliver, connectionInfo, emitter)
+				emitAMQP(*eventBasicDeliver, amqpRequest, basicMethodMap[60], connectionInfo, emitter)
 			default:
 			}
 
@@ -128,7 +130,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, em
 					NoWait:     m.NoWait,
 					Arguments:  m.Arguments,
 				}
-				emitQueueBind(*eventQueueBind, connectionInfo, emitter)
+				emitAMQP(*eventQueueBind, amqpRequest, queueMethodMap[20], connectionInfo, emitter)
 
 			case *BasicConsume:
 				eventBasicConsume := &BasicConsume{
@@ -140,7 +142,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, em
 					NoWait:      m.NoWait,
 					Arguments:   m.Arguments,
 				}
-				emitBasicConsume(*eventBasicConsume, connectionInfo, emitter)
+				emitAMQP(*eventBasicConsume, amqpRequest, basicMethodMap[20], connectionInfo, emitter)
 
 			case *BasicDeliver:
 				eventBasicDeliver.ConsumerTag = m.ConsumerTag
@@ -159,7 +161,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, em
 					NoWait:     m.NoWait,
 					Arguments:  m.Arguments,
 				}
-				emitQueueDeclare(*eventQueueDeclare, connectionInfo, emitter)
+				emitAMQP(*eventQueueDeclare, amqpRequest, queueMethodMap[10], connectionInfo, emitter)
 
 			case *ExchangeDeclare:
 				eventExchangeDeclare := &ExchangeDeclare{
@@ -172,7 +174,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, em
 					NoWait:     m.NoWait,
 					Arguments:  m.Arguments,
 				}
-				emitExchangeDeclare(*eventExchangeDeclare, connectionInfo, emitter)
+				emitAMQP(*eventExchangeDeclare, amqpRequest, exchangeMethodMap[10], connectionInfo, emitter)
 
 			case *ConnectionStart:
 				eventConnectionStart := &ConnectionStart{
@@ -182,7 +184,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, em
 					Mechanisms:       m.Mechanisms,
 					Locales:          m.Locales,
 				}
-				emitConnectionStart(*eventConnectionStart, connectionInfo, emitter)
+				emitAMQP(*eventConnectionStart, amqpRequest, connectionMethodMap[10], connectionInfo, emitter)
 
 			case *ConnectionClose:
 				eventConnectionClose := &ConnectionClose{
@@ -191,7 +193,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, em
 					ClassId:   m.ClassId,
 					MethodId:  m.MethodId,
 				}
-				emitConnectionClose(*eventConnectionClose, connectionInfo, emitter)
+				emitAMQP(*eventConnectionClose, amqpRequest, connectionMethodMap[50], connectionInfo, emitter)
 
 			default:
 
@@ -206,7 +208,6 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, em
 func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolvedSource string, resolvedDestination string) *api.MizuEntry {
 	request := item.Pair.Request.Payload.(map[string]interface{})
 	reqDetails := request["details"].(map[string]interface{})
-	entryBytes, _ := json.Marshal(item.Pair)
 	service := fmt.Sprintf("amqp")
 
 	summary := ""
@@ -241,6 +242,8 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolve
 		break
 	}
 
+	request["url"] = summary
+	entryBytes, _ := json.Marshal(item.Pair)
 	return &api.MizuEntry{
 		ProtocolName:        protocol.Name,
 		EntryId:             entryId,

@@ -56,9 +56,8 @@ const HarEntrySummary: React.FC<any> = ({har}) => {
     const {log: {entries}} = har;
     const {response, request} = JSON.parse(entries[0].entry);
 
-
     return <div className={classes.entrySummary}>
-        {response.payload && <div style={{marginRight: 8}}>
+        {response.payload && response.payload.status && <div style={{marginRight: 8}}>
             <StatusCode statusCode={response.payload.status}/>
         </div>}
         <div style={{flexGrow: 1, overflow: 'hidden'}}>

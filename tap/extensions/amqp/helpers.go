@@ -93,15 +93,15 @@ type AMQPWrapper struct {
 	Details interface{} `json:"details"`
 }
 
-func emitBasicPublish(event BasicPublish, connectionInfo *api.ConnectionInfo, emitter api.Emitter) {
+func emitAMQP(event interface{}, _type string, method string, connectionInfo *api.ConnectionInfo, emitter api.Emitter) {
 	request := &api.GenericMessage{
 		IsRequest:   true,
 		CaptureTime: time.Now(),
 		Payload: AMQPPayload{
-			Type: "basic_publish",
+			Type: _type,
 			Data: &AMQPWrapper{
-				Method:  basicMethodMap[40],
-				Url:     event.Exchange,
+				Method:  method,
+				Url:     "",
 				Details: event,
 			},
 		},
@@ -287,31 +287,6 @@ func representBasicPublish(event map[string]interface{}) []interface{} {
 	return rep
 }
 
-func emitBasicDeliver(event BasicDeliver, connectionInfo *api.ConnectionInfo, emitter api.Emitter) {
-	request := &api.GenericMessage{
-		IsRequest:   true,
-		CaptureTime: time.Now(),
-		Payload: AMQPPayload{
-			Type: "basic_deliver",
-			Data: &AMQPWrapper{
-				Method:  basicMethodMap[60],
-				Url:     event.Exchange,
-				Details: event,
-			},
-		},
-	}
-	item := &api.OutputChannelItem{
-		Protocol:       protocol,
-		Timestamp:      time.Now().UnixNano() / int64(time.Millisecond),
-		ConnectionInfo: connectionInfo,
-		Pair: &api.RequestResponsePair{
-			Request:  *request,
-			Response: api.GenericMessage{},
-		},
-	}
-	emitter.Emit(item)
-}
-
 func representBasicDeliver(event map[string]interface{}) []interface{} {
 	rep := make([]interface{}, 0)
 
@@ -389,31 +364,6 @@ func representBasicDeliver(event map[string]interface{}) []interface{} {
 	return rep
 }
 
-func emitQueueDeclare(event QueueDeclare, connectionInfo *api.ConnectionInfo, emitter api.Emitter) {
-	request := &api.GenericMessage{
-		IsRequest:   true,
-		CaptureTime: time.Now(),
-		Payload: AMQPPayload{
-			Type: "queue_declare",
-			Data: &AMQPWrapper{
-				Method:  queueMethodMap[10],
-				Url:     event.Queue,
-				Details: event,
-			},
-		},
-	}
-	item := &api.OutputChannelItem{
-		Protocol:       protocol,
-		Timestamp:      time.Now().UnixNano() / int64(time.Millisecond),
-		ConnectionInfo: connectionInfo,
-		Pair: &api.RequestResponsePair{
-			Request:  *request,
-			Response: api.GenericMessage{},
-		},
-	}
-	emitter.Emit(item)
-}
-
 func representQueueDeclare(event map[string]interface{}) []interface{} {
 	rep := make([]interface{}, 0)
 
@@ -466,31 +416,6 @@ func representQueueDeclare(event map[string]interface{}) []interface{} {
 	}
 
 	return rep
-}
-
-func emitExchangeDeclare(event ExchangeDeclare, connectionInfo *api.ConnectionInfo, emitter api.Emitter) {
-	request := &api.GenericMessage{
-		IsRequest:   true,
-		CaptureTime: time.Now(),
-		Payload: AMQPPayload{
-			Type: "exchange_declare",
-			Data: &AMQPWrapper{
-				Method:  exchangeMethodMap[10],
-				Url:     event.Exchange,
-				Details: event,
-			},
-		},
-	}
-	item := &api.OutputChannelItem{
-		Protocol:       protocol,
-		Timestamp:      time.Now().UnixNano() / int64(time.Millisecond),
-		ConnectionInfo: connectionInfo,
-		Pair: &api.RequestResponsePair{
-			Request:  *request,
-			Response: api.GenericMessage{},
-		},
-	}
-	emitter.Emit(item)
 }
 
 func representExchangeDeclare(event map[string]interface{}) []interface{} {
@@ -551,31 +476,6 @@ func representExchangeDeclare(event map[string]interface{}) []interface{} {
 	return rep
 }
 
-func emitConnectionStart(event ConnectionStart, connectionInfo *api.ConnectionInfo, emitter api.Emitter) {
-	request := &api.GenericMessage{
-		IsRequest:   true,
-		CaptureTime: time.Now(),
-		Payload: AMQPPayload{
-			Type: "connection_start",
-			Data: &AMQPWrapper{
-				Method:  connectionMethodMap[10],
-				Url:     fmt.Sprintf("%d.%d", event.VersionMajor, event.VersionMinor),
-				Details: event,
-			},
-		},
-	}
-	item := &api.OutputChannelItem{
-		Protocol:       protocol,
-		Timestamp:      time.Now().UnixNano() / int64(time.Millisecond),
-		ConnectionInfo: connectionInfo,
-		Pair: &api.RequestResponsePair{
-			Request:  *request,
-			Response: api.GenericMessage{},
-		},
-	}
-	emitter.Emit(item)
-}
-
 func representConnectionStart(event map[string]interface{}) []interface{} {
 	rep := make([]interface{}, 0)
 
@@ -634,31 +534,6 @@ func representConnectionStart(event map[string]interface{}) []interface{} {
 	return rep
 }
 
-func emitConnectionClose(event ConnectionClose, connectionInfo *api.ConnectionInfo, emitter api.Emitter) {
-	request := &api.GenericMessage{
-		IsRequest:   true,
-		CaptureTime: time.Now(),
-		Payload: AMQPPayload{
-			Type: "connection_close",
-			Data: &AMQPWrapper{
-				Method:  connectionMethodMap[50],
-				Url:     event.ReplyText,
-				Details: event,
-			},
-		},
-	}
-	item := &api.OutputChannelItem{
-		Protocol:       protocol,
-		Timestamp:      time.Now().UnixNano() / int64(time.Millisecond),
-		ConnectionInfo: connectionInfo,
-		Pair: &api.RequestResponsePair{
-			Request:  *request,
-			Response: api.GenericMessage{},
-		},
-	}
-	emitter.Emit(item)
-}
-
 func representConnectionClose(event map[string]interface{}) []interface{} {
 	rep := make([]interface{}, 0)
 
@@ -687,31 +562,6 @@ func representConnectionClose(event map[string]interface{}) []interface{} {
 	})
 
 	return rep
-}
-
-func emitQueueBind(event QueueBind, connectionInfo *api.ConnectionInfo, emitter api.Emitter) {
-	request := &api.GenericMessage{
-		IsRequest:   true,
-		CaptureTime: time.Now(),
-		Payload: AMQPPayload{
-			Type: "queue_bind",
-			Data: &AMQPWrapper{
-				Method:  queueMethodMap[20],
-				Url:     event.Queue,
-				Details: event,
-			},
-		},
-	}
-	item := &api.OutputChannelItem{
-		Protocol:       protocol,
-		Timestamp:      time.Now().UnixNano() / int64(time.Millisecond),
-		ConnectionInfo: connectionInfo,
-		Pair: &api.RequestResponsePair{
-			Request:  *request,
-			Response: api.GenericMessage{},
-		},
-	}
-	emitter.Emit(item)
 }
 
 func representQueueBind(event map[string]interface{}) []interface{} {
@@ -758,31 +608,6 @@ func representQueueBind(event map[string]interface{}) []interface{} {
 	}
 
 	return rep
-}
-
-func emitBasicConsume(event BasicConsume, connectionInfo *api.ConnectionInfo, emitter api.Emitter) {
-	request := &api.GenericMessage{
-		IsRequest:   true,
-		CaptureTime: time.Now(),
-		Payload: AMQPPayload{
-			Type: "basic_consume",
-			Data: &AMQPWrapper{
-				Method:  basicMethodMap[20],
-				Url:     event.Queue,
-				Details: event,
-			},
-		},
-	}
-	item := &api.OutputChannelItem{
-		Protocol:       protocol,
-		Timestamp:      time.Now().UnixNano() / int64(time.Millisecond),
-		ConnectionInfo: connectionInfo,
-		Pair: &api.RequestResponsePair{
-			Request:  *request,
-			Response: api.GenericMessage{},
-		},
-	}
-	emitter.Emit(item)
 }
 
 func representBasicConsume(event map[string]interface{}) []interface{} {

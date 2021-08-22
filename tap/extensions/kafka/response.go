@@ -266,7 +266,11 @@ func ReadResponse(r io.Reader, tcpID *api.TcpID, emitter api.Emitter) (err error
 				CaptureTime: time.Now(),
 				Payload: KafkaPayload{
 					Type: "kafka_request",
-					Data: reqResPair.Request,
+					Data: &KafkaWrapper{
+						Method:  apiNames[apiKey],
+						Url:     "",
+						Details: reqResPair.Request,
+					},
 				},
 			},
 			Response: api.GenericMessage{
@@ -274,7 +278,11 @@ func ReadResponse(r io.Reader, tcpID *api.TcpID, emitter api.Emitter) (err error
 				CaptureTime: time.Now(),
 				Payload: KafkaPayload{
 					Type: "kafka_response",
-					Data: reqResPair.Response,
+					Data: &KafkaWrapper{
+						Method:  apiNames[apiKey],
+						Url:     "",
+						Details: reqResPair.Response,
+					},
 				},
 			},
 		},

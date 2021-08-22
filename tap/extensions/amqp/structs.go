@@ -17,7 +17,7 @@ type AMQPPayloader interface {
 func (h AMQPPayload) MarshalJSON() ([]byte, error) {
 	return json.Marshal(h.Data)
 	// switch h.Type {
-	// case "basic_publish":
+	// case "amqp_request":
 	// 	return json.Marshal(h.Data)
 	// default:
 	// 	panic(fmt.Sprintf("AMQP payload cannot be marshaled: %s\n", h.Type))
