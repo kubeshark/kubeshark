@@ -3,13 +3,14 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"github.com/up9inc/mizu/cli/apiserver"
 	"github.com/up9inc/mizu/cli/config"
 	"github.com/up9inc/mizu/cli/kubernetes"
 	"github.com/up9inc/mizu/cli/logger"
 	"github.com/up9inc/mizu/cli/mizu"
 	"github.com/up9inc/mizu/cli/mizu/version"
+	"github.com/up9inc/mizu/cli/uiUtils"
 	"net/http"
-	"time"
 )
 
 func runMizuView() {
@@ -34,19 +35,21 @@ func runMizuView() {
 		return
 	}
 
-	mizuProxiedUrl := kubernetes.GetMizuApiServerProxiedHostAndPath(config.Config.View.GuiPort)
-	_, err = http.Get(fmt.Sprintf("http://%s/", mizuProxiedUrl))
-	if err == nil {
+	response, err := http.Get(fmt.Sprintf("%s/", GetApiServerUrl()))
+	if err == nil && response.StatusCode == 200 {
 		logger.Log.Infof("Found a running service %s and open port %d", mizu.ApiServerPodName, config.Config.View.GuiPort)
 		return
 	}
 	logger.Log.Infof("Establishing connection to k8s cluster...")
 	go startProxyReportErrorIfAny(kubernetesProvider, cancel)
 
-	time.Sleep(time.Second * 5) // Waiting to be sure the proxy is ready
+	if err := apiserver.Provider.InitAndTestConnection(GetApiServerUrl(), 10); err != nil {
+		logger.Log.Errorf(uiUtils.Error, "Couldn't connect to API server, check logs")
+		return
+	}
 
-	logger.Log.Infof("Mizu is available at  http://%s\n", kubernetes.GetMizuApiServerProxiedHostAndPath(config.Config.View.GuiPort))
-	if isCompatible, err := version.CheckVersionCompatibility(config.Config.View.GuiPort); err != nil {
+	logger.Log.Infof("Mizu is available at %s\n", GetApiServerUrl())
+	if isCompatible, err := version.CheckVersionCompatibility(); err != nil {
 		logger.Log.Errorf("Failed to check versions compatibility %v", err)
 		cancel()
 		return
