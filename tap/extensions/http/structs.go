@@ -28,7 +28,7 @@ type HTTPWrapper struct {
 func (h HTTPPayload) MarshalJSON() ([]byte, error) {
 	switch h.Type {
 	case "http_request":
-		harRequest, err := har.NewRequest(h.Data.(*http.Request), false)
+		harRequest, err := har.NewRequest(h.Data.(*http.Request), true)
 		if err != nil {
 			rlog.Debugf("convert-request-to-har", "Failed converting request to HAR %s (%v,%+v)", err, err, err)
 			return nil, errors.New("Failed converting request to HAR")

@@ -235,18 +235,41 @@ func representRequest(request map[string]interface{}) []interface{} {
 
 	postData, _ := request["postData"].(map[string]interface{})
 	mimeType, _ := postData["mimeType"]
-	if mimeType == nil {
-		mimeType = "N/A"
+	if mimeType == nil || len(mimeType.(string)) == 0 {
+		mimeType = "text/html"
 	}
 	text, _ := postData["text"]
 	if text != nil {
 		repRequest = append(repRequest, map[string]string{
 			"type":      "body",
-			"title":     "POST Data",
-			"encoding":  "base64", // FIXME: Does `request` have it?
+			"title":     "POST Data (text/plain)",
+			"encoding":  "",
 			"mime_type": mimeType.(string),
 			"data":      text.(string),
 		})
+	}
+
+	params, _ := json.Marshal(postData["params"].([]interface{}))
+	if len(params) > 0 {
+		if mimeType == "multipart/form-data" {
+			multipart, _ := json.Marshal([]map[string]string{
+				{
+					"name":  "Files",
+					"value": string(params),
+				},
+			})
+			repRequest = append(repRequest, map[string]string{
+				"type":  "table",
+				"title": "POST Data (multipart/form-data)",
+				"data":  string(multipart),
+			})
+		} else {
+			repRequest = append(repRequest, map[string]string{
+				"type":  "table",
+				"title": "POST Data (application/x-www-form-urlencoded)",
+				"data":  string(params),
+			})
+		}
 	}
 
 	return repRequest
@@ -291,6 +314,9 @@ func representResponse(response map[string]interface{}) []interface{} {
 
 	content, _ := response["content"].(map[string]interface{})
 	mimeType, _ := content["mimeType"]
+	if mimeType == nil || len(mimeType.(string)) == 0 {
+		mimeType = "text/html"
+	}
 	encoding, _ := content["encoding"]
 	text, _ := content["text"]
 	if text != nil {
