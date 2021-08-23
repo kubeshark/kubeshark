@@ -107,6 +107,8 @@ func (h *tcpReader) run(wg *sync.WaitGroup) {
 		port = h.tcpID.SrcPort
 	}
 	b := bufio.NewReader(h)
+	// TODO: maybe check for kafka and amqp and when it is not one of those pass it to the HTTP?
+	//  because it will check for the ports that we checked in the "isTapTarget"
 	for _, extension := range extensions {
 		if containsPort(extension.Protocol.Ports, port) {
 			extension.Dissector.Dissect(b, h.isClient, h.tcpID, h.Emitter)

@@ -341,6 +341,7 @@ func startPassiveTapper(outputItems chan *api.OutputChannelItem, allExtensionPor
 
 	staleConnectionTimeout := time.Second * time.Duration(*staleTimeoutSeconds)
 	cleaner := Cleaner{
+		assembler:         assembler,
 		assemblerMutex:    &assemblerMutex,
 		cleanPeriod:       cleanPeriod,
 		connectionTimeout: staleConnectionTimeout,
