@@ -26,14 +26,21 @@ fi
 echo "Starting minikube..."
 minikube start
 
-echo "Creating mizu tests namespace"
+echo "Creating mizu tests namespaces"
 kubectl create namespace mizu-tests
+kubectl create namespace mizu-tests2
 
-echo "Creating httpbin deployment"
+echo "Creating httpbin deployments"
 kubectl create deployment httpbin --image=kennethreitz/httpbin -n mizu-tests
+kubectl create deployment httpbin2 --image=kennethreitz/httpbin -n mizu-tests
 
-echo "Creating httpbin service"
+kubectl create deployment httpbin --image=kennethreitz/httpbin -n mizu-tests2
+
+echo "Creating httpbin services"
 kubectl expose deployment httpbin --type=NodePort --port=80 -n mizu-tests
+kubectl expose deployment httpbin2 --type=NodePort --port=80 -n mizu-tests
+
+kubectl expose deployment httpbin --type=NodePort --port=80 -n mizu-tests2
 
 echo "Starting proxy"
 kubectl proxy --port=8080 &

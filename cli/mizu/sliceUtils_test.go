@@ -1,7 +1,9 @@
 package mizu_test
 
 import (
+	"fmt"
 	"github.com/up9inc/mizu/cli/mizu"
+	"reflect"
 	"testing"
 )
 
@@ -83,6 +85,44 @@ func TestContainsNilSlice(t *testing.T) {
 		t.Run(test.ContainsValue, func(t *testing.T) {
 			actual := mizu.Contains(test.Slice, test.ContainsValue)
 			if actual != test.Expected {
+				t.Errorf("unexpected result - Expected: %v, actual: %v", test.Expected, actual)
+			}
+		})
+	}
+}
+
+func TestUniqueNoDuplicateValues(t *testing.T) {
+	tests := []struct {
+		Slice         []string
+		Expected      []string
+	}{
+		{Slice: []string{"apple", "orange", "banana", "grapes"}, Expected: []string{"apple", "orange", "banana", "grapes"}},
+		{Slice: []string{"dog", "cat", "mouse"}, Expected: []string{"dog", "cat", "mouse"}},
+	}
+
+	for index, test := range tests {
+		t.Run(fmt.Sprintf("%v", index), func(t *testing.T) {
+			actual := mizu.Unique(test.Slice)
+			if !reflect.DeepEqual(test.Expected, actual) {
+				t.Errorf("unexpected result - Expected: %v, actual: %v", test.Expected, actual)
+			}
+		})
+	}
+}
+
+func TestUniqueDuplicateValues(t *testing.T) {
+	tests := []struct {
+		Slice         []string
+		Expected      []string
+	}{
+		{Slice: []string{"apple", "apple", "orange", "orange", "banana", "banana", "grapes", "grapes"}, Expected: []string{"apple", "orange", "banana", "grapes"}},
+		{Slice: []string{"dog", "cat", "cat", "mouse"}, Expected: []string{"dog", "cat", "mouse"}},
+	}
+
+	for index, test := range tests {
+		t.Run(fmt.Sprintf("%v", index), func(t *testing.T) {
+			actual := mizu.Unique(test.Slice)
+			if !reflect.DeepEqual(test.Expected, actual) {
 				t.Errorf("unexpected result - Expected: %v, actual: %v", test.Expected, actual)
 			}
 		})
