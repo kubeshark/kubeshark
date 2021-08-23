@@ -52,16 +52,16 @@ func GetEntries(c *gin.Context) {
 		utils.ReverseSlice(entries)
 	}
 
-	// baseEntries := make([]models.BaseEntryDetails, 0)
-	// for _, data := range entries {
-	// 	harEntry := models.BaseEntryDetails{}
-	// 	if err := models.GetEntry(&data, &harEntry); err != nil {
-	// 		continue
-	// 	}
-	// 	baseEntries = append(baseEntries, harEntry)
-	// }
+	baseEntries := make([]tapApi.BaseEntryDetails, 0)
+	for _, data := range entries {
+		harEntry := tapApi.BaseEntryDetails{}
+		if err := models.GetEntry(&data, &harEntry); err != nil {
+			continue
+		}
+		baseEntries = append(baseEntries, harEntry)
+	}
 
-	// c.JSON(http.StatusOK, baseEntries)
+	c.JSON(http.StatusOK, baseEntries)
 }
 
 func GetHARs(c *gin.Context) {
