@@ -134,7 +134,7 @@ func TestTapGuiPort(t *testing.T) {
 		t.Skip("ignored acceptance test")
 	}
 
-	tests := []int{8898}
+	tests := []uint16{8898}
 
 	for _, guiPort := range tests {
 		t.Run(fmt.Sprintf("%d", guiPort), func(t *testing.T) {

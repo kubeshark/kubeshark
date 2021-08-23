@@ -32,11 +32,20 @@ func getCliPath() (string, error) {
 	return cliPath, nil
 }
 
+func getConfigPath() (string, error) {
+	home, homeDirErr := os.UserHomeDir()
+	if homeDirErr != nil {
+		return "", homeDirErr
+	}
+
+	return path.Join(home, ".mizu", "config.yaml"), nil
+}
+
 func getProxyUrl(namespace string, service string) string {
 	return fmt.Sprintf("http://localhost:8080/api/v1/namespaces/%v/services/%v/proxy", namespace, service)
 }
 
-func getApiServerUrl(port int) string {
+func getApiServerUrl(port uint16) string {
 	return fmt.Sprintf("http://localhost:%v/mizu", port)
 }
 
@@ -72,6 +81,13 @@ func getDefaultFetchCommandArgs() []string {
 	defaultCmdArgs := getDefaultCommandArgs()
 
 	return append([]string{fetchCommand}, defaultCmdArgs...)
+}
+
+func getDefaultConfigCommandArgs() []string {
+	configCommand := "config"
+	defaultCmdArgs := getDefaultCommandArgs()
+
+	return append([]string{configCommand}, defaultCmdArgs...)
 }
 
 func retriesExecute(retriesCount int, executeFunc func() error) error {
