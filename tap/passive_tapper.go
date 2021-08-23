@@ -371,7 +371,7 @@ func startPassiveTapper(outputItems chan *api.OutputChannelItem, allExtensionPor
 			memStats := runtime.MemStats{}
 			runtime.ReadMemStats(&memStats)
 			log.Printf(
-				"mem: %d, goroutines: %d, unmatched messages:",
+				"mem: %d, goroutines: %d",
 				memStats.HeapAlloc,
 				runtime.NumGoroutine(),
 			)
