@@ -11,7 +11,7 @@ import (
 )
 
 type HTTPPayload struct {
-	Type string
+	Type uint8
 	Data interface{}
 }
 
@@ -27,7 +27,7 @@ type HTTPWrapper struct {
 
 func (h HTTPPayload) MarshalJSON() ([]byte, error) {
 	switch h.Type {
-	case "http_request":
+	case TypeHttpRequest:
 		harRequest, err := har.NewRequest(h.Data.(*http.Request), true)
 		if err != nil {
 			rlog.Debugf("convert-request-to-har", "Failed converting request to HAR %s (%v,%+v)", err, err, err)
@@ -38,7 +38,7 @@ func (h HTTPPayload) MarshalJSON() ([]byte, error) {
 			Url:     "",
 			Details: harRequest,
 		})
-	case "http_response":
+	case TypeHttpResponse:
 		harResponse, err := har.NewResponse(h.Data.(*http.Response), true)
 		if err != nil {
 			rlog.Debugf("convert-response-to-har", "Failed converting response to HAR %s (%v,%+v)", err, err, err)

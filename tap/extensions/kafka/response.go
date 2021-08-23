@@ -257,7 +257,6 @@ func ReadResponse(r io.Reader, tcpID *api.TcpID, emitter api.Emitter) (err error
 				IsRequest:   true,
 				CaptureTime: time.Now(),
 				Payload: KafkaPayload{
-					Type: "kafka_request",
 					Data: &KafkaWrapper{
 						Method:  apiNames[apiKey],
 						Url:     "",
@@ -269,7 +268,6 @@ func ReadResponse(r io.Reader, tcpID *api.TcpID, emitter api.Emitter) (err error
 				IsRequest:   false,
 				CaptureTime: time.Now(),
 				Payload: KafkaPayload{
-					Type: "kafka_response",
 					Data: &KafkaWrapper{
 						Method:  apiNames[apiKey],
 						Url:     "",

@@ -39,6 +39,11 @@ var http2Protocol api.Protocol = api.Protocol{
 	Ports:           []string{"80", "8080"},
 }
 
+const (
+	TypeHttpRequest = iota
+	TypeHttpResponse
+)
+
 func init() {
 	log.Println("Initializing HTTP extension.")
 	requestCounter = 0

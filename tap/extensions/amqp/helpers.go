@@ -98,7 +98,6 @@ func emitAMQP(event interface{}, _type string, method string, connectionInfo *ap
 		IsRequest:   true,
 		CaptureTime: time.Now(),
 		Payload: AMQPPayload{
-			Type: _type,
 			Data: &AMQPWrapper{
 				Method:  method,
 				Url:     "",

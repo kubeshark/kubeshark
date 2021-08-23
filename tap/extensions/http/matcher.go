@@ -32,7 +32,7 @@ func (matcher *requestResponseMatcher) registerRequest(ident string, request *ht
 		IsRequest:   true,
 		CaptureTime: captureTime,
 		Payload: HTTPPayload{
-			Type: "http_request",
+			Type: TypeHttpRequest,
 			Data: request,
 		},
 	}
@@ -61,7 +61,7 @@ func (matcher *requestResponseMatcher) registerResponse(ident string, response *
 		IsRequest:   false,
 		CaptureTime: captureTime,
 		Payload: HTTPPayload{
-			Type: "http_response",
+			Type: TypeHttpResponse,
 			Data: response,
 		},
 	}

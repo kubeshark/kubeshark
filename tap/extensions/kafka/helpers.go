@@ -7,7 +7,6 @@ import (
 )
 
 type KafkaPayload struct {
-	Type string
 	Data interface{}
 }
 
