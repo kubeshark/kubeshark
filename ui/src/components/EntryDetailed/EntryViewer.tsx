@@ -1,7 +1,7 @@
 import React, {useState} from 'react';
-import styles from './HAREntryViewer.module.sass';
-import Tabs from "../Tabs";
-import {HAREntryTableSection, HAREntryBodySection, HAREntryTablePolicySection} from "./HAREntrySections";
+import styles from './EntryViewer.module.sass';
+import Tabs from "../UI/Tabs";
+import {EntryTableSection, EntryBodySection, EntryTablePolicySection} from "./EntrySections";
 
 const SectionsRepresentation: React.FC<any> = ({data, color}) => {
     const sections = []
@@ -11,12 +11,12 @@ const SectionsRepresentation: React.FC<any> = ({data, color}) => {
             switch (row.type) {
                 case "table":
                     sections.push(
-                        <HAREntryTableSection key={i} title={row.title} color={color} arrayToIterate={JSON.parse(row.data)}/>
+                        <EntryTableSection key={i} title={row.title} color={color} arrayToIterate={JSON.parse(row.data)}/>
                     )
                     break;
                 case "body":
                     sections.push(
-                        <HAREntryBodySection key={i} color={color} content={row.data} encoding={row.encoding} contentType={row.mime_type}/>
+                        <EntryBodySection key={i} color={color} content={row.data} encoding={row.encoding} contentType={row.mime_type}/>
                     )
                     break;
                 default:
@@ -49,7 +49,7 @@ const AutoRepresentation: React.FC<any> = ({representation, color, isResponseMoc
 
     const {request, response} = JSON.parse(representation);
 
-    return <div className={styles.harEntry}>
+    return <div className={styles.Entry}>
         {<div className={styles.body}>
             <div className={styles.bodyHeader}>
                 <Tabs tabs={TABS} currentTab={currentTab} color={color} onChange={setCurrentTab} leftAligned/>
@@ -63,7 +63,7 @@ const AutoRepresentation: React.FC<any> = ({representation, color, isResponseMoc
             </React.Fragment>}
             {currentTab === TABS[2].tab && <React.Fragment>
                 {// FIXME: Fix here
-                <HAREntryTablePolicySection service={representation.log.entries[0].service} title={'Rule'} color={color} latency={0} response={response} arrayToIterate={rulesMatched ? rulesMatched : []}/>}
+                <EntryTablePolicySection service={representation.log.entries[0].service} title={'Rule'} color={color} latency={0} response={response} arrayToIterate={rulesMatched ? rulesMatched : []}/>}
             </React.Fragment>}
         </div>}
     </div>;
@@ -76,8 +76,8 @@ interface Props {
     showTitle?: boolean;
 }
 
-const HAREntryViewer: React.FC<Props> = ({representation, color, isResponseMocked, showTitle=true}) => {
+const EntryViewer: React.FC<Props> = ({representation, color, isResponseMocked, showTitle=true}) => {
     return <AutoRepresentation representation={representation} color={color} isResponseMocked={isResponseMocked} showTitle={showTitle}/>
 };
 
-export default HAREntryViewer;
+export default EntryViewer;

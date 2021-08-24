@@ -1,13 +1,13 @@
-import {HarEntry} from "./HarEntry";
-import React, {useCallback, useEffect, useMemo, useState} from "react";
-import styles from './style/HarEntriesList.module.sass';
+import {EntryItem} from "./EntryListItem/EntryListItem";
+import React, {useCallback, useEffect, useMemo, useRef, useState} from "react";
+import styles from './style/EntriesList.module.sass';
 import spinner from './assets/spinner.svg';
 import ScrollableFeed from "react-scrollable-feed";
-import {StatusType} from "./HarFilters";
+import {StatusType} from "./Filters";
 import Api from "../helpers/api";
-import uninon from "./assets/union.svg";
+import down from "./assets/downImg.svg";
 
-interface HarEntriesListProps {
+interface EntriesListProps {
     entries: any[];
     setEntries: (entries: any[]) => void;
     focusedEntryId: string;
@@ -32,10 +32,12 @@ enum FetchOperator {
 
 const api = new Api();
 
-export const HarEntriesList: React.FC<HarEntriesListProps> = ({entries, setEntries, focusedEntryId, setFocusedEntryId, connectionOpen, noMoreDataTop, setNoMoreDataTop, noMoreDataBottom, setNoMoreDataBottom, methodsFilter, statusFilter, pathFilter, listEntryREF, onScrollEvent, scrollableList}) => {
+export const EntriesList: React.FC<EntriesListProps> = ({entries, setEntries, focusedEntryId, setFocusedEntryId, connectionOpen, noMoreDataTop, setNoMoreDataTop, noMoreDataBottom, setNoMoreDataBottom, methodsFilter, statusFilter, pathFilter, listEntryREF, onScrollEvent, scrollableList}) => {
 
     const [loadMoreTop, setLoadMoreTop] = useState(false);
     const [isLoadingTop, setIsLoadingTop] = useState(false);
+
+    const scrollableRef = useRef(null);
 
     useEffect(() => {
         const list = document.getElementById('list').firstElementChild;
@@ -114,24 +116,20 @@ export const HarEntriesList: React.FC<HarEntriesListProps> = ({entries, setEntri
                     {isLoadingTop && <div className={styles.spinnerContainer}>
                         <img alt="spinner" src={spinner} style={{height: 25}}/>
                     </div>}
-                    <ScrollableFeed onScroll={(isAtBottom) => onScrollEvent(isAtBottom)}>
+                    <ScrollableFeed ref={scrollableRef} onScroll={(isAtBottom) => onScrollEvent(isAtBottom)}>
                         {noMoreDataTop && !connectionOpen && <div id="noMoreDataTop" className={styles.noMoreDataAvailable}>No more data available</div>}
-                        {filteredEntries.map(entry => <HarEntry key={entry.id}
-                                                     entry={entry}
-                                                     setFocusedEntryId={setFocusedEntryId}
-                                                     isSelected={focusedEntryId === entry.id}/>)}
+                        {filteredEntries.map(entry => <EntryItem key={entry.id}
+                                                        entry={entry}
+                                                        setFocusedEntryId={setFocusedEntryId}
+                                                        isSelected={focusedEntryId === entry.id}/>)}
                         {!connectionOpen && !noMoreDataBottom && <div className={styles.fetchButtonContainer}>
                             <div className={styles.styledButton} onClick={() => getNewEntries()}>Fetch more entries</div>
                         </div>}
                     </ScrollableFeed>
                     <button type="button" 
                         className={`${styles.btnLive} ${scrollableList ? styles.showButton : styles.hideButton}`} 
-                        onClick={(_) => {
-                            const list = listEntryREF.current.firstChild;
-                            if(list instanceof HTMLElement) {
-                                list.scrollTo({ top: list.scrollHeight, behavior: 'smooth' })
-                            }
-                        }}><img alt="Union" src={uninon} />
+                        onClick={(_) => scrollableRef.current.scrollToBottom()}>
+                        <img alt="down" src={down} />
                     </button>
                 </div>
 

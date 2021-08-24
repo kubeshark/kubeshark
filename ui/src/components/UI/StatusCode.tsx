@@ -7,11 +7,11 @@ export enum StatusCodeClassification {
     NEUTRAL = "neutral"
 }
 
-interface HAREntryProps {
+interface EntryProps {
     statusCode: number
 }
 
-const StatusCode: React.FC<HAREntryProps> = ({statusCode}) => {
+const StatusCode: React.FC<EntryProps> = ({statusCode}) => {
 
     const classification = getClassification(statusCode)
 

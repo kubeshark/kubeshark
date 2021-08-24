@@ -1,17 +1,17 @@
-import styles from "./HAREntrySections.module.sass";
+import styles from "./EntrySections.module.sass";
 import React, {useState} from "react";
-import {SyntaxHighlighter} from "../SyntaxHighlighter/index";
-import CollapsibleContainer from "../CollapsibleContainer";
-import FancyTextDisplay from "../FancyTextDisplay";
-import Checkbox from "../Checkbox";
+import {SyntaxHighlighter} from "../UI/SyntaxHighlighter/index";
+import CollapsibleContainer from "../UI/CollapsibleContainer";
+import FancyTextDisplay from "../UI/FancyTextDisplay";
+import Checkbox from "../UI/Checkbox";
 import ProtobufDecoder from "protobuf-decoder";
 
-interface HAREntryViewLineProps {
+interface EntryViewLineProps {
     label: string;
     value: number | string;
 }
 
-const HAREntryViewLine: React.FC<HAREntryViewLineProps> = ({label, value}) => {
+const EntryViewLine: React.FC<EntryViewLineProps> = ({label, value}) => {
     return (label && value && <tr className={styles.dataLine}>
                 <td className={styles.dataKey}>{label}</td>
                 <td>
@@ -27,13 +27,13 @@ const HAREntryViewLine: React.FC<HAREntryViewLineProps> = ({label, value}) => {
 }
 
 
-interface HAREntrySectionCollapsibleTitleProps {
+interface EntrySectionCollapsibleTitleProps {
     title: string,
     color: string,
     isExpanded: boolean,
 }
 
-const HAREntrySectionCollapsibleTitle: React.FC<HAREntrySectionCollapsibleTitleProps> = ({title, color, isExpanded}) => {
+const EntrySectionCollapsibleTitle: React.FC<EntrySectionCollapsibleTitleProps> = ({title, color, isExpanded}) => {
     return <div className={styles.title}>
         <span className={`${styles.button} ${isExpanded ? styles.expanded : ''}`} style={{backgroundColor: color}}>
             {isExpanded ? '-' : '+'}
@@ -42,31 +42,31 @@ const HAREntrySectionCollapsibleTitle: React.FC<HAREntrySectionCollapsibleTitleP
     </div>
 }
 
-interface HAREntrySectionContainerProps {
+interface EntrySectionContainerProps {
     title: string,
     color: string,
 }
 
-export const HAREntrySectionContainer: React.FC<HAREntrySectionContainerProps> = ({title, color, children}) => {
+export const EntrySectionContainer: React.FC<EntrySectionContainerProps> = ({title, color, children}) => {
     const [expanded, setExpanded] = useState(true);
     return <CollapsibleContainer
         className={styles.collapsibleContainer}
         isExpanded={expanded}
         onClick={() => setExpanded(!expanded)}
-        title={<HAREntrySectionCollapsibleTitle title={title} color={color} isExpanded={expanded}/>}
+        title={<EntrySectionCollapsibleTitle title={title} color={color} isExpanded={expanded}/>}
     >
         {children}
     </CollapsibleContainer>
 }
 
-interface HAREntryBodySectionProps {
+interface EntryBodySectionProps {
     content: any,
     color: string,
     encoding?: string,
     contentType?: string,
 }
 
-export const HAREntryBodySection: React.FC<HAREntryBodySectionProps> = ({
+export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
     color,
     content,
     encoding,
@@ -104,11 +104,11 @@ export const HAREntryBodySection: React.FC<HAREntryBodySectionProps> = ({
     }
 
     return <React.Fragment>
-        {content && content?.length > 0 && <HAREntrySectionContainer title='Body' color={color}>
+        {content && content?.length > 0 && <EntrySectionContainer title='Body' color={color}>
             <table>
                 <tbody>
-                    <HAREntryViewLine label={'Mime type'} value={contentType}/>
-                    <HAREntryViewLine label={'Encoding'} value={encoding}/>
+                    <EntryViewLine label={'Mime type'} value={contentType}/>
+                    <EntryViewLine label={'Encoding'} value={encoding}/>
                 </tbody>
             </table>
 
@@ -124,35 +124,35 @@ export const HAREntryBodySection: React.FC<HAREntryBodySectionProps> = ({
                 code={formatTextBody(content)}
                 language={content?.mimeType ? getLanguage(content.mimeType) : 'default'}
             />
-        </HAREntrySectionContainer>}
+        </EntrySectionContainer>}
     </React.Fragment>
 }
 
-interface HAREntrySectionProps {
+interface EntrySectionProps {
     title: string,
     color: string,
     arrayToIterate: any[],
 }
 
-export const HAREntryTableSection: React.FC<HAREntrySectionProps> = ({title, color, arrayToIterate}) => {
+export const EntryTableSection: React.FC<EntrySectionProps> = ({title, color, arrayToIterate}) => {
     return <React.Fragment>
         {
             arrayToIterate && arrayToIterate.length > 0 ?
-                <HAREntrySectionContainer title={title} color={color}>
+                <EntrySectionContainer title={title} color={color}>
                     <table>
                         <tbody>
-                            {arrayToIterate.map(({name, value}, index) => <HAREntryViewLine key={index} label={name}
+                            {arrayToIterate.map(({name, value}, index) => <EntryViewLine key={index} label={name}
                                                                                             value={value}/>)}
                         </tbody>
                     </table>
-                </HAREntrySectionContainer> : <span/>
+                </EntrySectionContainer> : <span/>
         }
     </React.Fragment>
 }
 
 
 
-interface HAREntryPolicySectionProps {
+interface EntryPolicySectionProps {
     service: string,
     title: string,
     color: string,
@@ -162,13 +162,13 @@ interface HAREntryPolicySectionProps {
 }
 
 
-interface HAREntryPolicySectionCollapsibleTitleProps {
+interface EntryPolicySectionCollapsibleTitleProps {
     label: string;
     matched: string;
     isExpanded: boolean;
 }
 
-const HAREntryPolicySectionCollapsibleTitle: React.FC<HAREntryPolicySectionCollapsibleTitleProps> = ({label, matched, isExpanded}) => {
+const EntryPolicySectionCollapsibleTitle: React.FC<EntryPolicySectionCollapsibleTitleProps> = ({label, matched, isExpanded}) => {
     return <div className={styles.title}>
         <span className={`${styles.button} ${isExpanded ? styles.expanded : ''}`}>
             {isExpanded ? '-' : '+'}
@@ -182,36 +182,36 @@ const HAREntryPolicySectionCollapsibleTitle: React.FC<HAREntryPolicySectionColla
     </div>
 }
 
-interface HAREntryPolicySectionContainerProps {
+interface EntryPolicySectionContainerProps {
     label: string;
     matched: string;
     children?: any;
 }
 
-export const HAREntryPolicySectionContainer: React.FC<HAREntryPolicySectionContainerProps> = ({label, matched, children}) => {
+export const EntryPolicySectionContainer: React.FC<EntryPolicySectionContainerProps> = ({label, matched, children}) => {
     const [expanded, setExpanded] = useState(false);
     return <CollapsibleContainer
         className={styles.collapsibleContainer}
         isExpanded={expanded}
         onClick={() => setExpanded(!expanded)}
-        title={<HAREntryPolicySectionCollapsibleTitle label={label} matched={matched} isExpanded={expanded}/>}
+        title={<EntryPolicySectionCollapsibleTitle label={label} matched={matched} isExpanded={expanded}/>}
     >
         {children}
     </CollapsibleContainer>
 }
 
-export const HAREntryTablePolicySection: React.FC<HAREntryPolicySectionProps> = ({service, title, color, response, latency, arrayToIterate}) => {
+export const EntryTablePolicySection: React.FC<EntryPolicySectionProps> = ({service, title, color, response, latency, arrayToIterate}) => {
     // const base64ToJson = response.content.mimeType === "application/json; charset=utf-8" ? JSON.parse(Buffer.from(response.content.text, "base64").toString()) : {};
     return <React.Fragment>
         {
             arrayToIterate && arrayToIterate.length > 0 ?
                 <>
-                <HAREntrySectionContainer title={title} color={color}>
+                <EntrySectionContainer title={title} color={color}>
                     <table>
                         <tbody>
                             {arrayToIterate.map(({rule, matched}, index) => {
                                     return (
-                                        <HAREntryPolicySectionContainer key={index} label={rule.Name} matched={matched && (rule.Type === 'latency' ? rule.Latency >= latency : true)? "Success" : "Failure"}>
+                                        <EntryPolicySectionContainer key={index} label={rule.Name} matched={matched && (rule.Type === 'latency' ? rule.Latency >= latency : true)? "Success" : "Failure"}>
                                             {
                                                 <>
                                                     {
@@ -251,14 +251,14 @@ export const HAREntryTablePolicySection: React.FC<HAREntryPolicySectionProps> = 
                                                     }
                                                 </>
                                             }
-                                        </HAREntryPolicySectionContainer>
+                                        </EntryPolicySectionContainer>
                                     )
                                 }
                             )
                             }
                         </tbody>
                     </table>
-                </HAREntrySectionContainer>
+                </EntrySectionContainer>
                 </> : <span/>
         }
     </React.Fragment>

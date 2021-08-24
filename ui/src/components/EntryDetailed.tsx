@@ -1,10 +1,9 @@
 import React from "react";
-import {singleEntryToHAR} from "./utils";
-import HAREntryViewer from "./HarEntryViewer/HAREntryViewer";
+import EntryViewer from "./EntryDetailed/EntryViewer";
 import {makeStyles} from "@material-ui/core";
-import Protocol from "./Protocol"
-import StatusCode from "./StatusCode";
-import {EndpointPath} from "./EndpointPath";
+import Protocol from "./UI/Protocol"
+import StatusCode from "./UI/StatusCode";
+import {EndpointPath} from "./UI/EndpointPath";
 
 const useStyles = makeStyles(() => ({
     entryTitle: {
@@ -27,34 +26,32 @@ const useStyles = makeStyles(() => ({
     }
 }));
 
-interface HarEntryDetailedProps {
-    harEntry: any;
-    classes?: any;
+interface EntryDetailedProps {
+    entryData: any
 }
 
 export const formatSize = (n: number) => n > 1000 ? `${Math.round(n / 1000)}KB` : `${n} B`;
 
-const HarEntryTitle: React.FC<any> = ({protocol, har}) => {
+const EntryTitle: React.FC<any> = ({protocol, data}) => {
     const classes = useStyles();
 
-    const {log: {entries}} = har;
-    const {response} = JSON.parse(entries[0].entry);
+    console.log("data:", data)
+    const {response} = JSON.parse(data.entry);
 
 
     return <div className={classes.entryTitle}>
         <Protocol protocol={protocol} horizontal={true}/>
         <div style={{right: "30px", position: "absolute", display: "flex"}}>
             {response.payload && <div style={{margin: "0 18px", opacity: 0.5}}>{formatSize(response.payload.bodySize)}</div>}
-            <div style={{opacity: 0.5}}>{'rulesMatched' in entries[0] ? entries[0].rulesMatched?.length : '0'} Rules Applied</div>
+            <div style={{opacity: 0.5}}>{'rulesMatched' in data ? data.rulesMatched?.length : '0'} Rules Applied</div>
         </div>
     </div>;
 };
 
-const HarEntrySummary: React.FC<any> = ({har}) => {
+const EntrySummary: React.FC<any> = ({data}) => {
     const classes = useStyles();
 
-    const {log: {entries}} = har;
-    const {response, request} = JSON.parse(entries[0].entry);
+    const {response, request} = JSON.parse(data.entry);
 
     return <div className={classes.entrySummary}>
         {response?.payload && response.payload?.details && "status" in response.payload.details && <div style={{marginRight: 8}}>
@@ -66,14 +63,12 @@ const HarEntrySummary: React.FC<any> = ({har}) => {
     </div>;
 };
 
-export const HAREntryDetailed: React.FC<HarEntryDetailedProps> = ({classes, harEntry}) => {
-    const har = singleEntryToHAR(harEntry.data);
-
+export const EntryDetailed: React.FC<EntryDetailedProps> = ({entryData}) => {
     return <>
-        <HarEntryTitle protocol={harEntry.protocol} har={har}/>
-        {har && <HarEntrySummary har={har}/>}
+        <EntryTitle protocol={entryData.protocol} data={entryData.data}/>
+        {entryData.data && <EntrySummary data={entryData.data}/>}
         <>
-            {har && <HAREntryViewer representation={harEntry.representation} color={harEntry.protocol.background_color}/>}
+            {entryData.data && <EntryViewer representation={entryData.representation} color={entryData.protocol.background_color}/>}
         </>
     </>
 };

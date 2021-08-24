@@ -1,14 +1,14 @@
 import React, {useEffect, useRef, useState} from "react";
-import {HarFilters} from "./HarFilters";
-import {HarEntriesList} from "./HarEntriesList";
+import {Filters} from "./Filters";
+import {EntriesList} from "./EntriesList";
 import {makeStyles} from "@material-ui/core";
-import "./style/HarPage.sass";
-import styles from './style/HarEntriesList.module.sass';
-import {HAREntryDetailed} from "./HarEntryDetailed";
+import "./style/TrafficPage.sass";
+import styles from './style/EntriesList.module.sass';
+import {EntryDetailed} from "./EntryDetailed";
 import playIcon from './assets/run.svg';
 import pauseIcon from './assets/pause.svg';
-import variables from './style/variables.module.scss';
-import {StatusBar} from "./StatusBar";
+import variables from '../variables.module.scss';
+import {StatusBar} from "./UI/StatusBar";
 import Api, {MizuWebsocketURL} from "../helpers/api";
 
 const useLayoutStyles = makeStyles(() => ({
@@ -21,7 +21,7 @@ const useLayoutStyles = makeStyles(() => ({
         background: variables.headerBackgoundColor
     },
 
-    harViewer: {
+    viewer: {
         display: 'flex',
         overflowY: 'auto',
         height: "calc(100% - 70px)",
@@ -36,20 +36,20 @@ enum ConnectionStatus {
     Paused
 }
 
-interface HarPageProps {
+interface TrafficPageProps {
     setAnalyzeStatus: (status: any) => void;
     onTLSDetected: (destAddress: string) => void;
 }
 
 const api = new Api();
 
-export const HarPage: React.FC<HarPageProps> = ({setAnalyzeStatus, onTLSDetected}) => {
+export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLSDetected}) => {
 
     const classes = useLayoutStyles();
 
     const [entries, setEntries] = useState([] as any);
     const [focusedEntryId, setFocusedEntryId] = useState(null);
-    const [selectedHarEntry, setSelectedHarEntry] = useState(null);
+    const [selectedEntryData, setSelectedEntryData] = useState(null);
     const [connection, setConnection] = useState(ConnectionStatus.Closed);
     const [noMoreDataTop, setNoMoreDataTop] = useState(false);
     const [noMoreDataBottom, setNoMoreDataBottom] = useState(false);
@@ -129,11 +129,11 @@ export const HarPage: React.FC<HarPageProps> = ({setAnalyzeStatus, onTLSDetected
 
     useEffect(() => {
         if (!focusedEntryId) return;
-        setSelectedHarEntry(null);
+        setSelectedEntryData(null);
         (async () => {
             try {
                 const entryData = await api.getEntry(focusedEntryId);
-                setSelectedHarEntry(entryData);
+                setSelectedEntryData(entryData);
             } catch (error) {
                 console.error(error);
             }
@@ -170,16 +170,16 @@ export const HarPage: React.FC<HarPageProps> = ({setAnalyzeStatus, onTLSDetected
     const onScrollEvent = (isAtBottom) => {
         isAtBottom ? setDisableScrollList(false) : setDisableScrollList(true)
     }
-    
+
     const isScrollable = (element) => {
-        return element.scrollWidth > element.clientWidth || element.scrollHeight > element.clientHeight;
+        return element.scrollHeight > element.clientHeight;
     };
 
     return (
-        <div className="HarPage">
-            <div className="harPageHeader">
+        <div className="TrafficPage">
+            <div className="TrafficPageHeader">
                 <img style={{cursor: "pointer", marginRight: 15, height: 30}} alt="pause"
-                     src={connection === ConnectionStatus.Connected ? pauseIcon : playIcon} onClick={toggleConnection}/>
+                    src={connection === ConnectionStatus.Connected ? pauseIcon : playIcon} onClick={toggleConnection}/>
                 <div className="connectionText">
                     {getConnectionTitle()}
                     <div className={"indicatorContainer " + getConnectionStatusClass(true)}>
@@ -187,9 +187,9 @@ export const HarPage: React.FC<HarPageProps> = ({setAnalyzeStatus, onTLSDetected
                     </div>
                 </div>
             </div>
-            {entries.length > 0 && <div className="HarPage-Container">
-                <div className="HarPage-ListContainer">
-                    <HarFilters methodsFilter={methodsFilter}
+            {entries.length > 0 && <div className="TrafficPage-Container">
+                <div className="TrafficPage-ListContainer">
+                    <Filters methodsFilter={methodsFilter}
                                 setMethodsFilter={setMethodsFilter}
                                 statusFilter={statusFilter}
                                 setStatusFilter={setStatusFilter}
@@ -197,7 +197,7 @@ export const HarPage: React.FC<HarPageProps> = ({setAnalyzeStatus, onTLSDetected
                                 setPathFilter={setPathFilter}
                     />
                     <div className={styles.container}>
-                        <HarEntriesList entries={entries}
+                        <EntriesList entries={entries}
                                         setEntries={setEntries}
                                         focusedEntryId={focusedEntryId}
                                         setFocusedEntryId={setFocusedEntryId}
@@ -216,8 +216,7 @@ export const HarPage: React.FC<HarPageProps> = ({setAnalyzeStatus, onTLSDetected
                     </div>
                 </div>
                 <div className={classes.details}>
-                    {selectedHarEntry &&
-                    <HAREntryDetailed harEntry={selectedHarEntry} classes={{root: classes.harViewer}}/>}
+                    {selectedEntryData && <EntryDetailed entryData={selectedEntryData}/>}
                 </div>
             </div>}
             {tappingStatus?.pods != null && <StatusBar tappingStatus={tappingStatus}/>}

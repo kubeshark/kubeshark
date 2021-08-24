@@ -1,16 +1,16 @@
 import React from "react";
-import styles from './style/HarEntry.module.sass';
-import StatusCode, {getClassification, StatusCodeClassification} from "./StatusCode";
-import Protocol, {ProtocolInterface} from "./Protocol"
-import {EndpointPath} from "./EndpointPath";
-import ingoingIconSuccess from "./assets/ingoing-traffic-success.svg"
-import ingoingIconFailure from "./assets/ingoing-traffic-failure.svg"
-import ingoingIconNeutral from "./assets/ingoing-traffic-neutral.svg"
-import outgoingIconSuccess from "./assets/outgoing-traffic-success.svg"
-import outgoingIconFailure from "./assets/outgoing-traffic-failure.svg"
-import outgoingIconNeutral from "./assets/outgoing-traffic-neutral.svg"
+import styles from './EntryListItem.module.sass';
+import StatusCode, {getClassification, StatusCodeClassification} from "../UI/StatusCode";
+import Protocol, {ProtocolInterface} from "../UI/Protocol"
+import {EndpointPath} from "../UI/EndpointPath";
+import ingoingIconSuccess from "../assets/ingoing-traffic-success.svg"
+import ingoingIconFailure from "../assets/ingoing-traffic-failure.svg"
+import ingoingIconNeutral from "../assets/ingoing-traffic-neutral.svg"
+import outgoingIconSuccess from "../assets/outgoing-traffic-success.svg"
+import outgoingIconFailure from "../assets/outgoing-traffic-failure.svg"
+import outgoingIconNeutral from "../assets/outgoing-traffic-neutral.svg"
 
-interface HAREntry {
+interface Entry {
     protocol: ProtocolInterface,
     method?: string,
     summary: string,
@@ -34,13 +34,13 @@ interface Rules {
     numberOfRules: number;
 }
 
-interface HAREntryProps {
-    entry: HAREntry;
+interface EntryProps {
+    entry: Entry;
     setFocusedEntryId: (id: string) => void;
     isSelected?: boolean;
 }
 
-export const HarEntry: React.FC<HAREntryProps> = ({entry, setFocusedEntryId, isSelected}) => {
+export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, isSelected}) => {
     const classification = getClassification(entry.status_code)
     let ingoingIcon;
     let outgoingIcon;
