@@ -29,7 +29,7 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.T
 	fsmOptions := reassembly.TCPSimpleFSMOptions{
 		SupportMissingEstablishment: *allowmissinginit,
 	}
-	rlog.Debugf("Current App Ports: %v", gSettings.filterPorts)
+	rlog.Debugf("Current App Ports: %v", factory.AllExtensionPorts)
 	srcIp := net.Src().String()
 	dstIp := net.Dst().String()
 	srcPort := transport.Src().String()

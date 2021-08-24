@@ -18,7 +18,6 @@ import (
 	"os/signal"
 	"runtime"
 	"runtime/pprof"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -38,19 +37,6 @@ const AppPortsEnvVar = "APP_PORTS"
 const cleanPeriod = time.Second * 10
 
 var remoteOnlyOutboundPorts = []int{80, 443}
-
-func parseAppPorts(appPortsList string) []int {
-	ports := make([]int, 0)
-	for _, portStr := range strings.Split(appPortsList, ",") {
-		parsedInt, parseError := strconv.Atoi(portStr)
-		if parseError != nil {
-			log.Printf("Provided app port %v is not a valid number!", portStr)
-		} else {
-			ports = append(ports, parsedInt)
-		}
-	}
-	return ports
-}
 
 var maxcount = flag.Int64("c", -1, "Only grab this many packets, then exit")
 var decoder = flag.String("decoder", "", "Name of the decoder to use (default: guess from capture)")
@@ -241,17 +227,7 @@ func startPassiveTapper(outputItems chan *api.OutputChannelItem, allExtensionPor
 		ownIps = localhostIPs
 	}
 
-	appPortsStr := os.Getenv(AppPortsEnvVar)
-	var appPorts []int
-	if appPortsStr == "" {
-		rlog.Info("Received empty/no APP_PORTS env var! only listening to ports:", allExtensionPorts)
-		appPorts = make([]int, 0)
-	} else {
-		appPorts = parseAppPorts(appPortsStr)
-	}
-	SetFilterPorts(appPorts)
-
-	log.Printf("App Ports: %v", gSettings.filterPorts)
+	log.Printf("App Ports: %v", allExtensionPorts)
 
 	var handle *pcap.Handle
 	var err error

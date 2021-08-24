@@ -115,6 +115,8 @@ func mergeUnique(slice []string, merge []string) []string {
 }
 
 func loadExtensions() {
+	appPorts := parseEnvVar(shared.AppPortsEnvVar)
+
 	dir, _ := filepath.Abs(filepath.Dir(os.Args[0]))
 	extensionsDir := path.Join(dir, "./extensions/")
 
@@ -140,6 +142,10 @@ func loadExtensions() {
 		extension.Dissector = dissector
 		log.Printf("Extension Properties: %+v\n", extension)
 		extensions[i] = extension
+		if ports, ok := appPorts[extension.Protocol.Name]; ok {
+			log.Printf("Overriding \"%s\" extension's ports to: %v", extension.Protocol.Name, ports)
+			extension.Protocol.Ports = ports
+		}
 		extensionsMap[extension.Protocol.Name] = extension
 		allExtensionPorts = mergeUnique(allExtensionPorts, extension.Protocol.Ports)
 	}
@@ -186,13 +192,25 @@ func CORSMiddleware() gin.HandlerFunc {
 	}
 }
 
+func parseEnvVar(env string) map[string][]string {
+	var mapOfList map[string][]string
+
+	val, present := os.LookupEnv(env)
+
+	if !present {
+		return mapOfList
+	}
+
+	err := json.Unmarshal([]byte(val), &mapOfList)
+	if err != nil {
+		panic(fmt.Sprintf("env var %s's value of %s is invalid! must be map[string][]string %v", env, mapOfList, err))
+	}
+	return mapOfList
+}
+
 func getTapTargets() []string {
 	nodeName := os.Getenv(shared.NodeNameEnvVar)
-	var tappedAddressesPerNodeDict map[string][]string
-	err := json.Unmarshal([]byte(os.Getenv(shared.TappedAddressesPerNodeDictEnvVar)), &tappedAddressesPerNodeDict)
-	if err != nil {
-		panic(fmt.Sprintf("env var %s's value of %s is invalid! must be map[string][]string %v", shared.TappedAddressesPerNodeDictEnvVar, tappedAddressesPerNodeDict, err))
-	}
+	tappedAddressesPerNodeDict := parseEnvVar(shared.TappedAddressesPerNodeDictEnvVar)
 	return tappedAddressesPerNodeDict[nodeName]
 }
 
