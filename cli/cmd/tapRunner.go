@@ -3,6 +3,11 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"path"
+	"regexp"
+	"strings"
+	"time"
+
 	"github.com/up9inc/mizu/cli/apiserver"
 	"github.com/up9inc/mizu/cli/config"
 	"github.com/up9inc/mizu/cli/config/configStructs"
@@ -19,10 +24,6 @@ import (
 	yaml "gopkg.in/yaml.v3"
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
-	"path"
-	"regexp"
-	"strings"
-	"time"
 )
 
 const (
@@ -497,12 +498,14 @@ func watchApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 				isPodReady = true
 				go startProxyReportErrorIfAny(kubernetesProvider, cancel)
 
+				url := GetApiServerUrl()
 				if err := apiserver.Provider.InitAndTestConnection(GetApiServerUrl(), 20); err != nil {
 					logger.Log.Errorf(uiUtils.Error, "Couldn't connect to API server, check logs")
 					cancel()
 					break
 				}
-				logger.Log.Infof("Mizu is available at %s\n", GetApiServerUrl())
+				logger.Log.Infof("Mizu is available at %s\n", url)
+				openBrowser(url)
 				requestForAnalysisIfNeeded()
 				if err := apiserver.Provider.ReportTappedPods(state.currentlyTappedPods); err != nil {
 					logger.Log.Debugf("[Error] failed update tapped pods %v", err)

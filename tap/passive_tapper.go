@@ -33,7 +33,6 @@ import (
 	"github.com/up9inc/mizu/tap/api"
 )
 
-const AppPortsEnvVar = "APP_PORTS"
 const cleanPeriod = time.Second * 10
 
 var remoteOnlyOutboundPorts = []int{80, 443}
