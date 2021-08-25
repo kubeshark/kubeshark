@@ -19,7 +19,7 @@ import (
  */
 type tcpStreamFactory struct {
 	wg                 sync.WaitGroup
-	outbountLinkWriter *OutboundLinkWriter
+	outboundLinkWriter *OutboundLinkWriter
 	AllExtensionPorts  []string
 	Emitter            api.Emitter
 }
@@ -36,9 +36,9 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.T
 	dstPort := transport.Dst().String()
 
 	// if factory.shouldNotifyOnOutboundLink(dstIp, dstPort) {
-	// 	factory.outbountLinkWriter.WriteOutboundLink(net.Src().String(), dstIp, dstPort, "", "")
+	// 	factory.outboundLinkWriter.WriteOutboundLink(net.Src().String(), dstIp, dstPort, "", "")
 	// }
-	props := factory.getStreamProps(srcIp, dstIp, srcPort, dstPort, factory.AllExtensionPorts)
+	props := factory.getStreamProps(srcIp, dstIp, dstPort)
 	isTapTarget := props.isTapTarget
 	stream := &tcpStream{
 		net:         net,
@@ -62,7 +62,7 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.T
 			parent:             stream,
 			isClient:           true,
 			isOutgoing:         props.isOutgoing,
-			outboundLinkWriter: factory.outbountLinkWriter,
+			outboundLinkWriter: factory.outboundLinkWriter,
 			Emitter:            factory.Emitter,
 		}
 		factory.wg.Add(1)
@@ -76,17 +76,15 @@ func (factory *tcpStreamFactory) WaitGoRoutines() {
 	factory.wg.Wait()
 }
 
-func (factory *tcpStreamFactory) getStreamProps(srcIP string, dstIP string, srcPort string, dstPort string, allExtensionPorts []string) *streamProps {
+func (factory *tcpStreamFactory) getStreamProps(srcIP string, dstIP string, dstPort string) *streamProps {
 	if hostMode {
-		// TODO: Bring back `filterAuthorities`
-		return &streamProps{isTapTarget: true, isOutgoing: false}
-		if inArrayString(gSettings.filterAuthorities, fmt.Sprintf("%s:%s", dstIP, dstPort)) == true {
+		if inArrayString(gSettings.filterAuthorities, fmt.Sprintf("%s:%s", dstIP, dstPort)) {
 			rlog.Debugf("getStreamProps %s", fmt.Sprintf("+ host1 %s:%s", dstIP, dstPort))
 			return &streamProps{isTapTarget: true, isOutgoing: false}
-		} else if inArrayString(gSettings.filterAuthorities, dstIP) == true {
+		} else if inArrayString(gSettings.filterAuthorities, dstIP) {
 			rlog.Debugf("getStreamProps %s", fmt.Sprintf("+ host2 %s", dstIP))
 			return &streamProps{isTapTarget: true, isOutgoing: false}
-		} else if *anydirection && inArrayString(gSettings.filterAuthorities, srcIP) == true {
+		} else if *anydirection && inArrayString(gSettings.filterAuthorities, srcIP) {
 			rlog.Debugf("getStreamProps %s", fmt.Sprintf("+ host3 %s", srcIP))
 			return &streamProps{isTapTarget: true, isOutgoing: true}
 		}
