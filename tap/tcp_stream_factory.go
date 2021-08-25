@@ -82,8 +82,8 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.T
 		}
 		factory.wg.Add(2)
 		// Start reading from channel stream.reader.bytes
-		go stream.client.run(&factory.wg)
-		go stream.server.run(&factory.wg)
+		go stream.client.run(&factory.wg, true)
+		go stream.server.run(&factory.wg, false)
 	}
 	return stream
 }

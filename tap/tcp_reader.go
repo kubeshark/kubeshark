@@ -91,7 +91,7 @@ func (h *tcpReader) Read(p []byte) (int, error) {
 	return l, nil
 }
 
-func (h *tcpReader) run(wg *sync.WaitGroup) {
+func (h *tcpReader) run(wg *sync.WaitGroup, isClient bool) {
 	defer wg.Done()
 
 	data, err := io.ReadAll(h)
@@ -102,9 +102,7 @@ func (h *tcpReader) run(wg *sync.WaitGroup) {
 	r := bytes.NewReader(data)
 
 	for _, extension := range extensions {
-		for _, isClient := range []bool{true, false} {
-			r.Reset(data)
-			extension.Dissector.Dissect(bufio.NewReader(r), isClient, h.tcpID, h.Emitter)
-		}
+		r.Reset(data)
+		extension.Dissector.Dissect(bufio.NewReader(r), isClient, h.tcpID, h.Emitter)
 	}
 }
