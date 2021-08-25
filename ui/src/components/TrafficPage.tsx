@@ -18,7 +18,7 @@ const useLayoutStyles = makeStyles(() => ({
         padding: "12px 24px",
         borderRadius: 4,
         marginTop: 15,
-        background: variables.headerBackgoundColor
+        background: variables.headerBackgoundColor,
     },
 
     viewer: {
@@ -26,7 +26,8 @@ const useLayoutStyles = makeStyles(() => ({
         overflowY: 'auto',
         height: "calc(100% - 70px)",
         padding: 5,
-        paddingBottom: 0
+        paddingBottom: 0,
+        overflow: "auto",
     }
 }));
 
