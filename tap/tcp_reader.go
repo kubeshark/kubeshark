@@ -104,8 +104,7 @@ func (h *tcpReader) run(wg *sync.WaitGroup) {
 	for _, extension := range extensions {
 		for _, isClient := range []bool{true, false} {
 			r.Reset(data)
-			b := bufio.NewReader(r)
-			extension.Dissector.Dissect(b, isClient, h.tcpID, h.Emitter)
+			extension.Dissector.Dissect(bufio.NewReader(r), isClient, h.tcpID, h.Emitter)
 		}
 	}
 }

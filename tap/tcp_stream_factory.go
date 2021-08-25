@@ -50,7 +50,7 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.T
 		optchecker:  reassembly.NewTCPOptionCheck(),
 	}
 	if stream.isTapTarget {
-		stream.reader = tcpReader{
+		stream.client = tcpReader{
 			msgQueue: make(chan tcpReaderDataMsg),
 			ident:    fmt.Sprintf("%s %s", net, transport),
 			tcpID: &api.TcpID{
@@ -65,9 +65,25 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.T
 			outboundLinkWriter: factory.outboundLinkWriter,
 			Emitter:            factory.Emitter,
 		}
-		factory.wg.Add(1)
+		stream.server = tcpReader{
+			msgQueue: make(chan tcpReaderDataMsg),
+			ident:    fmt.Sprintf("%s %s", net, transport),
+			tcpID: &api.TcpID{
+				SrcIP:   net.Dst().String(),
+				DstIP:   net.Src().String(),
+				SrcPort: transport.Dst().String(),
+				DstPort: transport.Src().String(),
+			},
+			parent:             stream,
+			isClient:           true,
+			isOutgoing:         props.isOutgoing,
+			outboundLinkWriter: factory.outbountLinkWriter,
+			Emitter:            factory.Emitter,
+		}
+		factory.wg.Add(2)
 		// Start reading from channel stream.reader.bytes
-		go stream.reader.run(&factory.wg)
+		go stream.client.run(&factory.wg)
+		go stream.server.run(&factory.wg)
 	}
 	return stream
 }
