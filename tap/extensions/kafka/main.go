@@ -41,12 +41,12 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, em
 		if isClient {
 			_, _, err := ReadRequest(b, tcpID)
 			if err != nil {
-				break
+				return err
 			}
 		} else {
 			err := ReadResponse(b, tcpID, emitter)
 			if err != nil {
-				break
+				return err
 			}
 		}
 	}

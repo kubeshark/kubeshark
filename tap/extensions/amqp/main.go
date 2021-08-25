@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -80,9 +81,9 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, em
 		frame, err := r.ReadFrame()
 		if err == io.EOF {
 			// We must read until we see an EOF... very important!
-			return nil
+			return errors.New("AMQP EOF")
 		} else if err != nil {
-			// log.Println("Error reading stream", h.net, h.transport, ":", err)
+			// return err
 		}
 
 		switch f := frame.(type) {
@@ -206,7 +207,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, em
 		}
 	}
 
-	return nil
+	return errors.New("AMQP EOF")
 }
 
 func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolvedSource string, resolvedDestination string) *api.MizuEntry {
