@@ -3,18 +3,23 @@ import styles from './EntryViewer.module.sass';
 import Tabs from "../UI/Tabs";
 import {EntryTableSection, EntryBodySection, EntryTablePolicySection} from "./EntrySections";
 
+enum SectionTypes {
+    SectionTable = "table",
+    SectionBody = "body",
+}
+
 const SectionsRepresentation: React.FC<any> = ({data, color}) => {
     const sections = []
 
-    if (data !== undefined) {
+    if (data) {
         for (const [i, row] of data.entries()) {
             switch (row.type) {
-                case "table":
+                case SectionTypes.SectionTable:
                     sections.push(
                         <EntryTableSection key={i} title={row.title} color={color} arrayToIterate={JSON.parse(row.data)}/>
                     )
                     break;
-                case "body":
+                case SectionTypes.SectionBody:
                     sections.push(
                         <EntryBodySection key={i} color={color} content={row.data} encoding={row.encoding} contentType={row.mime_type}/>
                     )
@@ -28,13 +33,14 @@ const SectionsRepresentation: React.FC<any> = ({data, color}) => {
     return <>{sections}</>;
 }
 
-const AutoRepresentation: React.FC<any> = ({representation, color, isResponseMocked}) => {
+const AutoRepresentation: React.FC<any> = ({representation, color}) => {
     const rulesMatched = []
     const TABS = [
-        {tab: 'request'},
+        {
+            tab: 'request'
+        },
         {
             tab: 'response',
-            badge: <>{isResponseMocked && <span className="smallBadge virtual mock">MOCK</span>}</>
         },
         {
             tab: 'Rules',
@@ -43,7 +49,7 @@ const AutoRepresentation: React.FC<any> = ({representation, color, isResponseMoc
     const [currentTab, setCurrentTab] = useState(TABS[0].tab);
 
     // Don't fail even if `representation` is an empty string
-    if (representation.length === 0) {
+    if (!representation) {
         return <></>;
     }
 
@@ -72,12 +78,10 @@ const AutoRepresentation: React.FC<any> = ({representation, color, isResponseMoc
 interface Props {
     representation: any;
     color: string,
-    isResponseMocked?: boolean;
-    showTitle?: boolean;
 }
 
-const EntryViewer: React.FC<Props> = ({representation, color, isResponseMocked, showTitle=true}) => {
-    return <AutoRepresentation representation={representation} color={color} isResponseMocked={isResponseMocked} showTitle={showTitle}/>
+const EntryViewer: React.FC<Props> = ({representation, color}) => {
+    return <AutoRepresentation representation={representation} color={color}/>
 };
 
 export default EntryViewer;

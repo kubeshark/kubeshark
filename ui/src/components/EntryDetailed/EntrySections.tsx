@@ -201,7 +201,6 @@ export const EntryPolicySectionContainer: React.FC<EntryPolicySectionContainerPr
 }
 
 export const EntryTablePolicySection: React.FC<EntryPolicySectionProps> = ({service, title, color, response, latency, arrayToIterate}) => {
-    // const base64ToJson = response.content.mimeType === "application/json; charset=utf-8" ? JSON.parse(Buffer.from(response.content.text, "base64").toString()) : {};
     return <React.Fragment>
         {
             arrayToIterate && arrayToIterate.length > 0 ?
@@ -215,39 +214,32 @@ export const EntryTablePolicySection: React.FC<EntryPolicySectionProps> = ({serv
                                             {
                                                 <>
                                                     {
-                                                        rule.Key !== "" ?
+                                                        rule.Key &&
                                                         <tr className={styles.dataValue}><td><b>Key</b>:</td><td>{rule.Key}</td></tr>
-                                                        : null
                                                     }
                                                     {
-                                                        rule.Latency !== "" ?
+                                                        rule.Latency &&
                                                         <tr className={styles.dataValue}><td><b>Latency:</b></td> <td>{rule.Latency}</td></tr>
-                                                        : null
                                                     }
                                                     {
-                                                        rule.Method !== "" ?
+                                                        rule.Method &&
                                                         <tr className={styles.dataValue}><td><b>Method:</b></td> <td>{rule.Method}</td></tr>
-                                                        : null
                                                     }
                                                     {
-                                                        rule.Path !== "" ?
+                                                        rule.Path &&
                                                         <tr className={styles.dataValue}><td><b>Path:</b></td> <td>{rule.Path}</td></tr>
-                                                        : null
                                                     }
                                                     {
-                                                        rule.Service !== "" ?
+                                                        rule.Service &&
                                                         <tr className={styles.dataValue}><td><b>Service:</b></td> <td>{service}</td></tr>
-                                                        : null
                                                     }
                                                     {
-                                                        rule.Type !== "" ?
+                                                        rule.Type &&
                                                         <tr className={styles.dataValue}><td><b>Type:</b></td> <td>{rule.Type}</td></tr>
-                                                        : null
                                                     }
                                                     {
-                                                        rule.Value !== "" ?
+                                                        rule.Value &&
                                                         <tr className={styles.dataValue}><td><b>Value:</b></td> <td>{rule.Value}</td></tr>
-                                                        : null
                                                     }
                                                 </>
                                             }
