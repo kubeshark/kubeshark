@@ -25,6 +25,10 @@ func ReadRequest(r io.Reader, tcpID *api.TcpID) (apiKey ApiKey, apiVersion int16
 		return 0, 0, fmt.Errorf("A Kafka message cannot be bigger than 1MB")
 	}
 
+	if size < 8 {
+		return 0, 0, fmt.Errorf("A Kafka request header cannot be smaller than 8 bytes")
+	}
+
 	if err = d.err; err != nil {
 		err = dontExpectEOF(err)
 		return 0, 0, err
