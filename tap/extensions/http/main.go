@@ -25,6 +25,7 @@ var protocol api.Protocol = api.Protocol{
 	FontSize:        12,
 	ReferenceLink:   "https://datatracker.ietf.org/doc/html/rfc2616",
 	Ports:           []string{"80", "8080", "50051"},
+	Priority:        0,
 }
 
 var http2Protocol api.Protocol = api.Protocol{
@@ -37,6 +38,7 @@ var http2Protocol api.Protocol = api.Protocol{
 	FontSize:        11,
 	ReferenceLink:   "https://datatracker.ietf.org/doc/html/rfc7540",
 	Ports:           []string{"80", "8080"},
+	Priority:        0,
 }
 
 const (

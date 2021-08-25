@@ -20,6 +20,7 @@ var _protocol api.Protocol = api.Protocol{
 	FontSize:        11,
 	ReferenceLink:   "https://kafka.apache.org/protocol",
 	Ports:           []string{"9092"},
+	Priority:        2,
 }
 
 func init() {

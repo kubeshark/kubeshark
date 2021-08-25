@@ -16,6 +16,7 @@ type Protocol struct {
 	FontSize        int8     `json:"font_size"`
 	ReferenceLink   string   `json:"reference_link"`
 	Ports           []string `json:"ports"`
+	Priority        uint8    `json:"priority"`
 }
 
 type Extension struct {

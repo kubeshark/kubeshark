@@ -17,6 +17,7 @@ import (
 	"path"
 	"path/filepath"
 	"plugin"
+	"sort"
 
 	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
@@ -149,7 +150,6 @@ func loadExtensions() {
 		dissector, _ = symDissector.(tapApi.Dissector)
 		dissector.Register(extension)
 		extension.Dissector = dissector
-		log.Printf("Extension Properties: %+v\n", extension)
 		extensions[i] = extension
 		if ports, ok := appPorts[extension.Protocol.Name]; ok {
 			log.Printf("Overriding \"%s\" extension's ports to: %v", extension.Protocol.Name, ports)
@@ -158,6 +158,15 @@ func loadExtensions() {
 		extensionsMap[extension.Protocol.Name] = extension
 		allExtensionPorts = mergeUnique(allExtensionPorts, extension.Protocol.Ports)
 	}
+
+	sort.Slice(extensions, func(i, j int) bool {
+		return extensions[i].Protocol.Priority < extensions[j].Protocol.Priority
+	})
+
+	for _, extension := range extensions {
+		log.Printf("Extension Properties: %+v\n", extension)
+	}
+
 	controllers.InitExtensionsMap(extensionsMap)
 	log.Printf("All extension ports: %v\n", allExtensionPorts)
 }
