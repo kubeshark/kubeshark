@@ -77,7 +77,7 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.T
 			parent:             stream,
 			isClient:           true,
 			isOutgoing:         props.isOutgoing,
-			outboundLinkWriter: factory.outbountLinkWriter,
+			outboundLinkWriter: factory.outboundLinkWriter,
 			Emitter:            factory.Emitter,
 		}
 		factory.wg.Add(2)
