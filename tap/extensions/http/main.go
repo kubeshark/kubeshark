@@ -12,8 +12,12 @@ import (
 	"github.com/up9inc/mizu/tap/api"
 )
 
-var requestCounter uint
-var responseCounter uint
+type counterPair struct {
+	request  uint
+	response uint
+}
+
+var counterMap map[string]*counterPair
 
 var protocol api.Protocol = api.Protocol{
 	Name:            "http",
@@ -48,8 +52,7 @@ const (
 
 func init() {
 	log.Println("Initializing HTTP extension.")
-	requestCounter = 0
-	responseCounter = 0
+	counterMap = make(map[string]*counterPair)
 }
 
 type dissecting string
