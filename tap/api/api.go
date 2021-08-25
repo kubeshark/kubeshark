@@ -42,20 +42,6 @@ type TcpID struct {
 	Ident   string
 }
 
-func (t *TcpID) Swap() *TcpID {
-	srcIP := t.SrcIP
-	dstIP := t.DstIP
-	srcPort := t.SrcPort
-	dstPort := t.DstPort
-
-	return &TcpID{
-		SrcIP:   dstIP,
-		SrcPort: dstPort,
-		DstIP:   srcIP,
-		DstPort: srcPort,
-	}
-}
-
 type GenericMessage struct {
 	IsRequest   bool        `json:"is_request"`
 	CaptureTime time.Time   `json:"capture_time"`

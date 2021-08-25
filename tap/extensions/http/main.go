@@ -91,7 +91,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, em
 			}
 			success = true
 		} else if isClient {
-			err = handleHTTP1ClientStream(b, tcpID.Swap(), emitter)
+			err = handleHTTP1ClientStream(b, tcpID, emitter)
 			if err == io.EOF || err == io.ErrUnexpectedEOF {
 				break
 			} else if err != nil {
