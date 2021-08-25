@@ -162,7 +162,7 @@ func (c *Context) GetCaptureInfo() gopacket.CaptureInfo {
 	return c.CaptureInfo
 }
 
-func StartPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem, extensionsRef []*api.Extension, allExtensionPorts []string) {
+func StartPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem, extensionsRef []*api.Extension) {
 	hostMode = opts.HostMode
 	extensions = extensionsRef
 
@@ -170,7 +170,7 @@ func StartPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem, 
 		startMemoryProfiler()
 	}
 
-	go startPassiveTapper(outputItems, allExtensionPorts)
+	go startPassiveTapper(outputItems)
 }
 
 func startMemoryProfiler() {
@@ -204,7 +204,7 @@ func startMemoryProfiler() {
 	}()
 }
 
-func startPassiveTapper(outputItems chan *api.OutputChannelItem, allExtensionPorts []string) {
+func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
 	log.SetFlags(log.LstdFlags | log.LUTC | log.Lshortfile)
 
 	defer util.Run()()
@@ -225,8 +225,6 @@ func startPassiveTapper(outputItems chan *api.OutputChannelItem, allExtensionPor
 	} else {
 		ownIps = localhostIPs
 	}
-
-	log.Printf("App Ports: %v", allExtensionPorts)
 
 	var handle *pcap.Handle
 	var err error
@@ -297,8 +295,7 @@ func startPassiveTapper(outputItems chan *api.OutputChannelItem, allExtensionPor
 	}
 
 	streamFactory := &tcpStreamFactory{
-		AllExtensionPorts: allExtensionPorts,
-		Emitter:           emitter,
+		Emitter: emitter,
 	}
 	streamPool := reassembly.NewStreamPool(streamFactory)
 	assembler := reassembly.NewAssembler(streamPool)

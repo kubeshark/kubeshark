@@ -38,7 +38,6 @@ var harsDir = flag.String("hars-dir", "", "Directory to read hars from")
 
 var extensions []*tapApi.Extension             // global
 var extensionsMap map[string]*tapApi.Extension // global
-var allExtensionPorts []string                 // global
 
 func main() {
 	flag.Parse()
@@ -54,7 +53,7 @@ func main() {
 		api.StartResolving(*namespace)
 
 		filteredOutputItemsChannel := make(chan *tapApi.OutputChannelItem)
-		tap.StartPassiveTapper(tapOpts, filteredOutputItemsChannel, extensions, allExtensionPorts)
+		tap.StartPassiveTapper(tapOpts, filteredOutputItemsChannel, extensions)
 
 		// go filterHarItems(harOutputChannel, filteredOutputItemsChannel, getTrafficFilteringOptions())
 		go api.StartReadingEntries(filteredOutputItemsChannel, nil, extensionsMap)
@@ -74,7 +73,7 @@ func main() {
 
 		// harOutputChannel, outboundLinkOutputChannel := tap.StartPassiveTapper(tapOpts)
 		filteredOutputItemsChannel := make(chan *tapApi.OutputChannelItem)
-		tap.StartPassiveTapper(tapOpts, filteredOutputItemsChannel, extensions, allExtensionPorts)
+		tap.StartPassiveTapper(tapOpts, filteredOutputItemsChannel, extensions)
 		socketConnection, err := shared.ConnectToSocketServer(*apiServerAddress, shared.DEFAULT_SOCKET_RETRIES, shared.DEFAULT_SOCKET_RETRY_SLEEP_TIME, false)
 		if err != nil {
 			panic(fmt.Sprintf("Error connecting to socket server at %s %v", *apiServerAddress, err))
@@ -109,21 +108,6 @@ func main() {
 	rlog.Info("Exiting")
 }
 
-func mergeUnique(slice []string, merge []string) []string {
-	for _, i := range merge {
-		add := true
-		for _, ele := range slice {
-			if ele == i {
-				add = false
-			}
-		}
-		if add {
-			slice = append(slice, i)
-		}
-	}
-	return slice
-}
-
 func loadExtensions() {
 	appPorts := parseEnvVar(shared.AppPortsEnvVar)
 
@@ -156,7 +140,6 @@ func loadExtensions() {
 			extension.Protocol.Ports = ports
 		}
 		extensionsMap[extension.Protocol.Name] = extension
-		allExtensionPorts = mergeUnique(allExtensionPorts, extension.Protocol.Ports)
 	}
 
 	sort.Slice(extensions, func(i, j int) bool {
@@ -168,7 +151,6 @@ func loadExtensions() {
 	}
 
 	controllers.InitExtensionsMap(extensionsMap)
-	log.Printf("All extension ports: %v\n", allExtensionPorts)
 }
 
 func hostApi(socketHarOutputChannel chan<- *tapApi.OutputChannelItem) {
