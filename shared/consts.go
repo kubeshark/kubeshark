@@ -8,5 +8,4 @@ const (
 	MaxEntriesDBSizeBytesEnvVar      = "MAX_ENTRIES_DB_BYTES"
 	RulePolicyPath                   = "/app/enforce-policy/"
 	RulePolicyFileName               = "enforce-policy.yaml"
-	AppPortsEnvVar                   = "APP_PORTS"
 )

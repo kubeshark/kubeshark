@@ -109,8 +109,6 @@ func main() {
 }
 
 func loadExtensions() {
-	appPorts := parseEnvVar(shared.AppPortsEnvVar)
-
 	dir, _ := filepath.Abs(filepath.Dir(os.Args[0]))
 	extensionsDir := path.Join(dir, "./extensions/")
 
@@ -135,10 +133,6 @@ func loadExtensions() {
 		dissector.Register(extension)
 		extension.Dissector = dissector
 		extensions[i] = extension
-		if ports, ok := appPorts[extension.Protocol.Name]; ok {
-			log.Printf("Overriding \"%s\" extension's ports to: %v", extension.Protocol.Name, ports)
-			extension.Protocol.Ports = ports
-		}
 		extensionsMap[extension.Protocol.Name] = extension
 	}
 
