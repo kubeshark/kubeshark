@@ -19,6 +19,10 @@ func ReadResponse(r io.Reader, tcpID *api.TcpID, emitter api.Emitter) (err error
 	d := &decoder{reader: r, remain: 4}
 	size := d.readInt32()
 
+	if size > 1000000 {
+		return fmt.Errorf("A Kafka message cannot be bigger than 1MB")
+	}
+
 	if err = d.err; err != nil {
 		err = dontExpectEOF(err)
 		return err
