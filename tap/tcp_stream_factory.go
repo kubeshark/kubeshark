@@ -96,8 +96,6 @@ func (factory *tcpStreamFactory) WaitGoRoutines() {
 
 func (factory *tcpStreamFactory) getStreamProps(srcIP string, dstIP string, dstPort string) *streamProps {
 	if hostMode {
-		// TODO: Bring back `filterAuthorities`
-		return &streamProps{isTapTarget: true, isOutgoing: false}
 		if inArrayString(gSettings.filterAuthorities, fmt.Sprintf("%s:%s", dstIP, dstPort)) {
 			rlog.Debugf("getStreamProps %s", fmt.Sprintf("+ host1 %s:%s", dstIP, dstPort))
 			return &streamProps{isTapTarget: true, isOutgoing: false}
