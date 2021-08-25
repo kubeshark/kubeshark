@@ -41,6 +41,18 @@ type TcpID struct {
 	Ident   string
 }
 
+func (t *TcpID) Swap() {
+	srcIP := t.SrcIP
+	dstIP := t.DstIP
+	srcPort := t.SrcPort
+	dstPort := t.DstPort
+
+	t.SrcIP = dstIP
+	t.SrcPort = dstPort
+	t.DstIP = srcIP
+	t.DstPort = srcPort
+}
+
 type GenericMessage struct {
 	IsRequest   bool        `json:"is_request"`
 	CaptureTime time.Time   `json:"capture_time"`
@@ -62,7 +74,7 @@ type OutputChannelItem struct {
 type Dissector interface {
 	Register(*Extension)
 	Ping()
-	Dissect(b *bufio.Reader, isClient bool, tcpID *TcpID, emitter Emitter)
+	Dissect(b *bufio.Reader, isClient bool, tcpID *TcpID, emitter Emitter) error
 	Analyze(item *OutputChannelItem, entryId string, resolvedSource string, resolvedDestination string) *MizuEntry
 	Summarize(entry *MizuEntry) *BaseEntryDetails
 	Represent(entry *MizuEntry) (Protocol, []byte, error)

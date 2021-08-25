@@ -39,7 +39,7 @@ func (d dissecting) Ping() {
 
 const amqpRequest string = "amqp_request"
 
-func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, emitter api.Emitter) {
+func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, emitter api.Emitter) error {
 	r := AmqpReader{b}
 
 	var remaining int
@@ -79,7 +79,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, em
 		frame, err := r.ReadFrame()
 		if err == io.EOF {
 			// We must read until we see an EOF... very important!
-			return
+			return nil
 		} else if err != nil {
 			// log.Println("Error reading stream", h.net, h.transport, ":", err)
 		}
@@ -204,6 +204,8 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, em
 			// log.Printf("unexpected frame: %+v\n", f)
 		}
 	}
+
+	return nil
 }
 
 func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolvedSource string, resolvedDestination string) *api.MizuEntry {

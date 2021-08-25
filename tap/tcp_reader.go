@@ -2,6 +2,7 @@ package tap
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"io"
 	"sync"
@@ -89,29 +90,19 @@ func (h *tcpReader) Read(p []byte) (int, error) {
 	return l, nil
 }
 
-func containsPort(ports []string, port string) bool {
-	for _, x := range ports {
-		if x == port {
-			return true
-		}
-	}
-	return false
-}
-
 func (h *tcpReader) run(wg *sync.WaitGroup) {
 	defer wg.Done()
-	var port string
-	if h.isClient {
-		port = h.tcpID.DstPort
-	} else {
-		port = h.tcpID.SrcPort
-	}
-	b := bufio.NewReader(h)
-	// TODO: maybe check for kafka and amqp and when it is not one of those pass it to the HTTP?
-	//  because it will check for the ports that we checked in the "isTapTarget"
-	for _, extension := range extensions {
-		if containsPort(extension.Protocol.Ports, port) {
-			extension.Dissector.Dissect(b, h.isClient, h.tcpID, h.Emitter)
-		}
-	}
+
+	data, _ := io.ReadAll(h)
+	r := bytes.NewReader(data)
+
+	b := bufio.NewReader(r)
+
+	extensions[1].Dissector.Dissect(b, true, h.tcpID, h.Emitter)
+
+	r.Reset(data)
+
+	b = bufio.NewReader(r)
+
+	extensions[1].Dissector.Dissect(b, false, h.tcpID, h.Emitter)
 }

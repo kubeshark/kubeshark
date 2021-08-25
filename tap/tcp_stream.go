@@ -21,10 +21,8 @@ type tcpStream struct {
 	optchecker     reassembly.TCPOptionCheck
 	net, transport gopacket.Flow
 	isDNS          bool
+	reader         tcpReader
 	isTapTarget    bool
-	reversed       bool
-	client         tcpReader
-	server         tcpReader
 	urls           []string
 	ident          string
 	sync.Mutex
@@ -145,11 +143,7 @@ func (t *tcpStream) ReassembledSG(sg reassembly.ScatterGather, ac reassembly.Ass
 			// This is where we pass the reassembled information onwards
 			// This channel is read by an tcpReader object
 			statsTracker.incReassembledTcpPayloadsCount()
-			if dir == reassembly.TCPDirClientToServer && !t.reversed {
-				t.client.msgQueue <- tcpReaderDataMsg{data, ac.GetCaptureInfo().Timestamp}
-			} else {
-				t.server.msgQueue <- tcpReaderDataMsg{data, ac.GetCaptureInfo().Timestamp}
-			}
+			t.reader.msgQueue <- tcpReaderDataMsg{data, ac.GetCaptureInfo().Timestamp}
 		}
 	}
 }
@@ -157,8 +151,7 @@ func (t *tcpStream) ReassembledSG(sg reassembly.ScatterGather, ac reassembly.Ass
 func (t *tcpStream) ReassemblyComplete(ac reassembly.AssemblerContext) bool {
 	Trace("%s: Connection closed", t.ident)
 	if t.isTapTarget {
-		close(t.client.msgQueue)
-		close(t.server.msgQueue)
+		close(t.reader.msgQueue)
 	}
 	// do not remove the connection to allow last ACK
 	return false

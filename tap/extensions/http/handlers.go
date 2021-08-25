@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"time"
 
@@ -78,7 +77,8 @@ func handleHTTP1ClientStream(b *bufio.Reader, tcpID *api.TcpID, emitter api.Emit
 	requestCounter++
 	req, err := http.ReadRequest(b)
 	if err != nil {
-		log.Println("Error reading stream:", err)
+		requestCounter--
+		// log.Println("Error reading stream:", err)
 		return err
 	}
 
@@ -120,7 +120,8 @@ func handleHTTP1ServerStream(b *bufio.Reader, tcpID *api.TcpID, emitter api.Emit
 	responseCounter++
 	res, err := http.ReadResponse(b, nil)
 	if err != nil {
-		log.Println("Error reading stream:", err)
+		responseCounter--
+		// log.Println("Error reading stream:", err)
 		return err
 	}
 	var req string

@@ -45,13 +45,12 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.T
 		transport:   transport,
 		isDNS:       tcp.SrcPort == 53 || tcp.DstPort == 53,
 		isTapTarget: isTapTarget,
-		reversed:    props.reversed,
 		tcpstate:    reassembly.NewTCPSimpleFSM(fsmOptions),
 		ident:       fmt.Sprintf("%s:%s", net, transport),
 		optchecker:  reassembly.NewTCPOptionCheck(),
 	}
 	if stream.isTapTarget {
-		stream.client = tcpReader{
+		stream.reader = tcpReader{
 			msgQueue: make(chan tcpReaderDataMsg),
 			ident:    fmt.Sprintf("%s %s", net, transport),
 			tcpID: &api.TcpID{
@@ -66,24 +65,9 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.T
 			outboundLinkWriter: factory.outbountLinkWriter,
 			Emitter:            factory.Emitter,
 		}
-		stream.server = tcpReader{
-			msgQueue: make(chan tcpReaderDataMsg),
-			ident:    fmt.Sprintf("%s %s", net.Reverse(), transport.Reverse()),
-			tcpID: &api.TcpID{
-				SrcIP:   net.Dst().String(),
-				DstIP:   net.Src().String(),
-				SrcPort: transport.Dst().String(),
-				DstPort: transport.Src().String(),
-			},
-			parent:             stream,
-			isOutgoing:         props.isOutgoing,
-			outboundLinkWriter: factory.outbountLinkWriter,
-			Emitter:            factory.Emitter,
-		}
-		factory.wg.Add(2)
-		// Start reading from channels stream.client.bytes and stream.server.bytes
-		go stream.client.run(&factory.wg)
-		go stream.server.run(&factory.wg)
+		factory.wg.Add(1)
+		// Start reading from channel stream.reader.bytes
+		go stream.reader.run(&factory.wg)
 	}
 	return stream
 }
@@ -93,42 +77,30 @@ func (factory *tcpStreamFactory) WaitGoRoutines() {
 }
 
 func (factory *tcpStreamFactory) getStreamProps(srcIP string, dstIP string, srcPort string, dstPort string, allExtensionPorts []string) *streamProps {
-	reversed := false
 	if hostMode {
-		// TODO: Implement reversed for the `hostMode`
+		// TODO: Bring back `filterAuthorities`
+		return &streamProps{isTapTarget: true, isOutgoing: false}
 		if inArrayString(gSettings.filterAuthorities, fmt.Sprintf("%s:%s", dstIP, dstPort)) == true {
 			rlog.Debugf("getStreamProps %s", fmt.Sprintf("+ host1 %s:%s", dstIP, dstPort))
-			return &streamProps{isTapTarget: true, isOutgoing: false, reversed: reversed}
+			return &streamProps{isTapTarget: true, isOutgoing: false}
 		} else if inArrayString(gSettings.filterAuthorities, dstIP) == true {
 			rlog.Debugf("getStreamProps %s", fmt.Sprintf("+ host2 %s", dstIP))
-			return &streamProps{isTapTarget: true, isOutgoing: false, reversed: reversed}
+			return &streamProps{isTapTarget: true, isOutgoing: false}
 		} else if *anydirection && inArrayString(gSettings.filterAuthorities, srcIP) == true {
 			rlog.Debugf("getStreamProps %s", fmt.Sprintf("+ host3 %s", srcIP))
-			return &streamProps{isTapTarget: true, isOutgoing: true, reversed: reversed}
+			return &streamProps{isTapTarget: true, isOutgoing: true}
 		}
-		return &streamProps{isTapTarget: false, reversed: reversed}
+		return &streamProps{isTapTarget: false}
 	} else {
-		// TODO: Bring back `filterPorts` as a string if it's really needed
-		// (gSettings.filterPorts != nil && (inArrayInt(gSettings.filterPorts, dstPort)))
-		isTappedPort := containsPort(allExtensionPorts, dstPort)
-		if !isTappedPort && containsPort(allExtensionPorts, srcPort) {
-			isTappedPort = true
-			reversed = true
-		}
-		if !isTappedPort {
-			rlog.Debugf("getStreamProps %s", fmt.Sprintf("- notHost1 %s", dstPort))
-			return &streamProps{isTapTarget: false, isOutgoing: false, reversed: reversed}
-		}
-
 		isOutgoing := !inArrayString(ownIps, dstIP)
 
 		if !*anydirection && isOutgoing {
 			rlog.Debugf("getStreamProps %s", fmt.Sprintf("- notHost2"))
-			return &streamProps{isTapTarget: false, isOutgoing: isOutgoing, reversed: reversed}
+			return &streamProps{isTapTarget: false, isOutgoing: isOutgoing}
 		}
 
 		rlog.Debugf("getStreamProps %s", fmt.Sprintf("+ notHost3 %s -> %s:%s", srcIP, dstIP, dstPort))
-		return &streamProps{isTapTarget: true, reversed: reversed}
+		return &streamProps{isTapTarget: true}
 	}
 }
 
@@ -143,5 +115,4 @@ func (factory *tcpStreamFactory) shouldNotifyOnOutboundLink(dstIP string, dstPor
 type streamProps struct {
 	isTapTarget bool
 	isOutgoing  bool
-	reversed    bool
 }
