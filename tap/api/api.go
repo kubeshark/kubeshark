@@ -41,16 +41,18 @@ type TcpID struct {
 	Ident   string
 }
 
-func (t *TcpID) Swap() {
+func (t *TcpID) Swap() *TcpID {
 	srcIP := t.SrcIP
 	dstIP := t.DstIP
 	srcPort := t.SrcPort
 	dstPort := t.DstPort
 
-	t.SrcIP = dstIP
-	t.SrcPort = dstPort
-	t.DstIP = srcIP
-	t.DstPort = srcPort
+	return &TcpID{
+		SrcIP:   dstIP,
+		SrcPort: dstPort,
+		DstIP:   srcIP,
+		DstPort: srcPort,
+	}
 }
 
 type GenericMessage struct {
