@@ -14,27 +14,16 @@ import (
 	"github.com/up9inc/mizu/tap/api"
 )
 
-func populateCounterMap(ident string) {
-	if counterMap[ident] == nil {
-		counterMap[ident] = &counterPair{
-			request:  0,
-			response: 0,
-		}
-	}
-}
-
 func handleHTTP2Stream(grpcAssembler *GrpcAssembler, tcpID *api.TcpID, emitter api.Emitter) error {
 	streamID, messageHTTP1, err := grpcAssembler.readMessage()
 	if err != nil {
 		return err
 	}
-	populateCounterMap(tcpID.Ident)
 
 	var item *api.OutputChannelItem
 
 	switch messageHTTP1 := messageHTTP1.(type) {
 	case http.Request:
-		counterMap[tcpID.Ident].request++
 		ident := fmt.Sprintf(
 			"%s->%s %s->%s %d",
 			tcpID.SrcIP,
@@ -54,7 +43,6 @@ func handleHTTP2Stream(grpcAssembler *GrpcAssembler, tcpID *api.TcpID, emitter a
 			}
 		}
 	case http.Response:
-		counterMap[tcpID.Ident].response++
 		ident := fmt.Sprintf(
 			"%s->%s %s->%s %d",
 			tcpID.DstIP,
@@ -83,14 +71,13 @@ func handleHTTP2Stream(grpcAssembler *GrpcAssembler, tcpID *api.TcpID, emitter a
 	return nil
 }
 
-func handleHTTP1ClientStream(b *bufio.Reader, tcpID *api.TcpID, emitter api.Emitter) error {
+func handleHTTP1ClientStream(b *bufio.Reader, tcpID *api.TcpID, counterPair *api.CounterPair, emitter api.Emitter) error {
 	req, err := http.ReadRequest(b)
 	if err != nil {
 		// log.Println("Error reading stream:", err)
 		return err
 	}
-	populateCounterMap(tcpID.Ident)
-	counterMap[tcpID.Ident].request++
+	counterPair.Request++
 
 	body, err := ioutil.ReadAll(req.Body)
 	req.Body = io.NopCloser(bytes.NewBuffer(body)) // rewind
@@ -110,7 +97,7 @@ func handleHTTP1ClientStream(b *bufio.Reader, tcpID *api.TcpID, emitter api.Emit
 		tcpID.DstIP,
 		tcpID.SrcPort,
 		tcpID.DstPort,
-		counterMap[tcpID.Ident].request,
+		counterPair.Request,
 	)
 	item := reqResMatcher.registerRequest(ident, req, time.Now())
 	if item != nil {
@@ -126,14 +113,13 @@ func handleHTTP1ClientStream(b *bufio.Reader, tcpID *api.TcpID, emitter api.Emit
 	return nil
 }
 
-func handleHTTP1ServerStream(b *bufio.Reader, tcpID *api.TcpID, emitter api.Emitter) error {
+func handleHTTP1ServerStream(b *bufio.Reader, tcpID *api.TcpID, counterPair *api.CounterPair, emitter api.Emitter) error {
 	res, err := http.ReadResponse(b, nil)
 	if err != nil {
 		// log.Println("Error reading stream:", err)
 		return err
 	}
-	populateCounterMap(tcpID.Ident)
-	counterMap[tcpID.Ident].response++
+	counterPair.Response++
 	var req string
 	req = fmt.Sprintf("<no-request-seen>")
 
@@ -163,7 +149,7 @@ func handleHTTP1ServerStream(b *bufio.Reader, tcpID *api.TcpID, emitter api.Emit
 		tcpID.SrcIP,
 		tcpID.DstPort,
 		tcpID.SrcPort,
-		counterMap[tcpID.Ident].response,
+		counterPair.Response,
 	)
 	item := reqResMatcher.registerResponse(ident, res, time.Now())
 	if item != nil {

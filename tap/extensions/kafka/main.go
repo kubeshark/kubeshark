@@ -36,7 +36,7 @@ func (d dissecting) Ping() {
 	log.Printf("pong %s\n", _protocol.Name)
 }
 
-func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, emitter api.Emitter) error {
+func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, counterPair *api.CounterPair, emitter api.Emitter) error {
 	for {
 		if isClient {
 			_, _, err := ReadRequest(b, tcpID)

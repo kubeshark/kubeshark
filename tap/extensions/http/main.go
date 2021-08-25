@@ -12,13 +12,6 @@ import (
 	"github.com/up9inc/mizu/tap/api"
 )
 
-type counterPair struct {
-	request  uint
-	response uint
-}
-
-var counterMap map[string]*counterPair
-
 var protocol api.Protocol = api.Protocol{
 	Name:            "http",
 	LongName:        "Hypertext Transfer Protocol -- HTTP/1.1",
@@ -52,7 +45,6 @@ const (
 
 func init() {
 	log.Println("Initializing HTTP extension.")
-	counterMap = make(map[string]*counterPair)
 }
 
 type dissecting string
@@ -65,7 +57,7 @@ func (d dissecting) Ping() {
 	log.Printf("pong %s\n", protocol.Name)
 }
 
-func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, emitter api.Emitter) error {
+func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, counterPair *api.CounterPair, emitter api.Emitter) error {
 	ident := fmt.Sprintf("%s->%s:%s->%s", tcpID.SrcIP, tcpID.DstIP, tcpID.SrcPort, tcpID.DstPort)
 	isHTTP2, err := checkIsHTTP2Connection(b, isClient)
 	if err != nil {
@@ -94,7 +86,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, em
 			}
 			success = true
 		} else if isClient {
-			err = handleHTTP1ClientStream(b, tcpID, emitter)
+			err = handleHTTP1ClientStream(b, tcpID, counterPair, emitter)
 			if err == io.EOF || err == io.ErrUnexpectedEOF {
 				break
 			} else if err != nil {
@@ -103,7 +95,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, em
 			}
 			success = true
 		} else {
-			err = handleHTTP1ServerStream(b, tcpID, emitter)
+			err = handleHTTP1ServerStream(b, tcpID, counterPair, emitter)
 			if err == io.EOF || err == io.ErrUnexpectedEOF {
 				break
 			} else if err != nil {
