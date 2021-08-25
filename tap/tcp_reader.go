@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"log"
 	"sync"
 	"time"
 
@@ -93,16 +94,18 @@ func (h *tcpReader) Read(p []byte) (int, error) {
 func (h *tcpReader) run(wg *sync.WaitGroup) {
 	defer wg.Done()
 
-	data, _ := io.ReadAll(h)
+	data, err := io.ReadAll(h)
+	if err != nil {
+		log.Printf("Corrupted TCP stream, unable to read!")
+		return
+	}
 	r := bytes.NewReader(data)
 
-	b := bufio.NewReader(r)
-
-	extensions[1].Dissector.Dissect(b, true, h.tcpID, h.Emitter)
-
-	r.Reset(data)
-
-	b = bufio.NewReader(r)
-
-	extensions[1].Dissector.Dissect(b, false, h.tcpID, h.Emitter)
+	for _, extension := range extensions {
+		for _, isClient := range []bool{true, false} {
+			r.Reset(data)
+			b := bufio.NewReader(r)
+			extension.Dissector.Dissect(b, isClient, h.tcpID, h.Emitter)
+		}
+	}
 }
