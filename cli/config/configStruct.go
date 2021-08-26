@@ -29,7 +29,7 @@ type ConfigStruct struct {
 	Telemetry              bool                        `yaml:"telemetry" default:"true"`
 	DumpLogs               bool                        `yaml:"dump-logs" default:"false"`
 	KubeConfigPathStr      string                      `yaml:"kube-config-path"`
-	ConfigFilePath         string                      `yaml:"config-path"`
+	ConfigFilePath         string                      `yaml:"config-path,omitempty" readonly:""`
 }
 
 func (config *ConfigStruct) SetDefaults() {

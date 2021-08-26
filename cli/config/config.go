@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/up9inc/mizu/cli/logger"
+	"github.com/up9inc/mizu/cli/mizu"
 	"io/ioutil"
 	"os"
 	"reflect"
@@ -86,7 +87,7 @@ func initFlag(f *pflag.Flag) {
 	configElemValue := reflect.ValueOf(&Config).Elem()
 
 	var flagPath []string
-	if f.Name == ConfigFilePathCommandName {
+	if mizu.Contains([]string{ConfigFilePathCommandName}, f.Name) {
 		flagPath = []string{f.Name}
 	} else {
 		flagPath = []string{cmdName, f.Name}
