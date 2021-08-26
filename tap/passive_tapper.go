@@ -65,7 +65,6 @@ var memprofile = flag.String("memprofile", "", "Write memory profile")
 // output
 var HarOutputDir = flag.String("hardir", "", "Directory in which to store output har files")
 var harEntriesPerFile = flag.Int("harentriesperfile", 200, "Number of max number of har entries to store in each file")
-var filter = flag.String("f", "tcp", "BPF filter for pcap")
 
 var statsTracker = StatsTracker{}
 

@@ -21,7 +21,6 @@ type tcpStream struct {
 	optchecker     reassembly.TCPOptionCheck
 	net, transport gopacket.Flow
 	isDNS          bool
-	reader         tcpReader
 	isTapTarget    bool
 	client         tcpReader
 	server         tcpReader
