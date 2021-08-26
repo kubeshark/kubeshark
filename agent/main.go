@@ -18,6 +18,7 @@ import (
 	"path/filepath"
 	"plugin"
 	"sort"
+	"strings"
 
 	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
@@ -52,10 +53,11 @@ func main() {
 	if *standaloneMode {
 		api.StartResolving(*namespace)
 
+		outputItemsChannel := make(chan *tapApi.OutputChannelItem)
 		filteredOutputItemsChannel := make(chan *tapApi.OutputChannelItem)
-		tap.StartPassiveTapper(tapOpts, filteredOutputItemsChannel, extensions)
+		tap.StartPassiveTapper(tapOpts, outputItemsChannel, extensions)
 
-		// go filterHarItems(harOutputChannel, filteredOutputItemsChannel, getTrafficFilteringOptions())
+		go filterItems(outputItemsChannel, filteredOutputItemsChannel, getTrafficFilteringOptions())
 		go api.StartReadingEntries(filteredOutputItemsChannel, nil, extensionsMap)
 		// go api.StartReadingOutbound(outboundLinkOutputChannel)
 
@@ -84,20 +86,19 @@ func main() {
 	} else if *apiServerMode {
 		api.StartResolving(*namespace)
 
-		socketHarOutChannel := make(chan *tapApi.OutputChannelItem, 1000)
-		// TODO: filtered does not work
-		// filteredHarChannel := make(chan *tapApi.OutputChannelItem)
+		outputItemsChannel := make(chan *tapApi.OutputChannelItem)
+		filteredOutputItemsChannel := make(chan *tapApi.OutputChannelItem)
 
-		// go filterHarItems(socketHarOutChannel, filteredHarChannel, getTrafficFilteringOptions())
-		go api.StartReadingEntries(socketHarOutChannel, nil, extensionsMap)
+		go filterItems(outputItemsChannel, filteredOutputItemsChannel, getTrafficFilteringOptions())
+		go api.StartReadingEntries(filteredOutputItemsChannel, nil, extensionsMap)
 
-		hostApi(socketHarOutChannel)
+		hostApi(outputItemsChannel)
 	} else if *harsReaderMode {
-		socketHarOutChannel := make(chan *tapApi.OutputChannelItem, 1000)
-		// filteredHarChannel := make(chan *tap.OutputChannelItem)
+		outputItemsChannel := make(chan *tapApi.OutputChannelItem, 1000)
+		filteredHarChannel := make(chan *tapApi.OutputChannelItem)
 
-		// go filterHarItems(socketHarOutChannel, filteredHarChannel, getTrafficFilteringOptions())
-		go api.StartReadingEntries(socketHarOutChannel, harsDir, extensionsMap)
+		go filterItems(outputItemsChannel, filteredHarChannel, getTrafficFilteringOptions())
+		go api.StartReadingEntries(filteredHarChannel, harsDir, extensionsMap)
 		hostApi(nil)
 	}
 
@@ -211,7 +212,9 @@ func getTapTargets() []string {
 func getTrafficFilteringOptions() *shared.TrafficFilteringOptions {
 	filteringOptionsJson := os.Getenv(shared.MizuFilteringOptionsEnvVar)
 	if filteringOptionsJson == "" {
-		return nil
+		return &shared.TrafficFilteringOptions{
+			HealthChecksUserAgentHeaders: []string{"kube-probe", "prometheus"},
+		}
 	}
 	var filteringOptions shared.TrafficFilteringOptions
 	err := json.Unmarshal([]byte(filteringOptionsJson), &filteringOptions)
@@ -222,39 +225,45 @@ func getTrafficFilteringOptions() *shared.TrafficFilteringOptions {
 	return &filteringOptions
 }
 
-// var userAgentsToFilter = []string{"kube-probe", "prometheus"}
+func filterItems(inChannel <-chan *tapApi.OutputChannelItem, outChannel chan *tapApi.OutputChannelItem, filterOptions *shared.TrafficFilteringOptions) {
+	for message := range inChannel {
+		if message.ConnectionInfo.IsOutgoing && api.CheckIsServiceIP(message.ConnectionInfo.ServerIP) {
+			continue
+		}
+		// TODO: move this to tappers https://up9.atlassian.net/browse/TRA-3441
+		if isHealthCheckByUserAgent(message, filterOptions.HealthChecksUserAgentHeaders) {
+			continue
+		}
 
-//func filterHarItems(inChannel <-chan *tap.OutputChannelItem, outChannel chan *tap.OutputChannelItem, filterOptions *shared.TrafficFilteringOptions) {
-//	for message := range inChannel {
-//		if message.ConnectionInfo.IsOutgoing && api.CheckIsServiceIP(message.ConnectionInfo.ServerIP) {
-//			continue
-//		}
-//		// TODO: move this to tappers https://up9.atlassian.net/browse/TRA-3441
-//		if filterOptions.HideHealthChecks && isHealthCheckByUserAgent(message) {
-//			continue
-//		}
-//
-//		if !filterOptions.DisableRedaction {
-//			sensitiveDataFiltering.FilterSensitiveInfoFromHarRequest(message, filterOptions)
-//		}
-//
-//		outChannel <- message
-//	}
-//}
+		// if !filterOptions.DisableRedaction {
+		// 	sensitiveDataFiltering.FilterSensitiveInfoFromHarRequest(message, filterOptions)
+		// }
 
-//func isHealthCheckByUserAgent(message *tap.OutputChannelItem) bool {
-//	// for _, header := range message.HarEntry.Request.Headers {
-//	// 	if strings.ToLower(header.Name) == "user-agent" {
-//	// 		for _, userAgent := range userAgentsToFilter {
-//	// 			if strings.Contains(strings.ToLower(header.Value), userAgent) {
-//	// 				return true
-//	// 			}
-//	// 		}
-//	// 		return false
-//	// 	}
-//	// }
-//	return false
-//}
+		outChannel <- message
+	}
+}
+
+func isHealthCheckByUserAgent(item *tapApi.OutputChannelItem, userAgentsToIgnore []string) bool {
+	if item.Protocol.Name != "http" {
+		return false
+	}
+
+	request := item.Pair.Request.Payload.(map[string]interface{})
+	reqDetails := request["details"].(map[string]interface{})
+
+	for _, header := range reqDetails["headers"].([]interface{}) {
+		h := header.(map[string]interface{})
+		if strings.ToLower(h["name"].(string)) == "user-agent" {
+			for _, userAgent := range userAgentsToIgnore {
+				if strings.Contains(strings.ToLower(h["value"].(string)), strings.ToLower(userAgent)) {
+					return true
+				}
+			}
+			return false
+		}
+	}
+	return false
+}
 
 func pipeTapChannelToSocket(connection *websocket.Conn, messageDataChannel <-chan *tapApi.OutputChannelItem) {
 	if connection == nil {
