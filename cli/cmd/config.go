@@ -25,11 +25,11 @@ var configCmd = &cobra.Command{
 		}
 		if config.Config.Config.Regenerate {
 			data := []byte(template)
-			if err := ioutil.WriteFile(config.GetConfigFilePath(), data, 0644); err != nil {
+			if err := ioutil.WriteFile(config.Config.ConfigFilePath, data, 0644); err != nil {
 				logger.Log.Errorf("Failed writing config %v", err)
 				return nil
 			}
-			logger.Log.Infof(fmt.Sprintf("Template File written to %s", fmt.Sprintf(uiUtils.Purple, config.GetConfigFilePath())))
+			logger.Log.Infof(fmt.Sprintf("Template File written to %s", fmt.Sprintf(uiUtils.Purple, config.Config.ConfigFilePath)))
 		} else {
 			logger.Log.Debugf("Writing template config.\n%v", template)
 			fmt.Printf("%v", template)
@@ -41,8 +41,8 @@ var configCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(configCmd)
 
-	defaultConfigConfig := configStructs.ConfigConfig{}
-	defaults.Set(&defaultConfigConfig)
+	defaultConfig := config.ConfigStruct{}
+	defaults.Set(&defaultConfig)
 
-	configCmd.Flags().BoolP(configStructs.RegenerateConfigName, "r", defaultConfigConfig.Regenerate, fmt.Sprintf("Regenerate the config file with default values %s", config.GetConfigFilePath()))
+	configCmd.Flags().BoolP(configStructs.RegenerateConfigName, "r", defaultConfig.Config.Regenerate, fmt.Sprintf("Regenerate the config file with default values to path %s or to chosen path using --%s", defaultConfig.ConfigFilePath, config.ConfigFilePathCommandName))
 }

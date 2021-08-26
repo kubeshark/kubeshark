@@ -564,7 +564,7 @@ func getNamespaces(kubernetesProvider *kubernetes.Provider) []string {
 	if config.Config.Tap.AllNamespaces {
 		return []string{mizu.K8sAllNamespaces}
 	} else if len(config.Config.Tap.Namespaces) > 0 {
-		return config.Config.Tap.Namespaces
+		return mizu.Unique(config.Config.Tap.Namespaces)
 	} else {
 		return []string{kubernetesProvider.CurrentNamespace()}
 	}

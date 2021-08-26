@@ -7,11 +7,13 @@ import (
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/util/homedir"
 	"os"
+	"path"
 	"path/filepath"
 )
 
 const (
 	MizuResourcesNamespaceConfigName = "mizu-resources-namespace"
+	ConfigFilePathCommandName        = "config-path"
 )
 
 type ConfigStruct struct {
@@ -27,10 +29,12 @@ type ConfigStruct struct {
 	Telemetry              bool                        `yaml:"telemetry" default:"true"`
 	DumpLogs               bool                        `yaml:"dump-logs" default:"false"`
 	KubeConfigPathStr      string                      `yaml:"kube-config-path"`
+	ConfigFilePath         string                      `yaml:"config-path,omitempty" readonly:""`
 }
 
 func (config *ConfigStruct) SetDefaults() {
 	config.AgentImage = fmt.Sprintf("gcr.io/up9-docker-hub/mizu/%s:%s", mizu.Branch, mizu.SemVer)
+	config.ConfigFilePath = path.Join(mizu.GetMizuFolderPath(), "config.yaml")
 }
 
 func (config *ConfigStruct) ImagePullPolicy() v1.PullPolicy {

@@ -7,7 +7,6 @@ import (
 	"github.com/up9inc/mizu/cli/mizu"
 	"io/ioutil"
 	"os"
-	"path"
 	"reflect"
 	"strconv"
 	"strings"
@@ -27,7 +26,7 @@ const (
 )
 
 var (
-	Config = ConfigStruct{}
+	Config  = ConfigStruct{}
 	cmdName string
 )
 
@@ -38,9 +37,11 @@ func InitConfig(cmd *cobra.Command) error {
 		return err
 	}
 
-	if err := mergeConfigFile(); err != nil {
-		return fmt.Errorf("invalid config, %w\n" +
-			"you can regenerate the file by removing it (%v) and using `mizu config -r`", err, GetConfigFilePath())
+	configFilePath := cmd.Flags().Lookup(ConfigFilePathCommandName).Value.String()
+
+	if err := mergeConfigFile(configFilePath); err != nil {
+		return fmt.Errorf("invalid config, %w\n"+
+			"you can regenerate the file by removing it (%v) and using `mizu config -r`", err, configFilePath)
 	}
 
 	cmd.Flags().Visit(initFlag)
@@ -63,12 +64,8 @@ func GetConfigWithDefaults() (string, error) {
 	return uiUtils.PrettyYaml(defaultConf)
 }
 
-func GetConfigFilePath() string {
-	return path.Join(mizu.GetMizuFolderPath(), "config.yaml")
-}
-
-func mergeConfigFile() error {
-	reader, openErr := os.Open(GetConfigFilePath())
+func mergeConfigFile(configFilePath string) error {
+	reader, openErr := os.Open(configFilePath)
 	if openErr != nil {
 		return nil
 	}
@@ -89,7 +86,12 @@ func mergeConfigFile() error {
 func initFlag(f *pflag.Flag) {
 	configElemValue := reflect.ValueOf(&Config).Elem()
 
-	flagPath := []string {cmdName, f.Name}
+	var flagPath []string
+	if mizu.Contains([]string{ConfigFilePathCommandName}, f.Name) {
+		flagPath = []string{f.Name}
+	} else {
+		flagPath = []string{cmdName, f.Name}
+	}
 
 	sliceValue, isSliceValue := f.Value.(pflag.SliceValue)
 	if !isSliceValue {
