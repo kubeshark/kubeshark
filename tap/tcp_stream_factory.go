@@ -48,44 +48,48 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.T
 		optchecker:  reassembly.NewTCPOptionCheck(),
 	}
 	if stream.isTapTarget {
-		counterPair := &api.CounterPair{
-			Request:  0,
-			Response: 0,
+		for i, extension := range extensions {
+			counterPair := &api.CounterPair{
+				Request:  0,
+				Response: 0,
+			}
+			stream.clients = append(stream.clients, tcpReader{
+				msgQueue: make(chan tcpReaderDataMsg),
+				ident:    fmt.Sprintf("%s %s", net, transport),
+				tcpID: &api.TcpID{
+					SrcIP:   srcIp,
+					DstIP:   dstIp,
+					SrcPort: srcPort,
+					DstPort: dstPort,
+				},
+				parent:             stream,
+				isClient:           true,
+				isOutgoing:         props.isOutgoing,
+				outboundLinkWriter: factory.outboundLinkWriter,
+				Extension:          extension,
+				Emitter:            factory.Emitter,
+			})
+			stream.servers = append(stream.servers, tcpReader{
+				msgQueue: make(chan tcpReaderDataMsg),
+				ident:    fmt.Sprintf("%s %s", net, transport),
+				tcpID: &api.TcpID{
+					SrcIP:   net.Dst().String(),
+					DstIP:   net.Src().String(),
+					SrcPort: transport.Dst().String(),
+					DstPort: transport.Src().String(),
+				},
+				parent:             stream,
+				isClient:           false,
+				isOutgoing:         props.isOutgoing,
+				outboundLinkWriter: factory.outboundLinkWriter,
+				Extension:          extension,
+				Emitter:            factory.Emitter,
+			})
+			factory.wg.Add(2)
+			// Start reading from channel stream.reader.bytes
+			go stream.clients[i].run(&factory.wg, counterPair)
+			go stream.servers[i].run(&factory.wg, counterPair)
 		}
-		stream.client = tcpReader{
-			msgQueue: make(chan tcpReaderDataMsg),
-			ident:    fmt.Sprintf("%s %s", net, transport),
-			tcpID: &api.TcpID{
-				SrcIP:   srcIp,
-				DstIP:   dstIp,
-				SrcPort: srcPort,
-				DstPort: dstPort,
-			},
-			parent:             stream,
-			isClient:           true,
-			isOutgoing:         props.isOutgoing,
-			outboundLinkWriter: factory.outboundLinkWriter,
-			Emitter:            factory.Emitter,
-		}
-		stream.server = tcpReader{
-			msgQueue: make(chan tcpReaderDataMsg),
-			ident:    fmt.Sprintf("%s %s", net, transport),
-			tcpID: &api.TcpID{
-				SrcIP:   net.Dst().String(),
-				DstIP:   net.Src().String(),
-				SrcPort: transport.Dst().String(),
-				DstPort: transport.Src().String(),
-			},
-			parent:             stream,
-			isClient:           false,
-			isOutgoing:         props.isOutgoing,
-			outboundLinkWriter: factory.outboundLinkWriter,
-			Emitter:            factory.Emitter,
-		}
-		factory.wg.Add(2)
-		// Start reading from channel stream.reader.bytes
-		go stream.client.run(&factory.wg, counterPair)
-		go stream.server.run(&factory.wg, counterPair)
 	}
 	return stream
 }

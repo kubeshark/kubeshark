@@ -2,10 +2,8 @@ package tap
 
 import (
 	"bufio"
-	"bytes"
 	"fmt"
 	"io"
-	"log"
 	"sync"
 	"time"
 
@@ -56,6 +54,7 @@ type tcpReader struct {
 	messageCount       uint
 	packetsSeen        uint
 	outboundLinkWriter *OutboundLinkWriter
+	Extension          *api.Extension
 	Emitter            api.Emitter
 }
 
@@ -93,16 +92,9 @@ func (h *tcpReader) Read(p []byte) (int, error) {
 
 func (h *tcpReader) run(wg *sync.WaitGroup, counterPair *api.CounterPair) {
 	defer wg.Done()
-
-	data, err := io.ReadAll(h)
+	b := bufio.NewReader(h)
+	err := h.Extension.Dissector.Dissect(b, h.isClient, h.tcpID, counterPair, h.Emitter)
 	if err != nil {
-		log.Printf("Corrupted TCP stream, unable to read!")
-		return
-	}
-	r := bytes.NewReader(data)
-
-	for _, extension := range extensions {
-		r.Reset(data)
-		extension.Dissector.Dissect(bufio.NewReader(r), h.isClient, h.tcpID, counterPair, h.Emitter)
+		io.ReadAll(b)
 	}
 }

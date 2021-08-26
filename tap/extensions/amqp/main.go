@@ -206,8 +206,6 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 			// log.Printf("unexpected frame: %+v\n", f)
 		}
 	}
-
-	return errors.New("AMQP EOF")
 }
 
 func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolvedSource string, resolvedDestination string) *api.MizuEntry {
