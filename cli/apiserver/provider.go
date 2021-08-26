@@ -77,7 +77,7 @@ func (provider *apiServerProvider) RequestAnalysis(analysisDestination string, s
 	if !provider.isReady {
 		return fmt.Errorf("trying to reach api server when not initialized yet")
 	}
-	urlPath := fmt.Sprintf("http://%s/api/uploadEntries?dest=%s&interval=%v", provider.url, url.QueryEscape(analysisDestination), sleepIntervalSec)
+	urlPath := fmt.Sprintf("%s/api/uploadEntries?dest=%s&interval=%v", provider.url, url.QueryEscape(analysisDestination), sleepIntervalSec)
 	u, parseErr := url.ParseRequestURI(urlPath)
 	if parseErr != nil {
 		logger.Log.Fatal("Failed parsing the URL (consider changing the analysis dest URL), err: %v", parseErr)
