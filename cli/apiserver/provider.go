@@ -28,7 +28,6 @@ func (provider *apiServerProvider) InitAndTestConnection(url string, retries int
 	for retriesLeft > 0 {
 		if response, err := http.Get(healthUrl); err != nil {
 			logger.Log.Debugf("[ERROR] failed connecting to api server %v", err)
-			return err
 		} else if response.StatusCode != 200 {
 			logger.Log.Debugf("can't connect to api server yet, response status code %v", response.StatusCode)
 		} else {
