@@ -1,2 +1,2 @@
 test: ## Run acceptance tests.
-	@go test ./...
+	@go test ./... -timeout 1h
