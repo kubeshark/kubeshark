@@ -66,8 +66,9 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.T
 				isClient:           true,
 				isOutgoing:         props.isOutgoing,
 				outboundLinkWriter: factory.outboundLinkWriter,
-				Extension:          extension,
-				Emitter:            factory.Emitter,
+				extension:          extension,
+				emitter:            factory.Emitter,
+				counterPair:        counterPair,
 			})
 			stream.servers = append(stream.servers, tcpReader{
 				msgQueue: make(chan tcpReaderDataMsg),
@@ -82,13 +83,14 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.T
 				isClient:           false,
 				isOutgoing:         props.isOutgoing,
 				outboundLinkWriter: factory.outboundLinkWriter,
-				Extension:          extension,
-				Emitter:            factory.Emitter,
+				extension:          extension,
+				emitter:            factory.Emitter,
+				counterPair:        counterPair,
 			})
 			factory.wg.Add(2)
 			// Start reading from channel stream.reader.bytes
-			go stream.clients[i].run(&factory.wg, counterPair)
-			go stream.servers[i].run(&factory.wg, counterPair)
+			go stream.clients[i].run(&factory.wg)
+			go stream.servers[i].run(&factory.wg)
 		}
 	}
 	return stream

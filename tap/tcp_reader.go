@@ -55,8 +55,9 @@ type tcpReader struct {
 	messageCount       uint
 	packetsSeen        uint
 	outboundLinkWriter *OutboundLinkWriter
-	Extension          *api.Extension
-	Emitter            api.Emitter
+	extension          *api.Extension
+	emitter            api.Emitter
+	counterPair        *api.CounterPair
 }
 
 func (h *tcpReader) Read(p []byte) (int, error) {
@@ -91,10 +92,10 @@ func (h *tcpReader) Read(p []byte) (int, error) {
 	return l, nil
 }
 
-func (h *tcpReader) run(wg *sync.WaitGroup, counterPair *api.CounterPair) {
+func (h *tcpReader) run(wg *sync.WaitGroup) {
 	defer wg.Done()
 	b := bufio.NewReader(h)
-	err := h.Extension.Dissector.Dissect(b, h.isClient, h.tcpID, counterPair, h.Emitter)
+	err := h.extension.Dissector.Dissect(b, h.isClient, h.tcpID, h.counterPair, h.emitter)
 	if err != nil {
 		io.ReadAll(b)
 	}
