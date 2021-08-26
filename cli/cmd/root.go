@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/creasty/defaults"
 	"github.com/spf13/cobra"
 	"github.com/up9inc/mizu/cli/config"
 	"github.com/up9inc/mizu/cli/logger"
@@ -25,7 +26,11 @@ Further info is available at https://github.com/up9inc/mizu`,
 }
 
 func init() {
+	defaultConfig := config.ConfigStruct{}
+	defaults.Set(&defaultConfig)
+
 	rootCmd.PersistentFlags().StringSlice(config.SetCommandName, []string{}, fmt.Sprintf("Override values using --%s", config.SetCommandName))
+	rootCmd.PersistentFlags().String(config.ConfigFilePathCommandName, defaultConfig.ConfigFilePath, fmt.Sprintf("Override config file path using --%s", config.ConfigFilePathCommandName))
 }
 
 func printNewVersionIfNeeded(versionChan chan string) {
