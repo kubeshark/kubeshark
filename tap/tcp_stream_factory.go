@@ -102,6 +102,8 @@ func (factory *tcpStreamFactory) WaitGoRoutines() {
 
 func (factory *tcpStreamFactory) getStreamProps(srcIP string, dstIP string, dstPort string) *streamProps {
 	if hostMode {
+		// TODO: Fix `filterAuthorities` logic or value. Default `isTapTarget: true` causes;
+		// RabbitMQ server->client pushes to not show up for example. Where the client is the tapped pod.
 		if inArrayString(gSettings.filterAuthorities, fmt.Sprintf("%s:%s", dstIP, dstPort)) {
 			rlog.Debugf("getStreamProps %s", fmt.Sprintf("+ host1 %s:%s", dstIP, dstPort))
 			return &streamProps{isTapTarget: true, isOutgoing: false}
@@ -112,7 +114,7 @@ func (factory *tcpStreamFactory) getStreamProps(srcIP string, dstIP string, dstP
 			rlog.Debugf("getStreamProps %s", fmt.Sprintf("+ host3 %s", srcIP))
 			return &streamProps{isTapTarget: true, isOutgoing: true}
 		}
-		return &streamProps{isTapTarget: false}
+		return &streamProps{isTapTarget: true, isOutgoing: false}
 	} else {
 		isOutgoing := !inArrayString(ownIps, dstIP)
 
