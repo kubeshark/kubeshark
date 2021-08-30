@@ -34,8 +34,6 @@ export const formatSize = (n: number) => n > 1000 ? `${Math.round(n / 1000)}KB` 
 
 const EntryTitle: React.FC<any> = ({protocol, data}) => {
     const classes = useStyles();
-
-    console.log("data:", data)
     const {response} = JSON.parse(data.entry);
 
 
