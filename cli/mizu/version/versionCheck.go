@@ -37,6 +37,7 @@ func CheckNewerVersion(versionChan chan string) {
 	latestRelease, _, err := client.Repositories.GetLatestRelease(context.Background(), "up9inc", "mizu")
 	if err != nil {
 		logger.Log.Debugf("[ERROR] Failed to get latest release")
+		versionChan <- ""
 		return
 	}
 
@@ -49,12 +50,14 @@ func CheckNewerVersion(versionChan chan string) {
 	}
 	if versionFileUrl == "" {
 		logger.Log.Debugf("[ERROR] Version file not found in the latest release")
+		versionChan <- ""
 		return
 	}
 
 	res, err := http.Get(versionFileUrl)
 	if err != nil {
 		logger.Log.Debugf("[ERROR] Failed to get the version file %v", err)
+		versionChan <- ""
 		return
 	}
 
@@ -62,6 +65,7 @@ func CheckNewerVersion(versionChan chan string) {
 	res.Body.Close()
 	if err != nil {
 		logger.Log.Debugf("[ERROR] Failed to read the version file -> %v", err)
+		versionChan <- ""
 		return
 	}
 	gitHubVersion := string(data)
@@ -73,6 +77,7 @@ func CheckNewerVersion(versionChan chan string) {
 
 	if gitHubVersionSemVer.GreaterThan(currentSemVer) {
 		versionChan <- fmt.Sprintf("Update available! %v -> %v (%v)", mizu.SemVer, gitHubVersion, *latestRelease.HTMLURL)
+	} else {
+		versionChan <- ""
 	}
-	versionChan <- ""
 }
