@@ -137,8 +137,9 @@ type BaseEntryDetails struct {
 }
 
 type ApplicableRules struct {
-	Latency int64 `json:"latency,omitempty"`
-	Status  bool  `json:"status,omitempty"`
+	Latency       int64 `json:"latency,omitempty"`
+	Status        bool  `json:"status,omitempty"`
+	NumberOfRules int   `json:"numberOfRules,omitempty"`
 }
 
 type DataUnmarshaler interface {
