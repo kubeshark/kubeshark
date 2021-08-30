@@ -37,11 +37,14 @@ func InitConfig(cmd *cobra.Command) error {
 		return err
 	}
 
-	configFilePath := cmd.Flags().Lookup(ConfigFilePathCommandName).Value.String()
-
+	configFilePathFlag := cmd.Flags().Lookup(ConfigFilePathCommandName)
+	configFilePath := configFilePathFlag.Value.String()
 	if err := mergeConfigFile(configFilePath); err != nil {
-		return fmt.Errorf("invalid config, %w\n"+
-			"you can regenerate the file by removing it (%v) and using `mizu config -r`", err, configFilePath)
+		_, isPathError := err.(*os.PathError)
+		if configFilePathFlag.Changed || !isPathError {
+			return fmt.Errorf("invalid config, %w\n"+
+				"you can regenerate the file by removing it (%v) and using `mizu config -r`", err, configFilePath)
+		}
 	}
 
 	cmd.Flags().Visit(initFlag)
@@ -67,7 +70,7 @@ func GetConfigWithDefaults() (string, error) {
 func mergeConfigFile(configFilePath string) error {
 	reader, openErr := os.Open(configFilePath)
 	if openErr != nil {
-		return nil
+		return openErr
 	}
 
 	buf, readErr := ioutil.ReadAll(reader)
