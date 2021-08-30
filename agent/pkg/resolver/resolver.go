@@ -53,9 +53,6 @@ func (resolver *Resolver) GetMap() cmap.ConcurrentMap {
 }
 
 func (resolver *Resolver) CheckIsServiceIP(address string) bool {
-	if resolver == nil {
-		return false
-	}
 	_, isFound := resolver.serviceMap.Get(address)
 	return isFound
 }

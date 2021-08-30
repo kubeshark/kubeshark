@@ -157,6 +157,9 @@ func getServiceNameFromUrl(inputUrl string) (string, string) {
 }
 
 func CheckIsServiceIP(address string) bool {
+	if k8sResolver == nil {
+		return false
+	}
 	return k8sResolver.CheckIsServiceIP(address)
 }
 
