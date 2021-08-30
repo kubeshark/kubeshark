@@ -40,8 +40,7 @@ func InitConfig(cmd *cobra.Command) error {
 	configFilePathFlag := cmd.Flags().Lookup(ConfigFilePathCommandName)
 	configFilePath := configFilePathFlag.Value.String()
 	if err := mergeConfigFile(configFilePath); err != nil {
-		_, isPathError := err.(*os.PathError)
-		if configFilePathFlag.Changed || !isPathError {
+		if configFilePathFlag.Changed || !os.IsNotExist(err) {
 			return fmt.Errorf("invalid config, %w\n"+
 				"you can regenerate the file by removing it (%v) and using `mizu config -r`", err, configFilePath)
 		}
