@@ -35,14 +35,12 @@ func init() {
 }
 
 func printNewVersionIfNeeded(versionChan chan string) {
-	go func() {
-		time.Sleep(2 * time.Second)
-		versionChan <- ""
-	}()
-
-	versionMsg := <-versionChan
-	if versionMsg != "" {
-		logger.Log.Infof(uiUtils.Yellow, versionMsg)
+	select {
+	case versionMsg := <-versionChan:
+		if versionMsg != "" {
+			logger.Log.Infof(uiUtils.Yellow, versionMsg)
+		}
+	case <-time.After(2 * time.Second):
 	}
 }
 
