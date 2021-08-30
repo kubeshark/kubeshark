@@ -120,8 +120,6 @@ func handleHTTP1ServerStream(b *bufio.Reader, tcpID *api.TcpID, counterPair *api
 		return err
 	}
 	counterPair.Response++
-	var req string
-	req = fmt.Sprintf("<no-request-seen>")
 
 	body, err := ioutil.ReadAll(res.Body)
 	res.Body = io.NopCloser(bytes.NewBuffer(body)) // rewind
@@ -141,7 +139,7 @@ func handleHTTP1ServerStream(b *bufio.Reader, tcpID *api.TcpID, counterPair *api
 		contentType = []string{http.DetectContentType(body)}
 	}
 	encoding := res.Header["Content-Encoding"]
-	rlog.Tracef(1, "HTTP/1 Response: %s %s URL:%s (%d%s%d%s) -> %s", tcpID.Ident, res.Status, req, res.ContentLength, sym, s, contentType, encoding)
+	rlog.Tracef(1, "HTTP/1 Response: %s %s (%d%s%d%s) -> %s", tcpID.Ident, res.Status, res.ContentLength, sym, s, contentType, encoding)
 
 	ident := fmt.Sprintf(
 		"%s->%s %s->%s %d",
