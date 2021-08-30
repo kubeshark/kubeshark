@@ -69,7 +69,7 @@ const AutoRepresentation: React.FC<any> = ({representation, color}) => {
             </React.Fragment>}
             {currentTab === TABS[2].tab && <React.Fragment>
                 {// FIXME: Fix here
-                <EntryTablePolicySection service={representation.log.entries[0].service} title={'Rule'} color={color} latency={0} response={response} arrayToIterate={rulesMatched ? rulesMatched : []}/>}
+                <EntryTablePolicySection service={representation.service} title={'Rule'} color={color} latency={0} response={response} arrayToIterate={rulesMatched ? rulesMatched : []}/>}
             </React.Fragment>}
         </div>}
     </div>;
