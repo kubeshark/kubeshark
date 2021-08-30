@@ -213,7 +213,7 @@ func getTrafficFilteringOptions() *shared.TrafficFilteringOptions {
 	filteringOptionsJson := os.Getenv(shared.MizuFilteringOptionsEnvVar)
 	if filteringOptionsJson == "" {
 		return &shared.TrafficFilteringOptions{
-			HealthChecksUserAgentHeaders: []string{"kube-probe", "prometheus"},
+			HealthChecksUserAgentHeaders: []string{},
 		}
 	}
 	var filteringOptions shared.TrafficFilteringOptions
