@@ -33,9 +33,6 @@ func (cl *Cleaner) clean() {
 	cl.assemblerMutex.Unlock()
 
 	for _, extension := range extensions {
-		if extension.MatcherMap == nil {
-			continue
-		}
 		deleted := deleteOlderThan(extension.MatcherMap, startCleanTime.Add(-cl.connectionTimeout))
 		cl.stats.deleted += deleted
 	}
