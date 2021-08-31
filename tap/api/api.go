@@ -58,6 +58,7 @@ type RequestResponsePair struct {
 	Response GenericMessage `json:"response"`
 }
 
+// `Protocol` is modified in the later stages of data propagation. Therefore it's not a pointer.
 type OutputChannelItem struct {
 	Protocol       Protocol
 	Timestamp      int64
