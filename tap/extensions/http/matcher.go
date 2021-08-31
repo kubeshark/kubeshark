@@ -103,18 +103,3 @@ func genKey(split []string) string {
 	key := fmt.Sprintf("%s:%s->%s:%s,%s", split[0], split[2], split[1], split[3], split[4])
 	return key
 }
-
-func (matcher *requestResponseMatcher) deleteOlderThan(t time.Time) int {
-	numDeleted := 0
-
-	matcher.openMessagesMap.Range(func(key interface{}, value interface{}) bool {
-		message, _ := value.(*api.GenericMessage)
-		if message.CaptureTime.Before(t) {
-			matcher.openMessagesMap.Delete(key)
-			numDeleted++
-		}
-		return true
-	})
-
-	return numDeleted
-}

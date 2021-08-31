@@ -3,6 +3,7 @@ package api
 import (
 	"bufio"
 	"plugin"
+	"sync"
 	"time"
 )
 
@@ -20,10 +21,11 @@ type Protocol struct {
 }
 
 type Extension struct {
-	Protocol  Protocol
-	Path      string
-	Plug      *plugin.Plugin
-	Dissector Dissector
+	Protocol   Protocol
+	Path       string
+	Plug       *plugin.Plugin
+	Dissector  Dissector
+	MatcherMap sync.Map
 }
 
 type ConnectionInfo struct {

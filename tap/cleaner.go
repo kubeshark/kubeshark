@@ -1,10 +1,12 @@
 package tap
 
 import (
-	"github.com/google/gopacket/reassembly"
-	"github.com/romana/rlog"
 	"sync"
 	"time"
+
+	"github.com/google/gopacket/reassembly"
+	"github.com/romana/rlog"
+	"github.com/up9inc/mizu/tap/api"
 )
 
 type CleanerStats struct {
@@ -29,6 +31,14 @@ func (cl *Cleaner) clean() {
 	rlog.Debugf("Assembler Stats before cleaning %s", cl.assembler.Dump())
 	flushed, closed := cl.assembler.FlushCloseOlderThan(startCleanTime.Add(-cl.connectionTimeout))
 	cl.assemblerMutex.Unlock()
+
+	for _, extension := range extensions {
+		if extension.MatcherMap == nil {
+			continue
+		}
+		deleted := deleteOlderThan(extension.MatcherMap, startCleanTime.Add(-cl.connectionTimeout))
+		cl.stats.deleted += deleted
+	}
 
 	cl.statsMutex.Lock()
 	rlog.Debugf("Assembler Stats after cleaning %s", cl.assembler.Dump())
@@ -64,4 +74,19 @@ func (cl *Cleaner) dumpStats() CleanerStats {
 	cl.statsMutex.Unlock()
 
 	return stats
+}
+
+func deleteOlderThan(matcherMap sync.Map, t time.Time) int {
+	numDeleted := 0
+
+	matcherMap.Range(func(key interface{}, value interface{}) bool {
+		message, _ := value.(*api.GenericMessage)
+		if message.CaptureTime.Before(t) {
+			matcherMap.Delete(key)
+			numDeleted++
+		}
+		return true
+	})
+
+	return numDeleted
 }
