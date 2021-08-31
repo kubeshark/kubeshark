@@ -258,7 +258,12 @@ func representProduceRequest(data map[string]interface{}) []interface{} {
 	rep = representRequestHeader(data, rep)
 
 	payload := data["Payload"].(map[string]interface{})
-	topicData, _ := json.Marshal(payload["TopicData"].([]interface{}))
+	topicData := ""
+	_topicData := payload["TopicData"]
+	if _topicData != nil {
+		x, _ := json.Marshal(_topicData.([]interface{}))
+		topicData = string(x)
+	}
 	transactionalID := ""
 	if payload["TransactionalID"] != nil {
 		transactionalID = payload["TransactionalID"].(string)
@@ -278,7 +283,7 @@ func representProduceRequest(data map[string]interface{}) []interface{} {
 		},
 		{
 			"name":  "Topic Data",
-			"value": string(topicData),
+			"value": topicData,
 		},
 	})
 	rep = append(rep, map[string]string{

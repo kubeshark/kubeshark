@@ -25,7 +25,11 @@ func CreateResponseRequestMatcher() requestResponseMatcher {
 
 func (matcher *requestResponseMatcher) registerRequest(key string, request *Request) *RequestResponsePair {
 	if response, found := matcher.openMessagesMap.LoadAndDelete(key); found {
-		return matcher.preparePair(request, response.(*Response))
+		// Check for a situation that only occurs when a Kafka broker is initiating
+		switch response.(type) {
+		case *Response:
+			return matcher.preparePair(request, response.(*Response))
+		}
 	}
 
 	matcher.openMessagesMap.Store(key, request)

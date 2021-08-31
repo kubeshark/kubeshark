@@ -78,7 +78,11 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolve
 		summary = reqDetails["ClientID"].(string)
 		break
 	case Produce:
-		topics := reqDetails["Payload"].(map[string]interface{})["TopicData"].([]interface{})
+		_topics := reqDetails["Payload"].(map[string]interface{})["TopicData"]
+		if _topics == nil {
+			break
+		}
+		topics := _topics.([]interface{})
 		for _, topic := range topics {
 			summary += fmt.Sprintf("%s, ", topic.(map[string]interface{})["Topic"].(string))
 		}
