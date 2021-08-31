@@ -127,10 +127,14 @@ func loadExtensions() {
 		}
 		plug, _ := plugin.Open(extension.Path)
 		extension.Plug = plug
-		symDissector, _ := plug.Lookup("Dissector")
+		symDissector, err := plug.Lookup("Dissector")
 
 		var dissector tapApi.Dissector
-		dissector, _ = symDissector.(tapApi.Dissector)
+		var ok bool
+		dissector, ok = symDissector.(tapApi.Dissector)
+		if err != nil || !ok {
+			panic(fmt.Sprintf("Failed to load the extension: %s\n", extension.Path))
+		}
 		dissector.Register(extension)
 		extension.Dissector = dissector
 		extensions[i] = extension

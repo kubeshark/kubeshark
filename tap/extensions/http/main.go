@@ -44,7 +44,7 @@ const (
 )
 
 func init() {
-	log.Println("Initializing HTTP extension.")
+	log.Println("Initializing HTTP extension...")
 }
 
 type dissecting string
