@@ -107,6 +107,7 @@ func hostApi(socketHarOutputChannel chan<- *tap.OutputChannelItem) {
 		SocketHarOutChannel: socketHarOutputChannel,
 	}
 
+	app.Use(DisableRootStaticCache())
 	app.Use(static.ServeRoot("/", "./site"))
 	app.Use(CORSMiddleware()) // This has to be called after the static middleware, does not work if its called before
 
@@ -117,6 +118,17 @@ func hostApi(socketHarOutputChannel chan<- *tap.OutputChannelItem) {
 	routes.NotFoundRoute(app)
 
 	utils.StartServer(app)
+}
+
+func DisableRootStaticCache() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if c.Request.RequestURI == "/" {
+			// Disable cache only for the main static route
+			c.Writer.Header().Set("Cache-Control", "no-store")
+		}
+
+		c.Next()
+	}
 }
 
 func CORSMiddleware() gin.HandlerFunc {
