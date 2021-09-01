@@ -82,9 +82,12 @@ func deleteOlderThan(matcherMap *sync.Map, t time.Time) int {
 
 	matcherMap.Range(func(key interface{}, value interface{}) bool {
 		message, _ := value.(*api.GenericMessage)
-		if message.CaptureTime.Before(t) {
-			matcherMap.Delete(key)
-			numDeleted++
+		// TODO: Investigate the reason why `request` is `nil` in some rare occasion
+		if message != nil {
+			if message.CaptureTime.Before(t) {
+				matcherMap.Delete(key)
+				numDeleted++
+			}
 		}
 		return true
 	})
