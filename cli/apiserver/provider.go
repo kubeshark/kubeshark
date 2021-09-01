@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/up9inc/mizu/cli/config"
 	"github.com/up9inc/mizu/cli/logger"
 	"github.com/up9inc/mizu/cli/uiUtils"
 	"github.com/up9inc/mizu/shared"
@@ -18,13 +19,15 @@ import (
 type apiServerProvider struct {
 	url     string
 	isReady bool
+	retries int
 }
 
-var Provider = apiServerProvider{}
+var Provider = apiServerProvider{retries: config.GetIntEnvConfig(config.ApiServerRetries, 20)}
 
-func (provider *apiServerProvider) InitAndTestConnection(url string, retries int) error {
+func (provider *apiServerProvider) InitAndTestConnection(url string) error {
 	healthUrl := fmt.Sprintf("%s/", url)
-	retriesLeft := retries
+	retriesLeft := provider.retries
+	fmt.Printf("%v", retriesLeft)
 	for retriesLeft > 0 {
 		if response, err := http.Get(healthUrl); err != nil {
 			logger.Log.Debugf("[ERROR] failed connecting to api server %v", err)
@@ -48,7 +51,7 @@ func (provider *apiServerProvider) InitAndTestConnection(url string, retries int
 
 	if retriesLeft == 0 {
 		provider.isReady = false
-		return fmt.Errorf("couldn't reach the api server after %v retries", retries)
+		return fmt.Errorf("couldn't reach the api server after %v retries", provider.retries)
 	}
 	provider.url = url
 	provider.isReady = true

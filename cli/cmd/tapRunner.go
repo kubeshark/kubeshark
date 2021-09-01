@@ -20,7 +20,6 @@ import (
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"path"
-	"reflect"
 	"regexp"
 	"strings"
 	"time"
@@ -498,8 +497,7 @@ func watchApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 				isPodReady = true
 				go startProxyReportErrorIfAny(kubernetesProvider, cancel)
 
-				retries := config.GetEnvConfig(reflect.Int, config.ApiServerRetries, reflect.ValueOf(20))
-				if err := apiserver.Provider.InitAndTestConnection(GetApiServerUrl(), retries.Interface().(int)); err != nil {
+				if err := apiserver.Provider.InitAndTestConnection(GetApiServerUrl()); err != nil {
 					logger.Log.Errorf(uiUtils.Error, "Couldn't connect to API server, check logs")
 					cancel()
 					break

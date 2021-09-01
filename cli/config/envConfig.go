@@ -1,28 +1,24 @@
 package config
 
 import (
-	"fmt"
-	"github.com/up9inc/mizu/cli/logger"
-	"github.com/up9inc/mizu/cli/uiUtils"
 	"os"
-	"reflect"
+	"strconv"
 )
 
 const (
 	ApiServerRetries = "API_SERVER_RETRIES"
 )
 
-func GetEnvConfig(kind reflect.Kind, key string, defaultValue reflect.Value) reflect.Value {
-	val := os.Getenv(key)
-	if val == "" {
+func GetIntEnvConfig(key string, defaultValue int) int {
+	value := os.Getenv(key)
+	if value == "" {
 		return defaultValue
 	}
 
-	parsedValue, err := getParsedValue(kind, val)
+	intValue, err := strconv.Atoi(value)
 	if err != nil {
-		logger.Log.Warningf(uiUtils.Warning, fmt.Sprintf("error parsing env value, expected value type: %v, key: %v, value: %v", kind, key, val))
 		return defaultValue
 	}
 
-	return parsedValue
+	return intValue
 }

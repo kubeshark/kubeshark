@@ -27,7 +27,7 @@ func startProxyReportErrorIfAny(kubernetesProvider *kubernetes.Provider, cancel 
 		cancel()
 	}
 
-	logger.Log.Debugf("done starting proxy")
+	logger.Log.Debugf("proxy ended")
 }
 
 func waitForFinish(ctx context.Context, cancel context.CancelFunc) {
