@@ -18,7 +18,7 @@ var fetchCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		go telemetry.ReportRun("fetch", config.Config.Fetch)
 
-		if err := apiserver.Provider.InitAndTestConnection(GetApiServerUrl(), 1); err != nil {
+		if err := apiserver.Provider.InitAndTestConnection(GetApiServerUrl()); err != nil {
 			logger.Log.Errorf(uiUtils.Error, "Couldn't connect to API server, make sure one running")
 			return nil
 		}

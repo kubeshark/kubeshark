@@ -9,7 +9,7 @@ import (
 )
 
 func RunMizuFetch() {
-	if err := apiserver.Provider.InitAndTestConnection(GetApiServerUrl(), 5); err != nil {
+	if err := apiserver.Provider.InitAndTestConnection(GetApiServerUrl()); err != nil {
 		logger.Log.Errorf(uiUtils.Error, "Couldn't connect to API server, check logs")
 	}
 

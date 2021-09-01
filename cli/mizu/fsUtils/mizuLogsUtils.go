@@ -39,22 +39,39 @@ func DumpLogs(provider *kubernetes.Provider, ctx context.Context, filePath strin
 		} else {
 			logger.Log.Debugf("Successfully read log length %d for pod: %s.%s", len(logs), pod.Namespace, pod.Name)
 		}
+
 		if err := AddStrToZip(zipWriter, logs, fmt.Sprintf("%s.%s.log", pod.Namespace, pod.Name)); err != nil {
 			logger.Log.Errorf("Failed write logs, %v", err)
 		} else {
 			logger.Log.Debugf("Successfully added log length %d from pod: %s.%s", len(logs), pod.Namespace, pod.Name)
 		}
 	}
+
+	events, err := provider.GetNamespaceEvents(config.Config.MizuResourcesNamespace, ctx)
+	if err != nil {
+		logger.Log.Debugf("Failed to get k8b events, %v", err)
+	} else {
+		logger.Log.Debugf("Successfully read events for k8b namespace: %s", config.Config.MizuResourcesNamespace)
+	}
+
+	if err := AddStrToZip(zipWriter, events, fmt.Sprintf("%s_events.log", config.Config.MizuResourcesNamespace)); err != nil {
+		logger.Log.Debugf("Failed write logs, %v", err)
+	} else {
+		logger.Log.Debugf("Successfully added events for k8b namespace: %s", config.Config.MizuResourcesNamespace)
+	}
+
 	if err := AddFileToZip(zipWriter, config.Config.ConfigFilePath); err != nil {
 		logger.Log.Debugf("Failed write file, %v", err)
 	} else {
 		logger.Log.Debugf("Successfully added file %s", config.Config.ConfigFilePath)
 	}
+
 	if err := AddFileToZip(zipWriter, logger.GetLogFilePath()); err != nil {
 		logger.Log.Debugf("Failed write file, %v", err)
 	} else {
 		logger.Log.Debugf("Successfully added file %s", logger.GetLogFilePath())
 	}
+
 	logger.Log.Infof("You can find the zip file with all logs in %s\n", filePath)
 	return nil
 }
