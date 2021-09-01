@@ -25,7 +25,7 @@ type Extension struct {
 	Path       string
 	Plug       *plugin.Plugin
 	Dissector  Dissector
-	MatcherMap sync.Map
+	MatcherMap *sync.Map
 }
 
 type ConnectionInfo struct {

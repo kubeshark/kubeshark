@@ -73,8 +73,12 @@ func (cl *Cleaner) dumpStats() CleanerStats {
 	return stats
 }
 
-func deleteOlderThan(matcherMap sync.Map, t time.Time) int {
+func deleteOlderThan(matcherMap *sync.Map, t time.Time) int {
 	numDeleted := 0
+
+	if matcherMap == nil {
+		return numDeleted
+	}
 
 	matcherMap.Range(func(key interface{}, value interface{}) bool {
 		message, _ := value.(*api.GenericMessage)

@@ -15,11 +15,11 @@ type RequestResponsePair struct {
 
 // Key is {client_addr}:{client_port}->{dest_addr}:{dest_port}::{correlation_id}
 type requestResponseMatcher struct {
-	openMessagesMap sync.Map
+	openMessagesMap *sync.Map
 }
 
 func CreateResponseRequestMatcher() requestResponseMatcher {
-	newMatcher := &requestResponseMatcher{openMessagesMap: sync.Map{}}
+	newMatcher := &requestResponseMatcher{openMessagesMap: &sync.Map{}}
 	return *newMatcher
 }
 

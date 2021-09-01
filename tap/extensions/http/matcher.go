@@ -16,11 +16,11 @@ var reqResMatcher = createResponseRequestMatcher() // global
 
 // Key is {client_addr}:{client_port}->{dest_addr}:{dest_port}_{incremental_counter}
 type requestResponseMatcher struct {
-	openMessagesMap sync.Map
+	openMessagesMap *sync.Map
 }
 
 func createResponseRequestMatcher() requestResponseMatcher {
-	newMatcher := &requestResponseMatcher{openMessagesMap: sync.Map{}}
+	newMatcher := &requestResponseMatcher{openMessagesMap: &sync.Map{}}
 	return *newMatcher
 }
 
