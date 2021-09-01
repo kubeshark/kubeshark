@@ -71,7 +71,6 @@ func TestTapAndFetch(t *testing.T) {
 				}
 
 				entries := requestResult.([]interface{})
-
 				if len(entries) == 0 {
 					return fmt.Errorf("unexpected entries result - Expected more than 0 entries")
 				}
@@ -523,6 +522,10 @@ func TestTapRedact(t *testing.T) {
 		}
 
 		entries := requestResult.([]interface{})
+		if len(entries) == 0 {
+			return fmt.Errorf("unexpected entries result - Expected more than 0 entries")
+		}
+
 		firstEntry :=  entries[0].(map[string]interface{})
 
 		entryUrl := fmt.Sprintf("%v/api/entries/%v", apiServerUrl, firstEntry["id"])
@@ -625,6 +628,10 @@ func TestTapNoRedact(t *testing.T) {
 		}
 
 		entries := requestResult.([]interface{})
+		if len(entries) == 0 {
+			return fmt.Errorf("unexpected entries result - Expected more than 0 entries")
+		}
+
 		firstEntry :=  entries[0].(map[string]interface{})
 
 		entryUrl := fmt.Sprintf("%v/api/entries/%v", apiServerUrl, firstEntry["id"])
@@ -727,6 +734,10 @@ func TestTapRegexMasking(t *testing.T) {
 		}
 
 		entries := requestResult.([]interface{})
+		if len(entries) == 0 {
+			return fmt.Errorf("unexpected entries result - Expected more than 0 entries")
+		}
+
 		firstEntry :=  entries[0].(map[string]interface{})
 
 		entryUrl := fmt.Sprintf("%v/api/entries/%v", apiServerUrl, firstEntry["id"])

@@ -739,6 +739,16 @@ func (provider *Provider) GetPodLogs(namespace string, podName string, ctx conte
 	return str, nil
 }
 
+func (provider *Provider) GetNamespaceEvents(namespace string, ctx context.Context) (string, error) {
+	eventsOpts := metav1.ListOptions{}
+	eventList, err := provider.clientSet.CoreV1().Events(namespace).List(ctx, eventsOpts)
+	if err != nil {
+		return "", fmt.Errorf("error getting events on ns: %s, %w", namespace, err)
+	}
+
+	return eventList.String(), nil
+}
+
 func getClientSet(config *restclient.Config) (*kubernetes.Clientset, error) {
 	clientSet, err := kubernetes.NewForConfig(config)
 	if err != nil {
