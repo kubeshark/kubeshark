@@ -497,7 +497,8 @@ func watchApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 				isPodReady = true
 				go startProxyReportErrorIfAny(kubernetesProvider, cancel)
 
-				if err := apiserver.Provider.InitAndTestConnection(GetApiServerUrl()); err != nil {
+				url := GetApiServerUrl()
+				if err := apiserver.Provider.InitAndTestConnection(url); err != nil {
 					logger.Log.Errorf(uiUtils.Error, "Couldn't connect to API server, check logs")
 					cancel()
 					break
