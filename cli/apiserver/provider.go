@@ -29,7 +29,15 @@ func (provider *apiServerProvider) InitAndTestConnection(url string, retries int
 		if response, err := http.Get(healthUrl); err != nil {
 			logger.Log.Debugf("[ERROR] failed connecting to api server %v", err)
 		} else if response.StatusCode != 200 {
-			logger.Log.Debugf("can't connect to api server yet, response status code %v", response.StatusCode)
+			responseBody := ""
+			data, readErr := ioutil.ReadAll(response.Body)
+			if readErr == nil {
+				responseBody = string(data)
+			}
+
+			logger.Log.Debugf("can't connect to api server yet, response status code: %v, body: %v", response.StatusCode, responseBody)
+
+			response.Body.Close()
 		} else {
 			logger.Log.Debugf("connection test to api server passed successfully")
 			break

@@ -26,6 +26,8 @@ func startProxyReportErrorIfAny(kubernetesProvider *kubernetes.Provider, cancel 
 			"Try setting different port by using --%s", errormessage.FormatError(err), configStructs.GuiPortTapName))
 		cancel()
 	}
+
+	logger.Log.Debugf("done starting proxy")
 }
 
 func waitForFinish(ctx context.Context, cancel context.CancelFunc) {
