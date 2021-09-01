@@ -49,15 +49,15 @@ func DumpLogs(provider *kubernetes.Provider, ctx context.Context, filePath strin
 
 	events, err := provider.GetNamespaceEvents(config.Config.MizuResourcesNamespace, ctx)
 	if err != nil {
-		logger.Log.Errorf("Failed to get events, %v", err)
+		logger.Log.Debugf("Failed to get k8b events, %v", err)
 	} else {
-		logger.Log.Debugf("Successfully read events for namespace: %s", config.Config.MizuResourcesNamespace)
+		logger.Log.Debugf("Successfully read events for k8b namespace: %s", config.Config.MizuResourcesNamespace)
 	}
 
 	if err := AddStrToZip(zipWriter, events, fmt.Sprintf("%s_events.log", config.Config.MizuResourcesNamespace)); err != nil {
-		logger.Log.Errorf("Failed write logs, %v", err)
+		logger.Log.Debugf("Failed write logs, %v", err)
 	} else {
-		logger.Log.Debugf("Successfully added events for namespace: %s", config.Config.MizuResourcesNamespace)
+		logger.Log.Debugf("Successfully added events for k8b namespace: %s", config.Config.MizuResourcesNamespace)
 	}
 
 	if err := AddFileToZip(zipWriter, config.Config.ConfigFilePath); err != nil {

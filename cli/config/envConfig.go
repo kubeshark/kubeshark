@@ -20,7 +20,7 @@ func GetEnvConfig(kind reflect.Kind, key string, defaultValue reflect.Value) ref
 
 	parsedValue, err := getParsedValue(kind, val)
 	if err != nil {
-		logger.Log.Warningf(uiUtils.Warning, fmt.Sprintf("error parsing env value, expected value: %v, key: %v, value: %v", kind, key, val))
+		logger.Log.Warningf(uiUtils.Warning, fmt.Sprintf("error parsing env value, expected value type: %v, key: %v, value: %v", kind, key, val))
 		return defaultValue
 	}
 
