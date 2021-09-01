@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"sync"
 	"time"
 
@@ -97,6 +98,6 @@ func (h *tcpReader) run(wg *sync.WaitGroup) {
 	b := bufio.NewReader(h)
 	err := h.extension.Dissector.Dissect(b, h.isClient, h.tcpID, h.counterPair, h.emitter)
 	if err != nil {
-		io.ReadAll(b)
+		io.Copy(ioutil.Discard, b)
 	}
 }
