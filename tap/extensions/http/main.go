@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net/url"
 
 	"github.com/romana/rlog"
 
@@ -113,6 +114,16 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 	return nil
 }
 
+func SetHostname(address, newHostname string) string {
+	replacedUrl, err := url.Parse(address)
+	if err != nil {
+		log.Printf("error replacing hostname to %s in address %s, returning original %v", newHostname, address, err)
+		return address
+	}
+	replacedUrl.Host = newHostname
+	return replacedUrl.String()
+}
+
 func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolvedSource string, resolvedDestination string) *api.MizuEntry {
 	var host, scheme, authority, path, service string
 
@@ -138,13 +149,18 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolve
 	}
 
 	if item.Protocol.Version == "2.0" {
-		service = fmt.Sprintf("(gRPC) %s://%s", scheme, authority)
+		service = fmt.Sprintf("%s://%s", scheme, authority)
 	} else {
 		service = fmt.Sprintf("http://%s", host)
 		path = reqDetails["url"].(string)
 	}
 
 	request["url"] = path
+	if resolvedDestination != "" {
+		service = SetHostname(service, resolvedDestination)
+	} else if resolvedSource != "" {
+		service = SetHostname(service, resolvedSource)
+	}
 	entryBytes, _ := json.Marshal(item.Pair)
 	return &api.MizuEntry{
 		ProtocolName:        protocol.Name,

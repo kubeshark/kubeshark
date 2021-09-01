@@ -57,6 +57,11 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolve
 	request := item.Pair.Request.Payload.(map[string]interface{})
 	reqDetails := request["details"].(map[string]interface{})
 	service := "kafka"
+	if resolvedDestination != "" {
+		service = resolvedDestination
+	} else if resolvedSource != "" {
+		service = resolvedSource
+	}
 	apiKey := ApiKey(reqDetails["ApiKey"].(float64))
 
 	summary := ""
