@@ -9,7 +9,6 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
-	"fmt"
 	"io"
 	"time"
 )
@@ -56,7 +55,7 @@ func (r *AmqpReader) ReadFrame() (frame frame, err error) {
 	size := binary.BigEndian.Uint32(scratch[3:7])
 
 	if size > 1000000 {
-		return nil, fmt.Errorf("An AMQP message cannot be bigger than 1MB")
+		return nil, ErrMaxSize
 	}
 
 	switch typ {

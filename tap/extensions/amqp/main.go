@@ -83,7 +83,8 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 			// We must read until we see an EOF... very important!
 			return errors.New("AMQP EOF")
 		} else if err != nil {
-			// return err
+			// TODO: Causes ignoring some methods. Return only in case of a certain error. But what?
+			return err
 		}
 
 		switch f := frame.(type) {

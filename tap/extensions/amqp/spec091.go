@@ -44,6 +44,7 @@ const (
 	NotAllowed         = 530
 	NotImplemented     = 540
 	InternalError      = 541
+	MaxSizeError       = 551
 )
 
 func isSoftExceptionCode(code int) bool {
