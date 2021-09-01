@@ -27,7 +27,6 @@ var Provider = apiServerProvider{retries: config.GetIntEnvConfig(config.ApiServe
 func (provider *apiServerProvider) InitAndTestConnection(url string) error {
 	healthUrl := fmt.Sprintf("%s/", url)
 	retriesLeft := provider.retries
-	fmt.Printf("%v", retriesLeft)
 	for retriesLeft > 0 {
 		if response, err := http.Get(healthUrl); err != nil {
 			logger.Log.Debugf("[ERROR] failed connecting to api server %v", err)
