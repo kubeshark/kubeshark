@@ -238,7 +238,6 @@ func updateMizuTappers(ctx context.Context, kubernetesProvider *kubernetes.Provi
 			fmt.Sprintf("%s.%s.svc.cluster.local", state.apiServerService.Name, state.apiServerService.Namespace),
 			nodeToTappedPodIPMap,
 			serviceAccountName,
-			config.Config.Tap.TapOutgoing(),
 			config.Config.Tap.TapperResources,
 			config.Config.ImagePullPolicy(),
 		); err != nil {

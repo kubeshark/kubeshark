@@ -57,11 +57,10 @@ var fname = flag.String("r", "", "Filename to read from, overrides -i")
 var snaplen = flag.Int("s", 65536, "Snap length (number of bytes max to read per packet")
 var tstype = flag.String("timestamp_type", "", "Type of timestamps to use")
 var promisc = flag.Bool("promisc", true, "Set promiscuous mode")
-var anydirection = flag.Bool("anydirection", false, "Capture requests to other hosts")
 var staleTimeoutSeconds = flag.Int("staletimout", 120, "Max time in seconds to keep connections which don't transmit data")
 
 var memprofile = flag.String("memprofile", "", "Write memory profile")
-	
+
 var statsTracker = StatsTracker{}
 
 // global

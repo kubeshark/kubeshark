@@ -36,7 +36,7 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.T
 	// if factory.shouldNotifyOnOutboundLink(dstIp, dstPort) {
 	// 	factory.outboundLinkWriter.WriteOutboundLink(net.Src().String(), dstIp, dstPort, "", "")
 	// }
-	props := factory.getStreamProps(srcIp, dstIp, dstPort)
+	props := factory.getStreamProps(srcIp, srcPort, dstIp, dstPort)
 	isTapTarget := props.isTapTarget
 	stream := &tcpStream{
 		net:         net,
@@ -100,25 +100,26 @@ func (factory *tcpStreamFactory) WaitGoRoutines() {
 	factory.wg.Wait()
 }
 
-func (factory *tcpStreamFactory) getStreamProps(srcIP string, dstIP string, dstPort string) *streamProps {
+func (factory *tcpStreamFactory) getStreamProps(srcIP string, srcPort string, dstIP string, dstPort string) *streamProps {
 	if hostMode {
-		// TODO: Fix `filterAuthorities` logic or value. Default `isTapTarget: true` causes;
-		// RabbitMQ server->client pushes to not show up for example. Where the client is the tapped pod.
 		if inArrayString(gSettings.filterAuthorities, fmt.Sprintf("%s:%s", dstIP, dstPort)) {
 			rlog.Debugf("getStreamProps %s", fmt.Sprintf("+ host1 %s:%s", dstIP, dstPort))
 			return &streamProps{isTapTarget: true, isOutgoing: false}
 		} else if inArrayString(gSettings.filterAuthorities, dstIP) {
 			rlog.Debugf("getStreamProps %s", fmt.Sprintf("+ host2 %s", dstIP))
 			return &streamProps{isTapTarget: true, isOutgoing: false}
-		} else if *anydirection && inArrayString(gSettings.filterAuthorities, srcIP) {
-			rlog.Debugf("getStreamProps %s", fmt.Sprintf("+ host3 %s", srcIP))
+		} else if inArrayString(gSettings.filterAuthorities, fmt.Sprintf("%s:%s", srcIP, srcPort)) {
+			rlog.Debugf("getStreamProps %s", fmt.Sprintf("+ host3 %s:%s", srcIP, srcPort))
+			return &streamProps{isTapTarget: true, isOutgoing: true}
+		} else if inArrayString(gSettings.filterAuthorities, srcIP) {
+			rlog.Debugf("getStreamProps %s", fmt.Sprintf("+ host4 %s", srcIP))
 			return &streamProps{isTapTarget: true, isOutgoing: true}
 		}
-		return &streamProps{isTapTarget: false}
+		return &streamProps{isTapTarget: false, isOutgoing: false}
 	} else {
 		isOutgoing := !inArrayString(ownIps, dstIP)
 
-		if !*anydirection && isOutgoing {
+		if isOutgoing {
 			rlog.Debugf("getStreamProps %s", fmt.Sprintf("- notHost2"))
 			return &streamProps{isTapTarget: false, isOutgoing: isOutgoing}
 		}

@@ -7,11 +7,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/up9inc/mizu/cli/config/configStructs"
-	"github.com/up9inc/mizu/cli/logger"
 	"path/filepath"
 	"regexp"
 	"strconv"
+
+	"github.com/up9inc/mizu/cli/config/configStructs"
+	"github.com/up9inc/mizu/cli/logger"
 
 	"io"
 
@@ -56,21 +57,21 @@ func NewProvider(kubeConfigPath string) (*Provider, error) {
 	restClientConfig, err := kubernetesConfig.ClientConfig()
 	if err != nil {
 		if clientcmd.IsEmptyConfig(err) {
-			return nil, fmt.Errorf("couldn't find the kube config file, or file is empty (%s)\n" +
+			return nil, fmt.Errorf("couldn't find the kube config file, or file is empty (%s)\n"+
 				"you can set alternative kube config file path by adding the kube-config-path field to the mizu config file, err:  %w", kubeConfigPath, err)
 		}
 		if clientcmd.IsConfigurationInvalid(err) {
-			return nil, fmt.Errorf("invalid kube config file (%s)\n" +
+			return nil, fmt.Errorf("invalid kube config file (%s)\n"+
 				"you can set alternative kube config file path by adding the kube-config-path field to the mizu config file, err:  %w", kubeConfigPath, err)
 		}
 
-		return nil, fmt.Errorf("error while using kube config (%s)\n" +
+		return nil, fmt.Errorf("error while using kube config (%s)\n"+
 			"you can set alternative kube config file path by adding the kube-config-path field to the mizu config file, err:  %w", kubeConfigPath, err)
 	}
 
 	clientSet, err := getClientSet(restClientConfig)
 	if err != nil {
-		return nil, fmt.Errorf("error while using kube config (%s)\n" +
+		return nil, fmt.Errorf("error while using kube config (%s)\n"+
 			"you can set alternative kube config file path by adding the kube-config-path field to the mizu config file, err:  %w", kubeConfigPath, err)
 	}
 
@@ -574,7 +575,7 @@ func (provider *Provider) CreateConfigMap(ctx context.Context, namespace string,
 	return nil
 }
 
-func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, apiServerPodIp string, nodeToTappedPodIPMap map[string][]string, serviceAccountName string, tapOutgoing bool, resources configStructs.Resources, imagePullPolicy core.PullPolicy) error {
+func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, apiServerPodIp string, nodeToTappedPodIPMap map[string][]string, serviceAccountName string, resources configStructs.Resources, imagePullPolicy core.PullPolicy) error {
 	logger.Log.Debugf("Applying %d tapper daemon sets, ns: %s, daemonSetName: %s, podImage: %s, tapperPodName: %s", len(nodeToTappedPodIPMap), namespace, daemonSetName, podImage, tapperPodName)
 
 	if len(nodeToTappedPodIPMap) == 0 {
@@ -592,9 +593,6 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 		"--tap",
 		"--api-server-address", fmt.Sprintf("ws://%s/wsTapper", apiServerPodIp),
 		"--nodefrag",
-	}
-	if tapOutgoing {
-		mizuCmd = append(mizuCmd, "--anydirection")
 	}
 
 	agentContainer := applyconfcore.Container()

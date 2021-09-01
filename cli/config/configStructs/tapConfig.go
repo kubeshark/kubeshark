@@ -53,15 +53,6 @@ func (config *TapConfig) PodRegex() *regexp.Regexp {
 	return podRegex
 }
 
-func (config *TapConfig) TapOutgoing() bool {
-	directionLowerCase := strings.ToLower(config.Direction)
-	if directionLowerCase == "any" {
-		return true
-	}
-
-	return false
-}
-
 func (config *TapConfig) MaxEntriesDBSizeBytes() int64 {
 	maxEntriesDBSizeBytes, _ := units.HumanReadableToBytes(config.HumanMaxEntriesDBSize)
 	return maxEntriesDBSizeBytes
