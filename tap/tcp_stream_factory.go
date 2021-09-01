@@ -114,7 +114,7 @@ func (factory *tcpStreamFactory) getStreamProps(srcIP string, dstIP string, dstP
 			rlog.Debugf("getStreamProps %s", fmt.Sprintf("+ host3 %s", srcIP))
 			return &streamProps{isTapTarget: true, isOutgoing: true}
 		}
-		return &streamProps{isTapTarget: true, isOutgoing: false}
+		return &streamProps{isTapTarget: false}
 	} else {
 		isOutgoing := !inArrayString(ownIps, dstIP)
 
