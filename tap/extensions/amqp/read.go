@@ -54,7 +54,7 @@ func (r *AmqpReader) ReadFrame() (frame frame, err error) {
 	channel := binary.BigEndian.Uint16(scratch[1:3])
 	size := binary.BigEndian.Uint32(scratch[3:7])
 
-	if size > 1000000 {
+	if size > 1000000*128 {
 		return nil, ErrMaxSize
 	}
 
@@ -352,6 +352,10 @@ func (r *AmqpReader) parseHeaderFrame(channel uint16, size uint32) (frame frame,
 		return
 	}
 
+	if hf.Size > 512 {
+		return nil, ErrMaxHeaderFrameSize
+	}
+
 	var flags uint16
 
 	if err = binary.Read(r.R, binary.BigEndian, &flags); err != nil {
@@ -439,6 +443,7 @@ func (r *AmqpReader) parseBodyFrame(channel uint16, size uint32) (frame frame, e
 	}
 
 	if _, err = io.ReadFull(r.R, bf.Body); err != nil {
+		bf.Body = nil
 		return nil, err
 	}
 

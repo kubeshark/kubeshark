@@ -18,6 +18,7 @@ import (
 	"os/signal"
 	"runtime"
 	"runtime/pprof"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -168,11 +169,23 @@ func StartPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem, 
 }
 
 func startMemoryProfiler() {
-	dirname := "/app/pprof"
-	rlog.Info("Profiling is on, results will be written to %s", dirname)
+	dumpPath := "/app/pprof"
+	envDumpPath := os.Getenv(MemoryProfilingDumpPath)
+	if envDumpPath != "" {
+		dumpPath = envDumpPath
+	}
+	timeInterval := 60
+	envTimeInterval := os.Getenv(MemoryProfilingTimeIntervalSeconds)
+	if envTimeInterval != "" {
+		if i, err := strconv.Atoi(envTimeInterval); err == nil {
+			timeInterval = i
+		}
+	}
+
+	rlog.Info("Profiling is on, results will be written to %s", dumpPath)
 	go func() {
-		if _, err := os.Stat(dirname); os.IsNotExist(err) {
-			if err := os.Mkdir(dirname, 0777); err != nil {
+		if _, err := os.Stat(dumpPath); os.IsNotExist(err) {
+			if err := os.Mkdir(dumpPath, 0777); err != nil {
 				log.Fatal("could not create directory for profile: ", err)
 			}
 		}
@@ -180,9 +193,9 @@ func startMemoryProfiler() {
 		for true {
 			t := time.Now()
 
-			filename := fmt.Sprintf("%s/%s__mem.prof", dirname, t.Format("15_04_05"))
+			filename := fmt.Sprintf("%s/%s__mem.prof", dumpPath, t.Format("15_04_05"))
 
-			rlog.Info("Writing memory profile to %s\n", filename)
+			rlog.Infof("Writing memory profile to %s\n", filename)
 
 			f, err := os.Create(filename)
 			if err != nil {
@@ -193,7 +206,7 @@ func startMemoryProfiler() {
 				log.Fatal("could not write memory profile: ", err)
 			}
 			_ = f.Close()
-			time.Sleep(time.Minute)
+			time.Sleep(time.Second * time.Duration(timeInterval))
 		}
 	}()
 }

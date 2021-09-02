@@ -60,8 +60,9 @@ var (
 	// ErrFieldType is returned when writing a message containing a Go type unsupported by AMQP.
 	ErrFieldType = &Error{Code: SyntaxError, Reason: "unsupported table field type"}
 
-	// ErrClosed is returned when the channel or connection is not open
-	ErrMaxSize = &Error{Code: MaxSizeError, Reason: "an AMQP message cannot be bigger than 1MB"}
+	ErrMaxSize = &Error{Code: MaxSizeError, Reason: "an AMQP message cannot be bigger than 128MB"}
+
+	ErrMaxHeaderFrameSize = &Error{Code: MaxHeaderFrameSizeError, Reason: "an AMQP header cannot be bigger than 512 bytes"}
 )
 
 // Error captures the code and reason a channel or connection has been closed
