@@ -92,7 +92,7 @@ const App = () => {
                 </table>
 
             </span>
-
+      
     return (
         <div className="mizuApp">
             <div className="header">
@@ -119,8 +119,9 @@ const App = () => {
             </div>
             <TrafficPage setAnalyzeStatus={setAnalyzeStatus} onTLSDetected={onTLSDetected}/>
             <Snackbar open={showTLSWarning && !userDismissedTLSWarning}>
-                <MuiAlert elevation={6} variant="filled" onClose={() => setUserDismissedTLSWarning(true)} severity="warning">
-                    Mizu is detecting TLS traffic{addressesWithTLS.size ? ` (directed to ${Array.from(addressesWithTLS).join(", ")})` : ''}, this type of traffic will not be displayed.
+                <MuiAlert classes={{ filledWarning: 'customWarningStyle' }} elevation={6} variant="filled" onClose={() => setUserDismissedTLSWarning(true)} severity="warning">
+                    Mizu is detecting TLS traffic, this type of traffic will not be displayed.
+                    {addressesWithTLS.size > 0 && <ul className="httpsDomains"> {Array.from(addressesWithTLS, address => <li>{address}</li>)} </ul>}
                 </MuiAlert>
             </Snackbar>
         </div>

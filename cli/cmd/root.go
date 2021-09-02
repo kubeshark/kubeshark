@@ -10,6 +10,7 @@ import (
 	"github.com/up9inc/mizu/cli/mizu/fsUtils"
 	"github.com/up9inc/mizu/cli/mizu/version"
 	"github.com/up9inc/mizu/cli/uiUtils"
+	"time"
 )
 
 var rootCmd = &cobra.Command{
@@ -34,9 +35,12 @@ func init() {
 }
 
 func printNewVersionIfNeeded(versionChan chan string) {
-	versionMsg := <-versionChan
-	if versionMsg != "" {
-		logger.Log.Infof(uiUtils.Yellow, versionMsg)
+	select {
+	case versionMsg := <-versionChan:
+		if versionMsg != "" {
+			logger.Log.Infof(uiUtils.Yellow, versionMsg)
+		}
+	case <-time.After(2 * time.Second):
 	}
 }
 
