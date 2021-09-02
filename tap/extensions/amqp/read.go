@@ -54,7 +54,7 @@ func (r *AmqpReader) ReadFrame() (frame frame, err error) {
 	channel := binary.BigEndian.Uint16(scratch[1:3])
 	size := binary.BigEndian.Uint32(scratch[3:7])
 
-	if size > 1000000*128 {
+	if size > 1000000*16 {
 		return nil, ErrMaxSize
 	}
 

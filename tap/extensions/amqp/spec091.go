@@ -10,7 +10,6 @@ package main
 
 import (
 	"encoding/binary"
-	"fmt"
 	"io"
 )
 
@@ -19,33 +18,35 @@ import (
 // ErrCredentials.  The text of the error is likely more interesting than
 // these constants.
 const (
-	frameMethod             = 1
-	frameHeader             = 2
-	frameBody               = 3
-	frameHeartbeat          = 8
-	frameMinSize            = 4096
-	frameEnd                = 206
-	replySuccess            = 200
-	ContentTooLarge         = 311
-	NoRoute                 = 312
-	NoConsumers             = 313
-	ConnectionForced        = 320
-	InvalidPath             = 402
-	AccessRefused           = 403
-	NotFound                = 404
-	ResourceLocked          = 405
-	PreconditionFailed      = 406
-	FrameError              = 501
-	SyntaxError             = 502
-	CommandInvalid          = 503
-	ChannelError            = 504
-	UnexpectedFrame         = 505
-	ResourceError           = 506
-	NotAllowed              = 530
-	NotImplemented          = 540
-	InternalError           = 541
-	MaxSizeError            = 551
-	MaxHeaderFrameSizeError = 552
+	frameMethod                 = 1
+	frameHeader                 = 2
+	frameBody                   = 3
+	frameHeartbeat              = 8
+	frameMinSize                = 4096
+	frameEnd                    = 206
+	replySuccess                = 200
+	ContentTooLarge             = 311
+	NoRoute                     = 312
+	NoConsumers                 = 313
+	ConnectionForced            = 320
+	InvalidPath                 = 402
+	AccessRefused               = 403
+	NotFound                    = 404
+	ResourceLocked              = 405
+	PreconditionFailed          = 406
+	FrameError                  = 501
+	SyntaxError                 = 502
+	CommandInvalid              = 503
+	ChannelError                = 504
+	UnexpectedFrame             = 505
+	ResourceError               = 506
+	NotAllowed                  = 530
+	NotImplemented              = 540
+	InternalError               = 541
+	MaxSizeError                = 551
+	MaxHeaderFrameSizeError     = 552
+	BadMethodFrameUnknownMethod = 601
+	BadMethodFrameUnknownClass  = 602
 )
 
 func isSoftExceptionCode(code int) bool {
@@ -2855,7 +2856,8 @@ func (r *AmqpReader) parseMethodFrame(channel uint16, size uint32) (f frame, err
 			mf.Method = method
 
 		default:
-			return nil, fmt.Errorf("Bad method frame, unknown method %d for class %d", mf.MethodId, mf.ClassId)
+			// log.Printf("Bad method frame, unknown method %d for class %d", mf.MethodId, mf.ClassId)
+			return nil, ErrBadMethodFrameUnknownMethod
 		}
 
 	case 20: // channel
@@ -2910,7 +2912,8 @@ func (r *AmqpReader) parseMethodFrame(channel uint16, size uint32) (f frame, err
 			mf.Method = method
 
 		default:
-			return nil, fmt.Errorf("Bad method frame, unknown method %d for class %d", mf.MethodId, mf.ClassId)
+			// log.Printf("Bad method frame, unknown method %d for class %d", mf.MethodId, mf.ClassId)
+			return nil, ErrBadMethodFrameUnknownMethod
 		}
 
 	case 40: // exchange
@@ -2981,7 +2984,8 @@ func (r *AmqpReader) parseMethodFrame(channel uint16, size uint32) (f frame, err
 			mf.Method = method
 
 		default:
-			return nil, fmt.Errorf("Bad method frame, unknown method %d for class %d", mf.MethodId, mf.ClassId)
+			// log.Printf("Bad method frame, unknown method %d for class %d", mf.MethodId, mf.ClassId)
+			return nil, ErrBadMethodFrameUnknownMethod
 		}
 
 	case 50: // queue
@@ -3068,7 +3072,8 @@ func (r *AmqpReader) parseMethodFrame(channel uint16, size uint32) (f frame, err
 			mf.Method = method
 
 		default:
-			return nil, fmt.Errorf("Bad method frame, unknown method %d for class %d", mf.MethodId, mf.ClassId)
+			// log.Printf("Bad method frame, unknown method %d for class %d", mf.MethodId, mf.ClassId)
+			return nil, ErrBadMethodFrameUnknownMethod
 		}
 
 	case 60: // basic
@@ -3219,7 +3224,8 @@ func (r *AmqpReader) parseMethodFrame(channel uint16, size uint32) (f frame, err
 			mf.Method = method
 
 		default:
-			return nil, fmt.Errorf("Bad method frame, unknown method %d for class %d", mf.MethodId, mf.ClassId)
+			// log.Printf("Bad method frame, unknown method %d for class %d", mf.MethodId, mf.ClassId)
+			return nil, ErrBadMethodFrameUnknownMethod
 		}
 
 	case 90: // tx
@@ -3274,7 +3280,8 @@ func (r *AmqpReader) parseMethodFrame(channel uint16, size uint32) (f frame, err
 			mf.Method = method
 
 		default:
-			return nil, fmt.Errorf("Bad method frame, unknown method %d for class %d", mf.MethodId, mf.ClassId)
+			// log.Printf("Bad method frame, unknown method %d for class %d", mf.MethodId, mf.ClassId)
+			return nil, ErrBadMethodFrameUnknownMethod
 		}
 
 	case 85: // confirm
@@ -3297,11 +3304,13 @@ func (r *AmqpReader) parseMethodFrame(channel uint16, size uint32) (f frame, err
 			mf.Method = method
 
 		default:
-			return nil, fmt.Errorf("Bad method frame, unknown method %d for class %d", mf.MethodId, mf.ClassId)
+			// log.Printf("Bad method frame, unknown method %d for class %d", mf.MethodId, mf.ClassId)
+			return nil, ErrBadMethodFrameUnknownMethod
 		}
 
 	default:
-		return nil, fmt.Errorf("Bad method frame, unknown class %d", mf.ClassId)
+		// log.Printf("Bad method frame, unknown class %d", mf.ClassId)
+		return nil, ErrBadMethodFrameUnknownClass
 	}
 
 	return mf, nil
