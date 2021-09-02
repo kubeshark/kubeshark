@@ -79,14 +79,13 @@ func handleHTTP1ClientStream(b *bufio.Reader, tcpID *api.TcpID, counterPair *api
 	}
 	counterPair.Request++
 
-	defer req.Body.Close()
 	body, err := ioutil.ReadAll(req.Body)
 	req.Body = io.NopCloser(bytes.NewBuffer(body)) // rewind
 	s := len(body)
 	if err != nil {
 		rlog.Debugf("[HTTP-request-body] stream %s Got body err: %s", tcpID.Ident, err)
 	}
-	if err := defer req.Body.Close(); err != nil {
+	if err := req.Body.Close(); err != nil {
 		rlog.Debugf("[HTTP-request-body-close] stream %s Failed to close request body: %s", tcpID.Ident, err)
 	}
 	encoding := req.Header["Content-Encoding"]
@@ -122,14 +121,13 @@ func handleHTTP1ServerStream(b *bufio.Reader, tcpID *api.TcpID, counterPair *api
 	}
 	counterPair.Response++
 
-	defer res.Body.Close()
 	body, err := ioutil.ReadAll(res.Body)
 	res.Body = io.NopCloser(bytes.NewBuffer(body)) // rewind
 	s := len(body)
 	if err != nil {
 		rlog.Debugf("[HTTP-response-body] HTTP/%s: failed to get body(parsed len:%d): %s", tcpID.Ident, s, err)
 	}
-	if err := defer res.Body.Close(); err != nil {
+	if err := res.Body.Close(); err != nil {
 		rlog.Debugf("[HTTP-response-body-close] HTTP/%s: failed to close body(parsed len:%d): %s", tcpID.Ident, s, err)
 	}
 	sym := ","
