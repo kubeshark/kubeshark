@@ -1,16 +1,17 @@
 package database
 
 import (
+	"log"
+	"os"
+	"strconv"
+	"time"
+
 	"github.com/fsnotify/fsnotify"
 	"github.com/romana/rlog"
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/debounce"
 	"github.com/up9inc/mizu/shared/units"
-	"log"
-	"mizuserver/pkg/models"
-	"os"
-	"strconv"
-	"time"
+	tapApi "github.com/up9inc/mizu/tap/api"
 )
 
 const percentageOfMaxSizeBytesToPrune = 15
@@ -99,7 +100,7 @@ func pruneOldEntries(currentFileSize int64) {
 		if bytesToBeRemoved >= amountOfBytesToTrim {
 			break
 		}
-		var entry models.MizuEntry
+		var entry tapApi.MizuEntry
 		err = DB.ScanRows(rows, &entry)
 		if err != nil {
 			rlog.Errorf("Error scanning db row: %v", err)
@@ -111,7 +112,7 @@ func pruneOldEntries(currentFileSize int64) {
 	}
 
 	if len(entryIdsToRemove) > 0 {
-		GetEntriesTable().Where(entryIdsToRemove).Delete(models.MizuEntry{})
+		GetEntriesTable().Where(entryIdsToRemove).Delete(tapApi.MizuEntry{})
 		// VACUUM causes sqlite to shrink the db file after rows have been deleted, the db file will not shrink without this
 		DB.Exec("VACUUM")
 		rlog.Errorf("Removed %d rows and cleared %s", len(entryIdsToRemove), units.BytesToHumanReadable(bytesToBeRemoved))

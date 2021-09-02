@@ -7,24 +7,29 @@ export enum StatusCodeClassification {
     NEUTRAL = "neutral"
 }
 
-
-interface HAREntryProps {
+interface EntryProps {
     statusCode: number
 }
 
-const StatusCode: React.FC<HAREntryProps> = ({statusCode}) => {
+const StatusCode: React.FC<EntryProps> = ({statusCode}) => {
 
     const classification = getClassification(statusCode)
 
-    return <span className={`${styles[classification]} ${styles.base}`}>{statusCode}</span>
+    return <span
+        title="Status Code"
+        className={`${styles[classification]} ${styles.base}`}>
+            {statusCode}
+    </span>
 };
 
 export function getClassification(statusCode: number): string {
     let classification = StatusCodeClassification.NEUTRAL;
 
-    if (statusCode >= 200 && statusCode <= 399) {
+    // 1 - 16 HTTP/2 (gRPC) status codes
+    // 2xx - 5xx HTTP/1.1 status codes
+    if ((statusCode >= 200 && statusCode <= 399) || statusCode === 0) {
         classification = StatusCodeClassification.SUCCESS;
-    } else if (statusCode >= 400) {
+    } else if (statusCode >= 400 || (statusCode >= 1 && statusCode <= 16)) {
         classification = StatusCodeClassification.FAILURE;
     }
 

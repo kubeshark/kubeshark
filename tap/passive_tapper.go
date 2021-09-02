@@ -18,7 +18,6 @@ import (
 	"os/signal"
 	"runtime"
 	"runtime/pprof"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -31,27 +30,12 @@ import (
 	"github.com/google/gopacket/layers" // pulls in all layers decoders
 	"github.com/google/gopacket/pcap"
 	"github.com/google/gopacket/reassembly"
+	"github.com/up9inc/mizu/tap/api"
 )
 
-const AppPortsEnvVar = "APP_PORTS"
-const maxHTTP2DataLenEnvVar = "HTTP2_DATA_SIZE_LIMIT"
-const maxHTTP2DataLenDefault = 1 * 1024 * 1024 // 1MB
 const cleanPeriod = time.Second * 10
 
 var remoteOnlyOutboundPorts = []int{80, 443}
-
-func parseAppPorts(appPortsList string) []int {
-	ports := make([]int, 0)
-	for _, portStr := range strings.Split(appPortsList, ",") {
-		parsedInt, parseError := strconv.Atoi(portStr)
-		if parseError != nil {
-			log.Printf("Provided app port %v is not a valid number!", portStr)
-		} else {
-			ports = append(ports, parsedInt)
-		}
-	}
-	return ports
-}
 
 var maxcount = flag.Int64("c", -1, "Only grab this many packets, then exit")
 var decoder = flag.String("decoder", "", "Name of the decoder to use (default: guess from capture)")
@@ -65,13 +49,6 @@ var allowmissinginit = flag.Bool("allowmissinginit", true, "Support streams with
 var verbose = flag.Bool("verbose", false, "Be verbose")
 var debug = flag.Bool("debug", false, "Display debug information")
 var quiet = flag.Bool("quiet", false, "Be quiet regarding errors")
-
-// http
-var nohttp = flag.Bool("nohttp", false, "Disable HTTP parsing")
-var output = flag.String("output", "", "Path to create file for HTTP 200 OK responses")
-var writeincomplete = flag.Bool("writeincomplete", false, "Write incomplete response")
-
-var hexdump = flag.Bool("dump", false, "Dump HTTP request/response as hex") // global
 var hexdumppkt = flag.Bool("dumppkt", false, "Dump packet as hex")
 
 // capture
@@ -80,16 +57,10 @@ var fname = flag.String("r", "", "Filename to read from, overrides -i")
 var snaplen = flag.Int("s", 65536, "Snap length (number of bytes max to read per packet")
 var tstype = flag.String("timestamp_type", "", "Type of timestamps to use")
 var promisc = flag.Bool("promisc", true, "Set promiscuous mode")
-var anydirection = flag.Bool("anydirection", false, "Capture http requests to other hosts")
 var staleTimeoutSeconds = flag.Int("staletimout", 120, "Max time in seconds to keep connections which don't transmit data")
 
 var memprofile = flag.String("memprofile", "", "Write memory profile")
 
-// output
-var HarOutputDir = flag.String("hardir", "", "Directory in which to store output har files")
-var harEntriesPerFile = flag.Int("harentriesperfile", 200, "Number of max number of har entries to store in each file")
-
-var reqResMatcher = createResponseRequestMatcher() // global
 var statsTracker = StatsTracker{}
 
 // global
@@ -119,8 +90,9 @@ var outputLevel int
 var errorsMap map[string]uint
 var errorsMapMutex sync.Mutex
 var nErrors uint
-var ownIps []string // global
-var hostMode bool   // global
+var ownIps []string             // global
+var hostMode bool               // global
+var extensions []*api.Extension // global
 
 /* minOutputLevel: Error will be printed only if outputLevel is above this value
  * t:              key for errorsMap (counting errors)
@@ -184,15 +156,15 @@ func (c *Context) GetCaptureInfo() gopacket.CaptureInfo {
 	return c.CaptureInfo
 }
 
-func StartPassiveTapper(opts *TapOpts) (<-chan *OutputChannelItem, <-chan *OutboundLink) {
+func StartPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem, extensionsRef []*api.Extension) {
 	hostMode = opts.HostMode
+	extensions = extensionsRef
 
-	harWriter := NewHarWriter(*HarOutputDir, *harEntriesPerFile)
-	outboundLinkWriter := NewOutboundLinkWriter()
+	if GetMemoryProfilingEnabled() {
+		startMemoryProfiler()
+	}
 
-	go startPassiveTapper(harWriter, outboundLinkWriter)
-
-	return harWriter.OutChan, outboundLinkWriter.OutChan
+	go startPassiveTapper(outputItems)
 }
 
 func startMemoryProfiler() {
@@ -226,7 +198,7 @@ func startMemoryProfiler() {
 	}()
 }
 
-func startPassiveTapper(harWriter *HarWriter, outboundLinkWriter *OutboundLinkWriter) {
+func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
 	log.SetFlags(log.LstdFlags | log.LUTC | log.Lshortfile)
 
 	defer util.Run()()
@@ -247,31 +219,6 @@ func startPassiveTapper(harWriter *HarWriter, outboundLinkWriter *OutboundLinkWr
 	} else {
 		ownIps = localhostIPs
 	}
-
-	appPortsStr := os.Getenv(AppPortsEnvVar)
-	var appPorts []int
-	if appPortsStr == "" {
-		rlog.Info("Received empty/no APP_PORTS env var! only listening to http on port 80!")
-		appPorts = make([]int, 0)
-	} else {
-		appPorts = parseAppPorts(appPortsStr)
-	}
-	SetFilterPorts(appPorts)
-	envVal := os.Getenv(maxHTTP2DataLenEnvVar)
-	if envVal == "" {
-		rlog.Infof("Received empty/no HTTP2_DATA_SIZE_LIMIT env var! falling back to %v", maxHTTP2DataLenDefault)
-		maxHTTP2DataLen = maxHTTP2DataLenDefault
-	} else {
-		if convertedInt, err := strconv.Atoi(envVal); err != nil {
-			rlog.Infof("Received invalid HTTP2_DATA_SIZE_LIMIT env var! falling back to %v", maxHTTP2DataLenDefault)
-			maxHTTP2DataLen = maxHTTP2DataLenDefault
-		} else {
-			rlog.Infof("Received HTTP2_DATA_SIZE_LIMIT env var: %v", maxHTTP2DataLenDefault)
-			maxHTTP2DataLen = convertedInt
-		}
-	}
-
-	log.Printf("App Ports: %v", gSettings.filterPorts)
 
 	var handle *pcap.Handle
 	var err error
@@ -315,10 +262,6 @@ func startPassiveTapper(harWriter *HarWriter, outboundLinkWriter *OutboundLinkWr
 		}
 	}
 
-	harWriter.Start()
-	defer harWriter.Stop()
-	defer outboundLinkWriter.Stop()
-
 	var dec gopacket.Decoder
 	var ok bool
 	decoderName := *decoder
@@ -335,10 +278,12 @@ func startPassiveTapper(harWriter *HarWriter, outboundLinkWriter *OutboundLinkWr
 	statsTracker.setStartTime(time.Now())
 	defragger := ip4defrag.NewIPv4Defragmenter()
 
+	var emitter api.Emitter = &api.Emitting{
+		OutputChannel: outputItems,
+	}
+
 	streamFactory := &tcpStreamFactory{
-		doHTTP:             !*nohttp,
-		harWriter:          harWriter,
-		outbountLinkWriter: outboundLinkWriter,
+		Emitter: emitter,
 	}
 	streamPool := reassembly.NewStreamPool(streamFactory)
 	assembler := reassembly.NewAssembler(streamPool)
@@ -358,7 +303,6 @@ func startPassiveTapper(harWriter *HarWriter, outboundLinkWriter *OutboundLinkWr
 	cleaner := Cleaner{
 		assembler:         assembler,
 		assemblerMutex:    &assemblerMutex,
-		matcher:           &reqResMatcher,
 		cleanPeriod:       cleanPeriod,
 		connectionTimeout: staleConnectionTimeout,
 	}
@@ -387,10 +331,9 @@ func startPassiveTapper(harWriter *HarWriter, outboundLinkWriter *OutboundLinkWr
 			memStats := runtime.MemStats{}
 			runtime.ReadMemStats(&memStats)
 			log.Printf(
-				"mem: %d, goroutines: %d, unmatched messages: %d",
+				"mem: %d, goroutines: %d",
 				memStats.HeapAlloc,
 				runtime.NumGoroutine(),
-				reqResMatcher.openMessagesMap.Count(),
 			)
 
 			// Since the last print

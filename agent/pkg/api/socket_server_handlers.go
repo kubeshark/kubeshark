@@ -8,9 +8,10 @@ import (
 	"mizuserver/pkg/up9"
 	"sync"
 
+	tapApi "github.com/up9inc/mizu/tap/api"
+
 	"github.com/romana/rlog"
 	"github.com/up9inc/mizu/shared"
-	"github.com/up9inc/mizu/tap"
 )
 
 var browserClientSocketUUIDs = make([]int, 0)
@@ -18,7 +19,7 @@ var socketListLock = sync.Mutex{}
 
 type RoutesEventHandlers struct {
 	EventHandlers
-	SocketHarOutChannel chan<- *tap.OutputChannelItem
+	SocketOutChannel chan<- *tapApi.OutputChannelItem
 }
 
 func init() {
@@ -73,7 +74,8 @@ func (h *RoutesEventHandlers) WebSocketMessage(_ int, message []byte) {
 			if err != nil {
 				rlog.Infof("Could not unmarshal message of message type %s %v\n", socketMessageBase.MessageType, err)
 			} else {
-				h.SocketHarOutChannel <- tappedEntryMessage.Data
+				// NOTE: This is where the message comes back from the intermediate WebSocket to code.
+				h.SocketOutChannel <- tappedEntryMessage.Data
 			}
 		case shared.WebSocketMessageTypeUpdateStatus:
 			var statusMessage shared.WebSocketStatusMessage

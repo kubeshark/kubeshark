@@ -1,4 +1,4 @@
-package tap
+package main
 
 import (
 	"bufio"
@@ -17,17 +17,19 @@ import (
 )
 
 const frameHeaderLen = 9
+
 var clientPreface = []byte(http2.ClientPreface)
+
 const initialHeaderTableSize = 4096
 const protoHTTP2 = "HTTP/2.0"
 const protoMajorHTTP2 = 2
 const protoMinorHTTP2 = 0
 
-var maxHTTP2DataLen int = maxHTTP2DataLenDefault // value initialized during init
+var maxHTTP2DataLen = 1 * 1024 * 1024 // 1MB
 
 type messageFragment struct {
 	headers []hpack.HeaderField
-	data []byte
+	data    []byte
 }
 
 type fragmentsByStream map[uint32]*messageFragment
@@ -46,7 +48,7 @@ func (fbs *fragmentsByStream) appendFrame(streamID uint32, frame http2.Frame) {
 		if existingFragment, ok := (*fbs)[streamID]; ok {
 			existingDataLen := len(existingFragment.data)
 			// Never save more than maxHTTP2DataLen bytes
-			numBytesToAppend := int(math.Min(float64(maxHTTP2DataLen - existingDataLen), float64(newDataLen)))
+			numBytesToAppend := int(math.Min(float64(maxHTTP2DataLen-existingDataLen), float64(newDataLen)))
 
 			existingFragment.data = append(existingFragment.data, frame.Data()[:numBytesToAppend]...)
 		} else {
@@ -69,19 +71,19 @@ func (fbs *fragmentsByStream) pop(streamID uint32) ([]hpack.HeaderField, []byte)
 	return headers, data
 }
 
-func createGrpcAssembler(b *bufio.Reader) GrpcAssembler {
+func createGrpcAssembler(b *bufio.Reader) *GrpcAssembler {
 	var framerOutput bytes.Buffer
 	framer := http2.NewFramer(&framerOutput, b)
 	framer.ReadMetaHeaders = hpack.NewDecoder(initialHeaderTableSize, nil)
-	return GrpcAssembler{
+	return &GrpcAssembler{
 		fragmentsByStream: make(fragmentsByStream),
-		framer: framer,
+		framer:            framer,
 	}
 }
 
 type GrpcAssembler struct {
 	fragmentsByStream fragmentsByStream
-	framer *http2.Framer
+	framer            *http2.Framer
 }
 
 func (ga *GrpcAssembler) readMessage() (uint32, interface{}, error) {
@@ -118,26 +120,26 @@ func (ga *GrpcAssembler) readMessage() (uint32, interface{}, error) {
 	var messageHTTP1 interface{}
 	if _, ok := headersHTTP1[":method"]; ok {
 		messageHTTP1 = http.Request{
-			URL: &url.URL{},
-			Method: "POST",
-			Header: headersHTTP1,
-			Proto: protoHTTP2,
-			ProtoMajor: protoMajorHTTP2,
-			ProtoMinor: protoMinorHTTP2,
-			Body: io.NopCloser(strings.NewReader(dataString)),
+			URL:           &url.URL{},
+			Method:        "POST",
+			Header:        headersHTTP1,
+			Proto:         protoHTTP2,
+			ProtoMajor:    protoMajorHTTP2,
+			ProtoMinor:    protoMinorHTTP2,
+			Body:          io.NopCloser(strings.NewReader(dataString)),
 			ContentLength: int64(len(dataString)),
 		}
 	} else if _, ok := headersHTTP1[":status"]; ok {
 		messageHTTP1 = http.Response{
-			Header: headersHTTP1,
-			Proto: protoHTTP2,
-			ProtoMajor: protoMajorHTTP2,
-			ProtoMinor: protoMinorHTTP2,
-			Body: io.NopCloser(strings.NewReader(dataString)),
+			Header:        headersHTTP1,
+			Proto:         protoHTTP2,
+			ProtoMajor:    protoMajorHTTP2,
+			ProtoMinor:    protoMinorHTTP2,
+			Body:          io.NopCloser(strings.NewReader(dataString)),
 			ContentLength: int64(len(dataString)),
 		}
 	} else {
-		return 0, nil, errors.New("Failed to assemble stream: neither a request nor a message")
+		return 0, nil, errors.New("failed to assemble stream: neither a request nor a message")
 	}
 
 	return streamID, messageHTTP1, nil
@@ -225,7 +227,7 @@ func checkClientPreface(b *bufio.Reader) (bool, error) {
 func discardClientPreface(b *bufio.Reader) error {
 	if isClientPrefacePresent, err := checkClientPreface(b); err != nil {
 		return err
-	} else if !isClientPrefacePresent{
+	} else if !isClientPrefacePresent {
 		return errors.New("discardClientPreface: does not begin with client preface")
 	}
 

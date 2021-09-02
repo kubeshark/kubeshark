@@ -2,7 +2,7 @@
 .dockerignore
 .editorconfig
 .gitignore
-.env.*
+**/.env*
 Dockerfile
 Makefile
 LICENSE

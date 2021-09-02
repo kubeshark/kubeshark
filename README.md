@@ -150,7 +150,6 @@ Web interface is now available at http://localhost:8899
 ^C
 
 ```
-
 Any request that contains `User-Agent` header with one of the specified values (`kube-probe` or `prometheus`) will not be captured
 
 ### API Rules validation

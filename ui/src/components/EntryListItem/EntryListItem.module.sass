@@ -1,4 +1,4 @@
-@import 'src/variables.module'
+@import '../../variables.module'
 
 .row
   display: flex
@@ -19,45 +19,20 @@
 
 .rowSelected
   border: 1px $blue-color solid
-  border-left: 5px $blue-color solid
+//   border-left: 5px $blue-color solid
   margin-left: 10px
   margin-right: 3px
 
 .ruleSuccessRow
-  background: #E8FFF1
-
-.ruleSuccessRowSelected
-  border: 1px #6FCF97 solid
-  border-left: 5px #6FCF97 solid
-  margin-left: 10px
-  margin-right: 3px
+  border: 1px $success-color solid
+//   border-left: 5px $success-color solid
 
 .ruleFailureRow
   background: #FFE9EF
 
 .ruleFailureRowSelected
   border: 1px $failure-color solid
-  border-left: 5px $failure-color solid
-  margin-left: 10px
-  margin-right: 3px
-
-.ruleNumberTextFailure
-  color: #DB2156
-  font-family: Source Sans Pro
-  font-style: normal
-  font-weight: 600
-  font-size: 12px
-  line-height: 15px
-  padding-right: 12px
-
-.ruleNumberTextSuccess
-  color: #219653
-  font-family: Source Sans Pro
-  font-style: normal
-  font-weight: 600
-  font-size: 12px
-  line-height: 15px
-  padding-right: 12px
+//   border-left: 5px $failure-color solid
 
 .service
   text-overflow: ellipsis
@@ -73,11 +48,10 @@
 .timestamp
   font-size: 12px
   color: $secondary-font-color
+  padding-left: 12px
   flex-shrink: 0
   width: 145px
   text-align: left
-  border-left: 1px solid $data-background-color
-  padding: 6px 0 6px 12px
 
 .endpointServiceContainer
   display: flex
@@ -89,12 +63,11 @@
 
 .directionContainer
   display: flex
-  padding: 4px 12px 4px 4px
+  border-right: 1px solid $data-background-color
+  padding: 4px
+  padding-right: 12px
 
-.icon
-  height: 14px
-  width: 50px
-  padding: 5px
-  background-color: white
-  border-radius: 15px
-  box-shadow: 1px 1px 9px -4px black
+.port
+  font-size: 12px
+  color: $secondary-font-color
+  margin: 5px

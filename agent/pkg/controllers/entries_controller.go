@@ -16,7 +16,15 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/martian/har"
 	"github.com/romana/rlog"
+
+	tapApi "github.com/up9inc/mizu/tap/api"
 )
+
+var extensionsMap map[string]*tapApi.Extension // global
+
+func InitExtensionsMap(ref map[string]*tapApi.Extension) {
+	extensionsMap = ref
+}
 
 func GetEntries(c *gin.Context) {
 	entriesFilter := &models.EntriesFilter{}
@@ -31,7 +39,7 @@ func GetEntries(c *gin.Context) {
 
 	order := database.OperatorToOrderMapping[entriesFilter.Operator]
 	operatorSymbol := database.OperatorToSymbolMapping[entriesFilter.Operator]
-	var entries []models.MizuEntry
+	var entries []tapApi.MizuEntry
 	database.GetEntriesTable().
 		Order(fmt.Sprintf("timestamp %s", order)).
 		Where(fmt.Sprintf("timestamp %s %v", operatorSymbol, entriesFilter.Timestamp)).
@@ -44,9 +52,9 @@ func GetEntries(c *gin.Context) {
 		utils.ReverseSlice(entries)
 	}
 
-	baseEntries := make([]models.BaseEntryDetails, 0)
+	baseEntries := make([]tapApi.BaseEntryDetails, 0)
 	for _, data := range entries {
-		harEntry := models.BaseEntryDetails{}
+		harEntry := tapApi.BaseEntryDetails{}
 		if err := models.GetEntry(&data, &harEntry); err != nil {
 			continue
 		}
@@ -80,7 +88,7 @@ func GetHARs(c *gin.Context) {
 		timestampTo = entriesFilter.To
 	}
 
-	var entries []models.MizuEntry
+	var entries []tapApi.MizuEntry
 	database.GetEntriesTable().
 		Where(fmt.Sprintf("timestamp BETWEEN %v AND %v", timestampFrom, timestampTo)).
 		Order(fmt.Sprintf("timestamp %s", order)).
@@ -207,7 +215,7 @@ func GetFullEntries(c *gin.Context) {
 }
 
 func GetEntry(c *gin.Context) {
-	var entryData models.MizuEntry
+	var entryData tapApi.MizuEntry
 	database.GetEntriesTable().
 		Where(map[string]string{"entryId": c.Param("entryId")}).
 		First(&entryData)
@@ -219,20 +227,28 @@ func GetEntry(c *gin.Context) {
 			"msg":   "Can't get entry details",
 		})
 	}
-	fullEntryWithPolicy := models.FullEntryWithPolicy{}
-	if err := models.GetEntry(&entryData, &fullEntryWithPolicy); err != nil {
-		c.JSON(http.StatusInternalServerError, map[string]interface{}{
-			"error": true,
-			"msg":   "Can't get entry details",
-		})
-	}
-	c.JSON(http.StatusOK, fullEntryWithPolicy)
+
+	// FIXME: Fix the part below
+	// fullEntryWithPolicy := models.FullEntryWithPolicy{}
+	// if err := models.GetEntry(&entryData, &fullEntryWithPolicy); err != nil {
+	// 	c.JSON(http.StatusInternalServerError, map[string]interface{}{
+	// 		"error": true,
+	// 		"msg":   "Can't get entry details",
+	// 	})
+	// }
+	extension := extensionsMap[entryData.ProtocolName]
+	protocol, representation, _ := extension.Dissector.Represent(&entryData)
+	c.JSON(http.StatusOK, tapApi.MizuEntryWrapper{
+		Protocol:       protocol,
+		Representation: string(representation),
+		Data:           entryData,
+	})
 }
 
 func DeleteAllEntries(c *gin.Context) {
 	database.GetEntriesTable().
 		Where("1 = 1").
-		Delete(&models.MizuEntry{})
+		Delete(&tapApi.MizuEntry{})
 
 	c.JSON(http.StatusOK, map[string]string{
 		"msg": "Success",

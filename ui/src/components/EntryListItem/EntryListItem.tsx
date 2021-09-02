@@ -1,16 +1,31 @@
 import React from "react";
 import styles from './EntryListItem.module.sass';
-import restIcon from '../assets/restIcon.svg';
-import kafkaIcon from '../assets/kafkaIcon.svg';
-import {RestEntry, RestEntryContent} from "./RestEntryContent";
-import {KafkaEntry, KafkaEntryContent} from "./KafkaEntryContent";
+import StatusCode, {getClassification, StatusCodeClassification} from "../UI/StatusCode";
+import Protocol, {ProtocolInterface} from "../UI/Protocol"
+import {EndpointPath} from "../UI/EndpointPath";
+import ingoingIconSuccess from "../assets/ingoing-traffic-success.svg"
+import ingoingIconFailure from "../assets/ingoing-traffic-failure.svg"
+import ingoingIconNeutral from "../assets/ingoing-traffic-neutral.svg"
+import outgoingIconSuccess from "../assets/outgoing-traffic-success.svg"
+import outgoingIconFailure from "../assets/outgoing-traffic-failure.svg"
+import outgoingIconNeutral from "../assets/outgoing-traffic-neutral.svg"
 
-export interface BaseEntry {
-    type: string;
+interface Entry {
+    protocol: ProtocolInterface,
+    method?: string,
+    summary: string,
+    service: string,
+    id: string,
+    status_code?: number;
+    url?: string;
     timestamp: Date;
-    id: string;
-    rules: Rules;
+    source_ip: string,
+    source_port: string,
+    destination_ip: string,
+    destination_port: string,
+	isOutgoing?: boolean;
     latency: number;
+    rules: Rules;
 }
 
 interface Rules {
@@ -20,66 +35,100 @@ interface Rules {
 }
 
 interface EntryProps {
-    entry: RestEntry | KafkaEntry | any;
-    setFocusedEntry: (entry: RestEntry | KafkaEntry) => void;
+    entry: Entry;
+    setFocusedEntryId: (id: string) => void;
     isSelected?: boolean;
 }
 
-export enum EntryType {
-    Rest = "rest",
-    Kafka = "kafka"
-}
-
-export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntry, isSelected}) => {
-
-    let additionalRulesProperties = "";
+export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, isSelected}) => {
+    const classification = getClassification(entry.status_code)
+    let ingoingIcon;
+    let outgoingIcon;
+    switch(classification) {
+        case StatusCodeClassification.SUCCESS: {
+            ingoingIcon = ingoingIconSuccess;
+            outgoingIcon = outgoingIconSuccess;
+            break;
+        }
+        case StatusCodeClassification.FAILURE: {
+            ingoingIcon = ingoingIconFailure;
+            outgoingIcon = outgoingIconFailure;
+            break;
+        }
+        case StatusCodeClassification.NEUTRAL: {
+            ingoingIcon = ingoingIconNeutral;
+            outgoingIcon = outgoingIconNeutral;
+            break;
+        }
+    }
+    // let additionalRulesProperties = "";
+    // let ruleSuccess: boolean;
     let rule = 'latency' in entry.rules
     if (rule) {
         if (entry.rules.latency !== -1) {
             if (entry.rules.latency >= entry.latency) {
-                additionalRulesProperties = styles.ruleSuccessRow
+                // additionalRulesProperties = styles.ruleSuccessRow
+                // ruleSuccess = true
             } else {
-                additionalRulesProperties = styles.ruleFailureRow
+                // additionalRulesProperties = styles.ruleFailureRow
+                // ruleSuccess = false
             }
             if (isSelected) {
-                additionalRulesProperties += ` ${entry.rules.latency >= entry.latency ? styles.ruleSuccessRowSelected : styles.ruleFailureRowSelected}`
+                // additionalRulesProperties += ` ${entry.rules.latency >= entry.latency ? styles.ruleSuccessRowSelected : styles.ruleFailureRowSelected}`
             }
         } else {
             if (entry.rules.status) {
-                additionalRulesProperties = styles.ruleSuccessRow
+                // additionalRulesProperties = styles.ruleSuccessRow
+                // ruleSuccess = true
             } else {
-                additionalRulesProperties = styles.ruleFailureRow
+                // additionalRulesProperties = styles.ruleFailureRow
+                // ruleSuccess = false
             }
             if (isSelected) {
-                additionalRulesProperties += ` ${entry.rules.status ? styles.ruleSuccessRowSelected : styles.ruleFailureRowSelected}`
+                // additionalRulesProperties += ` ${entry.rules.status ? styles.ruleSuccessRowSelected : styles.ruleFailureRowSelected}`
             }
         }
     }
-
-    let icon, content;
-
-    switch (entry.type) {
-        case EntryType.Rest:
-            content = <RestEntryContent entry={entry}/>;
-            icon = restIcon;
-            break;
-        case EntryType.Kafka:
-            content = <KafkaEntryContent entry={entry}/>;
-            icon = kafkaIcon;
-            break;
-        default:
-            content = <RestEntryContent entry={entry}/>;
-            icon = restIcon;
-            break;
+    let backgroundColor = "";
+    if ('latency' in entry.rules) {
+        if (entry.rules.latency !== -1) {
+            backgroundColor = entry.rules.latency >= entry.latency ? styles.ruleSuccessRow : styles.ruleFailureRow
+        } else {
+            backgroundColor = entry.rules.status ? styles.ruleSuccessRow : styles.ruleFailureRow
+        }
     }
-
     return <>
-        <div id={entry.id} className={`${styles.row} ${isSelected && !rule ? styles.rowSelected : additionalRulesProperties}`}
-             onClick={() => setFocusedEntry(entry)}>
-            {icon && <div style={{width: 80}}>{<img className={styles.icon} alt="icon" src={icon}/>}</div>}
-            {content}
-            <div className={styles.timestamp}>{new Date(+entry.timestamp)?.toLocaleString()}</div>
+        <div
+            id={entry.id}
+            className={`${styles.row}
+            ${isSelected ? styles.rowSelected : backgroundColor}`}
+            onClick={() => setFocusedEntryId(entry.id)}
+            style={{border: isSelected ? `1px ${entry.protocol.background_color} solid` : "1px transparent solid"}}
+        >
+            <Protocol protocol={entry.protocol} horizontal={false}/>
+            {((entry.protocol.name === "http" && "status_code" in entry) || entry.status_code !== 0) && <div>
+                <StatusCode statusCode={entry.status_code}/>
+            </div>}
+            <div className={styles.endpointServiceContainer}>
+                <EndpointPath method={entry.method} path={entry.summary}/>
+                <div className={styles.service}>
+                    <span title="Service Name">{entry.service}</span>
+                </div>
+            </div>
+            <div className={styles.directionContainer}>
+                <span className={styles.port} title="Source Port">{entry.source_port}</span>
+                {entry.isOutgoing ?
+                    <img src={outgoingIcon} alt="Ingoing traffic" title="Ingoing"/>
+                    :
+                    <img src={ingoingIcon} alt="Outgoing traffic" title="Outgoing"/>
+                }
+                <span className={styles.port} title="Destination Port">{entry.destination_port}</span>
+            </div>
+            <div className={styles.timestamp}>
+                <span title="Timestamp">
+                    {new Date(+entry.timestamp)?.toLocaleString()}
+                </span>
+            </div>
         </div>
     </>
 };
-

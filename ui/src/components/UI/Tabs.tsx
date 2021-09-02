@@ -16,6 +16,7 @@ interface Props {
     classes?: any,
     tabs: Tab[],
     currentTab: string,
+    color: string,
     onChange: (string) => void,
     leftAligned?: boolean,
     dark?: boolean,
@@ -28,7 +29,7 @@ const useTabsStyles = makeStyles((theme) => ({
         paddingTop: 15
     },
 
-    tab: { 
+    tab: {
         display: 'inline-block',
         textTransform: 'uppercase',
         color: variables.blueColor,
@@ -71,7 +72,7 @@ const useTabsStyles = makeStyles((theme) => ({
 }));
 
 
-const Tabs: React.FC<Props> = ({classes={}, tabs, currentTab, onChange, leftAligned, dark}) => {
+const Tabs: React.FC<Props> = ({classes={}, tabs, currentTab, color, onChange, leftAligned, dark}) => {
     const _classes = {...useTabsStyles(), ...classes};
     return <div className={`${_classes.root} ${leftAligned ? _classes.tabsAlignLeft : ''}`}>
         {tabs.filter((tab) => !tab.hidden).map(({tab, disabled, disabledMessage, highlight, badge}, index) => {
@@ -80,6 +81,7 @@ const Tabs: React.FC<Props> = ({classes={}, tabs, currentTab, onChange, leftAlig
                 key={tab}
                 className={`${_classes.tab} ${active ? _classes.active : ''} ${disabled ? _classes.disabled : ''} ${highlight ? _classes.highlight : ''} ${dark ? 'dark' : ''}`}
                 onClick={() => !disabled && onChange(tab)}
+                style={{color: color}}
             >
                 {tab}
 

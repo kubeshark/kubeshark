@@ -2,16 +2,18 @@ package database
 
 import (
 	"fmt"
+	"mizuserver/pkg/utils"
+	"time"
+
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
-	"mizuserver/pkg/models"
-	"mizuserver/pkg/utils"
-	"time"
+
+	tapApi "github.com/up9inc/mizu/tap/api"
 )
 
 const (
-	DBPath = "./entries.db"
+	DBPath    = "./entries.db"
 	OrderDesc = "desc"
 	OrderAsc  = "asc"
 	LT        = "lt"
@@ -19,8 +21,8 @@ const (
 )
 
 var (
-	DB *gorm.DB
-	IsDBLocked = false
+	DB                      *gorm.DB
+	IsDBLocked              = false
 	OperatorToSymbolMapping = map[string]string{
 		LT: "<",
 		GT: ">",
@@ -40,7 +42,7 @@ func GetEntriesTable() *gorm.DB {
 	return DB.Table("mizu_entries")
 }
 
-func CreateEntry(entry *models.MizuEntry) {
+func CreateEntry(entry *tapApi.MizuEntry) {
 	if IsDBLocked {
 		return
 	}
@@ -51,14 +53,13 @@ func initDataBase(databasePath string) *gorm.DB {
 	temp, _ := gorm.Open(sqlite.Open(databasePath), &gorm.Config{
 		Logger: &utils.TruncatingLogger{LogLevel: logger.Warn, SlowThreshold: 500 * time.Millisecond},
 	})
-	_ = temp.AutoMigrate(&models.MizuEntry{}) // this will ensure table is created
+	_ = temp.AutoMigrate(&tapApi.MizuEntry{}) // this will ensure table is created
 	return temp
 }
 
-
-func GetEntriesFromDb(timestampFrom int64, timestampTo int64) []models.MizuEntry {
+func GetEntriesFromDb(timestampFrom int64, timestampTo int64) []tapApi.MizuEntry {
 	order := OrderDesc
-	var entries []models.MizuEntry
+	var entries []tapApi.MizuEntry
 	GetEntriesTable().
 		Where(fmt.Sprintf("timestamp BETWEEN %v AND %v", timestampFrom, timestampTo)).
 		Order(fmt.Sprintf("timestamp %s", order)).
@@ -70,4 +71,3 @@ func GetEntriesFromDb(timestampFrom int64, timestampTo int64) []models.MizuEntry
 	}
 	return entries
 }
-

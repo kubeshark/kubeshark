@@ -2,7 +2,6 @@ package tap
 
 import (
 	"encoding/binary"
-	"encoding/hex"
 	"fmt"
 	"sync"
 
@@ -14,7 +13,7 @@ import (
 /* It's a connection (bidirectional)
  * Implements gopacket.reassembly.Stream interface (Accept, ReassembledSG, ReassemblyComplete)
  * ReassembledSG gets called when new reassembled data is ready (i.e. bytes in order, no duplicates, complete)
- * In our implementation, we pass information from ReassembledSG to the httpReader through a shared channel.
+ * In our implementation, we pass information from ReassembledSG to the tcpReader through a shared channel.
  */
 type tcpStream struct {
 	tcpstate       *reassembly.TCPSimpleFSM
@@ -22,10 +21,9 @@ type tcpStream struct {
 	optchecker     reassembly.TCPOptionCheck
 	net, transport gopacket.Flow
 	isDNS          bool
-	isHTTP         bool
-	reversed       bool
-	client         httpReader
-	server         httpReader
+	isTapTarget    bool
+	clients        []tcpReader
+	servers        []tcpReader
 	urls           []string
 	ident          string
 	sync.Mutex
@@ -141,18 +139,19 @@ func (t *tcpStream) ReassembledSG(sg reassembly.ScatterGather, ac reassembly.Ass
 		if len(data) > 2+int(dnsSize) {
 			sg.KeepFrom(2 + int(dnsSize))
 		}
-	} else if t.isHTTP {
+	} else if t.isTapTarget {
 		if length > 0 {
-			if *hexdump {
-				Trace("Feeding http with:%s", hex.Dump(data))
-			}
 			// This is where we pass the reassembled information onwards
-			// This channel is read by an httpReader object
+			// This channel is read by an tcpReader object
 			statsTracker.incReassembledTcpPayloadsCount()
-			if dir == reassembly.TCPDirClientToServer && !t.reversed {
-				t.client.msgQueue <- httpReaderDataMsg{data, ac.GetCaptureInfo().Timestamp}
+			if dir == reassembly.TCPDirClientToServer {
+				for _, reader := range t.clients {
+					reader.msgQueue <- tcpReaderDataMsg{data, ac.GetCaptureInfo().Timestamp}
+				}
 			} else {
-				t.server.msgQueue <- httpReaderDataMsg{data, ac.GetCaptureInfo().Timestamp}
+				for _, reader := range t.servers {
+					reader.msgQueue <- tcpReaderDataMsg{data, ac.GetCaptureInfo().Timestamp}
+				}
 			}
 		}
 	}
@@ -160,9 +159,13 @@ func (t *tcpStream) ReassembledSG(sg reassembly.ScatterGather, ac reassembly.Ass
 
 func (t *tcpStream) ReassemblyComplete(ac reassembly.AssemblerContext) bool {
 	Trace("%s: Connection closed", t.ident)
-	if t.isHTTP {
-		close(t.client.msgQueue)
-		close(t.server.msgQueue)
+	if t.isTapTarget {
+		for _, reader := range t.clients {
+			close(reader.msgQueue)
+		}
+		for _, reader := range t.servers {
+			close(reader.msgQueue)
+		}
 	}
 	// do not remove the connection to allow last ACK
 	return false
