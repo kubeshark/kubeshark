@@ -214,9 +214,7 @@ func (d dissecting) Summarize(entry *api.MizuEntry) *api.BaseEntryDetails {
 	}
 }
 
-func representRequest(request map[string]interface{}) []interface{} {
-	repRequest := make([]interface{}, 0)
-
+func representRequest(request map[string]interface{}) (repRequest []interface{}) {
 	details, _ := json.Marshal([]map[string]string{
 		{
 			"name":  "Method",
@@ -299,11 +297,13 @@ func representRequest(request map[string]interface{}) []interface{} {
 		}
 	}
 
-	return repRequest
+	return
 }
 
-func representResponse(response map[string]interface{}) []interface{} {
-	repResponse := make([]interface{}, 0)
+func representResponse(response map[string]interface{}) (repResponse []interface{}, bodySize int64) {
+	repResponse = make([]interface{}, 0)
+
+	bodySize = int64(response["bodySize"].(float64))
 
 	details, _ := json.Marshal([]map[string]string{
 		{
@@ -316,7 +316,7 @@ func representResponse(response map[string]interface{}) []interface{} {
 		},
 		{
 			"name":  "Body Size",
-			"value": fmt.Sprintf("%g bytes", response["bodySize"].(float64)),
+			"value": fmt.Sprintf("%d bytes", bodySize),
 		},
 	})
 	repResponse = append(repResponse, map[string]string{
@@ -356,11 +356,10 @@ func representResponse(response map[string]interface{}) []interface{} {
 		})
 	}
 
-	return repResponse
+	return
 }
 
-func (d dissecting) Represent(entry *api.MizuEntry) (api.Protocol, []byte, error) {
-	var p api.Protocol
+func (d dissecting) Represent(entry *api.MizuEntry) (p api.Protocol, object []byte, bodySize int64, err error) {
 	if entry.ProtocolVersion == "2.0" {
 		p = http2Protocol
 	} else {
@@ -374,11 +373,11 @@ func (d dissecting) Represent(entry *api.MizuEntry) (api.Protocol, []byte, error
 	reqDetails := request["details"].(map[string]interface{})
 	resDetails := response["details"].(map[string]interface{})
 	repRequest := representRequest(reqDetails)
-	repResponse := representResponse(resDetails)
+	repResponse, bodySize := representResponse(resDetails)
 	representation["request"] = repRequest
 	representation["response"] = repResponse
-	object, err := json.Marshal(representation)
-	return p, object, err
+	object, err = json.Marshal(representation)
+	return
 }
 
 var Dissector dissecting

@@ -32,7 +32,7 @@ interface EntryDetailedProps {
 
 export const formatSize = (n: number) => n > 1000 ? `${Math.round(n / 1000)}KB` : `${n} B`;
 
-const EntryTitle: React.FC<any> = ({protocol, data}) => {
+const EntryTitle: React.FC<any> = ({protocol, data, bodySize}) => {
     const classes = useStyles();
     const {response} = JSON.parse(data.entry);
 
@@ -40,7 +40,7 @@ const EntryTitle: React.FC<any> = ({protocol, data}) => {
     return <div className={classes.entryTitle}>
         <Protocol protocol={protocol} horizontal={true}/>
         <div style={{right: "30px", position: "absolute", display: "flex"}}>
-            {response.payload && <div style={{margin: "0 18px", opacity: 0.5}}>{formatSize(response.payload.bodySize)}</div>}
+            {response.payload && <div style={{margin: "0 18px", opacity: 0.5}}>{formatSize(bodySize)}</div>}
             <div style={{opacity: 0.5}}>{'rulesMatched' in data ? data.rulesMatched?.length : '0'} Rules Applied</div>
         </div>
     </div>;
@@ -63,7 +63,7 @@ const EntrySummary: React.FC<any> = ({data}) => {
 
 export const EntryDetailed: React.FC<EntryDetailedProps> = ({entryData}) => {
     return <>
-        <EntryTitle protocol={entryData.protocol} data={entryData.data}/>
+        <EntryTitle protocol={entryData.protocol} data={entryData.data} bodySize={entryData.body_size}/>
         {entryData.data && <EntrySummary data={entryData.data}/>}
         <>
             {entryData.data && <EntryViewer representation={entryData.representation} color={entryData.protocol.background_color}/>}

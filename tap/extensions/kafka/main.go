@@ -178,7 +178,9 @@ func (d dissecting) Summarize(entry *api.MizuEntry) *api.BaseEntryDetails {
 	}
 }
 
-func (d dissecting) Represent(entry *api.MizuEntry) (api.Protocol, []byte, error) {
+func (d dissecting) Represent(entry *api.MizuEntry) (p api.Protocol, object []byte, bodySize int64, err error) {
+	p = _protocol
+	bodySize = 0
 	var root map[string]interface{}
 	json.Unmarshal([]byte(entry.Entry), &root)
 	representation := make(map[string]interface{}, 0)
@@ -224,8 +226,8 @@ func (d dissecting) Represent(entry *api.MizuEntry) (api.Protocol, []byte, error
 
 	representation["request"] = repRequest
 	representation["response"] = repResponse
-	object, err := json.Marshal(representation)
-	return _protocol, object, err
+	object, err = json.Marshal(representation)
+	return
 }
 
 var Dissector dissecting

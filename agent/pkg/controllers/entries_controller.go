@@ -237,10 +237,11 @@ func GetEntry(c *gin.Context) {
 	// 	})
 	// }
 	extension := extensionsMap[entryData.ProtocolName]
-	protocol, representation, _ := extension.Dissector.Represent(&entryData)
+	protocol, representation, bodySize, _ := extension.Dissector.Represent(&entryData)
 	c.JSON(http.StatusOK, tapApi.MizuEntryWrapper{
 		Protocol:       protocol,
 		Representation: string(representation),
+		BodySize:       bodySize,
 		Data:           entryData,
 	})
 }
