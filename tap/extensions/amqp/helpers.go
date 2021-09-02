@@ -93,10 +93,10 @@ type AMQPWrapper struct {
 	Details interface{} `json:"details"`
 }
 
-func emitAMQP(event interface{}, _type string, method string, connectionInfo *api.ConnectionInfo, emitter api.Emitter) {
+func emitAMQP(event interface{}, _type string, method string, connectionInfo *api.ConnectionInfo, captureTime time.Time, emitter api.Emitter) {
 	request := &api.GenericMessage{
 		IsRequest:   true,
-		CaptureTime: time.Now(),
+		CaptureTime: captureTime,
 		Payload: AMQPPayload{
 			Data: &AMQPWrapper{
 				Method:  method,
@@ -107,7 +107,7 @@ func emitAMQP(event interface{}, _type string, method string, connectionInfo *ap
 	}
 	item := &api.OutputChannelItem{
 		Protocol:       protocol,
-		Timestamp:      time.Now().UnixNano() / int64(time.Millisecond),
+		Timestamp:      captureTime.UnixNano() / int64(time.Millisecond),
 		ConnectionInfo: connectionInfo,
 		Pair: &api.RequestResponsePair{
 			Request:  *request,

@@ -41,7 +41,7 @@ func (d dissecting) Ping() {
 
 const amqpRequest string = "amqp_request"
 
-func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, counterPair *api.CounterPair, emitter api.Emitter) error {
+func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, emitter api.Emitter) error {
 	r := AmqpReader{b}
 
 	var remaining int
@@ -110,10 +110,10 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 			switch lastMethodFrameMessage.(type) {
 			case *BasicPublish:
 				eventBasicPublish.Body = f.Body
-				emitAMQP(*eventBasicPublish, amqpRequest, basicMethodMap[40], connectionInfo, emitter)
+				emitAMQP(*eventBasicPublish, amqpRequest, basicMethodMap[40], connectionInfo, superTimer.CaptureTime, emitter)
 			case *BasicDeliver:
 				eventBasicDeliver.Body = f.Body
-				emitAMQP(*eventBasicDeliver, amqpRequest, basicMethodMap[60], connectionInfo, emitter)
+				emitAMQP(*eventBasicDeliver, amqpRequest, basicMethodMap[60], connectionInfo, superTimer.CaptureTime, emitter)
 			default:
 			}
 
@@ -134,7 +134,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 					NoWait:     m.NoWait,
 					Arguments:  m.Arguments,
 				}
-				emitAMQP(*eventQueueBind, amqpRequest, queueMethodMap[20], connectionInfo, emitter)
+				emitAMQP(*eventQueueBind, amqpRequest, queueMethodMap[20], connectionInfo, superTimer.CaptureTime, emitter)
 
 			case *BasicConsume:
 				eventBasicConsume := &BasicConsume{
@@ -146,7 +146,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 					NoWait:      m.NoWait,
 					Arguments:   m.Arguments,
 				}
-				emitAMQP(*eventBasicConsume, amqpRequest, basicMethodMap[20], connectionInfo, emitter)
+				emitAMQP(*eventBasicConsume, amqpRequest, basicMethodMap[20], connectionInfo, superTimer.CaptureTime, emitter)
 
 			case *BasicDeliver:
 				eventBasicDeliver.ConsumerTag = m.ConsumerTag
@@ -165,7 +165,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 					NoWait:     m.NoWait,
 					Arguments:  m.Arguments,
 				}
-				emitAMQP(*eventQueueDeclare, amqpRequest, queueMethodMap[10], connectionInfo, emitter)
+				emitAMQP(*eventQueueDeclare, amqpRequest, queueMethodMap[10], connectionInfo, superTimer.CaptureTime, emitter)
 
 			case *ExchangeDeclare:
 				eventExchangeDeclare := &ExchangeDeclare{
@@ -178,7 +178,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 					NoWait:     m.NoWait,
 					Arguments:  m.Arguments,
 				}
-				emitAMQP(*eventExchangeDeclare, amqpRequest, exchangeMethodMap[10], connectionInfo, emitter)
+				emitAMQP(*eventExchangeDeclare, amqpRequest, exchangeMethodMap[10], connectionInfo, superTimer.CaptureTime, emitter)
 
 			case *ConnectionStart:
 				eventConnectionStart := &ConnectionStart{
@@ -188,7 +188,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 					Mechanisms:       m.Mechanisms,
 					Locales:          m.Locales,
 				}
-				emitAMQP(*eventConnectionStart, amqpRequest, connectionMethodMap[10], connectionInfo, emitter)
+				emitAMQP(*eventConnectionStart, amqpRequest, connectionMethodMap[10], connectionInfo, superTimer.CaptureTime, emitter)
 
 			case *ConnectionClose:
 				eventConnectionClose := &ConnectionClose{
@@ -197,7 +197,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 					ClassId:   m.ClassId,
 					MethodId:  m.MethodId,
 				}
-				emitAMQP(*eventConnectionClose, amqpRequest, connectionMethodMap[50], connectionInfo, emitter)
+				emitAMQP(*eventConnectionClose, amqpRequest, connectionMethodMap[50], connectionInfo, superTimer.CaptureTime, emitter)
 
 			default:
 
@@ -264,6 +264,7 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolve
 		RequestSenderIp:     item.ConnectionInfo.ClientIP,
 		Service:             service,
 		Timestamp:           item.Timestamp,
+		ElapsedTime:         0,
 		Path:                summary,
 		ResolvedSource:      resolvedSource,
 		ResolvedDestination: resolvedDestination,

@@ -7,14 +7,13 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
-	"time"
 
 	"github.com/romana/rlog"
 
 	"github.com/up9inc/mizu/tap/api"
 )
 
-func handleHTTP2Stream(grpcAssembler *GrpcAssembler, tcpID *api.TcpID, emitter api.Emitter) error {
+func handleHTTP2Stream(grpcAssembler *GrpcAssembler, tcpID *api.TcpID, superTimer *api.SuperTimer, emitter api.Emitter) error {
 	streamID, messageHTTP1, err := grpcAssembler.readMessage()
 	if err != nil {
 		return err
@@ -32,7 +31,7 @@ func handleHTTP2Stream(grpcAssembler *GrpcAssembler, tcpID *api.TcpID, emitter a
 			tcpID.DstPort,
 			streamID,
 		)
-		item = reqResMatcher.registerRequest(ident, &messageHTTP1, time.Now())
+		item = reqResMatcher.registerRequest(ident, &messageHTTP1, superTimer.CaptureTime)
 		if item != nil {
 			item.ConnectionInfo = &api.ConnectionInfo{
 				ClientIP:   tcpID.SrcIP,
@@ -51,7 +50,7 @@ func handleHTTP2Stream(grpcAssembler *GrpcAssembler, tcpID *api.TcpID, emitter a
 			tcpID.SrcPort,
 			streamID,
 		)
-		item = reqResMatcher.registerResponse(ident, &messageHTTP1, time.Now())
+		item = reqResMatcher.registerResponse(ident, &messageHTTP1, superTimer.CaptureTime)
 		if item != nil {
 			item.ConnectionInfo = &api.ConnectionInfo{
 				ClientIP:   tcpID.DstIP,
@@ -71,7 +70,7 @@ func handleHTTP2Stream(grpcAssembler *GrpcAssembler, tcpID *api.TcpID, emitter a
 	return nil
 }
 
-func handleHTTP1ClientStream(b *bufio.Reader, tcpID *api.TcpID, counterPair *api.CounterPair, emitter api.Emitter) error {
+func handleHTTP1ClientStream(b *bufio.Reader, tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, emitter api.Emitter) error {
 	req, err := http.ReadRequest(b)
 	if err != nil {
 		// log.Println("Error reading stream:", err)
@@ -99,7 +98,7 @@ func handleHTTP1ClientStream(b *bufio.Reader, tcpID *api.TcpID, counterPair *api
 		tcpID.DstPort,
 		counterPair.Request,
 	)
-	item := reqResMatcher.registerRequest(ident, req, time.Now())
+	item := reqResMatcher.registerRequest(ident, req, superTimer.CaptureTime)
 	if item != nil {
 		item.ConnectionInfo = &api.ConnectionInfo{
 			ClientIP:   tcpID.SrcIP,
@@ -113,7 +112,7 @@ func handleHTTP1ClientStream(b *bufio.Reader, tcpID *api.TcpID, counterPair *api
 	return nil
 }
 
-func handleHTTP1ServerStream(b *bufio.Reader, tcpID *api.TcpID, counterPair *api.CounterPair, emitter api.Emitter) error {
+func handleHTTP1ServerStream(b *bufio.Reader, tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, emitter api.Emitter) error {
 	res, err := http.ReadResponse(b, nil)
 	if err != nil {
 		// log.Println("Error reading stream:", err)
@@ -149,7 +148,7 @@ func handleHTTP1ServerStream(b *bufio.Reader, tcpID *api.TcpID, counterPair *api
 		tcpID.SrcPort,
 		counterPair.Response,
 	)
-	item := reqResMatcher.registerResponse(ident, res, time.Now())
+	item := reqResMatcher.registerResponse(ident, res, superTimer.CaptureTime)
 	if item != nil {
 		item.ConnectionInfo = &api.ConnectionInfo{
 			ClientIP:   tcpID.DstIP,

@@ -68,10 +68,14 @@ type OutputChannelItem struct {
 	Pair           *RequestResponsePair
 }
 
+type SuperTimer struct {
+	CaptureTime time.Time
+}
+
 type Dissector interface {
 	Register(*Extension)
 	Ping()
-	Dissect(b *bufio.Reader, isClient bool, tcpID *TcpID, counterPair *CounterPair, emitter Emitter) error
+	Dissect(b *bufio.Reader, isClient bool, tcpID *TcpID, counterPair *CounterPair, superTimer *SuperTimer, emitter Emitter) error
 	Analyze(item *OutputChannelItem, entryId string, resolvedSource string, resolvedDestination string) *MizuEntry
 	Summarize(entry *MizuEntry) *BaseEntryDetails
 	Represent(entry *MizuEntry) (protocol Protocol, object []byte, bodySize int64, err error)
@@ -103,6 +107,7 @@ type MizuEntry struct {
 	RequestSenderIp     string `json:"requestSenderIp" gorm:"column:requestSenderIp"`
 	Service             string `json:"service" gorm:"column:service"`
 	Timestamp           int64  `json:"timestamp" gorm:"column:timestamp"`
+	ElapsedTime         int64  `json:"elapsed_time" gorm:"column:elapsedTime"`
 	Path                string `json:"path" gorm:"column:path"`
 	ResolvedSource      string `json:"resolvedSource,omitempty" gorm:"column:resolvedSource"`
 	ResolvedDestination string `json:"resolvedDestination,omitempty" gorm:"column:resolvedDestination"`
