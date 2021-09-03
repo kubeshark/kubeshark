@@ -107,7 +107,7 @@ type MizuEntry struct {
 	RequestSenderIp     string `json:"requestSenderIp" gorm:"column:requestSenderIp"`
 	Service             string `json:"service" gorm:"column:service"`
 	Timestamp           int64  `json:"timestamp" gorm:"column:timestamp"`
-	ElapsedTime         int64  `json:"elapsed_time" gorm:"column:elapsedTime"`
+	ElapsedTime         int64  `json:"elapsedTime" gorm:"column:elapsedTime"`
 	Path                string `json:"path" gorm:"column:path"`
 	ResolvedSource      string `json:"resolvedSource,omitempty" gorm:"column:resolvedSource"`
 	ResolvedDestination string `json:"resolvedDestination,omitempty" gorm:"column:resolvedDestination"`
@@ -122,7 +122,7 @@ type MizuEntry struct {
 type MizuEntryWrapper struct {
 	Protocol       Protocol  `json:"protocol"`
 	Representation string    `json:"representation"`
-	BodySize       int64     `json:"body_size"`
+	BodySize       int64     `json:"bodySize"`
 	Data           MizuEntry `json:"data"`
 }
 

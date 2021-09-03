@@ -67,8 +67,8 @@ export const EntryDetailed: React.FC<EntryDetailedProps> = ({entryData}) => {
         <EntryTitle
             protocol={entryData.protocol}
             data={entryData.data}
-            bodySize={entryData.body_size}
-            elapsedTime={entryData.data.elapsed_time}
+            bodySize={entryData.bodySize}
+            elapsedTime={entryData.data.elapsedTime}
         />
         {entryData.data && <EntrySummary data={entryData.data}/>}
         <>
