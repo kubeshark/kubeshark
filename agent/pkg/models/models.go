@@ -1,7 +1,15 @@
 package models
 
 import (
+	"bytes"
 	"encoding/json"
+	"errors"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+	"strconv"
+	"strings"
+	"time"
 
 	tapApi "github.com/up9inc/mizu/tap/api"
 
@@ -17,13 +25,13 @@ func GetEntry(r *tapApi.MizuEntry, v tapApi.DataUnmarshaler) error {
 	return v.UnmarshalData(r)
 }
 
-func NewApplicableRules(status bool, latency int64, number int) tapApi.ApplicableRules {
-	ar := tapApi.ApplicableRules{}
-	ar.Status = status
-	ar.Latency = latency
-	ar.NumberOfRules = number
-	return ar
-}
+//func NewApplicableRules(status bool, latency int64, number int) tapApi.ApplicableRules {
+//	ar := tapApi.ApplicableRules{}
+//	ar.Status = status
+//	ar.Latency = latency
+//	ar.NumberOfRules = number
+//	return ar
+//}
 
 type FullEntryDetails struct {
 	har.Entry
@@ -33,10 +41,90 @@ type FullEntryDetailsExtra struct {
 	har.Entry
 }
 
+func NewEntry(request *http.Request, requestTime time.Time, response *http.Response, responseTime time.Time) (*har.Entry, error) {
+	harRequest, err := har.NewRequest(request, false)
+	if err != nil {
+		// SilentError("convert-request-to-har", "Failed converting request to HAR %s (%v,%+v)", err, err, err)
+		return nil, errors.New("failed converting request to HAR")
+	}
+
+	// For requests with multipart/form-data or application/x-www-form-urlencoded Content-Type,
+	// martian/har will parse the request body and place the parameters in harRequest.PostData.Params
+	// instead of harRequest.PostData.Text (as the HAR spec requires it).
+	// Mizu currently only looks at PostData.Text. Therefore, instead of letting martian/har set the content of
+	// PostData, always copy the request body to PostData.Text.
+	if request.ContentLength > 0 {
+		reqBody, err := ioutil.ReadAll(request.Body)
+		if err != nil {
+			// SilentError("read-request-body", "Failed converting request to HAR %s (%v,%+v)", err, err, err)
+			return nil, errors.New("failed reading request body")
+		}
+		request.Body = ioutil.NopCloser(bytes.NewReader(reqBody))
+		harRequest.PostData.Text = string(reqBody)
+	}
+
+	harResponse, err := har.NewResponse(response, true)
+	if err != nil {
+		/// SilentError("convert-response-to-har", "Failed converting response to HAR %s (%v,%+v)", err, err, err)
+		return nil, errors.New("failed converting response to HAR")
+	}
+
+	if harRequest.PostData != nil && strings.HasPrefix(harRequest.PostData.MimeType, "application/grpc") {
+		// Force HTTP/2 gRPC into HAR template
+
+		harRequest.URL = fmt.Sprintf("%s://%s%s", request.Header.Get(":scheme"), request.Header.Get(":authority"), request.Header.Get(":path"))
+
+		status, err := strconv.Atoi(response.Header.Get(":status"))
+		if err != nil {
+			// SilentError("convert-response-status-for-har", "Failed converting status to int %s (%v,%+v)", err, err, err)
+			return nil, errors.New("failed converting response status to int for HAR")
+		}
+		harResponse.Status = status
+	} else {
+		// Martian copies http.Request.URL.String() to har.Request.URL, which usually contains the path.
+		// However, according to the HAR spec, the URL field needs to be the absolute URL.
+		var scheme string
+		if request.URL.Scheme != "" {
+			scheme = request.URL.Scheme
+		} else {
+			scheme = "http"
+		}
+		harRequest.URL = fmt.Sprintf("%s://%s%s", scheme, request.Host, request.URL)
+	}
+
+	totalTime := responseTime.Sub(requestTime).Round(time.Millisecond).Milliseconds()
+	if totalTime < 1 {
+		totalTime = 1
+	}
+
+	harEntry := har.Entry{
+		StartedDateTime: time.Now().UTC(),
+		Time:            totalTime,
+		Request:         harRequest,
+		Response:        harResponse,
+		Cache:           &har.Cache{},
+		Timings: &har.Timings{
+			Send:    -1,
+			Wait:    -1,
+			Receive: totalTime,
+		},
+	}
+
+	return &harEntry, nil
+}
+
 func (fed *FullEntryDetails) UnmarshalData(entry *tapApi.MizuEntry) error {
-	if err := json.Unmarshal([]byte(entry.Entry), &fed.Entry); err != nil {
+	var root tapApi.RequestResponsePair
+	err := json.Unmarshal([]byte(entry.Entry), &root)
+	if err != nil {
 		return err
 	}
+
+	entry1, err := NewEntry(root.Request.Payload.(*http.Request), root.Request.CaptureTime, root.Response.Payload.(*http.Response), root.Response.CaptureTime)
+	if err != nil {
+		return err
+	}
+	fed.Entry = *entry1
 
 	if entry.ResolvedDestination != "" {
 		fed.Entry.Request.URL = utils.SetHostname(fed.Entry.Request.URL, entry.ResolvedDestination)
@@ -45,9 +133,17 @@ func (fed *FullEntryDetails) UnmarshalData(entry *tapApi.MizuEntry) error {
 }
 
 func (fedex *FullEntryDetailsExtra) UnmarshalData(entry *tapApi.MizuEntry) error {
-	if err := json.Unmarshal([]byte(entry.Entry), &fedex.Entry); err != nil {
+	var root tapApi.RequestResponsePair
+	err := json.Unmarshal([]byte(entry.Entry), &root)
+	if err != nil {
 		return err
 	}
+
+	entry1, err := NewEntry(root.Request.Payload.(*http.Request), root.Request.CaptureTime, root.Response.Payload.(*http.Response), root.Response.CaptureTime)
+	if err != nil {
+		return err
+	}
+	fedex.Entry = *entry1
 
 	if entry.ResolvedSource != "" {
 		fedex.Entry.Request.Headers = append(fedex.Request.Headers, har.Header{Name: "x-mizu-source", Value: entry.ResolvedSource})
@@ -147,9 +243,17 @@ type FullEntryWithPolicy struct {
 }
 
 func (fewp *FullEntryWithPolicy) UnmarshalData(entry *tapApi.MizuEntry) error {
-	if err := json.Unmarshal([]byte(entry.Entry), &fewp.Entry); err != nil {
+	var root tapApi.RequestResponsePair
+	err := json.Unmarshal([]byte(entry.Entry), &root)
+	if err != nil {
 		return err
 	}
+
+	entry1, err := NewEntry(root.Request.Payload.(*http.Request), root.Request.CaptureTime, root.Response.Payload.(*http.Response), root.Response.CaptureTime)
+	if err != nil {
+		return err
+	}
+	fewp.Entry = *entry1
 
 	_, resultPolicyToSend := rules.MatchRequestPolicy(fewp.Entry, entry.Service)
 	fewp.RulesMatched = resultPolicyToSend
@@ -157,9 +261,9 @@ func (fewp *FullEntryWithPolicy) UnmarshalData(entry *tapApi.MizuEntry) error {
 	return nil
 }
 
-func RunValidationRulesState(harEntry har.Entry, service string) tapApi.ApplicableRules {
-	numberOfRules, resultPolicyToSend := rules.MatchRequestPolicy(harEntry, service)
-	statusPolicyToSend, latency, numberOfRules := rules.PassedValidationRules(resultPolicyToSend, numberOfRules)
-	ar := NewApplicableRules(statusPolicyToSend, latency, numberOfRules)
-	return ar
-}
+//func RunValidationRulesState(harEntry har.Entry, service string) tapApi.ApplicableRules {
+//	numberOfRules, resultPolicyToSend := rules.MatchRequestPolicy(harEntry, service)
+//	statusPolicyToSend, latency, numberOfRules := rules.PassedValidationRules(resultPolicyToSend, numberOfRules)
+//	ar := NewApplicableRules(statusPolicyToSend, latency, numberOfRules)
+//	return ar
+//}

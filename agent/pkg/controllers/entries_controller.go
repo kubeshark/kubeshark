@@ -48,7 +48,7 @@ func GetEntries(c *gin.Context) {
 		Find(&entries)
 
 	if len(entries) > 0 && order == database.OrderDesc {
-		// the entries always order from oldest to newest so we should revers
+		// the entries always order from oldest to newest - we should reverse
 		utils.ReverseSlice(entries)
 	}
 
@@ -95,7 +95,7 @@ func GetHARs(c *gin.Context) {
 		Find(&entries)
 
 	if len(entries) > 0 {
-		// the entries always order from oldest to newest so we should revers
+		// the entries always order from oldest to newest - we should reverse
 		utils.ReverseSlice(entries)
 	}
 
@@ -113,7 +113,7 @@ func GetHARs(c *gin.Context) {
 		if sourceOfEntry != "" {
 			// naively assumes the proper service source is http
 			sourceOfEntry = fmt.Sprintf("http://%s", sourceOfEntry)
-			//replace / from the file name cause they end up creating a corrupted folder
+			//replace / from the file name because they end up creating a corrupted folder
 			fileName = fmt.Sprintf("%s.har", strings.ReplaceAll(sourceOfEntry, "/", "_"))
 		} else {
 			fileName = "unknown_source.har"
@@ -202,7 +202,7 @@ func GetFullEntries(c *gin.Context) {
 		timestampTo = entriesFilter.To
 	}
 
-	entriesArray := database.GetEntriesFromDb(timestampFrom, timestampTo)
+	entriesArray := database.GetEntriesFromDb(timestampFrom, timestampTo, nil)
 	result := make([]models.FullEntryDetails, 0)
 	for _, data := range entriesArray {
 		harEntry := models.FullEntryDetails{}

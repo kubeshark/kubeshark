@@ -129,10 +129,26 @@ func UploadEntriesImpl(token string, model string, envPrefix string, sleepInterv
 	for {
 		timestampTo := time.Now().UnixNano() / int64(time.Millisecond)
 		rlog.Infof("Getting entries from %v, to %v\n", timestampFrom, timestampTo)
-		entriesArray := database.GetEntriesFromDb(timestampFrom, timestampTo)
+		protocolFilter := "http"
+		entriesArray := database.GetEntriesFromDb(timestampFrom, timestampTo, &protocolFilter)
+
+		//TODO: ROEE
+		//var root map[string]interface{}
+		//json.Unmarshal([]byte(entry.Entry), &root)
+		//representation := make(map[string]interface{}, 0)
+		//request := root["request"].(map[string]interface{})["payload"].(map[string]interface{})
+		//response := root["response"].(map[string]interface{})["payload"].(map[string]interface{})
+		//reqDetails := request["details"].(map[string]interface{})
+		//resDetails := response["details"].(map[string]interface{})
+		//repRequest := representRequest(reqDetails)
+		//repResponse, bodySize := representResponse(resDetails)
+		//representation["request"] = repRequest
+		//representation["response"] = repResponse
+		//object, err = json.Marshal(representation)
 
 		if len(entriesArray) > 0 {
 
+			//TODO: roee (fix converting the mizuEntry (type RequestResponsePair) to HAR
 			fullEntriesExtra := make([]models.FullEntryDetailsExtra, 0)
 			for _, data := range entriesArray {
 				harEntry := models.FullEntryDetailsExtra{}
