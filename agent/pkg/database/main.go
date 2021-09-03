@@ -61,7 +61,7 @@ func GetEntriesFromDb(timestampFrom int64, timestampTo int64, protocolName *stri
 	order := OrderDesc
 	protocolNameCondition := "1 = 1"
 	if protocolName != nil {
-		protocolNameCondition = fmt.Sprintf("protocolKey = %s", *protocolName)
+		protocolNameCondition = fmt.Sprintf("protocolKey = '%s'", *protocolName)
 	}
 
 	var entries []tapApi.MizuEntry
