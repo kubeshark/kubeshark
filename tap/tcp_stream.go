@@ -16,6 +16,8 @@ import (
  * In our implementation, we pass information from ReassembledSG to the tcpReader through a shared channel.
  */
 type tcpStream struct {
+	id             int64
+	isClosed       bool
 	tcpstate       *reassembly.TCPSimpleFSM
 	fsmerr         bool
 	optchecker     reassembly.TCPOptionCheck
@@ -140,17 +142,21 @@ func (t *tcpStream) ReassembledSG(sg reassembly.ScatterGather, ac reassembly.Ass
 			sg.KeepFrom(2 + int(dnsSize))
 		}
 	} else if t.isTapTarget {
-		if length > 0 {
+		if length > 0 && !t.isClosed {
 			// This is where we pass the reassembled information onwards
 			// This channel is read by an tcpReader object
 			statsTracker.incReassembledTcpPayloadsCount()
 			if dir == reassembly.TCPDirClientToServer {
 				for _, reader := range t.clients {
+					t.Lock()
 					reader.msgQueue <- tcpReaderDataMsg{data, ac.GetCaptureInfo().Timestamp}
+					t.Unlock()
 				}
 			} else {
 				for _, reader := range t.servers {
+					t.Lock()
 					reader.msgQueue <- tcpReaderDataMsg{data, ac.GetCaptureInfo().Timestamp}
+					t.Unlock()
 				}
 			}
 		}
@@ -159,12 +165,19 @@ func (t *tcpStream) ReassembledSG(sg reassembly.ScatterGather, ac reassembly.Ass
 
 func (t *tcpStream) ReassemblyComplete(ac reassembly.AssemblerContext) bool {
 	Trace("%s: Connection closed", t.ident)
-	if t.isTapTarget {
+	if t.isTapTarget && !t.isClosed {
+		t.Lock()
+		t.isClosed = true
+		t.Unlock()
 		for _, reader := range t.clients {
+			t.Lock()
 			close(reader.msgQueue)
+			t.Unlock()
 		}
 		for _, reader := range t.servers {
+			t.Lock()
 			close(reader.msgQueue)
+			t.Unlock()
 		}
 	}
 	// do not remove the connection to allow last ACK

@@ -3,6 +3,7 @@ package tap
 import (
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/romana/rlog"
 	"github.com/up9inc/mizu/tap/api"
@@ -22,6 +23,16 @@ type tcpStreamFactory struct {
 	outboundLinkWriter *OutboundLinkWriter
 	Emitter            api.Emitter
 }
+
+type tcpStreamWrapper struct {
+	stream    *tcpStream
+	createdAt time.Time
+}
+
+const baseStreamChannelTimeoutMs int = 10000
+
+var streams *sync.Map = &sync.Map{} // global
+var streamId int64 = 0
 
 func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.TCP, ac reassembly.AssemblerContext) reassembly.Stream {
 	rlog.Debugf("* NEW: %s %s", net, transport)
@@ -48,6 +59,8 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.T
 		optchecker:  reassembly.NewTCPOptionCheck(),
 	}
 	if stream.isTapTarget {
+		streamId++
+		stream.id = streamId
 		for i, extension := range extensions {
 			counterPair := &api.CounterPair{
 				Request:  0,
@@ -87,6 +100,12 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.T
 				emitter:            factory.Emitter,
 				counterPair:        counterPair,
 			})
+
+			streams.Store(stream.id, &tcpStreamWrapper{
+				stream:    stream,
+				createdAt: time.Now(),
+			})
+
 			factory.wg.Add(2)
 			// Start reading from channel stream.reader.bytes
 			go stream.clients[i].run(&factory.wg)
@@ -117,7 +136,7 @@ func (factory *tcpStreamFactory) getStreamProps(srcIP string, srcPort string, ds
 		}
 		return &streamProps{isTapTarget: false, isOutgoing: false}
 	} else {
-		rlog.Debugf("getStreamProps %s", fmt.Sprintf("+ notHost3 %s -> %s:%s", srcIP, dstIP, dstPort))
+		rlog.Debugf("getStreamProps %s", fmt.Sprintf("+ notHost3 %s:%s -> %s:%s", srcIP, srcPort, dstIP, dstPort))
 		return &streamProps{isTapTarget: true}
 	}
 }

@@ -13,6 +13,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"os/signal"
@@ -198,8 +199,37 @@ func startMemoryProfiler() {
 	}()
 }
 
+func closeTimedoutTcpStreamChannels() {
+	for {
+		runtime.Gosched()
+		streams.Range(func(key interface{}, value interface{}) bool {
+			streamWrapper := value.(*tcpStreamWrapper)
+			stream := streamWrapper.stream
+			dynamicStreamChannelTimeoutNs := baseStreamChannelTimeoutMs * runtime.NumCPU() / runtime.NumGoroutine() * 1000000
+			if !stream.isClosed && time.Now().After(streamWrapper.createdAt.Add(time.Duration(dynamicStreamChannelTimeoutNs))) {
+				stream.Lock()
+				stream.isClosed = true
+				stream.Unlock()
+				streams.Delete(key)
+				for _, reader := range stream.clients {
+					stream.Lock()
+					close(reader.msgQueue)
+					stream.Unlock()
+				}
+				for _, reader := range stream.servers {
+					stream.Lock()
+					close(reader.msgQueue)
+					stream.Unlock()
+				}
+			}
+			return true
+		})
+	}
+}
+
 func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
 	log.SetFlags(log.LstdFlags | log.LUTC | log.Lshortfile)
+	go closeTimedoutTcpStreamChannels()
 
 	defer util.Run()()
 	if *debug {
@@ -272,7 +302,7 @@ func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
 		log.Fatalln("No decoder named", decoderName)
 	}
 	source := gopacket.NewPacketSource(handle, dec)
-	source.Lazy = *lazy
+	// source.Lazy = *lazy
 	source.NoCopy = true
 	rlog.Info("Starting to read packets")
 	statsTracker.setStartTime(time.Now())
@@ -354,7 +384,14 @@ func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
 		startMemoryProfiler()
 	}
 
-	for packet := range source.Packets() {
+	for {
+		packet, err := source.NextPacket()
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			rlog.Debugf("Error:", err)
+			continue
+		}
 		packetsCount := statsTracker.incPacketsCount()
 		rlog.Debugf("PACKET #%d", packetsCount)
 		data := packet.Data()
