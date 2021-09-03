@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"mizuserver/pkg/database"
+	har2 "mizuserver/pkg/har"
 	"mizuserver/pkg/models"
 	"mizuserver/pkg/providers"
 	"mizuserver/pkg/up9"
@@ -203,14 +204,20 @@ func GetFullEntries(c *gin.Context) {
 	}
 
 	entriesArray := database.GetEntriesFromDb(timestampFrom, timestampTo, nil)
-	result := make([]models.FullEntryDetails, 0)
+
+	result := make([]har.Entry, 0)
 	for _, data := range entriesArray {
-		harEntry := models.FullEntryDetails{}
-		if err := models.GetEntry(&data, &harEntry); err != nil {
+		var pair tapApi.RequestResponsePair
+		if err := json.Unmarshal([]byte(data.Entry), &pair); err != nil {
 			continue
 		}
-		result = append(result, harEntry)
+		harEntry, err := har2.NewEntry(&pair)
+		if err != nil {
+			continue
+		}
+		result = append(result, *harEntry)
 	}
+
 	c.JSON(http.StatusOK, result)
 }
 

@@ -2,9 +2,8 @@ package models
 
 import (
 	"encoding/json"
-	"time"
-
 	tapApi "github.com/up9inc/mizu/tap/api"
+	har2 "mizuserver/pkg/har"
 
 	"mizuserver/pkg/rules"
 	"mizuserver/pkg/utils"
@@ -34,33 +33,17 @@ type FullEntryDetailsExtra struct {
 	har.Entry
 }
 
-func NewEntry(startDate time.Time, harRequest *har.Request, harResponse *har.Response, totalTime int64) har.Entry {
-	return har.Entry{
-		StartedDateTime: startDate,
-		Time:            totalTime,
-		Request:         harRequest,
-		Response:        harResponse,
-		Cache:           &har.Cache{},
-		Timings: &har.Timings{
-			Send:    -1,
-			Wait:    -1,
-			Receive: totalTime,
-		},
-	}
-}
-
-
 func (fed *FullEntryDetails) UnmarshalData(entry *tapApi.MizuEntry) error {
-	var root tapApi.RequestResponsePair
-	err := json.Unmarshal([]byte(entry.Entry), &root)
+	var pair tapApi.RequestResponsePair
+	err := json.Unmarshal([]byte(entry.Entry), &pair)
 	if err != nil {
 		return err
 	}
-	requestPayload := root.Request.Payload.(map[string]interface{})
-	responsePayload := root.Response.Payload.(map[string]interface{})
-	totalTime := root.Response.CaptureTime.Sub(root.Request.CaptureTime).Round(time.Millisecond).Milliseconds()
-	fed.Entry = NewEntry(root.Request.CaptureTime, requestPayload["details"].(interface{}).(*har.Request), responsePayload["details"].(interface{}).(*har.Response), totalTime)
-
+	harEntry, err := har2.NewEntry(&pair)
+	if err != nil {
+		return err
+	}
+	fed.Entry = *harEntry
 
 	if entry.ResolvedDestination != "" {
 		fed.Entry.Request.URL = utils.SetHostname(fed.Entry.Request.URL, entry.ResolvedDestination)
@@ -69,16 +52,16 @@ func (fed *FullEntryDetails) UnmarshalData(entry *tapApi.MizuEntry) error {
 }
 
 func (fedex *FullEntryDetailsExtra) UnmarshalData(entry *tapApi.MizuEntry) error {
-	var root tapApi.RequestResponsePair
-	err := json.Unmarshal([]byte(entry.Entry), &root)
+	var pair tapApi.RequestResponsePair
+	err := json.Unmarshal([]byte(entry.Entry), &pair)
 	if err != nil {
 		return err
 	}
-	requestPayload := root.Request.Payload.(map[string]interface{})
-	responsePayload := root.Response.Payload.(map[string]interface{})
-	totalTime := root.Response.CaptureTime.Sub(root.Request.CaptureTime).Round(time.Millisecond).Milliseconds()
-	fedex.Entry = NewEntry(root.Request.CaptureTime, requestPayload["details"].(interface{}).(*har.Request), responsePayload["details"].(interface{}).(*har.Response), totalTime)
-
+	harEntry, err := har2.NewEntry(&pair)
+	if err != nil {
+		return err
+	}
+	fedex.Entry = *harEntry
 
 	if entry.ResolvedSource != "" {
 		fedex.Entry.Request.Headers = append(fedex.Request.Headers, har.Header{Name: "x-mizu-source", Value: entry.ResolvedSource})
@@ -178,16 +161,16 @@ type FullEntryWithPolicy struct {
 }
 
 func (fewp *FullEntryWithPolicy) UnmarshalData(entry *tapApi.MizuEntry) error {
-	var root tapApi.RequestResponsePair
-	err := json.Unmarshal([]byte(entry.Entry), &root)
+	var pair tapApi.RequestResponsePair
+	err := json.Unmarshal([]byte(entry.Entry), &pair)
 	if err != nil {
 		return err
 	}
-	requestPayload := root.Request.Payload.(map[string]interface{})
-	responsePayload := root.Response.Payload.(map[string]interface{})
-	totalTime := root.Response.CaptureTime.Sub(root.Request.CaptureTime).Round(time.Millisecond).Milliseconds()
-	fewp.Entry = NewEntry(root.Request.CaptureTime, requestPayload["details"].(interface{}).(*har.Request), responsePayload["details"].(interface{}).(*har.Response), totalTime)
-
+	harEntry, err := har2.NewEntry(&pair)
+	if err != nil {
+		return err
+	}
+	fewp.Entry = *harEntry
 
 	_, resultPolicyToSend := rules.MatchRequestPolicy(fewp.Entry, entry.Service)
 	fewp.RulesMatched = resultPolicyToSend

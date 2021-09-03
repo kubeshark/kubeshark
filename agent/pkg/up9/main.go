@@ -5,12 +5,15 @@ import (
 	"compress/zlib"
 	"encoding/json"
 	"fmt"
+	"github.com/google/martian/har"
 	"github.com/romana/rlog"
 	"github.com/up9inc/mizu/shared"
+	tapApi "github.com/up9inc/mizu/tap/api"
 	"io/ioutil"
 	"log"
 	"mizuserver/pkg/database"
-	"mizuserver/pkg/models"
+	har2 "mizuserver/pkg/har"
+	"mizuserver/pkg/utils"
 	"net/http"
 	"net/url"
 	"strings"
@@ -132,34 +135,32 @@ func UploadEntriesImpl(token string, model string, envPrefix string, sleepInterv
 		protocolFilter := "http"
 		entriesArray := database.GetEntriesFromDb(timestampFrom, timestampTo, &protocolFilter)
 
-		//TODO: ROEE
-		//var root map[string]interface{}
-		//json.Unmarshal([]byte(entry.Entry), &root)
-		//representation := make(map[string]interface{}, 0)
-		//request := root["request"].(map[string]interface{})["payload"].(map[string]interface{})
-		//response := root["response"].(map[string]interface{})["payload"].(map[string]interface{})
-		//reqDetails := request["details"].(map[string]interface{})
-		//resDetails := response["details"].(map[string]interface{})
-		//repRequest := representRequest(reqDetails)
-		//repResponse, bodySize := representResponse(resDetails)
-		//representation["request"] = repRequest
-		//representation["response"] = repResponse
-		//object, err = json.Marshal(representation)
-
 		if len(entriesArray) > 0 {
-
-			//TODO: roee (fix converting the mizuEntry (type RequestResponsePair) to HAR
-			fullEntriesExtra := make([]models.FullEntryDetailsExtra, 0)
+			result := make([]har.Entry, 0)
 			for _, data := range entriesArray {
-				harEntry := models.FullEntryDetailsExtra{}
-				if err := models.GetEntry(&data, &harEntry); err != nil {
+				var pair tapApi.RequestResponsePair
+				if err := json.Unmarshal([]byte(data.Entry), &pair); err != nil {
 					continue
 				}
-				fullEntriesExtra = append(fullEntriesExtra, harEntry)
+				harEntry, err := har2.NewEntry(&pair)
+				logData, _ := json.Marshal(harEntry)
+				fmt.Printf("Entry: %s\n", string(logData))
+				if err != nil {
+					continue
+				}
+				if data.ResolvedSource != "" {
+					harEntry.Request.Headers = append(harEntry.Request.Headers, har.Header{Name: "x-mizu-source", Value: data.ResolvedSource})
+				}
+				if data.ResolvedDestination != "" {
+					harEntry.Request.Headers = append(harEntry.Request.Headers, har.Header{Name: "x-mizu-destination", Value: data.ResolvedDestination})
+					harEntry.Request.URL = utils.SetHostname(harEntry.Request.URL, data.ResolvedDestination)
+				}
+				result = append(result, *harEntry)
 			}
-			rlog.Infof("About to upload %v entries\n", len(fullEntriesExtra))
 
-			body, jMarshalErr := json.Marshal(fullEntriesExtra)
+			rlog.Infof("About to upload %v entries\n", len(result))
+
+			body, jMarshalErr := json.Marshal(result)
 			if jMarshalErr != nil {
 				analyzeInformation.Reset()
 				rlog.Infof("Stopping analyzing")
