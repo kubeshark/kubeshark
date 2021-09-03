@@ -302,7 +302,7 @@ func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
 		log.Fatalln("No decoder named", decoderName)
 	}
 	source := gopacket.NewPacketSource(handle, dec)
-	// source.Lazy = *lazy
+	source.Lazy = *lazy
 	source.NoCopy = true
 	rlog.Info("Starting to read packets")
 	statsTracker.setStartTime(time.Now())
