@@ -158,7 +158,7 @@ func NewRequest(request *api.GenericMessage) (harRequest *har.Request, err error
 		url = fmt.Sprintf("%s://%s%s", scheme, authority, path)
 	}
 
-	var harParams []har.Param
+	harParams := make([]har.Param, 0)
 	if postData["params"] != nil {
 		harParams = BuildPostParams(postData["params"].([]interface{}))
 	}
