@@ -169,6 +169,7 @@ func (t *tcpStream) ReassemblyComplete(ac reassembly.AssemblerContext) bool {
 		t.Lock()
 		t.isClosed = true
 		t.Unlock()
+		streams.Delete(t.id)
 		for _, reader := range t.clients {
 			t.Lock()
 			close(reader.msgQueue)
