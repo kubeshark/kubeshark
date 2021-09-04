@@ -13,9 +13,10 @@ type Response struct {
 	Size          int32
 	CorrelationID int32
 	Payload       interface{}
+	CaptureTime   time.Time
 }
 
-func ReadResponse(r io.Reader, tcpID *api.TcpID, emitter api.Emitter) (err error) {
+func ReadResponse(r io.Reader, tcpID *api.TcpID, superTimer *api.SuperTimer, emitter api.Emitter) (err error) {
 	d := &decoder{reader: r, remain: 4}
 	size := d.readInt32()
 
@@ -39,6 +40,7 @@ func ReadResponse(r io.Reader, tcpID *api.TcpID, emitter api.Emitter) (err error
 		Size:          size,
 		CorrelationID: correlationID,
 		Payload:       payload,
+		CaptureTime:   superTimer.CaptureTime,
 	}
 
 	key := fmt.Sprintf(
@@ -258,12 +260,12 @@ func ReadResponse(r io.Reader, tcpID *api.TcpID, emitter api.Emitter) (err error
 
 	item := &api.OutputChannelItem{
 		Protocol:       _protocol,
-		Timestamp:      time.Now().UnixNano() / int64(time.Millisecond),
+		Timestamp:      reqResPair.Request.CaptureTime.UnixNano() / int64(time.Millisecond),
 		ConnectionInfo: connectionInfo,
 		Pair: &api.RequestResponsePair{
 			Request: api.GenericMessage{
 				IsRequest:   true,
-				CaptureTime: time.Now(),
+				CaptureTime: reqResPair.Request.CaptureTime,
 				Payload: KafkaPayload{
 					Data: &KafkaWrapper{
 						Method:  apiNames[apiKey],
@@ -274,7 +276,7 @@ func ReadResponse(r io.Reader, tcpID *api.TcpID, emitter api.Emitter) (err error
 			},
 			Response: api.GenericMessage{
 				IsRequest:   false,
-				CaptureTime: time.Now(),
+				CaptureTime: reqResPair.Response.CaptureTime,
 				Payload: KafkaPayload{
 					Data: &KafkaWrapper{
 						Method:  apiNames[apiKey],

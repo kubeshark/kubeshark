@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"reflect"
+	"time"
 
 	"github.com/up9inc/mizu/tap/api"
 )
@@ -15,9 +16,10 @@ type Request struct {
 	CorrelationID int32
 	ClientID      string
 	Payload       interface{}
+	CaptureTime   time.Time
 }
 
-func ReadRequest(r io.Reader, tcpID *api.TcpID) (apiKey ApiKey, apiVersion int16, err error) {
+func ReadRequest(r io.Reader, tcpID *api.TcpID, superTimer *api.SuperTimer) (apiKey ApiKey, apiVersion int16, err error) {
 	d := &decoder{reader: r, remain: 4}
 	size := d.readInt32()
 
@@ -213,6 +215,7 @@ func ReadRequest(r io.Reader, tcpID *api.TcpID) (apiKey ApiKey, apiVersion int16
 		ApiVersion:    apiVersion,
 		CorrelationID: correlationID,
 		ClientID:      clientID,
+		CaptureTime:   superTimer.CaptureTime,
 		Payload:       payload,
 	}
 

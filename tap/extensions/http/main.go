@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"net/url"
+	"time"
 
 	"github.com/romana/rlog"
 
@@ -59,7 +60,7 @@ func (d dissecting) Ping() {
 	log.Printf("pong %s\n", protocol.Name)
 }
 
-func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, counterPair *api.CounterPair, emitter api.Emitter) error {
+func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, emitter api.Emitter) error {
 	ident := fmt.Sprintf("%s->%s:%s->%s", tcpID.SrcIP, tcpID.DstIP, tcpID.SrcPort, tcpID.DstPort)
 	isHTTP2, err := checkIsHTTP2Connection(b, isClient)
 	if err != nil {
@@ -79,7 +80,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 	success := false
 	for {
 		if isHTTP2 {
-			err = handleHTTP2Stream(grpcAssembler, tcpID, emitter)
+			err = handleHTTP2Stream(grpcAssembler, tcpID, superTimer, emitter)
 			if err == io.EOF || err == io.ErrUnexpectedEOF {
 				break
 			} else if err != nil {
@@ -88,7 +89,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 			}
 			success = true
 		} else if isClient {
-			err = handleHTTP1ClientStream(b, tcpID, counterPair, emitter)
+			err = handleHTTP1ClientStream(b, tcpID, counterPair, superTimer, emitter)
 			if err == io.EOF || err == io.ErrUnexpectedEOF {
 				break
 			} else if err != nil {
@@ -97,7 +98,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 			}
 			success = true
 		} else {
-			err = handleHTTP1ServerStream(b, tcpID, counterPair, emitter)
+			err = handleHTTP1ServerStream(b, tcpID, counterPair, superTimer, emitter)
 			if err == io.EOF || err == io.ErrUnexpectedEOF {
 				break
 			} else if err != nil {
@@ -161,6 +162,8 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolve
 	} else if resolvedSource != "" {
 		service = SetHostname(service, resolvedSource)
 	}
+
+	elapsedTime := item.Pair.Response.CaptureTime.Sub(item.Pair.Request.CaptureTime).Round(time.Millisecond).Milliseconds()
 	entryBytes, _ := json.Marshal(item.Pair)
 	return &api.MizuEntry{
 		ProtocolName:        protocol.Name,
@@ -173,6 +176,7 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolve
 		RequestSenderIp:     item.ConnectionInfo.ClientIP,
 		Service:             service,
 		Timestamp:           item.Timestamp,
+		ElapsedTime:         elapsedTime,
 		Path:                path,
 		ResolvedSource:      resolvedSource,
 		ResolvedDestination: resolvedDestination,
@@ -214,9 +218,7 @@ func (d dissecting) Summarize(entry *api.MizuEntry) *api.BaseEntryDetails {
 	}
 }
 
-func representRequest(request map[string]interface{}) []interface{} {
-	repRequest := make([]interface{}, 0)
-
+func representRequest(request map[string]interface{}) (repRequest []interface{}) {
 	details, _ := json.Marshal([]map[string]string{
 		{
 			"name":  "Method",
@@ -299,11 +301,13 @@ func representRequest(request map[string]interface{}) []interface{} {
 		}
 	}
 
-	return repRequest
+	return
 }
 
-func representResponse(response map[string]interface{}) []interface{} {
-	repResponse := make([]interface{}, 0)
+func representResponse(response map[string]interface{}) (repResponse []interface{}, bodySize int64) {
+	repResponse = make([]interface{}, 0)
+
+	bodySize = int64(response["bodySize"].(float64))
 
 	details, _ := json.Marshal([]map[string]string{
 		{
@@ -316,7 +320,7 @@ func representResponse(response map[string]interface{}) []interface{} {
 		},
 		{
 			"name":  "Body Size",
-			"value": fmt.Sprintf("%g bytes", response["bodySize"].(float64)),
+			"value": fmt.Sprintf("%d bytes", bodySize),
 		},
 	})
 	repResponse = append(repResponse, map[string]string{
@@ -356,11 +360,10 @@ func representResponse(response map[string]interface{}) []interface{} {
 		})
 	}
 
-	return repResponse
+	return
 }
 
-func (d dissecting) Represent(entry *api.MizuEntry) (api.Protocol, []byte, error) {
-	var p api.Protocol
+func (d dissecting) Represent(entry *api.MizuEntry) (p api.Protocol, object []byte, bodySize int64, err error) {
 	if entry.ProtocolVersion == "2.0" {
 		p = http2Protocol
 	} else {
@@ -374,11 +377,11 @@ func (d dissecting) Represent(entry *api.MizuEntry) (api.Protocol, []byte, error
 	reqDetails := request["details"].(map[string]interface{})
 	resDetails := response["details"].(map[string]interface{})
 	repRequest := representRequest(reqDetails)
-	repResponse := representResponse(resDetails)
+	repResponse, bodySize := representResponse(resDetails)
 	representation["request"] = repRequest
 	representation["response"] = repResponse
-	object, err := json.Marshal(representation)
-	return p, object, err
+	object, err = json.Marshal(representation)
+	return
 }
 
 var Dissector dissecting

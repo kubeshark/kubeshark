@@ -51,7 +51,7 @@ type tcpReader struct {
 	isOutgoing         bool
 	msgQueue           chan tcpReaderDataMsg // Channel of captured reassembled tcp payload
 	data               []byte
-	captureTime        time.Time
+	superTimer         *api.SuperTimer
 	parent             *tcpStream
 	messageCount       uint
 	packetsSeen        uint
@@ -69,7 +69,7 @@ func (h *tcpReader) Read(p []byte) (int, error) {
 		msg, ok = <-h.msgQueue
 		h.data = msg.bytes
 
-		h.captureTime = msg.timestamp
+		h.superTimer.CaptureTime = msg.timestamp
 		if len(h.data) > 0 {
 			h.packetsSeen += 1
 		}
@@ -96,7 +96,7 @@ func (h *tcpReader) Read(p []byte) (int, error) {
 func (h *tcpReader) run(wg *sync.WaitGroup) {
 	defer wg.Done()
 	b := bufio.NewReader(h)
-	err := h.extension.Dissector.Dissect(b, h.isClient, h.tcpID, h.counterPair, h.emitter)
+	err := h.extension.Dissector.Dissect(b, h.isClient, h.tcpID, h.counterPair, h.superTimer, h.emitter)
 	if err != nil {
 		io.Copy(ioutil.Discard, b)
 	}
