@@ -29,7 +29,7 @@ type tcpStreamWrapper struct {
 	createdAt time.Time
 }
 
-const baseStreamChannelTimeoutMs int = 10000
+const baseStreamChannelTimeoutMs int = 5000
 
 var streams *sync.Map = &sync.Map{} // global
 var streamId int64 = 0

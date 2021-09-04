@@ -200,12 +200,20 @@ func startMemoryProfiler() {
 }
 
 func closeTimedoutTcpStreamChannels() {
+	cpuCount := runtime.NumCPU()
+	// +1 Stats tracker Goroutine
+	// +1 Main packet capture loop
+	baseGoroutineCount := runtime.NumGoroutine() + 2
 	for {
 		runtime.Gosched()
 		streams.Range(func(key interface{}, value interface{}) bool {
 			streamWrapper := value.(*tcpStreamWrapper)
 			stream := streamWrapper.stream
-			dynamicStreamChannelTimeoutNs := baseStreamChannelTimeoutMs * runtime.NumCPU() / runtime.NumGoroutine() * 1000000
+			metric := runtime.NumGoroutine() - baseGoroutineCount
+			if metric < 1 {
+				metric = 1
+			}
+			dynamicStreamChannelTimeoutNs := baseStreamChannelTimeoutMs * cpuCount / metric * 1000000
 			if !stream.isClosed && time.Now().After(streamWrapper.createdAt.Add(time.Duration(dynamicStreamChannelTimeoutNs))) {
 				stream.Lock()
 				stream.isClosed = true
