@@ -219,7 +219,7 @@ func representProperties(properties map[string]interface{}, rep []interface{}) (
 		},
 	})
 	rep = append(rep, map[string]string{
-		"type":  "table",
+		"type":  api.TABLE,
 		"title": "Properties",
 		"data":  string(props),
 	})
@@ -249,7 +249,7 @@ func representBasicPublish(event map[string]interface{}) []interface{} {
 		},
 	})
 	rep = append(rep, map[string]string{
-		"type":  "table",
+		"type":  api.TABLE,
 		"title": "Details",
 		"data":  string(details),
 	})
@@ -267,7 +267,7 @@ func representBasicPublish(event map[string]interface{}) []interface{} {
 		}
 		headersMarshaled, _ := json.Marshal(headers)
 		rep = append(rep, map[string]string{
-			"type":  "table",
+			"type":  api.TABLE,
 			"title": "Headers",
 			"data":  string(headersMarshaled),
 		})
@@ -275,7 +275,7 @@ func representBasicPublish(event map[string]interface{}) []interface{} {
 
 	if event["Body"] != nil {
 		rep = append(rep, map[string]string{
-			"type":      "body",
+			"type":      api.BODY,
 			"title":     "Body",
 			"encoding":  "base64",
 			"mime_type": contentType,
@@ -326,7 +326,7 @@ func representBasicDeliver(event map[string]interface{}) []interface{} {
 		},
 	})
 	rep = append(rep, map[string]string{
-		"type":  "table",
+		"type":  api.TABLE,
 		"title": "Details",
 		"data":  string(details),
 	})
@@ -344,7 +344,7 @@ func representBasicDeliver(event map[string]interface{}) []interface{} {
 		}
 		headersMarshaled, _ := json.Marshal(headers)
 		rep = append(rep, map[string]string{
-			"type":  "table",
+			"type":  api.TABLE,
 			"title": "Headers",
 			"data":  string(headersMarshaled),
 		})
@@ -352,7 +352,7 @@ func representBasicDeliver(event map[string]interface{}) []interface{} {
 
 	if event["Body"] != nil {
 		rep = append(rep, map[string]string{
-			"type":      "body",
+			"type":      api.BODY,
 			"title":     "Body",
 			"encoding":  "base64",
 			"mime_type": contentType,
@@ -393,7 +393,7 @@ func representQueueDeclare(event map[string]interface{}) []interface{} {
 		},
 	})
 	rep = append(rep, map[string]string{
-		"type":  "table",
+		"type":  api.TABLE,
 		"title": "Details",
 		"data":  string(details),
 	})
@@ -408,7 +408,7 @@ func representQueueDeclare(event map[string]interface{}) []interface{} {
 		}
 		headersMarshaled, _ := json.Marshal(headers)
 		rep = append(rep, map[string]string{
-			"type":  "table",
+			"type":  api.TABLE,
 			"title": "Arguments",
 			"data":  string(headersMarshaled),
 		})
@@ -451,7 +451,7 @@ func representExchangeDeclare(event map[string]interface{}) []interface{} {
 		},
 	})
 	rep = append(rep, map[string]string{
-		"type":  "table",
+		"type":  api.TABLE,
 		"title": "Details",
 		"data":  string(details),
 	})
@@ -466,7 +466,7 @@ func representExchangeDeclare(event map[string]interface{}) []interface{} {
 		}
 		headersMarshaled, _ := json.Marshal(headers)
 		rep = append(rep, map[string]string{
-			"type":  "table",
+			"type":  api.TABLE,
 			"title": "Arguments",
 			"data":  string(headersMarshaled),
 		})
@@ -497,7 +497,7 @@ func representConnectionStart(event map[string]interface{}) []interface{} {
 		},
 	})
 	rep = append(rep, map[string]string{
-		"type":  "table",
+		"type":  api.TABLE,
 		"title": "Details",
 		"data":  string(details),
 	})
@@ -524,7 +524,7 @@ func representConnectionStart(event map[string]interface{}) []interface{} {
 		}
 		headersMarshaled, _ := json.Marshal(headers)
 		rep = append(rep, map[string]string{
-			"type":  "table",
+			"type":  api.TABLE,
 			"title": "Server Properties",
 			"data":  string(headersMarshaled),
 		})
@@ -555,7 +555,7 @@ func representConnectionClose(event map[string]interface{}) []interface{} {
 		},
 	})
 	rep = append(rep, map[string]string{
-		"type":  "table",
+		"type":  api.TABLE,
 		"title": "Details",
 		"data":  string(details),
 	})
@@ -585,7 +585,7 @@ func representQueueBind(event map[string]interface{}) []interface{} {
 		},
 	})
 	rep = append(rep, map[string]string{
-		"type":  "table",
+		"type":  api.TABLE,
 		"title": "Details",
 		"data":  string(details),
 	})
@@ -600,7 +600,7 @@ func representQueueBind(event map[string]interface{}) []interface{} {
 		}
 		headersMarshaled, _ := json.Marshal(headers)
 		rep = append(rep, map[string]string{
-			"type":  "table",
+			"type":  api.TABLE,
 			"title": "Arguments",
 			"data":  string(headersMarshaled),
 		})
@@ -639,7 +639,7 @@ func representBasicConsume(event map[string]interface{}) []interface{} {
 		},
 	})
 	rep = append(rep, map[string]string{
-		"type":  "table",
+		"type":  api.TABLE,
 		"title": "Details",
 		"data":  string(details),
 	})
@@ -654,7 +654,7 @@ func representBasicConsume(event map[string]interface{}) []interface{} {
 		}
 		headersMarshaled, _ := json.Marshal(headers)
 		rep = append(rep, map[string]string{
-			"type":  "table",
+			"type":  api.TABLE,
 			"title": "Arguments",
 			"data":  string(headersMarshaled),
 		})

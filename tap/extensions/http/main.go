@@ -234,28 +234,28 @@ func representRequest(request map[string]interface{}) (repRequest []interface{})
 		},
 	})
 	repRequest = append(repRequest, map[string]string{
-		"type":  "table",
+		"type":  api.TABLE,
 		"title": "Details",
 		"data":  string(details),
 	})
 
 	headers, _ := json.Marshal(request["headers"].([]interface{}))
 	repRequest = append(repRequest, map[string]string{
-		"type":  "table",
+		"type":  api.TABLE,
 		"title": "Headers",
 		"data":  string(headers),
 	})
 
 	cookies, _ := json.Marshal(request["cookies"].([]interface{}))
 	repRequest = append(repRequest, map[string]string{
-		"type":  "table",
+		"type":  api.TABLE,
 		"title": "Cookies",
 		"data":  string(cookies),
 	})
 
 	queryString, _ := json.Marshal(request["queryString"].([]interface{}))
 	repRequest = append(repRequest, map[string]string{
-		"type":  "table",
+		"type":  api.TABLE,
 		"title": "Query String",
 		"data":  string(queryString),
 	})
@@ -268,7 +268,7 @@ func representRequest(request map[string]interface{}) (repRequest []interface{})
 	text, _ := postData["text"]
 	if text != nil {
 		repRequest = append(repRequest, map[string]string{
-			"type":      "body",
+			"type":      api.BODY,
 			"title":     "POST Data (text/plain)",
 			"encoding":  "",
 			"mime_type": mimeType.(string),
@@ -287,13 +287,13 @@ func representRequest(request map[string]interface{}) (repRequest []interface{})
 					},
 				})
 				repRequest = append(repRequest, map[string]string{
-					"type":  "table",
+					"type":  api.TABLE,
 					"title": "POST Data (multipart/form-data)",
 					"data":  string(multipart),
 				})
 			} else {
 				repRequest = append(repRequest, map[string]string{
-					"type":  "table",
+					"type":  api.TABLE,
 					"title": "POST Data (application/x-www-form-urlencoded)",
 					"data":  string(params),
 				})
@@ -324,21 +324,21 @@ func representResponse(response map[string]interface{}) (repResponse []interface
 		},
 	})
 	repResponse = append(repResponse, map[string]string{
-		"type":  "table",
+		"type":  api.TABLE,
 		"title": "Details",
 		"data":  string(details),
 	})
 
 	headers, _ := json.Marshal(response["headers"].([]interface{}))
 	repResponse = append(repResponse, map[string]string{
-		"type":  "table",
+		"type":  api.TABLE,
 		"title": "Headers",
 		"data":  string(headers),
 	})
 
 	cookies, _ := json.Marshal(response["cookies"].([]interface{}))
 	repResponse = append(repResponse, map[string]string{
-		"type":  "table",
+		"type":  api.TABLE,
 		"title": "Cookies",
 		"data":  string(cookies),
 	})
@@ -352,7 +352,7 @@ func representResponse(response map[string]interface{}) (repResponse []interface
 	text, _ := content["text"]
 	if text != nil {
 		repResponse = append(repResponse, map[string]string{
-			"type":      "body",
+			"type":      api.BODY,
 			"title":     "Body",
 			"encoding":  encoding.(string),
 			"mime_type": mimeType.(string),

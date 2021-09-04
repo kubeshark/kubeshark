@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+
+	"github.com/up9inc/mizu/tap/api"
 )
 
 type KafkaPayload struct {
@@ -48,7 +50,7 @@ func representRequestHeader(data map[string]interface{}, rep []interface{}) []in
 		},
 	})
 	rep = append(rep, map[string]string{
-		"type":  "table",
+		"type":  api.TABLE,
 		"title": "Request Header",
 		"data":  string(requestHeader),
 	})
@@ -64,7 +66,7 @@ func representResponseHeader(data map[string]interface{}, rep []interface{}) []i
 		},
 	})
 	rep = append(rep, map[string]string{
-		"type":  "table",
+		"type":  api.TABLE,
 		"title": "Response Header",
 		"data":  string(requestHeader),
 	})
@@ -114,7 +116,7 @@ func representMetadataRequest(data map[string]interface{}) []interface{} {
 		},
 	})
 	rep = append(rep, map[string]string{
-		"type":  "table",
+		"type":  api.TABLE,
 		"title": "Payload",
 		"data":  string(repPayload),
 	})
@@ -173,7 +175,7 @@ func representMetadataResponse(data map[string]interface{}) []interface{} {
 		},
 	})
 	rep = append(rep, map[string]string{
-		"type":  "table",
+		"type":  api.TABLE,
 		"title": "Payload",
 		"data":  string(repPayload),
 	})
@@ -206,7 +208,7 @@ func representApiVersionsRequest(data map[string]interface{}) []interface{} {
 		},
 	})
 	rep = append(rep, map[string]string{
-		"type":  "table",
+		"type":  api.TABLE,
 		"title": "Payload",
 		"data":  string(repPayload),
 	})
@@ -244,7 +246,7 @@ func representApiVersionsResponse(data map[string]interface{}) []interface{} {
 		},
 	})
 	rep = append(rep, map[string]string{
-		"type":  "table",
+		"type":  api.TABLE,
 		"title": "Payload",
 		"data":  string(repPayload),
 	})
@@ -287,7 +289,7 @@ func representProduceRequest(data map[string]interface{}) []interface{} {
 		},
 	})
 	rep = append(rep, map[string]string{
-		"type":  "table",
+		"type":  api.TABLE,
 		"title": "Payload",
 		"data":  string(repPayload),
 	})
@@ -317,7 +319,7 @@ func representProduceResponse(data map[string]interface{}) []interface{} {
 		},
 	})
 	rep = append(rep, map[string]string{
-		"type":  "table",
+		"type":  api.TABLE,
 		"title": "Payload",
 		"data":  string(repPayload),
 	})
@@ -404,7 +406,7 @@ func representFetchRequest(data map[string]interface{}) []interface{} {
 		},
 	})
 	rep = append(rep, map[string]string{
-		"type":  "table",
+		"type":  api.TABLE,
 		"title": "Payload",
 		"data":  string(repPayload),
 	})
@@ -450,7 +452,7 @@ func representFetchResponse(data map[string]interface{}) []interface{} {
 		},
 	})
 	rep = append(rep, map[string]string{
-		"type":  "table",
+		"type":  api.TABLE,
 		"title": "Payload",
 		"data":  string(repPayload),
 	})
@@ -476,7 +478,7 @@ func representListOffsetsRequest(data map[string]interface{}) []interface{} {
 		},
 	})
 	rep = append(rep, map[string]string{
-		"type":  "table",
+		"type":  api.TABLE,
 		"title": "Payload",
 		"data":  string(repPayload),
 	})
@@ -506,7 +508,7 @@ func representListOffsetsResponse(data map[string]interface{}) []interface{} {
 		},
 	})
 	rep = append(rep, map[string]string{
-		"type":  "table",
+		"type":  api.TABLE,
 		"title": "Payload",
 		"data":  string(repPayload),
 	})
@@ -540,7 +542,7 @@ func representCreateTopicsRequest(data map[string]interface{}) []interface{} {
 		},
 	})
 	rep = append(rep, map[string]string{
-		"type":  "table",
+		"type":  api.TABLE,
 		"title": "Payload",
 		"data":  string(repPayload),
 	})
@@ -570,7 +572,7 @@ func representCreateTopicsResponse(data map[string]interface{}) []interface{} {
 		},
 	})
 	rep = append(rep, map[string]string{
-		"type":  "table",
+		"type":  api.TABLE,
 		"title": "Payload",
 		"data":  string(repPayload),
 	})
@@ -609,7 +611,7 @@ func representDeleteTopicsRequest(data map[string]interface{}) []interface{} {
 		},
 	})
 	rep = append(rep, map[string]string{
-		"type":  "table",
+		"type":  api.TABLE,
 		"title": "Payload",
 		"data":  string(repPayload),
 	})
@@ -639,7 +641,7 @@ func representDeleteTopicsResponse(data map[string]interface{}) []interface{} {
 		},
 	})
 	rep = append(rep, map[string]string{
-		"type":  "table",
+		"type":  api.TABLE,
 		"title": "Payload",
 		"data":  string(repPayload),
 	})
