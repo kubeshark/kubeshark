@@ -216,6 +216,8 @@ func closeTimedoutTcpStreamChannels() {
 			dynamicStreamChannelTimeoutNs := baseStreamChannelTimeoutMs * cpuCount / metric * 1000000
 			if !stream.isClosed && time.Now().After(streamWrapper.createdAt.Add(time.Duration(dynamicStreamChannelTimeoutNs))) {
 				stream.Close()
+				statsTracker.incDroppedTcpStreams()
+				rlog.Debugf("Dropped a TCP stream because of load. Total dropped: %d\n", statsTracker.appStats.DroppedTcpStreams)
 			}
 			return true
 		})
