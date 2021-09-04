@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/up9inc/mizu/tap/api"
 )
@@ -37,15 +38,15 @@ func (d dissecting) Ping() {
 	log.Printf("pong %s\n", _protocol.Name)
 }
 
-func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, counterPair *api.CounterPair, emitter api.Emitter) error {
+func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, emitter api.Emitter) error {
 	for {
 		if isClient {
-			_, _, err := ReadRequest(b, tcpID)
+			_, _, err := ReadRequest(b, tcpID, superTimer)
 			if err != nil {
 				return err
 			}
 		} else {
-			err := ReadResponse(b, tcpID, emitter)
+			err := ReadResponse(b, tcpID, superTimer, emitter)
 			if err != nil {
 				return err
 			}
@@ -131,6 +132,7 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolve
 	}
 
 	request["url"] = summary
+	elapsedTime := item.Pair.Response.CaptureTime.Sub(item.Pair.Request.CaptureTime).Round(time.Millisecond).Milliseconds()
 	entryBytes, _ := json.Marshal(item.Pair)
 	return &api.MizuEntry{
 		ProtocolName:        _protocol.Name,
@@ -143,6 +145,7 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolve
 		RequestSenderIp:     item.ConnectionInfo.ClientIP,
 		Service:             service,
 		Timestamp:           item.Timestamp,
+		ElapsedTime:         elapsedTime,
 		Path:                summary,
 		ResolvedSource:      resolvedSource,
 		ResolvedDestination: resolvedDestination,
@@ -178,7 +181,9 @@ func (d dissecting) Summarize(entry *api.MizuEntry) *api.BaseEntryDetails {
 	}
 }
 
-func (d dissecting) Represent(entry *api.MizuEntry) (api.Protocol, []byte, error) {
+func (d dissecting) Represent(entry *api.MizuEntry) (p api.Protocol, object []byte, bodySize int64, err error) {
+	p = _protocol
+	bodySize = 0
 	var root map[string]interface{}
 	json.Unmarshal([]byte(entry.Entry), &root)
 	representation := make(map[string]interface{}, 0)
@@ -224,8 +229,8 @@ func (d dissecting) Represent(entry *api.MizuEntry) (api.Protocol, []byte, error
 
 	representation["request"] = repRequest
 	representation["response"] = repResponse
-	object, err := json.Marshal(representation)
-	return _protocol, object, err
+	object, err = json.Marshal(representation)
+	return
 }
 
 var Dissector dissecting
