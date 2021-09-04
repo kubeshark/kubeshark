@@ -215,20 +215,7 @@ func closeTimedoutTcpStreamChannels() {
 			}
 			dynamicStreamChannelTimeoutNs := baseStreamChannelTimeoutMs * cpuCount / metric * 1000000
 			if !stream.isClosed && time.Now().After(streamWrapper.createdAt.Add(time.Duration(dynamicStreamChannelTimeoutNs))) {
-				stream.Lock()
-				stream.isClosed = true
-				stream.Unlock()
-				streams.Delete(key)
-				for _, reader := range stream.clients {
-					stream.Lock()
-					close(reader.msgQueue)
-					stream.Unlock()
-				}
-				for _, reader := range stream.servers {
-					stream.Lock()
-					close(reader.msgQueue)
-					stream.Unlock()
-				}
+				stream.Close()
 			}
 			return true
 		})

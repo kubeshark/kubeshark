@@ -167,21 +167,25 @@ func (t *tcpStream) ReassembledSG(sg reassembly.ScatterGather, ac reassembly.Ass
 func (t *tcpStream) ReassemblyComplete(ac reassembly.AssemblerContext) bool {
 	Trace("%s: Connection closed", t.ident)
 	if t.isTapTarget && !t.isClosed {
-		t.Lock()
-		t.isClosed = true
-		t.Unlock()
-		streams.Delete(t.id)
-		for _, reader := range t.clients {
-			t.Lock()
-			close(reader.msgQueue)
-			t.Unlock()
-		}
-		for _, reader := range t.servers {
-			t.Lock()
-			close(reader.msgQueue)
-			t.Unlock()
-		}
+		t.Close()
 	}
 	// do not remove the connection to allow last ACK
 	return false
+}
+
+func (t *tcpStream) Close() {
+	t.Lock()
+	t.isClosed = true
+	t.Unlock()
+	streams.Delete(t.id)
+	for _, reader := range t.clients {
+		t.Lock()
+		close(reader.msgQueue)
+		t.Unlock()
+	}
+	for _, reader := range t.servers {
+		t.Lock()
+		close(reader.msgQueue)
+		t.Unlock()
+	}
 }
