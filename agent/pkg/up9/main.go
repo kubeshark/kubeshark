@@ -142,8 +142,6 @@ func UploadEntriesImpl(token string, model string, envPrefix string, sleepInterv
 					continue
 				}
 				harEntry, err := utils.NewEntry(&pair)
-				logData, _ := json.Marshal(harEntry)
-				fmt.Printf("Entry: %s\n", string(logData))
 				if err != nil {
 					continue
 				}
