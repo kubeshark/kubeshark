@@ -144,22 +144,24 @@ func (t *tcpStream) ReassembledSG(sg reassembly.ScatterGather, ac reassembly.Ass
 			sg.KeepFrom(2 + int(dnsSize))
 		}
 	} else if t.isTapTarget {
-		if length > 0 && !t.isClosed {
+		if length > 0 {
 			// This is where we pass the reassembled information onwards
 			// This channel is read by an tcpReader object
 			statsTracker.incReassembledTcpPayloadsCount()
 			timestamp := ac.GetCaptureInfo().Timestamp
 			if dir == reassembly.TCPDirClientToServer {
-				for _, reader := range t.clients {
-					t.Lock()
-					reader.msgQueue <- tcpReaderDataMsg{data, timestamp}
-					t.Unlock()
+				for i := range t.clients {
+					reader := &t.clients[i]
+					if !reader.isClosed {
+						reader.msgQueue <- tcpReaderDataMsg{data, timestamp}
+					}
 				}
 			} else {
-				for _, reader := range t.servers {
-					t.Lock()
-					reader.msgQueue <- tcpReaderDataMsg{data, timestamp}
-					t.Unlock()
+				for i := range t.servers {
+					reader := &t.servers[i]
+					if !reader.isClosed {
+						reader.msgQueue <- tcpReaderDataMsg{data, timestamp}
+					}
 				}
 			}
 		}
@@ -180,14 +182,19 @@ func (t *tcpStream) Close() {
 	t.isClosed = true
 	t.Unlock()
 	streams.Delete(t.id)
-	for _, reader := range t.clients {
-		t.Lock()
+
+	for i := range t.clients {
+		reader := &t.clients[i]
+		reader.Lock()
+		t.isClosed = true
 		close(reader.msgQueue)
-		t.Unlock()
+		reader.Unlock()
 	}
-	for _, reader := range t.servers {
-		t.Lock()
+	for i := range t.servers {
+		reader := &t.servers[i]
+		reader.Lock()
+		t.isClosed = true
 		close(reader.msgQueue)
-		t.Unlock()
+		reader.Unlock()
 	}
 }

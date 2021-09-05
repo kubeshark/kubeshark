@@ -47,6 +47,7 @@ func (tid *tcpID) String() string {
 type tcpReader struct {
 	ident              string
 	tcpID              *api.TcpID
+	isClosed           bool
 	isClient           bool
 	isOutgoing         bool
 	msgQueue           chan tcpReaderDataMsg // Channel of captured reassembled tcp payload
@@ -59,6 +60,7 @@ type tcpReader struct {
 	extension          *api.Extension
 	emitter            api.Emitter
 	counterPair        *api.CounterPair
+	sync.Mutex
 }
 
 func (h *tcpReader) Read(p []byte) (int, error) {
