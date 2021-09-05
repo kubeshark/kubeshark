@@ -1,7 +1,6 @@
 package apiserver
 
 import (
-	"archive/zip"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -131,28 +130,6 @@ func (provider *apiServerProvider) GetGeneralStats() (map[string]interface{}, er
 	return generalStats, nil
 }
 
-func (provider *apiServerProvider) GetHars(fromTimestamp int, toTimestamp int) (*zip.Reader, error) {
-	if !provider.isReady {
-		return nil, fmt.Errorf("trying to reach api server when not initialized yet")
-	}
-	resp, err := http.Get(fmt.Sprintf("%s/api/har?from=%v&to=%v", provider.url, fromTimestamp, toTimestamp))
-	if err != nil {
-		return nil, fmt.Errorf("failed getting har from api server %w", err)
-	}
-
-	defer func() { _ = resp.Body.Close() }()
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("failed reading hars %w", err)
-	}
-
-	zipReader, err := zip.NewReader(bytes.NewReader(body), int64(len(body)))
-	if err != nil {
-		return nil, fmt.Errorf("failed craeting zip reader %w", err)
-	}
-	return zipReader, nil
-}
 
 func (provider *apiServerProvider) GetVersion() (string, error) {
 	if !provider.isReady {

@@ -3,10 +3,8 @@ package configStructs
 import (
 	"errors"
 	"fmt"
-	"regexp"
-	"strings"
-
 	"github.com/up9inc/mizu/shared/units"
+	"regexp"
 )
 
 const (
@@ -17,7 +15,6 @@ const (
 	PlainTextFilterRegexesTapName = "regex-masking"
 	DisableRedactionTapName       = "no-redact"
 	HumanMaxEntriesDBSizeTapName  = "max-entries-db-size"
-	DirectionTapName              = "direction"
 	DryRunTapName                 = "dry-run"
 	EnforcePolicyFile             = "test-rules"
 )
@@ -34,7 +31,6 @@ type TapConfig struct {
 	HealthChecksUserAgentHeaders []string  `yaml:"ignored-user-agents"`
 	DisableRedaction             bool      `yaml:"no-redact" default:"false"`
 	HumanMaxEntriesDBSize        string    `yaml:"max-entries-db-size" default:"200MB"`
-	Direction                    string    `yaml:"direction" default:"in"`
 	DryRun                       bool      `yaml:"dry-run" default:"false"`
 	EnforcePolicyFile            string    `yaml:"test-rules"`
 	ApiServerResources           Resources `yaml:"api-server-resources"`
@@ -67,11 +63,6 @@ func (config *TapConfig) Validate() error {
 	_, parseHumanDataSizeErr := units.HumanReadableToBytes(config.HumanMaxEntriesDBSize)
 	if parseHumanDataSizeErr != nil {
 		return errors.New(fmt.Sprintf("Could not parse --%s value %s", HumanMaxEntriesDBSizeTapName, config.HumanMaxEntriesDBSize))
-	}
-
-	directionLowerCase := strings.ToLower(config.Direction)
-	if directionLowerCase != "any" && directionLowerCase != "in" {
-		return errors.New(fmt.Sprintf("%s is not a valid value for flag --%s. Acceptable values are in/any.", config.Direction, DirectionTapName))
 	}
 
 	return nil

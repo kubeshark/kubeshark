@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"encoding/json"
 	"fmt"
 	"mizuserver/pkg/database"
 	"mizuserver/pkg/models"
@@ -10,11 +9,9 @@ import (
 	"mizuserver/pkg/utils"
 	"mizuserver/pkg/validation"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/martian/har"
 	"github.com/romana/rlog"
 
 	tapApi "github.com/up9inc/mizu/tap/api"
@@ -62,93 +59,6 @@ func GetEntries(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, baseEntries)
-}
-
-func GetHARs(c *gin.Context) {
-	entriesFilter := &models.HarFetchRequestQuery{}
-	order := database.OrderDesc
-	if err := c.BindQuery(entriesFilter); err != nil {
-		c.JSON(http.StatusBadRequest, err)
-	}
-	err := validation.Validate(entriesFilter)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, err)
-	}
-
-	var timestampFrom, timestampTo int64
-
-	if entriesFilter.From < 0 {
-		timestampFrom = 0
-	} else {
-		timestampFrom = entriesFilter.From
-	}
-	if entriesFilter.To <= 0 {
-		timestampTo = time.Now().UnixNano() / int64(time.Millisecond)
-	} else {
-		timestampTo = entriesFilter.To
-	}
-
-	var entries []tapApi.MizuEntry
-	database.GetEntriesTable().
-		Where(fmt.Sprintf("timestamp BETWEEN %v AND %v", timestampFrom, timestampTo)).
-		Order(fmt.Sprintf("timestamp %s", order)).
-		Find(&entries)
-
-	if len(entries) > 0 {
-		// the entries always order from oldest to newest so we should revers
-		utils.ReverseSlice(entries)
-	}
-
-	harsObject := map[string]*models.ExtendedHAR{}
-
-	for _, entryData := range entries {
-		var harEntry har.Entry
-		_ = json.Unmarshal([]byte(entryData.Entry), &harEntry)
-		if entryData.ResolvedDestination != "" {
-			harEntry.Request.URL = utils.SetHostname(harEntry.Request.URL, entryData.ResolvedDestination)
-		}
-
-		var fileName string
-		sourceOfEntry := entryData.ResolvedSource
-		if sourceOfEntry != "" {
-			// naively assumes the proper service source is http
-			sourceOfEntry = fmt.Sprintf("http://%s", sourceOfEntry)
-			//replace / from the file name cause they end up creating a corrupted folder
-			fileName = fmt.Sprintf("%s.har", strings.ReplaceAll(sourceOfEntry, "/", "_"))
-		} else {
-			fileName = "unknown_source.har"
-		}
-		if harOfSource, ok := harsObject[fileName]; ok {
-			harOfSource.Log.Entries = append(harOfSource.Log.Entries, &harEntry)
-		} else {
-			var entriesHar []*har.Entry
-			entriesHar = append(entriesHar, &harEntry)
-			harsObject[fileName] = &models.ExtendedHAR{
-				Log: &models.ExtendedLog{
-					Version: "1.2",
-					Creator: &models.ExtendedCreator{
-						Creator: &har.Creator{
-							Name:    "mizu",
-							Version: "0.0.2",
-						},
-					},
-					Entries: entriesHar,
-				},
-			}
-			// leave undefined when no source is present, otherwise modeler assumes source is empty string ""
-			if sourceOfEntry != "" {
-				harsObject[fileName].Log.Creator.Source = &sourceOfEntry
-			}
-		}
-	}
-
-	retObj := map[string][]byte{}
-	for k, v := range harsObject {
-		bytesData, _ := json.Marshal(v)
-		retObj[k] = bytesData
-	}
-	buffer := utils.ZipData(retObj)
-	c.Data(http.StatusOK, "application/octet-stream", buffer.Bytes())
 }
 
 func UploadEntries(c *gin.Context) {

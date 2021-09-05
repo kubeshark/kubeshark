@@ -76,12 +76,12 @@ func getDefaultTapNamespace() []string {
 	return []string{"-n", "mizu-tests"}
 }
 
-func getDefaultFetchCommandArgs() []string {
-	fetchCommand := "fetch"
-	defaultCmdArgs := getDefaultCommandArgs()
-
-	return append([]string{fetchCommand}, defaultCmdArgs...)
-}
+//func getDefaultFetchCommandArgs() []string {
+//	fetchCommand := "fetch"
+//	defaultCmdArgs := getDefaultCommandArgs()
+//
+//	return append([]string{fetchCommand}, defaultCmdArgs...)
+//}
 
 func getDefaultConfigCommandArgs() []string {
 	configCommand := "config"
@@ -179,18 +179,18 @@ func cleanupCommand(cmd *exec.Cmd) error {
 	return nil
 }
 
-func getEntriesFromHarBytes(harBytes []byte) ([]interface{}, error) {
-	harInterface, convertErr := jsonBytesToInterface(harBytes)
-	if convertErr != nil {
-		return nil, convertErr
-	}
-
-	har := harInterface.(map[string]interface{})
-	harLog := har["log"].(map[string]interface{})
-	harEntries := harLog["entries"].([]interface{})
-
-	return harEntries, nil
-}
+//func getEntriesFromHarBytes(harBytes []byte) ([]interface{}, error) {
+//	harInterface, convertErr := jsonBytesToInterface(harBytes)
+//	if convertErr != nil {
+//		return nil, convertErr
+//	}
+//
+//	har := harInterface.(map[string]interface{})
+//	harLog := har["log"].(map[string]interface{})
+//	harEntries := harLog["entries"].([]interface{})
+//
+//	return harEntries, nil
+//}
 
 func getPods(tapStatusInterface interface{}) ([]map[string]interface{}, error) {
 	tapStatus := tapStatusInterface.(map[string]interface{})

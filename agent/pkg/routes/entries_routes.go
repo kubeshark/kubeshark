@@ -15,8 +15,6 @@ func EntriesRoutes(ginApp *gin.Engine) {
 	routeGroup.GET("/uploadEntries", controllers.UploadEntries)
 	routeGroup.GET("/resolving", controllers.GetCurrentResolvingInformation)
 
-	routeGroup.GET("/har", controllers.GetHARs)
-
 	routeGroup.GET("/resetDB", controllers.DeleteAllEntries)     // get single (full) entry
 	routeGroup.GET("/generalStats", controllers.GetGeneralStats) // get general stats about entries in DB
 
