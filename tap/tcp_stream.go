@@ -152,16 +152,20 @@ func (t *tcpStream) ReassembledSG(sg reassembly.ScatterGather, ac reassembly.Ass
 			if dir == reassembly.TCPDirClientToServer {
 				for i := range t.clients {
 					reader := &t.clients[i]
+					reader.Lock()
 					if !reader.isClosed {
 						reader.msgQueue <- tcpReaderDataMsg{data, timestamp}
 					}
+					reader.Unlock()
 				}
 			} else {
 				for i := range t.servers {
 					reader := &t.servers[i]
+					reader.Lock()
 					if !reader.isClosed {
 						reader.msgQueue <- tcpReaderDataMsg{data, timestamp}
 					}
+					reader.Unlock()
 				}
 			}
 		}
@@ -178,23 +182,35 @@ func (t *tcpStream) ReassemblyComplete(ac reassembly.AssemblerContext) bool {
 }
 
 func (t *tcpStream) Close() {
+	shouldReturn := false
 	t.Lock()
-	t.isClosed = true
+	if t.isClosed {
+		shouldReturn = true
+	} else {
+		t.isClosed = true
+	}
 	t.Unlock()
+	if shouldReturn {
+		return
+	}
 	streams.Delete(t.id)
 
 	for i := range t.clients {
 		reader := &t.clients[i]
 		reader.Lock()
-		t.isClosed = true
-		close(reader.msgQueue)
+		if !reader.isClosed {
+			reader.isClosed = true
+			close(reader.msgQueue)
+		}
 		reader.Unlock()
 	}
 	for i := range t.servers {
 		reader := &t.servers[i]
 		reader.Lock()
-		t.isClosed = true
-		close(reader.msgQueue)
+		if !reader.isClosed {
+			reader.isClosed = true
+			close(reader.msgQueue)
+		}
 		reader.Unlock()
 	}
 }
