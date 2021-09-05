@@ -3,8 +3,6 @@ package models
 import (
 	"encoding/json"
 	tapApi "github.com/up9inc/mizu/tap/api"
-	har2 "mizuserver/pkg/har"
-
 	"mizuserver/pkg/rules"
 	"mizuserver/pkg/utils"
 
@@ -39,7 +37,7 @@ func (fed *FullEntryDetails) UnmarshalData(entry *tapApi.MizuEntry) error {
 	if err != nil {
 		return err
 	}
-	harEntry, err := har2.NewEntry(&pair)
+	harEntry, err := utils.NewEntry(&pair)
 	if err != nil {
 		return err
 	}
@@ -57,7 +55,7 @@ func (fedex *FullEntryDetailsExtra) UnmarshalData(entry *tapApi.MizuEntry) error
 	if err != nil {
 		return err
 	}
-	harEntry, err := har2.NewEntry(&pair)
+	harEntry, err := utils.NewEntry(&pair)
 	if err != nil {
 		return err
 	}
@@ -166,7 +164,7 @@ func (fewp *FullEntryWithPolicy) UnmarshalData(entry *tapApi.MizuEntry) error {
 	if err != nil {
 		return err
 	}
-	harEntry, err := har2.NewEntry(&pair)
+	harEntry, err := utils.NewEntry(&pair)
 	if err != nil {
 		return err
 	}

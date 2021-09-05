@@ -1,12 +1,9 @@
-package har
+package utils
 
 import (
 	"bytes"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
-	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -16,11 +13,9 @@ import (
 	"github.com/up9inc/mizu/tap/api"
 )
 
-type HarFile struct {
-	file       *os.File
-	entryCount int
-}
 
+// BuildCookies
+// Keep it because we might want cookies in the future
 func BuildCookies(rawCookies []interface{}) []har.Cookie {
 	cookies := make([]har.Cookie, 0, len(rawCookies))
 
@@ -262,54 +257,4 @@ func NewEntry(pair *api.RequestResponsePair) (*har.Entry, error) {
 	}
 
 	return &harEntry, nil
-}
-
-func (f *HarFile) WriteEntry(harEntry *har.Entry) {
-	harEntryJson, err := json.Marshal(harEntry)
-	if err != nil {
-		tap.SilentError("har-entry-marshal", "Failed converting har entry object to JSON%s (%v,%+v)", err, err, err)
-		return
-	}
-
-	var separator string
-	if f.GetEntryCount() > 0 {
-		separator = ","
-	} else {
-		separator = ""
-	}
-
-	harEntryString := append([]byte(separator), harEntryJson...)
-
-	if _, err := f.file.Write(harEntryString); err != nil {
-		log.Panicf("Failed to write to output file: %s (%v,%+v)", err, err, err)
-	}
-
-	f.entryCount++
-}
-
-func (f *HarFile) GetEntryCount() int {
-	return f.entryCount
-}
-
-func (f *HarFile) Close() {
-	f.writeTrailer()
-
-	err := f.file.Close()
-	if err != nil {
-		log.Panicf("Failed to close output file: %s (%v,%+v)", err, err, err)
-	}
-}
-
-func (f *HarFile) writeHeader() {
-	header := []byte(`{"log": {"version": "1.2", "creator": {"name": "Mizu", "version": "0.0.1"}, "entries": [`)
-	if _, err := f.file.Write(header); err != nil {
-		log.Panicf("Failed to write header to output file: %s (%v,%+v)", err, err, err)
-	}
-}
-
-func (f *HarFile) writeTrailer() {
-	trailer := []byte("]}}")
-	if _, err := f.file.Write(trailer); err != nil {
-		log.Panicf("Failed to write trailer to output file: %s (%v,%+v)", err, err, err)
-	}
 }

@@ -12,7 +12,6 @@ import (
 	"io/ioutil"
 	"log"
 	"mizuserver/pkg/database"
-	har2 "mizuserver/pkg/har"
 	"mizuserver/pkg/utils"
 	"net/http"
 	"net/url"
@@ -142,7 +141,7 @@ func UploadEntriesImpl(token string, model string, envPrefix string, sleepInterv
 				if err := json.Unmarshal([]byte(data.Entry), &pair); err != nil {
 					continue
 				}
-				harEntry, err := har2.NewEntry(&pair)
+				harEntry, err := utils.NewEntry(&pair)
 				logData, _ := json.Marshal(harEntry)
 				fmt.Printf("Entry: %s\n", string(logData))
 				if err != nil {

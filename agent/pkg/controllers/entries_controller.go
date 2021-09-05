@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"mizuserver/pkg/database"
-	har2 "mizuserver/pkg/har"
 	"mizuserver/pkg/models"
 	"mizuserver/pkg/providers"
 	"mizuserver/pkg/up9"
@@ -211,7 +210,7 @@ func GetFullEntries(c *gin.Context) {
 		if err := json.Unmarshal([]byte(data.Entry), &pair); err != nil {
 			continue
 		}
-		harEntry, err := har2.NewEntry(&pair)
+		harEntry, err := utils.NewEntry(&pair)
 		if err != nil {
 			continue
 		}
