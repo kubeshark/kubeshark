@@ -72,10 +72,14 @@ type SuperTimer struct {
 	CaptureTime time.Time
 }
 
+type SuperIdentifier struct {
+	Protocol *Protocol
+}
+
 type Dissector interface {
 	Register(*Extension)
 	Ping()
-	Dissect(b *bufio.Reader, isClient bool, tcpID *TcpID, counterPair *CounterPair, superTimer *SuperTimer, emitter Emitter) error
+	Dissect(b *bufio.Reader, isClient bool, tcpID *TcpID, counterPair *CounterPair, superTimer *SuperTimer, superIdentifier *SuperIdentifier, emitter Emitter) error
 	Analyze(item *OutputChannelItem, entryId string, resolvedSource string, resolvedDestination string) *MizuEntry
 	Summarize(entry *MizuEntry) *BaseEntryDetails
 	Represent(entry *MizuEntry) (protocol Protocol, object []byte, bodySize int64, err error)

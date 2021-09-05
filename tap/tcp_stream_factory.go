@@ -50,13 +50,14 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.T
 	props := factory.getStreamProps(srcIp, srcPort, dstIp, dstPort)
 	isTapTarget := props.isTapTarget
 	stream := &tcpStream{
-		net:         net,
-		transport:   transport,
-		isDNS:       tcp.SrcPort == 53 || tcp.DstPort == 53,
-		isTapTarget: isTapTarget,
-		tcpstate:    reassembly.NewTCPSimpleFSM(fsmOptions),
-		ident:       fmt.Sprintf("%s:%s", net, transport),
-		optchecker:  reassembly.NewTCPOptionCheck(),
+		net:             net,
+		transport:       transport,
+		isDNS:           tcp.SrcPort == 53 || tcp.DstPort == 53,
+		isTapTarget:     isTapTarget,
+		tcpstate:        reassembly.NewTCPSimpleFSM(fsmOptions),
+		ident:           fmt.Sprintf("%s:%s", net, transport),
+		optchecker:      reassembly.NewTCPOptionCheck(),
+		superIdentifier: &api.SuperIdentifier{},
 	}
 	if stream.isTapTarget {
 		streamId++

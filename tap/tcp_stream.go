@@ -8,6 +8,7 @@ import (
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers" // pulls in all layers decoders
 	"github.com/google/gopacket/reassembly"
+	"github.com/up9inc/mizu/tap/api"
 )
 
 /* It's a connection (bidirectional)
@@ -16,18 +17,19 @@ import (
  * In our implementation, we pass information from ReassembledSG to the tcpReader through a shared channel.
  */
 type tcpStream struct {
-	id             int64
-	isClosed       bool
-	tcpstate       *reassembly.TCPSimpleFSM
-	fsmerr         bool
-	optchecker     reassembly.TCPOptionCheck
-	net, transport gopacket.Flow
-	isDNS          bool
-	isTapTarget    bool
-	clients        []tcpReader
-	servers        []tcpReader
-	urls           []string
-	ident          string
+	id              int64
+	isClosed        bool
+	superIdentifier *api.SuperIdentifier
+	tcpstate        *reassembly.TCPSimpleFSM
+	fsmerr          bool
+	optchecker      reassembly.TCPOptionCheck
+	net, transport  gopacket.Flow
+	isDNS           bool
+	isTapTarget     bool
+	clients         []tcpReader
+	servers         []tcpReader
+	urls            []string
+	ident           string
 	sync.Mutex
 }
 

@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -38,18 +39,24 @@ func (d dissecting) Ping() {
 	log.Printf("pong %s\n", _protocol.Name)
 }
 
-func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, emitter api.Emitter) error {
+func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, superIdentifier *api.SuperIdentifier, emitter api.Emitter) error {
 	for {
+		if superIdentifier.Protocol != nil && superIdentifier.Protocol != &_protocol {
+			return errors.New("Identified by another protocol")
+		}
+
 		if isClient {
 			_, _, err := ReadRequest(b, tcpID, superTimer)
 			if err != nil {
 				return err
 			}
+			superIdentifier.Protocol = &_protocol
 		} else {
 			err := ReadResponse(b, tcpID, superTimer, emitter)
 			if err != nil {
 				return err
 			}
+			superIdentifier.Protocol = &_protocol
 		}
 	}
 }

@@ -213,8 +213,11 @@ func closeTimedoutTcpStreamChannels() {
 			if metric < 1 {
 				metric = 1
 			}
+			// `metric` stabilizes arround 0 - 24.
+			// `metric` means number of currently running extra Goroutines mainly spawned for dissectors.
+			// fmt.Printf("metric: %v\n", metric)
 			dynamicStreamChannelTimeoutNs := baseStreamChannelTimeoutMs * cpuCount / metric * 1000000
-			if !stream.isClosed && time.Now().After(streamWrapper.createdAt.Add(time.Duration(dynamicStreamChannelTimeoutNs))) {
+			if !stream.isClosed && stream.superIdentifier.Protocol == nil && time.Now().After(streamWrapper.createdAt.Add(time.Duration(dynamicStreamChannelTimeoutNs))) {
 				stream.Close()
 				statsTracker.incDroppedTcpStreams()
 				rlog.Debugf("Dropped a TCP stream because of load. Total dropped: %d\n", statsTracker.appStats.DroppedTcpStreams)

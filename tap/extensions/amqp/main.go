@@ -41,7 +41,7 @@ func (d dissecting) Ping() {
 
 const amqpRequest string = "amqp_request"
 
-func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, emitter api.Emitter) error {
+func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, superIdentifier *api.SuperIdentifier, emitter api.Emitter) error {
 	r := AmqpReader{b}
 
 	var remaining int
@@ -78,6 +78,10 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 	var lastMethodFrameMessage Message
 
 	for {
+		if superIdentifier.Protocol != nil && superIdentifier.Protocol != &protocol {
+			return errors.New("Identified by another protocol")
+		}
+
 		frame, err := r.ReadFrame()
 		if err == io.EOF {
 			// We must read until we see an EOF... very important!
@@ -110,9 +114,11 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 			switch lastMethodFrameMessage.(type) {
 			case *BasicPublish:
 				eventBasicPublish.Body = f.Body
+				superIdentifier.Protocol = &protocol
 				emitAMQP(*eventBasicPublish, amqpRequest, basicMethodMap[40], connectionInfo, superTimer.CaptureTime, emitter)
 			case *BasicDeliver:
 				eventBasicDeliver.Body = f.Body
+				superIdentifier.Protocol = &protocol
 				emitAMQP(*eventBasicDeliver, amqpRequest, basicMethodMap[60], connectionInfo, superTimer.CaptureTime, emitter)
 			default:
 			}
@@ -134,6 +140,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 					NoWait:     m.NoWait,
 					Arguments:  m.Arguments,
 				}
+				superIdentifier.Protocol = &protocol
 				emitAMQP(*eventQueueBind, amqpRequest, queueMethodMap[20], connectionInfo, superTimer.CaptureTime, emitter)
 
 			case *BasicConsume:
@@ -146,6 +153,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 					NoWait:      m.NoWait,
 					Arguments:   m.Arguments,
 				}
+				superIdentifier.Protocol = &protocol
 				emitAMQP(*eventBasicConsume, amqpRequest, basicMethodMap[20], connectionInfo, superTimer.CaptureTime, emitter)
 
 			case *BasicDeliver:
@@ -165,6 +173,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 					NoWait:     m.NoWait,
 					Arguments:  m.Arguments,
 				}
+				superIdentifier.Protocol = &protocol
 				emitAMQP(*eventQueueDeclare, amqpRequest, queueMethodMap[10], connectionInfo, superTimer.CaptureTime, emitter)
 
 			case *ExchangeDeclare:
@@ -178,6 +187,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 					NoWait:     m.NoWait,
 					Arguments:  m.Arguments,
 				}
+				superIdentifier.Protocol = &protocol
 				emitAMQP(*eventExchangeDeclare, amqpRequest, exchangeMethodMap[10], connectionInfo, superTimer.CaptureTime, emitter)
 
 			case *ConnectionStart:
@@ -188,6 +198,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 					Mechanisms:       m.Mechanisms,
 					Locales:          m.Locales,
 				}
+				superIdentifier.Protocol = &protocol
 				emitAMQP(*eventConnectionStart, amqpRequest, connectionMethodMap[10], connectionInfo, superTimer.CaptureTime, emitter)
 
 			case *ConnectionClose:
@@ -197,6 +208,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 					ClassId:   m.ClassId,
 					MethodId:  m.MethodId,
 				}
+				superIdentifier.Protocol = &protocol
 				emitAMQP(*eventConnectionClose, amqpRequest, connectionMethodMap[50], connectionInfo, superTimer.CaptureTime, emitter)
 
 			default:

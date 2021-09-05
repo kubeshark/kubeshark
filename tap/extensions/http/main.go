@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -60,7 +61,7 @@ func (d dissecting) Ping() {
 	log.Printf("pong %s\n", protocol.Name)
 }
 
-func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, emitter api.Emitter) error {
+func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, superIdentifier *api.SuperIdentifier, emitter api.Emitter) error {
 	ident := fmt.Sprintf("%s->%s:%s->%s", tcpID.SrcIP, tcpID.DstIP, tcpID.SrcPort, tcpID.DstPort)
 	isHTTP2, err := checkIsHTTP2Connection(b, isClient)
 	if err != nil {
@@ -77,8 +78,12 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 		grpcAssembler = createGrpcAssembler(b)
 	}
 
-	success := false
+	dissected := false
 	for {
+		if superIdentifier.Protocol != nil && superIdentifier.Protocol != &protocol {
+			return errors.New("Identified by another protocol")
+		}
+
 		if isHTTP2 {
 			err = handleHTTP2Stream(grpcAssembler, tcpID, superTimer, emitter)
 			if err == io.EOF || err == io.ErrUnexpectedEOF {
@@ -87,7 +92,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 				rlog.Debugf("[HTTP/2] stream %s error: %s (%v,%+v)", ident, err, err, err)
 				continue
 			}
-			success = true
+			dissected = true
 		} else if isClient {
 			err = handleHTTP1ClientStream(b, tcpID, counterPair, superTimer, emitter)
 			if err == io.EOF || err == io.ErrUnexpectedEOF {
@@ -96,7 +101,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 				rlog.Debugf("[HTTP-request] stream %s Request error: %s (%v,%+v)", ident, err, err, err)
 				continue
 			}
-			success = true
+			dissected = true
 		} else {
 			err = handleHTTP1ServerStream(b, tcpID, counterPair, superTimer, emitter)
 			if err == io.EOF || err == io.ErrUnexpectedEOF {
@@ -105,13 +110,14 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 				rlog.Debugf("[HTTP-response], stream %s Response error: %s (%v,%+v)", ident, err, err, err)
 				continue
 			}
-			success = true
+			dissected = true
 		}
 	}
 
-	if !success {
+	if !dissected {
 		return err
 	}
+	superIdentifier.Protocol = &protocol
 	return nil
 }
 
