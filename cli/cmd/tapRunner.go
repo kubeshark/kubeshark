@@ -380,12 +380,27 @@ func watchPodsForTapping(ctx context.Context, kubernetesProvider *kubernetes.Pro
 	for {
 		select {
 		case pod := <-added:
+			if pod == nil {
+				logger.Log.Debugf("Watching pods loop, added pod with nil")
+				continue
+			}
+
 			logger.Log.Debugf("Added matching pod %s, ns: %s", pod.Name, pod.Namespace)
 			restartTappersDebouncer.SetOn()
 		case pod := <-removed:
+			if pod == nil {
+				logger.Log.Debugf("Watching pods loop, removed pod with nil")
+				continue
+			}
+
 			logger.Log.Debugf("Removed matching pod %s, ns: %s", pod.Name, pod.Namespace)
 			restartTappersDebouncer.SetOn()
 		case pod := <-modified:
+			if pod == nil {
+				logger.Log.Debugf("Watching pods loop, modified pod with nil")
+				continue
+			}
+
 			logger.Log.Debugf("Modified matching pod %s, ns: %s, phase: %s, ip: %s", pod.Name, pod.Namespace, pod.Status.Phase, pod.Status.PodIP)
 			// Act only if the modified pod has already obtained an IP address.
 			// After filtering for IPs, on a normal pod restart this includes the following events:
@@ -492,6 +507,7 @@ func watchApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 				logger.Log.Debugf("Watching API Server pod loop, modifiedPod with nil")
 				continue
 			}
+
 			logger.Log.Debugf("Watching API Server pod loop, modified: %v", modifiedPod.Status.Phase)
 			if modifiedPod.Status.Phase == core.PodRunning && !isPodReady {
 				isPodReady = true
