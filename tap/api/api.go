@@ -169,3 +169,8 @@ func (bed *BaseEntryDetails) UnmarshalData(entry *MizuEntry) error {
 	bed.IsOutgoing = entry.IsOutgoing
 	return nil
 }
+
+const (
+	TABLE string = "table"
+	BODY  string = "body"
+)
