@@ -95,6 +95,8 @@ var ownIps []string             // global
 var hostMode bool               // global
 var extensions []*api.Extension // global
 
+const baseStreamChannelTimeoutMs int = 5000 * 100
+
 /* minOutputLevel: Error will be printed only if outputLevel is above this value
  * t:              key for errorsMap (counting errors)
  * s, a:           arguments log.Printf
@@ -209,18 +211,23 @@ func closeTimedoutTcpStreamChannels() {
 		streams.Range(func(key interface{}, value interface{}) bool {
 			streamWrapper := value.(*tcpStreamWrapper)
 			stream := streamWrapper.stream
-			metric := runtime.NumGoroutine() - baseGoroutineCount
-			if metric < 1 {
-				metric = 1
+			// `diff` tries to stabilize towards 0.
+			// `diff` means the number of currently running extra Goroutines mainly spawned for dissectors.
+			n := runtime.NumGoroutine()
+			diff := n - baseGoroutineCount
+			if diff < 1 {
+				diff = 1
 			}
-			// `metric` stabilizes arround 0 - 24.
-			// `metric` means number of currently running extra Goroutines mainly spawned for dissectors.
-			// fmt.Printf("metric: %v\n", metric)
-			dynamicStreamChannelTimeoutNs := baseStreamChannelTimeoutMs * cpuCount / metric * 1000000
+			// `metric` tries to stabilize arround 1.0.
+			// `metric` means what percentage of the load can be actually handled by the given resources.
+			metric := float64(cpuCount) / float64(diff)
+			dynamicStreamChannelTimeoutMs := int(float64(baseStreamChannelTimeoutMs) * metric)
+			dynamicStreamChannelTimeoutNs := dynamicStreamChannelTimeoutMs * 1000000
 			if !stream.isClosed && stream.superIdentifier.Protocol == nil && time.Now().After(streamWrapper.createdAt.Add(time.Duration(dynamicStreamChannelTimeoutNs))) {
 				stream.Close()
 				statsTracker.incDroppedTcpStreams()
-				rlog.Debugf("Dropped a TCP stream because of load. Total dropped: %d\n", statsTracker.appStats.DroppedTcpStreams)
+				fmt.Printf("Dropped an unidentified TCP stream because of load. Total dropped: %d Goroutine metric: %f Total Goroutines: %d Timeout (ms): %d\n", statsTracker.appStats.DroppedTcpStreams, metric, n, dynamicStreamChannelTimeoutMs)
+				rlog.Debugf("Dropped an unidentified TCP stream because of load. Total dropped: %d Goroutine metric: %f Total Goroutines: %d Timeout (ms): %d\n", statsTracker.appStats.DroppedTcpStreams, metric, n, dynamicStreamChannelTimeoutMs)
 			}
 			return true
 		})
