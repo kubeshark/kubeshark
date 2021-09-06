@@ -57,10 +57,16 @@ func initDataBase(databasePath string) *gorm.DB {
 	return temp
 }
 
-func GetEntriesFromDb(timestampFrom int64, timestampTo int64) []tapApi.MizuEntry {
+func GetEntriesFromDb(timestampFrom int64, timestampTo int64, protocolName *string) []tapApi.MizuEntry {
 	order := OrderDesc
+	protocolNameCondition := "1 = 1"
+	if protocolName != nil {
+		protocolNameCondition = fmt.Sprintf("protocolKey = '%s'", *protocolName)
+	}
+
 	var entries []tapApi.MizuEntry
 	GetEntriesTable().
+		Where(protocolNameCondition).
 		Where(fmt.Sprintf("timestamp BETWEEN %v AND %v", timestampFrom, timestampTo)).
 		Order(fmt.Sprintf("timestamp %s", order)).
 		Find(&entries)

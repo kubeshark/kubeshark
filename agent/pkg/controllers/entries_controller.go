@@ -48,7 +48,7 @@ func GetEntries(c *gin.Context) {
 		Find(&entries)
 
 	if len(entries) > 0 && order == database.OrderDesc {
-		// the entries always order from oldest to newest so we should revers
+		// the entries always order from oldest to newest - we should reverse
 		utils.ReverseSlice(entries)
 	}
 
@@ -95,7 +95,7 @@ func GetHARs(c *gin.Context) {
 		Find(&entries)
 
 	if len(entries) > 0 {
-		// the entries always order from oldest to newest so we should revers
+		// the entries always order from oldest to newest - we should reverse
 		utils.ReverseSlice(entries)
 	}
 
@@ -113,7 +113,7 @@ func GetHARs(c *gin.Context) {
 		if sourceOfEntry != "" {
 			// naively assumes the proper service source is http
 			sourceOfEntry = fmt.Sprintf("http://%s", sourceOfEntry)
-			//replace / from the file name cause they end up creating a corrupted folder
+			//replace / from the file name because they end up creating a corrupted folder
 			fileName = fmt.Sprintf("%s.har", strings.ReplaceAll(sourceOfEntry, "/", "_"))
 		} else {
 			fileName = "unknown_source.har"
@@ -202,15 +202,21 @@ func GetFullEntries(c *gin.Context) {
 		timestampTo = entriesFilter.To
 	}
 
-	entriesArray := database.GetEntriesFromDb(timestampFrom, timestampTo)
-	result := make([]models.FullEntryDetails, 0)
+	entriesArray := database.GetEntriesFromDb(timestampFrom, timestampTo, nil)
+
+	result := make([]har.Entry, 0)
 	for _, data := range entriesArray {
-		harEntry := models.FullEntryDetails{}
-		if err := models.GetEntry(&data, &harEntry); err != nil {
+		var pair tapApi.RequestResponsePair
+		if err := json.Unmarshal([]byte(data.Entry), &pair); err != nil {
 			continue
 		}
-		result = append(result, harEntry)
+		harEntry, err := utils.NewEntry(&pair)
+		if err != nil {
+			continue
+		}
+		result = append(result, *harEntry)
 	}
+
 	c.JSON(http.StatusOK, result)
 }
 
@@ -220,22 +226,6 @@ func GetEntry(c *gin.Context) {
 		Where(map[string]string{"entryId": c.Param("entryId")}).
 		First(&entryData)
 
-	fullEntry := models.FullEntryDetails{}
-	if err := models.GetEntry(&entryData, &fullEntry); err != nil {
-		c.JSON(http.StatusInternalServerError, map[string]interface{}{
-			"error": true,
-			"msg":   "Can't get entry details",
-		})
-	}
-
-	// FIXME: Fix the part below
-	// fullEntryWithPolicy := models.FullEntryWithPolicy{}
-	// if err := models.GetEntry(&entryData, &fullEntryWithPolicy); err != nil {
-	// 	c.JSON(http.StatusInternalServerError, map[string]interface{}{
-	// 		"error": true,
-	// 		"msg":   "Can't get entry details",
-	// 	})
-	// }
 	extension := extensionsMap[entryData.ProtocolName]
 	protocol, representation, bodySize, _ := extension.Dissector.Represent(&entryData)
 	c.JSON(http.StatusOK, tapApi.MizuEntryWrapper{
