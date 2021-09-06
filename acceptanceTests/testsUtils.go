@@ -84,10 +84,10 @@ func getDefaultConfigCommandArgs() []string {
 }
 
 func retriesExecute(retriesCount int, executeFunc func() error) error {
-	var lastError error
+	var lastError interface{}
 
 	for i := 0; i < retriesCount; i++ {
-		if err := executeFunc(); err != nil {
+		if err := tryExecuteFunc(executeFunc); err != nil {
 			lastError = err
 
 			time.Sleep(1 * time.Second)
@@ -98,6 +98,16 @@ func retriesExecute(retriesCount int, executeFunc func() error) error {
 	}
 
 	return fmt.Errorf("reached max retries count, retries count: %v, last err: %v", retriesCount, lastError)
+}
+
+func tryExecuteFunc(executeFunc func() error) (err interface{}) {
+	defer func() {
+		if panicErr := recover(); panicErr != nil {
+			err = panicErr
+		}
+	}()
+
+	return executeFunc()
 }
 
 func waitTapPodsReady(apiServerUrl string) error {
