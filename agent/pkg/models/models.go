@@ -15,6 +15,7 @@ func GetEntry(r *tapApi.MizuEntry, v tapApi.DataUnmarshaler) error {
 	return v.UnmarshalData(r)
 }
 
+// TODO: until we fixed the Rules feature
 //func NewApplicableRules(status bool, latency int64, number int) tapApi.ApplicableRules {
 //	ar := tapApi.ApplicableRules{}
 //	ar.Status = status
@@ -176,6 +177,7 @@ func (fewp *FullEntryWithPolicy) UnmarshalData(entry *tapApi.MizuEntry) error {
 	return nil
 }
 
+// TODO: until we fixed the Rules feature
 //func RunValidationRulesState(harEntry har.Entry, service string) tapApi.ApplicableRules {
 //	numberOfRules, resultPolicyToSend := rules.MatchRequestPolicy(harEntry, service)
 //	statusPolicyToSend, latency, numberOfRules := rules.PassedValidationRules(resultPolicyToSend, numberOfRules)

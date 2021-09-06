@@ -14,49 +14,48 @@ import (
 )
 
 
-// BuildCookies
 // Keep it because we might want cookies in the future
-func BuildCookies(rawCookies []interface{}) []har.Cookie {
-	cookies := make([]har.Cookie, 0, len(rawCookies))
-
-	for _, cookie := range rawCookies {
-		c := cookie.(map[string]interface{})
-		expiresStr := ""
-		if c["expires"] != nil {
-			expiresStr = c["expires"].(string)
-		}
-		expires, _ := time.Parse(time.RFC3339, expiresStr)
-		httpOnly := false
-		if c["httponly"] != nil {
-			httpOnly, _ = strconv.ParseBool(c["httponly"].(string))
-		}
-		secure := false
-		if c["secure"] != nil {
-			secure, _ = strconv.ParseBool(c["secure"].(string))
-		}
-		path := ""
-		if c["path"] != nil {
-			path = c["path"].(string)
-		}
-		domain := ""
-		if c["domain"] != nil {
-			domain = c["domain"].(string)
-		}
-
-		cookies = append(cookies, har.Cookie{
-			Name:        c["name"].(string),
-			Value:       c["value"].(string),
-			Path:        path,
-			Domain:      domain,
-			HTTPOnly:    httpOnly,
-			Secure:      secure,
-			Expires:     expires,
-			Expires8601: expiresStr,
-		})
-	}
-
-	return cookies
-}
+//func BuildCookies(rawCookies []interface{}) []har.Cookie {
+//	cookies := make([]har.Cookie, 0, len(rawCookies))
+//
+//	for _, cookie := range rawCookies {
+//		c := cookie.(map[string]interface{})
+//		expiresStr := ""
+//		if c["expires"] != nil {
+//			expiresStr = c["expires"].(string)
+//		}
+//		expires, _ := time.Parse(time.RFC3339, expiresStr)
+//		httpOnly := false
+//		if c["httponly"] != nil {
+//			httpOnly, _ = strconv.ParseBool(c["httponly"].(string))
+//		}
+//		secure := false
+//		if c["secure"] != nil {
+//			secure, _ = strconv.ParseBool(c["secure"].(string))
+//		}
+//		path := ""
+//		if c["path"] != nil {
+//			path = c["path"].(string)
+//		}
+//		domain := ""
+//		if c["domain"] != nil {
+//			domain = c["domain"].(string)
+//		}
+//
+//		cookies = append(cookies, har.Cookie{
+//			Name:        c["name"].(string),
+//			Value:       c["value"].(string),
+//			Path:        path,
+//			Domain:      domain,
+//			HTTPOnly:    httpOnly,
+//			Secure:      secure,
+//			Expires:     expires,
+//			Expires8601: expiresStr,
+//		})
+//	}
+//
+//	return cookies
+//}
 
 func BuildHeaders(rawHeaders []interface{}) ([]har.Header, string, string, string, string, string) {
 	var host, scheme, authority, path, status string
