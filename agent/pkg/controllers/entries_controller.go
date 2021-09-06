@@ -226,22 +226,6 @@ func GetEntry(c *gin.Context) {
 		Where(map[string]string{"entryId": c.Param("entryId")}).
 		First(&entryData)
 
-	fullEntry := models.FullEntryDetails{}
-	if err := models.GetEntry(&entryData, &fullEntry); err != nil {
-		c.JSON(http.StatusInternalServerError, map[string]interface{}{
-			"error": true,
-			"msg":   "Can't get entry details",
-		})
-	}
-
-	// FIXME: Fix the part below
-	// fullEntryWithPolicy := models.FullEntryWithPolicy{}
-	// if err := models.GetEntry(&entryData, &fullEntryWithPolicy); err != nil {
-	// 	c.JSON(http.StatusInternalServerError, map[string]interface{}{
-	// 		"error": true,
-	// 		"msg":   "Can't get entry details",
-	// 	})
-	// }
 	extension := extensionsMap[entryData.ProtocolName]
 	protocol, representation, _ := extension.Dissector.Represent(&entryData)
 	c.JSON(http.StatusOK, tapApi.MizuEntryWrapper{

@@ -24,54 +24,6 @@ func GetEntry(r *tapApi.MizuEntry, v tapApi.DataUnmarshaler) error {
 //	return ar
 //}
 
-type FullEntryDetails struct {
-	har.Entry
-}
-
-type FullEntryDetailsExtra struct {
-	har.Entry
-}
-
-func (fed *FullEntryDetails) UnmarshalData(entry *tapApi.MizuEntry) error {
-	var pair tapApi.RequestResponsePair
-	err := json.Unmarshal([]byte(entry.Entry), &pair)
-	if err != nil {
-		return err
-	}
-	harEntry, err := utils.NewEntry(&pair)
-	if err != nil {
-		return err
-	}
-	fed.Entry = *harEntry
-
-	if entry.ResolvedDestination != "" {
-		fed.Entry.Request.URL = utils.SetHostname(fed.Entry.Request.URL, entry.ResolvedDestination)
-	}
-	return nil
-}
-
-func (fedex *FullEntryDetailsExtra) UnmarshalData(entry *tapApi.MizuEntry) error {
-	var pair tapApi.RequestResponsePair
-	err := json.Unmarshal([]byte(entry.Entry), &pair)
-	if err != nil {
-		return err
-	}
-	harEntry, err := utils.NewEntry(&pair)
-	if err != nil {
-		return err
-	}
-	fedex.Entry = *harEntry
-
-	if entry.ResolvedSource != "" {
-		fedex.Entry.Request.Headers = append(fedex.Request.Headers, har.Header{Name: "x-mizu-source", Value: entry.ResolvedSource})
-	}
-	if entry.ResolvedDestination != "" {
-		fedex.Entry.Request.Headers = append(fedex.Request.Headers, har.Header{Name: "x-mizu-destination", Value: entry.ResolvedDestination})
-		fedex.Entry.Request.URL = utils.SetHostname(fedex.Entry.Request.URL, entry.ResolvedDestination)
-	}
-	return nil
-}
-
 type EntriesFilter struct {
 	Limit     int    `form:"limit" validate:"required,min=1,max=200"`
 	Operator  string `form:"operator" validate:"required,oneof='lt' 'gt'"`
@@ -161,8 +113,7 @@ type FullEntryWithPolicy struct {
 
 func (fewp *FullEntryWithPolicy) UnmarshalData(entry *tapApi.MizuEntry) error {
 	var pair tapApi.RequestResponsePair
-	err := json.Unmarshal([]byte(entry.Entry), &pair)
-	if err != nil {
+	if err := json.Unmarshal([]byte(entry.Entry), &pair); err != nil {
 		return err
 	}
 	harEntry, err := utils.NewEntry(&pair)
