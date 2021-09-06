@@ -207,7 +207,7 @@ func closeTimedoutTcpStreamChannels() {
 	// +1 Main packet capture loop
 	baseGoroutineCount := runtime.NumGoroutine() + 2
 	for {
-		runtime.Gosched()
+		time.Sleep(1 * time.Millisecond)
 		streams.Range(func(key interface{}, value interface{}) bool {
 			streamWrapper := value.(*tcpStreamWrapper)
 			stream := streamWrapper.stream
