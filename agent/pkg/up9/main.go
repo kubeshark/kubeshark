@@ -5,12 +5,14 @@ import (
 	"compress/zlib"
 	"encoding/json"
 	"fmt"
+	"github.com/google/martian/har"
 	"github.com/romana/rlog"
 	"github.com/up9inc/mizu/shared"
+	tapApi "github.com/up9inc/mizu/tap/api"
 	"io/ioutil"
 	"log"
 	"mizuserver/pkg/database"
-	"mizuserver/pkg/models"
+	"mizuserver/pkg/utils"
 	"net/http"
 	"net/url"
 	"strings"
@@ -129,21 +131,33 @@ func UploadEntriesImpl(token string, model string, envPrefix string, sleepInterv
 	for {
 		timestampTo := time.Now().UnixNano() / int64(time.Millisecond)
 		rlog.Infof("Getting entries from %v, to %v\n", timestampFrom, timestampTo)
-		entriesArray := database.GetEntriesFromDb(timestampFrom, timestampTo)
+		protocolFilter := "http"
+		entriesArray := database.GetEntriesFromDb(timestampFrom, timestampTo, &protocolFilter)
 
 		if len(entriesArray) > 0 {
-
-			fullEntriesExtra := make([]models.FullEntryDetailsExtra, 0)
+			result := make([]har.Entry, 0)
 			for _, data := range entriesArray {
-				harEntry := models.FullEntryDetailsExtra{}
-				if err := models.GetEntry(&data, &harEntry); err != nil {
+				var pair tapApi.RequestResponsePair
+				if err := json.Unmarshal([]byte(data.Entry), &pair); err != nil {
 					continue
 				}
-				fullEntriesExtra = append(fullEntriesExtra, harEntry)
+				harEntry, err := utils.NewEntry(&pair)
+				if err != nil {
+					continue
+				}
+				if data.ResolvedSource != "" {
+					harEntry.Request.Headers = append(harEntry.Request.Headers, har.Header{Name: "x-mizu-source", Value: data.ResolvedSource})
+				}
+				if data.ResolvedDestination != "" {
+					harEntry.Request.Headers = append(harEntry.Request.Headers, har.Header{Name: "x-mizu-destination", Value: data.ResolvedDestination})
+					harEntry.Request.URL = utils.SetHostname(harEntry.Request.URL, data.ResolvedDestination)
+				}
+				result = append(result, *harEntry)
 			}
-			rlog.Infof("About to upload %v entries\n", len(fullEntriesExtra))
 
-			body, jMarshalErr := json.Marshal(fullEntriesExtra)
+			rlog.Infof("About to upload %v entries\n", len(result))
+
+			body, jMarshalErr := json.Marshal(result)
 			if jMarshalErr != nil {
 				analyzeInformation.Reset()
 				rlog.Infof("Stopping analyzing")

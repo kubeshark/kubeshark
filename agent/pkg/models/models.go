@@ -2,9 +2,7 @@ package models
 
 import (
 	"encoding/json"
-
 	tapApi "github.com/up9inc/mizu/tap/api"
-
 	"mizuserver/pkg/rules"
 	"mizuserver/pkg/utils"
 
@@ -17,47 +15,14 @@ func GetEntry(r *tapApi.MizuEntry, v tapApi.DataUnmarshaler) error {
 	return v.UnmarshalData(r)
 }
 
-func NewApplicableRules(status bool, latency int64, number int) tapApi.ApplicableRules {
-	ar := tapApi.ApplicableRules{}
-	ar.Status = status
-	ar.Latency = latency
-	ar.NumberOfRules = number
-	return ar
-}
-
-type FullEntryDetails struct {
-	har.Entry
-}
-
-type FullEntryDetailsExtra struct {
-	har.Entry
-}
-
-func (fed *FullEntryDetails) UnmarshalData(entry *tapApi.MizuEntry) error {
-	if err := json.Unmarshal([]byte(entry.Entry), &fed.Entry); err != nil {
-		return err
-	}
-
-	if entry.ResolvedDestination != "" {
-		fed.Entry.Request.URL = utils.SetHostname(fed.Entry.Request.URL, entry.ResolvedDestination)
-	}
-	return nil
-}
-
-func (fedex *FullEntryDetailsExtra) UnmarshalData(entry *tapApi.MizuEntry) error {
-	if err := json.Unmarshal([]byte(entry.Entry), &fedex.Entry); err != nil {
-		return err
-	}
-
-	if entry.ResolvedSource != "" {
-		fedex.Entry.Request.Headers = append(fedex.Request.Headers, har.Header{Name: "x-mizu-source", Value: entry.ResolvedSource})
-	}
-	if entry.ResolvedDestination != "" {
-		fedex.Entry.Request.Headers = append(fedex.Request.Headers, har.Header{Name: "x-mizu-destination", Value: entry.ResolvedDestination})
-		fedex.Entry.Request.URL = utils.SetHostname(fedex.Entry.Request.URL, entry.ResolvedDestination)
-	}
-	return nil
-}
+// TODO: until we fixed the Rules feature
+//func NewApplicableRules(status bool, latency int64, number int) tapApi.ApplicableRules {
+//	ar := tapApi.ApplicableRules{}
+//	ar.Status = status
+//	ar.Latency = latency
+//	ar.NumberOfRules = number
+//	return ar
+//}
 
 type EntriesFilter struct {
 	Limit     int    `form:"limit" validate:"required,min=1,max=200"`
@@ -147,9 +112,15 @@ type FullEntryWithPolicy struct {
 }
 
 func (fewp *FullEntryWithPolicy) UnmarshalData(entry *tapApi.MizuEntry) error {
-	if err := json.Unmarshal([]byte(entry.Entry), &fewp.Entry); err != nil {
+	var pair tapApi.RequestResponsePair
+	if err := json.Unmarshal([]byte(entry.Entry), &pair); err != nil {
 		return err
 	}
+	harEntry, err := utils.NewEntry(&pair)
+	if err != nil {
+		return err
+	}
+	fewp.Entry = *harEntry
 
 	_, resultPolicyToSend := rules.MatchRequestPolicy(fewp.Entry, entry.Service)
 	fewp.RulesMatched = resultPolicyToSend
@@ -157,9 +128,10 @@ func (fewp *FullEntryWithPolicy) UnmarshalData(entry *tapApi.MizuEntry) error {
 	return nil
 }
 
-func RunValidationRulesState(harEntry har.Entry, service string) tapApi.ApplicableRules {
-	numberOfRules, resultPolicyToSend := rules.MatchRequestPolicy(harEntry, service)
-	statusPolicyToSend, latency, numberOfRules := rules.PassedValidationRules(resultPolicyToSend, numberOfRules)
-	ar := NewApplicableRules(statusPolicyToSend, latency, numberOfRules)
-	return ar
-}
+// TODO: until we fixed the Rules feature
+//func RunValidationRulesState(harEntry har.Entry, service string) tapApi.ApplicableRules {
+//	numberOfRules, resultPolicyToSend := rules.MatchRequestPolicy(harEntry, service)
+//	statusPolicyToSend, latency, numberOfRules := rules.PassedValidationRules(resultPolicyToSend, numberOfRules)
+//	ar := NewApplicableRules(statusPolicyToSend, latency, numberOfRules)
+//	return ar
+//}
