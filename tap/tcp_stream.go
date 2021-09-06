@@ -197,20 +197,10 @@ func (t *tcpStream) Close() {
 
 	for i := range t.clients {
 		reader := &t.clients[i]
-		reader.Lock()
-		if !reader.isClosed {
-			reader.isClosed = true
-			close(reader.msgQueue)
-		}
-		reader.Unlock()
+		reader.Close()
 	}
 	for i := range t.servers {
 		reader := &t.servers[i]
-		reader.Lock()
-		if !reader.isClosed {
-			reader.isClosed = true
-			close(reader.msgQueue)
-		}
-		reader.Unlock()
+		reader.Close()
 	}
 }

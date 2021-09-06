@@ -95,6 +95,15 @@ func (h *tcpReader) Read(p []byte) (int, error) {
 	return l, nil
 }
 
+func (h *tcpReader) Close() {
+	h.Lock()
+	if !h.isClosed {
+		h.isClosed = true
+		close(h.msgQueue)
+	}
+	h.Unlock()
+}
+
 func (h *tcpReader) run(wg *sync.WaitGroup) {
 	defer wg.Done()
 	b := bufio.NewReader(h)

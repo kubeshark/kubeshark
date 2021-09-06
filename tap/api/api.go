@@ -21,7 +21,7 @@ type Protocol struct {
 }
 
 type Extension struct {
-	Protocol   Protocol
+	Protocol   *Protocol
 	Path       string
 	Plug       *plugin.Plugin
 	Dissector  Dissector
@@ -73,7 +73,8 @@ type SuperTimer struct {
 }
 
 type SuperIdentifier struct {
-	Protocol *Protocol
+	Protocol       *Protocol
+	IsClosedOthers bool
 }
 
 type Dissector interface {

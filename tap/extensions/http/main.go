@@ -53,7 +53,7 @@ func init() {
 type dissecting string
 
 func (d dissecting) Register(extension *api.Extension) {
-	extension.Protocol = protocol
+	extension.Protocol = &protocol
 	extension.MatcherMap = reqResMatcher.openMessagesMap
 }
 

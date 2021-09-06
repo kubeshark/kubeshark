@@ -227,6 +227,20 @@ func closeTimedoutTcpStreamChannels() {
 				stream.Close()
 				statsTracker.incDroppedTcpStreams()
 				rlog.Debugf("Dropped an unidentified TCP stream because of load. Total dropped: %d Goroutine metric: %f Total Goroutines: %d Timeout (ms): %d\n", statsTracker.appStats.DroppedTcpStreams, metric, n, dynamicStreamChannelTimeoutMs)
+			} else if stream.superIdentifier.Protocol != nil && !stream.superIdentifier.IsClosedOthers {
+				for i := range stream.clients {
+					reader := &stream.clients[i]
+					if reader.extension.Protocol != stream.superIdentifier.Protocol {
+						reader.Close()
+					}
+				}
+				for i := range stream.servers {
+					reader := &stream.servers[i]
+					if reader.extension.Protocol != stream.superIdentifier.Protocol {
+						reader.Close()
+					}
+				}
+				stream.superIdentifier.IsClosedOthers = true
 			}
 			return true
 		})
