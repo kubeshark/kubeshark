@@ -2856,7 +2856,6 @@ func (r *AmqpReader) parseMethodFrame(channel uint16, size uint32) (f frame, err
 			mf.Method = method
 
 		default:
-			// log.Printf("Bad method frame, unknown method %d for class %d", mf.MethodId, mf.ClassId)
 			return nil, ErrBadMethodFrameUnknownMethod
 		}
 
@@ -2912,7 +2911,6 @@ func (r *AmqpReader) parseMethodFrame(channel uint16, size uint32) (f frame, err
 			mf.Method = method
 
 		default:
-			// log.Printf("Bad method frame, unknown method %d for class %d", mf.MethodId, mf.ClassId)
 			return nil, ErrBadMethodFrameUnknownMethod
 		}
 
@@ -2984,7 +2982,6 @@ func (r *AmqpReader) parseMethodFrame(channel uint16, size uint32) (f frame, err
 			mf.Method = method
 
 		default:
-			// log.Printf("Bad method frame, unknown method %d for class %d", mf.MethodId, mf.ClassId)
 			return nil, ErrBadMethodFrameUnknownMethod
 		}
 
@@ -3072,7 +3069,6 @@ func (r *AmqpReader) parseMethodFrame(channel uint16, size uint32) (f frame, err
 			mf.Method = method
 
 		default:
-			// log.Printf("Bad method frame, unknown method %d for class %d", mf.MethodId, mf.ClassId)
 			return nil, ErrBadMethodFrameUnknownMethod
 		}
 
@@ -3224,7 +3220,6 @@ func (r *AmqpReader) parseMethodFrame(channel uint16, size uint32) (f frame, err
 			mf.Method = method
 
 		default:
-			// log.Printf("Bad method frame, unknown method %d for class %d", mf.MethodId, mf.ClassId)
 			return nil, ErrBadMethodFrameUnknownMethod
 		}
 
@@ -3280,7 +3275,6 @@ func (r *AmqpReader) parseMethodFrame(channel uint16, size uint32) (f frame, err
 			mf.Method = method
 
 		default:
-			// log.Printf("Bad method frame, unknown method %d for class %d", mf.MethodId, mf.ClassId)
 			return nil, ErrBadMethodFrameUnknownMethod
 		}
 
@@ -3304,12 +3298,10 @@ func (r *AmqpReader) parseMethodFrame(channel uint16, size uint32) (f frame, err
 			mf.Method = method
 
 		default:
-			// log.Printf("Bad method frame, unknown method %d for class %d", mf.MethodId, mf.ClassId)
 			return nil, ErrBadMethodFrameUnknownMethod
 		}
 
 	default:
-		// log.Printf("Bad method frame, unknown class %d", mf.ClassId)
 		return nil, ErrBadMethodFrameUnknownClass
 	}
 

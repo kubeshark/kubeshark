@@ -78,16 +78,11 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 	var lastMethodFrameMessage Message
 
 	for {
-		// fmt.Printf("lastMethodFrameMessage: %v\n", lastMethodFrameMessage)
 		frame, err := r.ReadFrame()
 		if err == io.EOF {
 			// We must read until we see an EOF... very important!
 			return errors.New("AMQP EOF")
-		} else if err != nil {
-			// 	return err
 		}
-
-		// fmt.Printf("frame: %+v\n", frame)
 
 		switch f := frame.(type) {
 		case *HeartbeatFrame:
