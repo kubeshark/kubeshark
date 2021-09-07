@@ -132,6 +132,7 @@ type BaseEntryDetails struct {
 	Url             string          `json:"url,omitempty"`
 	RequestSenderIp string          `json:"request_sender_ip,omitempty"`
 	Service         string          `json:"service,omitempty"`
+	Path            string          `json:"path,omitempty"`
 	Summary         string          `json:"summary,omitempty"`
 	StatusCode      int             `json:"status_code"`
 	Method          string          `json:"method,omitempty"`

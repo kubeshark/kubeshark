@@ -201,6 +201,7 @@ func (d dissecting) Summarize(entry *api.MizuEntry) *api.BaseEntryDetails {
 		Url:             entry.Url,
 		RequestSenderIp: entry.RequestSenderIp,
 		Service:         entry.Service,
+		Path:            entry.Path,
 		Summary:         entry.Path,
 		StatusCode:      entry.Status,
 		Method:          entry.Method,

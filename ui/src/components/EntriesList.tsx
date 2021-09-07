@@ -54,8 +54,8 @@ export const EntriesList: React.FC<EntriesListProps> = ({entries, setEntries, fo
     const filterEntries = useCallback((entry) => {
         if(methodsFilter.length > 0 && !methodsFilter.includes(entry.method.toLowerCase())) return;
         if(pathFilter && entry.path?.toLowerCase()?.indexOf(pathFilter) === -1) return;
-        if(statusFilter.includes(StatusType.SUCCESS) && entry.statusCode >= 400) return;
-        if(statusFilter.includes(StatusType.ERROR) && entry.statusCode < 400) return;
+        if(statusFilter.includes(StatusType.SUCCESS) && entry.status_code >= 400) return;
+        if(statusFilter.includes(StatusType.ERROR) && entry.status_code < 400) return;
         return entry;
     },[methodsFilter, pathFilter, statusFilter])
 
