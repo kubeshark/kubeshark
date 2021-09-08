@@ -8,6 +8,7 @@ import (
 	"github.com/up9inc/mizu/cli/mizu"
 	"io/ioutil"
 	"net/http"
+	"runtime"
 	"time"
 
 	"github.com/google/go-github/v37/github"
@@ -76,7 +77,7 @@ func CheckNewerVersion(versionChan chan string) {
 	logger.Log.Debugf("Finished version validation, github version %v, current version %v, took %v", gitHubVersion, currentSemVer, time.Since(start))
 
 	if gitHubVersionSemVer.GreaterThan(currentSemVer) {
-		versionChan <- fmt.Sprintf("Update available! %v -> %v (%v)", mizu.SemVer, gitHubVersion, *latestRelease.HTMLURL)
+		versionChan <- fmt.Sprintf("Update available! %v -> %v (curl -Lo mizu %v/mizu_%s_amd64 && chmod 755 mizu)", mizu.SemVer, gitHubVersion, *latestRelease.HTMLURL, runtime.GOOS)
 	} else {
 		versionChan <- ""
 	}
