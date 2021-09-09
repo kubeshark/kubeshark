@@ -202,32 +202,18 @@ func startMemoryProfiler() {
 }
 
 func closeTimedoutTcpStreamChannels() {
-	cpuCount := runtime.NumCPU()
-	// +1 Stats tracker Goroutine
-	// +1 Main packet capture loop
-	baseGoroutineCount := runtime.NumGoroutine() + 2
+	maxNumberOfGoroutines = GetMaxNumberOfGoroutines()
+	TcpStreamChannelTimeoutMs := GetTcpChannelTimeoutMs()
 	for {
-		time.Sleep(1 * time.Millisecond)
+		time.Sleep(10 * time.Millisecond)
 		streams.Range(func(key interface{}, value interface{}) bool {
 			streamWrapper := value.(*tcpStreamWrapper)
 			stream := streamWrapper.stream
-			// `diff` tries to stabilize towards 0.
-			// `diff` means the number of currently running extra Goroutines mainly spawned for dissectors.
-			n := runtime.NumGoroutine()
-			diff := n - baseGoroutineCount
-			if diff < 1 {
-				diff = 1
-			}
-			// `metric` tries to stabilize arround 1.0.
-			// `metric` means what percentage of the load can be actually handled by the given resources.
-			metric := float64(cpuCount) / float64(diff)
-			dynamicStreamChannelTimeoutMs := int(float64(baseStreamChannelTimeoutMs) * metric)
-			dynamicStreamChannelTimeoutNs := dynamicStreamChannelTimeoutMs * 1000000
 			if stream.superIdentifier.Protocol == nil {
-				if !stream.isClosed && time.Now().After(streamWrapper.createdAt.Add(time.Duration(dynamicStreamChannelTimeoutNs))) {
+				if !stream.isClosed && time.Now().After(streamWrapper.createdAt.Add(TcpStreamChannelTimeoutMs)) {
 					stream.Close()
 					statsTracker.incDroppedTcpStreams()
-					rlog.Debugf("Dropped an unidentified TCP stream because of load. Total dropped: %d Goroutine metric: %f Total Goroutines: %d Timeout (ms): %d\n", statsTracker.appStats.DroppedTcpStreams, metric, n, dynamicStreamChannelTimeoutMs)
+					rlog.Debugf("Dropped an unidentified TCP stream because of timeout. Total dropped: %d Total Goroutines: %d Timeout (ms): %d\n", statsTracker.appStats.DroppedTcpStreams, runtime.NumGoroutine(), TcpStreamChannelTimeoutMs/1000000)
 				}
 			} else {
 				if !stream.superIdentifier.IsClosedOthers {
