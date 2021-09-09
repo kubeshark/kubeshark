@@ -7,6 +7,8 @@ import (
 
 const (
 	MemoryProfilingEnabledEnvVarName          = "MEMORY_PROFILING_ENABLED"
+	MemoryProfilingDumpPath                   = "MEMORY_PROFILING_DUMP_PATH"
+	MemoryProfilingTimeIntervalSeconds        = "MEMORY_PROFILING_TIME_INTERVAL"
 	MaxBufferedPagesTotalEnvVarName           = "MAX_BUFFERED_PAGES_TOTAL"
 	MaxBufferedPagesPerConnectionEnvVarName   = "MAX_BUFFERED_PAGES_PER_CONNECTION"
 	MaxBufferedPagesTotalDefaultValue         = 5000

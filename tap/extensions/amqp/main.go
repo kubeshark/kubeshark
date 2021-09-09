@@ -82,9 +82,6 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 		if err == io.EOF {
 			// We must read until we see an EOF... very important!
 			return errors.New("AMQP EOF")
-		} else if err != nil {
-			// TODO: Causes ignoring some methods. Return only in case of a certain error. But what?
-			return err
 		}
 
 		switch f := frame.(type) {
@@ -101,6 +98,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 			case *BasicDeliver:
 				eventBasicDeliver.Properties = header.Properties
 			default:
+				frame = nil
 			}
 
 		case *BodyFrame:
@@ -115,6 +113,8 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 				eventBasicDeliver.Body = f.Body
 				emitAMQP(*eventBasicDeliver, amqpRequest, basicMethodMap[60], connectionInfo, superTimer.CaptureTime, emitter)
 			default:
+				body = nil
+				frame = nil
 			}
 
 		case *MethodFrame:
@@ -200,6 +200,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 				emitAMQP(*eventConnectionClose, amqpRequest, connectionMethodMap[50], connectionInfo, superTimer.CaptureTime, emitter)
 
 			default:
+				frame = nil
 
 			}
 

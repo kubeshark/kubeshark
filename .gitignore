@@ -26,3 +26,6 @@ build
 
 # Environment variables
 .env
+
+# pprof
+pprof/*
