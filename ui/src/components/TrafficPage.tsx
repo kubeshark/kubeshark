@@ -86,10 +86,6 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                     }
                     if (!focusedEntryId) setFocusedEntryId(entry.id)
                     let newEntries = [...entries];
-                    if (entries.length === 1000) {
-                        newEntries = newEntries.splice(1);
-                        setNoMoreDataTop(false);
-                    }
                     setEntries([...newEntries, entry])
                     if(listEntry.current) {
                         if(isScrollable(listEntry.current.firstChild)) {

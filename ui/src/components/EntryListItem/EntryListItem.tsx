@@ -23,7 +23,7 @@ interface Entry {
     source_port: string,
     destination_ip: string,
     destination_port: string,
-	isOutgoing?: boolean;
+    isOutgoing?: boolean;
     latency: number;
     rules: Rules;
 }
@@ -38,9 +38,10 @@ interface EntryProps {
     entry: Entry;
     setFocusedEntryId: (id: string) => void;
     isSelected?: boolean;
+    style: object;
 }
 
-export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, isSelected}) => {
+export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, isSelected, style}) => {
     const classification = getClassification(entry.status_code)
     let ingoingIcon;
     let outgoingIcon;
@@ -103,7 +104,13 @@ export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, isSel
             className={`${styles.row}
             ${isSelected ? styles.rowSelected : backgroundColor}`}
             onClick={() => setFocusedEntryId(entry.id)}
-            style={{border: isSelected ? `1px ${entry.protocol.background_color} solid` : "1px transparent solid"}}
+            style={{
+                border: isSelected ? `1px ${entry.protocol.background_color} solid` : "1px transparent solid",
+                position: "absolute",
+                top: style['top'],
+                marginTop: style['marginTop'],
+                width: "calc(100% - 25px)",
+            }}
         >
             <Protocol protocol={entry.protocol} horizontal={false}/>
             {((entry.protocol.name === "http" && "status_code" in entry) || entry.status_code !== 0) && <div>
