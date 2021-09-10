@@ -40,8 +40,6 @@ jobs:
 
       - shell: bash
         run: |
-          gcc --version
-          go version
           sudo apt-get install libpcap-dev
 
       - name: Build Agent
