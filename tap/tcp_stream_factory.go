@@ -2,7 +2,9 @@ package tap
 
 import (
 	"fmt"
+	"runtime"
 	"sync"
+	"time"
 
 	"github.com/romana/rlog"
 	"github.com/up9inc/mizu/tap/api"
@@ -23,6 +25,16 @@ type tcpStreamFactory struct {
 	Emitter            api.Emitter
 }
 
+type tcpStreamWrapper struct {
+	stream    *tcpStream
+	createdAt time.Time
+}
+
+var streams *sync.Map = &sync.Map{} // global
+var streamId int64 = 0
+
+var maxNumberOfGoroutines int
+
 func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.TCP, ac reassembly.AssemblerContext) reassembly.Stream {
 	rlog.Debugf("* NEW: %s %s", net, transport)
 	fsmOptions := reassembly.TCPSimpleFSMOptions{
@@ -39,15 +51,23 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.T
 	props := factory.getStreamProps(srcIp, srcPort, dstIp, dstPort)
 	isTapTarget := props.isTapTarget
 	stream := &tcpStream{
-		net:         net,
-		transport:   transport,
-		isDNS:       tcp.SrcPort == 53 || tcp.DstPort == 53,
-		isTapTarget: isTapTarget,
-		tcpstate:    reassembly.NewTCPSimpleFSM(fsmOptions),
-		ident:       fmt.Sprintf("%s:%s", net, transport),
-		optchecker:  reassembly.NewTCPOptionCheck(),
+		net:             net,
+		transport:       transport,
+		isDNS:           tcp.SrcPort == 53 || tcp.DstPort == 53,
+		isTapTarget:     isTapTarget,
+		tcpstate:        reassembly.NewTCPSimpleFSM(fsmOptions),
+		ident:           fmt.Sprintf("%s:%s", net, transport),
+		optchecker:      reassembly.NewTCPOptionCheck(),
+		superIdentifier: &api.SuperIdentifier{},
 	}
 	if stream.isTapTarget {
+		if runtime.NumGoroutine() > maxNumberOfGoroutines {
+			statsTracker.incDroppedTcpStreams()
+			rlog.Debugf("Dropped a TCP stream because of load. Total dropped: %d Total Goroutines: %d\n", statsTracker.appStats.DroppedTcpStreams, runtime.NumGoroutine())
+			return stream
+		}
+		streamId++
+		stream.id = streamId
 		for i, extension := range extensions {
 			counterPair := &api.CounterPair{
 				Request:  0,
@@ -89,6 +109,12 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.T
 				emitter:            factory.Emitter,
 				counterPair:        counterPair,
 			})
+
+			streams.Store(stream.id, &tcpStreamWrapper{
+				stream:    stream,
+				createdAt: time.Now(),
+			})
+
 			factory.wg.Add(2)
 			// Start reading from channel stream.reader.bytes
 			go stream.clients[i].run(&factory.wg)
@@ -119,7 +145,7 @@ func (factory *tcpStreamFactory) getStreamProps(srcIP string, srcPort string, ds
 		}
 		return &streamProps{isTapTarget: false, isOutgoing: false}
 	} else {
-		rlog.Debugf("getStreamProps %s", fmt.Sprintf("+ notHost3 %s -> %s:%s", srcIP, dstIP, dstPort))
+		rlog.Debugf("getStreamProps %s", fmt.Sprintf("+ notHost3 %s:%s -> %s:%s", srcIP, srcPort, dstIP, dstPort))
 		return &streamProps{isTapTarget: true}
 	}
 }

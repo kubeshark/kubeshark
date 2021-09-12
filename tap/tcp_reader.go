@@ -47,6 +47,7 @@ func (tid *tcpID) String() string {
 type tcpReader struct {
 	ident              string
 	tcpID              *api.TcpID
+	isClosed           bool
 	isClient           bool
 	isOutgoing         bool
 	msgQueue           chan tcpReaderDataMsg // Channel of captured reassembled tcp payload
@@ -59,6 +60,7 @@ type tcpReader struct {
 	extension          *api.Extension
 	emitter            api.Emitter
 	counterPair        *api.CounterPair
+	sync.Mutex
 }
 
 func (h *tcpReader) Read(p []byte) (int, error) {
@@ -93,10 +95,19 @@ func (h *tcpReader) Read(p []byte) (int, error) {
 	return l, nil
 }
 
+func (h *tcpReader) Close() {
+	h.Lock()
+	if !h.isClosed {
+		h.isClosed = true
+		close(h.msgQueue)
+	}
+	h.Unlock()
+}
+
 func (h *tcpReader) run(wg *sync.WaitGroup) {
 	defer wg.Done()
 	b := bufio.NewReader(h)
-	err := h.extension.Dissector.Dissect(b, h.isClient, h.tcpID, h.counterPair, h.superTimer, h.emitter)
+	err := h.extension.Dissector.Dissect(b, h.isClient, h.tcpID, h.counterPair, h.superTimer, h.parent.superIdentifier, h.emitter)
 	if err != nil {
 		io.Copy(ioutil.Discard, b)
 	}
