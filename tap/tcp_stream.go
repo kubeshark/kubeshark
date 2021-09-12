@@ -8,6 +8,7 @@ import (
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers" // pulls in all layers decoders
 	"github.com/google/gopacket/reassembly"
+	"github.com/up9inc/mizu/tap/api"
 )
 
 /* It's a connection (bidirectional)
@@ -16,16 +17,19 @@ import (
  * In our implementation, we pass information from ReassembledSG to the tcpReader through a shared channel.
  */
 type tcpStream struct {
-	tcpstate       *reassembly.TCPSimpleFSM
-	fsmerr         bool
-	optchecker     reassembly.TCPOptionCheck
-	net, transport gopacket.Flow
-	isDNS          bool
-	isTapTarget    bool
-	clients        []tcpReader
-	servers        []tcpReader
-	urls           []string
-	ident          string
+	id              int64
+	isClosed        bool
+	superIdentifier *api.SuperIdentifier
+	tcpstate        *reassembly.TCPSimpleFSM
+	fsmerr          bool
+	optchecker      reassembly.TCPOptionCheck
+	net, transport  gopacket.Flow
+	isDNS           bool
+	isTapTarget     bool
+	clients         []tcpReader
+	servers         []tcpReader
+	urls            []string
+	ident           string
 	sync.Mutex
 }
 
@@ -146,12 +150,22 @@ func (t *tcpStream) ReassembledSG(sg reassembly.ScatterGather, ac reassembly.Ass
 			statsTracker.incReassembledTcpPayloadsCount()
 			timestamp := ac.GetCaptureInfo().Timestamp
 			if dir == reassembly.TCPDirClientToServer {
-				for _, reader := range t.clients {
-					reader.msgQueue <- tcpReaderDataMsg{data, timestamp}
+				for i := range t.clients {
+					reader := &t.clients[i]
+					reader.Lock()
+					if !reader.isClosed {
+						reader.msgQueue <- tcpReaderDataMsg{data, timestamp}
+					}
+					reader.Unlock()
 				}
 			} else {
-				for _, reader := range t.servers {
-					reader.msgQueue <- tcpReaderDataMsg{data, timestamp}
+				for i := range t.servers {
+					reader := &t.servers[i]
+					reader.Lock()
+					if !reader.isClosed {
+						reader.msgQueue <- tcpReaderDataMsg{data, timestamp}
+					}
+					reader.Unlock()
 				}
 			}
 		}
@@ -160,14 +174,33 @@ func (t *tcpStream) ReassembledSG(sg reassembly.ScatterGather, ac reassembly.Ass
 
 func (t *tcpStream) ReassemblyComplete(ac reassembly.AssemblerContext) bool {
 	Trace("%s: Connection closed", t.ident)
-	if t.isTapTarget {
-		for _, reader := range t.clients {
-			close(reader.msgQueue)
-		}
-		for _, reader := range t.servers {
-			close(reader.msgQueue)
-		}
+	if t.isTapTarget && !t.isClosed {
+		t.Close()
 	}
 	// do not remove the connection to allow last ACK
 	return false
+}
+
+func (t *tcpStream) Close() {
+	shouldReturn := false
+	t.Lock()
+	if t.isClosed {
+		shouldReturn = true
+	} else {
+		t.isClosed = true
+	}
+	t.Unlock()
+	if shouldReturn {
+		return
+	}
+	streams.Delete(t.id)
+
+	for i := range t.clients {
+		reader := &t.clients[i]
+		reader.Close()
+	}
+	for i := range t.servers {
+		reader := &t.servers[i]
+		reader.Close()
+	}
 }

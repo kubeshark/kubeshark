@@ -13,6 +13,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"os/signal"
@@ -94,6 +95,8 @@ var nErrors uint
 var ownIps []string             // global
 var hostMode bool               // global
 var extensions []*api.Extension // global
+
+const baseStreamChannelTimeoutMs int = 5000 * 100
 
 /* minOutputLevel: Error will be printed only if outputLevel is above this value
  * t:              key for errorsMap (counting errors)
@@ -211,8 +214,45 @@ func startMemoryProfiler() {
 	}()
 }
 
+func closeTimedoutTcpStreamChannels() {
+	maxNumberOfGoroutines = GetMaxNumberOfGoroutines()
+	TcpStreamChannelTimeoutMs := GetTcpChannelTimeoutMs()
+	for {
+		time.Sleep(10 * time.Millisecond)
+		streams.Range(func(key interface{}, value interface{}) bool {
+			streamWrapper := value.(*tcpStreamWrapper)
+			stream := streamWrapper.stream
+			if stream.superIdentifier.Protocol == nil {
+				if !stream.isClosed && time.Now().After(streamWrapper.createdAt.Add(TcpStreamChannelTimeoutMs)) {
+					stream.Close()
+					statsTracker.incDroppedTcpStreams()
+					rlog.Debugf("Dropped an unidentified TCP stream because of timeout. Total dropped: %d Total Goroutines: %d Timeout (ms): %d\n", statsTracker.appStats.DroppedTcpStreams, runtime.NumGoroutine(), TcpStreamChannelTimeoutMs/1000000)
+				}
+			} else {
+				if !stream.superIdentifier.IsClosedOthers {
+					for i := range stream.clients {
+						reader := &stream.clients[i]
+						if reader.extension.Protocol != stream.superIdentifier.Protocol {
+							reader.Close()
+						}
+					}
+					for i := range stream.servers {
+						reader := &stream.servers[i]
+						if reader.extension.Protocol != stream.superIdentifier.Protocol {
+							reader.Close()
+						}
+					}
+					stream.superIdentifier.IsClosedOthers = true
+				}
+			}
+			return true
+		})
+	}
+}
+
 func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
 	log.SetFlags(log.LstdFlags | log.LUTC | log.Lshortfile)
+	go closeTimedoutTcpStreamChannels()
 
 	defer util.Run()()
 	if *debug {
@@ -367,7 +407,14 @@ func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
 		startMemoryProfiler()
 	}
 
-	for packet := range source.Packets() {
+	for {
+		packet, err := source.NextPacket()
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			rlog.Debugf("Error:", err)
+			continue
+		}
 		packetsCount := statsTracker.incPacketsCount()
 		rlog.Debugf("PACKET #%d", packetsCount)
 		data := packet.Data()
