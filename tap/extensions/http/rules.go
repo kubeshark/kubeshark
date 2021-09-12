@@ -1,4 +1,4 @@
-package rules
+package main
 
 import (
 	"encoding/json"
@@ -9,16 +9,23 @@ import (
 
 	"github.com/google/martian/har"
 	"github.com/up9inc/mizu/shared"
+	"github.com/up9inc/mizu/tap/api"
 	jsonpath "github.com/yalp/jsonpath"
 )
 
-type RulesMatched struct {
-	Matched bool              `json:"matched"`
-	Rule    shared.RulePolicy `json:"rule"`
+
+
+// TODO: until we fixed the Rules feature
+func NewApplicableRules(status bool, latency int64, number int) api.ApplicableRules {
+	ar := api.ApplicableRules{}
+	ar.Status = status
+	ar.Latency = latency
+	ar.NumberOfRules = number
+	return ar
 }
 
-func appendRulesMatched(rulesMatched []RulesMatched, matched bool, rule shared.RulePolicy) []RulesMatched {
-	return append(rulesMatched, RulesMatched{Matched: matched, Rule: rule})
+func appendRulesMatched(rulesMatched []api.RulesMatched, matched bool, rule shared.RulePolicy) []api.RulesMatched {
+	return append(rulesMatched, api.RulesMatched{Matched: matched, Rule: rule})
 }
 
 func ValidatePath(URLFromRule string, URL string) bool {
@@ -41,9 +48,9 @@ func ValidateService(serviceFromRule string, service string) bool {
 	return true
 }
 
-func MatchRequestPolicy(harEntry har.Entry, service string) (int, []RulesMatched) {
+func MatchRequestPolicy(harEntry har.Entry, service string) (int, []api.RulesMatched) {
 	enforcePolicy, _ := shared.DecodeEnforcePolicy(fmt.Sprintf("%s/%s", shared.RulePolicyPath, shared.RulePolicyFileName))
-	var resultPolicyToSend []RulesMatched
+	var resultPolicyToSend []api.RulesMatched
 	for _, rule := range enforcePolicy.Rules {
 		if !ValidatePath(rule.Path, harEntry.Request.URL) || !ValidateService(rule.Service, service) {
 			continue
@@ -92,7 +99,7 @@ func MatchRequestPolicy(harEntry har.Entry, service string) (int, []RulesMatched
 	return len(enforcePolicy.Rules), resultPolicyToSend
 }
 
-func PassedValidationRules(rulesMatched []RulesMatched, numberOfRules int) (bool, int64, int) {
+func PassedValidationRules(rulesMatched []api.RulesMatched, numberOfRules int) (bool, int64, int) {
 	if len(rulesMatched) == 0 {
 		return false, 0, 0
 	}
@@ -107,4 +114,11 @@ func PassedValidationRules(rulesMatched []RulesMatched, numberOfRules int) (bool
 		}
 	}
 	return true, -1, len(rulesMatched)
+}
+
+func RunValidationRulesState(harEntry har.Entry, service string) api.ApplicableRules {
+	numberOfRules, resultPolicyToSend := MatchRequestPolicy(harEntry, service)
+	statusPolicyToSend, latency, numberOfRules := PassedValidationRules(resultPolicyToSend, numberOfRules)
+	ar := NewApplicableRules(statusPolicyToSend, latency, numberOfRules)
+	return ar
 }

@@ -17,6 +17,7 @@ import (
 	"net/url"
 	"strings"
 	"time"
+	harUtils "github.com/up9inc/mizu/shared/utils"
 )
 
 const (
@@ -141,7 +142,7 @@ func UploadEntriesImpl(token string, model string, envPrefix string, sleepInterv
 				if err := json.Unmarshal([]byte(data.Entry), &pair); err != nil {
 					continue
 				}
-				harEntry, err := utils.NewEntry(&pair)
+				harEntry, err := harUtils.NewEntry(&pair)
 				if err != nil {
 					continue
 				}

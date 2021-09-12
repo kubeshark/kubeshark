@@ -17,6 +17,7 @@ import (
 	"github.com/romana/rlog"
 
 	tapApi "github.com/up9inc/mizu/tap/api"
+	harUtils "github.com/up9inc/mizu/shared/utils"
 )
 
 var extensionsMap map[string]*tapApi.Extension // global
@@ -122,7 +123,7 @@ func GetFullEntries(c *gin.Context) {
 		if err := json.Unmarshal([]byte(data.Entry), &pair); err != nil {
 			continue
 		}
-		harEntry, err := utils.NewEntry(&pair)
+		harEntry, err := harUtils.NewEntry(&pair)
 		if err != nil {
 			continue
 		}

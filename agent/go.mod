@@ -18,7 +18,6 @@ require (
 	github.com/up9inc/mizu/shared v0.0.0
 	github.com/up9inc/mizu/tap v0.0.0
 	github.com/up9inc/mizu/tap/api v0.0.0
-	github.com/yalp/jsonpath v0.0.0-20180802001716-5cc68e5049a0
 	go.mongodb.org/mongo-driver v1.7.1
 	gorm.io/driver/sqlite v1.1.4
 	gorm.io/gorm v1.21.8

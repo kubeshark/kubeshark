@@ -12,7 +12,9 @@ import (
 
 	"github.com/romana/rlog"
 
+	harUtils "github.com/up9inc/mizu/shared/utils"
 	"github.com/up9inc/mizu/tap/api"
+
 )
 
 var protocol api.Protocol = api.Protocol{
@@ -392,3 +394,16 @@ func (d dissecting) Represent(entry *api.MizuEntry) (p api.Protocol, object []by
 }
 
 var Dissector dissecting
+
+func (d dissecting) Rules(entry *api.MizuEntry) (api.ApplicableRules, []api.RulesMatched) {
+	var pair api.RequestResponsePair
+	if err := json.Unmarshal([]byte(entry.Entry), &pair); err != nil {
+		return api.ApplicableRules{}, nil
+	}
+	harEntry, err := harUtils.NewEntry(&pair)
+	if err != nil {
+		return api.ApplicableRules{}, nil
+	}
+	applicableRules := RunValidationRulesState(*harEntry, entry.Service)
+	return applicableRules, nil
+}

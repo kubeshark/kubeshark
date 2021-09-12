@@ -116,6 +116,8 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 		baseEntry := extension.Dissector.Summarize(mizuEntry)
 		mizuEntry.EstimatedSizeBytes = getEstimatedEntrySizeBytes(mizuEntry)
 		database.CreateEntry(mizuEntry)
+		applicableRules, _ := extension.Dissector.Rules(mizuEntry)
+		baseEntry.Rules = applicableRules
 		baseEntryBytes, _ := models.CreateBaseEntryWebSocketMessage(baseEntry)
 		BroadcastToBrowserClients(baseEntryBytes)
 	}
