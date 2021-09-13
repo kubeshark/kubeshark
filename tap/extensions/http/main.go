@@ -12,7 +12,7 @@ import (
 
 	"github.com/romana/rlog"
 
-	// harUtils "github.com/up9inc/mizu/shared/utils"
+	harUtils "github.com/up9inc/mizu/shared/utils"
 	"github.com/up9inc/mizu/tap/api"
 
 )
@@ -393,23 +393,23 @@ func (d dissecting) Represent(entry *api.MizuEntry) (p api.Protocol, object []by
 	return
 }
 
+// func (d dissecting) Rules(entry *api.MizuEntry) (api.ApplicableRules) {
+// 	return api.ApplicableRules{}
+// }
+
 func (d dissecting) Rules(entry *api.MizuEntry) (api.ApplicableRules) {
-	return api.ApplicableRules{}
+	var pair api.RequestResponsePair
+	if err := json.Unmarshal([]byte(entry.Entry), &pair); err != nil {
+		return api.ApplicableRules{}
+	}
+	harEntry, err := harUtils.NewEntry(&pair)
+	if err != nil {
+		return api.ApplicableRules{}
+	}
+	applicableRules := RunValidationRulesState(*harEntry, entry.Service)
+	return applicableRules
 }
 
 var Dissector dissecting
 
 
-
-// func (d dissecting) Rules(entry *api.MizuEntry) (api.ApplicableRules) {
-// 	var pair api.RequestResponsePair
-// 	if err := json.Unmarshal([]byte(entry.Entry), &pair); err != nil {
-// 		return api.ApplicableRules{}
-// 	}
-// 	harEntry, err := harUtils.NewEntry(&pair)
-// 	if err != nil {
-// 		return api.ApplicableRules{}
-// 	}
-// 	applicableRules := RunValidationRulesState(*harEntry, entry.Service)
-// 	return applicableRules
-// }
