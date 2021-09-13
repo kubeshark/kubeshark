@@ -395,15 +395,15 @@ func (d dissecting) Represent(entry *api.MizuEntry) (p api.Protocol, object []by
 
 var Dissector dissecting
 
-func (d dissecting) Rules(entry *api.MizuEntry) (api.ApplicableRules, []api.RulesMatched) {
+func (d dissecting) Rules(entry *api.MizuEntry) (api.ApplicableRules) {
 	var pair api.RequestResponsePair
 	if err := json.Unmarshal([]byte(entry.Entry), &pair); err != nil {
-		return api.ApplicableRules{}, nil
+		return api.ApplicableRules{}
 	}
 	harEntry, err := harUtils.NewEntry(&pair)
 	if err != nil {
-		return api.ApplicableRules{}, nil
+		return api.ApplicableRules{}
 	}
 	applicableRules := RunValidationRulesState(*harEntry, entry.Service)
-	return applicableRules, nil
+	return applicableRules
 }

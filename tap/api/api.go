@@ -5,8 +5,6 @@ import (
 	"plugin"
 	"sync"
 	"time"
-
-	"github.com/up9inc/mizu/shared"
 )
 
 type Protocol struct {
@@ -86,18 +84,13 @@ type Dissector interface {
 	Analyze(item *OutputChannelItem, entryId string, resolvedSource string, resolvedDestination string) *MizuEntry
 	Summarize(entry *MizuEntry) *BaseEntryDetails
 	Represent(entry *MizuEntry) (protocol Protocol, object []byte, bodySize int64, err error)
-	Rules(entry *MizuEntry) (ApplicableRules, []RulesMatched)
+	Rules(entry *MizuEntry) (ApplicableRules)
 }
 
 type ApplicableRules struct {
 	Latency       int64 `json:"latency,omitempty"`
 	Status        bool  `json:"status,omitempty"`
 	NumberOfRules int   `json:"numberOfRules,omitempty"`
-}
-
-type RulesMatched struct {
-	Matched bool              `json:"matched"`
-	Rule    shared.RulePolicy `json:"rule"`
 }
 
 type Emitting struct {

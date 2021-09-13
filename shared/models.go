@@ -99,6 +99,12 @@ type RulePolicy struct {
 	Name    string `yaml:"name"`
 }
 
+
+type RulesMatched struct {
+	Matched bool              `json:"matched"`
+	Rule    RulePolicy `json:"rule"`
+}
+
 func (r *RulePolicy) validateType() bool {
 	permitedTypes := []string{"json", "header", "latency"}
 	_, found := Find(permitedTypes, r.Type)

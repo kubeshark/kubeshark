@@ -24,8 +24,8 @@ func NewApplicableRules(status bool, latency int64, number int) api.ApplicableRu
 	return ar
 }
 
-func appendRulesMatched(rulesMatched []api.RulesMatched, matched bool, rule shared.RulePolicy) []api.RulesMatched {
-	return append(rulesMatched, api.RulesMatched{Matched: matched, Rule: rule})
+func appendRulesMatched(rulesMatched []shared.RulesMatched, matched bool, rule shared.RulePolicy) []shared.RulesMatched {
+	return append(rulesMatched, shared.RulesMatched{Matched: matched, Rule: rule})
 }
 
 func ValidatePath(URLFromRule string, URL string) bool {
@@ -48,9 +48,9 @@ func ValidateService(serviceFromRule string, service string) bool {
 	return true
 }
 
-func MatchRequestPolicy(harEntry har.Entry, service string) (int, []api.RulesMatched) {
+func MatchRequestPolicy(harEntry har.Entry, service string) (int, []shared.RulesMatched) {
 	enforcePolicy, _ := shared.DecodeEnforcePolicy(fmt.Sprintf("%s/%s", shared.RulePolicyPath, shared.RulePolicyFileName))
-	var resultPolicyToSend []api.RulesMatched
+	var resultPolicyToSend []shared.RulesMatched
 	for _, rule := range enforcePolicy.Rules {
 		if !ValidatePath(rule.Path, harEntry.Request.URL) || !ValidateService(rule.Service, service) {
 			continue
@@ -99,7 +99,7 @@ func MatchRequestPolicy(harEntry har.Entry, service string) (int, []api.RulesMat
 	return len(enforcePolicy.Rules), resultPolicyToSend
 }
 
-func PassedValidationRules(rulesMatched []api.RulesMatched, numberOfRules int) (bool, int64, int) {
+func PassedValidationRules(rulesMatched []shared.RulesMatched, numberOfRules int) (bool, int64, int) {
 	if len(rulesMatched) == 0 {
 		return false, 0, 0
 	}
