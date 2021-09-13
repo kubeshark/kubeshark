@@ -87,6 +87,7 @@ type Dissector interface {
 }
 
 type Emitting struct {
+	AppStats      *AppStats
 	OutputChannel chan *OutputChannelItem
 }
 
@@ -96,6 +97,7 @@ type Emitter interface {
 
 func (e *Emitting) Emit(item *OutputChannelItem) {
 	e.OutputChannel <- item
+	e.AppStats.IncMatchedPairs()
 }
 
 type MizuEntry struct {
