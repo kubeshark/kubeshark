@@ -62,8 +62,8 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.T
 	}
 	if stream.isTapTarget {
 		if runtime.NumGoroutine() > maxNumberOfGoroutines {
-			statsTracker.incDroppedTcpStreams()
-			rlog.Debugf("Dropped a TCP stream because of load. Total dropped: %d Total Goroutines: %d\n", statsTracker.appStats.DroppedTcpStreams, runtime.NumGoroutine())
+			statsTracker.IncDroppedTcpStreams()
+			rlog.Debugf("Dropped a TCP stream because of load. Total dropped: %d Total Goroutines: %d\n", statsTracker.AppStats.DroppedTcpStreams, runtime.NumGoroutine())
 			return stream
 		}
 		streamId++
