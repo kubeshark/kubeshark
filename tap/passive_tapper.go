@@ -63,7 +63,7 @@ var staleTimeoutSeconds = flag.Int("staletimout", 120, "Max time in seconds to k
 
 var memprofile = flag.String("memprofile", "", "Write memory profile")
 
-var statsTracker = api.StatsTracker{}
+var appStats = api.AppStats{}
 
 // global
 var stats struct {
@@ -153,7 +153,7 @@ type Context struct {
 }
 
 func GetStats() api.AppStats {
-	return statsTracker.AppStats
+	return appStats
 }
 
 func (c *Context) GetCaptureInfo() gopacket.CaptureInfo {
@@ -225,8 +225,8 @@ func closeTimedoutTcpStreamChannels() {
 			if stream.superIdentifier.Protocol == nil {
 				if !stream.isClosed && time.Now().After(streamWrapper.createdAt.Add(TcpStreamChannelTimeoutMs)) {
 					stream.Close()
-					statsTracker.IncDroppedTcpStreams()
-					rlog.Debugf("Dropped an unidentified TCP stream because of timeout. Total dropped: %d Total Goroutines: %d Timeout (ms): %d\n", statsTracker.AppStats.DroppedTcpStreams, runtime.NumGoroutine(), TcpStreamChannelTimeoutMs/1000000)
+					appStats.IncDroppedTcpStreams()
+					rlog.Debugf("Dropped an unidentified TCP stream because of timeout. Total dropped: %d Total Goroutines: %d Timeout (ms): %d\n", appStats.DroppedTcpStreams, runtime.NumGoroutine(), TcpStreamChannelTimeoutMs/1000000)
 				}
 			} else {
 				if !stream.superIdentifier.IsClosedOthers {
@@ -328,11 +328,11 @@ func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
 	source.Lazy = *lazy
 	source.NoCopy = true
 	rlog.Info("Starting to read packets")
-	statsTracker.SetStartTime(time.Now())
+	appStats.SetStartTime(time.Now())
 	defragger := ip4defrag.NewIPv4Defragmenter()
 
 	var emitter api.Emitter = &api.Emitting{
-		StatsTracker:  &statsTracker,
+		AppStats:      &appStats,
 		OutputChannel: outputItems,
 	}
 
@@ -375,7 +375,7 @@ func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
 			errorsSummery := fmt.Sprintf("%v", errorsMap)
 			errorsMapMutex.Unlock()
 			log.Printf("%v (errors: %v, errTypes:%v) - Errors Summary: %s",
-				time.Since(statsTracker.AppStats.StartTime),
+				time.Since(appStats.StartTime),
 				nErrors,
 				errorMapLen,
 				errorsSummery,
@@ -398,7 +398,7 @@ func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
 				cleanStats.closed,
 				cleanStats.deleted,
 			)
-			currentAppStats := statsTracker.DumpStats()
+			currentAppStats := appStats.DumpStats()
 			appStatsJSON, _ := json.Marshal(currentAppStats)
 			log.Printf("app stats - %v", string(appStatsJSON))
 		}
@@ -416,10 +416,10 @@ func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
 			rlog.Debugf("Error:", err)
 			continue
 		}
-		packetsCount := statsTracker.IncPacketsCount()
+		packetsCount := appStats.IncPacketsCount()
 		rlog.Debugf("PACKET #%d", packetsCount)
 		data := packet.Data()
-		statsTracker.UpdateProcessedBytes(int64(len(data)))
+		appStats.UpdateProcessedBytes(uint64(len(data)))
 		if *hexdumppkt {
 			rlog.Debugf("Packet content (%d/0x%x) - %s", len(data), len(data), hex.Dump(data))
 		}
@@ -453,7 +453,7 @@ func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
 
 		tcp := packet.Layer(layers.LayerTypeTCP)
 		if tcp != nil {
-			statsTracker.IncTcpPacketsCount()
+			appStats.IncTcpPacketsCount()
 			tcp := tcp.(*layers.TCP)
 			if *checksum {
 				err := tcp.SetNetworkLayerForChecksum(packet.NetworkLayer())
@@ -471,15 +471,15 @@ func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
 			assemblerMutex.Unlock()
 		}
 
-		done := *maxcount > 0 && statsTracker.AppStats.PacketsCount >= *maxcount
+		done := *maxcount > 0 && int64(appStats.PacketsCount) >= *maxcount
 		if done {
 			errorsMapMutex.Lock()
 			errorMapLen := len(errorsMap)
 			errorsMapMutex.Unlock()
 			log.Printf("Processed %v packets (%v bytes) in %v (errors: %v, errTypes:%v)",
-				statsTracker.AppStats.PacketsCount,
-				statsTracker.AppStats.ProcessedBytes,
-				time.Since(statsTracker.AppStats.StartTime),
+				appStats.PacketsCount,
+				appStats.ProcessedBytes,
+				time.Since(appStats.StartTime),
 				nErrors,
 				errorMapLen)
 		}

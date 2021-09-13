@@ -147,7 +147,7 @@ func (t *tcpStream) ReassembledSG(sg reassembly.ScatterGather, ac reassembly.Ass
 		if length > 0 {
 			// This is where we pass the reassembled information onwards
 			// This channel is read by an tcpReader object
-			statsTracker.IncReassembledTcpPayloadsCount()
+			appStats.IncReassembledTcpPayloadsCount()
 			timestamp := ac.GetCaptureInfo().Timestamp
 			if dir == reassembly.TCPDirClientToServer {
 				for i := range t.clients {
