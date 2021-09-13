@@ -9,13 +9,13 @@ import (
 
 type Protocol struct {
 	Name            string   `json:"name"`
-	LongName        string   `json:"long_name"`
+	LongName        string   `json:"longName"`
 	Abbreviation    string   `json:"abbreviation"`
 	Version         string   `json:"version"`
-	BackgroundColor string   `json:"background_color"`
-	ForegroundColor string   `json:"foreground_color"`
-	FontSize        int8     `json:"font_size"`
-	ReferenceLink   string   `json:"reference_link"`
+	BackgroundColor string   `json:"backgroundColor"`
+	ForegroundColor string   `json:"foregroundColor"`
+	FontSize        int8     `json:"fontSize"`
+	ReferenceLink   string   `json:"referenceLink"`
 	Ports           []string `json:"ports"`
 	Priority        uint8    `json:"priority"`
 }
@@ -50,8 +50,8 @@ type CounterPair struct {
 }
 
 type GenericMessage struct {
-	IsRequest   bool        `json:"is_request"`
-	CaptureTime time.Time   `json:"capture_time"`
+	IsRequest   bool        `json:"isRequest"`
+	CaptureTime time.Time   `json:"captureTime"`
 	Payload     interface{} `json:"payload"`
 }
 
@@ -102,8 +102,8 @@ type MizuEntry struct {
 	ID                  uint `gorm:"primarykey"`
 	CreatedAt           time.Time
 	UpdatedAt           time.Time
-	ProtocolName        string `json:"protocol_key" gorm:"column:protocolKey"`
-	ProtocolVersion     string `json:"protocol_version" gorm:"column:protocolVersion"`
+	ProtocolName        string `json:"protocolKey" gorm:"column:protocolKey"`
+	ProtocolVersion     string `json:"protocolVersion" gorm:"column:protocolVersion"`
 	Entry               string `json:"entry,omitempty" gorm:"column:entry"`
 	EntryId             string `json:"entryId" gorm:"column:entryId"`
 	Url                 string `json:"url" gorm:"column:url"`
@@ -135,17 +135,17 @@ type BaseEntryDetails struct {
 	Id              string          `json:"id,omitempty"`
 	Protocol        Protocol        `json:"protocol,omitempty"`
 	Url             string          `json:"url,omitempty"`
-	RequestSenderIp string          `json:"request_sender_ip,omitempty"`
+	RequestSenderIp string          `json:"requestSenderIp,omitempty"`
 	Service         string          `json:"service,omitempty"`
 	Path            string          `json:"path,omitempty"`
 	Summary         string          `json:"summary,omitempty"`
-	StatusCode      int             `json:"status_code"`
+	StatusCode      int             `json:"statusCode"`
 	Method          string          `json:"method,omitempty"`
 	Timestamp       int64           `json:"timestamp,omitempty"`
-	SourceIp        string          `json:"source_ip,omitempty"`
-	DestinationIp   string          `json:"destination_ip,omitempty"`
-	SourcePort      string          `json:"source_port,omitempty"`
-	DestinationPort string          `json:"destination_port,omitempty"`
+	SourceIp        string          `json:"sourceIp,omitempty"`
+	DestinationIp   string          `json:"destinationIp,omitempty"`
+	SourcePort      string          `json:"sourcePort,omitempty"`
+	DestinationPort string          `json:"destinationPort,omitempty"`
 	IsOutgoing      bool            `json:"isOutgoing,omitempty"`
 	Latency         int64           `json:"latency,omitempty"`
 	Rules           ApplicableRules `json:"rules,omitempty"`

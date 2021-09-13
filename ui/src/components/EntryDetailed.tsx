@@ -72,7 +72,7 @@ export const EntryDetailed: React.FC<EntryDetailedProps> = ({entryData}) => {
         />
         {entryData.data && <EntrySummary data={entryData.data}/>}
         <>
-            {entryData.data && <EntryViewer representation={entryData.representation} color={entryData.protocol.background_color}/>}
+            {entryData.data && <EntryViewer representation={entryData.representation} color={entryData.protocol.backgroundColor}/>}
         </>
     </>
 };

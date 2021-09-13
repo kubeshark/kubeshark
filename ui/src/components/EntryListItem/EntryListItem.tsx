@@ -16,13 +16,13 @@ interface Entry {
     summary: string,
     service: string,
     id: string,
-    status_code?: number;
+    statusCode?: number;
     url?: string;
     timestamp: Date;
-    source_ip: string,
-    source_port: string,
-    destination_ip: string,
-    destination_port: string,
+    sourceIp: string,
+    sourcePort: string,
+    destinationIp: string,
+    destinationPort: string,
 	isOutgoing?: boolean;
     latency: number;
     rules: Rules;
@@ -41,7 +41,7 @@ interface EntryProps {
 }
 
 export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, isSelected}) => {
-    const classification = getClassification(entry.status_code)
+    const classification = getClassification(entry.statusCode)
     let ingoingIcon;
     let outgoingIcon;
     switch(classification) {
@@ -103,11 +103,11 @@ export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, isSel
             className={`${styles.row}
             ${isSelected ? styles.rowSelected : backgroundColor}`}
             onClick={() => setFocusedEntryId(entry.id)}
-            style={{border: isSelected ? `1px ${entry.protocol.background_color} solid` : "1px transparent solid"}}
+            style={{border: isSelected ? `1px ${entry.protocol.backgroundColor} solid` : "1px transparent solid"}}
         >
             <Protocol protocol={entry.protocol} horizontal={false}/>
-            {((entry.protocol.name === "http" && "status_code" in entry) || entry.status_code !== 0) && <div>
-                <StatusCode statusCode={entry.status_code}/>
+            {((entry.protocol.name === "http" && "statusCode" in entry) || entry.statusCode !== 0) && <div>
+                <StatusCode statusCode={entry.statusCode}/>
             </div>}
             <div className={styles.endpointServiceContainer}>
                 <EndpointPath method={entry.method} path={entry.summary}/>
@@ -116,13 +116,13 @@ export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, isSel
                 </div>
             </div>
             <div className={styles.directionContainer}>
-                <span className={styles.port} title="Source Port">{entry.source_port}</span>
+                <span className={styles.port} title="Source Port">{entry.sourcePort}</span>
                 {entry.isOutgoing ?
                     <img src={outgoingIcon} alt="Ingoing traffic" title="Ingoing"/>
                     :
                     <img src={ingoingIcon} alt="Outgoing traffic" title="Outgoing"/>
                 }
-                <span className={styles.port} title="Destination Port">{entry.destination_port}</span>
+                <span className={styles.port} title="Destination Port">{entry.destinationPort}</span>
             </div>
             <div className={styles.timestamp}>
                 <span title="Timestamp">
