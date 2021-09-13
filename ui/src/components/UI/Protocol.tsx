@@ -3,12 +3,12 @@ import styles from './style/Protocol.module.sass';
 
 export interface ProtocolInterface {
     name: string
-    long_name: string
+    longName: string
     abbreviation: string
-    background_color: string
-    foreground_color: string
-    font_size: number
-    reference_link: string
+    backgroundColor: string
+    foregroundColor: string
+    fontSize: number
+    referenceLink: string
     ports: string[]
     inbound_ports: string
 }
@@ -20,29 +20,29 @@ interface ProtocolProps {
 
 const Protocol: React.FC<ProtocolProps> = ({protocol, horizontal}) => {
     if (horizontal) {
-        return <a target="_blank" rel="noopener noreferrer" href={protocol.reference_link}>
+        return <a target="_blank" rel="noopener noreferrer" href={protocol.referenceLink}>
             <span
                 className={`${styles.base} ${styles.horizontal}`}
                 style={{
-                    backgroundColor: protocol.background_color,
-                    color: protocol.foreground_color,
+                    backgroundColor: protocol.backgroundColor,
+                    color: protocol.foregroundColor,
                     fontSize: 13,
                 }}
                 title={protocol.abbreviation}
             >
-                {protocol.long_name}
+                {protocol.longName}
             </span>
         </a>
     } else {
-        return <a target="_blank" rel="noopener noreferrer" href={protocol.reference_link}>
+        return <a target="_blank" rel="noopener noreferrer" href={protocol.referenceLink}>
             <span
                 className={`${styles.base} ${styles.vertical}`}
                 style={{
-                    backgroundColor: protocol.background_color,
-                    color: protocol.foreground_color,
-                    fontSize: protocol.font_size,
+                    backgroundColor: protocol.backgroundColor,
+                    color: protocol.foregroundColor,
+                    fontSize: protocol.fontSize,
                 }}
-                title={protocol.long_name}
+                title={protocol.longName}
             >
                 {protocol.abbreviation}
             </span>
