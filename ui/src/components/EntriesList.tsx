@@ -116,10 +116,10 @@ export const EntriesList: React.FC<EntriesListProps> = ({entries, setEntries, fo
                                                         setFocusedEntryId={setFocusedEntryId}
                                                         isSelected={focusedEntryId === entry.id}
                                                         style={{}}/>)}
-                        {!connectionOpen && !noMoreDataBottom && <div className={styles.fetchButtonContainer}>
-                            <div className={styles.styledButton} onClick={() => getNewEntries()}>Fetch more entries</div>
-                        </div>}
                     </ScrollableFeedVirtualized>
+                    {!connectionOpen && !noMoreDataBottom && <div className={styles.fetchButtonContainer}>
+                        <div className={styles.styledButton} onClick={() => getNewEntries()}>Fetch more entries</div>
+                    </div>}
                     <button type="button"
                         className={`${styles.btnLive} ${scrollableList ? styles.showButton : styles.hideButton}`}
                         onClick={(_) => scrollableRef.current.jumpToBottom()}>
