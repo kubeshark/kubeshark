@@ -231,7 +231,7 @@ export const EntryTablePolicySection: React.FC<EntryPolicySectionProps> = ({serv
                                                     }
                                                     {
                                                         rule.Service &&
-                                                        <tr className={styles.dataValue}><td><b>Service:</b></td> <td>{service}</td></tr>
+                                                        <tr className={styles.dataValue}><td><b>Service:</b></td> <td>{rule.Service}</td></tr>
                                                     }
                                                     {
                                                         rule.Type &&
