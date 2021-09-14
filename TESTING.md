@@ -18,6 +18,7 @@ Testing guidelines for Mizu project
   * Test file name - <tested_file_name>_test.go
   * Test package name - <package_being_tested>_test
   * Example - [Slice Utils](cli/mizu/sliceUtils_test.go)
+* Make sure to run test coverage to make sure you covered all the cases in the func  
   
 ## Acceptance tests
 * Test file position - Inside the acceptance tests folder
@@ -30,4 +31,4 @@ Testing guidelines for Mizu project
   * Switch to the branch that is being tested
   * Run acceptanceTests/setup.sh
   * Run tests
-* Example - [Tap](acceptanceTests/tap_test.go)  
+* Example - [Tap](acceptanceTests/tap_test.go)
