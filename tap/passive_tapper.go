@@ -216,7 +216,6 @@ func startMemoryProfiler() {
 }
 
 func closeTimedoutTcpStreamChannels() {
-	maxNumberOfGoroutines = GetMaxNumberOfGoroutines()
 	TcpStreamChannelTimeoutMs := GetTcpChannelTimeoutMs()
 	for {
 		_debug.FreeOSMemory()
