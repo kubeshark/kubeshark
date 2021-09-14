@@ -380,43 +380,47 @@ func watchPodsForTapping(ctx context.Context, kubernetesProvider *kubernetes.Pro
 	for {
 		select {
 		case pod, ok := <-added:
-			if ok {
-				logger.Log.Debugf("Added matching pod %s, ns: %s", pod.Name, pod.Namespace)
-				restartTappersDebouncer.SetOn()
-			} else {
+			if !ok {
 				added = nil
+				continue
 			}
+
+			logger.Log.Debugf("Added matching pod %s, ns: %s", pod.Name, pod.Namespace)
+			restartTappersDebouncer.SetOn()
 		case pod, ok := <-removed:
-			if ok {
-				logger.Log.Debugf("Removed matching pod %s, ns: %s", pod.Name, pod.Namespace)
-				restartTappersDebouncer.SetOn()
-			} else {
+			if !ok {
 				removed = nil
+				continue
 			}
+
+			logger.Log.Debugf("Removed matching pod %s, ns: %s", pod.Name, pod.Namespace)
+			restartTappersDebouncer.SetOn()
 		case pod, ok := <-modified:
-			if ok {
-				logger.Log.Debugf("Modified matching pod %s, ns: %s, phase: %s, ip: %s", pod.Name, pod.Namespace, pod.Status.Phase, pod.Status.PodIP)
-				// Act only if the modified pod has already obtained an IP address.
-				// After filtering for IPs, on a normal pod restart this includes the following events:
-				// - Pod deletion
-				// - Pod reaches start state
-				// - Pod reaches ready state
-				// Ready/unready transitions might also trigger this event.
-				if pod.Status.PodIP != "" {
-					restartTappersDebouncer.SetOn()
-				}
-			} else {
+			if !ok {
 				modified = nil
+				continue
+			}
+
+			logger.Log.Debugf("Modified matching pod %s, ns: %s, phase: %s, ip: %s", pod.Name, pod.Namespace, pod.Status.Phase, pod.Status.PodIP)
+			// Act only if the modified pod has already obtained an IP address.
+			// After filtering for IPs, on a normal pod restart this includes the following events:
+			// - Pod deletion
+			// - Pod reaches start state
+			// - Pod reaches ready state
+			// Ready/unready transitions might also trigger this event.
+			if pod.Status.PodIP != "" {
+				restartTappersDebouncer.SetOn()
 			}
 		case err, ok := <-errorChan:
-			if ok {
-				logger.Log.Debugf("Watching pods loop, got error %v, stopping `restart tappers debouncer`", err)
-				restartTappersDebouncer.Cancel()
-				// TODO: Does this also perform cleanup?
-				cancel()
-			} else {
+			if !ok {
 				errorChan = nil
+				continue
 			}
+
+			logger.Log.Debugf("Watching pods loop, got error %v, stopping `restart tappers debouncer`", err)
+			restartTappersDebouncer.Cancel()
+			// TODO: Does this also perform cleanup?
+			cancel()
 
 		case <-ctx.Done():
 			logger.Log.Debugf("Watching pods loop, context done, stopping `restart tappers debouncer`")
@@ -493,50 +497,53 @@ func watchApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 	for {
 		select {
 		case _, ok := <-added:
-			if ok {
-				logger.Log.Debugf("Watching API Server pod loop, added")
-				continue
-			} else {
+			if !ok {
 				added = nil
+				continue
 			}
-		case _, ok := <-removed:
-			if ok {
-				logger.Log.Infof("%s removed", mizu.ApiServerPodName)
-				cancel()
-				return
-			} else {
-				removed = nil
-			}
-		case modifiedPod, ok := <-modified:
-			if ok {
-				logger.Log.Debugf("Watching API Server pod loop, modified: %v", modifiedPod.Status.Phase)
-				if modifiedPod.Status.Phase == core.PodRunning && !isPodReady {
-					isPodReady = true
-					go startProxyReportErrorIfAny(kubernetesProvider, cancel)
 
-					url := GetApiServerUrl()
-					if err := apiserver.Provider.InitAndTestConnection(url); err != nil {
-						logger.Log.Errorf(uiUtils.Error, "Couldn't connect to API server, check logs")
-						cancel()
-						break
-					}
-					logger.Log.Infof("Mizu is available at %s\n", url)
-					openBrowser(url)
-					requestForAnalysisIfNeeded()
-					if err := apiserver.Provider.ReportTappedPods(state.currentlyTappedPods); err != nil {
-						logger.Log.Debugf("[Error] failed update tapped pods %v", err)
-					}
-				}
-			} else {
+			logger.Log.Debugf("Watching API Server pod loop, added")
+		case _, ok := <-removed:
+			if !ok {
+				removed = nil
+				continue
+			}
+
+			logger.Log.Infof("%s removed", mizu.ApiServerPodName)
+			cancel()
+			return
+		case modifiedPod, ok := <-modified:
+			if !ok {
 				modified = nil
+				continue
+			}
+
+			logger.Log.Debugf("Watching API Server pod loop, modified: %v", modifiedPod.Status.Phase)
+			if modifiedPod.Status.Phase == core.PodRunning && !isPodReady {
+				isPodReady = true
+				go startProxyReportErrorIfAny(kubernetesProvider, cancel)
+
+				url := GetApiServerUrl()
+				if err := apiserver.Provider.InitAndTestConnection(url); err != nil {
+					logger.Log.Errorf(uiUtils.Error, "Couldn't connect to API server, check logs")
+					cancel()
+					break
+				}
+				logger.Log.Infof("Mizu is available at %s\n", url)
+				openBrowser(url)
+				requestForAnalysisIfNeeded()
+				if err := apiserver.Provider.ReportTappedPods(state.currentlyTappedPods); err != nil {
+					logger.Log.Debugf("[Error] failed update tapped pods %v", err)
+				}
 			}
 		case _, ok := <-errorChan:
-			if ok {
-				logger.Log.Debugf("[ERROR] Agent creation, watching %v namespace", config.Config.MizuResourcesNamespace)
-				cancel()
-			} else {
+			if !ok {
 				errorChan = nil
+				continue
 			}
+
+			logger.Log.Debugf("[ERROR] Agent creation, watching %v namespace", config.Config.MizuResourcesNamespace)
+			cancel()
 
 		case <-timeAfter:
 			if !isPodReady {
