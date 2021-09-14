@@ -15,7 +15,7 @@ const (
 	TcpStreamChannelTimeoutMsEnvVarName       = "TCP_STREAM_CHANNEL_TIMEOUT_MS"
 	MaxBufferedPagesTotalDefaultValue         = 5000
 	MaxBufferedPagesPerConnectionDefaultValue = 5000
-	TcpStreamChannelTimeoutMsDefaultValue     = 5000
+	TcpStreamChannelTimeoutMsDefaultValue     = 10000
 )
 
 type globalSettings struct {
