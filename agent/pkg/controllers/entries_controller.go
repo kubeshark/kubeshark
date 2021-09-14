@@ -154,7 +154,9 @@ func GetEntry(c *gin.Context) {
 		Protocol:       protocol,
 		Representation: string(representation),
 		BodySize:       bodySize,
-		Data:           fewp,
+		Data:           entryData,
+		Rules:          rules
+		  
 	})
 }
 
