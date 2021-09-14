@@ -33,8 +33,7 @@ const SectionsRepresentation: React.FC<any> = ({data, color}) => {
     return <>{sections}</>;
 }
 
-const AutoRepresentation: React.FC<any> = ({representation, color}) => {
-    const rulesMatched = []
+const AutoRepresentation: React.FC<any> = ({representation, rulesMatched, color}) => {
     const TABS = [
         {
             tab: 'request'
@@ -77,11 +76,12 @@ const AutoRepresentation: React.FC<any> = ({representation, color}) => {
 
 interface Props {
     representation: any;
+    rulesMatched: any;
     color: string,
 }
 
-const EntryViewer: React.FC<Props> = ({representation, color}) => {
-    return <AutoRepresentation representation={representation} color={color}/>
+const EntryViewer: React.FC<Props> = ({representation, rulesMatched, color}) => {
+    return <AutoRepresentation representation={representation} rulesMatched={rulesMatched} color={color}/>
 };
 
 export default EntryViewer;

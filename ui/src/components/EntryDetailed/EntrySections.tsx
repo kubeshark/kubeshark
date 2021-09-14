@@ -251,7 +251,7 @@ export const EntryTablePolicySection: React.FC<EntryPolicySectionProps> = ({serv
                         </tbody>
                     </table>
                 </EntrySectionContainer>
-                </> : <span/>
+                </> : <span className={styles.noRules}>No rules could be applied to this request.</span>
         }
     </React.Fragment>
 }

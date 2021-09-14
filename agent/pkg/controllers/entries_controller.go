@@ -17,7 +17,6 @@ import (
 	"github.com/romana/rlog"
 
 	tapApi "github.com/up9inc/mizu/tap/api"
-	harUtils "github.com/up9inc/mizu/shared/utils"
 )
 
 var extensionsMap map[string]*tapApi.Extension // global
@@ -123,7 +122,7 @@ func GetFullEntries(c *gin.Context) {
 		if err := json.Unmarshal([]byte(data.Entry), &pair); err != nil {
 			continue
 		}
-		harEntry, err := harUtils.NewEntry(&pair)
+		harEntry, err := utils.NewEntry(&pair)
 		if err != nil {
 			continue
 		}
@@ -141,11 +140,26 @@ func GetEntry(c *gin.Context) {
 
 	extension := extensionsMap[entryData.ProtocolName]
 	protocol, representation, bodySize, _ := extension.Dissector.Represent(&entryData)
+
+	fewp := tapApi.FullEntryWithPolicy{}
+	fewp.Entry = entryData
+
+	if entryData.ProtocolName == "http" {
+		var pair tapApi.RequestResponsePair
+		json.Unmarshal([]byte(entryData.Entry), &pair)
+		harEntry, _ := utils.NewEntry(&pair)
+		_, rulesMatched := models.RunValidationRulesState(*harEntry, entryData.Service)
+		inrec, _ := json.Marshal(rulesMatched)
+		var rules []map[string]interface{}
+		json.Unmarshal(inrec, &rules)
+		fewp.RulesMatched = rules
+	}
+	
 	c.JSON(http.StatusOK, tapApi.MizuEntryWrapper{
 		Protocol:       protocol,
 		Representation: string(representation),
 		BodySize:       bodySize,
-		Data:           entryData,
+		Data:           fewp,
 	})
 }
 

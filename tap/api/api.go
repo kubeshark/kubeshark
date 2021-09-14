@@ -84,13 +84,6 @@ type Dissector interface {
 	Analyze(item *OutputChannelItem, entryId string, resolvedSource string, resolvedDestination string) *MizuEntry
 	Summarize(entry *MizuEntry) *BaseEntryDetails
 	Represent(entry *MizuEntry) (protocol Protocol, object []byte, bodySize int64, err error)
-	Rules(entry *MizuEntry) (ApplicableRules)
-}
-
-type ApplicableRules struct {
-	Latency       int64 `json:"latency,omitempty"`
-	Status        bool  `json:"status,omitempty"`
-	NumberOfRules int   `json:"numberOfRules,omitempty"`
 }
 
 type Emitting struct {
@@ -104,6 +97,7 @@ type Emitter interface {
 func (e *Emitting) Emit(item *OutputChannelItem) {
 	e.OutputChannel <- item
 }
+
 
 type MizuEntry struct {
 	ID                  uint `gorm:"primarykey"`
@@ -131,11 +125,16 @@ type MizuEntry struct {
 	EstimatedSizeBytes  int    `json:"-" gorm:"column:estimatedSizeBytes"`
 }
 
+type FullEntryWithPolicy struct {
+	RulesMatched []map[string]interface{} `json:"rulesMatched,omitempty"`
+	Entry        MizuEntry            `json:"entry"`
+}
+
 type MizuEntryWrapper struct {
 	Protocol       Protocol  `json:"protocol"`
 	Representation string    `json:"representation"`
 	BodySize       int64     `json:"bodySize"`
-	Data           MizuEntry `json:"data"`
+	Data           FullEntryWithPolicy `json:"data"`
 }
 
 type BaseEntryDetails struct {
@@ -156,6 +155,12 @@ type BaseEntryDetails struct {
 	IsOutgoing      bool            `json:"isOutgoing,omitempty"`
 	Latency         int64           `json:"latency,omitempty"`
 	Rules           ApplicableRules `json:"rules,omitempty"`
+}
+
+type ApplicableRules struct {
+	Latency       int64 `json:"latency,omitempty"`
+	Status        bool  `json:"status,omitempty"`
+	NumberOfRules int   `json:"numberOfRules,omitempty"`
 }
 
 type DataUnmarshaler interface {

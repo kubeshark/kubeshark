@@ -42,6 +42,7 @@ interface EntryProps {
 
 export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, isSelected}) => {
     const classification = getClassification(entry.status_code)
+    const numberOfRules = entry.rules.numberOfRules
     let ingoingIcon;
     let outgoingIcon;
     switch(classification) {
@@ -61,47 +62,39 @@ export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, isSel
             break;
         }
     }
-    // let additionalRulesProperties = "";
-    // let ruleSuccess: boolean;
+    let additionalRulesProperties = "";
+    let ruleSuccess: boolean;
     let rule = 'latency' in entry.rules
     if (rule) {
         if (entry.rules.latency !== -1) {
             if (entry.rules.latency >= entry.latency) {
-                // additionalRulesProperties = styles.ruleSuccessRow
-                // ruleSuccess = true
+                additionalRulesProperties = styles.ruleSuccessRow
+                ruleSuccess = true
             } else {
-                // additionalRulesProperties = styles.ruleFailureRow
-                // ruleSuccess = false
+                additionalRulesProperties = styles.ruleFailureRow
+                ruleSuccess = false
             }
             if (isSelected) {
-                // additionalRulesProperties += ` ${entry.rules.latency >= entry.latency ? styles.ruleSuccessRowSelected : styles.ruleFailureRowSelected}`
+                additionalRulesProperties += ` ${entry.rules.latency >= entry.latency ? styles.ruleSuccessRowSelected : styles.ruleFailureRowSelected}`
             }
         } else {
             if (entry.rules.status) {
-                // additionalRulesProperties = styles.ruleSuccessRow
-                // ruleSuccess = true
+                additionalRulesProperties = styles.ruleSuccessRow
+                ruleSuccess = true
             } else {
-                // additionalRulesProperties = styles.ruleFailureRow
-                // ruleSuccess = false
+                additionalRulesProperties = styles.ruleFailureRow
+                ruleSuccess = false
             }
             if (isSelected) {
-                // additionalRulesProperties += ` ${entry.rules.status ? styles.ruleSuccessRowSelected : styles.ruleFailureRowSelected}`
+                additionalRulesProperties += ` ${entry.rules.status ? styles.ruleSuccessRowSelected : styles.ruleFailureRowSelected}`
             }
-        }
-    }
-    let backgroundColor = "";
-    if ('latency' in entry.rules) {
-        if (entry.rules.latency !== -1) {
-            backgroundColor = entry.rules.latency >= entry.latency ? styles.ruleSuccessRow : styles.ruleFailureRow
-        } else {
-            backgroundColor = entry.rules.status ? styles.ruleSuccessRow : styles.ruleFailureRow
         }
     }
     return <>
         <div
             id={entry.id}
             className={`${styles.row}
-            ${isSelected ? styles.rowSelected : backgroundColor}`}
+            ${isSelected && !rule ? styles.rowSelected : additionalRulesProperties}`}
             onClick={() => setFocusedEntryId(entry.id)}
             style={{border: isSelected ? `1px ${entry.protocol.background_color} solid` : "1px transparent solid"}}
         >
@@ -115,6 +108,13 @@ export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, isSel
                     <span title="Service Name">{entry.service}</span>
                 </div>
             </div>
+            {
+                rule ?
+                    <div className={`${ruleSuccess ? styles.ruleNumberTextSuccess : styles.ruleNumberTextFailure}`}>
+                        {`Rules (${numberOfRules})`}
+                    </div>
+                : ""
+            }
             <div className={styles.directionContainer}>
                 <span className={styles.port} title="Source Port">{entry.source_port}</span>
                 {entry.isOutgoing ?
@@ -131,4 +131,5 @@ export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, isSel
             </div>
         </div>
     </>
-};
+
+}

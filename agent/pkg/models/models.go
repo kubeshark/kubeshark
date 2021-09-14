@@ -7,6 +7,7 @@ import (
 	"github.com/google/martian/har"
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/tap"
+	"mizuserver/pkg/rules"
 )
 
 func GetEntry(r *tapApi.MizuEntry, v tapApi.DataUnmarshaler) error {
@@ -94,25 +95,8 @@ type ExtendedCreator struct {
 	Source *string `json:"_source"`
 }
 
-// type FullEntryWithPolicy struct {
-// 	RulesMatched []rules.RulesMatched `json:"rulesMatched,omitempty"`
-// 	Entry        har.Entry            `json:"entry"`
-// 	Service      string               `json:"service"`
-// }
-
-// func (fewp *FullEntryWithPolicy) UnmarshalData(entry *tapApi.MizuEntry) error {
-// 	var pair tapApi.RequestResponsePair
-// 	if err := json.Unmarshal([]byte(entry.Entry), &pair); err != nil {
-// 		return err
-// 	}
-// 	harEntry, err := utils.NewEntry(&pair)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	fewp.Entry = *harEntry
-
-// 	_, resultPolicyToSend := rules.MatchRequestPolicy(fewp.Entry, entry.Service)
-// 	fewp.RulesMatched = resultPolicyToSend
-// 	fewp.Service = entry.Service
-// 	return nil
-// }
+func RunValidationRulesState(harEntry har.Entry, service string) (tapApi.ApplicableRules, []rules.RulesMatched) {
+	numberOfRules, resultPolicyToSend := rules.MatchRequestPolicy(harEntry, service)
+	statusPolicyToSend, latency, numberOfRules := rules.PassedValidationRules(resultPolicyToSend, numberOfRules)
+	return tapApi.ApplicableRules{Status: statusPolicyToSend, Latency: latency, NumberOfRules: numberOfRules}, resultPolicyToSend
+}

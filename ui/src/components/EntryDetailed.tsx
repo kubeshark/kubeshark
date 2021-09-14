@@ -34,7 +34,7 @@ export const formatSize = (n: number) => n > 1000 ? `${Math.round(n / 1000)}KB` 
 
 const EntryTitle: React.FC<any> = ({protocol, data, bodySize, elapsedTime}) => {
     const classes = useStyles();
-    const {response} = JSON.parse(data.entry);
+    const {response} = JSON.parse(data.entry.entry);
 
 
     return <div className={classes.entryTitle}>
@@ -42,7 +42,6 @@ const EntryTitle: React.FC<any> = ({protocol, data, bodySize, elapsedTime}) => {
         <div style={{right: "30px", position: "absolute", display: "flex"}}>
             {response.payload && <div style={{margin: "0 18px", opacity: 0.5}}>{formatSize(bodySize)}</div>}
             <div style={{marginRight: 18, opacity: 0.5}}>{Math.round(elapsedTime)}ms</div>
-            <div style={{opacity: 0.5}}>{'rulesMatched' in data ? data.rulesMatched?.length : '0'} Rules Applied</div>
         </div>
     </div>;
 };
@@ -50,7 +49,7 @@ const EntryTitle: React.FC<any> = ({protocol, data, bodySize, elapsedTime}) => {
 const EntrySummary: React.FC<any> = ({data}) => {
     const classes = useStyles();
 
-    const {response, request} = JSON.parse(data.entry);
+    const {response, request} = JSON.parse(data.entry.entry);
 
     return <div className={classes.entrySummary}>
         {response?.payload && response.payload?.details && "status" in response.payload.details && <div style={{marginRight: 8}}>
@@ -68,11 +67,11 @@ export const EntryDetailed: React.FC<EntryDetailedProps> = ({entryData}) => {
             protocol={entryData.protocol}
             data={entryData.data}
             bodySize={entryData.bodySize}
-            elapsedTime={entryData.data.elapsedTime}
+            elapsedTime={entryData.data.entry.elapsedTime}
         />
         {entryData.data && <EntrySummary data={entryData.data}/>}
         <>
-            {entryData.data && <EntryViewer representation={entryData.representation} color={entryData.protocol.background_color}/>}
+            {entryData.data && <EntryViewer representation={entryData.representation} rulesMatched={entryData.data.rulesMatched} color={entryData.protocol.background_color}/>}
         </>
     </>
 };

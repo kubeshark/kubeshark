@@ -354,9 +354,4 @@ func (d dissecting) Represent(entry *api.MizuEntry) (p api.Protocol, object []by
 	return
 }
 
-func (d dissecting) Rules(entry *api.MizuEntry) (api.ApplicableRules) {
-	return api.ApplicableRules{}
-}
-
 var Dissector dissecting
-
