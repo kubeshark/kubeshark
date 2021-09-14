@@ -46,7 +46,7 @@ While `mizu`most often works out of the box, you can influence its behavior:
 1. [OPTIONAL] Set `KUBECONFIG` environment variable to your Kubernetes configuration. If this is not set, Mizu assumes that configuration is at `${HOME}/.kube/config`
 2. `mizu` assumes user running the command has permissions to create resources (such as pods, services, namespaces) on your Kubernetes cluster (no worries - `mizu` resources are cleaned up upon termination)
 
-For detailed list of k8s permissions see [PERMISSIONS](PERMISSIONS.md) document
+For detailed list of k8s permissions see [PERMISSIONS](docs/PERMISSIONS.md) document
 
 
 ## How to Run
