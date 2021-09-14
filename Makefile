@@ -73,7 +73,7 @@ clean-docker:
 	@(echo "DOCKER cleanup - NOT IMPLEMENTED YET " )
 
 extensions:
-	./build_extensions.sh
+	devops/build_extensions.sh
 
 test-cli:
 	@echo "running cli tests"; cd cli && $(MAKE) test
