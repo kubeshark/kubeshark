@@ -24,8 +24,8 @@ Testing guidelines for Mizu project
 * Test file position - Inside the acceptance tests folder
 * File name - <tested_command>_test.go
 * Package name - acceptanceTests
-* Add short check and skip
-* Use/Create generic tests func in acceptanceTests/testsUtils
+* Add short check and skip if short
+* Use/Create generic test utils func in acceptanceTests/testsUtils
 * Don't use sleep inside the tests - active check 
 * Running acceptance tests locally
   * Switch to the branch that is being tested
