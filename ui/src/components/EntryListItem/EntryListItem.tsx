@@ -16,14 +16,14 @@ interface Entry {
     summary: string,
     service: string,
     id: string,
-    status_code?: number;
+    statusCode?: number;
     url?: string;
     timestamp: Date;
-    source_ip: string,
-    source_port: string,
-    destination_ip: string,
-    destination_port: string,
-	isOutgoing?: boolean;
+    sourceIp: string,
+    sourcePort: string,
+    destinationIp: string,
+    destinationPort: string,
+    isOutgoing?: boolean;
     latency: number;
     rules: Rules;
 }
@@ -38,10 +38,11 @@ interface EntryProps {
     entry: Entry;
     setFocusedEntryId: (id: string) => void;
     isSelected?: boolean;
+    style: object;
 }
-
-export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, isSelected}) => {
-    const classification = getClassification(entry.status_code)
+    
+export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, isSelected, style}) => {
+    const classification = getClassification(entry.statusCode)
     const numberOfRules = entry.rules.numberOfRules
     let ingoingIcon;
     let outgoingIcon;
@@ -96,11 +97,17 @@ export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, isSel
             className={`${styles.row}
             ${isSelected && !rule ? styles.rowSelected : additionalRulesProperties}`}
             onClick={() => setFocusedEntryId(entry.id)}
-            style={{border: isSelected ? `1px ${entry.protocol.background_color} solid` : "1px transparent solid"}}
+            style={{
+                border: isSelected ? `1px ${entry.protocol.backgroundColor} solid` : "1px transparent solid",
+                position: "absolute",
+                top: style['top'],
+                marginTop: style['marginTop'],
+                width: "calc(100% - 25px)",
+            }}
         >
             <Protocol protocol={entry.protocol} horizontal={false}/>
-            {((entry.protocol.name === "http" && "status_code" in entry) || entry.status_code !== 0) && <div>
-                <StatusCode statusCode={entry.status_code}/>
+            {((entry.protocol.name === "http" && "statusCode" in entry) || entry.statusCode !== 0) && <div>
+                <StatusCode statusCode={entry.statusCode}/>
             </div>}
             <div className={styles.endpointServiceContainer}>
                 <EndpointPath method={entry.method} path={entry.summary}/>
@@ -116,13 +123,13 @@ export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, isSel
                 : ""
             }
             <div className={styles.directionContainer}>
-                <span className={styles.port} title="Source Port">{entry.source_port}</span>
+                <span className={styles.port} title="Source Port">{entry.sourcePort}</span>
                 {entry.isOutgoing ?
                     <img src={outgoingIcon} alt="Ingoing traffic" title="Ingoing"/>
                     :
                     <img src={ingoingIcon} alt="Outgoing traffic" title="Outgoing"/>
                 }
-                <span className={styles.port} title="Destination Port">{entry.destination_port}</span>
+                <span className={styles.port} title="Destination Port">{entry.destinationPort}</span>
             </div>
             <div className={styles.timestamp}>
                 <span title="Timestamp">
