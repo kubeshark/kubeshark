@@ -140,7 +140,8 @@ func GetEntry(c *gin.Context) {
 
 	extension := extensionsMap[entryData.ProtocolName]
 	protocol, representation, bodySize, _ := extension.Dissector.Represent(&entryData)
-        var rules []map[string]interface{}
+
+	var rules []map[string]interface{}
 	if entryData.ProtocolName == "http" {
 		var pair tapApi.RequestResponsePair
 		json.Unmarshal([]byte(entryData.Entry), &pair)
@@ -155,8 +156,7 @@ func GetEntry(c *gin.Context) {
 		Representation: string(representation),
 		BodySize:       bodySize,
 		Data:           entryData,
-		Rules:          rules
-		  
+		Rules:          rules,
 	})
 }
 

@@ -34,7 +34,7 @@ export const formatSize = (n: number) => n > 1000 ? `${Math.round(n / 1000)}KB` 
 
 const EntryTitle: React.FC<any> = ({protocol, data, bodySize, elapsedTime}) => {
     const classes = useStyles();
-    const {response} = JSON.parse(data.entry.entry);
+    const {response} = JSON.parse(data.entry);
 
 
     return <div className={classes.entryTitle}>
@@ -49,7 +49,7 @@ const EntryTitle: React.FC<any> = ({protocol, data, bodySize, elapsedTime}) => {
 const EntrySummary: React.FC<any> = ({data}) => {
     const classes = useStyles();
 
-    const {response, request} = JSON.parse(data.entry.entry);
+    const {response, request} = JSON.parse(data.entry);
 
     return <div className={classes.entrySummary}>
         {response?.payload && response.payload?.details && "status" in response.payload.details && <div style={{marginRight: 8}}>
@@ -67,11 +67,11 @@ export const EntryDetailed: React.FC<EntryDetailedProps> = ({entryData}) => {
             protocol={entryData.protocol}
             data={entryData.data}
             bodySize={entryData.bodySize}
-            elapsedTime={entryData.data.entry.elapsedTime}
+            elapsedTime={entryData.data.elapsedTime}
         />
         {entryData.data && <EntrySummary data={entryData.data}/>}
         <>
-            {entryData.data && <EntryViewer representation={entryData.representation} rulesMatched={entryData.data.rulesMatched} color={entryData.protocol.backgroundColor}/>}
+            {entryData.data && <EntryViewer representation={entryData.representation} rulesMatched={entryData.rulesMatched} elapsedTime={entryData.data.elapsedTime} color={entryData.protocol.backgroundColor}/>}
         </>
     </>
 };

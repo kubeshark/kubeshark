@@ -33,7 +33,7 @@ const SectionsRepresentation: React.FC<any> = ({data, color}) => {
     return <>{sections}</>;
 }
 
-const AutoRepresentation: React.FC<any> = ({representation, rulesMatched, color}) => {
+const AutoRepresentation: React.FC<any> = ({representation, rulesMatched, elapsedTime, color}) => {
     const TABS = [
         {
             tab: 'request'
@@ -53,7 +53,6 @@ const AutoRepresentation: React.FC<any> = ({representation, rulesMatched, color}
     }
 
     const {request, response} = JSON.parse(representation);
-
     return <div className={styles.Entry}>
         {<div className={styles.body}>
             <div className={styles.bodyHeader}>
@@ -68,7 +67,7 @@ const AutoRepresentation: React.FC<any> = ({representation, rulesMatched, color}
             </React.Fragment>}
             {currentTab === TABS[2].tab && <React.Fragment>
                 {// FIXME: Fix here
-                <EntryTablePolicySection service={representation.service} title={'Rule'} color={color} latency={0} response={response} arrayToIterate={rulesMatched ? rulesMatched : []}/>}
+                <EntryTablePolicySection service={representation.service} title={'Rule'} color={color} latency={elapsedTime} response={response} arrayToIterate={rulesMatched ? rulesMatched : []}/>}
             </React.Fragment>}
         </div>}
     </div>;
@@ -77,11 +76,12 @@ const AutoRepresentation: React.FC<any> = ({representation, rulesMatched, color}
 interface Props {
     representation: any;
     rulesMatched: any;
-    color: string,
+    color: string;
+    elapsedTime: number;
 }
 
-const EntryViewer: React.FC<Props> = ({representation, rulesMatched, color}) => {
-    return <AutoRepresentation representation={representation} rulesMatched={rulesMatched} color={color}/>
+const EntryViewer: React.FC<Props> = ({representation, rulesMatched, elapsedTime, color}) => {
+    return <AutoRepresentation representation={representation} rulesMatched={rulesMatched} elapsedTime={elapsedTime} color={color}/>
 };
 
 export default EntryViewer;
