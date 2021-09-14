@@ -218,8 +218,8 @@ func startMemoryProfiler() {
 func closeTimedoutTcpStreamChannels() {
 	TcpStreamChannelTimeoutMs := GetTcpChannelTimeoutMs()
 	for {
-		_debug.FreeOSMemory()
 		time.Sleep(10 * time.Millisecond)
+		_debug.FreeOSMemory()
 		streams.Range(func(key interface{}, value interface{}) bool {
 			streamWrapper := value.(*tcpStreamWrapper)
 			stream := streamWrapper.stream
