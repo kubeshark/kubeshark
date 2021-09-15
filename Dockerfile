@@ -2,7 +2,7 @@ FROM node:14-slim AS site-build
 
 WORKDIR /app/ui-build
 
-COPY ../../ui .
+COPY ui .
 RUN npm i
 RUN npm run build
 
@@ -16,9 +16,9 @@ RUN apk add libpcap-dev gcc g++ make bash
 # Move to agent working directory (/agent-build).
 WORKDIR /app/agent-build
 
-COPY ../go.mod agent/go.sum ./
-COPY ../../shared/go.mod shared/go.mod ../shared/
-COPY ../../tap/go.mod tap/go.mod ../tap/
+COPY agent/go.mod agent/go.sum ./
+COPY shared/go.mod shared/go.mod ../shared/
+COPY tap/go.mod tap/go.mod ../tap/
 COPY tap/api/go.* ../tap/api/
 RUN go mod download
 # cheap trick to make the build faster (As long as go.mod wasn't changes)
@@ -30,16 +30,16 @@ ARG BUILD_TIMESTAMP
 ARG SEM_VER
 
 # Copy and build agent code
-COPY ../../shared ../shared
-COPY ../../tap ../tap
-COPY .. .
+COPY shared ../shared
+COPY tap ../tap
+COPY agent .
 RUN go build -ldflags="-s -w \
      -X 'mizuserver/pkg/version.GitCommitHash=${COMMIT_HASH}' \
      -X 'mizuserver/pkg/version.Branch=${GIT_BRANCH}' \
      -X 'mizuserver/pkg/version.BuildTimestamp=${BUILD_TIMESTAMP}' \
      -X 'mizuserver/pkg/version.SemVer=${SEM_VER}'" -o mizuagent .
 
-COPY ../../devops/build_extensions.sh ..
+COPY devops/build_extensions.sh ..
 RUN cd .. && /bin/bash build_extensions.sh
 
 FROM alpine:3.13.5

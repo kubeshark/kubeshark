@@ -3,7 +3,7 @@ FROM node:14-slim AS site-build
 
 WORKDIR /app/ui-build
 
-COPY ../../ui .
+COPY ui .
 RUN npm i
 RUN npm run build
 
@@ -17,18 +17,18 @@ RUN apk add libpcap-dev gcc g++ make
 # Move to agent working directory (/agent-build).
 WORKDIR /app/agent-build
 
-COPY ../go.mod agent/go.sum ./
-COPY ../../shared/go.mod shared/go.mod ../shared/
-COPY ../../tap/go.mod tap/go.mod ../tap/
+COPY agent/go.mod agent/go.sum ./
+COPY shared/go.mod shared/go.mod ../shared/
+COPY tap/go.mod tap/go.mod ../tap/
 
 RUN go mod download
 # cheap trick to make the build faster (As long as go.mod wasn't changes)
 RUN go list -f '{{.Path}}@{{.Version}}' -m all | sed 1d | grep -e 'go-cache' -e 'sqlite' | xargs go get
 
 # Copy and build agent code
-COPY ../../shared ../shared
-COPY ../../tap ../tap
-COPY .. .
+COPY shared ../shared
+COPY tap ../tap
+COPY agent .
 RUN go build -gcflags="all=-N -l" -o mizuagent .
 
 
