@@ -1,4 +1,4 @@
-![Mizu: The API Traffic Viewer for Kubernetes](assets/mizu-logo.svg)
+![Mizu: The API Traffic Viewer for Kubernetes](../assets/mizu-logo.svg)
 
 # Contributing to Mizu
 

@@ -39,7 +39,7 @@ RUN go build -ldflags="-s -w \
      -X 'mizuserver/pkg/version.BuildTimestamp=${BUILD_TIMESTAMP}' \
      -X 'mizuserver/pkg/version.SemVer=${SEM_VER}'" -o mizuagent .
 
-COPY build_extensions.sh ..
+COPY devops/build_extensions.sh ..
 RUN cd .. && /bin/bash build_extensions.sh
 
 FROM alpine:3.13.5
