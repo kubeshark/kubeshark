@@ -2,9 +2,10 @@ package models
 
 import (
 	"encoding/json"
-	tapApi "github.com/up9inc/mizu/tap/api"
 	"mizuserver/pkg/rules"
 	"mizuserver/pkg/utils"
+
+	tapApi "github.com/up9inc/mizu/tap/api"
 
 	"github.com/google/martian/har"
 	"github.com/up9inc/mizu/shared"
@@ -42,7 +43,7 @@ type HarFetchRequestQuery struct {
 
 type WebSocketEntryMessage struct {
 	*shared.WebSocketMessageMetadata
-	Data *tapApi.BaseEntryDetails `json:"data,omitempty"`
+	Data map[string]interface{} `json:"data,omitempty"`
 }
 
 type WebSocketTappedEntryMessage struct {
@@ -55,7 +56,7 @@ type WebsocketOutboundLinkMessage struct {
 	Data *tap.OutboundLink
 }
 
-func CreateBaseEntryWebSocketMessage(base *tapApi.BaseEntryDetails) ([]byte, error) {
+func CreateBaseEntryWebSocketMessage(base map[string]interface{}) ([]byte, error) {
 	message := &WebSocketEntryMessage{
 		WebSocketMessageMetadata: &shared.WebSocketMessageMetadata{
 			MessageType: shared.WebSocketMessageTypeEntry,

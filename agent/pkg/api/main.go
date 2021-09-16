@@ -21,7 +21,6 @@ import (
 	"github.com/up9inc/mizu/tap"
 	tapApi "github.com/up9inc/mizu/tap/api"
 
-	"mizuserver/pkg/models"
 	"mizuserver/pkg/resolver"
 	"mizuserver/pkg/utils"
 )
@@ -105,9 +104,13 @@ func startReadingFiles(workingDir string) {
 }
 
 func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extensionsMap map[string]*tapApi.Extension) {
+	conn := Connect("localhost", "8000")
+	SetModeInsert(conn)
 	if outputItems == nil {
 		panic("Channel of captured messages is nil")
 	}
+
+	go Query("", "localhost", "8000")
 
 	for item := range outputItems {
 		extension := extensionsMap[item.Protocol.Name]
@@ -116,8 +119,8 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 		baseEntry := extension.Dissector.Summarize(mizuEntry)
 		mizuEntry.EstimatedSizeBytes = getEstimatedEntrySizeBytes(mizuEntry)
 		database.CreateEntry(mizuEntry)
-		baseEntryBytes, _ := models.CreateBaseEntryWebSocketMessage(baseEntry)
-		BroadcastToBrowserClients(baseEntryBytes)
+		item.Summary = baseEntry
+		Insert(item, conn)
 	}
 }
 
