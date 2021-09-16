@@ -10,6 +10,8 @@ import (
 	"regexp"
 	"sync"
 	"time"
+
+	"github.com/gorilla/websocket"
 )
 
 func Connect(host string, port string) (conn net.Conn) {
@@ -45,11 +47,9 @@ func Insert(entry interface{}, conn net.Conn) {
 	conn.Write([]byte("\n"))
 }
 
-func Query(query string, host string, port string) {
-	conn := Connect(host, port)
-
+func Query(query string, conn net.Conn, ws *websocket.Conn) {
 	var wg sync.WaitGroup
-	go readConnection(&wg, conn)
+	go readConnection(&wg, conn, ws)
 	wg.Add(1)
 
 	conn.SetWriteDeadline(time.Now().Add(1 * time.Second))
@@ -61,7 +61,7 @@ func Query(query string, host string, port string) {
 	wg.Wait()
 }
 
-func readConnection(wg *sync.WaitGroup, conn net.Conn) {
+func readConnection(wg *sync.WaitGroup, conn net.Conn, ws *websocket.Conn) {
 	defer wg.Done()
 	for {
 		scanner := bufio.NewScanner(conn)
@@ -74,13 +74,17 @@ func readConnection(wg *sync.WaitGroup, conn net.Conn) {
 			if !command {
 				fmt.Printf("\b\b** %s\n> ", text)
 
+				if text == "" {
+					return
+				}
+
 				var data map[string]interface{}
 				if err := json.Unmarshal([]byte(text), &data); err != nil {
 					panic(err)
 				}
 
 				baseEntryBytes, _ := models.CreateBaseEntryWebSocketMessage(data["Summary"].(map[string]interface{}))
-				BroadcastToBrowserClients(baseEntryBytes)
+				ws.WriteMessage(1, baseEntryBytes)
 			}
 
 			if !ok {
