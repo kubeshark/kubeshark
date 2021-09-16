@@ -68,6 +68,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
     const listEntry = useRef(null);
 
     const openWebSocket = (query) => {
+        setEntries([])
         var url = MizuWebsocketURL + "?q=" + query;
         ws.current = new WebSocket(url);
         ws.current.onopen = () => setConnection(ConnectionStatus.Connected);

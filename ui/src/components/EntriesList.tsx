@@ -63,32 +63,6 @@ export const EntriesList: React.FC<EntriesListProps> = ({entries, setEntries, fo
         return entries.filter(filterEntries);
     },[entries, filterEntries])
 
-    const getOldEntries = useCallback(async () => {
-        setIsLoadingTop(true);
-        const data = await api.fetchEntries(FetchOperator.LT, entries[0].timestamp);
-        setLoadMoreTop(false);
-
-        let scrollTo;
-        if(data.length === 0) {
-            setNoMoreDataTop(true);
-            scrollTo = document.getElementById("noMoreDataTop");
-        } else {
-            scrollTo = document.getElementById(filteredEntries?.[0]?.id);
-        }
-        setIsLoadingTop(false);
-        const newEntries = [...data, ...entries];
-        setEntries(newEntries);
-
-        if(scrollTo) {
-            scrollTo.scrollIntoView();
-        }
-    },[setLoadMoreTop, setIsLoadingTop, entries, setEntries, filteredEntries, setNoMoreDataTop])
-
-    useEffect(() => {
-        if(!loadMoreTop || connectionOpen || noMoreDataTop) return;
-        getOldEntries();
-    }, [loadMoreTop, connectionOpen, noMoreDataTop, getOldEntries]);
-
     const getNewEntries = async () => {
         const data = await api.fetchEntries(FetchOperator.GT, entries[entries.length - 1].timestamp);
         let scrollTo;

@@ -72,7 +72,7 @@ func readConnection(wg *sync.WaitGroup, conn net.Conn, ws *websocket.Conn) {
 
 			command := handleCommands(text)
 			if !command {
-				fmt.Printf("\b\b** %s\n> ", text)
+				// fmt.Printf("\b\b** %s\n> ", text)
 
 				if text == "" {
 					return
