@@ -65,6 +65,8 @@ func readConnection(wg *sync.WaitGroup, conn net.Conn, ws *websocket.Conn) {
 	defer wg.Done()
 	for {
 		scanner := bufio.NewScanner(conn)
+		buf := make([]byte, 0, 64*1024)
+		scanner.Buffer(buf, 209715200)
 
 		for {
 			ok := scanner.Scan()
@@ -72,9 +74,11 @@ func readConnection(wg *sync.WaitGroup, conn net.Conn, ws *websocket.Conn) {
 
 			command := handleCommands(text)
 			if !command {
-				// fmt.Printf("\b\b** %s\n> ", text)
+				fmt.Printf("\b\b** %s\n> ", text)
 
 				if text == "" {
+					err := scanner.Err()
+					fmt.Printf("err: %v\n", err)
 					return
 				}
 
