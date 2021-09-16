@@ -93,18 +93,24 @@ func MatchRequestPolicy(harEntry har.Entry, service string) (int, []RulesMatched
 }
 
 func PassedValidationRules(rulesMatched []RulesMatched, numberOfRules int) (bool, int64, int) {
-	if len(rulesMatched) == 0 {
-		return false, 0, 0
+	var numberOfRulesMatched = len(rulesMatched)
+	var latency int64 = -1
+
+	if numberOfRulesMatched == 0 {
+		return false, 0, numberOfRulesMatched
 	}
+
 	for _, rule := range rulesMatched {
 		if rule.Matched == false {
-			return false, -1, len(rulesMatched)
+			return false, latency, numberOfRulesMatched
+		} else {
+			if strings.ToLower(rule.Rule.Type) == "latency" {
+				if rule.Rule.Latency < latency || latency == -1 {
+					latency = rule.Rule.Latency
+				}
+			}
 		}
 	}
-	for _, rule := range rulesMatched {
-		if strings.ToLower(rule.Rule.Type) == "latency" {
-			return true, rule.Rule.Latency, len(rulesMatched)
-		}
-	}
-	return true, -1, len(rulesMatched)
+
+	return true, latency, numberOfRulesMatched
 }
