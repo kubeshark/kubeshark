@@ -2,6 +2,7 @@ package rules
 
 import (
 	"encoding/json"
+	"encoding/base64"
 	"fmt"
 	"reflect"
 	"regexp"
@@ -50,7 +51,8 @@ func MatchRequestPolicy(harEntry har.Entry, service string) (int, []RulesMatched
 		}
 		if rule.Type == "json" {
 			var bodyJsonMap interface{}
-			if err := json.Unmarshal(harEntry.Response.Content.Text, &bodyJsonMap); err != nil {
+			contentTextDecoded, _ := base64.StdEncoding.DecodeString(string(harEntry.Response.Content.Text))
+			if err := json.Unmarshal(contentTextDecoded, &bodyJsonMap); err != nil {
 				continue
 			}
 			out, err := jsonpath.Read(bodyJsonMap, rule.Key)
@@ -63,6 +65,7 @@ func MatchRequestPolicy(harEntry har.Entry, service string) (int, []RulesMatched
 				if err != nil {
 					continue
 				}
+				fmt.Println(matchValue, rule.Value)
 			} else {
 				val := fmt.Sprint(out)
 				matchValue, err = regexp.MatchString(rule.Value, val)
