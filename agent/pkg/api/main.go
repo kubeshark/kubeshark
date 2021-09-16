@@ -124,7 +124,7 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 			baseEntry.Rules = rules
 			baseEntry.Latency = mizuEntry.ElapsedTime
 		}
-	
+
 		baseEntryBytes, _ := models.CreateBaseEntryWebSocketMessage(baseEntry)
 		BroadcastToBrowserClients(baseEntryBytes)
 	}

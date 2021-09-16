@@ -1,8 +1,8 @@
 package rules
 
 import (
-	"encoding/json"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"regexp"

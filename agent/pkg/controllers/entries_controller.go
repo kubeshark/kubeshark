@@ -3,7 +3,6 @@ package controllers
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/google/martian/har"
 	"mizuserver/pkg/database"
 	"mizuserver/pkg/models"
 	"mizuserver/pkg/providers"
@@ -12,6 +11,8 @@ import (
 	"mizuserver/pkg/validation"
 	"net/http"
 	"time"
+
+	"github.com/google/martian/har"
 
 	"github.com/gin-gonic/gin"
 	"github.com/romana/rlog"
@@ -150,7 +151,7 @@ func GetEntry(c *gin.Context) {
 		inrec, _ := json.Marshal(rulesMatched)
 		json.Unmarshal(inrec, &rules)
 	}
-	
+
 	c.JSON(http.StatusOK, tapApi.MizuEntryWrapper{
 		Protocol:       protocol,
 		Representation: string(representation),

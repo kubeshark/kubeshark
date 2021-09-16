@@ -99,9 +99,8 @@ type RulePolicy struct {
 	Name    string `yaml:"name"`
 }
 
-
 type RulesMatched struct {
-	Matched bool              `json:"matched"`
+	Matched bool       `json:"matched"`
 	Rule    RulePolicy `json:"rule"`
 }
 

@@ -53,6 +53,7 @@ const AutoRepresentation: React.FC<any> = ({representation, rulesMatched, elapse
     }
 
     const {request, response} = JSON.parse(representation);
+
     return <div className={styles.Entry}>
         {<div className={styles.body}>
             <div className={styles.bodyHeader}>

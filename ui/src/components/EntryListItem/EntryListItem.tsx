@@ -40,7 +40,7 @@ interface EntryProps {
     isSelected?: boolean;
     style: object;
 }
-    
+
 export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, isSelected, style}) => {
     const classification = getClassification(entry.statusCode)
     const numberOfRules = entry.rules.numberOfRules

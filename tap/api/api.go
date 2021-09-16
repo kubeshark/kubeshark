@@ -100,7 +100,6 @@ func (e *Emitting) Emit(item *OutputChannelItem) {
 	e.AppStats.IncMatchedPairs()
 }
 
-
 type MizuEntry struct {
 	ID                      uint `gorm:"primarykey"`
 	CreatedAt               time.Time
@@ -135,15 +134,15 @@ type MizuEntry struct {
 
 type FullEntryWithPolicy struct {
 	RulesMatched []map[string]interface{} `json:"rulesMatched,omitempty"`
-	Entry        MizuEntry            `json:"entry"`
+	Entry        MizuEntry                `json:"entry"`
 }
 
 type MizuEntryWrapper struct {
-	Protocol       Protocol  `json:"protocol"`
-	Representation string    `json:"representation"`
-	BodySize       int64     `json:"bodySize"`
-	Data MizuEntry `json:"data"`
-	Rules []map[string]interface{} `json:"rulesMatched,omitempty"`	
+	Protocol       Protocol                 `json:"protocol"`
+	Representation string                   `json:"representation"`
+	BodySize       int64                    `json:"bodySize"`
+	Data           MizuEntry                `json:"data"`
+	Rules          []map[string]interface{} `json:"rulesMatched,omitempty"`
 }
 
 type BaseEntryDetails struct {

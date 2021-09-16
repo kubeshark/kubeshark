@@ -2,12 +2,14 @@ package models
 
 import (
 	"encoding/json"
+
 	tapApi "github.com/up9inc/mizu/tap/api"
+
+	"mizuserver/pkg/rules"
 
 	"github.com/google/martian/har"
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/tap"
-	"mizuserver/pkg/rules"
 )
 
 func GetEntry(r *tapApi.MizuEntry, v tapApi.DataUnmarshaler) error {
