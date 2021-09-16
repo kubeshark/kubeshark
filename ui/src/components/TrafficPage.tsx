@@ -67,8 +67,9 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
 
     const listEntry = useRef(null);
 
-    const openWebSocket = () => {
-        ws.current = new WebSocket(MizuWebsocketURL);
+    const openWebSocket = (query) => {
+        var url = MizuWebsocketURL + "?q=" + query;
+        ws.current = new WebSocket(url);
         ws.current.onopen = () => setConnection(ConnectionStatus.Connected);
         ws.current.onclose = () => setConnection(ConnectionStatus.Closed);
     }
@@ -110,7 +111,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
 
     useEffect(() => {
         (async () => {
-            openWebSocket();
+            openWebSocket("");
             try{
                 const tapStatusResponse = await api.tapStatus();
                 setTappingStatus(tapStatusResponse);
@@ -184,7 +185,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                     </div>
                 </div>
             </div>
-            {entries.length > 0 && <div className="TrafficPage-Container">
+            {<div className="TrafficPage-Container">
                 <div className="TrafficPage-ListContainer">
                     <Filters methodsFilter={methodsFilter}
                                 setMethodsFilter={setMethodsFilter}
@@ -192,6 +193,8 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                                 setStatusFilter={setStatusFilter}
                                 pathFilter={pathFilter}
                                 setPathFilter={setPathFilter}
+                                ws={ws.current}
+                                openWebSocket={openWebSocket}
                     />
                     <div className={styles.container}>
                         <EntriesList entries={entries}

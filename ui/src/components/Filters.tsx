@@ -1,7 +1,7 @@
 import React from "react";
 import styles from './style/Filters.module.sass';
 import {FilterSelect} from "./UI/FilterSelect";
-import {TextField} from "@material-ui/core";
+import {TextField, Button} from "@material-ui/core";
 import {ALL_KEY} from "./UI/Select";
 
 interface FiltersProps {
@@ -11,14 +11,14 @@ interface FiltersProps {
     setStatusFilter: (methods: Array<string>) => void;
     pathFilter: string
     setPathFilter: (val: string) => void;
+    ws: any
+    openWebSocket: (query: string) => void;
 }
 
-export const Filters: React.FC<FiltersProps> = ({methodsFilter, setMethodsFilter, statusFilter, setStatusFilter, pathFilter, setPathFilter}) => {
+export const Filters: React.FC<FiltersProps> = ({methodsFilter, setMethodsFilter, statusFilter, setStatusFilter, pathFilter, setPathFilter, ws, openWebSocket}) => {
 
     return <div className={styles.container}>
-        <MethodFilter methodsFilter={methodsFilter} setMethodsFilter={setMethodsFilter}/>
-        <StatusTypesFilter statusFilter={statusFilter} setStatusFilter={setStatusFilter}/>
-        <PathFilter pathFilter={pathFilter} setPathFilter={setPathFilter}/>
+        <QueryForm ws={ws} openWebSocket={openWebSocket}/>
     </div>;
 };
 
@@ -102,18 +102,39 @@ const StatusTypesFilter: React.FC<StatusTypesFilterProps> = ({statusFilter, setS
     </FilterContainer>;
 };
 
-interface PathFilterProps {
-    pathFilter: string;
-    setPathFilter: (val: string) => void;
+interface QueryFormProps {
+    ws: any
+    openWebSocket: (query: string) => void;
 }
 
-const PathFilter: React.FC<PathFilterProps> = ({pathFilter, setPathFilter}) => {
+class QueryForm extends React.Component<QueryFormProps, { value: string }> {
+    constructor(props) {
+        super(props);
+        this.state = {value: ''};
 
-    return <FilterContainer>
-        <div className={styles.filterLabel}>Path</div>
-        <div>
-            <TextField value={pathFilter} variant="outlined" className={styles.filterText} style={{minWidth: '150px'}} onChange={(e: any) => setPathFilter(e.target.value)}/>
-        </div>
-    </FilterContainer>;
-};
+        this.handleChange = this.handleChange.bind(this);
+        this.handleSubmit = this.handleSubmit.bind(this);
+    }
 
+    handleChange(event) {
+        this.setState({value: event.target.value});
+    }
+
+    handleSubmit(event) {
+        this.props.ws.close()
+        this.props.openWebSocket(this.state.value)
+        // alert('A name was submitted: ' + this.state.value);
+        event.preventDefault();
+    }
+
+    render() {
+    return (
+        <form onSubmit={this.handleSubmit}>
+        <label>
+            <TextField value={this.state.value} onChange={this.handleChange} variant="outlined" className={styles.filterText} style={{minWidth: '450px'}} placeholder="Mizu Filter Syntax"/>
+        </label>
+        <Button type="submit" variant="contained" style={{marginLeft: "10px"}}>Apply</Button>
+        </form>
+    );
+    }
+}
