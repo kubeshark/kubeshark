@@ -215,10 +215,10 @@ export const EntryTablePolicySection: React.FC<EntryPolicySectionProps> = ({serv
                                                 <>
                                                     {
                                                         rule.Key &&
-                                                        <tr className={styles.dataValue}><td><b>Key</b>:</td><td>{rule.Key}</td></tr>
+                                                        <tr className={styles.dataValue}><td><b>Key:</b></td> <td>{rule.Key}</td></tr>
                                                     }
                                                     {
-                                                        rule.Latency &&
+                                                        rule.Latency !== 0 &&
                                                         <tr className={styles.dataValue}><td><b>Latency:</b></td> <td>{rule.Latency}</td></tr>
                                                     }
                                                     {
