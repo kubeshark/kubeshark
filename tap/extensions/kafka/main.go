@@ -143,6 +143,8 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolve
 	entryBytes, _ := json.Marshal(item.Pair)
 	return &api.MizuEntry{
 		Protocol:            _protocol,
+		Request:             reqDetails,
+		Response:            item.Pair.Response.Payload.(map[string]interface{})["details"].(map[string]interface{}),
 		EntryId:             entryId,
 		Entry:               string(entryBytes),
 		Url:                 fmt.Sprintf("%s%s", service, summary),

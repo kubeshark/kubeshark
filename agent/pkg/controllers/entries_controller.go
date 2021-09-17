@@ -151,6 +151,8 @@ func GetEntry(c *gin.Context) {
 			ReferenceLink:   entry["proto"].(map[string]interface{})["referenceLink"].(string),
 			Priority:        uint8(entry["proto"].(map[string]interface{})["priority"].(float64)),
 		},
+		Request:         entry["request"].(map[string]interface{}),
+		Response:        entry["response"].(map[string]interface{}),
 		EntryId:         entry["entryId"].(string),
 		Entry:           entry["entry"].(string),
 		Url:             entry["url"].(string),

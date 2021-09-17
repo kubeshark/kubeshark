@@ -102,29 +102,29 @@ func (e *Emitting) Emit(item *OutputChannelItem) {
 }
 
 type MizuEntry struct {
-	Id                  uint              `json:"id"`
-	Protocol            Protocol          `json:"proto"`
-	Timestamp           int64             `json:"timestamp"`
-	Request             interface{}       `json:"request"`
-	Response            interface{}       `json:"response"`
-	Summary             *BaseEntryDetails `json:"summary"`
-	Entry               string            `json:"entry,omitempty"`
-	EntryId             string            `json:"entryId" gorm:"column:entryId"`
-	Url                 string            `json:"url" gorm:"column:url"`
-	Method              string            `json:"method" gorm:"column:method"`
-	Status              int               `json:"status" gorm:"column:status"`
-	RequestSenderIp     string            `json:"requestSenderIp" gorm:"column:requestSenderIp"`
-	Service             string            `json:"service" gorm:"column:service"`
-	ElapsedTime         int64             `json:"elapsedTime" gorm:"column:elapsedTime"`
-	Path                string            `json:"path" gorm:"column:path"`
-	ResolvedSource      string            `json:"resolvedSource,omitempty" gorm:"column:resolvedSource"`
-	ResolvedDestination string            `json:"resolvedDestination,omitempty" gorm:"column:resolvedDestination"`
-	SourceIp            string            `json:"sourceIp,omitempty" gorm:"column:sourceIp"`
-	DestinationIp       string            `json:"destinationIp,omitempty" gorm:"column:destinationIp"`
-	SourcePort          string            `json:"sourcePort,omitempty" gorm:"column:sourcePort"`
-	DestinationPort     string            `json:"destinationPort,omitempty" gorm:"column:destinationPort"`
-	IsOutgoing          bool              `json:"isOutgoing,omitempty" gorm:"column:isOutgoing"`
-	EstimatedSizeBytes  int               `json:"-" gorm:"column:estimatedSizeBytes"`
+	Id                  uint                   `json:"id"`
+	Protocol            Protocol               `json:"proto"`
+	Timestamp           int64                  `json:"timestamp"`
+	Request             map[string]interface{} `json:"request"`
+	Response            map[string]interface{} `json:"response"`
+	Summary             *BaseEntryDetails      `json:"summary"`
+	Entry               string                 `json:"entry,omitempty"`
+	EntryId             string                 `json:"entryId" gorm:"column:entryId"`
+	Url                 string                 `json:"url" gorm:"column:url"`
+	Method              string                 `json:"method" gorm:"column:method"`
+	Status              int                    `json:"status" gorm:"column:status"`
+	RequestSenderIp     string                 `json:"requestSenderIp" gorm:"column:requestSenderIp"`
+	Service             string                 `json:"service" gorm:"column:service"`
+	ElapsedTime         int64                  `json:"elapsedTime" gorm:"column:elapsedTime"`
+	Path                string                 `json:"path" gorm:"column:path"`
+	ResolvedSource      string                 `json:"resolvedSource,omitempty" gorm:"column:resolvedSource"`
+	ResolvedDestination string                 `json:"resolvedDestination,omitempty" gorm:"column:resolvedDestination"`
+	SourceIp            string                 `json:"sourceIp,omitempty" gorm:"column:sourceIp"`
+	DestinationIp       string                 `json:"destinationIp,omitempty" gorm:"column:destinationIp"`
+	SourcePort          string                 `json:"sourcePort,omitempty" gorm:"column:sourcePort"`
+	DestinationPort     string                 `json:"destinationPort,omitempty" gorm:"column:destinationPort"`
+	IsOutgoing          bool                   `json:"isOutgoing,omitempty" gorm:"column:isOutgoing"`
+	EstimatedSizeBytes  int                    `json:"-" gorm:"column:estimatedSizeBytes"`
 }
 
 type MizuEntryWrapper struct {

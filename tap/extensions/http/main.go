@@ -175,6 +175,8 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolve
 	_protocol.Version = item.Protocol.Version
 	return &api.MizuEntry{
 		Protocol:            _protocol,
+		Request:             reqDetails,
+		Response:            resDetails,
 		EntryId:             entryId,
 		Entry:               string(entryBytes),
 		Url:                 fmt.Sprintf("%s%s", service, path),
