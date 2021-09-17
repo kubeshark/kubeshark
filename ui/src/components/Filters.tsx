@@ -1,8 +1,9 @@
-import React from "react";
+import React, {useRef, useState} from "react";
 import styles from './style/Filters.module.sass';
 import {FilterSelect} from "./UI/FilterSelect";
-import {TextField, Button} from "@material-ui/core";
+import {Button} from "@material-ui/core";
 import {ALL_KEY} from "./UI/Select";
+import CodeEditor from '@uiw/react-textarea-code-editor';
 
 interface FiltersProps {
     methodsFilter: Array<string>;
@@ -107,34 +108,40 @@ interface QueryFormProps {
     openWebSocket: (query: string) => void;
 }
 
-class QueryForm extends React.Component<QueryFormProps, { value: string }> {
-    constructor(props) {
-        super(props);
-        this.state = {value: ''};
+export const QueryForm: React.FC<QueryFormProps> = ({ws, openWebSocket}) => {
 
-        this.handleChange = this.handleChange.bind(this);
-        this.handleSubmit = this.handleSubmit.bind(this);
+    const [value, setValue] = useState("");
+    const formRef = useRef<HTMLFormElement>(null);
+
+    const handleChange = (e) => {
+        setValue(e.target.value);
     }
 
-    handleChange(event) {
-        this.setState({value: event.target.value});
+    const handleSubmit = (e) => {
+        ws.close()
+        openWebSocket(value)
+        e.preventDefault();
     }
 
-    handleSubmit(event) {
-        this.props.ws.close()
-        this.props.openWebSocket(this.state.value)
-        // alert('A name was submitted: ' + this.state.value);
-        event.preventDefault();
-    }
-
-    render() {
-    return (
-        <form onSubmit={this.handleSubmit}>
+    return <>
+        <form ref={formRef} onSubmit={handleSubmit}>
         <label>
-            <TextField value={this.state.value} onChange={this.handleChange} variant="outlined" className={styles.filterText} style={{minWidth: '450px'}} placeholder="Mizu Filter Syntax"/>
+            <CodeEditor
+                value={value}
+                language="py"
+                placeholder="Mizu Filter Syntax"
+                onChange={handleChange}
+                padding={8}
+                style={{
+                    fontSize: 14,
+                    backgroundColor: "#f5f5f5",
+                    fontFamily: 'ui-monospace,SFMono-Regular,SF Mono,Consolas,Liberation Mono,Menlo,monospace',
+                    display: 'inline-flex',
+                    minWidth: '450px',
+                }}
+            />
         </label>
         <Button type="submit" variant="contained" style={{marginLeft: "10px"}}>Apply</Button>
         </form>
-    );
-    }
+    </>
 }
