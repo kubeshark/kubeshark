@@ -68,6 +68,8 @@ func readConnectionSingle(wg *sync.WaitGroup, conn net.Conn, entry *map[string]i
 	defer wg.Done()
 	for {
 		scanner := bufio.NewScanner(conn)
+		buf := make([]byte, 0, 64*1024)
+		scanner.Buffer(buf, 209715200)
 
 		for {
 			ok := scanner.Scan()
@@ -76,6 +78,13 @@ func readConnectionSingle(wg *sync.WaitGroup, conn net.Conn, entry *map[string]i
 			command := handleCommands(text)
 			if !command {
 				fmt.Printf("\b\b** %s\n> ", text)
+
+				if text == "" {
+					err := scanner.Err()
+					fmt.Printf("err: %v\n", err)
+					return
+				}
+
 				if err := json.Unmarshal([]byte(text), entry); err != nil {
 					panic(err)
 				}
