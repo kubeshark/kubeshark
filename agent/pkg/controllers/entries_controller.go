@@ -139,6 +139,10 @@ func GetEntry(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("entryId"))
 	fmt.Printf("GetEntry id: %v\n", id)
 	entry := api.Single(uint(id))
+	var response map[string]interface{}
+	if entry["response"] != nil {
+		response = entry["response"].(map[string]interface{})
+	}
 	entryData := tapApi.MizuEntry{
 		Protocol: tapApi.Protocol{
 			Name:            entry["proto"].(map[string]interface{})["name"].(string),
@@ -152,7 +156,7 @@ func GetEntry(c *gin.Context) {
 			Priority:        uint8(entry["proto"].(map[string]interface{})["priority"].(float64)),
 		},
 		Request:         entry["request"].(map[string]interface{}),
-		Response:        entry["response"].(map[string]interface{}),
+		Response:        response,
 		EntryId:         entry["entryId"].(string),
 		Entry:           entry["entry"].(string),
 		Url:             entry["url"].(string),

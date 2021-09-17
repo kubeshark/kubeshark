@@ -75,6 +75,8 @@ func main() {
 			rlog.Infof("Filtering for the following authorities: %v", tap.GetFilterIPs())
 		}
 
+		time.Sleep(2 * time.Second)
+
 		// harOutputChannel, outboundLinkOutputChannel := tap.StartPassiveTapper(tapOpts)
 		filteredOutputItemsChannel := make(chan *tapApi.OutputChannelItem)
 		tap.StartPassiveTapper(tapOpts, filteredOutputItemsChannel, extensions)

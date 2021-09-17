@@ -41,11 +41,7 @@ func init() {
 
 func WebSocketRoutes(app *gin.Engine, eventHandlers EventHandlers) {
 	app.GET("/ws", func(c *gin.Context) {
-		queryMap := c.Request.URL.Query()
-		query := ""
-		if val, ok := queryMap["q"]; ok {
-			query = val[0]
-		}
+		query := c.DefaultQuery("q", "")
 		websocketHandlerUI(c.Writer, c.Request, eventHandlers, false, query)
 	})
 	app.GET("/wsTapper", func(c *gin.Context) {
