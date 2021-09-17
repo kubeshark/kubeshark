@@ -13,12 +13,14 @@ import (
 	"mizuserver/pkg/utils"
 	"net/http"
 	"os"
+	"os/exec"
 	"os/signal"
 	"path"
 	"path/filepath"
 	"plugin"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
@@ -84,6 +86,19 @@ func main() {
 		go pipeTapChannelToSocket(socketConnection, filteredOutputItemsChannel)
 		// go pipeOutboundLinksChannelToSocket(socketConnection, outboundLinkOutputChannel)
 	} else if *apiServerMode {
+		ex, err := os.Executable()
+		if err != nil {
+			log.Fatal(err)
+		}
+		dir := path.Dir(ex)
+		cmd := exec.Command(filepath.Join(dir, "./server"), "-port", "8000")
+		cmd.Stdout = os.Stdout
+		err = cmd.Start()
+		time.Sleep(1 * time.Second)
+		if err != nil {
+			log.Fatal(err)
+		}
+
 		api.StartResolving(*namespace)
 
 		outputItemsChannel := make(chan *tapApi.OutputChannelItem)
