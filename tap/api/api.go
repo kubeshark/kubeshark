@@ -102,35 +102,29 @@ func (e *Emitting) Emit(item *OutputChannelItem) {
 }
 
 type MizuEntry struct {
-	ID                      uint `gorm:"primarykey"`
-	CreatedAt               time.Time
-	UpdatedAt               time.Time
-	ProtocolName            string `json:"protocolName" gorm:"column:protocolName"`
-	ProtocolLongName        string `json:"protocolLongName" gorm:"column:protocolLongName"`
-	ProtocolAbbreviation    string `json:"protocolAbbreviation" gorm:"column:protocolVersion"`
-	ProtocolVersion         string `json:"protocolVersion" gorm:"column:protocolVersion"`
-	ProtocolBackgroundColor string `json:"protocolBackgroundColor" gorm:"column:protocolBackgroundColor"`
-	ProtocolForegroundColor string `json:"protocolForegroundColor" gorm:"column:protocolForegroundColor"`
-	ProtocolFontSize        int8   `json:"protocolFontSize" gorm:"column:protocolFontSize"`
-	ProtocolReferenceLink   string `json:"protocolReferenceLink" gorm:"column:protocolReferenceLink"`
-	Entry                   string `json:"entry,omitempty" gorm:"column:entry"`
-	EntryId                 string `json:"entryId" gorm:"column:entryId"`
-	Url                     string `json:"url" gorm:"column:url"`
-	Method                  string `json:"method" gorm:"column:method"`
-	Status                  int    `json:"status" gorm:"column:status"`
-	RequestSenderIp         string `json:"requestSenderIp" gorm:"column:requestSenderIp"`
-	Service                 string `json:"service" gorm:"column:service"`
-	Timestamp               int64  `json:"timestamp" gorm:"column:timestamp"`
-	ElapsedTime             int64  `json:"elapsedTime" gorm:"column:elapsedTime"`
-	Path                    string `json:"path" gorm:"column:path"`
-	ResolvedSource          string `json:"resolvedSource,omitempty" gorm:"column:resolvedSource"`
-	ResolvedDestination     string `json:"resolvedDestination,omitempty" gorm:"column:resolvedDestination"`
-	SourceIp                string `json:"sourceIp,omitempty" gorm:"column:sourceIp"`
-	DestinationIp           string `json:"destinationIp,omitempty" gorm:"column:destinationIp"`
-	SourcePort              string `json:"sourcePort,omitempty" gorm:"column:sourcePort"`
-	DestinationPort         string `json:"destinationPort,omitempty" gorm:"column:destinationPort"`
-	IsOutgoing              bool   `json:"isOutgoing,omitempty" gorm:"column:isOutgoing"`
-	EstimatedSizeBytes      int    `json:"-" gorm:"column:estimatedSizeBytes"`
+	Id                  uint              `json:"id"`
+	Protocol            Protocol          `json:"proto"`
+	Timestamp           int64             `json:"timestamp"`
+	Request             interface{}       `json:"request"`
+	Response            interface{}       `json:"response"`
+	Summary             *BaseEntryDetails `json:"summary"`
+	Entry               string            `json:"entry,omitempty"`
+	EntryId             string            `json:"entryId" gorm:"column:entryId"`
+	Url                 string            `json:"url" gorm:"column:url"`
+	Method              string            `json:"method" gorm:"column:method"`
+	Status              int               `json:"status" gorm:"column:status"`
+	RequestSenderIp     string            `json:"requestSenderIp" gorm:"column:requestSenderIp"`
+	Service             string            `json:"service" gorm:"column:service"`
+	ElapsedTime         int64             `json:"elapsedTime" gorm:"column:elapsedTime"`
+	Path                string            `json:"path" gorm:"column:path"`
+	ResolvedSource      string            `json:"resolvedSource,omitempty" gorm:"column:resolvedSource"`
+	ResolvedDestination string            `json:"resolvedDestination,omitempty" gorm:"column:resolvedDestination"`
+	SourceIp            string            `json:"sourceIp,omitempty" gorm:"column:sourceIp"`
+	DestinationIp       string            `json:"destinationIp,omitempty" gorm:"column:destinationIp"`
+	SourcePort          string            `json:"sourcePort,omitempty" gorm:"column:sourcePort"`
+	DestinationPort     string            `json:"destinationPort,omitempty" gorm:"column:destinationPort"`
+	IsOutgoing          bool              `json:"isOutgoing,omitempty" gorm:"column:isOutgoing"`
+	EstimatedSizeBytes  int               `json:"-" gorm:"column:estimatedSizeBytes"`
 }
 
 type MizuEntryWrapper struct {
@@ -141,7 +135,7 @@ type MizuEntryWrapper struct {
 }
 
 type BaseEntryDetails struct {
-	Id              string          `json:"id,omitempty"`
+	Id              uint            `json:"id"`
 	Protocol        Protocol        `json:"protocol,omitempty"`
 	Url             string          `json:"url,omitempty"`
 	RequestSenderIp string          `json:"requestSenderIp,omitempty"`
@@ -171,17 +165,8 @@ type DataUnmarshaler interface {
 }
 
 func (bed *BaseEntryDetails) UnmarshalData(entry *MizuEntry) error {
-	bed.Protocol = Protocol{
-		Name:            entry.ProtocolName,
-		LongName:        entry.ProtocolLongName,
-		Abbreviation:    entry.ProtocolAbbreviation,
-		Version:         entry.ProtocolVersion,
-		BackgroundColor: entry.ProtocolBackgroundColor,
-		ForegroundColor: entry.ProtocolForegroundColor,
-		FontSize:        entry.ProtocolFontSize,
-		ReferenceLink:   entry.ProtocolReferenceLink,
-	}
-	bed.Id = entry.EntryId
+	bed.Protocol = entry.Protocol
+	bed.Id = entry.Id
 	bed.Url = entry.Url
 	bed.Service = entry.Service
 	bed.Summary = entry.Path

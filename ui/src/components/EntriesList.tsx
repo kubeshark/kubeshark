@@ -88,7 +88,7 @@ export const EntriesList: React.FC<EntriesListProps> = ({entries, setEntries, fo
                         {filteredEntries.map(entry => <EntryItem key={entry.id}
                                                         entry={entry}
                                                         setFocusedEntryId={setFocusedEntryId}
-                                                        isSelected={focusedEntryId === entry.id}
+                                                        isSelected={focusedEntryId === entry.id.toString()}
                                                         style={{}}/>)}
                     </ScrollableFeedVirtualized>
                     {!connectionOpen && !noMoreDataBottom && <div className={styles.fetchButtonContainer}>

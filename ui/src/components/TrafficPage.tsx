@@ -86,7 +86,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                         setNoMoreDataBottom(false)
                         return;
                     }
-                    if (!focusedEntryId) setFocusedEntryId(entry.id)
+                    if (!focusedEntryId) setFocusedEntryId(entry.id.toString())
                     let newEntries = [...entries];
                     setEntries([...newEntries, entry])
                     if(listEntry.current) {

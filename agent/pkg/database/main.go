@@ -3,11 +3,8 @@ package database
 import (
 	"fmt"
 	"mizuserver/pkg/utils"
-	"time"
 
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
-	"gorm.io/gorm/logger"
 
 	tapApi "github.com/up9inc/mizu/tap/api"
 )
@@ -34,28 +31,18 @@ var (
 )
 
 func init() {
-	DB = initDataBase(DBPath)
-	go StartEnforcingDatabaseSize()
 }
 
 func GetEntriesTable() *gorm.DB {
 	return DB.Table("mizu_entries")
 }
 
-func CreateEntry(entry *tapApi.MizuEntry) {
-	if IsDBLocked {
-		return
-	}
-	GetEntriesTable().Create(entry)
-}
-
-func initDataBase(databasePath string) *gorm.DB {
-	temp, _ := gorm.Open(sqlite.Open(databasePath), &gorm.Config{
-		Logger: &utils.TruncatingLogger{LogLevel: logger.Warn, SlowThreshold: 500 * time.Millisecond},
-	})
-	_ = temp.AutoMigrate(&tapApi.MizuEntry{}) // this will ensure table is created
-	return temp
-}
+// func CreateEntry(entry *tapApi.MizuEntry) {
+// 	if IsDBLocked {
+// 		return
+// 	}
+// 	GetEntriesTable().Create(entry)
+// }
 
 func GetEntriesFromDb(timestampFrom int64, timestampTo int64, protocolName *string) []tapApi.MizuEntry {
 	order := OrderDesc

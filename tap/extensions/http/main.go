@@ -171,44 +171,39 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolve
 
 	elapsedTime := item.Pair.Response.CaptureTime.Sub(item.Pair.Request.CaptureTime).Round(time.Millisecond).Milliseconds()
 	entryBytes, _ := json.Marshal(item.Pair)
+	_protocol := protocol
+	_protocol.Version = item.Protocol.Version
 	return &api.MizuEntry{
-		ProtocolName:            protocol.Name,
-		ProtocolLongName:        protocol.LongName,
-		ProtocolAbbreviation:    protocol.Abbreviation,
-		ProtocolVersion:         item.Protocol.Version,
-		ProtocolBackgroundColor: protocol.BackgroundColor,
-		ProtocolForegroundColor: protocol.ForegroundColor,
-		ProtocolFontSize:        protocol.FontSize,
-		ProtocolReferenceLink:   protocol.ReferenceLink,
-		EntryId:                 entryId,
-		Entry:                   string(entryBytes),
-		Url:                     fmt.Sprintf("%s%s", service, path),
-		Method:                  reqDetails["method"].(string),
-		Status:                  int(resDetails["status"].(float64)),
-		RequestSenderIp:         item.ConnectionInfo.ClientIP,
-		Service:                 service,
-		Timestamp:               item.Timestamp,
-		ElapsedTime:             elapsedTime,
-		Path:                    path,
-		ResolvedSource:          resolvedSource,
-		ResolvedDestination:     resolvedDestination,
-		SourceIp:                item.ConnectionInfo.ClientIP,
-		DestinationIp:           item.ConnectionInfo.ServerIP,
-		SourcePort:              item.ConnectionInfo.ClientPort,
-		DestinationPort:         item.ConnectionInfo.ServerPort,
-		IsOutgoing:              item.ConnectionInfo.IsOutgoing,
+		Protocol:            _protocol,
+		EntryId:             entryId,
+		Entry:               string(entryBytes),
+		Url:                 fmt.Sprintf("%s%s", service, path),
+		Method:              reqDetails["method"].(string),
+		Status:              int(resDetails["status"].(float64)),
+		RequestSenderIp:     item.ConnectionInfo.ClientIP,
+		Service:             service,
+		Timestamp:           item.Timestamp,
+		ElapsedTime:         elapsedTime,
+		Path:                path,
+		ResolvedSource:      resolvedSource,
+		ResolvedDestination: resolvedDestination,
+		SourceIp:            item.ConnectionInfo.ClientIP,
+		DestinationIp:       item.ConnectionInfo.ServerIP,
+		SourcePort:          item.ConnectionInfo.ClientPort,
+		DestinationPort:     item.ConnectionInfo.ServerPort,
+		IsOutgoing:          item.ConnectionInfo.IsOutgoing,
 	}
 }
 
 func (d dissecting) Summarize(entry *api.MizuEntry) *api.BaseEntryDetails {
 	var p api.Protocol
-	if entry.ProtocolVersion == "2.0" {
+	if entry.Protocol.Version == "2.0" {
 		p = http2Protocol
 	} else {
 		p = protocol
 	}
 	return &api.BaseEntryDetails{
-		Id:              entry.EntryId,
+		Id:              entry.Id,
 		Protocol:        p,
 		Url:             entry.Url,
 		RequestSenderIp: entry.RequestSenderIp,
@@ -377,7 +372,7 @@ func representResponse(response map[string]interface{}) (repResponse []interface
 }
 
 func (d dissecting) Represent(entry *api.MizuEntry) (p api.Protocol, object []byte, bodySize int64, err error) {
-	if entry.ProtocolVersion == "2.0" {
+	if entry.Protocol.Version == "2.0" {
 		p = http2Protocol
 	} else {
 		p = protocol

@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"mizuserver/pkg/database"
 	"mizuserver/pkg/holder"
 	"net/url"
 	"os"
@@ -116,9 +115,8 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 		mizuEntry := extension.Dissector.Analyze(item, primitive.NewObjectID().Hex(), resolvedSource, resolvedDestionation)
 		baseEntry := extension.Dissector.Summarize(mizuEntry)
 		mizuEntry.EstimatedSizeBytes = getEstimatedEntrySizeBytes(mizuEntry)
-		database.CreateEntry(mizuEntry)
-		item.Summary = baseEntry
-		Insert(item, conn)
+		mizuEntry.Summary = baseEntry
+		Insert(mizuEntry, conn)
 	}
 }
 

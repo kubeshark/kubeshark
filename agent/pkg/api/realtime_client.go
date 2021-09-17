@@ -47,6 +47,49 @@ func Insert(entry interface{}, conn net.Conn) {
 	conn.Write([]byte("\n"))
 }
 
+func Single(index uint) (entry map[string]interface{}) {
+	conn := Connect("localhost", "8000")
+
+	var wg sync.WaitGroup
+	go readConnectionSingle(&wg, conn, &entry)
+	wg.Add(1)
+
+	conn.SetWriteDeadline(time.Now().Add(1 * time.Second))
+	conn.Write([]byte("/single\n"))
+
+	conn.SetWriteDeadline(time.Now().Add(1 * time.Second))
+	conn.Write([]byte(fmt.Sprintf("%d\n", index)))
+
+	wg.Wait()
+	return
+}
+
+func readConnectionSingle(wg *sync.WaitGroup, conn net.Conn, entry *map[string]interface{}) {
+	defer wg.Done()
+	for {
+		scanner := bufio.NewScanner(conn)
+
+		for {
+			ok := scanner.Scan()
+			text := scanner.Text()
+
+			command := handleCommands(text)
+			if !command {
+				fmt.Printf("\b\b** %s\n> ", text)
+				if err := json.Unmarshal([]byte(text), entry); err != nil {
+					panic(err)
+				}
+				return
+			}
+
+			if !ok {
+				fmt.Println("Reached EOF on server connection.")
+				break
+			}
+		}
+	}
+}
+
 func Query(query string, conn net.Conn, ws *websocket.Conn) {
 	var wg sync.WaitGroup
 	go readConnection(&wg, conn, ws)
@@ -87,7 +130,10 @@ func readConnection(wg *sync.WaitGroup, conn net.Conn, ws *websocket.Conn) {
 					panic(err)
 				}
 
-				baseEntryBytes, _ := models.CreateBaseEntryWebSocketMessage(data["Summary"].(map[string]interface{}))
+				summary := data["summary"].(map[string]interface{})
+				summary["id"] = uint(data["id"].(float64))
+
+				baseEntryBytes, _ := models.CreateBaseEntryWebSocketMessage(summary)
 				ws.WriteMessage(1, baseEntryBytes)
 			}
 

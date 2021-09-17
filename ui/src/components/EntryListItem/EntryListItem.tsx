@@ -15,7 +15,7 @@ interface Entry {
     method?: string,
     summary: string,
     service: string,
-    id: string,
+    id: number,
     statusCode?: number;
     url?: string;
     timestamp: Date;
@@ -100,10 +100,10 @@ export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, isSel
     }
     return <>
         <div
-            id={entry.id}
+            id={entry.id.toString()}
             className={`${styles.row}
             ${isSelected ? styles.rowSelected : backgroundColor}`}
-            onClick={() => setFocusedEntryId(entry.id)}
+            onClick={() => setFocusedEntryId(entry.id.toString())}
             style={{
                 border: isSelected ? `1px ${entry.protocol.backgroundColor} solid` : "1px transparent solid",
                 position: "absolute",

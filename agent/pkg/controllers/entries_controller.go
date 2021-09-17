@@ -3,7 +3,7 @@ package controllers
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/google/martian/har"
+	"mizuserver/pkg/api"
 	"mizuserver/pkg/database"
 	"mizuserver/pkg/models"
 	"mizuserver/pkg/providers"
@@ -11,7 +11,10 @@ import (
 	"mizuserver/pkg/utils"
 	"mizuserver/pkg/validation"
 	"net/http"
+	"strconv"
 	"time"
+
+	"github.com/google/martian/har"
 
 	"github.com/gin-gonic/gin"
 	"github.com/romana/rlog"
@@ -133,12 +136,41 @@ func GetFullEntries(c *gin.Context) {
 }
 
 func GetEntry(c *gin.Context) {
-	var entryData tapApi.MizuEntry
-	database.GetEntriesTable().
-		Where(map[string]string{"entryId": c.Param("entryId")}).
-		First(&entryData)
+	id, _ := strconv.Atoi(c.Param("entryId"))
+	fmt.Printf("GetEntry id: %v\n", id)
+	entry := api.Single(uint(id))
+	entryData := tapApi.MizuEntry{
+		Protocol: tapApi.Protocol{
+			Name:            entry["proto"].(map[string]interface{})["name"].(string),
+			LongName:        entry["proto"].(map[string]interface{})["longName"].(string),
+			Abbreviation:    entry["proto"].(map[string]interface{})["abbreviation"].(string),
+			Version:         entry["proto"].(map[string]interface{})["version"].(string),
+			BackgroundColor: entry["proto"].(map[string]interface{})["backgroundColor"].(string),
+			ForegroundColor: entry["proto"].(map[string]interface{})["foregroundColor"].(string),
+			FontSize:        int8(entry["proto"].(map[string]interface{})["fontSize"].(float64)),
+			ReferenceLink:   entry["proto"].(map[string]interface{})["referenceLink"].(string),
+			Priority:        uint8(entry["proto"].(map[string]interface{})["priority"].(float64)),
+		},
+		EntryId:         entry["entryId"].(string),
+		Entry:           entry["entry"].(string),
+		Url:             entry["url"].(string),
+		Method:          entry["method"].(string),
+		Status:          int(entry["status"].(float64)),
+		RequestSenderIp: entry["requestSenderIp"].(string),
+		Service:         entry["service"].(string),
+		Timestamp:       int64(entry["timestamp"].(float64)),
+		ElapsedTime:     int64(entry["elapsedTime"].(float64)),
+		Path:            entry["path"].(string),
+		// ResolvedSource:      entry["resolvedSource"].(string),
+		// ResolvedDestination: entry["resolvedDestination"].(string),
+		SourceIp:        entry["sourceIp"].(string),
+		DestinationIp:   entry["destinationIp"].(string),
+		SourcePort:      entry["sourcePort"].(string),
+		DestinationPort: entry["destinationPort"].(string),
+		// IsOutgoing:      entry["isOutgoing"].(bool),
+	}
 
-	extension := extensionsMap[entryData.ProtocolName]
+	extension := extensionsMap[entryData.Protocol.Name]
 	protocol, representation, bodySize, _ := extension.Dissector.Represent(&entryData)
 	c.JSON(http.StatusOK, tapApi.MizuEntryWrapper{
 		Protocol:       protocol,
