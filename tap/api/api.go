@@ -132,11 +132,6 @@ type MizuEntry struct {
 	EstimatedSizeBytes      int    `json:"-" gorm:"column:estimatedSizeBytes"`
 }
 
-type FullEntryWithPolicy struct {
-	RulesMatched []map[string]interface{} `json:"rulesMatched,omitempty"`
-	Entry        MizuEntry                `json:"entry"`
-}
-
 type MizuEntryWrapper struct {
 	Protocol       Protocol                 `json:"protocol"`
 	Representation string                   `json:"representation"`

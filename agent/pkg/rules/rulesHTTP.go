@@ -42,7 +42,7 @@ func ValidateService(serviceFromRule string, service string) bool {
 	return true
 }
 
-func MatchRequestPolicy(harEntry har.Entry, service string) (int, []RulesMatched) {
+func MatchRequestPolicy(harEntry har.Entry, service string) []RulesMatched {
 	enforcePolicy, _ := shared.DecodeEnforcePolicy(fmt.Sprintf("%s/%s", shared.RulePolicyPath, shared.RulePolicyFileName))
 	var resultPolicyToSend []RulesMatched
 	for _, rule := range enforcePolicy.Rules {
@@ -92,10 +92,10 @@ func MatchRequestPolicy(harEntry har.Entry, service string) (int, []RulesMatched
 			resultPolicyToSend = appendRulesMatched(resultPolicyToSend, true, rule)
 		}
 	}
-	return len(enforcePolicy.Rules), resultPolicyToSend
+	return resultPolicyToSend
 }
 
-func PassedValidationRules(rulesMatched []RulesMatched, numberOfRules int) (bool, int64, int) {
+func PassedValidationRules(rulesMatched []RulesMatched) (bool, int64, int) {
 	var numberOfRulesMatched = len(rulesMatched)
 	var latency int64 = -1
 
