@@ -18,6 +18,7 @@ import (
 
 	"github.com/up9inc/mizu/cli/mizu"
 	"github.com/up9inc/mizu/shared"
+	"github.com/up9inc/mizu/tap/api"
 	core "k8s.io/api/core/v1"
 	rbac "k8s.io/api/rbac/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
@@ -150,7 +151,7 @@ type ApiServerOptions struct {
 	PodImage                string
 	ServiceAccountName      string
 	IsNamespaceRestricted   bool
-	MizuApiFilteringOptions *shared.TrafficFilteringOptions
+	MizuApiFilteringOptions *api.TrafficFilteringOptions
 	MaxEntriesDBSizeBytes   int64
 	Resources               configStructs.Resources
 	ImagePullPolicy         core.PullPolicy

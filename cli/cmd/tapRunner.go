@@ -21,6 +21,7 @@ import (
 	"github.com/up9inc/mizu/cli/uiUtils"
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/debounce"
+	"github.com/up9inc/mizu/tap/api"
 	yaml "gopkg.in/yaml.v3"
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -123,7 +124,7 @@ func readValidationRules(file string) (string, error) {
 	return string(newContent), nil
 }
 
-func createMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, nodeToTappedPodIPMap map[string][]string, mizuApiFilteringOptions *shared.TrafficFilteringOptions, mizuValidationRules string) error {
+func createMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, nodeToTappedPodIPMap map[string][]string, mizuApiFilteringOptions *api.TrafficFilteringOptions, mizuValidationRules string) error {
 	if !config.Config.IsNsRestrictedMode() {
 		if err := createMizuNamespace(ctx, kubernetesProvider); err != nil {
 			return err
@@ -158,7 +159,7 @@ func createMizuNamespace(ctx context.Context, kubernetesProvider *kubernetes.Pro
 	return err
 }
 
-func createMizuApiServer(ctx context.Context, kubernetesProvider *kubernetes.Provider, mizuApiFilteringOptions *shared.TrafficFilteringOptions) error {
+func createMizuApiServer(ctx context.Context, kubernetesProvider *kubernetes.Provider, mizuApiFilteringOptions *api.TrafficFilteringOptions) error {
 	var err error
 
 	state.mizuServiceAccountExists, err = createRBACIfNecessary(ctx, kubernetesProvider)
@@ -199,13 +200,13 @@ func createMizuApiServer(ctx context.Context, kubernetesProvider *kubernetes.Pro
 	return nil
 }
 
-func getMizuApiFilteringOptions() (*shared.TrafficFilteringOptions, error) {
-	var compiledRegexSlice []*shared.SerializableRegexp
+func getMizuApiFilteringOptions() (*api.TrafficFilteringOptions, error) {
+	var compiledRegexSlice []*api.SerializableRegexp
 
 	if config.Config.Tap.PlainTextFilterRegexes != nil && len(config.Config.Tap.PlainTextFilterRegexes) > 0 {
-		compiledRegexSlice = make([]*shared.SerializableRegexp, 0)
+		compiledRegexSlice = make([]*api.SerializableRegexp, 0)
 		for _, regexStr := range config.Config.Tap.PlainTextFilterRegexes {
-			compiledRegex, err := shared.CompileRegexToSerializableRegexp(regexStr)
+			compiledRegex, err := api.CompileRegexToSerializableRegexp(regexStr)
 			if err != nil {
 				return nil, err
 			}
@@ -213,7 +214,7 @@ func getMizuApiFilteringOptions() (*shared.TrafficFilteringOptions, error) {
 		}
 	}
 
-	return &shared.TrafficFilteringOptions{
+	return &api.TrafficFilteringOptions{
 		PlainTextMaskingRegexes:      compiledRegexSlice,
 		HealthChecksUserAgentHeaders: config.Config.Tap.HealthChecksUserAgentHeaders,
 		DisableRedaction:             config.Config.Tap.DisableRedaction,
