@@ -61,7 +61,7 @@ func (d dissecting) Ping() {
 	log.Printf("pong %s\n", protocol.Name)
 }
 
-func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, superIdentifier *api.SuperIdentifier, emitter api.Emitter) error {
+func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, superIdentifier *api.SuperIdentifier, emitter api.Emitter, options *api.TrafficFilteringOptions) error {
 	ident := fmt.Sprintf("%s->%s:%s->%s", tcpID.SrcIP, tcpID.DstIP, tcpID.SrcPort, tcpID.DstPort)
 	isHTTP2, err := checkIsHTTP2Connection(b, isClient)
 	if err != nil {
@@ -85,7 +85,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 		}
 
 		if isHTTP2 {
-			err = handleHTTP2Stream(grpcAssembler, tcpID, superTimer, emitter)
+			err = handleHTTP2Stream(grpcAssembler, tcpID, superTimer, emitter, options)
 			if err == io.EOF || err == io.ErrUnexpectedEOF {
 				break
 			} else if err != nil {
@@ -94,7 +94,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 			}
 			dissected = true
 		} else if isClient {
-			err = handleHTTP1ClientStream(b, tcpID, counterPair, superTimer, emitter)
+			err = handleHTTP1ClientStream(b, tcpID, counterPair, superTimer, emitter, options)
 			if err == io.EOF || err == io.ErrUnexpectedEOF {
 				break
 			} else if err != nil {
@@ -103,7 +103,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 			}
 			dissected = true
 		} else {
-			err = handleHTTP1ServerStream(b, tcpID, counterPair, superTimer, emitter)
+			err = handleHTTP1ServerStream(b, tcpID, counterPair, superTimer, emitter, options)
 			if err == io.EOF || err == io.ErrUnexpectedEOF {
 				break
 			} else if err != nil {
