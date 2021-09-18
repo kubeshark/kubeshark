@@ -33,8 +33,7 @@ const SectionsRepresentation: React.FC<any> = ({data, color}) => {
     return <>{sections}</>;
 }
 
-const AutoRepresentation: React.FC<any> = ({representation, color}) => {
-    const rulesMatched = []
+const AutoRepresentation: React.FC<any> = ({representation, rulesMatched, elapsedTime, color}) => {
     const TABS = [
         {
             tab: 'request'
@@ -68,8 +67,7 @@ const AutoRepresentation: React.FC<any> = ({representation, color}) => {
                 <SectionsRepresentation data={response} color={color}/>
             </React.Fragment>}
             {currentTab === TABS[2].tab && <React.Fragment>
-                {// FIXME: Fix here
-                <EntryTablePolicySection service={representation.service} title={'Rule'} color={color} latency={0} response={response} arrayToIterate={rulesMatched ? rulesMatched : []}/>}
+                <EntryTablePolicySection service={representation.service} title={'Rule'} color={color} latency={elapsedTime} response={response} arrayToIterate={rulesMatched ? rulesMatched : []}/>
             </React.Fragment>}
         </div>}
     </div>;
@@ -77,11 +75,13 @@ const AutoRepresentation: React.FC<any> = ({representation, color}) => {
 
 interface Props {
     representation: any;
-    color: string,
+    rulesMatched: any;
+    color: string;
+    elapsedTime: number;
 }
 
-const EntryViewer: React.FC<Props> = ({representation, color}) => {
-    return <AutoRepresentation representation={representation} color={color}/>
+const EntryViewer: React.FC<Props> = ({representation, rulesMatched, elapsedTime, color}) => {
+    return <AutoRepresentation representation={representation} rulesMatched={rulesMatched} elapsedTime={elapsedTime} color={color}/>
 };
 
 export default EntryViewer;

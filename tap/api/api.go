@@ -133,10 +133,11 @@ type MizuEntry struct {
 }
 
 type MizuEntryWrapper struct {
-	Protocol       Protocol  `json:"protocol"`
-	Representation string    `json:"representation"`
-	BodySize       int64     `json:"bodySize"`
-	Data           MizuEntry `json:"data"`
+	Protocol       Protocol                 `json:"protocol"`
+	Representation string                   `json:"representation"`
+	BodySize       int64                    `json:"bodySize"`
+	Data           MizuEntry                `json:"data"`
+	Rules          []map[string]interface{} `json:"rulesMatched,omitempty"`
 }
 
 type BaseEntryDetails struct {

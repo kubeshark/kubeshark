@@ -42,7 +42,6 @@ const EntryTitle: React.FC<any> = ({protocol, data, bodySize, elapsedTime}) => {
         <div style={{right: "30px", position: "absolute", display: "flex"}}>
             {response.payload && <div style={{margin: "0 18px", opacity: 0.5}}>{formatSize(bodySize)}</div>}
             <div style={{marginRight: 18, opacity: 0.5}}>{Math.round(elapsedTime)}ms</div>
-            <div style={{opacity: 0.5}}>{'rulesMatched' in data ? data.rulesMatched?.length : '0'} Rules Applied</div>
         </div>
     </div>;
 };
@@ -72,7 +71,7 @@ export const EntryDetailed: React.FC<EntryDetailedProps> = ({entryData}) => {
         />
         {entryData.data && <EntrySummary data={entryData.data}/>}
         <>
-            {entryData.data && <EntryViewer representation={entryData.representation} color={entryData.protocol.backgroundColor}/>}
+            {entryData.data && <EntryViewer representation={entryData.representation} rulesMatched={entryData.rulesMatched} elapsedTime={entryData.data.elapsedTime} color={entryData.protocol.backgroundColor}/>}
         </>
     </>
 };
