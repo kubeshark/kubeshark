@@ -1,8 +1,9 @@
 package shared
 
 import (
-	"fmt"
+	// "fmt"
 	"io/ioutil"
+	"log"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -89,7 +90,7 @@ type RulePolicy struct {
 	Method  string `yaml:"method"`
 	Key     string `yaml:"key"`
 	Value   string `yaml:"value"`
-	Latency int64  `yaml:"latency"`
+	ResponseTime int64  `yaml:"response-time"`
 	Name    string `yaml:"name"`
 }
 
@@ -99,14 +100,16 @@ type RulesMatched struct {
 }
 
 func (r *RulePolicy) validateType() bool {
-	permitedTypes := []string{"json", "header", "latency"}
+	permitedTypes := []string{"json", "header", "slo"}
 	_, found := Find(permitedTypes, r.Type)
 	if !found {
-		fmt.Printf("\nRule with name %s will be ignored. Err: only json, header and latency types are supported on rule definition.\n", r.Name)
+		log.Printf("Error: %s. ", r.Name)
+		log.Fatalf("Only json, header and slo types are supported on rule definition.\n")
 	}
-	if strings.ToLower(r.Type) == "latency" {
-		if r.Latency == 0 {
-			fmt.Printf("\nRule with name %s will be ignored. Err: when type=latency, the field Latency should be specified and have a value >= 1\n\n", r.Name)
+	if strings.ToLower(r.Type) == "slo" {
+		if r.ResponseTime == 0 {
+			log.Printf("Error: %s. ", r.Name)
+			log.Fatalf("When type=slo, the field response-time should be specified and have a value >= 1\n\n")
 			found = false
 		}
 	}
