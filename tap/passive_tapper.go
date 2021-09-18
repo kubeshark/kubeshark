@@ -92,11 +92,10 @@ var outputLevel int
 var errorsMap map[string]uint
 var errorsMapMutex sync.Mutex
 var nErrors uint
-var ownIps []string             // global
-var hostMode bool               // global
-var extensions []*api.Extension // global
-
-var filteringOptions *api.TrafficFilteringOptions
+var ownIps []string                               // global
+var hostMode bool                                 // global
+var extensions []*api.Extension                   // global
+var filteringOptions *api.TrafficFilteringOptions // global
 
 const baseStreamChannelTimeoutMs int = 5000 * 100
 
