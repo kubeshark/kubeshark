@@ -48,8 +48,14 @@ func RunMizuTap() {
 		return
 	}
 	var mizuValidationRules string
-	if config.Config.Tap.EnforcePolicyFile != "" {
-		mizuValidationRules, err = readValidationRules(config.Config.Tap.EnforcePolicyFile)
+	
+	if config.Config.Tap.EnforcePolicyFile != "" || config.Config.Tap.EnforcePolicyFileDeprecated != "" {
+		trafficValidation := config.Config.Tap.EnforcePolicyFile
+		if config.Config.Tap.EnforcePolicyFileDeprecated != "" {
+			trafficValidation = config.Config.Tap.EnforcePolicyFileDeprecated
+			logger.Log.Infof(uiUtils.Warning, fmt.Sprintf("--test-rules is DEPRECATED and will be removed on the next release. Use --traffic-validation instead"))
+		}
+		mizuValidationRules, err = readValidationRules(trafficValidation)
 		if err != nil {
 			logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error reading policy file: %v", errormessage.FormatError(err)))
 			return
