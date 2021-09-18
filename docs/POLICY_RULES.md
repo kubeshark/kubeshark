@@ -24,14 +24,14 @@ To use this feature - create simple rules file (see details below) and pass this
 
 
 ```shell
-mizu tap --test-rules rules.yaml PODNAME
+mizu tap --traffic-validation rules.yaml PODNAME
 ```
 
 
 
 ## Rules file structure
 
-The structure of the test-rules-file is:
+The structure of the traffic-validation-file is:
 
 * `name`: string, name of the rule
 * `type`: string, type of the rule, must be `json` or `header` or `latency`
