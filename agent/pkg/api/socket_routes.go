@@ -41,23 +41,19 @@ func init() {
 
 func WebSocketRoutes(app *gin.Engine, eventHandlers EventHandlers) {
 	app.GET("/ws", func(c *gin.Context) {
-		query := c.DefaultQuery("q", "")
-		websocketHandlerUI(c.Writer, c.Request, eventHandlers, false, query)
+		websocketHandler(c.Writer, c.Request, eventHandlers, false)
 	})
 	app.GET("/wsTapper", func(c *gin.Context) {
 		websocketHandler(c.Writer, c.Request, eventHandlers, true)
 	})
 }
 
-func websocketHandlerUI(w http.ResponseWriter, r *http.Request, eventHandlers EventHandlers, isTapper bool, query string) {
+func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers EventHandlers, isTapper bool) {
 	ws, err := websocketUpgrader.Upgrade(w, r, nil)
 	if err != nil {
 		rlog.Errorf("Failed to set websocket upgrade: %v", err)
 		return
 	}
-
-	conn := Connect("localhost", "8000")
-	go Query(query, conn, ws)
 
 	websocketIdsLock.Lock()
 
@@ -79,40 +75,12 @@ func websocketHandlerUI(w http.ResponseWriter, r *http.Request, eventHandlers Ev
 			rlog.Errorf("Error reading message, socket id: %d, error: %v", socketId, err)
 			break
 		}
-		eventHandlers.WebSocketMessage(socketId, msg)
-	}
-
-	conn.Close()
-}
-
-func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers EventHandlers, isTapper bool) {
-	conn, err := websocketUpgrader.Upgrade(w, r, nil)
-	if err != nil {
-		rlog.Errorf("Failed to set websocket upgrade: %v", err)
-		return
-	}
-
-	websocketIdsLock.Lock()
-
-	connectedWebsocketIdCounter++
-	socketId := connectedWebsocketIdCounter
-	connectedWebsockets[socketId] = &SocketConnection{connection: conn, lock: &sync.Mutex{}, eventHandlers: eventHandlers, isTapper: isTapper}
-
-	websocketIdsLock.Unlock()
-
-	defer func() {
-		socketCleanup(socketId, connectedWebsockets[socketId])
-	}()
-
-	eventHandlers.WebSocketConnect(socketId, isTapper)
-
-	for {
-		_, msg, err := conn.ReadMessage()
-		if err != nil {
-			rlog.Errorf("Error reading message, socket id: %d, error: %v", socketId, err)
-			break
+		if !isTapper {
+			conn := Connect("localhost", "8000")
+			go Query(string(msg), conn, ws)
+		} else {
+			eventHandlers.WebSocketMessage(socketId, msg)
 		}
-		eventHandlers.WebSocketMessage(socketId, msg)
 	}
 }
 
