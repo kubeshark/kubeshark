@@ -2,6 +2,7 @@ package api
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"sync"
 	"time"
@@ -41,6 +42,7 @@ func init() {
 
 func WebSocketRoutes(app *gin.Engine, eventHandlers EventHandlers) {
 	app.GET("/ws", func(c *gin.Context) {
+		fmt.Printf("query: %v\n", c.Request.URL.Query())
 		query := c.DefaultQuery("q", "")
 		websocketHandlerUI(c.Writer, c.Request, eventHandlers, false, query)
 	})
