@@ -45,11 +45,11 @@ push: push-docker push-cli ## Build and publish agent docker image & CLI.
 
 push-docker: ## Build and publish agent docker image.
 	@echo "publishing Docker image .. "
-	./build-push-featurebranch.sh
+	devops/build-push-featurebranch.sh
 
 build-docker-ci: ## Build agent docker image for CI.
 	@echo "building docker image for ci"
-	./build-agent-ci.sh
+	devops/build-agent-ci.sh
 
 push-cli: ## Build and publish CLI.
 	@echo "publishing CLI .. "
@@ -78,7 +78,7 @@ database:
 	@(cd realtime_dbms/server; go build -o ../../agent/build/server server.go)
 
 extensions:
-	./build_extensions.sh
+	devops/build_extensions.sh
 
 test-cli:
 	@echo "running cli tests"; cd cli && $(MAKE) test

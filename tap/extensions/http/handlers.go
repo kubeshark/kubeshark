@@ -13,7 +13,14 @@ import (
 	"github.com/up9inc/mizu/tap/api"
 )
 
-func handleHTTP2Stream(grpcAssembler *GrpcAssembler, tcpID *api.TcpID, superTimer *api.SuperTimer, emitter api.Emitter) error {
+func filterAndEmit(item *api.OutputChannelItem, emitter api.Emitter, options *api.TrafficFilteringOptions) {
+	if !options.DisableRedaction {
+		FilterSensitiveData(item, options)
+	}
+	emitter.Emit(item)
+}
+
+func handleHTTP2Stream(grpcAssembler *GrpcAssembler, tcpID *api.TcpID, superTimer *api.SuperTimer, emitter api.Emitter, options *api.TrafficFilteringOptions) error {
 	streamID, messageHTTP1, err := grpcAssembler.readMessage()
 	if err != nil {
 		return err
@@ -64,13 +71,13 @@ func handleHTTP2Stream(grpcAssembler *GrpcAssembler, tcpID *api.TcpID, superTime
 
 	if item != nil {
 		item.Protocol = http2Protocol
-		emitter.Emit(item)
+		filterAndEmit(item, emitter, options)
 	}
 
 	return nil
 }
 
-func handleHTTP1ClientStream(b *bufio.Reader, tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, emitter api.Emitter) error {
+func handleHTTP1ClientStream(b *bufio.Reader, tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, emitter api.Emitter, options *api.TrafficFilteringOptions) error {
 	req, err := http.ReadRequest(b)
 	if err != nil {
 		// log.Println("Error reading stream:", err)
@@ -107,12 +114,12 @@ func handleHTTP1ClientStream(b *bufio.Reader, tcpID *api.TcpID, counterPair *api
 			ServerPort: tcpID.DstPort,
 			IsOutgoing: true,
 		}
-		emitter.Emit(item)
+		filterAndEmit(item, emitter, options)
 	}
 	return nil
 }
 
-func handleHTTP1ServerStream(b *bufio.Reader, tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, emitter api.Emitter) error {
+func handleHTTP1ServerStream(b *bufio.Reader, tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, emitter api.Emitter, options *api.TrafficFilteringOptions) error {
 	res, err := http.ReadResponse(b, nil)
 	if err != nil {
 		// log.Println("Error reading stream:", err)
@@ -157,7 +164,7 @@ func handleHTTP1ServerStream(b *bufio.Reader, tcpID *api.TcpID, counterPair *api
 			ServerPort: tcpID.SrcPort,
 			IsOutgoing: false,
 		}
-		emitter.Emit(item)
+		filterAndEmit(item, emitter, options)
 	}
 	return nil
 }

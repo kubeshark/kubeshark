@@ -16,7 +16,8 @@ const (
 	DisableRedactionTapName       = "no-redact"
 	HumanMaxEntriesDBSizeTapName  = "max-entries-db-size"
 	DryRunTapName                 = "dry-run"
-	EnforcePolicyFile             = "test-rules"
+	EnforcePolicyFile             = "traffic-validation"
+	EnforcePolicyFileDeprecated   = "test-rules"
 )
 
 type TapConfig struct {
@@ -32,7 +33,8 @@ type TapConfig struct {
 	DisableRedaction             bool      `yaml:"no-redact" default:"false"`
 	HumanMaxEntriesDBSize        string    `yaml:"max-entries-db-size" default:"200MB"`
 	DryRun                       bool      `yaml:"dry-run" default:"false"`
-	EnforcePolicyFile            string    `yaml:"test-rules"`
+	EnforcePolicyFile            string    `yaml:"traffic-validation"`
+	EnforcePolicyFileDeprecated  string    `yaml:"test-rules"`
 	ApiServerResources           Resources `yaml:"api-server-resources"`
 	TapperResources              Resources `yaml:"tapper-resources"`
 }

@@ -1,6 +1,7 @@
 package rules
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"reflect"
@@ -41,7 +42,7 @@ func ValidateService(serviceFromRule string, service string) bool {
 	return true
 }
 
-func MatchRequestPolicy(harEntry har.Entry, service string) (int, []RulesMatched) {
+func MatchRequestPolicy(harEntry har.Entry, service string) []RulesMatched {
 	enforcePolicy, _ := shared.DecodeEnforcePolicy(fmt.Sprintf("%s/%s", shared.RulePolicyPath, shared.RulePolicyFileName))
 	var resultPolicyToSend []RulesMatched
 	for _, rule := range enforcePolicy.Rules {
@@ -50,7 +51,8 @@ func MatchRequestPolicy(harEntry har.Entry, service string) (int, []RulesMatched
 		}
 		if rule.Type == "json" {
 			var bodyJsonMap interface{}
-			if err := json.Unmarshal(harEntry.Response.Content.Text, &bodyJsonMap); err != nil {
+			contentTextDecoded, _ := base64.StdEncoding.DecodeString(string(harEntry.Response.Content.Text))
+			if err := json.Unmarshal(contentTextDecoded, &bodyJsonMap); err != nil {
 				continue
 			}
 			out, err := jsonpath.Read(bodyJsonMap, rule.Key)
@@ -63,6 +65,7 @@ func MatchRequestPolicy(harEntry har.Entry, service string) (int, []RulesMatched
 				if err != nil {
 					continue
 				}
+				fmt.Println(matchValue, rule.Value)
 			} else {
 				val := fmt.Sprint(out)
 				matchValue, err = regexp.MatchString(rule.Value, val)
@@ -89,22 +92,28 @@ func MatchRequestPolicy(harEntry har.Entry, service string) (int, []RulesMatched
 			resultPolicyToSend = appendRulesMatched(resultPolicyToSend, true, rule)
 		}
 	}
-	return len(enforcePolicy.Rules), resultPolicyToSend
+	return resultPolicyToSend
 }
 
-func PassedValidationRules(rulesMatched []RulesMatched, numberOfRules int) (bool, int64, int) {
-	if len(rulesMatched) == 0 {
-		return false, 0, 0
+func PassedValidationRules(rulesMatched []RulesMatched) (bool, int64, int) {
+	var numberOfRulesMatched = len(rulesMatched)
+	var latency int64 = -1
+
+	if numberOfRulesMatched == 0 {
+		return false, 0, numberOfRulesMatched
 	}
+
 	for _, rule := range rulesMatched {
 		if rule.Matched == false {
-			return false, -1, len(rulesMatched)
+			return false, latency, numberOfRulesMatched
+		} else {
+			if strings.ToLower(rule.Rule.Type) == "latency" {
+				if rule.Rule.Latency < latency || latency == -1 {
+					latency = rule.Rule.Latency
+				}
+			}
 		}
 	}
-	for _, rule := range rulesMatched {
-		if strings.ToLower(rule.Rule.Type) == "latency" {
-			return true, rule.Rule.Latency, len(rulesMatched)
-		}
-	}
-	return true, -1, len(rulesMatched)
+
+	return true, latency, numberOfRulesMatched
 }

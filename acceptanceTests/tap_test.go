@@ -502,10 +502,19 @@ func TestTapRedact(t *testing.T) {
 			return fmt.Errorf("failed to get entry, err: %v", requestErr)
 		}
 
-		entry := requestResult.(map[string]interface{})["entry"].(map[string]interface{})
-		entryRequest := entry["request"].(map[string]interface{})
+		data := requestResult.(map[string]interface{})["data"].(map[string]interface{})
+		entryJson := data["entry"].(string)
 
-		headers :=  entryRequest["headers"].([]interface{})
+		var entry map[string]interface{}
+		if parseErr := json.Unmarshal([]byte(entryJson), &entry); parseErr != nil {
+			return fmt.Errorf("failed to parse entry, err: %v", parseErr)
+		}
+
+		entryRequest := entry["request"].(map[string]interface{})
+		entryPayload := entryRequest["payload"].(map[string]interface{})
+		entryDetails := entryPayload["details"].(map[string]interface{})
+
+		headers :=  entryDetails["headers"].([]interface{})
 		for _, headerInterface := range headers {
 			header := headerInterface.(map[string]interface{})
 			if header["name"].(string) != "User-Agent" {
@@ -518,8 +527,8 @@ func TestTapRedact(t *testing.T) {
 			}
 		}
 
-		data := entryRequest["postData"].(map[string]interface{})
-		textDataStr := data["text"].(string)
+		postData := entryDetails["postData"].(map[string]interface{})
+		textDataStr := postData["text"].(string)
 
 		var textData map[string]string
 		if parseErr := json.Unmarshal([]byte(textDataStr), &textData); parseErr != nil {
@@ -608,10 +617,19 @@ func TestTapNoRedact(t *testing.T) {
 			return fmt.Errorf("failed to get entry, err: %v", requestErr)
 		}
 
-		entry := requestResult.(map[string]interface{})["entry"].(map[string]interface{})
-		entryRequest := entry["request"].(map[string]interface{})
+		data := requestResult.(map[string]interface{})["data"].(map[string]interface{})
+		entryJson := data["entry"].(string)
 
-		headers :=  entryRequest["headers"].([]interface{})
+		var entry map[string]interface{}
+		if parseErr := json.Unmarshal([]byte(entryJson), &entry); parseErr != nil {
+			return fmt.Errorf("failed to parse entry, err: %v", parseErr)
+		}
+
+		entryRequest := entry["request"].(map[string]interface{})
+		entryPayload := entryRequest["payload"].(map[string]interface{})
+		entryDetails := entryPayload["details"].(map[string]interface{})
+
+		headers :=  entryDetails["headers"].([]interface{})
 		for _, headerInterface := range headers {
 			header := headerInterface.(map[string]interface{})
 			if header["name"].(string) != "User-Agent" {
@@ -624,8 +642,8 @@ func TestTapNoRedact(t *testing.T) {
 			}
 		}
 
-		data := entryRequest["postData"].(map[string]interface{})
-		textDataStr := data["text"].(string)
+		postData := entryDetails["postData"].(map[string]interface{})
+		textDataStr := postData["text"].(string)
 
 		var textData map[string]string
 		if parseErr := json.Unmarshal([]byte(textDataStr), &textData); parseErr != nil {
@@ -714,11 +732,20 @@ func TestTapRegexMasking(t *testing.T) {
 			return fmt.Errorf("failed to get entry, err: %v", requestErr)
 		}
 
-		entry := requestResult.(map[string]interface{})["entry"].(map[string]interface{})
-		entryRequest := entry["request"].(map[string]interface{})
+		data := requestResult.(map[string]interface{})["data"].(map[string]interface{})
+		entryJson := data["entry"].(string)
 
-		data := entryRequest["postData"].(map[string]interface{})
-		textData := data["text"].(string)
+		var entry map[string]interface{}
+		if parseErr := json.Unmarshal([]byte(entryJson), &entry); parseErr != nil {
+			return fmt.Errorf("failed to parse entry, err: %v", parseErr)
+		}
+
+		entryRequest := entry["request"].(map[string]interface{})
+		entryPayload := entryRequest["payload"].(map[string]interface{})
+		entryDetails := entryPayload["details"].(map[string]interface{})
+
+		postData := entryDetails["postData"].(map[string]interface{})
+		textData := postData["text"].(string)
 
 		if textData != "[REDACTED]" {
 			return fmt.Errorf("unexpected result - body is not redacted")

@@ -1,4 +1,4 @@
-![Mizu: The API Traffic Viewer for Kubernetes](assets/mizu-logo.svg)
+![Mizu: The API Traffic Viewer for Kubernetes](../assets/mizu-logo.svg)
 # Kubernetes permissions for MIZU  
 
 This document describes in details all permissions required for full and correct operation of Mizu

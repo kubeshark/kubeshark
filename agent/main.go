@@ -52,14 +52,16 @@ func main() {
 		panic("One of the flags --tap, --api or --standalone or --hars-read must be provided")
 	}
 
+	filteringOptions := getTrafficFilteringOptions()
+
 	if *standaloneMode {
 		api.StartResolving(*namespace)
 
 		outputItemsChannel := make(chan *tapApi.OutputChannelItem)
 		filteredOutputItemsChannel := make(chan *tapApi.OutputChannelItem)
-		tap.StartPassiveTapper(tapOpts, outputItemsChannel, extensions)
+		tap.StartPassiveTapper(tapOpts, outputItemsChannel, extensions, filteringOptions)
 
-		go filterItems(outputItemsChannel, filteredOutputItemsChannel, getTrafficFilteringOptions())
+		go filterItems(outputItemsChannel, filteredOutputItemsChannel, filteringOptions)
 		go api.StartReadingEntries(filteredOutputItemsChannel, nil, extensionsMap)
 		// go api.StartReadingOutbound(outboundLinkOutputChannel)
 
@@ -79,7 +81,7 @@ func main() {
 
 		// harOutputChannel, outboundLinkOutputChannel := tap.StartPassiveTapper(tapOpts)
 		filteredOutputItemsChannel := make(chan *tapApi.OutputChannelItem)
-		tap.StartPassiveTapper(tapOpts, filteredOutputItemsChannel, extensions)
+		tap.StartPassiveTapper(tapOpts, filteredOutputItemsChannel, extensions, filteringOptions)
 		socketConnection, err := shared.ConnectToSocketServer(*apiServerAddress, shared.DEFAULT_SOCKET_RETRIES, shared.DEFAULT_SOCKET_RETRY_SLEEP_TIME, false)
 		if err != nil {
 			panic(fmt.Sprintf("Error connecting to socket server at %s %v", *apiServerAddress, err))
@@ -106,7 +108,7 @@ func main() {
 		outputItemsChannel := make(chan *tapApi.OutputChannelItem)
 		filteredOutputItemsChannel := make(chan *tapApi.OutputChannelItem)
 
-		go filterItems(outputItemsChannel, filteredOutputItemsChannel, getTrafficFilteringOptions())
+		go filterItems(outputItemsChannel, filteredOutputItemsChannel, filteringOptions)
 		go api.StartReadingEntries(filteredOutputItemsChannel, nil, extensionsMap)
 
 		hostApi(outputItemsChannel)
@@ -114,7 +116,7 @@ func main() {
 		outputItemsChannel := make(chan *tapApi.OutputChannelItem, 1000)
 		filteredHarChannel := make(chan *tapApi.OutputChannelItem)
 
-		go filterItems(outputItemsChannel, filteredHarChannel, getTrafficFilteringOptions())
+		go filterItems(outputItemsChannel, filteredHarChannel, filteringOptions)
 		go api.StartReadingEntries(filteredHarChannel, harsDir, extensionsMap)
 		hostApi(nil)
 	}
@@ -242,23 +244,23 @@ func getTapTargets() []string {
 	return tappedAddressesPerNodeDict[nodeName]
 }
 
-func getTrafficFilteringOptions() *shared.TrafficFilteringOptions {
+func getTrafficFilteringOptions() *tapApi.TrafficFilteringOptions {
 	filteringOptionsJson := os.Getenv(shared.MizuFilteringOptionsEnvVar)
 	if filteringOptionsJson == "" {
-		return &shared.TrafficFilteringOptions{
+		return &tapApi.TrafficFilteringOptions{
 			HealthChecksUserAgentHeaders: []string{},
 		}
 	}
-	var filteringOptions shared.TrafficFilteringOptions
+	var filteringOptions tapApi.TrafficFilteringOptions
 	err := json.Unmarshal([]byte(filteringOptionsJson), &filteringOptions)
 	if err != nil {
-		panic(fmt.Sprintf("env var %s's value of %s is invalid! json must match the shared.TrafficFilteringOptions struct %v", shared.MizuFilteringOptionsEnvVar, filteringOptionsJson, err))
+		panic(fmt.Sprintf("env var %s's value of %s is invalid! json must match the api.TrafficFilteringOptions struct %v", shared.MizuFilteringOptionsEnvVar, filteringOptionsJson, err))
 	}
 
 	return &filteringOptions
 }
 
-func filterItems(inChannel <-chan *tapApi.OutputChannelItem, outChannel chan *tapApi.OutputChannelItem, filterOptions *shared.TrafficFilteringOptions) {
+func filterItems(inChannel <-chan *tapApi.OutputChannelItem, outChannel chan *tapApi.OutputChannelItem, filterOptions *tapApi.TrafficFilteringOptions) {
 	for message := range inChannel {
 		if message.ConnectionInfo.IsOutgoing && api.CheckIsServiceIP(message.ConnectionInfo.ServerIP) {
 			continue
@@ -267,10 +269,6 @@ func filterItems(inChannel <-chan *tapApi.OutputChannelItem, outChannel chan *ta
 		if isHealthCheckByUserAgent(message, filterOptions.HealthChecksUserAgentHeaders) {
 			continue
 		}
-
-		// if !filterOptions.DisableRedaction {
-		// 	sensitiveDataFiltering.FilterSensitiveInfoFromHarRequest(message, filterOptions)
-		// }
 
 		outChannel <- message
 	}

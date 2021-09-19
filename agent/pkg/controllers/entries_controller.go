@@ -178,11 +178,23 @@ func GetEntry(c *gin.Context) {
 
 	extension := extensionsMap[entryData.Protocol.Name]
 	protocol, representation, bodySize, _ := extension.Dissector.Represent(&entryData)
+
+	var rules []map[string]interface{}
+	if entryData.ProtocolName == "http" {
+		var pair tapApi.RequestResponsePair
+		json.Unmarshal([]byte(entryData.Entry), &pair)
+		harEntry, _ := utils.NewEntry(&pair)
+		_, rulesMatched := models.RunValidationRulesState(*harEntry, entryData.Service)
+		inrec, _ := json.Marshal(rulesMatched)
+		json.Unmarshal(inrec, &rules)
+	}
+
 	c.JSON(http.StatusOK, tapApi.MizuEntryWrapper{
 		Protocol:       protocol,
 		Representation: string(representation),
 		BodySize:       bodySize,
 		Data:           entryData,
+		Rules:          rules,
 	})
 }
 

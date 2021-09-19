@@ -215,10 +215,10 @@ export const EntryTablePolicySection: React.FC<EntryPolicySectionProps> = ({serv
                                                 <>
                                                     {
                                                         rule.Key &&
-                                                        <tr className={styles.dataValue}><td><b>Key</b>:</td><td>{rule.Key}</td></tr>
+                                                        <tr className={styles.dataValue}><td><b>Key:</b></td> <td>{rule.Key}</td></tr>
                                                     }
                                                     {
-                                                        rule.Latency &&
+                                                        rule.Latency !== 0 &&
                                                         <tr className={styles.dataValue}><td><b>Latency:</b></td> <td>{rule.Latency}</td></tr>
                                                     }
                                                     {
@@ -231,7 +231,7 @@ export const EntryTablePolicySection: React.FC<EntryPolicySectionProps> = ({serv
                                                     }
                                                     {
                                                         rule.Service &&
-                                                        <tr className={styles.dataValue}><td><b>Service:</b></td> <td>{service}</td></tr>
+                                                        <tr className={styles.dataValue}><td><b>Service:</b></td> <td>{rule.Service}</td></tr>
                                                     }
                                                     {
                                                         rule.Type &&
@@ -251,7 +251,7 @@ export const EntryTablePolicySection: React.FC<EntryPolicySectionProps> = ({serv
                         </tbody>
                     </table>
                 </EntrySectionContainer>
-                </> : <span/>
+                </> : <span className={styles.noRules}>No rules could be applied to this request.</span>
         }
     </React.Fragment>
 }

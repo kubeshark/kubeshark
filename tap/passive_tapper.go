@@ -93,9 +93,10 @@ var outputLevel int
 var errorsMap map[string]uint
 var errorsMapMutex sync.Mutex
 var nErrors uint
-var ownIps []string             // global
-var hostMode bool               // global
-var extensions []*api.Extension // global
+var ownIps []string                               // global
+var hostMode bool                                 // global
+var extensions []*api.Extension                   // global
+var filteringOptions *api.TrafficFilteringOptions // global
 
 const baseStreamChannelTimeoutMs int = 5000 * 100
 
@@ -161,9 +162,10 @@ func (c *Context) GetCaptureInfo() gopacket.CaptureInfo {
 	return c.CaptureInfo
 }
 
-func StartPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem, extensionsRef []*api.Extension) {
+func StartPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem, extensionsRef []*api.Extension, options *api.TrafficFilteringOptions) {
 	hostMode = opts.HostMode
 	extensions = extensionsRef
+	filteringOptions = options
 
 	if GetMemoryProfilingEnabled() {
 		startMemoryProfiler()

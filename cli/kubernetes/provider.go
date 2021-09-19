@@ -18,6 +18,7 @@ import (
 
 	"github.com/up9inc/mizu/cli/mizu"
 	"github.com/up9inc/mizu/shared"
+	"github.com/up9inc/mizu/tap/api"
 	core "k8s.io/api/core/v1"
 	rbac "k8s.io/api/rbac/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
@@ -150,7 +151,7 @@ type ApiServerOptions struct {
 	PodImage                string
 	ServiceAccountName      string
 	IsNamespaceRestricted   bool
-	MizuApiFilteringOptions *shared.TrafficFilteringOptions
+	MizuApiFilteringOptions *api.TrafficFilteringOptions
 	MaxEntriesDBSizeBytes   int64
 	Resources               configStructs.Resources
 	ImagePullPolicy         core.PullPolicy
@@ -575,7 +576,7 @@ func (provider *Provider) CreateConfigMap(ctx context.Context, namespace string,
 	return nil
 }
 
-func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, apiServerPodIp string, nodeToTappedPodIPMap map[string][]string, serviceAccountName string, resources configStructs.Resources, imagePullPolicy core.PullPolicy) error {
+func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, apiServerPodIp string, nodeToTappedPodIPMap map[string][]string, serviceAccountName string, resources configStructs.Resources, imagePullPolicy core.PullPolicy, mizuApiFilteringOptions *api.TrafficFilteringOptions) error {
 	logger.Log.Debugf("Applying %d tapper daemon sets, ns: %s, daemonSetName: %s, podImage: %s, tapperPodName: %s", len(nodeToTappedPodIPMap), namespace, daemonSetName, podImage, tapperPodName)
 
 	if len(nodeToTappedPodIPMap) == 0 {
@@ -583,6 +584,11 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	}
 
 	nodeToTappedPodIPMapJsonStr, err := json.Marshal(nodeToTappedPodIPMap)
+	if err != nil {
+		return err
+	}
+
+	marshaledFilteringOptions, err := json.Marshal(mizuApiFilteringOptions)
 	if err != nil {
 		return err
 	}
@@ -605,6 +611,7 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 		applyconfcore.EnvVar().WithName(shared.HostModeEnvVar).WithValue("1"),
 		applyconfcore.EnvVar().WithName(shared.TappedAddressesPerNodeDictEnvVar).WithValue(string(nodeToTappedPodIPMapJsonStr)),
 		applyconfcore.EnvVar().WithName(shared.GoGCEnvVar).WithValue("12800"),
+		applyconfcore.EnvVar().WithName(shared.MizuFilteringOptionsEnvVar).WithValue(string(marshaledFilteringOptions)),
 	)
 	agentContainer.WithEnv(
 		applyconfcore.EnvVar().WithName(shared.NodeNameEnvVar).WithValueFrom(

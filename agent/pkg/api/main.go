@@ -116,6 +116,15 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 		baseEntry := extension.Dissector.Summarize(mizuEntry)
 		mizuEntry.EstimatedSizeBytes = getEstimatedEntrySizeBytes(mizuEntry)
 		mizuEntry.Summary = baseEntry
+		if extension.Protocol.Name == "http" {
+			var pair tapApi.RequestResponsePair
+			json.Unmarshal([]byte(mizuEntry.Entry), &pair)
+			harEntry, _ := utils.NewEntry(&pair)
+			rules, _ := models.RunValidationRulesState(*harEntry, mizuEntry.Service)
+			baseEntry.Rules = rules
+			baseEntry.Latency = mizuEntry.ElapsedTime
+		}
+
 		Insert(mizuEntry, conn)
 	}
 }

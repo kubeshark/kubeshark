@@ -3,7 +3,6 @@ package models
 import (
 	"encoding/json"
 	"mizuserver/pkg/rules"
-	"mizuserver/pkg/utils"
 
 	tapApi "github.com/up9inc/mizu/tap/api"
 
@@ -15,15 +14,6 @@ import (
 func GetEntry(r *tapApi.MizuEntry, v tapApi.DataUnmarshaler) error {
 	return v.UnmarshalData(r)
 }
-
-// TODO: until we fixed the Rules feature
-//func NewApplicableRules(status bool, latency int64, number int) tapApi.ApplicableRules {
-//	ar := tapApi.ApplicableRules{}
-//	ar.Status = status
-//	ar.Latency = latency
-//	ar.NumberOfRules = number
-//	return ar
-//}
 
 type EntriesFilter struct {
 	Limit     int    `form:"limit" validate:"required,min=1,max=200"`
@@ -106,33 +96,8 @@ type ExtendedCreator struct {
 	Source *string `json:"_source"`
 }
 
-type FullEntryWithPolicy struct {
-	RulesMatched []rules.RulesMatched `json:"rulesMatched,omitempty"`
-	Entry        har.Entry            `json:"entry"`
-	Service      string               `json:"service"`
+func RunValidationRulesState(harEntry har.Entry, service string) (tapApi.ApplicableRules, []rules.RulesMatched) {
+	resultPolicyToSend := rules.MatchRequestPolicy(harEntry, service)
+	statusPolicyToSend, latency, numberOfRules := rules.PassedValidationRules(resultPolicyToSend)
+	return tapApi.ApplicableRules{Status: statusPolicyToSend, Latency: latency, NumberOfRules: numberOfRules}, resultPolicyToSend
 }
-
-func (fewp *FullEntryWithPolicy) UnmarshalData(entry *tapApi.MizuEntry) error {
-	var pair tapApi.RequestResponsePair
-	if err := json.Unmarshal([]byte(entry.Entry), &pair); err != nil {
-		return err
-	}
-	harEntry, err := utils.NewEntry(&pair)
-	if err != nil {
-		return err
-	}
-	fewp.Entry = *harEntry
-
-	_, resultPolicyToSend := rules.MatchRequestPolicy(fewp.Entry, entry.Service)
-	fewp.RulesMatched = resultPolicyToSend
-	fewp.Service = entry.Service
-	return nil
-}
-
-// TODO: until we fixed the Rules feature
-//func RunValidationRulesState(harEntry har.Entry, service string) tapApi.ApplicableRules {
-//	numberOfRules, resultPolicyToSend := rules.MatchRequestPolicy(harEntry, service)
-//	statusPolicyToSend, latency, numberOfRules := rules.PassedValidationRules(resultPolicyToSend, numberOfRules)
-//	ar := NewApplicableRules(statusPolicyToSend, latency, numberOfRules)
-//	return ar
-//}

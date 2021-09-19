@@ -74,12 +74,6 @@ func CreateWebSocketMessageTypeAnalyzeStatus(analyzeStatus AnalyzeStatus) WebSoc
 	}
 }
 
-type TrafficFilteringOptions struct {
-	HealthChecksUserAgentHeaders []string
-	PlainTextMaskingRegexes      []*SerializableRegexp
-	DisableRedaction             bool
-}
-
 type VersionResponse struct {
 	SemVer string `json:"semver"`
 }
@@ -97,6 +91,11 @@ type RulePolicy struct {
 	Value   string `yaml:"value"`
 	Latency int64  `yaml:"latency"`
 	Name    string `yaml:"name"`
+}
+
+type RulesMatched struct {
+	Matched bool       `json:"matched"`
+	Rule    RulePolicy `json:"rule"`
 }
 
 func (r *RulePolicy) validateType() bool {
