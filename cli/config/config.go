@@ -3,12 +3,10 @@ package config
 import (
 	"errors"
 	"fmt"
-	"github.com/up9inc/mizu/cli/config/configStructs"
 	"github.com/up9inc/mizu/cli/logger"
 	"github.com/up9inc/mizu/cli/mizu"
 	"io/ioutil"
 	"os"
-	"path"
 	"reflect"
 	"strconv"
 	"strings"
@@ -28,20 +26,9 @@ const (
 )
 
 var (
-	Config = ConfigStruct{}
+	Config  = ConfigStruct{}
 	cmdName string
 )
-
-func (config *ConfigStruct) Validate() error {
-	if config.IsNsRestrictedMode() {
-		if config.Tap.AllNamespaces || len(config.Tap.Namespaces) != 1 || config.Tap.Namespaces[0] != config.MizuResourcesNamespace {
-			return fmt.Errorf("Not supported mode. Mizu can't resolve IPs in other namespaces when running in namespace restricted mode.\n"+
-				"You can use the same namespace for --%s and --%s", configStructs.NamespacesTapName, MizuResourcesNamespaceConfigName)
-		}
-	}
-
-	return nil
-}
 
 func InitConfig(cmd *cobra.Command) error {
 	cmdName = cmd.Name()
@@ -50,9 +37,13 @@ func InitConfig(cmd *cobra.Command) error {
 		return err
 	}
 
-	if err := mergeConfigFile(); err != nil {
-		return fmt.Errorf("invalid config %w\n"+
-			"you can regenerate the file using `mizu config -r` or just remove it %v", err, GetConfigFilePath())
+	configFilePathFlag := cmd.Flags().Lookup(ConfigFilePathCommandName)
+	configFilePath := configFilePathFlag.Value.String()
+	if err := mergeConfigFile(configFilePath); err != nil {
+		if configFilePathFlag.Changed || !os.IsNotExist(err) {
+			return fmt.Errorf("invalid config, %w\n"+
+				"you can regenerate the file by removing it (%v) and using `mizu config -r`", err, configFilePath)
+		}
 	}
 
 	cmd.Flags().Visit(initFlag)
@@ -75,14 +66,10 @@ func GetConfigWithDefaults() (string, error) {
 	return uiUtils.PrettyYaml(defaultConf)
 }
 
-func GetConfigFilePath() string {
-	return path.Join(mizu.GetMizuFolderPath(), "config.yaml")
-}
-
-func mergeConfigFile() error {
-	reader, openErr := os.Open(GetConfigFilePath())
+func mergeConfigFile(configFilePath string) error {
+	reader, openErr := os.Open(configFilePath)
 	if openErr != nil {
-		return nil
+		return openErr
 	}
 
 	buf, readErr := ioutil.ReadAll(reader)
@@ -101,7 +88,12 @@ func mergeConfigFile() error {
 func initFlag(f *pflag.Flag) {
 	configElemValue := reflect.ValueOf(&Config).Elem()
 
-	flagPath := []string {cmdName, f.Name}
+	var flagPath []string
+	if mizu.Contains([]string{ConfigFilePathCommandName}, f.Name) {
+		flagPath = []string{f.Name}
+	} else {
+		flagPath = []string{cmdName, f.Name}
+	}
 
 	sliceValue, isSliceValue := f.Value.(pflag.SliceValue)
 	if !isSliceValue {

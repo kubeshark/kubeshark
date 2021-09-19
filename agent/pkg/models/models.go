@@ -3,121 +3,17 @@ package models
 import (
 	"encoding/json"
 
+	tapApi "github.com/up9inc/mizu/tap/api"
+
 	"mizuserver/pkg/rules"
-	"mizuserver/pkg/utils"
-	"time"
 
 	"github.com/google/martian/har"
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/tap"
 )
 
-type DataUnmarshaler interface {
-	UnmarshalData(*MizuEntry) error
-}
-
-func GetEntry(r *MizuEntry, v DataUnmarshaler) error {
+func GetEntry(r *tapApi.MizuEntry, v tapApi.DataUnmarshaler) error {
 	return v.UnmarshalData(r)
-}
-
-type MizuEntry struct {
-	ID                  uint `gorm:"primarykey"`
-	CreatedAt           time.Time
-	UpdatedAt           time.Time
-	Entry               string `json:"entry,omitempty" gorm:"column:entry"`
-	EntryId             string `json:"entryId" gorm:"column:entryId"`
-	Url                 string `json:"url" gorm:"column:url"`
-	Method              string `json:"method" gorm:"column:method"`
-	Status              int    `json:"status" gorm:"column:status"`
-	RequestSenderIp     string `json:"requestSenderIp" gorm:"column:requestSenderIp"`
-	Service             string `json:"service" gorm:"column:service"`
-	Timestamp           int64  `json:"timestamp" gorm:"column:timestamp"`
-	Path                string `json:"path" gorm:"column:path"`
-	ResolvedSource      string `json:"resolvedSource,omitempty" gorm:"column:resolvedSource"`
-	ResolvedDestination string `json:"resolvedDestination,omitempty" gorm:"column:resolvedDestination"`
-	IsOutgoing          bool   `json:"isOutgoing,omitempty" gorm:"column:isOutgoing"`
-	EstimatedSizeBytes  int    `json:"-" gorm:"column:estimatedSizeBytes"`
-}
-
-type BaseEntryDetails struct {
-	Id              string          `json:"id,omitempty"`
-	Url             string          `json:"url,omitempty"`
-	RequestSenderIp string          `json:"requestSenderIp,omitempty"`
-	Service         string          `json:"service,omitempty"`
-	Path            string          `json:"path,omitempty"`
-	StatusCode      int             `json:"statusCode,omitempty"`
-	Method          string          `json:"method,omitempty"`
-	Timestamp       int64           `json:"timestamp,omitempty"`
-	IsOutgoing      bool            `json:"isOutgoing,omitempty"`
-	Latency         int64           `json:"latency,omitempty"`
-	Rules           ApplicableRules `json:"rules,omitempty"`
-}
-
-type ApplicableRules struct {
-	Latency int64 `json:"latency,omitempty"`
-	Status  bool  `json:"status,omitempty"`
-	NumberOfRules int `json:"numberOfRules,omitempty"`
-}
-
-func NewApplicableRules(status bool, latency int64, number int) ApplicableRules {
-	ar := ApplicableRules{}
-	ar.Status = status
-	ar.Latency = latency
-	ar.NumberOfRules = number
-	return ar
-}
-
-type FullEntryDetails struct {
-	har.Entry
-}
-
-type FullEntryDetailsExtra struct {
-	har.Entry
-}
-
-func (bed *BaseEntryDetails) UnmarshalData(entry *MizuEntry) error {
-	entryUrl := entry.Url
-	service := entry.Service
-	if entry.ResolvedDestination != "" {
-		entryUrl = utils.SetHostname(entryUrl, entry.ResolvedDestination)
-		service = utils.SetHostname(service, entry.ResolvedDestination)
-	}
-	bed.Id = entry.EntryId
-	bed.Url = entryUrl
-	bed.Service = service
-	bed.Path = entry.Path
-	bed.StatusCode = entry.Status
-	bed.Method = entry.Method
-	bed.Timestamp = entry.Timestamp
-	bed.RequestSenderIp = entry.RequestSenderIp
-	bed.IsOutgoing = entry.IsOutgoing
-	return nil
-}
-
-func (fed *FullEntryDetails) UnmarshalData(entry *MizuEntry) error {
-	if err := json.Unmarshal([]byte(entry.Entry), &fed.Entry); err != nil {
-		return err
-	}
-
-	if entry.ResolvedDestination != "" {
-		fed.Entry.Request.URL = utils.SetHostname(fed.Entry.Request.URL, entry.ResolvedDestination)
-	}
-	return nil
-}
-
-func (fedex *FullEntryDetailsExtra) UnmarshalData(entry *MizuEntry) error {
-	if err := json.Unmarshal([]byte(entry.Entry), &fedex.Entry); err != nil {
-		return err
-	}
-
-	if entry.ResolvedSource != "" {
-		fedex.Entry.Request.Headers = append(fedex.Request.Headers, har.Header{Name: "x-mizu-source", Value: entry.ResolvedSource})
-	}
-	if entry.ResolvedDestination != "" {
-		fedex.Entry.Request.Headers = append(fedex.Request.Headers, har.Header{Name: "x-mizu-destination", Value: entry.ResolvedDestination})
-		fedex.Entry.Request.URL = utils.SetHostname(fedex.Entry.Request.URL, entry.ResolvedDestination)
-	}
-	return nil
 }
 
 type EntriesFilter struct {
@@ -138,12 +34,12 @@ type HarFetchRequestQuery struct {
 
 type WebSocketEntryMessage struct {
 	*shared.WebSocketMessageMetadata
-	Data *BaseEntryDetails `json:"data,omitempty"`
+	Data *tapApi.BaseEntryDetails `json:"data,omitempty"`
 }
 
 type WebSocketTappedEntryMessage struct {
 	*shared.WebSocketMessageMetadata
-	Data *tap.OutputChannelItem
+	Data *tapApi.OutputChannelItem
 }
 
 type WebsocketOutboundLinkMessage struct {
@@ -151,7 +47,7 @@ type WebsocketOutboundLinkMessage struct {
 	Data *tap.OutboundLink
 }
 
-func CreateBaseEntryWebSocketMessage(base *BaseEntryDetails) ([]byte, error) {
+func CreateBaseEntryWebSocketMessage(base *tapApi.BaseEntryDetails) ([]byte, error) {
 	message := &WebSocketEntryMessage{
 		WebSocketMessageMetadata: &shared.WebSocketMessageMetadata{
 			MessageType: shared.WebSocketMessageTypeEntry,
@@ -161,7 +57,7 @@ func CreateBaseEntryWebSocketMessage(base *BaseEntryDetails) ([]byte, error) {
 	return json.Marshal(message)
 }
 
-func CreateWebsocketTappedEntryMessage(base *tap.OutputChannelItem) ([]byte, error) {
+func CreateWebsocketTappedEntryMessage(base *tapApi.OutputChannelItem) ([]byte, error) {
 	message := &WebSocketTappedEntryMessage{
 		WebSocketMessageMetadata: &shared.WebSocketMessageMetadata{
 			MessageType: shared.WebSocketMessageTypeTappedEntry,
@@ -201,26 +97,8 @@ type ExtendedCreator struct {
 	Source *string `json:"_source"`
 }
 
-type FullEntryWithPolicy struct {
-	RulesMatched []rules.RulesMatched `json:"rulesMatched,omitempty"`
-	Entry        har.Entry            `json:"entry"`
-	Service      string               `json:"service"`
-}
-
-func (fewp *FullEntryWithPolicy) UnmarshalData(entry *MizuEntry) error {
-	if err := json.Unmarshal([]byte(entry.Entry), &fewp.Entry); err != nil {
-		return err
-	}
-
-	_, resultPolicyToSend := rules.MatchRequestPolicy(fewp.Entry, entry.Service)
-	fewp.RulesMatched = resultPolicyToSend
-	fewp.Service = entry.Service
-	return nil
-}
-
-func RunValidationRulesState(harEntry har.Entry, service string) ApplicableRules {
-	numberOfRules, resultPolicyToSend := rules.MatchRequestPolicy(harEntry, service)
-	statusPolicyToSend, latency, numberOfRules := rules.PassedValidationRules(resultPolicyToSend, numberOfRules)
-	ar := NewApplicableRules(statusPolicyToSend, latency, numberOfRules)
-	return ar
+func RunValidationRulesState(harEntry har.Entry, service string) (tapApi.ApplicableRules, []rules.RulesMatched) {
+	resultPolicyToSend := rules.MatchRequestPolicy(harEntry, service)
+	statusPolicyToSend, latency, numberOfRules := rules.PassedValidationRules(resultPolicyToSend)
+	return tapApi.ApplicableRules{Status: statusPolicyToSend, Latency: latency, NumberOfRules: numberOfRules}, resultPolicyToSend
 }

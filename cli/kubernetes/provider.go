@@ -7,16 +7,18 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/up9inc/mizu/cli/config/configStructs"
-	"github.com/up9inc/mizu/cli/logger"
-	"os"
 	"path/filepath"
 	"regexp"
 	"strconv"
 
+	"github.com/up9inc/mizu/cli/config/configStructs"
+	"github.com/up9inc/mizu/cli/logger"
+
+	"io"
+
 	"github.com/up9inc/mizu/cli/mizu"
 	"github.com/up9inc/mizu/shared"
-	"io"
+	"github.com/up9inc/mizu/tap/api"
 	core "k8s.io/api/core/v1"
 	rbac "k8s.io/api/rbac/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
@@ -38,7 +40,6 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	_ "k8s.io/client-go/tools/portforward"
 	watchtools "k8s.io/client-go/tools/watch"
-	"k8s.io/client-go/util/homedir"
 )
 
 type Provider struct {
@@ -57,13 +58,23 @@ func NewProvider(kubeConfigPath string) (*Provider, error) {
 	restClientConfig, err := kubernetesConfig.ClientConfig()
 	if err != nil {
 		if clientcmd.IsEmptyConfig(err) {
-			return nil, fmt.Errorf("Couldn't find the kube config file, or file is empty. Try adding '--kube-config=<path to kube config file>'\n")
+			return nil, fmt.Errorf("couldn't find the kube config file, or file is empty (%s)\n"+
+				"you can set alternative kube config file path by adding the kube-config-path field to the mizu config file, err:  %w", kubeConfigPath, err)
 		}
 		if clientcmd.IsConfigurationInvalid(err) {
-			return nil, fmt.Errorf("Invalid kube config file. Try using a different config with '--kube-config=<path to kube config file>'\n")
+			return nil, fmt.Errorf("invalid kube config file (%s)\n"+
+				"you can set alternative kube config file path by adding the kube-config-path field to the mizu config file, err:  %w", kubeConfigPath, err)
 		}
+
+		return nil, fmt.Errorf("error while using kube config (%s)\n"+
+			"you can set alternative kube config file path by adding the kube-config-path field to the mizu config file, err:  %w", kubeConfigPath, err)
 	}
-	clientSet := getClientSet(restClientConfig)
+
+	clientSet, err := getClientSet(restClientConfig)
+	if err != nil {
+		return nil, fmt.Errorf("error while using kube config (%s)\n"+
+			"you can set alternative kube config file path by adding the kube-config-path field to the mizu config file, err:  %w", kubeConfigPath, err)
+	}
 
 	return &Provider{
 		clientSet:        clientSet,
@@ -140,11 +151,13 @@ type ApiServerOptions struct {
 	PodImage                string
 	ServiceAccountName      string
 	IsNamespaceRestricted   bool
-	MizuApiFilteringOptions *shared.TrafficFilteringOptions
+	MizuApiFilteringOptions *api.TrafficFilteringOptions
 	MaxEntriesDBSizeBytes   int64
+	Resources               configStructs.Resources
+	ImagePullPolicy         core.PullPolicy
 }
 
-func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, opts *ApiServerOptions, resources configStructs.Resources) (*core.Pod, error) {
+func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, opts *ApiServerOptions) (*core.Pod, error) {
 	marshaledFilteringOptions, err := json.Marshal(opts.MizuApiFilteringOptions)
 	if err != nil {
 		return nil, err
@@ -154,19 +167,19 @@ func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, opts *ApiS
 	configMapOptional := true
 	configMapVolumeName.Optional = &configMapOptional
 
-	cpuLimit, err := resource.ParseQuantity(resources.CpuLimit)
+	cpuLimit, err := resource.ParseQuantity(opts.Resources.CpuLimit)
 	if err != nil {
 		return nil, errors.New(fmt.Sprintf("invalid cpu limit for %s container", opts.PodName))
 	}
-	memLimit, err := resource.ParseQuantity(resources.MemoryLimit)
+	memLimit, err := resource.ParseQuantity(opts.Resources.MemoryLimit)
 	if err != nil {
 		return nil, errors.New(fmt.Sprintf("invalid memory limit for %s container", opts.PodName))
 	}
-	cpuRequests, err := resource.ParseQuantity(resources.CpuRequests)
+	cpuRequests, err := resource.ParseQuantity(opts.Resources.CpuRequests)
 	if err != nil {
 		return nil, errors.New(fmt.Sprintf("invalid cpu request for %s container", opts.PodName))
 	}
-	memRequests, err := resource.ParseQuantity(resources.MemoryRequests)
+	memRequests, err := resource.ParseQuantity(opts.Resources.MemoryRequests)
 	if err != nil {
 		return nil, errors.New(fmt.Sprintf("invalid memory request for %s container", opts.PodName))
 	}
@@ -187,7 +200,7 @@ func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, opts *ApiS
 				{
 					Name:            opts.PodName,
 					Image:           opts.PodImage,
-					ImagePullPolicy: core.PullAlways,
+					ImagePullPolicy: opts.ImagePullPolicy,
 					VolumeMounts: []core.VolumeMount{
 						{
 							Name:      mizu.ConfigMapName,
@@ -563,11 +576,11 @@ func (provider *Provider) CreateConfigMap(ctx context.Context, namespace string,
 	return nil
 }
 
-func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, apiServerPodIp string, nodeToTappedPodIPMap map[string][]string, serviceAccountName string, tapOutgoing bool, resources configStructs.Resources) error {
-	logger.Log.Debugf("Applying %d tapper deamonsets, ns: %s, daemonSetName: %s, podImage: %s, tapperPodName: %s", len(nodeToTappedPodIPMap), namespace, daemonSetName, podImage, tapperPodName)
+func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, apiServerPodIp string, nodeToTappedPodIPMap map[string][]string, serviceAccountName string, resources configStructs.Resources, imagePullPolicy core.PullPolicy) error {
+	logger.Log.Debugf("Applying %d tapper daemon sets, ns: %s, daemonSetName: %s, podImage: %s, tapperPodName: %s", len(nodeToTappedPodIPMap), namespace, daemonSetName, podImage, tapperPodName)
 
 	if len(nodeToTappedPodIPMap) == 0 {
-		return fmt.Errorf("Daemon set %s must tap at least 1 pod", daemonSetName)
+		return fmt.Errorf("daemon set %s must tap at least 1 pod", daemonSetName)
 	}
 
 	nodeToTappedPodIPMapJsonStr, err := json.Marshal(nodeToTappedPodIPMap)
@@ -580,20 +593,19 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 		"-i", "any",
 		"--tap",
 		"--api-server-address", fmt.Sprintf("ws://%s/wsTapper", apiServerPodIp),
-	}
-	if tapOutgoing {
-		mizuCmd = append(mizuCmd, "--anydirection")
+		"--nodefrag",
 	}
 
 	agentContainer := applyconfcore.Container()
 	agentContainer.WithName(tapperPodName)
 	agentContainer.WithImage(podImage)
-	agentContainer.WithImagePullPolicy(core.PullAlways)
+	agentContainer.WithImagePullPolicy(imagePullPolicy)
 	agentContainer.WithSecurityContext(applyconfcore.SecurityContext().WithPrivileged(true))
 	agentContainer.WithCommand(mizuCmd...)
 	agentContainer.WithEnv(
 		applyconfcore.EnvVar().WithName(shared.HostModeEnvVar).WithValue("1"),
 		applyconfcore.EnvVar().WithName(shared.TappedAddressesPerNodeDictEnvVar).WithValue(string(nodeToTappedPodIPMapJsonStr)),
+		applyconfcore.EnvVar().WithName(shared.GoGCEnvVar).WithValue("12800"),
 	)
 	agentContainer.WithEnv(
 		applyconfcore.EnvVar().WithName(shared.NodeNameEnvVar).WithValueFrom(
@@ -729,24 +741,26 @@ func (provider *Provider) GetPodLogs(namespace string, podName string, ctx conte
 	return str, nil
 }
 
-func getClientSet(config *restclient.Config) *kubernetes.Clientset {
+func (provider *Provider) GetNamespaceEvents(namespace string, ctx context.Context) (string, error) {
+	eventsOpts := metav1.ListOptions{}
+	eventList, err := provider.clientSet.CoreV1().Events(namespace).List(ctx, eventsOpts)
+	if err != nil {
+		return "", fmt.Errorf("error getting events on ns: %s, %w", namespace, err)
+	}
+
+	return eventList.String(), nil
+}
+
+func getClientSet(config *restclient.Config) (*kubernetes.Clientset, error) {
 	clientSet, err := kubernetes.NewForConfig(config)
 	if err != nil {
-		panic(err.Error())
+		return nil, err
 	}
-	return clientSet
+
+	return clientSet, nil
 }
 
 func loadKubernetesConfiguration(kubeConfigPath string) clientcmd.ClientConfig {
-	if kubeConfigPath == "" {
-		kubeConfigPath = os.Getenv("KUBECONFIG")
-	}
-
-	if kubeConfigPath == "" {
-		home := homedir.HomeDir()
-		kubeConfigPath = filepath.Join(home, ".kube", "config")
-	}
-
 	logger.Log.Debugf("Using kube config %s", kubeConfigPath)
 	configPathList := filepath.SplitList(kubeConfigPath)
 	configLoadingRules := &clientcmd.ClientConfigLoadingRules{}

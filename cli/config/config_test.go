@@ -1,6 +1,7 @@
 package config_test
 
 import (
+	"fmt"
 	"github.com/up9inc/mizu/cli/config"
 	"reflect"
 	"strings"
@@ -15,9 +16,12 @@ func TestConfigWriteIgnoresReadonlyFields(t *testing.T) {
 
 	configWithDefaults, _ := config.GetConfigWithDefaults()
 	for _, readonlyField := range readonlyFields {
-		if strings.Contains(configWithDefaults, readonlyField) {
-			t.Errorf("unexpected result - readonly field: %v, config: %v", readonlyField, configWithDefaults)
-		}
+		t.Run(readonlyField, func(t *testing.T) {
+			readonlyFieldToCheck := fmt.Sprintf("\n%s:", readonlyField)
+			if strings.Contains(configWithDefaults, readonlyFieldToCheck) {
+				t.Errorf("unexpected result - readonly field: %v, config: %v", readonlyField, configWithDefaults)
+			}
+		})
 	}
 }
 

@@ -1,0 +1,73 @@
+@import "../../variables.module"
+
+.list
+  overflow: scroll
+  display: flex
+  flex-grow: 1
+  flex-direction: column
+  justify-content: space-between
+  position: relative
+
+.container
+  position: relative
+  display: flex
+  flex-direction: column
+  overflow: hidden
+  flex-grow: 1
+
+.footer
+  display: flex
+  justify-content: space-between
+  border-top: 1px solid #BCC6DD
+  align-items: center
+  padding-top: 10px
+  margin-right: 15px
+
+.styledButton
+  cursor: pointer
+  line-height: 1
+  border-radius: 20px
+  letter-spacing: .02857em
+  color: #627ef7
+  border: 1px solid rgba(98, 126, 247, 0.5)
+  padding: 5px 18px
+  transition: background-color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms,box-shadow 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms,border 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms
+  font-weight: 600
+
+.styledButton:hover
+  border: 1px solid #627ef7
+  background-color: rgba(255, 255, 255, 0.06)
+
+.spinnerContainer
+  display: flex
+  justify-content: center
+  margin-bottom: 10px
+
+.noMoreDataAvailable
+  text-align: center
+  font-weight: 600
+  color: $secondary-font-color
+.fetchButtonContainer
+  width: 100%
+  display: flex
+  justify-content: center
+  margin-top: 12px
+  font-weight: 600
+  color: rgba(255,255,255,0.75)
+
+.btnLive
+  position: absolute
+  bottom: 10px
+  right: 10px
+  background: #205CF5
+  border-radius: 50%
+  height: 35px
+  width: 35px
+  border: none
+  cursor: pointer
+  img
+    height: 10px
+.hideButton
+  display: none
+.showButton
+  display: block

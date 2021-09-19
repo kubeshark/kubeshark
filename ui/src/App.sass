@@ -1,4 +1,4 @@
-@import 'components/style/variables.module'
+@import './variables.module'
 
 .mizuApp
   background-color: $main-background-color
@@ -23,3 +23,16 @@
       font-size: 11px
       font-weight: bold
       color: $light-blue-color
+
+  .httpsDomains
+    display: none
+    margin: 0
+    padding: 0
+    list-style: none
+
+  .customWarningStyle
+    &:hover
+      overflow-y: scroll
+      height: 85px
+      .httpsDomains
+        display: block

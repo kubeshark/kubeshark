@@ -23,14 +23,18 @@ export SEM_VER?=0.0.0
 
 ui: ## Build UI.
 	@(cd ui; npm i ; npm run build; )
-	@ls -l ui/build  
+	@ls -l ui/build
 
 cli: ## Build CLI.
 	@echo "building cli"; cd cli && $(MAKE) build
 
+build-cli-ci: ## Build CLI for CI.
+	@echo "building cli for ci"; cd cli && $(MAKE) build GIT_BRANCH=ci SUFFIX=ci
+
 agent: ## Build agent.
 	@(echo "building mizu agent .." )
 	@(cd agent; go build -o build/mizuagent main.go)
+	${MAKE} extensions
 	@ls -l agent/build
 
 docker: ## Build and publish agent docker image.
@@ -40,7 +44,11 @@ push: push-docker push-cli ## Build and publish agent docker image & CLI.
 
 push-docker: ## Build and publish agent docker image.
 	@echo "publishing Docker image .. "
-	./build-push-featurebranch.sh
+	devops/build-push-featurebranch.sh
+
+build-docker-ci: ## Build agent docker image for CI.
+	@echo "building docker image for ci"
+	devops/build-agent-ci.sh
 
 push-cli: ## Build and publish CLI.
 	@echo "publishing CLI .. "
@@ -49,7 +57,6 @@ push-cli: ## Build and publish CLI.
 	#gsutil mv gs://${BUCKET_PATH}/${OUTPUT_FILE} gs://${BUCKET_PATH}/${OUTPUT_FILE}.${SUFFIX}
 	gsutil cp -r ./cli/bin/* gs://${BUCKET_PATH}/
 	gsutil setmeta -r -h "Cache-Control:public, max-age=30" gs://${BUCKET_PATH}/\*
-
 
 clean: clean-ui clean-agent clean-cli clean-docker ## Clean all build artifacts.
 
@@ -65,8 +72,14 @@ clean-cli:  ## Clean CLI.
 clean-docker:
 	@(echo "DOCKER cleanup - NOT IMPLEMENTED YET " )
 
-test-cli: ## Run tests.
+extensions:
+	devops/build_extensions.sh
+
+test-cli:
 	@echo "running cli tests"; cd cli && $(MAKE) test
 
-test-agent: ## Run tests.
+test-agent:
 	@echo "running agent tests"; cd agent && $(MAKE) test
+
+acceptance-test:
+	@echo "running acceptance tests"; cd acceptanceTests && $(MAKE) test

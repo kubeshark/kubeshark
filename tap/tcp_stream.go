@@ -2,32 +2,34 @@ package tap
 
 import (
 	"encoding/binary"
-	"encoding/hex"
 	"fmt"
 	"sync"
 
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers" // pulls in all layers decoders
 	"github.com/google/gopacket/reassembly"
+	"github.com/up9inc/mizu/tap/api"
 )
 
 /* It's a connection (bidirectional)
  * Implements gopacket.reassembly.Stream interface (Accept, ReassembledSG, ReassemblyComplete)
  * ReassembledSG gets called when new reassembled data is ready (i.e. bytes in order, no duplicates, complete)
- * In our implementation, we pass information from ReassembledSG to the httpReader through a shared channel.
+ * In our implementation, we pass information from ReassembledSG to the tcpReader through a shared channel.
  */
 type tcpStream struct {
-	tcpstate       *reassembly.TCPSimpleFSM
-	fsmerr         bool
-	optchecker     reassembly.TCPOptionCheck
-	net, transport gopacket.Flow
-	isDNS          bool
-	isHTTP         bool
-	reversed       bool
-	client         httpReader
-	server         httpReader
-	urls           []string
-	ident          string
+	id              int64
+	isClosed        bool
+	superIdentifier *api.SuperIdentifier
+	tcpstate        *reassembly.TCPSimpleFSM
+	fsmerr          bool
+	optchecker      reassembly.TCPOptionCheck
+	net, transport  gopacket.Flow
+	isDNS           bool
+	isTapTarget     bool
+	clients         []tcpReader
+	servers         []tcpReader
+	urls            []string
+	ident           string
 	sync.Mutex
 }
 
@@ -141,17 +143,30 @@ func (t *tcpStream) ReassembledSG(sg reassembly.ScatterGather, ac reassembly.Ass
 		if len(data) > 2+int(dnsSize) {
 			sg.KeepFrom(2 + int(dnsSize))
 		}
-	} else if t.isHTTP {
+	} else if t.isTapTarget {
 		if length > 0 {
-			if *hexdump {
-				Trace("Feeding http with:%s", hex.Dump(data))
-			}
 			// This is where we pass the reassembled information onwards
-			// This channel is read by an httpReader object
-			if dir == reassembly.TCPDirClientToServer && !t.reversed {
-				t.client.msgQueue <- httpReaderDataMsg{data, ac.GetCaptureInfo().Timestamp}
+			// This channel is read by an tcpReader object
+			appStats.IncReassembledTcpPayloadsCount()
+			timestamp := ac.GetCaptureInfo().Timestamp
+			if dir == reassembly.TCPDirClientToServer {
+				for i := range t.clients {
+					reader := &t.clients[i]
+					reader.Lock()
+					if !reader.isClosed {
+						reader.msgQueue <- tcpReaderDataMsg{data, timestamp}
+					}
+					reader.Unlock()
+				}
 			} else {
-				t.server.msgQueue <- httpReaderDataMsg{data, ac.GetCaptureInfo().Timestamp}
+				for i := range t.servers {
+					reader := &t.servers[i]
+					reader.Lock()
+					if !reader.isClosed {
+						reader.msgQueue <- tcpReaderDataMsg{data, timestamp}
+					}
+					reader.Unlock()
+				}
 			}
 		}
 	}
@@ -159,10 +174,33 @@ func (t *tcpStream) ReassembledSG(sg reassembly.ScatterGather, ac reassembly.Ass
 
 func (t *tcpStream) ReassemblyComplete(ac reassembly.AssemblerContext) bool {
 	Trace("%s: Connection closed", t.ident)
-	if t.isHTTP {
-		close(t.client.msgQueue)
-		close(t.server.msgQueue)
+	if t.isTapTarget && !t.isClosed {
+		t.Close()
 	}
 	// do not remove the connection to allow last ACK
 	return false
+}
+
+func (t *tcpStream) Close() {
+	shouldReturn := false
+	t.Lock()
+	if t.isClosed {
+		shouldReturn = true
+	} else {
+		t.isClosed = true
+	}
+	t.Unlock()
+	if shouldReturn {
+		return
+	}
+	streams.Delete(t.id)
+
+	for i := range t.clients {
+		reader := &t.clients[i]
+		reader.Close()
+	}
+	for i := range t.servers {
+		reader := &t.servers[i]
+		reader.Close()
+	}
 }

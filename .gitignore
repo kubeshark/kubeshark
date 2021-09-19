@@ -19,3 +19,13 @@ build
 
 # Mac OS
 .DS_Store
+.vscode/
+
+# Ignore the scripts that are created for development
+*dev.*
+
+# Environment variables
+.env
+
+# pprof
+pprof/*

@@ -3,34 +3,29 @@ package tap
 import (
 	"os"
 	"strconv"
+	"time"
 )
 
 const (
 	MemoryProfilingEnabledEnvVarName          = "MEMORY_PROFILING_ENABLED"
+	MemoryProfilingDumpPath                   = "MEMORY_PROFILING_DUMP_PATH"
+	MemoryProfilingTimeIntervalSeconds        = "MEMORY_PROFILING_TIME_INTERVAL"
 	MaxBufferedPagesTotalEnvVarName           = "MAX_BUFFERED_PAGES_TOTAL"
 	MaxBufferedPagesPerConnectionEnvVarName   = "MAX_BUFFERED_PAGES_PER_CONNECTION"
+	TcpStreamChannelTimeoutMsEnvVarName       = "TCP_STREAM_CHANNEL_TIMEOUT_MS"
+	MaxNumberOfGoroutinesEnvVarName           = "MAX_NUMBER_OF_GOROUTINES"
 	MaxBufferedPagesTotalDefaultValue         = 5000
 	MaxBufferedPagesPerConnectionDefaultValue = 5000
+	TcpStreamChannelTimeoutMsDefaultValue     = 5000
+	MaxNumberOfGoroutinesDefaultValue         = 4000
 )
 
 type globalSettings struct {
-	filterPorts       []int
 	filterAuthorities []string
 }
 
 var gSettings = &globalSettings{
-	filterPorts:       []int{},
 	filterAuthorities: []string{},
-}
-
-func SetFilterPorts(ports []int) {
-	gSettings.filterPorts = ports
-}
-
-func GetFilterPorts() []int {
-	ports := make([]int, len(gSettings.filterPorts))
-	copy(ports, gSettings.filterPorts)
-	return ports
 }
 
 func SetFilterAuthorities(ipAddresses []string) {
@@ -55,6 +50,22 @@ func GetMaxBufferedPagesPerConnection() int {
 	valueFromEnv, err := strconv.Atoi(os.Getenv(MaxBufferedPagesPerConnectionEnvVarName))
 	if err != nil {
 		return MaxBufferedPagesPerConnectionDefaultValue
+	}
+	return valueFromEnv
+}
+
+func GetTcpChannelTimeoutMs() time.Duration {
+	valueFromEnv, err := strconv.Atoi(os.Getenv(TcpStreamChannelTimeoutMsEnvVarName))
+	if err != nil {
+		return TcpStreamChannelTimeoutMsDefaultValue * time.Millisecond
+	}
+	return time.Duration(valueFromEnv) * time.Millisecond
+}
+
+func GetMaxNumberOfGoroutines() int {
+	valueFromEnv, err := strconv.Atoi(os.Getenv(MaxNumberOfGoroutinesEnvVarName))
+	if err != nil {
+		return MaxNumberOfGoroutinesDefaultValue
 	}
 	return valueFromEnv
 }

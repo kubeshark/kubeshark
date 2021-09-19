@@ -39,6 +39,7 @@ func StartProxy(kubernetesProvider *Provider, mizuPort uint16, mizuNamespace str
 	server := http.Server{
 		Handler: mux,
 	}
+
 	return server.Serve(l)
 }
 

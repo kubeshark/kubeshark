@@ -2,43 +2,22 @@ package version
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
+	"github.com/up9inc/mizu/cli/apiserver"
 	"github.com/up9inc/mizu/cli/logger"
 	"github.com/up9inc/mizu/cli/mizu"
 	"io/ioutil"
 	"net/http"
-	"net/url"
+	"runtime"
 	"time"
 
 	"github.com/google/go-github/v37/github"
 	"github.com/up9inc/mizu/cli/uiUtils"
-	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/semver"
 )
 
-func getApiVersion(port uint16) (string, error) {
-	versionUrl, _ := url.Parse(fmt.Sprintf("http://localhost:%d/mizu/metadata/version", port))
-	req := &http.Request{
-		Method: http.MethodGet,
-		URL:    versionUrl,
-	}
-	statusResp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return "", err
-	}
-	defer statusResp.Body.Close()
-
-	versionResponse := &shared.VersionResponse{}
-	if err := json.NewDecoder(statusResp.Body).Decode(&versionResponse); err != nil {
-		return "", err
-	}
-
-	return versionResponse.SemVer, nil
-}
-
-func CheckVersionCompatibility(port uint16) (bool, error) {
-	apiSemVer, err := getApiVersion(port)
+func CheckVersionCompatibility() (bool, error) {
+	apiSemVer, err := apiserver.Provider.GetVersion()
 	if err != nil {
 		return false, err
 	}
@@ -52,13 +31,14 @@ func CheckVersionCompatibility(port uint16) (bool, error) {
 	return false, nil
 }
 
-func CheckNewerVersion() {
+func CheckNewerVersion(versionChan chan string) {
 	logger.Log.Debugf("Checking for newer version...")
 	start := time.Now()
 	client := github.NewClient(nil)
 	latestRelease, _, err := client.Repositories.GetLatestRelease(context.Background(), "up9inc", "mizu")
 	if err != nil {
 		logger.Log.Debugf("[ERROR] Failed to get latest release")
+		versionChan <- ""
 		return
 	}
 
@@ -71,12 +51,14 @@ func CheckNewerVersion() {
 	}
 	if versionFileUrl == "" {
 		logger.Log.Debugf("[ERROR] Version file not found in the latest release")
+		versionChan <- ""
 		return
 	}
 
 	res, err := http.Get(versionFileUrl)
 	if err != nil {
 		logger.Log.Debugf("[ERROR] Failed to get the version file %v", err)
+		versionChan <- ""
 		return
 	}
 
@@ -84,12 +66,19 @@ func CheckNewerVersion() {
 	res.Body.Close()
 	if err != nil {
 		logger.Log.Debugf("[ERROR] Failed to read the version file -> %v", err)
+		versionChan <- ""
 		return
 	}
 	gitHubVersion := string(data)
 	gitHubVersion = gitHubVersion[:len(gitHubVersion)-1]
-	logger.Log.Debugf("Finished version validation, took %v", time.Since(start))
-	if mizu.SemVer < gitHubVersion {
-		logger.Log.Infof(uiUtils.Yellow, fmt.Sprintf("Update available! %v -> %v (%v)", mizu.SemVer, gitHubVersion, *latestRelease.HTMLURL))
+
+	gitHubVersionSemVer := semver.SemVersion(gitHubVersion)
+	currentSemVer := semver.SemVersion(mizu.SemVer)
+	logger.Log.Debugf("Finished version validation, github version %v, current version %v, took %v", gitHubVersion, currentSemVer, time.Since(start))
+
+	if gitHubVersionSemVer.GreaterThan(currentSemVer) {
+		versionChan <- fmt.Sprintf("Update available! %v -> %v (curl -Lo mizu %v/mizu_%s_amd64 && chmod 755 mizu)", mizu.SemVer, gitHubVersion, *latestRelease.HTMLURL, runtime.GOOS)
+	} else {
+		versionChan <- ""
 	}
 }
