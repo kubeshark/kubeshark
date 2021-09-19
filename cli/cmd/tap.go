@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"errors"
-	"log"
 	"os"
 
 	"github.com/up9inc/mizu/cli/config"
@@ -68,6 +67,4 @@ func init() {
 	tapCmd.Flags().String(configStructs.HumanMaxEntriesDBSizeTapName, defaultTapConfig.HumanMaxEntriesDBSize, "Override the default max entries db size")
 	tapCmd.Flags().Bool(configStructs.DryRunTapName, defaultTapConfig.DryRun, "Preview of all pods matching the regex, without tapping them")
 	tapCmd.Flags().String(configStructs.EnforcePolicyFile, defaultTapConfig.EnforcePolicyFile, "Yaml file with policy rules")
-
-	log.Printf("defaultTapConfig: %+v\n", defaultTapConfig)
 }
