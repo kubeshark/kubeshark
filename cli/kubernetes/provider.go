@@ -200,7 +200,6 @@ func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, opts *ApiS
 					Name:            opts.PodName,
 					Image:           opts.PodImage,
 					ImagePullPolicy: opts.ImagePullPolicy,
-					Ports:           []core.ContainerPort{{HostPort: 0, ContainerPort: 8899}},
 					VolumeMounts: []core.VolumeMount{
 						{
 							Name:      mizu.ConfigMapName,

@@ -77,7 +77,7 @@ func readConnectionSingle(wg *sync.WaitGroup, conn net.Conn, entry *map[string]i
 
 			command := handleCommands(text)
 			if !command {
-				// fmt.Printf("\b\b** %s\n> ", text)
+				fmt.Printf("\b\b** %s\n> ", text)
 
 				if text == "" {
 					err := scanner.Err()
@@ -126,7 +126,7 @@ func readConnection(wg *sync.WaitGroup, conn net.Conn, ws *websocket.Conn) {
 
 			command := handleCommands(text)
 			if !command {
-				// fmt.Printf("\b\b** %s\n> ", text)
+				fmt.Printf("\b\b** %s\n> ", text)
 
 				if text == "" {
 					err := scanner.Err()
