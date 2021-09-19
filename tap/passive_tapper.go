@@ -18,6 +18,7 @@ import (
 	"os"
 	"os/signal"
 	"runtime"
+	_debug "runtime/debug"
 	"runtime/pprof"
 	"strconv"
 	"strings"
@@ -217,10 +218,10 @@ func startMemoryProfiler() {
 }
 
 func closeTimedoutTcpStreamChannels() {
-	maxNumberOfGoroutines = GetMaxNumberOfGoroutines()
 	TcpStreamChannelTimeoutMs := GetTcpChannelTimeoutMs()
 	for {
 		time.Sleep(10 * time.Millisecond)
+		_debug.FreeOSMemory()
 		streams.Range(func(key interface{}, value interface{}) bool {
 			streamWrapper := value.(*tcpStreamWrapper)
 			stream := streamWrapper.stream

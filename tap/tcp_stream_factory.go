@@ -2,7 +2,6 @@ package tap
 
 import (
 	"fmt"
-	"runtime"
 	"sync"
 	"time"
 
@@ -33,8 +32,6 @@ type tcpStreamWrapper struct {
 var streams *sync.Map = &sync.Map{} // global
 var streamId int64 = 0
 
-var maxNumberOfGoroutines int
-
 func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.TCP, ac reassembly.AssemblerContext) reassembly.Stream {
 	rlog.Debugf("* NEW: %s %s", net, transport)
 	fsmOptions := reassembly.TCPSimpleFSMOptions{
@@ -61,11 +58,6 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.T
 		superIdentifier: &api.SuperIdentifier{},
 	}
 	if stream.isTapTarget {
-		if runtime.NumGoroutine() > maxNumberOfGoroutines {
-			appStats.IncDroppedTcpStreams()
-			rlog.Debugf("Dropped a TCP stream because of load. Total dropped: %d Total Goroutines: %d\n", appStats.DroppedTcpStreams, runtime.NumGoroutine())
-			return stream
-		}
 		streamId++
 		stream.id = streamId
 		for i, extension := range extensions {
