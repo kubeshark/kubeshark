@@ -2,11 +2,12 @@ package cmd
 
 import (
 	"errors"
+	"os"
+
 	"github.com/up9inc/mizu/cli/config"
 	"github.com/up9inc/mizu/cli/config/configStructs"
 	"github.com/up9inc/mizu/cli/logger"
 	"github.com/up9inc/mizu/cli/telemetry"
-	"os"
 
 	"github.com/creasty/defaults"
 	"github.com/spf13/cobra"

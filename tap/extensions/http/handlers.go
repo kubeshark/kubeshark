@@ -14,7 +14,9 @@ import (
 )
 
 func filterAndEmit(item *api.OutputChannelItem, emitter api.Emitter, options *api.TrafficFilteringOptions) {
-	FilterSensitiveData(item, options)
+	if !options.DisableRedaction {
+		FilterSensitiveData(item, options)
+	}
 	emitter.Emit(item)
 }
 
