@@ -33,13 +33,22 @@ func getCliPath() (string, error) {
 	return cliPath, nil
 }
 
-func getConfigPath() (string, error) {
+func getMizuFolderPath() (string, error) {
 	home, homeDirErr := os.UserHomeDir()
 	if homeDirErr != nil {
 		return "", homeDirErr
 	}
 
-	return path.Join(home, ".mizu", "config.yaml"), nil
+	return path.Join(home, ".mizu"), nil
+}
+
+func getConfigPath() (string, error) {
+	mizuFolderPath, mizuPathError := getMizuFolderPath()
+	if mizuPathError != nil {
+		return "", mizuPathError
+	}
+
+	return path.Join(mizuFolderPath, "config.yaml"), nil
 }
 
 func getProxyUrl(namespace string, service string) string {
