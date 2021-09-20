@@ -81,7 +81,7 @@ func BuildHeaders(rawHeaders []interface{}) ([]har.Header, string, string, strin
 			path = h["value"].(string)
 		}
 		if h["name"] == ":status" {
-			path = h["value"].(string)
+			status = h["value"].(string)
 		}
 	}
 
@@ -202,9 +202,7 @@ func NewResponse(response *api.GenericMessage) (harResponse *har.Response, err e
 
 	status := int(resDetails["status"].(float64))
 	if strings.HasPrefix(mimeType.(string), "application/grpc") {
-		if _status != "" {
-			status, err = strconv.Atoi(_status)
-		}
+		status, err = strconv.Atoi(_status)
 		if err != nil {
 			rlog.Debugf("Failed converting status to int %s (%v,%+v)", err, err, err)
 			return nil, errors.New("failed converting response status to int for HAR")
