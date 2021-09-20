@@ -9,10 +9,9 @@ import (
 	"time"
 
 	"github.com/google/martian/har"
-	"github.com/up9inc/mizu/tap"
+	"github.com/romana/rlog"
 	"github.com/up9inc/mizu/tap/api"
 )
-
 
 // Keep it because we might want cookies in the future
 //func BuildCookies(rawCookies []interface{}) []har.Cookie {
@@ -82,7 +81,7 @@ func BuildHeaders(rawHeaders []interface{}) ([]har.Header, string, string, strin
 			path = h["value"].(string)
 		}
 		if h["name"] == ":status" {
-			path = h["value"].(string)
+			status = h["value"].(string)
 		}
 	}
 
@@ -205,7 +204,7 @@ func NewResponse(response *api.GenericMessage) (harResponse *har.Response, err e
 	if strings.HasPrefix(mimeType.(string), "application/grpc") {
 		status, err = strconv.Atoi(_status)
 		if err != nil {
-			tap.SilentError("convert-response-status-for-har", "Failed converting status to int %s (%v,%+v)", err, err, err)
+			rlog.Errorf("Failed converting status to int %s (%v,%+v)", err, err, err)
 			return nil, errors.New("failed converting response status to int for HAR")
 		}
 	}
@@ -226,14 +225,13 @@ func NewResponse(response *api.GenericMessage) (harResponse *har.Response, err e
 func NewEntry(pair *api.RequestResponsePair) (*har.Entry, error) {
 	harRequest, err := NewRequest(&pair.Request)
 	if err != nil {
-		tap.SilentError("convert-request-to-har", "Failed converting request to HAR %s (%v,%+v)", err, err, err)
+		rlog.Errorf("Failed converting request to HAR %s (%v,%+v)", err, err, err)
 		return nil, errors.New("failed converting request to HAR")
 	}
 
 	harResponse, err := NewResponse(&pair.Response)
 	if err != nil {
-		fmt.Printf("err: %+v\n", err)
-		tap.SilentError("convert-response-to-har", "Failed converting response to HAR %s (%v,%+v)", err, err, err)
+		rlog.Errorf("Failed converting response to HAR %s (%v,%+v)", err, err, err)
 		return nil, errors.New("failed converting response to HAR")
 	}
 
