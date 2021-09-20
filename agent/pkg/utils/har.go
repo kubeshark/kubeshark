@@ -81,7 +81,7 @@ func BuildHeaders(rawHeaders []interface{}) ([]har.Header, string, string, strin
 			path = h["value"].(string)
 		}
 		if h["name"] == ":status" {
-			path = h["value"].(string)
+			status = h["value"].(string)
 		}
 	}
 
@@ -206,7 +206,7 @@ func NewResponse(response *api.GenericMessage) (harResponse *har.Response, err e
 			status, err = strconv.Atoi(_status)
 		}
 		if err != nil {
-			rlog.Debugf("Failed converting status to int %s (%v,%+v)", err, err, err)
+			rlog.Errorf("Failed converting status to int %s (%v,%+v)", err, err, err)
 			return nil, errors.New("failed converting response status to int for HAR")
 		}
 	}
@@ -227,13 +227,13 @@ func NewResponse(response *api.GenericMessage) (harResponse *har.Response, err e
 func NewEntry(pair *api.RequestResponsePair) (*har.Entry, error) {
 	harRequest, err := NewRequest(&pair.Request)
 	if err != nil {
-		rlog.Debugf("Failed converting request to HAR %s (%v,%+v)", err, err, err)
+		rlog.Errorf("Failed converting request to HAR %s (%v,%+v)", err, err, err)
 		return nil, errors.New("failed converting request to HAR")
 	}
 
 	harResponse, err := NewResponse(&pair.Response)
 	if err != nil {
-		rlog.Debugf("Failed converting response to HAR %s (%v,%+v)", err, err, err)
+		rlog.Errorf("Failed converting response to HAR %s (%v,%+v)", err, err, err)
 		return nil, errors.New("failed converting response to HAR")
 	}
 

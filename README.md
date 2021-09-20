@@ -143,7 +143,7 @@ Setting `mizu-resources-namespace=mizu` resets Mizu to its default behavior
 User-agent filtering (like health checks) - can be configured using command-line options:
 
 ```shell
-$ mizu tap "^ca.*" --set ignored-user-agents=kube-probe --set ignored-user-agents=prometheus
+$ mizu tap "^ca.*" --set tap.ignored-user-agents=kube-probe --set tap.ignored-user-agents=prometheus
 +carts-66c77f5fbb-fq65r
 +catalogue-5f4cb7cf5-7zrmn
 Web interface is now available at http://localhost:8899
