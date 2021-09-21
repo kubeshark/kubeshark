@@ -265,10 +265,10 @@ var keywords []RedisKeyword = []RedisKeyword{
 
 type RedisPacket struct {
 	Type    RedisType    `json:"type"`
-	Command RedisCommand `json:"command,omitempty"`
-	Key     string       `json:"key,omitempty"`
-	Value   string       `json:"value,omitempty"`
-	Keyword RedisKeyword `json:"keyword,omitempty"`
+	Command RedisCommand `json:"command"`
+	Key     string       `json:"key"`
+	Value   string       `json:"value"`
+	Keyword RedisKeyword `json:"keyword"`
 }
 
 func isValidRedisCommand(s []RedisCommand, c RedisCommand) bool {

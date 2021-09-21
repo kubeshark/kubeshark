@@ -139,10 +139,14 @@ func (d dissecting) Represent(entry *api.MizuEntry) (p api.Protocol, object []by
 	var root map[string]interface{}
 	json.Unmarshal([]byte(entry.Entry), &root)
 	representation := make(map[string]interface{}, 0)
-	// request := root["request"].(map[string]interface{})["payload"].(map[string]interface{})
-	var repRequest []interface{}
-	// details := request["details"].(map[string]interface{})
+	request := root["request"].(map[string]interface{})["payload"].(map[string]interface{})
+	response := root["response"].(map[string]interface{})["payload"].(map[string]interface{})
+	reqDetails := request["details"].(map[string]interface{})
+	resDetails := response["details"].(map[string]interface{})
+	repRequest := representGeneric(reqDetails)
+	repResponse := representGeneric(resDetails)
 	representation["request"] = repRequest
+	representation["response"] = repResponse
 	object, err = json.Marshal(representation)
 	return
 }
