@@ -30,13 +30,12 @@ type dissecting string
 
 func (d dissecting) Register(extension *api.Extension) {
 	extension.Protocol = &protocol
+	extension.MatcherMap = reqResMatcher.openMessagesMap
 }
 
 func (d dissecting) Ping() {
 	log.Printf("pong %s\n", protocol.Name)
 }
-
-const amqpRequest string = "amqp_request"
 
 func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, superIdentifier *api.SuperIdentifier, emitter api.Emitter, options *api.TrafficFilteringOptions) error {
 	is := &RedisInputStream{
@@ -45,25 +44,38 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 	}
 	proto := NewProtocol(is)
 	for {
-		x, err := proto.Read()
+		redisPacket, err := proto.Read()
 		if err != nil {
 			return err
 		}
-		fmt.Printf("%+v\n", x)
+
+		if isClient {
+			handleClientStream(tcpID, counterPair, superTimer, emitter, redisPacket)
+		} else {
+			handleServerStream(tcpID, counterPair, superTimer, emitter, redisPacket)
+		}
 	}
 }
 
 func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolvedSource string, resolvedDestination string) *api.MizuEntry {
 	request := item.Pair.Request.Payload.(map[string]interface{})
-	// reqDetails := request["details"].(map[string]interface{})
-	service := "amqp"
+	reqDetails := request["details"].(map[string]interface{})
+	service := "redis"
 	if resolvedDestination != "" {
 		service = resolvedDestination
 	} else if resolvedSource != "" {
 		service = resolvedSource
 	}
 
+	method := ""
+	if reqDetails["command"] != nil {
+		method = reqDetails["command"].(string)
+	}
+
 	summary := ""
+	if reqDetails["key"] != nil {
+		summary = reqDetails["key"].(string)
+	}
 
 	request["url"] = summary
 	entryBytes, _ := json.Marshal(item.Pair)
@@ -79,7 +91,7 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolve
 		EntryId:                 entryId,
 		Entry:                   string(entryBytes),
 		Url:                     fmt.Sprintf("%s%s", service, summary),
-		Method:                  request["method"].(string),
+		Method:                  method,
 		Status:                  0,
 		RequestSenderIp:         item.ConnectionInfo.ClientIP,
 		Service:                 service,
