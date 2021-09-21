@@ -1,8 +1,8 @@
-package shared
+package utils
 
 import (
-	"fmt"
 	"github.com/gorilla/websocket"
+	"github.com/romana/rlog"
 	"time"
 )
 
@@ -11,24 +11,22 @@ const (
 	DEFAULT_SOCKET_RETRY_SLEEP_TIME = time.Second * 10
 )
 
-func ConnectToSocketServer(address string, retries int, retrySleepTime time.Duration, hideTimeoutErrors bool) (*websocket.Conn, error) {
+func ConnectToSocketServer(address string) (*websocket.Conn, error) {
 	var err error
 	var connection *websocket.Conn
 	try := 0
 
 	// Connection to server fails if client pod is up before server.
 	// Retries solve this issue.
-	for try < retries {
+	for try < DEFAULT_SOCKET_RETRIES {
 		connection, _, err = websocket.DefaultDialer.Dial(address, nil)
 		if err != nil {
 			try++
-			if !hideTimeoutErrors {
-				fmt.Printf("Failed connecting to websocket server: %s, (%v,%+v)\n", err, err, err)
-			}
+			rlog.Warnf("Failed connecting to websocket: %s, attempt: %v/%v, err: %s, (%v,%+v)", address, try, DEFAULT_SOCKET_RETRIES, err, err, err)
 		} else {
 			break
 		}
-		time.Sleep(retrySleepTime)
+		time.Sleep(DEFAULT_SOCKET_RETRY_SLEEP_TIME)
 	}
 
 	if err != nil {
