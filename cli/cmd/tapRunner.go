@@ -275,8 +275,6 @@ func dumpLogsIfNeeded(ctx context.Context, kubernetesProvider *kubernetes.Provid
 func cleanUpMizuResources(ctx context.Context, cancel context.CancelFunc, kubernetesProvider *kubernetes.Provider) {
 	logger.Log.Infof("\nRemoving mizu resources\n")
 
-	// Do not report failed "get" operations to the user. Assume that the user can't get resources they can't create.
-
 	var leftoverResources []string
 
 	if config.Config.IsNsRestrictedMode() {
@@ -368,6 +366,8 @@ func isErrForbiddenGet(err error) bool {
 
 func logDeletionError(err error, resourceDesc string, leftoverResources []string) {
 	logger.Log.Debugf("Error removing %s: %v", resourceDesc, errormessage.FormatError(err))
+
+	// Do not report failed "get" operations to the user. Assume that the user can't get resources they can't create.
 	if !isErrForbiddenGet(err) {
 		leftoverResources = append(leftoverResources, resourceDesc)
 	}
