@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"mizuserver/pkg/database"
 	"mizuserver/pkg/holder"
-	"net/url"
 	"os"
 	"path"
 	"sort"
@@ -18,7 +17,6 @@ import (
 
 	"github.com/google/martian/har"
 	"github.com/romana/rlog"
-	"github.com/up9inc/mizu/tap"
 	tapApi "github.com/up9inc/mizu/tap/api"
 
 	"mizuserver/pkg/models"
@@ -59,8 +57,10 @@ func StartReadingEntries(harChannel <-chan *tapApi.OutputChannelItem, workingDir
 }
 
 func startReadingFiles(workingDir string) {
-	err := os.MkdirAll(workingDir, os.ModePerm)
-	utils.CheckErr(err)
+	if err := os.MkdirAll(workingDir, os.ModePerm); err != nil {
+		rlog.Errorf("Failed to make dir: %s, err: %v", workingDir, err)
+		return
+	}
 
 	for true {
 		dir, _ := os.Open(workingDir)
@@ -88,17 +88,6 @@ func startReadingFiles(workingDir string) {
 		decErr := json.NewDecoder(bufio.NewReader(file)).Decode(&inputHar)
 		utils.CheckErr(decErr)
 
-		// for _, entry := range inputHar.Log.Entries {
-		// 	time.Sleep(time.Millisecond * 250)
-		// 	// connectionInfo := &tap.ConnectionInfo{
-		// 	// 	ClientIP:   fileInfo.Name(),
-		// 	// 	ClientPort: "",
-		// 	// 	ServerIP:   "",
-		// 	// 	ServerPort: "",
-		// 	// 	IsOutgoing: false,
-		// 	// }
-		// 	// saveHarToDb(entry, connectionInfo)
-		// }
 		rmErr := os.Remove(inputFilePath)
 		utils.CheckErr(rmErr)
 	}
@@ -132,13 +121,6 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 	}
 }
 
-func StartReadingOutbound(outboundLinkChannel <-chan *tap.OutboundLink) {
-	// tcpStreamFactory will block on write to channel. Empty channel to unblock.
-	// TODO: Make write to channel optional.
-	for range outboundLinkChannel {
-	}
-}
-
 func resolveIP(connectionInfo *tapApi.ConnectionInfo) (resolvedSource string, resolvedDestination string) {
 	if k8sResolver != nil {
 		unresolvedSource := connectionInfo.ClientIP
@@ -159,12 +141,6 @@ func resolveIP(connectionInfo *tapApi.ConnectionInfo) (resolvedSource string, re
 		}
 	}
 	return resolvedSource, resolvedDestination
-}
-
-func getServiceNameFromUrl(inputUrl string) (string, string) {
-	parsed, err := url.Parse(inputUrl)
-	utils.CheckErr(err)
-	return fmt.Sprintf("%s://%s", parsed.Scheme, parsed.Host), parsed.Path
 }
 
 func CheckIsServiceIP(address string) bool {
