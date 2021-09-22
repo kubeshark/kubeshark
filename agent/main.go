@@ -61,7 +61,6 @@ func main() {
 
 		go filterItems(outputItemsChannel, filteredOutputItemsChannel, filteringOptions)
 		go api.StartReadingEntries(filteredOutputItemsChannel, nil, extensionsMap)
-		// go api.StartReadingOutbound(outboundLinkOutputChannel)
 
 		hostApi(nil)
 	} else if *tapperMode {
