@@ -713,7 +713,7 @@ func (provider *Provider) ListAllRunningPodsMatchingRegex(ctx context.Context, r
 	return matchingPods, nil
 }
 
-func (provider *Provider) GetPodLogs(namespace string, podName string, ctx context.Context) (string, error) {
+func (provider *Provider) GetPodLogs(ctx context.Context, namespace string, podName string) (string, error) {
 	podLogOpts := core.PodLogOptions{}
 	req := provider.clientSet.CoreV1().Pods(namespace).GetLogs(podName, &podLogOpts)
 	podLogs, err := req.Stream(ctx)
@@ -729,7 +729,7 @@ func (provider *Provider) GetPodLogs(namespace string, podName string, ctx conte
 	return str, nil
 }
 
-func (provider *Provider) GetNamespaceEvents(namespace string, ctx context.Context) (string, error) {
+func (provider *Provider) GetNamespaceEvents(ctx context.Context, namespace string) (string, error) {
 	eventsOpts := metav1.ListOptions{}
 	eventList, err := provider.clientSet.CoreV1().Events(namespace).List(ctx, eventsOpts)
 	if err != nil {

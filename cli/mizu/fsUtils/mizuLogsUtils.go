@@ -12,7 +12,7 @@ import (
 	"regexp"
 )
 
-func DumpLogs(provider *kubernetes.Provider, ctx context.Context, filePath string) error {
+func DumpLogs(ctx context.Context, provider *kubernetes.Provider, filePath string) error {
 	podExactRegex := regexp.MustCompile("^" + mizu.MizuResourcesPrefix)
 	pods, err := provider.ListAllPodsMatchingRegex(ctx, podExactRegex, []string{config.Config.MizuResourcesNamespace})
 	if err != nil {
@@ -32,7 +32,7 @@ func DumpLogs(provider *kubernetes.Provider, ctx context.Context, filePath strin
 	defer zipWriter.Close()
 
 	for _, pod := range pods {
-		logs, err := provider.GetPodLogs(pod.Namespace, pod.Name, ctx)
+		logs, err := provider.GetPodLogs(ctx, pod.Namespace, pod.Name)
 		if err != nil {
 			logger.Log.Errorf("Failed to get logs, %v", err)
 			continue
@@ -47,7 +47,7 @@ func DumpLogs(provider *kubernetes.Provider, ctx context.Context, filePath strin
 		}
 	}
 
-	events, err := provider.GetNamespaceEvents(config.Config.MizuResourcesNamespace, ctx)
+	events, err := provider.GetNamespaceEvents(ctx, config.Config.MizuResourcesNamespace)
 	if err != nil {
 		logger.Log.Debugf("Failed to get k8b events, %v", err)
 	} else {
