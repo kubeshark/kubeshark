@@ -7,15 +7,18 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/up9inc/mizu/cli/config/configStructs"
-	"github.com/up9inc/mizu/cli/logger"
 	"path/filepath"
 	"regexp"
 	"strconv"
 
+	"github.com/up9inc/mizu/cli/config/configStructs"
+	"github.com/up9inc/mizu/cli/logger"
+
+	"io"
+
 	"github.com/up9inc/mizu/cli/mizu"
 	"github.com/up9inc/mizu/shared"
-	"io"
+	"github.com/up9inc/mizu/tap/api"
 	core "k8s.io/api/core/v1"
 	rbac "k8s.io/api/rbac/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
@@ -55,21 +58,21 @@ func NewProvider(kubeConfigPath string) (*Provider, error) {
 	restClientConfig, err := kubernetesConfig.ClientConfig()
 	if err != nil {
 		if clientcmd.IsEmptyConfig(err) {
-			return nil, fmt.Errorf("couldn't find the kube config file, or file is empty (%s)\n" +
+			return nil, fmt.Errorf("couldn't find the kube config file, or file is empty (%s)\n"+
 				"you can set alternative kube config file path by adding the kube-config-path field to the mizu config file, err:  %w", kubeConfigPath, err)
 		}
 		if clientcmd.IsConfigurationInvalid(err) {
-			return nil, fmt.Errorf("invalid kube config file (%s)\n" +
+			return nil, fmt.Errorf("invalid kube config file (%s)\n"+
 				"you can set alternative kube config file path by adding the kube-config-path field to the mizu config file, err:  %w", kubeConfigPath, err)
 		}
 
-		return nil, fmt.Errorf("error while using kube config (%s)\n" +
+		return nil, fmt.Errorf("error while using kube config (%s)\n"+
 			"you can set alternative kube config file path by adding the kube-config-path field to the mizu config file, err:  %w", kubeConfigPath, err)
 	}
 
 	clientSet, err := getClientSet(restClientConfig)
 	if err != nil {
-		return nil, fmt.Errorf("error while using kube config (%s)\n" +
+		return nil, fmt.Errorf("error while using kube config (%s)\n"+
 			"you can set alternative kube config file path by adding the kube-config-path field to the mizu config file, err:  %w", kubeConfigPath, err)
 	}
 
@@ -148,7 +151,7 @@ type ApiServerOptions struct {
 	PodImage                string
 	ServiceAccountName      string
 	IsNamespaceRestricted   bool
-	MizuApiFilteringOptions *shared.TrafficFilteringOptions
+	MizuApiFilteringOptions *api.TrafficFilteringOptions
 	MaxEntriesDBSizeBytes   int64
 	Resources               configStructs.Resources
 	ImagePullPolicy         core.PullPolicy
@@ -573,14 +576,19 @@ func (provider *Provider) CreateConfigMap(ctx context.Context, namespace string,
 	return nil
 }
 
-func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, apiServerPodIp string, nodeToTappedPodIPMap map[string][]string, serviceAccountName string, tapOutgoing bool, resources configStructs.Resources, imagePullPolicy core.PullPolicy) error {
-	logger.Log.Debugf("Applying %d tapper deamonsets, ns: %s, daemonSetName: %s, podImage: %s, tapperPodName: %s", len(nodeToTappedPodIPMap), namespace, daemonSetName, podImage, tapperPodName)
+func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, apiServerPodIp string, nodeToTappedPodIPMap map[string][]string, serviceAccountName string, resources configStructs.Resources, imagePullPolicy core.PullPolicy, mizuApiFilteringOptions *api.TrafficFilteringOptions) error {
+	logger.Log.Debugf("Applying %d tapper daemon sets, ns: %s, daemonSetName: %s, podImage: %s, tapperPodName: %s", len(nodeToTappedPodIPMap), namespace, daemonSetName, podImage, tapperPodName)
 
 	if len(nodeToTappedPodIPMap) == 0 {
-		return fmt.Errorf("Daemon set %s must tap at least 1 pod", daemonSetName)
+		return fmt.Errorf("daemon set %s must tap at least 1 pod", daemonSetName)
 	}
 
 	nodeToTappedPodIPMapJsonStr, err := json.Marshal(nodeToTappedPodIPMap)
+	if err != nil {
+		return err
+	}
+
+	marshaledFilteringOptions, err := json.Marshal(mizuApiFilteringOptions)
 	if err != nil {
 		return err
 	}
@@ -590,9 +598,7 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 		"-i", "any",
 		"--tap",
 		"--api-server-address", fmt.Sprintf("ws://%s/wsTapper", apiServerPodIp),
-	}
-	if tapOutgoing {
-		mizuCmd = append(mizuCmd, "--anydirection")
+		"--nodefrag",
 	}
 
 	agentContainer := applyconfcore.Container()
@@ -604,6 +610,8 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	agentContainer.WithEnv(
 		applyconfcore.EnvVar().WithName(shared.HostModeEnvVar).WithValue("1"),
 		applyconfcore.EnvVar().WithName(shared.TappedAddressesPerNodeDictEnvVar).WithValue(string(nodeToTappedPodIPMapJsonStr)),
+		applyconfcore.EnvVar().WithName(shared.GoGCEnvVar).WithValue("12800"),
+		applyconfcore.EnvVar().WithName(shared.MizuFilteringOptionsEnvVar).WithValue(string(marshaledFilteringOptions)),
 	)
 	agentContainer.WithEnv(
 		applyconfcore.EnvVar().WithName(shared.NodeNameEnvVar).WithValueFrom(

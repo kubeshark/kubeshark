@@ -4,7 +4,7 @@ import {EntriesList} from "./EntriesList";
 import {makeStyles} from "@material-ui/core";
 import "./style/TrafficPage.sass";
 import styles from './style/EntriesList.module.sass';
-import {EntryDetailed} from "./EntryDetailed/EntryDetailed";
+import {EntryDetailed} from "./EntryDetailed";
 import playIcon from './assets/run.svg';
 import pauseIcon from './assets/pause.svg';
 import variables from '../variables.module.scss';
@@ -18,15 +18,16 @@ const useLayoutStyles = makeStyles(() => ({
         padding: "12px 24px",
         borderRadius: 4,
         marginTop: 15,
-        background: variables.headerBackgoundColor
+        background: variables.headerBackgoundColor,
     },
 
-    harViewer: {
+    viewer: {
         display: 'flex',
         overflowY: 'auto',
         height: "calc(100% - 70px)",
         padding: 5,
-        paddingBottom: 0
+        paddingBottom: 0,
+        overflow: "auto",
     }
 }));
 
@@ -36,19 +37,19 @@ enum ConnectionStatus {
     Paused
 }
 
-interface HarPageProps {
+interface TrafficPageProps {
     setAnalyzeStatus: (status: any) => void;
     onTLSDetected: (destAddress: string) => void;
 }
 
 const api = new Api();
 
-export const TrafficPage: React.FC<HarPageProps> = ({setAnalyzeStatus, onTLSDetected}) => {
+export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLSDetected}) => {
 
     const classes = useLayoutStyles();
 
     const [entries, setEntries] = useState([] as any);
-    const [focusedEntry, setFocusedEntry] = useState(null);
+    const [focusedEntryId, setFocusedEntryId] = useState(null);
     const [selectedEntryData, setSelectedEntryData] = useState(null);
     const [connection, setConnection] = useState(ConnectionStatus.Closed);
     const [noMoreDataTop, setNoMoreDataTop] = useState(false);
@@ -83,12 +84,8 @@ export const TrafficPage: React.FC<HarPageProps> = ({setAnalyzeStatus, onTLSDete
                         setNoMoreDataBottom(false)
                         return;
                     }
-                    if (!focusedEntry) setFocusedEntry(entry)
+                    if (!focusedEntryId) setFocusedEntryId(entry.id)
                     let newEntries = [...entries];
-                    if (entries.length === 1000) {
-                        newEntries = newEntries.splice(1);
-                        setNoMoreDataTop(false);
-                    }
                     setEntries([...newEntries, entry])
                     if(listEntry.current) {
                         if(isScrollable(listEntry.current.firstChild)) {
@@ -128,17 +125,17 @@ export const TrafficPage: React.FC<HarPageProps> = ({setAnalyzeStatus, onTLSDete
 
 
     useEffect(() => {
-        if (!focusedEntry) return;
+        if (!focusedEntryId) return;
         setSelectedEntryData(null);
         (async () => {
             try {
-                const entryData = await api.getEntry(focusedEntry.id);
+                const entryData = await api.getEntry(focusedEntryId);
                 setSelectedEntryData(entryData);
             } catch (error) {
                 console.error(error);
             }
         })()
-    }, [focusedEntry])
+    }, [focusedEntryId])
 
     const toggleConnection = () => {
         setConnection(connection === ConnectionStatus.Connected ? ConnectionStatus.Paused : ConnectionStatus.Connected);
@@ -170,16 +167,16 @@ export const TrafficPage: React.FC<HarPageProps> = ({setAnalyzeStatus, onTLSDete
     const onScrollEvent = (isAtBottom) => {
         isAtBottom ? setDisableScrollList(false) : setDisableScrollList(true)
     }
-    
+
     const isScrollable = (element) => {
         return element.scrollHeight > element.clientHeight;
     };
 
     return (
-        <div className="HarPage">
-            <div className="harPageHeader">
+        <div className="TrafficPage">
+            <div className="TrafficPageHeader">
                 <img style={{cursor: "pointer", marginRight: 15, height: 30}} alt="pause"
-                     src={connection === ConnectionStatus.Connected ? pauseIcon : playIcon} onClick={toggleConnection}/>
+                    src={connection === ConnectionStatus.Connected ? pauseIcon : playIcon} onClick={toggleConnection}/>
                 <div className="connectionText">
                     {getConnectionTitle()}
                     <div className={"indicatorContainer " + getConnectionStatusClass(true)}>
@@ -187,36 +184,36 @@ export const TrafficPage: React.FC<HarPageProps> = ({setAnalyzeStatus, onTLSDete
                     </div>
                 </div>
             </div>
-            {entries.length > 0 && <div className="HarPage-Container">
-                <div className="HarPage-ListContainer">
+            {entries.length > 0 && <div className="TrafficPage-Container">
+                <div className="TrafficPage-ListContainer">
                     <Filters methodsFilter={methodsFilter}
-                             setMethodsFilter={setMethodsFilter}
-                             statusFilter={statusFilter}
-                             setStatusFilter={setStatusFilter}
-                             pathFilter={pathFilter}
-                             setPathFilter={setPathFilter}
+                                setMethodsFilter={setMethodsFilter}
+                                statusFilter={statusFilter}
+                                setStatusFilter={setStatusFilter}
+                                pathFilter={pathFilter}
+                                setPathFilter={setPathFilter}
                     />
                     <div className={styles.container}>
                         <EntriesList entries={entries}
-                                     setEntries={setEntries}
-                                     focusedEntry={focusedEntry}
-                                     setFocusedEntry={setFocusedEntry}
-                                     connectionOpen={connection === ConnectionStatus.Connected}
-                                     noMoreDataBottom={noMoreDataBottom}
-                                     setNoMoreDataBottom={setNoMoreDataBottom}
-                                     noMoreDataTop={noMoreDataTop}
-                                     setNoMoreDataTop={setNoMoreDataTop}
-                                     methodsFilter={methodsFilter}
-                                     statusFilter={statusFilter}
-                                     pathFilter={pathFilter}
-                                     listEntryREF={listEntry}
-                                     onScrollEvent={onScrollEvent}
-                                     scrollableList={disableScrollList}
+                                        setEntries={setEntries}
+                                        focusedEntryId={focusedEntryId}
+                                        setFocusedEntryId={setFocusedEntryId}
+                                        connectionOpen={connection === ConnectionStatus.Connected}
+                                        noMoreDataBottom={noMoreDataBottom}
+                                        setNoMoreDataBottom={setNoMoreDataBottom}
+                                        noMoreDataTop={noMoreDataTop}
+                                        setNoMoreDataTop={setNoMoreDataTop}
+                                        methodsFilter={methodsFilter}
+                                        statusFilter={statusFilter}
+                                        pathFilter={pathFilter}
+                                        listEntryREF={listEntry}
+                                        onScrollEvent={onScrollEvent}
+                                        scrollableList={disableScrollList}
                         />
                     </div>
                 </div>
                 <div className={classes.details}>
-                    {selectedEntryData && <EntryDetailed entryData={selectedEntryData} entryType={focusedEntry?.type} classes={{root: classes.harViewer}}/>}
+                    {selectedEntryData && <EntryDetailed entryData={selectedEntryData}/>}
                 </div>
             </div>}
             {tappingStatus?.pods != null && <StatusBar tappingStatus={tappingStatus}/>}

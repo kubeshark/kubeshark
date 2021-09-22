@@ -5,21 +5,21 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"mizuserver/pkg/database"
 	"mizuserver/pkg/holder"
 	"mizuserver/pkg/providers"
-	"net/url"
 	"os"
 	"path"
 	"sort"
 	"strings"
 	"time"
 
-	"github.com/google/martian/har"
-	"github.com/romana/rlog"
-	"github.com/up9inc/mizu/tap"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
-	"mizuserver/pkg/database"
+	"github.com/google/martian/har"
+	"github.com/romana/rlog"
+	tapApi "github.com/up9inc/mizu/tap/api"
+
 	"mizuserver/pkg/models"
 	"mizuserver/pkg/resolver"
 	"mizuserver/pkg/utils"
@@ -49,17 +49,19 @@ func StartResolving(namespace string) {
 	holder.SetResolver(res)
 }
 
-func StartReadingEntries(harChannel <-chan *tap.OutputChannelItem, workingDir *string) {
+func StartReadingEntries(harChannel <-chan *tapApi.OutputChannelItem, workingDir *string, extensionsMap map[string]*tapApi.Extension) {
 	if workingDir != nil && *workingDir != "" {
 		startReadingFiles(*workingDir)
 	} else {
-		startReadingChannel(harChannel)
+		startReadingChannel(harChannel, extensionsMap)
 	}
 }
 
 func startReadingFiles(workingDir string) {
-	err := os.MkdirAll(workingDir, os.ModePerm)
-	utils.CheckErr(err)
+	if err := os.MkdirAll(workingDir, os.ModePerm); err != nil {
+		rlog.Errorf("Failed to make dir: %s, err: %v", workingDir, err)
+		return
+	}
 
 	for true {
 		dir, _ := os.Open(workingDir)
@@ -87,48 +89,42 @@ func startReadingFiles(workingDir string) {
 		decErr := json.NewDecoder(bufio.NewReader(file)).Decode(&inputHar)
 		utils.CheckErr(decErr)
 
-		for _, entry := range inputHar.Log.Entries {
-			time.Sleep(time.Millisecond * 250)
-			connectionInfo := &tap.ConnectionInfo{
-				ClientIP:   fileInfo.Name(),
-				ClientPort: "",
-				ServerIP:   "",
-				ServerPort: "",
-				IsOutgoing: false,
-			}
-			saveHarToDb(entry, connectionInfo)
-		}
 		rmErr := os.Remove(inputFilePath)
 		utils.CheckErr(rmErr)
 	}
 }
 
-func startReadingChannel(outputItems <-chan *tap.OutputChannelItem) {
+func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extensionsMap map[string]*tapApi.Extension) {
 	if outputItems == nil {
 		panic("Channel of captured messages is nil")
 	}
 
 	for item := range outputItems {
 		providers.EntryAdded()
-		saveHarToDb(item.HarEntry, item.ConnectionInfo)
+
+		extension := extensionsMap[item.Protocol.Name]
+		resolvedSource, resolvedDestionation := resolveIP(item.ConnectionInfo)
+		mizuEntry := extension.Dissector.Analyze(item, primitive.NewObjectID().Hex(), resolvedSource, resolvedDestionation)
+		baseEntry := extension.Dissector.Summarize(mizuEntry)
+		mizuEntry.EstimatedSizeBytes = getEstimatedEntrySizeBytes(mizuEntry)
+		database.CreateEntry(mizuEntry)
+		if extension.Protocol.Name == "http" {
+			var pair tapApi.RequestResponsePair
+			json.Unmarshal([]byte(mizuEntry.Entry), &pair)
+			harEntry, err := utils.NewEntry(&pair)
+			if err == nil {
+				rules, _ := models.RunValidationRulesState(*harEntry, mizuEntry.Service)
+				baseEntry.Rules = rules
+				baseEntry.Latency = mizuEntry.ElapsedTime
+			}
+		}
+
+		baseEntryBytes, _ := models.CreateBaseEntryWebSocketMessage(baseEntry)
+		BroadcastToBrowserClients(baseEntryBytes)
 	}
 }
 
-func StartReadingOutbound(outboundLinkChannel <-chan *tap.OutboundLink) {
-	// tcpStreamFactory will block on write to channel. Empty channel to unblock.
-	// TODO: Make write to channel optional.
-	for range outboundLinkChannel {
-	}
-}
-
-func saveHarToDb(entry *har.Entry, connectionInfo *tap.ConnectionInfo) {
-	entryBytes, _ := json.Marshal(entry)
-	serviceName, urlPath := getServiceNameFromUrl(entry.Request.URL)
-	entryId := primitive.NewObjectID().Hex()
-	var (
-		resolvedSource      string
-		resolvedDestination string
-	)
+func resolveIP(connectionInfo *tapApi.ConnectionInfo) (resolvedSource string, resolvedDestination string) {
 	if k8sResolver != nil {
 		unresolvedSource := connectionInfo.ClientIP
 		resolvedSource = k8sResolver.Resolve(unresolvedSource)
@@ -147,46 +143,18 @@ func saveHarToDb(entry *har.Entry, connectionInfo *tap.ConnectionInfo) {
 			}
 		}
 	}
-
-	mizuEntry := models.MizuEntry{
-		EntryId:             entryId,
-		Entry:               string(entryBytes), // simple way to store it and not convert to bytes
-		Service:             serviceName,
-		Url:                 entry.Request.URL,
-		Path:                urlPath,
-		Method:              entry.Request.Method,
-		Status:              entry.Response.Status,
-		RequestSenderIp:     connectionInfo.ClientIP,
-		Timestamp:           entry.StartedDateTime.UnixNano() / int64(time.Millisecond),
-		ResolvedSource:      resolvedSource,
-		ResolvedDestination: resolvedDestination,
-		IsOutgoing:          connectionInfo.IsOutgoing,
-	}
-	mizuEntry.EstimatedSizeBytes = getEstimatedEntrySizeBytes(mizuEntry)
-	database.CreateEntry(&mizuEntry)
-
-	baseEntry := models.BaseEntryDetails{}
-	if err := models.GetEntry(&mizuEntry, &baseEntry); err != nil {
-		return
-	}
-	baseEntry.Rules = models.RunValidationRulesState(*entry, serviceName)
-	baseEntry.Latency = entry.Timings.Receive
-	baseEntryBytes, _ := models.CreateBaseEntryWebSocketMessage(&baseEntry)
-	BroadcastToBrowserClients(baseEntryBytes)
-}
-
-func getServiceNameFromUrl(inputUrl string) (string, string) {
-	parsed, err := url.Parse(inputUrl)
-	utils.CheckErr(err)
-	return fmt.Sprintf("%s://%s", parsed.Scheme, parsed.Host), parsed.Path
+	return resolvedSource, resolvedDestination
 }
 
 func CheckIsServiceIP(address string) bool {
+	if k8sResolver == nil {
+		return false
+	}
 	return k8sResolver.CheckIsServiceIP(address)
 }
 
 // gives a rough estimate of the size this will take up in the db, good enough for maintaining db size limit accurately
-func getEstimatedEntrySizeBytes(mizuEntry models.MizuEntry) int {
+func getEstimatedEntrySizeBytes(mizuEntry *tapApi.MizuEntry) int {
 	sizeBytes := len(mizuEntry.Entry)
 	sizeBytes += len(mizuEntry.EntryId)
 	sizeBytes += len(mizuEntry.Service)

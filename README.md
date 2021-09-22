@@ -46,7 +46,7 @@ While `mizu`most often works out of the box, you can influence its behavior:
 1. [OPTIONAL] Set `KUBECONFIG` environment variable to your Kubernetes configuration. If this is not set, Mizu assumes that configuration is at `${HOME}/.kube/config`
 2. `mizu` assumes user running the command has permissions to create resources (such as pods, services, namespaces) on your Kubernetes cluster (no worries - `mizu` resources are cleaned up upon termination)
 
-For detailed list of k8s permissions see [PERMISSIONS](PERMISSIONS.md) document
+For detailed list of k8s permissions see [PERMISSIONS](docs/PERMISSIONS.md) document
 
 
 ## How to Run
@@ -143,22 +143,21 @@ Setting `mizu-resources-namespace=mizu` resets Mizu to its default behavior
 User-agent filtering (like health checks) - can be configured using command-line options:
 
 ```shell
-$ mizu tap "^ca.*" --set ignored-user-agents=kube-probe --set ignored-user-agents=prometheus
+$ mizu tap "^ca.*" --set tap.ignored-user-agents=kube-probe --set tap.ignored-user-agents=prometheus
 +carts-66c77f5fbb-fq65r
 +catalogue-5f4cb7cf5-7zrmn
 Web interface is now available at http://localhost:8899
 ^C
 
 ```
-
 Any request that contains `User-Agent` header with one of the specified values (`kube-probe` or `prometheus`) will not be captured
 
-### API Rules validation
+### Traffic validation rules
 
-This feature allows you to define set of simple rules, and test the API against them.
+This feature allows you to define set of simple rules, and test the traffic against them.
 Such validation may test response for specific JSON fields, headers, etc.
 
-Please see [API RULES](docs/POLICY_RULES.md) page for more details and syntax.
+Please see [TRAFFIC RULES](docs/POLICY_RULES.md) page for more details and syntax.
 
 
 ## How to Run local UI

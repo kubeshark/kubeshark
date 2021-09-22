@@ -3,7 +3,6 @@ module mizuserver
 go 1.16
 
 require (
-	github.com/beevik/etree v1.1.0
 	github.com/djherbis/atime v1.0.0
 	github.com/fsnotify/fsnotify v1.4.9
 	github.com/gin-contrib/static v0.0.1
@@ -18,8 +17,9 @@ require (
 	github.com/romana/rlog v0.0.0-20171115192701-f018bc92e7d7
 	github.com/up9inc/mizu/shared v0.0.0
 	github.com/up9inc/mizu/tap v0.0.0
+	github.com/up9inc/mizu/tap/api v0.0.0
 	github.com/yalp/jsonpath v0.0.0-20180802001716-5cc68e5049a0
-	go.mongodb.org/mongo-driver v1.5.1
+	go.mongodb.org/mongo-driver v1.7.1
 	gorm.io/driver/sqlite v1.1.4
 	gorm.io/gorm v1.21.8
 	k8s.io/api v0.21.0
@@ -30,3 +30,5 @@ require (
 replace github.com/up9inc/mizu/shared v0.0.0 => ../shared
 
 replace github.com/up9inc/mizu/tap v0.0.0 => ../tap
+
+replace github.com/up9inc/mizu/tap/api v0.0.0 => ../tap/api

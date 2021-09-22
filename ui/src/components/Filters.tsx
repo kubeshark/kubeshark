@@ -4,7 +4,7 @@ import {FilterSelect} from "./UI/FilterSelect";
 import {TextField} from "@material-ui/core";
 import {ALL_KEY} from "./UI/Select";
 
-interface HarFiltersProps {
+interface FiltersProps {
     methodsFilter: Array<string>;
     setMethodsFilter: (methods: Array<string>) => void;
     statusFilter: Array<string>;
@@ -13,7 +13,7 @@ interface HarFiltersProps {
     setPathFilter: (val: string) => void;
 }
 
-export const Filters: React.FC<HarFiltersProps> = ({methodsFilter, setMethodsFilter, statusFilter, setStatusFilter, pathFilter, setPathFilter}) => {
+export const Filters: React.FC<FiltersProps> = ({methodsFilter, setMethodsFilter, statusFilter, setStatusFilter, pathFilter, setPathFilter}) => {
 
     return <div className={styles.container}>
         <MethodFilter methodsFilter={methodsFilter} setMethodsFilter={setMethodsFilter}/>

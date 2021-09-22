@@ -2,8 +2,11 @@ package tap
 
 import (
 	"fmt"
-	"github.com/romana/rlog"
 	"sync"
+	"time"
+
+	"github.com/romana/rlog"
+	"github.com/up9inc/mizu/tap/api"
 
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers" // pulls in all layers decoders
@@ -17,72 +20,98 @@ import (
  */
 type tcpStreamFactory struct {
 	wg                 sync.WaitGroup
-	doHTTP             bool
-	harWriter          *HarWriter
-	outbountLinkWriter *OutboundLinkWriter
+	outboundLinkWriter *OutboundLinkWriter
+	Emitter            api.Emitter
 }
+
+type tcpStreamWrapper struct {
+	stream    *tcpStream
+	createdAt time.Time
+}
+
+var streams *sync.Map = &sync.Map{} // global
+var streamId int64 = 0
 
 func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.TCP, ac reassembly.AssemblerContext) reassembly.Stream {
 	rlog.Debugf("* NEW: %s %s", net, transport)
 	fsmOptions := reassembly.TCPSimpleFSMOptions{
 		SupportMissingEstablishment: *allowmissinginit,
 	}
-	rlog.Debugf("Current App Ports: %v", gSettings.filterPorts)
 	srcIp := net.Src().String()
 	dstIp := net.Dst().String()
-	dstPort := int(tcp.DstPort)
+	srcPort := transport.Src().String()
+	dstPort := transport.Dst().String()
 
-	if factory.shouldNotifyOnOutboundLink(dstIp, dstPort) {
-		factory.outbountLinkWriter.WriteOutboundLink(net.Src().String(), dstIp, dstPort, "", "")
-	}
-	props := factory.getStreamProps(srcIp, dstIp, dstPort)
-	isHTTP := props.isTapTarget
+	// if factory.shouldNotifyOnOutboundLink(dstIp, dstPort) {
+	// 	factory.outboundLinkWriter.WriteOutboundLink(net.Src().String(), dstIp, dstPort, "", "")
+	// }
+	props := factory.getStreamProps(srcIp, srcPort, dstIp, dstPort)
+	isTapTarget := props.isTapTarget
 	stream := &tcpStream{
-		net:        net,
-		transport:  transport,
-		isDNS:      tcp.SrcPort == 53 || tcp.DstPort == 53,
-		isHTTP:     isHTTP && factory.doHTTP,
-		reversed:   tcp.SrcPort == 80,
-		tcpstate:   reassembly.NewTCPSimpleFSM(fsmOptions),
-		ident:      fmt.Sprintf("%s:%s", net, transport),
-		optchecker: reassembly.NewTCPOptionCheck(),
+		net:             net,
+		transport:       transport,
+		isDNS:           tcp.SrcPort == 53 || tcp.DstPort == 53,
+		isTapTarget:     isTapTarget,
+		tcpstate:        reassembly.NewTCPSimpleFSM(fsmOptions),
+		ident:           fmt.Sprintf("%s:%s", net, transport),
+		optchecker:      reassembly.NewTCPOptionCheck(),
+		superIdentifier: &api.SuperIdentifier{},
 	}
-	if stream.isHTTP {
-		stream.client = httpReader{
-			msgQueue: make(chan httpReaderDataMsg),
-			ident:    fmt.Sprintf("%s %s", net, transport),
-			tcpID: tcpID{
-				srcIP:   net.Src().String(),
-				dstIP:   net.Dst().String(),
-				srcPort: transport.Src().String(),
-				dstPort: transport.Dst().String(),
-			},
-			hexdump:            *hexdump,
-			parent:             stream,
-			isClient:           true,
-			isOutgoing:         props.isOutgoing,
-			harWriter:          factory.harWriter,
-			outboundLinkWriter: factory.outbountLinkWriter,
+	if stream.isTapTarget {
+		streamId++
+		stream.id = streamId
+		for i, extension := range extensions {
+			counterPair := &api.CounterPair{
+				Request:  0,
+				Response: 0,
+			}
+			stream.clients = append(stream.clients, tcpReader{
+				msgQueue:   make(chan tcpReaderDataMsg),
+				superTimer: &api.SuperTimer{},
+				ident:      fmt.Sprintf("%s %s", net, transport),
+				tcpID: &api.TcpID{
+					SrcIP:   srcIp,
+					DstIP:   dstIp,
+					SrcPort: srcPort,
+					DstPort: dstPort,
+				},
+				parent:             stream,
+				isClient:           true,
+				isOutgoing:         props.isOutgoing,
+				outboundLinkWriter: factory.outboundLinkWriter,
+				extension:          extension,
+				emitter:            factory.Emitter,
+				counterPair:        counterPair,
+			})
+			stream.servers = append(stream.servers, tcpReader{
+				msgQueue:   make(chan tcpReaderDataMsg),
+				superTimer: &api.SuperTimer{},
+				ident:      fmt.Sprintf("%s %s", net, transport),
+				tcpID: &api.TcpID{
+					SrcIP:   net.Dst().String(),
+					DstIP:   net.Src().String(),
+					SrcPort: transport.Dst().String(),
+					DstPort: transport.Src().String(),
+				},
+				parent:             stream,
+				isClient:           false,
+				isOutgoing:         props.isOutgoing,
+				outboundLinkWriter: factory.outboundLinkWriter,
+				extension:          extension,
+				emitter:            factory.Emitter,
+				counterPair:        counterPair,
+			})
+
+			streams.Store(stream.id, &tcpStreamWrapper{
+				stream:    stream,
+				createdAt: time.Now(),
+			})
+
+			factory.wg.Add(2)
+			// Start reading from channel stream.reader.bytes
+			go stream.clients[i].run(&factory.wg)
+			go stream.servers[i].run(&factory.wg)
 		}
-		stream.server = httpReader{
-			msgQueue: make(chan httpReaderDataMsg),
-			ident:    fmt.Sprintf("%s %s", net.Reverse(), transport.Reverse()),
-			tcpID: tcpID{
-				srcIP:   net.Dst().String(),
-				dstIP:   net.Src().String(),
-				srcPort: transport.Dst().String(),
-				dstPort: transport.Src().String(),
-			},
-			hexdump:            *hexdump,
-			parent:             stream,
-			isOutgoing:         props.isOutgoing,
-			harWriter:          factory.harWriter,
-			outboundLinkWriter: factory.outbountLinkWriter,
-		}
-		factory.wg.Add(2)
-		// Start reading from channels stream.client.bytes and stream.server.bytes
-		go stream.client.run(&factory.wg)
-		go stream.server.run(&factory.wg)
 	}
 	return stream
 }
@@ -91,34 +120,24 @@ func (factory *tcpStreamFactory) WaitGoRoutines() {
 	factory.wg.Wait()
 }
 
-func (factory *tcpStreamFactory) getStreamProps(srcIP string, dstIP string, dstPort int) *streamProps {
+func (factory *tcpStreamFactory) getStreamProps(srcIP string, srcPort string, dstIP string, dstPort string) *streamProps {
 	if hostMode {
-		if inArrayString(gSettings.filterAuthorities, fmt.Sprintf("%s:%d", dstIP, dstPort)) == true {
-			rlog.Debugf("getStreamProps %s", fmt.Sprintf("+ host1 %s:%d", dstIP, dstPort))
+		if inArrayString(gSettings.filterAuthorities, fmt.Sprintf("%s:%s", dstIP, dstPort)) {
+			rlog.Debugf("getStreamProps %s", fmt.Sprintf("+ host1 %s:%s", dstIP, dstPort))
 			return &streamProps{isTapTarget: true, isOutgoing: false}
-		} else if inArrayString(gSettings.filterAuthorities, dstIP) == true {
+		} else if inArrayString(gSettings.filterAuthorities, dstIP) {
 			rlog.Debugf("getStreamProps %s", fmt.Sprintf("+ host2 %s", dstIP))
 			return &streamProps{isTapTarget: true, isOutgoing: false}
-		} else if *anydirection && inArrayString(gSettings.filterAuthorities, srcIP) == true {
-			rlog.Debugf("getStreamProps %s", fmt.Sprintf("+ host3 %s", srcIP))
+		} else if inArrayString(gSettings.filterAuthorities, fmt.Sprintf("%s:%s", srcIP, srcPort)) {
+			rlog.Debugf("getStreamProps %s", fmt.Sprintf("+ host3 %s:%s", srcIP, srcPort))
+			return &streamProps{isTapTarget: true, isOutgoing: true}
+		} else if inArrayString(gSettings.filterAuthorities, srcIP) {
+			rlog.Debugf("getStreamProps %s", fmt.Sprintf("+ host4 %s", srcIP))
 			return &streamProps{isTapTarget: true, isOutgoing: true}
 		}
-		return &streamProps{isTapTarget: false}
+		return &streamProps{isTapTarget: false, isOutgoing: false}
 	} else {
-		isTappedPort := dstPort == 80 || (gSettings.filterPorts != nil && (inArrayInt(gSettings.filterPorts, dstPort)))
-		if !isTappedPort {
-			rlog.Debugf("getStreamProps %s", fmt.Sprintf("- notHost1 %d", dstPort))
-			return &streamProps{isTapTarget: false, isOutgoing: false}
-		}
-
-		isOutgoing := !inArrayString(ownIps, dstIP)
-
-		if !*anydirection && isOutgoing {
-			rlog.Debugf("getStreamProps %s", fmt.Sprintf("- notHost2"))
-			return &streamProps{isTapTarget: false, isOutgoing: isOutgoing}
-		}
-
-		rlog.Debugf("getStreamProps %s", fmt.Sprintf("+ notHost3 %s -> %s:%d", srcIP, dstIP, dstPort))
+		rlog.Debugf("getStreamProps %s", fmt.Sprintf("+ notHost3 %s:%s -> %s:%s", srcIP, srcPort, dstIP, dstPort))
 		return &streamProps{isTapTarget: true}
 	}
 }

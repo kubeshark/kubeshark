@@ -38,15 +38,14 @@ const App = () => {
             }
 
         })();
-        // eslint-disable-next-line
-    }, []);
+    });
 
     const onTLSDetected = (destAddress: string) => {
         addressesWithTLS.add(destAddress);
         setAddressesWithTLS(new Set(addressesWithTLS));
 
         if (!userDismissedTLSWarning) {
-          setShowTLSWarning(true);
+            setShowTLSWarning(true);
         }
     };
 

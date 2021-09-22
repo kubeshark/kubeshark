@@ -1,18 +1,20 @@
 package acceptanceTests
 
 import (
+	"archive/zip"
 	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os/exec"
+	"path"
 	"strings"
 	"testing"
 	"time"
 )
 
-func TestTapAndFetch(t *testing.T) {
+func TestTap(t *testing.T) {
 	if testing.Short() {
 		t.Skip("ignored acceptance test")
 	}
@@ -90,37 +92,6 @@ func TestTapAndFetch(t *testing.T) {
 				return nil
 			}
 			if err := retriesExecute(shortRetriesCount, entriesCheckFunc); err != nil {
-				t.Errorf("%v", err)
-				return
-			}
-
-			fetchCmdArgs := getDefaultFetchCommandArgs()
-			fetchCmd := exec.Command(cliPath, fetchCmdArgs...)
-			t.Logf("running command: %v", fetchCmd.String())
-
-			if err := fetchCmd.Start(); err != nil {
-				t.Errorf("failed to start fetch command, err: %v", err)
-				return
-			}
-
-			harCheckFunc := func() error {
-				harBytes, readFileErr := ioutil.ReadFile("./unknown_source.har")
-				if readFileErr != nil {
-					return fmt.Errorf("failed to read har file, err: %v", readFileErr)
-				}
-
-				harEntries, err := getEntriesFromHarBytes(harBytes)
-				if err != nil {
-					return fmt.Errorf("failed to get entries from har, err: %v", err)
-				}
-
-				if len(harEntries) == 0 {
-					return fmt.Errorf("unexpected har entries result - Expected more than 0 entries")
-				}
-
-				return nil
-			}
-			if err := retriesExecute(shortRetriesCount, harCheckFunc); err != nil {
 				t.Errorf("%v", err)
 				return
 			}
@@ -534,10 +505,19 @@ func TestTapRedact(t *testing.T) {
 			return fmt.Errorf("failed to get entry, err: %v", requestErr)
 		}
 
-		entry := requestResult.(map[string]interface{})["entry"].(map[string]interface{})
-		entryRequest := entry["request"].(map[string]interface{})
+		data := requestResult.(map[string]interface{})["data"].(map[string]interface{})
+		entryJson := data["entry"].(string)
 
-		headers :=  entryRequest["headers"].([]interface{})
+		var entry map[string]interface{}
+		if parseErr := json.Unmarshal([]byte(entryJson), &entry); parseErr != nil {
+			return fmt.Errorf("failed to parse entry, err: %v", parseErr)
+		}
+
+		entryRequest := entry["request"].(map[string]interface{})
+		entryPayload := entryRequest["payload"].(map[string]interface{})
+		entryDetails := entryPayload["details"].(map[string]interface{})
+
+		headers :=  entryDetails["headers"].([]interface{})
 		for _, headerInterface := range headers {
 			header := headerInterface.(map[string]interface{})
 			if header["name"].(string) != "User-Agent" {
@@ -550,8 +530,8 @@ func TestTapRedact(t *testing.T) {
 			}
 		}
 
-		data := entryRequest["postData"].(map[string]interface{})
-		textDataStr := data["text"].(string)
+		postData := entryDetails["postData"].(map[string]interface{})
+		textDataStr := postData["text"].(string)
 
 		var textData map[string]string
 		if parseErr := json.Unmarshal([]byte(textDataStr), &textData); parseErr != nil {
@@ -640,10 +620,19 @@ func TestTapNoRedact(t *testing.T) {
 			return fmt.Errorf("failed to get entry, err: %v", requestErr)
 		}
 
-		entry := requestResult.(map[string]interface{})["entry"].(map[string]interface{})
-		entryRequest := entry["request"].(map[string]interface{})
+		data := requestResult.(map[string]interface{})["data"].(map[string]interface{})
+		entryJson := data["entry"].(string)
 
-		headers :=  entryRequest["headers"].([]interface{})
+		var entry map[string]interface{}
+		if parseErr := json.Unmarshal([]byte(entryJson), &entry); parseErr != nil {
+			return fmt.Errorf("failed to parse entry, err: %v", parseErr)
+		}
+
+		entryRequest := entry["request"].(map[string]interface{})
+		entryPayload := entryRequest["payload"].(map[string]interface{})
+		entryDetails := entryPayload["details"].(map[string]interface{})
+
+		headers :=  entryDetails["headers"].([]interface{})
 		for _, headerInterface := range headers {
 			header := headerInterface.(map[string]interface{})
 			if header["name"].(string) != "User-Agent" {
@@ -656,8 +645,8 @@ func TestTapNoRedact(t *testing.T) {
 			}
 		}
 
-		data := entryRequest["postData"].(map[string]interface{})
-		textDataStr := data["text"].(string)
+		postData := entryDetails["postData"].(map[string]interface{})
+		textDataStr := postData["text"].(string)
 
 		var textData map[string]string
 		if parseErr := json.Unmarshal([]byte(textDataStr), &textData); parseErr != nil {
@@ -746,11 +735,20 @@ func TestTapRegexMasking(t *testing.T) {
 			return fmt.Errorf("failed to get entry, err: %v", requestErr)
 		}
 
-		entry := requestResult.(map[string]interface{})["entry"].(map[string]interface{})
-		entryRequest := entry["request"].(map[string]interface{})
+		data := requestResult.(map[string]interface{})["data"].(map[string]interface{})
+		entryJson := data["entry"].(string)
 
-		data := entryRequest["postData"].(map[string]interface{})
-		textData := data["text"].(string)
+		var entry map[string]interface{}
+		if parseErr := json.Unmarshal([]byte(entryJson), &entry); parseErr != nil {
+			return fmt.Errorf("failed to parse entry, err: %v", parseErr)
+		}
+
+		entryRequest := entry["request"].(map[string]interface{})
+		entryPayload := entryRequest["payload"].(map[string]interface{})
+		entryDetails := entryPayload["details"].(map[string]interface{})
+
+		postData := entryDetails["postData"].(map[string]interface{})
+		textData := postData["text"].(string)
 
 		if textData != "[REDACTED]" {
 			return fmt.Errorf("unexpected result - body is not redacted")
@@ -760,6 +758,108 @@ func TestTapRegexMasking(t *testing.T) {
 	}
 	if err := retriesExecute(shortRetriesCount, redactCheckFunc); err != nil {
 		t.Errorf("%v", err)
+		return
+	}
+}
+
+func TestTapDumpLogs(t *testing.T) {
+	if testing.Short() {
+		t.Skip("ignored acceptance test")
+	}
+
+	cliPath, cliPathErr := getCliPath()
+	if cliPathErr != nil {
+		t.Errorf("failed to get cli path, err: %v", cliPathErr)
+		return
+	}
+
+	tapCmdArgs := getDefaultTapCommandArgs()
+
+	tapNamespace := getDefaultTapNamespace()
+	tapCmdArgs = append(tapCmdArgs, tapNamespace...)
+
+	tapCmdArgs = append(tapCmdArgs, "--set", "dump-logs=true")
+
+	tapCmd := exec.Command(cliPath, tapCmdArgs...)
+	t.Logf("running command: %v", tapCmd.String())
+
+	if err := tapCmd.Start(); err != nil {
+		t.Errorf("failed to start tap command, err: %v", err)
+		return
+	}
+
+	apiServerUrl := getApiServerUrl(defaultApiServerPort)
+
+	if err := waitTapPodsReady(apiServerUrl); err != nil {
+		t.Errorf("failed to start tap pods on time, err: %v", err)
+		return
+	}
+
+	if err := cleanupCommand(tapCmd); err != nil {
+		t.Errorf("failed to cleanup tap command, err: %v", err)
+		return
+	}
+
+	mizuFolderPath, mizuPathErr := getMizuFolderPath()
+	if mizuPathErr != nil {
+		t.Errorf("failed to get mizu folder path, err: %v", mizuPathErr)
+		return
+	}
+
+	files, readErr := ioutil.ReadDir(mizuFolderPath)
+	if readErr != nil {
+		t.Errorf("failed to read mizu folder files, err: %v", readErr)
+		return
+	}
+
+	var dumpsLogsPath string
+	for _, file := range files {
+		fileName := file.Name()
+		if strings.Contains(fileName, "mizu_logs") {
+			dumpsLogsPath = path.Join(mizuFolderPath, fileName)
+			break
+		}
+	}
+
+	if dumpsLogsPath == "" {
+		t.Errorf("dump logs file not found")
+		return
+	}
+
+	zipReader, zipError := zip.OpenReader(dumpsLogsPath)
+	if zipError != nil {
+		t.Errorf("failed to get zip reader, err: %v", zipError)
+		return
+	}
+
+	t.Cleanup(func() {
+		if err := zipReader.Close(); err != nil {
+			t.Logf("failed to close zip reader, err: %v", err)
+		}
+	})
+
+	var logsFileNames []string
+	for _, file := range zipReader.File {
+		logsFileNames = append(logsFileNames, file.Name)
+	}
+
+	if !Contains(logsFileNames, "mizu.mizu-api-server.log") {
+		t.Errorf("api server logs not found")
+		return
+	}
+
+	if !Contains(logsFileNames, "mizu_cli.log") {
+		t.Errorf("cli logs not found")
+		return
+	}
+
+	if !Contains(logsFileNames, "mizu_events.log") {
+		t.Errorf("events logs not found")
+		return
+	}
+
+	if !ContainsPartOfValue(logsFileNames, "mizu.mizu-tapper-daemon-set") {
+		t.Errorf("tapper logs not found")
 		return
 	}
 }

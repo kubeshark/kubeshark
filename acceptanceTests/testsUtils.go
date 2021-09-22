@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"strings"
 	"syscall"
 	"time"
 )
@@ -32,13 +33,22 @@ func getCliPath() (string, error) {
 	return cliPath, nil
 }
 
-func getConfigPath() (string, error) {
+func getMizuFolderPath() (string, error) {
 	home, homeDirErr := os.UserHomeDir()
 	if homeDirErr != nil {
 		return "", homeDirErr
 	}
 
-	return path.Join(home, ".mizu", "config.yaml"), nil
+	return path.Join(home, ".mizu"), nil
+}
+
+func getConfigPath() (string, error) {
+	mizuFolderPath, mizuPathError := getMizuFolderPath()
+	if mizuPathError != nil {
+		return "", mizuPathError
+	}
+
+	return path.Join(mizuFolderPath, "config.yaml"), nil
 }
 
 func getProxyUrl(namespace string, service string) string {
@@ -72,15 +82,15 @@ func getDefaultTapCommandArgsWithRegex(regex string) []string {
 	return append([]string{tapCommand, regex}, defaultCmdArgs...)
 }
 
-func getDefaultTapNamespace() []string {
-	return []string{"-n", "mizu-tests"}
-}
-
-func getDefaultFetchCommandArgs() []string {
-	fetchCommand := "fetch"
+func getDefaultLogsCommandArgs() []string {
+	logsCommand := "logs"
 	defaultCmdArgs := getDefaultCommandArgs()
 
-	return append([]string{fetchCommand}, defaultCmdArgs...)
+	return append([]string{logsCommand}, defaultCmdArgs...)
+}
+
+func getDefaultTapNamespace() []string {
+	return []string{"-n", "mizu-tests"}
 }
 
 func getDefaultConfigCommandArgs() []string {
@@ -91,10 +101,10 @@ func getDefaultConfigCommandArgs() []string {
 }
 
 func retriesExecute(retriesCount int, executeFunc func() error) error {
-	var lastError error
+	var lastError interface{}
 
 	for i := 0; i < retriesCount; i++ {
-		if err := executeFunc(); err != nil {
+		if err := tryExecuteFunc(executeFunc); err != nil {
 			lastError = err
 
 			time.Sleep(1 * time.Second)
@@ -105,6 +115,16 @@ func retriesExecute(retriesCount int, executeFunc func() error) error {
 	}
 
 	return fmt.Errorf("reached max retries count, retries count: %v, last err: %v", retriesCount, lastError)
+}
+
+func tryExecuteFunc(executeFunc func() error) (err interface{}) {
+	defer func() {
+		if panicErr := recover(); panicErr != nil {
+			err = panicErr
+		}
+	}()
+
+	return executeFunc()
 }
 
 func waitTapPodsReady(apiServerUrl string) error {
@@ -179,19 +199,6 @@ func cleanupCommand(cmd *exec.Cmd) error {
 	return nil
 }
 
-func getEntriesFromHarBytes(harBytes []byte) ([]interface{}, error) {
-	harInterface, convertErr := jsonBytesToInterface(harBytes)
-	if convertErr != nil {
-		return nil, convertErr
-	}
-
-	har := harInterface.(map[string]interface{})
-	harLog := har["log"].(map[string]interface{})
-	harEntries := harLog["entries"].([]interface{})
-
-	return harEntries, nil
-}
-
 func getPods(tapStatusInterface interface{}) ([]map[string]interface{}, error) {
 	tapStatus := tapStatusInterface.(map[string]interface{})
 	podsInterface := tapStatus["pods"].([]interface{})
@@ -202,4 +209,34 @@ func getPods(tapStatusInterface interface{}) ([]map[string]interface{}, error) {
 	}
 
 	return pods, nil
+}
+
+func getLogsPath() (string, error) {
+	dir, filePathErr := os.Getwd()
+	if filePathErr != nil {
+		return "", filePathErr
+	}
+
+	logsPath := path.Join(dir, "mizu_logs.zip")
+	return logsPath, nil
+}
+
+func Contains(slice []string, containsValue string) bool {
+	for _, sliceValue := range slice {
+		if sliceValue == containsValue {
+			return true
+		}
+	}
+
+	return false
+}
+
+func ContainsPartOfValue(slice []string, containsValue string) bool {
+	for _, sliceValue := range slice {
+		if strings.Contains(sliceValue, containsValue) {
+			return true
+		}
+	}
+
+	return false
 }

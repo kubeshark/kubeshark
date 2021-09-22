@@ -1,11 +1,12 @@
 package tap
 
 import (
-	"github.com/romana/rlog"
 	"sync"
 	"time"
 
 	"github.com/google/gopacket/reassembly"
+	"github.com/romana/rlog"
+	"github.com/up9inc/mizu/tap/api"
 )
 
 type CleanerStats struct {
@@ -17,7 +18,6 @@ type CleanerStats struct {
 type Cleaner struct {
 	assembler         *reassembly.Assembler
 	assemblerMutex    *sync.Mutex
-	matcher           *requestResponseMatcher
 	cleanPeriod       time.Duration
 	connectionTimeout time.Duration
 	stats             CleanerStats
@@ -32,13 +32,15 @@ func (cl *Cleaner) clean() {
 	flushed, closed := cl.assembler.FlushCloseOlderThan(startCleanTime.Add(-cl.connectionTimeout))
 	cl.assemblerMutex.Unlock()
 
-	deleted := cl.matcher.deleteOlderThan(startCleanTime.Add(-cl.connectionTimeout))
+	for _, extension := range extensions {
+		deleted := deleteOlderThan(extension.MatcherMap, startCleanTime.Add(-cl.connectionTimeout))
+		cl.stats.deleted += deleted
+	}
 
 	cl.statsMutex.Lock()
 	rlog.Debugf("Assembler Stats after cleaning %s", cl.assembler.Dump())
 	cl.stats.flushed += flushed
 	cl.stats.closed += closed
-	cl.stats.deleted += deleted
 	cl.statsMutex.Unlock()
 }
 
@@ -69,4 +71,26 @@ func (cl *Cleaner) dumpStats() CleanerStats {
 	cl.statsMutex.Unlock()
 
 	return stats
+}
+
+func deleteOlderThan(matcherMap *sync.Map, t time.Time) int {
+	numDeleted := 0
+
+	if matcherMap == nil {
+		return numDeleted
+	}
+
+	matcherMap.Range(func(key interface{}, value interface{}) bool {
+		message, _ := value.(*api.GenericMessage)
+		// TODO: Investigate the reason why `request` is `nil` in some rare occasion
+		if message != nil {
+			if message.CaptureTime.Before(t) {
+				matcherMap.Delete(key)
+				numDeleted++
+			}
+		}
+		return true
+	})
+
+	return numDeleted
 }
