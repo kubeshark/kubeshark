@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"mizuserver/pkg/database"
 	"mizuserver/pkg/holder"
+	"mizuserver/pkg/providers"
 	"net/url"
 	"os"
 	"path"
@@ -110,6 +111,8 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 	}
 
 	for item := range outputItems {
+		providers.EntryAdded()
+
 		extension := extensionsMap[item.Protocol.Name]
 		resolvedSource, resolvedDestionation := resolveIP(item.ConnectionInfo)
 		mizuEntry := extension.Dissector.Analyze(item, primitive.NewObjectID().Hex(), resolvedSource, resolvedDestionation)
