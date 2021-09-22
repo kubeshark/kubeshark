@@ -24,7 +24,7 @@ To use this feature - create simple rules file (see details below) and pass this
 
 
 ```shell
-mizu tap --traffic-validation rules.yaml PODNAME
+mizu tap --traffic-validation-file rules.yaml PODNAME
 ```
 
 
