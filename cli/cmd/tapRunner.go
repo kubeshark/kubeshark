@@ -364,6 +364,7 @@ func cleanUpNonRestrictedMode(ctx context.Context, cancel context.CancelFunc, ku
 	if err := kubernetesProvider.RemoveNonNamespacedResources(ctx, mizu.ClusterRoleName, mizu.ClusterRoleBindingName); err != nil {
 		logger.Log.Debugf(uiUtils.Error, fmt.Sprintf("Error removing non-namespaced resources: %v", errormessage.FormatError(err)))
 		if !isErrForbiddenGet(err) {
+			leftoverResources = append(leftoverResources, fmt.Sprintf("Namespace %s", config.Config.MizuResourcesNamespace))
 		}
 	}
 
