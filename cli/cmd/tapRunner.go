@@ -277,62 +277,97 @@ func cleanUpMizuResources(ctx context.Context, cancel context.CancelFunc, kubern
 
 	// Do not report failed "get" operations to the user. Assume that the user can't get resources they can't create.
 
+	var leftoverResources []string
+
 	if config.Config.IsNsRestrictedMode() {
-		cleanUpRestrictedMode(ctx, cancel, kubernetesProvider)
+		leftoverResources = cleanUpRestrictedMode(ctx, cancel, kubernetesProvider)
 	} else {
-		cleanUpNonRestrictedMode(ctx, cancel, kubernetesProvider)
+		leftoverResources = cleanUpNonRestrictedMode(ctx, cancel, kubernetesProvider)
+	}
+
+	if len(leftoverResources) > 0 {
+		errMsg := fmt.Sprintf("Failed to remove the following resources, for more info check logs at %s:", logger.GetLogFilePath())
+		for _, resource := range leftoverResources {
+			errMsg += "\n- " + resource
+		}
+		logger.Log.Errorf(uiUtils.Error, errMsg)
 	}
 }
 
-func cleanUpRestrictedMode(ctx context.Context, cancel context.CancelFunc, kubernetesProvider *kubernetes.Provider) {
+func cleanUpRestrictedMode(ctx context.Context, cancel context.CancelFunc, kubernetesProvider *kubernetes.Provider) []string {
+	leftoverResources := make([]string, 0)
+
 	if err := kubernetesProvider.RemovePod(ctx, config.Config.MizuResourcesNamespace, mizu.ApiServerPodName); err != nil {
-		level := getLogLevel(isErrForbiddenGet(err))
-		logger.Logf(level, uiUtils.Error, fmt.Sprintf("Error removing Pod %s in namespace %s: %v", mizu.ApiServerPodName, config.Config.MizuResourcesNamespace, errormessage.FormatError(err)))
+		logger.Log.Debugf(uiUtils.Error, fmt.Sprintf("Error removing Pod %s in namespace %s: %v", mizu.ApiServerPodName, config.Config.MizuResourcesNamespace, errormessage.FormatError(err)))
+		if !isErrForbiddenGet(err) {
+			leftoverResources = append(leftoverResources, fmt.Sprintf("Namespace %s", config.Config.MizuResourcesNamespace))
+		}
 	}
 
 	if err := kubernetesProvider.RemoveService(ctx, config.Config.MizuResourcesNamespace, mizu.ApiServerPodName); err != nil {
-		level := getLogLevel(isErrForbiddenGet(err))
-		logger.Logf(level, uiUtils.Error, fmt.Sprintf("Error removing Service %s in namespace %s: %v", mizu.ApiServerPodName, config.Config.MizuResourcesNamespace, errormessage.FormatError(err)))
+		logger.Log.Debugf(uiUtils.Error, fmt.Sprintf("Error removing Service %s in namespace %s: %v", mizu.ApiServerPodName, config.Config.MizuResourcesNamespace, errormessage.FormatError(err)))
+		if !isErrForbiddenGet(err) {
+			leftoverResources = append(leftoverResources, fmt.Sprintf("Namespace %s", config.Config.MizuResourcesNamespace))
+		}
 	}
 
 	if err := kubernetesProvider.RemoveDaemonSet(ctx, config.Config.MizuResourcesNamespace, mizu.TapperDaemonSetName); err != nil {
-		level := getLogLevel(isErrForbiddenGet(err))
-		logger.Logf(level, uiUtils.Error, fmt.Sprintf("Error removing DaemonSet %s in namespace %s: %v", mizu.TapperDaemonSetName, config.Config.MizuResourcesNamespace, errormessage.FormatError(err)))
+		logger.Log.Debugf(uiUtils.Error, fmt.Sprintf("Error removing DaemonSet %s in namespace %s: %v", mizu.TapperDaemonSetName, config.Config.MizuResourcesNamespace, errormessage.FormatError(err)))
+		if !isErrForbiddenGet(err) {
+			leftoverResources = append(leftoverResources, fmt.Sprintf("Namespace %s", config.Config.MizuResourcesNamespace))
+		}
 	}
 
 	if err := kubernetesProvider.RemoveConfigMap(ctx, config.Config.MizuResourcesNamespace, mizu.ConfigMapName); err != nil {
-		level := getLogLevel(isErrForbiddenGet(err))
-		logger.Logf(level, uiUtils.Error, fmt.Sprintf("Error removing ConfigMap %s in namespace %s: %v", mizu.ConfigMapName, config.Config.MizuResourcesNamespace, errormessage.FormatError(err)))
+		logger.Log.Debugf(uiUtils.Error, fmt.Sprintf("Error removing ConfigMap %s in namespace %s: %v", mizu.ConfigMapName, config.Config.MizuResourcesNamespace, errormessage.FormatError(err)))
+		if !isErrForbiddenGet(err) {
+			leftoverResources = append(leftoverResources, fmt.Sprintf("Namespace %s", config.Config.MizuResourcesNamespace))
+		}
 	}
 
 	if err := kubernetesProvider.RemoveServicAccount(ctx, config.Config.MizuResourcesNamespace, mizu.ServiceAccountName); err != nil {
-		level := getLogLevel(isErrForbiddenGet(err))
-		logger.Logf(level, uiUtils.Error, fmt.Sprintf("Error removing Service Account %s in namespace %s: %v", mizu.ServiceAccountName, config.Config.MizuResourcesNamespace, errormessage.FormatError(err)))
+		logger.Log.Debugf(uiUtils.Error, fmt.Sprintf("Error removing Service Account %s in namespace %s: %v", mizu.ServiceAccountName, config.Config.MizuResourcesNamespace, errormessage.FormatError(err)))
+		if !isErrForbiddenGet(err) {
+			leftoverResources = append(leftoverResources, fmt.Sprintf("Namespace %s", config.Config.MizuResourcesNamespace))
+		}
 	}
 
 	if err := kubernetesProvider.RemoveRole(ctx, config.Config.MizuResourcesNamespace, mizu.RoleName); err != nil {
-		level := getLogLevel(isErrForbiddenGet(err))
-		logger.Logf(level, uiUtils.Error, fmt.Sprintf("Error removing Role %s in namespace %s: %v", mizu.RoleName, config.Config.MizuResourcesNamespace, errormessage.FormatError(err)))
+		logger.Log.Debugf(uiUtils.Error, fmt.Sprintf("Error removing Role %s in namespace %s: %v", mizu.RoleName, config.Config.MizuResourcesNamespace, errormessage.FormatError(err)))
+		if !isErrForbiddenGet(err) {
+			leftoverResources = append(leftoverResources, fmt.Sprintf("Namespace %s", config.Config.MizuResourcesNamespace))
+		}
 	}
 
 	if err := kubernetesProvider.RemoveRoleBinding(ctx, config.Config.MizuResourcesNamespace, mizu.RoleBindingName); err != nil {
-		level := getLogLevel(isErrForbiddenGet(err))
-		logger.Logf(level, uiUtils.Error, fmt.Sprintf("Error removing RoleBinding %s in namespace %s: %v", mizu.RoleBindingName, config.Config.MizuResourcesNamespace, errormessage.FormatError(err)))
+		logger.Log.Debugf(uiUtils.Error, fmt.Sprintf("Error removing RoleBinding %s in namespace %s: %v", mizu.RoleBindingName, config.Config.MizuResourcesNamespace, errormessage.FormatError(err)))
+		if !isErrForbiddenGet(err) {
+			leftoverResources = append(leftoverResources, fmt.Sprintf("Namespace %s", config.Config.MizuResourcesNamespace))
+		}
 	}
+
+	return leftoverResources
 }
 
-func cleanUpNonRestrictedMode(ctx context.Context, cancel context.CancelFunc, kubernetesProvider *kubernetes.Provider) {
+func cleanUpNonRestrictedMode(ctx context.Context, cancel context.CancelFunc, kubernetesProvider *kubernetes.Provider) []string {
+	leftoverResources := make([]string, 0)
+
 	if err := kubernetesProvider.RemoveNamespace(ctx, config.Config.MizuResourcesNamespace); err != nil {
-		level := getLogLevel(isErrForbiddenGet(err))
-		logger.Logf(level, uiUtils.Error, fmt.Sprintf("Error removing Namespace %s: %v", config.Config.MizuResourcesNamespace, errormessage.FormatError(err)))
+		logger.Log.Debugf(uiUtils.Error, fmt.Sprintf("Error removing Namespace %s: %v", config.Config.MizuResourcesNamespace, errormessage.FormatError(err)))
+		if !isErrForbiddenGet(err) {
+			leftoverResources = append(leftoverResources, fmt.Sprintf("Namespace %s", config.Config.MizuResourcesNamespace))
+		}
 	} else {
 		defer waitUntilNamespaceDeleted(ctx, cancel, kubernetesProvider)
 	}
 
 	if err := kubernetesProvider.RemoveNonNamespacedResources(ctx, mizu.ClusterRoleName, mizu.ClusterRoleBindingName); err != nil {
-		level := getLogLevel(isErrForbiddenGet(err))
-		logger.Logf(level, uiUtils.Error, fmt.Sprintf("Error removing non-namespaced resources: %v", errormessage.FormatError(err)))
+		logger.Log.Debugf(uiUtils.Error, fmt.Sprintf("Error removing non-namespaced resources: %v", errormessage.FormatError(err)))
+		if !isErrForbiddenGet(err) {
+		}
 	}
+
+	return leftoverResources
 }
 
 func isErrForbiddenGet(err error) bool {
