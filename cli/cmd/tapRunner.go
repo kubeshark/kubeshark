@@ -361,10 +361,16 @@ func cleanUpNonRestrictedMode(ctx context.Context, cancel context.CancelFunc, ku
 		defer waitUntilNamespaceDeleted(ctx, cancel, kubernetesProvider)
 	}
 
-	if err := kubernetesProvider.RemoveNonNamespacedResources(ctx, mizu.ClusterRoleName, mizu.ClusterRoleBindingName); err != nil {
-		logger.Log.Debugf("Error removing non-namespaced resources: %v", errormessage.FormatError(err))
+	if err := kubernetesProvider.RemoveClusterRole(ctx, mizu.ClusterRoleName); err != nil {
+		logger.Log.Debugf("Error removing ClusterRole %s: %v", mizu.ClusterRoleName, errormessage.FormatError(err))
 		if !isErrForbiddenGet(err) {
 			leftoverResources = append(leftoverResources, fmt.Sprintf("ClusterRole %s", mizu.ClusterRoleName))
+		}
+	}
+
+	if err := kubernetesProvider.RemoveClusterRoleBinding(ctx, mizu.ClusterRoleBindingName); err != nil {
+		logger.Log.Debugf("Error removing ClusterRoleBinding %s: %v", mizu.ClusterRoleBindingName, errormessage.FormatError(err))
+		if !isErrForbiddenGet(err) {
 			leftoverResources = append(leftoverResources, fmt.Sprintf("ClusterRoleBinding %s", mizu.ClusterRoleBindingName))
 		}
 	}

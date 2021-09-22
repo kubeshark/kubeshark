@@ -450,18 +450,6 @@ func (provider *Provider) RemoveNamespace(ctx context.Context, name string) erro
 	return provider.clientSet.CoreV1().Namespaces().Delete(ctx, name, metav1.DeleteOptions{})
 }
 
-func (provider *Provider) RemoveNonNamespacedResources(ctx context.Context, clusterRoleName string, clusterRoleBindingName string) error {
-	if err := provider.RemoveClusterRole(ctx, clusterRoleName); err != nil {
-		return err
-	}
-
-	if err := provider.RemoveClusterRoleBinding(ctx, clusterRoleBindingName); err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func (provider *Provider) RemoveClusterRole(ctx context.Context, name string) error {
 	if isFound, err := provider.DoesClusterRoleExist(ctx, name); err != nil {
 		return err
