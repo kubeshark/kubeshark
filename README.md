@@ -152,12 +152,12 @@ Web interface is now available at http://localhost:8899
 ```
 Any request that contains `User-Agent` header with one of the specified values (`kube-probe` or `prometheus`) will not be captured
 
-### API Rules validation
+### Traffic validation rules
 
-This feature allows you to define set of simple rules, and test the API against them.
+This feature allows you to define set of simple rules, and test the traffic against them.
 Such validation may test response for specific JSON fields, headers, etc.
 
-Please see [API RULES](docs/POLICY_RULES.md) page for more details and syntax.
+Please see [TRAFFIC RULES](docs/POLICY_RULES.md) page for more details and syntax.
 
 
 ## How to Run local UI

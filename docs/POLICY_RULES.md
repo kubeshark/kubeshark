@@ -1,18 +1,16 @@
 
-# API rules validation
+# Traffic validation rules
 
-This feature allows you to define set of simple rules, and test the API against them.
+This feature allows you to define set of simple rules, and test the traffic against them.
 Such validation may test response for specific JSON fields, headers, etc.
 
 ## Examples
 
-
-Example 1: HTTP request (REST API call) that didn’t pass validation is highlighted in red
+Example 1: HTTP request (REST API call) that didn't pass validation is highlighted in red
 
 ![Simple UI](../assets/validation-example1.png)
 
 - - -
-
 
 Example 2: Details pane shows the validation rule details and whether it passed or failed
 
@@ -20,13 +18,12 @@ Example 2: Details pane shows the validation rule details and whether it passed 
 
 
 ## How to use
+
 To use this feature - create simple rules file (see details below) and pass this file as parameter to `mizu tap` command. For example, if rules are stored in file named `rules.yaml` — run the following command:
 
-
 ```shell
-mizu tap --traffic-validation rules.yaml PODNAME
+mizu tap --traffic-validation-file rules.yaml
 ```
-
 
 
 ## Rules file structure
@@ -62,6 +59,7 @@ rules:
   service: "carts.*"
 ```
 
+
 ### Explanation:
 
 * First rule `holy-in-name-property`:
@@ -74,5 +72,4 @@ rules:
 
 * Third rule `latency-test`:
 
-  > This rule will be applied to all request made to `carts.*` services. If the latency of the response is greater than `1` will be marked as failure, marked as success otherwise.
-
+  > This rule will be applied to all request made to `carts.*` services. If the latency of the response is greater than `1ms` will be marked as failure, marked as success otherwise.
