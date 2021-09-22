@@ -86,6 +86,10 @@ func getContentTypeHeaderValue(headers http.Header) string {
 }
 
 func isFieldNameSensitive(fieldName string) bool {
+	if fieldName == ":authority" {
+		return false
+	}
+
 	name := strings.ToLower(fieldName)
 	name = strings.ReplaceAll(name, "_", "")
 	name = strings.ReplaceAll(name, "-", "")
