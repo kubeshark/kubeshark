@@ -396,14 +396,6 @@ func isErrForbiddenGet(err error) bool {
 	return false
 }
 
-func getLogLevel(isDebugLevel bool) logger.Level {
-	if isDebugLevel {
-		return logger.DEBUG
-	}
-
-	return logger.ERROR
-}
-
 func waitUntilNamespaceDeleted(ctx context.Context, cancel context.CancelFunc, kubernetesProvider *kubernetes.Provider) {
 	// Call cancel if a terminating signal was received. Allows user to skip the wait.
 	go func() {
