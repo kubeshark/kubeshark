@@ -17,6 +17,7 @@ interface Props {
     tabs: Tab[],
     currentTab: string,
     color: string,
+    response: any,
     onChange: (string) => void,
     leftAligned?: boolean,
     dark?: boolean,
@@ -72,10 +73,13 @@ const useTabsStyles = makeStyles((theme) => ({
 }));
 
 
-const Tabs: React.FC<Props> = ({classes={}, tabs, currentTab, color, onChange, leftAligned, dark}) => {
+const Tabs: React.FC<Props> = ({classes={}, tabs, currentTab, color, response, onChange, leftAligned, dark}) => {
     const _classes = {...useTabsStyles(), ...classes};
     return <div className={`${_classes.root} ${leftAligned ? _classes.tabsAlignLeft : ''}`}>
         {tabs.filter((tab) => !tab.hidden).map(({tab, disabled, disabledMessage, highlight, badge}, index) => {
+            if (!response && index === 1) {
+                return <></>;
+            }
             const active = currentTab === tab;
             const tabLink = <span
                 key={tab}

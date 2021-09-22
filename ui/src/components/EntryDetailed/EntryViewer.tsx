@@ -57,13 +57,13 @@ const AutoRepresentation: React.FC<any> = ({representation, rulesMatched, elapse
     return <div className={styles.Entry}>
         {<div className={styles.body}>
             <div className={styles.bodyHeader}>
-                <Tabs tabs={TABS} currentTab={currentTab} color={color} onChange={setCurrentTab} leftAligned/>
+                <Tabs tabs={TABS} currentTab={currentTab} color={color} response={response} onChange={setCurrentTab} leftAligned/>
                 {request?.url && <a className={styles.endpointURL} href={request.payload.url} target='_blank' rel="noreferrer">{request.payload.url}</a>}
             </div>
             {currentTab === TABS[0].tab && <React.Fragment>
                 <SectionsRepresentation data={request} color={color}/>
             </React.Fragment>}
-            {currentTab === TABS[1].tab && <React.Fragment>
+            {response && currentTab === TABS[1].tab && <React.Fragment>
                 <SectionsRepresentation data={response} color={color}/>
             </React.Fragment>}
             {currentTab === TABS[2].tab && <React.Fragment>
