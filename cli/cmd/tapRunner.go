@@ -583,7 +583,7 @@ func watchApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 
 				url := GetApiServerUrl()
 				if err := apiserver.Provider.InitAndTestConnection(url); err != nil {
-					logger.Log.Errorf(uiUtils.Error, "Couldn't connect to API server, check logs")
+					logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Couldn't connect to API server, for more info check logs at %s", logger.GetLogFilePath()))
 					cancel()
 					break
 				}
