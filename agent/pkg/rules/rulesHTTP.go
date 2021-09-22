@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/romana/rlog"
 	"reflect"
 	"regexp"
 	"strings"
@@ -65,7 +66,7 @@ func MatchRequestPolicy(harEntry har.Entry, service string) []RulesMatched {
 				if err != nil {
 					continue
 				}
-				fmt.Println(matchValue, rule.Value)
+				rlog.Info(matchValue, rule.Value)
 			} else {
 				val := fmt.Sprint(out)
 				matchValue, err = regexp.MatchString(rule.Value, val)

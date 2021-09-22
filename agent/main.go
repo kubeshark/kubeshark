@@ -65,6 +65,7 @@ func main() {
 
 		hostApi(nil)
 	} else if *tapperMode {
+		rlog.Infof("Starting tapper, websocket address: %s", *apiServerAddress)
 		if *apiServerAddress == "" {
 			panic("API server address must be provided with --api-server-address when using --tap")
 		}
@@ -77,13 +78,13 @@ func main() {
 
 		filteredOutputItemsChannel := make(chan *tapApi.OutputChannelItem)
 		tap.StartPassiveTapper(tapOpts, filteredOutputItemsChannel, extensions, filteringOptions)
-		socketConnection, err := shared.ConnectToSocketServer(*apiServerAddress, shared.DEFAULT_SOCKET_RETRIES, shared.DEFAULT_SOCKET_RETRY_SLEEP_TIME, false)
+		socketConnection, err := utils.ConnectToSocketServer(*apiServerAddress)
 		if err != nil {
 			panic(fmt.Sprintf("Error connecting to socket server at %s %v", *apiServerAddress, err))
 		}
+		rlog.Infof("Connected successfully to websocket %s", *apiServerAddress)
 
 		go pipeTapChannelToSocket(socketConnection, filteredOutputItemsChannel)
-		// go pipeOutboundLinksChannelToSocket(socketConnection, outboundLinkOutputChannel)
 	} else if *apiServerMode {
 		api.StartResolving(*namespace)
 
@@ -122,7 +123,7 @@ func loadExtensions() {
 	extensionsMap = make(map[string]*tapApi.Extension)
 	for i, file := range files {
 		filename := file.Name()
-		log.Printf("Loading extension: %s\n", filename)
+		rlog.Infof("Loading extension: %s\n", filename)
 		extension := &tapApi.Extension{
 			Path: path.Join(extensionsDir, filename),
 		}
@@ -290,7 +291,7 @@ func pipeTapChannelToSocket(connection *websocket.Conn, messageDataChannel <-cha
 	for messageData := range messageDataChannel {
 		marshaledData, err := models.CreateWebsocketTappedEntryMessage(messageData)
 		if err != nil {
-			rlog.Infof("error converting message to json %s, (%v,%+v)\n", err, err, err)
+			rlog.Errorf("error converting message to json %v, err: %s, (%v,%+v)", messageData, err, err, err)
 			continue
 		}
 
@@ -298,26 +299,8 @@ func pipeTapChannelToSocket(connection *websocket.Conn, messageDataChannel <-cha
 		// and goes into the intermediate WebSocket.
 		err = connection.WriteMessage(websocket.TextMessage, marshaledData)
 		if err != nil {
-			rlog.Infof("error sending message through socket server %s, (%v,%+v)\n", err, err, err)
+			rlog.Errorf("error sending message through socket server %v, err: %s, (%v,%+v)", messageData, err, err, err)
 			continue
-		}
-	}
-}
-
-func pipeOutboundLinksChannelToSocket(connection *websocket.Conn, outboundLinkChannel <-chan *tap.OutboundLink) {
-	for outboundLink := range outboundLinkChannel {
-		if outboundLink.SuggestedProtocol == tap.TLSProtocol {
-			marshaledData, err := models.CreateWebsocketOutboundLinkMessage(outboundLink)
-			if err != nil {
-				rlog.Infof("Error converting outbound link to json %s, (%v,%+v)", err, err, err)
-				continue
-			}
-
-			err = connection.WriteMessage(websocket.TextMessage, marshaledData)
-			if err != nil {
-				rlog.Infof("error sending outbound link message through socket server %s, (%v,%+v)", err, err, err)
-				continue
-			}
 		}
 	}
 }

@@ -4,13 +4,12 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"strconv"
-	"strings"
-	"time"
-
 	"github.com/google/martian/har"
 	"github.com/romana/rlog"
 	"github.com/up9inc/mizu/tap/api"
+	"strconv"
+	"strings"
+	"time"
 )
 
 // Keep it because we might want cookies in the future
