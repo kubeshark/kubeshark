@@ -54,15 +54,14 @@ func ReverseSlice(data interface{}) {
 
 func CheckErr(e error) {
 	if e != nil {
-		rlog.Infof("%v", e)
-		//panic(e)
+		rlog.Errorf("%v", e)
 	}
 }
 
 func SetHostname(address, newHostname string) string {
 	replacedUrl, err := url.Parse(address)
 	if err != nil {
-		rlog.Infof("error replacing hostname to %s in address %s, returning original %v", newHostname, address, err)
+		rlog.Errorf("error replacing hostname to %s in address %s, returning original %v", newHostname, address, err)
 		return address
 	}
 	replacedUrl.Host = newHostname
