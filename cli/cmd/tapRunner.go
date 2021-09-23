@@ -8,6 +8,10 @@ import (
 	"strings"
 	"time"
 
+	"gopkg.in/yaml.v3"
+	core "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/util/wait"
+
 	"github.com/up9inc/mizu/cli/apiserver"
 	"github.com/up9inc/mizu/cli/config"
 	"github.com/up9inc/mizu/cli/config/configStructs"
@@ -22,9 +26,6 @@ import (
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/debounce"
 	"github.com/up9inc/mizu/tap/api"
-	yaml "gopkg.in/yaml.v3"
-	core "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/util/wait"
 )
 
 const (
@@ -36,7 +37,6 @@ type tapState struct {
 	apiServerService         *core.Service
 	currentlyTappedPods      []core.Pod
 	mizuServiceAccountExists bool
-	doNotRemoveConfigMap     bool
 }
 
 var state tapState
@@ -150,9 +150,6 @@ func createMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Pro
 
 	if err := createMizuConfigmap(ctx, kubernetesProvider, mizuValidationRules); err != nil {
 		logger.Log.Warningf(uiUtils.Warning, fmt.Sprintf("Failed to create resources required for policy validation. Mizu will not validate policy rules. error: %v\n", errormessage.FormatError(err)))
-		state.doNotRemoveConfigMap = true
-	} else if mizuValidationRules == "" {
-		state.doNotRemoveConfigMap = true
 	}
 
 	return nil
@@ -268,75 +265,108 @@ func finishMizuExecution(kubernetesProvider *kubernetes.Provider) {
 	telemetry.ReportAPICalls()
 	removalCtx, cancel := context.WithTimeout(context.Background(), cleanupTimeout)
 	defer cancel()
-	dumpLogsIfNeeded(kubernetesProvider, removalCtx)
-	cleanUpMizuResources(kubernetesProvider, removalCtx, cancel)
+	dumpLogsIfNeeded(removalCtx, kubernetesProvider)
+	cleanUpMizuResources(removalCtx, cancel, kubernetesProvider)
 }
 
-func dumpLogsIfNeeded(kubernetesProvider *kubernetes.Provider, removalCtx context.Context) {
+func dumpLogsIfNeeded(ctx context.Context, kubernetesProvider *kubernetes.Provider) {
 	if !config.Config.DumpLogs {
 		return
 	}
 	mizuDir := mizu.GetMizuFolderPath()
 	filePath := path.Join(mizuDir, fmt.Sprintf("mizu_logs_%s.zip", time.Now().Format("2006_01_02__15_04_05")))
-	if err := fsUtils.DumpLogs(kubernetesProvider, removalCtx, filePath); err != nil {
+	if err := fsUtils.DumpLogs(ctx, kubernetesProvider, filePath); err != nil {
 		logger.Log.Errorf("Failed dump logs %v", err)
 	}
 }
 
-func cleanUpMizuResources(kubernetesProvider *kubernetes.Provider, removalCtx context.Context, cancel context.CancelFunc) {
+func cleanUpMizuResources(ctx context.Context, cancel context.CancelFunc, kubernetesProvider *kubernetes.Provider) {
 	logger.Log.Infof("\nRemoving mizu resources\n")
 
-	if !config.Config.IsNsRestrictedMode() {
-		if err := kubernetesProvider.RemoveNamespace(removalCtx, config.Config.MizuResourcesNamespace); err != nil {
-			logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error removing Namespace %s: %v", config.Config.MizuResourcesNamespace, errormessage.FormatError(err)))
-			return
-		}
+	var leftoverResources []string
+
+	if config.Config.IsNsRestrictedMode() {
+		leftoverResources = cleanUpRestrictedMode(ctx, kubernetesProvider)
 	} else {
-		if err := kubernetesProvider.RemovePod(removalCtx, config.Config.MizuResourcesNamespace, mizu.ApiServerPodName); err != nil {
-			logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error removing Pod %s in namespace %s: %v", mizu.ApiServerPodName, config.Config.MizuResourcesNamespace, errormessage.FormatError(err)))
-		}
-
-		if err := kubernetesProvider.RemoveService(removalCtx, config.Config.MizuResourcesNamespace, mizu.ApiServerPodName); err != nil {
-			logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error removing Service %s in namespace %s: %v", mizu.ApiServerPodName, config.Config.MizuResourcesNamespace, errormessage.FormatError(err)))
-		}
-
-		if err := kubernetesProvider.RemoveDaemonSet(removalCtx, config.Config.MizuResourcesNamespace, mizu.TapperDaemonSetName); err != nil {
-			logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error removing DaemonSet %s in namespace %s: %v", mizu.TapperDaemonSetName, config.Config.MizuResourcesNamespace, errormessage.FormatError(err)))
-		}
-
-		if !state.doNotRemoveConfigMap {
-			if err := kubernetesProvider.RemoveConfigMap(removalCtx, config.Config.MizuResourcesNamespace, mizu.ConfigMapName); err != nil {
-				logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error removing ConfigMap %s in namespace %s: %v", mizu.ConfigMapName, config.Config.MizuResourcesNamespace, errormessage.FormatError(err)))
-			}
-		}
-
+		leftoverResources = cleanUpNonRestrictedMode(ctx, cancel, kubernetesProvider)
 	}
 
-	if state.mizuServiceAccountExists {
-		if !config.Config.IsNsRestrictedMode() {
-			if err := kubernetesProvider.RemoveNonNamespacedResources(removalCtx, mizu.ClusterRoleName, mizu.ClusterRoleBindingName); err != nil {
-				logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error removing non-namespaced resources: %v", errormessage.FormatError(err)))
-				return
-			}
-		} else {
-			if err := kubernetesProvider.RemoveServicAccount(removalCtx, config.Config.MizuResourcesNamespace, mizu.ServiceAccountName); err != nil {
-				logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error removing Service Account %s in namespace %s: %v", mizu.ServiceAccountName, config.Config.MizuResourcesNamespace, errormessage.FormatError(err)))
-				return
-			}
-
-			if err := kubernetesProvider.RemoveRole(removalCtx, config.Config.MizuResourcesNamespace, mizu.RoleName); err != nil {
-				logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error removing Role %s in namespace %s: %v", mizu.RoleName, config.Config.MizuResourcesNamespace, errormessage.FormatError(err)))
-			}
-
-			if err := kubernetesProvider.RemoveRoleBinding(removalCtx, config.Config.MizuResourcesNamespace, mizu.RoleBindingName); err != nil {
-				logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error removing RoleBinding %s in namespace %s: %v", mizu.RoleBindingName, config.Config.MizuResourcesNamespace, errormessage.FormatError(err)))
-			}
+	if len(leftoverResources) > 0 {
+		errMsg := fmt.Sprintf("Failed to remove the following resources, for more info check logs at %s:", logger.GetLogFilePath())
+		for _, resource := range leftoverResources {
+			errMsg += "\n- " + resource
 		}
+		logger.Log.Errorf(uiUtils.Error, errMsg)
+	}
+}
+
+func cleanUpRestrictedMode(ctx context.Context, kubernetesProvider *kubernetes.Provider) []string {
+	leftoverResources := make([]string, 0)
+
+	if err := kubernetesProvider.RemovePod(ctx, config.Config.MizuResourcesNamespace, mizu.ApiServerPodName); err != nil {
+		resourceDesc := fmt.Sprintf("Pod %s in namespace %s", mizu.ApiServerPodName, config.Config.MizuResourcesNamespace)
+		handleDeletionError(err, resourceDesc, &leftoverResources)
 	}
 
-	if !config.Config.IsNsRestrictedMode() {
-		waitUntilNamespaceDeleted(removalCtx, cancel, kubernetesProvider)
+	if err := kubernetesProvider.RemoveService(ctx, config.Config.MizuResourcesNamespace, mizu.ApiServerPodName); err != nil {
+		resourceDesc := fmt.Sprintf("Service %s in namespace %s", mizu.ApiServerPodName, config.Config.MizuResourcesNamespace)
+		handleDeletionError(err, resourceDesc, &leftoverResources)
 	}
+
+	if err := kubernetesProvider.RemoveDaemonSet(ctx, config.Config.MizuResourcesNamespace, mizu.TapperDaemonSetName); err != nil {
+		resourceDesc := fmt.Sprintf("DaemonSet %s in namespace %s", mizu.TapperDaemonSetName, config.Config.MizuResourcesNamespace)
+		handleDeletionError(err, resourceDesc, &leftoverResources)
+	}
+
+	if err := kubernetesProvider.RemoveConfigMap(ctx, config.Config.MizuResourcesNamespace, mizu.ConfigMapName); err != nil {
+		resourceDesc := fmt.Sprintf("ConfigMap %s in namespace %s", mizu.ConfigMapName, config.Config.MizuResourcesNamespace)
+		handleDeletionError(err, resourceDesc, &leftoverResources)
+	}
+
+	if err := kubernetesProvider.RemoveServicAccount(ctx, config.Config.MizuResourcesNamespace, mizu.ServiceAccountName); err != nil {
+		resourceDesc := fmt.Sprintf("Service Account %s in namespace %s", mizu.ServiceAccountName, config.Config.MizuResourcesNamespace)
+		handleDeletionError(err, resourceDesc, &leftoverResources)
+	}
+
+	if err := kubernetesProvider.RemoveRole(ctx, config.Config.MizuResourcesNamespace, mizu.RoleName); err != nil {
+		resourceDesc := fmt.Sprintf("Role %s in namespace %s", mizu.RoleName, config.Config.MizuResourcesNamespace)
+		handleDeletionError(err, resourceDesc, &leftoverResources)
+	}
+
+	if err := kubernetesProvider.RemoveRoleBinding(ctx, config.Config.MizuResourcesNamespace, mizu.RoleBindingName); err != nil {
+		resourceDesc := fmt.Sprintf("RoleBinding %s in namespace %s", mizu.RoleBindingName, config.Config.MizuResourcesNamespace)
+		handleDeletionError(err, resourceDesc, &leftoverResources)
+	}
+
+	return leftoverResources
+}
+
+func cleanUpNonRestrictedMode(ctx context.Context, cancel context.CancelFunc, kubernetesProvider *kubernetes.Provider) []string {
+	leftoverResources := make([]string, 0)
+
+	if err := kubernetesProvider.RemoveNamespace(ctx, config.Config.MizuResourcesNamespace); err != nil {
+		resourceDesc := fmt.Sprintf("Namespace %s", config.Config.MizuResourcesNamespace)
+		handleDeletionError(err, resourceDesc, &leftoverResources)
+	} else {
+		defer waitUntilNamespaceDeleted(ctx, cancel, kubernetesProvider)
+	}
+
+	if err := kubernetesProvider.RemoveClusterRole(ctx, mizu.ClusterRoleName); err != nil {
+		resourceDesc := fmt.Sprintf("ClusterRole %s", mizu.ClusterRoleName)
+		handleDeletionError(err, resourceDesc, &leftoverResources)
+	}
+
+	if err := kubernetesProvider.RemoveClusterRoleBinding(ctx, mizu.ClusterRoleBindingName); err != nil {
+		resourceDesc := fmt.Sprintf("ClusterRoleBinding %s", mizu.ClusterRoleBindingName)
+		handleDeletionError(err, resourceDesc, &leftoverResources)
+	}
+
+	return leftoverResources
+}
+
+func handleDeletionError(err error, resourceDesc string, leftoverResources *[]string) {
+	logger.Log.Debugf("Error removing %s: %v", resourceDesc, errormessage.FormatError(err))
+	*leftoverResources = append(*leftoverResources, resourceDesc)
 }
 
 func waitUntilNamespaceDeleted(ctx context.Context, cancel context.CancelFunc, kubernetesProvider *kubernetes.Provider) {
@@ -536,7 +566,7 @@ func watchApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 
 				url := GetApiServerUrl()
 				if err := apiserver.Provider.InitAndTestConnection(url); err != nil {
-					logger.Log.Errorf(uiUtils.Error, "Couldn't connect to API server, check logs")
+					logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Couldn't connect to API server, for more info check logs at %s", logger.GetLogFilePath()))
 					cancel()
 					break
 				}
