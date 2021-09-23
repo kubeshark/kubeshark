@@ -268,53 +268,8 @@ func (provider *Provider) CreateService(ctx context.Context, namespace string, s
 	return provider.clientSet.CoreV1().Services(namespace).Create(ctx, &service, metav1.CreateOptions{})
 }
 
-func (provider *Provider) DoesServiceAccountExist(ctx context.Context, namespace string, serviceAccountName string) (bool, error) {
-	serviceAccount, err := provider.clientSet.CoreV1().ServiceAccounts(namespace).Get(ctx, serviceAccountName, metav1.GetOptions{})
-	return provider.doesResourceExist(serviceAccount, err)
-}
-
-func (provider *Provider) DoesConfigMapExist(ctx context.Context, namespace string, name string) (bool, error) {
-	resource, err := provider.clientSet.CoreV1().ConfigMaps(namespace).Get(ctx, name, metav1.GetOptions{})
-	return provider.doesResourceExist(resource, err)
-}
-
 func (provider *Provider) DoesServicesExist(ctx context.Context, namespace string, name string) (bool, error) {
 	resource, err := provider.clientSet.CoreV1().Services(namespace).Get(ctx, name, metav1.GetOptions{})
-	return provider.doesResourceExist(resource, err)
-}
-
-func (provider *Provider) DoesNamespaceExist(ctx context.Context, name string) (bool, error) {
-	resource, err := provider.clientSet.CoreV1().Namespaces().Get(ctx, name, metav1.GetOptions{})
-	return provider.doesResourceExist(resource, err)
-}
-
-func (provider *Provider) DoesClusterRoleExist(ctx context.Context, name string) (bool, error) {
-	resource, err := provider.clientSet.RbacV1().ClusterRoles().Get(ctx, name, metav1.GetOptions{})
-	return provider.doesResourceExist(resource, err)
-}
-
-func (provider *Provider) DoesClusterRoleBindingExist(ctx context.Context, name string) (bool, error) {
-	resource, err := provider.clientSet.RbacV1().ClusterRoleBindings().Get(ctx, name, metav1.GetOptions{})
-	return provider.doesResourceExist(resource, err)
-}
-
-func (provider *Provider) DoesRoleExist(ctx context.Context, namespace string, name string) (bool, error) {
-	resource, err := provider.clientSet.RbacV1().Roles(namespace).Get(ctx, name, metav1.GetOptions{})
-	return provider.doesResourceExist(resource, err)
-}
-
-func (provider *Provider) DoesRoleBindingExist(ctx context.Context, namespace string, name string) (bool, error) {
-	resource, err := provider.clientSet.RbacV1().RoleBindings(namespace).Get(ctx, name, metav1.GetOptions{})
-	return provider.doesResourceExist(resource, err)
-}
-
-func (provider *Provider) DoesPodExist(ctx context.Context, namespace string, name string) (bool, error) {
-	resource, err := provider.clientSet.CoreV1().Pods(namespace).Get(ctx, name, metav1.GetOptions{})
-	return provider.doesResourceExist(resource, err)
-}
-
-func (provider *Provider) DoesDaemonSetExist(ctx context.Context, namespace string, name string) (bool, error) {
-	resource, err := provider.clientSet.AppsV1().DaemonSets(namespace).Get(ctx, name, metav1.GetOptions{})
 	return provider.doesResourceExist(resource, err)
 }
 
@@ -440,103 +395,63 @@ func (provider *Provider) CreateMizuRBACNamespaceRestricted(ctx context.Context,
 }
 
 func (provider *Provider) RemoveNamespace(ctx context.Context, name string) error {
-	if isFound, err := provider.DoesNamespaceExist(ctx, name); err != nil {
-		return err
-	} else if !isFound {
-		return nil
-	}
-
-	return provider.clientSet.CoreV1().Namespaces().Delete(ctx, name, metav1.DeleteOptions{})
+	err := provider.clientSet.CoreV1().Namespaces().Delete(ctx, name, metav1.DeleteOptions{})
+	return provider.processRemovalError(err)
 }
 
 func (provider *Provider) RemoveClusterRole(ctx context.Context, name string) error {
-	if isFound, err := provider.DoesClusterRoleExist(ctx, name); err != nil {
-		return err
-	} else if !isFound {
-		return nil
-	}
-
-	return provider.clientSet.RbacV1().ClusterRoles().Delete(ctx, name, metav1.DeleteOptions{})
+	err := provider.clientSet.RbacV1().ClusterRoles().Delete(ctx, name, metav1.DeleteOptions{})
+	return provider.processRemovalError(err)
 }
 
 func (provider *Provider) RemoveClusterRoleBinding(ctx context.Context, name string) error {
-	if isFound, err := provider.DoesClusterRoleBindingExist(ctx, name); err != nil {
-		return err
-	} else if !isFound {
-		return nil
-	}
-
-	return provider.clientSet.RbacV1().ClusterRoleBindings().Delete(ctx, name, metav1.DeleteOptions{})
+	err := provider.clientSet.RbacV1().ClusterRoleBindings().Delete(ctx, name, metav1.DeleteOptions{})
+	return provider.processRemovalError(err)
 }
 
 func (provider *Provider) RemoveRoleBinding(ctx context.Context, namespace string, name string) error {
-	if isFound, err := provider.DoesRoleBindingExist(ctx, namespace, name); err != nil {
-		return err
-	} else if !isFound {
-		return nil
-	}
-
-	return provider.clientSet.RbacV1().RoleBindings(namespace).Delete(ctx, name, metav1.DeleteOptions{})
+	err := provider.clientSet.RbacV1().RoleBindings(namespace).Delete(ctx, name, metav1.DeleteOptions{})
+	return provider.processRemovalError(err)
 }
 
 func (provider *Provider) RemoveRole(ctx context.Context, namespace string, name string) error {
-	if isFound, err := provider.DoesRoleExist(ctx, namespace, name); err != nil {
-		return err
-	} else if !isFound {
-		return nil
-	}
-
-	return provider.clientSet.RbacV1().Roles(namespace).Delete(ctx, name, metav1.DeleteOptions{})
+	err := provider.clientSet.RbacV1().Roles(namespace).Delete(ctx, name, metav1.DeleteOptions{})
+	return provider.processRemovalError(err)
 }
 
 func (provider *Provider) RemoveServicAccount(ctx context.Context, namespace string, name string) error {
-	if isFound, err := provider.DoesServiceAccountExist(ctx, namespace, name); err != nil {
-		return err
-	} else if !isFound {
-		return nil
-	}
-
-	return provider.clientSet.CoreV1().ServiceAccounts(namespace).Delete(ctx, name, metav1.DeleteOptions{})
+	err := provider.clientSet.CoreV1().ServiceAccounts(namespace).Delete(ctx, name, metav1.DeleteOptions{})
+	return provider.processRemovalError(err)
 }
 
 func (provider *Provider) RemovePod(ctx context.Context, namespace string, podName string) error {
-	if isFound, err := provider.DoesPodExist(ctx, namespace, podName); err != nil {
-		return err
-	} else if !isFound {
-		return nil
-	}
-
-	return provider.clientSet.CoreV1().Pods(namespace).Delete(ctx, podName, metav1.DeleteOptions{})
+	err := provider.clientSet.CoreV1().Pods(namespace).Delete(ctx, podName, metav1.DeleteOptions{})
+	return provider.processRemovalError(err)
 }
 
 func (provider *Provider) RemoveConfigMap(ctx context.Context, namespace string, configMapName string) error {
-	if isFound, err := provider.DoesConfigMapExist(ctx, namespace, configMapName); err != nil {
-		return err
-	} else if !isFound {
-		return nil
-	}
-
-	return provider.clientSet.CoreV1().ConfigMaps(namespace).Delete(ctx, configMapName, metav1.DeleteOptions{})
+	err := provider.clientSet.CoreV1().ConfigMaps(namespace).Delete(ctx, configMapName, metav1.DeleteOptions{})
+	return provider.processRemovalError(err)
 }
 
 func (provider *Provider) RemoveService(ctx context.Context, namespace string, serviceName string) error {
-	if isFound, err := provider.DoesServicesExist(ctx, namespace, serviceName); err != nil {
-		return err
-	} else if !isFound {
-		return nil
-	}
-
-	return provider.clientSet.CoreV1().Services(namespace).Delete(ctx, serviceName, metav1.DeleteOptions{})
+	err := provider.clientSet.CoreV1().Services(namespace).Delete(ctx, serviceName, metav1.DeleteOptions{})
+	return provider.processRemovalError(err)
 }
 
 func (provider *Provider) RemoveDaemonSet(ctx context.Context, namespace string, daemonSetName string) error {
-	if isFound, err := provider.DoesDaemonSetExist(ctx, namespace, daemonSetName); err != nil {
-		return err
-	} else if !isFound {
+	err := provider.clientSet.AppsV1().DaemonSets(namespace).Delete(ctx, daemonSetName, metav1.DeleteOptions{})
+	return provider.processRemovalError(err)
+}
+
+func (provider *Provider) processRemovalError(err error) error {
+	// Ignore NotFound - There is nothing to delete.
+	// Ignore Forbidden - Assume that a user could not have created the resource in the first place.
+	if k8serrors.IsNotFound(err) || k8serrors.IsForbidden(err){
 		return nil
 	}
 
-	return provider.clientSet.AppsV1().DaemonSets(namespace).Delete(ctx, daemonSetName, metav1.DeleteOptions{})
+	return err
 }
 
 func (provider *Provider) CreateConfigMap(ctx context.Context, namespace string, configMapName string, data string) error {
