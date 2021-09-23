@@ -54,10 +54,14 @@ const AutoRepresentation: React.FC<any> = ({representation, rulesMatched, elapse
 
     const {request, response} = JSON.parse(representation);
 
+    if (!response) {
+        TABS[1]['hidden'] = true;
+    }
+
     return <div className={styles.Entry}>
         {<div className={styles.body}>
             <div className={styles.bodyHeader}>
-                <Tabs tabs={TABS} currentTab={currentTab} color={color} response={response} onChange={setCurrentTab} leftAligned/>
+                <Tabs tabs={TABS} currentTab={currentTab} color={color} onChange={setCurrentTab} leftAligned/>
                 {request?.url && <a className={styles.endpointURL} href={request.payload.url} target='_blank' rel="noreferrer">{request.payload.url}</a>}
             </div>
             {currentTab === TABS[0].tab && <React.Fragment>
