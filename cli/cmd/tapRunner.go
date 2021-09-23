@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	yaml "gopkg.in/yaml.v3"
+	"gopkg.in/yaml.v3"
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 
@@ -276,7 +276,7 @@ func cleanUpMizuResources(ctx context.Context, cancel context.CancelFunc, kubern
 	var leftoverResources []string
 
 	if config.Config.IsNsRestrictedMode() {
-		leftoverResources = cleanUpRestrictedMode(ctx, cancel, kubernetesProvider)
+		leftoverResources = cleanUpRestrictedMode(ctx, kubernetesProvider)
 	} else {
 		leftoverResources = cleanUpNonRestrictedMode(ctx, cancel, kubernetesProvider)
 	}
@@ -290,7 +290,7 @@ func cleanUpMizuResources(ctx context.Context, cancel context.CancelFunc, kubern
 	}
 }
 
-func cleanUpRestrictedMode(ctx context.Context, cancel context.CancelFunc, kubernetesProvider *kubernetes.Provider) []string {
+func cleanUpRestrictedMode(ctx context.Context, kubernetesProvider *kubernetes.Provider) []string {
 	leftoverResources := make([]string, 0)
 
 	if err := kubernetesProvider.RemovePod(ctx, config.Config.MizuResourcesNamespace, mizu.ApiServerPodName); err != nil {
