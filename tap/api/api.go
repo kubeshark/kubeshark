@@ -156,7 +156,7 @@ type BaseEntryDetails struct {
 	SourcePort      string          `json:"sourcePort,omitempty"`
 	DestinationPort string          `json:"destinationPort,omitempty"`
 	IsOutgoing      bool            `json:"isOutgoing,omitempty"`
-	Latency         int64           `json:"latency,omitempty"`
+	Latency         int64           `json:"latency"`
 	Rules           ApplicableRules `json:"rules,omitempty"`
 }
 
@@ -190,6 +190,7 @@ func (bed *BaseEntryDetails) UnmarshalData(entry *MizuEntry) error {
 	bed.Timestamp = entry.Timestamp
 	bed.RequestSenderIp = entry.RequestSenderIp
 	bed.IsOutgoing = entry.IsOutgoing
+	bed.Latency = entry.ElapsedTime
 	return nil
 }
 
