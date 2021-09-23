@@ -67,15 +67,15 @@ const (
 	pubSubNumPat            = "numpat"
 )
 
-//IntToByteArr convert int to byte array
-func IntToByteArr(a int) []byte {
+//intToByteArr convert int to byte array
+func intToByteArr(a int) []byte {
 	buf := make([]byte, 0)
 	return strconv.AppendInt(buf, int64(a), 10)
 }
 
 var (
-	bytesTrue  = IntToByteArr(1)
-	bytesFalse = IntToByteArr(0)
+	bytesTrue  = intToByteArr(1)
+	bytesFalse = intToByteArr(0)
 	bytesTilde = []byte("~")
 
 	positiveInfinityBytes = []byte("+inf")
