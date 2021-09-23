@@ -319,16 +319,15 @@ func (provider *Provider) DoesDaemonSetExist(ctx context.Context, namespace stri
 }
 
 func (provider *Provider) doesResourceExist(resource interface{}, err error) (bool, error) {
-	var statusError *k8serrors.StatusError
-	if errors.As(err, &statusError) {
-		// expected behavior when resource does not exist
-		if statusError.ErrStatus.Reason == metav1.StatusReasonNotFound {
-			return false, nil
-		}
+	// Getting NotFound error is the expected behavior when a resource does not exist.
+	if k8serrors.IsNotFound(err) {
+		return false, nil
 	}
+
 	if err != nil {
 		return false, err
 	}
+
 	return resource != nil, nil
 }
 
