@@ -396,55 +396,55 @@ func (provider *Provider) CreateMizuRBACNamespaceRestricted(ctx context.Context,
 
 func (provider *Provider) RemoveNamespace(ctx context.Context, name string) error {
 	err := provider.clientSet.CoreV1().Namespaces().Delete(ctx, name, metav1.DeleteOptions{})
-	return provider.processRemovalError(err)
+	return provider.handleRemovalError(err)
 }
 
 func (provider *Provider) RemoveClusterRole(ctx context.Context, name string) error {
 	err := provider.clientSet.RbacV1().ClusterRoles().Delete(ctx, name, metav1.DeleteOptions{})
-	return provider.processRemovalError(err)
+	return provider.handleRemovalError(err)
 }
 
 func (provider *Provider) RemoveClusterRoleBinding(ctx context.Context, name string) error {
 	err := provider.clientSet.RbacV1().ClusterRoleBindings().Delete(ctx, name, metav1.DeleteOptions{})
-	return provider.processRemovalError(err)
+	return provider.handleRemovalError(err)
 }
 
 func (provider *Provider) RemoveRoleBinding(ctx context.Context, namespace string, name string) error {
 	err := provider.clientSet.RbacV1().RoleBindings(namespace).Delete(ctx, name, metav1.DeleteOptions{})
-	return provider.processRemovalError(err)
+	return provider.handleRemovalError(err)
 }
 
 func (provider *Provider) RemoveRole(ctx context.Context, namespace string, name string) error {
 	err := provider.clientSet.RbacV1().Roles(namespace).Delete(ctx, name, metav1.DeleteOptions{})
-	return provider.processRemovalError(err)
+	return provider.handleRemovalError(err)
 }
 
 func (provider *Provider) RemoveServicAccount(ctx context.Context, namespace string, name string) error {
 	err := provider.clientSet.CoreV1().ServiceAccounts(namespace).Delete(ctx, name, metav1.DeleteOptions{})
-	return provider.processRemovalError(err)
+	return provider.handleRemovalError(err)
 }
 
 func (provider *Provider) RemovePod(ctx context.Context, namespace string, podName string) error {
 	err := provider.clientSet.CoreV1().Pods(namespace).Delete(ctx, podName, metav1.DeleteOptions{})
-	return provider.processRemovalError(err)
+	return provider.handleRemovalError(err)
 }
 
 func (provider *Provider) RemoveConfigMap(ctx context.Context, namespace string, configMapName string) error {
 	err := provider.clientSet.CoreV1().ConfigMaps(namespace).Delete(ctx, configMapName, metav1.DeleteOptions{})
-	return provider.processRemovalError(err)
+	return provider.handleRemovalError(err)
 }
 
 func (provider *Provider) RemoveService(ctx context.Context, namespace string, serviceName string) error {
 	err := provider.clientSet.CoreV1().Services(namespace).Delete(ctx, serviceName, metav1.DeleteOptions{})
-	return provider.processRemovalError(err)
+	return provider.handleRemovalError(err)
 }
 
 func (provider *Provider) RemoveDaemonSet(ctx context.Context, namespace string, daemonSetName string) error {
 	err := provider.clientSet.AppsV1().DaemonSets(namespace).Delete(ctx, daemonSetName, metav1.DeleteOptions{})
-	return provider.processRemovalError(err)
+	return provider.handleRemovalError(err)
 }
 
-func (provider *Provider) processRemovalError(err error) error {
+func (provider *Provider) handleRemovalError(err error) error {
 	// Ignore NotFound - There is nothing to delete.
 	// Ignore Forbidden - Assume that a user could not have created the resource in the first place.
 	if k8serrors.IsNotFound(err) || k8serrors.IsForbidden(err){
