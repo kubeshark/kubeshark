@@ -147,6 +147,7 @@ func GetEntry(c *gin.Context) {
 		var pair tapApi.RequestResponsePair
 		json.Unmarshal([]byte(entryData.Entry), &pair)
 		harEntry, _ := utils.NewEntry(&pair)
+		// TODO: here
 		_, rulesMatched := models.RunValidationRulesState(*harEntry, entryData.Service)
 		inrec, _ := json.Marshal(rulesMatched)
 		json.Unmarshal(inrec, &rules)

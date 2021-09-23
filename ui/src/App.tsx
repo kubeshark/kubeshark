@@ -91,7 +91,7 @@ const App = () => {
                 </table>
 
             </span>
-      
+
     return (
         <div className="mizuApp">
             <div className="header">
