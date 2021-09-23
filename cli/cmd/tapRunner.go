@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"path"
 	"regexp"
@@ -11,7 +10,6 @@ import (
 
 	yaml "gopkg.in/yaml.v3"
 	core "k8s.io/api/core/v1"
-	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/util/wait"
 
 	"github.com/up9inc/mizu/cli/apiserver"
@@ -354,14 +352,6 @@ func cleanUpNonRestrictedMode(ctx context.Context, cancel context.CancelFunc, ku
 	}
 
 	return leftoverResources
-}
-
-func isErrForbiddenGet(err error) bool {
-	if status := k8serrors.APIStatus(nil); errors.As(err, &status) {
-		return strings.Contains(status.Status().Message, "cannot get resource")
-	}
-
-	return false
 }
 
 func handleDeletionError(err error, resourceDesc string, leftoverResources *[]string) {
