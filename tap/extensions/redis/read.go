@@ -113,13 +113,6 @@ type RedisInputStream struct {
 	limit int
 }
 
-func newRedisInputStream(br *bufio.Reader) *RedisInputStream {
-	return &RedisInputStream{
-		Reader: br,
-		Buf:    make([]byte, 8192),
-	}
-}
-
 func (r *RedisInputStream) readByte() (byte, error) {
 	err := r.ensureFill()
 	if err != nil {
