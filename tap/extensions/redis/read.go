@@ -314,6 +314,8 @@ func (p *RedisProtocol) Read() (packet *RedisPacket, err error) {
 		} else {
 			packet.Value = val
 		}
+	case string:
+		packet.Value = x.(string)
 	default:
 		msg := fmt.Sprintf("Unrecognized Redis data type: %v\n", reflect.TypeOf(x))
 		log.Printf(msg)
@@ -411,7 +413,7 @@ func (p *RedisProtocol) processArray() ([]interface{}, error) {
 	ret := make([]interface{}, 0)
 	for i := 0; i < int(l); i++ {
 		if obj, _, err := p.process(); err != nil {
-			ret = append(ret, newDataError(err.Error()))
+			ret = append(ret, err)
 		} else {
 			ret = append(ret, obj)
 		}
@@ -429,27 +431,33 @@ func (p *RedisProtocol) processError() (interface{}, error) {
 		return nil, newConnectError(err.Error())
 	}
 	if strings.HasPrefix(msg, movedPrefix) {
-		host, port, slot := p.parseTargetHostAndSlot(msg)
-		return nil, newMovedDataError(msg, host, port, slot)
+		host, port, slot, err := p.parseTargetHostAndSlot(msg)
+		if err != nil {
+			return nil, err
+		}
+		return fmt.Sprintf("MovedDataError: %s host: %s port: %d slot: %d", msg, host, port, slot), nil
 	} else if strings.HasPrefix(msg, askPrefix) {
-		host, port, slot := p.parseTargetHostAndSlot(msg)
-		return nil, newAskDataError(msg, host, port, slot)
+		host, port, slot, err := p.parseTargetHostAndSlot(msg)
+		if err != nil {
+			return nil, err
+		}
+		return fmt.Sprintf("AskDataError: %s host: %s port: %d slot: %d", msg, host, port, slot), nil
 	} else if strings.HasPrefix(msg, clusterDownPrefix) {
-		return nil, newClusterError(msg)
+		return fmt.Sprintf("ClusterError: %s", msg), nil
 	} else if strings.HasPrefix(msg, busyPrefix) {
-		return nil, newBusyError(msg)
+		return fmt.Sprintf("BusyError: %s", msg), nil
 	} else if strings.HasPrefix(msg, noscriptPrefix) {
-		return nil, newNoScriptError(msg)
+		return fmt.Sprintf("NoScriptError: %s", msg), nil
 	}
-	return nil, newDataError(msg)
+	return fmt.Sprintf("DataError: %s", msg), nil
 }
 
-func (p *RedisProtocol) parseTargetHostAndSlot(clusterRedirectResponse string) (string, int, int) {
+func (p *RedisProtocol) parseTargetHostAndSlot(clusterRedirectResponse string) (host string, po int, slot int, err error) {
 	arr := strings.Split(clusterRedirectResponse, " ")
 	host, port := p.extractParts(arr[2])
-	slot, _ := strconv.Atoi(arr[1])
-	po, _ := strconv.Atoi(port)
-	return host, po, slot
+	slot, err = strconv.Atoi(arr[1])
+	po, err = strconv.Atoi(port)
+	return
 }
 
 func (p *RedisProtocol) extractParts(from string) (string, string) {
