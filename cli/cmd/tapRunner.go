@@ -2,7 +2,9 @@ package cmd
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"log"
 	"path"
 	"regexp"
 	"strings"
@@ -571,6 +573,8 @@ func watchApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 					logger.Log.Debugf("[Error] failed to start tappers %v", err)
 				}
 
+				go goUtils.HandleExcWrapper(watchTapperPod, ctx, kubernetesProvider, cancel)
+
 				logger.Log.Infof("Mizu is available at %s\n", url)
 				openBrowser(url)
 				requestForAnalysisIfNeeded()
@@ -594,6 +598,57 @@ func watchApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 			}
 		case <-ctx.Done():
 			logger.Log.Debugf("Watching API Server pod loop, ctx done")
+			return
+		}
+	}
+}
+
+func watchTapperPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
+	podExactRegex := regexp.MustCompile(fmt.Sprintf("^%s.*", mizu.TapperDaemonSetName))
+	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, kubernetesProvider, []string{config.Config.MizuResourcesNamespace}, podExactRegex)
+	for {
+		select {
+		case _, ok := <-added:
+			if !ok {
+				added = nil
+				continue
+			}
+
+			logger.Log.Debugf("Watching tapper pod loop, added")
+		case _, ok := <-removed:
+			if !ok {
+				removed = nil
+				continue
+			}
+
+			logger.Log.Infof("%s removed", mizu.TapperDaemonSetName)
+			cancel()
+			return
+		case modifiedPod, ok := <-modified:
+			if !ok {
+				modified = nil
+				continue
+			}
+
+			// TODO: Remove the debugging print below
+			empJSON, err := json.MarshalIndent(modifiedPod, "", "  ")
+			if err != nil {
+				log.Fatalf(err.Error())
+			}
+			fmt.Printf("modifiedPod:\n%s\n", string(empJSON))
+
+			logger.Log.Debugf("Watching tapper pod loop, modified: %v", modifiedPod.Status.Phase)
+		case _, ok := <-errorChan:
+			if !ok {
+				errorChan = nil
+				continue
+			}
+
+			logger.Log.Debugf("[ERROR] Tapper creation, watching %v namespace", config.Config.MizuResourcesNamespace)
+			cancel()
+
+		case <-ctx.Done():
+			logger.Log.Debugf("Watching tapper pod loop, ctx done")
 			return
 		}
 	}
