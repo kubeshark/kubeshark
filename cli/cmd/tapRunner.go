@@ -117,10 +117,10 @@ func RunMizuTap() {
 		return
 	}
 
-	go goUtils.HandleExcWrapper(watchApiServerPod, ctx, kubernetesProvider, cancel)
+	go goUtils.HandleExcWrapper(watchApiServerPod, ctx, kubernetesProvider, cancel, nodeToTappedPodIPMap, mizuApiFilteringOptions)
 	go goUtils.HandleExcWrapper(watchPodsForTapping, ctx, kubernetesProvider, targetNamespaces, cancel, mizuApiFilteringOptions)
 
-	//block until exit signal or error
+	// block until exit signal or error
 	waitForFinish(ctx, cancel)
 }
 
@@ -141,10 +141,6 @@ func createMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Pro
 	}
 
 	if err := createMizuApiServer(ctx, kubernetesProvider, mizuApiFilteringOptions); err != nil {
-		return err
-	}
-
-	if err := updateMizuTappers(ctx, kubernetesProvider, nodeToTappedPodIPMap, mizuApiFilteringOptions); err != nil {
 		return err
 	}
 
@@ -530,7 +526,7 @@ func getMissingPods(pods1 []core.Pod, pods2 []core.Pod) []core.Pod {
 	return missingPods
 }
 
-func watchApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
+func watchApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc, nodeToTappedPodIPMap map[string][]string, mizuApiFilteringOptions *api.TrafficFilteringOptions) {
 	podExactRegex := regexp.MustCompile(fmt.Sprintf("^%s$", mizu.ApiServerPodName))
 	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, kubernetesProvider, []string{config.Config.MizuResourcesNamespace}, podExactRegex)
 	isPodReady := false
@@ -570,6 +566,11 @@ func watchApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 					cancel()
 					break
 				}
+
+				if err := updateMizuTappers(ctx, kubernetesProvider, nodeToTappedPodIPMap, mizuApiFilteringOptions); err != nil {
+					logger.Log.Debugf("[Error] failed to start tappers %v", err)
+				}
+
 				logger.Log.Infof("Mizu is available at %s\n", url)
 				openBrowser(url)
 				requestForAnalysisIfNeeded()
