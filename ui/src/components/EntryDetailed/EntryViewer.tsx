@@ -54,6 +54,10 @@ const AutoRepresentation: React.FC<any> = ({representation, rulesMatched, elapse
 
     const {request, response} = JSON.parse(representation);
 
+    if (!response) {
+        TABS[1]['hidden'] = true;
+    }
+
     return <div className={styles.Entry}>
         {<div className={styles.body}>
             <div className={styles.bodyHeader}>
@@ -63,7 +67,7 @@ const AutoRepresentation: React.FC<any> = ({representation, rulesMatched, elapse
             {currentTab === TABS[0].tab && <React.Fragment>
                 <SectionsRepresentation data={request} color={color}/>
             </React.Fragment>}
-            {currentTab === TABS[1].tab && <React.Fragment>
+            {response && currentTab === TABS[1].tab && <React.Fragment>
                 <SectionsRepresentation data={response} color={color}/>
             </React.Fragment>}
             {currentTab === TABS[2].tab && <React.Fragment>
