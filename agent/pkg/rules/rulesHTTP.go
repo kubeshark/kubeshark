@@ -4,10 +4,11 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/romana/rlog"
 	"reflect"
 	"regexp"
 	"strings"
+
+	"github.com/romana/rlog"
 
 	"github.com/google/martian/har"
 	"github.com/up9inc/mizu/shared"
@@ -43,9 +44,11 @@ func ValidateService(serviceFromRule string, service string) bool {
 	return true
 }
 
-func MatchRequestPolicy(harEntry har.Entry, service string) []RulesMatched {
-	enforcePolicy, _ := shared.DecodeEnforcePolicy(fmt.Sprintf("%s/%s", shared.RulePolicyPath, shared.RulePolicyFileName))
-	var resultPolicyToSend []RulesMatched
+func MatchRequestPolicy(harEntry har.Entry, service string) (resultPolicyToSend []RulesMatched, isEnabled bool) {
+	enforcePolicy, err := shared.DecodeEnforcePolicy(fmt.Sprintf("%s/%s", shared.RulePolicyPath, shared.RulePolicyFileName))
+	if err == nil {
+		isEnabled = true
+	}
 	for _, rule := range enforcePolicy.Rules {
 		if !ValidatePath(rule.Path, harEntry.Request.URL) || !ValidateService(rule.Service, service) {
 			continue
@@ -93,7 +96,7 @@ func MatchRequestPolicy(harEntry har.Entry, service string) []RulesMatched {
 			resultPolicyToSend = appendRulesMatched(resultPolicyToSend, true, rule)
 		}
 	}
-	return resultPolicyToSend
+	return
 }
 
 func PassedValidationRules(rulesMatched []RulesMatched) (bool, int64, int) {

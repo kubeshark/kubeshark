@@ -447,7 +447,7 @@ func (provider *Provider) RemoveDaemonSet(ctx context.Context, namespace string,
 func (provider *Provider) handleRemovalError(err error) error {
 	// Ignore NotFound - There is nothing to delete.
 	// Ignore Forbidden - Assume that a user could not have created the resource in the first place.
-	if k8serrors.IsNotFound(err) || k8serrors.IsForbidden(err){
+	if k8serrors.IsNotFound(err) || k8serrors.IsForbidden(err) {
 		return nil
 	}
 
