@@ -32,7 +32,7 @@ var logsCmd = &cobra.Command{
 
 		logger.Log.Debugf("Using file path %s", config.Config.Logs.FilePath())
 
-		if dumpLogsErr := fsUtils.DumpLogs(kubernetesProvider, ctx, config.Config.Logs.FilePath()); dumpLogsErr != nil {
+		if dumpLogsErr := fsUtils.DumpLogs(ctx, kubernetesProvider, config.Config.Logs.FilePath()); dumpLogsErr != nil {
 			logger.Log.Errorf("Failed dump logs %v", dumpLogsErr)
 		}
 

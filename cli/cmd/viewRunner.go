@@ -47,7 +47,7 @@ func runMizuView() {
 	go startProxyReportErrorIfAny(kubernetesProvider, cancel)
 
 	if err := apiserver.Provider.InitAndTestConnection(GetApiServerUrl()); err != nil {
-		logger.Log.Errorf(uiUtils.Error, "Couldn't connect to API server, check logs")
+		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Couldn't connect to API server, for more info check logs at %s", logger.GetLogFilePath()))
 		return
 	}
 
