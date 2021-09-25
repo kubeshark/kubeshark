@@ -14,14 +14,15 @@ const addr = "localhost:8898"
 var upgrader = websocket.Upgrader{} // use default options
 
 type SocketMessage struct {
-	Type      string
-	AutoClose uint
-	Text      string
+	Type      string `json:"type"`
+	AutoClose uint   `json:"autoClose"`
+	Text      string `json:"text"`
 }
 
 var socketMessageChannel chan *SocketMessage
 
 func handle(w http.ResponseWriter, r *http.Request) {
+	upgrader.CheckOrigin = func(r *http.Request) bool { return true }
 	c, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		logger.Log.Debugf("Error on WebSocket upgrade:", err)
