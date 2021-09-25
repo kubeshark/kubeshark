@@ -97,8 +97,8 @@ type ExtendedCreator struct {
 	Source *string `json:"_source"`
 }
 
-func RunValidationRulesState(harEntry har.Entry, service string) (tapApi.ApplicableRules, []rules.RulesMatched) {
-	resultPolicyToSend := rules.MatchRequestPolicy(harEntry, service)
+func RunValidationRulesState(harEntry har.Entry, service string) (tapApi.ApplicableRules, []rules.RulesMatched, bool) {
+	resultPolicyToSend, isEnabled := rules.MatchRequestPolicy(harEntry, service)
 	statusPolicyToSend, latency, numberOfRules := rules.PassedValidationRules(resultPolicyToSend)
-	return tapApi.ApplicableRules{Status: statusPolicyToSend, Latency: latency, NumberOfRules: numberOfRules}, resultPolicyToSend
+	return tapApi.ApplicableRules{Status: statusPolicyToSend, Latency: latency, NumberOfRules: numberOfRules}, resultPolicyToSend, isEnabled
 }

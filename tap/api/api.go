@@ -138,6 +138,7 @@ type MizuEntryWrapper struct {
 	BodySize       int64                    `json:"bodySize"`
 	Data           MizuEntry                `json:"data"`
 	Rules          []map[string]interface{} `json:"rulesMatched,omitempty"`
+	IsRulesEnabled bool                     `json:"isRulesEnabled"`
 }
 
 type BaseEntryDetails struct {

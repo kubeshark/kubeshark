@@ -153,10 +153,8 @@ export const EntryTableSection: React.FC<EntrySectionProps> = ({title, color, ar
 
 
 interface EntryPolicySectionProps {
-    service: string,
     title: string,
     color: string,
-    response: any,
     latency?: number,
     arrayToIterate: any[],
 }
@@ -200,7 +198,7 @@ export const EntryPolicySectionContainer: React.FC<EntryPolicySectionContainerPr
     </CollapsibleContainer>
 }
 
-export const EntryTablePolicySection: React.FC<EntryPolicySectionProps> = ({service, title, color, response, latency, arrayToIterate}) => {
+export const EntryTablePolicySection: React.FC<EntryPolicySectionProps> = ({title, color, latency, arrayToIterate}) => {
     return <React.Fragment>
         {
             arrayToIterate && arrayToIterate.length > 0 ?

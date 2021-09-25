@@ -113,7 +113,7 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 			json.Unmarshal([]byte(mizuEntry.Entry), &pair)
 			harEntry, err := utils.NewEntry(&pair)
 			if err == nil {
-				rules, _ := models.RunValidationRulesState(*harEntry, mizuEntry.Service)
+				rules, _, _ := models.RunValidationRulesState(*harEntry, mizuEntry.Service)
 				baseEntry.Rules = rules
 			}
 		}

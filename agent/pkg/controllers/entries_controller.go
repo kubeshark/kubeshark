@@ -143,11 +143,13 @@ func GetEntry(c *gin.Context) {
 	protocol, representation, bodySize, _ := extension.Dissector.Represent(&entryData)
 
 	var rules []map[string]interface{}
+	var isRulesEnabled bool
 	if entryData.ProtocolName == "http" {
 		var pair tapApi.RequestResponsePair
 		json.Unmarshal([]byte(entryData.Entry), &pair)
 		harEntry, _ := utils.NewEntry(&pair)
-		_, rulesMatched := models.RunValidationRulesState(*harEntry, entryData.Service)
+		_, rulesMatched, _isRulesEnabled := models.RunValidationRulesState(*harEntry, entryData.Service)
+		isRulesEnabled = _isRulesEnabled
 		inrec, _ := json.Marshal(rulesMatched)
 		json.Unmarshal(inrec, &rules)
 	}
@@ -158,6 +160,7 @@ func GetEntry(c *gin.Context) {
 		BodySize:       bodySize,
 		Data:           entryData,
 		Rules:          rules,
+		IsRulesEnabled: isRulesEnabled,
 	})
 }
 
