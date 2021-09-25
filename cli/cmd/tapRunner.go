@@ -23,6 +23,7 @@ import (
 	"github.com/up9inc/mizu/cli/mizu"
 	"github.com/up9inc/mizu/cli/mizu/fsUtils"
 	"github.com/up9inc/mizu/cli/mizu/goUtils"
+	"github.com/up9inc/mizu/cli/socket"
 	"github.com/up9inc/mizu/cli/telemetry"
 	"github.com/up9inc/mizu/cli/uiUtils"
 	"github.com/up9inc/mizu/shared"
@@ -141,6 +142,8 @@ func createMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Pro
 			return err
 		}
 	}
+
+	go socket.Listen()
 
 	if err := createMizuApiServer(ctx, kubernetesProvider, mizuApiFilteringOptions); err != nil {
 		return err
@@ -614,6 +617,7 @@ func watchTapperPod(ctx context.Context, kubernetesProvider *kubernetes.Provider
 				continue
 			}
 
+			socket.Send("info", 2000, "Tapper is created.")
 			logger.Log.Debugf("Watching tapper pod loop, added")
 		case _, ok := <-removed:
 			if !ok {
@@ -621,6 +625,7 @@ func watchTapperPod(ctx context.Context, kubernetesProvider *kubernetes.Provider
 				continue
 			}
 
+			socket.Send("success", 2000, "Tapper is removed.")
 			logger.Log.Infof("%s removed", mizu.TapperDaemonSetName)
 			cancel()
 			return
@@ -629,6 +634,8 @@ func watchTapperPod(ctx context.Context, kubernetesProvider *kubernetes.Provider
 				modified = nil
 				continue
 			}
+
+			socket.Send("info", 2000, "Tapper is modified.")
 
 			// TODO: Remove the debugging print below
 			empJSON, err := json.MarshalIndent(modifiedPod, "", "  ")

@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/creasty/defaults"
 	"github.com/spf13/cobra"
 	"github.com/up9inc/mizu/cli/config"
@@ -10,7 +12,6 @@ import (
 	"github.com/up9inc/mizu/cli/mizu/fsUtils"
 	"github.com/up9inc/mizu/cli/mizu/version"
 	"github.com/up9inc/mizu/cli/uiUtils"
-	"time"
 )
 
 var rootCmd = &cobra.Command{
