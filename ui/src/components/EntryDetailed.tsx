@@ -62,7 +62,6 @@ const EntrySummary: React.FC<any> = ({data}) => {
 };
 
 export const EntryDetailed: React.FC<EntryDetailedProps> = ({entryData}) => {
-    console.log("entryData.rulesMatched:", entryData.rulesMatched)
     return <>
         <EntryTitle
             protocol={entryData.protocol}
