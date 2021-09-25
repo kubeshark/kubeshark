@@ -609,6 +609,7 @@ func watchApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 func watchTapperPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
 	podExactRegex := regexp.MustCompile(fmt.Sprintf("^%s.*", mizu.TapperDaemonSetName))
 	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, kubernetesProvider, []string{config.Config.MizuResourcesNamespace}, podExactRegex)
+	var prevPodPhase core.PodPhase
 	for {
 		select {
 		case _, ok := <-added:
@@ -617,16 +618,16 @@ func watchTapperPod(ctx context.Context, kubernetesProvider *kubernetes.Provider
 				continue
 			}
 
-			socket.Send("info", 2000, "Tapper is created.")
 			logger.Log.Debugf("Watching tapper pod loop, added")
+			socket.Send("info", 1000, "Tapper is created")
 		case _, ok := <-removed:
 			if !ok {
 				removed = nil
 				continue
 			}
 
-			socket.Send("success", 2000, "Tapper is removed.")
 			logger.Log.Infof("%s removed", mizu.TapperDaemonSetName)
+			socket.Send("success", 2000, "Tapper is removed")
 			cancel()
 			return
 		case modifiedPod, ok := <-modified:
@@ -635,7 +636,42 @@ func watchTapperPod(ctx context.Context, kubernetesProvider *kubernetes.Provider
 				continue
 			}
 
-			socket.Send("info", 2000, "Tapper is modified.")
+			logger.Log.Debugf("Watching tapper pod loop, modified: %v", modifiedPod.Status.Phase)
+
+			podStatus := modifiedPod.Status
+			if podStatus.Phase == "Pending" && prevPodPhase == podStatus.Phase {
+				continue
+			}
+			prevPodPhase = podStatus.Phase
+
+			messageType := "info"
+			autoClose := uint(1000)
+			text := "Tapper is "
+			if podStatus.Phase == "Running" {
+				state := podStatus.ContainerStatuses[0].State
+				if state.Terminated != nil {
+					messageType = "error"
+					autoClose = uint(5000)
+					text = fmt.Sprintf("%s %s! %s.", text, "terminated", state.Terminated.Reason)
+					switch state.Terminated.Reason {
+					case "OOMKilled":
+						text = fmt.Sprintf("%s %s", text, "Increase pod resources.")
+					}
+				} else if state.Waiting != nil {
+					text = fmt.Sprintf("%s %s", text, "waiting")
+					messageType = "warning"
+					autoClose = uint(3000)
+				} else if state.Running != nil {
+					text = fmt.Sprintf("%s %s", text, "running")
+					messageType = "success"
+					autoClose = uint(2000)
+				} else {
+					text = fmt.Sprintf("%s %s", text, strings.ToLower(string(podStatus.Phase)))
+				}
+			} else {
+				text = fmt.Sprintf("%s %s", text, strings.ToLower(string(podStatus.Phase)))
+			}
+			socket.Send(messageType, autoClose, text)
 
 			// TODO: Remove the debugging print below
 			empJSON, err := json.MarshalIndent(modifiedPod, "", "  ")
@@ -643,8 +679,6 @@ func watchTapperPod(ctx context.Context, kubernetesProvider *kubernetes.Provider
 				log.Fatalf(err.Error())
 			}
 			fmt.Printf("modifiedPod:\n%s\n", string(empJSON))
-
-			logger.Log.Debugf("Watching tapper pod loop, modified: %v", modifiedPod.Status.Phase)
 		case _, ok := <-errorChan:
 			if !ok {
 				errorChan = nil
