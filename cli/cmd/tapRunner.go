@@ -2,9 +2,7 @@ package cmd
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"log"
 	"path"
 	"regexp"
 	"strings"
@@ -115,13 +113,13 @@ func RunMizuTap() {
 	nodeToTappedPodIPMap := getNodeHostToTappedPodIpsMap(state.currentlyTappedPods)
 
 	defer finishMizuExecution(kubernetesProvider)
+	go goUtils.HandleExcWrapper(watchApiServerPod, ctx, kubernetesProvider, cancel, nodeToTappedPodIPMap, mizuApiFilteringOptions)
+	go goUtils.HandleExcWrapper(watchPodsForTapping, ctx, kubernetesProvider, targetNamespaces, cancel, mizuApiFilteringOptions)
+
 	if err := createMizuResources(ctx, kubernetesProvider, nodeToTappedPodIPMap, mizuApiFilteringOptions, mizuValidationRules); err != nil {
 		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error creating resources: %v", errormessage.FormatError(err)))
 		return
 	}
-
-	go goUtils.HandleExcWrapper(watchApiServerPod, ctx, kubernetesProvider, cancel, nodeToTappedPodIPMap, mizuApiFilteringOptions)
-	go goUtils.HandleExcWrapper(watchPodsForTapping, ctx, kubernetesProvider, targetNamespaces, cancel, mizuApiFilteringOptions)
 
 	// block until exit signal or error
 	waitForFinish(ctx, cancel)
@@ -561,6 +559,13 @@ func watchApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 			}
 
 			logger.Log.Debugf("Watching API Server pod loop, modified: %v", modifiedPod.Status.Phase)
+
+			if modifiedPod.Status.Phase == core.PodPending && modifiedPod.Status.Conditions[0].Type == core.PodScheduled && modifiedPod.Status.Conditions[0].Status != core.ConditionTrue {
+				logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Cannot deploy the API server. Reason: \"%s\"", modifiedPod.Status.Conditions[0].Message))
+				cancel()
+				break
+			}
+
 			if modifiedPod.Status.Phase == core.PodRunning && !isPodReady {
 				isPodReady = true
 				go startProxyReportErrorIfAny(kubernetesProvider, cancel)
@@ -638,8 +643,16 @@ func watchTapperPod(ctx context.Context, kubernetesProvider *kubernetes.Provider
 
 			logger.Log.Debugf("Watching tapper pod loop, modified: %v", modifiedPod.Status.Phase)
 
+			if modifiedPod.Status.Phase == core.PodPending && modifiedPod.Status.Conditions[0].Type == core.PodScheduled && modifiedPod.Status.Conditions[0].Status != core.ConditionTrue {
+				msg := fmt.Sprintf("Cannot deploy the tapper. Reason: \"%s\"", modifiedPod.Status.Conditions[0].Message)
+				socket.Send("error", 5000, msg)
+				logger.Log.Errorf(uiUtils.Error, msg)
+				cancel()
+				break
+			}
+
 			podStatus := modifiedPod.Status
-			if podStatus.Phase == "Pending" && prevPodPhase == podStatus.Phase {
+			if podStatus.Phase == core.PodPending && prevPodPhase == podStatus.Phase {
 				continue
 			}
 			prevPodPhase = podStatus.Phase
@@ -647,7 +660,7 @@ func watchTapperPod(ctx context.Context, kubernetesProvider *kubernetes.Provider
 			messageType := "info"
 			autoClose := uint(1000)
 			text := "Tapper is "
-			if podStatus.Phase == "Running" {
+			if podStatus.Phase == core.PodRunning {
 				state := podStatus.ContainerStatuses[0].State
 				if state.Terminated != nil {
 					messageType = "error"
@@ -672,13 +685,6 @@ func watchTapperPod(ctx context.Context, kubernetesProvider *kubernetes.Provider
 				text = fmt.Sprintf("%s %s", text, strings.ToLower(string(podStatus.Phase)))
 			}
 			socket.Send(messageType, autoClose, text)
-
-			// TODO: Remove the debugging print below
-			empJSON, err := json.MarshalIndent(modifiedPod, "", "  ")
-			if err != nil {
-				log.Fatalf(err.Error())
-			}
-			fmt.Printf("modifiedPod:\n%s\n", string(empJSON))
 		case _, ok := <-errorChan:
 			if !ok {
 				errorChan = nil
