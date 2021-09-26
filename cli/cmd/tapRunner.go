@@ -533,7 +533,6 @@ func watchApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 	podExactRegex := regexp.MustCompile(fmt.Sprintf("^%s$", mizu.ApiServerPodName))
 	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, kubernetesProvider, []string{config.Config.MizuResourcesNamespace}, podExactRegex)
 	isPodReady := false
-	timeAfter := time.After(25 * time.Second)
 	for {
 		select {
 		case _, ok := <-added:
@@ -607,11 +606,6 @@ func watchApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 			logger.Log.Debugf("[ERROR] Agent creation, watching %v namespace", config.Config.MizuResourcesNamespace)
 			cancel()
 
-		case <-timeAfter:
-			if !isPodReady {
-				logger.Log.Errorf(uiUtils.Error, "Mizu API server was not ready in time")
-				cancel()
-			}
 		case <-ctx.Done():
 			logger.Log.Debugf("Watching API Server pod loop, ctx done")
 			return
