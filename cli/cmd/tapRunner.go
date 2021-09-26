@@ -621,6 +621,7 @@ func watchTapperPod(ctx context.Context, kubernetesProvider *kubernetes.Provider
 	if len(nodeToTappedPodIPMap) > 1 {
 		appendMetaname = true
 	}
+	autoClose := uint(5000)
 	for {
 		select {
 		case addedPod, ok := <-added:
@@ -630,17 +631,15 @@ func watchTapperPod(ctx context.Context, kubernetesProvider *kubernetes.Provider
 			}
 
 			logger.Log.Debugf("Watching tapper pod loop, added")
-			socket.Send("info", 2000, "Tapper is created", addedPod.ObjectMeta.Name, appendMetaname)
+			socket.Send("info", autoClose, "Tapper is created", addedPod.ObjectMeta.Name, appendMetaname)
 		case removedPod, ok := <-removed:
 			if !ok {
 				removed = nil
 				continue
 			}
 
-			logger.Log.Infof("%s removed", mizu.TapperDaemonSetName)
-			socket.Send("success", 5000, "Tapper is removed", removedPod.ObjectMeta.Name, appendMetaname)
-			cancel()
-			return
+			logger.Log.Debugf("%s removed", mizu.TapperDaemonSetName)
+			socket.Send("warning", autoClose, "Tapper is removed", removedPod.ObjectMeta.Name, appendMetaname)
 		case modifiedPod, ok := <-modified:
 			if !ok {
 				modified = nil
@@ -651,7 +650,7 @@ func watchTapperPod(ctx context.Context, kubernetesProvider *kubernetes.Provider
 
 			if modifiedPod.Status.Phase == core.PodPending && modifiedPod.Status.Conditions[0].Type == core.PodScheduled && modifiedPod.Status.Conditions[0].Status != core.ConditionTrue {
 				msg := fmt.Sprintf("Cannot deploy the tapper. Reason: \"%s\"", modifiedPod.Status.Conditions[0].Message)
-				socket.Send("error", 5000, msg, modifiedPod.ObjectMeta.Name, appendMetaname)
+				socket.Send("error", autoClose, msg, modifiedPod.ObjectMeta.Name, appendMetaname)
 				logger.Log.Errorf(uiUtils.Error, msg)
 				cancel()
 				break
@@ -664,13 +663,11 @@ func watchTapperPod(ctx context.Context, kubernetesProvider *kubernetes.Provider
 			prevPodPhase = podStatus.Phase
 
 			messageType := "info"
-			autoClose := uint(3000)
 			text := "Tapper is "
 			if podStatus.Phase == core.PodRunning {
 				state := podStatus.ContainerStatuses[0].State
 				if state.Terminated != nil {
 					messageType = "error"
-					autoClose = uint(5000)
 					text = fmt.Sprintf("%s %s! %s.", text, "terminated", state.Terminated.Reason)
 					switch state.Terminated.Reason {
 					case "OOMKilled":
@@ -679,11 +676,9 @@ func watchTapperPod(ctx context.Context, kubernetesProvider *kubernetes.Provider
 				} else if state.Waiting != nil {
 					text = fmt.Sprintf("%s %s", text, "waiting")
 					messageType = "warning"
-					autoClose = uint(5000)
 				} else if state.Running != nil {
 					text = fmt.Sprintf("%s %s", text, "running")
 					messageType = "success"
-					autoClose = uint(5000)
 				} else {
 					text = fmt.Sprintf("%s %s", text, strings.ToLower(string(podStatus.Phase)))
 				}
