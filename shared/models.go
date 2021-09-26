@@ -103,12 +103,13 @@ func (r *RulePolicy) validateType() bool {
 	_, found := Find(permitedTypes, r.Type)
 	if !found {
 		log.Printf("Error: %s. ", r.Name)
-		log.Fatalf("Only json, header and slo types are supported on rule definition.\n")
+		log.Printf("Only json, header and slo types are supported on rule definition. This rule will be ignored\n")
+		found = false
 	}
 	if strings.ToLower(r.Type) == "slo" {
 		if r.ResponseTime == 0 {
 			log.Printf("Error: %s. ", r.Name)
-			log.Fatalf("When type=slo, the field response-time should be specified and have a value >= 1\n\n")
+			log.Printf("When type=slo, the field response-time should be specified and have a value >= 1\n\n")
 			found = false
 		}
 	}
@@ -124,10 +125,6 @@ func (rules *RulesPolicy) ValidateRulesPolicy() []int {
 		}
 	}
 	return invalidIndex
-}
-
-func (rules *RulesPolicy) RemoveRule(idx int) {
-	rules.Rules = append(rules.Rules[:idx], rules.Rules[idx+1:]...)
 }
 
 func Find(slice []string, val string) (int, bool) {
@@ -150,10 +147,25 @@ func DecodeEnforcePolicy(path string) (RulesPolicy, error) {
 		return enforcePolicy, err
 	}
 	invalidIndex := enforcePolicy.ValidateRulesPolicy()
+	var k = 0
 	if len(invalidIndex) != 0 {
-		for i := range invalidIndex {
-			enforcePolicy.RemoveRule(invalidIndex[i])
+		for i, rule := range enforcePolicy.Rules {
+			if !contains(invalidIndex, i) {
+				enforcePolicy.Rules[k] = rule
+				k++
+			}
 		}
+		enforcePolicy.Rules = enforcePolicy.Rules[:k]
 	}
 	return enforcePolicy, nil
+}
+
+func contains(s []int, num int) bool {
+	for _, v := range s {
+		if v == num {
+			return true
+		}
+	}
+
+	return false
 }
