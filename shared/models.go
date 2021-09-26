@@ -83,14 +83,14 @@ type RulesPolicy struct {
 }
 
 type RulePolicy struct {
-	Type    string `yaml:"type"`
-	Service string `yaml:"service"`
-	Path    string `yaml:"path"`
-	Method  string `yaml:"method"`
-	Key     string `yaml:"key"`
-	Value   string `yaml:"value"`
+	Type         string `yaml:"type"`
+	Service      string `yaml:"service"`
+	Path         string `yaml:"path"`
+	Method       string `yaml:"method"`
+	Key          string `yaml:"key"`
+	Value        string `yaml:"value"`
 	ResponseTime int64  `yaml:"response-time"`
-	Name    string `yaml:"name"`
+	Name         string `yaml:"name"`
 }
 
 type RulesMatched struct {
