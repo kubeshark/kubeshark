@@ -50,8 +50,10 @@ func Listen() {
 	log.Fatal(http.ListenAndServe(addr, nil))
 }
 
-func Send(_type string, autoClose uint, text string, metadataName string) {
-	text = fmt.Sprintf("%s [%s]", text, metadataName)
+func Send(_type string, autoClose uint, text string, metaname string, appendMetaname bool) {
+	if appendMetaname {
+		text = fmt.Sprintf("%s [%s]", text, metaname)
+	}
 	socketMessageChannel <- &SocketMessage{
 		Type:      _type,
 		AutoClose: autoClose,
