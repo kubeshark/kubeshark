@@ -2,6 +2,7 @@ package socket
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -49,7 +50,8 @@ func Listen() {
 	log.Fatal(http.ListenAndServe(addr, nil))
 }
 
-func Send(_type string, autoClose uint, text string) {
+func Send(_type string, autoClose uint, text string, metadataName string) {
+	text = fmt.Sprintf("%s [%s]", text, metadataName)
 	socketMessageChannel <- &SocketMessage{
 		Type:      _type,
 		AutoClose: autoClose,

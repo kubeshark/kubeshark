@@ -619,22 +619,22 @@ func watchTapperPod(ctx context.Context, kubernetesProvider *kubernetes.Provider
 	var prevPodPhase core.PodPhase
 	for {
 		select {
-		case _, ok := <-added:
+		case addedPod, ok := <-added:
 			if !ok {
 				added = nil
 				continue
 			}
 
 			logger.Log.Debugf("Watching tapper pod loop, added")
-			socket.Send("info", 1000, "Tapper is created")
-		case _, ok := <-removed:
+			socket.Send("info", 2000, "Tapper is created", addedPod.ObjectMeta.Name)
+		case removedPod, ok := <-removed:
 			if !ok {
 				removed = nil
 				continue
 			}
 
 			logger.Log.Infof("%s removed", mizu.TapperDaemonSetName)
-			socket.Send("success", 2000, "Tapper is removed")
+			socket.Send("success", 5000, "Tapper is removed", removedPod.ObjectMeta.Name)
 			cancel()
 			return
 		case modifiedPod, ok := <-modified:
@@ -647,7 +647,7 @@ func watchTapperPod(ctx context.Context, kubernetesProvider *kubernetes.Provider
 
 			if modifiedPod.Status.Phase == core.PodPending && modifiedPod.Status.Conditions[0].Type == core.PodScheduled && modifiedPod.Status.Conditions[0].Status != core.ConditionTrue {
 				msg := fmt.Sprintf("Cannot deploy the tapper. Reason: \"%s\"", modifiedPod.Status.Conditions[0].Message)
-				socket.Send("error", 5000, msg)
+				socket.Send("error", 5000, msg, modifiedPod.ObjectMeta.Name)
 				logger.Log.Errorf(uiUtils.Error, msg)
 				cancel()
 				break
@@ -660,7 +660,7 @@ func watchTapperPod(ctx context.Context, kubernetesProvider *kubernetes.Provider
 			prevPodPhase = podStatus.Phase
 
 			messageType := "info"
-			autoClose := uint(1000)
+			autoClose := uint(3000)
 			text := "Tapper is "
 			if podStatus.Phase == core.PodRunning {
 				state := podStatus.ContainerStatuses[0].State
@@ -675,18 +675,18 @@ func watchTapperPod(ctx context.Context, kubernetesProvider *kubernetes.Provider
 				} else if state.Waiting != nil {
 					text = fmt.Sprintf("%s %s", text, "waiting")
 					messageType = "warning"
-					autoClose = uint(3000)
+					autoClose = uint(5000)
 				} else if state.Running != nil {
 					text = fmt.Sprintf("%s %s", text, "running")
 					messageType = "success"
-					autoClose = uint(2000)
+					autoClose = uint(5000)
 				} else {
 					text = fmt.Sprintf("%s %s", text, strings.ToLower(string(podStatus.Phase)))
 				}
 			} else {
 				text = fmt.Sprintf("%s %s", text, strings.ToLower(string(podStatus.Phase)))
 			}
-			socket.Send(messageType, autoClose, text)
+			socket.Send(messageType, autoClose, text, modifiedPod.ObjectMeta.Name)
 		case _, ok := <-errorChan:
 			if !ok {
 				errorChan = nil
