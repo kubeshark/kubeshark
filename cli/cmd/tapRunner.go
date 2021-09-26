@@ -560,10 +560,18 @@ func watchApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 
 			logger.Log.Debugf("Watching API Server pod loop, modified: %v", modifiedPod.Status.Phase)
 
-			if modifiedPod.Status.Phase == core.PodPending && modifiedPod.Status.Conditions[0].Type == core.PodScheduled && modifiedPod.Status.Conditions[0].Status != core.ConditionTrue {
-				logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Cannot deploy the API server. Reason: \"%s\"", modifiedPod.Status.Conditions[0].Message))
-				cancel()
-				break
+			if modifiedPod.Status.Phase == core.PodPending {
+				if modifiedPod.Status.Conditions[0].Type == core.PodScheduled && modifiedPod.Status.Conditions[0].Status != core.ConditionTrue {
+					logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Cannot deploy the API server. Reason: \"%s\"", modifiedPod.Status.Conditions[0].Message))
+					cancel()
+					break
+				}
+
+				if len(modifiedPod.Status.ContainerStatuses) > 0 && modifiedPod.Status.ContainerStatuses[0].State.Waiting != nil && modifiedPod.Status.ContainerStatuses[0].State.Waiting.Reason == "ErrImagePull" {
+					logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Cannot deploy the API server. (ErrImagePull) Reason: \"%s\"", modifiedPod.Status.ContainerStatuses[0].State.Waiting.Message))
+					cancel()
+					break
+				}
 			}
 
 			if modifiedPod.Status.Phase == core.PodRunning && !isPodReady {
