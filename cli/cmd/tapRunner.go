@@ -628,7 +628,6 @@ func watchTapperPod(ctx context.Context, kubernetesProvider *kubernetes.Provider
 				continue
 			}
 
-			logger.Log.Debugf("Watching tapper pod loop, added")
 			socket.Send("info", autoClose, "Tapper is created", addedPod.ObjectMeta.Name, appendMetaname)
 		case removedPod, ok := <-removed:
 			if !ok {
@@ -636,7 +635,6 @@ func watchTapperPod(ctx context.Context, kubernetesProvider *kubernetes.Provider
 				continue
 			}
 
-			logger.Log.Debugf("%s removed", mizu.TapperDaemonSetName)
 			socket.Send("warning", autoClose, "Tapper is removed", removedPod.ObjectMeta.Name, appendMetaname)
 		case modifiedPod, ok := <-modified:
 			if !ok {
@@ -644,12 +642,9 @@ func watchTapperPod(ctx context.Context, kubernetesProvider *kubernetes.Provider
 				continue
 			}
 
-			logger.Log.Debugf("Watching tapper pod loop, modified: %v", modifiedPod.Status.Phase)
-
 			if modifiedPod.Status.Phase == core.PodPending && modifiedPod.Status.Conditions[0].Type == core.PodScheduled && modifiedPod.Status.Conditions[0].Status != core.ConditionTrue {
 				msg := fmt.Sprintf("Cannot deploy the tapper. Reason: \"%s\"", modifiedPod.Status.Conditions[0].Message)
 				socket.Send("error", autoClose, msg, modifiedPod.ObjectMeta.Name, appendMetaname)
-				logger.Log.Errorf(uiUtils.Error, msg)
 				cancel()
 				break
 			}
@@ -661,7 +656,7 @@ func watchTapperPod(ctx context.Context, kubernetesProvider *kubernetes.Provider
 			prevPodPhase = podStatus.Phase
 
 			messageType := "info"
-			text := "Tapper is "
+			text := "Tapper is"
 			if podStatus.Phase == core.PodRunning {
 				state := podStatus.ContainerStatuses[0].State
 				if state.Terminated != nil {

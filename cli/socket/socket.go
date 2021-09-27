@@ -7,6 +7,7 @@ import (
 
 	"github.com/gorilla/websocket"
 	"github.com/up9inc/mizu/cli/logger"
+	"github.com/up9inc/mizu/cli/uiUtils"
 	"github.com/up9inc/mizu/shared"
 )
 
@@ -49,6 +50,18 @@ func Send(_type string, autoClose uint, text string, metaname string, appendMeta
 	if appendMetaname {
 		text = fmt.Sprintf("%s [%s]", text, metaname)
 	}
+
+	switch _type {
+	case "success":
+		logger.Log.Infof(uiUtils.Green, text)
+	case "warning":
+		logger.Log.Infof(uiUtils.Yellow, text)
+	case "error":
+		logger.Log.Infof(uiUtils.Red, text)
+	default:
+		logger.Log.Infof(uiUtils.White, text)
+	}
+
 	toastMessageChannel <- &shared.ToastMessage{
 		Type:      _type,
 		AutoClose: autoClose,
