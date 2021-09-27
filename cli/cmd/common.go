@@ -15,6 +15,7 @@ import (
 	"github.com/up9inc/mizu/cli/kubernetes"
 	"github.com/up9inc/mizu/cli/logger"
 	"github.com/up9inc/mizu/cli/mizu"
+	"github.com/up9inc/mizu/cli/socket"
 	"github.com/up9inc/mizu/cli/uiUtils"
 )
 
@@ -50,6 +51,7 @@ func waitForFinish(ctx context.Context, cancel context.CancelFunc) {
 }
 
 func openBrowser(url string) {
+	go socket.OpenWebsocket(url)
 	var err error
 
 	switch runtime.GOOS {

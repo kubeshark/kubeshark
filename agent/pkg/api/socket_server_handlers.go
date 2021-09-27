@@ -94,6 +94,8 @@ func (h *RoutesEventHandlers) WebSocketMessage(_ int, message []byte) {
 			} else {
 				handleTLSLink(outboundLinkMessage)
 			}
+		case shared.WebSocketMessageTypeToast:
+			BroadcastToBrowserClients(message)
 		default:
 			rlog.Infof("Received socket message of type %s for which no handlers are defined", socketMessageBase.MessageType)
 		}

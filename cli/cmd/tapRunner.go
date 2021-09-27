@@ -141,8 +141,6 @@ func createMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Pro
 		}
 	}
 
-	go socket.Listen()
-
 	if err := createMizuApiServer(ctx, kubernetesProvider, mizuApiFilteringOptions); err != nil {
 		return err
 	}

@@ -105,37 +105,27 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                 case "outboundLink":
                     onTLSDetected(message.Data.DstIP);
                     break;
+                case "toast":
+                    toast[message.data.type](message.data.text, {
+                        position: "bottom-right",
+                        theme: "colored",
+                        autoClose: message.data.autoClose,
+                        hideProgressBar: false,
+                        closeOnClick: true,
+                        pauseOnHover: true,
+                        draggable: true,
+                        progress: undefined,
+                    });
+                    break;
                 default:
                     console.error(`unsupported websocket message type, Got: ${message.messageType}`)
             }
         }
     }
 
-    const openWebSocketCli = () => {
-        wsCli.current = new WebSocket("ws://localhost:8898/wsCli");
-    }
-
-    if (wsCli.current) {
-        wsCli.current.onmessage = e => {
-            if (!e?.data) return;
-            const message = JSON.parse(e.data);
-            toast[message.type](message.text, {
-                position: "bottom-right",
-                theme: "colored",
-                autoClose: message.autoClose,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
-                progress: undefined,
-            });
-        }
-    }
-
     useEffect(() => {
         (async () => {
             openWebSocket();
-            openWebSocketCli();
             try{
                 const tapStatusResponse = await api.tapStatus();
                 setTappingStatus(tapStatusResponse);

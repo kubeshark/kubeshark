@@ -16,6 +16,7 @@ const (
 	WebSocketMessageTypeUpdateStatus  WebSocketMessageType = "status"
 	WebSocketMessageTypeAnalyzeStatus WebSocketMessageType = "analyzeStatus"
 	WebsocketMessageTypeOutboundLink  WebSocketMessageType = "outboundLink"
+	WebSocketMessageTypeToast         WebSocketMessageType = "toast"
 )
 
 type WebSocketMessageMetadata struct {
@@ -42,6 +43,17 @@ type WebSocketStatusMessage struct {
 type TapStatus struct {
 	Pods     []PodInfo     `json:"pods"`
 	TLSLinks []TLSLinkInfo `json:"tlsLinks"`
+}
+
+type ToastMessage struct {
+	Type      string `json:"type"`
+	AutoClose uint   `json:"autoClose"`
+	Text      string `json:"text"`
+}
+
+type WebSocketToastMessage struct {
+	*WebSocketMessageMetadata
+	Data *ToastMessage `json:"data,omitempty"`
 }
 
 type PodInfo struct {

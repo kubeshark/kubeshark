@@ -3,58 +3,53 @@ package socket
 import (
 	"encoding/json"
 	"fmt"
-	"log"
-	"net/http"
+	"net/url"
 
 	"github.com/gorilla/websocket"
 	"github.com/up9inc/mizu/cli/logger"
+	"github.com/up9inc/mizu/shared"
 )
 
-const addr = "localhost:8898"
+var toastMessageChannel chan *shared.ToastMessage = make(chan *shared.ToastMessage)
 
-var upgrader = websocket.Upgrader{} // use default options
-
-type SocketMessage struct {
-	Type      string `json:"type"`
-	AutoClose uint   `json:"autoClose"`
-	Text      string `json:"text"`
-}
-
-var socketMessageChannel chan *SocketMessage
-
-func handle(w http.ResponseWriter, r *http.Request) {
-	upgrader.CheckOrigin = func(r *http.Request) bool { return true }
-	c, err := upgrader.Upgrade(w, r, nil)
+func OpenWebsocket(urlStr string) {
+	u, err := url.Parse(urlStr)
 	if err != nil {
-		logger.Log.Debugf("Error on WebSocket upgrade:", err)
-		return
+		logger.Log.Errorf("WebSocket URL parse error:", err)
 	}
-	defer c.Close()
-	for {
-		msg := <-socketMessageChannel
-		data, err := json.Marshal(msg)
-		if err != nil {
-			logger.Log.Debugf(err.Error())
-		}
-		err = c.WriteMessage(websocket.TextMessage, data)
-		if err != nil {
-			logger.Log.Debugf("Error on WebSocket write:", err)
-			break
-		}
-	}
-}
+	u.Scheme = "ws"
+	u.Path = fmt.Sprintf("%s/ws", u.Path)
 
-func Listen() {
-	socketMessageChannel = make(chan *SocketMessage)
-	http.HandleFunc("/wsCli", handle)
-	log.Fatal(http.ListenAndServe(addr, nil))
+	conn, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
+	if err != nil {
+		logger.Log.Errorf("WebSocket Dial error:", err)
+	}
+	defer conn.Close()
+
+	for {
+		msg := <-toastMessageChannel
+		wsMsg := &shared.WebSocketToastMessage{
+			WebSocketMessageMetadata: &shared.WebSocketMessageMetadata{
+				MessageType: shared.WebSocketMessageTypeToast,
+			},
+			Data: msg,
+		}
+		data, err := json.Marshal(wsMsg)
+		if err != nil {
+			logger.Log.Errorf("WebSocket JSON Marshal error:", err)
+		}
+		err = conn.WriteMessage(websocket.TextMessage, data)
+		if err != nil {
+			logger.Log.Errorf("WebSocket write error:", err)
+		}
+	}
 }
 
 func Send(_type string, autoClose uint, text string, metaname string, appendMetaname bool) {
 	if appendMetaname {
 		text = fmt.Sprintf("%s [%s]", text, metaname)
 	}
-	socketMessageChannel <- &SocketMessage{
+	toastMessageChannel <- &shared.ToastMessage{
 		Type:      _type,
 		AutoClose: autoClose,
 		Text:      text,
