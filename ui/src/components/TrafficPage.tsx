@@ -10,8 +10,6 @@ import pauseIcon from './assets/pause.svg';
 import variables from '../variables.module.scss';
 import {StatusBar} from "./UI/StatusBar";
 import Api, {MizuWebsocketURL} from "../helpers/api";
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 
 const useLayoutStyles = makeStyles(() => ({
     details: {
@@ -106,16 +104,6 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                     onTLSDetected(message.Data.DstIP);
                     break;
                 case "toast":
-                    toast[message.data.type](message.data.text, {
-                        position: "bottom-right",
-                        theme: "colored",
-                        autoClose: message.data.autoClose,
-                        hideProgressBar: false,
-                        closeOnClick: true,
-                        pauseOnHover: true,
-                        draggable: true,
-                        progress: undefined,
-                    });
                     break;
                 default:
                     console.error(`unsupported websocket message type, Got: ${message.messageType}`)
@@ -231,17 +219,6 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                 </div>
             </div>}
             {tappingStatus?.pods != null && <StatusBar tappingStatus={tappingStatus}/>}
-            <ToastContainer
-                position="bottom-right"
-                autoClose={5000}
-                hideProgressBar={false}
-                newestOnTop={false}
-                closeOnClick
-                rtl={false}
-                pauseOnFocusLoss
-                draggable
-                pauseOnHover
-            />
         </div>
     )
 };
