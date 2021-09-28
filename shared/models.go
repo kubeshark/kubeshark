@@ -107,7 +107,7 @@ func (r *RulePolicy) validateType() bool {
 		found = false
 	}
 	if strings.ToLower(r.Type) == "slo" {
-		if r.ResponseTime == 0 {
+		if r.ResponseTime <= 0 {
 			log.Printf("Error: %s. ", r.Name)
 			log.Printf("When type=slo, the field response-time should be specified and have a value >= 1\n\n")
 			found = false
