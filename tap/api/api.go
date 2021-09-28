@@ -106,7 +106,7 @@ type MizuEntry struct {
 	UpdatedAt               time.Time
 	ProtocolName            string `json:"protocolName" gorm:"column:protocolName"`
 	ProtocolLongName        string `json:"protocolLongName" gorm:"column:protocolLongName"`
-	ProtocolAbbreviation    string `json:"protocolAbbreviation" gorm:"column:protocolVersion"`
+	ProtocolAbbreviation    string `json:"protocolAbbreviation" gorm:"column:protocolAbbreviation"`
 	ProtocolVersion         string `json:"protocolVersion" gorm:"column:protocolVersion"`
 	ProtocolBackgroundColor string `json:"protocolBackgroundColor" gorm:"column:protocolBackgroundColor"`
 	ProtocolForegroundColor string `json:"protocolForegroundColor" gorm:"column:protocolForegroundColor"`
