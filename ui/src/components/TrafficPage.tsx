@@ -64,7 +64,6 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
     const [disableScrollList, setDisableScrollList] = useState(false);
 
     const ws = useRef(null);
-    const wsCli = useRef(null);
 
     const listEntry = useRef(null);
 
