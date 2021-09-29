@@ -101,7 +101,7 @@ func MatchRequestPolicy(harEntry har.Entry, service string) (resultPolicyToSend 
 
 func PassedValidationRules(rulesMatched []RulesMatched) (bool, int64, int) {
 	var numberOfRulesMatched = len(rulesMatched)
-	var latency int64 = -1
+	var responseTime int64 = -1
 
 	if numberOfRulesMatched == 0 {
 		return false, 0, numberOfRulesMatched
@@ -109,15 +109,15 @@ func PassedValidationRules(rulesMatched []RulesMatched) (bool, int64, int) {
 
 	for _, rule := range rulesMatched {
 		if rule.Matched == false {
-			return false, latency, numberOfRulesMatched
+			return false, responseTime, numberOfRulesMatched
 		} else {
-			if strings.ToLower(rule.Rule.Type) == "latency" {
-				if rule.Rule.Latency < latency || latency == -1 {
-					latency = rule.Rule.Latency
+			if strings.ToLower(rule.Rule.Type) == "responseTime" {
+				if rule.Rule.ResponseTime < responseTime || responseTime == -1 {
+					responseTime = rule.Rule.ResponseTime
 				}
 			}
 		}
 	}
 
-	return true, latency, numberOfRulesMatched
+	return true, responseTime, numberOfRulesMatched
 }

@@ -76,7 +76,7 @@ func RunMizuTap() {
 	targetNamespaces := getNamespaces(kubernetesProvider)
 
 	if config.Config.IsNsRestrictedMode() {
-		if len(targetNamespaces) != 1 || !mizu.Contains(targetNamespaces, config.Config.MizuResourcesNamespace) {
+		if len(targetNamespaces) != 1 || !shared.Contains(targetNamespaces, config.Config.MizuResourcesNamespace) {
 			logger.Log.Errorf("Not supported mode. Mizu can't resolve IPs in other namespaces when running in namespace restricted mode.\n"+
 				"You can use the same namespace for --%s and --%s", configStructs.NamespacesTapName, config.MizuResourcesNamespaceConfigName)
 			return
@@ -84,7 +84,7 @@ func RunMizuTap() {
 	}
 
 	var namespacesStr string
-	if !mizu.Contains(targetNamespaces, mizu.K8sAllNamespaces) {
+	if !shared.Contains(targetNamespaces, mizu.K8sAllNamespaces) {
 		namespacesStr = fmt.Sprintf("namespaces \"%s\"", strings.Join(targetNamespaces, "\", \""))
 	} else {
 		namespacesStr = "all namespaces"
@@ -99,7 +99,7 @@ func RunMizuTap() {
 
 	if len(state.currentlyTappedPods) == 0 {
 		var suggestionStr string
-		if !mizu.Contains(targetNamespaces, mizu.K8sAllNamespaces) {
+		if !shared.Contains(targetNamespaces, mizu.K8sAllNamespaces) {
 			suggestionStr = ". Select a different namespace with -n or tap all namespaces with -A"
 		}
 		logger.Log.Warningf(uiUtils.Warning, fmt.Sprintf("Did not find any pods matching the regex argument%s", suggestionStr))
@@ -639,7 +639,7 @@ func getNamespaces(kubernetesProvider *kubernetes.Provider) []string {
 	if config.Config.Tap.AllNamespaces {
 		return []string{mizu.K8sAllNamespaces}
 	} else if len(config.Config.Tap.Namespaces) > 0 {
-		return mizu.Unique(config.Config.Tap.Namespaces)
+		return shared.Unique(config.Config.Tap.Namespaces)
 	} else {
 		return []string{kubernetesProvider.CurrentNamespace()}
 	}
