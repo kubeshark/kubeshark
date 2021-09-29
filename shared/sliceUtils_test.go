@@ -1,8 +1,8 @@
-package mizu_test
+package shared_test
 
 import (
 	"fmt"
-	"github.com/up9inc/mizu/cli/mizu"
+	"github.com/up9inc/mizu/shared"
 	"reflect"
 	"testing"
 )
@@ -21,7 +21,7 @@ func TestContainsExists(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.ContainsValue, func(t *testing.T) {
-			actual := mizu.Contains(test.Slice, test.ContainsValue)
+			actual := shared.Contains(test.Slice, test.ContainsValue)
 			if actual != test.Expected {
 				t.Errorf("unexpected result - Expected: %v, actual: %v", test.Expected, actual)
 			}
@@ -43,7 +43,7 @@ func TestContainsNotExists(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.ContainsValue, func(t *testing.T) {
-			actual := mizu.Contains(test.Slice, test.ContainsValue)
+			actual := shared.Contains(test.Slice, test.ContainsValue)
 			if actual != test.Expected {
 				t.Errorf("unexpected result - Expected: %v, actual: %v", test.Expected, actual)
 			}
@@ -63,7 +63,7 @@ func TestContainsEmptySlice(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.ContainsValue, func(t *testing.T) {
-			actual := mizu.Contains(test.Slice, test.ContainsValue)
+			actual := shared.Contains(test.Slice, test.ContainsValue)
 			if actual != test.Expected {
 				t.Errorf("unexpected result - Expected: %v, actual: %v", test.Expected, actual)
 			}
@@ -83,7 +83,7 @@ func TestContainsNilSlice(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.ContainsValue, func(t *testing.T) {
-			actual := mizu.Contains(test.Slice, test.ContainsValue)
+			actual := shared.Contains(test.Slice, test.ContainsValue)
 			if actual != test.Expected {
 				t.Errorf("unexpected result - Expected: %v, actual: %v", test.Expected, actual)
 			}
@@ -102,7 +102,7 @@ func TestUniqueNoDuplicateValues(t *testing.T) {
 
 	for index, test := range tests {
 		t.Run(fmt.Sprintf("%v", index), func(t *testing.T) {
-			actual := mizu.Unique(test.Slice)
+			actual := shared.Unique(test.Slice)
 			if !reflect.DeepEqual(test.Expected, actual) {
 				t.Errorf("unexpected result - Expected: %v, actual: %v", test.Expected, actual)
 			}
@@ -121,7 +121,7 @@ func TestUniqueDuplicateValues(t *testing.T) {
 
 	for index, test := range tests {
 		t.Run(fmt.Sprintf("%v", index), func(t *testing.T) {
-			actual := mizu.Unique(test.Slice)
+			actual := shared.Unique(test.Slice)
 			if !reflect.DeepEqual(test.Expected, actual) {
 				t.Errorf("unexpected result - Expected: %v, actual: %v", test.Expected, actual)
 			}

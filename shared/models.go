@@ -150,7 +150,7 @@ func DecodeEnforcePolicy(path string) (RulesPolicy, error) {
 	var k = 0
 	if len(invalidIndex) != 0 {
 		for i, rule := range enforcePolicy.Rules {
-			if !contains(invalidIndex, i) {
+			if !ContainsInt(invalidIndex, i) {
 				enforcePolicy.Rules[k] = rule
 				k++
 			}
@@ -158,14 +158,4 @@ func DecodeEnforcePolicy(path string) (RulesPolicy, error) {
 		enforcePolicy.Rules = enforcePolicy.Rules[:k]
 	}
 	return enforcePolicy, nil
-}
-
-func contains(s []int, num int) bool {
-	for _, v := range s {
-		if v == num {
-			return true
-		}
-	}
-
-	return false
 }
