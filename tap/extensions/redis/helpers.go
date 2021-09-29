@@ -24,27 +24,27 @@ type RedisWrapper struct {
 	Details interface{} `json:"details"`
 }
 
-func representGeneric(generic map[string]string) (representation []interface{}) {
+func representGeneric(generic map[string]interface{}) (representation []interface{}) {
 	details, _ := json.Marshal([]map[string]string{
 		{
 			"name":  "Type",
-			"value": generic["type"],
+			"value": generic["type"].(string),
 		},
 		{
 			"name":  "Command",
-			"value": generic["command"],
+			"value": generic["command"].(string),
 		},
 		{
 			"name":  "Key",
-			"value": generic["key"],
+			"value": generic["key"].(string),
 		},
 		{
 			"name":  "Value",
-			"value": generic["value"],
+			"value": generic["value"].(string),
 		},
 		{
 			"name":  "Keyword",
-			"value": generic["keyword"],
+			"value": generic["keyword"].(string),
 		},
 	})
 	representation = append(representation, map[string]string{
