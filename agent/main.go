@@ -77,7 +77,7 @@ func main() {
 
 		filteredOutputItemsChannel := make(chan *tapApi.OutputChannelItem)
 		tap.StartPassiveTapper(tapOpts, filteredOutputItemsChannel, extensions, filteringOptions)
-		socketConnection, err := utils.ConnectToSocketServer(*apiServerAddress)
+		socketConnection, _, err := websocket.DefaultDialer.Dial(*apiServerAddress, nil)
 		if err != nil {
 			panic(fmt.Sprintf("Error connecting to socket server at %s %v", *apiServerAddress, err))
 		}
