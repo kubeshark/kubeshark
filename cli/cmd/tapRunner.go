@@ -666,7 +666,7 @@ func watchTapperPod(ctx context.Context, kubernetesProvider *kubernetes.Provider
 				continue
 			}
 
-			logger.Log.Errorf("[ERROR] Tapper creation, watching %v namespace", config.Config.MizuResourcesNamespace)
+			logger.Log.Errorf("Error in mizu tapper watch")
 			cancel()
 
 		case <-ctx.Done():
