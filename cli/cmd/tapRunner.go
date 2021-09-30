@@ -118,6 +118,7 @@ func RunMizuTap() {
 	}
 
 	go goUtils.HandleExcWrapper(watchApiServerPod, ctx, kubernetesProvider, cancel, nodeToTappedPodIPMap, mizuApiFilteringOptions)
+	go goUtils.HandleExcWrapper(watchTapperPod, ctx, kubernetesProvider, cancel, nodeToTappedPodIPMap)
 	go goUtils.HandleExcWrapper(watchPodsForTapping, ctx, kubernetesProvider, targetNamespaces, cancel, mizuApiFilteringOptions)
 
 	// block until exit signal or error
@@ -567,10 +568,6 @@ func watchApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 					break
 				}
 
-				if err := updateMizuTappers(ctx, kubernetesProvider, nodeToTappedPodIPMap, mizuApiFilteringOptions); err != nil {
-					logger.Log.Debugf("[Error] failed to start tappers %v", err)
-				}
-
 				logger.Log.Infof("Mizu is available at %s\n", url)
 				openBrowser(url)
 				requestForAnalysisIfNeeded()
@@ -594,6 +591,86 @@ func watchApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 			}
 		case <-ctx.Done():
 			logger.Log.Debugf("Watching API Server pod loop, ctx done")
+			return
+		}
+	}
+}
+
+func watchTapperPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc, nodeToTappedPodIPMap map[string][]string) {
+	podExactRegex := regexp.MustCompile(fmt.Sprintf("^%s.*", mizu.TapperDaemonSetName))
+	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, kubernetesProvider, []string{config.Config.MizuResourcesNamespace}, podExactRegex)
+	var prevPodPhase core.PodPhase
+	var appendMetaname bool
+	if len(nodeToTappedPodIPMap) > 1 {
+		appendMetaname = true
+	}
+	for {
+		select {
+		case addedPod, ok := <-added:
+			if !ok {
+				added = nil
+				continue
+			}
+
+			if appendMetaname {
+				logger.Log.Debugf("Tapper is created [%s]", addedPod.ObjectMeta.Name)
+			} else {
+				logger.Log.Debugf("Tapper is created")
+			}
+		case removedPod, ok := <-removed:
+			if !ok {
+				removed = nil
+				continue
+			}
+
+			if appendMetaname {
+				logger.Log.Debugf("Tapper is removed [%s]", removedPod.ObjectMeta.Name)
+			} else {
+				logger.Log.Debugf("Tapper is removed")
+			}
+		case modifiedPod, ok := <-modified:
+			if !ok {
+				modified = nil
+				continue
+			}
+
+			if modifiedPod.Status.Phase == core.PodPending && modifiedPod.Status.Conditions[0].Type == core.PodScheduled && modifiedPod.Status.Conditions[0].Status != core.ConditionTrue {
+				logger.Log.Infof(uiUtils.Red, "Cannot deploy the tapper. Reason: \"%s\"", modifiedPod.Status.Conditions[0].Message)
+				cancel()
+				break
+			}
+
+			podStatus := modifiedPod.Status
+			if podStatus.Phase == core.PodPending && prevPodPhase == podStatus.Phase {
+				continue
+			}
+			prevPodPhase = podStatus.Phase
+
+			if podStatus.Phase == core.PodRunning {
+				state := podStatus.ContainerStatuses[0].State
+				if state.Terminated != nil {
+					switch state.Terminated.Reason {
+					case "OOMKilled":
+						logger.Log.Infof(uiUtils.Red, "Tapper is terminated! OOMKilled. Increase pod resources.")
+					}
+				} else {
+					logger.Log.Debugf("Tapper is %s", strings.ToLower(string(podStatus.Phase)))
+				}
+			} else {
+				logger.Log.Debugf("Tapper is %s", strings.ToLower(string(podStatus.Phase)))
+			}
+
+		case _, ok := <-errorChan:
+			if !ok {
+				errorChan = nil
+				continue
+			}
+
+			logger.Log.Errorf("[ERROR] Tapper creation, watching %v namespace", config.Config.MizuResourcesNamespace)
+			cancel()
+
+		case <-ctx.Done():
+			logger.Log.Debugf("Watching tapper pod loop, ctx done")
 			return
 		}
 	}
