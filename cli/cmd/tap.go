@@ -8,6 +8,7 @@ import (
 	"github.com/up9inc/mizu/cli/logger"
 	"github.com/up9inc/mizu/cli/telemetry"
 	"os"
+	"time"
 
 	"github.com/creasty/defaults"
 	"github.com/spf13/cobra"
@@ -47,6 +48,10 @@ Supported protocols are HTTP and gRPC.`,
 
 			if config.Config.Auth.Token == "" {
 				return errors.New(fmt.Sprintf("--%s flag requires authentication, run `mizu auth login` to authenticate", configStructs.WorkspaceTapName))
+			}
+
+			if time.Now().After(config.Config.Auth.ExpiryDate) {
+				return errors.New("token is expired, run `mizu auth login` to re-authenticate")
 			}
 		}
 

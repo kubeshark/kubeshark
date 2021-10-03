@@ -52,7 +52,7 @@ func runMizuView() {
 	}
 
 	logger.Log.Infof("Mizu is available at %s\n", url)
-	openBrowser(url)
+	uiUtils.OpenBrowser(url)
 	if isCompatible, err := version.CheckVersionCompatibility(); err != nil {
 		logger.Log.Errorf("Failed to check versions compatibility %v", err)
 		cancel()
