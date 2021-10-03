@@ -23,7 +23,9 @@ type EntriesFilter struct {
 }
 
 type UploadEntriesRequestQuery struct {
+	Token            string `json:"token"`
 	Dest             string `form:"dest"`
+	Workspace        string `form:"workspace"`
 	SleepIntervalSec int    `form:"interval"`
 }
 

@@ -16,13 +16,13 @@ const (
 	DisableRedactionTapName       = "no-redact"
 	HumanMaxEntriesDBSizeTapName  = "max-entries-db-size"
 	DryRunTapName                 = "dry-run"
+	WorkspaceTapName              = "workspace"
 	EnforcePolicyFile             = "traffic-validation-file"
 	EnforcePolicyFileDeprecated   = "test-rules"
 )
 
 type TapConfig struct {
-	AnalysisDestination          string    `yaml:"dest" default:"up9.app"`
-	SleepIntervalSec             int       `yaml:"upload-interval" default:"10"`
+	UploadIntervalSec            int       `yaml:"upload-interval" default:"10"`
 	PodRegexStr                  string    `yaml:"regex" default:".*"`
 	GuiPort                      uint16    `yaml:"gui-port" default:"8899"`
 	Namespaces                   []string  `yaml:"namespaces"`
@@ -33,6 +33,7 @@ type TapConfig struct {
 	DisableRedaction             bool      `yaml:"no-redact" default:"false"`
 	HumanMaxEntriesDBSize        string    `yaml:"max-entries-db-size" default:"200MB"`
 	DryRun                       bool      `yaml:"dry-run" default:"false"`
+	Workspace                    string    `yaml:"workspace"`
 	EnforcePolicyFile            string    `yaml:"traffic-validation-file"`
 	EnforcePolicyFileDeprecated  string    `yaml:"test-rules,omitempty" readonly:""`
 	ApiServerResources           Resources `yaml:"api-server-resources"`
@@ -65,6 +66,10 @@ func (config *TapConfig) Validate() error {
 	_, parseHumanDataSizeErr := units.HumanReadableToBytes(config.HumanMaxEntriesDBSize)
 	if parseHumanDataSizeErr != nil {
 		return errors.New(fmt.Sprintf("Could not parse --%s value %s", HumanMaxEntriesDBSizeTapName, config.HumanMaxEntriesDBSize))
+	}
+
+	if config.Analysis && config.Workspace != "" {
+		return errors.New(fmt.Sprintf("Can't run with both --%s and --%s flags", AnalysisTapName, WorkspaceTapName))
 	}
 
 	return nil

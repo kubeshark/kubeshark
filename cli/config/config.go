@@ -27,11 +27,15 @@ const (
 
 var (
 	Config  = ConfigStruct{}
-	cmdName string
+	configSection string
 )
 
 func InitConfig(cmd *cobra.Command) error {
-	cmdName = cmd.Name()
+	if val, ok := cmd.Annotations["ConfigSection"]; ok {
+		configSection = val
+	} else {
+		configSection = cmd.Name()
+	}
 
 	if err := defaults.Set(&Config); err != nil {
 		return err
@@ -54,16 +58,30 @@ func InitConfig(cmd *cobra.Command) error {
 	return nil
 }
 
-func GetConfigWithDefaults() (string, error) {
+func GetConfigWithDefaults() (*ConfigStruct, error) {
 	defaultConf := ConfigStruct{}
 	if err := defaults.Set(&defaultConf); err != nil {
-		return "", err
+		return nil, err
 	}
 
 	configElem := reflect.ValueOf(&defaultConf).Elem()
 	setZeroForReadonlyFields(configElem)
 
-	return uiUtils.PrettyYaml(defaultConf)
+	return &defaultConf, nil
+}
+
+func WriteConfig(config *ConfigStruct) error {
+	template, err := uiUtils.PrettyYaml(config)
+	if err != nil {
+		return fmt.Errorf("failed converting config to yaml, err: %v", err)
+	}
+
+	data := []byte(template)
+	if err := ioutil.WriteFile(Config.ConfigFilePath, data, 0644); err != nil {
+		return fmt.Errorf("failed writing config, err: %v", err)
+	}
+
+	return nil
 }
 
 func mergeConfigFile(configFilePath string) error {
@@ -92,7 +110,7 @@ func initFlag(f *pflag.Flag) {
 	if shared.Contains([]string{ConfigFilePathCommandName}, f.Name) {
 		flagPath = []string{f.Name}
 	} else {
-		flagPath = []string{cmdName, f.Name}
+		flagPath = []string{configSection, f.Name}
 	}
 
 	sliceValue, isSliceValue := f.Value.(pflag.SliceValue)

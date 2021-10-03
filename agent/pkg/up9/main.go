@@ -117,7 +117,7 @@ func GetAnalyzeInfo() *shared.AnalyzeStatus {
 	}
 }
 
-func UploadEntriesImpl(token string, model string, envPrefix string, sleepIntervalSec int) {
+func UploadEntriesImpl(token string, model string, envPrefix string, sleepIntervalSec int, guestMode bool) {
 	analyzeInformation.IsAnalyzing = true
 	analyzeInformation.AnalyzedModel = model
 	analyzeInformation.AnalyzeToken = token
@@ -160,7 +160,7 @@ func UploadEntriesImpl(token string, model string, envPrefix string, sleepInterv
 			body, jMarshalErr := json.Marshal(result)
 			if jMarshalErr != nil {
 				analyzeInformation.Reset()
-				rlog.Infof("Stopping analyzing")
+				rlog.Infof("Stopping upload entries")
 				log.Fatal(jMarshalErr)
 			}
 
@@ -170,20 +170,27 @@ func UploadEntriesImpl(token string, model string, envPrefix string, sleepInterv
 			_ = w.Close()
 			reqBody := ioutil.NopCloser(bytes.NewReader(in.Bytes()))
 
+			var authHeader string
+			if guestMode {
+				authHeader = "Guest-Auth"
+			} else {
+				authHeader = "Authorization"
+			}
+
 			req := &http.Request{
 				Method: http.MethodPost,
 				URL:    GetTrafficDumpUrl(envPrefix, model),
 				Header: map[string][]string{
 					"Content-Encoding": {"deflate"},
 					"Content-Type":     {"application/octet-stream"},
-					"Guest-Auth":       {token},
+					authHeader:         {token},
 				},
 				Body: reqBody,
 			}
 
 			if _, postErr := http.DefaultClient.Do(req); postErr != nil {
 				analyzeInformation.Reset()
-				rlog.Info("Stopping analyzing")
+				rlog.Info("Stopping upload entries")
 				log.Fatal(postErr)
 			}
 			analyzeInformation.SentCount += len(entriesArray)

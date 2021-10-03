@@ -82,23 +82,28 @@ func (provider *apiServerProvider) ReportTappedPods(pods []core.Pod) error {
 	}
 }
 
-func (provider *apiServerProvider) RequestAnalysis(analysisDestination string, sleepIntervalSec int) error {
+func (provider *apiServerProvider) RequestUploadTraffic(envName string, workspace string, sleepIntervalSec int, token string) error {
 	if !provider.isReady {
 		return fmt.Errorf("trying to reach api server when not initialized yet")
 	}
-	urlPath := fmt.Sprintf("%s/api/uploadEntries?dest=%s&interval=%v", provider.url, url.QueryEscape(analysisDestination), sleepIntervalSec)
+	urlPath := fmt.Sprintf("%s/api/uploadEntries?dest=%s&workspace=%s&interval=%v", provider.url, url.QueryEscape(envName), url.QueryEscape(workspace), sleepIntervalSec)
 	u, parseErr := url.ParseRequestURI(urlPath)
 	if parseErr != nil {
-		logger.Log.Fatal("Failed parsing the URL (consider changing the analysis dest URL), err: %v", parseErr)
+		logger.Log.Fatal("Failed parsing the URL (consider changing the upload dest URL), err: %v", parseErr)
 	}
 
-	logger.Log.Debugf("Analysis url %v", u.String())
-	if response, requestErr := http.Get(u.String()); requestErr != nil {
-		return fmt.Errorf("failed to notify agent for analysis, err: %w", requestErr)
+	requestBody, jsonErr := json.Marshal(map[string]string{"token": token})
+	if jsonErr != nil {
+		return fmt.Errorf("failed to marshal token to json, err: %w", jsonErr)
+	}
+
+	logger.Log.Debugf("Uploading traffic url %v", u.String())
+	if response, requestErr := http.Post(u.String(), "application/json", bytes.NewBuffer(requestBody)); requestErr != nil {
+		return fmt.Errorf("failed to notify agent for upload traffic, err: %w", requestErr)
 	} else if response.StatusCode != 200 {
-		return fmt.Errorf("failed to notify agent for analysis, status code: %v", response.StatusCode)
+		return fmt.Errorf("failed to notify agent for upload traffic, status code: %v", response.StatusCode)
 	} else {
-		logger.Log.Infof(uiUtils.Purple, "Traffic is uploading to UP9 for further analysis")
+		logger.Log.Infof(uiUtils.Purple, "Traffic is uploading to UP9")
 		return nil
 	}
 }
