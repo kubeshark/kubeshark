@@ -59,14 +59,22 @@ func GetRemoteUrl(analyzeDestination string, analyzeToken string) string {
 	return fmt.Sprintf("https://%s/share/%s", analyzeDestination, analyzeToken)
 }
 
-func CheckIfModelReady(analyzeDestination string, analyzeModel string, analyzeToken string) bool {
+func CheckIfModelReady(analyzeDestination string, analyzeModel string, analyzeToken string, guestMode bool) bool {
 	statusUrl, _ := url.Parse(fmt.Sprintf("https://trcc.%s/models/%s/status", analyzeDestination, analyzeModel))
+
+	var authHeader string
+	if guestMode {
+		authHeader = "Guest-Auth"
+	} else {
+		authHeader = "Authorization"
+	}
+
 	req := &http.Request{
 		Method: http.MethodGet,
 		URL:    statusUrl,
 		Header: map[string][]string{
 			"Content-Type": {"application/json"},
-			"Guest-Auth":   {analyzeToken},
+			authHeader:     {analyzeToken},
 		},
 	}
 	statusResp, err := http.DefaultClient.Do(req)
@@ -92,6 +100,7 @@ func GetTrafficDumpUrl(analyzeDestination string, analyzeModel string) *url.URL 
 
 type AnalyzeInformation struct {
 	IsAnalyzing        bool
+	GuestMode          bool
 	SentCount          int
 	AnalyzedModel      string
 	AnalyzeToken       string
@@ -100,6 +109,7 @@ type AnalyzeInformation struct {
 
 func (info *AnalyzeInformation) Reset() {
 	info.IsAnalyzing = false
+	info.GuestMode = true
 	info.AnalyzedModel = ""
 	info.AnalyzeToken = ""
 	info.AnalyzeDestination = ""
@@ -112,13 +122,14 @@ func GetAnalyzeInfo() *shared.AnalyzeStatus {
 	return &shared.AnalyzeStatus{
 		IsAnalyzing:   analyzeInformation.IsAnalyzing,
 		RemoteUrl:     GetRemoteUrl(analyzeInformation.AnalyzeDestination, analyzeInformation.AnalyzeToken),
-		IsRemoteReady: CheckIfModelReady(analyzeInformation.AnalyzeDestination, analyzeInformation.AnalyzedModel, analyzeInformation.AnalyzeToken),
+		IsRemoteReady: CheckIfModelReady(analyzeInformation.AnalyzeDestination, analyzeInformation.AnalyzedModel, analyzeInformation.AnalyzeToken, analyzeInformation.GuestMode),
 		SentCount:     analyzeInformation.SentCount,
 	}
 }
 
 func UploadEntriesImpl(token string, model string, envPrefix string, sleepIntervalSec int, guestMode bool) {
 	analyzeInformation.IsAnalyzing = true
+	analyzeInformation.GuestMode = guestMode
 	analyzeInformation.AnalyzedModel = model
 	analyzeInformation.AnalyzeToken = token
 	analyzeInformation.AnalyzeDestination = envPrefix
