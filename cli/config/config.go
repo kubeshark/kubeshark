@@ -27,15 +27,11 @@ const (
 
 var (
 	Config  = ConfigStruct{}
-	configSection string
+	cmdName string
 )
 
 func InitConfig(cmd *cobra.Command) error {
-	if val, ok := cmd.Annotations["ConfigSection"]; ok {
-		configSection = val
-	} else {
-		configSection = cmd.Name()
-	}
+	cmdName = cmd.Name()
 
 	if err := defaults.Set(&Config); err != nil {
 		return err
@@ -110,7 +106,7 @@ func initFlag(f *pflag.Flag) {
 	if shared.Contains([]string{ConfigFilePathCommandName}, f.Name) {
 		flagPath = []string{f.Name}
 	} else {
-		flagPath = []string{configSection, f.Name}
+		flagPath = []string{cmdName, f.Name}
 	}
 
 	sliceValue, isSliceValue := f.Value.(pflag.SliceValue)

@@ -12,9 +12,6 @@ import (
 var authLoginCmd = &cobra.Command{
 	Use:   "login",
 	Short: "Login to up9 application",
-	Annotations: map[string]string{
-		"ConfigSection": "auth",
-	},
 	RunE: func(cmd *cobra.Command, args []string) error {
 		go telemetry.ReportRun("authLogin", config.Config.Auth)
 
