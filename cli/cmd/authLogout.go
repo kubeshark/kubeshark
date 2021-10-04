@@ -5,6 +5,7 @@ import (
 	"github.com/up9inc/mizu/cli/config"
 	"github.com/up9inc/mizu/cli/logger"
 	"github.com/up9inc/mizu/cli/telemetry"
+	"time"
 )
 
 var authLogoutCmd = &cobra.Command{
@@ -13,13 +14,10 @@ var authLogoutCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		go telemetry.ReportRun("authLogout", config.Config.Auth)
 
-		configWithDefaults, err := config.GetConfigWithDefaults()
-		if err != nil {
-			logger.Log.Errorf("Failed generating config with defaults, err: %v", err)
-			return nil
-		}
+		config.Config.Auth.Token = ""
+		config.Config.Auth.ExpiryDate = time.Time{}
 
-		if err := config.WriteConfig(configWithDefaults); err != nil {
+		if err := config.WriteConfig(&config.Config); err != nil {
 			logger.Log.Errorf("Failed writing config with default auth, err: %v", err)
 			return nil
 		}

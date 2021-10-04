@@ -24,21 +24,15 @@ var authLoginCmd = &cobra.Command{
 			return nil
 		}
 
-		configWithDefaults, err := config.GetConfigWithDefaults()
-		if err != nil {
-			logger.Log.Errorf("Failed generating config with defaults, err: %v", err)
-			return nil
-		}
-
 		authConfig := configStructs.AuthConfig{
 			EnvName:      config.Config.Auth.EnvName,
 			Token:        token.AccessToken,
 			ExpiryDate:   token.Expiry,
 		}
 
-		configWithDefaults.Auth = authConfig
+		config.Config.Auth = authConfig
 
-		if err := config.WriteConfig(configWithDefaults); err != nil {
+		if err := config.WriteConfig(&config.Config); err != nil {
 			logger.Log.Errorf("Failed writing config with auth, err: %v", err)
 			return nil
 		}
