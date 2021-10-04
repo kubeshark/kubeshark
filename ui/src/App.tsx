@@ -1,6 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import './App.sass';
 import logo from './components/assets/Mizu-logo.svg';
+import logo_up9 from './components/assets/logo_up9.svg';
 import {Button, Snackbar} from "@material-ui/core";
 import {TrafficPage} from "./components/TrafficPage";
 import Tooltip from "./components/UI/Tooltip";
@@ -99,22 +100,38 @@ const App = () => {
                     <div className="title"><img src={logo} alt="logo"/></div>
                     <div className="description">Traffic viewer for Kubernetes</div>
                 </div>
-                {analyzeStatus?.isAnalyzing &&
-                <Tooltip title={analysisMessage} isSimple classes={classes}>
-                    <div>
-
-                        <Button
-                            variant="contained"
-                            color="primary"
-                            disabled={!analyzeStatus?.isRemoteReady}
-                            onClick={() => {
-                                window.open(analyzeStatus?.remoteUrl)
-                            }}>
-                            Analysis
-                        </Button>
+                <div style={{display: "flex", alignItems: "center"}}>
+                    <div style={{display: "flex"}}>
+                        <div>
+                            <img style={{height: 30}} src={logo_up9} alt={"up9"}/>
+                        </div>
+                        <div style={{marginLeft: 5}}>
+                            <div style={{fontWeight: 600, fontSize: 13}}>liraz@up9</div>
+                            <div style={{fontSize:11, textAlign: "center"}}>demo0410</div>
+                        </div>
                     </div>
-                </Tooltip>
-                }
+                    {analyzeStatus?.isAnalyzing &&
+                        <div style={{marginLeft: 7}}>
+                            <Tooltip title={analysisMessage} isSimple classes={classes}>
+                                <div>
+                                    <Button
+                                        style={{fontFamily: "Source Sans Pro,sans-serif",
+                                            fontWeight: 600,
+                                            fontSize: 12,
+                                            padding: 8}}
+                                        size={"small"}
+                                        variant="contained"
+                                        color="primary"
+                                        disabled={!analyzeStatus?.isRemoteReady}
+                                        onClick={() => {
+                                            window.open(analyzeStatus?.remoteUrl)
+                                        }}>
+                                        Analysis
+                                    </Button>
+                                </div>
+                            </Tooltip>
+                        </div>}
+                </div>
             </div>
             <TrafficPage setAnalyzeStatus={setAnalyzeStatus} onTLSDetected={onTLSDetected}/>
             <Snackbar open={showTLSWarning && !userDismissedTLSWarning}>
