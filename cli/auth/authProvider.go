@@ -87,32 +87,32 @@ func loginCallbackHandler(tokenChannel chan *oauth2.Token, errorChannel chan err
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		if err := request.ParseForm(); err != nil {
 			errorMsg := fmt.Sprintf("failed to parse form, err: %v", err)
-			errorChannel <- fmt.Errorf(errorMsg)
 			http.Error(writer, errorMsg, http.StatusBadRequest)
+			errorChannel <- fmt.Errorf(errorMsg)
 			return
 		}
 
 		requestState := request.Form.Get("state")
 		if requestState != state.String() {
 			errorMsg := fmt.Sprintf("state invalid, requestState: %v, authState:%v", requestState, state.String())
-			errorChannel <- fmt.Errorf(errorMsg)
 			http.Error(writer, errorMsg, http.StatusBadRequest)
+			errorChannel <- fmt.Errorf(errorMsg)
 			return
 		}
 
 		code := request.Form.Get("code")
 		if code == "" {
 			errorMsg := "code not found"
-			errorChannel <- fmt.Errorf(errorMsg)
 			http.Error(writer, errorMsg, http.StatusBadRequest)
+			errorChannel <- fmt.Errorf(errorMsg)
 			return
 		}
 
 		token, err := config.Exchange(context.Background(), code)
 		if err != nil {
 			errorMsg := fmt.Sprintf("failed to create token, err: %v", err)
-			errorChannel <- fmt.Errorf(errorMsg)
 			http.Error(writer, errorMsg, http.StatusInternalServerError)
+			errorChannel <- fmt.Errorf(errorMsg)
 			return
 		}
 
