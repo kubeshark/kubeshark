@@ -9,7 +9,6 @@ import (
 	"github.com/up9inc/mizu/cli/logger"
 	"github.com/up9inc/mizu/cli/telemetry"
 	"github.com/up9inc/mizu/cli/uiUtils"
-	"io/ioutil"
 )
 
 var configCmd = &cobra.Command{
@@ -18,22 +17,30 @@ var configCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		go telemetry.ReportRun("config", config.Config.Config)
 
-		template, err := config.GetConfigWithDefaults()
+		configWithDefaults, err := config.GetConfigWithDefaults()
 		if err != nil {
-			logger.Log.Errorf("Failed generating config with defaults %v", err)
+			logger.Log.Errorf("Failed generating config with defaults, err: %v", err)
 			return nil
 		}
+
 		if config.Config.Config.Regenerate {
-			data := []byte(template)
-			if err := ioutil.WriteFile(config.Config.ConfigFilePath, data, 0644); err != nil {
-				logger.Log.Errorf("Failed writing config %v", err)
+			if err := config.WriteConfig(configWithDefaults); err != nil {
+				logger.Log.Errorf("Failed writing config with defaults, err: %v", err)
 				return nil
 			}
+
 			logger.Log.Infof(fmt.Sprintf("Template File written to %s", fmt.Sprintf(uiUtils.Purple, config.Config.ConfigFilePath)))
 		} else {
+			template, err := uiUtils.PrettyYaml(configWithDefaults)
+			if err != nil {
+				logger.Log.Errorf("Failed converting config with defaults to yaml, err: %v", err)
+				return nil
+			}
+
 			logger.Log.Debugf("Writing template config.\n%v", template)
 			fmt.Printf("%v", template)
 		}
+
 		return nil
 	},
 }
