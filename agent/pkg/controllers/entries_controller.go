@@ -72,11 +72,6 @@ func UploadEntries(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
-	if err := c.Bind(uploadParams); err != nil {
-		c.JSON(http.StatusBadRequest, err)
-		return
-	}
-
 	if err := validation.Validate(uploadParams); err != nil {
 		c.JSON(http.StatusBadRequest, err)
 		return
@@ -86,32 +81,14 @@ func UploadEntries(c *gin.Context) {
 		return
 	}
 
-	var token, model string
-	var guestMode bool
-	if uploadParams.Workspace == "" {
-		rlog.Infof("Upload entries - creating token. dest %s\n", uploadParams.Dest)
-		guestToken, err := up9.CreateAnonymousToken(uploadParams.Dest)
-		if err != nil {
-			c.String(http.StatusServiceUnavailable, "Failed creating anonymous token")
-			return
-		}
-
-		token = guestToken.Token
-		model = guestToken.Model
-		guestMode = true
-	} else {
-		if uploadParams.Token == "" {
-			c.String(http.StatusBadRequest, "Invalid token")
-			return
-		}
-
-		token = fmt.Sprintf("bearer %s", uploadParams.Token)
-		model = uploadParams.Workspace
-		guestMode = false
+	rlog.Infof("Upload entries - creating token. dest %s\n", uploadParams.Dest)
+	token, err := up9.CreateAnonymousToken(uploadParams.Dest)
+	if err != nil {
+		c.String(http.StatusServiceUnavailable, "Cannot analyze, mizu is already analyzing")
+		return
 	}
-
-	rlog.Infof("Upload entries - uploading. token: %s model: %s\n", token, model)
-	go up9.UploadEntriesImpl(token, model, uploadParams.Dest, uploadParams.SleepIntervalSec, guestMode)
+	rlog.Infof("Upload entries - uploading. token: %s model: %s\n", token.Token, token.Model)
+	go up9.UploadEntriesImpl(token.Token, token.Model, uploadParams.Dest, uploadParams.SleepIntervalSec)
 	c.String(http.StatusOK, "OK")
 }
 

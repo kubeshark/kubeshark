@@ -586,7 +586,7 @@ func watchApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 
 				logger.Log.Infof("Mizu is available at %s\n", url)
 				uiUtils.OpenBrowser(url)
-				requestForUploadEntriesIfNeeded()
+				requestForAnalysisIfNeeded()
 				if err := apiserver.Provider.ReportTappedPods(state.currentlyTappedPods); err != nil {
 					logger.Log.Debugf("[Error] failed update tapped pods %v", err)
 				}
@@ -678,13 +678,12 @@ func watchTapperPod(ctx context.Context, kubernetesProvider *kubernetes.Provider
 	}
 }
 
-func requestForUploadEntriesIfNeeded() {
-	if !config.Config.Tap.Analysis && config.Config.Tap.Workspace == "" {
+func requestForAnalysisIfNeeded() {
+	if !config.Config.Tap.Analysis {
 		return
 	}
-
-	if err := apiserver.Provider.RequestUploadTraffic(config.Config.Auth.EnvName, config.Config.Tap.Workspace, config.Config.Tap.UploadIntervalSec, config.Config.Auth.Token); err != nil {
-		logger.Log.Debugf("[Error] failed requesting for upload traffic %v", err)
+	if err := apiserver.Provider.RequestAnalysis(config.Config.Tap.AnalysisDestination, config.Config.Tap.SleepIntervalSec); err != nil {
+		logger.Log.Debugf("[Error] failed requesting for analysis %v", err)
 	}
 }
 

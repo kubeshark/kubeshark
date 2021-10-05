@@ -59,22 +59,14 @@ func GetRemoteUrl(analyzeDestination string, analyzeToken string) string {
 	return fmt.Sprintf("https://%s/share/%s", analyzeDestination, analyzeToken)
 }
 
-func CheckIfModelReady(analyzeDestination string, analyzeModel string, analyzeToken string, guestMode bool) bool {
+func CheckIfModelReady(analyzeDestination string, analyzeModel string, analyzeToken string) bool {
 	statusUrl, _ := url.Parse(fmt.Sprintf("https://trcc.%s/models/%s/status", analyzeDestination, analyzeModel))
-
-	var authHeader string
-	if guestMode {
-		authHeader = "Guest-Auth"
-	} else {
-		authHeader = "Authorization"
-	}
-
 	req := &http.Request{
 		Method: http.MethodGet,
 		URL:    statusUrl,
 		Header: map[string][]string{
 			"Content-Type": {"application/json"},
-			authHeader:     {analyzeToken},
+			"Guest-Auth":   {analyzeToken},
 		},
 	}
 	statusResp, err := http.DefaultClient.Do(req)
@@ -100,7 +92,6 @@ func GetTrafficDumpUrl(analyzeDestination string, analyzeModel string) *url.URL 
 
 type AnalyzeInformation struct {
 	IsAnalyzing        bool
-	GuestMode          bool
 	SentCount          int
 	AnalyzedModel      string
 	AnalyzeToken       string
@@ -109,7 +100,6 @@ type AnalyzeInformation struct {
 
 func (info *AnalyzeInformation) Reset() {
 	info.IsAnalyzing = false
-	info.GuestMode = true
 	info.AnalyzedModel = ""
 	info.AnalyzeToken = ""
 	info.AnalyzeDestination = ""
@@ -122,14 +112,13 @@ func GetAnalyzeInfo() *shared.AnalyzeStatus {
 	return &shared.AnalyzeStatus{
 		IsAnalyzing:   analyzeInformation.IsAnalyzing,
 		RemoteUrl:     GetRemoteUrl(analyzeInformation.AnalyzeDestination, analyzeInformation.AnalyzeToken),
-		IsRemoteReady: CheckIfModelReady(analyzeInformation.AnalyzeDestination, analyzeInformation.AnalyzedModel, analyzeInformation.AnalyzeToken, analyzeInformation.GuestMode),
+		IsRemoteReady: CheckIfModelReady(analyzeInformation.AnalyzeDestination, analyzeInformation.AnalyzedModel, analyzeInformation.AnalyzeToken),
 		SentCount:     analyzeInformation.SentCount,
 	}
 }
 
-func UploadEntriesImpl(token string, model string, envPrefix string, sleepIntervalSec int, guestMode bool) {
+func UploadEntriesImpl(token string, model string, envPrefix string, sleepIntervalSec int) {
 	analyzeInformation.IsAnalyzing = true
-	analyzeInformation.GuestMode = guestMode
 	analyzeInformation.AnalyzedModel = model
 	analyzeInformation.AnalyzeToken = token
 	analyzeInformation.AnalyzeDestination = envPrefix
@@ -171,7 +160,7 @@ func UploadEntriesImpl(token string, model string, envPrefix string, sleepInterv
 			body, jMarshalErr := json.Marshal(result)
 			if jMarshalErr != nil {
 				analyzeInformation.Reset()
-				rlog.Infof("Stopping upload entries")
+				rlog.Infof("Stopping analyzing")
 				log.Fatal(jMarshalErr)
 			}
 
@@ -181,27 +170,20 @@ func UploadEntriesImpl(token string, model string, envPrefix string, sleepInterv
 			_ = w.Close()
 			reqBody := ioutil.NopCloser(bytes.NewReader(in.Bytes()))
 
-			var authHeader string
-			if guestMode {
-				authHeader = "Guest-Auth"
-			} else {
-				authHeader = "Authorization"
-			}
-
 			req := &http.Request{
 				Method: http.MethodPost,
 				URL:    GetTrafficDumpUrl(envPrefix, model),
 				Header: map[string][]string{
 					"Content-Encoding": {"deflate"},
 					"Content-Type":     {"application/octet-stream"},
-					authHeader:         {token},
+					"Guest-Auth":       {token},
 				},
 				Body: reqBody,
 			}
 
 			if _, postErr := http.DefaultClient.Do(req); postErr != nil {
 				analyzeInformation.Reset()
-				rlog.Info("Stopping upload entries")
+				rlog.Info("Stopping analyzing")
 				log.Fatal(postErr)
 			}
 			analyzeInformation.SentCount += len(entriesArray)
