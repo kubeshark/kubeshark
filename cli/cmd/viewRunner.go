@@ -39,7 +39,7 @@ func runMizuView() {
 			return
 		}
 
-		url := GetApiServerUrl()
+		url = GetApiServerUrl()
 
 		response, err := http.Get(fmt.Sprintf("%s/", url))
 		if err == nil && response.StatusCode == 200 {
