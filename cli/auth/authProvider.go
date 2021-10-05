@@ -69,44 +69,50 @@ func startLoginServer(tokenChannel chan *oauth2.Token, errorChannel chan error, 
 
 		serveErr := server.Serve(listener)
 		if serveErr == http.ErrServerClosed {
-			logger.Log.Debugf("Received server shutdown, server on port %v is closed", port)
+			logger.Log.Debugf("received server shutdown, server on port %v is closed", port)
+			return
 		} else if serveErr != nil {
 			logger.Log.Debugf("failed to start serving on port %v, err: %v", port, serveErr)
 			continue
 		}
 
+		logger.Log.Debugf("didn't receive server closed on port %v", port)
 		return
 	}
 
-	errorChannel <- fmt.Errorf("failed to start serving on all listen ports")
+	errorChannel <- fmt.Errorf("failed to start serving on all listen ports, ports: %v", listenPorts)
 }
 
 func loginCallbackHandler(tokenChannel chan *oauth2.Token, errorChannel chan error, config *oauth2.Config, envName string, state uuid.UUID) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		if err := request.ParseForm(); err != nil {
-			errorChannel <- fmt.Errorf("failed to parse form, err: %v", err)
-			http.Error(writer, fmt.Sprintf("failed to parse form, err: %v", err), http.StatusBadRequest)
+			errorMsg := fmt.Sprintf("failed to parse form, err: %v", err)
+			errorChannel <- fmt.Errorf(errorMsg)
+			http.Error(writer, errorMsg, http.StatusBadRequest)
 			return
 		}
 
 		requestState := request.Form.Get("state")
 		if requestState != state.String() {
-			errorChannel <- fmt.Errorf("state invalid, requestState: %v, authState:%v", requestState, state.String())
-			http.Error(writer, fmt.Sprintf("state invalid, requestState: %v, authState:%v", requestState, state.String()), http.StatusBadRequest)
+			errorMsg := fmt.Sprintf("state invalid, requestState: %v, authState:%v", requestState, state.String())
+			errorChannel <- fmt.Errorf(errorMsg)
+			http.Error(writer, errorMsg, http.StatusBadRequest)
 			return
 		}
 
 		code := request.Form.Get("code")
 		if code == "" {
-			errorChannel <- fmt.Errorf("code not found")
-			http.Error(writer, "code not found", http.StatusBadRequest)
+			errorMsg := "code not found"
+			errorChannel <- fmt.Errorf(errorMsg)
+			http.Error(writer, errorMsg, http.StatusBadRequest)
 			return
 		}
 
 		token, err := config.Exchange(context.Background(), code)
 		if err != nil {
-			errorChannel <- fmt.Errorf("failed to create token, err: %v", err)
-			http.Error(writer, fmt.Sprintf("failed to create token, err: %v", err), http.StatusInternalServerError)
+			errorMsg := fmt.Sprintf("failed to create token, err: %v", err)
+			errorChannel <- fmt.Errorf(errorMsg)
+			http.Error(writer, errorMsg, http.StatusInternalServerError)
 			return
 		}
 
