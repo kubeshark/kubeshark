@@ -33,7 +33,7 @@ var configCmd = &cobra.Command{
 		} else {
 			template, err := uiUtils.PrettyYaml(configWithDefaults)
 			if err != nil {
-				logger.Log.Errorf("Failed converting config with defaults to json, err: %v", err)
+				logger.Log.Errorf("Failed converting config with defaults to yaml, err: %v", err)
 				return nil
 			}
 
