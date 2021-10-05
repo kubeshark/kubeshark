@@ -3,18 +3,17 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"github.com/creasty/defaults"
+	"github.com/spf13/cobra"
 	"github.com/up9inc/mizu/cli/auth"
 	"github.com/up9inc/mizu/cli/config"
 	"github.com/up9inc/mizu/cli/config/configStructs"
+	"github.com/up9inc/mizu/cli/errormessage"
 	"github.com/up9inc/mizu/cli/logger"
 	"github.com/up9inc/mizu/cli/telemetry"
+	"github.com/up9inc/mizu/cli/uiUtils"
 	"os"
 	"time"
-
-	"github.com/creasty/defaults"
-	"github.com/spf13/cobra"
-	"github.com/up9inc/mizu/cli/errormessage"
-	"github.com/up9inc/mizu/cli/uiUtils"
 )
 
 const uploadTrafficMessageToConfirm = `NOTE: running mizu with --%s flag will upload recorded traffic for further analysis and enriched presentation options.`
@@ -40,11 +39,14 @@ Supported protocols are HTTP and gRPC.`,
 			return errormessage.FormatError(err)
 		}
 
-		if config.Config.Tap.Analysis {
-			askConfirmation(configStructs.AnalysisTapName)
+		if config.Config.Auth.Token != "" {
+			expiry, err := auth.GetExpiry(config.Config.Auth.Token)
+			if err != nil {
+				logger.Log.Errorf("failed to get expiry from token, err: %v", err)
+			}
 
-			if config.Config.Auth.Token != "" {
-				config.Config.Tap.Workspace = uiUtils.AskForAnswer(fmt.Sprintf("running mizu with --%s flag while logged in requires workspace, please provide workspace name", configStructs.AnalysisTapName))
+			if time.Now().After(*expiry) {
+				return errors.New("token is expired, run `mizu auth login` to re-authenticate")
 			}
 		}
 
@@ -54,14 +56,13 @@ Supported protocols are HTTP and gRPC.`,
 			if config.Config.Auth.Token == "" {
 				return errors.New(fmt.Sprintf("--%s flag requires authentication, run `mizu auth login` to authenticate", configStructs.WorkspaceTapName))
 			}
+		}
 
-			expiry, err := auth.GetExpiry(config.Config.Auth.Token)
-			if err != nil {
-				logger.Log.Errorf("failed to get expiry from token, err: %v", err)
-			}
+		if config.Config.Tap.Analysis {
+			askConfirmation(configStructs.AnalysisTapName)
 
-			if time.Now().After(*expiry) {
-				return errors.New("token is expired, run `mizu auth login` to re-authenticate")
+			if config.Config.Auth.Token != "" {
+				config.Config.Tap.Workspace = uiUtils.AskForAnswer(fmt.Sprintf("running mizu with --%s flag while logged in requires workspace, please provide workspace name: ", configStructs.AnalysisTapName))
 			}
 		}
 

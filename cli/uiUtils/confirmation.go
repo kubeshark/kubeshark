@@ -36,5 +36,5 @@ func AskForAnswer(s string) string {
 		log.Fatal(err)
 	}
 
-	return response
+	return strings.ToLower(strings.TrimSpace(response))
 }
