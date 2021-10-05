@@ -24,7 +24,6 @@ var authLoginCmd = &cobra.Command{
 		authConfig := configStructs.AuthConfig{
 			EnvName:      config.Config.Auth.EnvName,
 			Token:        token.AccessToken,
-			ExpiryDate:   token.Expiry,
 		}
 
 		config.Config.Auth = authConfig
