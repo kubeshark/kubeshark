@@ -31,7 +31,7 @@ var configCmd = &cobra.Command{
 
 			logger.Log.Infof(fmt.Sprintf("Template File written to %s", fmt.Sprintf(uiUtils.Purple, config.Config.ConfigFilePath)))
 		} else {
-			template, err := uiUtils.PrettyJson(configWithDefaults)
+			template, err := uiUtils.PrettyYaml(configWithDefaults)
 			if err != nil {
 				logger.Log.Errorf("Failed converting config with defaults to json, err: %v", err)
 				return nil
@@ -40,6 +40,7 @@ var configCmd = &cobra.Command{
 			logger.Log.Debugf("Writing template config.\n%v", template)
 			fmt.Printf("%v", template)
 		}
+
 		return nil
 	},
 }

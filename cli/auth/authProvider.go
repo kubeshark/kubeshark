@@ -13,101 +13,105 @@ import (
 	"time"
 )
 
+const loginTimeoutInMin = 2
+
 // Ports are configured in keycloak "cli" client as valid redirect URIs. A change here must be reflected there as well.
 var listenPorts = []int{3141, 4001, 5002, 6003, 7004, 8005, 9006, 10007}
 
 func LoginInteractively(envName string) (*oauth2.Token, error) {
 	tokenChannel := make(chan *oauth2.Token)
+	errorChannel := make(chan error)
 
-	go func() {
-		for _, port := range listenPorts {
-			var config = &oauth2.Config{
-				ClientID:    "cli",
-				RedirectURL: fmt.Sprintf("http://localhost:%v/callback", port),
-				Endpoint: oauth2.Endpoint{
-					AuthURL:  fmt.Sprintf("https://auth.%s/auth/realms/testr/protocol/openid-connect/auth", envName),
-					TokenURL: fmt.Sprintf("https://auth.%s/auth/realms/testr/protocol/openid-connect/token", envName),
-				},
-			}
+	server := http.Server{}
+	go startLoginServer(tokenChannel, errorChannel, envName, &server)
 
-			state := uuid.New()
-
-			mux := http.NewServeMux()
-			server := http.Server{Handler: mux}
-
-			mux.HandleFunc("/callback", func(writer http.ResponseWriter, request *http.Request) {
-				if err := request.ParseForm(); err != nil {
-					logger.Log.Errorf("Failed to parse form, err: %v", err)
-					http.Error(writer, "Failed to parse form", http.StatusBadRequest)
-					return
-				}
-
-				requestState := request.Form.Get("state")
-				if requestState != state.String() {
-					logger.Log.Errorf("State invalid, requestState: %v, authState:", requestState, state.String())
-					http.Error(writer, "State invalid", http.StatusBadRequest)
-					return
-				}
-
-				code := request.Form.Get("code")
-				if code == "" {
-					logger.Log.Errorf("Code not found")
-					http.Error(writer, "Code not found", http.StatusBadRequest)
-					return
-				}
-
-				token, err := config.Exchange(context.Background(), code)
-				if err != nil {
-					logger.Log.Errorf("Failed to create token, err: %v", err)
-					http.Error(writer, "Failed to create token", http.StatusInternalServerError)
-					return
-				}
-
-				http.Redirect(writer, request, fmt.Sprintf("https://%s/CliLogin", envName), http.StatusFound)
-
-				flusher, ok := writer.(http.Flusher)
-				if !ok {
-					logger.Log.Errorf("No flush support")
-					http.Error(writer, "No flush support", http.StatusInternalServerError)
-					return
-				}
-
-				flusher.Flush()
-
-				tokenChannel <- token
-
-				if err := server.Shutdown(context.Background()); err != nil {
-					logger.Log.Warningf("Error shutting down server, err: %v", err)
-				}
-			})
-
-			listener, err := net.Listen("tcp", fmt.Sprintf("%s:%d", "127.0.0.1", port))
-			if err != nil {
-				continue
-			}
-
-			authorizationUrl := config.AuthCodeURL(state.String())
-			uiUtils.OpenBrowser(authorizationUrl)
-
-			if err := server.Serve(listener); err != nil && err != http.ErrServerClosed {
-				continue
-			}
-
-			return
+	defer func() {
+		if err := server.Shutdown(context.Background()); err != nil {
+			logger.Log.Debugf("Error shutting down server, err: %v", err)
 		}
-
-		tokenChannel <- nil
 	}()
 
 	select {
-	case <-time.After(2 * time.Minute):
+	case <-time.After(loginTimeoutInMin * time.Minute):
+		return nil, errors.New("auth timed out")
+	case err := <-errorChannel:
+		return nil, err
 	case token := <-tokenChannel:
-		if token == nil {
-			return nil, errors.New("failed to start serving on all listen ports")
-		}
-
 		return token, nil
 	}
+}
 
-	return nil, errors.New("auth timed out")
+func startLoginServer(tokenChannel chan *oauth2.Token, errorChannel chan error, envName string, server *http.Server) {
+	for _, port := range listenPorts {
+		var config = &oauth2.Config{
+			ClientID:    "cli",
+			RedirectURL: fmt.Sprintf("http://localhost:%v/callback", port),
+			Endpoint: oauth2.Endpoint{
+				AuthURL:  fmt.Sprintf("https://auth.%s/auth/realms/testr/protocol/openid-connect/auth", envName),
+				TokenURL: fmt.Sprintf("https://auth.%s/auth/realms/testr/protocol/openid-connect/token", envName),
+			},
+		}
+
+		state := uuid.New()
+
+		mux := http.NewServeMux()
+		server.Handler = mux
+		mux.Handle("/callback", loginCallbackHandler(tokenChannel, errorChannel, config, envName, state))
+
+		listener, listenErr := net.Listen("tcp", fmt.Sprintf("%s:%d", "127.0.0.1", port))
+		if listenErr != nil {
+			logger.Log.Debugf("failed to start listening on port %v, err: %v", port, listenErr)
+			continue
+		}
+
+		authorizationUrl := config.AuthCodeURL(state.String())
+		uiUtils.OpenBrowser(authorizationUrl)
+
+		serveErr := server.Serve(listener)
+		if serveErr == http.ErrServerClosed {
+			logger.Log.Debugf("Received server shutdown, server on port %v is closed", port)
+		} else if serveErr != nil {
+			logger.Log.Debugf("failed to start serving on port %v, err: %v", port, serveErr)
+			continue
+		}
+
+		return
+	}
+
+	errorChannel <- fmt.Errorf("failed to start serving on all listen ports")
+}
+
+func loginCallbackHandler(tokenChannel chan *oauth2.Token, errorChannel chan error, config *oauth2.Config, envName string, state uuid.UUID) http.Handler {
+	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		if err := request.ParseForm(); err != nil {
+			errorChannel <- fmt.Errorf("failed to parse form, err: %v", err)
+			http.Error(writer, fmt.Sprintf("failed to parse form, err: %v", err), http.StatusBadRequest)
+			return
+		}
+
+		requestState := request.Form.Get("state")
+		if requestState != state.String() {
+			errorChannel <- fmt.Errorf("state invalid, requestState: %v, authState:%v", requestState, state.String())
+			http.Error(writer, fmt.Sprintf("state invalid, requestState: %v, authState:%v", requestState, state.String()), http.StatusBadRequest)
+			return
+		}
+
+		code := request.Form.Get("code")
+		if code == "" {
+			errorChannel <- fmt.Errorf("code not found")
+			http.Error(writer, "code not found", http.StatusBadRequest)
+			return
+		}
+
+		token, err := config.Exchange(context.Background(), code)
+		if err != nil {
+			errorChannel <- fmt.Errorf("failed to create token, err: %v", err)
+			http.Error(writer, fmt.Sprintf("failed to create token, err: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+		tokenChannel <- token
+
+		http.Redirect(writer, request, fmt.Sprintf("https://%s/CliLogin", envName), http.StatusFound)
+	})
 }

@@ -22,7 +22,7 @@ var authLogoutCmd = &cobra.Command{
 			return nil
 		}
 
-		logger.Log.Infof("Logout completed")
+		logger.Log.Infof("Logout successfully, token removed from config")
 
 		return nil
 	},
