@@ -34,7 +34,7 @@ var authLoginCmd = &cobra.Command{
 			return nil
 		}
 
-		logger.Log.Infof("Login completed")
+		logger.Log.Infof("Login successfully, token stored in config")
 
 		return nil
 	},
