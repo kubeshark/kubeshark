@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/google/uuid"
 	"github.com/up9inc/mizu/cli/logger"
 	"github.com/up9inc/mizu/cli/uiUtils"
@@ -39,6 +40,21 @@ func LoginInteractively(envName string) (*oauth2.Token, error) {
 	case token := <-tokenChannel:
 		return token, nil
 	}
+}
+
+func GetExpiry(tokenString string) (*time.Time, error) {
+	token, _, err := new(jwt.Parser).ParseUnverified(tokenString, jwt.MapClaims{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse token, err: %v", err)
+	}
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return nil, fmt.Errorf("can't convert token's claims to standard claims")
+	}
+
+	expiry := time.Unix(int64(claims["exp"].(float64)), 0)
+	return &expiry, nil
 }
 
 func startLoginServer(tokenChannel chan *oauth2.Token, errorChannel chan error, envName string, server *http.Server) {

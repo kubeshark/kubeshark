@@ -88,7 +88,7 @@ func UploadEntries(c *gin.Context) {
 
 	var token, model string
 	var guestMode bool
-	if uploadParams.Workspace == "" {
+	if uploadParams.Token == "" {
 		rlog.Infof("Upload entries - creating token. dest %s\n", uploadParams.Dest)
 		guestToken, err := up9.CreateAnonymousToken(uploadParams.Dest)
 		if err != nil {
@@ -100,11 +100,6 @@ func UploadEntries(c *gin.Context) {
 		model = guestToken.Model
 		guestMode = true
 	} else {
-		if uploadParams.Token == "" {
-			c.String(http.StatusBadRequest, "Invalid token")
-			return
-		}
-
 		token = fmt.Sprintf("bearer %s", uploadParams.Token)
 		model = uploadParams.Workspace
 		guestMode = false

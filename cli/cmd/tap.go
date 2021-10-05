@@ -3,6 +3,7 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"github.com/up9inc/mizu/cli/auth"
 	"github.com/up9inc/mizu/cli/config"
 	"github.com/up9inc/mizu/cli/config/configStructs"
 	"github.com/up9inc/mizu/cli/logger"
@@ -41,6 +42,10 @@ Supported protocols are HTTP and gRPC.`,
 
 		if config.Config.Tap.Analysis {
 			askConfirmation(configStructs.AnalysisTapName)
+
+			if config.Config.Auth.Token != "" {
+				config.Config.Tap.Workspace = uiUtils.AskForAnswer(fmt.Sprintf("running mizu with --%s flag while logged in requires workspace, please provide workspace name", configStructs.AnalysisTapName))
+			}
 		}
 
 		if config.Config.Tap.Workspace != "" {
@@ -50,7 +55,12 @@ Supported protocols are HTTP and gRPC.`,
 				return errors.New(fmt.Sprintf("--%s flag requires authentication, run `mizu auth login` to authenticate", configStructs.WorkspaceTapName))
 			}
 
-			if time.Now().After(config.Config.Auth.ExpiryDate) {
+			expiry, err := auth.GetExpiry(config.Config.Auth.Token)
+			if err != nil {
+				logger.Log.Errorf("failed to get expiry from token, err: %v", err)
+			}
+
+			if time.Now().After(*expiry) {
 				return errors.New("token is expired, run `mizu auth login` to re-authenticate")
 			}
 		}
