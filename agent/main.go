@@ -230,7 +230,7 @@ func getTrafficFilteringOptions() *tapApi.TrafficFilteringOptions {
 	filteringOptionsJson := os.Getenv(shared.MizuFilteringOptionsEnvVar)
 	if filteringOptionsJson == "" {
 		return &tapApi.TrafficFilteringOptions{
-			HealthChecksUserAgentHeaders: []string{},
+			IgnoredUserAgents: []string{},
 		}
 	}
 	var filteringOptions tapApi.TrafficFilteringOptions
@@ -248,7 +248,7 @@ func filterItems(inChannel <-chan *tapApi.OutputChannelItem, outChannel chan *ta
 			continue
 		}
 		// TODO: move this to tappers https://up9.atlassian.net/browse/TRA-3441
-		if isHealthCheckByUserAgent(message, filterOptions.HealthChecksUserAgentHeaders) {
+		if isIgnoredUserAgent(message, filterOptions.IgnoredUserAgents) {
 			continue
 		}
 
@@ -256,7 +256,7 @@ func filterItems(inChannel <-chan *tapApi.OutputChannelItem, outChannel chan *ta
 	}
 }
 
-func isHealthCheckByUserAgent(item *tapApi.OutputChannelItem, userAgentsToIgnore []string) bool {
+func isIgnoredUserAgent(item *tapApi.OutputChannelItem, userAgentsToIgnore []string) bool {
 	if item.Protocol.Name != "http" {
 		return false
 	}

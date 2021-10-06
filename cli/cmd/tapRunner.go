@@ -216,9 +216,9 @@ func getMizuApiFilteringOptions() (*api.TrafficFilteringOptions, error) {
 	}
 
 	return &api.TrafficFilteringOptions{
-		PlainTextMaskingRegexes:      compiledRegexSlice,
-		HealthChecksUserAgentHeaders: config.Config.Tap.HealthChecksUserAgentHeaders,
-		DisableRedaction:             config.Config.Tap.DisableRedaction,
+		PlainTextMaskingRegexes: compiledRegexSlice,
+		IgnoredUserAgents:       config.Config.Tap.IgnoredUserAgents,
+		DisableRedaction:        config.Config.Tap.DisableRedaction,
 	}, nil
 }
 
