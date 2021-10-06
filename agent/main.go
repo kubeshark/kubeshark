@@ -4,6 +4,13 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"github.com/gin-contrib/static"
+	"github.com/gin-gonic/gin"
+	"github.com/gorilla/websocket"
+	"github.com/romana/rlog"
+	"github.com/up9inc/mizu/shared"
+	"github.com/up9inc/mizu/tap"
+	tapApi "github.com/up9inc/mizu/tap/api"
 	"io/ioutil"
 	"log"
 	"mizuserver/pkg/api"
@@ -18,15 +25,6 @@ import (
 	"path/filepath"
 	"plugin"
 	"sort"
-	"strings"
-
-	"github.com/gin-contrib/static"
-	"github.com/gin-gonic/gin"
-	"github.com/gorilla/websocket"
-	"github.com/romana/rlog"
-	"github.com/up9inc/mizu/shared"
-	"github.com/up9inc/mizu/tap"
-	tapApi "github.com/up9inc/mizu/tap/api"
 )
 
 var tapperMode = flag.Bool("tap", false, "Run in tapper mode without API")
@@ -59,7 +57,7 @@ func main() {
 		filteredOutputItemsChannel := make(chan *tapApi.OutputChannelItem)
 		tap.StartPassiveTapper(tapOpts, outputItemsChannel, extensions, filteringOptions)
 
-		go filterItems(outputItemsChannel, filteredOutputItemsChannel, filteringOptions)
+		go filterItems(outputItemsChannel, filteredOutputItemsChannel)
 		go api.StartReadingEntries(filteredOutputItemsChannel, nil, extensionsMap)
 
 		hostApi(nil)
@@ -90,7 +88,7 @@ func main() {
 		outputItemsChannel := make(chan *tapApi.OutputChannelItem)
 		filteredOutputItemsChannel := make(chan *tapApi.OutputChannelItem)
 
-		go filterItems(outputItemsChannel, filteredOutputItemsChannel, filteringOptions)
+		go filterItems(outputItemsChannel, filteredOutputItemsChannel)
 		go api.StartReadingEntries(filteredOutputItemsChannel, nil, extensionsMap)
 
 		hostApi(outputItemsChannel)
@@ -98,7 +96,7 @@ func main() {
 		outputItemsChannel := make(chan *tapApi.OutputChannelItem, 1000)
 		filteredHarChannel := make(chan *tapApi.OutputChannelItem)
 
-		go filterItems(outputItemsChannel, filteredHarChannel, filteringOptions)
+		go filterItems(outputItemsChannel, filteredHarChannel)
 		go api.StartReadingEntries(filteredHarChannel, harsDir, extensionsMap)
 		hostApi(nil)
 	}
@@ -242,40 +240,14 @@ func getTrafficFilteringOptions() *tapApi.TrafficFilteringOptions {
 	return &filteringOptions
 }
 
-func filterItems(inChannel <-chan *tapApi.OutputChannelItem, outChannel chan *tapApi.OutputChannelItem, filterOptions *tapApi.TrafficFilteringOptions) {
+func filterItems(inChannel <-chan *tapApi.OutputChannelItem, outChannel chan *tapApi.OutputChannelItem) {
 	for message := range inChannel {
 		if message.ConnectionInfo.IsOutgoing && api.CheckIsServiceIP(message.ConnectionInfo.ServerIP) {
-			continue
-		}
-		// TODO: move this to tappers https://up9.atlassian.net/browse/TRA-3441
-		if isIgnoredUserAgent(message, filterOptions.IgnoredUserAgents) {
 			continue
 		}
 
 		outChannel <- message
 	}
-}
-
-func isIgnoredUserAgent(item *tapApi.OutputChannelItem, userAgentsToIgnore []string) bool {
-	if item.Protocol.Name != "http" {
-		return false
-	}
-
-	request := item.Pair.Request.Payload.(map[string]interface{})
-	reqDetails := request["details"].(map[string]interface{})
-
-	for _, header := range reqDetails["headers"].([]interface{}) {
-		h := header.(map[string]interface{})
-		if strings.ToLower(h["name"].(string)) == "user-agent" {
-			for _, userAgent := range userAgentsToIgnore {
-				if strings.Contains(strings.ToLower(h["value"].(string)), strings.ToLower(userAgent)) {
-					return true
-				}
-			}
-			return false
-		}
-	}
-	return false
 }
 
 func pipeTapChannelToSocket(connection *websocket.Conn, messageDataChannel <-chan *tapApi.OutputChannelItem) {
