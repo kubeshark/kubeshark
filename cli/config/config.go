@@ -54,30 +54,16 @@ func InitConfig(cmd *cobra.Command) error {
 	return nil
 }
 
-func GetConfigWithDefaults() (*ConfigStruct, error) {
+func GetConfigWithDefaults() (string, error) {
 	defaultConf := ConfigStruct{}
 	if err := defaults.Set(&defaultConf); err != nil {
-		return nil, err
+		return "", err
 	}
 
 	configElem := reflect.ValueOf(&defaultConf).Elem()
 	setZeroForReadonlyFields(configElem)
 
-	return &defaultConf, nil
-}
-
-func WriteConfig(config *ConfigStruct) error {
-	template, err := uiUtils.PrettyYaml(config)
-	if err != nil {
-		return fmt.Errorf("failed converting config to yaml, err: %v", err)
-	}
-
-	data := []byte(template)
-	if err := ioutil.WriteFile(Config.ConfigFilePath, data, 0644); err != nil {
-		return fmt.Errorf("failed writing config, err: %v", err)
-	}
-
-	return nil
+	return uiUtils.PrettyYaml(defaultConf)
 }
 
 func mergeConfigFile(configFilePath string) error {
