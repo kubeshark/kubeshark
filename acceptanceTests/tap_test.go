@@ -779,7 +779,7 @@ func TestTapIgnoredUserAgents(t *testing.T) {
 	tapCmdArgs = append(tapCmdArgs, tapNamespace...)
 
 	ignoredUserAgentValue := "ignore"
-	tapCmdArgs = append(tapCmdArgs, "--no-redact", "--set", fmt.Sprintf("tap.ignored-user-agents=%v", ignoredUserAgentValue))
+	tapCmdArgs = append(tapCmdArgs, "--set", fmt.Sprintf("tap.ignored-user-agents=%v", ignoredUserAgentValue))
 
 	tapCmd := exec.Command(cliPath, tapCmdArgs...)
 	t.Logf("running command: %v", tapCmd.String())
@@ -804,7 +804,8 @@ func TestTapIgnoredUserAgents(t *testing.T) {
 
 	proxyUrl := getProxyUrl(defaultNamespaceName, defaultServiceName)
 
-	headers := map[string]string {"User-Agent": ignoredUserAgentValue}
+	ignoredUserAgentCustomHeader := "Ignored-User-Agent"
+	headers := map[string]string {"User-Agent": ignoredUserAgentValue, ignoredUserAgentCustomHeader: ""}
 	for i := 0; i < defaultEntriesCount; i++ {
 		if _, requestErr := executeHttpGetRequestWithHeaders(fmt.Sprintf("%v/get", proxyUrl), headers); requestErr != nil {
 			t.Errorf("failed to send proxy request, err: %v", requestErr)
@@ -855,14 +856,11 @@ func TestTapIgnoredUserAgents(t *testing.T) {
 			entryHeaders :=  entryDetails["headers"].([]interface{})
 			for _, headerInterface := range entryHeaders {
 				header := headerInterface.(map[string]interface{})
-				if header["name"].(string) != "User-Agent" {
+				if header["name"].(string) != ignoredUserAgentCustomHeader {
 					continue
 				}
 
-				userAgent := header["value"].(string)
-				if userAgent == ignoredUserAgentValue {
-					return fmt.Errorf("unexpected result - user agent is not ignored")
-				}
+				return fmt.Errorf("unexpected result - user agent is not ignored")
 			}
 		}
 
