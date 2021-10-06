@@ -21,7 +21,6 @@ type ConfigStruct struct {
 	Version                configStructs.VersionConfig `yaml:"version"`
 	View                   configStructs.ViewConfig    `yaml:"view"`
 	Logs                   configStructs.LogsConfig    `yaml:"logs"`
-	Auth                   configStructs.AuthConfig    `yaml:"auth"`
 	Config                 configStructs.ConfigConfig  `yaml:"config,omitempty"`
 	AgentImage             string                      `yaml:"agent-image,omitempty" readonly:""`
 	ImagePullPolicyStr     string                      `yaml:"image-pull-policy" default:"Always"`
