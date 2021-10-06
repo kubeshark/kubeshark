@@ -762,6 +762,118 @@ func TestTapRegexMasking(t *testing.T) {
 	}
 }
 
+func TestTapIgnoredUserAgents(t *testing.T) {
+	if testing.Short() {
+		t.Skip("ignored acceptance test")
+	}
+
+	cliPath, cliPathErr := getCliPath()
+	if cliPathErr != nil {
+		t.Errorf("failed to get cli path, err: %v", cliPathErr)
+		return
+	}
+
+	tapCmdArgs := getDefaultTapCommandArgs()
+
+	tapNamespace := getDefaultTapNamespace()
+	tapCmdArgs = append(tapCmdArgs, tapNamespace...)
+
+	ignoredUserAgentValue := "ignore"
+	tapCmdArgs = append(tapCmdArgs, "--no-redact", "--set", fmt.Sprintf("tap.ignored-user-agents=%v", ignoredUserAgentValue))
+
+	tapCmd := exec.Command(cliPath, tapCmdArgs...)
+	t.Logf("running command: %v", tapCmd.String())
+
+	t.Cleanup(func() {
+		if err := cleanupCommand(tapCmd); err != nil {
+			t.Logf("failed to cleanup tap command, err: %v", err)
+		}
+	})
+
+	if err := tapCmd.Start(); err != nil {
+		t.Errorf("failed to start tap command, err: %v", err)
+		return
+	}
+
+	apiServerUrl := getApiServerUrl(defaultApiServerPort)
+
+	if err := waitTapPodsReady(apiServerUrl); err != nil {
+		t.Errorf("failed to start tap pods on time, err: %v", err)
+		return
+	}
+
+	proxyUrl := getProxyUrl(defaultNamespaceName, defaultServiceName)
+
+	headers := map[string]string {"User-Agent": ignoredUserAgentValue}
+	for i := 0; i < defaultEntriesCount; i++ {
+		if _, requestErr := executeHttpGetRequestWithHeaders(fmt.Sprintf("%v/get", proxyUrl), headers); requestErr != nil {
+			t.Errorf("failed to send proxy request, err: %v", requestErr)
+			return
+		}
+	}
+
+	for i := 0; i < defaultEntriesCount; i++ {
+		if _, requestErr := executeHttpGetRequest(fmt.Sprintf("%v/get", proxyUrl)); requestErr != nil {
+			t.Errorf("failed to send proxy request, err: %v", requestErr)
+			return
+		}
+	}
+
+	ignoredUserAgentsCheckFunc := func() error {
+		timestamp := time.Now().UnixNano() / int64(time.Millisecond)
+
+		entriesUrl := fmt.Sprintf("%v/api/entries?limit=%v&operator=lt&timestamp=%v", apiServerUrl, defaultEntriesCount * 2, timestamp)
+		requestResult, requestErr := executeHttpGetRequest(entriesUrl)
+		if requestErr != nil {
+			return fmt.Errorf("failed to get entries, err: %v", requestErr)
+		}
+
+		entries := requestResult.([]interface{})
+		if len(entries) == 0 {
+			return fmt.Errorf("unexpected entries result - Expected more than 0 entries")
+		}
+
+		for _, entryInterface := range entries {
+			entryUrl := fmt.Sprintf("%v/api/entries/%v", apiServerUrl, entryInterface.(map[string]interface{})["id"])
+			requestResult, requestErr = executeHttpGetRequest(entryUrl)
+			if requestErr != nil {
+				return fmt.Errorf("failed to get entry, err: %v", requestErr)
+			}
+
+			data := requestResult.(map[string]interface{})["data"].(map[string]interface{})
+			entryJson := data["entry"].(string)
+
+			var entry map[string]interface{}
+			if parseErr := json.Unmarshal([]byte(entryJson), &entry); parseErr != nil {
+				return fmt.Errorf("failed to parse entry, err: %v", parseErr)
+			}
+
+			entryRequest := entry["request"].(map[string]interface{})
+			entryPayload := entryRequest["payload"].(map[string]interface{})
+			entryDetails := entryPayload["details"].(map[string]interface{})
+
+			entryHeaders :=  entryDetails["headers"].([]interface{})
+			for _, headerInterface := range entryHeaders {
+				header := headerInterface.(map[string]interface{})
+				if header["name"].(string) != "User-Agent" {
+					continue
+				}
+
+				userAgent := header["value"].(string)
+				if userAgent == ignoredUserAgentValue {
+					return fmt.Errorf("unexpected result - user agent is not ignored")
+				}
+			}
+		}
+
+		return nil
+	}
+	if err := retriesExecute(shortRetriesCount, ignoredUserAgentsCheckFunc); err != nil {
+		t.Errorf("%v", err)
+		return
+	}
+}
+
 func TestTapDumpLogs(t *testing.T) {
 	if testing.Short() {
 		t.Skip("ignored acceptance test")
