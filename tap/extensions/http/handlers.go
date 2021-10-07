@@ -14,9 +14,14 @@ import (
 )
 
 func filterAndEmit(item *api.OutputChannelItem, emitter api.Emitter, options *api.TrafficFilteringOptions) {
+	if IsIgnoredUserAgent(item, options) {
+		return
+	}
+
 	if !options.DisableRedaction {
 		FilterSensitiveData(item, options)
 	}
+
 	emitter.Emit(item)
 }
 
