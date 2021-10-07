@@ -26,6 +26,7 @@ interface Entry {
     isOutgoing?: boolean;
     latency: number;
     rules: Rules;
+    contractStatus: number,
 }
 
 interface Rules {
@@ -91,11 +92,32 @@ export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, isSel
             }
         }
     }
+
+    var contractEnabled = true;
+    var contractText = "";
+    switch (entry.contractStatus) {
+        case 0:
+            contractEnabled = false;
+            break;
+        case 1:
+            additionalRulesProperties = styles.ruleSuccessRow
+            ruleSuccess = true
+            contractText = "Contract Success"
+            break;
+        case 2:
+            additionalRulesProperties = styles.ruleFailureRow
+            ruleSuccess = false
+            contractText = "Contract Failure"
+            break;
+        default:
+            break;
+    }
+
     return <>
         <div
             id={entry.id}
             className={`${styles.row}
-            ${isSelected && !rule ? styles.rowSelected : additionalRulesProperties}`}
+            ${isSelected && !rule && !contractEnabled ? styles.rowSelected : additionalRulesProperties}`}
             onClick={() => setFocusedEntryId(entry.id)}
             style={{
                 border: isSelected ? `1px ${entry.protocol.backgroundColor} solid` : "1px transparent solid",
@@ -119,6 +141,13 @@ export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, isSel
                 rule ?
                     <div className={`${styles.ruleNumberText} ${ruleSuccess ? styles.ruleNumberTextSuccess : styles.ruleNumberTextFailure}`}>
                         {`Rules (${numberOfRules})`}
+                    </div>
+                : ""
+            }
+            {
+                contractEnabled ?
+                    <div className={`${styles.ruleNumberText} ${ruleSuccess ? styles.ruleNumberTextSuccess : styles.ruleNumberTextFailure}`}>
+                        {contractText}
                     </div>
                 : ""
             }

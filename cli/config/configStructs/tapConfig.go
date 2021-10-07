@@ -3,8 +3,9 @@ package configStructs
 import (
 	"errors"
 	"fmt"
-	"github.com/up9inc/mizu/shared/units"
 	"regexp"
+
+	"github.com/up9inc/mizu/shared/units"
 )
 
 const (
@@ -18,6 +19,7 @@ const (
 	DryRunTapName                 = "dry-run"
 	EnforcePolicyFile             = "traffic-validation-file"
 	EnforcePolicyFileDeprecated   = "test-rules"
+	ContractFile                  = "contract"
 )
 
 type TapConfig struct {
@@ -35,6 +37,7 @@ type TapConfig struct {
 	DryRun                      bool      `yaml:"dry-run" default:"false"`
 	EnforcePolicyFile           string    `yaml:"traffic-validation-file"`
 	EnforcePolicyFileDeprecated string    `yaml:"test-rules,omitempty" readonly:""`
+	ContractFile                string    `yaml:"contract"`
 	ApiServerResources          Resources `yaml:"api-server-resources"`
 	TapperResources             Resources `yaml:"tapper-resources"`
 }

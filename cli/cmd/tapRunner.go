@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"path"
 	"regexp"
 	"strings"
@@ -64,6 +65,16 @@ func RunMizuTap() {
 		}
 	}
 
+	var contract string
+	if config.Config.Tap.ContractFile != "" {
+		bytes, err := ioutil.ReadFile(config.Config.Tap.ContractFile)
+		if err != nil {
+			logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error reading contract file: %v", errormessage.FormatError(err)))
+			return
+		}
+		contract = string(bytes)
+	}
+
 	kubernetesProvider, err := kubernetes.NewProvider(config.Config.KubeConfigPath())
 	if err != nil {
 		logger.Log.Error(err)
@@ -110,7 +121,7 @@ func RunMizuTap() {
 	}
 
 	defer finishMizuExecution(kubernetesProvider)
-	if err := createMizuResources(ctx, kubernetesProvider, mizuApiFilteringOptions, mizuValidationRules); err != nil {
+	if err := createMizuResources(ctx, kubernetesProvider, mizuApiFilteringOptions, mizuValidationRules, contract); err != nil {
 		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error creating resources: %v", errormessage.FormatError(err)))
 		return
 	}
@@ -132,7 +143,7 @@ func readValidationRules(file string) (string, error) {
 	return string(newContent), nil
 }
 
-func createMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, mizuApiFilteringOptions *api.TrafficFilteringOptions, mizuValidationRules string) error {
+func createMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, mizuApiFilteringOptions *api.TrafficFilteringOptions, mizuValidationRules string, contract string) error {
 	if !config.Config.IsNsRestrictedMode() {
 		if err := createMizuNamespace(ctx, kubernetesProvider); err != nil {
 			return err
@@ -143,15 +154,15 @@ func createMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Pro
 		return err
 	}
 
-	if err := createMizuConfigmap(ctx, kubernetesProvider, mizuValidationRules); err != nil {
+	if err := createMizuConfigmap(ctx, kubernetesProvider, mizuValidationRules, contract); err != nil {
 		logger.Log.Warningf(uiUtils.Warning, fmt.Sprintf("Failed to create resources required for policy validation. Mizu will not validate policy rules. error: %v\n", errormessage.FormatError(err)))
 	}
 
 	return nil
 }
 
-func createMizuConfigmap(ctx context.Context, kubernetesProvider *kubernetes.Provider, data string) error {
-	err := kubernetesProvider.CreateConfigMap(ctx, config.Config.MizuResourcesNamespace, mizu.ConfigMapName, data)
+func createMizuConfigmap(ctx context.Context, kubernetesProvider *kubernetes.Provider, data string, contract string) error {
+	err := kubernetesProvider.CreateConfigMap(ctx, config.Config.MizuResourcesNamespace, mizu.ConfigMapName, data, contract)
 	return err
 }
 

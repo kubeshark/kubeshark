@@ -454,13 +454,14 @@ func (provider *Provider) handleRemovalError(err error) error {
 	return err
 }
 
-func (provider *Provider) CreateConfigMap(ctx context.Context, namespace string, configMapName string, data string) error {
-	if data == "" {
+func (provider *Provider) CreateConfigMap(ctx context.Context, namespace string, configMapName string, data string, contract string) error {
+	if data == "" && contract == "" {
 		return nil
 	}
 
 	configMapData := make(map[string]string, 0)
 	configMapData[shared.RulePolicyFileName] = data
+	configMapData[shared.ContractFileName] = contract
 	configMap := &core.ConfigMap{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "ConfigMap",

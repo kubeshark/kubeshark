@@ -2,9 +2,18 @@ package api
 
 import (
 	"bufio"
+	"bytes"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"io/ioutil"
+	"net/http"
 	"plugin"
 	"sync"
 	"time"
+
+	"github.com/google/martian/har"
+	"github.com/romana/rlog"
 )
 
 type Protocol struct {
@@ -159,6 +168,7 @@ type BaseEntryDetails struct {
 	IsOutgoing      bool            `json:"isOutgoing,omitempty"`
 	Latency         int64           `json:"latency"`
 	Rules           ApplicableRules `json:"rules,omitempty"`
+	ContractStatus  int             `json:"contractStatus"`
 }
 
 type ApplicableRules struct {
@@ -199,3 +209,111 @@ const (
 	TABLE string = "table"
 	BODY  string = "body"
 )
+
+const (
+	TypeHttpRequest = iota
+	TypeHttpResponse
+)
+
+type HTTPPayload struct {
+	Type uint8
+	Data interface{}
+}
+
+type HTTPPayloader interface {
+	MarshalJSON() ([]byte, error)
+}
+
+type HTTPWrapper struct {
+	Method      string               `json:"method"`
+	Url         string               `json:"url"`
+	Details     interface{}          `json:"details"`
+	RawRequest  *HTTPRequestWrapper  `json:"rawRequest"`
+	RawResponse *HTTPResponseWrapper `json:"rawResponse"`
+}
+
+func (h HTTPPayload) MarshalJSON() ([]byte, error) {
+	switch h.Type {
+	case TypeHttpRequest:
+		harRequest, err := har.NewRequest(h.Data.(*http.Request), true)
+		if err != nil {
+			rlog.Debugf("convert-request-to-har", "Failed converting request to HAR %s (%v,%+v)", err, err, err)
+			return nil, errors.New("Failed converting request to HAR")
+		}
+		return json.Marshal(&HTTPWrapper{
+			Method:     harRequest.Method,
+			Url:        "",
+			Details:    harRequest,
+			RawRequest: &HTTPRequestWrapper{Request: h.Data.(*http.Request)},
+		})
+	case TypeHttpResponse:
+		harResponse, err := har.NewResponse(h.Data.(*http.Response), true)
+		if err != nil {
+			rlog.Debugf("convert-response-to-har", "Failed converting response to HAR %s (%v,%+v)", err, err, err)
+			return nil, errors.New("Failed converting response to HAR")
+		}
+		return json.Marshal(&HTTPWrapper{
+			Method:      "",
+			Url:         "",
+			Details:     harResponse,
+			RawResponse: &HTTPResponseWrapper{Response: h.Data.(*http.Response)},
+		})
+	default:
+		panic(fmt.Sprintf("HTTP payload cannot be marshaled: %s\n", h.Type))
+	}
+}
+
+type HTTPWrapperTricky struct {
+	Method      string         `json:"method"`
+	Url         string         `json:"url"`
+	Details     interface{}    `json:"details"`
+	RawRequest  *http.Request  `json:"rawRequest"`
+	RawResponse *http.Response `json:"rawResponse"`
+}
+
+type HTTPMessage struct {
+	IsRequest   bool              `json:"isRequest"`
+	CaptureTime time.Time         `json:"captureTime"`
+	Payload     HTTPWrapperTricky `json:"payload"`
+}
+
+type HTTPRequestResponsePair struct {
+	Request  HTTPMessage `json:"request"`
+	Response HTTPMessage `json:"response"`
+}
+
+type HTTPRequestWrapper struct {
+	*http.Request
+}
+
+func (r *HTTPRequestWrapper) MarshalJSON() ([]byte, error) {
+	body, _ := ioutil.ReadAll(r.Request.Body)
+	r.Request.Body = ioutil.NopCloser(bytes.NewBuffer(body))
+	return json.Marshal(&struct {
+		Body    string `json:"Body,omitempty"`
+		GetBody string `json:"GetBody,omitempty"`
+		Cancel  string `json:"Cancel,omitempty"`
+		*http.Request
+	}{
+		Body:    string(body),
+		Request: r.Request,
+	})
+}
+
+type HTTPResponseWrapper struct {
+	*http.Response
+}
+
+func (r *HTTPResponseWrapper) MarshalJSON() ([]byte, error) {
+	body, _ := ioutil.ReadAll(r.Response.Body)
+	r.Response.Body = ioutil.NopCloser(bytes.NewBuffer(body))
+	return json.Marshal(&struct {
+		Body    string `json:"Body,omitempty"`
+		GetBody string `json:"GetBody,omitempty"`
+		Cancel  string `json:"Cancel,omitempty"`
+		*http.Response
+	}{
+		Body:     string(body),
+		Response: r.Response,
+	})
+}

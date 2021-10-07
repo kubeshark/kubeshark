@@ -8,5 +8,6 @@ const (
 	MaxEntriesDBSizeBytesEnvVar      = "MAX_ENTRIES_DB_BYTES"
 	RulePolicyPath                   = "/app/enforce-policy/"
 	RulePolicyFileName               = "enforce-policy.yaml"
+	ContractFileName                 = "contract-oas.yaml"
 	GoGCEnvVar                       = "GOGC"
 )
