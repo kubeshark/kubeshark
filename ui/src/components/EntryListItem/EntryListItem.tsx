@@ -68,7 +68,7 @@ export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, isSel
     let rule = 'latency' in entry.rules
     if (rule) {
         if (entry.rules.latency !== -1) {
-            if (entry.rules.latency >= entry.latency) {
+            if (entry.rules.latency >= entry.latency || !('latency' in entry)) {
                 additionalRulesProperties = styles.ruleSuccessRow
                 ruleSuccess = true
             } else {

@@ -172,6 +172,21 @@ func executeHttpRequest(response *http.Response, requestErr error) (interface{},
 	return jsonBytesToInterface(data)
 }
 
+func executeHttpGetRequestWithHeaders(url string, headers map[string]string) (interface{}, error) {
+	request, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	for headerKey, headerValue := range headers {
+		request.Header.Add(headerKey, headerValue)
+	}
+
+	client := &http.Client{}
+	response, requestErr := client.Do(request)
+	return executeHttpRequest(response, requestErr)
+}
+
 func executeHttpGetRequest(url string) (interface{}, error) {
 	response, requestErr := http.Get(url)
 	return executeHttpRequest(response, requestErr)

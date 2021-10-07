@@ -4,10 +4,11 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/romana/rlog"
 	"reflect"
 	"regexp"
 	"strings"
+
+	"github.com/romana/rlog"
 
 	"github.com/google/martian/har"
 	"github.com/up9inc/mizu/shared"
@@ -43,9 +44,11 @@ func ValidateService(serviceFromRule string, service string) bool {
 	return true
 }
 
-func MatchRequestPolicy(harEntry har.Entry, service string) []RulesMatched {
-	enforcePolicy, _ := shared.DecodeEnforcePolicy(fmt.Sprintf("%s/%s", shared.RulePolicyPath, shared.RulePolicyFileName))
-	var resultPolicyToSend []RulesMatched
+func MatchRequestPolicy(harEntry har.Entry, service string) (resultPolicyToSend []RulesMatched, isEnabled bool) {
+	enforcePolicy, err := shared.DecodeEnforcePolicy(fmt.Sprintf("%s/%s", shared.RulePolicyPath, shared.RulePolicyFileName))
+	if err == nil {
+		isEnabled = true
+	}
 	for _, rule := range enforcePolicy.Rules {
 		if !ValidatePath(rule.Path, harEntry.Request.URL) || !ValidateService(rule.Service, service) {
 			continue
@@ -93,12 +96,12 @@ func MatchRequestPolicy(harEntry har.Entry, service string) []RulesMatched {
 			resultPolicyToSend = appendRulesMatched(resultPolicyToSend, true, rule)
 		}
 	}
-	return resultPolicyToSend
+	return
 }
 
 func PassedValidationRules(rulesMatched []RulesMatched) (bool, int64, int) {
 	var numberOfRulesMatched = len(rulesMatched)
-	var latency int64 = -1
+	var responseTime int64 = -1
 
 	if numberOfRulesMatched == 0 {
 		return false, 0, numberOfRulesMatched
@@ -106,15 +109,15 @@ func PassedValidationRules(rulesMatched []RulesMatched) (bool, int64, int) {
 
 	for _, rule := range rulesMatched {
 		if rule.Matched == false {
-			return false, latency, numberOfRulesMatched
+			return false, responseTime, numberOfRulesMatched
 		} else {
-			if strings.ToLower(rule.Rule.Type) == "latency" {
-				if rule.Rule.Latency < latency || latency == -1 {
-					latency = rule.Rule.Latency
+			if strings.ToLower(rule.Rule.Type) == "responseTime" {
+				if rule.Rule.ResponseTime < responseTime || responseTime == -1 {
+					responseTime = rule.Rule.ResponseTime
 				}
 			}
 		}
 	}
 
-	return true, latency, numberOfRulesMatched
+	return true, responseTime, numberOfRulesMatched
 }

@@ -106,7 +106,7 @@ type MizuEntry struct {
 	UpdatedAt               time.Time
 	ProtocolName            string `json:"protocolName" gorm:"column:protocolName"`
 	ProtocolLongName        string `json:"protocolLongName" gorm:"column:protocolLongName"`
-	ProtocolAbbreviation    string `json:"protocolAbbreviation" gorm:"column:protocolVersion"`
+	ProtocolAbbreviation    string `json:"protocolAbbreviation" gorm:"column:protocolAbbreviation"`
 	ProtocolVersion         string `json:"protocolVersion" gorm:"column:protocolVersion"`
 	ProtocolBackgroundColor string `json:"protocolBackgroundColor" gorm:"column:protocolBackgroundColor"`
 	ProtocolForegroundColor string `json:"protocolForegroundColor" gorm:"column:protocolForegroundColor"`
@@ -138,6 +138,7 @@ type MizuEntryWrapper struct {
 	BodySize       int64                    `json:"bodySize"`
 	Data           MizuEntry                `json:"data"`
 	Rules          []map[string]interface{} `json:"rulesMatched,omitempty"`
+	IsRulesEnabled bool                     `json:"isRulesEnabled"`
 }
 
 type BaseEntryDetails struct {
@@ -156,7 +157,7 @@ type BaseEntryDetails struct {
 	SourcePort      string          `json:"sourcePort,omitempty"`
 	DestinationPort string          `json:"destinationPort,omitempty"`
 	IsOutgoing      bool            `json:"isOutgoing,omitempty"`
-	Latency         int64           `json:"latency,omitempty"`
+	Latency         int64           `json:"latency"`
 	Rules           ApplicableRules `json:"rules,omitempty"`
 }
 
@@ -190,6 +191,7 @@ func (bed *BaseEntryDetails) UnmarshalData(entry *MizuEntry) error {
 	bed.Timestamp = entry.Timestamp
 	bed.RequestSenderIp = entry.RequestSenderIp
 	bed.IsOutgoing = entry.IsOutgoing
+	bed.Latency = entry.ElapsedTime
 	return nil
 }
 

@@ -17,26 +17,24 @@ const (
 	HumanMaxEntriesDBSizeTapName  = "max-entries-db-size"
 	DryRunTapName                 = "dry-run"
 	EnforcePolicyFile             = "traffic-validation-file"
-	EnforcePolicyFileDeprecated   = "test-rules"
 )
 
 type TapConfig struct {
-	AnalysisDestination          string    `yaml:"dest" default:"up9.app"`
-	SleepIntervalSec             int       `yaml:"upload-interval" default:"10"`
-	PodRegexStr                  string    `yaml:"regex" default:".*"`
-	GuiPort                      uint16    `yaml:"gui-port" default:"8899"`
-	Namespaces                   []string  `yaml:"namespaces"`
-	Analysis                     bool      `yaml:"analysis" default:"false"`
-	AllNamespaces                bool      `yaml:"all-namespaces" default:"false"`
-	PlainTextFilterRegexes       []string  `yaml:"regex-masking"`
-	HealthChecksUserAgentHeaders []string  `yaml:"ignored-user-agents"`
-	DisableRedaction             bool      `yaml:"no-redact" default:"false"`
-	HumanMaxEntriesDBSize        string    `yaml:"max-entries-db-size" default:"200MB"`
-	DryRun                       bool      `yaml:"dry-run" default:"false"`
-	EnforcePolicyFile            string    `yaml:"traffic-validation-file"`
-	EnforcePolicyFileDeprecated  string    `yaml:"test-rules"`
-	ApiServerResources           Resources `yaml:"api-server-resources"`
-	TapperResources              Resources `yaml:"tapper-resources"`
+	AnalysisDestination         string    `yaml:"dest" default:"up9.app"`
+	SleepIntervalSec            int       `yaml:"upload-interval" default:"10"`
+	PodRegexStr                 string    `yaml:"regex" default:".*"`
+	GuiPort                     uint16    `yaml:"gui-port" default:"8899"`
+	Namespaces                  []string  `yaml:"namespaces"`
+	Analysis                    bool      `yaml:"analysis" default:"false"`
+	AllNamespaces               bool      `yaml:"all-namespaces" default:"false"`
+	PlainTextFilterRegexes      []string  `yaml:"regex-masking"`
+	IgnoredUserAgents           []string  `yaml:"ignored-user-agents"`
+	DisableRedaction            bool      `yaml:"no-redact" default:"false"`
+	HumanMaxEntriesDBSize       string    `yaml:"max-entries-db-size" default:"200MB"`
+	DryRun                      bool      `yaml:"dry-run" default:"false"`
+	EnforcePolicyFile           string    `yaml:"traffic-validation-file"`
+	ApiServerResources          Resources `yaml:"api-server-resources"`
+	TapperResources             Resources `yaml:"tapper-resources"`
 }
 
 type Resources struct {
