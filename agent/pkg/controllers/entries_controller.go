@@ -77,6 +77,7 @@ func SyncEntries(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
+	
 	if up9.GetAnalyzeInfo().IsAnalyzing {
 		c.String(http.StatusBadRequest, "Cannot analyze, mizu is already analyzing")
 		return
