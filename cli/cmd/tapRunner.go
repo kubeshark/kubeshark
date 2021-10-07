@@ -578,7 +578,7 @@ func watchApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 				}
 
 				logger.Log.Infof("Mizu is available at %s\n", url)
-				openBrowser(url)
+				uiUtils.OpenBrowser(url)
 				requestForAnalysisIfNeeded()
 				if err := apiserver.Provider.ReportTappedPods(state.currentlyTappedPods); err != nil {
 					logger.Log.Debugf("[Error] failed update tapped pods %v", err)
