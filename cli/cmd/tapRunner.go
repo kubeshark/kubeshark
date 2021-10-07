@@ -675,7 +675,7 @@ func requestForSyncEntriesIfNeeded() {
 	if !config.Config.Tap.Analysis {
 		return
 	}
-	if err := apiserver.Provider.RequestSyncEntries(config.Config.Tap.AnalysisDestination, config.Config.Tap.SleepIntervalSec); err != nil {
+	if err := apiserver.Provider.RequestSyncEntries(config.Config.Tap.AnalysisDestination, config.Config.Tap.UploadIntervalSec); err != nil {
 		logger.Log.Debugf("[Error] failed requesting for sync entries, err: %v", err)
 	}
 }
