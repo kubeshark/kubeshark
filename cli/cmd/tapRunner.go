@@ -49,15 +49,8 @@ func RunMizuTap() {
 	}
 
 	var mizuValidationRules string
-	if config.Config.Tap.EnforcePolicyFile != "" || config.Config.Tap.EnforcePolicyFileDeprecated != "" {
-		var trafficValidation string
-		if config.Config.Tap.EnforcePolicyFile != "" {
-			trafficValidation = config.Config.Tap.EnforcePolicyFile
-		} else {
-			trafficValidation = config.Config.Tap.EnforcePolicyFileDeprecated
-		}
-
-		mizuValidationRules, err = readValidationRules(trafficValidation)
+	if config.Config.Tap.EnforcePolicyFile != "" {
+		mizuValidationRules, err = readValidationRules(config.Config.Tap.EnforcePolicyFile)
 		if err != nil {
 			logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error reading policy file: %v", errormessage.FormatError(err)))
 			return

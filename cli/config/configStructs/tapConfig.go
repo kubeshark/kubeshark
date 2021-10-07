@@ -17,7 +17,6 @@ const (
 	HumanMaxEntriesDBSizeTapName  = "max-entries-db-size"
 	DryRunTapName                 = "dry-run"
 	EnforcePolicyFile             = "traffic-validation-file"
-	EnforcePolicyFileDeprecated   = "test-rules"
 )
 
 type TapConfig struct {
@@ -34,7 +33,6 @@ type TapConfig struct {
 	HumanMaxEntriesDBSize       string    `yaml:"max-entries-db-size" default:"200MB"`
 	DryRun                      bool      `yaml:"dry-run" default:"false"`
 	EnforcePolicyFile           string    `yaml:"traffic-validation-file"`
-	EnforcePolicyFileDeprecated string    `yaml:"test-rules,omitempty" readonly:""`
 	ApiServerResources          Resources `yaml:"api-server-resources"`
 	TapperResources             Resources `yaml:"tapper-resources"`
 }
