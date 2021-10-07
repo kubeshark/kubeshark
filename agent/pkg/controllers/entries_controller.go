@@ -64,20 +64,16 @@ func GetEntries(c *gin.Context) {
 	c.JSON(http.StatusOK, baseEntries)
 }
 
-func UploadEntries(c *gin.Context) {
-	rlog.Infof("Upload entries - started\n")
+func SyncEntries(c *gin.Context) {
+	rlog.Infof("Sync entries - started\n")
 
-	uploadParams := &models.UploadEntriesRequestQuery{}
-	if err := c.BindQuery(uploadParams); err != nil {
-		c.JSON(http.StatusBadRequest, err)
-		return
-	}
-	if err := c.Bind(uploadParams); err != nil {
+	syncParams := &models.SyncEntriesRequestQuery{}
+	if err := c.BindQuery(syncParams); err != nil {
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
 
-	if err := validation.Validate(uploadParams); err != nil {
+	if err := validation.Validate(syncParams); err != nil {
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
@@ -88,9 +84,9 @@ func UploadEntries(c *gin.Context) {
 
 	var token, model string
 	var guestMode bool
-	if uploadParams.Token == "" {
-		rlog.Infof("Upload entries - creating token. dest %s\n", uploadParams.Dest)
-		guestToken, err := up9.CreateAnonymousToken(uploadParams.Dest)
+	if syncParams.Token == "" {
+		rlog.Infof("Sync entries - creating token. env %s\n", syncParams.Env)
+		guestToken, err := up9.CreateAnonymousToken(syncParams.Env)
 		if err != nil {
 			c.String(http.StatusServiceUnavailable, "Failed creating anonymous token")
 			return
@@ -100,13 +96,13 @@ func UploadEntries(c *gin.Context) {
 		model = guestToken.Model
 		guestMode = true
 	} else {
-		token = fmt.Sprintf("bearer %s", uploadParams.Token)
-		model = uploadParams.Workspace
+		token = fmt.Sprintf("bearer %s", syncParams.Token)
+		model = syncParams.Workspace
 		guestMode = false
 	}
 
-	rlog.Infof("Upload entries - uploading. token: %s model: %s\n", token, model)
-	go up9.UploadEntriesImpl(token, model, uploadParams.Dest, uploadParams.SleepIntervalSec, guestMode)
+	rlog.Infof("Sync entries - syncing. token: %s model: %s\n", token, model)
+	go up9.SyncEntriesImpl(token, model, syncParams.Env, syncParams.SleepIntervalSec, guestMode)
 	c.String(http.StatusOK, "OK")
 }
 

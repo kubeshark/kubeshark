@@ -22,9 +22,9 @@ type EntriesFilter struct {
 	Timestamp int64  `form:"timestamp" validate:"required,min=1"`
 }
 
-type UploadEntriesRequestQuery struct {
-	Token            string `json:"token"`
-	Dest             string `form:"dest"`
+type SyncEntriesRequestQuery struct {
+	Token            string `form:"token"`
+	Env              string `form:"env"`
 	Workspace        string `form:"workspace"`
 	SleepIntervalSec int    `form:"interval"`
 }

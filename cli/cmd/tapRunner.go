@@ -579,7 +579,7 @@ func watchApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 
 				logger.Log.Infof("Mizu is available at %s\n", url)
 				uiUtils.OpenBrowser(url)
-				requestForUploadEntriesIfNeeded()
+				requestForSyncEntriesIfNeeded()
 				if err := apiserver.Provider.ReportTappedPods(state.currentlyTappedPods); err != nil {
 					logger.Log.Debugf("[Error] failed update tapped pods %v", err)
 				}
@@ -671,13 +671,13 @@ func watchTapperPod(ctx context.Context, kubernetesProvider *kubernetes.Provider
 	}
 }
 
-func requestForUploadEntriesIfNeeded() {
+func requestForSyncEntriesIfNeeded() {
 	if !config.Config.Tap.Analysis && config.Config.Tap.Workspace == "" {
 		return
 	}
 
-	if err := apiserver.Provider.RequestUploadTraffic(config.Config.Auth.EnvName, config.Config.Tap.Workspace, config.Config.Tap.UploadIntervalSec, config.Config.Auth.Token); err != nil {
-		logger.Log.Debugf("[Error] failed requesting for upload traffic %v", err)
+	if err := apiserver.Provider.RequestSyncEntries(config.Config.Auth.EnvName, config.Config.Tap.Workspace, config.Config.Tap.UploadIntervalSec, config.Config.Auth.Token); err != nil {
+		logger.Log.Debugf("[Error] failed requesting for sync entries, err: %v", err)
 	}
 }
 
