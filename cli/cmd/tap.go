@@ -13,7 +13,6 @@ import (
 	"github.com/up9inc/mizu/cli/telemetry"
 	"github.com/up9inc/mizu/cli/uiUtils"
 	"os"
-	"time"
 )
 
 const uploadTrafficMessageToConfirm = `NOTE: running mizu with --%s flag will upload recorded traffic for further analysis and enriched presentation options.`
@@ -40,12 +39,12 @@ Supported protocols are HTTP and gRPC.`,
 		}
 
 		if config.Config.Auth.Token != "" {
-			expiry, err := auth.GetExpiry(config.Config.Auth.Token)
+			tokenExpired, err := auth.IsTokenExpired(config.Config.Auth.Token)
 			if err != nil {
-				logger.Log.Errorf("failed to get expiry from token, err: %v", err)
+				return errors.New(fmt.Sprintf("failed to check if token is expired, err: %v", err))
 			}
 
-			if time.Now().After(*expiry) {
+			if tokenExpired {
 				return errors.New("token is expired, run `mizu auth login` to re-authenticate")
 			}
 		}
