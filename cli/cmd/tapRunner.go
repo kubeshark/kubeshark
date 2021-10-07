@@ -579,7 +579,7 @@ func watchApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 
 				logger.Log.Infof("Mizu is available at %s\n", url)
 				uiUtils.OpenBrowser(url)
-				requestForAnalysisIfNeeded()
+				requestForSyncEntriesIfNeeded()
 				if err := apiserver.Provider.ReportTappedPods(state.currentlyTappedPods); err != nil {
 					logger.Log.Debugf("[Error] failed update tapped pods %v", err)
 				}
@@ -671,12 +671,12 @@ func watchTapperPod(ctx context.Context, kubernetesProvider *kubernetes.Provider
 	}
 }
 
-func requestForAnalysisIfNeeded() {
+func requestForSyncEntriesIfNeeded() {
 	if !config.Config.Tap.Analysis {
 		return
 	}
-	if err := apiserver.Provider.RequestAnalysis(config.Config.Tap.AnalysisDestination, config.Config.Tap.SleepIntervalSec); err != nil {
-		logger.Log.Debugf("[Error] failed requesting for analysis %v", err)
+	if err := apiserver.Provider.RequestSyncEntries(config.Config.Tap.AnalysisDestination, config.Config.Tap.SleepIntervalSec); err != nil {
+		logger.Log.Debugf("[Error] failed requesting for sync entries, err: %v", err)
 	}
 }
 

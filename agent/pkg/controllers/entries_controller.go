@@ -64,15 +64,15 @@ func GetEntries(c *gin.Context) {
 	c.JSON(http.StatusOK, baseEntries)
 }
 
-func UploadEntries(c *gin.Context) {
-	rlog.Infof("Upload entries - started\n")
+func SyncEntries(c *gin.Context) {
+	rlog.Infof("Sync entries - started\n")
 
-	uploadParams := &models.UploadEntriesRequestQuery{}
-	if err := c.BindQuery(uploadParams); err != nil {
+	syncParams := &models.SyncEntriesRequestQuery{}
+	if err := c.BindQuery(syncParams); err != nil {
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
-	if err := validation.Validate(uploadParams); err != nil {
+	if err := validation.Validate(syncParams); err != nil {
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
@@ -81,14 +81,14 @@ func UploadEntries(c *gin.Context) {
 		return
 	}
 
-	rlog.Infof("Upload entries - creating token. dest %s\n", uploadParams.Dest)
-	token, err := up9.CreateAnonymousToken(uploadParams.Dest)
+	rlog.Infof("Sync entries - creating token. env %s\n", syncParams.Env)
+	token, err := up9.CreateAnonymousToken(syncParams.Env)
 	if err != nil {
 		c.String(http.StatusServiceUnavailable, "Cannot analyze, mizu is already analyzing")
 		return
 	}
-	rlog.Infof("Upload entries - uploading. token: %s model: %s\n", token.Token, token.Model)
-	go up9.UploadEntriesImpl(token.Token, token.Model, uploadParams.Dest, uploadParams.SleepIntervalSec)
+	rlog.Infof("Sync entries - syncing. token: %s model: %s\n", token.Token, token.Model)
+	go up9.SyncEntriesImpl(token.Token, token.Model, syncParams.Env, syncParams.SleepIntervalSec)
 	c.String(http.StatusOK, "OK")
 }
 
