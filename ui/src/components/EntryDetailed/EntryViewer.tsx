@@ -41,12 +41,6 @@ const AutoRepresentation: React.FC<any> = ({representation, isRulesEnabled, rule
         {
             tab: 'Response',
         },
-        {
-            tab: 'Rules',
-        },
-        {
-            tab: 'Contract',
-        },
     ];
     const [currentTab, setCurrentTab] = useState(TABS[0].tab);
 
@@ -61,12 +55,28 @@ const AutoRepresentation: React.FC<any> = ({representation, isRulesEnabled, rule
         TABS[1]['hidden'] = true;
     }
 
-    if (!isRulesEnabled) {
-        TABS[2]['hidden'] = true;
+    var rulesTabIndex = 0;
+    var contractTabIndex = 0;
+    if (isRulesEnabled) {
+        TABS.push(
+            {
+                tab: 'Rules',
+            }
+        );
+        rulesTabIndex = 2;
     }
 
-    if (contractStatus !== 2) {
-        TABS[3]['hidden'] = true;
+    if (contractStatus === 2) {
+        TABS.push(
+            {
+                tab: 'Contract',
+            }
+        );
+        if (rulesTabIndex === 0) {
+            contractTabIndex = 2;
+        } else {
+            contractTabIndex = rulesTabIndex + 1;
+        }
     }
 
     return <div className={styles.Entry}>
@@ -80,10 +90,10 @@ const AutoRepresentation: React.FC<any> = ({representation, isRulesEnabled, rule
             {response && currentTab === TABS[1].tab && <React.Fragment>
                 <SectionsRepresentation data={response} color={color}/>
             </React.Fragment>}
-            {isRulesEnabled && currentTab === TABS[2].tab && <React.Fragment>
+            {isRulesEnabled && currentTab === TABS[rulesTabIndex].tab && <React.Fragment>
                 <EntryTablePolicySection title={'Rule'} color={color} latency={elapsedTime} arrayToIterate={rulesMatched ? rulesMatched : []}/>
             </React.Fragment>}
-            {currentTab === TABS[3].tab && <React.Fragment>
+            {contractStatus === 2 && currentTab === TABS[contractTabIndex].tab && <React.Fragment>
                 <EntryContractSection title={'Contract'} color={color} contractReason={contractReason}/>
             </React.Fragment>}
         </div>}
