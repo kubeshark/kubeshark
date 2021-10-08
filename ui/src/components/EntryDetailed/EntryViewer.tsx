@@ -1,7 +1,7 @@
 import React, {useState} from 'react';
 import styles from './EntryViewer.module.sass';
 import Tabs from "../UI/Tabs";
-import {EntryTableSection, EntryBodySection, EntryTablePolicySection} from "./EntrySections";
+import {EntryTableSection, EntryBodySection, EntryTablePolicySection, EntryContractSection} from "./EntrySections";
 
 enum SectionTypes {
     SectionTable = "table",
@@ -33,16 +33,19 @@ const SectionsRepresentation: React.FC<any> = ({data, color}) => {
     return <>{sections}</>;
 }
 
-const AutoRepresentation: React.FC<any> = ({representation, isRulesEnabled, rulesMatched, elapsedTime, color}) => {
+const AutoRepresentation: React.FC<any> = ({representation, isRulesEnabled, rulesMatched, contractStatus, contractReason, elapsedTime, color}) => {
     var TABS = [
         {
-            tab: 'request'
+            tab: 'Request'
         },
         {
-            tab: 'response',
+            tab: 'Response',
         },
         {
             tab: 'Rules',
+        },
+        {
+            tab: 'Contract',
         },
     ];
     const [currentTab, setCurrentTab] = useState(TABS[0].tab);
@@ -59,14 +62,17 @@ const AutoRepresentation: React.FC<any> = ({representation, isRulesEnabled, rule
     }
 
     if (!isRulesEnabled) {
-        TABS.pop()
+        TABS[2]['hidden'] = true;
+    }
+
+    if (contractStatus !== 2) {
+        TABS[3]['hidden'] = true;
     }
 
     return <div className={styles.Entry}>
         {<div className={styles.body}>
             <div className={styles.bodyHeader}>
                 <Tabs tabs={TABS} currentTab={currentTab} color={color} onChange={setCurrentTab} leftAligned/>
-                {request?.url && <a className={styles.endpointURL} href={request.payload.url} target='_blank' rel="noreferrer">{request.payload.url}</a>}
             </div>
             {currentTab === TABS[0].tab && <React.Fragment>
                 <SectionsRepresentation data={request} color={color}/>
@@ -74,8 +80,11 @@ const AutoRepresentation: React.FC<any> = ({representation, isRulesEnabled, rule
             {response && currentTab === TABS[1].tab && <React.Fragment>
                 <SectionsRepresentation data={response} color={color}/>
             </React.Fragment>}
-            {TABS.length > 2 && currentTab === TABS[2].tab && <React.Fragment>
+            {isRulesEnabled && currentTab === TABS[2].tab && <React.Fragment>
                 <EntryTablePolicySection title={'Rule'} color={color} latency={elapsedTime} arrayToIterate={rulesMatched ? rulesMatched : []}/>
+            </React.Fragment>}
+            {currentTab === TABS[3].tab && <React.Fragment>
+                <EntryContractSection title={'Contract'} color={color} contractReason={contractReason}/>
             </React.Fragment>}
         </div>}
     </div>;
@@ -85,12 +94,14 @@ interface Props {
     representation: any;
     isRulesEnabled: boolean;
     rulesMatched: any;
+    contractStatus: number;
+    contractReason: string;
     color: string;
     elapsedTime: number;
 }
 
-const EntryViewer: React.FC<Props> = ({representation, isRulesEnabled, rulesMatched, elapsedTime, color}) => {
-    return <AutoRepresentation representation={representation} isRulesEnabled={isRulesEnabled} rulesMatched={rulesMatched} elapsedTime={elapsedTime} color={color}/>
+const EntryViewer: React.FC<Props> = ({representation, isRulesEnabled, rulesMatched, contractStatus, contractReason, elapsedTime, color}) => {
+    return <AutoRepresentation representation={representation} isRulesEnabled={isRulesEnabled} rulesMatched={rulesMatched} contractStatus={contractStatus} contractReason={contractReason} elapsedTime={elapsedTime} color={color}/>
 };
 
 export default EntryViewer;

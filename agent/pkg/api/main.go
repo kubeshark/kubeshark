@@ -2,30 +2,22 @@ package api
 
 import (
 	"bufio"
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"mizuserver/pkg/database"
 	"mizuserver/pkg/holder"
 	"mizuserver/pkg/providers"
-	"net/http"
 	"os"
 	"path"
 	"sort"
 	"strings"
 	"time"
 
-	"github.com/getkin/kin-openapi/openapi3"
-	"github.com/getkin/kin-openapi/openapi3filter"
-	"github.com/getkin/kin-openapi/routers"
-	legacyrouter "github.com/getkin/kin-openapi/routers/legacy"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"github.com/google/martian/har"
 	"github.com/romana/rlog"
-	"github.com/up9inc/mizu/shared"
 	tapApi "github.com/up9inc/mizu/tap/api"
 
 	"mizuserver/pkg/models"
@@ -102,60 +94,6 @@ func startReadingFiles(workingDir string) {
 	}
 }
 
-func loadOAS() (ctx context.Context, doc *openapi3.T, router routers.Router, err error) {
-	path := fmt.Sprintf("%s/%s", shared.RulePolicyPath, shared.ContractFileName)
-	if _, err = os.Stat(path); os.IsNotExist(err) {
-		return
-	}
-	ctx = context.Background()
-	loader := &openapi3.Loader{Context: ctx}
-	doc, _ = loader.LoadFromFile(path)
-	err = doc.Validate(ctx)
-	if err != nil {
-		return
-	}
-	router, _ = legacyrouter.NewRouter(doc)
-	return
-}
-
-func validateOAS(ctx context.Context, doc *openapi3.T, router routers.Router, req *http.Request, res *http.Response) (bool, error) {
-	// Find route
-	route, pathParams, err := router.FindRoute(req)
-	if err != nil {
-		fmt.Printf("err: %v\n", err)
-		return false, err
-	}
-
-	// Validate request
-	requestValidationInput := &openapi3filter.RequestValidationInput{
-		Request:    req,
-		PathParams: pathParams,
-		Route:      route,
-	}
-	if err := openapi3filter.ValidateRequest(ctx, requestValidationInput); err != nil {
-		fmt.Printf("err: %v\n", err)
-		return false, err
-	}
-
-	responseValidationInput := &openapi3filter.ResponseValidationInput{
-		RequestValidationInput: requestValidationInput,
-		Status:                 res.StatusCode,
-		Header:                 res.Header,
-	}
-
-	body, _ := ioutil.ReadAll(res.Body)
-	res.Body = ioutil.NopCloser(bytes.NewBuffer(body))
-	responseValidationInput.SetBodyBytes(body)
-
-	// Validate response.
-	if err := openapi3filter.ValidateResponse(ctx, responseValidationInput); err != nil {
-		fmt.Printf("err: %v\n", err)
-		return false, err
-	}
-
-	return true, nil
-}
-
 func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extensionsMap map[string]*tapApi.Extension) {
 	if outputItems == nil {
 		panic("Channel of captured messages is nil")
@@ -164,6 +102,7 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 	disableOASValidation := false
 	ctx, doc, router, err := loadOAS()
 	if err != nil {
+		rlog.Infof("Disabled OAS validation: %s\n", err.Error())
 		disableOASValidation = true
 	}
 
@@ -175,18 +114,21 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 		mizuEntry := extension.Dissector.Analyze(item, primitive.NewObjectID().Hex(), resolvedSource, resolvedDestionation)
 		baseEntry := extension.Dissector.Summarize(mizuEntry)
 		mizuEntry.EstimatedSizeBytes = getEstimatedEntrySizeBytes(mizuEntry)
-		database.CreateEntry(mizuEntry)
 		if extension.Protocol.Name == "http" {
 			var httpPair tapApi.HTTPRequestResponsePair
 			json.Unmarshal([]byte(mizuEntry.Entry), &httpPair)
 
 			if !disableOASValidation {
-				isValid, _ := validateOAS(ctx, doc, router, httpPair.Request.Payload.RawRequest, httpPair.Request.Payload.RawResponse)
+				isValid, err := validateOAS(ctx, doc, router, httpPair.Request.Payload.RawRequest, httpPair.Request.Payload.RawResponse)
 				if isValid {
 					baseEntry.ContractStatus = 1
 				} else {
 					baseEntry.ContractStatus = 2
+					baseEntry.ContractReason = err.Error()
 				}
+
+				mizuEntry.ContractStatus = baseEntry.ContractStatus
+				mizuEntry.ContractReason = baseEntry.ContractReason
 			}
 
 			var pair tapApi.RequestResponsePair
@@ -197,6 +139,7 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 				baseEntry.Rules = rules
 			}
 		}
+		database.CreateEntry(mizuEntry)
 
 		baseEntryBytes, _ := models.CreateBaseEntryWebSocketMessage(baseEntry)
 		BroadcastToBrowserClients(baseEntryBytes)

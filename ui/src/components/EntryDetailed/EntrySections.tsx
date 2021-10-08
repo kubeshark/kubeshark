@@ -150,15 +150,12 @@ export const EntryTableSection: React.FC<EntrySectionProps> = ({title, color, ar
     </React.Fragment>
 }
 
-
-
 interface EntryPolicySectionProps {
     title: string,
     color: string,
     latency?: number,
     arrayToIterate: any[],
 }
-
 
 interface EntryPolicySectionCollapsibleTitleProps {
     label: string;
@@ -251,5 +248,19 @@ export const EntryTablePolicySection: React.FC<EntryPolicySectionProps> = ({titl
                 </EntrySectionContainer>
                 </> : <span className={styles.noRules}>No rules could be applied to this request.</span>
         }
+    </React.Fragment>
+}
+
+interface EntryContractSectionProps {
+    title: string,
+    color: string,
+    contractReason: string,
+}
+
+export const EntryContractSection: React.FC<EntryContractSectionProps> = ({title, color, contractReason}) => {
+    return <React.Fragment>
+        <EntrySectionContainer title={title} color={color}>
+            {contractReason}
+        </EntrySectionContainer>
     </React.Fragment>
 }

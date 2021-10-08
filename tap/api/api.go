@@ -138,6 +138,8 @@ type MizuEntry struct {
 	SourcePort              string `json:"sourcePort,omitempty" gorm:"column:sourcePort"`
 	DestinationPort         string `json:"destinationPort,omitempty" gorm:"column:destinationPort"`
 	IsOutgoing              bool   `json:"isOutgoing,omitempty" gorm:"column:isOutgoing"`
+	ContractStatus          int    `json:"contractStatus,omitempty" gorm:"column:contractStatus"`
+	ContractReason          string `json:"contractReason,omitempty" gorm:"column:contractReason"`
 	EstimatedSizeBytes      int    `json:"-" gorm:"column:estimatedSizeBytes"`
 }
 
@@ -169,6 +171,7 @@ type BaseEntryDetails struct {
 	Latency         int64           `json:"latency"`
 	Rules           ApplicableRules `json:"rules,omitempty"`
 	ContractStatus  int             `json:"contractStatus"`
+	ContractReason  string          `json:"contractReason"`
 }
 
 type ApplicableRules struct {
