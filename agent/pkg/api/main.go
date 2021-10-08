@@ -115,10 +115,10 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 		baseEntry := extension.Dissector.Summarize(mizuEntry)
 		mizuEntry.EstimatedSizeBytes = getEstimatedEntrySizeBytes(mizuEntry)
 		if extension.Protocol.Name == "http" {
-			var httpPair tapApi.HTTPRequestResponsePair
-			json.Unmarshal([]byte(mizuEntry.Entry), &httpPair)
-
 			if !disableOASValidation {
+				var httpPair tapApi.HTTPRequestResponsePair
+				json.Unmarshal([]byte(mizuEntry.Entry), &httpPair)
+
 				isValid, ignore, err := validateOAS(ctx, doc, router, httpPair.Request.Payload.RawRequest, httpPair.Response.Payload.RawResponse)
 				if ignore {
 					baseEntry.ContractStatus = 0
