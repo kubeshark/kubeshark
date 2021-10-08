@@ -4,7 +4,7 @@ An OAS/Swagger file can contain schemas under `parameters` and `responses` field
 CLI option, you can pass your API description to Mizu and the traffic will automatically be validated
 against the contracts.
 
-Below is an example of an OAS/Swagger file from [Sock Shop](https://microservices-demo.github.io/) microservice mode
+Below is an example of an OAS/Swagger file from [Sock Shop](https://microservices-demo.github.io/) microservice demo
 that contains a bunch contracts:
 
 ```yaml
