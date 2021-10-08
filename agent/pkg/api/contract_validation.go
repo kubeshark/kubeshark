@@ -32,11 +32,11 @@ func loadOAS() (ctx context.Context, doc *openapi3.T, router routers.Router, err
 	return
 }
 
-func validateOAS(ctx context.Context, doc *openapi3.T, router routers.Router, req *http.Request, res *http.Response) (bool, error) {
+func validateOAS(ctx context.Context, doc *openapi3.T, router routers.Router, req *http.Request, res *http.Response) (bool, bool, error) {
 	// Find route
 	route, pathParams, err := router.FindRoute(req)
 	if err != nil {
-		return false, err
+		return false, true, err
 	}
 
 	// Validate request
@@ -46,7 +46,7 @@ func validateOAS(ctx context.Context, doc *openapi3.T, router routers.Router, re
 		Route:      route,
 	}
 	if err := openapi3filter.ValidateRequest(ctx, requestValidationInput); err != nil {
-		return false, err
+		return false, false, err
 	}
 
 	responseValidationInput := &openapi3filter.ResponseValidationInput{
@@ -55,14 +55,16 @@ func validateOAS(ctx context.Context, doc *openapi3.T, router routers.Router, re
 		Header:                 res.Header,
 	}
 
-	body, _ := ioutil.ReadAll(res.Body)
-	res.Body = ioutil.NopCloser(bytes.NewBuffer(body))
-	responseValidationInput.SetBodyBytes(body)
+	if res.Body != nil {
+		body, _ := ioutil.ReadAll(res.Body)
+		res.Body = ioutil.NopCloser(bytes.NewBuffer(body))
+		responseValidationInput.SetBodyBytes(body)
+	}
 
 	// Validate response.
 	if err := openapi3filter.ValidateResponse(ctx, responseValidationInput); err != nil {
-		return false, err
+		return false, false, err
 	}
 
-	return true, nil
+	return true, false, nil
 }
