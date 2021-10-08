@@ -50,15 +50,8 @@ func RunMizuTap() {
 	}
 
 	var mizuValidationRules string
-	if config.Config.Tap.EnforcePolicyFile != "" || config.Config.Tap.EnforcePolicyFileDeprecated != "" {
-		var trafficValidation string
-		if config.Config.Tap.EnforcePolicyFile != "" {
-			trafficValidation = config.Config.Tap.EnforcePolicyFile
-		} else {
-			trafficValidation = config.Config.Tap.EnforcePolicyFileDeprecated
-		}
-
-		mizuValidationRules, err = readValidationRules(trafficValidation)
+	if config.Config.Tap.EnforcePolicyFile != "" {
+		mizuValidationRules, err = readValidationRules(config.Config.Tap.EnforcePolicyFile)
 		if err != nil {
 			logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error reading policy file: %v", errormessage.FormatError(err)))
 			return
@@ -596,8 +589,8 @@ func watchApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 				}
 
 				logger.Log.Infof("Mizu is available at %s\n", url)
-				openBrowser(url)
-				requestForAnalysisIfNeeded()
+				uiUtils.OpenBrowser(url)
+				requestForSyncEntriesIfNeeded()
 				if err := apiserver.Provider.ReportTappedPods(state.currentlyTappedPods); err != nil {
 					logger.Log.Debugf("[Error] failed update tapped pods %v", err)
 				}
@@ -650,7 +643,7 @@ func watchTapperPod(ctx context.Context, kubernetesProvider *kubernetes.Provider
 			}
 
 			if modifiedPod.Status.Phase == core.PodPending && modifiedPod.Status.Conditions[0].Type == core.PodScheduled && modifiedPod.Status.Conditions[0].Status != core.ConditionTrue {
-				logger.Log.Infof(uiUtils.Red, "Wasn't able to deploy the tapper %s. Reason: \"%s\"", modifiedPod.Name, modifiedPod.Status.Conditions[0].Message)
+				logger.Log.Infof(uiUtils.Red, fmt.Sprintf("Wasn't able to deploy the tapper %s. Reason: \"%s\"", modifiedPod.Name, modifiedPod.Status.Conditions[0].Message))
 				cancel()
 				break
 			}
@@ -667,7 +660,7 @@ func watchTapperPod(ctx context.Context, kubernetesProvider *kubernetes.Provider
 				if state.Terminated != nil {
 					switch state.Terminated.Reason {
 					case "OOMKilled":
-						logger.Log.Infof(uiUtils.Red, "Tapper %s was terminated (reason: OOMKilled). You should consider increasing machine resources.", modifiedPod.Name)
+						logger.Log.Infof(uiUtils.Red, fmt.Sprintf("Tapper %s was terminated (reason: OOMKilled). You should consider increasing machine resources.", modifiedPod.Name))
 					}
 				}
 			}
@@ -689,12 +682,12 @@ func watchTapperPod(ctx context.Context, kubernetesProvider *kubernetes.Provider
 	}
 }
 
-func requestForAnalysisIfNeeded() {
+func requestForSyncEntriesIfNeeded() {
 	if !config.Config.Tap.Analysis {
 		return
 	}
-	if err := apiserver.Provider.RequestAnalysis(config.Config.Tap.AnalysisDestination, config.Config.Tap.SleepIntervalSec); err != nil {
-		logger.Log.Debugf("[Error] failed requesting for analysis %v", err)
+	if err := apiserver.Provider.RequestSyncEntries(config.Config.Tap.AnalysisDestination, config.Config.Tap.UploadIntervalSec); err != nil {
+		logger.Log.Debugf("[Error] failed requesting for sync entries, err: %v", err)
 	}
 }
 

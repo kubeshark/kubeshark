@@ -20,8 +20,8 @@ export const Filters: React.FC<FiltersProps> = ({methodsFilter, setMethodsFilter
     return <div className={styles.container}>
         <MethodFilter methodsFilter={methodsFilter} setMethodsFilter={setMethodsFilter}/>
         <StatusTypesFilter statusFilter={statusFilter} setStatusFilter={setStatusFilter}/>
-        <PathFilter pathFilter={pathFilter} setPathFilter={setPathFilter}/>
         <ServiceFilter serviceFilter={serviceFilter} setServiceFilter={setServiceFilter}/>
+        <PathFilter pathFilter={pathFilter} setPathFilter={setPathFilter}/>
     </div>;
 };
 

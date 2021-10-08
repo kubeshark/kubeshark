@@ -82,23 +82,23 @@ func (provider *apiServerProvider) ReportTappedPods(pods []core.Pod) error {
 	}
 }
 
-func (provider *apiServerProvider) RequestAnalysis(analysisDestination string, sleepIntervalSec int) error {
+func (provider *apiServerProvider) RequestSyncEntries(analysisDestination string, sleepIntervalSec int) error {
 	if !provider.isReady {
 		return fmt.Errorf("trying to reach api server when not initialized yet")
 	}
-	urlPath := fmt.Sprintf("%s/api/uploadEntries?dest=%s&interval=%v", provider.url, url.QueryEscape(analysisDestination), sleepIntervalSec)
-	u, parseErr := url.ParseRequestURI(urlPath)
+	urlPath := fmt.Sprintf("%s/api/syncEntries?env=%s&interval=%v", provider.url, url.QueryEscape(analysisDestination), sleepIntervalSec)
+	syncEntriesUrl, parseErr := url.ParseRequestURI(urlPath)
 	if parseErr != nil {
-		logger.Log.Fatal("Failed parsing the URL (consider changing the analysis dest URL), err: %v", parseErr)
+		logger.Log.Fatal("Failed parsing the URL (consider changing the env name), err: %v", parseErr)
 	}
 
-	logger.Log.Debugf("Analysis url %v", u.String())
-	if response, requestErr := http.Get(u.String()); requestErr != nil {
-		return fmt.Errorf("failed to notify agent for analysis, err: %w", requestErr)
+	logger.Log.Debugf("Sync entries url %v", syncEntriesUrl.String())
+	if response, requestErr := http.Get(syncEntriesUrl.String()); requestErr != nil {
+		return fmt.Errorf("failed to notify api server for sync entries, err: %w", requestErr)
 	} else if response.StatusCode != 200 {
-		return fmt.Errorf("failed to notify agent for analysis, status code: %v", response.StatusCode)
+		return fmt.Errorf("failed to notify api server for sync entries, status code: %v", response.StatusCode)
 	} else {
-		logger.Log.Infof(uiUtils.Purple, "Traffic is uploading to UP9 for further analysis")
+		logger.Log.Infof(uiUtils.Purple, "Entries are syncing to UP9 for further analysis")
 		return nil
 	}
 }

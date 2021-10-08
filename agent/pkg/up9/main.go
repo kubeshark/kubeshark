@@ -117,7 +117,7 @@ func GetAnalyzeInfo() *shared.AnalyzeStatus {
 	}
 }
 
-func UploadEntriesImpl(token string, model string, envPrefix string, sleepIntervalSec int) {
+func SyncEntriesImpl(token string, model string, envPrefix string, sleepIntervalSec int) {
 	analyzeInformation.IsAnalyzing = true
 	analyzeInformation.AnalyzedModel = model
 	analyzeInformation.AnalyzeToken = token
@@ -160,7 +160,7 @@ func UploadEntriesImpl(token string, model string, envPrefix string, sleepInterv
 			body, jMarshalErr := json.Marshal(result)
 			if jMarshalErr != nil {
 				analyzeInformation.Reset()
-				rlog.Infof("Stopping analyzing")
+				rlog.Infof("Stopping sync entries")
 				log.Fatal(jMarshalErr)
 			}
 
@@ -183,7 +183,7 @@ func UploadEntriesImpl(token string, model string, envPrefix string, sleepInterv
 
 			if _, postErr := http.DefaultClient.Do(req); postErr != nil {
 				analyzeInformation.Reset()
-				rlog.Info("Stopping analyzing")
+				rlog.Info("Stopping sync entries")
 				log.Fatal(postErr)
 			}
 			analyzeInformation.SentCount += len(entriesArray)

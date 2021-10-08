@@ -31,12 +31,12 @@ mizu tap --traffic-validation-file rules.yaml
 The structure of the traffic-validation-file is:
 
 * `name`: string, name of the rule
-* `type`: string, type of the rule, must be `json` or `header` or `latency`
+* `type`: string, type of the rule, must be `json` or `header` or `slo`
 * `key`: string, [jsonpath](https://code.google.com/archive/p/jsonpath/wikis/Javascript.wiki) used only in `json` or `header` type
 * `value`: string, [regex](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions) used only in `json` or `header` type
 * `service`: string, [regex](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions) service name to filter
 * `path`: string, [regex](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions) URL path to filter
-* `latency`: integer, time in ms of the expected latency.
+* `response-time`: integer, time in ms of the expected latency.
 
 
 ### For example:
@@ -54,8 +54,8 @@ rules:
   key: "Content-Le.*"
   value: "(\\d+(?:\\.\\d+)?)"
 - name: latency-test
-  type: latency
-  latency: 1
+  type: slo
+  response-time: 1
   service: "carts.*"
 ```
 

@@ -130,8 +130,16 @@ func representMetadataResponse(data map[string]interface{}) []interface{} {
 	rep = representResponseHeader(data, rep)
 
 	payload := data["Payload"].(map[string]interface{})
-	topics, _ := json.Marshal(payload["Topics"].([]interface{}))
-	brokers, _ := json.Marshal(payload["Brokers"].([]interface{}))
+	topics := ""
+	if payload["Topics"] != nil {
+		_topics, _ := json.Marshal(payload["Topics"].([]interface{}))
+		topics = string(_topics)
+	}
+	brokers := ""
+	if payload["Brokers"] != nil {
+		_brokers, _ := json.Marshal(payload["Brokers"].([]interface{}))
+		brokers = string(_brokers)
+	}
 	controllerID := ""
 	clusterID := ""
 	throttleTimeMs := ""
@@ -155,7 +163,7 @@ func representMetadataResponse(data map[string]interface{}) []interface{} {
 		},
 		{
 			"name":  "Brokers",
-			"value": string(brokers),
+			"value": brokers,
 		},
 		{
 			"name":  "Cluster ID",
@@ -167,7 +175,7 @@ func representMetadataResponse(data map[string]interface{}) []interface{} {
 		},
 		{
 			"name":  "Topics",
-			"value": string(topics),
+			"value": topics,
 		},
 		{
 			"name":  "Cluster Authorized Operations",
@@ -303,7 +311,11 @@ func representProduceResponse(data map[string]interface{}) []interface{} {
 	rep = representResponseHeader(data, rep)
 
 	payload := data["Payload"].(map[string]interface{})
-	responses, _ := json.Marshal(payload["Responses"].([]interface{}))
+	responses := ""
+	if payload["Responses"] != nil {
+		_responses, _ := json.Marshal(payload["Responses"].([]interface{}))
+		responses = string(_responses)
+	}
 	throttleTimeMs := ""
 	if payload["ThrottleTimeMs"] != nil {
 		throttleTimeMs = fmt.Sprintf("%d", int(payload["ThrottleTimeMs"].(float64)))
@@ -333,7 +345,11 @@ func representFetchRequest(data map[string]interface{}) []interface{} {
 	rep = representRequestHeader(data, rep)
 
 	payload := data["Payload"].(map[string]interface{})
-	topics, _ := json.Marshal(payload["Topics"].([]interface{}))
+	topics := ""
+	if payload["Topics"] != nil {
+		_topics, _ := json.Marshal(payload["Topics"].([]interface{}))
+		topics = string(_topics)
+	}
 	replicaId := ""
 	if payload["ReplicaId"] != nil {
 		replicaId = fmt.Sprintf("%d", int(payload["ReplicaId"].(float64)))
@@ -361,7 +377,7 @@ func representFetchRequest(data map[string]interface{}) []interface{} {
 	}
 	rackId := ""
 	if payload["RackId"] != nil {
-		rackId = fmt.Sprintf("%d", int(payload["RackId"].(float64)))
+		rackId = payload["RackId"].(string)
 	}
 	repPayload, _ := json.Marshal([]map[string]string{
 		{
@@ -394,7 +410,7 @@ func representFetchRequest(data map[string]interface{}) []interface{} {
 		},
 		{
 			"name":  "Topics",
-			"value": string(topics),
+			"value": topics,
 		},
 		{
 			"name":  "Forgotten Topics Data",
@@ -420,7 +436,11 @@ func representFetchResponse(data map[string]interface{}) []interface{} {
 	rep = representResponseHeader(data, rep)
 
 	payload := data["Payload"].(map[string]interface{})
-	responses, _ := json.Marshal(payload["Responses"].([]interface{}))
+	responses := ""
+	if payload["Responses"] != nil {
+		_responses, _ := json.Marshal(payload["Responses"].([]interface{}))
+		responses = string(_responses)
+	}
 	throttleTimeMs := ""
 	if payload["ThrottleTimeMs"] != nil {
 		throttleTimeMs = fmt.Sprintf("%d", int(payload["ThrottleTimeMs"].(float64)))
@@ -448,7 +468,7 @@ func representFetchResponse(data map[string]interface{}) []interface{} {
 		},
 		{
 			"name":  "Responses",
-			"value": string(responses),
+			"value": responses,
 		},
 	})
 	rep = append(rep, map[string]string{
@@ -466,7 +486,11 @@ func representListOffsetsRequest(data map[string]interface{}) []interface{} {
 	rep = representRequestHeader(data, rep)
 
 	payload := data["Payload"].(map[string]interface{})
-	topics, _ := json.Marshal(payload["Topics"].([]interface{}))
+	topics := ""
+	if payload["Topics"] != nil {
+		_topics, _ := json.Marshal(payload["Topics"].([]interface{}))
+		topics = string(_topics)
+	}
 	repPayload, _ := json.Marshal([]map[string]string{
 		{
 			"name":  "Replica ID",
@@ -474,7 +498,7 @@ func representListOffsetsRequest(data map[string]interface{}) []interface{} {
 		},
 		{
 			"name":  "Topics",
-			"value": string(topics),
+			"value": topics,
 		},
 	})
 	rep = append(rep, map[string]string{
