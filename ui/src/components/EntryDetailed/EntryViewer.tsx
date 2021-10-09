@@ -81,7 +81,7 @@ const AutoRepresentation: React.FC<any> = ({representation, isRulesEnabled, rule
             {response && currentTab === TABS[responseTabIndex].tab && <React.Fragment>
                 <SectionsRepresentation data={response} color={color}/>
             </React.Fragment>}
-            {TABS.length > 2 && currentTab === TABS[rulesTabIndex].tab && <React.Fragment>
+            {isRulesEnabled && currentTab === TABS[rulesTabIndex].tab && <React.Fragment>
                 <EntryTablePolicySection title={'Rule'} color={color} latency={elapsedTime} arrayToIterate={rulesMatched ? rulesMatched : []}/>
             </React.Fragment>}
         </div>}
