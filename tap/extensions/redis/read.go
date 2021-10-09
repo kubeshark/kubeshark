@@ -296,12 +296,28 @@ func (p *RedisProtocol) Read() (packet *RedisPacket, err error) {
 	switch x.(type) {
 	case []interface{}:
 		array := x.([]interface{})
-		packet.Command = RedisCommand(strings.ToUpper(string(array[0].([]uint8))))
-		if len(array) > 1 {
-			packet.Key = string(array[1].([]uint8))
-		}
-		if len(array) > 2 {
-			packet.Value = string(array[2].([]uint8))
+		switch array[0].(type) {
+		case []uint8:
+			packet.Command = RedisCommand(strings.ToUpper(string(array[0].([]uint8))))
+			if len(array) > 1 {
+				packet.Key = string(array[1].([]uint8))
+			}
+			if len(array) > 2 {
+				packet.Value = string(array[2].([]uint8))
+			}
+			if len(array) > 3 {
+				packet.Value = fmt.Sprintf("[%s", packet.Value)
+				for _, item := range array[3:] {
+					packet.Value = fmt.Sprintf("%s, %s", packet.Value, item.([]uint8))
+				}
+				packet.Value = strings.TrimSuffix(packet.Value, ", ")
+				packet.Value = fmt.Sprintf("%s]", packet.Value)
+			}
+		default:
+			msg := fmt.Sprintf("Unrecognized element in Redis array: %v\n", reflect.TypeOf(array[0]))
+			log.Printf(msg)
+			err = errors.New(msg)
+			return
 		}
 	case []uint8:
 		val := string(x.([]uint8))
@@ -316,6 +332,8 @@ func (p *RedisProtocol) Read() (packet *RedisPacket, err error) {
 		}
 	case string:
 		packet.Value = x.(string)
+	case int64:
+		packet.Value = fmt.Sprintf("%d", x.(int64))
 	default:
 		msg := fmt.Sprintf("Unrecognized Redis data type: %v\n", reflect.TypeOf(x))
 		log.Printf(msg)
