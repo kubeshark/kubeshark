@@ -37,10 +37,7 @@ const AutoRepresentation: React.FC<any> = ({representation, isRulesEnabled, rule
     var TABS = [
         {
             tab: 'Request'
-        },
-        {
-            tab: 'Response',
-        },
+        }
     ];
     const [currentTab, setCurrentTab] = useState(TABS[0].tab);
 
@@ -51,19 +48,26 @@ const AutoRepresentation: React.FC<any> = ({representation, isRulesEnabled, rule
 
     const {request, response} = JSON.parse(representation);
 
-    if (!response) {
-        TABS[1]['hidden'] = true;
-    }
-
+    var responseTabIndex = 0;
     var rulesTabIndex = 0;
     var contractTabIndex = 0;
+
+    if (response) {
+        TABS.push(
+            {
+                tab: 'Response',
+            }
+        );
+        responseTabIndex = TABS.length - 1;
+    }
+
     if (isRulesEnabled) {
         TABS.push(
             {
                 tab: 'Rules',
             }
         );
-        rulesTabIndex = 2;
+        rulesTabIndex = TABS.length - 1;
     }
 
     if (contractStatus === 2) {
@@ -72,11 +76,7 @@ const AutoRepresentation: React.FC<any> = ({representation, isRulesEnabled, rule
                 tab: 'Contract',
             }
         );
-        if (rulesTabIndex === 0) {
-            contractTabIndex = 2;
-        } else {
-            contractTabIndex = rulesTabIndex + 1;
-        }
+        rulesTabIndex = TABS.length - 1;
     }
 
     return <div className={styles.Entry}>
@@ -87,7 +87,7 @@ const AutoRepresentation: React.FC<any> = ({representation, isRulesEnabled, rule
             {currentTab === TABS[0].tab && <React.Fragment>
                 <SectionsRepresentation data={request} color={color}/>
             </React.Fragment>}
-            {response && currentTab === TABS[1].tab && <React.Fragment>
+            {response && currentTab === TABS[responseTabIndex].tab && <React.Fragment>
                 <SectionsRepresentation data={response} color={color}/>
             </React.Fragment>}
             {isRulesEnabled && currentTab === TABS[rulesTabIndex].tab && <React.Fragment>

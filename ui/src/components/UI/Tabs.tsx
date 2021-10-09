@@ -5,7 +5,6 @@ import variables from '../../variables.module.scss';
 
 interface Tab {
     tab: string,
-    hidden?: boolean,
     disabled?: boolean,
     disabledMessage?: string,
     highlight?: boolean,
@@ -66,7 +65,8 @@ const useTabsStyles = makeStyles((theme) => ({
         borderRight: "1px solid " + theme.palette.primary.dark,
         height: 20,
         verticalAlign: 'middle',
-        margin: '0 20px'
+        margin: '0 20px',
+        cursor: 'unset',
     }
 
 }));
@@ -75,7 +75,7 @@ const useTabsStyles = makeStyles((theme) => ({
 const Tabs: React.FC<Props> = ({classes={}, tabs, currentTab, color, onChange, leftAligned, dark}) => {
     const _classes = {...useTabsStyles(), ...classes};
     return <div className={`${_classes.root} ${leftAligned ? _classes.tabsAlignLeft : ''}`}>
-        {tabs.filter((tab) => !tab.hidden).map(({tab, disabled, disabledMessage, highlight, badge}, index) => {
+        {tabs.map(({tab, disabled, disabledMessage, highlight, badge}, index) => {
             const active = currentTab === tab;
             const tabLink = <span
                 key={tab}
