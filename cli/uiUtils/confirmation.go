@@ -17,11 +17,9 @@ func AskForConfirmation(s string) bool {
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	response = strings.ToLower(strings.TrimSpace(response))
 	if response == "" || response == "y" || response == "yes" {
 		return true
 	}
-
 	return false
 }
