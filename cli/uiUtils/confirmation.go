@@ -17,24 +17,9 @@ func AskForConfirmation(s string) bool {
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	response = strings.ToLower(strings.TrimSpace(response))
 	if response == "" || response == "y" || response == "yes" {
 		return true
 	}
-
 	return false
-}
-
-func AskForAnswer(s string) string {
-	reader := bufio.NewReader(os.Stdin)
-
-	fmt.Printf(Magenta, s)
-
-	response, err := reader.ReadString('\n')
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return strings.ToLower(strings.TrimSpace(response))
 }

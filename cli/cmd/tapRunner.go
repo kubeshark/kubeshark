@@ -632,7 +632,7 @@ func watchTapperPod(ctx context.Context, kubernetesProvider *kubernetes.Provider
 			}
 
 			if modifiedPod.Status.Phase == core.PodPending && modifiedPod.Status.Conditions[0].Type == core.PodScheduled && modifiedPod.Status.Conditions[0].Status != core.ConditionTrue {
-				logger.Log.Infof(uiUtils.Red, "Wasn't able to deploy the tapper %s. Reason: \"%s\"", modifiedPod.Name, modifiedPod.Status.Conditions[0].Message)
+				logger.Log.Infof(uiUtils.Red, fmt.Sprintf("Wasn't able to deploy the tapper %s. Reason: \"%s\"", modifiedPod.Name, modifiedPod.Status.Conditions[0].Message))
 				cancel()
 				break
 			}
@@ -649,7 +649,7 @@ func watchTapperPod(ctx context.Context, kubernetesProvider *kubernetes.Provider
 				if state.Terminated != nil {
 					switch state.Terminated.Reason {
 					case "OOMKilled":
-						logger.Log.Infof(uiUtils.Red, "Tapper %s was terminated (reason: OOMKilled). You should consider increasing machine resources.", modifiedPod.Name)
+						logger.Log.Infof(uiUtils.Red, fmt.Sprintf("Tapper %s was terminated (reason: OOMKilled). You should consider increasing machine resources.", modifiedPod.Name))
 					}
 				}
 			}
@@ -672,11 +672,10 @@ func watchTapperPod(ctx context.Context, kubernetesProvider *kubernetes.Provider
 }
 
 func requestForSyncEntriesIfNeeded() {
-	if !config.Config.Tap.Analysis && config.Config.Tap.Workspace == "" {
+	if !config.Config.Tap.Analysis {
 		return
 	}
-
-	if err := apiserver.Provider.RequestSyncEntries(config.Config.Auth.EnvName, config.Config.Tap.Workspace, config.Config.Tap.UploadIntervalSec, config.Config.Auth.Token); err != nil {
+	if err := apiserver.Provider.RequestSyncEntries(config.Config.Tap.AnalysisDestination, config.Config.Tap.UploadIntervalSec); err != nil {
 		logger.Log.Debugf("[Error] failed requesting for sync entries, err: %v", err)
 	}
 }
