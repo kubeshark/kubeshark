@@ -38,31 +38,33 @@ Supported protocols are HTTP and gRPC.`,
 			return errormessage.FormatError(err)
 		}
 
-		if config.Config.Auth.Token != "" {
-			tokenExpired, err := auth.IsTokenExpired(config.Config.Auth.Token)
-			if err != nil {
-				return errors.New(fmt.Sprintf("failed to check if token is expired, err: %v", err))
-			}
-
-			if tokenExpired {
-				return errors.New("token is expired, run `mizu auth login` to re-authenticate")
-			}
-		}
-
 		if config.Config.Tap.Workspace != "" {
 			askConfirmation(configStructs.WorkspaceTapName)
 
 			if config.Config.Auth.Token == "" {
-				return errors.New(fmt.Sprintf("--%s flag requires authentication, run `mizu auth login` to authenticate", configStructs.WorkspaceTapName))
+				logger.Log.Infof("This action requires authentication, please log in to continue")
+				if err := auth.Login(); err != nil {
+					return errors.New(fmt.Sprintf("failed to log in, err: %v", err))
+				}
+			} else {
+				tokenExpired, err := auth.IsTokenExpired(config.Config.Auth.Token)
+				if err != nil {
+					return errors.New(fmt.Sprintf("failed to check if token is expired, err: %v", err))
+				}
+
+				if tokenExpired {
+					logger.Log.Infof("Token expired, please log in again to continue")
+					if err := auth.Login(); err != nil {
+						return errors.New(fmt.Sprintf("failed to log in, err: %v", err))
+					}
+				}
 			}
 		}
 
 		if config.Config.Tap.Analysis {
 			askConfirmation(configStructs.AnalysisTapName)
 
-			if config.Config.Auth.Token != "" {
-				config.Config.Tap.Workspace = uiUtils.AskForAnswer(fmt.Sprintf("running mizu with --%s flag while logged in requires workspace, please provide workspace name: ", configStructs.AnalysisTapName))
-			}
+			config.Config.Auth.Token = ""
 		}
 
 		logger.Log.Infof("Mizu will store up to %s of traffic, old traffic will be cleared once the limit is reached.", config.Config.Tap.HumanMaxEntriesDBSize)

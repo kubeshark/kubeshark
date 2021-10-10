@@ -66,6 +66,13 @@ func (config *TapConfig) Validate() error {
 		return errors.New(fmt.Sprintf("Could not parse --%s value %s", HumanMaxEntriesDBSizeTapName, config.HumanMaxEntriesDBSize))
 	}
 
+	if config.Workspace != "" {
+		workspaceRegex, _ := regexp.Compile("[A-Za-z0-9][-A-Za-z0-9_.]*[A-Za-z0-9]+$")
+		if len(config.Workspace) > 63  || !workspaceRegex.MatchString(config.Workspace) {
+			return errors.New("invalid workspace name")
+		}
+	}
+
 	if config.Analysis && config.Workspace != "" {
 		return errors.New(fmt.Sprintf("Can't run with both --%s and --%s flags", AnalysisTapName, WorkspaceTapName))
 	}

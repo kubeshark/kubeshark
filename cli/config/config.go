@@ -80,15 +80,24 @@ func WriteConfig(config *ConfigStruct) error {
 	return nil
 }
 
-func mergeConfigFile(configFilePath string) error {
-	reader, openErr := os.Open(configFilePath)
-	if openErr != nil {
-		return openErr
+func GetConfigFile() (*ConfigStruct, error) {
+	buf, err := getConfigFileBuffer(Config.ConfigFilePath)
+	if err != nil {
+		return nil, err
 	}
 
-	buf, readErr := ioutil.ReadAll(reader)
-	if readErr != nil {
-		return readErr
+	fileConfig := ConfigStruct{}
+	if err := yaml.Unmarshal(buf, &fileConfig); err != nil {
+		return nil, err
+	}
+
+	return &fileConfig, nil
+}
+
+func mergeConfigFile(configFilePath string) error {
+	buf, err := getConfigFileBuffer(configFilePath)
+	if err != nil {
+		return err
 	}
 
 	if err := yaml.Unmarshal(buf, &Config); err != nil {
@@ -97,6 +106,20 @@ func mergeConfigFile(configFilePath string) error {
 	logger.Log.Debugf("Found config file, merged to default options")
 
 	return nil
+}
+
+func getConfigFileBuffer(configFilePath string) ([]byte, error) {
+	reader, openErr := os.Open(configFilePath)
+	if openErr != nil {
+		return nil, openErr
+	}
+
+	buf, readErr := ioutil.ReadAll(reader)
+	if readErr != nil {
+		return nil, readErr
+	}
+
+	return buf, nil
 }
 
 func initFlag(f *pflag.Flag) {

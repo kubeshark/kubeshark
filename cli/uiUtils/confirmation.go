@@ -25,16 +25,3 @@ func AskForConfirmation(s string) bool {
 
 	return false
 }
-
-func AskForAnswer(s string) string {
-	reader := bufio.NewReader(os.Stdin)
-
-	fmt.Printf(Magenta, s)
-
-	response, err := reader.ReadString('\n')
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return strings.ToLower(strings.TrimSpace(response))
-}

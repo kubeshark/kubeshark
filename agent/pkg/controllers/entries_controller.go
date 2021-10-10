@@ -10,6 +10,7 @@ import (
 	"mizuserver/pkg/utils"
 	"mizuserver/pkg/validation"
 	"net/http"
+	"regexp"
 	"time"
 
 	"github.com/google/martian/har"
@@ -100,6 +101,12 @@ func SyncEntries(c *gin.Context) {
 		token = fmt.Sprintf("bearer %s", syncParams.Token)
 		model = syncParams.Workspace
 		guestMode = false
+	}
+
+	modelRegex, _ := regexp.Compile("[A-Za-z0-9][-A-Za-z0-9_.]*[A-Za-z0-9]+$")
+	if len(model) > 63  || !modelRegex.MatchString(model) {
+		c.String(http.StatusBadRequest, "Invalid model name")
+		return
 	}
 
 	rlog.Infof("Sync entries - syncing. token: %s model: %s\n", token, model)
