@@ -82,11 +82,11 @@ func (provider *apiServerProvider) ReportTappedPods(pods []core.Pod) error {
 	}
 }
 
-func (provider *apiServerProvider) RequestSyncEntries(envName string, workspace string, sleepIntervalSec int, token string) error {
+func (provider *apiServerProvider) RequestSyncEntries(analysisDestination string, sleepIntervalSec int) error {
 	if !provider.isReady {
 		return fmt.Errorf("trying to reach api server when not initialized yet")
 	}
-	urlPath := fmt.Sprintf("%s/api/syncEntries?env=%s&workspace=%s&token=%s&interval=%v", provider.url, url.QueryEscape(envName), url.QueryEscape(workspace), url.QueryEscape(token), sleepIntervalSec)
+	urlPath := fmt.Sprintf("%s/api/syncEntries?env=%s&interval=%v", provider.url, url.QueryEscape(analysisDestination), sleepIntervalSec)
 	syncEntriesUrl, parseErr := url.ParseRequestURI(urlPath)
 	if parseErr != nil {
 		logger.Log.Fatal("Failed parsing the URL (consider changing the env name), err: %v", parseErr)
