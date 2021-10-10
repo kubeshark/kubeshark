@@ -75,6 +75,12 @@ func CheckNewerVersion(versionChan chan string) {
 
 	gitHubVersionSemVer := semver.SemVersion(gitHubVersion)
 	currentSemVer := semver.SemVersion(mizu.SemVer)
+	if !gitHubVersionSemVer.IsValid() || !currentSemVer.IsValid() {
+		logger.Log.Debugf("[ERROR] Semver version is not valid, github version %v, current version %v", gitHubVersion, currentSemVer)
+		versionChan <- ""
+		return
+	}
+
 	logger.Log.Debugf("Finished version validation, github version %v, current version %v, took %v", gitHubVersion, currentSemVer, time.Since(start))
 
 	if gitHubVersionSemVer.GreaterThan(currentSemVer) {
