@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/creasty/defaults"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
 	"github.com/up9inc/mizu/cli/config"
@@ -40,9 +39,9 @@ func IsTokenExpired(tokenString string) (bool, error) {
 }
 
 func Login() error {
-	token, err := loginInteractively()
-	if err != nil {
-		return fmt.Errorf("failed login interactively, err: %v", err)
+	token, loginErr := loginInteractively()
+	if loginErr != nil {
+		return fmt.Errorf("failed login interactively, err: %v", loginErr)
 	}
 
 	authConfig := configStructs.AuthConfig{
@@ -50,18 +49,18 @@ func Login() error {
 		Token:   token.AccessToken,
 	}
 
-	configFile := config.ConfigStruct{}
-	if err := defaults.Set(&configFile); err != nil {
-		return fmt.Errorf("failed inserting default values to config, err: %v", err)
+	configFile, defaultConfigErr := config.GetConfigWithDefaults()
+	if defaultConfigErr != nil {
+		return fmt.Errorf("failed getting config with defaults, err: %v", defaultConfigErr)
 	}
 
-	if err := config.LoadConfigFile(config.Config.ConfigFilePath, &configFile); err != nil && !os.IsNotExist(err) {
+	if err := config.LoadConfigFile(config.Config.ConfigFilePath, configFile); err != nil && !os.IsNotExist(err) {
 		return fmt.Errorf("failed getting config file, err: %v", err)
 	}
 
 	configFile.Auth = authConfig
 
-	if err := config.WriteConfig(&configFile); err != nil {
+	if err := config.WriteConfig(configFile); err != nil {
 		return fmt.Errorf("failed writing config with auth, err: %v", err)
 	}
 
