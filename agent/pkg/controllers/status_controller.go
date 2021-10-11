@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/romana/rlog"
 	"github.com/up9inc/mizu/shared"
@@ -9,6 +10,7 @@ import (
 	"mizuserver/pkg/providers"
 	"mizuserver/pkg/validation"
 	"net/http"
+	"os"
 )
 
 func PostTappedPods(c *gin.Context) {
@@ -33,4 +35,22 @@ func PostTappedPods(c *gin.Context) {
 
 func GetTappersCount(c *gin.Context) {
 	c.JSON(http.StatusOK, providers.TappersCount)
+}
+
+func GetAuthStatus(c *gin.Context) {
+	authStatusJson := os.Getenv(shared.AuthStatusEnvVar)
+	if authStatusJson == "" {
+		authStatus := shared.AuthStatus{}
+		c.JSON(http.StatusOK, authStatus)
+		return
+	}
+
+	var authStatus shared.AuthStatus
+	err := json.Unmarshal([]byte(authStatusJson), &authStatus)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, fmt.Sprintf("Failed to marshal auth status, err: %v", err))
+		return
+	}
+
+	c.JSON(http.StatusOK, authStatus)
 }
