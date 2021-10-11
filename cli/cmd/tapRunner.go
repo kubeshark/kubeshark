@@ -672,11 +672,10 @@ func watchTapperPod(ctx context.Context, kubernetesProvider *kubernetes.Provider
 }
 
 func requestForSyncEntriesIfNeeded() {
-	if !config.Config.Tap.Analysis && config.Config.Tap.Workspace == "" {
+	if !config.Config.Tap.Analysis {
 		return
 	}
-
-	if err := apiserver.Provider.RequestSyncEntries(config.Config.Auth.EnvName, config.Config.Tap.Workspace, config.Config.Tap.UploadIntervalSec, config.Config.Auth.Token); err != nil {
+	if err := apiserver.Provider.RequestSyncEntries(config.Config.Tap.AnalysisDestination, config.Config.Tap.UploadIntervalSec); err != nil {
 		logger.Log.Debugf("[Error] failed requesting for sync entries, err: %v", err)
 	}
 }
