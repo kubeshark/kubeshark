@@ -62,13 +62,7 @@ func GetRemoteUrl(analyzeDestination string, analyzeToken string) string {
 func CheckIfModelReady(analyzeDestination string, analyzeModel string, analyzeToken string, guestMode bool) bool {
 	statusUrl, _ := url.Parse(fmt.Sprintf("https://trcc.%s/models/%s/status", analyzeDestination, analyzeModel))
 
-	var authHeader string
-	if guestMode {
-		authHeader = "Guest-Auth"
-	} else {
-		authHeader = "Authorization"
-	}
-
+	authHeader := getAuthHeader(guestMode)
 	req := &http.Request{
 		Method: http.MethodGet,
 		URL:    statusUrl,
@@ -87,6 +81,14 @@ func CheckIfModelReady(analyzeDestination string, analyzeModel string, analyzeTo
 	_ = json.NewDecoder(statusResp.Body).Decode(&target)
 
 	return target.LastMajorGeneration > 0
+}
+
+func getAuthHeader(guestMode bool) string {
+	if guestMode {
+		return "Guest-Auth"
+	}
+
+	return "Authorization"
 }
 
 func GetTrafficDumpUrl(analyzeDestination string, analyzeModel string) *url.URL {
@@ -127,7 +129,7 @@ func GetAnalyzeInfo() *shared.AnalyzeStatus {
 	}
 }
 
-func SyncEntriesImpl(token string, model string, envPrefix string, sleepIntervalSec int, guestMode bool) {
+func SyncEntriesImpl(token string, model string, envPrefix string, uploadIntervalSec int, guestMode bool) {
 	analyzeInformation.IsAnalyzing = true
 	analyzeInformation.GuestMode = guestMode
 	analyzeInformation.AnalyzedModel = model
@@ -135,7 +137,7 @@ func SyncEntriesImpl(token string, model string, envPrefix string, sleepInterval
 	analyzeInformation.AnalyzeDestination = envPrefix
 	analyzeInformation.SentCount = 0
 
-	sleepTime := time.Second * time.Duration(sleepIntervalSec)
+	sleepTime := time.Second * time.Duration(uploadIntervalSec)
 
 	var timestampFrom int64 = 0
 
@@ -181,13 +183,7 @@ func SyncEntriesImpl(token string, model string, envPrefix string, sleepInterval
 			_ = w.Close()
 			reqBody := ioutil.NopCloser(bytes.NewReader(in.Bytes()))
 
-			var authHeader string
-			if guestMode {
-				authHeader = "Guest-Auth"
-			} else {
-				authHeader = "Authorization"
-			}
-
+			authHeader := getAuthHeader(guestMode)
 			req := &http.Request{
 				Method: http.MethodPost,
 				URL:    GetTrafficDumpUrl(envPrefix, model),

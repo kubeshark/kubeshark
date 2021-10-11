@@ -23,10 +23,10 @@ type EntriesFilter struct {
 }
 
 type SyncEntriesRequestQuery struct {
-	Token            string `form:"token"`
-	Env              string `form:"env"`
-	Workspace        string `form:"workspace"`
-	SleepIntervalSec int    `form:"interval"`
+	Token             string `form:"token"`
+	Env               string `form:"env"`
+	Workspace         string `form:"workspace"`
+	UploadIntervalSec int    `form:"interval"`
 }
 
 type HarFetchRequestQuery struct {
