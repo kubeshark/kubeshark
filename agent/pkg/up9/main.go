@@ -129,7 +129,7 @@ func GetAnalyzeInfo() *shared.AnalyzeStatus {
 	}
 }
 
-func SyncEntriesImpl(token string, model string, envPrefix string, sleepIntervalSec int, guestMode bool) {
+func SyncEntriesImpl(token string, model string, envPrefix string, uploadIntervalSec int, guestMode bool) {
 	analyzeInformation.IsAnalyzing = true
 	analyzeInformation.GuestMode = guestMode
 	analyzeInformation.AnalyzedModel = model
@@ -137,7 +137,7 @@ func SyncEntriesImpl(token string, model string, envPrefix string, sleepInterval
 	analyzeInformation.AnalyzeDestination = envPrefix
 	analyzeInformation.SentCount = 0
 
-	sleepTime := time.Second * time.Duration(sleepIntervalSec)
+	sleepTime := time.Second * time.Duration(uploadIntervalSec)
 
 	var timestampFrom int64 = 0
 

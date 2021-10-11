@@ -111,8 +111,8 @@ func SyncEntries(c *gin.Context) {
 		return
 	}
 
-	rlog.Infof("Sync entries - syncing. token: %s model: %s\n", token, model)
-	go up9.SyncEntriesImpl(token, model, syncParams.Env, syncParams.SleepIntervalSec, guestMode)
+	rlog.Infof("Sync entries - syncing. token: %s, model: %s, guest mode: %v\n", token, model, guestMode)
+	go up9.SyncEntriesImpl(token, model, syncParams.Env, syncParams.UploadIntervalSec, guestMode)
 	c.String(http.StatusOK, "OK")
 }
 
