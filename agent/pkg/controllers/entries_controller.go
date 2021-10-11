@@ -78,7 +78,7 @@ func SyncEntries(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
-	
+
 	if up9.GetAnalyzeInfo().IsAnalyzing {
 		c.String(http.StatusBadRequest, "Cannot analyze, mizu is already analyzing")
 		return
@@ -86,7 +86,7 @@ func SyncEntries(c *gin.Context) {
 
 	var (
 		token, model string
-		guestMode bool
+		guestMode    bool
 	)
 	if syncParams.Token == "" {
 		rlog.Infof("Sync entries - creating token. env %s\n", syncParams.Env)
@@ -106,7 +106,7 @@ func SyncEntries(c *gin.Context) {
 	}
 
 	modelRegex, _ := regexp.Compile("[A-Za-z0-9][-A-Za-z0-9_.]*[A-Za-z0-9]+$")
-	if len(model) > 63  || !modelRegex.MatchString(model) {
+	if len(model) > 63 || !modelRegex.MatchString(model) {
 		c.String(http.StatusBadRequest, "Invalid model name")
 		return
 	}
