@@ -55,8 +55,12 @@ func CreateAnonymousToken(envPrefix string) (*GuestToken, error) {
 	return token, nil
 }
 
-func GetRemoteUrl(analyzeDestination string, analyzeToken string) string {
-	return fmt.Sprintf("https://%s/share/%s", analyzeDestination, analyzeToken)
+func GetRemoteUrl(analyzeDestination string, analyzeModel string, analyzeToken string, guestMode bool) string {
+	if guestMode {
+		return fmt.Sprintf("https://%s/share/%s", analyzeDestination, analyzeToken)
+	}
+
+	return fmt.Sprintf("https://%s/app/workspaces/%s", analyzeDestination, analyzeModel)
 }
 
 func CheckIfModelReady(analyzeDestination string, analyzeModel string, analyzeToken string, guestMode bool) bool {
@@ -123,7 +127,7 @@ var analyzeInformation = &AnalyzeInformation{}
 func GetAnalyzeInfo() *shared.AnalyzeStatus {
 	return &shared.AnalyzeStatus{
 		IsAnalyzing:   analyzeInformation.IsAnalyzing,
-		RemoteUrl:     GetRemoteUrl(analyzeInformation.AnalyzeDestination, analyzeInformation.AnalyzeToken),
+		RemoteUrl:     GetRemoteUrl(analyzeInformation.AnalyzeDestination, analyzeInformation.AnalyzedModel, analyzeInformation.AnalyzeToken, analyzeInformation.GuestMode),
 		IsRemoteReady: CheckIfModelReady(analyzeInformation.AnalyzeDestination, analyzeInformation.AnalyzedModel, analyzeInformation.AnalyzeToken, analyzeInformation.GuestMode),
 		SentCount:     analyzeInformation.SentCount,
 	}
