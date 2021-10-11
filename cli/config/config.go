@@ -95,6 +95,8 @@ func LoadConfigFile(configFilePath string, config *ConfigStruct) error {
 		return err
 	}
 
+	logger.Log.Debugf("Found config file, config path: %s", configFilePath)
+
 	return nil
 }
 
