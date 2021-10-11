@@ -68,7 +68,7 @@ func (config *TapConfig) Validate() error {
 
 	if config.Workspace != "" {
 		workspaceRegex, _ := regexp.Compile("[A-Za-z0-9][-A-Za-z0-9_.]*[A-Za-z0-9]+$")
-		if len(config.Workspace) > 63  || !workspaceRegex.MatchString(config.Workspace) {
+		if len(config.Workspace) > 63 || !workspaceRegex.MatchString(config.Workspace) {
 			return errors.New("invalid workspace name")
 		}
 	}
