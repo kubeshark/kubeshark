@@ -39,7 +39,7 @@ func InitConfig(cmd *cobra.Command) error {
 
 	configFilePathFlag := cmd.Flags().Lookup(ConfigFilePathCommandName)
 	configFilePath := configFilePathFlag.Value.String()
-	if err := mergeConfigFile(configFilePath); err != nil {
+	if err := LoadConfigFile(configFilePath, &Config); err != nil {
 		if configFilePathFlag.Changed || !os.IsNotExist(err) {
 			return fmt.Errorf("invalid config, %w\n"+
 				"you can regenerate the file by removing it (%v) and using `mizu config -r`", err, configFilePath)
@@ -80,46 +80,22 @@ func WriteConfig(config *ConfigStruct) error {
 	return nil
 }
 
-func GetConfigFile() (*ConfigStruct, error) {
-	buf, err := getConfigFileBuffer(Config.ConfigFilePath)
-	if err != nil {
-		return nil, err
-	}
-
-	fileConfig := ConfigStruct{}
-	if err := yaml.Unmarshal(buf, &fileConfig); err != nil {
-		return nil, err
-	}
-
-	return &fileConfig, nil
-}
-
-func mergeConfigFile(configFilePath string) error {
-	buf, err := getConfigFileBuffer(configFilePath)
-	if err != nil {
-		return err
-	}
-
-	if err := yaml.Unmarshal(buf, &Config); err != nil {
-		return err
-	}
-	logger.Log.Debugf("Found config file, merged to default options")
-
-	return nil
-}
-
-func getConfigFileBuffer(configFilePath string) ([]byte, error) {
+func LoadConfigFile(configFilePath string, config *ConfigStruct) error {
 	reader, openErr := os.Open(configFilePath)
 	if openErr != nil {
-		return nil, openErr
+		return openErr
 	}
 
 	buf, readErr := ioutil.ReadAll(reader)
 	if readErr != nil {
-		return nil, readErr
+		return readErr
 	}
 
-	return buf, nil
+	if err := yaml.Unmarshal(buf, config); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func initFlag(f *pflag.Flag) {
