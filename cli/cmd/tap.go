@@ -44,18 +44,21 @@ Supported protocols are HTTP and gRPC.`,
 			if config.Config.Auth.Token == "" {
 				logger.Log.Infof("This action requires authentication, please log in to continue")
 				if err := auth.Login(); err != nil {
-					return errors.New(fmt.Sprintf("failed to log in, err: %v", err))
+					logger.Log.Errorf("failed to log in, err: %v", err)
+					return nil
 				}
 			} else {
 				tokenExpired, err := auth.IsTokenExpired(config.Config.Auth.Token)
 				if err != nil {
-					return errors.New(fmt.Sprintf("failed to check if token is expired, err: %v", err))
+					logger.Log.Errorf("failed to check if token is expired, err: %v", err)
+					return nil
 				}
 
 				if tokenExpired {
 					logger.Log.Infof("Token expired, please log in again to continue")
 					if err := auth.Login(); err != nil {
-						return errors.New(fmt.Sprintf("failed to log in, err: %v", err))
+						logger.Log.Errorf("failed to log in, err: %v", err)
+						return nil
 					}
 				}
 			}
@@ -95,6 +98,6 @@ func init() {
 	tapCmd.Flags().Bool(configStructs.DisableRedactionTapName, defaultTapConfig.DisableRedaction, "Disables redaction of potentially sensitive request/response headers and body values")
 	tapCmd.Flags().String(configStructs.HumanMaxEntriesDBSizeTapName, defaultTapConfig.HumanMaxEntriesDBSize, "Override the default max entries db size")
 	tapCmd.Flags().Bool(configStructs.DryRunTapName, defaultTapConfig.DryRun, "Preview of all pods matching the regex, without tapping them")
-	tapCmd.Flags().StringP(configStructs.WorkspaceTapName, "w", defaultTapConfig.Workspace, "Uploads traffic to UP9 workspace for further analysis (requires auth)")
+	tapCmd.Flags().StringP(configStructs.WorkspaceTapName, "w", defaultTapConfig.Workspace, "Uploads traffic to your UP9 workspace for further analysis (requires auth)")
 	tapCmd.Flags().String(configStructs.EnforcePolicyFile, defaultTapConfig.EnforcePolicyFile, "Yaml file path with policy rules")
 }
