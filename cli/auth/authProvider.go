@@ -46,8 +46,8 @@ func Login() error {
 	}
 
 	authConfig := configStructs.AuthConfig{
-		EnvName:      config.Config.Auth.EnvName,
-		Token:        token.AccessToken,
+		EnvName: config.Config.Auth.EnvName,
+		Token:   token.AccessToken,
 	}
 
 	configFile := config.ConfigStruct{}
