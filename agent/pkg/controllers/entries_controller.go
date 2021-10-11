@@ -84,8 +84,10 @@ func SyncEntries(c *gin.Context) {
 		return
 	}
 
-	var token, model string
-	var guestMode bool
+	var (
+		token, model string
+		guestMode bool
+	)
 	if syncParams.Token == "" {
 		rlog.Infof("Sync entries - creating token. env %s\n", syncParams.Env)
 		guestToken, err := up9.CreateAnonymousToken(syncParams.Env)
