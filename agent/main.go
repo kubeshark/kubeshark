@@ -93,7 +93,7 @@ func main() {
 		go api.StartReadingEntries(filteredOutputItemsChannel, nil, extensionsMap)
 
 		syncEntriesConfig := getSyncEntriesConfig()
-		if *syncEntriesConfig != (shared.SyncEntriesConfig{}) {
+		if syncEntriesConfig != nil {
 			if err := up9.SyncEntries(syncEntriesConfig); err != nil {
 				panic(fmt.Sprintf("Error syncing entries, err: %v", err))
 			}
@@ -285,9 +285,12 @@ func pipeTapChannelToSocket(connection *websocket.Conn, messageDataChannel <-cha
 }
 
 func getSyncEntriesConfig() *shared.SyncEntriesConfig {
-	var syncEntriesConfig = &shared.SyncEntriesConfig{}
-
 	syncEntriesConfigJson := os.Getenv(shared.SyncEntriesConfigEnvVar)
+	if syncEntriesConfigJson == "" {
+		return nil
+	}
+
+	var syncEntriesConfig = &shared.SyncEntriesConfig{}
 	err := json.Unmarshal([]byte(syncEntriesConfigJson), syncEntriesConfig)
 	if err != nil {
 		panic(fmt.Sprintf("env var %s's value of %s is invalid! json must match the shared.SyncEntriesConfig struct, err: %v", shared.SyncEntriesConfigEnvVar, syncEntriesConfigJson, err))

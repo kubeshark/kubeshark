@@ -218,7 +218,7 @@ func getMizuApiFilteringOptions() (*api.TrafficFilteringOptions, error) {
 
 func getSyncEntriesConfig() *shared.SyncEntriesConfig {
 	if !config.Config.Tap.Analysis && config.Config.Tap.Workspace == "" {
-		return &shared.SyncEntriesConfig{}
+		return nil
 	}
 
 	return &shared.SyncEntriesConfig{

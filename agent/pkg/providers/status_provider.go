@@ -26,6 +26,11 @@ var (
 func GetAuthStatus() (*models.AuthStatus, error) {
 	if authStatus == nil {
 		syncEntriesConfigJson := os.Getenv(shared.SyncEntriesConfigEnvVar)
+		if syncEntriesConfigJson == "" {
+			authStatus = &models.AuthStatus{}
+			return authStatus, nil
+		}
+
 		syncEntriesConfig := &shared.SyncEntriesConfig{}
 		err := json.Unmarshal([]byte(syncEntriesConfigJson), syncEntriesConfig)
 		if err != nil {
