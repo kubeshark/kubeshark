@@ -151,7 +151,6 @@ type ApiServerOptions struct {
 	PodImage                string
 	ServiceAccountName      string
 	IsNamespaceRestricted   bool
-	MizuApiFilteringOptions *api.TrafficFilteringOptions
 	SyncEntriesConfig       *shared.SyncEntriesConfig
 	MaxEntriesDBSizeBytes   int64
 	Resources               configStructs.Resources
@@ -159,12 +158,10 @@ type ApiServerOptions struct {
 }
 
 func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, opts *ApiServerOptions) (*core.Pod, error) {
-	marshaledFilteringOptions, err := json.Marshal(opts.MizuApiFilteringOptions)
-	if err != nil {
-		return nil, err
-	}
-
-	var marshaledSyncEntriesConfig []byte
+	var (
+		marshaledSyncEntriesConfig []byte
+		err error
+	)
 	if opts.SyncEntriesConfig != nil {
 		marshaledSyncEntriesConfig, err = json.Marshal(opts.SyncEntriesConfig)
 		if err != nil {
@@ -219,14 +216,6 @@ func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, opts *ApiS
 					},
 					Command: command,
 					Env: []core.EnvVar{
-						{
-							Name:  shared.HostModeEnvVar,
-							Value: "1",
-						},
-						{
-							Name:  shared.MizuFilteringOptionsEnvVar,
-							Value: string(marshaledFilteringOptions),
-						},
 						{
 							Name:  shared.SyncEntriesConfigEnvVar,
 							Value: string(marshaledSyncEntriesConfig),
