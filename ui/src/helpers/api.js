@@ -45,4 +45,9 @@ export default class Api {
         const response = await this.client.get("/recentTLSLinks");
         return response.data;
     }
+
+    getAuthStatus = async () => {
+        const response = await this.client.get("/status/auth");
+        return response.data;
+    }
 }
