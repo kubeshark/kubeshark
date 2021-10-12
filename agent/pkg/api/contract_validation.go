@@ -36,7 +36,7 @@ func validateOAS(ctx context.Context, doc *openapi3.T, router routers.Router, re
 	// Find route
 	route, pathParams, err := router.FindRoute(req)
 	if err != nil {
-		return false, true, err
+		return true, false, err
 	}
 
 	// Validate request
