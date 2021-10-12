@@ -34,3 +34,13 @@ func PostTappedPods(c *gin.Context) {
 func GetTappersCount(c *gin.Context) {
 	c.JSON(http.StatusOK, providers.TappersCount)
 }
+
+func GetAuthStatus(c *gin.Context) {
+	authStatus, err := providers.GetAuthStatus()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, authStatus)
+}

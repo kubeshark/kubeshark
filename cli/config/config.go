@@ -39,7 +39,7 @@ func InitConfig(cmd *cobra.Command) error {
 
 	configFilePathFlag := cmd.Flags().Lookup(ConfigFilePathCommandName)
 	configFilePath := configFilePathFlag.Value.String()
-	if err := mergeConfigFile(configFilePath); err != nil {
+	if err := LoadConfigFile(configFilePath, &Config); err != nil {
 		if configFilePathFlag.Changed || !os.IsNotExist(err) {
 			return fmt.Errorf("invalid config, %w\n"+
 				"you can regenerate the file by removing it (%v) and using `mizu config -r`", err, configFilePath)
@@ -80,7 +80,7 @@ func WriteConfig(config *ConfigStruct) error {
 	return nil
 }
 
-func mergeConfigFile(configFilePath string) error {
+func LoadConfigFile(configFilePath string, config *ConfigStruct) error {
 	reader, openErr := os.Open(configFilePath)
 	if openErr != nil {
 		return openErr
@@ -91,10 +91,11 @@ func mergeConfigFile(configFilePath string) error {
 		return readErr
 	}
 
-	if err := yaml.Unmarshal(buf, &Config); err != nil {
+	if err := yaml.Unmarshal(buf, config); err != nil {
 		return err
 	}
-	logger.Log.Debugf("Found config file, merged to default options")
+
+	logger.Log.Debugf("Found config file, config path: %s", configFilePath)
 
 	return nil
 }

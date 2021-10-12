@@ -56,6 +56,11 @@ type TLSLinkInfo struct {
 	ResolvedSourceName      string `json:"resolvedSourceName"`
 }
 
+type AuthStatus struct {
+	Email string `json:"email"`
+	Model string `json:"model"`
+}
+
 func CreateWebSocketStatusMessage(tappingStatus TapStatus) WebSocketStatusMessage {
 	return WebSocketStatusMessage{
 		WebSocketMessageMetadata: &WebSocketMessageMetadata{

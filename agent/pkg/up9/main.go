@@ -55,18 +55,24 @@ func CreateAnonymousToken(envPrefix string) (*GuestToken, error) {
 	return token, nil
 }
 
-func GetRemoteUrl(analyzeDestination string, analyzeToken string) string {
-	return fmt.Sprintf("https://%s/share/%s", analyzeDestination, analyzeToken)
+func GetRemoteUrl(analyzeDestination string, analyzeModel string, analyzeToken string, guestMode bool) string {
+	if guestMode {
+		return fmt.Sprintf("https://%s/share/%s", analyzeDestination, analyzeToken)
+	}
+
+	return fmt.Sprintf("https://%s/app/workspaces/%s", analyzeDestination, analyzeModel)
 }
 
-func CheckIfModelReady(analyzeDestination string, analyzeModel string, analyzeToken string) bool {
+func CheckIfModelReady(analyzeDestination string, analyzeModel string, analyzeToken string, guestMode bool) bool {
 	statusUrl, _ := url.Parse(fmt.Sprintf("https://trcc.%s/models/%s/status", analyzeDestination, analyzeModel))
+
+	authHeader := getAuthHeader(guestMode)
 	req := &http.Request{
 		Method: http.MethodGet,
 		URL:    statusUrl,
 		Header: map[string][]string{
 			"Content-Type": {"application/json"},
-			"Guest-Auth":   {analyzeToken},
+			authHeader:     {analyzeToken},
 		},
 	}
 	statusResp, err := http.DefaultClient.Do(req)
@@ -81,6 +87,14 @@ func CheckIfModelReady(analyzeDestination string, analyzeModel string, analyzeTo
 	return target.LastMajorGeneration > 0
 }
 
+func getAuthHeader(guestMode bool) string {
+	if guestMode {
+		return "Guest-Auth"
+	}
+
+	return "Authorization"
+}
+
 func GetTrafficDumpUrl(analyzeDestination string, analyzeModel string) *url.URL {
 	strUrl := fmt.Sprintf("https://traffic.%s/dumpTrafficBulk/%s", analyzeDestination, analyzeModel)
 	if strings.HasPrefix(analyzeDestination, "http") {
@@ -92,6 +106,7 @@ func GetTrafficDumpUrl(analyzeDestination string, analyzeModel string) *url.URL 
 
 type AnalyzeInformation struct {
 	IsAnalyzing        bool
+	GuestMode          bool
 	SentCount          int
 	AnalyzedModel      string
 	AnalyzeToken       string
@@ -100,6 +115,7 @@ type AnalyzeInformation struct {
 
 func (info *AnalyzeInformation) Reset() {
 	info.IsAnalyzing = false
+	info.GuestMode = true
 	info.AnalyzedModel = ""
 	info.AnalyzeToken = ""
 	info.AnalyzeDestination = ""
@@ -111,20 +127,21 @@ var analyzeInformation = &AnalyzeInformation{}
 func GetAnalyzeInfo() *shared.AnalyzeStatus {
 	return &shared.AnalyzeStatus{
 		IsAnalyzing:   analyzeInformation.IsAnalyzing,
-		RemoteUrl:     GetRemoteUrl(analyzeInformation.AnalyzeDestination, analyzeInformation.AnalyzeToken),
-		IsRemoteReady: CheckIfModelReady(analyzeInformation.AnalyzeDestination, analyzeInformation.AnalyzedModel, analyzeInformation.AnalyzeToken),
+		RemoteUrl:     GetRemoteUrl(analyzeInformation.AnalyzeDestination, analyzeInformation.AnalyzedModel, analyzeInformation.AnalyzeToken, analyzeInformation.GuestMode),
+		IsRemoteReady: CheckIfModelReady(analyzeInformation.AnalyzeDestination, analyzeInformation.AnalyzedModel, analyzeInformation.AnalyzeToken, analyzeInformation.GuestMode),
 		SentCount:     analyzeInformation.SentCount,
 	}
 }
 
-func SyncEntriesImpl(token string, model string, envPrefix string, sleepIntervalSec int) {
+func SyncEntriesImpl(token string, model string, envPrefix string, uploadIntervalSec int, guestMode bool) {
 	analyzeInformation.IsAnalyzing = true
+	analyzeInformation.GuestMode = guestMode
 	analyzeInformation.AnalyzedModel = model
 	analyzeInformation.AnalyzeToken = token
 	analyzeInformation.AnalyzeDestination = envPrefix
 	analyzeInformation.SentCount = 0
 
-	sleepTime := time.Second * time.Duration(sleepIntervalSec)
+	sleepTime := time.Second * time.Duration(uploadIntervalSec)
 
 	var timestampFrom int64 = 0
 
@@ -170,13 +187,14 @@ func SyncEntriesImpl(token string, model string, envPrefix string, sleepInterval
 			_ = w.Close()
 			reqBody := ioutil.NopCloser(bytes.NewReader(in.Bytes()))
 
+			authHeader := getAuthHeader(guestMode)
 			req := &http.Request{
 				Method: http.MethodPost,
 				URL:    GetTrafficDumpUrl(envPrefix, model),
 				Header: map[string][]string{
 					"Content-Encoding": {"deflate"},
 					"Content-Type":     {"application/octet-stream"},
-					"Guest-Auth":       {token},
+					authHeader:         {token},
 				},
 				Body: reqBody,
 			}
