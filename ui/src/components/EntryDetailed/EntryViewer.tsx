@@ -76,7 +76,7 @@ const AutoRepresentation: React.FC<any> = ({representation, isRulesEnabled, rule
                 tab: 'Contract',
             }
         );
-        rulesTabIndex = TABS.length - 1;
+        contractTabIndex = TABS.length - 1;
     }
 
     return <div className={styles.Entry}>
