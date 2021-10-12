@@ -141,19 +141,19 @@ export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, isSel
             </div>
             {
                 rule ?
-                    <div className={`${styles.ruleNumberText} ${ruleSuccess ? styles.ruleNumberTextSuccess : styles.ruleNumberTextFailure}`}>
+                    <div className={`${styles.ruleNumberText} ${ruleSuccess ? styles.ruleNumberTextSuccess : styles.ruleNumberTextFailure} ${rule && contractEnabled ? styles.separatorRight : ""}`}>
                         {`Rules (${numberOfRules})`}
                     </div>
                 : ""
             }
             {
                 contractEnabled ?
-                    <div className={`${styles.ruleNumberText} ${ruleSuccess ? styles.ruleNumberTextSuccess : styles.ruleNumberTextFailure}`}>
+                    <div className={`${styles.ruleNumberText} ${ruleSuccess ? styles.ruleNumberTextSuccess : styles.ruleNumberTextFailure} ${rule && contractEnabled ? styles.separatorLeft : ""}`}>
                         {contractText}
                     </div>
                 : ""
             }
-            <div className={styles.directionContainer}>
+            <div className={styles.separatorRight}>
                 <span className={styles.port} title="Source Port">{entry.sourcePort}</span>
                 {entry.isOutgoing ?
                     <img src={outgoingIcon} alt="Ingoing traffic" title="Ingoing"/>

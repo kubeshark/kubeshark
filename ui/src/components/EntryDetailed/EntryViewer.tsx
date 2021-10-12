@@ -70,7 +70,7 @@ const AutoRepresentation: React.FC<any> = ({representation, isRulesEnabled, rule
         rulesTabIndex = TABS.length - 1;
     }
 
-    if (contractStatus !== 0) {
+    if (contractStatus !== 0 && contractContent) {
         TABS.push(
             {
                 tab: 'Contract',
@@ -93,7 +93,7 @@ const AutoRepresentation: React.FC<any> = ({representation, isRulesEnabled, rule
             {isRulesEnabled && currentTab === TABS[rulesTabIndex].tab && <React.Fragment>
                 <EntryTablePolicySection title={'Rule'} color={color} latency={elapsedTime} arrayToIterate={rulesMatched ? rulesMatched : []}/>
             </React.Fragment>}
-            {contractStatus !== 0 && currentTab === TABS[contractTabIndex].tab && <React.Fragment>
+            {contractStatus !== 0 && contractContent && currentTab === TABS[contractTabIndex].tab && <React.Fragment>
                 <EntryContractSection color={color} requestReason={requestReason} responseReason={responseReason} contractContent={contractContent}/>
             </React.Fragment>}
         </div>}

@@ -266,8 +266,12 @@ export const EntryContractSection: React.FC<EntryContractSectionProps> = ({color
         {responseReason && <EntrySectionContainer title="Response" color={color}>
             {responseReason}
         </EntrySectionContainer>}
-        <EntrySectionContainer title="Contract" color={color}>
-            {contractContent}
-        </EntrySectionContainer>
+        {contractContent && <EntrySectionContainer title="Contract" color={color}>
+            <SyntaxHighlighter
+                isWrapped={false}
+                code={contractContent}
+                language={"yaml"}
+            />
+        </EntrySectionContainer>}
     </React.Fragment>
 }
