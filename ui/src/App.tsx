@@ -109,7 +109,7 @@ const App = () => {
                 <div style={{display: "flex", alignItems: "center"}}>
 
                     {analyzeStatus?.isAnalyzing &&
-                        <div style={{marginRight: 7}}>
+                        <div>
                             <Tooltip title={analysisMessage} isSimple classes={classes}>
                                 <div>
                                     <Button
@@ -131,8 +131,8 @@ const App = () => {
                             </Tooltip>
                         </div>
                     }
-                    {statusAuth?.email && <div style={{display: "flex", borderLeft: "2px #87878759 solid", paddingLeft: 7}}>
-                        <div style={{marginLeft: 5, color: "rgba(0,0,0,0.75)"}}>
+                    {statusAuth?.email && <div style={{display: "flex", borderLeft: "2px #87878759 solid", paddingLeft: 10, marginLeft: 10}}>
+                        <div style={{color: "rgba(0,0,0,0.75)"}}>
                             <div style={{fontWeight: 600, fontSize: 13}}>{statusAuth.email}</div>
                             <div style={{fontSize:11}}>{statusAuth.model}</div>
                         </div>
