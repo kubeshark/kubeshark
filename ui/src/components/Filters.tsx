@@ -11,13 +11,16 @@ interface FiltersProps {
     setStatusFilter: (methods: Array<string>) => void;
     pathFilter: string
     setPathFilter: (val: string) => void;
+    serviceFilter: string
+    setServiceFilter: (val: string) => void;
 }
 
-export const Filters: React.FC<FiltersProps> = ({methodsFilter, setMethodsFilter, statusFilter, setStatusFilter, pathFilter, setPathFilter}) => {
+export const Filters: React.FC<FiltersProps> = ({methodsFilter, setMethodsFilter, statusFilter, setStatusFilter, pathFilter, setPathFilter, serviceFilter, setServiceFilter}) => {
 
     return <div className={styles.container}>
         <MethodFilter methodsFilter={methodsFilter} setMethodsFilter={setMethodsFilter}/>
         <StatusTypesFilter statusFilter={statusFilter} setStatusFilter={setStatusFilter}/>
+        <ServiceFilter serviceFilter={serviceFilter} setServiceFilter={setServiceFilter}/>
         <PathFilter pathFilter={pathFilter} setPathFilter={setPathFilter}/>
     </div>;
 };
@@ -113,6 +116,21 @@ const PathFilter: React.FC<PathFilterProps> = ({pathFilter, setPathFilter}) => {
         <div className={styles.filterLabel}>Path</div>
         <div>
             <TextField value={pathFilter} variant="outlined" className={styles.filterText} style={{minWidth: '150px'}} onChange={(e: any) => setPathFilter(e.target.value)}/>
+        </div>
+    </FilterContainer>;
+};
+
+interface ServiceFilterProps {
+    serviceFilter: string;
+    setServiceFilter: (val: string) => void;
+}
+
+const ServiceFilter: React.FC<ServiceFilterProps> = ({serviceFilter, setServiceFilter}) => {
+
+    return <FilterContainer>
+        <div className={styles.filterLabel}>Service</div>
+        <div>
+            <TextField value={serviceFilter} variant="outlined" className={styles.filterText} style={{minWidth: '150px'}} onChange={(e: any) => setServiceFilter(e.target.value)}/>
         </div>
     </FilterContainer>;
 };

@@ -33,7 +33,10 @@ func FilteredWatch(ctx context.Context, kubernetesProvider *Provider, targetName
 						return
 					}
 
-					pod := e.Object.(*corev1.Pod)
+					pod, ok := e.Object.(*corev1.Pod)
+					if !ok {
+						continue
+					}
 
 					if !podFilter.MatchString(pod.Name) {
 						continue
