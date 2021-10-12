@@ -65,7 +65,7 @@ export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, isSel
         }
     }
     let additionalRulesProperties = "";
-    let ruleSuccess: boolean;
+    let ruleSuccess = true;
     let rule = 'latency' in entry.rules
     if (rule) {
         if (entry.rules.latency !== -1) {
@@ -101,7 +101,9 @@ export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, isSel
             break;
         case 1:
             additionalRulesProperties = styles.ruleSuccessRow
-            ruleSuccess = true
+            if (!ruleSuccess) {
+                ruleSuccess = true
+            }
             contractText = "No Breaches"
             break;
         case 2:

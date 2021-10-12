@@ -100,7 +100,7 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 	}
 
 	disableOASValidation := false
-	ctx, doc, router, err := loadOAS()
+	ctx, doc, contractContent, router, err := loadOAS()
 	if err != nil {
 		rlog.Infof("Disabled OAS validation: %s\n", err.Error())
 		disableOASValidation = true
@@ -119,20 +119,12 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 				var httpPair tapApi.HTTPRequestResponsePair
 				json.Unmarshal([]byte(mizuEntry.Entry), &httpPair)
 
-				isValid, ignore, err := validateOAS(ctx, doc, router, httpPair.Request.Payload.RawRequest, httpPair.Response.Payload.RawResponse)
-				if ignore {
-					baseEntry.ContractStatus = 0
-				} else {
-					if isValid {
-						baseEntry.ContractStatus = 1
-					} else {
-						baseEntry.ContractStatus = 2
-						baseEntry.ContractReason = err.Error()
-					}
-				}
-
-				mizuEntry.ContractStatus = baseEntry.ContractStatus
-				mizuEntry.ContractReason = baseEntry.ContractReason
+				contract := handleOAS(ctx, doc, router, httpPair.Request.Payload.RawRequest, httpPair.Response.Payload.RawResponse, contractContent)
+				baseEntry.ContractStatus = contract.Status
+				mizuEntry.ContractStatus = contract.Status
+				mizuEntry.ContractRequestReason = contract.RequestReason
+				mizuEntry.ContractResponseReason = contract.ResponseReason
+				mizuEntry.ContractContent = contract.Content
 			}
 
 			var pair tapApi.RequestResponsePair

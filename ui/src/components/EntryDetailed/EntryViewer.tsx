@@ -33,7 +33,7 @@ const SectionsRepresentation: React.FC<any> = ({data, color}) => {
     return <>{sections}</>;
 }
 
-const AutoRepresentation: React.FC<any> = ({representation, isRulesEnabled, rulesMatched, contractStatus, contractReason, elapsedTime, color}) => {
+const AutoRepresentation: React.FC<any> = ({representation, isRulesEnabled, rulesMatched, contractStatus, requestReason, responseReason, contractContent, elapsedTime, color}) => {
     var TABS = [
         {
             tab: 'Request'
@@ -70,7 +70,7 @@ const AutoRepresentation: React.FC<any> = ({representation, isRulesEnabled, rule
         rulesTabIndex = TABS.length - 1;
     }
 
-    if (contractStatus === 2) {
+    if (contractStatus !== 0) {
         TABS.push(
             {
                 tab: 'Contract',
@@ -93,8 +93,8 @@ const AutoRepresentation: React.FC<any> = ({representation, isRulesEnabled, rule
             {isRulesEnabled && currentTab === TABS[rulesTabIndex].tab && <React.Fragment>
                 <EntryTablePolicySection title={'Rule'} color={color} latency={elapsedTime} arrayToIterate={rulesMatched ? rulesMatched : []}/>
             </React.Fragment>}
-            {contractStatus === 2 && currentTab === TABS[contractTabIndex].tab && <React.Fragment>
-                <EntryContractSection title={'Contract'} color={color} contractReason={contractReason}/>
+            {contractStatus !== 0 && currentTab === TABS[contractTabIndex].tab && <React.Fragment>
+                <EntryContractSection color={color} requestReason={requestReason} responseReason={responseReason} contractContent={contractContent}/>
             </React.Fragment>}
         </div>}
     </div>;
@@ -105,13 +105,25 @@ interface Props {
     isRulesEnabled: boolean;
     rulesMatched: any;
     contractStatus: number;
-    contractReason: string;
+    requestReason: string;
+    responseReason: string;
+    contractContent: string;
     color: string;
     elapsedTime: number;
 }
 
-const EntryViewer: React.FC<Props> = ({representation, isRulesEnabled, rulesMatched, contractStatus, contractReason, elapsedTime, color}) => {
-    return <AutoRepresentation representation={representation} isRulesEnabled={isRulesEnabled} rulesMatched={rulesMatched} contractStatus={contractStatus} contractReason={contractReason} elapsedTime={elapsedTime} color={color}/>
+const EntryViewer: React.FC<Props> = ({representation, isRulesEnabled, rulesMatched, contractStatus, requestReason, responseReason, contractContent, elapsedTime, color}) => {
+    return <AutoRepresentation
+        representation={representation}
+        isRulesEnabled={isRulesEnabled}
+        rulesMatched={rulesMatched}
+        contractStatus={contractStatus}
+        requestReason={requestReason}
+        responseReason={responseReason}
+        contractContent={contractContent}
+        elapsedTime={elapsedTime}
+        color={color}
+    />
 };
 
 export default EntryViewer;

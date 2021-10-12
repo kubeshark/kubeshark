@@ -139,7 +139,9 @@ type MizuEntry struct {
 	DestinationPort         string `json:"destinationPort,omitempty" gorm:"column:destinationPort"`
 	IsOutgoing              bool   `json:"isOutgoing,omitempty" gorm:"column:isOutgoing"`
 	ContractStatus          int    `json:"contractStatus,omitempty" gorm:"column:contractStatus"`
-	ContractReason          string `json:"contractReason,omitempty" gorm:"column:contractReason"`
+	ContractRequestReason   string `json:"contractRequestReason,omitempty" gorm:"column:contractRequestReason"`
+	ContractResponseReason  string `json:"contractResponseReason,omitempty" gorm:"column:contractResponseReason"`
+	ContractContent         string `json:"contractContent,omitempty" gorm:"column:contractContent"`
 	EstimatedSizeBytes      int    `json:"-" gorm:"column:estimatedSizeBytes"`
 }
 
@@ -171,13 +173,19 @@ type BaseEntryDetails struct {
 	Latency         int64           `json:"latency"`
 	Rules           ApplicableRules `json:"rules,omitempty"`
 	ContractStatus  int             `json:"contractStatus"`
-	ContractReason  string          `json:"contractReason"`
 }
 
 type ApplicableRules struct {
 	Latency       int64 `json:"latency,omitempty"`
 	Status        bool  `json:"status,omitempty"`
 	NumberOfRules int   `json:"numberOfRules,omitempty"`
+}
+
+type Contract struct {
+	Status         int    `json:"status"`
+	RequestReason  string `json:"requestReason"`
+	ResponseReason string `json:"responseReason"`
+	Content        string `json:"content"`
 }
 
 type DataUnmarshaler interface {
@@ -205,6 +213,7 @@ func (bed *BaseEntryDetails) UnmarshalData(entry *MizuEntry) error {
 	bed.RequestSenderIp = entry.RequestSenderIp
 	bed.IsOutgoing = entry.IsOutgoing
 	bed.Latency = entry.ElapsedTime
+	bed.ContractStatus = entry.ContractStatus
 	return nil
 }
 

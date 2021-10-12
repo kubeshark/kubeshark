@@ -158,7 +158,7 @@ Pass it to Mizu through the CLI option: `mizu tap -n sock-shop --contract catalo
 
 Now Mizu will monitor the traffic against these contracts.
 
-If an entry fails to comply with the contract, it's marked with `Contract Failure` notice in the UI.
+If an entry fails to comply with the contract, it's marked with `Breach` notice in the UI.
 The reason of the failure can be seen under the `CONTRACT` tab in the details layout.
 
 ### Notes

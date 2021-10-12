@@ -71,7 +71,7 @@ export const EntryDetailed: React.FC<EntryDetailedProps> = ({entryData}) => {
         />
         {entryData.data && <EntrySummary data={entryData.data}/>}
         <>
-            {entryData.data && <EntryViewer representation={entryData.representation} isRulesEnabled={entryData.isRulesEnabled} rulesMatched={entryData.rulesMatched} contractStatus={entryData.data.contractStatus} contractReason={entryData.data.contractReason} elapsedTime={entryData.data.elapsedTime} color={entryData.protocol.backgroundColor}/>}
+            {entryData.data && <EntryViewer representation={entryData.representation} isRulesEnabled={entryData.isRulesEnabled} rulesMatched={entryData.rulesMatched} contractStatus={entryData.data.contractStatus} requestReason={entryData.data.contractRequestReason} responseReason={entryData.data.contractResponseReason} contractContent={entryData.data.contractContent} elapsedTime={entryData.data.elapsedTime} color={entryData.protocol.backgroundColor}/>}
         </>
     </>
 };
