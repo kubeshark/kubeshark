@@ -17,6 +17,7 @@ import (
 	"mizuserver/pkg/controllers"
 	"mizuserver/pkg/models"
 	"mizuserver/pkg/routes"
+	"mizuserver/pkg/up9"
 	"mizuserver/pkg/utils"
 	"net/http"
 	"os"
@@ -90,6 +91,13 @@ func main() {
 
 		go filterItems(outputItemsChannel, filteredOutputItemsChannel)
 		go api.StartReadingEntries(filteredOutputItemsChannel, nil, extensionsMap)
+
+		syncEntriesRequest := getSyncEntriesRequest()
+		if *syncEntriesRequest != (shared.SyncEntriesRequest{}) {
+			if err := up9.SyncEntries(syncEntriesRequest); err != nil {
+				panic(fmt.Sprintf("Error syncing entries, err: %v", err))
+			}
+		}
 
 		hostApi(outputItemsChannel)
 	} else if *harsReaderMode {
@@ -274,4 +282,16 @@ func pipeTapChannelToSocket(connection *websocket.Conn, messageDataChannel <-cha
 			continue
 		}
 	}
+}
+
+func getSyncEntriesRequest() *shared.SyncEntriesRequest {
+	var syncEntriesRequest = &shared.SyncEntriesRequest{}
+
+	syncEntriesRequestJson := os.Getenv(shared.SyncEntriesRequestEnvVar)
+	err := json.Unmarshal([]byte(syncEntriesRequestJson), syncEntriesRequest)
+	if err != nil {
+		panic(fmt.Sprintf("env var %s's value of %s is invalid! json must match the shared.SyncEntriesRequest struct, err: %v", shared.SyncEntriesRequestEnvVar, syncEntriesRequestJson, err))
+	}
+
+	return syncEntriesRequest
 }

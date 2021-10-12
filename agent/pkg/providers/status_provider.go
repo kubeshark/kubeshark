@@ -1,9 +1,13 @@
 package providers
 
 import (
+	"encoding/json"
+	"fmt"
 	"github.com/patrickmn/go-cache"
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/tap"
+	"mizuserver/pkg/models"
+	"os"
 	"sync"
 	"time"
 )
@@ -13,10 +17,39 @@ const tlsLinkRetainmentTime = time.Minute * 15
 var (
 	TappersCount   int
 	TapStatus      shared.TapStatus
+	authStatus     *models.AuthStatus
 	RecentTLSLinks = cache.New(tlsLinkRetainmentTime, tlsLinkRetainmentTime)
 
 	tappersCountLock = sync.Mutex{}
 )
+
+func GetAuthStatus() (*models.AuthStatus, error) {
+	if authStatus == nil {
+		syncEntriesRequestJson := os.Getenv(shared.SyncEntriesRequestEnvVar)
+		syncEntriesRequest := &shared.SyncEntriesRequest{}
+		err := json.Unmarshal([]byte(syncEntriesRequestJson), syncEntriesRequest)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal sync entries request, err: %v", err)
+		}
+
+		if syncEntriesRequest.Token == "" {
+			authStatus = &models.AuthStatus{}
+			return authStatus, nil
+		}
+
+		tokenEmail, err := shared.GetTokenEmail(syncEntriesRequest.Token)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get token email, err: %v", err)
+		}
+
+		authStatus = &models.AuthStatus{
+			Email: tokenEmail,
+			Model: syncEntriesRequest.Workspace,
+		}
+	}
+
+	return authStatus, nil
+}
 
 func GetAllRecentTLSAddresses() []string {
 	recentTLSLinks := make([]string, 0)

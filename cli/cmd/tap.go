@@ -12,6 +12,7 @@ import (
 	"github.com/up9inc/mizu/cli/logger"
 	"github.com/up9inc/mizu/cli/telemetry"
 	"github.com/up9inc/mizu/cli/uiUtils"
+	"github.com/up9inc/mizu/shared"
 	"os"
 )
 
@@ -48,7 +49,7 @@ Supported protocols are HTTP and gRPC.`,
 					return nil
 				}
 			} else {
-				tokenExpired, err := auth.IsTokenExpired(config.Config.Auth.Token)
+				tokenExpired, err := shared.IsTokenExpired(config.Config.Auth.Token)
 				if err != nil {
 					logger.Log.Errorf("failed to check if token is expired, err: %v", err)
 					return nil
