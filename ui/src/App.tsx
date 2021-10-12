@@ -28,18 +28,24 @@ const App = () => {
     const [showTLSWarning, setShowTLSWarning] = useState(false);
     const [userDismissedTLSWarning, setUserDismissedTLSWarning] = useState(false);
     const [addressesWithTLS, setAddressesWithTLS] = useState(new Set());
+    const [statusAuth, setStatusAuth] = useState(null);
 
     useEffect(() => {
         (async () => {
-            const recentTLSLinks = await api.getRecentTLSLinks();
-
-            if (recentTLSLinks?.length > 0) {
-                setAddressesWithTLS(new Set([...addressesWithTLS, ...recentTLSLinks]));
-                setShowTLSWarning(true);
+            try {
+                const recentTLSLinks = await api.getRecentTLSLinks();
+                if (recentTLSLinks?.length > 0) {
+                    setAddressesWithTLS(new Set([...addressesWithTLS, ...recentTLSLinks]));
+                    setShowTLSWarning(true);
+                }
+                const auth = await api.getAuthStatus();
+                setStatusAuth(auth);
+            } catch (e) {
+                console.error(e);
             }
 
         })();
-    });
+    },[]);
 
     const onTLSDetected = (destAddress: string) => {
         addressesWithTLS.add(destAddress);
@@ -101,27 +107,20 @@ const App = () => {
                     <div className="description">Traffic viewer for Kubernetes</div>
                 </div>
                 <div style={{display: "flex", alignItems: "center"}}>
-                    <div style={{display: "flex"}}>
-                        <div>
-                            <img style={{height: 30}} src={logo_up9} alt={"up9"}/>
-                        </div>
-                        <div style={{marginLeft: 5}}>
-                            <div style={{fontWeight: 600, fontSize: 13}}>liraz@up9</div>
-                            <div style={{fontSize:11, textAlign: "center"}}>demo0410</div>
-                        </div>
-                    </div>
+
                     {analyzeStatus?.isAnalyzing &&
-                        <div style={{marginLeft: 7}}>
+                        <div style={{marginRight: 7}}>
                             <Tooltip title={analysisMessage} isSimple classes={classes}>
                                 <div>
                                     <Button
-                                        style={{fontFamily: "Source Sans Pro,sans-serif",
+                                        style={{fontFamily: "system-ui",
                                             fontWeight: 600,
                                             fontSize: 12,
                                             padding: 8}}
                                         size={"small"}
                                         variant="contained"
                                         color="primary"
+                                        startIcon={<img style={{height: 24, maxHeight: "none", maxWidth: "none"}} src={logo_up9} alt={"up9"}/>}
                                         disabled={!analyzeStatus?.isRemoteReady}
                                         onClick={() => {
                                             window.open(analyzeStatus?.remoteUrl)
@@ -130,7 +129,14 @@ const App = () => {
                                     </Button>
                                 </div>
                             </Tooltip>
-                        </div>}
+                        </div>
+                    }
+                    {statusAuth?.email && <div style={{display: "flex", borderLeft: "2px #87878759 solid", paddingLeft: 7}}>
+                        <div style={{marginLeft: 5, color: "rgba(0,0,0,0.75)"}}>
+                            <div style={{fontWeight: 600, fontSize: 13}}>{statusAuth.email}</div>
+                            <div style={{fontSize:11}}>{statusAuth.model}</div>
+                        </div>
+                    </div>}
                 </div>
             </div>
             <TrafficPage setAnalyzeStatus={setAnalyzeStatus} onTLSDetected={onTLSDetected}/>
