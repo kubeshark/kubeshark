@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"github.com/up9inc/mizu/cli/auth"
 	"path"
 	"regexp"
 	"strings"
@@ -45,6 +46,12 @@ func RunMizuTap() {
 	mizuApiFilteringOptions, err := getMizuApiFilteringOptions()
 	if err != nil {
 		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error parsing regex-masking: %v", errormessage.FormatError(err)))
+		return
+	}
+
+	authStatus, err := getAuthStatus()
+	if err != nil {
+		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error getting auth status: %v", errormessage.FormatError(err)))
 		return
 	}
 
@@ -103,7 +110,7 @@ func RunMizuTap() {
 	}
 
 	defer finishMizuExecution(kubernetesProvider)
-	if err := createMizuResources(ctx, kubernetesProvider, mizuApiFilteringOptions, mizuValidationRules); err != nil {
+	if err := createMizuResources(ctx, kubernetesProvider, mizuApiFilteringOptions, mizuValidationRules, authStatus); err != nil {
 		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error creating resources: %v", errormessage.FormatError(err)))
 		return
 	}
@@ -125,14 +132,14 @@ func readValidationRules(file string) (string, error) {
 	return string(newContent), nil
 }
 
-func createMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, mizuApiFilteringOptions *api.TrafficFilteringOptions, mizuValidationRules string) error {
+func createMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, mizuApiFilteringOptions *api.TrafficFilteringOptions, mizuValidationRules string, authStatus *shared.AuthStatus) error {
 	if !config.Config.IsNsRestrictedMode() {
 		if err := createMizuNamespace(ctx, kubernetesProvider); err != nil {
 			return err
 		}
 	}
 
-	if err := createMizuApiServer(ctx, kubernetesProvider, mizuApiFilteringOptions); err != nil {
+	if err := createMizuApiServer(ctx, kubernetesProvider, mizuApiFilteringOptions, authStatus); err != nil {
 		return err
 	}
 
@@ -153,7 +160,7 @@ func createMizuNamespace(ctx context.Context, kubernetesProvider *kubernetes.Pro
 	return err
 }
 
-func createMizuApiServer(ctx context.Context, kubernetesProvider *kubernetes.Provider, mizuApiFilteringOptions *api.TrafficFilteringOptions) error {
+func createMizuApiServer(ctx context.Context, kubernetesProvider *kubernetes.Provider, mizuApiFilteringOptions *api.TrafficFilteringOptions, authStatus *shared.AuthStatus) error {
 	var err error
 
 	state.mizuServiceAccountExists, err = createRBACIfNecessary(ctx, kubernetesProvider)
@@ -175,6 +182,7 @@ func createMizuApiServer(ctx context.Context, kubernetesProvider *kubernetes.Pro
 		ServiceAccountName:      serviceAccountName,
 		IsNamespaceRestricted:   config.Config.IsNsRestrictedMode(),
 		MizuApiFilteringOptions: mizuApiFilteringOptions,
+		AuthStatus:              authStatus,
 		MaxEntriesDBSizeBytes:   config.Config.Tap.MaxEntriesDBSizeBytes(),
 		Resources:               config.Config.Tap.ApiServerResources,
 		ImagePullPolicy:         config.Config.ImagePullPolicy(),
@@ -212,6 +220,22 @@ func getMizuApiFilteringOptions() (*api.TrafficFilteringOptions, error) {
 		PlainTextMaskingRegexes: compiledRegexSlice,
 		IgnoredUserAgents:       config.Config.Tap.IgnoredUserAgents,
 		DisableRedaction:        config.Config.Tap.DisableRedaction,
+	}, nil
+}
+
+func getAuthStatus() (*shared.AuthStatus, error) {
+	if config.Config.Tap.Workspace == "" {
+		return &shared.AuthStatus{}, nil
+	}
+
+	email, err := auth.GetTokenEmail(config.Config.Auth.Token)
+	if err != nil {
+		return nil, err
+	}
+
+	return &shared.AuthStatus{
+		Email: email,
+		Model: config.Config.Tap.Workspace,
 	}, nil
 }
 
