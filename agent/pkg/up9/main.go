@@ -111,7 +111,7 @@ func GetAnalyzeInfo() *shared.AnalyzeStatus {
 	}
 }
 
-func SyncEntries(syncEntriesRequest *shared.SyncEntriesRequest) error {
+func SyncEntries(syncEntriesConfig *shared.SyncEntriesConfig) error {
 	rlog.Infof("Sync entries - started\n")
 
 	if GetAnalyzeInfo().IsAnalyzing {
@@ -122,9 +122,9 @@ func SyncEntries(syncEntriesRequest *shared.SyncEntriesRequest) error {
 		token, model string
 		guestMode    bool
 	)
-	if syncEntriesRequest.Token == "" {
-		rlog.Infof("Sync entries - creating token. env %s\n", syncEntriesRequest.Env)
-		guestToken, err := createAnonymousToken(syncEntriesRequest.Env)
+	if syncEntriesConfig.Token == "" {
+		rlog.Infof("Sync entries - creating token. env %s\n", syncEntriesConfig.Env)
+		guestToken, err := createAnonymousToken(syncEntriesConfig.Env)
 		if err != nil {
 			return fmt.Errorf("failed creating anonymous token, err: %v", err)
 		}
@@ -133,8 +133,8 @@ func SyncEntries(syncEntriesRequest *shared.SyncEntriesRequest) error {
 		model = guestToken.Model
 		guestMode = true
 	} else {
-		token = fmt.Sprintf("bearer %s", syncEntriesRequest.Token)
-		model = syncEntriesRequest.Workspace
+		token = fmt.Sprintf("bearer %s", syncEntriesConfig.Token)
+		model = syncEntriesConfig.Workspace
 		guestMode = false
 	}
 
@@ -144,7 +144,7 @@ func SyncEntries(syncEntriesRequest *shared.SyncEntriesRequest) error {
 	}
 
 	rlog.Infof("Sync entries - syncing. token: %s, model: %s, guest mode: %v\n", token, model, guestMode)
-	go syncEntriesImpl(token, model, syncEntriesRequest.Env, syncEntriesRequest.UploadIntervalSec, guestMode)
+	go syncEntriesImpl(token, model, syncEntriesConfig.Env, syncEntriesConfig.UploadIntervalSec, guestMode)
 
 	return nil
 }

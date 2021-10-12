@@ -25,26 +25,26 @@ var (
 
 func GetAuthStatus() (*models.AuthStatus, error) {
 	if authStatus == nil {
-		syncEntriesRequestJson := os.Getenv(shared.SyncEntriesRequestEnvVar)
-		syncEntriesRequest := &shared.SyncEntriesRequest{}
-		err := json.Unmarshal([]byte(syncEntriesRequestJson), syncEntriesRequest)
+		syncEntriesConfigJson := os.Getenv(shared.SyncEntriesConfigEnvVar)
+		syncEntriesConfig := &shared.SyncEntriesConfig{}
+		err := json.Unmarshal([]byte(syncEntriesConfigJson), syncEntriesConfig)
 		if err != nil {
-			return nil, fmt.Errorf("failed to marshal sync entries request, err: %v", err)
+			return nil, fmt.Errorf("failed to marshal sync entries config, err: %v", err)
 		}
 
-		if syncEntriesRequest.Token == "" {
+		if syncEntriesConfig.Token == "" {
 			authStatus = &models.AuthStatus{}
 			return authStatus, nil
 		}
 
-		tokenEmail, err := shared.GetTokenEmail(syncEntriesRequest.Token)
+		tokenEmail, err := shared.GetTokenEmail(syncEntriesConfig.Token)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get token email, err: %v", err)
 		}
 
 		authStatus = &models.AuthStatus{
 			Email: tokenEmail,
-			Model: syncEntriesRequest.Workspace,
+			Model: syncEntriesConfig.Workspace,
 		}
 	}
 

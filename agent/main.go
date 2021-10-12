@@ -92,9 +92,9 @@ func main() {
 		go filterItems(outputItemsChannel, filteredOutputItemsChannel)
 		go api.StartReadingEntries(filteredOutputItemsChannel, nil, extensionsMap)
 
-		syncEntriesRequest := getSyncEntriesRequest()
-		if *syncEntriesRequest != (shared.SyncEntriesRequest{}) {
-			if err := up9.SyncEntries(syncEntriesRequest); err != nil {
+		syncEntriesConfig := getSyncEntriesConfig()
+		if *syncEntriesConfig != (shared.SyncEntriesConfig{}) {
+			if err := up9.SyncEntries(syncEntriesConfig); err != nil {
 				panic(fmt.Sprintf("Error syncing entries, err: %v", err))
 			}
 		}
@@ -284,14 +284,14 @@ func pipeTapChannelToSocket(connection *websocket.Conn, messageDataChannel <-cha
 	}
 }
 
-func getSyncEntriesRequest() *shared.SyncEntriesRequest {
-	var syncEntriesRequest = &shared.SyncEntriesRequest{}
+func getSyncEntriesConfig() *shared.SyncEntriesConfig {
+	var syncEntriesConfig = &shared.SyncEntriesConfig{}
 
-	syncEntriesRequestJson := os.Getenv(shared.SyncEntriesRequestEnvVar)
-	err := json.Unmarshal([]byte(syncEntriesRequestJson), syncEntriesRequest)
+	syncEntriesConfigJson := os.Getenv(shared.SyncEntriesConfigEnvVar)
+	err := json.Unmarshal([]byte(syncEntriesConfigJson), syncEntriesConfig)
 	if err != nil {
-		panic(fmt.Sprintf("env var %s's value of %s is invalid! json must match the shared.SyncEntriesRequest struct, err: %v", shared.SyncEntriesRequestEnvVar, syncEntriesRequestJson, err))
+		panic(fmt.Sprintf("env var %s's value of %s is invalid! json must match the shared.SyncEntriesConfig struct, err: %v", shared.SyncEntriesConfigEnvVar, syncEntriesConfigJson, err))
 	}
 
-	return syncEntriesRequest
+	return syncEntriesConfig
 }

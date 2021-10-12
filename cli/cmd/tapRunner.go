@@ -48,7 +48,7 @@ func RunMizuTap() {
 		return
 	}
 
-	syncEntriesRequest := getSyncEntriesRequest()
+	syncEntriesConfig := getSyncEntriesConfig()
 
 	var mizuValidationRules string
 	if config.Config.Tap.EnforcePolicyFile != "" {
@@ -105,7 +105,7 @@ func RunMizuTap() {
 	}
 
 	defer finishMizuExecution(kubernetesProvider)
-	if err := createMizuResources(ctx, kubernetesProvider, mizuApiFilteringOptions, mizuValidationRules, syncEntriesRequest); err != nil {
+	if err := createMizuResources(ctx, kubernetesProvider, mizuApiFilteringOptions, mizuValidationRules, syncEntriesConfig); err != nil {
 		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error creating resources: %v", errormessage.FormatError(err)))
 		return
 	}
@@ -127,14 +127,14 @@ func readValidationRules(file string) (string, error) {
 	return string(newContent), nil
 }
 
-func createMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, mizuApiFilteringOptions *api.TrafficFilteringOptions, mizuValidationRules string, syncEntriesRequest *shared.SyncEntriesRequest) error {
+func createMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, mizuApiFilteringOptions *api.TrafficFilteringOptions, mizuValidationRules string, syncEntriesConfig *shared.SyncEntriesConfig) error {
 	if !config.Config.IsNsRestrictedMode() {
 		if err := createMizuNamespace(ctx, kubernetesProvider); err != nil {
 			return err
 		}
 	}
 
-	if err := createMizuApiServer(ctx, kubernetesProvider, mizuApiFilteringOptions, syncEntriesRequest); err != nil {
+	if err := createMizuApiServer(ctx, kubernetesProvider, mizuApiFilteringOptions, syncEntriesConfig); err != nil {
 		return err
 	}
 
@@ -155,7 +155,7 @@ func createMizuNamespace(ctx context.Context, kubernetesProvider *kubernetes.Pro
 	return err
 }
 
-func createMizuApiServer(ctx context.Context, kubernetesProvider *kubernetes.Provider, mizuApiFilteringOptions *api.TrafficFilteringOptions, syncEntriesRequest *shared.SyncEntriesRequest) error {
+func createMizuApiServer(ctx context.Context, kubernetesProvider *kubernetes.Provider, mizuApiFilteringOptions *api.TrafficFilteringOptions, syncEntriesConfig *shared.SyncEntriesConfig) error {
 	var err error
 
 	state.mizuServiceAccountExists, err = createRBACIfNecessary(ctx, kubernetesProvider)
@@ -177,7 +177,7 @@ func createMizuApiServer(ctx context.Context, kubernetesProvider *kubernetes.Pro
 		ServiceAccountName:      serviceAccountName,
 		IsNamespaceRestricted:   config.Config.IsNsRestrictedMode(),
 		MizuApiFilteringOptions: mizuApiFilteringOptions,
-		SyncEntriesRequest:      syncEntriesRequest,
+		SyncEntriesConfig:       syncEntriesConfig,
 		MaxEntriesDBSizeBytes:   config.Config.Tap.MaxEntriesDBSizeBytes(),
 		Resources:               config.Config.Tap.ApiServerResources,
 		ImagePullPolicy:         config.Config.ImagePullPolicy(),
@@ -218,12 +218,12 @@ func getMizuApiFilteringOptions() (*api.TrafficFilteringOptions, error) {
 	}, nil
 }
 
-func getSyncEntriesRequest() *shared.SyncEntriesRequest {
+func getSyncEntriesConfig() *shared.SyncEntriesConfig {
 	if !config.Config.Tap.Analysis && config.Config.Tap.Workspace == "" {
-		return &shared.SyncEntriesRequest{}
+		return &shared.SyncEntriesConfig{}
 	}
 
-	return &shared.SyncEntriesRequest {
+	return &shared.SyncEntriesConfig{
 		Token:             config.Config.Auth.Token,
 		Env:               config.Config.Auth.EnvName,
 		Workspace:         config.Config.Tap.Workspace,
