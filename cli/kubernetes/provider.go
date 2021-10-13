@@ -158,13 +158,10 @@ type ApiServerOptions struct {
 }
 
 func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, opts *ApiServerOptions) (*core.Pod, error) {
-	var (
-		marshaledSyncEntriesConfig []byte
-		err error
-	)
+	var marshaledSyncEntriesConfig []byte
 	if opts.SyncEntriesConfig != nil {
-		marshaledSyncEntriesConfig, err = json.Marshal(opts.SyncEntriesConfig)
-		if err != nil {
+		var err error
+		if marshaledSyncEntriesConfig, err = json.Marshal(opts.SyncEntriesConfig); err != nil {
 			return nil, err
 		}
 	}
