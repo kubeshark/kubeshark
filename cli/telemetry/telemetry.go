@@ -4,12 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"net/http"
+
 	"github.com/denisbrodbeck/machineid"
 	"github.com/up9inc/mizu/cli/apiserver"
 	"github.com/up9inc/mizu/cli/config"
-	"github.com/up9inc/mizu/cli/logger"
 	"github.com/up9inc/mizu/cli/mizu"
-	"net/http"
+	"github.com/up9inc/mizu/shared/logger"
 )
 
 const telemetryUrl = "https://us-east4-up9-prod.cloudfunctions.net/mizu-telemetry"

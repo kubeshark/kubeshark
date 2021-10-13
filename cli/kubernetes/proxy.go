@@ -2,12 +2,13 @@ package kubernetes
 
 import (
 	"fmt"
-	"github.com/up9inc/mizu/cli/logger"
-	"k8s.io/kubectl/pkg/proxy"
 	"net"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/up9inc/mizu/shared/logger"
+	"k8s.io/kubectl/pkg/proxy"
 )
 
 const k8sProxyApiPrefix = "/"

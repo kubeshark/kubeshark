@@ -3,13 +3,14 @@ package config
 import (
 	"errors"
 	"fmt"
-	"github.com/up9inc/mizu/cli/logger"
-	"github.com/up9inc/mizu/shared"
 	"io/ioutil"
 	"os"
 	"reflect"
 	"strconv"
 	"strings"
+
+	"github.com/up9inc/mizu/shared"
+	"github.com/up9inc/mizu/shared/logger"
 
 	"github.com/creasty/defaults"
 	"github.com/spf13/cobra"
