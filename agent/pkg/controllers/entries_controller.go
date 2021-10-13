@@ -3,19 +3,13 @@ package controllers
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/gin-gonic/gin"
+	tapApi "github.com/up9inc/mizu/tap/api"
 	"mizuserver/pkg/database"
 	"mizuserver/pkg/models"
-	"mizuserver/pkg/providers"
-	"mizuserver/pkg/up9"
 	"mizuserver/pkg/utils"
 	"mizuserver/pkg/validation"
 	"net/http"
-	"time"
-
-	"github.com/google/martian/har"
-
-	"github.com/gin-gonic/gin"
-	tapApi "github.com/up9inc/mizu/tap/api"
 )
 
 var extensionsMap map[string]*tapApi.Extension // global
@@ -62,47 +56,6 @@ func GetEntries(c *gin.Context) {
 	c.JSON(http.StatusOK, baseEntries)
 }
 
-func GetFullEntries(c *gin.Context) {
-	entriesFilter := &models.HarFetchRequestQuery{}
-	if err := c.BindQuery(entriesFilter); err != nil {
-		c.JSON(http.StatusBadRequest, err)
-	}
-	err := validation.Validate(entriesFilter)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, err)
-	}
-
-	var timestampFrom, timestampTo int64
-
-	if entriesFilter.From < 0 {
-		timestampFrom = 0
-	} else {
-		timestampFrom = entriesFilter.From
-	}
-	if entriesFilter.To <= 0 {
-		timestampTo = time.Now().UnixNano() / int64(time.Millisecond)
-	} else {
-		timestampTo = entriesFilter.To
-	}
-
-	entriesArray := database.GetEntriesFromDb(timestampFrom, timestampTo, nil)
-
-	result := make([]har.Entry, 0)
-	for _, data := range entriesArray {
-		var pair tapApi.RequestResponsePair
-		if err := json.Unmarshal([]byte(data.Entry), &pair); err != nil {
-			continue
-		}
-		harEntry, err := utils.NewEntry(&pair)
-		if err != nil {
-			continue
-		}
-		result = append(result, *harEntry)
-	}
-
-	c.JSON(http.StatusOK, result)
-}
-
 func GetEntry(c *gin.Context) {
 	var entryData tapApi.MizuEntry
 	database.GetEntriesTable().
@@ -132,31 +85,4 @@ func GetEntry(c *gin.Context) {
 		Rules:          rules,
 		IsRulesEnabled: isRulesEnabled,
 	})
-}
-
-func DeleteAllEntries(c *gin.Context) {
-	database.GetEntriesTable().
-		Where("1 = 1").
-		Delete(&tapApi.MizuEntry{})
-
-	c.JSON(http.StatusOK, map[string]string{
-		"msg": "Success",
-	})
-
-}
-
-func GetGeneralStats(c *gin.Context) {
-	c.JSON(http.StatusOK, providers.GetGeneralStats())
-}
-
-func GetTappingStatus(c *gin.Context) {
-	c.JSON(http.StatusOK, providers.TapStatus)
-}
-
-func AnalyzeInformation(c *gin.Context) {
-	c.JSON(http.StatusOK, up9.GetAnalyzeInfo())
-}
-
-func GetRecentTLSLinks(c *gin.Context) {
-	c.JSON(http.StatusOK, providers.GetAllRecentTLSAddresses())
 }

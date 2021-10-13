@@ -85,7 +85,7 @@ func (provider *apiServerProvider) GetGeneralStats() (map[string]interface{}, er
 	if !provider.isReady {
 		return nil, fmt.Errorf("trying to reach api server when not initialized yet")
 	}
-	generalStatsUrl := fmt.Sprintf("%s/api/generalStats", provider.url)
+	generalStatsUrl := fmt.Sprintf("%s/status/general", provider.url)
 
 	response, requestErr := http.Get(generalStatsUrl)
 	if requestErr != nil {
