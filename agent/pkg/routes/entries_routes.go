@@ -11,8 +11,4 @@ func EntriesRoutes(ginApp *gin.Engine) {
 
 	routeGroup.GET("/", controllers.GetEntries)        // get entries (base/thin entries)
 	routeGroup.GET("/:entryId", controllers.GetEntry) // get single (full) entry
-
-	routeGroup.GET("/export", controllers.GetFullEntries)
-
-	routeGroup.GET("/resetDB", controllers.DeleteAllEntries)     // get single (full) entry
 }

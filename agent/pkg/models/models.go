@@ -22,11 +22,6 @@ type EntriesFilter struct {
 	Timestamp int64  `form:"timestamp" validate:"required,min=1"`
 }
 
-type HarFetchRequestQuery struct {
-	From int64 `form:"from"`
-	To   int64 `form:"to"`
-}
-
 type WebSocketEntryMessage struct {
 	*shared.WebSocketMessageMetadata
 	Data *tapApi.BaseEntryDetails `json:"data,omitempty"`
