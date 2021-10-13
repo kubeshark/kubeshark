@@ -22,18 +22,6 @@ type EntriesFilter struct {
 	Timestamp int64  `form:"timestamp" validate:"required,min=1"`
 }
 
-type SyncEntriesRequestQuery struct {
-	Token             string `form:"token"`
-	Env               string `form:"env"`
-	Workspace         string `form:"workspace"`
-	UploadIntervalSec int    `form:"interval"`
-}
-
-type HarFetchRequestQuery struct {
-	From int64 `form:"from"`
-	To   int64 `form:"to"`
-}
-
 type WebSocketEntryMessage struct {
 	*shared.WebSocketMessageMetadata
 	Data *tapApi.BaseEntryDetails `json:"data,omitempty"`
@@ -47,6 +35,11 @@ type WebSocketTappedEntryMessage struct {
 type WebsocketOutboundLinkMessage struct {
 	*shared.WebSocketMessageMetadata
 	Data *tap.OutboundLink
+}
+
+type AuthStatus struct {
+	Email string `json:"email"`
+	Model string `json:"model"`
 }
 
 func CreateBaseEntryWebSocketMessage(base *tapApi.BaseEntryDetails) ([]byte, error) {

@@ -17,6 +17,7 @@ import (
 	"mizuserver/pkg/controllers"
 	"mizuserver/pkg/models"
 	"mizuserver/pkg/routes"
+	"mizuserver/pkg/up9"
 	"mizuserver/pkg/utils"
 	"net/http"
 	"os"
@@ -41,20 +42,20 @@ var extensionsMap map[string]*tapApi.Extension // global
 func main() {
 	flag.Parse()
 	loadExtensions()
-	hostMode := os.Getenv(shared.HostModeEnvVar) == "1"
-	tapOpts := &tap.TapOpts{HostMode: hostMode}
 
 	if !*tapperMode && !*apiServerMode && !*standaloneMode && !*harsReaderMode {
 		panic("One of the flags --tap, --api or --standalone or --hars-read must be provided")
 	}
-
-	filteringOptions := getTrafficFilteringOptions()
 
 	if *standaloneMode {
 		api.StartResolving(*namespace)
 
 		outputItemsChannel := make(chan *tapApi.OutputChannelItem)
 		filteredOutputItemsChannel := make(chan *tapApi.OutputChannelItem)
+
+		filteringOptions := getTrafficFilteringOptions()
+		hostMode := os.Getenv(shared.HostModeEnvVar) == "1"
+		tapOpts := &tap.TapOpts{HostMode: hostMode}
 		tap.StartPassiveTapper(tapOpts, outputItemsChannel, extensions, filteringOptions)
 
 		go filterItems(outputItemsChannel, filteredOutputItemsChannel)
@@ -74,6 +75,10 @@ func main() {
 		}
 
 		filteredOutputItemsChannel := make(chan *tapApi.OutputChannelItem)
+
+		filteringOptions := getTrafficFilteringOptions()
+		hostMode := os.Getenv(shared.HostModeEnvVar) == "1"
+		tapOpts := &tap.TapOpts{HostMode: hostMode}
 		tap.StartPassiveTapper(tapOpts, filteredOutputItemsChannel, extensions, filteringOptions)
 		socketConnection, _, err := websocket.DefaultDialer.Dial(*apiServerAddress, nil)
 		if err != nil {
@@ -90,6 +95,13 @@ func main() {
 
 		go filterItems(outputItemsChannel, filteredOutputItemsChannel)
 		go api.StartReadingEntries(filteredOutputItemsChannel, nil, extensionsMap)
+
+		syncEntriesConfig := getSyncEntriesConfig()
+		if syncEntriesConfig != nil {
+			if err := up9.SyncEntries(syncEntriesConfig); err != nil {
+				panic(fmt.Sprintf("Error syncing entries, err: %v", err))
+			}
+		}
 
 		hostApi(outputItemsChannel)
 	} else if *harsReaderMode {
@@ -274,4 +286,19 @@ func pipeTapChannelToSocket(connection *websocket.Conn, messageDataChannel <-cha
 			continue
 		}
 	}
+}
+
+func getSyncEntriesConfig() *shared.SyncEntriesConfig {
+	syncEntriesConfigJson := os.Getenv(shared.SyncEntriesConfigEnvVar)
+	if syncEntriesConfigJson == "" {
+		return nil
+	}
+
+	var syncEntriesConfig = &shared.SyncEntriesConfig{}
+	err := json.Unmarshal([]byte(syncEntriesConfigJson), syncEntriesConfig)
+	if err != nil {
+		panic(fmt.Sprintf("env var %s's value of %s is invalid! json must match the shared.SyncEntriesConfig struct, err: %v", shared.SyncEntriesConfigEnvVar, syncEntriesConfigJson, err))
+	}
+
+	return syncEntriesConfig
 }
