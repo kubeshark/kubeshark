@@ -42,20 +42,20 @@ var extensionsMap map[string]*tapApi.Extension // global
 func main() {
 	flag.Parse()
 	loadExtensions()
-	hostMode := os.Getenv(shared.HostModeEnvVar) == "1"
-	tapOpts := &tap.TapOpts{HostMode: hostMode}
 
 	if !*tapperMode && !*apiServerMode && !*standaloneMode && !*harsReaderMode {
 		panic("One of the flags --tap, --api or --standalone or --hars-read must be provided")
 	}
-
-	filteringOptions := getTrafficFilteringOptions()
 
 	if *standaloneMode {
 		api.StartResolving(*namespace)
 
 		outputItemsChannel := make(chan *tapApi.OutputChannelItem)
 		filteredOutputItemsChannel := make(chan *tapApi.OutputChannelItem)
+
+		filteringOptions := getTrafficFilteringOptions()
+		hostMode := os.Getenv(shared.HostModeEnvVar) == "1"
+		tapOpts := &tap.TapOpts{HostMode: hostMode}
 		tap.StartPassiveTapper(tapOpts, outputItemsChannel, extensions, filteringOptions)
 
 		go filterItems(outputItemsChannel, filteredOutputItemsChannel)
@@ -75,6 +75,10 @@ func main() {
 		}
 
 		filteredOutputItemsChannel := make(chan *tapApi.OutputChannelItem)
+
+		filteringOptions := getTrafficFilteringOptions()
+		hostMode := os.Getenv(shared.HostModeEnvVar) == "1"
+		tapOpts := &tap.TapOpts{HostMode: hostMode}
 		tap.StartPassiveTapper(tapOpts, filteredOutputItemsChannel, extensions, filteringOptions)
 		socketConnection, _, err := websocket.DefaultDialer.Dial(*apiServerAddress, nil)
 		if err != nil {
