@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
 	"github.com/up9inc/mizu/cli/config"
 	"github.com/up9inc/mizu/cli/config/configStructs"
@@ -21,40 +20,6 @@ const loginTimeoutInMin = 2
 
 // Ports are configured in keycloak "cli" client as valid redirect URIs. A change here must be reflected there as well.
 var listenPorts = []int{3141, 4001, 5002, 6003, 7004, 8005, 9006, 10007}
-
-func IsTokenExpired(tokenString string) (bool, error) {
-	claims, err := getTokenClaims(tokenString)
-	if err != nil {
-		return true, err
-	}
-
-	expiry := time.Unix(int64(claims["exp"].(float64)), 0)
-
-	return time.Now().After(expiry), nil
-}
-
-func GetTokenEmail(tokenString string) (string, error) {
-	claims, err := getTokenClaims(tokenString)
-	if err != nil {
-		return "", err
-	}
-
-	return claims["email"].(string), nil
-}
-
-func getTokenClaims(tokenString string) (jwt.MapClaims, error) {
-	token, _, err := new(jwt.Parser).ParseUnverified(tokenString, jwt.MapClaims{})
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse token, err: %v", err)
-	}
-
-	claims, ok := token.Claims.(jwt.MapClaims)
-	if !ok {
-		return nil, fmt.Errorf("can't convert token's claims to standard claims")
-	}
-
-	return claims, nil
-}
 
 func Login() error {
 	token, loginErr := loginInteractively()

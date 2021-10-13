@@ -152,7 +152,7 @@ type ApiServerOptions struct {
 	ServiceAccountName      string
 	IsNamespaceRestricted   bool
 	MizuApiFilteringOptions *api.TrafficFilteringOptions
-	AuthStatus              *shared.AuthStatus
+	SyncEntriesConfig       *shared.SyncEntriesConfig
 	MaxEntriesDBSizeBytes   int64
 	Resources               configStructs.Resources
 	ImagePullPolicy         core.PullPolicy
@@ -164,9 +164,12 @@ func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, opts *ApiS
 		return nil, err
 	}
 
-	marshaledAuthStatus, err := json.Marshal(opts.AuthStatus)
-	if err != nil {
-		return nil, err
+	var marshaledSyncEntriesConfig []byte
+	if opts.SyncEntriesConfig != nil {
+		marshaledSyncEntriesConfig, err = json.Marshal(opts.SyncEntriesConfig)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	configMapVolumeName := &core.ConfigMapVolumeSource{}
@@ -225,8 +228,8 @@ func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, opts *ApiS
 							Value: string(marshaledFilteringOptions),
 						},
 						{
-							Name: shared.AuthStatusEnvVar,
-							Value: string(marshaledAuthStatus),
+							Name:  shared.SyncEntriesConfigEnvVar,
+							Value: string(marshaledSyncEntriesConfig),
 						},
 						{
 							Name:  shared.MaxEntriesDBSizeBytesEnvVar,

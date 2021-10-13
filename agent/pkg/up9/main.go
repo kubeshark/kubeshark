@@ -15,6 +15,7 @@ import (
 	"mizuserver/pkg/utils"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strings"
 	"time"
 )
@@ -30,29 +31,6 @@ type GuestToken struct {
 
 type ModelStatus struct {
 	LastMajorGeneration float64 `json:"lastMajorGeneration"`
-}
-
-func getGuestToken(url string, target *GuestToken) error {
-	resp, err := http.Get(url)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-	rlog.Infof("Got token from the server, starting to json decode... status code: %v", resp.StatusCode)
-	return json.NewDecoder(resp.Body).Decode(target)
-}
-
-func CreateAnonymousToken(envPrefix string) (*GuestToken, error) {
-	tokenUrl := fmt.Sprintf("https://trcc.%s/anonymous/token", envPrefix)
-	if strings.HasPrefix(envPrefix, "http") {
-		tokenUrl = fmt.Sprintf("%s/api/token", envPrefix)
-	}
-	token := &GuestToken{}
-	if err := getGuestToken(tokenUrl, token); err != nil {
-		rlog.Infof("Failed to get token, %s", err)
-		return nil, err
-	}
-	return token, nil
 }
 
 func GetRemoteUrl(analyzeDestination string, analyzeModel string, analyzeToken string, guestMode bool) string {
@@ -133,7 +111,64 @@ func GetAnalyzeInfo() *shared.AnalyzeStatus {
 	}
 }
 
-func SyncEntriesImpl(token string, model string, envPrefix string, uploadIntervalSec int, guestMode bool) {
+func SyncEntries(syncEntriesConfig *shared.SyncEntriesConfig) error {
+	rlog.Infof("Sync entries - started\n")
+
+	var (
+		token, model string
+		guestMode    bool
+	)
+	if syncEntriesConfig.Token == "" {
+		rlog.Infof("Sync entries - creating anonymous token. env %s\n", syncEntriesConfig.Env)
+		guestToken, err := createAnonymousToken(syncEntriesConfig.Env)
+		if err != nil {
+			return fmt.Errorf("failed creating anonymous token, err: %v", err)
+		}
+
+		token = guestToken.Token
+		model = guestToken.Model
+		guestMode = true
+	} else {
+		token = fmt.Sprintf("bearer %s", syncEntriesConfig.Token)
+		model = syncEntriesConfig.Workspace
+		guestMode = false
+	}
+
+	modelRegex, _ := regexp.Compile("[A-Za-z0-9][-A-Za-z0-9_.]*[A-Za-z0-9]+$")
+	if len(model) > 63 || !modelRegex.MatchString(model) {
+		return fmt.Errorf("invalid model name, model name: %s", model)
+	}
+
+	rlog.Infof("Sync entries - syncing. token: %s, model: %s, guest mode: %v\n", token, model, guestMode)
+	go syncEntriesImpl(token, model, syncEntriesConfig.Env, syncEntriesConfig.UploadIntervalSec, guestMode)
+
+	return nil
+}
+
+func createAnonymousToken(envPrefix string) (*GuestToken, error) {
+	tokenUrl := fmt.Sprintf("https://trcc.%s/anonymous/token", envPrefix)
+	if strings.HasPrefix(envPrefix, "http") {
+		tokenUrl = fmt.Sprintf("%s/api/token", envPrefix)
+	}
+	token := &GuestToken{}
+	if err := getGuestToken(tokenUrl, token); err != nil {
+		rlog.Infof("Failed to get token, %s", err)
+		return nil, err
+	}
+	return token, nil
+}
+
+func getGuestToken(url string, target *GuestToken) error {
+	resp, err := http.Get(url)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	rlog.Infof("Got token from the server, starting to json decode... status code: %v", resp.StatusCode)
+	return json.NewDecoder(resp.Body).Decode(target)
+}
+
+func syncEntriesImpl(token string, model string, envPrefix string, uploadIntervalSec int, guestMode bool) {
 	analyzeInformation.IsAnalyzing = true
 	analyzeInformation.GuestMode = guestMode
 	analyzeInformation.AnalyzedModel = model

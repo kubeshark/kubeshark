@@ -10,14 +10,11 @@ import (
 	"mizuserver/pkg/utils"
 	"mizuserver/pkg/validation"
 	"net/http"
-	"regexp"
 	"time"
 
 	"github.com/google/martian/har"
 
 	"github.com/gin-gonic/gin"
-	"github.com/romana/rlog"
-
 	tapApi "github.com/up9inc/mizu/tap/api"
 )
 
@@ -63,57 +60,6 @@ func GetEntries(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, baseEntries)
-}
-
-func SyncEntries(c *gin.Context) {
-	rlog.Infof("Sync entries - started\n")
-
-	syncParams := &models.SyncEntriesRequestQuery{}
-	if err := c.BindQuery(syncParams); err != nil {
-		c.JSON(http.StatusBadRequest, err)
-		return
-	}
-
-	if err := validation.Validate(syncParams); err != nil {
-		c.JSON(http.StatusBadRequest, err)
-		return
-	}
-
-	if up9.GetAnalyzeInfo().IsAnalyzing {
-		c.String(http.StatusBadRequest, "Cannot analyze, mizu is already analyzing")
-		return
-	}
-
-	var (
-		token, model string
-		guestMode    bool
-	)
-	if syncParams.Token == "" {
-		rlog.Infof("Sync entries - creating token. env %s\n", syncParams.Env)
-		guestToken, err := up9.CreateAnonymousToken(syncParams.Env)
-		if err != nil {
-			c.String(http.StatusServiceUnavailable, "Failed creating anonymous token")
-			return
-		}
-
-		token = guestToken.Token
-		model = guestToken.Model
-		guestMode = true
-	} else {
-		token = fmt.Sprintf("bearer %s", syncParams.Token)
-		model = syncParams.Workspace
-		guestMode = false
-	}
-
-	modelRegex, _ := regexp.Compile("[A-Za-z0-9][-A-Za-z0-9_.]*[A-Za-z0-9]+$")
-	if len(model) > 63 || !modelRegex.MatchString(model) {
-		c.String(http.StatusBadRequest, "Invalid model name")
-		return
-	}
-
-	rlog.Infof("Sync entries - syncing. token: %s, model: %s, guest mode: %v\n", token, model, guestMode)
-	go up9.SyncEntriesImpl(token, model, syncParams.Env, syncParams.UploadIntervalSec, guestMode)
-	c.String(http.StatusOK, "OK")
 }
 
 func GetFullEntries(c *gin.Context) {

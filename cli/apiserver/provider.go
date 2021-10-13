@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/up9inc/mizu/cli/config"
 	"github.com/up9inc/mizu/cli/logger"
-	"github.com/up9inc/mizu/cli/uiUtils"
 	"github.com/up9inc/mizu/shared"
 	"io/ioutil"
 	core "k8s.io/api/core/v1"
@@ -79,27 +78,6 @@ func (provider *apiServerProvider) ReportTappedPods(pods []core.Pod) error {
 			logger.Log.Debugf("Reported to server API about %d taped pods successfully", len(podInfos))
 			return nil
 		}
-	}
-}
-
-func (provider *apiServerProvider) RequestSyncEntries(envName string, workspace string, uploadIntervalSec int, token string) error {
-	if !provider.isReady {
-		return fmt.Errorf("trying to reach api server when not initialized yet")
-	}
-	urlPath := fmt.Sprintf("%s/api/syncEntries?env=%s&workspace=%s&token=%s&interval=%v", provider.url, url.QueryEscape(envName), url.QueryEscape(workspace), url.QueryEscape(token), uploadIntervalSec)
-	syncEntriesUrl, parseErr := url.ParseRequestURI(urlPath)
-	if parseErr != nil {
-		logger.Log.Fatal("Failed parsing the URL (consider changing the env name), err: %v", parseErr)
-	}
-
-	logger.Log.Debugf("Sync entries url %v", syncEntriesUrl.String())
-	if response, requestErr := http.Get(syncEntriesUrl.String()); requestErr != nil {
-		return fmt.Errorf("failed to notify api server for sync entries, err: %w", requestErr)
-	} else if response.StatusCode != 200 {
-		return fmt.Errorf("failed to notify api server for sync entries, status code: %v", response.StatusCode)
-	} else {
-		logger.Log.Infof(uiUtils.Purple, "Entries are syncing to UP9 for further analysis")
-		return nil
 	}
 }
 

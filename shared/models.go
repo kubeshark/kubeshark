@@ -56,9 +56,11 @@ type TLSLinkInfo struct {
 	ResolvedSourceName      string `json:"resolvedSourceName"`
 }
 
-type AuthStatus struct {
-	Email string `json:"email"`
-	Model string `json:"model"`
+type SyncEntriesConfig struct {
+	Token             string `json:"token"`
+	Env               string `json:"env"`
+	Workspace         string `json:"workspace"`
+	UploadIntervalSec int    `json:"interval"`
 }
 
 func CreateWebSocketStatusMessage(tappingStatus TapStatus) WebSocketStatusMessage {
