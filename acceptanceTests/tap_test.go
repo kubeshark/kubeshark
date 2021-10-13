@@ -66,7 +66,7 @@ func TestTap(t *testing.T) {
 			entriesCheckFunc := func() error {
 				timestamp := time.Now().UnixNano() / int64(time.Millisecond)
 
-				entriesUrl := fmt.Sprintf("%v/api/entries?limit=%v&operator=lt&timestamp=%v", apiServerUrl, entriesCount, timestamp)
+				entriesUrl := fmt.Sprintf("%v/entries?limit=%v&operator=lt&timestamp=%v", apiServerUrl, entriesCount, timestamp)
 				requestResult, requestErr := executeHttpGetRequest(entriesUrl)
 				if requestErr != nil {
 					return fmt.Errorf("failed to get entries, err: %v", requestErr)
@@ -79,7 +79,7 @@ func TestTap(t *testing.T) {
 
 				entry :=  entries[0].(map[string]interface{})
 
-				entryUrl := fmt.Sprintf("%v/api/entries/%v", apiServerUrl, entry["id"])
+				entryUrl := fmt.Sprintf("%v/entries/%v", apiServerUrl, entry["id"])
 				requestResult, requestErr = executeHttpGetRequest(entryUrl)
 				if requestErr != nil {
 					return fmt.Errorf("failed to get entry, err: %v", requestErr)
@@ -188,7 +188,7 @@ func TestTapAllNamespaces(t *testing.T) {
 		return
 	}
 
-	podsUrl := fmt.Sprintf("%v/api/tapStatus", apiServerUrl)
+	podsUrl := fmt.Sprintf("%v/status/tap", apiServerUrl)
 	requestResult, requestErr := executeHttpGetRequest(podsUrl)
 	if requestErr != nil {
 		t.Errorf("failed to get tap status, err: %v", requestErr)
@@ -269,7 +269,7 @@ func TestTapMultipleNamespaces(t *testing.T) {
 		return
 	}
 
-	podsUrl := fmt.Sprintf("%v/api/tapStatus", apiServerUrl)
+	podsUrl := fmt.Sprintf("%v/status/tap", apiServerUrl)
 	requestResult, requestErr := executeHttpGetRequest(podsUrl)
 	if requestErr != nil {
 		t.Errorf("failed to get tap status, err: %v", requestErr)
@@ -352,7 +352,7 @@ func TestTapRegex(t *testing.T) {
 		return
 	}
 
-	podsUrl := fmt.Sprintf("%v/api/tapStatus", apiServerUrl)
+	podsUrl := fmt.Sprintf("%v/status/tap", apiServerUrl)
 	requestResult, requestErr := executeHttpGetRequest(podsUrl)
 	if requestErr != nil {
 		t.Errorf("failed to get tap status, err: %v", requestErr)
@@ -486,7 +486,7 @@ func TestTapRedact(t *testing.T) {
 	redactCheckFunc := func() error {
 		timestamp := time.Now().UnixNano() / int64(time.Millisecond)
 
-		entriesUrl := fmt.Sprintf("%v/api/entries?limit=%v&operator=lt&timestamp=%v", apiServerUrl, defaultEntriesCount, timestamp)
+		entriesUrl := fmt.Sprintf("%v/entries?limit=%v&operator=lt&timestamp=%v", apiServerUrl, defaultEntriesCount, timestamp)
 		requestResult, requestErr := executeHttpGetRequest(entriesUrl)
 		if requestErr != nil {
 			return fmt.Errorf("failed to get entries, err: %v", requestErr)
@@ -499,7 +499,7 @@ func TestTapRedact(t *testing.T) {
 
 		firstEntry :=  entries[0].(map[string]interface{})
 
-		entryUrl := fmt.Sprintf("%v/api/entries/%v", apiServerUrl, firstEntry["id"])
+		entryUrl := fmt.Sprintf("%v/entries/%v", apiServerUrl, firstEntry["id"])
 		requestResult, requestErr = executeHttpGetRequest(entryUrl)
 		if requestErr != nil {
 			return fmt.Errorf("failed to get entry, err: %v", requestErr)
@@ -601,7 +601,7 @@ func TestTapNoRedact(t *testing.T) {
 	redactCheckFunc := func() error {
 		timestamp := time.Now().UnixNano() / int64(time.Millisecond)
 
-		entriesUrl := fmt.Sprintf("%v/api/entries?limit=%v&operator=lt&timestamp=%v", apiServerUrl, defaultEntriesCount, timestamp)
+		entriesUrl := fmt.Sprintf("%v/entries?limit=%v&operator=lt&timestamp=%v", apiServerUrl, defaultEntriesCount, timestamp)
 		requestResult, requestErr := executeHttpGetRequest(entriesUrl)
 		if requestErr != nil {
 			return fmt.Errorf("failed to get entries, err: %v", requestErr)
@@ -614,7 +614,7 @@ func TestTapNoRedact(t *testing.T) {
 
 		firstEntry :=  entries[0].(map[string]interface{})
 
-		entryUrl := fmt.Sprintf("%v/api/entries/%v", apiServerUrl, firstEntry["id"])
+		entryUrl := fmt.Sprintf("%v/entries/%v", apiServerUrl, firstEntry["id"])
 		requestResult, requestErr = executeHttpGetRequest(entryUrl)
 		if requestErr != nil {
 			return fmt.Errorf("failed to get entry, err: %v", requestErr)
@@ -716,7 +716,7 @@ func TestTapRegexMasking(t *testing.T) {
 	redactCheckFunc := func() error {
 		timestamp := time.Now().UnixNano() / int64(time.Millisecond)
 
-		entriesUrl := fmt.Sprintf("%v/api/entries?limit=%v&operator=lt&timestamp=%v", apiServerUrl, defaultEntriesCount, timestamp)
+		entriesUrl := fmt.Sprintf("%v/entries?limit=%v&operator=lt&timestamp=%v", apiServerUrl, defaultEntriesCount, timestamp)
 		requestResult, requestErr := executeHttpGetRequest(entriesUrl)
 		if requestErr != nil {
 			return fmt.Errorf("failed to get entries, err: %v", requestErr)
@@ -729,7 +729,7 @@ func TestTapRegexMasking(t *testing.T) {
 
 		firstEntry :=  entries[0].(map[string]interface{})
 
-		entryUrl := fmt.Sprintf("%v/api/entries/%v", apiServerUrl, firstEntry["id"])
+		entryUrl := fmt.Sprintf("%v/entries/%v", apiServerUrl, firstEntry["id"])
 		requestResult, requestErr = executeHttpGetRequest(entryUrl)
 		if requestErr != nil {
 			return fmt.Errorf("failed to get entry, err: %v", requestErr)
@@ -823,7 +823,7 @@ func TestTapIgnoredUserAgents(t *testing.T) {
 	ignoredUserAgentsCheckFunc := func() error {
 		timestamp := time.Now().UnixNano() / int64(time.Millisecond)
 
-		entriesUrl := fmt.Sprintf("%v/api/entries?limit=%v&operator=lt&timestamp=%v", apiServerUrl, defaultEntriesCount * 2, timestamp)
+		entriesUrl := fmt.Sprintf("%v/entries?limit=%v&operator=lt&timestamp=%v", apiServerUrl, defaultEntriesCount * 2, timestamp)
 		requestResult, requestErr := executeHttpGetRequest(entriesUrl)
 		if requestErr != nil {
 			return fmt.Errorf("failed to get entries, err: %v", requestErr)
@@ -835,7 +835,7 @@ func TestTapIgnoredUserAgents(t *testing.T) {
 		}
 
 		for _, entryInterface := range entries {
-			entryUrl := fmt.Sprintf("%v/api/entries/%v", apiServerUrl, entryInterface.(map[string]interface{})["id"])
+			entryUrl := fmt.Sprintf("%v/entries/%v", apiServerUrl, entryInterface.(map[string]interface{})["id"])
 			requestResult, requestErr = executeHttpGetRequest(entryUrl)
 			if requestErr != nil {
 				return fmt.Errorf("failed to get entry, err: %v", requestErr)

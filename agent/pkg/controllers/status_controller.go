@@ -6,7 +6,9 @@ import (
 	"github.com/romana/rlog"
 	"github.com/up9inc/mizu/shared"
 	"mizuserver/pkg/api"
+	"mizuserver/pkg/holder"
 	"mizuserver/pkg/providers"
+	"mizuserver/pkg/up9"
 	"mizuserver/pkg/validation"
 	"net/http"
 )
@@ -43,4 +45,24 @@ func GetAuthStatus(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, authStatus)
+}
+
+func GetTappingStatus(c *gin.Context) {
+	c.JSON(http.StatusOK, providers.TapStatus)
+}
+
+func AnalyzeInformation(c *gin.Context) {
+	c.JSON(http.StatusOK, up9.GetAnalyzeInfo())
+}
+
+func GetGeneralStats(c *gin.Context) {
+	c.JSON(http.StatusOK, providers.GetGeneralStats())
+}
+
+func GetRecentTLSLinks(c *gin.Context) {
+	c.JSON(http.StatusOK, providers.GetAllRecentTLSAddresses())
+}
+
+func GetCurrentResolvingInformation(c *gin.Context) {
+	c.JSON(http.StatusOK, holder.GetResolver().GetMap())
 }

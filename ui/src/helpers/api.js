@@ -22,27 +22,27 @@ export default class Api {
     }
 
     tapStatus = async () => {
-        const response = await this.client.get("/api/tapStatus");
+        const response = await this.client.get("/status/tap");
         return response.data;
     }
 
     analyzeStatus = async () => {
-        const response = await this.client.get("/api/analyzeStatus");
+        const response = await this.client.get("/status/analyze");
         return response.data;
     }
 
     getEntry = async (entryId) => {
-        const response = await this.client.get(`/api/entries/${entryId}`);
+        const response = await this.client.get(`/entries/${entryId}`);
         return response.data;
     }
 
     fetchEntries = async (operator, timestamp) => {
-        const response = await this.client.get(`/api/entries?limit=50&operator=${operator}&timestamp=${timestamp}`);
+        const response = await this.client.get(`/entries?limit=50&operator=${operator}&timestamp=${timestamp}`);
         return response.data;
     }
 
     getRecentTLSLinks = async () => {
-        const response = await this.client.get("/api/recentTLSLinks");
+        const response = await this.client.get("/status/recentTLSLinks");
         return response.data;
     }
 
