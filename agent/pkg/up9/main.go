@@ -114,16 +114,12 @@ func GetAnalyzeInfo() *shared.AnalyzeStatus {
 func SyncEntries(syncEntriesConfig *shared.SyncEntriesConfig) error {
 	rlog.Infof("Sync entries - started\n")
 
-	if GetAnalyzeInfo().IsAnalyzing {
-		return fmt.Errorf("cannot analyze, mizu is already analyzing")
-	}
-
 	var (
 		token, model string
 		guestMode    bool
 	)
 	if syncEntriesConfig.Token == "" {
-		rlog.Infof("Sync entries - creating token. env %s\n", syncEntriesConfig.Env)
+		rlog.Infof("Sync entries - creating anonymous token. env %s\n", syncEntriesConfig.Env)
 		guestToken, err := createAnonymousToken(syncEntriesConfig.Env)
 		if err != nil {
 			return fmt.Errorf("failed creating anonymous token, err: %v", err)
