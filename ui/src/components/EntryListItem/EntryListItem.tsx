@@ -101,9 +101,7 @@ export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, isSel
             break;
         case 1:
             additionalRulesProperties = styles.ruleSuccessRow
-            if (!ruleSuccess) {
-                ruleSuccess = true
-            }
+            ruleSuccess = true
             contractText = "No Breaches"
             break;
         case 2:
