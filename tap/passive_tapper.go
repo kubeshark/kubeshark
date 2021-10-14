@@ -220,8 +220,8 @@ func startMemoryProfiler() {
 func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
 	log.SetFlags(log.LstdFlags | log.LUTC | log.Lshortfile)
 
-	streamMap := NewTcpStreamMap()
-	go streamMap.closeTimedoutTcpStreamChannels()
+	streamsMap := NewTcpStreamMap()
+	go streamsMap.closeTimedoutTcpStreamChannels()
 
 	defer util.Run()()
 	if *debug {
@@ -305,9 +305,7 @@ func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
 		OutputChannel: outputItems,
 	}
 
-	streamFactory := &tcpStreamFactory{
-		Emitter: emitter,
-	}
+	streamFactory := NewTcpStreamFactory(emitter, streamsMap)
 	streamPool := reassembly.NewStreamPool(streamFactory)
 	assembler := reassembly.NewAssembler(streamPool)
 

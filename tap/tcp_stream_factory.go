@@ -30,6 +30,13 @@ type tcpStreamWrapper struct {
 	createdAt time.Time
 }
 
+func NewTcpStreamFactory(emitter api.Emitter, streamsMap *tcpStreamMap) *tcpStreamFactory {
+	return &tcpStreamFactory{
+		Emitter:    emitter,
+		streamsMap: streamsMap,
+	}
+}
+
 func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.TCP, ac reassembly.AssemblerContext) reassembly.Stream {
 	rlog.Debugf("* NEW: %s %s", net, transport)
 	fsmOptions := reassembly.TCPSimpleFSMOptions{
@@ -54,6 +61,7 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.T
 		ident:           fmt.Sprintf("%s:%s", net, transport),
 		optchecker:      reassembly.NewTCPOptionCheck(),
 		superIdentifier: &api.SuperIdentifier{},
+		streamsMap:      factory.streamsMap,
 	}
 	if stream.isTapTarget {
 		stream.id = factory.streamsMap.nextId()
