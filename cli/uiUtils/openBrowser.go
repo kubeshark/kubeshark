@@ -2,9 +2,10 @@ package uiUtils
 
 import (
 	"fmt"
-	"github.com/up9inc/mizu/cli/logger"
 	"os/exec"
 	"runtime"
+
+	"github.com/up9inc/mizu/shared/logger"
 )
 
 func OpenBrowser(url string) {

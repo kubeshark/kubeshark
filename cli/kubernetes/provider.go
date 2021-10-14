@@ -12,7 +12,7 @@ import (
 	"strconv"
 
 	"github.com/up9inc/mizu/cli/config/configStructs"
-	"github.com/up9inc/mizu/cli/logger"
+	"github.com/up9inc/mizu/shared/logger"
 
 	"io"
 
@@ -146,15 +146,15 @@ func (provider *Provider) CreateNamespace(ctx context.Context, name string) (*co
 }
 
 type ApiServerOptions struct {
-	Namespace               string
-	PodName                 string
-	PodImage                string
-	ServiceAccountName      string
-	IsNamespaceRestricted   bool
-	SyncEntriesConfig       *shared.SyncEntriesConfig
-	MaxEntriesDBSizeBytes   int64
-	Resources               configStructs.Resources
-	ImagePullPolicy         core.PullPolicy
+	Namespace             string
+	PodName               string
+	PodImage              string
+	ServiceAccountName    string
+	IsNamespaceRestricted bool
+	SyncEntriesConfig     *shared.SyncEntriesConfig
+	MaxEntriesDBSizeBytes int64
+	Resources             configStructs.Resources
+	ImagePullPolicy       core.PullPolicy
 }
 
 func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, opts *ApiServerOptions) (*core.Pod, error) {

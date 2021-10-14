@@ -4,14 +4,15 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/up9inc/mizu/cli/config"
-	"github.com/up9inc/mizu/cli/logger"
-	"github.com/up9inc/mizu/shared"
 	"io/ioutil"
-	core "k8s.io/api/core/v1"
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/up9inc/mizu/cli/config"
+	"github.com/up9inc/mizu/shared"
+	"github.com/up9inc/mizu/shared/logger"
+	core "k8s.io/api/core/v1"
 )
 
 type apiServerProvider struct {
@@ -107,7 +108,6 @@ func (provider *apiServerProvider) GetGeneralStats() (map[string]interface{}, er
 	}
 	return generalStats, nil
 }
-
 
 func (provider *apiServerProvider) GetVersion() (string, error) {
 	if !provider.isReady {

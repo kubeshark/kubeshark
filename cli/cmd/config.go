@@ -2,13 +2,14 @@ package cmd
 
 import (
 	"fmt"
+
 	"github.com/creasty/defaults"
 	"github.com/spf13/cobra"
 	"github.com/up9inc/mizu/cli/config"
 	"github.com/up9inc/mizu/cli/config/configStructs"
-	"github.com/up9inc/mizu/cli/logger"
 	"github.com/up9inc/mizu/cli/telemetry"
 	"github.com/up9inc/mizu/cli/uiUtils"
+	"github.com/up9inc/mizu/shared/logger"
 )
 
 var configCmd = &cobra.Command{
