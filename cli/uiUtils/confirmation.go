@@ -16,7 +16,7 @@ func AskForConfirmation(s string) bool {
 
 	response, err := reader.ReadString('\n')
 	if err != nil {
-		logger.Log.Errorf(err.Error())
+		logger.Log.Fatal(err.Error())
 	}
 	response = strings.ToLower(strings.TrimSpace(response))
 	if response == "" || response == "y" || response == "yes" {
