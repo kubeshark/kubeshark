@@ -22,15 +22,13 @@ type tcpStreamFactory struct {
 	wg                 sync.WaitGroup
 	outboundLinkWriter *OutboundLinkWriter
 	Emitter            api.Emitter
+	streamsMap         *tcpStreamMap
 }
 
 type tcpStreamWrapper struct {
 	stream    *tcpStream
 	createdAt time.Time
 }
-
-var streams *sync.Map = &sync.Map{} // global
-var streamId int64 = 0
 
 func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.TCP, ac reassembly.AssemblerContext) reassembly.Stream {
 	rlog.Debugf("* NEW: %s %s", net, transport)
@@ -58,8 +56,7 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.T
 		superIdentifier: &api.SuperIdentifier{},
 	}
 	if stream.isTapTarget {
-		streamId++
-		stream.id = streamId
+		stream.id = factory.streamsMap.nextId()
 		for i, extension := range extensions {
 			counterPair := &api.CounterPair{
 				Request:  0,
@@ -102,7 +99,7 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.T
 				counterPair:        counterPair,
 			})
 
-			streams.Store(stream.id, &tcpStreamWrapper{
+			factory.streamsMap.Store(stream.id, &tcpStreamWrapper{
 				stream:    stream,
 				createdAt: time.Now(),
 			})

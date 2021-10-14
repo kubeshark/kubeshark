@@ -18,7 +18,6 @@ import (
 	"os"
 	"os/signal"
 	"runtime"
-	_debug "runtime/debug"
 	"runtime/pprof"
 	"strconv"
 	"strings"
@@ -218,46 +217,11 @@ func startMemoryProfiler() {
 	}()
 }
 
-func closeTimedoutTcpStreamChannels() {
-	tcpStreamChannelTimeout := GetTcpChannelTimeoutMs()
-	for {
-		time.Sleep(10 * time.Millisecond)
-		_debug.FreeOSMemory()
-		streams.Range(func(key interface{}, value interface{}) bool {
-			streamWrapper := value.(*tcpStreamWrapper)
-			stream := streamWrapper.stream
-			if stream.superIdentifier.Protocol == nil {
-				if !stream.isClosed && time.Now().After(streamWrapper.createdAt.Add(tcpStreamChannelTimeout)) {
-					stream.Close()
-					appStats.IncDroppedTcpStreams()
-					rlog.Debugf("Dropped an unidentified TCP stream because of timeout. Total dropped: %d Total Goroutines: %d Timeout (ms): %d\n",
-						appStats.DroppedTcpStreams, runtime.NumGoroutine(), tcpStreamChannelTimeout/1000000)
-				}
-			} else {
-				if !stream.superIdentifier.IsClosedOthers {
-					for i := range stream.clients {
-						reader := &stream.clients[i]
-						if reader.extension.Protocol != stream.superIdentifier.Protocol {
-							reader.Close()
-						}
-					}
-					for i := range stream.servers {
-						reader := &stream.servers[i]
-						if reader.extension.Protocol != stream.superIdentifier.Protocol {
-							reader.Close()
-						}
-					}
-					stream.superIdentifier.IsClosedOthers = true
-				}
-			}
-			return true
-		})
-	}
-}
-
 func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
 	log.SetFlags(log.LstdFlags | log.LUTC | log.Lshortfile)
-	go closeTimedoutTcpStreamChannels()
+
+	streamMap := NewTcpStreamMap()
+	go streamMap.closeTimedoutTcpStreamChannels()
 
 	defer util.Run()()
 	if *debug {
