@@ -3,9 +3,10 @@ package uiUtils
 import (
 	"bufio"
 	"fmt"
-	"log"
 	"os"
 	"strings"
+
+	"github.com/up9inc/mizu/shared/logger"
 )
 
 func AskForConfirmation(s string) bool {
@@ -15,7 +16,7 @@ func AskForConfirmation(s string) bool {
 
 	response, err := reader.ReadString('\n')
 	if err != nil {
-		log.Fatal(err)
+		logger.Log.Errorf(err)
 	}
 	response = strings.ToLower(strings.TrimSpace(response))
 	if response == "" || response == "y" || response == "yes" {
