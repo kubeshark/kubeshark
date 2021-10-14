@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"mizuserver/pkg/database"
 	"mizuserver/pkg/utils"
 	"net/http"
@@ -214,7 +213,7 @@ func syncEntriesImpl(token string, model string, envPrefix string, uploadInterva
 			if jMarshalErr != nil {
 				analyzeInformation.Reset()
 				logger.Log.Infof("Stopping sync entries")
-				log.Fatal(jMarshalErr)
+				logger.Log.Fatal(jMarshalErr)
 			}
 
 			var in bytes.Buffer
@@ -238,7 +237,7 @@ func syncEntriesImpl(token string, model string, envPrefix string, uploadInterva
 			if _, postErr := http.DefaultClient.Do(req); postErr != nil {
 				analyzeInformation.Reset()
 				logger.Log.Info("Stopping sync entries")
-				log.Fatal(postErr)
+				logger.Log.Fatal(postErr)
 			}
 			analyzeInformation.SentCount += len(entriesArray)
 			logger.Log.Infof("Finish uploading %v entries to %s\n", len(entriesArray), GetTrafficDumpUrl(envPrefix, model))

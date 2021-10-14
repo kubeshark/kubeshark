@@ -5,7 +5,6 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"mizuserver/pkg/api"
 	"mizuserver/pkg/controllers"
 	"mizuserver/pkg/models"
@@ -128,7 +127,7 @@ func loadExtensions() {
 
 	files, err := ioutil.ReadDir(extensionsDir)
 	if err != nil {
-		log.Fatal(err)
+		logger.Log.Fatal(err)
 	}
 	extensions = make([]*tapApi.Extension, len(files))
 	extensionsMap = make(map[string]*tapApi.Extension)
@@ -159,7 +158,7 @@ func loadExtensions() {
 	})
 
 	for _, extension := range extensions {
-		log.Printf("Extension Properties: %+v\n", extension)
+		logger.Log.Infof("Extension Properties: %+v\n", extension)
 	}
 
 	controllers.InitExtensionsMap(extensionsMap)

@@ -1,7 +1,6 @@
 package database
 
 import (
-	"log"
 	"os"
 	"strconv"
 	"time"
@@ -20,13 +19,13 @@ const defaultMaxDatabaseSizeBytes int64 = 200 * 1000 * 1000
 func StartEnforcingDatabaseSize() {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
-		log.Fatalf("Error creating filesystem watcher for db size enforcement: %v\n", err)
+		logger.Log.Fatalf("Error creating filesystem watcher for db size enforcement: %v\n", err)
 		return
 	}
 
 	maxEntriesDBByteSize, err := getMaxEntriesDBByteSize()
 	if err != nil {
-		log.Fatalf("Error parsing max db size: %v\n", err)
+		logger.Log.Fatalf("Error parsing max db size: %v\n", err)
 		return
 	}
 
@@ -55,7 +54,7 @@ func StartEnforcingDatabaseSize() {
 
 	err = watcher.Add(DBPath)
 	if err != nil {
-		log.Fatalf("Error adding %s to filesystem watcher for db size enforcement: %v\n", DBPath, err)
+		logger.Log.Fatalf("Error adding %s to filesystem watcher for db size enforcement: %v\n", DBPath, err)
 	}
 }
 
