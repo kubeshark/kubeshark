@@ -35,7 +35,7 @@ func InitLoggerStderrOnly() {
 	backend1Formatter := logging.NewBackendFormatter(consoleLog, format)
 
 	backend1Leveled := logging.AddModuleLevel(consoleLog)
-	backend1Leveled.SetLevel(logging.INFO, "")
+	backend1Leveled.SetLevel(logging.DEBUG, "")
 
 	logging.SetBackend(backend1Leveled, backend1Formatter)
 }
