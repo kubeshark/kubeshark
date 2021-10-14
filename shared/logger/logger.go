@@ -32,8 +32,10 @@ func InitLogger(logPath string) {
 func InitLoggerStderrOnly() {
 	consoleLog := logging.NewLogBackend(os.Stderr, "", 0)
 
+	backend1Formatter := logging.NewBackendFormatter(consoleLog, format)
+
 	backend1Leveled := logging.AddModuleLevel(consoleLog)
 	backend1Leveled.SetLevel(logging.INFO, "")
 
-	logging.SetBackend(backend1Leveled)
+	logging.SetBackend(backend1Leveled, backend1Formatter)
 }
