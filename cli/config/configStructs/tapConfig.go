@@ -19,7 +19,6 @@ const (
 	DryRunTapName                 = "dry-run"
 	WorkspaceTapName              = "workspace"
 	EnforcePolicyFile             = "traffic-validation-file"
-	EnforcePolicyFileDeprecated   = "test-rules"
 	ContractFile                  = "contract"
 )
 
