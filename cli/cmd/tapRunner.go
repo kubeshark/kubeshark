@@ -13,6 +13,7 @@ import (
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 
+	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/up9inc/mizu/cli/apiserver"
 	"github.com/up9inc/mizu/cli/config"
 	"github.com/up9inc/mizu/cli/config/configStructs"
@@ -58,6 +59,7 @@ func RunMizuTap() {
 		}
 	}
 
+	// Read and validate the OAS file
 	var contract string
 	if config.Config.Tap.ContractFile != "" {
 		bytes, err := ioutil.ReadFile(config.Config.Tap.ContractFile)
@@ -66,6 +68,19 @@ func RunMizuTap() {
 			return
 		}
 		contract = string(bytes)
+
+		ctx := context.Background()
+		loader := &openapi3.Loader{Context: ctx}
+		doc, err := loader.LoadFromData(bytes)
+		if err != nil {
+			logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error loading contract file: %v", errormessage.FormatError(err)))
+			return
+		}
+		err = doc.Validate(ctx)
+		if err != nil {
+			logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error validating contract file: %v", errormessage.FormatError(err)))
+			return
+		}
 	}
 
 	kubernetesProvider, err := kubernetes.NewProvider(config.Config.KubeConfigPath())
