@@ -113,36 +113,36 @@ type MizuEntry struct {
 	ID                      uint `gorm:"primarykey"`
 	CreatedAt               time.Time
 	UpdatedAt               time.Time
-	ProtocolName            string `json:"protocolName" gorm:"column:protocolName"`
-	ProtocolLongName        string `json:"protocolLongName" gorm:"column:protocolLongName"`
-	ProtocolAbbreviation    string `json:"protocolAbbreviation" gorm:"column:protocolAbbreviation"`
-	ProtocolVersion         string `json:"protocolVersion" gorm:"column:protocolVersion"`
-	ProtocolBackgroundColor string `json:"protocolBackgroundColor" gorm:"column:protocolBackgroundColor"`
-	ProtocolForegroundColor string `json:"protocolForegroundColor" gorm:"column:protocolForegroundColor"`
-	ProtocolFontSize        int8   `json:"protocolFontSize" gorm:"column:protocolFontSize"`
-	ProtocolReferenceLink   string `json:"protocolReferenceLink" gorm:"column:protocolReferenceLink"`
-	Entry                   string `json:"entry,omitempty" gorm:"column:entry"`
-	EntryId                 string `json:"entryId" gorm:"column:entryId"`
-	Url                     string `json:"url" gorm:"column:url"`
-	Method                  string `json:"method" gorm:"column:method"`
-	Status                  int    `json:"status" gorm:"column:status"`
-	RequestSenderIp         string `json:"requestSenderIp" gorm:"column:requestSenderIp"`
-	Service                 string `json:"service" gorm:"column:service"`
-	Timestamp               int64  `json:"timestamp" gorm:"column:timestamp"`
-	ElapsedTime             int64  `json:"elapsedTime" gorm:"column:elapsedTime"`
-	Path                    string `json:"path" gorm:"column:path"`
-	ResolvedSource          string `json:"resolvedSource,omitempty" gorm:"column:resolvedSource"`
-	ResolvedDestination     string `json:"resolvedDestination,omitempty" gorm:"column:resolvedDestination"`
-	SourceIp                string `json:"sourceIp,omitempty" gorm:"column:sourceIp"`
-	DestinationIp           string `json:"destinationIp,omitempty" gorm:"column:destinationIp"`
-	SourcePort              string `json:"sourcePort,omitempty" gorm:"column:sourcePort"`
-	DestinationPort         string `json:"destinationPort,omitempty" gorm:"column:destinationPort"`
-	IsOutgoing              bool   `json:"isOutgoing,omitempty" gorm:"column:isOutgoing"`
-	ContractStatus          int    `json:"contractStatus,omitempty" gorm:"column:contractStatus"`
-	ContractRequestReason   string `json:"contractRequestReason,omitempty" gorm:"column:contractRequestReason"`
-	ContractResponseReason  string `json:"contractResponseReason,omitempty" gorm:"column:contractResponseReason"`
-	ContractContent         string `json:"contractContent,omitempty" gorm:"column:contractContent"`
-	EstimatedSizeBytes      int    `json:"-" gorm:"column:estimatedSizeBytes"`
+	ProtocolName            string         `json:"protocolName" gorm:"column:protocolName"`
+	ProtocolLongName        string         `json:"protocolLongName" gorm:"column:protocolLongName"`
+	ProtocolAbbreviation    string         `json:"protocolAbbreviation" gorm:"column:protocolAbbreviation"`
+	ProtocolVersion         string         `json:"protocolVersion" gorm:"column:protocolVersion"`
+	ProtocolBackgroundColor string         `json:"protocolBackgroundColor" gorm:"column:protocolBackgroundColor"`
+	ProtocolForegroundColor string         `json:"protocolForegroundColor" gorm:"column:protocolForegroundColor"`
+	ProtocolFontSize        int8           `json:"protocolFontSize" gorm:"column:protocolFontSize"`
+	ProtocolReferenceLink   string         `json:"protocolReferenceLink" gorm:"column:protocolReferenceLink"`
+	Entry                   string         `json:"entry,omitempty" gorm:"column:entry"`
+	EntryId                 string         `json:"entryId" gorm:"column:entryId"`
+	Url                     string         `json:"url" gorm:"column:url"`
+	Method                  string         `json:"method" gorm:"column:method"`
+	Status                  int            `json:"status" gorm:"column:status"`
+	RequestSenderIp         string         `json:"requestSenderIp" gorm:"column:requestSenderIp"`
+	Service                 string         `json:"service" gorm:"column:service"`
+	Timestamp               int64          `json:"timestamp" gorm:"column:timestamp"`
+	ElapsedTime             int64          `json:"elapsedTime" gorm:"column:elapsedTime"`
+	Path                    string         `json:"path" gorm:"column:path"`
+	ResolvedSource          string         `json:"resolvedSource,omitempty" gorm:"column:resolvedSource"`
+	ResolvedDestination     string         `json:"resolvedDestination,omitempty" gorm:"column:resolvedDestination"`
+	SourceIp                string         `json:"sourceIp,omitempty" gorm:"column:sourceIp"`
+	DestinationIp           string         `json:"destinationIp,omitempty" gorm:"column:destinationIp"`
+	SourcePort              string         `json:"sourcePort,omitempty" gorm:"column:sourcePort"`
+	DestinationPort         string         `json:"destinationPort,omitempty" gorm:"column:destinationPort"`
+	IsOutgoing              bool           `json:"isOutgoing,omitempty" gorm:"column:isOutgoing"`
+	ContractStatus          ContractStatus `json:"contractStatus,omitempty" gorm:"column:contractStatus"`
+	ContractRequestReason   string         `json:"contractRequestReason,omitempty" gorm:"column:contractRequestReason"`
+	ContractResponseReason  string         `json:"contractResponseReason,omitempty" gorm:"column:contractResponseReason"`
+	ContractContent         string         `json:"contractContent,omitempty" gorm:"column:contractContent"`
+	EstimatedSizeBytes      int            `json:"-" gorm:"column:estimatedSizeBytes"`
 }
 
 type MizuEntryWrapper struct {
@@ -172,7 +172,7 @@ type BaseEntryDetails struct {
 	IsOutgoing      bool            `json:"isOutgoing,omitempty"`
 	Latency         int64           `json:"latency"`
 	Rules           ApplicableRules `json:"rules,omitempty"`
-	ContractStatus  int             `json:"contractStatus"`
+	ContractStatus  ContractStatus  `json:"contractStatus"`
 }
 
 type ApplicableRules struct {
@@ -181,11 +181,13 @@ type ApplicableRules struct {
 	NumberOfRules int   `json:"numberOfRules,omitempty"`
 }
 
+type ContractStatus int
+
 type Contract struct {
-	Status         int    `json:"status"`
-	RequestReason  string `json:"requestReason"`
-	ResponseReason string `json:"responseReason"`
-	Content        string `json:"content"`
+	Status         ContractStatus `json:"status"`
+	RequestReason  string         `json:"requestReason"`
+	ResponseReason string         `json:"responseReason"`
+	Content        string         `json:"content"`
 }
 
 type DataUnmarshaler interface {

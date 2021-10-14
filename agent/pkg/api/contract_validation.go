@@ -19,6 +19,12 @@ import (
 	"github.com/up9inc/mizu/tap/api"
 )
 
+const (
+	ContractNotApplicable api.ContractStatus = 0
+	ContractPassed        api.ContractStatus = 1
+	ContractFailed        api.ContractStatus = 2
+)
+
 func loadOAS(ctx context.Context) (doc *openapi3.T, contractContent string, router routers.Router, err error) {
 	path := fmt.Sprintf("%s/%s", shared.RulePolicyPath, shared.ContractFileName)
 	if _, err = os.Stat(path); os.IsNotExist(err) {
@@ -86,13 +92,14 @@ func validateOAS(ctx context.Context, doc *openapi3.T, router routers.Router, re
 func handleOAS(ctx context.Context, doc *openapi3.T, router routers.Router, req *http.Request, res *http.Response, contractContent string) (contract api.Contract) {
 	contract = api.Contract{
 		Content: contractContent,
+		Status:  ContractNotApplicable,
 	}
 
 	isValid, reqErr, resErr := validateOAS(ctx, doc, router, req, res)
 	if isValid {
-		contract.Status = 1
+		contract.Status = ContractPassed
 	} else {
-		contract.Status = 2
+		contract.Status = ContractFailed
 		if reqErr != nil {
 			contract.RequestReason = reqErr.Error()
 		} else {
