@@ -48,7 +48,7 @@ func (cl *Cleaner) start() {
 	go func() {
 		ticker := time.NewTicker(cl.cleanPeriod)
 
-		for true {
+		for {
 			<-ticker.C
 			cl.clean()
 		}

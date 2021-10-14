@@ -38,6 +38,7 @@ import (
 
 const cleanPeriod = time.Second * 10
 
+//lint:ignore U1000 will be used in the future
 var remoteOnlyOutboundPorts = []int{80, 443}
 
 var maxcount = flag.Int64("c", -1, "Only grab this many packets, then exit")
@@ -93,12 +94,12 @@ var outputLevel int
 var errorsMap map[string]uint
 var errorsMapMutex sync.Mutex
 var nErrors uint
+
+//lint:ignore U1000 will be used in the future
 var ownIps []string                               // global
 var hostMode bool                                 // global
 var extensions []*api.Extension                   // global
 var filteringOptions *api.TrafficFilteringOptions // global
-
-const baseStreamChannelTimeoutMs int = 5000 * 100
 
 /* minOutputLevel: Error will be printed only if outputLevel is above this value
  * t:              key for errorsMap (counting errors)
@@ -108,7 +109,7 @@ const baseStreamChannelTimeoutMs int = 5000 * 100
 func logError(minOutputLevel int, t string, s string, a ...interface{}) {
 	errorsMapMutex.Lock()
 	nErrors++
-	nb, _ := errorsMap[t]
+	nb := errorsMap[t]
 	errorsMap[t] = nb + 1
 	errorsMapMutex.Unlock()
 
@@ -196,7 +197,7 @@ func startMemoryProfiler() {
 			}
 		}
 
-		for true {
+		for {
 			t := time.Now()
 
 			filename := fmt.Sprintf("%s/%s__mem.prof", dumpPath, t.Format("15_04_05"))
@@ -218,7 +219,7 @@ func startMemoryProfiler() {
 }
 
 func closeTimedoutTcpStreamChannels() {
-	TcpStreamChannelTimeoutMs := GetTcpChannelTimeoutMs()
+	tcpStreamChannelTimeout := GetTcpChannelTimeoutMs()
 	for {
 		time.Sleep(10 * time.Millisecond)
 		_debug.FreeOSMemory()
@@ -226,10 +227,11 @@ func closeTimedoutTcpStreamChannels() {
 			streamWrapper := value.(*tcpStreamWrapper)
 			stream := streamWrapper.stream
 			if stream.superIdentifier.Protocol == nil {
-				if !stream.isClosed && time.Now().After(streamWrapper.createdAt.Add(TcpStreamChannelTimeoutMs)) {
+				if !stream.isClosed && time.Now().After(streamWrapper.createdAt.Add(tcpStreamChannelTimeout)) {
 					stream.Close()
 					appStats.IncDroppedTcpStreams()
-					rlog.Debugf("Dropped an unidentified TCP stream because of timeout. Total dropped: %d Total Goroutines: %d Timeout (ms): %d\n", appStats.DroppedTcpStreams, runtime.NumGoroutine(), TcpStreamChannelTimeoutMs/1000000)
+					rlog.Debugf("Dropped an unidentified TCP stream because of timeout. Total dropped: %d Total Goroutines: %d Timeout (ms): %d\n",
+						appStats.DroppedTcpStreams, runtime.NumGoroutine(), tcpStreamChannelTimeout/1000000)
 				}
 			} else {
 				if !stream.superIdentifier.IsClosedOthers {
@@ -322,7 +324,7 @@ func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
 	var ok bool
 	decoderName := *decoder
 	if decoderName == "" {
-		decoderName = fmt.Sprintf("%s", handle.LinkType())
+		decoderName = handle.LinkType().String()
 	}
 	if dec, ok = gopacket.DecodersByLayerName[decoderName]; !ok {
 		log.Fatalln("No decoder named", decoderName)
@@ -369,7 +371,7 @@ func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
 		statsPeriod := time.Second * time.Duration(*statsevery)
 		ticker := time.NewTicker(statsPeriod)
 
-		for true {
+		for {
 			<-ticker.C
 
 			// Since the start
