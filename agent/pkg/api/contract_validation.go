@@ -19,13 +19,12 @@ import (
 	"github.com/up9inc/mizu/tap/api"
 )
 
-func loadOAS() (ctx context.Context, doc *openapi3.T, contractContent string, router routers.Router, err error) {
+func loadOAS(ctx context.Context) (doc *openapi3.T, contractContent string, router routers.Router, err error) {
 	path := fmt.Sprintf("%s/%s", shared.RulePolicyPath, shared.ContractFileName)
 	if _, err = os.Stat(path); os.IsNotExist(err) {
 		rlog.Error(err.Error())
 		return
 	}
-	ctx = context.Background()
 	loader := &openapi3.Loader{Context: ctx}
 	doc, _ = loader.LoadFromFile(path)
 	err = doc.Validate(ctx)
