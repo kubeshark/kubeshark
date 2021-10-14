@@ -6,13 +6,11 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"os"
 
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/getkin/kin-openapi/openapi3filter"
 	"github.com/getkin/kin-openapi/routers"
 	legacyrouter "github.com/getkin/kin-openapi/routers/legacy"
-	"github.com/ghodss/yaml"
 	"github.com/romana/rlog"
 
 	"github.com/up9inc/mizu/shared"
@@ -27,23 +25,19 @@ const (
 
 func loadOAS(ctx context.Context) (doc *openapi3.T, contractContent string, router routers.Router, err error) {
 	path := fmt.Sprintf("%s/%s", shared.RulePolicyPath, shared.ContractFileName)
-	if _, err = os.Stat(path); os.IsNotExist(err) {
+	bytes, err := ioutil.ReadFile(path)
+	if err != nil {
 		rlog.Error(err.Error())
 		return
 	}
+	contractContent = string(bytes)
 	loader := &openapi3.Loader{Context: ctx}
-	doc, _ = loader.LoadFromFile(path)
+	doc, _ = loader.LoadFromData(bytes)
 	err = doc.Validate(ctx)
 	if err != nil {
 		rlog.Error(err.Error())
 		return
 	}
-	_contractContent, err := yaml.Marshal(doc)
-	if err != nil {
-		rlog.Error(err.Error())
-		return
-	}
-	contractContent = string(_contractContent)
 	router, _ = legacyrouter.NewRouter(doc)
 	return
 }
