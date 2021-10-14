@@ -74,7 +74,7 @@ func loadExtensions() ([]*tapApi.Extension, error) {
 
 func internalRun() error {
 	opts := tap.TapOpts{
-		HostMode: true,
+		HostMode: false,
 	}
 
 	outputItems := make(chan *tapApi.OutputChannelItem, 1000)
