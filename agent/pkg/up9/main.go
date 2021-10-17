@@ -167,6 +167,7 @@ func upsertModel(token string, model string, envPrefix string) error {
 		return fmt.Errorf("failed request to upsert model, err: %v", err)
 	}
 
+	// In case the model is not created (not 201) and doesn't exists (not 409)
 	if response.StatusCode != 201 && response.StatusCode != 409 {
 		return fmt.Errorf("failed request to upsert model, status code: %v", response.StatusCode)
 	}
