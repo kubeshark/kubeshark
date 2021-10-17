@@ -35,7 +35,7 @@ const App = () => {
             try {
                 const recentTLSLinks = await api.getRecentTLSLinks();
                 if (recentTLSLinks?.length > 0) {
-                    setAddressesWithTLS(new Set([...addressesWithTLS, ...recentTLSLinks]));
+                    setAddressesWithTLS(new Set(recentTLSLinks));
                     setShowTLSWarning(true);
                 }
                 const auth = await api.getAuthStatus();
@@ -45,7 +45,6 @@ const App = () => {
             }
 
         })();
-        // eslint-disable-next-line
     }, []);
 
     const onTLSDetected = (destAddress: string) => {
