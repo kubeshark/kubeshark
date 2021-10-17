@@ -193,10 +193,7 @@ func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, opts *ApiS
 		command = append(command, "--namespace", opts.Namespace)
 	}
 
-	port := intstr.IntOrString{
-		Type:   intstr.Int,
-		IntVal: 8899,
-	}
+	port := intstr.FromInt(8899)
 
 	pod := &core.Pod{
 		ObjectMeta: metav1.ObjectMeta{
