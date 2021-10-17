@@ -5,12 +5,7 @@ import (
 	"compress/zlib"
 	"encoding/json"
 	"fmt"
-	"github.com/google/martian/har"
-	"github.com/romana/rlog"
-	"github.com/up9inc/mizu/shared"
-	tapApi "github.com/up9inc/mizu/tap/api"
 	"io/ioutil"
-	"log"
 	"mizuserver/pkg/database"
 	"mizuserver/pkg/utils"
 	"net/http"
@@ -18,6 +13,11 @@ import (
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/google/martian/har"
+	"github.com/up9inc/mizu/shared"
+	"github.com/up9inc/mizu/shared/logger"
+	tapApi "github.com/up9inc/mizu/tap/api"
 )
 
 const (
@@ -112,14 +112,14 @@ func GetAnalyzeInfo() *shared.AnalyzeStatus {
 }
 
 func SyncEntries(syncEntriesConfig *shared.SyncEntriesConfig) error {
-	rlog.Infof("Sync entries - started\n")
+	logger.Log.Infof("Sync entries - started\n")
 
 	var (
 		token, model string
 		guestMode    bool
 	)
 	if syncEntriesConfig.Token == "" {
-		rlog.Infof("Sync entries - creating anonymous token. env %s\n", syncEntriesConfig.Env)
+		logger.Log.Infof("Sync entries - creating anonymous token. env %s\n", syncEntriesConfig.Env)
 		guestToken, err := createAnonymousToken(syncEntriesConfig.Env)
 		if err != nil {
 			return fmt.Errorf("failed creating anonymous token, err: %v", err)
@@ -144,7 +144,7 @@ func SyncEntries(syncEntriesConfig *shared.SyncEntriesConfig) error {
 		return fmt.Errorf("invalid model name, model name: %s", model)
 	}
 
-	rlog.Infof("Sync entries - syncing. token: %s, model: %s, guest mode: %v\n", token, model, guestMode)
+	logger.Log.Infof("Sync entries - syncing. token: %s, model: %s, guest mode: %v\n", token, model, guestMode)
 	go syncEntriesImpl(token, model, syncEntriesConfig.Env, syncEntriesConfig.UploadIntervalSec, guestMode)
 
 	return nil
@@ -181,7 +181,7 @@ func createAnonymousToken(envPrefix string) (*GuestToken, error) {
 	}
 	token := &GuestToken{}
 	if err := getGuestToken(tokenUrl, token); err != nil {
-		rlog.Infof("Failed to get token, %s", err)
+		logger.Log.Infof("Failed to get token, %s", err)
 		return nil, err
 	}
 	return token, nil
@@ -193,7 +193,7 @@ func getGuestToken(url string, target *GuestToken) error {
 		return err
 	}
 	defer resp.Body.Close()
-	rlog.Infof("Got token from the server, starting to json decode... status code: %v", resp.StatusCode)
+	logger.Log.Infof("Got token from the server, starting to json decode... status code: %v", resp.StatusCode)
 	return json.NewDecoder(resp.Body).Decode(target)
 }
 
@@ -211,7 +211,7 @@ func syncEntriesImpl(token string, model string, envPrefix string, uploadInterva
 
 	for {
 		timestampTo := time.Now().UnixNano() / int64(time.Millisecond)
-		rlog.Infof("Getting entries from %v, to %v\n", timestampFrom, timestampTo)
+		logger.Log.Infof("Getting entries from %v, to %v\n", timestampFrom, timestampTo)
 		protocolFilter := "http"
 		entriesArray := database.GetEntriesFromDb(timestampFrom, timestampTo, &protocolFilter)
 
@@ -236,13 +236,13 @@ func syncEntriesImpl(token string, model string, envPrefix string, uploadInterva
 				result = append(result, *harEntry)
 			}
 
-			rlog.Infof("About to upload %v entries\n", len(result))
+			logger.Log.Infof("About to upload %v entries\n", len(result))
 
 			body, jMarshalErr := json.Marshal(result)
 			if jMarshalErr != nil {
 				analyzeInformation.Reset()
-				rlog.Infof("Stopping sync entries")
-				log.Fatal(jMarshalErr)
+				logger.Log.Infof("Stopping sync entries")
+				logger.Log.Fatal(jMarshalErr)
 			}
 
 			var in bytes.Buffer
@@ -265,17 +265,17 @@ func syncEntriesImpl(token string, model string, envPrefix string, uploadInterva
 
 			if _, postErr := http.DefaultClient.Do(req); postErr != nil {
 				analyzeInformation.Reset()
-				rlog.Info("Stopping sync entries")
-				log.Fatal(postErr)
+				logger.Log.Info("Stopping sync entries")
+				logger.Log.Fatal(postErr)
 			}
 			analyzeInformation.SentCount += len(entriesArray)
-			rlog.Infof("Finish uploading %v entries to %s\n", len(entriesArray), GetTrafficDumpUrl(envPrefix, model))
+			logger.Log.Infof("Finish uploading %v entries to %s\n", len(entriesArray), GetTrafficDumpUrl(envPrefix, model))
 
 		} else {
-			rlog.Infof("Nothing to upload")
+			logger.Log.Infof("Nothing to upload")
 		}
 
-		rlog.Infof("Sleeping for %v...\n", sleepTime)
+		logger.Log.Infof("Sleeping for %v...\n", sleepTime)
 		time.Sleep(sleepTime)
 		timestampFrom = timestampTo
 	}

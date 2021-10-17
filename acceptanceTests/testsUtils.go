@@ -12,12 +12,14 @@ import (
 	"strings"
 	"syscall"
 	"time"
+
+	"github.com/up9inc/mizu/shared"
 )
 
 const (
 	longRetriesCount     = 100
 	shortRetriesCount    = 10
-	defaultApiServerPort = 8899
+	defaultApiServerPort = shared.DefaultApiServerPort
 	defaultNamespaceName = "mizu-tests"
 	defaultServiceName   = "httpbin"
 	defaultEntriesCount  = 50

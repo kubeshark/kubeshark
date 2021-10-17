@@ -193,6 +193,8 @@ func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, opts *ApiS
 		command = append(command, "--namespace", opts.Namespace)
 	}
 
+	port := intstr.FromInt(shared.DefaultApiServerPort)
+
 	pod := &core.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      opts.PodName,
@@ -232,6 +234,25 @@ func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, opts *ApiS
 							"memory": memRequests,
 						},
 					},
+					ReadinessProbe: &core.Probe{
+						Handler: core.Handler{
+							TCPSocket: &core.TCPSocketAction{
+								Port: port,
+							},
+						},
+						InitialDelaySeconds: 5,
+						PeriodSeconds:       10,
+					},
+					LivenessProbe: &core.Probe{
+						Handler: core.Handler{
+							HTTPGet: &core.HTTPGetAction{
+								Path: "/echo",
+								Port: port,
+							},
+						},
+						InitialDelaySeconds: 5,
+						PeriodSeconds:       10,
+					},
 				},
 			},
 			Volumes: []core.Volume{
@@ -260,7 +281,7 @@ func (provider *Provider) CreateService(ctx context.Context, namespace string, s
 			Namespace: namespace,
 		},
 		Spec: core.ServiceSpec{
-			Ports:    []core.ServicePort{{TargetPort: intstr.FromInt(8899), Port: 80}},
+			Ports:    []core.ServicePort{{TargetPort: intstr.FromInt(shared.DefaultApiServerPort), Port: 80}},
 			Type:     core.ServiceTypeClusterIP,
 			Selector: map[string]string{"app": appLabelValue},
 		},

@@ -10,8 +10,8 @@ import (
 
 	tapApi "github.com/up9inc/mizu/tap/api"
 
-	"github.com/romana/rlog"
 	"github.com/up9inc/mizu/shared"
+	"github.com/up9inc/mizu/shared/logger"
 )
 
 var browserClientSocketUUIDs = make([]int, 0)
@@ -28,10 +28,10 @@ func init() {
 
 func (h *RoutesEventHandlers) WebSocketConnect(socketId int, isTapper bool) {
 	if isTapper {
-		rlog.Infof("Websocket event - Tapper connected, socket ID: %d", socketId)
+		logger.Log.Infof("Websocket event - Tapper connected, socket ID: %d", socketId)
 		providers.TapperAdded()
 	} else {
-		rlog.Infof("Websocket event - Browser socket connected, socket ID: %d", socketId)
+		logger.Log.Infof("Websocket event - Browser socket connected, socket ID: %d", socketId)
 		socketListLock.Lock()
 		browserClientSocketUUIDs = append(browserClientSocketUUIDs, socketId)
 		socketListLock.Unlock()
@@ -40,10 +40,10 @@ func (h *RoutesEventHandlers) WebSocketConnect(socketId int, isTapper bool) {
 
 func (h *RoutesEventHandlers) WebSocketDisconnect(socketId int, isTapper bool) {
 	if isTapper {
-		rlog.Infof("Websocket event - Tapper disconnected, socket ID:  %d", socketId)
+		logger.Log.Infof("Websocket event - Tapper disconnected, socket ID:  %d", socketId)
 		providers.TapperRemoved()
 	} else {
-		rlog.Infof("Websocket event - Browser socket disconnected, socket ID:  %d", socketId)
+		logger.Log.Infof("Websocket event - Browser socket disconnected, socket ID:  %d", socketId)
 		socketListLock.Lock()
 		removeSocketUUIDFromBrowserSlice(socketId)
 		socketListLock.Unlock()
@@ -55,7 +55,7 @@ func BroadcastToBrowserClients(message []byte) {
 		go func(socketId int) {
 			err := SendToSocket(socketId, message)
 			if err != nil {
-				rlog.Errorf("error sending message to socket ID %d: %v", socketId, err)
+				logger.Log.Errorf("error sending message to socket ID %d: %v", socketId, err)
 			}
 		}(socketId)
 	}
@@ -65,14 +65,14 @@ func (h *RoutesEventHandlers) WebSocketMessage(_ int, message []byte) {
 	var socketMessageBase shared.WebSocketMessageMetadata
 	err := json.Unmarshal(message, &socketMessageBase)
 	if err != nil {
-		rlog.Infof("Could not unmarshal websocket message %v\n", err)
+		logger.Log.Infof("Could not unmarshal websocket message %v\n", err)
 	} else {
 		switch socketMessageBase.MessageType {
 		case shared.WebSocketMessageTypeTappedEntry:
 			var tappedEntryMessage models.WebSocketTappedEntryMessage
 			err := json.Unmarshal(message, &tappedEntryMessage)
 			if err != nil {
-				rlog.Infof("Could not unmarshal message of message type %s %v\n", socketMessageBase.MessageType, err)
+				logger.Log.Infof("Could not unmarshal message of message type %s %v\n", socketMessageBase.MessageType, err)
 			} else {
 				// NOTE: This is where the message comes back from the intermediate WebSocket to code.
 				h.SocketOutChannel <- tappedEntryMessage.Data
@@ -81,7 +81,7 @@ func (h *RoutesEventHandlers) WebSocketMessage(_ int, message []byte) {
 			var statusMessage shared.WebSocketStatusMessage
 			err := json.Unmarshal(message, &statusMessage)
 			if err != nil {
-				rlog.Infof("Could not unmarshal message of message type %s %v\n", socketMessageBase.MessageType, err)
+				logger.Log.Infof("Could not unmarshal message of message type %s %v\n", socketMessageBase.MessageType, err)
 			} else {
 				providers.TapStatus.Pods = statusMessage.TappingStatus.Pods
 				BroadcastToBrowserClients(message)
@@ -90,12 +90,12 @@ func (h *RoutesEventHandlers) WebSocketMessage(_ int, message []byte) {
 			var outboundLinkMessage models.WebsocketOutboundLinkMessage
 			err := json.Unmarshal(message, &outboundLinkMessage)
 			if err != nil {
-				rlog.Infof("Could not unmarshal message of message type %s %v\n", socketMessageBase.MessageType, err)
+				logger.Log.Infof("Could not unmarshal message of message type %s %v\n", socketMessageBase.MessageType, err)
 			} else {
 				handleTLSLink(outboundLinkMessage)
 			}
 		default:
-			rlog.Infof("Received socket message of type %s for which no handlers are defined", socketMessageBase.MessageType)
+			logger.Log.Infof("Received socket message of type %s for which no handlers are defined", socketMessageBase.MessageType)
 		}
 	}
 }
@@ -116,9 +116,9 @@ func handleTLSLink(outboundLinkMessage models.WebsocketOutboundLinkMessage) {
 	}
 	marshaledMessage, err := json.Marshal(outboundLinkMessage)
 	if err != nil {
-		rlog.Errorf("Error marshaling outbound link message for broadcasting: %v", err)
+		logger.Log.Errorf("Error marshaling outbound link message for broadcasting: %v", err)
 	} else {
-		rlog.Errorf("Broadcasting outboundlink message %s", string(marshaledMessage))
+		logger.Log.Errorf("Broadcasting outboundlink message %s", string(marshaledMessage))
 		BroadcastToBrowserClients(marshaledMessage)
 	}
 }
