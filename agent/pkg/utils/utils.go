@@ -2,8 +2,6 @@ package utils
 
 import (
 	"context"
-	"github.com/gin-gonic/gin"
-	"github.com/romana/rlog"
 	"net/http"
 	"net/url"
 	"os"
@@ -11,6 +9,9 @@ import (
 	"reflect"
 	"syscall"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/up9inc/mizu/shared/logger"
 )
 
 // StartServer starts the server with a graceful shutdown
@@ -28,16 +29,16 @@ func StartServer(app *gin.Engine) {
 
 	go func() {
 		_ = <-signals
-		rlog.Infof("Shutting down...")
+		logger.Log.Infof("Shutting down...")
 		ctx, _ := context.WithTimeout(context.Background(), 5*time.Second)
 		_ = srv.Shutdown(ctx)
 		os.Exit(0)
 	}()
 
 	// Run server.
-	rlog.Infof("Starting the server...")
+	logger.Log.Infof("Starting the server...")
 	if err := app.Run(":8899"); err != nil {
-		rlog.Errorf("Server is not running! Reason: %v", err)
+		logger.Log.Errorf("Server is not running! Reason: %v", err)
 	}
 }
 
@@ -54,14 +55,14 @@ func ReverseSlice(data interface{}) {
 
 func CheckErr(e error) {
 	if e != nil {
-		rlog.Errorf("%v", e)
+		logger.Log.Errorf("%v", e)
 	}
 }
 
 func SetHostname(address, newHostname string) string {
 	replacedUrl, err := url.Parse(address)
 	if err != nil {
-		rlog.Errorf("error replacing hostname to %s in address %s, returning original %v", newHostname, address, err)
+		logger.Log.Errorf("error replacing hostname to %s in address %s, returning original %v", newHostname, address, err)
 		return address
 	}
 	replacedUrl.Host = newHostname
