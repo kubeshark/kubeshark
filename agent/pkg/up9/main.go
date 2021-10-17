@@ -133,7 +133,7 @@ func SyncEntries(syncEntriesConfig *shared.SyncEntriesConfig) error {
 		model = syncEntriesConfig.Workspace
 		guestMode = false
 
-		rlog.Infof("Sync entries - upserting model. env %s, model %s\n", syncEntriesConfig.Env, model)
+		logger.Log.Infof("Sync entries - upserting model. env %s, model %s\n", syncEntriesConfig.Env, model)
 		if err := upsertModel(token, model, syncEntriesConfig.Env); err != nil {
 			return fmt.Errorf("failed upserting model, err: %v", err)
 		}
