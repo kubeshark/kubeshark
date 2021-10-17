@@ -3,10 +3,11 @@ package utils
 import (
 	"context"
 	"fmt"
-	"github.com/romana/rlog"
+	"time"
+
+	loggerShared "github.com/up9inc/mizu/shared/logger"
 	"gorm.io/gorm/logger"
 	"gorm.io/gorm/utils"
-	"time"
 )
 
 // TruncatingLogger implements the gorm logger.Interface interface. Its purpose is to act as gorm's logger while truncating logs to a max of 50 characters to minimise the performance impact
@@ -24,21 +25,21 @@ func (truncatingLogger *TruncatingLogger) Info(_ context.Context, message string
 	if truncatingLogger.LogLevel < logger.Info {
 		return
 	}
-	rlog.Errorf("gorm info: %.150s", message)
+	loggerShared.Log.Errorf("gorm info: %.150s", message)
 }
 
 func (truncatingLogger *TruncatingLogger) Warn(_ context.Context, message string, __ ...interface{}) {
 	if truncatingLogger.LogLevel < logger.Warn {
 		return
 	}
-	rlog.Errorf("gorm warning: %.150s", message)
+	loggerShared.Log.Errorf("gorm warning: %.150s", message)
 }
 
 func (truncatingLogger *TruncatingLogger) Error(_ context.Context, message string, __ ...interface{}) {
 	if truncatingLogger.LogLevel < logger.Error {
 		return
 	}
-	rlog.Errorf("gorm error: %.150s", message)
+	loggerShared.Log.Errorf("gorm error: %.150s", message)
 }
 
 func (truncatingLogger *TruncatingLogger) Trace(ctx context.Context, begin time.Time, fc func() (string, int64), err error) {

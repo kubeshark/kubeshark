@@ -3,14 +3,15 @@ package version
 import (
 	"context"
 	"fmt"
-	"github.com/up9inc/mizu/cli/apiserver"
-	"github.com/up9inc/mizu/cli/logger"
-	"github.com/up9inc/mizu/cli/mizu"
 	"io/ioutil"
 	"net/http"
 	"runtime"
 	"strings"
 	"time"
+
+	"github.com/up9inc/mizu/cli/apiserver"
+	"github.com/up9inc/mizu/cli/mizu"
+	"github.com/up9inc/mizu/shared/logger"
 
 	"github.com/google/go-github/v37/github"
 	"github.com/up9inc/mizu/cli/uiUtils"

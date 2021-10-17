@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/google/martian/har"
-	"github.com/romana/rlog"
+	"github.com/up9inc/mizu/shared/logger"
 	"github.com/up9inc/mizu/tap/api"
 )
 
@@ -204,7 +204,7 @@ func NewResponse(response *api.GenericMessage) (harResponse *har.Response, err e
 	if strings.HasPrefix(mimeType.(string), "application/grpc") {
 		status, err = strconv.Atoi(_status)
 		if err != nil {
-			rlog.Errorf("Failed converting status to int %s (%v,%+v)", err, err, err)
+			logger.Log.Errorf("Failed converting status to int %s (%v,%+v)", err, err, err)
 			return nil, errors.New("failed converting response status to int for HAR")
 		}
 	}
@@ -225,13 +225,13 @@ func NewResponse(response *api.GenericMessage) (harResponse *har.Response, err e
 func NewEntry(pair *api.RequestResponsePair) (*har.Entry, error) {
 	harRequest, err := NewRequest(&pair.Request)
 	if err != nil {
-		rlog.Errorf("Failed converting request to HAR %s (%v,%+v)", err, err, err)
+		logger.Log.Errorf("Failed converting request to HAR %s (%v,%+v)", err, err, err)
 		return nil, errors.New("failed converting request to HAR")
 	}
 
 	harResponse, err := NewResponse(&pair.Response)
 	if err != nil {
-		rlog.Errorf("Failed converting response to HAR %s (%v,%+v)", err, err, err)
+		logger.Log.Errorf("Failed converting response to HAR %s (%v,%+v)", err, err, err)
 		return nil, errors.New("failed converting response to HAR")
 	}
 

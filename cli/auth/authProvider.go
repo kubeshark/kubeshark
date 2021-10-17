@@ -4,16 +4,17 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/google/uuid"
-	"github.com/up9inc/mizu/cli/config"
-	"github.com/up9inc/mizu/cli/config/configStructs"
-	"github.com/up9inc/mizu/cli/logger"
-	"github.com/up9inc/mizu/cli/uiUtils"
-	"golang.org/x/oauth2"
 	"net"
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/google/uuid"
+	"github.com/up9inc/mizu/cli/config"
+	"github.com/up9inc/mizu/cli/config/configStructs"
+	"github.com/up9inc/mizu/cli/uiUtils"
+	"github.com/up9inc/mizu/shared/logger"
+	"golang.org/x/oauth2"
 )
 
 const loginTimeoutInMin = 2

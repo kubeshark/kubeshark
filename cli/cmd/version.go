@@ -1,12 +1,13 @@
 package cmd
 
 import (
-	"github.com/up9inc/mizu/cli/config"
-	"github.com/up9inc/mizu/cli/config/configStructs"
-	"github.com/up9inc/mizu/cli/logger"
-	"github.com/up9inc/mizu/cli/telemetry"
 	"strconv"
 	"time"
+
+	"github.com/up9inc/mizu/cli/config"
+	"github.com/up9inc/mizu/cli/config/configStructs"
+	"github.com/up9inc/mizu/cli/telemetry"
+	"github.com/up9inc/mizu/shared/logger"
 
 	"github.com/creasty/defaults"
 	"github.com/spf13/cobra"

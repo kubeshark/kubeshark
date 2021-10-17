@@ -12,7 +12,7 @@ import (
 	"strconv"
 
 	"github.com/up9inc/mizu/cli/config/configStructs"
-	"github.com/up9inc/mizu/cli/logger"
+	"github.com/up9inc/mizu/shared/logger"
 
 	"io"
 
@@ -146,15 +146,15 @@ func (provider *Provider) CreateNamespace(ctx context.Context, name string) (*co
 }
 
 type ApiServerOptions struct {
-	Namespace               string
-	PodName                 string
-	PodImage                string
-	ServiceAccountName      string
-	IsNamespaceRestricted   bool
-	SyncEntriesConfig       *shared.SyncEntriesConfig
-	MaxEntriesDBSizeBytes   int64
-	Resources               configStructs.Resources
-	ImagePullPolicy         core.PullPolicy
+	Namespace             string
+	PodName               string
+	PodImage              string
+	ServiceAccountName    string
+	IsNamespaceRestricted bool
+	SyncEntriesConfig     *shared.SyncEntriesConfig
+	MaxEntriesDBSizeBytes int64
+	Resources             configStructs.Resources
+	ImagePullPolicy       core.PullPolicy
 }
 
 func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, opts *ApiServerOptions) (*core.Pod, error) {
@@ -192,6 +192,8 @@ func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, opts *ApiS
 	if opts.IsNamespaceRestricted {
 		command = append(command, "--namespace", opts.Namespace)
 	}
+
+	port := intstr.FromInt(8899)
 
 	pod := &core.Pod{
 		ObjectMeta: metav1.ObjectMeta{
@@ -231,6 +233,25 @@ func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, opts *ApiS
 							"cpu":    cpuRequests,
 							"memory": memRequests,
 						},
+					},
+					ReadinessProbe: &core.Probe{
+						Handler: core.Handler{
+							TCPSocket: &core.TCPSocketAction{
+								Port: port,
+							},
+						},
+						InitialDelaySeconds: 5,
+						PeriodSeconds:       10,
+					},
+					LivenessProbe: &core.Probe{
+						Handler: core.Handler{
+							HTTPGet: &core.HTTPGetAction{
+								Path: "/echo",
+								Port: port,
+							},
+						},
+						InitialDelaySeconds: 5,
+						PeriodSeconds:       10,
 					},
 				},
 			},

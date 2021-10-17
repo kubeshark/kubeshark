@@ -11,9 +11,9 @@ import (
 	"github.com/up9inc/mizu/cli/config/configStructs"
 	"github.com/up9inc/mizu/cli/errormessage"
 	"github.com/up9inc/mizu/cli/kubernetes"
-	"github.com/up9inc/mizu/cli/logger"
 	"github.com/up9inc/mizu/cli/mizu"
 	"github.com/up9inc/mizu/cli/uiUtils"
+	"github.com/up9inc/mizu/shared/logger"
 )
 
 func GetApiServerUrl() string {
@@ -46,4 +46,3 @@ func waitForFinish(ctx context.Context, cancel context.CancelFunc) {
 		cancel()
 	}
 }
-
