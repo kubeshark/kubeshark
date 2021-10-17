@@ -103,7 +103,7 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 	ctx := context.Background()
 	doc, contractContent, router, err := loadOAS(ctx)
 	if err != nil {
-		rlog.Infof("Disabled OAS validation: %s\n", err.Error())
+		logger.Log.Infof("Disabled OAS validation: %s\n", err.Error())
 		disableOASValidation = true
 	}
 
