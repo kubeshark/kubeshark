@@ -193,7 +193,7 @@ func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, opts *ApiS
 		command = append(command, "--namespace", opts.Namespace)
 	}
 
-	port := intstr.FromInt(8899)
+	port := intstr.FromInt(shared.DefaultApiServerPort)
 
 	pod := &core.Pod{
 		ObjectMeta: metav1.ObjectMeta{
@@ -281,7 +281,7 @@ func (provider *Provider) CreateService(ctx context.Context, namespace string, s
 			Namespace: namespace,
 		},
 		Spec: core.ServiceSpec{
-			Ports:    []core.ServicePort{{TargetPort: intstr.FromInt(8899), Port: 80}},
+			Ports:    []core.ServicePort{{TargetPort: intstr.FromInt(shared.DefaultApiServerPort), Port: 80}},
 			Type:     core.ServiceTypeClusterIP,
 			Selector: map[string]string{"app": appLabelValue},
 		},

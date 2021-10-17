@@ -10,4 +10,5 @@ const (
 	RulePolicyPath                   = "/app/enforce-policy/"
 	RulePolicyFileName               = "enforce-policy.yaml"
 	GoGCEnvVar                       = "GOGC"
+	DefaultApiServerPort             = 8899
 )

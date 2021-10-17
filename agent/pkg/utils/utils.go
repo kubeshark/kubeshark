@@ -2,6 +2,7 @@ package utils
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/url"
 	"os"
@@ -11,6 +12,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/logger"
 )
 
@@ -37,7 +39,7 @@ func StartServer(app *gin.Engine) {
 
 	// Run server.
 	logger.Log.Infof("Starting the server...")
-	if err := app.Run(":8899"); err != nil {
+	if err := app.Run(fmt.Sprintf(":%d", shared.DefaultApiServerPort)); err != nil {
 		logger.Log.Errorf("Server is not running! Reason: %v", err)
 	}
 }
