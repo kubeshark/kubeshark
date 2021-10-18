@@ -124,9 +124,6 @@ func SilentError(t string, s string, a ...interface{}) {
 func Debug(s string, a ...interface{}) {
 	logger.Log.Debugf(s, a...)
 }
-func Trace(s string, a ...interface{}) {
-	logger.Log.Infof(s, a...)
-}
 
 func inArrayInt(arr []int, valueToCheck int) bool {
 	for _, value := range arr {
