@@ -12,6 +12,7 @@ require (
 	github.com/go-playground/validator/v10 v10.5.0
 	github.com/google/martian v2.1.0+incompatible
 	github.com/gorilla/websocket v1.4.2
+	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7 // indirect
 	github.com/orcaman/concurrent-map v0.0.0-20210106121528-16402b402231
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/romana/rlog v0.0.0-20171115192701-f018bc92e7d7
