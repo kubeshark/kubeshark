@@ -29,15 +29,18 @@ func FilteredWatch(ctx context.Context, kubernetesProvider *Provider, targetName
 		go func(targetNamespace string) {
 			defer wg.Done()
 			watchRestartDebouncer := debounce.NewDebouncer(5 * time.Second, func() {})
+			shouldStop := false
 
-			for {
+			for !shouldStop {
 				watcher := kubernetesProvider.GetPodWatcher(ctx, targetNamespace)
 				func() {
-					for {
+					for !shouldStop {
 						select {
 						case e := <-watcher.ResultChan():
 							if e.Type == watch.Error {
 								errorChan <- apierrors.FromObject(e.Object)
+								shouldStop = true
+								return
 							}
 							if e.Object == nil {
 								if !watchRestartDebouncer.IsOn() {
@@ -45,6 +48,7 @@ func FilteredWatch(ctx context.Context, kubernetesProvider *Provider, targetName
 									return
 								} else {
 									errorChan <- errors.New("received too many unknown errors in k8s watch")
+									shouldStop = true
 									return
 								}
 
@@ -69,6 +73,7 @@ func FilteredWatch(ctx context.Context, kubernetesProvider *Provider, targetName
 							}
 						case <-ctx.Done():
 							watcher.Stop()
+							shouldStop = true
 							return
 						}
 					}
