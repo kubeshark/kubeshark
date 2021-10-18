@@ -3,10 +3,14 @@ package kubernetes
 import (
 	"context"
 	"errors"
+	"github.com/up9inc/mizu/shared/debounce"
+	"github.com/up9inc/mizu/shared/logger"
 	"regexp"
 	"sync"
+	"time"
 
 	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/watch"
 )
 
@@ -16,6 +20,7 @@ func FilteredWatch(ctx context.Context, kubernetesProvider *Provider, targetName
 	removedChan := make(chan *corev1.Pod)
 	errorChan := make(chan error)
 
+
 	var wg sync.WaitGroup
 
 	for _, targetNamespace := range targetNamespaces {
@@ -23,37 +28,51 @@ func FilteredWatch(ctx context.Context, kubernetesProvider *Provider, targetName
 
 		go func(targetNamespace string) {
 			defer wg.Done()
-			watcher := kubernetesProvider.GetPodWatcher(ctx, targetNamespace)
+			watchRestartDebouncer := debounce.NewDebouncer(5 * time.Second, func() {})
 
 			for {
-				select {
-				case e := <-watcher.ResultChan():
-					if e.Object == nil {
-						errorChan <- errors.New("kubernetes pod watch failed")
-						return
-					}
+				watcher := kubernetesProvider.GetPodWatcher(ctx, targetNamespace)
+				func() {
+					for {
+						select {
+						case e := <-watcher.ResultChan():
+							if e.Type == watch.Error {
+								errorChan <- apierrors.FromObject(e.Object)
+							}
+							if e.Object == nil {
+								if !watchRestartDebouncer.IsOn() {
+									logger.Log.Debug("detected a potential harmless watch timeout, retrying watch loop")
+									return
+								} else {
+									errorChan <- errors.New("received too many unknown errors in k8s watch")
+									return
+								}
 
-					pod, ok := e.Object.(*corev1.Pod)
-					if !ok {
-						continue
-					}
+							}
 
-					if !podFilter.MatchString(pod.Name) {
-						continue
-					}
+							pod, ok := e.Object.(*corev1.Pod)
+							if !ok {
+								continue
+							}
 
-					switch e.Type {
-					case watch.Added:
-						addedChan <- pod
-					case watch.Modified:
-						modifiedChan <- pod
-					case watch.Deleted:
-						removedChan <- pod
+							if !podFilter.MatchString(pod.Name) {
+								continue
+							}
+
+							switch e.Type {
+							case watch.Added:
+								addedChan <- pod
+							case watch.Modified:
+								modifiedChan <- pod
+							case watch.Deleted:
+								removedChan <- pod
+							}
+						case <-ctx.Done():
+							watcher.Stop()
+							return
+						}
 					}
-				case <-ctx.Done():
-					watcher.Stop()
-					return
-				}
+				}()
 			}
 		}(targetNamespace)
 	}
