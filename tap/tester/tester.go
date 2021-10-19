@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
@@ -34,7 +33,7 @@ func loadExtensions() ([]*tapApi.Extension, error) {
 			continue
 		}
 
-		fmt.Printf("Loading extension: %s\n", filename)
+		logger.Log.Infof("Loading extension: %s\n", filename)
 
 		extension := &tapApi.Extension{
 			Path: path.Join(extensionsDir, filename),
@@ -69,7 +68,7 @@ func loadExtensions() ([]*tapApi.Extension, error) {
 	})
 
 	for _, extension := range extensions {
-		fmt.Printf("Extension Properties: %+v\n", extension)
+		logger.Log.Infof("Extension Properties: %+v\n", extension)
 	}
 
 	return extensions, nil
@@ -93,7 +92,7 @@ func internalRun() error {
 
 	tap.StartPassiveTapper(&opts, outputItems, extenssions, &tapOpts)
 
-	fmt.Printf("Tapping, press enter to exit...\n")
+	logger.Log.Infof("Tapping, press enter to exit...\n")
 	reader := bufio.NewReader(os.Stdin)
 	reader.ReadLine()
 	return nil
@@ -105,9 +104,9 @@ func main() {
 	if err != nil {
 		switch err := err.(type) {
 		case *errors.Error:
-			fmt.Printf("Error: %v\n", err.ErrorStack())
+			logger.Log.Errorf("Error: %v\n", err.ErrorStack())
 		default:
-			fmt.Printf("Error: %v\n", err)
+			logger.Log.Errorf("Error: %v\n", err)
 		}
 
 		os.Exit(1)
