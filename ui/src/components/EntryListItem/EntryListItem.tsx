@@ -26,6 +26,7 @@ interface Entry {
     isOutgoing?: boolean;
     latency: number;
     rules: Rules;
+    contractStatus: number,
 }
 
 interface Rules {
@@ -64,7 +65,7 @@ export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, isSel
         }
     }
     let additionalRulesProperties = "";
-    let ruleSuccess: boolean;
+    let ruleSuccess = true;
     let rule = 'latency' in entry.rules
     if (rule) {
         if (entry.rules.latency !== -1) {
@@ -91,11 +92,32 @@ export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, isSel
             }
         }
     }
+
+    var contractEnabled = true;
+    var contractText = "";
+    switch (entry.contractStatus) {
+        case 0:
+            contractEnabled = false;
+            break;
+        case 1:
+            additionalRulesProperties = styles.ruleSuccessRow
+            ruleSuccess = true
+            contractText = "No Breaches"
+            break;
+        case 2:
+            additionalRulesProperties = styles.ruleFailureRow
+            ruleSuccess = false
+            contractText = "Breach"
+            break;
+        default:
+            break;
+    }
+
     return <>
         <div
             id={entry.id}
             className={`${styles.row}
-            ${isSelected && !rule ? styles.rowSelected : additionalRulesProperties}`}
+            ${isSelected && !rule && !contractEnabled ? styles.rowSelected : additionalRulesProperties}`}
             onClick={() => setFocusedEntryId(entry.id)}
             style={{
                 border: isSelected ? `1px ${entry.protocol.backgroundColor} solid` : "1px transparent solid",
@@ -117,12 +139,19 @@ export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, isSel
             </div>
             {
                 rule ?
-                    <div className={`${styles.ruleNumberText} ${ruleSuccess ? styles.ruleNumberTextSuccess : styles.ruleNumberTextFailure}`}>
+                    <div className={`${styles.ruleNumberText} ${ruleSuccess ? styles.ruleNumberTextSuccess : styles.ruleNumberTextFailure} ${rule && contractEnabled ? styles.separatorRight : ""}`}>
                         {`Rules (${numberOfRules})`}
                     </div>
                 : ""
             }
-            <div className={styles.directionContainer}>
+            {
+                contractEnabled ?
+                    <div className={`${styles.ruleNumberText} ${ruleSuccess ? styles.ruleNumberTextSuccess : styles.ruleNumberTextFailure} ${rule && contractEnabled ? styles.separatorLeft : ""}`}>
+                        {contractText}
+                    </div>
+                : ""
+            }
+            <div className={styles.separatorRight}>
                 <span className={styles.port} title="Source Port">{entry.sourcePort}</span>
                 {entry.isOutgoing ?
                     <img src={outgoingIcon} alt="Ingoing traffic" title="Ingoing"/>
