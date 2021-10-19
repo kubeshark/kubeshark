@@ -32,23 +32,27 @@ func FilteredWatch(ctx context.Context, kubernetesProvider *Provider, targetName
 
 			for {
 				watcher := kubernetesProvider.GetPodWatcher(ctx, targetNamespace)
-				err, isContextCanceled := startWatchLoop(ctx, watcher, podFilter, addedChan, modifiedChan, removedChan)
-
+				err := startWatchLoop(ctx, watcher, podFilter, addedChan, modifiedChan, removedChan) // blocking
 				watcher.Stop()
-				if isContextCanceled {
+
+				select {
+				case <- ctx.Done():
+					return
+				default:
 					break
 				}
 
 				if err != nil {
 					errorChan <- errors.New("received too many unknown errors in k8s watch")
+					break
 				} else {
 					if !watchRestartDebouncer.IsOn() {
 						watchRestartDebouncer.SetOn()
-						logger.Log.Warning("detected a potential harmless watch timeout, retrying watch loop")
+						logger.Log.Warning("k8s watch channel closed, restarting watcher")
 						time.Sleep(time.Second * 5)
 						continue
 					} else {
-						errorChan <- errors.New("received too many unknown errors in k8s watch")
+						errorChan <- errors.New("k8s watch channel was closed too often")
 						break
 					}
 				}
@@ -68,15 +72,17 @@ func FilteredWatch(ctx context.Context, kubernetesProvider *Provider, targetName
 	return addedChan, modifiedChan, removedChan, errorChan
 }
 
-func startWatchLoop(ctx context.Context, watcher watch.Interface, podFilter *regexp.Regexp, addedChan chan *corev1.Pod, modifiedChan chan *corev1.Pod, removedChan chan *corev1.Pod) (err error, isContextCanceled bool) {
+func startWatchLoop(ctx context.Context, watcher watch.Interface, podFilter *regexp.Regexp, addedChan chan *corev1.Pod, modifiedChan chan *corev1.Pod, removedChan chan *corev1.Pod) error {
+	resultChan := watcher.ResultChan()
 	for {
 		select {
-		case e := <-watcher.ResultChan():
-			if e.Type == watch.Error {
-				return apierrors.FromObject(e.Object), false
+		case e, isChannelOpen := <-resultChan:
+			if !isChannelOpen {
+				return nil
 			}
-			if e.Object == nil {
-				return nil, false
+
+			if e.Type == watch.Error {
+				return apierrors.FromObject(e.Object)
 			}
 
 			pod, ok := e.Object.(*corev1.Pod)
@@ -97,7 +103,7 @@ func startWatchLoop(ctx context.Context, watcher watch.Interface, podFilter *reg
 				removedChan <- pod
 			}
 		case <-ctx.Done():
-			return nil, true
+			return nil
 		}
 	}
 }
