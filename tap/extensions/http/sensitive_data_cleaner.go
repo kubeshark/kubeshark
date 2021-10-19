@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/url"
 	"strings"
@@ -64,7 +63,7 @@ func filterRequestBody(request *http.Request, options *api.TrafficFilteringOptio
 	contenType := getContentTypeHeaderValue(request.Header)
 	body, err := ioutil.ReadAll(request.Body)
 	if err != nil {
-		log.Printf("Filtering error reading body: %v", err)
+		// log.Printf("Filtering error reading body: %v", err)
 		return
 	}
 	filteredBody, err := filterHttpBody([]byte(body), contenType, options)
@@ -79,7 +78,7 @@ func filterResponseBody(response *http.Response, options *api.TrafficFilteringOp
 	contentType := getContentTypeHeaderValue(response.Header)
 	body, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		log.Printf("Filtering error reading body: %v", err)
+		// log.Printf("Filtering error reading body: %v", err)
 		return
 	}
 	filteredBody, err := filterHttpBody([]byte(body), contentType, options)

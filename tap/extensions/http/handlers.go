@@ -2,11 +2,7 @@ package main
 
 import (
 	"bufio"
-	"bytes"
 	"fmt"
-	"io"
-	"io/ioutil"
-	"log"
 	"net/http"
 
 	"github.com/up9inc/mizu/tap/api"
@@ -89,17 +85,16 @@ func handleHTTP1ClientStream(b *bufio.Reader, tcpID *api.TcpID, counterPair *api
 	}
 	counterPair.Request++
 
-	body, err := ioutil.ReadAll(req.Body)
-	req.Body = io.NopCloser(bytes.NewBuffer(body)) // rewind
-	s := len(body)
-	if err != nil {
-		log.Printf("[HTTP-request-body] stream %s Got body err: %s", tcpID.Ident, err)
-	}
-	if err := req.Body.Close(); err != nil {
-		log.Printf("[HTTP-request-body-close] stream %s Failed to close request body: %s", tcpID.Ident, err)
-	}
-	encoding := req.Header["Content-Encoding"]
-	log.Printf("HTTP/1 Request: %s %s %s (Body:%d) -> %s", tcpID.Ident, req.Method, req.URL, s, encoding)
+	// body, err := ioutil.ReadAll(req.Body)
+	// req.Body = io.NopCloser(bytes.NewBuffer(body)) // rewind
+	// s := len(body)
+	// if err != nil {
+	// 	log.Printf("[HTTP-request-body] stream %s Got body err: %s", tcpID.Ident, err)
+	// }
+	// if err := req.Body.Close(); err != nil {
+	// 	log.Printf("[HTTP-request-body-close] stream %s Failed to close request body: %s", tcpID.Ident, err)
+	// }
+	// log.Printf("HTTP/1 Request: %s %s %s (Body:%d) -> %s", tcpID.Ident, req.Method, req.URL, s, req.Header["Content-Encoding"])
 
 	ident := fmt.Sprintf(
 		"%s->%s %s->%s %d",
@@ -131,25 +126,24 @@ func handleHTTP1ServerStream(b *bufio.Reader, tcpID *api.TcpID, counterPair *api
 	}
 	counterPair.Response++
 
-	body, err := ioutil.ReadAll(res.Body)
-	res.Body = io.NopCloser(bytes.NewBuffer(body)) // rewind
-	s := len(body)
-	if err != nil {
-		log.Printf("[HTTP-response-body] HTTP/%s: failed to get body(parsed len:%d): %s", tcpID.Ident, s, err)
-	}
-	if err := res.Body.Close(); err != nil {
-		log.Printf("[HTTP-response-body-close] HTTP/%s: failed to close body(parsed len:%d): %s", tcpID.Ident, s, err)
-	}
-	sym := ","
-	if res.ContentLength > 0 && res.ContentLength != int64(s) {
-		sym = "!="
-	}
-	contentType, ok := res.Header["Content-Type"]
-	if !ok {
-		contentType = []string{http.DetectContentType(body)}
-	}
-	encoding := res.Header["Content-Encoding"]
-	log.Printf("HTTP/1 Response: %s %s (%d%s%d%s) -> %s", tcpID.Ident, res.Status, res.ContentLength, sym, s, contentType, encoding)
+	// body, err := ioutil.ReadAll(res.Body)
+	// res.Body = io.NopCloser(bytes.NewBuffer(body)) // rewind
+	// s := len(body)
+	// if err != nil {
+	// 	log.Printf("[HTTP-response-body] HTTP/%s: failed to get body(parsed len:%d): %s", tcpID.Ident, s, err)
+	// }
+	// if err := res.Body.Close(); err != nil {
+	// 	log.Printf("[HTTP-response-body-close] HTTP/%s: failed to close body(parsed len:%d): %s", tcpID.Ident, s, err)
+	// }
+	// sym := ","
+	// if res.ContentLength > 0 && res.ContentLength != int64(s) {
+	// 	sym = "!="
+	// }
+	// contentType, ok := res.Header["Content-Type"]
+	// if !ok {
+	// 	contentType = []string{http.DetectContentType(body)}
+	// }
+	// log.Printf("HTTP/1 Response: %s %s (%d%s%d%s) -> %s", tcpID.Ident, res.Status, res.ContentLength, sym, s, contentType, res.Header["Content-Encoding"])
 
 	ident := fmt.Sprintf(
 		"%s->%s %s->%s %d",
