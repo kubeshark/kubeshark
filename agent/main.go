@@ -4,15 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/gin-contrib/static"
-	"github.com/gin-gonic/gin"
-	"github.com/gorilla/websocket"
-	"github.com/romana/rlog"
-	"github.com/up9inc/mizu/shared"
-	"github.com/up9inc/mizu/tap"
-	tapApi "github.com/up9inc/mizu/tap/api"
 	"io/ioutil"
-	"log"
 	"mizuserver/pkg/api"
 	"mizuserver/pkg/controllers"
 	"mizuserver/pkg/models"
@@ -26,6 +18,15 @@ import (
 	"path/filepath"
 	"plugin"
 	"sort"
+
+	"github.com/gin-contrib/static"
+	"github.com/gin-gonic/gin"
+	"github.com/gorilla/websocket"
+	"github.com/op/go-logging"
+	"github.com/up9inc/mizu/shared"
+	"github.com/up9inc/mizu/shared/logger"
+	"github.com/up9inc/mizu/tap"
+	tapApi "github.com/up9inc/mizu/tap/api"
 )
 
 var tapperMode = flag.Bool("tap", false, "Run in tapper mode without API")
@@ -40,6 +41,8 @@ var extensions []*tapApi.Extension             // global
 var extensionsMap map[string]*tapApi.Extension // global
 
 func main() {
+	logLevel := determineLogLevel()
+	logger.InitLoggerStderrOnly(logLevel)
 	flag.Parse()
 	loadExtensions()
 
@@ -63,7 +66,7 @@ func main() {
 
 		hostApi(nil)
 	} else if *tapperMode {
-		rlog.Infof("Starting tapper, websocket address: %s", *apiServerAddress)
+		logger.Log.Infof("Starting tapper, websocket address: %s", *apiServerAddress)
 		if *apiServerAddress == "" {
 			panic("API server address must be provided with --api-server-address when using --tap")
 		}
@@ -71,7 +74,7 @@ func main() {
 		tapTargets := getTapTargets()
 		if tapTargets != nil {
 			tap.SetFilterAuthorities(tapTargets)
-			rlog.Infof("Filtering for the following authorities: %v", tap.GetFilterIPs())
+			logger.Log.Infof("Filtering for the following authorities: %v", tap.GetFilterIPs())
 		}
 
 		filteredOutputItemsChannel := make(chan *tapApi.OutputChannelItem)
@@ -84,7 +87,7 @@ func main() {
 		if err != nil {
 			panic(fmt.Sprintf("Error connecting to socket server at %s %v", *apiServerAddress, err))
 		}
-		rlog.Infof("Connected successfully to websocket %s", *apiServerAddress)
+		logger.Log.Infof("Connected successfully to websocket %s", *apiServerAddress)
 
 		go pipeTapChannelToSocket(socketConnection, filteredOutputItemsChannel)
 	} else if *apiServerMode {
@@ -117,7 +120,7 @@ func main() {
 	signal.Notify(signalChan, os.Interrupt)
 	<-signalChan
 
-	rlog.Info("Exiting")
+	logger.Log.Info("Exiting")
 }
 
 func loadExtensions() {
@@ -126,13 +129,13 @@ func loadExtensions() {
 
 	files, err := ioutil.ReadDir(extensionsDir)
 	if err != nil {
-		log.Fatal(err)
+		logger.Log.Fatal(err)
 	}
 	extensions = make([]*tapApi.Extension, len(files))
 	extensionsMap = make(map[string]*tapApi.Extension)
 	for i, file := range files {
 		filename := file.Name()
-		rlog.Infof("Loading extension: %s\n", filename)
+		logger.Log.Infof("Loading extension: %s\n", filename)
 		extension := &tapApi.Extension{
 			Path: path.Join(extensionsDir, filename),
 		}
@@ -157,7 +160,7 @@ func loadExtensions() {
 	})
 
 	for _, extension := range extensions {
-		log.Printf("Extension Properties: %+v\n", extension)
+		logger.Log.Infof("Extension Properties: %+v\n", extension)
 	}
 
 	controllers.InitExtensionsMap(extensionsMap)
@@ -274,7 +277,7 @@ func pipeTapChannelToSocket(connection *websocket.Conn, messageDataChannel <-cha
 	for messageData := range messageDataChannel {
 		marshaledData, err := models.CreateWebsocketTappedEntryMessage(messageData)
 		if err != nil {
-			rlog.Errorf("error converting message to json %v, err: %s, (%v,%+v)", messageData, err, err, err)
+			logger.Log.Errorf("error converting message to json %v, err: %s, (%v,%+v)", messageData, err, err, err)
 			continue
 		}
 
@@ -282,7 +285,7 @@ func pipeTapChannelToSocket(connection *websocket.Conn, messageDataChannel <-cha
 		// and goes into the intermediate WebSocket.
 		err = connection.WriteMessage(websocket.TextMessage, marshaledData)
 		if err != nil {
-			rlog.Errorf("error sending message through socket server %v, err: %s, (%v,%+v)", messageData, err, err, err)
+			logger.Log.Errorf("error sending message through socket server %v, err: %s, (%v,%+v)", messageData, err, err, err)
 			continue
 		}
 	}
@@ -301,4 +304,12 @@ func getSyncEntriesConfig() *shared.SyncEntriesConfig {
 	}
 
 	return syncEntriesConfig
+}
+
+func determineLogLevel() (logLevel logging.Level) {
+	logLevel = logging.INFO
+	if os.Getenv(shared.DebugModeEnvVar) == "1" {
+		logLevel = logging.DEBUG
+	}
+	return
 }

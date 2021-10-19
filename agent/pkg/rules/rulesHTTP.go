@@ -8,7 +8,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/romana/rlog"
+	"github.com/up9inc/mizu/shared/logger"
 
 	"github.com/google/martian/har"
 	"github.com/up9inc/mizu/shared"
@@ -46,7 +46,7 @@ func ValidateService(serviceFromRule string, service string) bool {
 
 func MatchRequestPolicy(harEntry har.Entry, service string) (resultPolicyToSend []RulesMatched, isEnabled bool) {
 	enforcePolicy, err := shared.DecodeEnforcePolicy(fmt.Sprintf("%s/%s", shared.RulePolicyPath, shared.RulePolicyFileName))
-	if err == nil {
+	if err == nil && len(enforcePolicy.Rules) > 0 {
 		isEnabled = true
 	}
 	for _, rule := range enforcePolicy.Rules {
@@ -69,7 +69,7 @@ func MatchRequestPolicy(harEntry har.Entry, service string) (resultPolicyToSend 
 				if err != nil {
 					continue
 				}
-				rlog.Info(matchValue, rule.Value)
+				logger.Log.Info(matchValue, rule.Value)
 			} else {
 				val := fmt.Sprint(out)
 				matchValue, err = regexp.MatchString(rule.Value, val)

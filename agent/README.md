@@ -12,7 +12,8 @@ Basic APIs:
    `docker build . -t  gcr.io/up9-docker-hub/mizu/debug:latest -f debug.Dockerfile && docker push gcr.io/up9-docker-hub/mizu/debug:latest`
 
 ### Connecting
-1. Start mizu using the cli with the debug image `mizu tap --mizu-image gcr.io/up9-docker-hub/mizu/debug:latest {tapped_pod_name}`
+1. Start mizu using the cli with the debug
+   image `mizu tap --set agent-image=gcr.io/up9-docker-hub/mizu/debug:latest {tapped_pod_name}`
 2. Forward the debug port using `kubectl port-forward -n default mizu-api-server 2345:2345`
 3. Run the run/debug configuration you've created earlier in Intellij.
 

@@ -52,3 +52,7 @@ func (d *Debouncer) SetOn() error {
 	d.timer = time.AfterFunc(d.timeout, d.callback)
 	return nil
 }
+
+func (d *Debouncer) IsOn() bool {
+	return d.running
+}

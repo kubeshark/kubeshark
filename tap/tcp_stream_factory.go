@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/romana/rlog"
+	"github.com/up9inc/mizu/shared/logger"
 	"github.com/up9inc/mizu/tap/api"
 
 	"github.com/google/gopacket"
@@ -38,7 +38,7 @@ func NewTcpStreamFactory(emitter api.Emitter, streamsMap *tcpStreamMap) *tcpStre
 }
 
 func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.TCP, ac reassembly.AssemblerContext) reassembly.Stream {
-	rlog.Debugf("* NEW: %s %s", net, transport)
+	logger.Log.Debugf("* NEW: %s %s", net, transport)
 	fsmOptions := reassembly.TCPSimpleFSMOptions{
 		SupportMissingEstablishment: *allowmissinginit,
 	}
@@ -128,21 +128,21 @@ func (factory *tcpStreamFactory) WaitGoRoutines() {
 func (factory *tcpStreamFactory) getStreamProps(srcIP string, srcPort string, dstIP string, dstPort string) *streamProps {
 	if hostMode {
 		if inArrayString(gSettings.filterAuthorities, fmt.Sprintf("%s:%s", dstIP, dstPort)) {
-			rlog.Debugf("getStreamProps %s", fmt.Sprintf("+ host1 %s:%s", dstIP, dstPort))
+			logger.Log.Debugf("getStreamProps %s", fmt.Sprintf("+ host1 %s:%s", dstIP, dstPort))
 			return &streamProps{isTapTarget: true, isOutgoing: false}
 		} else if inArrayString(gSettings.filterAuthorities, dstIP) {
-			rlog.Debugf("getStreamProps %s", fmt.Sprintf("+ host2 %s", dstIP))
+			logger.Log.Debugf("getStreamProps %s", fmt.Sprintf("+ host2 %s", dstIP))
 			return &streamProps{isTapTarget: true, isOutgoing: false}
 		} else if inArrayString(gSettings.filterAuthorities, fmt.Sprintf("%s:%s", srcIP, srcPort)) {
-			rlog.Debugf("getStreamProps %s", fmt.Sprintf("+ host3 %s:%s", srcIP, srcPort))
+			logger.Log.Debugf("getStreamProps %s", fmt.Sprintf("+ host3 %s:%s", srcIP, srcPort))
 			return &streamProps{isTapTarget: true, isOutgoing: true}
 		} else if inArrayString(gSettings.filterAuthorities, srcIP) {
-			rlog.Debugf("getStreamProps %s", fmt.Sprintf("+ host4 %s", srcIP))
+			logger.Log.Debugf("getStreamProps %s", fmt.Sprintf("+ host4 %s", srcIP))
 			return &streamProps{isTapTarget: true, isOutgoing: true}
 		}
 		return &streamProps{isTapTarget: false, isOutgoing: false}
 	} else {
-		rlog.Debugf("getStreamProps %s", fmt.Sprintf("+ notHost3 %s:%s -> %s:%s", srcIP, srcPort, dstIP, dstPort))
+		logger.Log.Debugf("getStreamProps %s", fmt.Sprintf("+ notHost3 %s:%s -> %s:%s", srcIP, srcPort, dstIP, dstPort))
 		return &streamProps{isTapTarget: true}
 	}
 }
