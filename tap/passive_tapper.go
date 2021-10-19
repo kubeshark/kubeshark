@@ -171,6 +171,92 @@ func startMemoryProfiler() {
 	}()
 }
 
+func printPeriodicStats(cleaner *Cleaner) {
+	statsPeriod := time.Second * time.Duration(*statsevery)
+	ticker := time.NewTicker(statsPeriod)
+
+	for {
+		<-ticker.C
+
+		// Since the start
+		errorMapLen, errorsSummery := tapErrors.getErrorsSummary()
+
+		logger.Log.Infof("%v (errors: %v, errTypes:%v) - Errors Summary: %s",
+			time.Since(appStats.StartTime),
+			tapErrors.nErrors,
+			errorMapLen,
+			errorsSummery,
+		)
+
+		// At this moment
+		memStats := runtime.MemStats{}
+		runtime.ReadMemStats(&memStats)
+		logger.Log.Infof(
+			"mem: %d, goroutines: %d",
+			memStats.HeapAlloc,
+			runtime.NumGoroutine(),
+		)
+
+		// Since the last print
+		cleanStats := cleaner.dumpStats()
+		logger.Log.Infof(
+			"cleaner - flushed connections: %d, closed connections: %d, deleted messages: %d",
+			cleanStats.flushed,
+			cleanStats.closed,
+			cleanStats.deleted,
+		)
+		currentAppStats := appStats.DumpStats()
+		appStatsJSON, _ := json.Marshal(currentAppStats)
+		logger.Log.Infof("app stats - %v", string(appStatsJSON))
+	}
+}
+
+func dumpMemoryProfile(filename string) error {
+	if filename == "" {
+		return nil
+	}
+
+	f, err := os.Create(*memprofile)
+
+	if err != nil {
+		return err
+	}
+
+	defer f.Close()
+
+	if err := pprof.WriteHeapProfile(f); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func printStatsSummary() {
+	if !*nodefrag {
+		logger.Log.Infof("IPdefrag:\t\t%d", stats.ipdefrag)
+	}
+	logger.Log.Infof("TCP stats:")
+	logger.Log.Infof(" missed bytes:\t\t%d", stats.missedBytes)
+	logger.Log.Infof(" total packets:\t\t%d", stats.pkt)
+	logger.Log.Infof(" rejected FSM:\t\t%d", stats.rejectFsm)
+	logger.Log.Infof(" rejected Options:\t%d", stats.rejectOpt)
+	logger.Log.Infof(" reassembled bytes:\t%d", stats.sz)
+	logger.Log.Infof(" total TCP bytes:\t%d", stats.totalsz)
+	logger.Log.Infof(" conn rejected FSM:\t%d", stats.rejectConnFsm)
+	logger.Log.Infof(" reassembled chunks:\t%d", stats.reassembled)
+	logger.Log.Infof(" out-of-order packets:\t%d", stats.outOfOrderPackets)
+	logger.Log.Infof(" out-of-order bytes:\t%d", stats.outOfOrderBytes)
+	logger.Log.Infof(" biggest-chunk packets:\t%d", stats.biggestChunkPackets)
+	logger.Log.Infof(" biggest-chunk bytes:\t%d", stats.biggestChunkBytes)
+	logger.Log.Infof(" overlap packets:\t%d", stats.overlapPackets)
+	logger.Log.Infof(" overlap bytes:\t\t%d", stats.overlapBytes)
+	logger.Log.Infof("Errors: %d", tapErrors.nErrors)
+	for e := range tapErrors.errorsMap {
+		logger.Log.Infof(" %s:\t\t%d", e, tapErrors.errorsMap[e])
+	}
+	logger.Log.Infof("AppStats: %v", GetStats())
+}
+
 func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
 	streamsMap := NewTcpStreamMap()
 	go streamsMap.closeTimedoutTcpStreamChannels()
@@ -202,6 +288,10 @@ func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
 		bpfFilter:   bpffilter,
 	})
 
+	if err != nil {
+		logger.Log.Fatal(err)
+	}
+
 	defer packetSource.close()
 
 	packets := make(chan tcpPacketInfo, 10000)
@@ -212,10 +302,6 @@ func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
 
 	go packetSource.readPackets(!*nodefrag, packets)
 
-	if err != nil {
-		logger.Log.Fatal(err)
-	}
-
 	staleConnectionTimeout := time.Second * time.Duration(*staleTimeoutSeconds)
 	cleaner := Cleaner{
 		assembler:         assembler.Assembler,
@@ -225,45 +311,7 @@ func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
 	}
 	cleaner.start()
 
-	go func() {
-		statsPeriod := time.Second * time.Duration(*statsevery)
-		ticker := time.NewTicker(statsPeriod)
-
-		for {
-			<-ticker.C
-
-			// Since the start
-			errorMapLen, errorsSummery := tapErrors.getErrorsSummary()
-
-			logger.Log.Infof("%v (errors: %v, errTypes:%v) - Errors Summary: %s",
-				time.Since(appStats.StartTime),
-				tapErrors.nErrors,
-				errorMapLen,
-				errorsSummery,
-			)
-
-			// At this moment
-			memStats := runtime.MemStats{}
-			runtime.ReadMemStats(&memStats)
-			logger.Log.Infof(
-				"mem: %d, goroutines: %d",
-				memStats.HeapAlloc,
-				runtime.NumGoroutine(),
-			)
-
-			// Since the last print
-			cleanStats := cleaner.dumpStats()
-			logger.Log.Infof(
-				"cleaner - flushed connections: %d, closed connections: %d, deleted messages: %d",
-				cleanStats.flushed,
-				cleanStats.closed,
-				cleanStats.deleted,
-			)
-			currentAppStats := appStats.DumpStats()
-			appStatsJSON, _ := json.Marshal(currentAppStats)
-			logger.Log.Infof("app stats - %v", string(appStatsJSON))
-		}
-	}()
+	go printPeriodicStats(&cleaner)
 
 	if GetMemoryProfilingEnabled() {
 		startMemoryProfiler()
@@ -275,38 +323,11 @@ func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
 		assembler.dumpStreamPool()
 	}
 
-	if *memprofile != "" {
-		f, err := os.Create(*memprofile)
-		if err != nil {
-			logger.Log.Fatal(err)
-		}
-		_ = pprof.WriteHeapProfile(f)
-		_ = f.Close()
+	if err := dumpMemoryProfile(*memprofile); err != nil {
+		logger.Log.Errorf("Error dumping memory profile %v\n", err)
 	}
 
 	assembler.waitAndDump()
 
-	if !*nodefrag {
-		logger.Log.Infof("IPdefrag:\t\t%d", stats.ipdefrag)
-	}
-	logger.Log.Infof("TCP stats:")
-	logger.Log.Infof(" missed bytes:\t\t%d", stats.missedBytes)
-	logger.Log.Infof(" total packets:\t\t%d", stats.pkt)
-	logger.Log.Infof(" rejected FSM:\t\t%d", stats.rejectFsm)
-	logger.Log.Infof(" rejected Options:\t%d", stats.rejectOpt)
-	logger.Log.Infof(" reassembled bytes:\t%d", stats.sz)
-	logger.Log.Infof(" total TCP bytes:\t%d", stats.totalsz)
-	logger.Log.Infof(" conn rejected FSM:\t%d", stats.rejectConnFsm)
-	logger.Log.Infof(" reassembled chunks:\t%d", stats.reassembled)
-	logger.Log.Infof(" out-of-order packets:\t%d", stats.outOfOrderPackets)
-	logger.Log.Infof(" out-of-order bytes:\t%d", stats.outOfOrderBytes)
-	logger.Log.Infof(" biggest-chunk packets:\t%d", stats.biggestChunkPackets)
-	logger.Log.Infof(" biggest-chunk bytes:\t%d", stats.biggestChunkBytes)
-	logger.Log.Infof(" overlap packets:\t%d", stats.overlapPackets)
-	logger.Log.Infof(" overlap bytes:\t\t%d", stats.overlapBytes)
-	logger.Log.Infof("Errors: %d", tapErrors.nErrors)
-	for e := range tapErrors.errorsMap {
-		logger.Log.Infof(" %s:\t\t%d", e, tapErrors.errorsMap[e])
-	}
-	logger.Log.Infof("AppStats: %v", GetStats())
+	printStatsSummary()
 }
