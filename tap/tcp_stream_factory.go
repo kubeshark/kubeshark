@@ -163,7 +163,7 @@ func (factory *tcpStreamFactory) getStreamProps(srcIP string, srcPort string, ds
 //lint:ignore U1000 will be used in the future
 func (factory *tcpStreamFactory) shouldNotifyOnOutboundLink(dstIP string, dstPort int) bool {
 	if inArrayInt(remoteOnlyOutboundPorts, dstPort) {
-		isDirectedHere := inArrayString(ownIps, dstIP)
+		isDirectedHere := inArrayString(factory.ownIps, dstIP)
 		return !isDirectedHere && !isPrivateIP(dstIP)
 	}
 	return true
