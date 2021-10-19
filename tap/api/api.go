@@ -206,12 +206,17 @@ func (bed *BaseEntryDetails) UnmarshalData(entry *MizuEntry) error {
 	}
 	bed.Id = entry.EntryId
 	bed.Url = entry.Url
+	bed.RequestSenderIp = entry.RequestSenderIp
 	bed.Service = entry.Service
+	bed.Path = entry.Path
 	bed.Summary = entry.Path
 	bed.StatusCode = entry.Status
 	bed.Method = entry.Method
 	bed.Timestamp = entry.Timestamp
-	bed.RequestSenderIp = entry.RequestSenderIp
+	bed.SourceIp = entry.SourceIp
+	bed.DestinationIp = entry.DestinationIp
+	bed.SourcePort = entry.SourcePort
+	bed.DestinationPort = entry.DestinationPort
 	bed.IsOutgoing = entry.IsOutgoing
 	bed.Latency = entry.ElapsedTime
 	bed.ContractStatus = entry.ContractStatus
