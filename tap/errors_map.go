@@ -10,7 +10,7 @@ import (
 type errorsMap struct {
 	errorsMap      map[string]uint
 	outputLevel    int
-	nErrors        int
+	nErrors        uint
 	errorsMapMutex sync.Mutex
 }
 
