@@ -30,6 +30,7 @@ type tcpStream struct {
 	servers         []tcpReader
 	ident           string
 	sync.Mutex
+	streamsMap *tcpStreamMap
 }
 
 func (t *tcpStream) Accept(tcp *layers.TCP, ci gopacket.CaptureInfo, dir reassembly.TCPFlowDirection, nextSeq reassembly.Sequence, start *bool, ac reassembly.AssemblerContext) bool {
@@ -192,7 +193,7 @@ func (t *tcpStream) Close() {
 	if shouldReturn {
 		return
 	}
-	streams.Delete(t.id)
+	t.streamsMap.Delete(t.id)
 
 	for i := range t.clients {
 		reader := &t.clients[i]
