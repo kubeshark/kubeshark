@@ -2,7 +2,6 @@ package tap
 
 import (
 	"bufio"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"sync"
@@ -20,23 +19,12 @@ type tcpReaderDataMsg struct {
 	timestamp time.Time
 }
 
-type tcpID struct {
-	srcIP   string
-	dstIP   string
-	srcPort string
-	dstPort string
-}
-
 type ConnectionInfo struct {
 	ClientIP   string
 	ClientPort string
 	ServerIP   string
 	ServerPort string
 	IsOutgoing bool
-}
-
-func (tid *tcpID) String() string {
-	return fmt.Sprintf("%s->%s %s->%s", tid.srcIP, tid.dstIP, tid.srcPort, tid.dstPort)
 }
 
 /* tcpReader gets reads from a channel of bytes of tcp payload, and parses it into requests and responses.
@@ -54,7 +42,6 @@ type tcpReader struct {
 	data               []byte
 	superTimer         *api.SuperTimer
 	parent             *tcpStream
-	messageCount       uint
 	packetsSeen        uint
 	outboundLinkWriter *OutboundLinkWriter
 	extension          *api.Extension

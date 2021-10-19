@@ -28,7 +28,6 @@ type tcpStream struct {
 	isTapTarget     bool
 	clients         []tcpReader
 	servers         []tcpReader
-	urls            []string
 	ident           string
 	sync.Mutex
 }
