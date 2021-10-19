@@ -75,9 +75,6 @@ func getAuthHeader(guestMode bool) string {
 
 func GetTrafficDumpUrl(analyzeDestination string, analyzeModel string) *url.URL {
 	strUrl := fmt.Sprintf("https://traffic.%s/dumpTrafficBulk/%s", analyzeDestination, analyzeModel)
-	if strings.HasPrefix(analyzeDestination, "http") {
-		strUrl = fmt.Sprintf("%s/api/workspace/dumpTrafficBulk", analyzeDestination)
-	}
 	postUrl, _ := url.Parse(strUrl)
 	return postUrl
 }
