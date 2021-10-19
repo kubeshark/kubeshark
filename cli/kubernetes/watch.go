@@ -3,6 +3,7 @@ package kubernetes
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/up9inc/mizu/shared/debounce"
 	"github.com/up9inc/mizu/shared/logger"
 	"regexp"
@@ -43,7 +44,7 @@ func FilteredWatch(ctx context.Context, kubernetesProvider *Provider, targetName
 				}
 
 				if err != nil {
-					errorChan <- errors.New("received too many unknown errors in k8s watch")
+					errorChan <- fmt.Errorf("error in k8 watch: %v", err)
 					break
 				} else {
 					if !watchRestartDebouncer.IsOn() {
@@ -52,7 +53,7 @@ func FilteredWatch(ctx context.Context, kubernetesProvider *Provider, targetName
 						time.Sleep(time.Second * 5)
 						continue
 					} else {
-						errorChan <- errors.New("k8s watch channel was closed too often")
+						errorChan <- errors.New("k8s watch unstable, closes frequently")
 						break
 					}
 				}
