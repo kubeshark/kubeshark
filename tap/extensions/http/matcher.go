@@ -39,15 +39,12 @@ func (matcher *requestResponseMatcher) registerRequest(ident string, request *ht
 		// Type assertion always succeeds because all of the map's values are of api.GenericMessage type
 		responseHTTPMessage := response.(*api.GenericMessage)
 		if responseHTTPMessage.IsRequest {
-			// log.Printf("[Request-Duplicate] Got duplicate request with same identifier")
 			return nil
 		}
-		// log.Printf("Matched open Response for %s", key)
 		return matcher.preparePair(&requestHTTPMessage, responseHTTPMessage)
 	}
 
 	matcher.openMessagesMap.Store(key, &requestHTTPMessage)
-	// log.Printf("Registered open Request for %s", key)
 	return nil
 }
 
@@ -68,15 +65,12 @@ func (matcher *requestResponseMatcher) registerResponse(ident string, response *
 		// Type assertion always succeeds because all of the map's values are of api.GenericMessage type
 		requestHTTPMessage := request.(*api.GenericMessage)
 		if !requestHTTPMessage.IsRequest {
-			// log.Printf("[Response-Duplicate] Got duplicate response with same identifier")
 			return nil
 		}
-		// log.Printf("Matched open Request for %s", key)
 		return matcher.preparePair(requestHTTPMessage, &responseHTTPMessage)
 	}
 
 	matcher.openMessagesMap.Store(key, &responseHTTPMessage)
-	// log.Printf("Registered open Response for %s", key)
 	return nil
 }
 

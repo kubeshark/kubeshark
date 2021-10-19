@@ -314,7 +314,6 @@ func (p *RedisProtocol) Read() (packet *RedisPacket, err error) {
 			}
 		default:
 			msg := fmt.Sprintf("Unrecognized element in Redis array: %v\n", reflect.TypeOf(array[0]))
-			// log.Printf(msg)
 			err = errors.New(msg)
 			return
 		}
@@ -335,7 +334,6 @@ func (p *RedisProtocol) Read() (packet *RedisPacket, err error) {
 		packet.Value = fmt.Sprintf("%d", x.(int64))
 	default:
 		msg := fmt.Sprintf("Unrecognized Redis data type: %v\n", reflect.TypeOf(x))
-		// log.Printf(msg)
 		err = errors.New(msg)
 		return
 	}
