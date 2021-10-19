@@ -29,55 +29,29 @@ func FilteredWatch(ctx context.Context, kubernetesProvider *Provider, targetName
 		go func(targetNamespace string) {
 			defer wg.Done()
 			watchRestartDebouncer := debounce.NewDebouncer(5 * time.Second, func() {})
-			shouldStop := false
 
-			for !shouldStop {
+			for {
 				watcher := kubernetesProvider.GetPodWatcher(ctx, targetNamespace)
-				func() {
-					for !shouldStop {
-						select {
-						case e := <-watcher.ResultChan():
-							if e.Type == watch.Error {
-								errorChan <- apierrors.FromObject(e.Object)
-								shouldStop = true
-								return
-							}
-							if e.Object == nil {
-								if !watchRestartDebouncer.IsOn() {
-									logger.Log.Debug("detected a potential harmless watch timeout, retrying watch loop")
-									return
-								} else {
-									errorChan <- errors.New("received too many unknown errors in k8s watch")
-									shouldStop = true
-									return
-								}
+				err, isContextCanceled := startWatchLoop(ctx, watcher, podFilter, addedChan, modifiedChan, removedChan)
 
-							}
+				watcher.Stop()
+				if isContextCanceled {
+					break
+				}
 
-							pod, ok := e.Object.(*corev1.Pod)
-							if !ok {
-								continue
-							}
-
-							if !podFilter.MatchString(pod.Name) {
-								continue
-							}
-
-							switch e.Type {
-							case watch.Added:
-								addedChan <- pod
-							case watch.Modified:
-								modifiedChan <- pod
-							case watch.Deleted:
-								removedChan <- pod
-							}
-						case <-ctx.Done():
-							watcher.Stop()
-							shouldStop = true
-							return
-						}
+				if err != nil {
+					errorChan <- errors.New("received too many unknown errors in k8s watch")
+				} else {
+					if !watchRestartDebouncer.IsOn() {
+						watchRestartDebouncer.SetOn()
+						logger.Log.Warning("detected a potential harmless watch timeout, retrying watch loop")
+						time.Sleep(time.Second * 5)
+						continue
+					} else {
+						errorChan <- errors.New("received too many unknown errors in k8s watch")
+						break
 					}
-				}()
+				}
 			}
 		}(targetNamespace)
 	}
@@ -92,4 +66,38 @@ func FilteredWatch(ctx context.Context, kubernetesProvider *Provider, targetName
 	}()
 
 	return addedChan, modifiedChan, removedChan, errorChan
+}
+
+func startWatchLoop(ctx context.Context, watcher watch.Interface, podFilter *regexp.Regexp, addedChan chan *corev1.Pod, modifiedChan chan *corev1.Pod, removedChan chan *corev1.Pod) (err error, isContextCanceled bool) {
+	for {
+		select {
+		case e := <-watcher.ResultChan():
+			if e.Type == watch.Error {
+				return apierrors.FromObject(e.Object), false
+			}
+			if e.Object == nil {
+				return nil, false
+			}
+
+			pod, ok := e.Object.(*corev1.Pod)
+			if !ok {
+				continue
+			}
+
+			if !podFilter.MatchString(pod.Name) {
+				continue
+			}
+
+			switch e.Type {
+			case watch.Added:
+				addedChan <- pod
+			case watch.Modified:
+				modifiedChan <- pod
+			case watch.Deleted:
+				removedChan <- pod
+			}
+		case <-ctx.Done():
+			return nil, true
+		}
+	}
 }
