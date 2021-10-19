@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/reassembly"
 	"github.com/up9inc/mizu/shared/logger"
@@ -18,6 +19,20 @@ type tcpAssembler struct {
 	streamPool     *reassembly.StreamPool
 	streamFactory  *tcpStreamFactory
 	assemblerMutex sync.Mutex
+}
+
+// Context
+// The assembler context
+type context struct {
+	CaptureInfo gopacket.CaptureInfo
+}
+
+func GetStats() api.AppStats {
+	return appStats
+}
+
+func (c *context) GetCaptureInfo() gopacket.CaptureInfo {
+	return c.CaptureInfo
 }
 
 func NewTcpAssember(outputItems chan *api.OutputChannelItem, streamsMap *tcpStreamMap) *tcpAssembler {
@@ -68,7 +83,7 @@ func (a *tcpAssembler) processPackets(dumpPacket bool, packets <-chan tcpPacketI
 					logger.Log.Fatalf("Failed to set network layer for checksum: %s\n", err)
 				}
 			}
-			c := Context{
+			c := context{
 				CaptureInfo: packet.Metadata().CaptureInfo,
 			}
 			stats.totalsz += len(tcp.Payload)

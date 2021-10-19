@@ -19,7 +19,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/gopacket"
 	"github.com/google/gopacket/examples/util" // pulls in all layers decoders
 	"github.com/up9inc/mizu/shared/logger"
 	"github.com/up9inc/mizu/tap/api"
@@ -100,20 +99,6 @@ func inArrayString(arr []string, valueToCheck string) bool {
 		}
 	}
 	return false
-}
-
-// Context
-// The assembler context
-type Context struct {
-	CaptureInfo gopacket.CaptureInfo
-}
-
-func GetStats() api.AppStats {
-	return appStats
-}
-
-func (c *Context) GetCaptureInfo() gopacket.CaptureInfo {
-	return c.CaptureInfo
 }
 
 func StartPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem, extensionsRef []*api.Extension, options *api.TrafficFilteringOptions) {
@@ -204,6 +189,10 @@ func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
 
 	defer packetSource.close()
 
+	if err != nil {
+		logger.Log.Fatal(err)
+	}
+
 	packets := make(chan tcpPacketInfo, 10000)
 	assembler := NewTcpAssember(outputItems, streamsMap)
 
@@ -211,10 +200,6 @@ func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
 	appStats.SetStartTime(time.Now())
 
 	go packetSource.readPackets(!*nodefrag, packets)
-
-	if err != nil {
-		logger.Log.Fatal(err)
-	}
 
 	staleConnectionTimeout := time.Second * time.Duration(*staleTimeoutSeconds)
 	cleaner := Cleaner{
