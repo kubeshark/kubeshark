@@ -1,15 +1,14 @@
 package database
 
 import (
-	"log"
 	"os"
 	"strconv"
 	"time"
 
 	"github.com/fsnotify/fsnotify"
-	"github.com/romana/rlog"
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/debounce"
+	"github.com/up9inc/mizu/shared/logger"
 	"github.com/up9inc/mizu/shared/units"
 	tapApi "github.com/up9inc/mizu/tap/api"
 )
@@ -20,13 +19,13 @@ const defaultMaxDatabaseSizeBytes int64 = 200 * 1000 * 1000
 func StartEnforcingDatabaseSize() {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
-		log.Fatalf("Error creating filesystem watcher for db size enforcement: %v\n", err)
+		logger.Log.Fatalf("Error creating filesystem watcher for db size enforcement: %v\n", err)
 		return
 	}
 
 	maxEntriesDBByteSize, err := getMaxEntriesDBByteSize()
 	if err != nil {
-		log.Fatalf("Error parsing max db size: %v\n", err)
+		logger.Log.Fatalf("Error parsing max db size: %v\n", err)
 		return
 	}
 
@@ -48,14 +47,14 @@ func StartEnforcingDatabaseSize() {
 				if !ok {
 					return // closed channel
 				}
-				rlog.Errorf("filesystem watcher encountered error:%v", err)
+				logger.Log.Errorf("filesystem watcher encountered error:%v", err)
 			}
 		}
 	}()
 
 	err = watcher.Add(DBPath)
 	if err != nil {
-		log.Fatalf("Error adding %s to filesystem watcher for db size enforcement: %v\n", DBPath, err)
+		logger.Log.Fatalf("Error adding %s to filesystem watcher for db size enforcement: %v\n", DBPath, err)
 	}
 }
 
@@ -73,7 +72,7 @@ func getMaxEntriesDBByteSize() (int64, error) {
 func checkFileSize(maxSizeBytes int64) {
 	fileStat, err := os.Stat(DBPath)
 	if err != nil {
-		rlog.Errorf("Error checking %s file size: %v", DBPath, err)
+		logger.Log.Errorf("Error checking %s file size: %v", DBPath, err)
 	} else {
 		if fileStat.Size() > maxSizeBytes {
 			pruneOldEntries(fileStat.Size())
@@ -90,7 +89,7 @@ func pruneOldEntries(currentFileSize int64) {
 
 	rows, err := GetEntriesTable().Limit(10000).Order("id").Rows()
 	if err != nil {
-		rlog.Errorf("Error getting 10000 first db rows: %v", err)
+		logger.Log.Errorf("Error getting 10000 first db rows: %v", err)
 		return
 	}
 
@@ -103,7 +102,7 @@ func pruneOldEntries(currentFileSize int64) {
 		var entry tapApi.MizuEntry
 		err = DB.ScanRows(rows, &entry)
 		if err != nil {
-			rlog.Errorf("Error scanning db row: %v", err)
+			logger.Log.Errorf("Error scanning db row: %v", err)
 			continue
 		}
 
@@ -115,8 +114,8 @@ func pruneOldEntries(currentFileSize int64) {
 		GetEntriesTable().Where(entryIdsToRemove).Delete(tapApi.MizuEntry{})
 		// VACUUM causes sqlite to shrink the db file after rows have been deleted, the db file will not shrink without this
 		DB.Exec("VACUUM")
-		rlog.Errorf("Removed %d rows and cleared %s", len(entryIdsToRemove), units.BytesToHumanReadable(bytesToBeRemoved))
+		logger.Log.Errorf("Removed %d rows and cleared %s", len(entryIdsToRemove), units.BytesToHumanReadable(bytesToBeRemoved))
 	} else {
-		rlog.Error("Found no rows to remove when pruning")
+		logger.Log.Error("Found no rows to remove when pruning")
 	}
 }

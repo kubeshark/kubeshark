@@ -14,7 +14,6 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"os/signal"
 	"runtime"
@@ -24,14 +23,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/romana/rlog"
-
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/examples/util"
 	"github.com/google/gopacket/ip4defrag"
 	"github.com/google/gopacket/layers" // pulls in all layers decoders
 	"github.com/google/gopacket/pcap"
 	"github.com/google/gopacket/reassembly"
+	"github.com/up9inc/mizu/shared/logger"
 	"github.com/up9inc/mizu/tap/api"
 )
 
@@ -65,7 +63,6 @@ var staleTimeoutSeconds = flag.Int("staletimout", 120, "Max time in seconds to k
 var memprofile = flag.String("memprofile", "", "Write memory profile")
 
 var appStats = api.AppStats{}
-var tapErrors *errorsMap
 
 // global
 var stats struct {
@@ -154,11 +151,11 @@ func startMemoryProfiler() {
 		}
 	}
 
-	rlog.Info("Profiling is on, results will be written to %s", dumpPath)
+	logger.Log.Info("Profiling is on, results will be written to %s", dumpPath)
 	go func() {
 		if _, err := os.Stat(dumpPath); os.IsNotExist(err) {
 			if err := os.Mkdir(dumpPath, 0777); err != nil {
-				log.Fatal("could not create directory for profile: ", err)
+				logger.Log.Fatal("could not create directory for profile: ", err)
 			}
 		}
 
@@ -167,15 +164,15 @@ func startMemoryProfiler() {
 
 			filename := fmt.Sprintf("%s/%s__mem.prof", dumpPath, t.Format("15_04_05"))
 
-			rlog.Infof("Writing memory profile to %s\n", filename)
+			logger.Log.Infof("Writing memory profile to %s\n", filename)
 
 			f, err := os.Create(filename)
 			if err != nil {
-				log.Fatal("could not create memory profile: ", err)
+				logger.Log.Fatal("could not create memory profile: ", err)
 			}
 			runtime.GC() // get up-to-date statistics
 			if err := pprof.WriteHeapProfile(f); err != nil {
-				log.Fatal("could not write memory profile: ", err)
+				logger.Log.Fatal("could not write memory profile: ", err)
 			}
 			_ = f.Close()
 			time.Sleep(time.Second * time.Duration(timeInterval))
@@ -184,8 +181,6 @@ func startMemoryProfiler() {
 }
 
 func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
-	log.SetFlags(log.LstdFlags | log.LUTC | log.Lshortfile)
-
 	streamsMap := NewTcpStreamMap()
 	go streamsMap.closeTimedoutTcpStreamChannels()
 
@@ -204,8 +199,8 @@ func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
 
 	if localhostIPs, err := getLocalhostIPs(); err != nil {
 		// TODO: think this over
-		rlog.Info("Failed to get self IP addresses")
-		rlog.Errorf("Getting-Self-Address", "Error getting self ip address: %s (%v,%+v)", err, err, err)
+		logger.Log.Info("Failed to get self IP addresses")
+		logger.Log.Errorf("Getting-Self-Address", "Error getting self ip address: %s (%v,%+v)", err, err, err)
 		ownIps = make([]string, 0)
 	} else {
 		ownIps = localhostIPs
@@ -215,7 +210,7 @@ func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
 	var err error
 	if *fname != "" {
 		if handle, err = pcap.OpenOffline(*fname); err != nil {
-			log.Fatalf("PCAP OpenOffline error: %v", err)
+			logger.Log.Fatalf("PCAP OpenOffline error: %v", err)
 		}
 	} else {
 		// This is a little complicated because we want to allow all possible options
@@ -223,33 +218,33 @@ func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
 		// just call pcap.OpenLive if you want a simple handle.
 		inactive, err := pcap.NewInactiveHandle(*iface)
 		if err != nil {
-			log.Fatalf("could not create: %v", err)
+			logger.Log.Fatalf("could not create: %v", err)
 		}
 		defer inactive.CleanUp()
 		if err = inactive.SetSnapLen(*snaplen); err != nil {
-			log.Fatalf("could not set snap length: %v", err)
+			logger.Log.Fatalf("could not set snap length: %v", err)
 		} else if err = inactive.SetPromisc(*promisc); err != nil {
-			log.Fatalf("could not set promisc mode: %v", err)
+			logger.Log.Fatalf("could not set promisc mode: %v", err)
 		} else if err = inactive.SetTimeout(time.Second); err != nil {
-			log.Fatalf("could not set timeout: %v", err)
+			logger.Log.Fatalf("could not set timeout: %v", err)
 		}
 		if *tstype != "" {
 			if t, err := pcap.TimestampSourceFromString(*tstype); err != nil {
-				log.Fatalf("Supported timestamp types: %v", inactive.SupportedTimestamps())
+				logger.Log.Fatalf("Supported timestamp types: %v", inactive.SupportedTimestamps())
 			} else if err := inactive.SetTimestampSource(t); err != nil {
-				log.Fatalf("Supported timestamp types: %v", inactive.SupportedTimestamps())
+				logger.Log.Fatalf("Supported timestamp types: %v", inactive.SupportedTimestamps())
 			}
 		}
 		if handle, err = inactive.Activate(); err != nil {
-			log.Fatalf("PCAP Activate error: %v", err)
+			logger.Log.Fatalf("PCAP Activate error: %v", err)
 		}
 		defer handle.Close()
 	}
 	if len(flag.Args()) > 0 {
 		bpffilter := strings.Join(flag.Args(), " ")
-		rlog.Infof("Using BPF filter %q", bpffilter)
+		logger.Log.Infof("Using BPF filter %q", bpffilter)
 		if err = handle.SetBPFFilter(bpffilter); err != nil {
-			log.Fatalf("BPF filter error: %v", err)
+			logger.Log.Fatalf("BPF filter error: %v", err)
 		}
 	}
 
@@ -260,12 +255,12 @@ func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
 		decoderName = handle.LinkType().String()
 	}
 	if dec, ok = gopacket.DecodersByLayerName[decoderName]; !ok {
-		log.Fatalln("No decoder named", decoderName)
+		logger.Log.Fatal("No decoder named", decoderName)
 	}
 	source := gopacket.NewPacketSource(handle, dec)
 	source.Lazy = *lazy
 	source.NoCopy = true
-	rlog.Info("Starting to read packets")
+	logger.Log.Info("Starting to read packets")
 	appStats.SetStartTime(time.Now())
 	defragger := ip4defrag.NewIPv4Defragmenter()
 
@@ -280,7 +275,7 @@ func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
 
 	maxBufferedPagesTotal := GetMaxBufferedPagesPerConnection()
 	maxBufferedPagesPerConnection := GetMaxBufferedPagesTotal()
-	rlog.Infof("Assembler options: maxBufferedPagesTotal=%d, maxBufferedPagesPerConnection=%d", maxBufferedPagesTotal, maxBufferedPagesPerConnection)
+	logger.Log.Infof("Assembler options: maxBufferedPagesTotal=%d, maxBufferedPagesPerConnection=%d", maxBufferedPagesTotal, maxBufferedPagesPerConnection)
 	assembler.AssemblerOptions.MaxBufferedPagesTotal = maxBufferedPagesTotal
 	assembler.AssemblerOptions.MaxBufferedPagesPerConnection = maxBufferedPagesPerConnection
 
@@ -308,7 +303,7 @@ func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
 			// Since the start
 			errorMapLen, errorsSummery := tapErrors.getErrorsSummary()
 
-			log.Printf("%v (errors: %v, errTypes:%v) - Errors Summary: %s",
+			logger.Log.Infof("%v (errors: %v, errTypes:%v) - Errors Summary: %s",
 				time.Since(appStats.StartTime),
 				tapErrors.nErrors,
 				errorMapLen,
@@ -318,7 +313,7 @@ func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
 			// At this moment
 			memStats := runtime.MemStats{}
 			runtime.ReadMemStats(&memStats)
-			log.Printf(
+			logger.Log.Infof(
 				"mem: %d, goroutines: %d",
 				memStats.HeapAlloc,
 				runtime.NumGoroutine(),
@@ -326,7 +321,7 @@ func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
 
 			// Since the last print
 			cleanStats := cleaner.dumpStats()
-			log.Printf(
+			logger.Log.Infof(
 				"cleaner - flushed connections: %d, closed connections: %d, deleted messages: %d",
 				cleanStats.flushed,
 				cleanStats.closed,
@@ -334,7 +329,7 @@ func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
 			)
 			currentAppStats := appStats.DumpStats()
 			appStatsJSON, _ := json.Marshal(currentAppStats)
-			log.Printf("app stats - %v", string(appStatsJSON))
+			logger.Log.Infof("app stats - %v", string(appStatsJSON))
 		}
 	}()
 
@@ -347,15 +342,15 @@ func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
 		if err == io.EOF {
 			break
 		} else if err != nil {
-			rlog.Debugf("Error:", err)
+			logger.Log.Debugf("Error: %v", err)
 			continue
 		}
 		packetsCount := appStats.IncPacketsCount()
-		rlog.Debugf("PACKET #%d", packetsCount)
+		logger.Log.Debugf("PACKET #%d", packetsCount)
 		data := packet.Data()
 		appStats.UpdateProcessedBytes(uint64(len(data)))
 		if *hexdumppkt {
-			rlog.Debugf("Packet content (%d/0x%x) - %s", len(data), len(data), hex.Dump(data))
+			logger.Log.Debugf("Packet content (%d/0x%x) - %s", len(data), len(data), hex.Dump(data))
 		}
 
 		// defrag the IPv4 packet if required
@@ -368,17 +363,17 @@ func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
 			l := ip4.Length
 			newip4, err := defragger.DefragIPv4(ip4)
 			if err != nil {
-				log.Fatalln("Error while de-fragmenting", err)
+				logger.Log.Fatal("Error while de-fragmenting", err)
 			} else if newip4 == nil {
-				rlog.Debugf("Fragment...")
+				logger.Log.Debugf("Fragment...")
 				continue // packet fragment, we don't have whole packet yet.
 			}
 			if newip4.Length != l {
 				stats.ipdefrag++
-				rlog.Debugf("Decoding re-assembled packet: %s", newip4.NextLayerType())
+				logger.Log.Debugf("Decoding re-assembled packet: %s", newip4.NextLayerType())
 				pb, ok := packet.(gopacket.PacketBuilder)
 				if !ok {
-					log.Panic("Not a PacketBuilder")
+					logger.Log.Panic("Not a PacketBuilder")
 				}
 				nextDecoder := newip4.NextLayerType()
 				_ = nextDecoder.Decode(newip4.Payload, pb)
@@ -392,14 +387,14 @@ func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
 			if *checksum {
 				err := tcp.SetNetworkLayerForChecksum(packet.NetworkLayer())
 				if err != nil {
-					log.Fatalf("Failed to set network layer for checksum: %s\n", err)
+					logger.Log.Fatalf("Failed to set network layer for checksum: %s\n", err)
 				}
 			}
 			c := Context{
 				CaptureInfo: packet.Metadata().CaptureInfo,
 			}
 			stats.totalsz += len(tcp.Payload)
-			rlog.Debugf("%s : %v -> %s : %v", packet.NetworkLayer().NetworkFlow().Src(), tcp.SrcPort, packet.NetworkLayer().NetworkFlow().Dst(), tcp.DstPort)
+			logger.Log.Debugf("%s : %v -> %s : %v", packet.NetworkLayer().NetworkFlow().Src(), tcp.SrcPort, packet.NetworkLayer().NetworkFlow().Dst(), tcp.DstPort)
 			assemblerMutex.Lock()
 			assembler.AssembleWithContext(packet.NetworkLayer().NetworkFlow(), tcp, &c)
 			assemblerMutex.Unlock()
@@ -408,7 +403,7 @@ func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
 		done := *maxcount > 0 && int64(appStats.PacketsCount) >= *maxcount
 		if done {
 			errorMapLen, _ := tapErrors.getErrorsSummary()
-			log.Printf("Processed %v packets (%v bytes) in %v (errors: %v, errTypes:%v)",
+			logger.Log.Infof("Processed %v packets (%v bytes) in %v (errors: %v, errTypes:%v)",
 				appStats.PacketsCount,
 				appStats.ProcessedBytes,
 				time.Since(appStats.StartTime),
@@ -417,7 +412,7 @@ func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
 		}
 		select {
 		case <-signalChan:
-			log.Printf("Caught SIGINT: aborting")
+			logger.Log.Infof("Caught SIGINT: aborting")
 			done = true
 		default:
 			// NOP: continue
@@ -430,7 +425,7 @@ func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
 	assemblerMutex.Lock()
 	closed := assembler.FlushAll()
 	assemblerMutex.Unlock()
-	rlog.Debugf("Final flush: %d closed", closed)
+	logger.Log.Debugf("Final flush: %d closed", closed)
 	if outputLevel >= 2 {
 		streamPool.Dump()
 	}
@@ -438,7 +433,7 @@ func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
 	if *memprofile != "" {
 		f, err := os.Create(*memprofile)
 		if err != nil {
-			log.Fatal(err)
+			logger.Log.Fatal(err)
 		}
 		_ = pprof.WriteHeapProfile(f)
 		_ = f.Close()
@@ -446,29 +441,29 @@ func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
 
 	streamFactory.WaitGoRoutines()
 	assemblerMutex.Lock()
-	rlog.Debugf("%s", assembler.Dump())
+	logger.Log.Debugf("%s", assembler.Dump())
 	assemblerMutex.Unlock()
 	if !*nodefrag {
-		log.Printf("IPdefrag:\t\t%d", stats.ipdefrag)
+		logger.Log.Infof("IPdefrag:\t\t%d", stats.ipdefrag)
 	}
-	log.Printf("TCP stats:")
-	log.Printf(" missed bytes:\t\t%d", stats.missedBytes)
-	log.Printf(" total packets:\t\t%d", stats.pkt)
-	log.Printf(" rejected FSM:\t\t%d", stats.rejectFsm)
-	log.Printf(" rejected Options:\t%d", stats.rejectOpt)
-	log.Printf(" reassembled bytes:\t%d", stats.sz)
-	log.Printf(" total TCP bytes:\t%d", stats.totalsz)
-	log.Printf(" conn rejected FSM:\t%d", stats.rejectConnFsm)
-	log.Printf(" reassembled chunks:\t%d", stats.reassembled)
-	log.Printf(" out-of-order packets:\t%d", stats.outOfOrderPackets)
-	log.Printf(" out-of-order bytes:\t%d", stats.outOfOrderBytes)
-	log.Printf(" biggest-chunk packets:\t%d", stats.biggestChunkPackets)
-	log.Printf(" biggest-chunk bytes:\t%d", stats.biggestChunkBytes)
-	log.Printf(" overlap packets:\t%d", stats.overlapPackets)
-	log.Printf(" overlap bytes:\t\t%d", stats.overlapBytes)
-	log.Printf("Errors: %d", tapErrors.nErrors)
+	logger.Log.Infof("TCP stats:")
+	logger.Log.Infof(" missed bytes:\t\t%d", stats.missedBytes)
+	logger.Log.Infof(" total packets:\t\t%d", stats.pkt)
+	logger.Log.Infof(" rejected FSM:\t\t%d", stats.rejectFsm)
+	logger.Log.Infof(" rejected Options:\t%d", stats.rejectOpt)
+	logger.Log.Infof(" reassembled bytes:\t%d", stats.sz)
+	logger.Log.Infof(" total TCP bytes:\t%d", stats.totalsz)
+	logger.Log.Infof(" conn rejected FSM:\t%d", stats.rejectConnFsm)
+	logger.Log.Infof(" reassembled chunks:\t%d", stats.reassembled)
+	logger.Log.Infof(" out-of-order packets:\t%d", stats.outOfOrderPackets)
+	logger.Log.Infof(" out-of-order bytes:\t%d", stats.outOfOrderBytes)
+	logger.Log.Infof(" biggest-chunk packets:\t%d", stats.biggestChunkPackets)
+	logger.Log.Infof(" biggest-chunk bytes:\t%d", stats.biggestChunkBytes)
+	logger.Log.Infof(" overlap packets:\t%d", stats.overlapPackets)
+	logger.Log.Infof(" overlap bytes:\t\t%d", stats.overlapBytes)
+	logger.Log.Infof("Errors: %d", tapErrors.nErrors)
 	for e := range tapErrors.errorsMap {
-		log.Printf(" %s:\t\t%d", e, tapErrors.errorsMap[e])
+		logger.Log.Infof(" %s:\t\t%d", e, tapErrors.errorsMap[e])
 	}
-	log.Printf("AppStats: %v", GetStats())
+	logger.Log.Infof("AppStats: %v", GetStats())
 }

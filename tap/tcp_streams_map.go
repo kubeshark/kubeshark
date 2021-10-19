@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/romana/rlog"
+	"github.com/up9inc/mizu/shared/logger"
 )
 
 type tcpStreamMap struct {
@@ -45,7 +45,7 @@ func (streamMap *tcpStreamMap) closeTimedoutTcpStreamChannels() {
 				if !stream.isClosed && time.Now().After(streamWrapper.createdAt.Add(tcpStreamChannelTimeout)) {
 					stream.Close()
 					appStats.IncDroppedTcpStreams()
-					rlog.Debugf("Dropped an unidentified TCP stream because of timeout. Total dropped: %d Total Goroutines: %d Timeout (ms): %d\n",
+					logger.Log.Debugf("Dropped an unidentified TCP stream because of timeout. Total dropped: %d Total Goroutines: %d Timeout (ms): %d\n",
 						appStats.DroppedTcpStreams, runtime.NumGoroutine(), tcpStreamChannelTimeout/1000000)
 				}
 			} else {
