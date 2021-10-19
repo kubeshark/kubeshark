@@ -2,12 +2,11 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"strings"
 	"sync"
 	"time"
-
-	"github.com/romana/rlog"
 
 	"github.com/up9inc/mizu/tap/api"
 )
@@ -41,15 +40,15 @@ func (matcher *requestResponseMatcher) registerRequest(ident string, request *ht
 		// Type assertion always succeeds because all of the map's values are of api.GenericMessage type
 		responseHTTPMessage := response.(*api.GenericMessage)
 		if responseHTTPMessage.IsRequest {
-			rlog.Debugf("[Request-Duplicate] Got duplicate request with same identifier")
+			log.Printf("[Request-Duplicate] Got duplicate request with same identifier")
 			return nil
 		}
-		rlog.Tracef(1, "Matched open Response for %s", key)
+		log.Printf("Matched open Response for %s", key)
 		return matcher.preparePair(&requestHTTPMessage, responseHTTPMessage)
 	}
 
 	matcher.openMessagesMap.Store(key, &requestHTTPMessage)
-	rlog.Tracef(1, "Registered open Request for %s", key)
+	log.Printf("Registered open Request for %s", key)
 	return nil
 }
 
@@ -70,15 +69,15 @@ func (matcher *requestResponseMatcher) registerResponse(ident string, response *
 		// Type assertion always succeeds because all of the map's values are of api.GenericMessage type
 		requestHTTPMessage := request.(*api.GenericMessage)
 		if !requestHTTPMessage.IsRequest {
-			rlog.Debugf("[Response-Duplicate] Got duplicate response with same identifier")
+			log.Printf("[Response-Duplicate] Got duplicate response with same identifier")
 			return nil
 		}
-		rlog.Tracef(1, "Matched open Request for %s", key)
+		log.Printf("Matched open Request for %s", key)
 		return matcher.preparePair(requestHTTPMessage, &responseHTTPMessage)
 	}
 
 	matcher.openMessagesMap.Store(key, &responseHTTPMessage)
-	rlog.Tracef(1, "Registered open Response for %s", key)
+	log.Printf("Registered open Response for %s", key)
 	return nil
 }
 

@@ -10,8 +10,6 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/romana/rlog"
-
 	"github.com/up9inc/mizu/tap/api"
 )
 
@@ -65,7 +63,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 	ident := fmt.Sprintf("%s->%s:%s->%s", tcpID.SrcIP, tcpID.DstIP, tcpID.SrcPort, tcpID.DstPort)
 	isHTTP2, err := checkIsHTTP2Connection(b, isClient)
 	if err != nil {
-		rlog.Debugf("[HTTP/2-Prepare-Connection] stream %s Failed to check if client is HTTP/2: %s (%v,%+v)", ident, err, err, err)
+		log.Printf("[HTTP/2-Prepare-Connection] stream %s Failed to check if client is HTTP/2: %s (%v,%+v)", ident, err, err, err)
 		// Do something?
 	}
 
@@ -73,7 +71,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 	if isHTTP2 {
 		err := prepareHTTP2Connection(b, isClient)
 		if err != nil {
-			rlog.Debugf("[HTTP/2-Prepare-Connection-After-Check] stream %s error: %s (%v,%+v)", ident, err, err, err)
+			log.Printf("[HTTP/2-Prepare-Connection-After-Check] stream %s error: %s (%v,%+v)", ident, err, err, err)
 		}
 		grpcAssembler = createGrpcAssembler(b)
 	}
@@ -89,7 +87,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 			if err == io.EOF || err == io.ErrUnexpectedEOF {
 				break
 			} else if err != nil {
-				rlog.Debugf("[HTTP/2] stream %s error: %s (%v,%+v)", ident, err, err, err)
+				log.Printf("[HTTP/2] stream %s error: %s (%v,%+v)", ident, err, err, err)
 				continue
 			}
 			dissected = true
@@ -98,7 +96,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 			if err == io.EOF || err == io.ErrUnexpectedEOF {
 				break
 			} else if err != nil {
-				rlog.Debugf("[HTTP-request] stream %s Request error: %s (%v,%+v)", ident, err, err, err)
+				log.Printf("[HTTP-request] stream %s Request error: %s (%v,%+v)", ident, err, err, err)
 				continue
 			}
 			dissected = true
@@ -107,7 +105,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 			if err == io.EOF || err == io.ErrUnexpectedEOF {
 				break
 			} else if err != nil {
-				rlog.Debugf("[HTTP-response], stream %s Response error: %s (%v,%+v)", ident, err, err, err)
+				log.Printf("[HTTP-response], stream %s Response error: %s (%v,%+v)", ident, err, err, err)
 				continue
 			}
 			dissected = true

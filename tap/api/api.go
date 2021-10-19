@@ -7,13 +7,13 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"plugin"
 	"sync"
 	"time"
 
 	"github.com/google/martian/har"
-	"github.com/romana/rlog"
 )
 
 type Protocol struct {
@@ -251,7 +251,7 @@ func (h HTTPPayload) MarshalJSON() ([]byte, error) {
 	case TypeHttpRequest:
 		harRequest, err := har.NewRequest(h.Data.(*http.Request), true)
 		if err != nil {
-			rlog.Debugf("convert-request-to-har", "Failed converting request to HAR %s (%v,%+v)", err, err, err)
+			log.Printf("Failed converting request to HAR %s (%v,%+v)", err, err, err)
 			return nil, errors.New("Failed converting request to HAR")
 		}
 		return json.Marshal(&HTTPWrapper{
@@ -263,7 +263,7 @@ func (h HTTPPayload) MarshalJSON() ([]byte, error) {
 	case TypeHttpResponse:
 		harResponse, err := har.NewResponse(h.Data.(*http.Response), true)
 		if err != nil {
-			rlog.Debugf("convert-response-to-har", "Failed converting response to HAR %s (%v,%+v)", err, err, err)
+			log.Printf("Failed converting response to HAR %s (%v,%+v)", err, err, err)
 			return nil, errors.New("Failed converting response to HAR")
 		}
 		return json.Marshal(&HTTPWrapper{
