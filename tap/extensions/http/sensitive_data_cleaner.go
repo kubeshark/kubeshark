@@ -12,7 +12,6 @@ import (
 	"strings"
 
 	"github.com/beevik/etree"
-	"github.com/romana/rlog"
 	"github.com/up9inc/mizu/tap/api"
 )
 
@@ -64,7 +63,6 @@ func filterRequestBody(request *http.Request, options *api.TrafficFilteringOptio
 	contenType := getContentTypeHeaderValue(request.Header)
 	body, err := ioutil.ReadAll(request.Body)
 	if err != nil {
-		rlog.Debugf("Filtering error reading body: %v", err)
 		return
 	}
 	filteredBody, err := filterHttpBody([]byte(body), contenType, options)
@@ -79,7 +77,6 @@ func filterResponseBody(response *http.Response, options *api.TrafficFilteringOp
 	contentType := getContentTypeHeaderValue(response.Header)
 	body, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		rlog.Debugf("Filtering error reading body: %v", err)
 		return
 	}
 	filteredBody, err := filterHttpBody([]byte(body), contentType, options)
