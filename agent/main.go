@@ -41,11 +41,7 @@ var extensions []*tapApi.Extension             // global
 var extensionsMap map[string]*tapApi.Extension // global
 
 func main() {
-	logLevel := logging.INFO
-	debugMode := os.Getenv(shared.DebugModeEnvVar) == "1"
-	if debugMode {
-		logLevel = logging.DEBUG
-	}
+	logLevel := determineLogLevel()
 	logger.InitLoggerStderrOnly(logLevel)
 	flag.Parse()
 	loadExtensions()
@@ -308,4 +304,12 @@ func getSyncEntriesConfig() *shared.SyncEntriesConfig {
 	}
 
 	return syncEntriesConfig
+}
+
+func determineLogLevel() (logLevel logging.Level) {
+	logLevel = logging.INFO
+	if os.Getenv(shared.DebugModeEnvVar) == "1" {
+		logLevel = logging.DEBUG
+	}
+	return
 }
