@@ -22,6 +22,7 @@ import (
 	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
+	"github.com/op/go-logging"
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/logger"
 	"github.com/up9inc/mizu/tap"
@@ -40,7 +41,8 @@ var extensions []*tapApi.Extension             // global
 var extensionsMap map[string]*tapApi.Extension // global
 
 func main() {
-	logger.InitLoggerStderrOnly()
+	logLevel := determineLogLevel()
+	logger.InitLoggerStderrOnly(logLevel)
 	flag.Parse()
 	loadExtensions()
 
@@ -302,4 +304,12 @@ func getSyncEntriesConfig() *shared.SyncEntriesConfig {
 	}
 
 	return syncEntriesConfig
+}
+
+func determineLogLevel() (logLevel logging.Level) {
+	logLevel = logging.INFO
+	if os.Getenv(shared.DebugModeEnvVar) == "1" {
+		logLevel = logging.DEBUG
+	}
+	return
 }

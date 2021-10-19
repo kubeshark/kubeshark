@@ -16,6 +16,7 @@ import (
 
 	"io"
 
+	"github.com/up9inc/mizu/cli/config"
 	"github.com/up9inc/mizu/cli/mizu"
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/tap/api"
@@ -195,6 +196,11 @@ func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, opts *ApiS
 
 	port := intstr.FromInt(shared.DefaultApiServerPort)
 
+	debugMode := ""
+	if config.Config.DumpLogs {
+		debugMode = "1"
+	}
+
 	pod := &core.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      opts.PodName,
@@ -222,6 +228,10 @@ func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, opts *ApiS
 						{
 							Name:  shared.MaxEntriesDBSizeBytesEnvVar,
 							Value: strconv.FormatInt(opts.MaxEntriesDBSizeBytes, 10),
+						},
+						{
+							Name:  shared.DebugModeEnvVar,
+							Value: debugMode,
 						},
 					},
 					Resources: core.ResourceRequirements{
@@ -524,6 +534,11 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 		"--nodefrag",
 	}
 
+	debugMode := ""
+	if config.Config.DumpLogs {
+		debugMode = "1"
+	}
+
 	agentContainer := applyconfcore.Container()
 	agentContainer.WithName(tapperPodName)
 	agentContainer.WithImage(podImage)
@@ -531,6 +546,7 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	agentContainer.WithSecurityContext(applyconfcore.SecurityContext().WithPrivileged(true))
 	agentContainer.WithCommand(mizuCmd...)
 	agentContainer.WithEnv(
+		applyconfcore.EnvVar().WithName(shared.DebugModeEnvVar).WithValue(debugMode),
 		applyconfcore.EnvVar().WithName(shared.HostModeEnvVar).WithValue("1"),
 		applyconfcore.EnvVar().WithName(shared.TappedAddressesPerNodeDictEnvVar).WithValue(string(nodeToTappedPodIPMapJsonStr)),
 		applyconfcore.EnvVar().WithName(shared.GoGCEnvVar).WithValue("12800"),

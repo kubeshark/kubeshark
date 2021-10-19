@@ -11,4 +11,5 @@ const (
 	RulePolicyFileName               = "enforce-policy.yaml"
 	GoGCEnvVar                       = "GOGC"
 	DefaultApiServerPort             = 8899
+	DebugModeEnvVar                  = "MIZU_DEBUG"
 )
