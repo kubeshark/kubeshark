@@ -63,6 +63,7 @@ var staleTimeoutSeconds = flag.Int("staletimout", 120, "Max time in seconds to k
 var memprofile = flag.String("memprofile", "", "Write memory profile")
 
 var appStats = api.AppStats{}
+var tapErrors *errorsMap
 
 // global
 var stats struct {
@@ -342,7 +343,9 @@ func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
 		if err == io.EOF {
 			break
 		} else if err != nil {
-			logger.Log.Debugf("Error: %v", err)
+			if err.Error() != "Timeout Expired" {
+				logger.Log.Debugf("Error: %T", err)
+			}
 			continue
 		}
 		packetsCount := appStats.IncPacketsCount()

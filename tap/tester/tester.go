@@ -10,7 +10,10 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/op/go-logging"
+
 	"github.com/go-errors/errors"
+	"github.com/up9inc/mizu/shared/logger"
 	"github.com/up9inc/mizu/tap"
 	tapApi "github.com/up9inc/mizu/tap/api"
 )
@@ -73,6 +76,8 @@ func loadExtensions() ([]*tapApi.Extension, error) {
 }
 
 func internalRun() error {
+	logger.InitLoggerStderrOnly(logging.DEBUG)
+
 	opts := tap.TapOpts{
 		HostMode: false,
 	}
