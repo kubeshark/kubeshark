@@ -12,14 +12,14 @@ import (
 	"github.com/up9inc/mizu/shared/logger"
 )
 
-type TcpPacketSource struct {
+type tcpPacketSource struct {
 	source    *gopacket.PacketSource
 	handle    *pcap.Handle
 	defragger *ip4defrag.IPv4Defragmenter
-	behaviour *TcpPacketSourceBehaviour
+	behaviour *tcpPacketSourceBehaviour
 }
 
-type TcpPacketSourceBehaviour struct {
+type tcpPacketSourceBehaviour struct {
 	snapLength  int
 	promisc     bool
 	tstype      string
@@ -28,16 +28,16 @@ type TcpPacketSourceBehaviour struct {
 	bpfFilter   string
 }
 
-type TcpPacketInfo struct {
+type tcpPacketInfo struct {
 	packet gopacket.Packet
-	source *TcpPacketSource
+	source *tcpPacketSource
 }
 
 func NewTcpPacketSource(pid int, filename string, interfaceName string,
-	behaviour TcpPacketSourceBehaviour) (*TcpPacketSource, error) {
+	behaviour tcpPacketSourceBehaviour) (*tcpPacketSource, error) {
 	var err error
 
-	result := &TcpPacketSource{
+	result := &tcpPacketSource{
 		defragger: ip4defrag.NewIPv4Defragmenter(),
 		behaviour: &behaviour,
 	}
@@ -95,13 +95,13 @@ func NewTcpPacketSource(pid int, filename string, interfaceName string,
 	return result, nil
 }
 
-func (source *TcpPacketSource) close() {
+func (source *tcpPacketSource) close() {
 	if source.handle != nil {
 		source.handle.Close()
 	}
 }
 
-func (source *TcpPacketSource) readPackets(ipdefrag bool, packets chan<- TcpPacketInfo) error {
+func (source *tcpPacketSource) readPackets(ipdefrag bool, packets chan<- tcpPacketInfo) error {
 	for {
 		packet, err := source.source.NextPacket()
 
@@ -141,7 +141,7 @@ func (source *TcpPacketSource) readPackets(ipdefrag bool, packets chan<- TcpPack
 			}
 		}
 
-		packets <- TcpPacketInfo{
+		packets <- tcpPacketInfo{
 			packet: packet,
 			source: source,
 		}

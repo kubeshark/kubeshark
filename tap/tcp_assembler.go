@@ -13,14 +13,14 @@ import (
 	"github.com/up9inc/mizu/tap/api"
 )
 
-type TcpAssembler struct {
+type tcpAssembler struct {
 	*reassembly.Assembler
 	streamPool     *reassembly.StreamPool
 	streamFactory  *tcpStreamFactory
 	assemblerMutex sync.Mutex
 }
 
-func NewTcpAssember(outputItems chan *api.OutputChannelItem, streamsMap *tcpStreamMap) *TcpAssembler {
+func NewTcpAssember(outputItems chan *api.OutputChannelItem, streamsMap *tcpStreamMap) *tcpAssembler {
 	var emitter api.Emitter = &api.Emitting{
 		AppStats:      &appStats,
 		OutputChannel: outputItems,
@@ -37,14 +37,14 @@ func NewTcpAssember(outputItems chan *api.OutputChannelItem, streamsMap *tcpStre
 	assembler.AssemblerOptions.MaxBufferedPagesTotal = maxBufferedPagesTotal
 	assembler.AssemblerOptions.MaxBufferedPagesPerConnection = maxBufferedPagesPerConnection
 
-	return &TcpAssembler{
+	return &tcpAssembler{
 		Assembler:     assembler,
 		streamPool:    streamPool,
 		streamFactory: streamFactory,
 	}
 }
 
-func (a *TcpAssembler) processPackets(dumpPacket bool, packets <-chan TcpPacketInfo) {
+func (a *tcpAssembler) processPackets(dumpPacket bool, packets <-chan tcpPacketInfo) {
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, os.Interrupt)
 
@@ -107,11 +107,11 @@ func (a *TcpAssembler) processPackets(dumpPacket bool, packets <-chan TcpPacketI
 	logger.Log.Debugf("Final flush: %d closed", closed)
 }
 
-func (a *TcpAssembler) dumpStreamPool() {
+func (a *tcpAssembler) dumpStreamPool() {
 	a.streamPool.Dump()
 }
 
-func (a *TcpAssembler) waitAndDump() {
+func (a *tcpAssembler) waitAndDump() {
 	a.streamFactory.WaitGoRoutines()
 	a.assemblerMutex.Lock()
 	logger.Log.Debugf("%s", a.Dump())
