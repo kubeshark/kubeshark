@@ -99,6 +99,14 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 		panic("Channel of captured messages is nil")
 	}
 
+	disableOASValidation := false
+	ctx := context.Background()
+	doc, contractContent, router, err := loadOAS(ctx)
+	if err != nil {
+		logger.Log.Infof("Disabled OAS validation: %s\n", err.Error())
+		disableOASValidation = true
+	}
+
 	for item := range outputItems {
 		providers.EntryAdded()
 
@@ -107,8 +115,19 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 		mizuEntry := extension.Dissector.Analyze(item, primitive.NewObjectID().Hex(), resolvedSource, resolvedDestionation)
 		baseEntry := extension.Dissector.Summarize(mizuEntry)
 		mizuEntry.EstimatedSizeBytes = getEstimatedEntrySizeBytes(mizuEntry)
-		database.CreateEntry(mizuEntry)
 		if extension.Protocol.Name == "http" {
+			if !disableOASValidation {
+				var httpPair tapApi.HTTPRequestResponsePair
+				json.Unmarshal([]byte(mizuEntry.Entry), &httpPair)
+
+				contract := handleOAS(ctx, doc, router, httpPair.Request.Payload.RawRequest, httpPair.Response.Payload.RawResponse, contractContent)
+				baseEntry.ContractStatus = contract.Status
+				mizuEntry.ContractStatus = contract.Status
+				mizuEntry.ContractRequestReason = contract.RequestReason
+				mizuEntry.ContractResponseReason = contract.ResponseReason
+				mizuEntry.ContractContent = contract.Content
+			}
+
 			var pair tapApi.RequestResponsePair
 			json.Unmarshal([]byte(mizuEntry.Entry), &pair)
 			harEntry, err := utils.NewEntry(&pair)
@@ -117,6 +136,7 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 				baseEntry.Rules = rules
 			}
 		}
+		database.CreateEntry(mizuEntry)
 
 		baseEntryBytes, _ := models.CreateBaseEntryWebSocketMessage(baseEntry)
 		BroadcastToBrowserClients(baseEntryBytes)

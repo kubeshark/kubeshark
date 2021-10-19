@@ -159,6 +159,13 @@ Such validation may test response for specific JSON fields, headers, etc.
 
 Please see [TRAFFIC RULES](docs/POLICY_RULES.md) page for more details and syntax.
 
+### OpenAPI Specification (OAS) Contract Monitoring
+
+An OAS/Swagger file can contain schemas under `parameters` and `responses` fields. With `--contract catalogue.yaml`
+CLI option, you can pass your API description to Mizu and the traffic will automatically be validated
+against the contracts.
+
+Please see [CONTRACT MONITORING](docs/CONTRACT_MONITORING.md) page for more details and syntax.
 
 ## How to Run local UI
 

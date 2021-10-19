@@ -150,15 +150,12 @@ export const EntryTableSection: React.FC<EntrySectionProps> = ({title, color, ar
     </React.Fragment>
 }
 
-
-
 interface EntryPolicySectionProps {
     title: string,
     color: string,
     latency?: number,
     arrayToIterate: any[],
 }
-
 
 interface EntryPolicySectionCollapsibleTitleProps {
     label: string;
@@ -251,5 +248,30 @@ export const EntryTablePolicySection: React.FC<EntryPolicySectionProps> = ({titl
                 </EntrySectionContainer>
                 </> : <span className={styles.noRules}>No rules could be applied to this request.</span>
         }
+    </React.Fragment>
+}
+
+interface EntryContractSectionProps {
+    color: string,
+    requestReason: string,
+    responseReason: string,
+    contractContent: string,
+}
+
+export const EntryContractSection: React.FC<EntryContractSectionProps> = ({color, requestReason, responseReason, contractContent}) => {
+    return <React.Fragment>
+        {requestReason && <EntrySectionContainer title="Request" color={color}>
+            {requestReason}
+        </EntrySectionContainer>}
+        {responseReason && <EntrySectionContainer title="Response" color={color}>
+            {responseReason}
+        </EntrySectionContainer>}
+        {contractContent && <EntrySectionContainer title="Contract" color={color}>
+            <SyntaxHighlighter
+                isWrapped={false}
+                code={contractContent}
+                language={"yaml"}
+            />
+        </EntrySectionContainer>}
     </React.Fragment>
 }

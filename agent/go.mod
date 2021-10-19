@@ -5,6 +5,7 @@ go 1.16
 require (
 	github.com/djherbis/atime v1.0.0
 	github.com/fsnotify/fsnotify v1.4.9
+	github.com/getkin/kin-openapi v0.76.0
 	github.com/gin-contrib/static v0.0.1
 	github.com/gin-gonic/gin v1.7.2
 	github.com/go-playground/locales v0.13.0

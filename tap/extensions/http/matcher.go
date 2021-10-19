@@ -31,7 +31,7 @@ func (matcher *requestResponseMatcher) registerRequest(ident string, request *ht
 	requestHTTPMessage := api.GenericMessage{
 		IsRequest:   true,
 		CaptureTime: captureTime,
-		Payload: HTTPPayload{
+		Payload: api.HTTPPayload{
 			Type: TypeHttpRequest,
 			Data: request,
 		},
@@ -60,7 +60,7 @@ func (matcher *requestResponseMatcher) registerResponse(ident string, response *
 	responseHTTPMessage := api.GenericMessage{
 		IsRequest:   false,
 		CaptureTime: captureTime,
-		Payload: HTTPPayload{
+		Payload: api.HTTPPayload{
 			Type: TypeHttpResponse,
 			Data: response,
 		},
