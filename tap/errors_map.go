@@ -8,7 +8,7 @@ import (
 )
 
 type errorsMap struct {
-	errorsMap      map[string]int
+	errorsMap      map[string]uint
 	outputLevel    int
 	nErrors        int
 	errorsMapMutex sync.Mutex
@@ -16,7 +16,7 @@ type errorsMap struct {
 
 func NewErrorsMap(outputLevel int) *errorsMap {
 	return &errorsMap{
-		errorsMap:   make(map[string]int),
+		errorsMap:   make(map[string]uint),
 		outputLevel: outputLevel,
 	}
 }
