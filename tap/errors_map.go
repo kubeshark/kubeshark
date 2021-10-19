@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/romana/rlog"
+	"github.com/up9inc/mizu/shared/logger"
 )
 
 type errorsMap struct {
 	errorsMap      map[string]uint
 	outputLevel    int
-	nErrors        int
+	nErrors        uint
 	errorsMapMutex sync.Mutex
 }
 
@@ -23,7 +23,7 @@ func NewErrorsMap(outputLevel int) *errorsMap {
 
 /* minOutputLevel: Error will be printed only if outputLevel is above this value
  * t:              key for errorsMap (counting errors)
- * s, a:           arguments log.Printf
+ * s, a:           arguments logger.Log.Infof
  * Note:           Too bad for perf that a... is evaluated
  */
 func (e *errorsMap) logError(minOutputLevel int, t string, s string, a ...interface{}) {
@@ -35,7 +35,7 @@ func (e *errorsMap) logError(minOutputLevel int, t string, s string, a ...interf
 
 	if e.outputLevel >= minOutputLevel {
 		formatStr := fmt.Sprintf("%s: %s", t, s)
-		rlog.Errorf(formatStr, a...)
+		logger.Log.Errorf(formatStr, a...)
 	}
 }
 
@@ -48,11 +48,7 @@ func (e *errorsMap) SilentError(t string, s string, a ...interface{}) {
 }
 
 func (e *errorsMap) Debug(s string, a ...interface{}) {
-	rlog.Debugf(s, a...)
-}
-
-func (e *errorsMap) Trace(s string, a ...interface{}) {
-	rlog.Tracef(1, s, a...)
+	logger.Log.Debugf(s, a...)
 }
 
 func (e *errorsMap) getErrorsSummary() (int, string) {

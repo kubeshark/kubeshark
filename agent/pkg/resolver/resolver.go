@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/romana/rlog"
+	"github.com/up9inc/mizu/shared/logger"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 
 	cmap "github.com/orcaman/concurrent-map"
@@ -157,10 +157,10 @@ func (resolver *Resolver) watchServices(ctx context.Context) error {
 func (resolver *Resolver) saveResolvedName(key string, resolved string, eventType watch.EventType) {
 	if eventType == watch.Deleted {
 		resolver.nameMap.Remove(key)
-		rlog.Infof("setting %s=nil\n", key)
+		logger.Log.Infof("setting %s=nil\n", key)
 	} else {
 		resolver.nameMap.Set(key, resolved)
-		rlog.Infof("setting %s=%s\n", key, resolved)
+		logger.Log.Infof("setting %s=%s\n", key, resolved)
 	}
 }
 
@@ -181,7 +181,7 @@ func (resolver *Resolver) infiniteErrorHandleRetryFunc(ctx context.Context, fun 
 			var statusError *k8serrors.StatusError
 			if errors.As(err, &statusError) {
 				if statusError.ErrStatus.Reason == metav1.StatusReasonForbidden {
-					rlog.Infof("Resolver loop encountered permission error, aborting event listening - %v\n", err)
+					logger.Log.Infof("Resolver loop encountered permission error, aborting event listening - %v\n", err)
 					return
 				}
 			}

@@ -12,7 +12,6 @@ import (
 	"strings"
 
 	"github.com/beevik/etree"
-	"github.com/romana/rlog"
 	"github.com/up9inc/mizu/tap/api"
 )
 
@@ -30,7 +29,7 @@ func IsIgnoredUserAgent(item *api.OutputChannelItem, options *api.TrafficFilteri
 		return false
 	}
 
-	request := item.Pair.Request.Payload.(HTTPPayload).Data.(*http.Request)
+	request := item.Pair.Request.Payload.(api.HTTPPayload).Data.(*http.Request)
 
 	for headerKey, headerValues := range request.Header {
 		if strings.ToLower(headerKey) == "user-agent" {
@@ -50,8 +49,8 @@ func IsIgnoredUserAgent(item *api.OutputChannelItem, options *api.TrafficFilteri
 }
 
 func FilterSensitiveData(item *api.OutputChannelItem, options *api.TrafficFilteringOptions) {
-	request := item.Pair.Request.Payload.(HTTPPayload).Data.(*http.Request)
-	response := item.Pair.Response.Payload.(HTTPPayload).Data.(*http.Response)
+	request := item.Pair.Request.Payload.(api.HTTPPayload).Data.(*http.Request)
+	response := item.Pair.Response.Payload.(api.HTTPPayload).Data.(*http.Response)
 
 	filterHeaders(&request.Header)
 	filterHeaders(&response.Header)
@@ -64,7 +63,6 @@ func filterRequestBody(request *http.Request, options *api.TrafficFilteringOptio
 	contenType := getContentTypeHeaderValue(request.Header)
 	body, err := ioutil.ReadAll(request.Body)
 	if err != nil {
-		rlog.Debugf("Filtering error reading body: %v", err)
 		return
 	}
 	filteredBody, err := filterHttpBody([]byte(body), contenType, options)
@@ -79,7 +77,6 @@ func filterResponseBody(response *http.Response, options *api.TrafficFilteringOp
 	contentType := getContentTypeHeaderValue(response.Header)
 	body, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		rlog.Debugf("Filtering error reading body: %v", err)
 		return
 	}
 	filteredBody, err := filterHttpBody([]byte(body), contentType, options)
