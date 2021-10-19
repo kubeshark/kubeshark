@@ -23,6 +23,7 @@ type tcpStreamFactory struct {
 	outboundLinkWriter *OutboundLinkWriter
 	Emitter            api.Emitter
 	streamsMap         *tcpStreamMap
+	ownIps             []string
 }
 
 type tcpStreamWrapper struct {
@@ -31,9 +32,21 @@ type tcpStreamWrapper struct {
 }
 
 func NewTcpStreamFactory(emitter api.Emitter, streamsMap *tcpStreamMap) *tcpStreamFactory {
+	var ownIps []string
+
+	if localhostIPs, err := getLocalhostIPs(); err != nil {
+		// TODO: think this over
+		logger.Log.Info("Failed to get self IP addresses")
+		logger.Log.Errorf("Getting-Self-Address", "Error getting self ip address: %s (%v,%+v)", err, err, err)
+		ownIps = make([]string, 0)
+	} else {
+		ownIps = localhostIPs
+	}
+
 	return &tcpStreamFactory{
 		Emitter:    emitter,
 		streamsMap: streamsMap,
+		ownIps:     ownIps,
 	}
 }
 

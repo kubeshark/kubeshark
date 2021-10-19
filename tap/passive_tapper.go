@@ -88,8 +88,6 @@ type TapOpts struct {
 	HostMode bool
 }
 
-//lint:ignore U1000 will be used in the future
-var ownIps []string                               // global
 var hostMode bool                                 // global
 var extensions []*api.Extension                   // global
 var filteringOptions *api.TrafficFilteringOptions // global
@@ -198,17 +196,9 @@ func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
 
 	tapErrors = NewErrorsMap(outputLevel)
 
-	if localhostIPs, err := getLocalhostIPs(); err != nil {
-		// TODO: think this over
-		logger.Log.Info("Failed to get self IP addresses")
-		logger.Log.Errorf("Getting-Self-Address", "Error getting self ip address: %s (%v,%+v)", err, err, err)
-		ownIps = make([]string, 0)
-	} else {
-		ownIps = localhostIPs
-	}
-
 	var handle *pcap.Handle
 	var err error
+
 	if *fname != "" {
 		if handle, err = pcap.OpenOffline(*fname); err != nil {
 			logger.Log.Fatalf("PCAP OpenOffline error: %v", err)
