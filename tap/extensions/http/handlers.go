@@ -2,7 +2,10 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"net/http"
 
 	"github.com/up9inc/mizu/tap/api"
@@ -84,6 +87,9 @@ func handleHTTP1ClientStream(b *bufio.Reader, tcpID *api.TcpID, counterPair *api
 	}
 	counterPair.Request++
 
+	body, err := ioutil.ReadAll(req.Body)
+	req.Body = io.NopCloser(bytes.NewBuffer(body)) // rewind
+
 	ident := fmt.Sprintf(
 		"%s->%s %s->%s %d",
 		tcpID.SrcIP,
@@ -112,6 +118,9 @@ func handleHTTP1ServerStream(b *bufio.Reader, tcpID *api.TcpID, counterPair *api
 		return err
 	}
 	counterPair.Response++
+
+	body, err := ioutil.ReadAll(res.Body)
+	res.Body = io.NopCloser(bytes.NewBuffer(body)) // rewind
 
 	ident := fmt.Sprintf(
 		"%s->%s %s->%s %d",
