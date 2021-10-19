@@ -28,7 +28,7 @@ func FilteredWatch(ctx context.Context, kubernetesProvider *Provider, targetName
 
 		go func(targetNamespace string) {
 			defer wg.Done()
-			watchRestartDebouncer := debounce.NewDebouncer(5 * time.Second, func() {})
+			watchRestartDebouncer := debounce.NewDebouncer(1 * time.Minute, func() {})
 
 			for {
 				watcher := kubernetesProvider.GetPodWatcher(ctx, targetNamespace)
@@ -48,7 +48,7 @@ func FilteredWatch(ctx context.Context, kubernetesProvider *Provider, targetName
 				} else {
 					if !watchRestartDebouncer.IsOn() {
 						watchRestartDebouncer.SetOn()
-						logger.Log.Warning("k8s watch channel closed, restarting watcher")
+						logger.Log.Debug("k8s watch channel closed, restarting watcher")
 						time.Sleep(time.Second * 5)
 						continue
 					} else {
