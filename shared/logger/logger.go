@@ -36,3 +36,27 @@ func InitLoggerStderrOnly(level logging.Level) {
 	logging.SetBackend(backendFormatter)
 	logging.SetLevel(level, "")
 }
+
+func GetCriticialLevel() (level logging.Level) {
+	return logging.CRITICAL
+}
+
+func GetErrorLevel() (level logging.Level) {
+	return logging.ERROR
+}
+
+func GetWarningLevel() (level logging.Level) {
+	return logging.WARNING
+}
+
+func GetNoticeLevel() (level logging.Level) {
+	return logging.NOTICE
+}
+
+func GetInfoLevel() (level logging.Level) {
+	return logging.INFO
+}
+
+func GetDebugLevel() (level logging.Level) {
+	return logging.DEBUG
+}
