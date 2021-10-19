@@ -75,9 +75,6 @@ func getAuthHeader(guestMode bool) string {
 
 func GetTrafficDumpUrl(analyzeDestination string, analyzeModel string) *url.URL {
 	strUrl := fmt.Sprintf("https://traffic.%s/dumpTrafficBulk/%s", analyzeDestination, analyzeModel)
-	if strings.HasPrefix(analyzeDestination, "http") {
-		strUrl = fmt.Sprintf("%s/api/workspace/dumpTrafficBulk", analyzeDestination)
-	}
 	postUrl, _ := url.Parse(strUrl)
 	return postUrl
 }
@@ -132,6 +129,11 @@ func SyncEntries(syncEntriesConfig *shared.SyncEntriesConfig) error {
 		token = fmt.Sprintf("bearer %s", syncEntriesConfig.Token)
 		model = syncEntriesConfig.Workspace
 		guestMode = false
+
+		logger.Log.Infof("Sync entries - upserting model. env %s, model %s\n", syncEntriesConfig.Env, model)
+		if err := upsertModel(token, model, syncEntriesConfig.Env); err != nil {
+			return fmt.Errorf("failed upserting model, err: %v", err)
+		}
 	}
 
 	modelRegex, _ := regexp.Compile("[A-Za-z0-9][-A-Za-z0-9_.]*[A-Za-z0-9]+$")
@@ -141,6 +143,31 @@ func SyncEntries(syncEntriesConfig *shared.SyncEntriesConfig) error {
 
 	logger.Log.Infof("Sync entries - syncing. token: %s, model: %s, guest mode: %v\n", token, model, guestMode)
 	go syncEntriesImpl(token, model, syncEntriesConfig.Env, syncEntriesConfig.UploadIntervalSec, guestMode)
+
+	return nil
+}
+
+func upsertModel(token string, model string, envPrefix string) error {
+	upsertModelUrl, _ := url.Parse(fmt.Sprintf("https://trcc.%s/models/%s", envPrefix, model))
+
+	authHeader := getAuthHeader(false)
+	req := &http.Request{
+		Method: http.MethodPost,
+		URL:    upsertModelUrl,
+		Header: map[string][]string{
+			authHeader: {token},
+		},
+	}
+
+	response, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed request to upsert model, err: %v", err)
+	}
+
+	// In case the model is not created (not 201) and doesn't exists (not 409)
+	if response.StatusCode != 201 && response.StatusCode != 409 {
+		return fmt.Errorf("failed request to upsert model, status code: %v", response.StatusCode)
+	}
 
 	return nil
 }
