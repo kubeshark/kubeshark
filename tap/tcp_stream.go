@@ -107,7 +107,7 @@ func (t *tcpStream) ReassembledSG(sg reassembly.ScatterGather, ac reassembly.Ass
 	} else {
 		ident = fmt.Sprintf("%v %v(%s): ", t.net.Reverse(), t.transport.Reverse(), dir)
 	}
-	Trace("%s: SG reassembled packet with %d bytes (start:%v,end:%v,skip:%d,saved:%d,nb:%d,%d,overlap:%d,%d)", ident, length, start, end, skip, saved, sgStats.Packets, sgStats.Chunks, sgStats.OverlapBytes, sgStats.OverlapPackets)
+	Debug("%s: SG reassembled packet with %d bytes (start:%v,end:%v,skip:%d,saved:%d,nb:%d,%d,overlap:%d,%d)", ident, length, start, end, skip, saved, sgStats.Packets, sgStats.Chunks, sgStats.OverlapBytes, sgStats.OverlapPackets)
 	if skip == -1 && *allowmissinginit {
 		// this is allowed
 	} else if skip != 0 {
@@ -126,7 +126,7 @@ func (t *tcpStream) ReassembledSG(sg reassembly.ScatterGather, ac reassembly.Ass
 		}
 		dnsSize := binary.BigEndian.Uint16(data[:2])
 		missing := int(dnsSize) - len(data[2:])
-		Trace("dnsSize: %d, missing: %d", dnsSize, missing)
+		Debug("dnsSize: %d, missing: %d", dnsSize, missing)
 		if missing > 0 {
 			Debug("Missing some bytes: %d", missing)
 			sg.KeepFrom(0)
@@ -137,7 +137,7 @@ func (t *tcpStream) ReassembledSG(sg reassembly.ScatterGather, ac reassembly.Ass
 		if err != nil {
 			SilentError("DNS-parser", "Failed to decode DNS: %v", err)
 		} else {
-			Trace("DNS: %s", gopacket.LayerDump(dns))
+			Debug("DNS: %s", gopacket.LayerDump(dns))
 		}
 		if len(data) > 2+int(dnsSize) {
 			sg.KeepFrom(2 + int(dnsSize))
@@ -172,7 +172,7 @@ func (t *tcpStream) ReassembledSG(sg reassembly.ScatterGather, ac reassembly.Ass
 }
 
 func (t *tcpStream) ReassemblyComplete(ac reassembly.AssemblerContext) bool {
-	Trace("%s: Connection closed", t.ident)
+	Debug("%s: Connection closed", t.ident)
 	if t.isTapTarget && !t.isClosed {
 		t.Close()
 	}

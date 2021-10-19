@@ -17,7 +17,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"github.com/google/martian/har"
-	"github.com/romana/rlog"
+	"github.com/up9inc/mizu/shared/logger"
 	tapApi "github.com/up9inc/mizu/tap/api"
 
 	"mizuserver/pkg/models"
@@ -31,7 +31,7 @@ func StartResolving(namespace string) {
 	errOut := make(chan error, 100)
 	res, err := resolver.NewFromInCluster(errOut, namespace)
 	if err != nil {
-		rlog.Infof("error creating k8s resolver %s", err)
+		logger.Log.Infof("error creating k8s resolver %s", err)
 		return
 	}
 	ctx := context.Background()
@@ -40,7 +40,7 @@ func StartResolving(namespace string) {
 		for {
 			select {
 			case err := <-errOut:
-				rlog.Infof("name resolving error %s", err)
+				logger.Log.Infof("name resolving error %s", err)
 			}
 		}
 	}()
@@ -59,7 +59,7 @@ func StartReadingEntries(harChannel <-chan *tapApi.OutputChannelItem, workingDir
 
 func startReadingFiles(workingDir string) {
 	if err := os.MkdirAll(workingDir, os.ModePerm); err != nil {
-		rlog.Errorf("Failed to make dir: %s, err: %v", workingDir, err)
+		logger.Log.Errorf("Failed to make dir: %s, err: %v", workingDir, err)
 		return
 	}
 
@@ -76,7 +76,7 @@ func startReadingFiles(workingDir string) {
 		sort.Sort(utils.ByModTime(harFiles))
 
 		if len(harFiles) == 0 {
-			rlog.Infof("Waiting for new files\n")
+			logger.Log.Infof("Waiting for new files\n")
 			time.Sleep(3 * time.Second)
 			continue
 		}
@@ -99,6 +99,14 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 		panic("Channel of captured messages is nil")
 	}
 
+	disableOASValidation := false
+	ctx := context.Background()
+	doc, contractContent, router, err := loadOAS(ctx)
+	if err != nil {
+		logger.Log.Infof("Disabled OAS validation: %s\n", err.Error())
+		disableOASValidation = true
+	}
+
 	for item := range outputItems {
 		providers.EntryAdded()
 
@@ -107,8 +115,19 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 		mizuEntry := extension.Dissector.Analyze(item, primitive.NewObjectID().Hex(), resolvedSource, resolvedDestionation)
 		baseEntry := extension.Dissector.Summarize(mizuEntry)
 		mizuEntry.EstimatedSizeBytes = getEstimatedEntrySizeBytes(mizuEntry)
-		database.CreateEntry(mizuEntry)
 		if extension.Protocol.Name == "http" {
+			if !disableOASValidation {
+				var httpPair tapApi.HTTPRequestResponsePair
+				json.Unmarshal([]byte(mizuEntry.Entry), &httpPair)
+
+				contract := handleOAS(ctx, doc, router, httpPair.Request.Payload.RawRequest, httpPair.Response.Payload.RawResponse, contractContent)
+				baseEntry.ContractStatus = contract.Status
+				mizuEntry.ContractStatus = contract.Status
+				mizuEntry.ContractRequestReason = contract.RequestReason
+				mizuEntry.ContractResponseReason = contract.ResponseReason
+				mizuEntry.ContractContent = contract.Content
+			}
+
 			var pair tapApi.RequestResponsePair
 			json.Unmarshal([]byte(mizuEntry.Entry), &pair)
 			harEntry, err := utils.NewEntry(&pair)
@@ -117,6 +136,7 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 				baseEntry.Rules = rules
 			}
 		}
+		database.CreateEntry(mizuEntry)
 
 		baseEntryBytes, _ := models.CreateBaseEntryWebSocketMessage(baseEntry)
 		BroadcastToBrowserClients(baseEntryBytes)
@@ -128,7 +148,7 @@ func resolveIP(connectionInfo *tapApi.ConnectionInfo) (resolvedSource string, re
 		unresolvedSource := connectionInfo.ClientIP
 		resolvedSource = k8sResolver.Resolve(unresolvedSource)
 		if resolvedSource == "" {
-			rlog.Debugf("Cannot find resolved name to source: %s\n", unresolvedSource)
+			logger.Log.Debugf("Cannot find resolved name to source: %s\n", unresolvedSource)
 			if os.Getenv("SKIP_NOT_RESOLVED_SOURCE") == "1" {
 				return
 			}
@@ -136,7 +156,7 @@ func resolveIP(connectionInfo *tapApi.ConnectionInfo) (resolvedSource string, re
 		unresolvedDestination := fmt.Sprintf("%s:%s", connectionInfo.ServerIP, connectionInfo.ServerPort)
 		resolvedDestination = k8sResolver.Resolve(unresolvedDestination)
 		if resolvedDestination == "" {
-			rlog.Debugf("Cannot find resolved name to dest: %s\n", unresolvedDestination)
+			logger.Log.Debugf("Cannot find resolved name to dest: %s\n", unresolvedDestination)
 			if os.Getenv("SKIP_NOT_RESOLVED_DEST") == "1" {
 				return
 			}
