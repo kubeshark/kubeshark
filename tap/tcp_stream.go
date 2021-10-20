@@ -37,10 +37,10 @@ func (t *tcpStream) Accept(tcp *layers.TCP, ci gopacket.CaptureInfo, dir reassem
 	// FSM
 	if !t.tcpstate.CheckState(tcp, dir) {
 		tapErrors.SilentError("FSM-rejection", "%s: Packet rejected by FSM (state:%s)", t.ident, t.tcpstate.String())
-		stats.rejectFsm++
+		internalStats.rejectFsm++
 		if !t.fsmerr {
 			t.fsmerr = true
-			stats.rejectConnFsm++
+			internalStats.rejectConnFsm++
 		}
 		if !*ignorefsmerr {
 			return false
@@ -50,7 +50,7 @@ func (t *tcpStream) Accept(tcp *layers.TCP, ci gopacket.CaptureInfo, dir reassem
 	err := t.optchecker.Accept(tcp, ci, dir, nextSeq, start)
 	if err != nil {
 		tapErrors.SilentError("OptionChecker-rejection", "%s: Packet rejected by OptionChecker: %s", t.ident, err)
-		stats.rejectOpt++
+		internalStats.rejectOpt++
 		if !*nooptcheck {
 			return false
 		}
@@ -68,7 +68,7 @@ func (t *tcpStream) Accept(tcp *layers.TCP, ci gopacket.CaptureInfo, dir reassem
 		}
 	}
 	if !accept {
-		stats.rejectOpt++
+		internalStats.rejectOpt++
 	}
 	return accept
 }
@@ -79,28 +79,28 @@ func (t *tcpStream) ReassembledSG(sg reassembly.ScatterGather, ac reassembly.Ass
 	// update stats
 	sgStats := sg.Stats()
 	if skip > 0 {
-		stats.missedBytes += skip
+		internalStats.missedBytes += skip
 	}
-	stats.sz += length - saved
-	stats.pkt += sgStats.Packets
+	internalStats.sz += length - saved
+	internalStats.pkt += sgStats.Packets
 	if sgStats.Chunks > 1 {
-		stats.reassembled++
+		internalStats.reassembled++
 	}
-	stats.outOfOrderPackets += sgStats.QueuedPackets
-	stats.outOfOrderBytes += sgStats.QueuedBytes
-	if length > stats.biggestChunkBytes {
-		stats.biggestChunkBytes = length
+	internalStats.outOfOrderPackets += sgStats.QueuedPackets
+	internalStats.outOfOrderBytes += sgStats.QueuedBytes
+	if length > internalStats.biggestChunkBytes {
+		internalStats.biggestChunkBytes = length
 	}
-	if sgStats.Packets > stats.biggestChunkPackets {
-		stats.biggestChunkPackets = sgStats.Packets
+	if sgStats.Packets > internalStats.biggestChunkPackets {
+		internalStats.biggestChunkPackets = sgStats.Packets
 	}
 	if sgStats.OverlapBytes != 0 && sgStats.OverlapPackets == 0 {
 		// In the original example this was handled with panic().
 		// I don't know what this error means or how to handle it properly.
 		tapErrors.SilentError("Invalid-Overlap", "bytes:%d, pkts:%d", sgStats.OverlapBytes, sgStats.OverlapPackets)
 	}
-	stats.overlapBytes += sgStats.OverlapBytes
-	stats.overlapPackets += sgStats.OverlapPackets
+	internalStats.overlapBytes += sgStats.OverlapBytes
+	internalStats.overlapPackets += sgStats.OverlapPackets
 
 	var ident string
 	if dir == reassembly.TCPDirClientToServer {

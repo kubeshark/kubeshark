@@ -27,10 +27,6 @@ type context struct {
 	CaptureInfo gopacket.CaptureInfo
 }
 
-func GetStats() api.AppStats {
-	return appStats
-}
-
 func (c *context) GetCaptureInfo() gopacket.CaptureInfo {
 	return c.CaptureInfo
 }
@@ -86,7 +82,7 @@ func (a *tcpAssembler) processPackets(dumpPacket bool, packets <-chan tcpPacketI
 			c := context{
 				CaptureInfo: packet.Metadata().CaptureInfo,
 			}
-			stats.totalsz += len(tcp.Payload)
+			internalStats.totalsz += len(tcp.Payload)
 			logger.Log.Debugf("%s : %v -> %s : %v", packet.NetworkLayer().NetworkFlow().Src(), tcp.SrcPort, packet.NetworkLayer().NetworkFlow().Dst(), tcp.DstPort)
 			a.assemblerMutex.Lock()
 			a.AssembleWithContext(packet.NetworkLayer().NetworkFlow(), tcp, &c)
