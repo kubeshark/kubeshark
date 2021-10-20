@@ -35,7 +35,6 @@ func GetEntries(c *gin.Context) {
 	database.GetEntriesTable().
 		Order(fmt.Sprintf("timestamp %s", order)).
 		Where(fmt.Sprintf("timestamp %s %v", operatorSymbol, entriesFilter.Timestamp)).
-		Omit("entry"). // remove the "big" entry field
 		Limit(entriesFilter.Limit).
 		Find(&entries)
 
@@ -45,12 +44,21 @@ func GetEntries(c *gin.Context) {
 	}
 
 	baseEntries := make([]tapApi.BaseEntryDetails, 0)
-	for _, data := range entries {
-		harEntry := tapApi.BaseEntryDetails{}
-		if err := models.GetEntry(&data, &harEntry); err != nil {
+	for _, entry := range entries {
+		baseEntryDetails := tapApi.BaseEntryDetails{}
+		if err := models.GetEntry(&entry, &baseEntryDetails); err != nil {
 			continue
 		}
-		baseEntries = append(baseEntries, harEntry)
+
+		var pair tapApi.RequestResponsePair
+		json.Unmarshal([]byte(entry.Entry), &pair)
+		harEntry, err := utils.NewEntry(&pair)
+		if err == nil {
+			rules, _, _ := models.RunValidationRulesState(*harEntry, entry.Service)
+			baseEntryDetails.Rules = rules
+		}
+
+		baseEntries = append(baseEntries, baseEntryDetails)
 	}
 
 	c.JSON(http.StatusOK, baseEntries)
