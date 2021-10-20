@@ -28,15 +28,15 @@ type tcpStream struct {
 	isTapTarget     bool
 	clients         []tcpReader
 	servers         []tcpReader
-	urls            []string
 	ident           string
 	sync.Mutex
+	streamsMap *tcpStreamMap
 }
 
 func (t *tcpStream) Accept(tcp *layers.TCP, ci gopacket.CaptureInfo, dir reassembly.TCPFlowDirection, nextSeq reassembly.Sequence, start *bool, ac reassembly.AssemblerContext) bool {
 	// FSM
 	if !t.tcpstate.CheckState(tcp, dir) {
-		SilentError("FSM-rejection", "%s: Packet rejected by FSM (state:%s)", t.ident, t.tcpstate.String())
+		tapErrors.SilentError("FSM-rejection", "%s: Packet rejected by FSM (state:%s)", t.ident, t.tcpstate.String())
 		stats.rejectFsm++
 		if !t.fsmerr {
 			t.fsmerr = true
@@ -49,7 +49,7 @@ func (t *tcpStream) Accept(tcp *layers.TCP, ci gopacket.CaptureInfo, dir reassem
 	// Options
 	err := t.optchecker.Accept(tcp, ci, dir, nextSeq, start)
 	if err != nil {
-		SilentError("OptionChecker-rejection", "%s: Packet rejected by OptionChecker: %s", t.ident, err)
+		tapErrors.SilentError("OptionChecker-rejection", "%s: Packet rejected by OptionChecker: %s", t.ident, err)
 		stats.rejectOpt++
 		if !*nooptcheck {
 			return false
@@ -60,10 +60,10 @@ func (t *tcpStream) Accept(tcp *layers.TCP, ci gopacket.CaptureInfo, dir reassem
 	if *checksum {
 		c, err := tcp.ComputeChecksum()
 		if err != nil {
-			SilentError("ChecksumCompute", "%s: Got error computing checksum: %s", t.ident, err)
+			tapErrors.SilentError("ChecksumCompute", "%s: Got error computing checksum: %s", t.ident, err)
 			accept = false
 		} else if c != 0x0 {
-			SilentError("Checksum", "%s: Invalid checksum: 0x%x", t.ident, c)
+			tapErrors.SilentError("Checksum", "%s: Invalid checksum: 0x%x", t.ident, c)
 			accept = false
 		}
 	}
@@ -97,7 +97,7 @@ func (t *tcpStream) ReassembledSG(sg reassembly.ScatterGather, ac reassembly.Ass
 	if sgStats.OverlapBytes != 0 && sgStats.OverlapPackets == 0 {
 		// In the original example this was handled with panic().
 		// I don't know what this error means or how to handle it properly.
-		SilentError("Invalid-Overlap", "bytes:%d, pkts:%d", sgStats.OverlapBytes, sgStats.OverlapPackets)
+		tapErrors.SilentError("Invalid-Overlap", "bytes:%d, pkts:%d", sgStats.OverlapBytes, sgStats.OverlapPackets)
 	}
 	stats.overlapBytes += sgStats.OverlapBytes
 	stats.overlapPackets += sgStats.OverlapPackets
@@ -108,7 +108,7 @@ func (t *tcpStream) ReassembledSG(sg reassembly.ScatterGather, ac reassembly.Ass
 	} else {
 		ident = fmt.Sprintf("%v %v(%s): ", t.net.Reverse(), t.transport.Reverse(), dir)
 	}
-	Debug("%s: SG reassembled packet with %d bytes (start:%v,end:%v,skip:%d,saved:%d,nb:%d,%d,overlap:%d,%d)", ident, length, start, end, skip, saved, sgStats.Packets, sgStats.Chunks, sgStats.OverlapBytes, sgStats.OverlapPackets)
+	tapErrors.Debug("%s: SG reassembled packet with %d bytes (start:%v,end:%v,skip:%d,saved:%d,nb:%d,%d,overlap:%d,%d)", ident, length, start, end, skip, saved, sgStats.Packets, sgStats.Chunks, sgStats.OverlapBytes, sgStats.OverlapPackets)
 	if skip == -1 && *allowmissinginit {
 		// this is allowed
 	} else if skip != 0 {
@@ -127,18 +127,18 @@ func (t *tcpStream) ReassembledSG(sg reassembly.ScatterGather, ac reassembly.Ass
 		}
 		dnsSize := binary.BigEndian.Uint16(data[:2])
 		missing := int(dnsSize) - len(data[2:])
-		Debug("dnsSize: %d, missing: %d", dnsSize, missing)
+		tapErrors.Debug("dnsSize: %d, missing: %d", dnsSize, missing)
 		if missing > 0 {
-			Debug("Missing some bytes: %d", missing)
+			tapErrors.Debug("Missing some bytes: %d", missing)
 			sg.KeepFrom(0)
 			return
 		}
 		p := gopacket.NewDecodingLayerParser(layers.LayerTypeDNS, dns)
 		err := p.DecodeLayers(data[2:], &decoded)
 		if err != nil {
-			SilentError("DNS-parser", "Failed to decode DNS: %v", err)
+			tapErrors.SilentError("DNS-parser", "Failed to decode DNS: %v", err)
 		} else {
-			Debug("DNS: %s", gopacket.LayerDump(dns))
+			tapErrors.Debug("DNS: %s", gopacket.LayerDump(dns))
 		}
 		if len(data) > 2+int(dnsSize) {
 			sg.KeepFrom(2 + int(dnsSize))
@@ -173,7 +173,7 @@ func (t *tcpStream) ReassembledSG(sg reassembly.ScatterGather, ac reassembly.Ass
 }
 
 func (t *tcpStream) ReassemblyComplete(ac reassembly.AssemblerContext) bool {
-	Debug("%s: Connection closed", t.ident)
+	tapErrors.Debug("%s: Connection closed", t.ident)
 	if t.isTapTarget && !t.isClosed {
 		t.Close()
 	}
@@ -193,7 +193,7 @@ func (t *tcpStream) Close() {
 	if shouldReturn {
 		return
 	}
-	streams.Delete(t.id)
+	t.streamsMap.Delete(t.id)
 
 	for i := range t.clients {
 		reader := &t.clients[i]

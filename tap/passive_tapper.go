@@ -17,7 +17,6 @@ import (
 	"os"
 	"os/signal"
 	"runtime"
-	_debug "runtime/debug"
 	"runtime/pprof"
 	"strconv"
 	"strings"
@@ -36,6 +35,7 @@ import (
 
 const cleanPeriod = time.Second * 10
 
+//lint:ignore U1000 will be used in the future
 var remoteOnlyOutboundPorts = []int{80, 443}
 
 var maxcount = flag.Int64("c", -1, "Only grab this many packets, then exit")
@@ -63,6 +63,7 @@ var staleTimeoutSeconds = flag.Int("staletimout", 120, "Max time in seconds to k
 var memprofile = flag.String("memprofile", "", "Write memory profile")
 
 var appStats = api.AppStats{}
+var tapErrors *errorsMap
 
 // global
 var stats struct {
@@ -87,43 +88,9 @@ type TapOpts struct {
 	HostMode bool
 }
 
-var outputLevel int
-var errorsMap map[string]uint
-var errorsMapMutex sync.Mutex
-var nErrors uint
-var ownIps []string                               // global
 var hostMode bool                                 // global
 var extensions []*api.Extension                   // global
 var filteringOptions *api.TrafficFilteringOptions // global
-
-const baseStreamChannelTimeoutMs int = 5000 * 100
-
-/* minOutputLevel: Error will be printed only if outputLevel is above this value
- * t:              key for errorsMap (counting errors)
- * s, a:           arguments logger.Log.Infof
- * Note:           Too bad for perf that a... is evaluated
- */
-func logError(minOutputLevel int, t string, s string, a ...interface{}) {
-	errorsMapMutex.Lock()
-	nErrors++
-	nb, _ := errorsMap[t]
-	errorsMap[t] = nb + 1
-	errorsMapMutex.Unlock()
-
-	if outputLevel >= minOutputLevel {
-		formatStr := fmt.Sprintf("%s: %s", t, s)
-		logger.Log.Errorf(formatStr, a...)
-	}
-}
-func Error(t string, s string, a ...interface{}) {
-	logError(0, t, s, a...)
-}
-func SilentError(t string, s string, a ...interface{}) {
-	logError(2, t, s, a...)
-}
-func Debug(s string, a ...interface{}) {
-	logger.Log.Debugf(s, a...)
-}
 
 func inArrayInt(arr []int, valueToCheck int) bool {
 	for _, value := range arr {
@@ -191,7 +158,7 @@ func startMemoryProfiler() {
 			}
 		}
 
-		for true {
+		for {
 			t := time.Now()
 
 			filename := fmt.Sprintf("%s/%s__mem.prof", dumpPath, t.Format("15_04_05"))
@@ -212,44 +179,11 @@ func startMemoryProfiler() {
 	}()
 }
 
-func closeTimedoutTcpStreamChannels() {
-	TcpStreamChannelTimeoutMs := GetTcpChannelTimeoutMs()
-	for {
-		time.Sleep(10 * time.Millisecond)
-		_debug.FreeOSMemory()
-		streams.Range(func(key interface{}, value interface{}) bool {
-			streamWrapper := value.(*tcpStreamWrapper)
-			stream := streamWrapper.stream
-			if stream.superIdentifier.Protocol == nil {
-				if !stream.isClosed && time.Now().After(streamWrapper.createdAt.Add(TcpStreamChannelTimeoutMs)) {
-					stream.Close()
-					appStats.IncDroppedTcpStreams()
-					logger.Log.Debugf("Dropped an unidentified TCP stream because of timeout. Total dropped: %d Total Goroutines: %d Timeout (ms): %d\n", appStats.DroppedTcpStreams, runtime.NumGoroutine(), TcpStreamChannelTimeoutMs/1000000)
-				}
-			} else {
-				if !stream.superIdentifier.IsClosedOthers {
-					for i := range stream.clients {
-						reader := &stream.clients[i]
-						if reader.extension.Protocol != stream.superIdentifier.Protocol {
-							reader.Close()
-						}
-					}
-					for i := range stream.servers {
-						reader := &stream.servers[i]
-						if reader.extension.Protocol != stream.superIdentifier.Protocol {
-							reader.Close()
-						}
-					}
-					stream.superIdentifier.IsClosedOthers = true
-				}
-			}
-			return true
-		})
-	}
-}
-
 func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
-	go closeTimedoutTcpStreamChannels()
+	streamsMap := NewTcpStreamMap()
+	go streamsMap.closeTimedoutTcpStreamChannels()
+
+	var outputLevel int
 
 	defer util.Run()()
 	if *debug {
@@ -259,19 +193,12 @@ func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
 	} else if *quiet {
 		outputLevel = -1
 	}
-	errorsMap = make(map[string]uint)
 
-	if localhostIPs, err := getLocalhostIPs(); err != nil {
-		// TODO: think this over
-		logger.Log.Info("Failed to get self IP addresses")
-		logger.Log.Errorf("Getting-Self-Address", "Error getting self ip address: %s (%v,%+v)", err, err, err)
-		ownIps = make([]string, 0)
-	} else {
-		ownIps = localhostIPs
-	}
+	tapErrors = NewErrorsMap(outputLevel)
 
 	var handle *pcap.Handle
 	var err error
+
 	if *fname != "" {
 		if handle, err = pcap.OpenOffline(*fname); err != nil {
 			logger.Log.Fatalf("PCAP OpenOffline error: %v", err)
@@ -316,7 +243,7 @@ func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
 	var ok bool
 	decoderName := *decoder
 	if decoderName == "" {
-		decoderName = fmt.Sprintf("%s", handle.LinkType())
+		decoderName = handle.LinkType().String()
 	}
 	if dec, ok = gopacket.DecodersByLayerName[decoderName]; !ok {
 		logger.Log.Fatal("No decoder named", decoderName)
@@ -333,9 +260,7 @@ func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
 		OutputChannel: outputItems,
 	}
 
-	streamFactory := &tcpStreamFactory{
-		Emitter: emitter,
-	}
+	streamFactory := NewTcpStreamFactory(emitter, streamsMap)
 	streamPool := reassembly.NewStreamPool(streamFactory)
 	assembler := reassembly.NewAssembler(streamPool)
 
@@ -363,17 +288,15 @@ func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
 		statsPeriod := time.Second * time.Duration(*statsevery)
 		ticker := time.NewTicker(statsPeriod)
 
-		for true {
+		for {
 			<-ticker.C
 
 			// Since the start
-			errorsMapMutex.Lock()
-			errorMapLen := len(errorsMap)
-			errorsSummery := fmt.Sprintf("%v", errorsMap)
-			errorsMapMutex.Unlock()
+			errorMapLen, errorsSummery := tapErrors.getErrorsSummary()
+
 			logger.Log.Infof("%v (errors: %v, errTypes:%v) - Errors Summary: %s",
 				time.Since(appStats.StartTime),
-				nErrors,
+				tapErrors.nErrors,
 				errorMapLen,
 				errorsSummery,
 			)
@@ -410,7 +333,9 @@ func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
 		if err == io.EOF {
 			break
 		} else if err != nil {
-			logger.Log.Debugf("Error: %v", err)
+			if err.Error() != "Timeout Expired" {
+				logger.Log.Debugf("Error: %T", err)
+			}
 			continue
 		}
 		packetsCount := appStats.IncPacketsCount()
@@ -470,14 +395,12 @@ func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
 
 		done := *maxcount > 0 && int64(appStats.PacketsCount) >= *maxcount
 		if done {
-			errorsMapMutex.Lock()
-			errorMapLen := len(errorsMap)
-			errorsMapMutex.Unlock()
+			errorMapLen, _ := tapErrors.getErrorsSummary()
 			logger.Log.Infof("Processed %v packets (%v bytes) in %v (errors: %v, errTypes:%v)",
 				appStats.PacketsCount,
 				appStats.ProcessedBytes,
 				time.Since(appStats.StartTime),
-				nErrors,
+				tapErrors.nErrors,
 				errorMapLen)
 		}
 		select {
@@ -531,9 +454,9 @@ func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
 	logger.Log.Infof(" biggest-chunk bytes:\t%d", stats.biggestChunkBytes)
 	logger.Log.Infof(" overlap packets:\t%d", stats.overlapPackets)
 	logger.Log.Infof(" overlap bytes:\t\t%d", stats.overlapBytes)
-	logger.Log.Infof("Errors: %d", nErrors)
-	for e := range errorsMap {
-		logger.Log.Infof(" %s:\t\t%d", e, errorsMap[e])
+	logger.Log.Infof("Errors: %d", tapErrors.nErrors)
+	for e := range tapErrors.errorsMap {
+		logger.Log.Infof(" %s:\t\t%d", e, tapErrors.errorsMap[e])
 	}
 	logger.Log.Infof("AppStats: %v", GetStats())
 }

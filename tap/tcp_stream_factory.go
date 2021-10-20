@@ -22,6 +22,8 @@ type tcpStreamFactory struct {
 	wg                 sync.WaitGroup
 	outboundLinkWriter *OutboundLinkWriter
 	Emitter            api.Emitter
+	streamsMap         *tcpStreamMap
+	ownIps             []string
 }
 
 type tcpStreamWrapper struct {
@@ -29,8 +31,24 @@ type tcpStreamWrapper struct {
 	createdAt time.Time
 }
 
-var streams *sync.Map = &sync.Map{} // global
-var streamId int64 = 0
+func NewTcpStreamFactory(emitter api.Emitter, streamsMap *tcpStreamMap) *tcpStreamFactory {
+	var ownIps []string
+
+	if localhostIPs, err := getLocalhostIPs(); err != nil {
+		// TODO: think this over
+		logger.Log.Info("Failed to get self IP addresses")
+		logger.Log.Errorf("Getting-Self-Address", "Error getting self ip address: %s (%v,%+v)", err, err, err)
+		ownIps = make([]string, 0)
+	} else {
+		ownIps = localhostIPs
+	}
+
+	return &tcpStreamFactory{
+		Emitter:    emitter,
+		streamsMap: streamsMap,
+		ownIps:     ownIps,
+	}
+}
 
 func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.TCP, ac reassembly.AssemblerContext) reassembly.Stream {
 	logger.Log.Debugf("* NEW: %s %s", net, transport)
@@ -56,10 +74,10 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.T
 		ident:           fmt.Sprintf("%s:%s", net, transport),
 		optchecker:      reassembly.NewTCPOptionCheck(),
 		superIdentifier: &api.SuperIdentifier{},
+		streamsMap:      factory.streamsMap,
 	}
 	if stream.isTapTarget {
-		streamId++
-		stream.id = streamId
+		stream.id = factory.streamsMap.nextId()
 		for i, extension := range extensions {
 			counterPair := &api.CounterPair{
 				Request:  0,
@@ -102,7 +120,7 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.T
 				counterPair:        counterPair,
 			})
 
-			streams.Store(stream.id, &tcpStreamWrapper{
+			factory.streamsMap.Store(stream.id, &tcpStreamWrapper{
 				stream:    stream,
 				createdAt: time.Now(),
 			})
@@ -142,9 +160,10 @@ func (factory *tcpStreamFactory) getStreamProps(srcIP string, srcPort string, ds
 	}
 }
 
+//lint:ignore U1000 will be used in the future
 func (factory *tcpStreamFactory) shouldNotifyOnOutboundLink(dstIP string, dstPort int) bool {
 	if inArrayInt(remoteOnlyOutboundPorts, dstPort) {
-		isDirectedHere := inArrayString(ownIps, dstIP)
+		isDirectedHere := inArrayString(factory.ownIps, dstIP)
 		return !isDirectedHere && !isPrivateIP(dstIP)
 	}
 	return true
