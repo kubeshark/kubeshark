@@ -12,6 +12,7 @@ import (
 	"github.com/google/gopacket/reassembly"
 	"github.com/up9inc/mizu/shared/logger"
 	"github.com/up9inc/mizu/tap/api"
+	"github.com/up9inc/mizu/tap/diagnose"
 )
 
 type tcpAssembler struct {
@@ -33,7 +34,7 @@ func (c *context) GetCaptureInfo() gopacket.CaptureInfo {
 
 func NewTcpAssember(outputItems chan *api.OutputChannelItem, streamsMap *tcpStreamMap) *tcpAssembler {
 	var emitter api.Emitter = &api.Emitting{
-		AppStats:      &appStats,
+		AppStats:      &diagnose.AppStats,
 		OutputChannel: outputItems,
 	}
 
@@ -60,18 +61,18 @@ func (a *tcpAssembler) processPackets(dumpPacket bool, packets <-chan tcpPacketI
 	signal.Notify(signalChan, os.Interrupt)
 
 	for packetInfo := range packets {
-		packetsCount := appStats.IncPacketsCount()
+		packetsCount := diagnose.AppStats.IncPacketsCount()
 		logger.Log.Debugf("PACKET #%d", packetsCount)
 		packet := packetInfo.packet
 		data := packet.Data()
-		appStats.UpdateProcessedBytes(uint64(len(data)))
+		diagnose.AppStats.UpdateProcessedBytes(uint64(len(data)))
 		if dumpPacket {
 			logger.Log.Debugf("Packet content (%d/0x%x) - %s", len(data), len(data), hex.Dump(data))
 		}
 
 		tcp := packet.Layer(layers.LayerTypeTCP)
 		if tcp != nil {
-			appStats.IncTcpPacketsCount()
+			diagnose.AppStats.IncTcpPacketsCount()
 			tcp := tcp.(*layers.TCP)
 			if *checksum {
 				err := tcp.SetNetworkLayerForChecksum(packet.NetworkLayer())
@@ -82,21 +83,21 @@ func (a *tcpAssembler) processPackets(dumpPacket bool, packets <-chan tcpPacketI
 			c := context{
 				CaptureInfo: packet.Metadata().CaptureInfo,
 			}
-			internalStats.totalsz += len(tcp.Payload)
+			diagnose.InternalStats.Totalsz += len(tcp.Payload)
 			logger.Log.Debugf("%s : %v -> %s : %v", packet.NetworkLayer().NetworkFlow().Src(), tcp.SrcPort, packet.NetworkLayer().NetworkFlow().Dst(), tcp.DstPort)
 			a.assemblerMutex.Lock()
 			a.AssembleWithContext(packet.NetworkLayer().NetworkFlow(), tcp, &c)
 			a.assemblerMutex.Unlock()
 		}
 
-		done := *maxcount > 0 && int64(appStats.PacketsCount) >= *maxcount
+		done := *maxcount > 0 && int64(diagnose.AppStats.PacketsCount) >= *maxcount
 		if done {
-			errorMapLen, _ := tapErrors.getErrorsSummary()
+			errorMapLen, _ := diagnose.TapErrors.GetErrorsSummary()
 			logger.Log.Infof("Processed %v packets (%v bytes) in %v (errors: %v, errTypes:%v)",
-				appStats.PacketsCount,
-				appStats.ProcessedBytes,
-				time.Since(appStats.StartTime),
-				tapErrors.nErrors,
+				diagnose.AppStats.PacketsCount,
+				diagnose.AppStats.ProcessedBytes,
+				time.Since(diagnose.AppStats.StartTime),
+				diagnose.TapErrors.ErrorsCount,
 				errorMapLen)
 		}
 
