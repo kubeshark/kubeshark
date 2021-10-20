@@ -3,6 +3,7 @@ package up9
 import (
 	"bytes"
 	"compress/zlib"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -231,6 +232,12 @@ func syncEntriesImpl(token string, model string, envPrefix string, uploadInterva
 					harEntry.Request.Headers = append(harEntry.Request.Headers, har.Header{Name: "x-mizu-destination", Value: data.ResolvedDestination})
 					harEntry.Request.URL = utils.SetHostname(harEntry.Request.URL, data.ResolvedDestination)
 				}
+
+				// go's default marshal behavior is to encode []byte fields to base64, python's default unmarshal behavior is to not decode []byte fields from base64
+				if harEntry.Response.Content.Text, err = base64.StdEncoding.DecodeString(string(harEntry.Response.Content.Text)); err != nil {
+					continue
+				}
+
 				result = append(result, *harEntry)
 			}
 
