@@ -60,8 +60,8 @@ func (e *errorsMap) getErrorsSummary() (int, string) {
 }
 
 func (e *errorsMap) PrintSummary() {
-	logger.Log.Infof("Errors: %d", tapErrors.nErrors)
-	for e := range tapErrors.errorsMap {
-		logger.Log.Infof(" %s:\t\t%d", e, tapErrors.errorsMap[e])
+	logger.Log.Infof("Errors: %d", e.nErrors)
+	for t := range e.errorsMap {
+		logger.Log.Infof(" %s:\t\t%d", e, e.errorsMap[t])
 	}
 }

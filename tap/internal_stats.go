@@ -25,9 +25,7 @@ func NewTapperInternalStats() *tapperInternalStats {
 }
 
 func (stats *tapperInternalStats) PrintStatsSummary() {
-	if !*nodefrag {
-		logger.Log.Infof("IPdefrag:\t\t%d", stats.ipdefrag)
-	}
+	logger.Log.Infof("IPdefrag:\t\t%d", stats.ipdefrag)
 	logger.Log.Infof("TCP stats:")
 	logger.Log.Infof(" missed bytes:\t\t%d", stats.missedBytes)
 	logger.Log.Infof(" total packets:\t\t%d", stats.pkt)
