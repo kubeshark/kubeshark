@@ -133,6 +133,7 @@ func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
 	go streamsMap.closeTimedoutTcpStreamChannels()
 
 	diagnose.InitializeErrorsMap(*debug, *verbose, *quiet)
+	diagnose.InitializeTapperInternalStats()
 
 	var bpffilter string
 	if len(flag.Args()) > 0 {
