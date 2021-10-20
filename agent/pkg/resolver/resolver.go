@@ -140,6 +140,13 @@ func (resolver *Resolver) watchServices(ctx context.Context) error {
 			serviceHostname := fmt.Sprintf("%s.%s", service.Name, service.Namespace)
 			if service.Spec.ClusterIP != "" && service.Spec.ClusterIP != kubClientNullString {
 				resolver.saveResolvedName(service.Spec.ClusterIP, serviceHostname, event.Type)
+				if service.Spec.Ports != nil {
+					for _, port := range service.Spec.Ports {
+						if port.Port > 0 {
+							resolver.saveResolvedName(fmt.Sprintf("%s:%d", service.Spec.ClusterIP, port.Port), serviceHostname, event.Type)
+						}
+					}
+				}
 				resolver.saveServiceIP(service.Spec.ClusterIP, serviceHostname, event.Type)
 			}
 			if service.Status.LoadBalancer.Ingress != nil {
