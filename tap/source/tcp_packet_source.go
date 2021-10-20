@@ -1,4 +1,4 @@
-package tap
+package source
 
 import (
 	"fmt"
@@ -13,34 +13,34 @@ import (
 	"github.com/up9inc/mizu/tap/diagnose"
 )
 
-type tcpPacketSource struct {
+type TcpPacketSource struct {
 	source    *gopacket.PacketSource
 	handle    *pcap.Handle
 	defragger *ip4defrag.IPv4Defragmenter
-	behaviour *tcpPacketSourceBehaviour
+	Behaviour *TcpPacketSourceBehaviour
 }
 
-type tcpPacketSourceBehaviour struct {
-	snapLength  int
-	promisc     bool
-	tstype      string
-	decoderName string
-	lazy        bool
-	bpfFilter   string
+type TcpPacketSourceBehaviour struct {
+	SnapLength  int
+	Promisc     bool
+	Tstype      string
+	DecoderName string
+	Lazy        bool
+	BpfFilter   string
 }
 
-type tcpPacketInfo struct {
-	packet gopacket.Packet
-	source *tcpPacketSource
+type TcpPacketInfo struct {
+	Packet gopacket.Packet
+	Source *TcpPacketSource
 }
 
 func NewTcpPacketSource(pid int, filename string, interfaceName string,
-	behaviour tcpPacketSourceBehaviour) (*tcpPacketSource, error) {
+	behaviour TcpPacketSourceBehaviour) (*TcpPacketSource, error) {
 	var err error
 
-	result := &tcpPacketSource{
+	result := &TcpPacketSource{
 		defragger: ip4defrag.NewIPv4Defragmenter(),
-		behaviour: &behaviour,
+		Behaviour: &behaviour,
 	}
 
 	if filename != "" {
@@ -56,15 +56,15 @@ func NewTcpPacketSource(pid int, filename string, interfaceName string,
 			return result, fmt.Errorf("could not create: %v", err)
 		}
 		defer inactive.CleanUp()
-		if err = inactive.SetSnapLen(behaviour.snapLength); err != nil {
+		if err = inactive.SetSnapLen(behaviour.SnapLength); err != nil {
 			return result, fmt.Errorf("could not set snap length: %v", err)
-		} else if err = inactive.SetPromisc(behaviour.promisc); err != nil {
+		} else if err = inactive.SetPromisc(behaviour.Promisc); err != nil {
 			return result, fmt.Errorf("could not set promisc mode: %v", err)
 		} else if err = inactive.SetTimeout(time.Second); err != nil {
 			return result, fmt.Errorf("could not set timeout: %v", err)
 		}
-		if behaviour.tstype != "" {
-			if t, err := pcap.TimestampSourceFromString(behaviour.tstype); err != nil {
+		if behaviour.Tstype != "" {
+			if t, err := pcap.TimestampSourceFromString(behaviour.Tstype); err != nil {
 				return result, fmt.Errorf("supported timestamp types: %v", inactive.SupportedTimestamps())
 			} else if err := inactive.SetTimestampSource(t); err != nil {
 				return result, fmt.Errorf("supported timestamp types: %v", inactive.SupportedTimestamps())
@@ -74,35 +74,35 @@ func NewTcpPacketSource(pid int, filename string, interfaceName string,
 			return result, fmt.Errorf("PCAP Activate error: %v", err)
 		}
 	}
-	if behaviour.bpfFilter != "" {
-		logger.Log.Infof("Using BPF filter %q", behaviour.bpfFilter)
-		if err = result.handle.SetBPFFilter(behaviour.bpfFilter); err != nil {
+	if behaviour.BpfFilter != "" {
+		logger.Log.Infof("Using BPF filter %q", behaviour.BpfFilter)
+		if err = result.handle.SetBPFFilter(behaviour.BpfFilter); err != nil {
 			return nil, fmt.Errorf("BPF filter error: %v", err)
 		}
 	}
 
 	var dec gopacket.Decoder
 	var ok bool
-	if behaviour.decoderName == "" {
-		behaviour.decoderName = result.handle.LinkType().String()
+	if behaviour.DecoderName == "" {
+		behaviour.DecoderName = result.handle.LinkType().String()
 	}
-	if dec, ok = gopacket.DecodersByLayerName[behaviour.decoderName]; !ok {
-		return nil, fmt.Errorf("no decoder named %v", behaviour.decoderName)
+	if dec, ok = gopacket.DecodersByLayerName[behaviour.DecoderName]; !ok {
+		return nil, fmt.Errorf("no decoder named %v", behaviour.DecoderName)
 	}
 	result.source = gopacket.NewPacketSource(result.handle, dec)
-	result.source.Lazy = behaviour.lazy
+	result.source.Lazy = behaviour.Lazy
 	result.source.NoCopy = true
 
 	return result, nil
 }
 
-func (source *tcpPacketSource) close() {
+func (source *TcpPacketSource) Close() {
 	if source.handle != nil {
 		source.handle.Close()
 	}
 }
 
-func (source *tcpPacketSource) readPackets(ipdefrag bool, packets chan<- tcpPacketInfo) error {
+func (source *TcpPacketSource) ReadPackets(ipdefrag bool, packets chan<- TcpPacketInfo) error {
 	for {
 		packet, err := source.source.NextPacket()
 
@@ -142,9 +142,9 @@ func (source *tcpPacketSource) readPackets(ipdefrag bool, packets chan<- tcpPack
 			}
 		}
 
-		packets <- tcpPacketInfo{
-			packet: packet,
-			source: source,
+		packets <- TcpPacketInfo{
+			Packet: packet,
+			Source: source,
 		}
 	}
 }

@@ -13,6 +13,7 @@ import (
 	"github.com/up9inc/mizu/shared/logger"
 	"github.com/up9inc/mizu/tap/api"
 	"github.com/up9inc/mizu/tap/diagnose"
+	"github.com/up9inc/mizu/tap/source"
 )
 
 type tcpAssembler struct {
@@ -56,14 +57,14 @@ func NewTcpAssember(outputItems chan *api.OutputChannelItem, streamsMap *tcpStre
 	}
 }
 
-func (a *tcpAssembler) processPackets(dumpPacket bool, packets <-chan tcpPacketInfo) {
+func (a *tcpAssembler) processPackets(dumpPacket bool, packets <-chan source.TcpPacketInfo) {
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, os.Interrupt)
 
 	for packetInfo := range packets {
 		packetsCount := diagnose.AppStats.IncPacketsCount()
 		logger.Log.Debugf("PACKET #%d", packetsCount)
-		packet := packetInfo.packet
+		packet := packetInfo.Packet
 		data := packet.Data()
 		diagnose.AppStats.UpdateProcessedBytes(uint64(len(data)))
 		if dumpPacket {
