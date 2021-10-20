@@ -115,7 +115,7 @@ func (source *tcpPacketSource) readPackets(ipdefrag bool, packets chan<- tcpPack
 		}
 
 		// defrag the IPv4 packet if required
-		if !*nodefrag {
+		if !ipdefrag {
 			ip4Layer := packet.Layer(layers.LayerTypeIPv4)
 			if ip4Layer == nil {
 				continue
