@@ -15,6 +15,10 @@ Think TCPDump and Chrome Dev Tools combined.
 - No installation or code instrumentation
 - Works completely on premises
 
+## Requirements
+
+A Kubernetes server version of 1.16.0 or higher is required.
+
 ## Download
 
 Download Mizu for your platform and operating system
