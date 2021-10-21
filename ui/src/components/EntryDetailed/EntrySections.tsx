@@ -214,7 +214,7 @@ export const EntryTablePolicySection: React.FC<EntryPolicySectionProps> = ({titl
                                                     }
                                                     {
                                                         rule.ResponseTime !== 0 &&
-                                                        <tr className={styles.dataValue}><td><b>ResponseTime:</b></td> <td>{rule.ResponseTime}</td></tr>
+                                                        <tr className={styles.dataValue}><td><b>Response Time:</b></td> <td>{rule.ResponseTime}</td></tr>
                                                     }
                                                     {
                                                         rule.Method &&
