@@ -17,7 +17,7 @@ Think TCPDump and Chrome Dev Tools combined.
 
 ## Requirements
 
-A Kubernetes Server version of 1.16.0 is required.
+A Kubernetes Server version of or higher 1.16.0 is required.
 
 ## Download
 
