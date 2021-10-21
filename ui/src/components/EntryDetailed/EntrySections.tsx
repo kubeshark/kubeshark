@@ -205,7 +205,7 @@ export const EntryTablePolicySection: React.FC<EntryPolicySectionProps> = ({titl
                         <tbody>
                             {arrayToIterate.map(({rule, matched}, index) => {
                                     return (
-                                        <EntryPolicySectionContainer key={index} label={rule.Name} matched={matched && (rule.Type === 'latency' ? rule.Latency >= latency : true)? "Success" : "Failure"}>
+                                        <EntryPolicySectionContainer key={index} label={rule.Name} matched={matched && (rule.Type === 'slo' ? rule.ResponseTime >= latency : true)? "Success" : "Failure"}>
                                             {
                                                 <>
                                                     {
@@ -213,8 +213,8 @@ export const EntryTablePolicySection: React.FC<EntryPolicySectionProps> = ({titl
                                                         <tr className={styles.dataValue}><td><b>Key:</b></td> <td>{rule.Key}</td></tr>
                                                     }
                                                     {
-                                                        rule.Latency !== 0 &&
-                                                        <tr className={styles.dataValue}><td><b>Latency:</b></td> <td>{rule.Latency}</td></tr>
+                                                        rule.ResponseTime !== 0 &&
+                                                        <tr className={styles.dataValue}><td><b>ResponseTime:</b></td> <td>{rule.ResponseTime}</td></tr>
                                                     }
                                                     {
                                                         rule.Method &&
