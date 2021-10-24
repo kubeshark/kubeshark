@@ -2,14 +2,9 @@
 
 Download Mizu for your platform
 
-**Mac** (Intel)
+**Mac** (on Intel chip)
 ```
 curl -Lo mizu https://github.com/up9inc/mizu/releases/download/_SEM_VER_/mizu_darwin_amd64 && chmod 755 mizu
-```
-
-**Mac** (Apple M1 silicon)
-```
-curl -Lo mizu https://github.com/up9inc/mizu/releases/download/_SEM_VER_/mizu_darwin_arm64 && chmod 755 mizu
 ```
 
 **Linux** 
@@ -17,10 +12,6 @@ curl -Lo mizu https://github.com/up9inc/mizu/releases/download/_SEM_VER_/mizu_da
 curl -Lo mizu https://github.com/up9inc/mizu/releases/download/_SEM_VER_/mizu_linux_amd64 && chmod 755 mizu
 ```
 
-**Windows** (Intel 64bit)
-```
-curl -LO https://github.com/up9inc/mizu/releases/download/_SEM_VER_/mizu.exe
-```
 
 ### Checksums
 SHA256 checksums available for compiled binaries.
