@@ -19,7 +19,7 @@ curl -Lo mizu https://github.com/up9inc/mizu/releases/download/_SEM_VER_/mizu_li
 
 **Windows** (Intel 64bit)
 ```
-curl -Lo https://github.com/up9inc/mizu/releases/download/_SEM_VER_/mizu.exe
+curl -LO https://github.com/up9inc/mizu/releases/download/_SEM_VER_/mizu.exe
 ```
 
 ### Checksums
