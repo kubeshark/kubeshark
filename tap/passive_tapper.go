@@ -19,6 +19,7 @@ import (
 	"github.com/up9inc/mizu/shared/logger"
 	"github.com/up9inc/mizu/tap/api"
 	"github.com/up9inc/mizu/tap/diagnose"
+	"github.com/up9inc/mizu/tap/source"
 )
 
 const cleanPeriod = time.Second * 10
@@ -140,32 +141,32 @@ func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
 		bpffilter = strings.Join(flag.Args(), " ")
 	}
 
-	packetSource, err := NewTcpPacketSource(*fname, *iface, tcpPacketSourceBehaviour{
-		snapLength:  *snaplen,
-		promisc:     *promisc,
-		tstype:      *tstype,
-		decoderName: *decoder,
-		lazy:        *lazy,
-		bpfFilter:   bpffilter,
+	packetSource, err := source.NewTcpPacketSource(*fname, *iface, source.TcpPacketSourceBehaviour{
+		SnapLength:  *snaplen,
+		Promisc:     *promisc,
+		Tstype:      *tstype,
+		DecoderName: *decoder,
+		Lazy:        *lazy,
+		BpfFilter:   bpffilter,
 	})
 
 	if err != nil {
 		logger.Log.Fatal(err)
 	}
 
-	defer packetSource.close()
+	defer packetSource.Close()
 
 	if err != nil {
 		logger.Log.Fatal(err)
 	}
 
-	packets := make(chan tcpPacketInfo, 10000)
+	packets := make(chan source.TcpPacketInfo, 10000)
 	assembler := NewTcpAssembler(outputItems, streamsMap)
 
 	logger.Log.Info("Starting to read packets")
 	diagnose.AppStats.SetStartTime(time.Now())
 
-	go packetSource.readPackets(!*nodefrag, packets)
+	go packetSource.ReadPackets(!*nodefrag, packets)
 
 	staleConnectionTimeout := time.Second * time.Duration(*staleTimeoutSeconds)
 	cleaner := Cleaner{
