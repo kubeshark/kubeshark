@@ -194,7 +194,7 @@ func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
 	}
 
 	packets := make(chan tcpPacketInfo, 10000)
-	assembler := NewTcpAssember(outputItems, streamsMap)
+	assembler := NewTcpAssembler(outputItems, streamsMap)
 
 	logger.Log.Info("Starting to read packets")
 	appStats.SetStartTime(time.Now())
