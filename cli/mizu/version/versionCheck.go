@@ -85,7 +85,13 @@ func CheckNewerVersion(versionChan chan string) {
 	logger.Log.Debugf("Finished version validation, github version %v, current version %v, took %v", gitHubVersion, currentSemVer, time.Since(start))
 
 	if gitHubVersionSemVer.GreaterThan(currentSemVer) {
-		versionChan <- fmt.Sprintf("Update available! %v -> %v (curl -Lo mizu %v/mizu_%s_amd64 && chmod 755 mizu)", mizu.SemVer, gitHubVersion, strings.Replace(*latestRelease.HTMLURL, "tag", "download", 1), runtime.GOOS)
+		var downloadMessage string
+		if runtime.GOOS == "windows" {
+			downloadMessage = fmt.Sprintf("curl -LO %v/mizu.exe", strings.Replace(*latestRelease.HTMLURL, "tag", "download", 1))
+		} else {
+			downloadMessage = fmt.Sprintf("curl -Lo mizu %v/mizu_%s_%s && chmod 755 mizu", strings.Replace(*latestRelease.HTMLURL, "tag", "download", 1), runtime.GOOS, runtime.GOARCH)
+		}
+		versionChan <- fmt.Sprintf("Update available! %v -> %v (%s)", mizu.SemVer, gitHubVersion, downloadMessage)
 	} else {
 		versionChan <- ""
 	}
