@@ -221,7 +221,7 @@ func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
 		bpffilter = strings.Join(flag.Args(), " ")
 	}
 
-	packetSource, err := NewTcpPacketSource(0, *fname, *iface, tcpPacketSourceBehaviour{
+	packetSource, err := NewTcpPacketSource(*fname, *iface, tcpPacketSourceBehaviour{
 		snapLength:  *snaplen,
 		promisc:     *promisc,
 		tstype:      *tstype,
@@ -241,7 +241,7 @@ func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
 	}
 
 	packets := make(chan tcpPacketInfo, 10000)
-	assembler := NewTcpAssember(outputItems, streamsMap)
+	assembler := NewTcpAssembler(outputItems, streamsMap)
 
 	logger.Log.Info("Starting to read packets")
 	appStats.SetStartTime(time.Now())
