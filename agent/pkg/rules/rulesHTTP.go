@@ -111,7 +111,7 @@ func PassedValidationRules(rulesMatched []RulesMatched) (bool, int64, int) {
 		if rule.Matched == false {
 			return false, responseTime, numberOfRulesMatched
 		} else {
-			if strings.ToLower(rule.Rule.Type) == "responseTime" {
+			if strings.ToLower(rule.Rule.Type) == "slo" {
 				if rule.Rule.ResponseTime < responseTime || responseTime == -1 {
 					responseTime = rule.Rule.ResponseTime
 				}
