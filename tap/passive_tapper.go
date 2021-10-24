@@ -11,17 +11,14 @@ package tap
 import (
 	"encoding/json"
 	"flag"
-	"fmt"
 	"os"
 	"runtime"
-	"runtime/pprof"
-	"strconv"
 	"strings"
 	"time"
 
-	"github.com/google/gopacket/examples/util" // pulls in all layers decoders
 	"github.com/up9inc/mizu/shared/logger"
 	"github.com/up9inc/mizu/tap/api"
+	"github.com/up9inc/mizu/tap/diagnose"
 )
 
 const cleanPeriod = time.Second * 10
@@ -52,10 +49,6 @@ var promisc = flag.Bool("promisc", true, "Set promiscuous mode")
 var staleTimeoutSeconds = flag.Int("staletimout", 120, "Max time in seconds to keep connections which don't transmit data")
 
 var memprofile = flag.String("memprofile", "", "Write memory profile")
-
-var appStats = api.AppStats{}
-var tapErrors *errorsMap
-var internalStats *tapperInternalStats
 
 type TapOpts struct {
 	HostMode bool
@@ -89,53 +82,10 @@ func StartPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem, 
 	filteringOptions = options
 
 	if GetMemoryProfilingEnabled() {
-		startMemoryProfiler()
+		diagnose.StartMemoryProfiler(os.Getenv(MemoryProfilingDumpPath), os.Getenv(MemoryProfilingTimeIntervalSeconds))
 	}
 
 	go startPassiveTapper(outputItems)
-}
-
-func startMemoryProfiler() {
-	dumpPath := "/app/pprof"
-	envDumpPath := os.Getenv(MemoryProfilingDumpPath)
-	if envDumpPath != "" {
-		dumpPath = envDumpPath
-	}
-	timeInterval := 60
-	envTimeInterval := os.Getenv(MemoryProfilingTimeIntervalSeconds)
-	if envTimeInterval != "" {
-		if i, err := strconv.Atoi(envTimeInterval); err == nil {
-			timeInterval = i
-		}
-	}
-
-	logger.Log.Info("Profiling is on, results will be written to %s", dumpPath)
-	go func() {
-		if _, err := os.Stat(dumpPath); os.IsNotExist(err) {
-			if err := os.Mkdir(dumpPath, 0777); err != nil {
-				logger.Log.Fatal("could not create directory for profile: ", err)
-			}
-		}
-
-		for {
-			t := time.Now()
-
-			filename := fmt.Sprintf("%s/%s__mem.prof", dumpPath, t.Format("15_04_05"))
-
-			logger.Log.Infof("Writing memory profile to %s\n", filename)
-
-			f, err := os.Create(filename)
-			if err != nil {
-				logger.Log.Fatal("could not create memory profile: ", err)
-			}
-			runtime.GC() // get up-to-date statistics
-			if err := pprof.WriteHeapProfile(f); err != nil {
-				logger.Log.Fatal("could not write memory profile: ", err)
-			}
-			_ = f.Close()
-			time.Sleep(time.Second * time.Duration(timeInterval))
-		}
-	}()
 }
 
 func printPeriodicStats(cleaner *Cleaner) {
@@ -146,11 +96,11 @@ func printPeriodicStats(cleaner *Cleaner) {
 		<-ticker.C
 
 		// Since the start
-		errorMapLen, errorsSummery := tapErrors.getErrorsSummary()
+		errorMapLen, errorsSummery := diagnose.TapErrors.GetErrorsSummary()
 
 		logger.Log.Infof("%v (errors: %v, errTypes:%v) - Errors Summary: %s",
-			time.Since(appStats.StartTime),
-			tapErrors.nErrors,
+			time.Since(diagnose.AppStats.StartTime),
+			diagnose.TapErrors.ErrorsCount,
 			errorMapLen,
 			errorsSummery,
 		)
@@ -172,49 +122,18 @@ func printPeriodicStats(cleaner *Cleaner) {
 			cleanStats.closed,
 			cleanStats.deleted,
 		)
-		currentAppStats := appStats.DumpStats()
+		currentAppStats := diagnose.AppStats.DumpStats()
 		appStatsJSON, _ := json.Marshal(currentAppStats)
 		logger.Log.Infof("app stats - %v", string(appStatsJSON))
 	}
-}
-
-func dumpMemoryProfile(filename string) error {
-	if filename == "" {
-		return nil
-	}
-
-	f, err := os.Create(*memprofile)
-
-	if err != nil {
-		return err
-	}
-
-	defer f.Close()
-
-	if err := pprof.WriteHeapProfile(f); err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
 	streamsMap := NewTcpStreamMap()
 	go streamsMap.closeTimedoutTcpStreamChannels()
 
-	var outputLevel int
-
-	defer util.Run()()
-	if *debug {
-		outputLevel = 2
-	} else if *verbose {
-		outputLevel = 1
-	} else if *quiet {
-		outputLevel = -1
-	}
-
-	tapErrors = NewErrorsMap(outputLevel)
-	internalStats = NewTapperInternalStats()
+	diagnose.InitializeErrorsMap(*debug, *verbose, *quiet)
+	diagnose.InitializeTapperInternalStats()
 
 	var bpffilter string
 	if len(flag.Args()) > 0 {
@@ -244,7 +163,7 @@ func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
 	assembler := NewTcpAssembler(outputItems, streamsMap)
 
 	logger.Log.Info("Starting to read packets")
-	appStats.SetStartTime(time.Now())
+	diagnose.AppStats.SetStartTime(time.Now())
 
 	go packetSource.readPackets(!*nodefrag, packets)
 
@@ -259,23 +178,19 @@ func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
 
 	go printPeriodicStats(&cleaner)
 
-	if GetMemoryProfilingEnabled() {
-		startMemoryProfiler()
-	}
-
 	assembler.processPackets(*hexdumppkt, packets)
 
-	if outputLevel >= 2 {
+	if diagnose.TapErrors.OutputLevel >= 2 {
 		assembler.dumpStreamPool()
 	}
 
-	if err := dumpMemoryProfile(*memprofile); err != nil {
+	if err := diagnose.DumpMemoryProfile(*memprofile); err != nil {
 		logger.Log.Errorf("Error dumping memory profile %v\n", err)
 	}
 
 	assembler.waitAndDump()
 
-	internalStats.PrintStatsSummary()
-	tapErrors.PrintSummary()
-	logger.Log.Infof("AppStats: %v", appStats)
+	diagnose.InternalStats.PrintStatsSummary()
+	diagnose.TapErrors.PrintSummary()
+	logger.Log.Infof("AppStats: %v", diagnose.AppStats)
 }

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/up9inc/mizu/shared/logger"
+	"github.com/up9inc/mizu/tap/diagnose"
 )
 
 type tcpStreamMap struct {
@@ -44,9 +45,9 @@ func (streamMap *tcpStreamMap) closeTimedoutTcpStreamChannels() {
 			if stream.superIdentifier.Protocol == nil {
 				if !stream.isClosed && time.Now().After(streamWrapper.createdAt.Add(tcpStreamChannelTimeout)) {
 					stream.Close()
-					appStats.IncDroppedTcpStreams()
+					diagnose.AppStats.IncDroppedTcpStreams()
 					logger.Log.Debugf("Dropped an unidentified TCP stream because of timeout. Total dropped: %d Total Goroutines: %d Timeout (ms): %d\n",
-						appStats.DroppedTcpStreams, runtime.NumGoroutine(), tcpStreamChannelTimeout/1000000)
+						diagnose.AppStats.DroppedTcpStreams, runtime.NumGoroutine(), tcpStreamChannelTimeout/1000000)
 				}
 			} else {
 				if !stream.superIdentifier.IsClosedOthers {

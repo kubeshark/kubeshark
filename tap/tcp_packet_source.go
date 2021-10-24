@@ -10,6 +10,7 @@ import (
 	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/pcap"
 	"github.com/up9inc/mizu/shared/logger"
+	"github.com/up9inc/mizu/tap/diagnose"
 )
 
 type tcpPacketSource struct {
@@ -130,7 +131,7 @@ func (source *tcpPacketSource) readPackets(ipdefrag bool, packets chan<- tcpPack
 				continue // packet fragment, we don't have whole packet yet.
 			}
 			if newip4.Length != l {
-				internalStats.ipdefrag++
+				diagnose.InternalStats.Ipdefrag++
 				logger.Log.Debugf("Decoding re-assembled packet: %s", newip4.NextLayerType())
 				pb, ok := packet.(gopacket.PacketBuilder)
 				if !ok {
