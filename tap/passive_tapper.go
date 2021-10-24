@@ -178,7 +178,7 @@ func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
 		bpffilter = strings.Join(flag.Args(), " ")
 	}
 
-	packetSource, err := NewTcpPacketSource(0, *fname, *iface, tcpPacketSourceBehaviour{
+	packetSource, err := NewTcpPacketSource(*fname, *iface, tcpPacketSourceBehaviour{
 		snapLength:  *snaplen,
 		promisc:     *promisc,
 		tstype:      *tstype,

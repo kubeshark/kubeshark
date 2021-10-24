@@ -33,7 +33,7 @@ type tcpPacketInfo struct {
 	source *tcpPacketSource
 }
 
-func NewTcpPacketSource(pid int, filename string, interfaceName string,
+func NewTcpPacketSource(filename string, interfaceName string,
 	behaviour tcpPacketSourceBehaviour) (*tcpPacketSource, error) {
 	var err error
 
