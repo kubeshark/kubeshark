@@ -2,15 +2,16 @@ package cmd
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/creasty/defaults"
 	"github.com/spf13/cobra"
 	"github.com/up9inc/mizu/cli/config"
-	"github.com/up9inc/mizu/cli/logger"
 	"github.com/up9inc/mizu/cli/mizu"
 	"github.com/up9inc/mizu/cli/mizu/fsUtils"
 	"github.com/up9inc/mizu/cli/mizu/version"
 	"github.com/up9inc/mizu/cli/uiUtils"
-	"time"
+	"github.com/up9inc/mizu/shared/logger"
 )
 
 var rootCmd = &cobra.Command{
@@ -50,7 +51,7 @@ func Execute() {
 	if err := fsUtils.EnsureDir(mizu.GetMizuFolderPath()); err != nil {
 		logger.Log.Errorf("Failed to use mizu folder, %v", err)
 	}
-	logger.InitLogger()
+	logger.InitLogger(fsUtils.GetLogFilePath())
 
 	versionChan := make(chan string)
 	defer printNewVersionIfNeeded(versionChan)

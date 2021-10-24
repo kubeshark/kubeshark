@@ -6,9 +6,17 @@ import (
 
 type SemVersion string
 
+func (v SemVersion) IsValid() bool {
+	re := regexp.MustCompile(`\d+`)
+	breakdown := re.FindAllString(string(v), 3)
+
+	return len(breakdown) == 3
+}
+
 func (v SemVersion) Breakdown() (string, string, string) {
 	re := regexp.MustCompile(`\d+`)
 	breakdown := re.FindAllString(string(v), 3)
+
 	return breakdown[0], breakdown[1], breakdown[2]
 }
 

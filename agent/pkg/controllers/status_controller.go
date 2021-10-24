@@ -2,13 +2,16 @@ package controllers
 
 import (
 	"encoding/json"
-	"github.com/gin-gonic/gin"
-	"github.com/romana/rlog"
-	"github.com/up9inc/mizu/shared"
 	"mizuserver/pkg/api"
+	"mizuserver/pkg/holder"
 	"mizuserver/pkg/providers"
+	"mizuserver/pkg/up9"
 	"mizuserver/pkg/validation"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
+	"github.com/up9inc/mizu/shared"
+	"github.com/up9inc/mizu/shared/logger"
 )
 
 func PostTappedPods(c *gin.Context) {
@@ -21,11 +24,11 @@ func PostTappedPods(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
-	rlog.Infof("[Status] POST request: %d tapped pods", len(tapStatus.Pods))
+	logger.Log.Infof("[Status] POST request: %d tapped pods", len(tapStatus.Pods))
 	providers.TapStatus.Pods = tapStatus.Pods
 	message := shared.CreateWebSocketStatusMessage(*tapStatus)
 	if jsonBytes, err := json.Marshal(message); err != nil {
-		rlog.Errorf("Could not Marshal message %v\n", err)
+		logger.Log.Errorf("Could not Marshal message %v\n", err)
 	} else {
 		api.BroadcastToBrowserClients(jsonBytes)
 	}
@@ -33,4 +36,34 @@ func PostTappedPods(c *gin.Context) {
 
 func GetTappersCount(c *gin.Context) {
 	c.JSON(http.StatusOK, providers.TappersCount)
+}
+
+func GetAuthStatus(c *gin.Context) {
+	authStatus, err := providers.GetAuthStatus()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, authStatus)
+}
+
+func GetTappingStatus(c *gin.Context) {
+	c.JSON(http.StatusOK, providers.TapStatus)
+}
+
+func AnalyzeInformation(c *gin.Context) {
+	c.JSON(http.StatusOK, up9.GetAnalyzeInfo())
+}
+
+func GetGeneralStats(c *gin.Context) {
+	c.JSON(http.StatusOK, providers.GetGeneralStats())
+}
+
+func GetRecentTLSLinks(c *gin.Context) {
+	c.JSON(http.StatusOK, providers.GetAllRecentTLSAddresses())
+}
+
+func GetCurrentResolvingInformation(c *gin.Context) {
+	c.JSON(http.StatusOK, holder.GetResolver().GetMap())
 }

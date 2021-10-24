@@ -12,10 +12,11 @@ import (
 	"strconv"
 
 	"github.com/up9inc/mizu/cli/config/configStructs"
-	"github.com/up9inc/mizu/cli/logger"
+	"github.com/up9inc/mizu/shared/logger"
 
 	"io"
 
+	"github.com/up9inc/mizu/cli/config"
 	"github.com/up9inc/mizu/cli/mizu"
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/tap/api"
@@ -146,22 +147,26 @@ func (provider *Provider) CreateNamespace(ctx context.Context, name string) (*co
 }
 
 type ApiServerOptions struct {
-	Namespace               string
-	PodName                 string
-	PodImage                string
-	ServiceAccountName      string
-	IsNamespaceRestricted   bool
-	MizuApiFilteringOptions *api.TrafficFilteringOptions
-	MaxEntriesDBSizeBytes   int64
-	Resources               configStructs.Resources
-	ImagePullPolicy         core.PullPolicy
+	Namespace             string
+	PodName               string
+	PodImage              string
+	ServiceAccountName    string
+	IsNamespaceRestricted bool
+	SyncEntriesConfig     *shared.SyncEntriesConfig
+	MaxEntriesDBSizeBytes int64
+	Resources             configStructs.Resources
+	ImagePullPolicy       core.PullPolicy
 }
 
 func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, opts *ApiServerOptions) (*core.Pod, error) {
-	marshaledFilteringOptions, err := json.Marshal(opts.MizuApiFilteringOptions)
-	if err != nil {
-		return nil, err
+	var marshaledSyncEntriesConfig []byte
+	if opts.SyncEntriesConfig != nil {
+		var err error
+		if marshaledSyncEntriesConfig, err = json.Marshal(opts.SyncEntriesConfig); err != nil {
+			return nil, err
+		}
 	}
+
 	configMapVolumeName := &core.ConfigMapVolumeSource{}
 	configMapVolumeName.Name = mizu.ConfigMapName
 	configMapOptional := true
@@ -189,6 +194,13 @@ func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, opts *ApiS
 		command = append(command, "--namespace", opts.Namespace)
 	}
 
+	port := intstr.FromInt(shared.DefaultApiServerPort)
+
+	debugMode := ""
+	if config.Config.DumpLogs {
+		debugMode = "1"
+	}
+
 	pod := &core.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      opts.PodName,
@@ -210,16 +222,16 @@ func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, opts *ApiS
 					Command: command,
 					Env: []core.EnvVar{
 						{
-							Name:  shared.HostModeEnvVar,
-							Value: "1",
-						},
-						{
-							Name:  shared.MizuFilteringOptionsEnvVar,
-							Value: string(marshaledFilteringOptions),
+							Name:  shared.SyncEntriesConfigEnvVar,
+							Value: string(marshaledSyncEntriesConfig),
 						},
 						{
 							Name:  shared.MaxEntriesDBSizeBytesEnvVar,
 							Value: strconv.FormatInt(opts.MaxEntriesDBSizeBytes, 10),
+						},
+						{
+							Name:  shared.DebugModeEnvVar,
+							Value: debugMode,
 						},
 					},
 					Resources: core.ResourceRequirements{
@@ -231,6 +243,25 @@ func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, opts *ApiS
 							"cpu":    cpuRequests,
 							"memory": memRequests,
 						},
+					},
+					ReadinessProbe: &core.Probe{
+						Handler: core.Handler{
+							TCPSocket: &core.TCPSocketAction{
+								Port: port,
+							},
+						},
+						InitialDelaySeconds: 5,
+						PeriodSeconds:       10,
+					},
+					LivenessProbe: &core.Probe{
+						Handler: core.Handler{
+							HTTPGet: &core.HTTPGetAction{
+								Path: "/echo",
+								Port: port,
+							},
+						},
+						InitialDelaySeconds: 5,
+						PeriodSeconds:       10,
 					},
 				},
 			},
@@ -260,7 +291,7 @@ func (provider *Provider) CreateService(ctx context.Context, namespace string, s
 			Namespace: namespace,
 		},
 		Spec: core.ServiceSpec{
-			Ports:    []core.ServicePort{{TargetPort: intstr.FromInt(8899), Port: 80}},
+			Ports:    []core.ServicePort{{TargetPort: intstr.FromInt(shared.DefaultApiServerPort), Port: 80}},
 			Type:     core.ServiceTypeClusterIP,
 			Selector: map[string]string{"app": appLabelValue},
 		},
@@ -454,13 +485,14 @@ func (provider *Provider) handleRemovalError(err error) error {
 	return err
 }
 
-func (provider *Provider) CreateConfigMap(ctx context.Context, namespace string, configMapName string, data string) error {
-	if data == "" {
+func (provider *Provider) CreateConfigMap(ctx context.Context, namespace string, configMapName string, data string, contract string) error {
+	if data == "" && contract == "" {
 		return nil
 	}
 
 	configMapData := make(map[string]string, 0)
 	configMapData[shared.RulePolicyFileName] = data
+	configMapData[shared.ContractFileName] = contract
 	configMap := &core.ConfigMap{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "ConfigMap",
@@ -503,6 +535,11 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 		"--nodefrag",
 	}
 
+	debugMode := ""
+	if config.Config.DumpLogs {
+		debugMode = "1"
+	}
+
 	agentContainer := applyconfcore.Container()
 	agentContainer.WithName(tapperPodName)
 	agentContainer.WithImage(podImage)
@@ -510,6 +547,7 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	agentContainer.WithSecurityContext(applyconfcore.SecurityContext().WithPrivileged(true))
 	agentContainer.WithCommand(mizuCmd...)
 	agentContainer.WithEnv(
+		applyconfcore.EnvVar().WithName(shared.DebugModeEnvVar).WithValue(debugMode),
 		applyconfcore.EnvVar().WithName(shared.HostModeEnvVar).WithValue("1"),
 		applyconfcore.EnvVar().WithName(shared.TappedAddressesPerNodeDictEnvVar).WithValue(string(nodeToTappedPodIPMapJsonStr)),
 		applyconfcore.EnvVar().WithName(shared.GoGCEnvVar).WithValue("12800"),

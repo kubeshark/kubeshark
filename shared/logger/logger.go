@@ -1,24 +1,18 @@
 package logger
 
 import (
-	"github.com/op/go-logging"
-	"github.com/up9inc/mizu/cli/mizu"
 	"os"
-	"path"
+
+	"github.com/op/go-logging"
 )
 
-var Log = logging.MustGetLogger("mizu_cli")
+var Log = logging.MustGetLogger("mizu")
 
 var format = logging.MustStringFormatter(
 	`%{time} %{level:.5s} ▶ %{pid} %{shortfile} %{shortfunc} ▶ %{message}`,
 )
 
-func GetLogFilePath() string {
-	return path.Join(mizu.GetMizuFolderPath(), "mizu_cli.log")
-}
-
-func InitLogger() {
-	logPath := GetLogFilePath()
+func InitLogger(logPath string) {
 	f, err := os.OpenFile(logPath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		Log.Infof("Failed to open mizu log file: %v, err %v", logPath, err)
@@ -33,7 +27,12 @@ func InitLogger() {
 	backend1Leveled.SetLevel(logging.INFO, "")
 
 	logging.SetBackend(backend1Leveled, backend2Formatter)
+}
 
-	Log.Debugf("\n\n\n")
-	Log.Debugf("Running mizu version %v", mizu.SemVer)
+func InitLoggerStderrOnly(level logging.Level) {
+	backend := logging.NewLogBackend(os.Stderr, "", 0)
+	backendFormatter := logging.NewBackendFormatter(backend, format)
+
+	logging.SetBackend(backendFormatter)
+	logging.SetLevel(level, "")
 }

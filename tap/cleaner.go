@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/google/gopacket/reassembly"
-	"github.com/romana/rlog"
+	"github.com/up9inc/mizu/shared/logger"
 	"github.com/up9inc/mizu/tap/api"
 )
 
@@ -28,7 +28,7 @@ func (cl *Cleaner) clean() {
 	startCleanTime := time.Now()
 
 	cl.assemblerMutex.Lock()
-	rlog.Debugf("Assembler Stats before cleaning %s", cl.assembler.Dump())
+	logger.Log.Debugf("Assembler Stats before cleaning %s", cl.assembler.Dump())
 	flushed, closed := cl.assembler.FlushCloseOlderThan(startCleanTime.Add(-cl.connectionTimeout))
 	cl.assemblerMutex.Unlock()
 
@@ -38,7 +38,7 @@ func (cl *Cleaner) clean() {
 	}
 
 	cl.statsMutex.Lock()
-	rlog.Debugf("Assembler Stats after cleaning %s", cl.assembler.Dump())
+	logger.Log.Debugf("Assembler Stats after cleaning %s", cl.assembler.Dump())
 	cl.stats.flushed += flushed
 	cl.stats.closed += closed
 	cl.statsMutex.Unlock()
@@ -48,7 +48,7 @@ func (cl *Cleaner) start() {
 	go func() {
 		ticker := time.NewTicker(cl.cleanPeriod)
 
-		for true {
+		for {
 			<-ticker.C
 			cl.clean()
 		}

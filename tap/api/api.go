@@ -2,9 +2,17 @@ package api
 
 import (
 	"bufio"
+	"bytes"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"io/ioutil"
+	"net/http"
 	"plugin"
 	"sync"
 	"time"
+
+	"github.com/google/martian/har"
 )
 
 type Protocol struct {
@@ -104,32 +112,36 @@ type MizuEntry struct {
 	ID                      uint `gorm:"primarykey"`
 	CreatedAt               time.Time
 	UpdatedAt               time.Time
-	ProtocolName            string `json:"protocolName" gorm:"column:protocolName"`
-	ProtocolLongName        string `json:"protocolLongName" gorm:"column:protocolLongName"`
-	ProtocolAbbreviation    string `json:"protocolAbbreviation" gorm:"column:protocolAbbreviation"`
-	ProtocolVersion         string `json:"protocolVersion" gorm:"column:protocolVersion"`
-	ProtocolBackgroundColor string `json:"protocolBackgroundColor" gorm:"column:protocolBackgroundColor"`
-	ProtocolForegroundColor string `json:"protocolForegroundColor" gorm:"column:protocolForegroundColor"`
-	ProtocolFontSize        int8   `json:"protocolFontSize" gorm:"column:protocolFontSize"`
-	ProtocolReferenceLink   string `json:"protocolReferenceLink" gorm:"column:protocolReferenceLink"`
-	Entry                   string `json:"entry,omitempty" gorm:"column:entry"`
-	EntryId                 string `json:"entryId" gorm:"column:entryId"`
-	Url                     string `json:"url" gorm:"column:url"`
-	Method                  string `json:"method" gorm:"column:method"`
-	Status                  int    `json:"status" gorm:"column:status"`
-	RequestSenderIp         string `json:"requestSenderIp" gorm:"column:requestSenderIp"`
-	Service                 string `json:"service" gorm:"column:service"`
-	Timestamp               int64  `json:"timestamp" gorm:"column:timestamp"`
-	ElapsedTime             int64  `json:"elapsedTime" gorm:"column:elapsedTime"`
-	Path                    string `json:"path" gorm:"column:path"`
-	ResolvedSource          string `json:"resolvedSource,omitempty" gorm:"column:resolvedSource"`
-	ResolvedDestination     string `json:"resolvedDestination,omitempty" gorm:"column:resolvedDestination"`
-	SourceIp                string `json:"sourceIp,omitempty" gorm:"column:sourceIp"`
-	DestinationIp           string `json:"destinationIp,omitempty" gorm:"column:destinationIp"`
-	SourcePort              string `json:"sourcePort,omitempty" gorm:"column:sourcePort"`
-	DestinationPort         string `json:"destinationPort,omitempty" gorm:"column:destinationPort"`
-	IsOutgoing              bool   `json:"isOutgoing,omitempty" gorm:"column:isOutgoing"`
-	EstimatedSizeBytes      int    `json:"-" gorm:"column:estimatedSizeBytes"`
+	ProtocolName            string         `json:"protocolName" gorm:"column:protocolName"`
+	ProtocolLongName        string         `json:"protocolLongName" gorm:"column:protocolLongName"`
+	ProtocolAbbreviation    string         `json:"protocolAbbreviation" gorm:"column:protocolAbbreviation"`
+	ProtocolVersion         string         `json:"protocolVersion" gorm:"column:protocolVersion"`
+	ProtocolBackgroundColor string         `json:"protocolBackgroundColor" gorm:"column:protocolBackgroundColor"`
+	ProtocolForegroundColor string         `json:"protocolForegroundColor" gorm:"column:protocolForegroundColor"`
+	ProtocolFontSize        int8           `json:"protocolFontSize" gorm:"column:protocolFontSize"`
+	ProtocolReferenceLink   string         `json:"protocolReferenceLink" gorm:"column:protocolReferenceLink"`
+	Entry                   string         `json:"entry,omitempty" gorm:"column:entry"`
+	EntryId                 string         `json:"entryId" gorm:"column:entryId"`
+	Url                     string         `json:"url" gorm:"column:url"`
+	Method                  string         `json:"method" gorm:"column:method"`
+	Status                  int            `json:"status" gorm:"column:status"`
+	RequestSenderIp         string         `json:"requestSenderIp" gorm:"column:requestSenderIp"`
+	Service                 string         `json:"service" gorm:"column:service"`
+	Timestamp               int64          `json:"timestamp" gorm:"column:timestamp"`
+	ElapsedTime             int64          `json:"elapsedTime" gorm:"column:elapsedTime"`
+	Path                    string         `json:"path" gorm:"column:path"`
+	ResolvedSource          string         `json:"resolvedSource,omitempty" gorm:"column:resolvedSource"`
+	ResolvedDestination     string         `json:"resolvedDestination,omitempty" gorm:"column:resolvedDestination"`
+	SourceIp                string         `json:"sourceIp,omitempty" gorm:"column:sourceIp"`
+	DestinationIp           string         `json:"destinationIp,omitempty" gorm:"column:destinationIp"`
+	SourcePort              string         `json:"sourcePort,omitempty" gorm:"column:sourcePort"`
+	DestinationPort         string         `json:"destinationPort,omitempty" gorm:"column:destinationPort"`
+	IsOutgoing              bool           `json:"isOutgoing,omitempty" gorm:"column:isOutgoing"`
+	ContractStatus          ContractStatus `json:"contractStatus,omitempty" gorm:"column:contractStatus"`
+	ContractRequestReason   string         `json:"contractRequestReason,omitempty" gorm:"column:contractRequestReason"`
+	ContractResponseReason  string         `json:"contractResponseReason,omitempty" gorm:"column:contractResponseReason"`
+	ContractContent         string         `json:"contractContent,omitempty" gorm:"column:contractContent"`
+	EstimatedSizeBytes      int            `json:"-" gorm:"column:estimatedSizeBytes"`
 }
 
 type MizuEntryWrapper struct {
@@ -159,12 +171,22 @@ type BaseEntryDetails struct {
 	IsOutgoing      bool            `json:"isOutgoing,omitempty"`
 	Latency         int64           `json:"latency"`
 	Rules           ApplicableRules `json:"rules,omitempty"`
+	ContractStatus  ContractStatus  `json:"contractStatus"`
 }
 
 type ApplicableRules struct {
 	Latency       int64 `json:"latency,omitempty"`
 	Status        bool  `json:"status,omitempty"`
 	NumberOfRules int   `json:"numberOfRules,omitempty"`
+}
+
+type ContractStatus int
+
+type Contract struct {
+	Status         ContractStatus `json:"status"`
+	RequestReason  string         `json:"requestReason"`
+	ResponseReason string         `json:"responseReason"`
+	Content        string         `json:"content"`
 }
 
 type DataUnmarshaler interface {
@@ -184,14 +206,20 @@ func (bed *BaseEntryDetails) UnmarshalData(entry *MizuEntry) error {
 	}
 	bed.Id = entry.EntryId
 	bed.Url = entry.Url
+	bed.RequestSenderIp = entry.RequestSenderIp
 	bed.Service = entry.Service
+	bed.Path = entry.Path
 	bed.Summary = entry.Path
 	bed.StatusCode = entry.Status
 	bed.Method = entry.Method
 	bed.Timestamp = entry.Timestamp
-	bed.RequestSenderIp = entry.RequestSenderIp
+	bed.SourceIp = entry.SourceIp
+	bed.DestinationIp = entry.DestinationIp
+	bed.SourcePort = entry.SourcePort
+	bed.DestinationPort = entry.DestinationPort
 	bed.IsOutgoing = entry.IsOutgoing
 	bed.Latency = entry.ElapsedTime
+	bed.ContractStatus = entry.ContractStatus
 	return nil
 }
 
@@ -199,3 +227,109 @@ const (
 	TABLE string = "table"
 	BODY  string = "body"
 )
+
+const (
+	TypeHttpRequest = iota
+	TypeHttpResponse
+)
+
+type HTTPPayload struct {
+	Type uint8
+	Data interface{}
+}
+
+type HTTPPayloader interface {
+	MarshalJSON() ([]byte, error)
+}
+
+type HTTPWrapper struct {
+	Method      string               `json:"method"`
+	Url         string               `json:"url"`
+	Details     interface{}          `json:"details"`
+	RawRequest  *HTTPRequestWrapper  `json:"rawRequest"`
+	RawResponse *HTTPResponseWrapper `json:"rawResponse"`
+}
+
+func (h HTTPPayload) MarshalJSON() ([]byte, error) {
+	switch h.Type {
+	case TypeHttpRequest:
+		harRequest, err := har.NewRequest(h.Data.(*http.Request), true)
+		if err != nil {
+			return nil, errors.New("Failed converting request to HAR")
+		}
+		return json.Marshal(&HTTPWrapper{
+			Method:     harRequest.Method,
+			Url:        "",
+			Details:    harRequest,
+			RawRequest: &HTTPRequestWrapper{Request: h.Data.(*http.Request)},
+		})
+	case TypeHttpResponse:
+		harResponse, err := har.NewResponse(h.Data.(*http.Response), true)
+		if err != nil {
+			return nil, errors.New("Failed converting response to HAR")
+		}
+		return json.Marshal(&HTTPWrapper{
+			Method:      "",
+			Url:         "",
+			Details:     harResponse,
+			RawResponse: &HTTPResponseWrapper{Response: h.Data.(*http.Response)},
+		})
+	default:
+		panic(fmt.Sprintf("HTTP payload cannot be marshaled: %s\n", h.Type))
+	}
+}
+
+type HTTPWrapperTricky struct {
+	Method      string         `json:"method"`
+	Url         string         `json:"url"`
+	Details     interface{}    `json:"details"`
+	RawRequest  *http.Request  `json:"rawRequest"`
+	RawResponse *http.Response `json:"rawResponse"`
+}
+
+type HTTPMessage struct {
+	IsRequest   bool              `json:"isRequest"`
+	CaptureTime time.Time         `json:"captureTime"`
+	Payload     HTTPWrapperTricky `json:"payload"`
+}
+
+type HTTPRequestResponsePair struct {
+	Request  HTTPMessage `json:"request"`
+	Response HTTPMessage `json:"response"`
+}
+
+type HTTPRequestWrapper struct {
+	*http.Request
+}
+
+func (r *HTTPRequestWrapper) MarshalJSON() ([]byte, error) {
+	body, _ := ioutil.ReadAll(r.Request.Body)
+	r.Request.Body = ioutil.NopCloser(bytes.NewBuffer(body))
+	return json.Marshal(&struct {
+		Body    string `json:"Body,omitempty"`
+		GetBody string `json:"GetBody,omitempty"`
+		Cancel  string `json:"Cancel,omitempty"`
+		*http.Request
+	}{
+		Body:    string(body),
+		Request: r.Request,
+	})
+}
+
+type HTTPResponseWrapper struct {
+	*http.Response
+}
+
+func (r *HTTPResponseWrapper) MarshalJSON() ([]byte, error) {
+	body, _ := ioutil.ReadAll(r.Response.Body)
+	r.Response.Body = ioutil.NopCloser(bytes.NewBuffer(body))
+	return json.Marshal(&struct {
+		Body    string `json:"Body,omitempty"`
+		GetBody string `json:"GetBody,omitempty"`
+		Cancel  string `json:"Cancel,omitempty"`
+		*http.Response
+	}{
+		Body:     string(body),
+		Response: r.Response,
+	})
+}

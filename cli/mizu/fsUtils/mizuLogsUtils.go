@@ -4,13 +4,19 @@ import (
 	"archive/zip"
 	"context"
 	"fmt"
+	"os"
+	"path"
+	"regexp"
+
 	"github.com/up9inc/mizu/cli/config"
 	"github.com/up9inc/mizu/cli/kubernetes"
-	"github.com/up9inc/mizu/cli/logger"
 	"github.com/up9inc/mizu/cli/mizu"
-	"os"
-	"regexp"
+	"github.com/up9inc/mizu/shared/logger"
 )
+
+func GetLogFilePath() string {
+	return path.Join(mizu.GetMizuFolderPath(), "mizu_cli.log")
+}
 
 func DumpLogs(ctx context.Context, provider *kubernetes.Provider, filePath string) error {
 	podExactRegex := regexp.MustCompile("^" + mizu.MizuResourcesPrefix)
@@ -66,10 +72,10 @@ func DumpLogs(ctx context.Context, provider *kubernetes.Provider, filePath strin
 		logger.Log.Debugf("Successfully added file %s", config.Config.ConfigFilePath)
 	}
 
-	if err := AddFileToZip(zipWriter, logger.GetLogFilePath()); err != nil {
+	if err := AddFileToZip(zipWriter, GetLogFilePath()); err != nil {
 		logger.Log.Debugf("Failed write file, %v", err)
 	} else {
-		logger.Log.Debugf("Successfully added file %s", logger.GetLogFilePath())
+		logger.Log.Debugf("Successfully added file %s", GetLogFilePath())
 	}
 
 	logger.Log.Infof("You can find the zip file with all logs in %s\n", filePath)

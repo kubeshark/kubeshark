@@ -2,20 +2,22 @@ package cmd
 
 import (
 	"errors"
+	"fmt"
 	"os"
-
-	"github.com/up9inc/mizu/cli/config"
-	"github.com/up9inc/mizu/cli/config/configStructs"
-	"github.com/up9inc/mizu/cli/logger"
-	"github.com/up9inc/mizu/cli/telemetry"
 
 	"github.com/creasty/defaults"
 	"github.com/spf13/cobra"
+	"github.com/up9inc/mizu/cli/auth"
+	"github.com/up9inc/mizu/cli/config"
+	"github.com/up9inc/mizu/cli/config/configStructs"
 	"github.com/up9inc/mizu/cli/errormessage"
+	"github.com/up9inc/mizu/cli/telemetry"
 	"github.com/up9inc/mizu/cli/uiUtils"
+	"github.com/up9inc/mizu/shared"
+	"github.com/up9inc/mizu/shared/logger"
 )
 
-const analysisMessageToConfirm = `NOTE: running mizu with --analysis flag will upload recorded traffic for further analysis and enriched presentation options.`
+const uploadTrafficMessageToConfirm = `NOTE: running mizu with --%s flag will upload recorded traffic for further analysis and enriched presentation options.`
 
 var tapCmd = &cobra.Command{
 	Use:   "tap [POD REGEX]",
@@ -38,18 +40,50 @@ Supported protocols are HTTP and gRPC.`,
 			return errormessage.FormatError(err)
 		}
 
-		logger.Log.Infof("Mizu will store up to %s of traffic, old traffic will be cleared once the limit is reached.", config.Config.Tap.HumanMaxEntriesDBSize)
+		if config.Config.Tap.Workspace != "" {
+			askConfirmation(configStructs.WorkspaceTapName)
 
-		if config.Config.Tap.Analysis {
-			logger.Log.Infof(analysisMessageToConfirm)
-			if !uiUtils.AskForConfirmation("Would you like to proceed [Y/n]: ") {
-				logger.Log.Infof("You can always run mizu without analysis, aborting")
-				os.Exit(0)
+			if config.Config.Auth.Token == "" {
+				logger.Log.Infof("This action requires authentication, please log in to continue")
+				if err := auth.Login(); err != nil {
+					logger.Log.Errorf("failed to log in, err: %v", err)
+					return nil
+				}
+			} else {
+				tokenExpired, err := shared.IsTokenExpired(config.Config.Auth.Token)
+				if err != nil {
+					logger.Log.Errorf("failed to check if token is expired, err: %v", err)
+					return nil
+				}
+
+				if tokenExpired {
+					logger.Log.Infof("Token expired, please log in again to continue")
+					if err := auth.Login(); err != nil {
+						logger.Log.Errorf("failed to log in, err: %v", err)
+						return nil
+					}
+				}
 			}
 		}
 
+		if config.Config.Tap.Analysis {
+			askConfirmation(configStructs.AnalysisTapName)
+
+			config.Config.Auth.Token = ""
+		}
+
+		logger.Log.Infof("Mizu will store up to %s of traffic, old traffic will be cleared once the limit is reached.", config.Config.Tap.HumanMaxEntriesDBSize)
+
 		return nil
 	},
+}
+
+func askConfirmation(flagName string) {
+	logger.Log.Infof(fmt.Sprintf(uploadTrafficMessageToConfirm, flagName))
+	if !uiUtils.AskForConfirmation("Would you like to proceed [Y/n]: ") {
+		logger.Log.Infof("You can always run mizu without %s, aborting", flagName)
+		os.Exit(0)
+	}
 }
 
 func init() {
@@ -66,5 +100,7 @@ func init() {
 	tapCmd.Flags().Bool(configStructs.DisableRedactionTapName, defaultTapConfig.DisableRedaction, "Disables redaction of potentially sensitive request/response headers and body values")
 	tapCmd.Flags().String(configStructs.HumanMaxEntriesDBSizeTapName, defaultTapConfig.HumanMaxEntriesDBSize, "Override the default max entries db size")
 	tapCmd.Flags().Bool(configStructs.DryRunTapName, defaultTapConfig.DryRun, "Preview of all pods matching the regex, without tapping them")
+	tapCmd.Flags().StringP(configStructs.WorkspaceTapName, "w", defaultTapConfig.Workspace, "Uploads traffic to your UP9 workspace for further analysis (requires auth)")
 	tapCmd.Flags().String(configStructs.EnforcePolicyFile, defaultTapConfig.EnforcePolicyFile, "Yaml file path with policy rules")
+	tapCmd.Flags().String(configStructs.ContractFile, defaultTapConfig.ContractFile, "OAS/Swagger file to validate to monitor the contracts")
 }

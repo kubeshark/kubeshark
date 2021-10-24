@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"path"
 	"regexp"
 	"strings"
@@ -12,12 +13,13 @@ import (
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 
+	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/up9inc/mizu/cli/apiserver"
 	"github.com/up9inc/mizu/cli/config"
 	"github.com/up9inc/mizu/cli/config/configStructs"
 	"github.com/up9inc/mizu/cli/errormessage"
+
 	"github.com/up9inc/mizu/cli/kubernetes"
-	"github.com/up9inc/mizu/cli/logger"
 	"github.com/up9inc/mizu/cli/mizu"
 	"github.com/up9inc/mizu/cli/mizu/fsUtils"
 	"github.com/up9inc/mizu/cli/mizu/goUtils"
@@ -25,6 +27,7 @@ import (
 	"github.com/up9inc/mizu/cli/uiUtils"
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/debounce"
+	"github.com/up9inc/mizu/shared/logger"
 	"github.com/up9inc/mizu/tap/api"
 )
 
@@ -53,6 +56,30 @@ func RunMizuTap() {
 		mizuValidationRules, err = readValidationRules(config.Config.Tap.EnforcePolicyFile)
 		if err != nil {
 			logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error reading policy file: %v", errormessage.FormatError(err)))
+			return
+		}
+	}
+
+	// Read and validate the OAS file
+	var contract string
+	if config.Config.Tap.ContractFile != "" {
+		bytes, err := ioutil.ReadFile(config.Config.Tap.ContractFile)
+		if err != nil {
+			logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error reading contract file: %v", errormessage.FormatError(err)))
+			return
+		}
+		contract = string(bytes)
+
+		ctx := context.Background()
+		loader := &openapi3.Loader{Context: ctx}
+		doc, err := loader.LoadFromData(bytes)
+		if err != nil {
+			logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error loading contract file: %v", errormessage.FormatError(err)))
+			return
+		}
+		err = doc.Validate(ctx)
+		if err != nil {
+			logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error validating contract file: %v", errormessage.FormatError(err)))
 			return
 		}
 	}
@@ -103,7 +130,7 @@ func RunMizuTap() {
 	}
 
 	defer finishMizuExecution(kubernetesProvider)
-	if err := createMizuResources(ctx, kubernetesProvider, mizuApiFilteringOptions, mizuValidationRules); err != nil {
+	if err := createMizuResources(ctx, kubernetesProvider, mizuValidationRules, contract); err != nil {
 		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error creating resources: %v", errormessage.FormatError(err)))
 		return
 	}
@@ -125,26 +152,26 @@ func readValidationRules(file string) (string, error) {
 	return string(newContent), nil
 }
 
-func createMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, mizuApiFilteringOptions *api.TrafficFilteringOptions, mizuValidationRules string) error {
+func createMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, mizuValidationRules string, contract string) error {
 	if !config.Config.IsNsRestrictedMode() {
 		if err := createMizuNamespace(ctx, kubernetesProvider); err != nil {
 			return err
 		}
 	}
 
-	if err := createMizuApiServer(ctx, kubernetesProvider, mizuApiFilteringOptions); err != nil {
+	if err := createMizuApiServer(ctx, kubernetesProvider); err != nil {
 		return err
 	}
 
-	if err := createMizuConfigmap(ctx, kubernetesProvider, mizuValidationRules); err != nil {
+	if err := createMizuConfigmap(ctx, kubernetesProvider, mizuValidationRules, contract); err != nil {
 		logger.Log.Warningf(uiUtils.Warning, fmt.Sprintf("Failed to create resources required for policy validation. Mizu will not validate policy rules. error: %v\n", errormessage.FormatError(err)))
 	}
 
 	return nil
 }
 
-func createMizuConfigmap(ctx context.Context, kubernetesProvider *kubernetes.Provider, data string) error {
-	err := kubernetesProvider.CreateConfigMap(ctx, config.Config.MizuResourcesNamespace, mizu.ConfigMapName, data)
+func createMizuConfigmap(ctx context.Context, kubernetesProvider *kubernetes.Provider, data string, contract string) error {
+	err := kubernetesProvider.CreateConfigMap(ctx, config.Config.MizuResourcesNamespace, mizu.ConfigMapName, data, contract)
 	return err
 }
 
@@ -153,7 +180,7 @@ func createMizuNamespace(ctx context.Context, kubernetesProvider *kubernetes.Pro
 	return err
 }
 
-func createMizuApiServer(ctx context.Context, kubernetesProvider *kubernetes.Provider, mizuApiFilteringOptions *api.TrafficFilteringOptions) error {
+func createMizuApiServer(ctx context.Context, kubernetesProvider *kubernetes.Provider) error {
 	var err error
 
 	state.mizuServiceAccountExists, err = createRBACIfNecessary(ctx, kubernetesProvider)
@@ -169,15 +196,15 @@ func createMizuApiServer(ctx context.Context, kubernetesProvider *kubernetes.Pro
 	}
 
 	opts := &kubernetes.ApiServerOptions{
-		Namespace:               config.Config.MizuResourcesNamespace,
-		PodName:                 mizu.ApiServerPodName,
-		PodImage:                config.Config.AgentImage,
-		ServiceAccountName:      serviceAccountName,
-		IsNamespaceRestricted:   config.Config.IsNsRestrictedMode(),
-		MizuApiFilteringOptions: mizuApiFilteringOptions,
-		MaxEntriesDBSizeBytes:   config.Config.Tap.MaxEntriesDBSizeBytes(),
-		Resources:               config.Config.Tap.ApiServerResources,
-		ImagePullPolicy:         config.Config.ImagePullPolicy(),
+		Namespace:             config.Config.MizuResourcesNamespace,
+		PodName:               mizu.ApiServerPodName,
+		PodImage:              config.Config.AgentImage,
+		ServiceAccountName:    serviceAccountName,
+		IsNamespaceRestricted: config.Config.IsNsRestrictedMode(),
+		SyncEntriesConfig:     getSyncEntriesConfig(),
+		MaxEntriesDBSizeBytes: config.Config.Tap.MaxEntriesDBSizeBytes(),
+		Resources:             config.Config.Tap.ApiServerResources,
+		ImagePullPolicy:       config.Config.ImagePullPolicy(),
 	}
 	_, err = kubernetesProvider.CreateMizuApiServerPod(ctx, opts)
 	if err != nil {
@@ -213,6 +240,19 @@ func getMizuApiFilteringOptions() (*api.TrafficFilteringOptions, error) {
 		IgnoredUserAgents:       config.Config.Tap.IgnoredUserAgents,
 		DisableRedaction:        config.Config.Tap.DisableRedaction,
 	}, nil
+}
+
+func getSyncEntriesConfig() *shared.SyncEntriesConfig {
+	if !config.Config.Tap.Analysis && config.Config.Tap.Workspace == "" {
+		return nil
+	}
+
+	return &shared.SyncEntriesConfig{
+		Token:             config.Config.Auth.Token,
+		Env:               config.Config.Auth.EnvName,
+		Workspace:         config.Config.Tap.Workspace,
+		UploadIntervalSec: config.Config.Tap.UploadIntervalSec,
+	}
 }
 
 func updateMizuTappers(ctx context.Context, kubernetesProvider *kubernetes.Provider, mizuApiFilteringOptions *api.TrafficFilteringOptions) error {
@@ -282,7 +322,7 @@ func cleanUpMizuResources(ctx context.Context, cancel context.CancelFunc, kubern
 	}
 
 	if len(leftoverResources) > 0 {
-		errMsg := fmt.Sprintf("Failed to remove the following resources, for more info check logs at %s:", logger.GetLogFilePath())
+		errMsg := fmt.Sprintf("Failed to remove the following resources, for more info check logs at %s:", fsUtils.GetLogFilePath())
 		for _, resource := range leftoverResources {
 			errMsg += "\n- " + resource
 		}
@@ -549,14 +589,14 @@ func watchApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 			if modifiedPod.Status.Phase == core.PodPending {
 				if modifiedPod.Status.Conditions[0].Type == core.PodScheduled && modifiedPod.Status.Conditions[0].Status != core.ConditionTrue {
 					logger.Log.Debugf("Wasn't able to deploy the API server. Reason: \"%s\"", modifiedPod.Status.Conditions[0].Message)
-					logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Wasn't able to deploy the API server, for more info check logs at %s", logger.GetLogFilePath()))
+					logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Wasn't able to deploy the API server, for more info check logs at %s", fsUtils.GetLogFilePath()))
 					cancel()
 					break
 				}
 
 				if len(modifiedPod.Status.ContainerStatuses) > 0 && modifiedPod.Status.ContainerStatuses[0].State.Waiting != nil && modifiedPod.Status.ContainerStatuses[0].State.Waiting.Reason == "ErrImagePull" {
 					logger.Log.Debugf("Wasn't able to deploy the API server. (ErrImagePull) Reason: \"%s\"", modifiedPod.Status.ContainerStatuses[0].State.Waiting.Message)
-					logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Wasn't able to deploy the API server: failed to pull the image, for more info check logs at %v", logger.GetLogFilePath()))
+					logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Wasn't able to deploy the API server: failed to pull the image, for more info check logs at %v", fsUtils.GetLogFilePath()))
 					cancel()
 					break
 				}
@@ -568,7 +608,7 @@ func watchApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 
 				url := GetApiServerUrl()
 				if err := apiserver.Provider.InitAndTestConnection(url); err != nil {
-					logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Couldn't connect to API server, for more info check logs at %s", logger.GetLogFilePath()))
+					logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Couldn't connect to API server, for more info check logs at %s", fsUtils.GetLogFilePath()))
 					cancel()
 					break
 				}
@@ -578,8 +618,7 @@ func watchApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 				}
 
 				logger.Log.Infof("Mizu is available at %s\n", url)
-				openBrowser(url)
-				requestForAnalysisIfNeeded()
+				uiUtils.OpenBrowser(url)
 				if err := apiserver.Provider.ReportTappedPods(state.currentlyTappedPods); err != nil {
 					logger.Log.Debugf("[Error] failed update tapped pods %v", err)
 				}
@@ -632,7 +671,7 @@ func watchTapperPod(ctx context.Context, kubernetesProvider *kubernetes.Provider
 			}
 
 			if modifiedPod.Status.Phase == core.PodPending && modifiedPod.Status.Conditions[0].Type == core.PodScheduled && modifiedPod.Status.Conditions[0].Status != core.ConditionTrue {
-				logger.Log.Infof(uiUtils.Red, "Wasn't able to deploy the tapper %s. Reason: \"%s\"", modifiedPod.Name, modifiedPod.Status.Conditions[0].Message)
+				logger.Log.Infof(uiUtils.Red, fmt.Sprintf("Wasn't able to deploy the tapper %s. Reason: \"%s\"", modifiedPod.Name, modifiedPod.Status.Conditions[0].Message))
 				cancel()
 				break
 			}
@@ -649,7 +688,7 @@ func watchTapperPod(ctx context.Context, kubernetesProvider *kubernetes.Provider
 				if state.Terminated != nil {
 					switch state.Terminated.Reason {
 					case "OOMKilled":
-						logger.Log.Infof(uiUtils.Red, "Tapper %s was terminated (reason: OOMKilled). You should consider increasing machine resources.", modifiedPod.Name)
+						logger.Log.Infof(uiUtils.Red, fmt.Sprintf("Tapper %s was terminated (reason: OOMKilled). You should consider increasing machine resources.", modifiedPod.Name))
 					}
 				}
 			}
@@ -668,15 +707,6 @@ func watchTapperPod(ctx context.Context, kubernetesProvider *kubernetes.Provider
 			logger.Log.Debugf("Watching tapper pod loop, ctx done")
 			return
 		}
-	}
-}
-
-func requestForAnalysisIfNeeded() {
-	if !config.Config.Tap.Analysis {
-		return
-	}
-	if err := apiserver.Provider.RequestAnalysis(config.Config.Tap.AnalysisDestination, config.Config.Tap.SleepIntervalSec); err != nil {
-		logger.Log.Debugf("[Error] failed requesting for analysis %v", err)
 	}
 }
 

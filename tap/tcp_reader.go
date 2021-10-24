@@ -2,14 +2,13 @@ package tap
 
 import (
 	"bufio"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"sync"
 	"time"
 
 	"github.com/bradleyfalzon/tlsx"
-	"github.com/romana/rlog"
+	"github.com/up9inc/mizu/shared/logger"
 	"github.com/up9inc/mizu/tap/api"
 )
 
@@ -20,23 +19,12 @@ type tcpReaderDataMsg struct {
 	timestamp time.Time
 }
 
-type tcpID struct {
-	srcIP   string
-	dstIP   string
-	srcPort string
-	dstPort string
-}
-
 type ConnectionInfo struct {
 	ClientIP   string
 	ClientPort string
 	ServerIP   string
 	ServerPort string
 	IsOutgoing bool
-}
-
-func (tid *tcpID) String() string {
-	return fmt.Sprintf("%s->%s %s->%s", tid.srcIP, tid.dstIP, tid.srcPort, tid.dstPort)
 }
 
 /* tcpReader gets reads from a channel of bytes of tcp payload, and parses it into requests and responses.
@@ -54,7 +42,6 @@ type tcpReader struct {
 	data               []byte
 	superTimer         *api.SuperTimer
 	parent             *tcpStream
-	messageCount       uint
 	packetsSeen        uint
 	outboundLinkWriter *OutboundLinkWriter
 	extension          *api.Extension
@@ -79,7 +66,7 @@ func (h *tcpReader) Read(p []byte) (int, error) {
 			clientHello := tlsx.ClientHello{}
 			err := clientHello.Unmarshall(msg.bytes)
 			if err == nil {
-				rlog.Debugf("Detected TLS client hello with SNI %s\n", clientHello.SNI)
+				logger.Log.Debugf("Detected TLS client hello with SNI %s\n", clientHello.SNI)
 				// TODO: Throws `panic: runtime error: invalid memory address or nil pointer dereference` error.
 				// numericPort, _ := strconv.Atoi(h.tcpID.DstPort)
 				// h.outboundLinkWriter.WriteOutboundLink(h.tcpID.SrcIP, h.tcpID.DstIP, numericPort, clientHello.SNI, TLSProtocol)

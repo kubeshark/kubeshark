@@ -8,10 +8,11 @@ import (
 	"github.com/up9inc/mizu/cli/apiserver"
 	"github.com/up9inc/mizu/cli/config"
 	"github.com/up9inc/mizu/cli/kubernetes"
-	"github.com/up9inc/mizu/cli/logger"
 	"github.com/up9inc/mizu/cli/mizu"
+	"github.com/up9inc/mizu/cli/mizu/fsUtils"
 	"github.com/up9inc/mizu/cli/mizu/version"
 	"github.com/up9inc/mizu/cli/uiUtils"
+	"github.com/up9inc/mizu/shared/logger"
 )
 
 func runMizuView() {
@@ -50,14 +51,15 @@ func runMizuView() {
 		go startProxyReportErrorIfAny(kubernetesProvider, cancel)
 
 		if err := apiserver.Provider.InitAndTestConnection(GetApiServerUrl()); err != nil {
-			logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Couldn't connect to API server, for more info check logs at %s", logger.GetLogFilePath()))
+			logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Couldn't connect to API server, for more info check logs at %s", fsUtils.GetLogFilePath()))
 			return
 		}
 	}
 
 	logger.Log.Infof("Mizu is available at %s\n", url)
 
-	openBrowser(url)
+	uiUtils.OpenBrowser(url)
+
 	if isCompatible, err := version.CheckVersionCompatibility(); err != nil {
 		logger.Log.Errorf("Failed to check versions compatibility %v", err)
 		cancel()

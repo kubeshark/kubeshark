@@ -3,13 +3,14 @@ package config
 import (
 	"errors"
 	"fmt"
-	"github.com/up9inc/mizu/cli/logger"
-	"github.com/up9inc/mizu/shared"
 	"io/ioutil"
 	"os"
 	"reflect"
 	"strconv"
 	"strings"
+
+	"github.com/up9inc/mizu/shared"
+	"github.com/up9inc/mizu/shared/logger"
 
 	"github.com/creasty/defaults"
 	"github.com/spf13/cobra"
@@ -39,7 +40,7 @@ func InitConfig(cmd *cobra.Command) error {
 
 	configFilePathFlag := cmd.Flags().Lookup(ConfigFilePathCommandName)
 	configFilePath := configFilePathFlag.Value.String()
-	if err := mergeConfigFile(configFilePath); err != nil {
+	if err := LoadConfigFile(configFilePath, &Config); err != nil {
 		if configFilePathFlag.Changed || !os.IsNotExist(err) {
 			return fmt.Errorf("invalid config, %w\n"+
 				"you can regenerate the file by removing it (%v) and using `mizu config -r`", err, configFilePath)
@@ -54,19 +55,33 @@ func InitConfig(cmd *cobra.Command) error {
 	return nil
 }
 
-func GetConfigWithDefaults() (string, error) {
+func GetConfigWithDefaults() (*ConfigStruct, error) {
 	defaultConf := ConfigStruct{}
 	if err := defaults.Set(&defaultConf); err != nil {
-		return "", err
+		return nil, err
 	}
 
 	configElem := reflect.ValueOf(&defaultConf).Elem()
 	setZeroForReadonlyFields(configElem)
 
-	return uiUtils.PrettyYaml(defaultConf)
+	return &defaultConf, nil
 }
 
-func mergeConfigFile(configFilePath string) error {
+func WriteConfig(config *ConfigStruct) error {
+	template, err := uiUtils.PrettyYaml(config)
+	if err != nil {
+		return fmt.Errorf("failed converting config to yaml, err: %v", err)
+	}
+
+	data := []byte(template)
+	if err := ioutil.WriteFile(Config.ConfigFilePath, data, 0644); err != nil {
+		return fmt.Errorf("failed writing config, err: %v", err)
+	}
+
+	return nil
+}
+
+func LoadConfigFile(configFilePath string, config *ConfigStruct) error {
 	reader, openErr := os.Open(configFilePath)
 	if openErr != nil {
 		return openErr
@@ -77,10 +92,11 @@ func mergeConfigFile(configFilePath string) error {
 		return readErr
 	}
 
-	if err := yaml.Unmarshal(buf, &Config); err != nil {
+	if err := yaml.Unmarshal(buf, config); err != nil {
 		return err
 	}
-	logger.Log.Debugf("Found config file, merged to default options")
+
+	logger.Log.Debugf("Found config file, config path: %s", configFilePath)
 
 	return nil
 }
