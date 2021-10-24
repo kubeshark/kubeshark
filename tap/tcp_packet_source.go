@@ -130,7 +130,7 @@ func (source *tcpPacketSource) readPackets(ipdefrag bool, packets chan<- tcpPack
 				continue // packet fragment, we don't have whole packet yet.
 			}
 			if newip4.Length != l {
-				stats.ipdefrag++
+				internalStats.ipdefrag++
 				logger.Log.Debugf("Decoding re-assembled packet: %s", newip4.NextLayerType())
 				pb, ok := packet.(gopacket.PacketBuilder)
 				if !ok {

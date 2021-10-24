@@ -55,25 +55,7 @@ var memprofile = flag.String("memprofile", "", "Write memory profile")
 
 var appStats = api.AppStats{}
 var tapErrors *errorsMap
-
-// global
-var stats struct {
-	ipdefrag            int
-	missedBytes         int
-	pkt                 int
-	sz                  int
-	totalsz             int
-	rejectFsm           int
-	rejectOpt           int
-	rejectConnFsm       int
-	reassembled         int
-	outOfOrderBytes     int
-	outOfOrderPackets   int
-	biggestChunkBytes   int
-	biggestChunkPackets int
-	overlapBytes        int
-	overlapPackets      int
-}
+var internalStats *tapperInternalStats
 
 type TapOpts struct {
 	HostMode bool
@@ -216,32 +198,6 @@ func dumpMemoryProfile(filename string) error {
 	return nil
 }
 
-func printStatsSummary() {
-	if !*nodefrag {
-		logger.Log.Infof("IPdefrag:\t\t%d", stats.ipdefrag)
-	}
-	logger.Log.Infof("TCP stats:")
-	logger.Log.Infof(" missed bytes:\t\t%d", stats.missedBytes)
-	logger.Log.Infof(" total packets:\t\t%d", stats.pkt)
-	logger.Log.Infof(" rejected FSM:\t\t%d", stats.rejectFsm)
-	logger.Log.Infof(" rejected Options:\t%d", stats.rejectOpt)
-	logger.Log.Infof(" reassembled bytes:\t%d", stats.sz)
-	logger.Log.Infof(" total TCP bytes:\t%d", stats.totalsz)
-	logger.Log.Infof(" conn rejected FSM:\t%d", stats.rejectConnFsm)
-	logger.Log.Infof(" reassembled chunks:\t%d", stats.reassembled)
-	logger.Log.Infof(" out-of-order packets:\t%d", stats.outOfOrderPackets)
-	logger.Log.Infof(" out-of-order bytes:\t%d", stats.outOfOrderBytes)
-	logger.Log.Infof(" biggest-chunk packets:\t%d", stats.biggestChunkPackets)
-	logger.Log.Infof(" biggest-chunk bytes:\t%d", stats.biggestChunkBytes)
-	logger.Log.Infof(" overlap packets:\t%d", stats.overlapPackets)
-	logger.Log.Infof(" overlap bytes:\t\t%d", stats.overlapBytes)
-	logger.Log.Infof("Errors: %d", tapErrors.nErrors)
-	for e := range tapErrors.errorsMap {
-		logger.Log.Infof(" %s:\t\t%d", e, tapErrors.errorsMap[e])
-	}
-	logger.Log.Infof("AppStats: %v", GetStats())
-}
-
 func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
 	streamsMap := NewTcpStreamMap()
 	go streamsMap.closeTimedoutTcpStreamChannels()
@@ -258,6 +214,7 @@ func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
 	}
 
 	tapErrors = NewErrorsMap(outputLevel)
+	internalStats = NewTapperInternalStats()
 
 	var bpffilter string
 	if len(flag.Args()) > 0 {
@@ -318,5 +275,7 @@ func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
 
 	assembler.waitAndDump()
 
-	printStatsSummary()
+	internalStats.PrintStatsSummary()
+	tapErrors.PrintSummary()
+	logger.Log.Infof("AppStats: %v", appStats)
 }

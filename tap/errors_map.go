@@ -58,3 +58,10 @@ func (e *errorsMap) getErrorsSummary() (int, string) {
 	e.errorsMapMutex.Unlock()
 	return errorMapLen, errorsSummery
 }
+
+func (e *errorsMap) PrintSummary() {
+	logger.Log.Infof("Errors: %d", e.nErrors)
+	for t := range e.errorsMap {
+		logger.Log.Infof(" %s:\t\t%d", e, e.errorsMap[t])
+	}
+}
