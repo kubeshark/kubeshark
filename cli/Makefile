@@ -27,8 +27,9 @@ build-all: ## Build for all supported platforms.
 	@mkdir -p bin && sed s/_SEM_VER_/$(SEM_VER)/g README.md.TEMPLATE >  bin/README.md
 	@$(MAKE) build GOOS=darwin GOARCH=amd64
 	@$(MAKE) build GOOS=linux GOARCH=amd64
-	@# $(MAKE) build GOOS=darwin GOARCH=arm64
-	@# $(MAKE) GOOS=windows GOARCH=amd64
+	@$(MAKE) build GOOS=darwin GOARCH=arm64
+	@$(MAKE) build GOOS=windows GOARCH=amd64
+	@mv ./bin/mizu_windows_amd64 ./bin/mizu.exe
 	@# $(MAKE) GOOS=linux GOARCH=386
 	@# $(MAKE) GOOS=windows GOARCH=386
 	@# $(MAKE) GOOS=linux GOARCH=arm64
