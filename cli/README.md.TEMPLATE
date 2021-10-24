@@ -7,7 +7,7 @@ Download Mizu for your platform
 curl -Lo mizu https://github.com/up9inc/mizu/releases/download/_SEM_VER_/mizu_darwin_amd64 && chmod 755 mizu
 ```
 
-**Mac** (Apple M1 silicon )
+**Mac** (Apple M1 silicon)
 ```
 curl -Lo mizu https://github.com/up9inc/mizu/releases/download/_SEM_VER_/mizu_darwin_arm64 && chmod 755 mizu
 ```
@@ -19,7 +19,7 @@ curl -Lo mizu https://github.com/up9inc/mizu/releases/download/_SEM_VER_/mizu_li
 
 **Windows** (Intel 64bit)
 ```
-curl -LO https://github.com/up9inc/mizu/releases/download/_SEM_VER_/mizu.exe
+curl -Lo https://github.com/up9inc/mizu/releases/download/_SEM_VER_/mizu.exe
 ```
 
 ### Checksums
