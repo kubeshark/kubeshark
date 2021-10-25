@@ -138,8 +138,10 @@ func getMaxEntriesDBByteSize() int64 {
 	if maxEntriesDBSizeByteSEnvVarValue != "" {
 		var err error
 		maxEntriesDBByteSize, err = strconv.ParseInt(maxEntriesDBSizeByteSEnvVarValue, 10, 64)
-		logger.Log.Fatalf("Error parsing max db size: %v\n", err)
-		return defaultMaxDatabaseSizeBytes
+		if err != nil {
+			logger.Log.Debugf("Error parsing max db size: %v\n", err)
+			return defaultMaxDatabaseSizeBytes
+		}
 	}
 	return maxEntriesDBByteSize
 }
