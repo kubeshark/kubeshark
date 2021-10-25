@@ -34,7 +34,6 @@ build-cli-ci: ## Build CLI for CI.
 agent: ## Build agent.
 	@(echo "building mizu agent .." )
 	@(cd agent; go build -o build/mizuagent main.go)
-	${MAKE} database
 	${MAKE} extensions
 	@ls -l agent/build
 
@@ -72,10 +71,6 @@ clean-cli:  ## Clean CLI.
 
 clean-docker:
 	@(echo "DOCKER cleanup - NOT IMPLEMENTED YET " )
-
-database:
-	@(echo "building database .." )
-	@(cd realtime_dbms/server; go build -o ../../agent/build/server server.go)
 
 extensions:
 	devops/build_extensions.sh

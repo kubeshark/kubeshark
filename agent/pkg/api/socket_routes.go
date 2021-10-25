@@ -1,7 +1,9 @@
 package api
 
 import (
+	"encoding/json"
 	"errors"
+	"mizuserver/pkg/models"
 	"net/http"
 	"sync"
 	"time"
@@ -9,6 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"github.com/romana/rlog"
+	basenine "github.com/up9inc/basenine/client/go"
 	"github.com/up9inc/mizu/shared/debounce"
 )
 
@@ -63,7 +66,17 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 
 	websocketIdsLock.Unlock()
 
+	var c *basenine.Connection
+	var isQuerySet bool
+	if !isTapper {
+		c, err = basenine.NewConnection(BASENINE_HOST, BASENINE_PORT)
+		if err != nil {
+			panic(err)
+		}
+	}
+
 	defer func() {
+		c.Close()
 		socketCleanup(socketId, connectedWebsockets[socketId])
 	}()
 
@@ -75,9 +88,33 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 			rlog.Errorf("Error reading message, socket id: %d, error: %v", socketId, err)
 			break
 		}
-		if !isTapper {
-			conn := Connect("localhost", "8000")
-			go Query(string(msg), conn, ws)
+		if !isTapper && !isQuerySet {
+			isQuerySet = true
+			data := make(chan []byte)
+
+			handleDataChannel := func(wg *sync.WaitGroup, c *basenine.Connection, data chan []byte) {
+				defer wg.Done()
+				for {
+					bytes := <-data
+
+					var d map[string]interface{}
+					err = json.Unmarshal(bytes, &d)
+
+					summary := d["summary"].(map[string]interface{})
+					summary["id"] = uint(d["id"].(float64))
+
+					baseEntryBytes, _ := models.CreateBaseEntryWebSocketMessage(summary)
+					ws.WriteMessage(1, baseEntryBytes)
+				}
+			}
+
+			var wg sync.WaitGroup
+			go handleDataChannel(&wg, c, data)
+			wg.Add(1)
+
+			c.Query(string(msg), data)
+
+			wg.Wait()
 		} else {
 			eventHandlers.WebSocketMessage(socketId, msg)
 		}

@@ -1,3 +1,0 @@
-[submodule "realtime_dbms"]
-	path = realtime_dbms
-	url = https://github.com/mertyildiran/simple-realtime-dbms

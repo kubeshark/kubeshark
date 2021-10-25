@@ -42,17 +42,16 @@ RUN go build -ldflags="-s -w \
 COPY devops/build_extensions.sh ..
 RUN cd .. && /bin/bash build_extensions.sh
 
-COPY realtime_dbms ../realtime_dbms
-RUN cd ../realtime_dbms/server && go build -o server server.go
-
 FROM alpine:3.13.5
 
 RUN apk add bash libpcap-dev tcpdump
+
+ADD https://github.com/up9inc/basenine/releases/download/v0.1.0/basenine_linux_amd64 /usr/local/bin/basenine
+
 WORKDIR /app
 
 # Copy binary and config files from /build to root folder of scratch container.
 COPY --from=builder ["/app/agent-build/mizuagent", "."]
-COPY --from=builder ["/app/realtime_dbms/server", "."]
 COPY --from=builder ["/app/agent/build/extensions", "extensions"]
 COPY --from=site-build ["/app/ui-build/build", "site"]
 

@@ -23,6 +23,13 @@ import (
 	"mizuserver/pkg/models"
 	"mizuserver/pkg/resolver"
 	"mizuserver/pkg/utils"
+
+	basenine "github.com/up9inc/basenine/client/go"
+)
+
+const (
+	BASENINE_HOST string = "localhost"
+	BASENINE_PORT string = "9099"
 )
 
 var k8sResolver *resolver.Resolver
@@ -104,11 +111,15 @@ func startReadingFiles(workingDir string) {
 }
 
 func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extensionsMap map[string]*tapApi.Extension) {
-	conn := Connect("localhost", "8000")
-	SetModeInsert(conn)
 	if outputItems == nil {
 		panic("Channel of captured messages is nil")
 	}
+
+	c, err := basenine.NewConnection(BASENINE_HOST, BASENINE_PORT)
+	if err != nil {
+		panic(err)
+	}
+	c.InsertMode()
 
 	for item := range outputItems {
 		extension := extensionsMap[item.Protocol.Name]
@@ -128,7 +139,11 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 			}
 		}
 
-		Insert(mizuEntry, conn)
+		data, err := json.Marshal(mizuEntry)
+		if err != nil {
+			panic(err)
+		}
+		c.SendText(string(data))
 	}
 }
 

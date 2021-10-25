@@ -3,7 +3,6 @@ package controllers
 import (
 	"encoding/json"
 	"fmt"
-	"mizuserver/pkg/api"
 	"mizuserver/pkg/database"
 	"mizuserver/pkg/models"
 	"mizuserver/pkg/providers"
@@ -19,7 +18,13 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/romana/rlog"
 
+	basenine "github.com/up9inc/basenine/client/go"
 	tapApi "github.com/up9inc/mizu/tap/api"
+)
+
+const (
+	BASENINE_HOST string = "localhost"
+	BASENINE_PORT string = "9099"
 )
 
 var extensionsMap map[string]*tapApi.Extension // global
@@ -138,7 +143,14 @@ func GetFullEntries(c *gin.Context) {
 func GetEntry(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("entryId"))
 	fmt.Printf("GetEntry id: %v\n", id)
-	entry := api.Single(uint(id))
+	var entry map[string]interface{}
+	bytes, err := basenine.Single(BASENINE_HOST, BASENINE_PORT, id)
+	if err != nil {
+		panic(err)
+	}
+	if err := json.Unmarshal(bytes, &entry); err != nil {
+		panic(err)
+	}
 	var response map[string]interface{}
 	if entry["response"] != nil {
 		response = entry["response"].(map[string]interface{})

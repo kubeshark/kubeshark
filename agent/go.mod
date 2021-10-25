@@ -15,6 +15,7 @@ require (
 	github.com/orcaman/concurrent-map v0.0.0-20210106121528-16402b402231
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/romana/rlog v0.0.0-20171115192701-f018bc92e7d7
+	github.com/up9inc/basenine/client/go v0.0.0-20211024211816-39aa5140ee37 // indirect
 	github.com/up9inc/mizu/shared v0.0.0
 	github.com/up9inc/mizu/tap v0.0.0
 	github.com/up9inc/mizu/tap/api v0.0.0

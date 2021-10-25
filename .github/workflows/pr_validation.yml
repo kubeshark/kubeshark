@@ -22,8 +22,6 @@ jobs:
 
       - name: Check out code into the Go module directory
         uses: actions/checkout@v2
-        with:
-          submodules: recursive
 
       - name: Build CLI
         run: make cli
@@ -39,8 +37,6 @@ jobs:
 
       - name: Check out code into the Go module directory
         uses: actions/checkout@v2
-        with:
-          submodules: recursive
 
       - shell: bash
         run: |
