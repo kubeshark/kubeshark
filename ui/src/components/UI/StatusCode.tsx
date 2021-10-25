@@ -9,15 +9,20 @@ export enum StatusCodeClassification {
 
 interface EntryProps {
     statusCode: number
+    updateQuery: any
 }
 
-const StatusCode: React.FC<EntryProps> = ({statusCode}) => {
+const StatusCode: React.FC<EntryProps> = ({statusCode, updateQuery}) => {
 
     const classification = getClassification(statusCode)
 
     return <span
         title="Status Code"
-        className={`${styles[classification]} ${styles.base}`}>
+        className={`${styles[classification]} ${styles.base}`}
+        onClick={() => {
+            updateQuery(`response.status == ${statusCode}`)
+        }}
+        style={{cursor: "pointer"}}>
             {statusCode}
     </span>
 };

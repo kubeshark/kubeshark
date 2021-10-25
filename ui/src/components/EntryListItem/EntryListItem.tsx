@@ -134,7 +134,7 @@ export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, isSel
                 updateQuery={updateQuery}
             />
             {((entry.protocol.name === "http" && "statusCode" in entry) || entry.statusCode !== 0) && <div>
-                <StatusCode statusCode={entry.statusCode}/>
+                <StatusCode statusCode={entry.statusCode} updateQuery={updateQuery}/>
             </div>}
             <div className={styles.endpointServiceContainer}>
                 <EndpointPath method={entry.method} path={entry.summary}/>

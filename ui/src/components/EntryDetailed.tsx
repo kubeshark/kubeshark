@@ -28,6 +28,7 @@ const useStyles = makeStyles(() => ({
 
 interface EntryDetailedProps {
     entryData: any
+    updateQuery: any
 }
 
 export const formatSize = (n: number) => n > 1000 ? `${Math.round(n / 1000)}KB` : `${n} B`;
@@ -46,14 +47,14 @@ const EntryTitle: React.FC<any> = ({protocol, data, bodySize, elapsedTime}) => {
     </div>;
 };
 
-const EntrySummary: React.FC<any> = ({data}) => {
+const EntrySummary: React.FC<any> = ({data, updateQuery}) => {
     const classes = useStyles();
 
     const {response, request} = JSON.parse(data.entry);
 
     return <div className={classes.entrySummary}>
         {response?.payload && response.payload?.details && "status" in response.payload.details && <div style={{marginRight: 8}}>
-            <StatusCode statusCode={response.payload.details.status}/>
+            <StatusCode statusCode={response.payload.details.status} updateQuery={updateQuery}/>
         </div>}
         <div style={{flexGrow: 1, overflow: 'hidden'}}>
             <EndpointPath method={request?.payload.method} path={request?.payload.url}/>
@@ -61,7 +62,7 @@ const EntrySummary: React.FC<any> = ({data}) => {
     </div>;
 };
 
-export const EntryDetailed: React.FC<EntryDetailedProps> = ({entryData}) => {
+export const EntryDetailed: React.FC<EntryDetailedProps> = ({entryData, updateQuery}) => {
     return <>
         <EntryTitle
             protocol={entryData.protocol}
@@ -69,7 +70,7 @@ export const EntryDetailed: React.FC<EntryDetailedProps> = ({entryData}) => {
             bodySize={entryData.bodySize}
             elapsedTime={entryData.data.elapsedTime}
         />
-        {entryData.data && <EntrySummary data={entryData.data}/>}
+        {entryData.data && <EntrySummary data={entryData.data} updateQuery={updateQuery}/>}
         <>
             {entryData.data && <EntryViewer representation={entryData.representation} isRulesEnabled={entryData.isRulesEnabled} rulesMatched={entryData.rulesMatched} contractStatus={entryData.data.contractStatus} requestReason={entryData.data.contractRequestReason} responseReason={entryData.data.contractResponseReason} contractContent={entryData.data.contractContent} elapsedTime={entryData.data.elapsedTime} color={entryData.protocol.backgroundColor}/>}
         </>
