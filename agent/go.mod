@@ -3,6 +3,7 @@ module mizuserver
 go 1.16
 
 require (
+	github.com/antelman107/net-wait-go v0.0.0-20210623112055-cf684aebda7b // indirect
 	github.com/djherbis/atime v1.0.0
 	github.com/fsnotify/fsnotify v1.4.9
 	github.com/gin-contrib/static v0.0.1

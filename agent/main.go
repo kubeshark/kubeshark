@@ -13,6 +13,7 @@ import (
 	"mizuserver/pkg/utils"
 	"net/http"
 	"os"
+	"os/exec"
 	"os/signal"
 	"path"
 	"path/filepath"
@@ -21,6 +22,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/antelman107/net-wait-go/wait"
 	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -89,6 +91,7 @@ func main() {
 		go pipeTapChannelToSocket(socketConnection, filteredOutputItemsChannel)
 		// go pipeOutboundLinksChannelToSocket(socketConnection, outboundLinkOutputChannel)
 	} else if *apiServerMode {
+		startBasenineServer(shared.BasenineHost, shared.BaseninePort)
 		api.StartResolving(*namespace)
 
 		outputItemsChannel := make(chan *tapApi.OutputChannelItem)
@@ -112,6 +115,25 @@ func main() {
 	<-signalChan
 
 	rlog.Info("Exiting")
+}
+
+func startBasenineServer(host string, port string) {
+	cmd := exec.Command("basenine", "-addr", host, "-port", port)
+	cmd.Stdout = os.Stdout
+	err := cmd.Start()
+	if err != nil {
+		panic(err)
+	}
+
+	if !wait.New(
+		wait.WithProto("tcp"),
+		wait.WithWait(200*time.Millisecond),
+		wait.WithBreak(50*time.Millisecond),
+		wait.WithDeadline(5*time.Second),
+		wait.WithDebug(true),
+	).Do([]string{fmt.Sprintf("%s:%s", host, port)}) {
+		panic("Basenine is not available")
+	}
 }
 
 func loadExtensions() {
