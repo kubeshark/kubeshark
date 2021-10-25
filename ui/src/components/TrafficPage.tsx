@@ -52,13 +52,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
     const [focusedEntryId, setFocusedEntryId] = useState(null);
     const [selectedEntryData, setSelectedEntryData] = useState(null);
     const [connection, setConnection] = useState(ConnectionStatus.Closed);
-    const [noMoreDataTop, setNoMoreDataTop] = useState(false);
     const [noMoreDataBottom, setNoMoreDataBottom] = useState(false);
-
-    const [methodsFilter, setMethodsFilter] = useState([]);
-    const [statusFilter, setStatusFilter] = useState([]);
-    const [pathFilter, setPathFilter] = useState("");
-    const [serviceFilter, setServiceFilter] = useState("");
 
     const [tappingStatus, setTappingStatus] = useState(null);
 
@@ -191,14 +185,8 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
             </div>
             {<div className="TrafficPage-Container">
                 <div className="TrafficPage-ListContainer">
-                    <Filters methodsFilter={methodsFilter}
-                                setMethodsFilter={setMethodsFilter}
-                                statusFilter={statusFilter}
-                                setStatusFilter={setStatusFilter}
-                                pathFilter={pathFilter}
-                                setPathFilter={setPathFilter}
-                                ws={ws.current}
-                                openWebSocket={openWebSocket}
+                    <Filters ws={ws.current}
+                        openWebSocket={openWebSocket}
                     />
                     <div className={styles.container}>
                         <EntriesList entries={entries}
@@ -208,12 +196,6 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                                         connectionOpen={connection === ConnectionStatus.Connected}
                                         noMoreDataBottom={noMoreDataBottom}
                                         setNoMoreDataBottom={setNoMoreDataBottom}
-                                        noMoreDataTop={noMoreDataTop}
-                                        setNoMoreDataTop={setNoMoreDataTop}
-                                        methodsFilter={methodsFilter}
-                                        statusFilter={statusFilter}
-                                        pathFilter={pathFilter}
-                                        serviceFilter={serviceFilter}
                                         listEntryREF={listEntry}
                                         onScrollEvent={onScrollEvent}
                                         scrollableList={disableScrollList}
