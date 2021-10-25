@@ -164,13 +164,43 @@ export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, isSel
                 : ""
             }
             <div className={styles.separatorRight}>
-                <span className={styles.port} title="Source Port">{entry.sourcePort}</span>
+                <span
+                    className={styles.port}
+                    title="Source Port"
+                    onClick={() => {
+                        updateQuery(`src.port == "${entry.sourcePort}"`)
+                    }}
+                >
+                    {entry.sourcePort}
+                </span>
                 {entry.isOutgoing ?
-                    <img src={outgoingIcon} alt="Ingoing traffic" title="Ingoing"/>
+                    <img
+                        src={outgoingIcon}
+                        alt="Ingoing traffic"
+                        title="Ingoing"
+                        onClick={() => {
+                            updateQuery(`outgoing == true`)
+                        }}
+                    />
                     :
-                    <img src={ingoingIcon} alt="Outgoing traffic" title="Outgoing"/>
+                    <img
+                        src={ingoingIcon}
+                        alt="Outgoing traffic"
+                        title="Outgoing"
+                        onClick={() => {
+                            updateQuery(`outgoing == false`)
+                        }}
+                    />
                 }
-                <span className={styles.port} title="Destination Port">{entry.destinationPort}</span>
+                <span
+                    className={styles.port}
+                    title="Destination Port"
+                    onClick={() => {
+                        updateQuery(`dst.port == "${entry.destinationPort}"`)
+                    }}
+                >
+                    {entry.destinationPort}
+                </span>
             </div>
             <div className={styles.timestamp}>
                 <span

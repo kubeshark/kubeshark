@@ -29,6 +29,12 @@ type Protocol struct {
 	Priority        uint8    `json:"priority"`
 }
 
+type TCP struct {
+	IP   string `json:"ip"`
+	Port string `json:"port"`
+	Name string `json:"name"`
+}
+
 type Extension struct {
 	Protocol   *Protocol
 	Path       string
@@ -114,6 +120,9 @@ func (e *Emitting) Emit(item *OutputChannelItem) {
 type MizuEntry struct {
 	Id                     uint                   `json:"id"`
 	Protocol               Protocol               `json:"proto"`
+	Source                 *TCP                   `json:"src"`
+	Destination            *TCP                   `json:"dst"`
+	Outgoing               bool                   `json:"outgoing"`
 	Timestamp              int64                  `json:"timestamp"`
 	Request                map[string]interface{} `json:"request"`
 	Response               map[string]interface{} `json:"response"`

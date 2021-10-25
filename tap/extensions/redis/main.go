@@ -84,7 +84,18 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolve
 	request["url"] = summary
 	entryBytes, _ := json.Marshal(item.Pair)
 	return &api.MizuEntry{
-		Protocol:            protocol,
+		Protocol: protocol,
+		Source: &api.TCP{
+			Name: resolvedSource,
+			IP:   item.ConnectionInfo.ClientIP,
+			Port: item.ConnectionInfo.ClientPort,
+		},
+		Destination: &api.TCP{
+			Name: resolvedDestination,
+			IP:   item.ConnectionInfo.ServerIP,
+			Port: item.ConnectionInfo.ServerPort,
+		},
+		Outgoing:            item.ConnectionInfo.IsOutgoing,
 		Request:             reqDetails,
 		Response:            resDetails,
 		EntryId:             entryId,
