@@ -19,6 +19,7 @@ import (
 	"path/filepath"
 	"plugin"
 	"sort"
+	"strconv"
 	"time"
 
 	"github.com/antelman107/net-wait-go/wait"
@@ -26,6 +27,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"github.com/op/go-logging"
+	basenine "github.com/up9inc/basenine/client/go"
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/logger"
 	"github.com/up9inc/mizu/tap"
@@ -42,6 +44,8 @@ var harsDir = flag.String("hars-dir", "", "Directory to read hars from")
 
 var extensions []*tapApi.Extension             // global
 var extensionsMap map[string]*tapApi.Extension // global
+
+const defaultMaxDatabaseSizeBytes int64 = 200 * 1000 * 1000
 
 func main() {
 	logLevel := determineLogLevel()
@@ -127,6 +131,19 @@ func main() {
 	logger.Log.Info("Exiting")
 }
 
+func getMaxEntriesDBByteSize() int64 {
+	maxEntriesDBByteSize := defaultMaxDatabaseSizeBytes
+
+	maxEntriesDBSizeByteSEnvVarValue := os.Getenv(shared.MaxEntriesDBSizeBytesEnvVar)
+	if maxEntriesDBSizeByteSEnvVarValue != "" {
+		var err error
+		maxEntriesDBByteSize, err = strconv.ParseInt(maxEntriesDBSizeByteSEnvVarValue, 10, 64)
+		logger.Log.Fatalf("Error parsing max db size: %v\n", err)
+		return defaultMaxDatabaseSizeBytes
+	}
+	return maxEntriesDBByteSize
+}
+
 func startBasenineServer(host string, port string) {
 	cmd := exec.Command("basenine", "-addr", host, "-port", port)
 	cmd.Stdout = os.Stdout
@@ -143,6 +160,12 @@ func startBasenineServer(host string, port string) {
 		wait.WithDebug(true),
 	).Do([]string{fmt.Sprintf("%s:%s", host, port)}) {
 		panic("Basenine is not available")
+	}
+
+	// Limit the database size to default 200MB
+	err = basenine.Limit(host, port, getMaxEntriesDBByteSize())
+	if err != nil {
+		panic(err)
 	}
 }
 
