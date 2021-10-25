@@ -17,6 +17,7 @@ import (
 
 	"github.com/google/martian/har"
 	"github.com/romana/rlog"
+	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/tap"
 	tapApi "github.com/up9inc/mizu/tap/api"
 
@@ -25,11 +26,6 @@ import (
 	"mizuserver/pkg/utils"
 
 	basenine "github.com/up9inc/basenine/client/go"
-)
-
-const (
-	BASENINE_HOST string = "localhost"
-	BASENINE_PORT string = "9099"
 )
 
 var k8sResolver *resolver.Resolver
@@ -115,7 +111,7 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 		panic("Channel of captured messages is nil")
 	}
 
-	c, err := basenine.NewConnection(BASENINE_HOST, BASENINE_PORT)
+	c, err := basenine.NewConnection(shared.BasenineHost, shared.BaseninePort)
 	if err != nil {
 		panic(err)
 	}

@@ -19,12 +19,8 @@ import (
 	"github.com/romana/rlog"
 
 	basenine "github.com/up9inc/basenine/client/go"
+	"github.com/up9inc/mizu/shared"
 	tapApi "github.com/up9inc/mizu/tap/api"
-)
-
-const (
-	BASENINE_HOST string = "localhost"
-	BASENINE_PORT string = "9099"
 )
 
 var extensionsMap map[string]*tapApi.Extension // global
@@ -144,7 +140,7 @@ func GetEntry(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("entryId"))
 	fmt.Printf("GetEntry id: %v\n", id)
 	var entry map[string]interface{}
-	bytes, err := basenine.Single(BASENINE_HOST, BASENINE_PORT, id)
+	bytes, err := basenine.Single(shared.BasenineHost, shared.BaseninePort, id)
 	if err != nil {
 		panic(err)
 	}

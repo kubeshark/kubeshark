@@ -9,4 +9,6 @@ const (
 	RulePolicyPath                   = "/app/enforce-policy/"
 	RulePolicyFileName               = "enforce-policy.yaml"
 	GoGCEnvVar                       = "GOGC"
+	BasenineHost                     = "localhost"
+	BaseninePort                     = "9099"
 )

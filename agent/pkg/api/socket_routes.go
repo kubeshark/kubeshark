@@ -12,6 +12,7 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/romana/rlog"
 	basenine "github.com/up9inc/basenine/client/go"
+	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/debounce"
 )
 
@@ -69,7 +70,7 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 	var c *basenine.Connection
 	var isQuerySet bool
 	if !isTapper {
-		c, err = basenine.NewConnection(BASENINE_HOST, BASENINE_PORT)
+		c, err = basenine.NewConnection(shared.BasenineHost, shared.BaseninePort)
 		if err != nil {
 			panic(err)
 		}
