@@ -3,6 +3,8 @@ package tap
 import (
 	"net"
 	"strings"
+
+	"github.com/up9inc/mizu/tap/diagnose"
 )
 
 var privateIPBlocks []*net.IPNet
@@ -55,7 +57,7 @@ func initPrivateIPBlocks() {
 	} {
 		_, block, err := net.ParseCIDR(cidr)
 		if err != nil {
-			tapErrors.Error("Private-IP-Block-Parse", "parse error on %q: %v", cidr, err)
+			diagnose.TapErrors.Error("Private-IP-Block-Parse", "parse error on %q: %v", cidr, err)
 		} else {
 			privateIPBlocks = append(privateIPBlocks, block)
 		}
