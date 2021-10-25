@@ -57,7 +57,7 @@ const EntrySummary: React.FC<any> = ({data, updateQuery}) => {
             <StatusCode statusCode={response.payload.details.status} updateQuery={updateQuery}/>
         </div>}
         <div style={{flexGrow: 1, overflow: 'hidden'}}>
-            <EndpointPath method={request?.payload.method} path={request?.payload.url}/>
+            <EndpointPath method={request?.payload.method} path={request?.payload.url} updateQuery={updateQuery}/>
         </div>
     </div>;
 };

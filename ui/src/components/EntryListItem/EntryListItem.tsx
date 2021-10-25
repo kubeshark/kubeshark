@@ -137,9 +137,16 @@ export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, isSel
                 <StatusCode statusCode={entry.statusCode} updateQuery={updateQuery}/>
             </div>}
             <div className={styles.endpointServiceContainer}>
-                <EndpointPath method={entry.method} path={entry.summary}/>
+                <EndpointPath method={entry.method} path={entry.summary} updateQuery={updateQuery}/>
                 <div className={styles.service}>
-                    <span title="Service Name">{entry.service}</span>
+                    <span
+                        title="Service Name"
+                        onClick={() => {
+                            updateQuery(`service == "${entry.service}"`)
+                        }}
+                    >
+                        {entry.service}
+                    </span>
                 </div>
             </div>
             {
