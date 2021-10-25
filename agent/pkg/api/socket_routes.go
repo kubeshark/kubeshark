@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"mizuserver/pkg/models"
 	"net/http"
 	"sync"
@@ -97,6 +98,18 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 		}
 
 		if !isTapper && !isQuerySet {
+			query := string(msg)
+			err = basenine.Validate(shared.BasenineHost, shared.BaseninePort, query)
+			if err != nil {
+				toastBytes, _ := models.CreateWebsocketToastMessage(&models.ToastMessage{
+					Type:      "error",
+					AutoClose: 5000,
+					Text:      fmt.Sprintf("Syntax error: %s", err.Error()),
+				})
+				ws.WriteMessage(1, toastBytes)
+				break
+			}
+
 			isQuerySet = true
 
 			handleDataChannel := func(c *basenine.Connection, data chan []byte) {
@@ -120,7 +133,7 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 
 			go handleDataChannel(c, data)
 
-			c.Query(string(msg), data)
+			c.Query(query, data)
 		} else {
 			eventHandlers.WebSocketMessage(socketId, msg)
 		}

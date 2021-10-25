@@ -41,6 +41,17 @@ type AuthStatus struct {
 	Model string `json:"model"`
 }
 
+type ToastMessage struct {
+	Type      string `json:"type"`
+	AutoClose uint   `json:"autoClose"`
+	Text      string `json:"text"`
+}
+
+type WebSocketToastMessage struct {
+	*shared.WebSocketMessageMetadata
+	Data *ToastMessage `json:"data,omitempty"`
+}
+
 func CreateBaseEntryWebSocketMessage(base map[string]interface{}) ([]byte, error) {
 	message := &WebSocketEntryMessage{
 		WebSocketMessageMetadata: &shared.WebSocketMessageMetadata{
@@ -65,6 +76,16 @@ func CreateWebsocketOutboundLinkMessage(base *tap.OutboundLink) ([]byte, error) 
 	message := &WebsocketOutboundLinkMessage{
 		WebSocketMessageMetadata: &shared.WebSocketMessageMetadata{
 			MessageType: shared.WebsocketMessageTypeOutboundLink,
+		},
+		Data: base,
+	}
+	return json.Marshal(message)
+}
+
+func CreateWebsocketToastMessage(base *ToastMessage) ([]byte, error) {
+	message := &WebSocketToastMessage{
+		WebSocketMessageMetadata: &shared.WebSocketMessageMetadata{
+			MessageType: shared.WebSocketMessageTypeToast,
 		},
 		Data: base,
 	}
