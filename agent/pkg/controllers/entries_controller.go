@@ -71,7 +71,6 @@ func GetEntries(c *gin.Context) {
 
 func GetEntry(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("entryId"))
-	fmt.Printf("GetEntry id: %v\n", id)
 	var entry map[string]interface{}
 	bytes, err := basenine.Single(shared.BasenineHost, shared.BaseninePort, id)
 	if err != nil {
