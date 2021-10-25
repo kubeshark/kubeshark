@@ -69,6 +69,8 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 
 	var c *basenine.Connection
 	var isQuerySet bool
+
+	// `!isTapper` means it's a connection from the web UI
 	if !isTapper {
 		c, err = basenine.NewConnection(shared.BasenineHost, shared.BaseninePort)
 		if err != nil {
@@ -77,10 +79,10 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 	}
 
 	data := make(chan []byte)
-	const channelClose = "%close%"
 
 	defer func() {
-		data <- []byte(channelClose)
+		data <- []byte(basenine.CloseChannel)
+		close(data)
 		c.Close()
 		socketCleanup(socketId, connectedWebsockets[socketId])
 	}()
@@ -93,6 +95,7 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 			logger.Log.Errorf("Error reading message, socket id: %d, error: %v", socketId, err)
 			break
 		}
+
 		if !isTapper && !isQuerySet {
 			isQuerySet = true
 
@@ -100,7 +103,7 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 				for {
 					bytes := <-data
 
-					if string(bytes) == channelClose {
+					if string(bytes) == basenine.CloseChannel {
 						return
 					}
 
