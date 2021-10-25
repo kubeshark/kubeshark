@@ -29,3 +29,6 @@ build
 
 # pprof
 pprof/*
+
+# Database Files
+*.bin
