@@ -76,7 +76,11 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 		}
 	}
 
+	data := make(chan []byte)
+	const channelClose = "%close%"
+
 	defer func() {
+		data <- []byte(channelClose)
 		c.Close()
 		socketCleanup(socketId, connectedWebsockets[socketId])
 	}()
@@ -91,12 +95,14 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 		}
 		if !isTapper && !isQuerySet {
 			isQuerySet = true
-			data := make(chan []byte)
 
-			handleDataChannel := func(wg *sync.WaitGroup, c *basenine.Connection, data chan []byte) {
-				defer wg.Done()
+			handleDataChannel := func(c *basenine.Connection, data chan []byte) {
 				for {
 					bytes := <-data
+
+					if string(bytes) == channelClose {
+						return
+					}
 
 					var d map[string]interface{}
 					err = json.Unmarshal(bytes, &d)
@@ -109,13 +115,9 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 				}
 			}
 
-			var wg sync.WaitGroup
-			go handleDataChannel(&wg, c, data)
-			wg.Add(1)
+			go handleDataChannel(c, data)
 
 			c.Query(string(msg), data)
-
-			wg.Wait()
 		} else {
 			eventHandlers.WebSocketMessage(socketId, msg)
 		}
