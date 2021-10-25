@@ -33,3 +33,5 @@ replace github.com/up9inc/mizu/shared v0.0.0 => ../shared
 replace github.com/up9inc/mizu/tap v0.0.0 => ../tap
 
 replace github.com/up9inc/mizu/tap/api v0.0.0 => ../tap/api
+
+replace github.com/up9inc/basenine/client/go v0.0.0-20211025125113-2d26b853fd45 => /home/mertyildiran/Documents/up9/basenine/client/go

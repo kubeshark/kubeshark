@@ -1,7 +1,8 @@
-import React, {useRef} from "react";
+import React, {useRef, useState} from "react";
 import styles from './style/Filters.module.sass';
 import {Button} from "@material-ui/core";
 import CodeEditor from '@uiw/react-textarea-code-editor';
+import Api from "../helpers/api";
 
 interface FiltersProps {
     query: string
@@ -28,11 +29,25 @@ interface QueryFormProps {
     openWebSocket: (query: string) => void;
 }
 
+const api = new Api();
+
 export const QueryForm: React.FC<QueryFormProps> = ({query, setQuery, ws, openWebSocket}) => {
 
     const formRef = useRef<HTMLFormElement>(null);
 
-    const handleChange = (e) => {
+    const [backgroundColor, setBackgroundColor] = useState("#f5f5f5");
+
+    const handleChange = async (e) => {
+        if (!e.target.value) {
+            setBackgroundColor("#f5f5f5")
+            return
+        }
+        const data = await api.validateQuery(e.target.value);
+        if (data.valid) {
+            setBackgroundColor("#d2fad2")
+        } else {
+            setBackgroundColor("#fad6dc")
+        }
         setQuery(e.target.value);
     }
 
@@ -53,7 +68,7 @@ export const QueryForm: React.FC<QueryFormProps> = ({query, setQuery, ws, openWe
                 padding={8}
                 style={{
                     fontSize: 14,
-                    backgroundColor: "#f5f5f5",
+                    backgroundColor: `${backgroundColor}`,
                     fontFamily: 'ui-monospace,SFMono-Regular,SF Mono,Consolas,Liberation Mono,Menlo,monospace',
                     display: 'inline-flex',
                     minWidth: '450px',

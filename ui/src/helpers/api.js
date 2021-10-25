@@ -50,4 +50,11 @@ export default class Api {
         const response = await this.client.get("/status/auth");
         return response.data;
     }
+
+    validateQuery = async (query) => {
+        const form = new FormData();
+        form.append('query', query)
+        const response = await this.client.post(`/query/validate`, form);
+        return response.data;
+    }
 }
