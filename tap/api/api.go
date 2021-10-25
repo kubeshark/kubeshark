@@ -19,6 +19,7 @@ type Protocol struct {
 	Name            string   `json:"name"`
 	LongName        string   `json:"longName"`
 	Abbreviation    string   `json:"abbr"`
+	Macro           string   `json:"macro"`
 	Version         string   `json:"version"`
 	BackgroundColor string   `json:"backgroundColor"`
 	ForegroundColor string   `json:"foregroundColor"`

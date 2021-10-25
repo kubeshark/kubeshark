@@ -16,6 +16,7 @@ var protocol api.Protocol = api.Protocol{
 	Name:            "amqp",
 	LongName:        "Advanced Message Queuing Protocol 0-9-1",
 	Abbreviation:    "AMQP",
+	Macro:           "amqp",
 	Version:         "0-9-1",
 	BackgroundColor: "#ff6600",
 	ForegroundColor: "#ffffff",

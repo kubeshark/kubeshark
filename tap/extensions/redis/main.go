@@ -13,6 +13,7 @@ var protocol api.Protocol = api.Protocol{
 	Name:            "redis",
 	LongName:        "Redis Serialization Protocol",
 	Abbreviation:    "REDIS",
+	Macro:           "redis",
 	Version:         "3.x",
 	BackgroundColor: "#a41e11",
 	ForegroundColor: "#ffffff",

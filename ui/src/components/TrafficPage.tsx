@@ -58,6 +58,16 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
 
     const [disableScrollList, setDisableScrollList] = useState(false);
 
+    const [query, setQuery] = useState("");
+
+    const updateQuery = (addition) => {
+        if (query) {
+            setQuery(`${query} and ${addition}`)
+        } else {
+            setQuery(addition)
+        }
+    }
+
     const ws = useRef(null);
 
     const listEntry = useRef(null);
@@ -109,7 +119,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
 
     useEffect(() => {
         (async () => {
-            openWebSocket("");
+            openWebSocket(query);
             try{
                 const tapStatusResponse = await api.tapStatus();
                 setTappingStatus(tapStatusResponse);
@@ -185,20 +195,25 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
             </div>
             {<div className="TrafficPage-Container">
                 <div className="TrafficPage-ListContainer">
-                    <Filters ws={ws.current}
+                    <Filters
+                        query={query}
+                        setQuery={setQuery}
+                        ws={ws.current}
                         openWebSocket={openWebSocket}
                     />
                     <div className={styles.container}>
-                        <EntriesList entries={entries}
-                                        setEntries={setEntries}
-                                        focusedEntryId={focusedEntryId}
-                                        setFocusedEntryId={setFocusedEntryId}
-                                        connectionOpen={connection === ConnectionStatus.Connected}
-                                        noMoreDataBottom={noMoreDataBottom}
-                                        setNoMoreDataBottom={setNoMoreDataBottom}
-                                        listEntryREF={listEntry}
-                                        onScrollEvent={onScrollEvent}
-                                        scrollableList={disableScrollList}
+                        <EntriesList
+                            entries={entries}
+                            setEntries={setEntries}
+                            focusedEntryId={focusedEntryId}
+                            setFocusedEntryId={setFocusedEntryId}
+                            connectionOpen={connection === ConnectionStatus.Connected}
+                            noMoreDataBottom={noMoreDataBottom}
+                            setNoMoreDataBottom={setNoMoreDataBottom}
+                            listEntryREF={listEntry}
+                            onScrollEvent={onScrollEvent}
+                            scrollableList={disableScrollList}
+                            updateQuery={updateQuery}
                         />
                     </div>
                 </div>

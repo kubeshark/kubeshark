@@ -1,36 +1,44 @@
-import React, {useRef, useState} from "react";
+import React, {useRef} from "react";
 import styles from './style/Filters.module.sass';
 import {Button} from "@material-ui/core";
 import CodeEditor from '@uiw/react-textarea-code-editor';
 
 interface FiltersProps {
+    query: string
+    setQuery: any
     ws: any
     openWebSocket: (query: string) => void;
 }
 
-export const Filters: React.FC<FiltersProps> = ({ws, openWebSocket}) => {
+export const Filters: React.FC<FiltersProps> = ({query, setQuery, ws, openWebSocket}) => {
     return <div className={styles.container}>
-        <QueryForm ws={ws} openWebSocket={openWebSocket}/>
+        <QueryForm
+            query={query}
+            setQuery={setQuery}
+            ws={ws}
+            openWebSocket={openWebSocket}
+        />
     </div>;
 };
 
 interface QueryFormProps {
+    query: string
+    setQuery: any
     ws: any
     openWebSocket: (query: string) => void;
 }
 
-export const QueryForm: React.FC<QueryFormProps> = ({ws, openWebSocket}) => {
+export const QueryForm: React.FC<QueryFormProps> = ({query, setQuery, ws, openWebSocket}) => {
 
-    const [value, setValue] = useState("");
     const formRef = useRef<HTMLFormElement>(null);
 
     const handleChange = (e) => {
-        setValue(e.target.value);
+        setQuery(e.target.value);
     }
 
     const handleSubmit = (e) => {
         ws.close()
-        openWebSocket(value)
+        openWebSocket(query)
         e.preventDefault();
     }
 
@@ -38,7 +46,7 @@ export const QueryForm: React.FC<QueryFormProps> = ({ws, openWebSocket}) => {
         <form ref={formRef} onSubmit={handleSubmit}>
         <label>
             <CodeEditor
-                value={value}
+                value={query}
                 language="py"
                 placeholder="Mizu Filter Syntax"
                 onChange={handleChange}

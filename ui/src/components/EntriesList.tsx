@@ -16,6 +16,7 @@ interface EntriesListProps {
     listEntryREF: any;
     onScrollEvent: (isAtBottom:boolean) => void;
     scrollableList: boolean;
+    updateQuery: any;
 }
 
 enum FetchOperator {
@@ -25,7 +26,7 @@ enum FetchOperator {
 
 const api = new Api();
 
-export const EntriesList: React.FC<EntriesListProps> = ({entries, setEntries, focusedEntryId, setFocusedEntryId, connectionOpen, noMoreDataBottom, setNoMoreDataBottom, listEntryREF, onScrollEvent, scrollableList}) => {
+export const EntriesList: React.FC<EntriesListProps> = ({entries, setEntries, focusedEntryId, setFocusedEntryId, connectionOpen, noMoreDataBottom, setNoMoreDataBottom, listEntryREF, onScrollEvent, scrollableList, updateQuery}) => {
 
     const scrollableRef = useRef(null);
 
@@ -52,7 +53,8 @@ export const EntriesList: React.FC<EntriesListProps> = ({entries, setEntries, fo
                                                         entry={entry}
                                                         setFocusedEntryId={setFocusedEntryId}
                                                         isSelected={focusedEntryId === entry.id.toString()}
-                                                        style={{}}/>)}
+                                                        style={{}}
+                                                        updateQuery={updateQuery}/>)}
                     </ScrollableFeedVirtualized>
                     {!connectionOpen && !noMoreDataBottom && <div className={styles.fetchButtonContainer}>
                         <div className={styles.styledButton} onClick={() => getNewEntries()}>Fetch more entries</div>

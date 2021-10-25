@@ -15,6 +15,7 @@ var _protocol api.Protocol = api.Protocol{
 	Name:            "kafka",
 	LongName:        "Apache Kafka Protocol",
 	Abbreviation:    "KAFKA",
+	Macro:           "kafka",
 	Version:         "12",
 	BackgroundColor: "#000000",
 	ForegroundColor: "#ffffff",

@@ -40,9 +40,10 @@ interface EntryProps {
     setFocusedEntryId: (id: string) => void;
     isSelected?: boolean;
     style: object;
+    updateQuery: any;
 }
 
-export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, isSelected, style}) => {
+export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, isSelected, style, updateQuery}) => {
     const classification = getClassification(entry.statusCode)
     const numberOfRules = entry.rules.numberOfRules
     let ingoingIcon;
@@ -127,7 +128,11 @@ export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, isSel
                 width: "calc(100% - 25px)",
             }}
         >
-            <Protocol protocol={entry.protocol} horizontal={false}/>
+            <Protocol
+                protocol={entry.protocol}
+                horizontal={false}
+                updateQuery={updateQuery}
+            />
             {((entry.protocol.name === "http" && "statusCode" in entry) || entry.statusCode !== 0) && <div>
                 <StatusCode statusCode={entry.statusCode}/>
             </div>}
