@@ -58,7 +58,22 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
 
     const [disableScrollList, setDisableScrollList] = useState(false);
 
-    const [query, setQuery] = useState("");
+    const [query, setQueryDefault] = useState("");
+    const [queryBackgroundColor, setQueryBackgroundColor] = useState("#f5f5f5");
+
+    const setQuery = async (query) => {
+        if (!query) {
+            setQueryBackgroundColor("#f5f5f5")
+            return
+        }
+        const data = await api.validateQuery(query);
+        if (data.valid) {
+            setQueryBackgroundColor("#d2fad2")
+        } else {
+            setQueryBackgroundColor("#fad6dc")
+        }
+        setQueryDefault(query)
+    }
 
     const updateQuery = (addition) => {
         if (query) {
@@ -198,6 +213,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                     <Filters
                         query={query}
                         setQuery={setQuery}
+                        backgroundColor={queryBackgroundColor}
                         ws={ws.current}
                         openWebSocket={openWebSocket}
                     />
