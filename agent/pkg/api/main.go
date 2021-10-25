@@ -145,7 +145,6 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 				baseEntry.Rules = rules
 			}
 		}
-		database.CreateEntry(mizuEntry)
 
 		data, err := json.Marshal(mizuEntry)
 		if err != nil {

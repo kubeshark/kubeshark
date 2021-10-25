@@ -59,7 +59,10 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 
 func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolvedSource string, resolvedDestination string) *api.MizuEntry {
 	request := item.Pair.Request.Payload.(map[string]interface{})
+	response := item.Pair.Response.Payload.(map[string]interface{})
 	reqDetails := request["details"].(map[string]interface{})
+	resDetails := response["details"].(map[string]interface{})
+
 	service := "redis"
 	if resolvedDestination != "" {
 		service = resolvedDestination
@@ -80,38 +83,33 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolve
 	request["url"] = summary
 	entryBytes, _ := json.Marshal(item.Pair)
 	return &api.MizuEntry{
-		ProtocolName:            protocol.Name,
-		ProtocolLongName:        protocol.LongName,
-		ProtocolAbbreviation:    protocol.Abbreviation,
-		ProtocolVersion:         protocol.Version,
-		ProtocolBackgroundColor: protocol.BackgroundColor,
-		ProtocolForegroundColor: protocol.ForegroundColor,
-		ProtocolFontSize:        protocol.FontSize,
-		ProtocolReferenceLink:   protocol.ReferenceLink,
-		EntryId:                 entryId,
-		Entry:                   string(entryBytes),
-		Url:                     fmt.Sprintf("%s%s", service, summary),
-		Method:                  method,
-		Status:                  0,
-		RequestSenderIp:         item.ConnectionInfo.ClientIP,
-		Service:                 service,
-		Timestamp:               item.Timestamp,
-		ElapsedTime:             0,
-		Path:                    summary,
-		ResolvedSource:          resolvedSource,
-		ResolvedDestination:     resolvedDestination,
-		SourceIp:                item.ConnectionInfo.ClientIP,
-		DestinationIp:           item.ConnectionInfo.ServerIP,
-		SourcePort:              item.ConnectionInfo.ClientPort,
-		DestinationPort:         item.ConnectionInfo.ServerPort,
-		IsOutgoing:              item.ConnectionInfo.IsOutgoing,
+		Protocol:            protocol,
+		Request:             reqDetails,
+		Response:            resDetails,
+		EntryId:             entryId,
+		Entry:               string(entryBytes),
+		Url:                 fmt.Sprintf("%s%s", service, summary),
+		Method:              method,
+		Status:              0,
+		RequestSenderIp:     item.ConnectionInfo.ClientIP,
+		Service:             service,
+		Timestamp:           item.Timestamp,
+		ElapsedTime:         0,
+		Path:                summary,
+		ResolvedSource:      resolvedSource,
+		ResolvedDestination: resolvedDestination,
+		SourceIp:            item.ConnectionInfo.ClientIP,
+		DestinationIp:       item.ConnectionInfo.ServerIP,
+		SourcePort:          item.ConnectionInfo.ClientPort,
+		DestinationPort:     item.ConnectionInfo.ServerPort,
+		IsOutgoing:          item.ConnectionInfo.IsOutgoing,
 	}
 
 }
 
 func (d dissecting) Summarize(entry *api.MizuEntry) *api.BaseEntryDetails {
 	return &api.BaseEntryDetails{
-		Id:              entry.EntryId,
+		Id:              entry.Id,
 		Protocol:        protocol,
 		Url:             entry.Url,
 		RequestSenderIp: entry.RequestSenderIp,

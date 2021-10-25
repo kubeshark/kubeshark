@@ -11,9 +11,6 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	tapApi "github.com/up9inc/mizu/tap/api"
-
-	"github.com/gin-gonic/gin"
 
 	basenine "github.com/up9inc/basenine/client/go"
 	"github.com/up9inc/mizu/shared"
