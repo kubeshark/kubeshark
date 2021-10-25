@@ -3,6 +3,7 @@ package config_test
 import (
 	"fmt"
 	"github.com/up9inc/mizu/cli/config"
+	"gopkg.in/yaml.v3"
 	"reflect"
 	"strings"
 	"testing"
@@ -15,10 +16,11 @@ func TestConfigWriteIgnoresReadonlyFields(t *testing.T) {
 	getFieldsWithReadonlyTag(configElem, &readonlyFields)
 
 	configWithDefaults, _ := config.GetConfigWithDefaults()
+	configWithDefaultsBytes, _ := yaml.Marshal(configWithDefaults)
 	for _, readonlyField := range readonlyFields {
 		t.Run(readonlyField, func(t *testing.T) {
-			readonlyFieldToCheck := fmt.Sprintf("\n%s:", readonlyField)
-			if strings.Contains(configWithDefaults, readonlyFieldToCheck) {
+			readonlyFieldToCheck := fmt.Sprintf(" %s:", readonlyField)
+			if strings.Contains(string(configWithDefaultsBytes), readonlyFieldToCheck) {
 				t.Errorf("unexpected result - readonly field: %v, config: %v", readonlyField, configWithDefaults)
 			}
 		})

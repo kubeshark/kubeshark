@@ -3,11 +3,12 @@ package fsUtils
 import (
 	"archive/zip"
 	"fmt"
-	"github.com/up9inc/mizu/cli/logger"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/up9inc/mizu/shared/logger"
 )
 
 func AddFileToZip(zipWriter *zip.Writer, filename string) error {

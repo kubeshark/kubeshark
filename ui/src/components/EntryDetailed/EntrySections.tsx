@@ -150,17 +150,12 @@ export const EntryTableSection: React.FC<EntrySectionProps> = ({title, color, ar
     </React.Fragment>
 }
 
-
-
 interface EntryPolicySectionProps {
-    service: string,
     title: string,
     color: string,
-    response: any,
     latency?: number,
     arrayToIterate: any[],
 }
-
 
 interface EntryPolicySectionCollapsibleTitleProps {
     label: string;
@@ -200,7 +195,7 @@ export const EntryPolicySectionContainer: React.FC<EntryPolicySectionContainerPr
     </CollapsibleContainer>
 }
 
-export const EntryTablePolicySection: React.FC<EntryPolicySectionProps> = ({service, title, color, response, latency, arrayToIterate}) => {
+export const EntryTablePolicySection: React.FC<EntryPolicySectionProps> = ({title, color, latency, arrayToIterate}) => {
     return <React.Fragment>
         {
             arrayToIterate && arrayToIterate.length > 0 ?
@@ -210,7 +205,7 @@ export const EntryTablePolicySection: React.FC<EntryPolicySectionProps> = ({serv
                         <tbody>
                             {arrayToIterate.map(({rule, matched}, index) => {
                                     return (
-                                        <EntryPolicySectionContainer key={index} label={rule.Name} matched={matched && (rule.Type === 'latency' ? rule.Latency >= latency : true)? "Success" : "Failure"}>
+                                        <EntryPolicySectionContainer key={index} label={rule.Name} matched={matched && (rule.Type === 'slo' ? rule.ResponseTime >= latency : true)? "Success" : "Failure"}>
                                             {
                                                 <>
                                                     {
@@ -218,8 +213,8 @@ export const EntryTablePolicySection: React.FC<EntryPolicySectionProps> = ({serv
                                                         <tr className={styles.dataValue}><td><b>Key:</b></td> <td>{rule.Key}</td></tr>
                                                     }
                                                     {
-                                                        rule.Latency !== 0 &&
-                                                        <tr className={styles.dataValue}><td><b>Latency:</b></td> <td>{rule.Latency}</td></tr>
+                                                        rule.ResponseTime !== 0 &&
+                                                        <tr className={styles.dataValue}><td><b>Response Time:</b></td> <td>{rule.ResponseTime}</td></tr>
                                                     }
                                                     {
                                                         rule.Method &&
@@ -253,5 +248,30 @@ export const EntryTablePolicySection: React.FC<EntryPolicySectionProps> = ({serv
                 </EntrySectionContainer>
                 </> : <span className={styles.noRules}>No rules could be applied to this request.</span>
         }
+    </React.Fragment>
+}
+
+interface EntryContractSectionProps {
+    color: string,
+    requestReason: string,
+    responseReason: string,
+    contractContent: string,
+}
+
+export const EntryContractSection: React.FC<EntryContractSectionProps> = ({color, requestReason, responseReason, contractContent}) => {
+    return <React.Fragment>
+        {requestReason && <EntrySectionContainer title="Request" color={color}>
+            {requestReason}
+        </EntrySectionContainer>}
+        {responseReason && <EntrySectionContainer title="Response" color={color}>
+            {responseReason}
+        </EntrySectionContainer>}
+        {contractContent && <EntrySectionContainer title="Contract" color={color}>
+            <SyntaxHighlighter
+                isWrapped={false}
+                code={contractContent}
+                language={"yaml"}
+            />
+        </EntrySectionContainer>}
     </React.Fragment>
 }

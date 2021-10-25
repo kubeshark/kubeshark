@@ -4,18 +4,16 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"os/exec"
 	"os/signal"
-	"runtime"
 	"syscall"
 
 	"github.com/up9inc/mizu/cli/config"
 	"github.com/up9inc/mizu/cli/config/configStructs"
 	"github.com/up9inc/mizu/cli/errormessage"
 	"github.com/up9inc/mizu/cli/kubernetes"
-	"github.com/up9inc/mizu/cli/logger"
 	"github.com/up9inc/mizu/cli/mizu"
 	"github.com/up9inc/mizu/cli/uiUtils"
+	"github.com/up9inc/mizu/shared/logger"
 )
 
 func GetApiServerUrl() string {
@@ -46,24 +44,5 @@ func waitForFinish(ctx context.Context, cancel context.CancelFunc) {
 	case <-sigChan:
 		logger.Log.Debugf("Got termination signal, canceling execution...")
 		cancel()
-	}
-}
-
-func openBrowser(url string) {
-	var err error
-
-	switch runtime.GOOS {
-	case "linux":
-		err = exec.Command("xdg-open", url).Start()
-	case "windows":
-		err = exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start()
-	case "darwin":
-		err = exec.Command("open", url).Start()
-	default:
-		err = fmt.Errorf("unsupported platform")
-	}
-
-	if err != nil {
-		logger.Log.Errorf("error while opening browser, %v", err)
 	}
 }

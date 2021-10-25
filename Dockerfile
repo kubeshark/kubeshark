@@ -2,8 +2,10 @@ FROM node:14-slim AS site-build
 
 WORKDIR /app/ui-build
 
-COPY ui .
+COPY ui/package.json .
+COPY ui/package-lock.json .
 RUN npm i
+COPY ui .
 RUN npm run build
 
 

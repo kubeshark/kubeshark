@@ -1,8 +1,8 @@
 package shared
 
 import (
-	"fmt"
 	"io/ioutil"
+	"log"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -56,6 +56,13 @@ type TLSLinkInfo struct {
 	ResolvedSourceName      string `json:"resolvedSourceName"`
 }
 
+type SyncEntriesConfig struct {
+	Token             string `json:"token"`
+	Env               string `json:"env"`
+	Workspace         string `json:"workspace"`
+	UploadIntervalSec int    `json:"interval"`
+}
+
 func CreateWebSocketStatusMessage(tappingStatus TapStatus) WebSocketStatusMessage {
 	return WebSocketStatusMessage{
 		WebSocketMessageMetadata: &WebSocketMessageMetadata{
@@ -83,14 +90,14 @@ type RulesPolicy struct {
 }
 
 type RulePolicy struct {
-	Type    string `yaml:"type"`
-	Service string `yaml:"service"`
-	Path    string `yaml:"path"`
-	Method  string `yaml:"method"`
-	Key     string `yaml:"key"`
-	Value   string `yaml:"value"`
-	Latency int64  `yaml:"latency"`
-	Name    string `yaml:"name"`
+	Type         string `yaml:"type"`
+	Service      string `yaml:"service"`
+	Path         string `yaml:"path"`
+	Method       string `yaml:"method"`
+	Key          string `yaml:"key"`
+	Value        string `yaml:"value"`
+	ResponseTime int64  `yaml:"response-time"`
+	Name         string `yaml:"name"`
 }
 
 type RulesMatched struct {
@@ -99,14 +106,17 @@ type RulesMatched struct {
 }
 
 func (r *RulePolicy) validateType() bool {
-	permitedTypes := []string{"json", "header", "latency"}
+	permitedTypes := []string{"json", "header", "slo"}
 	_, found := Find(permitedTypes, r.Type)
 	if !found {
-		fmt.Printf("\nRule with name %s will be ignored. Err: only json, header and latency types are supported on rule definition.\n", r.Name)
+		log.Printf("Error: %s. ", r.Name)
+		log.Printf("Only json, header and slo types are supported on rule definition. This rule will be ignored\n")
+		found = false
 	}
-	if strings.ToLower(r.Type) == "latency" {
-		if r.Latency == 0 {
-			fmt.Printf("\nRule with name %s will be ignored. Err: when type=latency, the field Latency should be specified and have a value >= 1\n\n", r.Name)
+	if strings.ToLower(r.Type) == "slo" {
+		if r.ResponseTime <= 0 {
+			log.Printf("Error: %s. ", r.Name)
+			log.Printf("When type=slo, the field response-time should be specified and have a value >= 1\n\n")
 			found = false
 		}
 	}
@@ -122,10 +132,6 @@ func (rules *RulesPolicy) ValidateRulesPolicy() []int {
 		}
 	}
 	return invalidIndex
-}
-
-func (rules *RulesPolicy) RemoveRule(idx int) {
-	rules.Rules = append(rules.Rules[:idx], rules.Rules[idx+1:]...)
 }
 
 func Find(slice []string, val string) (int, bool) {
@@ -148,10 +154,15 @@ func DecodeEnforcePolicy(path string) (RulesPolicy, error) {
 		return enforcePolicy, err
 	}
 	invalidIndex := enforcePolicy.ValidateRulesPolicy()
+	var k = 0
 	if len(invalidIndex) != 0 {
-		for i := range invalidIndex {
-			enforcePolicy.RemoveRule(invalidIndex[i])
+		for i, rule := range enforcePolicy.Rules {
+			if !ContainsInt(invalidIndex, i) {
+				enforcePolicy.Rules[k] = rule
+				k++
+			}
 		}
+		enforcePolicy.Rules = enforcePolicy.Rules[:k]
 	}
 	return enforcePolicy, nil
 }

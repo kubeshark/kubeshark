@@ -32,7 +32,7 @@ Now you will be able to import `github.com/up9inc/mizu/resolver` in any `.go` fi
 errOut := make(chan error, 100)
 k8sResolver, err := resolver.NewFromOutOfCluster("", errOut)
 if err != nil {
-    rlog.Errorf("error creating k8s resolver %s", err)
+    logger.Log.Errorf("error creating k8s resolver %s", err)
 }
 
 ctx, cancel := context.WithCancel(context.Background())
@@ -40,15 +40,15 @@ k8sResolver.Start(ctx)
 
 resolvedName := k8sResolver.Resolve("10.107.251.91") // will always return `nil` in real scenarios as the internal map takes a moment to populate after `Start` is called
 if resolvedName != nil {
-    rlog.Errorf("resolved 10.107.251.91=%s", *resolvedName)
+    logger.Log.Errorf("resolved 10.107.251.91=%s", *resolvedName)
 } else {
-    rlog.Error("Could not find a resolved name for 10.107.251.91")
+    logger.Log.Error("Could not find a resolved name for 10.107.251.91")
 }
 
 for {
     select {
         case err := <- errOut:
-            rlog.Errorf("name resolving error %s", err)
+            logger.Log.Errorf("name resolving error %s", err)
     }
 }
 ```

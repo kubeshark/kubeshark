@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"mizuserver/pkg/holder"
-	"net/url"
+	"mizuserver/pkg/providers"
 	"os"
 	"path"
 	"sort"
@@ -16,9 +16,8 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"github.com/google/martian/har"
-	"github.com/romana/rlog"
 	"github.com/up9inc/mizu/shared"
-	"github.com/up9inc/mizu/tap"
+	"github.com/up9inc/mizu/shared/logger"
 	tapApi "github.com/up9inc/mizu/tap/api"
 
 	"mizuserver/pkg/models"
@@ -34,7 +33,7 @@ func StartResolving(namespace string) {
 	errOut := make(chan error, 100)
 	res, err := resolver.NewFromInCluster(errOut, namespace)
 	if err != nil {
-		rlog.Infof("error creating k8s resolver %s", err)
+		logger.Log.Infof("error creating k8s resolver %s", err)
 		return
 	}
 	ctx := context.Background()
@@ -43,7 +42,7 @@ func StartResolving(namespace string) {
 		for {
 			select {
 			case err := <-errOut:
-				rlog.Infof("name resolving error %s", err)
+				logger.Log.Infof("name resolving error %s", err)
 			}
 		}
 	}()
@@ -61,8 +60,10 @@ func StartReadingEntries(harChannel <-chan *tapApi.OutputChannelItem, workingDir
 }
 
 func startReadingFiles(workingDir string) {
-	err := os.MkdirAll(workingDir, os.ModePerm)
-	utils.CheckErr(err)
+	if err := os.MkdirAll(workingDir, os.ModePerm); err != nil {
+		logger.Log.Errorf("Failed to make dir: %s, err: %v", workingDir, err)
+		return
+	}
 
 	for true {
 		dir, _ := os.Open(workingDir)
@@ -77,7 +78,7 @@ func startReadingFiles(workingDir string) {
 		sort.Sort(utils.ByModTime(harFiles))
 
 		if len(harFiles) == 0 {
-			rlog.Infof("Waiting for new files\n")
+			logger.Log.Infof("Waiting for new files\n")
 			time.Sleep(3 * time.Second)
 			continue
 		}
@@ -90,17 +91,6 @@ func startReadingFiles(workingDir string) {
 		decErr := json.NewDecoder(bufio.NewReader(file)).Decode(&inputHar)
 		utils.CheckErr(decErr)
 
-		// for _, entry := range inputHar.Log.Entries {
-		// 	time.Sleep(time.Millisecond * 250)
-		// 	// connectionInfo := &tap.ConnectionInfo{
-		// 	// 	ClientIP:   fileInfo.Name(),
-		// 	// 	ClientPort: "",
-		// 	// 	ServerIP:   "",
-		// 	// 	ServerPort: "",
-		// 	// 	IsOutgoing: false,
-		// 	// }
-		// 	// saveHarToDb(entry, connectionInfo)
-		// }
 		rmErr := os.Remove(inputFilePath)
 		utils.CheckErr(rmErr)
 	}
@@ -117,7 +107,17 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 	}
 	c.InsertMode()
 
+	disableOASValidation := false
+	ctx := context.Background()
+	doc, contractContent, router, err := loadOAS(ctx)
+	if err != nil {
+		logger.Log.Infof("Disabled OAS validation: %s\n", err.Error())
+		disableOASValidation = true
+	}
+
 	for item := range outputItems {
+		providers.EntryAdded()
+
 		extension := extensionsMap[item.Protocol.Name]
 		resolvedSource, resolvedDestionation := resolveIP(item.ConnectionInfo)
 		mizuEntry := extension.Dissector.Analyze(item, primitive.NewObjectID().Hex(), resolvedSource, resolvedDestionation)
@@ -125,15 +125,27 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 		mizuEntry.EstimatedSizeBytes = getEstimatedEntrySizeBytes(mizuEntry)
 		mizuEntry.Summary = baseEntry
 		if extension.Protocol.Name == "http" {
+			if !disableOASValidation {
+				var httpPair tapApi.HTTPRequestResponsePair
+				json.Unmarshal([]byte(mizuEntry.Entry), &httpPair)
+
+				contract := handleOAS(ctx, doc, router, httpPair.Request.Payload.RawRequest, httpPair.Response.Payload.RawResponse, contractContent)
+				baseEntry.ContractStatus = contract.Status
+				mizuEntry.ContractStatus = contract.Status
+				mizuEntry.ContractRequestReason = contract.RequestReason
+				mizuEntry.ContractResponseReason = contract.ResponseReason
+				mizuEntry.ContractContent = contract.Content
+			}
+
 			var pair tapApi.RequestResponsePair
 			json.Unmarshal([]byte(mizuEntry.Entry), &pair)
 			harEntry, err := utils.NewEntry(&pair)
 			if err == nil {
-				rules, _ := models.RunValidationRulesState(*harEntry, mizuEntry.Service)
+				rules, _, _ := models.RunValidationRulesState(*harEntry, mizuEntry.Service)
 				baseEntry.Rules = rules
-				baseEntry.Latency = mizuEntry.ElapsedTime
 			}
 		}
+		database.CreateEntry(mizuEntry)
 
 		data, err := json.Marshal(mizuEntry)
 		if err != nil {
@@ -143,19 +155,12 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 	}
 }
 
-func StartReadingOutbound(outboundLinkChannel <-chan *tap.OutboundLink) {
-	// tcpStreamFactory will block on write to channel. Empty channel to unblock.
-	// TODO: Make write to channel optional.
-	for range outboundLinkChannel {
-	}
-}
-
 func resolveIP(connectionInfo *tapApi.ConnectionInfo) (resolvedSource string, resolvedDestination string) {
 	if k8sResolver != nil {
 		unresolvedSource := connectionInfo.ClientIP
 		resolvedSource = k8sResolver.Resolve(unresolvedSource)
 		if resolvedSource == "" {
-			rlog.Debugf("Cannot find resolved name to source: %s\n", unresolvedSource)
+			logger.Log.Debugf("Cannot find resolved name to source: %s\n", unresolvedSource)
 			if os.Getenv("SKIP_NOT_RESOLVED_SOURCE") == "1" {
 				return
 			}
@@ -163,19 +168,13 @@ func resolveIP(connectionInfo *tapApi.ConnectionInfo) (resolvedSource string, re
 		unresolvedDestination := fmt.Sprintf("%s:%s", connectionInfo.ServerIP, connectionInfo.ServerPort)
 		resolvedDestination = k8sResolver.Resolve(unresolvedDestination)
 		if resolvedDestination == "" {
-			rlog.Debugf("Cannot find resolved name to dest: %s\n", unresolvedDestination)
+			logger.Log.Debugf("Cannot find resolved name to dest: %s\n", unresolvedDestination)
 			if os.Getenv("SKIP_NOT_RESOLVED_DEST") == "1" {
 				return
 			}
 		}
 	}
 	return resolvedSource, resolvedDestination
-}
-
-func getServiceNameFromUrl(inputUrl string) (string, string) {
-	parsed, err := url.Parse(inputUrl)
-	utils.CheckErr(err)
-	return fmt.Sprintf("%s://%s", parsed.Scheme, parsed.Host), parsed.Path
 }
 
 func CheckIsServiceIP(address string) bool {

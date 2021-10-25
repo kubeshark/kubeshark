@@ -1,9 +1,10 @@
 package goUtils
 
 import (
-	"github.com/up9inc/mizu/cli/logger"
 	"reflect"
 	"runtime/debug"
+
+	"github.com/up9inc/mizu/shared/logger"
 )
 
 func HandleExcWrapper(fn interface{}, params ...interface{}) (result []reflect.Value) {

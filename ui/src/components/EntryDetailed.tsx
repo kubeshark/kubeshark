@@ -41,7 +41,7 @@ const EntryTitle: React.FC<any> = ({protocol, data, bodySize, elapsedTime}) => {
         <Protocol protocol={protocol} horizontal={true}/>
         <div style={{right: "30px", position: "absolute", display: "flex"}}>
             {response.payload && <div style={{margin: "0 18px", opacity: 0.5}}>{formatSize(bodySize)}</div>}
-            <div style={{marginRight: 18, opacity: 0.5}}>{Math.round(elapsedTime)}ms</div>
+            {response.payload && <div style={{marginRight: 18, opacity: 0.5}}>{Math.round(elapsedTime)}ms</div>}
         </div>
     </div>;
 };
@@ -71,7 +71,7 @@ export const EntryDetailed: React.FC<EntryDetailedProps> = ({entryData}) => {
         />
         {entryData.data && <EntrySummary data={entryData.data}/>}
         <>
-            {entryData.data && <EntryViewer representation={entryData.representation} rulesMatched={entryData.rulesMatched} elapsedTime={entryData.data.elapsedTime} color={entryData.protocol.backgroundColor}/>}
+            {entryData.data && <EntryViewer representation={entryData.representation} isRulesEnabled={entryData.isRulesEnabled} rulesMatched={entryData.rulesMatched} contractStatus={entryData.data.contractStatus} requestReason={entryData.data.contractRequestReason} responseReason={entryData.data.contractResponseReason} contractContent={entryData.data.contractContent} elapsedTime={entryData.data.elapsedTime} color={entryData.protocol.backgroundColor}/>}
         </>
     </>
 };

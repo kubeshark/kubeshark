@@ -3,20 +3,22 @@ package up9
 import (
 	"bytes"
 	"compress/zlib"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/google/martian/har"
-	"github.com/romana/rlog"
-	"github.com/up9inc/mizu/shared"
-	tapApi "github.com/up9inc/mizu/tap/api"
 	"io/ioutil"
-	"log"
 	"mizuserver/pkg/database"
 	"mizuserver/pkg/utils"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strings"
 	"time"
+
+	"github.com/google/martian/har"
+	"github.com/up9inc/mizu/shared"
+	"github.com/up9inc/mizu/shared/logger"
+	tapApi "github.com/up9inc/mizu/tap/api"
 )
 
 const (
@@ -32,41 +34,24 @@ type ModelStatus struct {
 	LastMajorGeneration float64 `json:"lastMajorGeneration"`
 }
 
-func getGuestToken(url string, target *GuestToken) error {
-	resp, err := http.Get(url)
-	if err != nil {
-		return err
+func GetRemoteUrl(analyzeDestination string, analyzeModel string, analyzeToken string, guestMode bool) string {
+	if guestMode {
+		return fmt.Sprintf("https://%s/share/%s", analyzeDestination, analyzeToken)
 	}
-	defer resp.Body.Close()
-	rlog.Infof("Got token from the server, starting to json decode... status code: %v", resp.StatusCode)
-	return json.NewDecoder(resp.Body).Decode(target)
+
+	return fmt.Sprintf("https://%s/app/workspaces/%s", analyzeDestination, analyzeModel)
 }
 
-func CreateAnonymousToken(envPrefix string) (*GuestToken, error) {
-	tokenUrl := fmt.Sprintf("https://trcc.%s/anonymous/token", envPrefix)
-	if strings.HasPrefix(envPrefix, "http") {
-		tokenUrl = fmt.Sprintf("%s/api/token", envPrefix)
-	}
-	token := &GuestToken{}
-	if err := getGuestToken(tokenUrl, token); err != nil {
-		rlog.Infof("Failed to get token, %s", err)
-		return nil, err
-	}
-	return token, nil
-}
-
-func GetRemoteUrl(analyzeDestination string, analyzeToken string) string {
-	return fmt.Sprintf("https://%s/share/%s", analyzeDestination, analyzeToken)
-}
-
-func CheckIfModelReady(analyzeDestination string, analyzeModel string, analyzeToken string) bool {
+func CheckIfModelReady(analyzeDestination string, analyzeModel string, analyzeToken string, guestMode bool) bool {
 	statusUrl, _ := url.Parse(fmt.Sprintf("https://trcc.%s/models/%s/status", analyzeDestination, analyzeModel))
+
+	authHeader := getAuthHeader(guestMode)
 	req := &http.Request{
 		Method: http.MethodGet,
 		URL:    statusUrl,
 		Header: map[string][]string{
 			"Content-Type": {"application/json"},
-			"Guest-Auth":   {analyzeToken},
+			authHeader:     {analyzeToken},
 		},
 	}
 	statusResp, err := http.DefaultClient.Do(req)
@@ -81,17 +66,23 @@ func CheckIfModelReady(analyzeDestination string, analyzeModel string, analyzeTo
 	return target.LastMajorGeneration > 0
 }
 
+func getAuthHeader(guestMode bool) string {
+	if guestMode {
+		return "Guest-Auth"
+	}
+
+	return "Authorization"
+}
+
 func GetTrafficDumpUrl(analyzeDestination string, analyzeModel string) *url.URL {
 	strUrl := fmt.Sprintf("https://traffic.%s/dumpTrafficBulk/%s", analyzeDestination, analyzeModel)
-	if strings.HasPrefix(analyzeDestination, "http") {
-		strUrl = fmt.Sprintf("%s/api/workspace/dumpTrafficBulk", analyzeDestination)
-	}
 	postUrl, _ := url.Parse(strUrl)
 	return postUrl
 }
 
 type AnalyzeInformation struct {
 	IsAnalyzing        bool
+	GuestMode          bool
 	SentCount          int
 	AnalyzedModel      string
 	AnalyzeToken       string
@@ -100,6 +91,7 @@ type AnalyzeInformation struct {
 
 func (info *AnalyzeInformation) Reset() {
 	info.IsAnalyzing = false
+	info.GuestMode = true
 	info.AnalyzedModel = ""
 	info.AnalyzeToken = ""
 	info.AnalyzeDestination = ""
@@ -111,26 +103,114 @@ var analyzeInformation = &AnalyzeInformation{}
 func GetAnalyzeInfo() *shared.AnalyzeStatus {
 	return &shared.AnalyzeStatus{
 		IsAnalyzing:   analyzeInformation.IsAnalyzing,
-		RemoteUrl:     GetRemoteUrl(analyzeInformation.AnalyzeDestination, analyzeInformation.AnalyzeToken),
-		IsRemoteReady: CheckIfModelReady(analyzeInformation.AnalyzeDestination, analyzeInformation.AnalyzedModel, analyzeInformation.AnalyzeToken),
+		RemoteUrl:     GetRemoteUrl(analyzeInformation.AnalyzeDestination, analyzeInformation.AnalyzedModel, analyzeInformation.AnalyzeToken, analyzeInformation.GuestMode),
+		IsRemoteReady: CheckIfModelReady(analyzeInformation.AnalyzeDestination, analyzeInformation.AnalyzedModel, analyzeInformation.AnalyzeToken, analyzeInformation.GuestMode),
 		SentCount:     analyzeInformation.SentCount,
 	}
 }
 
-func UploadEntriesImpl(token string, model string, envPrefix string, sleepIntervalSec int) {
+func SyncEntries(syncEntriesConfig *shared.SyncEntriesConfig) error {
+	logger.Log.Infof("Sync entries - started\n")
+
+	var (
+		token, model string
+		guestMode    bool
+	)
+	if syncEntriesConfig.Token == "" {
+		logger.Log.Infof("Sync entries - creating anonymous token. env %s\n", syncEntriesConfig.Env)
+		guestToken, err := createAnonymousToken(syncEntriesConfig.Env)
+		if err != nil {
+			return fmt.Errorf("failed creating anonymous token, err: %v", err)
+		}
+
+		token = guestToken.Token
+		model = guestToken.Model
+		guestMode = true
+	} else {
+		token = fmt.Sprintf("bearer %s", syncEntriesConfig.Token)
+		model = syncEntriesConfig.Workspace
+		guestMode = false
+
+		logger.Log.Infof("Sync entries - upserting model. env %s, model %s\n", syncEntriesConfig.Env, model)
+		if err := upsertModel(token, model, syncEntriesConfig.Env); err != nil {
+			return fmt.Errorf("failed upserting model, err: %v", err)
+		}
+	}
+
+	modelRegex, _ := regexp.Compile("[A-Za-z0-9][-A-Za-z0-9_.]*[A-Za-z0-9]+$")
+	if len(model) > 63 || !modelRegex.MatchString(model) {
+		return fmt.Errorf("invalid model name, model name: %s", model)
+	}
+
+	logger.Log.Infof("Sync entries - syncing. token: %s, model: %s, guest mode: %v\n", token, model, guestMode)
+	go syncEntriesImpl(token, model, syncEntriesConfig.Env, syncEntriesConfig.UploadIntervalSec, guestMode)
+
+	return nil
+}
+
+func upsertModel(token string, model string, envPrefix string) error {
+	upsertModelUrl, _ := url.Parse(fmt.Sprintf("https://trcc.%s/models/%s", envPrefix, model))
+
+	authHeader := getAuthHeader(false)
+	req := &http.Request{
+		Method: http.MethodPost,
+		URL:    upsertModelUrl,
+		Header: map[string][]string{
+			authHeader: {token},
+		},
+	}
+
+	response, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed request to upsert model, err: %v", err)
+	}
+
+	// In case the model is not created (not 201) and doesn't exists (not 409)
+	if response.StatusCode != 201 && response.StatusCode != 409 {
+		return fmt.Errorf("failed request to upsert model, status code: %v", response.StatusCode)
+	}
+
+	return nil
+}
+
+func createAnonymousToken(envPrefix string) (*GuestToken, error) {
+	tokenUrl := fmt.Sprintf("https://trcc.%s/anonymous/token", envPrefix)
+	if strings.HasPrefix(envPrefix, "http") {
+		tokenUrl = fmt.Sprintf("%s/api/token", envPrefix)
+	}
+	token := &GuestToken{}
+	if err := getGuestToken(tokenUrl, token); err != nil {
+		logger.Log.Infof("Failed to get token, %s", err)
+		return nil, err
+	}
+	return token, nil
+}
+
+func getGuestToken(url string, target *GuestToken) error {
+	resp, err := http.Get(url)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	logger.Log.Infof("Got token from the server, starting to json decode... status code: %v", resp.StatusCode)
+	return json.NewDecoder(resp.Body).Decode(target)
+}
+
+func syncEntriesImpl(token string, model string, envPrefix string, uploadIntervalSec int, guestMode bool) {
 	analyzeInformation.IsAnalyzing = true
+	analyzeInformation.GuestMode = guestMode
 	analyzeInformation.AnalyzedModel = model
 	analyzeInformation.AnalyzeToken = token
 	analyzeInformation.AnalyzeDestination = envPrefix
 	analyzeInformation.SentCount = 0
 
-	sleepTime := time.Second * time.Duration(sleepIntervalSec)
+	sleepTime := time.Second * time.Duration(uploadIntervalSec)
 
 	var timestampFrom int64 = 0
 
 	for {
 		timestampTo := time.Now().UnixNano() / int64(time.Millisecond)
-		rlog.Infof("Getting entries from %v, to %v\n", timestampFrom, timestampTo)
+		logger.Log.Infof("Getting entries from %v, to %v\n", timestampFrom, timestampTo)
 		protocolFilter := "http"
 		entriesArray := database.GetEntriesFromDb(timestampFrom, timestampTo, &protocolFilter)
 
@@ -152,16 +232,22 @@ func UploadEntriesImpl(token string, model string, envPrefix string, sleepInterv
 					harEntry.Request.Headers = append(harEntry.Request.Headers, har.Header{Name: "x-mizu-destination", Value: data.ResolvedDestination})
 					harEntry.Request.URL = utils.SetHostname(harEntry.Request.URL, data.ResolvedDestination)
 				}
+
+				// go's default marshal behavior is to encode []byte fields to base64, python's default unmarshal behavior is to not decode []byte fields from base64
+				if harEntry.Response.Content.Text, err = base64.StdEncoding.DecodeString(string(harEntry.Response.Content.Text)); err != nil {
+					continue
+				}
+
 				result = append(result, *harEntry)
 			}
 
-			rlog.Infof("About to upload %v entries\n", len(result))
+			logger.Log.Infof("About to upload %v entries\n", len(result))
 
 			body, jMarshalErr := json.Marshal(result)
 			if jMarshalErr != nil {
 				analyzeInformation.Reset()
-				rlog.Infof("Stopping analyzing")
-				log.Fatal(jMarshalErr)
+				logger.Log.Infof("Stopping sync entries")
+				logger.Log.Fatal(jMarshalErr)
 			}
 
 			var in bytes.Buffer
@@ -170,30 +256,31 @@ func UploadEntriesImpl(token string, model string, envPrefix string, sleepInterv
 			_ = w.Close()
 			reqBody := ioutil.NopCloser(bytes.NewReader(in.Bytes()))
 
+			authHeader := getAuthHeader(guestMode)
 			req := &http.Request{
 				Method: http.MethodPost,
 				URL:    GetTrafficDumpUrl(envPrefix, model),
 				Header: map[string][]string{
 					"Content-Encoding": {"deflate"},
 					"Content-Type":     {"application/octet-stream"},
-					"Guest-Auth":       {token},
+					authHeader:         {token},
 				},
 				Body: reqBody,
 			}
 
 			if _, postErr := http.DefaultClient.Do(req); postErr != nil {
 				analyzeInformation.Reset()
-				rlog.Info("Stopping analyzing")
-				log.Fatal(postErr)
+				logger.Log.Info("Stopping sync entries")
+				logger.Log.Fatal(postErr)
 			}
 			analyzeInformation.SentCount += len(entriesArray)
-			rlog.Infof("Finish uploading %v entries to %s\n", len(entriesArray), GetTrafficDumpUrl(envPrefix, model))
+			logger.Log.Infof("Finish uploading %v entries to %s\n", len(entriesArray), GetTrafficDumpUrl(envPrefix, model))
 
 		} else {
-			rlog.Infof("Nothing to upload")
+			logger.Log.Infof("Nothing to upload")
 		}
 
-		rlog.Infof("Sleeping for %v...\n", sleepTime)
+		logger.Log.Infof("Sleeping for %v...\n", sleepTime)
 		time.Sleep(sleepTime)
 		timestampFrom = timestampTo
 	}

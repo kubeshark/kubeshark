@@ -4,15 +4,15 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/up9inc/mizu/cli/config"
-	"github.com/up9inc/mizu/cli/logger"
-	"github.com/up9inc/mizu/cli/uiUtils"
-	"github.com/up9inc/mizu/shared"
 	"io/ioutil"
-	core "k8s.io/api/core/v1"
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/up9inc/mizu/cli/config"
+	"github.com/up9inc/mizu/shared"
+	"github.com/up9inc/mizu/shared/logger"
+	core "k8s.io/api/core/v1"
 )
 
 type apiServerProvider struct {
@@ -82,32 +82,11 @@ func (provider *apiServerProvider) ReportTappedPods(pods []core.Pod) error {
 	}
 }
 
-func (provider *apiServerProvider) RequestAnalysis(analysisDestination string, sleepIntervalSec int) error {
-	if !provider.isReady {
-		return fmt.Errorf("trying to reach api server when not initialized yet")
-	}
-	urlPath := fmt.Sprintf("%s/api/uploadEntries?dest=%s&interval=%v", provider.url, url.QueryEscape(analysisDestination), sleepIntervalSec)
-	u, parseErr := url.ParseRequestURI(urlPath)
-	if parseErr != nil {
-		logger.Log.Fatal("Failed parsing the URL (consider changing the analysis dest URL), err: %v", parseErr)
-	}
-
-	logger.Log.Debugf("Analysis url %v", u.String())
-	if response, requestErr := http.Get(u.String()); requestErr != nil {
-		return fmt.Errorf("failed to notify agent for analysis, err: %w", requestErr)
-	} else if response.StatusCode != 200 {
-		return fmt.Errorf("failed to notify agent for analysis, status code: %v", response.StatusCode)
-	} else {
-		logger.Log.Infof(uiUtils.Purple, "Traffic is uploading to UP9 for further analysis")
-		return nil
-	}
-}
-
 func (provider *apiServerProvider) GetGeneralStats() (map[string]interface{}, error) {
 	if !provider.isReady {
 		return nil, fmt.Errorf("trying to reach api server when not initialized yet")
 	}
-	generalStatsUrl := fmt.Sprintf("%s/api/generalStats", provider.url)
+	generalStatsUrl := fmt.Sprintf("%s/status/general", provider.url)
 
 	response, requestErr := http.Get(generalStatsUrl)
 	if requestErr != nil {
@@ -129,7 +108,6 @@ func (provider *apiServerProvider) GetGeneralStats() (map[string]interface{}, er
 	}
 	return generalStats, nil
 }
-
 
 func (provider *apiServerProvider) GetVersion() (string, error) {
 	if !provider.isReady {

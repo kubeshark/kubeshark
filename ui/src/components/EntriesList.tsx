@@ -19,7 +19,8 @@ interface EntriesListProps {
     setNoMoreDataBottom: (flag: boolean) => void;
     methodsFilter: Array<string>;
     statusFilter: Array<string>;
-    pathFilter: string
+    pathFilter: string;
+    serviceFilter: string;
     listEntryREF: any;
     onScrollEvent: (isAtBottom:boolean) => void;
     scrollableList: boolean;
@@ -32,7 +33,7 @@ enum FetchOperator {
 
 const api = new Api();
 
-export const EntriesList: React.FC<EntriesListProps> = ({entries, setEntries, focusedEntryId, setFocusedEntryId, connectionOpen, noMoreDataTop, setNoMoreDataTop, noMoreDataBottom, setNoMoreDataBottom, methodsFilter, statusFilter, pathFilter, listEntryREF, onScrollEvent, scrollableList}) => {
+export const EntriesList: React.FC<EntriesListProps> = ({entries, setEntries, focusedEntryId, setFocusedEntryId, connectionOpen, noMoreDataTop, setNoMoreDataTop, noMoreDataBottom, setNoMoreDataBottom, methodsFilter, statusFilter, pathFilter, serviceFilter, listEntryREF, onScrollEvent, scrollableList}) => {
 
     const [loadMoreTop, setLoadMoreTop] = useState(false);
     const [isLoadingTop, setIsLoadingTop] = useState(false);
@@ -54,10 +55,11 @@ export const EntriesList: React.FC<EntriesListProps> = ({entries, setEntries, fo
     const filterEntries = useCallback((entry) => {
         if(methodsFilter.length > 0 && !methodsFilter.includes(entry.method.toLowerCase())) return;
         if(pathFilter && entry.path?.toLowerCase()?.indexOf(pathFilter) === -1) return;
+        if(serviceFilter && entry.service?.toLowerCase()?.indexOf(serviceFilter) === -1) return;
         if(statusFilter.includes(StatusType.SUCCESS) && entry.statusCode >= 400) return;
         if(statusFilter.includes(StatusType.ERROR) && entry.statusCode < 400) return;
         return entry;
-    },[methodsFilter, pathFilter, statusFilter])
+    },[methodsFilter, pathFilter, statusFilter, serviceFilter])
 
     const filteredEntries = useMemo(() => {
         return entries.filter(filterEntries);

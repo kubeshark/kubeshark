@@ -58,6 +58,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
     const [methodsFilter, setMethodsFilter] = useState([]);
     const [statusFilter, setStatusFilter] = useState([]);
     const [pathFilter, setPathFilter] = useState("");
+    const [serviceFilter, setServiceFilter] = useState("");
 
     const [tappingStatus, setTappingStatus] = useState(null);
 
@@ -212,6 +213,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                                         methodsFilter={methodsFilter}
                                         statusFilter={statusFilter}
                                         pathFilter={pathFilter}
+                                        serviceFilter={serviceFilter}
                                         listEntryREF={listEntry}
                                         onScrollEvent={onScrollEvent}
                                         scrollableList={disableScrollList}

@@ -5,18 +5,15 @@ import (
 	"fmt"
 	"mizuserver/pkg/database"
 	"mizuserver/pkg/models"
-	"mizuserver/pkg/providers"
-	"mizuserver/pkg/up9"
 	"mizuserver/pkg/utils"
 	"mizuserver/pkg/validation"
 	"net/http"
 	"strconv"
-	"time"
-
-	"github.com/google/martian/har"
 
 	"github.com/gin-gonic/gin"
-	"github.com/romana/rlog"
+	tapApi "github.com/up9inc/mizu/tap/api"
+
+	"github.com/gin-gonic/gin"
 
 	basenine "github.com/up9inc/basenine/client/go"
 	"github.com/up9inc/mizu/shared"
@@ -46,7 +43,6 @@ func GetEntries(c *gin.Context) {
 	database.GetEntriesTable().
 		Order(fmt.Sprintf("timestamp %s", order)).
 		Where(fmt.Sprintf("timestamp %s %v", operatorSymbol, entriesFilter.Timestamp)).
-		Omit("entry"). // remove the "big" entry field
 		Limit(entriesFilter.Limit).
 		Find(&entries)
 
@@ -56,84 +52,24 @@ func GetEntries(c *gin.Context) {
 	}
 
 	baseEntries := make([]tapApi.BaseEntryDetails, 0)
-	for _, data := range entries {
-		harEntry := tapApi.BaseEntryDetails{}
-		if err := models.GetEntry(&data, &harEntry); err != nil {
+	for _, entry := range entries {
+		baseEntryDetails := tapApi.BaseEntryDetails{}
+		if err := models.GetEntry(&entry, &baseEntryDetails); err != nil {
 			continue
 		}
-		baseEntries = append(baseEntries, harEntry)
+
+		var pair tapApi.RequestResponsePair
+		json.Unmarshal([]byte(entry.Entry), &pair)
+		harEntry, err := utils.NewEntry(&pair)
+		if err == nil {
+			rules, _, _ := models.RunValidationRulesState(*harEntry, entry.Service)
+			baseEntryDetails.Rules = rules
+		}
+
+		baseEntries = append(baseEntries, baseEntryDetails)
 	}
 
 	c.JSON(http.StatusOK, baseEntries)
-}
-
-func UploadEntries(c *gin.Context) {
-	rlog.Infof("Upload entries - started\n")
-
-	uploadParams := &models.UploadEntriesRequestQuery{}
-	if err := c.BindQuery(uploadParams); err != nil {
-		c.JSON(http.StatusBadRequest, err)
-		return
-	}
-	if err := validation.Validate(uploadParams); err != nil {
-		c.JSON(http.StatusBadRequest, err)
-		return
-	}
-	if up9.GetAnalyzeInfo().IsAnalyzing {
-		c.String(http.StatusBadRequest, "Cannot analyze, mizu is already analyzing")
-		return
-	}
-
-	rlog.Infof("Upload entries - creating token. dest %s\n", uploadParams.Dest)
-	token, err := up9.CreateAnonymousToken(uploadParams.Dest)
-	if err != nil {
-		c.String(http.StatusServiceUnavailable, "Cannot analyze, mizu is already analyzing")
-		return
-	}
-	rlog.Infof("Upload entries - uploading. token: %s model: %s\n", token.Token, token.Model)
-	go up9.UploadEntriesImpl(token.Token, token.Model, uploadParams.Dest, uploadParams.SleepIntervalSec)
-	c.String(http.StatusOK, "OK")
-}
-
-func GetFullEntries(c *gin.Context) {
-	entriesFilter := &models.HarFetchRequestQuery{}
-	if err := c.BindQuery(entriesFilter); err != nil {
-		c.JSON(http.StatusBadRequest, err)
-	}
-	err := validation.Validate(entriesFilter)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, err)
-	}
-
-	var timestampFrom, timestampTo int64
-
-	if entriesFilter.From < 0 {
-		timestampFrom = 0
-	} else {
-		timestampFrom = entriesFilter.From
-	}
-	if entriesFilter.To <= 0 {
-		timestampTo = time.Now().UnixNano() / int64(time.Millisecond)
-	} else {
-		timestampTo = entriesFilter.To
-	}
-
-	entriesArray := database.GetEntriesFromDb(timestampFrom, timestampTo, nil)
-
-	result := make([]har.Entry, 0)
-	for _, data := range entriesArray {
-		var pair tapApi.RequestResponsePair
-		if err := json.Unmarshal([]byte(data.Entry), &pair); err != nil {
-			continue
-		}
-		harEntry, err := utils.NewEntry(&pair)
-		if err != nil {
-			continue
-		}
-		result = append(result, *harEntry)
-	}
-
-	c.JSON(http.StatusOK, result)
 }
 
 func GetEntry(c *gin.Context) {
@@ -188,11 +124,13 @@ func GetEntry(c *gin.Context) {
 	protocol, representation, bodySize, _ := extension.Dissector.Represent(&entryData)
 
 	var rules []map[string]interface{}
+	var isRulesEnabled bool
 	if entryData.Protocol.Name == "http" {
 		var pair tapApi.RequestResponsePair
 		json.Unmarshal([]byte(entryData.Entry), &pair)
 		harEntry, _ := utils.NewEntry(&pair)
-		_, rulesMatched := models.RunValidationRulesState(*harEntry, entryData.Service)
+		_, rulesMatched, _isRulesEnabled := models.RunValidationRulesState(*harEntry, entryData.Service)
+		isRulesEnabled = _isRulesEnabled
 		inrec, _ := json.Marshal(rulesMatched)
 		json.Unmarshal(inrec, &rules)
 	}
@@ -203,32 +141,6 @@ func GetEntry(c *gin.Context) {
 		BodySize:       bodySize,
 		Data:           entryData,
 		Rules:          rules,
+		IsRulesEnabled: isRulesEnabled,
 	})
-}
-
-func DeleteAllEntries(c *gin.Context) {
-	database.GetEntriesTable().
-		Where("1 = 1").
-		Delete(&tapApi.MizuEntry{})
-
-	c.JSON(http.StatusOK, map[string]string{
-		"msg": "Success",
-	})
-
-}
-
-func GetGeneralStats(c *gin.Context) {
-	c.JSON(http.StatusOK, providers.GetGeneralStats())
-}
-
-func GetTappingStatus(c *gin.Context) {
-	c.JSON(http.StatusOK, providers.TapStatus)
-}
-
-func AnalyzeInformation(c *gin.Context) {
-	c.JSON(http.StatusOK, up9.GetAnalyzeInfo())
-}
-
-func GetRecentTLSLinks(c *gin.Context) {
-	c.JSON(http.StatusOK, providers.GetAllRecentTLSAddresses())
 }

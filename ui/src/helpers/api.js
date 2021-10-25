@@ -10,7 +10,7 @@ export default class Api {
     constructor() {
 
         // When working locally cp `cp .env.example .env`
-        const apiURL = process.env.REACT_APP_OVERRIDE_API_URL ? process.env.REACT_APP_OVERRIDE_API_URL : `${window.location.origin}${mizuAPIPathPrefix}/api/`;
+        const apiURL = process.env.REACT_APP_OVERRIDE_API_URL ? process.env.REACT_APP_OVERRIDE_API_URL : `${window.location.origin}${mizuAPIPathPrefix}/`;
 
         this.client = axios.create({
             baseURL: apiURL,
@@ -22,12 +22,12 @@ export default class Api {
     }
 
     tapStatus = async () => {
-        const response = await this.client.get("/tapStatus");
+        const response = await this.client.get("/status/tap");
         return response.data;
     }
 
     analyzeStatus = async () => {
-        const response = await this.client.get("/analyzeStatus");
+        const response = await this.client.get("/status/analyze");
         return response.data;
     }
 
@@ -42,7 +42,12 @@ export default class Api {
     }
 
     getRecentTLSLinks = async () => {
-        const response = await this.client.get("/recentTLSLinks");
+        const response = await this.client.get("/status/recentTLSLinks");
+        return response.data;
+    }
+
+    getAuthStatus = async () => {
+        const response = await this.client.get("/status/auth");
         return response.data;
     }
 }

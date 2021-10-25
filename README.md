@@ -15,6 +15,10 @@ Think TCPDump and Chrome Dev Tools combined.
 - No installation or code instrumentation
 - Works completely on premises
 
+## Requirements
+
+A Kubernetes server version of 1.16.0 or higher is required.
+
 ## Download
 
 Download Mizu for your platform and operating system
@@ -152,13 +156,20 @@ Web interface is now available at http://localhost:8899
 ```
 Any request that contains `User-Agent` header with one of the specified values (`kube-probe` or `prometheus`) will not be captured
 
-### API Rules validation
+### Traffic validation rules
 
-This feature allows you to define set of simple rules, and test the API against them.
+This feature allows you to define set of simple rules, and test the traffic against them.
 Such validation may test response for specific JSON fields, headers, etc.
 
-Please see [API RULES](docs/POLICY_RULES.md) page for more details and syntax.
+Please see [TRAFFIC RULES](docs/POLICY_RULES.md) page for more details and syntax.
 
+### OpenAPI Specification (OAS) Contract Monitoring
+
+An OAS/Swagger file can contain schemas under `parameters` and `responses` fields. With `--contract catalogue.yaml`
+CLI option, you can pass your API description to Mizu and the traffic will automatically be validated
+against the contracts.
+
+Please see [CONTRACT MONITORING](docs/CONTRACT_MONITORING.md) page for more details and syntax.
 
 ## How to Run local UI
 

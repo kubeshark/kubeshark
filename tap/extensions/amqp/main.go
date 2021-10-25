@@ -306,7 +306,7 @@ func (d dissecting) Summarize(entry *api.MizuEntry) *api.BaseEntryDetails {
 		SourcePort:      entry.SourcePort,
 		DestinationPort: entry.DestinationPort,
 		IsOutgoing:      entry.IsOutgoing,
-		Latency:         0,
+		Latency:         entry.ElapsedTime,
 		Rules: api.ApplicableRules{
 			Latency: 0,
 			Status:  false,

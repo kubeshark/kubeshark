@@ -12,12 +12,14 @@ import (
 	"strings"
 	"syscall"
 	"time"
+
+	"github.com/up9inc/mizu/shared"
 )
 
 const (
 	longRetriesCount     = 100
 	shortRetriesCount    = 10
-	defaultApiServerPort = 8899
+	defaultApiServerPort = shared.DefaultApiServerPort
 	defaultNamespaceName = "mizu-tests"
 	defaultServiceName   = "httpbin"
 	defaultEntriesCount  = 50
@@ -170,6 +172,21 @@ func executeHttpRequest(response *http.Response, requestErr error) (interface{},
 	}
 
 	return jsonBytesToInterface(data)
+}
+
+func executeHttpGetRequestWithHeaders(url string, headers map[string]string) (interface{}, error) {
+	request, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	for headerKey, headerValue := range headers {
+		request.Header.Add(headerKey, headerValue)
+	}
+
+	client := &http.Client{}
+	response, requestErr := client.Do(request)
+	return executeHttpRequest(response, requestErr)
 }
 
 func executeHttpGetRequest(url string) (interface{}, error) {

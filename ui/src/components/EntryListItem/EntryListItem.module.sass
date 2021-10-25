@@ -36,8 +36,9 @@
   border-left: 5px $failure-color solid
 
 .ruleNumberText
-  font-size: 12px;
-  font-style: italic;
+  font-size: 12px
+  font-weight: 600
+  white-space: nowrap
 
 .ruleNumberTextFailure
   color: #DB2156
@@ -72,11 +73,16 @@
   padding-left: 10px
   flex-grow: 1
 
-.directionContainer
+.separatorRight
   display: flex
   border-right: 1px solid $data-background-color
   padding: 4px
   padding-right: 12px
+
+.separatorLeft
+  display: flex
+  padding: 4px
+  padding-left: 12px
 
 .port
   font-size: 12px

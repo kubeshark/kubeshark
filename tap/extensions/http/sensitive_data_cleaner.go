@@ -12,7 +12,6 @@ import (
 	"strings"
 
 	"github.com/beevik/etree"
-	"github.com/romana/rlog"
 	"github.com/up9inc/mizu/tap/api"
 )
 
@@ -25,9 +24,33 @@ var personallyIdentifiableDataFields = []string{"token", "authorization", "authe
 	"zip", "zipcode", "address", "country", "firstname", "lastname",
 	"middlename", "fname", "lname", "birthdate"}
 
+func IsIgnoredUserAgent(item *api.OutputChannelItem, options *api.TrafficFilteringOptions) bool {
+	if item.Protocol.Name != "http" {
+		return false
+	}
+
+	request := item.Pair.Request.Payload.(api.HTTPPayload).Data.(*http.Request)
+
+	for headerKey, headerValues := range request.Header {
+		if strings.ToLower(headerKey) == "user-agent" {
+			for _, userAgent := range options.IgnoredUserAgents {
+				for _, headerValue := range headerValues {
+					if strings.Contains(strings.ToLower(headerValue), strings.ToLower(userAgent)) {
+						return true
+					}
+				}
+			}
+
+			return false
+		}
+	}
+
+	return false
+}
+
 func FilterSensitiveData(item *api.OutputChannelItem, options *api.TrafficFilteringOptions) {
-	request := item.Pair.Request.Payload.(HTTPPayload).Data.(*http.Request)
-	response := item.Pair.Response.Payload.(HTTPPayload).Data.(*http.Response)
+	request := item.Pair.Request.Payload.(api.HTTPPayload).Data.(*http.Request)
+	response := item.Pair.Response.Payload.(api.HTTPPayload).Data.(*http.Response)
 
 	filterHeaders(&request.Header)
 	filterHeaders(&response.Header)
@@ -40,7 +63,6 @@ func filterRequestBody(request *http.Request, options *api.TrafficFilteringOptio
 	contenType := getContentTypeHeaderValue(request.Header)
 	body, err := ioutil.ReadAll(request.Body)
 	if err != nil {
-		rlog.Debugf("Filtering error reading body: %v", err)
 		return
 	}
 	filteredBody, err := filterHttpBody([]byte(body), contenType, options)
@@ -55,7 +77,6 @@ func filterResponseBody(response *http.Response, options *api.TrafficFilteringOp
 	contentType := getContentTypeHeaderValue(response.Header)
 	body, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		rlog.Debugf("Filtering error reading body: %v", err)
 		return
 	}
 	filteredBody, err := filterHttpBody([]byte(body), contentType, options)
@@ -86,6 +107,10 @@ func getContentTypeHeaderValue(headers http.Header) string {
 }
 
 func isFieldNameSensitive(fieldName string) bool {
+	if fieldName == ":authority" {
+		return false
+	}
+
 	name := strings.ToLower(fieldName)
 	name = strings.ReplaceAll(name, "_", "")
 	name = strings.ReplaceAll(name, "-", "")

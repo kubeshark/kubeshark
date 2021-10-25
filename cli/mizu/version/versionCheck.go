@@ -3,13 +3,15 @@ package version
 import (
 	"context"
 	"fmt"
-	"github.com/up9inc/mizu/cli/apiserver"
-	"github.com/up9inc/mizu/cli/logger"
-	"github.com/up9inc/mizu/cli/mizu"
 	"io/ioutil"
 	"net/http"
 	"runtime"
+	"strings"
 	"time"
+
+	"github.com/up9inc/mizu/cli/apiserver"
+	"github.com/up9inc/mizu/cli/mizu"
+	"github.com/up9inc/mizu/shared/logger"
 
 	"github.com/google/go-github/v37/github"
 	"github.com/up9inc/mizu/cli/uiUtils"
@@ -74,10 +76,22 @@ func CheckNewerVersion(versionChan chan string) {
 
 	gitHubVersionSemVer := semver.SemVersion(gitHubVersion)
 	currentSemVer := semver.SemVersion(mizu.SemVer)
+	if !gitHubVersionSemVer.IsValid() || !currentSemVer.IsValid() {
+		logger.Log.Debugf("[ERROR] Semver version is not valid, github version %v, current version %v", gitHubVersion, currentSemVer)
+		versionChan <- ""
+		return
+	}
+
 	logger.Log.Debugf("Finished version validation, github version %v, current version %v, took %v", gitHubVersion, currentSemVer, time.Since(start))
 
 	if gitHubVersionSemVer.GreaterThan(currentSemVer) {
-		versionChan <- fmt.Sprintf("Update available! %v -> %v (curl -Lo mizu %v/mizu_%s_amd64 && chmod 755 mizu)", mizu.SemVer, gitHubVersion, *latestRelease.HTMLURL, runtime.GOOS)
+		var downloadMessage string
+		if runtime.GOOS == "windows" {
+			downloadMessage = fmt.Sprintf("curl -LO %v/mizu.exe", strings.Replace(*latestRelease.HTMLURL, "tag", "download", 1))
+		} else {
+			downloadMessage = fmt.Sprintf("curl -Lo mizu %v/mizu_%s_%s && chmod 755 mizu", strings.Replace(*latestRelease.HTMLURL, "tag", "download", 1), runtime.GOOS, runtime.GOARCH)
+		}
+		versionChan <- fmt.Sprintf("Update available! %v -> %v (%s)", mizu.SemVer, gitHubVersion, downloadMessage)
 	} else {
 		versionChan <- ""
 	}

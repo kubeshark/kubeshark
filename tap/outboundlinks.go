@@ -7,11 +7,11 @@ const (
 )
 
 type OutboundLink struct {
-	Src     string
-	DstIP   string
-	DstPort int
+	Src                   string
+	DstIP                 string
+	DstPort               int
 	SuggestedResolvedName string
-	SuggestedProtocol OutboundLinkProtocol
+	SuggestedProtocol     OutboundLinkProtocol
 }
 
 func NewOutboundLinkWriter() *OutboundLinkWriter {
@@ -26,11 +26,11 @@ type OutboundLinkWriter struct {
 
 func (olw *OutboundLinkWriter) WriteOutboundLink(src string, DstIP string, DstPort int, SuggestedResolvedName string, SuggestedProtocol OutboundLinkProtocol) {
 	olw.OutChan <- &OutboundLink{
-		Src: src,
-		DstIP: DstIP,
-		DstPort: DstPort,
+		Src:                   src,
+		DstIP:                 DstIP,
+		DstPort:               DstPort,
 		SuggestedResolvedName: SuggestedResolvedName,
-		SuggestedProtocol: SuggestedProtocol,
+		SuggestedProtocol:     SuggestedProtocol,
 	}
 }
 

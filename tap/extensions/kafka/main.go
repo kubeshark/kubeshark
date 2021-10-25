@@ -104,7 +104,11 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolve
 		}
 		break
 	case Fetch:
-		topics := reqDetails["Payload"].(map[string]interface{})["Topics"].([]interface{})
+		_topics := reqDetails["Payload"].(map[string]interface{})["Topics"]
+		if _topics == nil {
+			break
+		}
+		topics := _topics.([]interface{})
 		for _, topic := range topics {
 			summary += fmt.Sprintf("%s, ", topic.(map[string]interface{})["Topic"].(string))
 		}
@@ -113,7 +117,11 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolve
 		}
 		break
 	case ListOffsets:
-		topics := reqDetails["Payload"].(map[string]interface{})["Topics"].([]interface{})
+		_topics := reqDetails["Payload"].(map[string]interface{})["Topics"]
+		if _topics == nil {
+			break
+		}
+		topics := _topics.([]interface{})
 		for _, topic := range topics {
 			summary += fmt.Sprintf("%s, ", topic.(map[string]interface{})["Name"].(string))
 		}
@@ -181,7 +189,7 @@ func (d dissecting) Summarize(entry *api.MizuEntry) *api.BaseEntryDetails {
 		SourcePort:      entry.SourcePort,
 		DestinationPort: entry.DestinationPort,
 		IsOutgoing:      entry.IsOutgoing,
-		Latency:         0,
+		Latency:         entry.ElapsedTime,
 		Rules: api.ApplicableRules{
 			Latency: 0,
 			Status:  false,

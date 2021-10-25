@@ -21,16 +21,6 @@ type EntriesFilter struct {
 	Timestamp int64  `form:"timestamp" validate:"required,min=1"`
 }
 
-type UploadEntriesRequestQuery struct {
-	Dest             string `form:"dest"`
-	SleepIntervalSec int    `form:"interval"`
-}
-
-type HarFetchRequestQuery struct {
-	From int64 `form:"from"`
-	To   int64 `form:"to"`
-}
-
 type WebSocketEntryMessage struct {
 	*shared.WebSocketMessageMetadata
 	Data map[string]interface{} `json:"data,omitempty"`
@@ -44,6 +34,11 @@ type WebSocketTappedEntryMessage struct {
 type WebsocketOutboundLinkMessage struct {
 	*shared.WebSocketMessageMetadata
 	Data *tap.OutboundLink
+}
+
+type AuthStatus struct {
+	Email string `json:"email"`
+	Model string `json:"model"`
 }
 
 func CreateBaseEntryWebSocketMessage(base map[string]interface{}) ([]byte, error) {
@@ -96,8 +91,8 @@ type ExtendedCreator struct {
 	Source *string `json:"_source"`
 }
 
-func RunValidationRulesState(harEntry har.Entry, service string) (tapApi.ApplicableRules, []rules.RulesMatched) {
-	resultPolicyToSend := rules.MatchRequestPolicy(harEntry, service)
+func RunValidationRulesState(harEntry har.Entry, service string) (tapApi.ApplicableRules, []rules.RulesMatched, bool) {
+	resultPolicyToSend, isEnabled := rules.MatchRequestPolicy(harEntry, service)
 	statusPolicyToSend, latency, numberOfRules := rules.PassedValidationRules(resultPolicyToSend)
-	return tapApi.ApplicableRules{Status: statusPolicyToSend, Latency: latency, NumberOfRules: numberOfRules}, resultPolicyToSend
+	return tapApi.ApplicableRules{Status: statusPolicyToSend, Latency: latency, NumberOfRules: numberOfRules}, resultPolicyToSend, isEnabled
 }

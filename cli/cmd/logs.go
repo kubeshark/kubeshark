@@ -2,15 +2,16 @@ package cmd
 
 import (
 	"context"
+
 	"github.com/creasty/defaults"
 	"github.com/spf13/cobra"
 	"github.com/up9inc/mizu/cli/config"
 	"github.com/up9inc/mizu/cli/config/configStructs"
 	"github.com/up9inc/mizu/cli/errormessage"
 	"github.com/up9inc/mizu/cli/kubernetes"
-	"github.com/up9inc/mizu/cli/logger"
 	"github.com/up9inc/mizu/cli/mizu/fsUtils"
 	"github.com/up9inc/mizu/cli/telemetry"
+	"github.com/up9inc/mizu/shared/logger"
 )
 
 var logsCmd = &cobra.Command{
@@ -32,7 +33,7 @@ var logsCmd = &cobra.Command{
 
 		logger.Log.Debugf("Using file path %s", config.Config.Logs.FilePath())
 
-		if dumpLogsErr := fsUtils.DumpLogs(kubernetesProvider, ctx, config.Config.Logs.FilePath()); dumpLogsErr != nil {
+		if dumpLogsErr := fsUtils.DumpLogs(ctx, kubernetesProvider, config.Config.Logs.FilePath()); dumpLogsErr != nil {
 			logger.Log.Errorf("Failed dump logs %v", dumpLogsErr)
 		}
 

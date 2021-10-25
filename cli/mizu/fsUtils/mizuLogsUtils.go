@@ -4,15 +4,21 @@ import (
 	"archive/zip"
 	"context"
 	"fmt"
+	"os"
+	"path"
+	"regexp"
+
 	"github.com/up9inc/mizu/cli/config"
 	"github.com/up9inc/mizu/cli/kubernetes"
-	"github.com/up9inc/mizu/cli/logger"
 	"github.com/up9inc/mizu/cli/mizu"
-	"os"
-	"regexp"
+	"github.com/up9inc/mizu/shared/logger"
 )
 
-func DumpLogs(provider *kubernetes.Provider, ctx context.Context, filePath string) error {
+func GetLogFilePath() string {
+	return path.Join(mizu.GetMizuFolderPath(), "mizu_cli.log")
+}
+
+func DumpLogs(ctx context.Context, provider *kubernetes.Provider, filePath string) error {
 	podExactRegex := regexp.MustCompile("^" + mizu.MizuResourcesPrefix)
 	pods, err := provider.ListAllPodsMatchingRegex(ctx, podExactRegex, []string{config.Config.MizuResourcesNamespace})
 	if err != nil {
@@ -32,7 +38,7 @@ func DumpLogs(provider *kubernetes.Provider, ctx context.Context, filePath strin
 	defer zipWriter.Close()
 
 	for _, pod := range pods {
-		logs, err := provider.GetPodLogs(pod.Namespace, pod.Name, ctx)
+		logs, err := provider.GetPodLogs(ctx, pod.Namespace, pod.Name)
 		if err != nil {
 			logger.Log.Errorf("Failed to get logs, %v", err)
 			continue
@@ -47,7 +53,7 @@ func DumpLogs(provider *kubernetes.Provider, ctx context.Context, filePath strin
 		}
 	}
 
-	events, err := provider.GetNamespaceEvents(config.Config.MizuResourcesNamespace, ctx)
+	events, err := provider.GetNamespaceEvents(ctx, config.Config.MizuResourcesNamespace)
 	if err != nil {
 		logger.Log.Debugf("Failed to get k8b events, %v", err)
 	} else {
@@ -66,10 +72,10 @@ func DumpLogs(provider *kubernetes.Provider, ctx context.Context, filePath strin
 		logger.Log.Debugf("Successfully added file %s", config.Config.ConfigFilePath)
 	}
 
-	if err := AddFileToZip(zipWriter, logger.GetLogFilePath()); err != nil {
+	if err := AddFileToZip(zipWriter, GetLogFilePath()); err != nil {
 		logger.Log.Debugf("Failed write file, %v", err)
 	} else {
-		logger.Log.Debugf("Successfully added file %s", logger.GetLogFilePath())
+		logger.Log.Debugf("Successfully added file %s", GetLogFilePath())
 	}
 
 	logger.Log.Infof("You can find the zip file with all logs in %s\n", filePath)

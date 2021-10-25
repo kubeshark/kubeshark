@@ -3,6 +3,8 @@ package tap
 import (
 	"net"
 	"strings"
+
+	"github.com/up9inc/mizu/tap/diagnose"
 )
 
 var privateIPBlocks []*net.IPNet
@@ -27,6 +29,7 @@ func getLocalhostIPs() ([]string, error) {
 	return myIPs, nil
 }
 
+//lint:ignore U1000 will be used in the future
 func isPrivateIP(ipStr string) bool {
 	ip := net.ParseIP(ipStr)
 	if ip.IsLoopback() || ip.IsLinkLocalUnicast() || ip.IsLinkLocalMulticast() {
@@ -54,7 +57,7 @@ func initPrivateIPBlocks() {
 	} {
 		_, block, err := net.ParseCIDR(cidr)
 		if err != nil {
-			Error("Private-IP-Block-Parse", "parse error on %q: %v", cidr, err)
+			diagnose.TapErrors.Error("Private-IP-Block-Parse", "parse error on %q: %v", cidr, err)
 		} else {
 			privateIPBlocks = append(privateIPBlocks, block)
 		}

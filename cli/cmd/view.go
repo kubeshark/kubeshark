@@ -25,4 +25,7 @@ func init() {
 	defaults.Set(&defaultViewConfig)
 
 	viewCmd.Flags().Uint16P(configStructs.GuiPortViewName, "p", defaultViewConfig.GuiPort, "Provide a custom port for the web interface webserver")
+	viewCmd.Flags().StringP(configStructs.UrlViewName, "u", defaultViewConfig.Url, "Provide a custom host")
+
+	viewCmd.Flags().MarkHidden(configStructs.UrlViewName)
 }
