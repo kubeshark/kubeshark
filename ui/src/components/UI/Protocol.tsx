@@ -4,7 +4,7 @@ import styles from './style/Protocol.module.sass';
 export interface ProtocolInterface {
     name: string
     longName: string
-    abbreviation: string
+    abbr: string
     backgroundColor: string
     foregroundColor: string
     fontSize: number
@@ -28,7 +28,7 @@ const Protocol: React.FC<ProtocolProps> = ({protocol, horizontal}) => {
                     color: protocol.foregroundColor,
                     fontSize: 13,
                 }}
-                title={protocol.abbreviation}
+                title={protocol.abbr}
             >
                 {protocol.longName}
             </span>
@@ -44,7 +44,7 @@ const Protocol: React.FC<ProtocolProps> = ({protocol, horizontal}) => {
                 }}
                 title={protocol.longName}
             >
-                {protocol.abbreviation}
+                {protocol.abbr}
             </span>
         </a>
     }

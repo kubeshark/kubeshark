@@ -167,6 +167,16 @@ func startBasenineServer(host string, port string) {
 	if err != nil {
 		panic(err)
 	}
+
+	for _, extension := range extensions {
+		macros := extension.Dissector.Macros()
+		for macro, expanded := range macros {
+			err = basenine.Macro(host, port, macro, expanded)
+			if err != nil {
+				panic(err)
+			}
+		}
+	}
 }
 
 func loadExtensions() {

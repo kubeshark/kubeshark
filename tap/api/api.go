@@ -18,7 +18,7 @@ import (
 type Protocol struct {
 	Name            string   `json:"name"`
 	LongName        string   `json:"longName"`
-	Abbreviation    string   `json:"abbreviation"`
+	Abbreviation    string   `json:"abbr"`
 	Version         string   `json:"version"`
 	BackgroundColor string   `json:"backgroundColor"`
 	ForegroundColor string   `json:"foregroundColor"`
@@ -93,6 +93,7 @@ type Dissector interface {
 	Analyze(item *OutputChannelItem, entryId string, resolvedSource string, resolvedDestination string) *MizuEntry
 	Summarize(entry *MizuEntry) *BaseEntryDetails
 	Represent(entry *MizuEntry) (protocol Protocol, object []byte, bodySize int64, err error)
+	Macros() map[string]string
 }
 
 type Emitting struct {

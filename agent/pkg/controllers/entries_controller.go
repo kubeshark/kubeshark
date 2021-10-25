@@ -88,7 +88,7 @@ func GetEntry(c *gin.Context) {
 		Protocol: tapApi.Protocol{
 			Name:            entry["proto"].(map[string]interface{})["name"].(string),
 			LongName:        entry["proto"].(map[string]interface{})["longName"].(string),
-			Abbreviation:    entry["proto"].(map[string]interface{})["abbreviation"].(string),
+			Abbreviation:    entry["proto"].(map[string]interface{})["abbr"].(string),
 			Version:         entry["proto"].(map[string]interface{})["version"].(string),
 			BackgroundColor: entry["proto"].(map[string]interface{})["backgroundColor"].(string),
 			ForegroundColor: entry["proto"].(map[string]interface{})["foregroundColor"].(string),

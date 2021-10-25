@@ -249,4 +249,10 @@ func (d dissecting) Represent(entry *api.MizuEntry) (p api.Protocol, object []by
 	return
 }
 
+func (d dissecting) Macros() map[string]string {
+	return map[string]string{
+		`kafka`: fmt.Sprintf(`proto.abbr == "%s"`, _protocol.Abbreviation),
+	}
+}
+
 var Dissector dissecting

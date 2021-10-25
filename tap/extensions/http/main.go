@@ -380,4 +380,12 @@ func (d dissecting) Represent(entry *api.MizuEntry) (p api.Protocol, object []by
 	return
 }
 
+func (d dissecting) Macros() map[string]string {
+	return map[string]string{
+		`http`:  fmt.Sprintf(`proto.abbr == "%s"`, protocol.Abbreviation),
+		`grpc`:  fmt.Sprintf(`proto.abbr == "%s"`, http2Protocol.Abbreviation),
+		`http2`: fmt.Sprintf(`proto.abbr == "%s"`, http2Protocol.Abbreviation),
+	}
+}
+
 var Dissector dissecting
