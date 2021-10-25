@@ -166,7 +166,13 @@ export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, isSel
                 <span className={styles.port} title="Destination Port">{entry.destinationPort}</span>
             </div>
             <div className={styles.timestamp}>
-                <span title="Timestamp">
+                <span
+                    title="Timestamp"
+                    onClick={() => {
+                        console.log(entry.timestamp)
+                        updateQuery(`timestamp >= datetime("${new Date(+entry.timestamp)?.toLocaleString("en-US", {timeZone: 'UTC' })}")`)
+                    }}
+                >
                     {new Date(+entry.timestamp)?.toLocaleString()}
                 </span>
             </div>
