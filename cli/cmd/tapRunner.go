@@ -2,8 +2,11 @@ package cmd
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io/ioutil"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"path"
 	"regexp"
 	"strings"
@@ -131,7 +134,13 @@ func RunMizuTap() {
 
 	if err := createMizuResources(ctx, kubernetesProvider, mizuValidationRules, contract); err != nil {
 		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error creating resources: %v", errormessage.FormatError(err)))
-		logger.Log.Info("Someone else may be running mizu on this cluster, run `mizu clean` if you wish to proceed anyway.")
+
+		var statusError *k8serrors.StatusError
+		if errors.As(err, &statusError) {
+			if statusError.ErrStatus.Reason == metav1.StatusReasonAlreadyExists {
+				logger.Log.Info("Someone else may be running mizu on this cluster, run `mizu clean` if you wish to proceed anyway.")
+			}
+		}
 		return
 	}
 	defer finishMizuExecution(kubernetesProvider)
