@@ -13,7 +13,7 @@ import (
 	"github.com/up9inc/mizu/tap/diagnose"
 )
 
-type TcpPacketSource struct {
+type tcpPacketSource struct {
 	source    *gopacket.PacketSource
 	handle    *pcap.Handle
 	defragger *ip4defrag.IPv4Defragmenter
@@ -31,14 +31,14 @@ type TcpPacketSourceBehaviour struct {
 
 type TcpPacketInfo struct {
 	Packet gopacket.Packet
-	Source *TcpPacketSource
+	Source *tcpPacketSource
 }
 
-func NewTcpPacketSource(filename string, interfaceName string,
-	behaviour TcpPacketSourceBehaviour) (*TcpPacketSource, error) {
+func newTcpPacketSource(filename string, interfaceName string,
+	behaviour TcpPacketSourceBehaviour) (*tcpPacketSource, error) {
 	var err error
 
-	result := &TcpPacketSource{
+	result := &tcpPacketSource{
 		defragger: ip4defrag.NewIPv4Defragmenter(),
 		Behaviour: &behaviour,
 	}
@@ -96,18 +96,18 @@ func NewTcpPacketSource(filename string, interfaceName string,
 	return result, nil
 }
 
-func (source *TcpPacketSource) Close() {
+func (source *tcpPacketSource) close() {
 	if source.handle != nil {
 		source.handle.Close()
 	}
 }
 
-func (source *TcpPacketSource) ReadPackets(ipdefrag bool, packets chan<- TcpPacketInfo) error {
+func (source *tcpPacketSource) readPackets(ipdefrag bool, packets chan<- TcpPacketInfo) {
 	for {
 		packet, err := source.source.NextPacket()
 
 		if err == io.EOF {
-			return err
+			return
 		} else if err != nil {
 			if err.Error() != "Timeout Expired" {
 				logger.Log.Debugf("Error: %T", err)
