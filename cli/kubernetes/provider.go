@@ -80,7 +80,7 @@ func NewProvider(kubeConfigPath string) (*Provider, error) {
 	}
 
 	if err := validateNotProxy(kubernetesConfig, restClientConfig); err != nil {
-		return nil, fmt.Errorf("error in kubernetes server validation, err: %v", err)
+		return nil, err
 	}
 
 	return &Provider{
@@ -740,7 +740,8 @@ func isPodRunning(pod *core.Pod) bool {
 func validateNotProxy(kubernetesConfig clientcmd.ClientConfig, restClientConfig *restclient.Config) error {
 	kubernetesUrl, err := url.Parse(restClientConfig.Host)
 	if err != nil {
-		return fmt.Errorf("error while parsing kubernetes host, err: %v", err)
+		logger.Log.Debugf("validateNotProxy - error while parsing kubernetes host, err: %v", err)
+		return nil
 	}
 
 	restProxyClientConfig, _ := kubernetesConfig.ClientConfig()
@@ -750,7 +751,7 @@ func validateNotProxy(kubernetesConfig clientcmd.ClientConfig, restClientConfig 
 	if err == nil {
 		proxyServerVersion, err := clientProxySet.ServerVersion()
 		if err != nil {
-			return fmt.Errorf("error while getting client host server version, err: %v", err)
+			return nil
 		}
 
 		if *proxyServerVersion == (version.Info{}) {
