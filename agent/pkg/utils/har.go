@@ -123,7 +123,7 @@ func BuildPostParams(rawParams []interface{}) []har.Param {
 func NewRequest(request *api.GenericMessage) (harRequest *har.Request, err error) {
 	reqDetails := request.Payload.(map[string]interface{})["details"].(map[string]interface{})
 
-	headers, host, scheme, authority, path, _ := BuildHeaders(reqDetails["headers"].([]interface{}))
+	headers, host, scheme, authority, path, _ := BuildHeaders(reqDetails["_headers"].([]interface{}))
 	cookies := make([]har.Cookie, 0) // BuildCookies(reqDetails["cookies"].([]interface{}))
 
 	postData, _ := reqDetails["postData"].(map[string]interface{})
@@ -178,7 +178,7 @@ func NewRequest(request *api.GenericMessage) (harRequest *har.Request, err error
 func NewResponse(response *api.GenericMessage) (harResponse *har.Response, err error) {
 	resDetails := response.Payload.(map[string]interface{})["details"].(map[string]interface{})
 
-	headers, _, _, _, _, _status := BuildHeaders(resDetails["headers"].([]interface{}))
+	headers, _, _, _, _, _status := BuildHeaders(resDetails["_headers"].([]interface{}))
 	cookies := make([]har.Cookie, 0) // BuildCookies(resDetails["cookies"].([]interface{}))
 
 	content, _ := resDetails["content"].(map[string]interface{})

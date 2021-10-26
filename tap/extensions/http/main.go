@@ -157,6 +157,13 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolve
 
 	request["url"] = reqDetails["url"].(string)
 	reqDetails["path"] = path
+
+	// Rearrange the headers for the querying
+	reqDetails["_headers"] = reqDetails["headers"]
+	reqDetails["headers"] = rebuildHeaders(reqDetails["_headers"])
+	resDetails["_headers"] = resDetails["headers"]
+	resDetails["headers"] = rebuildHeaders(resDetails["_headers"])
+
 	if resolvedDestination != "" {
 		service = SetHostname(service, resolvedDestination)
 	} else if resolvedSource != "" {
@@ -254,7 +261,7 @@ func representRequest(request map[string]interface{}) (repRequest []interface{})
 		"data":  string(details),
 	})
 
-	headers, _ := json.Marshal(request["headers"].([]interface{}))
+	headers, _ := json.Marshal(request["_headers"].([]interface{}))
 	repRequest = append(repRequest, map[string]string{
 		"type":  api.TABLE,
 		"title": "Headers",
@@ -344,7 +351,7 @@ func representResponse(response map[string]interface{}) (repResponse []interface
 		"data":  string(details),
 	})
 
-	headers, _ := json.Marshal(response["headers"].([]interface{}))
+	headers, _ := json.Marshal(response["_headers"].([]interface{}))
 	repResponse = append(repResponse, map[string]string{
 		"type":  api.TABLE,
 		"title": "Headers",

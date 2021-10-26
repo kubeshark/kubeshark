@@ -77,7 +77,7 @@ func TestTap(t *testing.T) {
 					return fmt.Errorf("unexpected entries result - Expected more than 0 entries")
 				}
 
-				entry :=  entries[0].(map[string]interface{})
+				entry := entries[0].(map[string]interface{})
 
 				entryUrl := fmt.Sprintf("%v/entries/%v", apiServerUrl, entry["id"])
 				requestResult, requestErr = executeHttpGetRequest(entryUrl)
@@ -150,7 +150,7 @@ func TestTapAllNamespaces(t *testing.T) {
 		t.Skip("ignored acceptance test")
 	}
 
-	expectedPods := []struct{
+	expectedPods := []struct {
 		Name      string
 		Namespace string
 	}{
@@ -205,7 +205,7 @@ func TestTapAllNamespaces(t *testing.T) {
 		podFound := false
 
 		for _, pod := range pods {
-			podNamespace :=  pod["namespace"].(string)
+			podNamespace := pod["namespace"].(string)
 			podName := pod["name"].(string)
 
 			if expectedPod.Namespace == podNamespace && strings.Contains(podName, expectedPod.Name) {
@@ -226,7 +226,7 @@ func TestTapMultipleNamespaces(t *testing.T) {
 		t.Skip("ignored acceptance test")
 	}
 
-	expectedPods := []struct{
+	expectedPods := []struct {
 		Name      string
 		Namespace string
 	}{
@@ -291,7 +291,7 @@ func TestTapMultipleNamespaces(t *testing.T) {
 		podFound := false
 
 		for _, pod := range pods {
-			podNamespace :=  pod["namespace"].(string)
+			podNamespace := pod["namespace"].(string)
 			podName := pod["name"].(string)
 
 			if expectedPod.Namespace == podNamespace && strings.Contains(podName, expectedPod.Name) {
@@ -313,7 +313,7 @@ func TestTapRegex(t *testing.T) {
 	}
 
 	regexPodName := "httpbin2"
-	expectedPods := []struct{
+	expectedPods := []struct {
 		Name      string
 		Namespace string
 	}{
@@ -374,7 +374,7 @@ func TestTapRegex(t *testing.T) {
 		podFound := false
 
 		for _, pod := range pods {
-			podNamespace :=  pod["namespace"].(string)
+			podNamespace := pod["namespace"].(string)
 			podName := pod["name"].(string)
 
 			if expectedPod.Namespace == podNamespace && strings.Contains(podName, expectedPod.Name) {
@@ -431,7 +431,7 @@ func TestTapDryRun(t *testing.T) {
 		resultChannel <- "fail"
 	}()
 
-	testResult := <- resultChannel
+	testResult := <-resultChannel
 	if testResult != "success" {
 		t.Errorf("unexpected result - dry run cmd not done")
 	}
@@ -497,7 +497,7 @@ func TestTapRedact(t *testing.T) {
 			return fmt.Errorf("unexpected entries result - Expected more than 0 entries")
 		}
 
-		firstEntry :=  entries[0].(map[string]interface{})
+		firstEntry := entries[0].(map[string]interface{})
 
 		entryUrl := fmt.Sprintf("%v/entries/%v", apiServerUrl, firstEntry["id"])
 		requestResult, requestErr = executeHttpGetRequest(entryUrl)
@@ -517,7 +517,7 @@ func TestTapRedact(t *testing.T) {
 		entryPayload := entryRequest["payload"].(map[string]interface{})
 		entryDetails := entryPayload["details"].(map[string]interface{})
 
-		headers :=  entryDetails["headers"].([]interface{})
+		headers := entryDetails["_headers"].([]interface{})
 		for _, headerInterface := range headers {
 			header := headerInterface.(map[string]interface{})
 			if header["name"].(string) != "User-Agent" {
@@ -612,7 +612,7 @@ func TestTapNoRedact(t *testing.T) {
 			return fmt.Errorf("unexpected entries result - Expected more than 0 entries")
 		}
 
-		firstEntry :=  entries[0].(map[string]interface{})
+		firstEntry := entries[0].(map[string]interface{})
 
 		entryUrl := fmt.Sprintf("%v/entries/%v", apiServerUrl, firstEntry["id"])
 		requestResult, requestErr = executeHttpGetRequest(entryUrl)
@@ -632,7 +632,7 @@ func TestTapNoRedact(t *testing.T) {
 		entryPayload := entryRequest["payload"].(map[string]interface{})
 		entryDetails := entryPayload["details"].(map[string]interface{})
 
-		headers :=  entryDetails["headers"].([]interface{})
+		headers := entryDetails["_headers"].([]interface{})
 		for _, headerInterface := range headers {
 			header := headerInterface.(map[string]interface{})
 			if header["name"].(string) != "User-Agent" {
@@ -727,7 +727,7 @@ func TestTapRegexMasking(t *testing.T) {
 			return fmt.Errorf("unexpected entries result - Expected more than 0 entries")
 		}
 
-		firstEntry :=  entries[0].(map[string]interface{})
+		firstEntry := entries[0].(map[string]interface{})
 
 		entryUrl := fmt.Sprintf("%v/entries/%v", apiServerUrl, firstEntry["id"])
 		requestResult, requestErr = executeHttpGetRequest(entryUrl)
@@ -805,7 +805,7 @@ func TestTapIgnoredUserAgents(t *testing.T) {
 	proxyUrl := getProxyUrl(defaultNamespaceName, defaultServiceName)
 
 	ignoredUserAgentCustomHeader := "Ignored-User-Agent"
-	headers := map[string]string {"User-Agent": ignoredUserAgentValue, ignoredUserAgentCustomHeader: ""}
+	headers := map[string]string{"User-Agent": ignoredUserAgentValue, ignoredUserAgentCustomHeader: ""}
 	for i := 0; i < defaultEntriesCount; i++ {
 		if _, requestErr := executeHttpGetRequestWithHeaders(fmt.Sprintf("%v/get", proxyUrl), headers); requestErr != nil {
 			t.Errorf("failed to send proxy request, err: %v", requestErr)
@@ -823,7 +823,7 @@ func TestTapIgnoredUserAgents(t *testing.T) {
 	ignoredUserAgentsCheckFunc := func() error {
 		timestamp := time.Now().UnixNano() / int64(time.Millisecond)
 
-		entriesUrl := fmt.Sprintf("%v/entries?limit=%v&operator=lt&timestamp=%v", apiServerUrl, defaultEntriesCount * 2, timestamp)
+		entriesUrl := fmt.Sprintf("%v/entries?limit=%v&operator=lt&timestamp=%v", apiServerUrl, defaultEntriesCount*2, timestamp)
 		requestResult, requestErr := executeHttpGetRequest(entriesUrl)
 		if requestErr != nil {
 			return fmt.Errorf("failed to get entries, err: %v", requestErr)
@@ -853,7 +853,7 @@ func TestTapIgnoredUserAgents(t *testing.T) {
 			entryPayload := entryRequest["payload"].(map[string]interface{})
 			entryDetails := entryPayload["details"].(map[string]interface{})
 
-			entryHeaders :=  entryDetails["headers"].([]interface{})
+			entryHeaders := entryDetails["_headers"].([]interface{})
 			for _, headerInterface := range entryHeaders {
 				header := headerInterface.(map[string]interface{})
 				if header["name"].(string) != ignoredUserAgentCustomHeader {
