@@ -88,7 +88,7 @@ func NewProvider(kubeConfigPath string) (*Provider, error) {
 	restProxyClientConfig.Host = kubernetesUrl.Host
 
 	clientProxySet, err := getClientSet(restProxyClientConfig)
-	// error if there is a proxy before k8b server
+	// error if there is a proxy before k8s server - caused by lens kube config starting proxy to k8s server, if no proxy - ignore
 	if err == nil {
 		proxyServerVersion, err := clientProxySet.ServerVersion()
 		if err != nil {
