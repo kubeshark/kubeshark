@@ -225,6 +225,12 @@ const (
 	BODY  string = "body"
 )
 
+type TableData struct {
+	Name     string      `json:"name"`
+	Value    interface{} `json:"value"`
+	Selector string      `json:"selector"`
+}
+
 const (
 	TypeHttpRequest = iota
 	TypeHttpResponse

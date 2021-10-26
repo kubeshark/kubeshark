@@ -160,17 +160,17 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolve
 
 	// Rearrange the maps for the querying
 	reqDetails["_headers"] = reqDetails["headers"]
-	reqDetails["headers"] = rebuildAsMap(reqDetails["_headers"])
+	reqDetails["headers"] = mapSliceRebuildAsMap(reqDetails["_headers"].([]interface{}))
 	resDetails["_headers"] = resDetails["headers"]
-	resDetails["headers"] = rebuildAsMap(resDetails["_headers"])
+	resDetails["headers"] = mapSliceRebuildAsMap(resDetails["_headers"].([]interface{}))
 
 	reqDetails["_cookies"] = reqDetails["cookies"]
-	reqDetails["cookies"] = rebuildAsMap(reqDetails["_cookies"])
+	reqDetails["cookies"] = mapSliceRebuildAsMap(reqDetails["_cookies"].([]interface{}))
 	resDetails["_cookies"] = resDetails["cookies"]
-	resDetails["cookies"] = rebuildAsMap(resDetails["_cookies"])
+	resDetails["cookies"] = mapSliceRebuildAsMap(resDetails["_cookies"].([]interface{}))
 
 	reqDetails["_queryString"] = reqDetails["queryString"]
-	reqDetails["queryString"] = rebuildAsMap(reqDetails["_queryString"])
+	reqDetails["queryString"] = mapSliceRebuildAsMap(reqDetails["_queryString"].([]interface{}))
 
 	if resolvedDestination != "" {
 		service = SetHostname(service, resolvedDestination)
@@ -249,18 +249,21 @@ func (d dissecting) Summarize(entry *api.MizuEntry) *api.BaseEntryDetails {
 }
 
 func representRequest(request map[string]interface{}) (repRequest []interface{}) {
-	details, _ := json.Marshal([]map[string]string{
+	details, _ := json.Marshal([]api.TableData{
 		{
-			"name":  "Method",
-			"value": request["method"].(string),
+			Name:     "Method",
+			Value:    request["method"].(string),
+			Selector: `request.method`,
 		},
 		{
-			"name":  "URL",
-			"value": request["url"].(string),
+			Name:     "URL",
+			Value:    request["url"].(string),
+			Selector: `request.url`,
 		},
 		{
-			"name":  "Body Size",
-			"value": fmt.Sprintf("%g bytes", request["bodySize"].(float64)),
+			Name:     "Body Size (bytes)",
+			Value:    int64(request["bodySize"].(float64)),
+			Selector: `request.bodySize`,
 		},
 	})
 	repRequest = append(repRequest, map[string]string{
@@ -269,25 +272,22 @@ func representRequest(request map[string]interface{}) (repRequest []interface{})
 		"data":  string(details),
 	})
 
-	headers, _ := json.Marshal(request["_headers"].([]interface{}))
 	repRequest = append(repRequest, map[string]string{
 		"type":  api.TABLE,
 		"title": "Headers",
-		"data":  string(headers),
+		"data":  representMapSliceAsTable(request["_headers"].([]interface{}), `request.headers`),
 	})
 
-	cookies, _ := json.Marshal(request["_cookies"].([]interface{}))
 	repRequest = append(repRequest, map[string]string{
 		"type":  api.TABLE,
 		"title": "Cookies",
-		"data":  string(cookies),
+		"data":  representMapSliceAsTable(request["_cookies"].([]interface{}), `request.cookies`),
 	})
 
-	queryString, _ := json.Marshal(request["_queryString"].([]interface{}))
 	repRequest = append(repRequest, map[string]string{
 		"type":  api.TABLE,
 		"title": "Query String",
-		"data":  string(queryString),
+		"data":  representMapSliceAsTable(request["_queryString"].([]interface{}), `request.queryString`),
 	})
 
 	postData, _ := request["postData"].(map[string]interface{})
@@ -325,7 +325,7 @@ func representRequest(request map[string]interface{}) (repRequest []interface{})
 				repRequest = append(repRequest, map[string]string{
 					"type":  api.TABLE,
 					"title": "POST Data (application/x-www-form-urlencoded)",
-					"data":  string(params),
+					"data":  representMapSliceAsTable(postData["params"].([]interface{}), `request.postData.params`),
 				})
 			}
 		}
@@ -339,18 +339,21 @@ func representResponse(response map[string]interface{}) (repResponse []interface
 
 	bodySize = int64(response["bodySize"].(float64))
 
-	details, _ := json.Marshal([]map[string]string{
+	details, _ := json.Marshal([]api.TableData{
 		{
-			"name":  "Status",
-			"value": fmt.Sprintf("%g", response["status"].(float64)),
+			Name:     "Status",
+			Value:    int64(response["status"].(float64)),
+			Selector: `response.status`,
 		},
 		{
-			"name":  "Status Text",
-			"value": response["statusText"].(string),
+			Name:     "Status Text",
+			Value:    response["statusText"].(string),
+			Selector: `response.statusText`,
 		},
 		{
-			"name":  "Body Size",
-			"value": fmt.Sprintf("%d bytes", bodySize),
+			Name:     "Body Size (bytes)",
+			Value:    bodySize,
+			Selector: `response.bodySize`,
 		},
 	})
 	repResponse = append(repResponse, map[string]string{
@@ -359,18 +362,16 @@ func representResponse(response map[string]interface{}) (repResponse []interface
 		"data":  string(details),
 	})
 
-	headers, _ := json.Marshal(response["_headers"].([]interface{}))
 	repResponse = append(repResponse, map[string]string{
 		"type":  api.TABLE,
 		"title": "Headers",
-		"data":  string(headers),
+		"data":  representMapSliceAsTable(response["_headers"].([]interface{}), `response.headers`),
 	})
 
-	cookies, _ := json.Marshal(response["_cookies"].([]interface{}))
 	repResponse = append(repResponse, map[string]string{
 		"type":  api.TABLE,
 		"title": "Cookies",
-		"data":  string(cookies),
+		"data":  representMapSliceAsTable(response["_cookies"].([]interface{}), `response.cookies`),
 	})
 
 	content, _ := response["content"].(map[string]interface{})

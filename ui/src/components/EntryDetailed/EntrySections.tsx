@@ -9,11 +9,27 @@ import ProtobufDecoder from "protobuf-decoder";
 interface EntryViewLineProps {
     label: string;
     value: number | string;
+    updateQuery: any;
+    selector: string;
 }
 
-const EntryViewLine: React.FC<EntryViewLineProps> = ({label, value}) => {
+const EntryViewLine: React.FC<EntryViewLineProps> = ({label, value, updateQuery, selector}) => {
     return (label && value && <tr className={styles.dataLine}>
-                <td className={styles.dataKey}>{label}</td>
+                <td
+                    className={styles.dataKey}
+                    onClick={() => {
+                        if (selector == null) {
+                            return
+                        } else if (typeof(value) == "string") {
+                            updateQuery(`${selector} == "${JSON.stringify(value).slice(1, -1)}"`)
+                        } else {
+                            updateQuery(`${selector} == ${value}`)
+                        }
+                    }}
+                    style={{cursor: "pointer"}}
+                >
+                    {label}
+                </td>
                 <td>
                     <FancyTextDisplay
                         className={styles.dataValue}
@@ -62,12 +78,14 @@ export const EntrySectionContainer: React.FC<EntrySectionContainerProps> = ({tit
 interface EntryBodySectionProps {
     content: any,
     color: string,
+    updateQuery: any,
     encoding?: string,
     contentType?: string,
 }
 
 export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
     color,
+    updateQuery,
     content,
     encoding,
     contentType,
@@ -107,8 +125,8 @@ export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
         {content && content?.length > 0 && <EntrySectionContainer title='Body' color={color}>
             <table>
                 <tbody>
-                    <EntryViewLine label={'Mime type'} value={contentType}/>
-                    <EntryViewLine label={'Encoding'} value={encoding}/>
+                    <EntryViewLine label={'Mime type'} value={contentType} updateQuery={updateQuery} selector={null}/>
+                    <EntryViewLine label={'Encoding'} value={encoding} updateQuery={updateQuery} selector={null}/>
                 </tbody>
             </table>
 
@@ -132,17 +150,23 @@ interface EntrySectionProps {
     title: string,
     color: string,
     arrayToIterate: any[],
+    updateQuery: any,
 }
 
-export const EntryTableSection: React.FC<EntrySectionProps> = ({title, color, arrayToIterate}) => {
+export const EntryTableSection: React.FC<EntrySectionProps> = ({title, color, arrayToIterate, updateQuery}) => {
     return <React.Fragment>
         {
             arrayToIterate && arrayToIterate.length > 0 ?
                 <EntrySectionContainer title={title} color={color}>
                     <table>
                         <tbody>
-                            {arrayToIterate.map(({name, value}, index) => <EntryViewLine key={index} label={name}
-                                                                                            value={value}/>)}
+                            {arrayToIterate.map(({name, value, selector}, index) => <EntryViewLine
+                                key={index}
+                                label={name}
+                                value={value}
+                                updateQuery={updateQuery}
+                                selector={selector}
+                            />)}
                         </tbody>
                     </table>
                 </EntrySectionContainer> : <span/>
