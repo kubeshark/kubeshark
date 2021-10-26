@@ -7,6 +7,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"k8s.io/apimachinery/pkg/version"
+	"net/url"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -75,6 +77,27 @@ func NewProvider(kubeConfigPath string) (*Provider, error) {
 	if err != nil {
 		return nil, fmt.Errorf("error while using kube config (%s)\n"+
 			"you can set alternative kube config file path by adding the kube-config-path field to the mizu config file, err:  %w", kubeConfigPath, err)
+	}
+
+	kubernetesUrl, err := url.Parse(restClientConfig.Host)
+	if err != nil {
+		return nil, fmt.Errorf("error while parsing kubernetes clinet host, err: %v", err)
+	}
+
+	restProxyClientConfig, _ := kubernetesConfig.ClientConfig()
+	restProxyClientConfig.Host = kubernetesUrl.Host
+
+	clientProxySet, err := getClientSet(restProxyClientConfig)
+	// error if there is a proxy before k8b server
+	if err == nil {
+		proxyServerVersion, err := clientProxySet.ServerVersion()
+		if err != nil {
+			return nil, fmt.Errorf("error while getting client host server version, err: %v", err)
+		}
+
+		if *proxyServerVersion == (version.Info{}) {
+			return nil, fmt.Errorf("cannot establish http-proxy connection to the Kubernetes cluster. If you’re using Lens or similar tool, please run mizu with regular kubectl config using --%v %v=$HOME/.kube/config flag", config.SetCommandName, config.KubeConfigPathConfigName)
+		}
 	}
 
 	return &Provider{
