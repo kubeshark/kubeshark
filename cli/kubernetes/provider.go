@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/up9inc/mizu/shared/semver"
 	"k8s.io/apimachinery/pkg/version"
 	"net/url"
 	"path/filepath"
@@ -80,6 +81,10 @@ func NewProvider(kubeConfigPath string) (*Provider, error) {
 	}
 
 	if err := validateNotProxy(kubernetesConfig, restClientConfig); err != nil {
+		return nil, err
+	}
+
+	if err := validateKubernetesVersion(clientSet); err != nil {
 		return nil, err
 	}
 
@@ -757,6 +762,21 @@ func validateNotProxy(kubernetesConfig clientcmd.ClientConfig, restClientConfig 
 		if *proxyServerVersion == (version.Info{}) {
 			return fmt.Errorf("cannot establish http-proxy connection to the Kubernetes cluster. If you’re using Lens or similar tool, please run mizu with regular kubectl config using --%v %v=$HOME/.kube/config flag", config.SetCommandName, config.KubeConfigPathConfigName)
 		}
+	}
+
+	return nil
+}
+
+func validateKubernetesVersion(clientSet *kubernetes.Clientset) error {
+	serverVersion, err := clientSet.ServerVersion()
+	if err != nil {
+		return fmt.Errorf("error while getting kubernetes server version, err: %v", err)
+	}
+
+	serverVersionSemVer := semver.SemVersion(serverVersion.GitVersion)
+	minKubernetesServerVersionSemVer := semver.SemVersion(mizu.MinKubernetesServerVersion)
+	if minKubernetesServerVersionSemVer.GreaterThan(serverVersionSemVer) {
+		return fmt.Errorf("kubernetes server version %v is not supported, supporting only kubernetes versions higher than %v", serverVersion.GitVersion, mizu.MinKubernetesServerVersion)
 	}
 
 	return nil
