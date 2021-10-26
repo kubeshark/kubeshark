@@ -776,7 +776,7 @@ func validateKubernetesVersion(clientSet *kubernetes.Clientset) error {
 	serverVersionSemVer := semver.SemVersion(serverVersion.GitVersion)
 	minKubernetesServerVersionSemVer := semver.SemVersion(mizu.MinKubernetesServerVersion)
 	if minKubernetesServerVersionSemVer.GreaterThan(serverVersionSemVer) {
-		return fmt.Errorf("kubernetes server version %v is not supported, supporting only kubernetes versions higher than %v", serverVersion.GitVersion, mizu.MinKubernetesServerVersion)
+		return fmt.Errorf("kubernetes server version %v is not supported, supporting only kubernetes server version of %v or higher", serverVersion.GitVersion, mizu.MinKubernetesServerVersion)
 	}
 
 	return nil
