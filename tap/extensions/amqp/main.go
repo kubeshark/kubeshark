@@ -236,32 +236,32 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolve
 	summary := ""
 	switch request["method"] {
 	case basicMethodMap[40]:
-		summary = reqDetails["Exchange"].(string)
+		summary = reqDetails["exchange"].(string)
 		break
 	case basicMethodMap[60]:
-		summary = reqDetails["Exchange"].(string)
+		summary = reqDetails["exchange"].(string)
 		break
 	case exchangeMethodMap[10]:
-		summary = reqDetails["Exchange"].(string)
+		summary = reqDetails["exchange"].(string)
 		break
 	case queueMethodMap[10]:
-		summary = reqDetails["Queue"].(string)
+		summary = reqDetails["queue"].(string)
 		break
 	case connectionMethodMap[10]:
 		summary = fmt.Sprintf(
 			"%s.%s",
-			strconv.Itoa(int(reqDetails["VersionMajor"].(float64))),
-			strconv.Itoa(int(reqDetails["VersionMinor"].(float64))),
+			strconv.Itoa(int(reqDetails["versionMajor"].(float64))),
+			strconv.Itoa(int(reqDetails["versionMinor"].(float64))),
 		)
 		break
 	case connectionMethodMap[50]:
-		summary = reqDetails["ReplyText"].(string)
+		summary = reqDetails["replyText"].(string)
 		break
 	case queueMethodMap[20]:
-		summary = reqDetails["Queue"].(string)
+		summary = reqDetails["queue"].(string)
 		break
 	case basicMethodMap[20]:
-		summary = reqDetails["Queue"].(string)
+		summary = reqDetails["queue"].(string)
 		break
 	}
 
