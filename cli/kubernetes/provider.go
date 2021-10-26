@@ -79,25 +79,8 @@ func NewProvider(kubeConfigPath string) (*Provider, error) {
 			"you can set alternative kube config file path by adding the kube-config-path field to the mizu config file, err:  %w", kubeConfigPath, err)
 	}
 
-	kubernetesUrl, err := url.Parse(restClientConfig.Host)
-	if err != nil {
-		return nil, fmt.Errorf("error while parsing kubernetes clinet host, err: %v", err)
-	}
-
-	restProxyClientConfig, _ := kubernetesConfig.ClientConfig()
-	restProxyClientConfig.Host = kubernetesUrl.Host
-
-	clientProxySet, err := getClientSet(restProxyClientConfig)
-	// error if there is a proxy before k8s server - caused by lens kube config starting proxy to k8s server, if no proxy - ignore
-	if err == nil {
-		proxyServerVersion, err := clientProxySet.ServerVersion()
-		if err != nil {
-			return nil, fmt.Errorf("error while getting client host server version, err: %v", err)
-		}
-
-		if *proxyServerVersion == (version.Info{}) {
-			return nil, fmt.Errorf("cannot establish http-proxy connection to the Kubernetes cluster. If you’re using Lens or similar tool, please run mizu with regular kubectl config using --%v %v=$HOME/.kube/config flag", config.SetCommandName, config.KubeConfigPathConfigName)
-		}
+	if err := validateNotProxy(kubernetesConfig, restClientConfig); err != nil {
+		return nil, fmt.Errorf("error in kubernetes server validation, err: %v", err)
 	}
 
 	return &Provider{
@@ -749,4 +732,31 @@ func loadKubernetesConfiguration(kubeConfigPath string) clientcmd.ClientConfig {
 
 func isPodRunning(pod *core.Pod) bool {
 	return pod.Status.Phase == core.PodRunning
+}
+
+// We added this after a customer tried to run mizu from lens, which used len's kube config, which have cluster server configuration, which points to len's local proxy.
+// The workaround was to use the user's local default kube config.
+// For now - we are blocking the option to run mizu through a proxy to k8s server
+func validateNotProxy(kubernetesConfig clientcmd.ClientConfig, restClientConfig *restclient.Config) error {
+	kubernetesUrl, err := url.Parse(restClientConfig.Host)
+	if err != nil {
+		return fmt.Errorf("error while parsing kubernetes host, err: %v", err)
+	}
+
+	restProxyClientConfig, _ := kubernetesConfig.ClientConfig()
+	restProxyClientConfig.Host = kubernetesUrl.Host
+
+	clientProxySet, err := getClientSet(restProxyClientConfig)
+	if err == nil {
+		proxyServerVersion, err := clientProxySet.ServerVersion()
+		if err != nil {
+			return fmt.Errorf("error while getting client host server version, err: %v", err)
+		}
+
+		if *proxyServerVersion == (version.Info{}) {
+			return fmt.Errorf("cannot establish http-proxy connection to the Kubernetes cluster. If you’re using Lens or similar tool, please run mizu with regular kubectl config using --%v %v=$HOME/.kube/config flag", config.SetCommandName, config.KubeConfigPathConfigName)
+		}
+	}
+
+	return nil
 }
