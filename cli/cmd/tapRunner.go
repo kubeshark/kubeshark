@@ -129,11 +129,12 @@ func RunMizuTap() {
 		return
 	}
 
-	defer finishMizuExecution(kubernetesProvider)
 	if err := createMizuResources(ctx, kubernetesProvider, mizuValidationRules, contract); err != nil {
 		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error creating resources: %v", errormessage.FormatError(err)))
+		logger.Log.Info("Someone else may be running mizu on this cluster, run `mizu clean` if you wish to proceed anyway.")
 		return
 	}
+	defer finishMizuExecution(kubernetesProvider)
 
 	go goUtils.HandleExcWrapper(watchApiServerPod, ctx, kubernetesProvider, cancel, mizuApiFilteringOptions)
 	go goUtils.HandleExcWrapper(watchTapperPod, ctx, kubernetesProvider, cancel)
