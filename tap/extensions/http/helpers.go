@@ -1,10 +1,10 @@
 package main
 
-func rebuildHeaders(harHeaders interface{}) (headers map[string]interface{}) {
-	headers = make(map[string]interface{})
-	for _, header := range harHeaders.([]interface{}) {
+func rebuildAsMap(harMap interface{}) (newMap map[string]interface{}) {
+	newMap = make(map[string]interface{})
+	for _, header := range harMap.([]interface{}) {
 		h := header.(map[string]interface{})
-		headers[h["name"].(string)] = h["value"]
+		newMap[h["name"].(string)] = h["value"]
 	}
 
 	return

@@ -158,11 +158,19 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolve
 	request["url"] = reqDetails["url"].(string)
 	reqDetails["path"] = path
 
-	// Rearrange the headers for the querying
+	// Rearrange the maps for the querying
 	reqDetails["_headers"] = reqDetails["headers"]
-	reqDetails["headers"] = rebuildHeaders(reqDetails["_headers"])
+	reqDetails["headers"] = rebuildAsMap(reqDetails["_headers"])
 	resDetails["_headers"] = resDetails["headers"]
-	resDetails["headers"] = rebuildHeaders(resDetails["_headers"])
+	resDetails["headers"] = rebuildAsMap(resDetails["_headers"])
+
+	reqDetails["_cookies"] = reqDetails["cookies"]
+	reqDetails["cookies"] = rebuildAsMap(reqDetails["_cookies"])
+	resDetails["_cookies"] = resDetails["cookies"]
+	resDetails["cookies"] = rebuildAsMap(resDetails["_cookies"])
+
+	reqDetails["_queryString"] = reqDetails["queryString"]
+	reqDetails["queryString"] = rebuildAsMap(reqDetails["_queryString"])
 
 	if resolvedDestination != "" {
 		service = SetHostname(service, resolvedDestination)
@@ -268,14 +276,14 @@ func representRequest(request map[string]interface{}) (repRequest []interface{})
 		"data":  string(headers),
 	})
 
-	cookies, _ := json.Marshal(request["cookies"].([]interface{}))
+	cookies, _ := json.Marshal(request["_cookies"].([]interface{}))
 	repRequest = append(repRequest, map[string]string{
 		"type":  api.TABLE,
 		"title": "Cookies",
 		"data":  string(cookies),
 	})
 
-	queryString, _ := json.Marshal(request["queryString"].([]interface{}))
+	queryString, _ := json.Marshal(request["_queryString"].([]interface{}))
 	repRequest = append(repRequest, map[string]string{
 		"type":  api.TABLE,
 		"title": "Query String",
@@ -358,7 +366,7 @@ func representResponse(response map[string]interface{}) (repResponse []interface
 		"data":  string(headers),
 	})
 
-	cookies, _ := json.Marshal(response["cookies"].([]interface{}))
+	cookies, _ := json.Marshal(response["_cookies"].([]interface{}))
 	repResponse = append(repResponse, map[string]string{
 		"type":  api.TABLE,
 		"title": "Cookies",

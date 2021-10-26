@@ -124,7 +124,7 @@ func NewRequest(request *api.GenericMessage) (harRequest *har.Request, err error
 	reqDetails := request.Payload.(map[string]interface{})["details"].(map[string]interface{})
 
 	headers, host, scheme, authority, path, _ := BuildHeaders(reqDetails["_headers"].([]interface{}))
-	cookies := make([]har.Cookie, 0) // BuildCookies(reqDetails["cookies"].([]interface{}))
+	cookies := make([]har.Cookie, 0) // BuildCookies(reqDetails["_cookies"].([]interface{}))
 
 	postData, _ := reqDetails["postData"].(map[string]interface{})
 	mimeType, _ := postData["mimeType"]
@@ -138,7 +138,7 @@ func NewRequest(request *api.GenericMessage) (harRequest *har.Request, err error
 	}
 
 	queryString := make([]har.QueryString, 0)
-	for _, _qs := range reqDetails["queryString"].([]interface{}) {
+	for _, _qs := range reqDetails["_queryString"].([]interface{}) {
 		qs := _qs.(map[string]interface{})
 		queryString = append(queryString, har.QueryString{
 			Name:  qs["name"].(string),
@@ -179,7 +179,7 @@ func NewResponse(response *api.GenericMessage) (harResponse *har.Response, err e
 	resDetails := response.Payload.(map[string]interface{})["details"].(map[string]interface{})
 
 	headers, _, _, _, _, _status := BuildHeaders(resDetails["_headers"].([]interface{}))
-	cookies := make([]har.Cookie, 0) // BuildCookies(resDetails["cookies"].([]interface{}))
+	cookies := make([]har.Cookie, 0) // BuildCookies(resDetails["_cookies"].([]interface{}))
 
 	content, _ := resDetails["content"].(map[string]interface{})
 	mimeType, _ := content["mimeType"]
