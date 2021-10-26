@@ -22,8 +22,9 @@ const StatusCode: React.FC<EntryProps> = ({statusCode, updateQuery}) => {
         onClick={() => {
             updateQuery(`response.status == ${statusCode}`)
         }}
-        style={{cursor: "pointer"}}>
-            {statusCode}
+        style={{cursor: "pointer"}}
+    >
+        {statusCode}
     </span>
 };
 

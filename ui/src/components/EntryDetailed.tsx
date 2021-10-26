@@ -33,7 +33,7 @@ interface EntryDetailedProps {
 
 export const formatSize = (n: number) => n > 1000 ? `${Math.round(n / 1000)}KB` : `${n} B`;
 
-const EntryTitle: React.FC<any> = ({protocol, data, bodySize, elapsedTime}) => {
+const EntryTitle: React.FC<any> = ({protocol, data, bodySize, elapsedTime, updateQuery}) => {
     const classes = useStyles();
     const {response} = JSON.parse(data.entry);
 
@@ -41,8 +41,22 @@ const EntryTitle: React.FC<any> = ({protocol, data, bodySize, elapsedTime}) => {
     return <div className={classes.entryTitle}>
         <Protocol protocol={protocol} horizontal={true} updateQuery={null}/>
         <div style={{right: "30px", position: "absolute", display: "flex"}}>
-            {response.payload && <div style={{margin: "0 18px", opacity: 0.5}}>{formatSize(bodySize)}</div>}
-            {response.payload && <div style={{marginRight: 18, opacity: 0.5}}>{Math.round(elapsedTime)}ms</div>}
+            {response.payload && <div
+                style={{margin: "0 18px", opacity: 0.5, cursor: "pointer"}}
+                onClick={() => {
+                    updateQuery(`response.bodySize == ${bodySize}`)
+                }}
+            >
+                {formatSize(bodySize)}
+            </div>}
+            {response.payload && <div
+                style={{marginRight: 18, opacity: 0.5, cursor: "pointer"}}
+                onClick={() => {
+                    updateQuery(`elapsedTime >= ${elapsedTime}`)
+                }}
+            >
+                {Math.round(elapsedTime)}ms
+            </div>}
         </div>
     </div>;
 };
@@ -69,6 +83,7 @@ export const EntryDetailed: React.FC<EntryDetailedProps> = ({entryData, updateQu
             data={entryData.data}
             bodySize={entryData.bodySize}
             elapsedTime={entryData.data.elapsedTime}
+            updateQuery={updateQuery}
         />
         {entryData.data && <EntrySummary data={entryData.data} updateQuery={updateQuery}/>}
         <>

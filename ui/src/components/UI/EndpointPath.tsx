@@ -16,6 +16,7 @@ export const EndpointPath: React.FC<EndpointPathProps> = ({method, path, updateQ
             onClick={() => {
                 updateQuery(`method == "${method}"`)
             }}
+            style={{cursor: "pointer"}}
         >
             {method}
         </span>}
@@ -25,6 +26,7 @@ export const EndpointPath: React.FC<EndpointPathProps> = ({method, path, updateQ
             onClick={() => {
                 updateQuery(`path == "${path}"`)
             }}
+            style={{cursor: "pointer"}}
         >
             {path}
         </div>}
