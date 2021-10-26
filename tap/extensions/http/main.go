@@ -147,10 +147,16 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolve
 		service = fmt.Sprintf("%s://%s", scheme, authority)
 	} else {
 		service = fmt.Sprintf("http://%s", host)
-		path = reqDetails["url"].(string)
+		u, err := url.Parse(reqDetails["url"].(string))
+		if err != nil {
+			path = reqDetails["url"].(string)
+		} else {
+			path = u.Path
+		}
 	}
 
-	request["url"] = path
+	request["url"] = reqDetails["url"].(string)
+	reqDetails["path"] = path
 	if resolvedDestination != "" {
 		service = SetHostname(service, resolvedDestination)
 	} else if resolvedSource != "" {
