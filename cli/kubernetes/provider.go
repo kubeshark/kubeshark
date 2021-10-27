@@ -770,7 +770,8 @@ func validateNotProxy(kubernetesConfig clientcmd.ClientConfig, restClientConfig 
 func validateKubernetesVersion(clientSet *kubernetes.Clientset) error {
 	serverVersion, err := clientSet.ServerVersion()
 	if err != nil {
-		return fmt.Errorf("error while getting kubernetes server version, err: %v", err)
+		logger.Log.Debugf("error while getting kubernetes server version, err: %v", err)
+		return nil
 	}
 
 	serverVersionSemVer := semver.SemVersion(serverVersion.GitVersion)
