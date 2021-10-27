@@ -21,7 +21,7 @@ const SectionsRepresentation: React.FC<any> = ({data, color, updateQuery}) => {
                     break;
                 case SectionTypes.SectionBody:
                     sections.push(
-                        <EntryBodySection key={i} color={color} content={row.data} encoding={row.encoding} contentType={row.mime_type} updateQuery={updateQuery}/>
+                        <EntryBodySection key={i} color={color} content={row.data} encoding={row.encoding} contentType={row.mimeType} updateQuery={updateQuery}/>
                     )
                     break;
                 default:

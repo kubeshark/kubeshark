@@ -225,6 +225,14 @@ const (
 	BODY  string = "body"
 )
 
+type SectionData struct {
+	Type     string `json:"type"`
+	Title    string `json:"title"`
+	Data     string `json:"data"`
+	Encoding string `json:"encoding,omitempty"`
+	MimeType string `json:"mimeType,omitempty"`
+}
+
 type TableData struct {
 	Name     string      `json:"name"`
 	Value    interface{} `json:"value"`

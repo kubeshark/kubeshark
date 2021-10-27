@@ -266,28 +266,28 @@ func representRequest(request map[string]interface{}) (repRequest []interface{})
 			Selector: `request.bodySize`,
 		},
 	})
-	repRequest = append(repRequest, map[string]string{
-		"type":  api.TABLE,
-		"title": "Details",
-		"data":  string(details),
+	repRequest = append(repRequest, api.SectionData{
+		Type:  api.TABLE,
+		Title: "Details",
+		Data:  string(details),
 	})
 
-	repRequest = append(repRequest, map[string]string{
-		"type":  api.TABLE,
-		"title": "Headers",
-		"data":  representMapSliceAsTable(request["_headers"].([]interface{}), `request.headers`),
+	repRequest = append(repRequest, api.SectionData{
+		Type:  api.TABLE,
+		Title: "Headers",
+		Data:  representMapSliceAsTable(request["_headers"].([]interface{}), `request.headers`),
 	})
 
-	repRequest = append(repRequest, map[string]string{
-		"type":  api.TABLE,
-		"title": "Cookies",
-		"data":  representMapSliceAsTable(request["_cookies"].([]interface{}), `request.cookies`),
+	repRequest = append(repRequest, api.SectionData{
+		Type:  api.TABLE,
+		Title: "Cookies",
+		Data:  representMapSliceAsTable(request["_cookies"].([]interface{}), `request.cookies`),
 	})
 
-	repRequest = append(repRequest, map[string]string{
-		"type":  api.TABLE,
-		"title": "Query String",
-		"data":  representMapSliceAsTable(request["_queryString"].([]interface{}), `request.queryString`),
+	repRequest = append(repRequest, api.SectionData{
+		Type:  api.TABLE,
+		Title: "Query String",
+		Data:  representMapSliceAsTable(request["_queryString"].([]interface{}), `request.queryString`),
 	})
 
 	postData, _ := request["postData"].(map[string]interface{})
@@ -297,12 +297,11 @@ func representRequest(request map[string]interface{}) (repRequest []interface{})
 	}
 	text, _ := postData["text"]
 	if text != nil {
-		repRequest = append(repRequest, map[string]string{
-			"type":      api.BODY,
-			"title":     "POST Data (text/plain)",
-			"encoding":  "",
-			"mime_type": mimeType.(string),
-			"data":      text.(string),
+		repRequest = append(repRequest, api.SectionData{
+			Type:     api.BODY,
+			Title:    "POST Data (text/plain)",
+			MimeType: mimeType.(string),
+			Data:     text.(string),
 		})
 	}
 
@@ -316,16 +315,16 @@ func representRequest(request map[string]interface{}) (repRequest []interface{})
 						"value": string(params),
 					},
 				})
-				repRequest = append(repRequest, map[string]string{
-					"type":  api.TABLE,
-					"title": "POST Data (multipart/form-data)",
-					"data":  string(multipart),
+				repRequest = append(repRequest, api.SectionData{
+					Type:  api.TABLE,
+					Title: "POST Data (multipart/form-data)",
+					Data:  string(multipart),
 				})
 			} else {
-				repRequest = append(repRequest, map[string]string{
-					"type":  api.TABLE,
-					"title": "POST Data (application/x-www-form-urlencoded)",
-					"data":  representMapSliceAsTable(postData["params"].([]interface{}), `request.postData.params`),
+				repRequest = append(repRequest, api.SectionData{
+					Type:  api.TABLE,
+					Title: "POST Data (application/x-www-form-urlencoded)",
+					Data:  representMapSliceAsTable(postData["params"].([]interface{}), `request.postData.params`),
 				})
 			}
 		}
@@ -356,22 +355,22 @@ func representResponse(response map[string]interface{}) (repResponse []interface
 			Selector: `response.bodySize`,
 		},
 	})
-	repResponse = append(repResponse, map[string]string{
-		"type":  api.TABLE,
-		"title": "Details",
-		"data":  string(details),
+	repResponse = append(repResponse, api.SectionData{
+		Type:  api.TABLE,
+		Title: "Details",
+		Data:  string(details),
 	})
 
-	repResponse = append(repResponse, map[string]string{
-		"type":  api.TABLE,
-		"title": "Headers",
-		"data":  representMapSliceAsTable(response["_headers"].([]interface{}), `response.headers`),
+	repResponse = append(repResponse, api.SectionData{
+		Type:  api.TABLE,
+		Title: "Headers",
+		Data:  representMapSliceAsTable(response["_headers"].([]interface{}), `response.headers`),
 	})
 
-	repResponse = append(repResponse, map[string]string{
-		"type":  api.TABLE,
-		"title": "Cookies",
-		"data":  representMapSliceAsTable(response["_cookies"].([]interface{}), `response.cookies`),
+	repResponse = append(repResponse, api.SectionData{
+		Type:  api.TABLE,
+		Title: "Cookies",
+		Data:  representMapSliceAsTable(response["_cookies"].([]interface{}), `response.cookies`),
 	})
 
 	content, _ := response["content"].(map[string]interface{})
@@ -382,12 +381,12 @@ func representResponse(response map[string]interface{}) (repResponse []interface
 	encoding, _ := content["encoding"]
 	text, _ := content["text"]
 	if text != nil {
-		repResponse = append(repResponse, map[string]string{
-			"type":      api.BODY,
-			"title":     "Body",
-			"encoding":  encoding.(string),
-			"mime_type": mimeType.(string),
-			"data":      text.(string),
+		repResponse = append(repResponse, api.SectionData{
+			Type:     api.BODY,
+			Title:    "Body",
+			Encoding: encoding.(string),
+			MimeType: mimeType.(string),
+			Data:     text.(string),
 		})
 	}
 

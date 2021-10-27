@@ -54,10 +54,10 @@ func representRequestHeader(data map[string]interface{}, rep []interface{}) []in
 			Selector: `request.size`,
 		},
 	})
-	rep = append(rep, map[string]string{
-		"type":  api.TABLE,
-		"title": "Request Header",
-		"data":  string(requestHeader),
+	rep = append(rep, api.SectionData{
+		Type:  api.TABLE,
+		Title: "Request Header",
+		Data:  string(requestHeader),
 	})
 
 	return rep
@@ -71,10 +71,10 @@ func representResponseHeader(data map[string]interface{}, rep []interface{}) []i
 			Selector: `response.correlationID`,
 		},
 	})
-	rep = append(rep, map[string]string{
-		"type":  api.TABLE,
-		"title": "Response Header",
-		"data":  string(requestHeader),
+	rep = append(rep, api.SectionData{
+		Type:  api.TABLE,
+		Title: "Response Header",
+		Data:  string(requestHeader),
 	})
 
 	return rep
@@ -125,10 +125,10 @@ func representMetadataRequest(data map[string]interface{}) []interface{} {
 			Selector: `request.payload.includeTopicAuthorizedOperations`,
 		},
 	})
-	rep = append(rep, map[string]string{
-		"type":  api.TABLE,
-		"title": "Payload",
-		"data":  string(repPayload),
+	rep = append(rep, api.SectionData{
+		Type:  api.TABLE,
+		Title: "Payload",
+		Data:  string(repPayload),
 	})
 
 	return rep
@@ -198,10 +198,10 @@ func representMetadataResponse(data map[string]interface{}) []interface{} {
 			Selector: `response.payload.clusterAuthorizedOperations`,
 		},
 	})
-	rep = append(rep, map[string]string{
-		"type":  api.TABLE,
-		"title": "Payload",
-		"data":  string(repPayload),
+	rep = append(rep, api.SectionData{
+		Type:  api.TABLE,
+		Title: "Payload",
+		Data:  string(repPayload),
 	})
 
 	return rep
@@ -233,10 +233,10 @@ func representApiVersionsRequest(data map[string]interface{}) []interface{} {
 			Selector: `request.payload.clientSoftwareVersion`,
 		},
 	})
-	rep = append(rep, map[string]string{
-		"type":  api.TABLE,
-		"title": "Payload",
-		"data":  string(repPayload),
+	rep = append(rep, api.SectionData{
+		Type:  api.TABLE,
+		Title: "Payload",
+		Data:  string(repPayload),
 	})
 
 	return rep
@@ -274,10 +274,10 @@ func representApiVersionsResponse(data map[string]interface{}) []interface{} {
 			Selector: `response.payload.throttleTimeMs`,
 		},
 	})
-	rep = append(rep, map[string]string{
-		"type":  api.TABLE,
-		"title": "Payload",
-		"data":  string(repPayload),
+	rep = append(rep, api.SectionData{
+		Type:  api.TABLE,
+		Title: "Payload",
+		Data:  string(repPayload),
 	})
 
 	return rep
@@ -321,10 +321,10 @@ func representProduceRequest(data map[string]interface{}) []interface{} {
 			Selector: `request.payload.topicData`,
 		},
 	})
-	rep = append(rep, map[string]string{
-		"type":  api.TABLE,
-		"title": "Payload",
-		"data":  string(repPayload),
+	rep = append(rep, api.SectionData{
+		Type:  api.TABLE,
+		Title: "Payload",
+		Data:  string(repPayload),
 	})
 
 	return rep
@@ -357,10 +357,10 @@ func representProduceResponse(data map[string]interface{}) []interface{} {
 			Selector: `response.payload.throttleTimeMs`,
 		},
 	})
-	rep = append(rep, map[string]string{
-		"type":  api.TABLE,
-		"title": "Payload",
-		"data":  string(repPayload),
+	rep = append(rep, api.SectionData{
+		Type:  api.TABLE,
+		Title: "Payload",
+		Data:  string(repPayload),
 	})
 
 	return rep
@@ -458,10 +458,10 @@ func representFetchRequest(data map[string]interface{}) []interface{} {
 			Selector: `request.payload.rackId`,
 		},
 	})
-	rep = append(rep, map[string]string{
-		"type":  api.TABLE,
-		"title": "Payload",
-		"data":  string(repPayload),
+	rep = append(rep, api.SectionData{
+		Type:  api.TABLE,
+		Title: "Payload",
+		Data:  string(repPayload),
 	})
 
 	return rep
@@ -512,10 +512,10 @@ func representFetchResponse(data map[string]interface{}) []interface{} {
 			Selector: `response.payload.responses`,
 		},
 	})
-	rep = append(rep, map[string]string{
-		"type":  api.TABLE,
-		"title": "Payload",
-		"data":  string(repPayload),
+	rep = append(rep, api.SectionData{
+		Type:  api.TABLE,
+		Title: "Payload",
+		Data:  string(repPayload),
 	})
 
 	return rep
@@ -544,10 +544,10 @@ func representListOffsetsRequest(data map[string]interface{}) []interface{} {
 			Selector: `request.payload.topics`,
 		},
 	})
-	rep = append(rep, map[string]string{
-		"type":  api.TABLE,
-		"title": "Payload",
-		"data":  string(repPayload),
+	rep = append(rep, api.SectionData{
+		Type:  api.TABLE,
+		Title: "Payload",
+		Data:  string(repPayload),
 	})
 
 	return rep
@@ -576,10 +576,10 @@ func representListOffsetsResponse(data map[string]interface{}) []interface{} {
 			Selector: `response.payload.topics`,
 		},
 	})
-	rep = append(rep, map[string]string{
-		"type":  api.TABLE,
-		"title": "Payload",
-		"data":  string(repPayload),
+	rep = append(rep, api.SectionData{
+		Type:  api.TABLE,
+		Title: "Payload",
+		Data:  string(repPayload),
 	})
 
 	return rep
@@ -613,10 +613,10 @@ func representCreateTopicsRequest(data map[string]interface{}) []interface{} {
 			Selector: `request.payload.validateOnly`,
 		},
 	})
-	rep = append(rep, map[string]string{
-		"type":  api.TABLE,
-		"title": "Payload",
-		"data":  string(repPayload),
+	rep = append(rep, api.SectionData{
+		Type:  api.TABLE,
+		Title: "Payload",
+		Data:  string(repPayload),
 	})
 
 	return rep
@@ -645,10 +645,10 @@ func representCreateTopicsResponse(data map[string]interface{}) []interface{} {
 			Selector: `response.payload.topics`,
 		},
 	})
-	rep = append(rep, map[string]string{
-		"type":  api.TABLE,
-		"title": "Payload",
-		"data":  string(repPayload),
+	rep = append(rep, api.SectionData{
+		Type:  api.TABLE,
+		Title: "Payload",
+		Data:  string(repPayload),
 	})
 
 	return rep
@@ -687,10 +687,10 @@ func representDeleteTopicsRequest(data map[string]interface{}) []interface{} {
 			Selector: `request.payload.timeoutMs`,
 		},
 	})
-	rep = append(rep, map[string]string{
-		"type":  api.TABLE,
-		"title": "Payload",
-		"data":  string(repPayload),
+	rep = append(rep, api.SectionData{
+		Type:  api.TABLE,
+		Title: "Payload",
+		Data:  string(repPayload),
 	})
 
 	return rep
@@ -719,10 +719,10 @@ func representDeleteTopicsResponse(data map[string]interface{}) []interface{} {
 			Selector: `response.payload.responses`,
 		},
 	})
-	rep = append(rep, map[string]string{
-		"type":  api.TABLE,
-		"title": "Payload",
-		"data":  string(repPayload),
+	rep = append(rep, api.SectionData{
+		Type:  api.TABLE,
+		Title: "Payload",
+		Data:  string(repPayload),
 	})
 
 	return rep

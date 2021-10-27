@@ -53,10 +53,10 @@ func representGeneric(generic map[string]interface{}, selectorPrefix string) (re
 			Selector: fmt.Sprintf("%skeyword", selectorPrefix),
 		},
 	})
-	representation = append(representation, map[string]string{
-		"type":  api.TABLE,
-		"title": "Details",
-		"data":  string(details),
+	representation = append(representation, api.SectionData{
+		Type:  api.TABLE,
+		Title: "Details",
+		Data:  string(details),
 	})
 
 	return
