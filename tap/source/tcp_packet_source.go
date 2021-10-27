@@ -152,6 +152,4 @@ func (source *tcpPacketSource) readPackets(ipdefrag bool, packets chan<- TcpPack
 			Source: source,
 		}
 	}
-
-	logger.Log.Infof("Done reading packets from %v", source.name)
 }
