@@ -138,7 +138,7 @@ func RunMizuTap() {
 		var statusError *k8serrors.StatusError
 		if errors.As(err, &statusError) {
 			if statusError.ErrStatus.Reason == metav1.StatusReasonAlreadyExists {
-				logger.Log.Info("Someone else may be running mizu on this cluster, run `mizu clean` if you wish to proceed anyway.")
+				logger.Log.Info("Mizu is already running in this namespace, change the `mizu-resources-namespace` configuration or run `mizu clean` to remove the currently running Mizu instance")
 			}
 		}
 		return
