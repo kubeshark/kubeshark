@@ -71,76 +71,76 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolve
 	} else if resolvedSource != "" {
 		service = resolvedSource
 	}
-	apiKey := ApiKey(reqDetails["ApiKey"].(float64))
+	apiKey := ApiKey(reqDetails["apiKey"].(float64))
 
 	summary := ""
 	switch apiKey {
 	case Metadata:
-		_topics := reqDetails["Payload"].(map[string]interface{})["Topics"]
+		_topics := reqDetails["payload"].(map[string]interface{})["topics"]
 		if _topics == nil {
 			break
 		}
 		topics := _topics.([]interface{})
 		for _, topic := range topics {
-			summary += fmt.Sprintf("%s, ", topic.(map[string]interface{})["Name"].(string))
+			summary += fmt.Sprintf("%s, ", topic.(map[string]interface{})["name"].(string))
 		}
 		if len(summary) > 0 {
 			summary = summary[:len(summary)-2]
 		}
 		break
 	case ApiVersions:
-		summary = reqDetails["ClientID"].(string)
+		summary = reqDetails["clientID"].(string)
 		break
 	case Produce:
-		_topics := reqDetails["Payload"].(map[string]interface{})["TopicData"]
+		_topics := reqDetails["payload"].(map[string]interface{})["topicData"]
 		if _topics == nil {
 			break
 		}
 		topics := _topics.([]interface{})
 		for _, topic := range topics {
-			summary += fmt.Sprintf("%s, ", topic.(map[string]interface{})["Topic"].(string))
+			summary += fmt.Sprintf("%s, ", topic.(map[string]interface{})["topic"].(string))
 		}
 		if len(summary) > 0 {
 			summary = summary[:len(summary)-2]
 		}
 		break
 	case Fetch:
-		_topics := reqDetails["Payload"].(map[string]interface{})["Topics"]
+		_topics := reqDetails["payload"].(map[string]interface{})["topics"]
 		if _topics == nil {
 			break
 		}
 		topics := _topics.([]interface{})
 		for _, topic := range topics {
-			summary += fmt.Sprintf("%s, ", topic.(map[string]interface{})["Topic"].(string))
+			summary += fmt.Sprintf("%s, ", topic.(map[string]interface{})["topic"].(string))
 		}
 		if len(summary) > 0 {
 			summary = summary[:len(summary)-2]
 		}
 		break
 	case ListOffsets:
-		_topics := reqDetails["Payload"].(map[string]interface{})["Topics"]
+		_topics := reqDetails["payload"].(map[string]interface{})["topics"]
 		if _topics == nil {
 			break
 		}
 		topics := _topics.([]interface{})
 		for _, topic := range topics {
-			summary += fmt.Sprintf("%s, ", topic.(map[string]interface{})["Name"].(string))
+			summary += fmt.Sprintf("%s, ", topic.(map[string]interface{})["name"].(string))
 		}
 		if len(summary) > 0 {
 			summary = summary[:len(summary)-2]
 		}
 		break
 	case CreateTopics:
-		topics := reqDetails["Payload"].(map[string]interface{})["Topics"].([]interface{})
+		topics := reqDetails["payload"].(map[string]interface{})["topics"].([]interface{})
 		for _, topic := range topics {
-			summary += fmt.Sprintf("%s, ", topic.(map[string]interface{})["Name"].(string))
+			summary += fmt.Sprintf("%s, ", topic.(map[string]interface{})["name"].(string))
 		}
 		if len(summary) > 0 {
 			summary = summary[:len(summary)-2]
 		}
 		break
 	case DeleteTopics:
-		topicNames := reqDetails["TopicNames"].([]string)
+		topicNames := reqDetails["topicNames"].([]string)
 		for _, name := range topicNames {
 			summary += fmt.Sprintf("%s, ", name)
 		}
@@ -220,7 +220,7 @@ func (d dissecting) Represent(entry *api.MizuEntry) (p api.Protocol, object []by
 	reqDetails := request["details"].(map[string]interface{})
 	resDetails := response["details"].(map[string]interface{})
 
-	apiKey := ApiKey(reqDetails["ApiKey"].(float64))
+	apiKey := ApiKey(reqDetails["apiKey"].(float64))
 
 	var repRequest []interface{}
 	var repResponse []interface{}
