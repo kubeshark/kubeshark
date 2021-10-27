@@ -153,8 +153,8 @@ func (d dissecting) Represent(entry *api.MizuEntry) (p api.Protocol, object []by
 	response := root["response"].(map[string]interface{})["payload"].(map[string]interface{})
 	reqDetails := request["details"].(map[string]interface{})
 	resDetails := response["details"].(map[string]interface{})
-	repRequest := representGeneric(reqDetails)
-	repResponse := representGeneric(resDetails)
+	repRequest := representGeneric(reqDetails, `request.`)
+	repResponse := representGeneric(resDetails, `response.`)
 	representation["request"] = repRequest
 	representation["response"] = repResponse
 	object, err = json.Marshal(representation)
