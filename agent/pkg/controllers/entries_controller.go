@@ -106,7 +106,7 @@ func GetEntry(c *gin.Context) {
 		Service:         entry["service"].(string),
 		Timestamp:       int64(entry["timestamp"].(float64)),
 		ElapsedTime:     int64(entry["elapsedTime"].(float64)),
-		Path:            entry["path"].(string),
+		Summary:         entry["summary"].(string),
 		// ResolvedSource:      entry["resolvedSource"].(string),
 		// ResolvedDestination: entry["resolvedDestination"].(string),
 		SourceIp:        entry["sourceIp"].(string),

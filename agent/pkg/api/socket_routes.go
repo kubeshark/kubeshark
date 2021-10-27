@@ -123,10 +123,10 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 					var d map[string]interface{}
 					err = json.Unmarshal(bytes, &d)
 
-					summary := d["summary"].(map[string]interface{})
-					summary["id"] = uint(d["id"].(float64))
+					base := d["base"].(map[string]interface{})
+					base["id"] = uint(d["id"].(float64))
 
-					baseEntryBytes, _ := models.CreateBaseEntryWebSocketMessage(summary)
+					baseEntryBytes, _ := models.CreateBaseEntryWebSocketMessage(base)
 					ws.WriteMessage(1, baseEntryBytes)
 				}
 			}

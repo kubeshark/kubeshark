@@ -3,7 +3,7 @@ import EntryViewer from "./EntryDetailed/EntryViewer";
 import {makeStyles} from "@material-ui/core";
 import Protocol from "./UI/Protocol"
 import StatusCode from "./UI/StatusCode";
-import {EndpointPath} from "./UI/EndpointPath";
+import {Summary} from "./UI/Summary";
 
 const useStyles = makeStyles(() => ({
     entryTitle: {
@@ -64,14 +64,14 @@ const EntryTitle: React.FC<any> = ({protocol, data, bodySize, elapsedTime, updat
 const EntrySummary: React.FC<any> = ({data, updateQuery}) => {
     const classes = useStyles();
 
-    const {response, request} = JSON.parse(data.entry);
+    const {response} = JSON.parse(data.entry);
 
     return <div className={classes.entrySummary}>
         {response?.payload && response.payload?.details && "status" in response.payload.details && <div style={{marginRight: 8}}>
             <StatusCode statusCode={response.payload.details.status} updateQuery={updateQuery}/>
         </div>}
         <div style={{flexGrow: 1, overflow: 'hidden'}}>
-            <EndpointPath method={request?.payload.method} path={request?.payload.url} updateQuery={updateQuery}/>
+            <Summary method={data.method} summary={data.summary} updateQuery={updateQuery}/>
         </div>
     </div>;
 };

@@ -157,6 +157,7 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolve
 
 	request["url"] = reqDetails["url"].(string)
 	reqDetails["path"] = path
+	reqDetails["summary"] = path
 
 	// Rearrange the maps for the querying
 	reqDetails["_headers"] = reqDetails["headers"]
@@ -206,7 +207,7 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolve
 		Service:             service,
 		Timestamp:           item.Timestamp,
 		ElapsedTime:         elapsedTime,
-		Path:                path,
+		Summary:             path,
 		ResolvedSource:      resolvedSource,
 		ResolvedDestination: resolvedDestination,
 		SourceIp:            item.ConnectionInfo.ClientIP,
@@ -231,7 +232,7 @@ func (d dissecting) Summarize(entry *api.MizuEntry) *api.BaseEntryDetails {
 		RequestSenderIp: entry.RequestSenderIp,
 		Service:         entry.Service,
 		Path:            entry.Path,
-		Summary:         entry.Path,
+		Summary:         entry.Summary,
 		StatusCode:      entry.Status,
 		Method:          entry.Method,
 		Timestamp:       entry.Timestamp,

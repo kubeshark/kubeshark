@@ -1,14 +1,14 @@
 import miscStyles from "./style/misc.module.sass";
 import React from "react";
-import styles from './style/EndpointPath.module.sass';
+import styles from './style/Summary.module.sass';
 
-interface EndpointPathProps {
+interface SummaryProps {
     method: string
-    path: string
+    summary: string
     updateQuery: any
 }
 
-export const EndpointPath: React.FC<EndpointPathProps> = ({method, path, updateQuery}) => {
+export const Summary: React.FC<SummaryProps> = ({method, summary, updateQuery}) => {
     return <div className={styles.container}>
         {method && <span
             title="Method"
@@ -20,15 +20,15 @@ export const EndpointPath: React.FC<EndpointPathProps> = ({method, path, updateQ
         >
             {method}
         </span>}
-        {path && <div
+        {summary && <div
             title="Summary"
-            className={styles.path}
+            className={styles.summary}
             onClick={() => {
-                updateQuery(`path == "${path}"`)
+                updateQuery(`summary == "${summary}"`)
             }}
             style={{cursor: "pointer"}}
         >
-            {path}
+            {summary}
         </div>}
     </div>
 };

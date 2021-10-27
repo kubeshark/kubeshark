@@ -2,7 +2,7 @@ import React from "react";
 import styles from './EntryListItem.module.sass';
 import StatusCode, {getClassification, StatusCodeClassification} from "../UI/StatusCode";
 import Protocol, {ProtocolInterface} from "../UI/Protocol"
-import {EndpointPath} from "../UI/EndpointPath";
+import {Summary} from "../UI/Summary";
 import ingoingIconSuccess from "../assets/ingoing-traffic-success.svg"
 import ingoingIconFailure from "../assets/ingoing-traffic-failure.svg"
 import ingoingIconNeutral from "../assets/ingoing-traffic-neutral.svg"
@@ -137,7 +137,7 @@ export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, isSel
                 <StatusCode statusCode={entry.statusCode} updateQuery={updateQuery}/>
             </div>}
             <div className={styles.endpointServiceContainer}>
-                <EndpointPath method={entry.method} path={entry.summary} updateQuery={updateQuery}/>
+                <Summary method={entry.method} summary={entry.summary} updateQuery={updateQuery}/>
                 <div className={styles.service}>
                     <span
                         title="Service Name"

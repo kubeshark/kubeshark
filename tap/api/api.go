@@ -126,7 +126,8 @@ type MizuEntry struct {
 	Timestamp              int64                  `json:"timestamp"`
 	Request                map[string]interface{} `json:"request"`
 	Response               map[string]interface{} `json:"response"`
-	Summary                *BaseEntryDetails      `json:"summary"`
+	Base                   *BaseEntryDetails      `json:"base"`
+	Summary                string                 `json:"summary"`
 	Entry                  string                 `json:"entry,omitempty"`
 	EntryId                string                 `json:"entryId" gorm:"column:entryId"`
 	Url                    string                 `json:"url" gorm:"column:url"`
