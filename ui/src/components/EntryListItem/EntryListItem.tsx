@@ -141,6 +141,7 @@ export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, isSel
                 <div className={styles.service}>
                     <span
                         title="Service Name"
+                        className="queryable"
                         onClick={() => {
                             updateQuery(`service == "${entry.service}"`)
                         }}
@@ -165,7 +166,7 @@ export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, isSel
             }
             <div className={styles.separatorRight}>
                 <span
-                    className={styles.port}
+                    className={`queryable ${styles.port}`}
                     title="Source Port"
                     onClick={() => {
                         updateQuery(`src.port == "${entry.sourcePort}"`)
@@ -193,7 +194,7 @@ export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, isSel
                     />
                 }
                 <span
-                    className={styles.port}
+                    className={`queryable ${styles.port}`}
                     title="Destination Port"
                     onClick={() => {
                         updateQuery(`dst.port == "${entry.destinationPort}"`)
@@ -205,6 +206,7 @@ export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, isSel
             <div className={styles.timestamp}>
                 <span
                     title="Timestamp"
+                    className="queryable"
                     onClick={() => {
                         console.log(entry.timestamp)
                         updateQuery(`timestamp >= datetime("${new Date(+entry.timestamp)?.toLocaleString("en-US", {timeZone: 'UTC' })}")`)

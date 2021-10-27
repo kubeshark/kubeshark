@@ -18,11 +18,10 @@ const StatusCode: React.FC<EntryProps> = ({statusCode, updateQuery}) => {
 
     return <span
         title="Status Code"
-        className={`${styles[classification]} ${styles.base}`}
+        className={`queryable ${styles[classification]} ${styles.base}`}
         onClick={() => {
             updateQuery(`response.status == ${statusCode}`)
         }}
-        style={{cursor: "pointer"}}
     >
         {statusCode}
     </span>

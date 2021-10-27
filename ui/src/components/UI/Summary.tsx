@@ -12,21 +12,19 @@ export const Summary: React.FC<SummaryProps> = ({method, summary, updateQuery}) 
     return <div className={styles.container}>
         {method && <span
             title="Method"
-            className={`${miscStyles.protocol} ${miscStyles.method}`}
+            className={`queryable ${miscStyles.protocol} ${miscStyles.method}`}
             onClick={() => {
                 updateQuery(`method == "${method}"`)
             }}
-            style={{cursor: "pointer"}}
         >
             {method}
         </span>}
         {summary && <div
             title="Summary"
-            className={styles.summary}
+            className={`queryable ${styles.summary}`}
             onClick={() => {
                 updateQuery(`summary == "${summary}"`)
             }}
-            style={{cursor: "pointer"}}
         >
             {summary}
         </div>}

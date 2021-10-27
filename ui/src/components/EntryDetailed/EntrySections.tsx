@@ -17,7 +17,7 @@ interface EntryViewLineProps {
 const EntryViewLine: React.FC<EntryViewLineProps> = ({label, value, updateQuery, selector, overrideQueryValue}) => {
     return (label && value && <tr className={styles.dataLine}>
                 <td
-                    className={styles.dataKey}
+                    className={`queryable ${styles.dataKey}`}
                     onClick={() => {
                         if (!selector) {
                             return
@@ -29,7 +29,6 @@ const EntryViewLine: React.FC<EntryViewLineProps> = ({label, value, updateQuery,
                             updateQuery(`${selector} == ${value}`)
                         }
                     }}
-                    style={{cursor: "pointer"}}
                 >
                     {label}
                 </td>

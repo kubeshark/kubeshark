@@ -42,7 +42,8 @@ const EntryTitle: React.FC<any> = ({protocol, data, bodySize, elapsedTime, updat
         <Protocol protocol={protocol} horizontal={true} updateQuery={null}/>
         <div style={{right: "30px", position: "absolute", display: "flex"}}>
             {response.payload && <div
-                style={{margin: "0 18px", opacity: 0.5, cursor: "pointer"}}
+                className="queryable"
+                style={{margin: "0 18px", opacity: 0.5}}
                 onClick={() => {
                     updateQuery(`response.bodySize == ${bodySize}`)
                 }}
@@ -50,7 +51,8 @@ const EntryTitle: React.FC<any> = ({protocol, data, bodySize, elapsedTime, updat
                 {formatSize(bodySize)}
             </div>}
             {response.payload && <div
-                style={{marginRight: 18, opacity: 0.5, cursor: "pointer"}}
+                className="queryable"
+                style={{marginRight: 18, opacity: 0.5}}
                 onClick={() => {
                     updateQuery(`elapsedTime >= ${elapsedTime}`)
                 }}
