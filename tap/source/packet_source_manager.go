@@ -2,6 +2,7 @@ package source
 
 import (
 	"fmt"
+	"runtime"
 	"strconv"
 	"strings"
 
@@ -15,9 +16,8 @@ type PacketSourceManager struct {
 
 func NewPacketSourceManager(procfs string, pids string, filename string, interfaceName string,
 	behaviour TcpPacketSourceBehaviour) (*PacketSourceManager, error) {
-
 	sources := make([]*tcpPacketSource, 0)
-	host_source, err := newTcpPacketSource(filename, interfaceName, behaviour)
+	host_source, err := newHostPacketSource(filename, interfaceName, behaviour)
 
 	if err != nil {
 		return nil, err
@@ -27,10 +27,7 @@ func NewPacketSourceManager(procfs string, pids string, filename string, interfa
 
 	if pids != "" {
 		netnsSources := newNetnsPacketSources(procfs, pids, interfaceName, behaviour)
-
-		if err != nil {
-			sources = append(sources, netnsSources...)
-		}
+		sources = append(sources, netnsSources...)
 	}
 
 	return &PacketSourceManager{
@@ -38,9 +35,28 @@ func NewPacketSourceManager(procfs string, pids string, filename string, interfa
 	}, nil
 }
 
+func newHostPacketSource(filename string, interfaceName string,
+	behaviour TcpPacketSourceBehaviour) (*tcpPacketSource, error) {
+	var name string
+
+	if filename == "" {
+		name = fmt.Sprintf("host-%v", interfaceName)
+	} else {
+		name = fmt.Sprintf("file-%v", filename)
+	}
+
+	source, err := newTcpPacketSource(name, filename, interfaceName, behaviour)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return source, nil
+}
+
 func newNetnsPacketSources(procfs string, pids string, interfaceName string,
 	behaviour TcpPacketSourceBehaviour) []*tcpPacketSource {
-	result := make([]*tcpPacketSource, 1)
+	result := make([]*tcpPacketSource, 0)
 
 	for _, pidstr := range strings.Split(pids, ",") {
 		pid, err := strconv.Atoi(pidstr)
@@ -74,30 +90,41 @@ func newNetnsPacketSource(pid int, nsh netns.NsHandle, interfaceName string,
 	behaviour TcpPacketSourceBehaviour) (*tcpPacketSource, error) {
 
 	done := make(chan *tcpPacketSource)
+	errors := make(chan error)
 
 	go func(done chan<- *tcpPacketSource) {
+		// Setting a netns should be done from a dedicated OS thread.
+		//
+		// goroutines are not really OS threads, we try to mimic the issue by
+		//	locking the OS thread to this goroutine
+		//
+		runtime.LockOSThread()
+		defer runtime.UnlockOSThread()
+
 		if err := netns.Set(nsh); err != nil {
 			logger.Log.Errorf("Unable to set netns of pid %v - %v", pid, err)
-			close(done)
+			errors <- err
+			return
 		}
 
-		src, err := newTcpPacketSource("", interfaceName, behaviour)
+		name := fmt.Sprintf("netns-%v-%v", pid, interfaceName)
+		src, err := newTcpPacketSource(name, "", interfaceName, behaviour)
 
 		if err != nil {
 			logger.Log.Errorf("Error listening to PID %v - %v", pid, err)
-			close(done)
+			errors <- err
+			return
 		}
 
 		done <- src
 	}(done)
 
-	result, closed := <-done
-
-	if closed {
-		return nil, fmt.Errorf("unable to listen to PID: %v", pid)
+	select {
+	case err := <-errors:
+		return nil, err
+	case source := <-done:
+		return source, nil
 	}
-
-	return result, nil
 }
 
 func (m *PacketSourceManager) ReadPackets(ipdefrag bool, packets chan<- TcpPacketInfo) {
@@ -108,6 +135,6 @@ func (m *PacketSourceManager) ReadPackets(ipdefrag bool, packets chan<- TcpPacke
 
 func (m *PacketSourceManager) Close() {
 	for _, src := range m.sources {
-		go src.close()
+		src.close()
 	}
 }

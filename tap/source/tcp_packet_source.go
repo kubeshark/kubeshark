@@ -18,6 +18,7 @@ type tcpPacketSource struct {
 	handle    *pcap.Handle
 	defragger *ip4defrag.IPv4Defragmenter
 	Behaviour *TcpPacketSourceBehaviour
+	name      string
 }
 
 type TcpPacketSourceBehaviour struct {
@@ -34,11 +35,12 @@ type TcpPacketInfo struct {
 	Source *tcpPacketSource
 }
 
-func newTcpPacketSource(filename string, interfaceName string,
+func newTcpPacketSource(name, filename string, interfaceName string,
 	behaviour TcpPacketSourceBehaviour) (*tcpPacketSource, error) {
 	var err error
 
 	result := &tcpPacketSource{
+		name:      name,
 		defragger: ip4defrag.NewIPv4Defragmenter(),
 		Behaviour: &behaviour,
 	}
@@ -103,14 +105,17 @@ func (source *tcpPacketSource) close() {
 }
 
 func (source *tcpPacketSource) readPackets(ipdefrag bool, packets chan<- TcpPacketInfo) {
+	logger.Log.Infof("Start reading packets from %v", source.name)
+
 	for {
 		packet, err := source.source.NextPacket()
 
 		if err == io.EOF {
+			logger.Log.Infof("Got EOF while reading packets from %v", source.name)
 			return
 		} else if err != nil {
 			if err.Error() != "Timeout Expired" {
-				logger.Log.Debugf("Error: %T", err)
+				logger.Log.Debugf("Error while reading from %v - %v", source.name, err)
 			}
 			continue
 		}
@@ -147,4 +152,6 @@ func (source *tcpPacketSource) readPackets(ipdefrag bool, packets chan<- TcpPack
 			Source: source,
 		}
 	}
+
+	logger.Log.Infof("Done reading packets from %v", source.name)
 }
