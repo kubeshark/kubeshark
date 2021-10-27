@@ -261,6 +261,11 @@ func representRequest(request map[string]interface{}) (repRequest []interface{})
 			Selector: `request.url`,
 		},
 		{
+			Name:     "Path",
+			Value:    request["path"].(string),
+			Selector: `request.path`,
+		},
+		{
 			Name:     "Body Size (bytes)",
 			Value:    int64(request["bodySize"].(float64)),
 			Selector: `request.bodySize`,
