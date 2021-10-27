@@ -11,15 +11,18 @@ interface EntryViewLineProps {
     value: number | string;
     updateQuery: any;
     selector: string;
+    overrideQueryValue?: string;
 }
 
-const EntryViewLine: React.FC<EntryViewLineProps> = ({label, value, updateQuery, selector}) => {
+const EntryViewLine: React.FC<EntryViewLineProps> = ({label, value, updateQuery, selector, overrideQueryValue}) => {
     return (label && value && <tr className={styles.dataLine}>
                 <td
                     className={styles.dataKey}
                     onClick={() => {
-                        if (selector == null) {
+                        if (!selector) {
                             return
+                        } else if (overrideQueryValue) {
+                            updateQuery(`${selector} == ${overrideQueryValue}`)
                         } else if (typeof(value) == "string") {
                             updateQuery(`${selector} == "${JSON.stringify(value).slice(1, -1)}"`)
                         } else {
@@ -81,6 +84,7 @@ interface EntryBodySectionProps {
     updateQuery: any,
     encoding?: string,
     contentType?: string,
+    selector?: string,
 }
 
 export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
@@ -89,6 +93,7 @@ export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
     content,
     encoding,
     contentType,
+    selector,
 }) => {
     const MAXIMUM_BYTES_TO_HIGHLIGHT = 10000; // The maximum of chars to highlight in body, in case the response can be megabytes
     const supportedLanguages = [['html', 'html'], ['json', 'json'], ['application/grpc', 'json']]; // [[indicator, languageToUse],...]
@@ -125,8 +130,8 @@ export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
         {content && content?.length > 0 && <EntrySectionContainer title='Body' color={color}>
             <table>
                 <tbody>
-                    <EntryViewLine label={'Mime type'} value={contentType} updateQuery={updateQuery} selector={null}/>
-                    <EntryViewLine label={'Encoding'} value={encoding} updateQuery={updateQuery} selector={null}/>
+                    <EntryViewLine label={'Mime type'} value={contentType} updateQuery={updateQuery} selector={selector} overrideQueryValue={`r".*"`}/>
+                    <EntryViewLine label={'Encoding'} value={encoding} updateQuery={updateQuery} selector={selector} overrideQueryValue={`r".*"`}/>
                 </tbody>
             </table>
 

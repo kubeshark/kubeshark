@@ -290,13 +290,14 @@ func representBasicPublish(event map[string]interface{}) []interface{} {
 		})
 	}
 
-	if event["Body"] != nil {
+	if event["body"] != nil {
 		rep = append(rep, api.SectionData{
 			Type:     api.BODY,
 			Title:    "Body",
 			Encoding: "base64",
 			MimeType: contentType,
 			Data:     event["body"].(string),
+			Selector: `request.body`,
 		})
 	}
 
@@ -373,13 +374,14 @@ func representBasicDeliver(event map[string]interface{}) []interface{} {
 		})
 	}
 
-	if event["Body"] != nil {
+	if event["body"] != nil {
 		rep = append(rep, api.SectionData{
 			Type:     api.BODY,
 			Title:    "Body",
 			Encoding: "base64",
 			MimeType: contentType,
 			Data:     event["body"].(string),
+			Selector: `request.body`,
 		})
 	}
 

@@ -302,6 +302,7 @@ func representRequest(request map[string]interface{}) (repRequest []interface{})
 			Title:    "POST Data (text/plain)",
 			MimeType: mimeType.(string),
 			Data:     text.(string),
+			Selector: `request.postData.text`,
 		})
 	}
 
@@ -387,6 +388,7 @@ func representResponse(response map[string]interface{}) (repResponse []interface
 			Encoding: encoding.(string),
 			MimeType: mimeType.(string),
 			Data:     text.(string),
+			Selector: `response.content.text`,
 		})
 	}
 

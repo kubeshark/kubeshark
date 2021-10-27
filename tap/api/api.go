@@ -231,6 +231,7 @@ type SectionData struct {
 	Data     string `json:"data"`
 	Encoding string `json:"encoding,omitempty"`
 	MimeType string `json:"mimeType,omitempty"`
+	Selector string `json:"selector,omitempty"`
 }
 
 type TableData struct {
