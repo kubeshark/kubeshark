@@ -7,15 +7,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/up9inc/mizu/cli/config/configStructs"
+	"github.com/up9inc/mizu/shared/logger"
 	"github.com/up9inc/mizu/shared/semver"
 	"k8s.io/apimachinery/pkg/version"
 	"net/url"
 	"path/filepath"
 	"regexp"
-	"strconv"
-
-	"github.com/up9inc/mizu/cli/config/configStructs"
-	"github.com/up9inc/mizu/shared/logger"
 
 	"io"
 
@@ -180,7 +178,7 @@ func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, opts *ApiS
 
 	configMapVolumeName := &core.ConfigMapVolumeSource{}
 	configMapVolumeName.Name = mizu.ConfigMapName
-	configMapOptional := true
+	configMapOptional := false
 	configMapVolumeName.Optional = &configMapOptional
 
 	cpuLimit, err := resource.ParseQuantity(opts.Resources.CpuLimit)
@@ -227,7 +225,7 @@ func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, opts *ApiS
 					VolumeMounts: []core.VolumeMount{
 						{
 							Name:      mizu.ConfigMapName,
-							MountPath: shared.RulePolicyPath,
+							MountPath: shared.ConfigDirPath,
 						},
 					},
 					Command: command,
@@ -235,10 +233,6 @@ func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, opts *ApiS
 						{
 							Name:  shared.SyncEntriesConfigEnvVar,
 							Value: string(marshaledSyncEntriesConfig),
-						},
-						{
-							Name:  shared.MaxEntriesDBSizeBytesEnvVar,
-							Value: strconv.FormatInt(opts.MaxEntriesDBSizeBytes, 10),
 						},
 						{
 							Name:  shared.DebugModeEnvVar,
@@ -496,14 +490,16 @@ func (provider *Provider) handleRemovalError(err error) error {
 	return err
 }
 
-func (provider *Provider) CreateConfigMap(ctx context.Context, namespace string, configMapName string, data string, contract string) error {
-	if data == "" && contract == "" {
-		return nil
-	}
-
+func (provider *Provider) CreateConfigMap(ctx context.Context, namespace string, configMapName string, data string, contract string, mizuConfig string) error {
 	configMapData := make(map[string]string, 0)
-	configMapData[shared.RulePolicyFileName] = data
-	configMapData[shared.ContractFileName] = contract
+	if data != "" {
+		configMapData[shared.RulePolicyFileName] = data
+	}
+	if contract != "" {
+		configMapData[shared.ContractFileName] = contract
+	}
+	configMapData[shared.ConfigFileName] = mizuConfig
+
 	configMap := &core.ConfigMap{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "ConfigMap",

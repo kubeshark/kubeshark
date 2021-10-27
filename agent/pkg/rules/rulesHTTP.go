@@ -45,7 +45,7 @@ func ValidateService(serviceFromRule string, service string) bool {
 }
 
 func MatchRequestPolicy(harEntry har.Entry, service string) (resultPolicyToSend []RulesMatched, isEnabled bool) {
-	enforcePolicy, err := shared.DecodeEnforcePolicy(fmt.Sprintf("%s/%s", shared.RulePolicyPath, shared.RulePolicyFileName))
+	enforcePolicy, err := shared.DecodeEnforcePolicy(fmt.Sprintf("%s/%s", shared.ConfigDirPath, shared.RulePolicyFileName))
 	if err == nil && len(enforcePolicy.Rules) > 0 {
 		isEnabled = true
 	}

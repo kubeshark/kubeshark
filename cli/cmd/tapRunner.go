@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -173,15 +174,20 @@ func createMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Pro
 		return err
 	}
 
-	if err := createMizuConfigmap(ctx, kubernetesProvider, mizuValidationRules, contract); err != nil {
+	mizuConfig, err := getSerializedMizuConfig()
+	if err != nil {
+		return err
+	}
+
+	if err := createMizuConfigmap(ctx, kubernetesProvider, mizuValidationRules, contract, mizuConfig); err != nil {
 		logger.Log.Warningf(uiUtils.Warning, fmt.Sprintf("Failed to create resources required for policy validation. Mizu will not validate policy rules. error: %v\n", errormessage.FormatError(err)))
 	}
 
 	return nil
 }
 
-func createMizuConfigmap(ctx context.Context, kubernetesProvider *kubernetes.Provider, data string, contract string) error {
-	err := kubernetesProvider.CreateConfigMap(ctx, config.Config.MizuResourcesNamespace, mizu.ConfigMapName, data, contract)
+func createMizuConfigmap(ctx context.Context, kubernetesProvider *kubernetes.Provider, data string, contract string, mizuConfig string) error {
+	err := kubernetesProvider.CreateConfigMap(ctx, config.Config.MizuResourcesNamespace, mizu.ConfigMapName, data, contract, mizuConfig)
 	return err
 }
 
@@ -232,12 +238,12 @@ func createMizuApiServer(ctx context.Context, kubernetesProvider *kubernetes.Pro
 }
 
 func getMizuApiFilteringOptions() (*api.TrafficFilteringOptions, error) {
-	var compiledRegexSlice []*api.SerializableRegexp
+	var compiledRegexSlice []*shared.SerializableRegexp
 
 	if config.Config.Tap.PlainTextFilterRegexes != nil && len(config.Config.Tap.PlainTextFilterRegexes) > 0 {
-		compiledRegexSlice = make([]*api.SerializableRegexp, 0)
+		compiledRegexSlice = make([]*shared.SerializableRegexp, 0)
 		for _, regexStr := range config.Config.Tap.PlainTextFilterRegexes {
-			compiledRegex, err := api.CompileRegexToSerializableRegexp(regexStr)
+			compiledRegex, err := shared.CompileRegexToSerializableRegexp(regexStr)
 			if err != nil {
 				return nil, err
 			}
@@ -756,4 +762,28 @@ func getNamespaces(kubernetesProvider *kubernetes.Provider) []string {
 	} else {
 		return []string{kubernetesProvider.CurrentNamespace()}
 	}
+}
+
+func getSerializedMizuConfig() (string, error) {
+	mizuConfig, err := getMizuConfig()
+	if err != nil {
+		return "", err
+	}
+	serializedConfig, err := json.Marshal(mizuConfig)
+	if err != nil {
+		return "", err
+	}
+	return string(serializedConfig), nil
+}
+
+func getMizuConfig() (*shared.MizuConfig, error) {
+	serializableRegex, err := shared.CompileRegexToSerializableRegexp(config.Config.Tap.PodRegexStr)
+	if err != nil {
+		return nil, err
+	}
+	config := shared.MizuConfig{
+		TapTargetRegex: *serializableRegex,
+		MaxDBSizeBytes: config.Config.Tap.MaxEntriesDBSizeBytes(),
+	}
+	return &config, nil
 }

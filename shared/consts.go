@@ -6,10 +6,10 @@ const (
 	HostModeEnvVar                   = "HOST_MODE"
 	NodeNameEnvVar                   = "NODE_NAME"
 	TappedAddressesPerNodeDictEnvVar = "TAPPED_ADDRESSES_PER_HOST"
-	MaxEntriesDBSizeBytesEnvVar      = "MAX_ENTRIES_DB_BYTES"
-	RulePolicyPath                   = "/app/enforce-policy/"
+	ConfigDirPath                    = "/app/config/"
 	RulePolicyFileName               = "enforce-policy.yaml"
 	ContractFileName                 = "contract-oas.yaml"
+	ConfigFileName                   = "mizu-config.json"
 	GoGCEnvVar                       = "GOGC"
 	DefaultApiServerPort             = 8899
 	DebugModeEnvVar                  = "MIZU_DEBUG"
