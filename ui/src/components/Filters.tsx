@@ -54,7 +54,14 @@ export const QueryForm: React.FC<QueryFormProps> = ({query, setQuery, background
             }}
         >
             <Grid container spacing={2}>
-                <Grid item xs={9}>
+                <Grid
+                    item
+                    xs={9}
+                    style={{
+                        maxHeight: '25vh',
+                        overflowY: 'auto',
+                    }}
+                >
                     <label>
                         <CodeEditor
                             value={query}
