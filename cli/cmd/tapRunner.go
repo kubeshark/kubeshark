@@ -267,7 +267,7 @@ func getSyncEntriesConfig() *shared.SyncEntriesConfig {
 }
 
 func updateMizuTappers(ctx context.Context, kubernetesProvider *kubernetes.Provider, mizuApiFilteringOptions *api.TrafficFilteringOptions) error {
-	nodeToTappedPodIPMap := getNodeHostToTappedPodIpsMap(state.currentlyTappedPods)
+	nodeToTappedPodIPMap := kubernetes.GetNodeHostToTappedPodIpsMap(state.currentlyTappedPods)
 
 	if len(nodeToTappedPodIPMap) > 0 {
 		var serviceAccountName string
@@ -740,19 +740,6 @@ func createRBACIfNecessary(ctx context.Context, kubernetesProvider *kubernetes.P
 		}
 	}
 	return true, nil
-}
-
-func getNodeHostToTappedPodIpsMap(tappedPods []core.Pod) map[string][]string {
-	nodeToTappedPodIPMap := make(map[string][]string, 0)
-	for _, pod := range tappedPods {
-		existingList := nodeToTappedPodIPMap[pod.Spec.NodeName]
-		if existingList == nil {
-			nodeToTappedPodIPMap[pod.Spec.NodeName] = []string{pod.Status.PodIP}
-		} else {
-			nodeToTappedPodIPMap[pod.Spec.NodeName] = append(nodeToTappedPodIPMap[pod.Spec.NodeName], pod.Status.PodIP)
-		}
-	}
-	return nodeToTappedPodIPMap
 }
 
 func getNamespaces(kubernetesProvider *kubernetes.Provider) []string {
