@@ -25,13 +25,6 @@ jobs:
         working-directory: ./ui
         run: snyk test
         continue-on-error: true
-        with:
-          args: --sarif-file-output=snyk.sarif
-
-      - name: Upload result to GitHub Code Scanning
-        uses: github/codeql-action/upload-sarif@v1
-        with:
-          sarif_file: snyk.sarif
 
       - name: CLI
         working-directory: ./cli
@@ -40,6 +33,7 @@ jobs:
       - name: Agent
         working-directory: ./agent
         run: snyk test
+        continue-on-error: true
 
       - name: Shared
         working-directory: ./shared
