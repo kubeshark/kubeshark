@@ -193,12 +193,12 @@ export const QueryForm: React.FC<QueryFormProps> = ({query, setQuery, background
                         <Divider orientation="vertical" flexItem />
                         <Grid item xs style={{margin: "10px"}}>
                             <Typography id="modal-modal-description">
-                                Since Mizu supports various protocols like AMQP, Kafka and Redis. It's possible to write complex queries that matches multiple protocols like this:
+                                Since Mizu supports various protocols like gRPC, AMQP, Kafka and Redis. It's possible to write complex queries that matches multiple protocols like this:
                             </Typography>
                             <SyntaxHighlighter
                                 isWrapped={false}
                                 showLineNumbers={false}
-                                code={`(http and request.method == "PUT") or (amqp and request.queue.startsWith("test"))\n or (kafka and response.payload.errorCode == 2) or (redis and request.key == "example")`}
+                                code={`(http and request.method == "PUT") or (amqp and request.queue.startsWith("test"))\n or (kafka and response.payload.errorCode == 2) or (redis and request.key == "example")\n or (grpc and request.headers[":path"] == r".*foo.*")`}
                                 language="python"
                             />
                             <Typography id="modal-modal-description">
