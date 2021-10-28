@@ -17,7 +17,7 @@ const mizuServicePort = 80
 func StartProxy(kubernetesProvider *Provider, mizuPort uint16, mizuNamespace string, mizuServiceName string) error {
 	logger.Log.Debugf("Starting proxy. namespace: [%v], service name: [%s], port: [%v]", mizuNamespace, mizuServiceName, mizuPort)
 	filter := &proxy.FilterServer{
-		AcceptPaths:   proxy.MakeRegexpArrayOrDie(proxy.DefaultPathAcceptRE),
+		AcceptPaths:   proxy.MakeRegexpArrayOrDie(".*"),
 		RejectPaths:   proxy.MakeRegexpArrayOrDie(proxy.DefaultPathRejectRE),
 		AcceptHosts:   proxy.MakeRegexpArrayOrDie(proxy.DefaultHostAcceptRE),
 		RejectMethods: proxy.MakeRegexpArrayOrDie(proxy.DefaultMethodRejectRE),
@@ -32,7 +32,7 @@ func StartProxy(kubernetesProvider *Provider, mizuPort uint16, mizuNamespace str
 	mux.Handle("/static/", getRerouteHttpHandlerMizuStatic(proxyHandler, mizuNamespace, mizuServiceName))
 	mux.Handle("/mizu/", getRerouteHttpHandlerMizuAPI(proxyHandler, mizuNamespace, mizuServiceName))
 
-	l, err := net.Listen("tcp", fmt.Sprintf("%s:%d", "127.0.0.1", int(mizuPort)))
+	l, err := net.Listen("tcp", fmt.Sprintf("%s:%d", "0.0.0.0", int(mizuPort)))
 	if err != nil {
 		return err
 	}
