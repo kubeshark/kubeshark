@@ -24,6 +24,7 @@ jobs:
 
       - name: Snyk monitor
         run: snyk test
+        working-directory: ./cli
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
