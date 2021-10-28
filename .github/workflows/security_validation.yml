@@ -8,7 +8,7 @@ on:
 
 jobs:
   security:
-    name: Run Snyk to check for vulnerabilities
+    name: Check for vulnerabilities
     runs-on: ubuntu-latest
     env:
       SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
@@ -24,7 +24,7 @@ jobs:
       - name: UI
         working-directory: ./ui
         run: snyk test
-        continue-on-error: true
+      #        continue-on-error: true
 
       - name: CLI
         working-directory: ./cli
@@ -33,7 +33,7 @@ jobs:
       - name: Agent
         working-directory: ./agent
         run: snyk test
-        continue-on-error: true
+      #        continue-on-error: true
 
       - name: Shared
         working-directory: ./shared
