@@ -36,7 +36,6 @@ const useLayoutStyles = makeStyles(() => ({
 enum ConnectionStatus {
     Closed,
     Connected,
-    Paused
 }
 
 interface TrafficPageProps {
@@ -54,7 +53,6 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
     const [focusedEntryId, setFocusedEntryId] = useState(null);
     const [selectedEntryData, setSelectedEntryData] = useState(null);
     const [connection, setConnection] = useState(ConnectionStatus.Closed);
-    const [noMoreDataBottom, setNoMoreDataBottom] = useState(false);
 
     const [tappingStatus, setTappingStatus] = useState(null);
 
@@ -111,10 +109,6 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
             switch (message.messageType) {
                 case "entry":
                     const entry = message.data
-                    if (connection === ConnectionStatus.Paused) {
-                        setNoMoreDataBottom(false)
-                        return;
-                    }
                     if (!focusedEntryId) setFocusedEntryId(entry.id.toString())
                     let newEntries = [...entries];
                     setEntries([...newEntries, entry])
@@ -150,7 +144,6 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                     setQueriedTotal(message.data.total)
                     break;
                 case "startTime":
-                    console.log(message);
                     setStartTime(message.data);
                     break;
                 default:
@@ -189,14 +182,17 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
     }, [focusedEntryId])
 
     const toggleConnection = () => {
-        setConnection(connection === ConnectionStatus.Connected ? ConnectionStatus.Paused : ConnectionStatus.Connected);
+        if (connection === ConnectionStatus.Connected) {
+            ws.current.close();
+        } else {
+            openWebSocket(query);
+            setConnection(ConnectionStatus.Connected);
+        }
     }
 
     const getConnectionStatusClass = (isContainer) => {
         const container = isContainer ? "Container" : "";
         switch (connection) {
-            case ConnectionStatus.Paused:
-                return "orangeIndicator" + container;
             case ConnectionStatus.Connected:
                 return "greenIndicator" + container;
             default:
@@ -206,8 +202,6 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
 
     const getConnectionTitle = () => {
         switch (connection) {
-            case ConnectionStatus.Paused:
-                return "traffic paused";
             case ConnectionStatus.Connected:
                 return "connected, waiting for traffic"
             default:
@@ -251,11 +245,12 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                             focusedEntryId={focusedEntryId}
                             setFocusedEntryId={setFocusedEntryId}
                             connectionOpen={connection === ConnectionStatus.Connected}
-                            noMoreDataBottom={noMoreDataBottom}
-                            setNoMoreDataBottom={setNoMoreDataBottom}
                             listEntryREF={listEntry}
                             onScrollEvent={onScrollEvent}
                             scrollableList={disableScrollList}
+                            ws={ws.current}
+                            openWebSocket={openWebSocket}
+                            query={query}
                             updateQuery={updateQuery}
                             queriedCurrent={queriedCurrent}
                             queriedTotal={queriedTotal}

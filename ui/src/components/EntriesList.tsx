@@ -2,7 +2,6 @@ import {EntryItem} from "./EntryListItem/EntryListItem";
 import React, {useRef} from "react";
 import styles from './style/EntriesList.module.sass';
 import ScrollableFeedVirtualized from "react-scrollable-feed-virtualized";
-import Api from "../helpers/api";
 import down from "./assets/downImg.svg";
 
 interface EntriesListProps {
@@ -11,41 +10,21 @@ interface EntriesListProps {
     focusedEntryId: string;
     setFocusedEntryId: (id: string) => void;
     connectionOpen: boolean;
-    noMoreDataBottom: boolean;
-    setNoMoreDataBottom: (flag: boolean) => void;
     listEntryREF: any;
     onScrollEvent: (isAtBottom:boolean) => void;
     scrollableList: boolean;
+    ws: any
+    openWebSocket: any;
+    query: string;
     updateQuery: any;
     queriedCurrent: number;
     queriedTotal: number;
     startTime: number;
 }
 
-enum FetchOperator {
-    LT = "lt",
-    GT = "gt"
-}
-
-const api = new Api();
-
-export const EntriesList: React.FC<EntriesListProps> = ({entries, setEntries, focusedEntryId, setFocusedEntryId, connectionOpen, noMoreDataBottom, setNoMoreDataBottom, listEntryREF, onScrollEvent, scrollableList, updateQuery, queriedCurrent, queriedTotal, startTime}) => {
+export const EntriesList: React.FC<EntriesListProps> = ({entries, setEntries, focusedEntryId, setFocusedEntryId, connectionOpen, listEntryREF, onScrollEvent, scrollableList, ws, openWebSocket, query, updateQuery, queriedCurrent, queriedTotal, startTime}) => {
 
     const scrollableRef = useRef(null);
-
-    const getNewEntries = async () => {
-        const data = await api.fetchEntries(FetchOperator.GT, entries[entries.length - 1].timestamp);
-        let scrollTo;
-        if(data.length === 0) {
-            setNoMoreDataBottom(true);
-        }
-        scrollTo = document.getElementById(entries?.[entries.length -1]?.id);
-        let newEntries = [...entries, ...data];
-        setEntries(newEntries);
-        if(scrollTo) {
-            scrollTo.scrollIntoView({behavior: "smooth"});
-        }
-    }
 
     return <>
             <div className={styles.list}>
@@ -59,8 +38,8 @@ export const EntriesList: React.FC<EntriesListProps> = ({entries, setEntries, fo
                                                         style={{}}
                                                         updateQuery={updateQuery}/>)}
                     </ScrollableFeedVirtualized>
-                    {!connectionOpen && !noMoreDataBottom && <div className={styles.fetchButtonContainer}>
-                        <div className={styles.styledButton} onClick={() => getNewEntries()}>Fetch more entries</div>
+                    {!connectionOpen && <div className={styles.fetchButtonContainer}>
+                        <div className={styles.styledButton} onClick={() => {ws.close(); openWebSocket(query);}}>Reconnect</div>
                     </div>}
                     <button type="button"
                         className={`${styles.btnLive} ${scrollableList ? styles.showButton : styles.hideButton}`}
