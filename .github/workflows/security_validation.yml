@@ -8,16 +8,15 @@ on:
 
 jobs:
   security:
-    name: Check for vulnerabilities
+    name: Run Snyk to check for vulnerabilities
     runs-on: ubuntu-latest
     env:
       SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
     steps:
       - uses: actions/checkout@v2
 
-      - name: UI
+      - name: Run Snyk to check for vulnerabilities
         uses: snyk/actions/node@master
-        working-directory: ./ui
 
       - uses: snyk/actions/setup@master
       - name: Set up Go 1.16
@@ -27,16 +26,16 @@ jobs:
 
       - name: CLI
         working-directory: ./cli
-        uses: snyk/actions/golang@master
+        run: snyk test
 
       - name: Agent
         working-directory: ./agent
-        uses: snyk/actions/golang@master
+        run: snyk test
 
       - name: Shared
         working-directory: ./shared
-        uses: snyk/actions/golang@master
+        run: snyk test
 
       - name: Tap
         working-directory: ./tap
-        uses: snyk/actions/golang@master
+        run: snyk test
