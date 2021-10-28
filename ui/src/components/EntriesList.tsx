@@ -17,6 +17,8 @@ interface EntriesListProps {
     onScrollEvent: (isAtBottom:boolean) => void;
     scrollableList: boolean;
     updateQuery: any;
+    queriedCurrent: number;
+    queriedTotal: number;
 }
 
 enum FetchOperator {
@@ -26,7 +28,7 @@ enum FetchOperator {
 
 const api = new Api();
 
-export const EntriesList: React.FC<EntriesListProps> = ({entries, setEntries, focusedEntryId, setFocusedEntryId, connectionOpen, noMoreDataBottom, setNoMoreDataBottom, listEntryREF, onScrollEvent, scrollableList, updateQuery}) => {
+export const EntriesList: React.FC<EntriesListProps> = ({entries, setEntries, focusedEntryId, setFocusedEntryId, connectionOpen, noMoreDataBottom, setNoMoreDataBottom, listEntryREF, onScrollEvent, scrollableList, updateQuery, queriedCurrent, queriedTotal}) => {
 
     const scrollableRef = useRef(null);
 
@@ -67,7 +69,7 @@ export const EntriesList: React.FC<EntriesListProps> = ({entries, setEntries, fo
                 </div>
 
                 {entries?.length > 0 && <div className={styles.footer}>
-                    <div><b>{entries?.length}</b> requests</div>
+                    <div>Displaying <b>{entries?.length}</b> results (queried <b>{queriedCurrent}</b>/<b>{queriedTotal}</b>)</div>
                     <div>Started listening at <span style={{marginRight: 5, fontWeight: 600, fontSize: 13}}>{new Date(+entries[0].timestamp)?.toLocaleString()}</span></div>
                 </div>}
             </div>

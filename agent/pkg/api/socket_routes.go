@@ -80,10 +80,13 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 	}
 
 	data := make(chan []byte)
+	meta := make(chan []byte)
 
 	defer func() {
 		data <- []byte(basenine.CloseChannel)
+		meta <- []byte(basenine.CloseChannel)
 		close(data)
+		close(meta)
 		c.Close()
 		socketCleanup(socketId, connectedWebsockets[socketId])
 	}()
@@ -106,7 +109,7 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 					AutoClose: 5000,
 					Text:      fmt.Sprintf("Syntax error: %s", err.Error()),
 				})
-				ws.WriteMessage(1, toastBytes)
+				BroadcastToBrowserClients(toastBytes)
 				break
 			}
 
@@ -127,13 +130,33 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 					base["id"] = uint(d["id"].(float64))
 
 					baseEntryBytes, _ := models.CreateBaseEntryWebSocketMessage(base)
-					ws.WriteMessage(1, baseEntryBytes)
+					BroadcastToBrowserClients(baseEntryBytes)
+				}
+			}
+
+			handleMetaChannel := func(c *basenine.Connection, meta chan []byte) {
+				for {
+					bytes := <-meta
+
+					if string(bytes) == basenine.CloseChannel {
+						return
+					}
+
+					var metadata *basenine.Metadata
+					err = json.Unmarshal(bytes, &metadata)
+					if err != nil {
+						logger.Log.Debugf("Error recieving metadata: %v\n", err.Error())
+					}
+
+					metadataBytes, _ := models.CreateWebsocketQueryMetadataMessage(metadata)
+					BroadcastToBrowserClients(metadataBytes)
 				}
 			}
 
 			go handleDataChannel(c, data)
+			go handleMetaChannel(c, meta)
 
-			c.Query(query, data)
+			c.Query(query, data, meta)
 		} else {
 			eventHandlers.WebSocketMessage(socketId, msg)
 		}

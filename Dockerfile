@@ -48,7 +48,7 @@ FROM alpine:3.13.5
 
 RUN apk add bash libpcap-dev tcpdump
 
-ADD https://github.com/up9inc/basenine/releases/download/v0.1.3/basenine_linux_amd64 /usr/local/bin/basenine
+ADD https://github.com/up9inc/basenine/releases/download/v0.2.0/basenine_linux_amd64 /usr/local/bin/basenine
 RUN chmod +x /usr/local/bin/basenine
 
 WORKDIR /app

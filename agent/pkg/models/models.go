@@ -7,6 +7,7 @@ import (
 	tapApi "github.com/up9inc/mizu/tap/api"
 
 	"github.com/google/martian/har"
+	basenine "github.com/up9inc/basenine/client/go"
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/tap"
 )
@@ -52,6 +53,11 @@ type WebSocketToastMessage struct {
 	Data *ToastMessage `json:"data,omitempty"`
 }
 
+type WebSocketQueryMetadataMessage struct {
+	*shared.WebSocketMessageMetadata
+	Data *basenine.Metadata `json:"data,omitempty"`
+}
+
 func CreateBaseEntryWebSocketMessage(base map[string]interface{}) ([]byte, error) {
 	message := &WebSocketEntryMessage{
 		WebSocketMessageMetadata: &shared.WebSocketMessageMetadata{
@@ -86,6 +92,16 @@ func CreateWebsocketToastMessage(base *ToastMessage) ([]byte, error) {
 	message := &WebSocketToastMessage{
 		WebSocketMessageMetadata: &shared.WebSocketMessageMetadata{
 			MessageType: shared.WebSocketMessageTypeToast,
+		},
+		Data: base,
+	}
+	return json.Marshal(message)
+}
+
+func CreateWebsocketQueryMetadataMessage(base *basenine.Metadata) ([]byte, error) {
+	message := &WebSocketQueryMetadataMessage{
+		WebSocketMessageMetadata: &shared.WebSocketMessageMetadata{
+			MessageType: shared.WebSocketMessageTypeQueryMetadata,
 		},
 		Data: base,
 	}
