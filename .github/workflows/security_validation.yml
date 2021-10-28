@@ -1,0 +1,42 @@
+name: Security validation
+
+on:
+  pull_request:
+    branches:
+      - 'develop'
+      - 'main'
+
+jobs:
+  security:
+    name: Check for vulnerabilities
+    runs-on: ubuntu-latest
+    env:
+      SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: snyk/actions/setup@master
+      - name: Set up Go 1.16
+        uses: actions/setup-go@v2
+        with:
+          go-version: '1.16'
+
+      - name: CLI
+        working-directory: ./cli
+        run: snyk test
+
+      - name: Agent
+        working-directory: ./agent
+        run: snyk test
+
+      - name: Shared
+        working-directory: ./shared
+        run: snyk test
+
+      - name: Tap
+        working-directory: ./tap
+        run: snyk test
+
+      - name: UI
+        working-directory: ./ui
+        run: snyk test

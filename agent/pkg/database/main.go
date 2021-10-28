@@ -10,11 +10,12 @@ import (
 )
 
 const (
-	DBPath    = "./entries.db"
-	OrderDesc = "desc"
-	OrderAsc  = "asc"
-	LT        = "lt"
-	GT        = "gt"
+	DBPath     = "./entries.db"
+	OrderDesc  = "desc"
+	OrderAsc   = "asc"
+	LT         = "lt"
+	GT         = "gt"
+	TimeFormat = "2006-01-02 15:04:05.000000000"
 )
 
 var (
@@ -44,7 +45,7 @@ func GetEntriesTable() *gorm.DB {
 // 	GetEntriesTable().Create(entry)
 // }
 
-func GetEntriesFromDb(timestampFrom int64, timestampTo int64, protocolName *string) []tapApi.MizuEntry {
+func GetEntriesFromDb(timeFrom time.Time, timeTo time.Time, protocolName *string) []tapApi.MizuEntry {
 	order := OrderDesc
 	protocolNameCondition := "1 = 1"
 	if protocolName != nil {
@@ -54,7 +55,7 @@ func GetEntriesFromDb(timestampFrom int64, timestampTo int64, protocolName *stri
 	var entries []tapApi.MizuEntry
 	GetEntriesTable().
 		Where(protocolNameCondition).
-		Where(fmt.Sprintf("timestamp BETWEEN %v AND %v", timestampFrom, timestampTo)).
+		Where(fmt.Sprintf("created_at BETWEEN '%s' AND '%s'", timeFrom.Format(TimeFormat), timeTo.Format(TimeFormat))).
 		Order(fmt.Sprintf("timestamp %s", order)).
 		Find(&entries)
 

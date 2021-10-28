@@ -2,8 +2,11 @@ package cmd
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io/ioutil"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"path"
 	"regexp"
 	"strings"
@@ -129,11 +132,18 @@ func RunMizuTap() {
 		return
 	}
 
-	defer finishMizuExecution(kubernetesProvider)
 	if err := createMizuResources(ctx, kubernetesProvider, mizuValidationRules, contract); err != nil {
 		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error creating resources: %v", errormessage.FormatError(err)))
+
+		var statusError *k8serrors.StatusError
+		if errors.As(err, &statusError) {
+			if statusError.ErrStatus.Reason == metav1.StatusReasonAlreadyExists {
+				logger.Log.Info("Mizu is already running in this namespace, change the `mizu-resources-namespace` configuration or run `mizu clean` to remove the currently running Mizu instance")
+			}
+		}
 		return
 	}
+	defer finishMizuExecution(kubernetesProvider)
 
 	go goUtils.HandleExcWrapper(watchApiServerPod, ctx, kubernetesProvider, cancel, mizuApiFilteringOptions)
 	go goUtils.HandleExcWrapper(watchTapperPod, ctx, kubernetesProvider, cancel)

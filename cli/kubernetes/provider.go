@@ -7,6 +7,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/up9inc/mizu/shared/semver"
+	"k8s.io/apimachinery/pkg/version"
+	"net/url"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -75,6 +78,14 @@ func NewProvider(kubeConfigPath string) (*Provider, error) {
 	if err != nil {
 		return nil, fmt.Errorf("error while using kube config (%s)\n"+
 			"you can set alternative kube config file path by adding the kube-config-path field to the mizu config file, err:  %w", kubeConfigPath, err)
+	}
+
+	if err := validateNotProxy(kubernetesConfig, restClientConfig); err != nil {
+		return nil, err
+	}
+
+	if err := validateKubernetesVersion(clientSet); err != nil {
+		return nil, err
 	}
 
 	return &Provider{
@@ -726,4 +737,48 @@ func loadKubernetesConfiguration(kubeConfigPath string) clientcmd.ClientConfig {
 
 func isPodRunning(pod *core.Pod) bool {
 	return pod.Status.Phase == core.PodRunning
+}
+
+// We added this after a customer tried to run mizu from lens, which used len's kube config, which have cluster server configuration, which points to len's local proxy.
+// The workaround was to use the user's local default kube config.
+// For now - we are blocking the option to run mizu through a proxy to k8s server
+func validateNotProxy(kubernetesConfig clientcmd.ClientConfig, restClientConfig *restclient.Config) error {
+	kubernetesUrl, err := url.Parse(restClientConfig.Host)
+	if err != nil {
+		logger.Log.Debugf("validateNotProxy - error while parsing kubernetes host, err: %v", err)
+		return nil
+	}
+
+	restProxyClientConfig, _ := kubernetesConfig.ClientConfig()
+	restProxyClientConfig.Host = kubernetesUrl.Host
+
+	clientProxySet, err := getClientSet(restProxyClientConfig)
+	if err == nil {
+		proxyServerVersion, err := clientProxySet.ServerVersion()
+		if err != nil {
+			return nil
+		}
+
+		if *proxyServerVersion == (version.Info{}) {
+			return fmt.Errorf("cannot establish http-proxy connection to the Kubernetes cluster. If you’re using Lens or similar tool, please run mizu with regular kubectl config using --%v %v=$HOME/.kube/config flag", config.SetCommandName, config.KubeConfigPathConfigName)
+		}
+	}
+
+	return nil
+}
+
+func validateKubernetesVersion(clientSet *kubernetes.Clientset) error {
+	serverVersion, err := clientSet.ServerVersion()
+	if err != nil {
+		logger.Log.Debugf("error while getting kubernetes server version, err: %v", err)
+		return nil
+	}
+
+	serverVersionSemVer := semver.SemVersion(serverVersion.GitVersion)
+	minKubernetesServerVersionSemVer := semver.SemVersion(mizu.MinKubernetesServerVersion)
+	if minKubernetesServerVersionSemVer.GreaterThan(serverVersionSemVer) {
+		return fmt.Errorf("kubernetes server version %v is not supported, supporting only kubernetes server version of %v or higher", serverVersion.GitVersion, mizu.MinKubernetesServerVersion)
+	}
+
+	return nil
 }
