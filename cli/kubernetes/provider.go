@@ -197,7 +197,6 @@ func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, opts *ApiS
 	}
 
 	command := []string{"./mizuagent", "--api-server"}
-	//command := []string{"dlv", "--headless=true" , "--listen=:2345" , "--log" , "--api-version=2" , "--accept-multiclient" , "exec" , "./mizuagent" , "--", "--api-server"}
 	if opts.IsNamespaceRestricted {
 		command = append(command, "--namespace", opts.Namespace)
 	}
