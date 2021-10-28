@@ -23,9 +23,9 @@ jobs:
           go-version: '1.16'
 
       - name: Snyk monitor
-          run: snyk test
-          env:
-            SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: snyk test
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
       - name: Build CLI
         run: make cli
