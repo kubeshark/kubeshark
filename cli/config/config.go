@@ -40,7 +40,7 @@ func InitConfig(cmd *cobra.Command) error {
 
 	configFilePathFlag := cmd.Flags().Lookup(ConfigFilePathCommandName)
 	configFilePath := configFilePathFlag.Value.String()
-	if err := LoadConfigFile(configFilePath, &Config); err != nil {
+	if err := loadConfigFile(configFilePath, &Config); err != nil {
 		if configFilePathFlag.Changed || !os.IsNotExist(err) {
 			return fmt.Errorf("invalid config, %w\n"+
 				"you can regenerate the file by removing it (%v) and using `mizu config -r`", err, configFilePath)
@@ -81,7 +81,27 @@ func WriteConfig(config *ConfigStruct) error {
 	return nil
 }
 
-func LoadConfigFile(configFilePath string, config *ConfigStruct) error {
+type updateConfigStruct func(*ConfigStruct)
+func UpdateConfig(updateConfigStruct updateConfigStruct) error {
+	configFile, err := GetConfigWithDefaults()
+	if err != nil {
+		return fmt.Errorf("failed getting config with defaults, err: %v", err)
+	}
+
+	if err := loadConfigFile(Config.ConfigFilePath, configFile); err != nil && !os.IsNotExist(err) {
+		return fmt.Errorf("failed getting config file, err: %v", err)
+	}
+
+	updateConfigStruct(configFile)
+
+	if err := WriteConfig(configFile); err != nil {
+		return fmt.Errorf("failed writing config, err: %v", err)
+	}
+
+	return nil
+}
+
+func loadConfigFile(configFilePath string, config *ConfigStruct) error {
 	reader, openErr := os.Open(configFilePath)
 	if openErr != nil {
 		return openErr
