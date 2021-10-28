@@ -175,7 +175,7 @@ Please see [CONTRACT MONITORING](docs/CONTRACT_MONITORING.md) page for more deta
 
 User can change the mizu proxy to custom host (e.g: 0.0.0.0), default will be 127.0.0.1 (localhost)
 and when changed it will support accessing by IP, this settings can be changed via config file under 
-`tap` section in the `proxyHost` value or via command like flag `--set tap.proxyHost=<value>`
+`tap` section in the `proxy-host` value or via command like flag `--set tap.proxy-host=<value>`
 
 
 ## How to Run local UI
