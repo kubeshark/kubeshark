@@ -488,15 +488,15 @@ func (provider *Provider) handleRemovalError(err error) error {
 	return err
 }
 
-func (provider *Provider) CreateConfigMap(ctx context.Context, namespace string, configMapName string, data string, contract string, mizuConfig string) error {
+func (provider *Provider) CreateConfigMap(ctx context.Context, namespace string, configMapName string, serializedRulePolicy string, serializedContract string, serializedMizuConfig string) error {
 	configMapData := make(map[string]string, 0)
-	if data != "" {
-		configMapData[shared.RulePolicyFileName] = data
+	if serializedRulePolicy != "" {
+		configMapData[shared.RulePolicyFileName] = serializedRulePolicy
 	}
-	if contract != "" {
-		configMapData[shared.ContractFileName] = contract
+	if serializedContract != "" {
+		configMapData[shared.ContractFileName] = serializedContract
 	}
-	configMapData[shared.ConfigFileName] = mizuConfig
+	configMapData[shared.ConfigFileName] = serializedMizuConfig
 
 	configMap := &core.ConfigMap{
 		TypeMeta: metav1.TypeMeta{
