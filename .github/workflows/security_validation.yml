@@ -21,11 +21,6 @@ jobs:
         with:
           go-version: '1.16'
 
-      - name: UI
-        working-directory: ./ui
-        run: snyk test
-      #        continue-on-error: true
-
       - name: CLI
         working-directory: ./cli
         run: snyk test
@@ -42,3 +37,8 @@ jobs:
       - name: Tap
         working-directory: ./tap
         run: snyk test
+
+      - name: UI
+        working-directory: ./ui
+        run: snyk test
+      #        continue-on-error: true
