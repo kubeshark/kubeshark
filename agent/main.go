@@ -152,6 +152,7 @@ func getMaxEntriesDBByteSize() int64 {
 func startBasenineServer(host string, port string) {
 	cmd := exec.Command("basenine", "-addr", host, "-port", port)
 	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
 	err := cmd.Start()
 	if err != nil {
 		panic(err)
