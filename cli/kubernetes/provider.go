@@ -176,10 +176,8 @@ func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, opts *ApiS
 		}
 	}
 
-	configMapVolumeName := &core.ConfigMapVolumeSource{}
-	configMapVolumeName.Name = mizu.ConfigMapName
-	configMapOptional := false
-	configMapVolumeName.Optional = &configMapOptional
+	configMapVolume := &core.ConfigMapVolumeSource{}
+	configMapVolume.Name = mizu.ConfigMapName
 
 	cpuLimit, err := resource.ParseQuantity(opts.Resources.CpuLimit)
 	if err != nil {
@@ -199,6 +197,7 @@ func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, opts *ApiS
 	}
 
 	command := []string{"./mizuagent", "--api-server"}
+	//command := []string{"dlv", "--headless=true" , "--listen=:2345" , "--log" , "--api-version=2" , "--accept-multiclient" , "exec" , "./mizuagent" , "--", "--api-server"}
 	if opts.IsNamespaceRestricted {
 		command = append(command, "--namespace", opts.Namespace)
 	}
@@ -274,7 +273,7 @@ func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, opts *ApiS
 				{
 					Name: mizu.ConfigMapName,
 					VolumeSource: core.VolumeSource{
-						ConfigMap: configMapVolumeName,
+						ConfigMap: configMapVolume,
 					},
 				},
 			},
@@ -618,6 +617,24 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	noScheduleToleration.WithOperator(core.TolerationOpExists)
 	noScheduleToleration.WithEffect(core.TaintEffectNoSchedule)
 
+	volumeName := mizu.ConfigMapName
+	configMapVolume := applyconfcore.VolumeApplyConfiguration{
+		Name:                           &volumeName,
+		VolumeSourceApplyConfiguration: applyconfcore.VolumeSourceApplyConfiguration{
+			ConfigMap: &applyconfcore.ConfigMapVolumeSourceApplyConfiguration{
+				LocalObjectReferenceApplyConfiguration: applyconfcore.LocalObjectReferenceApplyConfiguration{
+					Name: &volumeName,
+				},
+			},
+		},
+	}
+	mountPath := shared.ConfigDirPath
+	configMapVolumeMount := applyconfcore.VolumeMountApplyConfiguration{
+		Name:             &volumeName,
+		MountPath:        &mountPath,
+	}
+	agentContainer.WithVolumeMounts(&configMapVolumeMount)
+
 	podSpec := applyconfcore.PodSpec()
 	podSpec.WithHostNetwork(true)
 	podSpec.WithDNSPolicy(core.DNSClusterFirstWithHostNet)
@@ -628,6 +645,7 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	podSpec.WithContainers(agentContainer)
 	podSpec.WithAffinity(affinity)
 	podSpec.WithTolerations(noExecuteToleration, noScheduleToleration)
+	podSpec.WithVolumes(&configMapVolume)
 
 	podTemplate := applyconfcore.PodTemplateSpec()
 	podTemplate.WithLabels(map[string]string{"app": tapperPodName})

@@ -238,12 +238,12 @@ func createMizuApiServer(ctx context.Context, kubernetesProvider *kubernetes.Pro
 }
 
 func getMizuApiFilteringOptions() (*api.TrafficFilteringOptions, error) {
-	var compiledRegexSlice []*shared.SerializableRegexp
+	var compiledRegexSlice []*api.SerializableRegexp
 
 	if config.Config.Tap.PlainTextFilterRegexes != nil && len(config.Config.Tap.PlainTextFilterRegexes) > 0 {
-		compiledRegexSlice = make([]*shared.SerializableRegexp, 0)
+		compiledRegexSlice = make([]*api.SerializableRegexp, 0)
 		for _, regexStr := range config.Config.Tap.PlainTextFilterRegexes {
-			compiledRegex, err := shared.CompileRegexToSerializableRegexp(regexStr)
+			compiledRegex, err := api.CompileRegexToSerializableRegexp(regexStr)
 			if err != nil {
 				return nil, err
 			}
