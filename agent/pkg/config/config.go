@@ -13,12 +13,12 @@ func LoadConfig() error {
 	if Config != nil {
 		return nil
 	}
-	filePath := fmt.Sprintf("%s/%s", shared.ConfigDirPath, shared.ConfigFileName)
+	filePath := fmt.Sprintf("%s%s", shared.ConfigDirPath, shared.ConfigFileName)
 	content, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		return err
 	}
-	err = json.Unmarshal(content, Config)
+	err = json.Unmarshal(content, &Config)
 	if err != nil {
 		return err
 	}
