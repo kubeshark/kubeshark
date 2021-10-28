@@ -32,15 +32,8 @@ func Login() error {
 		Token:   token.AccessToken,
 	}
 
-	configFile, loadedDefaultConfigErr := config.GetLoadedConfigFileWithDefaults()
-	if loadedDefaultConfigErr != nil {
-		return fmt.Errorf("failed getting loaded config with defaults, err: %v", loadedDefaultConfigErr)
-	}
-
-	configFile.Auth = authConfig
-
-	if err := config.WriteConfig(configFile); err != nil {
-		return fmt.Errorf("failed writing config with auth, err: %v", err)
+	if err := config.UpdateConfig(func(configStruct *config.ConfigStruct) { configStruct.Auth = authConfig }); err != nil {
+		return fmt.Errorf("failed updating config with auth, err: %v", err)
 	}
 
 	config.Config.Auth = authConfig

@@ -90,17 +90,8 @@ func askConfirmation(flagName string) {
 		os.Exit(0)
 	}
 
-	configFile, loadedDefaultConfigErr := config.GetLoadedConfigFileWithDefaults()
-	if loadedDefaultConfigErr != nil {
-		logger.Log.Debugf("failed getting loaded config with defaults, err: %v", loadedDefaultConfigErr)
-		return
-	}
-
-	configFile.Tap.AskUploadConfirmation = false
-
-	if err := config.WriteConfig(configFile); err != nil {
-		logger.Log.Debugf("failed writing config with auth, err: %v", err)
-		return
+	if err := config.UpdateConfig(func(configStruct *config.ConfigStruct) { configStruct.Tap.AskUploadConfirmation = false }); err != nil {
+		logger.Log.Debugf("failed updating config with confirmation, err: %v", err)
 	}
 }
 
