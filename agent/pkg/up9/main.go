@@ -206,13 +206,13 @@ func syncEntriesImpl(token string, model string, envPrefix string, uploadInterva
 
 	sleepTime := time.Second * time.Duration(uploadIntervalSec)
 
-	var timestampFrom int64 = 0
+	var timeFrom time.Time
+	protocolFilter := "http"
 
 	for {
-		timestampTo := time.Now().UnixNano() / int64(time.Millisecond)
-		logger.Log.Infof("Getting entries from %v, to %v\n", timestampFrom, timestampTo)
-		protocolFilter := "http"
-		entriesArray := database.GetEntriesFromDb(timestampFrom, timestampTo, &protocolFilter)
+		timeTo := time.Now()
+		logger.Log.Infof("Getting entries from %v, to %v\n", timeFrom.Format(time.RFC3339Nano), timeTo.Format(time.RFC3339Nano))
+		entriesArray := database.GetEntriesFromDb(timeFrom, timeTo, &protocolFilter)
 
 		if len(entriesArray) > 0 {
 			result := make([]har.Entry, 0)
@@ -276,13 +276,14 @@ func syncEntriesImpl(token string, model string, envPrefix string, uploadInterva
 			analyzeInformation.SentCount += len(entriesArray)
 			logger.Log.Infof("Finish uploading %v entries to %s\n", len(entriesArray), GetTrafficDumpUrl(envPrefix, model))
 
+			logger.Log.Infof("Uploaded %v entries until now", analyzeInformation.SentCount)
 		} else {
 			logger.Log.Infof("Nothing to upload")
 		}
 
 		logger.Log.Infof("Sleeping for %v...\n", sleepTime)
 		time.Sleep(sleepTime)
-		timestampFrom = timestampTo
+		timeFrom = timeTo
 	}
 }
 
