@@ -28,7 +28,6 @@ jobs:
       - name: Agent
         working-directory: ./agent
         run: snyk test
-      #        continue-on-error: true
 
       - name: Shared
         working-directory: ./shared
@@ -41,4 +40,3 @@ jobs:
       - name: UI
         working-directory: ./ui
         run: snyk test
-      #        continue-on-error: true
