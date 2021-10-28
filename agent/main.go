@@ -47,6 +47,8 @@ var extensionsMap map[string]*tapApi.Extension // global
 
 const defaultMaxDatabaseSizeBytes int64 = 200 * 1000 * 1000
 
+var startTime int64
+
 func main() {
 	logLevel := determineLogLevel()
 	logger.InitLoggerStderrOnly(logLevel)
@@ -99,6 +101,7 @@ func main() {
 		go pipeTapChannelToSocket(socketConnection, filteredOutputItemsChannel)
 	} else if *apiServerMode {
 		startBasenineServer(shared.BasenineHost, shared.BaseninePort)
+		startTime = time.Now().UnixNano() / int64(time.Millisecond)
 		api.StartResolving(*namespace)
 
 		outputItemsChannel := make(chan *tapApi.OutputChannelItem)
@@ -239,7 +242,7 @@ func hostApi(socketHarOutputChannel chan<- *tapApi.OutputChannelItem) {
 	app.Use(static.ServeRoot("/", "./site"))
 	app.Use(CORSMiddleware()) // This has to be called after the static middleware, does not work if its called before
 
-	api.WebSocketRoutes(app, &eventHandlers)
+	api.WebSocketRoutes(app, &eventHandlers, startTime)
 	routes.QueryRoutes(app)
 	routes.EntriesRoutes(app)
 	routes.MetadataRoutes(app)

@@ -66,6 +66,8 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
     const [queriedCurrent, setQueriedCurrent] = useState(0);
     const [queriedTotal, setQueriedTotal] = useState(0);
 
+    const [startTime, setStartTime] = useState(0);
+
     const setQuery = async (query) => {
         if (!query) {
             setQueryBackgroundColor("#f5f5f5")
@@ -146,6 +148,10 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                 case "queryMetadata":
                     setQueriedCurrent(message.data.current)
                     setQueriedTotal(message.data.total)
+                    break;
+                case "startTime":
+                    console.log(message);
+                    setStartTime(message.data);
                     break;
                 default:
                     console.error(`unsupported websocket message type, Got: ${message.messageType}`)
@@ -253,6 +259,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                             updateQuery={updateQuery}
                             queriedCurrent={queriedCurrent}
                             queriedTotal={queriedTotal}
+                            startTime={startTime}
                         />
                     </div>
                 </div>

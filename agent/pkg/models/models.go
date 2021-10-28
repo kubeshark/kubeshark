@@ -58,6 +58,11 @@ type WebSocketQueryMetadataMessage struct {
 	Data *basenine.Metadata `json:"data,omitempty"`
 }
 
+type WebSocketStartTimeMessage struct {
+	*shared.WebSocketMessageMetadata
+	Data int64 `json:"data"`
+}
+
 func CreateBaseEntryWebSocketMessage(base map[string]interface{}) ([]byte, error) {
 	message := &WebSocketEntryMessage{
 		WebSocketMessageMetadata: &shared.WebSocketMessageMetadata{
@@ -102,6 +107,16 @@ func CreateWebsocketQueryMetadataMessage(base *basenine.Metadata) ([]byte, error
 	message := &WebSocketQueryMetadataMessage{
 		WebSocketMessageMetadata: &shared.WebSocketMessageMetadata{
 			MessageType: shared.WebSocketMessageTypeQueryMetadata,
+		},
+		Data: base,
+	}
+	return json.Marshal(message)
+}
+
+func CreateWebsocketStartTimeMessage(base int64) ([]byte, error) {
+	message := &WebSocketStartTimeMessage{
+		WebSocketMessageMetadata: &shared.WebSocketMessageMetadata{
+			MessageType: shared.WebSocketMessageTypeStartTime,
 		},
 		Data: base,
 	}

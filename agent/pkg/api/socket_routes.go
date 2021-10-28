@@ -44,16 +44,16 @@ func init() {
 	connectedWebsockets = make(map[int]*SocketConnection, 0)
 }
 
-func WebSocketRoutes(app *gin.Engine, eventHandlers EventHandlers) {
+func WebSocketRoutes(app *gin.Engine, eventHandlers EventHandlers, startTime int64) {
 	app.GET("/ws", func(c *gin.Context) {
-		websocketHandler(c.Writer, c.Request, eventHandlers, false)
+		websocketHandler(c.Writer, c.Request, eventHandlers, false, startTime)
 	})
 	app.GET("/wsTapper", func(c *gin.Context) {
-		websocketHandler(c.Writer, c.Request, eventHandlers, true)
+		websocketHandler(c.Writer, c.Request, eventHandlers, true, startTime)
 	})
 }
 
-func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers EventHandlers, isTapper bool) {
+func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers EventHandlers, isTapper bool, startTime int64) {
 	ws, err := websocketUpgrader.Upgrade(w, r, nil)
 	if err != nil {
 		logger.Log.Errorf("Failed to set websocket upgrade: %v", err)
@@ -92,6 +92,9 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 	}()
 
 	eventHandlers.WebSocketConnect(socketId, isTapper)
+
+	startTimeBytes, _ := models.CreateWebsocketStartTimeMessage(startTime)
+	BroadcastToBrowserClients(startTimeBytes)
 
 	for {
 		_, msg, err := ws.ReadMessage()

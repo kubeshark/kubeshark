@@ -18,6 +18,7 @@ const (
 	WebsocketMessageTypeOutboundLink  WebSocketMessageType = "outboundLink"
 	WebSocketMessageTypeToast         WebSocketMessageType = "toast"
 	WebSocketMessageTypeQueryMetadata WebSocketMessageType = "queryMetadata"
+	WebSocketMessageTypeStartTime     WebSocketMessageType = "startTime"
 )
 
 type WebSocketMessageMetadata struct {
