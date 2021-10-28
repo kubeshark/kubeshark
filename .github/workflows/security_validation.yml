@@ -21,5 +21,5 @@ jobs:
         with:
           go-version: '1.16'
 
-      - name: CLI
+      - name: Run snyl on all projects
         run: snyk test --all-projects
