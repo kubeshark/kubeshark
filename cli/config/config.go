@@ -101,6 +101,19 @@ func LoadConfigFile(configFilePath string, config *ConfigStruct) error {
 	return nil
 }
 
+func GetLoadedConfigFileWithDefaults() (*ConfigStruct, error) {
+	configFile, defaultConfigErr := GetConfigWithDefaults()
+	if defaultConfigErr != nil {
+		return nil, fmt.Errorf("failed getting config with defaults, err: %v", defaultConfigErr)
+	}
+
+	if err := LoadConfigFile(Config.ConfigFilePath, configFile); err != nil && !os.IsNotExist(err) {
+		return nil, fmt.Errorf("failed getting config file, err: %v", err)
+	}
+
+	return configFile, nil
+}
+
 func initFlag(f *pflag.Flag) {
 	configElemValue := reflect.ValueOf(&Config).Elem()
 

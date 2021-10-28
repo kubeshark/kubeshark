@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/google/uuid"
@@ -33,13 +32,9 @@ func Login() error {
 		Token:   token.AccessToken,
 	}
 
-	configFile, defaultConfigErr := config.GetConfigWithDefaults()
-	if defaultConfigErr != nil {
-		return fmt.Errorf("failed getting config with defaults, err: %v", defaultConfigErr)
-	}
-
-	if err := config.LoadConfigFile(config.Config.ConfigFilePath, configFile); err != nil && !os.IsNotExist(err) {
-		return fmt.Errorf("failed getting config file, err: %v", err)
+	configFile, loadedDefaultConfigErr := config.GetLoadedConfigFileWithDefaults()
+	if loadedDefaultConfigErr != nil {
+		return fmt.Errorf("failed getting loaded config with defaults, err: %v", loadedDefaultConfigErr)
 	}
 
 	configFile.Auth = authConfig

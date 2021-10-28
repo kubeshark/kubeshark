@@ -80,9 +80,27 @@ Supported protocols are HTTP and gRPC.`,
 
 func askConfirmation(flagName string) {
 	logger.Log.Infof(fmt.Sprintf(uploadTrafficMessageToConfirm, flagName))
+
+	if !config.Config.Tap.AskConfirmation {
+		return
+	}
+
 	if !uiUtils.AskForConfirmation("Would you like to proceed [Y/n]: ") {
 		logger.Log.Infof("You can always run mizu without %s, aborting", flagName)
 		os.Exit(0)
+	}
+
+	configFile, loadedDefaultConfigErr := config.GetLoadedConfigFileWithDefaults()
+	if loadedDefaultConfigErr != nil {
+		logger.Log.Debugf("failed getting loaded config with defaults, err: %v", loadedDefaultConfigErr)
+		return
+	}
+
+	configFile.Tap.AskConfirmation = false
+
+	if err := config.WriteConfig(configFile); err != nil {
+		logger.Log.Debugf("failed writing config with auth, err: %v", err)
+		return
 	}
 }
 

@@ -37,6 +37,7 @@ type TapConfig struct {
 	Workspace              string    `yaml:"workspace"`
 	EnforcePolicyFile      string    `yaml:"traffic-validation-file"`
 	ContractFile           string    `yaml:"contract"`
+	AskConfirmation        bool      `yaml:"ask-confirmation" default:"true"`
 	ApiServerResources     Resources `yaml:"api-server-resources"`
 	TapperResources        Resources `yaml:"tapper-resources"`
 }
