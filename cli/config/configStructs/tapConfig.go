@@ -26,6 +26,7 @@ type TapConfig struct {
 	UploadIntervalSec      int       `yaml:"upload-interval" default:"10"`
 	PodRegexStr            string    `yaml:"regex" default:".*"`
 	GuiPort                uint16    `yaml:"gui-port" default:"8899"`
+	ProxyHost              string    `yaml:"proxyHost" default:"127.0.0.1"`
 	Namespaces             []string  `yaml:"namespaces"`
 	Analysis               bool      `yaml:"analysis" default:"false"`
 	AllNamespaces          bool      `yaml:"all-namespaces" default:"false"`
