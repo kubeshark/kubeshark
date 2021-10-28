@@ -13,7 +13,7 @@ FROM golang:1.16-alpine AS builder
 # Set necessary environment variables needed for our image.
 ENV CGO_ENABLED=1 GOOS=linux GOARCH=amd64
 
-RUN apk add libpcap-dev gcc g++ make bash
+RUN apk add libpcap-dev gcc g++ make bash perl-utils
 
 # Move to agent working directory (/agent-build).
 WORKDIR /app/agent-build
@@ -41,6 +41,12 @@ RUN go build -ldflags="-s -w \
      -X 'mizuserver/pkg/version.BuildTimestamp=${BUILD_TIMESTAMP}' \
      -X 'mizuserver/pkg/version.SemVer=${SEM_VER}'" -o mizuagent .
 
+# Download Basenine executable, verify the sha1sum and move it to a directory in $PATH
+ADD https://github.com/up9inc/basenine/releases/download/v0.2.0/basenine_linux_amd64 ./basenine_linux_amd64
+ADD https://github.com/up9inc/basenine/releases/download/v0.2.0/basenine_linux_amd64.sha256 ./basenine_linux_amd64.sha256
+RUN shasum -c basenine_linux_amd64.sha256
+RUN chmod +x ./basenine_linux_amd64
+
 COPY devops/build_extensions.sh ..
 RUN cd .. && /bin/bash build_extensions.sh
 
@@ -48,13 +54,11 @@ FROM alpine:3.13.5
 
 RUN apk add bash libpcap-dev tcpdump
 
-ADD https://github.com/up9inc/basenine/releases/download/v0.2.0/basenine_linux_amd64 /usr/local/bin/basenine
-RUN chmod +x /usr/local/bin/basenine
-
 WORKDIR /app
 
 # Copy binary and config files from /build to root folder of scratch container.
 COPY --from=builder ["/app/agent-build/mizuagent", "."]
+COPY --from=builder ["/app/agent-build/basenine_linux_amd64", "/usr/local/bin/basenine"]
 COPY --from=builder ["/app/agent/build/extensions", "extensions"]
 COPY --from=site-build ["/app/ui-build/build", "site"]
 
