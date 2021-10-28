@@ -112,7 +112,7 @@ export const highlighterStyle = {
         "color": "#C6C5FE"
     },
     "operator": {
-        "color": "#EDEDED"
+        "color": "#A1A1A1"
     },
     "entity": {
         "color": "#fdab2b",
