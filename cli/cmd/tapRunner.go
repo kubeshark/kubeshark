@@ -88,6 +88,12 @@ func RunMizuTap() {
 		}
 	}
 
+	serializedMizuConfig, err := getSerializedMizuConfig()
+	if err != nil {
+		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error composing mizu config: %v", errormessage.FormatError(err)))
+		return
+	}
+
 	kubernetesProvider, err := kubernetes.NewProvider(config.Config.KubeConfigPath())
 	if err != nil {
 		logger.Log.Error(err)
@@ -133,7 +139,7 @@ func RunMizuTap() {
 		return
 	}
 
-	if err := createMizuResources(ctx, kubernetesProvider, serializedRulePolicy, serializedContract); err != nil {
+	if err := createMizuResources(ctx, kubernetesProvider, serializedRulePolicy, serializedContract, serializedMizuConfig); err != nil {
 		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error creating resources: %v", errormessage.FormatError(err)))
 
 		var statusError *k8serrors.StatusError
@@ -163,7 +169,7 @@ func readValidationRules(file string) (string, error) {
 	return string(newContent), nil
 }
 
-func createMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, serializedRulePolicy string, serializedContract string) error {
+func createMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, serializedRulePolicy string, serializedContract string, serializedMizuConfig string) error {
 	if !config.Config.IsNsRestrictedMode() {
 		if err := createMizuNamespace(ctx, kubernetesProvider); err != nil {
 			return err
@@ -174,11 +180,6 @@ func createMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Pro
 		return err
 	}
 
-	serializedMizuConfig, err := getSerializedMizuConfig()
-	if err != nil {
-		return err
-	}
-
 	if err := createMizuConfigmap(ctx, kubernetesProvider, serializedRulePolicy, serializedContract, serializedMizuConfig); err != nil {
 		logger.Log.Warningf(uiUtils.Warning, fmt.Sprintf("Failed to create resources required for policy validation. Mizu will not validate policy rules. error: %v\n", errormessage.FormatError(err)))
 	}
@@ -186,8 +187,8 @@ func createMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Pro
 	return nil
 }
 
-func createMizuConfigmap(ctx context.Context, kubernetesProvider *kubernetes.Provider, data string, contract string, mizuConfig string) error {
-	err := kubernetesProvider.CreateConfigMap(ctx, config.Config.MizuResourcesNamespace, mizu.ConfigMapName, data, contract, mizuConfig)
+func createMizuConfigmap(ctx context.Context, kubernetesProvider *kubernetes.Provider, serializedRulePolicy string, serializedContract string, serializedMizuConfig string) error {
+	err := kubernetesProvider.CreateConfigMap(ctx, config.Config.MizuResourcesNamespace, mizu.ConfigMapName, serializedRulePolicy, serializedContract, serializedMizuConfig)
 	return err
 }
 
@@ -776,12 +777,12 @@ func getSerializedMizuConfig() (string, error) {
 	return string(serializedConfig), nil
 }
 
-func getMizuConfig() (*shared.MizuConfig, error) {
+func getMizuConfig() (*shared.MizuAgentConfig, error) {
 	serializableRegex, err := shared.CompileRegexToSerializableRegexp(config.Config.Tap.PodRegexStr)
 	if err != nil {
 		return nil, err
 	}
-	config := shared.MizuConfig{
+	config := shared.MizuAgentConfig{
 		TapTargetRegex: *serializableRegex,
 		MaxDBSizeBytes: config.Config.Tap.MaxEntriesDBSizeBytes(),
 	}

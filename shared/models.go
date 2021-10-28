@@ -18,7 +18,7 @@ const (
 	WebsocketMessageTypeOutboundLink  WebSocketMessageType = "outboundLink"
 )
 
-type MizuConfig struct {
+type MizuAgentConfig struct {
 	TapTargetRegex SerializableRegexp `yaml:"tapTargetRegex"`
 	MaxDBSizeBytes int64              `yaml:"maxDBSizeBytes"`
 }

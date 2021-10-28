@@ -2,12 +2,20 @@ package config
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/up9inc/mizu/shared"
+	"io/fs"
 	"io/ioutil"
+	"syscall"
 )
 
-var Config *shared.MizuConfig
+const (
+	defaultMaxDatabaseSizeBytes int64  = 200 * 1000 * 1000
+	defaultRegexTarget          string = ".*"
+)
+
+var Config *shared.MizuAgentConfig
 
 func LoadConfig() error {
 	if Config != nil {
@@ -16,6 +24,12 @@ func LoadConfig() error {
 	filePath := fmt.Sprintf("%s%s", shared.ConfigDirPath, shared.ConfigFileName)
 	content, err := ioutil.ReadFile(filePath)
 	if err != nil {
+		var fsError *fs.PathError
+		if errors.As(err, &fsError) {
+			if fsError.Err == syscall.ENOENT { // file doesnt exist
+				return applyDefaultConfig()
+			}
+		}
 		return err
 	}
 	err = json.Unmarshal(content, &Config)
@@ -23,4 +37,24 @@ func LoadConfig() error {
 		return err
 	}
 	return nil
+}
+
+func applyDefaultConfig() error {
+	defaultConfig, err := getDefaultConfig()
+	if err != nil {
+		return err
+	}
+	Config = defaultConfig
+	return nil
+}
+
+func getDefaultConfig() (*shared.MizuAgentConfig, error) {
+	regex, err := shared.CompileRegexToSerializableRegexp(defaultRegexTarget)
+	if err != nil {
+		return nil, err
+	}
+	return &shared.MizuAgentConfig{
+		TapTargetRegex: *regex,
+		MaxDBSizeBytes: defaultMaxDatabaseSizeBytes,
+	}, nil
 }
