@@ -44,7 +44,7 @@ RUN go build -ldflags="-s -w \
 # Download Basenine executable, verify the sha1sum and move it to a directory in $PATH
 ADD https://github.com/up9inc/basenine/releases/download/v0.2.0/basenine_linux_amd64 ./basenine_linux_amd64
 ADD https://github.com/up9inc/basenine/releases/download/v0.2.0/basenine_linux_amd64.sha256 ./basenine_linux_amd64.sha256
-RUN shasum -c basenine_linux_amd64.sha256
+RUN shasum -a 256 -c basenine_linux_amd64.sha256
 RUN chmod +x ./basenine_linux_amd64
 
 COPY devops/build_extensions.sh ..
