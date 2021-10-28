@@ -1,6 +1,6 @@
 import React, {useRef} from "react";
 import styles from './style/Filters.module.sass';
-import {Button} from "@material-ui/core";
+import {Button, Grid} from "@material-ui/core";
 import CodeEditor from '@uiw/react-textarea-code-editor';
 
 interface FiltersProps {
@@ -46,24 +46,34 @@ export const QueryForm: React.FC<QueryFormProps> = ({query, setQuery, background
     }
 
     return <>
-        <form ref={formRef} onSubmit={handleSubmit}>
-        <label>
-            <CodeEditor
-                value={query}
-                language="py"
-                placeholder="Mizu Filter Syntax"
-                onChange={handleChange}
-                padding={8}
-                style={{
-                    fontSize: 14,
-                    backgroundColor: `${backgroundColor}`,
-                    fontFamily: 'ui-monospace,SFMono-Regular,SF Mono,Consolas,Liberation Mono,Menlo,monospace',
-                    display: 'inline-flex',
-                    minWidth: '450px',
-                }}
-            />
-        </label>
-        <Button type="submit" variant="contained" style={{marginLeft: "10px"}}>Apply</Button>
+        <form
+            ref={formRef}
+            onSubmit={handleSubmit}
+            style={{
+                width: '100%',
+            }}
+        >
+            <Grid container spacing={2}>
+                <Grid item xs={9}>
+                    <label>
+                        <CodeEditor
+                            value={query}
+                            language="py"
+                            placeholder="Mizu Filter Syntax"
+                            onChange={handleChange}
+                            padding={8}
+                            style={{
+                                fontSize: 14,
+                                backgroundColor: `${backgroundColor}`,
+                                fontFamily: 'ui-monospace,SFMono-Regular,SF Mono,Consolas,Liberation Mono,Menlo,monospace',
+                            }}
+                        />
+                    </label>
+                </Grid>
+                <Grid item xs={3}>
+                    <Button type="submit" variant="contained" style={{marginTop: "2px"}}>Apply</Button>
+                </Grid>
+            </Grid>
         </form>
     </>
 }
