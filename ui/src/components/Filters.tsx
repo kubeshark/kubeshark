@@ -102,7 +102,7 @@ export const QueryForm: React.FC<QueryFormProps> = ({query, setQuery, background
                 <Grid item xs={4}>
                     <Button type="submit" variant="contained" style={{margin: "2px 0px 0px 0px"}}>Apply</Button>
                     <Button
-                        title="Filtering Guide"
+                        title="Open Filtering Guide (Cheatsheet)"
                         variant="contained"
                         style={{margin: "2px 0px 0px 5px", minWidth: "26px"}}
                         onClick={handleOpenModal}
