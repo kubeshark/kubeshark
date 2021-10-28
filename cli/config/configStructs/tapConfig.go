@@ -3,6 +3,7 @@ package configStructs
 import (
 	"errors"
 	"fmt"
+	"github.com/up9inc/mizu/shared"
 	"regexp"
 
 	"github.com/up9inc/mizu/shared/units"
@@ -36,16 +37,9 @@ type TapConfig struct {
 	DryRun                 bool      `yaml:"dry-run" default:"false"`
 	Workspace              string    `yaml:"workspace"`
 	EnforcePolicyFile      string    `yaml:"traffic-validation-file"`
-	ContractFile           string    `yaml:"contract"`
-	ApiServerResources     Resources `yaml:"api-server-resources"`
-	TapperResources        Resources `yaml:"tapper-resources"`
-}
-
-type Resources struct {
-	CpuLimit       string `yaml:"cpu-limit" default:"750m"`
-	MemoryLimit    string `yaml:"memory-limit" default:"1Gi"`
-	CpuRequests    string `yaml:"cpu-requests" default:"50m"`
-	MemoryRequests string `yaml:"memory-requests" default:"50Mi"`
+	ContractFile       string           `yaml:"contract"`
+	ApiServerResources shared.Resources `yaml:"api-server-resources"`
+	TapperResources    shared.Resources `yaml:"tapper-resources"`
 }
 
 func (config *TapConfig) PodRegex() *regexp.Regexp {

@@ -18,6 +18,13 @@ const (
 	WebsocketMessageTypeOutboundLink  WebSocketMessageType = "outboundLink"
 )
 
+type Resources struct {
+	CpuLimit       string `yaml:"cpu-limit" default:"750m"`
+	MemoryLimit    string `yaml:"memory-limit" default:"1Gi"`
+	CpuRequests    string `yaml:"cpu-requests" default:"50m"`
+	MemoryRequests string `yaml:"memory-requests" default:"50Mi"`
+}
+
 type WebSocketMessageMetadata struct {
 	MessageType WebSocketMessageType `json:"messageType,omitempty"`
 }

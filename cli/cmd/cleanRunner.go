@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"github.com/up9inc/mizu/cli/config"
-	"github.com/up9inc/mizu/cli/kubernetes"
+	"github.com/up9inc/mizu/shared/kubernetes"
 	"github.com/up9inc/mizu/shared/logger"
 )
 

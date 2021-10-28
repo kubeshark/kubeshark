@@ -10,9 +10,8 @@ import (
 	"github.com/up9inc/mizu/cli/config"
 	"github.com/up9inc/mizu/cli/config/configStructs"
 	"github.com/up9inc/mizu/cli/errormessage"
-	"github.com/up9inc/mizu/cli/kubernetes"
-	"github.com/up9inc/mizu/cli/mizu"
 	"github.com/up9inc/mizu/cli/uiUtils"
+	"github.com/up9inc/mizu/shared/kubernetes"
 	"github.com/up9inc/mizu/shared/logger"
 )
 
@@ -21,7 +20,7 @@ func GetApiServerUrl() string {
 }
 
 func startProxyReportErrorIfAny(kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
-	err := kubernetes.StartProxy(kubernetesProvider, config.Config.Tap.GuiPort, config.Config.MizuResourcesNamespace, mizu.ApiServerPodName)
+	err := kubernetes.StartProxy(kubernetesProvider, config.Config.Tap.GuiPort, config.Config.MizuResourcesNamespace, kubernetes.ApiServerPodName)
 	if err != nil {
 		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error occured while running k8s proxy %v\n"+
 			"Try setting different port by using --%s", errormessage.FormatError(err), configStructs.GuiPortTapName))

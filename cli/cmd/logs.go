@@ -8,9 +8,9 @@ import (
 	"github.com/up9inc/mizu/cli/config"
 	"github.com/up9inc/mizu/cli/config/configStructs"
 	"github.com/up9inc/mizu/cli/errormessage"
-	"github.com/up9inc/mizu/cli/kubernetes"
 	"github.com/up9inc/mizu/cli/mizu/fsUtils"
 	"github.com/up9inc/mizu/cli/telemetry"
+	"github.com/up9inc/mizu/shared/kubernetes"
 	"github.com/up9inc/mizu/shared/logger"
 )
 
