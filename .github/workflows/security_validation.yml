@@ -15,14 +15,16 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Run Snyk to check for vulnerabilities
-        uses: snyk/actions/node@master
-
       - uses: snyk/actions/setup@master
       - name: Set up Go 1.16
         uses: actions/setup-go@v2
         with:
           go-version: '1.16'
+
+      - name: UI
+        working-directory: ./ui
+        run: snyk test
+        continue-on-error: true
 
       - name: CLI
         working-directory: ./cli
