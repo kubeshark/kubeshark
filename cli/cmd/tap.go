@@ -81,7 +81,7 @@ Supported protocols are HTTP and gRPC.`,
 func askConfirmation(flagName string) {
 	logger.Log.Infof(fmt.Sprintf(uploadTrafficMessageToConfirm, flagName))
 
-	if !config.Config.Tap.AskConfirmation {
+	if !config.Config.Tap.AskUploadConfirmation {
 		return
 	}
 
@@ -96,7 +96,7 @@ func askConfirmation(flagName string) {
 		return
 	}
 
-	configFile.Tap.AskConfirmation = false
+	configFile.Tap.AskUploadConfirmation = false
 
 	if err := config.WriteConfig(configFile); err != nil {
 		logger.Log.Debugf("failed writing config with auth, err: %v", err)
