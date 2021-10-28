@@ -91,7 +91,7 @@ func askConfirmation(flagName string) {
 	}
 
 	if err := config.UpdateConfig(func(configStruct *config.ConfigStruct) { configStruct.Tap.AskUploadConfirmation = false }); err != nil {
-		logger.Log.Debugf("failed updating config with confirmation, err: %v", err)
+		logger.Log.Debugf("failed updating config with upload confirmation, err: %v", err)
 	}
 }
 

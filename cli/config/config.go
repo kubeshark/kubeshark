@@ -95,7 +95,7 @@ func UpdateConfig(updateConfigStruct updateConfigStruct) error {
 	updateConfigStruct(configFile)
 
 	if err := WriteConfig(configFile); err != nil {
-		return fmt.Errorf("failed writing config with auth, err: %v", err)
+		return fmt.Errorf("failed writing config, err: %v", err)
 	}
 
 	return nil
