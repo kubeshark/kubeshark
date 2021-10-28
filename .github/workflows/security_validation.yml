@@ -8,7 +8,7 @@ on:
 
 jobs:
   security:
-    name: Run Snyk to check for vulnerabilities
+    name: Check for vulnerabilities
     runs-on: ubuntu-latest
     env:
       SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
@@ -16,8 +16,8 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: UI
-        working-directory: ./ui
         uses: snyk/actions/node@master
+        working-directory: ./ui
 
       - uses: snyk/actions/setup@master
       - name: Set up Go 1.16
