@@ -354,7 +354,7 @@ func representBasicDeliver(event map[string]interface{}) []interface{} {
 		Data:  string(details),
 	})
 
-	properties := event["Properties"].(map[string]interface{})
+	properties := event["properties"].(map[string]interface{})
 	rep, contentType, _ := representProperties(properties, rep)
 
 	if properties["headers"] != nil {
@@ -633,7 +633,7 @@ func representQueueBind(event map[string]interface{}) []interface{} {
 		},
 		{
 			Name:     "NoWait",
-			Value:    strconv.FormatBool(event["NoWait"].(bool)),
+			Value:    strconv.FormatBool(event["noWait"].(bool)),
 			Selector: `request.noWait`,
 		},
 	})
