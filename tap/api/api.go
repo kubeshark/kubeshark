@@ -150,6 +150,7 @@ type MizuEntry struct {
 	ContractResponseReason string                 `json:"contractResponseReason,omitempty" gorm:"column:contractResponseReason"`
 	ContractContent        string                 `json:"contractContent,omitempty" gorm:"column:contractContent"`
 	EstimatedSizeBytes     int                    `json:"-" gorm:"column:estimatedSizeBytes"`
+	HTTPPair               string                 `json:"httpPair,omitempty"`
 }
 
 type MizuEntryWrapper struct {

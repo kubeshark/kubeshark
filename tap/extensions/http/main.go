@@ -216,6 +216,7 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolve
 		SourcePort:          item.ConnectionInfo.ClientPort,
 		DestinationPort:     item.ConnectionInfo.ServerPort,
 		IsOutgoing:          item.ConnectionInfo.IsOutgoing,
+		HTTPPair:            string(entryBytes),
 	}
 }
 
