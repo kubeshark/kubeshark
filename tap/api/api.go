@@ -124,6 +124,7 @@ type MizuEntry struct {
 	Destination            *TCP                   `json:"dst"`
 	Outgoing               bool                   `json:"outgoing"`
 	Timestamp              int64                  `json:"timestamp"`
+	StartTime              time.Time              `json:"startTime"`
 	Request                map[string]interface{} `json:"request"`
 	Response               map[string]interface{} `json:"response"`
 	Base                   *BaseEntryDetails      `json:"base"`

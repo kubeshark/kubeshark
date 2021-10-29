@@ -137,9 +137,7 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 				mizuEntry.ContractContent = contract.Content
 			}
 
-			var pair tapApi.RequestResponsePair
-			json.Unmarshal([]byte(mizuEntry.Entry), &pair)
-			harEntry, err := utils.NewEntry(&pair, mizuEntry.ElapsedTime)
+			harEntry, err := utils.NewEntry(mizuEntry.Request, mizuEntry.Response, mizuEntry.StartTime, mizuEntry.ElapsedTime)
 			if err == nil {
 				rules, _, _ := models.RunValidationRulesState(*harEntry, mizuEntry.Service)
 				baseEntry.Rules = rules

@@ -242,17 +242,7 @@ func syncEntriesImpl(token string, model string, envPrefix string, uploadInterva
 			if err := json.Unmarshal([]byte(b), &entry); err != nil {
 				continue
 			}
-			pair := tapApi.RequestResponsePair{
-				Request: tapApi.GenericMessage{
-					IsRequest: true,
-					Payload:   entry.Request,
-				},
-				Response: tapApi.GenericMessage{
-					IsRequest: false,
-					Payload:   entry.Response,
-				},
-			}
-			harEntry, err := utils.NewEntry(&pair, entry.ElapsedTime)
+			harEntry, err := utils.NewEntry(entry.Request, entry.Response, entry.StartTime, entry.ElapsedTime)
 			if err != nil {
 				continue
 			}

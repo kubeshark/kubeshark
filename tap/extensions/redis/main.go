@@ -106,6 +106,7 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolve
 		RequestSenderIp:     item.ConnectionInfo.ClientIP,
 		Service:             service,
 		Timestamp:           item.Timestamp,
+		StartTime:           item.Pair.Request.CaptureTime,
 		ElapsedTime:         0,
 		Summary:             summary,
 		ResolvedSource:      resolvedSource,
