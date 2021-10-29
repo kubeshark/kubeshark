@@ -104,7 +104,7 @@ export const QueryForm: React.FC<QueryFormProps> = ({query, setQuery, background
                     <Button
                         title="Open Filtering Guide (Cheatsheet)"
                         variant="contained"
-                        style={{margin: "2px 0px 0px 5px", minWidth: "26px"}}
+                        style={{margin: "2px 0px 0px 10px", minWidth: "26px"}}
                         onClick={handleOpenModal}
                     >
                         <MenuBookIcon fontSize="inherit"></MenuBookIcon>
