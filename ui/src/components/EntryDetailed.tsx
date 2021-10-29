@@ -35,13 +35,13 @@ export const formatSize = (n: number) => n > 1000 ? `${Math.round(n / 1000)}KB` 
 
 const EntryTitle: React.FC<any> = ({protocol, data, bodySize, elapsedTime, updateQuery}) => {
     const classes = useStyles();
-    const {response} = JSON.parse(data.entry);
+    const response = data.response;
 
 
     return <div className={classes.entryTitle}>
         <Protocol protocol={protocol} horizontal={true} updateQuery={null}/>
         <div style={{right: "30px", position: "absolute", display: "flex"}}>
-            {response.payload && <div
+            {response && <div
                 className="queryable"
                 style={{margin: "0 18px", opacity: 0.5}}
                 onClick={() => {
@@ -50,7 +50,7 @@ const EntryTitle: React.FC<any> = ({protocol, data, bodySize, elapsedTime, updat
             >
                 {formatSize(bodySize)}
             </div>}
-            {response.payload && <div
+            {response && <div
                 className="queryable"
                 style={{marginRight: 18, opacity: 0.5}}
                 onClick={() => {
@@ -66,11 +66,11 @@ const EntryTitle: React.FC<any> = ({protocol, data, bodySize, elapsedTime, updat
 const EntrySummary: React.FC<any> = ({data, updateQuery}) => {
     const classes = useStyles();
 
-    const {response} = JSON.parse(data.entry);
+    const response = data.response;
 
     return <div className={classes.entrySummary}>
-        {response?.payload && response.payload?.details && "status" in response.payload.details && <div style={{marginRight: 8}}>
-            <StatusCode statusCode={response.payload.details.status} updateQuery={updateQuery}/>
+        {response && "status" in response && <div style={{marginRight: 8}}>
+            <StatusCode statusCode={response.status} updateQuery={updateQuery}/>
         </div>}
         <div style={{flexGrow: 1, overflow: 'hidden'}}>
             <Summary method={data.method} summary={data.summary} updateQuery={updateQuery}/>

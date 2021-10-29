@@ -97,7 +97,7 @@ type Dissector interface {
 	Register(*Extension)
 	Ping()
 	Dissect(b *bufio.Reader, isClient bool, tcpID *TcpID, counterPair *CounterPair, superTimer *SuperTimer, superIdentifier *SuperIdentifier, emitter Emitter, options *TrafficFilteringOptions) error
-	Analyze(item *OutputChannelItem, entryId string, resolvedSource string, resolvedDestination string) *MizuEntry
+	Analyze(item *OutputChannelItem, resolvedSource string, resolvedDestination string) *MizuEntry
 	Summarize(entry *MizuEntry) *BaseEntryDetails
 	Represent(pIn Protocol, request map[string]interface{}, response map[string]interface{}) (pOut Protocol, object []byte, bodySize int64, err error)
 	Macros() map[string]string
@@ -129,8 +129,6 @@ type MizuEntry struct {
 	Response               map[string]interface{} `json:"response"`
 	Base                   *BaseEntryDetails      `json:"base"`
 	Summary                string                 `json:"summary"`
-	Entry                  string                 `json:"entry,omitempty"`
-	EntryId                string                 `json:"entryId" gorm:"column:entryId"`
 	Url                    string                 `json:"url" gorm:"column:url"`
 	Method                 string                 `json:"method" gorm:"column:method"`
 	Status                 int                    `json:"status" gorm:"column:status"`
@@ -149,7 +147,6 @@ type MizuEntry struct {
 	ContractRequestReason  string                 `json:"contractRequestReason,omitempty" gorm:"column:contractRequestReason"`
 	ContractResponseReason string                 `json:"contractResponseReason,omitempty" gorm:"column:contractResponseReason"`
 	ContractContent        string                 `json:"contractContent,omitempty" gorm:"column:contractContent"`
-	EstimatedSizeBytes     int                    `json:"-" gorm:"column:estimatedSizeBytes"`
 	HTTPPair               string                 `json:"httpPair,omitempty"`
 }
 

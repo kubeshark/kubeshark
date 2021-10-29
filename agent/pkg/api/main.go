@@ -13,8 +13,6 @@ import (
 	"strings"
 	"time"
 
-	"go.mongodb.org/mongo-driver/bson/primitive"
-
 	"github.com/google/martian/har"
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/logger"
@@ -120,9 +118,8 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 
 		extension := extensionsMap[item.Protocol.Name]
 		resolvedSource, resolvedDestionation := resolveIP(item.ConnectionInfo)
-		mizuEntry := extension.Dissector.Analyze(item, primitive.NewObjectID().Hex(), resolvedSource, resolvedDestionation)
+		mizuEntry := extension.Dissector.Analyze(item, resolvedSource, resolvedDestionation)
 		baseEntry := extension.Dissector.Summarize(mizuEntry)
-		mizuEntry.EstimatedSizeBytes = getEstimatedEntrySizeBytes(mizuEntry)
 		mizuEntry.Base = baseEntry
 		if extension.Protocol.Name == "http" {
 			if !disableOASValidation {
@@ -179,22 +176,4 @@ func CheckIsServiceIP(address string) bool {
 		return false
 	}
 	return k8sResolver.CheckIsServiceIP(address)
-}
-
-// gives a rough estimate of the size this will take up in the db, good enough for maintaining db size limit accurately
-func getEstimatedEntrySizeBytes(mizuEntry *tapApi.MizuEntry) int {
-	sizeBytes := len(mizuEntry.Entry)
-	sizeBytes += len(mizuEntry.EntryId)
-	sizeBytes += len(mizuEntry.Service)
-	sizeBytes += len(mizuEntry.Url)
-	sizeBytes += len(mizuEntry.Method)
-	sizeBytes += len(mizuEntry.RequestSenderIp)
-	sizeBytes += len(mizuEntry.ResolvedDestination)
-	sizeBytes += len(mizuEntry.ResolvedSource)
-	sizeBytes += 8 // Status bytes (sqlite integer is always 8 bytes)
-	sizeBytes += 8 // Timestamp bytes
-	sizeBytes += 8 // SizeBytes bytes
-	sizeBytes += 1 // IsOutgoing bytes
-
-	return sizeBytes
 }

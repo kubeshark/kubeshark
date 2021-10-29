@@ -62,7 +62,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 	}
 }
 
-func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolvedSource string, resolvedDestination string) *api.MizuEntry {
+func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, resolvedDestination string) *api.MizuEntry {
 	request := item.Pair.Request.Payload.(map[string]interface{})
 	reqDetails := request["details"].(map[string]interface{})
 	service := "kafka"
@@ -149,7 +149,6 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolve
 
 	request["url"] = summary
 	elapsedTime := item.Pair.Response.CaptureTime.Sub(item.Pair.Request.CaptureTime).Round(time.Millisecond).Milliseconds()
-	entryBytes, _ := json.Marshal(item.Pair)
 	return &api.MizuEntry{
 		Protocol: _protocol,
 		Source: &api.TCP{
@@ -165,8 +164,6 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolve
 		Outgoing:            item.ConnectionInfo.IsOutgoing,
 		Request:             reqDetails,
 		Response:            item.Pair.Response.Payload.(map[string]interface{})["details"].(map[string]interface{}),
-		EntryId:             entryId,
-		Entry:               string(entryBytes),
 		Url:                 fmt.Sprintf("%s%s", service, summary),
 		Method:              apiNames[apiKey],
 		Status:              0,

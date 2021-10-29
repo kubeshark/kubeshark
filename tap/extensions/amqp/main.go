@@ -223,7 +223,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 	}
 }
 
-func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolvedSource string, resolvedDestination string) *api.MizuEntry {
+func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, resolvedDestination string) *api.MizuEntry {
 	request := item.Pair.Request.Payload.(map[string]interface{})
 	reqDetails := request["details"].(map[string]interface{})
 	service := "amqp"
@@ -266,7 +266,6 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolve
 	}
 
 	request["url"] = summary
-	entryBytes, _ := json.Marshal(item.Pair)
 	return &api.MizuEntry{
 		Protocol: protocol,
 		Source: &api.TCP{
@@ -281,8 +280,6 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolve
 		},
 		Outgoing:            item.ConnectionInfo.IsOutgoing,
 		Request:             reqDetails,
-		EntryId:             entryId,
-		Entry:               string(entryBytes),
 		Url:                 fmt.Sprintf("%s%s", service, summary),
 		Method:              request["method"].(string),
 		Status:              0,

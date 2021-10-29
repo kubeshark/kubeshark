@@ -10,5 +10,5 @@ import (
 func EntriesRoutes(ginApp *gin.Engine) {
 	routeGroup := ginApp.Group("/entries")
 
-	routeGroup.GET("/:entryId", controllers.GetEntry) // get single (full) entry
+	routeGroup.GET("/:id", controllers.GetEntry) // get single (full) entry
 }

@@ -21,7 +21,7 @@ func InitExtensionsMap(ref map[string]*tapApi.Extension) {
 }
 
 func GetEntry(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("entryId"))
+	id, _ := strconv.Atoi(c.Param("id"))
 	var entry map[string]interface{}
 	bytes, err := basenine.Single(shared.BasenineHost, shared.BaseninePort, id)
 	if err != nil {
@@ -48,8 +48,6 @@ func GetEntry(c *gin.Context) {
 		},
 		Request:         entry["request"].(map[string]interface{}),
 		Response:        response,
-		EntryId:         entry["entryId"].(string),
-		Entry:           entry["entry"].(string),
 		Url:             entry["url"].(string),
 		Method:          entry["method"].(string),
 		Status:          int(entry["status"].(float64)),

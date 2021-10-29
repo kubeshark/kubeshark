@@ -119,7 +119,7 @@ func SetHostname(address, newHostname string) string {
 	return replacedUrl.String()
 }
 
-func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolvedSource string, resolvedDestination string) *api.MizuEntry {
+func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, resolvedDestination string) *api.MizuEntry {
 	var host, scheme, authority, path, service string
 
 	request := item.Pair.Request.Payload.(map[string]interface{})
@@ -180,7 +180,7 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolve
 	}
 
 	elapsedTime := item.Pair.Response.CaptureTime.Sub(item.Pair.Request.CaptureTime).Round(time.Millisecond).Milliseconds()
-	entryBytes, _ := json.Marshal(item.Pair)
+	httpPair, _ := json.Marshal(item.Pair)
 	_protocol := protocol
 	_protocol.Version = item.Protocol.Version
 	return &api.MizuEntry{
@@ -198,8 +198,6 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolve
 		Outgoing:            item.ConnectionInfo.IsOutgoing,
 		Request:             reqDetails,
 		Response:            resDetails,
-		EntryId:             entryId,
-		Entry:               string(entryBytes),
 		Url:                 fmt.Sprintf("%s%s", service, path),
 		Method:              reqDetails["method"].(string),
 		Status:              int(resDetails["status"].(float64)),
@@ -216,7 +214,7 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolve
 		SourcePort:          item.ConnectionInfo.ClientPort,
 		DestinationPort:     item.ConnectionInfo.ServerPort,
 		IsOutgoing:          item.ConnectionInfo.IsOutgoing,
-		HTTPPair:            string(entryBytes),
+		HTTPPair:            string(httpPair),
 	}
 }
 

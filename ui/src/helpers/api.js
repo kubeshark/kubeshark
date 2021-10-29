@@ -31,8 +31,8 @@ export default class Api {
         return response.data;
     }
 
-    getEntry = async (entryId) => {
-        const response = await this.client.get(`/entries/${entryId}`);
+    getEntry = async (id) => {
+        const response = await this.client.get(`/entries/${id}`);
         return response.data;
     }
 
