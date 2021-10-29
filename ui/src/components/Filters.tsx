@@ -123,6 +123,7 @@ export const QueryForm: React.FC<QueryFormProps> = ({query, setQuery, background
             BackdropProps={{
                 timeout: 500,
             }}
+            style={{overflow: 'auto'}}
         >
             <Fade in={openModal}>
                 <Box sx={style}>
