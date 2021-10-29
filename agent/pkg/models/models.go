@@ -16,12 +16,6 @@ func GetEntry(r *tapApi.MizuEntry, v tapApi.DataUnmarshaler) error {
 	return v.UnmarshalData(r)
 }
 
-type EntriesFilter struct {
-	Limit     int    `form:"limit" validate:"required,min=1,max=200"`
-	Operator  string `form:"operator" validate:"required,oneof='lt' 'gt'"`
-	Timestamp int64  `form:"timestamp" validate:"required,min=1"`
-}
-
 type WebSocketEntryMessage struct {
 	*shared.WebSocketMessageMetadata
 	Data map[string]interface{} `json:"data,omitempty"`

@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"mizuserver/pkg/database"
 	"mizuserver/pkg/utils"
 	"net/http"
 	"net/url"
@@ -16,6 +15,7 @@ import (
 	"time"
 
 	"github.com/google/martian/har"
+	basenine "github.com/up9inc/basenine/client/go"
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/logger"
 	tapApi "github.com/up9inc/mizu/tap/api"
@@ -204,44 +204,72 @@ func syncEntriesImpl(token string, model string, envPrefix string, uploadInterva
 	analyzeInformation.AnalyzeDestination = envPrefix
 	analyzeInformation.SentCount = 0
 
-	sleepTime := time.Second * time.Duration(uploadIntervalSec)
+	query := "http"
 
-	var timeFrom time.Time
-	protocolFilter := "http"
+	logger.Log.Infof("Getting entries from the database\n")
 
-	for {
-		timeTo := time.Now()
-		logger.Log.Infof("Getting entries from %v, to %v\n", timeFrom.Format(time.RFC3339Nano), timeTo.Format(time.RFC3339Nano))
-		entriesArray := database.GetEntriesFromDb(timeFrom, timeTo, &protocolFilter)
+	var c *basenine.Connection
+	var err error
+	c, err = basenine.NewConnection(shared.BasenineHost, shared.BaseninePort)
+	if err != nil {
+		panic(err)
+	}
 
-		if len(entriesArray) > 0 {
-			result := make([]har.Entry, 0)
-			for _, data := range entriesArray {
-				var pair tapApi.RequestResponsePair
-				if err := json.Unmarshal([]byte(data.Entry), &pair); err != nil {
-					continue
-				}
-				harEntry, err := utils.NewEntry(&pair)
-				if err != nil {
-					continue
-				}
-				if data.ResolvedSource != "" {
-					harEntry.Request.Headers = append(harEntry.Request.Headers, har.Header{Name: "x-mizu-source", Value: data.ResolvedSource})
-				}
-				if data.ResolvedDestination != "" {
-					harEntry.Request.Headers = append(harEntry.Request.Headers, har.Header{Name: "x-mizu-destination", Value: data.ResolvedDestination})
-					harEntry.Request.URL = utils.SetHostname(harEntry.Request.URL, data.ResolvedDestination)
-				}
+	data := make(chan []byte)
+	meta := make(chan []byte)
 
-				// go's default marshal behavior is to encode []byte fields to base64, python's default unmarshal behavior is to not decode []byte fields from base64
-				if harEntry.Response.Content.Text, err = base64.StdEncoding.DecodeString(string(harEntry.Response.Content.Text)); err != nil {
-					continue
-				}
+	defer func() {
+		data <- []byte(basenine.CloseChannel)
+		meta <- []byte(basenine.CloseChannel)
+		close(data)
+		close(meta)
+		c.Close()
+	}()
 
-				result = append(result, *harEntry)
+	handleDataChannel := func(c *basenine.Connection, data chan []byte) {
+		for {
+			b := <-data
+
+			if string(b) == basenine.CloseChannel {
+				return
 			}
 
-			logger.Log.Infof("About to upload %v entries\n", len(result))
+			var d map[string]interface{}
+			err = json.Unmarshal(b, &d)
+
+			result := make([]har.Entry, 0)
+			var entry tapApi.MizuEntry
+			if err := json.Unmarshal([]byte(b), &entry); err != nil {
+				continue
+			}
+			pair := tapApi.RequestResponsePair{
+				Request: tapApi.GenericMessage{
+					IsRequest: true,
+					Payload:   entry.Request,
+				},
+				Response: tapApi.GenericMessage{
+					IsRequest: false,
+					Payload:   entry.Response,
+				},
+			}
+			harEntry, err := utils.NewEntry(&pair, entry.ElapsedTime)
+			if err != nil {
+				continue
+			}
+			if entry.ResolvedSource != "" {
+				harEntry.Request.Headers = append(harEntry.Request.Headers, har.Header{Name: "x-mizu-source", Value: entry.ResolvedSource})
+			}
+			if entry.ResolvedDestination != "" {
+				harEntry.Request.Headers = append(harEntry.Request.Headers, har.Header{Name: "x-mizu-destination", Value: entry.ResolvedDestination})
+				harEntry.Request.URL = utils.SetHostname(harEntry.Request.URL, entry.ResolvedDestination)
+			}
+
+			// go's default marshal behavior is to encode []byte fields to base64, python's default unmarshal behavior is to not decode []byte fields from base64
+			if harEntry.Response.Content.Text, err = base64.StdEncoding.DecodeString(string(harEntry.Response.Content.Text)); err != nil {
+				continue
+			}
+
+			result = append(result, *harEntry)
 
 			body, jMarshalErr := json.Marshal(result)
 			if jMarshalErr != nil {
@@ -273,18 +301,28 @@ func syncEntriesImpl(token string, model string, envPrefix string, uploadInterva
 				logger.Log.Info("Stopping sync entries")
 				logger.Log.Fatal(postErr)
 			}
-			analyzeInformation.SentCount += len(entriesArray)
-			logger.Log.Infof("Finish uploading %v entries to %s\n", len(entriesArray), GetTrafficDumpUrl(envPrefix, model))
+			analyzeInformation.SentCount += 1
 
-			logger.Log.Infof("Uploaded %v entries until now", analyzeInformation.SentCount)
-		} else {
-			logger.Log.Infof("Nothing to upload")
+			if analyzeInformation.SentCount%100 == 0 {
+				logger.Log.Infof("Uploaded %v entries until now", analyzeInformation.SentCount)
+			}
 		}
-
-		logger.Log.Infof("Sleeping for %v...\n", sleepTime)
-		time.Sleep(sleepTime)
-		timeFrom = timeTo
 	}
+
+	handleMetaChannel := func(c *basenine.Connection, meta chan []byte) {
+		for {
+			b := <-meta
+
+			if string(b) == basenine.CloseChannel {
+				return
+			}
+		}
+	}
+
+	go handleDataChannel(c, data)
+	go handleMetaChannel(c, meta)
+
+	c.Query(query, data, meta)
 }
 
 func UpdateAnalyzeStatus(callback func(data []byte)) {

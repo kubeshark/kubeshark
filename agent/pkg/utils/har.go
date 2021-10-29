@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/google/martian/har"
 	"github.com/up9inc/mizu/shared/logger"
@@ -224,7 +223,7 @@ func NewResponse(response *api.GenericMessage) (harResponse *har.Response, err e
 	return
 }
 
-func NewEntry(pair *api.RequestResponsePair) (*har.Entry, error) {
+func NewEntry(pair *api.RequestResponsePair, elapsedTime int64) (*har.Entry, error) {
 	harRequest, err := NewRequest(&pair.Request)
 	if err != nil {
 		logger.Log.Errorf("Failed converting request to HAR %s (%v,%+v)", err, err, err)
@@ -237,21 +236,20 @@ func NewEntry(pair *api.RequestResponsePair) (*har.Entry, error) {
 		return nil, errors.New("failed converting response to HAR")
 	}
 
-	totalTime := pair.Response.CaptureTime.Sub(pair.Request.CaptureTime).Round(time.Millisecond).Milliseconds()
-	if totalTime < 1 {
-		totalTime = 1
+	if elapsedTime < 1 {
+		elapsedTime = 1
 	}
 
 	harEntry := har.Entry{
 		StartedDateTime: pair.Request.CaptureTime,
-		Time:            totalTime,
+		Time:            elapsedTime,
 		Request:         harRequest,
 		Response:        harResponse,
 		Cache:           &har.Cache{},
 		Timings: &har.Timings{
 			Send:    -1,
 			Wait:    -1,
-			Receive: totalTime,
+			Receive: elapsedTime,
 		},
 	}
 
