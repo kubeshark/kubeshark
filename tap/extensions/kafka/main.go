@@ -210,49 +210,43 @@ func (d dissecting) Summarize(entry *api.MizuEntry) *api.BaseEntryDetails {
 	}
 }
 
-func (d dissecting) Represent(entry *api.MizuEntry) (p api.Protocol, object []byte, bodySize int64, err error) {
-	p = _protocol
+func (d dissecting) Represent(protoIn api.Protocol, request map[string]interface{}, response map[string]interface{}) (protoOut api.Protocol, object []byte, bodySize int64, err error) {
+	protoOut = _protocol
 	bodySize = 0
-	var root map[string]interface{}
-	json.Unmarshal([]byte(entry.Entry), &root)
 	representation := make(map[string]interface{}, 0)
-	request := root["request"].(map[string]interface{})["payload"].(map[string]interface{})
-	response := root["response"].(map[string]interface{})["payload"].(map[string]interface{})
-	reqDetails := request["details"].(map[string]interface{})
-	resDetails := response["details"].(map[string]interface{})
 
-	apiKey := ApiKey(reqDetails["apiKey"].(float64))
+	apiKey := ApiKey(request["apiKey"].(float64))
 
 	var repRequest []interface{}
 	var repResponse []interface{}
 	switch apiKey {
 	case Metadata:
-		repRequest = representMetadataRequest(reqDetails)
-		repResponse = representMetadataResponse(resDetails)
+		repRequest = representMetadataRequest(request)
+		repResponse = representMetadataResponse(response)
 		break
 	case ApiVersions:
-		repRequest = representApiVersionsRequest(reqDetails)
-		repResponse = representApiVersionsResponse(resDetails)
+		repRequest = representApiVersionsRequest(request)
+		repResponse = representApiVersionsResponse(response)
 		break
 	case Produce:
-		repRequest = representProduceRequest(reqDetails)
-		repResponse = representProduceResponse(resDetails)
+		repRequest = representProduceRequest(request)
+		repResponse = representProduceResponse(response)
 		break
 	case Fetch:
-		repRequest = representFetchRequest(reqDetails)
-		repResponse = representFetchResponse(resDetails)
+		repRequest = representFetchRequest(request)
+		repResponse = representFetchResponse(response)
 		break
 	case ListOffsets:
-		repRequest = representListOffsetsRequest(reqDetails)
-		repResponse = representListOffsetsResponse(resDetails)
+		repRequest = representListOffsetsRequest(request)
+		repResponse = representListOffsetsResponse(response)
 		break
 	case CreateTopics:
-		repRequest = representCreateTopicsRequest(reqDetails)
-		repResponse = representCreateTopicsResponse(resDetails)
+		repRequest = representCreateTopicsRequest(request)
+		repResponse = representCreateTopicsResponse(response)
 		break
 	case DeleteTopics:
-		repRequest = representDeleteTopicsRequest(reqDetails)
-		repResponse = representDeleteTopicsResponse(resDetails)
+		repRequest = representDeleteTopicsRequest(request)
+		repResponse = representDeleteTopicsResponse(response)
 		break
 	}
 

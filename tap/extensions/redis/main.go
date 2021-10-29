@@ -144,18 +144,12 @@ func (d dissecting) Summarize(entry *api.MizuEntry) *api.BaseEntryDetails {
 	}
 }
 
-func (d dissecting) Represent(entry *api.MizuEntry) (p api.Protocol, object []byte, bodySize int64, err error) {
-	p = protocol
+func (d dissecting) Represent(protoIn api.Protocol, request map[string]interface{}, response map[string]interface{}) (protoOut api.Protocol, object []byte, bodySize int64, err error) {
+	protoOut = protocol
 	bodySize = 0
-	var root map[string]interface{}
-	json.Unmarshal([]byte(entry.Entry), &root)
 	representation := make(map[string]interface{}, 0)
-	request := root["request"].(map[string]interface{})["payload"].(map[string]interface{})
-	response := root["response"].(map[string]interface{})["payload"].(map[string]interface{})
-	reqDetails := request["details"].(map[string]interface{})
-	resDetails := response["details"].(map[string]interface{})
-	repRequest := representGeneric(reqDetails, `request.`)
-	repResponse := representGeneric(resDetails, `response.`)
+	repRequest := representGeneric(request, `request.`)
+	repResponse := representGeneric(response, `response.`)
 	representation["request"] = repRequest
 	representation["response"] = repResponse
 	object, err = json.Marshal(representation)

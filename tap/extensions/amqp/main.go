@@ -327,39 +327,35 @@ func (d dissecting) Summarize(entry *api.MizuEntry) *api.BaseEntryDetails {
 	}
 }
 
-func (d dissecting) Represent(entry *api.MizuEntry) (p api.Protocol, object []byte, bodySize int64, err error) {
-	p = protocol
+func (d dissecting) Represent(protoIn api.Protocol, request map[string]interface{}, response map[string]interface{}) (protoOut api.Protocol, object []byte, bodySize int64, err error) {
+	protoOut = protocol
 	bodySize = 0
-	var root map[string]interface{}
-	json.Unmarshal([]byte(entry.Entry), &root)
 	representation := make(map[string]interface{}, 0)
-	request := root["request"].(map[string]interface{})["payload"].(map[string]interface{})
 	var repRequest []interface{}
-	details := request["details"].(map[string]interface{})
 	switch request["method"].(string) {
 	case basicMethodMap[40]:
-		repRequest = representBasicPublish(details)
+		repRequest = representBasicPublish(request)
 		break
 	case basicMethodMap[60]:
-		repRequest = representBasicDeliver(details)
+		repRequest = representBasicDeliver(request)
 		break
 	case queueMethodMap[10]:
-		repRequest = representQueueDeclare(details)
+		repRequest = representQueueDeclare(request)
 		break
 	case exchangeMethodMap[10]:
-		repRequest = representExchangeDeclare(details)
+		repRequest = representExchangeDeclare(request)
 		break
 	case connectionMethodMap[10]:
-		repRequest = representConnectionStart(details)
+		repRequest = representConnectionStart(request)
 		break
 	case connectionMethodMap[50]:
-		repRequest = representConnectionClose(details)
+		repRequest = representConnectionClose(request)
 		break
 	case queueMethodMap[20]:
-		repRequest = representQueueBind(details)
+		repRequest = representQueueBind(request)
 		break
 	case basicMethodMap[20]:
-		repRequest = representBasicConsume(details)
+		repRequest = representBasicConsume(request)
 		break
 	}
 	representation["request"] = repRequest

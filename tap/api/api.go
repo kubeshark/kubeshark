@@ -99,7 +99,7 @@ type Dissector interface {
 	Dissect(b *bufio.Reader, isClient bool, tcpID *TcpID, counterPair *CounterPair, superTimer *SuperTimer, superIdentifier *SuperIdentifier, emitter Emitter, options *TrafficFilteringOptions) error
 	Analyze(item *OutputChannelItem, entryId string, resolvedSource string, resolvedDestination string) *MizuEntry
 	Summarize(entry *MizuEntry) *BaseEntryDetails
-	Represent(entry *MizuEntry) (protocol Protocol, object []byte, bodySize int64, err error)
+	Represent(pIn Protocol, request map[string]interface{}, response map[string]interface{}) (pOut Protocol, object []byte, bodySize int64, err error)
 	Macros() map[string]string
 }
 

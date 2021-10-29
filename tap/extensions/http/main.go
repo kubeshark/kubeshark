@@ -402,21 +402,15 @@ func representResponse(response map[string]interface{}) (repResponse []interface
 	return
 }
 
-func (d dissecting) Represent(entry *api.MizuEntry) (p api.Protocol, object []byte, bodySize int64, err error) {
-	if entry.Protocol.Version == "2.0" {
-		p = http2Protocol
+func (d dissecting) Represent(protoIn api.Protocol, request map[string]interface{}, response map[string]interface{}) (protoOut api.Protocol, object []byte, bodySize int64, err error) {
+	if protoIn.Version == "2.0" {
+		protoOut = http2Protocol
 	} else {
-		p = protocol
+		protoOut = protocol
 	}
-	var root map[string]interface{}
-	json.Unmarshal([]byte(entry.Entry), &root)
 	representation := make(map[string]interface{}, 0)
-	request := root["request"].(map[string]interface{})["payload"].(map[string]interface{})
-	response := root["response"].(map[string]interface{})["payload"].(map[string]interface{})
-	reqDetails := request["details"].(map[string]interface{})
-	resDetails := response["details"].(map[string]interface{})
-	repRequest := representRequest(reqDetails)
-	repResponse, bodySize := representResponse(resDetails)
+	repRequest := representRequest(request)
+	repResponse, bodySize := representResponse(response)
 	representation["request"] = repRequest
 	representation["response"] = repResponse
 	object, err = json.Marshal(representation)

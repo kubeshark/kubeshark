@@ -68,7 +68,7 @@ func GetEntry(c *gin.Context) {
 	}
 
 	extension := extensionsMap[entryData.Protocol.Name]
-	protocol, representation, bodySize, _ := extension.Dissector.Represent(&entryData)
+	protocol, representation, bodySize, _ := extension.Dissector.Represent(entryData.Protocol, entryData.Request, entryData.Response)
 
 	var rules []map[string]interface{}
 	var isRulesEnabled bool
