@@ -129,24 +129,24 @@ type MizuEntry struct {
 	Response               map[string]interface{} `json:"response"`
 	Base                   *BaseEntryDetails      `json:"base"`
 	Summary                string                 `json:"summary"`
-	Url                    string                 `json:"url" gorm:"column:url"`
-	Method                 string                 `json:"method" gorm:"column:method"`
-	Status                 int                    `json:"status" gorm:"column:status"`
-	RequestSenderIp        string                 `json:"requestSenderIp" gorm:"column:requestSenderIp"`
-	Service                string                 `json:"service" gorm:"column:service"`
-	ElapsedTime            int64                  `json:"elapsedTime" gorm:"column:elapsedTime"`
-	Path                   string                 `json:"path" gorm:"column:path"`
-	ResolvedSource         string                 `json:"resolvedSource,omitempty" gorm:"column:resolvedSource"`
-	ResolvedDestination    string                 `json:"resolvedDestination,omitempty" gorm:"column:resolvedDestination"`
-	SourceIp               string                 `json:"sourceIp,omitempty" gorm:"column:sourceIp"`
-	DestinationIp          string                 `json:"destinationIp,omitempty" gorm:"column:destinationIp"`
-	SourcePort             string                 `json:"sourcePort,omitempty" gorm:"column:sourcePort"`
-	DestinationPort        string                 `json:"destinationPort,omitempty" gorm:"column:destinationPort"`
-	IsOutgoing             bool                   `json:"isOutgoing,omitempty" gorm:"column:isOutgoing"`
-	ContractStatus         ContractStatus         `json:"contractStatus,omitempty" gorm:"column:contractStatus"`
-	ContractRequestReason  string                 `json:"contractRequestReason,omitempty" gorm:"column:contractRequestReason"`
-	ContractResponseReason string                 `json:"contractResponseReason,omitempty" gorm:"column:contractResponseReason"`
-	ContractContent        string                 `json:"contractContent,omitempty" gorm:"column:contractContent"`
+	Url                    string                 `json:"url"`
+	Method                 string                 `json:"method"`
+	Status                 int                    `json:"status"`
+	RequestSenderIp        string                 `json:"requestSenderIp"`
+	Service                string                 `json:"service"`
+	ElapsedTime            int64                  `json:"elapsedTime"`
+	Path                   string                 `json:"path"`
+	ResolvedSource         string                 `json:"resolvedSource,omitempty"`
+	ResolvedDestination    string                 `json:"resolvedDestination,omitempty"`
+	SourceIp               string                 `json:"sourceIp,omitempty"`
+	DestinationIp          string                 `json:"destinationIp,omitempty"`
+	SourcePort             string                 `json:"sourcePort,omitempty"`
+	DestinationPort        string                 `json:"destinationPort,omitempty"`
+	IsOutgoing             bool                   `json:"isOutgoing,omitempty"`
+	ContractStatus         ContractStatus         `json:"contractStatus,omitempty"`
+	ContractRequestReason  string                 `json:"contractRequestReason,omitempty"`
+	ContractResponseReason string                 `json:"contractResponseReason,omitempty"`
+	ContractContent        string                 `json:"contractContent,omitempty"`
 	HTTPPair               string                 `json:"httpPair,omitempty"`
 }
 

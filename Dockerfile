@@ -24,7 +24,7 @@ COPY tap/go.mod tap/go.mod ../tap/
 COPY tap/api/go.* ../tap/api/
 RUN go mod download
 # cheap trick to make the build faster (As long as go.mod wasn't changes)
-RUN go list -f '{{.Path}}@{{.Version}}' -m all | sed 1d | grep -e 'go-cache' -e 'sqlite' | xargs go get
+RUN go list -f '{{.Path}}@{{.Version}}' -m all | sed 1d | grep -e 'go-cache' | xargs go get
 
 ARG COMMIT_HASH
 ARG GIT_BRANCH

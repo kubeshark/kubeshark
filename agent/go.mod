@@ -22,7 +22,6 @@ require (
 	github.com/up9inc/mizu/tap/api v0.0.0
 	github.com/yalp/jsonpath v0.0.0-20180802001716-5cc68e5049a0
 	golang.org/x/text v0.3.5 // indirect
-	gorm.io/gorm v1.21.8
 	k8s.io/api v0.21.0
 	k8s.io/apimachinery v0.21.0
 	k8s.io/client-go v0.21.0
