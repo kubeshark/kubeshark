@@ -21,22 +21,5 @@ jobs:
         with:
           go-version: '1.16'
 
-      - name: CLI
-        working-directory: ./cli
-        run: snyk test
-
-      - name: Agent
-        working-directory: ./agent
-        run: snyk test
-
-      - name: Shared
-        working-directory: ./shared
-        run: snyk test
-
-      - name: Tap
-        working-directory: ./tap
-        run: snyk test
-
-      - name: UI
-        working-directory: ./ui
-        run: snyk test
+      - name: Run snyl on all projects
+        run: snyk test --all-projects

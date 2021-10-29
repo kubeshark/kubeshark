@@ -1,0 +1,135 @@
+# Snyk (https://snyk.io) policy file, patches or ignores known vulnerabilities.
+version: v1.14.0
+ignore:
+  SNYK-JS-AXIOS-1579269:
+      - '*':
+        reason: None Given
+  SNYK-JS-TRIMNEWLINES-1298042:
+      - '*':
+        reason: None Given
+  SNYK-JS-ANSIHTML-1296849:
+      - '*':
+        reason: None Given
+  SNYK-JS-ANSIREGEX-1583908:
+        - '*':
+          reason: None Given
+  SNYK-JS-BROWSERSLIST-1090194:
+        - '*':
+          reason: None Given
+  SNYK-JS-CSSWHAT-1298035:
+        - '*':
+          reason: None Given
+  SNYK-JS-DNSPACKET-1293563:
+        - '*':
+          reason: None Given
+  SNYK-JS-EJS-1049328:
+        - '*':
+          reason: None Given
+  SNYK-JS-GLOBPARENT-1016905:
+        - '*':
+          reason: None Given
+  SNYK-JS-IMMER-1540542:
+        - '*':
+          reason: None Given
+  SNYK-JS-LODASHTEMPLATE-1088054:
+        - '*':
+          reason: None Given
+  SNYK-JS-NODESASS-1059081:
+        - '*':
+          reason: None Given
+  SNYK-JS-NODESASS-535498:
+        - '*':
+          reason: None Given
+  SNYK-JS-NODESASS-535500:
+        - '*':
+          reason: None Given
+  SNYK-JS-NODESASS-535502:
+        - '*':
+          reason: None Given
+  SNYK-JS-NODESASS-540956:
+    - '*':
+        reason: Non given
+  SNYK-JS-NODESASS-540958:
+    - '*':
+        reason: Non given
+  SNYK-JS-NODESASS-540964:
+    - '*':
+        reason: Non given
+  SNYK-JS-NODESASS-540978:
+    - '*':
+        reason: Non given
+  SNYK-JS-NODESASS-540980:
+    - '*':
+        reason: Non given
+  SNYK-JS-NODESASS-540990:
+    - '*':
+        reason: Non given
+  SNYK-JS-NODESASS-540992:
+    - '*':
+        reason: Non given
+  SNYK-JS-NODESASS-540994:
+    - '*':
+        reason: Non given
+  SNYK-JS-NODESASS-540996:
+    - '*':
+        reason: Non given
+  SNYK-JS-NODESASS-540998:
+    - '*':
+        reason: Non given
+  SNYK-JS-NODESASS-541000:
+    - '*':
+        reason: Non given
+  SNYK-JS-NODESASS-541002:
+    - '*':
+        reason: Non given
+  SNYK-JS-NTHCHECK-1586032:
+    - '*':
+        reason: Non given
+  SNYK-JS-PATHPARSE-1077067:
+    - '*':
+        reason: Non given
+  SNYK-JS-POSTCSS-1090595:
+    - '*':
+        reason: Non given
+  SNYK-JS-POSTCSS-1255640:
+    - '*':
+        reason: Non given
+  SNYK-JS-PRISMJS-1314893:
+    - '*':
+        reason: Non given
+  SNYK-JS-PRISMJS-1585202:
+    - '*':
+        reason: Non given
+  SNYK-JS-PROMPTS-1729737:
+    - '*':
+        reason: Non given
+  SNYK-JS-SHELLQUOTE-1766506:
+    - '*':
+        reason: Non given
+  SNYK-JS-TAR-1536528:
+    - '*':
+        reason: Non given
+  SNYK-JS-TAR-1536531:
+    - '*':
+        reason: Non given
+  SNYK-JS-TAR-1536758:
+    - '*':
+        reason: Non given
+  SNYK-JS-TAR-1579147:
+    - '*':
+        reason: Non given
+  SNYK-JS-TAR-1579152:
+    - '*':
+        reason: Non given
+  SNYK-JS-TAR-1579155:
+    - '*':
+        reason: Non given
+  SNYK-JS-TMPL-1583443:
+    - '*':
+        reason: Non given
+  SNYK-JS-URLPARSE-1533425:
+    - '*':
+        reason: Non given
+  SNYK-JS-WS-1296835:
+    - '*':
+        reason: Non given
