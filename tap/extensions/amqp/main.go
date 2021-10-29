@@ -266,6 +266,7 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 	}
 
 	request["url"] = summary
+	reqDetails["method"] = request["method"]
 	return &api.MizuEntry{
 		Protocol: protocol,
 		Source: &api.TCP{
