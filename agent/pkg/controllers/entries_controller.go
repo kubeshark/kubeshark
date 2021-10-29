@@ -22,7 +22,7 @@ func InitExtensionsMap(ref map[string]*tapApi.Extension) {
 
 func GetEntry(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
-	var entry map[string]interface{}
+	var entry tapApi.MizuEntry
 	bytes, err := basenine.Single(shared.BasenineHost, shared.BaseninePort, id)
 	if err != nil {
 		panic(err)
@@ -30,49 +30,15 @@ func GetEntry(c *gin.Context) {
 	if err := json.Unmarshal(bytes, &entry); err != nil {
 		panic(err)
 	}
-	var response map[string]interface{}
-	if entry["response"] != nil {
-		response = entry["response"].(map[string]interface{})
-	}
-	entryData := tapApi.MizuEntry{
-		Protocol: tapApi.Protocol{
-			Name:            entry["proto"].(map[string]interface{})["name"].(string),
-			LongName:        entry["proto"].(map[string]interface{})["longName"].(string),
-			Abbreviation:    entry["proto"].(map[string]interface{})["abbr"].(string),
-			Version:         entry["proto"].(map[string]interface{})["version"].(string),
-			BackgroundColor: entry["proto"].(map[string]interface{})["backgroundColor"].(string),
-			ForegroundColor: entry["proto"].(map[string]interface{})["foregroundColor"].(string),
-			FontSize:        int8(entry["proto"].(map[string]interface{})["fontSize"].(float64)),
-			ReferenceLink:   entry["proto"].(map[string]interface{})["referenceLink"].(string),
-			Priority:        uint8(entry["proto"].(map[string]interface{})["priority"].(float64)),
-		},
-		Request:         entry["request"].(map[string]interface{}),
-		Response:        response,
-		Url:             entry["url"].(string),
-		Method:          entry["method"].(string),
-		Status:          int(entry["status"].(float64)),
-		RequestSenderIp: entry["requestSenderIp"].(string),
-		Service:         entry["service"].(string),
-		Timestamp:       int64(entry["timestamp"].(float64)),
-		ElapsedTime:     int64(entry["elapsedTime"].(float64)),
-		Summary:         entry["summary"].(string),
-		// ResolvedSource:      entry["resolvedSource"].(string),
-		// ResolvedDestination: entry["resolvedDestination"].(string),
-		SourceIp:        entry["sourceIp"].(string),
-		DestinationIp:   entry["destinationIp"].(string),
-		SourcePort:      entry["sourcePort"].(string),
-		DestinationPort: entry["destinationPort"].(string),
-		// IsOutgoing:      entry["isOutgoing"].(bool),
-	}
 
-	extension := extensionsMap[entryData.Protocol.Name]
-	protocol, representation, bodySize, _ := extension.Dissector.Represent(entryData.Protocol, entryData.Request, entryData.Response)
+	extension := extensionsMap[entry.Protocol.Name]
+	protocol, representation, bodySize, _ := extension.Dissector.Represent(entry.Protocol, entry.Request, entry.Response)
 
 	var rules []map[string]interface{}
 	var isRulesEnabled bool
-	if entryData.Protocol.Name == "http" {
-		harEntry, _ := utils.NewEntry(entryData.Request, entryData.Response, entryData.StartTime, entryData.ElapsedTime)
-		_, rulesMatched, _isRulesEnabled := models.RunValidationRulesState(*harEntry, entryData.Service)
+	if entry.Protocol.Name == "http" {
+		harEntry, _ := utils.NewEntry(entry.Request, entry.Response, entry.StartTime, entry.ElapsedTime)
+		_, rulesMatched, _isRulesEnabled := models.RunValidationRulesState(*harEntry, entry.Service)
 		isRulesEnabled = _isRulesEnabled
 		inrec, _ := json.Marshal(rulesMatched)
 		json.Unmarshal(inrec, &rules)
@@ -82,7 +48,7 @@ func GetEntry(c *gin.Context) {
 		Protocol:       protocol,
 		Representation: string(representation),
 		BodySize:       bodySize,
-		Data:           entryData,
+		Data:           entry,
 		Rules:          rules,
 		IsRulesEnabled: isRulesEnabled,
 	})
