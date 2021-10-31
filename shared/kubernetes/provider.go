@@ -765,8 +765,6 @@ func validateNotProxy(kubernetesConfig clientcmd.ClientConfig, restClientConfig 
 
 		if *proxyServerVersion == (version.Info{}) {
 			return &ClusterBehindProxyError{}
-			// TODO: handle this with CLI from outside the function, or move to outside or shared
-			//return fmt.Errorf("cannot establish http-proxy connection to the Kubernetes cluster. If you’re using Lens or similar tool, please run mizu with regular kubectl config using --%v %v=$HOME/.kube/config flag", "set", "kube-config-path")
 		}
 	}
 

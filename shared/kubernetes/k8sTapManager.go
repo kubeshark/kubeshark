@@ -20,7 +20,7 @@ type TappedPodChangeEvent struct {
 	Removed []core.Pod
 }
 
-// MizuTapperSyncer syncs tappers using a k8s pod watch
+// MizuTapperSyncer uses a k8s pod watch to update tapper daemonsets when targeted pods are removed or created
 type MizuTapperSyncer struct {
 	context             context.Context
 	CurrentlyTappedPods []core.Pod
@@ -28,7 +28,7 @@ type MizuTapperSyncer struct {
 	kubernetesProvider  *Provider
 	TapPodChangesOut    chan TappedPodChangeEvent
 	ErrorOut            chan K8sTapManagerError
-	shouldUpdateTappers bool // used to prevent updating tapper daemonsets before api is available but still get targeted pod change events
+	shouldUpdateTappers bool // Used to prevent daemonset updates but still allow tracking targeted pods
 }
 
 type TapperSyncerConfig struct {
@@ -155,6 +155,7 @@ func (tapperSyncer *MizuTapperSyncer) watchPodsForTapping() {
 		case <-tapperSyncer.context.Done():
 			logger.Log.Debugf("Watching pods loop, context done, stopping `restart tappers debouncer`")
 			restartTappersDebouncer.Cancel()
+			// TODO: Does this also perform cleanup?
 			return
 		}
 	}
