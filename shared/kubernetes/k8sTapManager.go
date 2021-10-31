@@ -3,6 +3,7 @@ package kubernetes
 import (
 	"context"
 	"fmt"
+	"github.com/up9inc/mizu/cli/uiUtils"
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/logger"
 	core "k8s.io/api/core/v1"
@@ -27,6 +28,7 @@ type TapManagerConfig struct {
 	TapperResources       shared.Resources
 	ImagePullPolicy       core.PullPolicy
 	DumpLogs              bool
+	IgnoredUserAgents     []string
 }
 
 func CreateK8sTapManager(config TapManagerConfig, podFilterRegex regexp.Regexp) *K8sTapManager {
@@ -35,6 +37,27 @@ func CreateK8sTapManager(config TapManagerConfig, podFilterRegex regexp.Regexp) 
 		config:         config,
 		podFilterRegex: podFilterRegex,
 	}
+}
+
+func updateCurrentlyTappedPods(kubernetesProvider *Provider, ctx context.Context, targetNamespaces []string) (error, bool) {
+	changeFound := false
+	if matchingPods, err := kubernetesProvider.ListAllRunningPodsMatchingRegex(ctx, config.Config.Tap.PodRegex(), targetNamespaces); err != nil {
+		return err, false
+	} else {
+		podsToTap := excludeMizuPods(matchingPods)
+		addedPods, removedPods := getPodArrayDiff(state.currentlyTappedPods, podsToTap)
+		for _, addedPod := range addedPods {
+			changeFound = true
+			logger.Log.Infof(uiUtils.Green, fmt.Sprintf("+%s", addedPod.Name))
+		}
+		for _, removedPod := range removedPods {
+			changeFound = true
+			logger.Log.Infof(uiUtils.Red, fmt.Sprintf("-%s", removedPod.Name))
+		}
+		state.currentlyTappedPods = podsToTap
+	}
+
+	return nil, changeFound
 }
 
 func (tapManager *K8sTapManager) updateMizuTappers(ctx context.Context, kubernetesProvider *Provider, mizuApiFilteringOptions *interface{}) error {
