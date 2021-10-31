@@ -171,6 +171,16 @@ against the contracts.
 
 Please see [CONTRACT MONITORING](docs/CONTRACT_MONITORING.md) page for more details and syntax.
 
+### Configure proxy host 
+
+By default, mizu will be accessible via local host: 'http://localhost:8899/mizu/', it is possible to change the host,
+for instance, to '0.0.0.0' which can grant access via machine IP address.
+This setting can be changed via command line flag `--set tap.proxy-host=<value>` or via config file:
+tap
+    proxy-host: 0.0.0.0
+and when changed it will support accessing by IP
+
+
 ## How to Run local UI
 
 - run from mizu/agent `go run main.go --hars-read --hars-dir <folder>`
