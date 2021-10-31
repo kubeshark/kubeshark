@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"k8s.io/apimachinery/pkg/util/json"
 	"os"
 	"reflect"
 	"strconv"
@@ -362,4 +363,28 @@ func setZeroForReadonlyFields(currentElem reflect.Value) {
 			currentFieldByName.Set(reflect.Zero(currentField.Type))
 		}
 	}
+}
+
+func GetSerializedMizuConfig() (string, error) {
+	mizuConfig, err := getMizuConfig()
+	if err != nil {
+		return "", err
+	}
+	serializedConfig, err := json.Marshal(mizuConfig)
+	if err != nil {
+		return "", err
+	}
+	return string(serializedConfig), nil
+}
+
+func getMizuConfig() (*shared.MizuAgentConfig, error) {
+	serializableRegex, err := shared.CompileRegexToSerializableRegexp(Config.Tap.PodRegexStr)
+	if err != nil {
+		return nil, err
+	}
+	config := shared.MizuAgentConfig{
+		TapTargetRegex: *serializableRegex,
+		MaxDBSizeBytes: Config.Tap.MaxEntriesDBSizeBytes(),
+	}
+	return &config, nil
 }

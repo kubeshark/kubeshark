@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -55,9 +54,9 @@ func RunMizuTap() {
 		return
 	}
 
-	var serializedRulePolicy string
+	var serializedValidationRules string
 	if config.Config.Tap.EnforcePolicyFile != "" {
-		serializedRulePolicy, err = readValidationRules(config.Config.Tap.EnforcePolicyFile)
+		serializedValidationRules, err = readValidationRules(config.Config.Tap.EnforcePolicyFile)
 		if err != nil {
 			logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error reading policy file: %v", errormessage.FormatError(err)))
 			return
@@ -88,7 +87,7 @@ func RunMizuTap() {
 		}
 	}
 
-	serializedMizuConfig, err := getSerializedMizuConfig()
+	serializedMizuConfig, err := config.GetSerializedMizuConfig()
 	if err != nil {
 		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error composing mizu config: %v", errormessage.FormatError(err)))
 		return
@@ -139,7 +138,7 @@ func RunMizuTap() {
 		return
 	}
 
-	if err := createMizuResources(ctx, kubernetesProvider, serializedRulePolicy, serializedContract, serializedMizuConfig); err != nil {
+	if err := createMizuResources(ctx, kubernetesProvider, serializedValidationRules, serializedContract, serializedMizuConfig); err != nil {
 		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error creating resources: %v", errormessage.FormatError(err)))
 
 		var statusError *k8serrors.StatusError
@@ -169,7 +168,7 @@ func readValidationRules(file string) (string, error) {
 	return string(newContent), nil
 }
 
-func createMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, serializedRulePolicy string, serializedContract string, serializedMizuConfig string) error {
+func createMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, serializedValidationRules string, serializedContract string, serializedMizuConfig string) error {
 	if !config.Config.IsNsRestrictedMode() {
 		if err := createMizuNamespace(ctx, kubernetesProvider); err != nil {
 			return err
@@ -180,15 +179,15 @@ func createMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Pro
 		return err
 	}
 
-	if err := createMizuConfigmap(ctx, kubernetesProvider, serializedRulePolicy, serializedContract, serializedMizuConfig); err != nil {
+	if err := createMizuConfigmap(ctx, kubernetesProvider, serializedValidationRules, serializedContract, serializedMizuConfig); err != nil {
 		logger.Log.Warningf(uiUtils.Warning, fmt.Sprintf("Failed to create resources required for policy validation. Mizu will not validate policy rules. error: %v\n", errormessage.FormatError(err)))
 	}
 
 	return nil
 }
 
-func createMizuConfigmap(ctx context.Context, kubernetesProvider *kubernetes.Provider, serializedRulePolicy string, serializedContract string, serializedMizuConfig string) error {
-	err := kubernetesProvider.CreateConfigMap(ctx, config.Config.MizuResourcesNamespace, mizu.ConfigMapName, serializedRulePolicy, serializedContract, serializedMizuConfig)
+func createMizuConfigmap(ctx context.Context, kubernetesProvider *kubernetes.Provider, serializedValidationRules string, serializedContract string, serializedMizuConfig string) error {
+	err := kubernetesProvider.CreateConfigMap(ctx, config.Config.MizuResourcesNamespace, mizu.ConfigMapName, serializedValidationRules, serializedContract, serializedMizuConfig)
 	return err
 }
 
@@ -763,28 +762,4 @@ func getNamespaces(kubernetesProvider *kubernetes.Provider) []string {
 	} else {
 		return []string{kubernetesProvider.CurrentNamespace()}
 	}
-}
-
-func getSerializedMizuConfig() (string, error) {
-	mizuConfig, err := getMizuConfig()
-	if err != nil {
-		return "", err
-	}
-	serializedConfig, err := json.Marshal(mizuConfig)
-	if err != nil {
-		return "", err
-	}
-	return string(serializedConfig), nil
-}
-
-func getMizuConfig() (*shared.MizuAgentConfig, error) {
-	serializableRegex, err := shared.CompileRegexToSerializableRegexp(config.Config.Tap.PodRegexStr)
-	if err != nil {
-		return nil, err
-	}
-	config := shared.MizuAgentConfig{
-		TapTargetRegex: *serializableRegex,
-		MaxDBSizeBytes: config.Config.Tap.MaxEntriesDBSizeBytes(),
-	}
-	return &config, nil
 }

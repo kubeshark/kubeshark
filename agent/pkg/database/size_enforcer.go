@@ -13,7 +13,6 @@ import (
 )
 
 const percentageOfMaxSizeBytesToPrune = 15
-const defaultMaxDatabaseSizeBytes int64 = 200 * 1000 * 1000
 
 func StartEnforcingDatabaseSize() {
 	watcher, err := fsnotify.NewWatcher()
@@ -22,10 +21,8 @@ func StartEnforcingDatabaseSize() {
 		return
 	}
 
-	maxEntriesDBByteSize := getMaxEntriesDBByteSize()
-
 	checkFileSizeDebouncer := debounce.NewDebouncer(5*time.Second, func() {
-		checkFileSize(maxEntriesDBByteSize)
+		checkFileSize(config.Config.MaxDBSizeBytes)
 	})
 
 	go func() {
@@ -51,13 +48,6 @@ func StartEnforcingDatabaseSize() {
 	if err != nil {
 		logger.Log.Fatalf("Error adding %s to filesystem watcher for db size enforcement: %v\n", DBPath, err)
 	}
-}
-
-func getMaxEntriesDBByteSize() int64 {
-	if config.Config == nil {
-		return defaultMaxDatabaseSizeBytes
-	}
-	return config.Config.MaxDBSizeBytes
 }
 
 func checkFileSize(maxSizeBytes int64) {

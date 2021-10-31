@@ -2,14 +2,13 @@ package config
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/up9inc/mizu/shared"
-	"io/fs"
 	"io/ioutil"
-	"syscall"
+	"os"
 )
 
+// these values are used when the config.json file is not present
 const (
 	defaultMaxDatabaseSizeBytes int64  = 200 * 1000 * 1000
 	defaultRegexTarget          string = ".*"
@@ -22,13 +21,11 @@ func LoadConfig() error {
 		return nil
 	}
 	filePath := fmt.Sprintf("%s%s", shared.ConfigDirPath, shared.ConfigFileName)
+
 	content, err := ioutil.ReadFile(filePath)
 	if err != nil {
-		var fsError *fs.PathError
-		if errors.As(err, &fsError) {
-			if fsError.Err == syscall.ENOENT { // file doesnt exist
-				return applyDefaultConfig()
-			}
+		if os.IsNotExist(err) {
+			return applyDefaultConfig()
 		}
 		return err
 	}
