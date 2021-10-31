@@ -17,7 +17,6 @@ import (
 func runMizuView() {
 	kubernetesProvider, err := getKubernetesProviderForCli()
 	if err != nil {
-		logger.Log.Error(err)
 		return
 	}
 

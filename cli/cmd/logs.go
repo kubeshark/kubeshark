@@ -21,7 +21,6 @@ var logsCmd = &cobra.Command{
 
 		kubernetesProvider, err := getKubernetesProviderForCli()
 		if err != nil {
-			logger.Log.Error(err)
 			return nil
 		}
 		ctx, _ := context.WithCancel(context.Background())
