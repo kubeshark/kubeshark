@@ -609,7 +609,7 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 
 	volumeName := ConfigMapName
 	configMapVolume := applyconfcore.VolumeApplyConfiguration{
-		Name:                           &volumeName,
+		Name: &volumeName,
 		VolumeSourceApplyConfiguration: applyconfcore.VolumeSourceApplyConfiguration{
 			ConfigMap: &applyconfcore.ConfigMapVolumeSourceApplyConfiguration{
 				LocalObjectReferenceApplyConfiguration: applyconfcore.LocalObjectReferenceApplyConfiguration{
@@ -620,8 +620,8 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	}
 	mountPath := shared.ConfigDirPath
 	configMapVolumeMount := applyconfcore.VolumeMountApplyConfiguration{
-		Name:             &volumeName,
-		MountPath:        &mountPath,
+		Name:      &volumeName,
+		MountPath: &mountPath,
 	}
 	agentContainer.WithVolumeMounts(&configMapVolumeMount)
 
@@ -772,7 +772,6 @@ func validateNotProxy(kubernetesConfig clientcmd.ClientConfig, restClientConfig 
 
 	return nil
 }
-
 
 func validateKubernetesVersion(clientSet *kubernetes.Clientset) error {
 	serverVersion, err := clientSet.ServerVersion()

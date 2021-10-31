@@ -20,17 +20,18 @@ type TappedPodChangeEvent struct {
 	Removed []core.Pod
 }
 
-type K8sTapManager struct {
+// MizuTapperSyncer syncs tappers using a k8s pod watch
+type MizuTapperSyncer struct {
 	context             context.Context
 	CurrentlyTappedPods []core.Pod
-	config              TapManagerConfig
+	config              TapperSyncerConfig
 	kubernetesProvider  *Provider
 	TapPodChangesOut    chan TappedPodChangeEvent
 	ErrorOut            chan K8sTapManagerError
-	shouldUpdateTappers bool // used to prevent updating tapper daemonsets before api is available
+	shouldUpdateTappers bool // used to prevent updating tapper daemonsets before api is available but still get targeted pod change events
 }
 
-type TapManagerConfig struct {
+type TapperSyncerConfig struct {
 	TargetNamespaces         []string
 	PodFilterRegex           regexp.Regexp
 	MizuResourcesNamespace   string
@@ -43,8 +44,8 @@ type TapManagerConfig struct {
 	MizuServiceAccountExists bool
 }
 
-func CreateAndStartK8sTapManager(ctx context.Context, kubernetesProvider *Provider, config TapManagerConfig, shouldUpdateTappers bool) (*K8sTapManager, error) {
-	manager := &K8sTapManager{
+func CreateAndStartMizuTapperSyncer(ctx context.Context, kubernetesProvider *Provider, config TapperSyncerConfig, shouldUpdateTappers bool) (*MizuTapperSyncer, error) {
+	manager := &MizuTapperSyncer{
 		context:             ctx,
 		CurrentlyTappedPods: make([]core.Pod, 0),
 		config:              config,
@@ -69,21 +70,21 @@ func CreateAndStartK8sTapManager(ctx context.Context, kubernetesProvider *Provid
 }
 
 // BeginUpdatingTappers should only be called after mizu api server is available
-func (tapManager *K8sTapManager) BeginUpdatingTappers() error {
-	tapManager.shouldUpdateTappers = true
-	if err := tapManager.updateMizuTappers(); err != nil {
+func (tapperSyncer *MizuTapperSyncer) BeginUpdatingTappers() error {
+	tapperSyncer.shouldUpdateTappers = true
+	if err := tapperSyncer.updateMizuTappers(); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (tapManager *K8sTapManager) watchPodsForTapping() {
-	added, modified, removed, errorChan := FilteredWatch(tapManager.context, tapManager.kubernetesProvider, tapManager.config.TargetNamespaces, &tapManager.config.PodFilterRegex)
+func (tapperSyncer *MizuTapperSyncer) watchPodsForTapping() {
+	added, modified, removed, errorChan := FilteredWatch(tapperSyncer.context, tapperSyncer.kubernetesProvider, tapperSyncer.config.TargetNamespaces, &tapperSyncer.config.PodFilterRegex)
 
 	restartTappers := func() {
-		err, changeFound := tapManager.updateCurrentlyTappedPods()
+		err, changeFound := tapperSyncer.updateCurrentlyTappedPods()
 		if err != nil {
-			tapManager.ErrorOut <- K8sTapManagerError{
+			tapperSyncer.ErrorOut <- K8sTapManagerError{
 				OriginalError:    err,
 				TapManagerReason: TapManagerPodListError,
 			}
@@ -93,9 +94,9 @@ func (tapManager *K8sTapManager) watchPodsForTapping() {
 			logger.Log.Debugf("Nothing changed update tappers not needed")
 			return
 		}
-		if tapManager.shouldUpdateTappers {
-			if err := tapManager.updateMizuTappers(); err != nil {
-				tapManager.ErrorOut <- K8sTapManagerError{
+		if tapperSyncer.shouldUpdateTappers {
+			if err := tapperSyncer.updateMizuTappers(); err != nil {
+				tapperSyncer.ErrorOut <- K8sTapManagerError{
 					OriginalError:    err,
 					TapManagerReason: TapManagerTapperUpdateError,
 				}
@@ -146,12 +147,12 @@ func (tapManager *K8sTapManager) watchPodsForTapping() {
 
 			logger.Log.Debugf("Watching pods loop, got error %v, stopping `restart tappers debouncer`", err)
 			restartTappersDebouncer.Cancel()
-			tapManager.ErrorOut <- K8sTapManagerError{
+			tapperSyncer.ErrorOut <- K8sTapManagerError{
 				OriginalError:    err,
 				TapManagerReason: TapManagerPodWatchError,
 			}
 
-		case <-tapManager.context.Done():
+		case <-tapperSyncer.context.Done():
 			logger.Log.Debugf("Watching pods loop, context done, stopping `restart tappers debouncer`")
 			restartTappersDebouncer.Cancel()
 			return
@@ -159,15 +160,15 @@ func (tapManager *K8sTapManager) watchPodsForTapping() {
 	}
 }
 
-func (tapManager *K8sTapManager) updateCurrentlyTappedPods() (err error, changesFound bool) {
-	if matchingPods, err := tapManager.kubernetesProvider.ListAllRunningPodsMatchingRegex(tapManager.context, &tapManager.config.PodFilterRegex, tapManager.config.TargetNamespaces); err != nil {
+func (tapperSyncer *MizuTapperSyncer) updateCurrentlyTappedPods() (err error, changesFound bool) {
+	if matchingPods, err := tapperSyncer.kubernetesProvider.ListAllRunningPodsMatchingRegex(tapperSyncer.context, &tapperSyncer.config.PodFilterRegex, tapperSyncer.config.TargetNamespaces); err != nil {
 		return err, false
 	} else {
 		podsToTap := excludeMizuPods(matchingPods)
-		addedPods, removedPods := getPodArrayDiff(tapManager.CurrentlyTappedPods, podsToTap)
+		addedPods, removedPods := getPodArrayDiff(tapperSyncer.CurrentlyTappedPods, podsToTap)
 		if len(addedPods) > 0 || len(removedPods) > 0 {
-			tapManager.CurrentlyTappedPods = podsToTap
-			tapManager.TapPodChangesOut <- TappedPodChangeEvent{
+			tapperSyncer.CurrentlyTappedPods = podsToTap
+			tapperSyncer.TapPodChangesOut <- TappedPodChangeEvent{
 				Added:   addedPods,
 				Removed: removedPods,
 			}
@@ -177,36 +178,36 @@ func (tapManager *K8sTapManager) updateCurrentlyTappedPods() (err error, changes
 	}
 }
 
-func (tapManager *K8sTapManager) updateMizuTappers() error {
-	nodeToTappedPodIPMap := GetNodeHostToTappedPodIpsMap(tapManager.CurrentlyTappedPods)
+func (tapperSyncer *MizuTapperSyncer) updateMizuTappers() error {
+	nodeToTappedPodIPMap := GetNodeHostToTappedPodIpsMap(tapperSyncer.CurrentlyTappedPods)
 
 	if len(nodeToTappedPodIPMap) > 0 {
 		var serviceAccountName string
-		if tapManager.config.MizuServiceAccountExists {
+		if tapperSyncer.config.MizuServiceAccountExists {
 			serviceAccountName = ServiceAccountName
 		} else {
 			serviceAccountName = ""
 		}
 
-		if err := tapManager.kubernetesProvider.ApplyMizuTapperDaemonSet(
-			tapManager.context,
-			tapManager.config.MizuResourcesNamespace,
+		if err := tapperSyncer.kubernetesProvider.ApplyMizuTapperDaemonSet(
+			tapperSyncer.context,
+			tapperSyncer.config.MizuResourcesNamespace,
 			TapperDaemonSetName,
-			tapManager.config.AgentImage,
+			tapperSyncer.config.AgentImage,
 			TapperPodName,
-			fmt.Sprintf("%s.%s.svc.cluster.local", ApiServerPodName, tapManager.config.MizuResourcesNamespace),
+			fmt.Sprintf("%s.%s.svc.cluster.local", ApiServerPodName, tapperSyncer.config.MizuResourcesNamespace),
 			nodeToTappedPodIPMap,
 			serviceAccountName,
-			tapManager.config.TapperResources,
-			tapManager.config.ImagePullPolicy,
-			tapManager.config.MizuApiFilteringOptions,
-			tapManager.config.DumpLogs,
+			tapperSyncer.config.TapperResources,
+			tapperSyncer.config.ImagePullPolicy,
+			tapperSyncer.config.MizuApiFilteringOptions,
+			tapperSyncer.config.DumpLogs,
 		); err != nil {
 			return err
 		}
 		logger.Log.Debugf("Successfully created %v tappers", len(nodeToTappedPodIPMap))
 	} else {
-		if err := tapManager.kubernetesProvider.RemoveDaemonSet(tapManager.context, tapManager.config.MizuResourcesNamespace, TapperDaemonSetName); err != nil {
+		if err := tapperSyncer.kubernetesProvider.RemoveDaemonSet(tapperSyncer.context, tapperSyncer.config.MizuResourcesNamespace, TapperDaemonSetName); err != nil {
 			return err
 		}
 	}

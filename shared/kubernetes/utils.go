@@ -18,7 +18,6 @@ func GetNodeHostToTappedPodIpsMap(tappedPods []core.Pod) map[string][]string {
 	return nodeToTappedPodIPMap
 }
 
-
 func excludeMizuPods(pods []core.Pod) []core.Pod {
 	mizuPrefixRegex := regexp.MustCompile("^" + MizuResourcesPrefix)
 

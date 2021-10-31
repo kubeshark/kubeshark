@@ -14,4 +14,3 @@ const (
 	ConfigMapName              = MizuResourcesPrefix + "config"
 	MinKubernetesServerVersion = "1.16.0"
 )
-

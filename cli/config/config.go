@@ -84,6 +84,7 @@ func WriteConfig(config *ConfigStruct) error {
 }
 
 type updateConfigStruct func(*ConfigStruct)
+
 func UpdateConfig(updateConfigStruct updateConfigStruct) error {
 	configFile, err := GetConfigWithDefaults()
 	if err != nil {

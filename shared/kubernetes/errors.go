@@ -4,12 +4,12 @@ type K8sTapManagerErrorReason string
 
 const (
 	TapManagerTapperUpdateError K8sTapManagerErrorReason = "TAPPER_UPDATE_ERROR"
-	TapManagerPodWatchError K8sTapManagerErrorReason = "POD_WATCH_ERROR"
-	TapManagerPodListError K8sTapManagerErrorReason = "POD_LIST_ERROR"
+	TapManagerPodWatchError     K8sTapManagerErrorReason = "POD_WATCH_ERROR"
+	TapManagerPodListError      K8sTapManagerErrorReason = "POD_LIST_ERROR"
 )
 
 type K8sTapManagerError struct {
-	OriginalError error
+	OriginalError    error
 	TapManagerReason K8sTapManagerErrorReason
 }
 
@@ -18,7 +18,7 @@ func (e *K8sTapManagerError) Error() string {
 	return e.OriginalError.Error()
 }
 
-type ClusterBehindProxyError struct {}
+type ClusterBehindProxyError struct{}
 
 // ClusterBehindProxyError implements the Error interface.
 func (e *ClusterBehindProxyError) Error() string {

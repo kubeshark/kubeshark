@@ -33,13 +33,11 @@ import (
 	"github.com/up9inc/mizu/tap/api"
 )
 
-const (
-	cleanupTimeout     = time.Minute
-)
+const cleanupTimeout = time.Minute
 
 type tapState struct {
 	apiServerService         *core.Service
-	tapManager               *kubernetes.K8sTapManager
+	tapperSyncer             *kubernetes.MizuTapperSyncer
 	mizuServiceAccountExists bool
 }
 
@@ -149,7 +147,7 @@ func RunMizuTap() {
 }
 
 func startTapManager(ctx context.Context, cancel context.CancelFunc, provider *kubernetes.Provider, targetNamespaces []string, mizuApiFilteringOptions api.TrafficFilteringOptions) error {
-	manager, err := kubernetes.CreateAndStartK8sTapManager(ctx, provider, kubernetes.TapManagerConfig{
+	tapperSyncer, err := kubernetes.CreateAndStartMizuTapperSyncer(ctx, provider, kubernetes.TapperSyncerConfig{
 		TargetNamespaces:         targetNamespaces,
 		PodFilterRegex:           *config.Config.Tap.PodRegex(),
 		MizuResourcesNamespace:   config.Config.MizuResourcesNamespace,
@@ -166,7 +164,7 @@ func startTapManager(ctx context.Context, cancel context.CancelFunc, provider *k
 		return err
 	}
 
-	if len(manager.CurrentlyTappedPods) == 0 {
+	if len(tapperSyncer.CurrentlyTappedPods) == 0 {
 		var suggestionStr string
 		if !shared.Contains(targetNamespaces, kubernetes.K8sAllNamespaces) {
 			suggestionStr = ". Select a different namespace with -n or tap all namespaces with -A"
@@ -177,21 +175,21 @@ func startTapManager(ctx context.Context, cancel context.CancelFunc, provider *k
 	go func() {
 		for {
 			select {
-			case managerErr := <-manager.ErrorOut:
+			case managerErr := <-tapperSyncer.ErrorOut:
 				logger.Log.Errorf(uiUtils.Error, getErrorDisplayTextForK8sTapManagerError(managerErr))
 				cancel()
-			case tappedPodChanges := <- manager.TapPodChangesOut:
-				if err := apiserver.Provider.ReportTappedPods(manager.CurrentlyTappedPods); err != nil {
+			case tappedPodChanges := <-tapperSyncer.TapPodChangesOut:
+				if err := apiserver.Provider.ReportTappedPods(tapperSyncer.CurrentlyTappedPods); err != nil {
 					logger.Log.Debugf("[Error] failed update tapped pods %v", err)
 				}
 				displayTapPodChangesEvent(tappedPodChanges)
-			case <- ctx.Done():
+			case <-ctx.Done():
 				return
 			}
 		}
 	}()
 
-	state.tapManager = manager
+	state.tapperSyncer = tapperSyncer
 
 	return nil
 }
@@ -514,7 +512,7 @@ func watchApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 					break
 				}
 
-				if err := state.tapManager.BeginUpdatingTappers(); err != nil {
+				if err := state.tapperSyncer.BeginUpdatingTappers(); err != nil {
 					logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error updating tappers: %v", err))
 					cancel()
 					break
@@ -522,7 +520,7 @@ func watchApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 
 				logger.Log.Infof("Mizu is available at %s\n", url)
 				uiUtils.OpenBrowser(url)
-				if err := apiserver.Provider.ReportTappedPods(state.tapManager.CurrentlyTappedPods); err != nil {
+				if err := apiserver.Provider.ReportTappedPods(state.tapperSyncer.CurrentlyTappedPods); err != nil {
 					logger.Log.Debugf("[Error] failed update tapped pods %v", err)
 				}
 			}

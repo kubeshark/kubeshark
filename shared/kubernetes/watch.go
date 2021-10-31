@@ -21,7 +21,6 @@ func FilteredWatch(ctx context.Context, kubernetesProvider *Provider, targetName
 	removedChan := make(chan *corev1.Pod)
 	errorChan := make(chan error)
 
-
 	var wg sync.WaitGroup
 
 	for _, targetNamespace := range targetNamespaces {
@@ -29,7 +28,7 @@ func FilteredWatch(ctx context.Context, kubernetesProvider *Provider, targetName
 
 		go func(targetNamespace string) {
 			defer wg.Done()
-			watchRestartDebouncer := debounce.NewDebouncer(1 * time.Minute, func() {})
+			watchRestartDebouncer := debounce.NewDebouncer(1*time.Minute, func() {})
 
 			for {
 				watcher := kubernetesProvider.GetPodWatcher(ctx, targetNamespace)
@@ -37,7 +36,7 @@ func FilteredWatch(ctx context.Context, kubernetesProvider *Provider, targetName
 				watcher.Stop()
 
 				select {
-				case <- ctx.Done():
+				case <-ctx.Done():
 					return
 				default:
 					break
