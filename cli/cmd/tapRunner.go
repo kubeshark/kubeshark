@@ -52,9 +52,9 @@ func RunMizuTap() {
 		return
 	}
 
-	var mizuValidationRules string
+	var serializedValidationRules string
 	if config.Config.Tap.EnforcePolicyFile != "" {
-		mizuValidationRules, err = readValidationRules(config.Config.Tap.EnforcePolicyFile)
+		serializedValidationRules, err = readValidationRules(config.Config.Tap.EnforcePolicyFile)
 		if err != nil {
 			logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error reading policy file: %v", errormessage.FormatError(err)))
 			return
@@ -62,14 +62,14 @@ func RunMizuTap() {
 	}
 
 	// Read and validate the OAS file
-	var contract string
+	var serializedContract string
 	if config.Config.Tap.ContractFile != "" {
 		bytes, err := ioutil.ReadFile(config.Config.Tap.ContractFile)
 		if err != nil {
 			logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error reading contract file: %v", errormessage.FormatError(err)))
 			return
 		}
-		contract = string(bytes)
+		serializedContract = string(bytes)
 
 		ctx := context.Background()
 		loader := &openapi3.Loader{Context: ctx}
@@ -83,6 +83,12 @@ func RunMizuTap() {
 			logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error validating contract file: %v", errormessage.FormatError(err)))
 			return
 		}
+	}
+
+	serializedMizuConfig, err := config.GetSerializedMizuConfig()
+	if err != nil {
+		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error composing mizu config: %v", errormessage.FormatError(err)))
+		return
 	}
 
 	kubernetesProvider, err := kubernetes.NewProvider(config.Config.KubeConfigPath())
@@ -117,7 +123,7 @@ func RunMizuTap() {
 		return
 	}
 
-	if err := createMizuResources(ctx, kubernetesProvider, mizuValidationRules, contract); err != nil {
+	if err := createMizuResources(ctx, kubernetesProvider, serializedValidationRules, serializedContract, serializedMizuConfig); err != nil {
 		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error creating resources: %v", errormessage.FormatError(err)))
 
 		var statusError *k8serrors.StatusError
@@ -221,7 +227,7 @@ func readValidationRules(file string) (string, error) {
 	return string(newContent), nil
 }
 
-func createMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, mizuValidationRules string, contract string) error {
+func createMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, serializedValidationRules string, serializedContract string, serializedMizuConfig string) error {
 	if !config.Config.IsNsRestrictedMode() {
 		if err := createMizuNamespace(ctx, kubernetesProvider); err != nil {
 			return err
@@ -232,15 +238,15 @@ func createMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Pro
 		return err
 	}
 
-	if err := createMizuConfigmap(ctx, kubernetesProvider, mizuValidationRules, contract); err != nil {
+	if err := createMizuConfigmap(ctx, kubernetesProvider, serializedValidationRules, serializedContract, serializedMizuConfig); err != nil {
 		logger.Log.Warningf(uiUtils.Warning, fmt.Sprintf("Failed to create resources required for policy validation. Mizu will not validate policy rules. error: %v\n", errormessage.FormatError(err)))
 	}
 
 	return nil
 }
 
-func createMizuConfigmap(ctx context.Context, kubernetesProvider *kubernetes.Provider, data string, contract string) error {
-	err := kubernetesProvider.CreateConfigMap(ctx, config.Config.MizuResourcesNamespace, kubernetes.ConfigMapName, data, contract)
+func createMizuConfigmap(ctx context.Context, kubernetesProvider *kubernetes.Provider, serializedValidationRules string, serializedContract string, serializedMizuConfig string) error {
+	err := kubernetesProvider.CreateConfigMap(ctx, config.Config.MizuResourcesNamespace, kubernetes.ConfigMapName, serializedValidationRules, serializedContract, serializedMizuConfig)
 	return err
 }
 

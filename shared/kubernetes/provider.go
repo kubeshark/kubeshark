@@ -6,6 +6,21 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+<<<<<<< HEAD:shared/kubernetes/provider.go
+=======
+	"github.com/up9inc/mizu/cli/config/configStructs"
+	"github.com/up9inc/mizu/shared/logger"
+	"github.com/up9inc/mizu/shared/semver"
+	"k8s.io/apimachinery/pkg/version"
+	"net/url"
+	"path/filepath"
+	"regexp"
+
+	"io"
+
+	"github.com/up9inc/mizu/cli/config"
+	"github.com/up9inc/mizu/cli/mizu"
+>>>>>>> develop:cli/kubernetes/provider.go
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/logger"
 	"github.com/up9inc/mizu/shared/semver"
@@ -168,10 +183,15 @@ func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, opts *ApiS
 		}
 	}
 
+<<<<<<< HEAD:shared/kubernetes/provider.go
 	configMapVolumeName := &core.ConfigMapVolumeSource{}
 	configMapVolumeName.Name = ConfigMapName
 	configMapOptional := true
 	configMapVolumeName.Optional = &configMapOptional
+=======
+	configMapVolume := &core.ConfigMapVolumeSource{}
+	configMapVolume.Name = mizu.ConfigMapName
+>>>>>>> develop:cli/kubernetes/provider.go
 
 	cpuLimit, err := resource.ParseQuantity(opts.Resources.CpuLimit)
 	if err != nil {
@@ -216,8 +236,13 @@ func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, opts *ApiS
 					ImagePullPolicy: opts.ImagePullPolicy,
 					VolumeMounts: []core.VolumeMount{
 						{
+<<<<<<< HEAD:shared/kubernetes/provider.go
 							Name:      ConfigMapName,
 							MountPath: shared.RulePolicyPath,
+=======
+							Name:      mizu.ConfigMapName,
+							MountPath: shared.ConfigDirPath,
+>>>>>>> develop:cli/kubernetes/provider.go
 						},
 					},
 					Command: command,
@@ -225,10 +250,6 @@ func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, opts *ApiS
 						{
 							Name:  shared.SyncEntriesConfigEnvVar,
 							Value: string(marshaledSyncEntriesConfig),
-						},
-						{
-							Name:  shared.MaxEntriesDBSizeBytesEnvVar,
-							Value: strconv.FormatInt(opts.MaxEntriesDBSizeBytes, 10),
 						},
 						{
 							Name:  shared.DebugModeEnvVar,
@@ -270,7 +291,7 @@ func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, opts *ApiS
 				{
 					Name: ConfigMapName,
 					VolumeSource: core.VolumeSource{
-						ConfigMap: configMapVolumeName,
+						ConfigMap: configMapVolume,
 					},
 				},
 			},
@@ -486,14 +507,16 @@ func (provider *Provider) handleRemovalError(err error) error {
 	return err
 }
 
-func (provider *Provider) CreateConfigMap(ctx context.Context, namespace string, configMapName string, data string, contract string) error {
-	if data == "" && contract == "" {
-		return nil
-	}
-
+func (provider *Provider) CreateConfigMap(ctx context.Context, namespace string, configMapName string, serializedValidationRules string, serializedContract string, serializedMizuConfig string) error {
 	configMapData := make(map[string]string, 0)
-	configMapData[shared.RulePolicyFileName] = data
-	configMapData[shared.ContractFileName] = contract
+	if serializedValidationRules != "" {
+		configMapData[shared.ValidationRulesFileName] = serializedValidationRules
+	}
+	if serializedContract != "" {
+		configMapData[shared.ContractFileName] = serializedContract
+	}
+	configMapData[shared.ConfigFileName] = serializedMizuConfig
+
 	configMap := &core.ConfigMap{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "ConfigMap",
@@ -612,6 +635,24 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	noScheduleToleration.WithOperator(core.TolerationOpExists)
 	noScheduleToleration.WithEffect(core.TaintEffectNoSchedule)
 
+	volumeName := mizu.ConfigMapName
+	configMapVolume := applyconfcore.VolumeApplyConfiguration{
+		Name:                           &volumeName,
+		VolumeSourceApplyConfiguration: applyconfcore.VolumeSourceApplyConfiguration{
+			ConfigMap: &applyconfcore.ConfigMapVolumeSourceApplyConfiguration{
+				LocalObjectReferenceApplyConfiguration: applyconfcore.LocalObjectReferenceApplyConfiguration{
+					Name: &volumeName,
+				},
+			},
+		},
+	}
+	mountPath := shared.ConfigDirPath
+	configMapVolumeMount := applyconfcore.VolumeMountApplyConfiguration{
+		Name:             &volumeName,
+		MountPath:        &mountPath,
+	}
+	agentContainer.WithVolumeMounts(&configMapVolumeMount)
+
 	podSpec := applyconfcore.PodSpec()
 	podSpec.WithHostNetwork(true)
 	podSpec.WithDNSPolicy(core.DNSClusterFirstWithHostNet)
@@ -622,6 +663,7 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	podSpec.WithContainers(agentContainer)
 	podSpec.WithAffinity(affinity)
 	podSpec.WithTolerations(noExecuteToleration, noScheduleToleration)
+	podSpec.WithVolumes(&configMapVolume)
 
 	podTemplate := applyconfcore.PodTemplateSpec()
 	podTemplate.WithLabels(map[string]string{"app": tapperPodName})
