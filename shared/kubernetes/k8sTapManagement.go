@@ -6,11 +6,13 @@ import (
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/logger"
 	core "k8s.io/api/core/v1"
+	"regexp"
 )
 
 type K8sTapManager struct {
 	state TapState
-	Config TapManagerConfig
+	config TapManagerConfig
+	podFilterRegex regexp.Regexp
 }
 
 type TapState struct {
@@ -25,7 +27,14 @@ type TapManagerConfig struct {
 	TapperResources       shared.Resources
 	ImagePullPolicy       core.PullPolicy
 	DumpLogs              bool
+}
 
+func CreateK8sTapManager(config TapManagerConfig, podFilterRegex regexp.Regexp) *K8sTapManager {
+	return &K8sTapManager{
+		state:          TapState{},
+		config:         config,
+		podFilterRegex: podFilterRegex,
+	}
 }
 
 func (tapManager *K8sTapManager) updateMizuTappers(ctx context.Context, kubernetesProvider *Provider, mizuApiFilteringOptions *interface{}) error {
@@ -41,23 +50,23 @@ func (tapManager *K8sTapManager) updateMizuTappers(ctx context.Context, kubernet
 
 		if err := kubernetesProvider.ApplyMizuTapperDaemonSet(
 			ctx,
-			tapManager.Config.MizuResourcesNamespace,
+			tapManager.config.MizuResourcesNamespace,
 			TapperDaemonSetName,
-			tapManager.Config.AgentImage,
+			tapManager.config.AgentImage,
 			TapperPodName,
 			fmt.Sprintf("%s.%s.svc.cluster.local", tapManager.state.apiServerService.Name, tapManager.state.apiServerService.Namespace),
 			nodeToTappedPodIPMap,
 			serviceAccountName,
-			tapManager.Config.TapperResources,
-			tapManager.Config.ImagePullPolicy,
+			tapManager.config.TapperResources,
+			tapManager.config.ImagePullPolicy,
 			mizuApiFilteringOptions,
-			tapManager.Config.DumpLogs,
+			tapManager.config.DumpLogs,
 		); err != nil {
 			return err
 		}
 		logger.Log.Debugf("Successfully created %v tappers", len(nodeToTappedPodIPMap))
 	} else {
-		if err := kubernetesProvider.RemoveDaemonSet(ctx, tapManager.Config.MizuResourcesNamespace, TapperDaemonSetName); err != nil {
+		if err := kubernetesProvider.RemoveDaemonSet(ctx, tapManager.config.MizuResourcesNamespace, TapperDaemonSetName); err != nil {
 			return err
 		}
 	}
