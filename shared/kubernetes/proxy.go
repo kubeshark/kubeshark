@@ -2,24 +2,19 @@ package kubernetes
 
 import (
 	"fmt"
-	"github.com/up9inc/mizu/shared/logger"
 	"net"
 	"net/http"
 	"strings"
 	"time"
 
+	"github.com/up9inc/mizu/shared/logger"
 	"k8s.io/kubectl/pkg/proxy"
 )
 
 const k8sProxyApiPrefix = "/"
 const mizuServicePort = 80
 
-<<<<<<< HEAD:shared/kubernetes/proxy.go
-func StartProxy(kubernetesProvider *Provider, mizuPort uint16, mizuNamespace string, mizuServiceName string) error {
-	//TODO: move to outside of call in cli
-=======
 func StartProxy(kubernetesProvider *Provider, proxyHost string, mizuPort uint16, mizuNamespace string, mizuServiceName string) error {
->>>>>>> develop:cli/kubernetes/proxy.go
 	logger.Log.Debugf("Starting proxy. namespace: [%v], service name: [%s], port: [%v]", mizuNamespace, mizuServiceName, mizuPort)
 	filter := &proxy.FilterServer{
 		AcceptPaths:   proxy.MakeRegexpArrayOrDie(proxy.DefaultPathAcceptRE),

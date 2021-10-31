@@ -11,7 +11,7 @@ const (
 	ServiceAccountName         = MizuResourcesPrefix + "service-account"
 	TapperDaemonSetName        = MizuResourcesPrefix + "tapper-daemon-set"
 	TapperPodName              = MizuResourcesPrefix + "tapper"
-	ConfigMapName              = MizuResourcesPrefix + "policy"
+	ConfigMapName              = MizuResourcesPrefix + "config"
 	MinKubernetesServerVersion = "1.16.0"
 )
 

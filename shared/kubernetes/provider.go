@@ -6,21 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-<<<<<<< HEAD:shared/kubernetes/provider.go
-=======
-	"github.com/up9inc/mizu/cli/config/configStructs"
-	"github.com/up9inc/mizu/shared/logger"
-	"github.com/up9inc/mizu/shared/semver"
-	"k8s.io/apimachinery/pkg/version"
-	"net/url"
-	"path/filepath"
-	"regexp"
-
-	"io"
-
-	"github.com/up9inc/mizu/cli/config"
-	"github.com/up9inc/mizu/cli/mizu"
->>>>>>> develop:cli/kubernetes/provider.go
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/logger"
 	"github.com/up9inc/mizu/shared/semver"
@@ -47,7 +32,6 @@ import (
 	"net/url"
 	"path/filepath"
 	"regexp"
-	"strconv"
 )
 
 type Provider struct {
@@ -183,15 +167,8 @@ func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, opts *ApiS
 		}
 	}
 
-<<<<<<< HEAD:shared/kubernetes/provider.go
 	configMapVolumeName := &core.ConfigMapVolumeSource{}
 	configMapVolumeName.Name = ConfigMapName
-	configMapOptional := true
-	configMapVolumeName.Optional = &configMapOptional
-=======
-	configMapVolume := &core.ConfigMapVolumeSource{}
-	configMapVolume.Name = mizu.ConfigMapName
->>>>>>> develop:cli/kubernetes/provider.go
 
 	cpuLimit, err := resource.ParseQuantity(opts.Resources.CpuLimit)
 	if err != nil {
@@ -236,13 +213,8 @@ func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, opts *ApiS
 					ImagePullPolicy: opts.ImagePullPolicy,
 					VolumeMounts: []core.VolumeMount{
 						{
-<<<<<<< HEAD:shared/kubernetes/provider.go
 							Name:      ConfigMapName,
-							MountPath: shared.RulePolicyPath,
-=======
-							Name:      mizu.ConfigMapName,
 							MountPath: shared.ConfigDirPath,
->>>>>>> develop:cli/kubernetes/provider.go
 						},
 					},
 					Command: command,
@@ -291,7 +263,7 @@ func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, opts *ApiS
 				{
 					Name: ConfigMapName,
 					VolumeSource: core.VolumeSource{
-						ConfigMap: configMapVolume,
+						ConfigMap: configMapVolumeName,
 					},
 				},
 			},
@@ -635,7 +607,7 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	noScheduleToleration.WithOperator(core.TolerationOpExists)
 	noScheduleToleration.WithEffect(core.TaintEffectNoSchedule)
 
-	volumeName := mizu.ConfigMapName
+	volumeName := ConfigMapName
 	configMapVolume := applyconfcore.VolumeApplyConfiguration{
 		Name:                           &volumeName,
 		VolumeSourceApplyConfiguration: applyconfcore.VolumeSourceApplyConfiguration{
@@ -792,8 +764,9 @@ func validateNotProxy(kubernetesConfig clientcmd.ClientConfig, restClientConfig 
 		}
 
 		if *proxyServerVersion == (version.Info{}) {
+			return &ClusterBehindProxyError{}
 			// TODO: handle this with CLI from outside the function, or move to outside or shared
-			return fmt.Errorf("cannot establish http-proxy connection to the Kubernetes cluster. If you’re using Lens or similar tool, please run mizu with regular kubectl config using --%v %v=$HOME/.kube/config flag", "set", "kube-config-path")
+			//return fmt.Errorf("cannot establish http-proxy connection to the Kubernetes cluster. If you’re using Lens or similar tool, please run mizu with regular kubectl config using --%v %v=$HOME/.kube/config flag", "set", "kube-config-path")
 		}
 	}
 

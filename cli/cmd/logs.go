@@ -10,7 +10,6 @@ import (
 	"github.com/up9inc/mizu/cli/errormessage"
 	"github.com/up9inc/mizu/cli/mizu/fsUtils"
 	"github.com/up9inc/mizu/cli/telemetry"
-	"github.com/up9inc/mizu/shared/kubernetes"
 	"github.com/up9inc/mizu/shared/logger"
 )
 
@@ -20,7 +19,7 @@ var logsCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		go telemetry.ReportRun("logs", config.Config.Logs)
 
-		kubernetesProvider, err := kubernetes.NewProvider(config.Config.KubeConfigPath())
+		kubernetesProvider, err := getKubernetesProviderForCli()
 		if err != nil {
 			logger.Log.Error(err)
 			return nil

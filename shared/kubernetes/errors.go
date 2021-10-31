@@ -17,3 +17,10 @@ type K8sTapManagerError struct {
 func (e *K8sTapManagerError) Error() string {
 	return e.OriginalError.Error()
 }
+
+type ClusterBehindProxyError struct {}
+
+// ClusterBehindProxyError implements the Error interface.
+func (e *ClusterBehindProxyError) Error() string {
+	return "Cluster is behind proxy"
+}

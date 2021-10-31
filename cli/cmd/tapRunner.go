@@ -91,7 +91,7 @@ func RunMizuTap() {
 		return
 	}
 
-	kubernetesProvider, err := kubernetes.NewProvider(config.Config.KubeConfigPath())
+	kubernetesProvider, err := getKubernetesProviderForCli()
 	if err != nil {
 		logger.Log.Error(err)
 		return
