@@ -23,9 +23,9 @@ require (
 	go.mongodb.org/mongo-driver v1.7.1
 	gorm.io/driver/sqlite v1.1.4
 	gorm.io/gorm v1.21.8
-	k8s.io/api v0.22.3
-	k8s.io/apimachinery v0.22.3
-	k8s.io/client-go v0.22.3
+	k8s.io/api v0.21.2
+	k8s.io/apimachinery v0.21.2
+	k8s.io/client-go v0.21.2
 )
 
 replace github.com/up9inc/mizu/shared v0.0.0 => ../shared
