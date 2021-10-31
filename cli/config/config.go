@@ -3,6 +3,7 @@ package config
 import (
 	"errors"
 	"fmt"
+	"github.com/up9inc/mizu/tap/api"
 	"io/ioutil"
 	"k8s.io/apimachinery/pkg/util/json"
 	"os"
@@ -378,7 +379,7 @@ func GetSerializedMizuConfig() (string, error) {
 }
 
 func getMizuConfig() (*shared.MizuAgentConfig, error) {
-	serializableRegex, err := shared.CompileRegexToSerializableRegexp(Config.Tap.PodRegexStr)
+	serializableRegex, err := api.CompileRegexToSerializableRegexp(Config.Tap.PodRegexStr)
 	if err != nil {
 		return nil, err
 	}

@@ -167,8 +167,8 @@ func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, opts *ApiS
 		}
 	}
 
-	configMapVolumeName := &core.ConfigMapVolumeSource{}
-	configMapVolumeName.Name = ConfigMapName
+	configMapVolume := &core.ConfigMapVolumeSource{}
+	configMapVolume.Name = ConfigMapName
 
 	cpuLimit, err := resource.ParseQuantity(opts.Resources.CpuLimit)
 	if err != nil {
@@ -263,7 +263,7 @@ func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, opts *ApiS
 				{
 					Name: ConfigMapName,
 					VolumeSource: core.VolumeSource{
-						ConfigMap: configMapVolumeName,
+						ConfigMap: configMapVolume,
 					},
 				},
 			},

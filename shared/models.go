@@ -1,6 +1,7 @@
 package shared
 
 import (
+	"github.com/up9inc/mizu/tap/api"
 	"io/ioutil"
 	"log"
 	"strings"
@@ -26,8 +27,8 @@ type Resources struct {
 }
 
 type MizuAgentConfig struct {
-	TapTargetRegex SerializableRegexp `yaml:"tapTargetRegex"`
-	MaxDBSizeBytes int64              `yaml:"maxDBSizeBytes"`
+	TapTargetRegex api.SerializableRegexp `yaml:"tapTargetRegex"`
+	MaxDBSizeBytes int64                  `yaml:"maxDBSizeBytes"`
 }
 
 type WebSocketMessageMetadata struct {
