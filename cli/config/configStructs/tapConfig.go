@@ -24,24 +24,24 @@ const (
 )
 
 type TapConfig struct {
-	UploadIntervalSec      int       `yaml:"upload-interval" default:"10"`
-	PodRegexStr            string    `yaml:"regex" default:".*"`
-	GuiPort                uint16    `yaml:"gui-port" default:"8899"`
-	ProxyHost              string    `yaml:"proxy-host" default:"127.0.0.1"`
-	Namespaces             []string  `yaml:"namespaces"`
-	Analysis               bool      `yaml:"analysis" default:"false"`
-	AllNamespaces          bool      `yaml:"all-namespaces" default:"false"`
-	PlainTextFilterRegexes []string  `yaml:"regex-masking"`
-	IgnoredUserAgents      []string  `yaml:"ignored-user-agents"`
-	DisableRedaction       bool      `yaml:"no-redact" default:"false"`
-	HumanMaxEntriesDBSize  string    `yaml:"max-entries-db-size" default:"200MB"`
-	DryRun                 bool      `yaml:"dry-run" default:"false"`
-	Workspace              string    `yaml:"workspace"`
-	EnforcePolicyFile      string    `yaml:"traffic-validation-file"`
-	ContractFile       string           `yaml:"contract"`
-	AskUploadConfirmation  bool      `yaml:"ask-upload-confirmation" default:"true"`
-	ApiServerResources shared.Resources `yaml:"api-server-resources"`
-	TapperResources    shared.Resources `yaml:"tapper-resources"`
+	UploadIntervalSec      int              `yaml:"upload-interval" default:"10"`
+	PodRegexStr            string           `yaml:"regex" default:".*"`
+	GuiPort                uint16           `yaml:"gui-port" default:"8899"`
+	ProxyHost              string           `yaml:"proxy-host" default:"127.0.0.1"`
+	Namespaces             []string         `yaml:"namespaces"`
+	Analysis               bool             `yaml:"analysis" default:"false"`
+	AllNamespaces          bool             `yaml:"all-namespaces" default:"false"`
+	PlainTextFilterRegexes []string         `yaml:"regex-masking"`
+	IgnoredUserAgents      []string         `yaml:"ignored-user-agents"`
+	DisableRedaction       bool             `yaml:"no-redact" default:"false"`
+	HumanMaxEntriesDBSize  string           `yaml:"max-entries-db-size" default:"200MB"`
+	DryRun                 bool             `yaml:"dry-run" default:"false"`
+	Workspace              string           `yaml:"workspace"`
+	EnforcePolicyFile      string           `yaml:"traffic-validation-file"`
+	ContractFile           string           `yaml:"contract"`
+	AskUploadConfirmation  bool             `yaml:"ask-upload-confirmation" default:"true"`
+	ApiServerResources     shared.Resources `yaml:"api-server-resources"`
+	TapperResources        shared.Resources `yaml:"tapper-resources"`
 }
 
 func (config *TapConfig) PodRegex() *regexp.Regexp {

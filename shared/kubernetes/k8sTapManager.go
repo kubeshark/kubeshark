@@ -150,7 +150,6 @@ func (tapManager *K8sTapManager) watchPodsForTapping() {
 				OriginalError:    err,
 				TapManagerReason: TapManagerPodWatchError,
 			}
-			// TODO: Does this also perform cleanup?
 
 		case <-tapManager.context.Done():
 			logger.Log.Debugf("Watching pods loop, context done, stopping `restart tappers debouncer`")
