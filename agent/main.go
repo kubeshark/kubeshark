@@ -45,9 +45,8 @@ func main() {
 	logLevel := determineLogLevel()
 	logger.InitLoggerStderrOnly(logLevel)
 	flag.Parse()
-	err := config.LoadConfig()
-	if err != nil {
-		panic(fmt.Sprintf("Error loading config file %v", err))
+	if err := config.LoadConfig(); err != nil {
+		logger.Log.Fatalf("Error loading config file %v", err)
 	}
 	loadExtensions()
 
