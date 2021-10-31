@@ -29,8 +29,8 @@ func LoadConfig() error {
 		}
 		return err
 	}
-	err = json.Unmarshal(content, &Config)
-	if err != nil {
+
+	if err = json.Unmarshal(content, &Config); err != nil {
 		return err
 	}
 	return nil
