@@ -27,6 +27,7 @@ type K8sTapManager struct {
 	kubernetesProvider  *Provider
 	TapPodChangesOut    chan TappedPodChangeEvent
 	ErrorOut            chan K8sTapManagerError
+	shouldUpdateTappers bool // used to prevent updating tapper daemonsets before api is available
 }
 
 type TapManagerConfig struct {
@@ -42,7 +43,7 @@ type TapManagerConfig struct {
 	MizuServiceAccountExists bool
 }
 
-func CreateAndStartK8sTapManager(ctx context.Context, kubernetesProvider *Provider, config TapManagerConfig) (*K8sTapManager, *K8sTapManagerError) {
+func CreateAndStartK8sTapManager(ctx context.Context, kubernetesProvider *Provider, config TapManagerConfig, shouldUpdateTappers bool) (*K8sTapManager, error) {
 	manager := &K8sTapManager{
 		context:             ctx,
 		CurrentlyTappedPods: make([]core.Pod, 0),
@@ -50,21 +51,16 @@ func CreateAndStartK8sTapManager(ctx context.Context, kubernetesProvider *Provid
 		kubernetesProvider:  kubernetesProvider,
 		TapPodChangesOut:    make(chan TappedPodChangeEvent, 100),
 		ErrorOut:            make(chan K8sTapManagerError, 100),
+		shouldUpdateTappers: shouldUpdateTappers,
 	}
 
-	err, _ := manager.updateCurrentlyTappedPods()
-	if err != nil {
-		return nil, &K8sTapManagerError{
-			OriginalError:    err,
-			TapManagerReason: TapManagerPodListError,
-		}
+	if err, _ := manager.updateCurrentlyTappedPods(); err != nil {
+		return nil, err
 	}
 
-	err = manager.updateMizuTappers()
-	if err != nil {
-		return nil, &K8sTapManagerError{
-			OriginalError:    err,
-			TapManagerReason: TapManagerTapperUpdateError,
+	if shouldUpdateTappers {
+		if err := manager.updateMizuTappers(); err != nil {
+			return nil, err
 		}
 	}
 
@@ -72,6 +68,14 @@ func CreateAndStartK8sTapManager(ctx context.Context, kubernetesProvider *Provid
 	return manager, nil
 }
 
+// BeginUpdatingTappers should only be called after mizu api server is available
+func (tapManager *K8sTapManager) BeginUpdatingTappers() error {
+	tapManager.shouldUpdateTappers = true
+	if err := tapManager.updateMizuTappers(); err != nil {
+		return err
+	}
+	return nil
+}
 
 func (tapManager *K8sTapManager) watchPodsForTapping() {
 	added, modified, removed, errorChan := FilteredWatch(tapManager.context, tapManager.kubernetesProvider, tapManager.config.TargetNamespaces, &tapManager.config.PodFilterRegex)
@@ -89,11 +93,12 @@ func (tapManager *K8sTapManager) watchPodsForTapping() {
 			logger.Log.Debugf("Nothing changed update tappers not needed")
 			return
 		}
-
-		if err := tapManager.updateMizuTappers(); err != nil {
-			tapManager.ErrorOut <- K8sTapManagerError{
-				OriginalError:    err,
-				TapManagerReason: TapManagerTapperUpdateError,
+		if tapManager.shouldUpdateTappers {
+			if err := tapManager.updateMizuTappers(); err != nil {
+				tapManager.ErrorOut <- K8sTapManagerError{
+					OriginalError:    err,
+					TapManagerReason: TapManagerTapperUpdateError,
+				}
 			}
 		}
 	}

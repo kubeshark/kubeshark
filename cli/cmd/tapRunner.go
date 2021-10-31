@@ -130,8 +130,8 @@ func RunMizuTap() {
 	}
 	defer finishMizuExecution(kubernetesProvider)
 
-	if tapManagerErr := startTapManager(ctx, cancel, kubernetesProvider, targetNamespaces, *mizuApiFilteringOptions); tapManagerErr != nil {
-		logger.Log.Errorf(uiUtils.Error, getErrorDisplayTextForK8sTapManagerError(*tapManagerErr))
+	if err = startTapManager(ctx, cancel, kubernetesProvider, targetNamespaces, *mizuApiFilteringOptions); err != nil {
+		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error listing pods: %v", err))
 		cancel()
 	}
 
@@ -142,7 +142,7 @@ func RunMizuTap() {
 	waitForFinish(ctx, cancel)
 }
 
-func startTapManager(ctx context.Context, cancel context.CancelFunc, provider *kubernetes.Provider, targetNamespaces []string, mizuApiFilteringOptions api.TrafficFilteringOptions) *kubernetes.K8sTapManagerError {
+func startTapManager(ctx context.Context, cancel context.CancelFunc, provider *kubernetes.Provider, targetNamespaces []string, mizuApiFilteringOptions api.TrafficFilteringOptions) error {
 	manager, err := kubernetes.CreateAndStartK8sTapManager(ctx, provider, kubernetes.TapManagerConfig{
 		TargetNamespaces:         targetNamespaces,
 		PodFilterRegex:           *config.Config.Tap.PodRegex(),
@@ -154,7 +154,7 @@ func startTapManager(ctx context.Context, cancel context.CancelFunc, provider *k
 		IgnoredUserAgents:        config.Config.Tap.IgnoredUserAgents,
 		MizuApiFilteringOptions:  mizuApiFilteringOptions,
 		MizuServiceAccountExists: state.mizuServiceAccountExists,
-	})
+	}, false)
 
 	if err != nil {
 		return err
@@ -504,6 +504,12 @@ func watchApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 				url := GetApiServerUrl()
 				if err := apiserver.Provider.InitAndTestConnection(url); err != nil {
 					logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Couldn't connect to API server, for more info check logs at %s", fsUtils.GetLogFilePath()))
+					cancel()
+					break
+				}
+
+				if err := state.tapManager.BeginUpdatingTappers(); err != nil {
+					logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error updating tappers: %v", err))
 					cancel()
 					break
 				}
