@@ -230,7 +230,7 @@ export const QueryForm: React.FC<QueryFormProps> = ({query, setQuery, background
                                 title="Clicking to UI elements (right-pane)"
                             />
                             <Typography id="modal-modal-description">
-                                A query that compares one selector to another is also valid query:
+                                A query that compares one selector to another is also a valid query:
                             </Typography>
                             <SyntaxHighlighter
                                 isWrapped={false}
