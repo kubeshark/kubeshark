@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/debounce"
-	"github.com/up9inc/mizu/shared/goUtils"
 	"github.com/up9inc/mizu/shared/logger"
 	"github.com/up9inc/mizu/tap/api"
 	core "k8s.io/api/core/v1"
@@ -45,7 +44,7 @@ type TapperSyncerConfig struct {
 }
 
 func CreateAndStartMizuTapperSyncer(ctx context.Context, kubernetesProvider *Provider, config TapperSyncerConfig, shouldUpdateTappers bool) (*MizuTapperSyncer, error) {
-	manager := &MizuTapperSyncer{
+	syncer := &MizuTapperSyncer{
 		context:             ctx,
 		CurrentlyTappedPods: make([]core.Pod, 0),
 		config:              config,
@@ -55,18 +54,18 @@ func CreateAndStartMizuTapperSyncer(ctx context.Context, kubernetesProvider *Pro
 		shouldUpdateTappers: shouldUpdateTappers,
 	}
 
-	if err, _ := manager.updateCurrentlyTappedPods(); err != nil {
+	if err, _ := syncer.updateCurrentlyTappedPods(); err != nil {
 		return nil, err
 	}
 
 	if shouldUpdateTappers {
-		if err := manager.updateMizuTappers(); err != nil {
+		if err := syncer.updateMizuTappers(); err != nil {
 			return nil, err
 		}
 	}
 
-	go goUtils.HandleExcWrapper(manager.watchPodsForTapping)
-	return manager, nil
+	go syncer.watchPodsForTapping()
+	return syncer, nil
 }
 
 // BeginUpdatingTappers should only be called after mizu api server is available

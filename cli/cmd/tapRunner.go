@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/up9inc/mizu/shared/goUtils"
+	"github.com/up9inc/mizu/cli/cmd/goUtils"
 	"io/ioutil"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -183,6 +183,7 @@ func startTapManager(ctx context.Context, cancel context.CancelFunc, provider *k
 				}
 				displayTapPodChangesEvent(tappedPodChanges)
 			case <-ctx.Done():
+				logger.Log.Debug("mizuTapperSyncer event listener loop exiting due to context done")
 				return
 			}
 		}
