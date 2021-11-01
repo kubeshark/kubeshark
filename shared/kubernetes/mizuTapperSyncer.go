@@ -27,7 +27,6 @@ type MizuTapperSyncer struct {
 	kubernetesProvider  *Provider
 	TapPodChangesOut    chan TappedPodChangeEvent
 	ErrorOut            chan K8sTapManagerError
-	shouldUpdateTappers bool // Used to prevent daemonset updates but still allow tracking targeted pods
 }
 
 type TapperSyncerConfig struct {
@@ -43,7 +42,7 @@ type TapperSyncerConfig struct {
 	MizuServiceAccountExists bool
 }
 
-func CreateAndStartMizuTapperSyncer(ctx context.Context, kubernetesProvider *Provider, config TapperSyncerConfig, shouldUpdateTappers bool) (*MizuTapperSyncer, error) {
+func CreateAndStartMizuTapperSyncer(ctx context.Context, kubernetesProvider *Provider, config TapperSyncerConfig) (*MizuTapperSyncer, error) {
 	syncer := &MizuTapperSyncer{
 		context:             ctx,
 		CurrentlyTappedPods: make([]core.Pod, 0),
@@ -51,30 +50,18 @@ func CreateAndStartMizuTapperSyncer(ctx context.Context, kubernetesProvider *Pro
 		kubernetesProvider:  kubernetesProvider,
 		TapPodChangesOut:    make(chan TappedPodChangeEvent, 100),
 		ErrorOut:            make(chan K8sTapManagerError, 100),
-		shouldUpdateTappers: shouldUpdateTappers,
 	}
 
 	if err, _ := syncer.updateCurrentlyTappedPods(); err != nil {
 		return nil, err
 	}
 
-	if shouldUpdateTappers {
-		if err := syncer.updateMizuTappers(); err != nil {
-			return nil, err
-		}
+	if err := syncer.updateMizuTappers(); err != nil {
+		return nil, err
 	}
 
 	go syncer.watchPodsForTapping()
 	return syncer, nil
-}
-
-// BeginUpdatingTappers should only be called after mizu api server is available
-func (tapperSyncer *MizuTapperSyncer) BeginUpdatingTappers() error {
-	tapperSyncer.shouldUpdateTappers = true
-	if err := tapperSyncer.updateMizuTappers(); err != nil {
-		return err
-	}
-	return nil
 }
 
 func (tapperSyncer *MizuTapperSyncer) watchPodsForTapping() {
@@ -93,12 +80,10 @@ func (tapperSyncer *MizuTapperSyncer) watchPodsForTapping() {
 			logger.Log.Debugf("Nothing changed update tappers not needed")
 			return
 		}
-		if tapperSyncer.shouldUpdateTappers {
-			if err := tapperSyncer.updateMizuTappers(); err != nil {
-				tapperSyncer.ErrorOut <- K8sTapManagerError{
-					OriginalError:    err,
-					TapManagerReason: TapManagerTapperUpdateError,
-				}
+		if err := tapperSyncer.updateMizuTappers(); err != nil {
+			tapperSyncer.ErrorOut <- K8sTapManagerError{
+				OriginalError:    err,
+				TapManagerReason: TapManagerTapperUpdateError,
 			}
 		}
 	}
@@ -166,6 +151,12 @@ func (tapperSyncer *MizuTapperSyncer) updateCurrentlyTappedPods() (err error, ch
 	} else {
 		podsToTap := excludeMizuPods(matchingPods)
 		addedPods, removedPods := getPodArrayDiff(tapperSyncer.CurrentlyTappedPods, podsToTap)
+		for _, addedPod := range addedPods {
+			logger.Log.Debugf("tapping new pod %s", addedPod.Name)
+		}
+		for _, removedPod := range removedPods {
+			logger.Log.Debugf("pod %s is no longer running, tapping for it stopped", removedPod.Name)
+		}
 		if len(addedPods) > 0 || len(removedPods) > 0 {
 			tapperSyncer.CurrentlyTappedPods = podsToTap
 			tapperSyncer.TapPodChangesOut <- TappedPodChangeEvent{

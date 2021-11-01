@@ -157,10 +157,14 @@ func startTapManager(ctx context.Context, cancel context.CancelFunc, provider *k
 		IgnoredUserAgents:        config.Config.Tap.IgnoredUserAgents,
 		MizuApiFilteringOptions:  mizuApiFilteringOptions,
 		MizuServiceAccountExists: state.mizuServiceAccountExists,
-	}, false)
+	})
 
 	if err != nil {
 		return err
+	}
+
+	for _, tappedPod := range tapperSyncer.CurrentlyTappedPods {
+		logger.Log.Infof(uiUtils.Green, fmt.Sprintf("+%s", tappedPod.Name))
 	}
 
 	if len(tapperSyncer.CurrentlyTappedPods) == 0 {
@@ -177,11 +181,10 @@ func startTapManager(ctx context.Context, cancel context.CancelFunc, provider *k
 			case managerErr := <-tapperSyncer.ErrorOut:
 				logger.Log.Errorf(uiUtils.Error, getErrorDisplayTextForK8sTapManagerError(managerErr))
 				cancel()
-			case tappedPodChanges := <-tapperSyncer.TapPodChangesOut:
+			case <-tapperSyncer.TapPodChangesOut:
 				if err := apiserver.Provider.ReportTappedPods(tapperSyncer.CurrentlyTappedPods); err != nil {
 					logger.Log.Debugf("[Error] failed update tapped pods %v", err)
 				}
-				displayTapPodChangesEvent(tappedPodChanges)
 			case <-ctx.Done():
 				logger.Log.Debug("mizuTapperSyncer event listener loop exiting due to context done")
 				return
@@ -192,15 +195,6 @@ func startTapManager(ctx context.Context, cancel context.CancelFunc, provider *k
 	state.tapperSyncer = tapperSyncer
 
 	return nil
-}
-
-func displayTapPodChangesEvent(event kubernetes.TappedPodChangeEvent) {
-	for _, addedPod := range event.Added {
-		logger.Log.Infof(uiUtils.Green, fmt.Sprintf("+%s", addedPod.Name))
-	}
-	for _, removedPod := range event.Removed {
-		logger.Log.Infof(uiUtils.Red, fmt.Sprintf("-%s", removedPod.Name))
-	}
 }
 
 func getErrorDisplayTextForK8sTapManagerError(err kubernetes.K8sTapManagerError) string {
@@ -508,12 +502,6 @@ func watchApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 				url := GetApiServerUrl()
 				if err := apiserver.Provider.InitAndTestConnection(url); err != nil {
 					logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Couldn't connect to API server, for more info check logs at %s", fsUtils.GetLogFilePath()))
-					cancel()
-					break
-				}
-
-				if err := state.tapperSyncer.BeginUpdatingTappers(); err != nil {
-					logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error updating tappers: %v", err))
 					cancel()
 					break
 				}
