@@ -387,6 +387,7 @@ func getMizuConfig() (*shared.MizuAgentConfig, error) {
 	config := shared.MizuAgentConfig{
 		TapTargetRegex: *serializableRegex,
 		MaxDBSizeBytes: Config.Tap.MaxEntriesDBSizeBytes(),
+		DaemonMode:     Config.Tap.DaemonMode,
 	}
 	return &config, nil
 }

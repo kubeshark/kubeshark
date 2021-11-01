@@ -21,6 +21,7 @@ const (
 	WorkspaceTapName              = "workspace"
 	EnforcePolicyFile             = "traffic-validation-file"
 	ContractFile                  = "contract"
+	DaemonModeTapName             = "daemon"
 )
 
 type TapConfig struct {
@@ -42,6 +43,7 @@ type TapConfig struct {
 	AskUploadConfirmation  bool             `yaml:"ask-upload-confirmation" default:"true"`
 	ApiServerResources     shared.Resources `yaml:"api-server-resources"`
 	TapperResources        shared.Resources `yaml:"tapper-resources"`
+	DaemonMode             bool             `yaml:"daemon-mode"`
 }
 
 func (config *TapConfig) PodRegex() *regexp.Regexp {

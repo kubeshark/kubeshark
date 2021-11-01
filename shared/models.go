@@ -29,6 +29,7 @@ type Resources struct {
 type MizuAgentConfig struct {
 	TapTargetRegex api.SerializableRegexp `yaml:"tapTargetRegex"`
 	MaxDBSizeBytes int64                  `yaml:"maxDBSizeBytes"`
+	DaemonMode     bool                   `yaml:"daemonMode"`
 }
 
 type WebSocketMessageMetadata struct {
