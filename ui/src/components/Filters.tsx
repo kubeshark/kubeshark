@@ -131,7 +131,7 @@ export const QueryForm: React.FC<QueryFormProps> = ({query, setQuery, background
                         Filtering Guide (Cheatsheet)
                     </Typography>
                     <Typography id="modal-modal-description">
-                        <p>Mizu has a rich filtering syntax that let's you query results both flexibly and efficiently.</p>
+                        <p>Mizu has a rich filtering syntax that let's you query the results both flexibly and efficiently.</p>
                         <p>Here are some examples that you can try;</p>
                     </Typography>
                     <Grid container>
@@ -146,7 +146,7 @@ export const QueryForm: React.FC<QueryFormProps> = ({query, setQuery, background
                                 language="python"
                             />
                             <Typography id="modal-modal-description">
-                                The same query can be negated and written like this:
+                                The same query can be negated for HTTP path and written like this:
                             </Typography>
                             <SyntaxHighlighter
                                 isWrapped={false}
@@ -173,7 +173,7 @@ export const QueryForm: React.FC<QueryFormProps> = ({query, setQuery, background
                                 language="python"
                             />
                             <Typography id="modal-modal-description">
-                                The same exact query can be written like this too:
+                                The same exact query can be as integer comparison:
                             </Typography>
                             <SyntaxHighlighter
                                 isWrapped={false}
@@ -194,7 +194,7 @@ export const QueryForm: React.FC<QueryFormProps> = ({query, setQuery, background
                         <Divider orientation="vertical" flexItem />
                         <Grid item xs style={{margin: "10px"}}>
                             <Typography id="modal-modal-description">
-                                Since Mizu supports various protocols like gRPC, AMQP, Kafka and Redis. It's possible to write complex queries that matches multiple protocols like this:
+                                Since Mizu supports various protocols like gRPC, AMQP, Kafka and Redis. It's possible to write complex queries that match multiple protocols like this:
                             </Typography>
                             <SyntaxHighlighter
                                 isWrapped={false}
@@ -212,7 +212,7 @@ export const QueryForm: React.FC<QueryFormProps> = ({query, setQuery, background
                                 title="Clicking to UI elements (left-pane)"
                             />
                             <Typography id="modal-modal-description">
-                                Such that clicking this in left-pane, would append the query below:
+                                Such that; clicking this in left-pane, would append the query below:
                             </Typography>
                             <SyntaxHighlighter
                                 isWrapped={false}
@@ -242,7 +242,7 @@ export const QueryForm: React.FC<QueryFormProps> = ({query, setQuery, background
                         <Divider orientation="vertical" flexItem />
                         <Grid item xs style={{margin: "10px"}}>
                             <Typography id="modal-modal-description">
-                                There are a few helper methods included the in the filter syntax to help building queries more easily.
+                                There are a few helper methods included the in the filter language* to help building queries more easily.
                             </Typography>
                             <br></br>
                             <Typography id="modal-modal-description">
@@ -273,7 +273,7 @@ export const QueryForm: React.FC<QueryFormProps> = ({query, setQuery, background
                                 language="python"
                             />
                             <Typography id="modal-modal-description">
-                                returns the UNIX timestamp integer which is the equivalent of the time that's provided by the string. Invalid input evaluates to false:
+                                returns the UNIX timestamp which is the equivalent of the time that's provided by the string. Invalid input evaluates to false:
                             </Typography>
                             <SyntaxHighlighter
                                 isWrapped={false}
@@ -294,7 +294,7 @@ export const QueryForm: React.FC<QueryFormProps> = ({query, setQuery, background
                     </Grid>
                     <br></br>
                     <Typography id="modal-modal-description" style={{fontSize: 12, fontStyle: 'italic'}}>
-                        * The filtering functionality is provided through <b>Basenine</b> database server. Please refer to <a href="https://github.com/up9inc/basenine/wiki/BFL-Syntax-Reference"><b>BFL Syntax Reference</b></a> for more information.
+                        *The filtering functionality is provided through <b>Basenine</b> database server. Please refer to <a href="https://github.com/up9inc/basenine/wiki/BFL-Syntax-Reference"><b>BFL Syntax Reference</b></a> for more information.
                     </Typography>
                 </Box>
             </Fade>
