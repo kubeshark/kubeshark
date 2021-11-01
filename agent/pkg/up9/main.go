@@ -12,6 +12,7 @@ import (
 	"net/url"
 	"regexp"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/google/martian/har"
@@ -226,7 +227,8 @@ func syncEntriesImpl(token string, model string, envPrefix string, uploadInterva
 		c.Close()
 	}()
 
-	handleDataChannel := func(c *basenine.Connection, data chan []byte) {
+	handleDataChannel := func(wg *sync.WaitGroup, c *basenine.Connection, data chan []byte) {
+		defer wg.Done()
 		for {
 			b := <-data
 
@@ -299,7 +301,8 @@ func syncEntriesImpl(token string, model string, envPrefix string, uploadInterva
 		}
 	}
 
-	handleMetaChannel := func(c *basenine.Connection, meta chan []byte) {
+	handleMetaChannel := func(wg *sync.WaitGroup, c *basenine.Connection, meta chan []byte) {
+		defer wg.Done()
 		for {
 			b := <-meta
 
@@ -309,10 +312,14 @@ func syncEntriesImpl(token string, model string, envPrefix string, uploadInterva
 		}
 	}
 
-	go handleDataChannel(c, data)
-	go handleMetaChannel(c, meta)
+	var wg sync.WaitGroup
+	go handleDataChannel(&wg, c, data)
+	go handleMetaChannel(&wg, c, meta)
+	wg.Add(2)
 
 	c.Query(query, data, meta)
+
+	wg.Wait()
 }
 
 func UpdateAnalyzeStatus(callback func(data []byte)) {
