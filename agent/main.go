@@ -20,7 +20,6 @@ import (
 	"path/filepath"
 	"plugin"
 	"sort"
-	"strconv"
 	"time"
 
 	"github.com/antelman107/net-wait-go/wait"
@@ -138,21 +137,6 @@ func main() {
 	logger.Log.Info("Exiting")
 }
 
-func getMaxEntriesDBByteSize() int64 {
-	maxEntriesDBByteSize := defaultMaxDatabaseSizeBytes
-
-	maxEntriesDBSizeByteSEnvVarValue := os.Getenv(shared.MaxEntriesDBSizeBytesEnvVar)
-	if maxEntriesDBSizeByteSEnvVarValue != "" {
-		var err error
-		maxEntriesDBByteSize, err = strconv.ParseInt(maxEntriesDBSizeByteSEnvVarValue, 10, 64)
-		if err != nil {
-			logger.Log.Debugf("Error parsing max db size: %v\n", err)
-			return defaultMaxDatabaseSizeBytes
-		}
-	}
-	return maxEntriesDBByteSize
-}
-
 func startBasenineServer(host string, port string) {
 	cmd := exec.Command("basenine", "-addr", host, "-port", port)
 	cmd.Stdout = os.Stdout
@@ -173,7 +157,7 @@ func startBasenineServer(host string, port string) {
 	}
 
 	// Limit the database size to default 200MB
-	err = basenine.Limit(host, port, getMaxEntriesDBByteSize())
+	err = basenine.Limit(host, port, config.Config.MaxDBSizeBytes)
 	if err != nil {
 		panic(err)
 	}
@@ -380,4 +364,3 @@ func determineLogLevel() (logLevel logging.Level) {
 	}
 	return
 }
-
