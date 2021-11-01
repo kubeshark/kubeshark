@@ -367,8 +367,8 @@ func setZeroForReadonlyFields(currentElem reflect.Value) {
 	}
 }
 
-func GetSerializedMizuConfig() (string, error) {
-	mizuConfig, err := getMizuConfig()
+func GetSerializedMizuConfig(targetNamespaces []string, mizuApiFilteringOptions *api.TrafficFilteringOptions) (string, error) {
+	mizuConfig, err := getMizuConfig(targetNamespaces, mizuApiFilteringOptions)
 	if err != nil {
 		return "", err
 	}
@@ -379,15 +379,23 @@ func GetSerializedMizuConfig() (string, error) {
 	return string(serializedConfig), nil
 }
 
-func getMizuConfig() (*shared.MizuAgentConfig, error) {
+func getMizuConfig(targetNamespaces []string, mizuApiFilteringOptions *api.TrafficFilteringOptions) (*shared.MizuAgentConfig, error) {
 	serializableRegex, err := api.CompileRegexToSerializableRegexp(Config.Tap.PodRegexStr)
 	if err != nil {
 		return nil, err
 	}
 	config := shared.MizuAgentConfig{
-		TapTargetRegex: *serializableRegex,
-		MaxDBSizeBytes: Config.Tap.MaxEntriesDBSizeBytes(),
-		DaemonMode:     Config.Tap.DaemonMode,
+		TapTargetRegex:          *serializableRegex,
+		MaxDBSizeBytes:          Config.Tap.MaxEntriesDBSizeBytes(),
+		DaemonMode:              Config.Tap.DaemonMode,
+		TargetNamespaces:        targetNamespaces,
+		AgentImage:              Config.AgentImage,
+		PullPolicy:              Config.ImagePullPolicyStr,
+		DumpLogs:                Config.DumpLogs,
+		IgnoredUserAgents:       Config.Tap.IgnoredUserAgents,
+		TapperResources:         Config.Tap.TapperResources,
+		MizuResourcesNamespace:  Config.MizuResourcesNamespace,
+		MizuApiFilteringOptions: *mizuApiFilteringOptions,
 	}
 	return &config, nil
 }

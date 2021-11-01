@@ -83,12 +83,6 @@ func RunMizuTap() {
 		}
 	}
 
-	serializedMizuConfig, err := config.GetSerializedMizuConfig()
-	if err != nil {
-		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error composing mizu config: %v", errormessage.FormatError(err)))
-		return
-	}
-
 	kubernetesProvider, err := getKubernetesProviderForCli()
 	if err != nil {
 		return
@@ -98,6 +92,12 @@ func RunMizuTap() {
 	defer cancel() // cancel will be called when this function exits
 
 	targetNamespaces := getNamespaces(kubernetesProvider)
+
+	serializedMizuConfig, err := config.GetSerializedMizuConfig(targetNamespaces, mizuApiFilteringOptions)
+	if err != nil {
+		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error composing mizu config: %v", errormessage.FormatError(err)))
+		return
+	}
 
 	if config.Config.IsNsRestrictedMode() {
 		if len(targetNamespaces) != 1 || !shared.Contains(targetNamespaces, config.Config.MizuResourcesNamespace) {
@@ -120,7 +120,7 @@ func RunMizuTap() {
 		return
 	}
 
-	if err := createMizuResources(ctx, kubernetesProvider, serializedValidationRules, serializedContract, serializedMizuConfig); err != nil {
+	if err := createMizuResources(ctx, cancel, kubernetesProvider, serializedValidationRules, serializedContract, serializedMizuConfig); err != nil {
 		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error creating resources: %v", errormessage.FormatError(err)))
 
 		var statusError *k8serrors.StatusError
@@ -224,14 +224,14 @@ func readValidationRules(file string) (string, error) {
 	return string(newContent), nil
 }
 
-func createMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, serializedValidationRules string, serializedContract string, serializedMizuConfig string) error {
+func createMizuResources(ctx context.Context, cancel context.CancelFunc, kubernetesProvider *kubernetes.Provider, serializedValidationRules string, serializedContract string, serializedMizuConfig string) error {
 	if !config.Config.IsNsRestrictedMode() {
 		if err := createMizuNamespace(ctx, kubernetesProvider); err != nil {
 			return err
 		}
 	}
 
-	if err := createMizuApiServer(ctx, kubernetesProvider); err != nil {
+	if err := createMizuApiServer(ctx, cancel, kubernetesProvider); err != nil {
 		return err
 	}
 
@@ -252,12 +252,17 @@ func createMizuNamespace(ctx context.Context, kubernetesProvider *kubernetes.Pro
 	return err
 }
 
-func createMizuApiServer(ctx context.Context, kubernetesProvider *kubernetes.Provider) error {
+func createMizuApiServer(ctx context.Context, cancel context.CancelFunc, kubernetesProvider *kubernetes.Provider) error {
 	var err error
 
 	state.mizuServiceAccountExists, err = createRBACIfNecessary(ctx, kubernetesProvider)
 	if err != nil {
-		logger.Log.Warningf(uiUtils.Warning, fmt.Sprintf("Failed to ensure the resources required for IP resolving. Mizu will not resolve target IPs to names. error: %v", errormessage.FormatError(err)))
+		if config.Config.Tap.DaemonMode {
+			defer cleanUpMizuResources(ctx, cancel, kubernetesProvider)
+			logger.Log.Fatalf(uiUtils.Red, fmt.Sprintf("Failed to ensure the resources required for mizu to run in daemon mode. cannot proceed. error: %v", errormessage.FormatError(err)))
+		} else {
+			logger.Log.Warningf(uiUtils.Warning, fmt.Sprintf("Failed to ensure the resources required for IP resolving. Mizu will not resolve target IPs to names. error: %v", errormessage.FormatError(err)))
+		}
 	}
 
 	var serviceAccountName string
@@ -606,13 +611,16 @@ func watchTapperPod(ctx context.Context, kubernetesProvider *kubernetes.Provider
 
 func createRBACIfNecessary(ctx context.Context, kubernetesProvider *kubernetes.Provider) (bool, error) {
 	if !config.Config.IsNsRestrictedMode() {
-		err := kubernetesProvider.CreateMizuRBAC(ctx, config.Config.MizuResourcesNamespace, kubernetes.ServiceAccountName, kubernetes.ClusterRoleName, kubernetes.ClusterRoleBindingName, mizu.RBACVersion)
-		if err != nil {
+		if err := kubernetesProvider.CreateMizuRBAC(ctx, config.Config.MizuResourcesNamespace, kubernetes.ServiceAccountName, kubernetes.ClusterRoleName, kubernetes.ClusterRoleBindingName, mizu.RBACVersion); err != nil {
 			return false, err
 		}
 	} else {
-		err := kubernetesProvider.CreateMizuRBACNamespaceRestricted(ctx, config.Config.MizuResourcesNamespace, kubernetes.ServiceAccountName, kubernetes.RoleName, kubernetes.RoleBindingName, mizu.RBACVersion)
-		if err != nil {
+		if err := kubernetesProvider.CreateMizuRBACNamespaceRestricted(ctx, config.Config.MizuResourcesNamespace, kubernetes.ServiceAccountName, kubernetes.RoleName, kubernetes.RoleBindingName, mizu.RBACVersion); err != nil {
+			return false, err
+		}
+	}
+	if config.Config.Tap.DaemonMode {
+		if err := kubernetesProvider.CreateDaemonsetPatchRBAC(ctx, config.Config.MizuResourcesNamespace, kubernetes.ServiceAccountName, kubernetes.DaemonClusterRoleName, kubernetes.DaemonClusterRoleBindingName, mizu.RBACVersion); err != nil {
 			return false, err
 		}
 	}

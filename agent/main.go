@@ -222,7 +222,7 @@ func hostApi(socketHarOutputChannel chan<- *tapApi.OutputChannelItem) {
 
 		tapperSyncer, err := startMizuTapperSyncer(ctx)
 		if err != nil {
-			logger.Log.Fatalf("error initializing tapper syncer: %v", err)
+			logger.Log.Fatalf("error initializing tapper syncer: %+v", err)
 		}
 
 		go func() {

@@ -440,6 +440,49 @@ func (provider *Provider) CreateMizuRBACNamespaceRestricted(ctx context.Context,
 	return nil
 }
 
+func (provider *Provider) CreateDaemonsetPatchRBAC(ctx context.Context, namespace string, serviceAccountName string, roleName string, roleBindingName string, version string) error {
+	role := &rbac.Role{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:   roleName,
+			Labels: map[string]string{"mizu-cli-version": version},
+		},
+		Rules: []rbac.PolicyRule{
+			{
+				APIGroups: []string{"apps"},
+				Resources: []string{"daemonsets"},
+				Verbs:     []string{"patch", "get", "list", "create", "delete"},
+			},
+		},
+	}
+	roleBinding := &rbac.RoleBinding{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:   roleBindingName,
+			Labels: map[string]string{"mizu-cli-version": version},
+		},
+		RoleRef: rbac.RoleRef{
+			Name:     roleName,
+			Kind:     "Role",
+			APIGroup: "rbac.authorization.k8s.io",
+		},
+		Subjects: []rbac.Subject{
+			{
+				Kind:      "ServiceAccount",
+				Name:      serviceAccountName,
+				Namespace: namespace,
+			},
+		},
+	}
+	_, err := provider.clientSet.RbacV1().Roles(namespace).Create(ctx, role, metav1.CreateOptions{})
+	if err != nil && !k8serrors.IsAlreadyExists(err) {
+		return err
+	}
+	_, err = provider.clientSet.RbacV1().RoleBindings(namespace).Create(ctx, roleBinding, metav1.CreateOptions{})
+	if err != nil && !k8serrors.IsAlreadyExists(err) {
+		return err
+	}
+	return nil
+}
+
 func (provider *Provider) RemoveNamespace(ctx context.Context, name string) error {
 	err := provider.clientSet.CoreV1().Namespaces().Delete(ctx, name, metav1.DeleteOptions{})
 	return provider.handleRemovalError(err)
