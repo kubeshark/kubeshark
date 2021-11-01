@@ -21,7 +21,6 @@ func FilteredWatch(ctx context.Context, kubernetesProvider *Provider, targetName
 	removedChan := make(chan *corev1.Pod)
 	errorChan := make(chan error)
 
-
 	var wg sync.WaitGroup
 
 	for _, targetNamespace := range targetNamespaces {

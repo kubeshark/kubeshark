@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/up9inc/mizu/shared"
+	"github.com/up9inc/mizu/tap/api"
 	"io/ioutil"
 	"os"
 )
@@ -46,7 +47,7 @@ func applyDefaultConfig() error {
 }
 
 func getDefaultConfig() (*shared.MizuAgentConfig, error) {
-	regex, err := shared.CompileRegexToSerializableRegexp(defaultRegexTarget)
+	regex, err := api.CompileRegexToSerializableRegexp(defaultRegexTarget)
 	if err != nil {
 		return nil, err
 	}

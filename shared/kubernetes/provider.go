@@ -2,46 +2,36 @@ package kubernetes
 
 import (
 	"bytes"
-	_ "bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/up9inc/mizu/cli/config/configStructs"
+	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/logger"
 	"github.com/up9inc/mizu/shared/semver"
-	"k8s.io/apimachinery/pkg/version"
-	"net/url"
-	"path/filepath"
-	"regexp"
-
-	"io"
-
-	"github.com/up9inc/mizu/cli/config"
-	"github.com/up9inc/mizu/cli/mizu"
-	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/tap/api"
+	"io"
 	core "k8s.io/api/core/v1"
 	rbac "k8s.io/api/rbac/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
-	resource "k8s.io/apimachinery/pkg/api/resource"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/apimachinery/pkg/version"
 	"k8s.io/apimachinery/pkg/watch"
 	applyconfapp "k8s.io/client-go/applyconfigurations/apps/v1"
 	applyconfcore "k8s.io/client-go/applyconfigurations/core/v1"
 	applyconfmeta "k8s.io/client-go/applyconfigurations/meta/v1"
 	"k8s.io/client-go/kubernetes"
-	_ "k8s.io/client-go/plugin/pkg/client/auth/azure"
-	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
-	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc"
-	_ "k8s.io/client-go/plugin/pkg/client/auth/openstack"
+	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
-	_ "k8s.io/client-go/tools/portforward"
 	watchtools "k8s.io/client-go/tools/watch"
+	"net/url"
+	"path/filepath"
+	"regexp"
 )
 
 type Provider struct {
@@ -163,8 +153,9 @@ type ApiServerOptions struct {
 	IsNamespaceRestricted bool
 	SyncEntriesConfig     *shared.SyncEntriesConfig
 	MaxEntriesDBSizeBytes int64
-	Resources             configStructs.Resources
+	Resources             shared.Resources
 	ImagePullPolicy       core.PullPolicy
+	DumpLogs              bool
 }
 
 func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, opts *ApiServerOptions) (*core.Pod, error) {
@@ -177,7 +168,7 @@ func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, opts *ApiS
 	}
 
 	configMapVolume := &core.ConfigMapVolumeSource{}
-	configMapVolume.Name = mizu.ConfigMapName
+	configMapVolume.Name = ConfigMapName
 
 	cpuLimit, err := resource.ParseQuantity(opts.Resources.CpuLimit)
 	if err != nil {
@@ -204,7 +195,7 @@ func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, opts *ApiS
 	port := intstr.FromInt(shared.DefaultApiServerPort)
 
 	debugMode := ""
-	if config.Config.DumpLogs {
+	if opts.DumpLogs {
 		debugMode = "1"
 	}
 
@@ -222,7 +213,7 @@ func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, opts *ApiS
 					ImagePullPolicy: opts.ImagePullPolicy,
 					VolumeMounts: []core.VolumeMount{
 						{
-							Name:      mizu.ConfigMapName,
+							Name:      ConfigMapName,
 							MountPath: shared.ConfigDirPath,
 						},
 					},
@@ -270,7 +261,7 @@ func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, opts *ApiS
 			},
 			Volumes: []core.Volume{
 				{
-					Name: mizu.ConfigMapName,
+					Name: ConfigMapName,
 					VolumeSource: core.VolumeSource{
 						ConfigMap: configMapVolume,
 					},
@@ -515,7 +506,7 @@ func (provider *Provider) CreateConfigMap(ctx context.Context, namespace string,
 	return nil
 }
 
-func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, apiServerPodIp string, nodeToTappedPodIPMap map[string][]string, serviceAccountName string, resources configStructs.Resources, imagePullPolicy core.PullPolicy, mizuApiFilteringOptions *api.TrafficFilteringOptions) error {
+func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, apiServerPodIp string, nodeToTappedPodIPMap map[string][]string, serviceAccountName string, resources shared.Resources, imagePullPolicy core.PullPolicy, mizuApiFilteringOptions api.TrafficFilteringOptions, dumpLogs bool) error {
 	logger.Log.Debugf("Applying %d tapper daemon sets, ns: %s, daemonSetName: %s, podImage: %s, tapperPodName: %s", len(nodeToTappedPodIPMap), namespace, daemonSetName, podImage, tapperPodName)
 
 	if len(nodeToTappedPodIPMap) == 0 {
@@ -527,7 +518,7 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 		return err
 	}
 
-	marshaledFilteringOptions, err := json.Marshal(mizuApiFilteringOptions)
+	mizuApiFilteringOptionsJsonStr, err := json.Marshal(mizuApiFilteringOptions)
 	if err != nil {
 		return err
 	}
@@ -541,7 +532,7 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	}
 
 	debugMode := ""
-	if config.Config.DumpLogs {
+	if dumpLogs {
 		debugMode = "1"
 	}
 
@@ -556,7 +547,7 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 		applyconfcore.EnvVar().WithName(shared.HostModeEnvVar).WithValue("1"),
 		applyconfcore.EnvVar().WithName(shared.TappedAddressesPerNodeDictEnvVar).WithValue(string(nodeToTappedPodIPMapJsonStr)),
 		applyconfcore.EnvVar().WithName(shared.GoGCEnvVar).WithValue("12800"),
-		applyconfcore.EnvVar().WithName(shared.MizuFilteringOptionsEnvVar).WithValue(string(marshaledFilteringOptions)),
+		applyconfcore.EnvVar().WithName(shared.MizuFilteringOptionsEnvVar).WithValue(string(mizuApiFilteringOptionsJsonStr)),
 	)
 	agentContainer.WithEnv(
 		applyconfcore.EnvVar().WithName(shared.NodeNameEnvVar).WithValueFrom(
@@ -616,9 +607,9 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	noScheduleToleration.WithOperator(core.TolerationOpExists)
 	noScheduleToleration.WithEffect(core.TaintEffectNoSchedule)
 
-	volumeName := mizu.ConfigMapName
+	volumeName := ConfigMapName
 	configMapVolume := applyconfcore.VolumeApplyConfiguration{
-		Name:                           &volumeName,
+		Name: &volumeName,
 		VolumeSourceApplyConfiguration: applyconfcore.VolumeSourceApplyConfiguration{
 			ConfigMap: &applyconfcore.ConfigMapVolumeSourceApplyConfiguration{
 				LocalObjectReferenceApplyConfiguration: applyconfcore.LocalObjectReferenceApplyConfiguration{
@@ -629,8 +620,8 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	}
 	mountPath := shared.ConfigDirPath
 	configMapVolumeMount := applyconfcore.VolumeMountApplyConfiguration{
-		Name:             &volumeName,
-		MountPath:        &mountPath,
+		Name:      &volumeName,
+		MountPath: &mountPath,
 	}
 	agentContainer.WithVolumeMounts(&configMapVolumeMount)
 
@@ -773,7 +764,7 @@ func validateNotProxy(kubernetesConfig clientcmd.ClientConfig, restClientConfig 
 		}
 
 		if *proxyServerVersion == (version.Info{}) {
-			return fmt.Errorf("cannot establish http-proxy connection to the Kubernetes cluster. If you’re using Lens or similar tool, please run mizu with regular kubectl config using --%v %v=$HOME/.kube/config flag", config.SetCommandName, config.KubeConfigPathConfigName)
+			return &ClusterBehindProxyError{}
 		}
 	}
 
@@ -788,9 +779,9 @@ func validateKubernetesVersion(clientSet *kubernetes.Clientset) error {
 	}
 
 	serverVersionSemVer := semver.SemVersion(serverVersion.GitVersion)
-	minKubernetesServerVersionSemVer := semver.SemVersion(mizu.MinKubernetesServerVersion)
+	minKubernetesServerVersionSemVer := semver.SemVersion(MinKubernetesServerVersion)
 	if minKubernetesServerVersionSemVer.GreaterThan(serverVersionSemVer) {
-		return fmt.Errorf("kubernetes server version %v is not supported, supporting only kubernetes server version of %v or higher", serverVersion.GitVersion, mizu.MinKubernetesServerVersion)
+		return fmt.Errorf("kubernetes server version %v is not supported, supporting only kubernetes server version of %v or higher", serverVersion.GitVersion, MinKubernetesServerVersion)
 	}
 
 	return nil
