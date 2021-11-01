@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/up9inc/mizu/shared/kubernetes"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -62,10 +63,7 @@ func (provider *apiServerProvider) ReportTappedPods(pods []core.Pod) error {
 	}
 	tappedPodsUrl := fmt.Sprintf("%s/status/tappedPods", provider.url)
 
-	podInfos := make([]shared.PodInfo, 0)
-	for _, pod := range pods {
-		podInfos = append(podInfos, shared.PodInfo{Name: pod.Name, Namespace: pod.Namespace})
-	}
+	podInfos := kubernetes.GetPodInfosForPods(pods)
 	tapStatus := shared.TapStatus{Pods: podInfos}
 
 	if jsonValue, err := json.Marshal(tapStatus); err != nil {

@@ -620,6 +620,7 @@ func getNamespaces(kubernetesProvider *kubernetes.Provider) []string {
 	} else if len(config.Config.Tap.Namespaces) > 0 {
 		return shared.Unique(config.Config.Tap.Namespaces)
 	} else {
-		return []string{kubernetesProvider.CurrentNamespace()}
+		currentNamespace, _ := kubernetesProvider.CurrentNamespace()
+		return []string{currentNamespace}
 	}
 }

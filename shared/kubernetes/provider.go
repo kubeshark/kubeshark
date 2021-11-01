@@ -25,6 +25,7 @@ import (
 	applyconfmeta "k8s.io/client-go/applyconfigurations/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
+	"k8s.io/client-go/rest"
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
@@ -83,9 +84,29 @@ func NewProvider(kubeConfigPath string) (*Provider, error) {
 	}, nil
 }
 
-func (provider *Provider) CurrentNamespace() string {
-	ns, _, _ := provider.kubernetesConfig.Namespace()
-	return ns
+func NewProviderInCluster() (*Provider, error) {
+	restClientConfig, err := rest.InClusterConfig()
+	if err != nil {
+		return nil, err
+	}
+	clientSet, err := getClientSet(restClientConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Provider{
+		clientSet:        clientSet,
+		kubernetesConfig: nil, // not relevant in cluster
+		clientConfig:     *restClientConfig,
+	}, nil
+}
+
+func (provider *Provider) CurrentNamespace() (string, error) {
+	if provider.kubernetesConfig == nil {
+		return "", errors.New("kubernetesConfig is nil, CurrentNamespace will not work in cluster")
+	}
+	ns, _, err := provider.kubernetesConfig.Namespace()
+	return ns, err
 }
 
 func (provider *Provider) WaitUtilNamespaceDeleted(ctx context.Context, name string) error {

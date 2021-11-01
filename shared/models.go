@@ -27,9 +27,17 @@ type Resources struct {
 }
 
 type MizuAgentConfig struct {
-	TapTargetRegex api.SerializableRegexp `yaml:"tapTargetRegex"`
-	MaxDBSizeBytes int64                  `yaml:"maxDBSizeBytes"`
-	DaemonMode     bool                   `yaml:"daemonMode"`
+	TapTargetRegex          api.SerializableRegexp      `json:"tapTargetRegex"`
+	MaxDBSizeBytes          int64                       `json:"maxDBSizeBytes"`
+	DaemonMode              bool                        `json:"daemonMode"`
+	TargetNamespaces        []string                    `json:"targetNamespaces"`
+	AgentImage              string                      `json:"agentImage"`
+	PullPolicy              string                      `json:"pullPolicy"`
+	DumpLogs                bool                        `json:"dumpLogs"`
+	IgnoredUserAgents       []string                    `json:"ignoredUserAgents"`
+	TapperResources         Resources                   `json:"tapperResources"`
+	MizuResourcesNamespace  string                      `json:"mizuResourceNamespace"`
+	MizuApiFilteringOptions api.TrafficFilteringOptions `json:"mizuApiFilteringOptions"`
 }
 
 type WebSocketMessageMetadata struct {
