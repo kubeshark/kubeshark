@@ -131,18 +131,23 @@ func RunMizuTap() {
 		}
 		return
 	}
-	defer finishMizuExecution(kubernetesProvider)
+	if config.Config.Tap.DaemonMode {
+		//TODO: wait for mizu api pod to be ready, then finish
+		logger.Log.Info("Mizu is now running in daemon mode, run `mizu view` to connect to the mizu daemon instance")
+	} else {
+		defer finishMizuExecution(kubernetesProvider)
 
-	if err = startTapManager(ctx, cancel, kubernetesProvider, targetNamespaces, *mizuApiFilteringOptions); err != nil {
-		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error listing pods: %v", err))
-		cancel()
+		if err = startTapManager(ctx, cancel, kubernetesProvider, targetNamespaces, *mizuApiFilteringOptions); err != nil {
+			logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error starting mizu tapper syncer: %v", err))
+			cancel()
+		}
+
+		go goUtils.HandleExcWrapper(watchApiServerPod, ctx, kubernetesProvider, cancel, mizuApiFilteringOptions)
+		go goUtils.HandleExcWrapper(watchTapperPod, ctx, kubernetesProvider, cancel)
+
+		// block until exit signal or error
+		waitForFinish(ctx, cancel)
 	}
-
-	go goUtils.HandleExcWrapper(watchApiServerPod, ctx, kubernetesProvider, cancel, mizuApiFilteringOptions)
-	go goUtils.HandleExcWrapper(watchTapperPod, ctx, kubernetesProvider, cancel)
-
-	// block until exit signal or error
-	waitForFinish(ctx, cancel)
 }
 
 func startTapManager(ctx context.Context, cancel context.CancelFunc, provider *kubernetes.Provider, targetNamespaces []string, mizuApiFilteringOptions api.TrafficFilteringOptions) error {
