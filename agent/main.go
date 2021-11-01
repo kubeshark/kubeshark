@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"mizuserver/pkg/api"
+	"mizuserver/pkg/config"
 	"mizuserver/pkg/controllers"
 	"mizuserver/pkg/models"
 	"mizuserver/pkg/routes"
@@ -53,6 +54,9 @@ func main() {
 	logLevel := determineLogLevel()
 	logger.InitLoggerStderrOnly(logLevel)
 	flag.Parse()
+	if err := config.LoadConfig(); err != nil {
+		logger.Log.Fatalf("Error loading config file %v", err)
+	}
 	loadExtensions()
 
 	if !*tapperMode && !*apiServerMode && !*standaloneMode && !*harsReaderMode {
@@ -376,3 +380,4 @@ func determineLogLevel() (logLevel logging.Level) {
 	}
 	return
 }
+

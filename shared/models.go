@@ -21,6 +21,11 @@ const (
 	WebSocketMessageTypeStartTime     WebSocketMessageType = "startTime"
 )
 
+type MizuAgentConfig struct {
+	TapTargetRegex SerializableRegexp `yaml:"tapTargetRegex"`
+	MaxDBSizeBytes int64              `yaml:"maxDBSizeBytes"`
+}
+
 type WebSocketMessageMetadata struct {
 	MessageType WebSocketMessageType `json:"messageType,omitempty"`
 }
