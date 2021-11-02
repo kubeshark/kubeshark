@@ -43,6 +43,8 @@ type Provider struct {
 
 const (
 	fieldManagerName = "mizu-manager"
+	procfsVolumeName = "proc"
+	procfsMountPath  = "/hostproc"
 )
 
 func NewProvider(kubeConfigPath string) (*Provider, error) {
@@ -529,6 +531,7 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 		"--tap",
 		"--api-server-address", fmt.Sprintf("ws://%s/wsTapper", apiServerPodIp),
 		"--nodefrag",
+		"--procfs", procfsMountPath,
 	}
 
 	debugMode := ""
@@ -607,6 +610,10 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	noScheduleToleration.WithOperator(core.TolerationOpExists)
 	noScheduleToleration.WithEffect(core.TaintEffectNoSchedule)
 
+	procfsVolume := applyconfcore.Volume()
+	procfsVolume.WithName(procfsVolumeName).WithHostPath(applyconfcore.HostPathVolumeSource().WithPath("/proc"))
+	agentContainer.WithVolumeMounts(applyconfcore.VolumeMount().WithName(procfsVolumeName).WithMountPath(procfsMountPath))
+
 	volumeName := ConfigMapName
 	configMapVolume := applyconfcore.VolumeApplyConfiguration{
 		Name: &volumeName,
@@ -635,7 +642,7 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	podSpec.WithContainers(agentContainer)
 	podSpec.WithAffinity(affinity)
 	podSpec.WithTolerations(noExecuteToleration, noScheduleToleration)
-	podSpec.WithVolumes(&configMapVolume)
+	podSpec.WithVolumes(&configMapVolume, procfsVolume)
 
 	podTemplate := applyconfcore.PodTemplateSpec()
 	podTemplate.WithLabels(map[string]string{"app": tapperPodName})
