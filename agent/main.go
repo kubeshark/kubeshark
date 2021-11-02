@@ -233,7 +233,8 @@ func hostApi(socketHarOutputChannel chan<- *tapApi.OutputChannelItem) {
 					logger.Log.Fatalf("fatal tap syncer error: %v", syncerErr)
 				case <-tapperSyncer.TapPodChangesOut:
 					tapStatus := shared.TapStatus{Pods: kubernetes.GetPodInfosForPods(tapperSyncer.CurrentlyTappedPods)}
-					serializedTapStatus, err := json.Marshal(tapStatus)
+
+					serializedTapStatus, err := json.Marshal(shared.CreateWebSocketStatusMessage(tapStatus))
 					if err != nil {
 						logger.Log.Fatalf("error serializing tap status: %v", err)
 					}
@@ -350,7 +351,7 @@ func pipeTapChannelToSocket(connection *websocket.Conn, messageDataChannel <-cha
 				logger.Log.Warning("detected socket disconnection, reestablishing socket connection")
 				connection, err = dialSocketWithRetry(*apiServerAddress, socketConnectionRetries, socketConnectionRetryDelay)
 				if err != nil {
-					logger.Log.Errorf("error reestablishing socket connection: %v", err)
+					logger.Log.Fatalf("error reestablishing socket connection: %v", err)
 				} else {
 					logger.Log.Info("recovered connection successfully")
 				}

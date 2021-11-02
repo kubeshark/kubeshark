@@ -48,17 +48,19 @@ func runMizuView() {
 		logger.Log.Infof("Establishing connection to k8s cluster...")
 		go startProxyReportErrorIfAny(kubernetesProvider, cancel)
 
-		if err := apiserver.Provider.InitAndTestConnection(GetApiServerUrl()); err != nil {
-			logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Couldn't connect to API server, for more info check logs at %s", fsUtils.GetLogFilePath()))
-			return
-		}
+	}
+
+	apiServerProvider := apiserver.GetProvider(url, apiserver.DefaultRetries, apiserver.DefaultTimeout)
+	if err := apiServerProvider.TestConnection(); err != nil {
+		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Couldn't connect to API server, for more info check logs at %s", fsUtils.GetLogFilePath()))
+		return
 	}
 
 	logger.Log.Infof("Mizu is available at %s\n", url)
 
 	uiUtils.OpenBrowser(url)
 
-	if isCompatible, err := version.CheckVersionCompatibility(); err != nil {
+	if isCompatible, err := version.CheckVersionCompatibility(apiServerProvider); err != nil {
 		logger.Log.Errorf("Failed to check versions compatibility %v", err)
 		cancel()
 		return
