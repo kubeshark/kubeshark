@@ -223,8 +223,6 @@ func syncEntriesImpl(token string, model string, envPrefix string, uploadInterva
 		data <- []byte(basenine.CloseChannel)
 		meta <- []byte(basenine.CloseChannel)
 		c.Close()
-		close(data)
-		close(meta)
 	}()
 
 	handleDataChannel := func(wg *sync.WaitGroup, c *basenine.Connection, data chan []byte) {
