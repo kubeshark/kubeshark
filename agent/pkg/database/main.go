@@ -2,6 +2,7 @@ package database
 
 import (
 	"fmt"
+	"github.com/up9inc/mizu/shared"
 	"mizuserver/pkg/utils"
 	"time"
 
@@ -13,7 +14,7 @@ import (
 )
 
 const (
-	DBPath     = "./entries.db"
+	DBPath     = shared.DataDirPath + "entries.db"
 	OrderDesc  = "desc"
 	OrderAsc   = "asc"
 	LT         = "lt"
