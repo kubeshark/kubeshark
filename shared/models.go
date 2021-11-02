@@ -1,6 +1,7 @@
 package shared
 
 import (
+	"github.com/up9inc/mizu/tap/api"
 	"io/ioutil"
 	"log"
 	"strings"
@@ -17,6 +18,18 @@ const (
 	WebSocketMessageTypeAnalyzeStatus WebSocketMessageType = "analyzeStatus"
 	WebsocketMessageTypeOutboundLink  WebSocketMessageType = "outboundLink"
 )
+
+type Resources struct {
+	CpuLimit       string `yaml:"cpu-limit" default:"750m"`
+	MemoryLimit    string `yaml:"memory-limit" default:"1Gi"`
+	CpuRequests    string `yaml:"cpu-requests" default:"50m"`
+	MemoryRequests string `yaml:"memory-requests" default:"50Mi"`
+}
+
+type MizuAgentConfig struct {
+	TapTargetRegex api.SerializableRegexp `yaml:"tapTargetRegex"`
+	MaxDBSizeBytes int64                  `yaml:"maxDBSizeBytes"`
+}
 
 type WebSocketMessageMetadata struct {
 	MessageType WebSocketMessageType `json:"messageType,omitempty"`

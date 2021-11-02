@@ -46,6 +46,10 @@ push-docker: ## Build and publish agent docker image.
 	@echo "publishing Docker image .. "
 	devops/build-push-featurebranch.sh
 
+push-docker-debug:
+	@echo "publishing debug Docker image .. "
+	devops/build-push-featurebranch-debug.sh
+
 build-docker-ci: ## Build agent docker image for CI.
 	@echo "building docker image for ci"
 	devops/build-agent-ci.sh

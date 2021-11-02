@@ -9,8 +9,8 @@ import (
 	"regexp"
 
 	"github.com/up9inc/mizu/cli/config"
-	"github.com/up9inc/mizu/cli/kubernetes"
 	"github.com/up9inc/mizu/cli/mizu"
+	"github.com/up9inc/mizu/shared/kubernetes"
 	"github.com/up9inc/mizu/shared/logger"
 )
 
@@ -19,7 +19,7 @@ func GetLogFilePath() string {
 }
 
 func DumpLogs(ctx context.Context, provider *kubernetes.Provider, filePath string) error {
-	podExactRegex := regexp.MustCompile("^" + mizu.MizuResourcesPrefix)
+	podExactRegex := regexp.MustCompile("^" + kubernetes.MizuResourcesPrefix)
 	pods, err := provider.ListAllPodsMatchingRegex(ctx, podExactRegex, []string{config.Config.MizuResourcesNamespace})
 	if err != nil {
 		return err

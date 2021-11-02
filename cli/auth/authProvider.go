@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/google/uuid"
@@ -33,19 +32,8 @@ func Login() error {
 		Token:   token.AccessToken,
 	}
 
-	configFile, defaultConfigErr := config.GetConfigWithDefaults()
-	if defaultConfigErr != nil {
-		return fmt.Errorf("failed getting config with defaults, err: %v", defaultConfigErr)
-	}
-
-	if err := config.LoadConfigFile(config.Config.ConfigFilePath, configFile); err != nil && !os.IsNotExist(err) {
-		return fmt.Errorf("failed getting config file, err: %v", err)
-	}
-
-	configFile.Auth = authConfig
-
-	if err := config.WriteConfig(configFile); err != nil {
-		return fmt.Errorf("failed writing config with auth, err: %v", err)
+	if err := config.UpdateConfig(func(configStruct *config.ConfigStruct) { configStruct.Auth = authConfig }); err != nil {
+		return fmt.Errorf("failed updating config with auth, err: %v", err)
 	}
 
 	config.Config.Auth = authConfig

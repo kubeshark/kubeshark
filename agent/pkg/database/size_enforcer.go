@@ -1,12 +1,11 @@
 package database
 
 import (
+	"mizuserver/pkg/config"
 	"os"
-	"strconv"
 	"time"
 
 	"github.com/fsnotify/fsnotify"
-	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/debounce"
 	"github.com/up9inc/mizu/shared/logger"
 	"github.com/up9inc/mizu/shared/units"
@@ -14,7 +13,6 @@ import (
 )
 
 const percentageOfMaxSizeBytesToPrune = 15
-const defaultMaxDatabaseSizeBytes int64 = 200 * 1000 * 1000
 
 func StartEnforcingDatabaseSize() {
 	watcher, err := fsnotify.NewWatcher()
@@ -23,14 +21,8 @@ func StartEnforcingDatabaseSize() {
 		return
 	}
 
-	maxEntriesDBByteSize, err := getMaxEntriesDBByteSize()
-	if err != nil {
-		logger.Log.Fatalf("Error parsing max db size: %v\n", err)
-		return
-	}
-
 	checkFileSizeDebouncer := debounce.NewDebouncer(5*time.Second, func() {
-		checkFileSize(maxEntriesDBByteSize)
+		checkFileSize(config.Config.MaxDBSizeBytes)
 	})
 
 	go func() {
@@ -56,17 +48,6 @@ func StartEnforcingDatabaseSize() {
 	if err != nil {
 		logger.Log.Fatalf("Error adding %s to filesystem watcher for db size enforcement: %v\n", DBPath, err)
 	}
-}
-
-func getMaxEntriesDBByteSize() (int64, error) {
-	maxEntriesDBByteSize := defaultMaxDatabaseSizeBytes
-	var err error
-
-	maxEntriesDBSizeByteSEnvVarValue := os.Getenv(shared.MaxEntriesDBSizeBytesEnvVar)
-	if maxEntriesDBSizeByteSEnvVarValue != "" {
-		maxEntriesDBByteSize, err = strconv.ParseInt(maxEntriesDBSizeByteSEnvVarValue, 10, 64)
-	}
-	return maxEntriesDBByteSize, err
 }
 
 func checkFileSize(maxSizeBytes int64) {

@@ -80,9 +80,18 @@ Supported protocols are HTTP and gRPC.`,
 
 func askConfirmation(flagName string) {
 	logger.Log.Infof(fmt.Sprintf(uploadTrafficMessageToConfirm, flagName))
+
+	if !config.Config.Tap.AskUploadConfirmation {
+		return
+	}
+
 	if !uiUtils.AskForConfirmation("Would you like to proceed [Y/n]: ") {
 		logger.Log.Infof("You can always run mizu without %s, aborting", flagName)
 		os.Exit(0)
+	}
+
+	if err := config.UpdateConfig(func(configStruct *config.ConfigStruct) { configStruct.Tap.AskUploadConfirmation = false }); err != nil {
+		logger.Log.Debugf("failed updating config with upload confirmation, err: %v", err)
 	}
 }
 

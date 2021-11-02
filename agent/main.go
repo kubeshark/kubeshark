@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"mizuserver/pkg/api"
+	"mizuserver/pkg/config"
 	"mizuserver/pkg/controllers"
 	"mizuserver/pkg/models"
 	"mizuserver/pkg/routes"
@@ -18,6 +19,7 @@ import (
 	"path/filepath"
 	"plugin"
 	"sort"
+	"time"
 
 	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
@@ -40,10 +42,18 @@ var harsDir = flag.String("hars-dir", "", "Directory to read hars from")
 var extensions []*tapApi.Extension             // global
 var extensionsMap map[string]*tapApi.Extension // global
 
+const (
+	socketConnectionRetries = 10
+	socketConnectionRetryDelay = time.Second * 2
+)
+
 func main() {
 	logLevel := determineLogLevel()
 	logger.InitLoggerStderrOnly(logLevel)
 	flag.Parse()
+	if err := config.LoadConfig(); err != nil {
+		logger.Log.Fatalf("Error loading config file %v", err)
+	}
 	loadExtensions()
 
 	if !*tapperMode && !*apiServerMode && !*standaloneMode && !*harsReaderMode {
@@ -83,7 +93,7 @@ func main() {
 		hostMode := os.Getenv(shared.HostModeEnvVar) == "1"
 		tapOpts := &tap.TapOpts{HostMode: hostMode}
 		tap.StartPassiveTapper(tapOpts, filteredOutputItemsChannel, extensions, filteringOptions)
-		socketConnection, _, err := websocket.DefaultDialer.Dial(*apiServerAddress, nil)
+		socketConnection, err := dialSocketWithRetry(*apiServerAddress, socketConnectionRetries, socketConnectionRetryDelay)
 		if err != nil {
 			panic(fmt.Sprintf("Error connecting to socket server at %s %v", *apiServerAddress, err))
 		}
@@ -312,4 +322,21 @@ func determineLogLevel() (logLevel logging.Level) {
 		logLevel = logging.DEBUG
 	}
 	return
+}
+
+func dialSocketWithRetry(socketAddress string, retryAmount int, retryDelay time.Duration) (*websocket.Conn, error) {
+	var lastErr error
+	for i := 1; i < retryAmount; i++ {
+		socketConnection, _, err := websocket.DefaultDialer.Dial(socketAddress, nil)
+		if err != nil {
+			if i < retryAmount {
+				logger.Log.Debugf("socket connection to %s failed: %v, retrying %d out of %d in %d seconds...", socketAddress, err, i, retryAmount, retryDelay / time.Second)
+				time.Sleep(retryDelay)
+			}
+		} else {
+			logger.Log.Debugf("socket connection to %s successful", socketAddress)
+			return socketConnection, nil
+		}
+	}
+	return nil, lastErr
 }
