@@ -188,16 +188,14 @@ func cleanUpMizuResources(ctx context.Context, cancel context.CancelFunc, kubern
 
 func cleanUpRestrictedMode(ctx context.Context, kubernetesProvider *kubernetes.Provider) []string {
 	leftoverResources := make([]string, 0)
-	if config.Config.Tap.DaemonMode {
-		if err := kubernetesProvider.RemoveDeployment(ctx, config.Config.MizuResourcesNamespace, kubernetes.ApiServerPodName); err != nil {
-			resourceDesc := fmt.Sprintf("Deployment %s in namespace %s", kubernetes.ApiServerPodName, config.Config.MizuResourcesNamespace)
-			handleDeletionError(err, resourceDesc, &leftoverResources)
-		}
-	} else {
-		if err := kubernetesProvider.RemovePod(ctx, config.Config.MizuResourcesNamespace, kubernetes.ApiServerPodName); err != nil {
-			resourceDesc := fmt.Sprintf("Pod %s in namespace %s", kubernetes.ApiServerPodName, config.Config.MizuResourcesNamespace)
-			handleDeletionError(err, resourceDesc, &leftoverResources)
-		}
+	if err := kubernetesProvider.RemoveDeployment(ctx, config.Config.MizuResourcesNamespace, kubernetes.ApiServerPodName); err != nil {
+		resourceDesc := fmt.Sprintf("Deployment %s in namespace %s", kubernetes.ApiServerPodName, config.Config.MizuResourcesNamespace)
+		handleDeletionError(err, resourceDesc, &leftoverResources)
+	}
+
+	if err := kubernetesProvider.RemovePod(ctx, config.Config.MizuResourcesNamespace, kubernetes.ApiServerPodName); err != nil {
+		resourceDesc := fmt.Sprintf("Pod %s in namespace %s", kubernetes.ApiServerPodName, config.Config.MizuResourcesNamespace)
+		handleDeletionError(err, resourceDesc, &leftoverResources)
 	}
 
 	if err := kubernetesProvider.RemoveService(ctx, config.Config.MizuResourcesNamespace, kubernetes.ApiServerPodName); err != nil {

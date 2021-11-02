@@ -12,6 +12,7 @@ import (
 	"mizuserver/pkg/config"
 	"mizuserver/pkg/controllers"
 	"mizuserver/pkg/models"
+	"mizuserver/pkg/providers"
 	"mizuserver/pkg/routes"
 	"mizuserver/pkg/up9"
 	"mizuserver/pkg/utils"
@@ -237,6 +238,7 @@ func hostApi(socketHarOutputChannel chan<- *tapApi.OutputChannelItem) {
 						logger.Log.Fatalf("error serializing tap status: %v", err)
 					}
 					api.BroadcastToBrowserClients(serializedTapStatus)
+					providers.TapStatus.Pods = tapStatus.Pods
 				case <-ctx.Done():
 					logger.Log.Debug("mizuTapperSyncer event listener loop exiting due to context done")
 					return
@@ -344,6 +346,15 @@ func pipeTapChannelToSocket(connection *websocket.Conn, messageDataChannel <-cha
 		err = connection.WriteMessage(websocket.TextMessage, marshaledData)
 		if err != nil {
 			logger.Log.Errorf("error sending message through socket server %v, err: %s, (%v,%+v)", messageData, err, err, err)
+			if utils.IsSocketErrorBrokenPipe(err) {
+				logger.Log.Warning("detected socket disconnection, reestablishing socket connection")
+				connection, err = dialSocketWithRetry(*apiServerAddress, socketConnectionRetries, socketConnectionRetryDelay)
+				if err != nil {
+					logger.Log.Errorf("error reestablishing socket connection: %v", err)
+				} else {
+					logger.Log.Info("recovered connection successfully")
+				}
+			}
 			continue
 		}
 	}
