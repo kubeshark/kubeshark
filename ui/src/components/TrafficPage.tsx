@@ -154,7 +154,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
 
     useEffect(() => {
         (async () => {
-            openWebSocket(query);
+            openWebSocket("rlimit(100)");
             try{
                 const tapStatusResponse = await api.tapStatus();
                 setTappingStatus(tapStatusResponse);
