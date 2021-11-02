@@ -85,9 +85,9 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 	defer func() {
 		data <- []byte(basenine.CloseChannel)
 		meta <- []byte(basenine.CloseChannel)
+		c.Close()
 		close(data)
 		close(meta)
-		c.Close()
 		socketCleanup(socketId, connectedWebsockets[socketId])
 	}()
 
