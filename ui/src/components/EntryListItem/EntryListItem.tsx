@@ -212,7 +212,7 @@ export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, isSel
                         updateQuery(`timestamp >= datetime("${new Date(+entry.timestamp)?.toLocaleString("en-US", {timeZone: 'UTC' })}")`)
                     }}
                 >
-                    {new Date(+entry.timestamp)?.toLocaleString()}
+                    {new Date(+entry.timestamp)?.toLocaleString("en-US")}
                 </span>
             </div>
         </div>
