@@ -65,13 +65,69 @@ func main() {
 	}
 
 	if *standaloneMode {
-		runStandalone()
+		api.StartResolving(*namespace)
+
+		outputItemsChannel := make(chan *tapApi.OutputChannelItem)
+		filteredOutputItemsChannel := make(chan *tapApi.OutputChannelItem)
+
+		filteringOptions := getTrafficFilteringOptions()
+		hostMode := os.Getenv(shared.HostModeEnvVar) == "1"
+		tapOpts := &tap.TapOpts{HostMode: hostMode}
+		tap.StartPassiveTapper(tapOpts, outputItemsChannel, extensions, filteringOptions)
+
+		go filterItems(outputItemsChannel, filteredOutputItemsChannel)
+		go api.StartReadingEntries(filteredOutputItemsChannel, nil, extensionsMap)
+
+		hostApi(nil)
 	} else if *tapperMode {
-		runTapper()
+		logger.Log.Infof("Starting tapper, websocket address: %s", *apiServerAddress)
+		if *apiServerAddress == "" {
+			panic("API server address must be provided with --api-server-address when using --tap")
+		}
+
+		tapTargets := getTapTargets()
+		if tapTargets != nil {
+			tap.SetFilterAuthorities(tapTargets)
+			logger.Log.Infof("Filtering for the following authorities: %v", tap.GetFilterIPs())
+		}
+
+		filteredOutputItemsChannel := make(chan *tapApi.OutputChannelItem)
+
+		filteringOptions := getTrafficFilteringOptions()
+		hostMode := os.Getenv(shared.HostModeEnvVar) == "1"
+		tapOpts := &tap.TapOpts{HostMode: hostMode}
+		tap.StartPassiveTapper(tapOpts, filteredOutputItemsChannel, extensions, filteringOptions)
+		socketConnection, err := dialSocketWithRetry(*apiServerAddress, socketConnectionRetries, socketConnectionRetryDelay)
+		if err != nil {
+			panic(fmt.Sprintf("Error connecting to socket server at %s %v", *apiServerAddress, err))
+		}
+		logger.Log.Infof("Connected successfully to websocket %s", *apiServerAddress)
+
+		go pipeTapChannelToSocket(socketConnection, filteredOutputItemsChannel)
 	} else if *apiServerMode {
-		runApiServer()
+		api.StartResolving(*namespace)
+
+		outputItemsChannel := make(chan *tapApi.OutputChannelItem)
+		filteredOutputItemsChannel := make(chan *tapApi.OutputChannelItem)
+
+		go filterItems(outputItemsChannel, filteredOutputItemsChannel)
+		go api.StartReadingEntries(filteredOutputItemsChannel, nil, extensionsMap)
+
+		syncEntriesConfig := getSyncEntriesConfig()
+		if syncEntriesConfig != nil {
+			if err := up9.SyncEntries(syncEntriesConfig); err != nil {
+				panic(fmt.Sprintf("Error syncing entries, err: %v", err))
+			}
+		}
+
+		hostApi(outputItemsChannel)
 	} else if *harsReaderMode {
-		runHarReader()
+		outputItemsChannel := make(chan *tapApi.OutputChannelItem, 1000)
+		filteredHarChannel := make(chan *tapApi.OutputChannelItem)
+
+		go filterItems(outputItemsChannel, filteredHarChannel)
+		go api.StartReadingEntries(filteredHarChannel, harsDir, extensionsMap)
+		hostApi(nil)
 	}
 
 	signalChan := make(chan os.Signal, 1)
@@ -79,78 +135,6 @@ func main() {
 	<-signalChan
 
 	logger.Log.Info("Exiting")
-}
-
-func runStandalone() {
-	api.StartResolving(*namespace)
-
-	outputItemsChannel := make(chan *tapApi.OutputChannelItem)
-	filteredOutputItemsChannel := make(chan *tapApi.OutputChannelItem)
-
-	filteringOptions := getTrafficFilteringOptions()
-	hostMode := os.Getenv(shared.HostModeEnvVar) == "1"
-	tapOpts := &tap.TapOpts{HostMode: hostMode}
-	tap.StartPassiveTapper(tapOpts, outputItemsChannel, extensions, filteringOptions)
-
-	go filterItems(outputItemsChannel, filteredOutputItemsChannel)
-	go api.StartReadingEntries(filteredOutputItemsChannel, nil, extensionsMap)
-
-	hostApi(nil)
-}
-
-func runTapper() {
-	logger.Log.Infof("Starting tapper, websocket address: %s", *apiServerAddress)
-	if *apiServerAddress == "" {
-		panic("API server address must be provided with --api-server-address when using --tap")
-	}
-
-	tapTargets := getTapTargets()
-	if tapTargets != nil {
-		tap.SetFilterAuthorities(tapTargets)
-		logger.Log.Infof("Filtering for the following authorities: %v", tap.GetFilterIPs())
-	}
-
-	filteredOutputItemsChannel := make(chan *tapApi.OutputChannelItem)
-
-	filteringOptions := getTrafficFilteringOptions()
-	hostMode := os.Getenv(shared.HostModeEnvVar) == "1"
-	tapOpts := &tap.TapOpts{HostMode: hostMode}
-	tap.StartPassiveTapper(tapOpts, filteredOutputItemsChannel, extensions, filteringOptions)
-	socketConnection, err := dialSocketWithRetry(*apiServerAddress, socketConnectionRetries, socketConnectionRetryDelay)
-	if err != nil {
-		panic(fmt.Sprintf("Error connecting to socket server at %s %v", *apiServerAddress, err))
-	}
-	logger.Log.Infof("Connected successfully to websocket %s", *apiServerAddress)
-
-	go pipeTapChannelToSocket(socketConnection, filteredOutputItemsChannel)
-}
-
-func runApiServer() {
-	api.StartResolving(*namespace)
-
-	outputItemsChannel := make(chan *tapApi.OutputChannelItem)
-	filteredOutputItemsChannel := make(chan *tapApi.OutputChannelItem)
-
-	go filterItems(outputItemsChannel, filteredOutputItemsChannel)
-	go api.StartReadingEntries(filteredOutputItemsChannel, nil, extensionsMap)
-
-	syncEntriesConfig := getSyncEntriesConfig()
-	if syncEntriesConfig != nil {
-		if err := up9.SyncEntries(syncEntriesConfig); err != nil {
-			panic(fmt.Sprintf("Error syncing entries, err: %v", err))
-		}
-	}
-
-	hostApi(outputItemsChannel)
-}
-
-func runHarReader() {
-	outputItemsChannel := make(chan *tapApi.OutputChannelItem, 1000)
-	filteredHarChannel := make(chan *tapApi.OutputChannelItem)
-
-	go filterItems(outputItemsChannel, filteredHarChannel)
-	go api.StartReadingEntries(filteredHarChannel, harsDir, extensionsMap)
-	hostApi(nil)
 }
 
 func loadExtensions() {
