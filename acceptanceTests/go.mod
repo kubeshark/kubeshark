@@ -8,3 +8,5 @@ require (
 )
 
 replace github.com/up9inc/mizu/shared v0.0.0 => ../shared
+
+replace github.com/up9inc/mizu/tap/api v0.0.0 => ../tap/api
