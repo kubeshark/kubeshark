@@ -20,6 +20,9 @@ rules:
 - apiGroups: [""]
   resources: ["services/proxy"]
   verbs: ["get"]
+- apiGroups: [""]
+  resources: ["configmaps"]
+  verbs: ["get", "create", "delete"]
 ---
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1

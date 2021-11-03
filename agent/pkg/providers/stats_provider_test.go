@@ -7,8 +7,10 @@ import (
 	"testing"
 )
 
+const dbPath = "./entries.db"
+
 func init() {
-	database.InitDataBase("./entries.db")
+	database.InitDataBase(dbPath)
 }
 
 func TestNoEntryAddedCount(t *testing.T) {

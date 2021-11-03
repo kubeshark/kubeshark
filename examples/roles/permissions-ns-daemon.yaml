@@ -1,21 +1,22 @@
-# This example shows the roles required for a user to be able to use Mizu in all namespaces.
-kind: ClusterRole
+# This example shows the roles required for a user to be able to use Mizu in a single namespace.
+kind: Role
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: mizu-runner-clusterrole
+  name: mizu-runner-role
+  namespace: user1
 rules:
 - apiGroups: [""]
   resources: ["pods"]
-  verbs: ["get", "list", "watch", "create", "delete"]
+  verbs: ["get", "list", "watch", "delete"]
+- apiGroups: [ "" ]
+  resources: [ "deployments" ]
+  verbs: [ "get", "create", "delete" ]
 - apiGroups: [""]
   resources: ["services"]
   verbs: ["get", "list", "watch", "create", "delete"]
 - apiGroups: ["apps"]
   resources: ["daemonsets"]
-  verbs: ["create", "patch", "delete"]
-- apiGroups: [""]
-  resources: ["namespaces"]
-  verbs: ["get", "list", "watch", "create", "delete"]
+  verbs: ["get", "create", "patch", "delete"]
 - apiGroups: [""]
   resources: ["services/proxy"]
   verbs: ["get"]
@@ -24,12 +25,6 @@ rules:
   verbs: ["get", "create", "delete"]
 - apiGroups: [""]
   resources: ["serviceaccounts"]
-  verbs: ["get", "create", "delete"]
-- apiGroups: ["rbac.authorization.k8s.io"]
-  resources: ["clusterroles"]
-  verbs: ["get", "create", "delete"]
-- apiGroups: ["rbac.authorization.k8s.io"]
-  resources: ["clusterrolebindings"]
   verbs: ["get", "create", "delete"]
 - apiGroups: ["rbac.authorization.k8s.io"]
   resources: ["roles"]
@@ -47,15 +42,16 @@ rules:
   resources: ["endpoints"]
   verbs: ["get", "list", "watch"]
 ---
-kind: ClusterRoleBinding
+kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: mizu-runner-clusterrolebindings
+  name: mizu-runner-rolebindings
+  namespace: user1
 subjects:
 - kind: User
   name: user1
   apiGroup: rbac.authorization.k8s.io
 roleRef:
-  kind: ClusterRole
-  name: mizu-runner-clusterrole
+  kind: Role
+  name: mizu-runner-role
   apiGroup: rbac.authorization.k8s.io

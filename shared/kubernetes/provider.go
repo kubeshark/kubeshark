@@ -104,7 +104,7 @@ func NewProviderInCluster() (*Provider, error) {
 
 func (provider *Provider) CurrentNamespace() (string, error) {
 	if provider.kubernetesConfig == nil {
-		return "", errors.New("kubernetesConfig is nil, CurrentNamespace will not work in cluster")
+		return "", errors.New("kubernetesConfig is nil, mizu cli will not work with in-cluster kubernetes config, use a kubeconfig file when initializing the Provider")
 	}
 	ns, _, err := provider.kubernetesConfig.Namespace()
 	return ns, err
@@ -484,7 +484,7 @@ func (provider *Provider) CreateMizuRBACNamespaceRestricted(ctx context.Context,
 	return nil
 }
 
-func (provider *Provider) CreateDaemonsetPatchRBAC(ctx context.Context, namespace string, serviceAccountName string, roleName string, roleBindingName string, version string) error {
+func (provider *Provider) CreateDaemonsetRBAC(ctx context.Context, namespace string, serviceAccountName string, roleName string, roleBindingName string, version string) error {
 	role := &rbac.Role{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   roleName,
@@ -856,6 +856,10 @@ func (provider *Provider) CreatePersistentVolumeClaim(ctx context.Context, names
 	}
 
 	return provider.clientSet.CoreV1().PersistentVolumeClaims(namespace).Create(ctx, volumeClaim, metav1.CreateOptions{})
+}
+
+func (provider *Provider) RemovePersistentVolumeClaim(ctx context.Context, namespace string, volumeClaimName string) error {
+	return provider.clientSet.CoreV1().PersistentVolumeClaims(namespace).Delete(ctx, volumeClaimName, metav1.DeleteOptions{})
 }
 
 func getClientSet(config *restclient.Config) (*kubernetes.Clientset, error) {

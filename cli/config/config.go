@@ -367,8 +367,8 @@ func setZeroForReadonlyFields(currentElem reflect.Value) {
 	}
 }
 
-func GetSerializedMizuConfig(targetNamespaces []string, mizuApiFilteringOptions *api.TrafficFilteringOptions) (string, error) {
-	mizuConfig, err := getMizuConfig(targetNamespaces, mizuApiFilteringOptions)
+func GetSerializedMizuAgentConfig(targetNamespaces []string, mizuApiFilteringOptions *api.TrafficFilteringOptions) (string, error) {
+	mizuConfig, err := getMizuAgentConfig(targetNamespaces, mizuApiFilteringOptions)
 	if err != nil {
 		return "", err
 	}
@@ -379,7 +379,7 @@ func GetSerializedMizuConfig(targetNamespaces []string, mizuApiFilteringOptions 
 	return string(serializedConfig), nil
 }
 
-func getMizuConfig(targetNamespaces []string, mizuApiFilteringOptions *api.TrafficFilteringOptions) (*shared.MizuAgentConfig, error) {
+func getMizuAgentConfig(targetNamespaces []string, mizuApiFilteringOptions *api.TrafficFilteringOptions) (*shared.MizuAgentConfig, error) {
 	serializableRegex, err := api.CompileRegexToSerializableRegexp(Config.Tap.PodRegexStr)
 	if err != nil {
 		return nil, err

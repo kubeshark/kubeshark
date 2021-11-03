@@ -3,6 +3,7 @@ package apiserver
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/up9inc/mizu/shared/kubernetes"
 	"io/ioutil"
@@ -25,7 +26,7 @@ type Provider struct {
 const DefaultRetries = 20
 const DefaultTimeout = 5 * time.Second
 
-func GetProvider(url string, retries int, timeout time.Duration) *Provider {
+func NewProvider(url string, retries int, timeout time.Duration) *Provider {
 	return &Provider{
 		url: url,
 		retries: config.GetIntEnvConfig(config.ApiServerRetries, retries),
@@ -36,21 +37,10 @@ func GetProvider(url string, retries int, timeout time.Duration) *Provider {
 }
 
 func (provider *Provider) TestConnection() error {
-	healthUrl := fmt.Sprintf("%s/metadata/health", provider.url)
 	retriesLeft := provider.retries
 	for retriesLeft > 0 {
-		if response, err := provider.client.Get(healthUrl); err != nil {
-			logger.Log.Debugf("[ERROR] failed connecting to api server %v", err)
-		} else if response.StatusCode != 200 {
-			responseBody := ""
-			data, readErr := ioutil.ReadAll(response.Body)
-			if readErr == nil {
-				responseBody = string(data)
-			}
-
-			logger.Log.Debugf("can't connect to api server yet, response status code: %v, body: %v", response.StatusCode, responseBody)
-
-			response.Body.Close()
+		if _, err := provider.GetHealthStatus(); err != nil {
+			logger.Log.Debugf("[ERROR] api server not ready yet %v", err)
 		} else {
 			logger.Log.Debugf("connection test to api server passed successfully")
 			break
@@ -69,6 +59,8 @@ func (provider *Provider) GetHealthStatus() (*shared.HealthResponse, error) {
 	healthUrl := fmt.Sprintf("%s/metadata/health", provider.url)
 	if response, err := provider.client.Get(healthUrl); err != nil {
 		return nil, err
+	} else if response.StatusCode > 299 {
+		return nil, errors.New(fmt.Sprintf("status code: %d", response.StatusCode))
 	} else {
 		defer response.Body.Close()
 

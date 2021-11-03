@@ -50,7 +50,7 @@ func runMizuView() {
 
 	}
 
-	apiServerProvider := apiserver.GetProvider(url, apiserver.DefaultRetries, apiserver.DefaultTimeout)
+	apiServerProvider := apiserver.NewProvider(url, apiserver.DefaultRetries, apiserver.DefaultTimeout)
 	if err := apiServerProvider.TestConnection(); err != nil {
 		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Couldn't connect to API server, for more info check logs at %s", fsUtils.GetLogFilePath()))
 		return

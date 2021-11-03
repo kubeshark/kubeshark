@@ -213,31 +213,9 @@ func hostApi(socketHarOutputChannel chan<- *tapApi.OutputChannelItem) {
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
 
-		tapperSyncer, err := startMizuTapperSyncer(ctx)
-		if err != nil {
+		if _, err := startMizuTapperSyncer(ctx); err != nil {
 			logger.Log.Fatalf("error initializing tapper syncer: %+v", err)
 		}
-		// handle tapperSyncer events (pod changes and errors)
-		go func() {
-			for {
-				select {
-				case syncerErr := <-tapperSyncer.ErrorOut:
-					logger.Log.Fatalf("fatal tap syncer error: %v", syncerErr)
-				case <-tapperSyncer.TapPodChangesOut:
-					tapStatus := shared.TapStatus{Pods: kubernetes.GetPodInfosForPods(tapperSyncer.CurrentlyTappedPods)}
-
-					serializedTapStatus, err := json.Marshal(shared.CreateWebSocketStatusMessage(tapStatus))
-					if err != nil {
-						logger.Log.Fatalf("error serializing tap status: %v", err)
-					}
-					api.BroadcastToBrowserClients(serializedTapStatus)
-					providers.TapStatus.Pods = tapStatus.Pods
-				case <-ctx.Done():
-					logger.Log.Debug("mizuTapperSyncer event listener loop exiting due to context done")
-					return
-				}
-			}
-		}()
 	}
 
 	utils.StartServer(app)
@@ -402,7 +380,8 @@ func startMizuTapperSyncer(ctx context.Context) (*kubernetes.MizuTapperSyncer, e
 	if err != nil {
 		return nil, err
 	}
-	return kubernetes.CreateAndStartMizuTapperSyncer(ctx, provider, kubernetes.TapperSyncerConfig{
+
+	tapperSyncer, err := kubernetes.CreateAndStartMizuTapperSyncer(ctx, provider, kubernetes.TapperSyncerConfig{
 		TargetNamespaces:         config.Config.TargetNamespaces,
 		PodFilterRegex:           config.Config.TapTargetRegex.Regexp,
 		MizuResourcesNamespace:   config.Config.MizuResourcesNamespace,
@@ -414,4 +393,32 @@ func startMizuTapperSyncer(ctx context.Context) (*kubernetes.MizuTapperSyncer, e
 		MizuApiFilteringOptions:  config.Config.MizuApiFilteringOptions,
 		MizuServiceAccountExists: true, //assume service account exists since daemon mode will not function without it anyway
 	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	// handle tapperSyncer events (pod changes and errors)
+	go func() {
+		for {
+			select {
+			case syncerErr := <-tapperSyncer.ErrorOut:
+				logger.Log.Fatalf("fatal tap syncer error: %v", syncerErr)
+			case <-tapperSyncer.TapPodChangesOut:
+				tapStatus := shared.TapStatus{Pods: kubernetes.GetPodInfosForPods(tapperSyncer.CurrentlyTappedPods)}
+
+				serializedTapStatus, err := json.Marshal(shared.CreateWebSocketStatusMessage(tapStatus))
+				if err != nil {
+					logger.Log.Fatalf("error serializing tap status: %v", err)
+				}
+				api.BroadcastToBrowserClients(serializedTapStatus)
+				providers.TapStatus.Pods = tapStatus.Pods
+			case <-ctx.Done():
+				logger.Log.Debug("mizuTapperSyncer event listener loop exiting due to context done")
+				return
+			}
+		}
+	}()
+
+	return tapperSyncer, nil
 }
