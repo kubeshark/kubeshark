@@ -421,6 +421,17 @@ func finishMizuExecution(kubernetesProvider *kubernetes.Provider) {
 	cleanUpMizuResources(removalCtx, cancel, kubernetesProvider)
 }
 
+func dumpLogsIfNeeded(ctx context.Context, kubernetesProvider *kubernetes.Provider) {
+	if !config.Config.DumpLogs {
+		return
+	}
+	mizuDir := mizu.GetMizuFolderPath()
+	filePath := path.Join(mizuDir, fmt.Sprintf("mizu_logs_%s.zip", time.Now().Format("2006_01_02__15_04_05")))
+	if err := fsUtils.DumpLogs(ctx, kubernetesProvider, filePath); err != nil {
+		logger.Log.Errorf("Failed dump logs %v", err)
+	}
+}
+
 func cleanUpMizuResources(ctx context.Context, cancel context.CancelFunc, kubernetesProvider *kubernetes.Provider) {
 	logger.Log.Infof("\nRemoving mizu resources\n")
 
@@ -507,17 +518,6 @@ func cleanUpNonRestrictedMode(ctx context.Context, cancel context.CancelFunc, ku
 	}
 
 	return leftoverResources
-}
-
-func dumpLogsIfNeeded(ctx context.Context, kubernetesProvider *kubernetes.Provider) {
-	if !config.Config.DumpLogs {
-		return
-	}
-	mizuDir := mizu.GetMizuFolderPath()
-	filePath := path.Join(mizuDir, fmt.Sprintf("mizu_logs_%s.zip", time.Now().Format("2006_01_02__15_04_05")))
-	if err := fsUtils.DumpLogs(ctx, kubernetesProvider, filePath); err != nil {
-		logger.Log.Errorf("Failed dump logs %v", err)
-	}
 }
 
 func handleDeletionError(err error, resourceDesc string, leftoverResources *[]string) {

@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"github.com/up9inc/mizu/shared/kubernetes"
@@ -23,6 +24,7 @@ import (
 	"path/filepath"
 	"plugin"
 	"sort"
+	"syscall"
 	"time"
 
 	"github.com/gin-contrib/static"
@@ -331,7 +333,7 @@ func pipeTapChannelToSocket(connection *websocket.Conn, messageDataChannel <-cha
 		err = connection.WriteMessage(websocket.TextMessage, marshaledData)
 		if err != nil {
 			logger.Log.Errorf("error sending message through socket server %v, err: %s, (%v,%+v)", messageData, err, err, err)
-			if utils.IsSocketErrorBrokenPipe(err) {
+			if errors.Is(err, syscall.EPIPE) {
 				logger.Log.Warning("detected socket disconnection, reestablishing socket connection")
 				connection, err = dialSocketWithRetry(*apiServerAddress, socketConnectionRetries, socketConnectionRetryDelay)
 				if err != nil {
