@@ -6,11 +6,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"net/url"
+	"path/filepath"
+	"regexp"
+
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/logger"
 	"github.com/up9inc/mizu/shared/semver"
 	"github.com/up9inc/mizu/tap/api"
-	"io"
 	core "k8s.io/api/core/v1"
 	rbac "k8s.io/api/rbac/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
@@ -29,9 +33,6 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
 	watchtools "k8s.io/client-go/tools/watch"
-	"net/url"
-	"path/filepath"
-	"regexp"
 )
 
 type Provider struct {
@@ -610,12 +611,13 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	noScheduleToleration.WithOperator(core.TolerationOpExists)
 	noScheduleToleration.WithEffect(core.TaintEffectNoSchedule)
 
-	// Host procfs is needed inside the container because we need access to 
+	// Host procfs is needed inside the container because we need access to
 	//	the network namespaces of processes on the machine.
 	//
 	procfsVolume := applyconfcore.Volume()
 	procfsVolume.WithName(procfsVolumeName).WithHostPath(applyconfcore.HostPathVolumeSource().WithPath("/proc"))
-	agentContainer.WithVolumeMounts(applyconfcore.VolumeMount().WithName(procfsVolumeName).WithMountPath(procfsMountPath))
+	volumeMount := applyconfcore.VolumeMount().WithName(procfsVolumeName).WithMountPath(procfsMountPath).WithReadOnly(true)
+	agentContainer.WithVolumeMounts(volumeMount)
 
 	volumeName := ConfigMapName
 	configMapVolume := applyconfcore.VolumeApplyConfiguration{
