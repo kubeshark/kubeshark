@@ -23,7 +23,7 @@ func NewPacketSourceManager(procfs string, pids string, filename string, interfa
 		return nil, err
 	}
 
-	sources = append(sources, host_source)
+	sources = append(sources, hostSource)
 
 	if pids != "" {
 		netnsSources := newNetnsPacketSources(procfs, pids, interfaceName, behaviour)

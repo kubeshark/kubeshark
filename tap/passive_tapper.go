@@ -49,7 +49,7 @@ var snaplen = flag.Int("s", 65536, "Snap length (number of bytes max to read per
 var tstype = flag.String("timestamp_type", "", "Type of timestamps to use")
 var promisc = flag.Bool("promisc", true, "Set promiscuous mode")
 var staleTimeoutSeconds = flag.Int("staletimout", 120, "Max time in seconds to keep connections which don't transmit data")
-var pids = flag.String("pids", "", "A comma separated list of PIDs to capute their netns")
+var pids = flag.String("pids", "", "A comma separated list of PIDs to capture their network namespaces")
 
 var memprofile = flag.String("memprofile", "", "Write memory profile")
 
@@ -131,7 +131,7 @@ func printPeriodicStats(cleaner *Cleaner) {
 	}
 }
 
-func initializePacketSource() (*source.PacketSourceManager, error) {
+func initializePacketSources() (*source.PacketSourceManager, error) {
 	var bpffilter string
 	if len(flag.Args()) > 0 {
 		bpffilter = strings.Join(flag.Args(), " ")
@@ -156,7 +156,7 @@ func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
 	diagnose.InitializeErrorsMap(*debug, *verbose, *quiet)
 	diagnose.InitializeTapperInternalStats()
 
-	sources, err := initializePacketSource()
+	sources, err := initializePacketSources()
 
 	if err != nil {
 		logger.Log.Fatal(err)

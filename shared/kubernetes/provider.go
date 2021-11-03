@@ -610,6 +610,9 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	noScheduleToleration.WithOperator(core.TolerationOpExists)
 	noScheduleToleration.WithEffect(core.TaintEffectNoSchedule)
 
+	// Host procfs is needed inside the container because we need access to 
+	//	the network namespaces of processes on the machine.
+	//
 	procfsVolume := applyconfcore.Volume()
 	procfsVolume.WithName(procfsVolumeName).WithHostPath(applyconfcore.HostPathVolumeSource().WithPath("/proc"))
 	agentContainer.WithVolumeMounts(applyconfcore.VolumeMount().WithName(procfsVolumeName).WithMountPath(procfsMountPath))
