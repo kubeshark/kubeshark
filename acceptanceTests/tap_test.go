@@ -973,3 +973,197 @@ func TestTapDumpLogs(t *testing.T) {
 		return
 	}
 }
+
+func TestTapDaemon(t *testing.T) {
+	if testing.Short() {
+		t.Skip("ignored acceptance test")
+	}
+
+	tests := []int{50}
+
+	for _, entriesCount := range tests {
+		t.Run(fmt.Sprintf("%d", entriesCount), func(t *testing.T) {
+			cliPath, cliPathErr := getCliPath()
+			if cliPathErr != nil {
+				t.Errorf("failed to get cli path, err: %v", cliPathErr)
+				return
+			}
+
+			tapDaemonCmdArgs := getDefaultTapCommandArgsWithDaemonMode()
+
+			tapNamespace := getDefaultTapNamespace()
+			tapDaemonCmdArgs = append(tapDaemonCmdArgs, tapNamespace...)
+
+			tapCmd := exec.Command(cliPath, tapDaemonCmdArgs...)
+			t.Logf("running command: %v", tapCmd.String())
+
+			viewCmd := exec.Command(cliPath, getDefaultViewCommandArgs()...)
+			t.Logf("running command: %v", viewCmd.String())
+
+			t.Cleanup(func() {
+				if err := runMizuClean(); err != nil {
+					t.Logf("error running mizu clean: %v", err)
+				}
+				if err := cleanupCommand(viewCmd); err != nil {
+					t.Logf("failed to cleanup view command, err: %v", err)
+				}
+			})
+
+			if err := tapCmd.Run(); err != nil {
+				t.Errorf("error occured while running the tap command, err: %v", err)
+				return
+			}
+
+			if err := viewCmd.Start(); err != nil {
+				t.Errorf("error occured while running the view command, err: %v", err)
+				return
+			}
+
+			apiServerUrl := getApiServerUrl(defaultApiServerPort)
+
+			if err := waitTapPodsReady(apiServerUrl); err != nil {
+				t.Errorf("failed to start tap pods on time, err: %v", err)
+				return
+			}
+
+			proxyUrl := getProxyUrl(defaultNamespaceName, defaultServiceName)
+			for i := 0; i < entriesCount; i++ {
+				if _, requestErr := executeHttpGetRequest(fmt.Sprintf("%v/get", proxyUrl)); requestErr != nil {
+					t.Errorf("failed to send proxy request, err: %v", requestErr)
+					return
+				}
+			}
+
+			entriesCheckFunc := func() error {
+				timestamp := time.Now().UnixNano() / int64(time.Millisecond)
+
+				entriesUrl := fmt.Sprintf("%v/entries?limit=%v&operator=lt&timestamp=%v", apiServerUrl, entriesCount, timestamp)
+				requestResult, requestErr := executeHttpGetRequest(entriesUrl)
+				if requestErr != nil {
+					return fmt.Errorf("failed to get entries, err: %v", requestErr)
+				}
+
+				entries := requestResult.([]interface{})
+				if len(entries) == 0 {
+					return fmt.Errorf("unexpected entries result - Expected more than 0 entries")
+				}
+
+				entry :=  entries[0].(map[string]interface{})
+
+				entryUrl := fmt.Sprintf("%v/entries/%v", apiServerUrl, entry["id"])
+				requestResult, requestErr = executeHttpGetRequest(entryUrl)
+				if requestErr != nil {
+					return fmt.Errorf("failed to get entry, err: %v", requestErr)
+				}
+
+				if requestResult == nil {
+					return fmt.Errorf("unexpected nil entry result")
+				}
+
+				return nil
+			}
+			if err := retriesExecute(shortRetriesCount, entriesCheckFunc); err != nil {
+				t.Errorf("%v", err)
+				return
+			}
+		})
+	}
+}
+
+func TestTapDaemonMultipleNamespaces(t *testing.T) {
+	if testing.Short() {
+		t.Skip("ignored acceptance test")
+	}
+
+	expectedPods := []struct{
+		Name      string
+		Namespace string
+	}{
+		{Name: "httpbin", Namespace: "mizu-tests"},
+		{Name: "httpbin2", Namespace: "mizu-tests"},
+		{Name: "httpbin", Namespace: "mizu-tests2"},
+	}
+
+	cliPath, cliPathErr := getCliPath()
+	if cliPathErr != nil {
+		t.Errorf("failed to get cli path, err: %v", cliPathErr)
+		return
+	}
+
+	tapCmdArgs := getDefaultTapCommandArgsWithDaemonMode()
+	var namespacesCmd []string
+	for _, expectedPod := range expectedPods {
+		namespacesCmd = append(namespacesCmd, "-n", expectedPod.Namespace)
+	}
+	tapCmdArgs = append(tapCmdArgs, namespacesCmd...)
+
+	tapCmd := exec.Command(cliPath, tapCmdArgs...)
+	t.Logf("running command: %v", tapCmd.String())
+
+	viewCmd := exec.Command(cliPath, getDefaultViewCommandArgs()...)
+	t.Logf("running command: %v", viewCmd.String())
+
+	t.Cleanup(func() {
+		if err := runMizuClean(); err != nil {
+			t.Logf("error running mizu clean: %v", err)
+		}
+
+		if err := cleanupCommand(viewCmd); err != nil {
+			t.Logf("failed to cleanup view command, err: %v", err)
+		}
+	})
+
+	if err := tapCmd.Run(); err != nil {
+		t.Errorf("failed to start tap command, err: %v", err)
+		return
+	}
+
+	if err := viewCmd.Start(); err != nil {
+		t.Errorf("error occured while running the view command, err: %v", err)
+		return
+	}
+
+	apiServerUrl := getApiServerUrl(defaultApiServerPort)
+
+	if err := waitTapPodsReady(apiServerUrl); err != nil {
+		t.Errorf("failed to start tap pods on time, err: %v", err)
+		return
+	}
+
+	podsUrl := fmt.Sprintf("%v/status/tap", apiServerUrl)
+	requestResult, requestErr := executeHttpGetRequest(podsUrl)
+	if requestErr != nil {
+		t.Errorf("failed to get tap status, err: %v", requestErr)
+		return
+	}
+
+	pods, err := getPods(requestResult)
+	if err != nil {
+		t.Errorf("failed to get pods, err: %v", err)
+		return
+	}
+
+	if len(expectedPods) != len(pods) {
+		t.Errorf("unexpected result - expected pods length: %v, actual pods length: %v", len(expectedPods), len(pods))
+		return
+	}
+
+	for _, expectedPod := range expectedPods {
+		podFound := false
+
+		for _, pod := range pods {
+			podNamespace :=  pod["namespace"].(string)
+			podName := pod["name"].(string)
+
+			if expectedPod.Namespace == podNamespace && strings.Contains(podName, expectedPod.Name) {
+				podFound = true
+				break
+			}
+		}
+
+		if !podFound {
+			t.Errorf("unexpected result - expected pod not found, pod namespace: %v, pod name: %v", expectedPod.Namespace, expectedPod.Name)
+			return
+		}
+	}
+}

@@ -3,6 +3,7 @@ package acceptanceTests
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -23,6 +24,7 @@ const (
 	defaultNamespaceName = "mizu-tests"
 	defaultServiceName   = "httpbin"
 	defaultEntriesCount  = 50
+	cleanCommandTimeout  = 1 * time.Minute
 )
 
 func getCliPath() (string, error) {
@@ -64,8 +66,8 @@ func getApiServerUrl(port uint16) string {
 func getDefaultCommandArgs() []string {
 	setFlag := "--set"
 	telemetry := "telemetry=false"
-	agentImage := "agent-image=gcr.io/up9-docker-hub/mizu/ci:0.0.0"
-	imagePullPolicy := "image-pull-policy=Never"
+	agentImage := "agent-image=gcr.io/up9-docker-hub/mizu/feature/tra-3842_daemon_mode1:0.0.0"
+	imagePullPolicy := "image-pull-policy=Always"
 
 	return []string{setFlag, telemetry, setFlag, agentImage, setFlag, imagePullPolicy}
 }
@@ -75,6 +77,10 @@ func getDefaultTapCommandArgs() []string {
 	defaultCmdArgs := getDefaultCommandArgs()
 
 	return append([]string{tapCommand}, defaultCmdArgs...)
+}
+
+func getDefaultTapCommandArgsWithDaemonMode() []string {
+	return append(getDefaultTapCommandArgs(), "--daemon")
 }
 
 func getDefaultTapCommandArgsWithRegex(regex string) []string {
@@ -100,6 +106,14 @@ func getDefaultConfigCommandArgs() []string {
 	defaultCmdArgs := getDefaultCommandArgs()
 
 	return append([]string{configCommand}, defaultCmdArgs...)
+}
+
+func getDefaultCleanCommandArgs() []string {
+	return []string{"clean"}
+}
+
+func getDefaultViewCommandArgs() []string {
+	return []string{"view"}
 }
 
 func retriesExecute(retriesCount int, executeFunc func() error) error {
@@ -202,6 +216,36 @@ func executeHttpPostRequest(url string, body interface{}) (interface{}, error) {
 
 	response, requestErr := http.Post(url, "application/json", bytes.NewBuffer(requestBody))
 	return executeHttpRequest(response, requestErr)
+}
+
+func runMizuClean() error {
+	cliPath, err := getCliPath()
+	if err != nil {
+		return err
+	}
+
+	cleanCmdArgs := getDefaultCleanCommandArgs()
+
+	cleanCmd := exec.Command(cliPath, cleanCmdArgs...)
+
+	commandDone := make(chan error)
+	go func() {
+		if err := cleanCmd.Run(); err != nil {
+			commandDone <- err
+		}
+		commandDone <- nil
+	}()
+
+	select {
+	case err = <- commandDone:
+		if err != nil {
+			return err
+		}
+	case <- time.After(cleanCommandTimeout):
+		return errors.New("clean command timed out")
+	}
+
+	return nil
 }
 
 func cleanupCommand(cmd *exec.Cmd) error {
