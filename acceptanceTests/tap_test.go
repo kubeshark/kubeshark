@@ -998,7 +998,6 @@ func TestTapDaemon(t *testing.T) {
 			t.Logf("running command: %v", tapCmd.String())
 
 			viewCmd := exec.Command(cliPath, getDefaultViewCommandArgs()...)
-			t.Logf("running command: %v", viewCmd.String())
 
 			t.Cleanup(func() {
 				if err := runMizuClean(); err != nil {
@@ -1014,6 +1013,7 @@ func TestTapDaemon(t *testing.T) {
 				return
 			}
 
+			t.Logf("running command: %v", viewCmd.String())
 			if err := viewCmd.Start(); err != nil {
 				t.Errorf("error occured while running the view command, err: %v", err)
 				return
@@ -1101,7 +1101,6 @@ func TestTapDaemonMultipleNamespaces(t *testing.T) {
 	t.Logf("running command: %v", tapCmd.String())
 
 	viewCmd := exec.Command(cliPath, getDefaultViewCommandArgs()...)
-	t.Logf("running command: %v", viewCmd.String())
 
 	t.Cleanup(func() {
 		if err := runMizuClean(); err != nil {
@@ -1118,6 +1117,7 @@ func TestTapDaemonMultipleNamespaces(t *testing.T) {
 		return
 	}
 
+	t.Logf("running command: %v", viewCmd.String())
 	if err := viewCmd.Start(); err != nil {
 		t.Errorf("error occured while running the view command, err: %v", err)
 		return
