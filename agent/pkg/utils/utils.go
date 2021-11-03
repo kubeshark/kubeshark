@@ -2,9 +2,7 @@ package utils
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -72,14 +70,4 @@ func SetHostname(address, newHostname string) string {
 	replacedUrl.Host = newHostname
 	return replacedUrl.String()
 
-}
-
-func IsSocketErrorBrokenPipe(err error) bool {
-	var netOpError *net.OpError
-	if errors.As(err, &netOpError) {
-		if errors.Is(err, syscall.EPIPE) {
-			return true
-		}
-	}
-	return false
 }
