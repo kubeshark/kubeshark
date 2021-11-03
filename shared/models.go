@@ -38,6 +38,7 @@ type MizuAgentConfig struct {
 	TapperResources         Resources                   `json:"tapperResources"`
 	MizuResourcesNamespace  string                      `json:"mizuResourceNamespace"`
 	MizuApiFilteringOptions api.TrafficFilteringOptions `json:"mizuApiFilteringOptions"`
+	AgentDatabasePath       string                      `json:"agentDatabasePath"`
 }
 
 type WebSocketMessageMetadata struct {

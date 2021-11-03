@@ -396,6 +396,7 @@ func getMizuConfig(targetNamespaces []string, mizuApiFilteringOptions *api.Traff
 		TapperResources:         Config.Tap.TapperResources,
 		MizuResourcesNamespace:  Config.MizuResourcesNamespace,
 		MizuApiFilteringOptions: *mizuApiFilteringOptions,
+		AgentDatabasePath:       fmt.Sprintf("%s%s", shared.DataDirPath, "entries.db"),
 	}
 	return &config, nil
 }

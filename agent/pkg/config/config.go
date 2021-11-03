@@ -13,6 +13,7 @@ import (
 const (
 	defaultMaxDatabaseSizeBytes int64  = 200 * 1000 * 1000
 	defaultRegexTarget          string = ".*"
+	defaultDatabasePath         string = "./entries"
 )
 
 var Config *shared.MizuAgentConfig
@@ -52,7 +53,9 @@ func getDefaultConfig() (*shared.MizuAgentConfig, error) {
 		return nil, err
 	}
 	return &shared.MizuAgentConfig{
-		TapTargetRegex: *regex,
-		MaxDBSizeBytes: defaultMaxDatabaseSizeBytes,
+		TapTargetRegex:    *regex,
+		MaxDBSizeBytes:    defaultMaxDatabaseSizeBytes,
+		AgentDatabasePath: defaultDatabasePath,
+		DaemonMode:        false,
 	}, nil
 }
