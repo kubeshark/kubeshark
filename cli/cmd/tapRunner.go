@@ -138,7 +138,7 @@ func RunMizuTap() {
 			defer finishMizuExecution(kubernetesProvider)
 			cancel()
 		} else {
-			logger.Log.Infof(uiUtils.White, "Mizu is now running in daemon mode, run `mizu view` to connect to the mizu daemon instance")
+			logger.Log.Infof(uiUtils.Magenta, "Mizu is now running in daemon mode, run `mizu view` to connect to the mizu daemon instance")
 		}
 	} else {
 		defer finishMizuExecution(kubernetesProvider)
@@ -157,7 +157,7 @@ func RunMizuTap() {
 }
 
 func handleDaemonModePostCreation(cancel context.CancelFunc, kubernetesProvider *kubernetes.Provider) error {
-	apiProvider := apiserver.GetProvider(GetApiServerUrl(), 40, 1*time.Second)
+	apiProvider := apiserver.GetProvider(GetApiServerUrl(), 90, 1*time.Second)
 
 	if err := waitForDaemonModeToBeReady(cancel, kubernetesProvider, apiProvider); err != nil {
 		return err
@@ -181,7 +181,7 @@ func printDaemonModeTappedPods(apiProvider *apiserver.Provider) error {
 }
 
 func waitForDaemonModeToBeReady(cancel context.CancelFunc, kubernetesProvider *kubernetes.Provider, apiProvider *apiserver.Provider) error {
-	logger.Log.Info("Waiting for mizu to be ready...")
+	logger.Log.Info("Waiting for mizu to be ready... (may take a few minutes)")
 	go startProxyReportErrorIfAny(kubernetesProvider, cancel)
 
 	err := apiProvider.TestConnection()
