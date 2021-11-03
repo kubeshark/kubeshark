@@ -52,6 +52,7 @@ var extensionsMap map[string]*tapApi.Extension // global
 const (
 	socketConnectionRetries = 10
 	socketConnectionRetryDelay = time.Second * 2
+	socketHandshakeTimeout = time.Second * 2
 )
 
 func main() {
@@ -101,6 +102,9 @@ func main() {
 		tapOpts := &tap.TapOpts{HostMode: hostMode}
 		tap.StartPassiveTapper(tapOpts, filteredOutputItemsChannel, extensions, filteringOptions)
 		socketConnection, err := dialSocketWithRetry(*apiServerAddress, socketConnectionRetries, socketConnectionRetryDelay)
+		if err != nil {
+			panic(fmt.Sprintf("Error connecting to socket server at %s %v", *apiServerAddress, err))
+		}
 		if err != nil {
 			panic(fmt.Sprintf("Error connecting to socket server at %s %v", *apiServerAddress, err))
 		}
@@ -213,7 +217,7 @@ func hostApi(socketHarOutputChannel chan<- *tapApi.OutputChannelItem) {
 		if err != nil {
 			logger.Log.Fatalf("error initializing tapper syncer: %+v", err)
 		}
-
+		// handle tapperSyncer events (pod changes and errors)
 		go func() {
 			for {
 				select {
@@ -374,15 +378,18 @@ func determineLogLevel() (logLevel logging.Level) {
 
 func dialSocketWithRetry(socketAddress string, retryAmount int, retryDelay time.Duration) (*websocket.Conn, error) {
 	var lastErr error
+	dialer := &websocket.Dialer{ // we use our own dialer instead of the default due to the default's 45 sec handshake timeout, we occasionally encounter hanging socket handshakes when tapper tries to connect to api too soon
+		Proxy:            http.ProxyFromEnvironment,
+		HandshakeTimeout: socketHandshakeTimeout,
+	}
 	for i := 1; i < retryAmount; i++ {
-		socketConnection, _, err := websocket.DefaultDialer.Dial(socketAddress, nil)
+		socketConnection, _, err := dialer.Dial(socketAddress, nil)
 		if err != nil {
 			if i < retryAmount {
-				logger.Log.Debugf("socket connection to %s failed: %v, retrying %d out of %d in %d seconds...", socketAddress, err, i, retryAmount, retryDelay / time.Second)
+				logger.Log.Infof("socket connection to %s failed: %v, retrying %d out of %d in %d seconds...", socketAddress, err, i, retryAmount, retryDelay / time.Second)
 				time.Sleep(retryDelay)
 			}
 		} else {
-			logger.Log.Debugf("socket connection to %s successful", socketAddress)
 			return socketConnection, nil
 		}
 	}
