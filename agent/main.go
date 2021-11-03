@@ -12,6 +12,7 @@ import (
 	"mizuserver/pkg/api"
 	"mizuserver/pkg/config"
 	"mizuserver/pkg/controllers"
+	"mizuserver/pkg/database"
 	"mizuserver/pkg/models"
 	"mizuserver/pkg/providers"
 	"mizuserver/pkg/routes"
@@ -107,6 +108,7 @@ func main() {
 
 		go pipeTapChannelToSocket(socketConnection, filteredOutputItemsChannel)
 	} else if *apiServerMode {
+		database.InitDataBase(config.Config.AgentDatabasePath)
 		api.StartResolving(*namespace)
 
 		outputItemsChannel := make(chan *tapApi.OutputChannelItem)

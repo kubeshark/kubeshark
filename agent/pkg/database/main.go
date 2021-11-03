@@ -2,7 +2,6 @@ package database
 
 import (
 	"fmt"
-	"github.com/up9inc/mizu/shared"
 	"mizuserver/pkg/utils"
 	"time"
 
@@ -14,7 +13,6 @@ import (
 )
 
 const (
-	DBPath     = shared.DataDirPath + "entries.db"
 	OrderDesc  = "desc"
 	OrderAsc   = "asc"
 	LT         = "lt"
@@ -35,10 +33,7 @@ var (
 	}
 )
 
-func init() {
-	DB = initDataBase(DBPath)
-	go StartEnforcingDatabaseSize()
-}
+var DBPath string
 
 func GetEntriesTable() *gorm.DB {
 	return DB.Table("mizu_entries")
@@ -51,12 +46,14 @@ func CreateEntry(entry *tapApi.MizuEntry) {
 	GetEntriesTable().Create(entry)
 }
 
-func initDataBase(databasePath string) *gorm.DB {
-	temp, _ := gorm.Open(sqlite.Open(databasePath), &gorm.Config{
+func InitDataBase(databasePath string) *gorm.DB {
+	DBPath = databasePath
+	DB, _ = gorm.Open(sqlite.Open(databasePath), &gorm.Config{
 		Logger: &utils.TruncatingLogger{LogLevel: logger.Warn, SlowThreshold: 500 * time.Millisecond},
 	})
-	_ = temp.AutoMigrate(&tapApi.MizuEntry{}) // this will ensure table is created
-	return temp
+	_ = DB.AutoMigrate(&tapApi.MizuEntry{}) // this will ensure table is created
+	go StartEnforcingDatabaseSize()
+	return DB
 }
 
 func GetEntriesFromDb(timeFrom time.Time, timeTo time.Time, protocolName *string) []tapApi.MizuEntry {
