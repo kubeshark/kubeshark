@@ -254,7 +254,6 @@ func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, moun
 	pod := &core.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      opts.PodName,
-			Namespace: opts.Namespace,
 			Labels:    map[string]string{"app": opts.PodName},
 		},
 		Spec: core.PodSpec{
@@ -335,7 +334,6 @@ func (provider *Provider) CreateDeployment(ctx context.Context, namespace string
 	deployment := &v1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      deploymentName,
-			Namespace: namespace,
 		},
 		Spec: v1.DeploymentSpec{
 			Selector: &metav1.LabelSelector{
@@ -352,7 +350,6 @@ func (provider *Provider) CreateService(ctx context.Context, namespace string, s
 	service := core.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      serviceName,
-			Namespace: namespace,
 		},
 		Spec: core.ServiceSpec{
 			Ports:    []core.ServicePort{{TargetPort: intstr.FromInt(shared.DefaultApiServerPort), Port: 80}},
@@ -385,7 +382,6 @@ func (provider *Provider) CreateMizuRBAC(ctx context.Context, namespace string, 
 	serviceAccount := &core.ServiceAccount{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      serviceAccountName,
-			Namespace: namespace,
 			Labels:    map[string]string{"mizu-cli-version": version},
 		},
 	}
@@ -439,7 +435,6 @@ func (provider *Provider) CreateMizuRBACNamespaceRestricted(ctx context.Context,
 	serviceAccount := &core.ServiceAccount{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      serviceAccountName,
-			Namespace: namespace,
 			Labels:    map[string]string{"mizu-cli-version": version},
 		},
 	}
@@ -614,7 +609,6 @@ func (provider *Provider) CreateConfigMap(ctx context.Context, namespace string,
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      configMapName,
-			Namespace: namespace,
 		},
 		Data: configMapData,
 	}
@@ -846,7 +840,6 @@ func (provider *Provider) CreatePersistentVolumeClaim(ctx context.Context, names
 	sizeLimitQuantity := resource.NewQuantity(sizeLimitBytes, resource.DecimalSI)
 	volumeClaim := &core.PersistentVolumeClaim{
 		ObjectMeta: metav1.ObjectMeta{
-			Namespace: namespace,
 			Name: volumeClaimName,
 		},
 		Spec:       core.PersistentVolumeClaimSpec{
