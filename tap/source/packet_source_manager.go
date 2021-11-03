@@ -17,7 +17,7 @@ type PacketSourceManager struct {
 func NewPacketSourceManager(procfs string, pids string, filename string, interfaceName string,
 	behaviour TcpPacketSourceBehaviour) (*PacketSourceManager, error) {
 	sources := make([]*tcpPacketSource, 0)
-	host_source, err := newHostPacketSource(filename, interfaceName, behaviour)
+	hostSource, err := newHostPacketSource(filename, interfaceName, behaviour)
 
 	if err != nil {
 		return nil, err
