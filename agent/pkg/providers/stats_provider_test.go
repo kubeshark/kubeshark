@@ -2,15 +2,14 @@ package providers_test
 
 import (
 	"fmt"
+	"github.com/up9inc/mizu/shared"
 	"mizuserver/pkg/database"
 	"mizuserver/pkg/providers"
 	"testing"
 )
 
-const dbPath = "./entries.db"
-
 func init() {
-	database.InitDataBase(dbPath)
+	database.InitDataBase(shared.DefaultDbPath)
 }
 
 func TestNoEntryAddedCount(t *testing.T) {

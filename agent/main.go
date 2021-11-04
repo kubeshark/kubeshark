@@ -105,9 +105,6 @@ func main() {
 		if err != nil {
 			panic(fmt.Sprintf("Error connecting to socket server at %s %v", *apiServerAddress, err))
 		}
-		if err != nil {
-			panic(fmt.Sprintf("Error connecting to socket server at %s %v", *apiServerAddress, err))
-		}
 		logger.Log.Infof("Connected successfully to websocket %s", *apiServerAddress)
 
 		go pipeTapChannelToSocket(socketConnection, filteredOutputItemsChannel)
@@ -402,9 +399,17 @@ func startMizuTapperSyncer(ctx context.Context) (*kubernetes.MizuTapperSyncer, e
 	go func() {
 		for {
 			select {
-			case syncerErr := <-tapperSyncer.ErrorOut:
+			case syncerErr, ok := <-tapperSyncer.ErrorOut:
+				if !ok {
+					logger.Log.Debug("mizuTapperSyncer err channel closed, ending listener loop")
+					return
+				}
 				logger.Log.Fatalf("fatal tap syncer error: %v", syncerErr)
-			case <-tapperSyncer.TapPodChangesOut:
+			case _, ok := <-tapperSyncer.TapPodChangesOut:
+				if !ok {
+					logger.Log.Debug("mizuTapperSyncer pod changes channel closed, ending listener loop")
+					return
+				}
 				tapStatus := shared.TapStatus{Pods: kubernetes.GetPodInfosForPods(tapperSyncer.CurrentlyTappedPods)}
 
 				serializedTapStatus, err := json.Marshal(shared.CreateWebSocketStatusMessage(tapStatus))
