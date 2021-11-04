@@ -287,7 +287,9 @@ func createMizuResources(ctx context.Context, cancel context.CancelFunc, kuberne
 	var err error
 	state.mizuServiceAccountExists, err = createRBACIfNecessary(ctx, kubernetesProvider)
 	if err != nil {
-		return err
+		if !config.Config.Tap.DaemonMode {
+			logger.Log.Warningf(uiUtils.Warning, fmt.Sprintf("Failed to ensure the resources required for IP resolving. Mizu will not resolve target IPs to names. error: %v", errormessage.FormatError(err)))
+		}
 	}
 
 	var serviceAccountName string
