@@ -56,7 +56,7 @@ func (provider *Provider) TestConnection() error {
 }
 
 func (provider *Provider) GetHealthStatus() (*shared.HealthResponse, error) {
-	healthUrl := fmt.Sprintf("%s/metadata/health", provider.url)
+	healthUrl := fmt.Sprintf("%s/status/health", provider.url)
 	if response, err := provider.client.Get(healthUrl); err != nil {
 		return nil, err
 	} else if response.StatusCode > 299 {

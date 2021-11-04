@@ -133,8 +133,7 @@ func RunMizuTap() {
 		return
 	}
 	if config.Config.Tap.DaemonMode {
-		err := handleDaemonModePostCreation(cancel, kubernetesProvider)
-		if err != nil {
+		if err := handleDaemonModePostCreation(cancel, kubernetesProvider); err != nil {
 			defer finishMizuExecution(kubernetesProvider)
 			cancel()
 		} else {
@@ -185,8 +184,7 @@ func waitForDaemonModeToBeReady(cancel context.CancelFunc, kubernetesProvider *k
 	go startProxyReportErrorIfAny(kubernetesProvider, cancel)
 
 	// TODO: add a smarter test to see that tapping/pod watching is functioning properly
-	err := apiProvider.TestConnection()
-	if err != nil {
+	if err := apiProvider.TestConnection(); err != nil {
 		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Mizu was not ready in time, for more info check logs at %s", fsUtils.GetLogFilePath()))
 		return err
 	}
@@ -226,10 +224,18 @@ func startTapperSyncer(ctx context.Context, cancel context.CancelFunc, provider 
 	go func() {
 		for {
 			select {
-			case syncerErr := <-tapperSyncer.ErrorOut:
+			case syncerErr, ok := <-tapperSyncer.ErrorOut:
+				if !ok {
+					logger.Log.Debug("mizuTapperSyncer err channel closed, ending listener loop")
+					return
+				}
 				logger.Log.Errorf(uiUtils.Error, getErrorDisplayTextForK8sTapManagerError(syncerErr))
 				cancel()
-			case <-tapperSyncer.TapPodChangesOut:
+			case _, ok := <-tapperSyncer.TapPodChangesOut:
+				if !ok {
+					logger.Log.Debug("mizuTapperSyncer pod changes channel closed, ending listener loop")
+					return
+				}
 				if err := apiProvider.ReportTappedPods(tapperSyncer.CurrentlyTappedPods); err != nil {
 					logger.Log.Debugf("[Error] failed update tapped pods %v", err)
 				}
@@ -268,9 +274,8 @@ func readValidationRules(file string) (string, error) {
 }
 
 func createMizuResources(ctx context.Context, cancel context.CancelFunc, kubernetesProvider *kubernetes.Provider, serializedValidationRules string, serializedContract string, serializedMizuConfig string) error {
-	var err error
 	if !config.Config.IsNsRestrictedMode() {
-		if err = createMizuNamespace(ctx, kubernetesProvider); err != nil {
+		if err := createMizuNamespace(ctx, kubernetesProvider); err != nil {
 			return err
 		}
 	}
@@ -279,6 +284,7 @@ func createMizuResources(ctx context.Context, cancel context.CancelFunc, kuberne
 		logger.Log.Warningf(uiUtils.Warning, fmt.Sprintf("Failed to create resources required for policy validation. Mizu will not validate policy rules. error: %v\n", errormessage.FormatError(err)))
 	}
 
+	var err error
 	state.mizuServiceAccountExists, err = createRBACIfNecessary(ctx, kubernetesProvider)
 	if err != nil {
 		return err
@@ -304,7 +310,7 @@ func createMizuResources(ctx context.Context, cancel context.CancelFunc, kuberne
 	}
 
 	if config.Config.Tap.DaemonMode {
-		if state.mizuServiceAccountExists == false {
+		if !state.mizuServiceAccountExists {
 			defer cleanUpMizuResources(ctx, cancel, kubernetesProvider)
 			logger.Log.Fatalf(uiUtils.Red, fmt.Sprintf("Failed to ensure the resources required for mizu to run in daemon mode. cannot proceed. error: %v", errormessage.FormatError(err)))
 		}
@@ -341,8 +347,7 @@ func createMizuApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.
 	if err != nil {
 		return err
 	}
-	_, err = kubernetesProvider.CreatePod(ctx, config.Config.MizuResourcesNamespace, pod)
-	if err != nil {
+	if _, err = kubernetesProvider.CreatePod(ctx, config.Config.MizuResourcesNamespace, pod); err != nil {
 		return err
 	}
 	logger.Log.Debugf("Successfully created API server pod: %s", kubernetes.ApiServerPodName)
@@ -356,8 +361,7 @@ func createMizuApiServerDeployment(ctx context.Context, kubernetesProvider *kube
 		return err
 	}
 	if isDefaultStorageClassAvailable {
-		_, err = kubernetesProvider.CreatePersistentVolumeClaim(ctx, config.Config.MizuResourcesNamespace, kubernetes.PersistentVolumeClaimName, config.Config.Tap.MaxEntriesDBSizeBytes()+mizu.DaemonModePersistentVolumeSizeBufferBytes)
-		if err != nil {
+		if _, err = kubernetesProvider.CreatePersistentVolumeClaim(ctx, config.Config.MizuResourcesNamespace, kubernetes.PersistentVolumeClaimName, config.Config.Tap.MaxEntriesDBSizeBytes()+mizu.DaemonModePersistentVolumeSizeBufferBytes); err != nil {
 			logger.Log.Warningf(uiUtils.Yellow, "An error has occured while creating a persistent volume claim for mizu, this will mean that mizu's data will be lost on pod restart")
 			logger.Log.Debugf("error creating persistent volume claim: %v", err)
 		} else {
@@ -372,8 +376,7 @@ func createMizuApiServerDeployment(ctx context.Context, kubernetesProvider *kube
 		return err
 	}
 
-	_, err = kubernetesProvider.CreateDeployment(ctx, config.Config.MizuResourcesNamespace, opts.PodName, pod)
-	if err != nil {
+	if _, err = kubernetesProvider.CreateDeployment(ctx, config.Config.MizuResourcesNamespace, opts.PodName, pod); err != nil {
 		return err
 	}
 	logger.Log.Debugf("Successfully created API server deployment: %s", kubernetes.ApiServerPodName)

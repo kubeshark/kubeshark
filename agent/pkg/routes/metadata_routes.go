@@ -10,5 +10,4 @@ func MetadataRoutes(app *gin.Engine) {
 	routeGroup := app.Group("/metadata")
 
 	routeGroup.GET("/version", controllers.GetVersion)
-	routeGroup.GET("/health", controllers.HealthCheck)
 }
