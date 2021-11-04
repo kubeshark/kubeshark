@@ -35,13 +35,13 @@ func ReportRun(cmd string, args interface{}) {
 	logger.Log.Debugf("successfully reported telemetry for cmd %v", cmd)
 }
 
-func ReportAPICalls() {
+func ReportAPICalls(apiProvider *apiserver.Provider) {
 	if !shouldRunTelemetry() {
 		logger.Log.Debugf("not reporting telemetry")
 		return
 	}
 
-	generalStats, err := apiserver.Provider.GetGeneralStats()
+	generalStats, err := apiProvider.GetGeneralStats()
 	if err != nil {
 		logger.Log.Debugf("[ERROR] failed get general stats from api server %v", err)
 		return

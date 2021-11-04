@@ -24,6 +24,7 @@ const (
 	defaultNamespaceName = "mizu-tests"
 	defaultServiceName   = "httpbin"
 	defaultEntriesCount  = 50
+	waitAfterTapPodsReady = 3 * time.Second
 	cleanCommandTimeout  = 1 * time.Minute
 )
 
@@ -155,7 +156,7 @@ func waitTapPodsReady(apiServerUrl string) error {
 		if tappersCount == 0 {
 			return fmt.Errorf("no tappers running")
 		}
-
+		time.Sleep(waitAfterTapPodsReady)
 		return nil
 	}
 
