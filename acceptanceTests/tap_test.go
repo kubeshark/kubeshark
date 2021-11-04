@@ -974,7 +974,7 @@ func TestTapDumpLogs(t *testing.T) {
 	}
 }
 
-func TestTapDaemon(t *testing.T) {
+func TestDaemonSeeTraffic(t *testing.T) {
 	if testing.Short() {
 		t.Skip("ignored acceptance test")
 	}
@@ -1013,16 +1013,16 @@ func TestTapDaemon(t *testing.T) {
 				return
 			}
 
-			t.Logf("running command: %v", viewCmd.String())
-			if err := viewCmd.Start(); err != nil {
-				t.Errorf("error occured while running the view command, err: %v", err)
-				return
-			}
-
 			apiServerUrl := getApiServerUrl(defaultApiServerPort)
 
 			if err := waitTapPodsReady(apiServerUrl); err != nil {
 				t.Errorf("failed to start tap pods on time, err: %v", err)
+				return
+			}
+
+			t.Logf("running command: %v", viewCmd.String())
+			if err := viewCmd.Start(); err != nil {
+				t.Errorf("error occured while running the view command, err: %v", err)
 				return
 			}
 
@@ -1117,16 +1117,16 @@ func TestTapDaemonMultipleNamespaces(t *testing.T) {
 		return
 	}
 
-	t.Logf("running command: %v", viewCmd.String())
-	if err := viewCmd.Start(); err != nil {
-		t.Errorf("error occured while running the view command, err: %v", err)
-		return
-	}
-
 	apiServerUrl := getApiServerUrl(defaultApiServerPort)
 
 	if err := waitTapPodsReady(apiServerUrl); err != nil {
 		t.Errorf("failed to start tap pods on time, err: %v", err)
+		return
+	}
+
+	t.Logf("running command: %v", viewCmd.String())
+	if err := viewCmd.Start(); err != nil {
+		t.Errorf("error occured while running the view command, err: %v", err)
 		return
 	}
 

@@ -67,8 +67,8 @@ func getApiServerUrl(port uint16) string {
 func getDefaultCommandArgs() []string {
 	setFlag := "--set"
 	telemetry := "telemetry=false"
-	agentImage := "agent-image=gcr.io/up9-docker-hub/mizu/ci:0.0.0"
-	imagePullPolicy := "image-pull-policy=Never"
+	agentImage := "agent-image=gcr.io/up9-docker-hub/mizu/feature/tra-3842_daemon_mode1:0.0.0"
+	imagePullPolicy := "image-pull-policy=Always"
 
 	return []string{setFlag, telemetry, setFlag, agentImage, setFlag, imagePullPolicy}
 }
