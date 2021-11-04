@@ -134,13 +134,13 @@ func RunMizuTap() {
 	}
 	if config.Config.Tap.DaemonMode {
 		if err := handleDaemonModePostCreation(cancel, kubernetesProvider); err != nil {
-			defer finishMizuExecution(kubernetesProvider)
+			defer finishMizuExecution(kubernetesProvider, apiProvider)
 			cancel()
 		} else {
 			logger.Log.Infof(uiUtils.Magenta, "Mizu is now running in daemon mode, run `mizu view` to connect to the mizu daemon instance")
 		}
 	} else {
-		defer finishMizuExecution(kubernetesProvider)
+		defer finishMizuExecution(kubernetesProvider, apiProvider)
 
 		if err = startTapperSyncer(ctx, cancel, kubernetesProvider, targetNamespaces, *mizuApiFilteringOptions); err != nil {
 			logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error starting mizu tapper syncer: %v", err))
@@ -417,7 +417,7 @@ func getSyncEntriesConfig() *shared.SyncEntriesConfig {
 	}
 }
 
-func finishMizuExecution(kubernetesProvider *kubernetes.Provider) {
+func finishMizuExecution(kubernetesProvider *kubernetes.Provider, apiProvider *apiserver.Provider) {
 	telemetry.ReportAPICalls(apiProvider)
 	removalCtx, cancel := context.WithTimeout(context.Background(), cleanupTimeout)
 	defer cancel()
