@@ -19,7 +19,6 @@ func ContainsInt(slice []int, containsValue int) bool {
 	return false
 }
 
-
 func Unique(slice []string) []string {
 	keys := make(map[string]bool)
 	var list []string

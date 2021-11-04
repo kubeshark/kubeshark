@@ -14,6 +14,15 @@ import (
 	"github.com/up9inc/mizu/shared/logger"
 )
 
+func HealthCheck(c *gin.Context) {
+	response := shared.HealthResponse{
+		TapStatus:    providers.TapStatus,
+		TappersCount: providers.TappersCount,
+	}
+	c.JSON(http.StatusOK, response)
+}
+
+
 func PostTappedPods(c *gin.Context) {
 	tapStatus := &shared.TapStatus{}
 	if err := c.Bind(tapStatus); err != nil {

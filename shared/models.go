@@ -27,8 +27,18 @@ type Resources struct {
 }
 
 type MizuAgentConfig struct {
-	TapTargetRegex api.SerializableRegexp `yaml:"tapTargetRegex"`
-	MaxDBSizeBytes int64                  `yaml:"maxDBSizeBytes"`
+	TapTargetRegex          api.SerializableRegexp      `json:"tapTargetRegex"`
+	MaxDBSizeBytes          int64                       `json:"maxDBSizeBytes"`
+	DaemonMode              bool                        `json:"daemonMode"`
+	TargetNamespaces        []string                    `json:"targetNamespaces"`
+	AgentImage              string                      `json:"agentImage"`
+	PullPolicy              string                      `json:"pullPolicy"`
+	DumpLogs                bool                        `json:"dumpLogs"`
+	IgnoredUserAgents       []string                    `json:"ignoredUserAgents"`
+	TapperResources         Resources                   `json:"tapperResources"`
+	MizuResourcesNamespace  string                      `json:"mizuResourceNamespace"`
+	MizuApiFilteringOptions api.TrafficFilteringOptions `json:"mizuApiFilteringOptions"`
+	AgentDatabasePath       string                      `json:"agentDatabasePath"`
 }
 
 type WebSocketMessageMetadata struct {
@@ -92,6 +102,11 @@ func CreateWebSocketMessageTypeAnalyzeStatus(analyzeStatus AnalyzeStatus) WebSoc
 		},
 		AnalyzeStatus: analyzeStatus,
 	}
+}
+
+type HealthResponse struct {
+	TapStatus    TapStatus `json:"tapStatus"`
+	TappersCount int       `json:"tappersCount"`
 }
 
 type VersionResponse struct {

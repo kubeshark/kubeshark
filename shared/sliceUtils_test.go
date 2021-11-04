@@ -93,8 +93,8 @@ func TestContainsNilSlice(t *testing.T) {
 
 func TestUniqueNoDuplicateValues(t *testing.T) {
 	tests := []struct {
-		Slice         []string
-		Expected      []string
+		Slice    []string
+		Expected []string
 	}{
 		{Slice: []string{"apple", "orange", "banana", "grapes"}, Expected: []string{"apple", "orange", "banana", "grapes"}},
 		{Slice: []string{"dog", "cat", "mouse"}, Expected: []string{"dog", "cat", "mouse"}},
@@ -112,8 +112,8 @@ func TestUniqueNoDuplicateValues(t *testing.T) {
 
 func TestUniqueDuplicateValues(t *testing.T) {
 	tests := []struct {
-		Slice         []string
-		Expected      []string
+		Slice    []string
+		Expected []string
 	}{
 		{Slice: []string{"apple", "apple", "orange", "orange", "banana", "banana", "grapes", "grapes"}, Expected: []string{"apple", "orange", "banana", "grapes"}},
 		{Slice: []string{"dog", "cat", "cat", "mouse"}, Expected: []string{"dog", "cat", "mouse"}},
