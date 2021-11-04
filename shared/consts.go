@@ -14,5 +14,4 @@ const (
 	GoGCEnvVar                       = "GOGC"
 	DefaultApiServerPort             = 8899
 	DebugModeEnvVar                  = "MIZU_DEBUG"
-	DefaultDbPath                    = "./entries.db"
 )
