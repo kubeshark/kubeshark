@@ -94,6 +94,6 @@ type ExtendedCreator struct {
 
 func RunValidationRulesState(harEntry har.Entry, service string) (tapApi.ApplicableRules, []rules.RulesMatched, bool) {
 	resultPolicyToSend, isEnabled := rules.MatchRequestPolicy(harEntry, service)
-	statusPolicyToSend, latency, numberOfRules := rules.PassedValidationRules(resultPolicyToSend)
-	return tapApi.ApplicableRules{Status: statusPolicyToSend, Latency: latency, NumberOfRules: numberOfRules}, resultPolicyToSend, isEnabled
+	statusPolicyToSend, latency, numberOfFailedRules, numberOfRules := rules.PassedValidationRules(resultPolicyToSend)
+	return tapApi.ApplicableRules{Status: statusPolicyToSend, Latency: latency, NumberOfRules: numberOfRules, NumberOfFailedRules: numberOfFailedRules}, resultPolicyToSend, isEnabled
 }

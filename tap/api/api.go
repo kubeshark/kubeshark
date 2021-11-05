@@ -175,9 +175,10 @@ type BaseEntryDetails struct {
 }
 
 type ApplicableRules struct {
-	Latency       int64 `json:"latency,omitempty"`
-	Status        bool  `json:"status,omitempty"`
-	NumberOfRules int   `json:"numberOfRules,omitempty"`
+	Latency             int64 `json:"latency,omitempty"`
+	Status              bool  `json:"status,omitempty"`
+	NumberOfRules       int   `json:"numberOfRules,omitempty"`
+	NumberOfFailedRules int   `json:"numberOfFailedRules,omitempty"`
 }
 
 type ContractStatus int

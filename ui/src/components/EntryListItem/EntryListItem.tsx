@@ -33,6 +33,7 @@ interface Rules {
     status: boolean;
     latency: number;
     numberOfRules: number;
+    numberOfFailedRules: number;
 }
 
 interface EntryProps {
@@ -45,6 +46,7 @@ interface EntryProps {
 export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, isSelected, style}) => {
     const classification = getClassification(entry.statusCode)
     const numberOfRules = entry.rules.numberOfRules
+    const numberOfFailedRules = entry.rules.numberOfFailedRules
     let ingoingIcon;
     let outgoingIcon;
     switch(classification) {
@@ -140,7 +142,7 @@ export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, isSel
             {
                 rule ?
                     <div className={`${styles.ruleNumberText} ${ruleSuccess ? styles.ruleNumberTextSuccess : styles.ruleNumberTextFailure} ${rule && contractEnabled ? styles.separatorRight : ""}`}>
-                        {`Rules (${numberOfRules})`}
+                        {`Rules (${numberOfFailedRules}/${numberOfRules})`}
                     </div>
                 : ""
             }
