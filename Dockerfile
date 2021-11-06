@@ -61,6 +61,7 @@ COPY --from=builder ["/app/agent-build/mizuagent", "."]
 COPY --from=builder ["/app/agent-build/basenine_linux_amd64", "/usr/local/bin/basenine"]
 COPY --from=builder ["/app/agent/build/extensions", "extensions"]
 COPY --from=site-build ["/app/ui-build/build", "site"]
+RUN mkdir /app/data/
 
 # gin-gonic runs in debug mode without this
 ENV GIN_MODE=release

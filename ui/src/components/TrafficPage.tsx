@@ -220,8 +220,8 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
     return (
         <div className="TrafficPage">
             <div className="TrafficPageHeader">
-                <img style={{cursor: "pointer", marginRight: 15, height: 30}} alt="pause"
-                    src={connection === ConnectionStatus.Connected ? pauseIcon : playIcon} onClick={toggleConnection}/>
+                {connection !== ConnectionStatus.Closed && <img style={{cursor: "pointer", marginRight: 15, height: 30}} alt="pause"
+                     src={connection === ConnectionStatus.Connected ? pauseIcon : playIcon} onClick={toggleConnection}/>}
                 <div className="connectionText">
                     {getConnectionTitle()}
                     <div className={"indicatorContainer " + getConnectionStatusClass(true)}>

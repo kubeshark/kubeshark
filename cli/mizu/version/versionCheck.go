@@ -18,8 +18,8 @@ import (
 	"github.com/up9inc/mizu/shared/semver"
 )
 
-func CheckVersionCompatibility() (bool, error) {
-	apiSemVer, err := apiserver.Provider.GetVersion()
+func CheckVersionCompatibility(apiServerProvider *apiserver.Provider) (bool, error) {
+	apiSemVer, err := apiServerProvider.GetVersion()
 	if err != nil {
 		return false, err
 	}

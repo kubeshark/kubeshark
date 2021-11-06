@@ -17,12 +17,13 @@ import (
 )
 
 const (
-	longRetriesCount     = 100
-	shortRetriesCount    = 10
-	defaultApiServerPort = shared.DefaultApiServerPort
-	defaultNamespaceName = "mizu-tests"
-	defaultServiceName   = "httpbin"
-	defaultEntriesCount  = 50
+	longRetriesCount      = 100
+	shortRetriesCount     = 10
+	defaultApiServerPort  = shared.DefaultApiServerPort
+	defaultNamespaceName  = "mizu-tests"
+	defaultServiceName    = "httpbin"
+	defaultEntriesCount   = 50
+	waitAfterTapPodsReady = 3 * time.Second
 )
 
 func getCliPath() (string, error) {
@@ -141,7 +142,7 @@ func waitTapPodsReady(apiServerUrl string) error {
 		if tappersCount == 0 {
 			return fmt.Errorf("no tappers running")
 		}
-
+		time.Sleep(waitAfterTapPodsReady)
 		return nil
 	}
 

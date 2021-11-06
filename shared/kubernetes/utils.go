@@ -1,6 +1,7 @@
 package kubernetes
 
 import (
+	"github.com/up9inc/mizu/shared"
 	core "k8s.io/api/core/v1"
 	"regexp"
 )
@@ -54,4 +55,13 @@ func getMissingPods(pods1 []core.Pod, pods2 []core.Pod) []core.Pod {
 		}
 	}
 	return missingPods
+}
+
+
+func GetPodInfosForPods(pods []core.Pod) []shared.PodInfo {
+	podInfos := make([]shared.PodInfo, 0)
+	for _, pod := range pods {
+		podInfos = append(podInfos, shared.PodInfo{Name: pod.Name, Namespace: pod.Namespace})
+	}
+	return podInfos
 }
