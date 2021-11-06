@@ -3,13 +3,14 @@ package config
 import (
 	"errors"
 	"fmt"
-	"github.com/up9inc/mizu/tap/api"
 	"io/ioutil"
-	"k8s.io/apimachinery/pkg/util/json"
 	"os"
 	"reflect"
 	"strconv"
 	"strings"
+
+	"github.com/up9inc/mizu/tap/api"
+	"k8s.io/apimachinery/pkg/util/json"
 
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/logger"
@@ -396,7 +397,7 @@ func getMizuAgentConfig(targetNamespaces []string, mizuApiFilteringOptions *api.
 		TapperResources:         Config.Tap.TapperResources,
 		MizuResourcesNamespace:  Config.MizuResourcesNamespace,
 		MizuApiFilteringOptions: *mizuApiFilteringOptions,
-		AgentDatabasePath:       fmt.Sprintf("%s%s", shared.DataDirPath, "entries.db"),
+		AgentDatabasePath:       shared.DataDirPath,
 	}
 	return &config, nil
 }

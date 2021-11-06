@@ -149,7 +149,8 @@ func main() {
 }
 
 func startBasenineServer(host string, port string) {
-	cmd := exec.Command("basenine", "-addr", host, "-port", port)
+	cmd := exec.Command("basenine", "-addr", host, "-port", port, "-persistent")
+	cmd.Dir = config.Config.AgentDatabasePath
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err := cmd.Start()
@@ -166,6 +167,16 @@ func startBasenineServer(host string, port string) {
 	).Do([]string{fmt.Sprintf("%s:%s", host, port)}) {
 		panic("Basenine is not available")
 	}
+
+	// Make a channel to gracefully exit Basenine.
+	c := make(chan os.Signal)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+
+	// Handle the channel.
+	go func() {
+		<-c
+		cmd.Process.Signal(syscall.SIGTERM)
+	}()
 
 	// Limit the database size to default 200MB
 	err = basenine.Limit(host, port, config.Config.MaxDBSizeBytes)
