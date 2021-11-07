@@ -31,11 +31,13 @@ type ConfigStruct struct {
 	DumpLogs               bool                        `yaml:"dump-logs" default:"false"`
 	KubeConfigPathStr      string                      `yaml:"kube-config-path"`
 	ConfigFilePath         string                      `yaml:"config-path,omitempty" readonly:""`
+	MizuServiceType        string                      `yaml:"mizu-service-type" readonly:""`
 }
 
 func (config *ConfigStruct) SetDefaults() {
 	config.AgentImage = fmt.Sprintf("gcr.io/up9-docker-hub/mizu/%s:%s", mizu.Branch, mizu.SemVer)
 	config.ConfigFilePath = path.Join(mizu.GetMizuFolderPath(), "config.yaml")
+	config.MizuServiceType = string(v1.ServiceTypeClusterIP)
 }
 
 func (config *ConfigStruct) ImagePullPolicy() v1.PullPolicy {

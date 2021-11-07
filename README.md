@@ -112,6 +112,20 @@ To tap multiple pods using regex -
  ^C
 ```
 
+To run mizu with LoadBalancer kubernetes service 
+```bash
+ $ mizu tap --set mizu-service-type=LoadBalancer
+ +carts-66c77f5fbb-fq65r
+ +catalogue-5f4cb7cf5-7zrmn
+ +front-end-649fc5fd6-kqbtn
+ Web interface is now available at http://localhost:8899
+ 
+ $ kubectl get services -n mizu
+ NAME              TYPE           CLUSTER-IP      EXTERNAL-IP      PORT(S)        AGE
+ mizu-api-server   LoadBalancer   10.0.0.0    {EXTERNAL_HOSTNAME}   80:31799/TCP   61s
+```
+mizu will also be availble at the address that will in place of `EXTERNAL_HOSTNAME`
+
 ## Configuration
 
 Mizu can work with config file which should be stored in ${HOME}/.mizu/config.yaml (macOS: ~/.mizu/config.yaml) <br />
