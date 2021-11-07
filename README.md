@@ -184,7 +184,7 @@ and when changed it will support accessing by IP
 
 Mizu can be ran detached from the cli using the daemon flag: `mizu tap --daemon`. This type of mizu instance will run indefinitely in the cluster.
 
-In order to access a deamon mizu you will have to run `mizu view` after running the `tap --daemon` command.
+In order to access a daemon mizu you will have to run `mizu view` after running the `tap --daemon` command.
 
 To stop the detached mizu instance and clean all cluster side resources, run `mizu clean`
 
