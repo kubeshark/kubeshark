@@ -12,6 +12,7 @@ import (
 	"path"
 	"strings"
 	"syscall"
+	"testing"
 	"time"
 
 	"github.com/up9inc/mizu/shared"
@@ -27,6 +28,23 @@ const (
 	waitAfterTapPodsReady = 3 * time.Second
 	cleanCommandTimeout  = 1 * time.Minute
 )
+
+type PodDescriptor struct {
+	Name      string
+	Namespace string
+}
+
+func isPodDescriptorInPodArray(pods []map[string]interface{}, podDescriptor PodDescriptor) bool {
+	for _, pod := range pods {
+		podNamespace :=  pod["namespace"].(string)
+		podName := pod["name"].(string)
+
+		if podDescriptor.Namespace == podNamespace && strings.Contains(podName, podDescriptor.Name) {
+			return true
+		}
+	}
+	return false
+}
 
 func getCliPath() (string, error) {
 	dir, filePathErr := os.Getwd()
@@ -281,6 +299,16 @@ func getLogsPath() (string, error) {
 
 	logsPath := path.Join(dir, "mizu_logs.zip")
 	return logsPath, nil
+}
+
+func daemonCleanup(t *testing.T, viewCmd *exec.Cmd) {
+	if err := runMizuClean(); err != nil {
+		t.Logf("error running mizu clean: %v", err)
+	}
+
+	if err := cleanupCommand(viewCmd); err != nil {
+		t.Logf("failed to cleanup view command, err: %v", err)
+	}
 }
 
 func Contains(slice []string, containsValue string) bool {

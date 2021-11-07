@@ -150,10 +150,7 @@ func TestTapAllNamespaces(t *testing.T) {
 		t.Skip("ignored acceptance test")
 	}
 
-	expectedPods := []struct{
-		Name      string
-		Namespace string
-	}{
+	expectedPods := []PodDescriptor{
 		{Name: "httpbin", Namespace: "mizu-tests"},
 		{Name: "httpbin", Namespace: "mizu-tests2"},
 	}
@@ -202,19 +199,7 @@ func TestTapAllNamespaces(t *testing.T) {
 	}
 
 	for _, expectedPod := range expectedPods {
-		podFound := false
-
-		for _, pod := range pods {
-			podNamespace :=  pod["namespace"].(string)
-			podName := pod["name"].(string)
-
-			if expectedPod.Namespace == podNamespace && strings.Contains(podName, expectedPod.Name) {
-				podFound = true
-				break
-			}
-		}
-
-		if !podFound {
+		if !isPodDescriptorInPodArray(pods, expectedPod) {
 			t.Errorf("unexpected result - expected pod not found, pod namespace: %v, pod name: %v", expectedPod.Namespace, expectedPod.Name)
 			return
 		}
@@ -226,10 +211,7 @@ func TestTapMultipleNamespaces(t *testing.T) {
 		t.Skip("ignored acceptance test")
 	}
 
-	expectedPods := []struct{
-		Name      string
-		Namespace string
-	}{
+	expectedPods := []PodDescriptor{
 		{Name: "httpbin", Namespace: "mizu-tests"},
 		{Name: "httpbin2", Namespace: "mizu-tests"},
 		{Name: "httpbin", Namespace: "mizu-tests2"},
@@ -288,19 +270,7 @@ func TestTapMultipleNamespaces(t *testing.T) {
 	}
 
 	for _, expectedPod := range expectedPods {
-		podFound := false
-
-		for _, pod := range pods {
-			podNamespace :=  pod["namespace"].(string)
-			podName := pod["name"].(string)
-
-			if expectedPod.Namespace == podNamespace && strings.Contains(podName, expectedPod.Name) {
-				podFound = true
-				break
-			}
-		}
-
-		if !podFound {
+		if !isPodDescriptorInPodArray(pods, expectedPod) {
 			t.Errorf("unexpected result - expected pod not found, pod namespace: %v, pod name: %v", expectedPod.Namespace, expectedPod.Name)
 			return
 		}
@@ -313,10 +283,7 @@ func TestTapRegex(t *testing.T) {
 	}
 
 	regexPodName := "httpbin2"
-	expectedPods := []struct{
-		Name      string
-		Namespace string
-	}{
+	expectedPods := []PodDescriptor{
 		{Name: regexPodName, Namespace: "mizu-tests"},
 	}
 
@@ -371,19 +338,7 @@ func TestTapRegex(t *testing.T) {
 	}
 
 	for _, expectedPod := range expectedPods {
-		podFound := false
-
-		for _, pod := range pods {
-			podNamespace :=  pod["namespace"].(string)
-			podName := pod["name"].(string)
-
-			if expectedPod.Namespace == podNamespace && strings.Contains(podName, expectedPod.Name) {
-				podFound = true
-				break
-			}
-		}
-
-		if !podFound {
+		if !isPodDescriptorInPodArray(pods, expectedPod) {
 			t.Errorf("unexpected result - expected pod not found, pod namespace: %v, pod name: %v", expectedPod.Namespace, expectedPod.Name)
 			return
 		}
@@ -995,34 +950,28 @@ func TestDaemonSeeTraffic(t *testing.T) {
 			tapDaemonCmdArgs = append(tapDaemonCmdArgs, tapNamespace...)
 
 			tapCmd := exec.Command(cliPath, tapDaemonCmdArgs...)
-			t.Logf("running command: %v", tapCmd.String())
 
 			viewCmd := exec.Command(cliPath, getDefaultViewCommandArgs()...)
 
 			t.Cleanup(func() {
-				if err := runMizuClean(); err != nil {
-					t.Logf("error running mizu clean: %v", err)
-				}
-				if err := cleanupCommand(viewCmd); err != nil {
-					t.Logf("failed to cleanup view command, err: %v", err)
-				}
+				daemonCleanup(t, viewCmd)
 			})
 
+			t.Logf("running command: %v", tapCmd.String())
 			if err := tapCmd.Run(); err != nil {
 				t.Errorf("error occured while running the tap command, err: %v", err)
-				return
-			}
-
-			apiServerUrl := getApiServerUrl(defaultApiServerPort)
-
-			if err := waitTapPodsReady(apiServerUrl); err != nil {
-				t.Errorf("failed to start tap pods on time, err: %v", err)
 				return
 			}
 
 			t.Logf("running command: %v", viewCmd.String())
 			if err := viewCmd.Start(); err != nil {
 				t.Errorf("error occured while running the view command, err: %v", err)
+				return
+			}
+
+			apiServerUrl := getApiServerUrl(defaultApiServerPort)
+			if err := waitTapPodsReady(apiServerUrl); err != nil {
+				t.Errorf("failed to start tap pods on time, err: %v", err)
 				return
 			}
 
@@ -1070,15 +1019,12 @@ func TestDaemonSeeTraffic(t *testing.T) {
 	}
 }
 
-func TestTapDaemonMultipleNamespaces(t *testing.T) {
+func TestDaemonMultipleNamespacesSeePods(t *testing.T) {
 	if testing.Short() {
 		t.Skip("ignored acceptance test")
 	}
 
-	expectedPods := []struct{
-		Name      string
-		Namespace string
-	}{
+	expectedPods := []PodDescriptor {
 		{Name: "httpbin", Namespace: "mizu-tests"},
 		{Name: "httpbin2", Namespace: "mizu-tests"},
 		{Name: "httpbin", Namespace: "mizu-tests2"},
@@ -1098,35 +1044,28 @@ func TestTapDaemonMultipleNamespaces(t *testing.T) {
 	tapCmdArgs = append(tapCmdArgs, namespacesCmd...)
 
 	tapCmd := exec.Command(cliPath, tapCmdArgs...)
-	t.Logf("running command: %v", tapCmd.String())
 
 	viewCmd := exec.Command(cliPath, getDefaultViewCommandArgs()...)
 
 	t.Cleanup(func() {
-		if err := runMizuClean(); err != nil {
-			t.Logf("error running mizu clean: %v", err)
-		}
-
-		if err := cleanupCommand(viewCmd); err != nil {
-			t.Logf("failed to cleanup view command, err: %v", err)
-		}
+		daemonCleanup(t, viewCmd)
 	})
 
+	t.Logf("running command: %v", tapCmd.String())
 	if err := tapCmd.Run(); err != nil {
 		t.Errorf("failed to start tap command, err: %v", err)
-		return
-	}
-
-	apiServerUrl := getApiServerUrl(defaultApiServerPort)
-
-	if err := waitTapPodsReady(apiServerUrl); err != nil {
-		t.Errorf("failed to start tap pods on time, err: %v", err)
 		return
 	}
 
 	t.Logf("running command: %v", viewCmd.String())
 	if err := viewCmd.Start(); err != nil {
 		t.Errorf("error occured while running the view command, err: %v", err)
+		return
+	}
+
+	apiServerUrl := getApiServerUrl(defaultApiServerPort)
+	if err := waitTapPodsReady(apiServerUrl); err != nil {
+		t.Errorf("failed to start tap pods on time, err: %v", err)
 		return
 	}
 
@@ -1149,19 +1088,92 @@ func TestTapDaemonMultipleNamespaces(t *testing.T) {
 	}
 
 	for _, expectedPod := range expectedPods {
-		podFound := false
-
-		for _, pod := range pods {
-			podNamespace :=  pod["namespace"].(string)
-			podName := pod["name"].(string)
-
-			if expectedPod.Namespace == podNamespace && strings.Contains(podName, expectedPod.Name) {
-				podFound = true
-				break
-			}
+		if !isPodDescriptorInPodArray(pods, expectedPod) {
+			t.Errorf("unexpected result - expected pod not found, pod namespace: %v, pod name: %v", expectedPod.Namespace, expectedPod.Name)
+			return
 		}
+	}
+}
 
-		if !podFound {
+func TestDaemonSingleNamespaceSeePods(t *testing.T) {
+	if testing.Short() {
+		t.Skip("ignored acceptance test")
+	}
+
+	expectedPods := []PodDescriptor {
+		{Name: "httpbin", Namespace: "mizu-tests"},
+		{Name: "httpbin2", Namespace: "mizu-tests"},
+	}
+	unexpectedPods := []PodDescriptor {
+		{Name: "httpbin", Namespace: "mizu-tests2"},
+	}
+
+	cliPath, cliPathErr := getCliPath()
+	if cliPathErr != nil {
+		t.Errorf("failed to get cli path, err: %v", cliPathErr)
+		return
+	}
+
+	tapCmdArgs := getDefaultTapCommandArgsWithDaemonMode()
+	var namespacesCmd []string
+	for _, expectedPod := range expectedPods {
+		namespacesCmd = append(namespacesCmd, "-n", expectedPod.Namespace)
+	}
+	tapCmdArgs = append(tapCmdArgs, namespacesCmd...)
+
+	tapCmd := exec.Command(cliPath, tapCmdArgs...)
+
+	viewCmd := exec.Command(cliPath, getDefaultViewCommandArgs()...)
+
+	t.Cleanup(func() {
+		daemonCleanup(t, viewCmd)
+	})
+
+	t.Logf("running command: %v", tapCmd.String())
+	if err := tapCmd.Run(); err != nil {
+		t.Errorf("failed to start tap command, err: %v", err)
+		return
+	}
+
+	t.Logf("running command: %v", viewCmd.String())
+	if err := viewCmd.Start(); err != nil {
+		t.Errorf("error occured while running the view command, err: %v", err)
+		return
+	}
+
+	apiServerUrl := getApiServerUrl(defaultApiServerPort)
+	if err := waitTapPodsReady(apiServerUrl); err != nil {
+		t.Errorf("failed to start tap pods on time, err: %v", err)
+		return
+	}
+
+	podsUrl := fmt.Sprintf("%v/status/tap", apiServerUrl)
+	requestResult, requestErr := executeHttpGetRequest(podsUrl)
+	if requestErr != nil {
+		t.Errorf("failed to get tap status, err: %v", requestErr)
+		return
+	}
+
+	pods, err := getPods(requestResult)
+	if err != nil {
+		t.Errorf("failed to get pods, err: %v", err)
+		return
+	}
+
+	for _, unexpectedPod := range unexpectedPods {
+		if isPodDescriptorInPodArray(pods, unexpectedPod) {
+			t.Errorf("unexpected result - unexpected pod found, pod namespace: %v, pod name: %v", unexpectedPod.Namespace, unexpectedPod.Name)
+			return
+		}
+	}
+
+	if len(expectedPods) != len(pods) {
+		t.Errorf("unexpected result - expected pods length: %v, actual pods length: %v", len(expectedPods), len(pods))
+		return
+	}
+
+	for _, expectedPod := range expectedPods {
+		if !isPodDescriptorInPodArray(pods, expectedPod) {
 			t.Errorf("unexpected result - expected pod not found, pod namespace: %v, pod name: %v", expectedPod.Namespace, expectedPod.Name)
 			return
 		}
