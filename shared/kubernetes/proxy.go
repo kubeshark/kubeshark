@@ -49,7 +49,7 @@ func getMizuApiServerProxiedHostAndPath(mizuNamespace string, mizuServiceName st
 }
 
 func GetMizuApiServerProxiedHostAndPath(mizuPort uint16) string {
-	return fmt.Sprintf("localhost:%d/", mizuPort)
+	return fmt.Sprintf("localhost:%d", mizuPort)
 }
 
 func getRerouteHttpHandlerMizuAPI(proxyHandler http.Handler, mizuNamespace string, mizuServiceName string) http.Handler {
