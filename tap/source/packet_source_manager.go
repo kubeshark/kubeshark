@@ -100,6 +100,14 @@ func newNetnsPacketSource(pid int, nsh netns.NsHandle, interfaceName string,
 		//
 		runtime.LockOSThread()
 		defer runtime.UnlockOSThread()
+		
+		oldnetns, err := netns.Get()
+		
+		if err != nil {
+			logger.Log.Errorf("Unable to get netns of current thread %v", err)
+			errors <- err
+			return
+		}
 
 		if err := netns.Set(nsh); err != nil {
 			logger.Log.Errorf("Unable to set netns of pid %v - %v", pid, err)
@@ -112,6 +120,12 @@ func newNetnsPacketSource(pid int, nsh netns.NsHandle, interfaceName string,
 
 		if err != nil {
 			logger.Log.Errorf("Error listening to PID %v - %v", pid, err)
+			errors <- err
+			return
+		}
+
+		if err := netns.Set(oldnetns); err != nil {
+			logger.Log.Errorf("Unable to set back netns of current thread %v", err)
 			errors <- err
 			return
 		}
