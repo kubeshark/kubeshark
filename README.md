@@ -191,7 +191,6 @@ In order to access a daemon mizu you will have to run `mizu view` after running 
 To stop the detached mizu instance and clean all cluster side resources, run `mizu clean`
 
 
-
 ## How to Run local UI
 
 - run from mizu/agent `go run main.go --hars-read --hars-dir <folder>`
