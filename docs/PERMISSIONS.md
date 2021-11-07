@@ -57,7 +57,7 @@ Mizu needs following permissions on your Kubernetes cluster to run properly
   - get
 ```
 
-## Permissions required for service / pod name resolving (opt)
+## Permissions required for service / pod name resolving
 
 Optionally (mandatory with `--daemon` flag), for proper resolving of IP addresses to Kubernetes service name, Mizu needs below permissions:
 
