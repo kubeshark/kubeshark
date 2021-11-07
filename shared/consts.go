@@ -7,6 +7,7 @@ const (
 	NodeNameEnvVar                   = "NODE_NAME"
 	TappedAddressesPerNodeDictEnvVar = "TAPPED_ADDRESSES_PER_HOST"
 	ConfigDirPath                    = "/app/config/"
+	DataDirPath                      = "/app/data/"
 	ValidationRulesFileName          = "validation-rules.yaml"
 	ContractFileName                 = "contract-oas.yaml"
 	ConfigFileName                   = "mizu-config.json"

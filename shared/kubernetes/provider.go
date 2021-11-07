@@ -6,15 +6,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
-	"net/url"
-	"path/filepath"
-	"regexp"
-
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/logger"
 	"github.com/up9inc/mizu/shared/semver"
 	"github.com/up9inc/mizu/tap/api"
+	"io"
+	v1 "k8s.io/api/apps/v1"
 	core "k8s.io/api/core/v1"
 	rbac "k8s.io/api/rbac/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
@@ -29,10 +26,14 @@ import (
 	applyconfmeta "k8s.io/client-go/applyconfigurations/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
+	"k8s.io/client-go/rest"
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
 	watchtools "k8s.io/client-go/tools/watch"
+	"net/url"
+	"path/filepath"
+	"regexp"
 )
 
 type Provider struct {
@@ -86,9 +87,29 @@ func NewProvider(kubeConfigPath string) (*Provider, error) {
 	}, nil
 }
 
-func (provider *Provider) CurrentNamespace() string {
-	ns, _, _ := provider.kubernetesConfig.Namespace()
-	return ns
+func NewProviderInCluster() (*Provider, error) {
+	restClientConfig, err := rest.InClusterConfig()
+	if err != nil {
+		return nil, err
+	}
+	clientSet, err := getClientSet(restClientConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Provider{
+		clientSet:        clientSet,
+		kubernetesConfig: nil, // not relevant in cluster
+		clientConfig:     *restClientConfig,
+	}, nil
+}
+
+func (provider *Provider) CurrentNamespace() (string, error) {
+	if provider.kubernetesConfig == nil {
+		return "", errors.New("kubernetesConfig is nil, mizu cli will not work with in-cluster kubernetes config, use a kubeconfig file when initializing the Provider")
+	}
+	ns, _, err := provider.kubernetesConfig.Namespace()
+	return ns, err
 }
 
 func (provider *Provider) WaitUtilNamespaceDeleted(ctx context.Context, name string) error {
@@ -161,7 +182,7 @@ type ApiServerOptions struct {
 	DumpLogs              bool
 }
 
-func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, opts *ApiServerOptions) (*core.Pod, error) {
+func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, mountVolumeClaim bool, volumeClaimName string) (*core.Pod, error) {
 	var marshaledSyncEntriesConfig []byte
 	if opts.SyncEntriesConfig != nil {
 		var err error
@@ -195,6 +216,36 @@ func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, opts *ApiS
 		command = append(command, "--namespace", opts.Namespace)
 	}
 
+	volumeMounts := []core.VolumeMount{
+		{
+			Name:      ConfigMapName,
+			MountPath: shared.ConfigDirPath,
+		},
+	}
+	volumes := []core.Volume{
+		{
+			Name: ConfigMapName,
+			VolumeSource: core.VolumeSource{
+				ConfigMap: configMapVolume,
+			},
+		},
+	}
+
+	if mountVolumeClaim {
+		volumes = append(volumes, core.Volume{
+			Name: volumeClaimName,
+			VolumeSource: core.VolumeSource{
+				PersistentVolumeClaim: &core.PersistentVolumeClaimVolumeSource{
+					ClaimName: volumeClaimName,
+				},
+			},
+		})
+		volumeMounts = append(volumeMounts, core.VolumeMount{
+			Name:             volumeClaimName,
+			MountPath:        shared.DataDirPath,
+		})
+	}
+
 	port := intstr.FromInt(shared.DefaultApiServerPort)
 
 	debugMode := ""
@@ -205,7 +256,6 @@ func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, opts *ApiS
 	pod := &core.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      opts.PodName,
-			Namespace: opts.Namespace,
 			Labels:    map[string]string{"app": opts.PodName},
 		},
 		Spec: core.PodSpec{
@@ -214,12 +264,7 @@ func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, opts *ApiS
 					Name:            opts.PodName,
 					Image:           opts.PodImage,
 					ImagePullPolicy: opts.ImagePullPolicy,
-					VolumeMounts: []core.VolumeMount{
-						{
-							Name:      ConfigMapName,
-							MountPath: shared.ConfigDirPath,
-						},
-					},
+					VolumeMounts: volumeMounts,
 					Command: command,
 					Env: []core.EnvVar{
 						{
@@ -262,30 +307,51 @@ func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, opts *ApiS
 					},
 				},
 			},
-			Volumes: []core.Volume{
-				{
-					Name: ConfigMapName,
-					VolumeSource: core.VolumeSource{
-						ConfigMap: configMapVolume,
-					},
-				},
-			},
+			Volumes: volumes,
 			DNSPolicy:                     core.DNSClusterFirstWithHostNet,
 			TerminationGracePeriodSeconds: new(int64),
 		},
 	}
+
 	//define the service account only when it exists to prevent pod crash
 	if opts.ServiceAccountName != "" {
 		pod.Spec.ServiceAccountName = opts.ServiceAccountName
 	}
-	return provider.clientSet.CoreV1().Pods(opts.Namespace).Create(ctx, pod, metav1.CreateOptions{})
+	return pod, nil
+}
+
+
+func (provider *Provider) CreatePod(ctx context.Context, namespace string, podSpec *core.Pod) (*core.Pod, error) {
+	return provider.clientSet.CoreV1().Pods(namespace).Create(ctx, podSpec, metav1.CreateOptions{})
+}
+
+func (provider *Provider) CreateDeployment(ctx context.Context, namespace string, deploymentName string, podSpec *core.Pod) (*v1.Deployment, error) {
+	if _, keyExists := podSpec.ObjectMeta.Labels["app"]; keyExists == false {
+		return nil, errors.New("pod spec must contain 'app' label")
+	}
+	podTemplate := &core.PodTemplateSpec{
+		ObjectMeta: podSpec.ObjectMeta,
+		Spec:       podSpec.Spec,
+	}
+	deployment := &v1.Deployment{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      deploymentName,
+		},
+		Spec: v1.DeploymentSpec{
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{"app": podSpec.ObjectMeta.Labels["app"]},
+			},
+			Template:                *podTemplate,
+			Strategy:                v1.DeploymentStrategy{},
+		},
+	}
+	return provider.clientSet.AppsV1().Deployments(namespace).Create(ctx, deployment, metav1.CreateOptions{})
 }
 
 func (provider *Provider) CreateService(ctx context.Context, namespace string, serviceName string, appLabelValue string) (*core.Service, error) {
 	service := core.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      serviceName,
-			Namespace: namespace,
 		},
 		Spec: core.ServiceSpec{
 			Ports:    []core.ServicePort{{TargetPort: intstr.FromInt(shared.DefaultApiServerPort), Port: 80}},
@@ -318,7 +384,6 @@ func (provider *Provider) CreateMizuRBAC(ctx context.Context, namespace string, 
 	serviceAccount := &core.ServiceAccount{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      serviceAccountName,
-			Namespace: namespace,
 			Labels:    map[string]string{"mizu-cli-version": version},
 		},
 	}
@@ -372,7 +437,6 @@ func (provider *Provider) CreateMizuRBACNamespaceRestricted(ctx context.Context,
 	serviceAccount := &core.ServiceAccount{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      serviceAccountName,
-			Namespace: namespace,
 			Labels:    map[string]string{"mizu-cli-version": version},
 		},
 	}
@@ -422,6 +486,49 @@ func (provider *Provider) CreateMizuRBACNamespaceRestricted(ctx context.Context,
 	return nil
 }
 
+func (provider *Provider) CreateDaemonsetRBAC(ctx context.Context, namespace string, serviceAccountName string, roleName string, roleBindingName string, version string) error {
+	role := &rbac.Role{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:   roleName,
+			Labels: map[string]string{"mizu-cli-version": version},
+		},
+		Rules: []rbac.PolicyRule{
+			{
+				APIGroups: []string{"apps"},
+				Resources: []string{"daemonsets"},
+				Verbs:     []string{"patch", "get", "list", "create", "delete"},
+			},
+		},
+	}
+	roleBinding := &rbac.RoleBinding{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:   roleBindingName,
+			Labels: map[string]string{"mizu-cli-version": version},
+		},
+		RoleRef: rbac.RoleRef{
+			Name:     roleName,
+			Kind:     "Role",
+			APIGroup: "rbac.authorization.k8s.io",
+		},
+		Subjects: []rbac.Subject{
+			{
+				Kind:      "ServiceAccount",
+				Name:      serviceAccountName,
+				Namespace: namespace,
+			},
+		},
+	}
+	_, err := provider.clientSet.RbacV1().Roles(namespace).Create(ctx, role, metav1.CreateOptions{})
+	if err != nil && !k8serrors.IsAlreadyExists(err) {
+		return err
+	}
+	_, err = provider.clientSet.RbacV1().RoleBindings(namespace).Create(ctx, roleBinding, metav1.CreateOptions{})
+	if err != nil && !k8serrors.IsAlreadyExists(err) {
+		return err
+	}
+	return nil
+}
+
 func (provider *Provider) RemoveNamespace(ctx context.Context, name string) error {
 	err := provider.clientSet.CoreV1().Namespaces().Delete(ctx, name, metav1.DeleteOptions{})
 	return provider.handleRemovalError(err)
@@ -454,6 +561,11 @@ func (provider *Provider) RemoveServicAccount(ctx context.Context, namespace str
 
 func (provider *Provider) RemovePod(ctx context.Context, namespace string, podName string) error {
 	err := provider.clientSet.CoreV1().Pods(namespace).Delete(ctx, podName, metav1.DeleteOptions{})
+	return provider.handleRemovalError(err)
+}
+
+func (provider *Provider) RemoveDeployment(ctx context.Context, namespace string, deploymentName string) error {
+	err := provider.clientSet.AppsV1().Deployments(namespace).Delete(ctx, deploymentName, metav1.DeleteOptions{})
 	return provider.handleRemovalError(err)
 }
 
@@ -499,7 +611,6 @@ func (provider *Provider) CreateConfigMap(ctx context.Context, namespace string,
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      configMapName,
-			Namespace: namespace,
 		},
 		Data: configMapData,
 	}
@@ -715,13 +826,51 @@ func (provider *Provider) GetPodLogs(ctx context.Context, namespace string, podN
 }
 
 func (provider *Provider) GetNamespaceEvents(ctx context.Context, namespace string) (string, error) {
-	eventsOpts := metav1.ListOptions{}
-	eventList, err := provider.clientSet.CoreV1().Events(namespace).List(ctx, eventsOpts)
+	eventList, err := provider.clientSet.CoreV1().Events(namespace).List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return "", fmt.Errorf("error getting events on ns: %s, %w", namespace, err)
 	}
 
 	return eventList.String(), nil
+}
+
+func (provider *Provider) IsDefaultStorageProviderAvailable(ctx context.Context) (bool, error) {
+	storageClassList, err := provider.clientSet.StorageV1().StorageClasses().List(ctx, metav1.ListOptions{})
+	if err != nil {
+		return false, err
+	}
+	for _, storageClass := range storageClassList.Items {
+		if storageClass.Annotations["storageclass.kubernetes.io/is-default-class"] == "true" {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+func (provider *Provider) CreatePersistentVolumeClaim(ctx context.Context, namespace string, volumeClaimName string, sizeLimitBytes int64) (*core.PersistentVolumeClaim, error) {
+	sizeLimitQuantity := resource.NewQuantity(sizeLimitBytes, resource.DecimalSI)
+	volumeClaim := &core.PersistentVolumeClaim{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: volumeClaimName,
+		},
+		Spec:       core.PersistentVolumeClaimSpec{
+			AccessModes:      []core.PersistentVolumeAccessMode{core.ReadWriteOnce},
+			Resources:        core.ResourceRequirements{
+				Limits: core.ResourceList{
+					core.ResourceStorage: *sizeLimitQuantity,
+				},
+				Requests: core.ResourceList{
+					core.ResourceStorage: *sizeLimitQuantity,
+				},
+			},
+		},
+	}
+
+	return provider.clientSet.CoreV1().PersistentVolumeClaims(namespace).Create(ctx, volumeClaim, metav1.CreateOptions{})
+}
+
+func (provider *Provider) RemovePersistentVolumeClaim(ctx context.Context, namespace string, volumeClaimName string) error {
+	return provider.clientSet.CoreV1().PersistentVolumeClaims(namespace).Delete(ctx, volumeClaimName, metav1.DeleteOptions{})
 }
 
 func getClientSet(config *restclient.Config) (*kubernetes.Clientset, error) {

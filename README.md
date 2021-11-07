@@ -180,6 +180,16 @@ tap
     proxy-host: 0.0.0.0
 and when changed it will support accessing by IP
 
+### Run in daemon mode
+
+Mizu can be ran detached from the cli using the daemon flag: `mizu tap --daemon`. This type of mizu instance will run indefinitely in the cluster.
+
+Please note that daemon mode requires you to have RBAC creation permissions, see the [permissions](docs/PERMISSIONS.md) doc for more details.
+
+In order to access a daemon mizu you will have to run `mizu view` after running the `tap --daemon` command.
+
+To stop the detached mizu instance and clean all cluster side resources, run `mizu clean`
+
 
 ## How to Run local UI
 

@@ -13,7 +13,6 @@ import (
 	legacyrouter "github.com/getkin/kin-openapi/routers/legacy"
 
 	"github.com/up9inc/mizu/shared"
-	"github.com/up9inc/mizu/shared/logger"
 	"github.com/up9inc/mizu/tap/api"
 )
 
@@ -27,7 +26,6 @@ func loadOAS(ctx context.Context) (doc *openapi3.T, contractContent string, rout
 	path := fmt.Sprintf("%s%s", shared.ConfigDirPath, shared.ContractFileName)
 	bytes, err := ioutil.ReadFile(path)
 	if err != nil {
-		logger.Log.Error(err.Error())
 		return
 	}
 	contractContent = string(bytes)
@@ -35,7 +33,6 @@ func loadOAS(ctx context.Context) (doc *openapi3.T, contractContent string, rout
 	doc, _ = loader.LoadFromData(bytes)
 	err = doc.Validate(ctx)
 	if err != nil {
-		logger.Log.Error(err.Error())
 		return
 	}
 	router, _ = legacyrouter.NewRouter(doc)
