@@ -13,11 +13,11 @@ import (
 )
 
 const (
-	DBPath    = "./entries.db"
-	OrderDesc = "desc"
-	OrderAsc  = "asc"
-	LT        = "lt"
-	GT        = "gt"
+	OrderDesc  = "desc"
+	OrderAsc   = "asc"
+	LT         = "lt"
+	GT         = "gt"
+	TimeFormat = "2006-01-02 15:04:05.000000000"
 )
 
 var (
@@ -33,10 +33,7 @@ var (
 	}
 )
 
-func init() {
-	DB = initDataBase(DBPath)
-	go StartEnforcingDatabaseSize()
-}
+var DBPath string
 
 func GetEntriesTable() *gorm.DB {
 	return DB.Table("mizu_entries")
@@ -49,15 +46,17 @@ func CreateEntry(entry *tapApi.MizuEntry) {
 	GetEntriesTable().Create(entry)
 }
 
-func initDataBase(databasePath string) *gorm.DB {
-	temp, _ := gorm.Open(sqlite.Open(databasePath), &gorm.Config{
+func InitDataBase(databasePath string) *gorm.DB {
+	DBPath = databasePath
+	DB, _ = gorm.Open(sqlite.Open(databasePath), &gorm.Config{
 		Logger: &utils.TruncatingLogger{LogLevel: logger.Warn, SlowThreshold: 500 * time.Millisecond},
 	})
-	_ = temp.AutoMigrate(&tapApi.MizuEntry{}) // this will ensure table is created
-	return temp
+	_ = DB.AutoMigrate(&tapApi.MizuEntry{}) // this will ensure table is created
+	go StartEnforcingDatabaseSize()
+	return DB
 }
 
-func GetEntriesFromDb(timestampFrom int64, timestampTo int64, protocolName *string) []tapApi.MizuEntry {
+func GetEntriesFromDb(timeFrom time.Time, timeTo time.Time, protocolName *string) []tapApi.MizuEntry {
 	order := OrderDesc
 	protocolNameCondition := "1 = 1"
 	if protocolName != nil {
@@ -67,7 +66,7 @@ func GetEntriesFromDb(timestampFrom int64, timestampTo int64, protocolName *stri
 	var entries []tapApi.MizuEntry
 	GetEntriesTable().
 		Where(protocolNameCondition).
-		Where(fmt.Sprintf("timestamp BETWEEN %v AND %v", timestampFrom, timestampTo)).
+		Where(fmt.Sprintf("created_at BETWEEN '%s' AND '%s'", timeFrom.Format(TimeFormat), timeTo.Format(TimeFormat))).
 		Order(fmt.Sprintf("timestamp %s", order)).
 		Find(&entries)
 

@@ -2,9 +2,15 @@ package providers_test
 
 import (
 	"fmt"
+	"mizuserver/pkg/config"
+	"mizuserver/pkg/database"
 	"mizuserver/pkg/providers"
 	"testing"
 )
+
+func init() {
+	database.InitDataBase(config.DefaultDatabasePath)
+}
 
 func TestNoEntryAddedCount(t *testing.T) {
 	entriesStats := providers.GetGeneralStats()

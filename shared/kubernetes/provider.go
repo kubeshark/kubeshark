@@ -2,45 +2,38 @@ package kubernetes
 
 import (
 	"bytes"
-	_ "bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"path/filepath"
-	"regexp"
-	"strconv"
-
-	"github.com/up9inc/mizu/cli/config/configStructs"
-	"github.com/up9inc/mizu/shared/logger"
-
-	"io"
-
-	"github.com/up9inc/mizu/cli/config"
-	"github.com/up9inc/mizu/cli/mizu"
 	"github.com/up9inc/mizu/shared"
+	"github.com/up9inc/mizu/shared/logger"
+	"github.com/up9inc/mizu/shared/semver"
 	"github.com/up9inc/mizu/tap/api"
+	"io"
+	v1 "k8s.io/api/apps/v1"
 	core "k8s.io/api/core/v1"
 	rbac "k8s.io/api/rbac/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
-	resource "k8s.io/apimachinery/pkg/api/resource"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/apimachinery/pkg/version"
 	"k8s.io/apimachinery/pkg/watch"
 	applyconfapp "k8s.io/client-go/applyconfigurations/apps/v1"
 	applyconfcore "k8s.io/client-go/applyconfigurations/core/v1"
 	applyconfmeta "k8s.io/client-go/applyconfigurations/meta/v1"
 	"k8s.io/client-go/kubernetes"
-	_ "k8s.io/client-go/plugin/pkg/client/auth/azure"
-	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
-	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc"
-	_ "k8s.io/client-go/plugin/pkg/client/auth/openstack"
+	_ "k8s.io/client-go/plugin/pkg/client/auth"
+	"k8s.io/client-go/rest"
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
-	_ "k8s.io/client-go/tools/portforward"
 	watchtools "k8s.io/client-go/tools/watch"
+	"net/url"
+	"path/filepath"
+	"regexp"
 )
 
 type Provider struct {
@@ -77,6 +70,14 @@ func NewProvider(kubeConfigPath string) (*Provider, error) {
 			"you can set alternative kube config file path by adding the kube-config-path field to the mizu config file, err:  %w", kubeConfigPath, err)
 	}
 
+	if err := validateNotProxy(kubernetesConfig, restClientConfig); err != nil {
+		return nil, err
+	}
+
+	if err := validateKubernetesVersion(clientSet); err != nil {
+		return nil, err
+	}
+
 	return &Provider{
 		clientSet:        clientSet,
 		kubernetesConfig: kubernetesConfig,
@@ -84,9 +85,29 @@ func NewProvider(kubeConfigPath string) (*Provider, error) {
 	}, nil
 }
 
-func (provider *Provider) CurrentNamespace() string {
-	ns, _, _ := provider.kubernetesConfig.Namespace()
-	return ns
+func NewProviderInCluster() (*Provider, error) {
+	restClientConfig, err := rest.InClusterConfig()
+	if err != nil {
+		return nil, err
+	}
+	clientSet, err := getClientSet(restClientConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Provider{
+		clientSet:        clientSet,
+		kubernetesConfig: nil, // not relevant in cluster
+		clientConfig:     *restClientConfig,
+	}, nil
+}
+
+func (provider *Provider) CurrentNamespace() (string, error) {
+	if provider.kubernetesConfig == nil {
+		return "", errors.New("kubernetesConfig is nil, mizu cli will not work with in-cluster kubernetes config, use a kubeconfig file when initializing the Provider")
+	}
+	ns, _, err := provider.kubernetesConfig.Namespace()
+	return ns, err
 }
 
 func (provider *Provider) WaitUtilNamespaceDeleted(ctx context.Context, name string) error {
@@ -154,11 +175,12 @@ type ApiServerOptions struct {
 	IsNamespaceRestricted bool
 	SyncEntriesConfig     *shared.SyncEntriesConfig
 	MaxEntriesDBSizeBytes int64
-	Resources             configStructs.Resources
+	Resources             shared.Resources
 	ImagePullPolicy       core.PullPolicy
+	DumpLogs              bool
 }
 
-func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, opts *ApiServerOptions) (*core.Pod, error) {
+func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, mountVolumeClaim bool, volumeClaimName string) (*core.Pod, error) {
 	var marshaledSyncEntriesConfig []byte
 	if opts.SyncEntriesConfig != nil {
 		var err error
@@ -167,10 +189,8 @@ func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, opts *ApiS
 		}
 	}
 
-	configMapVolumeName := &core.ConfigMapVolumeSource{}
-	configMapVolumeName.Name = mizu.ConfigMapName
-	configMapOptional := true
-	configMapVolumeName.Optional = &configMapOptional
+	configMapVolume := &core.ConfigMapVolumeSource{}
+	configMapVolume.Name = ConfigMapName
 
 	cpuLimit, err := resource.ParseQuantity(opts.Resources.CpuLimit)
 	if err != nil {
@@ -194,17 +214,46 @@ func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, opts *ApiS
 		command = append(command, "--namespace", opts.Namespace)
 	}
 
+	volumeMounts := []core.VolumeMount{
+		{
+			Name:      ConfigMapName,
+			MountPath: shared.ConfigDirPath,
+		},
+	}
+	volumes := []core.Volume{
+		{
+			Name: ConfigMapName,
+			VolumeSource: core.VolumeSource{
+				ConfigMap: configMapVolume,
+			},
+		},
+	}
+
+	if mountVolumeClaim {
+		volumes = append(volumes, core.Volume{
+			Name: volumeClaimName,
+			VolumeSource: core.VolumeSource{
+				PersistentVolumeClaim: &core.PersistentVolumeClaimVolumeSource{
+					ClaimName: volumeClaimName,
+				},
+			},
+		})
+		volumeMounts = append(volumeMounts, core.VolumeMount{
+			Name:             volumeClaimName,
+			MountPath:        shared.DataDirPath,
+		})
+	}
+
 	port := intstr.FromInt(shared.DefaultApiServerPort)
 
 	debugMode := ""
-	if config.Config.DumpLogs {
+	if opts.DumpLogs {
 		debugMode = "1"
 	}
 
 	pod := &core.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      opts.PodName,
-			Namespace: opts.Namespace,
 			Labels:    map[string]string{"app": opts.PodName},
 		},
 		Spec: core.PodSpec{
@@ -213,21 +262,12 @@ func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, opts *ApiS
 					Name:            opts.PodName,
 					Image:           opts.PodImage,
 					ImagePullPolicy: opts.ImagePullPolicy,
-					VolumeMounts: []core.VolumeMount{
-						{
-							Name:      mizu.ConfigMapName,
-							MountPath: shared.RulePolicyPath,
-						},
-					},
+					VolumeMounts: volumeMounts,
 					Command: command,
 					Env: []core.EnvVar{
 						{
 							Name:  shared.SyncEntriesConfigEnvVar,
 							Value: string(marshaledSyncEntriesConfig),
-						},
-						{
-							Name:  shared.MaxEntriesDBSizeBytesEnvVar,
-							Value: strconv.FormatInt(opts.MaxEntriesDBSizeBytes, 10),
 						},
 						{
 							Name:  shared.DebugModeEnvVar,
@@ -265,30 +305,51 @@ func (provider *Provider) CreateMizuApiServerPod(ctx context.Context, opts *ApiS
 					},
 				},
 			},
-			Volumes: []core.Volume{
-				{
-					Name: mizu.ConfigMapName,
-					VolumeSource: core.VolumeSource{
-						ConfigMap: configMapVolumeName,
-					},
-				},
-			},
+			Volumes: volumes,
 			DNSPolicy:                     core.DNSClusterFirstWithHostNet,
 			TerminationGracePeriodSeconds: new(int64),
 		},
 	}
+
 	//define the service account only when it exists to prevent pod crash
 	if opts.ServiceAccountName != "" {
 		pod.Spec.ServiceAccountName = opts.ServiceAccountName
 	}
-	return provider.clientSet.CoreV1().Pods(opts.Namespace).Create(ctx, pod, metav1.CreateOptions{})
+	return pod, nil
+}
+
+
+func (provider *Provider) CreatePod(ctx context.Context, namespace string, podSpec *core.Pod) (*core.Pod, error) {
+	return provider.clientSet.CoreV1().Pods(namespace).Create(ctx, podSpec, metav1.CreateOptions{})
+}
+
+func (provider *Provider) CreateDeployment(ctx context.Context, namespace string, deploymentName string, podSpec *core.Pod) (*v1.Deployment, error) {
+	if _, keyExists := podSpec.ObjectMeta.Labels["app"]; keyExists == false {
+		return nil, errors.New("pod spec must contain 'app' label")
+	}
+	podTemplate := &core.PodTemplateSpec{
+		ObjectMeta: podSpec.ObjectMeta,
+		Spec:       podSpec.Spec,
+	}
+	deployment := &v1.Deployment{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      deploymentName,
+		},
+		Spec: v1.DeploymentSpec{
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{"app": podSpec.ObjectMeta.Labels["app"]},
+			},
+			Template:                *podTemplate,
+			Strategy:                v1.DeploymentStrategy{},
+		},
+	}
+	return provider.clientSet.AppsV1().Deployments(namespace).Create(ctx, deployment, metav1.CreateOptions{})
 }
 
 func (provider *Provider) CreateService(ctx context.Context, namespace string, serviceName string, appLabelValue string) (*core.Service, error) {
 	service := core.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      serviceName,
-			Namespace: namespace,
 		},
 		Spec: core.ServiceSpec{
 			Ports:    []core.ServicePort{{TargetPort: intstr.FromInt(shared.DefaultApiServerPort), Port: 80}},
@@ -321,7 +382,6 @@ func (provider *Provider) CreateMizuRBAC(ctx context.Context, namespace string, 
 	serviceAccount := &core.ServiceAccount{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      serviceAccountName,
-			Namespace: namespace,
 			Labels:    map[string]string{"mizu-cli-version": version},
 		},
 	}
@@ -375,7 +435,6 @@ func (provider *Provider) CreateMizuRBACNamespaceRestricted(ctx context.Context,
 	serviceAccount := &core.ServiceAccount{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      serviceAccountName,
-			Namespace: namespace,
 			Labels:    map[string]string{"mizu-cli-version": version},
 		},
 	}
@@ -425,6 +484,49 @@ func (provider *Provider) CreateMizuRBACNamespaceRestricted(ctx context.Context,
 	return nil
 }
 
+func (provider *Provider) CreateDaemonsetRBAC(ctx context.Context, namespace string, serviceAccountName string, roleName string, roleBindingName string, version string) error {
+	role := &rbac.Role{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:   roleName,
+			Labels: map[string]string{"mizu-cli-version": version},
+		},
+		Rules: []rbac.PolicyRule{
+			{
+				APIGroups: []string{"apps"},
+				Resources: []string{"daemonsets"},
+				Verbs:     []string{"patch", "get", "list", "create", "delete"},
+			},
+		},
+	}
+	roleBinding := &rbac.RoleBinding{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:   roleBindingName,
+			Labels: map[string]string{"mizu-cli-version": version},
+		},
+		RoleRef: rbac.RoleRef{
+			Name:     roleName,
+			Kind:     "Role",
+			APIGroup: "rbac.authorization.k8s.io",
+		},
+		Subjects: []rbac.Subject{
+			{
+				Kind:      "ServiceAccount",
+				Name:      serviceAccountName,
+				Namespace: namespace,
+			},
+		},
+	}
+	_, err := provider.clientSet.RbacV1().Roles(namespace).Create(ctx, role, metav1.CreateOptions{})
+	if err != nil && !k8serrors.IsAlreadyExists(err) {
+		return err
+	}
+	_, err = provider.clientSet.RbacV1().RoleBindings(namespace).Create(ctx, roleBinding, metav1.CreateOptions{})
+	if err != nil && !k8serrors.IsAlreadyExists(err) {
+		return err
+	}
+	return nil
+}
+
 func (provider *Provider) RemoveNamespace(ctx context.Context, name string) error {
 	err := provider.clientSet.CoreV1().Namespaces().Delete(ctx, name, metav1.DeleteOptions{})
 	return provider.handleRemovalError(err)
@@ -460,6 +562,11 @@ func (provider *Provider) RemovePod(ctx context.Context, namespace string, podNa
 	return provider.handleRemovalError(err)
 }
 
+func (provider *Provider) RemoveDeployment(ctx context.Context, namespace string, deploymentName string) error {
+	err := provider.clientSet.AppsV1().Deployments(namespace).Delete(ctx, deploymentName, metav1.DeleteOptions{})
+	return provider.handleRemovalError(err)
+}
+
 func (provider *Provider) RemoveConfigMap(ctx context.Context, namespace string, configMapName string) error {
 	err := provider.clientSet.CoreV1().ConfigMaps(namespace).Delete(ctx, configMapName, metav1.DeleteOptions{})
 	return provider.handleRemovalError(err)
@@ -485,14 +592,16 @@ func (provider *Provider) handleRemovalError(err error) error {
 	return err
 }
 
-func (provider *Provider) CreateConfigMap(ctx context.Context, namespace string, configMapName string, data string, contract string) error {
-	if data == "" && contract == "" {
-		return nil
-	}
-
+func (provider *Provider) CreateConfigMap(ctx context.Context, namespace string, configMapName string, serializedValidationRules string, serializedContract string, serializedMizuConfig string) error {
 	configMapData := make(map[string]string, 0)
-	configMapData[shared.RulePolicyFileName] = data
-	configMapData[shared.ContractFileName] = contract
+	if serializedValidationRules != "" {
+		configMapData[shared.ValidationRulesFileName] = serializedValidationRules
+	}
+	if serializedContract != "" {
+		configMapData[shared.ContractFileName] = serializedContract
+	}
+	configMapData[shared.ConfigFileName] = serializedMizuConfig
+
 	configMap := &core.ConfigMap{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "ConfigMap",
@@ -500,7 +609,6 @@ func (provider *Provider) CreateConfigMap(ctx context.Context, namespace string,
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      configMapName,
-			Namespace: namespace,
 		},
 		Data: configMapData,
 	}
@@ -510,7 +618,7 @@ func (provider *Provider) CreateConfigMap(ctx context.Context, namespace string,
 	return nil
 }
 
-func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, apiServerPodIp string, nodeToTappedPodIPMap map[string][]string, serviceAccountName string, resources configStructs.Resources, imagePullPolicy core.PullPolicy, mizuApiFilteringOptions *api.TrafficFilteringOptions) error {
+func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, apiServerPodIp string, nodeToTappedPodIPMap map[string][]string, serviceAccountName string, resources shared.Resources, imagePullPolicy core.PullPolicy, mizuApiFilteringOptions api.TrafficFilteringOptions, dumpLogs bool) error {
 	logger.Log.Debugf("Applying %d tapper daemon sets, ns: %s, daemonSetName: %s, podImage: %s, tapperPodName: %s", len(nodeToTappedPodIPMap), namespace, daemonSetName, podImage, tapperPodName)
 
 	if len(nodeToTappedPodIPMap) == 0 {
@@ -522,7 +630,7 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 		return err
 	}
 
-	marshaledFilteringOptions, err := json.Marshal(mizuApiFilteringOptions)
+	mizuApiFilteringOptionsJsonStr, err := json.Marshal(mizuApiFilteringOptions)
 	if err != nil {
 		return err
 	}
@@ -536,7 +644,7 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	}
 
 	debugMode := ""
-	if config.Config.DumpLogs {
+	if dumpLogs {
 		debugMode = "1"
 	}
 
@@ -551,7 +659,7 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 		applyconfcore.EnvVar().WithName(shared.HostModeEnvVar).WithValue("1"),
 		applyconfcore.EnvVar().WithName(shared.TappedAddressesPerNodeDictEnvVar).WithValue(string(nodeToTappedPodIPMapJsonStr)),
 		applyconfcore.EnvVar().WithName(shared.GoGCEnvVar).WithValue("12800"),
-		applyconfcore.EnvVar().WithName(shared.MizuFilteringOptionsEnvVar).WithValue(string(marshaledFilteringOptions)),
+		applyconfcore.EnvVar().WithName(shared.MizuFilteringOptionsEnvVar).WithValue(string(mizuApiFilteringOptionsJsonStr)),
 	)
 	agentContainer.WithEnv(
 		applyconfcore.EnvVar().WithName(shared.NodeNameEnvVar).WithValueFrom(
@@ -611,6 +719,24 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	noScheduleToleration.WithOperator(core.TolerationOpExists)
 	noScheduleToleration.WithEffect(core.TaintEffectNoSchedule)
 
+	volumeName := ConfigMapName
+	configMapVolume := applyconfcore.VolumeApplyConfiguration{
+		Name: &volumeName,
+		VolumeSourceApplyConfiguration: applyconfcore.VolumeSourceApplyConfiguration{
+			ConfigMap: &applyconfcore.ConfigMapVolumeSourceApplyConfiguration{
+				LocalObjectReferenceApplyConfiguration: applyconfcore.LocalObjectReferenceApplyConfiguration{
+					Name: &volumeName,
+				},
+			},
+		},
+	}
+	mountPath := shared.ConfigDirPath
+	configMapVolumeMount := applyconfcore.VolumeMountApplyConfiguration{
+		Name:      &volumeName,
+		MountPath: &mountPath,
+	}
+	agentContainer.WithVolumeMounts(&configMapVolumeMount)
+
 	podSpec := applyconfcore.PodSpec()
 	podSpec.WithHostNetwork(true)
 	podSpec.WithDNSPolicy(core.DNSClusterFirstWithHostNet)
@@ -621,6 +747,7 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	podSpec.WithContainers(agentContainer)
 	podSpec.WithAffinity(affinity)
 	podSpec.WithTolerations(noExecuteToleration, noScheduleToleration)
+	podSpec.WithVolumes(&configMapVolume)
 
 	podTemplate := applyconfcore.PodTemplateSpec()
 	podTemplate.WithLabels(map[string]string{"app": tapperPodName})
@@ -688,13 +815,51 @@ func (provider *Provider) GetPodLogs(ctx context.Context, namespace string, podN
 }
 
 func (provider *Provider) GetNamespaceEvents(ctx context.Context, namespace string) (string, error) {
-	eventsOpts := metav1.ListOptions{}
-	eventList, err := provider.clientSet.CoreV1().Events(namespace).List(ctx, eventsOpts)
+	eventList, err := provider.clientSet.CoreV1().Events(namespace).List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return "", fmt.Errorf("error getting events on ns: %s, %w", namespace, err)
 	}
 
 	return eventList.String(), nil
+}
+
+func (provider *Provider) IsDefaultStorageProviderAvailable(ctx context.Context) (bool, error) {
+	storageClassList, err := provider.clientSet.StorageV1().StorageClasses().List(ctx, metav1.ListOptions{})
+	if err != nil {
+		return false, err
+	}
+	for _, storageClass := range storageClassList.Items {
+		if storageClass.Annotations["storageclass.kubernetes.io/is-default-class"] == "true" {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+func (provider *Provider) CreatePersistentVolumeClaim(ctx context.Context, namespace string, volumeClaimName string, sizeLimitBytes int64) (*core.PersistentVolumeClaim, error) {
+	sizeLimitQuantity := resource.NewQuantity(sizeLimitBytes, resource.DecimalSI)
+	volumeClaim := &core.PersistentVolumeClaim{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: volumeClaimName,
+		},
+		Spec:       core.PersistentVolumeClaimSpec{
+			AccessModes:      []core.PersistentVolumeAccessMode{core.ReadWriteOnce},
+			Resources:        core.ResourceRequirements{
+				Limits: core.ResourceList{
+					core.ResourceStorage: *sizeLimitQuantity,
+				},
+				Requests: core.ResourceList{
+					core.ResourceStorage: *sizeLimitQuantity,
+				},
+			},
+		},
+	}
+
+	return provider.clientSet.CoreV1().PersistentVolumeClaims(namespace).Create(ctx, volumeClaim, metav1.CreateOptions{})
+}
+
+func (provider *Provider) RemovePersistentVolumeClaim(ctx context.Context, namespace string, volumeClaimName string) error {
+	return provider.clientSet.CoreV1().PersistentVolumeClaims(namespace).Delete(ctx, volumeClaimName, metav1.DeleteOptions{})
 }
 
 func getClientSet(config *restclient.Config) (*kubernetes.Clientset, error) {
@@ -726,4 +891,48 @@ func loadKubernetesConfiguration(kubeConfigPath string) clientcmd.ClientConfig {
 
 func isPodRunning(pod *core.Pod) bool {
 	return pod.Status.Phase == core.PodRunning
+}
+
+// We added this after a customer tried to run mizu from lens, which used len's kube config, which have cluster server configuration, which points to len's local proxy.
+// The workaround was to use the user's local default kube config.
+// For now - we are blocking the option to run mizu through a proxy to k8s server
+func validateNotProxy(kubernetesConfig clientcmd.ClientConfig, restClientConfig *restclient.Config) error {
+	kubernetesUrl, err := url.Parse(restClientConfig.Host)
+	if err != nil {
+		logger.Log.Debugf("validateNotProxy - error while parsing kubernetes host, err: %v", err)
+		return nil
+	}
+
+	restProxyClientConfig, _ := kubernetesConfig.ClientConfig()
+	restProxyClientConfig.Host = kubernetesUrl.Host
+
+	clientProxySet, err := getClientSet(restProxyClientConfig)
+	if err == nil {
+		proxyServerVersion, err := clientProxySet.ServerVersion()
+		if err != nil {
+			return nil
+		}
+
+		if *proxyServerVersion == (version.Info{}) {
+			return &ClusterBehindProxyError{}
+		}
+	}
+
+	return nil
+}
+
+func validateKubernetesVersion(clientSet *kubernetes.Clientset) error {
+	serverVersion, err := clientSet.ServerVersion()
+	if err != nil {
+		logger.Log.Debugf("error while getting kubernetes server version, err: %v", err)
+		return nil
+	}
+
+	serverVersionSemVer := semver.SemVersion(serverVersion.GitVersion)
+	minKubernetesServerVersionSemVer := semver.SemVersion(MinKubernetesServerVersion)
+	if minKubernetesServerVersionSemVer.GreaterThan(serverVersionSemVer) {
+		return fmt.Errorf("kubernetes server version %v is not supported, supporting only kubernetes server version of %v or higher", serverVersion.GitVersion, MinKubernetesServerVersion)
+	}
+
+	return nil
 }

@@ -14,6 +14,7 @@ import (
 const (
 	MizuResourcesNamespaceConfigName = "mizu-resources-namespace"
 	ConfigFilePathCommandName        = "config-path"
+	KubeConfigPathConfigName         = "kube-config-path"
 )
 
 type ConfigStruct struct {

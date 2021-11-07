@@ -3,7 +3,9 @@ package config
 import (
 	"errors"
 	"fmt"
+	"github.com/up9inc/mizu/tap/api"
 	"io/ioutil"
+	"k8s.io/apimachinery/pkg/util/json"
 	"os"
 	"reflect"
 	"strconv"
@@ -40,7 +42,7 @@ func InitConfig(cmd *cobra.Command) error {
 
 	configFilePathFlag := cmd.Flags().Lookup(ConfigFilePathCommandName)
 	configFilePath := configFilePathFlag.Value.String()
-	if err := LoadConfigFile(configFilePath, &Config); err != nil {
+	if err := loadConfigFile(configFilePath, &Config); err != nil {
 		if configFilePathFlag.Changed || !os.IsNotExist(err) {
 			return fmt.Errorf("invalid config, %w\n"+
 				"you can regenerate the file by removing it (%v) and using `mizu config -r`", err, configFilePath)
@@ -81,7 +83,28 @@ func WriteConfig(config *ConfigStruct) error {
 	return nil
 }
 
-func LoadConfigFile(configFilePath string, config *ConfigStruct) error {
+type updateConfigStruct func(*ConfigStruct)
+
+func UpdateConfig(updateConfigStruct updateConfigStruct) error {
+	configFile, err := GetConfigWithDefaults()
+	if err != nil {
+		return fmt.Errorf("failed getting config with defaults, err: %v", err)
+	}
+
+	if err := loadConfigFile(Config.ConfigFilePath, configFile); err != nil && !os.IsNotExist(err) {
+		return fmt.Errorf("failed getting config file, err: %v", err)
+	}
+
+	updateConfigStruct(configFile)
+
+	if err := WriteConfig(configFile); err != nil {
+		return fmt.Errorf("failed writing config, err: %v", err)
+	}
+
+	return nil
+}
+
+func loadConfigFile(configFilePath string, config *ConfigStruct) error {
 	reader, openErr := os.Open(configFilePath)
 	if openErr != nil {
 		return openErr
@@ -342,4 +365,38 @@ func setZeroForReadonlyFields(currentElem reflect.Value) {
 			currentFieldByName.Set(reflect.Zero(currentField.Type))
 		}
 	}
+}
+
+func GetSerializedMizuAgentConfig(targetNamespaces []string, mizuApiFilteringOptions *api.TrafficFilteringOptions) (string, error) {
+	mizuConfig, err := getMizuAgentConfig(targetNamespaces, mizuApiFilteringOptions)
+	if err != nil {
+		return "", err
+	}
+	serializedConfig, err := json.Marshal(mizuConfig)
+	if err != nil {
+		return "", err
+	}
+	return string(serializedConfig), nil
+}
+
+func getMizuAgentConfig(targetNamespaces []string, mizuApiFilteringOptions *api.TrafficFilteringOptions) (*shared.MizuAgentConfig, error) {
+	serializableRegex, err := api.CompileRegexToSerializableRegexp(Config.Tap.PodRegexStr)
+	if err != nil {
+		return nil, err
+	}
+	config := shared.MizuAgentConfig{
+		TapTargetRegex:          *serializableRegex,
+		MaxDBSizeBytes:          Config.Tap.MaxEntriesDBSizeBytes(),
+		DaemonMode:              Config.Tap.DaemonMode,
+		TargetNamespaces:        targetNamespaces,
+		AgentImage:              Config.AgentImage,
+		PullPolicy:              Config.ImagePullPolicyStr,
+		DumpLogs:                Config.DumpLogs,
+		IgnoredUserAgents:       Config.Tap.IgnoredUserAgents,
+		TapperResources:         Config.Tap.TapperResources,
+		MizuResourcesNamespace:  Config.MizuResourcesNamespace,
+		MizuApiFilteringOptions: *mizuApiFilteringOptions,
+		AgentDatabasePath:       fmt.Sprintf("%s%s", shared.DataDirPath, "entries.db"),
+	}
+	return &config, nil
 }

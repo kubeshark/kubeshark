@@ -8,6 +8,8 @@ import (
 func StatusRoutes(ginApp *gin.Engine) {
 	routeGroup := ginApp.Group("/status")
 
+	routeGroup.GET("/health", controllers.HealthCheck)
+
 	routeGroup.POST("/tappedPods", controllers.PostTappedPods)
 	routeGroup.GET("/tappersCount", controllers.GetTappersCount)
 	routeGroup.GET("/tap", controllers.GetTappingStatus)

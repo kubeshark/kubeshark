@@ -1,13 +1,20 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
+	"github.com/up9inc/mizu/shared/kubernetes"
 	"io/ioutil"
+	v1 "k8s.io/api/core/v1"
 	"mizuserver/pkg/api"
+	"mizuserver/pkg/config"
 	"mizuserver/pkg/controllers"
+	"mizuserver/pkg/database"
 	"mizuserver/pkg/models"
+	"mizuserver/pkg/providers"
 	"mizuserver/pkg/routes"
 	"mizuserver/pkg/up9"
 	"mizuserver/pkg/utils"
@@ -18,6 +25,8 @@ import (
 	"path/filepath"
 	"plugin"
 	"sort"
+	"syscall"
+	"time"
 
 	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
@@ -40,10 +49,19 @@ var harsDir = flag.String("hars-dir", "", "Directory to read hars from")
 var extensions []*tapApi.Extension             // global
 var extensionsMap map[string]*tapApi.Extension // global
 
+const (
+	socketConnectionRetries = 10
+	socketConnectionRetryDelay = time.Second * 2
+	socketHandshakeTimeout = time.Second * 2
+)
+
 func main() {
 	logLevel := determineLogLevel()
 	logger.InitLoggerStderrOnly(logLevel)
 	flag.Parse()
+	if err := config.LoadConfig(); err != nil {
+		logger.Log.Fatalf("Error loading config file %v", err)
+	}
 	loadExtensions()
 
 	if !*tapperMode && !*apiServerMode && !*standaloneMode && !*harsReaderMode {
@@ -83,7 +101,7 @@ func main() {
 		hostMode := os.Getenv(shared.HostModeEnvVar) == "1"
 		tapOpts := &tap.TapOpts{HostMode: hostMode}
 		tap.StartPassiveTapper(tapOpts, filteredOutputItemsChannel, extensions, filteringOptions)
-		socketConnection, _, err := websocket.DefaultDialer.Dial(*apiServerAddress, nil)
+		socketConnection, err := dialSocketWithRetry(*apiServerAddress, socketConnectionRetries, socketConnectionRetryDelay)
 		if err != nil {
 			panic(fmt.Sprintf("Error connecting to socket server at %s %v", *apiServerAddress, err))
 		}
@@ -91,6 +109,7 @@ func main() {
 
 		go pipeTapChannelToSocket(socketConnection, filteredOutputItemsChannel)
 	} else if *apiServerMode {
+		database.InitDataBase(config.Config.AgentDatabasePath)
 		api.StartResolving(*namespace)
 
 		outputItemsChannel := make(chan *tapApi.OutputChannelItem)
@@ -186,6 +205,15 @@ func hostApi(socketHarOutputChannel chan<- *tapApi.OutputChannelItem) {
 	routes.MetadataRoutes(app)
 	routes.StatusRoutes(app)
 	routes.NotFoundRoute(app)
+
+	if config.Config.DaemonMode {
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+
+		if _, err := startMizuTapperSyncer(ctx); err != nil {
+			logger.Log.Fatalf("error initializing tapper syncer: %+v", err)
+		}
+	}
 
 	utils.StartServer(app)
 }
@@ -286,6 +314,15 @@ func pipeTapChannelToSocket(connection *websocket.Conn, messageDataChannel <-cha
 		err = connection.WriteMessage(websocket.TextMessage, marshaledData)
 		if err != nil {
 			logger.Log.Errorf("error sending message through socket server %v, err: %s, (%v,%+v)", messageData, err, err, err)
+			if errors.Is(err, syscall.EPIPE) {
+				logger.Log.Warning("detected socket disconnection, reestablishing socket connection")
+				connection, err = dialSocketWithRetry(*apiServerAddress, socketConnectionRetries, socketConnectionRetryDelay)
+				if err != nil {
+					logger.Log.Fatalf("error reestablishing socket connection: %v", err)
+				} else {
+					logger.Log.Info("recovered connection successfully")
+				}
+			}
 			continue
 		}
 	}
@@ -312,4 +349,81 @@ func determineLogLevel() (logLevel logging.Level) {
 		logLevel = logging.DEBUG
 	}
 	return
+}
+
+func dialSocketWithRetry(socketAddress string, retryAmount int, retryDelay time.Duration) (*websocket.Conn, error) {
+	var lastErr error
+	dialer := &websocket.Dialer{ // we use our own dialer instead of the default due to the default's 45 sec handshake timeout, we occasionally encounter hanging socket handshakes when tapper tries to connect to api too soon
+		Proxy:            http.ProxyFromEnvironment,
+		HandshakeTimeout: socketHandshakeTimeout,
+	}
+	for i := 1; i < retryAmount; i++ {
+		socketConnection, _, err := dialer.Dial(socketAddress, nil)
+		if err != nil {
+			if i < retryAmount {
+				logger.Log.Infof("socket connection to %s failed: %v, retrying %d out of %d in %d seconds...", socketAddress, err, i, retryAmount, retryDelay / time.Second)
+				time.Sleep(retryDelay)
+			}
+		} else {
+			return socketConnection, nil
+		}
+	}
+	return nil, lastErr
+}
+
+
+func startMizuTapperSyncer(ctx context.Context) (*kubernetes.MizuTapperSyncer, error){
+	provider, err := kubernetes.NewProviderInCluster()
+	if err != nil {
+		return nil, err
+	}
+
+	tapperSyncer, err := kubernetes.CreateAndStartMizuTapperSyncer(ctx, provider, kubernetes.TapperSyncerConfig{
+		TargetNamespaces:         config.Config.TargetNamespaces,
+		PodFilterRegex:           config.Config.TapTargetRegex.Regexp,
+		MizuResourcesNamespace:   config.Config.MizuResourcesNamespace,
+		AgentImage:               config.Config.AgentImage,
+		TapperResources:          config.Config.TapperResources,
+		ImagePullPolicy:          v1.PullPolicy(config.Config.PullPolicy),
+		DumpLogs:                 config.Config.DumpLogs,
+		IgnoredUserAgents:        config.Config.IgnoredUserAgents,
+		MizuApiFilteringOptions:  config.Config.MizuApiFilteringOptions,
+		MizuServiceAccountExists: true, //assume service account exists since daemon mode will not function without it anyway
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	// handle tapperSyncer events (pod changes and errors)
+	go func() {
+		for {
+			select {
+			case syncerErr, ok := <-tapperSyncer.ErrorOut:
+				if !ok {
+					logger.Log.Debug("mizuTapperSyncer err channel closed, ending listener loop")
+					return
+				}
+				logger.Log.Fatalf("fatal tap syncer error: %v", syncerErr)
+			case _, ok := <-tapperSyncer.TapPodChangesOut:
+				if !ok {
+					logger.Log.Debug("mizuTapperSyncer pod changes channel closed, ending listener loop")
+					return
+				}
+				tapStatus := shared.TapStatus{Pods: kubernetes.GetPodInfosForPods(tapperSyncer.CurrentlyTappedPods)}
+
+				serializedTapStatus, err := json.Marshal(shared.CreateWebSocketStatusMessage(tapStatus))
+				if err != nil {
+					logger.Log.Fatalf("error serializing tap status: %v", err)
+				}
+				api.BroadcastToBrowserClients(serializedTapStatus)
+				providers.TapStatus.Pods = tapStatus.Pods
+			case <-ctx.Done():
+				logger.Log.Debug("mizuTapperSyncer event listener loop exiting due to context done")
+				return
+			}
+		}
+	}()
+
+	return tapperSyncer, nil
 }

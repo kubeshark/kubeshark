@@ -7,18 +7,16 @@ import (
 
 	"github.com/up9inc/mizu/cli/apiserver"
 	"github.com/up9inc/mizu/cli/config"
-	"github.com/up9inc/mizu/cli/kubernetes"
-	"github.com/up9inc/mizu/cli/mizu"
 	"github.com/up9inc/mizu/cli/mizu/fsUtils"
 	"github.com/up9inc/mizu/cli/mizu/version"
 	"github.com/up9inc/mizu/cli/uiUtils"
+	"github.com/up9inc/mizu/shared/kubernetes"
 	"github.com/up9inc/mizu/shared/logger"
 )
 
 func runMizuView() {
-	kubernetesProvider, err := kubernetes.NewProvider(config.Config.KubeConfigPath())
+	kubernetesProvider, err := getKubernetesProviderForCli()
 	if err != nil {
-		logger.Log.Error(err)
 		return
 	}
 
@@ -28,14 +26,14 @@ func runMizuView() {
 	url := config.Config.View.Url
 
 	if url == "" {
-		exists, err := kubernetesProvider.DoesServicesExist(ctx, config.Config.MizuResourcesNamespace, mizu.ApiServerPodName)
+		exists, err := kubernetesProvider.DoesServicesExist(ctx, config.Config.MizuResourcesNamespace, kubernetes.ApiServerPodName)
 		if err != nil {
 			logger.Log.Errorf("Failed to found mizu service %v", err)
 			cancel()
 			return
 		}
 		if !exists {
-			logger.Log.Infof("%s service not found, you should run `mizu tap` command first", mizu.ApiServerPodName)
+			logger.Log.Infof("%s service not found, you should run `mizu tap` command first", kubernetes.ApiServerPodName)
 			cancel()
 			return
 		}
@@ -44,23 +42,25 @@ func runMizuView() {
 
 		response, err := http.Get(fmt.Sprintf("%s/", url))
 		if err == nil && response.StatusCode == 200 {
-			logger.Log.Infof("Found a running service %s and open port %d", mizu.ApiServerPodName, config.Config.View.GuiPort)
+			logger.Log.Infof("Found a running service %s and open port %d", kubernetes.ApiServerPodName, config.Config.View.GuiPort)
 			return
 		}
 		logger.Log.Infof("Establishing connection to k8s cluster...")
 		go startProxyReportErrorIfAny(kubernetesProvider, cancel)
 
-		if err := apiserver.Provider.InitAndTestConnection(GetApiServerUrl()); err != nil {
-			logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Couldn't connect to API server, for more info check logs at %s", fsUtils.GetLogFilePath()))
-			return
-		}
+	}
+
+	apiServerProvider := apiserver.NewProvider(url, apiserver.DefaultRetries, apiserver.DefaultTimeout)
+	if err := apiServerProvider.TestConnection(); err != nil {
+		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Couldn't connect to API server, for more info check logs at %s", fsUtils.GetLogFilePath()))
+		return
 	}
 
 	logger.Log.Infof("Mizu is available at %s\n", url)
 
 	uiUtils.OpenBrowser(url)
 
-	if isCompatible, err := version.CheckVersionCompatibility(); err != nil {
+	if isCompatible, err := version.CheckVersionCompatibility(apiServerProvider); err != nil {
 		logger.Log.Errorf("Failed to check versions compatibility %v", err)
 		cancel()
 		return

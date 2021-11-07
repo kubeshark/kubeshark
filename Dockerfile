@@ -29,7 +29,7 @@ RUN go list -f '{{.Path}}@{{.Version}}' -m all | sed 1d | grep -e 'go-cache' -e 
 ARG COMMIT_HASH
 ARG GIT_BRANCH
 ARG BUILD_TIMESTAMP
-ARG SEM_VER
+ARG SEM_VER=0.0.0
 
 # Copy and build agent code
 COPY shared ../shared
@@ -53,6 +53,7 @@ WORKDIR /app
 COPY --from=builder ["/app/agent-build/mizuagent", "."]
 COPY --from=builder ["/app/agent/build/extensions", "extensions"]
 COPY --from=site-build ["/app/ui-build/build", "site"]
+RUN mkdir /app/data/
 
 # gin-gonic runs in debug mode without this
 ENV GIN_MODE=release

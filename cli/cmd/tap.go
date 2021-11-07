@@ -80,9 +80,18 @@ Supported protocols are HTTP and gRPC.`,
 
 func askConfirmation(flagName string) {
 	logger.Log.Infof(fmt.Sprintf(uploadTrafficMessageToConfirm, flagName))
+
+	if !config.Config.Tap.AskUploadConfirmation {
+		return
+	}
+
 	if !uiUtils.AskForConfirmation("Would you like to proceed [Y/n]: ") {
 		logger.Log.Infof("You can always run mizu without %s, aborting", flagName)
 		os.Exit(0)
+	}
+
+	if err := config.UpdateConfig(func(configStruct *config.ConfigStruct) { configStruct.Tap.AskUploadConfirmation = false }); err != nil {
+		logger.Log.Debugf("failed updating config with upload confirmation, err: %v", err)
 	}
 }
 
@@ -103,4 +112,5 @@ func init() {
 	tapCmd.Flags().StringP(configStructs.WorkspaceTapName, "w", defaultTapConfig.Workspace, "Uploads traffic to your UP9 workspace for further analysis (requires auth)")
 	tapCmd.Flags().String(configStructs.EnforcePolicyFile, defaultTapConfig.EnforcePolicyFile, "Yaml file path with policy rules")
 	tapCmd.Flags().String(configStructs.ContractFile, defaultTapConfig.ContractFile, "OAS/Swagger file to validate to monitor the contracts")
+	tapCmd.Flags().Bool(configStructs.DaemonModeTapName, defaultTapConfig.DaemonMode, "Run mizu in daemon mode, detached from the cli")
 }

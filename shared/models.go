@@ -1,6 +1,7 @@
 package shared
 
 import (
+	"github.com/up9inc/mizu/tap/api"
 	"io/ioutil"
 	"log"
 	"strings"
@@ -17,6 +18,28 @@ const (
 	WebSocketMessageTypeAnalyzeStatus WebSocketMessageType = "analyzeStatus"
 	WebsocketMessageTypeOutboundLink  WebSocketMessageType = "outboundLink"
 )
+
+type Resources struct {
+	CpuLimit       string `yaml:"cpu-limit" default:"750m"`
+	MemoryLimit    string `yaml:"memory-limit" default:"1Gi"`
+	CpuRequests    string `yaml:"cpu-requests" default:"50m"`
+	MemoryRequests string `yaml:"memory-requests" default:"50Mi"`
+}
+
+type MizuAgentConfig struct {
+	TapTargetRegex          api.SerializableRegexp      `json:"tapTargetRegex"`
+	MaxDBSizeBytes          int64                       `json:"maxDBSizeBytes"`
+	DaemonMode              bool                        `json:"daemonMode"`
+	TargetNamespaces        []string                    `json:"targetNamespaces"`
+	AgentImage              string                      `json:"agentImage"`
+	PullPolicy              string                      `json:"pullPolicy"`
+	DumpLogs                bool                        `json:"dumpLogs"`
+	IgnoredUserAgents       []string                    `json:"ignoredUserAgents"`
+	TapperResources         Resources                   `json:"tapperResources"`
+	MizuResourcesNamespace  string                      `json:"mizuResourceNamespace"`
+	MizuApiFilteringOptions api.TrafficFilteringOptions `json:"mizuApiFilteringOptions"`
+	AgentDatabasePath       string                      `json:"agentDatabasePath"`
+}
 
 type WebSocketMessageMetadata struct {
 	MessageType WebSocketMessageType `json:"messageType,omitempty"`
@@ -79,6 +102,11 @@ func CreateWebSocketMessageTypeAnalyzeStatus(analyzeStatus AnalyzeStatus) WebSoc
 		},
 		AnalyzeStatus: analyzeStatus,
 	}
+}
+
+type HealthResponse struct {
+	TapStatus    TapStatus `json:"tapStatus"`
+	TappersCount int       `json:"tappersCount"`
 }
 
 type VersionResponse struct {
