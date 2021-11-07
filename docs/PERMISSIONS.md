@@ -59,7 +59,7 @@ Mizu needs following permissions on your Kubernetes cluster to run properly
 
 ## Permissions required running with --daemon flag or (optional) for service / pod name resolving
 
-Mandatory permissions for running with `--daemon` flag,
+Mandatory permissions for running with `--daemon` flag.
 
 Optional for service/pod name resolving in non daemon mode
 
