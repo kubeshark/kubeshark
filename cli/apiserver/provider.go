@@ -5,11 +5,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/up9inc/mizu/shared/kubernetes"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/up9inc/mizu/shared/kubernetes"
 
 	"github.com/up9inc/mizu/cli/config"
 	"github.com/up9inc/mizu/shared"
@@ -28,7 +29,7 @@ const DefaultTimeout = 5 * time.Second
 
 func NewProvider(url string, retries int, timeout time.Duration) *Provider {
 	return &Provider{
-		url: url,
+		url:     url,
 		retries: config.GetIntEnvConfig(config.ApiServerRetries, retries),
 		client: &http.Client{
 			Timeout: timeout,
