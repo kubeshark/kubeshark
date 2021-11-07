@@ -24,6 +24,11 @@ func CheckVersionCompatibility(apiServerProvider *apiserver.Provider) (bool, err
 		return false, err
 	}
 
+	if !semver.SemVersion(apiSemVer).IsValid() {
+		logger.Log.Errorf(uiUtils.Red, fmt.Sprintf("api version (%s) is not a valid SemVer", apiSemVer))
+		return false, nil
+	}
+
 	if semver.SemVersion(apiSemVer).Major() == semver.SemVersion(mizu.SemVer).Major() &&
 		semver.SemVersion(apiSemVer).Minor() == semver.SemVersion(mizu.SemVer).Minor() {
 		return true, nil
