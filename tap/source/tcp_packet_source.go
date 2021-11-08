@@ -13,11 +13,12 @@ import (
 	"github.com/up9inc/mizu/tap/diagnose"
 )
 
-type TcpPacketSource struct {
+type tcpPacketSource struct {
 	source    *gopacket.PacketSource
 	handle    *pcap.Handle
 	defragger *ip4defrag.IPv4Defragmenter
 	Behaviour *TcpPacketSourceBehaviour
+	name      string
 }
 
 type TcpPacketSourceBehaviour struct {
@@ -31,14 +32,15 @@ type TcpPacketSourceBehaviour struct {
 
 type TcpPacketInfo struct {
 	Packet gopacket.Packet
-	Source *TcpPacketSource
+	Source *tcpPacketSource
 }
 
-func NewTcpPacketSource(filename string, interfaceName string,
-	behaviour TcpPacketSourceBehaviour) (*TcpPacketSource, error) {
+func newTcpPacketSource(name, filename string, interfaceName string,
+	behaviour TcpPacketSourceBehaviour) (*tcpPacketSource, error) {
 	var err error
 
-	result := &TcpPacketSource{
+	result := &tcpPacketSource{
+		name:      name,
 		defragger: ip4defrag.NewIPv4Defragmenter(),
 		Behaviour: &behaviour,
 	}
@@ -96,21 +98,24 @@ func NewTcpPacketSource(filename string, interfaceName string,
 	return result, nil
 }
 
-func (source *TcpPacketSource) Close() {
+func (source *tcpPacketSource) close() {
 	if source.handle != nil {
 		source.handle.Close()
 	}
 }
 
-func (source *TcpPacketSource) ReadPackets(ipdefrag bool, packets chan<- TcpPacketInfo) error {
+func (source *tcpPacketSource) readPackets(ipdefrag bool, packets chan<- TcpPacketInfo) {
+	logger.Log.Infof("Start reading packets from %v", source.name)
+
 	for {
 		packet, err := source.source.NextPacket()
 
 		if err == io.EOF {
-			return err
+			logger.Log.Infof("Got EOF while reading packets from %v", source.name)
+			return
 		} else if err != nil {
 			if err.Error() != "Timeout Expired" {
-				logger.Log.Debugf("Error: %T", err)
+				logger.Log.Debugf("Error while reading from %v - %v", source.name, err)
 			}
 			continue
 		}
