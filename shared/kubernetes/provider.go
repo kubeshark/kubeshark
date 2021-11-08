@@ -241,8 +241,8 @@ func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, moun
 			},
 		})
 		volumeMounts = append(volumeMounts, core.VolumeMount{
-			Name:             volumeClaimName,
-			MountPath:        shared.DataDirPath,
+			Name:      volumeClaimName,
+			MountPath: shared.DataDirPath,
 		})
 	}
 
@@ -255,8 +255,8 @@ func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, moun
 
 	pod := &core.Pod{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      opts.PodName,
-			Labels:    map[string]string{"app": opts.PodName},
+			Name:   opts.PodName,
+			Labels: map[string]string{"app": opts.PodName},
 		},
 		Spec: core.PodSpec{
 			Containers: []core.Container{
@@ -264,8 +264,8 @@ func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, moun
 					Name:            opts.PodName,
 					Image:           opts.PodImage,
 					ImagePullPolicy: opts.ImagePullPolicy,
-					VolumeMounts: volumeMounts,
-					Command: command,
+					VolumeMounts:    volumeMounts,
+					Command:         command,
 					Env: []core.EnvVar{
 						{
 							Name:  shared.SyncEntriesConfigEnvVar,
@@ -307,7 +307,7 @@ func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, moun
 					},
 				},
 			},
-			Volumes: volumes,
+			Volumes:                       volumes,
 			DNSPolicy:                     core.DNSClusterFirstWithHostNet,
 			TerminationGracePeriodSeconds: new(int64),
 		},
@@ -319,7 +319,6 @@ func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, moun
 	}
 	return pod, nil
 }
-
 
 func (provider *Provider) CreatePod(ctx context.Context, namespace string, podSpec *core.Pod) (*core.Pod, error) {
 	return provider.clientSet.CoreV1().Pods(namespace).Create(ctx, podSpec, metav1.CreateOptions{})
@@ -335,14 +334,14 @@ func (provider *Provider) CreateDeployment(ctx context.Context, namespace string
 	}
 	deployment := &v1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      deploymentName,
+			Name: deploymentName,
 		},
 		Spec: v1.DeploymentSpec{
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{"app": podSpec.ObjectMeta.Labels["app"]},
 			},
-			Template:                *podTemplate,
-			Strategy:                v1.DeploymentStrategy{},
+			Template: *podTemplate,
+			Strategy: v1.DeploymentStrategy{},
 		},
 	}
 	return provider.clientSet.AppsV1().Deployments(namespace).Create(ctx, deployment, metav1.CreateOptions{})
@@ -351,7 +350,7 @@ func (provider *Provider) CreateDeployment(ctx context.Context, namespace string
 func (provider *Provider) CreateService(ctx context.Context, namespace string, serviceName string, appLabelValue string) (*core.Service, error) {
 	service := core.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      serviceName,
+			Name: serviceName,
 		},
 		Spec: core.ServiceSpec{
 			Ports:    []core.ServicePort{{TargetPort: intstr.FromInt(shared.DefaultApiServerPort), Port: 80}},
@@ -383,8 +382,8 @@ func (provider *Provider) doesResourceExist(resource interface{}, err error) (bo
 func (provider *Provider) CreateMizuRBAC(ctx context.Context, namespace string, serviceAccountName string, clusterRoleName string, clusterRoleBindingName string, version string) error {
 	serviceAccount := &core.ServiceAccount{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      serviceAccountName,
-			Labels:    map[string]string{"mizu-cli-version": version},
+			Name:   serviceAccountName,
+			Labels: map[string]string{"mizu-cli-version": version},
 		},
 	}
 	clusterRole := &rbac.ClusterRole{
@@ -436,8 +435,8 @@ func (provider *Provider) CreateMizuRBAC(ctx context.Context, namespace string, 
 func (provider *Provider) CreateMizuRBACNamespaceRestricted(ctx context.Context, namespace string, serviceAccountName string, roleName string, roleBindingName string, version string) error {
 	serviceAccount := &core.ServiceAccount{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      serviceAccountName,
-			Labels:    map[string]string{"mizu-cli-version": version},
+			Name:   serviceAccountName,
+			Labels: map[string]string{"mizu-cli-version": version},
 		},
 	}
 	role := &rbac.Role{
@@ -610,7 +609,7 @@ func (provider *Provider) CreateConfigMap(ctx context.Context, namespace string,
 			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      configMapName,
+			Name: configMapName,
 		},
 		Data: configMapData,
 	}
@@ -853,9 +852,9 @@ func (provider *Provider) CreatePersistentVolumeClaim(ctx context.Context, names
 		ObjectMeta: metav1.ObjectMeta{
 			Name: volumeClaimName,
 		},
-		Spec:       core.PersistentVolumeClaimSpec{
-			AccessModes:      []core.PersistentVolumeAccessMode{core.ReadWriteOnce},
-			Resources:        core.ResourceRequirements{
+		Spec: core.PersistentVolumeClaimSpec{
+			AccessModes: []core.PersistentVolumeAccessMode{core.ReadWriteOnce},
+			Resources: core.ResourceRequirements{
 				Limits: core.ResourceList{
 					core.ResourceStorage: *sizeLimitQuantity,
 				},
