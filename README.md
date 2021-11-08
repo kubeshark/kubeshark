@@ -83,7 +83,7 @@ To tap all pods in current namespace -
 ```
 
 
-###To tap specific pod
+### To tap specific pod
 ```bash
  $ kubectl get pods 
  NAME                            READY   STATUS    RESTARTS   AGE
@@ -96,7 +96,7 @@ To tap all pods in current namespace -
  ^C
 ```
 
-###To tap multiple pods using regex
+### To tap multiple pods using regex
 ```bash
  $ kubectl get pods 
  NAME                            READY   STATUS    RESTARTS   AGE
@@ -111,7 +111,7 @@ To tap all pods in current namespace -
  Web interface is now available at http://localhost:8899
  ^C
 ```
-###To run mizu mizu daemon mode (detached from cli)
+### To run mizu mizu daemon mode (detached from cli)
 ```bash
 $ mizu tap "^ca.*" --daemon
   Mizu will store up to 200MB of traffic, old traffic will be cleared once the limit is reached.
@@ -133,7 +133,7 @@ $ mizu clean # mizu will continue running in cluster until clean is executed
 
 
 
-###To run mizu daemon mode with LoadBalancer kubernetes service
+### To run mizu daemon mode with LoadBalancer kubernetes service
 ```bash
 $ mizu tap "^ca.*" --daemon
   Mizu will store up to 200MB of traffic, old traffic will be cleared once the limit is reached.
