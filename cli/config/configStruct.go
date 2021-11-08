@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"github.com/up9inc/mizu/cli/config/configStructs"
 	"github.com/up9inc/mizu/cli/mizu"
@@ -58,4 +59,11 @@ func (config *ConfigStruct) KubeConfigPath() string {
 
 	home := homedir.HomeDir()
 	return filepath.Join(home, ".kube", "config")
+}
+
+func (config *ConfigStruct) Validate() error {
+	if config.DumpLogs && config.Tap.DaemonMode {
+		return errors.New(fmt.Sprintf("Can't run with both --%s and --%s dump-logs flags", configStructs.DaemonModeTapName, SetCommandName))
+	}
+	return nil
 }
