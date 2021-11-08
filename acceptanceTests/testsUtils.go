@@ -3,6 +3,7 @@ package acceptanceTests
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -11,20 +12,39 @@ import (
 	"path"
 	"strings"
 	"syscall"
+	"testing"
 	"time"
 
 	"github.com/up9inc/mizu/shared"
 )
 
 const (
-	longRetriesCount      = 100
-	shortRetriesCount     = 10
-	defaultApiServerPort  = shared.DefaultApiServerPort
-	defaultNamespaceName  = "mizu-tests"
-	defaultServiceName    = "httpbin"
-	defaultEntriesCount   = 50
+	longRetriesCount     = 100
+	shortRetriesCount    = 10
+	defaultApiServerPort = shared.DefaultApiServerPort
+	defaultNamespaceName = "mizu-tests"
+	defaultServiceName   = "httpbin"
+	defaultEntriesCount  = 50
 	waitAfterTapPodsReady = 3 * time.Second
+	cleanCommandTimeout  = 1 * time.Minute
 )
+
+type PodDescriptor struct {
+	Name      string
+	Namespace string
+}
+
+func isPodDescriptorInPodArray(pods []map[string]interface{}, podDescriptor PodDescriptor) bool {
+	for _, pod := range pods {
+		podNamespace :=  pod["namespace"].(string)
+		podName := pod["name"].(string)
+
+		if podDescriptor.Namespace == podNamespace && strings.Contains(podName, podDescriptor.Name) {
+			return true
+		}
+	}
+	return false
+}
 
 func getCliPath() (string, error) {
 	dir, filePathErr := os.Getwd()
@@ -78,6 +98,10 @@ func getDefaultTapCommandArgs() []string {
 	return append([]string{tapCommand}, defaultCmdArgs...)
 }
 
+func getDefaultTapCommandArgsWithDaemonMode() []string {
+	return append(getDefaultTapCommandArgs(), "--daemon")
+}
+
 func getDefaultTapCommandArgsWithRegex(regex string) []string {
 	tapCommand := "tap"
 	defaultCmdArgs := getDefaultCommandArgs()
@@ -101,6 +125,14 @@ func getDefaultConfigCommandArgs() []string {
 	defaultCmdArgs := getDefaultCommandArgs()
 
 	return append([]string{configCommand}, defaultCmdArgs...)
+}
+
+func getDefaultCleanCommandArgs() []string {
+	return []string{"clean"}
+}
+
+func getDefaultViewCommandArgs() []string {
+	return []string{"view"}
 }
 
 func retriesExecute(retriesCount int, executeFunc func() error) error {
@@ -205,6 +237,36 @@ func executeHttpPostRequest(url string, body interface{}) (interface{}, error) {
 	return executeHttpRequest(response, requestErr)
 }
 
+func runMizuClean() error {
+	cliPath, err := getCliPath()
+	if err != nil {
+		return err
+	}
+
+	cleanCmdArgs := getDefaultCleanCommandArgs()
+
+	cleanCmd := exec.Command(cliPath, cleanCmdArgs...)
+
+	commandDone := make(chan error)
+	go func() {
+		if err := cleanCmd.Run(); err != nil {
+			commandDone <- err
+		}
+		commandDone <- nil
+	}()
+
+	select {
+	case err = <- commandDone:
+		if err != nil {
+			return err
+		}
+	case <- time.After(cleanCommandTimeout):
+		return errors.New("clean command timed out")
+	}
+
+	return nil
+}
+
 func cleanupCommand(cmd *exec.Cmd) error {
 	if err := cmd.Process.Signal(syscall.SIGQUIT); err != nil {
 		return err
@@ -237,6 +299,16 @@ func getLogsPath() (string, error) {
 
 	logsPath := path.Join(dir, "mizu_logs.zip")
 	return logsPath, nil
+}
+
+func daemonCleanup(t *testing.T, viewCmd *exec.Cmd) {
+	if err := runMizuClean(); err != nil {
+		t.Logf("error running mizu clean: %v", err)
+	}
+
+	if err := cleanupCommand(viewCmd); err != nil {
+		t.Logf("failed to cleanup view command, err: %v", err)
+	}
 }
 
 func Contains(slice []string, containsValue string) bool {
