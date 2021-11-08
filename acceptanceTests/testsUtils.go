@@ -79,7 +79,7 @@ func getProxyUrl(namespace string, service string) string {
 }
 
 func getApiServerUrl(port uint16) string {
-	return fmt.Sprintf("http://localhost:%v/mizu", port)
+	return fmt.Sprintf("http://localhost:%v", port)
 }
 
 func getDefaultCommandArgs() []string {
