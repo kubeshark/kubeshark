@@ -345,14 +345,14 @@ func (provider *Provider) CreateDeployment(ctx context.Context, namespace string
 	return provider.clientSet.AppsV1().Deployments(namespace).Create(ctx, deployment, metav1.CreateOptions{})
 }
 
-func (provider *Provider) CreateService(ctx context.Context, namespace string, serviceName string, appLabelValue string, serviceType string) (*core.Service, error) {
+func (provider *Provider) CreateService(ctx context.Context, namespace string, serviceName string, appLabelValue string) (*core.Service, error) {
 	service := core.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: serviceName,
 		},
 		Spec: core.ServiceSpec{
 			Ports:    []core.ServicePort{{TargetPort: intstr.FromInt(shared.DefaultApiServerPort), Port: 80}},
-			Type:     core.ServiceType(serviceType),
+			Type:     core.ServiceTypeNodePort,
 			Selector: map[string]string{"app": appLabelValue},
 		},
 	}

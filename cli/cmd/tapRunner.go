@@ -325,7 +325,7 @@ func createMizuResources(ctx context.Context, cancel context.CancelFunc, kuberne
 		}
 	}
 
-	state.apiServerService, err = kubernetesProvider.CreateService(ctx, config.Config.MizuResourcesNamespace, kubernetes.ApiServerPodName, kubernetes.ApiServerPodName, config.Config.MizuServiceType)
+	state.apiServerService, err = kubernetesProvider.CreateService(ctx, config.Config.MizuResourcesNamespace, kubernetes.ApiServerPodName, kubernetes.ApiServerPodName)
 	if err != nil {
 		return err
 	}
