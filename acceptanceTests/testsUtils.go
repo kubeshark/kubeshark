@@ -87,20 +87,20 @@ func getWebSocketUrl(port uint16) string {
 }
 
 func getDefaultCommandArgs() []string {
-	headless := "--headless"
 	setFlag := "--set"
 	telemetry := "telemetry=false"
 	agentImage := "agent-image=gcr.io/up9-docker-hub/mizu/ci:0.0.0"
 	imagePullPolicy := "image-pull-policy=Never"
 
-	return []string{headless, setFlag, telemetry, setFlag, agentImage, setFlag, imagePullPolicy}
+	return []string{setFlag, telemetry, setFlag, agentImage, setFlag, imagePullPolicy}
 }
 
 func getDefaultTapCommandArgs() []string {
+	headless := "--headless"
 	tapCommand := "tap"
 	defaultCmdArgs := getDefaultCommandArgs()
 
-	return append([]string{tapCommand}, defaultCmdArgs...)
+	return append([]string{tapCommand, headless}, defaultCmdArgs...)
 }
 
 func getDefaultTapCommandArgsWithDaemonMode() []string {
