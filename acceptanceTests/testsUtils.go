@@ -19,14 +19,14 @@ import (
 )
 
 const (
-	longRetriesCount     = 100
-	shortRetriesCount    = 10
-	defaultApiServerPort = shared.DefaultApiServerPort
-	defaultNamespaceName = "mizu-tests"
-	defaultServiceName   = "httpbin"
-	defaultEntriesCount  = 50
+	longRetriesCount      = 100
+	shortRetriesCount     = 10
+	defaultApiServerPort  = shared.DefaultApiServerPort
+	defaultNamespaceName  = "mizu-tests"
+	defaultServiceName    = "httpbin"
+	defaultEntriesCount   = 50
 	waitAfterTapPodsReady = 3 * time.Second
-	cleanCommandTimeout  = 1 * time.Minute
+	cleanCommandTimeout   = 1 * time.Minute
 )
 
 type PodDescriptor struct {
@@ -36,7 +36,7 @@ type PodDescriptor struct {
 
 func isPodDescriptorInPodArray(pods []map[string]interface{}, podDescriptor PodDescriptor) bool {
 	for _, pod := range pods {
-		podNamespace :=  pod["namespace"].(string)
+		podNamespace := pod["namespace"].(string)
 		podName := pod["name"].(string)
 
 		if podDescriptor.Namespace == podNamespace && strings.Contains(podName, podDescriptor.Name) {
@@ -82,13 +82,18 @@ func getApiServerUrl(port uint16) string {
 	return fmt.Sprintf("http://localhost:%v", port)
 }
 
+func getWebSocketUrl(port uint16) string {
+	return fmt.Sprintf("ws://localhost:%v/ws", port)
+}
+
 func getDefaultCommandArgs() []string {
+	headless := "--headless"
 	setFlag := "--set"
 	telemetry := "telemetry=false"
 	agentImage := "agent-image=gcr.io/up9-docker-hub/mizu/ci:0.0.0"
 	imagePullPolicy := "image-pull-policy=Never"
 
-	return []string{setFlag, telemetry, setFlag, agentImage, setFlag, imagePullPolicy}
+	return []string{headless, setFlag, telemetry, setFlag, agentImage, setFlag, imagePullPolicy}
 }
 
 func getDefaultTapCommandArgs() []string {
@@ -256,11 +261,11 @@ func runMizuClean() error {
 	}()
 
 	select {
-	case err = <- commandDone:
+	case err = <-commandDone:
 		if err != nil {
 			return err
 		}
-	case <- time.After(cleanCommandTimeout):
+	case <-time.After(cleanCommandTimeout):
 		return errors.New("clean command timed out")
 	}
 

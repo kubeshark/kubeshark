@@ -113,4 +113,5 @@ func init() {
 	tapCmd.Flags().String(configStructs.EnforcePolicyFile, defaultTapConfig.EnforcePolicyFile, "Yaml file path with policy rules")
 	tapCmd.Flags().String(configStructs.ContractFile, defaultTapConfig.ContractFile, "OAS/Swagger file to validate to monitor the contracts")
 	tapCmd.Flags().Bool(configStructs.DaemonModeTapName, defaultTapConfig.DaemonMode, "Run mizu in daemon mode, detached from the cli")
+	tapCmd.Flags().Bool(configStructs.HeadlessMode, defaultTapConfig.HeadlessMode, "Enable headless mode.")
 }

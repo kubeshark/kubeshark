@@ -10,9 +10,71 @@ import (
 	"os/exec"
 	"path"
 	"strings"
+	"sync"
 	"testing"
 	"time"
+
+	"github.com/gorilla/websocket"
+	"github.com/stretchr/testify/assert"
 )
+
+// waitTimeout waits for the waitgroup for the specified max timeout.
+// Returns true if waiting timed out.
+func waitTimeout(wg *sync.WaitGroup, timeout time.Duration) bool {
+	c := make(chan struct{})
+	go func() {
+		defer close(c)
+		wg.Wait()
+	}()
+	select {
+	case <-c:
+		return false // completed normally
+	case <-time.After(timeout):
+		return true // timed out
+	}
+}
+
+// checkDBHasEntries checks whether there are any entries in the database
+// before the given timestamp. Returns a slice of non-empty entries if it succeeds.
+func checkDBHasEntries(t *testing.T, timestamp int64, limit int) (entries []map[string]interface{}) {
+	query := fmt.Sprintf("timestamp < %d and limit(%d)", timestamp, limit)
+	webSocketUrl := getWebSocketUrl(defaultApiServerPort)
+
+	c, _, err := websocket.DefaultDialer.Dial(webSocketUrl, nil)
+	assert.Nil(t, err)
+	defer c.Close()
+
+	handleWSConnection := func(wg *sync.WaitGroup) {
+		defer wg.Done()
+		for {
+			_, message, err := c.ReadMessage()
+			if err != nil {
+				return
+			}
+
+			var data map[string]interface{}
+			err = json.Unmarshal([]byte(message), &data)
+			assert.Nil(t, err)
+
+			entries = append(entries, data)
+		}
+	}
+
+	err = c.WriteMessage(websocket.TextMessage, []byte(query))
+	assert.Nil(t, err)
+
+	var wg sync.WaitGroup
+	go handleWSConnection(&wg)
+	wg.Add(1)
+
+	waitTimeout(&wg, 1*time.Second)
+
+	if len(entries) == 0 {
+		t.Error("unexpected entries result - Expected more than 0 entries")
+	}
+
+	return
+}
 
 func TestTap(t *testing.T) {
 	if testing.Short() {
@@ -66,21 +128,11 @@ func TestTap(t *testing.T) {
 			entriesCheckFunc := func() error {
 				timestamp := time.Now().UnixNano() / int64(time.Millisecond)
 
-				entriesUrl := fmt.Sprintf("%v/entries?limit=%v&operator=lt&timestamp=%v", apiServerUrl, entriesCount, timestamp)
-				requestResult, requestErr := executeHttpGetRequest(entriesUrl)
-				if requestErr != nil {
-					return fmt.Errorf("failed to get entries, err: %v", requestErr)
-				}
-
-				entries := requestResult.([]interface{})
-				if len(entries) == 0 {
-					return fmt.Errorf("unexpected entries result - Expected more than 0 entries")
-				}
-
-				entry := entries[0].(map[string]interface{})
+				entries := checkDBHasEntries(t, timestamp, entriesCount)
+				entry := entries[0]
 
 				entryUrl := fmt.Sprintf("%v/entries/%v", apiServerUrl, entry["id"])
-				requestResult, requestErr = executeHttpGetRequest(entryUrl)
+				requestResult, requestErr := executeHttpGetRequest(entryUrl)
 				if requestErr != nil {
 					return fmt.Errorf("failed to get entry, err: %v", requestErr)
 				}
@@ -441,21 +493,11 @@ func TestTapRedact(t *testing.T) {
 	redactCheckFunc := func() error {
 		timestamp := time.Now().UnixNano() / int64(time.Millisecond)
 
-		entriesUrl := fmt.Sprintf("%v/entries?limit=%v&operator=lt&timestamp=%v", apiServerUrl, defaultEntriesCount, timestamp)
-		requestResult, requestErr := executeHttpGetRequest(entriesUrl)
-		if requestErr != nil {
-			return fmt.Errorf("failed to get entries, err: %v", requestErr)
-		}
-
-		entries := requestResult.([]interface{})
-		if len(entries) == 0 {
-			return fmt.Errorf("unexpected entries result - Expected more than 0 entries")
-		}
-
-		firstEntry := entries[0].(map[string]interface{})
+		entries := checkDBHasEntries(t, timestamp, defaultEntriesCount)
+		firstEntry := entries[0]
 
 		entryUrl := fmt.Sprintf("%v/entries/%v", apiServerUrl, firstEntry["id"])
-		requestResult, requestErr = executeHttpGetRequest(entryUrl)
+		requestResult, requestErr := executeHttpGetRequest(entryUrl)
 		if requestErr != nil {
 			return fmt.Errorf("failed to get entry, err: %v", requestErr)
 		}
@@ -556,21 +598,11 @@ func TestTapNoRedact(t *testing.T) {
 	redactCheckFunc := func() error {
 		timestamp := time.Now().UnixNano() / int64(time.Millisecond)
 
-		entriesUrl := fmt.Sprintf("%v/entries?limit=%v&operator=lt&timestamp=%v", apiServerUrl, defaultEntriesCount, timestamp)
-		requestResult, requestErr := executeHttpGetRequest(entriesUrl)
-		if requestErr != nil {
-			return fmt.Errorf("failed to get entries, err: %v", requestErr)
-		}
-
-		entries := requestResult.([]interface{})
-		if len(entries) == 0 {
-			return fmt.Errorf("unexpected entries result - Expected more than 0 entries")
-		}
-
-		firstEntry := entries[0].(map[string]interface{})
+		entries := checkDBHasEntries(t, timestamp, defaultEntriesCount)
+		firstEntry := entries[0]
 
 		entryUrl := fmt.Sprintf("%v/entries/%v", apiServerUrl, firstEntry["id"])
-		requestResult, requestErr = executeHttpGetRequest(entryUrl)
+		requestResult, requestErr := executeHttpGetRequest(entryUrl)
 		if requestErr != nil {
 			return fmt.Errorf("failed to get entry, err: %v", requestErr)
 		}
@@ -671,21 +703,11 @@ func TestTapRegexMasking(t *testing.T) {
 	redactCheckFunc := func() error {
 		timestamp := time.Now().UnixNano() / int64(time.Millisecond)
 
-		entriesUrl := fmt.Sprintf("%v/entries?limit=%v&operator=lt&timestamp=%v", apiServerUrl, defaultEntriesCount, timestamp)
-		requestResult, requestErr := executeHttpGetRequest(entriesUrl)
-		if requestErr != nil {
-			return fmt.Errorf("failed to get entries, err: %v", requestErr)
-		}
-
-		entries := requestResult.([]interface{})
-		if len(entries) == 0 {
-			return fmt.Errorf("unexpected entries result - Expected more than 0 entries")
-		}
-
-		firstEntry := entries[0].(map[string]interface{})
+		entries := checkDBHasEntries(t, timestamp, defaultEntriesCount)
+		firstEntry := entries[0]
 
 		entryUrl := fmt.Sprintf("%v/entries/%v", apiServerUrl, firstEntry["id"])
-		requestResult, requestErr = executeHttpGetRequest(entryUrl)
+		requestResult, requestErr := executeHttpGetRequest(entryUrl)
 		if requestErr != nil {
 			return fmt.Errorf("failed to get entry, err: %v", requestErr)
 		}
@@ -778,20 +800,11 @@ func TestTapIgnoredUserAgents(t *testing.T) {
 	ignoredUserAgentsCheckFunc := func() error {
 		timestamp := time.Now().UnixNano() / int64(time.Millisecond)
 
-		entriesUrl := fmt.Sprintf("%v/entries?limit=%v&operator=lt&timestamp=%v", apiServerUrl, defaultEntriesCount*2, timestamp)
-		requestResult, requestErr := executeHttpGetRequest(entriesUrl)
-		if requestErr != nil {
-			return fmt.Errorf("failed to get entries, err: %v", requestErr)
-		}
-
-		entries := requestResult.([]interface{})
-		if len(entries) == 0 {
-			return fmt.Errorf("unexpected entries result - Expected more than 0 entries")
-		}
+		entries := checkDBHasEntries(t, timestamp, defaultEntriesCount)
 
 		for _, entryInterface := range entries {
-			entryUrl := fmt.Sprintf("%v/entries/%v", apiServerUrl, entryInterface.(map[string]interface{})["id"])
-			requestResult, requestErr = executeHttpGetRequest(entryUrl)
+			entryUrl := fmt.Sprintf("%v/entries/%v", apiServerUrl, entryInterface["id"])
+			requestResult, requestErr := executeHttpGetRequest(entryUrl)
 			if requestErr != nil {
 				return fmt.Errorf("failed to get entry, err: %v", requestErr)
 			}
@@ -986,21 +999,11 @@ func TestDaemonSeeTraffic(t *testing.T) {
 			entriesCheckFunc := func() error {
 				timestamp := time.Now().UnixNano() / int64(time.Millisecond)
 
-				entriesUrl := fmt.Sprintf("%v/entries?limit=%v&operator=lt&timestamp=%v", apiServerUrl, entriesCount, timestamp)
-				requestResult, requestErr := executeHttpGetRequest(entriesUrl)
-				if requestErr != nil {
-					return fmt.Errorf("failed to get entries, err: %v", requestErr)
-				}
-
-				entries := requestResult.([]interface{})
-				if len(entries) == 0 {
-					return fmt.Errorf("unexpected entries result - Expected more than 0 entries")
-				}
-
-				entry := entries[0].(map[string]interface{})
+				entries := checkDBHasEntries(t, timestamp, entriesCount)
+				entry := entries[0]
 
 				entryUrl := fmt.Sprintf("%v/entries/%v", apiServerUrl, entry["id"])
-				requestResult, requestErr = executeHttpGetRequest(entryUrl)
+				requestResult, requestErr := executeHttpGetRequest(entryUrl)
 				if requestErr != nil {
 					return fmt.Errorf("failed to get entry, err: %v", requestErr)
 				}
