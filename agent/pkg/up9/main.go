@@ -206,7 +206,8 @@ func syncEntriesImpl(token string, model string, envPrefix string, uploadInterva
 	analyzeInformation.AnalyzeDestination = envPrefix
 	analyzeInformation.SentCount = 0
 
-	query := "http"
+	// "http or grpc" filter indicates that we're only interested in HTTP and gRPC entries
+	query := "http or grpc"
 
 	logger.Log.Infof("Getting entries from the database\n")
 
