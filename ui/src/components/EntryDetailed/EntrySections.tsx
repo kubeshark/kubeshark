@@ -23,7 +23,7 @@ const EntryViewLine: React.FC<EntryViewLineProps> = ({label, value, updateQuery,
                             return
                         } else if (overrideQueryValue) {
                             updateQuery(`${selector} == ${overrideQueryValue}`)
-                        } else if (typeof(value) == "string") {
+                        } else if (typeof(value) === "string") {
                             updateQuery(`${selector} == "${JSON.stringify(value).slice(1, -1)}"`)
                         } else {
                             updateQuery(`${selector} == ${value}`)
