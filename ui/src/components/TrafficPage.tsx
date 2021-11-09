@@ -246,7 +246,6 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                             setEntries={setEntries}
                             focusedEntryId={focusedEntryId}
                             setFocusedEntryId={setFocusedEntryId}
-                            connectionOpen={connection === ConnectionStatus.Connected}
                             listEntryREF={listEntry}
                             onScrollEvent={onScrollEvent}
                             scrollableList={disableScrollList}
