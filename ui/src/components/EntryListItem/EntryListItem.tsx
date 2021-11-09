@@ -208,7 +208,6 @@ export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, isSel
                     title="Timestamp"
                     className="queryable"
                     onClick={() => {
-                        console.log(entry.timestamp)
                         updateQuery(`timestamp >= datetime("${new Date(+entry.timestamp)?.toLocaleString("en-US", {timeZone: 'UTC' })}")`)
                     }}
                 >
