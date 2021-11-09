@@ -24,6 +24,7 @@ import (
 
 const (
 	AnalyzeCheckSleepTime = 5 * time.Second
+	SentCountLogInterval  = 100
 )
 
 type GuestToken struct {
@@ -293,7 +294,7 @@ func syncEntriesImpl(token string, model string, envPrefix string, uploadInterva
 			}
 			analyzeInformation.SentCount += 1
 
-			if analyzeInformation.SentCount%100 == 0 {
+			if analyzeInformation.SentCount%SentCountLogInterval == 0 {
 				logger.Log.Infof("Uploaded %v entries until now", analyzeInformation.SentCount)
 			}
 		}
