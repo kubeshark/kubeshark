@@ -17,6 +17,9 @@ const (
 	WebSocketMessageTypeUpdateStatus  WebSocketMessageType = "status"
 	WebSocketMessageTypeAnalyzeStatus WebSocketMessageType = "analyzeStatus"
 	WebsocketMessageTypeOutboundLink  WebSocketMessageType = "outboundLink"
+	WebSocketMessageTypeToast         WebSocketMessageType = "toast"
+	WebSocketMessageTypeQueryMetadata WebSocketMessageType = "queryMetadata"
+	WebSocketMessageTypeStartTime     WebSocketMessageType = "startTime"
 )
 
 type Resources struct {

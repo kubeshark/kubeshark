@@ -131,97 +131,109 @@ func representProperties(properties map[string]interface{}, rep []interface{}) (
 	userId := ""
 	appId := ""
 
-	if properties["ContentType"] != nil {
-		contentType = properties["ContentType"].(string)
+	if properties["contentType"] != nil {
+		contentType = properties["contentType"].(string)
 	}
-	if properties["ContentEncoding"] != nil {
-		contentEncoding = properties["ContentEncoding"].(string)
+	if properties["contentEncoding"] != nil {
+		contentEncoding = properties["contentEncoding"].(string)
 	}
-	if properties["Delivery Mode"] != nil {
-		deliveryMode = fmt.Sprintf("%g", properties["DeliveryMode"].(float64))
+	if properties["deliveryMode"] != nil {
+		deliveryMode = fmt.Sprintf("%g", properties["deliveryMode"].(float64))
 	}
-	if properties["Priority"] != nil {
-		priority = fmt.Sprintf("%g", properties["Priority"].(float64))
+	if properties["priority"] != nil {
+		priority = fmt.Sprintf("%g", properties["priority"].(float64))
 	}
-	if properties["CorrelationId"] != nil {
-		correlationId = properties["CorrelationId"].(string)
+	if properties["correlationId"] != nil {
+		correlationId = properties["correlationId"].(string)
 	}
-	if properties["ReplyTo"] != nil {
-		replyTo = properties["ReplyTo"].(string)
+	if properties["replyTo"] != nil {
+		replyTo = properties["replyTo"].(string)
 	}
-	if properties["Expiration"] != nil {
-		expiration = properties["Expiration"].(string)
+	if properties["expiration"] != nil {
+		expiration = properties["expiration"].(string)
 	}
-	if properties["MessageId"] != nil {
-		messageId = properties["MessageId"].(string)
+	if properties["messageId"] != nil {
+		messageId = properties["messageId"].(string)
 	}
-	if properties["Timestamp"] != nil {
-		timestamp = properties["Timestamp"].(string)
+	if properties["timestamp"] != nil {
+		timestamp = properties["timestamp"].(string)
 	}
-	if properties["Type"] != nil {
-		_type = properties["Type"].(string)
+	if properties["type"] != nil {
+		_type = properties["type"].(string)
 	}
-	if properties["UserId"] != nil {
-		userId = properties["UserId"].(string)
+	if properties["userId"] != nil {
+		userId = properties["userId"].(string)
 	}
-	if properties["AppId"] != nil {
-		appId = properties["AppId"].(string)
+	if properties["appId"] != nil {
+		appId = properties["appId"].(string)
 	}
 
-	props, _ := json.Marshal([]map[string]string{
+	props, _ := json.Marshal([]api.TableData{
 		{
-			"name":  "Content Type",
-			"value": contentType,
+			Name:     "Content Type",
+			Value:    contentType,
+			Selector: `request.properties.contentType`,
 		},
 		{
-			"name":  "Content Encoding",
-			"value": contentEncoding,
+			Name:     "Content Encoding",
+			Value:    contentEncoding,
+			Selector: `request.properties.contentEncoding`,
 		},
 		{
-			"name":  "Delivery Mode",
-			"value": deliveryMode,
+			Name:     "Delivery Mode",
+			Value:    deliveryMode,
+			Selector: `request.properties.deliveryMode`,
 		},
 		{
-			"name":  "Priority",
-			"value": priority,
+			Name:     "Priority",
+			Value:    priority,
+			Selector: `request.properties.priority`,
 		},
 		{
-			"name":  "Correlation ID",
-			"value": correlationId,
+			Name:     "Correlation ID",
+			Value:    correlationId,
+			Selector: `request.properties.correlationId`,
 		},
 		{
-			"name":  "Reply To",
-			"value": replyTo,
+			Name:     "Reply To",
+			Value:    replyTo,
+			Selector: `request.properties.replyTo`,
 		},
 		{
-			"name":  "Expiration",
-			"value": expiration,
+			Name:     "Expiration",
+			Value:    expiration,
+			Selector: `request.properties.expiration`,
 		},
 		{
-			"name":  "Message ID",
-			"value": messageId,
+			Name:     "Message ID",
+			Value:    messageId,
+			Selector: `request.properties.messageId`,
 		},
 		{
-			"name":  "Timestamp",
-			"value": timestamp,
+			Name:     "Timestamp",
+			Value:    timestamp,
+			Selector: `request.properties.timestamp`,
 		},
 		{
-			"name":  "Type",
-			"value": _type,
+			Name:     "Type",
+			Value:    _type,
+			Selector: `request.properties.type`,
 		},
 		{
-			"name":  "User ID",
-			"value": userId,
+			Name:     "User ID",
+			Value:    userId,
+			Selector: `request.properties.userId`,
 		},
 		{
-			"name":  "App ID",
-			"value": appId,
+			Name:     "App ID",
+			Value:    appId,
+			Selector: `request.properties.appId`,
 		},
 	})
-	rep = append(rep, map[string]string{
-		"type":  api.TABLE,
-		"title": "Properties",
-		"data":  string(props),
+	rep = append(rep, api.SectionData{
+		Type:  api.TABLE,
+		Title: "Properties",
+		Data:  string(props),
 	})
 
 	return rep, contentType, contentEncoding
@@ -230,56 +242,62 @@ func representProperties(properties map[string]interface{}, rep []interface{}) (
 func representBasicPublish(event map[string]interface{}) []interface{} {
 	rep := make([]interface{}, 0)
 
-	details, _ := json.Marshal([]map[string]string{
+	details, _ := json.Marshal([]api.TableData{
 		{
-			"name":  "Exchange",
-			"value": event["Exchange"].(string),
+			Name:     "Exchange",
+			Value:    event["exchange"].(string),
+			Selector: `request.exchange`,
 		},
 		{
-			"name":  "Routing Key",
-			"value": event["RoutingKey"].(string),
+			Name:     "Routing Key",
+			Value:    event["routingKey"].(string),
+			Selector: `request.routingKey`,
 		},
 		{
-			"name":  "Mandatory",
-			"value": strconv.FormatBool(event["Mandatory"].(bool)),
+			Name:     "Mandatory",
+			Value:    strconv.FormatBool(event["mandatory"].(bool)),
+			Selector: `request.mandatory`,
 		},
 		{
-			"name":  "Immediate",
-			"value": strconv.FormatBool(event["Immediate"].(bool)),
+			Name:     "Immediate",
+			Value:    strconv.FormatBool(event["immediate"].(bool)),
+			Selector: `request.immediate`,
 		},
 	})
-	rep = append(rep, map[string]string{
-		"type":  api.TABLE,
-		"title": "Details",
-		"data":  string(details),
+	rep = append(rep, api.SectionData{
+		Type:  api.TABLE,
+		Title: "Details",
+		Data:  string(details),
 	})
 
-	properties := event["Properties"].(map[string]interface{})
+	properties := event["properties"].(map[string]interface{})
 	rep, contentType, _ := representProperties(properties, rep)
 
-	if properties["Headers"] != nil {
-		headers := make([]map[string]string, 0)
-		for name, value := range properties["Headers"].(map[string]interface{}) {
-			headers = append(headers, map[string]string{
-				"name":  name,
-				"value": value.(string),
+	if properties["headers"] != nil {
+		headers := make([]api.TableData, 0)
+		for name, value := range properties["headers"].(map[string]interface{}) {
+			headers = append(headers, api.TableData{
+				Name:     name,
+				Value:    value.(string),
+				Selector: fmt.Sprintf(`request.properties.headers["%s"]`, name),
 			})
 		}
 		headersMarshaled, _ := json.Marshal(headers)
-		rep = append(rep, map[string]string{
-			"type":  api.TABLE,
-			"title": "Headers",
-			"data":  string(headersMarshaled),
+		rep = append(rep, api.SectionData{
+			Type:  api.TABLE,
+			Title: "Headers",
+			Data:  string(headersMarshaled),
 		})
 	}
 
-	if event["Body"] != nil {
-		rep = append(rep, map[string]string{
-			"type":      api.BODY,
-			"title":     "Body",
-			"encoding":  "base64",
-			"mime_type": contentType,
-			"data":      event["Body"].(string),
+	if event["body"] != nil {
+		rep = append(rep, api.SectionData{
+			Type:     api.BODY,
+			Title:    "Body",
+			Encoding: "base64",
+			MimeType: contentType,
+			Data:     event["body"].(string),
+			Selector: `request.body`,
 		})
 	}
 
@@ -293,70 +311,77 @@ func representBasicDeliver(event map[string]interface{}) []interface{} {
 	deliveryTag := ""
 	redelivered := ""
 
-	if event["ConsumerTag"] != nil {
-		consumerTag = event["ConsumerTag"].(string)
+	if event["consumerTag"] != nil {
+		consumerTag = event["consumerTag"].(string)
 	}
-	if event["DeliveryTag"] != nil {
-		deliveryTag = fmt.Sprintf("%g", event["DeliveryTag"].(float64))
+	if event["deliveryTag"] != nil {
+		deliveryTag = fmt.Sprintf("%g", event["deliveryTag"].(float64))
 	}
-	if event["Redelivered"] != nil {
-		redelivered = strconv.FormatBool(event["Redelivered"].(bool))
+	if event["redelivered"] != nil {
+		redelivered = strconv.FormatBool(event["redelivered"].(bool))
 	}
 
-	details, _ := json.Marshal([]map[string]string{
+	details, _ := json.Marshal([]api.TableData{
 		{
-			"name":  "Consumer Tag",
-			"value": consumerTag,
+			Name:     "Consumer Tag",
+			Value:    consumerTag,
+			Selector: `request.consumerTag`,
 		},
 		{
-			"name":  "Delivery Tag",
-			"value": deliveryTag,
+			Name:     "Delivery Tag",
+			Value:    deliveryTag,
+			Selector: `request.deliveryTag`,
 		},
 		{
-			"name":  "Redelivered",
-			"value": redelivered,
+			Name:     "Redelivered",
+			Value:    redelivered,
+			Selector: `request.redelivered`,
 		},
 		{
-			"name":  "Exchange",
-			"value": event["Exchange"].(string),
+			Name:     "Exchange",
+			Value:    event["exchange"].(string),
+			Selector: `request.exchange`,
 		},
 		{
-			"name":  "Routing Key",
-			"value": event["RoutingKey"].(string),
+			Name:     "Routing Key",
+			Value:    event["routingKey"].(string),
+			Selector: `request.routingKey`,
 		},
 	})
-	rep = append(rep, map[string]string{
-		"type":  api.TABLE,
-		"title": "Details",
-		"data":  string(details),
+	rep = append(rep, api.SectionData{
+		Type:  api.TABLE,
+		Title: "Details",
+		Data:  string(details),
 	})
 
-	properties := event["Properties"].(map[string]interface{})
+	properties := event["properties"].(map[string]interface{})
 	rep, contentType, _ := representProperties(properties, rep)
 
-	if properties["Headers"] != nil {
-		headers := make([]map[string]string, 0)
-		for name, value := range properties["Headers"].(map[string]interface{}) {
-			headers = append(headers, map[string]string{
-				"name":  name,
-				"value": value.(string),
+	if properties["headers"] != nil {
+		headers := make([]api.TableData, 0)
+		for name, value := range properties["headers"].(map[string]interface{}) {
+			headers = append(headers, api.TableData{
+				Name:     name,
+				Value:    value.(string),
+				Selector: fmt.Sprintf(`request.properties.headers["%s"]`, name),
 			})
 		}
 		headersMarshaled, _ := json.Marshal(headers)
-		rep = append(rep, map[string]string{
-			"type":  api.TABLE,
-			"title": "Headers",
-			"data":  string(headersMarshaled),
+		rep = append(rep, api.SectionData{
+			Type:  api.TABLE,
+			Title: "Headers",
+			Data:  string(headersMarshaled),
 		})
 	}
 
-	if event["Body"] != nil {
-		rep = append(rep, map[string]string{
-			"type":      api.BODY,
-			"title":     "Body",
-			"encoding":  "base64",
-			"mime_type": contentType,
-			"data":      event["Body"].(string),
+	if event["body"] != nil {
+		rep = append(rep, api.SectionData{
+			Type:     api.BODY,
+			Title:    "Body",
+			Encoding: "base64",
+			MimeType: contentType,
+			Data:     event["body"].(string),
+			Selector: `request.body`,
 		})
 	}
 
@@ -366,51 +391,58 @@ func representBasicDeliver(event map[string]interface{}) []interface{} {
 func representQueueDeclare(event map[string]interface{}) []interface{} {
 	rep := make([]interface{}, 0)
 
-	details, _ := json.Marshal([]map[string]string{
+	details, _ := json.Marshal([]api.TableData{
 		{
-			"name":  "Queue",
-			"value": event["Queue"].(string),
+			Name:     "Queue",
+			Value:    event["queue"].(string),
+			Selector: `request.queue`,
 		},
 		{
-			"name":  "Passive",
-			"value": strconv.FormatBool(event["Passive"].(bool)),
+			Name:     "Passive",
+			Value:    strconv.FormatBool(event["passive"].(bool)),
+			Selector: `request.queue`,
 		},
 		{
-			"name":  "Durable",
-			"value": strconv.FormatBool(event["Durable"].(bool)),
+			Name:     "Durable",
+			Value:    strconv.FormatBool(event["durable"].(bool)),
+			Selector: `request.durable`,
 		},
 		{
-			"name":  "Exclusive",
-			"value": strconv.FormatBool(event["Exclusive"].(bool)),
+			Name:     "Exclusive",
+			Value:    strconv.FormatBool(event["exclusive"].(bool)),
+			Selector: `request.exclusive`,
 		},
 		{
-			"name":  "Auto Delete",
-			"value": strconv.FormatBool(event["AutoDelete"].(bool)),
+			Name:     "Auto Delete",
+			Value:    strconv.FormatBool(event["autoDelete"].(bool)),
+			Selector: `request.autoDelete`,
 		},
 		{
-			"name":  "NoWait",
-			"value": strconv.FormatBool(event["NoWait"].(bool)),
+			Name:     "NoWait",
+			Value:    strconv.FormatBool(event["noWait"].(bool)),
+			Selector: `request.noWait`,
 		},
 	})
-	rep = append(rep, map[string]string{
-		"type":  api.TABLE,
-		"title": "Details",
-		"data":  string(details),
+	rep = append(rep, api.SectionData{
+		Type:  api.TABLE,
+		Title: "Details",
+		Data:  string(details),
 	})
 
-	if event["Arguments"] != nil {
-		headers := make([]map[string]string, 0)
-		for name, value := range event["Arguments"].(map[string]interface{}) {
-			headers = append(headers, map[string]string{
-				"name":  name,
-				"value": value.(string),
+	if event["arguments"] != nil {
+		headers := make([]api.TableData, 0)
+		for name, value := range event["arguments"].(map[string]interface{}) {
+			headers = append(headers, api.TableData{
+				Name:     name,
+				Value:    value.(string),
+				Selector: fmt.Sprintf(`request.arguments["%s"]`, name),
 			})
 		}
 		headersMarshaled, _ := json.Marshal(headers)
-		rep = append(rep, map[string]string{
-			"type":  api.TABLE,
-			"title": "Arguments",
-			"data":  string(headersMarshaled),
+		rep = append(rep, api.SectionData{
+			Type:  api.TABLE,
+			Title: "Arguments",
+			Data:  string(headersMarshaled),
 		})
 	}
 
@@ -420,55 +452,63 @@ func representQueueDeclare(event map[string]interface{}) []interface{} {
 func representExchangeDeclare(event map[string]interface{}) []interface{} {
 	rep := make([]interface{}, 0)
 
-	details, _ := json.Marshal([]map[string]string{
+	details, _ := json.Marshal([]api.TableData{
 		{
-			"name":  "Exchange",
-			"value": event["Exchange"].(string),
+			Name:     "Exchange",
+			Value:    event["exchange"].(string),
+			Selector: `request.exchange`,
 		},
 		{
-			"name":  "Type",
-			"value": event["Type"].(string),
+			Name:     "Type",
+			Value:    event["type"].(string),
+			Selector: `request.type`,
 		},
 		{
-			"name":  "Passive",
-			"value": strconv.FormatBool(event["Passive"].(bool)),
+			Name:     "Passive",
+			Value:    strconv.FormatBool(event["passive"].(bool)),
+			Selector: `request.passive`,
 		},
 		{
-			"name":  "Durable",
-			"value": strconv.FormatBool(event["Durable"].(bool)),
+			Name:     "Durable",
+			Value:    strconv.FormatBool(event["durable"].(bool)),
+			Selector: `request.durable`,
 		},
 		{
-			"name":  "Auto Delete",
-			"value": strconv.FormatBool(event["AutoDelete"].(bool)),
+			Name:     "Auto Delete",
+			Value:    strconv.FormatBool(event["autoDelete"].(bool)),
+			Selector: `request.autoDelete`,
 		},
 		{
-			"name":  "Internal",
-			"value": strconv.FormatBool(event["Internal"].(bool)),
+			Name:     "Internal",
+			Value:    strconv.FormatBool(event["internal"].(bool)),
+			Selector: `request.internal`,
 		},
 		{
-			"name":  "NoWait",
-			"value": strconv.FormatBool(event["NoWait"].(bool)),
+			Name:     "NoWait",
+			Value:    strconv.FormatBool(event["noWait"].(bool)),
+			Selector: `request.noWait`,
 		},
 	})
-	rep = append(rep, map[string]string{
-		"type":  api.TABLE,
-		"title": "Details",
-		"data":  string(details),
+	rep = append(rep, api.SectionData{
+		Type:  api.TABLE,
+		Title: "Details",
+		Data:  string(details),
 	})
 
-	if event["Arguments"] != nil {
-		headers := make([]map[string]string, 0)
-		for name, value := range event["Arguments"].(map[string]interface{}) {
-			headers = append(headers, map[string]string{
-				"name":  name,
-				"value": value.(string),
+	if event["arguments"] != nil {
+		headers := make([]api.TableData, 0)
+		for name, value := range event["arguments"].(map[string]interface{}) {
+			headers = append(headers, api.TableData{
+				Name:     name,
+				Value:    value.(string),
+				Selector: fmt.Sprintf(`request.arguments["%s"]`, name),
 			})
 		}
 		headersMarshaled, _ := json.Marshal(headers)
-		rep = append(rep, map[string]string{
-			"type":  api.TABLE,
-			"title": "Arguments",
-			"data":  string(headersMarshaled),
+		rep = append(rep, api.SectionData{
+			Type:  api.TABLE,
+			Title: "Arguments",
+			Data:  string(headersMarshaled),
 		})
 	}
 
@@ -478,33 +518,37 @@ func representExchangeDeclare(event map[string]interface{}) []interface{} {
 func representConnectionStart(event map[string]interface{}) []interface{} {
 	rep := make([]interface{}, 0)
 
-	details, _ := json.Marshal([]map[string]string{
+	details, _ := json.Marshal([]api.TableData{
 		{
-			"name":  "Version Major",
-			"value": fmt.Sprintf("%g", event["VersionMajor"].(float64)),
+			Name:     "Version Major",
+			Value:    fmt.Sprintf("%g", event["versionMajor"].(float64)),
+			Selector: `request.versionMajor`,
 		},
 		{
-			"name":  "Version Minor",
-			"value": fmt.Sprintf("%g", event["VersionMinor"].(float64)),
+			Name:     "Version Minor",
+			Value:    fmt.Sprintf("%g", event["versionMinor"].(float64)),
+			Selector: `request.versionMinor`,
 		},
 		{
-			"name":  "Mechanisms",
-			"value": event["Mechanisms"].(string),
+			Name:     "Mechanisms",
+			Value:    event["mechanisms"].(string),
+			Selector: `request.mechanisms`,
 		},
 		{
-			"name":  "Locales",
-			"value": event["Locales"].(string),
+			Name:     "Locales",
+			Value:    event["locales"].(string),
+			Selector: `request.locales`,
 		},
 	})
-	rep = append(rep, map[string]string{
-		"type":  api.TABLE,
-		"title": "Details",
-		"data":  string(details),
+	rep = append(rep, api.SectionData{
+		Type:  api.TABLE,
+		Title: "Details",
+		Data:  string(details),
 	})
 
-	if event["ServerProperties"] != nil {
-		headers := make([]map[string]string, 0)
-		for name, value := range event["ServerProperties"].(map[string]interface{}) {
+	if event["serverProperties"] != nil {
+		headers := make([]api.TableData, 0)
+		for name, value := range event["serverProperties"].(map[string]interface{}) {
 			var outcome string
 			switch value.(type) {
 			case string:
@@ -517,16 +561,17 @@ func representConnectionStart(event map[string]interface{}) []interface{} {
 			default:
 				panic("Unknown data type for the server property!")
 			}
-			headers = append(headers, map[string]string{
-				"name":  name,
-				"value": outcome,
+			headers = append(headers, api.TableData{
+				Name:     name,
+				Value:    outcome,
+				Selector: fmt.Sprintf(`request.serverProperties["%s"]`, name),
 			})
 		}
 		headersMarshaled, _ := json.Marshal(headers)
-		rep = append(rep, map[string]string{
-			"type":  api.TABLE,
-			"title": "Server Properties",
-			"data":  string(headersMarshaled),
+		rep = append(rep, api.SectionData{
+			Type:  api.TABLE,
+			Title: "Server Properties",
+			Data:  string(headersMarshaled),
 		})
 	}
 
@@ -536,28 +581,32 @@ func representConnectionStart(event map[string]interface{}) []interface{} {
 func representConnectionClose(event map[string]interface{}) []interface{} {
 	rep := make([]interface{}, 0)
 
-	details, _ := json.Marshal([]map[string]string{
+	details, _ := json.Marshal([]api.TableData{
 		{
-			"name":  "Reply Code",
-			"value": fmt.Sprintf("%g", event["ReplyCode"].(float64)),
+			Name:     "Reply Code",
+			Value:    fmt.Sprintf("%g", event["replyCode"].(float64)),
+			Selector: `request.replyCode`,
 		},
 		{
-			"name":  "Reply Text",
-			"value": event["ReplyText"].(string),
+			Name:     "Reply Text",
+			Value:    event["replyText"].(string),
+			Selector: `request.replyText`,
 		},
 		{
-			"name":  "Class ID",
-			"value": fmt.Sprintf("%g", event["ClassId"].(float64)),
+			Name:     "Class ID",
+			Value:    fmt.Sprintf("%g", event["classId"].(float64)),
+			Selector: `request.classId`,
 		},
 		{
-			"name":  "Method ID",
-			"value": fmt.Sprintf("%g", event["MethodId"].(float64)),
+			Name:     "Method ID",
+			Value:    fmt.Sprintf("%g", event["methodId"].(float64)),
+			Selector: `request.methodId`,
 		},
 	})
-	rep = append(rep, map[string]string{
-		"type":  api.TABLE,
-		"title": "Details",
-		"data":  string(details),
+	rep = append(rep, api.SectionData{
+		Type:  api.TABLE,
+		Title: "Details",
+		Data:  string(details),
 	})
 
 	return rep
@@ -566,43 +615,48 @@ func representConnectionClose(event map[string]interface{}) []interface{} {
 func representQueueBind(event map[string]interface{}) []interface{} {
 	rep := make([]interface{}, 0)
 
-	details, _ := json.Marshal([]map[string]string{
+	details, _ := json.Marshal([]api.TableData{
 		{
-			"name":  "Queue",
-			"value": event["Queue"].(string),
+			Name:     "Queue",
+			Value:    event["queue"].(string),
+			Selector: `request.queue`,
 		},
 		{
-			"name":  "Exchange",
-			"value": event["Exchange"].(string),
+			Name:     "Exchange",
+			Value:    event["exchange"].(string),
+			Selector: `request.exchange`,
 		},
 		{
-			"name":  "RoutingKey",
-			"value": event["RoutingKey"].(string),
+			Name:     "RoutingKey",
+			Value:    event["routingKey"].(string),
+			Selector: `request.routingKey`,
 		},
 		{
-			"name":  "NoWait",
-			"value": strconv.FormatBool(event["NoWait"].(bool)),
+			Name:     "NoWait",
+			Value:    strconv.FormatBool(event["noWait"].(bool)),
+			Selector: `request.noWait`,
 		},
 	})
-	rep = append(rep, map[string]string{
-		"type":  api.TABLE,
-		"title": "Details",
-		"data":  string(details),
+	rep = append(rep, api.SectionData{
+		Type:  api.TABLE,
+		Title: "Details",
+		Data:  string(details),
 	})
 
-	if event["Arguments"] != nil {
-		headers := make([]map[string]string, 0)
-		for name, value := range event["Arguments"].(map[string]interface{}) {
-			headers = append(headers, map[string]string{
-				"name":  name,
-				"value": value.(string),
+	if event["arguments"] != nil {
+		headers := make([]api.TableData, 0)
+		for name, value := range event["arguments"].(map[string]interface{}) {
+			headers = append(headers, api.TableData{
+				Name:     name,
+				Value:    value.(string),
+				Selector: fmt.Sprintf(`request.arguments["%s"]`, name),
 			})
 		}
 		headersMarshaled, _ := json.Marshal(headers)
-		rep = append(rep, map[string]string{
-			"type":  api.TABLE,
-			"title": "Arguments",
-			"data":  string(headersMarshaled),
+		rep = append(rep, api.SectionData{
+			Type:  api.TABLE,
+			Title: "Arguments",
+			Data:  string(headersMarshaled),
 		})
 	}
 
@@ -612,51 +666,58 @@ func representQueueBind(event map[string]interface{}) []interface{} {
 func representBasicConsume(event map[string]interface{}) []interface{} {
 	rep := make([]interface{}, 0)
 
-	details, _ := json.Marshal([]map[string]string{
+	details, _ := json.Marshal([]api.TableData{
 		{
-			"name":  "Queue",
-			"value": event["Queue"].(string),
+			Name:     "Queue",
+			Value:    event["queue"].(string),
+			Selector: `request.queue`,
 		},
 		{
-			"name":  "Consumer Tag",
-			"value": event["ConsumerTag"].(string),
+			Name:     "Consumer Tag",
+			Value:    event["consumerTag"].(string),
+			Selector: `request.consumerTag`,
 		},
 		{
-			"name":  "No Local",
-			"value": strconv.FormatBool(event["NoLocal"].(bool)),
+			Name:     "No Local",
+			Value:    strconv.FormatBool(event["noLocal"].(bool)),
+			Selector: `request.noLocal`,
 		},
 		{
-			"name":  "No Ack",
-			"value": strconv.FormatBool(event["NoAck"].(bool)),
+			Name:     "No Ack",
+			Value:    strconv.FormatBool(event["noAck"].(bool)),
+			Selector: `request.noAck`,
 		},
 		{
-			"name":  "Exclusive",
-			"value": strconv.FormatBool(event["Exclusive"].(bool)),
+			Name:     "Exclusive",
+			Value:    strconv.FormatBool(event["exclusive"].(bool)),
+			Selector: `request.exclusive`,
 		},
 		{
-			"name":  "NoWait",
-			"value": strconv.FormatBool(event["NoWait"].(bool)),
+			Name:     "NoWait",
+			Value:    strconv.FormatBool(event["noWait"].(bool)),
+			Selector: `request.noWait`,
 		},
 	})
-	rep = append(rep, map[string]string{
-		"type":  api.TABLE,
-		"title": "Details",
-		"data":  string(details),
+	rep = append(rep, api.SectionData{
+		Type:  api.TABLE,
+		Title: "Details",
+		Data:  string(details),
 	})
 
-	if event["Arguments"] != nil {
-		headers := make([]map[string]string, 0)
-		for name, value := range event["Arguments"].(map[string]interface{}) {
-			headers = append(headers, map[string]string{
-				"name":  name,
-				"value": value.(string),
+	if event["arguments"] != nil {
+		headers := make([]api.TableData, 0)
+		for name, value := range event["arguments"].(map[string]interface{}) {
+			headers = append(headers, api.TableData{
+				Name:     name,
+				Value:    value.(string),
+				Selector: fmt.Sprintf(`request.arguments["%s"]`, name),
 			})
 		}
 		headersMarshaled, _ := json.Marshal(headers)
-		rep = append(rep, map[string]string{
-			"type":  api.TABLE,
-			"title": "Arguments",
-			"data":  string(headersMarshaled),
+		rep = append(rep, api.SectionData{
+			Type:  api.TABLE,
+			Title: "Arguments",
+			Data:  string(headersMarshaled),
 		})
 	}
 

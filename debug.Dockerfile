@@ -12,7 +12,7 @@ FROM golang:1.16-alpine AS builder
 # Set necessary environment variables needed for our image.
 ENV CGO_ENABLED=1 GOOS=linux GOARCH=amd64
 
-RUN apk add libpcap-dev gcc g++ make bash
+RUN apk add libpcap-dev gcc g++ make bash perl-utils
 
 # Move to agent working directory (/agent-build).
 WORKDIR /app/agent-build
@@ -23,7 +23,7 @@ COPY tap/go.mod tap/go.mod ../tap/
 COPY tap/api/go.* ../tap/api/
 RUN go mod download
 # cheap trick to make the build faster (As long as go.mod wasn't changes)
-RUN go list -f '{{.Path}}@{{.Version}}' -m all | sed 1d | grep -e 'go-cache' -e 'sqlite' | xargs go get
+RUN go list -f '{{.Path}}@{{.Version}}' -m all | sed 1d | grep -e 'go-cache' | xargs go get
 
 ARG COMMIT_HASH
 ARG GIT_BRANCH
@@ -36,6 +36,12 @@ COPY tap ../tap
 COPY agent .
 RUN go build -gcflags="all=-N -l" -o mizuagent .
 
+# Download Basenine executable, verify the sha1sum and move it to a directory in $PATH
+ADD https://github.com/up9inc/basenine/releases/download/v0.2.6/basenine_linux_amd64 ./basenine_linux_amd64
+ADD https://github.com/up9inc/basenine/releases/download/v0.2.6/basenine_linux_amd64.sha256 ./basenine_linux_amd64.sha256
+RUN shasum -a 256 -c basenine_linux_amd64.sha256
+RUN chmod +x ./basenine_linux_amd64
+
 COPY devops/build_extensions_debug.sh ..
 RUN cd .. && /bin/bash build_extensions_debug.sh
 
@@ -43,10 +49,12 @@ RUN cd .. && /bin/bash build_extensions_debug.sh
 FROM golang:1.16-alpine
 
 RUN apk add bash libpcap-dev tcpdump
+
 WORKDIR /app
 
 # Copy binary and config files from /build to root folder of scratch container.
 COPY --from=builder ["/app/agent-build/mizuagent", "."]
+COPY --from=builder ["/app/agent-build/basenine_linux_amd64", "/usr/local/bin/basenine"]
 COPY --from=builder ["/app/agent/build/extensions", "extensions"]
 COPY --from=site-build ["/app/ui-build/build", "site"]
 

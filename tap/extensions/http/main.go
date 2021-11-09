@@ -17,6 +17,7 @@ var protocol api.Protocol = api.Protocol{
 	Name:            "http",
 	LongName:        "Hypertext Transfer Protocol -- HTTP/1.1",
 	Abbreviation:    "HTTP",
+	Macro:           "http",
 	Version:         "1.1",
 	BackgroundColor: "#205cf5",
 	ForegroundColor: "#ffffff",
@@ -30,6 +31,7 @@ var http2Protocol api.Protocol = api.Protocol{
 	Name:            "http",
 	LongName:        "Hypertext Transfer Protocol Version 2 (HTTP/2) (gRPC)",
 	Abbreviation:    "HTTP/2",
+	Macro:           "grpc",
 	Version:         "2.0",
 	BackgroundColor: "#244c5a",
 	ForegroundColor: "#ffffff",
@@ -117,7 +119,7 @@ func SetHostname(address, newHostname string) string {
 	return replacedUrl.String()
 }
 
-func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolvedSource string, resolvedDestination string) *api.MizuEntry {
+func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, resolvedDestination string) *api.MizuEntry {
 	var host, scheme, authority, path, service string
 
 	request := item.Pair.Request.Payload.(map[string]interface{})
@@ -145,10 +147,32 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolve
 		service = fmt.Sprintf("%s://%s", scheme, authority)
 	} else {
 		service = fmt.Sprintf("http://%s", host)
-		path = reqDetails["url"].(string)
+		u, err := url.Parse(reqDetails["url"].(string))
+		if err != nil {
+			path = reqDetails["url"].(string)
+		} else {
+			path = u.Path
+		}
 	}
 
-	request["url"] = path
+	request["url"] = reqDetails["url"].(string)
+	reqDetails["path"] = path
+	reqDetails["summary"] = path
+
+	// Rearrange the maps for the querying
+	reqDetails["_headers"] = reqDetails["headers"]
+	reqDetails["headers"] = mapSliceRebuildAsMap(reqDetails["_headers"].([]interface{}))
+	resDetails["_headers"] = resDetails["headers"]
+	resDetails["headers"] = mapSliceRebuildAsMap(resDetails["_headers"].([]interface{}))
+
+	reqDetails["_cookies"] = reqDetails["cookies"]
+	reqDetails["cookies"] = mapSliceRebuildAsMap(reqDetails["_cookies"].([]interface{}))
+	resDetails["_cookies"] = resDetails["cookies"]
+	resDetails["cookies"] = mapSliceRebuildAsMap(resDetails["_cookies"].([]interface{}))
+
+	reqDetails["_queryString"] = reqDetails["queryString"]
+	reqDetails["queryString"] = mapSliceRebuildAsMap(reqDetails["_queryString"].([]interface{}))
+
 	if resolvedDestination != "" {
 		service = SetHostname(service, resolvedDestination)
 	} else if resolvedSource != "" {
@@ -156,51 +180,59 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolve
 	}
 
 	elapsedTime := item.Pair.Response.CaptureTime.Sub(item.Pair.Request.CaptureTime).Round(time.Millisecond).Milliseconds()
-	entryBytes, _ := json.Marshal(item.Pair)
+	httpPair, _ := json.Marshal(item.Pair)
+	_protocol := protocol
+	_protocol.Version = item.Protocol.Version
 	return &api.MizuEntry{
-		ProtocolName:            protocol.Name,
-		ProtocolLongName:        protocol.LongName,
-		ProtocolAbbreviation:    protocol.Abbreviation,
-		ProtocolVersion:         item.Protocol.Version,
-		ProtocolBackgroundColor: protocol.BackgroundColor,
-		ProtocolForegroundColor: protocol.ForegroundColor,
-		ProtocolFontSize:        protocol.FontSize,
-		ProtocolReferenceLink:   protocol.ReferenceLink,
-		EntryId:                 entryId,
-		Entry:                   string(entryBytes),
-		Url:                     fmt.Sprintf("%s%s", service, path),
-		Method:                  reqDetails["method"].(string),
-		Status:                  int(resDetails["status"].(float64)),
-		RequestSenderIp:         item.ConnectionInfo.ClientIP,
-		Service:                 service,
-		Timestamp:               item.Timestamp,
-		ElapsedTime:             elapsedTime,
-		Path:                    path,
-		ResolvedSource:          resolvedSource,
-		ResolvedDestination:     resolvedDestination,
-		SourceIp:                item.ConnectionInfo.ClientIP,
-		DestinationIp:           item.ConnectionInfo.ServerIP,
-		SourcePort:              item.ConnectionInfo.ClientPort,
-		DestinationPort:         item.ConnectionInfo.ServerPort,
-		IsOutgoing:              item.ConnectionInfo.IsOutgoing,
+		Protocol: _protocol,
+		Source: &api.TCP{
+			Name: resolvedSource,
+			IP:   item.ConnectionInfo.ClientIP,
+			Port: item.ConnectionInfo.ClientPort,
+		},
+		Destination: &api.TCP{
+			Name: resolvedDestination,
+			IP:   item.ConnectionInfo.ServerIP,
+			Port: item.ConnectionInfo.ServerPort,
+		},
+		Outgoing:            item.ConnectionInfo.IsOutgoing,
+		Request:             reqDetails,
+		Response:            resDetails,
+		Url:                 fmt.Sprintf("%s%s", service, path),
+		Method:              reqDetails["method"].(string),
+		Status:              int(resDetails["status"].(float64)),
+		RequestSenderIp:     item.ConnectionInfo.ClientIP,
+		Service:             service,
+		Timestamp:           item.Timestamp,
+		StartTime:           item.Pair.Request.CaptureTime,
+		ElapsedTime:         elapsedTime,
+		Summary:             path,
+		ResolvedSource:      resolvedSource,
+		ResolvedDestination: resolvedDestination,
+		SourceIp:            item.ConnectionInfo.ClientIP,
+		DestinationIp:       item.ConnectionInfo.ServerIP,
+		SourcePort:          item.ConnectionInfo.ClientPort,
+		DestinationPort:     item.ConnectionInfo.ServerPort,
+		IsOutgoing:          item.ConnectionInfo.IsOutgoing,
+		HTTPPair:            string(httpPair),
 	}
 }
 
 func (d dissecting) Summarize(entry *api.MizuEntry) *api.BaseEntryDetails {
 	var p api.Protocol
-	if entry.ProtocolVersion == "2.0" {
+	if entry.Protocol.Version == "2.0" {
 		p = http2Protocol
 	} else {
 		p = protocol
 	}
 	return &api.BaseEntryDetails{
-		Id:              entry.EntryId,
+		Id:              entry.Id,
 		Protocol:        p,
 		Url:             entry.Url,
 		RequestSenderIp: entry.RequestSenderIp,
 		Service:         entry.Service,
 		Path:            entry.Path,
-		Summary:         entry.Path,
+		Summary:         entry.Summary,
 		StatusCode:      entry.Status,
 		Method:          entry.Method,
 		Timestamp:       entry.Timestamp,
@@ -218,45 +250,50 @@ func (d dissecting) Summarize(entry *api.MizuEntry) *api.BaseEntryDetails {
 }
 
 func representRequest(request map[string]interface{}) (repRequest []interface{}) {
-	details, _ := json.Marshal([]map[string]string{
+	details, _ := json.Marshal([]api.TableData{
 		{
-			"name":  "Method",
-			"value": request["method"].(string),
+			Name:     "Method",
+			Value:    request["method"].(string),
+			Selector: `request.method`,
 		},
 		{
-			"name":  "URL",
-			"value": request["url"].(string),
+			Name:     "URL",
+			Value:    request["url"].(string),
+			Selector: `request.url`,
 		},
 		{
-			"name":  "Body Size",
-			"value": fmt.Sprintf("%g bytes", request["bodySize"].(float64)),
+			Name:     "Path",
+			Value:    request["path"].(string),
+			Selector: `request.path`,
+		},
+		{
+			Name:     "Body Size (bytes)",
+			Value:    int64(request["bodySize"].(float64)),
+			Selector: `request.bodySize`,
 		},
 	})
-	repRequest = append(repRequest, map[string]string{
-		"type":  api.TABLE,
-		"title": "Details",
-		"data":  string(details),
+	repRequest = append(repRequest, api.SectionData{
+		Type:  api.TABLE,
+		Title: "Details",
+		Data:  string(details),
 	})
 
-	headers, _ := json.Marshal(request["headers"].([]interface{}))
-	repRequest = append(repRequest, map[string]string{
-		"type":  api.TABLE,
-		"title": "Headers",
-		"data":  string(headers),
+	repRequest = append(repRequest, api.SectionData{
+		Type:  api.TABLE,
+		Title: "Headers",
+		Data:  representMapSliceAsTable(request["_headers"].([]interface{}), `request.headers`),
 	})
 
-	cookies, _ := json.Marshal(request["cookies"].([]interface{}))
-	repRequest = append(repRequest, map[string]string{
-		"type":  api.TABLE,
-		"title": "Cookies",
-		"data":  string(cookies),
+	repRequest = append(repRequest, api.SectionData{
+		Type:  api.TABLE,
+		Title: "Cookies",
+		Data:  representMapSliceAsTable(request["_cookies"].([]interface{}), `request.cookies`),
 	})
 
-	queryString, _ := json.Marshal(request["queryString"].([]interface{}))
-	repRequest = append(repRequest, map[string]string{
-		"type":  api.TABLE,
-		"title": "Query String",
-		"data":  string(queryString),
+	repRequest = append(repRequest, api.SectionData{
+		Type:  api.TABLE,
+		Title: "Query String",
+		Data:  representMapSliceAsTable(request["_queryString"].([]interface{}), `request.queryString`),
 	})
 
 	postData, _ := request["postData"].(map[string]interface{})
@@ -266,12 +303,12 @@ func representRequest(request map[string]interface{}) (repRequest []interface{})
 	}
 	text, _ := postData["text"]
 	if text != nil {
-		repRequest = append(repRequest, map[string]string{
-			"type":      api.BODY,
-			"title":     "POST Data (text/plain)",
-			"encoding":  "",
-			"mime_type": mimeType.(string),
-			"data":      text.(string),
+		repRequest = append(repRequest, api.SectionData{
+			Type:     api.BODY,
+			Title:    "POST Data (text/plain)",
+			MimeType: mimeType.(string),
+			Data:     text.(string),
+			Selector: `request.postData.text`,
 		})
 	}
 
@@ -285,16 +322,16 @@ func representRequest(request map[string]interface{}) (repRequest []interface{})
 						"value": string(params),
 					},
 				})
-				repRequest = append(repRequest, map[string]string{
-					"type":  api.TABLE,
-					"title": "POST Data (multipart/form-data)",
-					"data":  string(multipart),
+				repRequest = append(repRequest, api.SectionData{
+					Type:  api.TABLE,
+					Title: "POST Data (multipart/form-data)",
+					Data:  string(multipart),
 				})
 			} else {
-				repRequest = append(repRequest, map[string]string{
-					"type":  api.TABLE,
-					"title": "POST Data (application/x-www-form-urlencoded)",
-					"data":  string(params),
+				repRequest = append(repRequest, api.SectionData{
+					Type:  api.TABLE,
+					Title: "POST Data (application/x-www-form-urlencoded)",
+					Data:  representMapSliceAsTable(postData["params"].([]interface{}), `request.postData.params`),
 				})
 			}
 		}
@@ -308,38 +345,39 @@ func representResponse(response map[string]interface{}) (repResponse []interface
 
 	bodySize = int64(response["bodySize"].(float64))
 
-	details, _ := json.Marshal([]map[string]string{
+	details, _ := json.Marshal([]api.TableData{
 		{
-			"name":  "Status",
-			"value": fmt.Sprintf("%g", response["status"].(float64)),
+			Name:     "Status",
+			Value:    int64(response["status"].(float64)),
+			Selector: `response.status`,
 		},
 		{
-			"name":  "Status Text",
-			"value": response["statusText"].(string),
+			Name:     "Status Text",
+			Value:    response["statusText"].(string),
+			Selector: `response.statusText`,
 		},
 		{
-			"name":  "Body Size",
-			"value": fmt.Sprintf("%d bytes", bodySize),
+			Name:     "Body Size (bytes)",
+			Value:    bodySize,
+			Selector: `response.bodySize`,
 		},
 	})
-	repResponse = append(repResponse, map[string]string{
-		"type":  api.TABLE,
-		"title": "Details",
-		"data":  string(details),
-	})
-
-	headers, _ := json.Marshal(response["headers"].([]interface{}))
-	repResponse = append(repResponse, map[string]string{
-		"type":  api.TABLE,
-		"title": "Headers",
-		"data":  string(headers),
+	repResponse = append(repResponse, api.SectionData{
+		Type:  api.TABLE,
+		Title: "Details",
+		Data:  string(details),
 	})
 
-	cookies, _ := json.Marshal(response["cookies"].([]interface{}))
-	repResponse = append(repResponse, map[string]string{
-		"type":  api.TABLE,
-		"title": "Cookies",
-		"data":  string(cookies),
+	repResponse = append(repResponse, api.SectionData{
+		Type:  api.TABLE,
+		Title: "Headers",
+		Data:  representMapSliceAsTable(response["_headers"].([]interface{}), `response.headers`),
+	})
+
+	repResponse = append(repResponse, api.SectionData{
+		Type:  api.TABLE,
+		Title: "Cookies",
+		Data:  representMapSliceAsTable(response["_cookies"].([]interface{}), `response.cookies`),
 	})
 
 	content, _ := response["content"].(map[string]interface{})
@@ -350,37 +388,40 @@ func representResponse(response map[string]interface{}) (repResponse []interface
 	encoding, _ := content["encoding"]
 	text, _ := content["text"]
 	if text != nil {
-		repResponse = append(repResponse, map[string]string{
-			"type":      api.BODY,
-			"title":     "Body",
-			"encoding":  encoding.(string),
-			"mime_type": mimeType.(string),
-			"data":      text.(string),
+		repResponse = append(repResponse, api.SectionData{
+			Type:     api.BODY,
+			Title:    "Body",
+			Encoding: encoding.(string),
+			MimeType: mimeType.(string),
+			Data:     text.(string),
+			Selector: `response.content.text`,
 		})
 	}
 
 	return
 }
 
-func (d dissecting) Represent(entry *api.MizuEntry) (p api.Protocol, object []byte, bodySize int64, err error) {
-	if entry.ProtocolVersion == "2.0" {
-		p = http2Protocol
+func (d dissecting) Represent(protoIn api.Protocol, request map[string]interface{}, response map[string]interface{}) (protoOut api.Protocol, object []byte, bodySize int64, err error) {
+	if protoIn.Version == "2.0" {
+		protoOut = http2Protocol
 	} else {
-		p = protocol
+		protoOut = protocol
 	}
-	var root map[string]interface{}
-	json.Unmarshal([]byte(entry.Entry), &root)
 	representation := make(map[string]interface{}, 0)
-	request := root["request"].(map[string]interface{})["payload"].(map[string]interface{})
-	response := root["response"].(map[string]interface{})["payload"].(map[string]interface{})
-	reqDetails := request["details"].(map[string]interface{})
-	resDetails := response["details"].(map[string]interface{})
-	repRequest := representRequest(reqDetails)
-	repResponse, bodySize := representResponse(resDetails)
+	repRequest := representRequest(request)
+	repResponse, bodySize := representResponse(response)
 	representation["request"] = repRequest
 	representation["response"] = repResponse
 	object, err = json.Marshal(representation)
 	return
+}
+
+func (d dissecting) Macros() map[string]string {
+	return map[string]string{
+		`http`:  fmt.Sprintf(`proto.abbr == "%s"`, protocol.Abbreviation),
+		`grpc`:  fmt.Sprintf(`proto.abbr == "%s" and proto.version == "%s"`, protocol.Abbreviation, http2Protocol.Version),
+		`http2`: fmt.Sprintf(`proto.abbr == "%s" and proto.version == "%s"`, protocol.Abbreviation, http2Protocol.Version),
+	}
 }
 
 var Dissector dissecting

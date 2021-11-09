@@ -9,11 +9,29 @@ import ProtobufDecoder from "protobuf-decoder";
 interface EntryViewLineProps {
     label: string;
     value: number | string;
+    updateQuery: any;
+    selector: string;
+    overrideQueryValue?: string;
 }
 
-const EntryViewLine: React.FC<EntryViewLineProps> = ({label, value}) => {
+const EntryViewLine: React.FC<EntryViewLineProps> = ({label, value, updateQuery, selector, overrideQueryValue}) => {
     return (label && value && <tr className={styles.dataLine}>
-                <td className={styles.dataKey}>{label}</td>
+                <td
+                    className={`queryable ${styles.dataKey}`}
+                    onClick={() => {
+                        if (!selector) {
+                            return
+                        } else if (overrideQueryValue) {
+                            updateQuery(`${selector} == ${overrideQueryValue}`)
+                        } else if (typeof(value) === "string") {
+                            updateQuery(`${selector} == "${JSON.stringify(value).slice(1, -1)}"`)
+                        } else {
+                            updateQuery(`${selector} == ${value}`)
+                        }
+                    }}
+                >
+                    {label}
+                </td>
                 <td>
                     <FancyTextDisplay
                         className={styles.dataValue}
@@ -62,15 +80,19 @@ export const EntrySectionContainer: React.FC<EntrySectionContainerProps> = ({tit
 interface EntryBodySectionProps {
     content: any,
     color: string,
+    updateQuery: any,
     encoding?: string,
     contentType?: string,
+    selector?: string,
 }
 
 export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
     color,
+    updateQuery,
     content,
     encoding,
     contentType,
+    selector,
 }) => {
     const MAXIMUM_BYTES_TO_HIGHLIGHT = 10000; // The maximum of chars to highlight in body, in case the response can be megabytes
     const supportedLanguages = [['html', 'html'], ['json', 'json'], ['application/grpc', 'json']]; // [[indicator, languageToUse],...]
@@ -107,8 +129,8 @@ export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
         {content && content?.length > 0 && <EntrySectionContainer title='Body' color={color}>
             <table>
                 <tbody>
-                    <EntryViewLine label={'Mime type'} value={contentType}/>
-                    <EntryViewLine label={'Encoding'} value={encoding}/>
+                    <EntryViewLine label={'Mime type'} value={contentType} updateQuery={updateQuery} selector={selector} overrideQueryValue={`r".*"`}/>
+                    <EntryViewLine label={'Encoding'} value={encoding} updateQuery={updateQuery} selector={selector} overrideQueryValue={`r".*"`}/>
                 </tbody>
             </table>
 
@@ -132,17 +154,23 @@ interface EntrySectionProps {
     title: string,
     color: string,
     arrayToIterate: any[],
+    updateQuery: any,
 }
 
-export const EntryTableSection: React.FC<EntrySectionProps> = ({title, color, arrayToIterate}) => {
+export const EntryTableSection: React.FC<EntrySectionProps> = ({title, color, arrayToIterate, updateQuery}) => {
     return <React.Fragment>
         {
             arrayToIterate && arrayToIterate.length > 0 ?
                 <EntrySectionContainer title={title} color={color}>
                     <table>
                         <tbody>
-                            {arrayToIterate.map(({name, value}, index) => <EntryViewLine key={index} label={name}
-                                                                                            value={value}/>)}
+                            {arrayToIterate.map(({name, value, selector}, index) => <EntryViewLine
+                                key={index}
+                                label={name}
+                                value={value}
+                                updateQuery={updateQuery}
+                                selector={selector}
+                            />)}
                         </tbody>
                     </table>
                 </EntrySectionContainer> : <span/>

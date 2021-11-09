@@ -29,13 +29,8 @@ export default class Api {
         return response.data;
     }
 
-    getEntry = async (entryId) => {
-        const response = await this.client.get(`/entries/${entryId}`);
-        return response.data;
-    }
-
-    fetchEntries = async (operator, timestamp) => {
-        const response = await this.client.get(`/entries?limit=50&operator=${operator}&timestamp=${timestamp}`);
+    getEntry = async (id) => {
+        const response = await this.client.get(`/entries/${id}`);
         return response.data;
     }
 
@@ -46,6 +41,13 @@ export default class Api {
 
     getAuthStatus = async () => {
         const response = await this.client.get("/status/auth");
+        return response.data;
+    }
+
+    validateQuery = async (query) => {
+        const form = new FormData();
+        form.append('query', query)
+        const response = await this.client.post(`/query/validate`, form);
         return response.data;
     }
 }

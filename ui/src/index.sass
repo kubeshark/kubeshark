@@ -22,6 +22,11 @@ code
 .uppercase
   text-transform: uppercase
 
+.queryable
+  cursor: pointer
+  &:hover
+    text-decoration: underline
+
 /****
  * Button
  ***/
@@ -31,11 +36,13 @@ button
   &:not(.MuiFab-root)
     &.MuiButtonBase-root
       box-sizing: border-box
-      font-weight: 500
+      font-weight: 600
       line-height: 1
-      border-radius: 20px
+      border-radius: 4px
       letter-spacing: 0.02857em
-      text-transform: uppercase
+      background-color: $blue-color
+      color: #fff
+      text-transform: none
       img:not(.custom)
         max-width: 13px
         max-height: 13px

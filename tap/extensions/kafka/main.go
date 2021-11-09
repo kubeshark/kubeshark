@@ -15,6 +15,7 @@ var _protocol api.Protocol = api.Protocol{
 	Name:            "kafka",
 	LongName:        "Apache Kafka Protocol",
 	Abbreviation:    "KAFKA",
+	Macro:           "kafka",
 	Version:         "12",
 	BackgroundColor: "#000000",
 	ForegroundColor: "#ffffff",
@@ -61,7 +62,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 	}
 }
 
-func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolvedSource string, resolvedDestination string) *api.MizuEntry {
+func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, resolvedDestination string) *api.MizuEntry {
 	request := item.Pair.Request.Payload.(map[string]interface{})
 	reqDetails := request["details"].(map[string]interface{})
 	service := "kafka"
@@ -70,76 +71,76 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolve
 	} else if resolvedSource != "" {
 		service = resolvedSource
 	}
-	apiKey := ApiKey(reqDetails["ApiKey"].(float64))
+	apiKey := ApiKey(reqDetails["apiKey"].(float64))
 
 	summary := ""
 	switch apiKey {
 	case Metadata:
-		_topics := reqDetails["Payload"].(map[string]interface{})["Topics"]
+		_topics := reqDetails["payload"].(map[string]interface{})["topics"]
 		if _topics == nil {
 			break
 		}
 		topics := _topics.([]interface{})
 		for _, topic := range topics {
-			summary += fmt.Sprintf("%s, ", topic.(map[string]interface{})["Name"].(string))
+			summary += fmt.Sprintf("%s, ", topic.(map[string]interface{})["name"].(string))
 		}
 		if len(summary) > 0 {
 			summary = summary[:len(summary)-2]
 		}
 		break
 	case ApiVersions:
-		summary = reqDetails["ClientID"].(string)
+		summary = reqDetails["clientID"].(string)
 		break
 	case Produce:
-		_topics := reqDetails["Payload"].(map[string]interface{})["TopicData"]
+		_topics := reqDetails["payload"].(map[string]interface{})["topicData"]
 		if _topics == nil {
 			break
 		}
 		topics := _topics.([]interface{})
 		for _, topic := range topics {
-			summary += fmt.Sprintf("%s, ", topic.(map[string]interface{})["Topic"].(string))
+			summary += fmt.Sprintf("%s, ", topic.(map[string]interface{})["topic"].(string))
 		}
 		if len(summary) > 0 {
 			summary = summary[:len(summary)-2]
 		}
 		break
 	case Fetch:
-		_topics := reqDetails["Payload"].(map[string]interface{})["Topics"]
+		_topics := reqDetails["payload"].(map[string]interface{})["topics"]
 		if _topics == nil {
 			break
 		}
 		topics := _topics.([]interface{})
 		for _, topic := range topics {
-			summary += fmt.Sprintf("%s, ", topic.(map[string]interface{})["Topic"].(string))
+			summary += fmt.Sprintf("%s, ", topic.(map[string]interface{})["topic"].(string))
 		}
 		if len(summary) > 0 {
 			summary = summary[:len(summary)-2]
 		}
 		break
 	case ListOffsets:
-		_topics := reqDetails["Payload"].(map[string]interface{})["Topics"]
+		_topics := reqDetails["payload"].(map[string]interface{})["topics"]
 		if _topics == nil {
 			break
 		}
 		topics := _topics.([]interface{})
 		for _, topic := range topics {
-			summary += fmt.Sprintf("%s, ", topic.(map[string]interface{})["Name"].(string))
+			summary += fmt.Sprintf("%s, ", topic.(map[string]interface{})["name"].(string))
 		}
 		if len(summary) > 0 {
 			summary = summary[:len(summary)-2]
 		}
 		break
 	case CreateTopics:
-		topics := reqDetails["Payload"].(map[string]interface{})["Topics"].([]interface{})
+		topics := reqDetails["payload"].(map[string]interface{})["topics"].([]interface{})
 		for _, topic := range topics {
-			summary += fmt.Sprintf("%s, ", topic.(map[string]interface{})["Name"].(string))
+			summary += fmt.Sprintf("%s, ", topic.(map[string]interface{})["name"].(string))
 		}
 		if len(summary) > 0 {
 			summary = summary[:len(summary)-2]
 		}
 		break
 	case DeleteTopics:
-		topicNames := reqDetails["TopicNames"].([]string)
+		topicNames := reqDetails["topicNames"].([]string)
 		for _, name := range topicNames {
 			summary += fmt.Sprintf("%s, ", name)
 		}
@@ -148,44 +149,48 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolve
 
 	request["url"] = summary
 	elapsedTime := item.Pair.Response.CaptureTime.Sub(item.Pair.Request.CaptureTime).Round(time.Millisecond).Milliseconds()
-	entryBytes, _ := json.Marshal(item.Pair)
 	return &api.MizuEntry{
-		ProtocolName:            _protocol.Name,
-		ProtocolLongName:        _protocol.LongName,
-		ProtocolAbbreviation:    _protocol.Abbreviation,
-		ProtocolVersion:         _protocol.Version,
-		ProtocolBackgroundColor: _protocol.BackgroundColor,
-		ProtocolForegroundColor: _protocol.ForegroundColor,
-		ProtocolFontSize:        _protocol.FontSize,
-		ProtocolReferenceLink:   _protocol.ReferenceLink,
-		EntryId:                 entryId,
-		Entry:                   string(entryBytes),
-		Url:                     fmt.Sprintf("%s%s", service, summary),
-		Method:                  apiNames[apiKey],
-		Status:                  0,
-		RequestSenderIp:         item.ConnectionInfo.ClientIP,
-		Service:                 service,
-		Timestamp:               item.Timestamp,
-		ElapsedTime:             elapsedTime,
-		Path:                    summary,
-		ResolvedSource:          resolvedSource,
-		ResolvedDestination:     resolvedDestination,
-		SourceIp:                item.ConnectionInfo.ClientIP,
-		DestinationIp:           item.ConnectionInfo.ServerIP,
-		SourcePort:              item.ConnectionInfo.ClientPort,
-		DestinationPort:         item.ConnectionInfo.ServerPort,
-		IsOutgoing:              item.ConnectionInfo.IsOutgoing,
+		Protocol: _protocol,
+		Source: &api.TCP{
+			Name: resolvedSource,
+			IP:   item.ConnectionInfo.ClientIP,
+			Port: item.ConnectionInfo.ClientPort,
+		},
+		Destination: &api.TCP{
+			Name: resolvedDestination,
+			IP:   item.ConnectionInfo.ServerIP,
+			Port: item.ConnectionInfo.ServerPort,
+		},
+		Outgoing:            item.ConnectionInfo.IsOutgoing,
+		Request:             reqDetails,
+		Response:            item.Pair.Response.Payload.(map[string]interface{})["details"].(map[string]interface{}),
+		Url:                 fmt.Sprintf("%s%s", service, summary),
+		Method:              apiNames[apiKey],
+		Status:              0,
+		RequestSenderIp:     item.ConnectionInfo.ClientIP,
+		Service:             service,
+		Timestamp:           item.Timestamp,
+		StartTime:           item.Pair.Request.CaptureTime,
+		ElapsedTime:         elapsedTime,
+		Summary:             summary,
+		ResolvedSource:      resolvedSource,
+		ResolvedDestination: resolvedDestination,
+		SourceIp:            item.ConnectionInfo.ClientIP,
+		DestinationIp:       item.ConnectionInfo.ServerIP,
+		SourcePort:          item.ConnectionInfo.ClientPort,
+		DestinationPort:     item.ConnectionInfo.ServerPort,
+		IsOutgoing:          item.ConnectionInfo.IsOutgoing,
 	}
 }
 
 func (d dissecting) Summarize(entry *api.MizuEntry) *api.BaseEntryDetails {
 	return &api.BaseEntryDetails{
-		Id:              entry.EntryId,
+		Id:              entry.Id,
 		Protocol:        _protocol,
 		Url:             entry.Url,
 		RequestSenderIp: entry.RequestSenderIp,
 		Service:         entry.Service,
-		Summary:         entry.Path,
+		Summary:         entry.Summary,
 		StatusCode:      entry.Status,
 		Method:          entry.Method,
 		Timestamp:       entry.Timestamp,
@@ -202,49 +207,43 @@ func (d dissecting) Summarize(entry *api.MizuEntry) *api.BaseEntryDetails {
 	}
 }
 
-func (d dissecting) Represent(entry *api.MizuEntry) (p api.Protocol, object []byte, bodySize int64, err error) {
-	p = _protocol
+func (d dissecting) Represent(protoIn api.Protocol, request map[string]interface{}, response map[string]interface{}) (protoOut api.Protocol, object []byte, bodySize int64, err error) {
+	protoOut = _protocol
 	bodySize = 0
-	var root map[string]interface{}
-	json.Unmarshal([]byte(entry.Entry), &root)
 	representation := make(map[string]interface{}, 0)
-	request := root["request"].(map[string]interface{})["payload"].(map[string]interface{})
-	response := root["response"].(map[string]interface{})["payload"].(map[string]interface{})
-	reqDetails := request["details"].(map[string]interface{})
-	resDetails := response["details"].(map[string]interface{})
 
-	apiKey := ApiKey(reqDetails["ApiKey"].(float64))
+	apiKey := ApiKey(request["apiKey"].(float64))
 
 	var repRequest []interface{}
 	var repResponse []interface{}
 	switch apiKey {
 	case Metadata:
-		repRequest = representMetadataRequest(reqDetails)
-		repResponse = representMetadataResponse(resDetails)
+		repRequest = representMetadataRequest(request)
+		repResponse = representMetadataResponse(response)
 		break
 	case ApiVersions:
-		repRequest = representApiVersionsRequest(reqDetails)
-		repResponse = representApiVersionsResponse(resDetails)
+		repRequest = representApiVersionsRequest(request)
+		repResponse = representApiVersionsResponse(response)
 		break
 	case Produce:
-		repRequest = representProduceRequest(reqDetails)
-		repResponse = representProduceResponse(resDetails)
+		repRequest = representProduceRequest(request)
+		repResponse = representProduceResponse(response)
 		break
 	case Fetch:
-		repRequest = representFetchRequest(reqDetails)
-		repResponse = representFetchResponse(resDetails)
+		repRequest = representFetchRequest(request)
+		repResponse = representFetchResponse(response)
 		break
 	case ListOffsets:
-		repRequest = representListOffsetsRequest(reqDetails)
-		repResponse = representListOffsetsResponse(resDetails)
+		repRequest = representListOffsetsRequest(request)
+		repResponse = representListOffsetsResponse(response)
 		break
 	case CreateTopics:
-		repRequest = representCreateTopicsRequest(reqDetails)
-		repResponse = representCreateTopicsResponse(resDetails)
+		repRequest = representCreateTopicsRequest(request)
+		repResponse = representCreateTopicsResponse(response)
 		break
 	case DeleteTopics:
-		repRequest = representDeleteTopicsRequest(reqDetails)
-		repResponse = representDeleteTopicsResponse(resDetails)
+		repRequest = representDeleteTopicsRequest(request)
+		repResponse = representDeleteTopicsResponse(response)
 		break
 	}
 
@@ -252,6 +251,12 @@ func (d dissecting) Represent(entry *api.MizuEntry) (p api.Protocol, object []by
 	representation["response"] = repResponse
 	object, err = json.Marshal(representation)
 	return
+}
+
+func (d dissecting) Macros() map[string]string {
+	return map[string]string{
+		`kafka`: fmt.Sprintf(`proto.abbr == "%s"`, _protocol.Abbreviation),
+	}
 }
 
 var Dissector dissecting

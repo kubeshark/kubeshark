@@ -1,137 +1,303 @@
-import React from "react";
+import React, {useRef, useState} from "react";
 import styles from './style/Filters.module.sass';
-import {FilterSelect} from "./UI/FilterSelect";
-import {TextField} from "@material-ui/core";
-import {ALL_KEY} from "./UI/Select";
+import {Button, Grid, Modal, Box, Typography, Backdrop, Fade, Divider} from "@material-ui/core";
+import CodeEditor from '@uiw/react-textarea-code-editor';
+import MenuBookIcon from '@material-ui/icons/MenuBook';
+import {SyntaxHighlighter} from "./UI/SyntaxHighlighter/index";
+import filterUIExample1 from "./assets/filter-ui-example-1.png"
+import filterUIExample2 from "./assets/filter-ui-example-2.png"
 
 interface FiltersProps {
-    methodsFilter: Array<string>;
-    setMethodsFilter: (methods: Array<string>) => void;
-    statusFilter: Array<string>;
-    setStatusFilter: (methods: Array<string>) => void;
-    pathFilter: string
-    setPathFilter: (val: string) => void;
-    serviceFilter: string
-    setServiceFilter: (val: string) => void;
+    query: string
+    setQuery: any
+    backgroundColor: string
+    ws: any
+    openWebSocket: (query: string) => void;
 }
 
-export const Filters: React.FC<FiltersProps> = ({methodsFilter, setMethodsFilter, statusFilter, setStatusFilter, pathFilter, setPathFilter, serviceFilter, setServiceFilter}) => {
-
+export const Filters: React.FC<FiltersProps> = ({query, setQuery, backgroundColor, ws, openWebSocket}) => {
     return <div className={styles.container}>
-        <MethodFilter methodsFilter={methodsFilter} setMethodsFilter={setMethodsFilter}/>
-        <StatusTypesFilter statusFilter={statusFilter} setStatusFilter={setStatusFilter}/>
-        <ServiceFilter serviceFilter={serviceFilter} setServiceFilter={setServiceFilter}/>
-        <PathFilter pathFilter={pathFilter} setPathFilter={setPathFilter}/>
+        <QueryForm
+            query={query}
+            setQuery={setQuery}
+            backgroundColor={backgroundColor}
+            ws={ws}
+            openWebSocket={openWebSocket}
+        />
     </div>;
 };
 
-const _toUpperCase = v => v.toUpperCase();
+interface QueryFormProps {
+    query: string
+    setQuery: any
+    backgroundColor: string
+    ws: any
+    openWebSocket: (query: string) => void;
+}
 
-const FilterContainer: React.FC = ({children}) => {
-    return <div className={styles.filterContainer}>
-        {children}
-    </div>;
+const style = {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    width: '80vw',
+    bgcolor: 'background.paper',
+    borderRadius: '5px',
+    boxShadow: 24,
+    p: 4,
+    color: '#000',
 };
 
-enum HTTPMethod {
-    GET = "get",
-    PUT = "put",
-    POST = "post",
-    DELETE = "delete",
-    OPTIONS="options",
-    PATCH = "patch"
-}
+export const QueryForm: React.FC<QueryFormProps> = ({query, setQuery, backgroundColor, ws, openWebSocket}) => {
 
-interface MethodFilterProps {
-    methodsFilter: Array<string>;
-    setMethodsFilter: (methods: Array<string>) => void;
-}
+    const formRef = useRef<HTMLFormElement>(null);
 
-const MethodFilter: React.FC<MethodFilterProps> = ({methodsFilter, setMethodsFilter}) => {
+    const [openModal, setOpenModal] = useState(false);
 
-    const methodClicked = (val) => {
-        if(val === ALL_KEY) {
-            setMethodsFilter([]);
-            return;
-        }
-        if(methodsFilter.includes(val)) {
-            setMethodsFilter(methodsFilter.filter(method => method !== val))
-        } else {
-            setMethodsFilter([...methodsFilter, val]);
-        }
+    const handleOpenModal = () => setOpenModal(true);
+    const handleCloseModal = () => setOpenModal(false);
+
+    const handleChange = async (e) => {
+        setQuery(e.target.value);
     }
 
-    return <FilterContainer>
-        <FilterSelect
-            items={Object.values(HTTPMethod)}
-            allowMultiple={true}
-            value={methodsFilter}
-            onChange={(val) => methodClicked(val)}
-            transformDisplay={_toUpperCase}
-            label={"Methods"}
-        />
-    </FilterContainer>;
-};
-
-export enum StatusType {
-    SUCCESS = "success",
-    ERROR = "error"
-}
-
-interface StatusTypesFilterProps {
-    statusFilter: Array<string>;
-    setStatusFilter: (methods: Array<string>) => void;
-}
-
-const StatusTypesFilter: React.FC<StatusTypesFilterProps> = ({statusFilter, setStatusFilter}) => {
-
-    const statusClicked = (val) => {
-        if(val === ALL_KEY) {
-            setStatusFilter([]);
-            return;
-        }
-        setStatusFilter([val]);
+    const handleSubmit = (e) => {
+        ws.close()
+        openWebSocket(query)
+        e.preventDefault();
     }
 
-    return <FilterContainer>
-        <FilterSelect
-            items={Object.values(StatusType)}
-            allowMultiple={true}
-            value={statusFilter}
-            onChange={(val) => statusClicked(val)}
-            transformDisplay={_toUpperCase}
-            label="Status"
-        />
-    </FilterContainer>;
-};
+    return <>
+        <form
+            ref={formRef}
+            onSubmit={handleSubmit}
+            style={{
+                width: '100%',
+            }}
+        >
+            <Grid container spacing={2}>
+                <Grid
+                    item
+                    xs={8}
+                    style={{
+                        maxHeight: '25vh',
+                        overflowY: 'auto',
+                    }}
+                >
+                    <label>
+                        <CodeEditor
+                            value={query}
+                            language="py"
+                            placeholder="Mizu Filter Syntax"
+                            onChange={handleChange}
+                            padding={8}
+                            style={{
+                                fontSize: 14,
+                                backgroundColor: `${backgroundColor}`,
+                                fontFamily: 'ui-monospace,SFMono-Regular,SF Mono,Consolas,Liberation Mono,Menlo,monospace',
+                            }}
+                        />
+                    </label>
+                </Grid>
+                <Grid item xs={4}>
+                    <Button type="submit" variant="contained" style={{margin: "2px 0px 0px 0px"}}>Apply</Button>
+                    <Button
+                        title="Open Filtering Guide (Cheatsheet)"
+                        variant="contained"
+                        style={{margin: "2px 0px 0px 10px", minWidth: "26px"}}
+                        onClick={handleOpenModal}
+                    >
+                        <MenuBookIcon fontSize="inherit"></MenuBookIcon>
+                    </Button>
+                </Grid>
+            </Grid>
+        </form>
 
-interface PathFilterProps {
-    pathFilter: string;
-    setPathFilter: (val: string) => void;
+        <Modal
+            aria-labelledby="transition-modal-title"
+            aria-describedby="transition-modal-description"
+            open={openModal}
+            onClose={handleCloseModal}
+            closeAfterTransition
+            BackdropComponent={Backdrop}
+            BackdropProps={{
+                timeout: 500,
+            }}
+            style={{overflow: 'auto'}}
+        >
+            <Fade in={openModal}>
+                <Box sx={style}>
+                    <Typography id="modal-modal-title" variant="h5" component="h2" style={{textAlign: 'center'}}>
+                        Filtering Guide (Cheatsheet)
+                    </Typography>
+                    <Typography id="modal-modal-description">
+                        <p>Mizu has a rich filtering syntax that let's you query the results both flexibly and efficiently.</p>
+                        <p>Here are some examples that you can try;</p>
+                    </Typography>
+                    <Grid container>
+                        <Grid item xs style={{margin: "10px"}}>
+                            <Typography id="modal-modal-description">
+                                This is a simple query that matches to HTTP packets with request path "/catalogue":
+                            </Typography>
+                            <SyntaxHighlighter
+                                isWrapped={false}
+                                showLineNumbers={false}
+                                code={`http and request.path == "/catalogue"`}
+                                language="python"
+                            />
+                            <Typography id="modal-modal-description">
+                                The same query can be negated for HTTP path and written like this:
+                            </Typography>
+                            <SyntaxHighlighter
+                                isWrapped={false}
+                                showLineNumbers={false}
+                                code={`http and request.path != "/catalogue"`}
+                                language="python"
+                            />
+                            <Typography id="modal-modal-description">
+                                The syntax supports regular expressions. Here is a query that matches the HTTP requests that send JSON to a server:
+                            </Typography>
+                            <SyntaxHighlighter
+                                isWrapped={false}
+                                showLineNumbers={false}
+                                code={`http and request.headers["Accept"] == r"application/json.*"`}
+                                language="python"
+                            />
+                            <Typography id="modal-modal-description">
+                                Here is another query that matches HTTP responses with status code 4xx:
+                            </Typography>
+                            <SyntaxHighlighter
+                                isWrapped={false}
+                                showLineNumbers={false}
+                                code={`http and response.status == r"4.*"`}
+                                language="python"
+                            />
+                            <Typography id="modal-modal-description">
+                                The same exact query can be as integer comparison:
+                            </Typography>
+                            <SyntaxHighlighter
+                                isWrapped={false}
+                                showLineNumbers={false}
+                                code={`http and response.status >= 400`}
+                                language="python"
+                            />
+                            <Typography id="modal-modal-description">
+                                The results can be queried based on their timestamps:
+                            </Typography>
+                            <SyntaxHighlighter
+                                isWrapped={false}
+                                showLineNumbers={false}
+                                code={`timestamp < datetime("10/28/2021, 9:13:02 PM")`}
+                                language="python"
+                            />
+                        </Grid>
+                        <Divider orientation="vertical" flexItem />
+                        <Grid item xs style={{margin: "10px"}}>
+                            <Typography id="modal-modal-description">
+                                Since Mizu supports various protocols like gRPC, AMQP, Kafka and Redis. It's possible to write complex queries that match multiple protocols like this:
+                            </Typography>
+                            <SyntaxHighlighter
+                                isWrapped={false}
+                                showLineNumbers={false}
+                                code={`(http and request.method == "PUT") or (amqp and request.queue.startsWith("test"))\n or (kafka and response.payload.errorCode == 2) or (redis and request.key == "example")\n or (grpc and request.headers[":path"] == r".*foo.*")`}
+                                language="python"
+                            />
+                            <Typography id="modal-modal-description">
+                                By clicking the UI elements in both left-pane and right-pane, you can automatically select a field and update the query:
+                            </Typography>
+                            <img
+                                src={filterUIExample1}
+                                width={600}
+                                alt="Clicking to UI elements (left-pane)"
+                                title="Clicking to UI elements (left-pane)"
+                            />
+                            <Typography id="modal-modal-description">
+                                Such that; clicking this in left-pane, would append the query below:
+                            </Typography>
+                            <SyntaxHighlighter
+                                isWrapped={false}
+                                showLineNumbers={false}
+                                code={`and service == "http://carts.sock-shop"`}
+                                language="python"
+                            />
+                            <Typography id="modal-modal-description">
+                                Another queriable UI element example, this time from the right-pane:
+                            </Typography>
+                            <img
+                                src={filterUIExample2}
+                                width={300}
+                                alt="Clicking to UI elements (right-pane)"
+                                title="Clicking to UI elements (right-pane)"
+                            />
+                            <Typography id="modal-modal-description">
+                                A query that compares one selector to another is also a valid query:
+                            </Typography>
+                            <SyntaxHighlighter
+                                isWrapped={false}
+                                showLineNumbers={false}
+                                code={`http and (request.query["x"] == response.headers["y"]\n or response.content.text.contains(request.query["x"]))`}
+                                language="python"
+                            />
+                        </Grid>
+                        <Divider orientation="vertical" flexItem />
+                        <Grid item xs style={{margin: "10px"}}>
+                            <Typography id="modal-modal-description">
+                                There are a few helper methods included the in the filter language* to help building queries more easily.
+                            </Typography>
+                            <br></br>
+                            <Typography id="modal-modal-description">
+                                true if the given selector's value starts with the string:
+                            </Typography>
+                            <SyntaxHighlighter
+                                isWrapped={false}
+                                showLineNumbers={false}
+                                code={`request.path.startsWith("something")`}
+                                language="python"
+                            />
+                            <Typography id="modal-modal-description">
+                                true if the given selector's value ends with the string:
+                            </Typography>
+                            <SyntaxHighlighter
+                                isWrapped={false}
+                                showLineNumbers={false}
+                                code={`request.path.endsWith("something")`}
+                                language="python"
+                            />
+                            <Typography id="modal-modal-description">
+                                true if the given selector's value contains the string:
+                            </Typography>
+                            <SyntaxHighlighter
+                                isWrapped={false}
+                                showLineNumbers={false}
+                                code={`request.path.contains("something")`}
+                                language="python"
+                            />
+                            <Typography id="modal-modal-description">
+                                returns the UNIX timestamp which is the equivalent of the time that's provided by the string. Invalid input evaluates to false:
+                            </Typography>
+                            <SyntaxHighlighter
+                                isWrapped={false}
+                                showLineNumbers={false}
+                                code={`timestamp >= datetime("10/19/2021, 6:29:02 PM")`}
+                                language="python"
+                            />
+                            <Typography id="modal-modal-description">
+                                limits the number of records that are streamed back as a result of a query. Always evaluates to true:
+                            </Typography>
+                            <SyntaxHighlighter
+                                isWrapped={false}
+                                showLineNumbers={false}
+                                code={`and limit(100)`}
+                                language="python"
+                            />
+                        </Grid>
+                    </Grid>
+                    <br></br>
+                    <Typography id="modal-modal-description" style={{fontSize: 12, fontStyle: 'italic'}}>
+                        *The filtering functionality is provided through <b>Basenine</b> database server. Please refer to <a href="https://github.com/up9inc/basenine/wiki/BFL-Syntax-Reference"><b>BFL Syntax Reference</b></a> for more information.
+                    </Typography>
+                </Box>
+            </Fade>
+        </Modal>
+    </>
 }
-
-const PathFilter: React.FC<PathFilterProps> = ({pathFilter, setPathFilter}) => {
-
-    return <FilterContainer>
-        <div className={styles.filterLabel}>Path</div>
-        <div>
-            <TextField value={pathFilter} variant="outlined" className={styles.filterText} style={{minWidth: '150px'}} onChange={(e: any) => setPathFilter(e.target.value)}/>
-        </div>
-    </FilterContainer>;
-};
-
-interface ServiceFilterProps {
-    serviceFilter: string;
-    setServiceFilter: (val: string) => void;
-}
-
-const ServiceFilter: React.FC<ServiceFilterProps> = ({serviceFilter, setServiceFilter}) => {
-
-    return <FilterContainer>
-        <div className={styles.filterLabel}>Service</div>
-        <div>
-            <TextField value={serviceFilter} variant="outlined" className={styles.filterText} style={{minWidth: '150px'}} onChange={(e: any) => setServiceFilter(e.target.value)}/>
-        </div>
-    </FilterContainer>;
-};
-

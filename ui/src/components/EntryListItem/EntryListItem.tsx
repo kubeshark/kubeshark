@@ -2,7 +2,7 @@ import React from "react";
 import styles from './EntryListItem.module.sass';
 import StatusCode, {getClassification, StatusCodeClassification} from "../UI/StatusCode";
 import Protocol, {ProtocolInterface} from "../UI/Protocol"
-import {EndpointPath} from "../UI/EndpointPath";
+import {Summary} from "../UI/Summary";
 import ingoingIconSuccess from "../assets/ingoing-traffic-success.svg"
 import ingoingIconFailure from "../assets/ingoing-traffic-failure.svg"
 import ingoingIconNeutral from "../assets/ingoing-traffic-neutral.svg"
@@ -15,7 +15,7 @@ interface Entry {
     method?: string,
     summary: string,
     service: string,
-    id: string,
+    id: number,
     statusCode?: number;
     url?: string;
     timestamp: Date;
@@ -40,9 +40,10 @@ interface EntryProps {
     setFocusedEntryId: (id: string) => void;
     isSelected?: boolean;
     style: object;
+    updateQuery: any;
 }
 
-export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, isSelected, style}) => {
+export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, isSelected, style, updateQuery}) => {
     const classification = getClassification(entry.statusCode)
     const numberOfRules = entry.rules.numberOfRules
     let ingoingIcon;
@@ -115,10 +116,10 @@ export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, isSel
 
     return <>
         <div
-            id={entry.id}
+            id={entry.id.toString()}
             className={`${styles.row}
             ${isSelected && !rule && !contractEnabled ? styles.rowSelected : additionalRulesProperties}`}
-            onClick={() => setFocusedEntryId(entry.id)}
+            onClick={() => setFocusedEntryId(entry.id.toString())}
             style={{
                 border: isSelected ? `1px ${entry.protocol.backgroundColor} solid` : "1px transparent solid",
                 position: "absolute",
@@ -127,14 +128,26 @@ export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, isSel
                 width: "calc(100% - 25px)",
             }}
         >
-            <Protocol protocol={entry.protocol} horizontal={false}/>
+            <Protocol
+                protocol={entry.protocol}
+                horizontal={false}
+                updateQuery={updateQuery}
+            />
             {((entry.protocol.name === "http" && "statusCode" in entry) || entry.statusCode !== 0) && <div>
-                <StatusCode statusCode={entry.statusCode}/>
+                <StatusCode statusCode={entry.statusCode} updateQuery={updateQuery}/>
             </div>}
             <div className={styles.endpointServiceContainer}>
-                <EndpointPath method={entry.method} path={entry.summary}/>
+                <Summary method={entry.method} summary={entry.summary} updateQuery={updateQuery}/>
                 <div className={styles.service}>
-                    <span title="Service Name">{entry.service}</span>
+                    <span
+                        title="Service Name"
+                        className="queryable"
+                        onClick={() => {
+                            updateQuery(`service == "${entry.service}"`)
+                        }}
+                    >
+                        {entry.service}
+                    </span>
                 </div>
             </div>
             {
@@ -152,17 +165,53 @@ export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, isSel
                 : ""
             }
             <div className={styles.separatorRight}>
-                <span className={styles.port} title="Source Port">{entry.sourcePort}</span>
+                <span
+                    className={`queryable ${styles.port}`}
+                    title="Source Port"
+                    onClick={() => {
+                        updateQuery(`src.port == "${entry.sourcePort}"`)
+                    }}
+                >
+                    {entry.sourcePort}
+                </span>
                 {entry.isOutgoing ?
-                    <img src={outgoingIcon} alt="Ingoing traffic" title="Ingoing"/>
+                    <img
+                        src={outgoingIcon}
+                        alt="Ingoing traffic"
+                        title="Ingoing"
+                        onClick={() => {
+                            updateQuery(`outgoing == true`)
+                        }}
+                    />
                     :
-                    <img src={ingoingIcon} alt="Outgoing traffic" title="Outgoing"/>
+                    <img
+                        src={ingoingIcon}
+                        alt="Outgoing traffic"
+                        title="Outgoing"
+                        onClick={() => {
+                            updateQuery(`outgoing == false`)
+                        }}
+                    />
                 }
-                <span className={styles.port} title="Destination Port">{entry.destinationPort}</span>
+                <span
+                    className={`queryable ${styles.port}`}
+                    title="Destination Port"
+                    onClick={() => {
+                        updateQuery(`dst.port == "${entry.destinationPort}"`)
+                    }}
+                >
+                    {entry.destinationPort}
+                </span>
             </div>
             <div className={styles.timestamp}>
-                <span title="Timestamp">
-                    {new Date(+entry.timestamp)?.toLocaleString()}
+                <span
+                    title="Timestamp"
+                    className="queryable"
+                    onClick={() => {
+                        updateQuery(`timestamp >= datetime("${new Date(+entry.timestamp)?.toLocaleString("en-US", {timeZone: 'UTC' })}")`)
+                    }}
+                >
+                    {new Date(+entry.timestamp)?.toLocaleString("en-US")}
                 </span>
             </div>
         </div>

@@ -93,19 +93,19 @@ func (e Error) Error() string {
 
 // Used by header frames to capture routing and header information
 type Properties struct {
-	ContentType     string    // MIME content type
-	ContentEncoding string    // MIME content encoding
-	Headers         Table     // Application or header exchange table
-	DeliveryMode    uint8     // queue implementation use - Transient (1) or Persistent (2)
-	Priority        uint8     // queue implementation use - 0 to 9
-	CorrelationId   string    // application use - correlation identifier
-	ReplyTo         string    // application use - address to to reply to (ex: RPC)
-	Expiration      string    // implementation use - message expiration spec
-	MessageId       string    // application use - message identifier
-	Timestamp       time.Time // application use - message timestamp
-	Type            string    // application use - message type name
-	UserId          string    // application use - creating user id
-	AppId           string    // application use - creating application
+	ContentType     string    `json:"contentType"`     // MIME content type
+	ContentEncoding string    `json:"contentEncoding"` // MIME content encoding
+	Headers         Table     `json:"headers"`         // Application or header exchange table
+	DeliveryMode    uint8     `json:"deliveryMode"`    // queue implementation use - Transient (1) or Persistent (2)
+	Priority        uint8     `json:"priority"`        // queue implementation use - 0 to 9
+	CorrelationId   string    `json:"correlationId"`   // application use - correlation identifier
+	ReplyTo         string    `json:"replyTo"`         // application use - address to to reply to (ex: RPC)
+	Expiration      string    `json:"expiration"`      // implementation use - message expiration spec
+	MessageId       string    `json:"messageId"`       // application use - message identifier
+	Timestamp       time.Time `json:"timestamp"`       // application use - message timestamp
+	Type            string    `json:"type"`            // application use - message type name
+	UserId          string    `json:"userId"`          // application use - creating user id
+	AppId           string    `json:"appId"`           // application use - creating application
 	reserved1       string    // was cluster-id - process for buffer consumption
 }
 
