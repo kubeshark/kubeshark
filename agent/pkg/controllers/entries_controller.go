@@ -11,6 +11,7 @@ import (
 
 	basenine "github.com/up9inc/basenine/client/go"
 	"github.com/up9inc/mizu/shared"
+	"github.com/up9inc/mizu/shared/logger"
 	tapApi "github.com/up9inc/mizu/tap/api"
 )
 
@@ -20,15 +21,26 @@ func InitExtensionsMap(ref map[string]*tapApi.Extension) {
 	extensionsMap = ref
 }
 
+func Error(c *gin.Context, err error) bool {
+	if err != nil {
+		logger.Log.Errorf("Error getting entry: %v", err)
+		c.Error(err)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "msg": err.Error()})
+		return true // signal that there was an error and the caller should return
+	}
+	return false // no error, can continue
+}
+
 func GetEntry(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 	var entry tapApi.MizuEntry
 	bytes, err := basenine.Single(shared.BasenineHost, shared.BaseninePort, id)
-	if err != nil {
-		panic(err)
+	if Error(c, err) {
+		return // exit
 	}
-	if err := json.Unmarshal(bytes, &entry); err != nil {
-		panic(err)
+	err = json.Unmarshal(bytes, &entry)
+	if Error(c, err) {
+		return // exit
 	}
 
 	extension := extensionsMap[entry.Protocol.Name]
