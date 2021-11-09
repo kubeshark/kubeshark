@@ -169,12 +169,12 @@ func startBasenineServer(host string, port string) {
 	}
 
 	// Make a channel to gracefully exit Basenine.
-	c := make(chan os.Signal)
-	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	channel := make(chan os.Signal)
+	signal.Notify(channel, os.Interrupt, syscall.SIGTERM)
 
 	// Handle the channel.
 	go func() {
-		<-c
+		<-channel
 		cmd.Process.Signal(syscall.SIGTERM)
 	}()
 

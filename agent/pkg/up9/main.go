@@ -209,9 +209,9 @@ func syncEntriesImpl(token string, model string, envPrefix string, uploadInterva
 
 	logger.Log.Infof("Getting entries from the database\n")
 
-	var c *basenine.Connection
+	var connection *basenine.Connection
 	var err error
-	c, err = basenine.NewConnection(shared.BasenineHost, shared.BaseninePort)
+	connection, err = basenine.NewConnection(shared.BasenineHost, shared.BaseninePort)
 	if err != nil {
 		panic(err)
 	}
@@ -222,24 +222,24 @@ func syncEntriesImpl(token string, model string, envPrefix string, uploadInterva
 	defer func() {
 		data <- []byte(basenine.CloseChannel)
 		meta <- []byte(basenine.CloseChannel)
-		c.Close()
+		connection.Close()
 	}()
 
-	handleDataChannel := func(wg *sync.WaitGroup, c *basenine.Connection, data chan []byte) {
+	handleDataChannel := func(wg *sync.WaitGroup, connection *basenine.Connection, data chan []byte) {
 		defer wg.Done()
 		for {
-			b := <-data
+			dataBytes := <-data
 
-			if string(b) == basenine.CloseChannel {
+			if string(dataBytes) == basenine.CloseChannel {
 				return
 			}
 
-			var d map[string]interface{}
-			err = json.Unmarshal(b, &d)
+			var dataMap map[string]interface{}
+			err = json.Unmarshal(dataBytes, &dataMap)
 
 			result := make([]har.Entry, 0)
 			var entry tapApi.MizuEntry
-			if err := json.Unmarshal([]byte(b), &entry); err != nil {
+			if err := json.Unmarshal([]byte(dataBytes), &entry); err != nil {
 				continue
 			}
 			harEntry, err := utils.NewEntry(entry.Request, entry.Response, entry.StartTime, entry.ElapsedTime)
@@ -299,23 +299,23 @@ func syncEntriesImpl(token string, model string, envPrefix string, uploadInterva
 		}
 	}
 
-	handleMetaChannel := func(wg *sync.WaitGroup, c *basenine.Connection, meta chan []byte) {
+	handleMetaChannel := func(wg *sync.WaitGroup, connection *basenine.Connection, meta chan []byte) {
 		defer wg.Done()
 		for {
-			b := <-meta
+			metaBytes := <-meta
 
-			if string(b) == basenine.CloseChannel {
+			if string(metaBytes) == basenine.CloseChannel {
 				return
 			}
 		}
 	}
 
 	var wg sync.WaitGroup
-	go handleDataChannel(&wg, c, data)
-	go handleMetaChannel(&wg, c, meta)
+	go handleDataChannel(&wg, connection, data)
+	go handleMetaChannel(&wg, connection, meta)
 	wg.Add(2)
 
-	c.Query(query, data, meta)
+	connection.Query(query, data, meta)
 
 	wg.Wait()
 }

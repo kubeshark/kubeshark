@@ -68,12 +68,12 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 
 	websocketIdsLock.Unlock()
 
-	var c *basenine.Connection
+	var connection *basenine.Connection
 	var isQuerySet bool
 
 	// `!isTapper` means it's a connection from the web UI
 	if !isTapper {
-		c, err = basenine.NewConnection(shared.BasenineHost, shared.BaseninePort)
+		connection, err = basenine.NewConnection(shared.BasenineHost, shared.BaseninePort)
 		if err != nil {
 			panic(err)
 		}
@@ -85,7 +85,7 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 	defer func() {
 		data <- []byte(basenine.CloseChannel)
 		meta <- []byte(basenine.CloseChannel)
-		c.Close()
+		connection.Close()
 		socketCleanup(socketId, connectedWebsockets[socketId])
 	}()
 
@@ -124,11 +124,11 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 						return
 					}
 
-					var d map[string]interface{}
-					err = json.Unmarshal(bytes, &d)
+					var dataMap map[string]interface{}
+					err = json.Unmarshal(bytes, &dataMap)
 
-					base := d["base"].(map[string]interface{})
-					base["id"] = uint(d["id"].(float64))
+					base := dataMap["base"].(map[string]interface{})
+					base["id"] = uint(dataMap["id"].(float64))
 
 					baseEntryBytes, _ := models.CreateBaseEntryWebSocketMessage(base)
 					BroadcastToBrowserClients(baseEntryBytes)
@@ -154,10 +154,10 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 				}
 			}
 
-			go handleDataChannel(c, data)
-			go handleMetaChannel(c, meta)
+			go handleDataChannel(connection, data)
+			go handleMetaChannel(connection, meta)
 
-			c.Query(query, data, meta)
+			connection.Query(query, data, meta)
 		} else {
 			eventHandlers.WebSocketMessage(socketId, msg)
 		}

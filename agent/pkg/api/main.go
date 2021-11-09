@@ -99,11 +99,11 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 		panic("Channel of captured messages is nil")
 	}
 
-	c, err := basenine.NewConnection(shared.BasenineHost, shared.BaseninePort)
+	connection, err := basenine.NewConnection(shared.BasenineHost, shared.BaseninePort)
 	if err != nil {
 		panic(err)
 	}
-	c.InsertMode()
+	connection.InsertMode()
 
 	disableOASValidation := false
 	ctx := context.Background()
@@ -145,7 +145,7 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 		if err != nil {
 			panic(err)
 		}
-		c.SendText(string(data))
+		connection.SendText(string(data))
 	}
 }
 
