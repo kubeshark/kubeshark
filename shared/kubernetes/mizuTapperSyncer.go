@@ -15,8 +15,9 @@ import (
 const updateTappersDelay = 5 * time.Second
 
 type TappedPodChangeEvent struct {
-	Added   []core.Pod
-	Removed []core.Pod
+	Added                []core.Pod
+	Removed              []core.Pod
+	ExpectedTapperAmount int
 }
 
 // MizuTapperSyncer uses a k8s pod watch to update tapper daemonsets when targeted pods are removed or created
@@ -27,6 +28,7 @@ type MizuTapperSyncer struct {
 	kubernetesProvider  *Provider
 	TapPodChangesOut    chan TappedPodChangeEvent
 	ErrorOut            chan K8sTapManagerError
+	nodeToTappedPodIPMap map[string][]string
 }
 
 type TapperSyncerConfig struct {
@@ -159,9 +161,11 @@ func (tapperSyncer *MizuTapperSyncer) updateCurrentlyTappedPods() (err error, ch
 		}
 		if len(addedPods) > 0 || len(removedPods) > 0 {
 			tapperSyncer.CurrentlyTappedPods = podsToTap
+			tapperSyncer.nodeToTappedPodIPMap = GetNodeHostToTappedPodIpsMap(tapperSyncer.CurrentlyTappedPods)
 			tapperSyncer.TapPodChangesOut <- TappedPodChangeEvent{
 				Added:   addedPods,
 				Removed: removedPods,
+				ExpectedTapperAmount: len(tapperSyncer.nodeToTappedPodIPMap),
 			}
 			return nil, true
 		}
@@ -170,9 +174,7 @@ func (tapperSyncer *MizuTapperSyncer) updateCurrentlyTappedPods() (err error, ch
 }
 
 func (tapperSyncer *MizuTapperSyncer) updateMizuTappers() error {
-	nodeToTappedPodIPMap := GetNodeHostToTappedPodIpsMap(tapperSyncer.CurrentlyTappedPods)
-
-	if len(nodeToTappedPodIPMap) > 0 {
+	if len(tapperSyncer.nodeToTappedPodIPMap) > 0 {
 		var serviceAccountName string
 		if tapperSyncer.config.MizuServiceAccountExists {
 			serviceAccountName = ServiceAccountName
@@ -187,7 +189,7 @@ func (tapperSyncer *MizuTapperSyncer) updateMizuTappers() error {
 			tapperSyncer.config.AgentImage,
 			TapperPodName,
 			fmt.Sprintf("%s.%s.svc.cluster.local", ApiServerPodName, tapperSyncer.config.MizuResourcesNamespace),
-			nodeToTappedPodIPMap,
+			tapperSyncer.nodeToTappedPodIPMap,
 			serviceAccountName,
 			tapperSyncer.config.TapperResources,
 			tapperSyncer.config.ImagePullPolicy,
@@ -196,7 +198,7 @@ func (tapperSyncer *MizuTapperSyncer) updateMizuTappers() error {
 		); err != nil {
 			return err
 		}
-		logger.Log.Debugf("Successfully created %v tappers", len(nodeToTappedPodIPMap))
+		logger.Log.Debugf("Successfully created %v tappers", len(tapperSyncer.nodeToTappedPodIPMap))
 	} else {
 		if err := tapperSyncer.kubernetesProvider.RemoveDaemonSet(tapperSyncer.context, tapperSyncer.config.MizuResourcesNamespace, TapperDaemonSetName); err != nil {
 			return err

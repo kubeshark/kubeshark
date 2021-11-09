@@ -15,10 +15,11 @@ import (
 const tlsLinkRetainmentTime = time.Minute * 15
 
 var (
-	TappersCount   int
-	TapStatus      shared.TapStatus
-	authStatus     *models.AuthStatus
-	RecentTLSLinks = cache.New(tlsLinkRetainmentTime, tlsLinkRetainmentTime)
+	TappersCount         int
+	TapStatus            shared.TapStatus
+	authStatus           *models.AuthStatus
+	RecentTLSLinks       = cache.New(tlsLinkRetainmentTime, tlsLinkRetainmentTime)
+	ExpectedTapperAmount = -1 //only relevant in daemon mode as cli manages tappers otherwise
 
 	tappersCountLock = sync.Mutex{}
 )
