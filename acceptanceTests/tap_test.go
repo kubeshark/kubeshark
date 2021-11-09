@@ -56,7 +56,9 @@ func checkDBHasEntries(t *testing.T, timestamp int64, limit int) (entries []map[
 			err = json.Unmarshal([]byte(message), &data)
 			assert.Nil(t, err)
 
-			entries = append(entries, data)
+			if data["messageType"] == "entry" {
+				entries = append(entries, data)
+			}
 		}
 	}
 
@@ -502,19 +504,10 @@ func TestTapRedact(t *testing.T) {
 			return fmt.Errorf("failed to get entry, err: %v", requestErr)
 		}
 
-		data := requestResult.(map[string]interface{})["data"].(map[string]interface{})
-		entryJson := data["entry"].(string)
+		entry := requestResult.(map[string]interface{})["data"].(map[string]interface{})
+		request := entry["request"].(map[string]interface{})
 
-		var entry map[string]interface{}
-		if parseErr := json.Unmarshal([]byte(entryJson), &entry); parseErr != nil {
-			return fmt.Errorf("failed to parse entry, err: %v", parseErr)
-		}
-
-		entryRequest := entry["request"].(map[string]interface{})
-		entryPayload := entryRequest["payload"].(map[string]interface{})
-		entryDetails := entryPayload["details"].(map[string]interface{})
-
-		headers := entryDetails["_headers"].([]interface{})
+		headers := request["_headers"].([]interface{})
 		for _, headerInterface := range headers {
 			header := headerInterface.(map[string]interface{})
 			if header["name"].(string) != "User-Agent" {
@@ -527,7 +520,7 @@ func TestTapRedact(t *testing.T) {
 			}
 		}
 
-		postData := entryDetails["postData"].(map[string]interface{})
+		postData := request["postData"].(map[string]interface{})
 		textDataStr := postData["text"].(string)
 
 		var textData map[string]string
@@ -607,19 +600,10 @@ func TestTapNoRedact(t *testing.T) {
 			return fmt.Errorf("failed to get entry, err: %v", requestErr)
 		}
 
-		data := requestResult.(map[string]interface{})["data"].(map[string]interface{})
-		entryJson := data["entry"].(string)
+		entry := requestResult.(map[string]interface{})["data"].(map[string]interface{})
+		request := entry["request"].(map[string]interface{})
 
-		var entry map[string]interface{}
-		if parseErr := json.Unmarshal([]byte(entryJson), &entry); parseErr != nil {
-			return fmt.Errorf("failed to parse entry, err: %v", parseErr)
-		}
-
-		entryRequest := entry["request"].(map[string]interface{})
-		entryPayload := entryRequest["payload"].(map[string]interface{})
-		entryDetails := entryPayload["details"].(map[string]interface{})
-
-		headers := entryDetails["_headers"].([]interface{})
+		headers := request["_headers"].([]interface{})
 		for _, headerInterface := range headers {
 			header := headerInterface.(map[string]interface{})
 			if header["name"].(string) != "User-Agent" {
@@ -632,7 +616,7 @@ func TestTapNoRedact(t *testing.T) {
 			}
 		}
 
-		postData := entryDetails["postData"].(map[string]interface{})
+		postData := request["postData"].(map[string]interface{})
 		textDataStr := postData["text"].(string)
 
 		var textData map[string]string
@@ -712,19 +696,10 @@ func TestTapRegexMasking(t *testing.T) {
 			return fmt.Errorf("failed to get entry, err: %v", requestErr)
 		}
 
-		data := requestResult.(map[string]interface{})["data"].(map[string]interface{})
-		entryJson := data["entry"].(string)
+		entry := requestResult.(map[string]interface{})["data"].(map[string]interface{})
+		request := entry["request"].(map[string]interface{})
 
-		var entry map[string]interface{}
-		if parseErr := json.Unmarshal([]byte(entryJson), &entry); parseErr != nil {
-			return fmt.Errorf("failed to parse entry, err: %v", parseErr)
-		}
-
-		entryRequest := entry["request"].(map[string]interface{})
-		entryPayload := entryRequest["payload"].(map[string]interface{})
-		entryDetails := entryPayload["details"].(map[string]interface{})
-
-		postData := entryDetails["postData"].(map[string]interface{})
+		postData := request["postData"].(map[string]interface{})
 		textData := postData["text"].(string)
 
 		if textData != "[REDACTED]" {
@@ -809,20 +784,11 @@ func TestTapIgnoredUserAgents(t *testing.T) {
 				return fmt.Errorf("failed to get entry, err: %v", requestErr)
 			}
 
-			data := requestResult.(map[string]interface{})["data"].(map[string]interface{})
-			entryJson := data["entry"].(string)
+			entry := requestResult.(map[string]interface{})["data"].(map[string]interface{})
+			request := entry["request"].(map[string]interface{})
 
-			var entry map[string]interface{}
-			if parseErr := json.Unmarshal([]byte(entryJson), &entry); parseErr != nil {
-				return fmt.Errorf("failed to parse entry, err: %v", parseErr)
-			}
-
-			entryRequest := entry["request"].(map[string]interface{})
-			entryPayload := entryRequest["payload"].(map[string]interface{})
-			entryDetails := entryPayload["details"].(map[string]interface{})
-
-			entryHeaders := entryDetails["_headers"].([]interface{})
-			for _, headerInterface := range entryHeaders {
+			headers := request["_headers"].([]interface{})
+			for _, headerInterface := range headers {
 				header := headerInterface.(map[string]interface{})
 				if header["name"].(string) != ignoredUserAgentCustomHeader {
 					continue
