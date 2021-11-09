@@ -111,27 +111,6 @@ To tap all pods in current namespace -
  Web interface is now available at http://localhost:8899
  ^C
 ```
-### To run mizu mizu daemon mode (detached from cli)
-```bash
-$ mizu tap "^ca.*" --daemon
-  Mizu will store up to 200MB of traffic, old traffic will be cleared once the limit is reached.
-  Tapping pods in namespaces "sock-shop"
-  Waiting for mizu to be ready... (may take a few minutes)
-  +carts-66c77f5fbb-fq65r
-  +catalogue-5f4cb7cf5-7zrmn
-  ..
-
-$ mizu view
-  Establishing connection to k8s cluster...
-  Mizu is available at http://localhost:8899
-  ^C
-  ..
-
-$ mizu clean # mizu will continue running in cluster until clean is executed
-  Removing mizu resources
-```
-
-`mizu view` provides one way to access Mizu. For other options, see [Accessing Mizu Wiki Page](https://github.com/up9inc/mizu/wiki/Accessing-Mizu).
 
 ## Configuration
 
@@ -211,6 +190,7 @@ In order to access a daemon mizu you will have to run `mizu view` after running 
 
 To stop the detached mizu instance and clean all cluster side resources, run `mizu clean`
 
+For more information please refer to [DAEMON MODE](docs/DAEMON_MODE.md)
 
 ## How to Run local UI
 
