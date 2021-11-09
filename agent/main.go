@@ -155,7 +155,7 @@ func startBasenineServer(host string, port string) {
 	cmd.Stderr = os.Stderr
 	err := cmd.Start()
 	if err != nil {
-		logger.Log.Panicf("Failed starting Basenine: %v\n", err)
+		logger.Log.Panicf("Failed starting Basenine: %v", err)
 	}
 
 	if !wait.New(
@@ -165,7 +165,7 @@ func startBasenineServer(host string, port string) {
 		wait.WithDeadline(5*time.Second),
 		wait.WithDebug(true),
 	).Do([]string{fmt.Sprintf("%s:%s", host, port)}) {
-		logger.Log.Panicf("Basenine is not available: %v\n", err)
+		logger.Log.Panicf("Basenine is not available: %v", err)
 	}
 
 	// Make a channel to gracefully exit Basenine.
@@ -181,7 +181,7 @@ func startBasenineServer(host string, port string) {
 	// Limit the database size to default 200MB
 	err = basenine.Limit(host, port, config.Config.MaxDBSizeBytes)
 	if err != nil {
-		logger.Log.Panicf("Error while limiting database size: %v\n", err)
+		logger.Log.Panicf("Error while limiting database size: %v", err)
 	}
 
 	for _, extension := range extensions {
@@ -189,7 +189,7 @@ func startBasenineServer(host string, port string) {
 		for macro, expanded := range macros {
 			err = basenine.Macro(host, port, macro, expanded)
 			if err != nil {
-				logger.Log.Panicf("Error while adding a macro: %v\n", err)
+				logger.Log.Panicf("Error while adding a macro: %v", err)
 			}
 		}
 	}
