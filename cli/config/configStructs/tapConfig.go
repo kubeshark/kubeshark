@@ -82,7 +82,7 @@ func (config *TapConfig) Validate() error {
 	}
 
 	if config.NoPersistentVolumeClaim && !config.DaemonMode {
-		logger.Log.Warningf(uiUtils.Warning, fmt.Sprintf("the --set no-persistent-volume-claim=false flag has no effect without the --%s flag, the claim will not be created anyway.", DaemonModeTapName))
+		logger.Log.Warningf(uiUtils.Warning, fmt.Sprintf("the --set tap.no-persistent-volume-claim=true flag has no effect without the --%s flag, the claim will not be created anyway.", DaemonModeTapName))
 	}
 
 	return nil
