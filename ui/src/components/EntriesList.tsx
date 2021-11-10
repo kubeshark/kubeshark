@@ -9,7 +9,6 @@ interface EntriesListProps {
     setEntries: (entries: any[]) => void;
     focusedEntryId: string;
     setFocusedEntryId: (id: string) => void;
-    connectionOpen: boolean;
     listEntryREF: any;
     onScrollEvent: (isAtBottom:boolean) => void;
     scrollableList: boolean;
@@ -22,7 +21,7 @@ interface EntriesListProps {
     startTime: number;
 }
 
-export const EntriesList: React.FC<EntriesListProps> = ({entries, setEntries, focusedEntryId, setFocusedEntryId, connectionOpen, listEntryREF, onScrollEvent, scrollableList, ws, openWebSocket, query, updateQuery, queriedCurrent, queriedTotal, startTime}) => {
+export const EntriesList: React.FC<EntriesListProps> = ({entries, setEntries, focusedEntryId, setFocusedEntryId, listEntryREF, onScrollEvent, scrollableList, ws, openWebSocket, query, updateQuery, queriedCurrent, queriedTotal, startTime}) => {
 
     const scrollableRef = useRef(null);
 
@@ -38,9 +37,6 @@ export const EntriesList: React.FC<EntriesListProps> = ({entries, setEntries, fo
                                                         style={{}}
                                                         updateQuery={updateQuery}/>)}
                     </ScrollableFeedVirtualized>
-                    {!connectionOpen && <div className={styles.fetchButtonContainer}>
-                        <div className={styles.styledButton} onClick={() => {ws.close(); openWebSocket(query);}}>Reconnect</div>
-                    </div>}
                     <button type="button"
                         className={`${styles.btnLive} ${scrollableList ? styles.showButton : styles.hideButton}`}
                         onClick={(_) => scrollableRef.current.jumpToBottom()}>
