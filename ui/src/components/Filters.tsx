@@ -104,7 +104,14 @@ export const QueryForm: React.FC<QueryFormProps> = ({query, setQuery, background
                     <Button
                         type="submit"
                         variant="contained"
-                        style={{margin: "2px 0px 0px 0px", backgroundColor: variables.blueColor}}
+                        style={{
+                            margin: "2px 0px 0px 0px",
+                            backgroundColor: variables.blueColor,
+                            fontWeight: 600,
+                            borderRadius: "4px",
+                            color: "#fff",
+                            textTransform: "none",
+                        }}
                     >
                         Apply
                     </Button>
@@ -112,7 +119,15 @@ export const QueryForm: React.FC<QueryFormProps> = ({query, setQuery, background
                         title="Open Filtering Guide (Cheatsheet)"
                         variant="contained"
                         color="primary"
-                        style={{margin: "2px 0px 0px 10px", minWidth: "26px", backgroundColor: variables.blueColor}}
+                        style={{
+                            margin: "2px 0px 0px 10px",
+                            minWidth: "26px",
+                            backgroundColor: variables.blueColor,
+                            fontWeight: 600,
+                            borderRadius: "4px",
+                            color: "#fff",
+                            textTransform: "none",
+                        }}
                         onClick={handleOpenModal}
                     >
                         <MenuBookIcon fontSize="inherit"></MenuBookIcon>
