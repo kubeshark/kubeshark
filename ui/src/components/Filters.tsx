@@ -6,6 +6,7 @@ import MenuBookIcon from '@material-ui/icons/MenuBook';
 import {SyntaxHighlighter} from "./UI/SyntaxHighlighter/index";
 import filterUIExample1 from "./assets/filter-ui-example-1.png"
 import filterUIExample2 from "./assets/filter-ui-example-2.png"
+import variables from '../variables.module.scss';
 
 interface FiltersProps {
     query: string
@@ -100,11 +101,18 @@ export const QueryForm: React.FC<QueryFormProps> = ({query, setQuery, background
                     </label>
                 </Grid>
                 <Grid item xs={4}>
-                    <Button type="submit" variant="contained" style={{margin: "2px 0px 0px 0px"}}>Apply</Button>
+                    <Button
+                        type="submit"
+                        variant="contained"
+                        style={{margin: "2px 0px 0px 0px", backgroundColor: variables.blueColor}}
+                    >
+                        Apply
+                    </Button>
                     <Button
                         title="Open Filtering Guide (Cheatsheet)"
                         variant="contained"
-                        style={{margin: "2px 0px 0px 10px", minWidth: "26px"}}
+                        color="primary"
+                        style={{margin: "2px 0px 0px 10px", minWidth: "26px", backgroundColor: variables.blueColor}}
                         onClick={handleOpenModal}
                     >
                         <MenuBookIcon fontSize="inherit"></MenuBookIcon>
