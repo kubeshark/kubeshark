@@ -334,23 +334,24 @@ func waitTimeout(wg *sync.WaitGroup, timeout time.Duration) bool {
 	}
 }
 
-// assertEntriesAtLeast checks whether the number of entries greater than or equal to n
-func assertEntriesAtLeast(t *testing.T, entries []map[string]interface{}, n int) {
+// checkEntriesAtLeast checks whether the number of entries greater than or equal to n
+func checkEntriesAtLeast(entries []map[string]interface{}, n int) error {
 	if len(entries) < n {
-		t.Errorf("Unexpected entries result - Expected more than %d entries", n-1)
+		return fmt.Errorf("Unexpected entries result - Expected more than %d entries", n-1)
 	}
+	return nil
 }
 
 // getDBEntries retrieves the entries from the database before the given timestamp.
 // Also limits the results according to the limit parameter.
 // Timeout for the WebSocket connection is defined by the timeout parameter.
-func getDBEntries(t *testing.T, timestamp int64, limit int, timeout time.Duration) (entries []map[string]interface{}) {
+func getDBEntries(timestamp int64, limit int, timeout time.Duration) (entries []map[string]interface{}, err error) {
 	query := fmt.Sprintf("timestamp < %d and limit(%d)", timestamp, limit)
 	webSocketUrl := getWebSocketUrl(defaultApiServerPort)
 
-	connection, _, err := websocket.DefaultDialer.Dial(webSocketUrl, nil)
+	var connection *websocket.Conn
+	connection, _, err = websocket.DefaultDialer.Dial(webSocketUrl, nil)
 	if err != nil {
-		t.Errorf("%v", err)
 		return
 	}
 	defer connection.Close()
@@ -365,7 +366,6 @@ func getDBEntries(t *testing.T, timestamp int64, limit int, timeout time.Duratio
 
 			var data map[string]interface{}
 			if err = json.Unmarshal([]byte(message), &data); err != nil {
-				t.Errorf("%v", err)
 				return
 			}
 
@@ -377,7 +377,6 @@ func getDBEntries(t *testing.T, timestamp int64, limit int, timeout time.Duratio
 
 	err = connection.WriteMessage(websocket.TextMessage, []byte(query))
 	if err != nil {
-		t.Errorf("%v", err)
 		return
 	}
 

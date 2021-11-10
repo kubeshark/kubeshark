@@ -66,8 +66,14 @@ func TestTap(t *testing.T) {
 			entriesCheckFunc := func() error {
 				timestamp := time.Now().UnixNano() / int64(time.Millisecond)
 
-				entries := getDBEntries(t, timestamp, entriesCount, 1*time.Second)
-				assertEntriesAtLeast(t, entries, 1)
+				entries, err := getDBEntries(timestamp, entriesCount, 1*time.Second)
+				if err != nil {
+					return err
+				}
+				err = checkEntriesAtLeast(entries, 1)
+				if err != nil {
+					return err
+				}
 				entry := entries[0]
 
 				entryUrl := fmt.Sprintf("%v/entries/%v", apiServerUrl, entry["id"])
@@ -432,8 +438,14 @@ func TestTapRedact(t *testing.T) {
 	redactCheckFunc := func() error {
 		timestamp := time.Now().UnixNano() / int64(time.Millisecond)
 
-		entries := getDBEntries(t, timestamp, defaultEntriesCount, 1*time.Second)
-		assertEntriesAtLeast(t, entries, 1)
+		entries, err := getDBEntries(timestamp, defaultEntriesCount, 1*time.Second)
+		if err != nil {
+			return err
+		}
+		err = checkEntriesAtLeast(entries, 1)
+		if err != nil {
+			return err
+		}
 		firstEntry := entries[0]
 
 		entryUrl := fmt.Sprintf("%v/entries/%v", apiServerUrl, firstEntry["id"])
@@ -529,8 +541,14 @@ func TestTapNoRedact(t *testing.T) {
 	redactCheckFunc := func() error {
 		timestamp := time.Now().UnixNano() / int64(time.Millisecond)
 
-		entries := getDBEntries(t, timestamp, defaultEntriesCount, 1*time.Second)
-		assertEntriesAtLeast(t, entries, 1)
+		entries, err := getDBEntries(timestamp, defaultEntriesCount, 1*time.Second)
+		if err != nil {
+			return err
+		}
+		err = checkEntriesAtLeast(entries, 1)
+		if err != nil {
+			return err
+		}
 		firstEntry := entries[0]
 
 		entryUrl := fmt.Sprintf("%v/entries/%v", apiServerUrl, firstEntry["id"])
@@ -626,8 +644,14 @@ func TestTapRegexMasking(t *testing.T) {
 	redactCheckFunc := func() error {
 		timestamp := time.Now().UnixNano() / int64(time.Millisecond)
 
-		entries := getDBEntries(t, timestamp, defaultEntriesCount, 1*time.Second)
-		assertEntriesAtLeast(t, entries, 1)
+		entries, err := getDBEntries(timestamp, defaultEntriesCount, 1*time.Second)
+		if err != nil {
+			return err
+		}
+		err = checkEntriesAtLeast(entries, 1)
+		if err != nil {
+			return err
+		}
 		firstEntry := entries[0]
 
 		entryUrl := fmt.Sprintf("%v/entries/%v", apiServerUrl, firstEntry["id"])
@@ -715,8 +739,14 @@ func TestTapIgnoredUserAgents(t *testing.T) {
 	ignoredUserAgentsCheckFunc := func() error {
 		timestamp := time.Now().UnixNano() / int64(time.Millisecond)
 
-		entries := getDBEntries(t, timestamp, defaultEntriesCount, 1*time.Second)
-		assertEntriesAtLeast(t, entries, 1)
+		entries, err := getDBEntries(timestamp, defaultEntriesCount, 1*time.Second)
+		if err != nil {
+			return err
+		}
+		err = checkEntriesAtLeast(entries, 1)
+		if err != nil {
+			return err
+		}
 
 		for _, entryInterface := range entries {
 			entryUrl := fmt.Sprintf("%v/entries/%v", apiServerUrl, entryInterface["id"])
@@ -906,8 +936,14 @@ func TestDaemonSeeTraffic(t *testing.T) {
 			entriesCheckFunc := func() error {
 				timestamp := time.Now().UnixNano() / int64(time.Millisecond)
 
-				entries := getDBEntries(t, timestamp, entriesCount, 1*time.Second)
-				assertEntriesAtLeast(t, entries, 1)
+				entries, err := getDBEntries(timestamp, entriesCount, 1*time.Second)
+				if err != nil {
+					return err
+				}
+				err = checkEntriesAtLeast(entries, 1)
+				if err != nil {
+					return err
+				}
 				entry := entries[0]
 
 				entryUrl := fmt.Sprintf("%v/entries/%v", apiServerUrl, entry["id"])
