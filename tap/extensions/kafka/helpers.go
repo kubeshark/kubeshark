@@ -27,48 +27,54 @@ type KafkaWrapper struct {
 }
 
 func representRequestHeader(data map[string]interface{}, rep []interface{}) []interface{} {
-	requestHeader, _ := json.Marshal([]map[string]string{
+	requestHeader, _ := json.Marshal([]api.TableData{
 		{
-			"name":  "ApiKey",
-			"value": apiNames[int(data["ApiKey"].(float64))],
+			Name:     "ApiKey",
+			Value:    apiNames[int(data["apiKey"].(float64))],
+			Selector: `request.apiKey`,
 		},
 		{
-			"name":  "ApiVersion",
-			"value": fmt.Sprintf("%d", int(data["ApiVersion"].(float64))),
+			Name:     "ApiVersion",
+			Value:    fmt.Sprintf("%d", int(data["apiVersion"].(float64))),
+			Selector: `request.apiVersion`,
 		},
 		{
-			"name":  "Client ID",
-			"value": data["ClientID"].(string),
+			Name:     "Client ID",
+			Value:    data["clientID"].(string),
+			Selector: `request.clientID`,
 		},
 		{
-			"name":  "Correlation ID",
-			"value": fmt.Sprintf("%d", int(data["CorrelationID"].(float64))),
+			Name:     "Correlation ID",
+			Value:    fmt.Sprintf("%d", int(data["correlationID"].(float64))),
+			Selector: `request.correlationID`,
 		},
 		{
-			"name":  "Size",
-			"value": fmt.Sprintf("%d", int(data["Size"].(float64))),
+			Name:     "Size",
+			Value:    fmt.Sprintf("%d", int(data["size"].(float64))),
+			Selector: `request.size`,
 		},
 	})
-	rep = append(rep, map[string]string{
-		"type":  api.TABLE,
-		"title": "Request Header",
-		"data":  string(requestHeader),
+	rep = append(rep, api.SectionData{
+		Type:  api.TABLE,
+		Title: "Request Header",
+		Data:  string(requestHeader),
 	})
 
 	return rep
 }
 
 func representResponseHeader(data map[string]interface{}, rep []interface{}) []interface{} {
-	requestHeader, _ := json.Marshal([]map[string]string{
+	requestHeader, _ := json.Marshal([]api.TableData{
 		{
-			"name":  "Correlation ID",
-			"value": fmt.Sprintf("%d", int(data["CorrelationID"].(float64))),
+			Name:     "Correlation ID",
+			Value:    fmt.Sprintf("%d", int(data["correlationID"].(float64))),
+			Selector: `response.correlationID`,
 		},
 	})
-	rep = append(rep, map[string]string{
-		"type":  api.TABLE,
-		"title": "Response Header",
-		"data":  string(requestHeader),
+	rep = append(rep, api.SectionData{
+		Type:  api.TABLE,
+		Title: "Response Header",
+		Data:  string(requestHeader),
 	})
 
 	return rep
@@ -79,46 +85,50 @@ func representMetadataRequest(data map[string]interface{}) []interface{} {
 
 	rep = representRequestHeader(data, rep)
 
-	payload := data["Payload"].(map[string]interface{})
+	payload := data["payload"].(map[string]interface{})
 	topics := ""
 	allowAutoTopicCreation := ""
 	includeClusterAuthorizedOperations := ""
 	includeTopicAuthorizedOperations := ""
-	if payload["Topics"] != nil {
-		x, _ := json.Marshal(payload["Topics"].([]interface{}))
+	if payload["topics"] != nil {
+		x, _ := json.Marshal(payload["topics"].([]interface{}))
 		topics = string(x)
 	}
-	if payload["AllowAutoTopicCreation"] != nil {
-		allowAutoTopicCreation = strconv.FormatBool(payload["AllowAutoTopicCreation"].(bool))
+	if payload["allowAutoTopicCreation"] != nil {
+		allowAutoTopicCreation = strconv.FormatBool(payload["allowAutoTopicCreation"].(bool))
 	}
-	if payload["IncludeClusterAuthorizedOperations"] != nil {
-		includeClusterAuthorizedOperations = strconv.FormatBool(payload["IncludeClusterAuthorizedOperations"].(bool))
+	if payload["includeClusterAuthorizedOperations"] != nil {
+		includeClusterAuthorizedOperations = strconv.FormatBool(payload["includeClusterAuthorizedOperations"].(bool))
 	}
-	if payload["IncludeTopicAuthorizedOperations"] != nil {
-		includeTopicAuthorizedOperations = strconv.FormatBool(payload["IncludeTopicAuthorizedOperations"].(bool))
+	if payload["includeTopicAuthorizedOperations"] != nil {
+		includeTopicAuthorizedOperations = strconv.FormatBool(payload["includeTopicAuthorizedOperations"].(bool))
 	}
-	repPayload, _ := json.Marshal([]map[string]string{
+	repPayload, _ := json.Marshal([]api.TableData{
 		{
-			"name":  "Topics",
-			"value": topics,
+			Name:     "Topics",
+			Value:    topics,
+			Selector: `request.payload.topics`,
 		},
 		{
-			"name":  "Allow Auto Topic Creation",
-			"value": allowAutoTopicCreation,
+			Name:     "Allow Auto Topic Creation",
+			Value:    allowAutoTopicCreation,
+			Selector: `request.payload.allowAutoTopicCreation`,
 		},
 		{
-			"name":  "Include Cluster Authorized Operations",
-			"value": includeClusterAuthorizedOperations,
+			Name:     "Include Cluster Authorized Operations",
+			Value:    includeClusterAuthorizedOperations,
+			Selector: `request.payload.includeClusterAuthorizedOperations`,
 		},
 		{
-			"name":  "Include Topic Authorized Operations",
-			"value": includeTopicAuthorizedOperations,
+			Name:     "Include Topic Authorized Operations",
+			Value:    includeTopicAuthorizedOperations,
+			Selector: `request.payload.includeTopicAuthorizedOperations`,
 		},
 	})
-	rep = append(rep, map[string]string{
-		"type":  api.TABLE,
-		"title": "Payload",
-		"data":  string(repPayload),
+	rep = append(rep, api.SectionData{
+		Type:  api.TABLE,
+		Title: "Payload",
+		Data:  string(repPayload),
 	})
 
 	return rep
@@ -129,63 +139,69 @@ func representMetadataResponse(data map[string]interface{}) []interface{} {
 
 	rep = representResponseHeader(data, rep)
 
-	payload := data["Payload"].(map[string]interface{})
+	payload := data["payload"].(map[string]interface{})
 	topics := ""
-	if payload["Topics"] != nil {
-		_topics, _ := json.Marshal(payload["Topics"].([]interface{}))
+	if payload["topics"] != nil {
+		_topics, _ := json.Marshal(payload["topics"].([]interface{}))
 		topics = string(_topics)
 	}
 	brokers := ""
-	if payload["Brokers"] != nil {
-		_brokers, _ := json.Marshal(payload["Brokers"].([]interface{}))
+	if payload["brokers"] != nil {
+		_brokers, _ := json.Marshal(payload["brokers"].([]interface{}))
 		brokers = string(_brokers)
 	}
 	controllerID := ""
 	clusterID := ""
 	throttleTimeMs := ""
 	clusterAuthorizedOperations := ""
-	if payload["ControllerID"] != nil {
-		controllerID = fmt.Sprintf("%d", int(payload["ControllerID"].(float64)))
+	if payload["controllerID"] != nil {
+		controllerID = fmt.Sprintf("%d", int(payload["controllerID"].(float64)))
 	}
-	if payload["ClusterID"] != nil {
-		clusterID = payload["ClusterID"].(string)
+	if payload["clusterID"] != nil {
+		clusterID = payload["clusterID"].(string)
 	}
-	if payload["ThrottleTimeMs"] != nil {
-		throttleTimeMs = fmt.Sprintf("%d", int(payload["ThrottleTimeMs"].(float64)))
+	if payload["throttleTimeMs"] != nil {
+		throttleTimeMs = fmt.Sprintf("%d", int(payload["throttleTimeMs"].(float64)))
 	}
-	if payload["ClusterAuthorizedOperations"] != nil {
-		clusterAuthorizedOperations = fmt.Sprintf("%d", int(payload["ClusterAuthorizedOperations"].(float64)))
+	if payload["clusterAuthorizedOperations"] != nil {
+		clusterAuthorizedOperations = fmt.Sprintf("%d", int(payload["clusterAuthorizedOperations"].(float64)))
 	}
-	repPayload, _ := json.Marshal([]map[string]string{
+	repPayload, _ := json.Marshal([]api.TableData{
 		{
-			"name":  "Throttle Time (ms)",
-			"value": throttleTimeMs,
+			Name:     "Throttle Time (ms)",
+			Value:    throttleTimeMs,
+			Selector: `response.payload.throttleTimeMs`,
 		},
 		{
-			"name":  "Brokers",
-			"value": brokers,
+			Name:     "Brokers",
+			Value:    brokers,
+			Selector: `response.payload.brokers`,
 		},
 		{
-			"name":  "Cluster ID",
-			"value": clusterID,
+			Name:     "Cluster ID",
+			Value:    clusterID,
+			Selector: `response.payload.clusterID`,
 		},
 		{
-			"name":  "Controller ID",
-			"value": controllerID,
+			Name:     "Controller ID",
+			Value:    controllerID,
+			Selector: `response.payload.controllerID`,
 		},
 		{
-			"name":  "Topics",
-			"value": topics,
+			Name:     "Topics",
+			Value:    topics,
+			Selector: `response.payload.topics`,
 		},
 		{
-			"name":  "Cluster Authorized Operations",
-			"value": clusterAuthorizedOperations,
+			Name:     "Cluster Authorized Operations",
+			Value:    clusterAuthorizedOperations,
+			Selector: `response.payload.clusterAuthorizedOperations`,
 		},
 	})
-	rep = append(rep, map[string]string{
-		"type":  api.TABLE,
-		"title": "Payload",
-		"data":  string(repPayload),
+	rep = append(rep, api.SectionData{
+		Type:  api.TABLE,
+		Title: "Payload",
+		Data:  string(repPayload),
 	})
 
 	return rep
@@ -196,29 +212,31 @@ func representApiVersionsRequest(data map[string]interface{}) []interface{} {
 
 	rep = representRequestHeader(data, rep)
 
-	payload := data["Payload"].(map[string]interface{})
+	payload := data["payload"].(map[string]interface{})
 	clientSoftwareName := ""
 	clientSoftwareVersion := ""
-	if payload["ClientSoftwareName"] != nil {
-		clientSoftwareName = payload["ClientSoftwareName"].(string)
+	if payload["clientSoftwareName"] != nil {
+		clientSoftwareName = payload["clientSoftwareName"].(string)
 	}
-	if payload["ClientSoftwareVersion"] != nil {
-		clientSoftwareVersion = payload["ClientSoftwareVersion"].(string)
+	if payload["clientSoftwareVersion"] != nil {
+		clientSoftwareVersion = payload["clientSoftwareVersion"].(string)
 	}
-	repPayload, _ := json.Marshal([]map[string]string{
+	repPayload, _ := json.Marshal([]api.TableData{
 		{
-			"name":  "Client Software Name",
-			"value": clientSoftwareName,
+			Name:     "Client Software Name",
+			Value:    clientSoftwareName,
+			Selector: `request.payload.clientSoftwareName`,
 		},
 		{
-			"name":  "Client Software Version",
-			"value": clientSoftwareVersion,
+			Name:     "Client Software Version",
+			Value:    clientSoftwareVersion,
+			Selector: `request.payload.clientSoftwareVersion`,
 		},
 	})
-	rep = append(rep, map[string]string{
-		"type":  api.TABLE,
-		"title": "Payload",
-		"data":  string(repPayload),
+	rep = append(rep, api.SectionData{
+		Type:  api.TABLE,
+		Title: "Payload",
+		Data:  string(repPayload),
 	})
 
 	return rep
@@ -229,34 +247,37 @@ func representApiVersionsResponse(data map[string]interface{}) []interface{} {
 
 	rep = representResponseHeader(data, rep)
 
-	payload := data["Payload"].(map[string]interface{})
+	payload := data["payload"].(map[string]interface{})
 	apiKeys := ""
-	if payload["TopicNames"] != nil {
-		x, _ := json.Marshal(payload["ApiKeys"].([]interface{}))
+	if payload["apiKeys"] != nil {
+		x, _ := json.Marshal(payload["apiKeys"].([]interface{}))
 		apiKeys = string(x)
 	}
 	throttleTimeMs := ""
-	if payload["ThrottleTimeMs"] != nil {
-		throttleTimeMs = fmt.Sprintf("%d", int(payload["ThrottleTimeMs"].(float64)))
+	if payload["throttleTimeMs"] != nil {
+		throttleTimeMs = fmt.Sprintf("%d", int(payload["throttleTimeMs"].(float64)))
 	}
-	repPayload, _ := json.Marshal([]map[string]string{
+	repPayload, _ := json.Marshal([]api.TableData{
 		{
-			"name":  "Error Code",
-			"value": fmt.Sprintf("%d", int(payload["ErrorCode"].(float64))),
+			Name:     "Error Code",
+			Value:    fmt.Sprintf("%d", int(payload["errorCode"].(float64))),
+			Selector: `response.payload.errorCode`,
 		},
 		{
-			"name":  "ApiKeys",
-			"value": apiKeys,
+			Name:     "ApiKeys",
+			Value:    apiKeys,
+			Selector: `response.payload.apiKeys`,
 		},
 		{
-			"name":  "Throttle Time (ms)",
-			"value": throttleTimeMs,
+			Name:     "Throttle Time (ms)",
+			Value:    throttleTimeMs,
+			Selector: `response.payload.throttleTimeMs`,
 		},
 	})
-	rep = append(rep, map[string]string{
-		"type":  api.TABLE,
-		"title": "Payload",
-		"data":  string(repPayload),
+	rep = append(rep, api.SectionData{
+		Type:  api.TABLE,
+		Title: "Payload",
+		Data:  string(repPayload),
 	})
 
 	return rep
@@ -267,39 +288,43 @@ func representProduceRequest(data map[string]interface{}) []interface{} {
 
 	rep = representRequestHeader(data, rep)
 
-	payload := data["Payload"].(map[string]interface{})
+	payload := data["payload"].(map[string]interface{})
 	topicData := ""
-	_topicData := payload["TopicData"]
+	_topicData := payload["topicData"]
 	if _topicData != nil {
 		x, _ := json.Marshal(_topicData.([]interface{}))
 		topicData = string(x)
 	}
 	transactionalID := ""
-	if payload["TransactionalID"] != nil {
-		transactionalID = payload["TransactionalID"].(string)
+	if payload["transactionalID"] != nil {
+		transactionalID = payload["transactionalID"].(string)
 	}
-	repPayload, _ := json.Marshal([]map[string]string{
+	repPayload, _ := json.Marshal([]api.TableData{
 		{
-			"name":  "Transactional ID",
-			"value": transactionalID,
+			Name:     "Transactional ID",
+			Value:    transactionalID,
+			Selector: `request.payload.transactionalID`,
 		},
 		{
-			"name":  "Required Acknowledgements",
-			"value": fmt.Sprintf("%d", int(payload["RequiredAcks"].(float64))),
+			Name:     "Required Acknowledgements",
+			Value:    fmt.Sprintf("%d", int(payload["requiredAcks"].(float64))),
+			Selector: `request.payload.requiredAcks`,
 		},
 		{
-			"name":  "Timeout",
-			"value": fmt.Sprintf("%d", int(payload["Timeout"].(float64))),
+			Name:     "Timeout",
+			Value:    fmt.Sprintf("%d", int(payload["timeout"].(float64))),
+			Selector: `request.payload.timeout`,
 		},
 		{
-			"name":  "Topic Data",
-			"value": topicData,
+			Name:     "Topic Data",
+			Value:    topicData,
+			Selector: `request.payload.topicData`,
 		},
 	})
-	rep = append(rep, map[string]string{
-		"type":  api.TABLE,
-		"title": "Payload",
-		"data":  string(repPayload),
+	rep = append(rep, api.SectionData{
+		Type:  api.TABLE,
+		Title: "Payload",
+		Data:  string(repPayload),
 	})
 
 	return rep
@@ -310,30 +335,32 @@ func representProduceResponse(data map[string]interface{}) []interface{} {
 
 	rep = representResponseHeader(data, rep)
 
-	payload := data["Payload"].(map[string]interface{})
+	payload := data["payload"].(map[string]interface{})
 	responses := ""
-	if payload["Responses"] != nil {
-		_responses, _ := json.Marshal(payload["Responses"].([]interface{}))
+	if payload["responses"] != nil {
+		_responses, _ := json.Marshal(payload["responses"].([]interface{}))
 		responses = string(_responses)
 	}
 	throttleTimeMs := ""
-	if payload["ThrottleTimeMs"] != nil {
-		throttleTimeMs = fmt.Sprintf("%d", int(payload["ThrottleTimeMs"].(float64)))
+	if payload["throttleTimeMs"] != nil {
+		throttleTimeMs = fmt.Sprintf("%d", int(payload["throttleTimeMs"].(float64)))
 	}
-	repPayload, _ := json.Marshal([]map[string]string{
+	repPayload, _ := json.Marshal([]api.TableData{
 		{
-			"name":  "Responses",
-			"value": string(responses),
+			Name:     "Responses",
+			Value:    string(responses),
+			Selector: `response.payload.responses`,
 		},
 		{
-			"name":  "Throttle Time (ms)",
-			"value": throttleTimeMs,
+			Name:     "Throttle Time (ms)",
+			Value:    throttleTimeMs,
+			Selector: `response.payload.throttleTimeMs`,
 		},
 	})
-	rep = append(rep, map[string]string{
-		"type":  api.TABLE,
-		"title": "Payload",
-		"data":  string(repPayload),
+	rep = append(rep, api.SectionData{
+		Type:  api.TABLE,
+		Title: "Payload",
+		Data:  string(repPayload),
 	})
 
 	return rep
@@ -344,87 +371,97 @@ func representFetchRequest(data map[string]interface{}) []interface{} {
 
 	rep = representRequestHeader(data, rep)
 
-	payload := data["Payload"].(map[string]interface{})
+	payload := data["payload"].(map[string]interface{})
 	topics := ""
-	if payload["Topics"] != nil {
-		_topics, _ := json.Marshal(payload["Topics"].([]interface{}))
+	if payload["topics"] != nil {
+		_topics, _ := json.Marshal(payload["topics"].([]interface{}))
 		topics = string(_topics)
 	}
 	replicaId := ""
-	if payload["ReplicaId"] != nil {
-		replicaId = fmt.Sprintf("%d", int(payload["ReplicaId"].(float64)))
+	if payload["replicaId"] != nil {
+		replicaId = fmt.Sprintf("%d", int(payload["replicaId"].(float64)))
 	}
 	maxBytes := ""
-	if payload["MaxBytes"] != nil {
-		maxBytes = fmt.Sprintf("%d", int(payload["MaxBytes"].(float64)))
+	if payload["maxBytes"] != nil {
+		maxBytes = fmt.Sprintf("%d", int(payload["maxBytes"].(float64)))
 	}
 	isolationLevel := ""
-	if payload["IsolationLevel"] != nil {
-		isolationLevel = fmt.Sprintf("%d", int(payload["IsolationLevel"].(float64)))
+	if payload["isolationLevel"] != nil {
+		isolationLevel = fmt.Sprintf("%d", int(payload["isolationLevel"].(float64)))
 	}
 	sessionId := ""
-	if payload["SessionId"] != nil {
-		sessionId = fmt.Sprintf("%d", int(payload["SessionId"].(float64)))
+	if payload["sessionId"] != nil {
+		sessionId = fmt.Sprintf("%d", int(payload["sessionId"].(float64)))
 	}
 	sessionEpoch := ""
-	if payload["SessionEpoch"] != nil {
-		sessionEpoch = fmt.Sprintf("%d", int(payload["SessionEpoch"].(float64)))
+	if payload["sessionEpoch"] != nil {
+		sessionEpoch = fmt.Sprintf("%d", int(payload["sessionEpoch"].(float64)))
 	}
 	forgottenTopicsData := ""
-	if payload["ForgottenTopicsData"] != nil {
-		x, _ := json.Marshal(payload["ForgottenTopicsData"].(map[string]interface{}))
+	if payload["forgottenTopicsData"] != nil {
+		x, _ := json.Marshal(payload["forgottenTopicsData"].(map[string]interface{}))
 		forgottenTopicsData = string(x)
 	}
 	rackId := ""
-	if payload["RackId"] != nil {
-		rackId = payload["RackId"].(string)
+	if payload["rackId"] != nil {
+		rackId = payload["rackId"].(string)
 	}
-	repPayload, _ := json.Marshal([]map[string]string{
+	repPayload, _ := json.Marshal([]api.TableData{
 		{
-			"name":  "Replica ID",
-			"value": replicaId,
+			Name:     "Replica ID",
+			Value:    replicaId,
+			Selector: `request.payload.replicaId`,
 		},
 		{
-			"name":  "Maximum Wait (ms)",
-			"value": fmt.Sprintf("%d", int(payload["MaxWaitMs"].(float64))),
+			Name:     "Maximum Wait (ms)",
+			Value:    fmt.Sprintf("%d", int(payload["maxWaitMs"].(float64))),
+			Selector: `request.payload.maxWaitMs`,
 		},
 		{
-			"name":  "Minimum Bytes",
-			"value": fmt.Sprintf("%d", int(payload["MinBytes"].(float64))),
+			Name:     "Minimum Bytes",
+			Value:    fmt.Sprintf("%d", int(payload["minBytes"].(float64))),
+			Selector: `request.payload.minBytes`,
 		},
 		{
-			"name":  "Maximum Bytes",
-			"value": maxBytes,
+			Name:     "Maximum Bytes",
+			Value:    maxBytes,
+			Selector: `request.payload.maxBytes`,
 		},
 		{
-			"name":  "Isolation Level",
-			"value": isolationLevel,
+			Name:     "Isolation Level",
+			Value:    isolationLevel,
+			Selector: `request.payload.isolationLevel`,
 		},
 		{
-			"name":  "Session ID",
-			"value": sessionId,
+			Name:     "Session ID",
+			Value:    sessionId,
+			Selector: `request.payload.sessionId`,
 		},
 		{
-			"name":  "Session Epoch",
-			"value": sessionEpoch,
+			Name:     "Session Epoch",
+			Value:    sessionEpoch,
+			Selector: `request.payload.sessionEpoch`,
 		},
 		{
-			"name":  "Topics",
-			"value": topics,
+			Name:     "Topics",
+			Value:    topics,
+			Selector: `request.payload.topics`,
 		},
 		{
-			"name":  "Forgotten Topics Data",
-			"value": forgottenTopicsData,
+			Name:     "Forgotten Topics Data",
+			Value:    forgottenTopicsData,
+			Selector: `request.payload.forgottenTopicsData`,
 		},
 		{
-			"name":  "Rack ID",
-			"value": rackId,
+			Name:     "Rack ID",
+			Value:    rackId,
+			Selector: `request.payload.rackId`,
 		},
 	})
-	rep = append(rep, map[string]string{
-		"type":  api.TABLE,
-		"title": "Payload",
-		"data":  string(repPayload),
+	rep = append(rep, api.SectionData{
+		Type:  api.TABLE,
+		Title: "Payload",
+		Data:  string(repPayload),
 	})
 
 	return rep
@@ -435,46 +472,50 @@ func representFetchResponse(data map[string]interface{}) []interface{} {
 
 	rep = representResponseHeader(data, rep)
 
-	payload := data["Payload"].(map[string]interface{})
+	payload := data["payload"].(map[string]interface{})
 	responses := ""
-	if payload["Responses"] != nil {
-		_responses, _ := json.Marshal(payload["Responses"].([]interface{}))
+	if payload["responses"] != nil {
+		_responses, _ := json.Marshal(payload["responses"].([]interface{}))
 		responses = string(_responses)
 	}
 	throttleTimeMs := ""
-	if payload["ThrottleTimeMs"] != nil {
-		throttleTimeMs = fmt.Sprintf("%d", int(payload["ThrottleTimeMs"].(float64)))
+	if payload["throttleTimeMs"] != nil {
+		throttleTimeMs = fmt.Sprintf("%d", int(payload["throttleTimeMs"].(float64)))
 	}
 	errorCode := ""
-	if payload["ErrorCode"] != nil {
-		errorCode = fmt.Sprintf("%d", int(payload["ErrorCode"].(float64)))
+	if payload["errorCode"] != nil {
+		errorCode = fmt.Sprintf("%d", int(payload["errorCode"].(float64)))
 	}
 	sessionId := ""
-	if payload["SessionId"] != nil {
-		sessionId = fmt.Sprintf("%d", int(payload["SessionId"].(float64)))
+	if payload["sessionId"] != nil {
+		sessionId = fmt.Sprintf("%d", int(payload["sessionId"].(float64)))
 	}
-	repPayload, _ := json.Marshal([]map[string]string{
+	repPayload, _ := json.Marshal([]api.TableData{
 		{
-			"name":  "Throttle Time (ms)",
-			"value": throttleTimeMs,
+			Name:     "Throttle Time (ms)",
+			Value:    throttleTimeMs,
+			Selector: `response.payload.throttleTimeMs`,
 		},
 		{
-			"name":  "Error Code",
-			"value": errorCode,
+			Name:     "Error Code",
+			Value:    errorCode,
+			Selector: `response.payload.errorCode`,
 		},
 		{
-			"name":  "Session ID",
-			"value": sessionId,
+			Name:     "Session ID",
+			Value:    sessionId,
+			Selector: `response.payload.sessionId`,
 		},
 		{
-			"name":  "Responses",
-			"value": responses,
+			Name:     "Responses",
+			Value:    responses,
+			Selector: `response.payload.responses`,
 		},
 	})
-	rep = append(rep, map[string]string{
-		"type":  api.TABLE,
-		"title": "Payload",
-		"data":  string(repPayload),
+	rep = append(rep, api.SectionData{
+		Type:  api.TABLE,
+		Title: "Payload",
+		Data:  string(repPayload),
 	})
 
 	return rep
@@ -485,26 +526,28 @@ func representListOffsetsRequest(data map[string]interface{}) []interface{} {
 
 	rep = representRequestHeader(data, rep)
 
-	payload := data["Payload"].(map[string]interface{})
+	payload := data["payload"].(map[string]interface{})
 	topics := ""
-	if payload["Topics"] != nil {
-		_topics, _ := json.Marshal(payload["Topics"].([]interface{}))
+	if payload["topics"] != nil {
+		_topics, _ := json.Marshal(payload["topics"].([]interface{}))
 		topics = string(_topics)
 	}
-	repPayload, _ := json.Marshal([]map[string]string{
+	repPayload, _ := json.Marshal([]api.TableData{
 		{
-			"name":  "Replica ID",
-			"value": fmt.Sprintf("%d", int(payload["ReplicaId"].(float64))),
+			Name:     "Replica ID",
+			Value:    fmt.Sprintf("%d", int(payload["replicaId"].(float64))),
+			Selector: `request.payload.replicaId`,
 		},
 		{
-			"name":  "Topics",
-			"value": topics,
+			Name:     "Topics",
+			Value:    topics,
+			Selector: `request.payload.topics`,
 		},
 	})
-	rep = append(rep, map[string]string{
-		"type":  api.TABLE,
-		"title": "Payload",
-		"data":  string(repPayload),
+	rep = append(rep, api.SectionData{
+		Type:  api.TABLE,
+		Title: "Payload",
+		Data:  string(repPayload),
 	})
 
 	return rep
@@ -515,26 +558,28 @@ func representListOffsetsResponse(data map[string]interface{}) []interface{} {
 
 	rep = representResponseHeader(data, rep)
 
-	payload := data["Payload"].(map[string]interface{})
-	topics, _ := json.Marshal(payload["Topics"].([]interface{}))
+	payload := data["payload"].(map[string]interface{})
+	topics, _ := json.Marshal(payload["topics"].([]interface{}))
 	throttleTimeMs := ""
-	if payload["ThrottleTimeMs"] != nil {
-		throttleTimeMs = fmt.Sprintf("%d", int(payload["ThrottleTimeMs"].(float64)))
+	if payload["throttleTimeMs"] != nil {
+		throttleTimeMs = fmt.Sprintf("%d", int(payload["throttleTimeMs"].(float64)))
 	}
-	repPayload, _ := json.Marshal([]map[string]string{
+	repPayload, _ := json.Marshal([]api.TableData{
 		{
-			"name":  "Throttle Time (ms)",
-			"value": throttleTimeMs,
+			Name:     "Throttle Time (ms)",
+			Value:    throttleTimeMs,
+			Selector: `response.payload.throttleTimeMs`,
 		},
 		{
-			"name":  "Topics",
-			"value": string(topics),
+			Name:     "Topics",
+			Value:    string(topics),
+			Selector: `response.payload.topics`,
 		},
 	})
-	rep = append(rep, map[string]string{
-		"type":  api.TABLE,
-		"title": "Payload",
-		"data":  string(repPayload),
+	rep = append(rep, api.SectionData{
+		Type:  api.TABLE,
+		Title: "Payload",
+		Data:  string(repPayload),
 	})
 
 	return rep
@@ -545,30 +590,33 @@ func representCreateTopicsRequest(data map[string]interface{}) []interface{} {
 
 	rep = representRequestHeader(data, rep)
 
-	payload := data["Payload"].(map[string]interface{})
-	topics, _ := json.Marshal(payload["Topics"].([]interface{}))
+	payload := data["payload"].(map[string]interface{})
+	topics, _ := json.Marshal(payload["topics"].([]interface{}))
 	validateOnly := ""
-	if payload["ValidateOnly"] != nil {
-		validateOnly = strconv.FormatBool(payload["ValidateOnly"].(bool))
+	if payload["validateOnly"] != nil {
+		validateOnly = strconv.FormatBool(payload["validateOnly"].(bool))
 	}
-	repPayload, _ := json.Marshal([]map[string]string{
+	repPayload, _ := json.Marshal([]api.TableData{
 		{
-			"name":  "Topics",
-			"value": string(topics),
+			Name:     "Topics",
+			Value:    string(topics),
+			Selector: `request.payload.topics`,
 		},
 		{
-			"name":  "Timeout (ms)",
-			"value": fmt.Sprintf("%d", int(payload["TimeoutMs"].(float64))),
+			Name:     "Timeout (ms)",
+			Value:    fmt.Sprintf("%d", int(payload["timeoutMs"].(float64))),
+			Selector: `request.payload.timeoutMs`,
 		},
 		{
-			"name":  "Validate Only",
-			"value": validateOnly,
+			Name:     "Validate Only",
+			Value:    validateOnly,
+			Selector: `request.payload.validateOnly`,
 		},
 	})
-	rep = append(rep, map[string]string{
-		"type":  api.TABLE,
-		"title": "Payload",
-		"data":  string(repPayload),
+	rep = append(rep, api.SectionData{
+		Type:  api.TABLE,
+		Title: "Payload",
+		Data:  string(repPayload),
 	})
 
 	return rep
@@ -579,26 +627,28 @@ func representCreateTopicsResponse(data map[string]interface{}) []interface{} {
 
 	rep = representResponseHeader(data, rep)
 
-	payload := data["Payload"].(map[string]interface{})
-	topics, _ := json.Marshal(payload["Topics"].([]interface{}))
+	payload := data["payload"].(map[string]interface{})
+	topics, _ := json.Marshal(payload["topics"].([]interface{}))
 	throttleTimeMs := ""
-	if payload["ThrottleTimeMs"] != nil {
-		throttleTimeMs = fmt.Sprintf("%d", int(payload["ThrottleTimeMs"].(float64)))
+	if payload["throttleTimeMs"] != nil {
+		throttleTimeMs = fmt.Sprintf("%d", int(payload["throttleTimeMs"].(float64)))
 	}
-	repPayload, _ := json.Marshal([]map[string]string{
+	repPayload, _ := json.Marshal([]api.TableData{
 		{
-			"name":  "Throttle Time (ms)",
-			"value": throttleTimeMs,
+			Name:     "Throttle Time (ms)",
+			Value:    throttleTimeMs,
+			Selector: `response.payload.throttleTimeMs`,
 		},
 		{
-			"name":  "Topics",
-			"value": string(topics),
+			Name:     "Topics",
+			Value:    string(topics),
+			Selector: `response.payload.topics`,
 		},
 	})
-	rep = append(rep, map[string]string{
-		"type":  api.TABLE,
-		"title": "Payload",
-		"data":  string(repPayload),
+	rep = append(rep, api.SectionData{
+		Type:  api.TABLE,
+		Title: "Payload",
+		Data:  string(repPayload),
 	})
 
 	return rep
@@ -609,35 +659,38 @@ func representDeleteTopicsRequest(data map[string]interface{}) []interface{} {
 
 	rep = representRequestHeader(data, rep)
 
-	payload := data["Payload"].(map[string]interface{})
+	payload := data["payload"].(map[string]interface{})
 	topics := ""
-	if payload["Topics"] != nil {
-		x, _ := json.Marshal(payload["Topics"].([]interface{}))
+	if payload["topics"] != nil {
+		x, _ := json.Marshal(payload["topics"].([]interface{}))
 		topics = string(x)
 	}
 	topicNames := ""
-	if payload["TopicNames"] != nil {
-		x, _ := json.Marshal(payload["TopicNames"].([]interface{}))
+	if payload["topicNames"] != nil {
+		x, _ := json.Marshal(payload["topicNames"].([]interface{}))
 		topicNames = string(x)
 	}
-	repPayload, _ := json.Marshal([]map[string]string{
+	repPayload, _ := json.Marshal([]api.TableData{
 		{
-			"name":  "TopicNames",
-			"value": string(topicNames),
+			Name:     "TopicNames",
+			Value:    string(topicNames),
+			Selector: `request.payload.topicNames`,
 		},
 		{
-			"name":  "Topics",
-			"value": string(topics),
+			Name:     "Topics",
+			Value:    string(topics),
+			Selector: `request.payload.topics`,
 		},
 		{
-			"name":  "Timeout (ms)",
-			"value": fmt.Sprintf("%d", int(payload["TimeoutMs"].(float64))),
+			Name:     "Timeout (ms)",
+			Value:    fmt.Sprintf("%d", int(payload["timeoutMs"].(float64))),
+			Selector: `request.payload.timeoutMs`,
 		},
 	})
-	rep = append(rep, map[string]string{
-		"type":  api.TABLE,
-		"title": "Payload",
-		"data":  string(repPayload),
+	rep = append(rep, api.SectionData{
+		Type:  api.TABLE,
+		Title: "Payload",
+		Data:  string(repPayload),
 	})
 
 	return rep
@@ -648,26 +701,28 @@ func representDeleteTopicsResponse(data map[string]interface{}) []interface{} {
 
 	rep = representResponseHeader(data, rep)
 
-	payload := data["Payload"].(map[string]interface{})
-	responses, _ := json.Marshal(payload["Responses"].([]interface{}))
+	payload := data["payload"].(map[string]interface{})
+	responses, _ := json.Marshal(payload["responses"].([]interface{}))
 	throttleTimeMs := ""
-	if payload["ThrottleTimeMs"] != nil {
-		throttleTimeMs = fmt.Sprintf("%d", int(payload["ThrottleTimeMs"].(float64)))
+	if payload["throttleTimeMs"] != nil {
+		throttleTimeMs = fmt.Sprintf("%d", int(payload["throttleTimeMs"].(float64)))
 	}
-	repPayload, _ := json.Marshal([]map[string]string{
+	repPayload, _ := json.Marshal([]api.TableData{
 		{
-			"name":  "Throttle Time (ms)",
-			"value": throttleTimeMs,
+			Name:     "Throttle Time (ms)",
+			Value:    throttleTimeMs,
+			Selector: `response.payload.throttleTimeMs`,
 		},
 		{
-			"name":  "Responses",
-			"value": string(responses),
+			Name:     "Responses",
+			Value:    string(responses),
+			Selector: `response.payload.responses`,
 		},
 	})
-	rep = append(rep, map[string]string{
-		"type":  api.TABLE,
-		"title": "Payload",
-		"data":  string(repPayload),
+	rep = append(rep, api.SectionData{
+		Type:  api.TABLE,
+		Title: "Payload",
+		Data:  string(repPayload),
 	})
 
 	return rep

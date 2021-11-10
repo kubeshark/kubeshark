@@ -16,6 +16,7 @@ var protocol api.Protocol = api.Protocol{
 	Name:            "amqp",
 	LongName:        "Advanced Message Queuing Protocol 0-9-1",
 	Abbreviation:    "AMQP",
+	Macro:           "amqp",
 	Version:         "0-9-1",
 	BackgroundColor: "#ff6600",
 	ForegroundColor: "#ffffff",
@@ -222,7 +223,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 	}
 }
 
-func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolvedSource string, resolvedDestination string) *api.MizuEntry {
+func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, resolvedDestination string) *api.MizuEntry {
 	request := item.Pair.Request.Payload.(map[string]interface{})
 	reqDetails := request["details"].(map[string]interface{})
 	service := "amqp"
@@ -235,75 +236,79 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolve
 	summary := ""
 	switch request["method"] {
 	case basicMethodMap[40]:
-		summary = reqDetails["Exchange"].(string)
+		summary = reqDetails["exchange"].(string)
 		break
 	case basicMethodMap[60]:
-		summary = reqDetails["Exchange"].(string)
+		summary = reqDetails["exchange"].(string)
 		break
 	case exchangeMethodMap[10]:
-		summary = reqDetails["Exchange"].(string)
+		summary = reqDetails["exchange"].(string)
 		break
 	case queueMethodMap[10]:
-		summary = reqDetails["Queue"].(string)
+		summary = reqDetails["queue"].(string)
 		break
 	case connectionMethodMap[10]:
 		summary = fmt.Sprintf(
 			"%s.%s",
-			strconv.Itoa(int(reqDetails["VersionMajor"].(float64))),
-			strconv.Itoa(int(reqDetails["VersionMinor"].(float64))),
+			strconv.Itoa(int(reqDetails["versionMajor"].(float64))),
+			strconv.Itoa(int(reqDetails["versionMinor"].(float64))),
 		)
 		break
 	case connectionMethodMap[50]:
-		summary = reqDetails["ReplyText"].(string)
+		summary = reqDetails["replyText"].(string)
 		break
 	case queueMethodMap[20]:
-		summary = reqDetails["Queue"].(string)
+		summary = reqDetails["queue"].(string)
 		break
 	case basicMethodMap[20]:
-		summary = reqDetails["Queue"].(string)
+		summary = reqDetails["queue"].(string)
 		break
 	}
 
 	request["url"] = summary
-	entryBytes, _ := json.Marshal(item.Pair)
+	reqDetails["method"] = request["method"]
 	return &api.MizuEntry{
-		ProtocolName:            protocol.Name,
-		ProtocolLongName:        protocol.LongName,
-		ProtocolAbbreviation:    protocol.Abbreviation,
-		ProtocolVersion:         protocol.Version,
-		ProtocolBackgroundColor: protocol.BackgroundColor,
-		ProtocolForegroundColor: protocol.ForegroundColor,
-		ProtocolFontSize:        protocol.FontSize,
-		ProtocolReferenceLink:   protocol.ReferenceLink,
-		EntryId:                 entryId,
-		Entry:                   string(entryBytes),
-		Url:                     fmt.Sprintf("%s%s", service, summary),
-		Method:                  request["method"].(string),
-		Status:                  0,
-		RequestSenderIp:         item.ConnectionInfo.ClientIP,
-		Service:                 service,
-		Timestamp:               item.Timestamp,
-		ElapsedTime:             0,
-		Path:                    summary,
-		ResolvedSource:          resolvedSource,
-		ResolvedDestination:     resolvedDestination,
-		SourceIp:                item.ConnectionInfo.ClientIP,
-		DestinationIp:           item.ConnectionInfo.ServerIP,
-		SourcePort:              item.ConnectionInfo.ClientPort,
-		DestinationPort:         item.ConnectionInfo.ServerPort,
-		IsOutgoing:              item.ConnectionInfo.IsOutgoing,
+		Protocol: protocol,
+		Source: &api.TCP{
+			Name: resolvedSource,
+			IP:   item.ConnectionInfo.ClientIP,
+			Port: item.ConnectionInfo.ClientPort,
+		},
+		Destination: &api.TCP{
+			Name: resolvedDestination,
+			IP:   item.ConnectionInfo.ServerIP,
+			Port: item.ConnectionInfo.ServerPort,
+		},
+		Outgoing:            item.ConnectionInfo.IsOutgoing,
+		Request:             reqDetails,
+		Url:                 fmt.Sprintf("%s%s", service, summary),
+		Method:              request["method"].(string),
+		Status:              0,
+		RequestSenderIp:     item.ConnectionInfo.ClientIP,
+		Service:             service,
+		Timestamp:           item.Timestamp,
+		StartTime:           item.Pair.Request.CaptureTime,
+		ElapsedTime:         0,
+		Summary:             summary,
+		ResolvedSource:      resolvedSource,
+		ResolvedDestination: resolvedDestination,
+		SourceIp:            item.ConnectionInfo.ClientIP,
+		DestinationIp:       item.ConnectionInfo.ServerIP,
+		SourcePort:          item.ConnectionInfo.ClientPort,
+		DestinationPort:     item.ConnectionInfo.ServerPort,
+		IsOutgoing:          item.ConnectionInfo.IsOutgoing,
 	}
 
 }
 
 func (d dissecting) Summarize(entry *api.MizuEntry) *api.BaseEntryDetails {
 	return &api.BaseEntryDetails{
-		Id:              entry.EntryId,
+		Id:              entry.Id,
 		Protocol:        protocol,
 		Url:             entry.Url,
 		RequestSenderIp: entry.RequestSenderIp,
 		Service:         entry.Service,
-		Summary:         entry.Path,
+		Summary:         entry.Summary,
 		StatusCode:      entry.Status,
 		Method:          entry.Method,
 		Timestamp:       entry.Timestamp,
@@ -320,44 +325,46 @@ func (d dissecting) Summarize(entry *api.MizuEntry) *api.BaseEntryDetails {
 	}
 }
 
-func (d dissecting) Represent(entry *api.MizuEntry) (p api.Protocol, object []byte, bodySize int64, err error) {
-	p = protocol
+func (d dissecting) Represent(protoIn api.Protocol, request map[string]interface{}, response map[string]interface{}) (protoOut api.Protocol, object []byte, bodySize int64, err error) {
+	protoOut = protocol
 	bodySize = 0
-	var root map[string]interface{}
-	json.Unmarshal([]byte(entry.Entry), &root)
 	representation := make(map[string]interface{}, 0)
-	request := root["request"].(map[string]interface{})["payload"].(map[string]interface{})
 	var repRequest []interface{}
-	details := request["details"].(map[string]interface{})
 	switch request["method"].(string) {
 	case basicMethodMap[40]:
-		repRequest = representBasicPublish(details)
+		repRequest = representBasicPublish(request)
 		break
 	case basicMethodMap[60]:
-		repRequest = representBasicDeliver(details)
+		repRequest = representBasicDeliver(request)
 		break
 	case queueMethodMap[10]:
-		repRequest = representQueueDeclare(details)
+		repRequest = representQueueDeclare(request)
 		break
 	case exchangeMethodMap[10]:
-		repRequest = representExchangeDeclare(details)
+		repRequest = representExchangeDeclare(request)
 		break
 	case connectionMethodMap[10]:
-		repRequest = representConnectionStart(details)
+		repRequest = representConnectionStart(request)
 		break
 	case connectionMethodMap[50]:
-		repRequest = representConnectionClose(details)
+		repRequest = representConnectionClose(request)
 		break
 	case queueMethodMap[20]:
-		repRequest = representQueueBind(details)
+		repRequest = representQueueBind(request)
 		break
 	case basicMethodMap[20]:
-		repRequest = representBasicConsume(details)
+		repRequest = representBasicConsume(request)
 		break
 	}
 	representation["request"] = repRequest
 	object, err = json.Marshal(representation)
 	return
+}
+
+func (d dissecting) Macros() map[string]string {
+	return map[string]string{
+		`amqp`: fmt.Sprintf(`proto.abbr == "%s"`, protocol.Abbreviation),
+	}
 }
 
 var Dissector dissecting

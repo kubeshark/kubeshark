@@ -14,4 +14,6 @@ const (
 	GoGCEnvVar                       = "GOGC"
 	DefaultApiServerPort             = 8899
 	DebugModeEnvVar                  = "MIZU_DEBUG"
+	BasenineHost                     = "localhost"
+	BaseninePort                     = "9099"
 )

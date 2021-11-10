@@ -10,6 +10,8 @@ import pauseIcon from './assets/pause.svg';
 import variables from '../variables.module.scss';
 import {StatusBar} from "./UI/StatusBar";
 import Api, {MizuWebsocketURL} from "../helpers/api";
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const useLayoutStyles = makeStyles(() => ({
     details: {
@@ -34,7 +36,6 @@ const useLayoutStyles = makeStyles(() => ({
 enum ConnectionStatus {
     Closed,
     Connected,
-    Paused
 }
 
 interface TrafficPageProps {
@@ -52,25 +53,52 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
     const [focusedEntryId, setFocusedEntryId] = useState(null);
     const [selectedEntryData, setSelectedEntryData] = useState(null);
     const [connection, setConnection] = useState(ConnectionStatus.Closed);
-    const [noMoreDataTop, setNoMoreDataTop] = useState(false);
-    const [noMoreDataBottom, setNoMoreDataBottom] = useState(false);
-
-    const [methodsFilter, setMethodsFilter] = useState([]);
-    const [statusFilter, setStatusFilter] = useState([]);
-    const [pathFilter, setPathFilter] = useState("");
-    const [serviceFilter, setServiceFilter] = useState("");
 
     const [tappingStatus, setTappingStatus] = useState(null);
 
     const [disableScrollList, setDisableScrollList] = useState(false);
 
+    const [query, setQueryDefault] = useState("");
+    const [queryBackgroundColor, setQueryBackgroundColor] = useState("#f5f5f5");
+
+    const [queriedCurrent, setQueriedCurrent] = useState(0);
+    const [queriedTotal, setQueriedTotal] = useState(0);
+
+    const [startTime, setStartTime] = useState(0);
+
+    const setQuery = async (query) => {
+        if (!query) {
+            setQueryBackgroundColor("#f5f5f5")
+        } else {
+            const data = await api.validateQuery(query);
+            if (data.valid) {
+                setQueryBackgroundColor("#d2fad2")
+            } else {
+                setQueryBackgroundColor("#fad6dc")
+            }
+        }
+        setQueryDefault(query)
+    }
+
+    const updateQuery = (addition) => {
+        if (query) {
+            setQuery(`${query} and ${addition}`)
+        } else {
+            setQuery(addition)
+        }
+    }
+
     const ws = useRef(null);
 
     const listEntry = useRef(null);
 
-    const openWebSocket = () => {
+    const openWebSocket = (query) => {
+        setEntries([])
         ws.current = new WebSocket(MizuWebsocketURL);
-        ws.current.onopen = () => setConnection(ConnectionStatus.Connected);
+        ws.current.onopen = () => {
+            ws.current.send(query)
+            setConnection(ConnectionStatus.Connected);
+        }
         ws.current.onclose = () => setConnection(ConnectionStatus.Closed);
     }
 
@@ -81,11 +109,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
             switch (message.messageType) {
                 case "entry":
                     const entry = message.data
-                    if (connection === ConnectionStatus.Paused) {
-                        setNoMoreDataBottom(false)
-                        return;
-                    }
-                    if (!focusedEntryId) setFocusedEntryId(entry.id)
+                    if (!focusedEntryId) setFocusedEntryId(entry.id.toString())
                     let newEntries = [...entries];
                     setEntries([...newEntries, entry])
                     if(listEntry.current) {
@@ -103,6 +127,25 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                 case "outboundLink":
                     onTLSDetected(message.Data.DstIP);
                     break;
+                case "toast":
+                    toast[message.data.type](message.data.text, {
+                        position: "bottom-right",
+                        theme: "colored",
+                        autoClose: message.data.autoClose,
+                        hideProgressBar: false,
+                        closeOnClick: true,
+                        pauseOnHover: true,
+                        draggable: true,
+                        progress: undefined,
+                    });
+                    break;
+                case "queryMetadata":
+                    setQueriedCurrent(message.data.current)
+                    setQueriedTotal(message.data.total)
+                    break;
+                case "startTime":
+                    setStartTime(message.data);
+                    break;
                 default:
                     console.error(`unsupported websocket message type, Got: ${message.messageType}`)
             }
@@ -111,7 +154,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
 
     useEffect(() => {
         (async () => {
-            openWebSocket();
+            openWebSocket("rlimit(100)");
             try{
                 const tapStatusResponse = await api.tapStatus();
                 setTappingStatus(tapStatusResponse);
@@ -139,14 +182,17 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
     }, [focusedEntryId])
 
     const toggleConnection = () => {
-        setConnection(connection === ConnectionStatus.Connected ? ConnectionStatus.Paused : ConnectionStatus.Connected);
+        if (connection === ConnectionStatus.Connected) {
+            ws.current.close();
+        } else {
+            openWebSocket(query);
+            setConnection(ConnectionStatus.Connected);
+        }
     }
 
     const getConnectionStatusClass = (isContainer) => {
         const container = isContainer ? "Container" : "";
         switch (connection) {
-            case ConnectionStatus.Paused:
-                return "orangeIndicator" + container;
             case ConnectionStatus.Connected:
                 return "greenIndicator" + container;
             default:
@@ -156,8 +202,6 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
 
     const getConnectionTitle = () => {
         switch (connection) {
-            case ConnectionStatus.Paused:
-                return "traffic paused";
             case ConnectionStatus.Connected:
                 return "connected, waiting for traffic"
             default:
@@ -176,8 +220,10 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
     return (
         <div className="TrafficPage">
             <div className="TrafficPageHeader">
-                {connection !== ConnectionStatus.Closed && <img style={{cursor: "pointer", marginRight: 15, height: 30}} alt="pause"
-                     src={connection === ConnectionStatus.Connected ? pauseIcon : playIcon} onClick={toggleConnection}/>}
+                <img className="playPauseIcon" style={{visibility: connection === ConnectionStatus.Connected ? "visible" : "hidden"}} alt="pause"
+                    src={pauseIcon} onClick={toggleConnection}/>
+                <img className="playPauseIcon" style={{position: "absolute", visibility: connection === ConnectionStatus.Connected ? "hidden" : "visible"}} alt="play"
+                     src={playIcon} onClick={toggleConnection}/>
                 <div className="connectionText">
                     {getConnectionTitle()}
                     <div className={"indicatorContainer " + getConnectionStatusClass(true)}>
@@ -185,42 +231,51 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                     </div>
                 </div>
             </div>
-            {entries.length > 0 && <div className="TrafficPage-Container">
+            {<div className="TrafficPage-Container">
                 <div className="TrafficPage-ListContainer">
-                    <Filters methodsFilter={methodsFilter}
-                                setMethodsFilter={setMethodsFilter}
-                                statusFilter={statusFilter}
-                                setStatusFilter={setStatusFilter}
-                                pathFilter={pathFilter}
-                                setPathFilter={setPathFilter}
-                                serviceFilter={serviceFilter}
-                                setServiceFilter={setServiceFilter}
+                    <Filters
+                        query={query}
+                        setQuery={setQuery}
+                        backgroundColor={queryBackgroundColor}
+                        ws={ws.current}
+                        openWebSocket={openWebSocket}
                     />
                     <div className={styles.container}>
-                        <EntriesList entries={entries}
-                                        setEntries={setEntries}
-                                        focusedEntryId={focusedEntryId}
-                                        setFocusedEntryId={setFocusedEntryId}
-                                        connectionOpen={connection === ConnectionStatus.Connected}
-                                        noMoreDataBottom={noMoreDataBottom}
-                                        setNoMoreDataBottom={setNoMoreDataBottom}
-                                        noMoreDataTop={noMoreDataTop}
-                                        setNoMoreDataTop={setNoMoreDataTop}
-                                        methodsFilter={methodsFilter}
-                                        statusFilter={statusFilter}
-                                        pathFilter={pathFilter}
-                                        serviceFilter={serviceFilter}
-                                        listEntryREF={listEntry}
-                                        onScrollEvent={onScrollEvent}
-                                        scrollableList={disableScrollList}
+                        <EntriesList
+                            entries={entries}
+                            setEntries={setEntries}
+                            focusedEntryId={focusedEntryId}
+                            setFocusedEntryId={setFocusedEntryId}
+                            connectionOpen={connection === ConnectionStatus.Connected}
+                            listEntryREF={listEntry}
+                            onScrollEvent={onScrollEvent}
+                            scrollableList={disableScrollList}
+                            ws={ws.current}
+                            openWebSocket={openWebSocket}
+                            query={query}
+                            updateQuery={updateQuery}
+                            queriedCurrent={queriedCurrent}
+                            queriedTotal={queriedTotal}
+                            startTime={startTime}
                         />
                     </div>
                 </div>
                 <div className={classes.details}>
-                    {selectedEntryData && <EntryDetailed entryData={selectedEntryData}/>}
+                    {selectedEntryData && <EntryDetailed entryData={selectedEntryData} updateQuery={updateQuery}/>}
                 </div>
             </div>}
             {tappingStatus?.pods != null && <StatusBar tappingStatus={tappingStatus}/>}
+            <ToastContainer
+                position="bottom-right"
+                autoClose={5000}
+                hideProgressBar={false}
+                newestOnTop={false}
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+            />
         </div>
     )
 };

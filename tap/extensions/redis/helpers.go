@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/up9inc/mizu/tap/api"
 )
@@ -24,33 +25,38 @@ type RedisWrapper struct {
 	Details interface{} `json:"details"`
 }
 
-func representGeneric(generic map[string]interface{}) (representation []interface{}) {
-	details, _ := json.Marshal([]map[string]string{
+func representGeneric(generic map[string]interface{}, selectorPrefix string) (representation []interface{}) {
+	details, _ := json.Marshal([]api.TableData{
 		{
-			"name":  "Type",
-			"value": generic["type"].(string),
+			Name:     "Type",
+			Value:    generic["type"].(string),
+			Selector: fmt.Sprintf("%stype", selectorPrefix),
 		},
 		{
-			"name":  "Command",
-			"value": generic["command"].(string),
+			Name:     "Command",
+			Value:    generic["command"].(string),
+			Selector: fmt.Sprintf("%scommand", selectorPrefix),
 		},
 		{
-			"name":  "Key",
-			"value": generic["key"].(string),
+			Name:     "Key",
+			Value:    generic["key"].(string),
+			Selector: fmt.Sprintf("%skey", selectorPrefix),
 		},
 		{
-			"name":  "Value",
-			"value": generic["value"].(string),
+			Name:     "Value",
+			Value:    generic["value"].(string),
+			Selector: fmt.Sprintf("%svalue", selectorPrefix),
 		},
 		{
-			"name":  "Keyword",
-			"value": generic["keyword"].(string),
+			Name:     "Keyword",
+			Value:    generic["keyword"].(string),
+			Selector: fmt.Sprintf("%skeyword", selectorPrefix),
 		},
 	})
-	representation = append(representation, map[string]string{
-		"type":  api.TABLE,
-		"title": "Details",
-		"data":  string(details),
+	representation = append(representation, api.SectionData{
+		Type:  api.TABLE,
+		Title: "Details",
+		Data:  string(details),
 	})
 
 	return

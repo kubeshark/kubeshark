@@ -472,7 +472,7 @@ func TestTapRedact(t *testing.T) {
 		entryPayload := entryRequest["payload"].(map[string]interface{})
 		entryDetails := entryPayload["details"].(map[string]interface{})
 
-		headers := entryDetails["headers"].([]interface{})
+		headers := entryDetails["_headers"].([]interface{})
 		for _, headerInterface := range headers {
 			header := headerInterface.(map[string]interface{})
 			if header["name"].(string) != "User-Agent" {
@@ -587,7 +587,7 @@ func TestTapNoRedact(t *testing.T) {
 		entryPayload := entryRequest["payload"].(map[string]interface{})
 		entryDetails := entryPayload["details"].(map[string]interface{})
 
-		headers := entryDetails["headers"].([]interface{})
+		headers := entryDetails["_headers"].([]interface{})
 		for _, headerInterface := range headers {
 			header := headerInterface.(map[string]interface{})
 			if header["name"].(string) != "User-Agent" {
@@ -808,7 +808,7 @@ func TestTapIgnoredUserAgents(t *testing.T) {
 			entryPayload := entryRequest["payload"].(map[string]interface{})
 			entryDetails := entryPayload["details"].(map[string]interface{})
 
-			entryHeaders := entryDetails["headers"].([]interface{})
+			entryHeaders := entryDetails["_headers"].([]interface{})
 			for _, headerInterface := range entryHeaders {
 				header := headerInterface.(map[string]interface{})
 				if header["name"].(string) != ignoredUserAgentCustomHeader {

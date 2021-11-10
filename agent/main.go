@@ -6,13 +6,10 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"github.com/up9inc/mizu/shared/kubernetes"
 	"io/ioutil"
-	v1 "k8s.io/api/core/v1"
 	"mizuserver/pkg/api"
 	"mizuserver/pkg/config"
 	"mizuserver/pkg/controllers"
-	"mizuserver/pkg/database"
 	"mizuserver/pkg/models"
 	"mizuserver/pkg/providers"
 	"mizuserver/pkg/routes"
@@ -20,6 +17,7 @@ import (
 	"mizuserver/pkg/utils"
 	"net/http"
 	"os"
+	"os/exec"
 	"os/signal"
 	"path"
 	"path/filepath"
@@ -28,10 +26,15 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/up9inc/mizu/shared/kubernetes"
+	v1 "k8s.io/api/core/v1"
+
+	"github.com/antelman107/net-wait-go/wait"
 	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"github.com/op/go-logging"
+	basenine "github.com/up9inc/basenine/client/go"
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/logger"
 	"github.com/up9inc/mizu/tap"
@@ -49,10 +52,12 @@ var harsDir = flag.String("hars-dir", "", "Directory to read hars from")
 var extensions []*tapApi.Extension             // global
 var extensionsMap map[string]*tapApi.Extension // global
 
+var startTime int64
+
 const (
-	socketConnectionRetries = 10
+	socketConnectionRetries    = 10
 	socketConnectionRetryDelay = time.Second * 2
-	socketHandshakeTimeout = time.Second * 2
+	socketHandshakeTimeout     = time.Second * 2
 )
 
 func main() {
@@ -109,7 +114,8 @@ func main() {
 
 		go pipeTapChannelToSocket(socketConnection, filteredOutputItemsChannel)
 	} else if *apiServerMode {
-		database.InitDataBase(config.Config.AgentDatabasePath)
+		startBasenineServer(shared.BasenineHost, shared.BaseninePort)
+		startTime = time.Now().UnixNano() / int64(time.Millisecond)
 		api.StartResolving(*namespace)
 
 		outputItemsChannel := make(chan *tapApi.OutputChannelItem)
@@ -140,6 +146,53 @@ func main() {
 	<-signalChan
 
 	logger.Log.Info("Exiting")
+}
+
+func startBasenineServer(host string, port string) {
+	cmd := exec.Command("basenine", "-addr", host, "-port", port, "-persistent")
+	cmd.Dir = config.Config.AgentDatabasePath
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Start()
+	if err != nil {
+		logger.Log.Panicf("Failed starting Basenine: %v", err)
+	}
+
+	if !wait.New(
+		wait.WithProto("tcp"),
+		wait.WithWait(200*time.Millisecond),
+		wait.WithBreak(50*time.Millisecond),
+		wait.WithDeadline(5*time.Second),
+		wait.WithDebug(true),
+	).Do([]string{fmt.Sprintf("%s:%s", host, port)}) {
+		logger.Log.Panicf("Basenine is not available: %v", err)
+	}
+
+	// Make a channel to gracefully exit Basenine.
+	channel := make(chan os.Signal)
+	signal.Notify(channel, os.Interrupt, syscall.SIGTERM)
+
+	// Handle the channel.
+	go func() {
+		<-channel
+		cmd.Process.Signal(syscall.SIGTERM)
+	}()
+
+	// Limit the database size to default 200MB
+	err = basenine.Limit(host, port, config.Config.MaxDBSizeBytes)
+	if err != nil {
+		logger.Log.Panicf("Error while limiting database size: %v", err)
+	}
+
+	for _, extension := range extensions {
+		macros := extension.Dissector.Macros()
+		for macro, expanded := range macros {
+			err = basenine.Macro(host, port, macro, expanded)
+			if err != nil {
+				logger.Log.Panicf("Error while adding a macro: %v", err)
+			}
+		}
+	}
 }
 
 func loadExtensions() {
@@ -200,7 +253,8 @@ func hostApi(socketHarOutputChannel chan<- *tapApi.OutputChannelItem) {
 	app.Use(static.ServeRoot("/", "./site"))
 	app.Use(CORSMiddleware()) // This has to be called after the static middleware, does not work if its called before
 
-	api.WebSocketRoutes(app, &eventHandlers)
+	api.WebSocketRoutes(app, &eventHandlers, startTime)
+	routes.QueryRoutes(app)
 	routes.EntriesRoutes(app)
 	routes.MetadataRoutes(app)
 	routes.StatusRoutes(app)
@@ -361,7 +415,7 @@ func dialSocketWithRetry(socketAddress string, retryAmount int, retryDelay time.
 		socketConnection, _, err := dialer.Dial(socketAddress, nil)
 		if err != nil {
 			if i < retryAmount {
-				logger.Log.Infof("socket connection to %s failed: %v, retrying %d out of %d in %d seconds...", socketAddress, err, i, retryAmount, retryDelay / time.Second)
+				logger.Log.Infof("socket connection to %s failed: %v, retrying %d out of %d in %d seconds...", socketAddress, err, i, retryAmount, retryDelay/time.Second)
 				time.Sleep(retryDelay)
 			}
 		} else {
@@ -371,8 +425,7 @@ func dialSocketWithRetry(socketAddress string, retryAmount int, retryDelay time.
 	return nil, lastErr
 }
 
-
-func startMizuTapperSyncer(ctx context.Context) (*kubernetes.MizuTapperSyncer, error){
+func startMizuTapperSyncer(ctx context.Context) (*kubernetes.MizuTapperSyncer, error) {
 	provider, err := kubernetes.NewProviderInCluster()
 	if err != nil {
 		return nil, err
