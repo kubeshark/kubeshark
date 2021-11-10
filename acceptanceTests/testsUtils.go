@@ -334,9 +334,17 @@ func waitTimeout(wg *sync.WaitGroup, timeout time.Duration) bool {
 	}
 }
 
-// checkDBHasEntries checks whether there are any entries in the database
-// before the given timestamp. Returns a slice of non-empty entries if it succeeds.
-func checkDBHasEntries(t *testing.T, timestamp int64, limit int) (entries []map[string]interface{}) {
+// assertEntriesAtLeast checks whether the number of entries greater than or equal to n
+func assertEntriesAtLeast(t *testing.T, entries []map[string]interface{}, n int) {
+	if len(entries) < n {
+		t.Errorf("Unexpected entries result - Expected more than %d entries", n-1)
+	}
+}
+
+// getDBEntries retrieves the entries from the database before the given timestamp.
+// Also limits the results according to the limit parameter.
+// Timeout for the WebSocket connection is defined by the timeout parameter.
+func getDBEntries(t *testing.T, timestamp int64, limit int, timeout time.Duration) (entries []map[string]interface{}) {
 	query := fmt.Sprintf("timestamp < %d and limit(%d)", timestamp, limit)
 	webSocketUrl := getWebSocketUrl(defaultApiServerPort)
 
@@ -377,11 +385,7 @@ func checkDBHasEntries(t *testing.T, timestamp int64, limit int) (entries []map[
 	go handleWSConnection(&wg)
 	wg.Add(1)
 
-	waitTimeout(&wg, 1*time.Second)
-
-	if len(entries) == 0 {
-		t.Error("unexpected entries result - Expected more than 0 entries")
-	}
+	waitTimeout(&wg, timeout)
 
 	return
 }
