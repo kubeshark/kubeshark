@@ -38,9 +38,9 @@ interface QueryFormProps {
 
 const style = {
     position: 'absolute',
-    top: '50%',
+    top: '10%',
     left: '50%',
-    transform: 'translate(-50%, -50%)',
+    transform: 'translate(-50%, 0%)',
     width: '80vw',
     bgcolor: 'background.paper',
     borderRadius: '5px',
@@ -214,7 +214,7 @@ export const QueryForm: React.FC<QueryFormProps> = ({query, setQuery, background
                                 language="python"
                             />
                         </Grid>
-                        <Divider orientation="vertical" flexItem />
+                        <Divider className={styles.divider1} orientation="vertical" flexItem />
                         <Grid item xs style={{margin: "10px"}}>
                             <Typography id="modal-modal-description">
                                 Since Mizu supports various protocols like gRPC, AMQP, Kafka and Redis. It's possible to write complex queries that match multiple protocols like this:
@@ -262,7 +262,7 @@ export const QueryForm: React.FC<QueryFormProps> = ({query, setQuery, background
                                 language="python"
                             />
                         </Grid>
-                        <Divider orientation="vertical" flexItem />
+                        <Divider className={styles.divider2} orientation="vertical" flexItem />
                         <Grid item xs style={{margin: "10px"}}>
                             <Typography id="modal-modal-description">
                                 There are a few helper methods included the in the filter language* to help building queries more easily.

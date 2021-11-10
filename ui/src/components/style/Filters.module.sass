@@ -31,3 +31,19 @@
     border: 1px solid #BCC6DD
   fieldset
     border: none
+
+$layout-breakpoint-1: 1474px
+$layout-breakpoint-2: 1366px
+$layout-breakpoint-3: 1980px
+
+@media (max-width: $layout-breakpoint-1)
+  .divider1
+    display: none
+
+@media (max-width: $layout-breakpoint-2)
+  .divider2
+    display: none
+
+@media (min-width: $layout-breakpoint-1) and (max-width: $layout-breakpoint-3)
+  .divider2
+    display: none
