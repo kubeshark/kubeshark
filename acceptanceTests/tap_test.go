@@ -21,13 +21,13 @@ import (
 // waitTimeout waits for the waitgroup for the specified max timeout.
 // Returns true if waiting timed out.
 func waitTimeout(wg *sync.WaitGroup, timeout time.Duration) bool {
-	c := make(chan struct{})
+	channel := make(chan struct{})
 	go func() {
-		defer close(c)
+		defer close(channel)
 		wg.Wait()
 	}()
 	select {
-	case <-c:
+	case <-channel:
 		return false // completed normally
 	case <-time.After(timeout):
 		return true // timed out
@@ -40,14 +40,14 @@ func checkDBHasEntries(t *testing.T, timestamp int64, limit int) (entries []map[
 	query := fmt.Sprintf("timestamp < %d and limit(%d)", timestamp, limit)
 	webSocketUrl := getWebSocketUrl(defaultApiServerPort)
 
-	c, _, err := websocket.DefaultDialer.Dial(webSocketUrl, nil)
+	connection, _, err := websocket.DefaultDialer.Dial(webSocketUrl, nil)
 	assert.Nil(t, err)
-	defer c.Close()
+	defer connection.Close()
 
 	handleWSConnection := func(wg *sync.WaitGroup) {
 		defer wg.Done()
 		for {
-			_, message, err := c.ReadMessage()
+			_, message, err := connection.ReadMessage()
 			if err != nil {
 				return
 			}
@@ -62,7 +62,7 @@ func checkDBHasEntries(t *testing.T, timestamp int64, limit int) (entries []map[
 		}
 	}
 
-	err = c.WriteMessage(websocket.TextMessage, []byte(query))
+	err = connection.WriteMessage(websocket.TextMessage, []byte(query))
 	assert.Nil(t, err)
 
 	var wg sync.WaitGroup
