@@ -11,22 +11,24 @@ import (
 	"os/exec"
 	"path"
 	"strings"
+	"sync"
 	"syscall"
 	"testing"
 	"time"
 
+	"github.com/gorilla/websocket"
 	"github.com/up9inc/mizu/shared"
 )
 
 const (
-	longRetriesCount     = 100
-	shortRetriesCount    = 10
-	defaultApiServerPort = shared.DefaultApiServerPort
-	defaultNamespaceName = "mizu-tests"
-	defaultServiceName   = "httpbin"
-	defaultEntriesCount  = 50
+	longRetriesCount      = 100
+	shortRetriesCount     = 10
+	defaultApiServerPort  = shared.DefaultApiServerPort
+	defaultNamespaceName  = "mizu-tests"
+	defaultServiceName    = "httpbin"
+	defaultEntriesCount   = 50
 	waitAfterTapPodsReady = 3 * time.Second
-	cleanCommandTimeout  = 1 * time.Minute
+	cleanCommandTimeout   = 1 * time.Minute
 )
 
 type PodDescriptor struct {
@@ -36,7 +38,7 @@ type PodDescriptor struct {
 
 func isPodDescriptorInPodArray(pods []map[string]interface{}, podDescriptor PodDescriptor) bool {
 	for _, pod := range pods {
-		podNamespace :=  pod["namespace"].(string)
+		podNamespace := pod["namespace"].(string)
 		podName := pod["name"].(string)
 
 		if podDescriptor.Namespace == podNamespace && strings.Contains(podName, podDescriptor.Name) {
@@ -82,6 +84,10 @@ func getApiServerUrl(port uint16) string {
 	return fmt.Sprintf("http://localhost:%v", port)
 }
 
+func getWebSocketUrl(port uint16) string {
+	return fmt.Sprintf("ws://localhost:%v/ws", port)
+}
+
 func getDefaultCommandArgs() []string {
 	setFlag := "--set"
 	telemetry := "telemetry=false"
@@ -92,10 +98,11 @@ func getDefaultCommandArgs() []string {
 }
 
 func getDefaultTapCommandArgs() []string {
+	headless := "--headless"
 	tapCommand := "tap"
 	defaultCmdArgs := getDefaultCommandArgs()
 
-	return append([]string{tapCommand}, defaultCmdArgs...)
+	return append([]string{tapCommand, headless}, defaultCmdArgs...)
 }
 
 func getDefaultTapCommandArgsWithDaemonMode() []string {
@@ -256,11 +263,11 @@ func runMizuClean() error {
 	}()
 
 	select {
-	case err = <- commandDone:
+	case err = <-commandDone:
 		if err != nil {
 			return err
 		}
-	case <- time.After(cleanCommandTimeout):
+	case <-time.After(cleanCommandTimeout):
 		return errors.New("clean command timed out")
 	}
 
@@ -309,6 +316,77 @@ func daemonCleanup(t *testing.T, viewCmd *exec.Cmd) {
 	if err := cleanupCommand(viewCmd); err != nil {
 		t.Logf("failed to cleanup view command, err: %v", err)
 	}
+}
+
+// waitTimeout waits for the waitgroup for the specified max timeout.
+// Returns true if waiting timed out.
+func waitTimeout(wg *sync.WaitGroup, timeout time.Duration) bool {
+	channel := make(chan struct{})
+	go func() {
+		defer close(channel)
+		wg.Wait()
+	}()
+	select {
+	case <-channel:
+		return false // completed normally
+	case <-time.After(timeout):
+		return true // timed out
+	}
+}
+
+// checkEntriesAtLeast checks whether the number of entries greater than or equal to n
+func checkEntriesAtLeast(entries []map[string]interface{}, n int) error {
+	if len(entries) < n {
+		return fmt.Errorf("Unexpected entries result - Expected more than %d entries", n-1)
+	}
+	return nil
+}
+
+// getDBEntries retrieves the entries from the database before the given timestamp.
+// Also limits the results according to the limit parameter.
+// Timeout for the WebSocket connection is defined by the timeout parameter.
+func getDBEntries(timestamp int64, limit int, timeout time.Duration) (entries []map[string]interface{}, err error) {
+	query := fmt.Sprintf("timestamp < %d and limit(%d)", timestamp, limit)
+	webSocketUrl := getWebSocketUrl(defaultApiServerPort)
+
+	var connection *websocket.Conn
+	connection, _, err = websocket.DefaultDialer.Dial(webSocketUrl, nil)
+	if err != nil {
+		return
+	}
+	defer connection.Close()
+
+	handleWSConnection := func(wg *sync.WaitGroup) {
+		defer wg.Done()
+		for {
+			_, message, err := connection.ReadMessage()
+			if err != nil {
+				return
+			}
+
+			var data map[string]interface{}
+			if err = json.Unmarshal([]byte(message), &data); err != nil {
+				return
+			}
+
+			if data["messageType"] == "entry" {
+				entries = append(entries, data)
+			}
+		}
+	}
+
+	err = connection.WriteMessage(websocket.TextMessage, []byte(query))
+	if err != nil {
+		return
+	}
+
+	var wg sync.WaitGroup
+	go handleWSConnection(&wg)
+	wg.Add(1)
+
+	waitTimeout(&wg, timeout)
+
+	return
 }
 
 func Contains(slice []string, containsValue string) bool {

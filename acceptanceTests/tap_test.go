@@ -66,21 +66,18 @@ func TestTap(t *testing.T) {
 			entriesCheckFunc := func() error {
 				timestamp := time.Now().UnixNano() / int64(time.Millisecond)
 
-				entriesUrl := fmt.Sprintf("%v/entries?limit=%v&operator=lt&timestamp=%v", apiServerUrl, entriesCount, timestamp)
-				requestResult, requestErr := executeHttpGetRequest(entriesUrl)
-				if requestErr != nil {
-					return fmt.Errorf("failed to get entries, err: %v", requestErr)
+				entries, err := getDBEntries(timestamp, entriesCount, 1*time.Second)
+				if err != nil {
+					return err
 				}
-
-				entries := requestResult.([]interface{})
-				if len(entries) == 0 {
-					return fmt.Errorf("unexpected entries result - Expected more than 0 entries")
+				err = checkEntriesAtLeast(entries, 1)
+				if err != nil {
+					return err
 				}
-
-				entry := entries[0].(map[string]interface{})
+				entry := entries[0]
 
 				entryUrl := fmt.Sprintf("%v/entries/%v", apiServerUrl, entry["id"])
-				requestResult, requestErr = executeHttpGetRequest(entryUrl)
+				requestResult, requestErr := executeHttpGetRequest(entryUrl)
 				if requestErr != nil {
 					return fmt.Errorf("failed to get entry, err: %v", requestErr)
 				}
@@ -441,38 +438,26 @@ func TestTapRedact(t *testing.T) {
 	redactCheckFunc := func() error {
 		timestamp := time.Now().UnixNano() / int64(time.Millisecond)
 
-		entriesUrl := fmt.Sprintf("%v/entries?limit=%v&operator=lt&timestamp=%v", apiServerUrl, defaultEntriesCount, timestamp)
-		requestResult, requestErr := executeHttpGetRequest(entriesUrl)
-		if requestErr != nil {
-			return fmt.Errorf("failed to get entries, err: %v", requestErr)
+		entries, err := getDBEntries(timestamp, defaultEntriesCount, 1*time.Second)
+		if err != nil {
+			return err
 		}
-
-		entries := requestResult.([]interface{})
-		if len(entries) == 0 {
-			return fmt.Errorf("unexpected entries result - Expected more than 0 entries")
+		err = checkEntriesAtLeast(entries, 1)
+		if err != nil {
+			return err
 		}
-
-		firstEntry := entries[0].(map[string]interface{})
+		firstEntry := entries[0]
 
 		entryUrl := fmt.Sprintf("%v/entries/%v", apiServerUrl, firstEntry["id"])
-		requestResult, requestErr = executeHttpGetRequest(entryUrl)
+		requestResult, requestErr := executeHttpGetRequest(entryUrl)
 		if requestErr != nil {
 			return fmt.Errorf("failed to get entry, err: %v", requestErr)
 		}
 
-		data := requestResult.(map[string]interface{})["data"].(map[string]interface{})
-		entryJson := data["entry"].(string)
+		entry := requestResult.(map[string]interface{})["data"].(map[string]interface{})
+		request := entry["request"].(map[string]interface{})
 
-		var entry map[string]interface{}
-		if parseErr := json.Unmarshal([]byte(entryJson), &entry); parseErr != nil {
-			return fmt.Errorf("failed to parse entry, err: %v", parseErr)
-		}
-
-		entryRequest := entry["request"].(map[string]interface{})
-		entryPayload := entryRequest["payload"].(map[string]interface{})
-		entryDetails := entryPayload["details"].(map[string]interface{})
-
-		headers := entryDetails["_headers"].([]interface{})
+		headers := request["_headers"].([]interface{})
 		for _, headerInterface := range headers {
 			header := headerInterface.(map[string]interface{})
 			if header["name"].(string) != "User-Agent" {
@@ -485,7 +470,7 @@ func TestTapRedact(t *testing.T) {
 			}
 		}
 
-		postData := entryDetails["postData"].(map[string]interface{})
+		postData := request["postData"].(map[string]interface{})
 		textDataStr := postData["text"].(string)
 
 		var textData map[string]string
@@ -556,38 +541,26 @@ func TestTapNoRedact(t *testing.T) {
 	redactCheckFunc := func() error {
 		timestamp := time.Now().UnixNano() / int64(time.Millisecond)
 
-		entriesUrl := fmt.Sprintf("%v/entries?limit=%v&operator=lt&timestamp=%v", apiServerUrl, defaultEntriesCount, timestamp)
-		requestResult, requestErr := executeHttpGetRequest(entriesUrl)
-		if requestErr != nil {
-			return fmt.Errorf("failed to get entries, err: %v", requestErr)
+		entries, err := getDBEntries(timestamp, defaultEntriesCount, 1*time.Second)
+		if err != nil {
+			return err
 		}
-
-		entries := requestResult.([]interface{})
-		if len(entries) == 0 {
-			return fmt.Errorf("unexpected entries result - Expected more than 0 entries")
+		err = checkEntriesAtLeast(entries, 1)
+		if err != nil {
+			return err
 		}
-
-		firstEntry := entries[0].(map[string]interface{})
+		firstEntry := entries[0]
 
 		entryUrl := fmt.Sprintf("%v/entries/%v", apiServerUrl, firstEntry["id"])
-		requestResult, requestErr = executeHttpGetRequest(entryUrl)
+		requestResult, requestErr := executeHttpGetRequest(entryUrl)
 		if requestErr != nil {
 			return fmt.Errorf("failed to get entry, err: %v", requestErr)
 		}
 
-		data := requestResult.(map[string]interface{})["data"].(map[string]interface{})
-		entryJson := data["entry"].(string)
+		entry := requestResult.(map[string]interface{})["data"].(map[string]interface{})
+		request := entry["request"].(map[string]interface{})
 
-		var entry map[string]interface{}
-		if parseErr := json.Unmarshal([]byte(entryJson), &entry); parseErr != nil {
-			return fmt.Errorf("failed to parse entry, err: %v", parseErr)
-		}
-
-		entryRequest := entry["request"].(map[string]interface{})
-		entryPayload := entryRequest["payload"].(map[string]interface{})
-		entryDetails := entryPayload["details"].(map[string]interface{})
-
-		headers := entryDetails["_headers"].([]interface{})
+		headers := request["_headers"].([]interface{})
 		for _, headerInterface := range headers {
 			header := headerInterface.(map[string]interface{})
 			if header["name"].(string) != "User-Agent" {
@@ -600,7 +573,7 @@ func TestTapNoRedact(t *testing.T) {
 			}
 		}
 
-		postData := entryDetails["postData"].(map[string]interface{})
+		postData := request["postData"].(map[string]interface{})
 		textDataStr := postData["text"].(string)
 
 		var textData map[string]string
@@ -671,38 +644,26 @@ func TestTapRegexMasking(t *testing.T) {
 	redactCheckFunc := func() error {
 		timestamp := time.Now().UnixNano() / int64(time.Millisecond)
 
-		entriesUrl := fmt.Sprintf("%v/entries?limit=%v&operator=lt&timestamp=%v", apiServerUrl, defaultEntriesCount, timestamp)
-		requestResult, requestErr := executeHttpGetRequest(entriesUrl)
-		if requestErr != nil {
-			return fmt.Errorf("failed to get entries, err: %v", requestErr)
+		entries, err := getDBEntries(timestamp, defaultEntriesCount, 1*time.Second)
+		if err != nil {
+			return err
 		}
-
-		entries := requestResult.([]interface{})
-		if len(entries) == 0 {
-			return fmt.Errorf("unexpected entries result - Expected more than 0 entries")
+		err = checkEntriesAtLeast(entries, 1)
+		if err != nil {
+			return err
 		}
-
-		firstEntry := entries[0].(map[string]interface{})
+		firstEntry := entries[0]
 
 		entryUrl := fmt.Sprintf("%v/entries/%v", apiServerUrl, firstEntry["id"])
-		requestResult, requestErr = executeHttpGetRequest(entryUrl)
+		requestResult, requestErr := executeHttpGetRequest(entryUrl)
 		if requestErr != nil {
 			return fmt.Errorf("failed to get entry, err: %v", requestErr)
 		}
 
-		data := requestResult.(map[string]interface{})["data"].(map[string]interface{})
-		entryJson := data["entry"].(string)
+		entry := requestResult.(map[string]interface{})["data"].(map[string]interface{})
+		request := entry["request"].(map[string]interface{})
 
-		var entry map[string]interface{}
-		if parseErr := json.Unmarshal([]byte(entryJson), &entry); parseErr != nil {
-			return fmt.Errorf("failed to parse entry, err: %v", parseErr)
-		}
-
-		entryRequest := entry["request"].(map[string]interface{})
-		entryPayload := entryRequest["payload"].(map[string]interface{})
-		entryDetails := entryPayload["details"].(map[string]interface{})
-
-		postData := entryDetails["postData"].(map[string]interface{})
+		postData := request["postData"].(map[string]interface{})
 		textData := postData["text"].(string)
 
 		if textData != "[REDACTED]" {
@@ -778,38 +739,27 @@ func TestTapIgnoredUserAgents(t *testing.T) {
 	ignoredUserAgentsCheckFunc := func() error {
 		timestamp := time.Now().UnixNano() / int64(time.Millisecond)
 
-		entriesUrl := fmt.Sprintf("%v/entries?limit=%v&operator=lt&timestamp=%v", apiServerUrl, defaultEntriesCount*2, timestamp)
-		requestResult, requestErr := executeHttpGetRequest(entriesUrl)
-		if requestErr != nil {
-			return fmt.Errorf("failed to get entries, err: %v", requestErr)
+		entries, err := getDBEntries(timestamp, defaultEntriesCount, 1*time.Second)
+		if err != nil {
+			return err
 		}
-
-		entries := requestResult.([]interface{})
-		if len(entries) == 0 {
-			return fmt.Errorf("unexpected entries result - Expected more than 0 entries")
+		err = checkEntriesAtLeast(entries, 1)
+		if err != nil {
+			return err
 		}
 
 		for _, entryInterface := range entries {
-			entryUrl := fmt.Sprintf("%v/entries/%v", apiServerUrl, entryInterface.(map[string]interface{})["id"])
-			requestResult, requestErr = executeHttpGetRequest(entryUrl)
+			entryUrl := fmt.Sprintf("%v/entries/%v", apiServerUrl, entryInterface["id"])
+			requestResult, requestErr := executeHttpGetRequest(entryUrl)
 			if requestErr != nil {
 				return fmt.Errorf("failed to get entry, err: %v", requestErr)
 			}
 
-			data := requestResult.(map[string]interface{})["data"].(map[string]interface{})
-			entryJson := data["entry"].(string)
+			entry := requestResult.(map[string]interface{})["data"].(map[string]interface{})
+			request := entry["request"].(map[string]interface{})
 
-			var entry map[string]interface{}
-			if parseErr := json.Unmarshal([]byte(entryJson), &entry); parseErr != nil {
-				return fmt.Errorf("failed to parse entry, err: %v", parseErr)
-			}
-
-			entryRequest := entry["request"].(map[string]interface{})
-			entryPayload := entryRequest["payload"].(map[string]interface{})
-			entryDetails := entryPayload["details"].(map[string]interface{})
-
-			entryHeaders := entryDetails["_headers"].([]interface{})
-			for _, headerInterface := range entryHeaders {
+			headers := request["_headers"].([]interface{})
+			for _, headerInterface := range headers {
 				header := headerInterface.(map[string]interface{})
 				if header["name"].(string) != ignoredUserAgentCustomHeader {
 					continue
@@ -986,21 +936,18 @@ func TestDaemonSeeTraffic(t *testing.T) {
 			entriesCheckFunc := func() error {
 				timestamp := time.Now().UnixNano() / int64(time.Millisecond)
 
-				entriesUrl := fmt.Sprintf("%v/entries?limit=%v&operator=lt&timestamp=%v", apiServerUrl, entriesCount, timestamp)
-				requestResult, requestErr := executeHttpGetRequest(entriesUrl)
-				if requestErr != nil {
-					return fmt.Errorf("failed to get entries, err: %v", requestErr)
+				entries, err := getDBEntries(timestamp, entriesCount, 1*time.Second)
+				if err != nil {
+					return err
 				}
-
-				entries := requestResult.([]interface{})
-				if len(entries) == 0 {
-					return fmt.Errorf("unexpected entries result - Expected more than 0 entries")
+				err = checkEntriesAtLeast(entries, 1)
+				if err != nil {
+					return err
 				}
-
-				entry := entries[0].(map[string]interface{})
+				entry := entries[0]
 
 				entryUrl := fmt.Sprintf("%v/entries/%v", apiServerUrl, entry["id"])
-				requestResult, requestErr = executeHttpGetRequest(entryUrl)
+				requestResult, requestErr := executeHttpGetRequest(entryUrl)
 				if requestErr != nil {
 					return fmt.Errorf("failed to get entry, err: %v", requestErr)
 				}
