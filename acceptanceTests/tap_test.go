@@ -15,7 +15,6 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/stretchr/testify/assert"
 )
 
 // waitTimeout waits for the waitgroup for the specified max timeout.
@@ -41,7 +40,10 @@ func checkDBHasEntries(t *testing.T, timestamp int64, limit int) (entries []map[
 	webSocketUrl := getWebSocketUrl(defaultApiServerPort)
 
 	connection, _, err := websocket.DefaultDialer.Dial(webSocketUrl, nil)
-	assert.Nil(t, err)
+	if err != nil {
+		t.Errorf("%v", err)
+		return
+	}
 	defer connection.Close()
 
 	handleWSConnection := func(wg *sync.WaitGroup) {
@@ -53,8 +55,10 @@ func checkDBHasEntries(t *testing.T, timestamp int64, limit int) (entries []map[
 			}
 
 			var data map[string]interface{}
-			err = json.Unmarshal([]byte(message), &data)
-			assert.Nil(t, err)
+			if err = json.Unmarshal([]byte(message), &data); err != nil {
+				t.Errorf("%v", err)
+				return
+			}
 
 			if data["messageType"] == "entry" {
 				entries = append(entries, data)
@@ -63,7 +67,10 @@ func checkDBHasEntries(t *testing.T, timestamp int64, limit int) (entries []map[
 	}
 
 	err = connection.WriteMessage(websocket.TextMessage, []byte(query))
-	assert.Nil(t, err)
+	if err != nil {
+		t.Errorf("%v", err)
+		return
+	}
 
 	var wg sync.WaitGroup
 	go handleWSConnection(&wg)
