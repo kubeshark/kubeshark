@@ -119,7 +119,6 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                             key={entry.id}
                             entry={entry}
                             setFocusedEntryId={setFocusedEntryId}
-                            isSelected={focusedEntryId === entry.id.toString()}
                             style={{}}
                             updateQuery={updateQuery}
                         />
