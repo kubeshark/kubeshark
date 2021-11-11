@@ -131,7 +131,7 @@ $ mizu clean # mizu will continue running in cluster until clean is executed
   Removing mizu resources
 ```
 
-`mizu view` provides one way to access Mizu. For other options, see [[https://github.com/up9inc/mizu/wiki/Expose-Mizu-Daemon-Service]].
+`mizu view` provides one way to access Mizu. For other options, see [Wiki](https://github.com/up9inc/mizu/wiki/Expose-Mizu-Daemon-Service).
 
 ## Configuration
 
