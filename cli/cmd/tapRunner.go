@@ -33,7 +33,7 @@ import (
 	"github.com/up9inc/mizu/tap/api"
 )
 
-const cleanupTimeout = time.Minute
+const cleanupTimeout = 5 * time.Minute
 
 type tapState struct {
 	apiServerService         *core.Service
@@ -626,7 +626,7 @@ func watchApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 				}
 
 				logger.Log.Infof("Mizu is available at %s\n", url)
-				if !config.Config.Tap.HeadlessMode {
+				if !config.Config.HeadlessMode {
 					uiUtils.OpenBrowser(url)
 				}
 				if err := apiProvider.ReportTappedPods(state.tapperSyncer.CurrentlyTappedPods); err != nil {

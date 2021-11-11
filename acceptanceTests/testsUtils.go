@@ -93,16 +93,16 @@ func getDefaultCommandArgs() []string {
 	telemetry := "telemetry=false"
 	agentImage := "agent-image=gcr.io/up9-docker-hub/mizu/ci:0.0.0"
 	imagePullPolicy := "image-pull-policy=Never"
+	headless := "headless=true"
 
-	return []string{setFlag, telemetry, setFlag, agentImage, setFlag, imagePullPolicy}
+	return []string{setFlag, telemetry, setFlag, agentImage, setFlag, imagePullPolicy, setFlag, headless}
 }
 
 func getDefaultTapCommandArgs() []string {
-	headless := "--headless"
 	tapCommand := "tap"
 	defaultCmdArgs := getDefaultCommandArgs()
 
-	return append([]string{tapCommand, headless}, defaultCmdArgs...)
+	return append([]string{tapCommand}, defaultCmdArgs...)
 }
 
 func getDefaultTapCommandArgsWithDaemonMode() []string {
@@ -135,11 +135,17 @@ func getDefaultConfigCommandArgs() []string {
 }
 
 func getDefaultCleanCommandArgs() []string {
-	return []string{"clean"}
+	cleanCommand := "clean"
+	defaultCmdArgs := getDefaultCommandArgs()
+
+	return append([]string{cleanCommand}, defaultCmdArgs...)
 }
 
 func getDefaultViewCommandArgs() []string {
-	return []string{"view"}
+	viewCommand := "view"
+	defaultCmdArgs := getDefaultCommandArgs()
+
+	return append([]string{viewCommand}, defaultCmdArgs...)
 }
 
 func retriesExecute(retriesCount int, executeFunc func() error) error {
