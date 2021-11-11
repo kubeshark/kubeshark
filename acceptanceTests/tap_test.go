@@ -827,21 +827,21 @@ func TestTapDumpLogs(t *testing.T) {
 		return
 	}
 
-	var dumpsLogsPath string
+	var dumpLogsPath string
 	for _, file := range files {
 		fileName := file.Name()
 		if strings.Contains(fileName, "mizu_logs") {
-			dumpsLogsPath = path.Join(mizuFolderPath, fileName)
+			dumpLogsPath = path.Join(mizuFolderPath, fileName)
 			break
 		}
 	}
 
-	if dumpsLogsPath == "" {
+	if dumpLogsPath == "" {
 		t.Errorf("dump logs file not found")
 		return
 	}
 
-	zipReader, zipError := zip.OpenReader(dumpsLogsPath)
+	zipReader, zipError := zip.OpenReader(dumpLogsPath)
 	if zipError != nil {
 		t.Errorf("failed to get zip reader, err: %v", zipError)
 		return
