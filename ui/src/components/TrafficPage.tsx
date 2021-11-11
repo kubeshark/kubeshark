@@ -1,6 +1,7 @@
 import React, {useEffect, useRef, useState} from "react";
 import {Filters} from "./Filters";
 import {EntriesList} from "./EntriesList";
+import {EntryItem} from "./EntryListItem/EntryListItem";
 import {makeStyles} from "@material-ui/core";
 import "./style/TrafficPage.sass";
 import styles from './style/EntriesList.module.sass';
@@ -50,6 +51,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
     const classes = useLayoutStyles();
 
     const [entries, setEntries] = useState([] as any);
+    const [entriesBuffer, setEntriesBuffer] = useState([] as any);
     const [focusedEntryId, setFocusedEntryId] = useState(null);
     const [selectedEntryData, setSelectedEntryData] = useState(null);
     const [connection, setConnection] = useState(ConnectionStatus.Closed);
@@ -94,6 +96,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
 
     const openWebSocket = (query) => {
         setEntries([])
+        setEntriesBuffer([])
         ws.current = new WebSocket(MizuWebsocketURL);
         ws.current.onopen = () => {
             ws.current.send(query)
@@ -108,15 +111,19 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
             const message = JSON.parse(e.data);
             switch (message.messageType) {
                 case "entry":
-                    const entry = message.data
-                    if (!focusedEntryId) setFocusedEntryId(entry.id.toString())
-                    let newEntries = [...entries];
-                    setEntries([...newEntries, entry])
-                    if(listEntry.current) {
-                        if(isScrollable(listEntry.current.firstChild)) {
-                            setDisableScrollList(true)
-                        }
-                    }
+                    const entry = message.data;
+                    if (!focusedEntryId) setFocusedEntryId(entry.id.toString());
+                    setEntriesBuffer([
+                        ...entriesBuffer,
+                        <EntryItem
+                            key={entry.id}
+                            entry={entry}
+                            setFocusedEntryId={setFocusedEntryId}
+                            isSelected={focusedEntryId === entry.id.toString()}
+                            style={{}}
+                            updateQuery={updateQuery}
+                        />
+                    ])
                     break
                 case "status":
                     setTappingStatus(message.tappingStatus);
@@ -140,8 +147,14 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                     });
                     break;
                 case "queryMetadata":
-                    setQueriedCurrent(message.data.current)
-                    setQueriedTotal(message.data.total)
+                    setQueriedCurrent(message.data.current);
+                    setQueriedTotal(message.data.total);
+                    setEntries(entriesBuffer);
+                    if (listEntry.current) {
+                        if (isScrollable(listEntry.current.firstChild)) {
+                            setDisableScrollList(true)
+                        }
+                    }
                     break;
                 case "startTime":
                     setStartTime(message.data);
@@ -223,7 +236,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                 <img className="playPauseIcon" style={{visibility: connection === ConnectionStatus.Connected ? "visible" : "hidden"}} alt="pause"
                     src={pauseIcon} onClick={toggleConnection}/>
                 <img className="playPauseIcon" style={{position: "absolute", visibility: connection === ConnectionStatus.Connected ? "hidden" : "visible"}} alt="play"
-                     src={playIcon} onClick={toggleConnection}/>
+                    src={playIcon} onClick={toggleConnection}/>
                 <div className="connectionText">
                     {getConnectionTitle()}
                     <div className={"indicatorContainer " + getConnectionStatusClass(true)}>
@@ -243,16 +256,9 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                     <div className={styles.container}>
                         <EntriesList
                             entries={entries}
-                            setEntries={setEntries}
-                            focusedEntryId={focusedEntryId}
-                            setFocusedEntryId={setFocusedEntryId}
                             listEntryREF={listEntry}
                             onScrollEvent={onScrollEvent}
                             scrollableList={disableScrollList}
-                            ws={ws.current}
-                            openWebSocket={openWebSocket}
-                            query={query}
-                            updateQuery={updateQuery}
                             queriedCurrent={queriedCurrent}
                             queriedTotal={queriedTotal}
                             startTime={startTime}
