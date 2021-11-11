@@ -6,27 +6,31 @@ import down from "./assets/downImg.svg";
 interface EntriesListProps {
     entries: any[];
     listEntryREF: any;
-    onScrollEvent: (isAtBottom:boolean) => void;
-    scrollableList: boolean;
+    onSnapBrokenEvent: () => void;
+    isSnappedToBottom: boolean;
+    setIsSnappedToBottom: any;
     queriedCurrent: number;
     queriedTotal: number;
     startTime: number;
 }
 
-export const EntriesList: React.FC<EntriesListProps> = ({entries, listEntryREF, onScrollEvent, scrollableList, queriedCurrent, queriedTotal, startTime}) => {
+export const EntriesList: React.FC<EntriesListProps> = ({entries, listEntryREF, onSnapBrokenEvent, isSnappedToBottom, setIsSnappedToBottom, queriedCurrent, queriedTotal, startTime}) => {
 
     const scrollableRef = useRef(null);
 
     return <>
             <div className={styles.list}>
                 <div id="list" ref={listEntryREF} className={styles.list}>
-                    <ScrollableFeedVirtualized ref={scrollableRef} itemHeight={48} marginTop={10} onScroll={(isAtBottom) => onScrollEvent(isAtBottom)}>
+                    <ScrollableFeedVirtualized ref={scrollableRef} itemHeight={48} marginTop={10} onSnapBroken={onSnapBrokenEvent}>
                         {false /* TODO: why there is a need for something here (not necessarily false)? */}
                         {entries}
                     </ScrollableFeedVirtualized>
                     <button type="button"
-                        className={`${styles.btnLive} ${scrollableList ? styles.showButton : styles.hideButton}`}
-                        onClick={(_) => scrollableRef.current.jumpToBottom()}>
+                        className={`${styles.btnLive} ${isSnappedToBottom ? styles.hideButton : styles.showButton}`}
+                        onClick={(_) => {
+                            scrollableRef.current.jumpToBottom();
+                            setIsSnappedToBottom(true);
+                        }}>
                         <img alt="down" src={down} />
                     </button>
                 </div>

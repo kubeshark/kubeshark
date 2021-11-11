@@ -58,7 +58,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
 
     const [tappingStatus, setTappingStatus] = useState(null);
 
-    const [disableScrollList, setDisableScrollList] = useState(false);
+    const [isSnappedToBottom, setIsSnappedToBottom] = useState(true);
 
     const [query, setQueryDefault] = useState("");
     const [queryBackgroundColor, setQueryBackgroundColor] = useState("#f5f5f5");
@@ -150,11 +150,6 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                     setQueriedCurrent(message.data.current);
                     setQueriedTotal(message.data.total);
                     setEntries(entriesBuffer);
-                    if (listEntry.current) {
-                        if (isScrollable(listEntry.current.firstChild)) {
-                            setDisableScrollList(true)
-                        }
-                    }
                     break;
                 case "startTime":
                     setStartTime(message.data);
@@ -222,13 +217,9 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
         }
     }
 
-    const onScrollEvent = (isAtBottom) => {
-        isAtBottom ? setDisableScrollList(false) : setDisableScrollList(true)
+    const onSnapBrokenEvent = () => {
+        setIsSnappedToBottom(false)
     }
-
-    const isScrollable = (element) => {
-        return element.scrollHeight > element.clientHeight;
-    };
 
     return (
         <div className="TrafficPage">
@@ -257,8 +248,9 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                         <EntriesList
                             entries={entries}
                             listEntryREF={listEntry}
-                            onScrollEvent={onScrollEvent}
-                            scrollableList={disableScrollList}
+                            onSnapBrokenEvent={onSnapBrokenEvent}
+                            isSnappedToBottom={isSnappedToBottom}
+                            setIsSnappedToBottom={setIsSnappedToBottom}
                             queriedCurrent={queriedCurrent}
                             queriedTotal={queriedTotal}
                             startTime={startTime}
