@@ -69,6 +69,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
     const [startTime, setStartTime] = useState(0);
 
     const setQuery = async (query) => {
+        setQueryDefault(query)
         if (!query) {
             setQueryBackgroundColor("#f5f5f5")
         } else {
@@ -79,7 +80,6 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                 setQueryBackgroundColor("#fad6dc")
             }
         }
-        setQueryDefault(query)
     }
 
     const updateQuery = (addition) => {
