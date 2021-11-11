@@ -868,6 +868,15 @@ func TestTapDumpLogs(t *testing.T) {
 		return
 	}
 
+	for _, file := range zipReader.File {
+		if file.Name == "mizu_cli.log" {
+			fileread, _ := file.Open()
+			var bytes []byte
+			fileread.Read(bytes)
+			t.Log(string(bytes))
+		}
+	}
+
 	if !Contains(logsFileNames, "mizu_events.log") {
 		t.Errorf("events logs not found")
 		return
