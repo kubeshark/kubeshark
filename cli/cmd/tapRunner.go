@@ -33,7 +33,7 @@ import (
 	"github.com/up9inc/mizu/tap/api"
 )
 
-const cleanupTimeout = time.Minute
+const cleanupTimeout = 5 * time.Minute
 
 type tapState struct {
 	apiServerService         *core.Service
