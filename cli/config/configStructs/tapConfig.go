@@ -23,7 +23,6 @@ const (
 	EnforcePolicyFile             = "traffic-validation-file"
 	ContractFile                  = "contract"
 	DaemonModeTapName             = "daemon"
-	HeadlessMode                  = "headless"
 )
 
 type TapConfig struct {
@@ -46,7 +45,6 @@ type TapConfig struct {
 	ApiServerResources     shared.Resources `yaml:"api-server-resources"`
 	TapperResources        shared.Resources `yaml:"tapper-resources"`
 	DaemonMode             bool             `yaml:"daemon" default:"false"`
-	HeadlessMode           bool             `yaml:"headless" default:"false"`
 }
 
 func (config *TapConfig) PodRegex() *regexp.Regexp {
