@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"github.com/op/go-logging"
 	"github.com/up9inc/mizu/cli/config/configStructs"
 	"github.com/up9inc/mizu/cli/mizu"
 	v1 "k8s.io/api/core/v1"
@@ -32,6 +33,7 @@ type ConfigStruct struct {
 	KubeConfigPathStr      string                      `yaml:"kube-config-path"`
 	ConfigFilePath         string                      `yaml:"config-path,omitempty" readonly:""`
 	HeadlessMode           bool                        `yaml:"headless" default:"false"`
+	LogLevelInt            int                         `yaml:"server-log-level" default:"4"` // Default is INFO
 }
 
 func (config *ConfigStruct) SetDefaults() {
@@ -59,4 +61,8 @@ func (config *ConfigStruct) KubeConfigPath() string {
 
 	home := homedir.HomeDir()
 	return filepath.Join(home, ".kube", "config")
+}
+
+func (config *ConfigStruct) LogLevel() logging.Level {
+	return logging.Level(config.LogLevelInt)
 }

@@ -13,7 +13,7 @@ const (
 	ConfigFileName                   = "mizu-config.json"
 	GoGCEnvVar                       = "GOGC"
 	DefaultApiServerPort             = 8899
-	DebugModeEnvVar                  = "MIZU_DEBUG"
+	LogLevelEnvVar                   = "MIZU_LOG_LEVEL"
 	BasenineHost                     = "localhost"
 	BaseninePort                     = "9099"
 )

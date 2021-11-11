@@ -398,10 +398,11 @@ func getSyncEntriesConfig() *shared.SyncEntriesConfig {
 }
 
 func determineLogLevel() (logLevel logging.Level) {
-	logLevel = logging.INFO
-	if os.Getenv(shared.DebugModeEnvVar) == "1" {
-		logLevel = logging.DEBUG
+	logLevel, err := logging.LogLevel(os.Getenv(shared.LogLevelEnvVar))
+	if err != nil {
+		logLevel = logging.INFO
 	}
+
 	return
 }
 
@@ -438,7 +439,7 @@ func startMizuTapperSyncer(ctx context.Context) (*kubernetes.MizuTapperSyncer, e
 		AgentImage:               config.Config.AgentImage,
 		TapperResources:          config.Config.TapperResources,
 		ImagePullPolicy:          v1.PullPolicy(config.Config.PullPolicy),
-		DumpLogs:                 config.Config.DumpLogs,
+		LogLevel:                 config.Config.LogLevel,
 		IgnoredUserAgents:        config.Config.IgnoredUserAgents,
 		MizuApiFilteringOptions:  config.Config.MizuApiFilteringOptions,
 		MizuServiceAccountExists: true, //assume service account exists since daemon mode will not function without it anyway

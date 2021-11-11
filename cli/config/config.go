@@ -392,7 +392,7 @@ func getMizuAgentConfig(targetNamespaces []string, mizuApiFilteringOptions *api.
 		TargetNamespaces:        targetNamespaces,
 		AgentImage:              Config.AgentImage,
 		PullPolicy:              Config.ImagePullPolicyStr,
-		DumpLogs:                Config.DumpLogs,
+		LogLevel:                Config.LogLevel(),
 		IgnoredUserAgents:       Config.Tap.IgnoredUserAgents,
 		TapperResources:         Config.Tap.TapperResources,
 		MizuResourcesNamespace:  Config.MizuResourcesNamespace,
