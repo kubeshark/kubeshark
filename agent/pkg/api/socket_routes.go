@@ -92,7 +92,7 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 	eventHandlers.WebSocketConnect(socketId, isTapper)
 
 	startTimeBytes, _ := models.CreateWebsocketStartTimeMessage(startTime)
-	BroadcastToBrowserClients(startTimeBytes)
+	SendToSocket(socketId, startTimeBytes)
 
 	for {
 		_, msg, err := ws.ReadMessage()
@@ -110,7 +110,7 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 					AutoClose: 5000,
 					Text:      fmt.Sprintf("Syntax error: %s", err.Error()),
 				})
-				BroadcastToBrowserClients(toastBytes)
+				SendToSocket(socketId, toastBytes)
 				break
 			}
 
@@ -131,7 +131,7 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 					base["id"] = uint(dataMap["id"].(float64))
 
 					baseEntryBytes, _ := models.CreateBaseEntryWebSocketMessage(base)
-					BroadcastToBrowserClients(baseEntryBytes)
+					SendToSocket(socketId, baseEntryBytes)
 				}
 			}
 
@@ -150,7 +150,7 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 					}
 
 					metadataBytes, _ := models.CreateWebsocketQueryMetadataMessage(metadata)
-					BroadcastToBrowserClients(metadataBytes)
+					SendToSocket(socketId, metadataBytes)
 				}
 			}
 
