@@ -1,7 +1,10 @@
-### To run mizu mizu daemon mode (detached from cli)
+# Mizu daemon mode
 
-Please note that daemon mode requires you to have RBAC creation permissions, see the [permissions](PERMISSIONS.md) doc
-for more details.
+Mizu can be run detached from the cli using the daemon flag: `mizu tap --daemon`. This type of mizu instance will run
+indefinitely in the cluster.
+
+Please note that daemon mode requires you to have RBAC creation permissions, see the [permissions](PERMISSIONS.md)
+doc for more details.
 
 ```bash
 $ mizu tap "^ca.*" --daemon
@@ -11,26 +14,53 @@ $ mizu tap "^ca.*" --daemon
   +carts-66c77f5fbb-fq65r
   +catalogue-5f4cb7cf5-7zrmn
   ..
+```
 
+## Stop mizu daemon
+
+To stop the detached mizu instance and clean all cluster side resources, run `mizu clean`
+
+```bash
+$ mizu clean # mizu will continue running in cluster until clean is executed
+  Removing mizu resources
+```
+
+## Expose mizu web app
+
+Mizu could be exposed at a later stage in any of the following ways:
+
+### Using mizu view command
+
+In a machine that can access both the cluster and a browser, you can run `mizu view` command which creates a proxy.
+Besides that, all the regular ways to expose k8s pods are valid.
+
+```bash
 $ mizu view
   Establishing connection to k8s cluster...
   Mizu is available at http://localhost:8899
   ^C
   ..
-
-$ mizu clean # mizu will continue running in cluster until clean is executed
-  Removing mizu resources
 ```
 
-### To run mizu daemon mode with LoadBalancer kubernetes service
+### Port Forward
 
 ```bash
-$ mizu tap "^ca.*" --daemon
-  Mizu will store up to 200MB of traffic, old traffic will be cleared once the limit is reached.
-  Tapping pods in namespaces "sock-shop"
-  Waiting for mizu to be ready... (may take a few minutes)
-  ..
+$ kubectl port-forward -n mizu deployment/mizu-api-server 8899:8899
+```
 
+### NodePort
+
+```bash
+$ kubectl expose -n mizu deployment mizu-api-server --name mizu-node-port --type NodePort --port 80 --target-port 8899
+```
+
+Mizu's IP is the IP of any node (get the IP with `kubectl get nodes -o wide`) and the port is the target port of the new
+service (`kubectl get services -n mizu mizu-node-port`). Note that this method will expose Mizu to public access if your
+nodes are public.
+
+### LoadBalancer
+
+```bash
 $ kubectl expose deployment -n mizu --port 80 --target-port 8899 mizu-api-server --type=LoadBalancer --name=mizu-lb
   service/mizu-lb exposed
   ..
