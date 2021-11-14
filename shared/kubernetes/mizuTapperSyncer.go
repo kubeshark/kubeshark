@@ -66,7 +66,7 @@ func CreateAndStartMizuTapperSyncer(ctx context.Context, kubernetesProvider *Pro
 }
 
 func (tapperSyncer *MizuTapperSyncer) watchPodsForTapping() {
-	podWatchHelper := &PodWatchHelper{NameRegexFilter: &tapperSyncer.config.PodFilterRegex}
+	podWatchHelper := NewPodWatchHelper(&tapperSyncer.config.PodFilterRegex)
 	added, modified, removed, errorChan := FilteredWatch(tapperSyncer.context, tapperSyncer.kubernetesProvider, tapperSyncer.config.TargetNamespaces, podWatchHelper)
 
 	restartTappers := func() {

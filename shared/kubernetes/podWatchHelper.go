@@ -12,6 +12,11 @@ type PodWatchHelper struct {
 	NameRegexFilter *regexp.Regexp
 }
 
+func NewPodWatchHelper(NameRegexFilter *regexp.Regexp) *PodWatchHelper {
+	return &PodWatchHelper{NameRegexFilter: NameRegexFilter}
+}
+
+
 // Implemets the EventFilterer Interface
 func (pwh *PodWatchHelper) Filter(e *watch.Event) (bool, error) {
 	pod, err := pwh.GetPodFromEvent(e);
