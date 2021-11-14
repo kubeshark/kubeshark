@@ -33,7 +33,7 @@ import (
 	"github.com/up9inc/mizu/tap/api"
 )
 
-const cleanupTimeout = 5 * time.Minute
+const cleanupTimeout = time.Minute
 
 type tapState struct {
 	apiServerService         *core.Service
@@ -200,7 +200,7 @@ func startTapperSyncer(ctx context.Context, cancel context.CancelFunc, provider 
 		AgentImage:               config.Config.AgentImage,
 		TapperResources:          config.Config.Tap.TapperResources,
 		ImagePullPolicy:          config.Config.ImagePullPolicy(),
-		DumpLogs:                 config.Config.DumpLogs,
+		LogLevel:                 config.Config.LogLevel(),
 		IgnoredUserAgents:        config.Config.Tap.IgnoredUserAgents,
 		MizuApiFilteringOptions:  mizuApiFilteringOptions,
 		MizuServiceAccountExists: state.mizuServiceAccountExists,
@@ -310,6 +310,7 @@ func createMizuResources(ctx context.Context, cancel context.CancelFunc, kuberne
 		MaxEntriesDBSizeBytes: config.Config.Tap.MaxEntriesDBSizeBytes(),
 		Resources:             config.Config.Tap.ApiServerResources,
 		ImagePullPolicy:       config.Config.ImagePullPolicy(),
+		LogLevel:              config.Config.LogLevel(),
 	}
 
 	if config.Config.Tap.DaemonMode {
