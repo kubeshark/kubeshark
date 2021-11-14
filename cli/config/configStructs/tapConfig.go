@@ -3,8 +3,9 @@ package configStructs
 import (
 	"errors"
 	"fmt"
-	"github.com/up9inc/mizu/shared"
 	"regexp"
+
+	"github.com/up9inc/mizu/shared"
 
 	"github.com/up9inc/mizu/shared/units"
 )

@@ -4,15 +4,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/up9inc/mizu/cli/cmd/goUtils"
 	"io/ioutil"
-	k8serrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/wait"
 	"path"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/up9inc/mizu/cli/cmd/goUtils"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/wait"
 
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/up9inc/mizu/cli/apiserver"
@@ -32,7 +33,7 @@ import (
 	"github.com/up9inc/mizu/tap/api"
 )
 
-const cleanupTimeout = time.Minute
+const cleanupTimeout = 5 * time.Minute
 
 type tapState struct {
 	apiServerService         *core.Service
@@ -625,7 +626,9 @@ func watchApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 				}
 
 				logger.Log.Infof("Mizu is available at %s\n", url)
-				uiUtils.OpenBrowser(url)
+				if !config.Config.HeadlessMode {
+					uiUtils.OpenBrowser(url)
+				}
 				if err := apiProvider.ReportTappedPods(state.tapperSyncer.CurrentlyTappedPods); err != nil {
 					logger.Log.Debugf("[Error] failed update tapped pods %v", err)
 				}
