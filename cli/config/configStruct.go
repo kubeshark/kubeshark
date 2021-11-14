@@ -33,7 +33,7 @@ type ConfigStruct struct {
 	KubeConfigPathStr      string                      `yaml:"kube-config-path"`
 	ConfigFilePath         string                      `yaml:"config-path,omitempty" readonly:""`
 	HeadlessMode           bool                        `yaml:"headless" default:"false"`
-	LogLevelInt            int                         `yaml:"server-log-level" default:"4"` // Default is INFO
+	LogLevelStr            string                      `yaml:"server-log-level,omitempty" default:"INFO" readonly:""`
 }
 
 func (config *ConfigStruct) SetDefaults() {
@@ -64,5 +64,9 @@ func (config *ConfigStruct) KubeConfigPath() string {
 }
 
 func (config *ConfigStruct) LogLevel() logging.Level {
-	return logging.Level(config.LogLevelInt)
+	if logLevel, err := logging.LogLevel(config.LogLevelStr); err == nil {
+		return logLevel
+	}
+
+	return logging.INFO
 }
