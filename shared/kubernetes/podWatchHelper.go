@@ -9,7 +9,7 @@ import (
 )
 
 type PodWatchHelper struct {
-	NameRegex *regexp.Regexp
+	NameRegexFilter *regexp.Regexp
 }
 
 // Implemets the EventFilterer Interface
@@ -19,7 +19,7 @@ func (pwh *PodWatchHelper) Filter(e *watch.Event) (bool, error) {
 		return false, nil
 	}
 
-	if !pwh.NameRegex.MatchString(pod.Name) {
+	if !pwh.NameRegexFilter.MatchString(pod.Name) {
 		return false, nil
 	}
 
