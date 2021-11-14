@@ -33,7 +33,7 @@ type ConfigStruct struct {
 	KubeConfigPathStr      string                      `yaml:"kube-config-path"`
 	ConfigFilePath         string                      `yaml:"config-path,omitempty" readonly:""`
 	HeadlessMode           bool                        `yaml:"headless" default:"false"`
-	LogLevelStr            string                      `yaml:"server-log-level,omitempty" default:"INFO" readonly:""`
+	LogLevelStr            string                      `yaml:"log-level,omitempty" default:"INFO" readonly:""`
 }
 
 func(config *ConfigStruct) Validate() error {
