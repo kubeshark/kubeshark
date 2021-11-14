@@ -24,10 +24,6 @@ Further info is available at https://github.com/up9inc/mizu`,
 			logger.Log.Fatal(err)
 		}
 
-		if err := config.Config.Validate(); err != nil {
-			logger.Log.Fatal(err)
-		}
-
 		return nil
 	},
 }

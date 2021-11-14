@@ -36,7 +36,7 @@ type ConfigStruct struct {
 	LogLevelStr            string                      `yaml:"log-level,omitempty" default:"INFO" readonly:""`
 }
 
-func(config *ConfigStruct) Validate() error {
+func(config *ConfigStruct) validate() error {
 	if _, err := logging.LogLevel(config.LogLevelStr); err != nil {
 		return fmt.Errorf("%s is not a valid log level, err: %v", config.LogLevelStr, err)
 	}
