@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"regexp"
 
-	core "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/watch"
 )
 
@@ -26,8 +26,8 @@ func (pwh *PodWatchHelper) Filter(e *watch.Event) (bool, error) {
 	return true, nil
 }
 
-func (pwh *PodWatchHelper) GetPodFromEvent(e *watch.Event) (*core.Pod, error) {
-	pod, ok := e.Object.(*core.Pod)
+func (pwh *PodWatchHelper) GetPodFromEvent(e *watch.Event) (*corev1.Pod, error) {
+	pod, ok := e.Object.(*corev1.Pod)
 	if !ok {
 		return nil, fmt.Errorf("Invalid object type on pod event stream")
 	}
