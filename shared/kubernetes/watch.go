@@ -6,19 +6,21 @@ import (
 	"fmt"
 	"github.com/up9inc/mizu/shared/debounce"
 	"github.com/up9inc/mizu/shared/logger"
-	"regexp"
 	"sync"
 	"time"
 
-	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/watch"
 )
 
-func FilteredWatch(ctx context.Context, kubernetesProvider *Provider, targetNamespaces []string, podFilter *regexp.Regexp) (chan *corev1.Pod, chan *corev1.Pod, chan *corev1.Pod, chan error) {
-	addedChan := make(chan *corev1.Pod)
-	modifiedChan := make(chan *corev1.Pod)
-	removedChan := make(chan *corev1.Pod)
+type EventFilterer interface {
+	Filter(*watch.Event) (bool, error)
+}
+
+func FilteredWatch(ctx context.Context, kubernetesProvider *Provider, targetNamespaces []string, filterer EventFilterer) (chan *watch.Event, chan *watch.Event, chan *watch.Event, chan error) {
+	addedChan := make(chan *watch.Event)
+	modifiedChan := make(chan *watch.Event)
+	removedChan := make(chan *watch.Event)
 	errorChan := make(chan error)
 
 	var wg sync.WaitGroup
@@ -32,7 +34,7 @@ func FilteredWatch(ctx context.Context, kubernetesProvider *Provider, targetName
 
 			for {
 				watcher := kubernetesProvider.GetPodWatcher(ctx, targetNamespace)
-				err := startWatchLoop(ctx, watcher, podFilter, addedChan, modifiedChan, removedChan) // blocking
+				err := startWatchLoop(ctx, watcher, filterer, addedChan, modifiedChan, removedChan) // blocking
 				watcher.Stop()
 
 				select {
@@ -72,7 +74,7 @@ func FilteredWatch(ctx context.Context, kubernetesProvider *Provider, targetName
 	return addedChan, modifiedChan, removedChan, errorChan
 }
 
-func startWatchLoop(ctx context.Context, watcher watch.Interface, podFilter *regexp.Regexp, addedChan chan *corev1.Pod, modifiedChan chan *corev1.Pod, removedChan chan *corev1.Pod) error {
+func startWatchLoop(ctx context.Context, watcher watch.Interface, filterer EventFilterer, addedChan chan *watch.Event, modifiedChan chan *watch.Event, removedChan chan *watch.Event) error {
 	resultChan := watcher.ResultChan()
 	for {
 		select {
@@ -85,22 +87,19 @@ func startWatchLoop(ctx context.Context, watcher watch.Interface, podFilter *reg
 				return apierrors.FromObject(e.Object)
 			}
 
-			pod, ok := e.Object.(*corev1.Pod)
-			if !ok {
-				continue
-			}
-
-			if !podFilter.MatchString(pod.Name) {
+			if pass, err := filterer.Filter(&e); err != nil {
+				return err
+			} else if !pass {
 				continue
 			}
 
 			switch e.Type {
 			case watch.Added:
-				addedChan <- pod
+				addedChan <- &e
 			case watch.Modified:
-				modifiedChan <- pod
+				modifiedChan <- &e
 			case watch.Deleted:
-				removedChan <- pod
+				removedChan <- &e
 			}
 		case <-ctx.Done():
 			return nil

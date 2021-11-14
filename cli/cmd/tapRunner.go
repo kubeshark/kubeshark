@@ -569,7 +569,8 @@ func waitUntilNamespaceDeleted(ctx context.Context, cancel context.CancelFunc, k
 
 func watchApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
 	podExactRegex := regexp.MustCompile(fmt.Sprintf("^%s$", kubernetes.ApiServerPodName))
-	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, kubernetesProvider, []string{config.Config.MizuResourcesNamespace}, podExactRegex)
+	podHelper := &kubernetes.PodHelper{NameRegex: podExactRegex}
+	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, kubernetesProvider, []string{config.Config.MizuResourcesNamespace}, podHelper)
 	isPodReady := false
 	timeAfter := time.After(25 * time.Second)
 	for {
@@ -590,10 +591,16 @@ func watchApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 			logger.Log.Infof("%s removed", kubernetes.ApiServerPodName)
 			cancel()
 			return
-		case modifiedPod, ok := <-modified:
+		case event, ok := <-modified:
 			if !ok {
 				modified = nil
 				continue
+			}
+
+			modifiedPod, err := podHelper.GetPodFromEvent(event)
+			if err != nil {
+				logger.Log.Errorf(uiUtils.Error, err)
+				cancel()
 			}
 
 			logger.Log.Debugf("Watching API Server pod loop, modified: %v", modifiedPod.Status.Phase)
@@ -656,28 +663,48 @@ func watchApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 
 func watchTapperPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
 	podExactRegex := regexp.MustCompile(fmt.Sprintf("^%s.*", kubernetes.TapperDaemonSetName))
-	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, kubernetesProvider, []string{config.Config.MizuResourcesNamespace}, podExactRegex)
+	podHelper := &kubernetes.PodHelper{NameRegex: podExactRegex}
+	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, kubernetesProvider, []string{config.Config.MizuResourcesNamespace}, podHelper)
 	var prevPodPhase core.PodPhase
 	for {
 		select {
-		case addedPod, ok := <-added:
+		case event, ok := <-added:
 			if !ok {
 				added = nil
 				continue
 			}
 
+			addedPod, err := podHelper.GetPodFromEvent(event)
+			if err != nil {
+				logger.Log.Errorf(uiUtils.Error, err)
+				cancel()
+			}
+
 			logger.Log.Debugf("Tapper is created [%s]", addedPod.Name)
-		case removedPod, ok := <-removed:
+		case event, ok := <-removed:
 			if !ok {
 				removed = nil
 				continue
 			}
 
+			removedPod, err := podHelper.GetPodFromEvent(event)
+			if err != nil {
+				logger.Log.Errorf(uiUtils.Error, err)
+				cancel()
+			}
+
+
 			logger.Log.Debugf("Tapper is removed [%s]", removedPod.Name)
-		case modifiedPod, ok := <-modified:
+		case event, ok := <-modified:
 			if !ok {
 				modified = nil
 				continue
+			}
+
+			modifiedPod, err := podHelper.GetPodFromEvent(event)
+			if err != nil {
+				logger.Log.Errorf(uiUtils.Error, err)
+				cancel()
 			}
 
 			if modifiedPod.Status.Phase == core.PodPending && modifiedPod.Status.Conditions[0].Type == core.PodScheduled && modifiedPod.Status.Conditions[0].Status != core.ConditionTrue {
