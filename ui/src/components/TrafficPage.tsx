@@ -62,6 +62,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
 
     const [query, setQuery] = useState("");
     const [queryBackgroundColor, setQueryBackgroundColor] = useState("#f5f5f5");
+    const [addition, updateQuery] = useState("");
 
     const [queriedCurrent, setQueriedCurrent] = useState(0);
     const [queriedTotal, setQueriedTotal] = useState(0);
@@ -83,14 +84,14 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
         })();
     }, [query]);
 
-    const updateQuery = (addition) => {
+    useEffect(() => {
         if (query) {
-            const concat = `${query} and ${addition}`;
-            setQuery(concat);
+            setQuery(`${query} and ${addition}`);
         } else {
             setQuery(addition);
         }
-    }
+        // eslint-disable-next-line
+    }, [addition]);
 
     const ws = useRef(null);
 
