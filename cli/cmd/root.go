@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/up9inc/mizu/cli/errormessage"
 	"time"
 
 	"github.com/creasty/defaults"
@@ -23,6 +24,11 @@ Further info is available at https://github.com/up9inc/mizu`,
 		if err := config.InitConfig(cmd); err != nil {
 			logger.Log.Fatal(err)
 		}
+
+		if err := config.Config.Validate(); err != nil {
+			return errormessage.FormatError(err)
+		}
+
 		return nil
 	},
 }

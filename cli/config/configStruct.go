@@ -36,6 +36,14 @@ type ConfigStruct struct {
 	LogLevelStr            string                      `yaml:"server-log-level,omitempty" default:"INFO" readonly:""`
 }
 
+func(config *ConfigStruct) Validate() error {
+	if _, err := logging.LogLevel(config.LogLevelStr); err != nil {
+		return fmt.Errorf("%s is not a valid log level, err: %v", config.LogLevelStr, err)
+	}
+
+	return nil
+}
+
 func (config *ConfigStruct) SetDefaults() {
 	config.AgentImage = fmt.Sprintf("gcr.io/up9-docker-hub/mizu/%s:%s", mizu.Branch, mizu.SemVer)
 	config.ConfigFilePath = path.Join(mizu.GetMizuFolderPath(), "config.yaml")
@@ -64,9 +72,6 @@ func (config *ConfigStruct) KubeConfigPath() string {
 }
 
 func (config *ConfigStruct) LogLevel() logging.Level {
-	if logLevel, err := logging.LogLevel(config.LogLevelStr); err == nil {
-		return logLevel
-	}
-
-	return logging.INFO
+	logLevel, _ := logging.LogLevel(config.LogLevelStr)
+	return logLevel
 }
