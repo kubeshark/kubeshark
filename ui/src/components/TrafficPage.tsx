@@ -60,7 +60,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
 
     const [isSnappedToBottom, setIsSnappedToBottom] = useState(true);
 
-    const [query, setQueryDefault] = useState("");
+    const [query, setQuery] = useState("");
     const [queryBackgroundColor, setQueryBackgroundColor] = useState("#f5f5f5");
 
     const [queriedCurrent, setQueriedCurrent] = useState(0);
@@ -68,25 +68,29 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
 
     const [startTime, setStartTime] = useState(0);
 
-    const setQuery = async (query) => {
-        setQueryDefault(query)
-        if (!query) {
-            setQueryBackgroundColor("#f5f5f5")
-        } else {
-            const data = await api.validateQuery(query);
-            if (data.valid) {
-                setQueryBackgroundColor("#d2fad2")
+    useEffect(() => {
+        (async function() {
+            if (!query) {
+                setQueryBackgroundColor("#f5f5f5")
             } else {
-                setQueryBackgroundColor("#fad6dc")
+                const data = await api.validateQuery(query);
+                if (data.query === query) {
+                    if (data.valid) {
+                        setQueryBackgroundColor("#d2fad2");
+                    } else {
+                        setQueryBackgroundColor("#fad6dc");
+                    }
+                }
             }
-        }
-    }
+        })();
+    }, [query]);
 
     const updateQuery = (addition) => {
         if (query) {
-            setQuery(`${query} and ${addition}`)
+            const concat = `${query} and ${addition}`;
+            setQuery(concat);
         } else {
-            setQuery(addition)
+            setQuery(addition);
         }
     }
 
@@ -95,8 +99,8 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
     const listEntry = useRef(null);
 
     const openWebSocket = (query) => {
-        setEntries([])
-        setEntriesBuffer([])
+        setEntries([]);
+        setEntriesBuffer([]);
         ws.current = new WebSocket(MizuWebsocketURL);
         ws.current.onopen = () => {
             ws.current.send(query)
