@@ -10,19 +10,18 @@ import (
 	"strings"
 	"time"
 
-	"github.com/up9inc/mizu/cli/cmd/goUtils"
+	"github.com/getkin/kin-openapi/openapi3"
+	"gopkg.in/yaml.v3"
+	core "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 
-	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/up9inc/mizu/cli/apiserver"
+	"github.com/up9inc/mizu/cli/cmd/goUtils"
 	"github.com/up9inc/mizu/cli/config"
 	"github.com/up9inc/mizu/cli/config/configStructs"
 	"github.com/up9inc/mizu/cli/errormessage"
-	"gopkg.in/yaml.v3"
-	core "k8s.io/api/core/v1"
-
 	"github.com/up9inc/mizu/cli/mizu"
 	"github.com/up9inc/mizu/cli/mizu/fsUtils"
 	"github.com/up9inc/mizu/cli/telemetry"
