@@ -34,5 +34,3 @@ func (pwh *PodWatchHelper) GetPodFromEvent(e *watch.Event) (*corev1.Pod, error) 
 
 	return pod, nil
 }
-
-
