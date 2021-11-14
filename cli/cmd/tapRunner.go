@@ -569,8 +569,8 @@ func waitUntilNamespaceDeleted(ctx context.Context, cancel context.CancelFunc, k
 
 func watchApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
 	podExactRegex := regexp.MustCompile(fmt.Sprintf("^%s$", kubernetes.ApiServerPodName))
-	podHelper := &kubernetes.PodHelper{NameRegex: podExactRegex}
-	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, kubernetesProvider, []string{config.Config.MizuResourcesNamespace}, podHelper)
+	podWatchHelper := &kubernetes.PodWatchHelper{NameRegex: podExactRegex}
+	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, kubernetesProvider, []string{config.Config.MizuResourcesNamespace}, podWatchHelper)
 	isPodReady := false
 	timeAfter := time.After(25 * time.Second)
 	for {
@@ -597,7 +597,7 @@ func watchApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 				continue
 			}
 
-			modifiedPod, err := podHelper.GetPodFromEvent(event)
+			modifiedPod, err := podWatchHelper.GetPodFromEvent(event)
 			if err != nil {
 				logger.Log.Errorf(uiUtils.Error, err)
 				cancel()
@@ -663,8 +663,8 @@ func watchApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 
 func watchTapperPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
 	podExactRegex := regexp.MustCompile(fmt.Sprintf("^%s.*", kubernetes.TapperDaemonSetName))
-	podHelper := &kubernetes.PodHelper{NameRegex: podExactRegex}
-	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, kubernetesProvider, []string{config.Config.MizuResourcesNamespace}, podHelper)
+	podWatchHelper := &kubernetes.PodWatchHelper{NameRegex: podExactRegex}
+	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, kubernetesProvider, []string{config.Config.MizuResourcesNamespace}, podWatchHelper)
 	var prevPodPhase core.PodPhase
 	for {
 		select {
@@ -674,7 +674,7 @@ func watchTapperPod(ctx context.Context, kubernetesProvider *kubernetes.Provider
 				continue
 			}
 
-			addedPod, err := podHelper.GetPodFromEvent(event)
+			addedPod, err := podWatchHelper.GetPodFromEvent(event)
 			if err != nil {
 				logger.Log.Errorf(uiUtils.Error, err)
 				cancel()
@@ -687,7 +687,7 @@ func watchTapperPod(ctx context.Context, kubernetesProvider *kubernetes.Provider
 				continue
 			}
 
-			removedPod, err := podHelper.GetPodFromEvent(event)
+			removedPod, err := podWatchHelper.GetPodFromEvent(event)
 			if err != nil {
 				logger.Log.Errorf(uiUtils.Error, err)
 				cancel()
@@ -701,7 +701,7 @@ func watchTapperPod(ctx context.Context, kubernetesProvider *kubernetes.Provider
 				continue
 			}
 
-			modifiedPod, err := podHelper.GetPodFromEvent(event)
+			modifiedPod, err := podWatchHelper.GetPodFromEvent(event)
 			if err != nil {
 				logger.Log.Errorf(uiUtils.Error, err)
 				cancel()

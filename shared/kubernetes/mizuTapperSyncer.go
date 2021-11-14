@@ -66,8 +66,8 @@ func CreateAndStartMizuTapperSyncer(ctx context.Context, kubernetesProvider *Pro
 }
 
 func (tapperSyncer *MizuTapperSyncer) watchPodsForTapping() {
-	podHelper := &PodHelper{NameRegex: &tapperSyncer.config.PodFilterRegex}
-	added, modified, removed, errorChan := FilteredWatch(tapperSyncer.context, tapperSyncer.kubernetesProvider, tapperSyncer.config.TargetNamespaces, podHelper)
+	podWatchHelper := &PodWatchHelper{NameRegex: &tapperSyncer.config.PodFilterRegex}
+	added, modified, removed, errorChan := FilteredWatch(tapperSyncer.context, tapperSyncer.kubernetesProvider, tapperSyncer.config.TargetNamespaces, podWatchHelper)
 
 	restartTappers := func() {
 		err, changeFound := tapperSyncer.updateCurrentlyTappedPods()
@@ -99,7 +99,7 @@ func (tapperSyncer *MizuTapperSyncer) watchPodsForTapping() {
 				continue
 			}
 
-			pod, err := podHelper.GetPodFromEvent(event)
+			pod, err := podWatchHelper.GetPodFromEvent(event)
 			if err != nil {
 				tapperSyncer.handleErrorInWatchLoop(err, restartTappersDebouncer)
 			}
@@ -113,7 +113,7 @@ func (tapperSyncer *MizuTapperSyncer) watchPodsForTapping() {
 				continue
 			}
 
-			pod, err := podHelper.GetPodFromEvent(event)
+			pod, err := podWatchHelper.GetPodFromEvent(event)
 			if err != nil {
 				tapperSyncer.handleErrorInWatchLoop(err, restartTappersDebouncer)
 			}
@@ -126,7 +126,7 @@ func (tapperSyncer *MizuTapperSyncer) watchPodsForTapping() {
 				continue
 			}
 
-			pod, err := podHelper.GetPodFromEvent(event)
+			pod, err := podWatchHelper.GetPodFromEvent(event)
 			if err != nil {
 				tapperSyncer.handleErrorInWatchLoop(err, restartTappersDebouncer)
 			}

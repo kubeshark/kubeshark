@@ -8,25 +8,25 @@ import (
 	"k8s.io/apimachinery/pkg/watch"
 )
 
-type PodHelper struct {
+type PodWatchHelper struct {
 	NameRegex *regexp.Regexp
 }
 
-// Implemets kubernetes.EventFilterer Interface
-func (pef *PodHelper) Filter(e *watch.Event) (bool, error) {
-	pod, err := pef.GetPodFromEvent(e);
+// Implemets the EventFilterer Interface
+func (pwh *PodWatchHelper) Filter(e *watch.Event) (bool, error) {
+	pod, err := pwh.GetPodFromEvent(e);
 	if err != nil {
 		return false, nil
 	}
 
-	if !pef.NameRegex.MatchString(pod.Name) {
+	if !pwh.NameRegex.MatchString(pod.Name) {
 		return false, nil
 	}
 
 	return true, nil
 }
 
-func (pef *PodHelper) GetPodFromEvent(e *watch.Event) (*core.Pod, error) {
+func (pwh *PodWatchHelper) GetPodFromEvent(e *watch.Event) (*core.Pod, error) {
 	pod, ok := e.Object.(*core.Pod)
 	if !ok {
 		return nil, fmt.Errorf("Invalid object type on pod event stream")
