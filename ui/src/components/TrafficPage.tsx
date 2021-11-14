@@ -74,12 +74,10 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                 setQueryBackgroundColor("#f5f5f5")
             } else {
                 const data = await api.validateQuery(query);
-                if (data.query === query) {
-                    if (data.valid) {
-                        setQueryBackgroundColor("#d2fad2");
-                    } else {
-                        setQueryBackgroundColor("#fad6dc");
-                    }
+                if (data.valid) {
+                    setQueryBackgroundColor("#d2fad2");
+                } else {
+                    setQueryBackgroundColor("#fad6dc");
                 }
             }
         })();
@@ -126,7 +124,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                             style={{}}
                             updateQuery={updateQuery}
                         />
-                    ])
+                    ]);
                     break
                 case "status":
                     setTappingStatus(message.tappingStatus);

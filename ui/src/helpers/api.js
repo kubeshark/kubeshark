@@ -3,6 +3,9 @@ import * as axios from "axios";
 // When working locally cp `cp .env.example .env`
 export const MizuWebsocketURL = process.env.REACT_APP_OVERRIDE_WS_URL ? process.env.REACT_APP_OVERRIDE_WS_URL : `ws://${window.location.host}/ws`;
 
+const CancelToken = axios.CancelToken;
+const source = CancelToken.source();
+
 export default class Api {
 
     constructor() {
@@ -47,7 +50,9 @@ export default class Api {
     validateQuery = async (query) => {
         const form = new FormData();
         form.append('query', query)
-        const response = await this.client.post(`/query/validate`, form);
+        const response = await this.client.post(`/query/validate`, form, {
+            cancelToken: source.token
+        });
         return response.data;
     }
 }
