@@ -766,7 +766,7 @@ func watchMizuEvents(ctx context.Context, kubernetesProvider *kubernetes.Provide
 				cancel()
 			}
 
-			if eventObj.Type == "Warning" {
+			if eventObj.Type == core.EventTypeWarning {
 				logger.Log.Warningf(uiUtils.Warning, fmt.Sprintf("Resource %s in state %s - %s", eventObj.Regarding.Name, eventObj.Reason, eventObj.Note))
 			}
 			if !ok {
@@ -780,7 +780,7 @@ func watchMizuEvents(ctx context.Context, kubernetesProvider *kubernetes.Provide
 				cancel()
 			}
 
-			if eventObj.Type == "Warning" {
+			if eventObj.Type == core.EventTypeWarning {
 				logger.Log.Warningf(uiUtils.Warning, fmt.Sprintf("Resource %s in state %s - %s", eventObj.Regarding.Name, eventObj.Reason, eventObj.Note))
 			}
 			if !ok {
@@ -794,7 +794,7 @@ func watchMizuEvents(ctx context.Context, kubernetesProvider *kubernetes.Provide
 				cancel()
 			}
 
-			if eventObj.Type == "Warning" {
+			if eventObj.Type == core.EventTypeWarning {
 				logger.Log.Warningf(uiUtils.Warning, fmt.Sprintf("Resource %s in state %s - %s", eventObj.Regarding.Name, eventObj.Reason, eventObj.Note))
 			}
 			if !ok {
