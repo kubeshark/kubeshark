@@ -17,11 +17,11 @@ type EventFilterer interface {
 	Filter(*watch.Event) (bool, error)
 }
 
-type WatcherCreator interface {
+type WatchCreator interface {
 	NewWatcher(ctx context.Context, namespace string) (watch.Interface, error)
 }
 
-func FilteredWatch(ctx context.Context, watcherCreator WatcherCreator, targetNamespaces []string, filterer EventFilterer) (chan *watch.Event, chan *watch.Event, chan *watch.Event, chan error) {
+func FilteredWatch(ctx context.Context, watcherCreator WatchCreator, targetNamespaces []string, filterer EventFilterer) (chan *watch.Event, chan *watch.Event, chan *watch.Event, chan error) {
 	addedChan := make(chan *watch.Event)
 	modifiedChan := make(chan *watch.Event)
 	removedChan := make(chan *watch.Event)

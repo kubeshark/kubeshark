@@ -36,7 +36,7 @@ func (pwh *PodWatchHelper) Filter(e *watch.Event) (bool, error) {
 	return true, nil
 }
 
-// Implements the WatcherCreator Interface
+// Implements the WatchCreator Interface
 func (pwh *PodWatchHelper) NewWatcher(ctx context.Context, namespace string) (watch.Interface, error) {
 	watcher, err := pwh.kubernetesProvider.clientSet.CoreV1().Pods(namespace).Watch(ctx, metav1.ListOptions{Watch: true})
 	if err != nil {
