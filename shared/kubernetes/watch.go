@@ -17,7 +17,11 @@ type EventFilterer interface {
 	Filter(*watch.Event) (bool, error)
 }
 
-func FilteredWatch(ctx context.Context, kubernetesProvider *Provider, targetNamespaces []string, filterer EventFilterer) (chan *watch.Event, chan *watch.Event, chan *watch.Event, chan error) {
+type WatcherCreator interface {
+	NewWatcher(ctx context.Context, namespace string) (watch.Interface, error)
+}
+
+func FilteredWatch(ctx context.Context, watcherCreator WatcherCreator, targetNamespaces []string, filterer EventFilterer) (chan *watch.Event, chan *watch.Event, chan *watch.Event, chan error) {
 	addedChan := make(chan *watch.Event)
 	modifiedChan := make(chan *watch.Event)
 	removedChan := make(chan *watch.Event)
@@ -33,8 +37,13 @@ func FilteredWatch(ctx context.Context, kubernetesProvider *Provider, targetName
 			watchRestartDebouncer := debounce.NewDebouncer(1 * time.Minute, func() {})
 
 			for {
-				watcher := kubernetesProvider.GetPodWatcher(ctx, targetNamespace)
-				err := startWatchLoop(ctx, watcher, filterer, addedChan, modifiedChan, removedChan) // blocking
+				watcher, err := watcherCreator.NewWatcher(ctx, targetNamespace)
+				if err != nil {
+					errorChan <- fmt.Errorf("error in k8 watch: %v", err)
+					break
+				}
+
+				err = startWatchLoop(ctx, watcher, filterer, addedChan, modifiedChan, removedChan) // blocking
 				watcher.Stop()
 
 				select {

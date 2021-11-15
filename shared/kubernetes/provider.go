@@ -153,14 +153,6 @@ func (provider *Provider) WaitUtilNamespaceDeleted(ctx context.Context, name str
 	return err
 }
 
-func (provider *Provider) GetPodWatcher(ctx context.Context, namespace string) watch.Interface {
-	watcher, err := provider.clientSet.CoreV1().Pods(namespace).Watch(ctx, metav1.ListOptions{Watch: true})
-	if err != nil {
-		panic(err.Error())
-	}
-	return watcher
-}
-
 func (provider *Provider) CreateNamespace(ctx context.Context, name string) (*core.Namespace, error) {
 	namespaceSpec := &core.Namespace{
 		ObjectMeta: metav1.ObjectMeta{

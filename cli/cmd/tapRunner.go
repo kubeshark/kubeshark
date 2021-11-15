@@ -569,8 +569,8 @@ func waitUntilNamespaceDeleted(ctx context.Context, cancel context.CancelFunc, k
 
 func watchApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
 	podExactRegex := regexp.MustCompile(fmt.Sprintf("^%s$", kubernetes.ApiServerPodName))
-	podWatchHelper := kubernetes.NewPodWatchHelper(podExactRegex)
-	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, kubernetesProvider, []string{config.Config.MizuResourcesNamespace}, podWatchHelper)
+	podWatchHelper := kubernetes.NewPodWatchHelper(kubernetesProvider, podExactRegex)
+	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, podWatchHelper, []string{config.Config.MizuResourcesNamespace}, podWatchHelper)
 	isPodReady := false
 	timeAfter := time.After(25 * time.Second)
 	for {
@@ -663,8 +663,8 @@ func watchApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 
 func watchTapperPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
 	podExactRegex := regexp.MustCompile(fmt.Sprintf("^%s.*", kubernetes.TapperDaemonSetName))
-	podWatchHelper := kubernetes.NewPodWatchHelper(podExactRegex)
-	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, kubernetesProvider, []string{config.Config.MizuResourcesNamespace}, podWatchHelper)
+	podWatchHelper := kubernetes.NewPodWatchHelper(kubernetesProvider, podExactRegex)
+	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, podWatchHelper, []string{config.Config.MizuResourcesNamespace}, podWatchHelper)
 	var prevPodPhase core.PodPhase
 	for {
 		select {
