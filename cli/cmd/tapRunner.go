@@ -149,6 +149,7 @@ func RunMizuTap() {
 
 		go goUtils.HandleExcWrapper(watchApiServerPod, ctx, kubernetesProvider, cancel)
 		go goUtils.HandleExcWrapper(watchTapperPod, ctx, kubernetesProvider, cancel)
+		go goUtils.HandleExcWrapper(watchMizuEvents, ctx, kubernetesProvider, cancel)
 
 		// block until exit signal or error
 		waitForFinish(ctx, cancel)
@@ -746,6 +747,71 @@ func watchTapperPod(ctx context.Context, kubernetesProvider *kubernetes.Provider
 
 		case <-ctx.Done():
 			logger.Log.Debugf("Watching tapper pod loop, ctx done")
+			return
+		}
+	}
+}
+
+func watchMizuEvents(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
+	mizuResourceRegex := regexp.MustCompile(fmt.Sprintf("^%s.*", kubernetes.MizuResourcesPrefix))
+	eventWatchHelper := kubernetes.NewEventWatchHelper(kubernetesProvider, mizuResourceRegex)
+	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, eventWatchHelper, []string{config.Config.MizuResourcesNamespace}, eventWatchHelper)
+
+	for {
+		select {
+		case event, ok := <-added:
+			eventObj, err := eventWatchHelper.GetEventFromEvent(event)
+			if err != nil {
+				logger.Log.Errorf(uiUtils.Error, err)
+				cancel()
+			}
+
+			if eventObj.Type == "Warning" {
+				logger.Log.Warningf(uiUtils.Warning, fmt.Sprintf("Resource %s in state %s - %s", eventObj.Regarding.Name, eventObj.Reason, eventObj.Note))
+			}
+			if !ok {
+				added = nil
+				continue
+			}
+		case event, ok := <-removed:
+			eventObj, err := eventWatchHelper.GetEventFromEvent(event)
+			if err != nil {
+				logger.Log.Errorf(uiUtils.Error, err)
+				cancel()
+			}
+
+			if eventObj.Type == "Warning" {
+				logger.Log.Warningf(uiUtils.Warning, fmt.Sprintf("Resource %s in state %s - %s", eventObj.Regarding.Name, eventObj.Reason, eventObj.Note))
+			}
+			if !ok {
+				removed = nil
+				continue
+			}
+		case event, ok := <-modified:
+			eventObj, err := eventWatchHelper.GetEventFromEvent(event)
+			if err != nil {
+				logger.Log.Errorf(uiUtils.Error, err)
+				cancel()
+			}
+
+			if eventObj.Type == "Warning" {
+				logger.Log.Warningf(uiUtils.Warning, fmt.Sprintf("Resource %s in state %s - %s", eventObj.Regarding.Name, eventObj.Reason, eventObj.Note))
+			}
+			if !ok {
+				modified = nil
+				continue
+			}
+		case err, ok := <-errorChan:
+			if !ok {
+				errorChan = nil
+				continue
+			}
+
+			logger.Log.Errorf("[Error] Error in mizu tapper watch, err: %v", err)
+			cancel()
+
+		case <-ctx.Done():
+			logger.Log.Debugf("Watching Mizu events loop, ctx done")
 			return
 		}
 	}
