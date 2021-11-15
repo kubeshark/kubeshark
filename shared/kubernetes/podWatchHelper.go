@@ -16,10 +16,13 @@ type PodWatchHelper struct {
 }
 
 func NewPodWatchHelper(kubernetesProvider *Provider, NameRegexFilter *regexp.Regexp) *PodWatchHelper {
-	return &PodWatchHelper{kubernetesProvider: kubernetesProvider, NameRegexFilter: NameRegexFilter}
+	return &PodWatchHelper{
+		kubernetesProvider: kubernetesProvider,
+		NameRegexFilter: NameRegexFilter,
+	}
 }
 
-// Implemets the EventFilterer Interface
+// Implements the EventFilterer Interface
 func (pwh *PodWatchHelper) Filter(e *watch.Event) (bool, error) {
 	pod, err := pwh.GetPodFromEvent(e)
 	if err != nil {
@@ -33,7 +36,7 @@ func (pwh *PodWatchHelper) Filter(e *watch.Event) (bool, error) {
 	return true, nil
 }
 
-// Implemets the WatcherCreator Interface
+// Implements the WatcherCreator Interface
 func (pwh *PodWatchHelper) NewWatcher(ctx context.Context, namespace string) (watch.Interface, error) {
 	watcher, err := pwh.kubernetesProvider.clientSet.CoreV1().Pods(namespace).Watch(ctx, metav1.ListOptions{Watch: true})
 	if err != nil {
