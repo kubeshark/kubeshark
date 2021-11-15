@@ -143,6 +143,10 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 		}
 	}
 
+	if resDetails["bodySize"].(float64) < 0 {
+		resDetails["bodySize"] = 0
+	}
+
 	if item.Protocol.Version == "2.0" {
 		service = fmt.Sprintf("%s://%s", scheme, authority)
 	} else {
