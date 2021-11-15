@@ -36,7 +36,7 @@ func (pwh *EventWatchHelper) Filter(e *watch.Event) (bool, error) {
 	return true, nil
 }
 
-// Implements the WatcherCreator Interface
+// Implements the WatchCreator Interface
 func (pwh *EventWatchHelper) NewWatcher(ctx context.Context, namespace string) (watch.Interface, error) {
 	watcher, err := pwh.kubernetesProvider.clientSet.EventsV1().Events(namespace).Watch(ctx, metav1.ListOptions{Watch: true})
 	if err != nil {
