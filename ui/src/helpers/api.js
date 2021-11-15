@@ -4,7 +4,6 @@ import * as axios from "axios";
 export const MizuWebsocketURL = process.env.REACT_APP_OVERRIDE_WS_URL ? process.env.REACT_APP_OVERRIDE_WS_URL : `ws://${window.location.host}/ws`;
 
 const CancelToken = axios.CancelToken;
-const source = CancelToken.source();
 
 export default class Api {
 
@@ -20,6 +19,8 @@ export default class Api {
                 Accept: "application/json",
             }
         });
+
+        this.source = null;
     }
 
     tapStatus = async () => {
@@ -48,11 +49,27 @@ export default class Api {
     }
 
     validateQuery = async (query) => {
+        if (this.source) {
+            this.source.cancel();
+        }
+        this.source = CancelToken.source();
+
         const form = new FormData();
         form.append('query', query)
         const response = await this.client.post(`/query/validate`, form, {
-            cancelToken: source.token
+            cancelToken: this.source.token
+        }).catch(function (thrown) {
+            if (axios.isCancel(thrown)) {
+                console.log('Validate canceled');
+            } else {
+                console.log('Validate error', thrown.message);
+            }
         });
+
+        if (!response) {
+            return null;
+        }
+
         return response.data;
     }
 }

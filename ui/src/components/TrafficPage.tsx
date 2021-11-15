@@ -75,6 +75,9 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                 setQueryBackgroundColor("#f5f5f5")
             } else {
                 const data = await api.validateQuery(query);
+                if (!data) {
+                    return;
+                }
                 if (data.valid) {
                     setQueryBackgroundColor("#d2fad2");
                 } else {
