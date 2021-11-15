@@ -59,10 +59,8 @@ export default class Api {
         const response = await this.client.post(`/query/validate`, form, {
             cancelToken: this.source.token
         }).catch(function (thrown) {
-            if (axios.isCancel(thrown)) {
-                console.log('Validate canceled');
-            } else {
-                console.log('Validate error', thrown.message);
+            if (!axios.isCancel(thrown)) {
+                console.error('Validate error', thrown.message);
             }
         });
 
