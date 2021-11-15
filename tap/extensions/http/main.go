@@ -184,6 +184,9 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 	}
 
 	elapsedTime := item.Pair.Response.CaptureTime.Sub(item.Pair.Request.CaptureTime).Round(time.Millisecond).Milliseconds()
+	if elapsedTime < 0 {
+		elapsedTime = 0
+	}
 	httpPair, _ := json.Marshal(item.Pair)
 	_protocol := protocol
 	_protocol.Version = item.Protocol.Version
