@@ -3,6 +3,7 @@ package kubernetes
 import (
 	"context"
 	"fmt"
+	"github.com/op/go-logging"
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/debounce"
 	"github.com/up9inc/mizu/shared/logger"
@@ -38,7 +39,7 @@ type TapperSyncerConfig struct {
 	AgentImage               string
 	TapperResources          shared.Resources
 	ImagePullPolicy          core.PullPolicy
-	DumpLogs                 bool
+	LogLevel                 logging.Level
 	IgnoredUserAgents        []string
 	MizuApiFilteringOptions  api.TrafficFilteringOptions
 	MizuServiceAccountExists bool
@@ -194,7 +195,7 @@ func (tapperSyncer *MizuTapperSyncer) updateMizuTappers() error {
 			tapperSyncer.config.TapperResources,
 			tapperSyncer.config.ImagePullPolicy,
 			tapperSyncer.config.MizuApiFilteringOptions,
-			tapperSyncer.config.DumpLogs,
+			tapperSyncer.config.LogLevel,
 		); err != nil {
 			return err
 		}

@@ -2,11 +2,12 @@ package acceptanceTests
 
 import (
 	"fmt"
-	"gopkg.in/yaml.v3"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"testing"
+
+	"gopkg.in/yaml.v3"
 )
 
 type tapConfig struct {

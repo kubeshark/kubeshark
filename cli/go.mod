@@ -8,6 +8,7 @@ require (
 	github.com/getkin/kin-openapi v0.79.0
 	github.com/google/go-github/v37 v37.0.0
 	github.com/google/uuid v1.1.2
+	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/spf13/cobra v1.1.3
 	github.com/spf13/pflag v1.0.5
 	github.com/up9inc/mizu/shared v0.0.0

@@ -27,6 +27,7 @@ Further info is available at https://github.com/up9inc/mizu`,
 		if err := config.Config.Validate(); err != nil {
 			return errormessage.FormatError(err)
 		}
+
 		return nil
 	},
 }

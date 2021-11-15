@@ -4,15 +4,17 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/up9inc/mizu/cli/cmd/goUtils"
-	"github.com/up9inc/mizu/cli/config/configStructs"
 	"io/ioutil"
-	k8serrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/wait"
+	"path"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/up9inc/mizu/cli/cmd/goUtils"
+	"github.com/up9inc/mizu/cli/config/configStructs"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/wait"
 
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/up9inc/mizu/cli/apiserver"
@@ -208,7 +210,7 @@ func startTapperSyncer(ctx context.Context, cancel context.CancelFunc, provider 
 		AgentImage:               config.Config.AgentImage,
 		TapperResources:          config.Config.Tap.TapperResources,
 		ImagePullPolicy:          config.Config.ImagePullPolicy(),
-		DumpLogs:                 config.Config.DumpLogs,
+		LogLevel:                 config.Config.LogLevel(),
 		IgnoredUserAgents:        config.Config.Tap.IgnoredUserAgents,
 		MizuApiFilteringOptions:  mizuApiFilteringOptions,
 		MizuServiceAccountExists: state.mizuServiceAccountExists,
@@ -322,6 +324,7 @@ func createMizuResources(ctx context.Context, cancel context.CancelFunc, kuberne
 		MaxEntriesDBSizeBytes: config.Config.Tap.MaxEntriesDBSizeBytes(),
 		Resources:             config.Config.Tap.ApiServerResources,
 		ImagePullPolicy:       config.Config.ImagePullPolicy(),
+		LogLevel:              config.Config.LogLevel(),
 	}
 
 	if config.Config.Tap.DaemonMode {
@@ -608,7 +611,9 @@ func watchApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 				}
 
 				logger.Log.Infof("Mizu is available at %s\n", url)
-				uiUtils.OpenBrowser(url)
+				if !config.Config.HeadlessMode {
+					uiUtils.OpenBrowser(url)
+				}
 				if err := apiProvider.ReportTappedPods(state.tapperSyncer.CurrentlyTappedPods); err != nil {
 					logger.Log.Debugf("[Error] failed update tapped pods %v", err)
 				}
