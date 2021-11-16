@@ -25,7 +25,12 @@ func Error(c *gin.Context, err error) bool {
 	if err != nil {
 		logger.Log.Errorf("Error getting entry: %v", err)
 		c.Error(err)
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": true, "msg": err.Error()})
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+			"error":     true,
+			"type":      "error",
+			"autoClose": "5000",
+			"msg":       err.Error(),
+		})
 		return true // signal that there was an error and the caller should return
 	}
 	return false // no error, can continue
@@ -39,7 +44,13 @@ func GetEntry(c *gin.Context) {
 		return // exit
 	}
 	err = json.Unmarshal(bytes, &entry)
-	if Error(c, err) {
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"error":     true,
+			"type":      "error",
+			"autoClose": "5000",
+			"msg":       string(bytes),
+		})
 		return // exit
 	}
 
