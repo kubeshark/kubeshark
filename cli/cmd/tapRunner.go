@@ -379,6 +379,7 @@ func createMizuApiServerDeployment(ctx context.Context, kubernetesProvider *kube
 func TryToCreatePersistentVolumeClaim(ctx context.Context, kubernetesProvider *kubernetes.Provider) bool {
 	isDefaultStorageClassAvailable, err := kubernetesProvider.IsDefaultStorageProviderAvailable(ctx)
 	if err != nil {
+		logger.Log.Warningf(uiUtils.Yellow, "An error occured when checking if a default storage provider exists in this cluster, this will mean that mizu's data will be lost on pod restart")
 		logger.Log.Debugf("error checking if default storage class exists: %v", err)
 		return false
 	} else if !isDefaultStorageClassAvailable {
