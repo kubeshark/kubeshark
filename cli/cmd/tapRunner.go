@@ -359,7 +359,10 @@ func createMizuApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.
 }
 
 func createMizuApiServerDeployment(ctx context.Context, kubernetesProvider *kubernetes.Provider, opts *kubernetes.ApiServerOptions) error {
-	volumeClaimCreated := TryToCreatePersistentVolumeClaim(ctx, kubernetesProvider)
+        volumeClaimCreated := false
+	if !config.Config.Tap.NoPersistentVolumeClaim {
+		volumeClaimCreated := TryToCreatePersistentVolumeClaim(ctx, kubernetesProvider)
+	}
 
 	pod, err := kubernetesProvider.GetMizuApiServerPodObject(opts, volumeClaimCreated, kubernetes.PersistentVolumeClaimName)
 	if err != nil {

@@ -3,6 +3,8 @@ package configStructs
 import (
 	"errors"
 	"fmt"
+	"github.com/up9inc/mizu/cli/uiUtils"
+	"github.com/up9inc/mizu/shared/logger"
 	"regexp"
 
 	"github.com/up9inc/mizu/shared"
@@ -26,25 +28,26 @@ const (
 )
 
 type TapConfig struct {
-	UploadIntervalSec      int              `yaml:"upload-interval" default:"10"`
-	PodRegexStr            string           `yaml:"regex" default:".*"`
-	GuiPort                uint16           `yaml:"gui-port" default:"8899"`
-	ProxyHost              string           `yaml:"proxy-host" default:"127.0.0.1"`
-	Namespaces             []string         `yaml:"namespaces"`
-	Analysis               bool             `yaml:"analysis" default:"false"`
-	AllNamespaces          bool             `yaml:"all-namespaces" default:"false"`
-	PlainTextFilterRegexes []string         `yaml:"regex-masking"`
-	IgnoredUserAgents      []string         `yaml:"ignored-user-agents"`
-	DisableRedaction       bool             `yaml:"no-redact" default:"false"`
-	HumanMaxEntriesDBSize  string           `yaml:"max-entries-db-size" default:"200MB"`
-	DryRun                 bool             `yaml:"dry-run" default:"false"`
-	Workspace              string           `yaml:"workspace"`
-	EnforcePolicyFile      string           `yaml:"traffic-validation-file"`
-	ContractFile           string           `yaml:"contract"`
-	AskUploadConfirmation  bool             `yaml:"ask-upload-confirmation" default:"true"`
-	ApiServerResources     shared.Resources `yaml:"api-server-resources"`
-	TapperResources        shared.Resources `yaml:"tapper-resources"`
-	DaemonMode             bool             `yaml:"daemon" default:"false"`
+	UploadIntervalSec       int              `yaml:"upload-interval" default:"10"`
+	PodRegexStr             string           `yaml:"regex" default:".*"`
+	GuiPort                 uint16           `yaml:"gui-port" default:"8899"`
+	ProxyHost               string           `yaml:"proxy-host" default:"127.0.0.1"`
+	Namespaces              []string         `yaml:"namespaces"`
+	Analysis                bool             `yaml:"analysis" default:"false"`
+	AllNamespaces           bool             `yaml:"all-namespaces" default:"false"`
+	PlainTextFilterRegexes  []string         `yaml:"regex-masking"`
+	IgnoredUserAgents       []string         `yaml:"ignored-user-agents"`
+	DisableRedaction        bool             `yaml:"no-redact" default:"false"`
+	HumanMaxEntriesDBSize   string           `yaml:"max-entries-db-size" default:"200MB"`
+	DryRun                  bool             `yaml:"dry-run" default:"false"`
+	Workspace               string           `yaml:"workspace"`
+	EnforcePolicyFile       string           `yaml:"traffic-validation-file"`
+	ContractFile            string           `yaml:"contract"`
+	AskUploadConfirmation   bool             `yaml:"ask-upload-confirmation" default:"true"`
+	ApiServerResources      shared.Resources `yaml:"api-server-resources"`
+	TapperResources         shared.Resources `yaml:"tapper-resources"`
+	DaemonMode              bool             `yaml:"daemon" default:"false"`
+	NoPersistentVolumeClaim bool             `yaml:"no-persistent-volume-claim" default:"false"`
 }
 
 func (config *TapConfig) PodRegex() *regexp.Regexp {
@@ -77,6 +80,10 @@ func (config *TapConfig) Validate() error {
 
 	if config.Analysis && config.Workspace != "" {
 		return errors.New(fmt.Sprintf("Can't run with both --%s and --%s flags", AnalysisTapName, WorkspaceTapName))
+	}
+
+	if config.NoPersistentVolumeClaim && !config.DaemonMode {
+		logger.Log.Warningf(uiUtils.Warning, fmt.Sprintf("the --set tap.no-persistent-volume-claim=true flag has no effect without the --%s flag, the claim will not be created anyway.", DaemonModeTapName))
 	}
 
 	return nil
