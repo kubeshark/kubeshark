@@ -186,6 +186,7 @@ func printTappedPodsPreview(ctx context.Context, kubernetesProvider *kubernetes.
 		if len(matchingPods) == 0 {
 			printNoPodsFoundSuggestion(namespaces)
 		}
+		logger.Log.Info("Pods that match regex at this instant:")
 		for _, tappedPod := range matchingPods {
 			logger.Log.Infof(uiUtils.Green, fmt.Sprintf("+%s", tappedPod.Name))
 		}
