@@ -17,7 +17,6 @@ interface Props {
 const FancyTextDisplay: React.FC<Props> = ({text, className, isPossibleToCopy = true, applyTextEllipsis = true, flipped = false, useTooltip= false, displayIconOnMouseOver = false, buttonOnly = false}) => {
     const [showCopiedNotification, setCopied] = useState(false);
     const [showTooltip, setShowTooltip] = useState(false);
-    const displayText = text || '';
 
     const onCopy = () => {
         setCopied(true)
@@ -33,12 +32,12 @@ const FancyTextDisplay: React.FC<Props> = ({text, className, isPossibleToCopy = 
         return () => clearTimeout(timer);
     }, [showCopiedNotification]);
 
-    const textElement = <span className={'FancyTextDisplay-Text'}>{displayText}</span>;
+    const textElement = <span className={'FancyTextDisplay-Text'}>{text}</span>;
 
-    const copyButton = isPossibleToCopy && displayText ? <CopyToClipboard text={displayText} onCopy={onCopy}>
+    const copyButton = isPossibleToCopy && text ? <CopyToClipboard text={text} onCopy={onCopy}>
                     <span
                         className={`FancyTextDisplay-Icon`}
-                        title={`Copy "${displayText}" value to clipboard`}
+                        title={`Copy "${text}" value to clipboard`}
                     >
                         <img src={duplicateImg} alt="Duplicate full value"/>
                         {showCopiedNotification && <span className={'FancyTextDisplay-CopyNotifier'}>Copied</span>}
@@ -48,14 +47,14 @@ const FancyTextDisplay: React.FC<Props> = ({text, className, isPossibleToCopy = 
     return (
         <p
             className={`FancyTextDisplay-Container ${className ? className : ''} ${displayIconOnMouseOver ? 'displayIconOnMouseOver ' : ''} ${applyTextEllipsis ? ' FancyTextDisplay-ContainerEllipsis' : ''}`}
-            title={displayText.toString()}
+            title={text.toString()}
             onMouseOver={ e => setShowTooltip(true)}
             onMouseLeave={ e => setShowTooltip(false)}
         >
             {!buttonOnly && flipped && textElement}
             {copyButton}
             {!buttonOnly && !flipped && textElement}
-            {useTooltip && showTooltip && <span className={'FancyTextDisplay-CopyNotifier'}>{displayText}</span>}
+            {useTooltip && showTooltip && <span className={'FancyTextDisplay-CopyNotifier'}>{text}</span>}
         </p>
     );
 };
