@@ -78,6 +78,6 @@ func DumpLogs(ctx context.Context, provider *kubernetes.Provider, filePath strin
 		logger.Log.Debugf("Successfully added file %s", GetLogFilePath())
 	}
 
-	logger.Log.Infof("You can find the zip file with all logs in %s\n", filePath)
+	logger.Log.Infof("You can find the zip file with all logs in %s", filePath)
 	return nil
 }

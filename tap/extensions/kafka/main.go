@@ -37,7 +37,7 @@ func (d dissecting) Register(extension *api.Extension) {
 }
 
 func (d dissecting) Ping() {
-	log.Printf("pong %s\n", _protocol.Name)
+	log.Printf("pong %s", _protocol.Name)
 }
 
 func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, superIdentifier *api.SuperIdentifier, emitter api.Emitter, options *api.TrafficFilteringOptions) error {
