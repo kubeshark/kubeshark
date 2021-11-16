@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"path"
 	"regexp"
 	"strings"
 	"time"
