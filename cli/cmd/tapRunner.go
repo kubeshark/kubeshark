@@ -601,6 +601,7 @@ func watchApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 			if err != nil {
 				logger.Log.Errorf(uiUtils.Error, err)
 				cancel()
+				continue
 			}
 
 			logger.Log.Debugf("Watching API Server pod loop, modified: %v", modifiedPod.Status.Phase)
@@ -678,6 +679,7 @@ func watchTapperPod(ctx context.Context, kubernetesProvider *kubernetes.Provider
 			if err != nil {
 				logger.Log.Errorf(uiUtils.Error, err)
 				cancel()
+				continue
 			}
 
 			logger.Log.Debugf("Tapper is created [%s]", addedPod.Name)
@@ -691,6 +693,7 @@ func watchTapperPod(ctx context.Context, kubernetesProvider *kubernetes.Provider
 			if err != nil {
 				logger.Log.Errorf(uiUtils.Error, err)
 				cancel()
+				continue
 			}
 
 
@@ -705,12 +708,13 @@ func watchTapperPod(ctx context.Context, kubernetesProvider *kubernetes.Provider
 			if err != nil {
 				logger.Log.Errorf(uiUtils.Error, err)
 				cancel()
+				continue
 			}
 
 			if modifiedPod.Status.Phase == core.PodPending && modifiedPod.Status.Conditions[0].Type == core.PodScheduled && modifiedPod.Status.Conditions[0].Status != core.ConditionTrue {
 				logger.Log.Infof(uiUtils.Red, fmt.Sprintf("Wasn't able to deploy the tapper %s. Reason: \"%s\"", modifiedPod.Name, modifiedPod.Status.Conditions[0].Message))
 				cancel()
-				break
+				continue
 			}
 
 			podStatus := modifiedPod.Status
