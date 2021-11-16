@@ -2,7 +2,9 @@ package controllers
 
 import (
 	"encoding/json"
+	"fmt"
 	"mizuserver/pkg/api"
+	"mizuserver/pkg/config"
 	"mizuserver/pkg/holder"
 	"mizuserver/pkg/providers"
 	"mizuserver/pkg/up9"
@@ -15,6 +17,13 @@ import (
 )
 
 func HealthCheck(c *gin.Context) {
+	if config.Config.DaemonMode {
+		if providers.ExpectedTapperAmount != providers.TappersCount {
+			c.String(http.StatusInternalServerError, fmt.Sprintf("expecting more tappers than are actually connected (%d expected, %d connected)", providers.ExpectedTapperAmount, providers.TappersCount))
+			return
+		}
+	}
+
 	response := shared.HealthResponse{
 		TapStatus:    providers.TapStatus,
 		TappersCount: providers.TappersCount,
