@@ -759,8 +759,8 @@ func watchMizuEvents(ctx context.Context, kubernetesProvider *kubernetes.Provide
 
 	for {
 		select {
-		case event, ok := <-added:
-			eventObj, err := eventWatchHelper.GetEventFromEvent(event)
+		case wEvent, ok := <-added:
+			eventObj, err := wEvent.ToEvent()
 			if err != nil {
 				logger.Log.Errorf(uiUtils.Error, err)
 				cancel()
@@ -773,8 +773,8 @@ func watchMizuEvents(ctx context.Context, kubernetesProvider *kubernetes.Provide
 				added = nil
 				continue
 			}
-		case event, ok := <-removed:
-			eventObj, err := eventWatchHelper.GetEventFromEvent(event)
+		case wEvent, ok := <-removed:
+			eventObj, err := wEvent.ToEvent()
 			if err != nil {
 				logger.Log.Errorf(uiUtils.Error, err)
 				cancel()
@@ -787,8 +787,8 @@ func watchMizuEvents(ctx context.Context, kubernetesProvider *kubernetes.Provide
 				removed = nil
 				continue
 			}
-		case event, ok := <-modified:
-			eventObj, err := eventWatchHelper.GetEventFromEvent(event)
+		case wEvent, ok := <-modified:
+			eventObj, err := wEvent.ToEvent()
 			if err != nil {
 				logger.Log.Errorf(uiUtils.Error, err)
 				cancel()
