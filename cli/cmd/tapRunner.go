@@ -359,21 +359,7 @@ func createMizuApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.
 }
 
 func createMizuApiServerDeployment(ctx context.Context, kubernetesProvider *kubernetes.Provider, opts *kubernetes.ApiServerOptions) error {
-	isDefaultStorageClassAvailable, err := kubernetesProvider.IsDefaultStorageProviderAvailable(ctx)
-	volumeClaimCreated := false
-	if err != nil {
-		return err
-	}
-	if isDefaultStorageClassAvailable {
-		if _, err = kubernetesProvider.CreatePersistentVolumeClaim(ctx, config.Config.MizuResourcesNamespace, kubernetes.PersistentVolumeClaimName, config.Config.Tap.MaxEntriesDBSizeBytes()+mizu.DaemonModePersistentVolumeSizeBufferBytes); err != nil {
-			logger.Log.Warningf(uiUtils.Yellow, "An error has occured while creating a persistent volume claim for mizu, this will mean that mizu's data will be lost on pod restart")
-			logger.Log.Debugf("error creating persistent volume claim: %v", err)
-		} else {
-			volumeClaimCreated = true
-		}
-	} else {
-		logger.Log.Warningf(uiUtils.Yellow, "Could not find default volume provider in this cluster, this will mean that mizu's data will be lost on pod restart")
-	}
+	volumeClaimCreated := TryToCreatePersistentVolumeClaim(ctx, kubernetesProvider)
 
 	pod, err := kubernetesProvider.GetMizuApiServerPodObject(opts, volumeClaimCreated, kubernetes.PersistentVolumeClaimName)
 	if err != nil {
@@ -385,6 +371,25 @@ func createMizuApiServerDeployment(ctx context.Context, kubernetesProvider *kube
 	}
 	logger.Log.Debugf("Successfully created API server deployment: %s", kubernetes.ApiServerPodName)
 	return nil
+}
+
+func TryToCreatePersistentVolumeClaim(ctx context.Context, kubernetesProvider *kubernetes.Provider) bool {
+	isDefaultStorageClassAvailable, err := kubernetesProvider.IsDefaultStorageProviderAvailable(ctx)
+	if err != nil {
+		logger.Log.Debugf("error checking if default storage class exists: %v", err)
+	}
+
+	if isDefaultStorageClassAvailable {
+		if _, err = kubernetesProvider.CreatePersistentVolumeClaim(ctx, config.Config.MizuResourcesNamespace, kubernetes.PersistentVolumeClaimName, config.Config.Tap.MaxEntriesDBSizeBytes()+mizu.DaemonModePersistentVolumeSizeBufferBytes); err != nil {
+			logger.Log.Warningf(uiUtils.Yellow, "An error has occured while creating a persistent volume claim for mizu, this means mizu data will be lost on mizu-api-server pod restart")
+			logger.Log.Debugf("error creating persistent volume claim: %v", err)
+		} else {
+			return true
+		}
+	} else {
+		logger.Log.Warningf(uiUtils.Yellow, "Could not find default volume provider in this cluster, this will mean that mizu's data will be lost on pod restart")
+	}
+	return false
 }
 
 func getMizuApiFilteringOptions() (*api.TrafficFilteringOptions, error) {
