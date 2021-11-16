@@ -65,14 +65,14 @@ func (h *RoutesEventHandlers) WebSocketMessage(_ int, message []byte) {
 	var socketMessageBase shared.WebSocketMessageMetadata
 	err := json.Unmarshal(message, &socketMessageBase)
 	if err != nil {
-		logger.Log.Infof("Could not unmarshal websocket message %v\n", err)
+		logger.Log.Infof("Could not unmarshal websocket message %v", err)
 	} else {
 		switch socketMessageBase.MessageType {
 		case shared.WebSocketMessageTypeTappedEntry:
 			var tappedEntryMessage models.WebSocketTappedEntryMessage
 			err := json.Unmarshal(message, &tappedEntryMessage)
 			if err != nil {
-				logger.Log.Infof("Could not unmarshal message of message type %s %v\n", socketMessageBase.MessageType, err)
+				logger.Log.Infof("Could not unmarshal message of message type %s %v", socketMessageBase.MessageType, err)
 			} else {
 				// NOTE: This is where the message comes back from the intermediate WebSocket to code.
 				h.SocketOutChannel <- tappedEntryMessage.Data
@@ -81,7 +81,7 @@ func (h *RoutesEventHandlers) WebSocketMessage(_ int, message []byte) {
 			var statusMessage shared.WebSocketStatusMessage
 			err := json.Unmarshal(message, &statusMessage)
 			if err != nil {
-				logger.Log.Infof("Could not unmarshal message of message type %s %v\n", socketMessageBase.MessageType, err)
+				logger.Log.Infof("Could not unmarshal message of message type %s %v", socketMessageBase.MessageType, err)
 			} else {
 				providers.TapStatus.Pods = statusMessage.TappingStatus.Pods
 				BroadcastToBrowserClients(message)
@@ -90,7 +90,7 @@ func (h *RoutesEventHandlers) WebSocketMessage(_ int, message []byte) {
 			var outboundLinkMessage models.WebsocketOutboundLinkMessage
 			err := json.Unmarshal(message, &outboundLinkMessage)
 			if err != nil {
-				logger.Log.Infof("Could not unmarshal message of message type %s %v\n", socketMessageBase.MessageType, err)
+				logger.Log.Infof("Could not unmarshal message of message type %s %v", socketMessageBase.MessageType, err)
 			} else {
 				handleTLSLink(outboundLinkMessage)
 			}

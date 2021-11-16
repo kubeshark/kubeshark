@@ -2,7 +2,9 @@ package controllers
 
 import (
 	"encoding/json"
+	"fmt"
 	"mizuserver/pkg/api"
+	"mizuserver/pkg/config"
 	"mizuserver/pkg/holder"
 	"mizuserver/pkg/providers"
 	"mizuserver/pkg/up9"
@@ -15,6 +17,13 @@ import (
 )
 
 func HealthCheck(c *gin.Context) {
+	if config.Config.DaemonMode {
+		if providers.ExpectedTapperAmount != providers.TappersCount {
+			c.JSON(http.StatusInternalServerError, fmt.Sprintf("expecting more tappers than are actually connected (%d expected, %d connected)", providers.ExpectedTapperAmount, providers.TappersCount))
+			return
+		}
+	}
+
 	response := shared.HealthResponse{
 		TapStatus:    providers.TapStatus,
 		TappersCount: providers.TappersCount,
@@ -37,7 +46,7 @@ func PostTappedPods(c *gin.Context) {
 	providers.TapStatus.Pods = tapStatus.Pods
 	message := shared.CreateWebSocketStatusMessage(*tapStatus)
 	if jsonBytes, err := json.Marshal(message); err != nil {
-		logger.Log.Errorf("Could not Marshal message %v\n", err)
+		logger.Log.Errorf("Could not Marshal message %v", err)
 	} else {
 		api.BroadcastToBrowserClients(jsonBytes)
 	}

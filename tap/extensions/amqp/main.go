@@ -37,7 +37,7 @@ func (d dissecting) Register(extension *api.Extension) {
 }
 
 func (d dissecting) Ping() {
-	log.Printf("pong %s\n", protocol.Name)
+	log.Printf("pong %s", protocol.Name)
 }
 
 const amqpRequest string = "amqp_request"
@@ -218,7 +218,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 			}
 
 		default:
-			// log.Printf("unexpected frame: %+v\n", f)
+			// log.Printf("unexpected frame: %+v", f)
 		}
 	}
 }

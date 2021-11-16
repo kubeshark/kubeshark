@@ -282,7 +282,7 @@ func createMizuResources(ctx context.Context, cancel context.CancelFunc, kuberne
 	}
 
 	if err := createMizuConfigmap(ctx, kubernetesProvider, serializedValidationRules, serializedContract, serializedMizuConfig); err != nil {
-		logger.Log.Warningf(uiUtils.Warning, fmt.Sprintf("Failed to create resources required for policy validation. Mizu will not validate policy rules. error: %v\n", errormessage.FormatError(err)))
+		logger.Log.Warningf(uiUtils.Warning, fmt.Sprintf("Failed to create resources required for policy validation. Mizu will not validate policy rules. error: %v", errormessage.FormatError(err)))
 	}
 
 	var err error
@@ -441,7 +441,7 @@ func dumpLogsIfNeeded(ctx context.Context, kubernetesProvider *kubernetes.Provid
 }
 
 func cleanUpMizuResources(ctx context.Context, cancel context.CancelFunc, kubernetesProvider *kubernetes.Provider) {
-	logger.Log.Infof("\nRemoving mizu resources\n")
+	logger.Log.Infof("\nRemoving mizu resources")
 
 	var leftoverResources []string
 
@@ -626,7 +626,7 @@ func watchApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 					break
 				}
 
-				logger.Log.Infof("Mizu is available at %s\n", url)
+				logger.Log.Infof("Mizu is available at %s", url)
 				if !config.Config.HeadlessMode {
 					uiUtils.OpenBrowser(url)
 				}

@@ -16,6 +16,7 @@ import (
 )
 
 const maskedFieldPlaceholderValue = "[REDACTED]"
+const userAgent = "user-agent"
 
 //these values MUST be all lower case and contain no `-` or `_` characters
 var personallyIdentifiableDataFields = []string{"token", "authorization", "authentication", "cookie", "userid", "password",
@@ -32,7 +33,7 @@ func IsIgnoredUserAgent(item *api.OutputChannelItem, options *api.TrafficFilteri
 	request := item.Pair.Request.Payload.(api.HTTPPayload).Data.(*http.Request)
 
 	for headerKey, headerValues := range request.Header {
-		if strings.ToLower(headerKey) == "user-agent" {
+		if strings.ToLower(headerKey) == userAgent {
 			for _, userAgent := range options.IgnoredUserAgents {
 				for _, headerValue := range headerValues {
 					if strings.Contains(strings.ToLower(headerValue), strings.ToLower(userAgent)) {
@@ -89,6 +90,10 @@ func filterResponseBody(response *http.Response, options *api.TrafficFilteringOp
 
 func filterHeaders(headers *http.Header) {
 	for key, _ := range *headers {
+		if strings.ToLower(key) == userAgent {
+			continue
+		}
+
 		if strings.ToLower(key) == "cookie" {
 			headers.Del(key)
 		} else if isFieldNameSensitive(key) {

@@ -193,7 +193,7 @@ func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
 	}
 
 	if err := diagnose.DumpMemoryProfile(*memprofile); err != nil {
-		logger.Log.Errorf("Error dumping memory profile %v\n", err)
+		logger.Log.Errorf("Error dumping memory profile %v", err)
 	}
 
 	assembler.waitAndDump()
