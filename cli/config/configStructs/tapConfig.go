@@ -3,7 +3,6 @@ package configStructs
 import (
 	"errors"
 	"fmt"
-	cliConfig "github.com/up9inc/mizu/cli/config"
 	"github.com/up9inc/mizu/cli/uiUtils"
 	"github.com/up9inc/mizu/shared/logger"
 	"regexp"
@@ -84,7 +83,7 @@ func (config *TapConfig) Validate() error {
 	}
 
 	if config.NoPersistentVolumeClaim && !config.DaemonMode {
-		logger.Log.Warningf(uiUtils.Warning, fmt.Sprintf("the --%s tap.no-persistent-volume-claim=true flag has no effect without the --%s flag, the claim will not be created anyway.", cliConfig.SetCommandName, DaemonModeTapName))
+		logger.Log.Warningf(uiUtils.Warning, fmt.Sprintf("the --set tap.no-persistent-volume-claim=true flag has no effect without the --%s flag, the claim will not be created anyway.", DaemonModeTapName))
 	}
 
 	return nil
