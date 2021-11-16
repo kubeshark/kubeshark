@@ -58,7 +58,7 @@ func (d dissecting) Register(extension *api.Extension) {
 }
 
 func (d dissecting) Ping() {
-	log.Printf("pong %s\n", protocol.Name)
+	log.Printf("pong %s", protocol.Name)
 }
 
 func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, superIdentifier *api.SuperIdentifier, emitter api.Emitter, options *api.TrafficFilteringOptions) error {
@@ -143,6 +143,10 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 		}
 	}
 
+	if resDetails["bodySize"].(float64) < 0 {
+		resDetails["bodySize"] = 0
+	}
+
 	if item.Protocol.Version == "2.0" {
 		service = fmt.Sprintf("%s://%s", scheme, authority)
 	} else {
@@ -180,6 +184,9 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 	}
 
 	elapsedTime := item.Pair.Response.CaptureTime.Sub(item.Pair.Request.CaptureTime).Round(time.Millisecond).Milliseconds()
+	if elapsedTime < 0 {
+		elapsedTime = 0
+	}
 	httpPair, _ := json.Marshal(item.Pair)
 	_protocol := protocol
 	_protocol.Version = item.Protocol.Version
@@ -418,7 +425,7 @@ func (d dissecting) Represent(protoIn api.Protocol, request map[string]interface
 
 func (d dissecting) Macros() map[string]string {
 	return map[string]string{
-		`http`:  fmt.Sprintf(`proto.abbr == "%s"`, protocol.Abbreviation),
+		`http`:  fmt.Sprintf(`proto.abbr == "%s" and proto.version == "%s"`, protocol.Abbreviation, protocol.Version),
 		`grpc`:  fmt.Sprintf(`proto.abbr == "%s" and proto.version == "%s"`, protocol.Abbreviation, http2Protocol.Version),
 		`http2`: fmt.Sprintf(`proto.abbr == "%s" and proto.version == "%s"`, protocol.Abbreviation, http2Protocol.Version),
 	}

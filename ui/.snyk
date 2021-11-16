@@ -133,3 +133,6 @@ ignore:
   SNYK-JS-WS-1296835:
     - '*':
         reason: Non given
+  SNYK-JS-JSONSCHEMA-1920922:
+    - '*':
+        reason: Non given

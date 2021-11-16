@@ -39,7 +39,7 @@ func StartMemoryProfiler(envDumpPath string, envTimeInterval string) {
 
 			filename := fmt.Sprintf("%s/%s__mem.prof", dumpPath, t.Format("15_04_05"))
 
-			logger.Log.Infof("Writing memory profile to %s\n", filename)
+			logger.Log.Infof("Writing memory profile to %s", filename)
 
 			f, err := os.Create(filename)
 			if err != nil {

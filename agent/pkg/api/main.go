@@ -76,7 +76,7 @@ func startReadingFiles(workingDir string) {
 		sort.Sort(utils.ByModTime(harFiles))
 
 		if len(harFiles) == 0 {
-			logger.Log.Infof("Waiting for new files\n")
+			logger.Log.Infof("Waiting for new files")
 			time.Sleep(3 * time.Second)
 			continue
 		}
@@ -109,7 +109,7 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 	ctx := context.Background()
 	doc, contractContent, router, err := loadOAS(ctx)
 	if err != nil {
-		logger.Log.Infof("Disabled OAS validation: %s\n", err.Error())
+		logger.Log.Infof("Disabled OAS validation: %s", err.Error())
 		disableOASValidation = true
 	}
 
@@ -154,7 +154,7 @@ func resolveIP(connectionInfo *tapApi.ConnectionInfo) (resolvedSource string, re
 		unresolvedSource := connectionInfo.ClientIP
 		resolvedSource = k8sResolver.Resolve(unresolvedSource)
 		if resolvedSource == "" {
-			logger.Log.Debugf("Cannot find resolved name to source: %s\n", unresolvedSource)
+			logger.Log.Debugf("Cannot find resolved name to source: %s", unresolvedSource)
 			if os.Getenv("SKIP_NOT_RESOLVED_SOURCE") == "1" {
 				return
 			}
@@ -162,7 +162,7 @@ func resolveIP(connectionInfo *tapApi.ConnectionInfo) (resolvedSource string, re
 		unresolvedDestination := fmt.Sprintf("%s:%s", connectionInfo.ServerIP, connectionInfo.ServerPort)
 		resolvedDestination = k8sResolver.Resolve(unresolvedDestination)
 		if resolvedDestination == "" {
-			logger.Log.Debugf("Cannot find resolved name to dest: %s\n", unresolvedDestination)
+			logger.Log.Debugf("Cannot find resolved name to dest: %s", unresolvedDestination)
 			if os.Getenv("SKIP_NOT_RESOLVED_DEST") == "1" {
 				return
 			}

@@ -287,7 +287,7 @@ func (h HTTPPayload) MarshalJSON() ([]byte, error) {
 			RawResponse: &HTTPResponseWrapper{Response: h.Data.(*http.Response)},
 		})
 	default:
-		panic(fmt.Sprintf("HTTP payload cannot be marshaled: %s\n", h.Type))
+		panic(fmt.Sprintf("HTTP payload cannot be marshaled: %s", h.Type))
 	}
 }
 

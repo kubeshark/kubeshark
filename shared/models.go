@@ -2,9 +2,9 @@ package shared
 
 import (
 	"github.com/op/go-logging"
+	"github.com/up9inc/mizu/shared/logger"
 	"github.com/up9inc/mizu/tap/api"
 	"io/ioutil"
-	"log"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -142,14 +142,12 @@ func (r *RulePolicy) validateType() bool {
 	permitedTypes := []string{"json", "header", "slo"}
 	_, found := Find(permitedTypes, r.Type)
 	if !found {
-		log.Printf("Error: %s. ", r.Name)
-		log.Printf("Only json, header and slo types are supported on rule definition. This rule will be ignored\n")
+		logger.Log.Errorf("Only json, header and slo types are supported on rule definition. This rule will be ignored. rule name: %s", r.Name)
 		found = false
 	}
 	if strings.ToLower(r.Type) == "slo" {
 		if r.ResponseTime <= 0 {
-			log.Printf("Error: %s. ", r.Name)
-			log.Printf("When type=slo, the field response-time should be specified and have a value >= 1\n\n")
+			logger.Log.Errorf("When rule type is slo, the field response-time should be specified and have a value >= 1. rule name: %s", r.Name)
 			found = false
 		}
 	}

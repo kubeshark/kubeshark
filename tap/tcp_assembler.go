@@ -78,7 +78,7 @@ func (a *tcpAssembler) processPackets(dumpPacket bool, packets <-chan source.Tcp
 			if *checksum {
 				err := tcp.SetNetworkLayerForChecksum(packet.NetworkLayer())
 				if err != nil {
-					logger.Log.Fatalf("Failed to set network layer for checksum: %s\n", err)
+					logger.Log.Fatalf("Failed to set network layer for checksum: %s", err)
 				}
 			}
 			c := context{

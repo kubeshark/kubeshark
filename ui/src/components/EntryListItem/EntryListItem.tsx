@@ -1,4 +1,4 @@
-import React from "react";
+import React, {useState} from "react";
 import styles from './EntryListItem.module.sass';
 import StatusCode, {getClassification, StatusCodeClassification} from "../UI/StatusCode";
 import Protocol, {ProtocolInterface} from "../UI/Protocol"
@@ -38,12 +38,14 @@ interface Rules {
 interface EntryProps {
     entry: Entry;
     setFocusedEntryId: (id: string) => void;
-    isSelected?: boolean;
     style: object;
     updateQuery: any;
 }
 
-export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, isSelected, style, updateQuery}) => {
+export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, style, updateQuery}) => {
+
+    const [isSelected, setIsSelected] = useState(false);
+
     const classification = getClassification(entry.statusCode)
     const numberOfRules = entry.rules.numberOfRules
     let ingoingIcon;
@@ -119,7 +121,10 @@ export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, isSel
             id={entry.id.toString()}
             className={`${styles.row}
             ${isSelected && !rule && !contractEnabled ? styles.rowSelected : additionalRulesProperties}`}
-            onClick={() => setFocusedEntryId(entry.id.toString())}
+            onClick={() => {
+                setIsSelected(!isSelected);
+                setFocusedEntryId(entry.id.toString());
+            }}
             style={{
                 border: isSelected ? `1px ${entry.protocol.backgroundColor} solid` : "1px transparent solid",
                 position: "absolute",
