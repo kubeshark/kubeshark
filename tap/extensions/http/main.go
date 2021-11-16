@@ -143,6 +143,10 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 		}
 	}
 
+	if resDetails["bodySize"].(float64) < 0 {
+		resDetails["bodySize"] = 0
+	}
+
 	if item.Protocol.Version == "2.0" {
 		service = fmt.Sprintf("%s://%s", scheme, authority)
 	} else {
@@ -180,6 +184,9 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 	}
 
 	elapsedTime := item.Pair.Response.CaptureTime.Sub(item.Pair.Request.CaptureTime).Round(time.Millisecond).Milliseconds()
+	if elapsedTime < 0 {
+		elapsedTime = 0
+	}
 	httpPair, _ := json.Marshal(item.Pair)
 	_protocol := protocol
 	_protocol.Version = item.Protocol.Version

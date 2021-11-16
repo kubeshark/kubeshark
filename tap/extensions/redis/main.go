@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/up9inc/mizu/tap/api"
 )
@@ -82,6 +83,10 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 	}
 
 	request["url"] = summary
+	elapsedTime := item.Pair.Response.CaptureTime.Sub(item.Pair.Request.CaptureTime).Round(time.Millisecond).Milliseconds()
+	if elapsedTime < 0 {
+		elapsedTime = 0
+	}
 	return &api.MizuEntry{
 		Protocol: protocol,
 		Source: &api.TCP{
@@ -104,7 +109,7 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 		Service:             service,
 		Timestamp:           item.Timestamp,
 		StartTime:           item.Pair.Request.CaptureTime,
-		ElapsedTime:         0,
+		ElapsedTime:         elapsedTime,
 		Summary:             summary,
 		ResolvedSource:      resolvedSource,
 		ResolvedDestination: resolvedDestination,
