@@ -441,7 +441,7 @@ func dumpLogsIfNeeded(ctx context.Context, kubernetesProvider *kubernetes.Provid
 }
 
 func cleanUpMizuResources(ctx context.Context, cancel context.CancelFunc, kubernetesProvider *kubernetes.Provider) {
-	logger.Log.Infof("Removing mizu resources")
+	logger.Log.Infof("\nRemoving mizu resources")
 
 	var leftoverResources []string
 
