@@ -93,13 +93,13 @@ func (tapperSyncer *MizuTapperSyncer) watchPodsForTapping() {
 
 	for {
 		select {
-		case event, ok := <-added:
+		case wEvent, ok := <-added:
 			if !ok {
 				added = nil
 				continue
 			}
 
-			pod, err := podWatchHelper.GetPodFromEvent(event)
+			pod, err := wEvent.ToPod()
 			if err != nil {
 				tapperSyncer.handleErrorInWatchLoop(err, restartTappersDebouncer)
 				continue
@@ -108,13 +108,13 @@ func (tapperSyncer *MizuTapperSyncer) watchPodsForTapping() {
 
 			logger.Log.Debugf("Added matching pod %s, ns: %s", pod.Name, pod.Namespace)
 			restartTappersDebouncer.SetOn()
-		case event, ok := <-removed:
+		case wEvent, ok := <-removed:
 			if !ok {
 				removed = nil
 				continue
 			}
 
-			pod, err := podWatchHelper.GetPodFromEvent(event)
+			pod, err := wEvent.ToPod()
 			if err != nil {
 				tapperSyncer.handleErrorInWatchLoop(err, restartTappersDebouncer)
 				continue
@@ -122,13 +122,13 @@ func (tapperSyncer *MizuTapperSyncer) watchPodsForTapping() {
 
 			logger.Log.Debugf("Removed matching pod %s, ns: %s", pod.Name, pod.Namespace)
 			restartTappersDebouncer.SetOn()
-		case event, ok := <-modified:
+		case wEvent, ok := <-modified:
 			if !ok {
 				modified = nil
 				continue
 			}
 
-			pod, err := podWatchHelper.GetPodFromEvent(event)
+			pod, err := wEvent.ToPod()
 			if err != nil {
 				tapperSyncer.handleErrorInWatchLoop(err, restartTappersDebouncer)
 				continue

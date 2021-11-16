@@ -591,13 +591,13 @@ func watchApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 			logger.Log.Infof("%s removed", kubernetes.ApiServerPodName)
 			cancel()
 			return
-		case event, ok := <-modified:
+		case wEvent, ok := <-modified:
 			if !ok {
 				modified = nil
 				continue
 			}
 
-			modifiedPod, err := podWatchHelper.GetPodFromEvent(event)
+			modifiedPod, err := wEvent.ToPod()
 			if err != nil {
 				logger.Log.Errorf(uiUtils.Error, err)
 				cancel()
@@ -668,26 +668,26 @@ func watchTapperPod(ctx context.Context, kubernetesProvider *kubernetes.Provider
 	var prevPodPhase core.PodPhase
 	for {
 		select {
-		case event, ok := <-added:
+		case wEvent, ok := <-added:
 			if !ok {
 				added = nil
 				continue
 			}
 
-			addedPod, err := podWatchHelper.GetPodFromEvent(event)
+			addedPod, err := wEvent.ToPod()
 			if err != nil {
 				logger.Log.Errorf(uiUtils.Error, err)
 				cancel()
 			}
 
 			logger.Log.Debugf("Tapper is created [%s]", addedPod.Name)
-		case event, ok := <-removed:
+		case wEvent, ok := <-removed:
 			if !ok {
 				removed = nil
 				continue
 			}
 
-			removedPod, err := podWatchHelper.GetPodFromEvent(event)
+			removedPod, err := wEvent.ToPod()
 			if err != nil {
 				logger.Log.Errorf(uiUtils.Error, err)
 				cancel()
@@ -695,13 +695,13 @@ func watchTapperPod(ctx context.Context, kubernetesProvider *kubernetes.Provider
 
 
 			logger.Log.Debugf("Tapper is removed [%s]", removedPod.Name)
-		case event, ok := <-modified:
+		case wEvent, ok := <-modified:
 			if !ok {
 				modified = nil
 				continue
 			}
 
-			modifiedPod, err := podWatchHelper.GetPodFromEvent(event)
+			modifiedPod, err := wEvent.ToPod()
 			if err != nil {
 				logger.Log.Errorf(uiUtils.Error, err)
 				cancel()

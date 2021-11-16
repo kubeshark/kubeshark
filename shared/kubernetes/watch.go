@@ -14,17 +14,17 @@ import (
 )
 
 type EventFilterer interface {
-	Filter(*watch.Event) (bool, error)
+	Filter(*WatchEvent) (bool, error)
 }
 
 type WatchCreator interface {
 	NewWatcher(ctx context.Context, namespace string) (watch.Interface, error)
 }
 
-func FilteredWatch(ctx context.Context, watcherCreator WatchCreator, targetNamespaces []string, filterer EventFilterer) (chan *watch.Event, chan *watch.Event, chan *watch.Event, chan error) {
-	addedChan := make(chan *watch.Event)
-	modifiedChan := make(chan *watch.Event)
-	removedChan := make(chan *watch.Event)
+func FilteredWatch(ctx context.Context, watcherCreator WatchCreator, targetNamespaces []string, filterer EventFilterer) (chan *WatchEvent, chan *WatchEvent, chan *WatchEvent, chan error) {
+	addedChan := make(chan *WatchEvent)
+	modifiedChan := make(chan *WatchEvent)
+	removedChan := make(chan *WatchEvent)
 	errorChan := make(chan error)
 
 	var wg sync.WaitGroup
@@ -83,7 +83,7 @@ func FilteredWatch(ctx context.Context, watcherCreator WatchCreator, targetNames
 	return addedChan, modifiedChan, removedChan, errorChan
 }
 
-func startWatchLoop(ctx context.Context, watcher watch.Interface, filterer EventFilterer, addedChan chan *watch.Event, modifiedChan chan *watch.Event, removedChan chan *watch.Event) error {
+func startWatchLoop(ctx context.Context, watcher watch.Interface, filterer EventFilterer, addedChan chan *WatchEvent, modifiedChan chan *WatchEvent, removedChan chan *WatchEvent) error {
 	resultChan := watcher.ResultChan()
 	for {
 		select {
@@ -92,23 +92,25 @@ func startWatchLoop(ctx context.Context, watcher watch.Interface, filterer Event
 				return nil
 			}
 
-			if e.Type == watch.Error {
-				return apierrors.FromObject(e.Object)
+			wEvent := WatchEvent(e)
+
+			if wEvent.Type == watch.Error {
+				return apierrors.FromObject(wEvent.Object)
 			}
 
-			if pass, err := filterer.Filter(&e); err != nil {
+			if pass, err := filterer.Filter(&wEvent); err != nil {
 				return err
 			} else if !pass {
 				continue
 			}
 
-			switch e.Type {
+			switch wEvent.Type {
 			case watch.Added:
-				addedChan <- &e
+				addedChan <- &wEvent
 			case watch.Modified:
-				modifiedChan <- &e
+				modifiedChan <- &wEvent
 			case watch.Deleted:
-				removedChan <- &e
+				removedChan <- &wEvent
 			}
 		case <-ctx.Done():
 			return nil
