@@ -15,25 +15,24 @@ type PacketSourceManager struct {
 }
 
 func NewPacketSourceManager(procfs string, pids string, filename string, interfaceName string,
-	mtls bool, clusterIps []string, behaviour TcpPacketSourceBehaviour) (*PacketSourceManager, error) {
-
-	sources, err := addHostSource(filename, interfaceName, behaviour)
+	istio bool, clusterIps []string, behaviour TcpPacketSourceBehaviour) (*PacketSourceManager, error) {
+	sources := make([]*tcpPacketSource, 0)
+	sources, err := createHostSource(sources, filename, interfaceName, behaviour)
 
 	if err != nil {
 		return nil, err
 	}
 
-	sources = addSourcesFromPids(sources, procfs, pids, interfaceName, behaviour)
-	sources = addSourcesFromEnvoy(sources, mtls, procfs, clusterIps, interfaceName, behaviour)
+	sources = createSourcesFromPids(sources, procfs, pids, interfaceName, behaviour)
+	sources = createSourcesFromEnvoy(sources, istio, procfs, clusterIps, interfaceName, behaviour)
 
 	return &PacketSourceManager{
 		sources: sources,
 	}, nil
 }
 
-func addHostSource(filename string, interfaceName string,
+func createHostSource(sources []*tcpPacketSource, filename string, interfaceName string,
 	behaviour TcpPacketSourceBehaviour) ([]*tcpPacketSource, error) {
-	sources := make([]*tcpPacketSource, 0)
 	hostSource, err := newHostPacketSource(filename, interfaceName, behaviour)
 
 	if err != nil {
@@ -43,7 +42,7 @@ func addHostSource(filename string, interfaceName string,
 	return append(sources, hostSource), nil
 }
 
-func addSourcesFromPids(sources []*tcpPacketSource, procfs string, pids string,
+func createSourcesFromPids(sources []*tcpPacketSource, procfs string, pids string,
 	interfaceName string, behaviour TcpPacketSourceBehaviour) []*tcpPacketSource {
 	if pids == "" {
 		return sources
@@ -54,9 +53,9 @@ func addSourcesFromPids(sources []*tcpPacketSource, procfs string, pids string,
 	return sources
 }
 
-func addSourcesFromEnvoy(sources []*tcpPacketSource, mtls bool, procfs string, clusterIps []string,
+func createSourcesFromEnvoy(sources []*tcpPacketSource, istio bool, procfs string, clusterIps []string,
 	interfaceName string, behaviour TcpPacketSourceBehaviour) []*tcpPacketSource {
-	if !mtls {
+	if !istio {
 		return sources
 	}
 

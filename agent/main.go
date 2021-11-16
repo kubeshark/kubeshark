@@ -443,6 +443,7 @@ func startMizuTapperSyncer(ctx context.Context) (*kubernetes.MizuTapperSyncer, e
 		IgnoredUserAgents:        config.Config.IgnoredUserAgents,
 		MizuApiFilteringOptions:  config.Config.MizuApiFilteringOptions,
 		MizuServiceAccountExists: true, //assume service account exists since daemon mode will not function without it anyway
+		Istio:                    config.Config.Istio,
 	})
 
 	if err != nil {

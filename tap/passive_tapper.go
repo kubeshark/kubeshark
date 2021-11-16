@@ -50,7 +50,7 @@ var tstype = flag.String("timestamp_type", "", "Type of timestamps to use")
 var promisc = flag.Bool("promisc", true, "Set promiscuous mode")
 var staleTimeoutSeconds = flag.Int("staletimout", 120, "Max time in seconds to keep connections which don't transmit data")
 var pids = flag.String("pids", "", "A comma separated list of PIDs to capture their network namespaces")
-var mtls = flag.Bool("mtls", false, "Record decrypted traffic if the cluster configured with mtls (istio e.g.)")
+var istio = flag.Bool("istio", false, "Record decrypted traffic if the cluster configured with istio and mtls")
 
 var memprofile = flag.String("memprofile", "", "Write memory profile")
 
@@ -150,7 +150,7 @@ func initializePacketSources(opts *TapOpts) (*source.PacketSourceManager, error)
 		BpfFilter:   bpffilter,
 	}
 
-	return source.NewPacketSourceManager(*procfs, *pids, *fname, *iface, *mtls, opts.FilterAuthorities, behaviour)
+	return source.NewPacketSourceManager(*procfs, *pids, *fname, *iface, *istio, opts.FilterAuthorities, behaviour)
 }
 
 func startPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem) {
