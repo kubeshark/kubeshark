@@ -119,6 +119,9 @@ func RunMizuTap() {
 	logger.Log.Infof("Tapping pods in %s", namespacesStr)
 
 	if config.Config.Tap.DryRun {
+		if err := printTappedPodsPreview(ctx, kubernetesProvider, targetNamespaces); err != nil {
+			logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error listing pods: %v", errormessage.FormatError(err)))
+		}
 		return
 	}
 
@@ -134,7 +137,7 @@ func RunMizuTap() {
 		return
 	}
 	if config.Config.Tap.DaemonMode {
-		if err := handleDaemonModePostCreation(cancel, kubernetesProvider); err != nil {
+		if err := handleDaemonModePostCreation(ctx, cancel, kubernetesProvider, targetNamespaces); err != nil {
 			defer finishMizuExecution(kubernetesProvider, apiProvider)
 			cancel()
 		} else {
@@ -156,28 +159,38 @@ func RunMizuTap() {
 	}
 }
 
-func handleDaemonModePostCreation(cancel context.CancelFunc, kubernetesProvider *kubernetes.Provider) error {
+func handleDaemonModePostCreation(ctx context.Context, cancel context.CancelFunc, kubernetesProvider *kubernetes.Provider, namespaces []string) error {
+	if err := printTappedPodsPreview(ctx, kubernetesProvider, namespaces); err != nil {
+		return err
+	}
+
 	apiProvider := apiserver.NewProvider(GetApiServerUrl(), 90, 1*time.Second)
 
 	if err := waitForDaemonModeToBeReady(cancel, kubernetesProvider, apiProvider); err != nil {
-		return err
-	}
-	if err := printDaemonModeTappedPods(apiProvider); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func printDaemonModeTappedPods(apiProvider *apiserver.Provider) error {
-	if healthStatus, err := apiProvider.GetHealthStatus(); err != nil {
+/*
+this function is a bit problematic as it might be detached from the actual pods the mizu api server will tap.
+The alternative would be to wait for api server to be ready and then query it for the pods it listens to, this has
+the arguably worse drawback of taking a relatively very long time before the user sees which pods are targeted, if any.
+*/
+func printTappedPodsPreview(ctx context.Context, kubernetesProvider *kubernetes.Provider, namespaces []string) error {
+	if matchingPods, err := kubernetesProvider.ListAllRunningPodsMatchingRegex(ctx, config.Config.Tap.PodRegex(), namespaces); err != nil {
 		return err
 	} else {
-		for _, tappedPod := range healthStatus.TapStatus.Pods {
+		if len(matchingPods) == 0 {
+			printNoPodsFoundSuggestion(namespaces)
+		}
+		logger.Log.Info("Pods that match regex at this instant:")
+		for _, tappedPod := range matchingPods {
 			logger.Log.Infof(uiUtils.Green, fmt.Sprintf("+%s", tappedPod.Name))
 		}
+		return nil
 	}
-	return nil
 }
 
 func waitForDaemonModeToBeReady(cancel context.CancelFunc, kubernetesProvider *kubernetes.Provider, apiProvider *apiserver.Provider) error {
@@ -216,11 +229,7 @@ func startTapperSyncer(ctx context.Context, cancel context.CancelFunc, provider 
 	}
 
 	if len(tapperSyncer.CurrentlyTappedPods) == 0 {
-		var suggestionStr string
-		if !shared.Contains(targetNamespaces, kubernetes.K8sAllNamespaces) {
-			suggestionStr = ". Select a different namespace with -n or tap all namespaces with -A"
-		}
-		logger.Log.Warningf(uiUtils.Warning, fmt.Sprintf("Did not find any pods matching the regex argument%s", suggestionStr))
+		printNoPodsFoundSuggestion(targetNamespaces)
 	}
 
 	go func() {
@@ -251,6 +260,14 @@ func startTapperSyncer(ctx context.Context, cancel context.CancelFunc, provider 
 	state.tapperSyncer = tapperSyncer
 
 	return nil
+}
+
+func printNoPodsFoundSuggestion(targetNamespaces []string) {
+	var suggestionStr string
+	if !shared.Contains(targetNamespaces, kubernetes.K8sAllNamespaces) {
+		suggestionStr = ". You can also try selecting a different namespace with -n or tap all namespaces with -A"
+	}
+	logger.Log.Warningf(uiUtils.Warning, fmt.Sprintf("Did not find any currently running pods that match the regex argument, mizu will automatically tap matching pods if any are created later%s", suggestionStr))
 }
 
 func getErrorDisplayTextForK8sTapManagerError(err kubernetes.K8sTapManagerError) string {
@@ -360,22 +377,24 @@ func createMizuApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.
 }
 
 func createMizuApiServerDeployment(ctx context.Context, kubernetesProvider *kubernetes.Provider, opts *kubernetes.ApiServerOptions) error {
-	isDefaultStorageClassAvailable, err := kubernetesProvider.IsDefaultStorageProviderAvailable(ctx)
 	volumeClaimCreated := false
-	if err != nil {
-		return err
-	}
-	if isDefaultStorageClassAvailable {
-		if _, err = kubernetesProvider.CreatePersistentVolumeClaim(ctx, config.Config.MizuResourcesNamespace, kubernetes.PersistentVolumeClaimName, config.Config.Tap.MaxEntriesDBSizeBytes()+mizu.DaemonModePersistentVolumeSizeBufferBytes); err != nil {
-			logger.Log.Warningf(uiUtils.Yellow, "An error has occured while creating a persistent volume claim for mizu, this will mean that mizu's data will be lost on pod restart")
-			logger.Log.Debugf("error creating persistent volume claim: %v", err)
-		} else {
-			volumeClaimCreated = true
+	if !config.Config.Tap.NoPersistentVolumeClaim {
+		isDefaultStorageClassAvailable, err := kubernetesProvider.IsDefaultStorageProviderAvailable(ctx)
+		if err != nil {
+			return err
 		}
-	} else {
-		logger.Log.Warningf(uiUtils.Yellow, "Could not find default volume provider in this cluster, this will mean that mizu's data will be lost on pod restart")
-	}
+		if isDefaultStorageClassAvailable {
+			if _, err = kubernetesProvider.CreatePersistentVolumeClaim(ctx, config.Config.MizuResourcesNamespace, kubernetes.PersistentVolumeClaimName, config.Config.Tap.MaxEntriesDBSizeBytes()+mizu.DaemonModePersistentVolumeSizeBufferBytes); err != nil {
+				logger.Log.Warningf(uiUtils.Yellow, "An error has occured while creating a persistent volume claim for mizu, this will mean that mizu's data will be lost on pod restart")
+				logger.Log.Debugf("error creating persistent volume claim: %v", err)
+			} else {
+				volumeClaimCreated = true
+			}
+		} else {
+			logger.Log.Warningf(uiUtils.Yellow, "Could not find default volume provider in this cluster, this will mean that mizu's data will be lost on pod restart")
+		}
 
+	}
 	pod, err := kubernetesProvider.GetMizuApiServerPodObject(opts, volumeClaimCreated, kubernetes.PersistentVolumeClaimName)
 	if err != nil {
 		return err
