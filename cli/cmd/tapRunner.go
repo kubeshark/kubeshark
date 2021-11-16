@@ -119,7 +119,7 @@ func RunMizuTap() {
 	logger.Log.Infof("Tapping pods in %s", namespacesStr)
 
 	if config.Config.Tap.DryRun {
-		if err := printTappedPodsPreview(ctx, kubernetesProvider); err != nil {
+		if err := printTappedPodsPreview(ctx, kubernetesProvider, targetNamespaces); err != nil {
 			logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error listing pods: %v", errormessage.FormatError(err)))
 		}
 		return
@@ -137,7 +137,7 @@ func RunMizuTap() {
 		return
 	}
 	if config.Config.Tap.DaemonMode {
-		if err := handleDaemonModePostCreation(ctx, cancel, kubernetesProvider); err != nil {
+		if err := handleDaemonModePostCreation(ctx, cancel, kubernetesProvider, targetNamespaces); err != nil {
 			defer finishMizuExecution(kubernetesProvider, apiProvider)
 			cancel()
 		} else {
@@ -159,8 +159,8 @@ func RunMizuTap() {
 	}
 }
 
-func handleDaemonModePostCreation(ctx context.Context, cancel context.CancelFunc, kubernetesProvider *kubernetes.Provider) error {
-	if err := printTappedPodsPreview(ctx, kubernetesProvider); err != nil {
+func handleDaemonModePostCreation(ctx context.Context, cancel context.CancelFunc, kubernetesProvider *kubernetes.Provider, namespaces []string) error {
+	if err := printTappedPodsPreview(ctx, kubernetesProvider, namespaces); err != nil {
 		return err
 	}
 
@@ -178,8 +178,7 @@ this function is a bit problematic as it might be detached from the actual pods 
 The alternative would be to wait for api server to be ready and then query it for the pods it listens to, this has
 the arguably worse drawback of taking a relatively very long time before the user sees which pods are targeted, if any.
 */
-func printTappedPodsPreview(ctx context.Context, kubernetesProvider *kubernetes.Provider) error {
-	namespaces := getNamespaces(kubernetesProvider)
+func printTappedPodsPreview(ctx context.Context, kubernetesProvider *kubernetes.Provider, namespaces []string) error {
 	if matchingPods, err := kubernetesProvider.ListAllRunningPodsMatchingRegex(ctx, config.Config.Tap.PodRegex(), namespaces); err != nil {
 		return err
 	} else {
