@@ -102,6 +102,7 @@ func (tapperSyncer *MizuTapperSyncer) watchPodsForTapping() {
 			pod, err := podWatchHelper.GetPodFromEvent(event)
 			if err != nil {
 				tapperSyncer.handleErrorInWatchLoop(err, restartTappersDebouncer)
+				continue
 			}
 
 
@@ -116,6 +117,7 @@ func (tapperSyncer *MizuTapperSyncer) watchPodsForTapping() {
 			pod, err := podWatchHelper.GetPodFromEvent(event)
 			if err != nil {
 				tapperSyncer.handleErrorInWatchLoop(err, restartTappersDebouncer)
+				continue
 			}
 
 			logger.Log.Debugf("Removed matching pod %s, ns: %s", pod.Name, pod.Namespace)
@@ -129,6 +131,7 @@ func (tapperSyncer *MizuTapperSyncer) watchPodsForTapping() {
 			pod, err := podWatchHelper.GetPodFromEvent(event)
 			if err != nil {
 				tapperSyncer.handleErrorInWatchLoop(err, restartTappersDebouncer)
+				continue
 			}
 
 
@@ -149,6 +152,7 @@ func (tapperSyncer *MizuTapperSyncer) watchPodsForTapping() {
 			}
 
 			tapperSyncer.handleErrorInWatchLoop(err, restartTappersDebouncer)
+			continue
 
 		case <-tapperSyncer.context.Done():
 			logger.Log.Debugf("Watching pods loop, context done, stopping `restart tappers debouncer`")
