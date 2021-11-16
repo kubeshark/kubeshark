@@ -459,7 +459,7 @@ func startMizuTapperSyncer(ctx context.Context) (*kubernetes.MizuTapperSyncer, e
 					return
 				}
 				logger.Log.Fatalf("fatal tap syncer error: %v", syncerErr)
-			case _, ok := <-tapperSyncer.TapPodChangesOut:
+			case tapPodChangeEvent, ok := <-tapperSyncer.TapPodChangesOut:
 				if !ok {
 					logger.Log.Debug("mizuTapperSyncer pod changes channel closed, ending listener loop")
 					return
@@ -472,6 +472,7 @@ func startMizuTapperSyncer(ctx context.Context) (*kubernetes.MizuTapperSyncer, e
 				}
 				api.BroadcastToBrowserClients(serializedTapStatus)
 				providers.TapStatus.Pods = tapStatus.Pods
+				providers.ExpectedTapperAmount = tapPodChangeEvent.ExpectedTapperAmount
 			case <-ctx.Done():
 				logger.Log.Debug("mizuTapperSyncer event listener loop exiting due to context done")
 				return
