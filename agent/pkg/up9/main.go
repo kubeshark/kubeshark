@@ -112,14 +112,14 @@ func GetAnalyzeInfo() *shared.AnalyzeStatus {
 }
 
 func SyncEntries(syncEntriesConfig *shared.SyncEntriesConfig) error {
-	logger.Log.Infof("Sync entries - started\n")
+	logger.Log.Infof("Sync entries - started")
 
 	var (
 		token, model string
 		guestMode    bool
 	)
 	if syncEntriesConfig.Token == "" {
-		logger.Log.Infof("Sync entries - creating anonymous token. env %s\n", syncEntriesConfig.Env)
+		logger.Log.Infof("Sync entries - creating anonymous token. env %s", syncEntriesConfig.Env)
 		guestToken, err := createAnonymousToken(syncEntriesConfig.Env)
 		if err != nil {
 			return fmt.Errorf("failed creating anonymous token, err: %v", err)
@@ -133,7 +133,7 @@ func SyncEntries(syncEntriesConfig *shared.SyncEntriesConfig) error {
 		model = syncEntriesConfig.Workspace
 		guestMode = false
 
-		logger.Log.Infof("Sync entries - upserting model. env %s, model %s\n", syncEntriesConfig.Env, model)
+		logger.Log.Infof("Sync entries - upserting model. env %s, model %s", syncEntriesConfig.Env, model)
 		if err := upsertModel(token, model, syncEntriesConfig.Env); err != nil {
 			return fmt.Errorf("failed upserting model, err: %v", err)
 		}
@@ -144,7 +144,7 @@ func SyncEntries(syncEntriesConfig *shared.SyncEntriesConfig) error {
 		return fmt.Errorf("invalid model name, model name: %s", model)
 	}
 
-	logger.Log.Infof("Sync entries - syncing. token: %s, model: %s, guest mode: %v\n", token, model, guestMode)
+	logger.Log.Infof("Sync entries - syncing. token: %s, model: %s, guest mode: %v", token, model, guestMode)
 	go syncEntriesImpl(token, model, syncEntriesConfig.Env, syncEntriesConfig.UploadIntervalSec, guestMode)
 
 	return nil
@@ -209,7 +209,7 @@ func syncEntriesImpl(token string, model string, envPrefix string, uploadInterva
 	// "http or grpc" filter indicates that we're only interested in HTTP and gRPC entries
 	query := "http or grpc"
 
-	logger.Log.Infof("Getting entries from the database\n")
+	logger.Log.Infof("Getting entries from the database")
 
 	var connection *basenine.Connection
 	var err error

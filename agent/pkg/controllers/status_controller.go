@@ -37,7 +37,7 @@ func PostTappedPods(c *gin.Context) {
 	providers.TapStatus.Pods = tapStatus.Pods
 	message := shared.CreateWebSocketStatusMessage(*tapStatus)
 	if jsonBytes, err := json.Marshal(message); err != nil {
-		logger.Log.Errorf("Could not Marshal message %v\n", err)
+		logger.Log.Errorf("Could not Marshal message %v", err)
 	} else {
 		api.BroadcastToBrowserClients(jsonBytes)
 	}

@@ -207,7 +207,7 @@ func loadExtensions() {
 	extensionsMap = make(map[string]*tapApi.Extension)
 	for i, file := range files {
 		filename := file.Name()
-		logger.Log.Infof("Loading extension: %s\n", filename)
+		logger.Log.Infof("Loading extension: %s", filename)
 		extension := &tapApi.Extension{
 			Path: path.Join(extensionsDir, filename),
 		}
@@ -219,7 +219,7 @@ func loadExtensions() {
 		var ok bool
 		dissector, ok = symDissector.(tapApi.Dissector)
 		if err != nil || !ok {
-			panic(fmt.Sprintf("Failed to load the extension: %s\n", extension.Path))
+			panic(fmt.Sprintf("Failed to load the extension: %s", extension.Path))
 		}
 		dissector.Register(extension)
 		extension.Dissector = dissector
@@ -232,7 +232,7 @@ func loadExtensions() {
 	})
 
 	for _, extension := range extensions {
-		logger.Log.Infof("Extension Properties: %+v\n", extension)
+		logger.Log.Infof("Extension Properties: %+v", extension)
 	}
 
 	controllers.InitExtensionsMap(extensionsMap)
