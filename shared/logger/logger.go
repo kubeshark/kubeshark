@@ -9,7 +9,7 @@ import (
 var Log = logging.MustGetLogger("mizu")
 
 var format = logging.MustStringFormatter(
-	`%{time} %{level:.5s} ▶ %{pid} %{shortfile} %{shortfunc} ▶ %{message}`,
+	`%{time} %{level:.5s} ▶ %{message} ▶ %{pid} %{shortfile} %{shortfunc}`,
 )
 
 func InitLogger(logPath string) {
