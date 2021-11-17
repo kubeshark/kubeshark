@@ -4,9 +4,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/up9inc/mizu/cli/apiserver"
+	"github.com/up9inc/mizu/cli/mizu"
+	"github.com/up9inc/mizu/cli/mizu/fsUtils"
+	"github.com/up9inc/mizu/cli/telemetry"
 	"os"
 	"os/signal"
+	"path"
 	"syscall"
+	"time"
 
 	"github.com/up9inc/mizu/cli/config"
 	"github.com/up9inc/mizu/cli/config/configStructs"
@@ -62,5 +68,44 @@ func handleKubernetesProviderError(err error) {
 		logger.Log.Errorf("cannot establish http-proxy connection to the Kubernetes cluster. If you’re using Lens or similar tool, please run mizu with regular kubectl config using --%v %v=$HOME/.kube/config flag", config.SetCommandName, config.KubeConfigPathConfigName)
 	} else {
 		logger.Log.Error(err)
+	}
+}
+
+func finishMizuExecution(kubernetesProvider *kubernetes.Provider, apiProvider *apiserver.Provider) {
+	telemetry.ReportAPICalls(apiProvider)
+	removalCtx, cancel := context.WithTimeout(context.Background(), cleanupTimeout)
+	defer cancel()
+	dumpLogsIfNeeded(removalCtx, kubernetesProvider)
+	cleanUpMizuResources(removalCtx, cancel, kubernetesProvider)
+}
+
+func dumpLogsIfNeeded(ctx context.Context, kubernetesProvider *kubernetes.Provider) {
+	if !config.Config.DumpLogs {
+		return
+	}
+	mizuDir := mizu.GetMizuFolderPath()
+	filePath := path.Join(mizuDir, fmt.Sprintf("mizu_logs_%s.zip", time.Now().Format("2006_01_02__15_04_05")))
+	if err := fsUtils.DumpLogs(ctx, kubernetesProvider, filePath); err != nil {
+		logger.Log.Errorf("Failed dump logs %v", err)
+	}
+}
+
+func cleanUpMizuResources(ctx context.Context, cancel context.CancelFunc, kubernetesProvider *kubernetes.Provider) {
+	logger.Log.Infof("\nRemoving mizu resources")
+
+	var leftoverResources []string
+
+	if config.Config.IsNsRestrictedMode() {
+		leftoverResources = cleanUpRestrictedMode(ctx, kubernetesProvider)
+	} else {
+		leftoverResources = cleanUpNonRestrictedMode(ctx, cancel, kubernetesProvider)
+	}
+
+	if len(leftoverResources) > 0 {
+		errMsg := fmt.Sprintf("Failed to remove the following resources, for more info check logs at %s:", fsUtils.GetLogFilePath())
+		for _, resource := range leftoverResources {
+			errMsg += "\n- " + resource
+		}
+		logger.Log.Errorf(uiUtils.Error, errMsg)
 	}
 }

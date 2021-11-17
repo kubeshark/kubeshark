@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"path"
 	"regexp"
 	"strings"
 	"time"
@@ -25,7 +24,6 @@ import (
 
 	"github.com/up9inc/mizu/cli/mizu"
 	"github.com/up9inc/mizu/cli/mizu/fsUtils"
-	"github.com/up9inc/mizu/cli/telemetry"
 	"github.com/up9inc/mizu/cli/uiUtils"
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/kubernetes"
@@ -185,7 +183,7 @@ func printTappedPodsPreview(ctx context.Context, kubernetesProvider *kubernetes.
 		if len(matchingPods) == 0 {
 			printNoPodsFoundSuggestion(namespaces)
 		}
-		logger.Log.Info("Pods that match regex at this instant:")
+		logger.Log.Info("Pods that match the provided criteria at this instant:")
 		for _, tappedPod := range matchingPods {
 			logger.Log.Infof(uiUtils.Green, fmt.Sprintf("+%s", tappedPod.Name))
 		}
@@ -437,45 +435,6 @@ func getSyncEntriesConfig() *shared.SyncEntriesConfig {
 		Env:               config.Config.Auth.EnvName,
 		Workspace:         config.Config.Tap.Workspace,
 		UploadIntervalSec: config.Config.Tap.UploadIntervalSec,
-	}
-}
-
-func finishMizuExecution(kubernetesProvider *kubernetes.Provider, apiProvider *apiserver.Provider) {
-	telemetry.ReportAPICalls(apiProvider)
-	removalCtx, cancel := context.WithTimeout(context.Background(), cleanupTimeout)
-	defer cancel()
-	dumpLogsIfNeeded(removalCtx, kubernetesProvider)
-	cleanUpMizuResources(removalCtx, cancel, kubernetesProvider)
-}
-
-func dumpLogsIfNeeded(ctx context.Context, kubernetesProvider *kubernetes.Provider) {
-	if !config.Config.DumpLogs {
-		return
-	}
-	mizuDir := mizu.GetMizuFolderPath()
-	filePath := path.Join(mizuDir, fmt.Sprintf("mizu_logs_%s.zip", time.Now().Format("2006_01_02__15_04_05")))
-	if err := fsUtils.DumpLogs(ctx, kubernetesProvider, filePath); err != nil {
-		logger.Log.Errorf("Failed dump logs %v", err)
-	}
-}
-
-func cleanUpMizuResources(ctx context.Context, cancel context.CancelFunc, kubernetesProvider *kubernetes.Provider) {
-	logger.Log.Infof("\nRemoving mizu resources")
-
-	var leftoverResources []string
-
-	if config.Config.IsNsRestrictedMode() {
-		leftoverResources = cleanUpRestrictedMode(ctx, kubernetesProvider)
-	} else {
-		leftoverResources = cleanUpNonRestrictedMode(ctx, cancel, kubernetesProvider)
-	}
-
-	if len(leftoverResources) > 0 {
-		errMsg := fmt.Sprintf("Failed to remove the following resources, for more info check logs at %s:", fsUtils.GetLogFilePath())
-		for _, resource := range leftoverResources {
-			errMsg += "\n- " + resource
-		}
-		logger.Log.Errorf(uiUtils.Error, errMsg)
 	}
 }
 
