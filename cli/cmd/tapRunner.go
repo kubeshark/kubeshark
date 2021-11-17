@@ -400,7 +400,7 @@ func TryToCreatePersistentVolumeClaim(ctx context.Context, kubernetesProvider *k
 		logger.Log.Debugf("error checking if default storage class exists: %v", err)
 		return false
 	} else if !isDefaultStorageClassAvailable {
-		logger.Log.Warningf(uiUtils.Yellow, "Could not find default storage provider in this cluster,, this means mizu data will be lost on mizu-api-server pod restart")
+		logger.Log.Warningf(uiUtils.Yellow, "Could not find default storage provider in this cluster, this means mizu data will be lost on mizu-api-server pod restart")
 		return false
 	}
 
