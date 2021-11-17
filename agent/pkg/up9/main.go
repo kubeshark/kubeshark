@@ -227,7 +227,7 @@ func syncEntriesImpl(token string, model string, envPrefix string, uploadInterva
 		connection.Close()
 	}()
 
-	lastTimeSynced := time.Now().Add(time.Duration(-uploadIntervalSec) * time.Second)
+	lastTimeSynced := time.Time{}
 
 	batch := make([]har.Entry, 0)
 
