@@ -24,6 +24,8 @@ Further info is available at https://github.com/up9inc/mizu`,
 			logger.Log.Fatal(err)
 		}
 
+		logger.SetLogLevel(config.Config.LogLevel())
+
 		return nil
 	},
 }

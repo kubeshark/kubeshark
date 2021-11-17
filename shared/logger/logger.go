@@ -6,7 +6,8 @@ import (
 	"github.com/op/go-logging"
 )
 
-var Log = logging.MustGetLogger("mizu")
+var moduleName = "mizu"
+var Log = logging.MustGetLogger(moduleName)
 
 var format = logging.MustStringFormatter(
 	`%{time:2006-01-02T15:04:05.999Z-07:00} %{level:-5s} ▶ %{message} ▶ %{pid} %{shortfile} %{shortfunc}`,
@@ -35,4 +36,8 @@ func InitLoggerStderrOnly(level logging.Level) {
 
 	logging.SetBackend(backendFormatter)
 	logging.SetLevel(level, "")
+}
+
+func SetLogLevel(level logging.Level) {
+	logging.SetLevel(level, moduleName)
 }
