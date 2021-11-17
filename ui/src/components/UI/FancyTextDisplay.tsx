@@ -17,6 +17,7 @@ interface Props {
 const FancyTextDisplay: React.FC<Props> = ({text, className, isPossibleToCopy = true, applyTextEllipsis = true, flipped = false, useTooltip= false, displayIconOnMouseOver = false, buttonOnly = false}) => {
     const [showCopiedNotification, setCopied] = useState(false);
     const [showTooltip, setShowTooltip] = useState(false);
+    text = String(text);
 
     const onCopy = () => {
         setCopied(true)
@@ -47,7 +48,7 @@ const FancyTextDisplay: React.FC<Props> = ({text, className, isPossibleToCopy = 
     return (
         <p
             className={`FancyTextDisplay-Container ${className ? className : ''} ${displayIconOnMouseOver ? 'displayIconOnMouseOver ' : ''} ${applyTextEllipsis ? ' FancyTextDisplay-ContainerEllipsis' : ''}`}
-            title={text.toString()}
+            title={text}
             onMouseOver={ e => setShowTooltip(true)}
             onMouseLeave={ e => setShowTooltip(false)}
         >
