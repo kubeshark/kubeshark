@@ -62,6 +62,12 @@ Supported protocols are HTTP and gRPC.`,
 						logger.Log.Errorf("failed to log in, err: %v", err)
 						return nil
 					}
+				} else if isValidToken, err := shared.IsTokenValid(config.Config.Auth.Token, config.Config.Auth.EnvName); !isValidToken || err != nil {
+					logger.Log.Errorf("Token is not valid, please log in again to continue")
+					if err := auth.Login(); err != nil {
+						logger.Log.Errorf("failed to log in, err: %v", err)
+						return nil
+					}
 				}
 			}
 		}
