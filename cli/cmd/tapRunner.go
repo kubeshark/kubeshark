@@ -9,19 +9,18 @@ import (
 	"strings"
 	"time"
 
-	"github.com/up9inc/mizu/cli/cmd/goUtils"
+	"github.com/getkin/kin-openapi/openapi3"
+	"gopkg.in/yaml.v3"
+	core "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 
-	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/up9inc/mizu/cli/apiserver"
+	"github.com/up9inc/mizu/cli/cmd/goUtils"
 	"github.com/up9inc/mizu/cli/config"
 	"github.com/up9inc/mizu/cli/config/configStructs"
 	"github.com/up9inc/mizu/cli/errormessage"
-	"gopkg.in/yaml.v3"
-	core "k8s.io/api/core/v1"
-
 	"github.com/up9inc/mizu/cli/mizu"
 	"github.com/up9inc/mizu/cli/mizu/fsUtils"
 	"github.com/up9inc/mizu/cli/uiUtils"
@@ -555,7 +554,8 @@ func waitUntilNamespaceDeleted(ctx context.Context, cancel context.CancelFunc, k
 
 func watchApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
 	podExactRegex := regexp.MustCompile(fmt.Sprintf("^%s$", kubernetes.ApiServerPodName))
-	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, kubernetesProvider, []string{config.Config.MizuResourcesNamespace}, podExactRegex)
+	podWatchHelper := kubernetes.NewPodWatchHelper(kubernetesProvider, podExactRegex)
+	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, podWatchHelper, []string{config.Config.MizuResourcesNamespace}, podWatchHelper)
 	isPodReady := false
 	timeAfter := time.After(25 * time.Second)
 	for {
@@ -576,9 +576,16 @@ func watchApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 			logger.Log.Infof("%s removed", kubernetes.ApiServerPodName)
 			cancel()
 			return
-		case modifiedPod, ok := <-modified:
+		case wEvent, ok := <-modified:
 			if !ok {
 				modified = nil
+				continue
+			}
+
+			modifiedPod, err := wEvent.ToPod()
+			if err != nil {
+				logger.Log.Errorf(uiUtils.Error, err)
+				cancel()
 				continue
 			}
 
@@ -642,34 +649,57 @@ func watchApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 
 func watchTapperPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
 	podExactRegex := regexp.MustCompile(fmt.Sprintf("^%s.*", kubernetes.TapperDaemonSetName))
-	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, kubernetesProvider, []string{config.Config.MizuResourcesNamespace}, podExactRegex)
+	podWatchHelper := kubernetes.NewPodWatchHelper(kubernetesProvider, podExactRegex)
+	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, podWatchHelper, []string{config.Config.MizuResourcesNamespace}, podWatchHelper)
 	var prevPodPhase core.PodPhase
 	for {
 		select {
-		case addedPod, ok := <-added:
+		case wEvent, ok := <-added:
 			if !ok {
 				added = nil
 				continue
 			}
 
+			addedPod, err := wEvent.ToPod()
+			if err != nil {
+				logger.Log.Errorf(uiUtils.Error, err)
+				cancel()
+				continue
+			}
+
 			logger.Log.Debugf("Tapper is created [%s]", addedPod.Name)
-		case removedPod, ok := <-removed:
+		case wEvent, ok := <-removed:
 			if !ok {
 				removed = nil
 				continue
 			}
 
+			removedPod, err := wEvent.ToPod()
+			if err != nil {
+				logger.Log.Errorf(uiUtils.Error, err)
+				cancel()
+				continue
+			}
+
+
 			logger.Log.Debugf("Tapper is removed [%s]", removedPod.Name)
-		case modifiedPod, ok := <-modified:
+		case wEvent, ok := <-modified:
 			if !ok {
 				modified = nil
+				continue
+			}
+
+			modifiedPod, err := wEvent.ToPod()
+			if err != nil {
+				logger.Log.Errorf(uiUtils.Error, err)
+				cancel()
 				continue
 			}
 
 			if modifiedPod.Status.Phase == core.PodPending && modifiedPod.Status.Conditions[0].Type == core.PodScheduled && modifiedPod.Status.Conditions[0].Status != core.ConditionTrue {
 				logger.Log.Infof(uiUtils.Red, fmt.Sprintf("Wasn't able to deploy the tapper %s. Reason: \"%s\"", modifiedPod.Name, modifiedPod.Status.Conditions[0].Message))
 				cancel()
-				break
+				continue
 			}
 
 			podStatus := modifiedPod.Status
