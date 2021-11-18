@@ -760,20 +760,11 @@ func watchMizuEvents(ctx context.Context, kubernetesProvider *kubernetes.Provide
 	for {
 		select {
 		case wEvent, ok := <-added:
-			event, err := wEvent.ToEvent()
-			if err != nil {
-				logger.Log.Errorf(uiUtils.Error, err)
-				cancel()
-			}
-
-			if event.Type == core.EventTypeWarning {
-				logger.Log.Warningf(uiUtils.Warning, fmt.Sprintf("Resource %s in state %s - %s", event.Regarding.Name, event.Reason, event.Note))
-			}
 			if !ok {
 				added = nil
 				continue
 			}
-		case wEvent, ok := <-removed:
+
 			event, err := wEvent.ToEvent()
 			if err != nil {
 				logger.Log.Errorf(uiUtils.Error, err)
@@ -783,11 +774,12 @@ func watchMizuEvents(ctx context.Context, kubernetesProvider *kubernetes.Provide
 			if event.Type == core.EventTypeWarning {
 				logger.Log.Warningf(uiUtils.Warning, fmt.Sprintf("Resource %s in state %s - %s", event.Regarding.Name, event.Reason, event.Note))
 			}
+		case wEvent, ok := <-removed:
 			if !ok {
 				removed = nil
 				continue
 			}
-		case wEvent, ok := <-modified:
+
 			event, err := wEvent.ToEvent()
 			if err != nil {
 				logger.Log.Errorf(uiUtils.Error, err)
@@ -797,9 +789,20 @@ func watchMizuEvents(ctx context.Context, kubernetesProvider *kubernetes.Provide
 			if event.Type == core.EventTypeWarning {
 				logger.Log.Warningf(uiUtils.Warning, fmt.Sprintf("Resource %s in state %s - %s", event.Regarding.Name, event.Reason, event.Note))
 			}
+		case wEvent, ok := <-modified:
 			if !ok {
 				modified = nil
 				continue
+			}
+
+			event, err := wEvent.ToEvent()
+			if err != nil {
+				logger.Log.Errorf(uiUtils.Error, err)
+				cancel()
+			}
+
+			if event.Type == core.EventTypeWarning {
+				logger.Log.Warningf(uiUtils.Warning, fmt.Sprintf("Resource %s in state %s - %s", event.Regarding.Name, event.Reason, event.Note))
 			}
 		case err, ok := <-errorChan:
 			if !ok {
