@@ -69,7 +69,8 @@ func CreateAndStartMizuTapperSyncer(ctx context.Context, kubernetesProvider *Pro
 }
 
 func (tapperSyncer *MizuTapperSyncer) watchPodsForTapping() {
-	added, modified, removed, errorChan := FilteredWatch(tapperSyncer.context, tapperSyncer.kubernetesProvider, tapperSyncer.config.TargetNamespaces, &tapperSyncer.config.PodFilterRegex)
+	podWatchHelper := NewPodWatchHelper(tapperSyncer.kubernetesProvider, &tapperSyncer.config.PodFilterRegex)
+	added, modified, removed, errorChan := FilteredWatch(tapperSyncer.context, podWatchHelper, tapperSyncer.config.TargetNamespaces, podWatchHelper)
 
 	restartTappers := func() {
 		err, changeFound := tapperSyncer.updateCurrentlyTappedPods()
@@ -95,27 +96,47 @@ func (tapperSyncer *MizuTapperSyncer) watchPodsForTapping() {
 
 	for {
 		select {
-		case pod, ok := <-added:
+		case wEvent, ok := <-added:
 			if !ok {
 				added = nil
 				continue
 			}
 
+			pod, err := wEvent.ToPod()
+			if err != nil {
+				tapperSyncer.handleErrorInWatchLoop(err, restartTappersDebouncer)
+				continue
+			}
+
+
 			logger.Log.Debugf("Added matching pod %s, ns: %s", pod.Name, pod.Namespace)
 			restartTappersDebouncer.SetOn()
-		case pod, ok := <-removed:
+		case wEvent, ok := <-removed:
 			if !ok {
 				removed = nil
 				continue
 			}
 
+			pod, err := wEvent.ToPod()
+			if err != nil {
+				tapperSyncer.handleErrorInWatchLoop(err, restartTappersDebouncer)
+				continue
+			}
+
 			logger.Log.Debugf("Removed matching pod %s, ns: %s", pod.Name, pod.Namespace)
 			restartTappersDebouncer.SetOn()
-		case pod, ok := <-modified:
+		case wEvent, ok := <-modified:
 			if !ok {
 				modified = nil
 				continue
 			}
+
+			pod, err := wEvent.ToPod()
+			if err != nil {
+				tapperSyncer.handleErrorInWatchLoop(err, restartTappersDebouncer)
+				continue
+			}
+
 
 			logger.Log.Debugf("Modified matching pod %s, ns: %s, phase: %s, ip: %s", pod.Name, pod.Namespace, pod.Status.Phase, pod.Status.PodIP)
 			// Act only if the modified pod has already obtained an IP address.
@@ -133,12 +154,8 @@ func (tapperSyncer *MizuTapperSyncer) watchPodsForTapping() {
 				continue
 			}
 
-			logger.Log.Debugf("Watching pods loop, got error %v, stopping `restart tappers debouncer`", err)
-			restartTappersDebouncer.Cancel()
-			tapperSyncer.ErrorOut <- K8sTapManagerError{
-				OriginalError:    err,
-				TapManagerReason: TapManagerPodWatchError,
-			}
+			tapperSyncer.handleErrorInWatchLoop(err, restartTappersDebouncer)
+			continue
 
 		case <-tapperSyncer.context.Done():
 			logger.Log.Debugf("Watching pods loop, context done, stopping `restart tappers debouncer`")
@@ -146,6 +163,15 @@ func (tapperSyncer *MizuTapperSyncer) watchPodsForTapping() {
 			// TODO: Does this also perform cleanup?
 			return
 		}
+	}
+}
+
+func (tapperSyncer *MizuTapperSyncer) handleErrorInWatchLoop(err error, restartTappersDebouncer *debounce.Debouncer) {
+	logger.Log.Debugf("Watching pods loop, got error %v, stopping `restart tappers debouncer`", err)
+	restartTappersDebouncer.Cancel()
+	tapperSyncer.ErrorOut <- K8sTapManagerError{
+		OriginalError:    err,
+		TapManagerReason: TapManagerPodWatchError,
 	}
 }
 
