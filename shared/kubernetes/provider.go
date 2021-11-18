@@ -571,6 +571,11 @@ func (provider *Provider) RemoveDaemonSet(ctx context.Context, namespace string,
 	return provider.handleRemovalError(err)
 }
 
+func (provider *Provider) RemovePersistentVolumeClaim(ctx context.Context, namespace string, volumeClaimName string) error {
+	err := provider.clientSet.CoreV1().PersistentVolumeClaims(namespace).Delete(ctx, volumeClaimName, metav1.DeleteOptions{})
+	return provider.handleRemovalError(err)
+}
+
 func (provider *Provider) handleRemovalError(err error) error {
 	// Ignore NotFound - There is nothing to delete.
 	// Ignore Forbidden - Assume that a user could not have created the resource in the first place.
@@ -849,10 +854,6 @@ func (provider *Provider) CreatePersistentVolumeClaim(ctx context.Context, names
 	}
 
 	return provider.clientSet.CoreV1().PersistentVolumeClaims(namespace).Create(ctx, volumeClaim, metav1.CreateOptions{})
-}
-
-func (provider *Provider) RemovePersistentVolumeClaim(ctx context.Context, namespace string, volumeClaimName string) error {
-	return provider.clientSet.CoreV1().PersistentVolumeClaims(namespace).Delete(ctx, volumeClaimName, metav1.DeleteOptions{})
 }
 
 func getClientSet(config *restclient.Config) (*kubernetes.Clientset, error) {
