@@ -171,7 +171,17 @@ export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, style
             }
             <div className={styles.separatorRight}>
                 <span
-                    className={`queryable ${styles.port}`}
+                    className={`queryable ${styles.tcpInfo} ${styles.ip}`}
+                    title="Source IP"
+                    onClick={() => {
+                        updateQuery(`src.ip == "${entry.sourceIp}"`)
+                    }}
+                >
+                    {entry.sourceIp}
+                </span>
+                <span className={`${styles.tcpInfo}`}>:</span>
+                <span
+                    className={`queryable ${styles.tcpInfo} ${styles.port}`}
                     title="Source Port"
                     onClick={() => {
                         updateQuery(`src.port == "${entry.sourcePort}"`)
@@ -199,7 +209,17 @@ export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, style
                     />
                 }
                 <span
-                    className={`queryable ${styles.port}`}
+                    className={`queryable ${styles.tcpInfo} ${styles.ip}`}
+                    title="Destination IP"
+                    onClick={() => {
+                        updateQuery(`dst.ip == "${entry.destinationIp}"`)
+                    }}
+                >
+                    {entry.destinationIp}
+                </span>
+                <span className={`${styles.tcpInfo}`}>:</span>
+                <span
+                    className={`queryable ${styles.tcpInfo} ${styles.port}`}
                     title="Destination Port"
                     onClick={() => {
                         updateQuery(`dst.port == "${entry.destinationPort}"`)
