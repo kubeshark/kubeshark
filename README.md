@@ -11,7 +11,7 @@ Think TCPDump and Chrome Dev Tools combined.
 ## Features
 
 - Simple and powerful CLI
-- Real-time view of all HTTP requests, REST and gRPC API calls
+- Real-time view of all HTTP requests, REST, gRPC, Redis Kafka and RabbitMQ API calls
 - No installation or code instrumentation
 - Works completely on premises
 
@@ -43,15 +43,6 @@ SHA256 checksums are available on the [Releases](https://github.com/up9inc/mizu/
 
 ### Development (unstable) Build
 Pick one from the [Releases](https://github.com/up9inc/mizu/releases) page
-
-## Kubeconfig & Permissions
-While `mizu`most often works out of the box, you can influence its behavior:
-
-1. [OPTIONAL] Set `KUBECONFIG` environment variable to your Kubernetes configuration. If this is not set, Mizu assumes that configuration is at `${HOME}/.kube/config`
-2. `mizu` assumes user running the command has permissions to create resources (such as pods, services, namespaces) on your Kubernetes cluster (no worries - `mizu` resources are cleaned up upon termination)
-
-For detailed list of k8s permissions see [PERMISSIONS](docs/PERMISSIONS.md) document
-
 
 ## How to Run
 
@@ -135,20 +126,19 @@ $ mizu clean # mizu will continue running in cluster until clean is executed
 
 ## Configuration
 
-Mizu can work with config file which should be stored in ${HOME}/.mizu/config.yaml (macOS: ~/.mizu/config.yaml) <br />
-In case no config file found, defaults will be used <br />
+Mizu can optionally work with a config file that is either provided as a CLI argument or stored in ${HOME}/.mizu/config.yaml (macOS: ~/.mizu/config.yaml) or<br />
 In case of partial configuration defined, all other fields will be used with defaults <br />
 You can always override the defaults or config file with CLI flags
 
 To get the default config params run `mizu config` <br />
 To generate a new config file with default values use `mizu config -r`
 
-### Telemetry
-
-By default, mizu reports usage telemetry. It can be disabled by adding a line of `telemetry: false` in the `${HOME}/.mizu/config.yaml` file
-
 
 ## Advanced Usage
+
+### Kubeconfig
+
+It is possible to set `KUBECONFIG` environment variable to your Kubernetes configuration. If this is not set, Mizu assumes that configuration is at `${HOME}/.kube/config`
 
 ### Namespace-Restricted Mode
 
@@ -162,6 +152,8 @@ to the namespace set by `mizu-resources-namespace`. The user must set the tapped
 using the `--namespace` flag or by setting `tap.namespaces` in the config file
 
 Setting `mizu-resources-namespace=mizu` resets Mizu to its default behavior
+
+For detailed list of k8s permissions see [PERMISSIONS](docs/PERMISSIONS.md) document
 
 ### User agent filtering
 
