@@ -11,7 +11,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: golangci-lint
+
+      - name: golangci-lint (agent)
         uses: golangci/golangci-lint-action@v2
         with:
           version: latest
+          working-directory: agent
+
+      - name: golangci-lint (shared)
+        uses: golangci/golangci-lint-action@v2
+        with:
+          version: latest
+          working-directory: shared
+
+      - name: golangci-lint (tap)
+        uses: golangci/golangci-lint-action@v2
+        with:
+          version: latest
+          working-directory: tap
+
+      - name: golangci-lint (cli)
+        uses: golangci/golangci-lint-action@v2
+        with:
+          version: latest
+          working-directory: cli
