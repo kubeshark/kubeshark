@@ -15,7 +15,6 @@
 # vendor/
 .idea/
 build
-*.db
 
 # Mac OS
 .DS_Store
