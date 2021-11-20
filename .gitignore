@@ -32,3 +32,4 @@ pprof/*
 
 # Database Files
 *.bin
+*.gob
