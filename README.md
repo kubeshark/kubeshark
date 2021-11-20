@@ -11,7 +11,12 @@ Think TCPDump and Chrome Dev Tools combined.
 ## Features
 
 - Simple and powerful CLI
-- Real-time view of all HTTP requests, REST, gRPC, Redis Kafka and RabbitMQ API calls
+- Monitoring network traffic in real-time. Supported protocols:
+  - [HTTP/1.1](https://datatracker.ietf.org/doc/html/rfc2616)
+  - [HTTP/2](https://datatracker.ietf.org/doc/html/rfc7540) (gRPC)
+  - [AMQP](https://www.rabbitmq.com/amqp-0-9-1-reference.html) (RabbitMQ, Apache Qpid, etc.)
+  - [Apache Kafka](https://kafka.apache.org/protocol)
+  - [Redis](https://redis.io/topics/protocol)
 - No installation or code instrumentation
 - Works completely on premises
 
