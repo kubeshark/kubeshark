@@ -12,6 +12,11 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y libpcap-dev
+
       - name: golangci-lint (agent)
         uses: golangci/golangci-lint-action@v2
         with:
