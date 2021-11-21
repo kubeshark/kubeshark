@@ -48,7 +48,7 @@ RUN cd .. && /bin/bash build_extensions_debug.sh
 
 FROM golang:1.16-alpine
 
-RUN apk add bash libpcap-dev tcpdump
+RUN apk add bash libpcap-dev
 
 WORKDIR /app
 

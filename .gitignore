@@ -15,7 +15,6 @@
 # vendor/
 .idea/
 build
-*.db
 
 # Mac OS
 .DS_Store
@@ -32,3 +31,4 @@ pprof/*
 
 # Database Files
 *.bin
+*.gob
