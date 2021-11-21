@@ -44,7 +44,7 @@ var http2Protocol api.Protocol = api.Protocol{
 var grpcProtocol api.Protocol = api.Protocol{
 	Name:            "http",
 	LongName:        "Hypertext Transfer Protocol Version 2 (HTTP/2) [ gRPC over HTTP/2 ]",
-	Abbreviation:    "GRPC",
+	Abbreviation:    "gRPC",
 	Macro:           "grpc",
 	Version:         "2.0",
 	BackgroundColor: "#244c5a",
@@ -198,6 +198,9 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 	statusCode := int(resDetails["status"].(float64))
 	if item.Protocol.Abbreviation == "GRPC" {
 		resDetails["statusText"] = grpcStatusCodes[statusCode]
+	}
+
+	if item.Protocol.Version == "2.0" {
 		reqDetails["url"] = path
 		request["url"] = path
 	}
@@ -433,7 +436,7 @@ func (d dissecting) Macros() map[string]string {
 	return map[string]string{
 		`http`:  fmt.Sprintf(`proto.name == "%s" and proto.version == "%s"`, protocol.Name, protocol.Version),
 		`http2`: fmt.Sprintf(`proto.name == "%s" and proto.version == "%s"`, protocol.Name, http2Protocol.Version),
-		`grpc`:  fmt.Sprintf(`proto.name == "%s" and proto.version == "%s" and proto.macro == "%s"`, grpcProtocol.Name, grpcProtocol.Version, grpcProtocol.Macro),
+		`grpc`:  fmt.Sprintf(`proto.name == "%s" and proto.version == "%s" and proto.macro == "%s"`, protocol.Name, grpcProtocol.Version, grpcProtocol.Macro),
 	}
 }
 
