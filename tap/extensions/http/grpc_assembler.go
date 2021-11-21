@@ -10,6 +10,7 @@ import (
 	"math"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 
 	"golang.org/x/net/http2"
@@ -118,10 +119,12 @@ func (ga *GrpcAssembler) readMessage() (uint32, interface{}, error) {
 	// TODO: Create an interface that will be used by http_matcher:registerRequest and http_matcher:registerRequest
 	//       to accept both HTTP/1.x and HTTP/2 requests and responses
 	var messageHTTP1 interface{}
-	if _, ok := headersHTTP1[":method"]; ok {
+	method := headersHTTP1.Get(":method")
+	status := headersHTTP1.Get(":status")
+	if method != "" {
 		messageHTTP1 = http.Request{
 			URL:           &url.URL{},
-			Method:        "POST",
+			Method:        method,
 			Header:        headersHTTP1,
 			Proto:         protoHTTP2,
 			ProtoMajor:    protoMajorHTTP2,
@@ -129,8 +132,13 @@ func (ga *GrpcAssembler) readMessage() (uint32, interface{}, error) {
 			Body:          io.NopCloser(strings.NewReader(dataString)),
 			ContentLength: int64(len(dataString)),
 		}
-	} else if _, ok := headersHTTP1[":status"]; ok {
+	} else if status != "" {
+		statusCode, err := strconv.Atoi(status)
+		if err != nil {
+			return 0, nil, err
+		}
 		messageHTTP1 = http.Response{
+			StatusCode:    statusCode,
 			Header:        headersHTTP1,
 			Proto:         protoHTTP2,
 			ProtoMajor:    protoMajorHTTP2,
