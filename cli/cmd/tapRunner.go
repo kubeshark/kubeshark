@@ -729,7 +729,7 @@ func watchTapperPod(ctx context.Context, kubernetesProvider *kubernetes.Provider
 				continue
 			}
 
-			logger.Log.Errorf("[Error] Error in mizu tapper watch, err: %v", err)
+			logger.Log.Errorf("[Error] Error in mizu tapper pod watch, err: %v", err)
 			cancel()
 
 		case <-ctx.Done():
@@ -812,7 +812,7 @@ func watchMizuEvents(ctx context.Context, kubernetesProvider *kubernetes.Provide
 				continue
 			}
 
-			logger.Log.Errorf("[Error] Error in mizu tapper watch, err: %v", err)
+			logger.Log.Errorf("[Error] Error in mizu tapper event watch, err: %v", err)
 			cancel()
 
 		case <-ctx.Done():
