@@ -402,6 +402,7 @@ func getMizuAgentConfig(targetNamespaces []string, mizuApiFilteringOptions *api.
 		MizuResourcesNamespace:  Config.MizuResourcesNamespace,
 		MizuApiFilteringOptions: *mizuApiFilteringOptions,
 		AgentDatabasePath:       shared.DataDirPath,
+		Istio:                   Config.Tap.Istio,
 	}
 	return &config, nil
 }
