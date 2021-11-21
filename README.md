@@ -131,7 +131,7 @@ $ mizu clean # mizu will continue running in cluster until clean is executed
 
 ## Configuration
 
-Mizu can optionally work with a config file that is either provided as a CLI argument or stored in ${HOME}/.mizu/config.yaml (macOS: ~/.mizu/config.yaml) or<br />
+Mizu can optionally work with a config file that can be provided as a CLI argument (using `--set config-path=<PATH>`) or if not provided, will be stored at ${HOME}/.mizu/config.yaml 
 In case of partial configuration defined, all other fields will be used with defaults <br />
 You can always override the defaults or config file with CLI flags
 
@@ -143,7 +143,9 @@ To generate a new config file with default values use `mizu config -r`
 
 ### Kubeconfig
 
-It is possible to set `KUBECONFIG` environment variable to your Kubernetes configuration. If this is not set, Mizu assumes that configuration is at `${HOME}/.kube/config`
+It is possible to change the kubeconfig path using `KUBECONFIG` environment variable or the command like flag
+with `--set kube-config-path=<PATH>`. </br >
+If both are not set - Mizu assumes that configuration is at `${HOME}/.kube/config`
 
 ### Namespace-Restricted Mode
 
