@@ -160,7 +160,7 @@ func (d dissecting) Represent(protoIn api.Protocol, request map[string]interface
 
 func (d dissecting) Macros() map[string]string {
 	return map[string]string{
-		`redis`: fmt.Sprintf(`proto.abbr == "%s"`, protocol.Abbreviation),
+		`redis`: fmt.Sprintf(`proto.name == "%s"`, protocol.Name),
 	}
 }
 

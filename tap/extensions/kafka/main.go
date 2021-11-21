@@ -258,7 +258,7 @@ func (d dissecting) Represent(protoIn api.Protocol, request map[string]interface
 
 func (d dissecting) Macros() map[string]string {
 	return map[string]string{
-		`kafka`: fmt.Sprintf(`proto.abbr == "%s"`, _protocol.Abbreviation),
+		`kafka`: fmt.Sprintf(`proto.name == "%s"`, _protocol.Name),
 	}
 }
 
