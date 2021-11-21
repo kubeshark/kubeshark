@@ -42,8 +42,8 @@ RUN go build -ldflags="-s -w \
      -X 'mizuserver/pkg/version.SemVer=${SEM_VER}'" -o mizuagent .
 
 # Download Basenine executable, verify the sha1sum and move it to a directory in $PATH
-ADD https://github.com/up9inc/basenine/releases/download/v0.2.9/basenine_linux_amd64 ./basenine_linux_amd64
-ADD https://github.com/up9inc/basenine/releases/download/v0.2.9/basenine_linux_amd64.sha256 ./basenine_linux_amd64.sha256
+ADD https://github.com/up9inc/basenine/releases/download/v0.2.10/basenine_linux_amd64 ./basenine_linux_amd64
+ADD https://github.com/up9inc/basenine/releases/download/v0.2.10/basenine_linux_amd64.sha256 ./basenine_linux_amd64.sha256
 RUN shasum -a 256 -c basenine_linux_amd64.sha256
 RUN chmod +x ./basenine_linux_amd64
 
@@ -52,7 +52,7 @@ RUN cd .. && /bin/bash build_extensions.sh
 
 FROM alpine:3.14
 
-RUN apk add bash libpcap-dev tcpdump
+RUN apk add bash libpcap-dev
 
 WORKDIR /app
 
