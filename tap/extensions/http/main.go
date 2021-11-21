@@ -23,7 +23,7 @@ var protocol api.Protocol = api.Protocol{
 	ForegroundColor: "#ffffff",
 	FontSize:        12,
 	ReferenceLink:   "https://datatracker.ietf.org/doc/html/rfc2616",
-	Ports:           []string{"80", "8080", "50051"},
+	Ports:           []string{"80", "443", "8080"},
 	Priority:        0,
 }
 
@@ -37,7 +37,21 @@ var http2Protocol api.Protocol = api.Protocol{
 	ForegroundColor: "#ffffff",
 	FontSize:        11,
 	ReferenceLink:   "https://datatracker.ietf.org/doc/html/rfc7540",
-	Ports:           []string{"80", "8080"},
+	Ports:           []string{"80", "443", "8080"},
+	Priority:        0,
+}
+
+var grpcProtocol api.Protocol = api.Protocol{
+	Name:            "http",
+	LongName:        "Hypertext Transfer Protocol Version 2 (HTTP/2) [ gRPC over HTTP/2 ]",
+	Abbreviation:    "GRPC",
+	Macro:           "grpc",
+	Version:         "2.0",
+	BackgroundColor: "#244c5a",
+	ForegroundColor: "#ffffff",
+	FontSize:        11,
+	ReferenceLink:   "https://grpc.github.io/grpc/core/md_doc_statuscodes.html",
+	Ports:           []string{"80", "443", "8080", "50051"},
 	Priority:        0,
 }
 
@@ -120,7 +134,7 @@ func SetHostname(address, newHostname string) string {
 }
 
 func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, resolvedDestination string) *api.MizuEntry {
-	var host, scheme, authority, path, service string
+	var host, authority, path, service string
 
 	request := item.Pair.Request.Payload.(map[string]interface{})
 	response := item.Pair.Response.Payload.(map[string]interface{})
@@ -135,9 +149,6 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 		if h["name"] == ":authority" {
 			authority = h["value"].(string)
 		}
-		if h["name"] == ":scheme" {
-			scheme = h["value"].(string)
-		}
 		if h["name"] == ":path" {
 			path = h["value"].(string)
 		}
@@ -148,9 +159,9 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 	}
 
 	if item.Protocol.Version == "2.0" {
-		service = fmt.Sprintf("%s://%s", scheme, authority)
+		service = authority
 	} else {
-		service = fmt.Sprintf("http://%s", host)
+		service = host
 		u, err := url.Parse(reqDetails["url"].(string))
 		if err != nil {
 			path = reqDetails["url"].(string)
@@ -183,15 +194,21 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 		service = SetHostname(service, resolvedSource)
 	}
 
+	method := reqDetails["method"].(string)
+	statusCode := int(resDetails["status"].(float64))
+	if item.Protocol.Abbreviation == "GRPC" {
+		resDetails["statusText"] = grpcStatusCodes[statusCode]
+		reqDetails["url"] = path
+		request["url"] = path
+	}
+
 	elapsedTime := item.Pair.Response.CaptureTime.Sub(item.Pair.Request.CaptureTime).Round(time.Millisecond).Milliseconds()
 	if elapsedTime < 0 {
 		elapsedTime = 0
 	}
 	httpPair, _ := json.Marshal(item.Pair)
-	_protocol := protocol
-	_protocol.Version = item.Protocol.Version
 	return &api.MizuEntry{
-		Protocol: _protocol,
+		Protocol: item.Protocol,
 		Source: &api.TCP{
 			Name: resolvedSource,
 			IP:   item.ConnectionInfo.ClientIP,
@@ -206,8 +223,8 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 		Request:             reqDetails,
 		Response:            resDetails,
 		Url:                 fmt.Sprintf("%s%s", service, path),
-		Method:              reqDetails["method"].(string),
-		Status:              int(resDetails["status"].(float64)),
+		Method:              method,
+		Status:              statusCode,
 		RequestSenderIp:     item.ConnectionInfo.ClientIP,
 		Service:             service,
 		Timestamp:           item.Timestamp,
@@ -226,15 +243,9 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 }
 
 func (d dissecting) Summarize(entry *api.MizuEntry) *api.BaseEntryDetails {
-	var p api.Protocol
-	if entry.Protocol.Version == "2.0" {
-		p = http2Protocol
-	} else {
-		p = protocol
-	}
 	return &api.BaseEntryDetails{
 		Id:              entry.Id,
-		Protocol:        p,
+		Protocol:        entry.Protocol,
 		Url:             entry.Url,
 		RequestSenderIp: entry.RequestSenderIp,
 		Service:         entry.Service,
@@ -409,11 +420,7 @@ func representResponse(response map[string]interface{}) (repResponse []interface
 }
 
 func (d dissecting) Represent(protoIn api.Protocol, request map[string]interface{}, response map[string]interface{}) (protoOut api.Protocol, object []byte, bodySize int64, err error) {
-	if protoIn.Version == "2.0" {
-		protoOut = http2Protocol
-	} else {
-		protoOut = protocol
-	}
+	protoOut = protoIn
 	representation := make(map[string]interface{}, 0)
 	repRequest := representRequest(request)
 	repResponse, bodySize := representResponse(response)
@@ -427,6 +434,7 @@ func (d dissecting) Macros() map[string]string {
 	return map[string]string{
 		`http`:  fmt.Sprintf(`proto.abbr == "%s" and proto.version == "%s"`, protocol.Abbreviation, protocol.Version),
 		`http2`: fmt.Sprintf(`proto.abbr == "%s" and proto.version == "%s"`, protocol.Abbreviation, http2Protocol.Version),
+		`grpc`:  fmt.Sprintf(`proto.abbr == "%s" and proto.version == "%s" and proto.macro == "%s"`, protocol.Abbreviation, grpcProtocol.Version, grpcProtocol.Macro),
 	}
 }
 

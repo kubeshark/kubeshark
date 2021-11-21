@@ -10,6 +10,7 @@ import (
 	"math"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -27,6 +28,26 @@ const protoMajorHTTP2 = 2
 const protoMinorHTTP2 = 0
 
 var maxHTTP2DataLen = 1 * 1024 * 1024 // 1MB
+
+var grpcStatusCodes = []string{
+	"OK",
+	"CANCELLED",
+	"UNKNOWN",
+	"INVALID_ARGUMENT",
+	"DEADLINE_EXCEEDED",
+	"NOT_FOUND",
+	"ALREADY_EXISTS",
+	"PERMISSION_DENIED",
+	"RESOURCE_EXHAUSTED",
+	"FAILED_PRECONDITION",
+	"ABORTED",
+	"OUT_OF_RANGE",
+	"UNIMPLEMENTED",
+	"INTERNAL",
+	"UNAVAILABLE",
+	"DATA_LOSS",
+	"UNAUTHENTICATED",
+}
 
 type messageFragment struct {
 	headers []hpack.HeaderField
@@ -87,22 +108,23 @@ type Http2Assembler struct {
 	framer            *http2.Framer
 }
 
-func (ga *Http2Assembler) readMessage() (uint32, interface{}, error) {
+func (ga *Http2Assembler) readMessage() (streamID uint32, messageHTTP1 interface{}, isGrpc bool, err error) {
 	// Exactly one Framer is used for each half connection.
 	// (Instead of creating a new Framer for each ReadFrame operation)
 	// This is needed in order to decompress the headers,
 	// because the compression context is updated with each requests/response.
 	frame, err := ga.framer.ReadFrame()
 	if err != nil {
-		return 0, nil, err
+		return
 	}
 
-	streamID := frame.Header().StreamID
+	streamID = frame.Header().StreamID
 
 	ga.fragmentsByStream.appendFrame(streamID, frame)
 
 	if !(ga.isStreamEnd(frame)) {
-		return 0, nil, nil
+		streamID = 0
+		return
 	}
 
 	headers, data := ga.fragmentsByStream.pop(streamID)
@@ -116,11 +138,28 @@ func (ga *Http2Assembler) readMessage() (uint32, interface{}, error) {
 	dataString := base64.StdEncoding.EncodeToString(data)
 
 	// Use http1 types only because they are expected in http_matcher.
-	// TODO: Create an interface that will be used by http_matcher:registerRequest and http_matcher:registerRequest
-	//       to accept both HTTP/1.x and HTTP/2 requests and responses
-	var messageHTTP1 interface{}
 	method := headersHTTP1.Get(":method")
 	status := headersHTTP1.Get(":status")
+
+	// gRPC detection
+	grpcStatus := headersHTTP1.Get("Grpc-Status")
+	if grpcStatus != "" {
+		isGrpc = true
+		status = grpcStatus
+	}
+
+	grpcPath := headersHTTP1.Get(":path")
+	if grpcPath != "" {
+		isGrpc = true
+		pathSegments := strings.Split(grpcPath, "/")
+		if len(pathSegments) > 0 {
+			method = pathSegments[len(pathSegments)-1]
+		}
+
+		re := regexp.MustCompile(`[A-Z][^A-Z]*`)
+		method = strings.Join(re.FindAllString(method, -1), " ")
+	}
+
 	if method != "" {
 		messageHTTP1 = http.Request{
 			URL:           &url.URL{},
@@ -133,10 +172,13 @@ func (ga *Http2Assembler) readMessage() (uint32, interface{}, error) {
 			ContentLength: int64(len(dataString)),
 		}
 	} else if status != "" {
-		statusCode, err := strconv.Atoi(status)
+		var statusCode int
+
+		statusCode, err = strconv.Atoi(status)
 		if err != nil {
-			return 0, nil, err
+			return
 		}
+
 		messageHTTP1 = http.Response{
 			StatusCode:    statusCode,
 			Header:        headersHTTP1,
@@ -147,10 +189,11 @@ func (ga *Http2Assembler) readMessage() (uint32, interface{}, error) {
 			ContentLength: int64(len(dataString)),
 		}
 	} else {
-		return 0, nil, errors.New("failed to assemble stream: neither a request nor a message")
+		err = errors.New("failed to assemble stream: neither a request nor a message")
+		return
 	}
 
-	return streamID, messageHTTP1, nil
+	return
 }
 
 func (ga *Http2Assembler) isStreamEnd(frame http2.Frame) bool {

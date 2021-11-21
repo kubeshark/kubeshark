@@ -24,7 +24,7 @@ func filterAndEmit(item *api.OutputChannelItem, emitter api.Emitter, options *ap
 }
 
 func handleHTTP2Stream(http2Assembler *Http2Assembler, tcpID *api.TcpID, superTimer *api.SuperTimer, emitter api.Emitter, options *api.TrafficFilteringOptions) error {
-	streamID, messageHTTP1, err := http2Assembler.readMessage()
+	streamID, messageHTTP1, isGrpc, err := http2Assembler.readMessage()
 	if err != nil {
 		return err
 	}
@@ -73,7 +73,11 @@ func handleHTTP2Stream(http2Assembler *Http2Assembler, tcpID *api.TcpID, superTi
 	}
 
 	if item != nil {
-		item.Protocol = http2Protocol
+		if isGrpc {
+			item.Protocol = grpcProtocol
+		} else {
+			item.Protocol = http2Protocol
+		}
 		filterAndEmit(item, emitter, options)
 	}
 
