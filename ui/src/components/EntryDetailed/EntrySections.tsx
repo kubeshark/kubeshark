@@ -15,7 +15,7 @@ interface EntryViewLineProps {
 }
 
 const EntryViewLine: React.FC<EntryViewLineProps> = ({label, value, updateQuery, selector, overrideQueryValue}) => {
-    return (label && value && <tr className={styles.dataLine}>
+    return (label && <tr className={styles.dataLine}>
                 <td
                     className={`queryable ${styles.dataKey}`}
                     onClick={() => {

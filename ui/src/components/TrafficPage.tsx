@@ -101,6 +101,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
     const listEntry = useRef(null);
 
     const openWebSocket = (query) => {
+        setFocusedEntryId(null);
         setEntries([]);
         setEntriesBuffer([]);
         ws.current = new WebSocket(MizuWebsocketURL);
@@ -189,6 +190,16 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                 const entryData = await api.getEntry(focusedEntryId);
                 setSelectedEntryData(entryData);
             } catch (error) {
+                toast[error.response.data.type](`Entry[${focusedEntryId}]: ${error.response.data.msg}`, {
+                    position: "bottom-right",
+                    theme: "colored",
+                    autoClose: error.response.data.autoClose,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                    progress: undefined,
+                });
                 console.error(error);
             }
         })()

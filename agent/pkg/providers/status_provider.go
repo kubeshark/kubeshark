@@ -19,7 +19,7 @@ var (
 	TapStatus      shared.TapStatus
 	authStatus     *models.AuthStatus
 	RecentTLSLinks = cache.New(tlsLinkRetainmentTime, tlsLinkRetainmentTime)
-
+	ExpectedTapperAmount = -1 //only relevant in daemon mode as cli manages tappers otherwise
 	tappersCountLock = sync.Mutex{}
 )
 

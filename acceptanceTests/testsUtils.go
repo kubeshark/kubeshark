@@ -240,13 +240,24 @@ func executeHttpGetRequest(url string) (interface{}, error) {
 	return executeHttpRequest(response, requestErr)
 }
 
-func executeHttpPostRequest(url string, body interface{}) (interface{}, error) {
+func executeHttpPostRequestWithHeaders(url string, headers map[string]string, body interface{}) (interface{}, error) {
 	requestBody, jsonErr := json.Marshal(body)
 	if jsonErr != nil {
 		return nil, jsonErr
 	}
 
-	response, requestErr := http.Post(url, "application/json", bytes.NewBuffer(requestBody))
+	request, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(requestBody))
+	if err != nil {
+		return nil, err
+	}
+
+	request.Header.Add("Content-Type", "application/json")
+	for headerKey, headerValue := range headers {
+		request.Header.Add(headerKey, headerValue)
+	}
+
+	client := &http.Client{}
+	response, requestErr := client.Do(request)
 	return executeHttpRequest(response, requestErr)
 }
 
