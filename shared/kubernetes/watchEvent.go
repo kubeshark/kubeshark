@@ -20,10 +20,10 @@ func (we *WatchEvent) ToPod() (*corev1.Pod, error) {
 }
 
 func (we *WatchEvent) ToEvent() (*eventsv1.Event, error) {
-	pod, ok := we.Object.(*eventsv1.Event)
+	event, ok := we.Object.(*eventsv1.Event)
 	if !ok {
 		return nil, fmt.Errorf("Invalid object type on pod event stream")
 	}
 
-	return pod, nil
+	return event, nil
 }
