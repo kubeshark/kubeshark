@@ -432,9 +432,9 @@ func (d dissecting) Represent(protoIn api.Protocol, request map[string]interface
 
 func (d dissecting) Macros() map[string]string {
 	return map[string]string{
-		`http`:  fmt.Sprintf(`proto.abbr == "%s" and proto.version == "%s"`, protocol.Abbreviation, protocol.Version),
-		`http2`: fmt.Sprintf(`proto.abbr == "%s" and proto.version == "%s"`, protocol.Abbreviation, http2Protocol.Version),
-		`grpc`:  fmt.Sprintf(`proto.abbr == "%s" and proto.version == "%s" and proto.macro == "%s"`, protocol.Abbreviation, grpcProtocol.Version, grpcProtocol.Macro),
+		`http`:  fmt.Sprintf(`proto.name == "%s" and proto.version == "%s"`, protocol.Name, protocol.Version),
+		`http2`: fmt.Sprintf(`proto.name == "%s" and proto.version == "%s"`, protocol.Name, http2Protocol.Version),
+		`grpc`:  fmt.Sprintf(`proto.name == "%s" and proto.version == "%s" and proto.macro == "%s"`, grpcProtocol.Name, grpcProtocol.Version, grpcProtocol.Macro),
 	}
 }
 
