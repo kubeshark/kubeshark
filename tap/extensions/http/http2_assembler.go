@@ -148,14 +148,15 @@ func (ga *Http2Assembler) readMessage() (streamID uint32, messageHTTP1 interface
 		status = grpcStatus
 	}
 
-	grpcPath := headersHTTP1.Get(":path")
-	if grpcPath != "" {
+	if strings.Contains(headersHTTP1.Get("Content-Type"), "application/grpc") {
 		isGrpc = true
+		grpcPath := headersHTTP1.Get(":path")
 		pathSegments := strings.Split(grpcPath, "/")
 		if len(pathSegments) > 0 {
 			method = pathSegments[len(pathSegments)-1]
 		}
 
+		// Split method by uppercase
 		re := regexp.MustCompile(`[A-Z][^A-Z]*`)
 		method = strings.Join(re.FindAllString(method, -1), " ")
 	}
