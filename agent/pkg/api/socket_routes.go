@@ -146,7 +146,7 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 					var metadata *basenine.Metadata
 					err = json.Unmarshal(bytes, &metadata)
 					if err != nil {
-						logger.Log.Debugf("Error recieving metadata: %v\n", err.Error())
+						logger.Log.Debugf("Error recieving metadata: %v", err.Error())
 					}
 
 					metadataBytes, _ := models.CreateWebsocketQueryMetadataMessage(metadata)
@@ -167,7 +167,7 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 func socketCleanup(socketId int, socketConnection *SocketConnection) {
 	err := socketConnection.connection.Close()
 	if err != nil {
-		logger.Log.Errorf("Error closing socket connection for socket id %d: %v\n", socketId, err)
+		logger.Log.Errorf("Error closing socket connection for socket id %d: %v", socketId, err)
 	}
 
 	websocketIdsLock.Lock()

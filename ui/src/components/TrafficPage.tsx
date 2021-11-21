@@ -1,6 +1,7 @@
 import React, {useEffect, useRef, useState} from "react";
 import {Filters} from "./Filters";
 import {EntriesList} from "./EntriesList";
+import {EntryItem} from "./EntryListItem/EntryListItem";
 import {makeStyles} from "@material-ui/core";
 import "./style/TrafficPage.sass";
 import styles from './style/EntriesList.module.sass';
@@ -50,50 +51,59 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
     const classes = useLayoutStyles();
 
     const [entries, setEntries] = useState([] as any);
+    const [entriesBuffer, setEntriesBuffer] = useState([] as any);
     const [focusedEntryId, setFocusedEntryId] = useState(null);
     const [selectedEntryData, setSelectedEntryData] = useState(null);
     const [connection, setConnection] = useState(ConnectionStatus.Closed);
 
     const [tappingStatus, setTappingStatus] = useState(null);
 
-    const [disableScrollList, setDisableScrollList] = useState(false);
+    const [isSnappedToBottom, setIsSnappedToBottom] = useState(true);
 
-    const [query, setQueryDefault] = useState("");
+    const [query, setQuery] = useState("");
     const [queryBackgroundColor, setQueryBackgroundColor] = useState("#f5f5f5");
+    const [addition, updateQuery] = useState("");
 
     const [queriedCurrent, setQueriedCurrent] = useState(0);
     const [queriedTotal, setQueriedTotal] = useState(0);
 
     const [startTime, setStartTime] = useState(0);
 
-    const setQuery = async (query) => {
-        if (!query) {
-            setQueryBackgroundColor("#f5f5f5")
-        } else {
-            const data = await api.validateQuery(query);
-            if (data.valid) {
-                setQueryBackgroundColor("#d2fad2")
+    useEffect(() => {
+        (async function() {
+            if (!query) {
+                setQueryBackgroundColor("#f5f5f5")
             } else {
-                setQueryBackgroundColor("#fad6dc")
+                const data = await api.validateQuery(query);
+                if (!data) {
+                    return;
+                }
+                if (data.valid) {
+                    setQueryBackgroundColor("#d2fad2");
+                } else {
+                    setQueryBackgroundColor("#fad6dc");
+                }
             }
-        }
-        setQueryDefault(query)
-    }
+        })();
+    }, [query]);
 
-    const updateQuery = (addition) => {
+    useEffect(() => {
         if (query) {
-            setQuery(`${query} and ${addition}`)
+            setQuery(`${query} and ${addition}`);
         } else {
-            setQuery(addition)
+            setQuery(addition);
         }
-    }
+        // eslint-disable-next-line
+    }, [addition]);
 
     const ws = useRef(null);
 
     const listEntry = useRef(null);
 
     const openWebSocket = (query) => {
-        setEntries([])
+        setFocusedEntryId(null);
+        setEntries([]);
+        setEntriesBuffer([]);
         ws.current = new WebSocket(MizuWebsocketURL);
         ws.current.onopen = () => {
             ws.current.send(query)
@@ -108,15 +118,18 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
             const message = JSON.parse(e.data);
             switch (message.messageType) {
                 case "entry":
-                    const entry = message.data
-                    if (!focusedEntryId) setFocusedEntryId(entry.id.toString())
-                    let newEntries = [...entries];
-                    setEntries([...newEntries, entry])
-                    if(listEntry.current) {
-                        if(isScrollable(listEntry.current.firstChild)) {
-                            setDisableScrollList(true)
-                        }
-                    }
+                    const entry = message.data;
+                    if (!focusedEntryId) setFocusedEntryId(entry.id.toString());
+                    setEntriesBuffer([
+                        ...entriesBuffer,
+                        <EntryItem
+                            key={entry.id}
+                            entry={entry}
+                            setFocusedEntryId={setFocusedEntryId}
+                            style={{}}
+                            updateQuery={updateQuery}
+                        />
+                    ]);
                     break
                 case "status":
                     setTappingStatus(message.tappingStatus);
@@ -140,8 +153,9 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                     });
                     break;
                 case "queryMetadata":
-                    setQueriedCurrent(message.data.current)
-                    setQueriedTotal(message.data.total)
+                    setQueriedCurrent(message.data.current);
+                    setQueriedTotal(message.data.total);
+                    setEntries(entriesBuffer);
                     break;
                 case "startTime":
                     setStartTime(message.data);
@@ -176,6 +190,16 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                 const entryData = await api.getEntry(focusedEntryId);
                 setSelectedEntryData(entryData);
             } catch (error) {
+                toast[error.response.data.type](`Entry[${focusedEntryId}]: ${error.response.data.msg}`, {
+                    position: "bottom-right",
+                    theme: "colored",
+                    autoClose: error.response.data.autoClose,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                    progress: undefined,
+                });
                 console.error(error);
             }
         })()
@@ -209,13 +233,9 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
         }
     }
 
-    const onScrollEvent = (isAtBottom) => {
-        isAtBottom ? setDisableScrollList(false) : setDisableScrollList(true)
+    const onSnapBrokenEvent = () => {
+        setIsSnappedToBottom(false)
     }
-
-    const isScrollable = (element) => {
-        return element.scrollHeight > element.clientHeight;
-    };
 
     return (
         <div className="TrafficPage">
@@ -223,7 +243,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                 <img className="playPauseIcon" style={{visibility: connection === ConnectionStatus.Connected ? "visible" : "hidden"}} alt="pause"
                     src={pauseIcon} onClick={toggleConnection}/>
                 <img className="playPauseIcon" style={{position: "absolute", visibility: connection === ConnectionStatus.Connected ? "hidden" : "visible"}} alt="play"
-                     src={playIcon} onClick={toggleConnection}/>
+                    src={playIcon} onClick={toggleConnection}/>
                 <div className="connectionText">
                     {getConnectionTitle()}
                     <div className={"indicatorContainer " + getConnectionStatusClass(true)}>
@@ -243,16 +263,10 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                     <div className={styles.container}>
                         <EntriesList
                             entries={entries}
-                            setEntries={setEntries}
-                            focusedEntryId={focusedEntryId}
-                            setFocusedEntryId={setFocusedEntryId}
                             listEntryREF={listEntry}
-                            onScrollEvent={onScrollEvent}
-                            scrollableList={disableScrollList}
-                            ws={ws.current}
-                            openWebSocket={openWebSocket}
-                            query={query}
-                            updateQuery={updateQuery}
+                            onSnapBrokenEvent={onSnapBrokenEvent}
+                            isSnappedToBottom={isSnappedToBottom}
+                            setIsSnappedToBottom={setIsSnappedToBottom}
                             queriedCurrent={queriedCurrent}
                             queriedTotal={queriedTotal}
                             startTime={startTime}

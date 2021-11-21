@@ -3,6 +3,7 @@ package kubernetes
 import (
 	"context"
 	"fmt"
+	"github.com/op/go-logging"
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/debounce"
 	"github.com/up9inc/mizu/shared/logger"
@@ -15,18 +16,20 @@ import (
 const updateTappersDelay = 5 * time.Second
 
 type TappedPodChangeEvent struct {
-	Added   []core.Pod
-	Removed []core.Pod
+	Added                []core.Pod
+	Removed              []core.Pod
+	ExpectedTapperAmount int
 }
 
 // MizuTapperSyncer uses a k8s pod watch to update tapper daemonsets when targeted pods are removed or created
 type MizuTapperSyncer struct {
-	context             context.Context
-	CurrentlyTappedPods []core.Pod
-	config              TapperSyncerConfig
-	kubernetesProvider  *Provider
-	TapPodChangesOut    chan TappedPodChangeEvent
-	ErrorOut            chan K8sTapManagerError
+	context              context.Context
+	CurrentlyTappedPods  []core.Pod
+	config               TapperSyncerConfig
+	kubernetesProvider   *Provider
+	TapPodChangesOut     chan TappedPodChangeEvent
+	ErrorOut             chan K8sTapManagerError
+	nodeToTappedPodIPMap map[string][]string
 }
 
 type TapperSyncerConfig struct {
@@ -36,10 +39,11 @@ type TapperSyncerConfig struct {
 	AgentImage               string
 	TapperResources          shared.Resources
 	ImagePullPolicy          core.PullPolicy
-	DumpLogs                 bool
+	LogLevel                 logging.Level
 	IgnoredUserAgents        []string
 	MizuApiFilteringOptions  api.TrafficFilteringOptions
 	MizuServiceAccountExists bool
+	Istio                    bool
 }
 
 func CreateAndStartMizuTapperSyncer(ctx context.Context, kubernetesProvider *Provider, config TapperSyncerConfig) (*MizuTapperSyncer, error) {
@@ -65,7 +69,8 @@ func CreateAndStartMizuTapperSyncer(ctx context.Context, kubernetesProvider *Pro
 }
 
 func (tapperSyncer *MizuTapperSyncer) watchPodsForTapping() {
-	added, modified, removed, errorChan := FilteredWatch(tapperSyncer.context, tapperSyncer.kubernetesProvider, tapperSyncer.config.TargetNamespaces, &tapperSyncer.config.PodFilterRegex)
+	podWatchHelper := NewPodWatchHelper(tapperSyncer.kubernetesProvider, &tapperSyncer.config.PodFilterRegex)
+	added, modified, removed, errorChan := FilteredWatch(tapperSyncer.context, podWatchHelper, tapperSyncer.config.TargetNamespaces, podWatchHelper)
 
 	restartTappers := func() {
 		err, changeFound := tapperSyncer.updateCurrentlyTappedPods()
@@ -91,27 +96,47 @@ func (tapperSyncer *MizuTapperSyncer) watchPodsForTapping() {
 
 	for {
 		select {
-		case pod, ok := <-added:
+		case wEvent, ok := <-added:
 			if !ok {
 				added = nil
 				continue
 			}
 
+			pod, err := wEvent.ToPod()
+			if err != nil {
+				tapperSyncer.handleErrorInWatchLoop(err, restartTappersDebouncer)
+				continue
+			}
+
+
 			logger.Log.Debugf("Added matching pod %s, ns: %s", pod.Name, pod.Namespace)
 			restartTappersDebouncer.SetOn()
-		case pod, ok := <-removed:
+		case wEvent, ok := <-removed:
 			if !ok {
 				removed = nil
 				continue
 			}
 
+			pod, err := wEvent.ToPod()
+			if err != nil {
+				tapperSyncer.handleErrorInWatchLoop(err, restartTappersDebouncer)
+				continue
+			}
+
 			logger.Log.Debugf("Removed matching pod %s, ns: %s", pod.Name, pod.Namespace)
 			restartTappersDebouncer.SetOn()
-		case pod, ok := <-modified:
+		case wEvent, ok := <-modified:
 			if !ok {
 				modified = nil
 				continue
 			}
+
+			pod, err := wEvent.ToPod()
+			if err != nil {
+				tapperSyncer.handleErrorInWatchLoop(err, restartTappersDebouncer)
+				continue
+			}
+
 
 			logger.Log.Debugf("Modified matching pod %s, ns: %s, phase: %s, ip: %s", pod.Name, pod.Namespace, pod.Status.Phase, pod.Status.PodIP)
 			// Act only if the modified pod has already obtained an IP address.
@@ -129,12 +154,8 @@ func (tapperSyncer *MizuTapperSyncer) watchPodsForTapping() {
 				continue
 			}
 
-			logger.Log.Debugf("Watching pods loop, got error %v, stopping `restart tappers debouncer`", err)
-			restartTappersDebouncer.Cancel()
-			tapperSyncer.ErrorOut <- K8sTapManagerError{
-				OriginalError:    err,
-				TapManagerReason: TapManagerPodWatchError,
-			}
+			tapperSyncer.handleErrorInWatchLoop(err, restartTappersDebouncer)
+			continue
 
 		case <-tapperSyncer.context.Done():
 			logger.Log.Debugf("Watching pods loop, context done, stopping `restart tappers debouncer`")
@@ -142,6 +163,15 @@ func (tapperSyncer *MizuTapperSyncer) watchPodsForTapping() {
 			// TODO: Does this also perform cleanup?
 			return
 		}
+	}
+}
+
+func (tapperSyncer *MizuTapperSyncer) handleErrorInWatchLoop(err error, restartTappersDebouncer *debounce.Debouncer) {
+	logger.Log.Debugf("Watching pods loop, got error %v, stopping `restart tappers debouncer`", err)
+	restartTappersDebouncer.Cancel()
+	tapperSyncer.ErrorOut <- K8sTapManagerError{
+		OriginalError:    err,
+		TapManagerReason: TapManagerPodWatchError,
 	}
 }
 
@@ -159,9 +189,11 @@ func (tapperSyncer *MizuTapperSyncer) updateCurrentlyTappedPods() (err error, ch
 		}
 		if len(addedPods) > 0 || len(removedPods) > 0 {
 			tapperSyncer.CurrentlyTappedPods = podsToTap
+			tapperSyncer.nodeToTappedPodIPMap = GetNodeHostToTappedPodIpsMap(tapperSyncer.CurrentlyTappedPods)
 			tapperSyncer.TapPodChangesOut <- TappedPodChangeEvent{
-				Added:   addedPods,
-				Removed: removedPods,
+				Added:                addedPods,
+				Removed:              removedPods,
+				ExpectedTapperAmount: len(tapperSyncer.nodeToTappedPodIPMap),
 			}
 			return nil, true
 		}
@@ -170,9 +202,7 @@ func (tapperSyncer *MizuTapperSyncer) updateCurrentlyTappedPods() (err error, ch
 }
 
 func (tapperSyncer *MizuTapperSyncer) updateMizuTappers() error {
-	nodeToTappedPodIPMap := GetNodeHostToTappedPodIpsMap(tapperSyncer.CurrentlyTappedPods)
-
-	if len(nodeToTappedPodIPMap) > 0 {
+	if len(tapperSyncer.nodeToTappedPodIPMap) > 0 {
 		var serviceAccountName string
 		if tapperSyncer.config.MizuServiceAccountExists {
 			serviceAccountName = ServiceAccountName
@@ -187,16 +217,17 @@ func (tapperSyncer *MizuTapperSyncer) updateMizuTappers() error {
 			tapperSyncer.config.AgentImage,
 			TapperPodName,
 			fmt.Sprintf("%s.%s.svc.cluster.local", ApiServerPodName, tapperSyncer.config.MizuResourcesNamespace),
-			nodeToTappedPodIPMap,
+			tapperSyncer.nodeToTappedPodIPMap,
 			serviceAccountName,
 			tapperSyncer.config.TapperResources,
 			tapperSyncer.config.ImagePullPolicy,
 			tapperSyncer.config.MizuApiFilteringOptions,
-			tapperSyncer.config.DumpLogs,
+			tapperSyncer.config.LogLevel,
+			tapperSyncer.config.Istio,
 		); err != nil {
 			return err
 		}
-		logger.Log.Debugf("Successfully created %v tappers", len(nodeToTappedPodIPMap))
+		logger.Log.Debugf("Successfully created %v tappers", len(tapperSyncer.nodeToTappedPodIPMap))
 	} else {
 		if err := tapperSyncer.kubernetesProvider.RemoveDaemonSet(tapperSyncer.context, tapperSyncer.config.MizuResourcesNamespace, TapperDaemonSetName); err != nil {
 			return err

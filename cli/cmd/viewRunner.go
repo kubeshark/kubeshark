@@ -56,7 +56,7 @@ func runMizuView() {
 		return
 	}
 
-	logger.Log.Infof("Mizu is available at %s\n", url)
+	logger.Log.Infof("Mizu is available at %s", url)
 
 	if !config.Config.HeadlessMode {
 		uiUtils.OpenBrowser(url)

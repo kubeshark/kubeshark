@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/op/go-logging"
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/logger"
 	"github.com/up9inc/mizu/shared/semver"
@@ -152,14 +153,6 @@ func (provider *Provider) WaitUtilNamespaceDeleted(ctx context.Context, name str
 	return err
 }
 
-func (provider *Provider) GetPodWatcher(ctx context.Context, namespace string) watch.Interface {
-	watcher, err := provider.clientSet.CoreV1().Pods(namespace).Watch(ctx, metav1.ListOptions{Watch: true})
-	if err != nil {
-		panic(err.Error())
-	}
-	return watcher
-}
-
 func (provider *Provider) CreateNamespace(ctx context.Context, name string) (*core.Namespace, error) {
 	namespaceSpec := &core.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
@@ -179,7 +172,7 @@ type ApiServerOptions struct {
 	MaxEntriesDBSizeBytes int64
 	Resources             shared.Resources
 	ImagePullPolicy       core.PullPolicy
-	DumpLogs              bool
+	LogLevel              logging.Level
 }
 
 func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, mountVolumeClaim bool, volumeClaimName string) (*core.Pod, error) {
@@ -248,11 +241,6 @@ func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, moun
 
 	port := intstr.FromInt(shared.DefaultApiServerPort)
 
-	debugMode := ""
-	if opts.DumpLogs {
-		debugMode = "1"
-	}
-
 	pod := &core.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   opts.PodName,
@@ -272,8 +260,8 @@ func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, moun
 							Value: string(marshaledSyncEntriesConfig),
 						},
 						{
-							Name:  shared.DebugModeEnvVar,
-							Value: debugMode,
+							Name:  shared.LogLevelEnvVar,
+							Value: opts.LogLevel.String(),
 						},
 					},
 					Resources: core.ResourceRequirements{
@@ -583,6 +571,11 @@ func (provider *Provider) RemoveDaemonSet(ctx context.Context, namespace string,
 	return provider.handleRemovalError(err)
 }
 
+func (provider *Provider) RemovePersistentVolumeClaim(ctx context.Context, namespace string, volumeClaimName string) error {
+	err := provider.clientSet.CoreV1().PersistentVolumeClaims(namespace).Delete(ctx, volumeClaimName, metav1.DeleteOptions{})
+	return provider.handleRemovalError(err)
+}
+
 func (provider *Provider) handleRemovalError(err error) error {
 	// Ignore NotFound - There is nothing to delete.
 	// Ignore Forbidden - Assume that a user could not have created the resource in the first place.
@@ -619,7 +612,7 @@ func (provider *Provider) CreateConfigMap(ctx context.Context, namespace string,
 	return nil
 }
 
-func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, apiServerPodIp string, nodeToTappedPodIPMap map[string][]string, serviceAccountName string, resources shared.Resources, imagePullPolicy core.PullPolicy, mizuApiFilteringOptions api.TrafficFilteringOptions, dumpLogs bool) error {
+func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, apiServerPodIp string, nodeToTappedPodIPMap map[string][]string, serviceAccountName string, resources shared.Resources, imagePullPolicy core.PullPolicy, mizuApiFilteringOptions api.TrafficFilteringOptions, logLevel logging.Level, istio bool) error {
 	logger.Log.Debugf("Applying %d tapper daemon sets, ns: %s, daemonSetName: %s, podImage: %s, tapperPodName: %s", len(nodeToTappedPodIPMap), namespace, daemonSetName, podImage, tapperPodName)
 
 	if len(nodeToTappedPodIPMap) == 0 {
@@ -642,12 +635,10 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 		"--tap",
 		"--api-server-address", fmt.Sprintf("ws://%s/wsTapper", apiServerPodIp),
 		"--nodefrag",
-		"--procfs", procfsMountPath,
 	}
-
-	debugMode := ""
-	if dumpLogs {
-		debugMode = "1"
+	
+	if istio {
+		mizuCmd = append(mizuCmd, "--procfs", procfsMountPath, "--istio")
 	}
 
 	agentContainer := applyconfcore.Container()
@@ -657,7 +648,7 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	agentContainer.WithSecurityContext(applyconfcore.SecurityContext().WithPrivileged(true))
 	agentContainer.WithCommand(mizuCmd...)
 	agentContainer.WithEnv(
-		applyconfcore.EnvVar().WithName(shared.DebugModeEnvVar).WithValue(debugMode),
+		applyconfcore.EnvVar().WithName(shared.LogLevelEnvVar).WithValue(logLevel.String()),
 		applyconfcore.EnvVar().WithName(shared.HostModeEnvVar).WithValue("1"),
 		applyconfcore.EnvVar().WithName(shared.TappedAddressesPerNodeDictEnvVar).WithValue(string(nodeToTappedPodIPMapJsonStr)),
 		applyconfcore.EnvVar().WithName(shared.GoGCEnvVar).WithValue("12800"),
@@ -866,10 +857,6 @@ func (provider *Provider) CreatePersistentVolumeClaim(ctx context.Context, names
 	}
 
 	return provider.clientSet.CoreV1().PersistentVolumeClaims(namespace).Create(ctx, volumeClaim, metav1.CreateOptions{})
-}
-
-func (provider *Provider) RemovePersistentVolumeClaim(ctx context.Context, namespace string, volumeClaimName string) error {
-	return provider.clientSet.CoreV1().PersistentVolumeClaims(namespace).Delete(ctx, volumeClaimName, metav1.DeleteOptions{})
 }
 
 func getClientSet(config *restclient.Config) (*kubernetes.Clientset, error) {

@@ -33,7 +33,7 @@ func loadExtensions() ([]*tapApi.Extension, error) {
 			continue
 		}
 
-		logger.Log.Infof("Loading extension: %s\n", filename)
+		logger.Log.Infof("Loading extension: %s", filename)
 
 		extension := &tapApi.Extension{
 			Path: path.Join(extensionsDir, filename),
@@ -55,7 +55,7 @@ func loadExtensions() ([]*tapApi.Extension, error) {
 		dissector, ok := symDissector.(tapApi.Dissector)
 
 		if !ok {
-			return nil, errors.Errorf("Symbol Dissector type error: %v %T\n", file, symDissector)
+			return nil, errors.Errorf("Symbol Dissector type error: %v %T", file, symDissector)
 		}
 
 		dissector.Register(extension)
@@ -68,7 +68,7 @@ func loadExtensions() ([]*tapApi.Extension, error) {
 	})
 
 	for _, extension := range extensions {
-		logger.Log.Infof("Extension Properties: %+v\n", extension)
+		logger.Log.Infof("Extension Properties: %+v", extension)
 	}
 
 	return extensions, nil
@@ -92,7 +92,7 @@ func internalRun() error {
 
 	tap.StartPassiveTapper(&opts, outputItems, extenssions, &tapOpts)
 
-	logger.Log.Infof("Tapping, press enter to exit...\n")
+	logger.Log.Infof("Tapping, press enter to exit...")
 	reader := bufio.NewReader(os.Stdin)
 	reader.ReadLine()
 	return nil
@@ -104,9 +104,9 @@ func main() {
 	if err != nil {
 		switch err := err.(type) {
 		case *errors.Error:
-			logger.Log.Errorf("Error: %v\n", err.ErrorStack())
+			logger.Log.Errorf("Error: %v", err.ErrorStack())
 		default:
-			logger.Log.Errorf("Error: %v\n", err)
+			logger.Log.Errorf("Error: %v", err)
 		}
 
 		os.Exit(1)

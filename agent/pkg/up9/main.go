@@ -112,14 +112,14 @@ func GetAnalyzeInfo() *shared.AnalyzeStatus {
 }
 
 func SyncEntries(syncEntriesConfig *shared.SyncEntriesConfig) error {
-	logger.Log.Infof("Sync entries - started\n")
+	logger.Log.Infof("Sync entries - started")
 
 	var (
 		token, model string
 		guestMode    bool
 	)
 	if syncEntriesConfig.Token == "" {
-		logger.Log.Infof("Sync entries - creating anonymous token. env %s\n", syncEntriesConfig.Env)
+		logger.Log.Infof("Sync entries - creating anonymous token. env %s", syncEntriesConfig.Env)
 		guestToken, err := createAnonymousToken(syncEntriesConfig.Env)
 		if err != nil {
 			return fmt.Errorf("failed creating anonymous token, err: %v", err)
@@ -133,7 +133,7 @@ func SyncEntries(syncEntriesConfig *shared.SyncEntriesConfig) error {
 		model = syncEntriesConfig.Workspace
 		guestMode = false
 
-		logger.Log.Infof("Sync entries - upserting model. env %s, model %s\n", syncEntriesConfig.Env, model)
+		logger.Log.Infof("Sync entries - upserting model. env %s, model %s", syncEntriesConfig.Env, model)
 		if err := upsertModel(token, model, syncEntriesConfig.Env); err != nil {
 			return fmt.Errorf("failed upserting model, err: %v", err)
 		}
@@ -144,7 +144,7 @@ func SyncEntries(syncEntriesConfig *shared.SyncEntriesConfig) error {
 		return fmt.Errorf("invalid model name, model name: %s", model)
 	}
 
-	logger.Log.Infof("Sync entries - syncing. token: %s, model: %s, guest mode: %v\n", token, model, guestMode)
+	logger.Log.Infof("Sync entries - syncing. token: %s, model: %s, guest mode: %v", token, model, guestMode)
 	go syncEntriesImpl(token, model, syncEntriesConfig.Env, syncEntriesConfig.UploadIntervalSec, guestMode)
 
 	return nil
@@ -209,7 +209,7 @@ func syncEntriesImpl(token string, model string, envPrefix string, uploadInterva
 	// "http or grpc" filter indicates that we're only interested in HTTP and gRPC entries
 	query := "http or grpc"
 
-	logger.Log.Infof("Getting entries from the database\n")
+	logger.Log.Infof("Getting entries from the database")
 
 	var connection *basenine.Connection
 	var err error
@@ -227,6 +227,10 @@ func syncEntriesImpl(token string, model string, envPrefix string, uploadInterva
 		connection.Close()
 	}()
 
+	lastTimeSynced := time.Time{}
+
+	batch := make([]har.Entry, 0)
+
 	handleDataChannel := func(wg *sync.WaitGroup, connection *basenine.Connection, data chan []byte) {
 		defer wg.Done()
 		for {
@@ -239,7 +243,6 @@ func syncEntriesImpl(token string, model string, envPrefix string, uploadInterva
 			var dataMap map[string]interface{}
 			err = json.Unmarshal(dataBytes, &dataMap)
 
-			result := make([]har.Entry, 0)
 			var entry tapApi.MizuEntry
 			if err := json.Unmarshal([]byte(dataBytes), &entry); err != nil {
 				continue
@@ -261,14 +264,22 @@ func syncEntriesImpl(token string, model string, envPrefix string, uploadInterva
 				continue
 			}
 
-			result = append(result, *harEntry)
+			batch = append(batch, *harEntry)
 
-			body, jMarshalErr := json.Marshal(result)
+			now := time.Now()
+			if lastTimeSynced.Add(time.Duration(uploadIntervalSec) * time.Second).After(now) {
+				continue
+			}
+			lastTimeSynced = now
+
+			body, jMarshalErr := json.Marshal(batch)
+			batchSize := len(batch)
 			if jMarshalErr != nil {
 				analyzeInformation.Reset()
 				logger.Log.Infof("Stopping sync entries")
 				logger.Log.Fatal(jMarshalErr)
 			}
+			batch = make([]har.Entry, 0)
 
 			var in bytes.Buffer
 			w := zlib.NewWriter(&in)
@@ -293,7 +304,7 @@ func syncEntriesImpl(token string, model string, envPrefix string, uploadInterva
 				logger.Log.Info("Stopping sync entries")
 				logger.Log.Fatal(postErr)
 			}
-			analyzeInformation.SentCount += 1
+			analyzeInformation.SentCount += batchSize
 
 			if analyzeInformation.SentCount%SentCountLogInterval == 0 {
 				logger.Log.Infof("Uploaded %v entries until now", analyzeInformation.SentCount)

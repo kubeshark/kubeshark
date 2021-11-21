@@ -33,13 +33,13 @@ func (c *context) GetCaptureInfo() gopacket.CaptureInfo {
 	return c.CaptureInfo
 }
 
-func NewTcpAssembler(outputItems chan *api.OutputChannelItem, streamsMap *tcpStreamMap) *tcpAssembler {
+func NewTcpAssembler(outputItems chan *api.OutputChannelItem, streamsMap *tcpStreamMap, opts *TapOpts) *tcpAssembler {
 	var emitter api.Emitter = &api.Emitting{
 		AppStats:      &diagnose.AppStats,
 		OutputChannel: outputItems,
 	}
 
-	streamFactory := NewTcpStreamFactory(emitter, streamsMap)
+	streamFactory := NewTcpStreamFactory(emitter, streamsMap, opts)
 	streamPool := reassembly.NewStreamPool(streamFactory)
 	assembler := reassembly.NewAssembler(streamPool)
 
@@ -78,7 +78,7 @@ func (a *tcpAssembler) processPackets(dumpPacket bool, packets <-chan source.Tcp
 			if *checksum {
 				err := tcp.SetNetworkLayerForChecksum(packet.NetworkLayer())
 				if err != nil {
-					logger.Log.Fatalf("Failed to set network layer for checksum: %s\n", err)
+					logger.Log.Fatalf("Failed to set network layer for checksum: %s", err)
 				}
 			}
 			c := context{

@@ -46,7 +46,7 @@ func (streamMap *tcpStreamMap) closeTimedoutTcpStreamChannels() {
 				if !stream.isClosed && time.Now().After(streamWrapper.createdAt.Add(tcpStreamChannelTimeout)) {
 					stream.Close()
 					diagnose.AppStats.IncDroppedTcpStreams()
-					logger.Log.Debugf("Dropped an unidentified TCP stream because of timeout. Total dropped: %d Total Goroutines: %d Timeout (ms): %d\n",
+					logger.Log.Debugf("Dropped an unidentified TCP stream because of timeout. Total dropped: %d Total Goroutines: %d Timeout (ms): %d",
 						diagnose.AppStats.DroppedTcpStreams, runtime.NumGoroutine(), tcpStreamChannelTimeout/1000000)
 				}
 			} else {

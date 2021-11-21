@@ -94,17 +94,17 @@ func main() {
 			panic("API server address must be provided with --api-server-address when using --tap")
 		}
 
+		hostMode := os.Getenv(shared.HostModeEnvVar) == "1"
+		tapOpts := &tap.TapOpts{HostMode: hostMode}
 		tapTargets := getTapTargets()
 		if tapTargets != nil {
-			tap.SetFilterAuthorities(tapTargets)
-			logger.Log.Infof("Filtering for the following authorities: %v", tap.GetFilterIPs())
+			tapOpts.FilterAuthorities = tapTargets
+			logger.Log.Infof("Filtering for the following authorities: %v", tapOpts.FilterAuthorities)
 		}
 
 		filteredOutputItemsChannel := make(chan *tapApi.OutputChannelItem)
 
 		filteringOptions := getTrafficFilteringOptions()
-		hostMode := os.Getenv(shared.HostModeEnvVar) == "1"
-		tapOpts := &tap.TapOpts{HostMode: hostMode}
 		tap.StartPassiveTapper(tapOpts, filteredOutputItemsChannel, extensions, filteringOptions)
 		socketConnection, err := dialSocketWithRetry(*apiServerAddress, socketConnectionRetries, socketConnectionRetryDelay)
 		if err != nil {
@@ -207,7 +207,7 @@ func loadExtensions() {
 	extensionsMap = make(map[string]*tapApi.Extension)
 	for i, file := range files {
 		filename := file.Name()
-		logger.Log.Infof("Loading extension: %s\n", filename)
+		logger.Log.Infof("Loading extension: %s", filename)
 		extension := &tapApi.Extension{
 			Path: path.Join(extensionsDir, filename),
 		}
@@ -219,7 +219,7 @@ func loadExtensions() {
 		var ok bool
 		dissector, ok = symDissector.(tapApi.Dissector)
 		if err != nil || !ok {
-			panic(fmt.Sprintf("Failed to load the extension: %s\n", extension.Path))
+			panic(fmt.Sprintf("Failed to load the extension: %s", extension.Path))
 		}
 		dissector.Register(extension)
 		extension.Dissector = dissector
@@ -232,7 +232,7 @@ func loadExtensions() {
 	})
 
 	for _, extension := range extensions {
-		logger.Log.Infof("Extension Properties: %+v\n", extension)
+		logger.Log.Infof("Extension Properties: %+v", extension)
 	}
 
 	controllers.InitExtensionsMap(extensionsMap)
@@ -398,10 +398,11 @@ func getSyncEntriesConfig() *shared.SyncEntriesConfig {
 }
 
 func determineLogLevel() (logLevel logging.Level) {
-	logLevel = logging.INFO
-	if os.Getenv(shared.DebugModeEnvVar) == "1" {
-		logLevel = logging.DEBUG
+	logLevel, err := logging.LogLevel(os.Getenv(shared.LogLevelEnvVar))
+	if err != nil {
+		logLevel = logging.INFO
 	}
+
 	return
 }
 
@@ -438,10 +439,11 @@ func startMizuTapperSyncer(ctx context.Context) (*kubernetes.MizuTapperSyncer, e
 		AgentImage:               config.Config.AgentImage,
 		TapperResources:          config.Config.TapperResources,
 		ImagePullPolicy:          v1.PullPolicy(config.Config.PullPolicy),
-		DumpLogs:                 config.Config.DumpLogs,
+		LogLevel:                 config.Config.LogLevel,
 		IgnoredUserAgents:        config.Config.IgnoredUserAgents,
 		MizuApiFilteringOptions:  config.Config.MizuApiFilteringOptions,
 		MizuServiceAccountExists: true, //assume service account exists since daemon mode will not function without it anyway
+		Istio:                    config.Config.Istio,
 	})
 
 	if err != nil {
@@ -458,7 +460,7 @@ func startMizuTapperSyncer(ctx context.Context) (*kubernetes.MizuTapperSyncer, e
 					return
 				}
 				logger.Log.Fatalf("fatal tap syncer error: %v", syncerErr)
-			case _, ok := <-tapperSyncer.TapPodChangesOut:
+			case tapPodChangeEvent, ok := <-tapperSyncer.TapPodChangesOut:
 				if !ok {
 					logger.Log.Debug("mizuTapperSyncer pod changes channel closed, ending listener loop")
 					return
@@ -471,6 +473,7 @@ func startMizuTapperSyncer(ctx context.Context) (*kubernetes.MizuTapperSyncer, e
 				}
 				api.BroadcastToBrowserClients(serializedTapStatus)
 				providers.TapStatus.Pods = tapStatus.Pods
+				providers.ExpectedTapperAmount = tapPodChangeEvent.ExpectedTapperAmount
 			case <-ctx.Done():
 				logger.Log.Debug("mizuTapperSyncer event listener loop exiting due to context done")
 				return

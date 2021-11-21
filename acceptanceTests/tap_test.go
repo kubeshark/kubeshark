@@ -427,9 +427,10 @@ func TestTapRedact(t *testing.T) {
 	}
 
 	proxyUrl := getProxyUrl(defaultNamespaceName, defaultServiceName)
+	requestHeaders := map[string]string{"User-Header": "Mizu"}
 	requestBody := map[string]string{"User": "Mizu"}
 	for i := 0; i < defaultEntriesCount; i++ {
-		if _, requestErr := executeHttpPostRequest(fmt.Sprintf("%v/post", proxyUrl), requestBody); requestErr != nil {
+		if _, requestErr := executeHttpPostRequestWithHeaders(fmt.Sprintf("%v/post", proxyUrl), requestHeaders, requestBody); requestErr != nil {
 			t.Errorf("failed to send proxy request, err: %v", requestErr)
 			return
 		}
@@ -460,12 +461,12 @@ func TestTapRedact(t *testing.T) {
 		headers := request["_headers"].([]interface{})
 		for _, headerInterface := range headers {
 			header := headerInterface.(map[string]interface{})
-			if header["name"].(string) != "User-Agent" {
+			if header["name"].(string) != "User-Header" {
 				continue
 			}
 
-			userAgent := header["value"].(string)
-			if userAgent != "[REDACTED]" {
+			userHeader := header["value"].(string)
+			if userHeader != "[REDACTED]" {
 				return fmt.Errorf("unexpected result - user agent is not redacted")
 			}
 		}
@@ -530,9 +531,10 @@ func TestTapNoRedact(t *testing.T) {
 	}
 
 	proxyUrl := getProxyUrl(defaultNamespaceName, defaultServiceName)
+	requestHeaders := map[string]string{"User-Header": "Mizu"}
 	requestBody := map[string]string{"User": "Mizu"}
 	for i := 0; i < defaultEntriesCount; i++ {
-		if _, requestErr := executeHttpPostRequest(fmt.Sprintf("%v/post", proxyUrl), requestBody); requestErr != nil {
+		if _, requestErr := executeHttpPostRequestWithHeaders(fmt.Sprintf("%v/post", proxyUrl), requestHeaders, requestBody); requestErr != nil {
 			t.Errorf("failed to send proxy request, err: %v", requestErr)
 			return
 		}
@@ -563,12 +565,12 @@ func TestTapNoRedact(t *testing.T) {
 		headers := request["_headers"].([]interface{})
 		for _, headerInterface := range headers {
 			header := headerInterface.(map[string]interface{})
-			if header["name"].(string) != "User-Agent" {
+			if header["name"].(string) != "User-Header" {
 				continue
 			}
 
-			userAgent := header["value"].(string)
-			if userAgent == "[REDACTED]" {
+			userHeader := header["value"].(string)
+			if userHeader == "[REDACTED]" {
 				return fmt.Errorf("unexpected result - user agent is redacted")
 			}
 		}
