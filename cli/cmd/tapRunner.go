@@ -753,6 +753,9 @@ func watchTapperPod(ctx context.Context, kubernetesProvider *kubernetes.Provider
 }
 
 func watchMizuEvents(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
+	// startTime is rounded to seconds because we compare it to k8s event times which are rounded to seconds.
+	startTime := time.Now().Truncate(time.Second)
+
 	mizuResourceRegex := regexp.MustCompile(fmt.Sprintf("^%s.*", kubernetes.MizuResourcesPrefix))
 	eventWatchHelper := kubernetes.NewEventWatchHelper(kubernetesProvider, mizuResourceRegex)
 	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, eventWatchHelper, []string{config.Config.MizuResourcesNamespace}, eventWatchHelper)
@@ -771,6 +774,10 @@ func watchMizuEvents(ctx context.Context, kubernetesProvider *kubernetes.Provide
 				cancel()
 			}
 
+			if startTime.After(event.CreationTimestamp.Time) {
+				continue
+			}
+
 			if event.Type == core.EventTypeWarning {
 				logger.Log.Warningf(uiUtils.Warning, fmt.Sprintf("Resource %s in state %s - %s", event.Regarding.Name, event.Reason, event.Note))
 			}
@@ -786,6 +793,10 @@ func watchMizuEvents(ctx context.Context, kubernetesProvider *kubernetes.Provide
 				cancel()
 			}
 
+			if startTime.After(event.CreationTimestamp.Time) {
+				continue
+			}
+
 			if event.Type == core.EventTypeWarning {
 				logger.Log.Warningf(uiUtils.Warning, fmt.Sprintf("Resource %s in state %s - %s", event.Regarding.Name, event.Reason, event.Note))
 			}
@@ -799,6 +810,10 @@ func watchMizuEvents(ctx context.Context, kubernetesProvider *kubernetes.Provide
 			if err != nil {
 				logger.Log.Errorf(uiUtils.Error, err)
 				cancel()
+			}
+
+			if startTime.After(event.CreationTimestamp.Time) {
+				continue
 			}
 
 			if event.Type == core.EventTypeWarning {
