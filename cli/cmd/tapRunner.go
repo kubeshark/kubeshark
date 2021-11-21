@@ -44,6 +44,8 @@ var state tapState
 var apiProvider *apiserver.Provider
 
 func RunMizuTap() {
+	startTime := time.Now()
+
 	mizuApiFilteringOptions, err := getMizuApiFilteringOptions()
 	apiProvider = apiserver.NewProvider(GetApiServerUrl(), apiserver.DefaultRetries, apiserver.DefaultTimeout)
 	if err != nil {
@@ -149,7 +151,7 @@ func RunMizuTap() {
 
 		go goUtils.HandleExcWrapper(watchApiServerPod, ctx, kubernetesProvider, cancel)
 		go goUtils.HandleExcWrapper(watchTapperPod, ctx, kubernetesProvider, cancel)
-		go goUtils.HandleExcWrapper(watchMizuEvents, ctx, kubernetesProvider, cancel)
+		go goUtils.HandleExcWrapper(watchMizuEvents, ctx, kubernetesProvider, cancel, startTime)
 
 		// block until exit signal or error
 		waitForFinish(ctx, cancel)
@@ -752,9 +754,9 @@ func watchTapperPod(ctx context.Context, kubernetesProvider *kubernetes.Provider
 	}
 }
 
-func watchMizuEvents(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
-	// startTime is rounded to seconds because we compare it to k8s event times which are rounded to seconds.
-	startTime := time.Now().Truncate(time.Second)
+func watchMizuEvents(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc, startTime time.Time) {
+	// Round down because k8s CreationTimestamp is given in 1 sec resolution.
+	startTime = startTime.Truncate(time.Second)
 
 	mizuResourceRegex := regexp.MustCompile(fmt.Sprintf("^%s.*", kubernetes.MizuResourcesPrefix))
 	eventWatchHelper := kubernetes.NewEventWatchHelper(kubernetesProvider, mizuResourceRegex)
