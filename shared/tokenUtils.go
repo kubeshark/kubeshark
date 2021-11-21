@@ -3,7 +3,6 @@ package shared
 import (
 	"fmt"
 	"github.com/golang-jwt/jwt/v4"
-	"strings"
 	"time"
 )
 
@@ -25,15 +24,6 @@ func GetTokenEmail(tokenString string) (string, error) {
 	}
 
 	return claims["email"].(string), nil
-}
-
-func IsTokenValid(tokenString string, envName string) (bool, error) {
-	claims, err := getTokenClaims(tokenString)
-	if err != nil {
-		return false, err
-	}
-
-	return strings.Contains(claims["iss"].(string), envName), nil
 }
 
 func getTokenClaims(tokenString string) (jwt.MapClaims, error) {
