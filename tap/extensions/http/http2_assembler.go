@@ -72,22 +72,22 @@ func (fbs *fragmentsByStream) pop(streamID uint32) ([]hpack.HeaderField, []byte)
 	return headers, data
 }
 
-func createGrpcAssembler(b *bufio.Reader) *GrpcAssembler {
+func createHTTP2Assembler(b *bufio.Reader) *Http2Assembler {
 	var framerOutput bytes.Buffer
 	framer := http2.NewFramer(&framerOutput, b)
 	framer.ReadMetaHeaders = hpack.NewDecoder(initialHeaderTableSize, nil)
-	return &GrpcAssembler{
+	return &Http2Assembler{
 		fragmentsByStream: make(fragmentsByStream),
 		framer:            framer,
 	}
 }
 
-type GrpcAssembler struct {
+type Http2Assembler struct {
 	fragmentsByStream fragmentsByStream
 	framer            *http2.Framer
 }
 
-func (ga *GrpcAssembler) readMessage() (uint32, interface{}, error) {
+func (ga *Http2Assembler) readMessage() (uint32, interface{}, error) {
 	// Exactly one Framer is used for each half connection.
 	// (Instead of creating a new Framer for each ReadFrame operation)
 	// This is needed in order to decompress the headers,
@@ -153,7 +153,7 @@ func (ga *GrpcAssembler) readMessage() (uint32, interface{}, error) {
 	return streamID, messageHTTP1, nil
 }
 
-func (ga *GrpcAssembler) isStreamEnd(frame http2.Frame) bool {
+func (ga *Http2Assembler) isStreamEnd(frame http2.Frame) bool {
 	switch frame := frame.(type) {
 	case *http2.MetaHeadersFrame:
 		if frame.StreamEnded() {

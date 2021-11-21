@@ -29,9 +29,9 @@ var protocol api.Protocol = api.Protocol{
 
 var http2Protocol api.Protocol = api.Protocol{
 	Name:            "http",
-	LongName:        "Hypertext Transfer Protocol Version 2 (HTTP/2) (gRPC)",
+	LongName:        "Hypertext Transfer Protocol Version 2 (HTTP/2)",
 	Abbreviation:    "HTTP/2",
-	Macro:           "grpc",
+	Macro:           "http2",
 	Version:         "2.0",
 	BackgroundColor: "#244c5a",
 	ForegroundColor: "#ffffff",
@@ -64,10 +64,10 @@ func (d dissecting) Ping() {
 func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, superIdentifier *api.SuperIdentifier, emitter api.Emitter, options *api.TrafficFilteringOptions) error {
 	isHTTP2, err := checkIsHTTP2Connection(b, isClient)
 
-	var grpcAssembler *GrpcAssembler
+	var http2Assembler *Http2Assembler
 	if isHTTP2 {
 		prepareHTTP2Connection(b, isClient)
-		grpcAssembler = createGrpcAssembler(b)
+		http2Assembler = createHTTP2Assembler(b)
 	}
 
 	dissected := false
@@ -77,7 +77,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 		}
 
 		if isHTTP2 {
-			err = handleHTTP2Stream(grpcAssembler, tcpID, superTimer, emitter, options)
+			err = handleHTTP2Stream(http2Assembler, tcpID, superTimer, emitter, options)
 			if err == io.EOF || err == io.ErrUnexpectedEOF {
 				break
 			} else if err != nil {
@@ -426,7 +426,6 @@ func (d dissecting) Represent(protoIn api.Protocol, request map[string]interface
 func (d dissecting) Macros() map[string]string {
 	return map[string]string{
 		`http`:  fmt.Sprintf(`proto.abbr == "%s" and proto.version == "%s"`, protocol.Abbreviation, protocol.Version),
-		`grpc`:  fmt.Sprintf(`proto.abbr == "%s" and proto.version == "%s"`, protocol.Abbreviation, http2Protocol.Version),
 		`http2`: fmt.Sprintf(`proto.abbr == "%s" and proto.version == "%s"`, protocol.Abbreviation, http2Protocol.Version),
 	}
 }
