@@ -21,13 +21,13 @@ func NewEventWatchHelper(kubernetesProvider *Provider, NameRegexFilter *regexp.R
 }
 
 // Implements the EventFilterer Interface
-func (pwh *EventWatchHelper) Filter(wEvent *WatchEvent) (bool, error) {
+func (wh *EventWatchHelper) Filter(wEvent *WatchEvent) (bool, error) {
 	event, err := wEvent.ToEvent()
 	if err != nil {
 		return false, nil
 	}
 
-	if !pwh.NameRegexFilter.MatchString(event.Name) {
+	if !wh.NameRegexFilter.MatchString(event.Name) {
 		return false, nil
 	}
 
@@ -35,8 +35,8 @@ func (pwh *EventWatchHelper) Filter(wEvent *WatchEvent) (bool, error) {
 }
 
 // Implements the WatchCreator Interface
-func (pwh *EventWatchHelper) NewWatcher(ctx context.Context, namespace string) (watch.Interface, error) {
-	watcher, err := pwh.kubernetesProvider.clientSet.EventsV1().Events(namespace).Watch(ctx, metav1.ListOptions{Watch: true})
+func (wh *EventWatchHelper) NewWatcher(ctx context.Context, namespace string) (watch.Interface, error) {
+	watcher, err := wh.kubernetesProvider.clientSet.EventsV1().Events(namespace).Watch(ctx, metav1.ListOptions{Watch: true})
 	if err != nil {
 		return nil, err
 	}
