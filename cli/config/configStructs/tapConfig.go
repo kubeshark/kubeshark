@@ -25,6 +25,7 @@ const (
 	EnforcePolicyFile             = "traffic-validation-file"
 	ContractFile                  = "contract"
 	DaemonModeTapName             = "daemon"
+	IstioName                     = "istio"
 )
 
 type TapConfig struct {
@@ -48,6 +49,7 @@ type TapConfig struct {
 	TapperResources         shared.Resources `yaml:"tapper-resources"`
 	DaemonMode              bool             `yaml:"daemon" default:"false"`
 	NoPersistentVolumeClaim bool             `yaml:"no-persistent-volume-claim" default:"false"`
+	Istio                   bool             `yaml:"istio" default:"false"`
 }
 
 func (config *TapConfig) PodRegex() *regexp.Regexp {

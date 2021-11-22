@@ -217,6 +217,7 @@ func startTapperSyncer(ctx context.Context, cancel context.CancelFunc, provider 
 		IgnoredUserAgents:        config.Config.Tap.IgnoredUserAgents,
 		MizuApiFilteringOptions:  mizuApiFilteringOptions,
 		MizuServiceAccountExists: state.mizuServiceAccountExists,
+		Istio:                    config.Config.Tap.Istio,
 	})
 
 	if err != nil {

@@ -95,17 +95,17 @@ func main() {
 			panic("API server address must be provided with --api-server-address when using --tap")
 		}
 
+		hostMode := os.Getenv(shared.HostModeEnvVar) == "1"
+		tapOpts := &tap.TapOpts{HostMode: hostMode}
 		tapTargets := getTapTargets()
 		if tapTargets != nil {
-			tap.SetFilterAuthorities(tapTargets)
-			logger.Log.Infof("Filtering for the following authorities: %v", tap.GetFilterIPs())
+			tapOpts.FilterAuthorities = tapTargets
+			logger.Log.Infof("Filtering for the following authorities: %v", tapOpts.FilterAuthorities)
 		}
 
 		filteredOutputItemsChannel := make(chan *tapApi.OutputChannelItem)
 
 		filteringOptions := getTrafficFilteringOptions()
-		hostMode := os.Getenv(shared.HostModeEnvVar) == "1"
-		tapOpts := &tap.TapOpts{HostMode: hostMode}
 		tap.StartPassiveTapper(tapOpts, filteredOutputItemsChannel, extensions, filteringOptions)
 		socketConnection, err := dialSocketWithRetry(*apiServerAddress, socketConnectionRetries, socketConnectionRetryDelay)
 		if err != nil {
@@ -446,6 +446,7 @@ func startMizuTapperSyncer(ctx context.Context, provider *kubernetes.Provider) (
 		IgnoredUserAgents:        config.Config.IgnoredUserAgents,
 		MizuApiFilteringOptions:  config.Config.MizuApiFilteringOptions,
 		MizuServiceAccountExists: true, //assume service account exists since daemon mode will not function without it anyway
+		Istio:                    config.Config.Istio,
 	})
 
 	if err != nil {
