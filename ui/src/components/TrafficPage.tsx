@@ -96,6 +96,48 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
         // eslint-disable-next-line
     }, [addition]);
 
+    const [selectedEntries, setSelectedEntries] = useState([]);
+
+    const addSelectedEntries = (id: number) => {
+        selectedEntries.push(id);
+    }
+
+    const removeSelectedEntries = (id: number) => {
+        var index = selectedEntries.indexOf(id);
+        if (index !== -1) {
+            selectedEntries.splice(index, 1);
+        }
+    }
+
+    const filterSelectedEntries = () => {
+        var ids = "";
+        selectedEntries.forEach(id => {
+            if (ids) {
+                ids = `${ids} or id == ${id}`;
+            } else {
+                ids = `id == ${id}`;
+            }
+        });
+
+        if (!ids) {
+            toast.error("No entries are selected!", {
+                position: "bottom-right",
+                theme: "colored",
+                autoClose: 3000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+            });
+            return;
+        }
+
+        setQuery(ids);
+        ws.current.close();
+        openWebSocket(ids);
+    }
+
     const ws = useRef(null);
 
     const listEntry = useRef(null);
@@ -104,6 +146,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
         setFocusedEntryId(null);
         setEntries([]);
         setEntriesBuffer([]);
+        setSelectedEntries([]);
         ws.current = new WebSocket(MizuWebsocketURL);
         ws.current.onopen = () => {
             ws.current.send(query)
@@ -128,6 +171,8 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                             setFocusedEntryId={setFocusedEntryId}
                             style={{}}
                             updateQuery={updateQuery}
+                            addSelectedEntries={addSelectedEntries}
+                            removeSelectedEntries={removeSelectedEntries}
                         />
                     ]);
                     break
@@ -259,6 +304,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                         backgroundColor={queryBackgroundColor}
                         ws={ws.current}
                         openWebSocket={openWebSocket}
+                        filterSelectedEntries={filterSelectedEntries}
                     />
                     <div className={styles.container}>
                         <EntriesList

@@ -40,9 +40,11 @@ interface EntryProps {
     setFocusedEntryId: (id: string) => void;
     style: object;
     updateQuery: any;
+    addSelectedEntries: (id: number) => void;
+    removeSelectedEntries: (id: number) => void;
 }
 
-export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, style, updateQuery}) => {
+export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, style, updateQuery, addSelectedEntries, removeSelectedEntries}) => {
 
     const [isSelected, setIsSelected] = useState(false);
 
@@ -122,6 +124,11 @@ export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, style
             className={`${styles.row}
             ${isSelected && !rule && !contractEnabled ? styles.rowSelected : additionalRulesProperties}`}
             onClick={() => {
+                if (isSelected) {
+                    removeSelectedEntries(entry.id);
+                } else {
+                    addSelectedEntries(entry.id);
+                }
                 setIsSelected(!isSelected);
                 setFocusedEntryId(entry.id.toString());
             }}

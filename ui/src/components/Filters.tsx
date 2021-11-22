@@ -3,6 +3,7 @@ import styles from './style/Filters.module.sass';
 import {Button, Grid, Modal, Box, Typography, Backdrop, Fade, Divider} from "@material-ui/core";
 import CodeEditor from '@uiw/react-textarea-code-editor';
 import MenuBookIcon from '@material-ui/icons/MenuBook';
+import LibraryAddCheckIcon from '@material-ui/icons/LibraryAddCheck';
 import {SyntaxHighlighter} from "./UI/SyntaxHighlighter/index";
 import filterUIExample1 from "./assets/filter-ui-example-1.png"
 import filterUIExample2 from "./assets/filter-ui-example-2.png"
@@ -14,9 +15,10 @@ interface FiltersProps {
     backgroundColor: string
     ws: any
     openWebSocket: (query: string) => void;
+    filterSelectedEntries: () => void;
 }
 
-export const Filters: React.FC<FiltersProps> = ({query, setQuery, backgroundColor, ws, openWebSocket}) => {
+export const Filters: React.FC<FiltersProps> = ({query, setQuery, backgroundColor, ws, openWebSocket, filterSelectedEntries}) => {
     return <div className={styles.container}>
         <QueryForm
             query={query}
@@ -24,6 +26,7 @@ export const Filters: React.FC<FiltersProps> = ({query, setQuery, backgroundColo
             backgroundColor={backgroundColor}
             ws={ws}
             openWebSocket={openWebSocket}
+            filterSelectedEntries={filterSelectedEntries}
         />
     </div>;
 };
@@ -34,6 +37,7 @@ interface QueryFormProps {
     backgroundColor: string
     ws: any
     openWebSocket: (query: string) => void;
+    filterSelectedEntries: () => void;
 }
 
 const style = {
@@ -49,7 +53,7 @@ const style = {
     color: '#000',
 };
 
-export const QueryForm: React.FC<QueryFormProps> = ({query, setQuery, backgroundColor, ws, openWebSocket}) => {
+export const QueryForm: React.FC<QueryFormProps> = ({query, setQuery, backgroundColor, ws, openWebSocket, filterSelectedEntries}) => {
 
     const formRef = useRef<HTMLFormElement>(null);
 
@@ -131,6 +135,23 @@ export const QueryForm: React.FC<QueryFormProps> = ({query, setQuery, background
                         onClick={handleOpenModal}
                     >
                         <MenuBookIcon fontSize="inherit"></MenuBookIcon>
+                    </Button>
+                    <Button
+                        title="Filter Selected Results"
+                        variant="contained"
+                        color="primary"
+                        style={{
+                            margin: "2px 0px 0px 10px",
+                            minWidth: "26px",
+                            backgroundColor: variables.blueColor,
+                            fontWeight: 600,
+                            borderRadius: "4px",
+                            color: "#fff",
+                            textTransform: "none",
+                        }}
+                        onClick={filterSelectedEntries}
+                    >
+                        <LibraryAddCheckIcon fontSize="inherit"></LibraryAddCheckIcon>
                     </Button>
                 </Grid>
             </Grid>
