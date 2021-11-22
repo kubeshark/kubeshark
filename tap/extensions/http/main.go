@@ -124,15 +124,6 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 	return nil
 }
 
-func SetHostname(address, newHostname string) string {
-	replacedUrl, err := url.Parse(address)
-	if err != nil {
-		return address
-	}
-	replacedUrl.Host = newHostname
-	return replacedUrl.String()
-}
-
 func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, resolvedDestination string) *api.MizuEntry {
 	var host, authority, path, service string
 
@@ -189,9 +180,9 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 	reqDetails["queryString"] = mapSliceRebuildAsMap(reqDetails["_queryString"].([]interface{}))
 
 	if resolvedDestination != "" {
-		service = SetHostname(service, resolvedDestination)
+		service = resolvedDestination
 	} else if resolvedSource != "" {
-		service = SetHostname(service, resolvedSource)
+		service = resolvedSource
 	}
 
 	method := reqDetails["method"].(string)
