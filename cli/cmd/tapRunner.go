@@ -42,6 +42,8 @@ var state tapState
 var apiProvider *apiserver.Provider
 
 func RunMizuTap() {
+	startTime := time.Now()
+
 	mizuApiFilteringOptions, err := getMizuApiFilteringOptions()
 	apiProvider = apiserver.NewProvider(GetApiServerUrl(), apiserver.DefaultRetries, apiserver.DefaultTimeout)
 	if err != nil {
@@ -150,6 +152,7 @@ func RunMizuTap() {
 
 		go goUtils.HandleExcWrapper(watchApiServerPod, ctx, kubernetesProvider, cancel)
 		go goUtils.HandleExcWrapper(watchTapperPod, ctx, kubernetesProvider, cancel)
+		go goUtils.HandleExcWrapper(watchMizuEvents, ctx, kubernetesProvider, cancel, startTime)
 
 		// block until exit signal or error
 		waitForFinish(ctx, cancel)
@@ -214,6 +217,7 @@ func startTapperSyncer(ctx context.Context, cancel context.CancelFunc, provider 
 		IgnoredUserAgents:        config.Config.Tap.IgnoredUserAgents,
 		MizuApiFilteringOptions:  mizuApiFilteringOptions,
 		MizuServiceAccountExists: state.mizuServiceAccountExists,
+		Istio:                    config.Config.Tap.Istio,
 	})
 
 	if err != nil {
@@ -726,11 +730,94 @@ func watchTapperPod(ctx context.Context, kubernetesProvider *kubernetes.Provider
 				continue
 			}
 
-			logger.Log.Errorf("[Error] Error in mizu tapper watch, err: %v", err)
+			logger.Log.Errorf("[Error] Error in mizu tapper pod watch, err: %v", err)
 			cancel()
 
 		case <-ctx.Done():
 			logger.Log.Debugf("Watching tapper pod loop, ctx done")
+			return
+		}
+	}
+}
+
+func watchMizuEvents(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc, startTime time.Time) {
+	// Round down because k8s CreationTimestamp is given in 1 sec resolution.
+	startTime = startTime.Truncate(time.Second)
+
+	mizuResourceRegex := regexp.MustCompile(fmt.Sprintf("^%s.*", kubernetes.MizuResourcesPrefix))
+	eventWatchHelper := kubernetes.NewEventWatchHelper(kubernetesProvider, mizuResourceRegex)
+	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, eventWatchHelper, []string{config.Config.MizuResourcesNamespace}, eventWatchHelper)
+
+	for {
+		select {
+		case wEvent, ok := <-added:
+			if !ok {
+				added = nil
+				continue
+			}
+
+			event, err := wEvent.ToEvent()
+			if err != nil {
+				logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("error parsing Mizu resource added event: %+v", err))
+				cancel()
+			}
+
+			if startTime.After(event.CreationTimestamp.Time) {
+				continue
+			}
+
+			if event.Type == core.EventTypeWarning {
+				logger.Log.Warningf(uiUtils.Warning, fmt.Sprintf("Resource %s in state %s - %s", event.Regarding.Name, event.Reason, event.Note))
+			}
+		case wEvent, ok := <-removed:
+			if !ok {
+				removed = nil
+				continue
+			}
+
+			event, err := wEvent.ToEvent()
+			if err != nil {
+				logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("error parsing Mizu resource removed event: %+v", err))
+				cancel()
+			}
+
+			if startTime.After(event.CreationTimestamp.Time) {
+				continue
+			}
+
+			if event.Type == core.EventTypeWarning {
+				logger.Log.Warningf(uiUtils.Warning, fmt.Sprintf("Resource %s in state %s - %s", event.Regarding.Name, event.Reason, event.Note))
+			}
+		case wEvent, ok := <-modified:
+			if !ok {
+				modified = nil
+				continue
+			}
+
+			event, err := wEvent.ToEvent()
+			if err != nil {
+				logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("error parsing Mizu resource modified event: %+v", err))
+				cancel()
+			}
+
+			if startTime.After(event.CreationTimestamp.Time) {
+				continue
+			}
+
+			if event.Type == core.EventTypeWarning {
+				logger.Log.Warningf(uiUtils.Warning, fmt.Sprintf("Resource %s in state %s - %s", event.Regarding.Name, event.Reason, event.Note))
+			}
+		case err, ok := <-errorChan:
+			if !ok {
+				errorChan = nil
+				continue
+			}
+
+			logger.Log.Errorf("error in watch mizu resource events loop: %+v", err)
+			cancel()
+
+		case <-ctx.Done():
+			logger.Log.Debugf("watching Mizu resource events loop, ctx done")
 			return
 		}
 	}

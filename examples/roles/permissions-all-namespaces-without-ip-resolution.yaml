@@ -23,6 +23,9 @@ rules:
 - apiGroups: [""]
   resources: ["configmaps"]
   verbs: ["get", "create", "delete"]
+  - apiGroups: ["events.k8s.io"]
+    resources: ["events"]
+    verbs: ["list", "watch"]
 ---
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1

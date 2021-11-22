@@ -43,6 +43,7 @@ type MizuAgentConfig struct {
 	MizuResourcesNamespace  string                      `json:"mizuResourceNamespace"`
 	MizuApiFilteringOptions api.TrafficFilteringOptions `json:"mizuApiFilteringOptions"`
 	AgentDatabasePath       string                      `json:"agentDatabasePath"`
+	Istio                   bool                        `json:"istio"`
 }
 
 type WebSocketMessageMetadata struct {

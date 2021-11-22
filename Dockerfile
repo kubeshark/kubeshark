@@ -52,7 +52,7 @@ RUN cd .. && /bin/bash build_extensions.sh
 
 FROM alpine:3.14
 
-RUN apk add bash libpcap-dev tcpdump
+RUN apk add bash libpcap-dev
 
 WORKDIR /app
 
