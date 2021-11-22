@@ -9,7 +9,6 @@ import (
 	"sync"
 	"time"
 
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/watch"
 )
 
@@ -39,7 +38,7 @@ func FilteredWatch(ctx context.Context, watcherCreator WatchCreator, targetNames
 			for {
 				watcher, err := watcherCreator.NewWatcher(ctx, targetNamespace)
 				if err != nil {
-					errorChan <- fmt.Errorf("error in k8 watch: %v", err)
+					errorChan <- fmt.Errorf("error in k8s watch: %v", err)
 					break
 				}
 
@@ -54,7 +53,7 @@ func FilteredWatch(ctx context.Context, watcherCreator WatchCreator, targetNames
 				}
 
 				if err != nil {
-					errorChan <- fmt.Errorf("error in k8 watch: %v", err)
+					errorChan <- fmt.Errorf("error in k8s watch: %v", err)
 					break
 				} else {
 					if !watchRestartDebouncer.IsOn() {
@@ -95,7 +94,7 @@ func startWatchLoop(ctx context.Context, watcher watch.Interface, filterer Event
 			wEvent := WatchEvent(e)
 
 			if wEvent.Type == watch.Error {
-				return apierrors.FromObject(wEvent.Object)
+				return wEvent.ToError()
 			}
 
 			if pass, err := filterer.Filter(&wEvent); err != nil {
