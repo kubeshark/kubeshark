@@ -15,24 +15,61 @@ type PacketSourceManager struct {
 }
 
 func NewPacketSourceManager(procfs string, pids string, filename string, interfaceName string,
-	behaviour TcpPacketSourceBehaviour) (*PacketSourceManager, error) {
+	istio bool, clusterIps []string, behaviour TcpPacketSourceBehaviour) (*PacketSourceManager, error) {
 	sources := make([]*tcpPacketSource, 0)
-	hostSource, err := newHostPacketSource(filename, interfaceName, behaviour)
+	sources, err := createHostSource(sources, filename, interfaceName, behaviour)
 
 	if err != nil {
 		return nil, err
 	}
 
-	sources = append(sources, hostSource)
-
-	if pids != "" {
-		netnsSources := newNetnsPacketSources(procfs, pids, interfaceName, behaviour)
-		sources = append(sources, netnsSources...)
-	}
+	sources = createSourcesFromPids(sources, procfs, pids, interfaceName, behaviour)
+	sources = createSourcesFromEnvoy(sources, istio, procfs, clusterIps, interfaceName, behaviour)
 
 	return &PacketSourceManager{
 		sources: sources,
 	}, nil
+}
+
+func createHostSource(sources []*tcpPacketSource, filename string, interfaceName string,
+	behaviour TcpPacketSourceBehaviour) ([]*tcpPacketSource, error) {
+	hostSource, err := newHostPacketSource(filename, interfaceName, behaviour)
+
+	if err != nil {
+		return sources, err
+	}
+
+	return append(sources, hostSource), nil
+}
+
+func createSourcesFromPids(sources []*tcpPacketSource, procfs string, pids string,
+	interfaceName string, behaviour TcpPacketSourceBehaviour) []*tcpPacketSource {
+	if pids == "" {
+		return sources
+	}
+
+	netnsSources := newNetnsPacketSources(procfs, strings.Split(pids, ","), interfaceName, behaviour)
+	sources = append(sources, netnsSources...)
+	return sources
+}
+
+func createSourcesFromEnvoy(sources []*tcpPacketSource, istio bool, procfs string, clusterIps []string,
+	interfaceName string, behaviour TcpPacketSourceBehaviour) []*tcpPacketSource {
+	if !istio {
+		return sources
+	}
+
+	envoyPids, err := discoverRelevantEnvoyPids(procfs, clusterIps)
+
+	if err != nil {
+		logger.Log.Warningf("Unable to discover envoy pids - %v", err)
+		return sources
+	}
+
+	netnsSources := newNetnsPacketSources(procfs, envoyPids, interfaceName, behaviour)
+	sources = append(sources, netnsSources...)
+
+	return sources
 }
 
 func newHostPacketSource(filename string, interfaceName string,
@@ -54,11 +91,11 @@ func newHostPacketSource(filename string, interfaceName string,
 	return source, nil
 }
 
-func newNetnsPacketSources(procfs string, pids string, interfaceName string,
+func newNetnsPacketSources(procfs string, pids []string, interfaceName string,
 	behaviour TcpPacketSourceBehaviour) []*tcpPacketSource {
 	result := make([]*tcpPacketSource, 0)
 
-	for _, pidstr := range strings.Split(pids, ",") {
+	for _, pidstr := range pids {
 		pid, err := strconv.Atoi(pidstr)
 
 		if err != nil {
@@ -100,9 +137,9 @@ func newNetnsPacketSource(pid int, nsh netns.NsHandle, interfaceName string,
 		//
 		runtime.LockOSThread()
 		defer runtime.UnlockOSThread()
-		
+
 		oldnetns, err := netns.Get()
-		
+
 		if err != nil {
 			logger.Log.Errorf("Unable to get netns of current thread %v", err)
 			errors <- err

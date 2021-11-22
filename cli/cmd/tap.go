@@ -3,6 +3,7 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"github.com/up9inc/mizu/cli/up9"
 	"os"
 
 	"github.com/creasty/defaults"
@@ -62,6 +63,12 @@ Supported protocols are HTTP and gRPC.`,
 						logger.Log.Errorf("failed to log in, err: %v", err)
 						return nil
 					}
+				} else if isValidToken := up9.IsTokenValid(config.Config.Auth.Token, config.Config.Auth.EnvName); !isValidToken {
+					logger.Log.Errorf("Token is not valid, please log in again to continue")
+					if err := auth.Login(); err != nil {
+						logger.Log.Errorf("failed to log in, err: %v", err)
+						return nil
+					}
 				}
 			}
 		}
@@ -113,4 +120,5 @@ func init() {
 	tapCmd.Flags().String(configStructs.EnforcePolicyFile, defaultTapConfig.EnforcePolicyFile, "Yaml file path with policy rules")
 	tapCmd.Flags().String(configStructs.ContractFile, defaultTapConfig.ContractFile, "OAS/Swagger file to validate to monitor the contracts")
 	tapCmd.Flags().Bool(configStructs.DaemonModeTapName, defaultTapConfig.DaemonMode, "Run mizu in daemon mode, detached from the cli")
+	tapCmd.Flags().Bool(configStructs.IstioName, defaultTapConfig.Istio, "Record decrypted traffic if the cluster configured with istio and mtls")
 }

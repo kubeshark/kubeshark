@@ -50,14 +50,15 @@ var tstype = flag.String("timestamp_type", "", "Type of timestamps to use")
 var promisc = flag.Bool("promisc", true, "Set promiscuous mode")
 var staleTimeoutSeconds = flag.Int("staletimout", 120, "Max time in seconds to keep connections which don't transmit data")
 var pids = flag.String("pids", "", "A comma separated list of PIDs to capture their network namespaces")
+var istio = flag.Bool("istio", false, "Record decrypted traffic if the cluster configured with istio and mtls")
 
 var memprofile = flag.String("memprofile", "", "Write memory profile")
 
 type TapOpts struct {
-	HostMode bool
+	HostMode          bool
+	FilterAuthorities []string
 }
 
-var hostMode bool                                 // global
 var extensions []*api.Extension                   // global
 var filteringOptions *api.TrafficFilteringOptions // global
 
@@ -80,15 +81,18 @@ func inArrayString(arr []string, valueToCheck string) bool {
 }
 
 func StartPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem, extensionsRef []*api.Extension, options *api.TrafficFilteringOptions) {
-	hostMode = opts.HostMode
 	extensions = extensionsRef
 	filteringOptions = options
+
+	if opts.FilterAuthorities == nil {
+		opts.FilterAuthorities = []string{}
+	}
 
 	if GetMemoryProfilingEnabled() {
 		diagnose.StartMemoryProfiler(os.Getenv(MemoryProfilingDumpPath), os.Getenv(MemoryProfilingTimeIntervalSeconds))
 	}
 
-	go startPassiveTapper(outputItems)
+	go startPassiveTapper(opts, outputItems)
 }
 
 func printPeriodicStats(cleaner *Cleaner) {
@@ -131,7 +135,7 @@ func printPeriodicStats(cleaner *Cleaner) {
 	}
 }
 
-func initializePacketSources() (*source.PacketSourceManager, error) {
+func initializePacketSources(opts *TapOpts) (*source.PacketSourceManager, error) {
 	var bpffilter string
 	if len(flag.Args()) > 0 {
 		bpffilter = strings.Join(flag.Args(), " ")
@@ -146,17 +150,17 @@ func initializePacketSources() (*source.PacketSourceManager, error) {
 		BpfFilter:   bpffilter,
 	}
 
-	return source.NewPacketSourceManager(*procfs, *pids, *fname, *iface, behaviour)
+	return source.NewPacketSourceManager(*procfs, *pids, *fname, *iface, *istio, opts.FilterAuthorities, behaviour)
 }
 
-func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
+func startPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem) {
 	streamsMap := NewTcpStreamMap()
 	go streamsMap.closeTimedoutTcpStreamChannels()
 
 	diagnose.InitializeErrorsMap(*debug, *verbose, *quiet)
 	diagnose.InitializeTapperInternalStats()
 
-	sources, err := initializePacketSources()
+	sources, err := initializePacketSources(opts)
 
 	if err != nil {
 		logger.Log.Fatal(err)
@@ -169,7 +173,7 @@ func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
 	}
 
 	packets := make(chan source.TcpPacketInfo)
-	assembler := NewTcpAssembler(outputItems, streamsMap)
+	assembler := NewTcpAssembler(outputItems, streamsMap, opts)
 
 	diagnose.AppStats.SetStartTime(time.Now())
 
