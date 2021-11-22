@@ -39,7 +39,7 @@ func FilteredWatch(ctx context.Context, watcherCreator WatchCreator, targetNames
 			for {
 				watcher, err := watcherCreator.NewWatcher(ctx, targetNamespace)
 				if err != nil {
-					errorChan <- fmt.Errorf("error in k8 watch: %v", err)
+					errorChan <- fmt.Errorf("error in k8s watch: %v", err)
 					break
 				}
 
@@ -54,7 +54,7 @@ func FilteredWatch(ctx context.Context, watcherCreator WatchCreator, targetNames
 				}
 
 				if err != nil {
-					errorChan <- fmt.Errorf("error in k8 watch: %v", err)
+					errorChan <- fmt.Errorf("error in k8s watch: %v", err)
 					break
 				} else {
 					if !watchRestartDebouncer.IsOn() {
