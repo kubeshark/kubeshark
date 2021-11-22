@@ -6,6 +6,7 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	eventsv1 "k8s.io/api/events/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/watch"
 )
 
@@ -36,4 +37,8 @@ func (we *WatchEvent) ToEvent() (*eventsv1.Event, error) {
 	}
 
 	return event, nil
+}
+
+func (we *WatchEvent) ToError() error {
+	return apierrors.FromObject(we.Object)
 }

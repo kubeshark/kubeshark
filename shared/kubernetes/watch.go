@@ -9,7 +9,6 @@ import (
 	"sync"
 	"time"
 
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/watch"
 )
 
@@ -95,7 +94,7 @@ func startWatchLoop(ctx context.Context, watcher watch.Interface, filterer Event
 			wEvent := WatchEvent(e)
 
 			if wEvent.Type == watch.Error {
-				return apierrors.FromObject(wEvent.Object)
+				return wEvent.ToError()
 			}
 
 			if pass, err := filterer.Filter(&wEvent); err != nil {
