@@ -10,6 +10,14 @@ import (
 	"k8s.io/apimachinery/pkg/watch"
 )
 
+const (
+	EventAdded    watch.EventType = watch.Added
+	EventModified watch.EventType = watch.Modified
+	EventDeleted  watch.EventType = watch.Deleted
+	EventBookmark watch.EventType = watch.Bookmark
+	EventError    watch.EventType = watch.Error
+)
+
 type InvalidObjectType struct {
 	RequestedType reflect.Type
 }
