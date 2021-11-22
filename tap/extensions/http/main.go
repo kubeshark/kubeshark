@@ -196,7 +196,7 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 
 	method := reqDetails["method"].(string)
 	statusCode := int(resDetails["status"].(float64))
-	if item.Protocol.Abbreviation == "GRPC" {
+	if item.Protocol.Abbreviation == "gRPC" {
 		resDetails["statusText"] = grpcStatusCodes[statusCode]
 	}
 
