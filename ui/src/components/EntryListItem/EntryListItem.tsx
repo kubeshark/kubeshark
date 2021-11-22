@@ -44,8 +44,6 @@ interface EntryProps {
 
 export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, style, updateQuery}) => {
 
-    const [isSelected, setIsSelected] = useState(false);
-
     const classification = getClassification(entry.statusCode)
     const numberOfRules = entry.rules.numberOfRules
     let ingoingIcon;
@@ -79,9 +77,6 @@ export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, style
                 additionalRulesProperties = styles.ruleFailureRow
                 ruleSuccess = false
             }
-            if (isSelected) {
-                additionalRulesProperties += ` ${entry.rules.latency >= entry.latency ? styles.ruleSuccessRowSelected : styles.ruleFailureRowSelected}`
-            }
         } else {
             if (entry.rules.status) {
                 additionalRulesProperties = styles.ruleSuccessRow
@@ -89,9 +84,6 @@ export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, style
             } else {
                 additionalRulesProperties = styles.ruleFailureRow
                 ruleSuccess = false
-            }
-            if (isSelected) {
-                additionalRulesProperties += ` ${entry.rules.status ? styles.ruleSuccessRowSelected : styles.ruleFailureRowSelected}`
             }
         }
     }
@@ -119,14 +111,11 @@ export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, style
     return <>
         <div
             id={entry.id.toString()}
-            className={`${styles.row}
-            ${isSelected && !rule && !contractEnabled ? styles.rowSelected : additionalRulesProperties}`}
+            className={`${styles.row}`}
             onClick={() => {
-                setIsSelected(!isSelected);
                 setFocusedEntryId(entry.id.toString());
             }}
             style={{
-                border: isSelected ? `1px ${entry.protocol.backgroundColor} solid` : "1px transparent solid",
                 position: "absolute",
                 top: style['top'],
                 marginTop: style['marginTop'],
