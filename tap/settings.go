@@ -18,24 +18,6 @@ const (
 	TcpStreamChannelTimeoutMsDefaultValue     = 10000
 )
 
-type globalSettings struct {
-	filterAuthorities []string
-}
-
-var gSettings = &globalSettings{
-	filterAuthorities: []string{},
-}
-
-func SetFilterAuthorities(ipAddresses []string) {
-	gSettings.filterAuthorities = ipAddresses
-}
-
-func GetFilterIPs() []string {
-	addresses := make([]string, len(gSettings.filterAuthorities))
-	copy(addresses, gSettings.filterAuthorities)
-	return addresses
-}
-
 func GetMaxBufferedPagesTotal() int {
 	valueFromEnv, err := strconv.Atoi(os.Getenv(MaxBufferedPagesTotalEnvVarName))
 	if err != nil {

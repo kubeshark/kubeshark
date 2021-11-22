@@ -22,6 +22,7 @@ import (
 	"path"
 	"path/filepath"
 	"plugin"
+	"regexp"
 	"sort"
 	"syscall"
 	"time"
@@ -94,17 +95,17 @@ func main() {
 			panic("API server address must be provided with --api-server-address when using --tap")
 		}
 
+		hostMode := os.Getenv(shared.HostModeEnvVar) == "1"
+		tapOpts := &tap.TapOpts{HostMode: hostMode}
 		tapTargets := getTapTargets()
 		if tapTargets != nil {
-			tap.SetFilterAuthorities(tapTargets)
-			logger.Log.Infof("Filtering for the following authorities: %v", tap.GetFilterIPs())
+			tapOpts.FilterAuthorities = tapTargets
+			logger.Log.Infof("Filtering for the following authorities: %v", tapOpts.FilterAuthorities)
 		}
 
 		filteredOutputItemsChannel := make(chan *tapApi.OutputChannelItem)
 
 		filteringOptions := getTrafficFilteringOptions()
-		hostMode := os.Getenv(shared.HostModeEnvVar) == "1"
-		tapOpts := &tap.TapOpts{HostMode: hostMode}
 		tap.StartPassiveTapper(tapOpts, filteredOutputItemsChannel, extensions, filteringOptions)
 		socketConnection, err := dialSocketWithRetry(*apiServerAddress, socketConnectionRetries, socketConnectionRetryDelay)
 		if err != nil {
@@ -264,9 +265,16 @@ func hostApi(socketHarOutputChannel chan<- *tapApi.OutputChannelItem) {
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
 
-		if _, err := startMizuTapperSyncer(ctx); err != nil {
+		kubernetesProvider, err := kubernetes.NewProviderInCluster()
+		if err != nil {
+			logger.Log.Fatalf("error creating k8s provider: %+v", err)
+		}
+
+		if _, err := startMizuTapperSyncer(ctx, kubernetesProvider); err != nil {
 			logger.Log.Fatalf("error initializing tapper syncer: %+v", err)
 		}
+
+		go watchMizuEvents(ctx, kubernetesProvider, cancel) 
 	}
 
 	utils.StartServer(app)
@@ -426,12 +434,7 @@ func dialSocketWithRetry(socketAddress string, retryAmount int, retryDelay time.
 	return nil, lastErr
 }
 
-func startMizuTapperSyncer(ctx context.Context) (*kubernetes.MizuTapperSyncer, error) {
-	provider, err := kubernetes.NewProviderInCluster()
-	if err != nil {
-		return nil, err
-	}
-
+func startMizuTapperSyncer(ctx context.Context, provider *kubernetes.Provider) (*kubernetes.MizuTapperSyncer, error) {
 	tapperSyncer, err := kubernetes.CreateAndStartMizuTapperSyncer(ctx, provider, kubernetes.TapperSyncerConfig{
 		TargetNamespaces:         config.Config.TargetNamespaces,
 		PodFilterRegex:           config.Config.TapTargetRegex.Regexp,
@@ -443,6 +446,7 @@ func startMizuTapperSyncer(ctx context.Context) (*kubernetes.MizuTapperSyncer, e
 		IgnoredUserAgents:        config.Config.IgnoredUserAgents,
 		MizuApiFilteringOptions:  config.Config.MizuApiFilteringOptions,
 		MizuServiceAccountExists: true, //assume service account exists since daemon mode will not function without it anyway
+		Istio:                    config.Config.Istio,
 	})
 
 	if err != nil {
@@ -481,4 +485,87 @@ func startMizuTapperSyncer(ctx context.Context) (*kubernetes.MizuTapperSyncer, e
 	}()
 
 	return tapperSyncer, nil
+}
+
+func watchMizuEvents(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
+	// Round down because k8s CreationTimestamp is given in 1 sec resolution.
+	startTime := time.Now().Truncate(time.Second)
+
+	mizuResourceRegex := regexp.MustCompile(fmt.Sprintf("^%s.*", kubernetes.MizuResourcesPrefix))
+	eventWatchHelper := kubernetes.NewEventWatchHelper(kubernetesProvider, mizuResourceRegex)
+	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, eventWatchHelper, []string{config.Config.MizuResourcesNamespace}, eventWatchHelper)
+
+	for {
+		select {
+		case wEvent, ok := <-added:
+			if !ok {
+				added = nil
+				continue
+			}
+
+			event, err := wEvent.ToEvent()
+			if err != nil {
+				logger.Log.Errorf("error parsing Mizu resource added event: %+v", err)
+				cancel()
+			}
+
+			if startTime.After(event.CreationTimestamp.Time) {
+				continue
+			}
+
+			if event.Type == v1.EventTypeWarning {
+				logger.Log.Warningf("Resource %s in state %s - %s", event.Regarding.Name, event.Reason, event.Note)
+			}
+		case wEvent, ok := <-removed:
+			if !ok {
+				removed = nil
+				continue
+			}
+
+			event, err := wEvent.ToEvent()
+			if err != nil {
+				logger.Log.Errorf("error parsing Mizu resource removed event: %+v", err)
+				cancel()
+			}
+
+			if startTime.After(event.CreationTimestamp.Time) {
+				continue
+			}
+
+			if event.Type == v1.EventTypeWarning {
+				logger.Log.Warningf("Resource %s in state %s - %s", event.Regarding.Name, event.Reason, event.Note)
+			}
+		case wEvent, ok := <-modified:
+			if !ok {
+				modified = nil
+				continue
+			}
+
+			event, err := wEvent.ToEvent()
+			if err != nil {
+				logger.Log.Errorf("error parsing Mizu resource modified event: %+v", err)
+				cancel()
+			}
+
+			if startTime.After(event.CreationTimestamp.Time) {
+				continue
+			}
+
+			if event.Type == v1.EventTypeWarning {
+				logger.Log.Warningf("Resource %s in state %s - %s", event.Regarding.Name, event.Reason, event.Note)
+			}
+		case err, ok := <-errorChan:
+			if !ok {
+				errorChan = nil
+				continue
+			}
+
+			logger.Log.Errorf("error in watch mizu resource events loop: %+v", err)
+			cancel()
+
+		case <-ctx.Done():
+			logger.Log.Debugf("watching Mizu resource events loop, ctx done")
+			return
+		}
+	}
 }
