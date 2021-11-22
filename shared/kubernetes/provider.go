@@ -635,6 +635,7 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 		"-i", "any",
 		"--tap",
 		"--api-server-address", fmt.Sprintf("ws://%s/wsTapper", apiServerPodIp),
+		"--nodefrag",
 		"--procfs", procfsMountPath,
 	}
 
