@@ -55,7 +55,7 @@ func GetEntry(c *gin.Context) {
 	}
 
 	extension := extensionsMap[entry.Protocol.Name]
-	protocol, representation, bodySize, _ := extension.Dissector.Represent(entry.Protocol, entry.Request, entry.Response)
+	representation, bodySize, _ := extension.Dissector.Represent(entry.Request, entry.Response)
 
 	var rules []map[string]interface{}
 	var isRulesEnabled bool
@@ -68,7 +68,7 @@ func GetEntry(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, tapApi.MizuEntryWrapper{
-		Protocol:       protocol,
+		Protocol:       entry.Protocol,
 		Representation: string(representation),
 		BodySize:       bodySize,
 		Data:           entry,
