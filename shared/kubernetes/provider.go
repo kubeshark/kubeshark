@@ -485,6 +485,11 @@ func (provider *Provider) CreateDaemonsetRBAC(ctx context.Context, namespace str
 				Resources: []string{"daemonsets"},
 				Verbs:     []string{"patch", "get", "list", "create", "delete"},
 			},
+			{
+				APIGroups: []string{"events.k8s.io"},
+				Resources: []string{"events"},
+				Verbs:     []string{"get", "list", "watch"},
+			},
 		},
 	}
 	roleBinding := &rbac.RoleBinding{
