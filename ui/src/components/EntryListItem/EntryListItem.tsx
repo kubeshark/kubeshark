@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React from "react";
 import styles from './EntryListItem.module.sass';
 import StatusCode, {getClassification, StatusCodeClassification} from "../UI/StatusCode";
 import Protocol, {ProtocolInterface} from "../UI/Protocol"
@@ -37,14 +37,15 @@ interface Rules {
 
 interface EntryProps {
     entry: Entry;
+    focusedEntryId: string;
     setFocusedEntryId: (id: string) => void;
     style: object;
     updateQuery: any;
 }
 
-export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, style, updateQuery}) => {
+export const EntryItem: React.FC<EntryProps> = ({entry, focusedEntryId, setFocusedEntryId, style, updateQuery}) => {
 
-    const [isSelected, setIsSelected] = useState(false);
+    const isSelected = focusedEntryId === entry.id.toString();
 
     const classification = getClassification(entry.statusCode)
     const numberOfRules = entry.rules.numberOfRules
@@ -122,7 +123,6 @@ export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, style
             className={`${styles.row}
             ${isSelected && !rule && !contractEnabled ? styles.rowSelected : additionalRulesProperties}`}
             onClick={() => {
-                setIsSelected(!isSelected);
                 setFocusedEntryId(entry.id.toString());
             }}
             style={{

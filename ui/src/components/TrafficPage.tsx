@@ -119,12 +119,17 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
             switch (message.messageType) {
                 case "entry":
                     const entry = message.data;
-                    if (!focusedEntryId) setFocusedEntryId(entry.id.toString());
+                    var focusThis = false;
+                    if (!focusedEntryId) {
+                        focusThis = true;
+                        setFocusedEntryId(entry.id.toString());
+                    }
                     setEntriesBuffer([
                         ...entriesBuffer,
                         <EntryItem
                             key={entry.id}
                             entry={entry}
+                            focusedEntryId={focusThis ? entry.id.toString() : focusedEntryId}
                             setFocusedEntryId={setFocusedEntryId}
                             style={{}}
                             updateQuery={updateQuery}
@@ -185,6 +190,16 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
     useEffect(() => {
         if (!focusedEntryId) return;
         setSelectedEntryData(null);
+
+        // To achieve selecting only one entry, render all elements in the buffer
+        // with the current `focusedEntryId` value.
+        entriesBuffer.forEach((entry: any, i: number) => {
+            entriesBuffer[i] = React.cloneElement(entry, {
+                focusedEntryId: focusedEntryId
+            });
+        })
+        setEntries(entriesBuffer);
+
         (async () => {
             try {
                 const entryData = await api.getEntry(focusedEntryId);
@@ -203,6 +218,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                 console.error(error);
             }
         })()
+        // eslint-disable-next-line
     }, [focusedEntryId])
 
     const toggleConnection = () => {
