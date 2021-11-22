@@ -488,7 +488,7 @@ func (provider *Provider) CreateDaemonsetRBAC(ctx context.Context, namespace str
 			{
 				APIGroups: []string{"events.k8s.io"},
 				Resources: []string{"events"},
-				Verbs:     []string{"get", "list", "watch"},
+				Verbs:     []string{"list", "watch"},
 			},
 		},
 	}
