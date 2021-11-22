@@ -757,7 +757,7 @@ func watchMizuEvents(ctx context.Context, kubernetesProvider *kubernetes.Provide
 
 			event, err := wEvent.ToEvent()
 			if err != nil {
-				logger.Log.Errorf(uiUtils.Error, err)
+				logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("error parsing Mizu resource added event: %+v", err))
 				cancel()
 			}
 
@@ -776,7 +776,7 @@ func watchMizuEvents(ctx context.Context, kubernetesProvider *kubernetes.Provide
 
 			event, err := wEvent.ToEvent()
 			if err != nil {
-				logger.Log.Errorf(uiUtils.Error, err)
+				logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("error parsing Mizu resource removed event: %+v", err))
 				cancel()
 			}
 
@@ -795,7 +795,7 @@ func watchMizuEvents(ctx context.Context, kubernetesProvider *kubernetes.Provide
 
 			event, err := wEvent.ToEvent()
 			if err != nil {
-				logger.Log.Errorf(uiUtils.Error, err)
+				logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("error parsing Mizu resource modified event: %+v", err))
 				cancel()
 			}
 
@@ -812,11 +812,11 @@ func watchMizuEvents(ctx context.Context, kubernetesProvider *kubernetes.Provide
 				continue
 			}
 
-			logger.Log.Errorf("[Error] Error in mizu tapper event watch, err: %v", err)
+			logger.Log.Errorf("error in watch mizu resource events loop: %+v", err)
 			cancel()
 
 		case <-ctx.Done():
-			logger.Log.Debugf("Watching Mizu events loop, ctx done")
+			logger.Log.Debugf("watching Mizu resource events loop, ctx done")
 			return
 		}
 	}
