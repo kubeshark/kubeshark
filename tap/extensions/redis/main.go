@@ -146,8 +146,7 @@ func (d dissecting) Summarize(entry *api.MizuEntry) *api.BaseEntryDetails {
 	}
 }
 
-func (d dissecting) Represent(protoIn api.Protocol, request map[string]interface{}, response map[string]interface{}) (protoOut api.Protocol, object []byte, bodySize int64, err error) {
-	protoOut = protocol
+func (d dissecting) Represent(request map[string]interface{}, response map[string]interface{}) (object []byte, bodySize int64, err error) {
 	bodySize = 0
 	representation := make(map[string]interface{}, 0)
 	repRequest := representGeneric(request, `request.`)
@@ -160,7 +159,7 @@ func (d dissecting) Represent(protoIn api.Protocol, request map[string]interface
 
 func (d dissecting) Macros() map[string]string {
 	return map[string]string{
-		`redis`: fmt.Sprintf(`proto.abbr == "%s"`, protocol.Abbreviation),
+		`redis`: fmt.Sprintf(`proto.name == "%s"`, protocol.Name),
 	}
 }
 
