@@ -264,7 +264,12 @@ func hostApi(socketHarOutputChannel chan<- *tapApi.OutputChannelItem) {
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
 
-		if _, err := startMizuTapperSyncer(ctx); err != nil {
+		kubernetesProvider, err := kubernetes.NewProviderInCluster()
+		if err != nil {
+			logger.Log.Fatalf("error creating k8s provider: %+v", err)
+		}
+
+		if _, err := startMizuTapperSyncer(ctx, kubernetesProvider); err != nil {
 			logger.Log.Fatalf("error initializing tapper syncer: %+v", err)
 		}
 	}
@@ -426,12 +431,7 @@ func dialSocketWithRetry(socketAddress string, retryAmount int, retryDelay time.
 	return nil, lastErr
 }
 
-func startMizuTapperSyncer(ctx context.Context) (*kubernetes.MizuTapperSyncer, error) {
-	provider, err := kubernetes.NewProviderInCluster()
-	if err != nil {
-		return nil, err
-	}
-
+func startMizuTapperSyncer(ctx context.Context, provider *kubernetes.Provider) (*kubernetes.MizuTapperSyncer, error) {
 	tapperSyncer, err := kubernetes.CreateAndStartMizuTapperSyncer(ctx, provider, kubernetes.TapperSyncerConfig{
 		TargetNamespaces:         config.Config.TargetNamespaces,
 		PodFilterRegex:           config.Config.TapTargetRegex.Regexp,
