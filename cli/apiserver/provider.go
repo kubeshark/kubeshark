@@ -3,11 +3,12 @@ package apiserver
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/up9inc/mizu/shared/kubernetes"
@@ -61,7 +62,15 @@ func (provider *Provider) GetHealthStatus() (*shared.HealthResponse, error) {
 	if response, err := provider.client.Get(healthUrl); err != nil {
 		return nil, err
 	} else if response.StatusCode > 299 {
-		return nil, errors.New(fmt.Sprintf("status code: %d", response.StatusCode))
+		responseBody := new(strings.Builder)
+		_, err := io.Copy(responseBody, response.Body)
+
+		if err != nil {
+			return nil, fmt.Errorf("status code: %d - (bad resopnse - %v)", response.StatusCode, err)
+		} else {
+			singlelineResponse := strings.ReplaceAll(responseBody.String(), "\n", "")
+			return nil, fmt.Errorf("status code: %d - (resopnse - %v)", response.StatusCode, singlelineResponse)
+		}
 	} else {
 		defer response.Body.Close()
 
