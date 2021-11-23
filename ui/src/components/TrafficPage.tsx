@@ -1,7 +1,6 @@
 import React, {useEffect, useRef, useState} from "react";
 import {Filters} from "./Filters";
 import {EntriesList} from "./EntriesList";
-import {EntryItem} from "./EntryListItem/EntryListItem";
 import {makeStyles} from "@material-ui/core";
 import "./style/TrafficPage.sass";
 import styles from './style/EntriesList.module.sass';
@@ -51,7 +50,6 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
     const classes = useLayoutStyles();
 
     const [entries, setEntries] = useState([] as any);
-    const [entriesBuffer, setEntriesBuffer] = useState([] as any);
     const [focusedEntryId, setFocusedEntryId] = useState(null);
     const [selectedEntryData, setSelectedEntryData] = useState(null);
     const [connection, setConnection] = useState(ConnectionStatus.Closed);
@@ -103,7 +101,6 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
     const openWebSocket = (query) => {
         setFocusedEntryId(null);
         setEntries([]);
-        setEntriesBuffer([]);
         ws.current = new WebSocket(MizuWebsocketURL);
         ws.current.onopen = () => {
             ws.current.send(query)
@@ -118,18 +115,10 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
             const message = JSON.parse(e.data);
             switch (message.messageType) {
                 case "entry":
-                    const entry = message.data;
-                    if (!focusedEntryId) setFocusedEntryId(entry.id.toString());
-                    setEntriesBuffer([
-                        ...entriesBuffer,
-                        <EntryItem
-                            key={entry.id}
-                            entry={entry}
-                            setFocusedEntryId={setFocusedEntryId}
-                            style={{}}
-                            updateQuery={updateQuery}
-                        />
-                    ]);
+                    const entry = message.data
+                    if (!focusedEntryId) setFocusedEntryId(entry.id.toString())
+                    let newEntries = [...entries];
+                    setEntries([...newEntries, entry])
                     break
                 case "status":
                     setTappingStatus(message.tappingStatus);
@@ -155,7 +144,6 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                 case "queryMetadata":
                     setQueriedCurrent(message.data.current);
                     setQueriedTotal(message.data.total);
-                    setEntries(entriesBuffer);
                     break;
                 case "startTime":
                     setStartTime(message.data);
@@ -264,6 +252,9 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                         <EntriesList
                             entries={entries}
                             listEntryREF={listEntry}
+                            focusedEntryId={focusedEntryId}
+                            setFocusedEntryId={setFocusedEntryId}
+                            updateQuery={updateQuery}
                             onSnapBrokenEvent={onSnapBrokenEvent}
                             isSnappedToBottom={isSnappedToBottom}
                             setIsSnappedToBottom={setIsSnappedToBottom}

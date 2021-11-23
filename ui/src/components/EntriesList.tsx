@@ -1,4 +1,5 @@
 import React, {useRef} from "react";
+import {EntryItem} from "./EntryListItem/EntryListItem";
 import styles from './style/EntriesList.module.sass';
 import ScrollableFeedVirtualized from "react-scrollable-feed-virtualized";
 import down from "./assets/downImg.svg";
@@ -6,6 +7,9 @@ import down from "./assets/downImg.svg";
 interface EntriesListProps {
     entries: any[];
     listEntryREF: any;
+    focusedEntryId: string;
+    setFocusedEntryId: (id: string) => void;
+    updateQuery: any;
     onSnapBrokenEvent: () => void;
     isSnappedToBottom: boolean;
     setIsSnappedToBottom: any;
@@ -14,7 +18,7 @@ interface EntriesListProps {
     startTime: number;
 }
 
-export const EntriesList: React.FC<EntriesListProps> = ({entries, listEntryREF, onSnapBrokenEvent, isSnappedToBottom, setIsSnappedToBottom, queriedCurrent, queriedTotal, startTime}) => {
+export const EntriesList: React.FC<EntriesListProps> = ({entries, listEntryREF, focusedEntryId, setFocusedEntryId, updateQuery, onSnapBrokenEvent, isSnappedToBottom, setIsSnappedToBottom, queriedCurrent, queriedTotal, startTime}) => {
 
     const scrollableRef = useRef(null);
 
@@ -23,7 +27,12 @@ export const EntriesList: React.FC<EntriesListProps> = ({entries, listEntryREF, 
                 <div id="list" ref={listEntryREF} className={styles.list}>
                     <ScrollableFeedVirtualized ref={scrollableRef} itemHeight={48} marginTop={10} onSnapBroken={onSnapBrokenEvent}>
                         {false /* TODO: why there is a need for something here (not necessarily false)? */}
-                        {entries}
+                        {entries.map(entry => <EntryItem key={entry.id}
+                                                        entry={entry}
+                                                        setFocusedEntryId={setFocusedEntryId}
+                                                        isSelected={focusedEntryId === entry.id.toString()}
+                                                        style={{}}
+                                                        updateQuery={updateQuery}/>)}
                     </ScrollableFeedVirtualized>
                     <button type="button"
                         className={`${styles.btnLive} ${isSnappedToBottom ? styles.hideButton : styles.showButton}`}
