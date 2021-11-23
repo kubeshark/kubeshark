@@ -622,6 +622,10 @@ func watchApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 						logger.Log.Debugf("[Error] failed update tapped pods %v", err)
 					}
 				}
+			case kubernetes.EventBookmark:
+				break
+			case kubernetes.EventError:
+				break
 			}
 		case err, ok := <-errorChan:
 			if !ok {
@@ -689,6 +693,10 @@ func watchTapperPod(ctx context.Context, kubernetesProvider *kubernetes.Provider
 				}
 
 				logger.Log.Debugf("Tapper %s is %s", pod.Name, strings.ToLower(string(podStatus.Phase)))
+			case kubernetes.EventBookmark:
+				break
+			case kubernetes.EventError:
+				break
 			}
 		case err, ok := <-errorChan:
 			if !ok {

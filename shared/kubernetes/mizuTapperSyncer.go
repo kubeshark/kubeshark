@@ -127,6 +127,10 @@ func (tapperSyncer *MizuTapperSyncer) watchPodsForTapping() {
 				if pod.Status.PodIP != "" {
 					restartTappersDebouncer.SetOn()
 				}
+			case EventBookmark:
+				break
+			case EventError:
+				break
 			}
 		case err, ok := <-errorChan:
 			if !ok {
