@@ -190,7 +190,6 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
     useEffect(() => {
         if (!focusedEntryId) return;
         setSelectedEntryData(null);
-
         (async () => {
             try {
                 const entryData = await api.getEntry(focusedEntryId);
@@ -209,7 +208,6 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                 console.error(error);
             }
         })()
-        // eslint-disable-next-line
     }, [focusedEntryId])
 
     useEffect(() => {
