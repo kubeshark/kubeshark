@@ -559,76 +559,73 @@ func waitUntilNamespaceDeleted(ctx context.Context, cancel context.CancelFunc, k
 func watchApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
 	podExactRegex := regexp.MustCompile(fmt.Sprintf("^%s$", kubernetes.ApiServerPodName))
 	podWatchHelper := kubernetes.NewPodWatchHelper(kubernetesProvider, podExactRegex)
-	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, podWatchHelper, []string{config.Config.MizuResourcesNamespace}, podWatchHelper)
+	eventChan, errorChan := kubernetes.FilteredWatch(ctx, podWatchHelper, []string{config.Config.MizuResourcesNamespace}, podWatchHelper)
 	isPodReady := false
 	timeAfter := time.After(25 * time.Second)
 	for {
 		select {
-		case _, ok := <-added:
+		case wEvent, ok := <-eventChan:
 			if !ok {
-				added = nil
+				eventChan = nil
 				continue
 			}
 
-			logger.Log.Debugf("Watching API Server pod loop, added")
-		case _, ok := <-removed:
-			if !ok {
-				removed = nil
-				continue
-			}
-
-			logger.Log.Infof("%s removed", kubernetes.ApiServerPodName)
-			cancel()
-			return
-		case wEvent, ok := <-modified:
-			if !ok {
-				modified = nil
-				continue
-			}
-
-			modifiedPod, err := wEvent.ToPod()
-			if err != nil {
-				logger.Log.Errorf(uiUtils.Error, err)
+			switch wEvent.Type {
+			case kubernetes.EventAdded:
+				logger.Log.Debugf("Watching API Server pod loop, added")
+			case kubernetes.EventDeleted:
+				logger.Log.Infof("%s removed", kubernetes.ApiServerPodName)
 				cancel()
-				continue
-			}
-
-			logger.Log.Debugf("Watching API Server pod loop, modified: %v", modifiedPod.Status.Phase)
-
-			if modifiedPod.Status.Phase == core.PodPending {
-				if modifiedPod.Status.Conditions[0].Type == core.PodScheduled && modifiedPod.Status.Conditions[0].Status != core.ConditionTrue {
-					logger.Log.Debugf("Wasn't able to deploy the API server. Reason: \"%s\"", modifiedPod.Status.Conditions[0].Message)
-					logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Wasn't able to deploy the API server, for more info check logs at %s", fsUtils.GetLogFilePath()))
+				return
+			case kubernetes.EventModified:
+				modifiedPod, err := wEvent.ToPod()
+				if err != nil {
+					logger.Log.Errorf(uiUtils.Error, err)
 					cancel()
-					break
+					continue
 				}
 
-				if len(modifiedPod.Status.ContainerStatuses) > 0 && modifiedPod.Status.ContainerStatuses[0].State.Waiting != nil && modifiedPod.Status.ContainerStatuses[0].State.Waiting.Reason == "ErrImagePull" {
-					logger.Log.Debugf("Wasn't able to deploy the API server. (ErrImagePull) Reason: \"%s\"", modifiedPod.Status.ContainerStatuses[0].State.Waiting.Message)
-					logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Wasn't able to deploy the API server: failed to pull the image, for more info check logs at %v", fsUtils.GetLogFilePath()))
-					cancel()
-					break
-				}
-			}
+				logger.Log.Debugf("Watching API Server pod loop, modified: %v", modifiedPod.Status.Phase)
 
-			if modifiedPod.Status.Phase == core.PodRunning && !isPodReady {
-				isPodReady = true
-				go startProxyReportErrorIfAny(kubernetesProvider, cancel)
+				if modifiedPod.Status.Phase == core.PodPending {
+					if modifiedPod.Status.Conditions[0].Type == core.PodScheduled && modifiedPod.Status.Conditions[0].Status != core.ConditionTrue {
+						logger.Log.Debugf("Wasn't able to deploy the API server. Reason: \"%s\"", modifiedPod.Status.Conditions[0].Message)
+						logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Wasn't able to deploy the API server, for more info check logs at %s", fsUtils.GetLogFilePath()))
+						cancel()
+						break
+					}
 
-				url := GetApiServerUrl()
-				if err := apiProvider.TestConnection(); err != nil {
-					logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Couldn't connect to API server, for more info check logs at %s", fsUtils.GetLogFilePath()))
-					cancel()
-					break
+					if len(modifiedPod.Status.ContainerStatuses) > 0 && modifiedPod.Status.ContainerStatuses[0].State.Waiting != nil && modifiedPod.Status.ContainerStatuses[0].State.Waiting.Reason == "ErrImagePull" {
+						logger.Log.Debugf("Wasn't able to deploy the API server. (ErrImagePull) Reason: \"%s\"", modifiedPod.Status.ContainerStatuses[0].State.Waiting.Message)
+						logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Wasn't able to deploy the API server: failed to pull the image, for more info check logs at %v", fsUtils.GetLogFilePath()))
+						cancel()
+						break
+					}
 				}
 
-				logger.Log.Infof("Mizu is available at %s", url)
-				if !config.Config.HeadlessMode {
-					uiUtils.OpenBrowser(url)
+				if modifiedPod.Status.Phase == core.PodRunning && !isPodReady {
+					isPodReady = true
+					go startProxyReportErrorIfAny(kubernetesProvider, cancel)
+
+					url := GetApiServerUrl()
+					if err := apiProvider.TestConnection(); err != nil {
+						logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Couldn't connect to API server, for more info check logs at %s", fsUtils.GetLogFilePath()))
+						cancel()
+						break
+					}
+
+					logger.Log.Infof("Mizu is available at %s", url)
+					if !config.Config.HeadlessMode {
+						uiUtils.OpenBrowser(url)
+					}
+					if err := apiProvider.ReportTappedPods(state.tapperSyncer.CurrentlyTappedPods); err != nil {
+						logger.Log.Debugf("[Error] failed update tapped pods %v", err)
+					}
 				}
-				if err := apiProvider.ReportTappedPods(state.tapperSyncer.CurrentlyTappedPods); err != nil {
-					logger.Log.Debugf("[Error] failed update tapped pods %v", err)
-				}
+			case kubernetes.EventBookmark:
+				break
+			case kubernetes.EventError:
+				break
 			}
 		case err, ok := <-errorChan:
 			if !ok {
@@ -654,70 +651,53 @@ func watchApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 func watchTapperPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
 	podExactRegex := regexp.MustCompile(fmt.Sprintf("^%s.*", kubernetes.TapperDaemonSetName))
 	podWatchHelper := kubernetes.NewPodWatchHelper(kubernetesProvider, podExactRegex)
-	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, podWatchHelper, []string{config.Config.MizuResourcesNamespace}, podWatchHelper)
+	eventChan, errorChan := kubernetes.FilteredWatch(ctx, podWatchHelper, []string{config.Config.MizuResourcesNamespace}, podWatchHelper)
+
 	for {
 		select {
-		case wEvent, ok := <-added:
+		case wEvent, ok := <-eventChan:
 			if !ok {
-				added = nil
+				eventChan = nil
 				continue
 			}
 
-			addedPod, err := wEvent.ToPod()
+			pod, err := wEvent.ToPod()
 			if err != nil {
 				logger.Log.Errorf(uiUtils.Error, err)
 				cancel()
 				continue
 			}
 
-			logger.Log.Debugf("Tapper is created [%s]", addedPod.Name)
-		case wEvent, ok := <-removed:
-			if !ok {
-				removed = nil
-				continue
-			}
+			switch wEvent.Type {
+			case kubernetes.EventAdded:
+				logger.Log.Debugf("Tapper is created [%s]", pod.Name)
+			case kubernetes.EventDeleted:
+				logger.Log.Debugf("Tapper is removed [%s]", pod.Name)
+			case kubernetes.EventModified:
+				if pod.Status.Phase == core.PodPending && pod.Status.Conditions[0].Type == core.PodScheduled && pod.Status.Conditions[0].Status != core.ConditionTrue {
+					logger.Log.Infof(uiUtils.Red, fmt.Sprintf("Wasn't able to deploy the tapper %s. Reason: \"%s\"", pod.Name, pod.Status.Conditions[0].Message))
+					cancel()
+					continue
+				}
 
-			removedPod, err := wEvent.ToPod()
-			if err != nil {
-				logger.Log.Errorf(uiUtils.Error, err)
-				cancel()
-				continue
-			}
+				podStatus := pod.Status
 
-
-			logger.Log.Debugf("Tapper is removed [%s]", removedPod.Name)
-		case wEvent, ok := <-modified:
-			if !ok {
-				modified = nil
-				continue
-			}
-
-			modifiedPod, err := wEvent.ToPod()
-			if err != nil {
-				logger.Log.Errorf(uiUtils.Error, err)
-				cancel()
-				continue
-			}
-
-			if modifiedPod.Status.Phase == core.PodPending && modifiedPod.Status.Conditions[0].Type == core.PodScheduled && modifiedPod.Status.Conditions[0].Status != core.ConditionTrue {
-				logger.Log.Infof(uiUtils.Red, fmt.Sprintf("Wasn't able to deploy the tapper %s. Reason: \"%s\"", modifiedPod.Name, modifiedPod.Status.Conditions[0].Message))
-				cancel()
-				continue
-			}
-
-			podStatus := modifiedPod.Status
-
-			if podStatus.Phase == core.PodRunning {
-				state := podStatus.ContainerStatuses[0].State
-				if state.Terminated != nil {
-					switch state.Terminated.Reason {
-					case "OOMKilled":
-						logger.Log.Infof(uiUtils.Red, fmt.Sprintf("Tapper %s was terminated (reason: OOMKilled). You should consider increasing machine resources.", modifiedPod.Name))
+				if podStatus.Phase == core.PodRunning {
+					state := podStatus.ContainerStatuses[0].State
+					if state.Terminated != nil {
+						switch state.Terminated.Reason {
+						case "OOMKilled":
+							logger.Log.Infof(uiUtils.Red, fmt.Sprintf("Tapper %s was terminated (reason: OOMKilled). You should consider increasing machine resources.", pod.Name))
+						}
 					}
 				}
-			}
 
-			logger.Log.Debugf("Tapper %s is %s", modifiedPod.Name, strings.ToLower(string(podStatus.Phase)))
+				logger.Log.Debugf("Tapper %s is %s", pod.Name, strings.ToLower(string(podStatus.Phase)))
+			case kubernetes.EventBookmark:
+				break
+			case kubernetes.EventError:
+				break
+			}
 		case err, ok := <-errorChan:
 			if !ok {
 				errorChan = nil
@@ -740,57 +720,19 @@ func watchMizuEvents(ctx context.Context, kubernetesProvider *kubernetes.Provide
 
 	mizuResourceRegex := regexp.MustCompile(fmt.Sprintf("^%s.*", kubernetes.MizuResourcesPrefix))
 	eventWatchHelper := kubernetes.NewEventWatchHelper(kubernetesProvider, mizuResourceRegex)
-	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, eventWatchHelper, []string{config.Config.MizuResourcesNamespace}, eventWatchHelper)
+	eventChan, errorChan := kubernetes.FilteredWatch(ctx, eventWatchHelper, []string{config.Config.MizuResourcesNamespace}, eventWatchHelper)
 
 	for {
 		select {
-		case wEvent, ok := <-added:
+		case wEvent, ok := <-eventChan:
 			if !ok {
-				added = nil
+				eventChan = nil
 				continue
 			}
 
 			event, err := wEvent.ToEvent()
 			if err != nil {
-				logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("error parsing Mizu resource added event: %+v", err))
-				cancel()
-			}
-
-			if startTime.After(event.CreationTimestamp.Time) {
-				continue
-			}
-
-			if event.Type == core.EventTypeWarning {
-				logger.Log.Warningf(uiUtils.Warning, fmt.Sprintf("Resource %s in state %s - %s", event.Regarding.Name, event.Reason, event.Note))
-			}
-		case wEvent, ok := <-removed:
-			if !ok {
-				removed = nil
-				continue
-			}
-
-			event, err := wEvent.ToEvent()
-			if err != nil {
-				logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("error parsing Mizu resource removed event: %+v", err))
-				cancel()
-			}
-
-			if startTime.After(event.CreationTimestamp.Time) {
-				continue
-			}
-
-			if event.Type == core.EventTypeWarning {
-				logger.Log.Warningf(uiUtils.Warning, fmt.Sprintf("Resource %s in state %s - %s", event.Regarding.Name, event.Reason, event.Note))
-			}
-		case wEvent, ok := <-modified:
-			if !ok {
-				modified = nil
-				continue
-			}
-
-			event, err := wEvent.ToEvent()
-			if err != nil {
-				logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("error parsing Mizu resource modified event: %+v", err))
+				logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("error parsing Mizu resource event: %+v", err))
 				cancel()
 			}
 
