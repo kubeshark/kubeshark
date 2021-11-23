@@ -63,13 +63,12 @@ func (provider *Provider) GetHealthStatus() (*shared.HealthResponse, error) {
 		return nil, err
 	} else if response.StatusCode > 299 {
 		responseBody := new(strings.Builder)
-		_, err := io.Copy(responseBody, response.Body)
 
-		if err != nil {
-			return nil, fmt.Errorf("status code: %d - (bad resopnse - %v)", response.StatusCode, err)
+		if _, err := io.Copy(responseBody, response.Body); err != nil {
+			return nil, fmt.Errorf("status code: %d - (bad response - %v)", response.StatusCode, err)
 		} else {
-			singlelineResponse := strings.ReplaceAll(responseBody.String(), "\n", "")
-			return nil, fmt.Errorf("status code: %d - (resopnse - %v)", response.StatusCode, singlelineResponse)
+			singleLineResponse := strings.ReplaceAll(responseBody.String(), "\n", "")
+			return nil, fmt.Errorf("status code: %d - (response - %v)", response.StatusCode, singleLineResponse)
 		}
 	} else {
 		defer response.Body.Close()
