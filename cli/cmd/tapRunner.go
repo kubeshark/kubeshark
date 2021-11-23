@@ -570,13 +570,14 @@ func watchApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 				continue
 			}
 
-			if wEvent.Type == kubernetes.EventAdded {
+			switch {
+			case wEvent.Type == kubernetes.EventAdded:
 				logger.Log.Debugf("Watching API Server pod loop, added")
-			} else if wEvent.Type == kubernetes.EventDeleted {
+			case wEvent.Type == kubernetes.EventDeleted:
 				logger.Log.Infof("%s removed", kubernetes.ApiServerPodName)
 				cancel()
 				return
-			} else if wEvent.Type != kubernetes.EventModified {
+			case wEvent.Type != kubernetes.EventModified:
 				continue
 			}
 
@@ -665,11 +666,12 @@ func watchTapperPod(ctx context.Context, kubernetesProvider *kubernetes.Provider
 				continue
 			}
 
-			if wEvent.Type == kubernetes.EventAdded {
+			switch {
+			case wEvent.Type == kubernetes.EventAdded:
 				logger.Log.Debugf("Tapper is created [%s]", pod.Name)
-			} else if wEvent.Type == kubernetes.EventDeleted {
+			case wEvent.Type == kubernetes.EventDeleted:
 				logger.Log.Debugf("Tapper is removed [%s]", pod.Name)
-			} else if wEvent.Type != kubernetes.EventModified {
+			case wEvent.Type != kubernetes.EventModified:
 				continue
 			}
 
