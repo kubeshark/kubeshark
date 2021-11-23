@@ -655,7 +655,6 @@ func watchTapperPod(ctx context.Context, kubernetesProvider *kubernetes.Provider
 	podExactRegex := regexp.MustCompile(fmt.Sprintf("^%s.*", kubernetes.TapperDaemonSetName))
 	podWatchHelper := kubernetes.NewPodWatchHelper(kubernetesProvider, podExactRegex)
 	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, podWatchHelper, []string{config.Config.MizuResourcesNamespace}, podWatchHelper)
-	var prevPodPhase core.PodPhase
 	for {
 		select {
 		case wEvent, ok := <-added:
@@ -707,11 +706,6 @@ func watchTapperPod(ctx context.Context, kubernetesProvider *kubernetes.Provider
 			}
 
 			podStatus := modifiedPod.Status
-			if podStatus.Phase == core.PodPending && prevPodPhase == podStatus.Phase {
-				logger.Log.Debugf("Tapper %s is %s", modifiedPod.Name, strings.ToLower(string(podStatus.Phase)))
-				continue
-			}
-			prevPodPhase = podStatus.Phase
 
 			if podStatus.Phase == core.PodRunning {
 				state := podStatus.ContainerStatuses[0].State
