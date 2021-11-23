@@ -239,3 +239,5 @@ export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, isSel
     </>
 
 }
+
+export const MemoizedEntryItem = React.memo(EntryItem);

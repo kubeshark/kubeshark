@@ -1,5 +1,5 @@
 import React, {useRef} from "react";
-import {EntryItem} from "./EntryListItem/EntryListItem";
+import {MemoizedEntryItem} from "./EntryListItem/EntryListItem";
 import styles from './style/EntriesList.module.sass';
 import ScrollableFeedVirtualized from "react-scrollable-feed-virtualized";
 import down from "./assets/downImg.svg";
@@ -27,7 +27,7 @@ export const EntriesList: React.FC<EntriesListProps> = ({entries, listEntryREF, 
                 <div id="list" ref={listEntryREF} className={styles.list}>
                     <ScrollableFeedVirtualized ref={scrollableRef} itemHeight={48} marginTop={10} onSnapBroken={onSnapBrokenEvent}>
                         {false /* TODO: why there is a need for something here (not necessarily false)? */}
-                        {entries.map(entry => <EntryItem key={entry.id}
+                        {entries.map(entry => <MemoizedEntryItem key={entry.id}
                                                         entry={entry}
                                                         setFocusedEntryId={setFocusedEntryId}
                                                         isSelected={focusedEntryId === entry.id.toString()}

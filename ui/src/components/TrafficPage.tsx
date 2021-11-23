@@ -117,8 +117,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                 case "entry":
                     const entry = message.data
                     if (!focusedEntryId) setFocusedEntryId(entry.id.toString())
-                    let newEntries = [...entries];
-                    setEntries([...newEntries, entry])
+                    setEntries([...entries, entry]);
                     break
                 case "status":
                     setTappingStatus(message.tappingStatus);
