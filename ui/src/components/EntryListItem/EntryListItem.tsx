@@ -40,11 +40,13 @@ interface EntryProps {
     setFocusedEntryId: (id: string) => void;
     style: object;
     updateQuery: any;
+    forceSelect: boolean;
+    headingMode: boolean;
 }
 
-export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, style, updateQuery}) => {
+export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, style, updateQuery, forceSelect, headingMode}) => {
 
-    const [isSelected, setIsSelected] = useState(false);
+    const [isSelected, setIsSelected] = useState(!forceSelect ? false : true);
 
     const classification = getClassification(entry.statusCode)
     const numberOfRules = entry.rules.numberOfRules
@@ -122,22 +124,23 @@ export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, style
             className={`${styles.row}
             ${isSelected && !rule && !contractEnabled ? styles.rowSelected : additionalRulesProperties}`}
             onClick={() => {
+                if (!setFocusedEntryId) return;
                 setIsSelected(!isSelected);
                 setFocusedEntryId(entry.id.toString());
             }}
             style={{
                 border: isSelected ? `1px ${entry.protocol.backgroundColor} solid` : "1px transparent solid",
-                position: "absolute",
+                position: !headingMode ? "absolute" : "unset",
                 top: style['top'],
                 marginTop: style['marginTop'],
-                width: "calc(100% - 25px)",
+                width: !headingMode ? "calc(100% - 25px)" : "calc(100% - 18px)",
             }}
         >
-            <Protocol
+            {!headingMode ? <Protocol
                 protocol={entry.protocol}
                 horizontal={false}
                 updateQuery={updateQuery}
-            />
+            /> : null}
             {((entry.protocol.name === "http" && "statusCode" in entry) || entry.statusCode !== 0) && <div>
                 <StatusCode statusCode={entry.statusCode} updateQuery={updateQuery}/>
             </div>}
