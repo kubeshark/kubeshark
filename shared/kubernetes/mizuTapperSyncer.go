@@ -70,7 +70,7 @@ func CreateAndStartMizuTapperSyncer(ctx context.Context, kubernetesProvider *Pro
 
 func (tapperSyncer *MizuTapperSyncer) watchPodsForTapping() {
 	podWatchHelper := NewPodWatchHelper(tapperSyncer.kubernetesProvider, &tapperSyncer.config.PodFilterRegex)
-	added, modified, removed, errorChan := FilteredWatch(tapperSyncer.context, podWatchHelper, tapperSyncer.config.TargetNamespaces, podWatchHelper)
+	eventChan, errorChan := FilteredWatch(tapperSyncer.context, podWatchHelper, tapperSyncer.config.TargetNamespaces, podWatchHelper)
 
 	restartTappers := func() {
 		err, changeFound := tapperSyncer.updateCurrentlyTappedPods()
@@ -96,9 +96,9 @@ func (tapperSyncer *MizuTapperSyncer) watchPodsForTapping() {
 
 	for {
 		select {
-		case wEvent, ok := <-added:
+		case wEvent, ok := <-eventChan:
 			if !ok {
-				added = nil
+				eventChan = nil
 				continue
 			}
 
@@ -109,44 +109,28 @@ func (tapperSyncer *MizuTapperSyncer) watchPodsForTapping() {
 			}
 
 
-			logger.Log.Debugf("Added matching pod %s, ns: %s", pod.Name, pod.Namespace)
-			restartTappersDebouncer.SetOn()
-		case wEvent, ok := <-removed:
-			if !ok {
-				removed = nil
-				continue
-			}
-
-			pod, err := wEvent.ToPod()
-			if err != nil {
-				tapperSyncer.handleErrorInWatchLoop(err, restartTappersDebouncer)
-				continue
-			}
-
-			logger.Log.Debugf("Removed matching pod %s, ns: %s", pod.Name, pod.Namespace)
-			restartTappersDebouncer.SetOn()
-		case wEvent, ok := <-modified:
-			if !ok {
-				modified = nil
-				continue
-			}
-
-			pod, err := wEvent.ToPod()
-			if err != nil {
-				tapperSyncer.handleErrorInWatchLoop(err, restartTappersDebouncer)
-				continue
-			}
-
-
-			logger.Log.Debugf("Modified matching pod %s, ns: %s, phase: %s, ip: %s", pod.Name, pod.Namespace, pod.Status.Phase, pod.Status.PodIP)
-			// Act only if the modified pod has already obtained an IP address.
-			// After filtering for IPs, on a normal pod restart this includes the following events:
-			// - Pod deletion
-			// - Pod reaches start state
-			// - Pod reaches ready state
-			// Ready/unready transitions might also trigger this event.
-			if pod.Status.PodIP != "" {
+			switch wEvent.Type {
+			case EventAdded:
+				logger.Log.Debugf("Added matching pod %s, ns: %s", pod.Name, pod.Namespace)
 				restartTappersDebouncer.SetOn()
+			case EventDeleted:
+				logger.Log.Debugf("Removed matching pod %s, ns: %s", pod.Name, pod.Namespace)
+				restartTappersDebouncer.SetOn()
+			case EventModified:
+				logger.Log.Debugf("Modified matching pod %s, ns: %s, phase: %s, ip: %s", pod.Name, pod.Namespace, pod.Status.Phase, pod.Status.PodIP)
+				// Act only if the modified pod has already obtained an IP address.
+				// After filtering for IPs, on a normal pod restart this includes the following events:
+				// - Pod deletion
+				// - Pod reaches start state
+				// - Pod reaches ready state
+				// Ready/unready transitions might also trigger this event.
+				if pod.Status.PodIP != "" {
+					restartTappersDebouncer.SetOn()
+				}
+			case EventBookmark:
+				break
+			case EventError:
+				break
 			}
 		case err, ok := <-errorChan:
 			if !ok {

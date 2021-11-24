@@ -20,10 +20,8 @@ type WatchCreator interface {
 	NewWatcher(ctx context.Context, namespace string) (watch.Interface, error)
 }
 
-func FilteredWatch(ctx context.Context, watcherCreator WatchCreator, targetNamespaces []string, filterer EventFilterer) (chan *WatchEvent, chan *WatchEvent, chan *WatchEvent, chan error) {
-	addedChan := make(chan *WatchEvent)
-	modifiedChan := make(chan *WatchEvent)
-	removedChan := make(chan *WatchEvent)
+func FilteredWatch(ctx context.Context, watcherCreator WatchCreator, targetNamespaces []string, filterer EventFilterer) (<-chan *WatchEvent, <-chan error) {
+	eventChan := make(chan *WatchEvent)
 	errorChan := make(chan error)
 
 	var wg sync.WaitGroup
@@ -42,7 +40,7 @@ func FilteredWatch(ctx context.Context, watcherCreator WatchCreator, targetNames
 					break
 				}
 
-				err = startWatchLoop(ctx, watcher, filterer, addedChan, modifiedChan, removedChan) // blocking
+				err = startWatchLoop(ctx, watcher, filterer, eventChan) // blocking
 				watcher.Stop()
 
 				select {
@@ -73,16 +71,14 @@ func FilteredWatch(ctx context.Context, watcherCreator WatchCreator, targetNames
 	go func() {
 		<-ctx.Done()
 		wg.Wait()
-		close(addedChan)
-		close(modifiedChan)
-		close(removedChan)
+		close(eventChan)
 		close(errorChan)
 	}()
 
-	return addedChan, modifiedChan, removedChan, errorChan
+	return eventChan, errorChan
 }
 
-func startWatchLoop(ctx context.Context, watcher watch.Interface, filterer EventFilterer, addedChan chan *WatchEvent, modifiedChan chan *WatchEvent, removedChan chan *WatchEvent) error {
+func startWatchLoop(ctx context.Context, watcher watch.Interface, filterer EventFilterer, eventChan chan<- *WatchEvent) error {
 	resultChan := watcher.ResultChan()
 	for {
 		select {
@@ -103,14 +99,7 @@ func startWatchLoop(ctx context.Context, watcher watch.Interface, filterer Event
 				continue
 			}
 
-			switch wEvent.Type {
-			case watch.Added:
-				addedChan <- &wEvent
-			case watch.Modified:
-				modifiedChan <- &wEvent
-			case watch.Deleted:
-				removedChan <- &wEvent
-			}
+			eventChan <- &wEvent
 		case <-ctx.Done():
 			return nil
 		}
