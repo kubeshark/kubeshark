@@ -493,19 +493,19 @@ func watchMizuEvents(ctx context.Context, kubernetesProvider *kubernetes.Provide
 
 	mizuResourceRegex := regexp.MustCompile(fmt.Sprintf("^%s.*", kubernetes.MizuResourcesPrefix))
 	eventWatchHelper := kubernetes.NewEventWatchHelper(kubernetesProvider, mizuResourceRegex)
-	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, eventWatchHelper, []string{config.Config.MizuResourcesNamespace}, eventWatchHelper)
+	eventChan, errorChan := kubernetes.FilteredWatch(ctx, eventWatchHelper, []string{config.Config.MizuResourcesNamespace}, eventWatchHelper)
 
 	for {
 		select {
-		case wEvent, ok := <-added:
+		case wEvent, ok := <-eventChan:
 			if !ok {
-				added = nil
+				eventChan = nil
 				continue
 			}
 
 			event, err := wEvent.ToEvent()
 			if err != nil {
-				logger.Log.Errorf("error parsing Mizu resource added event: %+v", err)
+				logger.Log.Errorf("error parsing Mizu resource event: %+v", err)
 				cancel()
 			}
 
@@ -514,45 +514,7 @@ func watchMizuEvents(ctx context.Context, kubernetesProvider *kubernetes.Provide
 			}
 
 			if event.Type == v1.EventTypeWarning {
-				logger.Log.Warningf("Resource %s in state %s - %s", event.Regarding.Name, event.Reason, event.Note)
-			}
-		case wEvent, ok := <-removed:
-			if !ok {
-				removed = nil
-				continue
-			}
-
-			event, err := wEvent.ToEvent()
-			if err != nil {
-				logger.Log.Errorf("error parsing Mizu resource removed event: %+v", err)
-				cancel()
-			}
-
-			if startTime.After(event.CreationTimestamp.Time) {
-				continue
-			}
-
-			if event.Type == v1.EventTypeWarning {
-				logger.Log.Warningf("Resource %s in state %s - %s", event.Regarding.Name, event.Reason, event.Note)
-			}
-		case wEvent, ok := <-modified:
-			if !ok {
-				modified = nil
-				continue
-			}
-
-			event, err := wEvent.ToEvent()
-			if err != nil {
-				logger.Log.Errorf("error parsing Mizu resource modified event: %+v", err)
-				cancel()
-			}
-
-			if startTime.After(event.CreationTimestamp.Time) {
-				continue
-			}
-
-			if event.Type == v1.EventTypeWarning {
-				logger.Log.Warningf("Resource %s in state %s - %s", event.Regarding.Name, event.Reason, event.Note)
+				logger.Log.Warningf("resource %s in state %s - %s", event.Regarding.Name, event.Reason, event.Note)
 			}
 		case err, ok := <-errorChan:
 			if !ok {
