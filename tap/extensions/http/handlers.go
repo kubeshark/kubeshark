@@ -7,6 +7,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"strings"
 
 	"github.com/up9inc/mizu/tap/api"
 )
@@ -34,12 +35,13 @@ func handleHTTP2Stream(http2Assembler *Http2Assembler, tcpID *api.TcpID, superTi
 	switch messageHTTP1 := messageHTTP1.(type) {
 	case http.Request:
 		ident := fmt.Sprintf(
-			"%s->%s %s->%s %d",
+			"%s->%s %s->%s %d %s",
 			tcpID.SrcIP,
 			tcpID.DstIP,
 			tcpID.SrcPort,
 			tcpID.DstPort,
 			streamID,
+			"HTTP2",
 		)
 		item = reqResMatcher.registerRequest(ident, &messageHTTP1, superTimer.CaptureTime)
 		if item != nil {
@@ -53,12 +55,13 @@ func handleHTTP2Stream(http2Assembler *Http2Assembler, tcpID *api.TcpID, superTi
 		}
 	case http.Response:
 		ident := fmt.Sprintf(
-			"%s->%s %s->%s %d",
+			"%s->%s %s->%s %d %s",
 			tcpID.DstIP,
 			tcpID.SrcIP,
 			tcpID.DstPort,
 			tcpID.SrcPort,
 			streamID,
+			"HTTP2",
 		)
 		item = reqResMatcher.registerResponse(ident, &messageHTTP1, superTimer.CaptureTime)
 		if item != nil {
@@ -84,23 +87,30 @@ func handleHTTP2Stream(http2Assembler *Http2Assembler, tcpID *api.TcpID, superTi
 	return nil
 }
 
-func handleHTTP1ClientStream(b *bufio.Reader, tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, emitter api.Emitter, options *api.TrafficFilteringOptions) error {
-	req, err := http.ReadRequest(b)
+func handleHTTP1ClientStream(b *bufio.Reader, tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, emitter api.Emitter, options *api.TrafficFilteringOptions) (switchingProtocolsHTTP2 bool, req *http.Request, err error) {
+	req, err = http.ReadRequest(b)
 	if err != nil {
-		return err
+		return
 	}
 	counterPair.Request++
 
-	body, err := ioutil.ReadAll(req.Body)
+	// Check HTTP2 upgrade - HTTP2 Over Cleartext (H2C)
+	if strings.Contains(strings.ToLower(req.Header.Get("Connection")), "upgrade") && strings.ToLower(req.Header.Get("Upgrade")) == "h2c" {
+		switchingProtocolsHTTP2 = true
+	}
+
+	var body []byte
+	body, err = ioutil.ReadAll(req.Body)
 	req.Body = io.NopCloser(bytes.NewBuffer(body)) // rewind
 
 	ident := fmt.Sprintf(
-		"%s->%s %s->%s %d",
+		"%s->%s %s->%s %d %s",
 		tcpID.SrcIP,
 		tcpID.DstIP,
 		tcpID.SrcPort,
 		tcpID.DstPort,
 		counterPair.Request,
+		"HTTP1",
 	)
 	item := reqResMatcher.registerRequest(ident, req, superTimer.CaptureTime)
 	if item != nil {
@@ -113,26 +123,34 @@ func handleHTTP1ClientStream(b *bufio.Reader, tcpID *api.TcpID, counterPair *api
 		}
 		filterAndEmit(item, emitter, options)
 	}
-	return nil
+	return
 }
 
-func handleHTTP1ServerStream(b *bufio.Reader, tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, emitter api.Emitter, options *api.TrafficFilteringOptions) error {
-	res, err := http.ReadResponse(b, nil)
+func handleHTTP1ServerStream(b *bufio.Reader, tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, emitter api.Emitter, options *api.TrafficFilteringOptions) (switchingProtocolsHTTP2 bool, err error) {
+	var res *http.Response
+	res, err = http.ReadResponse(b, nil)
 	if err != nil {
-		return err
+		return
 	}
 	counterPair.Response++
 
-	body, err := ioutil.ReadAll(res.Body)
+	// Check HTTP2 upgrade - HTTP2 Over Cleartext (H2C)
+	if res.StatusCode == 101 && strings.Contains(strings.ToLower(res.Header.Get("Connection")), "upgrade") && strings.ToLower(res.Header.Get("Upgrade")) == "h2c" {
+		switchingProtocolsHTTP2 = true
+	}
+
+	var body []byte
+	body, err = ioutil.ReadAll(res.Body)
 	res.Body = io.NopCloser(bytes.NewBuffer(body)) // rewind
 
 	ident := fmt.Sprintf(
-		"%s->%s %s->%s %d",
+		"%s->%s %s->%s %d %s",
 		tcpID.DstIP,
 		tcpID.SrcIP,
 		tcpID.DstPort,
 		tcpID.SrcPort,
 		counterPair.Response,
+		"HTTP1",
 	)
 	item := reqResMatcher.registerResponse(ident, res, superTimer.CaptureTime)
 	if item != nil {
@@ -145,5 +163,5 @@ func handleHTTP1ServerStream(b *bufio.Reader, tcpID *api.TcpID, counterPair *api
 		}
 		filterAndEmit(item, emitter, options)
 	}
-	return nil
+	return
 }
