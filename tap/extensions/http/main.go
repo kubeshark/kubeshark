@@ -100,7 +100,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 		}
 
 		if isHTTP2 {
-			err = handleHTTP2Stream(http2Assembler, tcpID, superTimer, emitter, options, isClient)
+			err = handleHTTP2Stream(http2Assembler, tcpID, superTimer, emitter, options)
 			if err == io.EOF || err == io.ErrUnexpectedEOF {
 				break
 			} else if err != nil {
