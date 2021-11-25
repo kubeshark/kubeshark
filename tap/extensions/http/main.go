@@ -203,6 +203,7 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 	}
 
 	request["url"] = reqDetails["url"].(string)
+	reqDetails["targetUri"] = reqDetails["url"]
 	reqDetails["path"] = path
 	reqDetails["summary"] = path
 
@@ -310,9 +311,9 @@ func representRequest(request map[string]interface{}) (repRequest []interface{})
 			Selector: `request.method`,
 		},
 		{
-			Name:     "URL",
-			Value:    request["url"].(string),
-			Selector: `request.url`,
+			Name:     "Target URI",
+			Value:    request["targetUri"].(string),
+			Selector: `request.targetUri`,
 		},
 		{
 			Name:     "Path",
