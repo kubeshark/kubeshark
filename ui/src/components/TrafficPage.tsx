@@ -66,6 +66,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
 
     const [queriedCurrent, setQueriedCurrent] = useState(0);
     const [queriedTotal, setQueriedTotal] = useState(0);
+    const [leftOff, setLeftOff] = useState(0);
 
     const [startTime, setStartTime] = useState(0);
 
@@ -100,16 +101,30 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
 
     const listEntry = useRef(null);
 
-    const openWebSocket = (query) => {
-        setFocusedEntryId(null);
-        setEntries([]);
-        setEntriesBuffer([]);
+    const openWebSocket = (query: string, dontClear: boolean) => {
+        if (!dontClear) {
+            setFocusedEntryId(null);
+            setEntries([]);
+            setEntriesBuffer([]);
+        } else {
+            setEntriesBuffer(entries);
+        }
         ws.current = new WebSocket(MizuWebsocketURL);
         ws.current.onopen = () => {
-            ws.current.send(query)
             setConnection(ConnectionStatus.Connected);
+            ws.current.send(query);
         }
-        ws.current.onclose = () => setConnection(ConnectionStatus.Closed);
+        ws.current.onclose = () => {
+            setConnection(ConnectionStatus.Closed);
+        }
+        ws.current.onerror = (event) => {
+            console.error("WebSocket error:", event);
+            if (query) {
+                openWebSocket(`(${query}) and leftOff(${leftOff})`, true);
+            } else {
+                openWebSocket(`leftOff(${leftOff})`, true);
+            }
+        }
     }
 
     if (ws.current) {
@@ -155,6 +170,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                 case "queryMetadata":
                     setQueriedCurrent(message.data.current);
                     setQueriedTotal(message.data.total);
+                    setLeftOff(message.data.leftOff);
                     setEntries(entriesBuffer);
                     break;
                 case "startTime":
@@ -168,7 +184,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
 
     useEffect(() => {
         (async () => {
-            openWebSocket("rlimit(100)");
+            openWebSocket("leftOff(-1)", false);
             try{
                 const tapStatusResponse = await api.tapStatus();
                 setTappingStatus(tapStatusResponse);
@@ -209,8 +225,11 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
         if (connection === ConnectionStatus.Connected) {
             ws.current.close();
         } else {
-            openWebSocket(query);
-            setConnection(ConnectionStatus.Connected);
+            if (query) {
+                openWebSocket(`(${query}) and leftOff(${leftOff})`, true);
+            } else {
+                openWebSocket(`leftOff(${leftOff})`, true);
+            }
         }
     }
 
