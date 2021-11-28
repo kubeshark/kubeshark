@@ -92,6 +92,6 @@ func splitIdent(ident string) []string {
 }
 
 func genKey(split []string) string {
-	key := fmt.Sprintf("%s:%s->%s:%s,%s", split[0], split[2], split[1], split[3], split[4])
+	key := fmt.Sprintf("%s:%s->%s:%s,%s%s", split[0], split[2], split[1], split[3], split[4], split[5])
 	return key
 }

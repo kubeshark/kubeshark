@@ -1,9 +1,8 @@
 import React from "react";
 import EntryViewer from "./EntryDetailed/EntryViewer";
+import {EntryItem} from "./EntryListItem/EntryListItem";
 import {makeStyles} from "@material-ui/core";
 import Protocol from "./UI/Protocol"
-import StatusCode from "./UI/StatusCode";
-import {Summary} from "./UI/Summary";
 
 const useStyles = makeStyles(() => ({
     entryTitle: {
@@ -12,6 +11,7 @@ const useStyles = makeStyles(() => ({
         maxHeight: 46,
         alignItems: 'center',
         marginBottom: 4,
+        marginLeft: 6,
         padding: 2,
         paddingBottom: 0
     },
@@ -64,18 +64,17 @@ const EntryTitle: React.FC<any> = ({protocol, data, bodySize, elapsedTime, updat
 };
 
 const EntrySummary: React.FC<any> = ({data, updateQuery}) => {
-    const classes = useStyles();
+    const entry = data.base;
 
-    const response = data.response;
-
-    return <div className={classes.entrySummary}>
-        {response && "status" in response && <div style={{marginRight: 8}}>
-            <StatusCode statusCode={response.status} updateQuery={updateQuery}/>
-        </div>}
-        <div style={{flexGrow: 1, overflow: 'hidden'}}>
-            <Summary method={data.method} summary={data.summary} updateQuery={updateQuery}/>
-        </div>
-    </div>;
+    return <EntryItem
+        key={entry.id}
+        entry={entry}
+        setFocusedEntryId={null}
+        style={{}}
+        updateQuery={updateQuery}
+        forceSelect={false}
+        headingMode={true}
+    />;
 };
 
 export const EntryDetailed: React.FC<EntryDetailedProps> = ({entryData, updateQuery}) => {

@@ -185,15 +185,3 @@ Mizu can be run detached from the cli using the daemon flag: `mizu tap --daemon`
 indefinitely in the cluster.
 
 For more information please refer to [DAEMON MODE](docs/DAEMON_MODE.md)
-
-## How to Run local UI
-
-- run from mizu/agent `go run main.go --hars-read --hars-dir <folder>`
-
-- copy Har files into the folder from last command
-
-- change `MizuWebsocketURL` and `apiURL` in `api.js` file
-
-- run from mizu/ui - `npm run start`
-
-- open browser on `localhost:3000`

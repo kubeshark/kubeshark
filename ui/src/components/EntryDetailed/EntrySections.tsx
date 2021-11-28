@@ -130,7 +130,7 @@ export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
             <table>
                 <tbody>
                     <EntryViewLine label={'Mime type'} value={contentType} updateQuery={updateQuery} selector={selector} overrideQueryValue={`r".*"`}/>
-                    <EntryViewLine label={'Encoding'} value={encoding} updateQuery={updateQuery} selector={selector} overrideQueryValue={`r".*"`}/>
+                    {encoding && <EntryViewLine label={'Encoding'} value={encoding} updateQuery={updateQuery} selector={selector} overrideQueryValue={`r".*"`}/>}
                 </tbody>
             </table>
 
