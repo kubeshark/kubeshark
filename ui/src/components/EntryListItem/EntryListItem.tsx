@@ -127,10 +127,12 @@ export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, style
             ${isSelected && !rule && !contractEnabled ? styles.rowSelected : additionalRulesProperties}`}
             onClick={() => {
                 if (!setFocusedEntryId) return;
-                if (isSelected) {
-                    removeSelectedEntries(entry.id);
-                } else {
-                    addSelectedEntries(entry.id);
+                if (!headingMode) {
+                    if (isSelected) {
+                        removeSelectedEntries(entry.id);
+                    } else {
+                        addSelectedEntries(entry.id);
+                    }
                 }
                 setIsSelected(!isSelected);
                 setFocusedEntryId(entry.id.toString());
