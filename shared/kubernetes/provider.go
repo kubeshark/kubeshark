@@ -651,7 +651,17 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	agentContainer.WithName(tapperPodName)
 	agentContainer.WithImage(podImage)
 	agentContainer.WithImagePullPolicy(imagePullPolicy)
-	agentContainer.WithSecurityContext(applyconfcore.SecurityContext().WithPrivileged(true))
+
+	caps := applyconfcore.Capabilities().WithDrop("ALL").WithAdd("NET_RAW")
+	
+	if istio {
+		caps = caps.WithAdd("SYS_ADMIN") // for reading /proc/PID/net/ns
+		caps = caps.WithAdd("SYS_PTRACE") // for setting netns to other process
+		caps = caps.WithAdd("DAC_OVERRIDE") // for reading /proc/PID/environ
+	}
+	
+	agentContainer.WithSecurityContext(applyconfcore.SecurityContext().WithCapabilities(caps))
+
 	agentContainer.WithCommand(mizuCmd...)
 	agentContainer.WithEnv(
 		applyconfcore.EnvVar().WithName(shared.LogLevelEnvVar).WithValue(logLevel.String()),
