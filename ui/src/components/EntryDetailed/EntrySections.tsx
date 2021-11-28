@@ -3,6 +3,7 @@ import React, {useState} from "react";
 import {SyntaxHighlighter} from "../UI/SyntaxHighlighter/index";
 import CollapsibleContainer from "../UI/CollapsibleContainer";
 import FancyTextDisplay from "../UI/FancyTextDisplay";
+import Queryable from "../UI/Queryable";
 import Checkbox from "../UI/Checkbox";
 import ProtobufDecoder from "protobuf-decoder";
 
@@ -15,22 +16,27 @@ interface EntryViewLineProps {
 }
 
 const EntryViewLine: React.FC<EntryViewLineProps> = ({label, value, updateQuery, selector, overrideQueryValue}) => {
-    return (label && <tr className={styles.dataLine}>
-                <td
-                    className={`queryable ${styles.dataKey}`}
-                    onClick={() => {
-                        if (!selector) {
-                            return
-                        } else if (overrideQueryValue) {
-                            updateQuery(`${selector} == ${overrideQueryValue}`)
-                        } else if (typeof(value) === "string") {
-                            updateQuery(`${selector} == "${JSON.stringify(value).slice(1, -1)}"`)
-                        } else {
-                            updateQuery(`${selector} == ${value}`)
-                        }
-                    }}
-                >
-                    {label}
+    var query = "";
+    if (!selector) {
+        query = "";
+    } else if (overrideQueryValue) {
+        query = `${selector} == ${overrideQueryValue}`;
+    } else if (typeof(value) == "string") {
+        query = `${selector} == "${JSON.stringify(value).slice(1, -1)}"`;
+    } else {
+        query = `${selector} == ${value}`;
+    }
+    return (label && value && <tr className={styles.dataLine}>
+                <td>
+                    <Queryable
+                        text={label}
+                        query={query}
+                        updateQuery={updateQuery}
+                        style={{float: "right"}}
+                        className={`queryable ${styles.dataKey}`}
+                        applyTextEllipsis={false}
+                        displayIconOnMouseOver={true}
+                    />
                 </td>
                 <td>
                     <FancyTextDisplay
