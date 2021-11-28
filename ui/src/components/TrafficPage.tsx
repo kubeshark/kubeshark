@@ -119,7 +119,11 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
             switch (message.messageType) {
                 case "entry":
                     const entry = message.data;
-                    if (!focusedEntryId) setFocusedEntryId(entry.id.toString());
+                    var forceSelect = false;
+                    if (!focusedEntryId) {
+                        setFocusedEntryId(entry.id.toString());
+                        forceSelect = true;
+                    }
                     setEntriesBuffer([
                         ...entriesBuffer,
                         <EntryItem
@@ -128,6 +132,8 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                             setFocusedEntryId={setFocusedEntryId}
                             style={{}}
                             updateQuery={updateQuery}
+                            forceSelect={forceSelect}
+                            headingMode={false}
                         />
                     ]);
                     break
@@ -190,16 +196,18 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                 const entryData = await api.getEntry(focusedEntryId);
                 setSelectedEntryData(entryData);
             } catch (error) {
-                toast[error.response.data.type](`Entry[${focusedEntryId}]: ${error.response.data.msg}`, {
-                    position: "bottom-right",
-                    theme: "colored",
-                    autoClose: error.response.data.autoClose,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true,
-                    progress: undefined,
-                });
+                if (error.response) {
+                    toast[error.response.data.type](`Entry[${focusedEntryId}]: ${error.response.data.msg}`, {
+                        position: "bottom-right",
+                        theme: "colored",
+                        autoClose: error.response.data.autoClose,
+                        hideProgressBar: false,
+                        closeOnClick: true,
+                        pauseOnHover: true,
+                        draggable: true,
+                        progress: undefined,
+                    });
+                }
                 console.error(error);
             }
         })()
