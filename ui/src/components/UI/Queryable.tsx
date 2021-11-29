@@ -7,13 +7,14 @@ interface Props {
     query: string,
     updateQuery: any,
     style?: object,
+    iconStyle?: object,
     className?: string,
     useTooltip?: boolean,
     displayIconOnMouseOver?: boolean,
     flipped?: boolean,
 }
 
-const Queryable: React.FC<Props> = ({query, updateQuery, style, className, useTooltip= true, displayIconOnMouseOver = false, flipped = false, children}) => {
+const Queryable: React.FC<Props> = ({query, updateQuery, style, iconStyle, className, useTooltip= true, displayIconOnMouseOver = false, flipped = false, children}) => {
     const [showAddedNotification, setAdded] = useState(false);
     const [showTooltip, setShowTooltip] = useState(false);
 
@@ -37,6 +38,7 @@ const Queryable: React.FC<Props> = ({query, updateQuery, style, className, useTo
                     <span
                         className={`Queryable-Icon`}
                         title={`Add "${query}" to the filter`}
+                        style={iconStyle}
                     >
                         <AddCircleIcon fontSize="small" color="inherit"></AddCircleIcon>
                         {showAddedNotification && <span className={'Queryable-AddNotifier'}>Added</span>}

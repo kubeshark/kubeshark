@@ -39,13 +39,13 @@ const EntryTitle: React.FC<any> = ({protocol, data, bodySize, elapsedTime, updat
     const response = data.response;
 
     const bodySizeChild = <div
-        style={{margin: "0 18px", opacity: 0.5}}
+        style={{opacity: 0.5}}
     >
         {formatSize(bodySize)}
     </div>;
 
     const elapsedTimeChild = <div
-        style={{marginRight: 18, opacity: 0.5}}
+        style={{opacity: 0.5}}
     >
         {Math.round(elapsedTime)}ms
     </div>;
@@ -57,6 +57,7 @@ const EntryTitle: React.FC<any> = ({protocol, data, bodySize, elapsedTime, updat
             {response && <Queryable
                 query={`response.bodySize == ${bodySize}`}
                 updateQuery={updateQuery}
+                style={{margin: "0 18px"}}
                 displayIconOnMouseOver={true}
             >
                 {bodySizeChild}
@@ -64,6 +65,7 @@ const EntryTitle: React.FC<any> = ({protocol, data, bodySize, elapsedTime, updat
             {response && <Queryable
                 query={`elapsedTime >= ${elapsedTime}`}
                 updateQuery={updateQuery}
+                style={{marginRight: 18}}
                 displayIconOnMouseOver={true}
             >
                 {elapsedTimeChild}

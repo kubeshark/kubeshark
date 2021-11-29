@@ -1,5 +1,7 @@
 import React from "react";
 import styles from './style/Protocol.module.sass';
+import Queryable from "./Queryable";
+import variables from '../../variables.module.scss';
 
 export interface ProtocolInterface {
     name: string
@@ -36,7 +38,7 @@ const Protocol: React.FC<ProtocolProps> = ({protocol, horizontal, updateQuery}) 
             </span>
         </a>
     } else {
-        return <span
+        const child = <span
             className={`${styles.base} ${styles.vertical}`}
             style={{
                 backgroundColor: protocol.backgroundColor,
@@ -44,12 +46,22 @@ const Protocol: React.FC<ProtocolProps> = ({protocol, horizontal, updateQuery}) 
                 fontSize: protocol.fontSize,
             }}
             title={protocol.longName}
-            onClick={() => {
-                updateQuery(protocol.macro)
-            }}
         >
             {protocol.abbr}
-        </span>
+        </span>;
+
+        return <Queryable
+            query={protocol.macro}
+            updateQuery={updateQuery}
+            displayIconOnMouseOver={true}
+            flipped={true}
+            style={{
+                backgroundColor: variables.dataBackgroundColor,
+            }}
+            iconStyle={{marginRight: "28px"}}
+        >
+            {child}
+        </Queryable>
     }
 };
 
