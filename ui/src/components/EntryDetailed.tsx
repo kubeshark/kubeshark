@@ -69,6 +69,7 @@ const EntrySummary: React.FC<any> = ({data, updateQuery}) => {
     return <EntryItem
         key={entry.id}
         entry={entry}
+        focusedEntryId={null}
         setFocusedEntryId={null}
         style={{}}
         updateQuery={updateQuery}
