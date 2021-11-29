@@ -17,20 +17,18 @@ const StatusCode: React.FC<EntryProps> = ({statusCode, updateQuery}) => {
 
     const classification = getClassification(statusCode)
 
-    const child = <span
-        title="Status Code"
-        className={`${styles[classification]} ${styles.base}`}
-    >
-        {statusCode}
-    </span>
-
     return <Queryable
         query={`response.status == ${statusCode}`}
         updateQuery={updateQuery}
         style={{minWidth: "68px"}}
         displayIconOnMouseOver={true}
     >
-        {child}
+        <span
+            title="Status Code"
+            className={`${styles[classification]} ${styles.base}`}
+        >
+            {statusCode}
+        </span>
     </Queryable>
 };
 

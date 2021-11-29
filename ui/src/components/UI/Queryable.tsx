@@ -55,7 +55,7 @@ const Queryable: React.FC<Props> = ({query, updateQuery, style, iconStyle, class
             {flipped && addButton}
             {children}
             {!flipped && addButton}
-            {useTooltip && showTooltip && <span className={'Queryable-AddNotifier'}>{query}</span>}
+            {useTooltip && showTooltip && <span className={'Queryable-Tooltip'}>{query}</span>}
         </div>
     );
 };
