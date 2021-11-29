@@ -72,7 +72,6 @@ const EntrySummary: React.FC<any> = ({data, updateQuery}) => {
         setFocusedEntryId={null}
         style={{}}
         updateQuery={updateQuery}
-        forceSelect={false}
         headingMode={true}
     />;
 };

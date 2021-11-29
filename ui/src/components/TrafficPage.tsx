@@ -133,7 +133,6 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                             setFocusedEntryId={setFocusedEntryId}
                             style={{}}
                             updateQuery={updateQuery}
-                            forceSelect={forceSelect}
                             headingMode={false}
                         />
                     ]);
