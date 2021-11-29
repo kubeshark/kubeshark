@@ -10,25 +10,35 @@ interface SummaryProps {
 }
 
 export const Summary: React.FC<SummaryProps> = ({method, summary, updateQuery}) => {
+
+    const methodChild = <span
+        className={`queryable`}
+    >
+        {method}
+    </span>
+
+    const summaryChild = <div
+        className={`queryable ${styles.summary}`}
+    >
+        {summary}
+    </div>
+
+
     return <div className={styles.container}>
         {method && <Queryable
-            text={method}
             query={`method == "${method}"`}
-            updateQuery={updateQuery}
-            title="Method"
             className={`${miscStyles.protocol} ${miscStyles.method}`}
-            wrapperStyle={{height: "14px"}}
-            applyTextEllipsis={false}
+            updateQuery={updateQuery}
             displayIconOnMouseOver={true}
-        />}
+        >
+            {methodChild}
+        </Queryable>}
         {summary && <Queryable
-            text={summary}
             query={`summary == "${summary}"`}
             updateQuery={updateQuery}
-            title="Summary"
-            className={`${styles.summary}`}
-            applyTextEllipsis={false}
             displayIconOnMouseOver={true}
-        />}
+        >
+            {summaryChild}
+        </Queryable>}
     </div>
 };

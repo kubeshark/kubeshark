@@ -38,28 +38,36 @@ const EntryTitle: React.FC<any> = ({protocol, data, bodySize, elapsedTime, updat
     const classes = useStyles();
     const response = data.response;
 
+    const bodySizeChild = <div
+        style={{margin: "0 18px", opacity: 0.5}}
+    >
+        {formatSize(bodySize)}
+    </div>;
+
+    const elapsedTimeChild = <div
+        style={{marginRight: 18, opacity: 0.5}}
+    >
+        {Math.round(elapsedTime)}ms
+    </div>;
+
 
     return <div className={classes.entryTitle}>
         <Protocol protocol={protocol} horizontal={true} updateQuery={null}/>
         <div style={{right: "30px", position: "absolute", display: "flex"}}>
             {response && <Queryable
-                text={formatSize(bodySize)}
                 query={`response.bodySize == ${bodySize}`}
                 updateQuery={updateQuery}
-                textStyle={{opacity: 0.5}}
-                wrapperStyle={{margin: "0 18px"}}
-                applyTextEllipsis={false}
                 displayIconOnMouseOver={true}
-            />}
+            >
+                {bodySizeChild}
+            </Queryable>}
             {response && <Queryable
-                text={`${Math.round(elapsedTime)}ms`}
                 query={`elapsedTime >= ${elapsedTime}`}
                 updateQuery={updateQuery}
-                textStyle={{opacity: 0.5}}
-                wrapperStyle={{marginRight: 18}}
-                applyTextEllipsis={false}
                 displayIconOnMouseOver={true}
-            />}
+            >
+                {elapsedTimeChild}
+            </Queryable>}
         </div>
     </div>;
 };

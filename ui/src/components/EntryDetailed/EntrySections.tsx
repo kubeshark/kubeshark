@@ -29,14 +29,12 @@ const EntryViewLine: React.FC<EntryViewLineProps> = ({label, value, updateQuery,
     return (label && value && <tr className={styles.dataLine}>
                 <td>
                     <Queryable
-                        text={label}
                         query={query}
                         updateQuery={updateQuery}
-                        wrapperStyle={{float: "right"}}
-                        className={`${styles.dataKey}`}
-                        applyTextEllipsis={false}
                         displayIconOnMouseOver={true}
-                    />
+                    >
+                        <div className={`${styles.dataKey}`}>{label}</div>
+                    </Queryable>
                 </td>
                 <td>
                     <FancyTextDisplay
@@ -59,9 +57,9 @@ interface EntrySectionCollapsibleTitleProps {
 
 const EntrySectionCollapsibleTitle: React.FC<EntrySectionCollapsibleTitleProps> = ({title, color, isExpanded}) => {
     return <div className={styles.title}>
-        <span className={`${styles.button} ${isExpanded ? styles.expanded : ''}`} style={{backgroundColor: color}}>
+        <div className={`${styles.button} ${isExpanded ? styles.expanded : ''}`} style={{backgroundColor: color}}>
             {isExpanded ? '-' : '+'}
-        </span>
+        </div>
         <span>{title}</span>
     </div>
 }

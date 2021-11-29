@@ -1,5 +1,6 @@
 import React from "react";
 import styles from './style/StatusCode.module.sass';
+import Queryable from "./Queryable";
 
 export enum StatusCodeClassification {
     SUCCESS = "success",
@@ -16,15 +17,21 @@ const StatusCode: React.FC<EntryProps> = ({statusCode, updateQuery}) => {
 
     const classification = getClassification(statusCode)
 
-    return <span
+    const child = <span
         title="Status Code"
-        className={`queryable ${styles[classification]} ${styles.base}`}
-        onClick={() => {
-            updateQuery(`response.status == ${statusCode}`)
-        }}
+        className={`${styles[classification]} ${styles.base}`}
     >
         {statusCode}
     </span>
+
+    return <Queryable
+        query={`response.status == ${statusCode}`}
+        updateQuery={updateQuery}
+        style={{minWidth: "68px"}}
+        displayIconOnMouseOver={true}
+    >
+        {child}
+    </Queryable>
 };
 
 export function getClassification(statusCode: number): string {
