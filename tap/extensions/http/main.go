@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net/http"
 	"net/url"
 	"time"
 
@@ -85,7 +86,15 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 	}
 
 	dissected := false
+	switchingProtocolsHTTP2 := false
 	for {
+		if switchingProtocolsHTTP2 {
+			switchingProtocolsHTTP2 = false
+			isHTTP2, err = checkIsHTTP2Connection(b, isClient)
+			prepareHTTP2Connection(b, isClient)
+			http2Assembler = createHTTP2Assembler(b)
+		}
+
 		if superIdentifier.Protocol != nil && superIdentifier.Protocol != &protocol {
 			return errors.New("Identified by another protocol")
 		}
@@ -99,15 +108,39 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 			}
 			dissected = true
 		} else if isClient {
-			err = handleHTTP1ClientStream(b, tcpID, counterPair, superTimer, emitter, options)
+			var req *http.Request
+			switchingProtocolsHTTP2, req, err = handleHTTP1ClientStream(b, tcpID, counterPair, superTimer, emitter, options)
 			if err == io.EOF || err == io.ErrUnexpectedEOF {
 				break
 			} else if err != nil {
 				continue
 			}
 			dissected = true
+
+			// In case of an HTTP2 upgrade, duplicate the HTTP1 request into HTTP2 with stream ID 1
+			if switchingProtocolsHTTP2 {
+				ident := fmt.Sprintf(
+					"%s->%s %s->%s 1 %s",
+					tcpID.SrcIP,
+					tcpID.DstIP,
+					tcpID.SrcPort,
+					tcpID.DstPort,
+					"HTTP2",
+				)
+				item := reqResMatcher.registerRequest(ident, req, superTimer.CaptureTime)
+				if item != nil {
+					item.ConnectionInfo = &api.ConnectionInfo{
+						ClientIP:   tcpID.SrcIP,
+						ClientPort: tcpID.SrcPort,
+						ServerIP:   tcpID.DstIP,
+						ServerPort: tcpID.DstPort,
+						IsOutgoing: true,
+					}
+					filterAndEmit(item, emitter, options)
+				}
+			}
 		} else {
-			err = handleHTTP1ServerStream(b, tcpID, counterPair, superTimer, emitter, options)
+			switchingProtocolsHTTP2, err = handleHTTP1ServerStream(b, tcpID, counterPair, superTimer, emitter, options)
 			if err == io.EOF || err == io.ErrUnexpectedEOF {
 				break
 			} else if err != nil {
@@ -132,6 +165,8 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 	reqDetails := request["details"].(map[string]interface{})
 	resDetails := response["details"].(map[string]interface{})
 
+	isRequestUpgradedH2C := false
+
 	for _, header := range reqDetails["headers"].([]interface{}) {
 		h := header.(map[string]interface{})
 		if h["name"] == "Host" {
@@ -143,13 +178,19 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 		if h["name"] == ":path" {
 			path = h["value"].(string)
 		}
+
+		if h["name"] == "Upgrade" {
+			if h["value"].(string) == "h2c" {
+				isRequestUpgradedH2C = true
+			}
+		}
 	}
 
 	if resDetails["bodySize"].(float64) < 0 {
 		resDetails["bodySize"] = 0
 	}
 
-	if item.Protocol.Version == "2.0" {
+	if item.Protocol.Version == "2.0" && !isRequestUpgradedH2C {
 		service = authority
 	} else {
 		service = host
@@ -162,6 +203,7 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 	}
 
 	request["url"] = reqDetails["url"].(string)
+	reqDetails["targetUri"] = reqDetails["url"]
 	reqDetails["path"] = path
 	reqDetails["summary"] = path
 
@@ -191,7 +233,7 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 		resDetails["statusText"] = grpcStatusCodes[statusCode]
 	}
 
-	if item.Protocol.Version == "2.0" {
+	if item.Protocol.Version == "2.0" && !isRequestUpgradedH2C {
 		reqDetails["url"] = path
 		request["url"] = path
 	}
@@ -269,9 +311,9 @@ func representRequest(request map[string]interface{}) (repRequest []interface{})
 			Selector: `request.method`,
 		},
 		{
-			Name:     "URL",
-			Value:    request["url"].(string),
-			Selector: `request.url`,
+			Name:     "Target URI",
+			Value:    request["targetUri"].(string),
+			Selector: `request.targetUri`,
 		},
 		{
 			Name:     "Path",
