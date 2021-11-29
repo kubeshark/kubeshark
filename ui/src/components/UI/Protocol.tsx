@@ -24,32 +24,26 @@ interface ProtocolProps {
 
 const Protocol: React.FC<ProtocolProps> = ({protocol, horizontal, updateQuery}) => {
     if (horizontal) {
-        return <a target="_blank" rel="noopener noreferrer" href={protocol.referenceLink}>
-            <span
-                className={`${styles.base} ${styles.horizontal}`}
-                style={{
-                    backgroundColor: protocol.backgroundColor,
-                    color: protocol.foregroundColor,
-                    fontSize: 13,
-                }}
-                title={protocol.abbr}
-            >
-                {protocol.longName}
-            </span>
-        </a>
-    } else {
-        const child = <span
-            className={`${styles.base} ${styles.vertical}`}
-            style={{
-                backgroundColor: protocol.backgroundColor,
-                color: protocol.foregroundColor,
-                fontSize: protocol.fontSize,
-            }}
-            title={protocol.longName}
+        return <Queryable
+            query={protocol.macro}
+            updateQuery={updateQuery}
+            displayIconOnMouseOver={true}
         >
-            {protocol.abbr}
-        </span>;
-
+            <a target="_blank" rel="noopener noreferrer" href={protocol.referenceLink}>
+                <span
+                    className={`${styles.base} ${styles.horizontal}`}
+                    style={{
+                        backgroundColor: protocol.backgroundColor,
+                        color: protocol.foregroundColor,
+                        fontSize: 13,
+                    }}
+                    title={protocol.abbr}
+                >
+                    {protocol.longName}
+                </span>
+            </a>
+        </Queryable>
+    } else {
         return <Queryable
             query={protocol.macro}
             updateQuery={updateQuery}
@@ -60,7 +54,17 @@ const Protocol: React.FC<ProtocolProps> = ({protocol, horizontal, updateQuery}) 
             }}
             iconStyle={{marginRight: "28px"}}
         >
-            {child}
+            <span
+                className={`${styles.base} ${styles.vertical}`}
+                style={{
+                    backgroundColor: protocol.backgroundColor,
+                    color: protocol.foregroundColor,
+                    fontSize: protocol.fontSize,
+                }}
+                title={protocol.longName}
+            >
+                {protocol.abbr}
+            </span>
         </Queryable>
     }
 };

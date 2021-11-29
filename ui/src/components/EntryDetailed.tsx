@@ -52,7 +52,7 @@ const EntryTitle: React.FC<any> = ({protocol, data, bodySize, elapsedTime, updat
 
 
     return <div className={classes.entryTitle}>
-        <Protocol protocol={protocol} horizontal={true} updateQuery={null}/>
+        <Protocol protocol={protocol} horizontal={true} updateQuery={updateQuery}/>
         <div style={{right: "30px", position: "absolute", display: "flex"}}>
             {response && <Queryable
                 query={`response.bodySize == ${bodySize}`}
