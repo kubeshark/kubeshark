@@ -7,7 +7,8 @@ interface Props {
     text: string | number,
     query: string,
     updateQuery: any,
-    style?: object,
+    textStyle?: object,
+    wrapperStyle?: object,
     className?: string,
     isPossibleToCopy?: boolean,
     applyTextEllipsis?: boolean,
@@ -16,12 +17,10 @@ interface Props {
     onClick?: React.EventHandler<React.MouseEvent<HTMLElement>>;
 }
 
-const Queryable: React.FC<Props> = ({text, query, updateQuery, style, className, isPossibleToCopy = true, applyTextEllipsis = true, useTooltip= false, displayIconOnMouseOver = false}) => {
+const Queryable: React.FC<Props> = ({text, query, updateQuery, textStyle, wrapperStyle, className, isPossibleToCopy = true, applyTextEllipsis = true, useTooltip= false, displayIconOnMouseOver = false}) => {
     const [showAddedNotification, setAdded] = useState(false);
     const [showTooltip, setShowTooltip] = useState(false);
     text = String(text);
-
-    console.log(style);
 
     const onCopy = () => {
         setAdded(true)
@@ -39,7 +38,7 @@ const Queryable: React.FC<Props> = ({text, query, updateQuery, style, className,
         // eslint-disable-next-line
     }, [showAddedNotification]);
 
-    const textElement = <span className={'Queryable-Text'}>{text}</span>;
+    const textElement = <span className={'Queryable-Text'} style={textStyle}>{text}</span>;
 
     const copyButton = text ? <CopyToClipboard text={text} onCopy={onCopy}>
                     <span
@@ -54,7 +53,7 @@ const Queryable: React.FC<Props> = ({text, query, updateQuery, style, className,
     return (
         <div
             className={`Queryable-Container displayIconOnMouseOver ${className ? className : ''} ${displayIconOnMouseOver ? 'displayIconOnMouseOver ' : ''} ${applyTextEllipsis ? ' Queryable-ContainerEllipsis' : ''}`}
-            style={style}
+            style={wrapperStyle}
             onMouseOver={ e => setShowTooltip(true)}
             onMouseLeave={ e => setShowTooltip(false)}
         >
