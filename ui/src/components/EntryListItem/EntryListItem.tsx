@@ -41,9 +41,10 @@ interface EntryProps {
     setFocusedEntryId: (id: string) => void;
     style: object;
     updateQuery: any;
+    headingMode: boolean;
 }
 
-export const EntryItem: React.FC<EntryProps> = ({entry, focusedEntryId, setFocusedEntryId, style, updateQuery}) => {
+export const EntryItem: React.FC<EntryProps> = ({entry, focusedEntryId, setFocusedEntryId, style, updateQuery, headingMode}) => {
 
     const isSelected = focusedEntryId === entry.id.toString();
 
@@ -123,21 +124,22 @@ export const EntryItem: React.FC<EntryProps> = ({entry, focusedEntryId, setFocus
             className={`${styles.row}
             ${isSelected && !rule && !contractEnabled ? styles.rowSelected : additionalRulesProperties}`}
             onClick={() => {
+                if (!setFocusedEntryId) return;
                 setFocusedEntryId(entry.id.toString());
             }}
             style={{
                 border: isSelected ? `1px ${entry.protocol.backgroundColor} solid` : "1px transparent solid",
-                position: "absolute",
+                position: !headingMode ? "absolute" : "unset",
                 top: style['top'],
                 marginTop: style['marginTop'],
-                width: "calc(100% - 25px)",
+                width: !headingMode ? "calc(100% - 25px)" : "calc(100% - 18px)",
             }}
         >
-            <Protocol
+            {!headingMode ? <Protocol
                 protocol={entry.protocol}
                 horizontal={false}
                 updateQuery={updateQuery}
-            />
+            /> : null}
             {((entry.protocol.name === "http" && "statusCode" in entry) || entry.statusCode !== 0) && <div>
                 <StatusCode statusCode={entry.statusCode} updateQuery={updateQuery}/>
             </div>}
