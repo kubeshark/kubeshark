@@ -26,16 +26,19 @@ const EntryViewLine: React.FC<EntryViewLineProps> = ({label, value, updateQuery,
     } else {
         query = `${selector} == ${value}`;
     }
-    return (label && value && <tr className={styles.dataLine}>
-                <td>
-                    <Queryable
-                        query={query}
-                        updateQuery={updateQuery}
-                        displayIconOnMouseOver={true}
-                    >
-                        <div className={`${styles.dataKey}`}>{label}</div>
-                    </Queryable>
-                </td>
+    return (label && <tr className={styles.dataLine}>
+                    <td className={`${styles.dataKey}`}>
+                        <Queryable
+                            query={query}
+                            updateQuery={updateQuery}
+                            style={{float: "right", height: "0px"}}
+                            iconStyle={{marginRight: "20px"}}
+                            flipped={true}
+                            displayIconOnMouseOver={true}
+                        >
+                            {label}
+                        </Queryable>
+                    </td>
                 <td>
                     <FancyTextDisplay
                         className={styles.dataValue}
