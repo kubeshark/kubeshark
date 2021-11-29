@@ -134,7 +134,7 @@ export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, style
                 position: !headingMode ? "absolute" : "unset",
                 top: style['top'],
                 marginTop: !headingMode ? style['marginTop'] : "12px",
-                width: !headingMode ? "calc(100% - 10px)" : "calc(100%)",
+                width: !headingMode ? "calc(100% - 25px)" : "calc(100% - 18px)",
             }}
         >
             {!headingMode ? <Protocol

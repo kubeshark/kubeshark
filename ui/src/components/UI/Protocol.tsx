@@ -1,7 +1,6 @@
 import React from "react";
 import styles from './style/Protocol.module.sass';
 import Queryable from "./Queryable";
-import variables from '../../variables.module.scss';
 
 export interface ProtocolInterface {
     name: string
@@ -48,11 +47,8 @@ const Protocol: React.FC<ProtocolProps> = ({protocol, horizontal, updateQuery}) 
             query={protocol.macro}
             updateQuery={updateQuery}
             displayIconOnMouseOver={true}
-            flipped={true}
-            style={{
-                backgroundColor: variables.dataBackgroundColor,
-            }}
-            iconStyle={{marginRight: "28px"}}
+            flipped={false}
+            iconStyle={{marginTop: "48px"}}
         >
             <span
                 className={`${styles.base} ${styles.vertical}`}
