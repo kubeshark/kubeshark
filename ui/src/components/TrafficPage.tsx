@@ -194,11 +194,13 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
 
         // To achieve selecting only one entry, render all elements in the buffer
         // with the current `focusedEntryId` value.
-        entriesBuffer.forEach((entry: any, i: number) => {
-            entriesBuffer[i] = React.cloneElement(entry, {
+        let entriesBufferSnapshot = [...entriesBuffer];
+        entriesBufferSnapshot.forEach((entry: any, i: number) => {
+            entriesBufferSnapshot[i] = React.cloneElement(entry, {
                 focusedEntryId: focusedEntryId
             });
         })
+        setEntriesBuffer(entriesBufferSnapshot);
         setEntries(entriesBuffer);
 
         (async () => {
