@@ -17,27 +17,27 @@ interface Props {
 }
 
 const Queryable: React.FC<Props> = ({text, query, updateQuery, style, className, isPossibleToCopy = true, applyTextEllipsis = true, useTooltip= false, displayIconOnMouseOver = false}) => {
-    const [showCopiedNotification, setCopied] = useState(false);
+    const [showAddedNotification, setAdded] = useState(false);
     const [showTooltip, setShowTooltip] = useState(false);
     text = String(text);
 
     console.log(style);
 
     const onCopy = () => {
-        setCopied(true)
+        setAdded(true)
     };
 
     useEffect(() => {
         let timer;
-        if (showCopiedNotification) {
+        if (showAddedNotification) {
             updateQuery(query);
             timer = setTimeout(() => {
-                setCopied(false);
+                setAdded(false);
             }, 1000);
         }
         return () => clearTimeout(timer);
         // eslint-disable-next-line
-    }, [showCopiedNotification]);
+    }, [showAddedNotification]);
 
     const textElement = <span className={'Queryable-Text'}>{text}</span>;
 
@@ -47,20 +47,22 @@ const Queryable: React.FC<Props> = ({text, query, updateQuery, style, className,
                         title={`Add "${query}" to the filter`}
                     >
                         <AddCircleIcon fontSize="small" color="inherit"></AddCircleIcon>
-                        {showCopiedNotification && <span className={'Queryable-CopyNotifier'}>Added</span>}
+                        {showAddedNotification && <span className={'Queryable-CopyNotifier'}>Added</span>}
                     </span>
 				</CopyToClipboard> : null;
 
-    return <div
-        className={`Queryable-Container displayIconOnMouseOver ${className ? className : ''} ${displayIconOnMouseOver ? 'displayIconOnMouseOver ' : ''} ${applyTextEllipsis ? ' Queryable-ContainerEllipsis' : ''}`}
-        style={style}
-        onMouseOver={ e => setShowTooltip(true)}
-        onMouseLeave={ e => setShowTooltip(false)}
-    >
+    return (
+        <div
+            className={`Queryable-Container displayIconOnMouseOver ${className ? className : ''} ${displayIconOnMouseOver ? 'displayIconOnMouseOver ' : ''} ${applyTextEllipsis ? ' Queryable-ContainerEllipsis' : ''}`}
+            style={style}
+            onMouseOver={ e => setShowTooltip(true)}
+            onMouseLeave={ e => setShowTooltip(false)}
+        >
             {textElement}
             {copyButton}
             {useTooltip && showTooltip && <span className={'Queryable-CopyNotifier'}>{text}</span>}
-    </div>;
+        </div>
+    );
 };
 
 export default Queryable;

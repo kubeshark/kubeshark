@@ -33,7 +33,7 @@ const EntryViewLine: React.FC<EntryViewLineProps> = ({label, value, updateQuery,
                         query={query}
                         updateQuery={updateQuery}
                         style={{float: "right"}}
-                        className={`queryable ${styles.dataKey}`}
+                        className={`${styles.dataKey}`}
                         applyTextEllipsis={false}
                         displayIconOnMouseOver={true}
                     />
