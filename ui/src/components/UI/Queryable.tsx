@@ -13,7 +13,7 @@ interface Props {
     flipped?: boolean,
 }
 
-const Queryable: React.FC<Props> = ({query, updateQuery, style, className, useTooltip= false, displayIconOnMouseOver = false, flipped = false, children}) => {
+const Queryable: React.FC<Props> = ({query, updateQuery, style, className, useTooltip= true, displayIconOnMouseOver = false, flipped = false, children}) => {
     const [showAddedNotification, setAdded] = useState(false);
     const [showTooltip, setShowTooltip] = useState(false);
 
@@ -53,7 +53,7 @@ const Queryable: React.FC<Props> = ({query, updateQuery, style, className, useTo
             {flipped && addButton}
             {children}
             {!flipped && addButton}
-            {useTooltip && showTooltip && <span className={'Queryable-AddNotifier'}></span>}
+            {useTooltip && showTooltip && <span className={'Queryable-AddNotifier'}>{query}</span>}
         </div>
     );
 };

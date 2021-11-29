@@ -11,14 +11,12 @@ interface SummaryProps {
 
 export const Summary: React.FC<SummaryProps> = ({method, summary, updateQuery}) => {
 
-    const methodChild = <span
-        className={`queryable`}
-    >
+    const methodChild = <span>
         {method}
     </span>
 
     const summaryChild = <div
-        className={`queryable ${styles.summary}`}
+        className={`${styles.summary}`}
     >
         {summary}
     </div>
