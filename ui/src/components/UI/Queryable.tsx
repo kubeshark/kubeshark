@@ -7,6 +7,7 @@ interface Props {
     text: string | number,
     query: string,
     updateQuery: any,
+    title?: string,
     textStyle?: object,
     wrapperStyle?: object,
     className?: string,
@@ -17,7 +18,7 @@ interface Props {
     onClick?: React.EventHandler<React.MouseEvent<HTMLElement>>;
 }
 
-const Queryable: React.FC<Props> = ({text, query, updateQuery, textStyle, wrapperStyle, className, isPossibleToCopy = true, applyTextEllipsis = true, useTooltip= false, displayIconOnMouseOver = false}) => {
+const Queryable: React.FC<Props> = ({text, query, updateQuery, title, textStyle, wrapperStyle, className, isPossibleToCopy = true, applyTextEllipsis = true, useTooltip= false, displayIconOnMouseOver = false}) => {
     const [showAddedNotification, setAdded] = useState(false);
     const [showTooltip, setShowTooltip] = useState(false);
     text = String(text);
@@ -38,7 +39,7 @@ const Queryable: React.FC<Props> = ({text, query, updateQuery, textStyle, wrappe
         // eslint-disable-next-line
     }, [showAddedNotification]);
 
-    const textElement = <span className={'Queryable-Text'} style={textStyle}>{text}</span>;
+    const textElement = <span title={title} className={'Queryable-Text'} style={textStyle}>{text}</span>;
 
     const copyButton = text ? <CopyToClipboard text={text} onCopy={onCopy}>
                     <span
