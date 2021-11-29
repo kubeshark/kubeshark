@@ -226,7 +226,7 @@ export const QueryForm: React.FC<QueryFormProps> = ({query, setQuery, background
                                 language="python"
                             />
                             <Typography id="modal-modal-description">
-                                By clicking the UI elements in both left-pane and right-pane, you can automatically select a field and update the query:
+                                By clicking the plus icon that appears beside the queryable UI elements on hovering in both left-pane and right-pane, you can automatically select a field and update the query:
                             </Typography>
                             <img
                                 src={filterUIExample1}
@@ -235,12 +235,12 @@ export const QueryForm: React.FC<QueryFormProps> = ({query, setQuery, background
                                 title="Clicking to UI elements (left-pane)"
                             />
                             <Typography id="modal-modal-description">
-                                Such that; clicking this in left-pane, would append the query below:
+                                Such that; clicking this icon in left-pane, would append the query below:
                             </Typography>
                             <SyntaxHighlighter
                                 isWrapped={false}
                                 showLineNumbers={false}
-                                code={`and service == "http://carts.sock-shop"`}
+                                code={`and service == "carts.sock-shop"`}
                                 language="python"
                             />
                             <Typography id="modal-modal-description">
