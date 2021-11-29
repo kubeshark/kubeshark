@@ -152,6 +152,7 @@ export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, style
                         query={`service == "${entry.service}"`}
                         updateQuery={updateQuery}
                         displayIconOnMouseOver={true}
+                        style={{marginTop: "-4px"}}
                     >
                         <span
                             title="Service Name"
