@@ -133,7 +133,7 @@ export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, style
                 border: isSelected ? `1px ${entry.protocol.backgroundColor} solid` : "1px transparent solid",
                 position: !headingMode ? "absolute" : "unset",
                 top: style['top'],
-                marginTop: style['marginTop'],
+                marginTop: !headingMode ? style['marginTop'] : "12px",
                 width: !headingMode ? "calc(100% - 10px)" : "calc(100%)",
             }}
         >
