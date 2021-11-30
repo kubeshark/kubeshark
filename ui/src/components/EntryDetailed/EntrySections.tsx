@@ -16,7 +16,7 @@ interface EntryViewLineProps {
 }
 
 const EntryViewLine: React.FC<EntryViewLineProps> = ({label, value, updateQuery, selector, overrideQueryValue}) => {
-    var query = "";
+    let query: string;
     if (!selector) {
         query = "";
     } else if (overrideQueryValue) {
