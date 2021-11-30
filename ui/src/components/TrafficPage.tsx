@@ -166,6 +166,16 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                 case "startTime":
                     setStartTime(message.data);
                     break;
+                case "focusEntry":
+                    // To achieve selecting only one entry, render all elements in the buffer
+                    // with the current `focusedEntryId` value.
+                    entriesBuffer.forEach((entry: any, i: number) => {
+                        entriesBuffer[i] = React.cloneElement(entry, {
+                            focusedEntryId: focusedEntryId
+                        });
+                    })
+                    setEntries(entriesBuffer);
+                    break;
                 default:
                     console.error(`unsupported websocket message type, Got: ${message.messageType}`)
             }
@@ -192,16 +202,9 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
         if (!focusedEntryId) return;
         setSelectedEntryData(null);
 
-        // To achieve selecting only one entry, render all elements in the buffer
-        // with the current `focusedEntryId` value.
-        let entriesBufferSnapshot = [...entriesBuffer];
-        entriesBufferSnapshot.forEach((entry: any, i: number) => {
-            entriesBufferSnapshot[i] = React.cloneElement(entry, {
-                focusedEntryId: focusedEntryId
-            });
-        })
-        setEntriesBuffer(entriesBufferSnapshot);
-        setEntries(entriesBuffer);
+        if (ws.current.readyState === WebSocket.OPEN) {
+            ws.current.send(focusedEntryId);
+        }
 
         (async () => {
             try {
@@ -223,7 +226,6 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                 console.error(error);
             }
         })()
-        // eslint-disable-next-line
     }, [focusedEntryId])
 
     const toggleConnection = () => {
