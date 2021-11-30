@@ -66,6 +66,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
 
     const [queriedCurrent, setQueriedCurrent] = useState(0);
     const [queriedTotal, setQueriedTotal] = useState(0);
+    const [leftOff, setLeftOff] = useState(0);
 
     const [startTime, setStartTime] = useState(0);
 
@@ -100,16 +101,30 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
 
     const listEntry = useRef(null);
 
-    const openWebSocket = (query) => {
-        setFocusedEntryId(null);
-        setEntries([]);
-        setEntriesBuffer([]);
+    const openWebSocket = (query: string, resetEntriesBuffer: boolean) => {
+        if (resetEntriesBuffer) {
+            setFocusedEntryId(null);
+            setEntries([]);
+            setEntriesBuffer([]);
+        } else {
+            setEntriesBuffer(entries);
+        }
         ws.current = new WebSocket(MizuWebsocketURL);
         ws.current.onopen = () => {
-            ws.current.send(query)
             setConnection(ConnectionStatus.Connected);
+            ws.current.send(query);
         }
-        ws.current.onclose = () => setConnection(ConnectionStatus.Closed);
+        ws.current.onclose = () => {
+            setConnection(ConnectionStatus.Closed);
+        }
+        ws.current.onerror = (event) => {
+            console.error("WebSocket error:", event);
+            if (query) {
+                openWebSocket(`(${query}) and leftOff(${leftOff})`, false);
+            } else {
+                openWebSocket(`leftOff(${leftOff})`, false);
+            }
+        }
     }
 
     if (ws.current) {
@@ -119,20 +134,20 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
             switch (message.messageType) {
                 case "entry":
                     const entry = message.data;
-                    var forceSelect = false;
+                    var focusThis = false;
                     if (!focusedEntryId) {
+                        focusThis = true;
                         setFocusedEntryId(entry.id.toString());
-                        forceSelect = true;
                     }
                     setEntriesBuffer([
                         ...entriesBuffer,
                         <EntryItem
                             key={entry.id}
                             entry={entry}
+                            focusedEntryId={focusThis ? entry.id.toString() : focusedEntryId}
                             setFocusedEntryId={setFocusedEntryId}
                             style={{}}
                             updateQuery={updateQuery}
-                            forceSelect={forceSelect}
                             headingMode={false}
                         />
                     ]);
@@ -161,10 +176,21 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                 case "queryMetadata":
                     setQueriedCurrent(message.data.current);
                     setQueriedTotal(message.data.total);
+                    setLeftOff(message.data.leftOff);
                     setEntries(entriesBuffer);
                     break;
                 case "startTime":
                     setStartTime(message.data);
+                    break;
+                case "focusEntry":
+                    // To achieve selecting only one entry, render all elements in the buffer
+                    // with the current `focusedEntryId` value.
+                    entriesBuffer.forEach((entry: any, i: number) => {
+                        entriesBuffer[i] = React.cloneElement(entry, {
+                            focusedEntryId: focusedEntryId
+                        });
+                    })
+                    setEntries(entriesBuffer);
                     break;
                 default:
                     console.error(`unsupported websocket message type, Got: ${message.messageType}`)
@@ -174,7 +200,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
 
     useEffect(() => {
         (async () => {
-            openWebSocket("rlimit(100)");
+            openWebSocket("leftOff(-1)", true);
             try{
                 const tapStatusResponse = await api.tapStatus();
                 setTappingStatus(tapStatusResponse);
@@ -191,6 +217,11 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
     useEffect(() => {
         if (!focusedEntryId) return;
         setSelectedEntryData(null);
+
+        if (ws.current.readyState === WebSocket.OPEN) {
+            ws.current.send(focusedEntryId);
+        }
+
         (async () => {
             try {
                 const entryData = await api.getEntry(focusedEntryId);
@@ -217,8 +248,11 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
         if (connection === ConnectionStatus.Connected) {
             ws.current.close();
         } else {
-            openWebSocket(query);
-            setConnection(ConnectionStatus.Connected);
+            if (query) {
+                openWebSocket(`(${query}) and leftOff(${leftOff})`, false);
+            } else {
+                openWebSocket(`leftOff(${leftOff})`, false);
+            }
         }
     }
 
