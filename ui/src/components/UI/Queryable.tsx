@@ -31,8 +31,7 @@ const Queryable: React.FC<Props> = ({query, updateQuery, style, iconStyle, class
             }, 1000);
         }
         return () => clearTimeout(timer);
-        // eslint-disable-next-line
-    }, [showAddedNotification]);
+    }, [showAddedNotification, query, updateQuery]);
 
     const addButton = query ? <CopyToClipboard text={query} onCopy={onCopy}>
                     <span
