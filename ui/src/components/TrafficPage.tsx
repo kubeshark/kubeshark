@@ -119,20 +119,20 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
             switch (message.messageType) {
                 case "entry":
                     const entry = message.data;
-                    var forceSelect = false;
+                    var focusThis = false;
                     if (!focusedEntryId) {
+                        focusThis = true;
                         setFocusedEntryId(entry.id.toString());
-                        forceSelect = true;
                     }
                     setEntriesBuffer([
                         ...entriesBuffer,
                         <EntryItem
                             key={entry.id}
                             entry={entry}
+                            focusedEntryId={focusThis ? entry.id.toString() : focusedEntryId}
                             setFocusedEntryId={setFocusedEntryId}
                             style={{}}
                             updateQuery={updateQuery}
-                            forceSelect={forceSelect}
                             headingMode={false}
                         />
                     ]);
@@ -166,6 +166,16 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                 case "startTime":
                     setStartTime(message.data);
                     break;
+                case "focusEntry":
+                    // To achieve selecting only one entry, render all elements in the buffer
+                    // with the current `focusedEntryId` value.
+                    entriesBuffer.forEach((entry: any, i: number) => {
+                        entriesBuffer[i] = React.cloneElement(entry, {
+                            focusedEntryId: focusedEntryId
+                        });
+                    })
+                    setEntries(entriesBuffer);
+                    break;
                 default:
                     console.error(`unsupported websocket message type, Got: ${message.messageType}`)
             }
@@ -191,6 +201,11 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
     useEffect(() => {
         if (!focusedEntryId) return;
         setSelectedEntryData(null);
+
+        if (ws.current.readyState === WebSocket.OPEN) {
+            ws.current.send(focusedEntryId);
+        }
+
         (async () => {
             try {
                 const entryData = await api.getEntry(focusedEntryId);
