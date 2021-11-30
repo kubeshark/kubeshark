@@ -3,6 +3,7 @@ import EntryViewer from "./EntryDetailed/EntryViewer";
 import {EntryItem} from "./EntryListItem/EntryListItem";
 import {makeStyles} from "@material-ui/core";
 import Protocol from "./UI/Protocol"
+import Queryable from "./UI/Queryable";
 
 const useStyles = makeStyles(() => ({
     entryTitle: {
@@ -37,28 +38,33 @@ const EntryTitle: React.FC<any> = ({protocol, data, bodySize, elapsedTime, updat
     const classes = useStyles();
     const response = data.response;
 
-
     return <div className={classes.entryTitle}>
-        <Protocol protocol={protocol} horizontal={true} updateQuery={null}/>
+        <Protocol protocol={protocol} horizontal={true} updateQuery={updateQuery}/>
         <div style={{right: "30px", position: "absolute", display: "flex"}}>
-            {response && <div
-                className="queryable"
-                style={{margin: "0 18px", opacity: 0.5}}
-                onClick={() => {
-                    updateQuery(`response.bodySize == ${bodySize}`)
-                }}
+            {response && <Queryable
+                query={`response.bodySize == ${bodySize}`}
+                updateQuery={updateQuery}
+                style={{margin: "0 18px"}}
+                displayIconOnMouseOver={true}
             >
-                {formatSize(bodySize)}
-            </div>}
-            {response && <div
-                className="queryable"
-                style={{marginRight: 18, opacity: 0.5}}
-                onClick={() => {
-                    updateQuery(`elapsedTime >= ${elapsedTime}`)
-                }}
+                <div
+                    style={{opacity: 0.5}}
+                >
+                    {formatSize(bodySize)}
+                </div>
+            </Queryable>}
+            {response && <Queryable
+                query={`elapsedTime >= ${elapsedTime}`}
+                updateQuery={updateQuery}
+                style={{marginRight: 18}}
+                displayIconOnMouseOver={true}
             >
-                {Math.round(elapsedTime)}ms
-            </div>}
+                <div
+                    style={{opacity: 0.5}}
+                >
+                    {Math.round(elapsedTime)}ms
+                </div>
+            </Queryable>}
         </div>
     </div>;
 };

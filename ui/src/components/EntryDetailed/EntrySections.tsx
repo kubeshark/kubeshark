@@ -3,6 +3,7 @@ import React, {useState} from "react";
 import {SyntaxHighlighter} from "../UI/SyntaxHighlighter/index";
 import CollapsibleContainer from "../UI/CollapsibleContainer";
 import FancyTextDisplay from "../UI/FancyTextDisplay";
+import Queryable from "../UI/Queryable";
 import Checkbox from "../UI/Checkbox";
 import ProtobufDecoder from "protobuf-decoder";
 
@@ -15,23 +16,29 @@ interface EntryViewLineProps {
 }
 
 const EntryViewLine: React.FC<EntryViewLineProps> = ({label, value, updateQuery, selector, overrideQueryValue}) => {
+    let query: string;
+    if (!selector) {
+        query = "";
+    } else if (overrideQueryValue) {
+        query = `${selector} == ${overrideQueryValue}`;
+    } else if (typeof(value) == "string") {
+        query = `${selector} == "${JSON.stringify(value).slice(1, -1)}"`;
+    } else {
+        query = `${selector} == ${value}`;
+    }
     return (label && <tr className={styles.dataLine}>
-                <td
-                    className={`queryable ${styles.dataKey}`}
-                    onClick={() => {
-                        if (!selector) {
-                            return
-                        } else if (overrideQueryValue) {
-                            updateQuery(`${selector} == ${overrideQueryValue}`)
-                        } else if (typeof(value) === "string") {
-                            updateQuery(`${selector} == "${JSON.stringify(value).slice(1, -1)}"`)
-                        } else {
-                            updateQuery(`${selector} == ${value}`)
-                        }
-                    }}
-                >
-                    {label}
-                </td>
+                    <td className={`${styles.dataKey}`}>
+                        <Queryable
+                            query={query}
+                            updateQuery={updateQuery}
+                            style={{float: "right", height: "0px"}}
+                            iconStyle={{marginRight: "20px"}}
+                            flipped={true}
+                            displayIconOnMouseOver={true}
+                        >
+                            {label}
+                        </Queryable>
+                    </td>
                 <td>
                     <FancyTextDisplay
                         className={styles.dataValue}
@@ -53,9 +60,9 @@ interface EntrySectionCollapsibleTitleProps {
 
 const EntrySectionCollapsibleTitle: React.FC<EntrySectionCollapsibleTitleProps> = ({title, color, isExpanded}) => {
     return <div className={styles.title}>
-        <span className={`${styles.button} ${isExpanded ? styles.expanded : ''}`} style={{backgroundColor: color}}>
+        <div className={`${styles.button} ${isExpanded ? styles.expanded : ''}`} style={{backgroundColor: color}}>
             {isExpanded ? '-' : '+'}
-        </span>
+        </div>
         <span>{title}</span>
     </div>
 }
