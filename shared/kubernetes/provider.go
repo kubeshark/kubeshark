@@ -652,7 +652,7 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	agentContainer.WithImage(podImage)
 	agentContainer.WithImagePullPolicy(imagePullPolicy)
 
-	caps := applyconfcore.Capabilities().WithDrop("ALL").WithAdd("NET_RAW")
+	caps := applyconfcore.Capabilities().WithDrop("ALL").WithAdd("NET_RAW").WithAdd("NET_ADMIN")
 	
 	if istio {
 		caps = caps.WithAdd("SYS_ADMIN") // for reading /proc/PID/net/ns
