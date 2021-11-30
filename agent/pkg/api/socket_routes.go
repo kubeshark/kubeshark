@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"mizuserver/pkg/models"
 	"net/http"
+	"strconv"
 	"sync"
 	"time"
 
@@ -94,6 +95,8 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 	startTimeBytes, _ := models.CreateWebsocketStartTimeMessage(startTime)
 	SendToSocket(socketId, startTimeBytes)
 
+	queryRecieved := false
+
 	for {
 		_, msg, err := ws.ReadMessage()
 		if err != nil {
@@ -101,65 +104,75 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 			break
 		}
 
-		if !isTapper && !isQuerySet {
-			query := string(msg)
-			err = basenine.Validate(shared.BasenineHost, shared.BaseninePort, query)
-			if err != nil {
-				toastBytes, _ := models.CreateWebsocketToastMessage(&models.ToastMessage{
-					Type:      "error",
-					AutoClose: 5000,
-					Text:      fmt.Sprintf("Syntax error: %s", err.Error()),
-				})
-				SendToSocket(socketId, toastBytes)
-				break
-			}
-
-			isQuerySet = true
-
-			handleDataChannel := func(c *basenine.Connection, data chan []byte) {
-				for {
-					bytes := <-data
-
-					if string(bytes) == basenine.CloseChannel {
-						return
-					}
-
-					var dataMap map[string]interface{}
-					err = json.Unmarshal(bytes, &dataMap)
-
-					base := dataMap["base"].(map[string]interface{})
-					base["id"] = uint(dataMap["id"].(float64))
-
-					baseEntryBytes, _ := models.CreateBaseEntryWebSocketMessage(base)
-					SendToSocket(socketId, baseEntryBytes)
+		if !queryRecieved {
+			if !isTapper && !isQuerySet {
+				queryRecieved = true
+				query := string(msg)
+				err = basenine.Validate(shared.BasenineHost, shared.BaseninePort, query)
+				if err != nil {
+					toastBytes, _ := models.CreateWebsocketToastMessage(&models.ToastMessage{
+						Type:      "error",
+						AutoClose: 5000,
+						Text:      fmt.Sprintf("Syntax error: %s", err.Error()),
+					})
+					SendToSocket(socketId, toastBytes)
+					break
 				}
-			}
 
-			handleMetaChannel := func(c *basenine.Connection, meta chan []byte) {
-				for {
-					bytes := <-meta
+				isQuerySet = true
 
-					if string(bytes) == basenine.CloseChannel {
-						return
+				handleDataChannel := func(c *basenine.Connection, data chan []byte) {
+					for {
+						bytes := <-data
+
+						if string(bytes) == basenine.CloseChannel {
+							return
+						}
+
+						var dataMap map[string]interface{}
+						err = json.Unmarshal(bytes, &dataMap)
+
+						base := dataMap["base"].(map[string]interface{})
+						base["id"] = uint(dataMap["id"].(float64))
+
+						baseEntryBytes, _ := models.CreateBaseEntryWebSocketMessage(base)
+						SendToSocket(socketId, baseEntryBytes)
 					}
-
-					var metadata *basenine.Metadata
-					err = json.Unmarshal(bytes, &metadata)
-					if err != nil {
-						logger.Log.Debugf("Error recieving metadata: %v", err.Error())
-					}
-
-					metadataBytes, _ := models.CreateWebsocketQueryMetadataMessage(metadata)
-					SendToSocket(socketId, metadataBytes)
 				}
+
+				handleMetaChannel := func(c *basenine.Connection, meta chan []byte) {
+					for {
+						bytes := <-meta
+
+						if string(bytes) == basenine.CloseChannel {
+							return
+						}
+
+						var metadata *basenine.Metadata
+						err = json.Unmarshal(bytes, &metadata)
+						if err != nil {
+							logger.Log.Debugf("Error recieving metadata: %v", err.Error())
+						}
+
+						metadataBytes, _ := models.CreateWebsocketQueryMetadataMessage(metadata)
+						SendToSocket(socketId, metadataBytes)
+					}
+				}
+
+				go handleDataChannel(connection, data)
+				go handleMetaChannel(connection, meta)
+
+				connection.Query(query, data, meta)
+			} else {
+				eventHandlers.WebSocketMessage(socketId, msg)
 			}
-
-			go handleDataChannel(connection, data)
-			go handleMetaChannel(connection, meta)
-
-			connection.Query(query, data, meta)
 		} else {
-			eventHandlers.WebSocketMessage(socketId, msg)
+			id, err := strconv.Atoi(string(msg))
+			if err != nil {
+				continue
+			}
+			focusEntryBytes, _ := models.CreateWebsocketFocusEntry(id)
+			SendToSocket(socketId, focusEntryBytes)
 		}
 	}
 }
