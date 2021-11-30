@@ -21,7 +21,7 @@ const useLayoutStyles = makeStyles(() => ({
         padding: "12px 24px",
         borderRadius: 4,
         marginTop: 15,
-        background: variables.headerBackgoundColor,
+        background: variables.headerBackgroundColor,
     },
 
     viewer: {
