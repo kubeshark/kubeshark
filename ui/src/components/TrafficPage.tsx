@@ -101,8 +101,8 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
 
     const listEntry = useRef(null);
 
-    const openWebSocket = (query: string, dontClear: boolean) => {
-        if (!dontClear) {
+    const openWebSocket = (query: string, resetEntriesBuffer: boolean) => {
+        if (resetEntriesBuffer) {
             setFocusedEntryId(null);
             setEntries([]);
             setEntriesBuffer([]);
@@ -120,9 +120,9 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
         ws.current.onerror = (event) => {
             console.error("WebSocket error:", event);
             if (query) {
-                openWebSocket(`(${query}) and leftOff(${leftOff})`, true);
+                openWebSocket(`(${query}) and leftOff(${leftOff})`, false);
             } else {
-                openWebSocket(`leftOff(${leftOff})`, true);
+                openWebSocket(`leftOff(${leftOff})`, false);
             }
         }
     }
@@ -200,7 +200,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
 
     useEffect(() => {
         (async () => {
-            openWebSocket("leftOff(-1)", false);
+            openWebSocket("leftOff(-1)", true);
             try{
                 const tapStatusResponse = await api.tapStatus();
                 setTappingStatus(tapStatusResponse);
@@ -249,9 +249,9 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
             ws.current.close();
         } else {
             if (query) {
-                openWebSocket(`(${query}) and leftOff(${leftOff})`, true);
+                openWebSocket(`(${query}) and leftOff(${leftOff})`, false);
             } else {
-                openWebSocket(`leftOff(${leftOff})`, true);
+                openWebSocket(`leftOff(${leftOff})`, false);
             }
         }
     }
