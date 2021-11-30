@@ -10,5 +10,6 @@ import (
 func EntriesRoutes(ginApp *gin.Engine) {
 	routeGroup := ginApp.Group("/entries")
 
+	routeGroup.GET("/", controllers.GetEntries)  // get entries (base/thin entries)
 	routeGroup.GET("/:id", controllers.GetEntry) // get single (full) entry
 }

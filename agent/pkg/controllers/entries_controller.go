@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"mizuserver/pkg/models"
 	"mizuserver/pkg/utils"
+	"mizuserver/pkg/validation"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 
@@ -34,6 +36,58 @@ func Error(c *gin.Context, err error) bool {
 		return true // signal that there was an error and the caller should return
 	}
 	return false // no error, can continue
+}
+
+func GetEntries(c *gin.Context) {
+	entriesRequest := &models.EntriesRequest{}
+
+	if err := c.BindQuery(entriesRequest); err != nil {
+		c.JSON(http.StatusBadRequest, err)
+	}
+	validationError := validation.Validate(entriesRequest)
+	if validationError != nil {
+		c.JSON(http.StatusBadRequest, validationError)
+	}
+
+	data, meta, err := basenine.Fetch(shared.BasenineHost, shared.BaseninePort,
+		entriesRequest.LeftOff, entriesRequest.Direction, entriesRequest.Query,
+		entriesRequest.Limit, time.Duration(entriesRequest.TimeoutMs)*time.Millisecond)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, validationError)
+	}
+
+	result := make(map[string]interface{})
+	var dataSlice []interface{}
+
+	for _, row := range data {
+		var dataMap map[string]interface{}
+		err = json.Unmarshal(row, &dataMap)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error":     true,
+				"type":      "error",
+				"autoClose": "5000",
+				"msg":       string(row),
+			})
+			return // exit
+		}
+
+		base := dataMap["base"].(map[string]interface{})
+		base["id"] = uint(dataMap["id"].(float64))
+
+		dataSlice = append(dataSlice, base)
+	}
+
+	var metadata *basenine.Metadata
+	err = json.Unmarshal(meta, &metadata)
+	if err != nil {
+		logger.Log.Debugf("Error recieving metadata: %v", err.Error())
+	}
+
+	result["data"] = dataSlice
+	result["meta"] = metadata
+
+	c.JSON(http.StatusOK, result)
 }
 
 func GetEntry(c *gin.Context) {
