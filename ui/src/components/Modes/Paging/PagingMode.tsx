@@ -11,15 +11,9 @@ interface PagingModeProps {
     openWebSocket: (query: string, resetEntriesBuffer: boolean) => void;
     entries: any[];
     listEntryREF: any;
-    onSnapBrokenEvent: () => void;
-    isSnappedToBottom: boolean;
-    setIsSnappedToBottom: any;
-    queriedCurrent: number;
-    queriedTotal: number;
-    startTime: number;
 }
 
-export const PagingMode: React.FC<PagingModeProps> = ({query, setQuery, queryBackgroundColor, ws, openWebSocket, entries, listEntryREF, onSnapBrokenEvent, isSnappedToBottom, setIsSnappedToBottom, queriedCurrent, queriedTotal, startTime}) => {
+export const PagingMode: React.FC<PagingModeProps> = ({query, setQuery, queryBackgroundColor, ws, openWebSocket, entries, listEntryREF}) => {
 
     return <>
         <Filters
@@ -33,12 +27,6 @@ export const PagingMode: React.FC<PagingModeProps> = ({query, setQuery, queryBac
             <PagingEntriesList
                 entries={entries}
                 listEntryREF={listEntryREF}
-                onSnapBrokenEvent={onSnapBrokenEvent}
-                isSnappedToBottom={isSnappedToBottom}
-                setIsSnappedToBottom={setIsSnappedToBottom}
-                queriedCurrent={queriedCurrent}
-                queriedTotal={queriedTotal}
-                startTime={startTime}
             />
         </div>
 </>;

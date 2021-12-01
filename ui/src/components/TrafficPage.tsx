@@ -358,12 +358,6 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                         openWebSocket={openWebSocket}
                         entries={entries}
                         listEntryREF={listEntry}
-                        onSnapBrokenEvent={onSnapBrokenEvent}
-                        isSnappedToBottom={isSnappedToBottom}
-                        setIsSnappedToBottom={setIsSnappedToBottom}
-                        queriedCurrent={queriedCurrent}
-                        queriedTotal={queriedTotal}
-                        startTime={startTime}
                     />
                     }
                 </div>
