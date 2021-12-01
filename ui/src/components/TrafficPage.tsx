@@ -1,4 +1,5 @@
 import React, {useEffect, useRef, useState} from "react";
+import {Button} from "@material-ui/core";
 import {StreamingMode} from "./Modes/Streaming/StreamingMode";
 import {EntryItem} from "./EntryListItem/EntryListItem";
 import {makeStyles} from "@material-ui/core";
@@ -37,6 +38,11 @@ enum ConnectionStatus {
     Connected,
 }
 
+enum Mode {
+    Streaming,
+    Paging,
+}
+
 interface TrafficPageProps {
     setAnalyzeStatus: (status: any) => void;
     onTLSDetected: (destAddress: string) => void;
@@ -67,6 +73,10 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
     const [leftOff, setLeftOff] = useState(0);
 
     const [startTime, setStartTime] = useState(0);
+
+    const [mode, setMode] = useState(Mode.Streaming);
+
+    const handleModeSwitch = () => setMode(mode === Mode.Streaming ? Mode.Paging : Mode.Streaming);
 
     useEffect(() => {
         (async function() {
@@ -273,6 +283,17 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
         }
     }
 
+    const getModeText = () => {
+        switch (mode) {
+            case Mode.Streaming:
+                return "streaming";
+            case Mode.Paging:
+                return "paging";
+            default:
+                return "unknown";
+        }
+    }
+
     const onSnapBrokenEvent = () => {
         setIsSnappedToBottom(false)
     }
@@ -289,6 +310,24 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                     <div className={"indicatorContainer " + getConnectionStatusClass(true)}>
                         <div className={"indicator " + getConnectionStatusClass(false)}/>
                     </div>
+                </div>
+
+                <Button
+                    variant="contained"
+                    style={{
+                        margin: "0px 10px 0px 200px",
+                        backgroundColor: variables.blueColor,
+                        fontWeight: 600,
+                        borderRadius: "4px",
+                        color: "#fff",
+                        textTransform: "none",
+                    }}
+                    onClick={handleModeSwitch}
+                >
+                    Switch Mode
+                </Button>
+                <div className="connectionText">
+                    Mode: {getModeText()}
                 </div>
             </div>
             {<div className="TrafficPage-Container">
