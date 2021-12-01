@@ -1,6 +1,7 @@
 import React, {useEffect, useRef, useState} from "react";
 import {Button} from "@material-ui/core";
 import {StreamingMode} from "./Modes/Streaming/StreamingMode";
+import {PagingMode} from "./Modes/Paging/PagingMode";
 import {EntryItem} from "./EntryListItem/EntryListItem";
 import {makeStyles} from "@material-ui/core";
 import "./style/TrafficPage.sass";
@@ -332,6 +333,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
             </div>
             {<div className="TrafficPage-Container">
                 <div className="TrafficPage-ListContainer">
+                    {mode === Mode.Streaming ?
                     <StreamingMode
                         query={query}
                         setQuery={setQuery}
@@ -347,6 +349,23 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                         queriedTotal={queriedTotal}
                         startTime={startTime}
                     />
+                    :
+                    <PagingMode
+                        query={query}
+                        setQuery={setQuery}
+                        queryBackgroundColor={queryBackgroundColor}
+                        ws={ws.current}
+                        openWebSocket={openWebSocket}
+                        entries={entries}
+                        listEntryREF={listEntry}
+                        onSnapBrokenEvent={onSnapBrokenEvent}
+                        isSnappedToBottom={isSnappedToBottom}
+                        setIsSnappedToBottom={setIsSnappedToBottom}
+                        queriedCurrent={queriedCurrent}
+                        queriedTotal={queriedTotal}
+                        startTime={startTime}
+                    />
+                    }
                 </div>
                 <div className={classes.details}>
                     {selectedEntryData && <EntryDetailed entryData={selectedEntryData} updateQuery={updateQuery}/>}
