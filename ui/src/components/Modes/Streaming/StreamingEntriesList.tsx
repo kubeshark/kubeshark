@@ -1,9 +1,9 @@
 import React, {useRef} from "react";
-import styles from './style/EntriesList.module.sass';
+import styles from '../../style/EntriesList.module.sass';
 import ScrollableFeedVirtualized from "react-scrollable-feed-virtualized";
-import down from "./assets/downImg.svg";
+import down from "../../assets/downImg.svg";
 
-interface EntriesListProps {
+interface StreamingEntriesListProps {
     entries: any[];
     listEntryREF: any;
     onSnapBrokenEvent: () => void;
@@ -14,7 +14,7 @@ interface EntriesListProps {
     startTime: number;
 }
 
-export const EntriesList: React.FC<EntriesListProps> = ({entries, listEntryREF, onSnapBrokenEvent, isSnappedToBottom, setIsSnappedToBottom, queriedCurrent, queriedTotal, startTime}) => {
+export const StreamingEntriesList: React.FC<StreamingEntriesListProps> = ({entries, listEntryREF, onSnapBrokenEvent, isSnappedToBottom, setIsSnappedToBottom, queriedCurrent, queriedTotal, startTime}) => {
 
     const scrollableRef = useRef(null);
 

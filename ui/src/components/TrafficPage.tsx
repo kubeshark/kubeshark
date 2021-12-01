@@ -1,10 +1,8 @@
 import React, {useEffect, useRef, useState} from "react";
-import {Filters} from "./Filters";
-import {EntriesList} from "./EntriesList";
+import {StreamingMode} from "./Modes/Streaming/StreamingMode";
 import {EntryItem} from "./EntryListItem/EntryListItem";
 import {makeStyles} from "@material-ui/core";
 import "./style/TrafficPage.sass";
-import styles from './style/EntriesList.module.sass';
 import {EntryDetailed} from "./EntryDetailed";
 import playIcon from './assets/run.svg';
 import pauseIcon from './assets/pause.svg';
@@ -295,25 +293,21 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
             </div>
             {<div className="TrafficPage-Container">
                 <div className="TrafficPage-ListContainer">
-                    <Filters
+                    <StreamingMode
                         query={query}
                         setQuery={setQuery}
-                        backgroundColor={queryBackgroundColor}
+                        queryBackgroundColor={queryBackgroundColor}
                         ws={ws.current}
                         openWebSocket={openWebSocket}
+                        entries={entries}
+                        listEntryREF={listEntry}
+                        onSnapBrokenEvent={onSnapBrokenEvent}
+                        isSnappedToBottom={isSnappedToBottom}
+                        setIsSnappedToBottom={setIsSnappedToBottom}
+                        queriedCurrent={queriedCurrent}
+                        queriedTotal={queriedTotal}
+                        startTime={startTime}
                     />
-                    <div className={styles.container}>
-                        <EntriesList
-                            entries={entries}
-                            listEntryREF={listEntry}
-                            onSnapBrokenEvent={onSnapBrokenEvent}
-                            isSnappedToBottom={isSnappedToBottom}
-                            setIsSnappedToBottom={setIsSnappedToBottom}
-                            queriedCurrent={queriedCurrent}
-                            queriedTotal={queriedTotal}
-                            startTime={startTime}
-                        />
-                    </div>
                 </div>
                 <div className={classes.details}>
                     {selectedEntryData && <EntryDetailed entryData={selectedEntryData} updateQuery={updateQuery}/>}
