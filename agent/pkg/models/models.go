@@ -17,7 +17,7 @@ func GetEntry(r *tapApi.MizuEntry, v tapApi.DataUnmarshaler) error {
 }
 
 type EntriesRequest struct {
-	LeftOff   int    `form:"leftOff" validate:"required,min=0,max=2147483647"`
+	LeftOff   int    `form:"leftOff" validate:"required,min=-1,max=2147483647"`
 	Direction int    `form:"direction" validate:"required,oneof='1' '-1'"`
 	Query     string `form:"query"`
 	Limit     int    `form:"limit" validate:"required,min=1,max=2147483647"`
