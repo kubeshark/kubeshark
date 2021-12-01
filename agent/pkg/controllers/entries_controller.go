@@ -60,7 +60,7 @@ func GetEntries(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, validationError)
 	}
 
-	result := make(map[string]interface{})
+	response := &models.EntriesResponse{}
 	var dataSlice []interface{}
 
 	for _, row := range data {
@@ -88,10 +88,10 @@ func GetEntries(c *gin.Context) {
 		logger.Log.Debugf("Error recieving metadata: %v", err.Error())
 	}
 
-	result["data"] = dataSlice
-	result["meta"] = metadata
+	response.Data = dataSlice
+	response.Meta = metadata
 
-	c.JSON(http.StatusOK, result)
+	c.JSON(http.StatusOK, response)
 }
 
 func GetEntry(c *gin.Context) {

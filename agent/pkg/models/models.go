@@ -24,6 +24,11 @@ type EntriesRequest struct {
 	TimeoutMs int    `form:"timeoutMs" validate:"min=1"`
 }
 
+type EntriesResponse struct {
+	Data []interface{}      `json:"data"`
+	Meta *basenine.Metadata `json:"meta"`
+}
+
 type WebSocketEntryMessage struct {
 	*shared.WebSocketMessageMetadata
 	Data map[string]interface{} `json:"data,omitempty"`
