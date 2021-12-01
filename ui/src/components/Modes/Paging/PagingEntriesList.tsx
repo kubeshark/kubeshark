@@ -1,7 +1,6 @@
 import React, {useRef, useState} from "react";
 import styles from '../../style/EntriesList.module.sass';
-import ScrollableFeed from "react-scrollable-feed";
-import {EntryItem} from "../../EntryListItem/EntryListItem";
+import ScrollableFeedVirtualized from "react-scrollable-feed-virtualized";
 import spinner from '../../assets/spinner.svg';
 
 interface PagingEntriesListProps {
@@ -15,7 +14,8 @@ export const PagingEntriesList: React.FC<PagingEntriesListProps> = ({entries, li
     const [isLoadingTop, setIsLoadingTop] = useState(false);
     const scrollableRef = useRef(null);
 
-    console.log(entries);
+    const onSnapBrokenEvent = () => {
+    }
 
     return <>
             <div className={styles.list}>
@@ -23,9 +23,10 @@ export const PagingEntriesList: React.FC<PagingEntriesListProps> = ({entries, li
                     {isLoadingTop && <div className={styles.spinnerContainer}>
                         <img alt="spinner" src={spinner} style={{height: 25}}/>
                     </div>}
-                    <ScrollableFeed ref={scrollableRef} onScroll={(isAtBottom) => console.log(isAtBottom)}>
+                    <ScrollableFeedVirtualized ref={scrollableRef} itemHeight={48} marginTop={10} onSnapBroken={onSnapBrokenEvent}>
+                        {false /* TODO: why there is a need for something here (not necessarily false)? */}
                         {entries}
-                    </ScrollableFeed>
+                    </ScrollableFeedVirtualized>
                 </div>
 
                 {entries?.length > 0 && <div className={styles.footer}>
