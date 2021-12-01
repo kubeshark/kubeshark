@@ -21,7 +21,7 @@ type EntriesRequest struct {
 	Direction int    `form:"direction" validate:"required,oneof='1' '-1'"`
 	Query     string `form:"query"`
 	Limit     int    `form:"limit" validate:"required,min=1"`
-	TimeoutMs int    `form:"timeoutMs" validate:"required,min=1"`
+	TimeoutMs int    `form:"timeoutMs" validate:"min=1"`
 }
 
 type WebSocketEntryMessage struct {

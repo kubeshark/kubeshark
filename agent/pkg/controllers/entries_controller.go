@@ -49,6 +49,10 @@ func GetEntries(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, validationError)
 	}
 
+	if entriesRequest.TimeoutMs == 0 {
+		entriesRequest.TimeoutMs = 3000
+	}
+
 	data, meta, err := basenine.Fetch(shared.BasenineHost, shared.BaseninePort,
 		entriesRequest.LeftOff, entriesRequest.Direction, entriesRequest.Query,
 		entriesRequest.Limit, time.Duration(entriesRequest.TimeoutMs)*time.Millisecond)
