@@ -249,17 +249,25 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
             }
         })();
         // eslint-disable-next-line
-    }, [focusedEntryId])
+    }, [focusedEntryId]);
+
+    const closeWebSocket = () => {
+        ws.current.close();
+    }
+
+    const reconnectWebSocket = () => {
+        if (query) {
+            openWebSocket(`(${query}) and leftOff(${leftOffBottom})`, false);
+        } else {
+            openWebSocket(`leftOff(${leftOffBottom})`, false);
+        }
+    }
 
     const toggleConnection = () => {
         if (connection === ConnectionStatus.Connected) {
-            ws.current.close();
+            closeWebSocket();
         } else {
-            if (query) {
-                openWebSocket(`(${query}) and leftOff(${leftOffBottom})`, false);
-            } else {
-                openWebSocket(`leftOff(${leftOffBottom})`, false);
-            }
+            reconnectWebSocket();
         }
     }
 
@@ -329,6 +337,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                             updateQuery={updateQuery}
                             leftOffTop={leftOffTop}
                             setLeftOffTop={setLeftOffTop}
+                            closeWebSocket={closeWebSocket}
                         />
                     </div>
                 </div>

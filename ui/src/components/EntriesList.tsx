@@ -25,11 +25,12 @@ interface EntriesListProps {
     updateQuery: any;
     leftOffTop: number;
     setLeftOffTop: (leftOffTop: number) => void;
+    closeWebSocket: any;
 }
 
 const api = new Api();
 
-export const EntriesList: React.FC<EntriesListProps> = ({entries, setEntries, query, listEntryREF, onSnapBrokenEvent, isSnappedToBottom, setIsSnappedToBottom, queriedCurrent, setQueriedCurrent, queriedTotal, startTime, noMoreDataTop, setNoMoreDataTop, focusedEntryId, setFocusedEntryId, updateQuery, leftOffTop, setLeftOffTop}) => {
+export const EntriesList: React.FC<EntriesListProps> = ({entries, setEntries, query, listEntryREF, onSnapBrokenEvent, isSnappedToBottom, setIsSnappedToBottom, queriedCurrent, setQueriedCurrent, queriedTotal, startTime, noMoreDataTop, setNoMoreDataTop, focusedEntryId, setFocusedEntryId, updateQuery, leftOffTop, setLeftOffTop, closeWebSocket}) => {
     const [loadMoreTop, setLoadMoreTop] = useState(false);
     const [isLoadingTop, setIsLoadingTop] = useState(false);
     const scrollableRef = useRef(null);
@@ -51,6 +52,7 @@ export const EntriesList: React.FC<EntriesListProps> = ({entries, setEntries, qu
     },[entries]);
 
     const getOldEntries = useCallback(async () => {
+        closeWebSocket();
         setIsLoadingTop(true);
         setLoadMoreTop(false);
         const data = await api.fetchEntries(leftOffTop, -1, query, 100, 3000);
@@ -88,7 +90,7 @@ export const EntriesList: React.FC<EntriesListProps> = ({entries, setEntries, qu
         if (scrollTo) {
             scrollTo.scrollIntoView({block: "nearest", inline: "nearest"});
         }
-    },[setLoadMoreTop, setIsLoadingTop, entries, setEntries, query, setNoMoreDataTop, focusedEntryId, setFocusedEntryId, updateQuery, leftOffTop, setLeftOffTop, queriedCurrent, setQueriedCurrent]);
+    },[setLoadMoreTop, setIsLoadingTop, entries, setEntries, query, setNoMoreDataTop, focusedEntryId, setFocusedEntryId, updateQuery, leftOffTop, setLeftOffTop, queriedCurrent, setQueriedCurrent, closeWebSocket]);
 
     useEffect(() => {
         if(!loadMoreTop || noMoreDataTop) return;
