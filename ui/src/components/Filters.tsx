@@ -64,7 +64,11 @@ export const QueryForm: React.FC<QueryFormProps> = ({query, setQuery, background
 
     const handleSubmit = (e) => {
         ws.close();
-        openWebSocket(`(${query}) and leftOff(-1)`, true);
+        if (query) {
+            openWebSocket(`(${query}) and leftOff(-1)`, true);
+        } else {
+            openWebSocket(`leftOff(-1)`, true);
+        }
         e.preventDefault();
     }
 
