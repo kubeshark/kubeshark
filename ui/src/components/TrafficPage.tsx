@@ -173,7 +173,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                     });
                     break;
                 case "queryMetadata":
-                    setQueriedCurrent(message.data.current);
+                    setQueriedCurrent(queriedCurrent + message.data.current);
                     setQueriedTotal(message.data.total);
                     setLeftOffBottom(message.data.leftOff);
                     if (leftOffTop === null) {
@@ -319,6 +319,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                             isSnappedToBottom={isSnappedToBottom}
                             setIsSnappedToBottom={setIsSnappedToBottom}
                             queriedCurrent={queriedCurrent}
+                            setQueriedCurrent={setQueriedCurrent}
                             queriedTotal={queriedTotal}
                             startTime={startTime}
                             noMoreDataTop={noMoreDataTop}

@@ -15,6 +15,7 @@ interface EntriesListProps {
     isSnappedToBottom: boolean;
     setIsSnappedToBottom: any;
     queriedCurrent: number;
+    setQueriedCurrent: any;
     queriedTotal: number;
     startTime: number;
     noMoreDataTop: boolean;
@@ -28,8 +29,7 @@ interface EntriesListProps {
 
 const api = new Api();
 
-export const EntriesList: React.FC<EntriesListProps> = ({entries, setEntries, query, listEntryREF, onSnapBrokenEvent, isSnappedToBottom, setIsSnappedToBottom, queriedCurrent, queriedTotal, startTime, noMoreDataTop, setNoMoreDataTop, focusedEntryId, setFocusedEntryId, updateQuery, leftOffTop, setLeftOffTop}) => {
-
+export const EntriesList: React.FC<EntriesListProps> = ({entries, setEntries, query, listEntryREF, onSnapBrokenEvent, isSnappedToBottom, setIsSnappedToBottom, queriedCurrent, setQueriedCurrent, queriedTotal, startTime, noMoreDataTop, setNoMoreDataTop, focusedEntryId, setFocusedEntryId, updateQuery, leftOffTop, setLeftOffTop}) => {
     const [loadMoreTop, setLoadMoreTop] = useState(false);
     const [isLoadingTop, setIsLoadingTop] = useState(false);
     const scrollableRef = useRef(null);
@@ -83,10 +83,12 @@ export const EntriesList: React.FC<EntriesListProps> = ({entries, setEntries, qu
         const newEntries = [...incomingEntries, ...entries];
         setEntries(newEntries);
 
+        setQueriedCurrent(queriedCurrent + data.meta.current);
+
         if (scrollTo) {
             scrollTo.scrollIntoView({block: "nearest", inline: "nearest"});
         }
-    },[setLoadMoreTop, setIsLoadingTop, entries, setEntries, query, setNoMoreDataTop, focusedEntryId, setFocusedEntryId, updateQuery, leftOffTop, setLeftOffTop]);
+    },[setLoadMoreTop, setIsLoadingTop, entries, setEntries, query, setNoMoreDataTop, focusedEntryId, setFocusedEntryId, updateQuery, leftOffTop, setLeftOffTop, queriedCurrent, setQueriedCurrent]);
 
     useEffect(() => {
         if(!loadMoreTop || noMoreDataTop) return;
