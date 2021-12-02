@@ -42,16 +42,20 @@ export const EntriesList: React.FC<EntriesListProps> = ({entries, setEntries, qu
             if(el.scrollTop === 0) {
                 setLoadMoreTop(true);
             } else {
+                setNoMoreDataTop(false);
                 setLoadMoreTop(false);
             }
         });
-    }, []);
+    }, [setLoadMoreTop, setNoMoreDataTop]);
 
     const memoizedEntries = useMemo(() => {
         return entries;
     },[entries]);
 
     const getOldEntries = useCallback(async () => {
+        if (leftOffTop <= 0) {
+            return;
+        }
         setIsLoadingTop(true);
         setLoadMoreTop(false);
         const data = await api.fetchEntries(leftOffTop, -1, query, 100, 3000);
@@ -101,8 +105,9 @@ export const EntriesList: React.FC<EntriesListProps> = ({entries, setEntries, qu
                     {isLoadingTop && <div className={styles.spinnerContainer}>
                         <img alt="spinner" src={spinner} style={{height: 25}}/>
                     </div>}
+                    {noMoreDataTop && <div id="noMoreDataTop" className={styles.noMoreDataAvailable}>No more data available</div>}
                     <ScrollableFeedVirtualized ref={scrollableRef} itemHeight={48} marginTop={10} onSnapBroken={onSnapBrokenEvent}>
-                        {noMoreDataTop && <div id="noMoreDataTop" className={styles.noMoreDataAvailable}>No more data available</div>}
+                        {false /* TODO: why there is a need for something here (not necessarily false)? */}
                         {memoizedEntries}
                     </ScrollableFeedVirtualized>
                     <button type="button"

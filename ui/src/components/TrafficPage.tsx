@@ -108,6 +108,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
             setFocusedEntryId(null);
             setEntries([]);
             setQueriedCurrent(0);
+            setLeftOffTop(null);
         }
         ws.current = new WebSocket(MizuWebsocketURL);
         ws.current.onopen = () => {
