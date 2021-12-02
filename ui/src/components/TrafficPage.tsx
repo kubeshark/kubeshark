@@ -67,7 +67,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
 
     const [queriedCurrent, setQueriedCurrent] = useState(0);
     const [queriedTotal, setQueriedTotal] = useState(0);
-    const [leftOff, setLeftOff] = useState(0);
+    const [leftOffBottom, setLeftOffBottom] = useState(0);
     const [leftOffTop, setLeftOffTop] = useState(null);
 
     const [startTime, setStartTime] = useState(0);
@@ -119,9 +119,9 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
         ws.current.onerror = (event) => {
             console.error("WebSocket error:", event);
             if (query) {
-                openWebSocket(`(${query}) and leftOff(${leftOff})`, false);
+                openWebSocket(`(${query}) and leftOff(${leftOffBottom})`, false);
             } else {
-                openWebSocket(`leftOff(${leftOff})`, false);
+                openWebSocket(`leftOff(${leftOffBottom})`, false);
             }
         }
     }
@@ -175,7 +175,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                 case "queryMetadata":
                     setQueriedCurrent(message.data.current);
                     setQueriedTotal(message.data.total);
-                    setLeftOff(message.data.leftOff);
+                    setLeftOffBottom(message.data.leftOff);
                     if (leftOffTop === null) {
                         setLeftOffTop(message.data.leftOff);
                     }
@@ -249,9 +249,9 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
             ws.current.close();
         } else {
             if (query) {
-                openWebSocket(`(${query}) and leftOff(${leftOff})`, false);
+                openWebSocket(`(${query}) and leftOff(${leftOffBottom})`, false);
             } else {
-                openWebSocket(`leftOff(${leftOff})`, false);
+                openWebSocket(`leftOff(${leftOffBottom})`, false);
             }
         }
     }
