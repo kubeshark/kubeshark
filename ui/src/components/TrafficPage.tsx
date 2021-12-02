@@ -220,6 +220,12 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
 
         if (ws.current.readyState === WebSocket.OPEN) {
             ws.current.send(focusedEntryId);
+        } else {
+            entries.forEach((entry: any, i: number) => {
+                entries[i] = React.cloneElement(entry, {
+                    focusedEntryId: focusedEntryId
+                });
+            });
         }
 
         (async () => {
@@ -241,7 +247,8 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                 }
                 console.error(error);
             }
-        })()
+        })();
+        // eslint-disable-next-line
     }, [focusedEntryId])
 
     const toggleConnection = () => {
