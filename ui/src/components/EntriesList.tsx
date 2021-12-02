@@ -9,8 +9,6 @@ import Api from "../helpers/api";
 interface EntriesListProps {
     entries: any[];
     setEntries: any;
-    entriesBuffer: any[];
-    setEntriesBuffer: any;
     query: string;
     listEntryREF: any;
     onSnapBrokenEvent: () => void;
@@ -30,7 +28,7 @@ interface EntriesListProps {
 
 const api = new Api();
 
-export const EntriesList: React.FC<EntriesListProps> = ({entries, setEntries, entriesBuffer, setEntriesBuffer, query, listEntryREF, onSnapBrokenEvent, isSnappedToBottom, setIsSnappedToBottom, queriedCurrent, queriedTotal, startTime, noMoreDataTop, setNoMoreDataTop, focusedEntryId, setFocusedEntryId, updateQuery, leftOffTop, setLeftOffTop}) => {
+export const EntriesList: React.FC<EntriesListProps> = ({entries, setEntries, query, listEntryREF, onSnapBrokenEvent, isSnappedToBottom, setIsSnappedToBottom, queriedCurrent, queriedTotal, startTime, noMoreDataTop, setNoMoreDataTop, focusedEntryId, setFocusedEntryId, updateQuery, leftOffTop, setLeftOffTop}) => {
 
     const [loadMoreTop, setLoadMoreTop] = useState(false);
     const [isLoadingTop, setIsLoadingTop] = useState(false);
@@ -82,14 +80,13 @@ export const EntriesList: React.FC<EntriesListProps> = ({entries, setEntries, en
                 />
             );
         });
-        const newEntries = [...incomingEntries, ...entriesBuffer];
-        setEntriesBuffer(newEntries);
+        const newEntries = [...incomingEntries, ...entries];
         setEntries(newEntries);
 
         if (scrollTo) {
             scrollTo.scrollIntoView({block: "nearest", inline: "nearest"});
         }
-    },[setLoadMoreTop, setIsLoadingTop, setEntries, entriesBuffer, setEntriesBuffer, query, setNoMoreDataTop, focusedEntryId, setFocusedEntryId, updateQuery, leftOffTop, setLeftOffTop]);
+    },[setLoadMoreTop, setIsLoadingTop, entries, setEntries, query, setNoMoreDataTop, focusedEntryId, setFocusedEntryId, updateQuery, leftOffTop, setLeftOffTop]);
 
     useEffect(() => {
         if(!loadMoreTop || noMoreDataTop) return;

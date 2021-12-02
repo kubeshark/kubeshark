@@ -51,7 +51,6 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
     const classes = useLayoutStyles();
 
     const [entries, setEntries] = useState([] as any);
-    const [entriesBuffer, setEntriesBuffer] = useState([] as any);
     const [focusedEntryId, setFocusedEntryId] = useState(null);
     const [selectedEntryData, setSelectedEntryData] = useState(null);
     const [connection, setConnection] = useState(ConnectionStatus.Closed);
@@ -104,13 +103,10 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
 
     const listEntry = useRef(null);
 
-    const openWebSocket = (query: string, resetEntriesBuffer: boolean) => {
-        if (resetEntriesBuffer) {
+    const openWebSocket = (query: string, resetEntries: boolean) => {
+        if (resetEntries) {
             setFocusedEntryId(null);
             setEntries([]);
-            setEntriesBuffer([]);
-        } else {
-            setEntriesBuffer(entries);
         }
         ws.current = new WebSocket(MizuWebsocketURL);
         ws.current.onopen = () => {
@@ -142,8 +138,8 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                         focusThis = true;
                         setFocusedEntryId(entry.id.toString());
                     }
-                    setEntriesBuffer([
-                        ...entriesBuffer,
+                    setEntries([
+                        ...entries,
                         <EntryItem
                             key={entry.id}
                             entry={entry}
@@ -183,7 +179,6 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                     if (leftOffTop === null) {
                         setLeftOffTop(message.data.leftOff);
                     }
-                    setEntries(entriesBuffer);
                     break;
                 case "startTime":
                     setStartTime(message.data);
@@ -191,12 +186,11 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                 case "focusEntry":
                     // To achieve selecting only one entry, render all elements in the buffer
                     // with the current `focusedEntryId` value.
-                    entriesBuffer.forEach((entry: any, i: number) => {
-                        entriesBuffer[i] = React.cloneElement(entry, {
+                    entries.forEach((entry: any, i: number) => {
+                        entries[i] = React.cloneElement(entry, {
                             focusedEntryId: focusedEntryId
                         });
                     });
-                    setEntries(entriesBuffer);
                     break;
                 default:
                     console.error(`unsupported websocket message type, Got: ${message.messageType}`)
@@ -312,8 +306,6 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                         <EntriesList
                             entries={entries}
                             setEntries={setEntries}
-                            entriesBuffer={entriesBuffer}
-                            setEntriesBuffer={setEntriesBuffer}
                             query={query}
                             listEntryREF={listEntry}
                             onSnapBrokenEvent={onSnapBrokenEvent}

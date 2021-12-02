@@ -13,7 +13,7 @@ interface FiltersProps {
     setQuery: any
     backgroundColor: string
     ws: any
-    openWebSocket: (query: string, resetEntriesBuffer: boolean) => void;
+    openWebSocket: (query: string, resetEntries: boolean) => void;
 }
 
 export const Filters: React.FC<FiltersProps> = ({query, setQuery, backgroundColor, ws, openWebSocket}) => {
@@ -33,7 +33,7 @@ interface QueryFormProps {
     setQuery: any
     backgroundColor: string
     ws: any
-    openWebSocket: (query: string, resetEntriesBuffer: boolean) => void;
+    openWebSocket: (query: string, resetEntries: boolean) => void;
 }
 
 const style = {
