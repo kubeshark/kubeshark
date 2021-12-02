@@ -56,6 +56,8 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
     const [selectedEntryData, setSelectedEntryData] = useState(null);
     const [connection, setConnection] = useState(ConnectionStatus.Closed);
 
+    const [noMoreDataTop, setNoMoreDataTop] = useState(false);
+
     const [tappingStatus, setTappingStatus] = useState(null);
 
     const [isSnappedToBottom, setIsSnappedToBottom] = useState(true);
@@ -67,6 +69,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
     const [queriedCurrent, setQueriedCurrent] = useState(0);
     const [queriedTotal, setQueriedTotal] = useState(0);
     const [leftOff, setLeftOff] = useState(0);
+    const [leftOffTop, setLeftOffTop] = useState(null);
 
     const [startTime, setStartTime] = useState(0);
 
@@ -177,6 +180,9 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                     setQueriedCurrent(message.data.current);
                     setQueriedTotal(message.data.total);
                     setLeftOff(message.data.leftOff);
+                    if (leftOffTop === null) {
+                        setLeftOffTop(message.data.leftOff);
+                    }
                     setEntries(entriesBuffer);
                     break;
                 case "startTime":
@@ -189,7 +195,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                         entriesBuffer[i] = React.cloneElement(entry, {
                             focusedEntryId: focusedEntryId
                         });
-                    })
+                    });
                     setEntries(entriesBuffer);
                     break;
                 default:
@@ -305,6 +311,10 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                     <div className={styles.container}>
                         <EntriesList
                             entries={entries}
+                            setEntries={setEntries}
+                            entriesBuffer={entriesBuffer}
+                            setEntriesBuffer={setEntriesBuffer}
+                            query={query}
                             listEntryREF={listEntry}
                             onSnapBrokenEvent={onSnapBrokenEvent}
                             isSnappedToBottom={isSnappedToBottom}
@@ -312,6 +322,13 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                             queriedCurrent={queriedCurrent}
                             queriedTotal={queriedTotal}
                             startTime={startTime}
+                            noMoreDataTop={noMoreDataTop}
+                            setNoMoreDataTop={setNoMoreDataTop}
+                            focusedEntryId={focusedEntryId}
+                            setFocusedEntryId={setFocusedEntryId}
+                            updateQuery={updateQuery}
+                            leftOffTop={leftOffTop}
+                            setLeftOffTop={setLeftOffTop}
                         />
                     </div>
                 </div>

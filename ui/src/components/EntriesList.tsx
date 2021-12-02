@@ -1,10 +1,17 @@
-import React, {useRef} from "react";
+import React, {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import styles from './style/EntriesList.module.sass';
 import ScrollableFeedVirtualized from "react-scrollable-feed-virtualized";
+import {EntryItem} from "./EntryListItem/EntryListItem";
 import down from "./assets/downImg.svg";
+import spinner from './assets/spinner.svg';
+import Api from "../helpers/api";
 
 interface EntriesListProps {
     entries: any[];
+    setEntries: any;
+    entriesBuffer: any[];
+    setEntriesBuffer: any;
+    query: string;
     listEntryREF: any;
     onSnapBrokenEvent: () => void;
     isSnappedToBottom: boolean;
@@ -12,18 +19,90 @@ interface EntriesListProps {
     queriedCurrent: number;
     queriedTotal: number;
     startTime: number;
+    noMoreDataTop: boolean;
+    setNoMoreDataTop: (flag: boolean) => void;
+    focusedEntryId: string;
+    setFocusedEntryId: (id: string) => void;
+    updateQuery: any;
+    leftOffTop: any;
+    setLeftOffTop: (leftOffTop: number) => void;
 }
 
-export const EntriesList: React.FC<EntriesListProps> = ({entries, listEntryREF, onSnapBrokenEvent, isSnappedToBottom, setIsSnappedToBottom, queriedCurrent, queriedTotal, startTime}) => {
+const api = new Api();
 
+export const EntriesList: React.FC<EntriesListProps> = ({entries, setEntries, entriesBuffer, setEntriesBuffer, query, listEntryREF, onSnapBrokenEvent, isSnappedToBottom, setIsSnappedToBottom, queriedCurrent, queriedTotal, startTime, noMoreDataTop, setNoMoreDataTop, focusedEntryId, setFocusedEntryId, updateQuery, leftOffTop, setLeftOffTop}) => {
+
+    const [loadMoreTop, setLoadMoreTop] = useState(false);
+    const [isLoadingTop, setIsLoadingTop] = useState(false);
     const scrollableRef = useRef(null);
+
+    useEffect(() => {
+        const list = document.getElementById('list').firstElementChild;
+        list.addEventListener('scroll', (e) => {
+            const el: any = e.target;
+            if(el.scrollTop === 0) {
+                setLoadMoreTop(true);
+            } else {
+                setLoadMoreTop(false);
+            }
+        });
+    }, []);
+
+    const memoizedEntries = useMemo(() => {
+        return entries;
+    },[entries]);
+
+    const getOldEntries = useCallback(async () => {
+        setIsLoadingTop(true);
+        setLoadMoreTop(false);
+        const data = await api.fetchEntries(leftOffTop, -1, query, 100, 3000);
+        setLeftOffTop(data.meta.leftOff);
+
+        let scrollTo;
+        if(data.length === 0) {
+            setNoMoreDataTop(true);
+            scrollTo = document.getElementById("noMoreDataTop");
+        } else {
+            scrollTo = document.getElementById(entriesBuffer?.[0]?.id);
+        }
+        setIsLoadingTop(false);
+        let incomingEntries = [];
+        data.data.forEach((entry: any) => {
+            incomingEntries.push(
+                <EntryItem
+                    key={entry.id}
+                    entry={entry}
+                    focusedEntryId={focusedEntryId}
+                    setFocusedEntryId={setFocusedEntryId}
+                    style={{}}
+                    updateQuery={updateQuery}
+                    headingMode={false}
+                />
+            );
+        });
+        const newEntries = [...incomingEntries, ...entriesBuffer];
+        setEntriesBuffer(newEntries);
+        setEntries(newEntries);
+
+        if(scrollTo) {
+            scrollTo.scrollIntoView();
+        }
+    },[setLoadMoreTop, setIsLoadingTop, setEntries, entriesBuffer, setEntriesBuffer, query, setNoMoreDataTop, focusedEntryId, setFocusedEntryId, updateQuery, leftOffTop, setLeftOffTop]);
+
+    useEffect(() => {
+        if(!loadMoreTop || noMoreDataTop) return;
+        getOldEntries();
+    }, [loadMoreTop, noMoreDataTop, getOldEntries]);
 
     return <>
             <div className={styles.list}>
                 <div id="list" ref={listEntryREF} className={styles.list}>
+                    {isLoadingTop && <div className={styles.spinnerContainer}>
+                        <img alt="spinner" src={spinner} style={{height: 25}}/>
+                    </div>}
                     <ScrollableFeedVirtualized ref={scrollableRef} itemHeight={48} marginTop={10} onSnapBroken={onSnapBrokenEvent}>
                         {false /* TODO: why there is a need for something here (not necessarily false)? */}
-                        {entries}
+                        {memoizedEntries}
                     </ScrollableFeedVirtualized>
                     <button type="button"
                         className={`${styles.btnLive} ${isSnappedToBottom ? styles.hideButton : styles.showButton}`}
