@@ -56,16 +56,18 @@ export const EntriesList: React.FC<EntriesListProps> = ({entries, setEntries, en
         setIsLoadingTop(true);
         setLoadMoreTop(false);
         const data = await api.fetchEntries(leftOffTop, -1, query, 100, 3000);
+        let leftOffTopBak = leftOffTop;
         setLeftOffTop(data.meta.leftOff);
 
         let scrollTo;
-        if(data.length === 0) {
+        if (data.meta.leftOff === 0) {
             setNoMoreDataTop(true);
             scrollTo = document.getElementById("noMoreDataTop");
         } else {
-            scrollTo = document.getElementById(entriesBuffer?.[0]?.id);
+            scrollTo = document.getElementById(`entry-${leftOffTopBak}`);
         }
         setIsLoadingTop(false);
+
         let incomingEntries = [];
         data.data.forEach((entry: any) => {
             incomingEntries.push(
@@ -84,8 +86,8 @@ export const EntriesList: React.FC<EntriesListProps> = ({entries, setEntries, en
         setEntriesBuffer(newEntries);
         setEntries(newEntries);
 
-        if(scrollTo) {
-            scrollTo.scrollIntoView();
+        if (scrollTo) {
+            scrollTo.scrollIntoView({block: "nearest", inline: "nearest"});
         }
     },[setLoadMoreTop, setIsLoadingTop, setEntries, entriesBuffer, setEntriesBuffer, query, setNoMoreDataTop, focusedEntryId, setFocusedEntryId, updateQuery, leftOffTop, setLeftOffTop]);
 
@@ -101,7 +103,7 @@ export const EntriesList: React.FC<EntriesListProps> = ({entries, setEntries, en
                         <img alt="spinner" src={spinner} style={{height: 25}}/>
                     </div>}
                     <ScrollableFeedVirtualized ref={scrollableRef} itemHeight={48} marginTop={10} onSnapBroken={onSnapBrokenEvent}>
-                        {false /* TODO: why there is a need for something here (not necessarily false)? */}
+                        {noMoreDataTop && <div id="noMoreDataTop" className={styles.noMoreDataAvailable}>No more data available</div>}
                         {memoizedEntries}
                     </ScrollableFeedVirtualized>
                     <button type="button"
