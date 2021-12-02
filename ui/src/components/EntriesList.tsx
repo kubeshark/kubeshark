@@ -26,11 +26,12 @@ interface EntriesListProps {
     leftOffTop: number;
     setLeftOffTop: (leftOffTop: number) => void;
     closeWebSocket: any;
+    reconnectWebSocket: any;
 }
 
 const api = new Api();
 
-export const EntriesList: React.FC<EntriesListProps> = ({entries, setEntries, query, listEntryREF, onSnapBrokenEvent, isSnappedToBottom, setIsSnappedToBottom, queriedCurrent, setQueriedCurrent, queriedTotal, startTime, noMoreDataTop, setNoMoreDataTop, focusedEntryId, setFocusedEntryId, updateQuery, leftOffTop, setLeftOffTop, closeWebSocket}) => {
+export const EntriesList: React.FC<EntriesListProps> = ({entries, setEntries, query, listEntryREF, onSnapBrokenEvent, isSnappedToBottom, setIsSnappedToBottom, queriedCurrent, setQueriedCurrent, queriedTotal, startTime, noMoreDataTop, setNoMoreDataTop, focusedEntryId, setFocusedEntryId, updateQuery, leftOffTop, setLeftOffTop, closeWebSocket, reconnectWebSocket}) => {
     const [loadMoreTop, setLoadMoreTop] = useState(false);
     const [isLoadingTop, setIsLoadingTop] = useState(false);
     const scrollableRef = useRef(null);
@@ -110,6 +111,7 @@ export const EntriesList: React.FC<EntriesListProps> = ({entries, setEntries, qu
                     <button type="button"
                         className={`${styles.btnLive} ${isSnappedToBottom ? styles.hideButton : styles.showButton}`}
                         onClick={(_) => {
+                            reconnectWebSocket();
                             scrollableRef.current.jumpToBottom();
                             setIsSnappedToBottom(true);
                         }}>

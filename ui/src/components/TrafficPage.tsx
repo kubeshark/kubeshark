@@ -338,6 +338,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                             leftOffTop={leftOffTop}
                             setLeftOffTop={setLeftOffTop}
                             closeWebSocket={closeWebSocket}
+                            reconnectWebSocket={reconnectWebSocket}
                         />
                     </div>
                 </div>
