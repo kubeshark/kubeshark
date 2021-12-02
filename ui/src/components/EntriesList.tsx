@@ -22,7 +22,7 @@ interface EntriesListProps {
     focusedEntryId: string;
     setFocusedEntryId: (id: string) => void;
     updateQuery: any;
-    leftOffTop: any;
+    leftOffTop: number;
     setLeftOffTop: (leftOffTop: number) => void;
 }
 
