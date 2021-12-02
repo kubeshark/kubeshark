@@ -55,15 +55,14 @@ export const EntriesList: React.FC<EntriesListProps> = ({entries, setEntries, qu
         setIsLoadingTop(true);
         setLoadMoreTop(false);
         const data = await api.fetchEntries(leftOffTop, -1, query, 100, 3000);
-        let leftOffTopBak = leftOffTop;
         setLeftOffTop(data.meta.leftOff);
 
-        let scrollTo;
+        let scrollTo: boolean;
         if (data.meta.leftOff === 0) {
             setNoMoreDataTop(true);
-            scrollTo = document.getElementById("noMoreDataTop");
+            scrollTo = false;
         } else {
-            scrollTo = document.getElementById(`entry-${leftOffTopBak}`);
+            scrollTo = true;
         }
         setIsLoadingTop(false);
 
@@ -87,7 +86,7 @@ export const EntriesList: React.FC<EntriesListProps> = ({entries, setEntries, qu
         setQueriedCurrent(queriedCurrent + data.meta.current);
 
         if (scrollTo) {
-            scrollTo.scrollIntoView({block: "nearest", inline: "nearest"});
+            scrollableRef.current.scrollToIndex(incomingEntries.length - 1);
         }
     },[setLoadMoreTop, setIsLoadingTop, entries, setEntries, query, setNoMoreDataTop, focusedEntryId, setFocusedEntryId, updateQuery, leftOffTop, setLeftOffTop, queriedCurrent, setQueriedCurrent]);
 
