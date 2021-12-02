@@ -117,7 +117,7 @@ export const EntriesList: React.FC<EntriesListProps> = ({entries, setEntries, qu
                 </div>
 
                 <div className={styles.footer}>
-                    <div>Displaying <b>{entries?.length}</b> results (queried <b>{queriedCurrent}</b>/<b>{queriedTotal}</b>)</div>
+                    <div>Displaying <b>{entries?.length}</b> results out of <b>{queriedTotal}</b> total</div>
                     {startTime !== 0 && <div>Started listening at <span style={{marginRight: 5, fontWeight: 600, fontSize: 13}}>{new Date(startTime).toLocaleString()}</span></div>}
                 </div>
             </div>
