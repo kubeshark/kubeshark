@@ -16,6 +16,19 @@ func GetEntry(r *tapApi.MizuEntry, v tapApi.DataUnmarshaler) error {
 	return v.UnmarshalData(r)
 }
 
+type EntriesRequest struct {
+	LeftOff   int    `form:"leftOff" validate:"required,min=-1"`
+	Direction int    `form:"direction" validate:"required,oneof='1' '-1'"`
+	Query     string `form:"query"`
+	Limit     int    `form:"limit" validate:"required,min=1"`
+	TimeoutMs int    `form:"timeoutMs" validate:"min=1"`
+}
+
+type EntriesResponse struct {
+	Data []interface{}      `json:"data"`
+	Meta *basenine.Metadata `json:"meta"`
+}
+
 type WebSocketEntryMessage struct {
 	*shared.WebSocketMessageMetadata
 	Data map[string]interface{} `json:"data,omitempty"`
