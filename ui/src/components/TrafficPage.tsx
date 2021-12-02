@@ -291,7 +291,10 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
     }
 
     const onSnapBrokenEvent = () => {
-        setIsSnappedToBottom(false)
+        setIsSnappedToBottom(false);
+        if (connection === ConnectionStatus.Connected && !isSnappedToBottom) {
+            closeWebSocket();
+        }
     }
 
     return (
@@ -337,7 +340,6 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                             updateQuery={updateQuery}
                             leftOffTop={leftOffTop}
                             setLeftOffTop={setLeftOffTop}
-                            closeWebSocket={closeWebSocket}
                             reconnectWebSocket={reconnectWebSocket}
                         />
                     </div>
