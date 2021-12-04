@@ -20,8 +20,9 @@ const StatusCode: React.FC<EntryProps> = ({statusCode, updateQuery}) => {
     return <Queryable
         query={`response.status == ${statusCode}`}
         updateQuery={updateQuery}
-        style={{minWidth: "68px"}}
         displayIconOnMouseOver={true}
+        flipped={true}
+        iconStyle={{marginTop: "40px"}}
     >
         <span
             title="Status Code"

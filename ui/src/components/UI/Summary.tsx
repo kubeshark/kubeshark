@@ -17,6 +17,7 @@ export const Summary: React.FC<SummaryProps> = ({method, summary, updateQuery}) 
             className={`${miscStyles.protocol} ${miscStyles.method}`}
             updateQuery={updateQuery}
             displayIconOnMouseOver={true}
+            style={{whiteSpace: "nowrap"}}
         >
             <span>
                 {method}
