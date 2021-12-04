@@ -59,6 +59,11 @@ export const EntriesList: React.FC<EntriesListProps> = ({entries, setEntries, qu
         setIsLoadingTop(true);
         setLoadMoreTop(false);
         const data = await api.fetchEntries(leftOffTop, -1, query, 100, 3000);
+        if (!data.meta) {
+            setNoMoreDataTop(true);
+            setIsLoadingTop(false);
+            return;
+        }
         setLeftOffTop(data.meta.leftOff);
 
         let scrollTo: boolean;

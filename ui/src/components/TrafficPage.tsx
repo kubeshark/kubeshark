@@ -294,7 +294,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
 
     const onSnapBrokenEvent = () => {
         setIsSnappedToBottom(false);
-        if (connection === ConnectionStatus.Connected && !isSnappedToBottom) {
+        if (connection === ConnectionStatus.Connected) {
             closeWebSocket();
         }
     }
