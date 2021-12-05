@@ -26,11 +26,13 @@ interface EntriesListProps {
     leftOffTop: number;
     setLeftOffTop: (leftOffTop: number) => void;
     reconnectWebSocket: any;
+    isWebSocketConnectionClosed: boolean;
+    closeWebSocket: any;
 }
 
 const api = new Api();
 
-export const EntriesList: React.FC<EntriesListProps> = ({entries, setEntries, query, listEntryREF, onSnapBrokenEvent, isSnappedToBottom, setIsSnappedToBottom, queriedCurrent, setQueriedCurrent, queriedTotal, startTime, noMoreDataTop, setNoMoreDataTop, focusedEntryId, setFocusedEntryId, updateQuery, leftOffTop, setLeftOffTop, reconnectWebSocket}) => {
+export const EntriesList: React.FC<EntriesListProps> = ({entries, setEntries, query, listEntryREF, onSnapBrokenEvent, isSnappedToBottom, setIsSnappedToBottom, queriedCurrent, setQueriedCurrent, queriedTotal, startTime, noMoreDataTop, setNoMoreDataTop, focusedEntryId, setFocusedEntryId, updateQuery, leftOffTop, setLeftOffTop, reconnectWebSocket, isWebSocketConnectionClosed, closeWebSocket}) => {
     const [loadMoreTop, setLoadMoreTop] = useState(false);
     const [isLoadingTop, setIsLoadingTop] = useState(false);
     const scrollableRef = useRef(null);
@@ -53,13 +55,13 @@ export const EntriesList: React.FC<EntriesListProps> = ({entries, setEntries, qu
     },[entries]);
 
     const getOldEntries = useCallback(async () => {
-        if (leftOffTop <= 0) {
+        setLoadMoreTop(false);
+        if (leftOffTop === null || leftOffTop <= 0) {
             return;
         }
         setIsLoadingTop(true);
-        setLoadMoreTop(false);
         const data = await api.fetchEntries(leftOffTop, -1, query, 100, 3000);
-        if (!data.meta) {
+        if (!data || !data.meta) {
             setNoMoreDataTop(true);
             setIsLoadingTop(false);
             return;
@@ -79,7 +81,7 @@ export const EntriesList: React.FC<EntriesListProps> = ({entries, setEntries, qu
         data.data.forEach((entry: any) => {
             incomingEntries.push(
                 <EntryItem
-                    key={entry.id}
+                    key={`entry-${entry.id}`}
                     entry={entry}
                     focusedEntryId={focusedEntryId}
                     setFocusedEntryId={setFocusedEntryId}
@@ -100,9 +102,11 @@ export const EntriesList: React.FC<EntriesListProps> = ({entries, setEntries, qu
     },[setLoadMoreTop, setIsLoadingTop, entries, setEntries, query, setNoMoreDataTop, focusedEntryId, setFocusedEntryId, updateQuery, leftOffTop, setLeftOffTop, queriedCurrent, setQueriedCurrent]);
 
     useEffect(() => {
-        if(!loadMoreTop || noMoreDataTop) return;
+        if(!isWebSocketConnectionClosed || !loadMoreTop || noMoreDataTop) return;
         getOldEntries();
-    }, [loadMoreTop, noMoreDataTop, getOldEntries]);
+    }, [loadMoreTop, noMoreDataTop, getOldEntries, isWebSocketConnectionClosed]);
+
+    const scrollbarVisible = scrollableRef.current?.childWrapperRef.current.clientHeight > scrollableRef.current?.wrapperRef.current.clientHeight;
 
     return <>
             <div className={styles.list}>
@@ -116,7 +120,17 @@ export const EntriesList: React.FC<EntriesListProps> = ({entries, setEntries, qu
                         {memoizedEntries}
                     </ScrollableFeedVirtualized>
                     <button type="button"
-                        className={`${styles.btnLive} ${isSnappedToBottom ? styles.hideButton : styles.showButton}`}
+                        title="Fetch old records"
+                        className={`${styles.btnOld} ${scrollbarVisible && leftOffTop > 0 ? styles.hideButton : styles.showButton}`}
+                        onClick={(_) => {
+                            closeWebSocket();
+                            getOldEntries();
+                        }}>
+                        <img alt="down" src={down} />
+                    </button>
+                    <button type="button"
+                        title="Snap to bottom"
+                        className={`${styles.btnLive} ${isSnappedToBottom && !isWebSocketConnectionClosed ? styles.hideButton : styles.showButton}`}
                         onClick={(_) => {
                             reconnectWebSocket();
                             scrollableRef.current.jumpToBottom();

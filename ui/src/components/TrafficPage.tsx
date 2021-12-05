@@ -143,7 +143,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                     setEntries([
                         ...entries,
                         <EntryItem
-                            key={entry.id}
+                            key={`entry-${entry.id}`}
                             entry={entry}
                             focusedEntryId={focusThis ? entry.id.toString() : focusedEntryId}
                             setFocusedEntryId={setFocusedEntryId}
@@ -343,6 +343,8 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                             leftOffTop={leftOffTop}
                             setLeftOffTop={setLeftOffTop}
                             reconnectWebSocket={reconnectWebSocket}
+                            isWebSocketConnectionClosed={connection === ConnectionStatus.Closed}
+                            closeWebSocket={closeWebSocket}
                         />
                     </div>
                 </div>

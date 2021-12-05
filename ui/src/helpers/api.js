@@ -39,7 +39,10 @@ export default class Api {
     }
 
     fetchEntries = async (leftOff, direction, query, limit, timeoutMs) => {
-        const response = await this.client.get(`/entries/?leftOff=${leftOff}&direction=${direction}&query=${query}&limit=${limit}&timeoutMs=${timeoutMs}`);
+        const response = await this.client.get(`/entries/?leftOff=${leftOff}&direction=${direction}&query=${query}&limit=${limit}&timeoutMs=${timeoutMs}`).catch(function (thrown) {
+            console.error(thrown.message);
+            return {};
+        });
         return response.data;
     }
 
