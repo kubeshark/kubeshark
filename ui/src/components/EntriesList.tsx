@@ -102,7 +102,7 @@ export const EntriesList: React.FC<EntriesListProps> = ({entries, setEntries, qu
                     </div>}
                     {noMoreDataTop && <div id="noMoreDataTop" className={styles.noMoreDataAvailable}>No more data available</div>}
                     <ScrollableFeedVirtualized ref={scrollableRef} itemHeight={48} marginTop={10} onSnapBroken={onSnapBrokenEvent}>
-                        {false /* TODO: why there is a need for something here (not necessarily false)? */}
+                        {false /* It's because the first child is ignored by ScrollableFeedVirtualized */}
                         {memoizedEntries.map(entry => <EntryItem
                             key={`entry-${entry.id}`}
                             entry={entry}
