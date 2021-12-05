@@ -140,7 +140,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                         focusThis = true;
                         setFocusedEntryId(entry.id.toString());
                     }
-                    setEntries([
+                    let newEntries = [
                         ...entries,
                         <EntryItem
                             key={`entry-${entry.id}`}
@@ -151,7 +151,13 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                             updateQuery={updateQuery}
                             headingMode={false}
                         />
-                    ]);
+                    ];
+                    if (newEntries.length === 10001) {
+                        setLeftOffTop(newEntries[0].props.entry.id);
+                        newEntries.shift();
+                        setNoMoreDataTop(false);
+                    }
+                    setEntries(newEntries);
                     break
                 case "status":
                     setTappingStatus(message.tappingStatus);
