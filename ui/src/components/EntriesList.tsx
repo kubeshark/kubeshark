@@ -60,7 +60,7 @@ export const EntriesList: React.FC<EntriesListProps> = ({entries, setEntries, qu
             return;
         }
         setIsLoadingTop(true);
-        const data = await api.fetchEntries(leftOffTop, -1, query, 100, 3000);
+        const data = await api.fetchEntries(leftOffTop - 1, -1, query, 100, 3000);
         if (!data || !data.meta) {
             setNoMoreDataTop(true);
             setIsLoadingTop(false);
