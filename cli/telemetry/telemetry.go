@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/denisbrodbeck/machineid"
 	"github.com/up9inc/mizu/cli/apiserver"
@@ -62,6 +63,9 @@ func ReportAPICalls(apiProvider *apiserver.Provider) {
 }
 
 func shouldRunTelemetry() bool {
+	if _, present := os.LookupEnv("MIZU_DISABLE_TELEMTRY"); present {
+		return false
+	}
 	if !config.Config.Telemetry {
 		return false
 	}
