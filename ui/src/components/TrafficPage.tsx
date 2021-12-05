@@ -179,7 +179,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                     setQueriedTotal(message.data.total);
                     setLeftOffBottom(message.data.leftOff);
                     if (leftOffTop === null) {
-                        setLeftOffTop(message.data.leftOff);
+                        setLeftOffTop(message.data.leftOff - 2);
                     }
                     break;
                 case "startTime":
