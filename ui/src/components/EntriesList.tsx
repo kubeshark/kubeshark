@@ -77,30 +77,15 @@ export const EntriesList: React.FC<EntriesListProps> = ({entries, setEntries, qu
         }
         setIsLoadingTop(false);
 
-        let incomingEntries = [];
-        data.data.forEach((entry: any) => {
-            incomingEntries = [
-                <EntryItem
-                    key={`entry-${entry.id}`}
-                    entry={entry}
-                    focusedEntryId={focusedEntryId}
-                    setFocusedEntryId={setFocusedEntryId}
-                    style={{}}
-                    updateQuery={updateQuery}
-                    headingMode={false}
-                />,
-                ...incomingEntries
-            ];
-        });
-        const newEntries = [...incomingEntries, ...entries];
+        const newEntries = [...data.data, ...entries];
         setEntries(newEntries);
 
         setQueriedCurrent(queriedCurrent + data.meta.current);
 
         if (scrollTo) {
-            scrollableRef.current.scrollToIndex(incomingEntries.length - 1);
+            scrollableRef.current.scrollToIndex(data.data.length - 1);
         }
-    },[setLoadMoreTop, setIsLoadingTop, entries, setEntries, query, setNoMoreDataTop, focusedEntryId, setFocusedEntryId, updateQuery, leftOffTop, setLeftOffTop, queriedCurrent, setQueriedCurrent]);
+    },[setLoadMoreTop, setIsLoadingTop, entries, setEntries, query, setNoMoreDataTop, leftOffTop, setLeftOffTop, queriedCurrent, setQueriedCurrent]);
 
     useEffect(() => {
         if(!isWebSocketConnectionClosed || !loadMoreTop || noMoreDataTop) return;
@@ -118,7 +103,15 @@ export const EntriesList: React.FC<EntriesListProps> = ({entries, setEntries, qu
                     {noMoreDataTop && <div id="noMoreDataTop" className={styles.noMoreDataAvailable}>No more data available</div>}
                     <ScrollableFeedVirtualized ref={scrollableRef} itemHeight={48} marginTop={10} onSnapBroken={onSnapBrokenEvent}>
                         {false /* TODO: why there is a need for something here (not necessarily false)? */}
-                        {memoizedEntries}
+                        {memoizedEntries.map(entry => <EntryItem
+                            key={`entry-${entry.id}`}
+                            entry={entry}
+                            focusedEntryId={focusedEntryId}
+                            setFocusedEntryId={setFocusedEntryId}
+                            style={{}}
+                            updateQuery={updateQuery}
+                            headingMode={false}
+                        />)}
                     </ScrollableFeedVirtualized>
                     <button type="button"
                         title="Fetch old records"

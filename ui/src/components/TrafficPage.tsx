@@ -1,7 +1,6 @@
 import React, {useEffect, useRef, useState} from "react";
 import {Filters} from "./Filters";
 import {EntriesList} from "./EntriesList";
-import {EntryItem} from "./EntryListItem/EntryListItem";
 import {makeStyles} from "@material-ui/core";
 import "./style/TrafficPage.sass";
 import styles from './style/EntriesList.module.sass';
@@ -135,25 +134,10 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
             switch (message.messageType) {
                 case "entry":
                     const entry = message.data;
-                    var focusThis = false;
-                    if (!focusedEntryId) {
-                        focusThis = true;
-                        setFocusedEntryId(entry.id.toString());
-                    }
-                    let newEntries = [
-                        ...entries,
-                        <EntryItem
-                            key={`entry-${entry.id}`}
-                            entry={entry}
-                            focusedEntryId={focusThis ? entry.id.toString() : focusedEntryId}
-                            setFocusedEntryId={setFocusedEntryId}
-                            style={{}}
-                            updateQuery={updateQuery}
-                            headingMode={false}
-                        />
-                    ];
+                    if (!focusedEntryId) setFocusedEntryId(entry.id.toString())
+                    let newEntries = [...entries, entry];
                     if (newEntries.length === 10001) {
-                        setLeftOffTop(newEntries[0].props.entry.id);
+                        setLeftOffTop(newEntries[0].entry.id);
                         newEntries.shift();
                         setNoMoreDataTop(false);
                     }
@@ -194,11 +178,11 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                 case "focusEntry":
                     // To achieve selecting only one entry, render all elements in the buffer
                     // with the current `focusedEntryId` value.
-                    entries.forEach((entry: any, i: number) => {
-                        entries[i] = React.cloneElement(entry, {
-                            focusedEntryId: focusedEntryId
-                        });
-                    });
+                    // entries.forEach((entry: any, i: number) => {
+                    //     entries[i] = React.cloneElement(entry, {
+                    //         focusedEntryId: focusedEntryId
+                    //     });
+                    // });
                     break;
                 default:
                     console.error(`unsupported websocket message type, Got: ${message.messageType}`)
@@ -228,12 +212,6 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
 
         if (ws.current.readyState === WebSocket.OPEN) {
             ws.current.send(focusedEntryId);
-        } else {
-            entries.forEach((entry: any, i: number) => {
-                entries[i] = React.cloneElement(entry, {
-                    focusedEntryId: focusedEntryId
-                });
-            });
         }
 
         (async () => {
