@@ -79,7 +79,7 @@ export const EntriesList: React.FC<EntriesListProps> = ({entries, setEntries, qu
 
         let incomingEntries = [];
         data.data.forEach((entry: any) => {
-            incomingEntries.push(
+            incomingEntries = [
                 <EntryItem
                     key={`entry-${entry.id}`}
                     entry={entry}
@@ -88,8 +88,9 @@ export const EntriesList: React.FC<EntriesListProps> = ({entries, setEntries, qu
                     style={{}}
                     updateQuery={updateQuery}
                     headingMode={false}
-                />
-            );
+                />,
+                ...incomingEntries
+            ];
         });
         const newEntries = [...incomingEntries, ...entries];
         setEntries(newEntries);
