@@ -115,7 +115,7 @@ export const EntriesList: React.FC<EntriesListProps> = ({entries, setEntries, qu
                     </ScrollableFeedVirtualized>
                     <button type="button"
                         title="Fetch old records"
-                        className={`${styles.btnOld} ${scrollbarVisible && leftOffTop > 0 ? styles.hideButton : styles.showButton}`}
+                        className={`${styles.btnOld} ${!scrollbarVisible && leftOffTop > 0 ? styles.showButton : styles.hideButton}`}
                         onClick={(_) => {
                             closeWebSocket();
                             getOldEntries();
