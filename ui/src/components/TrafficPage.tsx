@@ -108,6 +108,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
             setEntries([]);
             setQueriedCurrent(0);
             setLeftOffTop(null);
+            setNoMoreDataTop(false);
         }
         ws.current = new WebSocket(MizuWebsocketURL);
         ws.current.onopen = () => {
@@ -169,7 +170,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                     setQueriedTotal(message.data.total);
                     setLeftOffBottom(message.data.leftOff);
                     if (leftOffTop === null) {
-                        setLeftOffTop(message.data.leftOff - 2);
+                        setLeftOffTop(message.data.leftOff - 1);
                     }
                     break;
                 case "startTime":
