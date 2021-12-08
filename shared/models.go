@@ -1,12 +1,11 @@
 package shared
 
 import (
-	"io/ioutil"
-	"strings"
-
 	"github.com/op/go-logging"
 	"github.com/up9inc/mizu/shared/logger"
 	"github.com/up9inc/mizu/tap/api"
+	"io/ioutil"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 )
@@ -22,7 +21,6 @@ const (
 	WebSocketMessageTypeToast         WebSocketMessageType = "toast"
 	WebSocketMessageTypeQueryMetadata WebSocketMessageType = "queryMetadata"
 	WebSocketMessageTypeStartTime     WebSocketMessageType = "startTime"
-	WebSocketMessageFocusEntry        WebSocketMessageType = "focusEntry"
 )
 
 type Resources struct {
