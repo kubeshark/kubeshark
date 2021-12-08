@@ -136,7 +136,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                 case "entry":
                     const entry = message.data;
                     if (!focusedEntryId) setFocusedEntryId(entry.id.toString())
-                    let newEntries = [...entries, entry];
+                    const newEntries = [...entries, entry];
                     if (newEntries.length === 10001) {
                         setLeftOffTop(newEntries[0].entry.id);
                         newEntries.shift();
