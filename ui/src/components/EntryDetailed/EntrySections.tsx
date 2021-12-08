@@ -31,7 +31,7 @@ const EntryViewLine: React.FC<EntryViewLineProps> = ({label, value, updateQuery,
                         <Queryable
                             query={query}
                             updateQuery={updateQuery}
-                            style={{float: "right", height: "0px"}}
+                            style={{float: "right", height: "18px"}}
                             iconStyle={{marginRight: "20px"}}
                             flipped={true}
                             displayIconOnMouseOver={true}

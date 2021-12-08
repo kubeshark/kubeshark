@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"mizuserver/pkg/models"
 	"net/http"
-	"strconv"
 	"sync"
 	"time"
 
@@ -95,8 +94,6 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 	startTimeBytes, _ := models.CreateWebsocketStartTimeMessage(startTime)
 	SendToSocket(socketId, startTimeBytes)
 
-	queryRecieved := false
-
 	for {
 		_, msg, err := ws.ReadMessage()
 		if err != nil {
@@ -104,82 +101,72 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 			break
 		}
 
-		if !queryRecieved {
-			if !isTapper && !isQuerySet {
-				queryRecieved = true
-				query := string(msg)
-				err = basenine.Validate(shared.BasenineHost, shared.BaseninePort, query)
-				if err != nil {
-					toastBytes, _ := models.CreateWebsocketToastMessage(&models.ToastMessage{
-						Type:      "error",
-						AutoClose: 5000,
-						Text:      fmt.Sprintf("Syntax error: %s", err.Error()),
-					})
-					SendToSocket(socketId, toastBytes)
-					break
-				}
-
-				isQuerySet = true
-
-				handleDataChannel := func(c *basenine.Connection, data chan []byte) {
-					for {
-						bytes := <-data
-
-						if string(bytes) == basenine.CloseChannel {
-							return
-						}
-
-						var dataMap map[string]interface{}
-						err = json.Unmarshal(bytes, &dataMap)
-
-						var base map[string]interface{}
-						switch dataMap["base"].(type) {
-						case map[string]interface{}:
-							base = dataMap["base"].(map[string]interface{})
-							base["id"] = uint(dataMap["id"].(float64))
-						default:
-							logger.Log.Debugf("Base field has an unrecognized type: %+v", dataMap)
-							continue
-						}
-
-						baseEntryBytes, _ := models.CreateBaseEntryWebSocketMessage(base)
-						SendToSocket(socketId, baseEntryBytes)
-					}
-				}
-
-				handleMetaChannel := func(c *basenine.Connection, meta chan []byte) {
-					for {
-						bytes := <-meta
-
-						if string(bytes) == basenine.CloseChannel {
-							return
-						}
-
-						var metadata *basenine.Metadata
-						err = json.Unmarshal(bytes, &metadata)
-						if err != nil {
-							logger.Log.Debugf("Error recieving metadata: %v", err.Error())
-						}
-
-						metadataBytes, _ := models.CreateWebsocketQueryMetadataMessage(metadata)
-						SendToSocket(socketId, metadataBytes)
-					}
-				}
-
-				go handleDataChannel(connection, data)
-				go handleMetaChannel(connection, meta)
-
-				connection.Query(query, data, meta)
-			} else {
-				eventHandlers.WebSocketMessage(socketId, msg)
-			}
-		} else {
-			id, err := strconv.Atoi(string(msg))
+		if !isTapper && !isQuerySet {
+			query := string(msg)
+			err = basenine.Validate(shared.BasenineHost, shared.BaseninePort, query)
 			if err != nil {
-				continue
+				toastBytes, _ := models.CreateWebsocketToastMessage(&models.ToastMessage{
+					Type:      "error",
+					AutoClose: 5000,
+					Text:      fmt.Sprintf("Syntax error: %s", err.Error()),
+				})
+				SendToSocket(socketId, toastBytes)
+				break
 			}
-			focusEntryBytes, _ := models.CreateWebsocketFocusEntry(id)
-			SendToSocket(socketId, focusEntryBytes)
+
+			isQuerySet = true
+
+			handleDataChannel := func(c *basenine.Connection, data chan []byte) {
+				for {
+					bytes := <-data
+
+					if string(bytes) == basenine.CloseChannel {
+						return
+					}
+
+					var dataMap map[string]interface{}
+					err = json.Unmarshal(bytes, &dataMap)
+
+					var base map[string]interface{}
+					switch dataMap["base"].(type) {
+					case map[string]interface{}:
+						base = dataMap["base"].(map[string]interface{})
+						base["id"] = uint(dataMap["id"].(float64))
+					default:
+						logger.Log.Debugf("Base field has an unrecognized type: %+v", dataMap)
+						continue
+					}
+
+					baseEntryBytes, _ := models.CreateBaseEntryWebSocketMessage(base)
+					SendToSocket(socketId, baseEntryBytes)
+				}
+			}
+
+			handleMetaChannel := func(c *basenine.Connection, meta chan []byte) {
+				for {
+					bytes := <-meta
+
+					if string(bytes) == basenine.CloseChannel {
+						return
+					}
+
+					var metadata *basenine.Metadata
+					err = json.Unmarshal(bytes, &metadata)
+					if err != nil {
+						logger.Log.Debugf("Error recieving metadata: %v", err.Error())
+					}
+
+					metadataBytes, _ := models.CreateWebsocketQueryMetadataMessage(metadata)
+					SendToSocket(socketId, metadataBytes)
+				}
+			}
+
+			go handleDataChannel(connection, data)
+			go handleMetaChannel(connection, meta)
+
+			connection.Query(query, data, meta)
+		} else {
+			eventHandlers.WebSocketMessage(socketId, msg)
 		}
 	}
 }

@@ -38,6 +38,14 @@ export default class Api {
         return response.data;
     }
 
+    fetchEntries = async (leftOff, direction, query, limit, timeoutMs) => {
+        const response = await this.client.get(`/entries/?leftOff=${leftOff}&direction=${direction}&query=${query}&limit=${limit}&timeoutMs=${timeoutMs}`).catch(function (thrown) {
+            console.error(thrown.message);
+            return {};
+        });
+        return response.data;
+    }
+
     getRecentTLSLinks = async () => {
         const response = await this.client.get("/status/recentTLSLinks");
         return response.data;

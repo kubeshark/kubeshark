@@ -1,7 +1,6 @@
 import React, {useEffect, useRef, useState} from "react";
 import {Filters} from "./Filters";
 import {EntriesList} from "./EntriesList";
-import {EntryItem} from "./EntryListItem/EntryListItem";
 import {makeStyles} from "@material-ui/core";
 import "./style/TrafficPage.sass";
 import styles from './style/EntriesList.module.sass';
@@ -51,10 +50,11 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
     const classes = useLayoutStyles();
 
     const [entries, setEntries] = useState([] as any);
-    const [entriesBuffer, setEntriesBuffer] = useState([] as any);
     const [focusedEntryId, setFocusedEntryId] = useState(null);
     const [selectedEntryData, setSelectedEntryData] = useState(null);
     const [connection, setConnection] = useState(ConnectionStatus.Closed);
+
+    const [noMoreDataTop, setNoMoreDataTop] = useState(false);
 
     const [tappingStatus, setTappingStatus] = useState(null);
 
@@ -66,7 +66,8 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
 
     const [queriedCurrent, setQueriedCurrent] = useState(0);
     const [queriedTotal, setQueriedTotal] = useState(0);
-    const [leftOff, setLeftOff] = useState(0);
+    const [leftOffBottom, setLeftOffBottom] = useState(0);
+    const [leftOffTop, setLeftOffTop] = useState(null);
 
     const [startTime, setStartTime] = useState(0);
 
@@ -101,13 +102,13 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
 
     const listEntry = useRef(null);
 
-    const openWebSocket = (query: string, resetEntriesBuffer: boolean) => {
-        if (resetEntriesBuffer) {
+    const openWebSocket = (query: string, resetEntries: boolean) => {
+        if (resetEntries) {
             setFocusedEntryId(null);
             setEntries([]);
-            setEntriesBuffer([]);
-        } else {
-            setEntriesBuffer(entries);
+            setQueriedCurrent(0);
+            setLeftOffTop(null);
+            setNoMoreDataTop(false);
         }
         ws.current = new WebSocket(MizuWebsocketURL);
         ws.current.onopen = () => {
@@ -120,9 +121,9 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
         ws.current.onerror = (event) => {
             console.error("WebSocket error:", event);
             if (query) {
-                openWebSocket(`(${query}) and leftOff(${leftOff})`, false);
+                openWebSocket(`(${query}) and leftOff(${leftOffBottom})`, false);
             } else {
-                openWebSocket(`leftOff(${leftOff})`, false);
+                openWebSocket(`leftOff(${leftOffBottom})`, false);
             }
         }
     }
@@ -134,23 +135,14 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
             switch (message.messageType) {
                 case "entry":
                     const entry = message.data;
-                    var focusThis = false;
-                    if (!focusedEntryId) {
-                        focusThis = true;
-                        setFocusedEntryId(entry.id.toString());
+                    if (!focusedEntryId) setFocusedEntryId(entry.id.toString())
+                    const newEntries = [...entries, entry];
+                    if (newEntries.length === 10001) {
+                        setLeftOffTop(newEntries[0].entry.id);
+                        newEntries.shift();
+                        setNoMoreDataTop(false);
                     }
-                    setEntriesBuffer([
-                        ...entriesBuffer,
-                        <EntryItem
-                            key={entry.id}
-                            entry={entry}
-                            focusedEntryId={focusThis ? entry.id.toString() : focusedEntryId}
-                            setFocusedEntryId={setFocusedEntryId}
-                            style={{}}
-                            updateQuery={updateQuery}
-                            headingMode={false}
-                        />
-                    ]);
+                    setEntries(newEntries);
                     break
                 case "status":
                     setTappingStatus(message.tappingStatus);
@@ -174,23 +166,15 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                     });
                     break;
                 case "queryMetadata":
-                    setQueriedCurrent(message.data.current);
+                    setQueriedCurrent(queriedCurrent + message.data.current);
                     setQueriedTotal(message.data.total);
-                    setLeftOff(message.data.leftOff);
-                    setEntries(entriesBuffer);
+                    setLeftOffBottom(message.data.leftOff);
+                    if (leftOffTop === null) {
+                        setLeftOffTop(message.data.leftOff - 1);
+                    }
                     break;
                 case "startTime":
                     setStartTime(message.data);
-                    break;
-                case "focusEntry":
-                    // To achieve selecting only one entry, render all elements in the buffer
-                    // with the current `focusedEntryId` value.
-                    entriesBuffer.forEach((entry: any, i: number) => {
-                        entriesBuffer[i] = React.cloneElement(entry, {
-                            focusedEntryId: focusedEntryId
-                        });
-                    })
-                    setEntries(entriesBuffer);
                     break;
                 default:
                     console.error(`unsupported websocket message type, Got: ${message.messageType}`)
@@ -217,11 +201,6 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
     useEffect(() => {
         if (!focusedEntryId) return;
         setSelectedEntryData(null);
-
-        if (ws.current.readyState === WebSocket.OPEN) {
-            ws.current.send(focusedEntryId);
-        }
-
         (async () => {
             try {
                 const entryData = await api.getEntry(focusedEntryId);
@@ -241,18 +220,27 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                 }
                 console.error(error);
             }
-        })()
-    }, [focusedEntryId])
+        })();
+        // eslint-disable-next-line
+    }, [focusedEntryId]);
+
+    const closeWebSocket = () => {
+        ws.current.close();
+    }
+
+    const reconnectWebSocket = () => {
+        if (query) {
+            openWebSocket(`(${query}) and leftOff(${leftOffBottom})`, false);
+        } else {
+            openWebSocket(`leftOff(${leftOffBottom})`, false);
+        }
+    }
 
     const toggleConnection = () => {
         if (connection === ConnectionStatus.Connected) {
-            ws.current.close();
+            closeWebSocket();
         } else {
-            if (query) {
-                openWebSocket(`(${query}) and leftOff(${leftOff})`, false);
-            } else {
-                openWebSocket(`leftOff(${leftOff})`, false);
-            }
+            reconnectWebSocket();
         }
     }
 
@@ -276,7 +264,10 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
     }
 
     const onSnapBrokenEvent = () => {
-        setIsSnappedToBottom(false)
+        setIsSnappedToBottom(false);
+        if (connection === ConnectionStatus.Connected) {
+            closeWebSocket();
+        }
     }
 
     return (
@@ -305,13 +296,26 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                     <div className={styles.container}>
                         <EntriesList
                             entries={entries}
+                            setEntries={setEntries}
+                            query={query}
                             listEntryREF={listEntry}
                             onSnapBrokenEvent={onSnapBrokenEvent}
                             isSnappedToBottom={isSnappedToBottom}
                             setIsSnappedToBottom={setIsSnappedToBottom}
                             queriedCurrent={queriedCurrent}
+                            setQueriedCurrent={setQueriedCurrent}
                             queriedTotal={queriedTotal}
                             startTime={startTime}
+                            noMoreDataTop={noMoreDataTop}
+                            setNoMoreDataTop={setNoMoreDataTop}
+                            focusedEntryId={focusedEntryId}
+                            setFocusedEntryId={setFocusedEntryId}
+                            updateQuery={updateQuery}
+                            leftOffTop={leftOffTop}
+                            setLeftOffTop={setLeftOffTop}
+                            reconnectWebSocket={reconnectWebSocket}
+                            isWebSocketConnectionClosed={connection === ConnectionStatus.Closed}
+                            closeWebSocket={closeWebSocket}
                         />
                     </div>
                 </div>
