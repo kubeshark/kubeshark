@@ -14,6 +14,8 @@ var (
 	DaemonModePersistentVolumeSizeBufferBytes = int64(500 * 1000 * 1000) //500mb
 )
 
+const DEVENVVAR = "MIZU_DISABLE_TELEMTRY"
+
 func GetMizuFolderPath() string {
 	home, homeDirErr := os.UserHomeDir()
 	if homeDirErr != nil {
