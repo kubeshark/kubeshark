@@ -63,7 +63,7 @@ func ReportAPICalls(apiProvider *apiserver.Provider) {
 }
 
 func shouldRunTelemetry() bool {
-	if _, present := os.LookupEnv("MIZU_DISABLE_TELEMTRY"); present {
+	if _, present := os.LookupEnv(mizu.DEVENVVAR); present {
 		return false
 	}
 	if !config.Config.Telemetry {
