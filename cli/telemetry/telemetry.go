@@ -83,6 +83,7 @@ func sendTelemetry(telemetryType string, argsMap map[string]interface{}) error {
 	argsMap["buildTimestamp"] = mizu.BuildTimestamp
 	argsMap["branch"] = mizu.Branch
 	argsMap["version"] = mizu.SemVer
+	argsMap["Platform"] = mizu.Platform
 
 	if machineId, err := machineid.ProtectedID("mizu"); err == nil {
 		argsMap["machineId"] = machineId

@@ -11,6 +11,7 @@ var (
 	GitCommitHash                             = "" // this var is overridden using ldflags in makefile when building
 	BuildTimestamp                            = "" // this var is overridden using ldflags in makefile when building
 	RBACVersion                               = "v1"
+	Platform                                  = ""
 	DaemonModePersistentVolumeSizeBufferBytes = int64(500 * 1000 * 1000) //500mb
 )
 
