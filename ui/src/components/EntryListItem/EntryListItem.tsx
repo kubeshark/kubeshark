@@ -1,4 +1,5 @@
 import React from "react";
+import Moment from 'moment';
 import styles from './EntryListItem.module.sass';
 import StatusCode, {getClassification, StatusCodeClassification} from "../UI/StatusCode";
 import Protocol, {ProtocolInterface} from "../UI/Protocol"
@@ -283,7 +284,7 @@ export const EntryItem: React.FC<EntryProps> = ({entry, focusedEntryId, setFocus
             </div>
             <div className={styles.timestamp}>
                 <Queryable
-                        query={`timestamp >= datetime("${new Date(+entry.timestamp)?.toLocaleString("en-US", {timeZone: 'UTC' })}")`}
+                        query={`timestamp >= datetime("${Moment(+entry.timestamp)?.utc().format('MM/DD/YYYY, h:mm:ss.SSS A')}")`}
                         updateQuery={updateQuery}
                         displayIconOnMouseOver={true}
                         flipped={false}
@@ -291,7 +292,7 @@ export const EntryItem: React.FC<EntryProps> = ({entry, focusedEntryId, setFocus
                     <span
                         title="Timestamp"
                     >
-                        {new Date(+entry.timestamp)?.toLocaleString("en-US")}
+                        {Moment(+entry.timestamp)?.utc().format('MM/DD/YYYY, h:mm:ss.SSS A')}
                     </span>
                 </Queryable>
             </div>
