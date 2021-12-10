@@ -65,13 +65,6 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 	reqDetails := request["details"].(map[string]interface{})
 	resDetails := response["details"].(map[string]interface{})
 
-	service := "redis"
-	if resolvedDestination != "" {
-		service = resolvedDestination
-	} else if resolvedSource != "" {
-		service = resolvedSource
-	}
-
 	method := ""
 	if reqDetails["command"] != nil {
 		method = reqDetails["command"].(string)
@@ -99,46 +92,32 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 			IP:   item.ConnectionInfo.ServerIP,
 			Port: item.ConnectionInfo.ServerPort,
 		},
-		Outgoing:            item.ConnectionInfo.IsOutgoing,
-		Request:             reqDetails,
-		Response:            resDetails,
-		Url:                 fmt.Sprintf("%s%s", service, summary),
-		Method:              method,
-		Status:              0,
-		RequestSenderIp:     item.ConnectionInfo.ClientIP,
-		Service:             service,
-		Timestamp:           item.Timestamp,
-		StartTime:           item.Pair.Request.CaptureTime,
-		ElapsedTime:         elapsedTime,
-		Summary:             summary,
-		ResolvedSource:      resolvedSource,
-		ResolvedDestination: resolvedDestination,
-		SourceIp:            item.ConnectionInfo.ClientIP,
-		DestinationIp:       item.ConnectionInfo.ServerIP,
-		SourcePort:          item.ConnectionInfo.ClientPort,
-		DestinationPort:     item.ConnectionInfo.ServerPort,
-		IsOutgoing:          item.ConnectionInfo.IsOutgoing,
+		Outgoing:    item.ConnectionInfo.IsOutgoing,
+		Request:     reqDetails,
+		Response:    resDetails,
+		Method:      method,
+		Status:      0,
+		Timestamp:   item.Timestamp,
+		StartTime:   item.Pair.Request.CaptureTime,
+		ElapsedTime: elapsedTime,
+		Summary:     summary,
+		IsOutgoing:  item.ConnectionInfo.IsOutgoing,
 	}
 
 }
 
 func (d dissecting) Summarize(entry *api.MizuEntry) *api.BaseEntryDetails {
 	return &api.BaseEntryDetails{
-		Id:              entry.Id,
-		Protocol:        protocol,
-		Url:             entry.Url,
-		RequestSenderIp: entry.RequestSenderIp,
-		Service:         entry.Service,
-		Summary:         entry.Summary,
-		StatusCode:      entry.Status,
-		Method:          entry.Method,
-		Timestamp:       entry.Timestamp,
-		SourceIp:        entry.SourceIp,
-		DestinationIp:   entry.DestinationIp,
-		SourcePort:      entry.SourcePort,
-		DestinationPort: entry.DestinationPort,
-		IsOutgoing:      entry.IsOutgoing,
-		Latency:         entry.ElapsedTime,
+		Id:          entry.Id,
+		Protocol:    protocol,
+		Summary:     entry.Summary,
+		StatusCode:  entry.Status,
+		Method:      entry.Method,
+		Timestamp:   entry.Timestamp,
+		Source:      entry.Source,
+		Destination: entry.Destination,
+		IsOutgoing:  entry.IsOutgoing,
+		Latency:     entry.ElapsedTime,
 		Rules: api.ApplicableRules{
 			Latency: 0,
 			Status:  false,

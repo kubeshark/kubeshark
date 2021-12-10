@@ -136,7 +136,7 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 
 			harEntry, err := utils.NewEntry(mizuEntry.Request, mizuEntry.Response, mizuEntry.StartTime, mizuEntry.ElapsedTime)
 			if err == nil {
-				rules, _, _ := models.RunValidationRulesState(*harEntry, mizuEntry.Service)
+				rules, _, _ := models.RunValidationRulesState(*harEntry, mizuEntry.Destination.Name)
 				baseEntry.Rules = rules
 			}
 		}
