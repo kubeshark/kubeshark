@@ -1,6 +1,7 @@
 import React, {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import styles from './style/EntriesList.module.sass';
 import ScrollableFeedVirtualized from "react-scrollable-feed-virtualized";
+import Moment from 'moment';
 import {EntryItem} from "./EntryListItem/EntryListItem";
 import down from "./assets/downImg.svg";
 import spinner from './assets/spinner.svg';
@@ -136,7 +137,7 @@ export const EntriesList: React.FC<EntriesListProps> = ({entries, setEntries, qu
 
                 <div className={styles.footer}>
                     <div>Displaying <b>{entries?.length}</b> results out of <b>{queriedTotal}</b> total</div>
-                    {startTime !== 0 && <div>Started listening at <span style={{marginRight: 5, fontWeight: 600, fontSize: 13}}>{new Date(startTime).toLocaleString()}</span></div>}
+                    {startTime !== 0 && <div>Started listening at <span style={{marginRight: 5, fontWeight: 600, fontSize: 13}}>{Moment(startTime).utc().format('MM/DD/YYYY, h:mm:ss.SSS A')}</span></div>}
                 </div>
             </div>
     </>;

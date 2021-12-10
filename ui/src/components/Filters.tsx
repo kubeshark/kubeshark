@@ -214,7 +214,7 @@ export const QueryForm: React.FC<QueryFormProps> = ({query, setQuery, background
                             <SyntaxHighlighter
                                 isWrapped={false}
                                 showLineNumbers={false}
-                                code={`timestamp < datetime("10/28/2021, 9:13:02 PM")`}
+                                code={`timestamp < datetime("10/28/2021, 9:13:02.905 PM")`}
                                 language="python"
                             />
                         </Grid>
@@ -305,7 +305,7 @@ export const QueryForm: React.FC<QueryFormProps> = ({query, setQuery, background
                             <SyntaxHighlighter
                                 isWrapped={false}
                                 showLineNumbers={false}
-                                code={`timestamp >= datetime("10/19/2021, 6:29:02 PM")`}
+                                code={`timestamp >= datetime("10/19/2021, 6:29:02.593 PM")`}
                                 language="python"
                             />
                             <Typography id="modal-modal-description">
