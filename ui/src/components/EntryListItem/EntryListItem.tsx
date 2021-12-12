@@ -1,5 +1,6 @@
 import React from "react";
 import Moment from 'moment';
+import SwapHorizIcon from '@material-ui/icons/SwapHoriz';
 import styles from './EntryListItem.module.sass';
 import StatusCode, {getClassification, StatusCodeClassification} from "../UI/StatusCode";
 import Protocol, {ProtocolInterface} from "../UI/Protocol"
@@ -154,7 +155,9 @@ export const EntryItem: React.FC<EntryProps> = ({entry, focusedEntryId, setFocus
                         query={`src.name == "${entry.src.name}"`}
                         updateQuery={updateQuery}
                         displayIconOnMouseOver={true}
-                        style={{marginTop: "-4px", marginRight: "10px"}}
+                        flipped={true}
+                        style={{marginTop: "-4px", overflow: "visible"}}
+                        iconStyle={{marginTop: "4px", left: "68px", position: "absolute"}}
                     >
                         <span
                             title="Source Name"
@@ -162,12 +165,13 @@ export const EntryItem: React.FC<EntryProps> = ({entry, focusedEntryId, setFocus
                             {entry.src.name ? entry.src.name : "[Unresolved]"}
                         </span>
                     </Queryable>
-                    <div style={{marginRight: "10px"}}>{"->"}</div>
+                    <SwapHorizIcon style={{color: entry.protocol.backgroundColor, marginTop: "-2px"}}></SwapHorizIcon>
                     <Queryable
                         query={`dst.name == "${entry.dst.name}"`}
                         updateQuery={updateQuery}
                         displayIconOnMouseOver={true}
                         style={{marginTop: "-4px"}}
+                        iconStyle={{marginTop: "4px", marginLeft: "-2px"}}
                     >
                         <span
                             title="Destination Name"
