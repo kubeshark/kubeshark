@@ -159,7 +159,7 @@ export const EntryItem: React.FC<EntryProps> = ({entry, focusedEntryId, setFocus
                         <span
                             title="Source Name"
                         >
-                            {entry.src.name ? entry.src.name : entry.src.ip}
+                            {entry.src.name ? entry.src.name : "[Unresolved]"}
                         </span>
                     </Queryable>
                     <div style={{marginRight: "10px"}}>{"->"}</div>
@@ -172,7 +172,7 @@ export const EntryItem: React.FC<EntryProps> = ({entry, focusedEntryId, setFocus
                         <span
                             title="Destination Name"
                         >
-                            {entry.dst.name ? entry.dst.name : entry.dst.ip}
+                            {entry.dst.name ? entry.dst.name : "[Unresolved]"}
                         </span>
                     </Queryable>
                 </div>
