@@ -48,7 +48,7 @@ const Protocol: React.FC<ProtocolProps> = ({protocol, horizontal, updateQuery}) 
             updateQuery={updateQuery}
             displayIconOnMouseOver={true}
             flipped={false}
-            iconStyle={{marginTop: "48px"}}
+            iconStyle={{marginTop: "52px", marginRight: "10px", zIndex: 1000}}
         >
             <span
                 className={`${styles.base} ${styles.vertical}`}
@@ -56,6 +56,7 @@ const Protocol: React.FC<ProtocolProps> = ({protocol, horizontal, updateQuery}) 
                     backgroundColor: protocol.backgroundColor,
                     color: protocol.foregroundColor,
                     fontSize: protocol.fontSize,
+                    marginRight: "-20px",
                 }}
                 title={protocol.longName}
             >

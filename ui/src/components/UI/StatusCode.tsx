@@ -22,7 +22,7 @@ const StatusCode: React.FC<EntryProps> = ({statusCode, updateQuery}) => {
         updateQuery={updateQuery}
         displayIconOnMouseOver={true}
         flipped={true}
-        iconStyle={{marginTop: "40px"}}
+        iconStyle={{marginTop: "40px", paddingLeft: "10px"}}
     >
         <span
             title="Status Code"

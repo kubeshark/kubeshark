@@ -120,6 +120,10 @@ export const EntryItem: React.FC<EntryProps> = ({entry, focusedEntryId, setFocus
             break;
     }
 
+    const isStatusCodeEnabled = ((entry.protocol.name === "http" && "statusCode" in entry) || entry.statusCode !== 0);
+    var endpointServiceContainer = "10px";
+    if (!isStatusCodeEnabled) endpointServiceContainer = "20px";
+
     return <>
         <div
             id={`entry-${entry.id.toString()}`}
@@ -142,10 +146,10 @@ export const EntryItem: React.FC<EntryProps> = ({entry, focusedEntryId, setFocus
                 horizontal={false}
                 updateQuery={updateQuery}
             /> : null}
-            {((entry.protocol.name === "http" && "statusCode" in entry) || entry.statusCode !== 0) && <div>
+            {isStatusCodeEnabled && <div>
                 <StatusCode statusCode={entry.statusCode} updateQuery={updateQuery}/>
             </div>}
-            <div className={styles.endpointServiceContainer}>
+            <div className={styles.endpointServiceContainer} style={{paddingLeft: endpointServiceContainer}}>
                 <Summary method={entry.method} summary={entry.summary} updateQuery={updateQuery}/>
                 <div className={styles.service}>
                     <Queryable
