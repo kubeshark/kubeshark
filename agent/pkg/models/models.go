@@ -70,6 +70,11 @@ type WebSocketStartTimeMessage struct {
 	Data int64 `json:"data"`
 }
 
+type WebSocketFocusEntryMessage struct {
+	*shared.WebSocketMessageMetadata
+	Id int `json:"id"`
+}
+
 func CreateBaseEntryWebSocketMessage(base map[string]interface{}) ([]byte, error) {
 	message := &WebSocketEntryMessage{
 		WebSocketMessageMetadata: &shared.WebSocketMessageMetadata{
@@ -126,6 +131,16 @@ func CreateWebsocketStartTimeMessage(base int64) ([]byte, error) {
 			MessageType: shared.WebSocketMessageTypeStartTime,
 		},
 		Data: base,
+	}
+	return json.Marshal(message)
+}
+
+func CreateWebsocketFocusEntry(id int) ([]byte, error) {
+	message := &WebSocketFocusEntryMessage{
+		WebSocketMessageMetadata: &shared.WebSocketMessageMetadata{
+			MessageType: shared.WebSocketMessageFocusEntry,
+		},
+		Id: id,
 	}
 	return json.Marshal(message)
 }

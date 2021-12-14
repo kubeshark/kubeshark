@@ -129,7 +129,7 @@ export const EntryItem: React.FC<EntryProps> = ({entry, focusedEntryId, setFocus
 
     return <>
         <div
-            id={`entry-${entry.id.toString()}`}
+            id={entry.id.toString()}
             className={`${styles.row}
             ${isSelected && !rule && !contractEnabled ? styles.rowSelected : additionalRulesProperties}`}
             onClick={() => {

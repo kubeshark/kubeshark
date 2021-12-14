@@ -73,7 +73,7 @@ const EntrySummary: React.FC<any> = ({data, updateQuery}) => {
     const entry = data.base;
 
     return <EntryItem
-        key={`entry-${entry.id}`}
+        key={entry.id}
         entry={entry}
         focusedEntryId={null}
         setFocusedEntryId={null}
