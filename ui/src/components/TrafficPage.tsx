@@ -224,23 +224,15 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
         // eslint-disable-next-line
     }, [focusedEntryId]);
 
-    const closeWebSocket = () => {
-        ws.current.close();
-    }
-
-    const reconnectWebSocket = () => {
-        if (query) {
-            openWebSocket(`(${query}) and leftOff(${leftOffBottom})`, false);
-        } else {
-            openWebSocket(`leftOff(${leftOffBottom})`, false);
-        }
-    }
-
     const toggleConnection = () => {
         if (connection === ConnectionStatus.Connected) {
-            closeWebSocket();
+            ws.current.close();
         } else {
-            reconnectWebSocket();
+            if (query) {
+                openWebSocket(`(${query}) and leftOff(${leftOffBottom})`, false);
+            } else {
+                openWebSocket(`leftOff(${leftOffBottom})`, false);
+            }
         }
     }
 
@@ -266,7 +258,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
     const onSnapBrokenEvent = () => {
         setIsSnappedToBottom(false);
         if (connection === ConnectionStatus.Connected) {
-            closeWebSocket();
+            ws.current.close();
         }
     }
 
@@ -313,9 +305,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                             updateQuery={updateQuery}
                             leftOffTop={leftOffTop}
                             setLeftOffTop={setLeftOffTop}
-                            reconnectWebSocket={reconnectWebSocket}
                             isWebSocketConnectionClosed={connection === ConnectionStatus.Closed}
-                            closeWebSocket={closeWebSocket}
                         />
                     </div>
                 </div>
