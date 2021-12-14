@@ -306,6 +306,9 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                             leftOffTop={leftOffTop}
                             setLeftOffTop={setLeftOffTop}
                             isWebSocketConnectionClosed={connection === ConnectionStatus.Closed}
+                            ws={ws.current}
+                            openWebSocket={openWebSocket}
+                            leftOffBottom={leftOffBottom}
                         />
                     </div>
                 </div>
