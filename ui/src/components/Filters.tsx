@@ -244,7 +244,7 @@ export const QueryForm: React.FC<QueryFormProps> = ({query, setQuery, background
                             <SyntaxHighlighter
                                 isWrapped={false}
                                 showLineNumbers={false}
-                                code={`and service == "carts.sock-shop"`}
+                                code={`and dst.name == "carts.sock-shop"`}
                                 language="python"
                             />
                             <Typography id="modal-modal-description">

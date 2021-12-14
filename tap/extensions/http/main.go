@@ -158,7 +158,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 }
 
 func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, resolvedDestination string) *api.MizuEntry {
-	var host, authority, path, service string
+	var host, authority, path string
 
 	request := item.Pair.Request.Payload.(map[string]interface{})
 	response := item.Pair.Response.Payload.(map[string]interface{})
@@ -191,9 +191,13 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 	}
 
 	if item.Protocol.Version == "2.0" && !isRequestUpgradedH2C {
-		service = authority
+		if resolvedDestination == "" {
+			resolvedDestination = authority
+		}
+		if resolvedDestination == "" {
+			resolvedDestination = host
+		}
 	} else {
-		service = host
 		u, err := url.Parse(reqDetails["url"].(string))
 		if err != nil {
 			path = reqDetails["url"].(string)
@@ -220,12 +224,6 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 
 	reqDetails["_queryString"] = reqDetails["queryString"]
 	reqDetails["queryString"] = mapSliceRebuildAsMap(reqDetails["_queryString"].([]interface{}))
-
-	if resolvedDestination != "" {
-		service = resolvedDestination
-	} else if resolvedSource != "" {
-		service = resolvedSource
-	}
 
 	method := reqDetails["method"].(string)
 	statusCode := int(resDetails["status"].(float64))
@@ -255,47 +253,33 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 			IP:   item.ConnectionInfo.ServerIP,
 			Port: item.ConnectionInfo.ServerPort,
 		},
-		Outgoing:            item.ConnectionInfo.IsOutgoing,
-		Request:             reqDetails,
-		Response:            resDetails,
-		Url:                 fmt.Sprintf("%s%s", service, path),
-		Method:              method,
-		Status:              statusCode,
-		RequestSenderIp:     item.ConnectionInfo.ClientIP,
-		Service:             service,
-		Timestamp:           item.Timestamp,
-		StartTime:           item.Pair.Request.CaptureTime,
-		ElapsedTime:         elapsedTime,
-		Summary:             path,
-		ResolvedSource:      resolvedSource,
-		ResolvedDestination: resolvedDestination,
-		SourceIp:            item.ConnectionInfo.ClientIP,
-		DestinationIp:       item.ConnectionInfo.ServerIP,
-		SourcePort:          item.ConnectionInfo.ClientPort,
-		DestinationPort:     item.ConnectionInfo.ServerPort,
-		IsOutgoing:          item.ConnectionInfo.IsOutgoing,
-		HTTPPair:            string(httpPair),
+		Outgoing:    item.ConnectionInfo.IsOutgoing,
+		Request:     reqDetails,
+		Response:    resDetails,
+		Method:      method,
+		Status:      statusCode,
+		Timestamp:   item.Timestamp,
+		StartTime:   item.Pair.Request.CaptureTime,
+		ElapsedTime: elapsedTime,
+		Summary:     path,
+		IsOutgoing:  item.ConnectionInfo.IsOutgoing,
+		HTTPPair:    string(httpPair),
 	}
 }
 
 func (d dissecting) Summarize(entry *api.MizuEntry) *api.BaseEntryDetails {
 	return &api.BaseEntryDetails{
-		Id:              entry.Id,
-		Protocol:        entry.Protocol,
-		Url:             entry.Url,
-		RequestSenderIp: entry.RequestSenderIp,
-		Service:         entry.Service,
-		Path:            entry.Path,
-		Summary:         entry.Summary,
-		StatusCode:      entry.Status,
-		Method:          entry.Method,
-		Timestamp:       entry.Timestamp,
-		SourceIp:        entry.SourceIp,
-		DestinationIp:   entry.DestinationIp,
-		SourcePort:      entry.SourcePort,
-		DestinationPort: entry.DestinationPort,
-		IsOutgoing:      entry.IsOutgoing,
-		Latency:         entry.ElapsedTime,
+		Id:          entry.Id,
+		Protocol:    entry.Protocol,
+		Path:        entry.Path,
+		Summary:     entry.Summary,
+		StatusCode:  entry.Status,
+		Method:      entry.Method,
+		Timestamp:   entry.Timestamp,
+		Source:      entry.Source,
+		Destination: entry.Destination,
+		IsOutgoing:  entry.IsOutgoing,
+		Latency:     entry.ElapsedTime,
 		Rules: api.ApplicableRules{
 			Latency: 0,
 			Status:  false,

@@ -119,7 +119,7 @@ func GetEntry(c *gin.Context) {
 	var isRulesEnabled bool
 	if entry.Protocol.Name == "http" {
 		harEntry, _ := utils.NewEntry(entry.Request, entry.Response, entry.StartTime, entry.ElapsedTime)
-		_, rulesMatched, _isRulesEnabled := models.RunValidationRulesState(*harEntry, entry.Service)
+		_, rulesMatched, _isRulesEnabled := models.RunValidationRulesState(*harEntry, entry.Destination.Name)
 		isRulesEnabled = _isRulesEnabled
 		inrec, _ := json.Marshal(rulesMatched)
 		json.Unmarshal(inrec, &rules)
