@@ -129,19 +129,10 @@ type MizuEntry struct {
 	Response               map[string]interface{} `json:"response"`
 	Base                   *BaseEntryDetails      `json:"base"`
 	Summary                string                 `json:"summary"`
-	Url                    string                 `json:"url"`
 	Method                 string                 `json:"method"`
 	Status                 int                    `json:"status"`
-	RequestSenderIp        string                 `json:"requestSenderIp"`
-	Service                string                 `json:"service"`
 	ElapsedTime            int64                  `json:"elapsedTime"`
 	Path                   string                 `json:"path"`
-	ResolvedSource         string                 `json:"resolvedSource,omitempty"`
-	ResolvedDestination    string                 `json:"resolvedDestination,omitempty"`
-	SourceIp               string                 `json:"sourceIp,omitempty"`
-	DestinationIp          string                 `json:"destinationIp,omitempty"`
-	SourcePort             string                 `json:"sourcePort,omitempty"`
-	DestinationPort        string                 `json:"destinationPort,omitempty"`
 	IsOutgoing             bool                   `json:"isOutgoing,omitempty"`
 	ContractStatus         ContractStatus         `json:"contractStatus,omitempty"`
 	ContractRequestReason  string                 `json:"contractRequestReason,omitempty"`
@@ -160,24 +151,20 @@ type MizuEntryWrapper struct {
 }
 
 type BaseEntryDetails struct {
-	Id              uint            `json:"id"`
-	Protocol        Protocol        `json:"protocol,omitempty"`
-	Url             string          `json:"url,omitempty"`
-	RequestSenderIp string          `json:"requestSenderIp,omitempty"`
-	Service         string          `json:"service,omitempty"`
-	Path            string          `json:"path,omitempty"`
-	Summary         string          `json:"summary,omitempty"`
-	StatusCode      int             `json:"statusCode"`
-	Method          string          `json:"method,omitempty"`
-	Timestamp       int64           `json:"timestamp,omitempty"`
-	SourceIp        string          `json:"sourceIp,omitempty"`
-	DestinationIp   string          `json:"destinationIp,omitempty"`
-	SourcePort      string          `json:"sourcePort,omitempty"`
-	DestinationPort string          `json:"destinationPort,omitempty"`
-	IsOutgoing      bool            `json:"isOutgoing,omitempty"`
-	Latency         int64           `json:"latency"`
-	Rules           ApplicableRules `json:"rules,omitempty"`
-	ContractStatus  ContractStatus  `json:"contractStatus"`
+	Id             uint            `json:"id"`
+	Protocol       Protocol        `json:"protocol,omitempty"`
+	Url            string          `json:"url,omitempty"`
+	Path           string          `json:"path,omitempty"`
+	Summary        string          `json:"summary,omitempty"`
+	StatusCode     int             `json:"statusCode"`
+	Method         string          `json:"method,omitempty"`
+	Timestamp      int64           `json:"timestamp,omitempty"`
+	Source         *TCP            `json:"src"`
+	Destination    *TCP            `json:"dst"`
+	IsOutgoing     bool            `json:"isOutgoing,omitempty"`
+	Latency        int64           `json:"latency"`
+	Rules          ApplicableRules `json:"rules,omitempty"`
+	ContractStatus ContractStatus  `json:"contractStatus"`
 }
 
 type ApplicableRules struct {
@@ -202,18 +189,13 @@ type DataUnmarshaler interface {
 func (bed *BaseEntryDetails) UnmarshalData(entry *MizuEntry) error {
 	bed.Protocol = entry.Protocol
 	bed.Id = entry.Id
-	bed.Url = entry.Url
-	bed.RequestSenderIp = entry.RequestSenderIp
-	bed.Service = entry.Service
 	bed.Path = entry.Path
-	bed.Summary = entry.Path
+	bed.Summary = entry.Summary
 	bed.StatusCode = entry.Status
 	bed.Method = entry.Method
 	bed.Timestamp = entry.Timestamp
-	bed.SourceIp = entry.SourceIp
-	bed.DestinationIp = entry.DestinationIp
-	bed.SourcePort = entry.SourcePort
-	bed.DestinationPort = entry.DestinationPort
+	bed.Source = entry.Source
+	bed.Destination = entry.Destination
 	bed.IsOutgoing = entry.IsOutgoing
 	bed.Latency = entry.ElapsedTime
 	bed.ContractStatus = entry.ContractStatus
@@ -271,7 +253,6 @@ func (h HTTPPayload) MarshalJSON() ([]byte, error) {
 		}
 		return json.Marshal(&HTTPWrapper{
 			Method:     harRequest.Method,
-			Url:        "",
 			Details:    harRequest,
 			RawRequest: &HTTPRequestWrapper{Request: h.Data.(*http.Request)},
 		})

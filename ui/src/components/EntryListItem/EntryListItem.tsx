@@ -1,5 +1,6 @@
 import React from "react";
 import Moment from 'moment';
+import SwapHorizIcon from '@material-ui/icons/SwapHoriz';
 import styles from './EntryListItem.module.sass';
 import StatusCode, {getClassification, StatusCodeClassification} from "../UI/StatusCode";
 import Protocol, {ProtocolInterface} from "../UI/Protocol"
@@ -12,19 +13,21 @@ import outgoingIconSuccess from "../assets/outgoing-traffic-success.svg"
 import outgoingIconFailure from "../assets/outgoing-traffic-failure.svg"
 import outgoingIconNeutral from "../assets/outgoing-traffic-neutral.svg"
 
+interface TCPInterface {
+    ip: string
+    port: string
+    name: string
+}
+
 interface Entry {
     protocol: ProtocolInterface,
     method?: string,
     summary: string,
-    service: string,
     id: number,
     statusCode?: number;
-    url?: string;
     timestamp: Date;
-    sourceIp: string,
-    sourcePort: string,
-    destinationIp: string,
-    destinationPort: string,
+    src: TCPInterface,
+    dst: TCPInterface,
     isOutgoing?: boolean;
     latency: number;
     rules: Rules;
@@ -151,17 +154,33 @@ export const EntryItem: React.FC<EntryProps> = ({entry, focusedEntryId, setFocus
             </div>}
             <div className={styles.endpointServiceContainer} style={{paddingLeft: endpointServiceContainer}}>
                 <Summary method={entry.method} summary={entry.summary} updateQuery={updateQuery}/>
-                <div className={styles.service}>
+                <div className={styles.resolvedName}>
                     <Queryable
-                        query={`service == "${entry.service}"`}
+                        query={`src.name == "${entry.src.name}"`}
+                        updateQuery={updateQuery}
+                        displayIconOnMouseOver={true}
+                        flipped={true}
+                        style={{marginTop: "-4px", overflow: "visible"}}
+                        iconStyle={!headingMode ? {marginTop: "4px", left: "68px", position: "absolute"} : {marginTop: "4px", left: "calc(50vw + 41px)", position: "absolute"}}
+                    >
+                        <span
+                            title="Source Name"
+                        >
+                            {entry.src.name ? entry.src.name : "[Unresolved]"}
+                        </span>
+                    </Queryable>
+                    <SwapHorizIcon style={{color: entry.protocol.backgroundColor, marginTop: "-2px"}}></SwapHorizIcon>
+                    <Queryable
+                        query={`dst.name == "${entry.dst.name}"`}
                         updateQuery={updateQuery}
                         displayIconOnMouseOver={true}
                         style={{marginTop: "-4px"}}
+                        iconStyle={{marginTop: "4px", marginLeft: "-2px"}}
                     >
                         <span
-                            title="Service Name"
+                            title="Destination Name"
                         >
-                            {entry.service}
+                            {entry.dst.name ? entry.dst.name : "[Unresolved]"}
                         </span>
                     </Queryable>
                 </div>
@@ -182,7 +201,7 @@ export const EntryItem: React.FC<EntryProps> = ({entry, focusedEntryId, setFocus
             }
             <div className={styles.separatorRight}>
                 <Queryable
-                        query={`src.ip == "${entry.sourceIp}"`}
+                        query={`src.ip == "${entry.src.ip}"`}
                         updateQuery={updateQuery}
                         displayIconOnMouseOver={true}
                         flipped={true}
@@ -192,12 +211,12 @@ export const EntryItem: React.FC<EntryProps> = ({entry, focusedEntryId, setFocus
                         className={`${styles.tcpInfo} ${styles.ip}`}
                         title="Source IP"
                     >
-                        {entry.sourceIp}
+                        {entry.src.ip}
                     </span>
                 </Queryable>
                 <span className={`${styles.tcpInfo}`} style={{marginTop: "18px"}}>:</span>
                 <Queryable
-                        query={`src.port == "${entry.sourcePort}"`}
+                        query={`src.port == "${entry.src.port}"`}
                         updateQuery={updateQuery}
                         displayIconOnMouseOver={true}
                         flipped={true}
@@ -207,7 +226,7 @@ export const EntryItem: React.FC<EntryProps> = ({entry, focusedEntryId, setFocus
                         className={`${styles.tcpInfo} ${styles.port}`}
                         title="Source Port"
                     >
-                        {entry.sourcePort}
+                        {entry.src.port}
                     </span>
                 </Queryable>
                 {entry.isOutgoing ?
@@ -243,7 +262,7 @@ export const EntryItem: React.FC<EntryProps> = ({entry, focusedEntryId, setFocus
                     </Queryable>
                 }
                 <Queryable
-                        query={`dst.ip == "${entry.destinationIp}"`}
+                        query={`dst.ip == "${entry.dst.ip}"`}
                         updateQuery={updateQuery}
                         displayIconOnMouseOver={true}
                         flipped={false}
@@ -253,12 +272,12 @@ export const EntryItem: React.FC<EntryProps> = ({entry, focusedEntryId, setFocus
                         className={`${styles.tcpInfo} ${styles.ip}`}
                         title="Destination IP"
                     >
-                        {entry.destinationIp}
+                        {entry.dst.ip}
                     </span>
                 </Queryable>
                 <span className={`${styles.tcpInfo}`} style={{marginTop: "18px"}}>:</span>
                 <Queryable
-                        query={`dst.port == "${entry.destinationPort}"`}
+                        query={`dst.port == "${entry.dst.port}"`}
                         updateQuery={updateQuery}
                         displayIconOnMouseOver={true}
                         flipped={false}
@@ -267,7 +286,7 @@ export const EntryItem: React.FC<EntryProps> = ({entry, focusedEntryId, setFocus
                         className={`${styles.tcpInfo} ${styles.port}`}
                         title="Destination Port"
                     >
-                        {entry.destinationPort}
+                        {entry.dst.port}
                     </span>
                 </Queryable>
             </div>

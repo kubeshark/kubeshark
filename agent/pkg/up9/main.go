@@ -251,12 +251,12 @@ func syncEntriesImpl(token string, model string, envPrefix string, uploadInterva
 			if err != nil {
 				continue
 			}
-			if entry.ResolvedSource != "" {
-				harEntry.Request.Headers = append(harEntry.Request.Headers, har.Header{Name: "x-mizu-source", Value: entry.ResolvedSource})
+			if entry.Source.Name != "" {
+				harEntry.Request.Headers = append(harEntry.Request.Headers, har.Header{Name: "x-mizu-source", Value: entry.Source.Name})
 			}
-			if entry.ResolvedDestination != "" {
-				harEntry.Request.Headers = append(harEntry.Request.Headers, har.Header{Name: "x-mizu-destination", Value: entry.ResolvedDestination})
-				harEntry.Request.URL = utils.SetHostname(harEntry.Request.URL, entry.ResolvedDestination)
+			if entry.Destination.Name != "" {
+				harEntry.Request.Headers = append(harEntry.Request.Headers, har.Header{Name: "x-mizu-destination", Value: entry.Destination.Name})
+				harEntry.Request.URL = utils.SetHostname(harEntry.Request.URL, entry.Destination.Name)
 			}
 
 			// go's default marshal behavior is to encode []byte fields to base64, python's default unmarshal behavior is to not decode []byte fields from base64
