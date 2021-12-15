@@ -161,7 +161,7 @@ export const EntryItem: React.FC<EntryProps> = ({entry, focusedEntryId, setFocus
                         displayIconOnMouseOver={true}
                         flipped={true}
                         style={{marginTop: "-4px", overflow: "visible"}}
-                        iconStyle={{marginTop: "4px", left: "68px", position: "absolute"}}
+                        iconStyle={!headingMode ? {marginTop: "4px", left: "68px", position: "absolute"} : {marginTop: "4px", left: "calc(50vw + 41px)", position: "absolute"}}
                     >
                         <span
                             title="Source Name"
