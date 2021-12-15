@@ -22,7 +22,6 @@ import (
 	"path"
 	"path/filepath"
 	"plugin"
-	"regexp"
 	"sort"
 	"syscall"
 	"time"
@@ -273,8 +272,6 @@ func hostApi(socketHarOutputChannel chan<- *tapApi.OutputChannelItem) {
 		if _, err := startMizuTapperSyncer(ctx, kubernetesProvider); err != nil {
 			logger.Log.Fatalf("error initializing tapper syncer: %+v", err)
 		}
-
-		go watchMizuEvents(ctx, kubernetesProvider, cancel) 
 	}
 
 	utils.StartServer(app)
@@ -447,7 +444,7 @@ func startMizuTapperSyncer(ctx context.Context, provider *kubernetes.Provider) (
 		MizuApiFilteringOptions:  config.Config.MizuApiFilteringOptions,
 		MizuServiceAccountExists: true, //assume service account exists since daemon mode will not function without it anyway
 		Istio:                    config.Config.Istio,
-	})
+	}, time.Now())
 
 	if err != nil {
 		return nil, err
@@ -477,6 +474,16 @@ func startMizuTapperSyncer(ctx context.Context, provider *kubernetes.Provider) (
 				api.BroadcastToBrowserClients(serializedTapStatus)
 				providers.TapStatus.Pods = tapStatus.Pods
 				providers.ExpectedTapperAmount = tapPodChangeEvent.ExpectedTapperAmount
+			case tapperStatus, ok := <-tapperSyncer.TapperStatusChangedOut:
+				if !ok {
+					logger.Log.Debug("mizuTapperSyncer tapper status changed channel closed, ending listener loop")
+					return
+				}
+				if providers.TappersStatus == nil {
+					providers.TappersStatus = make(map[string]shared.TapperStatus)
+				}
+				providers.TappersStatus[tapperStatus.NodeName] = tapperStatus
+
 			case <-ctx.Done():
 				logger.Log.Debug("mizuTapperSyncer event listener loop exiting due to context done")
 				return
@@ -485,49 +492,4 @@ func startMizuTapperSyncer(ctx context.Context, provider *kubernetes.Provider) (
 	}()
 
 	return tapperSyncer, nil
-}
-
-func watchMizuEvents(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
-	// Round down because k8s CreationTimestamp is given in 1 sec resolution.
-	startTime := time.Now().Truncate(time.Second)
-
-	mizuResourceRegex := regexp.MustCompile(fmt.Sprintf("^%s.*", kubernetes.MizuResourcesPrefix))
-	eventWatchHelper := kubernetes.NewEventWatchHelper(kubernetesProvider, mizuResourceRegex)
-	eventChan, errorChan := kubernetes.FilteredWatch(ctx, eventWatchHelper, []string{config.Config.MizuResourcesNamespace}, eventWatchHelper)
-
-	for {
-		select {
-		case wEvent, ok := <-eventChan:
-			if !ok {
-				eventChan = nil
-				continue
-			}
-
-			event, err := wEvent.ToEvent()
-			if err != nil {
-				logger.Log.Errorf("error parsing Mizu resource event: %+v", err)
-				cancel()
-			}
-
-			if startTime.After(event.CreationTimestamp.Time) {
-				continue
-			}
-
-			if event.Type == v1.EventTypeWarning {
-				logger.Log.Warningf("resource %s in state %s - %s", event.Regarding.Name, event.Reason, event.Note)
-			}
-		case err, ok := <-errorChan:
-			if !ok {
-				errorChan = nil
-				continue
-			}
-
-			logger.Log.Errorf("error in watch mizu resource events loop: %+v", err)
-			cancel()
-
-		case <-ctx.Done():
-			logger.Log.Debugf("watching Mizu resource events loop, ctx done")
-			return
-		}
-	}
 }

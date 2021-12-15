@@ -351,8 +351,8 @@ func (provider *Provider) CreateService(ctx context.Context, namespace string, s
 }
 
 func (provider *Provider) DoesServicesExist(ctx context.Context, namespace string, name string) (bool, error) {
-	resource, err := provider.clientSet.CoreV1().Services(namespace).Get(ctx, name, metav1.GetOptions{})
-	return provider.doesResourceExist(resource, err)
+	serviceResource, err := provider.clientSet.CoreV1().Services(namespace).Get(ctx, name, metav1.GetOptions{})
+	return provider.doesResourceExist(serviceResource, err)
 }
 
 func (provider *Provider) doesResourceExist(resource interface{}, err error) (bool, error) {
@@ -642,7 +642,7 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 		"--api-server-address", fmt.Sprintf("ws://%s/wsTapper", apiServerPodIp),
 		"--nodefrag",
 	}
-	
+
 	if istio {
 		mizuCmd = append(mizuCmd, "--procfs", procfsMountPath, "--istio")
 	}
@@ -653,13 +653,13 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	agentContainer.WithImagePullPolicy(imagePullPolicy)
 
 	caps := applyconfcore.Capabilities().WithDrop("ALL").WithAdd("NET_RAW").WithAdd("NET_ADMIN")
-	
+
 	if istio {
-		caps = caps.WithAdd("SYS_ADMIN") // for reading /proc/PID/net/ns
-		caps = caps.WithAdd("SYS_PTRACE") // for setting netns to other process
+		caps = caps.WithAdd("SYS_ADMIN")    // for reading /proc/PID/net/ns
+		caps = caps.WithAdd("SYS_PTRACE")   // for setting netns to other process
 		caps = caps.WithAdd("DAC_OVERRIDE") // for reading /proc/PID/environ
 	}
-	
+
 	agentContainer.WithSecurityContext(applyconfcore.SecurityContext().WithCapabilities(caps))
 
 	agentContainer.WithCommand(mizuCmd...)
@@ -780,10 +780,10 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	return err
 }
 
-func (provider *Provider) ListAllPodsMatchingRegex(ctx context.Context, regex *regexp.Regexp, namespaces []string) ([]core.Pod, error) {
+func (provider *Provider) listPodsImpl(ctx context.Context, regex *regexp.Regexp, namespaces []string, listOptions metav1.ListOptions) ([]core.Pod, error) {
 	var pods []core.Pod
 	for _, namespace := range namespaces {
-		namespacePods, err := provider.clientSet.CoreV1().Pods(namespace).List(ctx, metav1.ListOptions{})
+		namespacePods, err := provider.clientSet.CoreV1().Pods(namespace).List(ctx, listOptions)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get pods in ns: [%s], %w", namespace, err)
 		}
@@ -798,6 +798,14 @@ func (provider *Provider) ListAllPodsMatchingRegex(ctx context.Context, regex *r
 		}
 	}
 	return matchingPods, nil
+}
+
+func (provider *Provider) ListAllPodsMatchingRegex(ctx context.Context, regex *regexp.Regexp, namespaces []string) ([]core.Pod, error) {
+	return provider.listPodsImpl(ctx, regex, namespaces, metav1.ListOptions{})
+}
+
+func (provider *Provider) GetPod(ctx context.Context, namespaces string, podName string) (*core.Pod, error) {
+	return provider.clientSet.CoreV1().Pods(namespaces).Get(ctx, podName, metav1.GetOptions{})
 }
 
 func (provider *Provider) ListAllRunningPodsMatchingRegex(ctx context.Context, regex *regexp.Regexp, namespaces []string) ([]core.Pod, error) {

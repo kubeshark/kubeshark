@@ -24,13 +24,18 @@ func HealthCheck(c *gin.Context) {
 		}
 	}
 
+	tappers := make([]shared.TapperStatus, len(providers.TappersStatus))
+	for _, value := range providers.TappersStatus {
+		tappers = append(tappers, value)
+	}
+
 	response := shared.HealthResponse{
-		TapStatus:    providers.TapStatus,
-		TappersCount: providers.TappersCount,
+		TapStatus:     providers.TapStatus,
+		TappersCount:  providers.TappersCount,
+		TappersStatus: tappers,
 	}
 	c.JSON(http.StatusOK, response)
 }
-
 
 func PostTappedPods(c *gin.Context) {
 	tapStatus := &shared.TapStatus{}
@@ -50,6 +55,23 @@ func PostTappedPods(c *gin.Context) {
 	} else {
 		api.BroadcastToBrowserClients(jsonBytes)
 	}
+}
+
+func PostTapperStatus(c *gin.Context) {
+	tapperStatus := &shared.TapperStatus{}
+	if err := c.Bind(tapperStatus); err != nil {
+		c.JSON(http.StatusBadRequest, err)
+		return
+	}
+	if err := validation.Validate(tapperStatus); err != nil {
+		c.JSON(http.StatusBadRequest, err)
+		return
+	}
+	logger.Log.Infof("[Status] POST request, tapper status: %v", tapperStatus)
+	if providers.TappersStatus == nil {
+		providers.TappersStatus = make(map[string]shared.TapperStatus)
+	}
+	providers.TappersStatus[tapperStatus.NodeName] = *tapperStatus
 }
 
 func GetTappersCount(c *gin.Context) {

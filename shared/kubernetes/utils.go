@@ -57,11 +57,10 @@ func getMissingPods(pods1 []core.Pod, pods2 []core.Pod) []core.Pod {
 	return missingPods
 }
 
-
 func GetPodInfosForPods(pods []core.Pod) []shared.PodInfo {
 	podInfos := make([]shared.PodInfo, 0)
 	for _, pod := range pods {
-		podInfos = append(podInfos, shared.PodInfo{Name: pod.Name, Namespace: pod.Namespace})
+		podInfos = append(podInfos, shared.PodInfo{Name: pod.Name, Namespace: pod.Namespace, NodeName: pod.Spec.NodeName})
 	}
 	return podInfos
 }
