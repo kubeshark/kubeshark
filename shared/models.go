@@ -68,9 +68,9 @@ type WebSocketStatusMessage struct {
 }
 
 type TapperStatus struct {
-	TapperName string `json:"TapperName"`
-	NodeName   string `json:"NodeName"`
-	Status     string `json:"Status"`
+	TapperName string `json:"tapperName"`
+	NodeName   string `json:"nodeName"`
+	Status     string `json:"status"`
 }
 
 type TapStatus struct {
@@ -81,7 +81,7 @@ type TapStatus struct {
 type PodInfo struct {
 	Namespace string `json:"namespace"`
 	Name      string `json:"name"`
-	NodeName  string `json:"NodeName"`
+	NodeName  string `json:"nodeName"`
 }
 
 type TLSLinkInfo struct {
