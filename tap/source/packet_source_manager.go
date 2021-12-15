@@ -8,6 +8,7 @@ import (
 
 	"github.com/up9inc/mizu/shared/logger"
 	"github.com/vishvananda/netns"
+	v1 "k8s.io/api/core/v1"
 )
 
 type PacketSourceManager struct {
@@ -15,7 +16,7 @@ type PacketSourceManager struct {
 }
 
 func NewPacketSourceManager(procfs string, pids string, filename string, interfaceName string,
-	istio bool, clusterIps []string, behaviour TcpPacketSourceBehaviour) (*PacketSourceManager, error) {
+	istio bool, pods []v1.Pod, behaviour TcpPacketSourceBehaviour) (*PacketSourceManager, error) {
 	sources := make([]*tcpPacketSource, 0)
 	sources, err := createHostSource(sources, filename, interfaceName, behaviour)
 
@@ -24,7 +25,7 @@ func NewPacketSourceManager(procfs string, pids string, filename string, interfa
 	}
 
 	sources = createSourcesFromPids(sources, procfs, pids, interfaceName, behaviour)
-	sources = createSourcesFromEnvoy(sources, istio, procfs, clusterIps, interfaceName, behaviour)
+	sources = createSourcesFromEnvoy(sources, istio, procfs, pods, interfaceName, behaviour)
 
 	return &PacketSourceManager{
 		sources: sources,
@@ -53,7 +54,7 @@ func createSourcesFromPids(sources []*tcpPacketSource, procfs string, pids strin
 	return sources
 }
 
-func createSourcesFromEnvoy(sources []*tcpPacketSource, istio bool, procfs string, clusterIps []string,
+func createSourcesFromEnvoy(sources []*tcpPacketSource, istio bool, procfs string, clusterIps []v1.Pod,
 	interfaceName string, behaviour TcpPacketSourceBehaviour) []*tcpPacketSource {
 	if !istio {
 		return sources

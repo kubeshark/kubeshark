@@ -1,22 +1,38 @@
 package kubernetes
 
 import (
+	"regexp"
+
 	"github.com/up9inc/mizu/shared"
 	core "k8s.io/api/core/v1"
-	"regexp"
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func GetNodeHostToTappedPodIpsMap(tappedPods []core.Pod) map[string][]string {
-	nodeToTappedPodIPMap := make(map[string][]string, 0)
+func GetNodeHostToTappedPodsMap(tappedPods []core.Pod) map[string][]core.Pod {
+	nodeToTappedPodMap := make(map[string][]core.Pod, 0)
 	for _, pod := range tappedPods {
-		existingList := nodeToTappedPodIPMap[pod.Spec.NodeName]
+		minimizedPod := getMinimizedPod(pod)
+
+		existingList := nodeToTappedPodMap[pod.Spec.NodeName]
 		if existingList == nil {
-			nodeToTappedPodIPMap[pod.Spec.NodeName] = []string{pod.Status.PodIP}
+			nodeToTappedPodMap[pod.Spec.NodeName] = []core.Pod{minimizedPod}
 		} else {
-			nodeToTappedPodIPMap[pod.Spec.NodeName] = append(nodeToTappedPodIPMap[pod.Spec.NodeName], pod.Status.PodIP)
+			nodeToTappedPodMap[pod.Spec.NodeName] = append(nodeToTappedPodMap[pod.Spec.NodeName], minimizedPod)
 		}
 	}
-	return nodeToTappedPodIPMap
+	return nodeToTappedPodMap
+}
+
+func getMinimizedPod(fullPod core.Pod) core.Pod {
+	return core.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: fullPod.Name,
+		},
+		Status: v1.PodStatus{
+			PodIP: fullPod.Status.PodIP,
+		},
+	}
 }
 
 func excludeMizuPods(pods []core.Pod) []core.Pod {

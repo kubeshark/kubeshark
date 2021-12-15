@@ -304,8 +304,8 @@ func CORSMiddleware() gin.HandlerFunc {
 	}
 }
 
-func parseEnvVar(env string) map[string][]string {
-	var mapOfList map[string][]string
+func parseEnvVar(env string) map[string][]v1.Pod {
+	var mapOfList map[string][]v1.Pod
 
 	val, present := os.LookupEnv(env)
 
@@ -320,7 +320,7 @@ func parseEnvVar(env string) map[string][]string {
 	return mapOfList
 }
 
-func getTapTargets() []string {
+func getTapTargets() []v1.Pod {
 	nodeName := os.Getenv(shared.NodeNameEnvVar)
 	tappedAddressesPerNodeDict := parseEnvVar(shared.TappedAddressesPerNodeDictEnvVar)
 	return tappedAddressesPerNodeDict[nodeName]
