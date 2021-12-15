@@ -315,7 +315,7 @@ func parseEnvVar(env string) map[string][]v1.Pod {
 
 	err := json.Unmarshal([]byte(val), &mapOfList)
 	if err != nil {
-		panic(fmt.Sprintf("env var %s's value of %s is invalid! must be map[string][]string %v", env, mapOfList, err))
+		panic(fmt.Sprintf("env var %s's value of %v is invalid! must be map[string][]v1.Pod %v", env, mapOfList, err))
 	}
 	return mapOfList
 }
