@@ -3,6 +3,7 @@ package kubernetes
 import (
 	"context"
 	"regexp"
+	"strings"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/watch"
@@ -10,13 +11,15 @@ import (
 
 type EventWatchHelper struct {
 	kubernetesProvider *Provider
-	NameRegexFilter *regexp.Regexp
+	NameRegexFilter    *regexp.Regexp
+	Kind               string
 }
 
-func NewEventWatchHelper(kubernetesProvider *Provider, NameRegexFilter *regexp.Regexp) *EventWatchHelper {
+func NewEventWatchHelper(kubernetesProvider *Provider, NameRegexFilter *regexp.Regexp, kind string) *EventWatchHelper {
 	return &EventWatchHelper{
 		kubernetesProvider: kubernetesProvider,
-		NameRegexFilter: NameRegexFilter,
+		NameRegexFilter:    NameRegexFilter,
+		Kind:               kind,
 	}
 }
 
@@ -28,6 +31,10 @@ func (wh *EventWatchHelper) Filter(wEvent *WatchEvent) (bool, error) {
 	}
 
 	if !wh.NameRegexFilter.MatchString(event.Name) {
+		return false, nil
+	}
+
+	if strings.ToLower(event.Regarding.Kind) != strings.ToLower(wh.Kind) {
 		return false, nil
 	}
 

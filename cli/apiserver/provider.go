@@ -42,7 +42,7 @@ func (provider *Provider) TestConnection() error {
 	retriesLeft := provider.retries
 	for retriesLeft > 0 {
 		if _, err := provider.GetHealthStatus(); err != nil {
-			logger.Log.Debugf("[ERROR] api server not ready yet %v", err)
+			logger.Log.Debugf("api server not ready yet %v", err)
 		} else {
 			logger.Log.Debugf("connection test to api server passed successfully")
 			break
@@ -78,6 +78,23 @@ func (provider *Provider) GetHealthStatus() (*shared.HealthResponse, error) {
 			return nil, err
 		}
 		return healthResponse, nil
+	}
+}
+
+func (provider *Provider) ReportTapperStatus(tapperStatus shared.TapperStatus) error {
+	tapperStatusUrl := fmt.Sprintf("%s/status/tapperStatus", provider.url)
+
+	if jsonValue, err := json.Marshal(tapperStatus); err != nil {
+		return fmt.Errorf("failed Marshal the tapper status %w", err)
+	} else {
+		if response, err := provider.client.Post(tapperStatusUrl, "application/json", bytes.NewBuffer(jsonValue)); err != nil {
+			return fmt.Errorf("failed sending to API server the tapped pods %w", err)
+		} else if response.StatusCode != 200 {
+			return fmt.Errorf("failed sending to API server the tapper status, response status code %v", response.StatusCode)
+		} else {
+			logger.Log.Debugf("Reported to server API about tapper status: %v", tapperStatus)
+			return nil
+		}
 	}
 }
 

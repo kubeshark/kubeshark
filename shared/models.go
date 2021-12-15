@@ -67,6 +67,12 @@ type WebSocketStatusMessage struct {
 	TappingStatus TapStatus `json:"tappingStatus"`
 }
 
+type TapperStatus struct {
+	TapperName string `json:"TapperName"`
+	NodeName   string `json:"NodeName"`
+	Status     string `json:"Status"`
+}
+
 type TapStatus struct {
 	Pods     []PodInfo     `json:"pods"`
 	TLSLinks []TLSLinkInfo `json:"tlsLinks"`
@@ -75,6 +81,7 @@ type TapStatus struct {
 type PodInfo struct {
 	Namespace string `json:"namespace"`
 	Name      string `json:"name"`
+	NodeName  string `json:"NodeName"`
 }
 
 type TLSLinkInfo struct {
@@ -110,8 +117,9 @@ func CreateWebSocketMessageTypeAnalyzeStatus(analyzeStatus AnalyzeStatus) WebSoc
 }
 
 type HealthResponse struct {
-	TapStatus    TapStatus `json:"tapStatus"`
-	TappersCount int       `json:"tappersCount"`
+	TapStatus     TapStatus      `json:"tapStatus"`
+	TappersCount  int            `json:"tappersCount"`
+	TappersStatus []TapperStatus `json:"tappersStatus"`
 }
 
 type VersionResponse struct {

@@ -6,8 +6,8 @@ import (
 )
 
 var (
-	SemVer                                    = "0.0.1"
-	Branch                                    = "develop"
+	SemVer                                    = "0.0.0"
+	Branch                                    = "feature/tapped_pod_stats"
 	GitCommitHash                             = "" // this var is overridden using ldflags in makefile when building
 	BuildTimestamp                            = "" // this var is overridden using ldflags in makefile when building
 	RBACVersion                               = "v1"
