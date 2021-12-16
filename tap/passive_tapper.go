@@ -20,6 +20,7 @@ import (
 	"github.com/up9inc/mizu/tap/api"
 	"github.com/up9inc/mizu/tap/diagnose"
 	"github.com/up9inc/mizu/tap/source"
+	v1 "k8s.io/api/core/v1"
 )
 
 const cleanPeriod = time.Second * 10
@@ -56,7 +57,7 @@ var memprofile = flag.String("memprofile", "", "Write memory profile")
 
 type TapOpts struct {
 	HostMode          bool
-	FilterAuthorities []string
+	FilterAuthorities []v1.Pod
 }
 
 var extensions []*api.Extension                   // global
@@ -85,7 +86,7 @@ func StartPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem, 
 	filteringOptions = options
 
 	if opts.FilterAuthorities == nil {
-		opts.FilterAuthorities = []string{}
+		opts.FilterAuthorities = []v1.Pod{}
 	}
 
 	if GetMemoryProfilingEnabled() {
