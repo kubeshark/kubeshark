@@ -128,6 +128,7 @@ func RunMizuTap() {
 		return
 	}
 
+	logger.Log.Infof("Waiting for Mizu Agent to start...")
 	if err := createMizuResources(ctx, cancel, kubernetesProvider, serializedValidationRules, serializedContract, serializedMizuConfig); err != nil {
 		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error creating resources: %v", errormessage.FormatError(err)))
 

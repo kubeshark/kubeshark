@@ -281,8 +281,8 @@ func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, moun
 								Port: port,
 							},
 						},
-						InitialDelaySeconds: 5,
-						PeriodSeconds:       10,
+						InitialDelaySeconds: 0,
+						PeriodSeconds:       1,
 					},
 					LivenessProbe: &core.Probe{
 						Handler: core.Handler{
@@ -291,7 +291,7 @@ func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, moun
 								Port: port,
 							},
 						},
-						InitialDelaySeconds: 5,
+						InitialDelaySeconds: 0,
 						PeriodSeconds:       10,
 					},
 				},
