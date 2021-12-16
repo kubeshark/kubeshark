@@ -68,6 +68,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
     const [queriedTotal, setQueriedTotal] = useState(0);
     const [leftOffBottom, setLeftOffBottom] = useState(0);
     const [leftOffTop, setLeftOffTop] = useState(null);
+    const [truncatedTimestamp, setTruncatedTimestamp] = useState(0);
 
     const [startTime, setStartTime] = useState(0);
 
@@ -169,6 +170,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                     setQueriedCurrent(queriedCurrent + message.data.current);
                     setQueriedTotal(message.data.total);
                     setLeftOffBottom(message.data.leftOff);
+                    setTruncatedTimestamp(message.data.truncatedTimestamp);
                     if (leftOffTop === null) {
                         setLeftOffTop(message.data.leftOff - 1);
                     }
@@ -225,13 +227,12 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
     }, [focusedEntryId]);
 
     const toggleConnection = () => {
-        if (connection === ConnectionStatus.Connected) {
-            ws.current.close();
-        } else {
+        ws.current.close();
+        if (connection !== ConnectionStatus.Connected) {
             if (query) {
-                openWebSocket(`(${query}) and leftOff(${leftOffBottom})`, false);
+                openWebSocket(`(${query}) and leftOff(-1)`, true);
             } else {
-                openWebSocket(`leftOff(${leftOffBottom})`, false);
+                openWebSocket(`leftOff(-1)`, true);
             }
         }
     }
@@ -249,9 +250,9 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
     const getConnectionTitle = () => {
         switch (connection) {
             case ConnectionStatus.Connected:
-                return "connected, waiting for traffic"
+                return "streaming live traffic"
             default:
-                return "not connected";
+                return "streaming paused";
         }
     }
 
@@ -297,6 +298,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                             queriedCurrent={queriedCurrent}
                             setQueriedCurrent={setQueriedCurrent}
                             queriedTotal={queriedTotal}
+                            setQueriedTotal={setQueriedTotal}
                             startTime={startTime}
                             noMoreDataTop={noMoreDataTop}
                             setNoMoreDataTop={setNoMoreDataTop}
@@ -309,6 +311,8 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                             ws={ws.current}
                             openWebSocket={openWebSocket}
                             leftOffBottom={leftOffBottom}
+                            truncatedTimestamp={truncatedTimestamp}
+                            setTruncatedTimestamp={setTruncatedTimestamp}
                         />
                     </div>
                 </div>

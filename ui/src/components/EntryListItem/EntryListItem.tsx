@@ -298,7 +298,7 @@ export const EntryItem: React.FC<EntryProps> = ({entry, focusedEntryId, setFocus
                         flipped={false}
                 >
                     <span
-                        title="Timestamp"
+                        title="Timestamp (UTC)"
                     >
                         {Moment(+entry.timestamp)?.utc().format('MM/DD/YYYY, h:mm:ss.SSS A')}
                     </span>

@@ -18,6 +18,7 @@ interface EntriesListProps {
     queriedCurrent: number;
     setQueriedCurrent: any;
     queriedTotal: number;
+    setQueriedTotal: any;
     startTime: number;
     noMoreDataTop: boolean;
     setNoMoreDataTop: (flag: boolean) => void;
@@ -30,11 +31,13 @@ interface EntriesListProps {
     ws: any;
     openWebSocket: (query: string, resetEntries: boolean) => void;
     leftOffBottom: number;
+    truncatedTimestamp: number;
+    setTruncatedTimestamp: any;
 }
 
 const api = new Api();
 
-export const EntriesList: React.FC<EntriesListProps> = ({entries, setEntries, query, listEntryREF, onSnapBrokenEvent, isSnappedToBottom, setIsSnappedToBottom, queriedCurrent, setQueriedCurrent, queriedTotal, startTime, noMoreDataTop, setNoMoreDataTop, focusedEntryId, setFocusedEntryId, updateQuery, leftOffTop, setLeftOffTop, isWebSocketConnectionClosed, ws, openWebSocket, leftOffBottom}) => {
+export const EntriesList: React.FC<EntriesListProps> = ({entries, setEntries, query, listEntryREF, onSnapBrokenEvent, isSnappedToBottom, setIsSnappedToBottom, queriedCurrent, setQueriedCurrent, queriedTotal, setQueriedTotal, startTime, noMoreDataTop, setNoMoreDataTop, focusedEntryId, setFocusedEntryId, updateQuery, leftOffTop, setLeftOffTop, isWebSocketConnectionClosed, ws, openWebSocket, leftOffBottom, truncatedTimestamp, setTruncatedTimestamp}) => {
     const [loadMoreTop, setLoadMoreTop] = useState(false);
     const [isLoadingTop, setIsLoadingTop] = useState(false);
     const scrollableRef = useRef(null);
@@ -83,11 +86,13 @@ export const EntriesList: React.FC<EntriesListProps> = ({entries, setEntries, qu
         setEntries(newEntries);
 
         setQueriedCurrent(queriedCurrent + data.meta.current);
+        setQueriedTotal(data.meta.total);
+        setTruncatedTimestamp(data.meta.truncatedTimestamp);
 
         if (scrollTo) {
             scrollableRef.current.scrollToIndex(data.data.length - 1);
         }
-    },[setLoadMoreTop, setIsLoadingTop, entries, setEntries, query, setNoMoreDataTop, leftOffTop, setLeftOffTop, queriedCurrent, setQueriedCurrent]);
+    },[setLoadMoreTop, setIsLoadingTop, entries, setEntries, query, setNoMoreDataTop, leftOffTop, setLeftOffTop, queriedCurrent, setQueriedCurrent, setQueriedTotal, setTruncatedTimestamp]);
 
     useEffect(() => {
         if(!isWebSocketConnectionClosed || !loadMoreTop || noMoreDataTop) return;
@@ -144,7 +149,7 @@ export const EntriesList: React.FC<EntriesListProps> = ({entries, setEntries, qu
 
                 <div className={styles.footer}>
                     <div>Displaying <b>{entries?.length}</b> results out of <b>{queriedTotal}</b> total</div>
-                    {startTime !== 0 && <div>Started listening at <span style={{marginRight: 5, fontWeight: 600, fontSize: 13}}>{Moment(startTime).utc().format('MM/DD/YYYY, h:mm:ss.SSS A')}</span></div>}
+                    {startTime !== 0 && <div>Started listening at <span style={{marginRight: 5, fontWeight: 600, fontSize: 13}}>{Moment(truncatedTimestamp ? truncatedTimestamp : startTime).utc().format('MM/DD/YYYY, h:mm:ss.SSS A')}</span></div>}
                 </div>
             </div>
     </>;
