@@ -613,7 +613,7 @@ func watchApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 				if !config.Config.HeadlessMode {
 					uiUtils.OpenBrowser(url)
 				}
-			case "FailedScheduling", "Failed", "Killing":
+			case "FailedScheduling", "Failed":
 				logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Mizu API Server status: %s - %s", event.Reason, event.Note))
 				cancel()
 				break
