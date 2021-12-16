@@ -617,14 +617,10 @@ func watchApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 				// In general Killing event can fail -> so it not 100% sure that the API server will die
 				// For some reason in acceptance tests we are getting killing event to some wrong container,
 				// so the api server doesn't die
-				if pod, err := kubernetesProvider.GetPod(ctx, config.MizuResourcesNamespaceConfigName, event.Regarding.Name); err != nil {
-					logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Mizu API Server status: %s - %s", event.Reason, event.Note))
-				} else {
-					if pod.Status.Phase != core.PodRunning {
-						logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Mizu API Server status: %s - %s", event.Reason, event.Note))
-						cancel()
-						break
-					}
+				if pod, err := kubernetesProvider.GetPod(ctx, config.MizuResourcesNamespaceConfigName, event.Regarding.Name); err != nil || pod.Status.Phase != core.PodRunning {
+					logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Mizu API Server was killed"))
+					cancel()
+					break
 				}
 			case "FailedScheduling", "Failed":
 				logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Mizu API Server status: %s - %s", event.Reason, event.Note))
