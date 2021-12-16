@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"regexp"
 	"strings"
 	"time"
@@ -383,7 +384,16 @@ func createMizuApiServerDeployment(ctx context.Context, kubernetesProvider *kube
 	if err != nil {
 		return err
 	}
-
+	pod.Spec.Containers[0].LivenessProbe = &core.Probe{
+		Handler: core.Handler{
+			HTTPGet: &core.HTTPGetAction{
+				Path: "/echo",
+				Port: intstr.FromInt(shared.DefaultApiServerPort),
+			},
+		},
+		InitialDelaySeconds: 1,
+		PeriodSeconds:       10,
+	}
 	if _, err = kubernetesProvider.CreateDeployment(ctx, config.Config.MizuResourcesNamespace, opts.PodName, pod); err != nil {
 		return err
 	}
