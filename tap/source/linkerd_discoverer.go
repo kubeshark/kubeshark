@@ -10,9 +10,9 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
-const envoyBinary = "/envoy"
+const linkerdBinary = "/linkerd2-proxy"
 
-func discoverRelevantEnvoyPids(procfs string, pods []v1.Pod) ([]string, error) {
+func discoverRelevantLinkerdPids(procfs string, pods []v1.Pod) ([]string, error) {
 	result := make([]string, 0)
 
 	pids, err := ioutil.ReadDir(procfs)
@@ -21,7 +21,7 @@ func discoverRelevantEnvoyPids(procfs string, pods []v1.Pod) ([]string, error) {
 		return result, err
 	}
 
-	logger.Log.Infof("Starting envoy auto discoverer %v %v - scanning %v potential pids",
+	logger.Log.Infof("Starting linkerd auto discoverer %v %v - scanning %v potential pids",
 		procfs, pods, len(pids))
 
 	for _, pid := range pids {
@@ -33,17 +33,17 @@ func discoverRelevantEnvoyPids(procfs string, pods []v1.Pod) ([]string, error) {
 			continue
 		}
 
-		if checkEnvoyPid(procfs, pid.Name(), pods) {
+		if checkLinkerdPid(procfs, pid.Name(), pods) {
 			result = append(result, pid.Name())
 		}
 	}
 
-	logger.Log.Infof("Found %v relevant envoy processes - %v", len(result), result)
+	logger.Log.Infof("Found %v relevant linkerd processes - %v", len(result), result)
 
 	return result, nil
 }
 
-func checkEnvoyPid(procfs string, pid string, pods []v1.Pod) bool {
+func checkLinkerdPid(procfs string, pid string, pods []v1.Pod) bool {
 	execLink := fmt.Sprintf("%v/%v/exe", procfs, pid)
 	exec, err := os.Readlink(execLink)
 
@@ -55,26 +55,26 @@ func checkEnvoyPid(procfs string, pid string, pods []v1.Pod) bool {
 		return false
 	}
 
-	if !strings.HasSuffix(exec, envoyBinary) {
+	if !strings.HasSuffix(exec, linkerdBinary) {
 		return false
 	}
 
 	environmentFile := fmt.Sprintf("%v/%v/environ", procfs, pid)
-	podIp, err := readEnvironmentVariable(environmentFile, "INSTANCE_IP")
+	podName, err := readEnvironmentVariable(environmentFile, "_pod_name")
 
 	if err != nil {
 		return false
 	}
 
-	if podIp == "" {
-		logger.Log.Debugf("Found an envoy process without INSTANCE_IP variable %v\n", pid)
+	if podName == "" {
+		logger.Log.Debugf("Found a linkerd process without _pod_name variable %v\n", pid)
 		return false
 	}
 
-	logger.Log.Infof("Found envoy pid %v with cluster ip %v", pid, podIp)
+	logger.Log.Infof("Found linkerd pid %v with pod name %v", pid, podName)
 
 	for _, pod := range pods {
-		if pod.Status.PodIP == podIp {
+		if pod.Name == podName {
 			return true
 		}
 	}
