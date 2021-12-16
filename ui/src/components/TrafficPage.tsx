@@ -68,6 +68,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
     const [queriedTotal, setQueriedTotal] = useState(0);
     const [leftOffBottom, setLeftOffBottom] = useState(0);
     const [leftOffTop, setLeftOffTop] = useState(null);
+    const [truncatedTimestamp, setTruncatedTimestamp] = useState(0);
 
     const [startTime, setStartTime] = useState(0);
 
@@ -169,6 +170,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                     setQueriedCurrent(queriedCurrent + message.data.current);
                     setQueriedTotal(message.data.total);
                     setLeftOffBottom(message.data.leftOff);
+                    setTruncatedTimestamp(message.data.truncatedTimestamp);
                     if (leftOffTop === null) {
                         setLeftOffTop(message.data.leftOff - 1);
                     }
@@ -296,6 +298,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                             queriedCurrent={queriedCurrent}
                             setQueriedCurrent={setQueriedCurrent}
                             queriedTotal={queriedTotal}
+                            setQueriedTotal={setQueriedTotal}
                             startTime={startTime}
                             noMoreDataTop={noMoreDataTop}
                             setNoMoreDataTop={setNoMoreDataTop}
@@ -308,6 +311,8 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                             ws={ws.current}
                             openWebSocket={openWebSocket}
                             leftOffBottom={leftOffBottom}
+                            truncatedTimestamp={truncatedTimestamp}
+                            setTruncatedTimestamp={setTruncatedTimestamp}
                         />
                     </div>
                 </div>
