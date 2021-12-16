@@ -24,7 +24,7 @@ func HealthCheck(c *gin.Context) {
 		}
 	}
 
-	tappers := make([]shared.TapperStatus, len(providers.TappersStatus))
+	tappers := make([]shared.TapperStatus, 0)
 	for _, value := range providers.TappersStatus {
 		tappers = append(tappers, value)
 	}
