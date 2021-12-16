@@ -64,7 +64,7 @@ type AnalyzeStatus struct {
 
 type WebSocketStatusMessage struct {
 	*WebSocketMessageMetadata
-	TappingStatus TapStatus `json:"tappingStatus"`
+	TappingStatus []TappedPodStatus `json:"tappingStatus"`
 }
 
 type TapperStatus struct {
@@ -73,9 +73,14 @@ type TapperStatus struct {
 	Status     string `json:"status"`
 }
 
+type TappedPodStatus struct {
+	Name      string `json:"name"`
+	Namespace string `json:"namespace"`
+	IsTapped  bool   `json:"isTapped"`
+}
+
 type TapStatus struct {
-	Pods     []PodInfo     `json:"pods"`
-	TLSLinks []TLSLinkInfo `json:"tlsLinks"`
+	Pods []PodInfo `json:"pods"`
 }
 
 type PodInfo struct {
@@ -98,12 +103,12 @@ type SyncEntriesConfig struct {
 	UploadIntervalSec int    `json:"interval"`
 }
 
-func CreateWebSocketStatusMessage(tappingStatus TapStatus) WebSocketStatusMessage {
+func CreateWebSocketStatusMessage(tappedPodsStatus []TappedPodStatus) WebSocketStatusMessage {
 	return WebSocketStatusMessage{
 		WebSocketMessageMetadata: &WebSocketMessageMetadata{
 			MessageType: WebSocketMessageTypeUpdateStatus,
 		},
-		TappingStatus: tappingStatus,
+		TappingStatus: tappedPodsStatus,
 	}
 }
 
