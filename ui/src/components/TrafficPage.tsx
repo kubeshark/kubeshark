@@ -225,13 +225,12 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
     }, [focusedEntryId]);
 
     const toggleConnection = () => {
-        if (connection === ConnectionStatus.Connected) {
-            ws.current.close();
-        } else {
+        ws.current.close();
+        if (connection !== ConnectionStatus.Connected) {
             if (query) {
-                openWebSocket(`(${query}) and leftOff(${leftOffBottom})`, false);
+                openWebSocket(`(${query}) and leftOff(-1)`, true);
             } else {
-                openWebSocket(`leftOff(${leftOffBottom})`, false);
+                openWebSocket(`leftOff(-1)`, true);
             }
         }
     }
@@ -249,9 +248,9 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
     const getConnectionTitle = () => {
         switch (connection) {
             case ConnectionStatus.Connected:
-                return "connected, waiting for traffic"
+                return "streaming live traffic"
             default:
-                return "not connected";
+                return "streaming paused";
         }
     }
 
