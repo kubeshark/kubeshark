@@ -579,12 +579,18 @@ func representConnectionStart(event map[string]interface{}) []interface{} {
 }
 
 func representConnectionClose(event map[string]interface{}) []interface{} {
+	replyCode := ""
+
+	if event["replyCode"] != nil {
+		replyCode = fmt.Sprintf("%g", event["replyCode"].(float64))
+	}
+
 	rep := make([]interface{}, 0)
 
 	details, _ := json.Marshal([]api.TableData{
 		{
 			Name:     "Reply Code",
-			Value:    fmt.Sprintf("%g", event["replyCode"].(float64)),
+			Value:    replyCode,
 			Selector: `request.replyCode`,
 		},
 		{
