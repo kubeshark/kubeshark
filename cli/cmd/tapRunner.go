@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"regexp"
 	"strings"
 	"time"
@@ -128,6 +129,7 @@ func RunMizuTap() {
 		return
 	}
 
+	logger.Log.Infof("Waiting for Mizu Agent to start...")
 	if err := createMizuResources(ctx, cancel, kubernetesProvider, serializedValidationRules, serializedContract, serializedMizuConfig); err != nil {
 		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error creating resources: %v", errormessage.FormatError(err)))
 
@@ -382,7 +384,16 @@ func createMizuApiServerDeployment(ctx context.Context, kubernetesProvider *kube
 	if err != nil {
 		return err
 	}
-
+	pod.Spec.Containers[0].LivenessProbe = &core.Probe{
+		Handler: core.Handler{
+			HTTPGet: &core.HTTPGetAction{
+				Path: "/echo",
+				Port: intstr.FromInt(shared.DefaultApiServerPort),
+			},
+		},
+		InitialDelaySeconds: 1,
+		PeriodSeconds:       10,
+	}
 	if _, err = kubernetesProvider.CreateDeployment(ctx, config.Config.MizuResourcesNamespace, opts.PodName, pod); err != nil {
 		return err
 	}
@@ -602,7 +613,7 @@ func watchApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 				if !config.Config.HeadlessMode {
 					uiUtils.OpenBrowser(url)
 				}
-			case "FailedScheduling", "Failed", "Killing":
+			case "FailedScheduling", "Failed":
 				logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Mizu API Server status: %s - %s", event.Reason, event.Note))
 				cancel()
 				break

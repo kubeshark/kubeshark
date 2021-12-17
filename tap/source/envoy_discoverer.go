@@ -8,13 +8,14 @@ import (
 	"strings"
 
 	"github.com/up9inc/mizu/shared/logger"
+	v1 "k8s.io/api/core/v1"
 )
 
 const envoyBinary = "/envoy"
 
 var numberRegex = regexp.MustCompile("[0-9]+")
 
-func discoverRelevantEnvoyPids(procfs string, clusterIps []string) ([]string, error) {
+func discoverRelevantEnvoyPids(procfs string, pods []v1.Pod) ([]string, error) {
 	result := make([]string, 0)
 
 	pids, err := ioutil.ReadDir(procfs)
@@ -24,7 +25,7 @@ func discoverRelevantEnvoyPids(procfs string, clusterIps []string) ([]string, er
 	}
 
 	logger.Log.Infof("Starting envoy auto discoverer %v %v - scanning %v potential pids",
-		procfs, clusterIps, len(pids))
+		procfs, pods, len(pids))
 
 	for _, pid := range pids {
 		if !pid.IsDir() {
@@ -35,7 +36,7 @@ func discoverRelevantEnvoyPids(procfs string, clusterIps []string) ([]string, er
 			continue
 		}
 
-		if checkPid(procfs, pid.Name(), clusterIps) {
+		if checkPid(procfs, pid.Name(), pods) {
 			result = append(result, pid.Name())
 		}
 	}
@@ -45,7 +46,7 @@ func discoverRelevantEnvoyPids(procfs string, clusterIps []string) ([]string, er
 	return result, nil
 }
 
-func checkPid(procfs string, pid string, clusterIps []string) bool {
+func checkPid(procfs string, pid string, pods []v1.Pod) bool {
 	execLink := fmt.Sprintf("%v/%v/exe", procfs, pid)
 	exec, err := os.Readlink(execLink)
 
@@ -62,21 +63,21 @@ func checkPid(procfs string, pid string, clusterIps []string) bool {
 	}
 
 	environmentFile := fmt.Sprintf("%v/%v/environ", procfs, pid)
-	clusterIp, err := readEnvironmentVariable(environmentFile, "INSTANCE_IP")
+	podIp, err := readEnvironmentVariable(environmentFile, "INSTANCE_IP")
 
 	if err != nil {
 		return false
 	}
 
-	if clusterIp == "" {
+	if podIp == "" {
 		logger.Log.Debugf("Found an envoy process without INSTANCE_IP variable %v\n", pid)
 		return false
 	}
 
-	logger.Log.Infof("Found envoy pid %v with cluster ip %v", pid, clusterIp)
+	logger.Log.Infof("Found envoy pid %v with cluster ip %v", pid, podIp)
 
-	for _, value := range clusterIps {
-		if value == clusterIp {
+	for _, pod := range pods {
+		if pod.Status.PodIP == podIp {
 			return true
 		}
 	}
