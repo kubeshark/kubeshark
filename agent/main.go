@@ -23,6 +23,7 @@ import (
 	"path/filepath"
 	"plugin"
 	"sort"
+	"strings"
 	"syscall"
 	"time"
 
@@ -465,14 +466,19 @@ func startMizuTapperSyncer(ctx context.Context, provider *kubernetes.Provider) (
 					logger.Log.Debug("mizuTapperSyncer pod changes channel closed, ending listener loop")
 					return
 				}
-				tapStatus := shared.TapStatus{Pods: kubernetes.GetPodInfosForPods(tapperSyncer.CurrentlyTappedPods)}
+				providers.TapStatus = shared.TapStatus{Pods: kubernetes.GetPodInfosForPods(tapperSyncer.CurrentlyTappedPods)}
 
-				serializedTapStatus, err := json.Marshal(shared.CreateWebSocketStatusMessage(tapStatus))
+				tappedPodsStatus := make([]shared.TappedPodStatus, 0)
+				for _, pod := range providers.TapStatus.Pods {
+					isTapped := strings.ToLower(providers.TappersStatus[pod.NodeName].Status) == "started"
+					tappedPodsStatus = append(tappedPodsStatus, shared.TappedPodStatus{Name: pod.Name, Namespace: pod.Namespace, IsTapped: isTapped})
+				}
+
+				serializedTapStatus, err := json.Marshal(shared.CreateWebSocketStatusMessage(tappedPodsStatus))
 				if err != nil {
 					logger.Log.Fatalf("error serializing tap status: %v", err)
 				}
 				api.BroadcastToBrowserClients(serializedTapStatus)
-				providers.TapStatus.Pods = tapStatus.Pods
 				providers.ExpectedTapperAmount = tapPodChangeEvent.ExpectedTapperAmount
 			case tapperStatus, ok := <-tapperSyncer.TapperStatusChangedOut:
 				if !ok {

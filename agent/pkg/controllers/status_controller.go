@@ -10,6 +10,7 @@ import (
 	"mizuserver/pkg/up9"
 	"mizuserver/pkg/validation"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/up9inc/mizu/shared"
@@ -49,7 +50,17 @@ func PostTappedPods(c *gin.Context) {
 	}
 	logger.Log.Infof("[Status] POST request: %d tapped pods", len(tapStatus.Pods))
 	providers.TapStatus.Pods = tapStatus.Pods
-	message := shared.CreateWebSocketStatusMessage(*tapStatus)
+	broadcastTappedPodsStatus()
+}
+
+func broadcastTappedPodsStatus() {
+	tappedPodsStatus := make([]shared.TappedPodStatus, 0)
+	for _, pod := range providers.TapStatus.Pods {
+		isTapped := strings.ToLower(providers.TappersStatus[pod.NodeName].Status) == "started"
+		tappedPodsStatus = append(tappedPodsStatus, shared.TappedPodStatus{Name: pod.Name, Namespace: pod.Namespace, IsTapped: isTapped})
+	}
+
+	message := shared.CreateWebSocketStatusMessage(tappedPodsStatus)
 	if jsonBytes, err := json.Marshal(message); err != nil {
 		logger.Log.Errorf("Could not Marshal message %v", err)
 	} else {
@@ -72,6 +83,7 @@ func PostTapperStatus(c *gin.Context) {
 		providers.TappersStatus = make(map[string]shared.TapperStatus)
 	}
 	providers.TappersStatus[tapperStatus.NodeName] = *tapperStatus
+	broadcastTappedPodsStatus()
 }
 
 func GetTappersCount(c *gin.Context) {
@@ -89,7 +101,12 @@ func GetAuthStatus(c *gin.Context) {
 }
 
 func GetTappingStatus(c *gin.Context) {
-	c.JSON(http.StatusOK, providers.TapStatus)
+	tappedPodsStatus := make([]shared.TappedPodStatus, 0)
+	for _, pod := range providers.TapStatus.Pods {
+		isTapped := strings.ToLower(providers.TappersStatus[pod.NodeName].Status) == "started"
+		tappedPodsStatus = append(tappedPodsStatus, shared.TappedPodStatus{Name: pod.Name, Namespace: pod.Namespace, IsTapped: isTapped})
+	}
+	c.JSON(http.StatusOK, tappedPodsStatus)
 }
 
 func AnalyzeInformation(c *gin.Context) {

@@ -323,7 +323,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                     {selectedEntryData && <EntryDetailed entryData={selectedEntryData} updateQuery={updateQuery}/>}
                 </div>
             </div>}
-            {tappingStatus?.pods != null && <StatusBar tappingStatus={tappingStatus}/>}
+            {tappingStatus && <StatusBar tappingStatus={tappingStatus}/>}
             <ToastContainer
                 position="bottom-right"
                 autoClose={5000}
