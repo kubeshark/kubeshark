@@ -3,18 +3,17 @@ package controllers
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/gin-gonic/gin"
+	"github.com/up9inc/mizu/shared"
+	"github.com/up9inc/mizu/shared/logger"
 	"mizuserver/pkg/api"
 	"mizuserver/pkg/config"
 	"mizuserver/pkg/holder"
 	"mizuserver/pkg/providers"
 	"mizuserver/pkg/up9"
+	"mizuserver/pkg/utils"
 	"mizuserver/pkg/validation"
 	"net/http"
-	"strings"
-
-	"github.com/gin-gonic/gin"
-	"github.com/up9inc/mizu/shared"
-	"github.com/up9inc/mizu/shared/logger"
 )
 
 func HealthCheck(c *gin.Context) {
@@ -54,11 +53,7 @@ func PostTappedPods(c *gin.Context) {
 }
 
 func broadcastTappedPodsStatus() {
-	tappedPodsStatus := make([]shared.TappedPodStatus, 0)
-	for _, pod := range providers.TapStatus.Pods {
-		isTapped := strings.ToLower(providers.TappersStatus[pod.NodeName].Status) == "started"
-		tappedPodsStatus = append(tappedPodsStatus, shared.TappedPodStatus{Name: pod.Name, Namespace: pod.Namespace, IsTapped: isTapped})
-	}
+	tappedPodsStatus := utils.GetTappedPodsStatus()
 
 	message := shared.CreateWebSocketStatusMessage(tappedPodsStatus)
 	if jsonBytes, err := json.Marshal(message); err != nil {
@@ -101,11 +96,7 @@ func GetAuthStatus(c *gin.Context) {
 }
 
 func GetTappingStatus(c *gin.Context) {
-	tappedPodsStatus := make([]shared.TappedPodStatus, 0)
-	for _, pod := range providers.TapStatus.Pods {
-		isTapped := strings.ToLower(providers.TappersStatus[pod.NodeName].Status) == "started"
-		tappedPodsStatus = append(tappedPodsStatus, shared.TappedPodStatus{Name: pod.Name, Namespace: pod.Namespace, IsTapped: isTapped})
-	}
+	tappedPodsStatus := utils.GetTappedPodsStatus()
 	c.JSON(http.StatusOK, tappedPodsStatus)
 }
 

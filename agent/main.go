@@ -23,7 +23,6 @@ import (
 	"path/filepath"
 	"plugin"
 	"sort"
-	"strings"
 	"syscall"
 	"time"
 
@@ -468,11 +467,7 @@ func startMizuTapperSyncer(ctx context.Context, provider *kubernetes.Provider) (
 				}
 				providers.TapStatus = shared.TapStatus{Pods: kubernetes.GetPodInfosForPods(tapperSyncer.CurrentlyTappedPods)}
 
-				tappedPodsStatus := make([]shared.TappedPodStatus, 0)
-				for _, pod := range providers.TapStatus.Pods {
-					isTapped := strings.ToLower(providers.TappersStatus[pod.NodeName].Status) == "started"
-					tappedPodsStatus = append(tappedPodsStatus, shared.TappedPodStatus{Name: pod.Name, Namespace: pod.Namespace, IsTapped: isTapped})
-				}
+				tappedPodsStatus := utils.GetTappedPodsStatus()
 
 				serializedTapStatus, err := json.Marshal(shared.CreateWebSocketStatusMessage(tappedPodsStatus))
 				if err != nil {
