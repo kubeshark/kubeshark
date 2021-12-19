@@ -50,7 +50,10 @@ func PostTappedPods(c *gin.Context) {
 	}
 	logger.Log.Infof("[Status] POST request: %d tapped pods", len(tapStatus.Pods))
 	providers.TapStatus.Pods = tapStatus.Pods
+	broadcastTappedPodsStatus()
+}
 
+func broadcastTappedPodsStatus() {
 	tappedPodsStatus := make([]shared.TappedPodStatus, 0)
 	for _, pod := range providers.TapStatus.Pods {
 		isTapped := strings.ToLower(providers.TappersStatus[pod.NodeName].Status) == "started"
@@ -80,6 +83,7 @@ func PostTapperStatus(c *gin.Context) {
 		providers.TappersStatus = make(map[string]shared.TapperStatus)
 	}
 	providers.TappersStatus[tapperStatus.NodeName] = *tapperStatus
+	broadcastTappedPodsStatus()
 }
 
 func GetTappersCount(c *gin.Context) {
