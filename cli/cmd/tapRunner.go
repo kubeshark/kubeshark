@@ -5,10 +5,11 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"k8s.io/apimachinery/pkg/util/intstr"
 	"regexp"
 	"strings"
 	"time"
+
+	"k8s.io/apimachinery/pkg/util/intstr"
 
 	"github.com/getkin/kin-openapi/openapi3"
 	"gopkg.in/yaml.v3"
@@ -160,10 +161,6 @@ func RunMizuTap() {
 }
 
 func handleDaemonModePostCreation(ctx context.Context, cancel context.CancelFunc, kubernetesProvider *kubernetes.Provider, namespaces []string) error {
-	if err := printTappedPodsPreview(ctx, kubernetesProvider, namespaces); err != nil {
-		return err
-	}
-
 	apiProvider := apiserver.NewProvider(GetApiServerUrl(), 90, 1*time.Second)
 
 	if err := waitForDaemonModeToBeReady(cancel, kubernetesProvider, apiProvider); err != nil {
@@ -193,7 +190,6 @@ func printTappedPodsPreview(ctx context.Context, kubernetesProvider *kubernetes.
 }
 
 func waitForDaemonModeToBeReady(cancel context.CancelFunc, kubernetesProvider *kubernetes.Provider, apiProvider *apiserver.Provider) error {
-	logger.Log.Info("Waiting for mizu to be ready... (may take a few minutes)")
 	go startProxyReportErrorIfAny(kubernetesProvider, cancel)
 
 	// TODO: TRA-3903 add a smarter test to see that tapping/pod watching is functioning properly
