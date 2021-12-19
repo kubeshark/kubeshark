@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from "react";
+import React, {useEffect, useMemo, useRef, useState} from "react";
 import {Filters} from "./Filters";
 import {EntriesList} from "./EntriesList";
 import {makeStyles} from "@material-ui/core";
@@ -12,6 +12,7 @@ import {StatusBar} from "./UI/StatusBar";
 import Api, {MizuWebsocketURL} from "../helpers/api";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import debounce from 'lodash/debounce';
 
 const useLayoutStyles = makeStyles(() => ({
     details: {
@@ -72,22 +73,24 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
 
     const [startTime, setStartTime] = useState(0);
 
-    useEffect(() => {
-        (async function() {
-            if (!query) {
-                setQueryBackgroundColor("#f5f5f5")
-            } else {
-                const data = await api.validateQuery(query);
-                if (!data) {
-                    return;
-                }
-                if (data.valid) {
-                    setQueryBackgroundColor("#d2fad2");
-                } else {
-                    setQueryBackgroundColor("#fad6dc");
-                }
+    const handleQueryChange = useMemo(() => debounce(async (query: string) => {
+        if (!query) {
+            setQueryBackgroundColor("#f5f5f5")
+        } else {
+            const data = await api.validateQuery(query);
+            if (!data) {
+                return;
             }
-        })();
+            if (data.valid) {
+                setQueryBackgroundColor("#d2fad2");
+            } else {
+                setQueryBackgroundColor("#fad6dc");
+            }
+        }
+    }, 500), []) as (query: string) => void;
+
+    useEffect(() => {
+        handleQueryChange(query);
     }, [query]);
 
     useEffect(() => {

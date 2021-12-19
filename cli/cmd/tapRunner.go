@@ -5,10 +5,11 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"k8s.io/apimachinery/pkg/util/intstr"
 	"regexp"
 	"strings"
 	"time"
+
+	"k8s.io/apimachinery/pkg/util/intstr"
 
 	"github.com/getkin/kin-openapi/openapi3"
 	"gopkg.in/yaml.v3"
@@ -151,6 +152,7 @@ func RunMizuTap() {
 	} else {
 		defer finishMizuExecution(kubernetesProvider, apiProvider)
 
+		go goUtils.HandleExcWrapper(watchApiServerEvents, ctx, kubernetesProvider, cancel)
 		go goUtils.HandleExcWrapper(watchApiServerPod, ctx, kubernetesProvider, cancel)
 
 		// block until exit signal or error
@@ -159,10 +161,6 @@ func RunMizuTap() {
 }
 
 func handleDaemonModePostCreation(ctx context.Context, cancel context.CancelFunc, kubernetesProvider *kubernetes.Provider, namespaces []string) error {
-	if err := printTappedPodsPreview(ctx, kubernetesProvider, namespaces); err != nil {
-		return err
-	}
-
 	apiProvider := apiserver.NewProvider(GetApiServerUrl(), 90, 1*time.Second)
 
 	if err := waitForDaemonModeToBeReady(cancel, kubernetesProvider, apiProvider); err != nil {
@@ -192,7 +190,6 @@ func printTappedPodsPreview(ctx context.Context, kubernetesProvider *kubernetes.
 }
 
 func waitForDaemonModeToBeReady(cancel context.CancelFunc, kubernetesProvider *kubernetes.Provider, apiProvider *apiserver.Provider) error {
-	logger.Log.Info("Waiting for mizu to be ready... (may take a few minutes)")
 	go startProxyReportErrorIfAny(kubernetesProvider, cancel)
 
 	// TODO: TRA-3903 add a smarter test to see that tapping/pod watching is functioning properly
@@ -564,6 +561,67 @@ func waitUntilNamespaceDeleted(ctx context.Context, cancel context.CancelFunc, k
 }
 
 func watchApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
+	podExactRegex := regexp.MustCompile(fmt.Sprintf("^%s$", kubernetes.ApiServerPodName))
+	podWatchHelper := kubernetes.NewPodWatchHelper(kubernetesProvider, podExactRegex)
+	eventChan, errorChan := kubernetes.FilteredWatch(ctx, podWatchHelper, []string{config.Config.MizuResourcesNamespace}, podWatchHelper)
+	isPodReady := false
+	timeAfter := time.After(25 * time.Second)
+	for {
+		select {
+		case wEvent, ok := <-eventChan:
+			if !ok {
+				eventChan = nil
+				continue
+			}
+
+			switch wEvent.Type {
+			case kubernetes.EventAdded:
+				logger.Log.Debugf("Watching API Server pod loop, added")
+			case kubernetes.EventDeleted:
+				logger.Log.Infof("%s removed", kubernetes.ApiServerPodName)
+				cancel()
+				return
+			case kubernetes.EventModified:
+				modifiedPod, err := wEvent.ToPod()
+				if err != nil {
+					logger.Log.Errorf(uiUtils.Error, err)
+					cancel()
+					continue
+				}
+
+				logger.Log.Debugf("Watching API Server pod loop, modified: %v", modifiedPod.Status.Phase)
+
+				if modifiedPod.Status.Phase == core.PodRunning && !isPodReady {
+					isPodReady = true
+					postApiServerStarted(ctx, kubernetesProvider, cancel, err)
+				}
+			case kubernetes.EventBookmark:
+				break
+			case kubernetes.EventError:
+				break
+			}
+		case err, ok := <-errorChan:
+			if !ok {
+				errorChan = nil
+				continue
+			}
+
+			logger.Log.Errorf("[ERROR] Agent creation, watching %v namespace, error: %v", config.Config.MizuResourcesNamespace, err)
+			cancel()
+
+		case <-timeAfter:
+			if !isPodReady {
+				logger.Log.Errorf(uiUtils.Error, "Mizu API server was not ready in time")
+				cancel()
+			}
+		case <-ctx.Done():
+			logger.Log.Debugf("Watching API Server pod loop, ctx done")
+			return
+		}
+	}
+}
+
+func watchApiServerEvents(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
 	podExactRegex := regexp.MustCompile(fmt.Sprintf("^%s", kubernetes.ApiServerPodName))
 	eventWatchHelper := kubernetes.NewEventWatchHelper(kubernetesProvider, podExactRegex, "pod")
 	eventChan, errorChan := kubernetes.FilteredWatch(ctx, eventWatchHelper, []string{config.Config.MizuResourcesNamespace}, eventWatchHelper)
@@ -594,25 +652,6 @@ func watchApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 					event.Note))
 
 			switch event.Reason {
-			case "Started":
-				go startProxyReportErrorIfAny(kubernetesProvider, cancel)
-
-				url := GetApiServerUrl()
-				if err := apiProvider.TestConnection(); err != nil {
-					logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Couldn't connect to API server, for more info check logs at %s", fsUtils.GetLogFilePath()))
-					cancel()
-					break
-				}
-				options, _ := getMizuApiFilteringOptions()
-				if err = startTapperSyncer(ctx, cancel, kubernetesProvider, state.targetNamespaces, *options, state.startTime); err != nil {
-					logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error starting mizu tapper syncer: %v", err))
-					cancel()
-				}
-
-				logger.Log.Infof("Mizu is available at %s", url)
-				if !config.Config.HeadlessMode {
-					uiUtils.OpenBrowser(url)
-				}
 			case "FailedScheduling", "Failed":
 				logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Mizu API Server status: %s - %s", event.Reason, event.Note))
 				cancel()
@@ -629,6 +668,27 @@ func watchApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 			logger.Log.Debugf("Watching API server events loop, ctx done")
 			return
 		}
+	}
+}
+
+func postApiServerStarted(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc, err error) {
+	go startProxyReportErrorIfAny(kubernetesProvider, cancel)
+
+	url := GetApiServerUrl()
+	if err := apiProvider.TestConnection(); err != nil {
+		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Couldn't connect to API server, for more info check logs at %s", fsUtils.GetLogFilePath()))
+		cancel()
+		return
+	}
+	options, _ := getMizuApiFilteringOptions()
+	if err = startTapperSyncer(ctx, cancel, kubernetesProvider, state.targetNamespaces, *options, state.startTime); err != nil {
+		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error starting mizu tapper syncer: %v", err))
+		cancel()
+	}
+
+	logger.Log.Infof("Mizu is available at %s", url)
+	if !config.Config.HeadlessMode {
+		uiUtils.OpenBrowser(url)
 	}
 }
 
