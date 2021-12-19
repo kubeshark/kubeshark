@@ -1,10 +1,12 @@
 import React from "react";
 import styles from './style/Protocol.module.sass';
+import Queryable from "./Queryable";
 
 export interface ProtocolInterface {
     name: string
     longName: string
-    abbreviation: string
+    abbr: string
+    macro: string
     backgroundColor: string
     foregroundColor: string
     fontSize: number
@@ -16,37 +18,51 @@ export interface ProtocolInterface {
 interface ProtocolProps {
     protocol: ProtocolInterface
     horizontal: boolean
+    updateQuery: any
 }
 
-const Protocol: React.FC<ProtocolProps> = ({protocol, horizontal}) => {
+const Protocol: React.FC<ProtocolProps> = ({protocol, horizontal, updateQuery}) => {
     if (horizontal) {
-        return <a target="_blank" rel="noopener noreferrer" href={protocol.referenceLink}>
-            <span
-                className={`${styles.base} ${styles.horizontal}`}
-                style={{
-                    backgroundColor: protocol.backgroundColor,
-                    color: protocol.foregroundColor,
-                    fontSize: 13,
-                }}
-                title={protocol.abbreviation}
-            >
-                {protocol.longName}
-            </span>
-        </a>
+        return <Queryable
+            query={protocol.macro}
+            updateQuery={updateQuery}
+            displayIconOnMouseOver={true}
+        >
+            <a target="_blank" rel="noopener noreferrer" href={protocol.referenceLink}>
+                <span
+                    className={`${styles.base} ${styles.horizontal}`}
+                    style={{
+                        backgroundColor: protocol.backgroundColor,
+                        color: protocol.foregroundColor,
+                        fontSize: 13,
+                    }}
+                    title={protocol.abbr}
+                >
+                    {protocol.longName}
+                </span>
+            </a>
+        </Queryable>
     } else {
-        return <a target="_blank" rel="noopener noreferrer" href={protocol.referenceLink}>
+        return <Queryable
+            query={protocol.macro}
+            updateQuery={updateQuery}
+            displayIconOnMouseOver={true}
+            flipped={false}
+            iconStyle={{marginTop: "52px", marginRight: "10px", zIndex: 1000}}
+        >
             <span
                 className={`${styles.base} ${styles.vertical}`}
                 style={{
                     backgroundColor: protocol.backgroundColor,
                     color: protocol.foregroundColor,
                     fontSize: protocol.fontSize,
+                    marginRight: "-20px",
                 }}
                 title={protocol.longName}
             >
-                {protocol.abbreviation}
+                {protocol.abbr}
             </span>
-        </a>
+        </Queryable>
     }
 };
 

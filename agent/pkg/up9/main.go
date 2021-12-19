@@ -7,15 +7,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"mizuserver/pkg/database"
 	"mizuserver/pkg/utils"
 	"net/http"
 	"net/url"
 	"regexp"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/google/martian/har"
+	basenine "github.com/up9inc/basenine/client/go"
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/logger"
 	tapApi "github.com/up9inc/mizu/tap/api"
@@ -23,6 +24,7 @@ import (
 
 const (
 	AnalyzeCheckSleepTime = 5 * time.Second
+	SentCountLogInterval  = 100
 )
 
 type GuestToken struct {
@@ -110,14 +112,14 @@ func GetAnalyzeInfo() *shared.AnalyzeStatus {
 }
 
 func SyncEntries(syncEntriesConfig *shared.SyncEntriesConfig) error {
-	logger.Log.Infof("Sync entries - started\n")
+	logger.Log.Infof("Sync entries - started")
 
 	var (
 		token, model string
 		guestMode    bool
 	)
 	if syncEntriesConfig.Token == "" {
-		logger.Log.Infof("Sync entries - creating anonymous token. env %s\n", syncEntriesConfig.Env)
+		logger.Log.Infof("Sync entries - creating anonymous token. env %s", syncEntriesConfig.Env)
 		guestToken, err := createAnonymousToken(syncEntriesConfig.Env)
 		if err != nil {
 			return fmt.Errorf("failed creating anonymous token, err: %v", err)
@@ -131,7 +133,7 @@ func SyncEntries(syncEntriesConfig *shared.SyncEntriesConfig) error {
 		model = syncEntriesConfig.Workspace
 		guestMode = false
 
-		logger.Log.Infof("Sync entries - upserting model. env %s, model %s\n", syncEntriesConfig.Env, model)
+		logger.Log.Infof("Sync entries - upserting model. env %s, model %s", syncEntriesConfig.Env, model)
 		if err := upsertModel(token, model, syncEntriesConfig.Env); err != nil {
 			return fmt.Errorf("failed upserting model, err: %v", err)
 		}
@@ -142,7 +144,7 @@ func SyncEntries(syncEntriesConfig *shared.SyncEntriesConfig) error {
 		return fmt.Errorf("invalid model name, model name: %s", model)
 	}
 
-	logger.Log.Infof("Sync entries - syncing. token: %s, model: %s, guest mode: %v\n", token, model, guestMode)
+	logger.Log.Infof("Sync entries - syncing. token: %s, model: %s, guest mode: %v", token, model, guestMode)
 	go syncEntriesImpl(token, model, syncEntriesConfig.Env, syncEntriesConfig.UploadIntervalSec, guestMode)
 
 	return nil
@@ -204,51 +206,80 @@ func syncEntriesImpl(token string, model string, envPrefix string, uploadInterva
 	analyzeInformation.AnalyzeDestination = envPrefix
 	analyzeInformation.SentCount = 0
 
-	sleepTime := time.Second * time.Duration(uploadIntervalSec)
+	// "http or grpc" filter indicates that we're only interested in HTTP and gRPC entries
+	query := "http or grpc"
 
-	var timeFrom time.Time
-	protocolFilter := "http"
+	logger.Log.Infof("Getting entries from the database")
 
-	for {
-		timeTo := time.Now()
-		logger.Log.Infof("Getting entries from %v, to %v\n", timeFrom.Format(time.RFC3339Nano), timeTo.Format(time.RFC3339Nano))
-		entriesArray := database.GetEntriesFromDb(timeFrom, timeTo, &protocolFilter)
+	var connection *basenine.Connection
+	var err error
+	connection, err = basenine.NewConnection(shared.BasenineHost, shared.BaseninePort)
+	if err != nil {
+		panic(err)
+	}
 
-		if len(entriesArray) > 0 {
-			result := make([]har.Entry, 0)
-			for _, data := range entriesArray {
-				var pair tapApi.RequestResponsePair
-				if err := json.Unmarshal([]byte(data.Entry), &pair); err != nil {
-					continue
-				}
-				harEntry, err := utils.NewEntry(&pair)
-				if err != nil {
-					continue
-				}
-				if data.ResolvedSource != "" {
-					harEntry.Request.Headers = append(harEntry.Request.Headers, har.Header{Name: "x-mizu-source", Value: data.ResolvedSource})
-				}
-				if data.ResolvedDestination != "" {
-					harEntry.Request.Headers = append(harEntry.Request.Headers, har.Header{Name: "x-mizu-destination", Value: data.ResolvedDestination})
-					harEntry.Request.URL = utils.SetHostname(harEntry.Request.URL, data.ResolvedDestination)
-				}
+	data := make(chan []byte)
+	meta := make(chan []byte)
 
-				// go's default marshal behavior is to encode []byte fields to base64, python's default unmarshal behavior is to not decode []byte fields from base64
-				if harEntry.Response.Content.Text, err = base64.StdEncoding.DecodeString(string(harEntry.Response.Content.Text)); err != nil {
-					continue
-				}
+	defer func() {
+		data <- []byte(basenine.CloseChannel)
+		meta <- []byte(basenine.CloseChannel)
+		connection.Close()
+	}()
 
-				result = append(result, *harEntry)
+	lastTimeSynced := time.Time{}
+
+	batch := make([]har.Entry, 0)
+
+	handleDataChannel := func(wg *sync.WaitGroup, connection *basenine.Connection, data chan []byte) {
+		defer wg.Done()
+		for {
+			dataBytes := <-data
+
+			if string(dataBytes) == basenine.CloseChannel {
+				return
 			}
 
-			logger.Log.Infof("About to upload %v entries\n", len(result))
+			var dataMap map[string]interface{}
+			err = json.Unmarshal(dataBytes, &dataMap)
 
-			body, jMarshalErr := json.Marshal(result)
+			var entry tapApi.MizuEntry
+			if err := json.Unmarshal([]byte(dataBytes), &entry); err != nil {
+				continue
+			}
+			harEntry, err := utils.NewEntry(entry.Request, entry.Response, entry.StartTime, entry.ElapsedTime)
+			if err != nil {
+				continue
+			}
+			if entry.Source.Name != "" {
+				harEntry.Request.Headers = append(harEntry.Request.Headers, har.Header{Name: "x-mizu-source", Value: entry.Source.Name})
+			}
+			if entry.Destination.Name != "" {
+				harEntry.Request.Headers = append(harEntry.Request.Headers, har.Header{Name: "x-mizu-destination", Value: entry.Destination.Name})
+				harEntry.Request.URL = utils.SetHostname(harEntry.Request.URL, entry.Destination.Name)
+			}
+
+			// go's default marshal behavior is to encode []byte fields to base64, python's default unmarshal behavior is to not decode []byte fields from base64
+			if harEntry.Response.Content.Text, err = base64.StdEncoding.DecodeString(string(harEntry.Response.Content.Text)); err != nil {
+				continue
+			}
+
+			batch = append(batch, *harEntry)
+
+			now := time.Now()
+			if lastTimeSynced.Add(time.Duration(uploadIntervalSec) * time.Second).After(now) {
+				continue
+			}
+			lastTimeSynced = now
+
+			body, jMarshalErr := json.Marshal(batch)
+			batchSize := len(batch)
 			if jMarshalErr != nil {
 				analyzeInformation.Reset()
 				logger.Log.Infof("Stopping sync entries")
 				logger.Log.Fatal(jMarshalErr)
 			}
+			batch = make([]har.Entry, 0)
 
 			var in bytes.Buffer
 			w := zlib.NewWriter(&in)
@@ -273,18 +304,33 @@ func syncEntriesImpl(token string, model string, envPrefix string, uploadInterva
 				logger.Log.Info("Stopping sync entries")
 				logger.Log.Fatal(postErr)
 			}
-			analyzeInformation.SentCount += len(entriesArray)
-			logger.Log.Infof("Finish uploading %v entries to %s\n", len(entriesArray), GetTrafficDumpUrl(envPrefix, model))
+			analyzeInformation.SentCount += batchSize
 
-			logger.Log.Infof("Uploaded %v entries until now", analyzeInformation.SentCount)
-		} else {
-			logger.Log.Infof("Nothing to upload")
+			if analyzeInformation.SentCount%SentCountLogInterval == 0 {
+				logger.Log.Infof("Uploaded %v entries until now", analyzeInformation.SentCount)
+			}
 		}
-
-		logger.Log.Infof("Sleeping for %v...\n", sleepTime)
-		time.Sleep(sleepTime)
-		timeFrom = timeTo
 	}
+
+	handleMetaChannel := func(wg *sync.WaitGroup, connection *basenine.Connection, meta chan []byte) {
+		defer wg.Done()
+		for {
+			metaBytes := <-meta
+
+			if string(metaBytes) == basenine.CloseChannel {
+				return
+			}
+		}
+	}
+
+	var wg sync.WaitGroup
+	go handleDataChannel(&wg, connection, data)
+	go handleMetaChannel(&wg, connection, meta)
+	wg.Add(2)
+
+	connection.Query(query, data, meta)
+
+	wg.Wait()
 }
 
 func UpdateAnalyzeStatus(callback func(data []byte)) {

@@ -71,11 +71,11 @@ func isSoftExceptionCode(code int) bool {
 }
 
 type ConnectionStart struct {
-	VersionMajor     byte
-	VersionMinor     byte
-	ServerProperties Table
-	Mechanisms       string
-	Locales          string
+	VersionMajor     byte   `json:"versionMajor"`
+	VersionMinor     byte   `json:"versionMinor"`
+	ServerProperties Table  `json:"serverProperties"`
+	Mechanisms       string `json:"mechanisms"`
+	Locales          string `json:"locales"`
 }
 
 func (msg *ConnectionStart) id() (uint16, uint16) {
@@ -429,10 +429,10 @@ func (msg *connectionOpenOk) read(r io.Reader) (err error) {
 }
 
 type ConnectionClose struct {
-	ReplyCode uint16
-	ReplyText string
-	ClassId   uint16
-	MethodId  uint16
+	ReplyCode uint16 `json:"relyCode"`
+	ReplyText string `json:"replyText"`
+	ClassId   uint16 `json:"classId"`
+	MethodId  uint16 `json:"methodId"`
 }
 
 func (msg *ConnectionClose) id() (uint16, uint16) {
@@ -767,14 +767,14 @@ func (msg *channelCloseOk) read(r io.Reader) (err error) {
 
 type ExchangeDeclare struct {
 	reserved1  uint16
-	Exchange   string
-	Type       string
-	Passive    bool
-	Durable    bool
-	AutoDelete bool
-	Internal   bool
-	NoWait     bool
-	Arguments  Table
+	Exchange   string `json:"exchange"`
+	Type       string `json:"type"`
+	Passive    bool   `json:"passive"`
+	Durable    bool   `json:"durable"`
+	AutoDelete bool   `json:"autoDelete"`
+	Internal   bool   `json:"internal"`
+	NoWait     bool   `json:"noWait"`
+	Arguments  Table  `json:"arguments"`
 }
 
 func (msg *ExchangeDeclare) id() (uint16, uint16) {
@@ -1163,13 +1163,13 @@ func (msg *exchangeUnbindOk) read(r io.Reader) (err error) {
 
 type QueueDeclare struct {
 	reserved1  uint16
-	Queue      string
-	Passive    bool
-	Durable    bool
-	Exclusive  bool
-	AutoDelete bool
-	NoWait     bool
-	Arguments  Table
+	Queue      string `json:"queue"`
+	Passive    bool   `json:"passive"`
+	Durable    bool   `json:"durable"`
+	Exclusive  bool   `json:"exclusive"`
+	AutoDelete bool   `json:"autoDelete"`
+	NoWait     bool   `json:"noWait"`
+	Arguments  Table  `json:"arguments"`
 }
 
 func (msg *QueueDeclare) id() (uint16, uint16) {
@@ -1297,11 +1297,11 @@ func (msg *QueueDeclareOk) read(r io.Reader) (err error) {
 
 type QueueBind struct {
 	reserved1  uint16
-	Queue      string
-	Exchange   string
-	RoutingKey string
-	NoWait     bool
-	Arguments  Table
+	Queue      string `json:"queue"`
+	Exchange   string `json:"exchange"`
+	RoutingKey string `json:"routingKey"`
+	NoWait     bool   `json:"noWait"`
+	Arguments  Table  `json:"arguments"`
 }
 
 func (msg *QueueBind) id() (uint16, uint16) {
@@ -1737,13 +1737,13 @@ func (msg *basicQosOk) read(r io.Reader) (err error) {
 
 type BasicConsume struct {
 	reserved1   uint16
-	Queue       string
-	ConsumerTag string
-	NoLocal     bool
-	NoAck       bool
-	Exclusive   bool
-	NoWait      bool
-	Arguments   Table
+	Queue       string `json:"queue"`
+	ConsumerTag string `json:"consumerTag"`
+	NoLocal     bool   `json:"noLocal"`
+	NoAck       bool   `json:"noAck"`
+	Exclusive   bool   `json:"exclusive"`
+	NoWait      bool   `json:"noWait"`
+	Arguments   Table  `json:"arguments"`
 }
 
 func (msg *BasicConsume) id() (uint16, uint16) {
@@ -1932,12 +1932,12 @@ func (msg *basicCancelOk) read(r io.Reader) (err error) {
 
 type BasicPublish struct {
 	reserved1  uint16
-	Exchange   string
-	RoutingKey string
-	Mandatory  bool
-	Immediate  bool
-	Properties Properties
-	Body       []byte
+	Exchange   string     `json:"exchange"`
+	RoutingKey string     `json:"routingKey"`
+	Mandatory  bool       `json:"mandatory"`
+	Immediate  bool       `json:"immediate"`
+	Properties Properties `json:"properties"`
+	Body       []byte     `json:"body"`
 }
 
 func (msg *BasicPublish) id() (uint16, uint16) {
@@ -2072,13 +2072,13 @@ func (msg *basicReturn) read(r io.Reader) (err error) {
 }
 
 type BasicDeliver struct {
-	ConsumerTag string
-	DeliveryTag uint64
-	Redelivered bool
-	Exchange    string
-	RoutingKey  string
-	Properties  Properties
-	Body        []byte
+	ConsumerTag string     `json:"consumerTag"`
+	DeliveryTag uint64     `json:"deliveryTag"`
+	Redelivered bool       `json:"redelivered"`
+	Exchange    string     `json:"exchange"`
+	RoutingKey  string     `json:"routingKey"`
+	Properties  Properties `json:"properties"`
+	Body        []byte     `json:"body"`
 }
 
 func (msg *BasicDeliver) id() (uint16, uint16) {

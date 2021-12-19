@@ -1,43 +1,45 @@
-import {EntryItem} from "./EntryListItem/EntryListItem";
 import React, {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import styles from './style/EntriesList.module.sass';
-import spinner from './assets/spinner.svg';
 import ScrollableFeedVirtualized from "react-scrollable-feed-virtualized";
-import {StatusType} from "./Filters";
-import Api from "../helpers/api";
+import Moment from 'moment';
+import {EntryItem} from "./EntryListItem/EntryListItem";
 import down from "./assets/downImg.svg";
+import spinner from './assets/spinner.svg';
+import Api from "../helpers/api";
 
 interface EntriesListProps {
     entries: any[];
-    setEntries: (entries: any[]) => void;
-    focusedEntryId: string;
-    setFocusedEntryId: (id: string) => void;
-    connectionOpen: boolean;
+    setEntries: any;
+    query: string;
+    listEntryREF: any;
+    onSnapBrokenEvent: () => void;
+    isSnappedToBottom: boolean;
+    setIsSnappedToBottom: any;
+    queriedCurrent: number;
+    setQueriedCurrent: any;
+    queriedTotal: number;
+    setQueriedTotal: any;
+    startTime: number;
     noMoreDataTop: boolean;
     setNoMoreDataTop: (flag: boolean) => void;
-    noMoreDataBottom: boolean;
-    setNoMoreDataBottom: (flag: boolean) => void;
-    methodsFilter: Array<string>;
-    statusFilter: Array<string>;
-    pathFilter: string;
-    serviceFilter: string;
-    listEntryREF: any;
-    onScrollEvent: (isAtBottom:boolean) => void;
-    scrollableList: boolean;
-}
-
-enum FetchOperator {
-    LT = "lt",
-    GT = "gt"
+    focusedEntryId: string;
+    setFocusedEntryId: (id: string) => void;
+    updateQuery: any;
+    leftOffTop: number;
+    setLeftOffTop: (leftOffTop: number) => void;
+    isWebSocketConnectionClosed: boolean;
+    ws: any;
+    openWebSocket: (query: string, resetEntries: boolean) => void;
+    leftOffBottom: number;
+    truncatedTimestamp: number;
+    setTruncatedTimestamp: any;
 }
 
 const api = new Api();
 
-export const EntriesList: React.FC<EntriesListProps> = ({entries, setEntries, focusedEntryId, setFocusedEntryId, connectionOpen, noMoreDataTop, setNoMoreDataTop, noMoreDataBottom, setNoMoreDataBottom, methodsFilter, statusFilter, pathFilter, serviceFilter, listEntryREF, onScrollEvent, scrollableList}) => {
-
+export const EntriesList: React.FC<EntriesListProps> = ({entries, setEntries, query, listEntryREF, onSnapBrokenEvent, isSnappedToBottom, setIsSnappedToBottom, queriedCurrent, setQueriedCurrent, queriedTotal, setQueriedTotal, startTime, noMoreDataTop, setNoMoreDataTop, focusedEntryId, setFocusedEntryId, updateQuery, leftOffTop, setLeftOffTop, isWebSocketConnectionClosed, ws, openWebSocket, leftOffBottom, truncatedTimestamp, setTruncatedTimestamp}) => {
     const [loadMoreTop, setLoadMoreTop] = useState(false);
     const [isLoadingTop, setIsLoadingTop] = useState(false);
-
     const scrollableRef = useRef(null);
 
     useEffect(() => {
@@ -47,63 +49,57 @@ export const EntriesList: React.FC<EntriesListProps> = ({entries, setEntries, fo
             if(el.scrollTop === 0) {
                 setLoadMoreTop(true);
             } else {
+                setNoMoreDataTop(false);
                 setLoadMoreTop(false);
             }
         });
-    }, []);
+    }, [setLoadMoreTop, setNoMoreDataTop]);
 
-    const filterEntries = useCallback((entry) => {
-        if(methodsFilter.length > 0 && !methodsFilter.includes(entry.method.toLowerCase())) return;
-        if(pathFilter && entry.path?.toLowerCase()?.indexOf(pathFilter) === -1) return;
-        if(serviceFilter && entry.service?.toLowerCase()?.indexOf(serviceFilter) === -1) return;
-        if(statusFilter.includes(StatusType.SUCCESS) && entry.statusCode >= 400) return;
-        if(statusFilter.includes(StatusType.ERROR) && entry.statusCode < 400) return;
-        return entry;
-    },[methodsFilter, pathFilter, statusFilter, serviceFilter])
-
-    const filteredEntries = useMemo(() => {
-        return entries.filter(filterEntries);
-    },[entries, filterEntries])
+    const memoizedEntries = useMemo(() => {
+        return entries;
+    },[entries]);
 
     const getOldEntries = useCallback(async () => {
-        setIsLoadingTop(true);
-        const data = await api.fetchEntries(FetchOperator.LT, entries[0].timestamp);
         setLoadMoreTop(false);
-
-        let scrollTo;
-        if(data.length === 0) {
+        if (leftOffTop === null || leftOffTop <= 0) {
+            return;
+        }
+        setIsLoadingTop(true);
+        const data = await api.fetchEntries(leftOffTop, -1, query, 100, 3000);
+        if (!data || data.data === null || data.meta === null) {
             setNoMoreDataTop(true);
-            scrollTo = document.getElementById("noMoreDataTop");
+            setIsLoadingTop(false);
+            return;
+        }
+        setLeftOffTop(data.meta.leftOff);
+
+        let scrollTo: boolean;
+        if (data.meta.leftOff === 0) {
+            setNoMoreDataTop(true);
+            scrollTo = false;
         } else {
-            scrollTo = document.getElementById(filteredEntries?.[0]?.id);
+            scrollTo = true;
         }
         setIsLoadingTop(false);
-        const newEntries = [...data, ...entries];
+
+        const newEntries = [...data.data.reverse(), ...entries];
         setEntries(newEntries);
 
-        if(scrollTo) {
-            scrollTo.scrollIntoView();
+        setQueriedCurrent(queriedCurrent + data.meta.current);
+        setQueriedTotal(data.meta.total);
+        setTruncatedTimestamp(data.meta.truncatedTimestamp);
+
+        if (scrollTo) {
+            scrollableRef.current.scrollToIndex(data.data.length - 1);
         }
-    },[setLoadMoreTop, setIsLoadingTop, entries, setEntries, filteredEntries, setNoMoreDataTop])
+    },[setLoadMoreTop, setIsLoadingTop, entries, setEntries, query, setNoMoreDataTop, leftOffTop, setLeftOffTop, queriedCurrent, setQueriedCurrent, setQueriedTotal, setTruncatedTimestamp]);
 
     useEffect(() => {
-        if(!loadMoreTop || connectionOpen || noMoreDataTop) return;
+        if(!isWebSocketConnectionClosed || !loadMoreTop || noMoreDataTop) return;
         getOldEntries();
-    }, [loadMoreTop, connectionOpen, noMoreDataTop, getOldEntries]);
+    }, [loadMoreTop, noMoreDataTop, getOldEntries, isWebSocketConnectionClosed]);
 
-    const getNewEntries = async () => {
-        const data = await api.fetchEntries(FetchOperator.GT, entries[entries.length - 1].timestamp);
-        let scrollTo;
-        if(data.length === 0) {
-            setNoMoreDataBottom(true);
-        }
-        scrollTo = document.getElementById(filteredEntries?.[filteredEntries.length -1]?.id);
-        let newEntries = [...entries, ...data];
-        setEntries(newEntries);
-        if(scrollTo) {
-            scrollTo.scrollIntoView({behavior: "smooth"});
-        }
-    }
+    const scrollbarVisible = scrollableRef.current?.childWrapperRef.current.clientHeight > scrollableRef.current?.wrapperRef.current.clientHeight;
 
     return <>
             <div className={styles.list}>
@@ -111,28 +107,50 @@ export const EntriesList: React.FC<EntriesListProps> = ({entries, setEntries, fo
                     {isLoadingTop && <div className={styles.spinnerContainer}>
                         <img alt="spinner" src={spinner} style={{height: 25}}/>
                     </div>}
-                    <ScrollableFeedVirtualized ref={scrollableRef} itemHeight={48} marginTop={10} onScroll={(isAtBottom) => onScrollEvent(isAtBottom)}>
-                        {noMoreDataTop && !connectionOpen && <div id="noMoreDataTop" className={styles.noMoreDataAvailable}>No more data available</div>}
-                        {filteredEntries.map(entry => <EntryItem key={entry.id}
-                                                        entry={entry}
-                                                        setFocusedEntryId={setFocusedEntryId}
-                                                        isSelected={focusedEntryId === entry.id}
-                                                        style={{}}/>)}
+                    {noMoreDataTop && <div id="noMoreDataTop" className={styles.noMoreDataAvailable}>No more data available</div>}
+                    <ScrollableFeedVirtualized ref={scrollableRef} itemHeight={48} marginTop={10} onSnapBroken={onSnapBrokenEvent}>
+                        {false /* It's because the first child is ignored by ScrollableFeedVirtualized */}
+                        {memoizedEntries.map(entry => <EntryItem
+                            key={`entry-${entry.id}`}
+                            entry={entry}
+                            focusedEntryId={focusedEntryId}
+                            setFocusedEntryId={setFocusedEntryId}
+                            style={{}}
+                            updateQuery={updateQuery}
+                            headingMode={false}
+                        />)}
                     </ScrollableFeedVirtualized>
-                    {!connectionOpen && !noMoreDataBottom && <div className={styles.fetchButtonContainer}>
-                        <div className={styles.styledButton} onClick={() => getNewEntries()}>Fetch more entries</div>
-                    </div>}
                     <button type="button"
-                        className={`${styles.btnLive} ${scrollableList ? styles.showButton : styles.hideButton}`}
-                        onClick={(_) => scrollableRef.current.jumpToBottom()}>
+                        title="Fetch old records"
+                        className={`${styles.btnOld} ${!scrollbarVisible && leftOffTop > 0 ? styles.showButton : styles.hideButton}`}
+                        onClick={(_) => {
+                            ws.close();
+                            getOldEntries();
+                        }}>
+                        <img alt="down" src={down} />
+                    </button>
+                    <button type="button"
+                        title="Snap to bottom"
+                        className={`${styles.btnLive} ${isSnappedToBottom && !isWebSocketConnectionClosed ? styles.hideButton : styles.showButton}`}
+                        onClick={(_) => {
+                            if (isWebSocketConnectionClosed) {
+                                if (query) {
+                                    openWebSocket(`(${query}) and leftOff(${leftOffBottom})`, false);
+                                } else {
+                                    openWebSocket(`leftOff(${leftOffBottom})`, false);
+                                }
+                            }
+                            scrollableRef.current.jumpToBottom();
+                            setIsSnappedToBottom(true);
+                        }}>
                         <img alt="down" src={down} />
                     </button>
                 </div>
 
-                {entries?.length > 0 && <div className={styles.footer}>
-                    <div><b>{filteredEntries?.length !== entries.length && `${filteredEntries?.length} / `} {entries?.length}</b> requests</div>
-                    <div>Started listening at <span style={{marginRight: 5, fontWeight: 600, fontSize: 13}}>{new Date(+entries[0].timestamp)?.toLocaleString()}</span></div>
-                </div>}
+                <div className={styles.footer}>
+                    <div>Displaying <b>{entries?.length}</b> results out of <b>{queriedTotal}</b> total</div>
+                    {startTime !== 0 && <div>Started listening at <span style={{marginRight: 5, fontWeight: 600, fontSize: 13}}>{Moment(truncatedTimestamp ? truncatedTimestamp : startTime).utc().format('MM/DD/YYYY, h:mm:ss.SSS A')}</span></div>}
+                </div>
             </div>
     </>;
 };

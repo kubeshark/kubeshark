@@ -66,7 +66,7 @@ func (h *tcpReader) Read(p []byte) (int, error) {
 			clientHello := tlsx.ClientHello{}
 			err := clientHello.Unmarshall(msg.bytes)
 			if err == nil {
-				logger.Log.Debugf("Detected TLS client hello with SNI %s\n", clientHello.SNI)
+				logger.Log.Debugf("Detected TLS client hello with SNI %s", clientHello.SNI)
 				// TODO: Throws `panic: runtime error: invalid memory address or nil pointer dereference` error.
 				// numericPort, _ := strconv.Atoi(h.tcpID.DstPort)
 				// h.outboundLinkWriter.WriteOutboundLink(h.tcpID.SrcIP, h.tcpID.DstIP, numericPort, clientHello.SNI, TLSProtocol)

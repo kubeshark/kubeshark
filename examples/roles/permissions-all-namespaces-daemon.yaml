@@ -7,15 +7,15 @@ rules:
   - apiGroups: [""]
     resources: ["pods"]
     verbs: ["get", "list", "watch", "delete"]
-  - apiGroups: [ "" ]
+  - apiGroups: [ "apps" ]
     resources: [ "deployments" ]
-    verbs: [ "create", "delete" ]
+    verbs: [ "get", "create", "delete" ]
   - apiGroups: [""]
     resources: ["services"]
     verbs: ["get", "list", "watch", "create", "delete"]
   - apiGroups: ["apps"]
     resources: ["daemonsets"]
-    verbs: ["create", "patch", "delete"]
+    verbs: ["get", "create", "patch", "delete", "list"]
   - apiGroups: [""]
     resources: ["namespaces"]
     verbs: ["get", "list", "watch", "create", "delete"]
@@ -49,6 +49,9 @@ rules:
   - apiGroups: ["", "apps", "extensions"]
     resources: ["endpoints"]
     verbs: ["get", "list", "watch"]
+  - apiGroups: ["events.k8s.io"]
+    resources: ["events"]
+    verbs: ["list", "watch"]
 ---
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1

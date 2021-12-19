@@ -3,11 +3,12 @@ package utils
 import (
 	"context"
 	"fmt"
+	"mizuserver/pkg/providers"
 	"net/http"
 	"net/url"
 	"os"
 	"os/signal"
-	"reflect"
+	"strings"
 	"syscall"
 	"time"
 
@@ -44,15 +45,13 @@ func StartServer(app *gin.Engine) {
 	}
 }
 
-func ReverseSlice(data interface{}) {
-	value := reflect.ValueOf(data)
-	valueLen := value.Len()
-	for i := 0; i <= int((valueLen-1)/2); i++ {
-		reverseIndex := valueLen - 1 - i
-		tmp := value.Index(reverseIndex).Interface()
-		value.Index(reverseIndex).Set(value.Index(i))
-		value.Index(i).Set(reflect.ValueOf(tmp))
+func GetTappedPodsStatus() []shared.TappedPodStatus {
+	tappedPodsStatus := make([]shared.TappedPodStatus, 0)
+	for _, pod := range providers.TapStatus.Pods {
+		isTapped := strings.ToLower(providers.TappersStatus[pod.NodeName].Status) == "started"
+		tappedPodsStatus = append(tappedPodsStatus, shared.TappedPodStatus{Name: pod.Name, Namespace: pod.Namespace, IsTapped: isTapped})
 	}
+	return tappedPodsStatus
 }
 
 func CheckErr(e error) {

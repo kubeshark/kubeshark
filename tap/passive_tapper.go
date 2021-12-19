@@ -20,6 +20,7 @@ import (
 	"github.com/up9inc/mizu/tap/api"
 	"github.com/up9inc/mizu/tap/diagnose"
 	"github.com/up9inc/mizu/tap/source"
+	v1 "k8s.io/api/core/v1"
 )
 
 const cleanPeriod = time.Second * 10
@@ -40,6 +41,7 @@ var verbose = flag.Bool("verbose", false, "Be verbose")
 var debug = flag.Bool("debug", false, "Display debug information")
 var quiet = flag.Bool("quiet", false, "Be quiet regarding errors")
 var hexdumppkt = flag.Bool("dumppkt", false, "Dump packet as hex")
+var procfs = flag.String("procfs", "/proc", "The procfs directory, used when mapping host volumes into a container")
 
 // capture
 var iface = flag.String("i", "en0", "Interface to read packets from")
@@ -48,14 +50,16 @@ var snaplen = flag.Int("s", 65536, "Snap length (number of bytes max to read per
 var tstype = flag.String("timestamp_type", "", "Type of timestamps to use")
 var promisc = flag.Bool("promisc", true, "Set promiscuous mode")
 var staleTimeoutSeconds = flag.Int("staletimout", 120, "Max time in seconds to keep connections which don't transmit data")
+var pids = flag.String("pids", "", "A comma separated list of PIDs to capture their network namespaces")
+var istio = flag.Bool("istio", false, "Record decrypted traffic if the cluster configured with istio and mtls")
 
 var memprofile = flag.String("memprofile", "", "Write memory profile")
 
 type TapOpts struct {
-	HostMode bool
+	HostMode          bool
+	FilterAuthorities []v1.Pod
 }
 
-var hostMode bool                                 // global
 var extensions []*api.Extension                   // global
 var filteringOptions *api.TrafficFilteringOptions // global
 
@@ -78,15 +82,18 @@ func inArrayString(arr []string, valueToCheck string) bool {
 }
 
 func StartPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem, extensionsRef []*api.Extension, options *api.TrafficFilteringOptions) {
-	hostMode = opts.HostMode
 	extensions = extensionsRef
 	filteringOptions = options
+
+	if opts.FilterAuthorities == nil {
+		opts.FilterAuthorities = []v1.Pod{}
+	}
 
 	if GetMemoryProfilingEnabled() {
 		diagnose.StartMemoryProfiler(os.Getenv(MemoryProfilingDumpPath), os.Getenv(MemoryProfilingTimeIntervalSeconds))
 	}
 
-	go startPassiveTapper(outputItems)
+	go startPassiveTapper(opts, outputItems)
 }
 
 func printPeriodicStats(cleaner *Cleaner) {
@@ -129,44 +136,49 @@ func printPeriodicStats(cleaner *Cleaner) {
 	}
 }
 
-func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
-	streamsMap := NewTcpStreamMap()
-	go streamsMap.closeTimedoutTcpStreamChannels()
-
-	diagnose.InitializeErrorsMap(*debug, *verbose, *quiet)
-	diagnose.InitializeTapperInternalStats()
-
+func initializePacketSources(opts *TapOpts) (*source.PacketSourceManager, error) {
 	var bpffilter string
 	if len(flag.Args()) > 0 {
 		bpffilter = strings.Join(flag.Args(), " ")
 	}
 
-	packetSource, err := source.NewTcpPacketSource(*fname, *iface, source.TcpPacketSourceBehaviour{
+	behaviour := source.TcpPacketSourceBehaviour{
 		SnapLength:  *snaplen,
 		Promisc:     *promisc,
 		Tstype:      *tstype,
 		DecoderName: *decoder,
 		Lazy:        *lazy,
 		BpfFilter:   bpffilter,
-	})
+	}
+
+	return source.NewPacketSourceManager(*procfs, *pids, *fname, *iface, *istio, opts.FilterAuthorities, behaviour)
+}
+
+func startPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem) {
+	streamsMap := NewTcpStreamMap()
+	go streamsMap.closeTimedoutTcpStreamChannels()
+
+	diagnose.InitializeErrorsMap(*debug, *verbose, *quiet)
+	diagnose.InitializeTapperInternalStats()
+
+	sources, err := initializePacketSources(opts)
 
 	if err != nil {
 		logger.Log.Fatal(err)
 	}
 
-	defer packetSource.Close()
+	defer sources.Close()
 
 	if err != nil {
 		logger.Log.Fatal(err)
 	}
 
 	packets := make(chan source.TcpPacketInfo)
-	assembler := NewTcpAssembler(outputItems, streamsMap)
+	assembler := NewTcpAssembler(outputItems, streamsMap, opts)
 
-	logger.Log.Info("Starting to read packets")
 	diagnose.AppStats.SetStartTime(time.Now())
 
-	go packetSource.ReadPackets(!*nodefrag, packets)
+	sources.ReadPackets(!*nodefrag, packets)
 
 	staleConnectionTimeout := time.Second * time.Duration(*staleTimeoutSeconds)
 	cleaner := Cleaner{
@@ -186,7 +198,7 @@ func startPassiveTapper(outputItems chan *api.OutputChannelItem) {
 	}
 
 	if err := diagnose.DumpMemoryProfile(*memprofile); err != nil {
-		logger.Log.Errorf("Error dumping memory profile %v\n", err)
+		logger.Log.Errorf("Error dumping memory profile %v", err)
 	}
 
 	assembler.waitAndDump()

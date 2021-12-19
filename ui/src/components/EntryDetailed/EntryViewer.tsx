@@ -8,7 +8,7 @@ enum SectionTypes {
     SectionBody = "body",
 }
 
-const SectionsRepresentation: React.FC<any> = ({data, color}) => {
+const SectionsRepresentation: React.FC<any> = ({data, color, updateQuery}) => {
     const sections = []
 
     if (data) {
@@ -16,12 +16,12 @@ const SectionsRepresentation: React.FC<any> = ({data, color}) => {
             switch (row.type) {
                 case SectionTypes.SectionTable:
                     sections.push(
-                        <EntryTableSection key={i} title={row.title} color={color} arrayToIterate={JSON.parse(row.data)}/>
+                        <EntryTableSection key={i} title={row.title} color={color} arrayToIterate={JSON.parse(row.data)} updateQuery={updateQuery}/>
                     )
                     break;
                 case SectionTypes.SectionBody:
                     sections.push(
-                        <EntryBodySection key={i} color={color} content={row.data} encoding={row.encoding} contentType={row.mime_type}/>
+                        <EntryBodySection key={i} color={color} content={row.data} updateQuery={updateQuery} encoding={row.encoding} contentType={row.mimeType} selector={row.selector}/>
                     )
                     break;
                 default:
@@ -33,7 +33,7 @@ const SectionsRepresentation: React.FC<any> = ({data, color}) => {
     return <>{sections}</>;
 }
 
-const AutoRepresentation: React.FC<any> = ({representation, isRulesEnabled, rulesMatched, contractStatus, requestReason, responseReason, contractContent, elapsedTime, color}) => {
+const AutoRepresentation: React.FC<any> = ({representation, isRulesEnabled, rulesMatched, contractStatus, requestReason, responseReason, contractContent, elapsedTime, color, updateQuery}) => {
     var TABS = [
         {
             tab: 'Request'
@@ -85,10 +85,10 @@ const AutoRepresentation: React.FC<any> = ({representation, isRulesEnabled, rule
                 <Tabs tabs={TABS} currentTab={currentTab} color={color} onChange={setCurrentTab} leftAligned/>
             </div>
             {currentTab === TABS[0].tab && <React.Fragment>
-                <SectionsRepresentation data={request} color={color}/>
+                <SectionsRepresentation data={request} color={color} updateQuery={updateQuery}/>
             </React.Fragment>}
             {response && currentTab === TABS[responseTabIndex].tab && <React.Fragment>
-                <SectionsRepresentation data={response} color={color}/>
+                <SectionsRepresentation data={response} color={color} updateQuery={updateQuery}/>
             </React.Fragment>}
             {isRulesEnabled && currentTab === TABS[rulesTabIndex].tab && <React.Fragment>
                 <EntryTablePolicySection title={'Rule'} color={color} latency={elapsedTime} arrayToIterate={rulesMatched ? rulesMatched : []}/>
@@ -110,9 +110,10 @@ interface Props {
     contractContent: string;
     color: string;
     elapsedTime: number;
+    updateQuery: any;
 }
 
-const EntryViewer: React.FC<Props> = ({representation, isRulesEnabled, rulesMatched, contractStatus, requestReason, responseReason, contractContent, elapsedTime, color}) => {
+const EntryViewer: React.FC<Props> = ({representation, isRulesEnabled, rulesMatched, contractStatus, requestReason, responseReason, contractContent, elapsedTime, color, updateQuery}) => {
     return <AutoRepresentation
         representation={representation}
         isRulesEnabled={isRulesEnabled}
@@ -123,6 +124,7 @@ const EntryViewer: React.FC<Props> = ({representation, isRulesEnabled, rulesMatc
         contractContent={contractContent}
         elapsedTime={elapsedTime}
         color={color}
+        updateQuery={updateQuery}
     />
 };
 

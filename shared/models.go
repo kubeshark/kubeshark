@@ -1,9 +1,10 @@
 package shared
 
 import (
+	"github.com/op/go-logging"
+	"github.com/up9inc/mizu/shared/logger"
 	"github.com/up9inc/mizu/tap/api"
 	"io/ioutil"
-	"log"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -17,6 +18,9 @@ const (
 	WebSocketMessageTypeUpdateStatus  WebSocketMessageType = "status"
 	WebSocketMessageTypeAnalyzeStatus WebSocketMessageType = "analyzeStatus"
 	WebsocketMessageTypeOutboundLink  WebSocketMessageType = "outboundLink"
+	WebSocketMessageTypeToast         WebSocketMessageType = "toast"
+	WebSocketMessageTypeQueryMetadata WebSocketMessageType = "queryMetadata"
+	WebSocketMessageTypeStartTime     WebSocketMessageType = "startTime"
 )
 
 type Resources struct {
@@ -33,12 +37,13 @@ type MizuAgentConfig struct {
 	TargetNamespaces        []string                    `json:"targetNamespaces"`
 	AgentImage              string                      `json:"agentImage"`
 	PullPolicy              string                      `json:"pullPolicy"`
-	DumpLogs                bool                        `json:"dumpLogs"`
+	LogLevel                logging.Level               `json:"logLevel"`
 	IgnoredUserAgents       []string                    `json:"ignoredUserAgents"`
 	TapperResources         Resources                   `json:"tapperResources"`
 	MizuResourcesNamespace  string                      `json:"mizuResourceNamespace"`
 	MizuApiFilteringOptions api.TrafficFilteringOptions `json:"mizuApiFilteringOptions"`
 	AgentDatabasePath       string                      `json:"agentDatabasePath"`
+	Istio                   bool                        `json:"istio"`
 }
 
 type WebSocketMessageMetadata struct {
@@ -59,17 +64,29 @@ type AnalyzeStatus struct {
 
 type WebSocketStatusMessage struct {
 	*WebSocketMessageMetadata
-	TappingStatus TapStatus `json:"tappingStatus"`
+	TappingStatus []TappedPodStatus `json:"tappingStatus"`
+}
+
+type TapperStatus struct {
+	TapperName string `json:"tapperName"`
+	NodeName   string `json:"nodeName"`
+	Status     string `json:"status"`
+}
+
+type TappedPodStatus struct {
+	Name      string `json:"name"`
+	Namespace string `json:"namespace"`
+	IsTapped  bool   `json:"isTapped"`
 }
 
 type TapStatus struct {
-	Pods     []PodInfo     `json:"pods"`
-	TLSLinks []TLSLinkInfo `json:"tlsLinks"`
+	Pods []PodInfo `json:"pods"`
 }
 
 type PodInfo struct {
 	Namespace string `json:"namespace"`
 	Name      string `json:"name"`
+	NodeName  string `json:"nodeName"`
 }
 
 type TLSLinkInfo struct {
@@ -86,12 +103,12 @@ type SyncEntriesConfig struct {
 	UploadIntervalSec int    `json:"interval"`
 }
 
-func CreateWebSocketStatusMessage(tappingStatus TapStatus) WebSocketStatusMessage {
+func CreateWebSocketStatusMessage(tappedPodsStatus []TappedPodStatus) WebSocketStatusMessage {
 	return WebSocketStatusMessage{
 		WebSocketMessageMetadata: &WebSocketMessageMetadata{
 			MessageType: WebSocketMessageTypeUpdateStatus,
 		},
-		TappingStatus: tappingStatus,
+		TappingStatus: tappedPodsStatus,
 	}
 }
 
@@ -105,8 +122,9 @@ func CreateWebSocketMessageTypeAnalyzeStatus(analyzeStatus AnalyzeStatus) WebSoc
 }
 
 type HealthResponse struct {
-	TapStatus    TapStatus `json:"tapStatus"`
-	TappersCount int       `json:"tappersCount"`
+	TapStatus     TapStatus      `json:"tapStatus"`
+	TappersCount  int            `json:"tappersCount"`
+	TappersStatus []TapperStatus `json:"tappersStatus"`
 }
 
 type VersionResponse struct {
@@ -137,14 +155,12 @@ func (r *RulePolicy) validateType() bool {
 	permitedTypes := []string{"json", "header", "slo"}
 	_, found := Find(permitedTypes, r.Type)
 	if !found {
-		log.Printf("Error: %s. ", r.Name)
-		log.Printf("Only json, header and slo types are supported on rule definition. This rule will be ignored\n")
+		logger.Log.Errorf("Only json, header and slo types are supported on rule definition. This rule will be ignored. rule name: %s", r.Name)
 		found = false
 	}
 	if strings.ToLower(r.Type) == "slo" {
 		if r.ResponseTime <= 0 {
-			log.Printf("Error: %s. ", r.Name)
-			log.Printf("When type=slo, the field response-time should be specified and have a value >= 1\n\n")
+			logger.Log.Errorf("When rule type is slo, the field response-time should be specified and have a value >= 1. rule name: %s", r.Name)
 			found = false
 		}
 	}

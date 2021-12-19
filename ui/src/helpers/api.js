@@ -1,16 +1,16 @@
 import * as axios from "axios";
 
-const mizuAPIPathPrefix = "/mizu";
-
 // When working locally cp `cp .env.example .env`
-export const MizuWebsocketURL = process.env.REACT_APP_OVERRIDE_WS_URL ? process.env.REACT_APP_OVERRIDE_WS_URL : `ws://${window.location.host}${mizuAPIPathPrefix}/ws`;
+export const MizuWebsocketURL = process.env.REACT_APP_OVERRIDE_WS_URL ? process.env.REACT_APP_OVERRIDE_WS_URL : `ws://${window.location.host}/ws`;
+
+const CancelToken = axios.CancelToken;
 
 export default class Api {
 
     constructor() {
 
         // When working locally cp `cp .env.example .env`
-        const apiURL = process.env.REACT_APP_OVERRIDE_API_URL ? process.env.REACT_APP_OVERRIDE_API_URL : `${window.location.origin}${mizuAPIPathPrefix}/`;
+        const apiURL = process.env.REACT_APP_OVERRIDE_API_URL ? process.env.REACT_APP_OVERRIDE_API_URL : `${window.location.origin}/`;
 
         this.client = axios.create({
             baseURL: apiURL,
@@ -19,6 +19,8 @@ export default class Api {
                 Accept: "application/json",
             }
         });
+
+        this.source = null;
     }
 
     tapStatus = async () => {
@@ -31,13 +33,16 @@ export default class Api {
         return response.data;
     }
 
-    getEntry = async (entryId) => {
-        const response = await this.client.get(`/entries/${entryId}`);
+    getEntry = async (id) => {
+        const response = await this.client.get(`/entries/${id}`);
         return response.data;
     }
 
-    fetchEntries = async (operator, timestamp) => {
-        const response = await this.client.get(`/entries?limit=50&operator=${operator}&timestamp=${timestamp}`);
+    fetchEntries = async (leftOff, direction, query, limit, timeoutMs) => {
+        const response = await this.client.get(`/entries/?leftOff=${leftOff}&direction=${direction}&query=${query}&limit=${limit}&timeoutMs=${timeoutMs}`).catch(function (thrown) {
+            console.error(thrown.message);
+            return {};
+        });
         return response.data;
     }
 
@@ -48,6 +53,29 @@ export default class Api {
 
     getAuthStatus = async () => {
         const response = await this.client.get("/status/auth");
+        return response.data;
+    }
+
+    validateQuery = async (query) => {
+        if (this.source) {
+            this.source.cancel();
+        }
+        this.source = CancelToken.source();
+
+        const form = new FormData();
+        form.append('query', query)
+        const response = await this.client.post(`/query/validate`, form, {
+            cancelToken: this.source.token
+        }).catch(function (thrown) {
+            if (!axios.isCancel(thrown)) {
+                console.error('Validate error', thrown.message);
+            }
+        });
+
+        if (!response) {
+            return null;
+        }
+
         return response.data;
     }
 }

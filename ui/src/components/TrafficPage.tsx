@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from "react";
+import React, {useEffect, useMemo, useRef, useState} from "react";
 import {Filters} from "./Filters";
 import {EntriesList} from "./EntriesList";
 import {makeStyles} from "@material-ui/core";
@@ -10,6 +10,9 @@ import pauseIcon from './assets/pause.svg';
 import variables from '../variables.module.scss';
 import {StatusBar} from "./UI/StatusBar";
 import Api, {MizuWebsocketURL} from "../helpers/api";
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import debounce from 'lodash/debounce';
 
 const useLayoutStyles = makeStyles(() => ({
     details: {
@@ -18,7 +21,7 @@ const useLayoutStyles = makeStyles(() => ({
         padding: "12px 24px",
         borderRadius: 4,
         marginTop: 15,
-        background: variables.headerBackgoundColor,
+        background: variables.headerBackgroundColor,
     },
 
     viewer: {
@@ -34,7 +37,6 @@ const useLayoutStyles = makeStyles(() => ({
 enum ConnectionStatus {
     Closed,
     Connected,
-    Paused
 }
 
 interface TrafficPageProps {
@@ -52,26 +54,82 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
     const [focusedEntryId, setFocusedEntryId] = useState(null);
     const [selectedEntryData, setSelectedEntryData] = useState(null);
     const [connection, setConnection] = useState(ConnectionStatus.Closed);
-    const [noMoreDataTop, setNoMoreDataTop] = useState(false);
-    const [noMoreDataBottom, setNoMoreDataBottom] = useState(false);
 
-    const [methodsFilter, setMethodsFilter] = useState([]);
-    const [statusFilter, setStatusFilter] = useState([]);
-    const [pathFilter, setPathFilter] = useState("");
-    const [serviceFilter, setServiceFilter] = useState("");
+    const [noMoreDataTop, setNoMoreDataTop] = useState(false);
 
     const [tappingStatus, setTappingStatus] = useState(null);
 
-    const [disableScrollList, setDisableScrollList] = useState(false);
+    const [isSnappedToBottom, setIsSnappedToBottom] = useState(true);
+
+    const [query, setQuery] = useState("");
+    const [queryBackgroundColor, setQueryBackgroundColor] = useState("#f5f5f5");
+    const [addition, updateQuery] = useState("");
+
+    const [queriedCurrent, setQueriedCurrent] = useState(0);
+    const [queriedTotal, setQueriedTotal] = useState(0);
+    const [leftOffBottom, setLeftOffBottom] = useState(0);
+    const [leftOffTop, setLeftOffTop] = useState(null);
+    const [truncatedTimestamp, setTruncatedTimestamp] = useState(0);
+
+    const [startTime, setStartTime] = useState(0);
+
+    const handleQueryChange = useMemo(() => debounce(async (query: string) => {
+        if (!query) {
+            setQueryBackgroundColor("#f5f5f5")
+        } else {
+            const data = await api.validateQuery(query);
+            if (!data) {
+                return;
+            }
+            if (data.valid) {
+                setQueryBackgroundColor("#d2fad2");
+            } else {
+                setQueryBackgroundColor("#fad6dc");
+            }
+        }
+    }, 500), []) as (query: string) => void;
+
+    useEffect(() => {
+        handleQueryChange(query);
+    }, [query]);
+
+    useEffect(() => {
+        if (query) {
+            setQuery(`${query} and ${addition}`);
+        } else {
+            setQuery(addition);
+        }
+        // eslint-disable-next-line
+    }, [addition]);
 
     const ws = useRef(null);
 
     const listEntry = useRef(null);
 
-    const openWebSocket = () => {
+    const openWebSocket = (query: string, resetEntries: boolean) => {
+        if (resetEntries) {
+            setFocusedEntryId(null);
+            setEntries([]);
+            setQueriedCurrent(0);
+            setLeftOffTop(null);
+            setNoMoreDataTop(false);
+        }
         ws.current = new WebSocket(MizuWebsocketURL);
-        ws.current.onopen = () => setConnection(ConnectionStatus.Connected);
-        ws.current.onclose = () => setConnection(ConnectionStatus.Closed);
+        ws.current.onopen = () => {
+            setConnection(ConnectionStatus.Connected);
+            ws.current.send(query);
+        }
+        ws.current.onclose = () => {
+            setConnection(ConnectionStatus.Closed);
+        }
+        ws.current.onerror = (event) => {
+            console.error("WebSocket error:", event);
+            if (query) {
+                openWebSocket(`(${query}) and leftOff(${leftOffBottom})`, false);
+            } else {
+                openWebSocket(`leftOff(${leftOffBottom})`, false);
+            }
+        }
     }
 
     if (ws.current) {
@@ -80,19 +138,15 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
             const message = JSON.parse(e.data);
             switch (message.messageType) {
                 case "entry":
-                    const entry = message.data
-                    if (connection === ConnectionStatus.Paused) {
-                        setNoMoreDataBottom(false)
-                        return;
+                    const entry = message.data;
+                    if (!focusedEntryId) setFocusedEntryId(entry.id.toString())
+                    const newEntries = [...entries, entry];
+                    if (newEntries.length === 10001) {
+                        setLeftOffTop(newEntries[0].entry.id);
+                        newEntries.shift();
+                        setNoMoreDataTop(false);
                     }
-                    if (!focusedEntryId) setFocusedEntryId(entry.id)
-                    let newEntries = [...entries];
-                    setEntries([...newEntries, entry])
-                    if(listEntry.current) {
-                        if(isScrollable(listEntry.current.firstChild)) {
-                            setDisableScrollList(true)
-                        }
-                    }
+                    setEntries(newEntries);
                     break
                 case "status":
                     setTappingStatus(message.tappingStatus);
@@ -103,6 +157,30 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                 case "outboundLink":
                     onTLSDetected(message.Data.DstIP);
                     break;
+                case "toast":
+                    toast[message.data.type](message.data.text, {
+                        position: "bottom-right",
+                        theme: "colored",
+                        autoClose: message.data.autoClose,
+                        hideProgressBar: false,
+                        closeOnClick: true,
+                        pauseOnHover: true,
+                        draggable: true,
+                        progress: undefined,
+                    });
+                    break;
+                case "queryMetadata":
+                    setQueriedCurrent(queriedCurrent + message.data.current);
+                    setQueriedTotal(message.data.total);
+                    setLeftOffBottom(message.data.leftOff);
+                    setTruncatedTimestamp(message.data.truncatedTimestamp);
+                    if (leftOffTop === null) {
+                        setLeftOffTop(message.data.leftOff - 1);
+                    }
+                    break;
+                case "startTime":
+                    setStartTime(message.data);
+                    break;
                 default:
                     console.error(`unsupported websocket message type, Got: ${message.messageType}`)
             }
@@ -111,7 +189,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
 
     useEffect(() => {
         (async () => {
-            openWebSocket();
+            openWebSocket("leftOff(-1)", true);
             try{
                 const tapStatusResponse = await api.tapStatus();
                 setTappingStatus(tapStatusResponse);
@@ -133,20 +211,38 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                 const entryData = await api.getEntry(focusedEntryId);
                 setSelectedEntryData(entryData);
             } catch (error) {
+                if (error.response) {
+                    toast[error.response.data.type](`Entry[${focusedEntryId}]: ${error.response.data.msg}`, {
+                        position: "bottom-right",
+                        theme: "colored",
+                        autoClose: error.response.data.autoClose,
+                        hideProgressBar: false,
+                        closeOnClick: true,
+                        pauseOnHover: true,
+                        draggable: true,
+                        progress: undefined,
+                    });
+                }
                 console.error(error);
             }
-        })()
-    }, [focusedEntryId])
+        })();
+        // eslint-disable-next-line
+    }, [focusedEntryId]);
 
     const toggleConnection = () => {
-        setConnection(connection === ConnectionStatus.Connected ? ConnectionStatus.Paused : ConnectionStatus.Connected);
+        ws.current.close();
+        if (connection !== ConnectionStatus.Connected) {
+            if (query) {
+                openWebSocket(`(${query}) and leftOff(-1)`, true);
+            } else {
+                openWebSocket(`leftOff(-1)`, true);
+            }
+        }
     }
 
     const getConnectionStatusClass = (isContainer) => {
         const container = isContainer ? "Container" : "";
         switch (connection) {
-            case ConnectionStatus.Paused:
-                return "orangeIndicator" + container;
             case ConnectionStatus.Connected:
                 return "greenIndicator" + container;
             default:
@@ -156,28 +252,27 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
 
     const getConnectionTitle = () => {
         switch (connection) {
-            case ConnectionStatus.Paused:
-                return "traffic paused";
             case ConnectionStatus.Connected:
-                return "connected, waiting for traffic"
+                return "streaming live traffic"
             default:
-                return "not connected";
+                return "streaming paused";
         }
     }
 
-    const onScrollEvent = (isAtBottom) => {
-        isAtBottom ? setDisableScrollList(false) : setDisableScrollList(true)
+    const onSnapBrokenEvent = () => {
+        setIsSnappedToBottom(false);
+        if (connection === ConnectionStatus.Connected) {
+            ws.current.close();
+        }
     }
-
-    const isScrollable = (element) => {
-        return element.scrollHeight > element.clientHeight;
-    };
 
     return (
         <div className="TrafficPage">
             <div className="TrafficPageHeader">
-                {connection !== ConnectionStatus.Closed && <img style={{cursor: "pointer", marginRight: 15, height: 30}} alt="pause"
-                     src={connection === ConnectionStatus.Connected ? pauseIcon : playIcon} onClick={toggleConnection}/>}
+                <img className="playPauseIcon" style={{visibility: connection === ConnectionStatus.Connected ? "visible" : "hidden"}} alt="pause"
+                    src={pauseIcon} onClick={toggleConnection}/>
+                <img className="playPauseIcon" style={{position: "absolute", visibility: connection === ConnectionStatus.Connected ? "hidden" : "visible"}} alt="play"
+                    src={playIcon} onClick={toggleConnection}/>
                 <div className="connectionText">
                     {getConnectionTitle()}
                     <div className={"indicatorContainer " + getConnectionStatusClass(true)}>
@@ -185,42 +280,61 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                     </div>
                 </div>
             </div>
-            {entries.length > 0 && <div className="TrafficPage-Container">
+            {<div className="TrafficPage-Container">
                 <div className="TrafficPage-ListContainer">
-                    <Filters methodsFilter={methodsFilter}
-                                setMethodsFilter={setMethodsFilter}
-                                statusFilter={statusFilter}
-                                setStatusFilter={setStatusFilter}
-                                pathFilter={pathFilter}
-                                setPathFilter={setPathFilter}
-                                serviceFilter={serviceFilter}
-                                setServiceFilter={setServiceFilter}
+                    <Filters
+                        query={query}
+                        setQuery={setQuery}
+                        backgroundColor={queryBackgroundColor}
+                        ws={ws.current}
+                        openWebSocket={openWebSocket}
                     />
                     <div className={styles.container}>
-                        <EntriesList entries={entries}
-                                        setEntries={setEntries}
-                                        focusedEntryId={focusedEntryId}
-                                        setFocusedEntryId={setFocusedEntryId}
-                                        connectionOpen={connection === ConnectionStatus.Connected}
-                                        noMoreDataBottom={noMoreDataBottom}
-                                        setNoMoreDataBottom={setNoMoreDataBottom}
-                                        noMoreDataTop={noMoreDataTop}
-                                        setNoMoreDataTop={setNoMoreDataTop}
-                                        methodsFilter={methodsFilter}
-                                        statusFilter={statusFilter}
-                                        pathFilter={pathFilter}
-                                        serviceFilter={serviceFilter}
-                                        listEntryREF={listEntry}
-                                        onScrollEvent={onScrollEvent}
-                                        scrollableList={disableScrollList}
+                        <EntriesList
+                            entries={entries}
+                            setEntries={setEntries}
+                            query={query}
+                            listEntryREF={listEntry}
+                            onSnapBrokenEvent={onSnapBrokenEvent}
+                            isSnappedToBottom={isSnappedToBottom}
+                            setIsSnappedToBottom={setIsSnappedToBottom}
+                            queriedCurrent={queriedCurrent}
+                            setQueriedCurrent={setQueriedCurrent}
+                            queriedTotal={queriedTotal}
+                            setQueriedTotal={setQueriedTotal}
+                            startTime={startTime}
+                            noMoreDataTop={noMoreDataTop}
+                            setNoMoreDataTop={setNoMoreDataTop}
+                            focusedEntryId={focusedEntryId}
+                            setFocusedEntryId={setFocusedEntryId}
+                            updateQuery={updateQuery}
+                            leftOffTop={leftOffTop}
+                            setLeftOffTop={setLeftOffTop}
+                            isWebSocketConnectionClosed={connection === ConnectionStatus.Closed}
+                            ws={ws.current}
+                            openWebSocket={openWebSocket}
+                            leftOffBottom={leftOffBottom}
+                            truncatedTimestamp={truncatedTimestamp}
+                            setTruncatedTimestamp={setTruncatedTimestamp}
                         />
                     </div>
                 </div>
                 <div className={classes.details}>
-                    {selectedEntryData && <EntryDetailed entryData={selectedEntryData}/>}
+                    {selectedEntryData && <EntryDetailed entryData={selectedEntryData} updateQuery={updateQuery}/>}
                 </div>
             </div>}
-            {tappingStatus?.pods != null && <StatusBar tappingStatus={tappingStatus}/>}
+            {tappingStatus && <StatusBar tappingStatus={tappingStatus}/>}
+            <ToastContainer
+                position="bottom-right"
+                autoClose={5000}
+                hideProgressBar={false}
+                newestOnTop={false}
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+            />
         </div>
     )
 };

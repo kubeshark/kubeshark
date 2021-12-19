@@ -3,13 +3,14 @@ package config
 import (
 	"errors"
 	"fmt"
-	"github.com/up9inc/mizu/tap/api"
 	"io/ioutil"
-	"k8s.io/apimachinery/pkg/util/json"
 	"os"
 	"reflect"
 	"strconv"
 	"strings"
+
+	"github.com/up9inc/mizu/tap/api"
+	"k8s.io/apimachinery/pkg/util/json"
 
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/logger"
@@ -50,6 +51,10 @@ func InitConfig(cmd *cobra.Command) error {
 	}
 
 	cmd.Flags().Visit(initFlag)
+
+	if err := Config.validate(); err != nil {
+		return fmt.Errorf("config validation failed, err: %v", err)
+	}
 
 	finalConfigPrettified, _ := uiUtils.PrettyJson(Config)
 	logger.Log.Debugf("Init config finished\n Final config: %v", finalConfigPrettified)
@@ -391,12 +396,13 @@ func getMizuAgentConfig(targetNamespaces []string, mizuApiFilteringOptions *api.
 		TargetNamespaces:        targetNamespaces,
 		AgentImage:              Config.AgentImage,
 		PullPolicy:              Config.ImagePullPolicyStr,
-		DumpLogs:                Config.DumpLogs,
+		LogLevel:                Config.LogLevel(),
 		IgnoredUserAgents:       Config.Tap.IgnoredUserAgents,
 		TapperResources:         Config.Tap.TapperResources,
 		MizuResourcesNamespace:  Config.MizuResourcesNamespace,
 		MizuApiFilteringOptions: *mizuApiFilteringOptions,
-		AgentDatabasePath:       fmt.Sprintf("%s%s", shared.DataDirPath, "entries.db"),
+		AgentDatabasePath:       shared.DataDirPath,
+		Istio:                   Config.Tap.Istio,
 	}
 	return &config, nil
 }

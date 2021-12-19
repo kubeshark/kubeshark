@@ -18,7 +18,8 @@ import (
 type Protocol struct {
 	Name            string   `json:"name"`
 	LongName        string   `json:"longName"`
-	Abbreviation    string   `json:"abbreviation"`
+	Abbreviation    string   `json:"abbr"`
+	Macro           string   `json:"macro"`
 	Version         string   `json:"version"`
 	BackgroundColor string   `json:"backgroundColor"`
 	ForegroundColor string   `json:"foregroundColor"`
@@ -26,6 +27,12 @@ type Protocol struct {
 	ReferenceLink   string   `json:"referenceLink"`
 	Ports           []string `json:"ports"`
 	Priority        uint8    `json:"priority"`
+}
+
+type TCP struct {
+	IP   string `json:"ip"`
+	Port string `json:"port"`
+	Name string `json:"name"`
 }
 
 type Extension struct {
@@ -74,6 +81,7 @@ type OutputChannelItem struct {
 	Timestamp      int64
 	ConnectionInfo *ConnectionInfo
 	Pair           *RequestResponsePair
+	Summary        *BaseEntryDetails
 }
 
 type SuperTimer struct {
@@ -89,9 +97,10 @@ type Dissector interface {
 	Register(*Extension)
 	Ping()
 	Dissect(b *bufio.Reader, isClient bool, tcpID *TcpID, counterPair *CounterPair, superTimer *SuperTimer, superIdentifier *SuperIdentifier, emitter Emitter, options *TrafficFilteringOptions) error
-	Analyze(item *OutputChannelItem, entryId string, resolvedSource string, resolvedDestination string) *MizuEntry
+	Analyze(item *OutputChannelItem, resolvedSource string, resolvedDestination string) *MizuEntry
 	Summarize(entry *MizuEntry) *BaseEntryDetails
-	Represent(entry *MizuEntry) (protocol Protocol, object []byte, bodySize int64, err error)
+	Represent(request map[string]interface{}, response map[string]interface{}) (object []byte, bodySize int64, err error)
+	Macros() map[string]string
 }
 
 type Emitting struct {
@@ -109,39 +118,27 @@ func (e *Emitting) Emit(item *OutputChannelItem) {
 }
 
 type MizuEntry struct {
-	ID                      uint `gorm:"primarykey"`
-	CreatedAt               time.Time
-	UpdatedAt               time.Time
-	ProtocolName            string         `json:"protocolName" gorm:"column:protocolName"`
-	ProtocolLongName        string         `json:"protocolLongName" gorm:"column:protocolLongName"`
-	ProtocolAbbreviation    string         `json:"protocolAbbreviation" gorm:"column:protocolAbbreviation"`
-	ProtocolVersion         string         `json:"protocolVersion" gorm:"column:protocolVersion"`
-	ProtocolBackgroundColor string         `json:"protocolBackgroundColor" gorm:"column:protocolBackgroundColor"`
-	ProtocolForegroundColor string         `json:"protocolForegroundColor" gorm:"column:protocolForegroundColor"`
-	ProtocolFontSize        int8           `json:"protocolFontSize" gorm:"column:protocolFontSize"`
-	ProtocolReferenceLink   string         `json:"protocolReferenceLink" gorm:"column:protocolReferenceLink"`
-	Entry                   string         `json:"entry,omitempty" gorm:"column:entry"`
-	EntryId                 string         `json:"entryId" gorm:"column:entryId"`
-	Url                     string         `json:"url" gorm:"column:url"`
-	Method                  string         `json:"method" gorm:"column:method"`
-	Status                  int            `json:"status" gorm:"column:status"`
-	RequestSenderIp         string         `json:"requestSenderIp" gorm:"column:requestSenderIp"`
-	Service                 string         `json:"service" gorm:"column:service"`
-	Timestamp               int64          `json:"timestamp" gorm:"column:timestamp"`
-	ElapsedTime             int64          `json:"elapsedTime" gorm:"column:elapsedTime"`
-	Path                    string         `json:"path" gorm:"column:path"`
-	ResolvedSource          string         `json:"resolvedSource,omitempty" gorm:"column:resolvedSource"`
-	ResolvedDestination     string         `json:"resolvedDestination,omitempty" gorm:"column:resolvedDestination"`
-	SourceIp                string         `json:"sourceIp,omitempty" gorm:"column:sourceIp"`
-	DestinationIp           string         `json:"destinationIp,omitempty" gorm:"column:destinationIp"`
-	SourcePort              string         `json:"sourcePort,omitempty" gorm:"column:sourcePort"`
-	DestinationPort         string         `json:"destinationPort,omitempty" gorm:"column:destinationPort"`
-	IsOutgoing              bool           `json:"isOutgoing,omitempty" gorm:"column:isOutgoing"`
-	ContractStatus          ContractStatus `json:"contractStatus,omitempty" gorm:"column:contractStatus"`
-	ContractRequestReason   string         `json:"contractRequestReason,omitempty" gorm:"column:contractRequestReason"`
-	ContractResponseReason  string         `json:"contractResponseReason,omitempty" gorm:"column:contractResponseReason"`
-	ContractContent         string         `json:"contractContent,omitempty" gorm:"column:contractContent"`
-	EstimatedSizeBytes      int            `json:"-" gorm:"column:estimatedSizeBytes"`
+	Id                     uint                   `json:"id"`
+	Protocol               Protocol               `json:"proto"`
+	Source                 *TCP                   `json:"src"`
+	Destination            *TCP                   `json:"dst"`
+	Outgoing               bool                   `json:"outgoing"`
+	Timestamp              int64                  `json:"timestamp"`
+	StartTime              time.Time              `json:"startTime"`
+	Request                map[string]interface{} `json:"request"`
+	Response               map[string]interface{} `json:"response"`
+	Base                   *BaseEntryDetails      `json:"base"`
+	Summary                string                 `json:"summary"`
+	Method                 string                 `json:"method"`
+	Status                 int                    `json:"status"`
+	ElapsedTime            int64                  `json:"elapsedTime"`
+	Path                   string                 `json:"path"`
+	IsOutgoing             bool                   `json:"isOutgoing,omitempty"`
+	ContractStatus         ContractStatus         `json:"contractStatus,omitempty"`
+	ContractRequestReason  string                 `json:"contractRequestReason,omitempty"`
+	ContractResponseReason string                 `json:"contractResponseReason,omitempty"`
+	ContractContent        string                 `json:"contractContent,omitempty"`
+	HTTPPair               string                 `json:"httpPair,omitempty"`
 }
 
 type MizuEntryWrapper struct {
@@ -154,24 +151,20 @@ type MizuEntryWrapper struct {
 }
 
 type BaseEntryDetails struct {
-	Id              string          `json:"id,omitempty"`
-	Protocol        Protocol        `json:"protocol,omitempty"`
-	Url             string          `json:"url,omitempty"`
-	RequestSenderIp string          `json:"requestSenderIp,omitempty"`
-	Service         string          `json:"service,omitempty"`
-	Path            string          `json:"path,omitempty"`
-	Summary         string          `json:"summary,omitempty"`
-	StatusCode      int             `json:"statusCode"`
-	Method          string          `json:"method,omitempty"`
-	Timestamp       int64           `json:"timestamp,omitempty"`
-	SourceIp        string          `json:"sourceIp,omitempty"`
-	DestinationIp   string          `json:"destinationIp,omitempty"`
-	SourcePort      string          `json:"sourcePort,omitempty"`
-	DestinationPort string          `json:"destinationPort,omitempty"`
-	IsOutgoing      bool            `json:"isOutgoing,omitempty"`
-	Latency         int64           `json:"latency"`
-	Rules           ApplicableRules `json:"rules,omitempty"`
-	ContractStatus  ContractStatus  `json:"contractStatus"`
+	Id             uint            `json:"id"`
+	Protocol       Protocol        `json:"protocol,omitempty"`
+	Url            string          `json:"url,omitempty"`
+	Path           string          `json:"path,omitempty"`
+	Summary        string          `json:"summary,omitempty"`
+	StatusCode     int             `json:"statusCode"`
+	Method         string          `json:"method,omitempty"`
+	Timestamp      int64           `json:"timestamp,omitempty"`
+	Source         *TCP            `json:"src"`
+	Destination    *TCP            `json:"dst"`
+	IsOutgoing     bool            `json:"isOutgoing,omitempty"`
+	Latency        int64           `json:"latency"`
+	Rules          ApplicableRules `json:"rules,omitempty"`
+	ContractStatus ContractStatus  `json:"contractStatus"`
 }
 
 type ApplicableRules struct {
@@ -194,29 +187,15 @@ type DataUnmarshaler interface {
 }
 
 func (bed *BaseEntryDetails) UnmarshalData(entry *MizuEntry) error {
-	bed.Protocol = Protocol{
-		Name:            entry.ProtocolName,
-		LongName:        entry.ProtocolLongName,
-		Abbreviation:    entry.ProtocolAbbreviation,
-		Version:         entry.ProtocolVersion,
-		BackgroundColor: entry.ProtocolBackgroundColor,
-		ForegroundColor: entry.ProtocolForegroundColor,
-		FontSize:        entry.ProtocolFontSize,
-		ReferenceLink:   entry.ProtocolReferenceLink,
-	}
-	bed.Id = entry.EntryId
-	bed.Url = entry.Url
-	bed.RequestSenderIp = entry.RequestSenderIp
-	bed.Service = entry.Service
+	bed.Protocol = entry.Protocol
+	bed.Id = entry.Id
 	bed.Path = entry.Path
-	bed.Summary = entry.Path
+	bed.Summary = entry.Summary
 	bed.StatusCode = entry.Status
 	bed.Method = entry.Method
 	bed.Timestamp = entry.Timestamp
-	bed.SourceIp = entry.SourceIp
-	bed.DestinationIp = entry.DestinationIp
-	bed.SourcePort = entry.SourcePort
-	bed.DestinationPort = entry.DestinationPort
+	bed.Source = entry.Source
+	bed.Destination = entry.Destination
 	bed.IsOutgoing = entry.IsOutgoing
 	bed.Latency = entry.ElapsedTime
 	bed.ContractStatus = entry.ContractStatus
@@ -227,6 +206,21 @@ const (
 	TABLE string = "table"
 	BODY  string = "body"
 )
+
+type SectionData struct {
+	Type     string `json:"type"`
+	Title    string `json:"title"`
+	Data     string `json:"data"`
+	Encoding string `json:"encoding,omitempty"`
+	MimeType string `json:"mimeType,omitempty"`
+	Selector string `json:"selector,omitempty"`
+}
+
+type TableData struct {
+	Name     string      `json:"name"`
+	Value    interface{} `json:"value"`
+	Selector string      `json:"selector"`
+}
 
 const (
 	TypeHttpRequest = iota
@@ -259,7 +253,6 @@ func (h HTTPPayload) MarshalJSON() ([]byte, error) {
 		}
 		return json.Marshal(&HTTPWrapper{
 			Method:     harRequest.Method,
-			Url:        "",
 			Details:    harRequest,
 			RawRequest: &HTTPRequestWrapper{Request: h.Data.(*http.Request)},
 		})
@@ -275,7 +268,7 @@ func (h HTTPPayload) MarshalJSON() ([]byte, error) {
 			RawResponse: &HTTPResponseWrapper{Response: h.Data.(*http.Response)},
 		})
 	default:
-		panic(fmt.Sprintf("HTTP payload cannot be marshaled: %s\n", h.Type))
+		panic(fmt.Sprintf("HTTP payload cannot be marshaled: %s", h.Type))
 	}
 }
 

@@ -10,13 +10,13 @@ import (
 )
 
 type Request struct {
-	Size          int32
-	ApiKey        ApiKey
-	ApiVersion    int16
-	CorrelationID int32
-	ClientID      string
-	Payload       interface{}
-	CaptureTime   time.Time
+	Size          int32       `json:"size"`
+	ApiKey        ApiKey      `json:"apiKey"`
+	ApiVersion    int16       `json:"apiVersion"`
+	CorrelationID int32       `json:"correlationID"`
+	ClientID      string      `json:"clientID"`
+	Payload       interface{} `json:"payload"`
+	CaptureTime   time.Time   `json:"captureTime"`
 }
 
 func ReadRequest(r io.Reader, tcpID *api.TcpID, superTimer *api.SuperTimer) (apiKey ApiKey, apiVersion int16, err error) {

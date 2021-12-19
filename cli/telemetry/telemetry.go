@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/denisbrodbeck/machineid"
 	"github.com/up9inc/mizu/cli/apiserver"
@@ -62,6 +63,9 @@ func ReportAPICalls(apiProvider *apiserver.Provider) {
 }
 
 func shouldRunTelemetry() bool {
+	if _, present := os.LookupEnv(mizu.DEVENVVAR); present {
+		return false
+	}
 	if !config.Config.Telemetry {
 		return false
 	}
@@ -79,6 +83,7 @@ func sendTelemetry(telemetryType string, argsMap map[string]interface{}) error {
 	argsMap["buildTimestamp"] = mizu.BuildTimestamp
 	argsMap["branch"] = mizu.Branch
 	argsMap["version"] = mizu.SemVer
+	argsMap["Platform"] = mizu.Platform
 
 	if machineId, err := machineid.ProtectedID("mizu"); err == nil {
 		argsMap["machineId"] = machineId

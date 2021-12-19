@@ -15,7 +15,6 @@
 # vendor/
 .idea/
 build
-*.db
 
 # Mac OS
 .DS_Store
@@ -29,3 +28,10 @@ build
 
 # pprof
 pprof/*
+
+# Database Files
+*.bin
+*.gob
+
+# Nohup Files - https://man7.org/linux/man-pages/man1/nohup.1p.html
+nohup.*

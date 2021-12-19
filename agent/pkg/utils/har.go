@@ -10,7 +10,6 @@ import (
 
 	"github.com/google/martian/har"
 	"github.com/up9inc/mizu/shared/logger"
-	"github.com/up9inc/mizu/tap/api"
 )
 
 // Keep it because we might want cookies in the future
@@ -120,13 +119,11 @@ func BuildPostParams(rawParams []interface{}) []har.Param {
 	return params
 }
 
-func NewRequest(request *api.GenericMessage) (harRequest *har.Request, err error) {
-	reqDetails := request.Payload.(map[string]interface{})["details"].(map[string]interface{})
+func NewRequest(request map[string]interface{}) (harRequest *har.Request, err error) {
+	headers, host, scheme, authority, path, _ := BuildHeaders(request["_headers"].([]interface{}))
+	cookies := make([]har.Cookie, 0) // BuildCookies(request["_cookies"].([]interface{}))
 
-	headers, host, scheme, authority, path, _ := BuildHeaders(reqDetails["headers"].([]interface{}))
-	cookies := make([]har.Cookie, 0) // BuildCookies(reqDetails["cookies"].([]interface{}))
-
-	postData, _ := reqDetails["postData"].(map[string]interface{})
+	postData, _ := request["postData"].(map[string]interface{})
 	mimeType, _ := postData["mimeType"]
 	if mimeType == nil || len(mimeType.(string)) == 0 {
 		mimeType = "text/html"
@@ -138,7 +135,7 @@ func NewRequest(request *api.GenericMessage) (harRequest *har.Request, err error
 	}
 
 	queryString := make([]har.QueryString, 0)
-	for _, _qs := range reqDetails["queryString"].([]interface{}) {
+	for _, _qs := range request["_queryString"].([]interface{}) {
 		qs := _qs.(map[string]interface{})
 		queryString = append(queryString, har.QueryString{
 			Name:  qs["name"].(string),
@@ -146,7 +143,7 @@ func NewRequest(request *api.GenericMessage) (harRequest *har.Request, err error
 		})
 	}
 
-	url := fmt.Sprintf("http://%s%s", host, reqDetails["url"].(string))
+	url := fmt.Sprintf("http://%s%s", host, request["url"].(string))
 	if strings.HasPrefix(mimeType.(string), "application/grpc") {
 		url = fmt.Sprintf("%s://%s%s", scheme, authority, path)
 	}
@@ -157,9 +154,9 @@ func NewRequest(request *api.GenericMessage) (harRequest *har.Request, err error
 	}
 
 	harRequest = &har.Request{
-		Method:      reqDetails["method"].(string),
+		Method:      request["method"].(string),
 		URL:         url,
-		HTTPVersion: reqDetails["httpVersion"].(string),
+		HTTPVersion: request["httpVersion"].(string),
 		HeadersSize: -1,
 		BodySize:    int64(bytes.NewBufferString(postDataText).Len()),
 		QueryString: queryString,
@@ -175,13 +172,11 @@ func NewRequest(request *api.GenericMessage) (harRequest *har.Request, err error
 	return
 }
 
-func NewResponse(response *api.GenericMessage) (harResponse *har.Response, err error) {
-	resDetails := response.Payload.(map[string]interface{})["details"].(map[string]interface{})
+func NewResponse(response map[string]interface{}) (harResponse *har.Response, err error) {
+	headers, _, _, _, _, _status := BuildHeaders(response["_headers"].([]interface{}))
+	cookies := make([]har.Cookie, 0) // BuildCookies(response["_cookies"].([]interface{}))
 
-	headers, _, _, _, _, _status := BuildHeaders(resDetails["headers"].([]interface{}))
-	cookies := make([]har.Cookie, 0) // BuildCookies(resDetails["cookies"].([]interface{}))
-
-	content, _ := resDetails["content"].(map[string]interface{})
+	content, _ := response["content"].(map[string]interface{})
 	mimeType, _ := content["mimeType"]
 	if mimeType == nil || len(mimeType.(string)) == 0 {
 		mimeType = "text/html"
@@ -200,9 +195,11 @@ func NewResponse(response *api.GenericMessage) (harResponse *har.Response, err e
 		Size:     int64(len(bodyText)),
 	}
 
-	status := int(resDetails["status"].(float64))
+	status := int(response["status"].(float64))
 	if strings.HasPrefix(mimeType.(string), "application/grpc") {
-		status, err = strconv.Atoi(_status)
+		if _status != "" {
+			status, err = strconv.Atoi(_status)
+		}
 		if err != nil {
 			logger.Log.Errorf("Failed converting status to int %s (%v,%+v)", err, err, err)
 			return nil, errors.New("failed converting response status to int for HAR")
@@ -210,9 +207,9 @@ func NewResponse(response *api.GenericMessage) (harResponse *har.Response, err e
 	}
 
 	harResponse = &har.Response{
-		HTTPVersion: resDetails["httpVersion"].(string),
+		HTTPVersion: response["httpVersion"].(string),
 		Status:      status,
-		StatusText:  resDetails["statusText"].(string),
+		StatusText:  response["statusText"].(string),
 		HeadersSize: -1,
 		BodySize:    int64(bytes.NewBufferString(bodyText).Len()),
 		Headers:     headers,
@@ -222,34 +219,33 @@ func NewResponse(response *api.GenericMessage) (harResponse *har.Response, err e
 	return
 }
 
-func NewEntry(pair *api.RequestResponsePair) (*har.Entry, error) {
-	harRequest, err := NewRequest(&pair.Request)
+func NewEntry(request map[string]interface{}, response map[string]interface{}, startTime time.Time, elapsedTime int64) (*har.Entry, error) {
+	harRequest, err := NewRequest(request)
 	if err != nil {
 		logger.Log.Errorf("Failed converting request to HAR %s (%v,%+v)", err, err, err)
 		return nil, errors.New("failed converting request to HAR")
 	}
 
-	harResponse, err := NewResponse(&pair.Response)
+	harResponse, err := NewResponse(response)
 	if err != nil {
 		logger.Log.Errorf("Failed converting response to HAR %s (%v,%+v)", err, err, err)
 		return nil, errors.New("failed converting response to HAR")
 	}
 
-	totalTime := pair.Response.CaptureTime.Sub(pair.Request.CaptureTime).Round(time.Millisecond).Milliseconds()
-	if totalTime < 1 {
-		totalTime = 1
+	if elapsedTime < 1 {
+		elapsedTime = 1
 	}
 
 	harEntry := har.Entry{
-		StartedDateTime: pair.Request.CaptureTime,
-		Time:            totalTime,
+		StartedDateTime: startTime,
+		Time:            elapsedTime,
 		Request:         harRequest,
 		Response:        harResponse,
 		Cache:           &har.Cache{},
 		Timings: &har.Timings{
 			Send:    -1,
 			Wait:    -1,
-			Receive: totalTime,
+			Receive: elapsedTime,
 		},
 	}
 

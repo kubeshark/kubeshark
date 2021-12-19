@@ -1,9 +1,9 @@
 import React from "react";
 import EntryViewer from "./EntryDetailed/EntryViewer";
+import {EntryItem} from "./EntryListItem/EntryListItem";
 import {makeStyles} from "@material-ui/core";
 import Protocol from "./UI/Protocol"
-import StatusCode from "./UI/StatusCode";
-import {EndpointPath} from "./UI/EndpointPath";
+import Queryable from "./UI/Queryable";
 
 const useStyles = makeStyles(() => ({
     entryTitle: {
@@ -12,6 +12,7 @@ const useStyles = makeStyles(() => ({
         maxHeight: 46,
         alignItems: 'center',
         marginBottom: 4,
+        marginLeft: 6,
         padding: 2,
         paddingBottom: 0
     },
@@ -28,50 +29,83 @@ const useStyles = makeStyles(() => ({
 
 interface EntryDetailedProps {
     entryData: any
+    updateQuery: any
 }
 
 export const formatSize = (n: number) => n > 1000 ? `${Math.round(n / 1000)}KB` : `${n} B`;
 
-const EntryTitle: React.FC<any> = ({protocol, data, bodySize, elapsedTime}) => {
+const EntryTitle: React.FC<any> = ({protocol, data, bodySize, elapsedTime, updateQuery}) => {
     const classes = useStyles();
-    const {response} = JSON.parse(data.entry);
-
+    const response = data.response;
 
     return <div className={classes.entryTitle}>
-        <Protocol protocol={protocol} horizontal={true}/>
+        <Protocol protocol={protocol} horizontal={true} updateQuery={updateQuery}/>
         <div style={{right: "30px", position: "absolute", display: "flex"}}>
-            {response.payload && <div style={{margin: "0 18px", opacity: 0.5}}>{formatSize(bodySize)}</div>}
-            {response.payload && <div style={{marginRight: 18, opacity: 0.5}}>{Math.round(elapsedTime)}ms</div>}
+            {response && <Queryable
+                query={`response.bodySize == ${bodySize}`}
+                updateQuery={updateQuery}
+                style={{margin: "0 18px"}}
+                displayIconOnMouseOver={true}
+            >
+                <div
+                    style={{opacity: 0.5}}
+                >
+                    {formatSize(bodySize)}
+                </div>
+            </Queryable>}
+            {response && <Queryable
+                query={`elapsedTime >= ${elapsedTime}`}
+                updateQuery={updateQuery}
+                style={{marginRight: 18}}
+                displayIconOnMouseOver={true}
+            >
+                <div
+                    style={{opacity: 0.5}}
+                >
+                    {Math.round(elapsedTime)}ms
+                </div>
+            </Queryable>}
         </div>
     </div>;
 };
 
-const EntrySummary: React.FC<any> = ({data}) => {
-    const classes = useStyles();
+const EntrySummary: React.FC<any> = ({data, updateQuery}) => {
+    const entry = data.base;
 
-    const {response, request} = JSON.parse(data.entry);
-
-    return <div className={classes.entrySummary}>
-        {response?.payload && response.payload?.details && "status" in response.payload.details && <div style={{marginRight: 8}}>
-            <StatusCode statusCode={response.payload.details.status}/>
-        </div>}
-        <div style={{flexGrow: 1, overflow: 'hidden'}}>
-            <EndpointPath method={request?.payload.method} path={request?.payload.url}/>
-        </div>
-    </div>;
+    return <EntryItem
+        key={`entry-${entry.id}`}
+        entry={entry}
+        focusedEntryId={null}
+        setFocusedEntryId={null}
+        style={{}}
+        updateQuery={updateQuery}
+        headingMode={true}
+    />;
 };
 
-export const EntryDetailed: React.FC<EntryDetailedProps> = ({entryData}) => {
+export const EntryDetailed: React.FC<EntryDetailedProps> = ({entryData, updateQuery}) => {
     return <>
         <EntryTitle
             protocol={entryData.protocol}
             data={entryData.data}
             bodySize={entryData.bodySize}
             elapsedTime={entryData.data.elapsedTime}
+            updateQuery={updateQuery}
         />
-        {entryData.data && <EntrySummary data={entryData.data}/>}
+        {entryData.data && <EntrySummary data={entryData.data} updateQuery={updateQuery}/>}
         <>
-            {entryData.data && <EntryViewer representation={entryData.representation} isRulesEnabled={entryData.isRulesEnabled} rulesMatched={entryData.rulesMatched} contractStatus={entryData.data.contractStatus} requestReason={entryData.data.contractRequestReason} responseReason={entryData.data.contractResponseReason} contractContent={entryData.data.contractContent} elapsedTime={entryData.data.elapsedTime} color={entryData.protocol.backgroundColor}/>}
+            {entryData.data && <EntryViewer
+                representation={entryData.representation}
+                isRulesEnabled={entryData.isRulesEnabled}
+                rulesMatched={entryData.rulesMatched}
+                contractStatus={entryData.data.contractStatus}
+                requestReason={entryData.data.contractRequestReason}
+                responseReason={entryData.data.contractResponseReason}
+                contractContent={entryData.data.contractContent}
+                elapsedTime={entryData.data.elapsedTime}
+                color={entryData.protocol.backgroundColor}
+                updateQuery={updateQuery}
+            />}
         </>
     </>
 };

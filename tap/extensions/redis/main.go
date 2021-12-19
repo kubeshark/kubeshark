@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/up9inc/mizu/tap/api"
 )
@@ -13,6 +14,7 @@ var protocol api.Protocol = api.Protocol{
 	Name:            "redis",
 	LongName:        "Redis Serialization Protocol",
 	Abbreviation:    "REDIS",
+	Macro:           "redis",
 	Version:         "3.x",
 	BackgroundColor: "#a41e11",
 	ForegroundColor: "#ffffff",
@@ -34,7 +36,7 @@ func (d dissecting) Register(extension *api.Extension) {
 }
 
 func (d dissecting) Ping() {
-	log.Printf("pong %s\n", protocol.Name)
+	log.Printf("pong %s", protocol.Name)
 }
 
 func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, superIdentifier *api.SuperIdentifier, emitter api.Emitter, options *api.TrafficFilteringOptions) error {
@@ -57,15 +59,11 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 	}
 }
 
-func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolvedSource string, resolvedDestination string) *api.MizuEntry {
+func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, resolvedDestination string) *api.MizuEntry {
 	request := item.Pair.Request.Payload.(map[string]interface{})
+	response := item.Pair.Response.Payload.(map[string]interface{})
 	reqDetails := request["details"].(map[string]interface{})
-	service := "redis"
-	if resolvedDestination != "" {
-		service = resolvedDestination
-	} else if resolvedSource != "" {
-		service = resolvedSource
-	}
+	resDetails := response["details"].(map[string]interface{})
 
 	method := ""
 	if reqDetails["command"] != nil {
@@ -78,54 +76,48 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, entryId string, resolve
 	}
 
 	request["url"] = summary
-	entryBytes, _ := json.Marshal(item.Pair)
+	elapsedTime := item.Pair.Response.CaptureTime.Sub(item.Pair.Request.CaptureTime).Round(time.Millisecond).Milliseconds()
+	if elapsedTime < 0 {
+		elapsedTime = 0
+	}
 	return &api.MizuEntry{
-		ProtocolName:            protocol.Name,
-		ProtocolLongName:        protocol.LongName,
-		ProtocolAbbreviation:    protocol.Abbreviation,
-		ProtocolVersion:         protocol.Version,
-		ProtocolBackgroundColor: protocol.BackgroundColor,
-		ProtocolForegroundColor: protocol.ForegroundColor,
-		ProtocolFontSize:        protocol.FontSize,
-		ProtocolReferenceLink:   protocol.ReferenceLink,
-		EntryId:                 entryId,
-		Entry:                   string(entryBytes),
-		Url:                     fmt.Sprintf("%s%s", service, summary),
-		Method:                  method,
-		Status:                  0,
-		RequestSenderIp:         item.ConnectionInfo.ClientIP,
-		Service:                 service,
-		Timestamp:               item.Timestamp,
-		ElapsedTime:             0,
-		Path:                    summary,
-		ResolvedSource:          resolvedSource,
-		ResolvedDestination:     resolvedDestination,
-		SourceIp:                item.ConnectionInfo.ClientIP,
-		DestinationIp:           item.ConnectionInfo.ServerIP,
-		SourcePort:              item.ConnectionInfo.ClientPort,
-		DestinationPort:         item.ConnectionInfo.ServerPort,
-		IsOutgoing:              item.ConnectionInfo.IsOutgoing,
+		Protocol: protocol,
+		Source: &api.TCP{
+			Name: resolvedSource,
+			IP:   item.ConnectionInfo.ClientIP,
+			Port: item.ConnectionInfo.ClientPort,
+		},
+		Destination: &api.TCP{
+			Name: resolvedDestination,
+			IP:   item.ConnectionInfo.ServerIP,
+			Port: item.ConnectionInfo.ServerPort,
+		},
+		Outgoing:    item.ConnectionInfo.IsOutgoing,
+		Request:     reqDetails,
+		Response:    resDetails,
+		Method:      method,
+		Status:      0,
+		Timestamp:   item.Timestamp,
+		StartTime:   item.Pair.Request.CaptureTime,
+		ElapsedTime: elapsedTime,
+		Summary:     summary,
+		IsOutgoing:  item.ConnectionInfo.IsOutgoing,
 	}
 
 }
 
 func (d dissecting) Summarize(entry *api.MizuEntry) *api.BaseEntryDetails {
 	return &api.BaseEntryDetails{
-		Id:              entry.EntryId,
-		Protocol:        protocol,
-		Url:             entry.Url,
-		RequestSenderIp: entry.RequestSenderIp,
-		Service:         entry.Service,
-		Summary:         entry.Path,
-		StatusCode:      entry.Status,
-		Method:          entry.Method,
-		Timestamp:       entry.Timestamp,
-		SourceIp:        entry.SourceIp,
-		DestinationIp:   entry.DestinationIp,
-		SourcePort:      entry.SourcePort,
-		DestinationPort: entry.DestinationPort,
-		IsOutgoing:      entry.IsOutgoing,
-		Latency:         entry.ElapsedTime,
+		Id:          entry.Id,
+		Protocol:    protocol,
+		Summary:     entry.Summary,
+		StatusCode:  entry.Status,
+		Method:      entry.Method,
+		Timestamp:   entry.Timestamp,
+		Source:      entry.Source,
+		Destination: entry.Destination,
+		IsOutgoing:  entry.IsOutgoing,
+		Latency:     entry.ElapsedTime,
 		Rules: api.ApplicableRules{
 			Latency: 0,
 			Status:  false,
@@ -133,22 +125,21 @@ func (d dissecting) Summarize(entry *api.MizuEntry) *api.BaseEntryDetails {
 	}
 }
 
-func (d dissecting) Represent(entry *api.MizuEntry) (p api.Protocol, object []byte, bodySize int64, err error) {
-	p = protocol
+func (d dissecting) Represent(request map[string]interface{}, response map[string]interface{}) (object []byte, bodySize int64, err error) {
 	bodySize = 0
-	var root map[string]interface{}
-	json.Unmarshal([]byte(entry.Entry), &root)
 	representation := make(map[string]interface{}, 0)
-	request := root["request"].(map[string]interface{})["payload"].(map[string]interface{})
-	response := root["response"].(map[string]interface{})["payload"].(map[string]interface{})
-	reqDetails := request["details"].(map[string]interface{})
-	resDetails := response["details"].(map[string]interface{})
-	repRequest := representGeneric(reqDetails)
-	repResponse := representGeneric(resDetails)
+	repRequest := representGeneric(request, `request.`)
+	repResponse := representGeneric(response, `response.`)
 	representation["request"] = repRequest
 	representation["response"] = repResponse
 	object, err = json.Marshal(representation)
 	return
+}
+
+func (d dissecting) Macros() map[string]string {
+	return map[string]string{
+		`redis`: fmt.Sprintf(`proto.name == "%s"`, protocol.Name),
+	}
 }
 
 var Dissector dissecting

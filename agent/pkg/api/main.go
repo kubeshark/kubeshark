@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"mizuserver/pkg/database"
 	"mizuserver/pkg/holder"
 	"mizuserver/pkg/providers"
 	"os"
@@ -14,15 +13,16 @@ import (
 	"strings"
 	"time"
 
-	"go.mongodb.org/mongo-driver/bson/primitive"
-
 	"github.com/google/martian/har"
+	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/logger"
 	tapApi "github.com/up9inc/mizu/tap/api"
 
 	"mizuserver/pkg/models"
 	"mizuserver/pkg/resolver"
 	"mizuserver/pkg/utils"
+
+	basenine "github.com/up9inc/basenine/client/go"
 )
 
 var k8sResolver *resolver.Resolver
@@ -76,7 +76,7 @@ func startReadingFiles(workingDir string) {
 		sort.Sort(utils.ByModTime(harFiles))
 
 		if len(harFiles) == 0 {
-			logger.Log.Infof("Waiting for new files\n")
+			logger.Log.Infof("Waiting for new files")
 			time.Sleep(3 * time.Second)
 			continue
 		}
@@ -99,11 +99,17 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 		panic("Channel of captured messages is nil")
 	}
 
+	connection, err := basenine.NewConnection(shared.BasenineHost, shared.BaseninePort)
+	if err != nil {
+		panic(err)
+	}
+	connection.InsertMode()
+
 	disableOASValidation := false
 	ctx := context.Background()
 	doc, contractContent, router, err := loadOAS(ctx)
 	if err != nil {
-		logger.Log.Infof("Disabled OAS validation: %s\n", err.Error())
+		logger.Log.Infof("Disabled OAS validation: %s", err.Error())
 		disableOASValidation = true
 	}
 
@@ -112,13 +118,13 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 
 		extension := extensionsMap[item.Protocol.Name]
 		resolvedSource, resolvedDestionation := resolveIP(item.ConnectionInfo)
-		mizuEntry := extension.Dissector.Analyze(item, primitive.NewObjectID().Hex(), resolvedSource, resolvedDestionation)
+		mizuEntry := extension.Dissector.Analyze(item, resolvedSource, resolvedDestionation)
 		baseEntry := extension.Dissector.Summarize(mizuEntry)
-		mizuEntry.EstimatedSizeBytes = getEstimatedEntrySizeBytes(mizuEntry)
+		mizuEntry.Base = baseEntry
 		if extension.Protocol.Name == "http" {
 			if !disableOASValidation {
 				var httpPair tapApi.HTTPRequestResponsePair
-				json.Unmarshal([]byte(mizuEntry.Entry), &httpPair)
+				json.Unmarshal([]byte(mizuEntry.HTTPPair), &httpPair)
 
 				contract := handleOAS(ctx, doc, router, httpPair.Request.Payload.RawRequest, httpPair.Response.Payload.RawResponse, contractContent)
 				baseEntry.ContractStatus = contract.Status
@@ -128,18 +134,18 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 				mizuEntry.ContractContent = contract.Content
 			}
 
-			var pair tapApi.RequestResponsePair
-			json.Unmarshal([]byte(mizuEntry.Entry), &pair)
-			harEntry, err := utils.NewEntry(&pair)
+			harEntry, err := utils.NewEntry(mizuEntry.Request, mizuEntry.Response, mizuEntry.StartTime, mizuEntry.ElapsedTime)
 			if err == nil {
-				rules, _, _ := models.RunValidationRulesState(*harEntry, mizuEntry.Service)
+				rules, _, _ := models.RunValidationRulesState(*harEntry, mizuEntry.Destination.Name)
 				baseEntry.Rules = rules
 			}
 		}
-		database.CreateEntry(mizuEntry)
 
-		baseEntryBytes, _ := models.CreateBaseEntryWebSocketMessage(baseEntry)
-		BroadcastToBrowserClients(baseEntryBytes)
+		data, err := json.Marshal(mizuEntry)
+		if err != nil {
+			panic(err)
+		}
+		connection.SendText(string(data))
 	}
 }
 
@@ -148,7 +154,7 @@ func resolveIP(connectionInfo *tapApi.ConnectionInfo) (resolvedSource string, re
 		unresolvedSource := connectionInfo.ClientIP
 		resolvedSource = k8sResolver.Resolve(unresolvedSource)
 		if resolvedSource == "" {
-			logger.Log.Debugf("Cannot find resolved name to source: %s\n", unresolvedSource)
+			logger.Log.Debugf("Cannot find resolved name to source: %s", unresolvedSource)
 			if os.Getenv("SKIP_NOT_RESOLVED_SOURCE") == "1" {
 				return
 			}
@@ -156,7 +162,7 @@ func resolveIP(connectionInfo *tapApi.ConnectionInfo) (resolvedSource string, re
 		unresolvedDestination := fmt.Sprintf("%s:%s", connectionInfo.ServerIP, connectionInfo.ServerPort)
 		resolvedDestination = k8sResolver.Resolve(unresolvedDestination)
 		if resolvedDestination == "" {
-			logger.Log.Debugf("Cannot find resolved name to dest: %s\n", unresolvedDestination)
+			logger.Log.Debugf("Cannot find resolved name to dest: %s", unresolvedDestination)
 			if os.Getenv("SKIP_NOT_RESOLVED_DEST") == "1" {
 				return
 			}
@@ -170,22 +176,4 @@ func CheckIsServiceIP(address string) bool {
 		return false
 	}
 	return k8sResolver.CheckIsServiceIP(address)
-}
-
-// gives a rough estimate of the size this will take up in the db, good enough for maintaining db size limit accurately
-func getEstimatedEntrySizeBytes(mizuEntry *tapApi.MizuEntry) int {
-	sizeBytes := len(mizuEntry.Entry)
-	sizeBytes += len(mizuEntry.EntryId)
-	sizeBytes += len(mizuEntry.Service)
-	sizeBytes += len(mizuEntry.Url)
-	sizeBytes += len(mizuEntry.Method)
-	sizeBytes += len(mizuEntry.RequestSenderIp)
-	sizeBytes += len(mizuEntry.ResolvedDestination)
-	sizeBytes += len(mizuEntry.ResolvedSource)
-	sizeBytes += 8 // Status bytes (sqlite integer is always 8 bytes)
-	sizeBytes += 8 // Timestamp bytes
-	sizeBytes += 8 // SizeBytes bytes
-	sizeBytes += 1 // IsOutgoing bytes
-
-	return sizeBytes
 }

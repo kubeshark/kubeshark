@@ -6,11 +6,16 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"net/url"
+	"path/filepath"
+	"regexp"
+
+	"github.com/op/go-logging"
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/logger"
 	"github.com/up9inc/mizu/shared/semver"
 	"github.com/up9inc/mizu/tap/api"
-	"io"
 	v1 "k8s.io/api/apps/v1"
 	core "k8s.io/api/core/v1"
 	rbac "k8s.io/api/rbac/v1"
@@ -31,9 +36,6 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
 	watchtools "k8s.io/client-go/tools/watch"
-	"net/url"
-	"path/filepath"
-	"regexp"
 )
 
 type Provider struct {
@@ -45,6 +47,8 @@ type Provider struct {
 
 const (
 	fieldManagerName = "mizu-manager"
+	procfsVolumeName = "proc"
+	procfsMountPath  = "/hostproc"
 )
 
 func NewProvider(kubeConfigPath string) (*Provider, error) {
@@ -150,14 +154,6 @@ func (provider *Provider) WaitUtilNamespaceDeleted(ctx context.Context, name str
 	return err
 }
 
-func (provider *Provider) GetPodWatcher(ctx context.Context, namespace string) watch.Interface {
-	watcher, err := provider.clientSet.CoreV1().Pods(namespace).Watch(ctx, metav1.ListOptions{Watch: true})
-	if err != nil {
-		panic(err.Error())
-	}
-	return watcher
-}
-
 func (provider *Provider) CreateNamespace(ctx context.Context, name string) (*core.Namespace, error) {
 	namespaceSpec := &core.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
@@ -177,7 +173,7 @@ type ApiServerOptions struct {
 	MaxEntriesDBSizeBytes int64
 	Resources             shared.Resources
 	ImagePullPolicy       core.PullPolicy
-	DumpLogs              bool
+	LogLevel              logging.Level
 }
 
 func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, mountVolumeClaim bool, volumeClaimName string) (*core.Pod, error) {
@@ -239,22 +235,15 @@ func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, moun
 			},
 		})
 		volumeMounts = append(volumeMounts, core.VolumeMount{
-			Name:             volumeClaimName,
-			MountPath:        shared.DataDirPath,
+			Name:      volumeClaimName,
+			MountPath: shared.DataDirPath,
 		})
-	}
-
-	port := intstr.FromInt(shared.DefaultApiServerPort)
-
-	debugMode := ""
-	if opts.DumpLogs {
-		debugMode = "1"
 	}
 
 	pod := &core.Pod{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      opts.PodName,
-			Labels:    map[string]string{"app": opts.PodName},
+			Name:   opts.PodName,
+			Labels: map[string]string{"app": opts.PodName},
 		},
 		Spec: core.PodSpec{
 			Containers: []core.Container{
@@ -262,16 +251,16 @@ func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, moun
 					Name:            opts.PodName,
 					Image:           opts.PodImage,
 					ImagePullPolicy: opts.ImagePullPolicy,
-					VolumeMounts: volumeMounts,
-					Command: command,
+					VolumeMounts:    volumeMounts,
+					Command:         command,
 					Env: []core.EnvVar{
 						{
 							Name:  shared.SyncEntriesConfigEnvVar,
 							Value: string(marshaledSyncEntriesConfig),
 						},
 						{
-							Name:  shared.DebugModeEnvVar,
-							Value: debugMode,
+							Name:  shared.LogLevelEnvVar,
+							Value: opts.LogLevel.String(),
 						},
 					},
 					Resources: core.ResourceRequirements{
@@ -284,28 +273,9 @@ func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, moun
 							"memory": memRequests,
 						},
 					},
-					ReadinessProbe: &core.Probe{
-						Handler: core.Handler{
-							TCPSocket: &core.TCPSocketAction{
-								Port: port,
-							},
-						},
-						InitialDelaySeconds: 5,
-						PeriodSeconds:       10,
-					},
-					LivenessProbe: &core.Probe{
-						Handler: core.Handler{
-							HTTPGet: &core.HTTPGetAction{
-								Path: "/echo",
-								Port: port,
-							},
-						},
-						InitialDelaySeconds: 5,
-						PeriodSeconds:       10,
-					},
 				},
 			},
-			Volumes: volumes,
+			Volumes:                       volumes,
 			DNSPolicy:                     core.DNSClusterFirstWithHostNet,
 			TerminationGracePeriodSeconds: new(int64),
 		},
@@ -317,7 +287,6 @@ func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, moun
 	}
 	return pod, nil
 }
-
 
 func (provider *Provider) CreatePod(ctx context.Context, namespace string, podSpec *core.Pod) (*core.Pod, error) {
 	return provider.clientSet.CoreV1().Pods(namespace).Create(ctx, podSpec, metav1.CreateOptions{})
@@ -333,14 +302,14 @@ func (provider *Provider) CreateDeployment(ctx context.Context, namespace string
 	}
 	deployment := &v1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      deploymentName,
+			Name: deploymentName,
 		},
 		Spec: v1.DeploymentSpec{
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{"app": podSpec.ObjectMeta.Labels["app"]},
 			},
-			Template:                *podTemplate,
-			Strategy:                v1.DeploymentStrategy{},
+			Template: *podTemplate,
+			Strategy: v1.DeploymentStrategy{},
 		},
 	}
 	return provider.clientSet.AppsV1().Deployments(namespace).Create(ctx, deployment, metav1.CreateOptions{})
@@ -349,7 +318,7 @@ func (provider *Provider) CreateDeployment(ctx context.Context, namespace string
 func (provider *Provider) CreateService(ctx context.Context, namespace string, serviceName string, appLabelValue string) (*core.Service, error) {
 	service := core.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      serviceName,
+			Name: serviceName,
 		},
 		Spec: core.ServiceSpec{
 			Ports:    []core.ServicePort{{TargetPort: intstr.FromInt(shared.DefaultApiServerPort), Port: 80}},
@@ -361,8 +330,8 @@ func (provider *Provider) CreateService(ctx context.Context, namespace string, s
 }
 
 func (provider *Provider) DoesServicesExist(ctx context.Context, namespace string, name string) (bool, error) {
-	resource, err := provider.clientSet.CoreV1().Services(namespace).Get(ctx, name, metav1.GetOptions{})
-	return provider.doesResourceExist(resource, err)
+	serviceResource, err := provider.clientSet.CoreV1().Services(namespace).Get(ctx, name, metav1.GetOptions{})
+	return provider.doesResourceExist(serviceResource, err)
 }
 
 func (provider *Provider) doesResourceExist(resource interface{}, err error) (bool, error) {
@@ -381,8 +350,8 @@ func (provider *Provider) doesResourceExist(resource interface{}, err error) (bo
 func (provider *Provider) CreateMizuRBAC(ctx context.Context, namespace string, serviceAccountName string, clusterRoleName string, clusterRoleBindingName string, version string) error {
 	serviceAccount := &core.ServiceAccount{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      serviceAccountName,
-			Labels:    map[string]string{"mizu-cli-version": version},
+			Name:   serviceAccountName,
+			Labels: map[string]string{"mizu-cli-version": version},
 		},
 	}
 	clusterRole := &rbac.ClusterRole{
@@ -434,8 +403,8 @@ func (provider *Provider) CreateMizuRBAC(ctx context.Context, namespace string, 
 func (provider *Provider) CreateMizuRBACNamespaceRestricted(ctx context.Context, namespace string, serviceAccountName string, roleName string, roleBindingName string, version string) error {
 	serviceAccount := &core.ServiceAccount{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      serviceAccountName,
-			Labels:    map[string]string{"mizu-cli-version": version},
+			Name:   serviceAccountName,
+			Labels: map[string]string{"mizu-cli-version": version},
 		},
 	}
 	role := &rbac.Role{
@@ -495,6 +464,11 @@ func (provider *Provider) CreateDaemonsetRBAC(ctx context.Context, namespace str
 				APIGroups: []string{"apps"},
 				Resources: []string{"daemonsets"},
 				Verbs:     []string{"patch", "get", "list", "create", "delete"},
+			},
+			{
+				APIGroups: []string{"events.k8s.io"},
+				Resources: []string{"events"},
+				Verbs:     []string{"list", "watch"},
 			},
 		},
 	}
@@ -582,6 +556,11 @@ func (provider *Provider) RemoveDaemonSet(ctx context.Context, namespace string,
 	return provider.handleRemovalError(err)
 }
 
+func (provider *Provider) RemovePersistentVolumeClaim(ctx context.Context, namespace string, volumeClaimName string) error {
+	err := provider.clientSet.CoreV1().PersistentVolumeClaims(namespace).Delete(ctx, volumeClaimName, metav1.DeleteOptions{})
+	return provider.handleRemovalError(err)
+}
+
 func (provider *Provider) handleRemovalError(err error) error {
 	// Ignore NotFound - There is nothing to delete.
 	// Ignore Forbidden - Assume that a user could not have created the resource in the first place.
@@ -608,7 +587,7 @@ func (provider *Provider) CreateConfigMap(ctx context.Context, namespace string,
 			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      configMapName,
+			Name: configMapName,
 		},
 		Data: configMapData,
 	}
@@ -618,14 +597,14 @@ func (provider *Provider) CreateConfigMap(ctx context.Context, namespace string,
 	return nil
 }
 
-func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, apiServerPodIp string, nodeToTappedPodIPMap map[string][]string, serviceAccountName string, resources shared.Resources, imagePullPolicy core.PullPolicy, mizuApiFilteringOptions api.TrafficFilteringOptions, dumpLogs bool) error {
-	logger.Log.Debugf("Applying %d tapper daemon sets, ns: %s, daemonSetName: %s, podImage: %s, tapperPodName: %s", len(nodeToTappedPodIPMap), namespace, daemonSetName, podImage, tapperPodName)
+func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, apiServerPodIp string, nodeToTappedPodMap map[string][]core.Pod, serviceAccountName string, resources shared.Resources, imagePullPolicy core.PullPolicy, mizuApiFilteringOptions api.TrafficFilteringOptions, logLevel logging.Level, istio bool) error {
+	logger.Log.Debugf("Applying %d tapper daemon sets, ns: %s, daemonSetName: %s, podImage: %s, tapperPodName: %s", len(nodeToTappedPodMap), namespace, daemonSetName, podImage, tapperPodName)
 
-	if len(nodeToTappedPodIPMap) == 0 {
+	if len(nodeToTappedPodMap) == 0 {
 		return fmt.Errorf("daemon set %s must tap at least 1 pod", daemonSetName)
 	}
 
-	nodeToTappedPodIPMapJsonStr, err := json.Marshal(nodeToTappedPodIPMap)
+	nodeToTappedPodMapJsonStr, err := json.Marshal(nodeToTappedPodMap)
 	if err != nil {
 		return err
 	}
@@ -643,21 +622,30 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 		"--nodefrag",
 	}
 
-	debugMode := ""
-	if dumpLogs {
-		debugMode = "1"
+	if istio {
+		mizuCmd = append(mizuCmd, "--procfs", procfsMountPath, "--istio")
 	}
 
 	agentContainer := applyconfcore.Container()
 	agentContainer.WithName(tapperPodName)
 	agentContainer.WithImage(podImage)
 	agentContainer.WithImagePullPolicy(imagePullPolicy)
-	agentContainer.WithSecurityContext(applyconfcore.SecurityContext().WithPrivileged(true))
+
+	caps := applyconfcore.Capabilities().WithDrop("ALL").WithAdd("NET_RAW").WithAdd("NET_ADMIN")
+
+	if istio {
+		caps = caps.WithAdd("SYS_ADMIN")    // for reading /proc/PID/net/ns
+		caps = caps.WithAdd("SYS_PTRACE")   // for setting netns to other process
+		caps = caps.WithAdd("DAC_OVERRIDE") // for reading /proc/PID/environ
+	}
+
+	agentContainer.WithSecurityContext(applyconfcore.SecurityContext().WithCapabilities(caps))
+
 	agentContainer.WithCommand(mizuCmd...)
 	agentContainer.WithEnv(
-		applyconfcore.EnvVar().WithName(shared.DebugModeEnvVar).WithValue(debugMode),
+		applyconfcore.EnvVar().WithName(shared.LogLevelEnvVar).WithValue(logLevel.String()),
 		applyconfcore.EnvVar().WithName(shared.HostModeEnvVar).WithValue("1"),
-		applyconfcore.EnvVar().WithName(shared.TappedAddressesPerNodeDictEnvVar).WithValue(string(nodeToTappedPodIPMapJsonStr)),
+		applyconfcore.EnvVar().WithName(shared.TappedAddressesPerNodeDictEnvVar).WithValue(string(nodeToTappedPodMapJsonStr)),
 		applyconfcore.EnvVar().WithName(shared.GoGCEnvVar).WithValue("12800"),
 		applyconfcore.EnvVar().WithName(shared.MizuFilteringOptionsEnvVar).WithValue(string(mizuApiFilteringOptionsJsonStr)),
 	)
@@ -695,8 +683,8 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	agentResources := applyconfcore.ResourceRequirements().WithRequests(agentResourceRequests).WithLimits(agentResourceLimits)
 	agentContainer.WithResources(agentResources)
 
-	nodeNames := make([]string, 0, len(nodeToTappedPodIPMap))
-	for nodeName := range nodeToTappedPodIPMap {
+	nodeNames := make([]string, 0, len(nodeToTappedPodMap))
+	for nodeName := range nodeToTappedPodMap {
 		nodeNames = append(nodeNames, nodeName)
 	}
 	nodeSelectorRequirement := applyconfcore.NodeSelectorRequirement()
@@ -718,6 +706,14 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	noScheduleToleration := applyconfcore.Toleration()
 	noScheduleToleration.WithOperator(core.TolerationOpExists)
 	noScheduleToleration.WithEffect(core.TaintEffectNoSchedule)
+
+	// Host procfs is needed inside the container because we need access to
+	//	the network namespaces of processes on the machine.
+	//
+	procfsVolume := applyconfcore.Volume()
+	procfsVolume.WithName(procfsVolumeName).WithHostPath(applyconfcore.HostPathVolumeSource().WithPath("/proc"))
+	volumeMount := applyconfcore.VolumeMount().WithName(procfsVolumeName).WithMountPath(procfsMountPath).WithReadOnly(true)
+	agentContainer.WithVolumeMounts(volumeMount)
 
 	volumeName := ConfigMapName
 	configMapVolume := applyconfcore.VolumeApplyConfiguration{
@@ -747,7 +743,7 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	podSpec.WithContainers(agentContainer)
 	podSpec.WithAffinity(affinity)
 	podSpec.WithTolerations(noExecuteToleration, noScheduleToleration)
-	podSpec.WithVolumes(&configMapVolume)
+	podSpec.WithVolumes(&configMapVolume, procfsVolume)
 
 	podTemplate := applyconfcore.PodTemplateSpec()
 	podTemplate.WithLabels(map[string]string{"app": tapperPodName})
@@ -763,10 +759,10 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	return err
 }
 
-func (provider *Provider) ListAllPodsMatchingRegex(ctx context.Context, regex *regexp.Regexp, namespaces []string) ([]core.Pod, error) {
+func (provider *Provider) listPodsImpl(ctx context.Context, regex *regexp.Regexp, namespaces []string, listOptions metav1.ListOptions) ([]core.Pod, error) {
 	var pods []core.Pod
 	for _, namespace := range namespaces {
-		namespacePods, err := provider.clientSet.CoreV1().Pods(namespace).List(ctx, metav1.ListOptions{})
+		namespacePods, err := provider.clientSet.CoreV1().Pods(namespace).List(ctx, listOptions)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get pods in ns: [%s], %w", namespace, err)
 		}
@@ -781,6 +777,14 @@ func (provider *Provider) ListAllPodsMatchingRegex(ctx context.Context, regex *r
 		}
 	}
 	return matchingPods, nil
+}
+
+func (provider *Provider) ListAllPodsMatchingRegex(ctx context.Context, regex *regexp.Regexp, namespaces []string) ([]core.Pod, error) {
+	return provider.listPodsImpl(ctx, regex, namespaces, metav1.ListOptions{})
+}
+
+func (provider *Provider) GetPod(ctx context.Context, namespaces string, podName string) (*core.Pod, error) {
+	return provider.clientSet.CoreV1().Pods(namespaces).Get(ctx, podName, metav1.GetOptions{})
 }
 
 func (provider *Provider) ListAllRunningPodsMatchingRegex(ctx context.Context, regex *regexp.Regexp, namespaces []string) ([]core.Pod, error) {
@@ -842,9 +846,9 @@ func (provider *Provider) CreatePersistentVolumeClaim(ctx context.Context, names
 		ObjectMeta: metav1.ObjectMeta{
 			Name: volumeClaimName,
 		},
-		Spec:       core.PersistentVolumeClaimSpec{
-			AccessModes:      []core.PersistentVolumeAccessMode{core.ReadWriteOnce},
-			Resources:        core.ResourceRequirements{
+		Spec: core.PersistentVolumeClaimSpec{
+			AccessModes: []core.PersistentVolumeAccessMode{core.ReadWriteOnce},
+			Resources: core.ResourceRequirements{
 				Limits: core.ResourceList{
 					core.ResourceStorage: *sizeLimitQuantity,
 				},
@@ -856,10 +860,6 @@ func (provider *Provider) CreatePersistentVolumeClaim(ctx context.Context, names
 	}
 
 	return provider.clientSet.CoreV1().PersistentVolumeClaims(namespace).Create(ctx, volumeClaim, metav1.CreateOptions{})
-}
-
-func (provider *Provider) RemovePersistentVolumeClaim(ctx context.Context, namespace string, volumeClaimName string) error {
-	return provider.clientSet.CoreV1().PersistentVolumeClaims(namespace).Delete(ctx, volumeClaimName, metav1.DeleteOptions{})
 }
 
 func getClientSet(config *restclient.Config) (*kubernetes.Clientset, error) {

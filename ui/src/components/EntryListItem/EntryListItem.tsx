@@ -1,8 +1,11 @@
 import React from "react";
+import Moment from 'moment';
+import SwapHorizIcon from '@material-ui/icons/SwapHoriz';
 import styles from './EntryListItem.module.sass';
 import StatusCode, {getClassification, StatusCodeClassification} from "../UI/StatusCode";
 import Protocol, {ProtocolInterface} from "../UI/Protocol"
-import {EndpointPath} from "../UI/EndpointPath";
+import {Summary} from "../UI/Summary";
+import Queryable from "../UI/Queryable";
 import ingoingIconSuccess from "../assets/ingoing-traffic-success.svg"
 import ingoingIconFailure from "../assets/ingoing-traffic-failure.svg"
 import ingoingIconNeutral from "../assets/ingoing-traffic-neutral.svg"
@@ -10,19 +13,21 @@ import outgoingIconSuccess from "../assets/outgoing-traffic-success.svg"
 import outgoingIconFailure from "../assets/outgoing-traffic-failure.svg"
 import outgoingIconNeutral from "../assets/outgoing-traffic-neutral.svg"
 
+interface TCPInterface {
+    ip: string
+    port: string
+    name: string
+}
+
 interface Entry {
     protocol: ProtocolInterface,
     method?: string,
     summary: string,
-    service: string,
-    id: string,
+    id: number,
     statusCode?: number;
-    url?: string;
     timestamp: Date;
-    sourceIp: string,
-    sourcePort: string,
-    destinationIp: string,
-    destinationPort: string,
+    src: TCPInterface,
+    dst: TCPInterface,
     isOutgoing?: boolean;
     latency: number;
     rules: Rules;
@@ -37,12 +42,17 @@ interface Rules {
 
 interface EntryProps {
     entry: Entry;
+    focusedEntryId: string;
     setFocusedEntryId: (id: string) => void;
-    isSelected?: boolean;
     style: object;
+    updateQuery: any;
+    headingMode: boolean;
 }
 
-export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, isSelected, style}) => {
+export const EntryItem: React.FC<EntryProps> = ({entry, focusedEntryId, setFocusedEntryId, style, updateQuery, headingMode}) => {
+
+    const isSelected = focusedEntryId === entry.id.toString();
+
     const classification = getClassification(entry.statusCode)
     const numberOfRules = entry.rules.numberOfRules
     let ingoingIcon;
@@ -113,28 +123,66 @@ export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, isSel
             break;
     }
 
+    const isStatusCodeEnabled = ((entry.protocol.name === "http" && "statusCode" in entry) || entry.statusCode !== 0);
+    var endpointServiceContainer = "10px";
+    if (!isStatusCodeEnabled) endpointServiceContainer = "20px";
+
     return <>
         <div
-            id={entry.id}
+            id={`entry-${entry.id.toString()}`}
             className={`${styles.row}
             ${isSelected && !rule && !contractEnabled ? styles.rowSelected : additionalRulesProperties}`}
-            onClick={() => setFocusedEntryId(entry.id)}
+            onClick={() => {
+                if (!setFocusedEntryId) return;
+                setFocusedEntryId(entry.id.toString());
+            }}
             style={{
                 border: isSelected ? `1px ${entry.protocol.backgroundColor} solid` : "1px transparent solid",
-                position: "absolute",
+                position: !headingMode ? "absolute" : "unset",
                 top: style['top'],
-                marginTop: style['marginTop'],
-                width: "calc(100% - 25px)",
+                marginTop: !headingMode ? style['marginTop'] : "10px",
+                width: !headingMode ? "calc(100% - 25px)" : "calc(100% - 18px)",
             }}
         >
-            <Protocol protocol={entry.protocol} horizontal={false}/>
-            {((entry.protocol.name === "http" && "statusCode" in entry) || entry.statusCode !== 0) && <div>
-                <StatusCode statusCode={entry.statusCode}/>
+            {!headingMode ? <Protocol
+                protocol={entry.protocol}
+                horizontal={false}
+                updateQuery={updateQuery}
+            /> : null}
+            {isStatusCodeEnabled && <div>
+                <StatusCode statusCode={entry.statusCode} updateQuery={updateQuery}/>
             </div>}
-            <div className={styles.endpointServiceContainer}>
-                <EndpointPath method={entry.method} path={entry.summary}/>
-                <div className={styles.service}>
-                    <span title="Service Name">{entry.service}</span>
+            <div className={styles.endpointServiceContainer} style={{paddingLeft: endpointServiceContainer}}>
+                <Summary method={entry.method} summary={entry.summary} updateQuery={updateQuery}/>
+                <div className={styles.resolvedName}>
+                    <Queryable
+                        query={`src.name == "${entry.src.name}"`}
+                        updateQuery={updateQuery}
+                        displayIconOnMouseOver={true}
+                        flipped={true}
+                        style={{marginTop: "-4px", overflow: "visible"}}
+                        iconStyle={!headingMode ? {marginTop: "4px", left: "68px", position: "absolute"} : {marginTop: "4px", left: "calc(50vw + 41px)", position: "absolute"}}
+                    >
+                        <span
+                            title="Source Name"
+                        >
+                            {entry.src.name ? entry.src.name : "[Unresolved]"}
+                        </span>
+                    </Queryable>
+                    <SwapHorizIcon style={{color: entry.protocol.backgroundColor, marginTop: "-2px"}}></SwapHorizIcon>
+                    <Queryable
+                        query={`dst.name == "${entry.dst.name}"`}
+                        updateQuery={updateQuery}
+                        displayIconOnMouseOver={true}
+                        style={{marginTop: "-4px"}}
+                        iconStyle={{marginTop: "4px", marginLeft: "-2px"}}
+                    >
+                        <span
+                            title="Destination Name"
+                        >
+                            {entry.dst.name ? entry.dst.name : "[Unresolved]"}
+                        </span>
+                    </Queryable>
                 </div>
             </div>
             {
@@ -152,18 +200,109 @@ export const EntryItem: React.FC<EntryProps> = ({entry, setFocusedEntryId, isSel
                 : ""
             }
             <div className={styles.separatorRight}>
-                <span className={styles.port} title="Source Port">{entry.sourcePort}</span>
+                <Queryable
+                        query={`src.ip == "${entry.src.ip}"`}
+                        updateQuery={updateQuery}
+                        displayIconOnMouseOver={true}
+                        flipped={true}
+                        iconStyle={{marginRight: "16px"}}
+                >
+                    <span
+                        className={`${styles.tcpInfo} ${styles.ip}`}
+                        title="Source IP"
+                    >
+                        {entry.src.ip}
+                    </span>
+                </Queryable>
+                <span className={`${styles.tcpInfo}`} style={{marginTop: "18px"}}>:</span>
+                <Queryable
+                        query={`src.port == "${entry.src.port}"`}
+                        updateQuery={updateQuery}
+                        displayIconOnMouseOver={true}
+                        flipped={true}
+                        iconStyle={{marginTop: "28px"}}
+                >
+                    <span
+                        className={`${styles.tcpInfo} ${styles.port}`}
+                        title="Source Port"
+                    >
+                        {entry.src.port}
+                    </span>
+                </Queryable>
                 {entry.isOutgoing ?
-                    <img src={outgoingIcon} alt="Ingoing traffic" title="Ingoing"/>
+                    <Queryable
+                            query={`outgoing == true`}
+                            updateQuery={updateQuery}
+                            displayIconOnMouseOver={true}
+                            flipped={true}
+                            iconStyle={{marginTop: "28px"}}
+                    >
+                        <img
+                            src={outgoingIcon}
+                            alt="Ingoing traffic"
+                            title="Ingoing"
+                        />
+                    </Queryable>
                     :
-                    <img src={ingoingIcon} alt="Outgoing traffic" title="Outgoing"/>
+                    <Queryable
+                            query={`outgoing == true`}
+                            updateQuery={updateQuery}
+                            displayIconOnMouseOver={true}
+                            flipped={true}
+                            iconStyle={{marginTop: "28px"}}
+                    >
+                        <img
+                            src={ingoingIcon}
+                            alt="Outgoing traffic"
+                            title="Outgoing"
+                            onClick={() => {
+                                updateQuery(`outgoing == false`)
+                            }}
+                        />
+                    </Queryable>
                 }
-                <span className={styles.port} title="Destination Port">{entry.destinationPort}</span>
+                <Queryable
+                        query={`dst.ip == "${entry.dst.ip}"`}
+                        updateQuery={updateQuery}
+                        displayIconOnMouseOver={true}
+                        flipped={false}
+                        iconStyle={{marginTop: "28px"}}
+                >
+                    <span
+                        className={`${styles.tcpInfo} ${styles.ip}`}
+                        title="Destination IP"
+                    >
+                        {entry.dst.ip}
+                    </span>
+                </Queryable>
+                <span className={`${styles.tcpInfo}`} style={{marginTop: "18px"}}>:</span>
+                <Queryable
+                        query={`dst.port == "${entry.dst.port}"`}
+                        updateQuery={updateQuery}
+                        displayIconOnMouseOver={true}
+                        flipped={false}
+                >
+                    <span
+                        className={`${styles.tcpInfo} ${styles.port}`}
+                        title="Destination Port"
+                    >
+                        {entry.dst.port}
+                    </span>
+                </Queryable>
             </div>
             <div className={styles.timestamp}>
-                <span title="Timestamp">
-                    {new Date(+entry.timestamp)?.toLocaleString()}
-                </span>
+                <Queryable
+                        query={`timestamp >= datetime("${Moment(+entry.timestamp)?.utc().format('MM/DD/YYYY, h:mm:ss.SSS A')}")`}
+                        updateQuery={updateQuery}
+                        displayIconOnMouseOver={true}
+                        flipped={false}
+                >
+                    <span
+                        title="Timestamp (UTC)"
+                    >
+                        {Moment(+entry.timestamp)?.utc().format('MM/DD/YYYY, h:mm:ss.SSS A')}
+                    </span>
+                </Queryable>
             </div>
         </div>
     </>

@@ -3,17 +3,42 @@ import React, {useState} from "react";
 import {SyntaxHighlighter} from "../UI/SyntaxHighlighter/index";
 import CollapsibleContainer from "../UI/CollapsibleContainer";
 import FancyTextDisplay from "../UI/FancyTextDisplay";
+import Queryable from "../UI/Queryable";
 import Checkbox from "../UI/Checkbox";
 import ProtobufDecoder from "protobuf-decoder";
 
 interface EntryViewLineProps {
     label: string;
     value: number | string;
+    updateQuery: any;
+    selector: string;
+    overrideQueryValue?: string;
 }
 
-const EntryViewLine: React.FC<EntryViewLineProps> = ({label, value}) => {
-    return (label && value && <tr className={styles.dataLine}>
-                <td className={styles.dataKey}>{label}</td>
+const EntryViewLine: React.FC<EntryViewLineProps> = ({label, value, updateQuery, selector, overrideQueryValue}) => {
+    let query: string;
+    if (!selector) {
+        query = "";
+    } else if (overrideQueryValue) {
+        query = `${selector} == ${overrideQueryValue}`;
+    } else if (typeof(value) == "string") {
+        query = `${selector} == "${JSON.stringify(value).slice(1, -1)}"`;
+    } else {
+        query = `${selector} == ${value}`;
+    }
+    return (label && <tr className={styles.dataLine}>
+                    <td className={`${styles.dataKey}`}>
+                        <Queryable
+                            query={query}
+                            updateQuery={updateQuery}
+                            style={{float: "right", height: "18px"}}
+                            iconStyle={{marginRight: "20px"}}
+                            flipped={true}
+                            displayIconOnMouseOver={true}
+                        >
+                            {label}
+                        </Queryable>
+                    </td>
                 <td>
                     <FancyTextDisplay
                         className={styles.dataValue}
@@ -35,9 +60,9 @@ interface EntrySectionCollapsibleTitleProps {
 
 const EntrySectionCollapsibleTitle: React.FC<EntrySectionCollapsibleTitleProps> = ({title, color, isExpanded}) => {
     return <div className={styles.title}>
-        <span className={`${styles.button} ${isExpanded ? styles.expanded : ''}`} style={{backgroundColor: color}}>
+        <div className={`${styles.button} ${isExpanded ? styles.expanded : ''}`} style={{backgroundColor: color}}>
             {isExpanded ? '-' : '+'}
-        </span>
+        </div>
         <span>{title}</span>
     </div>
 }
@@ -62,15 +87,19 @@ export const EntrySectionContainer: React.FC<EntrySectionContainerProps> = ({tit
 interface EntryBodySectionProps {
     content: any,
     color: string,
+    updateQuery: any,
     encoding?: string,
     contentType?: string,
+    selector?: string,
 }
 
 export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
     color,
+    updateQuery,
     content,
     encoding,
     contentType,
+    selector,
 }) => {
     const MAXIMUM_BYTES_TO_HIGHLIGHT = 10000; // The maximum of chars to highlight in body, in case the response can be megabytes
     const supportedLanguages = [['html', 'html'], ['json', 'json'], ['application/grpc', 'json']]; // [[indicator, languageToUse],...]
@@ -107,8 +136,8 @@ export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
         {content && content?.length > 0 && <EntrySectionContainer title='Body' color={color}>
             <table>
                 <tbody>
-                    <EntryViewLine label={'Mime type'} value={contentType}/>
-                    <EntryViewLine label={'Encoding'} value={encoding}/>
+                    <EntryViewLine label={'Mime type'} value={contentType} updateQuery={updateQuery} selector={selector} overrideQueryValue={`r".*"`}/>
+                    {encoding && <EntryViewLine label={'Encoding'} value={encoding} updateQuery={updateQuery} selector={selector} overrideQueryValue={`r".*"`}/>}
                 </tbody>
             </table>
 
@@ -132,17 +161,23 @@ interface EntrySectionProps {
     title: string,
     color: string,
     arrayToIterate: any[],
+    updateQuery: any,
 }
 
-export const EntryTableSection: React.FC<EntrySectionProps> = ({title, color, arrayToIterate}) => {
+export const EntryTableSection: React.FC<EntrySectionProps> = ({title, color, arrayToIterate, updateQuery}) => {
     return <React.Fragment>
         {
             arrayToIterate && arrayToIterate.length > 0 ?
                 <EntrySectionContainer title={title} color={color}>
                     <table>
                         <tbody>
-                            {arrayToIterate.map(({name, value}, index) => <EntryViewLine key={index} label={name}
-                                                                                            value={value}/>)}
+                            {arrayToIterate.map(({name, value, selector}, index) => <EntryViewLine
+                                key={index}
+                                label={name}
+                                value={value}
+                                updateQuery={updateQuery}
+                                selector={selector}
+                            />)}
                         </tbody>
                     </table>
                 </EntrySectionContainer> : <span/>

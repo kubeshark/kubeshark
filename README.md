@@ -4,16 +4,21 @@
 
 A simple-yet-powerful API traffic viewer for Kubernetes enabling you to view all API communication between microservices to help your debug and troubleshoot regressions.
 
-Think TCPDump and Chrome Dev Tools combined.
+Think TCPDump and Wireshark re-invented for Kubernetes.
 
 ![Simple UI](assets/mizu-ui.png)
 
 ## Features
 
 - Simple and powerful CLI
-- Real-time view of all HTTP requests, REST and gRPC API calls
-- No installation or code instrumentation
-- Works completely on premises
+- Monitoring network traffic in real-time. Supported protocols:
+  - [HTTP/1.1](https://datatracker.ietf.org/doc/html/rfc2616) (REST, etc.)
+  - [HTTP/2](https://datatracker.ietf.org/doc/html/rfc7540) (gRPC)
+  - [AMQP](https://www.rabbitmq.com/amqp-0-9-1-reference.html) (RabbitMQ, Apache Qpid, etc.)
+  - [Apache Kafka](https://kafka.apache.org/protocol)
+  - [Redis](https://redis.io/topics/protocol)
+- Works with Kubernetes APIs. No installation or code instrumentation
+- Rich filtering
 
 ## Requirements
 
@@ -43,15 +48,6 @@ SHA256 checksums are available on the [Releases](https://github.com/up9inc/mizu/
 
 ### Development (unstable) Build
 Pick one from the [Releases](https://github.com/up9inc/mizu/releases) page
-
-## Kubeconfig & Permissions
-While `mizu`most often works out of the box, you can influence its behavior:
-
-1. [OPTIONAL] Set `KUBECONFIG` environment variable to your Kubernetes configuration. If this is not set, Mizu assumes that configuration is at `${HOME}/.kube/config`
-2. `mizu` assumes user running the command has permissions to create resources (such as pods, services, namespaces) on your Kubernetes cluster (no worries - `mizu` resources are cleaned up upon termination)
-
-For detailed list of k8s permissions see [PERMISSIONS](docs/PERMISSIONS.md) document
-
 
 ## How to Run
 
@@ -83,7 +79,7 @@ To tap all pods in current namespace -
 ```
 
 
-To tap specific pod - 
+### To tap specific pod
 ```bash
  $ kubectl get pods 
  NAME                            READY   STATUS    RESTARTS   AGE
@@ -96,7 +92,7 @@ To tap specific pod -
  ^C
 ```
 
-To tap multiple pods using regex - 
+### To tap multiple pods using regex
 ```bash
  $ kubectl get pods 
  NAME                            READY   STATUS    RESTARTS   AGE
@@ -114,20 +110,21 @@ To tap multiple pods using regex -
 
 ## Configuration
 
-Mizu can work with config file which should be stored in ${HOME}/.mizu/config.yaml (macOS: ~/.mizu/config.yaml) <br />
-In case no config file found, defaults will be used <br />
+Mizu can optionally work with a config file that can be provided as a CLI argument (using `--set config-path=<PATH>`) or if not provided, will be stored at ${HOME}/.mizu/config.yaml 
 In case of partial configuration defined, all other fields will be used with defaults <br />
 You can always override the defaults or config file with CLI flags
 
 To get the default config params run `mizu config` <br />
 To generate a new config file with default values use `mizu config -r`
 
-### Telemetry
-
-By default, mizu reports usage telemetry. It can be disabled by adding a line of `telemetry: false` in the `${HOME}/.mizu/config.yaml` file
-
 
 ## Advanced Usage
+
+### Kubeconfig
+
+It is possible to change the kubeconfig path using `KUBECONFIG` environment variable or the command like flag
+with `--set kube-config-path=<PATH>`. </br >
+If both are not set - Mizu assumes that configuration is at `${HOME}/.kube/config`
 
 ### Namespace-Restricted Mode
 
@@ -141,6 +138,8 @@ to the namespace set by `mizu-resources-namespace`. The user must set the tapped
 using the `--namespace` flag or by setting `tap.namespaces` in the config file
 
 Setting `mizu-resources-namespace=mizu` resets Mizu to its default behavior
+
+For detailed list of k8s permissions see [PERMISSIONS](docs/PERMISSIONS.md) document
 
 ### User agent filtering
 
@@ -182,23 +181,7 @@ and when changed it will support accessing by IP
 
 ### Run in daemon mode
 
-Mizu can be ran detached from the cli using the daemon flag: `mizu tap --daemon`. This type of mizu instance will run indefinitely in the cluster.
+Mizu can be run detached from the cli using the daemon flag: `mizu tap --daemon`. This type of mizu instance will run
+indefinitely in the cluster.
 
-Please note that daemon mode requires you to have RBAC creation permissions, see the [permissions](docs/PERMISSIONS.md) doc for more details.
-
-In order to access a daemon mizu you will have to run `mizu view` after running the `tap --daemon` command.
-
-To stop the detached mizu instance and clean all cluster side resources, run `mizu clean`
-
-
-## How to Run local UI
-
-- run from mizu/agent `go run main.go --hars-read --hars-dir <folder>`
-
-- copy Har files into the folder from last command
-
-- change `MizuWebsocketURL` and `apiURL` in `api.js` file
-
-- run from mizu/ui - `npm run start`
-
-- open browser on `localhost:3000`
+For more information please refer to [DAEMON MODE](docs/DAEMON_MODE.md)

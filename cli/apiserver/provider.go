@@ -3,11 +3,12 @@ package apiserver
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/up9inc/mizu/shared/kubernetes"
@@ -41,7 +42,7 @@ func (provider *Provider) TestConnection() error {
 	retriesLeft := provider.retries
 	for retriesLeft > 0 {
 		if _, err := provider.GetHealthStatus(); err != nil {
-			logger.Log.Debugf("[ERROR] api server not ready yet %v", err)
+			logger.Log.Debugf("api server not ready yet %v", err)
 		} else {
 			logger.Log.Debugf("connection test to api server passed successfully")
 			break
@@ -61,7 +62,14 @@ func (provider *Provider) GetHealthStatus() (*shared.HealthResponse, error) {
 	if response, err := provider.client.Get(healthUrl); err != nil {
 		return nil, err
 	} else if response.StatusCode > 299 {
-		return nil, errors.New(fmt.Sprintf("status code: %d", response.StatusCode))
+		responseBody := new(strings.Builder)
+
+		if _, err := io.Copy(responseBody, response.Body); err != nil {
+			return nil, fmt.Errorf("status code: %d - (bad response - %v)", response.StatusCode, err)
+		} else {
+			singleLineResponse := strings.ReplaceAll(responseBody.String(), "\n", "")
+			return nil, fmt.Errorf("status code: %d - (response - %v)", response.StatusCode, singleLineResponse)
+		}
 	} else {
 		defer response.Body.Close()
 
@@ -70,6 +78,23 @@ func (provider *Provider) GetHealthStatus() (*shared.HealthResponse, error) {
 			return nil, err
 		}
 		return healthResponse, nil
+	}
+}
+
+func (provider *Provider) ReportTapperStatus(tapperStatus shared.TapperStatus) error {
+	tapperStatusUrl := fmt.Sprintf("%s/status/tapperStatus", provider.url)
+
+	if jsonValue, err := json.Marshal(tapperStatus); err != nil {
+		return fmt.Errorf("failed Marshal the tapper status %w", err)
+	} else {
+		if response, err := provider.client.Post(tapperStatusUrl, "application/json", bytes.NewBuffer(jsonValue)); err != nil {
+			return fmt.Errorf("failed sending to API server the tapped pods %w", err)
+		} else if response.StatusCode != 200 {
+			return fmt.Errorf("failed sending to API server the tapper status, response status code %v", response.StatusCode)
+		} else {
+			logger.Log.Debugf("Reported to server API about tapper status: %v", tapperStatus)
+			return nil
+		}
 	}
 }
 

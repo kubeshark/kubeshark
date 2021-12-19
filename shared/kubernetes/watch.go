@@ -6,19 +6,22 @@ import (
 	"fmt"
 	"github.com/up9inc/mizu/shared/debounce"
 	"github.com/up9inc/mizu/shared/logger"
-	"regexp"
 	"sync"
 	"time"
 
-	corev1 "k8s.io/api/core/v1"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/watch"
 )
 
-func FilteredWatch(ctx context.Context, kubernetesProvider *Provider, targetNamespaces []string, podFilter *regexp.Regexp) (chan *corev1.Pod, chan *corev1.Pod, chan *corev1.Pod, chan error) {
-	addedChan := make(chan *corev1.Pod)
-	modifiedChan := make(chan *corev1.Pod)
-	removedChan := make(chan *corev1.Pod)
+type EventFilterer interface {
+	Filter(*WatchEvent) (bool, error)
+}
+
+type WatchCreator interface {
+	NewWatcher(ctx context.Context, namespace string) (watch.Interface, error)
+}
+
+func FilteredWatch(ctx context.Context, watcherCreator WatchCreator, targetNamespaces []string, filterer EventFilterer) (<-chan *WatchEvent, <-chan error) {
+	eventChan := make(chan *WatchEvent)
 	errorChan := make(chan error)
 
 	var wg sync.WaitGroup
@@ -31,8 +34,13 @@ func FilteredWatch(ctx context.Context, kubernetesProvider *Provider, targetName
 			watchRestartDebouncer := debounce.NewDebouncer(1 * time.Minute, func() {})
 
 			for {
-				watcher := kubernetesProvider.GetPodWatcher(ctx, targetNamespace)
-				err := startWatchLoop(ctx, watcher, podFilter, addedChan, modifiedChan, removedChan) // blocking
+				watcher, err := watcherCreator.NewWatcher(ctx, targetNamespace)
+				if err != nil {
+					errorChan <- fmt.Errorf("error in k8s watch: %v", err)
+					break
+				}
+
+				err = startWatchLoop(ctx, watcher, filterer, eventChan) // blocking
 				watcher.Stop()
 
 				select {
@@ -43,7 +51,7 @@ func FilteredWatch(ctx context.Context, kubernetesProvider *Provider, targetName
 				}
 
 				if err != nil {
-					errorChan <- fmt.Errorf("error in k8 watch: %v", err)
+					errorChan <- fmt.Errorf("error in k8s watch: %v", err)
 					break
 				} else {
 					if !watchRestartDebouncer.IsOn() {
@@ -63,16 +71,14 @@ func FilteredWatch(ctx context.Context, kubernetesProvider *Provider, targetName
 	go func() {
 		<-ctx.Done()
 		wg.Wait()
-		close(addedChan)
-		close(modifiedChan)
-		close(removedChan)
+		close(eventChan)
 		close(errorChan)
 	}()
 
-	return addedChan, modifiedChan, removedChan, errorChan
+	return eventChan, errorChan
 }
 
-func startWatchLoop(ctx context.Context, watcher watch.Interface, podFilter *regexp.Regexp, addedChan chan *corev1.Pod, modifiedChan chan *corev1.Pod, removedChan chan *corev1.Pod) error {
+func startWatchLoop(ctx context.Context, watcher watch.Interface, filterer EventFilterer, eventChan chan<- *WatchEvent) error {
 	resultChan := watcher.ResultChan()
 	for {
 		select {
@@ -81,27 +87,19 @@ func startWatchLoop(ctx context.Context, watcher watch.Interface, podFilter *reg
 				return nil
 			}
 
-			if e.Type == watch.Error {
-				return apierrors.FromObject(e.Object)
+			wEvent := WatchEvent(e)
+
+			if wEvent.Type == watch.Error {
+				return wEvent.ToError()
 			}
 
-			pod, ok := e.Object.(*corev1.Pod)
-			if !ok {
+			if pass, err := filterer.Filter(&wEvent); err != nil {
+				return err
+			} else if !pass {
 				continue
 			}
 
-			if !podFilter.MatchString(pod.Name) {
-				continue
-			}
-
-			switch e.Type {
-			case watch.Added:
-				addedChan <- pod
-			case watch.Modified:
-				modifiedChan <- pod
-			case watch.Deleted:
-				removedChan <- pod
-			}
+			eventChan <- &wEvent
 		case <-ctx.Done():
 			return nil
 		}

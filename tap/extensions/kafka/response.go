@@ -10,10 +10,10 @@ import (
 )
 
 type Response struct {
-	Size          int32
-	CorrelationID int32
-	Payload       interface{}
-	CaptureTime   time.Time
+	Size          int32       `json:"size"`
+	CorrelationID int32       `json:"correlationID"`
+	Payload       interface{} `json:"payload"`
+	CaptureTime   time.Time   `json:"captureTime"`
 }
 
 func ReadResponse(r io.Reader, tcpID *api.TcpID, superTimer *api.SuperTimer, emitter api.Emitter) (err error) {

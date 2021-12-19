@@ -16,6 +16,8 @@ import (
 	"github.com/up9inc/mizu/tap/source"
 )
 
+const PACKETS_SEEN_LOG_THRESHOLD = 1000
+
 type tcpAssembler struct {
 	*reassembly.Assembler
 	streamPool     *reassembly.StreamPool
@@ -33,13 +35,13 @@ func (c *context) GetCaptureInfo() gopacket.CaptureInfo {
 	return c.CaptureInfo
 }
 
-func NewTcpAssembler(outputItems chan *api.OutputChannelItem, streamsMap *tcpStreamMap) *tcpAssembler {
+func NewTcpAssembler(outputItems chan *api.OutputChannelItem, streamsMap *tcpStreamMap, opts *TapOpts) *tcpAssembler {
 	var emitter api.Emitter = &api.Emitting{
 		AppStats:      &diagnose.AppStats,
 		OutputChannel: outputItems,
 	}
 
-	streamFactory := NewTcpStreamFactory(emitter, streamsMap)
+	streamFactory := NewTcpStreamFactory(emitter, streamsMap, opts)
 	streamPool := reassembly.NewStreamPool(streamFactory)
 	assembler := reassembly.NewAssembler(streamPool)
 
@@ -63,7 +65,11 @@ func (a *tcpAssembler) processPackets(dumpPacket bool, packets <-chan source.Tcp
 
 	for packetInfo := range packets {
 		packetsCount := diagnose.AppStats.IncPacketsCount()
-		logger.Log.Debugf("PACKET #%d", packetsCount)
+		
+		if packetsCount % PACKETS_SEEN_LOG_THRESHOLD == 0 {
+			logger.Log.Debugf("Packets seen: #%d", packetsCount)
+		}
+		
 		packet := packetInfo.Packet
 		data := packet.Data()
 		diagnose.AppStats.UpdateProcessedBytes(uint64(len(data)))
@@ -78,14 +84,14 @@ func (a *tcpAssembler) processPackets(dumpPacket bool, packets <-chan source.Tcp
 			if *checksum {
 				err := tcp.SetNetworkLayerForChecksum(packet.NetworkLayer())
 				if err != nil {
-					logger.Log.Fatalf("Failed to set network layer for checksum: %s\n", err)
+					logger.Log.Fatalf("Failed to set network layer for checksum: %s", err)
 				}
 			}
 			c := context{
 				CaptureInfo: packet.Metadata().CaptureInfo,
 			}
 			diagnose.InternalStats.Totalsz += len(tcp.Payload)
-			logger.Log.Debugf("%s : %v -> %s : %v", packet.NetworkLayer().NetworkFlow().Src(), tcp.SrcPort, packet.NetworkLayer().NetworkFlow().Dst(), tcp.DstPort)
+			logger.Log.Debugf("%s:%v -> %s:%v", packet.NetworkLayer().NetworkFlow().Src(), tcp.SrcPort, packet.NetworkLayer().NetworkFlow().Dst(), tcp.DstPort)
 			a.assemblerMutex.Lock()
 			a.AssembleWithContext(packet.NetworkLayer().NetworkFlow(), tcp, &c)
 			a.assemblerMutex.Unlock()

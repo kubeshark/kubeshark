@@ -4,27 +4,27 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/up9inc/mizu/cli/cmd/goUtils"
 	"io/ioutil"
-	k8serrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/wait"
-	"path"
 	"regexp"
 	"strings"
 	"time"
 
+	"k8s.io/apimachinery/pkg/util/intstr"
+
 	"github.com/getkin/kin-openapi/openapi3"
+	"gopkg.in/yaml.v3"
+	core "k8s.io/api/core/v1"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/wait"
+
 	"github.com/up9inc/mizu/cli/apiserver"
+	"github.com/up9inc/mizu/cli/cmd/goUtils"
 	"github.com/up9inc/mizu/cli/config"
 	"github.com/up9inc/mizu/cli/config/configStructs"
 	"github.com/up9inc/mizu/cli/errormessage"
-	"gopkg.in/yaml.v3"
-	core "k8s.io/api/core/v1"
-
 	"github.com/up9inc/mizu/cli/mizu"
 	"github.com/up9inc/mizu/cli/mizu/fsUtils"
-	"github.com/up9inc/mizu/cli/telemetry"
 	"github.com/up9inc/mizu/cli/uiUtils"
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/kubernetes"
@@ -35,6 +35,9 @@ import (
 const cleanupTimeout = time.Minute
 
 type tapState struct {
+	startTime        time.Time
+	targetNamespaces []string
+
 	apiServerService         *core.Service
 	tapperSyncer             *kubernetes.MizuTapperSyncer
 	mizuServiceAccountExists bool
@@ -44,6 +47,8 @@ var state tapState
 var apiProvider *apiserver.Provider
 
 func RunMizuTap() {
+	state.startTime = time.Now()
+
 	mizuApiFilteringOptions, err := getMizuApiFilteringOptions()
 	apiProvider = apiserver.NewProvider(GetApiServerUrl(), apiserver.DefaultRetries, apiserver.DefaultTimeout)
 	if err != nil {
@@ -92,16 +97,16 @@ func RunMizuTap() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // cancel will be called when this function exits
 
-	targetNamespaces := getNamespaces(kubernetesProvider)
+	state.targetNamespaces = getNamespaces(kubernetesProvider)
 
-	serializedMizuConfig, err := config.GetSerializedMizuAgentConfig(targetNamespaces, mizuApiFilteringOptions)
+	serializedMizuConfig, err := config.GetSerializedMizuAgentConfig(state.targetNamespaces, mizuApiFilteringOptions)
 	if err != nil {
 		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error composing mizu config: %v", errormessage.FormatError(err)))
 		return
 	}
 
 	if config.Config.IsNsRestrictedMode() {
-		if len(targetNamespaces) != 1 || !shared.Contains(targetNamespaces, config.Config.MizuResourcesNamespace) {
+		if len(state.targetNamespaces) != 1 || !shared.Contains(state.targetNamespaces, config.Config.MizuResourcesNamespace) {
 			logger.Log.Errorf("Not supported mode. Mizu can't resolve IPs in other namespaces when running in namespace restricted mode.\n"+
 				"You can use the same namespace for --%s and --%s", configStructs.NamespacesTapName, config.MizuResourcesNamespaceConfigName)
 			return
@@ -109,18 +114,23 @@ func RunMizuTap() {
 	}
 
 	var namespacesStr string
-	if !shared.Contains(targetNamespaces, kubernetes.K8sAllNamespaces) {
-		namespacesStr = fmt.Sprintf("namespaces \"%s\"", strings.Join(targetNamespaces, "\", \""))
+	if !shared.Contains(state.targetNamespaces, kubernetes.K8sAllNamespaces) {
+		namespacesStr = fmt.Sprintf("namespaces \"%s\"", strings.Join(state.targetNamespaces, "\", \""))
 	} else {
 		namespacesStr = "all namespaces"
 	}
 
 	logger.Log.Infof("Tapping pods in %s", namespacesStr)
 
+	if err := printTappedPodsPreview(ctx, kubernetesProvider, state.targetNamespaces); err != nil {
+		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error listing pods: %v", errormessage.FormatError(err)))
+	}
+
 	if config.Config.Tap.DryRun {
 		return
 	}
 
+	logger.Log.Infof("Waiting for Mizu Agent to start...")
 	if err := createMizuResources(ctx, cancel, kubernetesProvider, serializedValidationRules, serializedContract, serializedMizuConfig); err != nil {
 		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error creating resources: %v", errormessage.FormatError(err)))
 
@@ -133,7 +143,7 @@ func RunMizuTap() {
 		return
 	}
 	if config.Config.Tap.DaemonMode {
-		if err := handleDaemonModePostCreation(cancel, kubernetesProvider); err != nil {
+		if err := handleDaemonModePostCreation(ctx, cancel, kubernetesProvider, state.targetNamespaces); err != nil {
 			defer finishMizuExecution(kubernetesProvider, apiProvider)
 			cancel()
 		} else {
@@ -142,45 +152,44 @@ func RunMizuTap() {
 	} else {
 		defer finishMizuExecution(kubernetesProvider, apiProvider)
 
-		if err = startTapperSyncer(ctx, cancel, kubernetesProvider, targetNamespaces, *mizuApiFilteringOptions); err != nil {
-			logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error starting mizu tapper syncer: %v", err))
-			cancel()
-		}
-
+		go goUtils.HandleExcWrapper(watchApiServerEvents, ctx, kubernetesProvider, cancel)
 		go goUtils.HandleExcWrapper(watchApiServerPod, ctx, kubernetesProvider, cancel)
-		go goUtils.HandleExcWrapper(watchTapperPod, ctx, kubernetesProvider, cancel)
 
 		// block until exit signal or error
 		waitForFinish(ctx, cancel)
 	}
 }
 
-func handleDaemonModePostCreation(cancel context.CancelFunc, kubernetesProvider *kubernetes.Provider) error {
+func handleDaemonModePostCreation(ctx context.Context, cancel context.CancelFunc, kubernetesProvider *kubernetes.Provider, namespaces []string) error {
 	apiProvider := apiserver.NewProvider(GetApiServerUrl(), 90, 1*time.Second)
 
 	if err := waitForDaemonModeToBeReady(cancel, kubernetesProvider, apiProvider); err != nil {
 		return err
 	}
-	if err := printDaemonModeTappedPods(apiProvider); err != nil {
-		return err
-	}
 
 	return nil
 }
 
-func printDaemonModeTappedPods(apiProvider *apiserver.Provider) error {
-	if healthStatus, err := apiProvider.GetHealthStatus(); err != nil {
+/*
+this function is a bit problematic as it might be detached from the actual pods the mizu api server will tap.
+The alternative would be to wait for api server to be ready and then query it for the pods it listens to, this has
+the arguably worse drawback of taking a relatively very long time before the user sees which pods are targeted, if any.
+*/
+func printTappedPodsPreview(ctx context.Context, kubernetesProvider *kubernetes.Provider, namespaces []string) error {
+	if matchingPods, err := kubernetesProvider.ListAllRunningPodsMatchingRegex(ctx, config.Config.Tap.PodRegex(), namespaces); err != nil {
 		return err
 	} else {
-		for _, tappedPod := range healthStatus.TapStatus.Pods {
+		if len(matchingPods) == 0 {
+			printNoPodsFoundSuggestion(namespaces)
+		}
+		for _, tappedPod := range matchingPods {
 			logger.Log.Infof(uiUtils.Green, fmt.Sprintf("+%s", tappedPod.Name))
 		}
+		return nil
 	}
-	return nil
 }
 
 func waitForDaemonModeToBeReady(cancel context.CancelFunc, kubernetesProvider *kubernetes.Provider, apiProvider *apiserver.Provider) error {
-	logger.Log.Info("Waiting for mizu to be ready... (may take a few minutes)")
 	go startProxyReportErrorIfAny(kubernetesProvider, cancel)
 
 	// TODO: TRA-3903 add a smarter test to see that tapping/pod watching is functioning properly
@@ -191,7 +200,7 @@ func waitForDaemonModeToBeReady(cancel context.CancelFunc, kubernetesProvider *k
 	return nil
 }
 
-func startTapperSyncer(ctx context.Context, cancel context.CancelFunc, provider *kubernetes.Provider, targetNamespaces []string, mizuApiFilteringOptions api.TrafficFilteringOptions) error {
+func startTapperSyncer(ctx context.Context, cancel context.CancelFunc, provider *kubernetes.Provider, targetNamespaces []string, mizuApiFilteringOptions api.TrafficFilteringOptions, startTime time.Time) error {
 	tapperSyncer, err := kubernetes.CreateAndStartMizuTapperSyncer(ctx, provider, kubernetes.TapperSyncerConfig{
 		TargetNamespaces:         targetNamespaces,
 		PodFilterRegex:           *config.Config.Tap.PodRegex(),
@@ -199,26 +208,15 @@ func startTapperSyncer(ctx context.Context, cancel context.CancelFunc, provider 
 		AgentImage:               config.Config.AgentImage,
 		TapperResources:          config.Config.Tap.TapperResources,
 		ImagePullPolicy:          config.Config.ImagePullPolicy(),
-		DumpLogs:                 config.Config.DumpLogs,
+		LogLevel:                 config.Config.LogLevel(),
 		IgnoredUserAgents:        config.Config.Tap.IgnoredUserAgents,
 		MizuApiFilteringOptions:  mizuApiFilteringOptions,
 		MizuServiceAccountExists: state.mizuServiceAccountExists,
-	})
+		Istio:                    config.Config.Tap.Istio,
+	}, startTime)
 
 	if err != nil {
 		return err
-	}
-
-	for _, tappedPod := range tapperSyncer.CurrentlyTappedPods {
-		logger.Log.Infof(uiUtils.Green, fmt.Sprintf("+%s", tappedPod.Name))
-	}
-
-	if len(tapperSyncer.CurrentlyTappedPods) == 0 {
-		var suggestionStr string
-		if !shared.Contains(targetNamespaces, kubernetes.K8sAllNamespaces) {
-			suggestionStr = ". Select a different namespace with -n or tap all namespaces with -A"
-		}
-		logger.Log.Warningf(uiUtils.Warning, fmt.Sprintf("Did not find any pods matching the regex argument%s", suggestionStr))
 	}
 
 	go func() {
@@ -239,6 +237,14 @@ func startTapperSyncer(ctx context.Context, cancel context.CancelFunc, provider 
 				if err := apiProvider.ReportTappedPods(tapperSyncer.CurrentlyTappedPods); err != nil {
 					logger.Log.Debugf("[Error] failed update tapped pods %v", err)
 				}
+			case tapperStatus, ok := <-tapperSyncer.TapperStatusChangedOut:
+				if !ok {
+					logger.Log.Debug("mizuTapperSyncer tapper status changed channel closed, ending listener loop")
+					return
+				}
+				if err := apiProvider.ReportTapperStatus(tapperStatus); err != nil {
+					logger.Log.Debugf("[Error] failed update tapper status %v", err)
+				}
 			case <-ctx.Done():
 				logger.Log.Debug("mizuTapperSyncer event listener loop exiting due to context done")
 				return
@@ -249,6 +255,14 @@ func startTapperSyncer(ctx context.Context, cancel context.CancelFunc, provider 
 	state.tapperSyncer = tapperSyncer
 
 	return nil
+}
+
+func printNoPodsFoundSuggestion(targetNamespaces []string) {
+	var suggestionStr string
+	if !shared.Contains(targetNamespaces, kubernetes.K8sAllNamespaces) {
+		suggestionStr = ". You can also try selecting a different namespace with -n or tap all namespaces with -A"
+	}
+	logger.Log.Warningf(uiUtils.Warning, fmt.Sprintf("Did not find any currently running pods that match the regex argument, mizu will automatically tap matching pods if any are created later%s", suggestionStr))
 }
 
 func getErrorDisplayTextForK8sTapManagerError(err kubernetes.K8sTapManagerError) string {
@@ -281,7 +295,7 @@ func createMizuResources(ctx context.Context, cancel context.CancelFunc, kuberne
 	}
 
 	if err := createMizuConfigmap(ctx, kubernetesProvider, serializedValidationRules, serializedContract, serializedMizuConfig); err != nil {
-		logger.Log.Warningf(uiUtils.Warning, fmt.Sprintf("Failed to create resources required for policy validation. Mizu will not validate policy rules. error: %v\n", errormessage.FormatError(err)))
+		logger.Log.Warningf(uiUtils.Warning, fmt.Sprintf("Failed to create resources required for policy validation. Mizu will not validate policy rules. error: %v", errormessage.FormatError(err)))
 	}
 
 	var err error
@@ -309,6 +323,7 @@ func createMizuResources(ctx context.Context, cancel context.CancelFunc, kuberne
 		MaxEntriesDBSizeBytes: config.Config.Tap.MaxEntriesDBSizeBytes(),
 		Resources:             config.Config.Tap.ApiServerResources,
 		ImagePullPolicy:       config.Config.ImagePullPolicy(),
+		LogLevel:              config.Config.LogLevel(),
 	}
 
 	if config.Config.Tap.DaemonMode {
@@ -357,32 +372,50 @@ func createMizuApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.
 }
 
 func createMizuApiServerDeployment(ctx context.Context, kubernetesProvider *kubernetes.Provider, opts *kubernetes.ApiServerOptions) error {
-	isDefaultStorageClassAvailable, err := kubernetesProvider.IsDefaultStorageProviderAvailable(ctx)
 	volumeClaimCreated := false
-	if err != nil {
-		return err
-	}
-	if isDefaultStorageClassAvailable {
-		if _, err = kubernetesProvider.CreatePersistentVolumeClaim(ctx, config.Config.MizuResourcesNamespace, kubernetes.PersistentVolumeClaimName, config.Config.Tap.MaxEntriesDBSizeBytes()+mizu.DaemonModePersistentVolumeSizeBufferBytes); err != nil {
-			logger.Log.Warningf(uiUtils.Yellow, "An error has occured while creating a persistent volume claim for mizu, this will mean that mizu's data will be lost on pod restart")
-			logger.Log.Debugf("error creating persistent volume claim: %v", err)
-		} else {
-			volumeClaimCreated = true
-		}
-	} else {
-		logger.Log.Warningf(uiUtils.Yellow, "Could not find default volume provider in this cluster, this will mean that mizu's data will be lost on pod restart")
+	if !config.Config.Tap.NoPersistentVolumeClaim {
+		volumeClaimCreated = TryToCreatePersistentVolumeClaim(ctx, kubernetesProvider)
 	}
 
 	pod, err := kubernetesProvider.GetMizuApiServerPodObject(opts, volumeClaimCreated, kubernetes.PersistentVolumeClaimName)
 	if err != nil {
 		return err
 	}
-
+	pod.Spec.Containers[0].LivenessProbe = &core.Probe{
+		Handler: core.Handler{
+			HTTPGet: &core.HTTPGetAction{
+				Path: "/echo",
+				Port: intstr.FromInt(shared.DefaultApiServerPort),
+			},
+		},
+		InitialDelaySeconds: 1,
+		PeriodSeconds:       10,
+	}
 	if _, err = kubernetesProvider.CreateDeployment(ctx, config.Config.MizuResourcesNamespace, opts.PodName, pod); err != nil {
 		return err
 	}
 	logger.Log.Debugf("Successfully created API server deployment: %s", kubernetes.ApiServerPodName)
 	return nil
+}
+
+func TryToCreatePersistentVolumeClaim(ctx context.Context, kubernetesProvider *kubernetes.Provider) bool {
+	isDefaultStorageClassAvailable, err := kubernetesProvider.IsDefaultStorageProviderAvailable(ctx)
+	if err != nil {
+		logger.Log.Warningf(uiUtils.Yellow, "An error occured when checking if a default storage provider exists in this cluster, this means mizu data will be lost on mizu-api-server pod restart")
+		logger.Log.Debugf("error checking if default storage class exists: %v", err)
+		return false
+	} else if !isDefaultStorageClassAvailable {
+		logger.Log.Warningf(uiUtils.Yellow, "Could not find default storage provider in this cluster, this means mizu data will be lost on mizu-api-server pod restart")
+		return false
+	}
+
+	if _, err = kubernetesProvider.CreatePersistentVolumeClaim(ctx, config.Config.MizuResourcesNamespace, kubernetes.PersistentVolumeClaimName, config.Config.Tap.MaxEntriesDBSizeBytes()+mizu.DaemonModePersistentVolumeSizeBufferBytes); err != nil {
+		logger.Log.Warningf(uiUtils.Yellow, "An error has occured while creating a persistent volume claim for mizu, this means mizu data will be lost on mizu-api-server pod restart")
+		logger.Log.Debugf("error creating persistent volume claim: %v", err)
+		return false
+	}
+
+	return true
 }
 
 func getMizuApiFilteringOptions() (*api.TrafficFilteringOptions, error) {
@@ -416,45 +449,6 @@ func getSyncEntriesConfig() *shared.SyncEntriesConfig {
 		Env:               config.Config.Auth.EnvName,
 		Workspace:         config.Config.Tap.Workspace,
 		UploadIntervalSec: config.Config.Tap.UploadIntervalSec,
-	}
-}
-
-func finishMizuExecution(kubernetesProvider *kubernetes.Provider, apiProvider *apiserver.Provider) {
-	telemetry.ReportAPICalls(apiProvider)
-	removalCtx, cancel := context.WithTimeout(context.Background(), cleanupTimeout)
-	defer cancel()
-	dumpLogsIfNeeded(removalCtx, kubernetesProvider)
-	cleanUpMizuResources(removalCtx, cancel, kubernetesProvider)
-}
-
-func dumpLogsIfNeeded(ctx context.Context, kubernetesProvider *kubernetes.Provider) {
-	if !config.Config.DumpLogs {
-		return
-	}
-	mizuDir := mizu.GetMizuFolderPath()
-	filePath := path.Join(mizuDir, fmt.Sprintf("mizu_logs_%s.zip", time.Now().Format("2006_01_02__15_04_05")))
-	if err := fsUtils.DumpLogs(ctx, kubernetesProvider, filePath); err != nil {
-		logger.Log.Errorf("Failed dump logs %v", err)
-	}
-}
-
-func cleanUpMizuResources(ctx context.Context, cancel context.CancelFunc, kubernetesProvider *kubernetes.Provider) {
-	logger.Log.Infof("\nRemoving mizu resources\n")
-
-	var leftoverResources []string
-
-	if config.Config.IsNsRestrictedMode() {
-		leftoverResources = cleanUpRestrictedMode(ctx, kubernetesProvider)
-	} else {
-		leftoverResources = cleanUpNonRestrictedMode(ctx, cancel, kubernetesProvider)
-	}
-
-	if len(leftoverResources) > 0 {
-		errMsg := fmt.Sprintf("Failed to remove the following resources, for more info check logs at %s:", fsUtils.GetLogFilePath())
-		for _, resource := range leftoverResources {
-			errMsg += "\n- " + resource
-		}
-		logger.Log.Errorf(uiUtils.Error, errMsg)
 	}
 }
 
@@ -568,67 +562,43 @@ func waitUntilNamespaceDeleted(ctx context.Context, cancel context.CancelFunc, k
 
 func watchApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
 	podExactRegex := regexp.MustCompile(fmt.Sprintf("^%s$", kubernetes.ApiServerPodName))
-	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, kubernetesProvider, []string{config.Config.MizuResourcesNamespace}, podExactRegex)
+	podWatchHelper := kubernetes.NewPodWatchHelper(kubernetesProvider, podExactRegex)
+	eventChan, errorChan := kubernetes.FilteredWatch(ctx, podWatchHelper, []string{config.Config.MizuResourcesNamespace}, podWatchHelper)
 	isPodReady := false
 	timeAfter := time.After(25 * time.Second)
 	for {
 		select {
-		case _, ok := <-added:
+		case wEvent, ok := <-eventChan:
 			if !ok {
-				added = nil
+				eventChan = nil
 				continue
 			}
 
-			logger.Log.Debugf("Watching API Server pod loop, added")
-		case _, ok := <-removed:
-			if !ok {
-				removed = nil
-				continue
-			}
-
-			logger.Log.Infof("%s removed", kubernetes.ApiServerPodName)
-			cancel()
-			return
-		case modifiedPod, ok := <-modified:
-			if !ok {
-				modified = nil
-				continue
-			}
-
-			logger.Log.Debugf("Watching API Server pod loop, modified: %v", modifiedPod.Status.Phase)
-
-			if modifiedPod.Status.Phase == core.PodPending {
-				if modifiedPod.Status.Conditions[0].Type == core.PodScheduled && modifiedPod.Status.Conditions[0].Status != core.ConditionTrue {
-					logger.Log.Debugf("Wasn't able to deploy the API server. Reason: \"%s\"", modifiedPod.Status.Conditions[0].Message)
-					logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Wasn't able to deploy the API server, for more info check logs at %s", fsUtils.GetLogFilePath()))
+			switch wEvent.Type {
+			case kubernetes.EventAdded:
+				logger.Log.Debugf("Watching API Server pod loop, added")
+			case kubernetes.EventDeleted:
+				logger.Log.Infof("%s removed", kubernetes.ApiServerPodName)
+				cancel()
+				return
+			case kubernetes.EventModified:
+				modifiedPod, err := wEvent.ToPod()
+				if err != nil {
+					logger.Log.Errorf(uiUtils.Error, err)
 					cancel()
-					break
+					continue
 				}
 
-				if len(modifiedPod.Status.ContainerStatuses) > 0 && modifiedPod.Status.ContainerStatuses[0].State.Waiting != nil && modifiedPod.Status.ContainerStatuses[0].State.Waiting.Reason == "ErrImagePull" {
-					logger.Log.Debugf("Wasn't able to deploy the API server. (ErrImagePull) Reason: \"%s\"", modifiedPod.Status.ContainerStatuses[0].State.Waiting.Message)
-					logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Wasn't able to deploy the API server: failed to pull the image, for more info check logs at %v", fsUtils.GetLogFilePath()))
-					cancel()
-					break
-				}
-			}
+				logger.Log.Debugf("Watching API Server pod loop, modified: %v", modifiedPod.Status.Phase)
 
-			if modifiedPod.Status.Phase == core.PodRunning && !isPodReady {
-				isPodReady = true
-				go startProxyReportErrorIfAny(kubernetesProvider, cancel)
-
-				url := GetApiServerUrl()
-				if err := apiProvider.TestConnection(); err != nil {
-					logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Couldn't connect to API server, for more info check logs at %s", fsUtils.GetLogFilePath()))
-					cancel()
-					break
+				if modifiedPod.Status.Phase == core.PodRunning && !isPodReady {
+					isPodReady = true
+					postApiServerStarted(ctx, kubernetesProvider, cancel, err)
 				}
-
-				logger.Log.Infof("Mizu is available at %s\n", url)
-				uiUtils.OpenBrowser(url)
-				if err := apiProvider.ReportTappedPods(state.tapperSyncer.CurrentlyTappedPods); err != nil {
-					logger.Log.Debugf("[Error] failed update tapped pods %v", err)
-				}
+			case kubernetes.EventBookmark:
+				break
+			case kubernetes.EventError:
+				break
 			}
 		case err, ok := <-errorChan:
 			if !ok {
@@ -651,69 +621,74 @@ func watchApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 	}
 }
 
-func watchTapperPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
-	podExactRegex := regexp.MustCompile(fmt.Sprintf("^%s.*", kubernetes.TapperDaemonSetName))
-	added, modified, removed, errorChan := kubernetes.FilteredWatch(ctx, kubernetesProvider, []string{config.Config.MizuResourcesNamespace}, podExactRegex)
-	var prevPodPhase core.PodPhase
+func watchApiServerEvents(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
+	podExactRegex := regexp.MustCompile(fmt.Sprintf("^%s", kubernetes.ApiServerPodName))
+	eventWatchHelper := kubernetes.NewEventWatchHelper(kubernetesProvider, podExactRegex, "pod")
+	eventChan, errorChan := kubernetes.FilteredWatch(ctx, eventWatchHelper, []string{config.Config.MizuResourcesNamespace}, eventWatchHelper)
 	for {
 		select {
-		case addedPod, ok := <-added:
+		case wEvent, ok := <-eventChan:
 			if !ok {
-				added = nil
+				eventChan = nil
 				continue
 			}
 
-			logger.Log.Debugf("Tapper is created [%s]", addedPod.Name)
-		case removedPod, ok := <-removed:
-			if !ok {
-				removed = nil
+			event, err := wEvent.ToEvent()
+			if err != nil {
+				logger.Log.Errorf(fmt.Sprintf("Error parsing Mizu resource event: %+v", err))
+			}
+
+			if state.startTime.After(event.CreationTimestamp.Time) {
 				continue
 			}
 
-			logger.Log.Debugf("Tapper is removed [%s]", removedPod.Name)
-		case modifiedPod, ok := <-modified:
-			if !ok {
-				modified = nil
-				continue
-			}
+			logger.Log.Debugf(
+				fmt.Sprintf("Watching API server events loop, event %s, time: %v, resource: %s (%s), reason: %s, note: %s",
+					event.Name,
+					event.CreationTimestamp.Time,
+					event.Regarding.Name,
+					event.Regarding.Kind,
+					event.Reason,
+					event.Note))
 
-			if modifiedPod.Status.Phase == core.PodPending && modifiedPod.Status.Conditions[0].Type == core.PodScheduled && modifiedPod.Status.Conditions[0].Status != core.ConditionTrue {
-				logger.Log.Infof(uiUtils.Red, fmt.Sprintf("Wasn't able to deploy the tapper %s. Reason: \"%s\"", modifiedPod.Name, modifiedPod.Status.Conditions[0].Message))
+			switch event.Reason {
+			case "FailedScheduling", "Failed":
+				logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Mizu API Server status: %s - %s", event.Reason, event.Note))
 				cancel()
 				break
 			}
-
-			podStatus := modifiedPod.Status
-			if podStatus.Phase == core.PodPending && prevPodPhase == podStatus.Phase {
-				logger.Log.Debugf("Tapper %s is %s", modifiedPod.Name, strings.ToLower(string(podStatus.Phase)))
-				continue
-			}
-			prevPodPhase = podStatus.Phase
-
-			if podStatus.Phase == core.PodRunning {
-				state := podStatus.ContainerStatuses[0].State
-				if state.Terminated != nil {
-					switch state.Terminated.Reason {
-					case "OOMKilled":
-						logger.Log.Infof(uiUtils.Red, fmt.Sprintf("Tapper %s was terminated (reason: OOMKilled). You should consider increasing machine resources.", modifiedPod.Name))
-					}
-				}
-			}
-
-			logger.Log.Debugf("Tapper %s is %s", modifiedPod.Name, strings.ToLower(string(podStatus.Phase)))
 		case err, ok := <-errorChan:
 			if !ok {
 				errorChan = nil
 				continue
 			}
 
-			logger.Log.Errorf("[Error] Error in mizu tapper watch, err: %v", err)
-			cancel()
-
+			logger.Log.Errorf("Watching API server events loop, error: %+v", err)
 		case <-ctx.Done():
-			logger.Log.Debugf("Watching tapper pod loop, ctx done")
+			logger.Log.Debugf("Watching API server events loop, ctx done")
 			return
 		}
+	}
+}
+
+func postApiServerStarted(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc, err error) {
+	go startProxyReportErrorIfAny(kubernetesProvider, cancel)
+
+	url := GetApiServerUrl()
+	if err := apiProvider.TestConnection(); err != nil {
+		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Couldn't connect to API server, for more info check logs at %s", fsUtils.GetLogFilePath()))
+		cancel()
+		return
+	}
+	options, _ := getMizuApiFilteringOptions()
+	if err = startTapperSyncer(ctx, cancel, kubernetesProvider, state.targetNamespaces, *options, state.startTime); err != nil {
+		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error starting mizu tapper syncer: %v", err))
+		cancel()
+	}
+
+	logger.Log.Infof("Mizu is available at %s", url)
+	if !config.Config.HeadlessMode {
+		uiUtils.OpenBrowser(url)
 	}
 }
 
