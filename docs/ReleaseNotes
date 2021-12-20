@@ -1,0 +1,19 @@
+Mizu release notes
+
+1. Mizu Report telemetry
+  1.1 not reporting UP9 users
+  1.2 report platform type
+
+2. Mizu user exprience
+  2.1 stream & search
+    2.1.1 New filter syntax for QL search 
+    2.1.2 Refresh and scrolling improvements
+  2.2 display
+    2.2.1 adding milisec to the row display
+    2.2.2 display source and destination service name
+
+3. Mizu helath status - display an upper bar with system status
+  3.1 Tapped pod - mark the ones which tapper was killed/didn’t start
+
+4. Defects
+
