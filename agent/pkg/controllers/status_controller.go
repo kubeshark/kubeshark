@@ -3,17 +3,17 @@ package controllers
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/gin-gonic/gin"
+	"github.com/up9inc/mizu/shared"
+	"github.com/up9inc/mizu/shared/logger"
 	"mizuserver/pkg/api"
 	"mizuserver/pkg/config"
 	"mizuserver/pkg/holder"
 	"mizuserver/pkg/providers"
 	"mizuserver/pkg/up9"
+	"mizuserver/pkg/utils"
 	"mizuserver/pkg/validation"
 	"net/http"
-
-	"github.com/gin-gonic/gin"
-	"github.com/up9inc/mizu/shared"
-	"github.com/up9inc/mizu/shared/logger"
 )
 
 func HealthCheck(c *gin.Context) {
@@ -24,7 +24,7 @@ func HealthCheck(c *gin.Context) {
 		}
 	}
 
-	tappers := make([]shared.TapperStatus, len(providers.TappersStatus))
+	tappers := make([]shared.TapperStatus, 0)
 	for _, value := range providers.TappersStatus {
 		tappers = append(tappers, value)
 	}
@@ -49,7 +49,13 @@ func PostTappedPods(c *gin.Context) {
 	}
 	logger.Log.Infof("[Status] POST request: %d tapped pods", len(tapStatus.Pods))
 	providers.TapStatus.Pods = tapStatus.Pods
-	message := shared.CreateWebSocketStatusMessage(*tapStatus)
+	broadcastTappedPodsStatus()
+}
+
+func broadcastTappedPodsStatus() {
+	tappedPodsStatus := utils.GetTappedPodsStatus()
+
+	message := shared.CreateWebSocketStatusMessage(tappedPodsStatus)
 	if jsonBytes, err := json.Marshal(message); err != nil {
 		logger.Log.Errorf("Could not Marshal message %v", err)
 	} else {
@@ -72,6 +78,7 @@ func PostTapperStatus(c *gin.Context) {
 		providers.TappersStatus = make(map[string]shared.TapperStatus)
 	}
 	providers.TappersStatus[tapperStatus.NodeName] = *tapperStatus
+	broadcastTappedPodsStatus()
 }
 
 func GetTappersCount(c *gin.Context) {
@@ -89,7 +96,8 @@ func GetAuthStatus(c *gin.Context) {
 }
 
 func GetTappingStatus(c *gin.Context) {
-	c.JSON(http.StatusOK, providers.TapStatus)
+	tappedPodsStatus := utils.GetTappedPodsStatus()
+	c.JSON(http.StatusOK, tappedPodsStatus)
 }
 
 func AnalyzeInformation(c *gin.Context) {

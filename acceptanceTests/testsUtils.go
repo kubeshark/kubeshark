@@ -304,11 +304,10 @@ func cleanupCommand(cmd *exec.Cmd) error {
 }
 
 func getPods(tapStatusInterface interface{}) ([]map[string]interface{}, error) {
-	tapStatus := tapStatusInterface.(map[string]interface{})
-	podsInterface := tapStatus["pods"].([]interface{})
+	tapPodsInterface := tapStatusInterface.([]interface{})
 
 	var pods []map[string]interface{}
-	for _, podInterface := range podsInterface {
+	for _, podInterface := range tapPodsInterface {
 		pods = append(pods, podInterface.(map[string]interface{}))
 	}
 

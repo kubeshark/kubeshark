@@ -83,7 +83,6 @@ func (h *RoutesEventHandlers) WebSocketMessage(_ int, message []byte) {
 			if err != nil {
 				logger.Log.Infof("Could not unmarshal message of message type %s %v", socketMessageBase.MessageType, err)
 			} else {
-				providers.TapStatus.Pods = statusMessage.TappingStatus.Pods
 				BroadcastToBrowserClients(message)
 			}
 		case shared.WebsocketMessageTypeOutboundLink:

@@ -465,14 +465,15 @@ func startMizuTapperSyncer(ctx context.Context, provider *kubernetes.Provider) (
 					logger.Log.Debug("mizuTapperSyncer pod changes channel closed, ending listener loop")
 					return
 				}
-				tapStatus := shared.TapStatus{Pods: kubernetes.GetPodInfosForPods(tapperSyncer.CurrentlyTappedPods)}
+				providers.TapStatus = shared.TapStatus{Pods: kubernetes.GetPodInfosForPods(tapperSyncer.CurrentlyTappedPods)}
 
-				serializedTapStatus, err := json.Marshal(shared.CreateWebSocketStatusMessage(tapStatus))
+				tappedPodsStatus := utils.GetTappedPodsStatus()
+
+				serializedTapStatus, err := json.Marshal(shared.CreateWebSocketStatusMessage(tappedPodsStatus))
 				if err != nil {
 					logger.Log.Fatalf("error serializing tap status: %v", err)
 				}
 				api.BroadcastToBrowserClients(serializedTapStatus)
-				providers.TapStatus.Pods = tapStatus.Pods
 				providers.ExpectedTapperAmount = tapPodChangeEvent.ExpectedTapperAmount
 			case tapperStatus, ok := <-tapperSyncer.TapperStatusChangedOut:
 				if !ok {
