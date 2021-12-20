@@ -60,7 +60,7 @@ func checkEnvoyPid(procfs string, pid string, pods []v1.Pod) bool {
 	}
 
 	environmentFile := fmt.Sprintf("%v/%v/environ", procfs, pid)
-	podIp, err := readEnvironmentVariable(environmentFile, "INSTANCE_IP")
+	podIp, err := getSingleValueFromEnvironmentVariableFile(environmentFile, "INSTANCE_IP")
 
 	if err != nil {
 		return false

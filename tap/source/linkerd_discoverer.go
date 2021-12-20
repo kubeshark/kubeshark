@@ -60,7 +60,7 @@ func checkLinkerdPid(procfs string, pid string, pods []v1.Pod) bool {
 	}
 
 	environmentFile := fmt.Sprintf("%v/%v/environ", procfs, pid)
-	podName, err := readEnvironmentVariable(environmentFile, "_pod_name")
+	podName, err := getSingleValueFromEnvironmentVariableFile(environmentFile, "_pod_name")
 
 	if err != nil {
 		return false
