@@ -60,8 +60,11 @@ type TapOpts struct {
 	FilterAuthorities []v1.Pod
 }
 
-var extensions []*api.Extension                   // global
-var filteringOptions *api.TrafficFilteringOptions // global
+var extensions []*api.Extension                     // global
+var filteringOptions *api.TrafficFilteringOptions   // global
+var tapTargets []v1.Pod                             // global
+var packetSourceManager *source.PacketSourceManager // global
+var mainPacketInputChan chan source.TcpPacketInfo   // global
 
 func inArrayInt(arr []int, valueToCheck int) bool {
 	for _, value := range arr {
@@ -86,7 +89,9 @@ func StartPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem, 
 	filteringOptions = options
 
 	if opts.FilterAuthorities == nil {
-		opts.FilterAuthorities = []v1.Pod{}
+		tapTargets = []v1.Pod{}
+	} else {
+		tapTargets = opts.FilterAuthorities
 	}
 
 	if GetMemoryProfilingEnabled() {
@@ -94,6 +99,11 @@ func StartPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem, 
 	}
 
 	go startPassiveTapper(opts, outputItems)
+}
+
+func UpdateTapTargets(newTapTargets []v1.Pod) {
+	tapTargets = newTapTargets
+	initializePacketSources()
 }
 
 func printPeriodicStats(cleaner *Cleaner) {
@@ -136,7 +146,11 @@ func printPeriodicStats(cleaner *Cleaner) {
 	}
 }
 
-func initializePacketSources(opts *TapOpts) (*source.PacketSourceManager, error) {
+func initializePacketSources() error {
+	if packetSourceManager != nil {
+		packetSourceManager.Close()
+	}
+
 	var bpffilter string
 	if len(flag.Args()) > 0 {
 		bpffilter = strings.Join(flag.Args(), " ")
@@ -151,7 +165,13 @@ func initializePacketSources(opts *TapOpts) (*source.PacketSourceManager, error)
 		BpfFilter:   bpffilter,
 	}
 
-	return source.NewPacketSourceManager(*procfs, *pids, *fname, *iface, *istio, opts.FilterAuthorities, behaviour)
+	var err error
+	if packetSourceManager, err = source.NewPacketSourceManager(*procfs, *pids, *fname, *iface, *istio, tapTargets, behaviour); err != nil {
+		return err
+	} else {
+		packetSourceManager.ReadPackets(!*nodefrag, mainPacketInputChan)
+		return nil
+	}
 }
 
 func startPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem) {
@@ -161,24 +181,16 @@ func startPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem) 
 	diagnose.InitializeErrorsMap(*debug, *verbose, *quiet)
 	diagnose.InitializeTapperInternalStats()
 
-	sources, err := initializePacketSources(opts)
+	err := initializePacketSources()
 
 	if err != nil {
 		logger.Log.Fatal(err)
 	}
 
-	defer sources.Close()
-
-	if err != nil {
-		logger.Log.Fatal(err)
-	}
-
-	packets := make(chan source.TcpPacketInfo)
+	mainPacketInputChan = make(chan source.TcpPacketInfo)
 	assembler := NewTcpAssembler(outputItems, streamsMap, opts)
 
 	diagnose.AppStats.SetStartTime(time.Now())
-
-	sources.ReadPackets(!*nodefrag, packets)
 
 	staleConnectionTimeout := time.Second * time.Duration(*staleTimeoutSeconds)
 	cleaner := Cleaner{
@@ -191,7 +203,7 @@ func startPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem) 
 
 	go printPeriodicStats(&cleaner)
 
-	assembler.processPackets(*hexdumppkt, packets)
+	assembler.processPackets(*hexdumppkt, mainPacketInputChan)
 
 	if diagnose.TapErrors.OutputLevel >= 2 {
 		assembler.dumpStreamPool()

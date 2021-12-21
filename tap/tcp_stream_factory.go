@@ -152,16 +152,16 @@ func inArrayPod(pods []v1.Pod, address string) bool {
 
 func (factory *tcpStreamFactory) getStreamProps(srcIP string, srcPort string, dstIP string, dstPort string) *streamProps {
 	if factory.opts.HostMode {
-		if inArrayPod(factory.opts.FilterAuthorities, fmt.Sprintf("%s:%s", dstIP, dstPort)) {
+		if inArrayPod(tapTargets, fmt.Sprintf("%s:%s", dstIP, dstPort)) {
 			logger.Log.Debugf("getStreamProps %s", fmt.Sprintf("+ host1 %s:%s", dstIP, dstPort))
 			return &streamProps{isTapTarget: true, isOutgoing: false}
-		} else if inArrayPod(factory.opts.FilterAuthorities, dstIP) {
+		} else if inArrayPod(tapTargets, dstIP) {
 			logger.Log.Debugf("getStreamProps %s", fmt.Sprintf("+ host2 %s", dstIP))
 			return &streamProps{isTapTarget: true, isOutgoing: false}
-		} else if inArrayPod(factory.opts.FilterAuthorities, fmt.Sprintf("%s:%s", srcIP, srcPort)) {
+		} else if inArrayPod(tapTargets, fmt.Sprintf("%s:%s", srcIP, srcPort)) {
 			logger.Log.Debugf("getStreamProps %s", fmt.Sprintf("+ host3 %s:%s", srcIP, srcPort))
 			return &streamProps{isTapTarget: true, isOutgoing: true}
-		} else if inArrayPod(factory.opts.FilterAuthorities, srcIP) {
+		} else if inArrayPod(tapTargets, srcIP) {
 			logger.Log.Debugf("getStreamProps %s", fmt.Sprintf("+ host4 %s", srcIP))
 			return &streamProps{isTapTarget: true, isOutgoing: true}
 		}
