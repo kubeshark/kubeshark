@@ -91,7 +91,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
 
     useEffect(() => {
         handleQueryChange(query);
-    }, [query]);
+    }, [query, handleQueryChange]);
 
     useEffect(() => {
         if (query) {
