@@ -10,12 +10,14 @@ import ProtobufDecoder from "protobuf-decoder";
 interface EntryViewLineProps {
     label: string;
     value: number | string;
-    updateQuery: any;
-    selector: string;
+    updateQuery?: any;
+    selector?: string;
     overrideQueryValue?: string;
+    displayIconOnMouseOver?: boolean;
+    useTooltip?: boolean;
 }
 
-const EntryViewLine: React.FC<EntryViewLineProps> = ({label, value, updateQuery, selector, overrideQueryValue}) => {
+const EntryViewLine: React.FC<EntryViewLineProps> = ({label, value, updateQuery = null, selector = "", overrideQueryValue = "", displayIconOnMouseOver = true, useTooltip = true}) => {
     let query: string;
     if (!selector) {
         query = "";
@@ -34,7 +36,8 @@ const EntryViewLine: React.FC<EntryViewLineProps> = ({label, value, updateQuery,
                             style={{float: "right", height: "18px"}}
                             iconStyle={{marginRight: "20px"}}
                             flipped={true}
-                            displayIconOnMouseOver={true}
+                            useTooltip={useTooltip}
+                            displayIconOnMouseOver={displayIconOnMouseOver}
                         >
                             {label}
                         </Queryable>
@@ -55,30 +58,47 @@ const EntryViewLine: React.FC<EntryViewLineProps> = ({label, value, updateQuery,
 interface EntrySectionCollapsibleTitleProps {
     title: string,
     color: string,
-    isExpanded: boolean,
+    expanded: boolean,
+    setExpanded: any,
+    query?: string,
+    updateQuery?: any,
 }
 
-const EntrySectionCollapsibleTitle: React.FC<EntrySectionCollapsibleTitleProps> = ({title, color, isExpanded}) => {
+const EntrySectionCollapsibleTitle: React.FC<EntrySectionCollapsibleTitleProps> = ({title, color, expanded, setExpanded, query = "", updateQuery = null}) => {
     return <div className={styles.title}>
-        <div className={`${styles.button} ${isExpanded ? styles.expanded : ''}`} style={{backgroundColor: color}}>
-            {isExpanded ? '-' : '+'}
+        <div
+            className={`${styles.button} ${expanded ? styles.expanded : ''}`}
+            style={{backgroundColor: color}}
+            onClick={() => {
+                setExpanded(!expanded)
+            }}
+        >
+            {expanded ? '-' : '+'}
         </div>
-        <span>{title}</span>
+        <Queryable
+            query={query}
+            updateQuery={updateQuery}
+            useTooltip={updateQuery ? true : false}
+            displayIconOnMouseOver={updateQuery ? true : false}
+        >
+            <span>{title}</span>
+        </Queryable>
     </div>
 }
 
 interface EntrySectionContainerProps {
     title: string,
     color: string,
+    query?: string,
+    updateQuery?: any,
 }
 
-export const EntrySectionContainer: React.FC<EntrySectionContainerProps> = ({title, color, children}) => {
+export const EntrySectionContainer: React.FC<EntrySectionContainerProps> = ({title, color, children, query = "", updateQuery = null}) => {
     const [expanded, setExpanded] = useState(true);
     return <CollapsibleContainer
         className={styles.collapsibleContainer}
-        isExpanded={expanded}
-        onClick={() => setExpanded(!expanded)}
-        title={<EntrySectionCollapsibleTitle title={title} color={color} isExpanded={expanded}/>}
+        expanded={expanded}
+        title={<EntrySectionCollapsibleTitle title={title} color={color} expanded={expanded} setExpanded={setExpanded} query={query} updateQuery={updateQuery}/>}
     >
         {children}
     </CollapsibleContainer>
@@ -133,11 +153,16 @@ export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
     }
 
     return <React.Fragment>
-        {content && content?.length > 0 && <EntrySectionContainer title='Body' color={color}>
+        {content && content?.length > 0 && <EntrySectionContainer
+                                                title='Body'
+                                                color={color}
+                                                query={`${selector} == r".*"`}
+                                                updateQuery={updateQuery}
+                                            >
             <table>
                 <tbody>
-                    <EntryViewLine label={'Mime type'} value={contentType} updateQuery={updateQuery} selector={selector} overrideQueryValue={`r".*"`}/>
-                    {encoding && <EntryViewLine label={'Encoding'} value={encoding} updateQuery={updateQuery} selector={selector} overrideQueryValue={`r".*"`}/>}
+                    <EntryViewLine label={'Mime type'} value={contentType} useTooltip={false}/>
+                    {encoding && <EntryViewLine label={'Encoding'} value={encoding} useTooltip={false}/>}
                 </tbody>
             </table>
 
@@ -195,13 +220,20 @@ interface EntryPolicySectionProps {
 interface EntryPolicySectionCollapsibleTitleProps {
     label: string;
     matched: string;
-    isExpanded: boolean;
+    expanded: boolean;
+    setExpanded: any;
 }
 
-const EntryPolicySectionCollapsibleTitle: React.FC<EntryPolicySectionCollapsibleTitleProps> = ({label, matched, isExpanded}) => {
+const EntryPolicySectionCollapsibleTitle: React.FC<EntryPolicySectionCollapsibleTitleProps> = ({label, matched, expanded, setExpanded}) => {
     return <div className={styles.title}>
-        <span className={`${styles.button} ${isExpanded ? styles.expanded : ''}`}>
-            {isExpanded ? '-' : '+'}
+        <span
+            className={`${styles.button}
+            ${expanded ? styles.expanded : ''}`}
+            onClick={() => {
+                setExpanded(!expanded)
+            }}
+        >
+            {expanded ? '-' : '+'}
         </span>
         <span>
             <tr className={styles.dataLine}>
@@ -222,9 +254,8 @@ export const EntryPolicySectionContainer: React.FC<EntryPolicySectionContainerPr
     const [expanded, setExpanded] = useState(false);
     return <CollapsibleContainer
         className={styles.collapsibleContainer}
-        isExpanded={expanded}
-        onClick={() => setExpanded(!expanded)}
-        title={<EntryPolicySectionCollapsibleTitle label={label} matched={matched} isExpanded={expanded}/>}
+        expanded={expanded}
+        title={<EntryPolicySectionCollapsibleTitle label={label} matched={matched} expanded={expanded} setExpanded={setExpanded}/>}
     >
         {children}
     </CollapsibleContainer>
