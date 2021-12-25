@@ -6,6 +6,7 @@ import FancyTextDisplay from "../UI/FancyTextDisplay";
 import Queryable from "../UI/Queryable";
 import Checkbox from "../UI/Checkbox";
 import ProtobufDecoder from "protobuf-decoder";
+import beautify from "json-beautify";
 
 interface EntryViewLineProps {
     label: string;
@@ -121,23 +122,24 @@ export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
     contentType,
     selector,
 }) => {
-    const MAXIMUM_BYTES_TO_HIGHLIGHT = 10000; // The maximum of chars to highlight in body, in case the response can be megabytes
-    const supportedLanguages = [['html', 'html'], ['json', 'json'], ['application/grpc', 'json']]; // [[indicator, languageToUse],...]
-    const jsonLikeFormats = ['json'];
+    const MAXIMUM_BYTES_TO_FORMAT = 100000; // The maximum of chars to highlight in body, in case the response can be megabytes
+    const jsonLikeFormats = ['json', 'yaml', 'yml'];
     const protobufFormats = ['application/grpc'];
-    const [isWrapped, setIsWrapped] = useState(false);
+    const [isPretty, setIsPretty] = useState(true);
 
     const formatTextBody = (body): string => {
-        const chunk = body.slice(0, MAXIMUM_BYTES_TO_HIGHLIGHT);
+        const chunk = body.slice(0, MAXIMUM_BYTES_TO_FORMAT);
         const bodyBuf = encoding === 'base64' ? atob(chunk) : chunk;
+
+        if (!isPretty) return bodyBuf;
 
         try {
             if (jsonLikeFormats.some(format => contentType?.indexOf(format) > -1)) {
-                return JSON.stringify(JSON.parse(bodyBuf), null, 2);
+                return pretty(JSON.parse(bodyBuf));
             } else if (protobufFormats.some(format => contentType?.indexOf(format) > -1)) {
                 // Replace all non printable characters (ASCII)
                 const protobufDecoder = new ProtobufDecoder(bodyBuf, true);
-                return JSON.stringify(protobufDecoder.decode().toSimple(), null, 2);
+                return pretty(protobufDecoder.decode().toSimple());
             }
         } catch (error) {
             console.error(error);
@@ -145,11 +147,8 @@ export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
         return bodyBuf;
     }
 
-    const getLanguage = (mimetype) => {
-        const chunk = content?.slice(0, 100);
-        if (chunk.indexOf('html') > 0 || chunk.indexOf('HTML') > 0) return supportedLanguages[0][1];
-        const language = supportedLanguages.find(el => (mimetype + contentType).indexOf(el[0]) > -1);
-        return language ? language[1] : 'default';
+    const pretty = (json: object): string => {
+        return beautify(json, null, 2, 80);
     }
 
     return <React.Fragment>
@@ -159,24 +158,15 @@ export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
                                                 query={`${selector} == r".*"`}
                                                 updateQuery={updateQuery}
                                             >
-            <table>
-                <tbody>
-                    <EntryViewLine label={'Mime type'} value={contentType} useTooltip={false}/>
-                    {encoding && <EntryViewLine label={'Encoding'} value={encoding} useTooltip={false}/>}
-                </tbody>
-            </table>
-
-            <div style={{display: 'flex', alignItems: 'center', alignContent: 'center', margin: "5px 0"}} onClick={() => setIsWrapped(!isWrapped)}>
+            <div style={{display: 'flex', alignItems: 'center', alignContent: 'center', margin: "5px 0"}}>
                 <div style={{paddingTop: 3}}>
-                    <Checkbox checked={isWrapped} onToggle={() => {}}/>
+                    <Checkbox checked={isPretty} onToggle={() => {setIsPretty(!isPretty)}}/>
                 </div>
-                <span style={{marginLeft: '.5rem'}}>Wrap text</span>
+                <span style={{marginLeft: '.5rem'}}>Pretty</span>
             </div>
 
             <SyntaxHighlighter
-                isWrapped={isWrapped}
                 code={formatTextBody(content)}
-                language={content?.mimeType ? getLanguage(content.mimeType) : 'default'}
             />
         </EntrySectionContainer>}
     </React.Fragment>
@@ -334,7 +324,6 @@ export const EntryContractSection: React.FC<EntryContractSectionProps> = ({color
         </EntrySectionContainer>}
         {contractContent && <EntrySectionContainer title="Contract" color={color}>
             <SyntaxHighlighter
-                isWrapped={false}
                 code={contractContent}
                 language={"yaml"}
             />
