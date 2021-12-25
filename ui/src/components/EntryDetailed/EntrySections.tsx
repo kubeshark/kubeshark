@@ -122,16 +122,21 @@ export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
     contentType,
     selector,
 }) => {
-    const MAXIMUM_BYTES_TO_FORMAT = 100000; // The maximum of chars to highlight in body, in case the response can be megabytes
+    const MAXIMUM_BYTES_TO_FORMAT = 1000000; // The maximum of chars to highlight in body, in case the response can be megabytes
     const jsonLikeFormats = ['json', 'yaml', 'yml'];
     const protobufFormats = ['application/grpc'];
 
     const [isPretty, setIsPretty] = useState(true);
     const [showLineNumbers, setShowLineNumbers] = useState(true);
+    const [decodeBase64, setDecodeBase64] = useState(true);
+
+    const isBase64Encoding = encoding === 'base64';
 
     const formatTextBody = (body): string => {
+        if (!decodeBase64) return body;
+
         const chunk = body.slice(0, MAXIMUM_BYTES_TO_FORMAT);
-        const bodyBuf = encoding === 'base64' ? atob(chunk) : chunk;
+        const bodyBuf = isBase64Encoding ? atob(chunk) : chunk;
 
         if (!isPretty) return bodyBuf;
 
@@ -170,6 +175,11 @@ export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
                     <Checkbox checked={showLineNumbers} onToggle={() => {setShowLineNumbers(!showLineNumbers)}}/>
                 </div>
                 <span style={{marginLeft: '.5rem'}}>Line numbers</span>
+
+                {isBase64Encoding && <div style={{paddingTop: 3, paddingLeft: 20}}>
+                    <Checkbox checked={decodeBase64} onToggle={() => {setDecodeBase64(!decodeBase64)}}/>
+                </div>}
+                {isBase64Encoding && <span style={{marginLeft: '.5rem'}}>Decode Base64</span>}
             </div>
 
             <SyntaxHighlighter
