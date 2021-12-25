@@ -125,7 +125,9 @@ export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
     const MAXIMUM_BYTES_TO_FORMAT = 100000; // The maximum of chars to highlight in body, in case the response can be megabytes
     const jsonLikeFormats = ['json', 'yaml', 'yml'];
     const protobufFormats = ['application/grpc'];
+
     const [isPretty, setIsPretty] = useState(true);
+    const [showLineNumbers, setShowLineNumbers] = useState(true);
 
     const formatTextBody = (body): string => {
         const chunk = body.slice(0, MAXIMUM_BYTES_TO_FORMAT);
@@ -163,10 +165,16 @@ export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
                     <Checkbox checked={isPretty} onToggle={() => {setIsPretty(!isPretty)}}/>
                 </div>
                 <span style={{marginLeft: '.5rem'}}>Pretty</span>
+
+                <div style={{paddingTop: 3, paddingLeft: 20}}>
+                    <Checkbox checked={showLineNumbers} onToggle={() => {setShowLineNumbers(!showLineNumbers)}}/>
+                </div>
+                <span style={{marginLeft: '.5rem'}}>Line numbers</span>
             </div>
 
             <SyntaxHighlighter
                 code={formatTextBody(content)}
+                showLineNumbers={showLineNumbers}
             />
         </EntrySectionContainer>}
     </React.Fragment>

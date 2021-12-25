@@ -26,12 +26,23 @@
     }
 }
 
-.wrapped{
-    pre {
-        code {
-            &:last-child {
-                white-space: pre-wrap!important
-            }
-        }
-    }
+code.hljs {
+    white-space: pre-wrap;
+}
+
+code.hljs:before {
+    counter-reset: listing;
+}
+
+code.hljs .hljs-marker-line {
+    counter-increment: listing;
+}
+
+code.hljs .hljs-marker-line:before {
+    content: counter(listing) ". ";
+    display: inline-block;
+    width: 3em;
+    padding-left: auto;
+    margin-left: auto;
+    text-align: left;
 }

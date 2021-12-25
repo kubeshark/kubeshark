@@ -1,7 +1,7 @@
 import React from 'react';
-import './index.scss';
 import Lowlight from 'react-lowlight'
 import 'highlight.js/styles/atom-one-light.css'
+import './index.scss';
 
 import xml from 'highlight.js/lib/languages/xml'
 import json from 'highlight.js/lib/languages/json'
@@ -30,11 +30,22 @@ interface Props {
 }
 
 export const SyntaxHighlighter: React.FC<Props> = ({
-                                                code,
-                                                showLineNumbers = true,
-                                                language = null
-                                            }) => {
-    return <Lowlight language={language ? language : ""} value={code} />;
+        code,
+        showLineNumbers = false,
+        language = null
+    }) => {
+    let arr = code.split("\n");
+    const markers = [];
+
+    if (showLineNumbers) {
+        for (var i = 0; i < arr.length; i++) {
+            markers.push({
+                line: i + 1,
+                className: 'hljs-marker-line'
+            });
+        }
+    }
+    return <div style={{fontSize: ".75rem"}}><Lowlight language={language ? language : ""} value={code} markers={markers}/></div>;
 };
 
 export default SyntaxHighlighter;
