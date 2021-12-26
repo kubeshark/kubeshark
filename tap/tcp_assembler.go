@@ -65,11 +65,11 @@ func (a *tcpAssembler) processPackets(dumpPacket bool, packets <-chan source.Tcp
 
 	for packetInfo := range packets {
 		packetsCount := diagnose.AppStats.IncPacketsCount()
-		
-		if packetsCount % PACKETS_SEEN_LOG_THRESHOLD == 0 {
+
+		if packetsCount%PACKETS_SEEN_LOG_THRESHOLD == 0 {
 			logger.Log.Debugf("Packets seen: #%d", packetsCount)
 		}
-		
+
 		packet := packetInfo.Packet
 		data := packet.Data()
 		diagnose.AppStats.UpdateProcessedBytes(uint64(len(data)))
@@ -91,7 +91,6 @@ func (a *tcpAssembler) processPackets(dumpPacket bool, packets <-chan source.Tcp
 				CaptureInfo: packet.Metadata().CaptureInfo,
 			}
 			diagnose.InternalStats.Totalsz += len(tcp.Payload)
-			logger.Log.Debugf("%s:%v -> %s:%v", packet.NetworkLayer().NetworkFlow().Src(), tcp.SrcPort, packet.NetworkLayer().NetworkFlow().Dst(), tcp.DstPort)
 			a.assemblerMutex.Lock()
 			a.AssembleWithContext(packet.NetworkLayer().NetworkFlow(), tcp, &c)
 			a.assemblerMutex.Unlock()
