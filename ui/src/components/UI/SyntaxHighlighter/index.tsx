@@ -34,17 +34,13 @@ export const SyntaxHighlighter: React.FC<Props> = ({
         showLineNumbers = false,
         language = null
     }) => {
-    let arr = code.split("\n");
-    const markers = [];
-
-    if (showLineNumbers) {
-        for (var i = 0; i < arr.length; i++) {
-            markers.push({
-                line: i + 1,
-                className: 'hljs-marker-line'
-            });
+    const markers = showLineNumbers ? code.split("\n").map((item, i) => {
+        return {
+            line: i + 1,
+            className: 'hljs-marker-line'
         }
-    }
+    }) : [];
+
     return <div style={{fontSize: ".75rem"}}><Lowlight language={language ? language : ""} value={code} markers={markers}/></div>;
 };
 
