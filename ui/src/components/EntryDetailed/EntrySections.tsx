@@ -6,6 +6,8 @@ import FancyTextDisplay from "../UI/FancyTextDisplay";
 import Queryable from "../UI/Queryable";
 import Checkbox from "../UI/Checkbox";
 import ProtobufDecoder from "protobuf-decoder";
+import {default as jsonBeautify} from "json-beautify";
+import {default as xmlBeautify} from "xml-formatter";
 
 interface EntryViewLineProps {
     label: string;
@@ -121,35 +123,46 @@ export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
     contentType,
     selector,
 }) => {
-    const MAXIMUM_BYTES_TO_HIGHLIGHT = 10000; // The maximum of chars to highlight in body, in case the response can be megabytes
-    const supportedLanguages = [['html', 'html'], ['json', 'json'], ['application/grpc', 'json']]; // [[indicator, languageToUse],...]
-    const jsonLikeFormats = ['json'];
+    const MAXIMUM_BYTES_TO_FORMAT = 1000000; // The maximum of chars to highlight in body, in case the response can be megabytes
+    const jsonLikeFormats = ['json', 'yaml', 'yml'];
+    const xmlLikeFormats = ['xml', 'html'];
     const protobufFormats = ['application/grpc'];
-    const [isWrapped, setIsWrapped] = useState(false);
+    const supportedFormats = jsonLikeFormats.concat(xmlLikeFormats, protobufFormats);
 
-    const formatTextBody = (body): string => {
-        const chunk = body.slice(0, MAXIMUM_BYTES_TO_HIGHLIGHT);
-        const bodyBuf = encoding === 'base64' ? atob(chunk) : chunk;
+    const [isPretty, setIsPretty] = useState(true);
+    const [showLineNumbers, setShowLineNumbers] = useState(true);
+    const [decodeBase64, setDecodeBase64] = useState(true);
+
+    const isBase64Encoding = encoding === 'base64';
+    const supportsPrettying = supportedFormats.some(format => contentType?.indexOf(format) > -1);
+
+    const formatTextBody = (body: any): string => {
+        if (!decodeBase64) return body;
+
+        const chunk = body.slice(0, MAXIMUM_BYTES_TO_FORMAT);
+        const bodyBuf = isBase64Encoding ? atob(chunk) : chunk;
+
+        if (!isPretty) return bodyBuf;
 
         try {
             if (jsonLikeFormats.some(format => contentType?.indexOf(format) > -1)) {
-                return JSON.stringify(JSON.parse(bodyBuf), null, 2);
+                return jsonBeautify(JSON.parse(bodyBuf), null, 2, 80);
+            }  else if (xmlLikeFormats.some(format => contentType?.indexOf(format) > -1)) {
+                return xmlBeautify(bodyBuf, {
+                    indentation: '  ',
+                    filter: (node) => node.type !== 'Comment',
+                    collapseContent: true,
+                    lineSeparator: '\n'
+                });
             } else if (protobufFormats.some(format => contentType?.indexOf(format) > -1)) {
                 // Replace all non printable characters (ASCII)
                 const protobufDecoder = new ProtobufDecoder(bodyBuf, true);
-                return JSON.stringify(protobufDecoder.decode().toSimple(), null, 2);
+                return jsonBeautify(protobufDecoder.decode().toSimple(), null, 2, 80);
             }
         } catch (error) {
             console.error(error);
         }
         return bodyBuf;
-    }
-
-    const getLanguage = (mimetype) => {
-        const chunk = content?.slice(0, 100);
-        if (chunk.indexOf('html') > 0 || chunk.indexOf('HTML') > 0) return supportedLanguages[0][1];
-        const language = supportedLanguages.find(el => (mimetype + contentType).indexOf(el[0]) > -1);
-        return language ? language[1] : 'default';
     }
 
     return <React.Fragment>
@@ -159,24 +172,26 @@ export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
                                                 query={`${selector} == r".*"`}
                                                 updateQuery={updateQuery}
                                             >
-            <table>
-                <tbody>
-                    <EntryViewLine label={'Mime type'} value={contentType} useTooltip={false}/>
-                    {encoding && <EntryViewLine label={'Encoding'} value={encoding} useTooltip={false}/>}
-                </tbody>
-            </table>
+            <div style={{display: 'flex', alignItems: 'center', alignContent: 'center', margin: "5px 0"}}>
+                {supportsPrettying && <div style={{paddingTop: 3}}>
+                    <Checkbox checked={isPretty} onToggle={() => {setIsPretty(!isPretty)}}/>
+                </div>}
+                {supportsPrettying && <span style={{marginLeft: '.2rem'}}>Pretty</span>}
 
-            <div style={{display: 'flex', alignItems: 'center', alignContent: 'center', margin: "5px 0"}} onClick={() => setIsWrapped(!isWrapped)}>
-                <div style={{paddingTop: 3}}>
-                    <Checkbox checked={isWrapped} onToggle={() => {}}/>
+                <div style={{paddingTop: 3, paddingLeft: supportsPrettying ? 20 : 0}}>
+                    <Checkbox checked={showLineNumbers} onToggle={() => {setShowLineNumbers(!showLineNumbers)}}/>
                 </div>
-                <span style={{marginLeft: '.5rem'}}>Wrap text</span>
+                <span style={{marginLeft: '.2rem'}}>Line numbers</span>
+
+                {isBase64Encoding && <div style={{paddingTop: 3, paddingLeft: 20}}>
+                    <Checkbox checked={decodeBase64} onToggle={() => {setDecodeBase64(!decodeBase64)}}/>
+                </div>}
+                {isBase64Encoding && <span style={{marginLeft: '.2rem'}}>Decode Base64</span>}
             </div>
 
             <SyntaxHighlighter
-                isWrapped={isWrapped}
                 code={formatTextBody(content)}
-                language={content?.mimeType ? getLanguage(content.mimeType) : 'default'}
+                showLineNumbers={showLineNumbers}
             />
         </EntrySectionContainer>}
     </React.Fragment>
@@ -334,7 +349,6 @@ export const EntryContractSection: React.FC<EntryContractSectionProps> = ({color
         </EntrySectionContainer>}
         {contractContent && <EntrySectionContainer title="Contract" color={color}>
             <SyntaxHighlighter
-                isWrapped={false}
                 code={contractContent}
                 language={"yaml"}
             />
