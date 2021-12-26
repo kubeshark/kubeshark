@@ -445,8 +445,6 @@ func handleIncomingMessageAsTapper(socketConnection *websocket.Conn) {
 			if err := json.Unmarshal(message, &tapConfigMessage); err != nil {
 				logger.Log.Errorf("received unknown message from socket connection: %s, err: %s, (%v,%+v)", string(message), err, err, err)
 			} else {
-				logger.Log.Debugf("received TapConfig message from socket, setting new tap targets: %+v", tapConfigMessage)
-				logger.Log.Info("received TapConfig message from socket, setting new tap targets")
 				tap.UpdateTapTargets(tapConfigMessage.TapTargets)
 			}
 		}
