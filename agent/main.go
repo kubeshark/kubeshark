@@ -368,8 +368,6 @@ func pipeTapChannelToSocket(connection *websocket.Conn, messageDataChannel <-cha
 			continue
 		}
 
-		logger.Log.Infof("received message %s", string(marshaledData))
-
 		// NOTE: This is where the `*tapApi.OutputChannelItem` leaves the code
 		// and goes into the intermediate WebSocket.
 		err = connection.WriteMessage(websocket.TextMessage, marshaledData)
