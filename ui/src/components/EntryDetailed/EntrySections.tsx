@@ -169,17 +169,17 @@ export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
                 <div style={{paddingTop: 3}}>
                     <Checkbox checked={isPretty} onToggle={() => {setIsPretty(!isPretty)}}/>
                 </div>
-                <span style={{marginLeft: '.5rem'}}>Pretty</span>
+                <span style={{marginLeft: '.2rem'}}>Pretty</span>
 
                 <div style={{paddingTop: 3, paddingLeft: 20}}>
                     <Checkbox checked={showLineNumbers} onToggle={() => {setShowLineNumbers(!showLineNumbers)}}/>
                 </div>
-                <span style={{marginLeft: '.5rem'}}>Line numbers</span>
+                <span style={{marginLeft: '.2rem'}}>Line numbers</span>
 
                 {isBase64Encoding && <div style={{paddingTop: 3, paddingLeft: 20}}>
                     <Checkbox checked={decodeBase64} onToggle={() => {setDecodeBase64(!decodeBase64)}}/>
                 </div>}
-                {isBase64Encoding && <span style={{marginLeft: '.5rem'}}>Decode Base64</span>}
+                {isBase64Encoding && <span style={{marginLeft: '.2rem'}}>Decode Base64</span>}
             </div>
 
             <SyntaxHighlighter

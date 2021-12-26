@@ -39,10 +39,10 @@ code.hljs .hljs-marker-line {
 }
 
 code.hljs .hljs-marker-line:before {
-    content: counter(listing) ". ";
+    content: counter(listing) "  ";
     display: inline-block;
-    width: 3em;
+    width: 3rem;
     padding-left: auto;
     margin-left: auto;
-    text-align: left;
+    text-align: right;
 }
