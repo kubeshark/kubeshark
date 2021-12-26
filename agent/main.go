@@ -55,7 +55,7 @@ var extensionsMap map[string]*tapApi.Extension // global
 var startTime int64
 
 const (
-	socketConnectionRetries    = 10
+	socketConnectionRetries    = 30
 	socketConnectionRetryDelay = time.Second * 2
 	socketHandshakeTimeout     = time.Second * 2
 )
@@ -368,6 +368,8 @@ func pipeTapChannelToSocket(connection *websocket.Conn, messageDataChannel <-cha
 			continue
 		}
 
+		logger.Log.Infof("received message %s", string(marshaledData))
+
 		// NOTE: This is where the `*tapApi.OutputChannelItem` leaves the code
 		// and goes into the intermediate WebSocket.
 		err = connection.WriteMessage(websocket.TextMessage, marshaledData)
@@ -425,10 +427,32 @@ func dialSocketWithRetry(socketAddress string, retryAmount int, retryDelay time.
 				time.Sleep(retryDelay)
 			}
 		} else {
+			go handleIncomingMessageAsTapper(socketConnection)
 			return socketConnection, nil
 		}
 	}
 	return nil, lastErr
+}
+
+func handleIncomingMessageAsTapper(socketConnection *websocket.Conn) {
+	for {
+		if _, message, err := socketConnection.ReadMessage(); err != nil {
+			logger.Log.Errorf("error reading message from socket connection, err: %s, (%v,%+v)", err, err, err)
+			if errors.Is(err, syscall.EPIPE) {
+				// socket has disconnected, we can safely stop this goroutine
+				return
+			}
+		} else {
+			var tapConfigMessage *shared.WebSocketTapConfigMessage
+			if err := json.Unmarshal(message, &tapConfigMessage); err != nil {
+				logger.Log.Errorf("received unknown message from socket connection: %s, err: %s, (%v,%+v)", string(message), err, err, err)
+			} else {
+				logger.Log.Debugf("received TapConfig message from socket, setting new tap targets: %+v", tapConfigMessage)
+				logger.Log.Info("received TapConfig message from socket, setting new tap targets")
+				tap.UpdateTapTargets(tapConfigMessage.TapTargets)
+			}
+		}
+	}
 }
 
 func startMizuTapperSyncer(ctx context.Context, provider *kubernetes.Provider) (*kubernetes.MizuTapperSyncer, error) {

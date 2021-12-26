@@ -11,6 +11,7 @@ package tap
 import (
 	"encoding/json"
 	"flag"
+	"fmt"
 	"os"
 	"runtime"
 	"strings"
@@ -103,6 +104,11 @@ func StartPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem, 
 
 func UpdateTapTargets(newTapTargets []v1.Pod) {
 	tapTargets = newTapTargets
+	printStr := ""
+	for _, tapTarget := range newTapTargets {
+		printStr += tapTarget.Status.PodIP + " "
+	}
+	fmt.Printf("Now tapping: %s\n", printStr)
 	initializePacketSources()
 }
 
