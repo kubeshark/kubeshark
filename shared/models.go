@@ -1,11 +1,13 @@
 package shared
 
 import (
+	"io/ioutil"
+	"strings"
+
 	"github.com/op/go-logging"
 	"github.com/up9inc/mizu/shared/logger"
 	"github.com/up9inc/mizu/tap/api"
-	"io/ioutil"
-	"strings"
+	v1 "k8s.io/api/core/v1"
 
 	"gopkg.in/yaml.v3"
 )
@@ -21,6 +23,7 @@ const (
 	WebSocketMessageTypeToast         WebSocketMessageType = "toast"
 	WebSocketMessageTypeQueryMetadata WebSocketMessageType = "queryMetadata"
 	WebSocketMessageTypeStartTime     WebSocketMessageType = "startTime"
+	WebSocketMessageTypeTapConfig     WebSocketMessageType = "tapConfig"
 )
 
 type Resources struct {
@@ -65,6 +68,11 @@ type AnalyzeStatus struct {
 type WebSocketStatusMessage struct {
 	*WebSocketMessageMetadata
 	TappingStatus []TappedPodStatus `json:"tappingStatus"`
+}
+
+type WebSocketTapConfigMessage struct {
+	*WebSocketMessageMetadata
+	TapTargets []v1.Pod `json:"pods"`
 }
 
 type TapperStatus struct {
