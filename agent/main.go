@@ -441,11 +441,21 @@ func handleIncomingMessageAsTapper(socketConnection *websocket.Conn) {
 				return
 			}
 		} else {
-			var tapConfigMessage *shared.WebSocketTapConfigMessage
-			if err := json.Unmarshal(message, &tapConfigMessage); err != nil {
-				logger.Log.Errorf("received unknown message from socket connection: %s, err: %s, (%v,%+v)", string(message), err, err, err)
+			var socketMessageBase shared.WebSocketMessageMetadata
+			if err := json.Unmarshal(message, &socketMessageBase); err != nil {
+				logger.Log.Infof("Could not unmarshal websocket message %v", err)
 			} else {
-				tap.UpdateTapTargets(tapConfigMessage.TapTargets)
+				switch socketMessageBase.MessageType {
+				case shared.WebSocketMessageTypeTapConfig:
+					var tapConfigMessage *shared.WebSocketTapConfigMessage
+					if err := json.Unmarshal(message, &tapConfigMessage); err != nil {
+						logger.Log.Errorf("received unknown message from socket connection: %s, err: %s, (%v,%+v)", string(message), err, err, err)
+					} else {
+						tap.UpdateTapTargets(tapConfigMessage.TapTargets)
+					}
+				default:
+					logger.Log.Infof("Received socket message of type %s for which no handlers are defined", socketMessageBase.MessageType)
+				}
 			}
 		}
 	}
