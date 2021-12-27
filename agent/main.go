@@ -131,6 +131,20 @@ func main() {
 			}
 		}
 
+		if config.Config.SyncTappers {
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+
+			kubernetesProvider, err := kubernetes.NewProviderInCluster()
+			if err != nil {
+				logger.Log.Fatalf("error creating k8s provider: %+v", err)
+			}
+
+			if _, err := startMizuTapperSyncer(ctx, kubernetesProvider); err != nil {
+				logger.Log.Fatalf("error initializing tapper syncer: %+v", err)
+			}
+		}
+
 		hostApi(outputItemsChannel)
 	} else if *harsReaderMode {
 		outputItemsChannel := make(chan *tapApi.OutputChannelItem, 1000)
@@ -259,20 +273,6 @@ func hostApi(socketHarOutputChannel chan<- *tapApi.OutputChannelItem) {
 	routes.MetadataRoutes(app)
 	routes.StatusRoutes(app)
 	routes.NotFoundRoute(app)
-
-	if config.Config.DaemonMode {
-		ctx, cancel := context.WithCancel(context.Background())
-		defer cancel()
-
-		kubernetesProvider, err := kubernetes.NewProviderInCluster()
-		if err != nil {
-			logger.Log.Fatalf("error creating k8s provider: %+v", err)
-		}
-
-		if _, err := startMizuTapperSyncer(ctx, kubernetesProvider); err != nil {
-			logger.Log.Fatalf("error initializing tapper syncer: %+v", err)
-		}
-	}
 
 	utils.StartServer(app)
 }

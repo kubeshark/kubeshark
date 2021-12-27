@@ -392,7 +392,6 @@ func getMizuAgentConfig(targetNamespaces []string, mizuApiFilteringOptions *api.
 	config := shared.MizuAgentConfig{
 		TapTargetRegex:          *serializableRegex,
 		MaxDBSizeBytes:          Config.Tap.MaxEntriesDBSizeBytes(),
-		DaemonMode:              Config.Tap.DaemonMode,
 		TargetNamespaces:        targetNamespaces,
 		AgentImage:              Config.AgentImage,
 		PullPolicy:              Config.ImagePullPolicyStr,
@@ -403,6 +402,7 @@ func getMizuAgentConfig(targetNamespaces []string, mizuApiFilteringOptions *api.
 		MizuApiFilteringOptions: *mizuApiFilteringOptions,
 		AgentDatabasePath:       shared.DataDirPath,
 		Istio:                   Config.Tap.Istio,
+		SyncTappers:             Config.Tap.DaemonMode,
 	}
 	return &config, nil
 }
