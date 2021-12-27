@@ -104,7 +104,9 @@ func StartPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem, 
 
 func UpdateTapTargets(newTapTargets []v1.Pod) {
 	tapTargets = newTapTargets
-	initializePacketSources()
+	if err := initializePacketSources(); err != nil {
+		logger.Log.Fatal(err)
+	}
 	printNewTapTargets()
 }
 
@@ -192,9 +194,7 @@ func startPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem) 
 	diagnose.InitializeErrorsMap(*debug, *verbose, *quiet)
 	diagnose.InitializeTapperInternalStats()
 
-	err := initializePacketSources()
-
-	if err != nil {
+	if err := initializePacketSources(); err != nil {
 		logger.Log.Fatal(err)
 	}
 
