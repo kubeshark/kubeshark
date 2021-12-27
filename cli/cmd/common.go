@@ -7,11 +7,9 @@ import (
 	"github.com/up9inc/mizu/cli/apiserver"
 	"github.com/up9inc/mizu/cli/mizu"
 	"github.com/up9inc/mizu/cli/mizu/fsUtils"
+	"github.com/up9inc/mizu/cli/resources"
 	"github.com/up9inc/mizu/cli/telemetry"
-	"os"
-	"os/signal"
 	"path"
-	"syscall"
 	"time"
 
 	"github.com/up9inc/mizu/cli/config"
@@ -37,22 +35,6 @@ func startProxyReportErrorIfAny(kubernetesProvider *kubernetes.Provider, cancel 
 	logger.Log.Debugf("proxy ended")
 }
 
-func waitForFinish(ctx context.Context, cancel context.CancelFunc) {
-	logger.Log.Debugf("waiting for finish...")
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
-
-	// block until ctx cancel is called or termination signal is received
-	select {
-	case <-ctx.Done():
-		logger.Log.Debugf("ctx done")
-		break
-	case <-sigChan:
-		logger.Log.Debugf("Got termination signal, canceling execution...")
-		cancel()
-	}
-}
-
 func getKubernetesProviderForCli() (*kubernetes.Provider, error) {
 	kubernetesProvider, err := kubernetes.NewProvider(config.Config.KubeConfigPath())
 	if err != nil {
@@ -71,12 +53,12 @@ func handleKubernetesProviderError(err error) {
 	}
 }
 
-func finishMizuExecution(kubernetesProvider *kubernetes.Provider, apiProvider *apiserver.Provider) {
+func finishMizuExecution(kubernetesProvider *kubernetes.Provider, apiProvider *apiserver.Provider, isNsRestrictedMode bool, mizuResourcesNamespace string) {
 	telemetry.ReportAPICalls(apiProvider)
 	removalCtx, cancel := context.WithTimeout(context.Background(), cleanupTimeout)
 	defer cancel()
 	dumpLogsIfNeeded(removalCtx, kubernetesProvider)
-	cleanUpMizuResources(removalCtx, cancel, kubernetesProvider)
+	resources.CleanUpMizuResources(removalCtx, cancel, kubernetesProvider, isNsRestrictedMode, mizuResourcesNamespace)
 }
 
 func dumpLogsIfNeeded(ctx context.Context, kubernetesProvider *kubernetes.Provider) {
@@ -87,25 +69,5 @@ func dumpLogsIfNeeded(ctx context.Context, kubernetesProvider *kubernetes.Provid
 	filePath := path.Join(mizuDir, fmt.Sprintf("mizu_logs_%s.zip", time.Now().Format("2006_01_02__15_04_05")))
 	if err := fsUtils.DumpLogs(ctx, kubernetesProvider, filePath); err != nil {
 		logger.Log.Errorf("Failed dump logs %v", err)
-	}
-}
-
-func cleanUpMizuResources(ctx context.Context, cancel context.CancelFunc, kubernetesProvider *kubernetes.Provider) {
-	logger.Log.Infof("\nRemoving mizu resources")
-
-	var leftoverResources []string
-
-	if config.Config.IsNsRestrictedMode() {
-		leftoverResources = cleanUpRestrictedMode(ctx, kubernetesProvider)
-	} else {
-		leftoverResources = cleanUpNonRestrictedMode(ctx, cancel, kubernetesProvider)
-	}
-
-	if len(leftoverResources) > 0 {
-		errMsg := fmt.Sprintf("Failed to remove the following resources, for more info check logs at %s:", fsUtils.GetLogFilePath())
-		for _, resource := range leftoverResources {
-			errMsg += "\n- " + resource
-		}
-		logger.Log.Errorf(uiUtils.Error, errMsg)
 	}
 }
