@@ -110,8 +110,9 @@ func UpdateTapTargets(newTapTargets []v1.Pod) {
 func printNewTapTargets() {
 	printStr := ""
 	for _, tapTarget := range tapTargets {
-		printStr += tapTarget.Status.PodIP + " "
+		printStr += fmt.Sprintf("%s (%s), ", tapTarget.Status.PodIP, tapTarget.Name)
 	}
+	strings.TrimRight(printStr, ", ")
 	logger.Log.Infof("Now tapping: %s", printStr)
 }
 
