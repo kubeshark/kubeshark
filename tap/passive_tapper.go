@@ -11,6 +11,7 @@ package tap
 import (
 	"encoding/json"
 	"flag"
+	"fmt"
 	"os"
 	"runtime"
 	"strings"
