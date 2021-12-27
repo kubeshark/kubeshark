@@ -443,7 +443,7 @@ func handleIncomingMessageAsTapper(socketConnection *websocket.Conn) {
 		} else {
 			var socketMessageBase shared.WebSocketMessageMetadata
 			if err := json.Unmarshal(message, &socketMessageBase); err != nil {
-				logger.Log.Infof("Could not unmarshal websocket message %v", err)
+				logger.Log.Errorf("Could not unmarshal websocket message %v", err)
 			} else {
 				switch socketMessageBase.MessageType {
 				case shared.WebSocketMessageTypeTapConfig:
@@ -454,7 +454,7 @@ func handleIncomingMessageAsTapper(socketConnection *websocket.Conn) {
 						tap.UpdateTapTargets(tapConfigMessage.TapTargets)
 					}
 				default:
-					logger.Log.Infof("Received socket message of type %s for which no handlers are defined", socketMessageBase.MessageType)
+					logger.Log.Warningf("Received socket message of type %s for which no handlers are defined", socketMessageBase.MessageType)
 				}
 			}
 		}
