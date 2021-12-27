@@ -132,7 +132,7 @@ func main() {
 		}
 
 		if config.Config.SyncTappers {
-			syncTappers()
+			startSyncingTappers()
 		}
 
 		hostApi(outputItemsChannel)
@@ -451,7 +451,7 @@ func handleIncomingMessageAsTapper(socketConnection *websocket.Conn) {
 	}
 }
 
-func syncTappers() {
+func startSyncingTappers() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
