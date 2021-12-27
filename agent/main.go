@@ -132,17 +132,7 @@ func main() {
 		}
 
 		if config.Config.SyncTappers {
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
-
-			kubernetesProvider, err := kubernetes.NewProviderInCluster()
-			if err != nil {
-				logger.Log.Fatalf("error creating k8s provider: %+v", err)
-			}
-
-			if _, err := startMizuTapperSyncer(ctx, kubernetesProvider); err != nil {
-				logger.Log.Fatalf("error initializing tapper syncer: %+v", err)
-			}
+			syncTappers()
 		}
 
 		hostApi(outputItemsChannel)
@@ -458,6 +448,20 @@ func handleIncomingMessageAsTapper(socketConnection *websocket.Conn) {
 				}
 			}
 		}
+	}
+}
+
+func syncTappers() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	kubernetesProvider, err := kubernetes.NewProviderInCluster()
+	if err != nil {
+		logger.Log.Fatalf("error creating k8s provider: %+v", err)
+	}
+
+	if _, err := startMizuTapperSyncer(ctx, kubernetesProvider); err != nil {
+		logger.Log.Fatalf("error initializing tapper syncer: %+v", err)
 	}
 }
 
