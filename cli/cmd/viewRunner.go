@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"github.com/up9inc/mizu/cli/utils"
 	"net/http"
 
 	"github.com/up9inc/mizu/cli/apiserver"
@@ -71,5 +72,5 @@ func runMizuView() {
 		return
 	}
 
-	waitForFinish(ctx, cancel)
+	utils.WaitForFinish(ctx, cancel)
 }
