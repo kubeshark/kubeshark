@@ -167,7 +167,6 @@ export const QueryForm: React.FC<QueryFormProps> = ({query, setQuery, background
                                 This is a simple query that matches to HTTP packets with request path "/catalogue":
                             </Typography>
                             <SyntaxHighlighter
-                                isWrapped={false}
                                 showLineNumbers={false}
                                 code={`http and request.path == "/catalogue"`}
                                 language="python"
@@ -176,7 +175,6 @@ export const QueryForm: React.FC<QueryFormProps> = ({query, setQuery, background
                                 The same query can be negated for HTTP path and written like this:
                             </Typography>
                             <SyntaxHighlighter
-                                isWrapped={false}
                                 showLineNumbers={false}
                                 code={`http and request.path != "/catalogue"`}
                                 language="python"
@@ -185,7 +183,6 @@ export const QueryForm: React.FC<QueryFormProps> = ({query, setQuery, background
                                 The syntax supports regular expressions. Here is a query that matches the HTTP requests that send JSON to a server:
                             </Typography>
                             <SyntaxHighlighter
-                                isWrapped={false}
                                 showLineNumbers={false}
                                 code={`http and request.headers["Accept"] == r"application/json.*"`}
                                 language="python"
@@ -194,7 +191,6 @@ export const QueryForm: React.FC<QueryFormProps> = ({query, setQuery, background
                                 Here is another query that matches HTTP responses with status code 4xx:
                             </Typography>
                             <SyntaxHighlighter
-                                isWrapped={false}
                                 showLineNumbers={false}
                                 code={`http and response.status == r"4.*"`}
                                 language="python"
@@ -203,7 +199,6 @@ export const QueryForm: React.FC<QueryFormProps> = ({query, setQuery, background
                                 The same exact query can be as integer comparison:
                             </Typography>
                             <SyntaxHighlighter
-                                isWrapped={false}
                                 showLineNumbers={false}
                                 code={`http and response.status >= 400`}
                                 language="python"
@@ -212,7 +207,6 @@ export const QueryForm: React.FC<QueryFormProps> = ({query, setQuery, background
                                 The results can be queried based on their timestamps:
                             </Typography>
                             <SyntaxHighlighter
-                                isWrapped={false}
                                 showLineNumbers={false}
                                 code={`timestamp < datetime("10/28/2021, 9:13:02.905 PM")`}
                                 language="python"
@@ -224,7 +218,6 @@ export const QueryForm: React.FC<QueryFormProps> = ({query, setQuery, background
                                 Since Mizu supports various protocols like gRPC, AMQP, Kafka and Redis. It's possible to write complex queries that match multiple protocols like this:
                             </Typography>
                             <SyntaxHighlighter
-                                isWrapped={false}
                                 showLineNumbers={false}
                                 code={`(http and request.method == "PUT") or (amqp and request.queue.startsWith("test"))\n or (kafka and response.payload.errorCode == 2) or (redis and request.key == "example")\n or (grpc and request.headers[":path"] == r".*foo.*")`}
                                 language="python"
@@ -242,7 +235,6 @@ export const QueryForm: React.FC<QueryFormProps> = ({query, setQuery, background
                                 Such that; clicking this icon in left-pane, would append the query below:
                             </Typography>
                             <SyntaxHighlighter
-                                isWrapped={false}
                                 showLineNumbers={false}
                                 code={`and dst.name == "carts.sock-shop"`}
                                 language="python"
@@ -260,7 +252,6 @@ export const QueryForm: React.FC<QueryFormProps> = ({query, setQuery, background
                                 A query that compares one selector to another is also a valid query:
                             </Typography>
                             <SyntaxHighlighter
-                                isWrapped={false}
                                 showLineNumbers={false}
                                 code={`http and (request.query["x"] == response.headers["y"]\n or response.content.text.contains(request.query["x"]))`}
                                 language="python"
@@ -276,7 +267,6 @@ export const QueryForm: React.FC<QueryFormProps> = ({query, setQuery, background
                                 true if the given selector's value starts with the string:
                             </Typography>
                             <SyntaxHighlighter
-                                isWrapped={false}
                                 showLineNumbers={false}
                                 code={`request.path.startsWith("something")`}
                                 language="python"
@@ -285,7 +275,6 @@ export const QueryForm: React.FC<QueryFormProps> = ({query, setQuery, background
                                 true if the given selector's value ends with the string:
                             </Typography>
                             <SyntaxHighlighter
-                                isWrapped={false}
                                 showLineNumbers={false}
                                 code={`request.path.endsWith("something")`}
                                 language="python"
@@ -294,7 +283,6 @@ export const QueryForm: React.FC<QueryFormProps> = ({query, setQuery, background
                                 true if the given selector's value contains the string:
                             </Typography>
                             <SyntaxHighlighter
-                                isWrapped={false}
                                 showLineNumbers={false}
                                 code={`request.path.contains("something")`}
                                 language="python"
@@ -303,7 +291,6 @@ export const QueryForm: React.FC<QueryFormProps> = ({query, setQuery, background
                                 returns the UNIX timestamp which is the equivalent of the time that's provided by the string. Invalid input evaluates to false:
                             </Typography>
                             <SyntaxHighlighter
-                                isWrapped={false}
                                 showLineNumbers={false}
                                 code={`timestamp >= datetime("10/19/2021, 6:29:02.593 PM")`}
                                 language="python"
@@ -312,7 +299,6 @@ export const QueryForm: React.FC<QueryFormProps> = ({query, setQuery, background
                                 limits the number of records that are streamed back as a result of a query. Always evaluates to true:
                             </Typography>
                             <SyntaxHighlighter
-                                isWrapped={false}
                                 showLineNumbers={false}
                                 code={`and limit(100)`}
                                 language="python"

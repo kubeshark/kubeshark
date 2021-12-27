@@ -2,7 +2,6 @@ package tap
 
 import (
 	"encoding/binary"
-	"fmt"
 	"sync"
 
 	"github.com/google/gopacket"
@@ -75,7 +74,7 @@ func (t *tcpStream) Accept(tcp *layers.TCP, ci gopacket.CaptureInfo, dir reassem
 }
 
 func (t *tcpStream) ReassembledSG(sg reassembly.ScatterGather, ac reassembly.AssemblerContext) {
-	dir, start, end, skip := sg.Info()
+	dir, _, _, skip := sg.Info()
 	length, saved := sg.Lengths()
 	// update stats
 	sgStats := sg.Stats()
@@ -103,13 +102,6 @@ func (t *tcpStream) ReassembledSG(sg reassembly.ScatterGather, ac reassembly.Ass
 	diagnose.InternalStats.OverlapBytes += sgStats.OverlapBytes
 	diagnose.InternalStats.OverlapPackets += sgStats.OverlapPackets
 
-	var ident string
-	if dir == reassembly.TCPDirClientToServer {
-		ident = fmt.Sprintf("%v %v(%s): ", t.net, t.transport, dir)
-	} else {
-		ident = fmt.Sprintf("%v %v(%s): ", t.net.Reverse(), t.transport.Reverse(), dir)
-	}
-	diagnose.TapErrors.Debug("%s: SG reassembled packet with %d bytes (start:%v,end:%v,skip:%d,saved:%d,nb:%d,%d,overlap:%d,%d)", ident, length, start, end, skip, saved, sgStats.Packets, sgStats.Chunks, sgStats.OverlapBytes, sgStats.OverlapPackets)
 	if skip == -1 && *allowmissinginit {
 		// this is allowed
 	} else if skip != 0 {
@@ -174,7 +166,6 @@ func (t *tcpStream) ReassembledSG(sg reassembly.ScatterGather, ac reassembly.Ass
 }
 
 func (t *tcpStream) ReassemblyComplete(ac reassembly.AssemblerContext) bool {
-	diagnose.TapErrors.Debug("%s: Connection closed", t.ident)
 	if t.isTapTarget && !t.isClosed {
 		t.Close()
 	}
