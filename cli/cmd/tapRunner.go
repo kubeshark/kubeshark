@@ -94,9 +94,15 @@ func RunMizuTap() {
 
 	state.targetNamespaces = getNamespaces(kubernetesProvider)
 
-	serializedMizuConfig, err := config.GetSerializedMizuAgentConfig(state.targetNamespaces, mizuApiFilteringOptions)
+	mizuAgentConfig, err := getMizuAgentConfig(state.targetNamespaces, mizuApiFilteringOptions)
 	if err != nil {
-		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error composing mizu config: %v", errormessage.FormatError(err)))
+		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error getting mizu config: %v", errormessage.FormatError(err)))
+		return
+	}
+
+	serializedMizuConfig, err := getSerializedMizuAgentConfig(mizuAgentConfig)
+	if err != nil {
+		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error serializing mizu config: %v", errormessage.FormatError(err)))
 		return
 	}
 
@@ -163,6 +169,31 @@ func handleDaemonModePostCreation(cancel context.CancelFunc, kubernetesProvider 
 	}
 
 	return nil
+}
+
+func getMizuAgentConfig(targetNamespaces []string, mizuApiFilteringOptions *api.TrafficFilteringOptions) (*shared.MizuAgentConfig, error) {
+	serializableRegex, err := api.CompileRegexToSerializableRegexp(config.Config.Tap.PodRegexStr)
+	if err != nil {
+		return nil, err
+	}
+
+	mizuAgentConfig := shared.MizuAgentConfig{
+		TapTargetRegex:          *serializableRegex,
+		MaxDBSizeBytes:          config.Config.Tap.MaxEntriesDBSizeBytes(),
+		TargetNamespaces:        targetNamespaces,
+		AgentImage:              config.Config.AgentImage,
+		PullPolicy:              config.Config.ImagePullPolicyStr,
+		LogLevel:                config.Config.LogLevel(),
+		IgnoredUserAgents:       config.Config.Tap.IgnoredUserAgents,
+		TapperResources:         config.Config.Tap.TapperResources,
+		MizuResourcesNamespace:  config.Config.MizuResourcesNamespace,
+		MizuApiFilteringOptions: *mizuApiFilteringOptions,
+		AgentDatabasePath:       shared.DataDirPath,
+		Istio:                   config.Config.Tap.Istio,
+		SyncTappers:             config.Config.Tap.DaemonMode,
+	}
+
+	return &mizuAgentConfig, nil
 }
 
 /*
