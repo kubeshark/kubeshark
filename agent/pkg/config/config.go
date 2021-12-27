@@ -56,6 +56,6 @@ func getDefaultConfig() (*shared.MizuAgentConfig, error) {
 		TapTargetRegex:    *regex,
 		MaxDBSizeBytes:    defaultMaxDatabaseSizeBytes,
 		AgentDatabasePath: DefaultDatabasePath,
-		DaemonMode:        false,
+		SyncTappers:       false,
 	}, nil
 }

@@ -36,7 +36,6 @@ type Resources struct {
 type MizuAgentConfig struct {
 	TapTargetRegex          api.SerializableRegexp      `json:"tapTargetRegex"`
 	MaxDBSizeBytes          int64                       `json:"maxDBSizeBytes"`
-	DaemonMode              bool                        `json:"daemonMode"`
 	TargetNamespaces        []string                    `json:"targetNamespaces"`
 	AgentImage              string                      `json:"agentImage"`
 	PullPolicy              string                      `json:"pullPolicy"`
@@ -47,6 +46,7 @@ type MizuAgentConfig struct {
 	MizuApiFilteringOptions api.TrafficFilteringOptions `json:"mizuApiFilteringOptions"`
 	AgentDatabasePath       string                      `json:"agentDatabasePath"`
 	Istio                   bool                        `json:"istio"`
+	SyncTappers             bool                        `json:"syncTappers"`
 }
 
 type WebSocketMessageMetadata struct {
