@@ -194,11 +194,12 @@ func startPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem) 
 	diagnose.InitializeErrorsMap(*debug, *verbose, *quiet)
 	diagnose.InitializeTapperInternalStats()
 
+	mainPacketInputChan = make(chan source.TcpPacketInfo)
+
 	if err := initializePacketSources(); err != nil {
 		logger.Log.Fatal(err)
 	}
 
-	mainPacketInputChan = make(chan source.TcpPacketInfo)
 	assembler := NewTcpAssembler(outputItems, streamsMap, opts)
 
 	diagnose.AppStats.SetStartTime(time.Now())
