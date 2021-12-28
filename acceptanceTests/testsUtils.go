@@ -13,7 +13,6 @@ import (
 	"strings"
 	"sync"
 	"syscall"
-	"testing"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -103,10 +102,6 @@ func getDefaultTapCommandArgs() []string {
 	defaultCmdArgs := getDefaultCommandArgs()
 
 	return append([]string{tapCommand}, defaultCmdArgs...)
-}
-
-func getDefaultTapCommandArgsWithDaemonMode() []string {
-	return append(getDefaultTapCommandArgs(), "--daemon")
 }
 
 func getDefaultTapCommandArgsWithRegex(regex string) []string {
@@ -322,16 +317,6 @@ func getLogsPath() (string, error) {
 
 	logsPath := path.Join(dir, "mizu_logs.zip")
 	return logsPath, nil
-}
-
-func daemonCleanup(t *testing.T, viewCmd *exec.Cmd) {
-	if err := runMizuClean(); err != nil {
-		t.Logf("error running mizu clean: %v", err)
-	}
-
-	if err := cleanupCommand(viewCmd); err != nil {
-		t.Logf("failed to cleanup view command, err: %v", err)
-	}
 }
 
 // waitTimeout waits for the waitgroup for the specified max timeout.

@@ -6,7 +6,6 @@ import (
 
 	"github.com/op/go-logging"
 	"github.com/up9inc/mizu/shared/logger"
-	"github.com/up9inc/mizu/tap/api"
 	v1 "k8s.io/api/core/v1"
 
 	"gopkg.in/yaml.v3"
@@ -34,19 +33,13 @@ type Resources struct {
 }
 
 type MizuAgentConfig struct {
-	TapTargetRegex          api.SerializableRegexp      `json:"tapTargetRegex"`
-	MaxDBSizeBytes          int64                       `json:"maxDBSizeBytes"`
-	TargetNamespaces        []string                    `json:"targetNamespaces"`
-	AgentImage              string                      `json:"agentImage"`
-	PullPolicy              string                      `json:"pullPolicy"`
-	LogLevel                logging.Level               `json:"logLevel"`
-	IgnoredUserAgents       []string                    `json:"ignoredUserAgents"`
-	TapperResources         Resources                   `json:"tapperResources"`
-	MizuResourcesNamespace  string                      `json:"mizuResourceNamespace"`
-	MizuApiFilteringOptions api.TrafficFilteringOptions `json:"mizuApiFilteringOptions"`
-	AgentDatabasePath       string                      `json:"agentDatabasePath"`
-	Istio                   bool                        `json:"istio"`
-	SyncTappers             bool                        `json:"syncTappers"`
+	MaxDBSizeBytes         int64         `json:"maxDBSizeBytes"`
+	AgentImage             string        `json:"agentImage"`
+	PullPolicy             string        `json:"pullPolicy"`
+	LogLevel               logging.Level `json:"logLevel"`
+	TapperResources        Resources     `json:"tapperResources"`
+	MizuResourcesNamespace string        `json:"mizuResourceNamespace"`
+	AgentDatabasePath      string        `json:"agentDatabasePath"`
 }
 
 type WebSocketMessageMetadata struct {
