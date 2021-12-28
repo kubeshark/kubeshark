@@ -5,18 +5,14 @@ import (
 	"errors"
 	"fmt"
 	"github.com/creasty/defaults"
-	"github.com/up9inc/mizu/cli/apiserver"
 	"github.com/up9inc/mizu/cli/config"
 	"github.com/up9inc/mizu/cli/errormessage"
-	"github.com/up9inc/mizu/cli/mizu/fsUtils"
 	"github.com/up9inc/mizu/cli/resources"
 	"github.com/up9inc/mizu/cli/uiUtils"
 	"github.com/up9inc/mizu/shared"
-	"github.com/up9inc/mizu/shared/kubernetes"
 	"github.com/up9inc/mizu/shared/logger"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"time"
 )
 
 func runMizuInstall() {
@@ -43,8 +39,8 @@ func runMizuInstall() {
 		return
 	}
 
-	logger.Log.Infof("Waiting for Mizu Agent to start...")
-	if state.mizuServiceAccountExists, err = resources.CreateMizuResources(ctx, cancel, kubernetesProvider, serializedValidationRules, serializedContract, serializedMizuConfig, config.Config.IsNsRestrictedMode(), config.Config.MizuResourcesNamespace, true, config.Config.AgentImage, nil, defaultMaxEntriesDBSizeBytes, defaultResources, config.Config.ImagePullPolicy(), config.Config.LogLevel(), false); err != nil {
+	if err = resources.CreateInstallMizuResources(ctx, kubernetesProvider, serializedValidationRules, serializedContract, serializedMizuConfig, config.Config.IsNsRestrictedMode(), config.Config.MizuResourcesNamespace, config.Config.AgentImage, nil, defaultMaxEntriesDBSizeBytes, defaultResources, config.Config.ImagePullPolicy(), config.Config.LogLevel(), false); err != nil {
+		defer resources.CleanUpMizuResources(ctx, cancel, kubernetesProvider, config.Config.IsNsRestrictedMode(), config.Config.MizuResourcesNamespace)
 		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error creating resources: %v", errormessage.FormatError(err)))
 
 		var statusError *k8serrors.StatusError
@@ -53,15 +49,11 @@ func runMizuInstall() {
 				logger.Log.Info("Mizu is already running in this namespace, change the `mizu-resources-namespace` configuration or run `mizu clean` to remove the currently running Mizu instance")
 			}
 		}
+
 		return
 	}
 
-	if err := handleInstallModePostCreation(cancel, kubernetesProvider); err != nil {
-		defer finishMizuExecution(kubernetesProvider, apiProvider, config.Config.IsNsRestrictedMode(), config.Config.MizuResourcesNamespace)
-		cancel()
-	} else {
-		logger.Log.Infof(uiUtils.Magenta, "Mizu is now running in install mode, run `mizu view` to connect to the mizu daemon instance")
-	}
+	logger.Log.Infof(uiUtils.Magenta, "Created Mizu Agent components, run `mizu view` to connect to the mizu daemon instance")
 }
 
 func getInstallMizuAgentConfig(maxDBSizeBytes int64, tapperResources shared.Resources) *shared.MizuAgentConfig {
@@ -76,24 +68,4 @@ func getInstallMizuAgentConfig(maxDBSizeBytes int64, tapperResources shared.Reso
 	}
 
 	return &mizuAgentConfig
-}
-
-func handleInstallModePostCreation(cancel context.CancelFunc, kubernetesProvider *kubernetes.Provider) error {
-	apiProvider := apiserver.NewProvider(GetApiServerUrl(), 90, 1*time.Second)
-
-	if err := waitForInstallModeToBeReady(cancel, kubernetesProvider, apiProvider); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func waitForInstallModeToBeReady(cancel context.CancelFunc, kubernetesProvider *kubernetes.Provider, apiProvider *apiserver.Provider) error {
-	go startProxyReportErrorIfAny(kubernetesProvider, cancel)
-
-	if err := apiProvider.TestConnection(); err != nil {
-		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Mizu was not ready in time, for more info check logs at %s", fsUtils.GetLogFilePath()))
-		return err
-	}
-	return nil
 }

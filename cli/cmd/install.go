@@ -7,7 +7,7 @@ import (
 
 var installCmd = &cobra.Command{
 	Use:   "install",
-	Short: "Run mizu in install mode, detached from the cli",
+	Short: "Installs mizu components",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		go telemetry.ReportRun("install", nil)
 		runMizuInstall()

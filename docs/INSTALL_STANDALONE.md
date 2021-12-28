@@ -1,9 +1,9 @@
-# Mizu install mode
+# Mizu install standalone
 
 Mizu can be run detached from the cli using the install command: `mizu install`. This type of mizu instance will run
 indefinitely in the cluster.
 
-Please note that install mode requires you to have RBAC creation permissions, see the [permissions](PERMISSIONS.md)
+Please note that install standalone requires you to have RBAC creation permissions, see the [permissions](PERMISSIONS.md)
 doc for more details.
 
 ```bash

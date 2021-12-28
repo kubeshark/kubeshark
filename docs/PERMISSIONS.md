@@ -61,7 +61,7 @@ Mizu needs following permissions on your Kubernetes cluster to run properly
 
 Mandatory permissions for running with install command.
 
-Optional for service/pod name resolving in non install mode
+Optional for service/pod name resolving in non install standalone
 
 ```yaml
 - apiGroups:

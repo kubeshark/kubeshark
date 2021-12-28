@@ -44,7 +44,6 @@ type TapConfig struct {
 	AskUploadConfirmation   bool             `yaml:"ask-upload-confirmation" default:"true"`
 	ApiServerResources      shared.Resources `yaml:"api-server-resources"`
 	TapperResources         shared.Resources `yaml:"tapper-resources"`
-	NoPersistentVolumeClaim bool             `yaml:"no-persistent-volume-claim" default:"false"`
 	Istio                   bool             `yaml:"istio" default:"false"`
 }
 
