@@ -89,14 +89,14 @@ func (tapperSyncer *MizuTapperSyncer) watchTapperPods() {
 
 			pod, err := wEvent.ToPod()
 			if err != nil {
-				logger.Log.Errorf(fmt.Sprintf("Error parsing Mizu resource pod: %+v", err))
+				logger.Log.Debugf(fmt.Sprintf("Error parsing Mizu resource pod: %+v", err))
 				continue
 			}
 
 			logger.Log.Debugf("Watching tapper pods loop, tapper: %v, node: %v, status: %v", pod.Name, pod.Spec.NodeName, pod.Status.Phase)
 			if pod.Spec.NodeName != "" {
-				taperStatus := shared.TapperStatus{TapperName: pod.Name, NodeName: pod.Spec.NodeName, Status: string(pod.Status.Phase)}
-				tapperSyncer.TapperStatusChangedOut <- taperStatus
+				tapperStatus := shared.TapperStatus{TapperName: pod.Name, NodeName: pod.Spec.NodeName, Status: string(pod.Status.Phase)}
+				tapperSyncer.TapperStatusChangedOut <- tapperStatus
 			}
 
 		case err, ok := <-errorChan:
@@ -104,7 +104,7 @@ func (tapperSyncer *MizuTapperSyncer) watchTapperPods() {
 				errorChan = nil
 				continue
 			}
-			logger.Log.Errorf("Watching tapper pods loop, error: %+v", err)
+			logger.Log.Debugf("Watching tapper pods loop, error: %+v", err)
 
 		case <-tapperSyncer.context.Done():
 			logger.Log.Debugf("Watching tapper pods loop, ctx done")
@@ -128,7 +128,7 @@ func (tapperSyncer *MizuTapperSyncer) watchTapperEvents() {
 
 			event, err := wEvent.ToEvent()
 			if err != nil {
-				logger.Log.Errorf(fmt.Sprintf("Error parsing Mizu resource event: %+v", err))
+				logger.Log.Debugf(fmt.Sprintf("Error parsing Mizu resource event: %+v", err))
 				continue
 			}
 
@@ -158,8 +158,8 @@ func (tapperSyncer *MizuTapperSyncer) watchTapperEvents() {
 				nodeName = pod.Spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms[0].MatchFields[0].Values[0]
 			}
 
-			taperStatus := shared.TapperStatus{TapperName: pod.Name, NodeName: nodeName, Status: string(pod.Status.Phase)}
-			tapperSyncer.TapperStatusChangedOut <- taperStatus
+			tapperStatus := shared.TapperStatus{TapperName: pod.Name, NodeName: nodeName, Status: string(pod.Status.Phase)}
+			tapperSyncer.TapperStatusChangedOut <- tapperStatus
 
 		case err, ok := <-errorChan:
 			if !ok {
