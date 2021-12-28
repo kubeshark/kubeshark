@@ -89,7 +89,7 @@ func (tapperSyncer *MizuTapperSyncer) watchTapperPods() {
 
 			pod, err := wEvent.ToPod()
 			if err != nil {
-				logger.Log.Debugf(fmt.Sprintf("Error parsing Mizu resource pod: %+v", err))
+				logger.Log.Debugf("[ERROR] parsing Mizu resource pod: %+v", err)
 				continue
 			}
 
@@ -104,7 +104,7 @@ func (tapperSyncer *MizuTapperSyncer) watchTapperPods() {
 				errorChan = nil
 				continue
 			}
-			logger.Log.Debugf("Watching tapper pods loop, error: %+v", err)
+			logger.Log.Debugf("[ERROR] Watching tapper pods loop, error: %+v", err)
 
 		case <-tapperSyncer.context.Done():
 			logger.Log.Debugf("Watching tapper pods loop, ctx done")
@@ -128,7 +128,7 @@ func (tapperSyncer *MizuTapperSyncer) watchTapperEvents() {
 
 			event, err := wEvent.ToEvent()
 			if err != nil {
-				logger.Log.Debugf(fmt.Sprintf("Error parsing Mizu resource event: %+v", err))
+				logger.Log.Debugf("[ERROR] parsing Mizu resource event: %+v", err)
 				continue
 			}
 
