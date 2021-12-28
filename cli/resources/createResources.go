@@ -55,7 +55,7 @@ func CreateMizuResources(ctx context.Context, cancel context.CancelFunc, kuberne
 	if isInstallMode {
 		if !mizuServiceAccountExists {
 			defer CleanUpMizuResources(ctx, cancel, kubernetesProvider, isNsRestrictedMode, mizuResourcesNamespace)
-			logger.Log.Fatalf(uiUtils.Red, fmt.Sprintf("Failed to ensure the resources required for mizu to run in daemon mode. cannot proceed. error: %v", errormessage.FormatError(err)))
+			logger.Log.Fatalf(uiUtils.Red, fmt.Sprintf("Failed to ensure the resources required for mizu to run in install mode. cannot proceed. error: %v", errormessage.FormatError(err)))
 		}
 		if err := createMizuApiServerDeployment(ctx, kubernetesProvider, opts, noPersistentVolumeClaim); err != nil {
 			return mizuServiceAccountExists, err
@@ -141,7 +141,7 @@ func tryToCreatePersistentVolumeClaim(ctx context.Context, kubernetesProvider *k
 		return false
 	}
 
-	if _, err = kubernetesProvider.CreatePersistentVolumeClaim(ctx, opts.Namespace, kubernetes.PersistentVolumeClaimName, opts.MaxEntriesDBSizeBytes + mizu.DaemonModePersistentVolumeSizeBufferBytes); err != nil {
+	if _, err = kubernetesProvider.CreatePersistentVolumeClaim(ctx, opts.Namespace, kubernetes.PersistentVolumeClaimName, opts.MaxEntriesDBSizeBytes + mizu.InstallModePersistentVolumeSizeBufferBytes); err != nil {
 		logger.Log.Warningf(uiUtils.Yellow, "An error has occured while creating a persistent volume claim for mizu, this means mizu data will be lost on mizu-api-server pod restart")
 		logger.Log.Debugf("error creating persistent volume claim: %v", err)
 		return false

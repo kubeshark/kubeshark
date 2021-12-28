@@ -90,7 +90,7 @@ func RunMizuTap() {
 
 	state.targetNamespaces = getNamespaces(kubernetesProvider)
 
-	mizuAgentConfig := getMizuAgentConfig()
+	mizuAgentConfig := getTapMizuAgentConfig()
 	serializedMizuConfig, err := getSerializedMizuAgentConfig(mizuAgentConfig)
 	if err != nil {
 		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error serializing mizu config: %v", errormessage.FormatError(err)))
@@ -123,7 +123,7 @@ func RunMizuTap() {
 	}
 
 	logger.Log.Infof("Waiting for Mizu Agent to start...")
-	if state.mizuServiceAccountExists, err = resources.CreateMizuResources(ctx, cancel, kubernetesProvider, serializedValidationRules, serializedContract, serializedMizuConfig, config.Config.IsNsRestrictedMode(), config.Config.MizuResourcesNamespace, config.Config.Tap.DaemonMode, config.Config.AgentImage, getSyncEntriesConfig(), config.Config.Tap.MaxEntriesDBSizeBytes(), config.Config.Tap.ApiServerResources, config.Config.ImagePullPolicy(), config.Config.LogLevel(), config.Config.Tap.NoPersistentVolumeClaim); err != nil {
+	if state.mizuServiceAccountExists, err = resources.CreateMizuResources(ctx, cancel, kubernetesProvider, serializedValidationRules, serializedContract, serializedMizuConfig, config.Config.IsNsRestrictedMode(), config.Config.MizuResourcesNamespace, false, config.Config.AgentImage, getSyncEntriesConfig(), config.Config.Tap.MaxEntriesDBSizeBytes(), config.Config.Tap.ApiServerResources, config.Config.ImagePullPolicy(), config.Config.LogLevel(), config.Config.Tap.NoPersistentVolumeClaim); err != nil {
 		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error creating resources: %v", errormessage.FormatError(err)))
 
 		var statusError *k8serrors.StatusError
@@ -134,35 +134,17 @@ func RunMizuTap() {
 		}
 		return
 	}
-	if config.Config.Tap.DaemonMode {
-		if err := handleDaemonModePostCreation(cancel, kubernetesProvider); err != nil {
-			defer finishMizuExecution(kubernetesProvider, apiProvider, config.Config.IsNsRestrictedMode(), config.Config.MizuResourcesNamespace)
-			cancel()
-		} else {
-			logger.Log.Infof(uiUtils.Magenta, "Mizu is now running in daemon mode, run `mizu view` to connect to the mizu daemon instance")
-		}
-	} else {
-		defer finishMizuExecution(kubernetesProvider, apiProvider, config.Config.IsNsRestrictedMode(), config.Config.MizuResourcesNamespace)
 
-		go goUtils.HandleExcWrapper(watchApiServerEvents, ctx, kubernetesProvider, cancel)
-		go goUtils.HandleExcWrapper(watchApiServerPod, ctx, kubernetesProvider, cancel)
+	defer finishMizuExecution(kubernetesProvider, apiProvider, config.Config.IsNsRestrictedMode(), config.Config.MizuResourcesNamespace)
 
-		// block until exit signal or error
-		utils.WaitForFinish(ctx, cancel)
-	}
+	go goUtils.HandleExcWrapper(watchApiServerEvents, ctx, kubernetesProvider, cancel)
+	go goUtils.HandleExcWrapper(watchApiServerPod, ctx, kubernetesProvider, cancel)
+
+	// block until exit signal or error
+	utils.WaitForFinish(ctx, cancel)
 }
 
-func handleDaemonModePostCreation(cancel context.CancelFunc, kubernetesProvider *kubernetes.Provider) error {
-	apiProvider := apiserver.NewProvider(GetApiServerUrl(), 90, 1*time.Second)
-
-	if err := waitForDaemonModeToBeReady(cancel, kubernetesProvider, apiProvider); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func getMizuAgentConfig() *shared.MizuAgentConfig {
+func getTapMizuAgentConfig() *shared.MizuAgentConfig {
 	mizuAgentConfig := shared.MizuAgentConfig{
 		MaxDBSizeBytes:         config.Config.Tap.MaxEntriesDBSizeBytes(),
 		AgentImage:             config.Config.AgentImage,
@@ -193,17 +175,6 @@ func printTappedPodsPreview(ctx context.Context, kubernetesProvider *kubernetes.
 		}
 		return nil
 	}
-}
-
-func waitForDaemonModeToBeReady(cancel context.CancelFunc, kubernetesProvider *kubernetes.Provider, apiProvider *apiserver.Provider) error {
-	go startProxyReportErrorIfAny(kubernetesProvider, cancel)
-
-	// TODO: TRA-3903 add a smarter test to see that tapping/pod watching is functioning properly
-	if err := apiProvider.TestConnection(); err != nil {
-		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Mizu was not ready in time, for more info check logs at %s", fsUtils.GetLogFilePath()))
-		return err
-	}
-	return nil
 }
 
 func startTapperSyncer(ctx context.Context, cancel context.CancelFunc, provider *kubernetes.Provider, targetNamespaces []string, mizuApiFilteringOptions api.TrafficFilteringOptions, startTime time.Time) error {
