@@ -373,7 +373,8 @@ func watchApiServerEvents(ctx context.Context, kubernetesProvider *kubernetes.Pr
 
 			event, err := wEvent.ToEvent()
 			if err != nil {
-				logger.Log.Errorf(fmt.Sprintf("Error parsing Mizu resource event: %+v", err))
+				logger.Log.Debugf("[ERROR] parsing Mizu resource event: %+v", err)
+				continue
 			}
 
 			if state.startTime.After(event.CreationTimestamp.Time) {
@@ -401,7 +402,7 @@ func watchApiServerEvents(ctx context.Context, kubernetesProvider *kubernetes.Pr
 				continue
 			}
 
-			logger.Log.Errorf("Watching API server events loop, error: %+v", err)
+			logger.Log.Debugf("[Error] Watching API server events loop, error: %+v", err)
 		case <-ctx.Done():
 			logger.Log.Debugf("Watching API server events loop, ctx done")
 			return
