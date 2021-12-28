@@ -91,7 +91,6 @@ func handleInstallModePostCreation(cancel context.CancelFunc, kubernetesProvider
 func waitForInstallModeToBeReady(cancel context.CancelFunc, kubernetesProvider *kubernetes.Provider, apiProvider *apiserver.Provider) error {
 	go startProxyReportErrorIfAny(kubernetesProvider, cancel)
 
-	// TODO: TRA-3903 add a smarter test to see that tapping/pod watching is functioning properly
 	if err := apiProvider.TestConnection(); err != nil {
 		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Mizu was not ready in time, for more info check logs at %s", fsUtils.GetLogFilePath()))
 		return err
