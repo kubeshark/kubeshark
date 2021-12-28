@@ -67,22 +67,22 @@ func CreateTapMizuResources(ctx context.Context, kubernetesProvider *kubernetes.
 func CreateInstallMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, serializedValidationRules string, serializedContract string, serializedMizuConfig string, isNsRestrictedMode bool, mizuResourcesNamespace string, agentImage string, syncEntriesConfig *shared.SyncEntriesConfig, maxEntriesDBSizeBytes int64, apiServerResources shared.Resources, imagePullPolicy core.PullPolicy, logLevel logging.Level, noPersistentVolumeClaim bool) error {
 	if !isNsRestrictedMode {
 		if err := createMizuNamespace(ctx, kubernetesProvider, mizuResourcesNamespace); err != nil {
-			return fmt.Errorf("failed to create mizu namespace. error: %v", errormessage.FormatError(err))
+			return err
 		}
 		logger.Log.Infof("Created mizu namespace")
 	}
 
 	if err := createMizuConfigmap(ctx, kubernetesProvider, serializedValidationRules, serializedContract, serializedMizuConfig, mizuResourcesNamespace); err != nil {
-		return fmt.Errorf("failed to create config map. error: %v", errormessage.FormatError(err))
+		return err
 	}
 	logger.Log.Infof("Created config map")
 
 	_, err := createRBACIfNecessary(ctx, kubernetesProvider, isNsRestrictedMode, mizuResourcesNamespace)
 	if err != nil {
-		return fmt.Errorf("failed to create RBAC. error: %v", errormessage.FormatError(err))
+		return err
 	}
 	if err := kubernetesProvider.CreateDaemonsetRBAC(ctx, mizuResourcesNamespace, kubernetes.ServiceAccountName, kubernetes.DaemonRoleName, kubernetes.DaemonRoleBindingName, mizu.RBACVersion); err != nil {
-		return fmt.Errorf("failed to create Daemonset RBAC. error: %v", errormessage.FormatError(err))
+		return err
 	}
 	logger.Log.Infof("Created RBAC")
 
@@ -101,13 +101,13 @@ func CreateInstallMizuResources(ctx context.Context, kubernetesProvider *kuberne
 	}
 
 	if err := createMizuApiServerDeployment(ctx, kubernetesProvider, opts, noPersistentVolumeClaim); err != nil {
-		return fmt.Errorf("failed to create mizu api server deployment. error: %v", errormessage.FormatError(err))
+		return err
 	}
 	logger.Log.Infof("Created Api Server deployment")
 
 	_, err = kubernetesProvider.CreateService(ctx, mizuResourcesNamespace, kubernetes.ApiServerPodName, kubernetes.ApiServerPodName)
 	if err != nil {
-		return fmt.Errorf("failed to create api server service. error: %v", errormessage.FormatError(err))
+		return err
 	}
 	logger.Log.Infof("Created Api Server service")
 

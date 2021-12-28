@@ -179,7 +179,7 @@ tap
     proxy-host: 0.0.0.0
 and when changed it will support accessing by IP
 
-### Run in install standalone
+### Install Mizu standalone
 
 Mizu can be run detached from the cli using the install command: `mizu install`. This type of mizu instance will run
 indefinitely in the cluster.
