@@ -22,6 +22,7 @@ import (
 	"path"
 	"path/filepath"
 	"plugin"
+	"regexp"
 	"sort"
 	"syscall"
 	"time"
@@ -129,10 +130,6 @@ func main() {
 			if err := up9.SyncEntries(syncEntriesConfig); err != nil {
 				panic(fmt.Sprintf("Error syncing entries, err: %v", err))
 			}
-		}
-
-		if config.Config.SyncTappers {
-			startSyncingTappers()
 		}
 
 		hostApi(outputItemsChannel)
@@ -451,33 +448,19 @@ func handleIncomingMessageAsTapper(socketConnection *websocket.Conn) {
 	}
 }
 
-func startSyncingTappers() {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	kubernetesProvider, err := kubernetes.NewProviderInCluster()
-	if err != nil {
-		logger.Log.Fatalf("error creating k8s provider: %+v", err)
-	}
-
-	if _, err := startMizuTapperSyncer(ctx, kubernetesProvider); err != nil {
-		logger.Log.Fatalf("error initializing tapper syncer: %+v", err)
-	}
-}
-
-func startMizuTapperSyncer(ctx context.Context, provider *kubernetes.Provider) (*kubernetes.MizuTapperSyncer, error) {
+func startMizuTapperSyncer(ctx context.Context, provider *kubernetes.Provider, targetNamespaces []string, podFilterRegex regexp.Regexp, ignoredUserAgents []string, mizuApiFilteringOptions tapApi.TrafficFilteringOptions, istio bool) (*kubernetes.MizuTapperSyncer, error) {
 	tapperSyncer, err := kubernetes.CreateAndStartMizuTapperSyncer(ctx, provider, kubernetes.TapperSyncerConfig{
-		TargetNamespaces:         config.Config.TargetNamespaces,
-		PodFilterRegex:           config.Config.TapTargetRegex.Regexp,
+		TargetNamespaces:         targetNamespaces,
+		PodFilterRegex:           podFilterRegex,
 		MizuResourcesNamespace:   config.Config.MizuResourcesNamespace,
 		AgentImage:               config.Config.AgentImage,
 		TapperResources:          config.Config.TapperResources,
 		ImagePullPolicy:          v1.PullPolicy(config.Config.PullPolicy),
 		LogLevel:                 config.Config.LogLevel,
-		IgnoredUserAgents:        config.Config.IgnoredUserAgents,
-		MizuApiFilteringOptions:  config.Config.MizuApiFilteringOptions,
-		MizuServiceAccountExists: true, //assume service account exists since daemon mode will not function without it anyway
-		Istio:                    config.Config.Istio,
+		IgnoredUserAgents:        ignoredUserAgents,
+		MizuApiFilteringOptions:  mizuApiFilteringOptions,
+		MizuServiceAccountExists: true, //assume service account exists since install mode will not function without it anyway
+		Istio:                    istio,
 	}, time.Now())
 
 	if err != nil {

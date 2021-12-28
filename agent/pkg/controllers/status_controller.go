@@ -2,12 +2,10 @@ package controllers
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/logger"
 	"mizuserver/pkg/api"
-	"mizuserver/pkg/config"
 	"mizuserver/pkg/holder"
 	"mizuserver/pkg/providers"
 	"mizuserver/pkg/up9"
@@ -17,13 +15,6 @@ import (
 )
 
 func HealthCheck(c *gin.Context) {
-	if config.Config.SyncTappers {
-		if providers.ExpectedTapperAmount != providers.TappersCount {
-			c.JSON(http.StatusInternalServerError, fmt.Sprintf("expecting more tappers than are actually connected (%d expected, %d connected)", providers.ExpectedTapperAmount, providers.TappersCount))
-			return
-		}
-	}
-
 	tappers := make([]shared.TapperStatus, 0)
 	for _, value := range providers.TappersStatus {
 		tappers = append(tappers, value)
