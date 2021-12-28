@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/up9inc/mizu/cli/apiserver"
@@ -9,6 +10,7 @@ import (
 	"github.com/up9inc/mizu/cli/mizu/fsUtils"
 	"github.com/up9inc/mizu/cli/resources"
 	"github.com/up9inc/mizu/cli/telemetry"
+	"github.com/up9inc/mizu/shared"
 	"path"
 	"time"
 
@@ -70,4 +72,13 @@ func dumpLogsIfNeeded(ctx context.Context, kubernetesProvider *kubernetes.Provid
 	if err := fsUtils.DumpLogs(ctx, kubernetesProvider, filePath); err != nil {
 		logger.Log.Errorf("Failed dump logs %v", err)
 	}
+}
+
+func getSerializedMizuAgentConfig(mizuAgentConfig *shared.MizuAgentConfig) (string, error) {
+	serializedConfig, err := json.Marshal(mizuAgentConfig)
+	if err != nil {
+		return "", err
+	}
+
+	return string(serializedConfig), nil
 }
