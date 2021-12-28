@@ -33,8 +33,8 @@ import (
 const cleanupTimeout = time.Minute
 
 type tapState struct {
-	startTime        time.Time
-	targetNamespaces []string
+	startTime                time.Time
+	targetNamespaces         []string
 	mizuServiceAccountExists bool
 }
 
@@ -448,7 +448,7 @@ func watchApiServerEvents(ctx context.Context, kubernetesProvider *kubernetes.Pr
 				continue
 			}
 
-			logger.Log.Errorf("Watching API server events loop, error: %+v", err)
+			logger.Log.Debugf("[Error] Watching API server events loop, error: %+v", err)
 		case <-ctx.Done():
 			logger.Log.Debugf("Watching API server events loop, ctx done")
 			return
