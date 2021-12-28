@@ -1,22 +1,16 @@
-# Mizu daemon mode
+# Mizu install mode
 
-Mizu can be run detached from the cli using the daemon flag: `mizu tap --daemon`. This type of mizu instance will run
+Mizu can be run detached from the cli using the install command: `mizu install`. This type of mizu instance will run
 indefinitely in the cluster.
 
-Please note that daemon mode requires you to have RBAC creation permissions, see the [permissions](PERMISSIONS.md)
+Please note that install mode requires you to have RBAC creation permissions, see the [permissions](PERMISSIONS.md)
 doc for more details.
 
 ```bash
-$ mizu tap "^ca.*" --daemon
-  Mizu will store up to 200MB of traffic, old traffic will be cleared once the limit is reached.
-  Tapping pods in namespaces "sock-shop"
-  Waiting for mizu to be ready... (may take a few minutes)
-  +carts-66c77f5fbb-fq65r
-  +catalogue-5f4cb7cf5-7zrmn
-  ..
+$ mizu install
 ```
 
-## Stop mizu daemon
+## Stop mizu install
 
 To stop the detached mizu instance and clean all cluster side resources, run `mizu clean`
 

@@ -38,8 +38,6 @@ Please make sure to use full option name (`tap.dry-run` as opposed to `dry-run` 
 
 * `all-namespaces` - special flag indicating whether Mizu should search and tap pods, matching the regex, in all namespaces. Default is `false`. Please use with caution, tapping too many pods can affect resource consumption.
 
-* `daemon` - instructs Mizu whether to run daemon mode (where CLI command exits after launch, and tapper & api-server pods in Kubernetes continue to run without controlling CLI). Typically supplied as command-line option `--daemon`. Default valie is `false`
-
 * `dry-run` - if true, Mizu will print list of pods matching the supplied (or default) regex and exit without actually tapping the traffic. Default value is `false`. Typically supplied as command-line option `--dry-run`
 
 * `proxy-host` - IP address on which proxy to Mizu API service is launched; should be accessible at `proxy-host:gui-port`. Default value is `127.0.0.1`
