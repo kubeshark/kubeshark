@@ -33,8 +33,8 @@ import (
 const cleanupTimeout = time.Minute
 
 type tapState struct {
-	startTime        time.Time
-	targetNamespaces []string
+	startTime                time.Time
+	targetNamespaces         []string
 	mizuServiceAccountExists bool
 }
 
@@ -44,13 +44,9 @@ var apiProvider *apiserver.Provider
 func RunMizuTap() {
 	state.startTime = time.Now()
 
-	mizuApiFilteringOptions, err := getMizuApiFilteringOptions()
 	apiProvider = apiserver.NewProvider(GetApiServerUrl(), apiserver.DefaultRetries, apiserver.DefaultTimeout)
-	if err != nil {
-		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error parsing regex-masking: %v", errormessage.FormatError(err)))
-		return
-	}
 
+	var err error
 	var serializedValidationRules string
 	if config.Config.Tap.EnforcePolicyFile != "" {
 		serializedValidationRules, err = readValidationRules(config.Config.Tap.EnforcePolicyFile)
@@ -94,12 +90,7 @@ func RunMizuTap() {
 
 	state.targetNamespaces = getNamespaces(kubernetesProvider)
 
-	mizuAgentConfig, err := getMizuAgentConfig(state.targetNamespaces, mizuApiFilteringOptions)
-	if err != nil {
-		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error getting mizu config: %v", errormessage.FormatError(err)))
-		return
-	}
-
+	mizuAgentConfig := getMizuAgentConfig()
 	serializedMizuConfig, err := getSerializedMizuAgentConfig(mizuAgentConfig)
 	if err != nil {
 		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error serializing mizu config: %v", errormessage.FormatError(err)))
@@ -171,29 +162,18 @@ func handleDaemonModePostCreation(cancel context.CancelFunc, kubernetesProvider 
 	return nil
 }
 
-func getMizuAgentConfig(targetNamespaces []string, mizuApiFilteringOptions *api.TrafficFilteringOptions) (*shared.MizuAgentConfig, error) {
-	serializableRegex, err := api.CompileRegexToSerializableRegexp(config.Config.Tap.PodRegexStr)
-	if err != nil {
-		return nil, err
-	}
-
+func getMizuAgentConfig() *shared.MizuAgentConfig {
 	mizuAgentConfig := shared.MizuAgentConfig{
-		TapTargetRegex:          *serializableRegex,
-		MaxDBSizeBytes:          config.Config.Tap.MaxEntriesDBSizeBytes(),
-		TargetNamespaces:        targetNamespaces,
-		AgentImage:              config.Config.AgentImage,
-		PullPolicy:              config.Config.ImagePullPolicyStr,
-		LogLevel:                config.Config.LogLevel(),
-		IgnoredUserAgents:       config.Config.Tap.IgnoredUserAgents,
-		TapperResources:         config.Config.Tap.TapperResources,
-		MizuResourcesNamespace:  config.Config.MizuResourcesNamespace,
-		MizuApiFilteringOptions: *mizuApiFilteringOptions,
-		AgentDatabasePath:       shared.DataDirPath,
-		Istio:                   config.Config.Tap.Istio,
-		SyncTappers:             config.Config.Tap.DaemonMode,
+		MaxDBSizeBytes:         config.Config.Tap.MaxEntriesDBSizeBytes(),
+		AgentImage:             config.Config.AgentImage,
+		PullPolicy:             config.Config.ImagePullPolicyStr,
+		LogLevel:               config.Config.LogLevel(),
+		TapperResources:        config.Config.Tap.TapperResources,
+		MizuResourcesNamespace: config.Config.MizuResourcesNamespace,
+		AgentDatabasePath:      shared.DataDirPath,
 	}
 
-	return &mizuAgentConfig, nil
+	return &mizuAgentConfig
 }
 
 /*
