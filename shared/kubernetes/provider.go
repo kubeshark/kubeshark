@@ -846,6 +846,26 @@ func (provider *Provider) GetNamespaceEvents(ctx context.Context, namespace stri
 	return eventList.String(), nil
 }
 
+func (provider *Provider) GetServiceAccount(ctx context.Context, namespace string, name string) (*core.ServiceAccount, error) {
+	return provider.clientSet.CoreV1().ServiceAccounts(namespace).Get(ctx, name, metav1.GetOptions{})
+}
+
+func (provider *Provider) GetClusterRole(ctx context.Context, name string) (*rbac.ClusterRole, error) {
+	return provider.clientSet.RbacV1().ClusterRoles().Get(ctx, name, metav1.GetOptions{})
+}
+
+func (provider *Provider) GetClusterRoleBinding(ctx context.Context, name string) (*rbac.ClusterRoleBinding, error) {
+	return provider.clientSet.RbacV1().ClusterRoleBindings().Get(ctx, name, metav1.GetOptions{})
+}
+
+func (provider *Provider) GetRole(ctx context.Context, namespace string, name string) (*rbac.Role, error) {
+	return provider.clientSet.RbacV1().Roles(namespace).Get(ctx, name, metav1.GetOptions{})
+}
+
+func (provider *Provider) GetRoleBinding(ctx context.Context, namespace string, name string) (*rbac.RoleBinding, error) {
+	return provider.clientSet.RbacV1().RoleBindings(namespace).Get(ctx, name, metav1.GetOptions{})
+}
+
 func (provider *Provider) IsDefaultStorageProviderAvailable(ctx context.Context) (bool, error) {
 	storageClassList, err := provider.clientSet.StorageV1().StorageClasses().List(ctx, metav1.ListOptions{})
 	if err != nil {
