@@ -15,6 +15,7 @@ require (
 	github.com/gorilla/websocket v1.4.2
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/orcaman/concurrent-map v0.0.0-20210106121528-16402b402231
+	github.com/ory/kratos-client-go v0.8.2-alpha.1 // indirect
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/up9inc/basenine/client/go v0.0.0-20211215185650-10083bb9a1b3
 	github.com/up9inc/mizu/shared v0.0.0

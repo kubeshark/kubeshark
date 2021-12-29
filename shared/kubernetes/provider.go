@@ -274,6 +274,22 @@ func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, moun
 						},
 					},
 				},
+				{
+					Name:            opts.PodName + "-auth-manager",
+					Image:           "gcr.io/up9-docker-hub/mizu-kratos/feature/tra-4075_integrate_user_management:0.0.0",
+					Args:            []string{"serve", "-c", "/etc/config/kratos/kratos.yml", "--dev", "--watch-courier"},
+					ImagePullPolicy: opts.ImagePullPolicy,
+					Resources: core.ResourceRequirements{
+						Limits: core.ResourceList{
+							"cpu":    cpuLimit,
+							"memory": memLimit,
+						},
+						Requests: core.ResourceList{
+							"cpu":    cpuRequests,
+							"memory": memRequests,
+						},
+					},
+				},
 			},
 			Volumes:                       volumes,
 			DNSPolicy:                     core.DNSClusterFirstWithHostNet,
@@ -321,8 +337,8 @@ func (provider *Provider) CreateService(ctx context.Context, namespace string, s
 			Name: serviceName,
 		},
 		Spec: core.ServiceSpec{
-			Ports:    []core.ServicePort{{TargetPort: intstr.FromInt(shared.DefaultApiServerPort), Port: 80}},
-			Type:     core.ServiceTypeClusterIP,
+			Ports:    []core.ServicePort{{TargetPort: intstr.FromInt(shared.DefaultApiServerPort), Port: 80, Name: "bob"}, {TargetPort: intstr.FromInt(4433), Port: 4433, Name: "dylan"}, {TargetPort: intstr.FromInt(4434), Port: 4434, Name: "test"}},
+			Type:     core.ServiceTypeLoadBalancer,
 			Selector: map[string]string{"app": appLabelValue},
 		},
 	}
