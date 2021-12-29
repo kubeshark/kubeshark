@@ -863,6 +863,61 @@ func (provider *Provider) GetRoleBinding(ctx context.Context, namespace string, 
 	return provider.clientSet.RbacV1().RoleBindings(namespace).Get(ctx, name, metav1.GetOptions{})
 }
 
+func (provider *Provider) IsManagedServiceAccount(ctx context.Context, namespace string, name string) (bool, error) {
+	resource, err := provider.GetServiceAccount(ctx, namespace, name)
+	if provider.handleRemovalError(err) != nil {
+		return false, err
+	}
+
+	return provider.isManagedResource(resource.ObjectMeta.Annotations), nil
+}
+
+func (provider *Provider) IsManagedClusterRole(ctx context.Context, name string) (bool, error) {
+	resource, err := provider.GetClusterRole(ctx, name)
+	if provider.handleRemovalError(err) != nil {
+		return false, err
+	}
+
+	return provider.isManagedResource(resource.ObjectMeta.Annotations), nil
+}
+
+func (provider *Provider) IsManagedClusterRoleBinding(ctx context.Context, name string) (bool, error) {
+	resource, err := provider.GetClusterRoleBinding(ctx, name)
+	if provider.handleRemovalError(err) != nil {
+		return false, err
+	}
+
+	return provider.isManagedResource(resource.ObjectMeta.Annotations), nil
+}
+
+func (provider *Provider) IsManagedRole(ctx context.Context, namespace string, name string) (bool, error) {
+	resource, err := provider.GetRole(ctx, namespace, name)
+	if provider.handleRemovalError(err) != nil {
+		return false, err
+	}
+
+	return provider.isManagedResource(resource.ObjectMeta.Annotations), nil
+}
+
+func (provider *Provider) IsManagedRoleBinding(ctx context.Context, namespace string, name string) (bool, error) {
+	resource, err := provider.GetRoleBinding(ctx, namespace, name)
+	if provider.handleRemovalError(err) != nil {
+		return false, err
+	}
+
+	return provider.isManagedResource(resource.ObjectMeta.Annotations), nil
+}
+
+func (provider *Provider) isManagedResource(annotations map[string]string) bool {
+	if annotation, ok := annotations[AnnotationMizuManaged]; !ok {
+		return false
+	} else if annotation != AnnotationYes  {
+		return false
+	}
+
+	return true
+}
+
 func (provider *Provider) IsDefaultStorageProviderAvailable(ctx context.Context) (bool, error) {
 	storageClassList, err := provider.clientSet.StorageV1().StorageClasses().List(ctx, metav1.ListOptions{})
 	if err != nil {
