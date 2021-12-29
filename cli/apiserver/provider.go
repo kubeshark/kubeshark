@@ -41,7 +41,7 @@ func NewProvider(url string, retries int, timeout time.Duration) *Provider {
 func (provider *Provider) TestConnection() error {
 	retriesLeft := provider.retries
 	for retriesLeft > 0 {
-		if _, err := provider.GetHealthStatus(); err != nil {
+		if _, err := provider.GetEcho(); err != nil {
 			logger.Log.Debugf("api server not ready yet %v", err)
 		} else {
 			logger.Log.Debugf("connection test to api server passed successfully")
@@ -57,27 +57,26 @@ func (provider *Provider) TestConnection() error {
 	return nil
 }
 
-func (provider *Provider) GetHealthStatus() (*shared.HealthResponse, error) {
+func (provider *Provider) GetEcho() (string, error) {
 	healthUrl := fmt.Sprintf("%s/echo", provider.url)
+	echoResponse := ""
 	if response, err := provider.client.Get(healthUrl); err != nil {
-		return nil, err
+		return echoResponse, err
 	} else if response.StatusCode > 299 {
 		responseBody := new(strings.Builder)
 
 		if _, err := io.Copy(responseBody, response.Body); err != nil {
-			return nil, fmt.Errorf("status code: %d - (bad response - %v)", response.StatusCode, err)
+			return echoResponse, fmt.Errorf("status code: %d - (err - %v)", response.StatusCode, err)
 		} else {
 			singleLineResponse := strings.ReplaceAll(responseBody.String(), "\n", "")
-			return nil, fmt.Errorf("status code: %d - (response - %v)", response.StatusCode, singleLineResponse)
+			return echoResponse, fmt.Errorf("status code: %d - (response - %v)", response.StatusCode, singleLineResponse)
 		}
 	} else {
 		defer response.Body.Close()
-
-		healthResponse := &shared.HealthResponse{}
-		if err := json.NewDecoder(response.Body).Decode(&healthResponse); err != nil {
-			return nil, err
+		if err := json.NewDecoder(response.Body).Decode(&echoResponse); err != nil {
+			return echoResponse, err
 		}
-		return healthResponse, nil
+		return echoResponse, nil
 	}
 }
 
