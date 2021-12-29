@@ -16,6 +16,10 @@ const (
 	ConfigMapName              = MizuResourcesPrefix + "config"
 	PersistentVolumeClaimName  = MizuResourcesPrefix + "volume-claim"
 	MinKubernetesServerVersion = "1.16.0"
-	AnnotationMizuManaged      = "mizu.io/managed"
-	AnnotationYes              = "yes"
+)
+
+const (
+	MizuAnnotationPrefix         = "mizu.io"
+	AnnotationMizuManagement     = MizuAnnotationPrefix + "mizu.io/management-method"
+	AnnotationMizuManagementAuto = "auto"
 )

@@ -158,7 +158,7 @@ func (provider *Provider) CreateNamespace(ctx context.Context, name string) (*co
 	namespaceSpec := &core.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
-			Annotations: map[string]string{AnnotationMizuManaged: AnnotationYes},
+			Annotations: map[string]string{AnnotationMizuManagement: AnnotationMizuManagementAuto},
 		},
 	}
 	return provider.clientSet.CoreV1().Namespaces().Create(ctx, namespaceSpec, metav1.CreateOptions{})
@@ -245,7 +245,7 @@ func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, moun
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   opts.PodName,
 			Labels: map[string]string{"app": opts.PodName},
-			Annotations: map[string]string{AnnotationMizuManaged: AnnotationYes},
+			Annotations: map[string]string{AnnotationMizuManagement: AnnotationMizuManagementAuto},
 		},
 		Spec: core.PodSpec{
 			Containers: []core.Container{
@@ -305,7 +305,7 @@ func (provider *Provider) CreateDeployment(ctx context.Context, namespace string
 	deployment := &v1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: deploymentName,
-			Annotations: map[string]string{AnnotationMizuManaged: AnnotationYes},
+			Annotations: map[string]string{AnnotationMizuManagement: AnnotationMizuManagementAuto},
 		},
 		Spec: v1.DeploymentSpec{
 			Selector: &metav1.LabelSelector{
@@ -322,7 +322,7 @@ func (provider *Provider) CreateService(ctx context.Context, namespace string, s
 	service := core.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: serviceName,
-			Annotations: map[string]string{AnnotationMizuManaged: AnnotationYes},
+			Annotations: map[string]string{AnnotationMizuManagement: AnnotationMizuManagementAuto},
 		},
 		Spec: core.ServiceSpec{
 			Ports:    []core.ServicePort{{TargetPort: intstr.FromInt(shared.DefaultApiServerPort), Port: 80}},
@@ -356,14 +356,14 @@ func (provider *Provider) CreateMizuRBAC(ctx context.Context, namespace string, 
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   serviceAccountName,
 			Labels: map[string]string{"mizu-cli-version": version},
-			Annotations: map[string]string{AnnotationMizuManaged: AnnotationYes},
+			Annotations: map[string]string{AnnotationMizuManagement: AnnotationMizuManagementAuto},
 		},
 	}
 	clusterRole := &rbac.ClusterRole{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   clusterRoleName,
 			Labels: map[string]string{"mizu-cli-version": version},
-			Annotations: map[string]string{AnnotationMizuManaged: AnnotationYes},
+			Annotations: map[string]string{AnnotationMizuManagement: AnnotationMizuManagementAuto},
 		},
 		Rules: []rbac.PolicyRule{
 			{
@@ -377,7 +377,7 @@ func (provider *Provider) CreateMizuRBAC(ctx context.Context, namespace string, 
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   clusterRoleBindingName,
 			Labels: map[string]string{"mizu-cli-version": version},
-			Annotations: map[string]string{AnnotationMizuManaged: AnnotationYes},
+			Annotations: map[string]string{AnnotationMizuManagement: AnnotationMizuManagementAuto},
 		},
 		RoleRef: rbac.RoleRef{
 			Name:     clusterRoleName,
@@ -412,14 +412,14 @@ func (provider *Provider) CreateMizuRBACNamespaceRestricted(ctx context.Context,
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   serviceAccountName,
 			Labels: map[string]string{"mizu-cli-version": version},
-			Annotations: map[string]string{AnnotationMizuManaged: AnnotationYes},
+			Annotations: map[string]string{AnnotationMizuManagement: AnnotationMizuManagementAuto},
 		},
 	}
 	role := &rbac.Role{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   roleName,
 			Labels: map[string]string{"mizu-cli-version": version},
-			Annotations: map[string]string{AnnotationMizuManaged: AnnotationYes},
+			Annotations: map[string]string{AnnotationMizuManagement: AnnotationMizuManagementAuto},
 		},
 		Rules: []rbac.PolicyRule{
 			{
@@ -433,7 +433,7 @@ func (provider *Provider) CreateMizuRBACNamespaceRestricted(ctx context.Context,
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   roleBindingName,
 			Labels: map[string]string{"mizu-cli-version": version},
-			Annotations: map[string]string{AnnotationMizuManaged: AnnotationYes},
+			Annotations: map[string]string{AnnotationMizuManagement: AnnotationMizuManagementAuto},
 		},
 		RoleRef: rbac.RoleRef{
 			Name:     roleName,
@@ -468,7 +468,7 @@ func (provider *Provider) CreateDaemonsetRBAC(ctx context.Context, namespace str
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   roleName,
 			Labels: map[string]string{"mizu-cli-version": version},
-			Annotations: map[string]string{AnnotationMizuManaged: AnnotationYes},
+			Annotations: map[string]string{AnnotationMizuManagement: AnnotationMizuManagementAuto},
 		},
 		Rules: []rbac.PolicyRule{
 			{
@@ -487,7 +487,7 @@ func (provider *Provider) CreateDaemonsetRBAC(ctx context.Context, namespace str
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   roleBindingName,
 			Labels: map[string]string{"mizu-cli-version": version},
-			Annotations: map[string]string{AnnotationMizuManaged: AnnotationYes},
+			Annotations: map[string]string{AnnotationMizuManagement: AnnotationMizuManagementAuto},
 		},
 		RoleRef: rbac.RoleRef{
 			Name:     roleName,
@@ -600,7 +600,7 @@ func (provider *Provider) CreateConfigMap(ctx context.Context, namespace string,
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name: configMapName,
-			Annotations: map[string]string{AnnotationMizuManaged: AnnotationYes},
+			Annotations: map[string]string{AnnotationMizuManagement: AnnotationMizuManagementAuto},
 		},
 		Data: configMapData,
 	}
@@ -760,7 +760,7 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 
 	podTemplate := applyconfcore.PodTemplateSpec()
 	podTemplate.WithLabels(map[string]string{"app": tapperPodName})
-	podTemplate.WithAnnotations(map[string]string{AnnotationMizuManaged: AnnotationYes})
+	podTemplate.WithAnnotations(map[string]string{AnnotationMizuManagement: AnnotationMizuManagementAuto})
 	podTemplate.WithSpec(podSpec)
 
 	labelSelector := applyconfmeta.LabelSelector()
@@ -768,7 +768,7 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 
 	daemonSet := applyconfapp.DaemonSet(daemonSetName, namespace)
 	daemonSet.
-		WithAnnotations(map[string]string{AnnotationMizuManaged: AnnotationYes}).
+		WithAnnotations(map[string]string{AnnotationMizuManagement: AnnotationMizuManagementAuto}).
 		WithSpec(applyconfapp.DaemonSetSpec().WithSelector(labelSelector).WithTemplate(podTemplate))
 
 	_, err = provider.clientSet.AppsV1().DaemonSets(namespace).Apply(ctx, daemonSet, metav1.ApplyOptions{FieldManager: fieldManagerName})
@@ -909,9 +909,9 @@ func (provider *Provider) IsManagedRoleBinding(ctx context.Context, namespace st
 }
 
 func (provider *Provider) isManagedResource(annotations map[string]string) bool {
-	if annotation, ok := annotations[AnnotationMizuManaged]; !ok {
+	if annotation, ok := annotations[AnnotationMizuManagement]; !ok {
 		return false
-	} else if annotation != AnnotationYes  {
+	} else if annotation != AnnotationMizuManagementAuto  {
 		return false
 	}
 
