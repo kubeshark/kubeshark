@@ -39,7 +39,7 @@ func NewProvider(url string, retries int, timeout time.Duration) *Provider {
 func (provider *Provider) TestConnection() error {
 	retriesLeft := provider.retries
 	for retriesLeft > 0 {
-		if isReady, err := provider.isReachable(); err != nil || !isReady {
+		if isReachable, err := provider.isReachable(); err != nil || !isReachable {
 			logger.Log.Debugf("api server not ready yet %v", err)
 		} else {
 			logger.Log.Debugf("connection test to api server passed successfully")
