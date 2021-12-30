@@ -24,6 +24,8 @@ import (
 	"plugin"
 	"regexp"
 	"sort"
+	"strconv"
+	"strings"
 	"syscall"
 	"time"
 
@@ -59,6 +61,7 @@ const (
 	socketConnectionRetries    = 30
 	socketConnectionRetryDelay = time.Second * 2
 	socketHandshakeTimeout     = time.Second * 2
+	uiIndexPath                = "./site/index.html"
 )
 
 func main() {
@@ -251,7 +254,12 @@ func hostApi(socketHarOutputChannel chan<- *tapApi.OutputChannelItem) {
 	}
 
 	app.Use(DisableRootStaticCache())
+
+	if err := setUIMode(); err != nil {
+		logger.Log.Panicf("Error setting ui mode, err: %v", err)
+	}
 	app.Use(static.ServeRoot("/", "./site"))
+
 	app.Use(CORSMiddleware()) // This has to be called after the static middleware, does not work if its called before
 
 	api.WebSocketRoutes(app, &eventHandlers, startTime)
@@ -289,6 +297,22 @@ func CORSMiddleware() gin.HandlerFunc {
 
 		c.Next()
 	}
+}
+
+func setUIMode() error {
+	read, err := ioutil.ReadFile(uiIndexPath)
+	if err != nil {
+		return err
+	}
+
+	replacedContent := strings.Replace(string(read), "__IS_ENT__", strconv.FormatBool(config.Config.InstallMode), 1)
+
+	err = ioutil.WriteFile(uiIndexPath, []byte(replacedContent), 0)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func parseEnvVar(env string) map[string][]v1.Pod {

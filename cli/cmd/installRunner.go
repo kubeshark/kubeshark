@@ -65,6 +65,7 @@ func getInstallMizuAgentConfig(maxDBSizeBytes int64, tapperResources shared.Reso
 		TapperResources:        tapperResources,
 		MizuResourcesNamespace: config.Config.MizuResourcesNamespace,
 		AgentDatabasePath:      shared.DataDirPath,
+		InstallMode:            true,
 	}
 
 	return &mizuAgentConfig

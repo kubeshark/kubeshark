@@ -49,5 +49,6 @@ func getDefaultConfig() (*shared.MizuAgentConfig, error) {
 	return &shared.MizuAgentConfig{
 		MaxDBSizeBytes:    defaultMaxDatabaseSizeBytes,
 		AgentDatabasePath: DefaultDatabasePath,
+		InstallMode:       false,
 	}, nil
 }
