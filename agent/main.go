@@ -305,7 +305,7 @@ func setUIMode() error {
 		return err
 	}
 
-	replacedContent := strings.Replace(string(read), "__IS_ENT__", strconv.FormatBool(config.Config.InstallMode), 1)
+	replacedContent := strings.Replace(string(read), "__IS_STANDALONE__", strconv.FormatBool(config.Config.StandaloneMode), 1)
 
 	err = ioutil.WriteFile(uiIndexPath, []byte(replacedContent), 0)
 	if err != nil {
