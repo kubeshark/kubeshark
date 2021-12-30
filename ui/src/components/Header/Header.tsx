@@ -2,6 +2,7 @@ import React from "react";
 import {AuthPresentation} from "../AuthPresentation/AuthPresentation";
 import {AnalyzeButton} from "../AnalyzeButton/AnalyzeButton";
 import logo from '../assets/Mizu-logo.svg';
+import './Header.sass';
 
 interface HeaderProps {
     analyzeStatus: any
