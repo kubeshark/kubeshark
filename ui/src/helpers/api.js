@@ -78,4 +78,31 @@ export default class Api {
 
         return response.data;
     }
+
+    isInstallNeeded = async () => {
+        const response = await this.client.get("/install/isNeeded");
+        return response.data;
+    }
+
+    isAuthenticationNeeded = async () => {
+        const response = await this.client.get("/status/tap");
+        return response.status == 401;
+    }
+
+    postInstall = async (adminPassword) => {
+        const form = new FormData();
+        form.append('adminPassword', adminPassword)
+
+        const response = await this.client.post(`/install/`, form);
+        return response.data;
+    }
+
+    login = async (username, password) => {
+        const form = new FormData();
+        form.append('username', username);
+        form.append('password', password);
+
+        const response = await this.client.post(`/user/login`, form);
+
+    }
 }

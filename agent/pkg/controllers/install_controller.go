@@ -16,7 +16,7 @@ func IsSetupNecessary(c *gin.Context) {
 }
 
 func Setup(c *gin.Context) {
-	if err := providers.DoInstall(c.PostForm("admin_password"), c.Request.Context()); err != nil {
+	if err := providers.DoInstall(c.PostForm("adminPassword"), c.Request.Context()); err != nil {
 		c.AbortWithStatusJSON(500, gin.H{"error": "internal error occured while setting up"})
 	} else {
 		c.JSON(http.StatusCreated, "")

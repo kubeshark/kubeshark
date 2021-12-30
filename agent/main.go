@@ -261,6 +261,7 @@ func hostApi(socketHarOutputChannel chan<- *tapApi.OutputChannelItem) {
 	routes.MetadataRoutes(app)
 	routes.StatusRoutes(app)
 	routes.InstallRoutes(app)
+	routes.UserRoutes(app)
 	routes.NotFoundRoute(app)
 
 	utils.StartServer(app)
