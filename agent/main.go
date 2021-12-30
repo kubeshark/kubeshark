@@ -194,6 +194,14 @@ func startBasenineServer(host string, port string) {
 			}
 		}
 	}
+
+	// Register the indexes
+	for _, path := range []string{"id", "timestamp"} {
+		err = basenine.Index(host, port, path)
+		if err != nil {
+			logger.Log.Panicf("Error while adding the index %s: %v", path, err)
+		}
+	}
 }
 
 func loadExtensions() {
