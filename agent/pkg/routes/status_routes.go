@@ -1,8 +1,10 @@
 package routes
 
 import (
-	"github.com/gin-gonic/gin"
 	"mizuserver/pkg/controllers"
+	"mizuserver/pkg/middlewares"
+
+	"github.com/gin-gonic/gin"
 )
 
 func StatusRoutes(ginApp *gin.Engine) {
@@ -24,4 +26,6 @@ func StatusRoutes(ginApp *gin.Engine) {
 	routeGroup.GET("/recentTLSLinks", controllers.GetRecentTLSLinks)
 
 	routeGroup.GET("/resolving", controllers.GetCurrentResolvingInformation)
+
+	routeGroup.Use(middlewares.RequiresAuth)
 }

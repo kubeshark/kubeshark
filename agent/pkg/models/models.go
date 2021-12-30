@@ -155,3 +155,7 @@ func RunValidationRulesState(harEntry har.Entry, service string) (tapApi.Applica
 	statusPolicyToSend, latency, numberOfRules := rules.PassedValidationRules(resultPolicyToSend)
 	return tapApi.ApplicableRules{Status: statusPolicyToSend, Latency: latency, NumberOfRules: numberOfRules}, resultPolicyToSend, isEnabled
 }
+
+type InstallState struct {
+	Completed bool `json:"completed"`
+}

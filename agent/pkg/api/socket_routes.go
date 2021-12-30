@@ -44,6 +44,7 @@ func init() {
 	connectedWebsockets = make(map[int]*SocketConnection, 0)
 }
 
+// TODO: add m2m authentication to these routes
 func WebSocketRoutes(app *gin.Engine, eventHandlers EventHandlers, startTime int64) {
 	app.GET("/ws", func(c *gin.Context) {
 		websocketHandler(c.Writer, c.Request, eventHandlers, false, startTime)

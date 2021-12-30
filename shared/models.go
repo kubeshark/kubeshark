@@ -40,6 +40,7 @@ type MizuAgentConfig struct {
 	TapperResources        Resources     `json:"tapperResources"`
 	MizuResourcesNamespace string        `json:"mizuResourceNamespace"`
 	AgentDatabasePath      string        `json:"agentDatabasePath"`
+	IsEphermeral           bool          `json:"isEphermeral"`
 }
 
 type WebSocketMessageMetadata struct {

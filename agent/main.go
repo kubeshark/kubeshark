@@ -10,6 +10,7 @@ import (
 	"mizuserver/pkg/api"
 	"mizuserver/pkg/config"
 	"mizuserver/pkg/controllers"
+	"mizuserver/pkg/middlewares"
 	"mizuserver/pkg/models"
 	"mizuserver/pkg/providers"
 	"mizuserver/pkg/routes"
@@ -252,13 +253,14 @@ func hostApi(socketHarOutputChannel chan<- *tapApi.OutputChannelItem) {
 
 	app.Use(DisableRootStaticCache())
 	app.Use(static.ServeRoot("/", "./site"))
-	app.Use(CORSMiddleware()) // This has to be called after the static middleware, does not work if its called before
+	app.Use(middlewares.CORSMiddleware()) // This has to be called after the static middleware, does not work if its called before
 
 	api.WebSocketRoutes(app, &eventHandlers, startTime)
 	routes.QueryRoutes(app)
 	routes.EntriesRoutes(app)
 	routes.MetadataRoutes(app)
 	routes.StatusRoutes(app)
+	routes.InstallRoutes(app)
 	routes.NotFoundRoute(app)
 
 	utils.StartServer(app)
@@ -269,22 +271,6 @@ func DisableRootStaticCache() gin.HandlerFunc {
 		if c.Request.RequestURI == "/" {
 			// Disable cache only for the main static route
 			c.Writer.Header().Set("Cache-Control", "no-store")
-		}
-
-		c.Next()
-	}
-}
-
-func CORSMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
-		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
-		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
-		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT")
-
-		if c.Request.Method == "OPTIONS" {
-			c.AbortWithStatus(204)
-			return
 		}
 
 		c.Next()
