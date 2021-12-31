@@ -14,8 +14,12 @@ help: ## This help.
 install:
 	go install mizu.go
 
+build-debug:
+	export GCLFAGS='-gcflags="all=-N -l"'
+	${MAKE} build
+
 build: ## Build mizu CLI binary (select platform via GOOS / GOARCH env variables).
-	go build -ldflags="-X 'github.com/up9inc/mizu/cli/mizu.GitCommitHash=$(COMMIT_HASH)' \
+	go build ${GCLFAGS} -ldflags="-X 'github.com/up9inc/mizu/cli/mizu.GitCommitHash=$(COMMIT_HASH)' \
 					   -X 'github.com/up9inc/mizu/cli/mizu.Branch=$(GIT_BRANCH)' \
 					   -X 'github.com/up9inc/mizu/cli/mizu.BuildTimestamp=$(BUILD_TIMESTAMP)' \
 					   -X 'github.com/up9inc/mizu/cli/mizu.Platform=$(SUFFIX)' \

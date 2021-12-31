@@ -8,7 +8,7 @@ SHELL=/bin/bash
 # HELP
 # This will output the help for each task
 # thanks to https://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
-.PHONY: help ui agent cli tap docker
+.PHONY: help ui extensions extensions-debug agent agent-debug cli tap docker
 
 help: ## This help.
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -28,6 +28,9 @@ ui: ## Build UI.
 cli: ## Build CLI.
 	@echo "building cli"; cd cli && $(MAKE) build
 
+cli-debug: ## Build CLI.
+	@echo "building cli"; cd cli && $(MAKE) build-debug	
+
 build-cli-ci: ## Build CLI for CI.
 	@echo "building cli for ci"; cd cli && $(MAKE) build GIT_BRANCH=ci SUFFIX=ci
 
@@ -35,6 +38,12 @@ agent: ## Build agent.
 	@(echo "building mizu agent .." )
 	@(cd agent; go build -o build/mizuagent main.go)
 	${MAKE} extensions
+	@ls -l agent/build
+
+agent-debug: ## Build agent for debug.
+	@(echo "building mizu agent for debug.." )
+	@(cd agent; go build -gcflags="all=-N -l" -o build/mizuagent main.go)
+	${MAKE} extensions-debug
 	@ls -l agent/build
 
 docker: ## Build and publish agent docker image.
@@ -78,6 +87,9 @@ clean-docker:
 
 extensions:
 	devops/build_extensions.sh
+
+extensions-debug:
+	devops/build_extensions_debug.sh
 
 test-cli:
 	@echo "running cli tests"; cd cli && $(MAKE) test
