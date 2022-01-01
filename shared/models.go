@@ -69,6 +69,13 @@ type WebSocketTapConfigMessage struct {
 	TapTargets []v1.Pod `json:"pods"`
 }
 
+type ServiceMapStatus struct {
+	Status                string `json:"status"`
+	EntriesProcessedCount int    `json:"entriesProcessedCount"`
+	NodeCount             int    `json:"nodeCount"`
+	EdgeCount             int    `json:"edgeCount"`
+}
+
 type TapperStatus struct {
 	TapperName string `json:"tapperName"`
 	NodeName   string `json:"nodeName"`

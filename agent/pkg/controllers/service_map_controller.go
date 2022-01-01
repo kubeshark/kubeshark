@@ -1,9 +1,11 @@
 package controllers
 
 import (
+	"mizuserver/pkg/api"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/up9inc/mizu/shared"
 )
 
 type ServiceMapController struct{}
@@ -13,7 +15,14 @@ func NewServiceMapController() *ServiceMapController {
 }
 
 func (s *ServiceMapController) Status(c *gin.Context) {
-	c.JSON(http.StatusNotImplemented, nil)
+	serviceMap := api.GetServiceMapInstance()
+	status := &shared.ServiceMapStatus{
+		Status:                "enabled",
+		EntriesProcessedCount: serviceMap.GetEntriesProcessedCount(),
+		NodeCount:             serviceMap.GetNodesCount(),
+		EdgeCount:             serviceMap.GetEdgesCount(),
+	}
+	c.JSON(http.StatusOK, status)
 }
 
 func (s *ServiceMapController) Get(c *gin.Context) {
