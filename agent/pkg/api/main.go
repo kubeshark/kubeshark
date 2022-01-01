@@ -11,6 +11,7 @@ import (
 	"path"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/google/martian/har"
@@ -19,6 +20,7 @@ import (
 	tapApi "github.com/up9inc/mizu/tap/api"
 
 	"mizuserver/pkg/models"
+	"mizuserver/pkg/oas"
 	"mizuserver/pkg/resolver"
 	"mizuserver/pkg/utils"
 
@@ -113,6 +115,16 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 		disableOASValidation = true
 	}
 
+	specs := &sync.Map{}
+	entries := make(chan *tapApi.MizuEntry)
+	go func() {
+		err := oas.EntriesToSpecs(entries, specs)
+		if err != nil {
+			logger.Log.Warningf("Failed to generate specs from traffic: %s", err)
+			close(entries)
+		}
+	}()
+
 	for item := range outputItems {
 		providers.EntryAdded()
 
@@ -140,6 +152,8 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 				baseEntry.Rules = rules
 			}
 		}
+
+		entries <- mizuEntry // TODO: without any buffering, this would block if OAS gen is slow
 
 		data, err := json.Marshal(mizuEntry)
 		if err != nil {
