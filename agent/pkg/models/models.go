@@ -6,7 +6,7 @@ import (
 
 	tapApi "github.com/up9inc/mizu/tap/api"
 
-	"github.com/google/martian/har"
+	har "github.com/mrichman/hargo"
 	basenine "github.com/up9inc/basenine/client/go"
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/tap"

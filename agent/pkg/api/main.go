@@ -14,7 +14,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/google/martian/har"
+	har "github.com/mrichman/hargo"
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/logger"
 	tapApi "github.com/up9inc/mizu/tap/api"
@@ -87,7 +87,7 @@ func startReadingFiles(workingDir string) {
 		file, err := os.Open(inputFilePath)
 		utils.CheckErr(err)
 
-		var inputHar har.HAR
+		var inputHar har.Har
 		decErr := json.NewDecoder(bufio.NewReader(file)).Decode(&inputHar)
 		utils.CheckErr(decErr)
 
@@ -146,7 +146,7 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 				mizuEntry.ContractContent = contract.Content
 			}
 
-			harEntry, err := utils.NewEntry(mizuEntry.Request, mizuEntry.Response, mizuEntry.StartTime, mizuEntry.ElapsedTime)
+			harEntry, err := utils.NewEntry(mizuEntry.Request, mizuEntry.Response, mizuEntry.StartTime, int(mizuEntry.ElapsedTime))
 			if err == nil {
 				rules, _, _ := models.RunValidationRulesState(*harEntry, mizuEntry.Destination.Name)
 				baseEntry.Rules = rules

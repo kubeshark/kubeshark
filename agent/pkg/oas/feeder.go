@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"errors"
-	"github.com/google/martian/har"
+	har "github.com/mrichman/hargo"
 	"github.com/up9inc/mizu/shared/logger"
 	"io"
 	"io/ioutil"
@@ -76,14 +76,14 @@ func feedFromHAR(file string, out chan<- *har.Entry) error {
 		return err
 	}
 
-	var har har.HAR
+	var har har.Har
 	err = json.Unmarshal(data, &har)
 	if err != nil {
 		return err
 	}
 
 	for _, entry := range har.Log.Entries {
-		out <- entry
+		out <- &entry
 	}
 
 	return nil
@@ -125,7 +125,7 @@ func feedFromLDJSON(file string, out chan<- *har.Entry) error {
 			var entry har.Entry
 			err := json.Unmarshal([]byte(line), &entry)
 			if err != nil {
-				return err
+				logger.Log.Warningf("Failed decoding entry: %s", line)
 			}
 			out <- &entry
 		}

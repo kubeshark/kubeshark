@@ -3,7 +3,9 @@ package oas
 import (
 	"encoding/json"
 	"github.com/chanced/openapi"
-	"github.com/google/martian/har"
+	har "github.com/mrichman/hargo"
+	"github.com/op/go-logging"
+	"github.com/up9inc/mizu/shared/logger"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -11,6 +13,10 @@ import (
 	"testing"
 	"time"
 )
+
+func init() {
+	logger.InitLoggerStderrOnly(logging.DEBUG)
+}
 
 func TestFilesList(t *testing.T) {
 	res, err := getFiles(".")
