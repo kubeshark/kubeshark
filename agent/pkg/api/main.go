@@ -116,7 +116,7 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 	}
 
 	specs := &sync.Map{}
-	entries := make(chan *har.Entry)
+	entries := make(chan har.Entry)
 	go func() {
 		err := oas.EntriesToSpecs(entries, specs)
 		if err != nil {
@@ -153,7 +153,7 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 			}
 
 			// TODO: without any buffering, this would block if OAS gen is slow
-			entries <- harEntry
+			entries <- *harEntry
 		}
 
 		data, err := json.Marshal(mizuEntry)

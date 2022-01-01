@@ -35,7 +35,7 @@ func TestEntries(t *testing.T) {
 		t.Log(err)
 		t.FailNow()
 	}
-	entries := make(chan *har.Entry)
+	entries := make(chan har.Entry)
 	go func() { // this goroutine reads inputs
 		err := feedEntries(files, entries)
 		if err != nil {
@@ -119,7 +119,7 @@ func TestEntries(t *testing.T) {
 
 func TestEntriesNegative(t *testing.T) {
 	files := []string{"invalid"}
-	entries := make(chan *har.Entry)
+	entries := make(chan har.Entry)
 	go func() {
 		err := feedEntries(files, entries)
 		if err == nil {
