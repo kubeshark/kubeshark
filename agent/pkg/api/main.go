@@ -11,14 +11,16 @@ import (
 	"path"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 
-	"github.com/google/martian/har"
+	har "github.com/mrichman/hargo"
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/logger"
 	tapApi "github.com/up9inc/mizu/tap/api"
 
 	"mizuserver/pkg/models"
+	"mizuserver/pkg/oas"
 	"mizuserver/pkg/resolver"
 	"mizuserver/pkg/utils"
 
@@ -85,7 +87,7 @@ func startReadingFiles(workingDir string) {
 		file, err := os.Open(inputFilePath)
 		utils.CheckErr(err)
 
-		var inputHar har.HAR
+		var inputHar har.Har
 		decErr := json.NewDecoder(bufio.NewReader(file)).Decode(&inputHar)
 		utils.CheckErr(decErr)
 
@@ -113,6 +115,16 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 		disableOASValidation = true
 	}
 
+	specs := &sync.Map{}
+	entries := make(chan *har.Entry)
+	go func() {
+		err := oas.EntriesToSpecs(entries, specs)
+		if err != nil {
+			logger.Log.Warningf("Failed to generate specs from traffic: %s", err)
+			close(entries)
+		}
+	}()
+
 	for item := range outputItems {
 		providers.EntryAdded()
 
@@ -131,11 +143,14 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 				mizuEntry.ContractContent = contract.Content
 			}
 
-			harEntry, err := utils.NewEntry(mizuEntry.Request, mizuEntry.Response, mizuEntry.StartTime, mizuEntry.ElapsedTime)
+			harEntry, err := utils.NewEntry(mizuEntry.Request, mizuEntry.Response, mizuEntry.StartTime, int(mizuEntry.ElapsedTime))
 			if err == nil {
 				rules, _, _ := models.RunValidationRulesState(*harEntry, mizuEntry.Destination.Name)
 				mizuEntry.Rules = rules
 			}
+
+			// TODO: without any buffering, this would block if OAS gen is slow
+			entries <- harEntry
 		}
 
 		data, err := json.Marshal(mizuEntry)
