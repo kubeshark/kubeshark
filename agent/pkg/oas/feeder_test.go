@@ -64,7 +64,7 @@ func TestEntries(t *testing.T) {
 		time.Sleep(time.Second / 2)
 		svcs := strings.Builder{}
 		specs.Range(func(key, val interface{}) bool {
-			gen := val.(SpecGen)
+			gen := val.(*SpecGen)
 			svc := key.(string)
 			svcs.WriteString(svc + ",")
 			spec, err := gen.getSpec()
@@ -96,7 +96,7 @@ func TestEntries(t *testing.T) {
 	}
 
 	specs.Range(func(_, val interface{}) bool {
-		gen := val.(SpecGen)
+		gen := val.(*SpecGen)
 		spec, err := gen.getSpec()
 		if err != nil {
 			t.Log(err)

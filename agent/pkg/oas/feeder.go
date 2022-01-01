@@ -76,13 +76,13 @@ func feedFromHAR(file string, out chan<- *har.Entry) error {
 		return err
 	}
 
-	var har har.Har
-	err = json.Unmarshal(data, &har)
+	var harDoc har.Har
+	err = json.Unmarshal(data, &harDoc)
 	if err != nil {
 		return err
 	}
 
-	for _, entry := range har.Log.Entries {
+	for _, entry := range harDoc.Log.Entries {
 		out <- &entry
 	}
 
@@ -147,12 +147,12 @@ func EntriesToSpecs(entries chan *har.Entry, specs *sync.Map) error {
 		}
 
 		val, found := specs.Load(u.Host)
-		var gen SpecGen
+		var gen *SpecGen
 		if !found {
-			gen = *NewGen(u.Host)
+			gen = NewGen(u.Host)
 			specs.Store(u.Host, gen)
 		} else {
-			gen = val.(SpecGen)
+			gen = val.(*SpecGen)
 		}
 
 		err = gen.feedEntry(entry)
