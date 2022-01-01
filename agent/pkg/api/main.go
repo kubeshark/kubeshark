@@ -116,7 +116,7 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 	}
 
 	specs := &sync.Map{}
-	entries := make(chan *tapApi.MizuEntry)
+	entries := make(chan *har.Entry)
 	go func() {
 		err := oas.EntriesToSpecs(entries, specs)
 		if err != nil {
@@ -151,9 +151,10 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 				rules, _, _ := models.RunValidationRulesState(*harEntry, mizuEntry.Destination.Name)
 				baseEntry.Rules = rules
 			}
-		}
 
-		entries <- mizuEntry // TODO: without any buffering, this would block if OAS gen is slow
+			// TODO: without any buffering, this would block if OAS gen is slow
+			entries <- harEntry
+		}
 
 		data, err := json.Marshal(mizuEntry)
 		if err != nil {

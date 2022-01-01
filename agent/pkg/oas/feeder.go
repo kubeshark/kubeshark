@@ -4,12 +4,10 @@ import (
 	"bufio"
 	"encoding/json"
 	"errors"
-	"github.com/mrichman/hargo"
+	"github.com/google/martian/har"
 	"github.com/up9inc/mizu/shared/logger"
-	"github.com/up9inc/mizu/tap/api"
 	"io"
 	"io/ioutil"
-	"mizuserver/pkg/utils"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -38,7 +36,7 @@ func getFiles(baseDir string) (result []string, err error) {
 	return result, err
 }
 
-func feedEntries(fromFiles []string, out chan<- hargo.Entry) (err error) {
+func feedEntries(fromFiles []string, out chan *har.Entry) (err error) {
 	defer close(out)
 
 	for _, file := range fromFiles {
@@ -65,7 +63,7 @@ func feedEntries(fromFiles []string, out chan<- hargo.Entry) (err error) {
 	return nil
 }
 
-func feedFromHAR(file string, out chan<- hargo.Entry) error {
+func feedFromHAR(file string, out chan<- *har.Entry) error {
 	fd, err := os.Open(file)
 	if err != nil {
 		panic(err)
@@ -78,7 +76,7 @@ func feedFromHAR(file string, out chan<- hargo.Entry) error {
 		return err
 	}
 
-	var har hargo.Har
+	var har har.HAR
 	err = json.Unmarshal(data, &har)
 	if err != nil {
 		return err
@@ -91,7 +89,7 @@ func feedFromHAR(file string, out chan<- hargo.Entry) error {
 	return nil
 }
 
-func feedFromLDJSON(file string, out chan<- hargo.Entry) error {
+func feedFromLDJSON(file string, out chan<- *har.Entry) error {
 	fd, err := os.Open(file)
 	if err != nil {
 		panic(err)
@@ -124,33 +122,23 @@ func feedFromLDJSON(file string, out chan<- hargo.Entry) error {
 				return err
 			}
 		} else {
-			var entry hargo.Entry
+			var entry har.Entry
 			err := json.Unmarshal([]byte(line), &entry)
 			if err != nil {
 				return err
 			}
-			out <- entry
+			out <- &entry
 		}
 	}
 
 	return nil
 }
 
-func EntriesToSpecs(entries <-chan *api.MizuEntry, specs *sync.Map) error {
+func EntriesToSpecs(entries chan *har.Entry, specs *sync.Map) error {
 	for {
-		mizuEntry, ok := <-entries
+		entry, ok := <-entries
 		if !ok {
 			break
-		}
-
-		if mizuEntry.Protocol.Name != "http" {
-			logger.Log.Debugf("Skipped non-HTTP entry for now: %s/%s", mizuEntry.Protocol.Name, mizuEntry.Id)
-			continue // TODO: handle non-HTTP entries into AsyncAPI specs
-		}
-
-		entry, err := utils.NewEntry(mizuEntry.Request, mizuEntry.Response, mizuEntry.StartTime, mizuEntry.ElapsedTime)
-		if err != nil {
-			return err
 		}
 
 		u, err := url.Parse(entry.Request.URL)

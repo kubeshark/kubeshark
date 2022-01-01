@@ -1,7 +1,6 @@
 package oas
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"github.com/chanced/openapi"
@@ -208,7 +207,7 @@ func handleOpObj(entry *har.Entry, pathObj *openapi.PathObj) error {
 }
 
 func handleRequest(req *har.Request, opObj *openapi.Operation, isSuccess bool) error {
-	if req.PostData.Text != "" && isSuccess {
+	if req.PostData != nil && req.PostData.Text != "" && isSuccess {
 		reqBody, err := getRequestBody(req, opObj, isSuccess)
 		if err != nil {
 			return err
@@ -252,9 +251,9 @@ func fillContent(reqResp ReqResp, respContent openapi.Content, ctype string, err
 
 	var text string
 	if reqResp.Req != nil {
-		text = decReqText(reqResp.Req.PostData)
+		text = reqResp.Req.PostData.Text
 	} else {
-		text = decRespText(reqResp.Resp.Content)
+		text = string(reqResp.Resp.Content.Text)
 	}
 
 	exampleMsg, err := json.Marshal(text)
@@ -263,33 +262,6 @@ func fillContent(reqResp ReqResp, respContent openapi.Content, ctype string, err
 	}
 	content.Example = exampleMsg
 	return respContent[ctype], nil
-}
-
-func decReqText(data *har.PostData) (res string) {
-	res = data.Text
-	//if data.Comment == "base64" { // UP9"s extension to HAR to mark potentially binary data
-	if false { // FIXME: what to do with binary request data?
-		data, err := base64.StdEncoding.DecodeString(res)
-		if err != nil {
-			logger.Log.Warningf("error decoding postData as base64: %s", err)
-		} else {
-			res = string(data)
-		}
-	}
-	return
-}
-
-func decRespText(content *har.Content) (res string) {
-	res = string(content.Text)
-	if content.Encoding == "base64" {
-		data, err := base64.StdEncoding.DecodeString(res)
-		if err != nil {
-			logger.Log.Warningf("error decoding response text as base64: %s", err)
-		} else {
-			res = string(data)
-		}
-	}
-	return
 }
 
 func getRespCtype(resp *har.Response) string {
