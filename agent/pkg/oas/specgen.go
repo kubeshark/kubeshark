@@ -66,8 +66,6 @@ func isExtIgnored(path string) bool {
 	return false
 }
 
-var lock sync.Mutex
-
 type ReqResp struct { // hello, generics in Go
 	Req  *har.Request
 	Resp *har.Response
@@ -76,6 +74,7 @@ type ReqResp struct { // hello, generics in Go
 type SpecGen struct {
 	oas  *openapi.OpenAPI
 	tree *Node
+	lock sync.Mutex
 }
 
 func NewGen(server string) *SpecGen {
@@ -98,8 +97,8 @@ func (g *SpecGen) startFromSpec(oas *openapi.OpenAPI) {
 }
 
 func (g *SpecGen) feedEntry(entry *har.Entry) error {
-	lock.Lock()
-	defer lock.Unlock()
+	g.lock.Lock()
+	defer g.lock.Unlock()
 
 	err := g.handlePathObj(entry)
 
@@ -107,8 +106,8 @@ func (g *SpecGen) feedEntry(entry *har.Entry) error {
 }
 
 func (g *SpecGen) getSpec() (*openapi.OpenAPI, error) {
-	lock.Lock()
-	defer lock.Unlock()
+	g.lock.Lock()
+	defer g.lock.Unlock()
 
 	// to make a deep copy, no better idea than marshal+unmarshal
 	specText, err := json.MarshalIndent(g.oas, "", "\t")
