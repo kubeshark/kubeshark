@@ -36,7 +36,7 @@ func getFiles(baseDir string) (result []string, err error) {
 	return result, err
 }
 
-func feedEntries(fromFiles []string, out chan *har.Entry) (err error) {
+func feedEntries(fromFiles []string, out chan har.Entry) (err error) {
 	defer close(out)
 
 	for _, file := range fromFiles {
@@ -63,7 +63,7 @@ func feedEntries(fromFiles []string, out chan *har.Entry) (err error) {
 	return nil
 }
 
-func feedFromHAR(file string, out chan<- *har.Entry) error {
+func feedFromHAR(file string, out chan<- har.Entry) error {
 	fd, err := os.Open(file)
 	if err != nil {
 		panic(err)
@@ -83,13 +83,13 @@ func feedFromHAR(file string, out chan<- *har.Entry) error {
 	}
 
 	for _, entry := range harDoc.Log.Entries {
-		out <- &entry
+		out <- entry
 	}
 
 	return nil
 }
 
-func feedFromLDJSON(file string, out chan<- *har.Entry) error {
+func feedFromLDJSON(file string, out chan<- har.Entry) error {
 	fd, err := os.Open(file)
 	if err != nil {
 		panic(err)
@@ -127,14 +127,14 @@ func feedFromLDJSON(file string, out chan<- *har.Entry) error {
 			if err != nil {
 				logger.Log.Warningf("Failed decoding entry: %s", line)
 			}
-			out <- &entry
+			out <- entry
 		}
 	}
 
 	return nil
 }
 
-func EntriesToSpecs(entries chan *har.Entry, specs *sync.Map) error {
+func EntriesToSpecs(entries chan har.Entry, specs *sync.Map) error {
 	for {
 		entry, ok := <-entries
 		if !ok {

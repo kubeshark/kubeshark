@@ -96,11 +96,11 @@ func (g *SpecGen) startFromSpec(oas *openapi.OpenAPI) {
 	}
 }
 
-func (g *SpecGen) feedEntry(entry *har.Entry) error {
+func (g *SpecGen) feedEntry(entry har.Entry) error {
 	g.lock.Lock()
 	defer g.lock.Unlock()
 
-	err := g.handlePathObj(entry)
+	err := g.handlePathObj(&entry)
 
 	return err
 }
