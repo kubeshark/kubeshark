@@ -105,6 +105,7 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 	}
 	connection.InsertMode()
 
+	serviceMap := GetServiceMapInstance()
 	disableOASValidation := false
 	ctx := context.Background()
 	doc, contractContent, router, err := loadOAS(ctx)
@@ -146,6 +147,9 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 			panic(err)
 		}
 		connection.SendText(string(data))
+
+		serviceMap.AddEdge(id(mizuEntry.Source.Name), id(mizuEntry.Destination.Name), extension.Protocol.Name)
+		serviceMap.PrintAdjacentEdges()
 	}
 }
 
