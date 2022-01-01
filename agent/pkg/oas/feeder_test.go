@@ -2,12 +2,8 @@ package oas
 
 import (
 	"encoding/json"
-	"errors"
-	"fmt"
 	"github.com/chanced/openapi"
 	"github.com/mrichman/hargo"
-	log "github.com/sirupsen/logrus"
-	"io"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -15,42 +11,6 @@ import (
 	"testing"
 	"time"
 )
-
-func init() {
-	log.SetOutput(os.Stdout)
-	tpid, err := GetTracerPid()
-	if err != nil {
-		panic(err)
-	} else if tpid != 0 {
-		log.SetLevel(log.DebugLevel)
-		log.Debugf("we're under debugging: %d", tpid)
-	} else {
-		log.SetLevel(log.InfoLevel)
-	}
-}
-
-func GetTracerPid() (int, error) {
-	//https://stackoverflow.com/questions/47879070/how-can-i-see-if-the-goland-debugger-is-running-in-the-program
-	file, err := os.Open("/proc/self/status")
-	if err != nil {
-		return -1, fmt.Errorf("can't open process status file: %w", err)
-	}
-	//goland:noinspection GoUnhandledErrorResult
-	defer file.Close()
-
-	for {
-		var tpid int
-		num, err := fmt.Fscanf(file, "TracerPid: %d\n", &tpid)
-		if err == io.EOF {
-			break
-		}
-		if num != 0 {
-			return tpid, nil
-		}
-	}
-
-	return -1, errors.New("unknown format of process status file")
-}
 
 func TestFilesList(t *testing.T) {
 	res, err := getFiles(".")

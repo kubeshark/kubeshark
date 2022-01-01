@@ -4,9 +4,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"errors"
-	"github.com/chanced/openapi"
 	"github.com/mrichman/hargo"
-	log "github.com/sirupsen/logrus"
 	"github.com/up9inc/mizu/shared/logger"
 	"github.com/up9inc/mizu/tap/api"
 	"io"
@@ -56,7 +54,7 @@ func feedEntries(fromFiles []string, out chan<- hargo.Entry) (err error) {
 		case ".ldjson":
 			err = feedFromLDJSON(file, out)
 			if err != nil {
-				log.Warning("Failed processing file: " + err.Error())
+				logger.Log.Warning("Failed processing file: " + err.Error())
 				continue
 			}
 		default:
@@ -146,11 +144,13 @@ func EntriesToSpecs(entries <-chan *api.MizuEntry, specs *sync.Map) error {
 		}
 
 		if mizuEntry.Protocol.Name != "http" {
+			logger.Log.Debugf("Skipped non-HTTP entry for now: %s/%s", mizuEntry.Protocol.Name, mizuEntry.Id)
 			continue // TODO: handle non-HTTP entries into AsyncAPI specs
 		}
 
 		entry, err := utils.NewEntry(mizuEntry.Request, mizuEntry.Response, mizuEntry.StartTime, mizuEntry.ElapsedTime)
-		if err == nil {
+		if err != nil {
+			return err
 		}
 
 		u, err := url.Parse(entry.Request.URL)
@@ -163,36 +163,13 @@ func EntriesToSpecs(entries <-chan *api.MizuEntry, specs *sync.Map) error {
 		if !found {
 			gen = *NewGen(u.Host)
 			specs.Store(u.Host, gen)
-
-			existingSpec := u.Host + ".json"
-			if _, err := os.Stat(existingSpec); err == nil {
-				fd, err := os.Open(existingSpec)
-				if err != nil {
-					log.Debugf("File not exists %s: %s", existingSpec, err)
-				} else {
-					defer fd.Close()
-
-					data, err := ioutil.ReadAll(fd)
-					if err != nil {
-						return err
-					}
-
-					var oas openapi.OpenAPI
-					err = json.Unmarshal(data, &oas)
-					if err != nil {
-						return err
-					}
-					gen.startFromSpec(&oas)
-				}
-			}
 		} else {
 			gen = val.(SpecGen)
 		}
 
 		err = gen.feedEntry(entry)
 		if err != nil {
-			log.Warning("Failed processing entry: " + err.Error())
-			continue
+			return err
 		}
 	}
 	return nil
