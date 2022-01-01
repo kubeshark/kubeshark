@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/chanced/openapi"
+	"github.com/google/martian/har"
 	"github.com/google/uuid"
-	"github.com/mrichman/hargo"
-	log "github.com/sirupsen/logrus"
+	"github.com/up9inc/mizu/shared/logger"
 	"mime"
 	"net/url"
 	"strconv"
@@ -70,8 +70,8 @@ func isExtIgnored(path string) bool {
 var lock sync.Mutex
 
 type ReqResp struct { // hello, generics in Go
-	Req  *hargo.Request
-	Resp *hargo.Response
+	Req  *har.Request
+	Resp *har.Response
 }
 
 type SpecGen struct {
@@ -98,7 +98,7 @@ func (g *SpecGen) startFromSpec(oas *openapi.OpenAPI) {
 	}
 }
 
-func (g *SpecGen) feedEntry(entry *hargo.Entry) error {
+func (g *SpecGen) feedEntry(entry *har.Entry) error {
 	lock.Lock()
 	defer lock.Unlock()
 
@@ -126,28 +126,28 @@ func (g *SpecGen) getSpec() (*openapi.OpenAPI, error) {
 	return spec, err
 }
 
-func (g *SpecGen) handlePathObj(entry *hargo.Entry) error {
+func (g *SpecGen) handlePathObj(entry *har.Entry) error {
 	urlParsed, err := url.Parse(entry.Request.URL)
 	if err != nil {
 		return err
 	}
 
 	if isExtIgnored(urlParsed.Path) {
-		log.Debugf("Dropped traffic entry due to ignored extension: %s", urlParsed.Path)
+		logger.Log.Debugf("Dropped traffic entry due to ignored extension: %s", urlParsed.Path)
 	}
 
-	ctype := getRespCtype(&entry.Response)
+	ctype := getRespCtype(entry.Response)
 	if isCtypeIgnored(ctype) {
-		log.Debugf("Dropped traffic entry due to ignored response ctype: %s", ctype)
+		logger.Log.Debugf("Dropped traffic entry due to ignored response ctype: %s", ctype)
 	}
 
 	if entry.Response.Status < 100 {
-		log.Debugf("Dropped traffic entry due to status<100: " + entry.StartedDateTime)
+		logger.Log.Debugf("Dropped traffic entry due to status<100: %s", entry.StartedDateTime)
 		return nil
 	}
 
 	if entry.Response.Status == 301 || entry.Response.Status == 308 {
-		log.Debugf("Dropped traffic entry due to permanent redirect status: " + entry.StartedDateTime)
+		logger.Log.Debugf("Dropped traffic entry due to permanent redirect status: %s", entry.StartedDateTime)
 		return nil
 	}
 
@@ -181,7 +181,7 @@ func (g *SpecGen) getPathObj(entryURL string) (*openapi.PathObj, error) {
 	return pathObj, nil
 }
 
-func handleOpObj(entry *hargo.Entry, pathObj *openapi.PathObj) error {
+func handleOpObj(entry *har.Entry, pathObj *openapi.PathObj) error {
 
 	isSuccess := 100 <= entry.Response.Status && entry.Response.Status < 400
 	opObj, wasMissing, err := getOpObj(pathObj, entry.Request.Method, isSuccess)
@@ -190,16 +190,16 @@ func handleOpObj(entry *hargo.Entry, pathObj *openapi.PathObj) error {
 	}
 
 	if !isSuccess && wasMissing {
-		log.Debugf("Dropped traffic entry due to failed status and no known endpoint at: " + entry.StartedDateTime)
+		logger.Log.Debugf("Dropped traffic entry due to failed status and no known endpoint at: %s", entry.StartedDateTime)
 		return nil
 	}
 
-	err = handleRequest(&entry.Request, opObj, isSuccess)
+	err = handleRequest(entry.Request, opObj, isSuccess)
 	if err != nil {
 		return err
 	}
 
-	err = handleResponse(&entry.Response, opObj, isSuccess)
+	err = handleResponse(entry.Response, opObj, isSuccess)
 	if err != nil {
 		return err
 	}
@@ -207,7 +207,7 @@ func handleOpObj(entry *hargo.Entry, pathObj *openapi.PathObj) error {
 	return nil
 }
 
-func handleRequest(req *hargo.Request, opObj *openapi.Operation, isSuccess bool) error {
+func handleRequest(req *har.Request, opObj *openapi.Operation, isSuccess bool) error {
 	if req.PostData.Text != "" && isSuccess {
 		reqBody, err := getRequestBody(req, opObj, isSuccess)
 		if err != nil {
@@ -227,7 +227,7 @@ func handleRequest(req *hargo.Request, opObj *openapi.Operation, isSuccess bool)
 	return nil
 }
 
-func handleResponse(resp *hargo.Response, opObj *openapi.Operation, isSuccess bool) error {
+func handleResponse(resp *har.Response, opObj *openapi.Operation, isSuccess bool) error {
 	respObj, err := getResponseObj(resp, opObj, isSuccess)
 	if err != nil {
 		return err
@@ -252,9 +252,9 @@ func fillContent(reqResp ReqResp, respContent openapi.Content, ctype string, err
 
 	var text string
 	if reqResp.Req != nil {
-		text = decReqText(&reqResp.Req.PostData)
+		text = decReqText(reqResp.Req.PostData)
 	} else {
-		text = decRespText(&reqResp.Resp.Content)
+		text = decRespText(reqResp.Resp.Content)
 	}
 
 	exampleMsg, err := json.Marshal(text)
@@ -265,12 +265,13 @@ func fillContent(reqResp ReqResp, respContent openapi.Content, ctype string, err
 	return respContent[ctype], nil
 }
 
-func decReqText(data *hargo.PostData) (res string) {
+func decReqText(data *har.PostData) (res string) {
 	res = data.Text
-	if data.Comment == "base64" { // UP9"s extension to HAR to mark potentially binary data
+	//if data.Comment == "base64" { // UP9"s extension to HAR to mark potentially binary data
+	if false { // FIXME: what to do with binary request data?
 		data, err := base64.StdEncoding.DecodeString(res)
 		if err != nil {
-			log.Warnf("error decoding postData as base64: %s", err)
+			logger.Log.Warningf("error decoding postData as base64: %s", err)
 		} else {
 			res = string(data)
 		}
@@ -278,12 +279,12 @@ func decReqText(data *hargo.PostData) (res string) {
 	return
 }
 
-func decRespText(content *hargo.Content) (res string) {
-	res = content.Text
+func decRespText(content *har.Content) (res string) {
+	res = string(content.Text)
 	if content.Encoding == "base64" {
 		data, err := base64.StdEncoding.DecodeString(res)
 		if err != nil {
-			log.Warnf("error decoding response text as base64: %s", err)
+			logger.Log.Warningf("error decoding response text as base64: %s", err)
 		} else {
 			res = string(data)
 		}
@@ -291,7 +292,7 @@ func decRespText(content *hargo.Content) (res string) {
 	return
 }
 
-func getRespCtype(resp *hargo.Response) string {
+func getRespCtype(resp *har.Response) string {
 	var ctype string
 	ctype = resp.Content.MimeType
 	for _, hdr := range resp.Headers {
@@ -307,7 +308,7 @@ func getRespCtype(resp *hargo.Response) string {
 	return mediaType
 }
 
-func getReqCtype(req *hargo.Request) string {
+func getReqCtype(req *har.Request) string {
 	var ctype string
 	ctype = req.PostData.MimeType
 	for _, hdr := range req.Headers {
@@ -323,7 +324,7 @@ func getReqCtype(req *hargo.Request) string {
 	return mediaType
 }
 
-func getResponseObj(resp *hargo.Response, opObj *openapi.Operation, isSuccess bool) (*openapi.ResponseObj, error) {
+func getResponseObj(resp *har.Response, opObj *openapi.Operation, isSuccess bool) (*openapi.ResponseObj, error) {
 	statusStr := strconv.Itoa(resp.Status)
 	var response openapi.Response
 	response, found := opObj.Responses[statusStr]
@@ -348,7 +349,7 @@ func getResponseObj(resp *hargo.Response, opObj *openapi.Operation, isSuccess bo
 	return resResponse, nil
 }
 
-func getRequestBody(req *hargo.Request, opObj *openapi.Operation, isSuccess bool) (*openapi.RequestBodyObj, error) {
+func getRequestBody(req *har.Request, opObj *openapi.Operation, isSuccess bool) (*openapi.RequestBodyObj, error) {
 	if opObj.RequestBody == nil {
 		opObj.RequestBody = &openapi.RequestBodyObj{Description: "Generic request body", Required: true, Content: map[string]*openapi.MediaType{}}
 	}

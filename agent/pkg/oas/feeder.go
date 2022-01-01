@@ -7,8 +7,11 @@ import (
 	"github.com/chanced/openapi"
 	"github.com/mrichman/hargo"
 	log "github.com/sirupsen/logrus"
+	"github.com/up9inc/mizu/shared/logger"
+	"github.com/up9inc/mizu/tap/api"
 	"io"
 	"io/ioutil"
+	"mizuserver/pkg/utils"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -41,13 +44,13 @@ func feedEntries(fromFiles []string, out chan<- hargo.Entry) (err error) {
 	defer close(out)
 
 	for _, file := range fromFiles {
-		log.Info("Processing file: " + file)
+		logger.Log.Info("Processing file: " + file)
 		ext := strings.ToLower(filepath.Ext(file))
 		switch ext {
 		case ".har":
 			err = feedFromHAR(file, out)
 			if err != nil {
-				log.Warning("Failed processing file: " + err.Error())
+				logger.Log.Warning("Failed processing file: " + err.Error())
 				continue
 			}
 		case ".ldjson":
@@ -135,11 +138,19 @@ func feedFromLDJSON(file string, out chan<- hargo.Entry) error {
 	return nil
 }
 
-func EntriesToSpecs(entries <-chan hargo.Entry, specs *sync.Map) error {
+func EntriesToSpecs(entries <-chan *api.MizuEntry, specs *sync.Map) error {
 	for {
-		entry, ok := <-entries
+		mizuEntry, ok := <-entries
 		if !ok {
 			break
+		}
+
+		if mizuEntry.Protocol.Name != "http" {
+			continue // TODO: handle non-HTTP entries into AsyncAPI specs
+		}
+
+		entry, err := utils.NewEntry(mizuEntry.Request, mizuEntry.Response, mizuEntry.StartTime, mizuEntry.ElapsedTime)
+		if err == nil {
 		}
 
 		u, err := url.Parse(entry.Request.URL)
@@ -178,7 +189,7 @@ func EntriesToSpecs(entries <-chan hargo.Entry, specs *sync.Map) error {
 			gen = val.(SpecGen)
 		}
 
-		err = gen.feedEntry(&entry)
+		err = gen.feedEntry(entry)
 		if err != nil {
 			log.Warning("Failed processing entry: " + err.Error())
 			continue
