@@ -6,9 +6,9 @@ import (
 	"github.com/google/martian/messageview"
 	"github.com/google/martian/proxyutil"
 	har "github.com/mrichman/hargo"
-	"github.com/up9inc/mizu/shared/logger"
 	"io"
 	"io/ioutil"
+	"log"
 	"mime"
 	"mime/multipart"
 	"net/http"
@@ -155,7 +155,7 @@ func postData(req *http.Request, logBody bool) (*PostData, error) {
 	ct := req.Header.Get("Content-Type")
 	mt, ps, err := mime.ParseMediaType(ct)
 	if err != nil {
-		logger.Log.Errorf("har: cannot parse Content-Type header %q: %v", ct, err)
+		log.Printf("har: cannot parse Content-Type header %q: %v", ct, err) // TODO: how to attach proper logger?
 		mt = ct
 	}
 
