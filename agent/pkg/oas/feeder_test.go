@@ -46,9 +46,14 @@ func TestEntries(t *testing.T) {
 
 	specs := sync.Map{}
 	finished := false
+	mutex := sync.Mutex{}
 	go func() { // this goroutine generates OAS from entries
 		err := EntriesToSpecs(entries, &specs)
+
+		mutex.Lock()
 		finished = true
+		mutex.Unlock()
+
 		if err != nil {
 			t.Log(err)
 			t.Fail()
@@ -82,9 +87,12 @@ func TestEntries(t *testing.T) {
 
 		t.Logf("Made a cycle on %d specs: %s", svcs.Len(), svcs.String())
 
+		mutex.Lock()
 		if finished {
+			mutex.Unlock()
 			break
 		}
+		mutex.Unlock()
 	}
 
 	specs.Range(func(_, val interface{}) bool {
