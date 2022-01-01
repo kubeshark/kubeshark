@@ -84,7 +84,7 @@ func NewGen(server string) *SpecGen {
 	info.Version = "0.0"
 	spec.Info = &info
 	spec.Paths = &openapi.Paths{Items: map[openapi.PathValue]*openapi.PathObj{}}
-	gen := SpecGen{oas: spec, tree: &Node{}}
+	gen := SpecGen{oas: spec, tree: &Node{constant: new(string)}}
 	return &gen
 }
 
@@ -108,6 +108,11 @@ func (g *SpecGen) feedEntry(entry *har.Entry) error {
 func (g *SpecGen) getSpec() (*openapi.OpenAPI, error) {
 	g.lock.Lock()
 	defer g.lock.Unlock()
+
+	g.tree.compact()
+
+	// put paths back from tree into OAS
+	g.oas.Paths = g.tree.ListPaths()
 
 	// to make a deep copy, no better idea than marshal+unmarshal
 	specText, err := json.MarshalIndent(g.oas, "", "\t")

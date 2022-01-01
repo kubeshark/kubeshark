@@ -59,6 +59,23 @@ func (n *Node) compact() {
 
 }
 
+func (n *Node) ListPaths() *openapi.Paths {
+	paths := &openapi.Paths{Items: map[openapi.PathValue]*openapi.PathObj{}}
+	for _, child := range n.children {
+		subPaths := child.ListPaths()
+		for path, pathObj := range subPaths.Items {
+			concat := *n.constant + "/" + string(path)
+			paths.Items[openapi.PathValue(concat)] = pathObj
+		}
+	}
+
+	if n.ops != nil {
+		paths.Items[openapi.PathValue(*n.constant)] = n.ops
+	}
+
+	return paths
+}
+
 func newNode() *Node {
 	required := true // FFS! https://stackoverflow.com/questions/32364027/reference-a-boolean-for-assignment-in-a-struct/32364093
 	param := openapi.ParameterObj{
