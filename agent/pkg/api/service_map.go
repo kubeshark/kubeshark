@@ -2,13 +2,35 @@ package api
 
 import (
 	"fmt"
+	"sync"
+
+	"github.com/up9inc/mizu/shared/logger"
 )
 
 const UnresolvedNode = "unresolved"
 
+var instance *graph
+var once sync.Once
+
+func GetServiceMapInstance() ServiceMapGraph {
+	once.Do(func() {
+		instance = newDirectedGraph()
+		logger.Log.Debug("Service Map Initialized: %s")
+	})
+	return instance
+}
+
+type ServiceMapGraph interface {
+	AddEdge(u, v id, protocol string)
+	GetNodes() []string
+	PrintNodes()
+	PrintAdjacentEdges()
+}
+
 type id string
 type edgeData struct {
-	count int
+	protocol string
+	count    int
 }
 
 type graph struct {
@@ -16,10 +38,17 @@ type graph struct {
 	Edges map[id]map[id]*edgeData
 }
 
-func NewDirectedGraph() *graph {
+func newDirectedGraph() *graph {
 	return &graph{
 		Nodes: make(map[id]struct{}),
 		Edges: make(map[id]map[id]*edgeData),
+	}
+}
+
+func newEdgeData(p string) *edgeData {
+	return &edgeData{
+		protocol: p,
+		count:    1,
 	}
 }
 
@@ -30,7 +59,7 @@ func (g *graph) addNode(id id) {
 	g.Nodes[id] = struct{}{}
 }
 
-func (g *graph) AddEdge(u, v id) {
+func (g *graph) AddEdge(u, v id, p string) {
 	if len(u) == 0 {
 		u = UnresolvedNode
 	}
@@ -52,8 +81,19 @@ func (g *graph) AddEdge(u, v id) {
 	if e, ok := g.Edges[u][v]; ok {
 		e.count++
 	} else {
-		g.Edges[u][v] = &edgeData{count: 1}
+		g.Edges[u][v] = &edgeData{
+			protocol: p,
+			count:    1,
+		}
 	}
+}
+
+func (g *graph) GetNodes() []string {
+	nodes := make([]string, 0)
+	for k := range g.Nodes {
+		nodes = append(nodes, string(k))
+	}
+	return nodes
 }
 
 func (g *graph) PrintNodes() {
