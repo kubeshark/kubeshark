@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/chanced/openapi"
+	"github.com/google/martian/har"
 	"github.com/google/uuid"
-	har "github.com/mrichman/hargo"
 	"github.com/up9inc/mizu/shared/logger"
 	"mime"
 	"net/url"
@@ -139,7 +139,7 @@ func (g *SpecGen) handlePathObj(entry *har.Entry) error {
 		logger.Log.Debugf("Dropped traffic entry due to ignored extension: %s", urlParsed.Path)
 	}
 
-	ctype := getRespCtype(&entry.Response)
+	ctype := getRespCtype(entry.Response)
 	if isCtypeIgnored(ctype) {
 		logger.Log.Debugf("Dropped traffic entry due to ignored response ctype: %s", ctype)
 	}
@@ -197,12 +197,12 @@ func handleOpObj(entry *har.Entry, pathObj *openapi.PathObj) error {
 		return nil
 	}
 
-	err = handleRequest(&entry.Request, opObj, isSuccess)
+	err = handleRequest(entry.Request, opObj, isSuccess)
 	if err != nil {
 		return err
 	}
 
-	err = handleResponse(&entry.Response, opObj, isSuccess)
+	err = handleResponse(entry.Response, opObj, isSuccess)
 	if err != nil {
 		return err
 	}
@@ -211,7 +211,7 @@ func handleOpObj(entry *har.Entry, pathObj *openapi.PathObj) error {
 }
 
 func handleRequest(req *har.Request, opObj *openapi.Operation, isSuccess bool) error {
-	if req.PostData.Text != "" && isSuccess {
+	if req.PostData != nil && req.PostData.Text != "" && isSuccess {
 		reqBody, err := getRequestBody(req, opObj, isSuccess)
 		if err != nil {
 			return err

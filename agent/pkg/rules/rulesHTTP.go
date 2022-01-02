@@ -10,7 +10,7 @@ import (
 
 	"github.com/up9inc/mizu/shared/logger"
 
-	har "github.com/mrichman/hargo"
+	"github.com/google/martian/har"
 	"github.com/up9inc/mizu/shared"
 	jsonpath "github.com/yalp/jsonpath"
 )

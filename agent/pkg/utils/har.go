@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	har "github.com/mrichman/hargo"
+	"github.com/google/martian/har"
 	"github.com/up9inc/mizu/shared/logger"
 )
 
@@ -55,14 +55,14 @@ import (
 //	return cookies
 //}
 
-func BuildHeaders(rawHeaders []interface{}) ([]har.NVP, string, string, string, string, string) {
+func BuildHeaders(rawHeaders []interface{}) ([]har.Header, string, string, string, string, string) {
 	var host, scheme, authority, path, status string
-	headers := make([]har.NVP, 0, len(rawHeaders))
+	headers := make([]har.Header, 0, len(rawHeaders))
 
 	for _, header := range rawHeaders {
 		h := header.(map[string]interface{})
 
-		headers = append(headers, har.NVP{
+		headers = append(headers, har.Header{
 			Name:  h["name"].(string),
 			Value: h["value"].(string),
 		})
@@ -87,8 +87,8 @@ func BuildHeaders(rawHeaders []interface{}) ([]har.NVP, string, string, string, 
 	return headers, host, scheme, authority, path, status
 }
 
-func BuildPostParams(rawParams []interface{}) []har.PostParam {
-	params := make([]har.PostParam, 0, len(rawParams))
+func BuildPostParams(rawParams []interface{}) []har.Param {
+	params := make([]har.Param, 0, len(rawParams))
 	for _, param := range rawParams {
 		p := param.(map[string]interface{})
 		name := ""
@@ -108,10 +108,10 @@ func BuildPostParams(rawParams []interface{}) []har.PostParam {
 			contentType = p["contentType"].(string)
 		}
 
-		params = append(params, har.PostParam{
+		params = append(params, har.Param{
 			Name:        name,
 			Value:       value,
-			FileName:    fileName,
+			Filename:    fileName,
 			ContentType: contentType,
 		})
 	}
@@ -134,10 +134,10 @@ func NewRequest(request map[string]interface{}) (harRequest *har.Request, err er
 		postDataText = text.(string)
 	}
 
-	queryString := make([]har.NVP, 0)
+	queryString := make([]har.QueryString, 0)
 	for _, _qs := range request["_queryString"].([]interface{}) {
 		qs := _qs.(map[string]interface{})
-		queryString = append(queryString, har.NVP{
+		queryString = append(queryString, har.QueryString{
 			Name:  qs["name"].(string),
 			Value: qs["value"].(string),
 		})
@@ -148,7 +148,7 @@ func NewRequest(request map[string]interface{}) (harRequest *har.Request, err er
 		url = fmt.Sprintf("%s://%s%s", scheme, authority, path)
 	}
 
-	harParams := make([]har.PostParam, 0)
+	harParams := make([]har.Param, 0)
 	if postData["params"] != nil {
 		harParams = BuildPostParams(postData["params"].([]interface{}))
 	}
@@ -157,12 +157,12 @@ func NewRequest(request map[string]interface{}) (harRequest *har.Request, err er
 		Method:      request["method"].(string),
 		URL:         url,
 		HTTPVersion: request["httpVersion"].(string),
-		HeaderSize:  -1,
-		BodySize:    bytes.NewBufferString(postDataText).Len(),
+		HeadersSize: -1,
+		BodySize:    int64(bytes.NewBufferString(postDataText).Len()),
 		QueryString: queryString,
 		Headers:     headers,
 		Cookies:     cookies,
-		PostData: har.PostData{
+		PostData: &har.PostData{
 			MimeType: mimeType.(string),
 			Params:   harParams,
 			Text:     postDataText,
@@ -191,8 +191,8 @@ func NewResponse(response map[string]interface{}) (harResponse *har.Response, er
 	harContent := &har.Content{
 		Encoding: encoding.(string),
 		MimeType: mimeType.(string),
-		Text:     bodyText,
-		Size:     len(bodyText),
+		Text:     []byte(bodyText),
+		Size:     int64(len(bodyText)),
 	}
 
 	status := int(response["status"].(float64))
@@ -211,15 +211,15 @@ func NewResponse(response map[string]interface{}) (harResponse *har.Response, er
 		Status:      status,
 		StatusText:  response["statusText"].(string),
 		HeadersSize: -1,
-		BodySize:    bytes.NewBufferString(bodyText).Len(),
+		BodySize:    int64(bytes.NewBufferString(bodyText).Len()),
 		Headers:     headers,
 		Cookies:     cookies,
-		Content:     *harContent,
+		Content:     harContent,
 	}
 	return
 }
 
-func NewEntry(request map[string]interface{}, response map[string]interface{}, startTime time.Time, elapsedTime int) (*har.Entry, error) {
+func NewEntry(request map[string]interface{}, response map[string]interface{}, startTime time.Time, elapsedTime int64) (*har.Entry, error) {
 	harRequest, err := NewRequest(request)
 	if err != nil {
 		logger.Log.Errorf("Failed converting request to HAR %s (%v,%+v)", err, err, err)
@@ -237,12 +237,12 @@ func NewEntry(request map[string]interface{}, response map[string]interface{}, s
 	}
 
 	harEntry := har.Entry{
-		StartedDateTime: startTime.String(),
-		Time:            float32(elapsedTime),
-		Request:         *harRequest,
-		Response:        *harResponse,
-		Cache:           har.Cache{},
-		PageTimings: har.PageTimings{
+		StartedDateTime: startTime,
+		Time:            elapsedTime,
+		Request:         harRequest,
+		Response:        harResponse,
+		Cache:           &har.Cache{},
+		Timings: &har.Timings{
 			Send:    -1,
 			Wait:    -1,
 			Receive: elapsedTime,
