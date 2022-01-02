@@ -11,6 +11,8 @@ import (
 	"plugin"
 	"sync"
 	"time"
+
+	"github.com/google/martian/har"
 )
 
 type Protocol struct {
@@ -245,19 +247,17 @@ type HTTPWrapper struct {
 func (h HTTPPayload) MarshalJSON() ([]byte, error) {
 	switch h.Type {
 	case TypeHttpRequest:
-		httpRequest := h.Data.(*http.Request)
-		harRequest, err := NewRequest(httpRequest, true)
+		harRequest, err := har.NewRequest(h.Data.(*http.Request), true)
 		if err != nil {
 			return nil, errors.New("Failed converting request to HAR")
 		}
 		return json.Marshal(&HTTPWrapper{
 			Method:     harRequest.Method,
 			Details:    harRequest,
-			RawRequest: &HTTPRequestWrapper{Request: httpRequest},
+			RawRequest: &HTTPRequestWrapper{Request: h.Data.(*http.Request)},
 		})
 	case TypeHttpResponse:
-		httpResponse := h.Data.(*http.Response)
-		harResponse, err := NewResponse(httpResponse, true)
+		harResponse, err := har.NewResponse(h.Data.(*http.Response), true)
 		if err != nil {
 			return nil, errors.New("Failed converting response to HAR")
 		}
@@ -265,7 +265,7 @@ func (h HTTPPayload) MarshalJSON() ([]byte, error) {
 			Method:      "",
 			Url:         "",
 			Details:     harResponse,
-			RawResponse: &HTTPResponseWrapper{Response: httpResponse},
+			RawResponse: &HTTPResponseWrapper{Response: h.Data.(*http.Response)},
 		})
 	default:
 		panic(fmt.Sprintf("HTTP payload cannot be marshaled: %s", h.Type))
