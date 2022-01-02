@@ -18,11 +18,6 @@ import (
 	"time"
 )
 
-func init() {
-	// TODO: will this be called by the main code?
-	//logger.InitLoggerStderrOnly(logging.DEBUG)
-}
-
 func getFiles(baseDir string) (result []string, err error) {
 	result = make([]string, 0, 0)
 	logger.Log.Infof("Reading files from tree: %s", baseDir)
@@ -169,7 +164,7 @@ func TestFilesList(t *testing.T) {
 
 func TestEntries(t *testing.T) {
 	files, err := getFiles(".")
-	files, err = getFiles("/media/bigdisk/UP9")
+	// files, err = getFiles("/media/bigdisk/UP9")
 	if err != nil {
 		t.Log(err)
 		t.FailNow()
