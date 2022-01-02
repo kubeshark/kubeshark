@@ -85,7 +85,7 @@ func NewGen(server string) *SpecGen {
 	info.Version = "0.0"
 	spec.Info = &info
 	spec.Paths = &openapi.Paths{Items: map[openapi.PathValue]*openapi.PathObj{}}
-	gen := SpecGen{oas: spec, tree: &Node{constant: new(string)}}
+	gen := SpecGen{oas: spec, tree: new(Node)}
 	return &gen
 }
 
@@ -93,7 +93,7 @@ func (g *SpecGen) startFromSpec(oas *openapi.OpenAPI) {
 	g.oas = oas
 	for pathStr, pathObj := range oas.Paths.Items {
 		pathSplit := strings.Split(string(pathStr), "/")
-		g.tree.getOrSet(pathSplit, true, pathObj)
+		g.tree.getOrSet(pathSplit, pathObj)
 	}
 }
 
@@ -113,7 +113,7 @@ func (g *SpecGen) GetSpec() (*openapi.OpenAPI, error) {
 	g.tree.compact()
 
 	// put paths back from tree into OAS
-	g.oas.Paths = g.tree.ListPaths()
+	g.oas.Paths = g.tree.listPaths()
 
 	// to make a deep copy, no better idea than marshal+unmarshal
 	specText, err := json.MarshalIndent(g.oas, "", "\t")
@@ -156,7 +156,7 @@ func (g *SpecGen) handlePathObj(entry *har.Entry) error {
 	}
 
 	split := strings.Split(urlParsed.Path, "/")
-	node, _, _ := g.tree.getOrSet(split, true, new(openapi.PathObj))
+	node := g.tree.getOrSet(split, new(openapi.PathObj))
 	err = handleOpObj(entry, node.ops)
 
 	return err
