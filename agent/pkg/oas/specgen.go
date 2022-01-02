@@ -1,6 +1,7 @@
 package oas
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"github.com/chanced/openapi"
@@ -257,7 +258,7 @@ func fillContent(reqResp ReqResp, respContent openapi.Content, ctype string, err
 	if reqResp.Req != nil {
 		text = reqResp.Req.PostData.Text
 	} else {
-		text = string(reqResp.Resp.Content.Text)
+		text = decRespText(reqResp.Resp.Content)
 	}
 
 	exampleMsg, err := json.Marshal(text)
@@ -266,6 +267,19 @@ func fillContent(reqResp ReqResp, respContent openapi.Content, ctype string, err
 	}
 	content.Example = exampleMsg
 	return respContent[ctype], nil
+}
+
+func decRespText(content *har.Content) (res string) {
+	res = string(content.Text)
+	if content.Encoding == "base64" {
+		data, err := base64.StdEncoding.DecodeString(res)
+		if err != nil {
+			logger.Log.Warningf("error decoding response text as base64: %s", err)
+		} else {
+			res = string(data)
+		}
+	}
+	return
 }
 
 func getRespCtype(resp *har.Response) string {
@@ -367,7 +381,7 @@ func getOpObj(pathObj *openapi.PathObj, method string, createIfNone bool) (*open
 	case "trace":
 		op = &pathObj.Trace
 	default:
-		return nil, false, errors.New("Unsupported method: " + method)
+		return nil, false, errors.New("Unsupported HTTP method: " + method)
 	}
 
 	isMissing := false
