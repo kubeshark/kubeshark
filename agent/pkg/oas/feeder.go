@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"errors"
-	har "github.com/mrichman/hargo"
+	"github.com/google/martian/har"
 	"github.com/up9inc/mizu/shared/logger"
 	"io"
 	"io/ioutil"
@@ -76,14 +76,14 @@ func feedFromHAR(file string, out chan<- har.Entry) error {
 		return err
 	}
 
-	var harDoc har.Har
+	var harDoc har.HAR
 	err = json.Unmarshal(data, &harDoc)
 	if err != nil {
 		return err
 	}
 
 	for _, entry := range harDoc.Log.Entries {
-		out <- entry
+		out <- *entry
 	}
 
 	return nil

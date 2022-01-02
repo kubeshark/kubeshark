@@ -15,7 +15,7 @@ import (
 	"sync"
 	"time"
 
-	har "github.com/mrichman/hargo"
+	"github.com/google/martian/har"
 	basenine "github.com/up9inc/basenine/client/go"
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/logger"
@@ -247,24 +247,21 @@ func syncEntriesImpl(token string, model string, envPrefix string, uploadInterva
 			if err := json.Unmarshal([]byte(dataBytes), &entry); err != nil {
 				continue
 			}
-			harEntry, err := utils.NewEntry(entry.Request, entry.Response, entry.StartTime, int(entry.ElapsedTime))
+			harEntry, err := utils.NewEntry(entry.Request, entry.Response, entry.StartTime, entry.ElapsedTime)
 			if err != nil {
 				continue
 			}
 			if entry.Source.Name != "" {
-				harEntry.Request.Headers = append(harEntry.Request.Headers, har.NVP{Name: "x-mizu-source", Value: entry.Source.Name})
+				harEntry.Request.Headers = append(harEntry.Request.Headers, har.Header{Name: "x-mizu-source", Value: entry.Source.Name})
 			}
 			if entry.Destination.Name != "" {
-				harEntry.Request.Headers = append(harEntry.Request.Headers, har.NVP{Name: "x-mizu-destination", Value: entry.Destination.Name})
+				harEntry.Request.Headers = append(harEntry.Request.Headers, har.Header{Name: "x-mizu-destination", Value: entry.Destination.Name})
 				harEntry.Request.URL = utils.SetHostname(harEntry.Request.URL, entry.Destination.Name)
 			}
 
-			if harEntry.Response.Content.Encoding == "base64" {
-				decoded, err := base64.StdEncoding.DecodeString(harEntry.Response.Content.Text)
-				if err != nil {
-					continue
-				}
-				harEntry.Response.Content.Text = string(decoded)
+			// go's default marshal behavior is to encode []byte fields to base64, python's default unmarshal behavior is to not decode []byte fields from base64
+			if harEntry.Response.Content.Text, err = base64.StdEncoding.DecodeString(string(harEntry.Response.Content.Text)); err != nil {
+				continue
 			}
 
 			batch = append(batch, *harEntry)

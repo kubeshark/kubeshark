@@ -3,7 +3,7 @@ package oas
 import (
 	"encoding/json"
 	"github.com/chanced/openapi"
-	har "github.com/mrichman/hargo"
+	"github.com/google/martian/har"
 	"github.com/op/go-logging"
 	"github.com/up9inc/mizu/shared/logger"
 	"io/ioutil"
