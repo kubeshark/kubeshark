@@ -105,7 +105,7 @@ func (g *SpecGen) feedEntry(entry har.Entry) error {
 	return err
 }
 
-func (g *SpecGen) getSpec() (*openapi.OpenAPI, error) {
+func (g *SpecGen) GetSpec() (*openapi.OpenAPI, error) {
 	g.lock.Lock()
 	defer g.lock.Unlock()
 

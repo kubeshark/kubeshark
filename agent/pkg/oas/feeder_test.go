@@ -67,7 +67,7 @@ func TestEntries(t *testing.T) {
 			gen := val.(*SpecGen)
 			svc := key.(string)
 			svcs.WriteString(svc + ",")
-			spec, err := gen.getSpec()
+			spec, err := gen.GetSpec()
 			if err != nil {
 				t.Log(err)
 				t.FailNow()
@@ -97,7 +97,7 @@ func TestEntries(t *testing.T) {
 
 	specs.Range(func(_, val interface{}) bool {
 		gen := val.(*SpecGen)
-		spec, err := gen.getSpec()
+		spec, err := gen.GetSpec()
 		if err != nil {
 			t.Log(err)
 			t.FailNow()
