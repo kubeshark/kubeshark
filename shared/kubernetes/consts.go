@@ -19,7 +19,7 @@ const (
 )
 
 const (
-	MizuAnnotationPrefix         = "mizu.io"
-	AnnotationMizuManagement     = MizuAnnotationPrefix + "mizu.io/management-method"
-	AnnotationMizuManagementAuto = "auto"
+	MizuLabelPrefix         = "mizu.io"
+	LabelMizuManagement     = MizuLabelPrefix + "mizu.io/management-method"
+	LabelMizuManagementAuto = "auto"
 )
