@@ -35,6 +35,7 @@ type ServiceMap interface {
 	GetEntriesProcessedCount() int
 	GetNodesCount() int
 	GetEdgesCount() int
+	Reset()
 }
 
 func newServiceMap() *serviceMap {
@@ -164,4 +165,9 @@ func (s *serviceMap) GetEdgesCount() int {
 		}
 	}
 	return count
+}
+
+func (s *serviceMap) Reset() {
+	s.entriesProcessed = 0
+	s.graph = newDirectedGraph()
 }

@@ -35,5 +35,7 @@ func (s *ServiceMapController) Get(c *gin.Context) {
 }
 
 func (s *ServiceMapController) Reset(c *gin.Context) {
-	c.JSON(http.StatusNotImplemented, nil)
+	serviceMap := api.GetServiceMapInstance()
+	serviceMap.Reset()
+	s.Status(c)
 }
