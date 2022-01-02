@@ -11,7 +11,6 @@ import (
 	"path"
 	"sort"
 	"strings"
-	"sync"
 	"time"
 
 	har "github.com/mrichman/hargo"
@@ -115,10 +114,9 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 		disableOASValidation = true
 	}
 
-	specs := &sync.Map{}
 	entries := make(chan har.Entry)
 	go func() {
-		err := oas.EntriesToSpecs(entries, specs)
+		err := oas.EntriesToSpecs(entries, oas.ServiceSpecs)
 		if err != nil {
 			logger.Log.Warningf("Failed to generate specs from traffic: %s", err)
 			close(entries)
@@ -153,6 +151,7 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 			}
 
 			// TODO: without any buffering, this would block if OAS gen is slow
+			// working with MizuEntry is very difficult, so we rely on harEntry
 			entries <- *harEntry
 		}
 
