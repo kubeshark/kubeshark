@@ -222,7 +222,7 @@ func TestEntries(t *testing.T) {
 			return true
 		})
 
-		t.Logf("Made a cycle on %d specs: %s", svcs.Len(), svcs.String())
+		t.Logf("Made a cycle on specs: %s", svcs.String())
 
 		mutex.Lock()
 		if finished {
@@ -295,7 +295,7 @@ func TestEntriesNegative(t *testing.T) {
 }
 
 func TestLoadValidHAR(t *testing.T) {
-	inp := `{"startedDateTime": "2021-02-03T07:48:12.959000+00:00", "time": 1, "request": {"method": "GET", "url": "http://unresolved_target/1.0.0/health", "httpVersion": "HTTP/1.1", "cookies": [], "headers": [{"name": "User-Agent", "value": "kube-probe/1.18+"}, {"name": "Accept-Encoding", "value": "gzip"}, {"name": "Connection", "value": "close"}, {"name": ":method", "value": "GET"}, {"name": ":path", "value": "/1.0.0/health"}, {"name": ":authority", "value": "10.104.140.105:8000"}, {"name": ":scheme", "value": "http"}, {"name": "x-request-start", "value": "1612338492.959"}, {"name": "x-up9-source", "value": "10.104.137.19"}, {"name": "x-up9-destination", "value": "10.104.140.105:8000"}, {"name": "x-up9-tapping-src", "value": "e08d091b-2065-408e-83a7-9f56bdea0ba0_public_api-gw"}, {"name": "x-up9-collector", "value": "ip-10-104-137-19.ec2.internal"}], "queryString": [], "headersSize": -1, "bodySize": -1}, "response": {"status": 200, "statusText": "OK", "httpVersion": "HTTP/1.1", "cookies": [], "headers": [{"name": "Server", "value": "fasthttp"}, {"name": "Date", "value": "Wed, 03 Feb 2021 07:48:12 GMT"}, {"name": "Content-Type", "value": "text/plain; charset=utf-8"}, {"name": "Content-Length", "value": "2"}, {"name": ":status", "value": "200"}, {"name": "x-up9-duration-ms", "value": "1"}], "content": {"size": 2, "mimeType": "", "text": "OK"}, "redirectURL": "", "headersSize": -1, "bodySize": 2}, "cache": {}, "timings": {"send": -1, "wait": -1, "receive": 1}}`
+	inp := `{"startedDateTime": "2021-02-03T07:48:12.959000+00:00", "time": 1, "request": {"method": "GET", "url": "http://unresolved_target/1.0.0/health", "httpVersion": "HTTP/1.1", "cookies": [], "headers": [], "queryString": [], "headersSize": -1, "bodySize": -1}, "response": {"status": 200, "statusText": "OK", "httpVersion": "HTTP/1.1", "cookies": [], "headers": [], "content": {"size": 2, "mimeType": "", "text": "OK"}, "redirectURL": "", "headersSize": -1, "bodySize": 2}, "cache": {}, "timings": {"send": -1, "wait": -1, "receive": 1}}`
 	var entry *har.Entry
 	var err = json.Unmarshal([]byte(inp), &entry)
 	if err != nil {

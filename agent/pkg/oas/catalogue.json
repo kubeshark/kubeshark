@@ -18,6 +18,19 @@
           "example": "some-uuid-maybe"
         }
       ]
+    },
+    "/catalogue/{id}/details": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "example": "some-uuid-maybe"
+        }
+      ]
     }
   }
 }
