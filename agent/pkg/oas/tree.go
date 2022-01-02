@@ -56,21 +56,24 @@ func (n *Node) getOrSet(path NodePath, createIfMissing bool, pathObjToSet *opena
 }
 
 func (n *Node) compact() {
-
+	// TODO
 }
 
 func (n *Node) ListPaths() *openapi.Paths {
 	paths := &openapi.Paths{Items: map[openapi.PathValue]*openapi.PathObj{}}
+
+	// add self
+	if n.ops != nil {
+		paths.Items[openapi.PathValue("/"+*n.constant)] = n.ops
+	}
+
+	// recurse into children
 	for _, child := range n.children {
 		subPaths := child.ListPaths()
 		for path, pathObj := range subPaths.Items {
-			concat := *n.constant + "/" + string(path)
+			concat := *n.constant + string(path)
 			paths.Items[openapi.PathValue(concat)] = pathObj
 		}
-	}
-
-	if n.ops != nil {
-		paths.Items[openapi.PathValue(*n.constant)] = n.ops
 	}
 
 	return paths
