@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/logger"
 )
 
@@ -28,6 +29,7 @@ type serviceMap struct {
 type ServiceMap interface {
 	AddEdge(source, destination id, protocol string)
 	GetNodes() []string
+	GetEdges() []shared.ServiceMapEdge
 	PrintNodes()
 	PrintAdjacentEdges()
 	GetEntriesProcessedCount() int
@@ -113,6 +115,21 @@ func (s *serviceMap) GetNodes() []string {
 	return nodes
 }
 
+func (s *serviceMap) GetEdges() []shared.ServiceMapEdge {
+	var edges []shared.ServiceMapEdge
+	for u, m := range s.graph.Edges {
+		for v := range m {
+			edges = append(edges, shared.ServiceMapEdge{
+				Source:      string(u),
+				Destination: string(v),
+				Count:       s.graph.Edges[u][v].count,
+				Protocol:    s.graph.Edges[u][v].protocol,
+			})
+		}
+	}
+	return edges
+}
+
 func (s *serviceMap) PrintNodes() {
 	fmt.Println("Printing all nodes...")
 
@@ -140,5 +157,11 @@ func (s *serviceMap) GetNodesCount() int {
 }
 
 func (s *serviceMap) GetEdgesCount() int {
-	return len(s.graph.Edges)
+	var count int
+	for _, m := range s.graph.Edges {
+		for range m {
+			count++
+		}
+	}
+	return count
 }

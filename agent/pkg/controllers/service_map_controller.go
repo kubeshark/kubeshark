@@ -26,7 +26,12 @@ func (s *ServiceMapController) Status(c *gin.Context) {
 }
 
 func (s *ServiceMapController) Get(c *gin.Context) {
-	c.JSON(http.StatusNotImplemented, nil)
+	serviceMap := api.GetServiceMapInstance()
+	response := &shared.ServiceMapResponse{
+		Nodes: serviceMap.GetNodes(),
+		Edges: serviceMap.GetEdges(),
+	}
+	c.JSON(http.StatusNotImplemented, response)
 }
 
 func (s *ServiceMapController) Reset(c *gin.Context) {
