@@ -62,7 +62,7 @@ push-cli: ## Build and publish CLI.
 	gsutil cp -r ./cli/bin/* gs://${BUCKET_PATH}/
 	gsutil setmeta -r -h "Cache-Control:public, max-age=30" gs://${BUCKET_PATH}/\*
 
-clean: clean-ui clean-agent clean-cli clean-docker ## Clean all build artifacts.
+clean: clean-ui clean-agent clean-cli clean-docker clean-extensions ## Clean all build artifacts.
 
 clean-ui: ## Clean UI.
 	@(rm -rf ui/build ; echo "UI cleanup done" )
@@ -72,6 +72,9 @@ clean-agent: ## Clean agent.
 
 clean-cli:  ## Clean CLI.
 	@(cd cli; make clean ; echo "CLI cleanup done" )
+
+clean-extensions:  ## Clean extensions
+	@(rm -rf tap/extensions/*.so ; echo "Extensions cleanup done" )
 
 clean-docker:
 	@(echo "DOCKER cleanup - NOT IMPLEMENTED YET " )
