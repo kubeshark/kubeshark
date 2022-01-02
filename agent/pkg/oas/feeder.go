@@ -157,7 +157,13 @@ func EntriesToSpecs(entries chan har.Entry, specs *sync.Map) error {
 
 		err = gen.feedEntry(entry)
 		if err != nil {
-			return err
+			txt, suberr := json.Marshal(entry)
+			if suberr == nil {
+				logger.Log.Debugf("Problematic entry: %s", txt)
+			}
+
+			logger.Log.Warningf("Failed processing entry: %s", err)
+			continue
 		}
 	}
 	return nil

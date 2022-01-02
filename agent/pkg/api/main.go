@@ -119,7 +119,7 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 		err := oas.EntriesToSpecs(entries, oas.ServiceSpecs)
 		if err != nil {
 			logger.Log.Warningf("Failed to generate specs from traffic: %s", err)
-			close(entries)
+			// close(entries)
 		}
 	}()
 
