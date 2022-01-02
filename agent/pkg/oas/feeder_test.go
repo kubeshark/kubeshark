@@ -1,13 +1,17 @@
 package oas
 
 import (
+	"bufio"
 	"encoding/json"
+	"errors"
 	"github.com/chanced/openapi"
 	"github.com/google/martian/har"
-	"github.com/op/go-logging"
 	"github.com/up9inc/mizu/shared/logger"
+	"io"
 	"io/ioutil"
 	"os"
+	"path/filepath"
+	"sort"
 	"strings"
 	"sync"
 	"testing"
@@ -15,7 +19,142 @@ import (
 )
 
 func init() {
-	logger.InitLoggerStderrOnly(logging.DEBUG)
+	// TODO: will this be called by the main code?
+	//logger.InitLoggerStderrOnly(logging.DEBUG)
+}
+
+func getFiles(baseDir string) (result []string, err error) {
+	result = make([]string, 0, 0)
+	logger.Log.Infof("Reading files from tree: %s", baseDir)
+
+	// https://yourbasic.org/golang/list-files-in-directory/
+	err = filepath.Walk(baseDir,
+		func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+
+			ext := strings.ToLower(filepath.Ext(path))
+			if !info.IsDir() && (ext == ".har" || ext == ".ldjson") {
+				result = append(result, path)
+			}
+
+			return nil
+		})
+
+	sort.SliceStable(result, func(i, j int) bool {
+		return fileSize(result[i]) < fileSize(result[j])
+	})
+
+	logger.Log.Infof("Got files: %d", len(result))
+	return result, err
+}
+
+func fileSize(fname string) int64 {
+	fi, err := os.Stat(fname)
+	if err != nil {
+		panic(err)
+	}
+
+	return fi.Size()
+}
+
+func feedEntries(fromFiles []string, out chan har.Entry) (err error) {
+	defer close(out)
+
+	for _, file := range fromFiles {
+		logger.Log.Info("Processing file: " + file)
+		ext := strings.ToLower(filepath.Ext(file))
+		switch ext {
+		case ".har":
+			err = feedFromHAR(file, out)
+			if err != nil {
+				logger.Log.Warning("Failed processing file: " + err.Error())
+				continue
+			}
+		case ".ldjson":
+			err = feedFromLDJSON(file, out)
+			if err != nil {
+				logger.Log.Warning("Failed processing file: " + err.Error())
+				continue
+			}
+		default:
+			return errors.New("Unsupported file extension: " + ext)
+		}
+	}
+
+	return nil
+}
+
+func feedFromHAR(file string, out chan<- har.Entry) error {
+	fd, err := os.Open(file)
+	if err != nil {
+		panic(err)
+	}
+
+	defer fd.Close()
+
+	data, err := ioutil.ReadAll(fd)
+	if err != nil {
+		return err
+	}
+
+	var harDoc har.HAR
+	err = json.Unmarshal(data, &harDoc)
+	if err != nil {
+		return err
+	}
+
+	for _, entry := range harDoc.Log.Entries {
+		out <- *entry
+	}
+
+	return nil
+}
+
+func feedFromLDJSON(file string, out chan<- har.Entry) error {
+	fd, err := os.Open(file)
+	if err != nil {
+		panic(err)
+	}
+
+	defer fd.Close()
+
+	reader := bufio.NewReader(fd)
+
+	var meta map[string]interface{}
+
+	buf := strings.Builder{}
+	for {
+		substr, isPrefix, err := reader.ReadLine()
+		if err == io.EOF {
+			break
+		}
+
+		buf.WriteString(string(substr))
+		if isPrefix {
+			continue
+		}
+
+		line := buf.String()
+		buf.Reset()
+
+		if meta == nil {
+			err := json.Unmarshal([]byte(line), &meta)
+			if err != nil {
+				return err
+			}
+		} else {
+			var entry har.Entry
+			err := json.Unmarshal([]byte(line), &entry)
+			if err != nil {
+				logger.Log.Warningf("Failed decoding entry: %s", line)
+			}
+			out <- entry
+		}
+	}
+
+	return nil
 }
 
 func TestFilesList(t *testing.T) {
@@ -30,7 +169,7 @@ func TestFilesList(t *testing.T) {
 
 func TestEntries(t *testing.T) {
 	files, err := getFiles(".")
-	// files, err = getFiles("/media/bigdisk/UP9")
+	files, err = getFiles("/media/bigdisk/UP9")
 	if err != nil {
 		t.Log(err)
 		t.FailNow()
@@ -127,6 +266,16 @@ func TestEntriesNegative(t *testing.T) {
 			t.Fail()
 		}
 	}()
+}
+
+func TestLoadValidHAR(t *testing.T) {
+	inp := `{"startedDateTime": "2021-02-03T07:48:12.959000+00:00", "time": 1, "request": {"method": "GET", "url": "http://unresolved_target/1.0.0/health", "httpVersion": "HTTP/1.1", "cookies": [], "headers": [{"name": "User-Agent", "value": "kube-probe/1.18+"}, {"name": "Accept-Encoding", "value": "gzip"}, {"name": "Connection", "value": "close"}, {"name": ":method", "value": "GET"}, {"name": ":path", "value": "/1.0.0/health"}, {"name": ":authority", "value": "10.104.140.105:8000"}, {"name": ":scheme", "value": "http"}, {"name": "x-request-start", "value": "1612338492.959"}, {"name": "x-up9-source", "value": "10.104.137.19"}, {"name": "x-up9-destination", "value": "10.104.140.105:8000"}, {"name": "x-up9-tapping-src", "value": "e08d091b-2065-408e-83a7-9f56bdea0ba0_public_api-gw"}, {"name": "x-up9-collector", "value": "ip-10-104-137-19.ec2.internal"}], "queryString": [], "headersSize": -1, "bodySize": -1}, "response": {"status": 200, "statusText": "OK", "httpVersion": "HTTP/1.1", "cookies": [], "headers": [{"name": "Server", "value": "fasthttp"}, {"name": "Date", "value": "Wed, 03 Feb 2021 07:48:12 GMT"}, {"name": "Content-Type", "value": "text/plain; charset=utf-8"}, {"name": "Content-Length", "value": "2"}, {"name": ":status", "value": "200"}, {"name": "x-up9-duration-ms", "value": "1"}], "content": {"size": 2, "mimeType": "", "text": "OK"}, "redirectURL": "", "headersSize": -1, "bodySize": 2}, "cache": {}, "timings": {"send": -1, "wait": -1, "receive": 1}}`
+	var entry *har.Entry
+	var err = json.Unmarshal([]byte(inp), &entry)
+	if err != nil {
+		t.Logf("Failed to decode entry: %s", err)
+		// t.FailNow() demonstrates the problem of library
+	}
 }
 
 func TestLoadValid3_1(t *testing.T) {
