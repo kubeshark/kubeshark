@@ -178,11 +178,14 @@ func TestEntries(t *testing.T) {
 		}
 	}()
 
-	specs := sync.Map{}
+	specs := new(sync.Map)
+
+	loadStartingOAS(specs)
+
 	finished := false
 	mutex := sync.Mutex{}
 	go func() { // this goroutine generates OAS from entries
-		err := EntriesToSpecs(entries, &specs)
+		err := EntriesToSpecs(entries, specs)
 
 		mutex.Lock()
 		finished = true
@@ -249,6 +252,34 @@ func TestEntries(t *testing.T) {
 		return true
 	})
 
+}
+
+func loadStartingOAS(specs *sync.Map) {
+	file := "catalogue.json"
+	fd, err := os.Open(file)
+	if err != nil {
+		panic(err)
+	}
+
+	defer fd.Close()
+
+	data, err := ioutil.ReadAll(fd)
+	if err != nil {
+		panic(err)
+	}
+
+	var doc *openapi.OpenAPI
+	err = json.Unmarshal(data, &doc)
+	if err != nil {
+		panic(err)
+	}
+
+	gen := NewGen("catalogue")
+	gen.startFromSpec(doc)
+
+	specs.Store("catalogue", gen)
+
+	return
 }
 
 func TestEntriesNegative(t *testing.T) {
