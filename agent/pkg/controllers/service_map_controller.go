@@ -31,7 +31,7 @@ func (s *ServiceMapController) Get(c *gin.Context) {
 		Nodes: serviceMap.GetNodes(),
 		Edges: serviceMap.GetEdges(),
 	}
-	c.JSON(http.StatusNotImplemented, response)
+	c.JSON(http.StatusOK, response)
 }
 
 func (s *ServiceMapController) Reset(c *gin.Context) {
