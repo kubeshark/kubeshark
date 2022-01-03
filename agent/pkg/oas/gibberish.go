@@ -2,6 +2,7 @@ package oas
 
 import (
 	"regexp"
+	"unicode"
 )
 
 var (
@@ -29,5 +30,53 @@ func isGibberish(str string) bool {
 		return true
 	}
 
+	noise := noiseLevel(str)
+	if noise >= 0.2 {
+		return true
+	}
+
 	return false
+}
+
+func noiseLevel(str string) (score float64) {
+	prev := *new(rune)
+	cnt := 0.0
+	for _, char := range str {
+		cnt += 1
+		if prev > 0 {
+			switch {
+			// continued class of upper/lower/digit adds no noise
+			case unicode.IsUpper(prev) && unicode.IsUpper(char):
+			case unicode.IsLower(prev) && unicode.IsLower(char):
+			case unicode.IsDigit(prev) && unicode.IsDigit(char):
+
+			// upper =>
+			case unicode.IsUpper(prev) && unicode.IsLower(char):
+				score += 0.25
+			case unicode.IsUpper(prev) && unicode.IsDigit(char):
+				score += 0.25
+
+			// lower =>
+			case unicode.IsLower(prev) && unicode.IsUpper(char):
+				score += 0.75
+			case unicode.IsLower(prev) && unicode.IsDigit(char):
+				score += 0.25
+
+			// digit =>
+			case unicode.IsDigit(prev) && unicode.IsUpper(char):
+				score += 0.75
+			case unicode.IsDigit(prev) && unicode.IsLower(char):
+				score += 0.75
+
+			// the rest is 100% noise
+			default:
+				score += 1
+			}
+		}
+		prev = char
+	}
+
+	score /= cnt
+
+	return score
 }
