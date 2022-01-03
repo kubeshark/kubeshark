@@ -1,6 +1,7 @@
 package oas
 
 import (
+	"encoding/json"
 	"github.com/chanced/openapi"
 	"github.com/up9inc/mizu/shared/logger"
 	"strconv"
@@ -23,9 +24,13 @@ func (n *Node) getOrSet(path NodePath, pathObjToSet *openapi.PathObj) (node *Nod
 	}
 
 	pathChunk := path[0]
+	chunkIsParam := strings.HasPrefix(pathChunk, "{") && strings.HasSuffix(pathChunk, "}")
 	chunkIsGibberish := isGibberish(pathChunk)
 
-	paramObj := findPathParam(pathChunk, pathObjToSet)
+	var paramObj *openapi.ParameterObj
+	if chunkIsParam && pathObjToSet != nil {
+		paramObj = findPathParam(pathChunk, pathObjToSet)
+	}
 
 	if paramObj == nil {
 		node = n.searchInConstants(pathChunk)
@@ -44,7 +49,8 @@ func (n *Node) getOrSet(path NodePath, pathObjToSet *openapi.PathObj) (node *Nod
 		if paramObj != nil {
 			node.param = paramObj
 		} else if chunkIsGibberish {
-			newParam := node.createParam()
+			newParam := n.createParam()
+			node.param = newParam
 
 			if pathObjToSet.Parameters == nil {
 				var params openapi.ParameterList
@@ -52,11 +58,18 @@ func (n *Node) getOrSet(path NodePath, pathObjToSet *openapi.PathObj) (node *Nod
 				pathObjToSet.Parameters = &params
 			}
 
-			someval := append(*pathObjToSet.Parameters, &newParam)
+			someval := append(*pathObjToSet.Parameters, newParam)
 			pathObjToSet.Parameters = &someval
-
 		} else {
 			node.constant = &pathChunk
+		}
+	}
+
+	// add example if it's a param
+	if node.param != nil && !chunkIsParam {
+		err := fillParamExample(node.param, pathChunk)
+		if err != nil {
+			logger.Log.Warningf("Failed to add example to a parameter: %s", err)
 		}
 	}
 
@@ -70,7 +83,48 @@ func (n *Node) getOrSet(path NodePath, pathObjToSet *openapi.PathObj) (node *Nod
 	return node
 }
 
-func (n *Node) createParam() openapi.ParameterObj {
+func fillParamExample(param *openapi.ParameterObj, exampleValue string) error {
+	if param.Examples == nil {
+		param.Examples = map[string]openapi.Example{}
+	}
+
+	var exampleObj *openapi.ExampleObj
+	cnt := 0
+	for key, example := range param.Examples {
+		cnt++
+		switch example.ExampleKind() {
+		case openapi.ExampleKindRef:
+			logger.Log.Warningf("Example references are not supported at the moment: %s", key)
+			continue
+		case openapi.ExampleKindObj:
+			exampleObj = example.(*openapi.ExampleObj)
+		}
+
+		var value string
+		err := json.Unmarshal(exampleObj.Value, &value)
+		if err != nil {
+			logger.Log.Warningf("Failed decoding parameter example into string: %s", err)
+			continue
+		}
+
+		if value == exampleValue {
+			return nil
+		}
+	}
+
+	valMsg, err := json.Marshal(exampleValue)
+	if err != nil {
+		return err
+	}
+
+	if false { // FIXME: the lib is broken in this place
+		param.Examples["example #"+strconv.Itoa(cnt)] = &openapi.ExampleObj{Value: valMsg}
+	}
+
+	return nil
+}
+
+func (n *Node) createParam() *openapi.ParameterObj {
 	required := true // FFS! https://stackoverflow.com/questions/32364027/reference-a-boolean-for-assignment-in-a-struct/32364093
 	schema := new(openapi.SchemaObj)
 	schema.Type = make(openapi.Types, 0)
@@ -90,9 +144,7 @@ func (n *Node) createParam() openapi.ParameterObj {
 		newParam.Name = newParam.Name + strconv.Itoa(x)
 	}
 
-	n.param = &newParam
-
-	return newParam
+	return &newParam
 }
 
 func (n *Node) searchInParams(paramObj *openapi.ParameterObj, chunkIsGibberish bool) *Node {
@@ -131,17 +183,15 @@ func (n *Node) searchInConstants(pathChunk string) *Node {
 }
 
 func findPathParam(paramStrName string, pathObj *openapi.PathObj) (pathParam *openapi.ParameterObj) {
-	if strings.HasPrefix(paramStrName, "{") && strings.HasSuffix(paramStrName, "}") && pathObj != nil {
-		for _, param := range *pathObj.Parameters {
-			switch param.ParameterKind() {
-			case openapi.ParameterKindReference:
-				logger.Log.Warningf("Reference type is not supported for parameters")
-			case openapi.ParameterKindObj:
-				paramObj := param.(*openapi.ParameterObj)
-				if "{"+paramObj.Name+"}" == paramStrName {
-					pathParam = paramObj
-					break
-				}
+	for _, param := range *pathObj.Parameters {
+		switch param.ParameterKind() {
+		case openapi.ParameterKindReference:
+			logger.Log.Warningf("Reference type is not supported for parameters")
+		case openapi.ParameterKindObj:
+			paramObj := param.(*openapi.ParameterObj)
+			if "{"+paramObj.Name+"}" == paramStrName {
+				pathParam = paramObj
+				break
 			}
 		}
 	}
