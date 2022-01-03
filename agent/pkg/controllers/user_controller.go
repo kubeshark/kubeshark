@@ -13,3 +13,12 @@ func Login(c *gin.Context) {
 		c.JSON(200, gin.H{"token": token})
 	}
 }
+
+func Logout(c *gin.Context) {
+	token := c.GetHeader("x-session-token")
+	if err := providers.Logout(token, c.Request.Context()); err != nil {
+		c.AbortWithStatusJSON(401, gin.H{"error": "error occured while logging out, the session might still be valid"})
+	} else {
+		c.JSON(200, "")
+	}
+}

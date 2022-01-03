@@ -12,7 +12,7 @@ import (
 
 var client = getKratosClient("http://127.0.0.1:4433", "http://127.0.0.1:4434")
 
-// returns bearer token if successful
+// returns session token if successful
 func RegisterUser(username string, password string, ctx context.Context) (token *string, identityId string, err error) {
 	flow, _, err := client.V0alpha2Api.InitializeSelfServiceRegistrationFlowWithoutBrowser(ctx).Execute()
 	if err != nil {
@@ -35,13 +35,11 @@ func RegisterUser(username string, password string, ctx context.Context) (token 
 }
 
 func PerformLogin(username string, password string, ctx context.Context) (*string, error) {
-	// Initialize the flow
 	flow, _, err := client.V0alpha2Api.InitializeSelfServiceLoginFlowWithoutBrowser(ctx).Execute()
 	if err != nil {
 		return nil, err
 	}
 
-	// Submit the form
 	result, _, err := client.V0alpha2Api.SubmitSelfServiceLoginFlow(ctx).Flow(flow.Id).SubmitSelfServiceLoginFlowBody(
 		ory.SubmitSelfServiceLoginFlowWithPasswordMethodBodyAsSubmitSelfServiceLoginFlowBody(&ory.SubmitSelfServiceLoginFlowWithPasswordMethodBody{
 			Method:             "password",
@@ -98,6 +96,20 @@ func AnyUserExists(ctx context.Context) (bool, error) {
 	} else {
 		return len(result) > 0, nil
 	}
+}
+
+func Logout(token string, ctx context.Context) error {
+	logoutRequest := client.V0alpha2Api.SubmitSelfServiceLogoutFlowWithoutBrowser(ctx)
+	logoutRequest.SubmitSelfServiceLogoutFlowWithoutBrowserBody(ory.SubmitSelfServiceLogoutFlowWithoutBrowserBody{
+		SessionToken: token,
+	})
+	if response, err := logoutRequest.Execute(); err != nil {
+		return err
+	} else if response == nil || response.StatusCode < 200 || response.StatusCode > 299 {
+		return errors.New("unknown error occured during logout")
+	}
+
+	return nil
 }
 
 func getKratosClient(url string, adminUrl string) *ory.APIClient {

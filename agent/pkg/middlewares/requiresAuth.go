@@ -3,7 +3,6 @@ package middlewares
 import (
 	"mizuserver/pkg/config"
 	"mizuserver/pkg/providers"
-	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -19,28 +18,13 @@ func RequiresAuth() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// auth is irrelevant for ephermeral mizu
 		if !config.Config.StandaloneMode {
-			logger.Log.Info("skipping auth check")
 			c.Next()
 			return
 		}
 
-		bearerToken := c.GetHeader("Authorization")
-
-		logger.Log.Infof("bearerToken=%s", bearerToken)
-
-		if bearerToken == "" {
-			logger.Log.Info("no bearer token")
-			c.AbortWithStatusJSON(401, gin.H{"error": "missing authorization header"})
-			return
-		}
-		if !strings.HasPrefix(bearerToken, "Bearer ") {
-			c.AbortWithStatusJSON(401, gin.H{"error": "authorization header must be a bearer token"})
-			return
-		}
-
-		token := strings.Split(bearerToken, " ")[1]
+		token := c.GetHeader("x-session-token")
 		if token == "" {
-			c.AbortWithStatusJSON(401, gin.H{"error": "bearer token is empty"})
+			c.AbortWithStatusJSON(401, gin.H{"error": "token header is empty"})
 			return
 		}
 

@@ -121,7 +121,8 @@ export default class Api {
         localStorage.setItem('token', token);
     }
 
-    logout = () => {
+    logout = async () => {
+        await this.client.post(`/user/logout`);
         this.persistToken(null);
     }
 
@@ -131,7 +132,7 @@ export default class Api {
         }
 
         if (this.token) {
-            headers['Authorization'] = `Bearer ${this.token}`;
+            headers['x-session-token'] = `${this.token}`; // we use `x-session-token` instead of `Authorization` because the latter is reserved by kubectl proxy, making mizu view not work
         }
         return axios.create({
             baseURL: apiURL,

@@ -59,7 +59,6 @@ func getRerouteHttpHandlerMizuAPI(proxyHandler http.Handler, mizuNamespace strin
 		if !strings.Contains(r.URL.Path, proxiedPath) {
 			r.URL.Path = fmt.Sprintf("%s%s", getMizuApiServerProxiedHostAndPath(mizuNamespace, mizuServiceName), r.URL.Path)
 		}
-		logger.Log.Infof("url %s", r.URL.Path)
 		proxyHandler.ServeHTTP(w, r)
 	})
 }

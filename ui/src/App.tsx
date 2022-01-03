@@ -43,8 +43,8 @@ const App = () => {
             if (isInstallNeeded) {
                 setPage(Page.Setup);
             } else {
-                const isAuthed = await api.isAuthenticationNeeded();
-                if(isAuthed) {
+                const isAuthNeeded = await api.isAuthenticationNeeded();
+                if(isAuthNeeded) {
                     setPage(Page.Login);
                 }
             }
@@ -101,6 +101,17 @@ const App = () => {
                             userDismissedTLSWarning={userDismissedTLSWarning}
                             setUserDismissedTLSWarning={setUserDismissedTLSWarning}/>
            </MizuContext.Provider>
+           <ToastContainer
+                position="bottom-right"
+                autoClose={5000}
+                hideProgressBar={false}
+                newestOnTop={false}
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+            />
         </div>
     );
 }
