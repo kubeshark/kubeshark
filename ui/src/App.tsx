@@ -71,7 +71,7 @@ const App = () => {
     
     let pageComponent: any;
 
-    switch (page) {
+    switch (page) { // TODO: move to state management / proper routing
         case Page.Traffic:
             pageComponent = <TrafficPage setAnalyzeStatus={setAnalyzeStatus} onTLSDetected={onTLSDetected}/>;
             break;
@@ -93,7 +93,7 @@ const App = () => {
         <div className="mizuApp">
             <MizuContext.Provider value={{page, setPage}}>
                 <Header analyzeStatus={analyzeStatus}/>
-                <TrafficPage setAnalyzeStatus={setAnalyzeStatus} onTLSDetected={onTLSDetected}/>
+                {pageComponent}
                 <TLSWarning showTLSWarning={showTLSWarning}
                             setShowTLSWarning={setShowTLSWarning}
                             addressesWithTLS={addressesWithTLS}

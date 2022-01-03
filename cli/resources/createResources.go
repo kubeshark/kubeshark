@@ -3,6 +3,7 @@ package resources
 import (
 	"context"
 	"fmt"
+
 	"github.com/op/go-logging"
 	"github.com/up9inc/mizu/cli/errormessage"
 	"github.com/up9inc/mizu/cli/mizu"
@@ -144,7 +145,7 @@ func createMizuApiServerDeployment(ctx context.Context, kubernetesProvider *kube
 		volumeClaimCreated = tryToCreatePersistentVolumeClaim(ctx, kubernetesProvider, opts)
 	}
 
-	pod, err := kubernetesProvider.GetMizuApiServerPodObject(opts, volumeClaimCreated, kubernetes.PersistentVolumeClaimName)
+	pod, err := kubernetesProvider.GetMizuApiServerPodObject(opts, volumeClaimCreated, kubernetes.PersistentVolumeClaimName, true)
 	if err != nil {
 		return err
 	}
@@ -176,7 +177,7 @@ func tryToCreatePersistentVolumeClaim(ctx context.Context, kubernetesProvider *k
 		return false
 	}
 
-	if _, err = kubernetesProvider.CreatePersistentVolumeClaim(ctx, opts.Namespace, kubernetes.PersistentVolumeClaimName, opts.MaxEntriesDBSizeBytes + mizu.InstallModePersistentVolumeSizeBufferBytes); err != nil {
+	if _, err = kubernetesProvider.CreatePersistentVolumeClaim(ctx, opts.Namespace, kubernetes.PersistentVolumeClaimName, opts.MaxEntriesDBSizeBytes+mizu.InstallModePersistentVolumeSizeBufferBytes); err != nil {
 		logger.Log.Warningf(uiUtils.Yellow, "An error has occured while creating a persistent volume claim for mizu, this means mizu data will be lost on mizu-api-server pod restart")
 		logger.Log.Debugf("error creating persistent volume claim: %v", err)
 		return false
@@ -186,7 +187,7 @@ func tryToCreatePersistentVolumeClaim(ctx context.Context, kubernetesProvider *k
 }
 
 func createMizuApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, opts *kubernetes.ApiServerOptions) error {
-	pod, err := kubernetesProvider.GetMizuApiServerPodObject(opts, false, "")
+	pod, err := kubernetesProvider.GetMizuApiServerPodObject(opts, false, "", false)
 	if err != nil {
 		return err
 	}
