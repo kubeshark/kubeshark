@@ -19,7 +19,10 @@ const (
 )
 
 const (
-	MizuLabelPrefix         = "mizu.io/"
-	LabelMizuManagement     = MizuLabelPrefix + "management-method"
-	LabelMizuManagementAuto = "auto"
+	LabelPrefixApp      = "app.kubernetes.io/"
+	LabelManagedBy      = LabelPrefixApp + "managed-by"
+	LabelCreatedBy      = LabelPrefixApp + "created-by"
+	LabelValueMizu      = "mizu"
+	LabelValueMizuCLI   = "mizu-cli"
+	LabelValueMizuAgent = "mizu-agent"
 )
