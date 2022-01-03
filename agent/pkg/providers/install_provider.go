@@ -4,8 +4,6 @@ import (
 	"context"
 	"errors"
 	"mizuserver/pkg/config"
-
-	"github.com/up9inc/mizu/shared/logger"
 )
 
 const (
@@ -14,8 +12,7 @@ const (
 )
 
 func IsInstallNeeded() (bool, error) {
-	logger.Log.Infof("config.Config.RequireUserAuth %b", config.Config.RequireUserAuth)
-	if !config.Config.RequireUserAuth {
+	if !config.Config.StandaloneMode { // install not needed in ephermeral mizu
 		return false, nil
 	}
 

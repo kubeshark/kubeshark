@@ -4,11 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"strings"
 	"time"
 
 	"github.com/up9inc/mizu/shared/kubernetes"
@@ -41,7 +39,7 @@ func NewProvider(url string, retries int, timeout time.Duration) *Provider {
 func (provider *Provider) TestConnection() error {
 	retriesLeft := provider.retries
 	for retriesLeft > 0 {
-		if _, err := provider.GetHealthStatus(); err != nil {
+		if isReachable, err := provider.isReachable(); err != nil || !isReachable {
 			logger.Log.Debugf("api server not ready yet %v", err)
 		} else {
 			logger.Log.Debugf("connection test to api server passed successfully")
@@ -57,27 +55,14 @@ func (provider *Provider) TestConnection() error {
 	return nil
 }
 
-func (provider *Provider) GetHealthStatus() (*shared.HealthResponse, error) {
-	healthUrl := fmt.Sprintf("%s/status/health", provider.url)
-	if response, err := provider.client.Get(healthUrl); err != nil {
-		return nil, err
-	} else if response.StatusCode > 299 {
-		responseBody := new(strings.Builder)
-
-		if _, err := io.Copy(responseBody, response.Body); err != nil {
-			return nil, fmt.Errorf("status code: %d - (bad response - %v)", response.StatusCode, err)
-		} else {
-			singleLineResponse := strings.ReplaceAll(responseBody.String(), "\n", "")
-			return nil, fmt.Errorf("status code: %d - (response - %v)", response.StatusCode, singleLineResponse)
-		}
+func (provider *Provider) isReachable() (bool, error) {
+	echoUrl := fmt.Sprintf("%s/echo", provider.url)
+	if response, err := provider.client.Get(echoUrl); err != nil {
+		return false, err
+	} else if response.StatusCode != 200 {
+		return false, fmt.Errorf("invalid status code %v", response.StatusCode)
 	} else {
-		defer response.Body.Close()
-
-		healthResponse := &shared.HealthResponse{}
-		if err := json.NewDecoder(response.Body).Decode(&healthResponse); err != nil {
-			return nil, err
-		}
-		return healthResponse, nil
+		return true, nil
 	}
 }
 

@@ -17,8 +17,8 @@ var cachedValidTokens = cache.New(cachedValidTokensRetainmentTime, cachedValidTo
 
 func RequiresAuth() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// auth is irrelevant for non enterprise mizu instances
-		if !config.Config.RequireUserAuth {
+		// auth is irrelevant for ephermeral mizu
+		if !config.Config.StandaloneMode {
 			logger.Log.Info("skipping auth check")
 			c.Next()
 			return
@@ -59,22 +59,6 @@ func RequiresAuth() gin.HandlerFunc {
 		}
 
 		cachedValidTokens.Set(token, true, cachedValidTokensRetainmentTime)
-
-		c.Next()
-	}
-}
-
-func CORSMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
-		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
-		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
-		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT")
-
-		if c.Request.Method == "OPTIONS" {
-			c.AbortWithStatus(204)
-			return
-		}
 
 		c.Next()
 	}

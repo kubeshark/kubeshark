@@ -40,7 +40,7 @@ type MizuAgentConfig struct {
 	TapperResources        Resources     `json:"tapperResources"`
 	MizuResourcesNamespace string        `json:"mizuResourceNamespace"`
 	AgentDatabasePath      string        `json:"agentDatabasePath"`
-	RequireUserAuth        bool          `json:"requireUserAuth"`
+	StandaloneMode         bool          `json:"standaloneMode"`
 }
 
 type WebSocketMessageMetadata struct {
