@@ -3,7 +3,7 @@ import React, { useContext, useState } from "react";
 import { toast } from "react-toastify";
 import { MizuContext, Page } from "../App";
 import Api from "../helpers/api";
-import LoadingOverlay from "./LoadOverlay";
+import LoadingOverlay from "./LoadingOverlay";
 
 const api = new Api();
 
