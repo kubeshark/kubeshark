@@ -3,8 +3,6 @@ package configStructs
 import (
 	"errors"
 	"fmt"
-	"github.com/up9inc/mizu/cli/uiUtils"
-	"github.com/up9inc/mizu/shared/logger"
 	"regexp"
 
 	"github.com/up9inc/mizu/shared"
@@ -24,7 +22,6 @@ const (
 	WorkspaceTapName              = "workspace"
 	EnforcePolicyFile             = "traffic-validation-file"
 	ContractFile                  = "contract"
-	DaemonModeTapName             = "daemon"
 	IstioName                     = "istio"
 )
 
@@ -47,8 +44,6 @@ type TapConfig struct {
 	AskUploadConfirmation   bool             `yaml:"ask-upload-confirmation" default:"true"`
 	ApiServerResources      shared.Resources `yaml:"api-server-resources"`
 	TapperResources         shared.Resources `yaml:"tapper-resources"`
-	DaemonMode              bool             `yaml:"daemon" default:"false"`
-	NoPersistentVolumeClaim bool             `yaml:"no-persistent-volume-claim" default:"false"`
 	Istio                   bool             `yaml:"istio" default:"false"`
 }
 
@@ -82,10 +77,6 @@ func (config *TapConfig) Validate() error {
 
 	if config.Analysis && config.Workspace != "" {
 		return errors.New(fmt.Sprintf("Can't run with both --%s and --%s flags", AnalysisTapName, WorkspaceTapName))
-	}
-
-	if config.NoPersistentVolumeClaim && !config.DaemonMode {
-		logger.Log.Warningf(uiUtils.Warning, fmt.Sprintf("the --set tap.no-persistent-volume-claim=true flag has no effect without the --%s flag, the claim will not be created anyway.", DaemonModeTapName))
 	}
 
 	return nil

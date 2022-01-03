@@ -14,7 +14,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
-func CreateMizuResources(ctx context.Context, cancel context.CancelFunc, kubernetesProvider *kubernetes.Provider, serializedValidationRules string, serializedContract string, serializedMizuConfig string, isNsRestrictedMode bool, mizuResourcesNamespace string, isInstallMode bool, agentImage string, syncEntriesConfig *shared.SyncEntriesConfig, maxEntriesDBSizeBytes int64, apiServerResources shared.Resources, imagePullPolicy core.PullPolicy, logLevel logging.Level, noPersistentVolumeClaim bool) (bool, error) {
+func CreateTapMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, serializedValidationRules string, serializedContract string, serializedMizuConfig string, isNsRestrictedMode bool, mizuResourcesNamespace string, agentImage string, syncEntriesConfig *shared.SyncEntriesConfig, maxEntriesDBSizeBytes int64, apiServerResources shared.Resources, imagePullPolicy core.PullPolicy, logLevel logging.Level) (bool, error) {
 	if !isNsRestrictedMode {
 		if err := createMizuNamespace(ctx, kubernetesProvider, mizuResourcesNamespace); err != nil {
 			return false, err
@@ -25,11 +25,9 @@ func CreateMizuResources(ctx context.Context, cancel context.CancelFunc, kuberne
 		logger.Log.Warningf(uiUtils.Warning, fmt.Sprintf("Failed to create resources required for policy validation. Mizu will not validate policy rules. error: %v", errormessage.FormatError(err)))
 	}
 
-	mizuServiceAccountExists, err := createRBACIfNecessary(ctx, kubernetesProvider, isNsRestrictedMode, mizuResourcesNamespace, isInstallMode)
+	mizuServiceAccountExists, err := createRBACIfNecessary(ctx, kubernetesProvider, isNsRestrictedMode, mizuResourcesNamespace)
 	if err != nil {
-		if !isInstallMode {
-			logger.Log.Warningf(uiUtils.Warning, fmt.Sprintf("Failed to ensure the resources required for IP resolving. Mizu will not resolve target IPs to names. error: %v", errormessage.FormatError(err)))
-		}
+		logger.Log.Warningf(uiUtils.Warning, fmt.Sprintf("Failed to ensure the resources required for IP resolving. Mizu will not resolve target IPs to names. error: %v", errormessage.FormatError(err)))
 	}
 
 	var serviceAccountName string
@@ -52,27 +50,68 @@ func CreateMizuResources(ctx context.Context, cancel context.CancelFunc, kuberne
 		LogLevel:              logLevel,
 	}
 
-	if isInstallMode {
-		if !mizuServiceAccountExists {
-			defer CleanUpMizuResources(ctx, cancel, kubernetesProvider, isNsRestrictedMode, mizuResourcesNamespace)
-			logger.Log.Fatalf(uiUtils.Red, fmt.Sprintf("Failed to ensure the resources required for mizu to run in daemon mode. cannot proceed. error: %v", errormessage.FormatError(err)))
-		}
-		if err := createMizuApiServerDeployment(ctx, kubernetesProvider, opts, noPersistentVolumeClaim); err != nil {
-			return mizuServiceAccountExists, err
-		}
-	} else {
-		if err := createMizuApiServerPod(ctx, kubernetesProvider, opts); err != nil {
-			return mizuServiceAccountExists, err
-		}
+	if err := createMizuApiServerPod(ctx, kubernetesProvider, opts); err != nil {
+		return mizuServiceAccountExists, err
 	}
 
 	_, err = kubernetesProvider.CreateService(ctx, mizuResourcesNamespace, kubernetes.ApiServerPodName, kubernetes.ApiServerPodName)
 	if err != nil {
 		return mizuServiceAccountExists, err
 	}
+
 	logger.Log.Debugf("Successfully created service: %s", kubernetes.ApiServerPodName)
 
 	return mizuServiceAccountExists, nil
+}
+
+func CreateInstallMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, serializedValidationRules string, serializedContract string, serializedMizuConfig string, isNsRestrictedMode bool, mizuResourcesNamespace string, agentImage string, syncEntriesConfig *shared.SyncEntriesConfig, maxEntriesDBSizeBytes int64, apiServerResources shared.Resources, imagePullPolicy core.PullPolicy, logLevel logging.Level, noPersistentVolumeClaim bool) error {
+	if !isNsRestrictedMode {
+		if err := createMizuNamespace(ctx, kubernetesProvider, mizuResourcesNamespace); err != nil {
+			return err
+		}
+		logger.Log.Infof("Created mizu namespace")
+	}
+
+	if err := createMizuConfigmap(ctx, kubernetesProvider, serializedValidationRules, serializedContract, serializedMizuConfig, mizuResourcesNamespace); err != nil {
+		return err
+	}
+	logger.Log.Infof("Created config map")
+
+	_, err := createRBACIfNecessary(ctx, kubernetesProvider, isNsRestrictedMode, mizuResourcesNamespace)
+	if err != nil {
+		return err
+	}
+	if err := kubernetesProvider.CreateDaemonsetRBAC(ctx, mizuResourcesNamespace, kubernetes.ServiceAccountName, kubernetes.DaemonRoleName, kubernetes.DaemonRoleBindingName, mizu.RBACVersion); err != nil {
+		return err
+	}
+	logger.Log.Infof("Created RBAC")
+
+	serviceAccountName := kubernetes.ServiceAccountName
+	opts := &kubernetes.ApiServerOptions{
+		Namespace:             mizuResourcesNamespace,
+		PodName:               kubernetes.ApiServerPodName,
+		PodImage:              agentImage,
+		ServiceAccountName:    serviceAccountName,
+		IsNamespaceRestricted: isNsRestrictedMode,
+		SyncEntriesConfig:     syncEntriesConfig,
+		MaxEntriesDBSizeBytes: maxEntriesDBSizeBytes,
+		Resources:             apiServerResources,
+		ImagePullPolicy:       imagePullPolicy,
+		LogLevel:              logLevel,
+	}
+
+	if err := createMizuApiServerDeployment(ctx, kubernetesProvider, opts, noPersistentVolumeClaim); err != nil {
+		return err
+	}
+	logger.Log.Infof("Created Api Server deployment")
+
+	_, err = kubernetesProvider.CreateService(ctx, mizuResourcesNamespace, kubernetes.ApiServerPodName, kubernetes.ApiServerPodName)
+	if err != nil {
+		return err
+	}
+	logger.Log.Infof("Created Api Server service")
+
+	return nil
 }
 
 func createMizuNamespace(ctx context.Context, kubernetesProvider *kubernetes.Provider, mizuResourcesNamespace string) error {
@@ -85,7 +124,7 @@ func createMizuConfigmap(ctx context.Context, kubernetesProvider *kubernetes.Pro
 	return err
 }
 
-func createRBACIfNecessary(ctx context.Context, kubernetesProvider *kubernetes.Provider, isNsRestrictedMode bool, mizuResourcesNamespace string, isInstallMode bool) (bool, error) {
+func createRBACIfNecessary(ctx context.Context, kubernetesProvider *kubernetes.Provider, isNsRestrictedMode bool, mizuResourcesNamespace string) (bool, error) {
 	if !isNsRestrictedMode {
 		if err := kubernetesProvider.CreateMizuRBAC(ctx, mizuResourcesNamespace, kubernetes.ServiceAccountName, kubernetes.ClusterRoleName, kubernetes.ClusterRoleBindingName, mizu.RBACVersion); err != nil {
 			return false, err
@@ -95,11 +134,7 @@ func createRBACIfNecessary(ctx context.Context, kubernetesProvider *kubernetes.P
 			return false, err
 		}
 	}
-	if isInstallMode {
-		if err := kubernetesProvider.CreateDaemonsetRBAC(ctx, mizuResourcesNamespace, kubernetes.ServiceAccountName, kubernetes.DaemonRoleName, kubernetes.DaemonRoleBindingName, mizu.RBACVersion); err != nil {
-			return false, err
-		}
-	}
+
 	return true, nil
 }
 
@@ -141,7 +176,7 @@ func tryToCreatePersistentVolumeClaim(ctx context.Context, kubernetesProvider *k
 		return false
 	}
 
-	if _, err = kubernetesProvider.CreatePersistentVolumeClaim(ctx, opts.Namespace, kubernetes.PersistentVolumeClaimName, opts.MaxEntriesDBSizeBytes + mizu.DaemonModePersistentVolumeSizeBufferBytes); err != nil {
+	if _, err = kubernetesProvider.CreatePersistentVolumeClaim(ctx, opts.Namespace, kubernetes.PersistentVolumeClaimName, opts.MaxEntriesDBSizeBytes + mizu.InstallModePersistentVolumeSizeBufferBytes); err != nil {
 		logger.Log.Warningf(uiUtils.Yellow, "An error has occured while creating a persistent volume claim for mizu, this means mizu data will be lost on mizu-api-server pod restart")
 		logger.Log.Debugf("error creating persistent volume claim: %v", err)
 		return false

@@ -211,7 +211,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                 const entryData = await api.getEntry(focusedEntryId);
                 setSelectedEntryData(entryData);
             } catch (error) {
-                if (error.response) {
+                if (error.response?.data?.type) {
                     toast[error.response.data.type](`Entry[${focusedEntryId}]: ${error.response.data.msg}`, {
                         position: "bottom-right",
                         theme: "colored",

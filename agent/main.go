@@ -22,7 +22,10 @@ import (
 	"path"
 	"path/filepath"
 	"plugin"
+	"regexp"
 	"sort"
+	"strconv"
+	"strings"
 	"syscall"
 	"time"
 
@@ -58,6 +61,7 @@ const (
 	socketConnectionRetries    = 30
 	socketConnectionRetryDelay = time.Second * 2
 	socketHandshakeTimeout     = time.Second * 2
+	uiIndexPath                = "./site/index.html"
 )
 
 func main() {
@@ -129,10 +133,6 @@ func main() {
 			if err := up9.SyncEntries(syncEntriesConfig); err != nil {
 				panic(fmt.Sprintf("Error syncing entries, err: %v", err))
 			}
-		}
-
-		if config.Config.SyncTappers {
-			startSyncingTappers()
 		}
 
 		hostApi(outputItemsChannel)
@@ -254,7 +254,12 @@ func hostApi(socketHarOutputChannel chan<- *tapApi.OutputChannelItem) {
 	}
 
 	app.Use(DisableRootStaticCache())
+
+	if err := setUIMode(); err != nil {
+		logger.Log.Panicf("Error setting ui mode, err: %v", err)
+	}
 	app.Use(static.ServeRoot("/", "./site"))
+
 	app.Use(CORSMiddleware()) // This has to be called after the static middleware, does not work if its called before
 
 	api.WebSocketRoutes(app, &eventHandlers, startTime)
@@ -292,6 +297,22 @@ func CORSMiddleware() gin.HandlerFunc {
 
 		c.Next()
 	}
+}
+
+func setUIMode() error {
+	read, err := ioutil.ReadFile(uiIndexPath)
+	if err != nil {
+		return err
+	}
+
+	replacedContent := strings.Replace(string(read), "__IS_STANDALONE__", strconv.FormatBool(config.Config.StandaloneMode), 1)
+
+	err = ioutil.WriteFile(uiIndexPath, []byte(replacedContent), 0)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func parseEnvVar(env string) map[string][]v1.Pod {
@@ -451,33 +472,19 @@ func handleIncomingMessageAsTapper(socketConnection *websocket.Conn) {
 	}
 }
 
-func startSyncingTappers() {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	kubernetesProvider, err := kubernetes.NewProviderInCluster()
-	if err != nil {
-		logger.Log.Fatalf("error creating k8s provider: %+v", err)
-	}
-
-	if _, err := startMizuTapperSyncer(ctx, kubernetesProvider); err != nil {
-		logger.Log.Fatalf("error initializing tapper syncer: %+v", err)
-	}
-}
-
-func startMizuTapperSyncer(ctx context.Context, provider *kubernetes.Provider) (*kubernetes.MizuTapperSyncer, error) {
+func startMizuTapperSyncer(ctx context.Context, provider *kubernetes.Provider, targetNamespaces []string, podFilterRegex regexp.Regexp, ignoredUserAgents []string, mizuApiFilteringOptions tapApi.TrafficFilteringOptions, istio bool) (*kubernetes.MizuTapperSyncer, error) {
 	tapperSyncer, err := kubernetes.CreateAndStartMizuTapperSyncer(ctx, provider, kubernetes.TapperSyncerConfig{
-		TargetNamespaces:         config.Config.TargetNamespaces,
-		PodFilterRegex:           config.Config.TapTargetRegex.Regexp,
+		TargetNamespaces:         targetNamespaces,
+		PodFilterRegex:           podFilterRegex,
 		MizuResourcesNamespace:   config.Config.MizuResourcesNamespace,
 		AgentImage:               config.Config.AgentImage,
 		TapperResources:          config.Config.TapperResources,
 		ImagePullPolicy:          v1.PullPolicy(config.Config.PullPolicy),
 		LogLevel:                 config.Config.LogLevel,
-		IgnoredUserAgents:        config.Config.IgnoredUserAgents,
-		MizuApiFilteringOptions:  config.Config.MizuApiFilteringOptions,
-		MizuServiceAccountExists: true, //assume service account exists since daemon mode will not function without it anyway
-		Istio:                    config.Config.Istio,
+		IgnoredUserAgents:        ignoredUserAgents,
+		MizuApiFilteringOptions:  mizuApiFilteringOptions,
+		MizuServiceAccountExists: true, //assume service account exists since install mode will not function without it anyway
+		Istio:                    istio,
 	}, time.Now())
 
 	if err != nil {
