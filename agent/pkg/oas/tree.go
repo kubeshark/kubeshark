@@ -107,7 +107,7 @@ func fillParamExample(param *openapi.ParameterObj, exampleValue string) error {
 			continue
 		}
 
-		if value == exampleValue {
+		if value == exampleValue || cnt > 5 { // 5 examples is enough
 			return nil
 		}
 	}
@@ -117,7 +117,7 @@ func fillParamExample(param *openapi.ParameterObj, exampleValue string) error {
 		return err
 	}
 
-	if false { // FIXME: the lib is broken in this place
+	if false { // FIXME: the lib is broken in this place https://github.com/chanced/openapi/issues/5
 		param.Examples["example #"+strconv.Itoa(cnt)] = &openapi.ExampleObj{Value: valMsg}
 	}
 
