@@ -29,7 +29,7 @@ func EntriesToSpecs(entries chan har.Entry, specs *sync.Map) error {
 			gen = val.(*SpecGen)
 		}
 
-		err = gen.feedEntry(entry)
+		opId, err := gen.feedEntry(entry)
 		if err != nil {
 			txt, suberr := json.Marshal(entry)
 			if suberr == nil {
@@ -39,6 +39,8 @@ func EntriesToSpecs(entries chan har.Entry, specs *sync.Map) error {
 			logger.Log.Warningf("Failed processing entry: %s", err)
 			continue
 		}
+
+		logger.Log.Debugf("Handled entry %s as opId: %s", entry.Request.URL, opId) // TODO: set opId back to entry?
 	}
 	return nil
 }

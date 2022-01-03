@@ -254,6 +254,49 @@ func TestEntries(t *testing.T) {
 
 }
 
+func TestFileLDJSON(t *testing.T) {
+	entries := make(chan har.Entry)
+	go func() {
+		file := "output_rdwtyeoyrj.har.ldjson"
+		err := feedFromLDJSON(file, entries)
+		if err != nil {
+			logger.Log.Warning("Failed processing file: " + err.Error())
+			t.Fail()
+		}
+		close(entries)
+	}()
+
+	specs := new(sync.Map)
+
+	loadStartingOAS(specs)
+
+	err := EntriesToSpecs(entries, specs)
+	if err != nil {
+		logger.Log.Warning("Failed processing entries: " + err.Error())
+		t.FailNow()
+	}
+
+	specs.Range(func(_, val interface{}) bool {
+		gen := val.(*SpecGen)
+		spec, err := gen.GetSpec()
+		if err != nil {
+			t.Log(err)
+			t.FailNow()
+		}
+
+		specText, _ := json.MarshalIndent(spec, "", "\t")
+		t.Logf("%s", string(specText))
+
+		err = spec.Validate()
+		if err != nil {
+			t.Log(err)
+			t.FailNow()
+		}
+
+		return true
+	})
+}
+
 func loadStartingOAS(specs *sync.Map) {
 	file := "catalogue.json"
 	fd, err := os.Open(file)

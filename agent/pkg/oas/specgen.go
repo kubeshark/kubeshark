@@ -97,13 +97,16 @@ func (g *SpecGen) startFromSpec(oas *openapi.OpenAPI) {
 	}
 }
 
-func (g *SpecGen) feedEntry(entry har.Entry) error {
+func (g *SpecGen) feedEntry(entry har.Entry) (string, error) {
 	g.lock.Lock()
 	defer g.lock.Unlock()
 
-	err := g.handlePathObj(&entry)
+	opId, err := g.handlePathObj(&entry)
+	if err != nil {
+		return "", err
+	}
 
-	return err
+	return opId, err
 }
 
 func (g *SpecGen) GetSpec() (*openapi.OpenAPI, error) {
@@ -130,10 +133,10 @@ func (g *SpecGen) GetSpec() (*openapi.OpenAPI, error) {
 	return spec, err
 }
 
-func (g *SpecGen) handlePathObj(entry *har.Entry) error {
+func (g *SpecGen) handlePathObj(entry *har.Entry) (string, error) {
 	urlParsed, err := url.Parse(entry.Request.URL)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	if isExtIgnored(urlParsed.Path) {
@@ -147,19 +150,19 @@ func (g *SpecGen) handlePathObj(entry *har.Entry) error {
 
 	if entry.Response.Status < 100 {
 		logger.Log.Debugf("Dropped traffic entry due to status<100: %s", entry.StartedDateTime)
-		return nil
+		return "", nil
 	}
 
 	if entry.Response.Status == 301 || entry.Response.Status == 308 {
 		logger.Log.Debugf("Dropped traffic entry due to permanent redirect status: %s", entry.StartedDateTime)
-		return nil
+		return "", nil
 	}
 
 	split := strings.Split(urlParsed.Path, "/")
 	node := g.tree.getOrSet(split, new(openapi.PathObj))
-	err = handleOpObj(entry, node.ops)
+	opObj, err := handleOpObj(entry, node.ops)
 
-	return err
+	return opObj.OperationID, err
 }
 
 func (g *SpecGen) getPathObj(entryURL string) (*openapi.PathObj, error) {
@@ -185,30 +188,29 @@ func (g *SpecGen) getPathObj(entryURL string) (*openapi.PathObj, error) {
 	return pathObj, nil
 }
 
-func handleOpObj(entry *har.Entry, pathObj *openapi.PathObj) error {
-
+func handleOpObj(entry *har.Entry, pathObj *openapi.PathObj) (*openapi.Operation, error) {
 	isSuccess := 100 <= entry.Response.Status && entry.Response.Status < 400
 	opObj, wasMissing, err := getOpObj(pathObj, entry.Request.Method, isSuccess)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if !isSuccess && wasMissing {
 		logger.Log.Debugf("Dropped traffic entry due to failed status and no known endpoint at: %s", entry.StartedDateTime)
-		return nil
+		return nil, nil
 	}
 
 	err = handleRequest(entry.Request, opObj, isSuccess)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	err = handleResponse(entry.Response, opObj, isSuccess)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return opObj, nil
 }
 
 func handleRequest(req *har.Request, opObj *openapi.Operation, isSuccess bool) error {
@@ -266,6 +268,7 @@ func fillContent(reqResp ReqResp, respContent openapi.Content, ctype string, err
 		return nil, err
 	}
 	content.Example = exampleMsg
+	content.Example = nil
 	return respContent[ctype], nil
 }
 

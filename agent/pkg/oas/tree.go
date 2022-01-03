@@ -3,6 +3,7 @@ package oas
 import (
 	"github.com/chanced/openapi"
 	"github.com/up9inc/mizu/shared/logger"
+	"strconv"
 	"strings"
 )
 
@@ -12,6 +13,7 @@ type Node struct {
 	constant *string
 	param    *openapi.ParameterObj
 	ops      *openapi.PathObj
+	parent   *Node
 	children []*Node
 }
 
@@ -36,22 +38,40 @@ func (n *Node) getOrSet(path NodePath, pathObjToSet *openapi.PathObj) (node *Nod
 	// still no node found, should create it
 	if node == nil {
 		node = new(Node)
+		node.parent = n
 		n.children = append(n.children, node)
 
 		if paramObj != nil {
 			node.param = paramObj
 		} else {
 			required := true // FFS! https://stackoverflow.com/questions/32364027/reference-a-boolean-for-assignment-in-a-struct/32364093
+			schema := new(openapi.SchemaObj)
+			schema.Type = make(openapi.Types, 0)
+			schema.Type = append(schema.Type, openapi.TypeString)
 			newParam := openapi.ParameterObj{
 				// the lack of Name keeps it invalid, until it's made valid below
 				In:       "path",
 				Style:    "simple",
 				Required: &required,
 				Examples: map[string]openapi.Example{},
+				Schema:   schema,
 			}
 
 			if chunkIsGibberish {
 				newParam.Name = "param"
+				x := n.countParentParams()
+				if x > 1 {
+					newParam.Name = newParam.Name + strconv.Itoa(x)
+				}
+
+				if pathObjToSet.Parameters == nil {
+					var params openapi.ParameterList
+					params = make([]openapi.Parameter, 0)
+					pathObjToSet.Parameters = &params
+				}
+
+				someval := append(*pathObjToSet.Parameters, &newParam)
+				pathObjToSet.Parameters = &someval
 			} else {
 				node.constant = &pathChunk
 			}
@@ -63,7 +83,7 @@ func (n *Node) getOrSet(path NodePath, pathObjToSet *openapi.PathObj) (node *Nod
 	// TODO: eat up trailing slash, in a smart way: node.ops!=nil && path[1]==""
 	if len(path) > 1 {
 		return node.getOrSet(path[1:], pathObjToSet)
-	} else {
+	} else if node.ops == nil {
 		node.ops = pathObjToSet
 	}
 
@@ -149,7 +169,7 @@ func (n *Node) listPaths() *openapi.Paths {
 		subPaths := child.listPaths()
 		for path, pathObj := range subPaths.Items {
 			var concat string
-			if n.param == nil {
+			if n.parent == nil {
 				concat = string(path)
 			} else {
 				concat = strChunk + "/" + string(path)
@@ -159,4 +179,20 @@ func (n *Node) listPaths() *openapi.Paths {
 	}
 
 	return paths
+}
+
+func (n *Node) countParentParams() int {
+	res := 0
+	node := n
+	for {
+		if node.param != nil {
+			res++
+		}
+
+		if node.parent == nil {
+			break
+		}
+		node = node.parent
+	}
+	return res
 }
