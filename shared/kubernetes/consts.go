@@ -19,7 +19,7 @@ const (
 )
 
 const (
-	MizuLabelPrefix         = "mizu.io"
-	LabelMizuManagement     = MizuLabelPrefix + "mizu.io/management-method"
+	MizuLabelPrefix         = "mizu.io/"
+	LabelMizuManagement     = MizuLabelPrefix + "management-method"
 	LabelMizuManagementAuto = "auto"
 )
