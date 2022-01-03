@@ -39,6 +39,7 @@ func isGibberish(str string) bool {
 }
 
 func noiseLevel(str string) (score float64) {
+	// opinionated algo of certain char pairs marking the non-human strings
 	prev := *new(rune)
 	cnt := 0.0
 	for _, char := range str {
@@ -76,7 +77,7 @@ func noiseLevel(str string) (score float64) {
 		prev = char
 	}
 
-	score /= cnt
+	score /= cnt // weigh it
 
 	return score
 }
