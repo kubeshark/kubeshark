@@ -863,79 +863,39 @@ func (provider *Provider) GetNamespaceEvents(ctx context.Context, namespace stri
 	return eventList.String(), nil
 }
 
-func (provider *Provider) GetServiceAccount(ctx context.Context, namespace string, name string) (*core.ServiceAccount, error) {
-	return provider.clientSet.CoreV1().ServiceAccounts(namespace).Get(ctx, name, metav1.GetOptions{})
-}
-
-func (provider *Provider) GetClusterRole(ctx context.Context, name string) (*rbac.ClusterRole, error) {
-	return provider.clientSet.RbacV1().ClusterRoles().Get(ctx, name, metav1.GetOptions{})
-}
-
-func (provider *Provider) GetClusterRoleBinding(ctx context.Context, name string) (*rbac.ClusterRoleBinding, error) {
-	return provider.clientSet.RbacV1().ClusterRoleBindings().Get(ctx, name, metav1.GetOptions{})
-}
-
-func (provider *Provider) GetRole(ctx context.Context, namespace string, name string) (*rbac.Role, error) {
-	return provider.clientSet.RbacV1().Roles(namespace).Get(ctx, name, metav1.GetOptions{})
-}
-
-func (provider *Provider) GetRoleBinding(ctx context.Context, namespace string, name string) (*rbac.RoleBinding, error) {
-	return provider.clientSet.RbacV1().RoleBindings(namespace).Get(ctx, name, metav1.GetOptions{})
-}
-
-func (provider *Provider) IsManagedServiceAccount(ctx context.Context, namespace string, name string) (bool, error) {
-	resource, err := provider.GetServiceAccount(ctx, namespace, name)
-	if provider.handleRemovalError(err) != nil {
-		return false, err
+func (provider *Provider) ListManagedServiceAccounts(ctx context.Context, namespace string) (*core.ServiceAccountList, error) {
+	listOptions := metav1.ListOptions{
+		LabelSelector: fmt.Sprintf("%s=%s", LabelMizuManagement, LabelMizuManagementAuto),
 	}
-
-	return provider.isManagedResource(resource.ObjectMeta.Labels), nil
+	return provider.clientSet.CoreV1().ServiceAccounts(namespace).List(ctx, listOptions)
 }
 
-func (provider *Provider) IsManagedClusterRole(ctx context.Context, name string) (bool, error) {
-	resource, err := provider.GetClusterRole(ctx, name)
-	if provider.handleRemovalError(err) != nil {
-		return false, err
+func (provider *Provider) ListManagedClusterRoles(ctx context.Context) (*rbac.ClusterRoleList, error) {
+	listOptions := metav1.ListOptions{
+		LabelSelector: fmt.Sprintf("%s=%s", LabelMizuManagement, LabelMizuManagementAuto),
 	}
-
-	return provider.isManagedResource(resource.ObjectMeta.Labels), nil
+	return provider.clientSet.RbacV1().ClusterRoles().List(ctx, listOptions)
 }
 
-func (provider *Provider) IsManagedClusterRoleBinding(ctx context.Context, name string) (bool, error) {
-	resource, err := provider.GetClusterRoleBinding(ctx, name)
-	if provider.handleRemovalError(err) != nil {
-		return false, err
+func (provider *Provider) ListManagedClusterRoleBindings(ctx context.Context) (*rbac.ClusterRoleBindingList, error) {
+	listOptions := metav1.ListOptions{
+		LabelSelector: fmt.Sprintf("%s=%s", LabelMizuManagement, LabelMizuManagementAuto),
 	}
-
-	return provider.isManagedResource(resource.ObjectMeta.Labels), nil
+	return provider.clientSet.RbacV1().ClusterRoleBindings().List(ctx, listOptions)
 }
 
-func (provider *Provider) IsManagedRole(ctx context.Context, namespace string, name string) (bool, error) {
-	resource, err := provider.GetRole(ctx, namespace, name)
-	if provider.handleRemovalError(err) != nil {
-		return false, err
+func (provider *Provider) ListManagedRoles(ctx context.Context, namespace string) (*rbac.RoleList, error) {
+	listOptions := metav1.ListOptions{
+		LabelSelector: fmt.Sprintf("%s=%s", LabelMizuManagement, LabelMizuManagementAuto),
 	}
-
-	return provider.isManagedResource(resource.ObjectMeta.Labels), nil
+	return provider.clientSet.RbacV1().Roles(namespace).List(ctx, listOptions)
 }
 
-func (provider *Provider) IsManagedRoleBinding(ctx context.Context, namespace string, name string) (bool, error) {
-	resource, err := provider.GetRoleBinding(ctx, namespace, name)
-	if provider.handleRemovalError(err) != nil {
-		return false, err
+func (provider *Provider) ListManagedRoleBindings(ctx context.Context, namespace string) (*rbac.RoleBindingList, error) {
+	listOptions := metav1.ListOptions{
+		LabelSelector: fmt.Sprintf("%s=%s", LabelMizuManagement, LabelMizuManagementAuto),
 	}
-
-	return provider.isManagedResource(resource.ObjectMeta.Labels), nil
-}
-
-func (provider *Provider) isManagedResource(labels map[string]string) bool {
-	if label, ok := labels[LabelMizuManagement]; !ok {
-		return false
-	} else if label != LabelMizuManagementAuto  {
-		return false
-	}
-
-	return true
+	return provider.clientSet.RbacV1().RoleBindings(namespace).List(ctx, listOptions)
 }
 
 func (provider *Provider) IsDefaultStorageProviderAvailable(ctx context.Context) (bool, error) {
