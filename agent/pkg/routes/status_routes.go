@@ -9,6 +9,7 @@ import (
 
 func StatusRoutes(ginApp *gin.Engine) {
 	routeGroup := ginApp.Group("/status")
+	routeGroup.Use(middlewares.RequiresAuth())
 
 	routeGroup.GET("/health", controllers.HealthCheck)
 
@@ -26,6 +27,4 @@ func StatusRoutes(ginApp *gin.Engine) {
 	routeGroup.GET("/recentTLSLinks", controllers.GetRecentTLSLinks)
 
 	routeGroup.GET("/resolving", controllers.GetCurrentResolvingInformation)
-
-	routeGroup.Use(middlewares.RequiresAuth)
 }

@@ -275,10 +275,10 @@ func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, moun
 					},
 				},
 				{
-					Name:            opts.PodName + "-auth-manager",
+					Name:            "kratos",
 					Image:           "gcr.io/up9-docker-hub/mizu-kratos/feature/tra-4075_integrate_user_management:0.0.0",
-					Args:            []string{"serve", "-c", "/etc/config/kratos/kratos.yml", "--dev", "--watch-courier"},
 					ImagePullPolicy: opts.ImagePullPolicy,
+					VolumeMounts:    volumeMounts,
 					Resources: core.ResourceRequirements{
 						Limits: core.ResourceList{
 							"cpu":    cpuLimit,

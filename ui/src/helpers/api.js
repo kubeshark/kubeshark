@@ -5,21 +5,15 @@ export const MizuWebsocketURL = process.env.REACT_APP_OVERRIDE_WS_URL ? process.
 
 const CancelToken = axios.CancelToken;
 
+// When working locally cp `cp .env.example .env`
+const apiURL = process.env.REACT_APP_OVERRIDE_API_URL ? process.env.REACT_APP_OVERRIDE_API_URL : `${window.location.origin}/`;
+
 export default class Api {
 
     constructor() {
+        this.token = localStorage.getItem("token");
 
-        // When working locally cp `cp .env.example .env`
-        const apiURL = process.env.REACT_APP_OVERRIDE_API_URL ? process.env.REACT_APP_OVERRIDE_API_URL : `${window.location.origin}/`;
-
-        this.client = axios.create({
-            baseURL: apiURL,
-            timeout: 31000,
-            headers: {
-                Accept: "application/json",
-            }
-        });
-
+        this.client = this.getAxiosClient();
         this.source = null;
     }
 
@@ -85,8 +79,15 @@ export default class Api {
     }
 
     isAuthenticationNeeded = async () => {
-        const response = await this.client.get("/status/tap");
-        return response.status == 401;
+        try {
+            await this.client.get("/status/tap");
+            return false;
+        } catch (e) {
+            if (e.response.status == 401) {
+                return true;
+            }
+            throw e;
+        }
     }
 
     postInstall = async (adminPassword) => {
@@ -94,7 +95,10 @@ export default class Api {
         form.append('adminPassword', adminPassword)
 
         const response = await this.client.post(`/install/`, form);
-        return response.data;
+        if (response.status >= 200 && response.status < 300) {
+            this.persistToken(response.data.token);
+        }
+
     }
 
     login = async (username, password) => {
@@ -103,6 +107,35 @@ export default class Api {
         form.append('password', password);
 
         const response = await this.client.post(`/user/login`, form);
+        if (response.status >= 200 && response.status < 300) {
+            this.persistToken(response.data.token);
+        }
 
+        return response;
+    }
+
+    persistToken = (token) => {
+        this.token = token;
+        this.client = this.getAxiosClient();
+        localStorage.setItem('token', token);
+    }
+
+    logout = () => {
+        this.persistToken(null);
+    }
+
+    getAxiosClient = () => {
+        const headers = {
+            Accept: "application/json"
+        }
+
+        if (this.token) {
+            headers['Authorization'] = `Bearer ${this.token}`;
+        }
+        return axios.create({
+            baseURL: apiURL,
+            timeout: 31000,
+            headers
+        });
     }
 }

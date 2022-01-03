@@ -1,7 +1,7 @@
 import React, {useEffect, useMemo, useRef, useState} from "react";
 import {Filters} from "./Filters";
 import {EntriesList} from "./EntriesList";
-import {makeStyles} from "@material-ui/core";
+import {makeStyles, Snackbar} from "@material-ui/core";
 import "./style/TrafficPage.sass";
 import styles from './style/EntriesList.module.sass';
 import {EntryDetailed} from "./EntryDetailed";
@@ -10,9 +10,9 @@ import pauseIcon from './assets/pause.svg';
 import variables from '../variables.module.scss';
 import {StatusBar} from "./UI/StatusBar";
 import Api, {MizuWebsocketURL} from "../helpers/api";
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { toast } from 'react-toastify';
 import debounce from 'lodash/debounce';
+import MuiAlert from '@material-ui/lab/Alert';
 
 const useLayoutStyles = makeStyles(() => ({
     details: {
@@ -41,12 +41,11 @@ enum ConnectionStatus {
 
 interface TrafficPageProps {
     setAnalyzeStatus: (status: any) => void;
-    onTLSDetected: (destAddress: string) => void;
 }
 
 const api = new Api();
 
-export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLSDetected}) => {
+export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus}) => {
 
     const classes = useLayoutStyles();
 
@@ -72,6 +71,34 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
     const [truncatedTimestamp, setTruncatedTimestamp] = useState(0);
 
     const [startTime, setStartTime] = useState(0);
+
+    const [showTLSWarning, setShowTLSWarning] = useState(false);
+    const [userDismissedTLSWarning, setUserDismissedTLSWarning] = useState(false);
+    const [addressesWithTLS, setAddressesWithTLS] = useState(new Set());
+
+    useEffect(() => {
+        (async () => {
+            try {
+                const recentTLSLinks = await api.getRecentTLSLinks();
+                if (recentTLSLinks?.length > 0) {
+                    setAddressesWithTLS(new Set(recentTLSLinks));
+                    setShowTLSWarning(true);
+                }
+            } catch (e) {
+                console.error(e);
+            }
+
+        })();
+    }, []);
+
+    const onTLSDetected = (destAddress: string) => {
+        addressesWithTLS.add(destAddress);
+        setAddressesWithTLS(new Set(addressesWithTLS));
+
+        if (!userDismissedTLSWarning) {
+            setShowTLSWarning(true);
+        }
+    };
 
     const handleQueryChange = useMemo(() => debounce(async (query: string) => {
         if (!query) {
@@ -267,74 +294,71 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
     }
 
     return (
-        <div className="TrafficPage">
-            <div className="TrafficPageHeader">
-                <img className="playPauseIcon" style={{visibility: connection === ConnectionStatus.Connected ? "visible" : "hidden"}} alt="pause"
-                    src={pauseIcon} onClick={toggleConnection}/>
-                <img className="playPauseIcon" style={{position: "absolute", visibility: connection === ConnectionStatus.Connected ? "hidden" : "visible"}} alt="play"
-                    src={playIcon} onClick={toggleConnection}/>
-                <div className="connectionText">
-                    {getConnectionTitle()}
-                    <div className={"indicatorContainer " + getConnectionStatusClass(true)}>
-                        <div className={"indicator " + getConnectionStatusClass(false)}/>
+        <>
+            <div className="TrafficPage">
+                <div className="TrafficPageHeader">
+                    <img className="playPauseIcon" style={{visibility: connection === ConnectionStatus.Connected ? "visible" : "hidden"}} alt="pause"
+                        src={pauseIcon} onClick={toggleConnection}/>
+                    <img className="playPauseIcon" style={{position: "absolute", visibility: connection === ConnectionStatus.Connected ? "hidden" : "visible"}} alt="play"
+                        src={playIcon} onClick={toggleConnection}/>
+                    <div className="connectionText">
+                        {getConnectionTitle()}
+                        <div className={"indicatorContainer " + getConnectionStatusClass(true)}>
+                            <div className={"indicator " + getConnectionStatusClass(false)}/>
+                        </div>
                     </div>
                 </div>
-            </div>
-            {<div className="TrafficPage-Container">
-                <div className="TrafficPage-ListContainer">
-                    <Filters
-                        query={query}
-                        setQuery={setQuery}
-                        backgroundColor={queryBackgroundColor}
-                        ws={ws.current}
-                        openWebSocket={openWebSocket}
-                    />
-                    <div className={styles.container}>
-                        <EntriesList
-                            entries={entries}
-                            setEntries={setEntries}
+                {<div className="TrafficPage-Container">
+                    <div className="TrafficPage-ListContainer">
+                        <Filters
                             query={query}
-                            listEntryREF={listEntry}
-                            onSnapBrokenEvent={onSnapBrokenEvent}
-                            isSnappedToBottom={isSnappedToBottom}
-                            setIsSnappedToBottom={setIsSnappedToBottom}
-                            queriedCurrent={queriedCurrent}
-                            setQueriedCurrent={setQueriedCurrent}
-                            queriedTotal={queriedTotal}
-                            setQueriedTotal={setQueriedTotal}
-                            startTime={startTime}
-                            noMoreDataTop={noMoreDataTop}
-                            setNoMoreDataTop={setNoMoreDataTop}
-                            focusedEntryId={focusedEntryId}
-                            setFocusedEntryId={setFocusedEntryId}
-                            updateQuery={updateQuery}
-                            leftOffTop={leftOffTop}
-                            setLeftOffTop={setLeftOffTop}
-                            isWebSocketConnectionClosed={connection === ConnectionStatus.Closed}
+                            setQuery={setQuery}
+                            backgroundColor={queryBackgroundColor}
                             ws={ws.current}
                             openWebSocket={openWebSocket}
-                            leftOffBottom={leftOffBottom}
-                            truncatedTimestamp={truncatedTimestamp}
-                            setTruncatedTimestamp={setTruncatedTimestamp}
                         />
+                        <div className={styles.container}>
+                            <EntriesList
+                                entries={entries}
+                                setEntries={setEntries}
+                                query={query}
+                                listEntryREF={listEntry}
+                                onSnapBrokenEvent={onSnapBrokenEvent}
+                                isSnappedToBottom={isSnappedToBottom}
+                                setIsSnappedToBottom={setIsSnappedToBottom}
+                                queriedCurrent={queriedCurrent}
+                                setQueriedCurrent={setQueriedCurrent}
+                                queriedTotal={queriedTotal}
+                                setQueriedTotal={setQueriedTotal}
+                                startTime={startTime}
+                                noMoreDataTop={noMoreDataTop}
+                                setNoMoreDataTop={setNoMoreDataTop}
+                                focusedEntryId={focusedEntryId}
+                                setFocusedEntryId={setFocusedEntryId}
+                                updateQuery={updateQuery}
+                                leftOffTop={leftOffTop}
+                                setLeftOffTop={setLeftOffTop}
+                                isWebSocketConnectionClosed={connection === ConnectionStatus.Closed}
+                                ws={ws.current}
+                                openWebSocket={openWebSocket}
+                                leftOffBottom={leftOffBottom}
+                                truncatedTimestamp={truncatedTimestamp}
+                                setTruncatedTimestamp={setTruncatedTimestamp}
+                            />
+                        </div>
                     </div>
-                </div>
-                <div className={classes.details}>
-                    {selectedEntryData && <EntryDetailed entryData={selectedEntryData} updateQuery={updateQuery}/>}
-                </div>
-            </div>}
-            {tappingStatus && <StatusBar tappingStatus={tappingStatus}/>}
-            <ToastContainer
-                position="bottom-right"
-                autoClose={5000}
-                hideProgressBar={false}
-                newestOnTop={false}
-                closeOnClick
-                rtl={false}
-                pauseOnFocusLoss
-                draggable
-                pauseOnHover
-            />
-        </div>
+                    <div className={classes.details}>
+                        {selectedEntryData && <EntryDetailed entryData={selectedEntryData} updateQuery={updateQuery}/>}
+                    </div>
+                </div>}
+                {tappingStatus && <StatusBar tappingStatus={tappingStatus}/>}
+            </div>
+            <Snackbar open={showTLSWarning && !userDismissedTLSWarning}>
+                <MuiAlert classes={{ filledWarning: 'customWarningStyle' }} elevation={6} variant="filled" onClose={() => setUserDismissedTLSWarning(true)} severity="warning">
+                    Mizu is detecting TLS traffic, this type of traffic will not be displayed.
+                    {addressesWithTLS.size > 0 && <ul className="httpsDomains"> {Array.from(addressesWithTLS, address => <li>{address}</li>)} </ul>}
+                </MuiAlert>
+            </Snackbar> 
+        </>
     )
 };

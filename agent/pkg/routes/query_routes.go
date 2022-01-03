@@ -9,8 +9,7 @@ import (
 
 func QueryRoutes(ginApp *gin.Engine) {
 	routeGroup := ginApp.Group("/query")
+	routeGroup.Use(middlewares.RequiresAuth())
 
 	routeGroup.POST("/validate", controllers.PostValidate)
-
-	routeGroup.Use(middlewares.RequiresAuth)
 }

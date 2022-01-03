@@ -10,10 +10,10 @@ import (
 	ory "github.com/ory/kratos-client-go"
 )
 
-var client = getKratosClient("http://127.0.0.1:4433")
+var client = getKratosClient("http://127.0.0.1:4433", "http://127.0.0.1:4434")
 
 // returns bearer token if successful
-func RegisterUser(email string, password string, ctx context.Context) (token *string, identityId string, err error) {
+func RegisterUser(username string, password string, ctx context.Context) (token *string, identityId string, err error) {
 	flow, _, err := client.V0alpha2Api.InitializeSelfServiceRegistrationFlowWithoutBrowser(ctx).Execute()
 	if err != nil {
 		return nil, "", err
@@ -23,7 +23,7 @@ func RegisterUser(email string, password string, ctx context.Context) (token *st
 		ory.SubmitSelfServiceRegistrationFlowWithPasswordMethodBodyAsSubmitSelfServiceRegistrationFlowBody(&ory.SubmitSelfServiceRegistrationFlowWithPasswordMethodBody{
 			Method:   "password",
 			Password: password,
-			Traits:   map[string]interface{}{"email": email},
+			Traits:   map[string]interface{}{"username": username},
 		}),
 	).Execute()
 
@@ -34,7 +34,7 @@ func RegisterUser(email string, password string, ctx context.Context) (token *st
 	return result.SessionToken, result.Identity.Id, nil
 }
 
-func PerformLogin(email string, password string, ctx context.Context) (*string, error) {
+func PerformLogin(username string, password string, ctx context.Context) (*string, error) {
 	// Initialize the flow
 	flow, _, err := client.V0alpha2Api.InitializeSelfServiceLoginFlowWithoutBrowser(ctx).Execute()
 	if err != nil {
@@ -46,7 +46,7 @@ func PerformLogin(email string, password string, ctx context.Context) (*string, 
 		ory.SubmitSelfServiceLoginFlowWithPasswordMethodBodyAsSubmitSelfServiceLoginFlowBody(&ory.SubmitSelfServiceLoginFlowWithPasswordMethodBody{
 			Method:             "password",
 			Password:           password,
-			PasswordIdentifier: email,
+			PasswordIdentifier: username,
 		}),
 	).Execute()
 
@@ -89,9 +89,27 @@ func DeleteUser(identityId string, ctx context.Context) error {
 	}
 }
 
-func getKratosClient(url string) *ory.APIClient {
+func AnyUserExists(ctx context.Context) (bool, error) {
+	request := client.V0alpha2Api.AdminListIdentities(ctx)
+	request.PerPage(1)
+
+	if result, _, err := request.Execute(); err != nil {
+		return false, err
+	} else {
+		return len(result) > 0, nil
+	}
+}
+
+func getKratosClient(url string, adminUrl string) *ory.APIClient {
 	conf := ory.NewConfiguration()
 	conf.Servers = ory.ServerConfigurations{{URL: url}}
+
+	// this ensures kratos client uses the admin url for admin actions (any new admin action we use will have to be added here)
+	conf.OperationServers = map[string]ory.ServerConfigurations{
+		"V0alpha2ApiService.AdminDeleteIdentity": {{URL: adminUrl}},
+		"V0alpha2ApiService.AdminListIdentities": {{URL: adminUrl}},
+	}
+
 	cj, _ := cookiejar.New(nil)
 	conf.HTTPClient = &http.Client{Jar: cj}
 	return ory.NewAPIClient(conf)
