@@ -18,7 +18,6 @@ const updateTappersDelay = 5 * time.Second
 type TappedPodChangeEvent struct {
 	Added                []core.Pod
 	Removed              []core.Pod
-	ExpectedTapperAmount int
 }
 
 // MizuTapperSyncer uses a k8s pod watch to update tapper daemonsets when targeted pods are removed or created
@@ -93,6 +92,10 @@ func (tapperSyncer *MizuTapperSyncer) watchTapperPods() {
 				continue
 			}
 
+			if tapperSyncer.startTime.After(pod.CreationTimestamp.Time) {
+				continue
+			}
+
 			logger.Log.Debugf("Watching tapper pods loop, tapper: %v, node: %v, status: %v", pod.Name, pod.Spec.NodeName, pod.Status.Phase)
 			if pod.Spec.NodeName != "" {
 				tapperStatus := shared.TapperStatus{TapperName: pod.Name, NodeName: pod.Spec.NodeName, Status: string(pod.Status.Phase)}
@@ -144,6 +147,10 @@ func (tapperSyncer *MizuTapperSyncer) watchTapperEvents() {
 					event.Regarding.Kind,
 					event.Reason,
 					event.Note))
+
+			if event.Reason == "Killing" {
+				continue
+			}
 
 			pod, err1 := tapperSyncer.kubernetesProvider.GetPod(tapperSyncer.context, tapperSyncer.config.MizuResourcesNamespace, event.Regarding.Name)
 			if err1 != nil {
@@ -284,7 +291,6 @@ func (tapperSyncer *MizuTapperSyncer) updateCurrentlyTappedPods() (err error, ch
 			tapperSyncer.TapPodChangesOut <- TappedPodChangeEvent{
 				Added:                addedPods,
 				Removed:              removedPods,
-				ExpectedTapperAmount: len(tapperSyncer.nodeToTappedPodMap),
 			}
 			return nil, true
 		}
