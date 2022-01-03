@@ -43,11 +43,12 @@ func cleanUpNonRestrictedMode(ctx context.Context, cancel context.CancelFunc, ku
 	}
 
 	if resources, err := kubernetesProvider.ListManagedClusterRoles(ctx); err != nil {
-		logger.Log.Error("Failed to list ClusterRoles")
+		resourceDesc := "ClusterRoles"
+		handleDeletionError(err, resourceDesc, &leftoverResources)
 	} else {
 		for _, resource := range resources.Items {
 			if err := kubernetesProvider.RemoveClusterRole(ctx, resource.Name); err != nil {
-				resourceDesc := fmt.Sprintf("ClusterRole %s in namespace %s", resource.Name, mizuResourcesNamespace)
+				resourceDesc := fmt.Sprintf("ClusterRole %s", resource.Name)
 				handleDeletionError(err, resourceDesc, &leftoverResources)
 			}
 		}
@@ -55,11 +56,12 @@ func cleanUpNonRestrictedMode(ctx context.Context, cancel context.CancelFunc, ku
 
 
 	if resources, err := kubernetesProvider.ListManagedClusterRoleBindings(ctx); err != nil {
-		logger.Log.Error("Failed to list ClusterRoleBindings")
+		resourceDesc := "ClusterRoleBindings"
+		handleDeletionError(err, resourceDesc, &leftoverResources)
 	} else {
 		for _, resource := range resources.Items {
 			if err := kubernetesProvider.RemoveClusterRoleBinding(ctx, resource.Name); err != nil {
-				resourceDesc := fmt.Sprintf("ClusterRoleBinding %s in namespace %s", resource.Name, mizuResourcesNamespace)
+				resourceDesc := fmt.Sprintf("ClusterRoleBinding %s", resource.Name)
 				handleDeletionError(err, resourceDesc, &leftoverResources)
 			}
 		}
@@ -105,7 +107,8 @@ func cleanUpRestrictedMode(ctx context.Context, kubernetesProvider *kubernetes.P
 	}
 
 	if resources, err := kubernetesProvider.ListManagedServiceAccounts(ctx, mizuResourcesNamespace); err != nil {
-		logger.Log.Error("Failed to list ServiceAccounts")
+		resourceDesc := fmt.Sprintf("ServiceAccounts in namespace %s", mizuResourcesNamespace)
+		handleDeletionError(err, resourceDesc, &leftoverResources)
 	} else {
 		for _, resource := range resources.Items {
 			if err := kubernetesProvider.RemoveServicAccount(ctx, mizuResourcesNamespace, resource.Name); err != nil {
@@ -116,7 +119,8 @@ func cleanUpRestrictedMode(ctx context.Context, kubernetesProvider *kubernetes.P
 	}
 
 	if resources, err := kubernetesProvider.ListManagedRoles(ctx, mizuResourcesNamespace); err != nil {
-		logger.Log.Error("Failed to list Roles")
+		resourceDesc := fmt.Sprintf("Roles in namespace %s", mizuResourcesNamespace)
+		handleDeletionError(err, resourceDesc, &leftoverResources)
 	} else {
 		for _, resource := range resources.Items {
 			if err := kubernetesProvider.RemoveRole(ctx, mizuResourcesNamespace, resource.Name); err != nil {
@@ -127,7 +131,8 @@ func cleanUpRestrictedMode(ctx context.Context, kubernetesProvider *kubernetes.P
 	}
 
 	if resources, err := kubernetesProvider.ListManagedRoleBindings(ctx, mizuResourcesNamespace); err != nil {
-		logger.Log.Error("Failed to list RoleBindings")
+		resourceDesc := fmt.Sprintf("RoleBindings in namespace %s", mizuResourcesNamespace)
+		handleDeletionError(err, resourceDesc, &leftoverResources)
 	} else {
 		for _, resource := range resources.Items {
 			if err := kubernetesProvider.RemoveRoleBinding(ctx, mizuResourcesNamespace, resource.Name); err != nil {
