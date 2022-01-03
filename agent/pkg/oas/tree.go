@@ -43,40 +43,20 @@ func (n *Node) getOrSet(path NodePath, pathObjToSet *openapi.PathObj) (node *Nod
 
 		if paramObj != nil {
 			node.param = paramObj
+		} else if chunkIsGibberish {
+			newParam := node.createParam()
+
+			if pathObjToSet.Parameters == nil {
+				var params openapi.ParameterList
+				params = make([]openapi.Parameter, 0)
+				pathObjToSet.Parameters = &params
+			}
+
+			someval := append(*pathObjToSet.Parameters, &newParam)
+			pathObjToSet.Parameters = &someval
+
 		} else {
-			required := true // FFS! https://stackoverflow.com/questions/32364027/reference-a-boolean-for-assignment-in-a-struct/32364093
-			schema := new(openapi.SchemaObj)
-			schema.Type = make(openapi.Types, 0)
-			schema.Type = append(schema.Type, openapi.TypeString)
-			newParam := openapi.ParameterObj{
-				// the lack of Name keeps it invalid, until it's made valid below
-				In:       "path",
-				Style:    "simple",
-				Required: &required,
-				Examples: map[string]openapi.Example{},
-				Schema:   schema,
-			}
-
-			if chunkIsGibberish {
-				newParam.Name = "param"
-				x := n.countParentParams()
-				if x > 1 {
-					newParam.Name = newParam.Name + strconv.Itoa(x)
-				}
-
-				if pathObjToSet.Parameters == nil {
-					var params openapi.ParameterList
-					params = make([]openapi.Parameter, 0)
-					pathObjToSet.Parameters = &params
-				}
-
-				someval := append(*pathObjToSet.Parameters, &newParam)
-				pathObjToSet.Parameters = &someval
-			} else {
-				node.constant = &pathChunk
-			}
-
-			node.param = &newParam
+			node.constant = &pathChunk
 		}
 	}
 
@@ -88,6 +68,31 @@ func (n *Node) getOrSet(path NodePath, pathObjToSet *openapi.PathObj) (node *Nod
 	}
 
 	return node
+}
+
+func (n *Node) createParam() openapi.ParameterObj {
+	required := true // FFS! https://stackoverflow.com/questions/32364027/reference-a-boolean-for-assignment-in-a-struct/32364093
+	schema := new(openapi.SchemaObj)
+	schema.Type = make(openapi.Types, 0)
+	schema.Type = append(schema.Type, openapi.TypeString)
+	newParam := openapi.ParameterObj{
+		// the lack of Name keeps it invalid, until it's made valid below
+		In:       "path",
+		Style:    "simple",
+		Required: &required,
+		Examples: map[string]openapi.Example{},
+		Schema:   schema,
+	}
+
+	newParam.Name = "param"
+	x := n.countParentParams()
+	if x > 1 {
+		newParam.Name = newParam.Name + strconv.Itoa(x)
+	}
+
+	n.param = &newParam
+
+	return newParam
 }
 
 func (n *Node) searchInParams(paramObj *openapi.ParameterObj, chunkIsGibberish bool) *Node {
