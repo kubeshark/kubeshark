@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import './App.sass';
 import {TrafficPage} from "./components/TrafficPage";
 import {TLSWarning} from "./components/TLSWarning/TLSWarning";
@@ -29,13 +29,15 @@ export interface MizuContextModel {
 export const MizuContext = React.createContext<MizuContextModel>(null);
 
 const App = () => {
-
+    const [isLoading, setIsLoading] = useState(true);
     const [analyzeStatus, setAnalyzeStatus] = useState(null);
     const [showTLSWarning, setShowTLSWarning] = useState(false);
     const [userDismissedTLSWarning, setUserDismissedTLSWarning] = useState(false);
     const [addressesWithTLS, setAddressesWithTLS] = useState(new Set<string>());
+
+    const [page, setPage] = useState(Page.Traffic); // TODO: move to state management
     
-     const determinePage = async () => { // TODO: move to state management
+    const determinePage = async () => { // TODO: move to state management
         try {
             const isInstallNeeded = await api.isInstallNeeded();
             if (isInstallNeeded) {
@@ -98,7 +100,7 @@ const App = () => {
                             setAddressesWithTLS={setAddressesWithTLS}
                             userDismissedTLSWarning={userDismissedTLSWarning}
                             setUserDismissedTLSWarning={setUserDismissedTLSWarning}/>
-           </MizuContext.Provider/>			    
+           </MizuContext.Provider>
         </div>
     );
 }
