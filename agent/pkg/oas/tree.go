@@ -1,7 +1,6 @@
 package oas
 
 import (
-	"encoding/json"
 	"github.com/chanced/openapi"
 	"github.com/up9inc/mizu/shared/logger"
 	"strconv"
@@ -63,7 +62,8 @@ func (n *Node) getOrSet(path NodePath, pathObjToSet *openapi.PathObj) (node *Nod
 
 	// add example if it's a param
 	if node.param != nil && !chunkIsParam {
-		err := fillParamExample(node.param, pathChunk)
+		exmp := &node.param.Examples
+		err := fillParamExample(&exmp, pathChunk)
 		if err != nil {
 			logger.Log.Warningf("Failed to add example to a parameter: %s", err)
 		}
@@ -77,41 +77,6 @@ func (n *Node) getOrSet(path NodePath, pathObjToSet *openapi.PathObj) (node *Nod
 	}
 
 	return node
-}
-
-func fillParamExample(param *openapi.ParameterObj, exampleValue string) error {
-	if param.Examples == nil {
-		param.Examples = map[string]openapi.Example{}
-	}
-
-	cnt := 0
-	for _, example := range param.Examples {
-		cnt++
-		exampleObj, err := example.ResolveExample(exampleResolver)
-		if err != nil {
-			continue
-		}
-
-		var value string
-		err = json.Unmarshal(exampleObj.Value, &value)
-		if err != nil {
-			logger.Log.Warningf("Failed decoding parameter example into string: %s", err)
-			continue
-		}
-
-		if value == exampleValue || cnt > 5 { // 5 examples is enough
-			return nil
-		}
-	}
-
-	valMsg, err := json.Marshal(exampleValue)
-	if err != nil {
-		return err
-	}
-
-	param.Examples["example #"+strconv.Itoa(cnt)] = &openapi.ExampleObj{Value: valMsg}
-
-	return nil
 }
 
 func (n *Node) createParam() *openapi.ParameterObj {
