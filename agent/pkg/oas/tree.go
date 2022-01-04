@@ -117,9 +117,7 @@ func fillParamExample(param *openapi.ParameterObj, exampleValue string) error {
 		return err
 	}
 
-	if false { // FIXME: the lib is broken in this place https://github.com/chanced/openapi/issues/5
-		param.Examples["example #"+strconv.Itoa(cnt)] = &openapi.ExampleObj{Value: valMsg}
-	}
+	param.Examples["example #"+strconv.Itoa(cnt)] = &openapi.ExampleObj{Value: valMsg}
 
 	return nil
 }
