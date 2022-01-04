@@ -252,7 +252,7 @@ func hostApi(socketHarOutputChannel chan<- *tapApi.OutputChannelItem) {
 	app.Use(DisableRootStaticCache())
 
 	if err := setUIMode(); err != nil {
-		logger.Log.Panicf("Error setting ui mode, err: %v", err)
+		logger.Log.Errorf("Error setting ui mode, err: %v", err)
 	}
 	app.Use(static.ServeRoot("/", "./site"))
 
