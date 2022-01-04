@@ -84,20 +84,16 @@ func fillParamExample(param *openapi.ParameterObj, exampleValue string) error {
 		param.Examples = map[string]openapi.Example{}
 	}
 
-	var exampleObj *openapi.ExampleObj
 	cnt := 0
-	for key, example := range param.Examples {
+	for _, example := range param.Examples {
 		cnt++
-		switch example.ExampleKind() {
-		case openapi.ExampleKindRef:
-			logger.Log.Warningf("Example references are not supported at the moment: %s", key)
+		exampleObj, err := example.ResolveExample(exampleResolver)
+		if err != nil {
 			continue
-		case openapi.ExampleKindObj:
-			exampleObj = example.(*openapi.ExampleObj)
 		}
 
 		var value string
-		err := json.Unmarshal(exampleObj.Value, &value)
+		err = json.Unmarshal(exampleObj.Value, &value)
 		if err != nil {
 			logger.Log.Warningf("Failed decoding parameter example into string: %s", err)
 			continue

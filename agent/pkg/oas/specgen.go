@@ -161,14 +161,13 @@ func handleRequest(req *har.Request, opObj *openapi.Operation, isSuccess bool) e
 }
 
 func handleHeaders(reqHeaders []har.Header, params **openapi.ParameterList) {
-	visited := make([]string, 0)
+	visited := map[string]*openapi.ParameterObj{}
 	for _, hdr := range reqHeaders {
 		if isHeaderIgnored(hdr.Name) {
 			continue
 		}
 
 		nameLower := strings.ToLower(hdr.Name)
-		visited = append(visited, nameLower)
 
 		initParams(params)
 		hdrParam := findParamByName(*params, openapi.InHeader, hdr.Name, true)
@@ -181,11 +180,21 @@ func handleHeaders(reqHeaders []har.Header, params **openapi.ParameterList) {
 		if err != nil {
 			logger.Log.Warningf("Failed to add example to a parameter: %s", err)
 		}
+		visited[nameLower] = hdrParam
 	}
 
 	if *params != nil {
 		for _, param := range **params {
-			_ = param
+			paramObj, err := param.ResolveParameter(paramResolver)
+			if err != nil {
+				logger.Log.Warningf("Failed to resolve param: %s", err)
+				continue
+			}
+			_, ok := visited[strings.ToLower(paramObj.Name)]
+			if !ok {
+				flag := false
+				paramObj.Required = &flag
+			}
 		}
 	}
 }
@@ -275,19 +284,21 @@ func getReqCtype(req *har.Request) string {
 
 func getResponseObj(resp *har.Response, opObj *openapi.Operation, isSuccess bool) (*openapi.ResponseObj, error) {
 	statusStr := strconv.Itoa(resp.Status)
+
 	var response openapi.Response
 	response, found := opObj.Responses[statusStr]
 	if !found {
+		if opObj.Responses == nil {
+			opObj.Responses = map[string]openapi.Response{}
+		}
+
 		opObj.Responses[statusStr] = &openapi.ResponseObj{Content: map[string]*openapi.MediaType{}}
 		response = opObj.Responses[statusStr]
 	}
 
-	var resResponse *openapi.ResponseObj
-	switch response.ResponseKind() {
-	case openapi.ResponseKindRef:
-		return nil, errors.New("response reference is not supported at the moment")
-	case openapi.ResponseKindObj:
-		resResponse = response.(*openapi.ResponseObj)
+	resResponse, err := response.ResolveResponse(responseResolver)
+	if err != nil {
+		return nil, err
 	}
 
 	if isSuccess {
@@ -303,13 +314,9 @@ func getRequestBody(req *har.Request, opObj *openapi.Operation, isSuccess bool) 
 		opObj.RequestBody = &openapi.RequestBodyObj{Description: "Generic request body", Required: true, Content: map[string]*openapi.MediaType{}}
 	}
 
-	var reqBody *openapi.RequestBodyObj
-
-	switch opObj.RequestBody.RequestBodyKind() {
-	case openapi.RequestBodyKindRef:
-		return nil, errors.New("request body reference is not supported at the moment")
-	case openapi.RequestBodyKindObj:
-		reqBody = opObj.RequestBody.(*openapi.RequestBodyObj)
+	reqBody, err := opObj.RequestBody.ResolveRequestBody(reqBodyResolver)
+	if err != nil {
+		return nil, err
 	}
 
 	// TODO: maintain required flag for it, but only consider successful responses

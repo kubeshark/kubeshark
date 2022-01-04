@@ -1,10 +1,27 @@
 package oas
 
 import (
+	"errors"
 	"github.com/chanced/openapi"
 	"github.com/up9inc/mizu/shared/logger"
 	"strings"
 )
+
+func exampleResolver(ref string) (*openapi.ExampleObj, error) {
+	return nil, errors.New("JSON references are not supported at the moment: " + ref)
+}
+
+func responseResolver(ref string) (*openapi.ResponseObj, error) {
+	return nil, errors.New("JSON references are not supported at the moment: " + ref)
+}
+
+func reqBodyResolver(ref string) (*openapi.RequestBodyObj, error) {
+	return nil, errors.New("JSON references are not supported at the moment: " + ref)
+}
+
+func paramResolver(ref string) (*openapi.ParameterObj, error) {
+	return nil, errors.New("JSON references are not supported at the moment: " + ref)
+}
 
 func initParams(obj **openapi.ParameterList) {
 	if *obj == nil {

@@ -18,7 +18,20 @@
           },
           "example": "some-uuid-maybe"
         }
-      ]
+      ],
+      "get": {
+        "parameters": [        {
+          "name": "non-required-header",
+          "in": "header",
+          "required": true,
+          "style": "simple",
+          "schema": {
+            "type": "string"
+          },
+          "example": "some-uuid-maybe"
+        }
+        ]
+      }
     },
     "/catalogue/{id}/details": {
       "parameters": [
