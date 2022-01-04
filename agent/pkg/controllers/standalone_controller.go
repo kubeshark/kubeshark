@@ -37,17 +37,16 @@ func PostTapConfig(c *gin.Context) {
 		broadcastTappedPodsStatus()
 	}
 
-	ctx, cancel := context.WithCancel(context.Background())
-
 	if kubernetesProvider == nil {
 		var err error
 		kubernetesProvider, err = kubernetes.NewProviderInCluster()
 		if err != nil {
 			c.JSON(http.StatusBadRequest, err)
-			cancel()
 			return
 		}
 	}
+
+	ctx, cancel := context.WithCancel(context.Background())
 
 	var tappedNamespaces []string
 	for namespace, tapped := range tapConfig.TappedNamespaces {
@@ -74,6 +73,8 @@ func GetTapConfig(c *gin.Context) {
 	if globalTapConfig != nil {
 		c.JSON(http.StatusOK, globalTapConfig)
 	}
+
+	c.JSON(http.StatusBadRequest, "Not config found")
 }
 
 func startMizuTapperSyncer(ctx context.Context, provider *kubernetes.Provider, targetNamespaces []string, podFilterRegex regexp.Regexp, ignoredUserAgents []string, mizuApiFilteringOptions tapApi.TrafficFilteringOptions, istio bool) (*kubernetes.MizuTapperSyncer, error) {
