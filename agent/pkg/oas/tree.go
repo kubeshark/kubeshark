@@ -29,7 +29,7 @@ func (n *Node) getOrSet(path NodePath, pathObjToSet *openapi.PathObj) (node *Nod
 
 	var paramObj *openapi.ParameterObj
 	if chunkIsParam && pathObjToSet != nil {
-		paramObj = findParamByName(pathObjToSet.Parameters, pathChunk[1:len(pathChunk)-1], false)
+		paramObj = findParamByName(pathObjToSet.Parameters, openapi.InPath, pathChunk[1:len(pathChunk)-1], false)
 	}
 
 	if paramObj == nil {
@@ -161,22 +161,6 @@ func (n *Node) searchInConstants(pathChunk string) *Node {
 		}
 	}
 	return nil
-}
-
-func findParamByName(params *openapi.ParameterList, name string, caseInsensitive bool) (pathParam *openapi.ParameterObj) {
-	for _, param := range *params {
-		switch param.ParameterKind() {
-		case openapi.ParameterKindReference:
-			logger.Log.Warningf("Reference type is not supported for parameters")
-		case openapi.ParameterKindObj:
-			paramObj := param.(*openapi.ParameterObj)
-			if paramObj.Name == name || (caseInsensitive && strings.ToLower(paramObj.Name) == strings.ToLower(name)) {
-				pathParam = paramObj
-				break
-			}
-		}
-	}
-	return pathParam
 }
 
 func (n *Node) compact() {

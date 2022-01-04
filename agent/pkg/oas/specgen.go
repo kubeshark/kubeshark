@@ -139,23 +139,7 @@ func handleOpObj(entry *har.Entry, pathObj *openapi.PathObj) (*openapi.Operation
 }
 
 func handleRequest(req *har.Request, opObj *openapi.Operation, isSuccess bool) error {
-	for _, hdr := range req.Headers {
-		if isHeaderIgnored(hdr.Name) {
-			continue
-		}
-
-		initParams(&opObj.Parameters)
-		hdrParam := findParamByName(opObj.Parameters, hdr.Name, true)
-		if hdrParam == nil {
-			hdrParam = createSimpleParam(strings.ToLower(hdr.Name), "header", "string")
-			appended := append(*opObj.Parameters, hdrParam)
-			opObj.Parameters = &appended
-		}
-		err := fillParamExample(hdrParam, hdr.Value)
-		if err != nil {
-			logger.Log.Warningf("Failed to add example to a parameter: %s", err)
-		}
-	}
+	handleHeaders(req.Headers, &opObj.Parameters)
 
 	if req.PostData != nil && req.PostData.Text != "" && isSuccess {
 		reqBody, err := getRequestBody(req, opObj, isSuccess)
@@ -176,28 +160,34 @@ func handleRequest(req *har.Request, opObj *openapi.Operation, isSuccess bool) e
 	return nil
 }
 
-func initParams(obj **openapi.ParameterList) {
-	if *obj == nil {
-		var params openapi.ParameterList
-		params = make([]openapi.Parameter, 0)
-		*obj = &params
-	}
-}
+func handleHeaders(reqHeaders []har.Header, params **openapi.ParameterList) {
+	visited := make([]string, 0)
+	for _, hdr := range reqHeaders {
+		if isHeaderIgnored(hdr.Name) {
+			continue
+		}
 
-func createSimpleParam(name string, in string, ptype string) *openapi.ParameterObj {
-	required := true // FFS! https://stackoverflow.com/questions/32364027/reference-a-boolean-for-assignment-in-a-struct/32364093
-	schema := new(openapi.SchemaObj)
-	schema.Type = make(openapi.Types, 0)
-	schema.Type = append(schema.Type, openapi.TypeString)
-	newParam := openapi.ParameterObj{
-		Name:     name,
-		In:       openapi.In(in),
-		Style:    "simple",
-		Examples: map[string]openapi.Example{},
-		Schema:   schema,
-		Required: &required,
+		nameLower := strings.ToLower(hdr.Name)
+		visited = append(visited, nameLower)
+
+		initParams(params)
+		hdrParam := findParamByName(*params, openapi.InHeader, hdr.Name, true)
+		if hdrParam == nil {
+			hdrParam = createSimpleParam(nameLower, openapi.InHeader, openapi.TypeString)
+			appended := append(**params, hdrParam)
+			*params = &appended
+		}
+		err := fillParamExample(hdrParam, hdr.Value)
+		if err != nil {
+			logger.Log.Warningf("Failed to add example to a parameter: %s", err)
+		}
 	}
-	return &newParam
+
+	if *params != nil {
+		for _, param := range **params {
+			_ = param
+		}
+	}
 }
 
 func handleResponse(resp *har.Response, opObj *openapi.Operation, isSuccess bool) error {
