@@ -261,7 +261,7 @@ func hostApi(socketHarOutputChannel chan<- *tapApi.OutputChannelItem) {
 	api.WebSocketRoutes(app, &eventHandlers, startTime)
 
 	if config.Config.StandaloneMode {
-		routes.StandaloneRoutes(app)
+		routes.ConfigRoutes(app)
 	}
 
 	routes.QueryRoutes(app)
