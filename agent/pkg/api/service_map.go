@@ -28,7 +28,7 @@ type serviceMap struct {
 
 type ServiceMap interface {
 	AddEdge(source, destination id, protocol string)
-	GetNodes() []string
+	GetNodes() []shared.ServiceMapNode
 	GetEdges() []shared.ServiceMapEdge
 	PrintNodes()
 	PrintAdjacentEdges()
@@ -46,35 +46,45 @@ func newServiceMap() *serviceMap {
 }
 
 type id string
-type edgeData struct {
+
+type nodeData struct {
 	protocol string
 	count    int
 }
+type edgeData struct {
+	count int
+}
 
 type graph struct {
-	Nodes map[id]struct{}
+	Nodes map[id]*nodeData
 	Edges map[id]map[id]*edgeData
 }
 
 func newDirectedGraph() *graph {
 	return &graph{
-		Nodes: make(map[id]struct{}),
+		Nodes: make(map[id]*nodeData),
 		Edges: make(map[id]map[id]*edgeData),
 	}
 }
 
-func newEdgeData(p string) *edgeData {
-	return &edgeData{
+func newNodeData(p string) *nodeData {
+	return &nodeData{
 		protocol: p,
 		count:    1,
 	}
 }
 
-func (s *serviceMap) addNode(id id) {
+func newEdgeData() *edgeData {
+	return &edgeData{
+		count: 1,
+	}
+}
+
+func (s *serviceMap) addNode(id id, p string) {
 	if _, ok := s.graph.Nodes[id]; ok {
 		return
 	}
-	s.graph.Nodes[id] = struct{}{}
+	s.graph.Nodes[id] = newNodeData(p)
 }
 
 func (s *serviceMap) AddEdge(u, v id, p string) {
@@ -85,11 +95,15 @@ func (s *serviceMap) AddEdge(u, v id, p string) {
 		v = UnresolvedNode
 	}
 
-	if _, ok := s.graph.Nodes[u]; !ok {
-		s.addNode(u)
+	if n, ok := s.graph.Nodes[u]; !ok {
+		s.addNode(u, p)
+	} else {
+		n.count++
 	}
-	if _, ok := s.graph.Nodes[v]; !ok {
-		s.addNode(v)
+	if n, ok := s.graph.Nodes[v]; !ok {
+		s.addNode(v, p)
+	} else {
+		n.count++
 	}
 
 	if _, ok := s.graph.Edges[u]; !ok {
@@ -99,19 +113,20 @@ func (s *serviceMap) AddEdge(u, v id, p string) {
 	if e, ok := s.graph.Edges[u][v]; ok {
 		e.count++
 	} else {
-		s.graph.Edges[u][v] = &edgeData{
-			protocol: p,
-			count:    1,
-		}
+		s.graph.Edges[u][v] = newEdgeData()
 	}
 
 	s.entriesProcessed++
 }
 
-func (s *serviceMap) GetNodes() []string {
-	nodes := make([]string, 0)
-	for k := range s.graph.Nodes {
-		nodes = append(nodes, string(k))
+func (s *serviceMap) GetNodes() []shared.ServiceMapNode {
+	var nodes []shared.ServiceMapNode
+	for i, n := range s.graph.Nodes {
+		nodes = append(nodes, shared.ServiceMapNode{
+			Name:     string(i),
+			Protocol: n.protocol,
+			Count:    n.count,
+		})
 	}
 	return nodes
 }
@@ -124,7 +139,6 @@ func (s *serviceMap) GetEdges() []shared.ServiceMapEdge {
 				Source:      string(u),
 				Destination: string(v),
 				Count:       s.graph.Edges[u][v].count,
-				Protocol:    s.graph.Edges[u][v].protocol,
 			})
 		}
 	}
@@ -134,8 +148,8 @@ func (s *serviceMap) GetEdges() []shared.ServiceMapEdge {
 func (s *serviceMap) PrintNodes() {
 	fmt.Println("Printing all nodes...")
 
-	for k := range s.graph.Nodes {
-		fmt.Printf("Node: %v\n", k)
+	for k, n := range s.graph.Nodes {
+		fmt.Printf("Node: %v - Protocol: %v Count: %v\n", k, n.protocol, n.count)
 	}
 }
 

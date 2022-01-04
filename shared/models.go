@@ -77,15 +77,20 @@ type ServiceMapStatus struct {
 }
 
 type ServiceMapResponse struct {
-	Nodes []string         `json:"nodes"`
+	Nodes []ServiceMapNode `json:"nodes"`
 	Edges []ServiceMapEdge `json:"edges"`
+}
+
+type ServiceMapNode struct {
+	Name     string `json:"name"`
+	Protocol string `json:"protocol"`
+	Count    int    `json:"count"`
 }
 
 type ServiceMapEdge struct {
 	Source      string `json:"source"`
 	Destination string `json:"destination"`
 	Count       int    `json:"count"`
-	Protocol    string `json:"protocol"`
 }
 
 type TapperStatus struct {
