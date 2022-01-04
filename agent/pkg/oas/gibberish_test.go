@@ -31,11 +31,9 @@ func TestPositive(t *testing.T) {
 		"610bd0315a77a7fa25034368",
 		"610bd0315a77a7fa25034368zh",
 		"710a462e",
-		// "fb6cjraf9cejut2a",
 		"1554507871",
 		"qwerqwerasdfqwer@protonmai.com",
 		"john.dow.1981@protonmail.com",
-		// "Fxvd1timk",  // questionable
 		"ci12NC01YzkyNTEzYzllMDRhLTAtYy5tb25pdG9yaW5nLmpzb24=", // long base64
 		"11ca096cbc224a67360493d44a9903",
 		"c738338322370b47a79251f7510dd", // prefixed hex
@@ -47,7 +45,6 @@ func TestPositive(t *testing.T) {
 		"arn-aws-ecs-eu-west-2-396248696294-cluster-london-01-ECSCluster-27iuIYva8nO4", // ?
 		"AAAA028295945",
 		"sp_ANQXRpqH_urn$3Auri$3Abase64$3A6698b0a3-97ad-52ce-8fc3-17d99e37a726",
-		// "JEHJW4BKVFDRTMTUQLHKK5WVAU",
 		"n63nd45qsj",
 		"n9z9QGNiz",
 		"proxy.3d2100fd7107262ecb55ce6847f01fa5.html",
@@ -58,6 +55,11 @@ func TestPositive(t *testing.T) {
 		"segments-1563566437171.639994",
 		"t_52d94268-8810-4a7e-ba87-ffd657a6752f",
 		"timeouts-1563566437171.639994",
+
+		// TODO
+		// "fb6cjraf9cejut2a",
+		// "Fxvd1timk", // questionable
+		// "JEHJW4BKVFDRTMTUQLHKK5WVAU",
 	}
 
 	for _, str := range cases {

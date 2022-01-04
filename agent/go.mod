@@ -4,7 +4,7 @@ go 1.16
 
 require (
 	github.com/antelman107/net-wait-go v0.0.0-20210623112055-cf684aebda7b
-	github.com/chanced/openapi v0.0.5
+	github.com/chanced/openapi v0.0.6
 	github.com/djherbis/atime v1.0.0
 	github.com/getkin/kin-openapi v0.76.0
 	github.com/gin-contrib/static v0.0.1

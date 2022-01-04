@@ -268,7 +268,6 @@ func fillContent(reqResp ReqResp, respContent openapi.Content, ctype string, err
 		return nil, err
 	}
 	content.Example = exampleMsg
-	content.Example = nil
 	return respContent[ctype], nil
 }
 
