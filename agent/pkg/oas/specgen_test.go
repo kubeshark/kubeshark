@@ -169,7 +169,7 @@ func loadStartingOAS(specs *sync.Map) {
 	}
 
 	gen := NewGen("catalogue")
-	gen.startFromSpec(doc)
+	gen.StartFromSpec(doc)
 
 	specs.Store("catalogue", gen)
 

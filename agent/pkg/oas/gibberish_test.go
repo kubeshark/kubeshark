@@ -15,7 +15,7 @@ func TestNegative(t *testing.T) {
 	}
 
 	for _, str := range cases {
-		if isGibberish(str) {
+		if IsGibberish(str) {
 			t.Errorf("Mistakenly true: %s", str)
 		}
 	}
@@ -64,7 +64,7 @@ func TestPositive(t *testing.T) {
 	}
 
 	for _, str := range cases {
-		if !isGibberish(str) {
+		if !IsGibberish(str) {
 			t.Errorf("Mistakenly false: %s", str)
 		}
 	}

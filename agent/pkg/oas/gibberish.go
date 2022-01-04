@@ -13,7 +13,7 @@ var (
 	patHexUpper = regexp.MustCompile(`(0x)?[0-9A-F]{6,}`)
 )
 
-func isGibberish(str string) bool {
+func IsGibberish(str string) bool {
 	if patBase64.MatchString(str) && len(str) > 32 {
 		return true
 	}

@@ -15,7 +15,7 @@ import (
 	"sync"
 )
 
-type ReqResp struct { // hello, generics in Go
+type reqResp struct { // hello, generics in Go
 	Req  *har.Request
 	Resp *har.Response
 }
@@ -37,7 +37,7 @@ func NewGen(server string) *SpecGen {
 	return &gen
 }
 
-func (g *SpecGen) startFromSpec(oas *openapi.OpenAPI) {
+func (g *SpecGen) StartFromSpec(oas *openapi.OpenAPI) {
 	g.oas = oas
 	for pathStr, pathObj := range oas.Paths.Items {
 		pathSplit := strings.Split(string(pathStr), "/")
@@ -149,7 +149,7 @@ func handleRequest(req *har.Request, opObj *openapi.Operation, isSuccess bool) e
 
 		if reqBody != nil {
 			reqCtype := getReqCtype(req)
-			reqMedia, err := fillContent(ReqResp{Req: req}, reqBody.Content, reqCtype, err)
+			reqMedia, err := fillContent(reqResp{Req: req}, reqBody.Content, reqCtype, err)
 			if err != nil {
 				return err
 			}
@@ -207,7 +207,7 @@ func handleResponse(resp *har.Response, opObj *openapi.Operation, isSuccess bool
 
 	respCtype := getRespCtype(resp)
 	respContent := respObj.Content
-	respMedia, err := fillContent(ReqResp{Resp: resp}, respContent, respCtype, err)
+	respMedia, err := fillContent(reqResp{Resp: resp}, respContent, respCtype, err)
 	if err != nil {
 		return err
 	}
@@ -215,7 +215,7 @@ func handleResponse(resp *har.Response, opObj *openapi.Operation, isSuccess bool
 	return nil
 }
 
-func fillContent(reqResp ReqResp, respContent openapi.Content, ctype string, err error) (*openapi.MediaType, error) {
+func fillContent(reqResp reqResp, respContent openapi.Content, ctype string, err error) (*openapi.MediaType, error) {
 	content, found := respContent[ctype]
 	if !found {
 		respContent[ctype] = &openapi.MediaType{}
