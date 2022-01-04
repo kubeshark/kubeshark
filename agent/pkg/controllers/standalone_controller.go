@@ -27,12 +27,6 @@ func PostTapConfig(c *gin.Context) {
 		return
 	}
 
-	podRegex, err := regexp.Compile(tapConfig.PodRegex)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, err)
-		return
-	}
-
 	if cancelTapperSyncer != nil {
 		cancelTapperSyncer()
 
@@ -57,6 +51,8 @@ func PostTapConfig(c *gin.Context) {
 			tappedNamespaces = append(tappedNamespaces, namespace)
 		}
 	}
+
+	podRegex, _ := regexp.Compile(".*")
 
 	if _, err = startMizuTapperSyncer(ctx, kubernetesProvider, tappedNamespaces, *podRegex, []string{} , tapApi.TrafficFilteringOptions{}, false); err != nil {
 		c.JSON(http.StatusBadRequest, err)

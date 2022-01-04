@@ -148,13 +148,9 @@ func (tapperSyncer *MizuTapperSyncer) watchTapperEvents() {
 					event.Reason,
 					event.Note))
 
-			if event.Reason == "Killing" {
-				continue
-			}
-
 			pod, err1 := tapperSyncer.kubernetesProvider.GetPod(tapperSyncer.context, tapperSyncer.config.MizuResourcesNamespace, event.Regarding.Name)
 			if err1 != nil {
-				logger.Log.Debugf(fmt.Sprintf("Failed to get tapper pod %s", event.Regarding.Name))
+				logger.Log.Debugf(fmt.Sprintf("Couldn't get tapper pod %s", event.Regarding.Name))
 				continue
 			}
 
