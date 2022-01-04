@@ -16,6 +16,10 @@ func GetEntry(r *tapApi.MizuEntry, v tapApi.DataUnmarshaler) error {
 	return v.UnmarshalData(r)
 }
 
+type StandaloneTapConfig struct {
+	TappedNamespaces map[string]bool `json:"tappedNamespaces"`
+}
+
 type EntriesRequest struct {
 	LeftOff   int    `form:"leftOff" validate:"required,min=-1"`
 	Direction int    `form:"direction" validate:"required,oneof='1' '-1'"`
