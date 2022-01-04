@@ -83,10 +83,10 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 	meta := make(chan []byte)
 
 	defer func() {
+		socketCleanup(socketId, connectedWebsockets[socketId])
 		data <- []byte(basenine.CloseChannel)
 		meta <- []byte(basenine.CloseChannel)
 		connection.Close()
-		socketCleanup(socketId, connectedWebsockets[socketId])
 	}()
 
 	eventHandlers.WebSocketConnect(socketId, isTapper)
@@ -97,7 +97,12 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 	for {
 		_, msg, err := ws.ReadMessage()
 		if err != nil {
-			logger.Log.Errorf("Error reading message, socket id: %d, error: %v", socketId, err)
+			if _, ok := err.(*websocket.CloseError); ok {
+				logger.Log.Debugf("Received websocket close message, socket id: %d", socketId)
+			} else {
+				logger.Log.Errorf("Error reading message, socket id: %d, error: %v", socketId, err)
+			}
+
 			break
 		}
 
