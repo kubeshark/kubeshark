@@ -29,7 +29,7 @@ func (n *Node) getOrSet(path NodePath, pathObjToSet *openapi.PathObj) (node *Nod
 
 	var paramObj *openapi.ParameterObj
 	if chunkIsParam && pathObjToSet != nil {
-		paramObj = findParamByName(pathObjToSet.Parameters, openapi.InPath, pathChunk[1:len(pathChunk)-1], false)
+		paramObj = findParamByName(pathObjToSet.Parameters, openapi.InPath, pathChunk[1:len(pathChunk)-1])
 	}
 
 	if paramObj == nil {

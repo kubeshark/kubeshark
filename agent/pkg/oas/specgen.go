@@ -139,7 +139,28 @@ func handleOpObj(entry *har.Entry, pathObj *openapi.PathObj) (*openapi.Operation
 }
 
 func handleRequest(req *har.Request, opObj *openapi.Operation, isSuccess bool) error {
-	handleHeaders(req.Headers, &opObj.Parameters)
+	// TODO: we don't handle the situation when header/qstr param can be defined on pathObj level. Also the path param defined on opObj
+
+	qstrGW := nvParams{
+		In: openapi.InQuery,
+		Pairs: func() []NVPair {
+			return qstrToNVP(req.QueryString)
+		},
+		IsIgnored:      func(name string) bool { return false },
+		GeneralizeName: func(name string) string { return name },
+	}
+
+	hdrGW := nvParams{
+		In: openapi.InHeader,
+		Pairs: func() []NVPair {
+			return hdrToNVP(req.Headers)
+		},
+		IsIgnored:      isHeaderIgnored,
+		GeneralizeName: strings.ToLower,
+	}
+
+	handleNameVals(hdrGW, &opObj.Parameters)
+	handleNameVals(qstrGW, &opObj.Parameters)
 
 	if req.PostData != nil && req.PostData.Text != "" && isSuccess {
 		reqBody, err := getRequestBody(req, opObj, isSuccess)
@@ -158,45 +179,6 @@ func handleRequest(req *har.Request, opObj *openapi.Operation, isSuccess bool) e
 		}
 	}
 	return nil
-}
-
-func handleHeaders(reqHeaders []har.Header, params **openapi.ParameterList) {
-	visited := map[string]*openapi.ParameterObj{}
-	for _, hdr := range reqHeaders {
-		if isHeaderIgnored(hdr.Name) {
-			continue
-		}
-
-		nameLower := strings.ToLower(hdr.Name)
-
-		initParams(params)
-		hdrParam := findParamByName(*params, openapi.InHeader, hdr.Name, true)
-		if hdrParam == nil {
-			hdrParam = createSimpleParam(nameLower, openapi.InHeader, openapi.TypeString)
-			appended := append(**params, hdrParam)
-			*params = &appended
-		}
-		err := fillParamExample(hdrParam, hdr.Value)
-		if err != nil {
-			logger.Log.Warningf("Failed to add example to a parameter: %s", err)
-		}
-		visited[nameLower] = hdrParam
-	}
-
-	if *params != nil {
-		for _, param := range **params {
-			paramObj, err := param.ResolveParameter(paramResolver)
-			if err != nil {
-				logger.Log.Warningf("Failed to resolve param: %s", err)
-				continue
-			}
-			_, ok := visited[strings.ToLower(paramObj.Name)]
-			if !ok {
-				flag := false
-				paramObj.Required = &flag
-			}
-		}
-	}
 }
 
 func handleResponse(resp *har.Response, opObj *openapi.Operation, isSuccess bool) error {
