@@ -16,9 +16,9 @@ func GetEntry(r *tapApi.MizuEntry, v tapApi.DataUnmarshaler) error {
 	return v.UnmarshalData(r)
 }
 
-type StandaloneConfig struct {
-	TargetNamespaces []string `json:"targetNamespaces"`
-	PodRegex         string   `json:"podRegex"`
+type StandaloneTapConfig struct {
+	TappedNamespaces map[string]bool `json:"tappedNamespaces"`
+	PodRegex         string          `json:"podRegex"`
 }
 
 type EntriesRequest struct {

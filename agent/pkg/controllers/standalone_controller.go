@@ -16,18 +16,18 @@ import (
 	"time"
 )
 
-var globalStandaloneConfig *models.StandaloneConfig
+var globalTapConfig *models.StandaloneTapConfig
 var cancelTapperSyncer context.CancelFunc
 
-func UpdateConfig(c *gin.Context) {
-	standaloneConfig := &models.StandaloneConfig{}
+func PostTapConfig(c *gin.Context) {
+	tapConfig := &models.StandaloneTapConfig{}
 
-	if err := c.Bind(standaloneConfig); err != nil {
+	if err := c.Bind(tapConfig); err != nil {
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
 
-	podRegex, err := regexp.Compile(standaloneConfig.PodRegex)
+	podRegex, err := regexp.Compile(tapConfig.PodRegex)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, err)
 		return
@@ -51,21 +51,28 @@ func UpdateConfig(c *gin.Context) {
 		return
 	}
 
-	if _, err = startMizuTapperSyncer(ctx, kubernetesProvider, standaloneConfig.TargetNamespaces, *podRegex, []string{} , tapApi.TrafficFilteringOptions{}, false); err != nil {
+	var tappedNamespaces []string
+	for namespace, tapped := range tapConfig.TappedNamespaces {
+		if tapped {
+			tappedNamespaces = append(tappedNamespaces, namespace)
+		}
+	}
+
+	if _, err = startMizuTapperSyncer(ctx, kubernetesProvider, tappedNamespaces, *podRegex, []string{} , tapApi.TrafficFilteringOptions{}, false); err != nil {
 		c.JSON(http.StatusBadRequest, err)
 		cancel()
 		return
 	}
 
 	cancelTapperSyncer = cancel
-	globalStandaloneConfig = standaloneConfig
+	globalTapConfig = tapConfig
 
 	c.JSON(http.StatusOK, "OK")
 }
 
-func GetConfig(c *gin.Context) {
-	if globalStandaloneConfig != nil {
-		c.JSON(http.StatusOK, globalStandaloneConfig)
+func GetTapConfig(c *gin.Context) {
+	if globalTapConfig != nil {
+		c.JSON(http.StatusOK, globalTapConfig)
 	}
 }
 

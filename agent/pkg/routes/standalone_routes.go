@@ -8,6 +8,6 @@ import (
 func StandaloneRoutes(ginApp *gin.Engine) {
 	routeGroup := ginApp.Group("/standalone")
 
-	routeGroup.POST("/updateConfig", controllers.UpdateConfig)
-	routeGroup.GET("/config", controllers.GetConfig)
+	routeGroup.POST("/tapConfig", controllers.PostTapConfig)
+	routeGroup.GET("/tapConfig", controllers.GetTapConfig)
 }
