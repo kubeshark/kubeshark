@@ -4,17 +4,17 @@ import * as axios from "axios";
 export const MizuWebsocketURL = process.env.REACT_APP_OVERRIDE_WS_URL ? process.env.REACT_APP_OVERRIDE_WS_URL :
                         window.location.protocol === 'https:' ? `wss://${window.location.host}/ws` : `ws://${window.location.host}/ws`;
 
+// When working locally cp `cp .env.example .env`
+export const MizuApiURL = process.env.REACT_APP_OVERRIDE_API_URL ? process.env.REACT_APP_OVERRIDE_API_URL : `${window.location.origin}/`;
+
 const CancelToken = axios.CancelToken;
 
 export default class Api {
 
     constructor() {
 
-        // When working locally cp `cp .env.example .env`
-        const apiURL = process.env.REACT_APP_OVERRIDE_API_URL ? process.env.REACT_APP_OVERRIDE_API_URL : `${window.location.origin}/`;
-
         this.client = axios.create({
-            baseURL: apiURL,
+            baseURL: MizuApiURL,
             timeout: 31000,
             headers: {
                 Accept: "application/json",
@@ -22,6 +22,21 @@ export default class Api {
         });
 
         this.source = null;
+    }
+
+    serviceMapStatus = async () => {
+        const response = await this.client.get("/servicemap/status");
+        return response.data;
+    }
+
+    serviceMapData = async () => {
+        const response = await this.client.get(`/servicemap/get`);
+        return response.data;
+    }
+
+    serviceMapReset = async () => {
+        const response = await this.client.get(`/servicemap/reset`);
+        return response.data;
     }
 
     tapStatus = async () => {

@@ -1,7 +1,7 @@
 import React, {useEffect, useMemo, useRef, useState} from "react";
 import {Filters} from "./Filters";
 import {EntriesList} from "./EntriesList";
-import {makeStyles} from "@material-ui/core";
+import {Button, makeStyles} from "@material-ui/core";
 import "./style/TrafficPage.sass";
 import styles from './style/EntriesList.module.sass';
 import {EntryDetailed} from "./EntryDetailed";
@@ -9,7 +9,7 @@ import playIcon from './assets/run.svg';
 import pauseIcon from './assets/pause.svg';
 import variables from '../variables.module.scss';
 import {StatusBar} from "./UI/StatusBar";
-import Api, {MizuWebsocketURL} from "../helpers/api";
+import Api, {MizuApiURL, MizuWebsocketURL} from "../helpers/api";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import debounce from 'lodash/debounce';
@@ -58,6 +58,8 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
     const [noMoreDataTop, setNoMoreDataTop] = useState(false);
 
     const [tappingStatus, setTappingStatus] = useState(null);
+
+    const [serviceMapStatus, setServiceMapStatus] = useState(false);
 
     const [isSnappedToBottom, setIsSnappedToBottom] = useState(true);
 
@@ -266,19 +268,85 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
         }
     }
 
+    useEffect(() => {
+        (async () => {
+            try {
+                const serviceMapStatusResponse = await api.serviceMapStatus();
+                if (serviceMapStatusResponse["status"] === "enabled") {
+                    setServiceMapStatus(true);
+                } else {
+                    setServiceMapStatus(false);
+                }
+            } catch(error) {
+                setServiceMapStatus(false);
+                console.error(error);
+            }
+        })()
+    }, []);
+
+    const openServiceMap = debounce(() => {
+            if (serviceMapStatus) {
+                const url = `${MizuApiURL}servicemap/render`
+                window.open(url, "_blank")
+            }
+            // TODO: toast error message?
+    }, 500);
+
+    const resetServiceMap = debounce(async () => {
+        try {
+            const serviceMapResetResponse = await api.serviceMapReset();
+            if (serviceMapResetResponse["status"] === "enabled") {
+                //TODO: toast success message?
+            }
+
+        } catch(error) {
+            console.error(error);
+        }
+    }, 500);
+
     return (
         <div className="TrafficPage">
             <div className="TrafficPageHeader">
-                <img className="playPauseIcon" style={{visibility: connection === ConnectionStatus.Connected ? "visible" : "hidden"}} alt="pause"
-                    src={pauseIcon} onClick={toggleConnection}/>
-                <img className="playPauseIcon" style={{position: "absolute", visibility: connection === ConnectionStatus.Connected ? "hidden" : "visible"}} alt="play"
-                    src={playIcon} onClick={toggleConnection}/>
+                <img className="playPauseIcon" style={{ visibility: connection === ConnectionStatus.Connected ? "visible" : "hidden" }} alt="pause"
+                    src={pauseIcon} onClick={toggleConnection} />
+                <img className="playPauseIcon" style={{ position: "absolute", visibility: connection === ConnectionStatus.Connected ? "hidden" : "visible" }} alt="play"
+                    src={playIcon} onClick={toggleConnection} />
                 <div className="connectionText">
                     {getConnectionTitle()}
                     <div className={"indicatorContainer " + getConnectionStatusClass(true)}>
-                        <div className={"indicator " + getConnectionStatusClass(false)}/>
+                        <div className={"indicator " + getConnectionStatusClass(false)} />
                     </div>
                 </div>
+                <Button
+                    variant="contained"
+                    style={{
+                        visibility: serviceMapStatus === true ? "visible" : "hidden",
+                        margin: "0px 0px 0px 10px",
+                        backgroundColor: variables.blueColor,
+                        fontWeight: 600,
+                        borderRadius: "4px",
+                        color: "#fff",
+                        textTransform: "none",
+                    }}
+                    onClick={openServiceMap}
+                >
+                    Service Map
+                </Button>
+                <Button
+                    variant="contained"
+                    style={{
+                        visibility: serviceMapStatus === true ? "visible" : "hidden",
+                        margin: "0px 0px 0px 10px",
+                        backgroundColor: variables.blueColor,
+                        fontWeight: 600,
+                        borderRadius: "4px",
+                        color: "#fff",
+                        textTransform: "none",
+                    }}
+                    onClick={resetServiceMap}
+                >
+                    Reset Service Map
+                </Button>
             </div>
             {<div className="TrafficPage-Container">
                 <div className="TrafficPage-ListContainer">
@@ -287,8 +355,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                         setQuery={setQuery}
                         backgroundColor={queryBackgroundColor}
                         ws={ws.current}
-                        openWebSocket={openWebSocket}
-                    />
+                        openWebSocket={openWebSocket} />
                     <div className={styles.container}>
                         <EntriesList
                             entries={entries}
@@ -315,15 +382,14 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                             openWebSocket={openWebSocket}
                             leftOffBottom={leftOffBottom}
                             truncatedTimestamp={truncatedTimestamp}
-                            setTruncatedTimestamp={setTruncatedTimestamp}
-                        />
+                            setTruncatedTimestamp={setTruncatedTimestamp} />
                     </div>
                 </div>
                 <div className={classes.details}>
-                    {selectedEntryData && <EntryDetailed entryData={selectedEntryData} updateQuery={updateQuery}/>}
+                    {selectedEntryData && <EntryDetailed entryData={selectedEntryData} updateQuery={updateQuery} />}
                 </div>
             </div>}
-            {tappingStatus && <StatusBar tappingStatus={tappingStatus}/>}
+            {tappingStatus && <StatusBar tappingStatus={tappingStatus} />}
             <ToastContainer
                 position="bottom-right"
                 autoClose={5000}
@@ -333,8 +399,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                 rtl={false}
                 pauseOnFocusLoss
                 draggable
-                pauseOnHover
-            />
+                pauseOnHover />
         </div>
     )
 };
