@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"flag"
@@ -11,7 +10,6 @@ import (
 	"mizuserver/pkg/config"
 	"mizuserver/pkg/controllers"
 	"mizuserver/pkg/models"
-	"mizuserver/pkg/providers"
 	"mizuserver/pkg/routes"
 	"mizuserver/pkg/up9"
 	"mizuserver/pkg/utils"
@@ -22,14 +20,12 @@ import (
 	"path"
 	"path/filepath"
 	"plugin"
-	"regexp"
 	"sort"
 	"strconv"
 	"strings"
 	"syscall"
 	"time"
 
-	"github.com/up9inc/mizu/shared/kubernetes"
 	v1 "k8s.io/api/core/v1"
 
 	"github.com/antelman107/net-wait-go/wait"
@@ -256,13 +252,18 @@ func hostApi(socketHarOutputChannel chan<- *tapApi.OutputChannelItem) {
 	app.Use(DisableRootStaticCache())
 
 	if err := setUIMode(); err != nil {
-		logger.Log.Panicf("Error setting ui mode, err: %v", err)
+		logger.Log.Errorf("Error setting ui mode, err: %v", err)
 	}
 	app.Use(static.ServeRoot("/", "./site"))
 
 	app.Use(CORSMiddleware()) // This has to be called after the static middleware, does not work if its called before
 
 	api.WebSocketRoutes(app, &eventHandlers, startTime)
+
+	if config.Config.StandaloneMode {
+		routes.StandaloneRoutes(app)
+	}
+
 	routes.QueryRoutes(app)
 	routes.EntriesRoutes(app)
 	routes.MetadataRoutes(app)
@@ -470,68 +471,4 @@ func handleIncomingMessageAsTapper(socketConnection *websocket.Conn) {
 			}
 		}
 	}
-}
-
-func startMizuTapperSyncer(ctx context.Context, provider *kubernetes.Provider, targetNamespaces []string, podFilterRegex regexp.Regexp, ignoredUserAgents []string, mizuApiFilteringOptions tapApi.TrafficFilteringOptions, istio bool) (*kubernetes.MizuTapperSyncer, error) {
-	tapperSyncer, err := kubernetes.CreateAndStartMizuTapperSyncer(ctx, provider, kubernetes.TapperSyncerConfig{
-		TargetNamespaces:         targetNamespaces,
-		PodFilterRegex:           podFilterRegex,
-		MizuResourcesNamespace:   config.Config.MizuResourcesNamespace,
-		AgentImage:               config.Config.AgentImage,
-		TapperResources:          config.Config.TapperResources,
-		ImagePullPolicy:          v1.PullPolicy(config.Config.PullPolicy),
-		LogLevel:                 config.Config.LogLevel,
-		IgnoredUserAgents:        ignoredUserAgents,
-		MizuApiFilteringOptions:  mizuApiFilteringOptions,
-		MizuServiceAccountExists: true, //assume service account exists since install mode will not function without it anyway
-		Istio:                    istio,
-	}, time.Now())
-
-	if err != nil {
-		return nil, err
-	}
-
-	// handle tapperSyncer events (pod changes and errors)
-	go func() {
-		for {
-			select {
-			case syncerErr, ok := <-tapperSyncer.ErrorOut:
-				if !ok {
-					logger.Log.Debug("mizuTapperSyncer err channel closed, ending listener loop")
-					return
-				}
-				logger.Log.Fatalf("fatal tap syncer error: %v", syncerErr)
-			case tapPodChangeEvent, ok := <-tapperSyncer.TapPodChangesOut:
-				if !ok {
-					logger.Log.Debug("mizuTapperSyncer pod changes channel closed, ending listener loop")
-					return
-				}
-				providers.TapStatus = shared.TapStatus{Pods: kubernetes.GetPodInfosForPods(tapperSyncer.CurrentlyTappedPods)}
-
-				tappedPodsStatus := utils.GetTappedPodsStatus()
-
-				serializedTapStatus, err := json.Marshal(shared.CreateWebSocketStatusMessage(tappedPodsStatus))
-				if err != nil {
-					logger.Log.Fatalf("error serializing tap status: %v", err)
-				}
-				api.BroadcastToBrowserClients(serializedTapStatus)
-				providers.ExpectedTapperAmount = tapPodChangeEvent.ExpectedTapperAmount
-			case tapperStatus, ok := <-tapperSyncer.TapperStatusChangedOut:
-				if !ok {
-					logger.Log.Debug("mizuTapperSyncer tapper status changed channel closed, ending listener loop")
-					return
-				}
-				if providers.TappersStatus == nil {
-					providers.TappersStatus = make(map[string]shared.TapperStatus)
-				}
-				providers.TappersStatus[tapperStatus.NodeName] = tapperStatus
-
-			case <-ctx.Done():
-				logger.Log.Debug("mizuTapperSyncer event listener loop exiting due to context done")
-				return
-			}
-		}
-	}()
-
-	return tapperSyncer, nil
 }

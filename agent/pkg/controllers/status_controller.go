@@ -54,21 +54,28 @@ func broadcastTappedPodsStatus() {
 	}
 }
 
+func addTapperStatus(tapperStatus shared.TapperStatus) {
+	if providers.TappersStatus == nil {
+		providers.TappersStatus = make(map[string]shared.TapperStatus)
+	}
+
+	providers.TappersStatus[tapperStatus.NodeName] = tapperStatus
+}
+
 func PostTapperStatus(c *gin.Context) {
 	tapperStatus := &shared.TapperStatus{}
 	if err := c.Bind(tapperStatus); err != nil {
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
+
 	if err := validation.Validate(tapperStatus); err != nil {
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
+
 	logger.Log.Infof("[Status] POST request, tapper status: %v", tapperStatus)
-	if providers.TappersStatus == nil {
-		providers.TappersStatus = make(map[string]shared.TapperStatus)
-	}
-	providers.TappersStatus[tapperStatus.NodeName] = *tapperStatus
+	addTapperStatus(*tapperStatus)
 	broadcastTappedPodsStatus()
 }
 
