@@ -78,4 +78,15 @@ export default class Api {
 
         return response.data;
     }
+
+    getTapConfig = async () => {
+        const response = await this.client.get("/standalone/tapConfig");
+        return response.data;
+    }
+
+    setTapConfig = async (config) => {
+        const response = await this.client.post("/standalone/tapConfig", {tapConfig: config});
+        return response.data;
+    }
+
 }
