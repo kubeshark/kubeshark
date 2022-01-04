@@ -4,6 +4,7 @@ import "testing"
 
 func TestNegative(t *testing.T) {
 	cases := []string{
+		"",
 		"b", // can be valid hexadecimal
 		"GetUniversalVariableUser",
 		"callback",

@@ -29,7 +29,7 @@ func (n *Node) getOrSet(path NodePath, pathObjToSet *openapi.PathObj) (node *Nod
 
 	var paramObj *openapi.ParameterObj
 	if chunkIsParam && pathObjToSet != nil {
-		paramObj = findPathParam(pathChunk, pathObjToSet)
+		paramObj = findParamByName(pathObjToSet.Parameters, pathChunk[1:len(pathChunk)-1], false)
 	}
 
 	if paramObj == nil {
@@ -49,17 +49,13 @@ func (n *Node) getOrSet(path NodePath, pathObjToSet *openapi.PathObj) (node *Nod
 		if paramObj != nil {
 			node.param = paramObj
 		} else if chunkIsGibberish {
+			initParams(&pathObjToSet.Parameters)
+
 			newParam := n.createParam()
 			node.param = newParam
 
-			if pathObjToSet.Parameters == nil {
-				var params openapi.ParameterList
-				params = make([]openapi.Parameter, 0)
-				pathObjToSet.Parameters = &params
-			}
-
-			someval := append(*pathObjToSet.Parameters, newParam)
-			pathObjToSet.Parameters = &someval
+			appended := append(*pathObjToSet.Parameters, newParam)
+			pathObjToSet.Parameters = &appended
 		} else {
 			node.constant = &pathChunk
 		}
@@ -123,26 +119,13 @@ func fillParamExample(param *openapi.ParameterObj, exampleValue string) error {
 }
 
 func (n *Node) createParam() *openapi.ParameterObj {
-	required := true // FFS! https://stackoverflow.com/questions/32364027/reference-a-boolean-for-assignment-in-a-struct/32364093
-	schema := new(openapi.SchemaObj)
-	schema.Type = make(openapi.Types, 0)
-	schema.Type = append(schema.Type, openapi.TypeString)
-	newParam := openapi.ParameterObj{
-		// the lack of Name keeps it invalid, until it's made valid below
-		In:       "path",
-		Style:    "simple",
-		Required: &required,
-		Examples: map[string]openapi.Example{},
-		Schema:   schema,
-	}
-
-	newParam.Name = "param"
+	newParam := createSimpleParam("param", "path", "string")
 	x := n.countParentParams()
 	if x > 1 {
 		newParam.Name = newParam.Name + strconv.Itoa(x)
 	}
 
-	return &newParam
+	return newParam
 }
 
 func (n *Node) searchInParams(paramObj *openapi.ParameterObj, chunkIsGibberish bool) *Node {
@@ -180,14 +163,14 @@ func (n *Node) searchInConstants(pathChunk string) *Node {
 	return nil
 }
 
-func findPathParam(paramStrName string, pathObj *openapi.PathObj) (pathParam *openapi.ParameterObj) {
-	for _, param := range *pathObj.Parameters {
+func findParamByName(params *openapi.ParameterList, name string, caseInsensitive bool) (pathParam *openapi.ParameterObj) {
+	for _, param := range *params {
 		switch param.ParameterKind() {
 		case openapi.ParameterKindReference:
 			logger.Log.Warningf("Reference type is not supported for parameters")
 		case openapi.ParameterKindObj:
 			paramObj := param.(*openapi.ParameterObj)
-			if "{"+paramObj.Name+"}" == paramStrName {
+			if paramObj.Name == name || (caseInsensitive && strings.ToLower(paramObj.Name) == strings.ToLower(name)) {
 				pathParam = paramObj
 				break
 			}
