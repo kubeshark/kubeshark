@@ -114,7 +114,7 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 		disableOASValidation = true
 	}
 
-	entries := make(chan har.Entry)
+	entries := make(chan har.Entry, 100) // buffer up to 100 entries for OAS processing
 	go func() {
 		err := oas.EntriesToSpecs(entries, oas.ServiceSpecs)
 		if err != nil {
