@@ -154,6 +154,7 @@ func getTapMizuAgentConfig() *shared.MizuAgentConfig {
 		LogLevel:               config.Config.LogLevel(),
 		TapperResources:        config.Config.Tap.TapperResources,
 		MizuResourcesNamespace: config.Config.MizuResourcesNamespace,
+		IsNsRestrictedMode:     config.Config.IsNsRestrictedMode(),
 		AgentDatabasePath:      shared.DataDirPath,
 	}
 

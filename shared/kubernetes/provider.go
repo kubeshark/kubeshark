@@ -392,7 +392,7 @@ func (provider *Provider) CreateMizuRBAC(ctx context.Context, namespace string, 
 		Rules: []rbac.PolicyRule{
 			{
 				APIGroups: []string{"", "extensions", "apps"},
-				Resources: []string{"pods", "services", "endpoints"},
+				Resources: []string{"pods", "services", "endpoints", "namespaces"},
 				Verbs:     []string{"list", "get", "watch"},
 			},
 		},
@@ -867,6 +867,15 @@ func (provider *Provider) ListAllRunningPodsMatchingRegex(ctx context.Context, r
 		}
 	}
 	return matchingPods, nil
+}
+
+func (provider *Provider) ListAllNamespaces(ctx context.Context) ([]core.Namespace, error) {
+	namespaces, err := provider.clientSet.CoreV1().Namespaces().List(ctx, metav1.ListOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	return namespaces.Items, err
 }
 
 func (provider *Provider) GetPodLogs(ctx context.Context, namespace string, podName string) (string, error) {

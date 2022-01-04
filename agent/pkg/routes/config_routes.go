@@ -5,8 +5,8 @@ import (
 	"mizuserver/pkg/controllers"
 )
 
-func StandaloneRoutes(ginApp *gin.Engine) {
-	routeGroup := ginApp.Group("/standalone")
+func ConfigRoutes(ginApp *gin.Engine) {
+	routeGroup := ginApp.Group("/config")
 
 	routeGroup.POST("/tapConfig", controllers.PostTapConfig)
 	routeGroup.GET("/tapConfig", controllers.GetTapConfig)

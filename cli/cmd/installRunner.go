@@ -64,6 +64,7 @@ func getInstallMizuAgentConfig(maxDBSizeBytes int64, tapperResources shared.Reso
 		LogLevel:               config.Config.LogLevel(),
 		TapperResources:        tapperResources,
 		MizuResourcesNamespace: config.Config.MizuResourcesNamespace,
+		IsNsRestrictedMode:     config.Config.IsNsRestrictedMode(),
 		AgentDatabasePath:      shared.DataDirPath,
 		StandaloneMode:         true,
 	}

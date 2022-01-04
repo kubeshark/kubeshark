@@ -39,6 +39,7 @@ type MizuAgentConfig struct {
 	LogLevel               logging.Level `json:"logLevel"`
 	TapperResources        Resources     `json:"tapperResources"`
 	MizuResourcesNamespace string        `json:"mizuResourceNamespace"`
+	IsNsRestrictedMode     bool          `json:"isNsRestrictedMode"`
 	AgentDatabasePath      string        `json:"agentDatabasePath"`
 	StandaloneMode         bool          `json:"standaloneMode"`
 }
