@@ -15,58 +15,6 @@ import (
 	"sync"
 )
 
-var IgnoredExtensions = []string{"gif", "svg", "css", "png", "ico", "js", "woff2", "woff", "jpg", "jpeg", "swf", "ttf", "map", "webp", "otf"}
-var IgnoredCtypePrefixes = []string{"image/", "font/", "video/", "text/javascript"}
-var IgnoredCtypes = []string{"application/javascript", "application/x-javascript", "text/css", "application/font-woff2", "application/font-woff", "application/x-font-woff"}
-var IgnoredHeaders = []string{
-	"a-im", "accept",
-	"authorization", "cache-control", "connection", "content-encoding", "content-length", "content-type", "cookie",
-	"date", "dnt", "expect", "forwarded", "from", "front-end-https", "host", "http2-settings",
-	"max-forwards", "origin", "pragma", "proxy-authorization", "proxy-connection", "range", "referer",
-	"save-data", "te", "trailer", "transfer-encoding", "upgrade", "upgrade-insecure-requests",
-	"server", "user-agent", "via", "warning", "strict-transport-security",
-	"x-att-deviceid", "x-correlation-id", "correlation-id", "x-client-data",
-	"x-http-method-override", "x-real-ip", "x-request-id", "x-request-start", "x-requested-with", "x-uidh",
-	"x-same-domain", "x-content-type-options", "x-frame-options", "x-xss-protection",
-	"x-wap-profile", "x-scheme",
-	"newrelic", "x-cloud-trace-context", "sentry-trace",
-	"expires", "set-cookie", "p3p", "location", "content-security-policy", "content-security-policy-report-only",
-	"last-modified", "content-language",
-	"keep-alive", "etag", "alt-svc", "x-csrf-token", "x-ua-compatible", "vary", "x-powered-by",
-	"age", "allow", "www-authenticate",
-}
-
-var IgnoredHeaderPrefixes = []string{
-	":", "accept-", "access-control-", "if-", "sec-", "grpc-",
-	"x-forwarded-", "x-original-",
-	"x-up9-", "x-envoy-", "x-hasura-", "x-b3-", "x-datadog-", "x-envoy-", "x-amz-", "x-newrelic-", "x-prometheus-",
-	"x-akamai-", "x-spotim-", "x-amzn-", "x-ratelimit-",
-}
-
-func isCtypeIgnored(ctype string) bool {
-	for _, prefix := range IgnoredCtypePrefixes {
-		if strings.HasPrefix(ctype, prefix) {
-			return true
-		}
-	}
-
-	for _, toIgnore := range IgnoredCtypes {
-		if ctype == toIgnore {
-			return true
-		}
-	}
-	return false
-}
-
-func isExtIgnored(path string) bool {
-	for _, extIgn := range IgnoredExtensions {
-		if strings.HasSuffix(path, "."+extIgn) {
-			return true
-		}
-	}
-	return false
-}
-
 type ReqResp struct { // hello, generics in Go
 	Req  *har.Request
 	Resp *har.Response
@@ -165,29 +113,6 @@ func (g *SpecGen) handlePathObj(entry *har.Entry) (string, error) {
 	return opObj.OperationID, err
 }
 
-func (g *SpecGen) getPathObj(entryURL string) (*openapi.PathObj, error) {
-	urlParsed, err := url.Parse(entryURL)
-	if err != nil {
-		return nil, err
-	}
-
-	urlPath := openapi.PathValue(urlParsed.Path)
-
-	var pathObj *openapi.PathObj
-	for k, v := range g.oas.Paths.Items {
-		if k == urlPath {
-			pathObj = v
-		}
-	}
-
-	if pathObj == nil {
-		g.oas.Paths.Items[urlPath] = &openapi.PathObj{}
-		pathObj = g.oas.Paths.Items[urlPath]
-	}
-
-	return pathObj, nil
-}
-
 func handleOpObj(entry *har.Entry, pathObj *openapi.PathObj) (*openapi.Operation, error) {
 	isSuccess := 100 <= entry.Response.Status && entry.Response.Status < 400
 	opObj, wasMissing, err := getOpObj(pathObj, entry.Request.Method, isSuccess)
@@ -214,6 +139,24 @@ func handleOpObj(entry *har.Entry, pathObj *openapi.PathObj) (*openapi.Operation
 }
 
 func handleRequest(req *har.Request, opObj *openapi.Operation, isSuccess bool) error {
+	for _, hdr := range req.Headers {
+		if isHeaderIgnored(hdr.Name) {
+			continue
+		}
+
+		initParams(&opObj.Parameters)
+		hdrParam := findParamByName(opObj.Parameters, hdr.Name, true)
+		if hdrParam == nil {
+			hdrParam = createSimpleParam(strings.ToLower(hdr.Name), "header", "string")
+			appended := append(*opObj.Parameters, hdrParam)
+			opObj.Parameters = &appended
+		}
+		err := fillParamExample(hdrParam, hdr.Value)
+		if err != nil {
+			logger.Log.Warningf("Failed to add example to a parameter: %s", err)
+		}
+	}
+
 	if req.PostData != nil && req.PostData.Text != "" && isSuccess {
 		reqBody, err := getRequestBody(req, opObj, isSuccess)
 		if err != nil {
@@ -231,6 +174,30 @@ func handleRequest(req *har.Request, opObj *openapi.Operation, isSuccess bool) e
 		}
 	}
 	return nil
+}
+
+func initParams(obj **openapi.ParameterList) {
+	if *obj == nil {
+		var params openapi.ParameterList
+		params = make([]openapi.Parameter, 0)
+		*obj = &params
+	}
+}
+
+func createSimpleParam(name string, in string, ptype string) *openapi.ParameterObj {
+	required := true // FFS! https://stackoverflow.com/questions/32364027/reference-a-boolean-for-assignment-in-a-struct/32364093
+	schema := new(openapi.SchemaObj)
+	schema.Type = make(openapi.Types, 0)
+	schema.Type = append(schema.Type, openapi.TypeString)
+	newParam := openapi.ParameterObj{
+		Name:     name,
+		In:       openapi.In(in),
+		Style:    "simple",
+		Examples: map[string]openapi.Example{},
+		Schema:   schema,
+		Required: &required,
+	}
+	return &newParam
 }
 
 func handleResponse(resp *har.Response, opObj *openapi.Operation, isSuccess bool) error {
