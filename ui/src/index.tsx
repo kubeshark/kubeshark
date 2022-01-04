@@ -6,7 +6,7 @@ import EntApp from "./EntApp";
 
 ReactDOM.render(
   <React.StrictMode>
-      {window["isEnt"] ? <EntApp/> : <App/>}
+      {!window["isEnt"] ? <EntApp/> : <App/>}
   </React.StrictMode>,
   document.getElementById('root')
 );

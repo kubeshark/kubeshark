@@ -40,13 +40,13 @@ enum ConnectionStatus {
 }
 
 interface TrafficPageProps {
-    setAnalyzeStatus: (status: any) => void;
     onTLSDetected: (destAddress: string) => void;
+    setAnalyzeStatus?: (status: any) => void;
 }
 
 const api = new Api();
 
-export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLSDetected}) => {
+export const TrafficPage: React.FC<TrafficPageProps> = ({onTLSDetected, setAnalyzeStatus}) => {
 
     const classes = useLayoutStyles();
 
@@ -152,7 +152,8 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                     setTappingStatus(message.tappingStatus);
                     break
                 case "analyzeStatus":
-                    setAnalyzeStatus(message.analyzeStatus);
+                    if(setAnalyzeStatus)
+                        setAnalyzeStatus(message.analyzeStatus);
                     break
                 case "outboundLink":
                     onTLSDetected(message.Data.DstIP);

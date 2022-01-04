@@ -2,12 +2,10 @@ import React, {useState} from 'react';
 import './App.sass';
 import {TrafficPage} from "./components/TrafficPage";
 import {TLSWarning} from "./components/TLSWarning/TLSWarning";
-import {Header} from "./components/Header/Header";
 import {EntHeader} from "./components/Header/EntHeader";
 
 const EntApp = () => {
 
-    const [analyzeStatus, setAnalyzeStatus] = useState(null);
     const [showTLSWarning, setShowTLSWarning] = useState(false);
     const [userDismissedTLSWarning, setUserDismissedTLSWarning] = useState(false);
     const [addressesWithTLS, setAddressesWithTLS] = useState(new Set<string>());
@@ -24,7 +22,7 @@ const EntApp = () => {
     return (
         <div className="mizuApp">
             <EntHeader/>
-            <TrafficPage setAnalyzeStatus={setAnalyzeStatus} onTLSDetected={onTLSDetected}/>
+            <TrafficPage onTLSDetected={onTLSDetected}/>
             <TLSWarning showTLSWarning={showTLSWarning}
                         setShowTLSWarning={setShowTLSWarning}
                         addressesWithTLS={addressesWithTLS}
