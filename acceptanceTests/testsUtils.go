@@ -13,6 +13,7 @@ import (
 	"strings"
 	"sync"
 	"syscall"
+	"testing"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -141,6 +142,17 @@ func getDefaultViewCommandArgs() []string {
 	defaultCmdArgs := getDefaultCommandArgs()
 
 	return append([]string{viewCommand}, defaultCmdArgs...)
+}
+
+func runCypressTests(t *testing.T, cypressRunCmd string) {
+	cypressCmd := exec.Command("bash", "-c", cypressRunCmd)
+	t.Logf("running command: %v", cypressCmd.String())
+	out, err := cypressCmd.Output()
+	if err != nil {
+		t.Errorf("%s", out)
+		return
+	}
+	t.Logf("%s", out)
 }
 
 func retriesExecute(retriesCount int, executeFunc func() error) error {
