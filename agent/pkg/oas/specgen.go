@@ -149,6 +149,7 @@ func handleRequest(req *har.Request, opObj *openapi.Operation, isSuccess bool) e
 		IsIgnored:      func(name string) bool { return false },
 		GeneralizeName: func(name string) string { return name },
 	}
+	handleNameVals(qstrGW, &opObj.Parameters)
 
 	hdrGW := nvParams{
 		In: openapi.InHeader,
@@ -158,9 +159,7 @@ func handleRequest(req *har.Request, opObj *openapi.Operation, isSuccess bool) e
 		IsIgnored:      isHeaderIgnored,
 		GeneralizeName: strings.ToLower,
 	}
-
 	handleNameVals(hdrGW, &opObj.Parameters)
-	handleNameVals(qstrGW, &opObj.Parameters)
 
 	if req.PostData != nil && req.PostData.Text != "" && isSuccess {
 		reqBody, err := getRequestBody(req, opObj, isSuccess)
@@ -182,10 +181,13 @@ func handleRequest(req *har.Request, opObj *openapi.Operation, isSuccess bool) e
 }
 
 func handleResponse(resp *har.Response, opObj *openapi.Operation, isSuccess bool) error {
+	// TODO: we don't support "default" response
 	respObj, err := getResponseObj(resp, opObj, isSuccess)
 	if err != nil {
 		return err
 	}
+
+	handleRespHeaders(resp.Headers, respObj)
 
 	respCtype := getRespCtype(resp)
 	respContent := respObj.Content
@@ -195,6 +197,50 @@ func handleResponse(resp *har.Response, opObj *openapi.Operation, isSuccess bool
 	}
 	_ = respMedia
 	return nil
+}
+
+func handleRespHeaders(reqHeaders []har.Header, respObj *openapi.ResponseObj) {
+	visited := map[string]*openapi.HeaderObj{}
+	for _, pair := range reqHeaders {
+		if isHeaderIgnored(pair.Name) {
+			continue
+		}
+
+		nameGeneral := strings.ToLower(pair.Name)
+
+		initHeaders(respObj)
+		objHeaders := respObj.Headers
+		param := findHeaderByName(&respObj.Headers, pair.Name)
+		if param == nil {
+			param = createHeader(openapi.TypeString)
+			objHeaders[nameGeneral] = param
+		}
+		exmp := &param.Examples
+		err := fillParamExample(&exmp, pair.Value)
+		if err != nil {
+			logger.Log.Warningf("Failed to add example to a parameter: %s", err)
+		}
+		visited[nameGeneral] = param
+	}
+
+	// maintain "required" flag
+	if respObj.Headers != nil {
+		for name, param := range respObj.Headers {
+			paramObj, err := param.ResolveHeader(headerResolver)
+			if err != nil {
+				logger.Log.Warningf("Failed to resolve param: %s", err)
+				continue
+			}
+
+			_, ok := visited[strings.ToLower(name)]
+			if !ok {
+				flag := false
+				paramObj.Required = &flag
+			}
+		}
+	}
+
+	return
 }
 
 func fillContent(reqResp reqResp, respContent openapi.Content, ctype string, err error) (*openapi.MediaType, error) {
