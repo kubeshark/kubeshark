@@ -18,6 +18,7 @@ import (
 
 var globalTapConfig *models.StandaloneTapConfig
 var cancelTapperSyncer context.CancelFunc
+var kubernetesProvider *kubernetes.Provider
 
 func PostTapConfig(c *gin.Context) {
 	tapConfig := &models.StandaloneTapConfig{}
@@ -38,11 +39,14 @@ func PostTapConfig(c *gin.Context) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 
-	kubernetesProvider, err := kubernetes.NewProviderInCluster()
-	if err != nil {
-		c.JSON(http.StatusBadRequest, err)
-		cancel()
-		return
+	if kubernetesProvider == nil {
+		var err error
+		kubernetesProvider, err = kubernetes.NewProviderInCluster()
+		if err != nil {
+			c.JSON(http.StatusBadRequest, err)
+			cancel()
+			return
+		}
 	}
 
 	var tappedNamespaces []string
@@ -54,7 +58,7 @@ func PostTapConfig(c *gin.Context) {
 
 	podRegex, _ := regexp.Compile(".*")
 
-	if _, err = startMizuTapperSyncer(ctx, kubernetesProvider, tappedNamespaces, *podRegex, []string{} , tapApi.TrafficFilteringOptions{}, false); err != nil {
+	if _, err := startMizuTapperSyncer(ctx, kubernetesProvider, tappedNamespaces, *podRegex, []string{} , tapApi.TrafficFilteringOptions{}, false); err != nil {
 		c.JSON(http.StatusBadRequest, err)
 		cancel()
 		return
