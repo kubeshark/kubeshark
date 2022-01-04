@@ -16,12 +16,12 @@ import (
 	"time"
 )
 
-var globalTapConfig *models.StandaloneTapConfig
+var globalTapConfig *models.TapConfig
 var cancelTapperSyncer context.CancelFunc
 var kubernetesProvider *kubernetes.Provider
 
 func PostTapConfig(c *gin.Context) {
-	tapConfig := &models.StandaloneTapConfig{}
+	tapConfig := &models.TapConfig{}
 
 	if err := c.Bind(tapConfig); err != nil {
 		c.JSON(http.StatusBadRequest, err)

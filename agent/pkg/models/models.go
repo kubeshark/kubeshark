@@ -16,7 +16,7 @@ func GetEntry(r *tapApi.MizuEntry, v tapApi.DataUnmarshaler) error {
 	return v.UnmarshalData(r)
 }
 
-type StandaloneTapConfig struct {
+type TapConfig struct {
 	TappedNamespaces map[string]bool `json:"tappedNamespaces"`
 }
 
