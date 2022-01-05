@@ -1,7 +1,8 @@
+@import "../../variables.module"
+
 .settingsTitle
-  text-align: center
-  font-size: 32px
-  color: #205cf5
+  font-size: 28px
+  color: $blue-gray
   font-weight: 600
 
 .welcomeSubtitle
@@ -11,19 +12,49 @@
 
 .namespacesSettingsContainer
   margin-top: 20px
-  background-color: #E9EBF8
   border-radius: 4px
-  padding: 20px
+  padding: 20px 0
 
   .searchNamespace
     outline: 0
     background: white
-    border-radius: 20px
-    width: 400px
-    padding: 5px 10px
-    border: none
+    border-radius: 4px
+    width: 300px
+    padding: 8px 10px
+    border: 1px #9D9D9D solid
+    font-size: 14px
+    color: #494677
 
 .settingsActionsContainer
   display: flex
   justify-content: flex-end
-  margin-top: 20px
+  padding: 20px
+  border-top: 2px $data-background-color solid
+
+.namespacesTable
+  table
+    width: 100%
+    margin-top: 20px
+
+    tbody
+      max-height: calc(50vh - 300px)
+      overflow-y: auto
+      display: block
+
+    th
+      color: $blue-gray
+      text-align: left
+      padding: 10px
+
+    tr
+      border-bottom-width: 1px
+      border-bottom-color: $data-background-color
+      border-bottom-style: solid
+      display: table
+      table-layout: fixed
+      width: 100%
+
+    td
+      color: $light-gray
+      padding: 10px
+      font-size: 16px
