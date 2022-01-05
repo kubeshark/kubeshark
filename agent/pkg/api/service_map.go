@@ -27,7 +27,7 @@ type serviceMap struct {
 }
 
 type ServiceMap interface {
-	AddEdge(source, destination id, protocol string)
+	AddEdge(source, destination key, protocol string)
 	GetNodes() []shared.ServiceMapNode
 	GetEdges() []shared.ServiceMapEdge
 	PrintNodes()
@@ -45,9 +45,10 @@ func newServiceMap() *serviceMap {
 	}
 }
 
-type id string
+type key string
 
 type nodeData struct {
+	id       int
 	protocol string
 	count    int
 }
@@ -56,19 +57,20 @@ type edgeData struct {
 }
 
 type graph struct {
-	Nodes map[id]*nodeData
-	Edges map[id]map[id]*edgeData
+	Nodes map[key]*nodeData
+	Edges map[key]map[key]*edgeData
 }
 
 func newDirectedGraph() *graph {
 	return &graph{
-		Nodes: make(map[id]*nodeData),
-		Edges: make(map[id]map[id]*edgeData),
+		Nodes: make(map[key]*nodeData),
+		Edges: make(map[key]map[key]*edgeData),
 	}
 }
 
-func newNodeData(p string) *nodeData {
+func newNodeData(id int, p string) *nodeData {
 	return &nodeData{
+		id:       id,
 		protocol: p,
 		count:    1,
 	}
@@ -80,14 +82,14 @@ func newEdgeData() *edgeData {
 	}
 }
 
-func (s *serviceMap) addNode(id id, p string) {
-	if _, ok := s.graph.Nodes[id]; ok {
+func (s *serviceMap) addNode(k key, p string) {
+	if _, ok := s.graph.Nodes[k]; ok {
 		return
 	}
-	s.graph.Nodes[id] = newNodeData(p)
+	s.graph.Nodes[k] = newNodeData(len(s.graph.Nodes)+1, p)
 }
 
-func (s *serviceMap) AddEdge(u, v id, p string) {
+func (s *serviceMap) AddEdge(u, v key, p string) {
 	if len(u) == 0 {
 		u = UnresolvedNode
 	}
@@ -107,7 +109,7 @@ func (s *serviceMap) AddEdge(u, v id, p string) {
 	}
 
 	if _, ok := s.graph.Edges[u]; !ok {
-		s.graph.Edges[u] = make(map[id]*edgeData)
+		s.graph.Edges[u] = make(map[key]*edgeData)
 	}
 
 	if e, ok := s.graph.Edges[u][v]; ok {
@@ -124,6 +126,7 @@ func (s *serviceMap) GetNodes() []shared.ServiceMapNode {
 	for i, n := range s.graph.Nodes {
 		nodes = append(nodes, shared.ServiceMapNode{
 			Name:     string(i),
+			Id:       n.id,
 			Protocol: n.protocol,
 			Count:    n.count,
 		})
@@ -136,9 +139,19 @@ func (s *serviceMap) GetEdges() []shared.ServiceMapEdge {
 	for u, m := range s.graph.Edges {
 		for v := range m {
 			edges = append(edges, shared.ServiceMapEdge{
-				Source:      string(u),
-				Destination: string(v),
-				Count:       s.graph.Edges[u][v].count,
+				Source: shared.ServiceMapNode{
+					Name:     string(u),
+					Id:       s.graph.Nodes[u].id,
+					Protocol: s.graph.Nodes[u].protocol,
+					Count:    s.graph.Nodes[u].count,
+				},
+				Destination: shared.ServiceMapNode{
+					Name:     string(v),
+					Id:       s.graph.Nodes[v].id,
+					Protocol: s.graph.Nodes[v].protocol,
+					Count:    s.graph.Nodes[v].count,
+				},
+				Count: s.graph.Edges[u][v].count,
 			})
 		}
 	}
@@ -149,7 +162,7 @@ func (s *serviceMap) PrintNodes() {
 	fmt.Println("Printing all nodes...")
 
 	for k, n := range s.graph.Nodes {
-		fmt.Printf("Node: %v - Protocol: %v Count: %v\n", k, n.protocol, n.count)
+		fmt.Printf("Node: %v Id: %v - Protocol: %v Count: %v\n", k, n.id, n.protocol, n.count)
 	}
 }
 

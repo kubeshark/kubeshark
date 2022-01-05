@@ -83,14 +83,15 @@ type ServiceMapResponse struct {
 
 type ServiceMapNode struct {
 	Name     string `json:"name"`
+	Id       int    `json:"id"`
 	Protocol string `json:"protocol"`
 	Count    int    `json:"count"`
 }
 
 type ServiceMapEdge struct {
-	Source      string `json:"source"`
-	Destination string `json:"destination"`
-	Count       int    `json:"count"`
+	Source      ServiceMapNode `json:"source"`
+	Destination ServiceMapNode `json:"destination"`
+	Count       int            `json:"count"`
 }
 
 type TapperStatus struct {

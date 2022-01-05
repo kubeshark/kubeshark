@@ -11,15 +11,20 @@ import (
 	"github.com/up9inc/mizu/shared"
 )
 
+const (
+	MinNodeSize = 1
+	MaxNodeSize = 200
+)
+
 func calcNodeSize(value float32) float32 {
 	//TODO: Linear interpolation
-	if value < 1 {
-		value = 1
+	if value < MinNodeSize {
+		value = MinNodeSize
 	}
-	if value > 300 {
-		value = 300
+	if value > MaxNodeSize {
+		value = MaxNodeSize
 	}
-	return value
+	return value * 0.5
 }
 
 func buildGraph() *components.Page {
@@ -55,8 +60,8 @@ func buildGraph() *components.Page {
 	var graphEdges []opts.GraphLink
 	for _, e := range api.GetServiceMapInstance().GetEdges() {
 		graphEdges = append(graphEdges, opts.GraphLink{
-			Source: e.Source,
-			Target: e.Destination,
+			Source: e.Source.Name,
+			Target: e.Destination.Name,
 			Value:  float32(e.Count),
 		})
 	}
