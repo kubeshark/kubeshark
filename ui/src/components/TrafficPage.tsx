@@ -9,10 +9,11 @@ import playIcon from './assets/run.svg';
 import pauseIcon from './assets/pause.svg';
 import variables from '../variables.module.scss';
 import {StatusBar} from "./UI/StatusBar";
-import Api, {MizuApiURL, MizuWebsocketURL} from "../helpers/api";
+import Api, {MizuWebsocketURL} from "../helpers/api";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import debounce from 'lodash/debounce';
+import { ServiceMapModal } from "./ServiceMapModal/ServiceMapModal";
 
 const useLayoutStyles = makeStyles(() => ({
     details: {
@@ -60,6 +61,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
     const [tappingStatus, setTappingStatus] = useState(null);
 
     const [serviceMapStatus, setServiceMapStatus] = useState(false);
+    const [serviceMapModalOpen, setServiceMapModalOpen] = useState(false);
 
     const [isSnappedToBottom, setIsSnappedToBottom] = useState(true);
 
@@ -274,22 +276,15 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                 const serviceMapStatusResponse = await api.serviceMapStatus();
                 if (serviceMapStatusResponse["status"] === "enabled") {
                     setServiceMapStatus(true);
-                } else {
-                    setServiceMapStatus(false);
-                }
+                } 
             } catch(error) {
-                setServiceMapStatus(false);
                 console.error(error);
             }
         })()
     }, []);
 
-    const openServiceMap = debounce(() => {
-            if (serviceMapStatus) {
-                const url = `${MizuApiURL}servicemap/render`
-                window.open(url, "_blank")
-            }
-            // TODO: toast error message?
+    const openServiceMapModal = debounce(() => {
+        setServiceMapModalOpen(true)
     }, 500);
 
     const resetServiceMap = debounce(async () => {
@@ -328,7 +323,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                         color: "#fff",
                         textTransform: "none",
                     }}
-                    onClick={openServiceMap}
+                    onClick={openServiceMapModal}
                 >
                     Service Map
                 </Button>
@@ -400,6 +395,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                 pauseOnFocusLoss
                 draggable
                 pauseOnHover />
+            {serviceMapModalOpen && <ServiceMapModal isOpen={serviceMapModalOpen} onClose={() => setServiceMapModalOpen(false)} api={api} />}
         </div>
     )
 };
