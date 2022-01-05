@@ -80,7 +80,18 @@ func (n *Node) getOrSet(path NodePath, pathObjToSet *openapi.PathObj) (node *Nod
 }
 
 func (n *Node) createParam() *openapi.ParameterObj {
-	newParam := createSimpleParam("param", "path", "string")
+	name := "param"
+
+	// REST assumption, not always correct
+	if strings.HasSuffix(*n.constant, "es") && len(*n.constant) > 4 {
+		name = *n.constant
+		name = name[:len(name)-2] + "Id"
+	} else if strings.HasSuffix(*n.constant, "s") && len(*n.constant) > 3 {
+		name = *n.constant
+		name = name[:len(name)-1] + "Id"
+	}
+
+	newParam := createSimpleParam(name, "path", "string")
 	x := n.countParentParams()
 	if x > 1 {
 		newParam.Name = newParam.Name + strconv.Itoa(x)
