@@ -1,7 +1,9 @@
 package controllers
 
 import (
+	"github.com/chanced/openapi"
 	"github.com/gin-gonic/gin"
+	"github.com/up9inc/mizu/shared/logger"
 	"mizuserver/pkg/oas"
 	"net/http"
 )
@@ -41,4 +43,20 @@ func GetOASSpec(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, spec)
+}
+
+func GetOASAllSpecs(c *gin.Context) {
+	res := map[string]*openapi.OpenAPI{}
+	oas.ServiceSpecs.Range(func(key, value interface{}) bool {
+		svc := key.(string)
+		gen := value.(*oas.SpecGen)
+		spec, err := gen.GetSpec()
+		if err != nil {
+			logger.Log.Warningf("Failed to obtain spec for service %s: %s", svc, err)
+			return true
+		}
+		res[svc] = spec
+		return true
+	})
+	c.JSON(http.StatusOK, res)
 }

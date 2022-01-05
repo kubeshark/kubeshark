@@ -18,6 +18,17 @@ func TestGetOASServers(t *testing.T) {
 	return
 }
 
+func TestGetOASAllSpecs(t *testing.T) {
+	recorder := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(recorder)
+
+	oas.ServiceSpecs.Store("some", oas.NewGen("some"))
+
+	GetOASAllSpecs(c)
+	t.Logf("Written body: %s", recorder.Body.String())
+	return
+}
+
 func TestGetOASSpec(t *testing.T) {
 	recorder := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(recorder)
