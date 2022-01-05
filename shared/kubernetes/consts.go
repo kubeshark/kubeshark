@@ -17,3 +17,12 @@ const (
 	PersistentVolumeClaimName  = MizuResourcesPrefix + "volume-claim"
 	MinKubernetesServerVersion = "1.16.0"
 )
+
+const (
+	LabelPrefixApp      = "app.kubernetes.io/"
+	LabelManagedBy      = LabelPrefixApp + "managed-by"
+	LabelCreatedBy      = LabelPrefixApp + "created-by"
+	LabelValueMizu      = "mizu"
+	LabelValueMizuCLI   = "mizu-cli"
+	LabelValueMizuAgent = "mizu-agent"
+)

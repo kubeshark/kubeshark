@@ -43,6 +43,8 @@ type Provider struct {
 	kubernetesConfig clientcmd.ClientConfig
 	clientConfig     restclient.Config
 	Namespace        string
+	managedBy        string
+	createdBy        string
 }
 
 const (
@@ -86,6 +88,8 @@ func NewProvider(kubeConfigPath string) (*Provider, error) {
 		clientSet:        clientSet,
 		kubernetesConfig: kubernetesConfig,
 		clientConfig:     *restClientConfig,
+		managedBy:        LabelValueMizu,
+		createdBy:        LabelValueMizuCLI,
 	}, nil
 }
 
@@ -103,6 +107,8 @@ func NewProviderInCluster() (*Provider, error) {
 		clientSet:        clientSet,
 		kubernetesConfig: nil, // not relevant in cluster
 		clientConfig:     *restClientConfig,
+		managedBy:        LabelValueMizu,
+		createdBy:        LabelValueMizuAgent,
 	}, nil
 }
 
@@ -158,6 +164,10 @@ func (provider *Provider) CreateNamespace(ctx context.Context, name string) (*co
 	namespaceSpec := &core.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
+			Labels: map[string]string{
+				LabelManagedBy: provider.managedBy,
+				LabelCreatedBy: provider.createdBy,
+			},
 		},
 	}
 	return provider.clientSet.CoreV1().Namespaces().Create(ctx, namespaceSpec, metav1.CreateOptions{})
@@ -242,8 +252,12 @@ func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, moun
 
 	pod := &core.Pod{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   opts.PodName,
-			Labels: map[string]string{"app": opts.PodName},
+			Name: opts.PodName,
+			Labels: map[string]string{
+				"app":          opts.PodName,
+				LabelManagedBy: provider.managedBy,
+				LabelCreatedBy: provider.createdBy,
+			},
 		},
 		Spec: core.PodSpec{
 			Containers: []core.Container{
@@ -303,6 +317,10 @@ func (provider *Provider) CreateDeployment(ctx context.Context, namespace string
 	deployment := &v1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: deploymentName,
+			Labels: map[string]string{
+				LabelManagedBy: provider.managedBy,
+				LabelCreatedBy: provider.createdBy,
+			},
 		},
 		Spec: v1.DeploymentSpec{
 			Selector: &metav1.LabelSelector{
@@ -319,6 +337,10 @@ func (provider *Provider) CreateService(ctx context.Context, namespace string, s
 	service := core.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: serviceName,
+			Labels: map[string]string{
+				LabelManagedBy: provider.managedBy,
+				LabelCreatedBy: provider.createdBy,
+			},
 		},
 		Spec: core.ServiceSpec{
 			Ports:    []core.ServicePort{{TargetPort: intstr.FromInt(shared.DefaultApiServerPort), Port: 80}},
@@ -347,30 +369,42 @@ func (provider *Provider) doesResourceExist(resource interface{}, err error) (bo
 	return resource != nil, nil
 }
 
-func (provider *Provider) CreateMizuRBAC(ctx context.Context, namespace string, serviceAccountName string, clusterRoleName string, clusterRoleBindingName string, version string) error {
+func (provider *Provider) CreateMizuRBAC(ctx context.Context, namespace string, serviceAccountName string, clusterRoleName string, clusterRoleBindingName string, version string, resources []string) error {
 	serviceAccount := &core.ServiceAccount{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   serviceAccountName,
-			Labels: map[string]string{"mizu-cli-version": version},
+			Name: serviceAccountName,
+			Labels: map[string]string{
+				"mizu-cli-version": version,
+				LabelManagedBy:     provider.managedBy,
+				LabelCreatedBy:     provider.createdBy,
+			},
 		},
 	}
 	clusterRole := &rbac.ClusterRole{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   clusterRoleName,
-			Labels: map[string]string{"mizu-cli-version": version},
+			Name: clusterRoleName,
+			Labels: map[string]string{
+				"mizu-cli-version": version,
+				LabelManagedBy:     provider.managedBy,
+				LabelCreatedBy:     provider.createdBy,
+			},
 		},
 		Rules: []rbac.PolicyRule{
 			{
 				APIGroups: []string{"", "extensions", "apps"},
-				Resources: []string{"pods", "services", "endpoints"},
+				Resources: resources,
 				Verbs:     []string{"list", "get", "watch"},
 			},
 		},
 	}
 	clusterRoleBinding := &rbac.ClusterRoleBinding{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   clusterRoleBindingName,
-			Labels: map[string]string{"mizu-cli-version": version},
+			Name: clusterRoleBindingName,
+			Labels: map[string]string{
+				"mizu-cli-version": version,
+				LabelManagedBy:     provider.managedBy,
+				LabelCreatedBy:     provider.createdBy,
+			},
 		},
 		RoleRef: rbac.RoleRef{
 			Name:     clusterRoleName,
@@ -403,14 +437,22 @@ func (provider *Provider) CreateMizuRBAC(ctx context.Context, namespace string, 
 func (provider *Provider) CreateMizuRBACNamespaceRestricted(ctx context.Context, namespace string, serviceAccountName string, roleName string, roleBindingName string, version string) error {
 	serviceAccount := &core.ServiceAccount{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   serviceAccountName,
-			Labels: map[string]string{"mizu-cli-version": version},
+			Name: serviceAccountName,
+			Labels: map[string]string{
+				"mizu-cli-version": version,
+				LabelManagedBy:     provider.managedBy,
+				LabelCreatedBy:     provider.createdBy,
+			},
 		},
 	}
 	role := &rbac.Role{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   roleName,
-			Labels: map[string]string{"mizu-cli-version": version},
+			Name: roleName,
+			Labels: map[string]string{
+				"mizu-cli-version": version,
+				LabelManagedBy:     provider.managedBy,
+				LabelCreatedBy:     provider.createdBy,
+			},
 		},
 		Rules: []rbac.PolicyRule{
 			{
@@ -422,8 +464,12 @@ func (provider *Provider) CreateMizuRBACNamespaceRestricted(ctx context.Context,
 	}
 	roleBinding := &rbac.RoleBinding{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   roleBindingName,
-			Labels: map[string]string{"mizu-cli-version": version},
+			Name: roleBindingName,
+			Labels: map[string]string{
+				"mizu-cli-version": version,
+				LabelManagedBy:     provider.managedBy,
+				LabelCreatedBy:     provider.createdBy,
+			},
 		},
 		RoleRef: rbac.RoleRef{
 			Name:     roleName,
@@ -456,8 +502,12 @@ func (provider *Provider) CreateMizuRBACNamespaceRestricted(ctx context.Context,
 func (provider *Provider) CreateDaemonsetRBAC(ctx context.Context, namespace string, serviceAccountName string, roleName string, roleBindingName string, version string) error {
 	role := &rbac.Role{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   roleName,
-			Labels: map[string]string{"mizu-cli-version": version},
+			Name: roleName,
+			Labels: map[string]string{
+				"mizu-cli-version": version,
+				LabelManagedBy:     provider.managedBy,
+				LabelCreatedBy:     provider.createdBy,
+			},
 		},
 		Rules: []rbac.PolicyRule{
 			{
@@ -474,8 +524,12 @@ func (provider *Provider) CreateDaemonsetRBAC(ctx context.Context, namespace str
 	}
 	roleBinding := &rbac.RoleBinding{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   roleBindingName,
-			Labels: map[string]string{"mizu-cli-version": version},
+			Name: roleBindingName,
+			Labels: map[string]string{
+				"mizu-cli-version": version,
+				LabelManagedBy:     provider.managedBy,
+				LabelCreatedBy:     provider.createdBy,
+			},
 		},
 		RoleRef: rbac.RoleRef{
 			Name:     roleName,
@@ -588,6 +642,10 @@ func (provider *Provider) CreateConfigMap(ctx context.Context, namespace string,
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name: configMapName,
+			Labels: map[string]string{
+				LabelManagedBy: provider.managedBy,
+				LabelCreatedBy: provider.createdBy,
+			},
 		},
 		Data: configMapData,
 	}
@@ -746,14 +804,23 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	podSpec.WithVolumes(&configMapVolume, procfsVolume)
 
 	podTemplate := applyconfcore.PodTemplateSpec()
-	podTemplate.WithLabels(map[string]string{"app": tapperPodName})
+	podTemplate.WithLabels(map[string]string{
+		"app":          tapperPodName,
+		LabelManagedBy: provider.managedBy,
+		LabelCreatedBy: provider.createdBy,
+	})
 	podTemplate.WithSpec(podSpec)
 
 	labelSelector := applyconfmeta.LabelSelector()
 	labelSelector.WithMatchLabels(map[string]string{"app": tapperPodName})
 
 	daemonSet := applyconfapp.DaemonSet(daemonSetName, namespace)
-	daemonSet.WithSpec(applyconfapp.DaemonSetSpec().WithSelector(labelSelector).WithTemplate(podTemplate))
+	daemonSet.
+		WithLabels(map[string]string{
+			LabelManagedBy: provider.managedBy,
+			LabelCreatedBy: provider.createdBy,
+		}).
+		WithSpec(applyconfapp.DaemonSetSpec().WithSelector(labelSelector).WithTemplate(podTemplate))
 
 	_, err = provider.clientSet.AppsV1().DaemonSets(namespace).Apply(ctx, daemonSet, metav1.ApplyOptions{FieldManager: fieldManagerName})
 	return err
@@ -802,6 +869,15 @@ func (provider *Provider) ListAllRunningPodsMatchingRegex(ctx context.Context, r
 	return matchingPods, nil
 }
 
+func (provider *Provider) ListAllNamespaces(ctx context.Context) ([]core.Namespace, error) {
+	namespaces, err := provider.clientSet.CoreV1().Namespaces().List(ctx, metav1.ListOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	return namespaces.Items, err
+}
+
 func (provider *Provider) GetPodLogs(ctx context.Context, namespace string, podName string) (string, error) {
 	podLogOpts := core.PodLogOptions{}
 	req := provider.clientSet.CoreV1().Pods(namespace).GetLogs(podName, &podLogOpts)
@@ -827,6 +903,41 @@ func (provider *Provider) GetNamespaceEvents(ctx context.Context, namespace stri
 	return eventList.String(), nil
 }
 
+func (provider *Provider) ListManagedServiceAccounts(ctx context.Context, namespace string) (*core.ServiceAccountList, error) {
+	listOptions := metav1.ListOptions{
+		LabelSelector: fmt.Sprintf("%s=%s", LabelManagedBy, provider.managedBy),
+	}
+	return provider.clientSet.CoreV1().ServiceAccounts(namespace).List(ctx, listOptions)
+}
+
+func (provider *Provider) ListManagedClusterRoles(ctx context.Context) (*rbac.ClusterRoleList, error) {
+	listOptions := metav1.ListOptions{
+		LabelSelector: fmt.Sprintf("%s=%s", LabelManagedBy, provider.managedBy),
+	}
+	return provider.clientSet.RbacV1().ClusterRoles().List(ctx, listOptions)
+}
+
+func (provider *Provider) ListManagedClusterRoleBindings(ctx context.Context) (*rbac.ClusterRoleBindingList, error) {
+	listOptions := metav1.ListOptions{
+		LabelSelector: fmt.Sprintf("%s=%s", LabelManagedBy, provider.managedBy),
+	}
+	return provider.clientSet.RbacV1().ClusterRoleBindings().List(ctx, listOptions)
+}
+
+func (provider *Provider) ListManagedRoles(ctx context.Context, namespace string) (*rbac.RoleList, error) {
+	listOptions := metav1.ListOptions{
+		LabelSelector: fmt.Sprintf("%s=%s", LabelManagedBy, provider.managedBy),
+	}
+	return provider.clientSet.RbacV1().Roles(namespace).List(ctx, listOptions)
+}
+
+func (provider *Provider) ListManagedRoleBindings(ctx context.Context, namespace string) (*rbac.RoleBindingList, error) {
+	listOptions := metav1.ListOptions{
+		LabelSelector: fmt.Sprintf("%s=%s", LabelManagedBy, provider.managedBy),
+	}
+	return provider.clientSet.RbacV1().RoleBindings(namespace).List(ctx, listOptions)
+}
+
 func (provider *Provider) IsDefaultStorageProviderAvailable(ctx context.Context) (bool, error) {
 	storageClassList, err := provider.clientSet.StorageV1().StorageClasses().List(ctx, metav1.ListOptions{})
 	if err != nil {
@@ -845,6 +956,10 @@ func (provider *Provider) CreatePersistentVolumeClaim(ctx context.Context, names
 	volumeClaim := &core.PersistentVolumeClaim{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: volumeClaimName,
+			Labels: map[string]string{
+				LabelManagedBy: provider.managedBy,
+				LabelCreatedBy: provider.createdBy,
+			},
 		},
 		Spec: core.PersistentVolumeClaimSpec{
 			AccessModes: []core.PersistentVolumeAccessMode{core.ReadWriteOnce},

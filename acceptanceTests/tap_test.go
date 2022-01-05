@@ -138,6 +138,8 @@ func TestTapGuiPort(t *testing.T) {
 				t.Errorf("failed to start tap pods on time, err: %v", err)
 				return
 			}
+
+			runCypressTests(t, fmt.Sprintf("npx cypress run --spec \"cypress/integration/tests/GuiPort.js\" --env port=%d", guiPort))
 		})
 	}
 }

@@ -20,7 +20,6 @@ var (
 	TappersStatus        map[string]shared.TapperStatus
 	authStatus           *models.AuthStatus
 	RecentTLSLinks       = cache.New(tlsLinkRetainmentTime, tlsLinkRetainmentTime)
-	ExpectedTapperAmount = -1 //only relevant in install mode as cli manages tappers otherwise
 	tappersCountLock     = sync.Mutex{}
 )
 
