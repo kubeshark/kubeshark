@@ -21,7 +21,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({isOpen, onClose}) =
     const [namespaces, setNamespaces] = useState({});
     const [isLoading, setIsLoading] = useState(false);
     const [searchValue, setSearchValue] = useState("");
-    const isFirstLogin = true;
+    const isFirstLogin = false;
 
     useEffect(() => {
         (async () => {
@@ -108,7 +108,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({isOpen, onClose}) =
                 <div style={{padding: 32, paddingBottom: 0}}>
                     <div className="settingsTitle">Tapping Settings</div>
                     <div className="settingsSubtitle" style={{marginTop: 20}}>
-                        please choose from below the namespaces for tapping, traffic for namespaces selected will be displayed
+                        Please choose from below the namespaces for tapping, traffic for namespaces selected will be displayed
                     </div>
                     {isLoading ? <div style={{textAlign: "center", padding: 20}}>
                         <img alt="spinner" src={spinner} style={{height: 35}}/>
