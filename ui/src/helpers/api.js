@@ -103,7 +103,7 @@ export default class Api {
             this.persistToken(response.data.token);
             return response;
         } catch (e) {
-            if (e.response.status == 400) {
+            if (e.response.status === 400) {
                 throw {
                     'type': FormValidationErrorType,
                     'messages': e.response.data

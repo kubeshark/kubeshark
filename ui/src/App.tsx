@@ -36,7 +36,7 @@ const App = () => {
     const [addressesWithTLS, setAddressesWithTLS] = useState(new Set<string>());
 
     const [page, setPage] = useState(Page.Traffic); // TODO: move to state management
-    
+
     const determinePage = async () => { // TODO: move to state management
         try {
             const isInstallNeeded = await api.isInstallNeeded();
@@ -68,7 +68,7 @@ const App = () => {
             setShowTLSWarning(true);
         }
     };
-    
+
     let pageComponent: any;
 
     switch (page) { // TODO: move to state management / proper routing
@@ -84,9 +84,9 @@ const App = () => {
         default:
             pageComponent = <div>Unknown Error</div>;
     }
-    
+
     if (isLoading) {
-    	return <LoadingOverlay/>;
+        return <LoadingOverlay/>;
     }
 
     return (
@@ -100,8 +100,8 @@ const App = () => {
                             setAddressesWithTLS={setAddressesWithTLS}
                             userDismissedTLSWarning={userDismissedTLSWarning}
                             setUserDismissedTLSWarning={setUserDismissedTLSWarning}/>
-           </MizuContext.Provider>
-           <ToastContainer
+            </MizuContext.Provider>
+            <ToastContainer
                 position="bottom-right"
                 autoClose={5000}
                 hideProgressBar={false}

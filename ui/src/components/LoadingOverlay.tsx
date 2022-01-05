@@ -11,16 +11,10 @@ const LoadingOverlay: React.FC<LoadingOverlayProps> = ({delay}) => {
 
     const [isVisible, setIsVisible] = useState(false);
 
-    //@ts-ignore
     useEffect(() => {
-        let isRelevant = true;
-
         setTimeout(() => {
-            if (isRelevant)
-                setIsVisible(true);
+            setIsVisible(true);
         }, delay ?? SpinnerShowDelayMs);
-
-        return () => isRelevant = false;
     }, []);
 
     return <div className="loading-overlay-container" hidden={!isVisible}>
