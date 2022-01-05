@@ -29,7 +29,7 @@ export const TLSWarning: React.FC<TLSWarningProps>  = ({showTLSWarning, setShowT
                 console.error(e);
             }
         })();
-    }, []);
+    }, [setShowTLSWarning, setAddressesWithTLS]);
 
     return (<Snackbar open={showTLSWarning && !userDismissedTLSWarning}>
         <MuiAlert classes={{filledWarning: 'customWarningStyle'}} elevation={6} variant="filled"

@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from "react";
-import {Modal, Backdrop, Fade, Box, Button, makeStyles} from "@material-ui/core";
+import {Modal, Backdrop, Fade, Box, Button} from "@material-ui/core";
 import {modalStyle} from "../Filters";
 import Checkbox from "../UI/Checkbox";
 import './SettingsModal.sass';
@@ -18,10 +18,10 @@ const api = new Api();
 export const SettingsModal: React.FC<SettingsModalProps> = ({isOpen, onClose}) => {
 
     const classes = useCommonStyles();
-    const [namespaces, setNamespaces] = useState({aa: true, bb: false} as any);
+    const [namespaces, setNamespaces] = useState({});
     const [isLoading, setIsLoading] = useState(false);
     const [searchValue, setSearchValue] = useState("");
-    const isFirstLogin = false;
+    const isFirstLogin = true;
 
     useEffect(() => {
         (async () => {
@@ -76,7 +76,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({isOpen, onClose}) =
             </thead>
             <tbody>
             {Object.keys(namespaces).filter((namespace) => namespace.includes(searchValue)).map(namespace => {
-                    return <tr>
+                    return <tr key={namespace}>
                         <td style={{width: 50}}>
                             <Checkbox checked={namespaces[namespace]} onToggle={() => toggleTapNamespace(namespace)}/>
                         </td>
@@ -88,16 +88,20 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({isOpen, onClose}) =
         </table>
     }
 
+    const onModalClose = (reason) => {
+        if(reason === 'backdropClick' && isFirstLogin) return;
+        onClose();
+    }
+
     return <Modal
         open={isOpen}
-        onClose={onClose}
+        onClose={(event, reason) => onModalClose(reason)}
         closeAfterTransition
         BackdropComponent={Backdrop}
         BackdropProps={{
             timeout: 500,
         }}
         style={{overflow: 'auto'}}
-        disableBackdropClick={isFirstLogin}
     >
         <Fade in={isOpen}>
             <Box sx={modalStyle} style={{width: "40vw", maxWidth: 600, height: "70vh", padding: 0, display: "flex", justifyContent: "space-between", flexDirection: "column"}}>
