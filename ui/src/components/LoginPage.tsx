@@ -5,7 +5,7 @@ import { MizuContext, Page } from "../App";
 import Api from "../helpers/api";
 import LoadingOverlay from "./LoadingOverlay";
 
-const api = new Api();
+const api = Api.getInstance();
 
 const LoginPage: React.FC = () => {
 

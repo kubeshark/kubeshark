@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"mizuserver/pkg/middlewares"
 	"mizuserver/pkg/models"
 	"net/http"
 	"sync"
@@ -44,12 +45,12 @@ func init() {
 	connectedWebsockets = make(map[int]*SocketConnection, 0)
 }
 
-// TODO: add m2m authentication to these routes
 func WebSocketRoutes(app *gin.Engine, eventHandlers EventHandlers, startTime int64) {
 	app.GET("/ws", func(c *gin.Context) {
 		websocketHandler(c.Writer, c.Request, eventHandlers, false, startTime)
-	})
-	app.GET("/wsTapper", func(c *gin.Context) {
+	}, middlewares.RequiresAuth())
+
+	app.GET("/wsTapper", func(c *gin.Context) { // TODO: add m2m authentication to this route
 		websocketHandler(c.Writer, c.Request, eventHandlers, true, startTime)
 	})
 }

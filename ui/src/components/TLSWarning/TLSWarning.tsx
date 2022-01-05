@@ -4,7 +4,7 @@ import React, {useEffect} from "react";
 import Api from "../../helpers/api";
 import './TLSWarning.sass';
 
-const api = new Api();
+const api = Api.getInstance();
 
 interface TLSWarningProps {
     showTLSWarning: boolean

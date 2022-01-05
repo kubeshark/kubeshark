@@ -6,7 +6,7 @@ import Api, { FormValidationErrorType } from "../helpers/api";
 import { toast } from 'react-toastify';
 import LoadingOverlay from "./LoadingOverlay";
 
-const api = new Api();
+const api = Api.getInstance();
 
 export const InstallPage: React.FC = () => {
 

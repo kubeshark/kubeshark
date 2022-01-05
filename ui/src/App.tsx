@@ -10,7 +10,7 @@ import LoadingOverlay from './components/LoadingOverlay';
 import LoginPage from './components/LoginPage';
 import InstallPage from './components/InstallPage';
 
-const api = new Api();
+const api = Api.getInstance();
 
  // TODO: move to state management
 export enum Page {
@@ -38,6 +38,11 @@ const App = () => {
     const [page, setPage] = useState(Page.Traffic); // TODO: move to state management
 
     const determinePage = async () => { // TODO: move to state management
+        if (window['__IS_STANDALONE__'] === true) {
+            setPage(Page.Traffic);
+            return;
+        }
+
         try {
             const isInstallNeeded = await api.isInstallNeeded();
             if (isInstallNeeded) {

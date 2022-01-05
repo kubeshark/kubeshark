@@ -12,6 +12,14 @@ const CancelToken = axios.CancelToken;
 const apiURL = process.env.REACT_APP_OVERRIDE_API_URL ? process.env.REACT_APP_OVERRIDE_API_URL : `${window.location.origin}/`;
 
 export default class Api {
+    static instance;
+
+    static getInstance() {
+        if (!Api.instance) {
+            Api.instance = new Api();
+        }
+        return Api.instance;
+    }
 
     constructor() {
         this.token = localStorage.getItem("token");

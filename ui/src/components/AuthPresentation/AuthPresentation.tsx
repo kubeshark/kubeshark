@@ -2,7 +2,7 @@ import React, {useEffect, useState} from "react";
 import Api from "../../helpers/api";
 import './AuthPresentation.sass';
 
-const api = new Api();
+const api = Api.getInstance();
 
 export const AuthPresentation = () => {
 

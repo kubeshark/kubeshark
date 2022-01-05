@@ -44,7 +44,7 @@ interface TrafficPageProps {
     onTLSDetected: (destAddress: string) => void;
 }
 
-const api = new Api();
+const api = Api.getInstance();
 
 export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLSDetected}) => {
 
