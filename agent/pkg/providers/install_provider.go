@@ -2,13 +2,7 @@ package providers
 
 import (
 	"context"
-	"errors"
 	"mizuserver/pkg/config"
-)
-
-const (
-	installStateFileName = "install_state.json"
-	adminUser            = "admin"
 )
 
 func IsInstallNeeded() (bool, error) {
@@ -21,19 +15,4 @@ func IsInstallNeeded() (bool, error) {
 	} else {
 		return !anyUserExists, nil
 	}
-}
-
-func DoInstall(adminPassword string, ctx context.Context) (*string, error) {
-	if IsInstallNeeded, err := IsInstallNeeded(); err != nil {
-		return nil, err
-	} else if !IsInstallNeeded {
-		return nil, errors.New("install has already been performed")
-	}
-
-	token, _, err := RegisterUser(adminUser, adminPassword, ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	return token, nil
 }

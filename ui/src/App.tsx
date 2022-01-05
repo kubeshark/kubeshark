@@ -6,7 +6,7 @@ import {Header} from "./components/Header/Header";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Api from "./helpers/api";
-import LoadingOverlay from './components/LoadOverlay';
+import LoadingOverlay from './components/LoadingOverlay';
 import LoginPage from './components/LoginPage';
 import InstallPage from './components/InstallPage';
 

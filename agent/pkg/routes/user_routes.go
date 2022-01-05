@@ -11,4 +11,5 @@ func UserRoutes(ginApp *gin.Engine) {
 
 	routeGroup.POST("/login", controllers.Login)
 	routeGroup.POST("/logout", controllers.Logout)
+	routeGroup.POST("/register", controllers.Register)
 }

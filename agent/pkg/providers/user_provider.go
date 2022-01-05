@@ -2,21 +2,23 @@ package providers
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 	"net/http/cookiejar"
 
 	ory "github.com/ory/kratos-client-go"
+	"github.com/up9inc/mizu/shared/logger"
 )
 
 var client = getKratosClient("http://127.0.0.1:4433", "http://127.0.0.1:4434")
 
 // returns session token if successful
-func RegisterUser(username string, password string, ctx context.Context) (token *string, identityId string, err error) {
+func RegisterUser(username string, password string, ctx context.Context) (token *string, identityId string, err error, formErrorMessages map[string][]ory.UiText) {
 	flow, _, err := client.V0alpha2Api.InitializeSelfServiceRegistrationFlowWithoutBrowser(ctx).Execute()
 	if err != nil {
-		return nil, "", err
+		return nil, "", err, nil
 	}
 
 	result, _, err := client.V0alpha2Api.SubmitSelfServiceRegistrationFlow(ctx).Flow(flow.Id).SubmitSelfServiceRegistrationFlowBody(
@@ -28,10 +30,16 @@ func RegisterUser(username string, password string, ctx context.Context) (token 
 	).Execute()
 
 	if err != nil {
-		return nil, "", err
+		parsedKratosError, parsingErr := parseKratosRegistrationFormError(err)
+		if parsingErr != nil {
+			logger.Log.Debugf("error parsing kratos error: %v", parsingErr)
+			return nil, "", err, nil
+		} else {
+			return nil, "", err, parsedKratosError
+		}
 	}
 
-	return result.SessionToken, result.Identity.Id, nil
+	return result.SessionToken, result.Identity.Id, nil, nil
 }
 
 func PerformLogin(username string, password string, ctx context.Context) (*string, error) {
@@ -125,4 +133,30 @@ func getKratosClient(url string, adminUrl string) *ory.APIClient {
 	cj, _ := cookiejar.New(nil)
 	conf.HTTPClient = &http.Client{Jar: cj}
 	return ory.NewAPIClient(conf)
+}
+
+// returns map of form value key to error message
+func parseKratosRegistrationFormError(err error) (map[string][]ory.UiText, error) {
+	var openApiError *ory.GenericOpenAPIError
+	if errors.As(err, &openApiError) {
+		var registrationFlowModel *ory.SelfServiceRegistrationFlow
+		if jsonErr := json.Unmarshal(openApiError.Body(), &registrationFlowModel); jsonErr != nil {
+			return nil, jsonErr
+		} else {
+			formMessages := registrationFlowModel.Ui.Nodes
+			parsedMessages := make(map[string][]ory.UiText)
+
+			for _, message := range formMessages {
+				if len(message.Messages) > 0 {
+					if _, ok := parsedMessages[message.Group]; !ok {
+						parsedMessages[message.Group] = make([]ory.UiText, 0)
+					}
+					parsedMessages[message.Group] = append(parsedMessages[message.Group], message.Messages...)
+				}
+			}
+			return parsedMessages, nil
+		}
+	} else {
+		return nil, errors.New("error is not a generic openapi error")
+	}
 }

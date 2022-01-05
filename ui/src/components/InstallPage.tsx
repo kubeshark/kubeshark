@@ -2,9 +2,9 @@ import { Button, TextField } from "@material-ui/core";
 import React, { useContext, useState } from "react";
 import { MizuContext, Page } from "../App";
 import { adminUsername } from "../consts";
-import Api from "../helpers/api";
+import Api, { FormValidationErrorType } from "../helpers/api";
 import { toast } from 'react-toastify';
-import LoadingOverlay from "./LoadOverlay";
+import LoadingOverlay from "./LoadingOverlay";
 
 const api = new Api();
 
@@ -17,7 +17,6 @@ export const InstallPage: React.FC = () => {
     const {setPage} = useContext(MizuContext);
 
     const onFormSubmit = async () => {
-        setIsLoading(true);
         if (password.length < 8) {
             toast.error("Password must be at least 8 characters long");
             return;
@@ -27,12 +26,20 @@ export const InstallPage: React.FC = () => {
         }
 
         try {
-            await api.postInstall(password);
+            setIsLoading(true);
+            await api.register(adminUsername, password);
             if (!await api.isAuthenticationNeeded()) {
                 toast.success("admin user created successfully");
                 setPage(Page.Traffic);
             }
         } catch (e) {
+            if (e.type === FormValidationErrorType) {
+                for (const messages of Object.values(e.messages) as any[]) {
+                    for (const message of messages) {
+                        toast.error(message.text);
+                    }
+                }
+            }
             console.error(e);
         } finally {
             setIsLoading(false);

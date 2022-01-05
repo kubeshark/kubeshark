@@ -4,6 +4,8 @@ import * as axios from "axios";
 export const MizuWebsocketURL = process.env.REACT_APP_OVERRIDE_WS_URL ? process.env.REACT_APP_OVERRIDE_WS_URL :
                         window.location.protocol === 'https:' ? `wss://${window.location.host}/ws` : `ws://${window.location.host}/ws`;
 
+export const FormValidationErrorType = "formError";
+
 const CancelToken = axios.CancelToken;
 
 // When working locally cp `cp .env.example .env`
@@ -91,15 +93,25 @@ export default class Api {
         }
     }
 
-    postInstall = async (adminPassword) => {
+    register = async (username, password) => {
         const form = new FormData();
-        form.append('adminPassword', adminPassword)
+        form.append('username', username);
+        form.append('password', password);
 
-        const response = await this.client.post(`/install/`, form);
-        if (response.status >= 200 && response.status < 300) {
+        try {
+            const response = await this.client.post(`/user/register`, form);
             this.persistToken(response.data.token);
+            return response;
+        } catch (e) {
+            if (e.response.status == 400) {
+                throw {
+                    'type': FormValidationErrorType,
+                    'messages': e.response.data
+                };
+            } else {
+                throw e;
+            }
         }
-
     }
 
     login = async (username, password) => {
