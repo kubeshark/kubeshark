@@ -38,7 +38,7 @@ const App = () => {
     const [page, setPage] = useState(Page.Traffic); // TODO: move to state management
 
     const determinePage = async () => { // TODO: move to state management
-        if (window['__IS_STANDALONE__'] === true) {
+        if (window['__IS_STANDALONE__'] !== true) {
             setPage(Page.Traffic);
             return;
         }
