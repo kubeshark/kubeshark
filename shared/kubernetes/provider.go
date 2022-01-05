@@ -186,7 +186,7 @@ type ApiServerOptions struct {
 	LogLevel              logging.Level
 }
 
-func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, mountVolumeClaim bool, volumeClaimName string) (*core.Pod, error) {
+func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, mountVolumeClaim bool, volumeClaimName string, createAuthContainer bool) (*core.Pod, error) {
 	var marshaledSyncEntriesConfig []byte
 	if opts.SyncEntriesConfig != nil {
 		var err error
@@ -250,6 +250,69 @@ func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, moun
 		})
 	}
 
+	containers := []core.Container{
+		{
+			Name:            opts.PodName,
+			Image:           opts.PodImage,
+			ImagePullPolicy: opts.ImagePullPolicy,
+			VolumeMounts:    volumeMounts,
+			Command:         command,
+			Env: []core.EnvVar{
+				{
+					Name:  shared.SyncEntriesConfigEnvVar,
+					Value: string(marshaledSyncEntriesConfig),
+				},
+				{
+					Name:  shared.LogLevelEnvVar,
+					Value: opts.LogLevel.String(),
+				},
+			},
+			Resources: core.ResourceRequirements{
+				Limits: core.ResourceList{
+					"cpu":    cpuLimit,
+					"memory": memLimit,
+				},
+				Requests: core.ResourceList{
+					"cpu":    cpuRequests,
+					"memory": memRequests,
+				},
+			},
+		},
+	}
+
+	if createAuthContainer {
+		containers = append(containers, core.Container{
+			Name:            "kratos",
+			Image:           "gcr.io/up9-docker-hub/mizu-kratos/stable:0.0.0",
+			ImagePullPolicy: opts.ImagePullPolicy,
+			VolumeMounts:    volumeMounts,
+			ReadinessProbe: &core.Probe{
+				FailureThreshold: 3,
+				Handler: core.Handler{
+					HTTPGet: &core.HTTPGetAction{
+						Path:   "/health/ready",
+						Port:   intstr.FromInt(4433),
+						Scheme: core.URISchemeHTTP,
+					},
+				},
+				PeriodSeconds:    1,
+				SuccessThreshold: 1,
+				TimeoutSeconds:   1,
+			},
+			Resources: core.ResourceRequirements{
+				Limits: core.ResourceList{
+					"cpu":    cpuLimit,
+					"memory": memLimit,
+				},
+				Requests: core.ResourceList{
+					"cpu":    cpuRequests,
+					"memory": memRequests,
+				},
+			},
+		})
+
+	}
+
 	pod := &core.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: opts.PodName,
@@ -260,35 +323,7 @@ func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, moun
 			},
 		},
 		Spec: core.PodSpec{
-			Containers: []core.Container{
-				{
-					Name:            opts.PodName,
-					Image:           opts.PodImage,
-					ImagePullPolicy: opts.ImagePullPolicy,
-					VolumeMounts:    volumeMounts,
-					Command:         command,
-					Env: []core.EnvVar{
-						{
-							Name:  shared.SyncEntriesConfigEnvVar,
-							Value: string(marshaledSyncEntriesConfig),
-						},
-						{
-							Name:  shared.LogLevelEnvVar,
-							Value: opts.LogLevel.String(),
-						},
-					},
-					Resources: core.ResourceRequirements{
-						Limits: core.ResourceList{
-							"cpu":    cpuLimit,
-							"memory": memLimit,
-						},
-						Requests: core.ResourceList{
-							"cpu":    cpuRequests,
-							"memory": memRequests,
-						},
-					},
-				},
-			},
+			Containers:                    containers,
 			Volumes:                       volumes,
 			DNSPolicy:                     core.DNSClusterFirstWithHostNet,
 			TerminationGracePeriodSeconds: new(int64),
@@ -343,7 +378,7 @@ func (provider *Provider) CreateService(ctx context.Context, namespace string, s
 			},
 		},
 		Spec: core.ServiceSpec{
-			Ports:    []core.ServicePort{{TargetPort: intstr.FromInt(shared.DefaultApiServerPort), Port: 80}},
+			Ports:    []core.ServicePort{{TargetPort: intstr.FromInt(shared.DefaultApiServerPort), Port: 80, Name: "api"}},
 			Type:     core.ServiceTypeClusterIP,
 			Selector: map[string]string{"app": appLabelValue},
 		},

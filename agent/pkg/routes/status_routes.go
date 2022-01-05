@@ -1,12 +1,15 @@
 package routes
 
 import (
-	"github.com/gin-gonic/gin"
 	"mizuserver/pkg/controllers"
+	"mizuserver/pkg/middlewares"
+
+	"github.com/gin-gonic/gin"
 )
 
 func StatusRoutes(ginApp *gin.Engine) {
 	routeGroup := ginApp.Group("/status")
+	routeGroup.Use(middlewares.RequiresAuth())
 
 	routeGroup.GET("/health", controllers.HealthCheck)
 

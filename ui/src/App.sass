@@ -1,7 +1,9 @@
 @import './variables.module'
 
-.mizuApp
+body
   background-color: $main-background-color
+
+.mizuApp
   color: $font-color
   width: 100%
 
@@ -23,3 +25,13 @@
       font-size: 11px
       font-weight: bold
       color: $light-blue-color
+
+  .centeredForm
+    max-width: 500px
+    text-align: center
+    display: flex
+    flex-direction: column
+    margin: 0 auto
+
+    .form-input, .form-button
+      margin-top: 20px
