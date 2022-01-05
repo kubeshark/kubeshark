@@ -25,7 +25,6 @@
     "react": "^17.0.2",
     "react-copy-to-clipboard": "^5.0.3",
     "react-dom": "^17.0.2",
-    "react-force-graph-2d": "^1.23.8",
     "react-lowlight": "^3.0.0",
     "react-scripts": "4.0.3",
     "react-scrollable-feed-virtualized": "^1.4.9",
@@ -36,7 +35,6 @@
     "xml-formatter": "^2.6.0"
   },
   "scripts": {
-    "preinstall": "npx npm-force-resolutions",
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
@@ -59,8 +57,5 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  },
-  "resolutions": {
-    "bezier-js": "4.0.3"
   }
 }
