@@ -39,7 +39,11 @@ func runMizuInstall() {
 		return
 	}
 
-	if err = resources.CreateInstallMizuResources(ctx, kubernetesProvider, serializedValidationRules, serializedContract, serializedMizuConfig, config.Config.IsNsRestrictedMode(), config.Config.MizuResourcesNamespace, config.Config.AgentImage, nil, defaultMaxEntriesDBSizeBytes, defaultResources, config.Config.ImagePullPolicy(), config.Config.LogLevel(), false); err != nil {
+	if err = resources.CreateInstallMizuResources(ctx, kubernetesProvider, serializedValidationRules,
+		serializedContract, serializedMizuConfig, config.Config.IsNsRestrictedMode(),
+		config.Config.MizuResourcesNamespace, config.Config.AgentImage,
+		nil, defaultMaxEntriesDBSizeBytes, defaultResources, config.Config.ImagePullPolicy(),
+		config.Config.LogLevel(), false); err != nil {
 		var statusError *k8serrors.StatusError
 		if errors.As(err, &statusError) {
 			if statusError.ErrStatus.Reason == metav1.StatusReasonAlreadyExists {
@@ -64,7 +68,6 @@ func getInstallMizuAgentConfig(maxDBSizeBytes int64, tapperResources shared.Reso
 		LogLevel:               config.Config.LogLevel(),
 		TapperResources:        tapperResources,
 		MizuResourcesNamespace: config.Config.MizuResourcesNamespace,
-		IsNsRestrictedMode:     config.Config.IsNsRestrictedMode(),
 		AgentDatabasePath:      shared.DataDirPath,
 		StandaloneMode:         true,
 	}

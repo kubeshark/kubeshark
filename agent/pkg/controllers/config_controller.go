@@ -16,9 +16,8 @@ import (
 	"time"
 )
 
-var globalTapConfig *models.TapConfig
+var globalTapConfig = &models.TapConfig{}
 var cancelTapperSyncer context.CancelFunc
-var kubernetesProvider *kubernetes.Provider
 
 func PostTapConfig(c *gin.Context) {
 	tapConfig := &models.TapConfig{}
@@ -26,15 +25,6 @@ func PostTapConfig(c *gin.Context) {
 	if err := c.Bind(tapConfig); err != nil {
 		c.JSON(http.StatusBadRequest, err)
 		return
-	}
-
-	if kubernetesProvider == nil {
-		var err error
-		kubernetesProvider, err = kubernetes.NewProviderInCluster()
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, err)
-			return
-		}
 	}
 
 	if cancelTapperSyncer != nil {
@@ -46,8 +36,6 @@ func PostTapConfig(c *gin.Context) {
 		broadcastTappedPodsStatus()
 	}
 
-	ctx, cancel := context.WithCancel(context.Background())
-
 	var tappedNamespaces []string
 	for namespace, tapped := range tapConfig.TappedNamespaces {
 		if tapped {
@@ -57,7 +45,13 @@ func PostTapConfig(c *gin.Context) {
 
 	podRegex, _ := regexp.Compile(".*")
 
-	if _, err := startMizuTapperSyncer(ctx, kubernetesProvider, tappedNamespaces, *podRegex, []string{} , tapApi.TrafficFilteringOptions{}, false); err != nil {
+	kubernetesProvider, err := kubernetes.NewProviderInCluster()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err)
+		return
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	if _, err := startMizuTapperSyncer(ctx, kubernetesProvider, tappedNamespaces, *podRegex, []string{}, tapApi.TrafficFilteringOptions{}, false); err != nil {
 		c.JSON(http.StatusInternalServerError, err)
 		cancel()
 		return
@@ -70,33 +64,13 @@ func PostTapConfig(c *gin.Context) {
 }
 
 func GetTapConfig(c *gin.Context) {
-	tappedNamespaces := make(map[string]bool)
-
-	if config.Config.IsNsRestrictedMode {
-		tapped := false
-		if globalTapConfig != nil {
-			tapped = globalTapConfig.TappedNamespaces[config.Config.MizuResourcesNamespace]
-		}
-
-		tappedNamespaces[config.Config.MizuResourcesNamespace] = tapped
-		tapConfig := models.TapConfig{TappedNamespaces: tappedNamespaces}
-
-		c.JSON(http.StatusOK, tapConfig)
+	kubernetesProvider, err := kubernetes.NewProviderInCluster()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err)
 		return
 	}
-
-	if kubernetesProvider == nil {
-		var err error
-		kubernetesProvider, err = kubernetes.NewProviderInCluster()
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, err)
-			return
-		}
-	}
-
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-
 	namespaces, err := kubernetesProvider.ListAllNamespaces(ctx)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, err)
@@ -108,16 +82,12 @@ func GetTapConfig(c *gin.Context) {
 			continue
 		}
 
-		tapped := false
-		if globalTapConfig != nil {
-			tapped = globalTapConfig.TappedNamespaces[namespace.Name]
+		if _, ok := globalTapConfig.TappedNamespaces[namespace.Name]; !ok {
+			globalTapConfig.TappedNamespaces[namespace.Name] = false
 		}
-
-		tappedNamespaces[namespace.Name] = tapped
 	}
 
-	tapConfig := models.TapConfig{TappedNamespaces: tappedNamespaces}
-	c.JSON(http.StatusOK, tapConfig)
+	c.JSON(http.StatusOK, globalTapConfig)
 }
 
 func startMizuTapperSyncer(ctx context.Context, provider *kubernetes.Provider, targetNamespaces []string, podFilterRegex regexp.Regexp, ignoredUserAgents []string, mizuApiFilteringOptions tapApi.TrafficFilteringOptions, istio bool) (*kubernetes.MizuTapperSyncer, error) {

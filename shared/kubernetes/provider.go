@@ -43,8 +43,8 @@ type Provider struct {
 	kubernetesConfig clientcmd.ClientConfig
 	clientConfig     restclient.Config
 	Namespace        string
-	managedBy   string
-	createdBy   string
+	managedBy        string
+	createdBy        string
 }
 
 const (
@@ -252,9 +252,9 @@ func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, moun
 
 	pod := &core.Pod{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   opts.PodName,
+			Name: opts.PodName,
 			Labels: map[string]string{
-				"app": opts.PodName,
+				"app":          opts.PodName,
 				LabelManagedBy: provider.managedBy,
 				LabelCreatedBy: provider.createdBy,
 			},
@@ -369,41 +369,41 @@ func (provider *Provider) doesResourceExist(resource interface{}, err error) (bo
 	return resource != nil, nil
 }
 
-func (provider *Provider) CreateMizuRBAC(ctx context.Context, namespace string, serviceAccountName string, clusterRoleName string, clusterRoleBindingName string, version string) error {
+func (provider *Provider) CreateMizuRBAC(ctx context.Context, namespace string, serviceAccountName string, clusterRoleName string, clusterRoleBindingName string, version string, resources []string) error {
 	serviceAccount := &core.ServiceAccount{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   serviceAccountName,
+			Name: serviceAccountName,
 			Labels: map[string]string{
 				"mizu-cli-version": version,
-				LabelManagedBy: provider.managedBy,
-				LabelCreatedBy: provider.createdBy,
+				LabelManagedBy:     provider.managedBy,
+				LabelCreatedBy:     provider.createdBy,
 			},
 		},
 	}
 	clusterRole := &rbac.ClusterRole{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   clusterRoleName,
+			Name: clusterRoleName,
 			Labels: map[string]string{
 				"mizu-cli-version": version,
-				LabelManagedBy: provider.managedBy,
-				LabelCreatedBy: provider.createdBy,
+				LabelManagedBy:     provider.managedBy,
+				LabelCreatedBy:     provider.createdBy,
 			},
 		},
 		Rules: []rbac.PolicyRule{
 			{
 				APIGroups: []string{"", "extensions", "apps"},
-				Resources: []string{"pods", "services", "endpoints", "namespaces"},
+				Resources: resources,
 				Verbs:     []string{"list", "get", "watch"},
 			},
 		},
 	}
 	clusterRoleBinding := &rbac.ClusterRoleBinding{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   clusterRoleBindingName,
+			Name: clusterRoleBindingName,
 			Labels: map[string]string{
 				"mizu-cli-version": version,
-				LabelManagedBy: provider.managedBy,
-				LabelCreatedBy: provider.createdBy,
+				LabelManagedBy:     provider.managedBy,
+				LabelCreatedBy:     provider.createdBy,
 			},
 		},
 		RoleRef: rbac.RoleRef{
@@ -437,21 +437,21 @@ func (provider *Provider) CreateMizuRBAC(ctx context.Context, namespace string, 
 func (provider *Provider) CreateMizuRBACNamespaceRestricted(ctx context.Context, namespace string, serviceAccountName string, roleName string, roleBindingName string, version string) error {
 	serviceAccount := &core.ServiceAccount{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   serviceAccountName,
+			Name: serviceAccountName,
 			Labels: map[string]string{
 				"mizu-cli-version": version,
-				LabelManagedBy: provider.managedBy,
-				LabelCreatedBy: provider.createdBy,
+				LabelManagedBy:     provider.managedBy,
+				LabelCreatedBy:     provider.createdBy,
 			},
 		},
 	}
 	role := &rbac.Role{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   roleName,
+			Name: roleName,
 			Labels: map[string]string{
 				"mizu-cli-version": version,
-				LabelManagedBy: provider.managedBy,
-				LabelCreatedBy: provider.createdBy,
+				LabelManagedBy:     provider.managedBy,
+				LabelCreatedBy:     provider.createdBy,
 			},
 		},
 		Rules: []rbac.PolicyRule{
@@ -464,11 +464,11 @@ func (provider *Provider) CreateMizuRBACNamespaceRestricted(ctx context.Context,
 	}
 	roleBinding := &rbac.RoleBinding{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   roleBindingName,
+			Name: roleBindingName,
 			Labels: map[string]string{
 				"mizu-cli-version": version,
-				LabelManagedBy: provider.managedBy,
-				LabelCreatedBy: provider.createdBy,
+				LabelManagedBy:     provider.managedBy,
+				LabelCreatedBy:     provider.createdBy,
 			},
 		},
 		RoleRef: rbac.RoleRef{
@@ -502,11 +502,11 @@ func (provider *Provider) CreateMizuRBACNamespaceRestricted(ctx context.Context,
 func (provider *Provider) CreateDaemonsetRBAC(ctx context.Context, namespace string, serviceAccountName string, roleName string, roleBindingName string, version string) error {
 	role := &rbac.Role{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   roleName,
+			Name: roleName,
 			Labels: map[string]string{
 				"mizu-cli-version": version,
-				LabelManagedBy: provider.managedBy,
-				LabelCreatedBy: provider.createdBy,
+				LabelManagedBy:     provider.managedBy,
+				LabelCreatedBy:     provider.createdBy,
 			},
 		},
 		Rules: []rbac.PolicyRule{
@@ -524,11 +524,11 @@ func (provider *Provider) CreateDaemonsetRBAC(ctx context.Context, namespace str
 	}
 	roleBinding := &rbac.RoleBinding{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   roleBindingName,
+			Name: roleBindingName,
 			Labels: map[string]string{
 				"mizu-cli-version": version,
-				LabelManagedBy: provider.managedBy,
-				LabelCreatedBy: provider.createdBy,
+				LabelManagedBy:     provider.managedBy,
+				LabelCreatedBy:     provider.createdBy,
 			},
 		},
 		RoleRef: rbac.RoleRef{
@@ -805,7 +805,7 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 
 	podTemplate := applyconfcore.PodTemplateSpec()
 	podTemplate.WithLabels(map[string]string{
-		"app": tapperPodName,
+		"app":          tapperPodName,
 		LabelManagedBy: provider.managedBy,
 		LabelCreatedBy: provider.createdBy,
 	})
