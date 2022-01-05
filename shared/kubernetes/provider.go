@@ -378,7 +378,7 @@ func (provider *Provider) CreateService(ctx context.Context, namespace string, s
 			},
 		},
 		Spec: core.ServiceSpec{
-			Ports:    []core.ServicePort{{TargetPort: intstr.FromInt(shared.DefaultApiServerPort), Port: 80, Name: "bob"}, {TargetPort: intstr.FromInt(4433), Port: 4433, Name: "dylan"}, {TargetPort: intstr.FromInt(4434), Port: 4434, Name: "test"}},
+			Ports:    []core.ServicePort{{TargetPort: intstr.FromInt(shared.DefaultApiServerPort), Port: 80}},
 			Type:     core.ServiceTypeLoadBalancer,
 			Selector: map[string]string{"app": appLabelValue},
 		},
