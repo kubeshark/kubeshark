@@ -69,7 +69,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({isOpen, onClose}) =
         return <table cellPadding={5} style={{borderCollapse: "collapse"}}>
             <thead>
             <tr style={{borderBottomWidth: "2px"}}>
-                {/*<th style={{width: 50, textAlign: "left"}}>Tap</th>*/}
                 <th style={{width: 50}}><Checkbox checked={Object.values(namespaces).every(tap => tap === true)}
                                                   onToggle={toggleAll}/></th>
                 <th>Namespace</th>
@@ -101,18 +100,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({isOpen, onClose}) =
         disableBackdropClick={isFirstLogin}
     >
         <Fade in={isOpen}>
-            <Box sx={modalStyle} style={{width: "40vw", maxWidth: 600, height: "50vh", padding: 0, display: "flex", justifyContent: "space-between", flexDirection: "column"}}>
+            <Box sx={modalStyle} style={{width: "40vw", maxWidth: 600, height: "70vh", padding: 0, display: "flex", justifyContent: "space-between", flexDirection: "column"}}>
                 <div style={{padding: 32, paddingBottom: 0}}>
-                    {isFirstLogin ? <div>
-                        <div className="settingsTitle">Welcome to Mizu Ent.</div>
-                        <div className="welcomeSubtitle" style={{marginTop: 15}}>The installation has finished
-                            successfully,
-                        </div>
-                        <div className="welcomeSubtitle" style={{marginTop: 5}}>please review the Tapping Settings (can
-                            be done at any time)
-                            press ok to continue and view traffic
-                        </div>
-                    </div> : <div className="settingsTitle">Tapping Settings</div>}
+                    <div className="settingsTitle">Tapping Settings</div>
+                    <div className="settingsSubtitle" style={{marginTop: 20}}>
+                        please choose from below the namespaces for tapping, traffic for namespaces selected will be displayed
+                    </div>
                     {isLoading ? <div style={{textAlign: "center", padding: 20}}>
                         <img alt="spinner" src={spinner} style={{height: 35}}/>
                     </div> : <>

@@ -6,8 +6,9 @@ export const useCommonStyles = makeStyles(() => ({
         backgroundColor: "#205cf5",
         color: "white",
         fontWeight: "600 !important",
-        fontSize: 13,
-        padding: "6px 12px",
+        fontSize: 12,
+        padding: "8px 12px",
+        borderRadius: "6px ! important",
 
         "&:hover": {
             backgroundColor: "#205cf5",
@@ -17,9 +18,10 @@ export const useCommonStyles = makeStyles(() => ({
         backgroundColor: "transparent",
         color: "#205cf5",
         fontWeight: "600 !important",
-        fontSize: 13,
-        padding: "6px 12px",
+        fontSize: 12,
+        padding: "8px 12px",
         border: "1px #205cf5 solid",
+        borderRadius: "6px ! important",
 
         "&:hover": {
             backgroundColor: "transparent",
