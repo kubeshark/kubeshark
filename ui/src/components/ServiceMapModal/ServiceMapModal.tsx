@@ -3,24 +3,36 @@ import { Box, Fade, Modal, Backdrop } from "@material-ui/core";
 import Api from "../../helpers/api";
 import spinnerStyle from '../style/Spinner.module.sass';
 import spinnerImg from '../assets/spinner.svg';
-import ForceGraph2D, { GraphData } from 'react-force-graph-2d';
+import Graph from "react-graph-vis";
 
 
-interface ServiceMapModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    api: Api
+interface GraphData {
+    nodes: Node[];
+    edges: Edge[];
+}
+
+interface Node {
+    id: number;
+    label: string;
+    title?: string;
+    color?: string;
+}
+
+interface Edge {
+    from: number;
+    to: number;
 }
 
 interface ServiceMapNode {
     name: string;
+    id: number;
     protocol: string;
     count: number;
 }
 
 interface ServiceMapEdge {
-    source: string;
-    destination: string;
+    source: ServiceMapNode;
+    destination: ServiceMapNode;
     count: number;
 }
 
@@ -29,12 +41,28 @@ interface ServiceMapGraph {
     edges: ServiceMapEdge[];
 }
 
+interface ServiceMapModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+    api: Api
+}
+
 export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClose, api }) => {
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [graphData, setGraphData] = useState<GraphData>({
         nodes: [],
-        links: []
+        edges: []
     });
+
+    const options = {
+        layout: {
+          hierarchical: true
+        },
+        edges: {
+          color: "#000000"
+        },
+        height: "500px"
+      };
 
     const style = {
         position: 'absolute',
@@ -52,35 +80,30 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
     useEffect(() => {
         (async () => {
             try {
-
                 const serviceMapData: ServiceMapGraph = await api.serviceMapData()
-                let data: GraphData = {
-                    nodes: [],
-                    links: []
-                }
 
                 for (let i = 0; i < serviceMapData.nodes.length; i++) {
-                    data.nodes.push({
-                        id: serviceMapData.nodes[i].name
+                    graphData.nodes.push({
+                        id: serviceMapData.nodes[i].id,
+                        label: serviceMapData.nodes[i].name
                     });
                 }
 
                 for (let i = 0; i < serviceMapData.edges.length; i++) {
-                    data.links.push({
-                        source: serviceMapData.edges[i].source,
-                        target: serviceMapData.edges[i].destination
+                    graphData.edges.push({
+                        from: serviceMapData.edges[i].source.id,
+                        to: serviceMapData.edges[i].destination.id
                     });
                 }
 
-
-                setGraphData(data)
+                setGraphData(graphData)
                 setIsLoading(false)
 
             } catch (error) {
                 console.error(error);
             }
         })()
-    }, [api]);
+    }, [api, graphData]);
 
     return (
         <Modal
@@ -96,19 +119,15 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
             style={{ overflow: 'auto' }}
         >
             <Fade in={isOpen}>
-                {/* <Box sx={style}> */}
-                <div>
+                <Box sx={style}>
                     {isLoading && <div className={spinnerStyle.spinnerContainer}>
                         <img alt="spinner" src={spinnerImg} style={{ height: 50 }} />
                     </div>}
-                    {!isLoading && <ForceGraph2D
-                        graphData={graphData}
-                        linkDirectionalArrowLength={3.5}
-                        linkDirectionalArrowRelPos={1}
-                        linkCurvature={0.25}
+                    {!isLoading && <Graph
+                        graph={graphData}
+                        options={options}
                     />}
-                </div>
-                {/* </Box> */}
+                </Box>
             </Fade>
         </Modal>
     );
