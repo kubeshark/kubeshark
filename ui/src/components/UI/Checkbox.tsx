@@ -8,8 +8,8 @@ export interface Props {
 const Checkbox: React.FC<Props> = ({checked, onToggle}) => {
 
     return (
-        <div className="checkboxWrapper">
-            <input type="checkbox" className="checkbox" checked={checked} onChange={(event) => onToggle(event.target.checked)}/>
+        <div>
+            <input style={{cursor: "pointer"}} type="checkbox" checked={checked} onChange={(event) => onToggle(event.target.checked)}/>
         </div>
     );
 };
