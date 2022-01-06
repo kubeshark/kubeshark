@@ -62,7 +62,7 @@ func runMizuInstall() {
 		return
 	}
 
-	logger.Log.Infof("Waiting for Mizu Agent to start...")
+	logger.Log.Infof("Waiting for Mizu server to start...")
 	readyChan := make(chan string)
 	readyErrorChan := make(chan error)
 	go watchApiServerPodReady(ctx, kubernetesProvider, readyChan, readyErrorChan)
