@@ -33,6 +33,7 @@ func NewGen(server string) *SpecGen {
 	info.Version = "0.0"
 	spec.Info = &info
 	spec.Paths = &openapi.Paths{Items: map[openapi.PathValue]*openapi.PathObj{}}
+	// TODO: service coordinates
 	gen := SpecGen{oas: spec, tree: new(Node)}
 	return &gen
 }
