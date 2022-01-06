@@ -90,7 +90,7 @@ export default class Api {
     }
 
     setTapConfig = async (config) => {
-        const response = await this.client.post("/config/tapConfig", {tapConfig: config});
+        const response = await this.client.post("/config/tapConfig", {tappedNamespaces: config});
         return response.data;
     }
 

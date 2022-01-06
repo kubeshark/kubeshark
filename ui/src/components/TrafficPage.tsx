@@ -149,16 +149,6 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({onTLSDetected, setAnaly
                     break
                 case "status":
                     setTappingStatus(message.tappingStatus);
-                    toast[message.data.type](message.data.text, {
-                        position: "bottom-right",
-                        theme: "colored",
-                        autoClose: message.data.autoClose,
-                        hideProgressBar: false,
-                        closeOnClick: true,
-                        pauseOnHover: true,
-                        draggable: true,
-                        progress: undefined,
-                    });
                     break
                 case "analyzeStatus":
                     if(setAnalyzeStatus)

@@ -8,7 +8,11 @@ import LoadingOverlay from "./LoadingOverlay";
 
 const api = Api.getInstance();
 
-export const InstallPage: React.FC = () => {
+interface InstallPageProps {
+    onFirstLogin: () => void;
+}
+
+export const InstallPage: React.FC<InstallPageProps> = ({onFirstLogin}) => {
 
     const [isLoading, setIsLoading] = useState(false);
     const [password, setPassword] = useState("");
@@ -17,8 +21,8 @@ export const InstallPage: React.FC = () => {
     const {setPage} = useContext(MizuContext);
 
     const onFormSubmit = async () => {
-        if (password.length < 8) {
-            toast.error("Password must be at least 8 characters long");
+        if (password.length < 4) {
+            toast.error("Password must be at least 4 characters long");
             return;
         } else if (password !== passwordConfirm) {
             toast.error("Passwords do not match");
@@ -31,6 +35,7 @@ export const InstallPage: React.FC = () => {
             if (!await api.isAuthenticationNeeded()) {
                 toast.success("admin user created successfully");
                 setPage(Page.Traffic);
+                onFirstLogin();
             }
         } catch (e) {
             if (e.type === FormValidationErrorType) {

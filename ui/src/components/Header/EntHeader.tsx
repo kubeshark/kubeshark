@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import logo from '../assets/MizuEntLogo.svg';
 import './Header.sass';
 import userImg from '../assets/user-circle.svg';
@@ -12,9 +12,25 @@ import {toast} from "react-toastify";
 
 const api = Api.getInstance();
 
-export const EntHeader = () => {
+interface EntHeaderProps {
+    isFirstLogin: boolean;
+    setIsFirstLogin: (flag: boolean) => void
+}
+
+export const EntHeader: React.FC<EntHeaderProps> = ({isFirstLogin, setIsFirstLogin}) => {
 
     const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+
+    useEffect(() => {
+        if(isFirstLogin) {
+            setIsSettingsModalOpen(true)
+        }
+    }, [isFirstLogin])
+
+    const onSettingsModalClose = () => {
+        setIsSettingsModalOpen(false);
+        setIsFirstLogin(false);
+    }
 
     return <div className="header">
         <div>
@@ -26,7 +42,7 @@ export const EntHeader = () => {
             <img className="headerIcon" alt="settings" src={settingImg} style={{marginRight: 25}} onClick={() => setIsSettingsModalOpen(true)}/>
             <ProfileButton/>
         </div>
-        <SettingsModal isOpen={isSettingsModalOpen} onClose={() => setIsSettingsModalOpen(false)}/>
+        <SettingsModal isOpen={isSettingsModalOpen} onClose={onSettingsModalClose} isFirstLogin={isFirstLogin}/>
     </div>;
 }
 

@@ -6,36 +6,45 @@ import './SettingsModal.sass';
 import Api from "../../helpers/api";
 import spinner from "../assets/spinner.svg";
 import {useCommonStyles} from "../../helpers/commonStyle";
+import {toast} from "react-toastify";
 
 interface SettingsModalProps {
     isOpen: boolean
     onClose: () => void
+    isFirstLogin: boolean
 }
 
 
 const api = Api.getInstance();
 
-export const SettingsModal: React.FC<SettingsModalProps> = ({isOpen, onClose}) => {
+export const SettingsModal: React.FC<SettingsModalProps> = ({isOpen, onClose, isFirstLogin}) => {
 
     const classes = useCommonStyles();
     const [namespaces, setNamespaces] = useState({});
     const [isLoading, setIsLoading] = useState(false);
     const [searchValue, setSearchValue] = useState("");
-    const isFirstLogin = false;
 
     useEffect(() => {
         (async () => {
             try {
                 setIsLoading(true);
                 const tapConfig = await api.getTapConfig()
-                setNamespaces(tapConfig?.tappedNamespaces);
+                if(isFirstLogin) {
+                    const namespacesObj = {...tapConfig?.tappedNamespaces}
+                    Object.keys(tapConfig?.tappedNamespaces ?? {}).forEach(namespace => {
+                        namespacesObj[namespace] = true;
+                    })
+                    setNamespaces(namespacesObj);
+                } else {
+                    setNamespaces(tapConfig?.tappedNamespaces);
+                }
             } catch (e) {
                 console.error(e);
             } finally {
                 setIsLoading(false);
             }
         })()
-    }, [])
+    }, [isFirstLogin])
 
     const setAllNamespacesTappedValue = (isTap: boolean) => {
         const newNamespaces = {};
@@ -49,8 +58,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({isOpen, onClose}) =
         try {
             await api.setTapConfig(namespaces);
             onClose();
+            toast.success("Saved successfully");
         } catch (e) {
             console.error(e);
+            toast.error("Something went wrong, changes may not have been saved.")
         }
     }
 

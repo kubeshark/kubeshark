@@ -34,6 +34,7 @@ const EntApp = () => {
     const [userDismissedTLSWarning, setUserDismissedTLSWarning] = useState(false);
     const [addressesWithTLS, setAddressesWithTLS] = useState(new Set<string>());
     const [page, setPage] = useState(Page.Traffic); // TODO: move to state management
+    const [isFirstLogin, setIsFirstLogin] = useState(false);
 
     const determinePage = async () => { // TODO: move to state management
         try {
@@ -74,7 +75,7 @@ const EntApp = () => {
             pageComponent = <TrafficPage onTLSDetected={onTLSDetected}/>;
             break;
         case Page.Setup:
-            pageComponent = <InstallPage/>;
+            pageComponent = <InstallPage onFirstLogin={() => setIsFirstLogin(true)}/>;
             break;
         case Page.Login:
             pageComponent = <LoginPage/>;
@@ -90,14 +91,14 @@ const EntApp = () => {
     return (
         <div className="mizuApp">
             <MizuContext.Provider value={{page, setPage}}>
-                <EntHeader/>
+                {page === Page.Traffic && <EntHeader isFirstLogin={isFirstLogin} setIsFirstLogin={setIsFirstLogin}/>}
                 {pageComponent}
-                <TLSWarning showTLSWarning={showTLSWarning}
+                {page === Page.Traffic && <TLSWarning showTLSWarning={showTLSWarning}
                             setShowTLSWarning={setShowTLSWarning}
                             addressesWithTLS={addressesWithTLS}
                             setAddressesWithTLS={setAddressesWithTLS}
                             userDismissedTLSWarning={userDismissedTLSWarning}
-                            setUserDismissedTLSWarning={setUserDismissedTLSWarning}/>
+                            setUserDismissedTLSWarning={setUserDismissedTLSWarning}/>}
             </MizuContext.Provider>
         </div>
     );
