@@ -66,11 +66,10 @@ func CreateTapMizuResources(ctx context.Context, kubernetesProvider *kubernetes.
 }
 
 func CreateInstallMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, serializedValidationRules string, serializedContract string, serializedMizuConfig string, isNsRestrictedMode bool, mizuResourcesNamespace string, agentImage string, syncEntriesConfig *shared.SyncEntriesConfig, maxEntriesDBSizeBytes int64, apiServerResources shared.Resources, imagePullPolicy core.PullPolicy, logLevel logging.Level, noPersistentVolumeClaim bool) error {
-	if !isNsRestrictedMode {
-		if err := createMizuNamespace(ctx, kubernetesProvider, mizuResourcesNamespace); err != nil {
-			return err
-		}
+	if err := createMizuNamespace(ctx, kubernetesProvider, mizuResourcesNamespace); err != nil {
+		return err
 	}
+	logger.Log.Infof("Created mizu namespace")
 
 	if err := createMizuConfigmap(ctx, kubernetesProvider, serializedValidationRules, serializedContract, serializedMizuConfig, mizuResourcesNamespace); err != nil {
 		return err
