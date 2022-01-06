@@ -46,9 +46,9 @@ func init() {
 }
 
 func WebSocketRoutes(app *gin.Engine, eventHandlers EventHandlers, startTime int64) {
-	app.GET("/ws", func(c *gin.Context) {
+	app.GET("/ws", middlewares.RequiresAuth(), func(c *gin.Context) {
 		websocketHandler(c.Writer, c.Request, eventHandlers, false, startTime)
-	}, middlewares.RequiresAuth())
+	})
 
 	app.GET("/wsTapper", func(c *gin.Context) { // TODO: add m2m authentication to this route
 		websocketHandler(c.Writer, c.Request, eventHandlers, true, startTime)
