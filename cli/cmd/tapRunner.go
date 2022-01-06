@@ -4,12 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/up9inc/mizu/cli/resources"
-	"github.com/up9inc/mizu/cli/utils"
 	"io/ioutil"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/up9inc/mizu/cli/resources"
+	"github.com/up9inc/mizu/cli/utils"
 
 	"github.com/getkin/kin-openapi/openapi3"
 	"gopkg.in/yaml.v3"
@@ -155,6 +156,7 @@ func getTapMizuAgentConfig() *shared.MizuAgentConfig {
 		TapperResources:        config.Config.Tap.TapperResources,
 		MizuResourcesNamespace: config.Config.MizuResourcesNamespace,
 		AgentDatabasePath:      shared.DataDirPath,
+		ServiceMap:             config.Config.ServiceMap,
 	}
 
 	return &mizuAgentConfig

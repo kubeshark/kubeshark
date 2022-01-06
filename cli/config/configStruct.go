@@ -2,14 +2,15 @@ package config
 
 import (
 	"fmt"
+	"os"
+	"path"
+	"path/filepath"
+
 	"github.com/op/go-logging"
 	"github.com/up9inc/mizu/cli/config/configStructs"
 	"github.com/up9inc/mizu/cli/mizu"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/util/homedir"
-	"os"
-	"path"
-	"path/filepath"
 )
 
 const (
@@ -33,10 +34,11 @@ type ConfigStruct struct {
 	KubeConfigPathStr      string                      `yaml:"kube-config-path"`
 	ConfigFilePath         string                      `yaml:"config-path,omitempty" readonly:""`
 	HeadlessMode           bool                        `yaml:"headless" default:"false"`
+	ServiceMap             bool                        `yaml:"service-map" default:"true"`
 	LogLevelStr            string                      `yaml:"log-level,omitempty" default:"INFO" readonly:""`
 }
 
-func(config *ConfigStruct) validate() error {
+func (config *ConfigStruct) validate() error {
 	if _, err := logging.LogLevel(config.LogLevelStr); err != nil {
 		return fmt.Errorf("%s is not a valid log level, err: %v", config.LogLevelStr, err)
 	}

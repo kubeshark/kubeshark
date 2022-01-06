@@ -41,6 +41,7 @@ type MizuAgentConfig struct {
 	MizuResourcesNamespace string        `json:"mizuResourceNamespace"`
 	AgentDatabasePath      string        `json:"agentDatabasePath"`
 	StandaloneMode         bool          `json:"standaloneMode"`
+	ServiceMap             bool          `json:"serviceMap"`
 }
 
 type WebSocketMessageMetadata struct {
@@ -77,8 +78,9 @@ type ServiceMapStatus struct {
 }
 
 type ServiceMapResponse struct {
-	Nodes []ServiceMapNode `json:"nodes"`
-	Edges []ServiceMapEdge `json:"edges"`
+	Status ServiceMapStatus `json:"status"`
+	Nodes  []ServiceMapNode `json:"nodes"`
+	Edges  []ServiceMapEdge `json:"edges"`
 }
 
 type ServiceMapNode struct {

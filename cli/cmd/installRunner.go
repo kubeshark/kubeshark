@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	"github.com/creasty/defaults"
 	"github.com/up9inc/mizu/cli/config"
 	"github.com/up9inc/mizu/cli/errormessage"
@@ -66,6 +67,7 @@ func getInstallMizuAgentConfig(maxDBSizeBytes int64, tapperResources shared.Reso
 		MizuResourcesNamespace: config.Config.MizuResourcesNamespace,
 		AgentDatabasePath:      shared.DataDirPath,
 		StandaloneMode:         true,
+		ServiceMap:             config.Config.ServiceMap,
 	}
 
 	return &mizuAgentConfig
