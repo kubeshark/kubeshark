@@ -13,6 +13,5 @@ func ServiceMapRoutes(ginApp *gin.Engine) {
 
 	routeGroup.GET("/status", controller.Status)
 	routeGroup.GET("/get", controller.Get)
-	routeGroup.GET("/render", controller.Render)
 	routeGroup.GET("/reset", controller.Reset)
 }
