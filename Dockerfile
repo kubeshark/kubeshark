@@ -78,8 +78,6 @@ ENV LD_LIBRARY_PATH=/tcpdump
 
 CMD ["./tcpdump", "-Z", "root"]
 
-RUN apk add bash libpcap-dev
-
 WORKDIR /app
 
 # Copy binary and config files from /build to root folder of scratch container.
