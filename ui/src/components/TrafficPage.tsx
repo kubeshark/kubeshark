@@ -10,8 +10,7 @@ import pauseIcon from './assets/pause.svg';
 import variables from '../variables.module.scss';
 import {StatusBar} from "./UI/StatusBar";
 import Api, {MizuWebsocketURL} from "../helpers/api";
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { toast } from 'react-toastify';
 import debounce from 'lodash/debounce';
 import { ServiceMapModal } from "./ServiceMapModal/ServiceMapModal";
 
@@ -41,13 +40,13 @@ enum ConnectionStatus {
 }
 
 interface TrafficPageProps {
-    setAnalyzeStatus: (status: any) => void;
     onTLSDetected: (destAddress: string) => void;
+    setAnalyzeStatus?: (status: any) => void;
 }
 
-const api = new Api();
+const api = Api.getInstance();
 
-export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLSDetected}) => {
+export const TrafficPage: React.FC<TrafficPageProps> = ({onTLSDetected, setAnalyzeStatus}) => {
 
     const classes = useLayoutStyles();
 
@@ -156,7 +155,8 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                     setTappingStatus(message.tappingStatus);
                     break
                 case "analyzeStatus":
-                    setAnalyzeStatus(message.analyzeStatus);
+                    if(setAnalyzeStatus)
+                        setAnalyzeStatus(message.analyzeStatus);
                     break
                 case "outboundLink":
                     onTLSDetected(message.Data.DstIP);
@@ -197,8 +197,10 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
             try{
                 const tapStatusResponse = await api.tapStatus();
                 setTappingStatus(tapStatusResponse);
-                const analyzeStatusResponse = await api.analyzeStatus();
-                setAnalyzeStatus(analyzeStatusResponse);
+                if(setAnalyzeStatus) {
+                    const analyzeStatusResponse = await api.analyzeStatus();
+                    setAnalyzeStatus(analyzeStatusResponse);
+                }
             } catch (error) {
                 console.error(error);
             }
@@ -384,17 +386,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, onTLS
                     {selectedEntryData && <EntryDetailed entryData={selectedEntryData} updateQuery={updateQuery} />}
                 </div>
             </div>}
-            {tappingStatus && <StatusBar tappingStatus={tappingStatus} />}
-            <ToastContainer
-                position="bottom-right"
-                autoClose={5000}
-                hideProgressBar={false}
-                newestOnTop={false}
-                closeOnClick
-                rtl={false}
-                pauseOnFocusLoss
-                draggable
-                pauseOnHover />
+            {tappingStatus && <StatusBar tappingStatus={tappingStatus}/>}
             {serviceMapModalOpen && <ServiceMapModal isOpen={serviceMapModalOpen} onClose={() => setServiceMapModalOpen(false)} api={api} />}
         </div>
     )

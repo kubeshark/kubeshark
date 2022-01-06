@@ -1,8 +1,8 @@
 import React, {useState} from 'react';
 import './App.sass';
-import {TrafficPage} from "./components/TrafficPage";
 import {TLSWarning} from "./components/TLSWarning/TLSWarning";
 import {Header} from "./components/Header/Header";
+import {TrafficPage} from "./components/TrafficPage";
 
 const App = () => {
 

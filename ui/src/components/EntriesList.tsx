@@ -35,7 +35,7 @@ interface EntriesListProps {
     setTruncatedTimestamp: any;
 }
 
-const api = new Api();
+const api = Api.getInstance();
 
 export const EntriesList: React.FC<EntriesListProps> = ({entries, setEntries, query, listEntryREF, onSnapBrokenEvent, isSnappedToBottom, setIsSnappedToBottom, queriedCurrent, setQueriedCurrent, queriedTotal, setQueriedTotal, startTime, noMoreDataTop, setNoMoreDataTop, focusedEntryId, setFocusedEntryId, updateQuery, leftOffTop, setLeftOffTop, isWebSocketConnectionClosed, ws, openWebSocket, leftOffBottom, truncatedTimestamp, setTruncatedTimestamp}) => {
     const [loadMoreTop, setLoadMoreTop] = useState(false);
