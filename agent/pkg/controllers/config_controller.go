@@ -45,7 +45,7 @@ func PostTapConfig(c *gin.Context) {
 
 	podRegex, _ := regexp.Compile(".*")
 
-	kubernetesProvider, err := kubernetes.NewProviderInCluster()
+	kubernetesProvider, err := providers.GetKubernetesProvider()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, err)
 		return
@@ -66,7 +66,7 @@ func PostTapConfig(c *gin.Context) {
 }
 
 func GetTapConfig(c *gin.Context) {
-	kubernetesProvider, err := kubernetes.NewProviderInCluster()
+	kubernetesProvider, err := providers.GetKubernetesProvider()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, err)
 		return
