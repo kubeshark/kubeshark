@@ -16,7 +16,7 @@ import (
 	"time"
 )
 
-var globalTapConfig = &models.TapConfig{}
+var globalTapConfig = &models.TapConfig{TappedNamespaces: make(map[string]bool)}
 var cancelTapperSyncer context.CancelFunc
 
 func PostTapConfig(c *gin.Context) {
