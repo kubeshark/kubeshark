@@ -7,9 +7,7 @@ import './Header.sass';
 interface HeaderProps {
     analyzeStatus: any
 }
-
 export const Header: React.FC<HeaderProps> = ({analyzeStatus}) => {
-
     return <div className="header">
         <div style={{display: "flex", alignItems: "center"}}>
             <div className="title"><img src={logo} alt="logo"/></div>

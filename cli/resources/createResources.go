@@ -3,6 +3,7 @@ package resources
 import (
 	"context"
 	"fmt"
+
 	"github.com/op/go-logging"
 	"github.com/up9inc/mizu/cli/errormessage"
 	"github.com/up9inc/mizu/cli/mizu"
@@ -65,6 +66,12 @@ func CreateTapMizuResources(ctx context.Context, kubernetesProvider *kubernetes.
 }
 
 func CreateInstallMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, serializedValidationRules string, serializedContract string, serializedMizuConfig string, isNsRestrictedMode bool, mizuResourcesNamespace string, agentImage string, syncEntriesConfig *shared.SyncEntriesConfig, maxEntriesDBSizeBytes int64, apiServerResources shared.Resources, imagePullPolicy core.PullPolicy, logLevel logging.Level, noPersistentVolumeClaim bool) error {
+	if !isNsRestrictedMode {
+		if err := createMizuNamespace(ctx, kubernetesProvider, mizuResourcesNamespace); err != nil {
+			return err
+		}
+	}
+
 	if err := createMizuConfigmap(ctx, kubernetesProvider, serializedValidationRules, serializedContract, serializedMizuConfig, mizuResourcesNamespace); err != nil {
 		return err
 	}
@@ -137,7 +144,7 @@ func createMizuApiServerDeployment(ctx context.Context, kubernetesProvider *kube
 		volumeClaimCreated = tryToCreatePersistentVolumeClaim(ctx, kubernetesProvider, opts)
 	}
 
-	pod, err := kubernetesProvider.GetMizuApiServerPodObject(opts, volumeClaimCreated, kubernetes.PersistentVolumeClaimName)
+	pod, err := kubernetesProvider.GetMizuApiServerPodObject(opts, volumeClaimCreated, kubernetes.PersistentVolumeClaimName, true)
 	if err != nil {
 		return err
 	}
@@ -179,7 +186,7 @@ func tryToCreatePersistentVolumeClaim(ctx context.Context, kubernetesProvider *k
 }
 
 func createMizuApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, opts *kubernetes.ApiServerOptions) error {
-	pod, err := kubernetesProvider.GetMizuApiServerPodObject(opts, false, "")
+	pod, err := kubernetesProvider.GetMizuApiServerPodObject(opts, false, "", false)
 	if err != nil {
 		return err
 	}

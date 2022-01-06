@@ -13,7 +13,7 @@ interface SettingsModalProps {
 }
 
 
-const api = new Api();
+const api = Api.getInstance();
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({isOpen, onClose}) => {
 

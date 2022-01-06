@@ -4,12 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/up9inc/mizu/cli/resources"
-	"github.com/up9inc/mizu/cli/utils"
 	"io/ioutil"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/up9inc/mizu/cli/resources"
+	"github.com/up9inc/mizu/cli/utils"
 
 	"github.com/getkin/kin-openapi/openapi3"
 	"gopkg.in/yaml.v3"
@@ -124,6 +125,7 @@ func RunMizuTap() {
 
 	logger.Log.Infof("Waiting for Mizu Agent to start...")
 	if state.mizuServiceAccountExists, err = resources.CreateTapMizuResources(ctx, kubernetesProvider, serializedValidationRules, serializedContract, serializedMizuConfig, config.Config.IsNsRestrictedMode(), config.Config.MizuResourcesNamespace, config.Config.AgentImage, getSyncEntriesConfig(), config.Config.Tap.MaxEntriesDBSizeBytes(), config.Config.Tap.ApiServerResources, config.Config.ImagePullPolicy(), config.Config.LogLevel()); err != nil {
+		logger.Log.Errorf("error %v", err)
 		var statusError *k8serrors.StatusError
 		if errors.As(err, &statusError) {
 			if statusError.ErrStatus.Reason == metav1.StatusReasonAlreadyExists {

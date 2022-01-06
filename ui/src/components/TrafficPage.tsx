@@ -10,8 +10,7 @@ import pauseIcon from './assets/pause.svg';
 import variables from '../variables.module.scss';
 import {StatusBar} from "./UI/StatusBar";
 import Api, {MizuWebsocketURL} from "../helpers/api";
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { toast } from 'react-toastify';
 import debounce from 'lodash/debounce';
 
 const useLayoutStyles = makeStyles(() => ({
@@ -44,7 +43,7 @@ interface TrafficPageProps {
     setAnalyzeStatus?: (status: any) => void;
 }
 
-const api = new Api();
+const api = Api.getInstance();
 
 export const TrafficPage: React.FC<TrafficPageProps> = ({onTLSDetected, setAnalyzeStatus}) => {
 
@@ -150,6 +149,16 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({onTLSDetected, setAnaly
                     break
                 case "status":
                     setTappingStatus(message.tappingStatus);
+                    toast[message.data.type](message.data.text, {
+                        position: "bottom-right",
+                        theme: "colored",
+                        autoClose: message.data.autoClose,
+                        hideProgressBar: false,
+                        closeOnClick: true,
+                        pauseOnHover: true,
+                        draggable: true,
+                        progress: undefined,
+                    });
                     break
                 case "analyzeStatus":
                     if(setAnalyzeStatus)
@@ -194,8 +203,10 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({onTLSDetected, setAnaly
             try{
                 const tapStatusResponse = await api.tapStatus();
                 setTappingStatus(tapStatusResponse);
-                const analyzeStatusResponse = await api.analyzeStatus();
-                setAnalyzeStatus(analyzeStatusResponse);
+                if(setAnalyzeStatus) {
+                    const analyzeStatusResponse = await api.analyzeStatus();
+                    setAnalyzeStatus(analyzeStatusResponse);
+                }
             } catch (error) {
                 console.error(error);
             }
@@ -325,17 +336,6 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({onTLSDetected, setAnaly
                 </div>
             </div>}
             {tappingStatus && <StatusBar tappingStatus={tappingStatus}/>}
-            <ToastContainer
-                position="bottom-right"
-                autoClose={5000}
-                hideProgressBar={false}
-                newestOnTop={false}
-                closeOnClick
-                rtl={false}
-                pauseOnFocusLoss
-                draggable
-                pauseOnHover
-            />
         </div>
     )
 };

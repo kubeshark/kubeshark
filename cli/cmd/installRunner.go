@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	"github.com/creasty/defaults"
 	"github.com/up9inc/mizu/cli/config"
 	"github.com/up9inc/mizu/cli/errormessage"
@@ -19,6 +20,10 @@ func runMizuInstall() {
 	kubernetesProvider, err := getKubernetesProviderForCli()
 	if err != nil {
 		return
+	}
+
+	if config.Config.IsNsRestrictedMode() {
+		logger.Log.Error("install is not supported in restricted namespace mode")
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -47,7 +52,7 @@ func runMizuInstall() {
 		var statusError *k8serrors.StatusError
 		if errors.As(err, &statusError) {
 			if statusError.ErrStatus.Reason == metav1.StatusReasonAlreadyExists {
-				logger.Log.Info("Mizu is already running in this namespace, change the `mizu-resources-namespace` configuration or run `mizu clean` to remove the currently running Mizu instance")
+				logger.Log.Info("Mizu is already running in this namespace, run `mizu clean` to remove the currently running Mizu instance")
 			}
 		} else {
 			defer resources.CleanUpMizuResources(ctx, cancel, kubernetesProvider, config.Config.IsNsRestrictedMode(), config.Config.MizuResourcesNamespace)

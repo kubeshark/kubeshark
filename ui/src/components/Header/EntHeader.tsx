@@ -7,6 +7,10 @@ import { Menu, MenuItem} from "@material-ui/core";
 import PopupState, {bindMenu, bindTrigger} from "material-ui-popup-state";
 import logoutIcon from '../assets/logout.png';
 import {SettingsModal} from "../SettingsModal/SettingModal";
+import Api from "../../helpers/api";
+import {toast} from "react-toastify";
+
+const api = Api.getInstance();
 
 export const EntHeader = () => {
 
@@ -28,8 +32,13 @@ export const EntHeader = () => {
 
 const ProfileButton = () => {
 
-    const logout = (popupState) => {
-        // todo: logout logic
+    const logout = async (popupState) => {
+        try {
+            await api.logout();
+        } catch (e) {
+            toast.error("Something went wrong, please check the console");
+            console.error(e);
+        }
         popupState.close();
     }
 

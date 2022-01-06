@@ -158,7 +158,7 @@ export const QueryForm: React.FC<QueryFormProps> = ({query, setQuery, background
                     <Typography id="modal-modal-title" variant="h5" component="h2" style={{textAlign: 'center'}}>
                         Filtering Guide (Cheatsheet)
                     </Typography>
-                    <Typography id="modal-modal-description">
+                    <Typography component={'span'} id="modal-modal-description">
                         <p>Mizu has a rich filtering syntax that let's you query the results both flexibly and efficiently.</p>
                         <p>Here are some examples that you can try;</p>
                     </Typography>
