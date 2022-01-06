@@ -1,7 +1,7 @@
 import { Button, TextField } from "@material-ui/core";
 import React, { useContext, useState } from "react";
 import { toast } from "react-toastify";
-import { MizuContext, Page } from "../App";
+import { MizuContext, Page } from "../EntApp";
 import Api from "../helpers/api";
 import LoadingOverlay from "./LoadingOverlay";
 

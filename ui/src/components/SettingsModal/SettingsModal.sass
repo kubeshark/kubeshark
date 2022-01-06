@@ -1,0 +1,61 @@
+@import "../../variables.module"
+
+.settingsTitle
+  font-size: 28px
+  color: $blue-gray
+  font-weight: 600
+
+.settingsSubtitle
+  font-size: 14px
+  color: $light-gray
+  margin-top: 20px
+  line-height: 20px
+
+.namespacesSettingsContainer
+  border-radius: 4px
+  padding: 20px 0
+
+  .searchNamespace
+    outline: 0
+    background: white
+    border-radius: 4px
+    width: 300px
+    max-width: calc(40vw - 85px)
+    padding: 8px 10px
+    border: 1px #9D9D9D solid
+    font-size: 14px
+    color: #494677
+
+.settingsActionsContainer
+  display: flex
+  justify-content: flex-end
+  padding: 20px
+  border-top: 2px $data-background-color solid
+
+.namespacesTable
+  table
+    width: 100%
+    margin-top: 20px
+
+    tbody
+      max-height: calc(70vh - 355px)
+      overflow-y: auto
+      display: block
+
+    th
+      color: $blue-gray
+      text-align: left
+      padding: 10px
+
+    tr
+      border-bottom-width: 1px
+      border-bottom-color: $data-background-color
+      border-bottom-style: solid
+      display: table
+      table-layout: fixed
+      width: 100%
+
+    td
+      color: $light-gray
+      padding: 10px
+      font-size: 16px

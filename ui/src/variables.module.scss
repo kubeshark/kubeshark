@@ -8,6 +8,7 @@ $light-blue-color: #BCCEFD;
 $success-color: #27AE60;
 $failure-color: #EB5757;
 $blue-gray: #494677;
+$light-gray: #8F9BB2;
 
 :export {
   mainBackgroundColor: $main-background-color;
@@ -19,4 +20,5 @@ $blue-gray: #494677;
   successColor: $success-color;
   failureColor: $failure-color;
   blueGray: $blue-gray;
+  lightGray: $light-gray;
 }
