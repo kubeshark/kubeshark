@@ -108,7 +108,7 @@ func AnyUserExists(ctx context.Context) (bool, error) {
 
 func Logout(token string, ctx context.Context) error {
 	logoutRequest := client.V0alpha2Api.SubmitSelfServiceLogoutFlowWithoutBrowser(ctx)
-	logoutRequest.SubmitSelfServiceLogoutFlowWithoutBrowserBody(ory.SubmitSelfServiceLogoutFlowWithoutBrowserBody{
+	logoutRequest = logoutRequest.SubmitSelfServiceLogoutFlowWithoutBrowserBody(ory.SubmitSelfServiceLogoutFlowWithoutBrowserBody{
 		SessionToken: token,
 	})
 	if response, err := logoutRequest.Execute(); err != nil {
