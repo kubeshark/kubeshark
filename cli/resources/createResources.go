@@ -69,21 +69,26 @@ func CreateInstallMizuResources(ctx context.Context, kubernetesProvider *kuberne
 	if err := createMizuNamespace(ctx, kubernetesProvider, mizuResourcesNamespace); err != nil {
 		return err
 	}
-	logger.Log.Infof("Created mizu namespace")
+	logger.Log.Infof("namespace/%v created", mizuResourcesNamespace)
 
 	if err := createMizuConfigmap(ctx, kubernetesProvider, serializedValidationRules, serializedContract, serializedMizuConfig, mizuResourcesNamespace); err != nil {
 		return err
 	}
-	logger.Log.Infof("Created config map")
+	logger.Log.Infof("configmap/%v created", kubernetes.ConfigMapName)
 
 	_, err := createRBACIfNecessary(ctx, kubernetesProvider, isNsRestrictedMode, mizuResourcesNamespace, []string{"pods", "services", "endpoints", "namespaces"})
 	if err != nil {
 		return err
 	}
+	logger.Log.Infof("serviceaccount/%v created", kubernetes.ServiceAccountName)
+	logger.Log.Infof("clusterrole.rbac.authorization.k8s.io/%v created", kubernetes.ClusterRoleName)
+	logger.Log.Infof("clusterrolebinding.rbac.authorization.k8s.io/%v created", kubernetes.ClusterRoleBindingName)
+
 	if err := kubernetesProvider.CreateDaemonsetRBAC(ctx, mizuResourcesNamespace, kubernetes.ServiceAccountName, kubernetes.DaemonRoleName, kubernetes.DaemonRoleBindingName, mizu.RBACVersion); err != nil {
 		return err
 	}
-	logger.Log.Infof("Created RBAC")
+	logger.Log.Infof("role.rbac.authorization.k8s.io/%v created", kubernetes.DaemonRoleName)
+	logger.Log.Infof("rolebinding.rbac.authorization.k8s.io/%v created", kubernetes.DaemonRoleBindingName)
 
 	serviceAccountName := kubernetes.ServiceAccountName
 	opts := &kubernetes.ApiServerOptions{
@@ -102,13 +107,13 @@ func CreateInstallMizuResources(ctx context.Context, kubernetesProvider *kuberne
 	if err := createMizuApiServerDeployment(ctx, kubernetesProvider, opts, noPersistentVolumeClaim); err != nil {
 		return err
 	}
-	logger.Log.Infof("Created Api Server deployment")
+	logger.Log.Infof("deployment.apps/%v created", kubernetes.ApiServerPodName)
 
 	_, err = kubernetesProvider.CreateService(ctx, mizuResourcesNamespace, kubernetes.ApiServerPodName, kubernetes.ApiServerPodName)
 	if err != nil {
 		return err
 	}
-	logger.Log.Infof("Created Api Server service")
+	logger.Log.Infof("service/%v created",  kubernetes.ApiServerPodName)
 
 	return nil
 }
