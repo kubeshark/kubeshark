@@ -39,16 +39,16 @@ export const StatusBar: React.FC<Props> = ({tappingStatus}) => {
             <table>
                 <thead>
                     <tr>
-                        <th>Pod name</th>
-                        <th>Namespace</th>
-                        <th style={{marginLeft: 10}}>Tapping</th>
+                        <th style={{width: "40%"}}>Pod name</th>
+                        <th style={{width: "40%"}}>Namespace</th>
+                        <th style={{width: "20%", textAlign: "center"}}>Tapping</th>
                     </tr>
                 </thead>
                 <tbody>
                     {tappingStatus.map(pod => <tr key={pod.name}>
-                        <td>{pod.name}</td>
-                        <td>{pod.namespace}</td>
-                        <td style={{textAlign: "center"}}><img style={{height: 20}} alt="status" src={pod.isTapped ? successIcon : failIcon}/></td>
+                        <td style={{width: "40%"}}>{pod.name}</td>
+                        <td style={{width: "40%"}}>{pod.namespace}</td>
+                        <td style={{width: "20%", textAlign: "center"}}><img style={{height: 20}} alt="status" src={pod.isTapped ? successIcon : failIcon}/></td>
                     </tr>)}
                 </tbody>
             </table>
