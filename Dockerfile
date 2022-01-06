@@ -1,3 +1,7 @@
+FROM debian as tcpdump-builder
+
+RUN apt-get update && apt-get install -y tcpdump
+
 FROM node:14-slim AS site-build
 
 WORKDIR /app/ui-build
@@ -50,7 +54,29 @@ RUN chmod +x ./basenine_linux_amd64
 COPY devops/build_extensions.sh ..
 RUN cd .. && /bin/bash build_extensions.sh
 
-FROM alpine:3.14
+
+FROM gcr.io/distroless/base-debian11
+
+WORKDIR /tcpdump
+COPY --from=tcpdump-builder /usr/bin/tcpdump .
+COPY --from=tcpdump-builder /usr/lib/x86_64-linux-gnu/libcrypto.so.1.1 .
+COPY --from=tcpdump-builder /usr/lib/x86_64-linux-gnu/libpcap.so.0.8 .
+COPY --from=tcpdump-builder /lib/x86_64-linux-gnu/libc.so.6 .
+COPY --from=tcpdump-builder /lib/x86_64-linux-gnu/libdl.so.2 .
+COPY --from=tcpdump-builder /lib/x86_64-linux-gnu/libpthread.so.0 .
+COPY --from=tcpdump-builder /lib/x86_64-linux-gnu/libdbus-1.so.3 .
+COPY --from=tcpdump-builder /lib64/ld-linux-x86-64.so.2  .
+COPY --from=tcpdump-builder /usr/lib/x86_64-linux-gnu/libsystemd.so.0 .
+COPY --from=tcpdump-builder /lib/x86_64-linux-gnu/librt.so.1 .
+COPY --from=tcpdump-builder /lib/x86_64-linux-gnu/liblzma.so.5 .
+COPY --from=tcpdump-builder /usr/lib/x86_64-linux-gnu/libzstd.so.1 .
+COPY --from=tcpdump-builder /usr/lib/x86_64-linux-gnu/liblz4.so.1 .
+COPY --from=tcpdump-builder /usr/lib/x86_64-linux-gnu/libgcrypt.so.20 .
+COPY --from=tcpdump-builder /lib/x86_64-linux-gnu/libgpg-error.so.0 .
+
+ENV LD_LIBRARY_PATH=/tcpdump
+
+CMD ["./tcpdump", "-Z", "root"]
 
 RUN apk add bash libpcap-dev
 
@@ -67,4 +93,4 @@ RUN mkdir /app/data/
 ENV GIN_MODE=release
 
 # this script runs both apiserver and passivetapper and exits either if one of them exits, preventing a scenario where the container runs without one process
-ENTRYPOINT "/app/mizuagent"
+ENTRYPOINT ["/app/mizuagent"]
