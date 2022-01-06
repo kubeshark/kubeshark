@@ -22,7 +22,6 @@ const LoginPage: React.FC = () => {
         try {
             await api.login(username, password);
             if (!await api.isAuthenticationNeeded()) {
-                toast.success("Logged in successfully");
                 setPage(Page.Traffic);
             } else {
                 toast.error("Invalid credentials");

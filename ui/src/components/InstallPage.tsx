@@ -33,7 +33,6 @@ export const InstallPage: React.FC<InstallPageProps> = ({onFirstLogin}) => {
             setIsLoading(true);
             await api.register(adminUsername, password);
             if (!await api.isAuthenticationNeeded()) {
-                toast.success("admin user created successfully");
                 setPage(Page.Traffic);
                 onFirstLogin();
             }
