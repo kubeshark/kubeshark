@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react";
+import React, {useEffect, useMemo, useState} from "react";
 import {Modal, Backdrop, Fade, Box, Button} from "@material-ui/core";
 import {modalStyle} from "../Filters";
 import Checkbox from "../UI/Checkbox";
@@ -72,8 +72,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({isOpen, onClose, is
 
     const toggleAll = () => {
         const isChecked = Object.values(namespaces).every(tap => tap === true);
-        isChecked ? setAllNamespacesTappedValue(false) : setAllNamespacesTappedValue(true);
+        setAllNamespacesTappedValue(!isChecked);
     }
+
+    const filteredNamespaces = useMemo(() => {
+        return Object.keys(namespaces).filter((namespace) => namespace.includes(searchValue));
+    },[namespaces, searchValue])
 
     const buildNamespacesTable = () => {
         return <table cellPadding={5} style={{borderCollapse: "collapse"}}>
@@ -85,7 +89,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({isOpen, onClose, is
             </tr>
             </thead>
             <tbody>
-            {Object.keys(namespaces).filter((namespace) => namespace.includes(searchValue)).map(namespace => {
+            {filteredNamespaces?.map(namespace => {
                     return <tr key={namespace}>
                         <td style={{width: 50}}>
                             <Checkbox checked={namespaces[namespace]} onToggle={() => toggleTapNamespace(namespace)}/>
