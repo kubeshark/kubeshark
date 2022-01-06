@@ -22,10 +22,6 @@ func runMizuInstall() {
 		return
 	}
 
-	if config.Config.IsNsRestrictedMode() {
-		logger.Log.Error("install is not supported in restricted namespace mode")
-	}
-
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // cancel will be called when this function exits
 
