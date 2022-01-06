@@ -4,6 +4,7 @@ import { toast } from "react-toastify";
 import { MizuContext, Page } from "../EntApp";
 import Api from "../helpers/api";
 import LoadingOverlay from "./LoadingOverlay";
+import './style/Common.sass';
 
 const api = Api.getInstance();
 
@@ -38,7 +39,7 @@ const LoginPage: React.FC = () => {
 
     return <div className="centeredForm">
             {isLoading && <LoadingOverlay/>}
-            <p>Welcome to Mizu, please login to continue</p>
+            <div className="title">Login</div>
             <TextField className="form-input" label="Username" variant="standard" fullWidth value={username} onChange={e => setUsername(e.target.value)} />
             <TextField className="form-input" label="Password" variant="standard" type="password" fullWidth value={password} onChange={e => setPassword(e.target.value)} />
             <Button className="form-button" variant="contained" fullWidth onClick={onFormSubmit}>Login</Button>

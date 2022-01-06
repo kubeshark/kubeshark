@@ -2,6 +2,7 @@ import React, {useEffect, useMemo, useState} from "react";
 import {Modal, Backdrop, Fade, Box, Button} from "@material-ui/core";
 import {modalStyle} from "../Filters";
 import Checkbox from "../UI/Checkbox";
+import '../style/Common.sass';
 import './SettingsModal.sass';
 import Api from "../../helpers/api";
 import spinner from "../assets/spinner.svg";
@@ -120,7 +121,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({isOpen, onClose, is
         <Fade in={isOpen}>
             <Box sx={modalStyle} style={{width: "40vw", maxWidth: 600, height: "70vh", padding: 0, display: "flex", justifyContent: "space-between", flexDirection: "column"}}>
                 <div style={{padding: 32, paddingBottom: 0}}>
-                    <div className="settingsTitle">Tapping Settings</div>
+                    <div className="title">Tapping Settings</div>
                     <div className="settingsSubtitle" style={{marginTop: 20}}>
                         Please choose from below the namespaces for tapping, traffic for namespaces selected will be displayed
                     </div>
