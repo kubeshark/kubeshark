@@ -50,7 +50,7 @@ RUN chmod +x ./basenine_linux_amd64
 COPY devops/build_extensions.sh ..
 RUN cd .. && /bin/bash build_extensions.sh
 
-FROM alpine:3.14
+FROM alpine:3.15
 
 RUN apk add bash libpcap-dev
 

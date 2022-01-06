@@ -16,7 +16,7 @@ func GetEntry(r *tapApi.MizuEntry, v tapApi.DataUnmarshaler) error {
 	return v.UnmarshalData(r)
 }
 
-type StandaloneTapConfig struct {
+type TapConfig struct {
 	TappedNamespaces map[string]bool `json:"tappedNamespaces"`
 }
 
@@ -158,4 +158,8 @@ func RunValidationRulesState(harEntry har.Entry, service string) (tapApi.Applica
 	resultPolicyToSend, isEnabled := rules.MatchRequestPolicy(harEntry, service)
 	statusPolicyToSend, latency, numberOfRules := rules.PassedValidationRules(resultPolicyToSend)
 	return tapApi.ApplicableRules{Status: statusPolicyToSend, Latency: latency, NumberOfRules: numberOfRules}, resultPolicyToSend, isEnabled
+}
+
+type InstallState struct {
+	Completed bool `json:"completed"`
 }

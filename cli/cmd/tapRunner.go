@@ -4,12 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/up9inc/mizu/cli/resources"
-	"github.com/up9inc/mizu/cli/utils"
 	"io/ioutil"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/up9inc/mizu/cli/resources"
+	"github.com/up9inc/mizu/cli/utils"
 
 	"github.com/getkin/kin-openapi/openapi3"
 	"gopkg.in/yaml.v3"

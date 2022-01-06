@@ -4,7 +4,7 @@ import React, {useEffect} from "react";
 import Api from "../../helpers/api";
 import './TLSWarning.sass';
 
-const api = new Api();
+const api = Api.getInstance();
 
 interface TLSWarningProps {
     showTLSWarning: boolean
@@ -29,7 +29,7 @@ export const TLSWarning: React.FC<TLSWarningProps>  = ({showTLSWarning, setShowT
                 console.error(e);
             }
         })();
-    }, []);
+    }, [setShowTLSWarning, setAddressesWithTLS]);
 
     return (<Snackbar open={showTLSWarning && !userDismissedTLSWarning}>
         <MuiAlert classes={{filledWarning: 'customWarningStyle'}} elevation={6} variant="filled"
