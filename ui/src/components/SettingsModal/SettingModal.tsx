@@ -14,7 +14,6 @@ interface SettingsModalProps {
     isFirstLogin: boolean
 }
 
-
 const api = Api.getInstance();
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({isOpen, onClose, isFirstLogin}) => {
