@@ -1,4 +1,4 @@
-FROM oryd/kratos:v0.8.0-sqlite
+FROM gcr.io/up9-docker-hub/mizu-kratos-base/simple-password-policy:latest
 
 USER root
 
