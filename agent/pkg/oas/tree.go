@@ -24,7 +24,7 @@ func (n *Node) getOrSet(path NodePath, pathObjToSet *openapi.PathObj) (node *Nod
 
 	pathChunk := path[0]
 	chunkIsParam := strings.HasPrefix(pathChunk, "{") && strings.HasSuffix(pathChunk, "}")
-	chunkIsGibberish := IsGibberish(pathChunk)
+	chunkIsGibberish := IsGibberish(pathChunk) && !IsVersionString(pathChunk)
 
 	var paramObj *openapi.ParameterObj
 	if chunkIsParam && pathObjToSet != nil {

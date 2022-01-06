@@ -2,9 +2,11 @@ package oas
 
 import "strings"
 
-var ignoredExtensions = []string{"gif", "svg", "css", "png", "ico", "js", "woff2", "woff", "jpg", "jpeg", "swf", "ttf", "map", "webp", "otf"}
-var ignoredCtypePrefixes = []string{"image/", "font/", "video/", "text/javascript"}
+var ignoredExtensions = []string{"gif", "svg", "css", "png", "ico", "js", "woff2", "woff", "jpg", "jpeg", "swf", "ttf", "map", "webp", "otf", "mp3"}
+
+var ignoredCtypePrefixes = []string{"image/", "font/", "video/", "audio/", "text/javascript"}
 var ignoredCtypes = []string{"application/javascript", "application/x-javascript", "text/css", "application/font-woff2", "application/font-woff", "application/x-font-woff"}
+
 var ignoredHeaders = []string{
 	"a-im", "accept",
 	"authorization", "cache-control", "connection", "content-encoding", "content-length", "content-type", "cookie",

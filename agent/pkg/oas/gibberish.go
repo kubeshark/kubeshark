@@ -2,6 +2,7 @@ package oas
 
 import (
 	"regexp"
+	"strings"
 	"unicode"
 )
 
@@ -80,4 +81,28 @@ func noiseLevel(str string) (score float64) {
 	score /= cnt // weigh it
 
 	return score
+}
+
+func IsVersionString(component string) bool {
+	if component == "" {
+		return false
+	}
+
+	hasV := false
+	if strings.HasPrefix(component, "v") {
+		component = component[1:]
+		hasV = true
+	}
+
+	for _, c := range component {
+		if string(c) != "." && !unicode.IsDigit(c) {
+			return false
+		}
+	}
+
+	if !hasV && strings.Contains(component, ".") {
+		return false
+	}
+
+	return true
 }
