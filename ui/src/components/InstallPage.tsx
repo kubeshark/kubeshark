@@ -1,6 +1,6 @@
 import { Button, TextField } from "@material-ui/core";
 import React, { useContext, useState } from "react";
-import { MizuContext, Page } from "../App";
+import { MizuContext, Page } from "../EntApp";
 import { adminUsername } from "../consts";
 import Api, { FormValidationErrorType } from "../helpers/api";
 import { toast } from 'react-toastify';
@@ -8,7 +8,11 @@ import LoadingOverlay from "./LoadingOverlay";
 
 const api = Api.getInstance();
 
-export const InstallPage: React.FC = () => {
+interface InstallPageProps {
+    onFirstLogin: () => void;
+}
+
+export const InstallPage: React.FC<InstallPageProps> = ({onFirstLogin}) => {
 
     const [isLoading, setIsLoading] = useState(false);
     const [password, setPassword] = useState("");
@@ -31,6 +35,7 @@ export const InstallPage: React.FC = () => {
             if (!await api.isAuthenticationNeeded()) {
                 toast.success("admin user created successfully");
                 setPage(Page.Traffic);
+                onFirstLogin();
             }
         } catch (e) {
             if (e.type === FormValidationErrorType) {

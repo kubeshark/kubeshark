@@ -18,6 +18,7 @@
     "highlight.js": "^11.3.1",
     "json-beautify": "^1.1.1",
     "jsonpath": "^1.1.1",
+    "material-ui-popup-state": "^2.0.0",
     "moment": "^2.29.1",
     "node-sass": "^5.0.0",
     "numeral": "^2.0.6",

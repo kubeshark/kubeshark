@@ -84,6 +84,16 @@ export default class Api {
         return response.data;
     }
 
+    getTapConfig = async () => {
+        const response = await this.client.get("/config/tapConfig");
+        return response.data;
+    }
+
+    setTapConfig = async (config) => {
+        const response = await this.client.post("/config/tapConfig", {tappedNamespaces: config});
+        return response.data;
+    }
+
     isInstallNeeded = async () => {
         const response = await this.client.get("/install/isNeeded");
         return response.data;
@@ -94,7 +104,7 @@ export default class Api {
             await this.client.get("/status/tap");
             return false;
         } catch (e) {
-            if (e.response.status == 401) {
+            if (e.response.status === 401) {
                 return true;
             }
             throw e;
@@ -112,10 +122,11 @@ export default class Api {
             return response;
         } catch (e) {
             if (e.response.status === 400) {
-                throw {
+                const error = {
                     'type': FormValidationErrorType,
                     'messages': e.response.data
                 };
+                throw error;
             } else {
                 throw e;
             }
