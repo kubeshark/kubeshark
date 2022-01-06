@@ -2,13 +2,18 @@ package api
 
 import (
 	"fmt"
+	"mizuserver/pkg/config"
 	"sync"
 
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/logger"
 )
 
-const UnresolvedNode = "unresolved"
+const (
+	ServiceMapEnabled  = "enabled"
+	ServiceMapDisabled = "disabled"
+	UnresolvedNode     = "unresolved"
+)
 
 var instance *serviceMap
 var once sync.Once
@@ -27,7 +32,9 @@ type serviceMap struct {
 }
 
 type ServiceMap interface {
+	IsEnabled() bool
 	AddEdge(source, destination key, protocol string)
+	GetStatus() shared.ServiceMapStatus
 	GetNodes() []shared.ServiceMapNode
 	GetEdges() []shared.ServiceMapEdge
 	PrintNodes()
@@ -119,6 +126,24 @@ func (s *serviceMap) AddEdge(u, v key, p string) {
 	}
 
 	s.entriesProcessed++
+}
+
+func (s *serviceMap) IsEnabled() bool {
+	return config.Config.ServiceMap
+}
+
+func (s *serviceMap) GetStatus() shared.ServiceMapStatus {
+	status := ServiceMapDisabled
+	if s.IsEnabled() {
+		status = ServiceMapEnabled
+	}
+
+	return shared.ServiceMapStatus{
+		Status:                status,
+		EntriesProcessedCount: s.entriesProcessed,
+		NodeCount:             s.GetNodesCount(),
+		EdgeCount:             s.GetEdgesCount(),
+	}
 }
 
 func (s *serviceMap) GetNodes() []shared.ServiceMapNode {

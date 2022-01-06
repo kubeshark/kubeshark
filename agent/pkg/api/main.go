@@ -147,7 +147,10 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 			panic(err)
 		}
 		connection.SendText(string(data))
-		serviceMap.AddEdge(key(mizuEntry.Source.Name), key(mizuEntry.Destination.Name), extension.Protocol.Name)
+
+		if serviceMap.IsEnabled() {
+			serviceMap.AddEdge(key(mizuEntry.Source.Name), key(mizuEntry.Destination.Name), extension.Protocol.Name)
+		}
 	}
 }
 

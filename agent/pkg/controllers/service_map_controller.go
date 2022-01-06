@@ -16,20 +16,15 @@ func NewServiceMapController() *ServiceMapController {
 
 func (s *ServiceMapController) Status(c *gin.Context) {
 	serviceMap := api.GetServiceMapInstance()
-	status := &shared.ServiceMapStatus{
-		Status:                "enabled",
-		EntriesProcessedCount: serviceMap.GetEntriesProcessedCount(),
-		NodeCount:             serviceMap.GetNodesCount(),
-		EdgeCount:             serviceMap.GetEdgesCount(),
-	}
-	c.JSON(http.StatusOK, status)
+	c.JSON(http.StatusOK, serviceMap.GetStatus())
 }
 
 func (s *ServiceMapController) Get(c *gin.Context) {
 	serviceMap := api.GetServiceMapInstance()
 	response := &shared.ServiceMapResponse{
-		Nodes: serviceMap.GetNodes(),
-		Edges: serviceMap.GetEdges(),
+		Status: serviceMap.GetStatus(),
+		Nodes:  serviceMap.GetNodes(),
+		Edges:  serviceMap.GetEdges(),
 	}
 	c.JSON(http.StatusOK, response)
 }
