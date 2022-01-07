@@ -197,7 +197,12 @@ func (g *SpecGen) handlePathObj(entry *har.Entry) (string, error) {
 
 func handleOpObj(entry *har.Entry, pathObj *openapi.PathObj) (*openapi.Operation, error) {
 	isSuccess := 100 <= entry.Response.Status && entry.Response.Status < 400
-	opObj, wasMissing, err := getOpObj(pathObj, entry.Request.Method, isSuccess)
+	urlParsed, err := url.Parse(entry.Request.URL)
+	if err != nil {
+		return nil, err
+	}
+
+	opObj, wasMissing, err := getOpObj(pathObj, entry.Request.Method, isSuccess, urlParsed.Path)
 	if err != nil {
 		return nil, err
 	}
@@ -435,7 +440,7 @@ func getRequestBody(req *har.Request, opObj *openapi.Operation, isSuccess bool) 
 	return reqBody, nil
 }
 
-func getOpObj(pathObj *openapi.PathObj, method string, createIfNone bool) (*openapi.Operation, bool, error) {
+func getOpObj(pathObj *openapi.PathObj, method string, createIfNone bool, path string) (*openapi.Operation, bool, error) {
 	method = strings.ToLower(method)
 	var op **openapi.Operation
 
@@ -467,6 +472,7 @@ func getOpObj(pathObj *openapi.PathObj, method string, createIfNone bool) (*open
 			*op = &openapi.Operation{Responses: map[string]openapi.Response{}}
 			newUUID := uuid.New().String()
 			(**op).OperationID = newUUID
+			(**op).Summary = path
 		} else {
 			return nil, isMissing, nil
 		}

@@ -13,6 +13,25 @@ import (
 	"time"
 )
 
+// if enabled via env, write file into subdir
+func writeFiles(label string, spec *openapi.OpenAPI) {
+	if os.Getenv("MIZU_OAS_WRITE_FILES") != "" {
+		path := "./oas-samples"
+		err := os.MkdirAll(path, 0o755)
+		if err != nil {
+			panic(err)
+		}
+		content, err := json.MarshalIndent(spec, "", "\t")
+		if err != nil {
+			panic(err)
+		}
+		err = ioutil.WriteFile(path+"/"+label+".json", content, 0644)
+		if err != nil {
+			panic(err)
+		}
+	}
+}
+
 func TestEntries(t *testing.T) {
 	files, err := getFiles(".")
 	// files, err = getFiles("/media/bigdisk/UP9")
@@ -83,7 +102,8 @@ func TestEntries(t *testing.T) {
 		mutex.Unlock()
 	}
 
-	specs.Range(func(_, val interface{}) bool {
+	specs.Range(func(key, val interface{}) bool {
+		svc := key.(string)
 		gen := val.(*SpecGen)
 		spec, err := gen.GetSpec()
 		if err != nil {
@@ -99,6 +119,7 @@ func TestEntries(t *testing.T) {
 			t.Log(err)
 			t.FailNow()
 		}
+		writeFiles(svc, spec)
 
 		return true
 	})
