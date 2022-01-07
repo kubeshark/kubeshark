@@ -280,14 +280,14 @@ func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, moun
 		},
 		{
 			Name:            "basenine",
-			Image:           "ghcr.io/up9inc/basenine:v0.2.26",
+			Image:           fmt.Sprintf("%s:%s", shared.BasenineImageRepo, shared.BasenineImageTag),
 			ImagePullPolicy: opts.ImagePullPolicy,
 			VolumeMounts:    volumeMounts,
 			ReadinessProbe: &core.Probe{
 				FailureThreshold: 3,
 				Handler: core.Handler{
 					TCPSocket: &core.TCPSocketAction{
-						Port: intstr.FromInt(9099),
+						Port: intstr.Parse(shared.BaseninePort),
 					},
 				},
 				PeriodSeconds:    1,
@@ -305,7 +305,7 @@ func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, moun
 				},
 			},
 			Command:    []string{"/basenine"},
-			Args:       []string{"-addr", "0.0.0.0", "-persistent"},
+			Args:       []string{"-addr", "0.0.0.0", "-port", shared.BaseninePort, "-persistent"},
 			WorkingDir: shared.DataDirPath,
 		},
 	}
