@@ -292,3 +292,53 @@ func getOps(pathObj *openapi.PathObj) []*openapi.Operation {
 	}
 	return res
 }
+
+// parses JSON into any possible value
+func anyJSON(text string) (anyVal interface{}, isJSON bool) {
+	isJSON = true
+	asMap := map[string]interface{}{}
+	err := json.Unmarshal([]byte(text), &asMap)
+	if err == nil && asMap != nil {
+		return asMap, isJSON
+	}
+
+	asArray := make([]interface{}, 0)
+	err = json.Unmarshal([]byte(text), &asArray)
+	if err == nil && asArray != nil {
+		return asArray, isJSON
+	}
+
+	asString := ""
+	sPtr := &asString
+	err = json.Unmarshal([]byte(text), &sPtr)
+	if err == nil && sPtr != nil {
+		return asString, isJSON
+	}
+
+	asInt := 0
+	intPtr := &asInt
+	err = json.Unmarshal([]byte(text), &intPtr)
+	if err == nil && intPtr != nil {
+		return asInt, isJSON
+	}
+
+	asFloat := 0.0
+	floatPtr := &asFloat
+	err = json.Unmarshal([]byte(text), &floatPtr)
+	if err == nil && floatPtr != nil {
+		return asFloat, isJSON
+	}
+
+	asBool := false
+	boolPtr := &asBool
+	err = json.Unmarshal([]byte(text), &boolPtr)
+	if err == nil && boolPtr != nil {
+		return asBool, isJSON
+	}
+
+	if text == "null" {
+		return nil, isJSON
+	}
+
+	return nil, false
+}
