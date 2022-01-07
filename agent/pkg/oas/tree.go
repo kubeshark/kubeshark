@@ -173,6 +173,21 @@ func (n *Node) listPaths() *openapi.Paths {
 	return paths
 }
 
+type PathAndOp struct {
+	path string
+	op   *openapi.Operation
+}
+
+func (n *Node) listOps() []PathAndOp {
+	res := make([]PathAndOp, 0)
+	for path, pathObj := range n.listPaths().Items {
+		for _, op := range getOps(pathObj) {
+			res = append(res, PathAndOp{path: string(path), op: op})
+		}
+	}
+	return res
+}
+
 func (n *Node) countParentParams() int {
 	res := 0
 	node := n

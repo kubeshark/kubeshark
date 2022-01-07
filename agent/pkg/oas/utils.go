@@ -279,3 +279,16 @@ func longestCommonXfix(strs [][]string, pre bool) []string { // https://github.c
 	}
 	return xfix
 }
+
+// returns all non-nil ops in PathObj
+func getOps(pathObj *openapi.PathObj) []*openapi.Operation {
+	ops := []**openapi.Operation{&pathObj.Get, &pathObj.Patch, &pathObj.Put, &pathObj.Options, &pathObj.Post, &pathObj.Trace, &pathObj.Head, &pathObj.Delete}
+	res := make([]*openapi.Operation, 0)
+	for _, opp := range ops {
+		if *opp == nil {
+			continue
+		}
+		res = append(res, *opp)
+	}
+	return res
+}

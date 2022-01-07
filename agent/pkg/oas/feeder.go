@@ -23,7 +23,7 @@ func EntriesToSpecs(entries chan har.Entry, specs *sync.Map) error {
 		val, found := specs.Load(u.Host)
 		var gen *SpecGen
 		if !found {
-			gen = NewGen(u.Host)
+			gen = NewGen(u.Scheme + "://" + u.Host)
 			specs.Store(u.Host, gen)
 		} else {
 			gen = val.(*SpecGen)
