@@ -343,10 +343,22 @@ func fillContent(reqResp reqResp, respContent openapi.Content, ctype string, err
 		text = decRespText(reqResp.Resp.Content)
 	}
 
-	exampleMsg, err := json.Marshal(text)
-	if err != nil {
-		return nil, err
+	var exampleMsg []byte
+	// try treating it as json
+	any, isJSON := anyJSON(text)
+	if isJSON {
+		// re-marshal with forced indent
+		exampleMsg, err = json.MarshalIndent(any, "", "\t")
+		if err != nil {
+			panic("Failed to re-marshal value, super-strange")
+		}
+	} else {
+		exampleMsg, err = json.Marshal(text)
+		if err != nil {
+			return nil, err
+		}
 	}
+
 	content.Example = exampleMsg
 	return respContent[ctype], nil
 }
@@ -461,7 +473,7 @@ func getOpObj(pathObj *openapi.PathObj, method string, createIfNone bool) (*open
 	case "trace":
 		op = &pathObj.Trace
 	default:
-		return nil, false, errors.New("Unsupported HTTP method: " + method)
+		return nil, false, errors.New("unsupported HTTP method: " + method)
 	}
 
 	isMissing := false
