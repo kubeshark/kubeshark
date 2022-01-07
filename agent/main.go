@@ -28,6 +28,7 @@ import (
 
 	v1 "k8s.io/api/core/v1"
 
+	"github.com/antelman107/net-wait-go/wait"
 	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -148,6 +149,16 @@ func main() {
 }
 
 func configureBasenineServer(host string, port string) {
+	if !wait.New(
+		wait.WithProto("tcp"),
+		wait.WithWait(200*time.Millisecond),
+		wait.WithBreak(50*time.Millisecond),
+		wait.WithDeadline(5*time.Second),
+		wait.WithDebug(true),
+	).Do([]string{fmt.Sprintf("%s:%s", host, port)}) {
+		logger.Log.Panicf("Basenine is not available!")
+	}
+
 	// Limit the database size to default 200MB
 	err := basenine.Limit(host, port, config.Config.MaxDBSizeBytes)
 	if err != nil {
