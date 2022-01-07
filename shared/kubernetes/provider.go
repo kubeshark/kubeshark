@@ -278,6 +278,34 @@ func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, moun
 				},
 			},
 		},
+		{
+			Name:            "basenine",
+			Image:           "ghcr.io/up9inc/basenine:v0.2.26",
+			ImagePullPolicy: opts.ImagePullPolicy,
+			VolumeMounts:    volumeMounts,
+			ReadinessProbe: &core.Probe{
+				FailureThreshold: 3,
+				Handler: core.Handler{
+					TCPSocket: &core.TCPSocketAction{
+						Port: intstr.FromInt(9099),
+					},
+				},
+				PeriodSeconds:    1,
+				SuccessThreshold: 1,
+				TimeoutSeconds:   1,
+			},
+			Resources: core.ResourceRequirements{
+				Limits: core.ResourceList{
+					"cpu":    cpuLimit,
+					"memory": memLimit,
+				},
+				Requests: core.ResourceList{
+					"cpu":    cpuRequests,
+					"memory": memRequests,
+				},
+			},
+			Args: []string{"-addr", "127.0.0.1", "-persistent"},
+		},
 	}
 
 	if createAuthContainer {

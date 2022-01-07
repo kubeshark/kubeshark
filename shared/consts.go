@@ -14,6 +14,6 @@ const (
 	GoGCEnvVar                       = "GOGC"
 	DefaultApiServerPort             = 8899
 	LogLevelEnvVar                   = "LOG_LEVEL"
-	BasenineHost                     = "localhost"
+	BasenineHost                     = "127.0.0.1"
 	BaseninePort                     = "9099"
 )
