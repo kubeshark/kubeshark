@@ -67,6 +67,8 @@ func (g *SpecGen) GetSpec() (*openapi.OpenAPI, error) {
 	// put paths back from tree into OAS
 	g.oas.Paths = g.tree.listPaths()
 
+	suggestTags(g.oas)
+
 	// to make a deep copy, no better idea than marshal+unmarshal
 	specText, err := json.MarshalIndent(g.oas, "", "\t")
 	if err != nil {
@@ -80,6 +82,85 @@ func (g *SpecGen) GetSpec() (*openapi.OpenAPI, error) {
 	}
 
 	return spec, err
+}
+
+func suggestTags(oas *openapi.OpenAPI) {
+	paths := getPathsKeys(oas.Paths.Items)
+	for len(paths) > 0 {
+		group := make([]string, 0)
+		group = append(group, paths[0])
+		paths = paths[1:]
+
+		pathsClone := append(paths[:0:0], paths...)
+		for _, path := range pathsClone {
+			if getSimilarPrefix([]string{group[0], path}) != "" {
+				group = append(group, path)
+				paths = deleteFromSlice(paths, path)
+			}
+		}
+
+		common := getSimilarPrefix(group)
+
+		if len(group) > 1 {
+			for _, path := range group {
+				pathObj := oas.Paths.Items[openapi.PathValue(path)]
+				ops := []**openapi.Operation{&pathObj.Get, &pathObj.Patch, &pathObj.Put, &pathObj.Options, &pathObj.Post, &pathObj.Trace, &pathObj.Head, &pathObj.Delete}
+				for _, opp := range ops {
+					if *opp == nil {
+						continue
+					}
+					op := *opp
+
+					if op.Tags == nil {
+						op.Tags = make([]string, 0)
+					}
+					// only add tags if not present
+					if len(op.Tags) == 0 {
+						op.Tags = append(op.Tags, common)
+					}
+				}
+			}
+		}
+
+		//groups[common] = group
+	}
+}
+
+func getSimilarPrefix(strs []string) string {
+	chunked := make([][]string, 0)
+	for _, item := range strs {
+		chunked = append(chunked, strings.Split(item, "/"))
+	}
+
+	cmn := longestCommonXfix(chunked, true)
+	res := make([]string, 0)
+	for _, chunk := range cmn {
+		if chunk != "api" && !IsVersionString(chunk) && !strings.HasPrefix(chunk, "{") {
+			res = append(res, chunk)
+		}
+	}
+	return strings.Join(res[1:], ".")
+}
+
+func deleteFromSlice(s []string, val string) []string {
+	temp := s[:0]
+	for _, x := range s {
+		if x != val {
+			temp = append(temp, x)
+		}
+	}
+	return temp
+}
+
+func getPathsKeys(mymap map[openapi.PathValue]*openapi.PathObj) []string {
+	keys := make([]string, len(mymap))
+
+	i := 0
+	for k := range mymap {
+		keys[i] = string(k)
+		i++
+	}
+	return keys
 }
 
 func (g *SpecGen) handlePathObj(entry *har.Entry) (string, error) {
