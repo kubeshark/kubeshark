@@ -29,11 +29,15 @@ type SpecGen struct {
 func NewGen(server string) *SpecGen {
 	spec := new(openapi.OpenAPI)
 	spec.Version = "3.1.0"
+
 	info := openapi.Info{Title: server}
 	info.Version = "0.0"
 	spec.Info = &info
 	spec.Paths = &openapi.Paths{Items: map[openapi.PathValue]*openapi.PathObj{}}
-	// TODO: service coordinates
+
+	spec.Servers = make([]*openapi.Server, 0)
+	spec.Servers = append(spec.Servers, &openapi.Server{URL: server})
+
 	gen := SpecGen{oas: spec, tree: new(Node)}
 	return &gen
 }
@@ -63,6 +67,12 @@ func (g *SpecGen) GetSpec() (*openapi.OpenAPI, error) {
 	defer g.lock.Unlock()
 
 	g.tree.compact()
+
+	for _, pathop := range g.tree.listOps() {
+		if pathop.op.Summary == "" {
+			pathop.op.Summary = pathop.path
+		}
+	}
 
 	// put paths back from tree into OAS
 	g.oas.Paths = g.tree.listPaths()
@@ -104,13 +114,7 @@ func suggestTags(oas *openapi.OpenAPI) {
 		if len(group) > 1 {
 			for _, path := range group {
 				pathObj := oas.Paths.Items[openapi.PathValue(path)]
-				ops := []**openapi.Operation{&pathObj.Get, &pathObj.Patch, &pathObj.Put, &pathObj.Options, &pathObj.Post, &pathObj.Trace, &pathObj.Head, &pathObj.Delete}
-				for _, opp := range ops {
-					if *opp == nil {
-						continue
-					}
-					op := *opp
-
+				for _, op := range getOps(pathObj) {
 					if op.Tags == nil {
 						op.Tags = make([]string, 0)
 					}
@@ -197,12 +201,7 @@ func (g *SpecGen) handlePathObj(entry *har.Entry) (string, error) {
 
 func handleOpObj(entry *har.Entry, pathObj *openapi.PathObj) (*openapi.Operation, error) {
 	isSuccess := 100 <= entry.Response.Status && entry.Response.Status < 400
-	urlParsed, err := url.Parse(entry.Request.URL)
-	if err != nil {
-		return nil, err
-	}
-
-	opObj, wasMissing, err := getOpObj(pathObj, entry.Request.Method, isSuccess, urlParsed.Path)
+	opObj, wasMissing, err := getOpObj(pathObj, entry.Request.Method, isSuccess)
 	if err != nil {
 		return nil, err
 	}
@@ -440,7 +439,7 @@ func getRequestBody(req *har.Request, opObj *openapi.Operation, isSuccess bool) 
 	return reqBody, nil
 }
 
-func getOpObj(pathObj *openapi.PathObj, method string, createIfNone bool, path string) (*openapi.Operation, bool, error) {
+func getOpObj(pathObj *openapi.PathObj, method string, createIfNone bool) (*openapi.Operation, bool, error) {
 	method = strings.ToLower(method)
 	var op **openapi.Operation
 
@@ -472,7 +471,6 @@ func getOpObj(pathObj *openapi.PathObj, method string, createIfNone bool, path s
 			*op = &openapi.Operation{Responses: map[string]openapi.Response{}}
 			newUUID := uuid.New().String()
 			(**op).OperationID = newUUID
-			(**op).Summary = path
 		} else {
 			return nil, isMissing, nil
 		}
