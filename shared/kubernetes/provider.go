@@ -304,7 +304,9 @@ func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, moun
 					"memory": memRequests,
 				},
 			},
-			Args: []string{"-addr", "127.0.0.1", "-persistent"},
+			Command:    []string{"/basenine"},
+			Args:       []string{"-addr", "0.0.0.0", "-persistent"},
+			WorkingDir: shared.DataDirPath,
 		},
 	}
 
