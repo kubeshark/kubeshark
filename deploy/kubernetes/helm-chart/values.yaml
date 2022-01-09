@@ -22,7 +22,11 @@ container:
   mizuAgent:
     image:
       repository: "gcr.io/up9-docker-hub/mizu/develop"
-      tag: "0.21.33"
+      tag: "0.21.29"
+  tapper:
+    image:
+      repository: "gcr.io/up9-docker-hub/mizu/develop"
+      tag: "0.21.29"
   basenine:
     name: "basenine"
     port: 9099
