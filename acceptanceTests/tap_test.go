@@ -437,6 +437,8 @@ func TestTapRedact(t *testing.T) {
 		}
 	}
 
+	time.Sleep(29 * time.Hour)
+
 	// TODO delete from here
 	redactCheckFunc := func() error {
 		timestamp := time.Now().UnixNano() / int64(time.Millisecond)
