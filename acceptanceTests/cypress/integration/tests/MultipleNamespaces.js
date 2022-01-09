@@ -1,28 +1,33 @@
 const columns = {"podName" : 1, "namespace" : 2, "tapping" : 3}
 const greenStatusImageSrc = "/static/media/success.662997eb.svg"
-it('verifying the first pod', function() {
-    cy.visit('http://localhost:8899/')
-    cy.get('.podsCount').trigger('mouseover')
-    findLineAndCheck({"podName" : Cypress.env('name1'), "namespace" : Cypress.env('namespace1')})
-})
 
-it('verifying the second pod', function () {
-    findLineAndCheck({"podName" : Cypress.env('name2'), "namespace" : Cypress.env('namespace2')})
-})
+it('opening', function () {
+    cy.visit(Cypress.env('testPath'))
+    cy.get('.podsCount').trigger('mouseover')
+});
+
+[1, 2, 3].map(doItFunc)
+
+function doItFunc(number) {
+    const podName = Cypress.env(`name${number}`)
+    const namespace = Cypress.env(`namespace${number}`)
+
+    it(`verifying the pod (${podName}, ${namespace})`, function () {
+        findLineAndCheck({"podName" : podName, "namespace" : namespace})
+    })
+}
 
 function getDomPathInStatusBar(line, column) {
     return `.expandedStatusBar > :nth-child(2) > > :nth-child(2) > :nth-child(${line}) > :nth-child(${column})`
 }
 
 function checkLine(line, expectedValues) {
-
     cy.get(getDomPathInStatusBar(line, columns.podName)).invoke('text').then(podValue => {
         const podName = podValue.substring(0, podValue.indexOf('-'))
         expect(podName).to.equal(expectedValues.podName)
 
         cy.get(getDomPathInStatusBar(line, columns.namespace)).invoke('text').then(namespaceValue => {
             expect(namespaceValue).to.equal(expectedValues.namespace)
-
             cy.get(getDomPathInStatusBar(line, columns.tapping)).children().should('have.attr', 'src', greenStatusImageSrc)
         })
     })
@@ -56,6 +61,7 @@ function findLineAndCheck(expectedValues) {
         })
     })
 }
+
 function throwError(pod, namespace) {
     throw new Error(`The pod named ${pod} doesn't match any namespace named ${namespace}`)
 }
