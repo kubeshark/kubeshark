@@ -3,9 +3,6 @@ apiVersion: v1
 metadata:
   name: {{ .Values.volumeClaim.name }}
   namespace: {{ .Release.Namespace }}
-  labels:
-    app.kubernetes.io/created-by: mizu-cli
-    app.kubernetes.io/managed-by: mizu
 spec:
   accessModes:
     - ReadWriteOnce
