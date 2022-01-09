@@ -720,7 +720,7 @@ func (provider *Provider) CreateConfigMap(ctx context.Context, namespace string,
 	return nil
 }
 
-func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, apiServerPodIp string, nodeToTappedPodMap map[string][]core.Pod, serviceAccountName string, resources shared.Resources, imagePullPolicy core.PullPolicy, mizuApiFilteringOptions api.TrafficFilteringOptions, logLevel logging.Level, istio bool) error {
+func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, apiServerPodIp string, nodeToTappedPodMap map[string][]core.Pod, serviceAccountName string, resources shared.Resources, imagePullPolicy core.PullPolicy, mizuApiFilteringOptions api.TrafficFilteringOptions, logLevel logging.Level, serviceMesh bool) error {
 	logger.Log.Debugf("Applying %d tapper daemon sets, ns: %s, daemonSetName: %s, podImage: %s, tapperPodName: %s", len(nodeToTappedPodMap), namespace, daemonSetName, podImage, tapperPodName)
 
 	if len(nodeToTappedPodMap) == 0 {
@@ -745,8 +745,8 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 		"--nodefrag",
 	}
 
-	if istio {
-		mizuCmd = append(mizuCmd, "--procfs", procfsMountPath, "--istio")
+	if serviceMesh {
+		mizuCmd = append(mizuCmd, "--procfs", procfsMountPath, "--servicemesh")
 	}
 
 	agentContainer := applyconfcore.Container()
@@ -756,7 +756,7 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 
 	caps := applyconfcore.Capabilities().WithDrop("ALL").WithAdd("NET_RAW").WithAdd("NET_ADMIN")
 
-	if istio {
+	if serviceMesh {
 		caps = caps.WithAdd("SYS_ADMIN")    // for reading /proc/PID/net/ns
 		caps = caps.WithAdd("SYS_PTRACE")   // for setting netns to other process
 		caps = caps.WithAdd("DAC_OVERRIDE") // for reading /proc/PID/environ
