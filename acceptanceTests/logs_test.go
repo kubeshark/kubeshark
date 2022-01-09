@@ -81,8 +81,13 @@ func TestLogs(t *testing.T) {
 		logsFileNames = append(logsFileNames, file.Name)
 	}
 
-	if !Contains(logsFileNames, "mizu.mizu-api-server.log") {
+	if !Contains(logsFileNames, "mizu.mizu-api-server.mizu-api-server.log") {
 		t.Errorf("api server logs not found")
+		return
+	}
+
+	if !Contains(logsFileNames, "mizu.mizu-api-server.basenine.log") {
+		t.Errorf("basenine logs not found")
 		return
 	}
 
