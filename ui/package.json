@@ -20,7 +20,7 @@
     "jsonpath": "^1.1.1",
     "material-ui-popup-state": "^2.0.0",
     "moment": "^2.29.1",
-    "node-sass": "^5.0.0",
+    "node-sass": "^6.0.0",
     "numeral": "^2.0.6",
     "protobuf-decoder": "^0.1.0",
     "react": "^17.0.2",
