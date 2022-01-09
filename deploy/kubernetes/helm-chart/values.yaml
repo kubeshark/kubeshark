@@ -42,6 +42,6 @@ deployment:
 configMap:
   name: "mizu-config"
 
-valumeClaim:
+volumeClaim:
   create: true
   name: "mizu-volume-claim"

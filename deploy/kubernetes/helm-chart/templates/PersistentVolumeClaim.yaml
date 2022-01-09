@@ -1,7 +1,7 @@
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
-  name: { { .Values.valumeClaim.name } }
+  name: { { .Values.volumeClaim.name } }
   namespace: { { .Release.Namespace } }
   labels:
     app.kubernetes.io/created-by: mizu-cli

@@ -22,9 +22,9 @@ spec:
           configMap:
             name: { { .Values.configMap.name } }
             defaultMode: 420
-        - name: { { .Values.valumeClaim.name } }
+        - name: { { .Values.volumeClaim.name } }
           persistentVolumeClaim:
-            claimName: { { .Values.valumeClaim.name } }
+            claimName: { { .Values.volumeClaim.name } }
       containers:
         - name: { { .Values.pod.name } }
           image: "{{ .Values.container.mizuAgent.image.repository }}:{{ .Values.container.mizuAgent.image.tag | default .Chart.AppVersion }}"
@@ -45,7 +45,7 @@ spec:
           volumeMounts:
             - name: { { .Values.configMap.name } }
               mountPath: /app/config/
-            - name: { { .Values.valumeClaim.name } }
+            - name: { { .Values.volumeClaim.name } }
               mountPath: /app/data/
           livenessProbe:
             httpGet:
@@ -81,7 +81,7 @@ spec:
           volumeMounts:
             - name: { { .Values.configMap.name } }
               mountPath: /app/config/
-            - name: { { .Values.valumeClaim.name } }
+            - name: { { .Values.volumeClaim.name } }
               mountPath: /app/data/
           readinessProbe:
             tcpSocket:
@@ -105,7 +105,7 @@ spec:
           volumeMounts:
             - name: { { .Values.configMap.name } }
               mountPath: /app/config/
-            - name: { { .Values.valumeClaim.name } }
+            - name: { { .Values.volumeClaim.name } }
               mountPath: /app/data/
           readinessProbe:
             httpGet:
