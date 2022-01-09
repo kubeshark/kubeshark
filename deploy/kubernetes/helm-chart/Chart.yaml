@@ -1,0 +1,7 @@
+apiVersion: v2
+name: mizu
+description: Mizu helm chart for Kubernetes
+type: application
+version: 0.1.0
+kubeVersion: ">= 1.16.0-0"
+appVersion: "0.21.29"

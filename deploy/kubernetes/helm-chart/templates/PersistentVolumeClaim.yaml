@@ -1,0 +1,16 @@
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: { { .Values.valumeClaim.name } }
+  namespace: { { .Release.Namespace } }
+  labels:
+    app.kubernetes.io/created-by: mizu-cli
+    app.kubernetes.io/managed-by: mizu
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    limits:
+      storage: 700M
+    requests:
+      storage: 700M
