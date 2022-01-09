@@ -151,6 +151,7 @@ func TestTapAllNamespaces(t *testing.T) {
 
 	expectedPods := []PodDescriptor{
 		{Name: "httpbin", Namespace: "mizu-tests"},
+		{Name: "httpbin2", Namespace: "mizu-tests"},
 		{Name: "httpbin", Namespace: "mizu-tests2"},
 	}
 
@@ -184,25 +185,8 @@ func TestTapAllNamespaces(t *testing.T) {
 		return
 	}
 
-	podsUrl := fmt.Sprintf("%v/status/tap", apiServerUrl)
-	requestResult, requestErr := executeHttpGetRequest(podsUrl)
-	if requestErr != nil {
-		t.Errorf("failed to get tap status, err: %v", requestErr)
-		return
-	}
-
-	pods, err := getPods(requestResult)
-	if err != nil {
-		t.Errorf("failed to get pods, err: %v", err)
-		return
-	}
-
-	for _, expectedPod := range expectedPods {
-		if !isPodDescriptorInPodArray(pods, expectedPod) {
-			t.Errorf("unexpected result - expected pod not found, pod namespace: %v, pod name: %v", expectedPod.Namespace, expectedPod.Name)
-			return
-		}
-	}
+	runCypressTests(t, fmt.Sprintf("npx cypress run --spec  \"cypress/integration/tests/MultipleNamespaces.js\" --env name1=%v,name2=%v,name3=%v,namespace1=%v,namespace2=%v,namespace3=%v",
+		expectedPods[0].Name, expectedPods[1].Name, expectedPods[2].Name, expectedPods[0].Namespace, expectedPods[1].Namespace, expectedPods[2].Namespace))
 }
 
 func TestTapMultipleNamespaces(t *testing.T) {
@@ -249,6 +233,7 @@ func TestTapMultipleNamespaces(t *testing.T) {
 		t.Errorf("failed to start tap pods on time, err: %v", err)
 		return
 	}
+	<<<<<<< HEAD
 	podsUrl := fmt.Sprintf("%v/status/tap", apiServerUrl)
 	requestResult, requestErr := executeHttpGetRequest(podsUrl)
 	if requestErr != nil {
@@ -273,6 +258,9 @@ func TestTapMultipleNamespaces(t *testing.T) {
 			return
 		}
 	}
+
+	runCypressTests(t, fmt.Sprintf("npx cypress run --spec  \"cypress/integration/tests/MultipleNamespaces.js\" --env name1=%v,name2=%v,name3=%v,namespace1=%v,namespace2=%v,namespace3=%v",
+		expectedPods[0].Name, expectedPods[1].Name, expectedPods[2].Name, expectedPods[0].Namespace, expectedPods[1].Namespace, expectedPods[2].Namespace))
 }
 
 func TestTapRegex(t *testing.T) {
@@ -864,8 +852,13 @@ func TestTapDumpLogs(t *testing.T) {
 		logsFileNames = append(logsFileNames, file.Name)
 	}
 
-	if !Contains(logsFileNames, "mizu.mizu-api-server.log") {
+	if !Contains(logsFileNames, "mizu.mizu-api-server.mizu-api-server.log") {
 		t.Errorf("api server logs not found")
+		return
+	}
+
+	if !Contains(logsFileNames, "mizu.mizu-api-server.basenine.log") {
+		t.Errorf("basenine logs not found")
 		return
 	}
 

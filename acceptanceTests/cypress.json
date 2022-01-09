@@ -4,5 +4,12 @@
   "viewportHeight": 1080,
   "video": false,
   "screenshotOnRunFailure": false,
-  "testFiles": ["tests/GuiPort.js", "tests/TapRedact.js"]
+
+  "testFiles":
+  ["tests/GuiPort.js",
+  "tests/MultipleNamespaces.js",
+    "tests/TapRedact.js"],
+  "env": {
+    "testUrl": "http://localhost:8899/"
+  }
 }

@@ -38,18 +38,20 @@ func DumpLogs(ctx context.Context, provider *kubernetes.Provider, filePath strin
 	defer zipWriter.Close()
 
 	for _, pod := range pods {
-		logs, err := provider.GetPodLogs(ctx, pod.Namespace, pod.Name)
-		if err != nil {
-			logger.Log.Errorf("Failed to get logs, %v", err)
-			continue
-		} else {
-			logger.Log.Debugf("Successfully read log length %d for pod: %s.%s", len(logs), pod.Namespace, pod.Name)
-		}
+		for _, container := range pod.Spec.Containers {
+			logs, err := provider.GetPodLogs(ctx, pod.Namespace, pod.Name, container.Name)
+			if err != nil {
+				logger.Log.Errorf("Failed to get logs, %v", err)
+				continue
+			} else {
+				logger.Log.Debugf("Successfully read log length %d for pod: %s.%s.%s", len(logs), pod.Namespace, pod.Name, container.Name)
+			}
 
-		if err := AddStrToZip(zipWriter, logs, fmt.Sprintf("%s.%s.log", pod.Namespace, pod.Name)); err != nil {
-			logger.Log.Errorf("Failed write logs, %v", err)
-		} else {
-			logger.Log.Debugf("Successfully added log length %d from pod: %s.%s", len(logs), pod.Namespace, pod.Name)
+			if err := AddStrToZip(zipWriter, logs, fmt.Sprintf("%s.%s.%s.log", pod.Namespace, pod.Name, container.Name)); err != nil {
+				logger.Log.Errorf("Failed write logs, %v", err)
+			} else {
+				logger.Log.Debugf("Successfully added log length %d from pod: %s.%s.%s", len(logs), pod.Namespace, pod.Name, container.Name)
+			}
 		}
 	}
 
