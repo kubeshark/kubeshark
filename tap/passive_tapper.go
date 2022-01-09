@@ -21,6 +21,7 @@ import (
 	"github.com/up9inc/mizu/tap/api"
 	"github.com/up9inc/mizu/tap/diagnose"
 	"github.com/up9inc/mizu/tap/source"
+	"github.com/up9inc/mizu/tap/tlstapper"
 	v1 "k8s.io/api/core/v1"
 )
 
@@ -53,6 +54,8 @@ var promisc = flag.Bool("promisc", true, "Set promiscuous mode")
 var staleTimeoutSeconds = flag.Int("staletimout", 120, "Max time in seconds to keep connections which don't transmit data")
 var pids = flag.String("pids", "", "A comma separated list of PIDs to capture their network namespaces")
 var istio = flag.Bool("istio", false, "Record decrypted traffic if the cluster configured with istio and mtls")
+var tls = flag.Bool("tls", false, "Enable Tls tapper")
+var sslLibrary = flag.String("ssl-library", "", "Tap ssl traffic of all processes with this libssl.so")
 
 var memprofile = flag.String("memprofile", "", "Write memory profile")
 
@@ -93,6 +96,14 @@ func StartPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem, 
 		tapTargets = []v1.Pod{}
 	} else {
 		tapTargets = opts.FilterAuthorities
+	}
+
+	if *tls {
+		for _, e := range extensions {
+			if e.Protocol.Name == "http" {
+				startTlsTapper(e, outputItems, options)
+			}
+		}
 	}
 
 	if GetMemoryProfilingEnabled() {
@@ -230,4 +241,26 @@ func startPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem) 
 	diagnose.InternalStats.PrintStatsSummary()
 	diagnose.TapErrors.PrintSummary()
 	logger.Log.Infof("AppStats: %v", diagnose.AppStats)
+}
+
+func startTlsTapper(httpExtension *api.Extension, outputItems chan *api.OutputChannelItem, options *api.TrafficFilteringOptions) (*tlstapper.TlsTapper, error) {
+	tls := tlstapper.TlsTapper{}
+
+	if err := tls.Init(os.Getpagesize() * 100); err != nil {
+		return nil, tlstapper.LogError(err)
+	}
+
+	if *sslLibrary != "" {
+		if err := tls.GlobalTap(*sslLibrary); err != nil {
+			return nil, tlstapper.LogError(err)
+		}
+	}
+
+	var emitter api.Emitter = &api.Emitting{
+		AppStats:      &diagnose.AppStats,
+		OutputChannel: outputItems,
+	}
+
+	go tlstapper.Poll(&tls, httpExtension, emitter, options)
+	return &tls, nil
 }
