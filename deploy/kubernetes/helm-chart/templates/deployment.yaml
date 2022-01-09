@@ -1,32 +1,32 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: { { .Values.pod.name } }
-  namespace: { { .Release.Namespace } }
+  name: {{ .Values.pod.name }}
+  namespace: {{ .Release.Namespace }}
   labels:
-    app: { { .Values.pod.name } }
+    app: {{ .Values.pod.name }}
 spec:
-  replicas: { { .Values.deployment.replicaCount } }
+  replicas: {{ .Values.deployment.replicaCount }}
   selector:
     matchLabels:
-      app: { { .Values.pod.name } }
+      app: {{ .Values.pod.name }}
   template:
     metadata:
-      name: { { .Values.pod.name } }
+      name: {{ .Values.pod.name }}
       creationTimestamp: null
       labels:
-        app: { { .Values.pod.name } }
+        app: {{ .Values.pod.name }}
     spec:
       volumes:
-        - name: { { .Values.configMap.name } }
+        - name: {{ .Values.configMap.name }}
           configMap:
-            name: { { .Values.configMap.name } }
+            name: {{ .Values.configMap.name }}
             defaultMode: 420
-        - name: { { .Values.volumeClaim.name } }
+        - name: {{ .Values.volumeClaim.name }}
           persistentVolumeClaim:
-            claimName: { { .Values.volumeClaim.name } }
+            claimName: {{ .Values.volumeClaim.name }}
       containers:
-        - name: { { .Values.pod.name } }
+        - name: {{ .Values.pod.name }}
           image: "{{ .Values.container.mizuAgent.image.repository }}:{{ .Values.container.mizuAgent.image.tag | default .Chart.AppVersion }}"
           command:
             - ./mizuagent
@@ -43,14 +43,14 @@ spec:
               cpu: 50m
               memory: 50Mi
           volumeMounts:
-            - name: { { .Values.configMap.name } }
+            - name: {{ .Values.configMap.name }}
               mountPath: /app/config/
-            - name: { { .Values.volumeClaim.name } }
+            - name: {{ .Values.volumeClaim.name }}
               mountPath: /app/data/
           livenessProbe:
             httpGet:
               path: /echo
-              port: { { .Values.pod.port } }
+              port: {{ .Values.pod.port }}
               scheme: HTTP
             initialDelaySeconds: 1
             timeoutSeconds: 1
@@ -60,7 +60,7 @@ spec:
           terminationMessagePath: /dev/termination-log
           terminationMessagePolicy: File
           imagePullPolicy: Always
-        - name: { { .Values.container.basenine.name } }
+        - name: {{ .Values.container.basenine.name }}
           image: "{{ .Values.container.basenine.image.repository }}:{{ .Values.container.basenine.image.tag | default .Chart.AppVersion }}"
           command:
             - /basenine
@@ -79,9 +79,9 @@ spec:
               cpu: 50m
               memory: 50Mi
           volumeMounts:
-            - name: { { .Values.configMap.name } }
+            - name: {{ .Values.configMap.name }}
               mountPath: /app/config/
-            - name: { { .Values.volumeClaim.name } }
+            - name: {{ .Values.volumeClaim.name }}
               mountPath: /app/data/
           readinessProbe:
             tcpSocket:
@@ -103,9 +103,9 @@ spec:
               cpu: 50m
               memory: 50Mi
           volumeMounts:
-            - name: { { .Values.configMap.name } }
+            - name: {{ .Values.configMap.name }}
               mountPath: /app/config/
-            - name: { { .Values.volumeClaim.name } }
+            - name: {{ .Values.volumeClaim.name }}
               mountPath: /app/data/
           readinessProbe:
             httpGet:
@@ -122,7 +122,7 @@ spec:
       restartPolicy: Always
       terminationGracePeriodSeconds: 0
       dnsPolicy: ClusterFirstWithHostNet
-      serviceAccountName: { { .Values.serviceAccountName } }
-      serviceAccount: { { .Values.serviceAccountName } }
+      serviceAccountName: {{ .Values.serviceAccountName }}
+      serviceAccount: {{ .Values.serviceAccountName }}
       securityContext: { }
       schedulerName: default-scheduler

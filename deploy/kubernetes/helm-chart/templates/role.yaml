@@ -1,10 +1,10 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: { { .Values.roleName } }
-  namespace: { { .Release.Namespace } }
+  name: {{ .Values.roleName }}
+  namespace: {{ .Release.Namespace }}
   labels:
-    mizu-cli-version: { { .Chart.AppVersion } }
+    mizu-cli-version: {{ .Chart.AppVersion }}
 rules:
   - apiGroups: [ "apps" ]
     resources: [ "daemonsets" ]
@@ -16,14 +16,14 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: { { .Values.roleBindingName } }
-  namespace: { { .Release.Namespace } }
+  name: {{ .Values.roleBindingName }}
+  namespace: {{ .Release.Namespace }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: { { .Values.roleName } }
+  name: {{ .Values.roleName }}
 subjects:
   - kind: ServiceAccount
-    name: { { .Values.serviceAccountName } }
-    namespace: { { .Release.Namespace } }
+    name: {{ .Values.serviceAccountName }}
+    namespace: {{ .Release.Namespace }}
 ---

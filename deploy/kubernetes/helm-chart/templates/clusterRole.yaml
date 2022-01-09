@@ -1,14 +1,14 @@
-{ { - if .Values.rbac.create - } }
+{{- if .Values.rbac.create -}}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: { { .Values.rbac.name } }
-  namespace: { { .Release.Namespace } }
+  name: {{ .Values.rbac.name }}
+  namespace: {{ .Release.Namespace }}
   labels:
-    mizu-cli-version: { { .Chart.AppVersion } }
-    chart: { { .Chart.Name } }-{{ .Chart.Version }}
-    heritage: { { .Release.Service } }
-    release: { { .Release.Name } }
+    mizu-cli-version: {{ .Chart.AppVersion }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
 rules:
   - apiGroups: [ "", "extensions", "apps" ]
     resources: [ "endpoints", "pods", "services", "namespaces" ]
@@ -17,15 +17,15 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: { { .Values.rbac.roleBindingName } }
+  name: {{ .Values.rbac.roleBindingName }}
   labels:
-    mizu-cli-version: { { .Chart.AppVersion } }
+    mizu-cli-version: {{ .Chart.AppVersion }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: { { .Values.rbac.name } }
+  name: {{ .Values.rbac.name }}
 subjects:
   - kind: ServiceAccount
-    name: { { .Values.serviceAccountName } }
-    namespace: { { .Release.Namespace } }
-  { { - end - } }
+    name: {{ .Values.serviceAccountName }}
+    namespace: {{ .Release.Namespace }}
+  {{- end -}}
