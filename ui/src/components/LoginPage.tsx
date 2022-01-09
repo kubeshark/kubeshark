@@ -3,15 +3,15 @@ import React, { useContext, useState } from "react";
 import { toast } from "react-toastify";
 import { MizuContext, Page } from "../EntApp";
 import Api from "../helpers/api";
+import { useCommonStyles } from "../helpers/commonStyle";
 import LoadingOverlay from "./LoadingOverlay";
-import './style/Common.sass';
 
 const api = Api.getInstance();
 
 const LoginPage: React.FC = () => {
 
+    const classes = useCommonStyles();
     const [isLoading, setIsLoading] = useState(false);
-
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
 
@@ -39,10 +39,17 @@ const LoginPage: React.FC = () => {
 
     return <div className="centeredForm">
             {isLoading && <LoadingOverlay/>}
-            <div className="title">Login</div>
-            <TextField className="form-input" label="Username" variant="standard" fullWidth value={username} onChange={e => setUsername(e.target.value)} />
-            <TextField className="form-input" label="Password" variant="standard" type="password" fullWidth value={password} onChange={e => setPassword(e.target.value)} />
-            <Button className="form-button" variant="contained" fullWidth onClick={onFormSubmit}>Login</Button>
+            <div className="form-title left-text">Login</div>
+            <div className="form-input">
+                <label htmlFor="inputUsername">Username</label>
+                <input id="inputUsername" className={classes.textField} value={username} onChange={(event) => setUsername(event.target.value)}/>    
+            </div>
+            <div className="form-input">
+                <label htmlFor="inputPassword">Password</label>
+                <input id="inputPassword" className={classes.textField} value={password} type="password" onChange={(event) => setPassword(event.target.value)}/>
+            </div>
+            <Button className={classes.button + " form-button"} variant="contained" fullWidth onClick={onFormSubmit}>Log in</Button>
+            
     </div>;
 };
 
