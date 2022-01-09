@@ -249,7 +249,6 @@ func TestTapMultipleNamespaces(t *testing.T) {
 		t.Errorf("failed to start tap pods on time, err: %v", err)
 		return
 	}
-
 	podsUrl := fmt.Sprintf("%v/status/tap", apiServerUrl)
 	requestResult, requestErr := executeHttpGetRequest(podsUrl)
 	if requestErr != nil {
@@ -438,6 +437,7 @@ func TestTapRedact(t *testing.T) {
 		}
 	}
 
+	// TODO delete from here
 	redactCheckFunc := func() error {
 		timestamp := time.Now().UnixNano() / int64(time.Millisecond)
 
