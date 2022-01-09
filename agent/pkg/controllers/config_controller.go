@@ -94,7 +94,7 @@ func GetTapConfig(c *gin.Context) {
 	c.JSON(http.StatusOK, tapConfig)
 }
 
-func startMizuTapperSyncer(ctx context.Context, provider *kubernetes.Provider, targetNamespaces []string, podFilterRegex regexp.Regexp, ignoredUserAgents []string, mizuApiFilteringOptions tapApi.TrafficFilteringOptions, istio bool) (*kubernetes.MizuTapperSyncer, error) {
+func startMizuTapperSyncer(ctx context.Context, provider *kubernetes.Provider, targetNamespaces []string, podFilterRegex regexp.Regexp, ignoredUserAgents []string, mizuApiFilteringOptions tapApi.TrafficFilteringOptions, serviceMesh bool) (*kubernetes.MizuTapperSyncer, error) {
 	tapperSyncer, err := kubernetes.CreateAndStartMizuTapperSyncer(ctx, provider, kubernetes.TapperSyncerConfig{
 		TargetNamespaces:         targetNamespaces,
 		PodFilterRegex:           podFilterRegex,
@@ -106,7 +106,7 @@ func startMizuTapperSyncer(ctx context.Context, provider *kubernetes.Provider, t
 		IgnoredUserAgents:        ignoredUserAgents,
 		MizuApiFilteringOptions:  mizuApiFilteringOptions,
 		MizuServiceAccountExists: true, //assume service account exists since install mode will not function without it anyway
-		Istio:                    istio,
+		ServiceMesh:              serviceMesh,
 	}, time.Now())
 
 	if err != nil {
