@@ -2,7 +2,7 @@ const columns = {"podName" : 1, "namespace" : 2, "tapping" : 3}
 const greenStatusImageSrc = "/static/media/success.662997eb.svg"
 
 it('opening', function () {
-    cy.visit(Cypress.env('testPath'))
+    cy.visit(Cypress.env('testUrl'))
     cy.get('.podsCount').trigger('mouseover')
 });
 

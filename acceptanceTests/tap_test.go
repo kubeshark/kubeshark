@@ -279,7 +279,7 @@ func TestTapRegex(t *testing.T) {
 		t.Errorf("failed to start tap pods on time, err: %v", err)
 		return
 	}
-	// TODO delete from here
+
 	podsUrl := fmt.Sprintf("%v/status/tap", apiServerUrl)
 	requestResult, requestErr := executeHttpGetRequest(podsUrl)
 	if requestErr != nil {
@@ -399,7 +399,7 @@ func TestTapRedact(t *testing.T) {
 			return
 		}
 	}
-	// TODO delete from here
+
 	redactCheckFunc := func() error {
 		timestamp := time.Now().UnixNano() / int64(time.Millisecond)
 
@@ -503,7 +503,7 @@ func TestTapNoRedact(t *testing.T) {
 			return
 		}
 	}
-	// TODO dleete from hereheree
+
 	redactCheckFunc := func() error {
 		timestamp := time.Now().UnixNano() / int64(time.Millisecond)
 
@@ -606,7 +606,7 @@ func TestTapRegexMasking(t *testing.T) {
 			return
 		}
 	}
-	// TODO delete from here
+
 	redactCheckFunc := func() error {
 		timestamp := time.Now().UnixNano() / int64(time.Millisecond)
 
@@ -701,7 +701,7 @@ func TestTapIgnoredUserAgents(t *testing.T) {
 			return
 		}
 	}
-	// TODO delete from herer
+
 	ignoredUserAgentsCheckFunc := func() error {
 		timestamp := time.Now().UnixNano() / int64(time.Millisecond)
 

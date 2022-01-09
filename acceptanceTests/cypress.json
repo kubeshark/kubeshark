@@ -8,6 +8,6 @@
   ["tests/GuiPort.js",
   "tests/MultipleNamespaces.js"],
   "env": {
-    "testPath": "http://localhost:8899/"
+    "testUrl": "http://localhost:8899/"
   }
 }
