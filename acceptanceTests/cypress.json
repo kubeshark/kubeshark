@@ -4,5 +4,10 @@
   "viewportHeight": 1080,
   "video": false,
   "screenshotOnRunFailure": false,
-  "testFiles": ["tests/GuiPort.js"]
+  "testFiles":
+  ["tests/GuiPort.js",
+  "tests/MultipleNamespaces.js"],
+  "env": {
+    "testUrl": "http://localhost:8899/"
+  }
 }
