@@ -25,7 +25,7 @@ Please make sure to use full option name (`tap.dry-run` as opposed to `dry-run` 
 
 * `dump-logs` - if set to `true`, saves log files for all Mizu components (tapper, api-server, CLI) in a zip file under `$HOME/.mizu`. Default value is `false`
 
-* `image-pull-policy` - container image pull policy for Kubernetes, default value `Always`. Other accepted values are `Never` or `IfNotExist`. Please mind the implications when changing this.
+* `image-pull-policy` - container image pull policy for Kubernetes, default value `Always`. Other accepted values are `Never` or `IfNotPresent`. Please mind the implications when changing this.
 
 * `kube-config-path` - path to alternative kubeconfig file to use for all interactions with Kubernetes cluster. By default - `$HOME/.kubeconfig`
 
