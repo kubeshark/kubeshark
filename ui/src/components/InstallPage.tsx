@@ -57,9 +57,18 @@ export const InstallPage: React.FC<InstallPageProps> = ({onFirstLogin}) => {
             {isLoading && <LoadingOverlay/>}
             <div className="form-title left-text">Setup</div>
             <span className="form-subtitle">Welcome to Mizu, please set up the admin user to continue</span>
-            <TextField className="form-input" variant="standard" label="Username" fullWidth value={adminUsername} disabled={true}/>
-            <TextField className="form-input" label="Password" variant="standard" type="password" fullWidth value={password} onChange={e => setPassword(e.target.value)}/>
-            <TextField className="form-input" label="Confirm Password" variant="standard" type="password" fullWidth value={passwordConfirm} onChange={e => setPasswordConfirm(e.target.value)}/>
+            <div className="form-input">
+                <label htmlFor="inputUsername">Username</label>
+                <input id="inputUsername" className={classes.textField} value={adminUsername} disabled={true} />
+            </div>
+            <div className="form-input">
+                <label htmlFor="inputUsername">Password</label>
+                <input id="inputUsername" className={classes.textField} value={password} type="password" onChange={(event) => setPassword(event.target.value)}/>    
+            </div>
+            <div className="form-input">
+                <label htmlFor="inputUsername">Confirm Password</label>
+                <input id="inputUsername" className={classes.textField} value={passwordConfirm} type="password" onChange={(event) => setPasswordConfirm(event.target.value)}/>    
+            </div>
             <Button className={classes.button + " form-button"} variant="contained" fullWidth onClick={onFormSubmit}>Finish</Button>
     </div>;
 };
