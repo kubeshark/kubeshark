@@ -22,7 +22,7 @@ const (
 	WorkspaceTapName              = "workspace"
 	EnforcePolicyFile             = "traffic-validation-file"
 	ContractFile                  = "contract"
-	IstioName                     = "istio"
+	ServiceMeshName               = "service-mesh"
 )
 
 type TapConfig struct {
@@ -44,7 +44,7 @@ type TapConfig struct {
 	AskUploadConfirmation   bool             `yaml:"ask-upload-confirmation" default:"true"`
 	ApiServerResources      shared.Resources `yaml:"api-server-resources"`
 	TapperResources         shared.Resources `yaml:"tapper-resources"`
-	Istio                   bool             `yaml:"istio" default:"false"`
+	ServiceMesh             bool             `yaml:"service-mesh" default:"false"`
 }
 
 func (config *TapConfig) PodRegex() *regexp.Regexp {
