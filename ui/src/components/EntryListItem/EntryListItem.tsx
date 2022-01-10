@@ -20,11 +20,11 @@ interface TCPInterface {
 }
 
 interface Entry {
-    protocol: ProtocolInterface,
+    proto: ProtocolInterface,
     method?: string,
     summary: string,
     id: number,
-    statusCode?: number;
+    status?: number;
     timestamp: Date;
     src: TCPInterface,
     dst: TCPInterface,
@@ -50,10 +50,11 @@ interface EntryProps {
 }
 
 export const EntryItem: React.FC<EntryProps> = ({entry, focusedEntryId, setFocusedEntryId, style, updateQuery, headingMode}) => {
+    console.log("entry:", entry);
 
     const isSelected = focusedEntryId === entry.id.toString();
 
-    const classification = getClassification(entry.statusCode)
+    const classification = getClassification(entry.status)
     const numberOfRules = entry.rules.numberOfRules
     let ingoingIcon;
     let outgoingIcon;
@@ -123,7 +124,7 @@ export const EntryItem: React.FC<EntryProps> = ({entry, focusedEntryId, setFocus
             break;
     }
 
-    const isStatusCodeEnabled = ((entry.protocol.name === "http" && "statusCode" in entry) || entry.statusCode !== 0);
+    const isStatusCodeEnabled = ((entry.proto.name === "http" && "status" in entry) || entry.status !== 0);
     var endpointServiceContainer = "10px";
     if (!isStatusCodeEnabled) endpointServiceContainer = "20px";
 
@@ -137,7 +138,7 @@ export const EntryItem: React.FC<EntryProps> = ({entry, focusedEntryId, setFocus
                 setFocusedEntryId(entry.id.toString());
             }}
             style={{
-                border: isSelected ? `1px ${entry.protocol.backgroundColor} solid` : "1px transparent solid",
+                border: isSelected ? `1px ${entry.proto.backgroundColor} solid` : "1px transparent solid",
                 position: !headingMode ? "absolute" : "unset",
                 top: style['top'],
                 marginTop: !headingMode ? style['marginTop'] : "10px",
@@ -145,12 +146,12 @@ export const EntryItem: React.FC<EntryProps> = ({entry, focusedEntryId, setFocus
             }}
         >
             {!headingMode ? <Protocol
-                protocol={entry.protocol}
+                protocol={entry.proto}
                 horizontal={false}
                 updateQuery={updateQuery}
             /> : null}
             {isStatusCodeEnabled && <div>
-                <StatusCode statusCode={entry.statusCode} updateQuery={updateQuery}/>
+                <StatusCode statusCode={entry.status} updateQuery={updateQuery}/>
             </div>}
             <div className={styles.endpointServiceContainer} style={{paddingLeft: endpointServiceContainer}}>
                 <Summary method={entry.method} summary={entry.summary} updateQuery={updateQuery}/>
@@ -169,7 +170,7 @@ export const EntryItem: React.FC<EntryProps> = ({entry, focusedEntryId, setFocus
                             {entry.src.name ? entry.src.name : "[Unresolved]"}
                         </span>
                     </Queryable>
-                    <SwapHorizIcon style={{color: entry.protocol.backgroundColor, marginTop: "-2px"}}></SwapHorizIcon>
+                    <SwapHorizIcon style={{color: entry.proto.backgroundColor, marginTop: "-2px"}}></SwapHorizIcon>
                     <Queryable
                         query={`dst.name == "${entry.dst.name}"`}
                         updateQuery={updateQuery}

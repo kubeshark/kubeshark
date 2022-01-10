@@ -64,8 +64,8 @@ func GetEntries(c *gin.Context) {
 	var dataSlice []interface{}
 
 	for _, row := range data {
-		var dataMap map[string]interface{}
-		err = json.Unmarshal(row, &dataMap)
+		var entry *tapApi.MizuEntry
+		err = json.Unmarshal(row, &entry)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
 				"error":     true,
@@ -76,8 +76,7 @@ func GetEntries(c *gin.Context) {
 			return // exit
 		}
 
-		base := dataMap["base"].(map[string]interface{})
-		base["id"] = uint(dataMap["id"].(float64))
+		base := tapApi.Summarize(entry)
 
 		dataSlice = append(dataSlice, base)
 	}
@@ -106,7 +105,7 @@ func GetEntry(c *gin.Context) {
 	}
 
 	id, _ := strconv.Atoi(c.Param("id"))
-	var entry tapApi.MizuEntry
+	var entry *tapApi.MizuEntry
 	bytes, err := basenine.Single(shared.BasenineHost, shared.BaseninePort, id, singleEntryRequest.Query)
 	if Error(c, err) {
 		return // exit

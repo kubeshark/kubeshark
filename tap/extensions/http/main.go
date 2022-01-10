@@ -267,26 +267,6 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 	}
 }
 
-func (d dissecting) Summarize(entry *api.MizuEntry) *api.BaseEntryDetails {
-	return &api.BaseEntryDetails{
-		Id:          entry.Id,
-		Protocol:    entry.Protocol,
-		Path:        entry.Path,
-		Summary:     entry.Summary,
-		StatusCode:  entry.Status,
-		Method:      entry.Method,
-		Timestamp:   entry.Timestamp,
-		Source:      entry.Source,
-		Destination: entry.Destination,
-		IsOutgoing:  entry.IsOutgoing,
-		Latency:     entry.ElapsedTime,
-		Rules: api.ApplicableRules{
-			Latency: 0,
-			Status:  false,
-		},
-	}
-}
-
 func representRequest(request map[string]interface{}) (repRequest []interface{}) {
 	details, _ := json.Marshal([]api.TableData{
 		{

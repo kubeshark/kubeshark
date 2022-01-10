@@ -69,9 +69,7 @@ const EntryTitle: React.FC<any> = ({protocol, data, bodySize, elapsedTime, updat
     </div>;
 };
 
-const EntrySummary: React.FC<any> = ({data, updateQuery}) => {
-    const entry = data.base;
-
+const EntrySummary: React.FC<any> = ({entry, updateQuery}) => {
     return <EntryItem
         key={`entry-${entry.id}`}
         entry={entry}
@@ -92,7 +90,7 @@ export const EntryDetailed: React.FC<EntryDetailedProps> = ({entryData, updateQu
             elapsedTime={entryData.data.elapsedTime}
             updateQuery={updateQuery}
         />
-        {entryData.data && <EntrySummary data={entryData.data} updateQuery={updateQuery}/>}
+        {entryData.data && <EntrySummary entry={entryData.data} updateQuery={updateQuery}/>}
         <>
             {entryData.data && <EntryViewer
                 representation={entryData.representation}

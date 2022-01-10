@@ -39,7 +39,7 @@ type EntriesResponse struct {
 
 type WebSocketEntryMessage struct {
 	*shared.WebSocketMessageMetadata
-	Data map[string]interface{} `json:"data,omitempty"`
+	Data *tapApi.BaseEntryDetails `json:"data,omitempty"`
 }
 
 type WebSocketTappedEntryMessage struct {
@@ -78,7 +78,7 @@ type WebSocketStartTimeMessage struct {
 	Data int64 `json:"data"`
 }
 
-func CreateBaseEntryWebSocketMessage(base map[string]interface{}) ([]byte, error) {
+func CreateBaseEntryWebSocketMessage(base *tapApi.BaseEntryDetails) ([]byte, error) {
 	message := &WebSocketEntryMessage{
 		WebSocketMessageMetadata: &shared.WebSocketMessageMetadata{
 			MessageType: shared.WebSocketMessageTypeEntry,
