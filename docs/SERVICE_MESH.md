@@ -38,6 +38,8 @@ spec:
 
 Save the above text to `mizu-xff-envoyfilter.yaml` and run `kubectl apply -f mizu-xff-envoyfilter.yaml`.
 
+With Istio, mizu does not resolve source IPs for non-HTTP traffic.
+
 ## Implementation
 
 ### Istio support
