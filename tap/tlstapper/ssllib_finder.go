@@ -10,8 +10,8 @@ import (
 	"github.com/up9inc/mizu/shared/logger"
 )
 
-func findSsllib(pid uint32) (string, error) {
-	binary, err := os.Readlink(fmt.Sprintf("/proc/%v/exe", pid))
+func findSsllib(procfs string, pid uint32) (string, error) {
+	binary, err := os.Readlink(fmt.Sprintf("%v/%v/exe", procfs, pid))
 
 	if err != nil {
 		return "", errors.Wrap(err, 0)
@@ -20,14 +20,14 @@ func findSsllib(pid uint32) (string, error) {
 	logger.Log.Infof("Binary file for %v = %v", pid, binary)
 
 	if strings.HasSuffix(binary, "/node") {
-		return findLibraryByPid(pid, binary)
+		return findLibraryByPid(procfs, pid, binary)
 	} else {
-		return findLibraryByPid(pid, "libssl.so")
+		return findLibraryByPid(procfs, pid, "libssl.so")
 	}
 }
 
-func findLibraryByPid(pid uint32, libraryName string) (string, error) {
-	file, err := os.Open(fmt.Sprintf("/proc/%v/maps", pid))
+func findLibraryByPid(procfs string, pid uint32, libraryName string) (string, error) {
+	file, err := os.Open(fmt.Sprintf("%v/%v/maps", procfs, pid))
 
 	if err != nil {
 		return "", err
@@ -50,7 +50,7 @@ func findLibraryByPid(pid uint32, libraryName string) (string, error) {
 			continue
 		}
 
-		fullpath := fmt.Sprintf("/proc/%v/root/%v", pid, filepath)
+		fullpath := fmt.Sprintf("%v/%v/root/%v", procfs, pid, filepath)
 
 		if _, err := os.Stat(fullpath); os.IsNotExist(err) {
 			continue

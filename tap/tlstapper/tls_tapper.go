@@ -78,8 +78,8 @@ func (t *TlsTapper) GlobalTap(sslLibrary string) error {
 	return t.tapPid(0, sslLibrary)
 }
 
-func (t *TlsTapper) AddPid(pid uint32) error {
-	sslLibrary, err := findSsllib(pid)
+func (t *TlsTapper) AddPid(procfs string, pid uint32) error {
+	sslLibrary, err := findSsllib(procfs, pid)
 
 	if err != nil {
 		return err

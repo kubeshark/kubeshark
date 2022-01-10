@@ -748,11 +748,15 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	}
 
 	if serviceMesh {
-		mizuCmd = append(mizuCmd, "--procfs", procfsMountPath, "--servicemesh")
+		mizuCmd = append(mizuCmd, "--servicemesh")
 	}
 
 	if tls {
 		mizuCmd = append(mizuCmd, "--tls")
+	}
+	
+	if serviceMesh || tls {
+		mizuCmd = append(mizuCmd, "--procfs", procfsMountPath)
 	}
 
 	agentContainer := applyconfcore.Container()
