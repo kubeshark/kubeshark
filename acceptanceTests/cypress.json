@@ -8,7 +8,8 @@
   "testFiles":
   ["tests/GuiPort.js",
   "tests/MultipleNamespaces.js",
-    "tests/TapRedact.js"],
+    "tests/Redact.js",
+  "tests/NoRedact.js"],
   "env": {
     "testUrl": "http://localhost:8899/"
   }
