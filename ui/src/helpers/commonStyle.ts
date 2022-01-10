@@ -26,5 +26,14 @@ export const useCommonStyles = makeStyles(() => ({
         "&:hover": {
             backgroundColor: "transparent",
         },
-    }
+    },
+    textField: {
+        outline: 0,
+        background: "white",
+        borderRadius: "4px",
+        padding: "8px 10px",
+        border: "1px #9D9D9D solid",
+        fontSize: "14px",
+        color: "#494677"
+    },
 }));

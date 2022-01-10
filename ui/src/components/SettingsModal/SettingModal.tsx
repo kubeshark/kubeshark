@@ -131,7 +131,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({isOpen, onClose, is
                     </div> : <>
                         <div className="namespacesSettingsContainer">
                             <div style={{margin: "10px 0"}}>
-                                <input className="searchNamespace" placeholder="Search" value={searchValue}
+                                <input className={classes.textField + " searchNamespace"} placeholder="Search" value={searchValue}
                                        onChange={(event) => setSearchValue(event.target.value)}/></div>
                             <div className="namespacesTable">
                                 {buildNamespacesTable()}
