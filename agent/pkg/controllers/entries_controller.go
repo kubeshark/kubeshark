@@ -64,7 +64,7 @@ func GetEntries(c *gin.Context) {
 	var dataSlice []interface{}
 
 	for _, row := range data {
-		var entry *tapApi.MizuEntry
+		var entry *tapApi.Entry
 		err = json.Unmarshal(row, &entry)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
@@ -105,7 +105,7 @@ func GetEntry(c *gin.Context) {
 	}
 
 	id, _ := strconv.Atoi(c.Param("id"))
-	var entry *tapApi.MizuEntry
+	var entry *tapApi.Entry
 	bytes, err := basenine.Single(shared.BasenineHost, shared.BaseninePort, id, singleEntryRequest.Query)
 	if Error(c, err) {
 		return // exit
@@ -134,7 +134,7 @@ func GetEntry(c *gin.Context) {
 		json.Unmarshal(inrec, &rules)
 	}
 
-	c.JSON(http.StatusOK, tapApi.MizuEntryWrapper{
+	c.JSON(http.StatusOK, tapApi.EntryWrapper{
 		Protocol:       entry.Protocol,
 		Representation: string(representation),
 		BodySize:       bodySize,

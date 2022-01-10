@@ -81,7 +81,7 @@ type OutputChannelItem struct {
 	Timestamp      int64
 	ConnectionInfo *ConnectionInfo
 	Pair           *RequestResponsePair
-	Summary        *BaseEntryDetails
+	Summary        *BaseEntry
 }
 
 type SuperTimer struct {
@@ -97,7 +97,7 @@ type Dissector interface {
 	Register(*Extension)
 	Ping()
 	Dissect(b *bufio.Reader, isClient bool, tcpID *TcpID, counterPair *CounterPair, superTimer *SuperTimer, superIdentifier *SuperIdentifier, emitter Emitter, options *TrafficFilteringOptions) error
-	Analyze(item *OutputChannelItem, resolvedSource string, resolvedDestination string) *MizuEntry
+	Analyze(item *OutputChannelItem, resolvedSource string, resolvedDestination string) *Entry
 	Represent(request map[string]interface{}, response map[string]interface{}) (object []byte, bodySize int64, err error)
 	Macros() map[string]string
 }
@@ -116,7 +116,7 @@ func (e *Emitting) Emit(item *OutputChannelItem) {
 	e.AppStats.IncMatchedPairs()
 }
 
-type MizuEntry struct {
+type Entry struct {
 	Id                     uint                   `json:"id"`
 	Protocol               Protocol               `json:"proto"`
 	Source                 *TCP                   `json:"src"`
@@ -140,16 +140,16 @@ type MizuEntry struct {
 	HTTPPair               string                 `json:"httpPair,omitempty"`
 }
 
-type MizuEntryWrapper struct {
+type EntryWrapper struct {
 	Protocol       Protocol                 `json:"protocol"`
 	Representation string                   `json:"representation"`
 	BodySize       int64                    `json:"bodySize"`
-	Data           *MizuEntry               `json:"data"`
+	Data           *Entry                   `json:"data"`
 	Rules          []map[string]interface{} `json:"rulesMatched,omitempty"`
 	IsRulesEnabled bool                     `json:"isRulesEnabled"`
 }
 
-type BaseEntryDetails struct {
+type BaseEntry struct {
 	Id             uint            `json:"id"`
 	Protocol       Protocol        `json:"proto,omitempty"`
 	Url            string          `json:"url,omitempty"`
@@ -181,8 +181,8 @@ type Contract struct {
 	Content        string         `json:"content"`
 }
 
-func Summarize(entry *MizuEntry) *BaseEntryDetails {
-	return &BaseEntryDetails{
+func Summarize(entry *Entry) *BaseEntry {
+	return &BaseEntry{
 		Id:          entry.Id,
 		Protocol:    entry.Protocol,
 		Path:        entry.Path,
@@ -199,10 +199,10 @@ func Summarize(entry *MizuEntry) *BaseEntryDetails {
 }
 
 type DataUnmarshaler interface {
-	UnmarshalData(*MizuEntry) error
+	UnmarshalData(*Entry) error
 }
 
-func (bed *BaseEntryDetails) UnmarshalData(entry *MizuEntry) error {
+func (bed *BaseEntry) UnmarshalData(entry *Entry) error {
 	bed.Protocol = entry.Protocol
 	bed.Id = entry.Id
 	bed.Path = entry.Path

@@ -132,7 +132,7 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 						return
 					}
 
-					var entry *tapApi.MizuEntry
+					var entry *tapApi.Entry
 					err = json.Unmarshal(bytes, &entry)
 
 					base := tapApi.Summarize(entry)
