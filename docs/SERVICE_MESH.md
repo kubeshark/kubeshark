@@ -9,6 +9,35 @@ The list of service meshes supported by Mizu include:
 - Istio
 - Linkerd
 
+## Installation
+
+### Optional: Allow source IP resolving in Istio
+
+When using Istio, in order to enable Mizu to reslove source IPs to names, turn on the [use_remote_address](https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http_conn_man/headers#x-forwarded-for) option in Istio sidecar Envoys.
+This setting causes the Envoys to append to `X-Forwarded-For` request header. Mizu in turn uses the `X-Forwarded-For` header to determine the true source IPs.
+One way to turn on the `use_remote_address` HTTP connection manager option is by applying an `EnvoyFilter`:
+
+```yaml
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: mizu-xff
+  namespace: istio-system # as defined in meshConfig resource.
+spec:
+  configPatches:
+  - applyTo: NETWORK_FILTER
+    match:
+      context: SIDECAR_OUTBOUND # will match outbound listeners in all sidecars
+    patch:
+      operation: MERGE
+      value:
+        typed_config:
+          "@type": "type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager"
+          use_remote_address: true
+```
+
+Save the above text to `mizu-xff-envoyfilter.yaml` and run `kubectl apply -f mizu-xff-envoyfilter.yaml`.
+
 ## Implementation
 
 ### Istio support
