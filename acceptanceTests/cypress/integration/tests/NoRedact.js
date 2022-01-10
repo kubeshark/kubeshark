@@ -1,16 +1,16 @@
-it('No redact test', function () {
+it('Loading mizu', function () {
     cy.visit(Cypress.env('testUrl'));
-
-    cy.get('.CollapsibleContainer', { timeout : 15 * 1000} ).then(allContainersText => {
-        const allText = allContainersText.text();
-
-        ['redacted', 'REDACTED', '{ "User": "[REDACTED]" }', '{"User":"[REDACTED]"}'].map(shouldNotInclude);
-
-        function shouldNotInclude(checkStr) {
-            allText.includes(checkStr) ? expect(0).to.e
-
-        }
-    });
 });
 
+['redact', 'REDACT', '{ "User": "[REDACTED]" }', '{"User":"[REDACTED]"}'].map(doItFunc)
+
+function doItFunc(stringToCheck) {
+    it(`No '${stringToCheck}' should exist`, function () {
+        cy.get('.CollapsibleContainer', { timeout : 10 * 1000 }).then(containersText => {
+            const allText = containersText.text();
+            if (allText.includes(stringToCheck))
+                throw new Error(`The containers include the string: ${stringToCheck}`);
+        });
+    });
+}
 
