@@ -2,7 +2,6 @@ package api
 
 import (
 	"fmt"
-	"mizuserver/pkg/config"
 	"sync"
 
 	"github.com/up9inc/mizu/shared"
@@ -21,17 +20,19 @@ var once sync.Once
 func GetServiceMapInstance() ServiceMap {
 	once.Do(func() {
 		instance = newServiceMap()
-		logger.Log.Debug("Service Map Initialized: %s")
+		logger.Log.Debug("Service Map Initialized")
 	})
 	return instance
 }
 
 type serviceMap struct {
+	config           *shared.MizuAgentConfig
 	graph            *graph
 	entriesProcessed int
 }
 
 type ServiceMap interface {
+	SetConfig(config *shared.MizuAgentConfig)
 	IsEnabled() bool
 	AddEdge(source, destination key, protocol string)
 	GetStatus() shared.ServiceMapStatus
@@ -47,6 +48,7 @@ type ServiceMap interface {
 
 func newServiceMap() *serviceMap {
 	return &serviceMap{
+		config:           nil,
 		entriesProcessed: 0,
 		graph:            newDirectedGraph(),
 	}
@@ -97,6 +99,10 @@ func (s *serviceMap) addNode(k key, p string) {
 }
 
 func (s *serviceMap) AddEdge(u, v key, p string) {
+	if !s.IsEnabled() {
+		return
+	}
+
 	if len(u) == 0 {
 		u = UnresolvedNode
 	}
@@ -128,8 +134,15 @@ func (s *serviceMap) AddEdge(u, v key, p string) {
 	s.entriesProcessed++
 }
 
+func (s *serviceMap) SetConfig(config *shared.MizuAgentConfig) {
+	s.config = config
+}
+
 func (s *serviceMap) IsEnabled() bool {
-	return config.Config.ServiceMap
+	if s.config != nil && s.config.ServiceMap {
+		return true
+	}
+	return false
 }
 
 func (s *serviceMap) GetStatus() shared.ServiceMapStatus {

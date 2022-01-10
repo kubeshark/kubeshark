@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"mizuserver/pkg/config"
 	"mizuserver/pkg/holder"
 	"mizuserver/pkg/providers"
 	"os"
@@ -105,7 +106,6 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 	}
 	connection.InsertMode()
 
-	serviceMap := GetServiceMapInstance()
 	disableOASValidation := false
 	ctx := context.Background()
 	doc, contractContent, router, err := loadOAS(ctx)
@@ -113,6 +113,9 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 		logger.Log.Infof("Disabled OAS validation: %s", err.Error())
 		disableOASValidation = true
 	}
+
+	serviceMap := GetServiceMapInstance()
+	serviceMap.SetConfig(config.Config)
 
 	for item := range outputItems {
 		providers.EntryAdded()
@@ -148,9 +151,7 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 		}
 		connection.SendText(string(data))
 
-		if serviceMap.IsEnabled() {
-			serviceMap.AddEdge(key(mizuEntry.Source.Name), key(mizuEntry.Destination.Name), extension.Protocol.Name)
-		}
+		serviceMap.AddEdge(key(mizuEntry.Source.Name), key(mizuEntry.Destination.Name), extension.Protocol.Name)
 	}
 }
 
