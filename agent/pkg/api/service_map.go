@@ -1,7 +1,6 @@
 package api
 
 import (
-	"fmt"
 	"sync"
 
 	"github.com/up9inc/mizu/shared"
@@ -38,8 +37,6 @@ type ServiceMap interface {
 	GetStatus() shared.ServiceMapStatus
 	GetNodes() []shared.ServiceMapNode
 	GetEdges() []shared.ServiceMapEdge
-	PrintNodes()
-	PrintAdjacentEdges()
 	GetEntriesProcessedCount() int
 	GetNodesCount() int
 	GetEdgesCount() int
@@ -194,24 +191,6 @@ func (s *serviceMap) GetEdges() []shared.ServiceMapEdge {
 		}
 	}
 	return edges
-}
-
-func (s *serviceMap) PrintNodes() {
-	fmt.Println("Printing all nodes...")
-
-	for k, n := range s.graph.Nodes {
-		fmt.Printf("Node: %v Id: %v - Protocol: %v Count: %v\n", k, n.id, n.protocol, n.count)
-	}
-}
-
-func (s *serviceMap) PrintAdjacentEdges() {
-	fmt.Println("Printing all edges...")
-	for u, m := range s.graph.Edges {
-		for v := range m {
-			// Edge exists from u to v.
-			fmt.Printf("Edge: %v -> %v - Count: %v\n", u, v, s.graph.Edges[u][v].count)
-		}
-	}
 }
 
 func (s *serviceMap) GetEntriesProcessedCount() int {
