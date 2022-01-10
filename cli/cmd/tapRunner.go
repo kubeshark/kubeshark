@@ -193,6 +193,7 @@ func startTapperSyncer(ctx context.Context, cancel context.CancelFunc, provider 
 		MizuApiFilteringOptions:  mizuApiFilteringOptions,
 		MizuServiceAccountExists: state.mizuServiceAccountExists,
 		ServiceMesh:              config.Config.Tap.ServiceMesh,
+		Tls:                      config.Config.Tap.Tls,
 	}, startTime)
 
 	if err != nil {

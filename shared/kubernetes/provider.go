@@ -51,6 +51,8 @@ const (
 	fieldManagerName = "mizu-manager"
 	procfsVolumeName = "proc"
 	procfsMountPath  = "/hostproc"
+	sysfsVolumeName  = "sys"
+	sysfsMountPath   = "/sys"
 )
 
 func NewProvider(kubeConfigPath string) (*Provider, error) {
@@ -720,7 +722,7 @@ func (provider *Provider) CreateConfigMap(ctx context.Context, namespace string,
 	return nil
 }
 
-func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, apiServerPodIp string, nodeToTappedPodMap map[string][]core.Pod, serviceAccountName string, resources shared.Resources, imagePullPolicy core.PullPolicy, mizuApiFilteringOptions api.TrafficFilteringOptions, logLevel logging.Level, serviceMesh bool) error {
+func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, apiServerPodIp string, nodeToTappedPodMap map[string][]core.Pod, serviceAccountName string, resources shared.Resources, imagePullPolicy core.PullPolicy, mizuApiFilteringOptions api.TrafficFilteringOptions, logLevel logging.Level, serviceMesh bool, tls bool) error {
 	logger.Log.Debugf("Applying %d tapper daemon sets, ns: %s, daemonSetName: %s, podImage: %s, tapperPodName: %s", len(nodeToTappedPodMap), namespace, daemonSetName, podImage, tapperPodName)
 
 	if len(nodeToTappedPodMap) == 0 {
@@ -749,17 +751,30 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 		mizuCmd = append(mizuCmd, "--procfs", procfsMountPath, "--servicemesh")
 	}
 
+	if tls {
+		mizuCmd = append(mizuCmd, "--tls")
+	}
+
 	agentContainer := applyconfcore.Container()
 	agentContainer.WithName(tapperPodName)
 	agentContainer.WithImage(podImage)
 	agentContainer.WithImagePullPolicy(imagePullPolicy)
 
-	caps := applyconfcore.Capabilities().WithDrop("ALL").WithAdd("NET_RAW").WithAdd("NET_ADMIN")
+	caps := applyconfcore.Capabilities().WithDrop("ALL")
 
-	if serviceMesh {
-		caps = caps.WithAdd("SYS_ADMIN")    // for reading /proc/PID/net/ns
-		caps = caps.WithAdd("SYS_PTRACE")   // for setting netns to other process
-		caps = caps.WithAdd("DAC_OVERRIDE") // for reading /proc/PID/environ
+	caps.WithAdd("NET_RAW").WithAdd("NET_ADMIN") // to listen to traffic using libpcap
+
+	if serviceMesh || tls {
+		caps = caps.WithAdd("SYS_ADMIN")  // to read /proc/PID/net/ns + to install eBPF programs (kernel < 5.8)
+		caps = caps.WithAdd("SYS_PTRACE") // to set netns to other process + to open libssl.so of other process
+
+		if serviceMesh {
+			caps = caps.WithAdd("DAC_OVERRIDE") // to read /proc/PID/environ
+		}
+
+		if tls {
+			caps = caps.WithAdd("SYS_RESOURCE") // to change rlimits for eBPF
+		}
 	}
 
 	agentContainer.WithSecurityContext(applyconfcore.SecurityContext().WithCapabilities(caps))
@@ -835,8 +850,15 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	//
 	procfsVolume := applyconfcore.Volume()
 	procfsVolume.WithName(procfsVolumeName).WithHostPath(applyconfcore.HostPathVolumeSource().WithPath("/proc"))
-	volumeMount := applyconfcore.VolumeMount().WithName(procfsVolumeName).WithMountPath(procfsMountPath).WithReadOnly(true)
-	agentContainer.WithVolumeMounts(volumeMount)
+	procfsVolumeMount := applyconfcore.VolumeMount().WithName(procfsVolumeName).WithMountPath(procfsMountPath).WithReadOnly(true)
+	agentContainer.WithVolumeMounts(procfsVolumeMount)
+
+	// We need access to /sys in order to install certain eBPF tracepoints
+	//
+	sysfsVolume := applyconfcore.Volume()
+	sysfsVolume.WithName(sysfsVolumeName).WithHostPath(applyconfcore.HostPathVolumeSource().WithPath("/sys"))
+	sysfsVolumeMount := applyconfcore.VolumeMount().WithName(sysfsVolumeName).WithMountPath(sysfsMountPath).WithReadOnly(true)
+	agentContainer.WithVolumeMounts(sysfsVolumeMount)
 
 	volumeName := ConfigMapName
 	configMapVolume := applyconfcore.VolumeApplyConfiguration{
@@ -866,7 +888,7 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	podSpec.WithContainers(agentContainer)
 	podSpec.WithAffinity(affinity)
 	podSpec.WithTolerations(noExecuteToleration, noScheduleToleration)
-	podSpec.WithVolumes(&configMapVolume, procfsVolume)
+	podSpec.WithVolumes(&configMapVolume, procfsVolume, sysfsVolume)
 
 	podTemplate := applyconfcore.PodTemplateSpec()
 	podTemplate.WithLabels(map[string]string{

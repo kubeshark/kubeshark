@@ -55,7 +55,6 @@ var staleTimeoutSeconds = flag.Int("staletimout", 120, "Max time in seconds to k
 var pids = flag.String("pids", "", "A comma separated list of PIDs to capture their network namespaces")
 var servicemesh = flag.Bool("servicemesh", false, "Record decrypted traffic if the cluster is configured with a service mesh and with mtls")
 var tls = flag.Bool("tls", false, "Enable Tls tapper")
-var sslLibrary = flag.String("ssl-library", "", "Tap ssl traffic of all processes with this libssl.so")
 
 var memprofile = flag.String("memprofile", "", "Write memory profile")
 
@@ -250,8 +249,10 @@ func startTlsTapper(httpExtension *api.Extension, outputItems chan *api.OutputCh
 		return nil, tlstapper.LogError(err)
 	}
 
-	if *sslLibrary != "" {
-		if err := tls.GlobalTap(*sslLibrary); err != nil {
+	// Used for debuging and troubleshooting - a quick way to instrument libssl.so without PID filtering.
+	//
+	if os.Getenv("MIZU_GLOBAL_SSL_LIBRARY") != "" {
+		if err := tls.GlobalTap(os.Getenv("MIZU_GLOBAL_SSL_LIBRARY")); err != nil {
 			return nil, tlstapper.LogError(err)
 		}
 	}
