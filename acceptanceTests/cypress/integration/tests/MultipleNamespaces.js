@@ -1,5 +1,4 @@
-import {findLineAndCheck} from '../page_objects/StatusBar';
-import {getExpectedDetailsDict} from '../page_objects/StatusBar';
+import {findLineAndCheck, getExpectedDetailsDict} from '../page_objects/StatusBar';
 
 it('opening', function () {
     cy.visit(Cypress.env('testUrl'));
@@ -13,7 +12,7 @@ function doItFunc(number) {
     const namespace = Cypress.env(`namespace${number}`);
 
     it(`verifying the pod (${podName}, ${namespace})`, function () {
-        findLineAndCheck(getExpectedDetailsDict(podName, namespace))
-    })
+        findLineAndCheck(getExpectedDetailsDict(podName, namespace));
+    });
 }
 

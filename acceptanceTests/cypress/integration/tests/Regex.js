@@ -1,5 +1,5 @@
-import {getExpectedDetailsDict} from "../page_objects/StatusBar";
-import {checkLine} from "../page_objects/StatusBar";
+import {getExpectedDetailsDict, checkLine} from '../page_objects/StatusBar';
+
 
 it('opening', function () {
     cy.visit(Cypress.env('testUrl'));
