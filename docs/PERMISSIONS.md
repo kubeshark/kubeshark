@@ -59,10 +59,13 @@ roleRef:
   kind: ClusterRole
   name: my-mizu-clusterrole
 subjects:
-- kind: ServiceAccount # Omit apiGroup
-  name: mizu-service-account
+- kind: ServiceAccount
+  name: mizu-service-account # The service account used by Mizu
   namespace: mizu
 ```
+
+With this setup, when Mizu starts and creates `mizu-service-account`, this account will be subject to `my-mizu-psp` via `my-mizu-clusterrolebinding`.
+When Mizu cleans up resources, the above resources will remain available for future executions.
 
 ### Replacing Mizu's default permissions with custom permissions
 
