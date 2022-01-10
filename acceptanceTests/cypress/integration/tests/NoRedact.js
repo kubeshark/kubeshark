@@ -1,4 +1,4 @@
-it('Loading mizu', function () {
+it('Loading Mizu', function () {
     cy.visit(Cypress.env('testUrl'));
 });
 
