@@ -59,6 +59,7 @@ func (g *SpecGen) feedEntry(entry har.Entry) (string, error) {
 		return "", err
 	}
 
+	// NOTE: opId can be empty for some failed entries
 	return opId, err
 }
 
@@ -196,7 +197,11 @@ func (g *SpecGen) handlePathObj(entry *har.Entry) (string, error) {
 	node := g.tree.getOrSet(split, new(openapi.PathObj))
 	opObj, err := handleOpObj(entry, node.ops)
 
-	return opObj.OperationID, err
+	if opObj != nil {
+		return opObj.OperationID, err
+	}
+
+	return "", err
 }
 
 func handleOpObj(entry *har.Entry, pathObj *openapi.PathObj) (*openapi.Operation, error) {
