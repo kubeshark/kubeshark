@@ -1,4 +1,4 @@
-import React, {useEffect, useMemo, useState} from "react";
+import React, {useEffect} from "react";
 
 interface GlobalKeydownTriggerProps {
     onKeyDown: (key: string) => void;
