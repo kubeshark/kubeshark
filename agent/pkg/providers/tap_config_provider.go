@@ -22,18 +22,20 @@ func GetTapConfig() *models.TapConfig {
 		configLock.Lock()
 		defer configLock.Unlock()
 
-		filePath := fmt.Sprintf("%s%s", shared.DataDirPath, TapConfigFileName)
+		if tapConfig == nil {
+			filePath := fmt.Sprintf("%s%s", shared.DataDirPath, TapConfigFileName)
 
-		content, err := ioutil.ReadFile(filePath)
-		if err != nil {
-			tapConfig = &models.TapConfig{TappedNamespaces: make(map[string]bool)}
-			if !os.IsNotExist(err) {
-				logger.Log.Errorf("Error loading tap config from file, err: %v", err)
-			}
-		} else {
-			if err = json.Unmarshal(content, &tapConfig); err != nil {
+			content, err := ioutil.ReadFile(filePath)
+			if err != nil {
 				tapConfig = &models.TapConfig{TappedNamespaces: make(map[string]bool)}
-				logger.Log.Errorf("Error while unmarshal tap config, err: %v", err)
+				if !os.IsNotExist(err) {
+					logger.Log.Errorf("Error loading tap config from file, err: %v", err)
+				}
+			} else {
+				if err = json.Unmarshal(content, &tapConfig); err != nil {
+					tapConfig = &models.TapConfig{TappedNamespaces: make(map[string]bool)}
+					logger.Log.Errorf("Error while unmarshal tap config, err: %v", err)
+				}
 			}
 		}
 	}
