@@ -7,6 +7,8 @@ import (
 	"github.com/up9inc/mizu/shared"
 )
 
+const Protocol = "p"
+
 type ServiceMapDisabledSuite struct {
 	suite.Suite
 
@@ -68,8 +70,8 @@ func (s *ServiceMapDisabledSuite) TestGetStatusShouldReturnDisabledByDefault() {
 func (s *ServiceMapDisabledSuite) TestAddEdgeShouldDoNothingWhenDisabled() {
 	assert := s.Assert()
 
-	s.instance.AddEdge("a", "b", "p")
-	s.instance.AddEdge("c", "d", "p")
+	s.instance.AddEdge("a", "b", Protocol)
+	s.instance.AddEdge("c", "d", Protocol)
 	status := s.instance.GetStatus()
 
 	assert.Equal("disabled", status.Status)
@@ -91,16 +93,20 @@ func (s *ServiceMapEnabledSuite) TestServiceMapIsEnabled() {
 func (s *ServiceMapEnabledSuite) TestServiceMap() {
 	assert := s.Assert()
 
-	s.instance.AddEdge("a", "b", "p")
-	s.instance.AddEdge("a", "b", "p")
-	s.instance.AddEdge("", "a", "p")
-	s.instance.AddEdge("b", "", "p")
-	s.instance.AddEdge("c", "d", "p")
+	// 6 entries
+	s.instance.AddEdge("a", "b", Protocol)
+	s.instance.AddEdge("a", "b", Protocol)
+	s.instance.AddEdge("", "a", Protocol)
+	s.instance.AddEdge("b", "", Protocol)
+	s.instance.AddEdge("c", "d", Protocol)
+	s.instance.AddEdge("a", "c", Protocol)
 
 	status := s.instance.GetStatus()
-	expectedEntriesProcessedCount := 5
+	nodes := s.instance.GetNodes()
+	edges := s.instance.GetEdges()
+	expectedEntriesProcessedCount := 6
 	expectedNodeCount := 5
-	expectedEdgeCount := 4
+	expectedEdgeCount := 5
 
 	// Counts
 	assert.Equal(expectedEntriesProcessedCount, s.instance.GetEntriesProcessedCount())
@@ -113,9 +119,116 @@ func (s *ServiceMapEnabledSuite) TestServiceMap() {
 	assert.Equal(expectedNodeCount, status.NodeCount)
 	assert.Equal(expectedEdgeCount, status.EdgeCount)
 
+	// Nodes
+	aNode := -1
+	bNode := -1
+	cNode := -1
+	dNode := -1
+	unresolvedNode := -1
+	var validateNode = func(node shared.ServiceMapNode, index int, count int) int {
+		// id
+		assert.GreaterOrEqual(node.Id, 1)
+		assert.LessOrEqual(node.Id, expectedNodeCount)
+
+		// protocol
+		assert.Equal(Protocol, node.Protocol)
+
+		// count
+		assert.Equal(count, node.Count)
+
+		return node.Id
+	}
+
+	for i, v := range nodes {
+		if v.Name == "a" {
+			aNode = validateNode(v, i, 4)
+			continue
+		}
+		if v.Name == "b" {
+			bNode = validateNode(v, i, 3)
+			continue
+		}
+		if v.Name == "c" {
+			cNode = validateNode(v, i, 2)
+			continue
+		}
+		if v.Name == "d" {
+			dNode = validateNode(v, i, 1)
+			continue
+		}
+		if v.Name == UnresolvedNode {
+			unresolvedNode = validateNode(v, i, 2)
+			continue
+		}
+	}
+
+	// Make sure we found all the nodes
+	nodeIds := [...]int{aNode, bNode, cNode, dNode, unresolvedNode}
+	for _, v := range nodeIds {
+		assert.NotEqual(-1, v)
+	}
+
+	// Edges
+	abEdge := -1
+	uaEdge := -1
+	buEdge := -1
+	cdEdge := -1
+	acEdge := -1
+	var validateEdge = func(edge shared.ServiceMapEdge, count int) {
+		// source
+		assert.Contains(nodeIds, edge.Source.Id)
+		assert.LessOrEqual(edge.Source.Id, expectedNodeCount)
+
+		// destination
+		assert.Contains(nodeIds, edge.Destination.Id)
+		assert.LessOrEqual(edge.Destination.Id, expectedNodeCount)
+
+		// protocol
+		assert.Equal(Protocol, edge.Source.Protocol)
+		assert.Equal(Protocol, edge.Destination.Protocol)
+
+		// count
+		assert.Equal(count, edge.Count)
+	}
+
+	for i, v := range edges {
+		if v.Source.Name == "a" && v.Destination.Name == "b" {
+			validateEdge(v, 2)
+			abEdge = i
+			continue
+		}
+		if v.Source.Name == UnresolvedNode && v.Destination.Name == "a" {
+			validateEdge(v, 1)
+			uaEdge = i
+			continue
+		}
+		if v.Source.Name == "b" && v.Destination.Name == UnresolvedNode {
+			validateEdge(v, 1)
+			buEdge = i
+			continue
+		}
+		if v.Source.Name == "c" && v.Destination.Name == "d" {
+			validateEdge(v, 1)
+			cdEdge = i
+			continue
+		}
+		if v.Source.Name == "a" && v.Destination.Name == "c" {
+			validateEdge(v, 1)
+			acEdge = i
+			continue
+		}
+	}
+
+	// Make sure we found all the edges
+	for _, v := range [...]int{abEdge, uaEdge, buEdge, cdEdge, acEdge} {
+		assert.NotEqual(-1, v)
+	}
+
 	// Reset
 	s.instance.Reset()
 	status = s.instance.GetStatus()
+	nodes = s.instance.GetNodes()
+	edges = s.instance.GetEdges()
 
 	// Counts after reset
 	assert.Equal(0, s.instance.GetEntriesProcessedCount())
@@ -128,6 +241,11 @@ func (s *ServiceMapEnabledSuite) TestServiceMap() {
 	assert.Equal(0, status.NodeCount)
 	assert.Equal(0, status.EdgeCount)
 
+	// Nodes after reset
+	assert.Equal([]shared.ServiceMapNode(nil), nodes)
+
+	// Edges after reset
+	assert.Equal([]shared.ServiceMapEdge(nil), edges)
 }
 
 func TestServiceMapSuite(t *testing.T) {
