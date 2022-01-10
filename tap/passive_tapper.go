@@ -53,7 +53,7 @@ var tstype = flag.String("timestamp_type", "", "Type of timestamps to use")
 var promisc = flag.Bool("promisc", true, "Set promiscuous mode")
 var staleTimeoutSeconds = flag.Int("staletimout", 120, "Max time in seconds to keep connections which don't transmit data")
 var pids = flag.String("pids", "", "A comma separated list of PIDs to capture their network namespaces")
-var istio = flag.Bool("istio", false, "Record decrypted traffic if the cluster configured with istio and mtls")
+var servicemesh = flag.Bool("servicemesh", false, "Record decrypted traffic if the cluster is configured with a service mesh and with mtls")
 var tls = flag.Bool("tls", false, "Enable Tls tapper")
 var sslLibrary = flag.String("ssl-library", "", "Tap ssl traffic of all processes with this libssl.so")
 
@@ -190,7 +190,7 @@ func initializePacketSources() error {
 	}
 
 	var err error
-	if packetSourceManager, err = source.NewPacketSourceManager(*procfs, *pids, *fname, *iface, *istio, tapTargets, behaviour); err != nil {
+	if packetSourceManager, err = source.NewPacketSourceManager(*procfs, *pids, *fname, *iface, *servicemesh, tapTargets, behaviour); err != nil {
 		return err
 	} else {
 		packetSourceManager.ReadPackets(!*nodefrag, mainPacketInputChan)

@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.configMap.name }}
+  namespace: {{ .Release.Namespace }}
+data:
+  mizu-config.json: >-
+    {"maxDBSizeBytes":200000000,"agentImage":"{{ .Values.container.tapper.image.repository }}:{{ .Values.container.tapper.image.tag }}","pullPolicy":"Always","logLevel":4,"tapperResources":{"CpuLimit":"750m","MemoryLimit":"1Gi","CpuRequests":"50m","MemoryRequests":"50Mi"},"mizuResourceNamespace":"{{ .Release.Namespace }}","agentDatabasePath":"/app/data/","standaloneMode":true}
