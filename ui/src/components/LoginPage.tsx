@@ -33,11 +33,16 @@ const LoginPage: React.FC = () => {
         } finally {
             setIsLoading(false);
         }
-
     }
 
+    const handleFormOnKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === "Enter") {
+            onFormSubmit();
+        }
+    };
 
-    return <div className="centeredForm">
+
+    return <div className="centeredForm" onKeyPress={handleFormOnKeyPress}>
             {isLoading && <LoadingOverlay/>}
             <div className="form-title left-text">Login</div>
             <div className="form-input">
