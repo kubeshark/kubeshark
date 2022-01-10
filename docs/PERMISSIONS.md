@@ -1,14 +1,14 @@
 ![Mizu: The API Traffic Viewer for Kubernetes](../assets/mizu-logo.svg)
+
 # Kubernetes permissions for MIZU  
 
-This document describes in details all permissions required for full and correct operation of Mizu
+This document describes in details all permissions required for full and correct operation of Mizu.
 
 We broke down this list into few categories:
-- Required - what is needed for `mizu` to run properly on your k8s cluster
-- Optional - permissions needed for proper name resolving for service & pod IPs 
-   - addition required for policy validation 
- 
 
+- Required - what is needed for `mizu` to run properly on your k8s cluster
+- Optional - permissions needed for proper name resolving for service & pod IPs
+  - addition required for policy validation
 
 # Required permissions
 
