@@ -4,7 +4,6 @@ import { toast } from "react-toastify";
 import { MizuContext, Page } from "../EntApp";
 import Api from "../helpers/api";
 import { useCommonStyles } from "../helpers/commonStyle";
-import GlobalKeydownTrigger from "./GlobalKeydownTrigger";
 import LoadingOverlay from "./LoadingOverlay";
 
 const api = Api.getInstance();
@@ -36,15 +35,14 @@ const LoginPage: React.FC = () => {
         }
     }
 
-    const handleFormOnKeyPress = (key: string) => {
-        if (key === "Enter") {
+    const handleFormOnKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === "Enter") {
             onFormSubmit();
         }
     };
 
 
-    return <div className="centeredForm">
-            <GlobalKeydownTrigger onKeyDown={handleFormOnKeyPress}/>
+    return <div className="centeredForm" onKeyPress={handleFormOnKeyPress}>
             {isLoading && <LoadingOverlay/>}
             <div className="form-title left-text">Login</div>
             <div className="form-input">
