@@ -47,7 +47,7 @@ const LoginPage: React.FC = () => {
             <div className="form-title left-text">Login</div>
             <div className="form-input">
                 <label htmlFor="inputUsername">Username</label>
-                <input id="inputUsername" className={classes.textField} value={username} onChange={(event) => setUsername(event.target.value)}/>    
+                <input id="inputUsername" autoFocus className={classes.textField} value={username} onChange={(event) => setUsername(event.target.value)}/>    
             </div>
             <div className="form-input">
                 <label htmlFor="inputPassword">Password</label>
