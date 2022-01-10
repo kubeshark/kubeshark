@@ -9,14 +9,6 @@ The list of service meshes supported by Mizu include:
 - Istio
 - Linkerd
 
-In order to create a service mesh setup for development, follow those steps:
-
-1. Deploy a sample application to a Kubernetes cluster, the sample application needs to make internal service to service calls
-2. SSH to one of the nodes, and run `tcpdump`
-3. Make sure you see the internal service to service calls in a plain text
-4. Deploy a service mesh (Istio, Linkerd) to the cluster - make sure it is attached to all pods of the sample application, and that it is configured with mtls (default)
-5. Run `tcpdump` again, make sure you don't see the internal service to service calls in a plain text
-
 ## Implementation
 
 ### Istio support
@@ -60,3 +52,13 @@ Istio sends an `INSTANCE_IP` environment variable to every Envoy proxy process. 
 #### Edge cases
 
 The method we use to find Envoy processes and correlate them to the cluster IPs may be inaccurate in certain situations. If, for example, a user runs an Envoy process manually, and set its `INSTANCE_IP` environment variable to one of the `CLUSTER_IPS` the tapper gets, then Mizu will capture traffic for it.
+
+## Development
+
+In order to create a service mesh setup for development, follow those steps:
+
+1. Deploy a sample application to a Kubernetes cluster, the sample application needs to make internal service to service calls
+2. SSH to one of the nodes, and run `tcpdump`
+3. Make sure you see the internal service to service calls in a plain text
+4. Deploy a service mesh (Istio, Linkerd) to the cluster - make sure it is attached to all pods of the sample application, and that it is configured with mtls (default)
+5. Run `tcpdump` again, make sure you don't see the internal service to service calls in a plain text
