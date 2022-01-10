@@ -210,7 +210,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({onTLSDetected, setAnaly
         setSelectedEntryData(null);
         (async () => {
             try {
-                const entryData = await api.getEntry(focusedEntryId);
+                const entryData = await api.getEntry(focusedEntryId, query);
                 setSelectedEntryData(entryData);
             } catch (error) {
                 if (error.response?.data?.type) {

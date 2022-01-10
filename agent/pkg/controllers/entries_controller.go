@@ -95,9 +95,19 @@ func GetEntries(c *gin.Context) {
 }
 
 func GetEntry(c *gin.Context) {
+	singleEntryRequest := &models.SingleEntryRequest{}
+
+	if err := c.BindQuery(singleEntryRequest); err != nil {
+		c.JSON(http.StatusBadRequest, err)
+	}
+	validationError := validation.Validate(singleEntryRequest)
+	if validationError != nil {
+		c.JSON(http.StatusBadRequest, validationError)
+	}
+
 	id, _ := strconv.Atoi(c.Param("id"))
 	var entry tapApi.MizuEntry
-	bytes, err := basenine.Single(shared.BasenineHost, shared.BaseninePort, id)
+	bytes, err := basenine.Single(shared.BasenineHost, shared.BaseninePort, id, singleEntryRequest.Query)
 	if Error(c, err) {
 		return // exit
 	}

@@ -28,6 +28,10 @@ type EntriesRequest struct {
 	TimeoutMs int    `form:"timeoutMs" validate:"min=1"`
 }
 
+type SingleEntryRequest struct {
+	Query string `form:"query"`
+}
+
 type EntriesResponse struct {
 	Data []interface{}      `json:"data"`
 	Meta *basenine.Metadata `json:"meta"`
