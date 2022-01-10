@@ -183,18 +183,19 @@ type Contract struct {
 
 func Summarize(entry *Entry) *BaseEntry {
 	return &BaseEntry{
-		Id:          entry.Id,
-		Protocol:    entry.Protocol,
-		Path:        entry.Path,
-		Summary:     entry.Summary,
-		StatusCode:  entry.Status,
-		Method:      entry.Method,
-		Timestamp:   entry.Timestamp,
-		Source:      entry.Source,
-		Destination: entry.Destination,
-		IsOutgoing:  entry.IsOutgoing,
-		Latency:     entry.ElapsedTime,
-		Rules:       entry.Rules,
+		Id:             entry.Id,
+		Protocol:       entry.Protocol,
+		Path:           entry.Path,
+		Summary:        entry.Summary,
+		StatusCode:     entry.Status,
+		Method:         entry.Method,
+		Timestamp:      entry.Timestamp,
+		Source:         entry.Source,
+		Destination:    entry.Destination,
+		IsOutgoing:     entry.IsOutgoing,
+		Latency:        entry.ElapsedTime,
+		Rules:          entry.Rules,
+		ContractStatus: entry.ContractStatus,
 	}
 }
 
