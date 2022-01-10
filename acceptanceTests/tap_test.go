@@ -279,7 +279,7 @@ func TestTapRegex(t *testing.T) {
 		t.Errorf("failed to start tap pods on time, err: %v", err)
 		return
 	}
-	
+
 	runCypressTests(t, fmt.Sprintf("npx cypress run --spec  \"cypress/integration/tests/Regex.js\" --env name=%v,namespace=%v",
 		expectedPods[0].Name, expectedPods[0].Namespace))
 }
