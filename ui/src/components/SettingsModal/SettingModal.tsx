@@ -24,8 +24,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({isOpen, onClose, is
     const [searchValue, setSearchValue] = useState("");
 
     useEffect(() => {
+        if(!isOpen) return;
         (async () => {
             try {
+                setSearchValue("");
                 setIsLoading(true);
                 const tapConfig = await api.getTapConfig()
                 if(isFirstLogin) {
@@ -43,7 +45,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({isOpen, onClose, is
                 setIsLoading(false);
             }
         })()
-    }, [isFirstLogin])
+    }, [isFirstLogin, isOpen])
 
     const setAllNamespacesTappedValue = (isTap: boolean) => {
         const newNamespaces = {};
