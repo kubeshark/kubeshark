@@ -10,7 +10,7 @@ We broke down this list into few categories:
 - Optional - permissions needed for proper name resolving for service & pod IPs
   - addition required for policy validation
 
-# Required permissions
+## Required permissions
 
 Mizu needs following permissions on your Kubernetes cluster to run properly
 
@@ -57,7 +57,7 @@ Mizu needs following permissions on your Kubernetes cluster to run properly
   - get
 ```
 
-## Permissions required running with install command or (optional) for service / pod name resolving
+### Permissions required running with install command or (optional) for service / pod name resolving
 
 Mandatory permissions for running with install command.
 
@@ -178,7 +178,7 @@ Optional for service/pod name resolving in non install standalone
   - watch
 ```
 
-## Permissions for Policy rules validation feature (opt)
+### Permissions for Policy rules validation feature (opt)
 
 Optionally, in order to use the policy rules validation feature, Mizu requires the following additional permissions:
 
@@ -195,7 +195,7 @@ Optionally, in order to use the policy rules validation feature, Mizu requires t
 
 - - -
 
-## Namespace-Restricted mode
+### Namespace-Restricted mode
 
 Alternatively, in order to restrict Mizu to one namespace only (by setting `agent.namespace` in the config file), Mizu needs the following permissions in that namespace:
 
@@ -235,7 +235,7 @@ Alternatively, in order to restrict Mizu to one namespace only (by setting `agen
   - get
 ```
 
-### Name resolving in Namespace-Restricted mode (opt)
+#### Name resolving in Namespace-Restricted mode (opt)
 
 To restrict Mizu to one namespace while also resolving IPs, Mizu needs the following permissions in that namespace:
 
