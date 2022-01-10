@@ -28,7 +28,11 @@ struct tlsChunk {
 struct ssl_info {
     void* buffer;
     __u32 fd;
-    __u64 reserved; // without it compilation failed - weird
+    
+    // for ssl_write and ssl_read must be zero
+    // for ssl_write_ex and ssl_read_ex save the *written/*readbytes pointer. 
+    //
+    size_t *count_ptr;
 };
 
 struct fd_info {

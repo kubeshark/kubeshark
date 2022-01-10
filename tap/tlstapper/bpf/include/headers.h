@@ -7,6 +7,7 @@ Copyright (C) UP9 Inc.
 #ifndef __HEADERS__
 #define __HEADERS__
 
+#include <stddef.h>
 #include <linux/bpf.h>
 #include <linux/ptrace.h>
 #include <bpf/bpf_helpers.h>

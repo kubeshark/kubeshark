@@ -18,17 +18,17 @@ struct {
 	__type(value, struct tlsChunk);
 } heap SEC(".maps");
 
-static __always_inline int ssl_uprobe(void* ssl, void* buffer, int num, struct bpf_map_def* map_fd) {
+static __always_inline int ssl_uprobe(void* ssl, void* buffer, int num, struct bpf_map_def* map_fd, size_t *count_ptr) {
 	__u64 id = bpf_get_current_pid_tgid();
 	
 	if (!should_tap(id >> 32)) {
 		return 0;
 	}
 	
-	struct ssl_info info = {
-		.fd = -1,
-	};
+	struct ssl_info info = {};
 	
+	info.fd = -1;
+	info.count_ptr = count_ptr;
 	info.buffer = buffer;
 	
 	long err = bpf_map_update_elem(map_fd, &id, &info, BPF_ANY);
@@ -74,9 +74,28 @@ static __always_inline int ssl_uretprobe(struct pt_regs *ctx, struct bpf_map_def
 		return 0;
 	}
 	
-	int num = PT_REGS_RC(ctx);
+	int countBytes = PT_REGS_RC(ctx);
 	
-	if (num <= 0) {
+	if (info.count_ptr != 0) {
+		// ssl_read_ex and ssl_write_ex return 1 for success
+		//
+		if (countBytes != 1) {
+			return 0; 
+		}
+		
+		size_t tempCount;
+		long err = bpf_probe_read(&tempCount, sizeof(size_t), (void*) info.count_ptr);
+		
+		if (err != 0) {
+			char msg[] = "Error reading bytes count of _ex (id: %ld) (err: %ld)";
+			bpf_trace_printk(msg, sizeof(msg), id, err);
+			return 0;
+		}
+		
+		countBytes = tempCount;
+	}
+	
+	if (countBytes <= 0) {
 		return 0;
 	}
 	
@@ -94,14 +113,22 @@ static __always_inline int ssl_uretprobe(struct pt_regs *ctx, struct bpf_map_def
 		return 0;
 	}
 	
+	size_t recorded = MIN(countBytes, sizeof(c->data));
+	
 	c->flags = flags;
 	c->pid = id >> 32;
 	c->tgid = id;
-	c->len = num;
-	c->recorded = MIN(num, sizeof(c->data));
+	c->len = countBytes;
+	c->recorded = recorded;
 	c->fd = info.fd;
 	
-	err = bpf_probe_read(c->data, c->recorded, info.buffer);
+	// Should never happen, its here for the eBPF verifier
+	//
+	if (recorded >= sizeof(c->data)) {
+		return 0;
+	}
+	
+	err = bpf_probe_read(c->data, recorded, info.buffer);
 	
 	if (err != 0) {
 		char msg[] = "Error reading from ssl buffer %ld - %ld";
@@ -131,7 +158,7 @@ static __always_inline int ssl_uretprobe(struct pt_regs *ctx, struct bpf_map_def
 
 SEC("uprobe/ssl_write")
 int BPF_KPROBE(ssl_write, void* ssl, void* buffer, int num) {
-	return ssl_uprobe(ssl, buffer, num, &ssl_write_context);
+	return ssl_uprobe(ssl, buffer, num, &ssl_write_context, 0);
 }
 
 SEC("uretprobe/ssl_write")
@@ -141,7 +168,7 @@ int BPF_KPROBE(ssl_ret_write) {
 
 SEC("uprobe/ssl_read")
 int BPF_KPROBE(ssl_read, void* ssl, void* buffer, int num) {
-	return ssl_uprobe(ssl, buffer, num, &ssl_read_context);
+	return ssl_uprobe(ssl, buffer, num, &ssl_read_context, 0);
 }
 
 SEC("uretprobe/ssl_read")
@@ -150,8 +177,8 @@ int BPF_KPROBE(ssl_ret_read) {
 }
 
 SEC("uprobe/ssl_write_ex")
-int BPF_KPROBE(ssl_write_ex, void* ssl, void* buffer, int num) {
-	return ssl_uprobe(ssl, buffer, num, &ssl_write_context);
+int BPF_KPROBE(ssl_write_ex, void* ssl, void* buffer, size_t num, size_t *written) {
+	return ssl_uprobe(ssl, buffer, num, &ssl_write_context, written);
 }
 
 SEC("uretprobe/ssl_write_ex")
@@ -160,8 +187,8 @@ int BPF_KPROBE(ssl_ret_write_ex) {
 }
 
 SEC("uprobe/ssl_read_ex")
-int BPF_KPROBE(ssl_read_ex, void* ssl, void* buffer, int num) {
-	return ssl_uprobe(ssl, buffer, num, &ssl_read_context);
+int BPF_KPROBE(ssl_read_ex, void* ssl, void* buffer, size_t num, size_t *readbytes) {
+	return ssl_uprobe(ssl, buffer, num, &ssl_read_context, readbytes);
 }
 
 SEC("uretprobe/ssl_read_ex")
