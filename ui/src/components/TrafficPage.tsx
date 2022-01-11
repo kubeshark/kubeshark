@@ -12,6 +12,8 @@ import {StatusBar} from "./UI/StatusBar";
 import Api, {MizuWebsocketURL} from "../helpers/api";
 import { toast } from 'react-toastify';
 import debounce from 'lodash/debounce';
+import {useRecoilState} from "recoil";
+import tappingStatusAtom from "../recoil/tappingStatus";
 
 const useLayoutStyles = makeStyles(() => ({
     details: {
@@ -56,7 +58,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({onTLSDetected, setAnaly
 
     const [noMoreDataTop, setNoMoreDataTop] = useState(false);
 
-    const [tappingStatus, setTappingStatus] = useState(null);
+    const [tappingStatus, setTappingStatus] = useRecoilState(tappingStatusAtom);
 
     const [isSnappedToBottom, setIsSnappedToBottom] = useState(true);
 
@@ -330,7 +332,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({onTLSDetected, setAnaly
                     {selectedEntryData && <EntryDetailed entryData={selectedEntryData} updateQuery={updateQuery}/>}
                 </div>
             </div>}
-            {tappingStatus && <StatusBar tappingStatus={tappingStatus}/>}
+            {tappingStatus && <StatusBar/>}
         </div>
     )
 };

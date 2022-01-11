@@ -1,10 +1,11 @@
 import { Button } from "@material-ui/core";
-import React, { useContext, useState } from "react";
+import React, { useState } from "react";
 import { toast } from "react-toastify";
-import { MizuContext, Page } from "../EntApp";
 import Api from "../helpers/api";
 import { useCommonStyles } from "../helpers/commonStyle";
 import LoadingOverlay from "./LoadingOverlay";
+import entPageAtom, {Page} from "../recoil/entPage";
+import {useSetRecoilState} from "recoil";
 
 const api = Api.getInstance();
 
@@ -15,7 +16,7 @@ const LoginPage: React.FC = () => {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
 
-    const {setPage} = useContext(MizuContext);
+    const setEntPage = useSetRecoilState(entPageAtom);
 
     const onFormSubmit = async () => {
         setIsLoading(true);
@@ -23,7 +24,7 @@ const LoginPage: React.FC = () => {
         try {
             await api.login(username, password);
             if (!await api.isAuthenticationNeeded()) {
-                setPage(Page.Traffic);
+                setEntPage(Page.Traffic);
             } else {
                 toast.error("Invalid credentials");
             }

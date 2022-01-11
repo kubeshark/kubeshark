@@ -3,27 +3,16 @@ import React, {useState} from "react";
 import warningIcon from '../assets/warning_icon.svg';
 import failIcon from '../assets/failed.svg';
 import successIcon from '../assets/success.svg';
-
-export interface TappingStatusPod {
-    name: string;
-    namespace: string;
-    isTapped: boolean;
-}
-
-export interface TappingStatus {
-    pods: TappingStatusPod[];
-}
-
-export interface Props {
-    tappingStatus: TappingStatusPod[]
-}
+import {useRecoilValue} from "recoil";
+import tappingStatusAtom from "../../recoil/tappingStatus";
 
 const pluralize = (noun: string, amount: number) => {
     return `${noun}${amount !== 1 ? 's' : ''}`
 }
 
-export const StatusBar: React.FC<Props> = ({tappingStatus}) => {
+export const StatusBar = () => {
 
+    const tappingStatus = useRecoilValue(tappingStatusAtom);
     const [expandedBar, setExpandedBar] = useState(false);
 
     const uniqueNamespaces = Array.from(new Set(tappingStatus.map(pod => pod.namespace)));
