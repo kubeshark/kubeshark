@@ -103,7 +103,11 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onOpen
         },
         nodes: {
             shape: "dot",
-            color: variables.blueColor
+            color: variables.blueColor,
+            shadow: true,
+        },
+        edges: {
+            shadow: true,
         },
         height: "750px",
     };
