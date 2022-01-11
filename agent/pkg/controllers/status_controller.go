@@ -12,7 +12,6 @@ import (
 	"mizuserver/pkg/providers/tappersCount"
 	"mizuserver/pkg/providers/tappersStatus"
 	"mizuserver/pkg/up9"
-	"mizuserver/pkg/utils"
 	"mizuserver/pkg/validation"
 	"net/http"
 )
@@ -44,7 +43,7 @@ func PostTappedPods(c *gin.Context) {
 }
 
 func broadcastTappedPodsStatus() {
-	tappedPodsStatus := utils.GetTappedPodsStatus()
+	tappedPodsStatus := tappedPods.GetTappedPodsStatus()
 
 	message := shared.CreateWebSocketStatusMessage(tappedPodsStatus)
 	if jsonBytes, err := json.Marshal(message); err != nil {
@@ -86,7 +85,7 @@ func GetAuthStatus(c *gin.Context) {
 }
 
 func GetTappingStatus(c *gin.Context) {
-	tappedPodsStatus := utils.GetTappedPodsStatus()
+	tappedPodsStatus := tappedPods.GetTappedPodsStatus()
 	c.JSON(http.StatusOK, tappedPodsStatus)
 }
 

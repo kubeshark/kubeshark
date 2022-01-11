@@ -33,7 +33,7 @@ func PostTapConfig(c *gin.Context) {
 		cancelTapperSyncer()
 
 		tappedPods.Set([]*shared.PodInfo{})
-		tappersStatus.Delete()
+		tappersStatus.Reset()
 
 		broadcastTappedPodsStatus()
 	}

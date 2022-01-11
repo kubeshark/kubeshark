@@ -20,6 +20,6 @@ func Set(tapperStatus *shared.TapperStatus) {
 	tappersStatus[tapperStatus.NodeName] = tapperStatus
 }
 
-func Delete() {
+func Reset() {
 	tappersStatus = make(map[string]*shared.TapperStatus)
 }
