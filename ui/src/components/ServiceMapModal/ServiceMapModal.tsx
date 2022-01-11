@@ -76,7 +76,7 @@ function getProtocolColor(protocol: string): string {
             break;
         }
         case "kafka": {
-            color = "#000000"
+            color = "#023020"
             break;
         }
         default: {
@@ -97,10 +97,22 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onOpen
     });
 
     const options = {
+        physics:{
+            enabled: true,
+            barnesHut: {
+              theta: 0.5,
+              gravitationalConstant: -2000,
+              centralGravity: 0.3,
+              springLength: 95,
+              springConstant: 0.04,
+              damping: 0.09,
+              avoidOverlap: 1
+            },
+        },
         layout: {
             hierarchical: false,
             randomSeed: 1 // always on node 1
-        },
+        },        
         nodes: {
             shape: "dot",
             color: variables.blueColor,
