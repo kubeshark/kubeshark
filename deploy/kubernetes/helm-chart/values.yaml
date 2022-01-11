@@ -32,7 +32,7 @@ container:
     port: 9099
     image:
       repository: "709825985650.dkr.ecr.us-east-1.amazonaws.com/up9/basenine"
-      tag: "v0.2.26"
+      tag: "v0.3.0"
   kratos:
     name: "kratos"
     port: 4433
