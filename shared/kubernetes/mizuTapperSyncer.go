@@ -44,7 +44,7 @@ type TapperSyncerConfig struct {
 	IgnoredUserAgents        []string
 	MizuApiFilteringOptions  api.TrafficFilteringOptions
 	MizuServiceAccountExists bool
-	Istio                    bool
+	ServiceMesh              bool
 }
 
 func CreateAndStartMizuTapperSyncer(ctx context.Context, kubernetesProvider *Provider, config TapperSyncerConfig, startTime time.Time) (*MizuTapperSyncer, error) {
@@ -316,7 +316,7 @@ func (tapperSyncer *MizuTapperSyncer) updateMizuTappers() error {
 			tapperSyncer.config.ImagePullPolicy,
 			tapperSyncer.config.MizuApiFilteringOptions,
 			tapperSyncer.config.LogLevel,
-			tapperSyncer.config.Istio,
+			tapperSyncer.config.ServiceMesh,
 		); err != nil {
 			return err
 		}
