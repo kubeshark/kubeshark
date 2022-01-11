@@ -14,14 +14,18 @@ interface GraphData {
 
 interface Node {
     id: number;
+    value: number;
     label: string;
-    title?: string;
+    title: string;
     color?: string;
 }
 
 interface Edge {
     from: number;
     to: number;
+    value: number;
+    title: string;
+    color?: string;
 }
 
 interface ServiceMapNode {
@@ -48,6 +52,41 @@ interface ServiceMapModalProps {
     onClose: () => void;
 }
 
+function getProtocolColor(protocol: string): string {
+    let color;
+    switch (protocol) {
+        case "http": {
+            color = "#27AE60"
+            break;
+        }
+        case "https": {
+            // TODO: https protocol color
+            break;
+        }
+        case "redis": {
+            color = "#A41E11"
+            break;
+        }
+        case "amqp": {
+            color = "#FF6600"
+            break;
+        }
+        case "grpc": {
+            color = "#244C5A"
+            break;
+        }
+        case "kafka": {
+            color = "#000000"
+            break;
+        }
+        default: {
+            color = variables.lightBlueColor
+            break;
+        }
+    }
+    return color
+}
+
 const api = Api.getInstance();
 
 export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onOpen, onClose }) => {
@@ -59,15 +98,17 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onOpen
 
     const options = {
         layout: {
-            hierarchical: true
+            hierarchical: false,
+            randomSeed: 1 // always on node 1
         },
-        edges: {
-            color: "#000000"
+        nodes: {
+            shape: "dot",
+            color: variables.blueColor
         },
-        height: "760px"
+        height: "750px",
     };
 
-    const style = {
+    const modalStyle = {
         position: 'absolute',
         top: '10%',
         left: '50%',
@@ -92,7 +133,9 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onOpen
                 for (let i = 0; i < serviceMapData.nodes.length; i++) {
                     graphData.nodes.push({
                         id: serviceMapData.nodes[i].id,
-                        label: serviceMapData.nodes[i].name
+                        value: serviceMapData.nodes[i].count,
+                        label: serviceMapData.nodes[i].name,
+                        title: "Count: " + serviceMapData.nodes[i].name,
                     });
                 }
             }
@@ -101,7 +144,10 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onOpen
                 for (let i = 0; i < serviceMapData.edges.length; i++) {
                     graphData.edges.push({
                         from: serviceMapData.edges[i].source.id,
-                        to: serviceMapData.edges[i].destination.id
+                        to: serviceMapData.edges[i].destination.id,
+                        value: serviceMapData.edges[i].count,
+                        title: "Count: " + serviceMapData.edges[i].count,
+                        color: getProtocolColor(serviceMapData.edges[i].source.protocol)
                     });
                 }
             }
@@ -113,11 +159,11 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onOpen
             setIsLoading(false)
             console.error(error);
         }
-      }, [graphData])
+    }, [graphData])
 
-      useEffect(() => {
+    useEffect(() => {
         getServiceMapData()
-      }, [getServiceMapData])
+    }, [getServiceMapData])
 
     const resetServiceMap = debounce(async () => {
         try {
@@ -138,7 +184,7 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onOpen
         onClose()
         onOpen()
     }, 500);
-    
+
 
     return (
         <Modal
@@ -154,7 +200,7 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onOpen
             style={{ overflow: 'auto' }}
         >
             <Fade in={isOpen}>
-                <Box sx={style}>
+                <Box sx={modalStyle}>
                     {isLoading && <div className={spinnerStyle.spinnerContainer}>
                         <img alt="spinner" src={spinnerImg} style={{ height: 50 }} />
                     </div>}
@@ -204,6 +250,9 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onOpen
                         <Graph
                             graph={graphData}
                             options={options}
+                            style={{
+                                border: "1px solid lightgray",
+                            }}
                         />
                     </div>}
                 </Box>
