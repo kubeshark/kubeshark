@@ -16,7 +16,7 @@ interface Node {
     id: number;
     value: number;
     label: string;
-    title: string;
+    title?: string;
     color?: string;
 }
 
@@ -24,7 +24,8 @@ interface Edge {
     from: number;
     to: number;
     value: number;
-    title: string;
+    label: string;
+    title?: string;
     color?: string;
 }
 
@@ -99,11 +100,12 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onOpen
     const options = {
         physics:{
             enabled: true,
+            solver: 'barnesHut',
             barnesHut: {
               theta: 0.5,
               gravitationalConstant: -2000,
               centralGravity: 0.3,
-              springLength: 95,
+              springLength: 180,
               springConstant: 0.04,
               damping: 0.09,
               avoidOverlap: 1
@@ -119,6 +121,11 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onOpen
             shadow: true,
         },
         edges: {
+            smooth: {
+                enabled: true,
+                type: "dynamic",
+                roundness: 1.0
+            },
             shadow: true,
         },
         height: "750px",
@@ -162,8 +169,8 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onOpen
                         from: serviceMapData.edges[i].source.id,
                         to: serviceMapData.edges[i].destination.id,
                         value: serviceMapData.edges[i].count,
-                        title: "Count: " + serviceMapData.edges[i].count,
-                        color: getProtocolColor(serviceMapData.edges[i].source.protocol)
+                        label: serviceMapData.edges[i].count.toString(),
+                        color: getProtocolColor(serviceMapData.edges[i].source.protocol),
                     });
                 }
             }
