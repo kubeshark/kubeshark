@@ -145,13 +145,11 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onOpen
     };
 
     const getServiceMapData = useCallback(async () => {
-        console.log("getServiceMapData called")
         try {
             setIsLoading(true)
 
             const serviceMapData: ServiceMapGraph = await api.serviceMapData()
-            console.log(serviceMapData)
-
+            
             if (serviceMapData.nodes != null) {
                 for (let i = 0; i < serviceMapData.nodes.length; i++) {
                     graphData.nodes.push({
@@ -201,8 +199,6 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onOpen
     }, 500);
 
     const refreshServiceMap = debounce(() => {
-        console.log("refreshServiceMap called")
-
         // close and re-open modal
         onClose()
         onOpen()
