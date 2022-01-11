@@ -50,7 +50,6 @@ interface EntryProps {
 }
 
 export const EntryItem: React.FC<EntryProps> = ({entry, focusedEntryId, setFocusedEntryId, style, updateQuery, headingMode}) => {
-    console.log("entry:", entry);
 
     const isSelected = focusedEntryId === entry.id.toString();
 
