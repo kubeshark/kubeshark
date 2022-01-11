@@ -3,7 +3,8 @@ package utils
 import (
 	"context"
 	"fmt"
-	"mizuserver/pkg/providers"
+	"mizuserver/pkg/providers/tappedPods"
+	"mizuserver/pkg/providers/tappersStatus"
 	"net/http"
 	"net/url"
 	"os"
@@ -47,9 +48,9 @@ func StartServer(app *gin.Engine) {
 
 func GetTappedPodsStatus() []shared.TappedPodStatus {
 	tappedPodsStatus := make([]shared.TappedPodStatus, 0)
-	for _, pod := range providers.GetTapStatus().Pods {
+	for _, pod := range tappedPods.Get() {
 		var status string
-		if tapperStatus, ok := providers.GetTappersStatus()[pod.NodeName]; ok {
+		if tapperStatus, ok := tappersStatus.Get()[pod.NodeName]; ok {
 			status = strings.ToLower(tapperStatus.Status)
 		}
 

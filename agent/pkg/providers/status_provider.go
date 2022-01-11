@@ -8,19 +8,14 @@ import (
 	"github.com/up9inc/mizu/tap"
 	"mizuserver/pkg/models"
 	"os"
-	"sync"
 	"time"
 )
 
 const tlsLinkRetainmentTime = time.Minute * 15
 
 var (
-	tappersCount     int
-	tapStatus        *shared.TapStatus
-	tappersStatus    map[string]*shared.TapperStatus
-	authStatus       *models.AuthStatus
-	RecentTLSLinks   = cache.New(tlsLinkRetainmentTime, tlsLinkRetainmentTime)
-	tappersCountLock = sync.Mutex{}
+	authStatus     *models.AuthStatus
+	RecentTLSLinks = cache.New(tlsLinkRetainmentTime, tlsLinkRetainmentTime)
 )
 
 func GetAuthStatus() (*models.AuthStatus, error) {
@@ -67,52 +62,4 @@ func GetAllRecentTLSAddresses() []string {
 	}
 
 	return recentTLSLinks
-}
-
-func GetTapStatus() *shared.TapStatus {
-	if tapStatus == nil {
-		tapStatus = &shared.TapStatus{}
-	}
-
-	return tapStatus
-}
-
-func SetTapStatus(tapStatusToSet *shared.TapStatus) {
-	tapStatus = tapStatusToSet
-}
-
-func GetTappersStatus() map[string]*shared.TapperStatus {
-	if tappersStatus == nil {
-		tappersStatus = make(map[string]*shared.TapperStatus)
-	}
-
-	return tappersStatus
-}
-
-func SetTapperStatus(tapperStatus *shared.TapperStatus) {
-	if tappersStatus == nil {
-		tappersStatus = make(map[string]*shared.TapperStatus)
-	}
-
-	tappersStatus[tapperStatus.NodeName] = tapperStatus
-}
-
-func DeleteTappersStatus() {
-	tappersStatus = make(map[string]*shared.TapperStatus)
-}
-
-func TapperAdded() {
-	tappersCountLock.Lock()
-	tappersCount++
-	tappersCountLock.Unlock()
-}
-
-func TapperRemoved() {
-	tappersCountLock.Lock()
-	tappersCount--
-	tappersCountLock.Unlock()
-}
-
-func GetTappersCount() int {
-	return tappersCount
 }
