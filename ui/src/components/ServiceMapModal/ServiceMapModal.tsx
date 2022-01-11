@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from "react";
-import { Box, Fade, Modal, Backdrop } from "@material-ui/core";
+import React, { useState, useEffect, useCallback } from "react";
+import { Box, Fade, Modal, Backdrop, Button } from "@material-ui/core";
 import Api from "../../helpers/api";
 import spinnerStyle from '../style/Spinner.module.sass';
 import spinnerImg from '../assets/spinner.svg';
 import Graph from "react-graph-vis";
-
+import variables from '../../variables.module.scss';
+import debounce from 'lodash/debounce';
 
 interface GraphData {
     nodes: Node[];
@@ -44,10 +45,11 @@ interface ServiceMapGraph {
 interface ServiceMapModalProps {
     isOpen: boolean;
     onClose: () => void;
-    api: Api
 }
 
-export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClose, api }) => {
+const api = Api.getInstance();
+
+export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClose }) => {
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [graphData, setGraphData] = useState<GraphData>({
         nodes: [],
@@ -56,13 +58,13 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
 
     const options = {
         layout: {
-          hierarchical: true
+            hierarchical: true
         },
         edges: {
-          color: "#000000"
+            color: "#000000"
         },
-        height: "500px"
-      };
+        height: "760px"
+    };
 
     const style = {
         position: 'absolute',
@@ -77,33 +79,58 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
         color: '#000',
     };
 
-    useEffect(() => {
-        (async () => {
-            try {
-                const serviceMapData: ServiceMapGraph = await api.serviceMapData()
+    const getData = useCallback(async () => {
+        console.log("getData called")
+        try {
+            setIsLoading(true)
 
+            const serviceMapData: ServiceMapGraph = await api.serviceMapData()
+            console.log(serviceMapData)
+
+            if (serviceMapData.nodes != null) {
                 for (let i = 0; i < serviceMapData.nodes.length; i++) {
                     graphData.nodes.push({
                         id: serviceMapData.nodes[i].id,
                         label: serviceMapData.nodes[i].name
                     });
                 }
+            }
 
+            if (serviceMapData.edges != null) {
                 for (let i = 0; i < serviceMapData.edges.length; i++) {
                     graphData.edges.push({
                         from: serviceMapData.edges[i].source.id,
                         to: serviceMapData.edges[i].destination.id
                     });
                 }
-
-                setGraphData(graphData)
-                setIsLoading(false)
-
-            } catch (error) {
-                console.error(error);
             }
-        })()
-    }, [api, graphData]);
+
+            setGraphData(graphData)
+            setIsLoading(false)
+
+        } catch (error) {
+            setIsLoading(false)
+            console.error(error);
+        }
+      }, [graphData])
+
+      useEffect(() => {
+        getData()
+      }, [getData])
+
+    const resetServiceMap = debounce(async () => {
+        try {
+            const serviceMapResetResponse = await api.serviceMapReset();
+            if (serviceMapResetResponse["status"] === "enabled") {
+                // close modal
+                onClose()
+            }
+
+        } catch (error) {
+            console.error(error);
+        }
+    }, 500);
+    
 
     return (
         <Modal
@@ -123,10 +150,26 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
                     {isLoading && <div className={spinnerStyle.spinnerContainer}>
                         <img alt="spinner" src={spinnerImg} style={{ height: 50 }} />
                     </div>}
-                    {!isLoading && <Graph
-                        graph={graphData}
-                        options={options}
-                    />}
+                    {!isLoading && <div>
+                        <Button
+                            variant="contained"
+                            style={{
+                                margin: "0px 0px 0px 0px",
+                                backgroundColor: variables.blueColor,
+                                fontWeight: 600,
+                                borderRadius: "4px",
+                                color: "#fff",
+                                textTransform: "none",
+                            }}
+                            onClick={resetServiceMap}
+                        >
+                            Reset
+                        </Button>
+                        <Graph
+                            graph={graphData}
+                            options={options}
+                        />
+                    </div>}
                 </Box>
             </Fade>
         </Modal>

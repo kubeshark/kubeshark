@@ -289,18 +289,6 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({onTLSDetected, setAnaly
         setServiceMapModalOpen(true)
     }, 500);
 
-    const resetServiceMap = debounce(async () => {
-        try {
-            const serviceMapResetResponse = await api.serviceMapReset();
-            if (serviceMapResetResponse["status"] === "enabled") {
-                //TODO: toast success message?
-            }
-
-        } catch(error) {
-            console.error(error);
-        }
-    }, 500);
-
     return (
         <div className="TrafficPage">
             <div className="TrafficPageHeader">
@@ -318,7 +306,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({onTLSDetected, setAnaly
                     variant="contained"
                     style={{
                         visibility: serviceMapStatus === true ? "visible" : "hidden",
-                        margin: "0px 0px 0px 10px",
+                        margin: "0px 0px 0px 20px",
                         backgroundColor: variables.blueColor,
                         fontWeight: 600,
                         borderRadius: "4px",
@@ -328,21 +316,6 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({onTLSDetected, setAnaly
                     onClick={openServiceMapModal}
                 >
                     Service Map
-                </Button>
-                <Button
-                    variant="contained"
-                    style={{
-                        visibility: serviceMapStatus === true ? "visible" : "hidden",
-                        margin: "0px 0px 0px 10px",
-                        backgroundColor: variables.blueColor,
-                        fontWeight: 600,
-                        borderRadius: "4px",
-                        color: "#fff",
-                        textTransform: "none",
-                    }}
-                    onClick={resetServiceMap}
-                >
-                    Reset Service Map
                 </Button>
             </div>
             {<div className="TrafficPage-Container">
@@ -386,8 +359,8 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({onTLSDetected, setAnaly
                     {selectedEntryData && <EntryDetailed entryData={selectedEntryData} updateQuery={updateQuery} />}
                 </div>
             </div>}
-            {tappingStatus && <StatusBar tappingStatus={tappingStatus}/>}
-            {serviceMapModalOpen && <ServiceMapModal isOpen={serviceMapModalOpen} onClose={() => setServiceMapModalOpen(false)} api={api} />}
+            {tappingStatus && <StatusBar tappingStatus={tappingStatus} />}
+            {serviceMapModalOpen && <ServiceMapModal isOpen={serviceMapModalOpen} onClose={() => setServiceMapModalOpen(false)} />}
         </div>
     )
 };
