@@ -12,7 +12,7 @@ import (
 	"github.com/up9inc/mizu/tap"
 )
 
-func GetEntry(r *tapApi.MizuEntry, v tapApi.DataUnmarshaler) error {
+func GetEntry(r *tapApi.Entry, v tapApi.DataUnmarshaler) error {
 	return v.UnmarshalData(r)
 }
 
@@ -28,6 +28,10 @@ type EntriesRequest struct {
 	TimeoutMs int    `form:"timeoutMs" validate:"min=1"`
 }
 
+type SingleEntryRequest struct {
+	Query string `form:"query"`
+}
+
 type EntriesResponse struct {
 	Data []interface{}      `json:"data"`
 	Meta *basenine.Metadata `json:"meta"`
@@ -35,7 +39,7 @@ type EntriesResponse struct {
 
 type WebSocketEntryMessage struct {
 	*shared.WebSocketMessageMetadata
-	Data map[string]interface{} `json:"data,omitempty"`
+	Data *tapApi.BaseEntry `json:"data,omitempty"`
 }
 
 type WebSocketTappedEntryMessage struct {
@@ -74,7 +78,7 @@ type WebSocketStartTimeMessage struct {
 	Data int64 `json:"data"`
 }
 
-func CreateBaseEntryWebSocketMessage(base map[string]interface{}) ([]byte, error) {
+func CreateBaseEntryWebSocketMessage(base *tapApi.BaseEntry) ([]byte, error) {
 	message := &WebSocketEntryMessage{
 		WebSocketMessageMetadata: &shared.WebSocketMessageMetadata{
 			MessageType: shared.WebSocketMessageTypeEntry,
