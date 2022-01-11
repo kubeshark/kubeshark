@@ -278,6 +278,36 @@ func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, moun
 				},
 			},
 		},
+		{
+			Name:            "basenine",
+			Image:           fmt.Sprintf("%s:%s", shared.BasenineImageRepo, shared.BasenineImageTag),
+			ImagePullPolicy: opts.ImagePullPolicy,
+			VolumeMounts:    volumeMounts,
+			ReadinessProbe: &core.Probe{
+				FailureThreshold: 3,
+				Handler: core.Handler{
+					TCPSocket: &core.TCPSocketAction{
+						Port: intstr.Parse(shared.BaseninePort),
+					},
+				},
+				PeriodSeconds:    1,
+				SuccessThreshold: 1,
+				TimeoutSeconds:   1,
+			},
+			Resources: core.ResourceRequirements{
+				Limits: core.ResourceList{
+					"cpu":    cpuLimit,
+					"memory": memLimit,
+				},
+				Requests: core.ResourceList{
+					"cpu":    cpuRequests,
+					"memory": memRequests,
+				},
+			},
+			Command:    []string{"/basenine"},
+			Args:       []string{"-addr", "0.0.0.0", "-port", shared.BaseninePort, "-persistent"},
+			WorkingDir: shared.DataDirPath,
+		},
 	}
 
 	if createAuthContainer {
@@ -690,7 +720,7 @@ func (provider *Provider) CreateConfigMap(ctx context.Context, namespace string,
 	return nil
 }
 
-func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, apiServerPodIp string, nodeToTappedPodMap map[string][]core.Pod, serviceAccountName string, resources shared.Resources, imagePullPolicy core.PullPolicy, mizuApiFilteringOptions api.TrafficFilteringOptions, logLevel logging.Level, istio bool) error {
+func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, apiServerPodIp string, nodeToTappedPodMap map[string][]core.Pod, serviceAccountName string, resources shared.Resources, imagePullPolicy core.PullPolicy, mizuApiFilteringOptions api.TrafficFilteringOptions, logLevel logging.Level, serviceMesh bool) error {
 	logger.Log.Debugf("Applying %d tapper daemon sets, ns: %s, daemonSetName: %s, podImage: %s, tapperPodName: %s", len(nodeToTappedPodMap), namespace, daemonSetName, podImage, tapperPodName)
 
 	if len(nodeToTappedPodMap) == 0 {
@@ -715,8 +745,8 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 		"--nodefrag",
 	}
 
-	if istio {
-		mizuCmd = append(mizuCmd, "--procfs", procfsMountPath, "--istio")
+	if serviceMesh {
+		mizuCmd = append(mizuCmd, "--procfs", procfsMountPath, "--servicemesh")
 	}
 
 	agentContainer := applyconfcore.Container()
@@ -726,7 +756,7 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 
 	caps := applyconfcore.Capabilities().WithDrop("ALL").WithAdd("NET_RAW").WithAdd("NET_ADMIN")
 
-	if istio {
+	if serviceMesh {
 		caps = caps.WithAdd("SYS_ADMIN")    // for reading /proc/PID/net/ns
 		caps = caps.WithAdd("SYS_PTRACE")   // for setting netns to other process
 		caps = caps.WithAdd("DAC_OVERRIDE") // for reading /proc/PID/environ
@@ -913,8 +943,8 @@ func (provider *Provider) ListAllNamespaces(ctx context.Context) ([]core.Namespa
 	return namespaces.Items, err
 }
 
-func (provider *Provider) GetPodLogs(ctx context.Context, namespace string, podName string) (string, error) {
-	podLogOpts := core.PodLogOptions{}
+func (provider *Provider) GetPodLogs(ctx context.Context, namespace string, podName string, containerName string) (string, error) {
+	podLogOpts := core.PodLogOptions{Container: containerName}
 	req := provider.clientSet.CoreV1().Pods(namespace).GetLogs(podName, &podLogOpts)
 	podLogs, err := req.Stream(ctx)
 	if err != nil {

@@ -11,7 +11,7 @@
     border-bottom-left-radius: 8px
     border-bottom-right-radius: 8px
     top: 0
-    padding: 2px 10px
+    padding: 10px
     font-size: 14px
     transition: max-height 2s ease-out
     width: auto
@@ -21,19 +21,30 @@
     .podsCount
         display: flex
         justify-content: center
-        padding: 8px
         font-weight: 600
 
         img
             margin-right: 10px
             height: 22px
 
-    th
-        text-align: left
-        padding-right: 15px
-    td
-        padding-right: 15px
-        padding-top: 5px
+    table
+        width: 100%
+        margin-top: 20px
+        
+        tbody
+            max-height: 70vh
+            overflow-y: auto
+            display: block
+        tr
+            display: table
+            table-layout: fixed
+            width: 100%
+        th
+            text-align: left
+            padding-right: 5%
+        td
+            text-align: left
+            padding-right: 5%
 
 .expandedStatusBar
     max-height: 100vh
