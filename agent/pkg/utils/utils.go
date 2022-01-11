@@ -3,12 +3,10 @@ package utils
 import (
 	"context"
 	"fmt"
-	"mizuserver/pkg/providers"
 	"net/http"
 	"net/url"
 	"os"
 	"os/signal"
-	"strings"
 	"syscall"
 	"time"
 
@@ -43,16 +41,6 @@ func StartServer(app *gin.Engine) {
 	if err := app.Run(fmt.Sprintf(":%d", shared.DefaultApiServerPort)); err != nil {
 		logger.Log.Errorf("Server is not running! Reason: %v", err)
 	}
-}
-
-func GetTappedPodsStatus() []shared.TappedPodStatus {
-	tappedPodsStatus := make([]shared.TappedPodStatus, 0)
-	for _, pod := range providers.TapStatus.Pods {
-		status := strings.ToLower(providers.TappersStatus[pod.NodeName].Status)
-		isTapped := status == "running"
-		tappedPodsStatus = append(tappedPodsStatus, shared.TappedPodStatus{Name: pod.Name, Namespace: pod.Namespace, IsTapped: isTapped})
-	}
-	return tappedPodsStatus
 }
 
 func CheckErr(e error) {
