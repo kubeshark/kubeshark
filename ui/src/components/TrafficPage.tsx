@@ -360,7 +360,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({onTLSDetected, setAnaly
                 </div>
             </div>}
             {tappingStatus && <StatusBar tappingStatus={tappingStatus} />}
-            {serviceMapModalOpen && <ServiceMapModal isOpen={serviceMapModalOpen} onClose={() => setServiceMapModalOpen(false)} />}
+            {serviceMapModalOpen && <ServiceMapModal isOpen={serviceMapModalOpen} onOpen={() => setServiceMapModalOpen(true)} onClose={() => setServiceMapModalOpen(false)} />}
         </div>
     )
 };

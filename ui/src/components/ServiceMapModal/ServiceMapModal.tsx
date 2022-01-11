@@ -44,12 +44,13 @@ interface ServiceMapGraph {
 
 interface ServiceMapModalProps {
     isOpen: boolean;
+    onOpen: () => void;
     onClose: () => void;
 }
 
 const api = Api.getInstance();
 
-export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClose }) => {
+export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onOpen, onClose }) => {
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [graphData, setGraphData] = useState<GraphData>({
         nodes: [],
@@ -79,8 +80,8 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
         color: '#000',
     };
 
-    const getData = useCallback(async () => {
-        console.log("getData called")
+    const getServiceMapData = useCallback(async () => {
+        console.log("getServiceMapData called")
         try {
             setIsLoading(true)
 
@@ -115,8 +116,8 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
       }, [graphData])
 
       useEffect(() => {
-        getData()
-      }, [getData])
+        getServiceMapData()
+      }, [getServiceMapData])
 
     const resetServiceMap = debounce(async () => {
         try {
@@ -129,6 +130,14 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
         } catch (error) {
             console.error(error);
         }
+    }, 500);
+
+    const refreshServiceMap = debounce(async () => {
+        console.log("refreshServiceMap called")
+
+        // close and re-open modal
+        onClose()
+        onOpen()
     }, 500);
     
 
@@ -164,6 +173,20 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
                             onClick={resetServiceMap}
                         >
                             Reset
+                        </Button>
+                        <Button
+                            variant="contained"
+                            style={{
+                                margin: "0px 0px 0px 10px",
+                                backgroundColor: variables.blueColor,
+                                fontWeight: 600,
+                                borderRadius: "4px",
+                                color: "#fff",
+                                textTransform: "none",
+                            }}
+                            onClick={refreshServiceMap}
+                        >
+                            Refresh
                         </Button>
                         <Graph
                             graph={graphData}
