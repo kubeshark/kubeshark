@@ -30,7 +30,7 @@ func init() {
 func (h *RoutesEventHandlers) WebSocketConnect(socketId int, isTapper bool) {
 	if isTapper {
 		logger.Log.Infof("Websocket event - Tapper connected, socket ID: %d", socketId)
-		tappersCount.TapperAdded()
+		tappersCount.Add()
 	} else {
 		logger.Log.Infof("Websocket event - Browser socket connected, socket ID: %d", socketId)
 		socketListLock.Lock()
@@ -42,7 +42,7 @@ func (h *RoutesEventHandlers) WebSocketConnect(socketId int, isTapper bool) {
 func (h *RoutesEventHandlers) WebSocketDisconnect(socketId int, isTapper bool) {
 	if isTapper {
 		logger.Log.Infof("Websocket event - Tapper disconnected, socket ID:  %d", socketId)
-		tappersCount.TapperRemoved()
+		tappersCount.Remove()
 	} else {
 		logger.Log.Infof("Websocket event - Browser socket disconnected, socket ID:  %d", socketId)
 		socketListLock.Lock()

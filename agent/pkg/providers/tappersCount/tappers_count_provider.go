@@ -6,14 +6,14 @@ var lock = &sync.Mutex{}
 
 var tappersCount int
 
-func TapperAdded() {
+func Add() {
 	lock.Lock()
 	defer lock.Unlock()
 
 	tappersCount++
 }
 
-func TapperRemoved() {
+func Remove() {
 	lock.Lock()
 	defer lock.Unlock()
 
