@@ -47,11 +47,16 @@ func StartServer(app *gin.Engine) {
 
 func GetTappedPodsStatus() []shared.TappedPodStatus {
 	tappedPodsStatus := make([]shared.TappedPodStatus, 0)
-	for _, pod := range providers.TapStatus.Pods {
-		status := strings.ToLower(providers.TappersStatus[pod.NodeName].Status)
+	for _, pod := range providers.GetTapStatus().Pods {
+		var status string
+		if tapperStatus, ok := providers.GetTappersStatus()[pod.NodeName]; ok {
+			status = strings.ToLower(tapperStatus.Status)
+		}
+
 		isTapped := status == "running"
 		tappedPodsStatus = append(tappedPodsStatus, shared.TappedPodStatus{Name: pod.Name, Namespace: pod.Namespace, IsTapped: isTapped})
 	}
+
 	return tappedPodsStatus
 }
 

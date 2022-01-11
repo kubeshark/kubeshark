@@ -15,14 +15,14 @@ import (
 )
 
 func HealthCheck(c *gin.Context) {
-	tappers := make([]shared.TapperStatus, 0)
-	for _, value := range providers.TappersStatus {
+	tappers := make([]*shared.TapperStatus, 0)
+	for _, value := range providers.GetTappersStatus() {
 		tappers = append(tappers, value)
 	}
 
 	response := shared.HealthResponse{
-		TapStatus:     providers.TapStatus,
-		TappersCount:  providers.TappersCount,
+		TapStatus:     providers.GetTapStatus(),
+		TappersCount:  providers.GetTappersCount(),
 		TappersStatus: tappers,
 	}
 	c.JSON(http.StatusOK, response)
@@ -39,7 +39,7 @@ func PostTappedPods(c *gin.Context) {
 		return
 	}
 	logger.Log.Infof("[Status] POST request: %d tapped pods", len(tapStatus.Pods))
-	providers.TapStatus.Pods = tapStatus.Pods
+	providers.SetTapStatus(tapStatus)
 	broadcastTappedPodsStatus()
 }
 
@@ -52,14 +52,6 @@ func broadcastTappedPodsStatus() {
 	} else {
 		api.BroadcastToBrowserClients(jsonBytes)
 	}
-}
-
-func addTapperStatus(tapperStatus shared.TapperStatus) {
-	if providers.TappersStatus == nil {
-		providers.TappersStatus = make(map[string]shared.TapperStatus)
-	}
-
-	providers.TappersStatus[tapperStatus.NodeName] = tapperStatus
 }
 
 func PostTapperStatus(c *gin.Context) {
@@ -75,12 +67,12 @@ func PostTapperStatus(c *gin.Context) {
 	}
 
 	logger.Log.Infof("[Status] POST request, tapper status: %v", tapperStatus)
-	addTapperStatus(*tapperStatus)
+	providers.SetTapperStatus(tapperStatus)
 	broadcastTappedPodsStatus()
 }
 
 func GetTappersCount(c *gin.Context) {
-	c.JSON(http.StatusOK, providers.TappersCount)
+	c.JSON(http.StatusOK, providers.GetTappersCount())
 }
 
 func GetAuthStatus(c *gin.Context) {

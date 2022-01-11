@@ -124,9 +124,9 @@ func CreateWebSocketMessageTypeAnalyzeStatus(analyzeStatus AnalyzeStatus) WebSoc
 }
 
 type HealthResponse struct {
-	TapStatus     TapStatus      `json:"tapStatus"`
+	TapStatus     *TapStatus      `json:"tapStatus"`
 	TappersCount  int            `json:"tappersCount"`
-	TappersStatus []TapperStatus `json:"tappersStatus"`
+	TappersStatus []*TapperStatus `json:"tappersStatus"`
 }
 
 type VersionResponse struct {

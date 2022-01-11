@@ -30,8 +30,8 @@ func PostTapConfig(c *gin.Context) {
 	if cancelTapperSyncer != nil {
 		cancelTapperSyncer()
 
-		providers.TapStatus = shared.TapStatus{}
-		providers.TappersStatus = make(map[string]shared.TapperStatus)
+		providers.SetTapStatus(&shared.TapStatus{})
+		providers.DeleteTappersStatus()
 
 		broadcastTappedPodsStatus()
 	}
@@ -131,7 +131,7 @@ func startMizuTapperSyncer(ctx context.Context, provider *kubernetes.Provider, t
 					return
 				}
 
-				providers.TapStatus = shared.TapStatus{Pods: kubernetes.GetPodInfosForPods(tapperSyncer.CurrentlyTappedPods)}
+				providers.SetTapStatus(&shared.TapStatus{Pods: kubernetes.GetPodInfosForPods(tapperSyncer.CurrentlyTappedPods)})
 				broadcastTappedPodsStatus()
 			case tapperStatus, ok := <-tapperSyncer.TapperStatusChangedOut:
 				if !ok {
@@ -139,7 +139,7 @@ func startMizuTapperSyncer(ctx context.Context, provider *kubernetes.Provider, t
 					return
 				}
 
-				addTapperStatus(tapperStatus)
+				providers.SetTapperStatus(&tapperStatus)
 				broadcastTappedPodsStatus()
 			case <-ctx.Done():
 				logger.Log.Debug("mizuTapperSyncer event listener loop exiting due to context done")
