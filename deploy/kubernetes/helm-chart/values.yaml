@@ -1,0 +1,51 @@
+# Default values for mizu.
+rbac:
+  create: true
+  name: "mizu-cluster-role"
+  roleBindingName: "mizu-role-binding"
+
+serviceAccountName: "mizu-service-account"
+
+roleName: "mizu-role-daemon"
+roleBindingName: "mizu-role-binding-daemon"
+
+service:
+  name: "mizu-api-server"
+  type: ClusterIP
+  port: 80
+
+pod:
+  name: "mizu-api-server"
+  port: 8899
+
+container:
+  mizuAgent:
+    image:
+      repository: "709825985650.dkr.ecr.us-east-1.amazonaws.com/up9/mizufree"
+      tag: "0.21.29"
+  tapper:
+    image:
+      repository: "709825985650.dkr.ecr.us-east-1.amazonaws.com/up9/mizufree"
+      tag: "0.21.29"
+  basenine:
+    name: "basenine"
+    port: 9099
+    image:
+      repository: "709825985650.dkr.ecr.us-east-1.amazonaws.com/up9/basenine"
+      tag: "v0.3.0"
+  kratos:
+    name: "kratos"
+    port: 4433
+    image:
+      repository: "709825985650.dkr.ecr.us-east-1.amazonaws.com/up9/kratos"
+      tag: "0.0.0"
+
+deployment:
+  replicaCount: 1
+
+configMap:
+  name: "mizu-config"
+
+volumeClaim:
+  create: true
+  name: "mizu-volume-claim"

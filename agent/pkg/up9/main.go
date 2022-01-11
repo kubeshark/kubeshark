@@ -243,7 +243,7 @@ func syncEntriesImpl(token string, model string, envPrefix string, uploadInterva
 			var dataMap map[string]interface{}
 			err = json.Unmarshal(dataBytes, &dataMap)
 
-			var entry tapApi.MizuEntry
+			var entry tapApi.Entry
 			if err := json.Unmarshal([]byte(dataBytes), &entry); err != nil {
 				continue
 			}

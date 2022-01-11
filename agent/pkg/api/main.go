@@ -129,15 +129,12 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 		extension := extensionsMap[item.Protocol.Name]
 		resolvedSource, resolvedDestionation := resolveIP(item.ConnectionInfo)
 		mizuEntry := extension.Dissector.Analyze(item, resolvedSource, resolvedDestionation)
-		baseEntry := extension.Dissector.Summarize(mizuEntry)
-		mizuEntry.Base = baseEntry
 		if extension.Protocol.Name == "http" {
 			if !disableOASValidation {
 				var httpPair tapApi.HTTPRequestResponsePair
 				json.Unmarshal([]byte(mizuEntry.HTTPPair), &httpPair)
 
 				contract := handleOAS(ctx, doc, router, httpPair.Request.Payload.RawRequest, httpPair.Response.Payload.RawResponse, contractContent)
-				baseEntry.ContractStatus = contract.Status
 				mizuEntry.ContractStatus = contract.Status
 				mizuEntry.ContractRequestReason = contract.RequestReason
 				mizuEntry.ContractResponseReason = contract.ResponseReason
@@ -147,7 +144,7 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 			harEntry, err := utils.NewEntry(mizuEntry.Request, mizuEntry.Response, mizuEntry.StartTime, mizuEntry.ElapsedTime)
 			if err == nil {
 				rules, _, _ := models.RunValidationRulesState(*harEntry, mizuEntry.Destination.Name)
-				baseEntry.Rules = rules
+				mizuEntry.Rules = rules
 			}
 
 			// TODO: without any buffering, this would block if OAS gen is slow

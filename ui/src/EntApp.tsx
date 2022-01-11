@@ -8,6 +8,7 @@ import {toast} from "react-toastify";
 import InstallPage from "./components/InstallPage";
 import LoginPage from "./components/LoginPage";
 import LoadingOverlay from "./components/LoadingOverlay";
+import AuthPageBase from './components/AuthPageBase';
 
 const api = Api.getInstance();
 
@@ -75,10 +76,10 @@ const EntApp = () => {
             pageComponent = <TrafficPage onTLSDetected={onTLSDetected}/>;
             break;
         case Page.Setup:
-            pageComponent = <InstallPage onFirstLogin={() => setIsFirstLogin(true)}/>;
+            pageComponent = <AuthPageBase><InstallPage onFirstLogin={() => setIsFirstLogin(true)}/></AuthPageBase>;
             break;
         case Page.Login:
-            pageComponent = <LoginPage/>;
+            pageComponent = <AuthPageBase><LoginPage/></AuthPageBase>;
             break;
         default:
             pageComponent = <div>Unknown Error</div>;
