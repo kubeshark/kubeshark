@@ -11,6 +11,7 @@ import (
 	"mizuserver/pkg/config"
 	"mizuserver/pkg/models"
 	"mizuserver/pkg/providers"
+	"mizuserver/pkg/providers/tapConfig"
 	"net/http"
 	"regexp"
 	"time"
@@ -19,9 +20,9 @@ import (
 var cancelTapperSyncer context.CancelFunc
 
 func PostTapConfig(c *gin.Context) {
-	tapConfig := &models.TapConfig{}
+	requestTapConfig := &models.TapConfig{}
 
-	if err := c.Bind(tapConfig); err != nil {
+	if err := c.Bind(requestTapConfig); err != nil {
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
@@ -36,7 +37,7 @@ func PostTapConfig(c *gin.Context) {
 	}
 
 	var tappedNamespaces []string
-	for namespace, tapped := range tapConfig.TappedNamespaces {
+	for namespace, tapped := range requestTapConfig.TappedNamespaces {
 		if tapped {
 			tappedNamespaces = append(tappedNamespaces, namespace)
 		}
@@ -59,7 +60,7 @@ func PostTapConfig(c *gin.Context) {
 	}
 
 	cancelTapperSyncer = cancel
-	providers.SaveTapConfig(tapConfig)
+	tapConfig.Save(requestTapConfig)
 
 	c.JSON(http.StatusOK, "OK")
 }
@@ -80,7 +81,7 @@ func GetTapConfig(c *gin.Context) {
 		return
 	}
 
-	tapConfig := providers.GetTapConfig()
+	savedTapConfig := tapConfig.Get()
 
 	tappedNamespaces := make(map[string]bool)
 	for _, namespace := range namespaces {
@@ -88,7 +89,7 @@ func GetTapConfig(c *gin.Context) {
 			continue
 		}
 
-		tappedNamespaces[namespace.Name] = tapConfig.TappedNamespaces[namespace.Name]
+		tappedNamespaces[namespace.Name] = savedTapConfig.TappedNamespaces[namespace.Name]
 	}
 
 	tapConfigToReturn := models.TapConfig{TappedNamespaces: tappedNamespaces}
