@@ -161,7 +161,9 @@ export const EntryItem: React.FC<EntryProps> = ({entry, focusedEntryId, setFocus
                         displayIconOnMouseOver={true}
                         flipped={true}
                         style={{marginTop: "-4px", overflow: "visible"}}
-                        iconStyle={!headingMode ? {marginTop: "4px", left: "68px", position: "absolute"} : {marginTop: "4px", left: "calc(50vw + 41px)", position: "absolute"}}
+                        iconStyle={!headingMode ? {marginTop: "4px", left: "68px", position: "absolute"} :
+                        entry.protocol.name === "http" ? {marginTop: "4px", left: "calc(50vw + 41px)", position: "absolute"} :
+                        {marginTop: "4px", left: "calc(50vw - 9px)", position: "absolute"}}
                     >
                         <span
                             title="Source Name"
