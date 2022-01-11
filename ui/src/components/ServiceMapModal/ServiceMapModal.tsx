@@ -163,6 +163,20 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onOpen
                             variant="contained"
                             style={{
                                 margin: "0px 0px 0px 0px",
+                                backgroundColor: variables.blueGray,
+                                fontWeight: 600,
+                                borderRadius: "4px",
+                                color: "#fff",
+                                textTransform: "none",
+                            }}
+                            onClick={() => onClose()}
+                        >
+                            Close
+                        </Button>
+                        <Button
+                            variant="contained"
+                            style={{
+                                margin: "0px 0px 0px 10px",
                                 backgroundColor: variables.blueColor,
                                 fontWeight: 600,
                                 borderRadius: "4px",
