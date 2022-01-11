@@ -6,7 +6,8 @@
   "screenshotOnRunFailure": false,
   "testFiles":
   ["tests/GuiPort.js",
-  "tests/MultipleNamespaces.js"],
+  "tests/MultipleNamespaces.js",
+  "tests/Regex.js"],
   "env": {
     "testUrl": "http://localhost:8899/"
   }
