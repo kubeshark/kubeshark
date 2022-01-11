@@ -19,6 +19,7 @@ require (
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/stretchr/testify v1.7.0
 	github.com/up9inc/basenine/client/go v0.0.0-20211215185650-10083bb9a1b3
+	github.com/up9inc/basenine/client/go v0.0.0-20220110083745-04fbc6c2068d
 	github.com/up9inc/mizu/shared v0.0.0
 	github.com/up9inc/mizu/tap v0.0.0
 	github.com/up9inc/mizu/tap/api v0.0.0

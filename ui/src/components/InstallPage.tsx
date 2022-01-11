@@ -1,10 +1,11 @@
-import { Button, TextField } from "@material-ui/core";
+import { Button } from "@material-ui/core";
 import React, { useContext, useState } from "react";
 import { MizuContext, Page } from "../EntApp";
 import { adminUsername } from "../consts";
 import Api, { FormValidationErrorType } from "../helpers/api";
 import { toast } from 'react-toastify';
 import LoadingOverlay from "./LoadingOverlay";
+import { useCommonStyles } from "../helpers/commonStyle";
 
 const api = Api.getInstance();
 
@@ -14,6 +15,7 @@ interface InstallPageProps {
 
 export const InstallPage: React.FC<InstallPageProps> = ({onFirstLogin}) => {
 
+    const classes = useCommonStyles();
     const [isLoading, setIsLoading] = useState(false);
     const [password, setPassword] = useState("");
     const [passwordConfirm, setPasswordConfirm] = useState("");
@@ -33,7 +35,6 @@ export const InstallPage: React.FC<InstallPageProps> = ({onFirstLogin}) => {
             setIsLoading(true);
             await api.register(adminUsername, password);
             if (!await api.isAuthenticationNeeded()) {
-                toast.success("admin user created successfully");
                 setPage(Page.Traffic);
                 onFirstLogin();
             }
@@ -54,11 +55,21 @@ export const InstallPage: React.FC<InstallPageProps> = ({onFirstLogin}) => {
 
     return <div className="centeredForm">
             {isLoading && <LoadingOverlay/>}
-            <p>Welcome to Mizu, please set up the admin user to continue</p>
-            <TextField className="form-input" variant="standard" fullWidth value={adminUsername} disabled={true}/>
-            <TextField className="form-input" label="Password" variant="standard" type="password" fullWidth value={password} onChange={e => setPassword(e.target.value)}/>
-            <TextField className="form-input" label="Confirm Password" variant="standard" type="password" fullWidth value={passwordConfirm} onChange={e => setPasswordConfirm(e.target.value)}/>
-            <Button className="form-button" variant="contained" fullWidth onClick={onFormSubmit}>Finish</Button>
+            <div className="form-title left-text">Setup</div>
+            <span className="form-subtitle">Welcome to Mizu, please set up the admin user to continue</span>
+            <div className="form-input">
+                <label htmlFor="inputUsername">Username</label>
+                <input id="inputUsername" className={classes.textField} value={adminUsername} disabled={true} />
+            </div>
+            <div className="form-input">
+                <label htmlFor="inputUsername">Password</label>
+                <input id="inputUsername" className={classes.textField} value={password} type="password" onChange={(event) => setPassword(event.target.value)}/>    
+            </div>
+            <div className="form-input">
+                <label htmlFor="inputUsername">Confirm Password</label>
+                <input id="inputUsername" className={classes.textField} value={passwordConfirm} type="password" onChange={(event) => setPasswordConfirm(event.target.value)}/>    
+            </div>
+            <Button className={classes.button + " form-button"} variant="contained" fullWidth onClick={onFormSubmit}>Finish</Button>
     </div>;
 };
 

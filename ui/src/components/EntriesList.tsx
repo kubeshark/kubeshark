@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useMemo, useRef, useState} from "react";
+import React, {useCallback, useEffect, useMemo, useState} from "react";
 import styles from './style/EntriesList.module.sass';
 import ScrollableFeedVirtualized from "react-scrollable-feed-virtualized";
 import Moment from 'moment';
@@ -33,14 +33,14 @@ interface EntriesListProps {
     leftOffBottom: number;
     truncatedTimestamp: number;
     setTruncatedTimestamp: any;
+    scrollableRef: any;
 }
 
 const api = Api.getInstance();
 
-export const EntriesList: React.FC<EntriesListProps> = ({entries, setEntries, query, listEntryREF, onSnapBrokenEvent, isSnappedToBottom, setIsSnappedToBottom, queriedCurrent, setQueriedCurrent, queriedTotal, setQueriedTotal, startTime, noMoreDataTop, setNoMoreDataTop, focusedEntryId, setFocusedEntryId, updateQuery, leftOffTop, setLeftOffTop, isWebSocketConnectionClosed, ws, openWebSocket, leftOffBottom, truncatedTimestamp, setTruncatedTimestamp}) => {
+export const EntriesList: React.FC<EntriesListProps> = ({entries, setEntries, query, listEntryREF, onSnapBrokenEvent, isSnappedToBottom, setIsSnappedToBottom, queriedCurrent, setQueriedCurrent, queriedTotal, setQueriedTotal, startTime, noMoreDataTop, setNoMoreDataTop, focusedEntryId, setFocusedEntryId, updateQuery, leftOffTop, setLeftOffTop, isWebSocketConnectionClosed, ws, openWebSocket, leftOffBottom, truncatedTimestamp, setTruncatedTimestamp, scrollableRef}) => {
     const [loadMoreTop, setLoadMoreTop] = useState(false);
     const [isLoadingTop, setIsLoadingTop] = useState(false);
-    const scrollableRef = useRef(null);
 
     useEffect(() => {
         const list = document.getElementById('list').firstElementChild;
@@ -92,7 +92,7 @@ export const EntriesList: React.FC<EntriesListProps> = ({entries, setEntries, qu
         if (scrollTo) {
             scrollableRef.current.scrollToIndex(data.data.length - 1);
         }
-    },[setLoadMoreTop, setIsLoadingTop, entries, setEntries, query, setNoMoreDataTop, leftOffTop, setLeftOffTop, queriedCurrent, setQueriedCurrent, setQueriedTotal, setTruncatedTimestamp]);
+    },[setLoadMoreTop, setIsLoadingTop, entries, setEntries, query, setNoMoreDataTop, leftOffTop, setLeftOffTop, queriedCurrent, setQueriedCurrent, setQueriedTotal, setTruncatedTimestamp, scrollableRef]);
 
     useEffect(() => {
         if(!isWebSocketConnectionClosed || !loadMoreTop || noMoreDataTop) return;

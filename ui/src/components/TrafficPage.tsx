@@ -76,6 +76,8 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({onTLSDetected, setAnaly
 
     const [startTime, setStartTime] = useState(0);
 
+    const scrollableRef = useRef(null);
+
     const handleQueryChange = useMemo(() => debounce(async (query: string) => {
         if (!query) {
             setQueryBackgroundColor("#f5f5f5")
@@ -214,7 +216,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({onTLSDetected, setAnaly
         setSelectedEntryData(null);
         (async () => {
             try {
-                const entryData = await api.getEntry(focusedEntryId);
+                const entryData = await api.getEntry(focusedEntryId, query);
                 setSelectedEntryData(entryData);
             } catch (error) {
                 if (error.response?.data?.type) {
@@ -243,6 +245,8 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({onTLSDetected, setAnaly
             } else {
                 openWebSocket(`leftOff(-1)`, true);
             }
+            scrollableRef.current.jumpToBottom();
+            setIsSnappedToBottom(true);
         }
     }
 
@@ -352,7 +356,9 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({onTLSDetected, setAnaly
                             openWebSocket={openWebSocket}
                             leftOffBottom={leftOffBottom}
                             truncatedTimestamp={truncatedTimestamp}
-                            setTruncatedTimestamp={setTruncatedTimestamp} />
+                            setTruncatedTimestamp={setTruncatedTimestamp}
+                            scrollableRef={scrollableRef}
+                        />
                     </div>
                 </div>
                 <div className={classes.details}>

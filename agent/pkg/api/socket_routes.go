@@ -16,6 +16,7 @@ import (
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/debounce"
 	"github.com/up9inc/mizu/shared/logger"
+	tapApi "github.com/up9inc/mizu/tap/api"
 )
 
 type EventHandlers interface {
@@ -131,18 +132,10 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 						return
 					}
 
-					var dataMap map[string]interface{}
-					err = json.Unmarshal(bytes, &dataMap)
+					var entry *tapApi.Entry
+					err = json.Unmarshal(bytes, &entry)
 
-					var base map[string]interface{}
-					switch dataMap["base"].(type) {
-					case map[string]interface{}:
-						base = dataMap["base"].(map[string]interface{})
-						base["id"] = uint(dataMap["id"].(float64))
-					default:
-						logger.Log.Debugf("Base field has an unrecognized type: %+v", dataMap)
-						continue
-					}
+					base := tapApi.Summarize(entry)
 
 					baseEntryBytes, _ := models.CreateBaseEntryWebSocketMessage(base)
 					SendToSocket(socketId, baseEntryBytes)
