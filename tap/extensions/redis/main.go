@@ -59,7 +59,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 	}
 }
 
-func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, resolvedDestination string) *api.MizuEntry {
+func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, resolvedDestination string) *api.Entry {
 	request := item.Pair.Request.Payload.(map[string]interface{})
 	response := item.Pair.Response.Payload.(map[string]interface{})
 	reqDetails := request["details"].(map[string]interface{})
@@ -80,7 +80,7 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 	if elapsedTime < 0 {
 		elapsedTime = 0
 	}
-	return &api.MizuEntry{
+	return &api.Entry{
 		Protocol: protocol,
 		Source: &api.TCP{
 			Name: resolvedSource,
@@ -104,25 +104,6 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 		IsOutgoing:  item.ConnectionInfo.IsOutgoing,
 	}
 
-}
-
-func (d dissecting) Summarize(entry *api.MizuEntry) *api.BaseEntryDetails {
-	return &api.BaseEntryDetails{
-		Id:          entry.Id,
-		Protocol:    protocol,
-		Summary:     entry.Summary,
-		StatusCode:  entry.Status,
-		Method:      entry.Method,
-		Timestamp:   entry.Timestamp,
-		Source:      entry.Source,
-		Destination: entry.Destination,
-		IsOutgoing:  entry.IsOutgoing,
-		Latency:     entry.ElapsedTime,
-		Rules: api.ApplicableRules{
-			Latency: 0,
-			Status:  false,
-		},
-	}
 }
 
 func (d dissecting) Represent(request map[string]interface{}, response map[string]interface{}) (object []byte, bodySize int64, err error) {
