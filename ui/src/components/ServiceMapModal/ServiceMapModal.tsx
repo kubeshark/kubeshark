@@ -123,8 +123,7 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onOpen
         try {
             const serviceMapResetResponse = await api.serviceMapReset();
             if (serviceMapResetResponse["status"] === "enabled") {
-                // close modal
-                onClose()
+                refreshServiceMap()
             }
 
         } catch (error) {
@@ -132,7 +131,7 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onOpen
         }
     }, 500);
 
-    const refreshServiceMap = debounce(async () => {
+    const refreshServiceMap = debounce(() => {
         console.log("refreshServiceMap called")
 
         // close and re-open modal
