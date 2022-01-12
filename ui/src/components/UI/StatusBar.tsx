@@ -5,6 +5,7 @@ import failIcon from '../assets/failed.svg';
 import successIcon from '../assets/success.svg';
 import {useRecoilValue} from "recoil";
 import tappingStatusAtom from "../../recoil/tappingStatus";
+import {tappingStatusDetails} from "../../recoil/entPage";
 
 const pluralize = (noun: string, amount: number) => {
     return `${noun}${amount !== 1 ? 's' : ''}`
@@ -14,11 +15,7 @@ export const StatusBar = () => {
 
     const tappingStatus = useRecoilValue(tappingStatusAtom);
     const [expandedBar, setExpandedBar] = useState(false);
-
-    const uniqueNamespaces = Array.from(new Set(tappingStatus.map(pod => pod.namespace)));
-    const amountOfPods = tappingStatus.length;
-    const amountOfTappedPods = tappingStatus.filter(pod => pod.isTapped).length;
-    const amountOfUntappedPods = amountOfPods - amountOfTappedPods;
+    const {uniqueNamespaces, amountOfPods, amountOfTappedPods, amountOfUntappedPods} = useRecoilValue(tappingStatusDetails);
 
     return <div className={'statusBar' + (expandedBar ? ' expandedStatusBar' : "")} onMouseOver={() => setExpandedBar(true)} onMouseLeave={() => setExpandedBar(false)}>
         <div className="podsCount">
