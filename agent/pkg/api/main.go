@@ -144,8 +144,6 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 				mizuEntry.Rules = rules
 			}
 
-			// TODO: without any buffering, this would block if OAS gen is slow
-			// working with MizuEntry is very difficult, so we rely on harEntry
 			oasGenerator.PushEntry(harEntry)
 		}
 
