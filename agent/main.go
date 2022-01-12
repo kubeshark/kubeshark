@@ -233,7 +233,7 @@ func hostApi(socketHarOutputChannel chan<- *tapApi.OutputChannelItem) {
 
 	app.Use(DisableRootStaticCache())
 
-	if err := setUIMode(); err != nil {
+	if err := setUIFlags(); err != nil {
 		logger.Log.Errorf("Error setting ui mode, err: %v", err)
 	}
 	app.Use(static.ServeRoot("/", "./site"))
@@ -268,13 +268,14 @@ func DisableRootStaticCache() gin.HandlerFunc {
 	}
 }
 
-func setUIMode() error {
+func setUIFlags() error {
 	read, err := ioutil.ReadFile(uiIndexPath)
 	if err != nil {
 		return err
 	}
 
 	replacedContent := strings.Replace(string(read), "__IS_STANDALONE__", strconv.FormatBool(config.Config.StandaloneMode), 1)
+	replacedContent = strings.Replace(replacedContent, "__IS_OAS_ENABLED__", strconv.FormatBool(config.Config.OAS), 1)
 
 	err = ioutil.WriteFile(uiIndexPath, []byte(replacedContent), 0)
 	if err != nil {
