@@ -14,17 +14,25 @@ var (
 	instance *oasGenerator
 )
 
-func GetOasGeneratorInstance(enabled bool) *oasGenerator {
+func GetOasGeneratorInstance() *oasGenerator {
 	syncOnce.Do(func() {
-		instance = newOasGenerator(enabled)
-
-		if enabled {
-			go instance.runGeneretor()
-		}
-
-		logger.Log.Debug("Oas Generato Initialized")
+		instance = newOasGenerator()
+		logger.Log.Debug("Oas Generator Initialized")
 	})
 	return instance
+}
+
+func (g *oasGenerator) Enable() {
+	if !g.enabled {
+		return
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	g.cancel = cancel
+	g.ctx = ctx
+	g.entriesChan = make(chan har.Entry, 100) // buffer up to 100 entries for OAS processing
+	g.ServiceSpecs = &sync.Map{}
+	g.enabled = true
+	go instance.runGeneretor()
 }
 
 func (g *oasGenerator) runGeneretor() {
@@ -44,11 +52,11 @@ func (g *oasGenerator) runGeneretor() {
 				logger.Log.Errorf("Failed to parse entry URL: %v, err: %v", entry.Request.URL, err)
 			}
 
-			val, found := g.serviceSpecs.Load(u.Host)
+			val, found := g.ServiceSpecs.Load(u.Host)
 			var gen *SpecGen
 			if !found {
 				gen = NewGen(u.Scheme + "://" + u.Host)
-				g.serviceSpecs.Store(u.Host, gen)
+				g.ServiceSpecs.Store(u.Host, gen)
 			} else {
 				gen = val.(*SpecGen)
 			}
@@ -80,14 +88,13 @@ func (g *oasGenerator) PushEntry(entry *har.Entry) {
 	}
 }
 
-func newOasGenerator(enabled bool) *oasGenerator {
-	ctx, cancel := context.WithCancel(context.Background())
+func newOasGenerator() *oasGenerator {
 	return &oasGenerator{
-		enabled:      enabled,
-		ctx:          ctx,
-		cancel:       cancel,
-		serviceSpecs: &sync.Map{},
-		entriesChan:  make(chan har.Entry, 100), // buffer up to 100 entries for OAS processing
+		enabled:      false,
+		ctx:          nil,
+		cancel:       nil,
+		ServiceSpecs: nil,
+		entriesChan:  nil,
 	}
 }
 
@@ -95,6 +102,6 @@ type oasGenerator struct {
 	enabled      bool
 	ctx          context.Context
 	cancel       context.CancelFunc
-	serviceSpecs *sync.Map
+	ServiceSpecs *sync.Map
 	entriesChan  chan har.Entry
 }

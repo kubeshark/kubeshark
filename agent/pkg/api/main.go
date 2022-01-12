@@ -115,7 +115,10 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 		disableOASValidation = true
 	}
 
-	oasGenerator := oas.GetOasGeneratorInstance(config.Config.OAS)
+	oasGenerator := oas.GetOasGeneratorInstance()
+	if config.Config.OAS {
+		oasGenerator.Enable()
+	}
 
 	for item := range outputItems {
 		providers.EntryAdded()
