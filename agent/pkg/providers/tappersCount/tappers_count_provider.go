@@ -3,7 +3,7 @@ package tappersCount
 import "sync"
 
 var (
-	lock = &sync.Mutex{}
+	lock         = &sync.Mutex{}
 	tappersCount int
 )
 

@@ -11,10 +11,10 @@ import (
 const FilePath = shared.DataDirPath + "tappers-status.json"
 
 var (
-	lock          = &sync.Mutex{}
-	syncOnce      sync.Once
+	lock           = &sync.Mutex{}
+	syncOnce       sync.Once
 	syncOnceCalled = false
-	tappersStatus map[string]*shared.TapperStatus
+	tappersStatus  map[string]*shared.TapperStatus
 )
 
 func Get() map[string]*shared.TapperStatus {
