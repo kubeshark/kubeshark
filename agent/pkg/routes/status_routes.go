@@ -15,7 +15,7 @@ func StatusRoutes(ginApp *gin.Engine) {
 
 	routeGroup.POST("/tappedPods", controllers.PostTappedPods)
 	routeGroup.POST("/tapperStatus", controllers.PostTapperStatus)
-	routeGroup.GET("/tappersCount", controllers.GetTappersCount)
+	routeGroup.GET("/connectedTappersCount", controllers.GetConnectedTappersCount)
 	routeGroup.GET("/tap", controllers.GetTappingStatus)
 
 	routeGroup.GET("/auth", controllers.GetAuthStatus)

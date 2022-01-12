@@ -9,23 +9,22 @@ import (
 	"mizuserver/pkg/holder"
 	"mizuserver/pkg/providers"
 	"mizuserver/pkg/providers/tappedPods"
-	"mizuserver/pkg/providers/tappersCount"
-	"mizuserver/pkg/providers/tappersStatus"
+	"mizuserver/pkg/providers/tappers"
 	"mizuserver/pkg/up9"
 	"mizuserver/pkg/validation"
 	"net/http"
 )
 
 func HealthCheck(c *gin.Context) {
-	tappers := make([]*shared.TapperStatus, 0)
-	for _, value := range tappersStatus.Get() {
-		tappers = append(tappers, value)
+	tappersStatus := make([]*shared.TapperStatus, 0)
+	for _, value := range tappers.GetStatus() {
+		tappersStatus = append(tappersStatus, value)
 	}
 
 	response := shared.HealthResponse{
-		TappedPods:    tappedPods.Get(),
-		TappersCount:  tappersCount.Get(),
-		TappersStatus: tappers,
+		TappedPods:            tappedPods.Get(),
+		ConnectedTappersCount: tappers.GetConnectedCount(),
+		TappersStatus:         tappersStatus,
 	}
 	c.JSON(http.StatusOK, response)
 }
@@ -66,12 +65,12 @@ func PostTapperStatus(c *gin.Context) {
 	}
 
 	logger.Log.Infof("[Status] POST request, tapper status: %v", tapperStatus)
-	tappersStatus.Set(tapperStatus)
+	tappers.SetStatus(tapperStatus)
 	broadcastTappedPodsStatus()
 }
 
-func GetTappersCount(c *gin.Context) {
-	c.JSON(http.StatusOK, tappersCount.Get())
+func GetConnectedTappersCount(c *gin.Context) {
+	c.JSON(http.StatusOK, tappers.GetConnectedCount())
 }
 
 func GetAuthStatus(c *gin.Context) {

@@ -3,7 +3,7 @@ package tappedPods
 import (
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/logger"
-	"mizuserver/pkg/providers/tappersStatus"
+	"mizuserver/pkg/providers/tappers"
 	"mizuserver/pkg/utils"
 	"os"
 	"strings"
@@ -44,7 +44,7 @@ func GetTappedPodsStatus() []shared.TappedPodStatus {
 	tappedPodsStatus := make([]shared.TappedPodStatus, 0)
 	for _, pod := range Get() {
 		var status string
-		if tapperStatus, ok := tappersStatus.Get()[pod.NodeName]; ok {
+		if tapperStatus, ok := tappers.GetStatus()[pod.NodeName]; ok {
 			status = strings.ToLower(tapperStatus.Status)
 		}
 
