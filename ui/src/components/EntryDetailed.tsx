@@ -1,9 +1,13 @@
-import React from "react";
+import React, {useEffect, useState} from "react";
 import EntryViewer from "./EntryDetailed/EntryViewer";
 import {EntryItem} from "./EntryListItem/EntryListItem";
 import {makeStyles} from "@material-ui/core";
 import Protocol from "./UI/Protocol"
 import Queryable from "./UI/Queryable";
+import {toast} from "react-toastify";
+import {useRecoilState, useRecoilValue} from "recoil";
+import focusedEntryIdAtom from "../recoil/focusedEntryId";
+import Api from "../helpers/api";
 
 const useStyles = makeStyles(() => ({
     entryTitle: {
@@ -28,7 +32,6 @@ const useStyles = makeStyles(() => ({
 }));
 
 interface EntryDetailedProps {
-    entryData: any
     updateQuery: any
 }
 
@@ -81,18 +84,50 @@ const EntrySummary: React.FC<any> = ({data, updateQuery}) => {
     />;
 };
 
-export const EntryDetailed: React.FC<EntryDetailedProps> = ({entryData, updateQuery}) => {
+const api = Api.getInstance();
+
+export const EntryDetailed: React.FC<EntryDetailedProps> = ({updateQuery}) => {
+
+    const focusedEntryId = useRecoilValue(focusedEntryIdAtom);
+    const [entryData, setEntryData] = useState(null);
+
+    useEffect(() => {
+        if (!focusedEntryId) return;
+        setEntryData(null);
+        (async () => {
+            try {
+                const entryData = await api.getEntry(focusedEntryId);
+                setEntryData(entryData);
+            } catch (error) {
+                if (error.response?.data?.type) {
+                    toast[error.response.data.type](`Entry[${focusedEntryId}]: ${error.response.data.msg}`, {
+                        position: "bottom-right",
+                        theme: "colored",
+                        autoClose: error.response.data.autoClose,
+                        hideProgressBar: false,
+                        closeOnClick: true,
+                        pauseOnHover: true,
+                        draggable: true,
+                        progress: undefined,
+                    });
+                }
+                console.error(error);
+            }
+        })();
+        // eslint-disable-next-line
+    }, [focusedEntryId]);
+
     return <>
-        <EntryTitle
+        {entryData && <EntryTitle
             protocol={entryData.protocol}
             data={entryData.data}
             bodySize={entryData.bodySize}
             elapsedTime={entryData.data.elapsedTime}
             updateQuery={updateQuery}
-        />
-        {entryData.data && <EntrySummary data={entryData.data} updateQuery={updateQuery}/>}
+        />}
+        {entryData && <EntrySummary data={entryData.data} updateQuery={updateQuery}/>}
         <>
-            {entryData.data && <EntryViewer
+            {entryData && <EntryViewer
                 representation={entryData.representation}
                 isRulesEnabled={entryData.isRulesEnabled}
                 rulesMatched={entryData.rulesMatched}

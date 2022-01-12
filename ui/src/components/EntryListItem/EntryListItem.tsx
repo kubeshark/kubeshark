@@ -104,8 +104,8 @@ export const EntryItem: React.FC<EntryProps> = ({entry, style, updateQuery, head
         }
     }
 
-    var contractEnabled = true;
-    var contractText = "";
+    let contractEnabled = true;
+    let contractText = "";
     switch (entry.contractStatus) {
         case 0:
             contractEnabled = false;
