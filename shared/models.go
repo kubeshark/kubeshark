@@ -41,6 +41,8 @@ type MizuAgentConfig struct {
 	MizuResourcesNamespace string        `json:"mizuResourceNamespace"`
 	AgentDatabasePath      string        `json:"agentDatabasePath"`
 	StandaloneMode         bool          `json:"standaloneMode"`
+	ServiceMap             bool          `json:"serviceMap"`
+	OAS                    bool          `json:"oas"`
 }
 
 type WebSocketMessageMetadata struct {
@@ -79,10 +81,6 @@ type TappedPodStatus struct {
 	Name      string `json:"name"`
 	Namespace string `json:"namespace"`
 	IsTapped  bool   `json:"isTapped"`
-}
-
-type TapStatus struct {
-	Pods []PodInfo `json:"pods"`
 }
 
 type PodInfo struct {
@@ -124,9 +122,9 @@ func CreateWebSocketMessageTypeAnalyzeStatus(analyzeStatus AnalyzeStatus) WebSoc
 }
 
 type HealthResponse struct {
-	TapStatus     TapStatus      `json:"tapStatus"`
-	TappersCount  int            `json:"tappersCount"`
-	TappersStatus []TapperStatus `json:"tappersStatus"`
+	TappedPods    []*PodInfo      `json:"tappedPods"`
+	TappersCount  int             `json:"tappersCount"`
+	TappersStatus []*TapperStatus `json:"tappersStatus"`
 }
 
 type VersionResponse struct {

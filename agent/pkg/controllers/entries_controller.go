@@ -64,8 +64,8 @@ func GetEntries(c *gin.Context) {
 	var dataSlice []interface{}
 
 	for _, row := range data {
-		var dataMap map[string]interface{}
-		err = json.Unmarshal(row, &dataMap)
+		var entry *tapApi.Entry
+		err = json.Unmarshal(row, &entry)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
 				"error":     true,
@@ -76,8 +76,7 @@ func GetEntries(c *gin.Context) {
 			return // exit
 		}
 
-		base := dataMap["base"].(map[string]interface{})
-		base["id"] = uint(dataMap["id"].(float64))
+		base := tapApi.Summarize(entry)
 
 		dataSlice = append(dataSlice, base)
 	}
@@ -95,9 +94,19 @@ func GetEntries(c *gin.Context) {
 }
 
 func GetEntry(c *gin.Context) {
+	singleEntryRequest := &models.SingleEntryRequest{}
+
+	if err := c.BindQuery(singleEntryRequest); err != nil {
+		c.JSON(http.StatusBadRequest, err)
+	}
+	validationError := validation.Validate(singleEntryRequest)
+	if validationError != nil {
+		c.JSON(http.StatusBadRequest, validationError)
+	}
+
 	id, _ := strconv.Atoi(c.Param("id"))
-	var entry tapApi.MizuEntry
-	bytes, err := basenine.Single(shared.BasenineHost, shared.BaseninePort, id)
+	var entry *tapApi.Entry
+	bytes, err := basenine.Single(shared.BasenineHost, shared.BaseninePort, id, singleEntryRequest.Query)
 	if Error(c, err) {
 		return // exit
 	}
@@ -125,7 +134,7 @@ func GetEntry(c *gin.Context) {
 		json.Unmarshal(inrec, &rules)
 	}
 
-	c.JSON(http.StatusOK, tapApi.MizuEntryWrapper{
+	c.JSON(http.StatusOK, tapApi.EntryWrapper{
 		Protocol:       entry.Protocol,
 		Representation: string(representation),
 		BodySize:       bodySize,

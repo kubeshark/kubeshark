@@ -156,6 +156,8 @@ func getTapMizuAgentConfig() *shared.MizuAgentConfig {
 		TapperResources:        config.Config.Tap.TapperResources,
 		MizuResourcesNamespace: config.Config.MizuResourcesNamespace,
 		AgentDatabasePath:      shared.DataDirPath,
+		ServiceMap:             config.Config.ServiceMap,
+		OAS:                    config.Config.OAS,
 	}
 
 	return &mizuAgentConfig
