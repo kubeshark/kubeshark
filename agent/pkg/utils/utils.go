@@ -2,7 +2,9 @@ package utils
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
@@ -58,4 +60,28 @@ func SetHostname(address, newHostname string) string {
 	replacedUrl.Host = newHostname
 	return replacedUrl.String()
 
+}
+
+func ReadJsonFile(filePath string, value interface{}) error {
+	if content, err := ioutil.ReadFile(filePath); err != nil {
+		return err
+	} else {
+		if err = json.Unmarshal(content, value); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func SaveJsonFile(filePath string, value interface{}) error {
+	if data, err := json.Marshal(value); err != nil {
+		return err
+	} else {
+		if err = ioutil.WriteFile(filePath, data, 0644); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
