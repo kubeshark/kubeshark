@@ -248,13 +248,15 @@ func hostApi(socketHarOutputChannel chan<- *tapApi.OutputChannelItem) {
 		routes.InstallRoutes(app)
 	}
 
+	if config.Config.OAS {
+		routes.OASRoutes(app)
+	}
+
 	routes.QueryRoutes(app)
 	routes.EntriesRoutes(app)
 	routes.MetadataRoutes(app)
 	routes.StatusRoutes(app)
-	routes.OASRoutes(app)
 	routes.NotFoundRoute(app)
-
 	utils.StartServer(app)
 }
 
