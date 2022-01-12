@@ -42,6 +42,8 @@ func replaceForwardedFor(item *api.OutputChannelItem) {
 	lastIP := strings.TrimSpace(ips[0])
 
 	item.ConnectionInfo.ClientIP = lastIP
+	// Erase the port field. Because the proxy terminates the connection from the client, the port that we see here
+	// is not the source port on the client side.
 	item.ConnectionInfo.ClientPort = ""
 }
 
