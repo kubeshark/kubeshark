@@ -41,6 +41,8 @@ type MizuAgentConfig struct {
 	MizuResourcesNamespace string        `json:"mizuResourceNamespace"`
 	AgentDatabasePath      string        `json:"agentDatabasePath"`
 	StandaloneMode         bool          `json:"standaloneMode"`
+	ServiceMap             bool          `json:"serviceMap"`
+	OAS                    bool          `json:"oas"`
 }
 
 type WebSocketMessageMetadata struct {
