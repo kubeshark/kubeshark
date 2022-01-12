@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"mizuserver/pkg/config"
 	"mizuserver/pkg/holder"
 	"mizuserver/pkg/providers"
 	"os"
@@ -114,14 +115,7 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 		disableOASValidation = true
 	}
 
-	entries := make(chan har.Entry, 100) // buffer up to 100 entries for OAS processing
-	go func() {
-		err := oas.EntriesToSpecs(entries, oas.ServiceSpecs)
-		if err != nil {
-			logger.Log.Warningf("Failed to generate specs from traffic: %s", err)
-			// close(entries)
-		}
-	}()
+	oasGenerator := oas.GetOasGeneratorInstance(config.Config.OAS)
 
 	for item := range outputItems {
 		providers.EntryAdded()
@@ -149,7 +143,7 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 
 			// TODO: without any buffering, this would block if OAS gen is slow
 			// working with MizuEntry is very difficult, so we rely on harEntry
-			entries <- *harEntry
+			oasGenerator.PushEntry(harEntry)
 		}
 
 		data, err := json.Marshal(mizuEntry)
