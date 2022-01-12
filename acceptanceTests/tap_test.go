@@ -232,30 +232,6 @@ func TestTapMultipleNamespaces(t *testing.T) {
 		t.Errorf("failed to start tap pods on time, err: %v", err)
 		return
 	}
-	podsUrl := fmt.Sprintf("%v/status/tap", apiServerUrl)
-	requestResult, requestErr := executeHttpGetRequest(podsUrl)
-	if requestErr != nil {
-		t.Errorf("failed to get tap status, err: %v", requestErr)
-		return
-	}
-
-	pods, err := getPods(requestResult)
-	if err != nil {
-		t.Errorf("failed to get pods, err: %v", err)
-		return
-	}
-
-	if len(expectedPods) != len(pods) {
-		t.Errorf("unexpected result - expected pods length: %v, actual pods length: %v", len(expectedPods), len(pods))
-		return
-	}
-
-	for _, expectedPod := range expectedPods {
-		if !isPodDescriptorInPodArray(pods, expectedPod) {
-			t.Errorf("unexpected result - expected pod not found, pod namespace: %v, pod name: %v", expectedPod.Namespace, expectedPod.Name)
-			return
-		}
-	}
 
 	runCypressTests(t, fmt.Sprintf("npx cypress run --spec  \"cypress/integration/tests/MultipleNamespaces.js\" --env name1=%v,name2=%v,name3=%v,namespace1=%v,namespace2=%v,namespace3=%v",
 		expectedPods[0].Name, expectedPods[1].Name, expectedPods[2].Name, expectedPods[0].Namespace, expectedPods[1].Namespace, expectedPods[2].Namespace))
