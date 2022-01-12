@@ -22,6 +22,7 @@ type ConfigStruct struct {
 	Tap                    configStructs.TapConfig     `yaml:"tap"`
 	Version                configStructs.VersionConfig `yaml:"version"`
 	View                   configStructs.ViewConfig    `yaml:"view"`
+	Check                  configStructs.CheckConfig   `yaml:"check"`
 	Logs                   configStructs.LogsConfig    `yaml:"logs"`
 	Auth                   configStructs.AuthConfig    `yaml:"auth"`
 	Config                 configStructs.ConfigConfig  `yaml:"config,omitempty"`

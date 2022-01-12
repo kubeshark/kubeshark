@@ -416,9 +416,54 @@ func (provider *Provider) CreateService(ctx context.Context, namespace string, s
 	return provider.clientSet.CoreV1().Services(namespace).Create(ctx, &service, metav1.CreateOptions{})
 }
 
-func (provider *Provider) DoesServicesExist(ctx context.Context, namespace string, name string) (bool, error) {
+func (provider *Provider) DoesNamespaceExist(ctx context.Context, name string) (bool, error) {
+	namespaceResource, err := provider.clientSet.CoreV1().Namespaces().Get(ctx, name, metav1.GetOptions{})
+	return provider.doesResourceExist(namespaceResource, err)
+}
+
+func (provider *Provider) DoesConfigMapExist(ctx context.Context, namespace string, name string) (bool, error) {
+	configMapResource, err := provider.clientSet.CoreV1().ConfigMaps(namespace).Get(ctx, name, metav1.GetOptions{})
+	return provider.doesResourceExist(configMapResource, err)
+}
+
+func (provider *Provider) DoesServiceAccountExist(ctx context.Context, namespace string, name string) (bool, error) {
+	serviceAccountResource, err := provider.clientSet.CoreV1().ServiceAccounts(namespace).Get(ctx, name, metav1.GetOptions{})
+	return provider.doesResourceExist(serviceAccountResource, err)
+}
+
+func (provider *Provider) DoesPersistentVolumeClaimExist(ctx context.Context, namespace string, name string) (bool, error) {
+	persistentVolumeClaimResource, err := provider.clientSet.CoreV1().PersistentVolumeClaims(namespace).Get(ctx, name, metav1.GetOptions{})
+	return provider.doesResourceExist(persistentVolumeClaimResource, err)
+}
+
+func (provider *Provider) DoesDeploymentExist(ctx context.Context, namespace string, name string) (bool, error) {
+	deploymentResource, err := provider.clientSet.AppsV1().Deployments(namespace).Get(ctx, name, metav1.GetOptions{})
+	return provider.doesResourceExist(deploymentResource, err)
+}
+
+func (provider *Provider) DoesServiceExist(ctx context.Context, namespace string, name string) (bool, error) {
 	serviceResource, err := provider.clientSet.CoreV1().Services(namespace).Get(ctx, name, metav1.GetOptions{})
 	return provider.doesResourceExist(serviceResource, err)
+}
+
+func (provider *Provider) DoesClusterRoleExist(ctx context.Context, name string) (bool, error) {
+	clusterRoleResource, err := provider.clientSet.RbacV1().ClusterRoles().Get(ctx, name, metav1.GetOptions{})
+	return provider.doesResourceExist(clusterRoleResource, err)
+}
+
+func (provider *Provider) DoesClusterRoleBindingExist(ctx context.Context, name string) (bool, error) {
+	clusterRoleBindingResource, err := provider.clientSet.RbacV1().ClusterRoleBindings().Get(ctx, name, metav1.GetOptions{})
+	return provider.doesResourceExist(clusterRoleBindingResource, err)
+}
+
+func (provider *Provider) DoesRoleExist(ctx context.Context, namespace string, name string) (bool, error) {
+	roleResource, err := provider.clientSet.RbacV1().Roles(namespace).Get(ctx, name, metav1.GetOptions{})
+	return provider.doesResourceExist(roleResource, err)
+}
+
+func (provider *Provider) DoesRoleBindingExist(ctx context.Context, namespace string, name string) (bool, error) {
+	roleBindingResource, err := provider.clientSet.RbacV1().RoleBindings(namespace).Get(ctx, name, metav1.GetOptions{})
+	return provider.doesResourceExist(roleBindingResource, err)
 }
 
 func (provider *Provider) doesResourceExist(resource interface{}, err error) (bool, error) {
