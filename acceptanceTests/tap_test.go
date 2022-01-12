@@ -401,7 +401,7 @@ func TestTapRedact(t *testing.T) {
 		}
 	}
 
-	runCypressTests(t, fmt.Sprintf("npx cypress run --spec  \"cypress/integration/tests/Redact.js\""))
+	runCypressTests(t, fmt.Sprintf("npx cypress run --spec  \"cypress/integration/tests/RedactTests.js\" --env shouldExist=true"))
 }
 
 func TestTapNoRedact(t *testing.T) {
@@ -453,7 +453,7 @@ func TestTapNoRedact(t *testing.T) {
 		}
 	}
 
-	runCypressTests(t, "npx cypress run --spec  \"cypress/integration/tests/NoRedact.js\"")
+	runCypressTests(t, "npx cypress run --spec  \"cypress/integration/tests/RedactTests.js\" --env shouldExist=false")
 }
 
 func TestTapRegexMasking(t *testing.T) {
