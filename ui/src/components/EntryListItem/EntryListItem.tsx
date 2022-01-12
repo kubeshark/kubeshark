@@ -14,6 +14,7 @@ import outgoingIconFailure from "../assets/outgoing-traffic-failure.svg"
 import outgoingIconNeutral from "../assets/outgoing-traffic-neutral.svg"
 import {useRecoilState} from "recoil";
 import focusedEntryIdAtom from "../../recoil/focusedEntryId";
+import queryAtom from "../../recoil/query";
 
 interface TCPInterface {
     ip: string
@@ -45,13 +46,13 @@ interface Rules {
 interface EntryProps {
     entry: Entry;
     style: object;
-    updateQuery: any;
     headingMode: boolean;
 }
 
-export const EntryItem: React.FC<EntryProps> = ({entry, style, updateQuery, headingMode}) => {
+export const EntryItem: React.FC<EntryProps> = ({entry, style, headingMode}) => {
 
     const [focusedEntryId, setFocusedEntryId] = useRecoilState(focusedEntryIdAtom);
+    const [queryState, setQuery] = useRecoilState(queryAtom);
     const isSelected = focusedEntryId === entry.id.toString();
 
     const classification = getClassification(entry.statusCode)
@@ -148,17 +149,15 @@ export const EntryItem: React.FC<EntryProps> = ({entry, style, updateQuery, head
             {!headingMode ? <Protocol
                 protocol={entry.protocol}
                 horizontal={false}
-                updateQuery={updateQuery}
             /> : null}
             {isStatusCodeEnabled && <div>
-                <StatusCode statusCode={entry.statusCode} updateQuery={updateQuery}/>
+                <StatusCode statusCode={entry.statusCode}/>
             </div>}
             <div className={styles.endpointServiceContainer} style={{paddingLeft: endpointServiceContainer}}>
-                <Summary method={entry.method} summary={entry.summary} updateQuery={updateQuery}/>
+                <Summary method={entry.method} summary={entry.summary}/>
                 <div className={styles.resolvedName}>
                     <Queryable
                         query={`src.name == "${entry.src.name}"`}
-                        updateQuery={updateQuery}
                         displayIconOnMouseOver={true}
                         flipped={true}
                         style={{marginTop: "-4px", overflow: "visible"}}
@@ -175,7 +174,6 @@ export const EntryItem: React.FC<EntryProps> = ({entry, style, updateQuery, head
                     <SwapHorizIcon style={{color: entry.protocol.backgroundColor, marginTop: "-2px"}}></SwapHorizIcon>
                     <Queryable
                         query={`dst.name == "${entry.dst.name}"`}
-                        updateQuery={updateQuery}
                         displayIconOnMouseOver={true}
                         style={{marginTop: "-4px"}}
                         iconStyle={{marginTop: "4px", marginLeft: "-2px"}}
@@ -205,7 +203,6 @@ export const EntryItem: React.FC<EntryProps> = ({entry, style, updateQuery, head
             <div className={styles.separatorRight}>
                 <Queryable
                         query={`src.ip == "${entry.src.ip}"`}
-                        updateQuery={updateQuery}
                         displayIconOnMouseOver={true}
                         flipped={true}
                         iconStyle={{marginRight: "16px"}}
@@ -220,7 +217,6 @@ export const EntryItem: React.FC<EntryProps> = ({entry, style, updateQuery, head
                 <span className={`${styles.tcpInfo}`} style={{marginTop: "18px"}}>:</span>
                 <Queryable
                         query={`src.port == "${entry.src.port}"`}
-                        updateQuery={updateQuery}
                         displayIconOnMouseOver={true}
                         flipped={true}
                         iconStyle={{marginTop: "28px"}}
@@ -235,7 +231,6 @@ export const EntryItem: React.FC<EntryProps> = ({entry, style, updateQuery, head
                 {entry.isOutgoing ?
                     <Queryable
                             query={`outgoing == true`}
-                            updateQuery={updateQuery}
                             displayIconOnMouseOver={true}
                             flipped={true}
                             iconStyle={{marginTop: "28px"}}
@@ -249,7 +244,6 @@ export const EntryItem: React.FC<EntryProps> = ({entry, style, updateQuery, head
                     :
                     <Queryable
                             query={`outgoing == true`}
-                            updateQuery={updateQuery}
                             displayIconOnMouseOver={true}
                             flipped={true}
                             iconStyle={{marginTop: "28px"}}
@@ -259,14 +253,14 @@ export const EntryItem: React.FC<EntryProps> = ({entry, style, updateQuery, head
                             alt="Outgoing traffic"
                             title="Outgoing"
                             onClick={() => {
-                                updateQuery(`outgoing == false`)
+                                const query = `outgoing == false`;
+                                setQuery(queryState ? `${queryState} and ${query}` : query);
                             }}
                         />
                     </Queryable>
                 }
                 <Queryable
                         query={`dst.ip == "${entry.dst.ip}"`}
-                        updateQuery={updateQuery}
                         displayIconOnMouseOver={true}
                         flipped={false}
                         iconStyle={{marginTop: "28px"}}
@@ -281,7 +275,6 @@ export const EntryItem: React.FC<EntryProps> = ({entry, style, updateQuery, head
                 <span className={`${styles.tcpInfo}`} style={{marginTop: "18px"}}>:</span>
                 <Queryable
                         query={`dst.port == "${entry.dst.port}"`}
-                        updateQuery={updateQuery}
                         displayIconOnMouseOver={true}
                         flipped={false}
                 >
@@ -296,7 +289,6 @@ export const EntryItem: React.FC<EntryProps> = ({entry, style, updateQuery, head
             <div className={styles.timestamp}>
                 <Queryable
                         query={`timestamp >= datetime("${Moment(+entry.timestamp)?.utc().format('MM/DD/YYYY, h:mm:ss.SSS A')}")`}
-                        updateQuery={updateQuery}
                         displayIconOnMouseOver={true}
                         flipped={false}
                 >

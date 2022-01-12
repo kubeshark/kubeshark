@@ -9,9 +9,9 @@ import Api from "../helpers/api";
 import {useRecoilState, useRecoilValue} from "recoil";
 import entriesAtom from "../recoil/entries";
 import wsConnectionAtom, {WsConnectionStatus} from "../recoil/wsConnection";
+import queryAtom from "../recoil/query";
 
 interface EntriesListProps {
-    query: string;
     listEntryREF: any;
     onSnapBrokenEvent: () => void;
     isSnappedToBottom: boolean;
@@ -23,7 +23,6 @@ interface EntriesListProps {
     startTime: number;
     noMoreDataTop: boolean;
     setNoMoreDataTop: (flag: boolean) => void;
-    updateQuery: any;
     leftOffTop: number;
     setLeftOffTop: (leftOffTop: number) => void;
     ws: any;
@@ -36,10 +35,11 @@ interface EntriesListProps {
 
 const api = Api.getInstance();
 
-export const EntriesList: React.FC<EntriesListProps> = ({query, listEntryREF, onSnapBrokenEvent, isSnappedToBottom, setIsSnappedToBottom, queriedCurrent, setQueriedCurrent, queriedTotal, setQueriedTotal, startTime, noMoreDataTop, setNoMoreDataTop, updateQuery, leftOffTop, setLeftOffTop, ws, openWebSocket, leftOffBottom, truncatedTimestamp, setTruncatedTimestamp, scrollableRef}) => {
+export const EntriesList: React.FC<EntriesListProps> = ({listEntryREF, onSnapBrokenEvent, isSnappedToBottom, setIsSnappedToBottom, queriedCurrent, setQueriedCurrent, queriedTotal, setQueriedTotal, startTime, noMoreDataTop, setNoMoreDataTop, leftOffTop, setLeftOffTop, ws, openWebSocket, leftOffBottom, truncatedTimestamp, setTruncatedTimestamp, scrollableRef}) => {
 
     const [entries, setEntries] = useRecoilState(entriesAtom);
     const wsConnection = useRecoilValue(wsConnectionAtom);
+    const query = useRecoilValue(queryAtom);
     const isWsConnectionClosed = wsConnection === WsConnectionStatus.Closed;
 
     const [loadMoreTop, setLoadMoreTop] = useState(false);
@@ -117,7 +117,6 @@ export const EntriesList: React.FC<EntriesListProps> = ({query, listEntryREF, on
                             key={`entry-${entry.id}`}
                             entry={entry}
                             style={{}}
-                            updateQuery={updateQuery}
                             headingMode={false}
                         />)}
                     </ScrollableFeedVirtualized>

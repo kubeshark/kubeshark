@@ -5,7 +5,7 @@ import {makeStyles} from "@material-ui/core";
 import Protocol from "./UI/Protocol"
 import Queryable from "./UI/Queryable";
 import {toast} from "react-toastify";
-import {useRecoilState, useRecoilValue} from "recoil";
+import {useRecoilValue} from "recoil";
 import focusedEntryIdAtom from "../recoil/focusedEntryId";
 import Api from "../helpers/api";
 
@@ -31,22 +31,17 @@ const useStyles = makeStyles(() => ({
     }
 }));
 
-interface EntryDetailedProps {
-    updateQuery: any
-}
-
 export const formatSize = (n: number) => n > 1000 ? `${Math.round(n / 1000)}KB` : `${n} B`;
 
-const EntryTitle: React.FC<any> = ({protocol, data, bodySize, elapsedTime, updateQuery}) => {
+const EntryTitle: React.FC<any> = ({protocol, data, bodySize, elapsedTime}) => {
     const classes = useStyles();
     const response = data.response;
 
     return <div className={classes.entryTitle}>
-        <Protocol protocol={protocol} horizontal={true} updateQuery={updateQuery}/>
+        <Protocol protocol={protocol} horizontal={true}/>
         <div style={{right: "30px", position: "absolute", display: "flex"}}>
             {response && <Queryable
                 query={`response.bodySize == ${bodySize}`}
-                updateQuery={updateQuery}
                 style={{margin: "0 18px"}}
                 displayIconOnMouseOver={true}
             >
@@ -58,7 +53,6 @@ const EntryTitle: React.FC<any> = ({protocol, data, bodySize, elapsedTime, updat
             </Queryable>}
             {response && <Queryable
                 query={`elapsedTime >= ${elapsedTime}`}
-                updateQuery={updateQuery}
                 style={{marginRight: 18}}
                 displayIconOnMouseOver={true}
             >
@@ -72,21 +66,20 @@ const EntryTitle: React.FC<any> = ({protocol, data, bodySize, elapsedTime, updat
     </div>;
 };
 
-const EntrySummary: React.FC<any> = ({data, updateQuery}) => {
+const EntrySummary: React.FC<any> = ({data}) => {
     const entry = data.base;
 
     return <EntryItem
         key={`entry-${entry.id}`}
         entry={entry}
         style={{}}
-        updateQuery={updateQuery}
         headingMode={true}
     />;
 };
 
 const api = Api.getInstance();
 
-export const EntryDetailed: React.FC<EntryDetailedProps> = ({updateQuery}) => {
+export const EntryDetailed = () => {
 
     const focusedEntryId = useRecoilValue(focusedEntryIdAtom);
     const [entryData, setEntryData] = useState(null);
@@ -123,9 +116,8 @@ export const EntryDetailed: React.FC<EntryDetailedProps> = ({updateQuery}) => {
             data={entryData.data}
             bodySize={entryData.bodySize}
             elapsedTime={entryData.data.elapsedTime}
-            updateQuery={updateQuery}
         />}
-        {entryData && <EntrySummary data={entryData.data} updateQuery={updateQuery}/>}
+        {entryData && <EntrySummary data={entryData.data}/>}
         <>
             {entryData && <EntryViewer
                 representation={entryData.representation}
@@ -137,7 +129,6 @@ export const EntryDetailed: React.FC<EntryDetailedProps> = ({updateQuery}) => {
                 contractContent={entryData.data.contractContent}
                 elapsedTime={entryData.data.elapsedTime}
                 color={entryData.protocol.backgroundColor}
-                updateQuery={updateQuery}
             />}
         </>
     </>

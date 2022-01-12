@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import './App.sass';
 import {TrafficPage} from "./components/TrafficPage";
 import {TLSWarning} from "./components/TLSWarning/TLSWarning";
@@ -23,7 +23,7 @@ const EntApp = () => {
     const [entPage, setEntPage] = useRecoilState(entPageAtom);
     const [isFirstLogin, setIsFirstLogin] = useState(false);
 
-    const determinePage = async () => { // TODO: move to state management
+    const determinePage =  useCallback(async () => { // TODO: move to state management
         try {
             const isInstallNeeded = await api.isInstallNeeded();
             if (isInstallNeeded) {
@@ -40,11 +40,11 @@ const EntApp = () => {
         } finally {
             setIsLoading(false);
         }
-    }
+    },[setEntPage]);
 
     useEffect(() => {
         determinePage();
-    }, []);
+    }, [determinePage]);
 
     const onTLSDetected = (destAddress: string) => {
         addressesWithTLS.add(destAddress);

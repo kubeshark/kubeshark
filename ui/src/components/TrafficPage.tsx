@@ -12,11 +12,12 @@ import {StatusBar} from "./UI/StatusBar";
 import Api, {MizuWebsocketURL} from "../helpers/api";
 import { toast } from 'react-toastify';
 import debounce from 'lodash/debounce';
-import {useRecoilState} from "recoil";
+import {useRecoilState, useRecoilValue} from "recoil";
 import tappingStatusAtom from "../recoil/tappingStatus";
 import entriesAtom from "../recoil/entries";
 import focusedEntryIdAtom from "../recoil/focusedEntryId";
 import websocketConnectionAtom, {WsConnectionStatus} from "../recoil/wsConnection";
+import queryAtom from "../recoil/query";
 
 const useLayoutStyles = makeStyles(() => ({
     details: {
@@ -52,14 +53,12 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({onTLSDetected, setAnaly
     const [entries, setEntries] = useRecoilState(entriesAtom);
     const [focusedEntryId, setFocusedEntryId] = useRecoilState(focusedEntryIdAtom);
     const [wsConnection, setWsConnection] = useRecoilState(websocketConnectionAtom);
+    const query = useRecoilValue(queryAtom);
 
     const [noMoreDataTop, setNoMoreDataTop] = useState(false);
-
     const [isSnappedToBottom, setIsSnappedToBottom] = useState(true);
 
-    const [query, setQuery] = useState("");
     const [queryBackgroundColor, setQueryBackgroundColor] = useState("#f5f5f5");
-    const [addition, updateQuery] = useState("");
 
     const [queriedCurrent, setQueriedCurrent] = useState(0);
     const [queriedTotal, setQueriedTotal] = useState(0);
@@ -90,15 +89,6 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({onTLSDetected, setAnaly
     useEffect(() => {
         handleQueryChange(query);
     }, [query, handleQueryChange]);
-
-    useEffect(() => {
-        if (query) {
-            setQuery(`${query} and ${addition}`);
-        } else {
-            setQuery(addition);
-        }
-        // eslint-disable-next-line
-    }, [addition]);
 
     const ws = useRef(null);
 
@@ -259,15 +249,12 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({onTLSDetected, setAnaly
             {<div className="TrafficPage-Container">
                 <div className="TrafficPage-ListContainer">
                     <Filters
-                        query={query}
-                        setQuery={setQuery}
                         backgroundColor={queryBackgroundColor}
                         ws={ws.current}
                         openWebSocket={openWebSocket}
                     />
                     <div className={styles.container}>
                         <EntriesList
-                            query={query}
                             listEntryREF={listEntry}
                             onSnapBrokenEvent={onSnapBrokenEvent}
                             isSnappedToBottom={isSnappedToBottom}
@@ -279,7 +266,6 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({onTLSDetected, setAnaly
                             startTime={startTime}
                             noMoreDataTop={noMoreDataTop}
                             setNoMoreDataTop={setNoMoreDataTop}
-                            updateQuery={updateQuery}
                             leftOffTop={leftOffTop}
                             setLeftOffTop={setLeftOffTop}
                             ws={ws.current}
@@ -292,7 +278,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({onTLSDetected, setAnaly
                     </div>
                 </div>
                 <div className={classes.details}>
-                    {focusedEntryId && <EntryDetailed updateQuery={updateQuery}/>}
+                    {focusedEntryId && <EntryDetailed/>}
                 </div>
             </div>}
             {tappingStatus && <StatusBar/>}
