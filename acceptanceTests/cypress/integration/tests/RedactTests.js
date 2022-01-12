@@ -1,6 +1,5 @@
 const inHeader = 'User-Header[REDACTED]';
-// const inBody = '{ "User": "[REDACTED]" }';
-const inBpdu = Cypres.env('third') ? '{ "User": "[REDACTED]" }';:
+const inBody = '{ "User": "[REDACTED]" }';
 const shouldExist = Cypress.env('shouldExist');
 
 it('Loading Mizu', function () {
