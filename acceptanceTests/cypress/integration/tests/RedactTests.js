@@ -8,7 +8,7 @@ it('Loading Mizu', function () {
 })
 
 it(`should ${shouldExist ? '' : 'not'} include ${inHeader}`, function () {
-    cy.get('.CollapsibleContainer', { timeout : 15 * 1000}).first().next().then(headerElements => { //TODO change the path and merge the body and head functions
+    cy.get('.CollapsibleContainer', { timeout : 15 * 1000}).first().next().then(headerElements => { //TODO change the path and refactor the body and head functions
         const allText = headerElements.text();
         if (allText.includes(inHeader) !== shouldExist)
             throw new Error(`The headers panel doesnt include ${inHeader}`);
