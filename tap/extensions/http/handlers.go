@@ -39,7 +39,7 @@ func replaceForwardedFor(item *api.OutputChannelItem) {
 	}
 
 	ips := strings.Split(forwardedFor, ",")
-	lastIP := strings.TrimSpace(ips[len(ips) - 1])
+	lastIP := strings.TrimSpace(ips[0])
 
 	item.ConnectionInfo.ClientIP = lastIP
 	item.ConnectionInfo.ClientPort = ""
