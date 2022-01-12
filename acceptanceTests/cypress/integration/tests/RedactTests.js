@@ -1,5 +1,6 @@
 const inHeader = 'User-Header[REDACTED]';
-const inBody = '{ "User": "[REDACTED]" }';
+// const inBody = '{ "User": "[REDACTED]" }';
+const inBpdu = Cypres.env('third') ? '{ "User": "[REDACTED]" }';:
 const shouldExist = Cypress.env('shouldExist');
 
 it('Loading Mizu', function () {
@@ -7,7 +8,7 @@ it('Loading Mizu', function () {
 })
 
 it(`should ${shouldExist ? '' : 'not'} include ${inHeader}`, function () {
-    cy.get('.CollapsibleContainer', { timeout : 15 * 1000}).first().next().then(headerElements => {
+    cy.get('.CollapsibleContainer', { timeout : 15 * 1000}).first().next().then(headerElements => { //TODO change the path and merge the body and head functions
         const allText = headerElements.text();
         if (allText.includes(inHeader) !== shouldExist)
             throw new Error(`The headers panel doesnt include ${inHeader}`);
