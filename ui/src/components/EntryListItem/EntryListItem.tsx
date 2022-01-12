@@ -23,11 +23,11 @@ interface TCPInterface {
 }
 
 interface Entry {
-    protocol: ProtocolInterface,
+    proto: ProtocolInterface,
     method?: string,
     summary: string,
     id: number,
-    statusCode?: number;
+    status?: number;
     timestamp: Date;
     src: TCPInterface,
     dst: TCPInterface,
@@ -55,7 +55,7 @@ export const EntryItem: React.FC<EntryProps> = ({entry, style, headingMode}) => 
     const [queryState, setQuery] = useRecoilState(queryAtom);
     const isSelected = focusedEntryId === entry.id.toString();
 
-    const classification = getClassification(entry.statusCode)
+    const classification = getClassification(entry.status)
     const numberOfRules = entry.rules.numberOfRules
     let ingoingIcon;
     let outgoingIcon;
@@ -125,7 +125,8 @@ export const EntryItem: React.FC<EntryProps> = ({entry, style, headingMode}) => 
             break;
     }
 
-    const isStatusCodeEnabled = ((entry.protocol.name === "http" && "statusCode" in entry) || entry.statusCode !== 0);
+
+    const isStatusCodeEnabled = ((entry.proto.name === "http" && "status" in entry) || entry.status !== 0);
     let endpointServiceContainer = "10px";
     if (!isStatusCodeEnabled) endpointServiceContainer = "20px";
 
@@ -139,7 +140,7 @@ export const EntryItem: React.FC<EntryProps> = ({entry, style, headingMode}) => 
                 setFocusedEntryId(entry.id.toString());
             }}
             style={{
-                border: isSelected ? `1px ${entry.protocol.backgroundColor} solid` : "1px transparent solid",
+                border: isSelected ? `1px ${entry.proto.backgroundColor} solid` : "1px transparent solid",
                 position: !headingMode ? "absolute" : "unset",
                 top: style['top'],
                 marginTop: !headingMode ? style['marginTop'] : "10px",
@@ -147,11 +148,11 @@ export const EntryItem: React.FC<EntryProps> = ({entry, style, headingMode}) => 
             }}
         >
             {!headingMode ? <Protocol
-                protocol={entry.protocol}
+                protocol={entry.proto}
                 horizontal={false}
             /> : null}
             {isStatusCodeEnabled && <div>
-                <StatusCode statusCode={entry.statusCode}/>
+                <StatusCode statusCode={entry.status}/>
             </div>}
             <div className={styles.endpointServiceContainer} style={{paddingLeft: endpointServiceContainer}}>
                 <Summary method={entry.method} summary={entry.summary}/>
@@ -162,7 +163,7 @@ export const EntryItem: React.FC<EntryProps> = ({entry, style, headingMode}) => 
                         flipped={true}
                         style={{marginTop: "-4px", overflow: "visible"}}
                         iconStyle={!headingMode ? {marginTop: "4px", left: "68px", position: "absolute"} :
-                        entry.protocol.name === "http" ? {marginTop: "4px", left: "calc(50vw + 41px)", position: "absolute"} :
+                        entry.proto.name === "http" ? {marginTop: "4px", left: "calc(50vw + 41px)", position: "absolute"} :
                         {marginTop: "4px", left: "calc(50vw - 9px)", position: "absolute"}}
                     >
                         <span
@@ -171,7 +172,7 @@ export const EntryItem: React.FC<EntryProps> = ({entry, style, headingMode}) => 
                             {entry.src.name ? entry.src.name : "[Unresolved]"}
                         </span>
                     </Queryable>
-                    <SwapHorizIcon style={{color: entry.protocol.backgroundColor, marginTop: "-2px"}}></SwapHorizIcon>
+                    <SwapHorizIcon style={{color: entry.proto.backgroundColor, marginTop: "-2px"}}></SwapHorizIcon>
                     <Queryable
                         query={`dst.name == "${entry.dst.name}"`}
                         displayIconOnMouseOver={true}
@@ -214,7 +215,7 @@ export const EntryItem: React.FC<EntryProps> = ({entry, style, headingMode}) => 
                         {entry.src.ip}
                     </span>
                 </Queryable>
-                <span className={`${styles.tcpInfo}`} style={{marginTop: "18px"}}>:</span>
+				<span className={`${styles.tcpInfo}`} style={{marginTop: "18px"}}>{entry.src.port ? ":" : ""}</span>
                 <Queryable
                         query={`src.port == "${entry.src.port}"`}
                         displayIconOnMouseOver={true}

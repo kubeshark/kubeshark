@@ -262,7 +262,7 @@ export const QueryForm: React.FC<QueryFormProps> = ({backgroundColor, ws, openWe
                             </Typography>
                             <br></br>
                             <Typography id="modal-modal-description">
-                                true if the given selector's value starts with the string:
+                                true if the given selector's value starts with (similarly <code style={{fontSize: "14px"}}>endsWith</code>, <code style={{fontSize: "14px"}}>contains</code>) the string:
                             </Typography>
                             <SyntaxHighlighter
                                 showLineNumbers={false}
@@ -270,19 +270,19 @@ export const QueryForm: React.FC<QueryFormProps> = ({backgroundColor, ws, openWe
                                 language="python"
                             />
                             <Typography id="modal-modal-description">
-                                true if the given selector's value ends with the string:
+                                a field that contains a JSON encoded string can be filtered based a JSONPath:
                             </Typography>
                             <SyntaxHighlighter
                                 showLineNumbers={false}
-                                code={`request.path.endsWith("something")`}
+                                code={`response.content.text.json().some.path == "somevalue"`}
                                 language="python"
                             />
                             <Typography id="modal-modal-description">
-                                true if the given selector's value contains the string:
+                                fields that contain sensitive information can be redacted:
                             </Typography>
                             <SyntaxHighlighter
                                 showLineNumbers={false}
-                                code={`request.path.contains("something")`}
+                                code={`and redact("request.path", "src.name")`}
                                 language="python"
                             />
                             <Typography id="modal-modal-description">
