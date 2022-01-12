@@ -87,9 +87,8 @@ func (provider *Provider) ReportTappedPods(pods []core.Pod) error {
 	tappedPodsUrl := fmt.Sprintf("%s/status/tappedPods", provider.url)
 
 	podInfos := kubernetes.GetPodInfosForPods(pods)
-	tapStatus := shared.TapStatus{Pods: podInfos}
 
-	if jsonValue, err := json.Marshal(tapStatus); err != nil {
+	if jsonValue, err := json.Marshal(podInfos); err != nil {
 		return fmt.Errorf("failed Marshal the tapped pods %w", err)
 	} else {
 		if response, err := provider.client.Post(tappedPodsUrl, "application/json", bytes.NewBuffer(jsonValue)); err != nil {

@@ -38,8 +38,8 @@ export default class Api {
         return response.data;
     }
 
-    getEntry = async (id) => {
-        const response = await this.client.get(`/entries/${id}`);
+    getEntry = async (id, query) => {
+        const response = await this.client.get(`/entries/${id}?query=${query}`);
         return response.data;
     }
 

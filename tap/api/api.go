@@ -81,7 +81,7 @@ type OutputChannelItem struct {
 	Timestamp      int64
 	ConnectionInfo *ConnectionInfo
 	Pair           *RequestResponsePair
-	Summary        *BaseEntryDetails
+	Summary        *BaseEntry
 }
 
 type SuperTimer struct {
@@ -97,8 +97,7 @@ type Dissector interface {
 	Register(*Extension)
 	Ping()
 	Dissect(b *bufio.Reader, isClient bool, tcpID *TcpID, counterPair *CounterPair, superTimer *SuperTimer, superIdentifier *SuperIdentifier, emitter Emitter, options *TrafficFilteringOptions) error
-	Analyze(item *OutputChannelItem, resolvedSource string, resolvedDestination string) *MizuEntry
-	Summarize(entry *MizuEntry) *BaseEntryDetails
+	Analyze(item *OutputChannelItem, resolvedSource string, resolvedDestination string) *Entry
 	Represent(request map[string]interface{}, response map[string]interface{}) (object []byte, bodySize int64, err error)
 	Macros() map[string]string
 }
@@ -117,7 +116,7 @@ func (e *Emitting) Emit(item *OutputChannelItem) {
 	e.AppStats.IncMatchedPairs()
 }
 
-type MizuEntry struct {
+type Entry struct {
 	Id                     uint                   `json:"id"`
 	Protocol               Protocol               `json:"proto"`
 	Source                 *TCP                   `json:"src"`
@@ -127,13 +126,13 @@ type MizuEntry struct {
 	StartTime              time.Time              `json:"startTime"`
 	Request                map[string]interface{} `json:"request"`
 	Response               map[string]interface{} `json:"response"`
-	Base                   *BaseEntryDetails      `json:"base"`
 	Summary                string                 `json:"summary"`
 	Method                 string                 `json:"method"`
 	Status                 int                    `json:"status"`
 	ElapsedTime            int64                  `json:"elapsedTime"`
 	Path                   string                 `json:"path"`
 	IsOutgoing             bool                   `json:"isOutgoing,omitempty"`
+	Rules                  ApplicableRules        `json:"rules,omitempty"`
 	ContractStatus         ContractStatus         `json:"contractStatus,omitempty"`
 	ContractRequestReason  string                 `json:"contractRequestReason,omitempty"`
 	ContractResponseReason string                 `json:"contractResponseReason,omitempty"`
@@ -141,22 +140,22 @@ type MizuEntry struct {
 	HTTPPair               string                 `json:"httpPair,omitempty"`
 }
 
-type MizuEntryWrapper struct {
+type EntryWrapper struct {
 	Protocol       Protocol                 `json:"protocol"`
 	Representation string                   `json:"representation"`
 	BodySize       int64                    `json:"bodySize"`
-	Data           MizuEntry                `json:"data"`
+	Data           *Entry                   `json:"data"`
 	Rules          []map[string]interface{} `json:"rulesMatched,omitempty"`
 	IsRulesEnabled bool                     `json:"isRulesEnabled"`
 }
 
-type BaseEntryDetails struct {
+type BaseEntry struct {
 	Id             uint            `json:"id"`
-	Protocol       Protocol        `json:"protocol,omitempty"`
+	Protocol       Protocol        `json:"proto,omitempty"`
 	Url            string          `json:"url,omitempty"`
 	Path           string          `json:"path,omitempty"`
 	Summary        string          `json:"summary,omitempty"`
-	StatusCode     int             `json:"statusCode"`
+	StatusCode     int             `json:"status"`
 	Method         string          `json:"method,omitempty"`
 	Timestamp      int64           `json:"timestamp,omitempty"`
 	Source         *TCP            `json:"src"`
@@ -182,11 +181,29 @@ type Contract struct {
 	Content        string         `json:"content"`
 }
 
-type DataUnmarshaler interface {
-	UnmarshalData(*MizuEntry) error
+func Summarize(entry *Entry) *BaseEntry {
+	return &BaseEntry{
+		Id:             entry.Id,
+		Protocol:       entry.Protocol,
+		Path:           entry.Path,
+		Summary:        entry.Summary,
+		StatusCode:     entry.Status,
+		Method:         entry.Method,
+		Timestamp:      entry.Timestamp,
+		Source:         entry.Source,
+		Destination:    entry.Destination,
+		IsOutgoing:     entry.IsOutgoing,
+		Latency:        entry.ElapsedTime,
+		Rules:          entry.Rules,
+		ContractStatus: entry.ContractStatus,
+	}
 }
 
-func (bed *BaseEntryDetails) UnmarshalData(entry *MizuEntry) error {
+type DataUnmarshaler interface {
+	UnmarshalData(*Entry) error
+}
+
+func (bed *BaseEntry) UnmarshalData(entry *Entry) error {
 	bed.Protocol = entry.Protocol
 	bed.Id = entry.Id
 	bed.Path = entry.Path

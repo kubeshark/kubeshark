@@ -89,6 +89,8 @@ func getInstallMizuAgentConfig(maxDBSizeBytes int64, tapperResources shared.Reso
 		MizuResourcesNamespace: config.Config.MizuResourcesNamespace,
 		AgentDatabasePath:      shared.DataDirPath,
 		StandaloneMode:         true,
+		ServiceMap:             config.Config.ServiceMap,
+		OAS:                    config.Config.OAS,
 	}
 
 	return &mizuAgentConfig
@@ -99,7 +101,7 @@ func watchApiServerPodReady(ctx context.Context, kubernetesProvider *kubernetes.
 	podWatchHelper := kubernetes.NewPodWatchHelper(kubernetesProvider, podExactRegex)
 	eventChan, errorChan := kubernetes.FilteredWatch(ctx, podWatchHelper, []string{config.Config.MizuResourcesNamespace}, podWatchHelper)
 
-	timeAfter := time.After(30 * time.Second)
+	timeAfter := time.After(1 * time.Minute)
 	for {
 		select {
 		case wEvent, ok := <-eventChan:
