@@ -8,43 +8,41 @@ import (
 	"mizuserver/pkg/api"
 	"mizuserver/pkg/holder"
 	"mizuserver/pkg/providers"
+	"mizuserver/pkg/providers/tappedPods"
+	"mizuserver/pkg/providers/tappers"
 	"mizuserver/pkg/up9"
-	"mizuserver/pkg/utils"
 	"mizuserver/pkg/validation"
 	"net/http"
 )
 
 func HealthCheck(c *gin.Context) {
-	tappers := make([]shared.TapperStatus, 0)
-	for _, value := range providers.TappersStatus {
-		tappers = append(tappers, value)
+	tappersStatus := make([]*shared.TapperStatus, 0)
+	for _, value := range tappers.GetStatus() {
+		tappersStatus = append(tappersStatus, value)
 	}
 
 	response := shared.HealthResponse{
-		TapStatus:     providers.TapStatus,
-		TappersCount:  providers.TappersCount,
-		TappersStatus: tappers,
+		TappedPods:            tappedPods.Get(),
+		ConnectedTappersCount: tappers.GetConnectedCount(),
+		TappersStatus:         tappersStatus,
 	}
 	c.JSON(http.StatusOK, response)
 }
 
 func PostTappedPods(c *gin.Context) {
-	tapStatus := &shared.TapStatus{}
-	if err := c.Bind(tapStatus); err != nil {
+	var requestTappedPods []*shared.PodInfo
+	if err := c.Bind(&requestTappedPods); err != nil {
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
-	if err := validation.Validate(tapStatus); err != nil {
-		c.JSON(http.StatusBadRequest, err)
-		return
-	}
-	logger.Log.Infof("[Status] POST request: %d tapped pods", len(tapStatus.Pods))
-	providers.TapStatus.Pods = tapStatus.Pods
+
+	logger.Log.Infof("[Status] POST request: %d tapped pods", len(requestTappedPods))
+	tappedPods.Set(requestTappedPods)
 	broadcastTappedPodsStatus()
 }
 
 func broadcastTappedPodsStatus() {
-	tappedPodsStatus := utils.GetTappedPodsStatus()
+	tappedPodsStatus := tappedPods.GetTappedPodsStatus()
 
 	message := shared.CreateWebSocketStatusMessage(tappedPodsStatus)
 	if jsonBytes, err := json.Marshal(message); err != nil {
@@ -52,14 +50,6 @@ func broadcastTappedPodsStatus() {
 	} else {
 		api.BroadcastToBrowserClients(jsonBytes)
 	}
-}
-
-func addTapperStatus(tapperStatus shared.TapperStatus) {
-	if providers.TappersStatus == nil {
-		providers.TappersStatus = make(map[string]shared.TapperStatus)
-	}
-
-	providers.TappersStatus[tapperStatus.NodeName] = tapperStatus
 }
 
 func PostTapperStatus(c *gin.Context) {
@@ -75,12 +65,12 @@ func PostTapperStatus(c *gin.Context) {
 	}
 
 	logger.Log.Infof("[Status] POST request, tapper status: %v", tapperStatus)
-	addTapperStatus(*tapperStatus)
+	tappers.SetStatus(tapperStatus)
 	broadcastTappedPodsStatus()
 }
 
-func GetTappersCount(c *gin.Context) {
-	c.JSON(http.StatusOK, providers.TappersCount)
+func GetConnectedTappersCount(c *gin.Context) {
+	c.JSON(http.StatusOK, tappers.GetConnectedCount())
 }
 
 func GetAuthStatus(c *gin.Context) {
@@ -94,7 +84,7 @@ func GetAuthStatus(c *gin.Context) {
 }
 
 func GetTappingStatus(c *gin.Context) {
-	tappedPodsStatus := utils.GetTappedPodsStatus()
+	tappedPodsStatus := tappedPods.GetTappedPodsStatus()
 	c.JSON(http.StatusOK, tappedPodsStatus)
 }
 
