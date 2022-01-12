@@ -12,6 +12,8 @@ import ingoingIconNeutral from "../assets/ingoing-traffic-neutral.svg"
 import outgoingIconSuccess from "../assets/outgoing-traffic-success.svg"
 import outgoingIconFailure from "../assets/outgoing-traffic-failure.svg"
 import outgoingIconNeutral from "../assets/outgoing-traffic-neutral.svg"
+import {useRecoilState} from "recoil";
+import focusedEntryIdAtom from "../../recoil/focusedEntryId";
 
 interface TCPInterface {
     ip: string
@@ -42,15 +44,14 @@ interface Rules {
 
 interface EntryProps {
     entry: Entry;
-    focusedEntryId: string;
-    setFocusedEntryId: (id: string) => void;
     style: object;
     updateQuery: any;
     headingMode: boolean;
 }
 
-export const EntryItem: React.FC<EntryProps> = ({entry, focusedEntryId, setFocusedEntryId, style, updateQuery, headingMode}) => {
+export const EntryItem: React.FC<EntryProps> = ({entry, style, updateQuery, headingMode}) => {
 
+    const [focusedEntryId, setFocusedEntryId] = useRecoilState(focusedEntryIdAtom);
     const isSelected = focusedEntryId === entry.id.toString();
 
     const classification = getClassification(entry.statusCode)
@@ -124,7 +125,7 @@ export const EntryItem: React.FC<EntryProps> = ({entry, focusedEntryId, setFocus
     }
 
     const isStatusCodeEnabled = ((entry.protocol.name === "http" && "statusCode" in entry) || entry.statusCode !== 0);
-    var endpointServiceContainer = "10px";
+    let endpointServiceContainer = "10px";
     if (!isStatusCodeEnabled) endpointServiceContainer = "20px";
 
     return <>

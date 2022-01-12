@@ -1,4 +1,4 @@
-import atom from "./atom"
+import atom from "./atom";
 
 interface TappingStatusPod {
     name: string;

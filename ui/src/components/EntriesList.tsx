@@ -6,10 +6,10 @@ import {EntryItem} from "./EntryListItem/EntryListItem";
 import down from "./assets/downImg.svg";
 import spinner from './assets/spinner.svg';
 import Api from "../helpers/api";
+import {useRecoilState} from "recoil";
+import entriesAtom from "../recoil/entries";
 
 interface EntriesListProps {
-    entries: any[];
-    setEntries: any;
     query: string;
     listEntryREF: any;
     onSnapBrokenEvent: () => void;
@@ -22,8 +22,6 @@ interface EntriesListProps {
     startTime: number;
     noMoreDataTop: boolean;
     setNoMoreDataTop: (flag: boolean) => void;
-    focusedEntryId: string;
-    setFocusedEntryId: (id: string) => void;
     updateQuery: any;
     leftOffTop: number;
     setLeftOffTop: (leftOffTop: number) => void;
@@ -38,7 +36,10 @@ interface EntriesListProps {
 
 const api = Api.getInstance();
 
-export const EntriesList: React.FC<EntriesListProps> = ({entries, setEntries, query, listEntryREF, onSnapBrokenEvent, isSnappedToBottom, setIsSnappedToBottom, queriedCurrent, setQueriedCurrent, queriedTotal, setQueriedTotal, startTime, noMoreDataTop, setNoMoreDataTop, focusedEntryId, setFocusedEntryId, updateQuery, leftOffTop, setLeftOffTop, isWebSocketConnectionClosed, ws, openWebSocket, leftOffBottom, truncatedTimestamp, setTruncatedTimestamp, scrollableRef}) => {
+export const EntriesList: React.FC<EntriesListProps> = ({query, listEntryREF, onSnapBrokenEvent, isSnappedToBottom, setIsSnappedToBottom, queriedCurrent, setQueriedCurrent, queriedTotal, setQueriedTotal, startTime, noMoreDataTop, setNoMoreDataTop, updateQuery, leftOffTop, setLeftOffTop, isWebSocketConnectionClosed, ws, openWebSocket, leftOffBottom, truncatedTimestamp, setTruncatedTimestamp, scrollableRef}) => {
+
+    const [entries, setEntries] = useRecoilState(entriesAtom);
+
     const [loadMoreTop, setLoadMoreTop] = useState(false);
     const [isLoadingTop, setIsLoadingTop] = useState(false);
 
@@ -113,8 +114,6 @@ export const EntriesList: React.FC<EntriesListProps> = ({entries, setEntries, qu
                         {memoizedEntries.map(entry => <EntryItem
                             key={`entry-${entry.id}`}
                             entry={entry}
-                            focusedEntryId={focusedEntryId}
-                            setFocusedEntryId={setFocusedEntryId}
                             style={{}}
                             updateQuery={updateQuery}
                             headingMode={false}

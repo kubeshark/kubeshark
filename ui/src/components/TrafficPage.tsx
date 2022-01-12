@@ -14,6 +14,8 @@ import { toast } from 'react-toastify';
 import debounce from 'lodash/debounce';
 import {useRecoilState} from "recoil";
 import tappingStatusAtom from "../recoil/tappingStatus";
+import entriesAtom from "../recoil/entries";
+import focusedEntryIdAtom from "../recoil/focusedEntryId";
 
 const useLayoutStyles = makeStyles(() => ({
     details: {
@@ -50,15 +52,14 @@ const api = Api.getInstance();
 export const TrafficPage: React.FC<TrafficPageProps> = ({onTLSDetected, setAnalyzeStatus}) => {
 
     const classes = useLayoutStyles();
+    const [tappingStatus, setTappingStatus] = useRecoilState(tappingStatusAtom);
+    const [entries, setEntries] = useRecoilState(entriesAtom);
+    const [focusedEntryId, setFocusedEntryId] = useRecoilState(focusedEntryIdAtom);
 
-    const [entries, setEntries] = useState([] as any);
-    const [focusedEntryId, setFocusedEntryId] = useState(null);
     const [selectedEntryData, setSelectedEntryData] = useState(null);
     const [connection, setConnection] = useState(ConnectionStatus.Closed);
 
     const [noMoreDataTop, setNoMoreDataTop] = useState(false);
-
-    const [tappingStatus, setTappingStatus] = useRecoilState(tappingStatusAtom);
 
     const [isSnappedToBottom, setIsSnappedToBottom] = useState(true);
 
@@ -299,8 +300,6 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({onTLSDetected, setAnaly
                     />
                     <div className={styles.container}>
                         <EntriesList
-                            entries={entries}
-                            setEntries={setEntries}
                             query={query}
                             listEntryREF={listEntry}
                             onSnapBrokenEvent={onSnapBrokenEvent}
@@ -313,8 +312,6 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({onTLSDetected, setAnaly
                             startTime={startTime}
                             noMoreDataTop={noMoreDataTop}
                             setNoMoreDataTop={setNoMoreDataTop}
-                            focusedEntryId={focusedEntryId}
-                            setFocusedEntryId={setFocusedEntryId}
                             updateQuery={updateQuery}
                             leftOffTop={leftOffTop}
                             setLeftOffTop={setLeftOffTop}

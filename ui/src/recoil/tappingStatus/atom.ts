@@ -1,9 +1,9 @@
-import { atom } from "recoil"
+import { atom } from "recoil";
 import {TappingStatusPod} from "./index";
 
 const tappingStatusAtom = atom({
     key: "tappingStatusAtom",
     default: null as TappingStatusPod[]
-})
+});
 
-export default tappingStatusAtom
+export default tappingStatusAtom;

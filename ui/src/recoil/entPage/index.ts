@@ -1,4 +1,4 @@
-import atom from "./atom"
+import atom from "./atom";
 import tappingStatusDetails from "../tappingStatus/details";
 
 enum Page {
@@ -7,6 +7,6 @@ enum Page {
     Login
 }
 
-export { Page, tappingStatusDetails }
+export { Page, tappingStatusDetails };
 
-export default atom
+export default atom;
