@@ -2,6 +2,7 @@
 
 for f in tap/extensions/*; do
     if [ -d "$f" ]; then
+        echo Building extension: $f
         extension=$(basename $f) && \
         cd tap/extensions/${extension} && \
         go build -buildmode=plugin -o ../${extension}.so .  && \
