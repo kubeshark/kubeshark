@@ -7,6 +7,7 @@ import {SyntaxHighlighter} from "./UI/SyntaxHighlighter/index";
 import filterUIExample1 from "./assets/filter-ui-example-1.png"
 import filterUIExample2 from "./assets/filter-ui-example-2.png"
 import variables from '../variables.module.scss';
+import bfl from '../helpers/bfl.js'
 
 interface FiltersProps {
     query: string
@@ -93,7 +94,8 @@ export const QueryForm: React.FC<QueryFormProps> = ({query, setQuery, background
                     <label>
                         <CodeEditor
                             value={query}
-                            language="py"
+                            syntax={bfl}
+                            language="bfl"
                             placeholder="Mizu Filter Syntax"
                             onChange={handleChange}
                             padding={8}

@@ -13,7 +13,7 @@
     "@types/node": "^12.20.10",
     "@types/react": "^17.0.3",
     "@types/react-dom": "^17.0.3",
-    "@uiw/react-textarea-code-editor": "^1.4.12",
+    "@uiw/react-textarea-code-editor": "file:/home/mertyildiran/Downloads/react-textarea-code-editor",
     "axios": "^0.21.1",
     "highlight.js": "^11.3.1",
     "json-beautify": "^1.1.1",
