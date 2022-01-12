@@ -168,7 +168,7 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onOpen
                         to: serviceMapData.edges[i].destination.id,
                         value: serviceMapData.edges[i].count,
                         label: serviceMapData.edges[i].count.toString(),
-                        color: getProtocolColor(serviceMapData.edges[i].source.protocol),
+                        color: getProtocolColor(serviceMapData.edges[i].destination.protocol),
                     });
                 }
             }
