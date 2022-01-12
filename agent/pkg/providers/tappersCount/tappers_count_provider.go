@@ -2,9 +2,10 @@ package tappersCount
 
 import "sync"
 
-var lock = &sync.Mutex{}
-
-var tappersCount int
+var (
+	lock = &sync.Mutex{}
+	tappersCount int
+)
 
 func Add() {
 	lock.Lock()
