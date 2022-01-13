@@ -17,7 +17,7 @@ interface Node {
     value: number;
     label: string;
     title?: string;
-    color?: string;
+    color?: object;
 }
 
 interface Edge {
@@ -26,13 +26,13 @@ interface Edge {
     value: number;
     label: string;
     title?: string;
-    color?: string;
+    color?: object;
 }
 
 interface ServiceMapNode {
     name: string;
     id: number;
-    protocol: string;
+    protocol: Protocol;
     count: number;
 }
 
@@ -47,45 +47,23 @@ interface ServiceMapGraph {
     edges: ServiceMapEdge[];
 }
 
+interface Protocol {
+    name: string;
+    abbr: string;
+    macro: string;
+    version: string;
+    backgroundColor: string;
+    foregroundColor: string;
+    fontSize: number;
+    referenceLink: string;
+    ports: string[];
+    priority: number;
+}
+
 interface ServiceMapModalProps {
     isOpen: boolean;
     onOpen: () => void;
     onClose: () => void;
-}
-
-function getProtocolColor(protocol: string): string {
-    let color;
-    switch (protocol) {
-        case "http": {
-            color = "#27AE60"
-            break;
-        }
-        case "https": {
-            // TODO: https protocol color
-            break;
-        }
-        case "redis": {
-            color = "#A41E11"
-            break;
-        }
-        case "amqp": {
-            color = "#FF6600"
-            break;
-        }
-        case "grpc": {
-            color = "#244C5A"
-            break;
-        }
-        case "kafka": {
-            color = "#023020"
-            break;
-        }
-        default: {
-            color = variables.lightBlueColor
-            break;
-        }
-    }
-    return color
 }
 
 const api = Api.getInstance();
@@ -98,34 +76,80 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onOpen
     });
 
     const options = {
-        physics:{
+        physics: {
             enabled: true,
             solver: 'barnesHut',
             barnesHut: {
-              theta: 0.5,
-              gravitationalConstant: -2000,
-              centralGravity: 0.3,
-              springLength: 180,
-              springConstant: 0.04,
-              damping: 0.09,
-              avoidOverlap: 1
+                theta: 0.5,
+                gravitationalConstant: -2000,
+                centralGravity: 0.3,
+                springLength: 180,
+                springConstant: 0.04,
+                damping: 0.09,
+                avoidOverlap: 1
             },
         },
         layout: {
             hierarchical: false,
             randomSeed: 1 // always on node 1
-        },        
+        },
         nodes: {
             shape: "dot",
-            color: variables.blueColor,
+            chosen: true,
+            color: {
+                border: '#000000',
+                highlight: {
+                    border: '#000000',
+                },
+            },
+            font: {
+                color: '#343434',
+                size: 14, // px
+                face: 'arial',
+                background: 'none',
+                strokeWidth: 0, // px
+                strokeColor: '#ffffff',
+                align: 'center',
+                multi: false,
+            },
+            borderWidth: 1.5,
+            borderWidthSelected: 2.5,
+            labelHighlightBold: true,
+            opacity: 1,
             shadow: true,
         },
         edges: {
+            chosen: true,
+            dashes: false,
+            arrowStrikethrough: false,
+            arrows: {
+                to: {
+                    enabled: true,
+                },
+                middle: {
+                    enabled: false,
+                },
+                from: {
+                    enabled: false,
+                }
+            },
             smooth: {
                 enabled: true,
                 type: "dynamic",
                 roundness: 1.0
             },
+            font: {
+                color: '#343434',
+                size: 12, // px
+                face: 'arial',
+                background: 'none',
+                strokeWidth: 2, // px
+                strokeColor: '#ffffff',
+                align: 'horizontal',
+                multi: false,
+            },
+            labelHighlightBold: true,
+            selectionWidth: 1,
             shadow: true,
         },
         height: "750px",
@@ -149,7 +173,7 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onOpen
             setIsLoading(true)
 
             const serviceMapData: ServiceMapGraph = await api.serviceMapData()
-            
+
             if (serviceMapData.nodes != null) {
                 for (let i = 0; i < serviceMapData.nodes.length; i++) {
                     graphData.nodes.push({
@@ -157,6 +181,12 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onOpen
                         value: serviceMapData.nodes[i].count,
                         label: serviceMapData.nodes[i].name,
                         title: "Count: " + serviceMapData.nodes[i].name,
+                        color: {
+                            background: serviceMapData.nodes[i].protocol.backgroundColor,
+                            highlight: {
+                                background: serviceMapData.nodes[i].protocol.backgroundColor
+                            },
+                        },
                     });
                 }
             }
@@ -168,7 +198,10 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onOpen
                         to: serviceMapData.edges[i].destination.id,
                         value: serviceMapData.edges[i].count,
                         label: serviceMapData.edges[i].count.toString(),
-                        color: getProtocolColor(serviceMapData.edges[i].destination.protocol),
+                        color: {
+                            color: serviceMapData.edges[i].destination.protocol.backgroundColor,
+                            highlight: serviceMapData.edges[i].destination.protocol.backgroundColor
+                        },
                     });
                 }
             }
@@ -269,9 +302,6 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onOpen
                         <Graph
                             graph={graphData}
                             options={options}
-                            style={{
-                                border: "1px solid lightgray",
-                            }}
                         />
                     </div>}
                 </Box>
