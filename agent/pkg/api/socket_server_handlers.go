@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"mizuserver/pkg/models"
 	"mizuserver/pkg/providers"
-	"mizuserver/pkg/providers/tappersCount"
+	"mizuserver/pkg/providers/tappers"
 	"mizuserver/pkg/up9"
 	"sync"
 
@@ -30,7 +30,7 @@ func init() {
 func (h *RoutesEventHandlers) WebSocketConnect(socketId int, isTapper bool) {
 	if isTapper {
 		logger.Log.Infof("Websocket event - Tapper connected, socket ID: %d", socketId)
-		tappersCount.Add()
+		tappers.Connected()
 	} else {
 		logger.Log.Infof("Websocket event - Browser socket connected, socket ID: %d", socketId)
 		socketListLock.Lock()
@@ -42,7 +42,7 @@ func (h *RoutesEventHandlers) WebSocketConnect(socketId int, isTapper bool) {
 func (h *RoutesEventHandlers) WebSocketDisconnect(socketId int, isTapper bool) {
 	if isTapper {
 		logger.Log.Infof("Websocket event - Tapper disconnected, socket ID:  %d", socketId)
-		tappersCount.Remove()
+		tappers.Disconnected()
 	} else {
 		logger.Log.Infof("Websocket event - Browser socket disconnected, socket ID:  %d", socketId)
 		socketListLock.Lock()
