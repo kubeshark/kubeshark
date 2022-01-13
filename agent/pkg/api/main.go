@@ -20,6 +20,7 @@ import (
 	tapApi "github.com/up9inc/mizu/tap/api"
 
 	"mizuserver/pkg/models"
+	"mizuserver/pkg/oas"
 	"mizuserver/pkg/resolver"
 	"mizuserver/pkg/utils"
 
@@ -140,6 +141,8 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 				rules, _, _ := models.RunValidationRulesState(*harEntry, mizuEntry.Destination.Name)
 				mizuEntry.Rules = rules
 			}
+
+			oas.GetOasGeneratorInstance().PushEntry(harEntry)
 		}
 
 		data, err := json.Marshal(mizuEntry)
