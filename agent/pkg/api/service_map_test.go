@@ -5,9 +5,22 @@ import (
 
 	"github.com/stretchr/testify/suite"
 	"github.com/up9inc/mizu/shared"
+	tapApi "github.com/up9inc/mizu/tap/api"
 )
 
-const Protocol = "p"
+var Protocol = &tapApi.Protocol{
+	Name:            "http",
+	LongName:        "Hypertext Transfer Protocol -- HTTP/1.1",
+	Abbreviation:    "HTTP",
+	Macro:           "http",
+	Version:         "1.1",
+	BackgroundColor: "#205cf5",
+	ForegroundColor: "#ffffff",
+	FontSize:        12,
+	ReferenceLink:   "https://datatracker.ietf.org/doc/html/rfc2616",
+	Ports:           []string{"80", "443", "8080"},
+	Priority:        0,
+}
 
 type ServiceMapDisabledSuite struct {
 	suite.Suite

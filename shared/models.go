@@ -6,6 +6,7 @@ import (
 
 	"github.com/op/go-logging"
 	"github.com/up9inc/mizu/shared/logger"
+	tapApi "github.com/up9inc/mizu/tap/api"
 	v1 "k8s.io/api/core/v1"
 
 	"gopkg.in/yaml.v3"
@@ -85,10 +86,10 @@ type ServiceMapResponse struct {
 }
 
 type ServiceMapNode struct {
-	Name     string `json:"name"`
-	Id       int    `json:"id"`
-	Protocol string `json:"protocol"`
-	Count    int    `json:"count"`
+	Name     string           `json:"name"`
+	Id       int              `json:"id"`
+	Protocol *tapApi.Protocol `json:"protocol"`
+	Count    int              `json:"count"`
 }
 
 type ServiceMapEdge struct {

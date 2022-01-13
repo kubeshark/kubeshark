@@ -9,7 +9,22 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/suite"
 	"github.com/up9inc/mizu/shared"
+	tapApi "github.com/up9inc/mizu/tap/api"
 )
+
+var Protocol = &tapApi.Protocol{
+	Name:            "http",
+	LongName:        "Hypertext Transfer Protocol -- HTTP/1.1",
+	Abbreviation:    "HTTP",
+	Macro:           "http",
+	Version:         "1.1",
+	BackgroundColor: "#205cf5",
+	ForegroundColor: "#ffffff",
+	FontSize:        12,
+	ReferenceLink:   "https://datatracker.ietf.org/doc/html/rfc2616",
+	Ports:           []string{"80", "443", "8080"},
+	Priority:        0,
+}
 
 type ServiceMapControllerSuite struct {
 	suite.Suite
@@ -24,7 +39,7 @@ func (s *ServiceMapControllerSuite) SetupTest() {
 	s.c.service.SetConfig(&shared.MizuAgentConfig{
 		ServiceMap: true,
 	})
-	s.c.service.AddEdge("a", "b", "p")
+	s.c.service.AddEdge("a", "b", Protocol)
 
 	s.w = httptest.NewRecorder()
 	s.g, _ = gin.CreateTestContext(s.w)
@@ -65,13 +80,13 @@ func (s *ServiceMapControllerSuite) TestGet() {
 	aNode := shared.ServiceMapNode{
 		Name:     "a",
 		Id:       1,
-		Protocol: "p",
+		Protocol: Protocol,
 		Count:    1,
 	}
 	bNode := shared.ServiceMapNode{
 		Name:     "b",
 		Id:       2,
-		Protocol: "p",
+		Protocol: Protocol,
 		Count:    1,
 	}
 	assert.Equal([]shared.ServiceMapNode{

@@ -5,6 +5,7 @@ import (
 
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/logger"
+	tapApi "github.com/up9inc/mizu/tap/api"
 )
 
 const (
@@ -33,7 +34,7 @@ type serviceMap struct {
 type ServiceMap interface {
 	SetConfig(config *shared.MizuAgentConfig)
 	IsEnabled() bool
-	AddEdge(source, destination key, protocol string)
+	AddEdge(source, destination key, protocol *tapApi.Protocol)
 	GetStatus() shared.ServiceMapStatus
 	GetNodes() []shared.ServiceMapNode
 	GetEdges() []shared.ServiceMapEdge
@@ -55,7 +56,7 @@ type key string
 
 type nodeData struct {
 	id       int
-	protocol string
+	protocol *tapApi.Protocol
 	count    int
 }
 type edgeData struct {
@@ -74,7 +75,7 @@ func newDirectedGraph() *graph {
 	}
 }
 
-func newNodeData(id int, p string) *nodeData {
+func newNodeData(id int, p *tapApi.Protocol) *nodeData {
 	return &nodeData{
 		id:       id,
 		protocol: p,
@@ -88,14 +89,14 @@ func newEdgeData() *edgeData {
 	}
 }
 
-func (s *serviceMap) addNode(k key, p string) {
+func (s *serviceMap) addNode(k key, p *tapApi.Protocol) {
 	if _, ok := s.graph.Nodes[k]; ok {
 		return
 	}
 	s.graph.Nodes[k] = newNodeData(len(s.graph.Nodes)+1, p)
 }
 
-func (s *serviceMap) AddEdge(u, v key, p string) {
+func (s *serviceMap) AddEdge(u, v key, p *tapApi.Protocol) {
 	if !s.IsEnabled() {
 		return
 	}
