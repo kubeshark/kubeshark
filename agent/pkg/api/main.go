@@ -115,9 +115,8 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 		disableOASValidation = true
 	}
 
-	oasGenerator := oas.GetOasGeneratorInstance()
 	if config.Config.OAS {
-		oasGenerator.Enable()
+		oas.GetOasGeneratorInstance().Start()
 	}
 
 	for item := range outputItems {
@@ -144,7 +143,7 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 				mizuEntry.Rules = rules
 			}
 
-			oasGenerator.PushEntry(harEntry)
+			oas.GetOasGeneratorInstance().PushEntry(harEntry)
 		}
 
 		data, err := json.Marshal(mizuEntry)

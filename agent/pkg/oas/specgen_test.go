@@ -8,12 +8,10 @@ import (
 	"io/ioutil"
 	"os"
 	"strings"
-	"sync"
 	"testing"
-	"time"
 )
 
-// if enabled via env, write file into subdir
+// if started via env, write file into subdir
 func writeFiles(label string, spec *openapi.OpenAPI) {
 	if os.Getenv("MIZU_OAS_WRITE_FILES") != "" {
 		path := "./oas-samples"
@@ -39,70 +37,39 @@ func TestEntries(t *testing.T) {
 		t.Log(err)
 		t.FailNow()
 	}
-	entries := make(chan har.Entry)
-	go func() { // this goroutine reads inputs
-		err := feedEntries(files, entries)
-		if err != nil {
-			t.Log(err)
-			t.Fail()
-		}
-	}()
+	GetOasGeneratorInstance().Start()
 
-	specs := new(sync.Map)
-
-	loadStartingOAS(specs)
-
-	finished := false
-	mutex := sync.Mutex{}
-	go func() { // this goroutine generates OAS from entries
-		err := EntriesToSpecs(entries, specs)
-
-		mutex.Lock()
-		finished = true
-		mutex.Unlock()
-
-		if err != nil {
-			t.Log(err)
-			t.Fail()
-		}
-	}()
-
-	for { // demo for parallel fetching of specs
-		time.Sleep(time.Second / 2)
-		svcs := strings.Builder{}
-		specs.Range(func(key, val interface{}) bool {
-			gen := val.(*SpecGen)
-			svc := key.(string)
-			svcs.WriteString(svc + ",")
-			spec, err := gen.GetSpec()
-			if err != nil {
-				t.Log(err)
-				t.FailNow()
-				return false
-			}
-
-			err = spec.Validate()
-			if err != nil {
-				specText, _ := json.MarshalIndent(spec, "", "\t")
-				t.Log(string(specText))
-				t.Log(err)
-				t.FailNow()
-			}
-
-			return true
-		})
-
-		t.Logf("Made a cycle on specs: %s", svcs.String())
-
-		mutex.Lock()
-		if finished {
-			mutex.Unlock()
-			break
-		}
-		mutex.Unlock()
+	if err := feedEntries(files); err != nil {
+		t.Log(err)
+		t.Fail()
 	}
 
-	specs.Range(func(key, val interface{}) bool {
+	loadStartingOAS()
+
+	svcs := strings.Builder{}
+	GetOasGeneratorInstance().ServiceSpecs.Range(func(key, val interface{}) bool {
+		gen := val.(*SpecGen)
+		svc := key.(string)
+		svcs.WriteString(svc + ",")
+		spec, err := gen.GetSpec()
+		if err != nil {
+			t.Log(err)
+			t.FailNow()
+			return false
+		}
+
+		err = spec.Validate()
+		if err != nil {
+			specText, _ := json.MarshalIndent(spec, "", "\t")
+			t.Log(string(specText))
+			t.Log(err)
+			t.FailNow()
+		}
+
+		return true
+	})
+
+	GetOasGeneratorInstance().ServiceSpecs.Range(func(key, val interface{}) bool {
 		svc := key.(string)
 		gen := val.(*SpecGen)
 		spec, err := gen.GetSpec()
@@ -127,28 +94,17 @@ func TestEntries(t *testing.T) {
 }
 
 func TestFileLDJSON(t *testing.T) {
-	entries := make(chan har.Entry)
-	go func() {
-		file := "output_rdwtyeoyrj.har.ldjson"
-		err := feedFromLDJSON(file, entries)
-		if err != nil {
-			logger.Log.Warning("Failed processing file: " + err.Error())
-			t.Fail()
-		}
-		close(entries)
-	}()
-
-	specs := new(sync.Map)
-
-	loadStartingOAS(specs)
-
-	err := EntriesToSpecs(entries, specs)
+	GetOasGeneratorInstance().Start()
+	file := "output_rdwtyeoyrj.har.ldjson"
+	err := feedFromLDJSON(file)
 	if err != nil {
-		logger.Log.Warning("Failed processing entries: " + err.Error())
-		t.FailNow()
+		logger.Log.Warning("Failed processing file: " + err.Error())
+		t.Fail()
 	}
 
-	specs.Range(func(_, val interface{}) bool {
+	loadStartingOAS()
+
+	GetOasGeneratorInstance().ServiceSpecs.Range(func(_, val interface{}) bool {
 		gen := val.(*SpecGen)
 		spec, err := gen.GetSpec()
 		if err != nil {
@@ -169,7 +125,7 @@ func TestFileLDJSON(t *testing.T) {
 	})
 }
 
-func loadStartingOAS(specs *sync.Map) {
+func loadStartingOAS() {
 	file := "catalogue.json"
 	fd, err := os.Open(file)
 	if err != nil {
@@ -192,21 +148,18 @@ func loadStartingOAS(specs *sync.Map) {
 	gen := NewGen("catalogue")
 	gen.StartFromSpec(doc)
 
-	specs.Store("catalogue", gen)
+	GetOasGeneratorInstance().ServiceSpecs.Store("catalogue", gen)
 
 	return
 }
 
 func TestEntriesNegative(t *testing.T) {
 	files := []string{"invalid"}
-	entries := make(chan har.Entry)
-	go func() {
-		err := feedEntries(files, entries)
-		if err == nil {
-			t.Logf("Should have failed")
-			t.Fail()
-		}
-	}()
+	err := feedEntries(files)
+	if err == nil {
+		t.Logf("Should have failed")
+		t.Fail()
+	}
 }
 
 func TestLoadValidHAR(t *testing.T) {

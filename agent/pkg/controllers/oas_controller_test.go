@@ -10,8 +10,8 @@ import (
 func TestGetOASServers(t *testing.T) {
 	recorder := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(recorder)
-
-	oas.ServiceSpecs.Store("some", oas.NewGen("some"))
+	oas.GetOasGeneratorInstance().Start()
+	oas.GetOasGeneratorInstance().ServiceSpecs.Store("some", oas.NewGen("some"))
 
 	GetOASServers(c)
 	t.Logf("Written body: %s", recorder.Body.String())
@@ -21,8 +21,8 @@ func TestGetOASServers(t *testing.T) {
 func TestGetOASAllSpecs(t *testing.T) {
 	recorder := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(recorder)
-
-	oas.ServiceSpecs.Store("some", oas.NewGen("some"))
+	oas.GetOasGeneratorInstance().Start()
+	oas.GetOasGeneratorInstance().ServiceSpecs.Store("some", oas.NewGen("some"))
 
 	GetOASAllSpecs(c)
 	t.Logf("Written body: %s", recorder.Body.String())
@@ -32,8 +32,8 @@ func TestGetOASAllSpecs(t *testing.T) {
 func TestGetOASSpec(t *testing.T) {
 	recorder := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(recorder)
-
-	oas.ServiceSpecs.Store("some", oas.NewGen("some"))
+	oas.GetOasGeneratorInstance().Start()
+	oas.GetOasGeneratorInstance().ServiceSpecs.Store("some", oas.NewGen("some"))
 
 	c.Params = []gin.Param{{Key: "id", Value: "some"}}
 

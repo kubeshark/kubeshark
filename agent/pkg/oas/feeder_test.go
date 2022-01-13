@@ -51,21 +51,19 @@ func fileSize(fname string) int64 {
 	return fi.Size()
 }
 
-func feedEntries(fromFiles []string, out chan har.Entry) (err error) {
-	defer close(out)
-
+func feedEntries(fromFiles []string) (err error) {
 	for _, file := range fromFiles {
 		logger.Log.Info("Processing file: " + file)
 		ext := strings.ToLower(filepath.Ext(file))
 		switch ext {
 		case ".har":
-			err = feedFromHAR(file, out)
+			err = feedFromHAR(file)
 			if err != nil {
 				logger.Log.Warning("Failed processing file: " + err.Error())
 				continue
 			}
 		case ".ldjson":
-			err = feedFromLDJSON(file, out)
+			err = feedFromLDJSON(file)
 			if err != nil {
 				logger.Log.Warning("Failed processing file: " + err.Error())
 				continue
@@ -78,7 +76,7 @@ func feedEntries(fromFiles []string, out chan har.Entry) (err error) {
 	return nil
 }
 
-func feedFromHAR(file string, out chan<- har.Entry) error {
+func feedFromHAR(file string) error {
 	fd, err := os.Open(file)
 	if err != nil {
 		panic(err)
@@ -98,13 +96,13 @@ func feedFromHAR(file string, out chan<- har.Entry) error {
 	}
 
 	for _, entry := range harDoc.Log.Entries {
-		out <- *entry
+		GetOasGeneratorInstance().PushEntry(entry)
 	}
 
 	return nil
 }
 
-func feedFromLDJSON(file string, out chan<- har.Entry) error {
+func feedFromLDJSON(file string) error {
 	fd, err := os.Open(file)
 	if err != nil {
 		panic(err)
@@ -142,7 +140,7 @@ func feedFromLDJSON(file string, out chan<- har.Entry) error {
 			if err != nil {
 				logger.Log.Warningf("Failed decoding entry: %s", line)
 			}
-			out <- entry
+			GetOasGeneratorInstance().PushEntry(&entry)
 		}
 	}
 

@@ -22,8 +22,8 @@ func GetOasGeneratorInstance() *oasGenerator {
 	return instance
 }
 
-func (g *oasGenerator) Enable() {
-	if !g.enabled {
+func (g *oasGenerator) Start() {
+	if g.started {
 		return
 	}
 	ctx, cancel := context.WithCancel(context.Background())
@@ -31,7 +31,7 @@ func (g *oasGenerator) Enable() {
 	g.ctx = ctx
 	g.entriesChan = make(chan har.Entry, 100) // buffer up to 100 entries for OAS processing
 	g.ServiceSpecs = &sync.Map{}
-	g.enabled = true
+	g.started = true
 	go instance.runGeneretor()
 }
 
@@ -78,7 +78,7 @@ func (g *oasGenerator) runGeneretor() {
 }
 
 func (g *oasGenerator) PushEntry(entry *har.Entry) {
-	if !g.enabled {
+	if !g.started {
 		return
 	}
 	select {
@@ -90,7 +90,7 @@ func (g *oasGenerator) PushEntry(entry *har.Entry) {
 
 func newOasGenerator() *oasGenerator {
 	return &oasGenerator{
-		enabled:      false,
+		started:      false,
 		ctx:          nil,
 		cancel:       nil,
 		ServiceSpecs: nil,
@@ -99,7 +99,7 @@ func newOasGenerator() *oasGenerator {
 }
 
 type oasGenerator struct {
-	enabled      bool
+	started      bool
 	ctx          context.Context
 	cancel       context.CancelFunc
 	ServiceSpecs *sync.Map
