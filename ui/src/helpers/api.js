@@ -61,6 +61,16 @@ export default class Api {
         return response.data;
     }
 
+    getOASAServices = async () => {
+        const response = await this.client.get("/oas");
+        return response.data;
+    }
+
+    getOASAByService = async (selectedService) => {
+        const response = await this.client.get(`/oas/${selectedService}`);
+        return response.data;
+    }
+
     getOASAllSpecs = async () => {
         const response = await this.client.get("/oas/all");
         return response.data;
