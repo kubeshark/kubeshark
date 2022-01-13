@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"mizuserver/pkg/config"
 	"mizuserver/pkg/holder"
 	"mizuserver/pkg/providers"
 	"os"
@@ -113,10 +112,6 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 	if err != nil {
 		logger.Log.Infof("Disabled OAS validation: %s", err.Error())
 		disableOASValidation = true
-	}
-
-	if config.Config.OAS {
-		oas.GetOasGeneratorInstance().Start()
 	}
 
 	for item := range outputItems {

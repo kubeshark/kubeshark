@@ -11,6 +11,7 @@ import (
 	"mizuserver/pkg/controllers"
 	"mizuserver/pkg/middlewares"
 	"mizuserver/pkg/models"
+	"mizuserver/pkg/oas"
 	"mizuserver/pkg/routes"
 	"mizuserver/pkg/up9"
 	"mizuserver/pkg/utils"
@@ -120,7 +121,7 @@ func main() {
 
 		outputItemsChannel := make(chan *tapApi.OutputChannelItem)
 		filteredOutputItemsChannel := make(chan *tapApi.OutputChannelItem)
-
+		enableExpFeatureIfNeeded()
 		go filterItems(outputItemsChannel, filteredOutputItemsChannel)
 		go api.StartReadingEntries(filteredOutputItemsChannel, nil, extensionsMap)
 
@@ -146,6 +147,12 @@ func main() {
 	<-signalChan
 
 	logger.Log.Info("Exiting")
+}
+
+func enableExpFeatureIfNeeded() {
+	if config.Config.OAS {
+		oas.GetOasGeneratorInstance().Start()
+	}
 }
 
 func configureBasenineServer(host string, port string) {
