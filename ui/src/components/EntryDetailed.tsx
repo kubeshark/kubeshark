@@ -66,9 +66,7 @@ const EntryTitle: React.FC<any> = ({protocol, data, bodySize, elapsedTime}) => {
     </div>;
 };
 
-const EntrySummary: React.FC<any> = ({data}) => {
-    const entry = data.base;
-
+const EntrySummary: React.FC<any> = ({entry}) => {
     return <EntryItem
         key={`entry-${entry.id}`}
         entry={entry}
@@ -117,7 +115,7 @@ export const EntryDetailed = () => {
             bodySize={entryData.bodySize}
             elapsedTime={entryData.data.elapsedTime}
         />}
-        {entryData && <EntrySummary data={entryData.data}/>}
+        {entryData && <EntrySummary entry={entryData.data}/>}
         <>
             {entryData && <EntryViewer
                 representation={entryData.representation}
