@@ -148,7 +148,7 @@ func feedFromLDJSON(file string) error {
 }
 
 func TestFilesList(t *testing.T) {
-	res, err := getFiles(".")
+	res, err := getFiles("./test_artifacts/")
 	t.Log(len(res))
 	t.Log(res)
 	if err != nil || len(res) != 2 {

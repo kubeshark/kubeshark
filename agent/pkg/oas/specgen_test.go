@@ -31,7 +31,7 @@ func writeFiles(label string, spec *openapi.OpenAPI) {
 }
 
 func TestEntries(t *testing.T) {
-	files, err := getFiles(".")
+	files, err := getFiles("./test_artifacts/")
 	// files, err = getFiles("/media/bigdisk/UP9")
 	if err != nil {
 		t.Log(err)
@@ -95,7 +95,7 @@ func TestEntries(t *testing.T) {
 
 func TestFileLDJSON(t *testing.T) {
 	GetOasGeneratorInstance().Start()
-	file := "output_rdwtyeoyrj.har.ldjson"
+	file := "test_artifacts/output_rdwtyeoyrj.har.ldjson"
 	err := feedFromLDJSON(file)
 	if err != nil {
 		logger.Log.Warning("Failed processing file: " + err.Error())
@@ -126,7 +126,7 @@ func TestFileLDJSON(t *testing.T) {
 }
 
 func loadStartingOAS() {
-	file := "catalogue.json"
+	file := "test_artifacts/catalogue.json"
 	fd, err := os.Open(file)
 	if err != nil {
 		panic(err)
@@ -173,7 +173,7 @@ func TestLoadValidHAR(t *testing.T) {
 }
 
 func TestLoadValid3_1(t *testing.T) {
-	fd, err := os.Open("catalogue.json")
+	fd, err := os.Open("test_artifacts/catalogue.json")
 	if err != nil {
 		t.Log(err)
 		t.FailNow()
