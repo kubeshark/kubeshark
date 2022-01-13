@@ -7,7 +7,7 @@ This document describe how Mizu tapper handles workloads configured with mtls, m
 The list of service meshes supported by Mizu include:
 
 - Istio
-- Linkerd
+- Linkerd (beta)
 
 ## Installation
 
