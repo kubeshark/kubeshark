@@ -10,8 +10,8 @@ import (
 
 func mapSliceRebuildAsMap(mapSlice []interface{}) (newMap map[string]interface{}) {
 	newMap = make(map[string]interface{})
-	for _, mapItem := range mapSlice {
-		h := mapItem.(map[string]interface{})
+	for _, item := range mapSlice {
+		h := item.(map[string]interface{})
 		newMap[h["name"].(string)] = h["value"]
 	}
 
@@ -20,8 +20,8 @@ func mapSliceRebuildAsMap(mapSlice []interface{}) (newMap map[string]interface{}
 
 func representMapSliceAsTable(mapSlice []interface{}, selectorPrefix string) (representation string) {
 	var table []api.TableData
-	for _, mapItem := range mapSlice {
-		h := mapItem.(map[string]interface{})
+	for _, item := range mapSlice {
+		h := item.(map[string]interface{})
 		selector := fmt.Sprintf("%s[\"%s\"]", selectorPrefix, h["name"].(string))
 		table = append(table, api.TableData{
 			Name:     h["name"].(string),
