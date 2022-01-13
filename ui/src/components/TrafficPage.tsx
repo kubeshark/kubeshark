@@ -13,7 +13,7 @@ import Api, { MizuWebsocketURL } from "../helpers/api";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import debounce from "lodash/debounce";
-import OasDModal from "./OasDialog/OasModal";
+import OasModal from "./OasModal/OasModal";
 
 const useLayoutStyles = makeStyles(() => ({
   details: {
@@ -75,11 +75,11 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({
   const [truncatedTimestamp, setTruncatedTimestamp] = useState(0);
 
   const [startTime, setStartTime] = useState(0);
+  const scrollableRef = useRef(null);
 
-  const [openModal, setOpenModal] = useState(false);
-
-  const handleOpenModal = () => setOpenModal(true);
-  const handleCloseModal = () => setOpenModal(false);
+  const [openOasModal, setOpenOasModal] = useState(false);
+  const handleOpenModal = () => setOpenOasModal(true);
+  const handleCloseModal = () => setOpenOasModal(false);
 
   const handleQueryChange = useMemo(
     () =>
@@ -253,6 +253,8 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({
       } else {
         openWebSocket(`leftOff(-1)`, true);
       }
+      scrollableRef.current.jumpToBottom();
+      setIsSnappedToBottom(true);
     }
   };
 
@@ -321,7 +323,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({
             </div>
           </div>
         </div>
-       {window["isOasEnable"] && <div>
+       {window["isOasEnabled"] && <div>
           <Button
             type="submit"
             variant="contained"
@@ -339,8 +341,8 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({
           </Button>
         </div>}
       </div>
-      {window["isOasEnable"] && <OasDModal
-        openModal={openModal}
+      {window["isOasEnabled"] && <OasModal
+        openModal={openOasModal}
         handleCloseModal={handleCloseModal}
         entries={entries}
       />}
@@ -375,15 +377,14 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({
                 updateQuery={updateQuery}
                 leftOffTop={leftOffTop}
                 setLeftOffTop={setLeftOffTop}
-                isWebSocketConnectionClosed={
-                  connection === ConnectionStatus.Closed
-                }
+                isWebSocketConnectionClosed={connection === ConnectionStatus.Closed}
                 ws={ws.current}
                 openWebSocket={openWebSocket}
                 leftOffBottom={leftOffBottom}
                 truncatedTimestamp={truncatedTimestamp}
                 setTruncatedTimestamp={setTruncatedTimestamp}
-              />
+                scrollableRef={scrollableRef}
+                />
             </div>
           </div>
           <div className={classes.details}>
@@ -396,7 +397,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({
           </div>
         </div>
       }
-      {tappingStatus && !openModal && (
+      {tappingStatus && !openOasModal && (
         <StatusBar tappingStatus={tappingStatus} />
       )}
       <ToastContainer

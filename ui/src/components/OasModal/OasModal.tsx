@@ -7,7 +7,7 @@ import closeIcon from "../assets/closeIcon.svg";
 
 const api = new Api();
 
-const OasDModal = ({ openModal, handleCloseModal, entries }) => {
+const OasModal = ({ openModal, handleCloseModal, entries }) => {
   const [oasServices, setOASservices] = useState([]);
   const [selectedOASService, setSelectedOASService] = useState("");
   const [serviceOAS, setServiceOAS] = useState(null);
@@ -96,4 +96,4 @@ const OasDModal = ({ openModal, handleCloseModal, entries }) => {
   );
 };
 
-export default OasDModal;
+export default OasModal;
