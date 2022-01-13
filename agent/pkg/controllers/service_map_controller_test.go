@@ -89,10 +89,9 @@ func (s *ServiceMapControllerSuite) TestGet() {
 		Protocol: Protocol,
 		Count:    1,
 	}
-	assert.Equal([]shared.ServiceMapNode{
-		aNode,
-		bNode,
-	}, response.Nodes)
+	assert.Contains(response.Nodes, aNode)
+	assert.Contains(response.Nodes, bNode)
+	assert.Len(response.Nodes, 2)
 
 	// response edges
 	assert.Equal([]shared.ServiceMapEdge{
