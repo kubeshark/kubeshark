@@ -21,7 +21,30 @@ func filterAndEmit(item *api.OutputChannelItem, emitter api.Emitter, options *ap
 		FilterSensitiveData(item, options)
 	}
 
+	replaceForwardedFor(item)
+
 	emitter.Emit(item)
+}
+
+func replaceForwardedFor(item *api.OutputChannelItem) {
+	if item.Protocol.Name != "http" {
+		return
+	}
+
+	request := item.Pair.Request.Payload.(api.HTTPPayload).Data.(*http.Request)
+
+	forwardedFor := request.Header.Get("X-Forwarded-For")
+	if forwardedFor == "" {
+		return
+	}
+
+	ips := strings.Split(forwardedFor, ",")
+	lastIP := strings.TrimSpace(ips[0])
+
+	item.ConnectionInfo.ClientIP = lastIP
+	// Erase the port field. Because the proxy terminates the connection from the client, the port that we see here
+	// is not the source port on the client side.
+	item.ConnectionInfo.ClientPort = ""
 }
 
 func handleHTTP2Stream(http2Assembler *Http2Assembler, tcpID *api.TcpID, superTimer *api.SuperTimer, emitter api.Emitter, options *api.TrafficFilteringOptions) error {

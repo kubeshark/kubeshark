@@ -4,11 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
-	"time"
-
 	"github.com/up9inc/mizu/shared/kubernetes"
 	core "k8s.io/api/core/v1"
+	"regexp"
+	"time"
 
 	"github.com/creasty/defaults"
 	"github.com/up9inc/mizu/cli/config"
@@ -91,6 +90,7 @@ func getInstallMizuAgentConfig(maxDBSizeBytes int64, tapperResources shared.Reso
 		AgentDatabasePath:      shared.DataDirPath,
 		StandaloneMode:         true,
 		ServiceMap:             config.Config.ServiceMap,
+		OAS:                    config.Config.OAS,
 	}
 
 	return &mizuAgentConfig

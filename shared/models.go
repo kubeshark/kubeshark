@@ -42,6 +42,7 @@ type MizuAgentConfig struct {
 	AgentDatabasePath      string        `json:"agentDatabasePath"`
 	StandaloneMode         bool          `json:"standaloneMode"`
 	ServiceMap             bool          `json:"serviceMap"`
+	OAS                    bool          `json:"oas"`
 }
 
 type WebSocketMessageMetadata struct {
@@ -147,9 +148,9 @@ func CreateWebSocketMessageTypeAnalyzeStatus(analyzeStatus AnalyzeStatus) WebSoc
 }
 
 type HealthResponse struct {
-	TappedPods    []*PodInfo      `json:"tappedPods"`
-	TappersCount  int             `json:"tappersCount"`
-	TappersStatus []*TapperStatus `json:"tappersStatus"`
+	TappedPods            []*PodInfo      `json:"tappedPods"`
+	ConnectedTappersCount int             `json:"connectedTappersCount"`
+	TappersStatus         []*TapperStatus `json:"tappersStatus"`
 }
 
 type VersionResponse struct {

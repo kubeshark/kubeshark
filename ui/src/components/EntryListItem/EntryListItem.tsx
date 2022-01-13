@@ -216,7 +216,7 @@ export const EntryItem: React.FC<EntryProps> = ({entry, focusedEntryId, setFocus
                         {entry.src.ip}
                     </span>
                 </Queryable>
-                <span className={`${styles.tcpInfo}`} style={{marginTop: "18px"}}>:</span>
+				<span className={`${styles.tcpInfo}`} style={{marginTop: "18px"}}>{entry.src.port ? ":" : ""}</span>
                 <Queryable
                         query={`src.port == "${entry.src.port}"`}
                         updateQuery={updateQuery}
