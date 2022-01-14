@@ -436,11 +436,6 @@ func representFetchRequest(data map[string]interface{}) []interface{} {
 	rep = representRequestHeader(data, rep)
 
 	payload := data["payload"].(map[string]interface{})
-	topics := ""
-	if payload["topics"] != nil {
-		_topics, _ := json.Marshal(payload["topics"].([]interface{}))
-		topics = string(_topics)
-	}
 	replicaId := ""
 	if payload["replicaId"] != nil {
 		replicaId = fmt.Sprintf("%d", int(payload["replicaId"].(float64)))
@@ -507,11 +502,6 @@ func representFetchRequest(data map[string]interface{}) []interface{} {
 			Selector: `request.payload.sessionEpoch`,
 		},
 		{
-			Name:     "Topics",
-			Value:    topics,
-			Selector: `request.payload.topics`,
-		},
-		{
 			Name:     "Forgotten Topics Data",
 			Value:    forgottenTopicsData,
 			Selector: `request.payload.forgottenTopicsData`,
@@ -528,6 +518,20 @@ func representFetchRequest(data map[string]interface{}) []interface{} {
 		Data:  string(repPayload),
 	})
 
+	for i, _topic := range payload["topics"].([]interface{}) {
+		topic := _topic.(map[string]interface{})
+		topicName := topic["topic"].(string)
+		for j, _partition := range topic["partitions"].([]interface{}) {
+			partition := _partition.(map[string]interface{})
+
+			rep = append(rep, api.SectionData{
+				Type:  api.TABLE,
+				Title: fmt.Sprintf("Partition [%d] (topic: %s)", j, topicName),
+				Data:  representMapAsTable(partition, fmt.Sprintf(`request.payload.topics[%d].partitions[%d]`, i, j)),
+			})
+		}
+	}
+
 	return rep
 }
 
@@ -537,11 +541,6 @@ func representFetchResponse(data map[string]interface{}) []interface{} {
 	rep = representResponseHeader(data, rep)
 
 	payload := data["payload"].(map[string]interface{})
-	responses := ""
-	if payload["responses"] != nil {
-		_responses, _ := json.Marshal(payload["responses"].([]interface{}))
-		responses = string(_responses)
-	}
 	throttleTimeMs := ""
 	if payload["throttleTimeMs"] != nil {
 		throttleTimeMs = fmt.Sprintf("%d", int(payload["throttleTimeMs"].(float64)))
@@ -570,17 +569,53 @@ func representFetchResponse(data map[string]interface{}) []interface{} {
 			Value:    sessionId,
 			Selector: `response.payload.sessionId`,
 		},
-		{
-			Name:     "Responses",
-			Value:    responses,
-			Selector: `response.payload.responses`,
-		},
 	})
 	rep = append(rep, api.SectionData{
 		Type:  api.TABLE,
 		Title: "Payload",
 		Data:  string(repPayload),
 	})
+
+	for i, _response := range payload["responses"].([]interface{}) {
+		response := _response.(map[string]interface{})
+		topicName := response["topic"].(string)
+
+		for j, _partitionResponse := range response["partitionResponses"].([]interface{}) {
+			partitionResponse := _partitionResponse.(map[string]interface{})
+			recordSet := partitionResponse["recordSet"].(map[string]interface{})
+
+			rep = append(rep, api.SectionData{
+				Type:  api.TABLE,
+				Title: fmt.Sprintf("Response [%d] Partition Response [%d] (topic: %s)", i, j, topicName),
+				Data:  representMapAsTable(partitionResponse, fmt.Sprintf(`response.payload.responses[%d].partitionResponses[%d]`, i, j)),
+			})
+
+			recordBatch := recordSet["recordBatch"].(map[string]interface{})
+			rep = append(rep, api.SectionData{
+				Type:  api.TABLE,
+				Title: fmt.Sprintf("Response [%d] Partition Response [%d] Record Batch (topic: %s)", i, j, topicName),
+				Data:  representMapAsTable(recordBatch, fmt.Sprintf(`response.payload.responses[%d].partitionResponses[%d].recordSet.recordBatch`, i, j)),
+			})
+
+			for k, _record := range recordBatch["record"].([]interface{}) {
+				record := _record.(map[string]interface{})
+				value := record["value"]
+
+				rep = append(rep, api.SectionData{
+					Type:  api.TABLE,
+					Title: fmt.Sprintf("Response [%d] Partition Response [%d] Record [%d] (topic: %s)", i, j, k, topicName),
+					Data:  representMapAsTable(record, fmt.Sprintf(`response.payload.responses[%d].partitionResponses[%d].recordSet.recordBatch.record[%d]`, i, j, k)),
+				})
+
+				rep = append(rep, api.SectionData{
+					Type:     api.BODY,
+					Title:    fmt.Sprintf("Response [%d] Partition Response [%d] Record [%d] Value (topic: %s)", i, j, k, topicName),
+					Data:     value.(string),
+					Selector: fmt.Sprintf(`response.payload.responses[%d].partitionResponses[%d].recordSet.recordBatch.record[%d].value`, i, j, k),
+				})
+			}
+		}
+	}
 
 	return rep
 }
