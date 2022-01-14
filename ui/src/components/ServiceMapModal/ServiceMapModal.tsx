@@ -30,8 +30,9 @@ interface Edge {
 }
 
 interface ServiceMapNode {
-    name: string;
     id: number;
+    name: string;
+    entry: Entry;
     protocol: Protocol;
     count: number;
 }
@@ -45,6 +46,12 @@ interface ServiceMapEdge {
 interface ServiceMapGraph {
     nodes: ServiceMapNode[];
     edges: ServiceMapEdge[];
+}
+
+interface Entry {
+    ip: string;
+    port: string;
+    name: string;
 }
 
 interface Protocol {
@@ -181,7 +188,7 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onOpen
                     graphData.nodes.push({
                         id: serviceMapData.nodes[i].id,
                         value: serviceMapData.nodes[i].count,
-                        label: serviceMapData.nodes[i].name,
+                        label: (serviceMapData.nodes[i].entry.name === "unresolved") ? serviceMapData.nodes[i].name : serviceMapData.nodes[i].entry.name,
                         title: "Count: " + serviceMapData.nodes[i].name,
                     });
                 }
@@ -195,8 +202,8 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onOpen
                         value: serviceMapData.edges[i].count,
                         label: serviceMapData.edges[i].count.toString(),
                         color: {
-                            color: serviceMapData.edges[i].source.protocol.backgroundColor,
-                            highlight: serviceMapData.edges[i].source.protocol.backgroundColor
+                            color: serviceMapData.edges[i].destination.protocol.backgroundColor,
+                            highlight: serviceMapData.edges[i].destination.protocol.backgroundColor
                         },
                     });
                 }
