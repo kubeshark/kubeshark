@@ -89,11 +89,18 @@ func newEdgeData() *edgeData {
 	}
 }
 
-func (s *serviceMap) addNode(k key, p *tapApi.Protocol) {
-	if _, ok := s.graph.Nodes[k]; ok {
-		return
+func (s *serviceMap) nodeExists(k key) (*nodeData, bool) {
+	n, ok := s.graph.Nodes[k]
+	return n, ok
+}
+
+func (s *serviceMap) addNode(k key, p *tapApi.Protocol) (*nodeData, bool) {
+	n, exists := s.nodeExists(k)
+	if !exists {
+		s.graph.Nodes[k] = newNodeData(len(s.graph.Nodes)+1, p)
+		return s.graph.Nodes[k], true
 	}
-	s.graph.Nodes[k] = newNodeData(len(s.graph.Nodes)+1, p)
+	return n, false
 }
 
 func (s *serviceMap) AddEdge(u, v key, p *tapApi.Protocol) {
@@ -101,6 +108,7 @@ func (s *serviceMap) AddEdge(u, v key, p *tapApi.Protocol) {
 		return
 	}
 
+	// TODO: fallback to ip address
 	if len(u) == 0 {
 		u = UnresolvedNode
 	}
@@ -108,14 +116,10 @@ func (s *serviceMap) AddEdge(u, v key, p *tapApi.Protocol) {
 		v = UnresolvedNode
 	}
 
-	if n, ok := s.graph.Nodes[u]; !ok {
-		s.addNode(u, p)
-	} else {
+	if n, ok := s.addNode(u, p); !ok {
 		n.count++
 	}
-	if n, ok := s.graph.Nodes[v]; !ok {
-		s.addNode(v, p)
-	} else {
+	if n, ok := s.addNode(v, p); !ok {
 		n.count++
 	}
 
