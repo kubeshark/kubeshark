@@ -352,7 +352,7 @@ func representProduceRequest(data map[string]interface{}) []interface{} {
 				rep = append(rep, api.SectionData{
 					Type:  api.TABLE,
 					Title: fmt.Sprintf("Record Batch (topic: %s)", topicName),
-					Data:  representMapAsTable(recordBatchresults[0].(map[string]interface{}), `request.payload.topicData.partitions.partitionData.records.recordBatch`),
+					Data:  representMapAsTable(recordBatchresults[0].(map[string]interface{}), `request.payload.topicData.partitions.partitionData.records.recordBatch`, []string{"record"}),
 				})
 			}
 
@@ -368,7 +368,7 @@ func representProduceRequest(data map[string]interface{}) []interface{} {
 					rep = append(rep, api.SectionData{
 						Type:  api.TABLE,
 						Title: fmt.Sprintf("Record [%d] Details (topic: %s)", i, topicName),
-						Data:  representMapAsTable(recordBatchresults[0].(map[string]interface{}), fmt.Sprintf(`request.payload.topicData.partitions.partitionData.records.recordBatch.record[%d]`, i)),
+						Data:  representMapAsTable(record, fmt.Sprintf(`request.payload.topicData.partitions.partitionData.records.recordBatch.record[%d]`, i), []string{"value"}),
 					})
 
 					rep = append(rep, api.SectionData{
@@ -414,7 +414,7 @@ func representProduceResponse(data map[string]interface{}) []interface{} {
 		rep = append(rep, api.SectionData{
 			Type:  api.TABLE,
 			Title: fmt.Sprintf("Response [%d]", i),
-			Data:  representMapAsTable(response, fmt.Sprintf(`response.payload.responses[%d]`, i)),
+			Data:  representMapAsTable(response, fmt.Sprintf(`response.payload.responses[%d]`, i), []string{"partitionResponses"}),
 		})
 
 		for j, _partitionResponse := range response["partitionResponses"].([]interface{}) {
@@ -422,7 +422,7 @@ func representProduceResponse(data map[string]interface{}) []interface{} {
 			rep = append(rep, api.SectionData{
 				Type:  api.TABLE,
 				Title: fmt.Sprintf("Response [%d] Partition Response [%d]", i, j),
-				Data:  representMapAsTable(partitionResponse, fmt.Sprintf(`response.payload.responses[%d].partitionResponses[%d]`, i, j)),
+				Data:  representMapAsTable(partitionResponse, fmt.Sprintf(`response.payload.responses[%d].partitionResponses[%d]`, i, j), []string{}),
 			})
 		}
 	}
@@ -514,7 +514,7 @@ func representFetchRequest(data map[string]interface{}) []interface{} {
 	})
 	rep = append(rep, api.SectionData{
 		Type:  api.TABLE,
-		Title: "Payload",
+		Title: "Transaction Details",
 		Data:  string(repPayload),
 	})
 
@@ -527,7 +527,7 @@ func representFetchRequest(data map[string]interface{}) []interface{} {
 			rep = append(rep, api.SectionData{
 				Type:  api.TABLE,
 				Title: fmt.Sprintf("Partition [%d] (topic: %s)", j, topicName),
-				Data:  representMapAsTable(partition, fmt.Sprintf(`request.payload.topics[%d].partitions[%d]`, i, j)),
+				Data:  representMapAsTable(partition, fmt.Sprintf(`request.payload.topics[%d].partitions[%d]`, i, j), []string{}),
 			})
 		}
 	}
@@ -572,7 +572,7 @@ func representFetchResponse(data map[string]interface{}) []interface{} {
 	})
 	rep = append(rep, api.SectionData{
 		Type:  api.TABLE,
-		Title: "Payload",
+		Title: "Transaction Details",
 		Data:  string(repPayload),
 	})
 
@@ -587,14 +587,14 @@ func representFetchResponse(data map[string]interface{}) []interface{} {
 			rep = append(rep, api.SectionData{
 				Type:  api.TABLE,
 				Title: fmt.Sprintf("Response [%d] Partition Response [%d] (topic: %s)", i, j, topicName),
-				Data:  representMapAsTable(partitionResponse, fmt.Sprintf(`response.payload.responses[%d].partitionResponses[%d]`, i, j)),
+				Data:  representMapAsTable(partitionResponse, fmt.Sprintf(`response.payload.responses[%d].partitionResponses[%d]`, i, j), []string{"recordSet"}),
 			})
 
 			recordBatch := recordSet["recordBatch"].(map[string]interface{})
 			rep = append(rep, api.SectionData{
 				Type:  api.TABLE,
 				Title: fmt.Sprintf("Response [%d] Partition Response [%d] Record Batch (topic: %s)", i, j, topicName),
-				Data:  representMapAsTable(recordBatch, fmt.Sprintf(`response.payload.responses[%d].partitionResponses[%d].recordSet.recordBatch`, i, j)),
+				Data:  representMapAsTable(recordBatch, fmt.Sprintf(`response.payload.responses[%d].partitionResponses[%d].recordSet.recordBatch`, i, j), []string{"record"}),
 			})
 
 			for k, _record := range recordBatch["record"].([]interface{}) {
@@ -604,7 +604,7 @@ func representFetchResponse(data map[string]interface{}) []interface{} {
 				rep = append(rep, api.SectionData{
 					Type:  api.TABLE,
 					Title: fmt.Sprintf("Response [%d] Partition Response [%d] Record [%d] (topic: %s)", i, j, k, topicName),
-					Data:  representMapAsTable(record, fmt.Sprintf(`response.payload.responses[%d].partitionResponses[%d].recordSet.recordBatch.record[%d]`, i, j, k)),
+					Data:  representMapAsTable(record, fmt.Sprintf(`response.payload.responses[%d].partitionResponses[%d].recordSet.recordBatch.record[%d]`, i, j, k), []string{"value"}),
 				})
 
 				rep = append(rep, api.SectionData{
@@ -718,7 +718,7 @@ func representCreateTopicsRequest(data map[string]interface{}) []interface{} {
 		rep = append(rep, api.SectionData{
 			Type:  api.TABLE,
 			Title: fmt.Sprintf("Topic [%d]", i),
-			Data:  representMapAsTable(topic, fmt.Sprintf(`request.payload.topics[%d]`, i)),
+			Data:  representMapAsTable(topic, fmt.Sprintf(`request.payload.topics[%d]`, i), []string{}),
 		})
 	}
 
@@ -754,7 +754,7 @@ func representCreateTopicsResponse(data map[string]interface{}) []interface{} {
 		rep = append(rep, api.SectionData{
 			Type:  api.TABLE,
 			Title: fmt.Sprintf("Topic [%d]", i),
-			Data:  representMapAsTable(topic, fmt.Sprintf(`response.payload.topics[%d]`, i)),
+			Data:  representMapAsTable(topic, fmt.Sprintf(`response.payload.topics[%d]`, i), []string{}),
 		})
 	}
 
@@ -835,22 +835,38 @@ func representDeleteTopicsResponse(data map[string]interface{}) []interface{} {
 	return rep
 }
 
-func representMapAsTable(mapData map[string]interface{}, selectorPrefix string) (representation string) {
+func contains(s []string, str string) bool {
+	for _, v := range s {
+		if v == str {
+			return true
+		}
+	}
+
+	return false
+}
+
+func representMapAsTable(mapData map[string]interface{}, selectorPrefix string, ignoreKeys []string) (representation string) {
 	var table []api.TableData
 	for key, value := range mapData {
+		if contains(ignoreKeys, key) {
+			continue
+		}
 		switch reflect.ValueOf(value).Kind() {
 		case reflect.Map:
 			fallthrough
 		case reflect.Slice:
-			continue
-		default:
-			selector := fmt.Sprintf("%s[\"%s\"]", selectorPrefix, key)
-			table = append(table, api.TableData{
-				Name:     strings.Join(camelcase.Split(strings.Title(key)), " "),
-				Value:    value,
-				Selector: selector,
-			})
+			x, err := json.Marshal(value)
+			value = string(x)
+			if err != nil {
+				continue
+			}
 		}
+		selector := fmt.Sprintf("%s[\"%s\"]", selectorPrefix, key)
+		table = append(table, api.TableData{
+			Name:     strings.Join(camelcase.Split(strings.Title(key)), " "),
+			Value:    value,
+			Selector: selector,
+		})
 	}
 
 	obj, _ := json.Marshal(table)
