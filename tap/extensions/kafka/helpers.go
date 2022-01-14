@@ -3,8 +3,13 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"strconv"
+	"strings"
 
+	"github.com/fatih/camelcase"
+	"github.com/ohler55/ojg/jp"
+	"github.com/ohler55/ojg/oj"
 	"github.com/up9inc/mizu/tap/api"
 )
 
@@ -289,17 +294,12 @@ func representProduceRequest(data map[string]interface{}) []interface{} {
 	rep = representRequestHeader(data, rep)
 
 	payload := data["payload"].(map[string]interface{})
-	topicData := ""
-	_topicData := payload["topicData"]
-	if _topicData != nil {
-		x, _ := json.Marshal(_topicData.([]interface{}))
-		topicData = string(x)
-	}
+	topicData := payload["topicData"]
 	transactionalID := ""
 	if payload["transactionalID"] != nil {
 		transactionalID = payload["transactionalID"].(string)
 	}
-	repPayload, _ := json.Marshal([]api.TableData{
+	repTransactionDetails, _ := json.Marshal([]api.TableData{
 		{
 			Name:     "Transactional ID",
 			Value:    transactionalID,
@@ -315,17 +315,72 @@ func representProduceRequest(data map[string]interface{}) []interface{} {
 			Value:    fmt.Sprintf("%d", int(payload["timeout"].(float64))),
 			Selector: `request.payload.timeout`,
 		},
-		{
-			Name:     "Topic Data",
-			Value:    topicData,
-			Selector: `request.payload.topicData`,
-		},
 	})
 	rep = append(rep, api.SectionData{
 		Type:  api.TABLE,
-		Title: "Payload",
-		Data:  string(repPayload),
+		Title: "Transaction Details",
+		Data:  string(repTransactionDetails),
 	})
+
+	if topicData != nil {
+		for _, _topic := range topicData.([]interface{}) {
+			topic := _topic.(map[string]interface{})
+			topicName := topic["topic"].(string)
+			partitions := topic["partitions"].(map[string]interface{})
+			partitionsJson, err := json.Marshal(partitions)
+			if err != nil {
+				return rep
+			}
+
+			repPartitions, _ := json.Marshal([]api.TableData{
+				{
+					Name:     "Length",
+					Value:    partitions["length"],
+					Selector: `request.payload.transactionalID`,
+				},
+			})
+			rep = append(rep, api.SectionData{
+				Type:  api.TABLE,
+				Title: fmt.Sprintf("Partitions (topic: %s)", topicName),
+				Data:  string(repPartitions),
+			})
+
+			obj, err := oj.ParseString(string(partitionsJson))
+			recordBatchPath, err := jp.ParseString(`partitionData.records.recordBatch`)
+			recordBatchresults := recordBatchPath.Get(obj)
+			if len(recordBatchresults) > 0 {
+				rep = append(rep, api.SectionData{
+					Type:  api.TABLE,
+					Title: fmt.Sprintf("Record Batch (topic: %s)", topicName),
+					Data:  representMapAsTable(recordBatchresults[0].(map[string]interface{}), `request.payload.topicData.partitions.partitionData.records.recordBatch`),
+				})
+			}
+
+			recordsPath, err := jp.ParseString(`partitionData.records.recordBatch.record`)
+			recordsResults := recordsPath.Get(obj)
+			if len(recordsResults) > 0 {
+				records := recordsResults[0].([]interface{})
+				for i, _record := range records {
+					record := _record.(map[string]interface{})
+					value := record["value"]
+					delete(record, "value")
+
+					rep = append(rep, api.SectionData{
+						Type:  api.TABLE,
+						Title: fmt.Sprintf("Record [%d] Details (topic: %s)", i, topicName),
+						Data:  representMapAsTable(recordBatchresults[0].(map[string]interface{}), fmt.Sprintf(`request.payload.topicData.partitions.partitionData.records.recordBatch.record[%d]`, i)),
+					})
+
+					rep = append(rep, api.SectionData{
+						Type:     api.BODY,
+						Title:    fmt.Sprintf("Record [%d] Value", i),
+						Data:     value.(string),
+						Selector: fmt.Sprintf(`request.payload.topicData.partitions.partitionData.records.recordBatch.record[%d].value`, i),
+					})
+				}
+			}
+		}
+	}
 
 	return rep
 }
@@ -726,4 +781,27 @@ func representDeleteTopicsResponse(data map[string]interface{}) []interface{} {
 	})
 
 	return rep
+}
+
+func representMapAsTable(mapData map[string]interface{}, selectorPrefix string) (representation string) {
+	var table []api.TableData
+	for key, value := range mapData {
+		switch reflect.ValueOf(value).Kind() {
+		case reflect.Map:
+			fallthrough
+		case reflect.Slice:
+			continue
+		default:
+			selector := fmt.Sprintf("%s[\"%s\"]", selectorPrefix, key)
+			table = append(table, api.TableData{
+				Name:     strings.Join(camelcase.Split(strings.Title(key)), " "),
+				Value:    value,
+				Selector: selector,
+			})
+		}
+	}
+
+	obj, _ := json.Marshal(table)
+	representation = string(obj)
+	return
 }
