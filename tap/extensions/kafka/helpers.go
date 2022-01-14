@@ -646,17 +646,11 @@ func representCreateTopicsRequest(data map[string]interface{}) []interface{} {
 	rep = representRequestHeader(data, rep)
 
 	payload := data["payload"].(map[string]interface{})
-	topics, _ := json.Marshal(payload["topics"].([]interface{}))
 	validateOnly := ""
 	if payload["validateOnly"] != nil {
 		validateOnly = strconv.FormatBool(payload["validateOnly"].(bool))
 	}
 	repPayload, _ := json.Marshal([]api.TableData{
-		{
-			Name:     "Topics",
-			Value:    string(topics),
-			Selector: `request.payload.topics`,
-		},
 		{
 			Name:     "Timeout (ms)",
 			Value:    fmt.Sprintf("%d", int(payload["timeoutMs"].(float64))),
@@ -670,9 +664,19 @@ func representCreateTopicsRequest(data map[string]interface{}) []interface{} {
 	})
 	rep = append(rep, api.SectionData{
 		Type:  api.TABLE,
-		Title: "Payload",
+		Title: "Transaction Details",
 		Data:  string(repPayload),
 	})
+
+	for i, _topic := range payload["topics"].([]interface{}) {
+		topic := _topic.(map[string]interface{})
+
+		rep = append(rep, api.SectionData{
+			Type:  api.TABLE,
+			Title: fmt.Sprintf("Topic [%d]", i),
+			Data:  representMapAsTable(topic, fmt.Sprintf(`request.payload.topics[%d]`, i)),
+		})
+	}
 
 	return rep
 }
@@ -683,7 +687,6 @@ func representCreateTopicsResponse(data map[string]interface{}) []interface{} {
 	rep = representResponseHeader(data, rep)
 
 	payload := data["payload"].(map[string]interface{})
-	topics, _ := json.Marshal(payload["topics"].([]interface{}))
 	throttleTimeMs := ""
 	if payload["throttleTimeMs"] != nil {
 		throttleTimeMs = fmt.Sprintf("%d", int(payload["throttleTimeMs"].(float64)))
@@ -694,17 +697,22 @@ func representCreateTopicsResponse(data map[string]interface{}) []interface{} {
 			Value:    throttleTimeMs,
 			Selector: `response.payload.throttleTimeMs`,
 		},
-		{
-			Name:     "Topics",
-			Value:    string(topics),
-			Selector: `response.payload.topics`,
-		},
 	})
 	rep = append(rep, api.SectionData{
 		Type:  api.TABLE,
-		Title: "Payload",
+		Title: "Transaction Details",
 		Data:  string(repPayload),
 	})
+
+	for i, _topic := range payload["topics"].([]interface{}) {
+		topic := _topic.(map[string]interface{})
+
+		rep = append(rep, api.SectionData{
+			Type:  api.TABLE,
+			Title: fmt.Sprintf("Topic [%d]", i),
+			Data:  representMapAsTable(topic, fmt.Sprintf(`request.payload.topics[%d]`, i)),
+		})
+	}
 
 	return rep
 }
