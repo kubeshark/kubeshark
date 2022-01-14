@@ -391,21 +391,11 @@ func representProduceResponse(data map[string]interface{}) []interface{} {
 	rep = representResponseHeader(data, rep)
 
 	payload := data["payload"].(map[string]interface{})
-	responses := ""
-	if payload["responses"] != nil {
-		_responses, _ := json.Marshal(payload["responses"].([]interface{}))
-		responses = string(_responses)
-	}
 	throttleTimeMs := ""
 	if payload["throttleTimeMs"] != nil {
 		throttleTimeMs = fmt.Sprintf("%d", int(payload["throttleTimeMs"].(float64)))
 	}
 	repPayload, _ := json.Marshal([]api.TableData{
-		{
-			Name:     "Responses",
-			Value:    string(responses),
-			Selector: `response.payload.responses`,
-		},
 		{
 			Name:     "Throttle Time (ms)",
 			Value:    throttleTimeMs,
@@ -414,9 +404,28 @@ func representProduceResponse(data map[string]interface{}) []interface{} {
 	})
 	rep = append(rep, api.SectionData{
 		Type:  api.TABLE,
-		Title: "Payload",
+		Title: "Transaction Details",
 		Data:  string(repPayload),
 	})
+
+	for i, _response := range payload["responses"].([]interface{}) {
+		response := _response.(map[string]interface{})
+
+		rep = append(rep, api.SectionData{
+			Type:  api.TABLE,
+			Title: fmt.Sprintf("Response [%d]", i),
+			Data:  representMapAsTable(response, fmt.Sprintf(`response.payload.responses[%d]`, i)),
+		})
+
+		for j, _partitionResponse := range response["partitionResponses"].([]interface{}) {
+			partitionResponse := _partitionResponse.(map[string]interface{})
+			rep = append(rep, api.SectionData{
+				Type:  api.TABLE,
+				Title: fmt.Sprintf("Response [%d] Partition Response [%d]", i, j),
+				Data:  representMapAsTable(partitionResponse, fmt.Sprintf(`response.payload.responses[%d].partitionResponses[%d]`, i, j)),
+			})
+		}
+	}
 
 	return rep
 }
@@ -710,7 +719,7 @@ func representCreateTopicsResponse(data map[string]interface{}) []interface{} {
 		rep = append(rep, api.SectionData{
 			Type:  api.TABLE,
 			Title: fmt.Sprintf("Topic [%d]", i),
-			Data:  representMapAsTable(topic, fmt.Sprintf(`request.payload.topics[%d]`, i)),
+			Data:  representMapAsTable(topic, fmt.Sprintf(`response.payload.topics[%d]`, i)),
 		})
 	}
 
