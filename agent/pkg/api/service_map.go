@@ -11,7 +11,7 @@ import (
 const (
 	ServiceMapEnabled  = "enabled"
 	ServiceMapDisabled = "disabled"
-	UnresolvedNode     = "unresolved"
+	UnresolvedNodeName = "unresolved"
 )
 
 var instance *serviceMap
@@ -34,7 +34,7 @@ type serviceMap struct {
 type ServiceMap interface {
 	SetConfig(config *shared.MizuAgentConfig)
 	IsEnabled() bool
-	AddEdge(source, destination key, protocol *tapApi.Protocol)
+	NewTCPEntry(source *tapApi.TCP, destination *tapApi.TCP, protocol *tapApi.Protocol)
 	GetStatus() shared.ServiceMapStatus
 	GetNodes() []shared.ServiceMapNode
 	GetEdges() []shared.ServiceMapEdge
@@ -54,8 +54,15 @@ func newServiceMap() *serviceMap {
 
 type key string
 
+type entryData struct {
+	key      key
+	entry    *tapApi.TCP
+	protocol *tapApi.Protocol
+}
+
 type nodeData struct {
 	id       int
+	entry    *tapApi.TCP
 	protocol *tapApi.Protocol
 	count    int
 }
@@ -75,9 +82,10 @@ func newDirectedGraph() *graph {
 	}
 }
 
-func newNodeData(id int, p *tapApi.Protocol) *nodeData {
+func newNodeData(id int, e *tapApi.TCP, p *tapApi.Protocol) *nodeData {
 	return &nodeData{
 		id:       id,
+		entry:    e,
 		protocol: p,
 		count:    1,
 	}
@@ -94,43 +102,31 @@ func (s *serviceMap) nodeExists(k key) (*nodeData, bool) {
 	return n, ok
 }
 
-func (s *serviceMap) addNode(k key, p *tapApi.Protocol) (*nodeData, bool) {
-	n, exists := s.nodeExists(k)
+func (s *serviceMap) addNode(k key, e *tapApi.TCP, p *tapApi.Protocol) (*nodeData, bool) {
+	nd, exists := s.nodeExists(k)
 	if !exists {
-		s.graph.Nodes[k] = newNodeData(len(s.graph.Nodes)+1, p)
+		s.graph.Nodes[k] = newNodeData(len(s.graph.Nodes)+1, e, p)
 		return s.graph.Nodes[k], true
 	}
-	return n, false
+	return nd, false
 }
 
-func (s *serviceMap) AddEdge(u, v key, p *tapApi.Protocol) {
-	if !s.IsEnabled() {
-		return
-	}
-
-	// TODO: fallback to ip address
-	if len(u) == 0 {
-		u = UnresolvedNode
-	}
-	if len(v) == 0 {
-		v = UnresolvedNode
-	}
-
-	if n, ok := s.addNode(u, p); !ok {
+func (s *serviceMap) addEdge(u, v *entryData) {
+	if n, ok := s.addNode(u.key, u.entry, u.protocol); !ok {
 		n.count++
 	}
-	if n, ok := s.addNode(v, p); !ok {
+	if n, ok := s.addNode(v.key, v.entry, v.protocol); !ok {
 		n.count++
 	}
 
-	if _, ok := s.graph.Edges[u]; !ok {
-		s.graph.Edges[u] = make(map[key]*edgeData)
+	if _, ok := s.graph.Edges[u.key]; !ok {
+		s.graph.Edges[u.key] = make(map[key]*edgeData)
 	}
 
-	if e, ok := s.graph.Edges[u][v]; ok {
+	if e, ok := s.graph.Edges[u.key][v.key]; ok {
 		e.count++
 	} else {
-		s.graph.Edges[u][v] = newEdgeData()
+		s.graph.Edges[u.key][v.key] = newEdgeData()
 	}
 
 	s.entriesProcessed++
@@ -145,6 +141,32 @@ func (s *serviceMap) IsEnabled() bool {
 		return true
 	}
 	return false
+}
+
+func (s *serviceMap) NewTCPEntry(src *tapApi.TCP, dst *tapApi.TCP, p *tapApi.Protocol) {
+	if !s.IsEnabled() {
+		return
+	}
+
+	srcEntry := &entryData{
+		key:      key(src.IP),
+		entry:    src,
+		protocol: p,
+	}
+	if len(srcEntry.entry.Name) == 0 {
+		srcEntry.entry.Name = UnresolvedNodeName
+	}
+
+	dstEntry := &entryData{
+		key:      key(dst.IP),
+		entry:    dst,
+		protocol: p,
+	}
+	if len(dstEntry.entry.Name) == 0 {
+		dstEntry.entry.Name = UnresolvedNodeName
+	}
+
+	s.addEdge(srcEntry, dstEntry)
 }
 
 func (s *serviceMap) GetStatus() shared.ServiceMapStatus {
@@ -165,8 +187,9 @@ func (s *serviceMap) GetNodes() []shared.ServiceMapNode {
 	var nodes []shared.ServiceMapNode
 	for i, n := range s.graph.Nodes {
 		nodes = append(nodes, shared.ServiceMapNode{
-			Name:     string(i),
 			Id:       n.id,
+			Name:     string(i),
+			Entry:    n.entry,
 			Protocol: n.protocol,
 			Count:    n.count,
 		})
@@ -180,14 +203,16 @@ func (s *serviceMap) GetEdges() []shared.ServiceMapEdge {
 		for v := range m {
 			edges = append(edges, shared.ServiceMapEdge{
 				Source: shared.ServiceMapNode{
-					Name:     string(u),
 					Id:       s.graph.Nodes[u].id,
+					Name:     string(u),
+					Entry:    s.graph.Nodes[u].entry,
 					Protocol: s.graph.Nodes[u].protocol,
 					Count:    s.graph.Nodes[u].count,
 				},
 				Destination: shared.ServiceMapNode{
-					Name:     string(v),
 					Id:       s.graph.Nodes[v].id,
+					Name:     string(v),
+					Entry:    s.graph.Nodes[v].entry,
 					Protocol: s.graph.Nodes[v].protocol,
 					Count:    s.graph.Nodes[v].count,
 				},

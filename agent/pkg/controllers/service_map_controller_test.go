@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -10,6 +11,26 @@ import (
 	"github.com/stretchr/testify/suite"
 	"github.com/up9inc/mizu/shared"
 	tapApi "github.com/up9inc/mizu/tap/api"
+)
+
+const (
+	a    = "aService"
+	b    = "bService"
+	Ip   = "127.0.0.1"
+	Port = "80"
+)
+
+var (
+	TCPEntryA = &tapApi.TCP{
+		Name: a,
+		Port: Port,
+		IP:   fmt.Sprintf("%s.%s", Ip, a),
+	}
+	TCPEntryB = &tapApi.TCP{
+		Name: b,
+		Port: Port,
+		IP:   fmt.Sprintf("%s.%s", Ip, b),
+	}
 )
 
 var Protocol = &tapApi.Protocol{
@@ -39,7 +60,7 @@ func (s *ServiceMapControllerSuite) SetupTest() {
 	s.c.service.SetConfig(&shared.MizuAgentConfig{
 		ServiceMap: true,
 	})
-	s.c.service.AddEdge("a", "b", Protocol)
+	s.c.service.NewTCPEntry(TCPEntryA, TCPEntryB, Protocol)
 
 	s.w = httptest.NewRecorder()
 	s.g, _ = gin.CreateTestContext(s.w)
@@ -78,14 +99,16 @@ func (s *ServiceMapControllerSuite) TestGet() {
 
 	// response nodes
 	aNode := shared.ServiceMapNode{
-		Name:     "a",
 		Id:       1,
+		Name:     TCPEntryA.IP,
+		Entry:    TCPEntryA,
 		Protocol: Protocol,
 		Count:    1,
 	}
 	bNode := shared.ServiceMapNode{
-		Name:     "b",
 		Id:       2,
+		Name:     TCPEntryB.IP,
+		Entry:    TCPEntryB,
 		Protocol: Protocol,
 		Count:    1,
 	}

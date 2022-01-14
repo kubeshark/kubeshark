@@ -86,8 +86,9 @@ type ServiceMapResponse struct {
 }
 
 type ServiceMapNode struct {
-	Name     string           `json:"name"`
 	Id       int              `json:"id"`
+	Name     string           `json:"name"`
+	Entry    *tapApi.TCP      `json:"entry"`
 	Protocol *tapApi.Protocol `json:"protocol"`
 	Count    int              `json:"count"`
 }
