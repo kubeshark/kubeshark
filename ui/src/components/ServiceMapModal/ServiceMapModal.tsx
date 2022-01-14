@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Box, Fade, Modal, Backdrop, Button } from "@material-ui/core";
+import { toast } from "react-toastify";
 import Api from "../../helpers/api";
 import spinnerStyle from '../style/Spinner.module.sass';
 import spinnerImg from '../assets/spinner.svg';
@@ -74,6 +75,108 @@ interface ServiceMapModalProps {
 }
 
 const api = Api.getInstance();
+const options = {
+    physics: {
+        enabled: true,
+        solver: 'barnesHut',
+        barnesHut: {
+            theta: 0.5,
+            gravitationalConstant: -2000,
+            centralGravity: 0.3,
+            springLength: 180,
+            springConstant: 0.04,
+            damping: 0.09,
+            avoidOverlap: 1
+        },
+    },
+    layout: {
+        hierarchical: false,
+        randomSeed: 1 // always on node 1
+    },
+    nodes: {
+        shape: 'dot',
+        chosen: true,
+        color: {
+            background: '#27AE60',
+            border: '#000000',
+            highlight: {
+                background: '#27AE60',
+                border: '#000000',
+            },
+        },
+        font: {
+            color: '#343434',
+            size: 14, // px
+            face: 'arial',
+            background: 'none',
+            strokeWidth: 0, // px
+            strokeColor: '#ffffff',
+            align: 'center',
+            multi: false,
+        },
+        borderWidth: 1.5,
+        borderWidthSelected: 2.5,
+        labelHighlightBold: true,
+        opacity: 1,
+        shadow: true,
+    },
+    edges: {
+        chosen: true,
+        dashes: false,
+        arrowStrikethrough: false,
+        arrows: {
+            to: {
+                enabled: true,
+            },
+            middle: {
+                enabled: false,
+            },
+            from: {
+                enabled: false,
+            }
+        },
+        smooth: {
+            enabled: true,
+            type: 'dynamic',
+            roundness: 1.0
+        },
+        font: {
+            color: '#343434',
+            size: 12, // px
+            face: 'arial',
+            background: 'none',
+            strokeWidth: 2, // px
+            strokeColor: '#ffffff',
+            align: 'horizontal',
+            multi: false,
+        },
+        labelHighlightBold: true,
+        selectionWidth: 1,
+        shadow: true,
+    },
+    height: '750px',
+};
+
+const modalStyle = {
+    position: 'absolute',
+    top: '10%',
+    left: '50%',
+    transform: 'translate(-50%, 0%)',
+    width: '80vw',
+    bgcolor: 'background.paper',
+    borderRadius: '5px',
+    boxShadow: 24,
+    p: 4,
+    color: '#000',
+};
+const buttonStyle: any = {
+    margin: "0px 0px 0px 10px",
+    backgroundColor: variables.blueColor,
+    fontWeight: 600,
+    borderRadius: "4px",
+    color: "#fff",
+    textTransform: "none",
+};
 
 export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onOpen, onClose }) => {
     const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -82,108 +185,13 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onOpen
         edges: []
     });
 
-    const options = {
-        physics: {
-            enabled: true,
-            solver: 'barnesHut',
-            barnesHut: {
-                theta: 0.5,
-                gravitationalConstant: -2000,
-                centralGravity: 0.3,
-                springLength: 180,
-                springConstant: 0.04,
-                damping: 0.09,
-                avoidOverlap: 1
-            },
-        },
-        layout: {
-            hierarchical: false,
-            randomSeed: 1 // always on node 1
-        },
-        nodes: {
-            shape: 'dot',
-            chosen: true,
-            color: {
-                background: '#27AE60',
-                border: '#000000',
-                highlight: {
-                    background: '#27AE60',
-                    border: '#000000',
-                },
-            },
-            font: {
-                color: '#343434',
-                size: 14, // px
-                face: 'arial',
-                background: 'none',
-                strokeWidth: 0, // px
-                strokeColor: '#ffffff',
-                align: 'center',
-                multi: false,
-            },
-            borderWidth: 1.5,
-            borderWidthSelected: 2.5,
-            labelHighlightBold: true,
-            opacity: 1,
-            shadow: true,
-        },
-        edges: {
-            chosen: true,
-            dashes: false,
-            arrowStrikethrough: false,
-            arrows: {
-                to: {
-                    enabled: true,
-                },
-                middle: {
-                    enabled: false,
-                },
-                from: {
-                    enabled: false,
-                }
-            },
-            smooth: {
-                enabled: true,
-                type: 'dynamic',
-                roundness: 1.0
-            },
-            font: {
-                color: '#343434',
-                size: 12, // px
-                face: 'arial',
-                background: 'none',
-                strokeWidth: 2, // px
-                strokeColor: '#ffffff',
-                align: 'horizontal',
-                multi: false,
-            },
-            labelHighlightBold: true,
-            selectionWidth: 1,
-            shadow: true,
-        },
-        height: '750px',
-    };
-
-    const modalStyle = {
-        position: 'absolute',
-        top: '10%',
-        left: '50%',
-        transform: 'translate(-50%, 0%)',
-        width: '80vw',
-        bgcolor: 'background.paper',
-        borderRadius: '5px',
-        boxShadow: 24,
-        p: 4,
-        color: '#000',
-    };
-
     const getServiceMapData = useCallback(async () => {
         try {
             setIsLoading(true)
 
             const serviceMapData: ServiceMapGraph = await api.serviceMapData()
 
-            if (serviceMapData.nodes != null) {
+            if (serviceMapData.nodes) {
                 for (let i = 0; i < serviceMapData.nodes.length; i++) {
                     graphData.nodes.push({
                         id: serviceMapData.nodes[i].id,
@@ -194,7 +202,7 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onOpen
                 }
             }
 
-            if (serviceMapData.edges != null) {
+            if (serviceMapData.edges) {
                 for (let i = 0; i < serviceMapData.edges.length; i++) {
                     graphData.edges.push({
                         from: serviceMapData.edges[i].source.id,
@@ -210,11 +218,12 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onOpen
             }
 
             setGraphData(graphData)
-            setIsLoading(false)
 
-        } catch (error) {
+        } catch (ex) {
+            toast.error("An error occurred while loading Mizu Service Map, see console for mode details");
+            console.error(ex);
+        } finally {
             setIsLoading(false)
-            console.error(error);
         }
     }, [graphData])
 
@@ -229,8 +238,9 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onOpen
                 refreshServiceMap()
             }
 
-        } catch (error) {
-            console.error(error);
+        } catch (ex) {
+            toast.error("An error occurred while resetting Mizu Service Map, see console for mode details");
+            console.error(ex);
         }
     }, 500);
 
@@ -262,28 +272,14 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onOpen
                     {!isLoading && <div>
                         <Button
                             variant="contained"
-                            style={{
-                                margin: "0px 0px 0px 0px",
-                                backgroundColor: variables.blueGray,
-                                fontWeight: 600,
-                                borderRadius: "4px",
-                                color: "#fff",
-                                textTransform: "none",
-                            }}
+                            style={buttonStyle}
                             onClick={() => onClose()}
                         >
                             Close
                         </Button>
                         <Button
                             variant="contained"
-                            style={{
-                                margin: "0px 0px 0px 10px",
-                                backgroundColor: variables.blueColor,
-                                fontWeight: 600,
-                                borderRadius: "4px",
-                                color: "#fff",
-                                textTransform: "none",
-                            }}
+                            style={buttonStyle}
                             onClick={resetServiceMap}
                         >
                             Reset

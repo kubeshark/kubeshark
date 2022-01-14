@@ -1,15 +1,15 @@
-import React, {useEffect, useMemo, useRef, useState} from "react";
-import {Filters} from "./Filters";
-import {EntriesList} from "./EntriesList";
-import {Button, makeStyles} from "@material-ui/core";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { Filters } from "./Filters";
+import { EntriesList } from "./EntriesList";
+import { Button, makeStyles } from "@material-ui/core";
 import "./style/TrafficPage.sass";
 import styles from './style/EntriesList.module.sass';
-import {EntryDetailed} from "./EntryDetailed";
+import { EntryDetailed } from "./EntryDetailed";
 import playIcon from './assets/run.svg';
 import pauseIcon from './assets/pause.svg';
 import variables from '../variables.module.scss';
-import {StatusBar} from "./UI/StatusBar";
-import Api, {MizuWebsocketURL} from "../helpers/api";
+import { StatusBar } from "./UI/StatusBar";
+import Api, { MizuWebsocketURL } from "../helpers/api";
 import { toast } from 'react-toastify';
 import debounce from 'lodash/debounce';
 import { ServiceMapModal } from "./ServiceMapModal/ServiceMapModal";
@@ -46,7 +46,7 @@ interface TrafficPageProps {
 
 const api = Api.getInstance();
 
-export const TrafficPage: React.FC<TrafficPageProps> = ({onTLSDetected, setAnalyzeStatus}) => {
+export const TrafficPage: React.FC<TrafficPageProps> = ({ onTLSDetected, setAnalyzeStatus }) => {
 
     const classes = useLayoutStyles();
 
@@ -157,7 +157,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({onTLSDetected, setAnaly
                     setTappingStatus(message.tappingStatus);
                     break
                 case "analyzeStatus":
-                    if(setAnalyzeStatus)
+                    if (setAnalyzeStatus)
                         setAnalyzeStatus(message.analyzeStatus);
                     break
                 case "outboundLink":
@@ -196,10 +196,10 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({onTLSDetected, setAnaly
     useEffect(() => {
         (async () => {
             openWebSocket("leftOff(-1)", true);
-            try{
+            try {
                 const tapStatusResponse = await api.tapStatus();
                 setTappingStatus(tapStatusResponse);
-                if(setAnalyzeStatus) {
+                if (setAnalyzeStatus) {
                     const analyzeStatusResponse = await api.analyzeStatus();
                     setAnalyzeStatus(analyzeStatusResponse);
                 }
@@ -282,8 +282,8 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({onTLSDetected, setAnaly
                 const serviceMapStatusResponse = await api.serviceMapStatus();
                 if (serviceMapStatusResponse["status"] === "enabled") {
                     setServiceMapStatus(true);
-                } 
-            } catch(error) {
+                }
+            } catch (error) {
                 console.error(error);
             }
         })()
@@ -306,10 +306,9 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({onTLSDetected, setAnaly
                         <div className={"indicator " + getConnectionStatusClass(false)} />
                     </div>
                 </div>
-                <Button
+                {serviceMapStatus && <Button
                     variant="contained"
                     style={{
-                        visibility: serviceMapStatus === true ? "visible" : "hidden",
                         margin: "0px 0px 0px 20px",
                         backgroundColor: variables.blueColor,
                         fontWeight: 600,
@@ -320,7 +319,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({onTLSDetected, setAnaly
                     onClick={openServiceMapModal}
                 >
                     Service Map
-                </Button>
+                </Button>}
             </div>
             {<div className="TrafficPage-Container">
                 <div className="TrafficPage-ListContainer">
