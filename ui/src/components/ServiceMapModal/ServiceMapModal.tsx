@@ -94,11 +94,13 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onOpen
             randomSeed: 1 // always on node 1
         },
         nodes: {
-            shape: "dot",
+            shape: 'dot',
             chosen: true,
             color: {
+                background: '#27AE60',
                 border: '#000000',
                 highlight: {
+                    background: '#27AE60',
                     border: '#000000',
                 },
             },
@@ -135,7 +137,7 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onOpen
             },
             smooth: {
                 enabled: true,
-                type: "dynamic",
+                type: 'dynamic',
                 roundness: 1.0
             },
             font: {
@@ -152,7 +154,7 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onOpen
             selectionWidth: 1,
             shadow: true,
         },
-        height: "750px",
+        height: '750px',
     };
 
     const modalStyle = {
@@ -181,12 +183,6 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onOpen
                         value: serviceMapData.nodes[i].count,
                         label: serviceMapData.nodes[i].name,
                         title: "Count: " + serviceMapData.nodes[i].name,
-                        color: {
-                            background: serviceMapData.nodes[i].protocol.backgroundColor,
-                            highlight: {
-                                background: serviceMapData.nodes[i].protocol.backgroundColor
-                            },
-                        },
                     });
                 }
             }
@@ -199,8 +195,8 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onOpen
                         value: serviceMapData.edges[i].count,
                         label: serviceMapData.edges[i].count.toString(),
                         color: {
-                            color: serviceMapData.edges[i].destination.protocol.backgroundColor,
-                            highlight: serviceMapData.edges[i].destination.protocol.backgroundColor
+                            color: serviceMapData.edges[i].source.protocol.backgroundColor,
+                            highlight: serviceMapData.edges[i].source.protocol.backgroundColor
                         },
                     });
                 }
