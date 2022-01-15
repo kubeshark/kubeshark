@@ -107,6 +107,7 @@ export const EntrySectionContainer: React.FC<EntrySectionContainerProps> = ({tit
 }
 
 interface EntryBodySectionProps {
+    title: string,
     content: any,
     color: string,
     updateQuery: any,
@@ -116,6 +117,7 @@ interface EntryBodySectionProps {
 }
 
 export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
+    title,
     color,
     updateQuery,
     content,
@@ -167,7 +169,7 @@ export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
 
     return <React.Fragment>
         {content && content?.length > 0 && <EntrySectionContainer
-                                                title='Body'
+                                                title={title}
                                                 color={color}
                                                 query={`${selector} == r".*"`}
                                                 updateQuery={updateQuery}
