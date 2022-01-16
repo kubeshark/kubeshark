@@ -8,7 +8,7 @@
         <img alt="GitHub License" src="https://img.shields.io/github/license/up9inc/mizu?logo=GitHub&style=flat-square">
     </a>
     <a href="https://join.slack.com/t/up9/shared_invite/zt-tfjnduli-QzlR8VV4Z1w3YnPIAJfhlQ">
-      <img alt="GitHub License" src="https://img.shields.io/badge/slack-join_chat-white.svg?logo=slack&style=social">
+      <img alt="Slack" src="https://img.shields.io/badge/slack-join_chat-white.svg?logo=slack&style=social">
     </a>
 </p>
 
