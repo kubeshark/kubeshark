@@ -1,4 +1,5 @@
 import atom from "./atom";
+import tappingStatusDetails from './details';
 
 interface TappingStatusPod {
     name: string;
@@ -10,6 +11,6 @@ interface TappingStatus {
     pods: TappingStatusPod[];
 }
 
-export type {TappingStatus, TappingStatusPod};
+export type {TappingStatus, TappingStatusPod, tappingStatusDetails};
 
 export default atom;

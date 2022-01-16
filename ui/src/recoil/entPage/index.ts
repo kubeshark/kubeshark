@@ -1,5 +1,4 @@
 import atom from "./atom";
-import tappingStatusDetails from "../tappingStatus/details";
 
 enum Page {
     Traffic,
@@ -7,6 +6,6 @@ enum Page {
     Login
 }
 
-export { Page, tappingStatusDetails };
+export { Page };
 
 export default atom;

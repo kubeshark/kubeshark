@@ -4,8 +4,7 @@ import warningIcon from '../assets/warning_icon.svg';
 import failIcon from '../assets/failed.svg';
 import successIcon from '../assets/success.svg';
 import {useRecoilValue} from "recoil";
-import tappingStatusAtom from "../../recoil/tappingStatus";
-import {tappingStatusDetails} from "../../recoil/entPage";
+import tappingStatusAtom, {tappingStatusDetails} from "../../recoil/tappingStatus";
 
 const pluralize = (noun: string, amount: number) => {
     return `${noun}${amount !== 1 ? 's' : ''}`
