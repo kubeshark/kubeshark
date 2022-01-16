@@ -42,7 +42,6 @@ const LoginPage: React.FC = () => {
         }
     };
 
-
     return <div className="centeredForm" onKeyPress={handleFormOnKeyPress}>
             {isLoading && <LoadingOverlay/>}
             <div className="form-title left-text">Login</div>

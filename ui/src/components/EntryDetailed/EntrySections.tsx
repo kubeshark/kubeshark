@@ -102,6 +102,7 @@ export const EntrySectionContainer: React.FC<EntrySectionContainerProps> = ({tit
 }
 
 interface EntryBodySectionProps {
+    title: string,
     content: any,
     color: string,
     encoding?: string,
@@ -110,6 +111,7 @@ interface EntryBodySectionProps {
 }
 
 export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
+    title,
     color,
     content,
     encoding,
@@ -160,7 +162,7 @@ export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
 
     return <React.Fragment>
         {content && content?.length > 0 && <EntrySectionContainer
-                                                title='Body'
+                                                title={title}
                                                 color={color}
                                                 query={`${selector} == r".*"`}
                                             >
@@ -196,13 +198,27 @@ interface EntrySectionProps {
 }
 
 export const EntryTableSection: React.FC<EntrySectionProps> = ({title, color, arrayToIterate}) => {
+    let arrayToIterateSorted: any[];
+    if (arrayToIterate) {
+        arrayToIterateSorted = arrayToIterate.sort((a, b) => {
+            if (a.name > b.name) {
+                return 1;
+            }
+
+            if (a.name < b.name) {
+                return -1;
+            }
+
+            return 0;
+        });
+    }
     return <React.Fragment>
         {
             arrayToIterate && arrayToIterate.length > 0 ?
                 <EntrySectionContainer title={title} color={color}>
                     <table>
-                        <tbody id={`tbody-${title}`}>
-                            {arrayToIterate.map(({name, value, selector}, index) => <EntryViewLine
+                        <tbody>
+                            {arrayToIterateSorted.map(({name, value, selector}, index) => <EntryViewLine
                                 key={index}
                                 label={name}
                                 value={value}

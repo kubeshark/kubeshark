@@ -54,7 +54,13 @@ export const InstallPage: React.FC<InstallPageProps> = ({onFirstLogin}) => {
 
     }
 
-    return <div className="centeredForm">
+    const handleFormOnKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === "Enter") {
+            onFormSubmit();
+        }
+    };
+
+    return <div className="centeredForm" onKeyPress={handleFormOnKeyPress}>
             {isLoading && <LoadingOverlay/>}
             <div className="form-title left-text">Setup</div>
             <span className="form-subtitle">Welcome to Mizu, please set up the admin user to continue</span>
