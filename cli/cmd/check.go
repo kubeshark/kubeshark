@@ -18,7 +18,7 @@ var checkCmd = &cobra.Command{
 }
 
 func init() {
-	installCmd.AddCommand(checkCmd)
+	rootCmd.AddCommand(checkCmd)
 
 	defaultCheckConfig := configStructs.CheckConfig{}
 	defaults.Set(&defaultCheckConfig)

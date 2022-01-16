@@ -12,27 +12,18 @@ import (
 )
 
 func runMizuCheck() {
-	checkPassed := true
+	logger.Log.Infof("Mizu install checks\n===================")
 
-	logger.Log.Infof("kubernetes-api\n--------------------")
-	kubernetesProvider, err := getKubernetesProviderForCli()
-	if err != nil {
-		logger.Log.Errorf("%v can't initialize the client", fmt.Sprintf(uiUtils.Red, "✗"))
-		checkPassed = false
-	} else {
-		logger.Log.Infof("%v can initialize the client", fmt.Sprintf(uiUtils.Green, "√"))
-	}
+	kubernetesProvider, checkPassed := checkKubernetesApi()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // cancel will be called when this function exits
 
 	if checkPassed {
-		logger.Log.Infof("\nmizu-existence\n--------------------")
 		checkPassed = checkAllResourcesExists(ctx, kubernetesProvider)
 	}
 
 	if checkPassed {
-		logger.Log.Infof("\nmizu-connectivity\n--------------------")
 		checkPassed = checkServerConnection(kubernetesProvider, cancel)
 	}
 
@@ -43,7 +34,22 @@ func runMizuCheck() {
 	}
 }
 
+func checkKubernetesApi() (*kubernetes.Provider, bool) {
+	logger.Log.Infof("\nkubernetes-api\n--------------------")
+
+	kubernetesProvider, err := getKubernetesProviderForCli()
+	if err != nil {
+		logger.Log.Errorf("%v can't initialize the client, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), err)
+		return nil, false
+	}
+
+	logger.Log.Infof("%v can initialize the client", fmt.Sprintf(uiUtils.Green, "√"))
+	return kubernetesProvider, true
+}
+
 func checkServerConnection(kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) bool {
+	logger.Log.Infof("\nmizu-connectivity\n--------------------")
+
 	serverUrl := config.Config.Check.ServerUrl
 
 	if serverUrl == "" {
@@ -56,7 +62,7 @@ func checkServerConnection(kubernetesProvider *kubernetes.Provider, cancel conte
 
 	apiServerProvider := apiserver.NewProvider(serverUrl, apiserver.DefaultRetries, apiserver.DefaultTimeout)
 	if err := apiServerProvider.TestConnection(); err != nil {
-		logger.Log.Errorf("%v couldn't connect to API server", fmt.Sprintf(uiUtils.Red, "✗"))
+		logger.Log.Errorf("%v couldn't connect to API server, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), err)
 		return false
 	}
 
@@ -65,6 +71,8 @@ func checkServerConnection(kubernetesProvider *kubernetes.Provider, cancel conte
 }
 
 func checkAllResourcesExists(ctx context.Context, kubernetesProvider *kubernetes.Provider) bool {
+	logger.Log.Infof("\nmizu-existence\n--------------------")
+
 	allResourcesExists := true
 
 	if doesResourceExist, err := kubernetesProvider.DoesNamespaceExist(ctx, config.Config.MizuResourcesNamespace); err != nil {
