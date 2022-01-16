@@ -6,11 +6,12 @@ import {EntryItem} from "./EntryListItem/EntryListItem";
 import down from "./assets/downImg.svg";
 import spinner from './assets/spinner.svg';
 import Api from "../helpers/api";
+import {useRecoilState, useRecoilValue} from "recoil";
+import entriesAtom from "../recoil/entries";
+import wsConnectionAtom, {WsConnectionStatus} from "../recoil/wsConnection";
+import queryAtom from "../recoil/query";
 
 interface EntriesListProps {
-    entries: any[];
-    setEntries: any;
-    query: string;
     listEntryREF: any;
     onSnapBrokenEvent: () => void;
     isSnappedToBottom: boolean;
@@ -22,12 +23,8 @@ interface EntriesListProps {
     startTime: number;
     noMoreDataTop: boolean;
     setNoMoreDataTop: (flag: boolean) => void;
-    focusedEntryId: string;
-    setFocusedEntryId: (id: string) => void;
-    updateQuery: any;
     leftOffTop: number;
     setLeftOffTop: (leftOffTop: number) => void;
-    isWebSocketConnectionClosed: boolean;
     ws: any;
     openWebSocket: (query: string, resetEntries: boolean) => void;
     leftOffBottom: number;
@@ -38,7 +35,13 @@ interface EntriesListProps {
 
 const api = Api.getInstance();
 
-export const EntriesList: React.FC<EntriesListProps> = ({entries, setEntries, query, listEntryREF, onSnapBrokenEvent, isSnappedToBottom, setIsSnappedToBottom, queriedCurrent, setQueriedCurrent, queriedTotal, setQueriedTotal, startTime, noMoreDataTop, setNoMoreDataTop, focusedEntryId, setFocusedEntryId, updateQuery, leftOffTop, setLeftOffTop, isWebSocketConnectionClosed, ws, openWebSocket, leftOffBottom, truncatedTimestamp, setTruncatedTimestamp, scrollableRef}) => {
+export const EntriesList: React.FC<EntriesListProps> = ({listEntryREF, onSnapBrokenEvent, isSnappedToBottom, setIsSnappedToBottom, queriedCurrent, setQueriedCurrent, queriedTotal, setQueriedTotal, startTime, noMoreDataTop, setNoMoreDataTop, leftOffTop, setLeftOffTop, ws, openWebSocket, leftOffBottom, truncatedTimestamp, setTruncatedTimestamp, scrollableRef}) => {
+
+    const [entries, setEntries] = useRecoilState(entriesAtom);
+    const wsConnection = useRecoilValue(wsConnectionAtom);
+    const query = useRecoilValue(queryAtom);
+    const isWsConnectionClosed = wsConnection === WsConnectionStatus.Closed;
+
     const [loadMoreTop, setLoadMoreTop] = useState(false);
     const [isLoadingTop, setIsLoadingTop] = useState(false);
 
@@ -95,9 +98,9 @@ export const EntriesList: React.FC<EntriesListProps> = ({entries, setEntries, qu
     },[setLoadMoreTop, setIsLoadingTop, entries, setEntries, query, setNoMoreDataTop, leftOffTop, setLeftOffTop, queriedCurrent, setQueriedCurrent, setQueriedTotal, setTruncatedTimestamp, scrollableRef]);
 
     useEffect(() => {
-        if(!isWebSocketConnectionClosed || !loadMoreTop || noMoreDataTop) return;
+        if(!isWsConnectionClosed || !loadMoreTop || noMoreDataTop) return;
         getOldEntries();
-    }, [loadMoreTop, noMoreDataTop, getOldEntries, isWebSocketConnectionClosed]);
+    }, [loadMoreTop, noMoreDataTop, getOldEntries, isWsConnectionClosed]);
 
     const scrollbarVisible = scrollableRef.current?.childWrapperRef.current.clientHeight > scrollableRef.current?.wrapperRef.current.clientHeight;
 
@@ -113,10 +116,7 @@ export const EntriesList: React.FC<EntriesListProps> = ({entries, setEntries, qu
                         {memoizedEntries.map(entry => <EntryItem
                             key={`entry-${entry.id}`}
                             entry={entry}
-                            focusedEntryId={focusedEntryId}
-                            setFocusedEntryId={setFocusedEntryId}
                             style={{}}
-                            updateQuery={updateQuery}
                             headingMode={false}
                         />)}
                     </ScrollableFeedVirtualized>
@@ -131,9 +131,9 @@ export const EntriesList: React.FC<EntriesListProps> = ({entries, setEntries, qu
                     </button>
                     <button type="button"
                         title="Snap to bottom"
-                        className={`${styles.btnLive} ${isSnappedToBottom && !isWebSocketConnectionClosed ? styles.hideButton : styles.showButton}`}
+                        className={`${styles.btnLive} ${isSnappedToBottom && !isWsConnectionClosed ? styles.hideButton : styles.showButton}`}
                         onClick={(_) => {
-                            if (isWebSocketConnectionClosed) {
+                            if (isWsConnectionClosed) {
                                 if (query) {
                                     openWebSocket(`(${query}) and leftOff(${leftOffBottom})`, false);
                                 } else {
