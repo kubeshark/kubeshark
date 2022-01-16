@@ -44,3 +44,13 @@ jobs:
 
       - name: Build Agent
         run: make agent
+
+  build-ui:
+    name: Build UI
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v2
+
+      - name: Build UI
+        run: make ui
