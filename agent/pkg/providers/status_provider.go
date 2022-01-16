@@ -8,20 +8,14 @@ import (
 	"github.com/up9inc/mizu/tap"
 	"mizuserver/pkg/models"
 	"os"
-	"sync"
 	"time"
 )
 
 const tlsLinkRetainmentTime = time.Minute * 15
 
 var (
-	TappersCount         int
-	TapStatus            shared.TapStatus
-	TappersStatus        map[string]shared.TapperStatus
-	authStatus           *models.AuthStatus
-	RecentTLSLinks       = cache.New(tlsLinkRetainmentTime, tlsLinkRetainmentTime)
-	ExpectedTapperAmount = -1 //only relevant in daemon mode as cli manages tappers otherwise
-	tappersCountLock     = sync.Mutex{}
+	authStatus     *models.AuthStatus
+	RecentTLSLinks = cache.New(tlsLinkRetainmentTime, tlsLinkRetainmentTime)
 )
 
 func GetAuthStatus() (*models.AuthStatus, error) {
@@ -68,16 +62,4 @@ func GetAllRecentTLSAddresses() []string {
 	}
 
 	return recentTLSLinks
-}
-
-func TapperAdded() {
-	tappersCountLock.Lock()
-	TappersCount++
-	tappersCountLock.Unlock()
-}
-
-func TapperRemoved() {
-	tappersCountLock.Lock()
-	TappersCount--
-	tappersCountLock.Unlock()
 }

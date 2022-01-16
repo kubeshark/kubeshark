@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"mizuserver/pkg/middlewares"
 	"mizuserver/pkg/models"
 	"net/http"
 	"sync"
@@ -15,6 +16,7 @@ import (
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/debounce"
 	"github.com/up9inc/mizu/shared/logger"
+	tapApi "github.com/up9inc/mizu/tap/api"
 )
 
 type EventHandlers interface {
@@ -47,8 +49,9 @@ func init() {
 func WebSocketRoutes(app *gin.Engine, eventHandlers EventHandlers, startTime int64) {
 	app.GET("/ws", func(c *gin.Context) {
 		websocketHandler(c.Writer, c.Request, eventHandlers, false, startTime)
-	})
-	app.GET("/wsTapper", func(c *gin.Context) {
+	}, middlewares.RequiresAuth())
+
+	app.GET("/wsTapper", func(c *gin.Context) { // TODO: add m2m authentication to this route
 		websocketHandler(c.Writer, c.Request, eventHandlers, true, startTime)
 	})
 }
@@ -83,10 +86,10 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 	meta := make(chan []byte)
 
 	defer func() {
+		socketCleanup(socketId, connectedWebsockets[socketId])
 		data <- []byte(basenine.CloseChannel)
 		meta <- []byte(basenine.CloseChannel)
 		connection.Close()
-		socketCleanup(socketId, connectedWebsockets[socketId])
 	}()
 
 	eventHandlers.WebSocketConnect(socketId, isTapper)
@@ -97,7 +100,12 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 	for {
 		_, msg, err := ws.ReadMessage()
 		if err != nil {
-			logger.Log.Errorf("Error reading message, socket id: %d, error: %v", socketId, err)
+			if _, ok := err.(*websocket.CloseError); ok {
+				logger.Log.Debugf("Received websocket close message, socket id: %d", socketId)
+			} else {
+				logger.Log.Errorf("Error reading message, socket id: %d, error: %v", socketId, err)
+			}
+
 			break
 		}
 
@@ -124,18 +132,10 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 						return
 					}
 
-					var dataMap map[string]interface{}
-					err = json.Unmarshal(bytes, &dataMap)
+					var entry *tapApi.Entry
+					err = json.Unmarshal(bytes, &entry)
 
-					var base map[string]interface{}
-					switch dataMap["base"].(type) {
-					case map[string]interface{}:
-						base = dataMap["base"].(map[string]interface{})
-						base["id"] = uint(dataMap["id"].(float64))
-					default:
-						logger.Log.Debugf("Base field has an unrecognized type: %+v", dataMap)
-						continue
-					}
+					base := tapApi.Summarize(entry)
 
 					baseEntryBytes, _ := models.CreateBaseEntryWebSocketMessage(base)
 					SendToSocket(socketId, baseEntryBytes)

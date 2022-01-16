@@ -43,6 +43,8 @@ type Provider struct {
 	kubernetesConfig clientcmd.ClientConfig
 	clientConfig     restclient.Config
 	Namespace        string
+	managedBy        string
+	createdBy        string
 }
 
 const (
@@ -86,6 +88,8 @@ func NewProvider(kubeConfigPath string) (*Provider, error) {
 		clientSet:        clientSet,
 		kubernetesConfig: kubernetesConfig,
 		clientConfig:     *restClientConfig,
+		managedBy:        LabelValueMizu,
+		createdBy:        LabelValueMizuCLI,
 	}, nil
 }
 
@@ -103,6 +107,8 @@ func NewProviderInCluster() (*Provider, error) {
 		clientSet:        clientSet,
 		kubernetesConfig: nil, // not relevant in cluster
 		clientConfig:     *restClientConfig,
+		managedBy:        LabelValueMizu,
+		createdBy:        LabelValueMizuAgent,
 	}, nil
 }
 
@@ -158,6 +164,10 @@ func (provider *Provider) CreateNamespace(ctx context.Context, name string) (*co
 	namespaceSpec := &core.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
+			Labels: map[string]string{
+				LabelManagedBy: provider.managedBy,
+				LabelCreatedBy: provider.createdBy,
+			},
 		},
 	}
 	return provider.clientSet.CoreV1().Namespaces().Create(ctx, namespaceSpec, metav1.CreateOptions{})
@@ -176,7 +186,7 @@ type ApiServerOptions struct {
 	LogLevel              logging.Level
 }
 
-func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, mountVolumeClaim bool, volumeClaimName string) (*core.Pod, error) {
+func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, mountVolumeClaim bool, volumeClaimName string, createAuthContainer bool) (*core.Pod, error) {
 	var marshaledSyncEntriesConfig []byte
 	if opts.SyncEntriesConfig != nil {
 		var err error
@@ -240,41 +250,110 @@ func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, moun
 		})
 	}
 
-	pod := &core.Pod{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:   opts.PodName,
-			Labels: map[string]string{"app": opts.PodName},
-		},
-		Spec: core.PodSpec{
-			Containers: []core.Container{
+	containers := []core.Container{
+		{
+			Name:            opts.PodName,
+			Image:           opts.PodImage,
+			ImagePullPolicy: opts.ImagePullPolicy,
+			VolumeMounts:    volumeMounts,
+			Command:         command,
+			Env: []core.EnvVar{
 				{
-					Name:            opts.PodName,
-					Image:           opts.PodImage,
-					ImagePullPolicy: opts.ImagePullPolicy,
-					VolumeMounts:    volumeMounts,
-					Command:         command,
-					Env: []core.EnvVar{
-						{
-							Name:  shared.SyncEntriesConfigEnvVar,
-							Value: string(marshaledSyncEntriesConfig),
-						},
-						{
-							Name:  shared.LogLevelEnvVar,
-							Value: opts.LogLevel.String(),
-						},
-					},
-					Resources: core.ResourceRequirements{
-						Limits: core.ResourceList{
-							"cpu":    cpuLimit,
-							"memory": memLimit,
-						},
-						Requests: core.ResourceList{
-							"cpu":    cpuRequests,
-							"memory": memRequests,
-						},
-					},
+					Name:  shared.SyncEntriesConfigEnvVar,
+					Value: string(marshaledSyncEntriesConfig),
+				},
+				{
+					Name:  shared.LogLevelEnvVar,
+					Value: opts.LogLevel.String(),
 				},
 			},
+			Resources: core.ResourceRequirements{
+				Limits: core.ResourceList{
+					"cpu":    cpuLimit,
+					"memory": memLimit,
+				},
+				Requests: core.ResourceList{
+					"cpu":    cpuRequests,
+					"memory": memRequests,
+				},
+			},
+		},
+		{
+			Name:            "basenine",
+			Image:           fmt.Sprintf("%s:%s", shared.BasenineImageRepo, shared.BasenineImageTag),
+			ImagePullPolicy: opts.ImagePullPolicy,
+			VolumeMounts:    volumeMounts,
+			ReadinessProbe: &core.Probe{
+				FailureThreshold: 3,
+				Handler: core.Handler{
+					TCPSocket: &core.TCPSocketAction{
+						Port: intstr.Parse(shared.BaseninePort),
+					},
+				},
+				PeriodSeconds:    1,
+				SuccessThreshold: 1,
+				TimeoutSeconds:   1,
+			},
+			Resources: core.ResourceRequirements{
+				Limits: core.ResourceList{
+					"cpu":    cpuLimit,
+					"memory": memLimit,
+				},
+				Requests: core.ResourceList{
+					"cpu":    cpuRequests,
+					"memory": memRequests,
+				},
+			},
+			Command:    []string{"/basenine"},
+			Args:       []string{"-addr", "0.0.0.0", "-port", shared.BaseninePort, "-persistent"},
+			WorkingDir: shared.DataDirPath,
+		},
+	}
+
+	if createAuthContainer {
+		containers = append(containers, core.Container{
+			Name:            "kratos",
+			Image:           "gcr.io/up9-docker-hub/mizu-kratos/stable:0.0.0",
+			ImagePullPolicy: opts.ImagePullPolicy,
+			VolumeMounts:    volumeMounts,
+			ReadinessProbe: &core.Probe{
+				FailureThreshold: 3,
+				Handler: core.Handler{
+					HTTPGet: &core.HTTPGetAction{
+						Path:   "/health/ready",
+						Port:   intstr.FromInt(4433),
+						Scheme: core.URISchemeHTTP,
+					},
+				},
+				PeriodSeconds:    1,
+				SuccessThreshold: 1,
+				TimeoutSeconds:   1,
+			},
+			Resources: core.ResourceRequirements{
+				Limits: core.ResourceList{
+					"cpu":    cpuLimit,
+					"memory": memLimit,
+				},
+				Requests: core.ResourceList{
+					"cpu":    cpuRequests,
+					"memory": memRequests,
+				},
+			},
+		})
+
+	}
+
+	pod := &core.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: opts.PodName,
+			Labels: map[string]string{
+				"app":          opts.PodName,
+				LabelManagedBy: provider.managedBy,
+				LabelCreatedBy: provider.createdBy,
+			},
+		},
+		Spec: core.PodSpec{
+			Containers:                    containers,
 			Volumes:                       volumes,
 			DNSPolicy:                     core.DNSClusterFirstWithHostNet,
 			TerminationGracePeriodSeconds: new(int64),
@@ -303,6 +382,10 @@ func (provider *Provider) CreateDeployment(ctx context.Context, namespace string
 	deployment := &v1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: deploymentName,
+			Labels: map[string]string{
+				LabelManagedBy: provider.managedBy,
+				LabelCreatedBy: provider.createdBy,
+			},
 		},
 		Spec: v1.DeploymentSpec{
 			Selector: &metav1.LabelSelector{
@@ -319,9 +402,13 @@ func (provider *Provider) CreateService(ctx context.Context, namespace string, s
 	service := core.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: serviceName,
+			Labels: map[string]string{
+				LabelManagedBy: provider.managedBy,
+				LabelCreatedBy: provider.createdBy,
+			},
 		},
 		Spec: core.ServiceSpec{
-			Ports:    []core.ServicePort{{TargetPort: intstr.FromInt(shared.DefaultApiServerPort), Port: 80}},
+			Ports:    []core.ServicePort{{TargetPort: intstr.FromInt(shared.DefaultApiServerPort), Port: 80, Name: "api"}},
 			Type:     core.ServiceTypeClusterIP,
 			Selector: map[string]string{"app": appLabelValue},
 		},
@@ -347,30 +434,42 @@ func (provider *Provider) doesResourceExist(resource interface{}, err error) (bo
 	return resource != nil, nil
 }
 
-func (provider *Provider) CreateMizuRBAC(ctx context.Context, namespace string, serviceAccountName string, clusterRoleName string, clusterRoleBindingName string, version string) error {
+func (provider *Provider) CreateMizuRBAC(ctx context.Context, namespace string, serviceAccountName string, clusterRoleName string, clusterRoleBindingName string, version string, resources []string) error {
 	serviceAccount := &core.ServiceAccount{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   serviceAccountName,
-			Labels: map[string]string{"mizu-cli-version": version},
+			Name: serviceAccountName,
+			Labels: map[string]string{
+				"mizu-cli-version": version,
+				LabelManagedBy:     provider.managedBy,
+				LabelCreatedBy:     provider.createdBy,
+			},
 		},
 	}
 	clusterRole := &rbac.ClusterRole{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   clusterRoleName,
-			Labels: map[string]string{"mizu-cli-version": version},
+			Name: clusterRoleName,
+			Labels: map[string]string{
+				"mizu-cli-version": version,
+				LabelManagedBy:     provider.managedBy,
+				LabelCreatedBy:     provider.createdBy,
+			},
 		},
 		Rules: []rbac.PolicyRule{
 			{
 				APIGroups: []string{"", "extensions", "apps"},
-				Resources: []string{"pods", "services", "endpoints"},
+				Resources: resources,
 				Verbs:     []string{"list", "get", "watch"},
 			},
 		},
 	}
 	clusterRoleBinding := &rbac.ClusterRoleBinding{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   clusterRoleBindingName,
-			Labels: map[string]string{"mizu-cli-version": version},
+			Name: clusterRoleBindingName,
+			Labels: map[string]string{
+				"mizu-cli-version": version,
+				LabelManagedBy:     provider.managedBy,
+				LabelCreatedBy:     provider.createdBy,
+			},
 		},
 		RoleRef: rbac.RoleRef{
 			Name:     clusterRoleName,
@@ -403,14 +502,22 @@ func (provider *Provider) CreateMizuRBAC(ctx context.Context, namespace string, 
 func (provider *Provider) CreateMizuRBACNamespaceRestricted(ctx context.Context, namespace string, serviceAccountName string, roleName string, roleBindingName string, version string) error {
 	serviceAccount := &core.ServiceAccount{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   serviceAccountName,
-			Labels: map[string]string{"mizu-cli-version": version},
+			Name: serviceAccountName,
+			Labels: map[string]string{
+				"mizu-cli-version": version,
+				LabelManagedBy:     provider.managedBy,
+				LabelCreatedBy:     provider.createdBy,
+			},
 		},
 	}
 	role := &rbac.Role{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   roleName,
-			Labels: map[string]string{"mizu-cli-version": version},
+			Name: roleName,
+			Labels: map[string]string{
+				"mizu-cli-version": version,
+				LabelManagedBy:     provider.managedBy,
+				LabelCreatedBy:     provider.createdBy,
+			},
 		},
 		Rules: []rbac.PolicyRule{
 			{
@@ -422,8 +529,12 @@ func (provider *Provider) CreateMizuRBACNamespaceRestricted(ctx context.Context,
 	}
 	roleBinding := &rbac.RoleBinding{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   roleBindingName,
-			Labels: map[string]string{"mizu-cli-version": version},
+			Name: roleBindingName,
+			Labels: map[string]string{
+				"mizu-cli-version": version,
+				LabelManagedBy:     provider.managedBy,
+				LabelCreatedBy:     provider.createdBy,
+			},
 		},
 		RoleRef: rbac.RoleRef{
 			Name:     roleName,
@@ -456,8 +567,12 @@ func (provider *Provider) CreateMizuRBACNamespaceRestricted(ctx context.Context,
 func (provider *Provider) CreateDaemonsetRBAC(ctx context.Context, namespace string, serviceAccountName string, roleName string, roleBindingName string, version string) error {
 	role := &rbac.Role{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   roleName,
-			Labels: map[string]string{"mizu-cli-version": version},
+			Name: roleName,
+			Labels: map[string]string{
+				"mizu-cli-version": version,
+				LabelManagedBy:     provider.managedBy,
+				LabelCreatedBy:     provider.createdBy,
+			},
 		},
 		Rules: []rbac.PolicyRule{
 			{
@@ -474,8 +589,12 @@ func (provider *Provider) CreateDaemonsetRBAC(ctx context.Context, namespace str
 	}
 	roleBinding := &rbac.RoleBinding{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   roleBindingName,
-			Labels: map[string]string{"mizu-cli-version": version},
+			Name: roleBindingName,
+			Labels: map[string]string{
+				"mizu-cli-version": version,
+				LabelManagedBy:     provider.managedBy,
+				LabelCreatedBy:     provider.createdBy,
+			},
 		},
 		RoleRef: rbac.RoleRef{
 			Name:     roleName,
@@ -588,6 +707,10 @@ func (provider *Provider) CreateConfigMap(ctx context.Context, namespace string,
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name: configMapName,
+			Labels: map[string]string{
+				LabelManagedBy: provider.managedBy,
+				LabelCreatedBy: provider.createdBy,
+			},
 		},
 		Data: configMapData,
 	}
@@ -597,7 +720,7 @@ func (provider *Provider) CreateConfigMap(ctx context.Context, namespace string,
 	return nil
 }
 
-func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, apiServerPodIp string, nodeToTappedPodMap map[string][]core.Pod, serviceAccountName string, resources shared.Resources, imagePullPolicy core.PullPolicy, mizuApiFilteringOptions api.TrafficFilteringOptions, logLevel logging.Level, istio bool) error {
+func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, apiServerPodIp string, nodeToTappedPodMap map[string][]core.Pod, serviceAccountName string, resources shared.Resources, imagePullPolicy core.PullPolicy, mizuApiFilteringOptions api.TrafficFilteringOptions, logLevel logging.Level, serviceMesh bool) error {
 	logger.Log.Debugf("Applying %d tapper daemon sets, ns: %s, daemonSetName: %s, podImage: %s, tapperPodName: %s", len(nodeToTappedPodMap), namespace, daemonSetName, podImage, tapperPodName)
 
 	if len(nodeToTappedPodMap) == 0 {
@@ -622,8 +745,8 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 		"--nodefrag",
 	}
 
-	if istio {
-		mizuCmd = append(mizuCmd, "--procfs", procfsMountPath, "--istio")
+	if serviceMesh {
+		mizuCmd = append(mizuCmd, "--procfs", procfsMountPath, "--servicemesh")
 	}
 
 	agentContainer := applyconfcore.Container()
@@ -633,7 +756,7 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 
 	caps := applyconfcore.Capabilities().WithDrop("ALL").WithAdd("NET_RAW").WithAdd("NET_ADMIN")
 
-	if istio {
+	if serviceMesh {
 		caps = caps.WithAdd("SYS_ADMIN")    // for reading /proc/PID/net/ns
 		caps = caps.WithAdd("SYS_PTRACE")   // for setting netns to other process
 		caps = caps.WithAdd("DAC_OVERRIDE") // for reading /proc/PID/environ
@@ -746,14 +869,23 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	podSpec.WithVolumes(&configMapVolume, procfsVolume)
 
 	podTemplate := applyconfcore.PodTemplateSpec()
-	podTemplate.WithLabels(map[string]string{"app": tapperPodName})
+	podTemplate.WithLabels(map[string]string{
+		"app":          tapperPodName,
+		LabelManagedBy: provider.managedBy,
+		LabelCreatedBy: provider.createdBy,
+	})
 	podTemplate.WithSpec(podSpec)
 
 	labelSelector := applyconfmeta.LabelSelector()
 	labelSelector.WithMatchLabels(map[string]string{"app": tapperPodName})
 
 	daemonSet := applyconfapp.DaemonSet(daemonSetName, namespace)
-	daemonSet.WithSpec(applyconfapp.DaemonSetSpec().WithSelector(labelSelector).WithTemplate(podTemplate))
+	daemonSet.
+		WithLabels(map[string]string{
+			LabelManagedBy: provider.managedBy,
+			LabelCreatedBy: provider.createdBy,
+		}).
+		WithSpec(applyconfapp.DaemonSetSpec().WithSelector(labelSelector).WithTemplate(podTemplate))
 
 	_, err = provider.clientSet.AppsV1().DaemonSets(namespace).Apply(ctx, daemonSet, metav1.ApplyOptions{FieldManager: fieldManagerName})
 	return err
@@ -802,8 +934,17 @@ func (provider *Provider) ListAllRunningPodsMatchingRegex(ctx context.Context, r
 	return matchingPods, nil
 }
 
-func (provider *Provider) GetPodLogs(ctx context.Context, namespace string, podName string) (string, error) {
-	podLogOpts := core.PodLogOptions{}
+func (provider *Provider) ListAllNamespaces(ctx context.Context) ([]core.Namespace, error) {
+	namespaces, err := provider.clientSet.CoreV1().Namespaces().List(ctx, metav1.ListOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	return namespaces.Items, err
+}
+
+func (provider *Provider) GetPodLogs(ctx context.Context, namespace string, podName string, containerName string) (string, error) {
+	podLogOpts := core.PodLogOptions{Container: containerName}
 	req := provider.clientSet.CoreV1().Pods(namespace).GetLogs(podName, &podLogOpts)
 	podLogs, err := req.Stream(ctx)
 	if err != nil {
@@ -827,6 +968,41 @@ func (provider *Provider) GetNamespaceEvents(ctx context.Context, namespace stri
 	return eventList.String(), nil
 }
 
+func (provider *Provider) ListManagedServiceAccounts(ctx context.Context, namespace string) (*core.ServiceAccountList, error) {
+	listOptions := metav1.ListOptions{
+		LabelSelector: fmt.Sprintf("%s=%s", LabelManagedBy, provider.managedBy),
+	}
+	return provider.clientSet.CoreV1().ServiceAccounts(namespace).List(ctx, listOptions)
+}
+
+func (provider *Provider) ListManagedClusterRoles(ctx context.Context) (*rbac.ClusterRoleList, error) {
+	listOptions := metav1.ListOptions{
+		LabelSelector: fmt.Sprintf("%s=%s", LabelManagedBy, provider.managedBy),
+	}
+	return provider.clientSet.RbacV1().ClusterRoles().List(ctx, listOptions)
+}
+
+func (provider *Provider) ListManagedClusterRoleBindings(ctx context.Context) (*rbac.ClusterRoleBindingList, error) {
+	listOptions := metav1.ListOptions{
+		LabelSelector: fmt.Sprintf("%s=%s", LabelManagedBy, provider.managedBy),
+	}
+	return provider.clientSet.RbacV1().ClusterRoleBindings().List(ctx, listOptions)
+}
+
+func (provider *Provider) ListManagedRoles(ctx context.Context, namespace string) (*rbac.RoleList, error) {
+	listOptions := metav1.ListOptions{
+		LabelSelector: fmt.Sprintf("%s=%s", LabelManagedBy, provider.managedBy),
+	}
+	return provider.clientSet.RbacV1().Roles(namespace).List(ctx, listOptions)
+}
+
+func (provider *Provider) ListManagedRoleBindings(ctx context.Context, namespace string) (*rbac.RoleBindingList, error) {
+	listOptions := metav1.ListOptions{
+		LabelSelector: fmt.Sprintf("%s=%s", LabelManagedBy, provider.managedBy),
+	}
+	return provider.clientSet.RbacV1().RoleBindings(namespace).List(ctx, listOptions)
+}
+
 func (provider *Provider) IsDefaultStorageProviderAvailable(ctx context.Context) (bool, error) {
 	storageClassList, err := provider.clientSet.StorageV1().StorageClasses().List(ctx, metav1.ListOptions{})
 	if err != nil {
@@ -845,6 +1021,10 @@ func (provider *Provider) CreatePersistentVolumeClaim(ctx context.Context, names
 	volumeClaim := &core.PersistentVolumeClaim{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: volumeClaimName,
+			Labels: map[string]string{
+				LabelManagedBy: provider.managedBy,
+				LabelCreatedBy: provider.createdBy,
+			},
 		},
 		Spec: core.PersistentVolumeClaimSpec{
 			AccessModes: []core.PersistentVolumeAccessMode{core.ReadWriteOnce},

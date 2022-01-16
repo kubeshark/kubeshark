@@ -52,8 +52,8 @@ Pick one from the [Releases](https://github.com/up9inc/mizu/releases) page
 ## How to Run
 
 1. Find pods you'd like to tap to in your Kubernetes cluster
-2. Run `mizu tap` or `mizu tap PODNAME`  
-3. Open browser on `http://localhost:8899/mizu` **or** as instructed in the CLI
+2. Run `mizu tap` or `mizu tap PODNAME`
+3. Open browser on `http://localhost:8899` **or** as instructed in the CLI
 4. Watch the API traffic flowing
 5. Type ^C to stop
 
@@ -172,16 +172,14 @@ Please see [CONTRACT MONITORING](docs/CONTRACT_MONITORING.md) page for more deta
 
 ### Configure proxy host 
 
-By default, mizu will be accessible via local host: 'http://localhost:8899/mizu/', it is possible to change the host,
-for instance, to '0.0.0.0' which can grant access via machine IP address.
-This setting can be changed via command line flag `--set tap.proxy-host=<value>` or via config file:
-tap
-    proxy-host: 0.0.0.0
-and when changed it will support accessing by IP
+By default, mizu will be accessible via local host: 'http://localhost:8899', it is possible to change the host, for
+instance, to '0.0.0.0' which can grant access via machine IP address. This setting can be changed via command line
+flag `--set tap.proxy-host=<value>` or via config file:
+tap proxy-host: 0.0.0.0 and when changed it will support accessing by IP
 
-### Run in daemon mode
+### Install Mizu standalone
 
-Mizu can be run detached from the cli using the daemon flag: `mizu tap --daemon`. This type of mizu instance will run
+Mizu can be run detached from the cli using the install command: `mizu install`. This type of mizu instance will run
 indefinitely in the cluster.
 
-For more information please refer to [DAEMON MODE](docs/DAEMON_MODE.md)
+For more information please refer to [INSTALL STANDALONE](docs/INSTALL_STANDALONE.md)

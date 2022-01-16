@@ -1,25 +1,30 @@
 import * as axios from "axios";
 
 // When working locally cp `cp .env.example .env`
-export const MizuWebsocketURL = process.env.REACT_APP_OVERRIDE_WS_URL ? process.env.REACT_APP_OVERRIDE_WS_URL : `ws://${window.location.host}/ws`;
+export const MizuWebsocketURL = process.env.REACT_APP_OVERRIDE_WS_URL ? process.env.REACT_APP_OVERRIDE_WS_URL :
+                        window.location.protocol === 'https:' ? `wss://${window.location.host}/ws` : `ws://${window.location.host}/ws`;
+
+export const FormValidationErrorType = "formError";
 
 const CancelToken = axios.CancelToken;
 
+// When working locally cp `cp .env.example .env`
+const apiURL = process.env.REACT_APP_OVERRIDE_API_URL ? process.env.REACT_APP_OVERRIDE_API_URL : `${window.location.origin}/`;
+
 export default class Api {
+    static instance;
+
+    static getInstance() {
+        if (!Api.instance) {
+            Api.instance = new Api();
+        }
+        return Api.instance;
+    }
 
     constructor() {
+        this.token = localStorage.getItem("token");
 
-        // When working locally cp `cp .env.example .env`
-        const apiURL = process.env.REACT_APP_OVERRIDE_API_URL ? process.env.REACT_APP_OVERRIDE_API_URL : `${window.location.origin}/`;
-
-        this.client = axios.create({
-            baseURL: apiURL,
-            timeout: 31000,
-            headers: {
-                Accept: "application/json",
-            }
-        });
-
+        this.client = this.getAxiosClient();
         this.source = null;
     }
 
@@ -33,8 +38,8 @@ export default class Api {
         return response.data;
     }
 
-    getEntry = async (id) => {
-        const response = await this.client.get(`/entries/${id}`);
+    getEntry = async (id, query) => {
+        const response = await this.client.get(`/entries/${id}?query=${query}`);
         return response.data;
     }
 
@@ -77,5 +82,93 @@ export default class Api {
         }
 
         return response.data;
+    }
+
+    getTapConfig = async () => {
+        const response = await this.client.get("/config/tapConfig");
+        return response.data;
+    }
+
+    setTapConfig = async (config) => {
+        const response = await this.client.post("/config/tapConfig", {tappedNamespaces: config});
+        return response.data;
+    }
+
+    isInstallNeeded = async () => {
+        const response = await this.client.get("/install/isNeeded");
+        return response.data;
+    }
+
+    isAuthenticationNeeded = async () => {
+        try {
+            await this.client.get("/status/tap");
+            return false;
+        } catch (e) {
+            if (e.response.status === 401) {
+                return true;
+            }
+            throw e;
+        }
+    }
+
+    register = async (username, password) => {
+        const form = new FormData();
+        form.append('username', username);
+        form.append('password', password);
+
+        try {
+            const response = await this.client.post(`/user/register`, form);
+            this.persistToken(response.data.token);
+            return response;
+        } catch (e) {
+            if (e.response.status === 400) {
+                const error = {
+                    'type': FormValidationErrorType,
+                    'messages': e.response.data
+                };
+                throw error;
+            } else {
+                throw e;
+            }
+        }
+    }
+
+    login = async (username, password) => {
+        const form = new FormData();
+        form.append('username', username);
+        form.append('password', password);
+
+        const response = await this.client.post(`/user/login`, form);
+        if (response.status >= 200 && response.status < 300) {
+            this.persistToken(response.data.token);
+        }
+
+        return response;
+    }
+
+    persistToken = (token) => {
+        this.token = token;
+        this.client = this.getAxiosClient();
+        localStorage.setItem('token', token);
+    }
+
+    logout = async () => {
+        await this.client.post(`/user/logout`);
+        this.persistToken(null);
+    }
+
+    getAxiosClient = () => {
+        const headers = {
+            Accept: "application/json"
+        }
+
+        if (this.token) {
+            headers['x-session-token'] = `${this.token}`; // we use `x-session-token` instead of `Authorization` because the latter is reserved by kubectl proxy, making mizu view not work
+        }
+        return axios.create({
+            baseURL: apiURL,
+            timeout: 31000,
+            headers
+        });
     }
 }

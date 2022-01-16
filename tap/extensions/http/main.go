@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/up9inc/mizu/tap/api"
@@ -157,7 +158,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 	return nil
 }
 
-func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, resolvedDestination string) *api.MizuEntry {
+func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, resolvedDestination string) *api.Entry {
 	var host, authority, path string
 
 	request := item.Pair.Request.Payload.(map[string]interface{})
@@ -209,6 +210,7 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 	request["url"] = reqDetails["url"].(string)
 	reqDetails["targetUri"] = reqDetails["url"]
 	reqDetails["path"] = path
+	reqDetails["pathSegments"] = strings.Split(path, "/")[1:]
 	reqDetails["summary"] = path
 
 	// Rearrange the maps for the querying
@@ -241,7 +243,7 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 		elapsedTime = 0
 	}
 	httpPair, _ := json.Marshal(item.Pair)
-	return &api.MizuEntry{
+	return &api.Entry{
 		Protocol: item.Protocol,
 		Source: &api.TCP{
 			Name: resolvedSource,
@@ -264,26 +266,6 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 		Summary:     path,
 		IsOutgoing:  item.ConnectionInfo.IsOutgoing,
 		HTTPPair:    string(httpPair),
-	}
-}
-
-func (d dissecting) Summarize(entry *api.MizuEntry) *api.BaseEntryDetails {
-	return &api.BaseEntryDetails{
-		Id:          entry.Id,
-		Protocol:    entry.Protocol,
-		Path:        entry.Path,
-		Summary:     entry.Summary,
-		StatusCode:  entry.Status,
-		Method:      entry.Method,
-		Timestamp:   entry.Timestamp,
-		Source:      entry.Source,
-		Destination: entry.Destination,
-		IsOutgoing:  entry.IsOutgoing,
-		Latency:     entry.ElapsedTime,
-		Rules: api.ApplicableRules{
-			Latency: 0,
-			Status:  false,
-		},
 	}
 }
 
@@ -315,6 +297,15 @@ func representRequest(request map[string]interface{}) (repRequest []interface{})
 		Title: "Details",
 		Data:  string(details),
 	})
+
+	pathSegments := request["pathSegments"].([]interface{})
+	if len(pathSegments) > 1 {
+		repRequest = append(repRequest, api.SectionData{
+			Type:  api.TABLE,
+			Title: "Path Segments",
+			Data:  representSliceAsTable(pathSegments, `request.pathSegments`),
+		})
+	}
 
 	repRequest = append(repRequest, api.SectionData{
 		Type:  api.TABLE,

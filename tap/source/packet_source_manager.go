@@ -16,7 +16,7 @@ type PacketSourceManager struct {
 }
 
 func NewPacketSourceManager(procfs string, pids string, filename string, interfaceName string,
-	istio bool, pods []v1.Pod, behaviour TcpPacketSourceBehaviour) (*PacketSourceManager, error) {
+	mtls bool, pods []v1.Pod, behaviour TcpPacketSourceBehaviour) (*PacketSourceManager, error) {
 	sources := make([]*tcpPacketSource, 0)
 	sources, err := createHostSource(sources, filename, interfaceName, behaviour)
 
@@ -25,7 +25,8 @@ func NewPacketSourceManager(procfs string, pids string, filename string, interfa
 	}
 
 	sources = createSourcesFromPids(sources, procfs, pids, interfaceName, behaviour)
-	sources = createSourcesFromEnvoy(sources, istio, procfs, pods, interfaceName, behaviour)
+	sources = createSourcesFromEnvoy(sources, mtls, procfs, pods, interfaceName, behaviour)
+	sources = createSourcesFromLinkerd(sources, mtls, procfs, pods, interfaceName, behaviour)
 
 	return &PacketSourceManager{
 		sources: sources,
@@ -54,13 +55,13 @@ func createSourcesFromPids(sources []*tcpPacketSource, procfs string, pids strin
 	return sources
 }
 
-func createSourcesFromEnvoy(sources []*tcpPacketSource, istio bool, procfs string, clusterIps []v1.Pod,
+func createSourcesFromEnvoy(sources []*tcpPacketSource, mtls bool, procfs string, pods []v1.Pod,
 	interfaceName string, behaviour TcpPacketSourceBehaviour) []*tcpPacketSource {
-	if !istio {
+	if !mtls {
 		return sources
 	}
 
-	envoyPids, err := discoverRelevantEnvoyPids(procfs, clusterIps)
+	envoyPids, err := discoverRelevantEnvoyPids(procfs, pods)
 
 	if err != nil {
 		logger.Log.Warningf("Unable to discover envoy pids - %v", err)
@@ -68,6 +69,25 @@ func createSourcesFromEnvoy(sources []*tcpPacketSource, istio bool, procfs strin
 	}
 
 	netnsSources := newNetnsPacketSources(procfs, envoyPids, interfaceName, behaviour)
+	sources = append(sources, netnsSources...)
+
+	return sources
+}
+
+func createSourcesFromLinkerd(sources []*tcpPacketSource, mtls bool, procfs string, pods []v1.Pod,
+	interfaceName string, behaviour TcpPacketSourceBehaviour) []*tcpPacketSource {
+	if !mtls {
+		return sources
+	}
+
+	linkerdPids, err := discoverRelevantLinkerdPids(procfs, pods)
+
+	if err != nil {
+		logger.Log.Warningf("Unable to discover linkerd pids - %v", err)
+		return sources
+	}
+
+	netnsSources := newNetnsPacketSources(procfs, linkerdPids, interfaceName, behaviour)
 	sources = append(sources, netnsSources...)
 
 	return sources

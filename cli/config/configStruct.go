@@ -34,9 +34,11 @@ type ConfigStruct struct {
 	ConfigFilePath         string                      `yaml:"config-path,omitempty" readonly:""`
 	HeadlessMode           bool                        `yaml:"headless" default:"false"`
 	LogLevelStr            string                      `yaml:"log-level,omitempty" default:"INFO" readonly:""`
+	ServiceMap             bool                        `yaml:"service-map,omitempty" default:"false" readonly:""`
+	OAS                    bool                        `yaml:"oas,omitempty" default:"false" readonly:""`
 }
 
-func(config *ConfigStruct) validate() error {
+func (config *ConfigStruct) validate() error {
 	if _, err := logging.LogLevel(config.LogLevelStr); err != nil {
 		return fmt.Errorf("%s is not a valid log level, err: %v", config.LogLevelStr, err)
 	}

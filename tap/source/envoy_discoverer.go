@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"regexp"
 	"strings"
 
 	"github.com/up9inc/mizu/shared/logger"
@@ -12,8 +11,6 @@ import (
 )
 
 const envoyBinary = "/envoy"
-
-var numberRegex = regexp.MustCompile("[0-9]+")
 
 func discoverRelevantEnvoyPids(procfs string, pods []v1.Pod) ([]string, error) {
 	result := make([]string, 0)
@@ -36,7 +33,7 @@ func discoverRelevantEnvoyPids(procfs string, pods []v1.Pod) ([]string, error) {
 			continue
 		}
 
-		if checkPid(procfs, pid.Name(), pods) {
+		if checkEnvoyPid(procfs, pid.Name(), pods) {
 			result = append(result, pid.Name())
 		}
 	}
@@ -46,7 +43,7 @@ func discoverRelevantEnvoyPids(procfs string, pods []v1.Pod) ([]string, error) {
 	return result, nil
 }
 
-func checkPid(procfs string, pid string, pods []v1.Pod) bool {
+func checkEnvoyPid(procfs string, pid string, pods []v1.Pod) bool {
 	execLink := fmt.Sprintf("%v/%v/exe", procfs, pid)
 	exec, err := os.Readlink(execLink)
 
@@ -63,7 +60,7 @@ func checkPid(procfs string, pid string, pods []v1.Pod) bool {
 	}
 
 	environmentFile := fmt.Sprintf("%v/%v/environ", procfs, pid)
-	podIp, err := readEnvironmentVariable(environmentFile, "INSTANCE_IP")
+	podIp, err := getSingleValueFromEnvironmentVariableFile(environmentFile, "INSTANCE_IP")
 
 	if err != nil {
 		return false
@@ -83,31 +80,4 @@ func checkPid(procfs string, pid string, pods []v1.Pod) bool {
 	}
 
 	return false
-}
-
-func readEnvironmentVariable(file string, name string) (string, error) {
-	bytes, err := ioutil.ReadFile(file)
-
-	if err != nil {
-		logger.Log.Warningf("Error reading environment file %v - %v", file, err)
-		return "", err
-	}
-
-	envs := strings.Split(string(bytes), string([]byte{0}))
-
-	for _, env := range envs {
-		if !strings.Contains(env, "=") {
-			continue
-		}
-
-		parts := strings.Split(env, "=")
-		varName := parts[0]
-		value := parts[1]
-
-		if name == varName {
-			return value, nil
-		}
-	}
-
-	return "", nil
 }

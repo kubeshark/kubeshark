@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/up9inc/mizu/shared"
-	"github.com/up9inc/mizu/tap/api"
 	"io/ioutil"
 	"os"
 )
@@ -12,7 +11,6 @@ import (
 // these values are used when the config.json file is not present
 const (
 	defaultMaxDatabaseSizeBytes int64  = 200 * 1000 * 1000
-	defaultRegexTarget          string = ".*"
 	DefaultDatabasePath         string = "./entries"
 )
 
@@ -48,14 +46,8 @@ func applyDefaultConfig() error {
 }
 
 func getDefaultConfig() (*shared.MizuAgentConfig, error) {
-	regex, err := api.CompileRegexToSerializableRegexp(defaultRegexTarget)
-	if err != nil {
-		return nil, err
-	}
 	return &shared.MizuAgentConfig{
-		TapTargetRegex:    *regex,
 		MaxDBSizeBytes:    defaultMaxDatabaseSizeBytes,
 		AgentDatabasePath: DefaultDatabasePath,
-		DaemonMode:        false,
 	}, nil
 }

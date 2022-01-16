@@ -92,7 +92,7 @@ func getDefaultCommandArgs() []string {
 	setFlag := "--set"
 	telemetry := "telemetry=false"
 	agentImage := "agent-image=gcr.io/up9-docker-hub/mizu/ci:0.0.0"
-	imagePullPolicy := "image-pull-policy=Never"
+	imagePullPolicy := "image-pull-policy=IfNotPresent"
 	headless := "headless=true"
 
 	return []string{setFlag, telemetry, setFlag, agentImage, setFlag, imagePullPolicy, setFlag, headless}
@@ -103,10 +103,6 @@ func getDefaultTapCommandArgs() []string {
 	defaultCmdArgs := getDefaultCommandArgs()
 
 	return append([]string{tapCommand}, defaultCmdArgs...)
-}
-
-func getDefaultTapCommandArgsWithDaemonMode() []string {
-	return append(getDefaultTapCommandArgs(), "--daemon")
 }
 
 func getDefaultTapCommandArgsWithRegex(regex string) []string {
@@ -148,6 +144,17 @@ func getDefaultViewCommandArgs() []string {
 	return append([]string{viewCommand}, defaultCmdArgs...)
 }
 
+func runCypressTests(t *testing.T, cypressRunCmd string) {
+	cypressCmd := exec.Command("bash", "-c", cypressRunCmd)
+	t.Logf("running command: %v", cypressCmd.String())
+	out, err := cypressCmd.Output()
+	if err != nil {
+		t.Errorf("%s", out)
+		return
+	}
+	t.Logf("%s", out)
+}
+
 func retriesExecute(retriesCount int, executeFunc func() error) error {
 	var lastError interface{}
 
@@ -176,16 +183,16 @@ func tryExecuteFunc(executeFunc func() error) (err interface{}) {
 }
 
 func waitTapPodsReady(apiServerUrl string) error {
-	resolvingUrl := fmt.Sprintf("%v/status/tappersCount", apiServerUrl)
+	resolvingUrl := fmt.Sprintf("%v/status/connectedTappersCount", apiServerUrl)
 	tapPodsReadyFunc := func() error {
 		requestResult, requestErr := executeHttpGetRequest(resolvingUrl)
 		if requestErr != nil {
 			return requestErr
 		}
 
-		tappersCount := requestResult.(float64)
-		if tappersCount == 0 {
-			return fmt.Errorf("no tappers running")
+		connectedTappersCount := requestResult.(float64)
+		if connectedTappersCount == 0 {
+			return fmt.Errorf("no connected tappers running")
 		}
 		time.Sleep(waitAfterTapPodsReady)
 		return nil
@@ -322,16 +329,6 @@ func getLogsPath() (string, error) {
 
 	logsPath := path.Join(dir, "mizu_logs.zip")
 	return logsPath, nil
-}
-
-func daemonCleanup(t *testing.T, viewCmd *exec.Cmd) {
-	if err := runMizuClean(); err != nil {
-		t.Logf("error running mizu clean: %v", err)
-	}
-
-	if err := cleanupCommand(viewCmd); err != nil {
-		t.Logf("failed to cleanup view command, err: %v", err)
-	}
 }
 
 // waitTimeout waits for the waitgroup for the specified max timeout.

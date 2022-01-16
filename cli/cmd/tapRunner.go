@@ -9,21 +9,20 @@ import (
 	"strings"
 	"time"
 
-	"k8s.io/apimachinery/pkg/util/intstr"
+	"github.com/up9inc/mizu/cli/resources"
+	"github.com/up9inc/mizu/cli/utils"
 
 	"github.com/getkin/kin-openapi/openapi3"
 	"gopkg.in/yaml.v3"
 	core "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/wait"
 
 	"github.com/up9inc/mizu/cli/apiserver"
 	"github.com/up9inc/mizu/cli/cmd/goUtils"
 	"github.com/up9inc/mizu/cli/config"
 	"github.com/up9inc/mizu/cli/config/configStructs"
 	"github.com/up9inc/mizu/cli/errormessage"
-	"github.com/up9inc/mizu/cli/mizu"
 	"github.com/up9inc/mizu/cli/mizu/fsUtils"
 	"github.com/up9inc/mizu/cli/uiUtils"
 	"github.com/up9inc/mizu/shared"
@@ -35,11 +34,8 @@ import (
 const cleanupTimeout = time.Minute
 
 type tapState struct {
-	startTime        time.Time
-	targetNamespaces []string
-
-	apiServerService         *core.Service
-	tapperSyncer             *kubernetes.MizuTapperSyncer
+	startTime                time.Time
+	targetNamespaces         []string
 	mizuServiceAccountExists bool
 }
 
@@ -49,13 +45,9 @@ var apiProvider *apiserver.Provider
 func RunMizuTap() {
 	state.startTime = time.Now()
 
-	mizuApiFilteringOptions, err := getMizuApiFilteringOptions()
 	apiProvider = apiserver.NewProvider(GetApiServerUrl(), apiserver.DefaultRetries, apiserver.DefaultTimeout)
-	if err != nil {
-		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error parsing regex-masking: %v", errormessage.FormatError(err)))
-		return
-	}
 
+	var err error
 	var serializedValidationRules string
 	if config.Config.Tap.EnforcePolicyFile != "" {
 		serializedValidationRules, err = readValidationRules(config.Config.Tap.EnforcePolicyFile)
@@ -99,9 +91,10 @@ func RunMizuTap() {
 
 	state.targetNamespaces = getNamespaces(kubernetesProvider)
 
-	serializedMizuConfig, err := config.GetSerializedMizuAgentConfig(state.targetNamespaces, mizuApiFilteringOptions)
+	mizuAgentConfig := getTapMizuAgentConfig()
+	serializedMizuConfig, err := getSerializedMizuAgentConfig(mizuAgentConfig)
 	if err != nil {
-		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error composing mizu config: %v", errormessage.FormatError(err)))
+		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error serializing mizu config: %v", errormessage.FormatError(err)))
 		return
 	}
 
@@ -131,43 +124,43 @@ func RunMizuTap() {
 	}
 
 	logger.Log.Infof("Waiting for Mizu Agent to start...")
-	if err := createMizuResources(ctx, cancel, kubernetesProvider, serializedValidationRules, serializedContract, serializedMizuConfig); err != nil {
-		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error creating resources: %v", errormessage.FormatError(err)))
-
+	if state.mizuServiceAccountExists, err = resources.CreateTapMizuResources(ctx, kubernetesProvider, serializedValidationRules, serializedContract, serializedMizuConfig, config.Config.IsNsRestrictedMode(), config.Config.MizuResourcesNamespace, config.Config.AgentImage, getSyncEntriesConfig(), config.Config.Tap.MaxEntriesDBSizeBytes(), config.Config.Tap.ApiServerResources, config.Config.ImagePullPolicy(), config.Config.LogLevel()); err != nil {
 		var statusError *k8serrors.StatusError
 		if errors.As(err, &statusError) {
 			if statusError.ErrStatus.Reason == metav1.StatusReasonAlreadyExists {
 				logger.Log.Info("Mizu is already running in this namespace, change the `mizu-resources-namespace` configuration or run `mizu clean` to remove the currently running Mizu instance")
 			}
+		} else {
+			defer resources.CleanUpMizuResources(ctx, cancel, kubernetesProvider, config.Config.IsNsRestrictedMode(), config.Config.MizuResourcesNamespace)
+			logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error creating resources: %v", errormessage.FormatError(err)))
 		}
+
 		return
 	}
-	if config.Config.Tap.DaemonMode {
-		if err := handleDaemonModePostCreation(ctx, cancel, kubernetesProvider, state.targetNamespaces); err != nil {
-			defer finishMizuExecution(kubernetesProvider, apiProvider)
-			cancel()
-		} else {
-			logger.Log.Infof(uiUtils.Magenta, "Mizu is now running in daemon mode, run `mizu view` to connect to the mizu daemon instance")
-		}
-	} else {
-		defer finishMizuExecution(kubernetesProvider, apiProvider)
 
-		go goUtils.HandleExcWrapper(watchApiServerEvents, ctx, kubernetesProvider, cancel)
-		go goUtils.HandleExcWrapper(watchApiServerPod, ctx, kubernetesProvider, cancel)
+	defer finishMizuExecution(kubernetesProvider, apiProvider, config.Config.IsNsRestrictedMode(), config.Config.MizuResourcesNamespace)
 
-		// block until exit signal or error
-		waitForFinish(ctx, cancel)
-	}
+	go goUtils.HandleExcWrapper(watchApiServerEvents, ctx, kubernetesProvider, cancel)
+	go goUtils.HandleExcWrapper(watchApiServerPod, ctx, kubernetesProvider, cancel)
+
+	// block until exit signal or error
+	utils.WaitForFinish(ctx, cancel)
 }
 
-func handleDaemonModePostCreation(ctx context.Context, cancel context.CancelFunc, kubernetesProvider *kubernetes.Provider, namespaces []string) error {
-	apiProvider := apiserver.NewProvider(GetApiServerUrl(), 90, 1*time.Second)
-
-	if err := waitForDaemonModeToBeReady(cancel, kubernetesProvider, apiProvider); err != nil {
-		return err
+func getTapMizuAgentConfig() *shared.MizuAgentConfig {
+	mizuAgentConfig := shared.MizuAgentConfig{
+		MaxDBSizeBytes:         config.Config.Tap.MaxEntriesDBSizeBytes(),
+		AgentImage:             config.Config.AgentImage,
+		PullPolicy:             config.Config.ImagePullPolicyStr,
+		LogLevel:               config.Config.LogLevel(),
+		TapperResources:        config.Config.Tap.TapperResources,
+		MizuResourcesNamespace: config.Config.MizuResourcesNamespace,
+		AgentDatabasePath:      shared.DataDirPath,
+		ServiceMap:             config.Config.ServiceMap,
+		OAS:                    config.Config.OAS,
 	}
 
-	return nil
+	return &mizuAgentConfig
 }
 
 /*
@@ -189,17 +182,6 @@ func printTappedPodsPreview(ctx context.Context, kubernetesProvider *kubernetes.
 	}
 }
 
-func waitForDaemonModeToBeReady(cancel context.CancelFunc, kubernetesProvider *kubernetes.Provider, apiProvider *apiserver.Provider) error {
-	go startProxyReportErrorIfAny(kubernetesProvider, cancel)
-
-	// TODO: TRA-3903 add a smarter test to see that tapping/pod watching is functioning properly
-	if err := apiProvider.TestConnection(); err != nil {
-		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Mizu was not ready in time, for more info check logs at %s", fsUtils.GetLogFilePath()))
-		return err
-	}
-	return nil
-}
-
 func startTapperSyncer(ctx context.Context, cancel context.CancelFunc, provider *kubernetes.Provider, targetNamespaces []string, mizuApiFilteringOptions api.TrafficFilteringOptions, startTime time.Time) error {
 	tapperSyncer, err := kubernetes.CreateAndStartMizuTapperSyncer(ctx, provider, kubernetes.TapperSyncerConfig{
 		TargetNamespaces:         targetNamespaces,
@@ -212,7 +194,7 @@ func startTapperSyncer(ctx context.Context, cancel context.CancelFunc, provider 
 		IgnoredUserAgents:        config.Config.Tap.IgnoredUserAgents,
 		MizuApiFilteringOptions:  mizuApiFilteringOptions,
 		MizuServiceAccountExists: state.mizuServiceAccountExists,
-		Istio:                    config.Config.Tap.Istio,
+		ServiceMesh:              config.Config.Tap.ServiceMesh,
 	}, startTime)
 
 	if err != nil {
@@ -252,8 +234,6 @@ func startTapperSyncer(ctx context.Context, cancel context.CancelFunc, provider 
 		}
 	}()
 
-	state.tapperSyncer = tapperSyncer
-
 	return nil
 }
 
@@ -285,137 +265,6 @@ func readValidationRules(file string) (string, error) {
 	}
 	newContent, _ := yaml.Marshal(&rules)
 	return string(newContent), nil
-}
-
-func createMizuResources(ctx context.Context, cancel context.CancelFunc, kubernetesProvider *kubernetes.Provider, serializedValidationRules string, serializedContract string, serializedMizuConfig string) error {
-	if !config.Config.IsNsRestrictedMode() {
-		if err := createMizuNamespace(ctx, kubernetesProvider); err != nil {
-			return err
-		}
-	}
-
-	if err := createMizuConfigmap(ctx, kubernetesProvider, serializedValidationRules, serializedContract, serializedMizuConfig); err != nil {
-		logger.Log.Warningf(uiUtils.Warning, fmt.Sprintf("Failed to create resources required for policy validation. Mizu will not validate policy rules. error: %v", errormessage.FormatError(err)))
-	}
-
-	var err error
-	state.mizuServiceAccountExists, err = createRBACIfNecessary(ctx, kubernetesProvider)
-	if err != nil {
-		if !config.Config.Tap.DaemonMode {
-			logger.Log.Warningf(uiUtils.Warning, fmt.Sprintf("Failed to ensure the resources required for IP resolving. Mizu will not resolve target IPs to names. error: %v", errormessage.FormatError(err)))
-		}
-	}
-
-	var serviceAccountName string
-	if state.mizuServiceAccountExists {
-		serviceAccountName = kubernetes.ServiceAccountName
-	} else {
-		serviceAccountName = ""
-	}
-
-	opts := &kubernetes.ApiServerOptions{
-		Namespace:             config.Config.MizuResourcesNamespace,
-		PodName:               kubernetes.ApiServerPodName,
-		PodImage:              config.Config.AgentImage,
-		ServiceAccountName:    serviceAccountName,
-		IsNamespaceRestricted: config.Config.IsNsRestrictedMode(),
-		SyncEntriesConfig:     getSyncEntriesConfig(),
-		MaxEntriesDBSizeBytes: config.Config.Tap.MaxEntriesDBSizeBytes(),
-		Resources:             config.Config.Tap.ApiServerResources,
-		ImagePullPolicy:       config.Config.ImagePullPolicy(),
-		LogLevel:              config.Config.LogLevel(),
-	}
-
-	if config.Config.Tap.DaemonMode {
-		if !state.mizuServiceAccountExists {
-			defer cleanUpMizuResources(ctx, cancel, kubernetesProvider)
-			logger.Log.Fatalf(uiUtils.Red, fmt.Sprintf("Failed to ensure the resources required for mizu to run in daemon mode. cannot proceed. error: %v", errormessage.FormatError(err)))
-		}
-		if err := createMizuApiServerDeployment(ctx, kubernetesProvider, opts); err != nil {
-			return err
-		}
-	} else {
-		if err := createMizuApiServerPod(ctx, kubernetesProvider, opts); err != nil {
-			return err
-		}
-	}
-
-	state.apiServerService, err = kubernetesProvider.CreateService(ctx, config.Config.MizuResourcesNamespace, kubernetes.ApiServerPodName, kubernetes.ApiServerPodName)
-	if err != nil {
-		return err
-	}
-	logger.Log.Debugf("Successfully created service: %s", kubernetes.ApiServerPodName)
-
-	return nil
-}
-
-func createMizuConfigmap(ctx context.Context, kubernetesProvider *kubernetes.Provider, serializedValidationRules string, serializedContract string, serializedMizuConfig string) error {
-	err := kubernetesProvider.CreateConfigMap(ctx, config.Config.MizuResourcesNamespace, kubernetes.ConfigMapName, serializedValidationRules, serializedContract, serializedMizuConfig)
-	return err
-}
-
-func createMizuNamespace(ctx context.Context, kubernetesProvider *kubernetes.Provider) error {
-	_, err := kubernetesProvider.CreateNamespace(ctx, config.Config.MizuResourcesNamespace)
-	return err
-}
-
-func createMizuApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, opts *kubernetes.ApiServerOptions) error {
-	pod, err := kubernetesProvider.GetMizuApiServerPodObject(opts, false, "")
-	if err != nil {
-		return err
-	}
-	if _, err = kubernetesProvider.CreatePod(ctx, config.Config.MizuResourcesNamespace, pod); err != nil {
-		return err
-	}
-	logger.Log.Debugf("Successfully created API server pod: %s", kubernetes.ApiServerPodName)
-	return nil
-}
-
-func createMizuApiServerDeployment(ctx context.Context, kubernetesProvider *kubernetes.Provider, opts *kubernetes.ApiServerOptions) error {
-	volumeClaimCreated := false
-	if !config.Config.Tap.NoPersistentVolumeClaim {
-		volumeClaimCreated = TryToCreatePersistentVolumeClaim(ctx, kubernetesProvider)
-	}
-
-	pod, err := kubernetesProvider.GetMizuApiServerPodObject(opts, volumeClaimCreated, kubernetes.PersistentVolumeClaimName)
-	if err != nil {
-		return err
-	}
-	pod.Spec.Containers[0].LivenessProbe = &core.Probe{
-		Handler: core.Handler{
-			HTTPGet: &core.HTTPGetAction{
-				Path: "/echo",
-				Port: intstr.FromInt(shared.DefaultApiServerPort),
-			},
-		},
-		InitialDelaySeconds: 1,
-		PeriodSeconds:       10,
-	}
-	if _, err = kubernetesProvider.CreateDeployment(ctx, config.Config.MizuResourcesNamespace, opts.PodName, pod); err != nil {
-		return err
-	}
-	logger.Log.Debugf("Successfully created API server deployment: %s", kubernetes.ApiServerPodName)
-	return nil
-}
-
-func TryToCreatePersistentVolumeClaim(ctx context.Context, kubernetesProvider *kubernetes.Provider) bool {
-	isDefaultStorageClassAvailable, err := kubernetesProvider.IsDefaultStorageProviderAvailable(ctx)
-	if err != nil {
-		logger.Log.Warningf(uiUtils.Yellow, "An error occured when checking if a default storage provider exists in this cluster, this means mizu data will be lost on mizu-api-server pod restart")
-		logger.Log.Debugf("error checking if default storage class exists: %v", err)
-		return false
-	} else if !isDefaultStorageClassAvailable {
-		logger.Log.Warningf(uiUtils.Yellow, "Could not find default storage provider in this cluster, this means mizu data will be lost on mizu-api-server pod restart")
-		return false
-	}
-
-	if _, err = kubernetesProvider.CreatePersistentVolumeClaim(ctx, config.Config.MizuResourcesNamespace, kubernetes.PersistentVolumeClaimName, config.Config.Tap.MaxEntriesDBSizeBytes()+mizu.DaemonModePersistentVolumeSizeBufferBytes); err != nil {
-		logger.Log.Warningf(uiUtils.Yellow, "An error has occured while creating a persistent volume claim for mizu, this means mizu data will be lost on mizu-api-server pod restart")
-		logger.Log.Debugf("error creating persistent volume claim: %v", err)
-		return false
-	}
-
-	return true
 }
 
 func getMizuApiFilteringOptions() (*api.TrafficFilteringOptions, error) {
@@ -452,120 +301,14 @@ func getSyncEntriesConfig() *shared.SyncEntriesConfig {
 	}
 }
 
-func cleanUpRestrictedMode(ctx context.Context, kubernetesProvider *kubernetes.Provider) []string {
-	leftoverResources := make([]string, 0)
-
-	if err := kubernetesProvider.RemoveService(ctx, config.Config.MizuResourcesNamespace, kubernetes.ApiServerPodName); err != nil {
-		resourceDesc := fmt.Sprintf("Service %s in namespace %s", kubernetes.ApiServerPodName, config.Config.MizuResourcesNamespace)
-		handleDeletionError(err, resourceDesc, &leftoverResources)
-	}
-
-	if err := kubernetesProvider.RemoveDaemonSet(ctx, config.Config.MizuResourcesNamespace, kubernetes.TapperDaemonSetName); err != nil {
-		resourceDesc := fmt.Sprintf("DaemonSet %s in namespace %s", kubernetes.TapperDaemonSetName, config.Config.MizuResourcesNamespace)
-		handleDeletionError(err, resourceDesc, &leftoverResources)
-	}
-
-	if err := kubernetesProvider.RemoveConfigMap(ctx, config.Config.MizuResourcesNamespace, kubernetes.ConfigMapName); err != nil {
-		resourceDesc := fmt.Sprintf("ConfigMap %s in namespace %s", kubernetes.ConfigMapName, config.Config.MizuResourcesNamespace)
-		handleDeletionError(err, resourceDesc, &leftoverResources)
-	}
-
-	if err := kubernetesProvider.RemoveServicAccount(ctx, config.Config.MizuResourcesNamespace, kubernetes.ServiceAccountName); err != nil {
-		resourceDesc := fmt.Sprintf("Service Account %s in namespace %s", kubernetes.ServiceAccountName, config.Config.MizuResourcesNamespace)
-		handleDeletionError(err, resourceDesc, &leftoverResources)
-	}
-
-	if err := kubernetesProvider.RemoveRole(ctx, config.Config.MizuResourcesNamespace, kubernetes.RoleName); err != nil {
-		resourceDesc := fmt.Sprintf("Role %s in namespace %s", kubernetes.RoleName, config.Config.MizuResourcesNamespace)
-		handleDeletionError(err, resourceDesc, &leftoverResources)
-	}
-
-	if err := kubernetesProvider.RemovePod(ctx, config.Config.MizuResourcesNamespace, kubernetes.ApiServerPodName); err != nil {
-		resourceDesc := fmt.Sprintf("Pod %s in namespace %s", kubernetes.ApiServerPodName, config.Config.MizuResourcesNamespace)
-		handleDeletionError(err, resourceDesc, &leftoverResources)
-	}
-
-	//daemon mode resources
-	if err := kubernetesProvider.RemoveRoleBinding(ctx, config.Config.MizuResourcesNamespace, kubernetes.RoleBindingName); err != nil {
-		resourceDesc := fmt.Sprintf("RoleBinding %s in namespace %s", kubernetes.RoleBindingName, config.Config.MizuResourcesNamespace)
-		handleDeletionError(err, resourceDesc, &leftoverResources)
-	}
-
-	if err := kubernetesProvider.RemoveDeployment(ctx, config.Config.MizuResourcesNamespace, kubernetes.ApiServerPodName); err != nil {
-		resourceDesc := fmt.Sprintf("Deployment %s in namespace %s", kubernetes.ApiServerPodName, config.Config.MizuResourcesNamespace)
-		handleDeletionError(err, resourceDesc, &leftoverResources)
-	}
-
-	if err := kubernetesProvider.RemovePersistentVolumeClaim(ctx, config.Config.MizuResourcesNamespace, kubernetes.PersistentVolumeClaimName); err != nil {
-		resourceDesc := fmt.Sprintf("PersistentVolumeClaim %s in namespace %s", kubernetes.PersistentVolumeClaimName, config.Config.MizuResourcesNamespace)
-		handleDeletionError(err, resourceDesc, &leftoverResources)
-	}
-
-	if err := kubernetesProvider.RemoveRole(ctx, config.Config.MizuResourcesNamespace, kubernetes.DaemonRoleName); err != nil {
-		resourceDesc := fmt.Sprintf("Role %s in namespace %s", kubernetes.DaemonRoleName, config.Config.MizuResourcesNamespace)
-		handleDeletionError(err, resourceDesc, &leftoverResources)
-	}
-
-	if err := kubernetesProvider.RemoveRoleBinding(ctx, config.Config.MizuResourcesNamespace, kubernetes.DaemonRoleBindingName); err != nil {
-		resourceDesc := fmt.Sprintf("RoleBinding %s in namespace %s", kubernetes.DaemonRoleBindingName, config.Config.MizuResourcesNamespace)
-		handleDeletionError(err, resourceDesc, &leftoverResources)
-	}
-
-	return leftoverResources
-}
-
-func cleanUpNonRestrictedMode(ctx context.Context, cancel context.CancelFunc, kubernetesProvider *kubernetes.Provider) []string {
-	leftoverResources := make([]string, 0)
-
-	if err := kubernetesProvider.RemoveNamespace(ctx, config.Config.MizuResourcesNamespace); err != nil {
-		resourceDesc := fmt.Sprintf("Namespace %s", config.Config.MizuResourcesNamespace)
-		handleDeletionError(err, resourceDesc, &leftoverResources)
-	} else {
-		defer waitUntilNamespaceDeleted(ctx, cancel, kubernetesProvider)
-	}
-
-	if err := kubernetesProvider.RemoveClusterRole(ctx, kubernetes.ClusterRoleName); err != nil {
-		resourceDesc := fmt.Sprintf("ClusterRole %s", kubernetes.ClusterRoleName)
-		handleDeletionError(err, resourceDesc, &leftoverResources)
-	}
-
-	if err := kubernetesProvider.RemoveClusterRoleBinding(ctx, kubernetes.ClusterRoleBindingName); err != nil {
-		resourceDesc := fmt.Sprintf("ClusterRoleBinding %s", kubernetes.ClusterRoleBindingName)
-		handleDeletionError(err, resourceDesc, &leftoverResources)
-	}
-
-	return leftoverResources
-}
-
-func handleDeletionError(err error, resourceDesc string, leftoverResources *[]string) {
-	logger.Log.Debugf("Error removing %s: %v", resourceDesc, errormessage.FormatError(err))
-	*leftoverResources = append(*leftoverResources, resourceDesc)
-}
-
-func waitUntilNamespaceDeleted(ctx context.Context, cancel context.CancelFunc, kubernetesProvider *kubernetes.Provider) {
-	// Call cancel if a terminating signal was received. Allows user to skip the wait.
-	go func() {
-		waitForFinish(ctx, cancel)
-	}()
-
-	if err := kubernetesProvider.WaitUtilNamespaceDeleted(ctx, config.Config.MizuResourcesNamespace); err != nil {
-		switch {
-		case ctx.Err() == context.Canceled:
-			logger.Log.Debugf("Do nothing. User interrupted the wait")
-		case err == wait.ErrWaitTimeout:
-			logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Timeout while removing Namespace %s", config.Config.MizuResourcesNamespace))
-		default:
-			logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error while waiting for Namespace %s to be deleted: %v", config.Config.MizuResourcesNamespace, errormessage.FormatError(err)))
-		}
-	}
-}
-
 func watchApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
 	podExactRegex := regexp.MustCompile(fmt.Sprintf("^%s$", kubernetes.ApiServerPodName))
 	podWatchHelper := kubernetes.NewPodWatchHelper(kubernetesProvider, podExactRegex)
 	eventChan, errorChan := kubernetes.FilteredWatch(ctx, podWatchHelper, []string{config.Config.MizuResourcesNamespace}, podWatchHelper)
 	isPodReady := false
-	timeAfter := time.After(25 * time.Second)
+
+	apiServerTimeoutSec := config.GetIntEnvConfig(config.ApiServerTimeoutSec, 120)
+	timeAfter := time.After(time.Duration(apiServerTimeoutSec) * time.Second)
 	for {
 		select {
 		case wEvent, ok := <-eventChan:
@@ -635,7 +378,8 @@ func watchApiServerEvents(ctx context.Context, kubernetesProvider *kubernetes.Pr
 
 			event, err := wEvent.ToEvent()
 			if err != nil {
-				logger.Log.Errorf(fmt.Sprintf("Error parsing Mizu resource event: %+v", err))
+				logger.Log.Debugf("[ERROR] parsing Mizu resource event: %+v", err)
+				continue
 			}
 
 			if state.startTime.After(event.CreationTimestamp.Time) {
@@ -663,7 +407,7 @@ func watchApiServerEvents(ctx context.Context, kubernetesProvider *kubernetes.Pr
 				continue
 			}
 
-			logger.Log.Errorf("Watching API server events loop, error: %+v", err)
+			logger.Log.Debugf("[Error] Watching API server events loop, error: %+v", err)
 		case <-ctx.Done():
 			logger.Log.Debugf("Watching API server events loop, ctx done")
 			return
@@ -704,22 +448,4 @@ func getNamespaces(kubernetesProvider *kubernetes.Provider) []string {
 		}
 		return []string{currentNamespace}
 	}
-}
-
-func createRBACIfNecessary(ctx context.Context, kubernetesProvider *kubernetes.Provider) (bool, error) {
-	if !config.Config.IsNsRestrictedMode() {
-		if err := kubernetesProvider.CreateMizuRBAC(ctx, config.Config.MizuResourcesNamespace, kubernetes.ServiceAccountName, kubernetes.ClusterRoleName, kubernetes.ClusterRoleBindingName, mizu.RBACVersion); err != nil {
-			return false, err
-		}
-	} else {
-		if err := kubernetesProvider.CreateMizuRBACNamespaceRestricted(ctx, config.Config.MizuResourcesNamespace, kubernetes.ServiceAccountName, kubernetes.RoleName, kubernetes.RoleBindingName, mizu.RBACVersion); err != nil {
-			return false, err
-		}
-	}
-	if config.Config.Tap.DaemonMode {
-		if err := kubernetesProvider.CreateDaemonsetRBAC(ctx, config.Config.MizuResourcesNamespace, kubernetes.ServiceAccountName, kubernetes.DaemonRoleName, kubernetes.DaemonRoleBindingName, mizu.RBACVersion); err != nil {
-			return false, err
-		}
-	}
-	return true, nil
 }

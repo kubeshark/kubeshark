@@ -2,13 +2,13 @@ package utils
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
-	"mizuserver/pkg/providers"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
 	"os/signal"
-	"strings"
 	"syscall"
 	"time"
 
@@ -45,15 +45,6 @@ func StartServer(app *gin.Engine) {
 	}
 }
 
-func GetTappedPodsStatus() []shared.TappedPodStatus {
-	tappedPodsStatus := make([]shared.TappedPodStatus, 0)
-	for _, pod := range providers.TapStatus.Pods {
-		isTapped := strings.ToLower(providers.TappersStatus[pod.NodeName].Status) == "started"
-		tappedPodsStatus = append(tappedPodsStatus, shared.TappedPodStatus{Name: pod.Name, Namespace: pod.Namespace, IsTapped: isTapped})
-	}
-	return tappedPodsStatus
-}
-
 func CheckErr(e error) {
 	if e != nil {
 		logger.Log.Errorf("%v", e)
@@ -69,4 +60,28 @@ func SetHostname(address, newHostname string) string {
 	replacedUrl.Host = newHostname
 	return replacedUrl.String()
 
+}
+
+func ReadJsonFile(filePath string, value interface{}) error {
+	if content, err := ioutil.ReadFile(filePath); err != nil {
+		return err
+	} else {
+		if err = json.Unmarshal(content, value); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func SaveJsonFile(filePath string, value interface{}) error {
+	if data, err := json.Marshal(value); err != nil {
+		return err
+	} else {
+		if err = ioutil.WriteFile(filePath, data, 0644); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

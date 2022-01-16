@@ -4,9 +4,9 @@ const (
 	MizuResourcesPrefix        = "mizu-"
 	ApiServerPodName           = MizuResourcesPrefix + "api-server"
 	ClusterRoleBindingName     = MizuResourcesPrefix + "cluster-role-binding"
-	DaemonRoleBindingName      = MizuResourcesPrefix + "cluster-role-binding-daemon"
+	DaemonRoleBindingName      = MizuResourcesPrefix + "role-binding-daemon"
 	ClusterRoleName            = MizuResourcesPrefix + "cluster-role"
-	DaemonRoleName             = MizuResourcesPrefix + "cluster-role-daemon"
+	DaemonRoleName             = MizuResourcesPrefix + "role-daemon"
 	K8sAllNamespaces           = ""
 	RoleBindingName            = MizuResourcesPrefix + "role-binding"
 	RoleName                   = MizuResourcesPrefix + "role"
@@ -16,4 +16,13 @@ const (
 	ConfigMapName              = MizuResourcesPrefix + "config"
 	PersistentVolumeClaimName  = MizuResourcesPrefix + "volume-claim"
 	MinKubernetesServerVersion = "1.16.0"
+)
+
+const (
+	LabelPrefixApp      = "app.kubernetes.io/"
+	LabelManagedBy      = LabelPrefixApp + "managed-by"
+	LabelCreatedBy      = LabelPrefixApp + "created-by"
+	LabelValueMizu      = "mizu"
+	LabelValueMizuCLI   = "mizu-cli"
+	LabelValueMizuAgent = "mizu-agent"
 )

@@ -25,7 +25,7 @@ Please make sure to use full option name (`tap.dry-run` as opposed to `dry-run` 
 
 * `dump-logs` - if set to `true`, saves log files for all Mizu components (tapper, api-server, CLI) in a zip file under `$HOME/.mizu`. Default value is `false`
 
-* `image-pull-policy` - container image pull policy for Kubernetes, default value `Always`. Other accepted values are `Never` or `IfNotExist`. Please mind the implications when changing this.
+* `image-pull-policy` - container image pull policy for Kubernetes, default value `Always`. Other accepted values are `Never` or `IfNotPresent`. Please mind the implications when changing this.
 
 * `kube-config-path` - path to alternative kubeconfig file to use for all interactions with Kubernetes cluster. By default - `$HOME/.kubeconfig`
 
@@ -37,8 +37,6 @@ Please make sure to use full option name (`tap.dry-run` as opposed to `dry-run` 
 * `namespaces` - list of namespace names, in which pods are tapped. Default value is empty, meaning only pods in the current namespace are tapped. Typically supplied as command line options.
 
 * `all-namespaces` - special flag indicating whether Mizu should search and tap pods, matching the regex, in all namespaces. Default is `false`. Please use with caution, tapping too many pods can affect resource consumption.
-
-* `daemon` - instructs Mizu whether to run daemon mode (where CLI command exits after launch, and tapper & api-server pods in Kubernetes continue to run without controlling CLI). Typically supplied as command-line option `--daemon`. Default valie is `false`
 
 * `dry-run` - if true, Mizu will print list of pods matching the supplied (or default) regex and exit without actually tapping the traffic. Default value is `false`. Typically supplied as command-line option `--dry-run`
 

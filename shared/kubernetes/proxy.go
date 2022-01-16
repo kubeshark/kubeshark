@@ -31,7 +31,6 @@ func StartProxy(kubernetesProvider *Provider, proxyHost string, mizuPort uint16,
 	mux.Handle(k8sProxyApiPrefix, getRerouteHttpHandlerMizuAPI(proxyHandler, mizuNamespace, mizuServiceName))
 	mux.Handle("/static/", getRerouteHttpHandlerMizuStatic(proxyHandler, mizuNamespace, mizuServiceName))
 
-
 	l, err := net.Listen("tcp", fmt.Sprintf("%s:%d", proxyHost, int(mizuPort)))
 	if err != nil {
 		return err
