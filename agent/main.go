@@ -129,7 +129,6 @@ func main() {
 		if syncEntriesConfig != nil {
 			if err := up9.SyncEntries(syncEntriesConfig); err != nil {
 				logger.Log.Error("Error syncing entries, err: %v", err)
-				return
 			}
 		}
 
