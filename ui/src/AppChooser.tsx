@@ -1,17 +1,18 @@
-import React from 'react';
+import React, {Suspense} from 'react';
+import LoadingOverlay from "./components/LoadingOverlay";
 
 const AppChooser = () => {
 
-    let mainComponent;
+    let MainComponent;
     if(process.env.REACT_APP_OVERRIDE_IS_ENTERPRISE === "true") {
-        mainComponent = React.lazy(() => import('./EntApp'));
+        MainComponent = React.lazy(() => import('./EntApp'));
     } else {
-        mainComponent = <div>blabla</div>
+        MainComponent = React.lazy(() => import('./App'));
     }
 
-    return (
-       <>{mainComponent}</>
-    );
+    return <Suspense fallback={<LoadingOverlay/>}>
+        <MainComponent/>
+    </Suspense>;
 }
 
 export default AppChooser;
