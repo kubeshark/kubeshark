@@ -49,6 +49,11 @@ jobs:
     name: Build UI
     runs-on: ubuntu-latest
     steps:
+      - name: Set up Node 14
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+
       - name: Check out code into the Go module directory
         uses: actions/checkout@v2
 
