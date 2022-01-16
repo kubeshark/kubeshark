@@ -1,4 +1,4 @@
-FROM node:14-slim AS site-build
+FROM node:14 AS site-build
 
 WORKDIR /app/ui-build
 
@@ -9,11 +9,12 @@ COPY ui .
 RUN npm run build
 
 
-FROM golang:1.16-alpine AS builder
+FROM golang:1.17-alpine AS builder
 # Set necessary environment variables needed for our image.
-ENV CGO_ENABLED=1 GOOS=linux GOARCH=amd64
+#ENV CGO_ENABLED=1 GOOS=linux GOARCH=amd64
+ENV CGO_ENABLED=1 GOOS=linux
 
-RUN apk add libpcap-dev gcc g++ make bash perl-utils
+RUN apk add --no-cache musl-dev libpcap-dev go gcc g++ make bash perl-utils openssl
 
 # Move to agent working directory (/agent-build).
 WORKDIR /app/agent-build
@@ -22,8 +23,8 @@ COPY agent/go.mod agent/go.sum ./
 COPY shared/go.mod shared/go.mod ../shared/
 COPY tap/go.mod tap/go.mod ../tap/
 COPY tap/api/go.* ../tap/api/
-RUN go mod download
-# cheap trick to make the build faster (As long as go.mod wasn't changes)
+RUN go mod download -x
+# cheap trick to make the build faster (as long as go.mod did not change)
 RUN go list -f '{{.Path}}@{{.Version}}' -m all | sed 1d | grep -e 'go-cache' | xargs go get
 
 ARG COMMIT_HASH
