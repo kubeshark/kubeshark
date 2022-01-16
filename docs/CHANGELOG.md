@@ -7,7 +7,7 @@ Ongoing work and development releases are under `develop` branch.
 ### main features
 * Service Mesh support -- mizu is now capable to tap mTLS traffic between pods connected by Istio service mesh
   * Use `--service-mesh` option to enable this feature
-* New installation option - have the same Mizu functionality as long living pods in your cluster, with password protection.
+* New installation option - have the same Mizu functionality as long living pods in your cluster, with password protection
   * To install use `mizu install` command
   * To access use `mizu view` or `kubectl -n mizu port-forward svc/mizu-api-server`
   * To uninstall run `mizu clean`
