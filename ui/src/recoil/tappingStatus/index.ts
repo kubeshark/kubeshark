@@ -11,6 +11,7 @@ interface TappingStatus {
     pods: TappingStatusPod[];
 }
 
-export type {TappingStatus, TappingStatusPod, tappingStatusDetails};
+export type {TappingStatus, TappingStatusPod};
+export {tappingStatusDetails};
 
 export default atom;
