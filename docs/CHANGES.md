@@ -19,7 +19,6 @@ Ongoing work and development releases are under `develop` branch.
 ### improvements
 * improved Mizu permissions/roles logic to support clusters with strict PodSecurityPolicy (PSP) -- see [PERMISSIONS](PERMISSIONS.md) doc for more details
  
-
 ### notable bug fixes
 * mizu now works properly when API service is exposed via HTTPS url
 * mizu now properly displays KAFKA message body 
