@@ -101,7 +101,8 @@ func watchApiServerPodReady(ctx context.Context, kubernetesProvider *kubernetes.
 	podWatchHelper := kubernetes.NewPodWatchHelper(kubernetesProvider, podExactRegex)
 	eventChan, errorChan := kubernetes.FilteredWatch(ctx, podWatchHelper, []string{config.Config.MizuResourcesNamespace}, podWatchHelper)
 
-	timeAfter := time.After(1 * time.Minute)
+	apiServerTimeoutSec := config.GetIntEnvConfig(config.ApiServerTimeoutSec, 120)
+	timeAfter := time.After(time.Duration(apiServerTimeoutSec) * time.Second)
 	for {
 		select {
 		case wEvent, ok := <-eventChan:
