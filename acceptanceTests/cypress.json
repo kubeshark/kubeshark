@@ -10,8 +10,6 @@
   "tests/MultipleNamespaces.js",
   "tests/Redact.js",
     "tests/NoRedact.js",
-    "tests/RegexMasking.js",
-    "tests/IgnoredUserAgents.js",
   "tests/Regex.js"],
 
   "env": {
