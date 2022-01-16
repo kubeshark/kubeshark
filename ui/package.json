@@ -37,7 +37,9 @@
   },
   "scripts": {
     "start": "react-scripts start",
+    "start-ent": "./node_modules/.bin/env-cmd -f .env.enterprise react-scripts start",
     "build": "react-scripts build",
+    "build-ent": "BUILD_PATH='./build-ent' ./node_modules/.bin/env-cmd -f .env.enterprise react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
@@ -58,5 +60,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "env-cmd": "^10.1.0"
   }
 }

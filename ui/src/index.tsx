@@ -9,7 +9,8 @@ import 'react-toastify/dist/ReactToastify.css';
 ReactDOM.render(
   <React.StrictMode>
     <>
-      {window["isEnt"] ? <EntApp/> : <App/>}
+        {console.log(process.env.REACT_APP_OVERRIDE_IS_ENTERPRISE)}
+      {process.env.REACT_APP_OVERRIDE_IS_ENTERPRISE === "true" ? <EntApp/> : <App/>}
       <ToastContainer
           position="bottom-right"
           autoClose={5000}
