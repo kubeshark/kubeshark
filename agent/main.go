@@ -128,7 +128,8 @@ func main() {
 		syncEntriesConfig := getSyncEntriesConfig()
 		if syncEntriesConfig != nil {
 			if err := up9.SyncEntries(syncEntriesConfig); err != nil {
-				panic(fmt.Sprintf("Error syncing entries, err: %v", err))
+				logger.Log.Error("Error syncing entries, err: %v", err)
+				return
 			}
 		}
 
