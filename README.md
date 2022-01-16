@@ -1,5 +1,17 @@
 ![Mizu: The API Traffic Viewer for Kubernetes](assets/mizu-logo.svg)
 
+<p align="center">
+    <a href="https://github.com/up9inc/mizu/releases/latest">
+        <img alt="GitHub Latest Release" src="https://img.shields.io/github/v/release/up9inc/mizu?logo=GitHub&style=flat-square">
+    </a>
+    <a href="https://github.com/up9inc/mizu/blob/main/LICENSE">
+        <img alt="GitHub License" src="https://img.shields.io/github/license/up9inc/mizu?logo=GitHub&style=flat-square">
+    </a>
+    <a href="https://join.slack.com/t/up9/shared_invite/zt-tfjnduli-QzlR8VV4Z1w3YnPIAJfhlQ">
+      <img alt="Slack" src="https://img.shields.io/badge/slack-join_chat-white.svg?logo=slack&style=social">
+    </a>
+</p>
+
 # The API Traffic Viewer for Kubernetes
 
 A simple-yet-powerful API traffic viewer for Kubernetes enabling you to view all API communication between microservices to help your debug and troubleshoot regressions.
