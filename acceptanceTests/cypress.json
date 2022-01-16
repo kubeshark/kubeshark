@@ -15,7 +15,6 @@
   "env": {
     "testUrl": "http://localhost:8899/",
     "redactHeaderContent": "User-Header[REDACTED]",
-    "redactBodyContent": "{ \"User\": \"[REDACTED]\" }",
-    "regexMaskingBodyContent": "[REDACTED]"
+    "redactBodyContent": "{ \"User\": \"[REDACTED]\" }"
   }
 }
