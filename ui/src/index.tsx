@@ -1,16 +1,14 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.sass';
-import App from './App';
-import EntApp from "./EntApp";
 import {ToastContainer} from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
+import AppChooser from "./AppChooser";
 
 ReactDOM.render(
   <React.StrictMode>
     <>
-        {console.log(process.env.REACT_APP_OVERRIDE_IS_ENTERPRISE)}
-      {process.env.REACT_APP_OVERRIDE_IS_ENTERPRISE === "true" ? <EntApp/> : <App/>}
+        <AppChooser/>
       <ToastContainer
           position="bottom-right"
           autoClose={5000}

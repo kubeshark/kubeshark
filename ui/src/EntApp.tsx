@@ -28,7 +28,7 @@ export interface MizuContextModel {
 // TODO: move to state management
 export const MizuContext = React.createContext<MizuContextModel>(null);
 
-const EntApp = () => {
+const EntApp: React.FC = () => {
 
     const [isLoading, setIsLoading] = useState(true);
     const [showTLSWarning, setShowTLSWarning] = useState(false);
