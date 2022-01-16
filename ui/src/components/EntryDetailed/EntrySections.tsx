@@ -217,7 +217,7 @@ export const EntryTableSection: React.FC<EntrySectionProps> = ({title, color, ar
             arrayToIterate && arrayToIterate.length > 0 ?
                 <EntrySectionContainer title={title} color={color}>
                     <table>
-                        <tbody>
+                        <tbody id={`tbody-${title}`}>
                             {arrayToIterateSorted.map(({name, value, selector}, index) => <EntryViewLine
                                 key={index}
                                 label={name}
