@@ -12,7 +12,7 @@ Ongoing work and development releases are under `develop` branch.
   * To access use `mizu view` or `kubectl -n mizu port-forward svc/mizu-api-server`
   * To uninstall run `mizu clean`
 * At first login
-  * set admin password as prompted, use it to login to mizu later on.
+  * Set admin password as prompted, use it to login to mizu later on.
   * After login, user should select cluster namespaces to tap: by default all namespaces in the cluster are selected, user can select/unselect according to their needs. These settings are retained and can be modified at any time via Settings menu (cog icon on the top-right)
 
 
