@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/up9inc/mizu/tap/api"
@@ -209,6 +210,7 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 	request["url"] = reqDetails["url"].(string)
 	reqDetails["targetUri"] = reqDetails["url"]
 	reqDetails["path"] = path
+	reqDetails["pathSegments"] = strings.Split(path, "/")[1:]
 	reqDetails["summary"] = path
 
 	// Rearrange the maps for the querying
@@ -295,6 +297,15 @@ func representRequest(request map[string]interface{}) (repRequest []interface{})
 		Title: "Details",
 		Data:  string(details),
 	})
+
+	pathSegments := request["pathSegments"].([]interface{})
+	if len(pathSegments) > 1 {
+		repRequest = append(repRequest, api.SectionData{
+			Type:  api.TABLE,
+			Title: "Path Segments",
+			Data:  representSliceAsTable(pathSegments, `request.pathSegments`),
+		})
+	}
 
 	repRequest = append(repRequest, api.SectionData{
 		Type:  api.TABLE,

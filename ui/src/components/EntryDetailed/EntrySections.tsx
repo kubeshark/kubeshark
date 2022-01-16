@@ -107,6 +107,7 @@ export const EntrySectionContainer: React.FC<EntrySectionContainerProps> = ({tit
 }
 
 interface EntryBodySectionProps {
+    title: string,
     content: any,
     color: string,
     updateQuery: any,
@@ -116,6 +117,7 @@ interface EntryBodySectionProps {
 }
 
 export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
+    title,
     color,
     updateQuery,
     content,
@@ -167,7 +169,7 @@ export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
 
     return <React.Fragment>
         {content && content?.length > 0 && <EntrySectionContainer
-                                                title='Body'
+                                                title={title}
                                                 color={color}
                                                 query={`${selector} == r".*"`}
                                                 updateQuery={updateQuery}
@@ -205,13 +207,27 @@ interface EntrySectionProps {
 }
 
 export const EntryTableSection: React.FC<EntrySectionProps> = ({title, color, arrayToIterate, updateQuery}) => {
+    let arrayToIterateSorted: any[];
+    if (arrayToIterate) {
+        arrayToIterateSorted = arrayToIterate.sort((a, b) => {
+            if (a.name > b.name) {
+                return 1;
+            }
+
+            if (a.name < b.name) {
+                return -1;
+            }
+
+            return 0;
+        });
+    }
     return <React.Fragment>
         {
             arrayToIterate && arrayToIterate.length > 0 ?
                 <EntrySectionContainer title={title} color={color}>
                     <table>
                         <tbody>
-                            {arrayToIterate.map(({name, value, selector}, index) => <EntryViewLine
+                            {arrayToIterateSorted.map(({name, value, selector}, index) => <EntryViewLine
                                 key={index}
                                 label={name}
                                 value={value}
