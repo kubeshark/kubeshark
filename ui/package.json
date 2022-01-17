@@ -35,6 +35,7 @@
     "react-toastify": "^8.0.3",
     "redoc": "^2.0.0-rc.59",
     "styled-components": "^5.3.3",
+    "recoil": "^0.5.2",
     "typescript": "^4.2.4",
     "web-vitals": "^1.1.1",
     "xml-formatter": "^2.6.0"

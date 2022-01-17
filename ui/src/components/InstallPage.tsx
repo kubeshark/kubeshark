@@ -1,11 +1,12 @@
 import { Button } from "@material-ui/core";
-import React, { useContext, useState } from "react";
-import { MizuContext, Page } from "../EntApp";
+import React, { useState } from "react";
 import { adminUsername } from "../consts";
 import Api, { FormValidationErrorType } from "../helpers/api";
 import { toast } from 'react-toastify';
 import LoadingOverlay from "./LoadingOverlay";
 import { useCommonStyles } from "../helpers/commonStyle";
+import {useSetRecoilState} from "recoil";
+import entPageAtom, {Page} from "../recoil/entPage";
 
 const api = Api.getInstance();
 
@@ -20,7 +21,7 @@ export const InstallPage: React.FC<InstallPageProps> = ({onFirstLogin}) => {
     const [password, setPassword] = useState("");
     const [passwordConfirm, setPasswordConfirm] = useState("");
 
-    const {setPage} = useContext(MizuContext);
+    const setEntPage = useSetRecoilState(entPageAtom);
 
     const onFormSubmit = async () => {
         if (password.length < 4) {
@@ -35,7 +36,7 @@ export const InstallPage: React.FC<InstallPageProps> = ({onFirstLogin}) => {
             setIsLoading(true);
             await api.register(adminUsername, password);
             if (!await api.isAuthenticationNeeded()) {
-                setPage(Page.Traffic);
+                setEntPage(Page.Traffic);
                 onFirstLogin();
             }
         } catch (e) {
@@ -53,7 +54,13 @@ export const InstallPage: React.FC<InstallPageProps> = ({onFirstLogin}) => {
 
     }
 
-    return <div className="centeredForm">
+    const handleFormOnKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === "Enter") {
+            onFormSubmit();
+        }
+    };
+
+    return <div className="centeredForm" onKeyPress={handleFormOnKeyPress}>
             {isLoading && <LoadingOverlay/>}
             <div className="form-title left-text">Setup</div>
             <span className="form-subtitle">Welcome to Mizu, please set up the admin user to continue</span>
