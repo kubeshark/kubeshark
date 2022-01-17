@@ -9,6 +9,8 @@ import filterUIExample2 from "./assets/filter-ui-example-2.png"
 import variables from '../variables.module.scss';
 import {useRecoilState} from "recoil";
 import queryAtom from "../recoil/query";
+import useKeyPress from "../hooks/useKeyPress"
+import shortcutsKeyboard from "../configs/shortcutsKeyboard"
 
 interface FiltersProps {
     backgroundColor: string
@@ -60,7 +62,10 @@ export const QueryForm: React.FC<QueryFormProps> = ({backgroundColor, ws, openWe
         setQuery(e.target.value);
     }
 
+    
+
     const handleSubmit = (e) => {
+        debugger;
         ws.close();
         if (query) {
             openWebSocket(`(${query}) and leftOff(-1)`, true);
@@ -69,6 +74,8 @@ export const QueryForm: React.FC<QueryFormProps> = ({backgroundColor, ws, openWe
         }
         e.preventDefault();
     }
+
+    useKeyPress(shortcutsKeyboard,handleSubmit);
 
     return <>
         <form
