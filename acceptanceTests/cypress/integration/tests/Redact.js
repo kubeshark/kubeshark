@@ -1,4 +1,4 @@
-import {isValueExistsInElement, isValueExistsInElement} from '../test-helpers/TrafficHelper';
+import {isValueExistsInElement, isValueExistsInElement} from '../testHelpers/TrafficHelper';
 
 it('Loading Mizu', function () {
     cy.visit(Cypress.env('testUrl'));

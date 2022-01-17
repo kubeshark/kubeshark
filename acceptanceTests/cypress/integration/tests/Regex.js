@@ -1,4 +1,4 @@
-import {getExpectedDetailsDict, checkLine} from '../test-helpers/StatusBarHelper';
+import {getExpectedDetailsDict, checkLine} from '../testHelpers/StatusBarHelper';
 
 
 it('opening', function () {
