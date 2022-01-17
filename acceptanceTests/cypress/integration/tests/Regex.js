@@ -1,4 +1,4 @@
-import {getExpectedDetailsDict, checkLine} from '../page_objects/StatusBar';
+import {getExpectedDetailsDict, checkLine} from '../page_objects/StatusBarHelper';
 
 
 it('opening', function () {
