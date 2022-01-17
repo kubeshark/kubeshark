@@ -16,6 +16,6 @@ const (
 	LogLevelEnvVar                   = "LOG_LEVEL"
 	BasenineHost                     = "127.0.0.1"
 	BaseninePort                     = "9099"
-	BasenineImageRepo                = "ghcr.io/up9inc/basenine"
+	BasenineImageRepo                = "docker.io/up9inc/basenine"
 	BasenineImageTag                 = "v0.4.6"
 )
