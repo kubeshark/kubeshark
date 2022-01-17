@@ -50,7 +50,7 @@ var (
 		Port: Port,
 		IP:   fmt.Sprintf("%s.%s", Ip, UnresolvedNodeName),
 	}
-	Protocol = &tapApi.Protocol{
+	ProtocolHttp = &tapApi.Protocol{
 		Name:            "http",
 		LongName:        "Hypertext Transfer Protocol -- HTTP/1.1",
 		Abbreviation:    "HTTP",
@@ -62,6 +62,19 @@ var (
 		ReferenceLink:   "https://datatracker.ietf.org/doc/html/rfc2616",
 		Ports:           []string{"80", "443", "8080"},
 		Priority:        0,
+	}
+	ProtocolRedis = &tapApi.Protocol{
+		Name:            "redis",
+		LongName:        "Redis Serialization Protocol",
+		Abbreviation:    "REDIS",
+		Macro:           "redis",
+		Version:         "3.x",
+		BackgroundColor: "#a41e11",
+		ForegroundColor: "#ffffff",
+		FontSize:        11,
+		ReferenceLink:   "https://redis.io/topics/protocol",
+		Ports:           []string{"6379"},
+		Priority:        3,
 	}
 )
 
@@ -126,8 +139,8 @@ func (s *ServiceMapDisabledSuite) TestGetStatusShouldReturnDisabledByDefault() {
 func (s *ServiceMapDisabledSuite) TestNewTCPEntryShouldDoNothingWhenDisabled() {
 	assert := s.Assert()
 
-	s.instance.NewTCPEntry(TCPEntryA, TCPEntryB, Protocol)
-	s.instance.NewTCPEntry(TCPEntryC, TCPEntryD, Protocol)
+	s.instance.NewTCPEntry(TCPEntryA, TCPEntryB, ProtocolHttp)
+	s.instance.NewTCPEntry(TCPEntryC, TCPEntryD, ProtocolHttp)
 	status := s.instance.GetStatus()
 
 	assert.Equal("disabled", status.Status)
@@ -149,24 +162,78 @@ func (s *ServiceMapEnabledSuite) TestServiceMapIsEnabled() {
 func (s *ServiceMapEnabledSuite) TestServiceMap() {
 	assert := s.Assert()
 
-	s.instance.NewTCPEntry(TCPEntryA, TCPEntryB, Protocol)
-	s.instance.NewTCPEntry(TCPEntryA, TCPEntryB, Protocol)
-	s.instance.NewTCPEntry(TCPEntryUnresolved, TCPEntryA, Protocol)
-	s.instance.NewTCPEntry(TCPEntryB, TCPEntryUnresolved2, Protocol)
-	s.instance.NewTCPEntry(TCPEntryC, TCPEntryD, Protocol)
-	s.instance.NewTCPEntry(TCPEntryA, TCPEntryC, Protocol)
+	// A -> B - HTTP
+	s.instance.NewTCPEntry(TCPEntryA, TCPEntryB, ProtocolHttp)
 
-	status := s.instance.GetStatus()
 	nodes := s.instance.GetNodes()
 	edges := s.instance.GetEdges()
-	expectedEntriesProcessedCount := 6
-	expectedNodeCount := 6
-	expectedEdgeCount := 5
 
-	// Counts
+	// Counts for the first entry
+	assert.Equal(1, s.instance.GetEntriesProcessedCount())
+	assert.Equal(2, s.instance.GetNodesCount())
+	assert.Equal(2, len(nodes))
+	assert.Equal(1, s.instance.GetEdgesCount())
+	assert.Equal(1, len(edges))
+	//http protocol
+	assert.Equal(1, edges[0].Count)
+	assert.Equal(ProtocolHttp.Name, edges[0].Protocol.Name)
+
+	// same A -> B - HTTP, http protocol count should be 2, edges count should be 1
+	s.instance.NewTCPEntry(TCPEntryA, TCPEntryB, ProtocolHttp)
+
+	nodes = s.instance.GetNodes()
+	edges = s.instance.GetEdges()
+
+	// Counts for a second entry
+	assert.Equal(2, s.instance.GetEntriesProcessedCount())
+	assert.Equal(2, s.instance.GetNodesCount())
+	assert.Equal(2, len(nodes))
+	// edges count should still be 1, but http protocol count should be 2
+	assert.Equal(1, s.instance.GetEdgesCount())
+	assert.Equal(1, len(edges))
+	// http protocol
+	assert.Equal(2, edges[0].Count) //http
+	assert.Equal(ProtocolHttp.Name, edges[0].Protocol.Name)
+
+	// same A -> B - REDIS, http protocol count should be 2 and redis protocol count should 1, edges count should be 2
+	s.instance.NewTCPEntry(TCPEntryA, TCPEntryB, ProtocolRedis)
+
+	nodes = s.instance.GetNodes()
+	edges = s.instance.GetEdges()
+
+	// Counts after second entry
+	assert.Equal(3, s.instance.GetEntriesProcessedCount())
+	assert.Equal(2, s.instance.GetNodesCount())
+	assert.Equal(2, len(nodes))
+	// edges count should be 2, http protocol count should be 2 and redis protocol should be 1
+	assert.Equal(2, s.instance.GetEdgesCount())
+	assert.Equal(2, len(edges))
+	// http protocol
+	assert.Equal(2, edges[0].Count)
+	assert.Equal(ProtocolHttp.Name, edges[0].Protocol.Name)
+	// redis protocol
+	assert.Equal(1, edges[1].Count)
+	assert.Equal(ProtocolRedis.Name, edges[1].Protocol.Name)
+
+	// other entries
+	s.instance.NewTCPEntry(TCPEntryUnresolved, TCPEntryA, ProtocolHttp)
+	s.instance.NewTCPEntry(TCPEntryB, TCPEntryUnresolved2, ProtocolHttp)
+	s.instance.NewTCPEntry(TCPEntryC, TCPEntryD, ProtocolHttp)
+	s.instance.NewTCPEntry(TCPEntryA, TCPEntryC, ProtocolHttp)
+
+	status := s.instance.GetStatus()
+	nodes = s.instance.GetNodes()
+	edges = s.instance.GetEdges()
+	expectedEntriesProcessedCount := 7
+	expectedNodeCount := 6
+	expectedEdgeCount := 6
+
+	// Counts after all entries
 	assert.Equal(expectedEntriesProcessedCount, s.instance.GetEntriesProcessedCount())
 	assert.Equal(expectedNodeCount, s.instance.GetNodesCount())
+	assert.Equal(expectedNodeCount, len(nodes))
 	assert.Equal(expectedEdgeCount, s.instance.GetEdgesCount())
+	assert.Equal(expectedEdgeCount, len(edges))
 
 	// Status
 	assert.Equal("enabled", status.Status)
@@ -193,9 +260,6 @@ func (s *ServiceMapEnabledSuite) TestServiceMap() {
 		assert.Equal(Port, node.Entry.Port)
 		assert.Equal(entryName, node.Entry.Name)
 
-		// protocol
-		assert.Equal(Protocol, node.Protocol)
-
 		// count
 		assert.Equal(count, node.Count)
 
@@ -203,13 +267,12 @@ func (s *ServiceMapEnabledSuite) TestServiceMap() {
 	}
 
 	for _, v := range nodes {
-
 		if strings.HasSuffix(v.Name, a) {
-			aNode = validateNode(v, a, 4)
+			aNode = validateNode(v, a, 5)
 			continue
 		}
 		if strings.HasSuffix(v.Name, b) {
-			bNode = validateNode(v, b, 3)
+			bNode = validateNode(v, b, 4)
 			continue
 		}
 		if strings.HasSuffix(v.Name, c) {
@@ -242,7 +305,7 @@ func (s *ServiceMapEnabledSuite) TestServiceMap() {
 	buEdge := -1
 	cdEdge := -1
 	acEdge := -1
-	var validateEdge = func(edge shared.ServiceMapEdge, sourceEntryName string, destEntryName string, count int) {
+	var validateEdge = func(edge shared.ServiceMapEdge, sourceEntryName string, destEntryName string, protocolName string, protocolCount int) {
 		// source
 		assert.Contains(nodeIds, edge.Source.Id)
 		assert.LessOrEqual(edge.Source.Id, expectedNodeCount)
@@ -256,36 +319,38 @@ func (s *ServiceMapEnabledSuite) TestServiceMap() {
 		assert.Equal(destEntryName, edge.Destination.Entry.Name)
 
 		// protocol
-		assert.Equal(Protocol, edge.Source.Protocol)
-		assert.Equal(Protocol, edge.Destination.Protocol)
-
-		// count
-		assert.Equal(count, edge.Count)
+		assert.Equal(protocolName, edge.Protocol.Name)
+		assert.Equal(protocolCount, edge.Count)
 	}
 
 	for i, v := range edges {
-		if v.Source.Entry.Name == a && v.Destination.Entry.Name == b {
-			validateEdge(v, a, b, 2)
+		if v.Source.Entry.Name == a && v.Destination.Entry.Name == b && v.Protocol.Name == "http" {
+			validateEdge(v, a, b, ProtocolHttp.Name, 2)
+			abEdge = i
+			continue
+		}
+		if v.Source.Entry.Name == a && v.Destination.Entry.Name == b && v.Protocol.Name == "redis" {
+			validateEdge(v, a, b, ProtocolRedis.Name, 1)
 			abEdge = i
 			continue
 		}
 		if v.Source.Entry.Name == UnresolvedNodeName && v.Destination.Entry.Name == a {
-			validateEdge(v, UnresolvedNodeName, a, 1)
+			validateEdge(v, UnresolvedNodeName, a, ProtocolHttp.Name, 1)
 			uaEdge = i
 			continue
 		}
 		if v.Source.Entry.Name == b && v.Destination.Entry.Name == UnresolvedNodeName {
-			validateEdge(v, b, UnresolvedNodeName, 1)
+			validateEdge(v, b, UnresolvedNodeName, ProtocolHttp.Name, 1)
 			buEdge = i
 			continue
 		}
 		if v.Source.Entry.Name == c && v.Destination.Entry.Name == d {
-			validateEdge(v, c, d, 1)
+			validateEdge(v, c, d, ProtocolHttp.Name, 1)
 			cdEdge = i
 			continue
 		}
 		if v.Source.Entry.Name == a && v.Destination.Entry.Name == c {
-			validateEdge(v, a, c, 1)
+			validateEdge(v, a, c, ProtocolHttp.Name, 1)
 			acEdge = i
 			continue
 		}

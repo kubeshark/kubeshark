@@ -55,19 +55,23 @@ func newServiceMap() *serviceMap {
 type key string
 
 type entryData struct {
-	key      key
-	entry    *tapApi.TCP
-	protocol *tapApi.Protocol
+	key   key
+	entry *tapApi.TCP
 }
 
 type nodeData struct {
-	id       int
-	entry    *tapApi.TCP
+	id    int
+	entry *tapApi.TCP
+	count int
+}
+
+type edgeProtocol struct {
 	protocol *tapApi.Protocol
 	count    int
 }
+
 type edgeData struct {
-	count int
+	data map[key]*edgeProtocol
 }
 
 type graph struct {
@@ -82,18 +86,22 @@ func newDirectedGraph() *graph {
 	}
 }
 
-func newNodeData(id int, e *tapApi.TCP, p *tapApi.Protocol) *nodeData {
+func newNodeData(id int, e *tapApi.TCP) *nodeData {
 	return &nodeData{
-		id:       id,
-		entry:    e,
-		protocol: p,
-		count:    1,
+		id:    id,
+		entry: e,
+		count: 1,
 	}
 }
 
-func newEdgeData() *edgeData {
+func newEdgeData(p *tapApi.Protocol) *edgeData {
 	return &edgeData{
-		count: 1,
+		data: map[key]*edgeProtocol{
+			key(p.Name): {
+				protocol: p,
+				count:    1,
+			},
+		},
 	}
 }
 
@@ -102,20 +110,20 @@ func (s *serviceMap) nodeExists(k key) (*nodeData, bool) {
 	return n, ok
 }
 
-func (s *serviceMap) addNode(k key, e *tapApi.TCP, p *tapApi.Protocol) (*nodeData, bool) {
+func (s *serviceMap) addNode(k key, e *tapApi.TCP) (*nodeData, bool) {
 	nd, exists := s.nodeExists(k)
 	if !exists {
-		s.graph.Nodes[k] = newNodeData(len(s.graph.Nodes)+1, e, p)
+		s.graph.Nodes[k] = newNodeData(len(s.graph.Nodes)+1, e)
 		return s.graph.Nodes[k], true
 	}
 	return nd, false
 }
 
-func (s *serviceMap) addEdge(u, v *entryData) {
-	if n, ok := s.addNode(u.key, u.entry, u.protocol); !ok {
+func (s *serviceMap) addEdge(u, v *entryData, p *tapApi.Protocol) {
+	if n, ok := s.addNode(u.key, u.entry); !ok {
 		n.count++
 	}
-	if n, ok := s.addNode(v.key, v.entry, v.protocol); !ok {
+	if n, ok := s.addNode(v.key, v.entry); !ok {
 		n.count++
 	}
 
@@ -123,10 +131,26 @@ func (s *serviceMap) addEdge(u, v *entryData) {
 		s.graph.Edges[u.key] = make(map[key]*edgeData)
 	}
 
+	// new edge u -> v pair
+	// protocol is the same for u and v
 	if e, ok := s.graph.Edges[u.key][v.key]; ok {
-		e.count++
+		// edge data already exists for u -> v pair
+		// we have a new protocol for this u -> v pair
+
+		k := key(p.Name)
+		if pd, pOk := e.data[k]; pOk {
+			// protocol key already exists, just increment the count
+			pd.count++
+		} else {
+			// new protocol key
+			e.data[k] = &edgeProtocol{
+				protocol: p,
+				count:    1,
+			}
+		}
 	} else {
-		s.graph.Edges[u.key][v.key] = newEdgeData()
+		// new edge data for u -> v pair
+		s.graph.Edges[u.key][v.key] = newEdgeData(p)
 	}
 
 	s.entriesProcessed++
@@ -149,24 +173,22 @@ func (s *serviceMap) NewTCPEntry(src *tapApi.TCP, dst *tapApi.TCP, p *tapApi.Pro
 	}
 
 	srcEntry := &entryData{
-		key:      key(src.IP),
-		entry:    src,
-		protocol: p,
+		key:   key(src.IP),
+		entry: src,
 	}
 	if len(srcEntry.entry.Name) == 0 {
 		srcEntry.entry.Name = UnresolvedNodeName
 	}
 
 	dstEntry := &entryData{
-		key:      key(dst.IP),
-		entry:    dst,
-		protocol: p,
+		key:   key(dst.IP),
+		entry: dst,
 	}
 	if len(dstEntry.entry.Name) == 0 {
 		dstEntry.entry.Name = UnresolvedNodeName
 	}
 
-	s.addEdge(srcEntry, dstEntry)
+	s.addEdge(srcEntry, dstEntry, p)
 }
 
 func (s *serviceMap) GetStatus() shared.ServiceMapStatus {
@@ -187,11 +209,10 @@ func (s *serviceMap) GetNodes() []shared.ServiceMapNode {
 	var nodes []shared.ServiceMapNode
 	for i, n := range s.graph.Nodes {
 		nodes = append(nodes, shared.ServiceMapNode{
-			Id:       n.id,
-			Name:     string(i),
-			Entry:    n.entry,
-			Protocol: n.protocol,
-			Count:    n.count,
+			Id:    n.id,
+			Name:  string(i),
+			Entry: n.entry,
+			Count: n.count,
 		})
 	}
 	return nodes
@@ -201,23 +222,24 @@ func (s *serviceMap) GetEdges() []shared.ServiceMapEdge {
 	var edges []shared.ServiceMapEdge
 	for u, m := range s.graph.Edges {
 		for v := range m {
-			edges = append(edges, shared.ServiceMapEdge{
-				Source: shared.ServiceMapNode{
-					Id:       s.graph.Nodes[u].id,
-					Name:     string(u),
-					Entry:    s.graph.Nodes[u].entry,
-					Protocol: s.graph.Nodes[u].protocol,
-					Count:    s.graph.Nodes[u].count,
-				},
-				Destination: shared.ServiceMapNode{
-					Id:       s.graph.Nodes[v].id,
-					Name:     string(v),
-					Entry:    s.graph.Nodes[v].entry,
-					Protocol: s.graph.Nodes[v].protocol,
-					Count:    s.graph.Nodes[v].count,
-				},
-				Count: s.graph.Edges[u][v].count,
-			})
+			for _, p := range s.graph.Edges[u][v].data {
+				edges = append(edges, shared.ServiceMapEdge{
+					Source: shared.ServiceMapNode{
+						Id:    s.graph.Nodes[u].id,
+						Name:  string(u),
+						Entry: s.graph.Nodes[u].entry,
+						Count: s.graph.Nodes[u].count,
+					},
+					Destination: shared.ServiceMapNode{
+						Id:    s.graph.Nodes[v].id,
+						Name:  string(v),
+						Entry: s.graph.Nodes[v].entry,
+						Count: s.graph.Nodes[v].count,
+					},
+					Count:    p.count,
+					Protocol: p.protocol,
+				})
+			}
 		}
 	}
 	return edges
@@ -233,9 +255,11 @@ func (s *serviceMap) GetNodesCount() int {
 
 func (s *serviceMap) GetEdgesCount() int {
 	var count int
-	for _, m := range s.graph.Edges {
-		for range m {
-			count++
+	for u, m := range s.graph.Edges {
+		for v := range m {
+			for range s.graph.Edges[u][v].data {
+				count++
+			}
 		}
 	}
 	return count

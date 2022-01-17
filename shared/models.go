@@ -86,17 +86,17 @@ type ServiceMapResponse struct {
 }
 
 type ServiceMapNode struct {
-	Id       int              `json:"id"`
-	Name     string           `json:"name"`
-	Entry    *tapApi.TCP      `json:"entry"`
-	Protocol *tapApi.Protocol `json:"protocol"`
-	Count    int              `json:"count"`
+	Id    int         `json:"id"`
+	Name  string      `json:"name"`
+	Entry *tapApi.TCP `json:"entry"`
+	Count int         `json:"count"`
 }
 
 type ServiceMapEdge struct {
-	Source      ServiceMapNode `json:"source"`
-	Destination ServiceMapNode `json:"destination"`
-	Count       int            `json:"count"`
+	Source      ServiceMapNode   `json:"source"`
+	Destination ServiceMapNode   `json:"destination"`
+	Count       int              `json:"count"`
+	Protocol    *tapApi.Protocol `json:"protocol"`
 }
 
 type TapperStatus struct {

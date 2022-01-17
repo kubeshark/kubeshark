@@ -34,7 +34,6 @@ interface ServiceMapNode {
     id: number;
     name: string;
     entry: Entry;
-    protocol: Protocol;
     count: number;
 }
 
@@ -42,6 +41,7 @@ interface ServiceMapEdge {
     source: ServiceMapNode;
     destination: ServiceMapNode;
     count: number;
+    protocol: Protocol;
 }
 
 interface ServiceMapGraph {
@@ -211,8 +211,8 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onOpen
                         value: serviceMapData.edges[i].count,
                         label: serviceMapData.edges[i].count.toString(),
                         color: {
-                            color: serviceMapData.edges[i].destination.protocol.backgroundColor,
-                            highlight: serviceMapData.edges[i].destination.protocol.backgroundColor
+                            color: serviceMapData.edges[i].protocol.backgroundColor,
+                            highlight: serviceMapData.edges[i].protocol.backgroundColor
                         },
                     });
                 }
