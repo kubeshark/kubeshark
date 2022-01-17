@@ -39,7 +39,7 @@
   "scripts": {
     "start": "react-scripts start",
     "start-ent": "./node_modules/.bin/env-cmd -f .env.enterprise react-scripts start",
-    "build": "react-scripts build & BUILD_PATH='./build-ent' ./node_modules/.bin/env-cmd -f .env.enterprise react-scripts build",
+    "build": "./node_modules/.bin/env-cmd -f .env.basic react-scripts build & BUILD_PATH='./build-ent' ./node_modules/.bin/env-cmd -f .env.enterprise react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
