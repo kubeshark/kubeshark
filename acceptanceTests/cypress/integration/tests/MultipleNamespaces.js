@@ -1,4 +1,4 @@
-import {findLineAndCheck, getExpectedDetailsDict} from '../page_objects/StatusBar';
+import {findLineAndCheck, getExpectedDetailsDict} from '../testHelpers/StatusBarHelper';
 
 it('opening', function () {
     cy.visit(Cypress.env('testUrl'));

@@ -18,14 +18,12 @@ export interface ProtocolInterface {
 interface ProtocolProps {
     protocol: ProtocolInterface
     horizontal: boolean
-    updateQuery: any
 }
 
-const Protocol: React.FC<ProtocolProps> = ({protocol, horizontal, updateQuery}) => {
+const Protocol: React.FC<ProtocolProps> = ({protocol, horizontal}) => {
     if (horizontal) {
         return <Queryable
             query={protocol.macro}
-            updateQuery={updateQuery}
             displayIconOnMouseOver={true}
         >
             <a target="_blank" rel="noopener noreferrer" href={protocol.referenceLink}>
@@ -45,7 +43,6 @@ const Protocol: React.FC<ProtocolProps> = ({protocol, horizontal, updateQuery}) 
     } else {
         return <Queryable
             query={protocol.macro}
-            updateQuery={updateQuery}
             displayIconOnMouseOver={true}
             flipped={false}
             iconStyle={{marginTop: "52px", marginRight: "10px", zIndex: 1000}}
