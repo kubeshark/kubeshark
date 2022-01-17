@@ -70,7 +70,7 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            ARCH=amd64v8
+            ARCH=amd64
             GOARCH=amd64
             SEM_VER=${{ steps.versioning.outputs.version }}
             BUILD_TIMESTAMP=${{ steps.version_parameters.outputs.build_timestamp }}

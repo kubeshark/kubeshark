@@ -9,7 +9,7 @@ GIT_BRANCH=$(git branch | grep \* | cut -d ' ' -f2 | tr '[:upper:]' '[:lower:]')
 DOCKER_REPO=$REPOSITORY/$SERVER_NAME/$GIT_BRANCH
 SEM_VER=${SEM_VER=0.0.0}
 ARCH=amd64
-GOARCH=amd64
+GOARCH=$ARCH
 
 DOCKER_TAGGED_BUILDS=("$DOCKER_REPO:latest" "$DOCKER_REPO:$SEM_VER")
 
