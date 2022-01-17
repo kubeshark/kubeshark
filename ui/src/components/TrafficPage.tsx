@@ -13,6 +13,12 @@ import Api, { MizuWebsocketURL } from "../helpers/api";
 import { toast } from 'react-toastify';
 import debounce from 'lodash/debounce';
 import { ServiceMapModal } from "./ServiceMapModal/ServiceMapModal";
+import {useRecoilState, useRecoilValue} from "recoil";
+import tappingStatusAtom from "../recoil/tappingStatus";
+import entriesAtom from "../recoil/entries";
+import focusedEntryIdAtom from "../recoil/focusedEntryId";
+import websocketConnectionAtom, {WsConnectionStatus} from "../recoil/wsConnection";
+import queryAtom from "../recoil/query";
 
 const useLayoutStyles = makeStyles(() => ({
     details: {
@@ -34,11 +40,6 @@ const useLayoutStyles = makeStyles(() => ({
     }
 }));
 
-enum ConnectionStatus {
-    Closed,
-    Connected,
-}
-
 interface TrafficPageProps {
     onTLSDetected: (destAddress: string) => void;
     setAnalyzeStatus?: (status: any) => void;
@@ -49,24 +50,19 @@ const api = Api.getInstance();
 export const TrafficPage: React.FC<TrafficPageProps> = ({ onTLSDetected, setAnalyzeStatus }) => {
 
     const classes = useLayoutStyles();
-
-    const [entries, setEntries] = useState([] as any);
-    const [focusedEntryId, setFocusedEntryId] = useState(null);
-    const [selectedEntryData, setSelectedEntryData] = useState(null);
-    const [connection, setConnection] = useState(ConnectionStatus.Closed);
+    const [tappingStatus, setTappingStatus] = useRecoilState(tappingStatusAtom);
+    const [entries, setEntries] = useRecoilState(entriesAtom);
+    const [focusedEntryId, setFocusedEntryId] = useRecoilState(focusedEntryIdAtom);
+    const [wsConnection, setWsConnection] = useRecoilState(websocketConnectionAtom);
+    const query = useRecoilValue(queryAtom);
 
     const [noMoreDataTop, setNoMoreDataTop] = useState(false);
-
-    const [tappingStatus, setTappingStatus] = useState(null);
+    const [isSnappedToBottom, setIsSnappedToBottom] = useState(true);
 
     const [serviceMapStatus, setServiceMapStatus] = useState(false);
     const [serviceMapModalOpen, setServiceMapModalOpen] = useState(false);
 
-    const [isSnappedToBottom, setIsSnappedToBottom] = useState(true);
-
-    const [query, setQuery] = useState("");
     const [queryBackgroundColor, setQueryBackgroundColor] = useState("#f5f5f5");
-    const [addition, updateQuery] = useState("");
 
     const [queriedCurrent, setQueriedCurrent] = useState(0);
     const [queriedTotal, setQueriedTotal] = useState(0);
@@ -98,15 +94,6 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({ onTLSDetected, setAnal
         handleQueryChange(query);
     }, [query, handleQueryChange]);
 
-    useEffect(() => {
-        if (query) {
-            setQuery(`${query} and ${addition}`);
-        } else {
-            setQuery(addition);
-        }
-        // eslint-disable-next-line
-    }, [addition]);
-
     const ws = useRef(null);
 
     const listEntry = useRef(null);
@@ -121,11 +108,11 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({ onTLSDetected, setAnal
         }
         ws.current = new WebSocket(MizuWebsocketURL);
         ws.current.onopen = () => {
-            setConnection(ConnectionStatus.Connected);
+            setWsConnection(WsConnectionStatus.Connected);
             ws.current.send(query);
         }
         ws.current.onclose = () => {
-            setConnection(ConnectionStatus.Closed);
+            setWsConnection(WsConnectionStatus.Closed);
         }
         ws.current.onerror = (event) => {
             console.error("WebSocket error:", event);
@@ -210,36 +197,9 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({ onTLSDetected, setAnal
         // eslint-disable-next-line
     }, []);
 
-
-    useEffect(() => {
-        if (!focusedEntryId) return;
-        setSelectedEntryData(null);
-        (async () => {
-            try {
-                const entryData = await api.getEntry(focusedEntryId, query);
-                setSelectedEntryData(entryData);
-            } catch (error) {
-                if (error.response?.data?.type) {
-                    toast[error.response.data.type](`Entry[${focusedEntryId}]: ${error.response.data.msg}`, {
-                        position: "bottom-right",
-                        theme: "colored",
-                        autoClose: error.response.data.autoClose,
-                        hideProgressBar: false,
-                        closeOnClick: true,
-                        pauseOnHover: true,
-                        draggable: true,
-                        progress: undefined,
-                    });
-                }
-                console.error(error);
-            }
-        })();
-        // eslint-disable-next-line
-    }, [focusedEntryId]);
-
     const toggleConnection = () => {
         ws.current.close();
-        if (connection !== ConnectionStatus.Connected) {
+        if (wsConnection !== WsConnectionStatus.Connected) {
             if (query) {
                 openWebSocket(`(${query}) and leftOff(-1)`, true);
             } else {
@@ -252,8 +212,8 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({ onTLSDetected, setAnal
 
     const getConnectionStatusClass = (isContainer) => {
         const container = isContainer ? "Container" : "";
-        switch (connection) {
-            case ConnectionStatus.Connected:
+        switch (wsConnection) {
+            case WsConnectionStatus.Connected:
                 return "greenIndicator" + container;
             default:
                 return "redIndicator" + container;
@@ -261,8 +221,8 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({ onTLSDetected, setAnal
     }
 
     const getConnectionTitle = () => {
-        switch (connection) {
-            case ConnectionStatus.Connected:
+        switch (wsConnection) {
+            case WsConnectionStatus.Connected:
                 return "streaming live traffic"
             default:
                 return "streaming paused";
@@ -271,7 +231,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({ onTLSDetected, setAnal
 
     const onSnapBrokenEvent = () => {
         setIsSnappedToBottom(false);
-        if (connection === ConnectionStatus.Connected) {
+        if (wsConnection === WsConnectionStatus.Connected) {
             ws.current.close();
         }
     }
@@ -296,10 +256,10 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({ onTLSDetected, setAnal
     return (
         <div className="TrafficPage">
             <div className="TrafficPageHeader">
-                <img className="playPauseIcon" style={{ visibility: connection === ConnectionStatus.Connected ? "visible" : "hidden" }} alt="pause"
-                    src={pauseIcon} onClick={toggleConnection} />
-                <img className="playPauseIcon" style={{ position: "absolute", visibility: connection === ConnectionStatus.Connected ? "hidden" : "visible" }} alt="play"
-                    src={playIcon} onClick={toggleConnection} />
+                <img className="playPauseIcon" style={{visibility: wsConnection === WsConnectionStatus.Connected ? "visible" : "hidden"}} alt="pause"
+                    src={pauseIcon} onClick={toggleConnection}/>
+                <img className="playPauseIcon" style={{position: "absolute", visibility: wsConnection === WsConnectionStatus.Connected ? "hidden" : "visible"}} alt="play"
+                    src={playIcon} onClick={toggleConnection}/>
                 <div className="connectionText">
                     {getConnectionTitle()}
                     <div className={"indicatorContainer " + getConnectionStatusClass(true)}>
@@ -324,16 +284,11 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({ onTLSDetected, setAnal
             {<div className="TrafficPage-Container">
                 <div className="TrafficPage-ListContainer">
                     <Filters
-                        query={query}
-                        setQuery={setQuery}
                         backgroundColor={queryBackgroundColor}
                         ws={ws.current}
                         openWebSocket={openWebSocket} />
                     <div className={styles.container}>
                         <EntriesList
-                            entries={entries}
-                            setEntries={setEntries}
-                            query={query}
                             listEntryREF={listEntry}
                             onSnapBrokenEvent={onSnapBrokenEvent}
                             isSnappedToBottom={isSnappedToBottom}
@@ -345,12 +300,8 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({ onTLSDetected, setAnal
                             startTime={startTime}
                             noMoreDataTop={noMoreDataTop}
                             setNoMoreDataTop={setNoMoreDataTop}
-                            focusedEntryId={focusedEntryId}
-                            setFocusedEntryId={setFocusedEntryId}
-                            updateQuery={updateQuery}
                             leftOffTop={leftOffTop}
                             setLeftOffTop={setLeftOffTop}
-                            isWebSocketConnectionClosed={connection === ConnectionStatus.Closed}
                             ws={ws.current}
                             openWebSocket={openWebSocket}
                             leftOffBottom={leftOffBottom}
@@ -361,10 +312,10 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({ onTLSDetected, setAnal
                     </div>
                 </div>
                 <div className={classes.details}>
-                    {selectedEntryData && <EntryDetailed entryData={selectedEntryData} updateQuery={updateQuery} />}
+                    {focusedEntryId && <EntryDetailed/>}
                 </div>
             </div>}
-            {tappingStatus && <StatusBar tappingStatus={tappingStatus} />}
+            {tappingStatus && <StatusBar/>}
             {serviceMapModalOpen && <ServiceMapModal isOpen={serviceMapModalOpen} onOpen={() => setServiceMapModalOpen(true)} onClose={() => setServiceMapModalOpen(false)} />}
         </div>
     )

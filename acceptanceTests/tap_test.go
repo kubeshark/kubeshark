@@ -3,7 +3,6 @@ package acceptanceTests
 import (
 	"archive/zip"
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -378,59 +377,7 @@ func TestTapRedact(t *testing.T) {
 		}
 	}
 
-	redactCheckFunc := func() error {
-		timestamp := time.Now().UnixNano() / int64(time.Millisecond)
-
-		entries, err := getDBEntries(timestamp, defaultEntriesCount, 1*time.Second)
-		if err != nil {
-			return err
-		}
-		err = checkEntriesAtLeast(entries, 1)
-		if err != nil {
-			return err
-		}
-		firstEntry := entries[0]
-
-		entryUrl := fmt.Sprintf("%v/entries/%v", apiServerUrl, firstEntry["id"])
-		requestResult, requestErr := executeHttpGetRequest(entryUrl)
-		if requestErr != nil {
-			return fmt.Errorf("failed to get entry, err: %v", requestErr)
-		}
-
-		entry := requestResult.(map[string]interface{})["data"].(map[string]interface{})
-		request := entry["request"].(map[string]interface{})
-
-		headers := request["_headers"].([]interface{})
-		for _, headerInterface := range headers {
-			header := headerInterface.(map[string]interface{})
-			if header["name"].(string) != "User-Header" {
-				continue
-			}
-
-			userHeader := header["value"].(string)
-			if userHeader != "[REDACTED]" {
-				return fmt.Errorf("unexpected result - user agent is not redacted")
-			}
-		}
-
-		postData := request["postData"].(map[string]interface{})
-		textDataStr := postData["text"].(string)
-
-		var textData map[string]string
-		if parseErr := json.Unmarshal([]byte(textDataStr), &textData); parseErr != nil {
-			return fmt.Errorf("failed to parse text data, err: %v", parseErr)
-		}
-
-		if textData["User"] != "[REDACTED]" {
-			return fmt.Errorf("unexpected result - user in body is not redacted")
-		}
-
-		return nil
-	}
-	if err := retriesExecute(shortRetriesCount, redactCheckFunc); err != nil {
-		t.Errorf("%v", err)
-		return
-	}
+	runCypressTests(t, fmt.Sprintf("npx cypress run --spec  \"cypress/integration/tests/Redact.js\""))
 }
 
 func TestTapNoRedact(t *testing.T) {
@@ -482,59 +429,7 @@ func TestTapNoRedact(t *testing.T) {
 		}
 	}
 
-	redactCheckFunc := func() error {
-		timestamp := time.Now().UnixNano() / int64(time.Millisecond)
-
-		entries, err := getDBEntries(timestamp, defaultEntriesCount, 1*time.Second)
-		if err != nil {
-			return err
-		}
-		err = checkEntriesAtLeast(entries, 1)
-		if err != nil {
-			return err
-		}
-		firstEntry := entries[0]
-
-		entryUrl := fmt.Sprintf("%v/entries/%v", apiServerUrl, firstEntry["id"])
-		requestResult, requestErr := executeHttpGetRequest(entryUrl)
-		if requestErr != nil {
-			return fmt.Errorf("failed to get entry, err: %v", requestErr)
-		}
-
-		entry := requestResult.(map[string]interface{})["data"].(map[string]interface{})
-		request := entry["request"].(map[string]interface{})
-
-		headers := request["_headers"].([]interface{})
-		for _, headerInterface := range headers {
-			header := headerInterface.(map[string]interface{})
-			if header["name"].(string) != "User-Header" {
-				continue
-			}
-
-			userHeader := header["value"].(string)
-			if userHeader == "[REDACTED]" {
-				return fmt.Errorf("unexpected result - user agent is redacted")
-			}
-		}
-
-		postData := request["postData"].(map[string]interface{})
-		textDataStr := postData["text"].(string)
-
-		var textData map[string]string
-		if parseErr := json.Unmarshal([]byte(textDataStr), &textData); parseErr != nil {
-			return fmt.Errorf("failed to parse text data, err: %v", parseErr)
-		}
-
-		if textData["User"] == "[REDACTED]" {
-			return fmt.Errorf("unexpected result - user in body is redacted")
-		}
-
-		return nil
-	}
-	if err := retriesExecute(shortRetriesCount, redactCheckFunc); err != nil {
-		t.Errorf("%v", err)
-		return
-	}
+	runCypressTests(t, "npx cypress run --spec  \"cypress/integration/tests/NoRedact.js\"")
 }
 
 func TestTapRegexMasking(t *testing.T) {
