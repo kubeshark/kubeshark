@@ -1,6 +1,8 @@
-ARG ARCH=
-ARG GOARCH=
+ARG ARCH
+ARG GOARCH
 FROM ${ARCH}/node:14 AS site-build
+ARG ARCH
+ARG GOARCH
 
 WORKDIR /app/ui-build
 
@@ -12,6 +14,9 @@ RUN npm run build
 
 
 FROM ${ARCH}/golang:1.17-alpine AS builder
+ARG ARCH
+ARG GOARCH
+
 # Set necessary environment variables needed for our image.
 ENV CGO_ENABLED=1 GOOS=linux GOARCH=${GOARCH}
 
@@ -47,6 +52,8 @@ COPY devops/build_extensions.sh ..
 RUN cd .. && /bin/bash build_extensions.sh
 
 FROM ${ARCH}/alpine:3.15
+ARG ARCH
+ARG GOARCH
 
 RUN apk add bash libpcap-dev
 
