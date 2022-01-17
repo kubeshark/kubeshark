@@ -8,10 +8,13 @@
   "testFiles":
   ["tests/GuiPort.js",
   "tests/MultipleNamespaces.js",
-  "tests/RedactTests.js",
+  "tests/Redact.js",
+    "tests/NoRedact.js",
   "tests/Regex.js"],
 
   "env": {
-    "testUrl": "http://localhost:8899/"
+    "testUrl": "http://localhost:8899/",
+    "redactHeaderContent": "User-Header[REDACTED]",
+    "redactBodyContent": "{ \"User\": \"[REDACTED]\" }"
   }
 }
