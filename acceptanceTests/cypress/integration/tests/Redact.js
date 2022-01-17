@@ -1,4 +1,4 @@
-import {check} from '../page_objects/TrafficHelper';
+import {check} from '../test-helpers/TrafficHelper';
 
 it('Loading Mizu', function () {
     cy.visit(Cypress.env('testUrl'));
