@@ -148,7 +148,7 @@ export const EntriesList: React.FC<EntriesListProps> = ({listEntryREF, onSnapBro
                 </div>
 
                 <div className={styles.footer}>
-                    <div>Displaying <b>{entries?.length}</b> results out of <b>{queriedTotal}</b> total</div>
+                    <div>Displaying <b id="entries-length">{entries?.length}</b> results out of <b id="total-entries">{queriedTotal}</b> total</div>
                     {startTime !== 0 && <div>Started listening at <span style={{marginRight: 5, fontWeight: 600, fontSize: 13}}>{Moment(truncatedTimestamp ? truncatedTimestamp : startTime).utc().format('MM/DD/YYYY, h:mm:ss.SSS A')}</span></div>}
                 </div>
             </div>
