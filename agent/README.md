@@ -10,7 +10,7 @@ Basic APIs:
 1. Run `go get github.com/go-delve/delve/cmd/dlv`
 2. Create a "Go Remote" run/debug configuration in Intellij, set to localhost:2345
 3. Build and push a debug image using
-   `docker build . -t  gcr.io/up9-docker-hub/mizu/debug:latest --build-arg ARCH=amd64 -f debug.Dockerfile && docker push gcr.io/up9-docker-hub/mizu/debug:latest`
+   `docker build . -t  gcr.io/up9-docker-hub/mizu/debug:latest --build-arg ARCH=amd64 --build-arg GOARCH=amd64 -f debug.Dockerfile && docker push gcr.io/up9-docker-hub/mizu/debug:latest`
 
 ### Connecting
 1. Start mizu using the cli with the debug

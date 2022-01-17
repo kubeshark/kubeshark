@@ -1,4 +1,5 @@
 ARG ARCH=
+ARG GOARCH=
 FROM ${ARCH}/node:14 AS site-build
 
 WORKDIR /app/ui-build
@@ -12,7 +13,7 @@ RUN npm run build
 
 FROM ${ARCH}/golang:1.17-alpine AS builder
 # Set necessary environment variables needed for our image.
-ENV CGO_ENABLED=1 GOOS=linux GOARCH=${ARCH}
+ENV CGO_ENABLED=1 GOOS=linux GOARCH=${GOARCH}
 
 RUN apk add binutils-gold libpcap-dev gcc g++ make bash perl-utils
 
