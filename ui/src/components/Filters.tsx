@@ -75,7 +75,7 @@ export const QueryForm: React.FC<QueryFormProps> = ({backgroundColor, ws, openWe
         e.preventDefault();
     }
 
-    useKeyPress(shortcutsKeyboard,handleSubmit);
+    useKeyPress(shortcutsKeyboard.QuerySubmit,handleSubmit);
 
     return <>
         <form

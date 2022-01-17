@@ -1,3 +1,6 @@
-const keys = [{metaKey : true, code:"Enter"}, {ctrlKey:true, code:"Enter"}];
+const dictionary = {
+    "QuerySubmit" : [{metaKey : true, code:"Enter"}, {ctrlKey:true, code:"Enter"}]
+};
 
-export default keys;
+
+export default dictionary;
