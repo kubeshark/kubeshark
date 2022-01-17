@@ -154,7 +154,7 @@ const options = {
         selectionWidth: 1,
         shadow: true,
     },
-    height: '750px',
+    autoResize: true,
 };
 
 const modalStyle = {
@@ -163,6 +163,7 @@ const modalStyle = {
     left: '50%',
     transform: 'translate(-50%, 0%)',
     width: '80vw',
+    height: '80vh',
     bgcolor: 'background.paper',
     borderRadius: '5px',
     boxShadow: 24,
@@ -269,7 +270,7 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onOpen
                     {isLoading && <div className={spinnerStyle.spinnerContainer}>
                         <img alt="spinner" src={spinnerImg} style={{ height: 50 }} />
                     </div>}
-                    {!isLoading && <div>
+                    {!isLoading && <div style={{ height: "100%", width: "100%" }}>
                         <Button
                             variant="contained"
                             style={buttonStyle}
