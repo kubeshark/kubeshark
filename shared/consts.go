@@ -17,5 +17,5 @@ const (
 	BasenineHost                     = "127.0.0.1"
 	BaseninePort                     = "9099"
 	BasenineImageRepo                = "docker.io/up9inc/basenine"
-	BasenineImageTag                 = "v0.4.6"
+	BasenineImageTag                 = "v0.4.10"
 )
