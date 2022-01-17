@@ -1,4 +1,4 @@
-export function check(shouldInclude, content, domPathToContainer){
+export function isValueExistsInElement(shouldInclude, content, domPathToContainer){
     it(`should ${shouldInclude ? '' : 'not'} include '${content}'`, function () {
         cy.get(domPathToContainer).then(htmlText => {
             const allTextString = htmlText.text();
