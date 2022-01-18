@@ -172,16 +172,18 @@ export const EntryItem: React.FC<EntryProps> = ({entry, style, headingMode}) => 
                             {entry.src.name ? entry.src.name : "[Unresolved]"}
                         </span>
                     </Queryable>
-                    <SwapHorizIcon style={{color: entry.proto.backgroundColor, marginTop: "-2px"}}></SwapHorizIcon>
+                    <SwapHorizIcon style={{color: entry.proto.backgroundColor, marginTop: "-2px",marginLeft:"5px",marginRight:"5px"}}></SwapHorizIcon>
                     <Queryable
                         query={`dst.name == "${entry.dst.name}"`}
                         displayIconOnMouseOver={true}
+                        flipped={true}
+                        // style={{marginTop: "-4px",position: "relative"}}
+                        // iconStyle={{marginTop: "4px", marginLeft: "-2px",position: "absolute",left: "min(221px,100%)"}}
                         style={{marginTop: "-4px"}}
-                        iconStyle={{marginTop: "4px", marginLeft: "-2px"}}
+                        iconStyle={{marginTop: "4px", marginLeft: "-2px",left: "173px", position: "absolute"}}
                     >
                         <span
-                            title="Destination Name"
-                        >
+                            title="Destination Name">
                             {entry.dst.name ? entry.dst.name : "[Unresolved]"}
                         </span>
                     </Queryable>
