@@ -5,14 +5,15 @@ it('Loading Mizu', function () {
 });
 
 it('going through each entry', function () {
-
     cy.get('#total-entries').then(number => {
         const getNum = () => {
             const numOfEntries = number.text();
             return parseInt(numOfEntries);
         };
-        cy.wrap({ there: getNum }).invoke('there').should('be.gte', 35);
+        cy.wrap({ there: getNum }).invoke('there').should('be.gte', 25);
+
         checkThatAllEntriesShown();
+
         const entriesNum = getNum();
         [...Array(entriesNum).keys()].map(checkEntry);
     });
