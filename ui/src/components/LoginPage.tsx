@@ -1,11 +1,14 @@
 import { Button } from "@material-ui/core";
-import React, { useState } from "react";
+import React, { useState,useRef } from "react";
 import { toast } from "react-toastify";
 import Api from "../helpers/api";
 import { useCommonStyles } from "../helpers/commonStyle";
 import LoadingOverlay from "./LoadingOverlay";
 import entPageAtom, {Page} from "../recoil/entPage";
 import {useSetRecoilState} from "recoil";
+import useKeyPress from "../hooks/useKeyPress"
+import shortcutsKeyboard from "../configs/shortcutsKeyboard"
+
 
 const api = Api.getInstance();
 
@@ -15,6 +18,7 @@ const LoginPage: React.FC = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
+    const formRef = useRef(null);
 
     const setEntPage = useSetRecoilState(entPageAtom);
 
@@ -36,13 +40,9 @@ const LoginPage: React.FC = () => {
         }
     }
 
-    const handleFormOnKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === "Enter") {
-            onFormSubmit();
-        }
-    };
+    useKeyPress(shortcutsKeyboard.enter, onFormSubmit, formRef.current);
 
-    return <div className="centeredForm" onKeyPress={handleFormOnKeyPress}>
+    return <div className="centeredForm" ref={formRef}> 
             {isLoading && <LoadingOverlay/>}
             <div className="form-title left-text">Login</div>
             <div className="form-input">
