@@ -7,6 +7,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	service "mizuserver/pkg/service_map"
+
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/suite"
 	"github.com/up9inc/mizu/shared"
@@ -72,7 +74,7 @@ func (s *ServiceMapControllerSuite) TestGetStatus() {
 	s.c.Status(s.g)
 	assert.Equal(http.StatusOK, s.w.Code)
 
-	var status shared.ServiceMapStatus
+	var status service.ServiceMapStatus
 	err := json.Unmarshal(s.w.Body.Bytes(), &status)
 	assert.NoError(err)
 	assert.Equal("enabled", status.Status)
@@ -87,7 +89,7 @@ func (s *ServiceMapControllerSuite) TestGet() {
 	s.c.Get(s.g)
 	assert.Equal(http.StatusOK, s.w.Code)
 
-	var response shared.ServiceMapResponse
+	var response service.ServiceMapResponse
 	err := json.Unmarshal(s.w.Body.Bytes(), &response)
 	assert.NoError(err)
 
@@ -98,13 +100,13 @@ func (s *ServiceMapControllerSuite) TestGet() {
 	assert.Equal(1, response.Status.EdgeCount)
 
 	// response nodes
-	aNode := shared.ServiceMapNode{
+	aNode := service.ServiceMapNode{
 		Id:    1,
 		Name:  TCPEntryA.IP,
 		Entry: TCPEntryA,
 		Count: 1,
 	}
-	bNode := shared.ServiceMapNode{
+	bNode := service.ServiceMapNode{
 		Id:    2,
 		Name:  TCPEntryB.IP,
 		Entry: TCPEntryB,
@@ -115,7 +117,7 @@ func (s *ServiceMapControllerSuite) TestGet() {
 	assert.Len(response.Nodes, 2)
 
 	// response edges
-	assert.Equal([]shared.ServiceMapEdge{
+	assert.Equal([]service.ServiceMapEdge{
 		{
 			Source:      aNode,
 			Destination: bNode,
@@ -131,7 +133,7 @@ func (s *ServiceMapControllerSuite) TestGetReset() {
 	s.c.Reset(s.g)
 	assert.Equal(http.StatusOK, s.w.Code)
 
-	var status shared.ServiceMapStatus
+	var status service.ServiceMapStatus
 	err := json.Unmarshal(s.w.Body.Bytes(), &status)
 	assert.NoError(err)
 	assert.Equal("enabled", status.Status)

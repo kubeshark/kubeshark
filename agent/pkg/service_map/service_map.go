@@ -1,4 +1,4 @@
-package api
+package service_map
 
 import (
 	"sync"
@@ -35,9 +35,9 @@ type ServiceMap interface {
 	SetConfig(config *shared.MizuAgentConfig)
 	IsEnabled() bool
 	NewTCPEntry(source *tapApi.TCP, destination *tapApi.TCP, protocol *tapApi.Protocol)
-	GetStatus() shared.ServiceMapStatus
-	GetNodes() []shared.ServiceMapNode
-	GetEdges() []shared.ServiceMapEdge
+	GetStatus() ServiceMapStatus
+	GetNodes() []ServiceMapNode
+	GetEdges() []ServiceMapEdge
 	GetEntriesProcessedCount() int
 	GetNodesCount() int
 	GetEdgesCount() int
@@ -191,13 +191,13 @@ func (s *serviceMap) NewTCPEntry(src *tapApi.TCP, dst *tapApi.TCP, p *tapApi.Pro
 	s.addEdge(srcEntry, dstEntry, p)
 }
 
-func (s *serviceMap) GetStatus() shared.ServiceMapStatus {
+func (s *serviceMap) GetStatus() ServiceMapStatus {
 	status := ServiceMapDisabled
 	if s.IsEnabled() {
 		status = ServiceMapEnabled
 	}
 
-	return shared.ServiceMapStatus{
+	return ServiceMapStatus{
 		Status:                status,
 		EntriesProcessedCount: s.entriesProcessed,
 		NodeCount:             s.GetNodesCount(),
@@ -205,10 +205,10 @@ func (s *serviceMap) GetStatus() shared.ServiceMapStatus {
 	}
 }
 
-func (s *serviceMap) GetNodes() []shared.ServiceMapNode {
-	var nodes []shared.ServiceMapNode
+func (s *serviceMap) GetNodes() []ServiceMapNode {
+	var nodes []ServiceMapNode
 	for i, n := range s.graph.Nodes {
-		nodes = append(nodes, shared.ServiceMapNode{
+		nodes = append(nodes, ServiceMapNode{
 			Id:    n.id,
 			Name:  string(i),
 			Entry: n.entry,
@@ -218,19 +218,19 @@ func (s *serviceMap) GetNodes() []shared.ServiceMapNode {
 	return nodes
 }
 
-func (s *serviceMap) GetEdges() []shared.ServiceMapEdge {
-	var edges []shared.ServiceMapEdge
+func (s *serviceMap) GetEdges() []ServiceMapEdge {
+	var edges []ServiceMapEdge
 	for u, m := range s.graph.Edges {
 		for v := range m {
 			for _, p := range s.graph.Edges[u][v].data {
-				edges = append(edges, shared.ServiceMapEdge{
-					Source: shared.ServiceMapNode{
+				edges = append(edges, ServiceMapEdge{
+					Source: ServiceMapNode{
 						Id:    s.graph.Nodes[u].id,
 						Name:  string(u),
 						Entry: s.graph.Nodes[u].entry,
 						Count: s.graph.Nodes[u].count,
 					},
-					Destination: shared.ServiceMapNode{
+					Destination: ServiceMapNode{
 						Id:    s.graph.Nodes[v].id,
 						Name:  string(v),
 						Entry: s.graph.Nodes[v].entry,

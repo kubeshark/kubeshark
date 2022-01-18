@@ -6,7 +6,6 @@ import (
 
 	"github.com/op/go-logging"
 	"github.com/up9inc/mizu/shared/logger"
-	tapApi "github.com/up9inc/mizu/tap/api"
 	v1 "k8s.io/api/core/v1"
 
 	"gopkg.in/yaml.v3"
@@ -70,33 +69,6 @@ type WebSocketStatusMessage struct {
 type WebSocketTapConfigMessage struct {
 	*WebSocketMessageMetadata
 	TapTargets []v1.Pod `json:"pods"`
-}
-
-type ServiceMapStatus struct {
-	Status                string `json:"status"`
-	EntriesProcessedCount int    `json:"entriesProcessedCount"`
-	NodeCount             int    `json:"nodeCount"`
-	EdgeCount             int    `json:"edgeCount"`
-}
-
-type ServiceMapResponse struct {
-	Status ServiceMapStatus `json:"status"`
-	Nodes  []ServiceMapNode `json:"nodes"`
-	Edges  []ServiceMapEdge `json:"edges"`
-}
-
-type ServiceMapNode struct {
-	Id    int         `json:"id"`
-	Name  string      `json:"name"`
-	Entry *tapApi.TCP `json:"entry"`
-	Count int         `json:"count"`
-}
-
-type ServiceMapEdge struct {
-	Source      ServiceMapNode   `json:"source"`
-	Destination ServiceMapNode   `json:"destination"`
-	Count       int              `json:"count"`
-	Protocol    *tapApi.Protocol `json:"protocol"`
 }
 
 type TapperStatus struct {

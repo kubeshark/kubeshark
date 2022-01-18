@@ -1,4 +1,4 @@
-package api
+package service_map
 
 import (
 	"fmt"
@@ -262,7 +262,7 @@ func (s *ServiceMapEnabledSuite) TestServiceMap() {
 	dNode := -1
 	unresolvedNode := -1
 	unresolvedNode2 := -1
-	var validateNode = func(node shared.ServiceMapNode, entryName string, count int) int {
+	var validateNode = func(node ServiceMapNode, entryName string, count int) int {
 		// id
 		assert.GreaterOrEqual(node.Id, 1)
 		assert.LessOrEqual(node.Id, expectedNodeCount)
@@ -319,7 +319,7 @@ func (s *ServiceMapEnabledSuite) TestServiceMap() {
 	buEdge := -1
 	cdEdge := -1
 	acEdge := -1
-	var validateEdge = func(edge shared.ServiceMapEdge, sourceEntryName string, destEntryName string, protocolName string, protocolCount int) {
+	var validateEdge = func(edge ServiceMapEdge, sourceEntryName string, destEntryName string, protocolName string, protocolCount int) {
 		// source
 		assert.Contains(nodeIds, edge.Source.Id)
 		assert.LessOrEqual(edge.Source.Id, expectedNodeCount)
@@ -393,10 +393,10 @@ func (s *ServiceMapEnabledSuite) TestServiceMap() {
 	assert.Equal(0, status.EdgeCount)
 
 	// Nodes after reset
-	assert.Equal([]shared.ServiceMapNode(nil), nodes)
+	assert.Equal([]ServiceMapNode(nil), nodes)
 
 	// Edges after reset
-	assert.Equal([]shared.ServiceMapEdge(nil), edges)
+	assert.Equal([]ServiceMapEdge(nil), edges)
 }
 
 func TestServiceMapSuite(t *testing.T) {

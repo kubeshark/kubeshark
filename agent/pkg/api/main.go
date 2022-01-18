@@ -14,6 +14,8 @@ import (
 	"strings"
 	"time"
 
+	serviceMap "mizuserver/pkg/service_map"
+
 	"github.com/google/martian/har"
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/logger"
@@ -115,7 +117,7 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 		disableOASValidation = true
 	}
 
-	serviceMap := GetServiceMapInstance()
+	serviceMap := serviceMap.GetServiceMapInstance()
 	serviceMap.SetConfig(config.Config)
 
 	for item := range outputItems {
