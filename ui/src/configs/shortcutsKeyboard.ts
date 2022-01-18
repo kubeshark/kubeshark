@@ -1,5 +1,6 @@
 const dictionary = {
-    "QuerySubmit" : [{metaKey : true, code:"Enter"}, {ctrlKey:true, code:"Enter"}]
+    ctrlEnter : [{metaKey : true, code:"Enter"}, {ctrlKey:true, code:"Enter"}],
+    enter : [{code:"Enter"}]
 };
 
 
