@@ -35,7 +35,7 @@ func startProxyReportErrorIfAny(kubernetesProvider *kubernetes.Provider, cancel 
 			cancel()
 		}
 	} else if proxyType == shared.ProxyTypePortForward {
-		err := kubernetes.StartPortForward(kubernetesProvider, config.Config.Tap.ProxyHost, config.Config.Tap.GuiPort, config.Config.MizuResourcesNamespace, kubernetes.ApiServerPodName)
+		err := kubernetes.NewPortForward(kubernetesProvider, config.Config.MizuResourcesNamespace, kubernetes.ApiServerPodName, config.Config.Tap.GuiPort, cancel)
 		if err != nil {
 			logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error occured while running k8s proxy %v\n"+
 				"Try setting different port by using --%s", errormessage.FormatError(err), configStructs.GuiPortTapName))

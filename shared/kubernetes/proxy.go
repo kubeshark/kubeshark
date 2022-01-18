@@ -1,7 +1,13 @@
 package kubernetes
 
 import (
+	"bytes"
+	"context"
 	"fmt"
+	"github.com/up9inc/mizu/shared"
+	"k8s.io/apimachinery/pkg/util/httpstream"
+	"k8s.io/client-go/tools/portforward"
+	"k8s.io/client-go/transport/spdy"
 	"net"
 	"net/http"
 	"net/url"
@@ -44,6 +50,7 @@ func StartProxy(kubernetesProvider *Provider, proxyHost string, mizuPort uint16,
 	return server.Serve(l)
 }
 
+
 func getMizuApiServerProxiedHostAndPath(mizuNamespace string, mizuServiceName string) string {
 	return fmt.Sprintf("/api/v1/namespaces/%s/services/%s:%d/proxy", mizuNamespace, mizuServiceName, mizuServicePort)
 }
@@ -72,44 +79,36 @@ func getRerouteHttpHandlerMizuStatic(proxyHandler http.Handler, mizuNamespace st
 }
 
 
-func StartPortForward(kubernetesProvider *Provider, proxyHost string, mizuPort uint16, mizuNamespace string, mizuServiceName string) error {
-	filter := &proxy.FilterServer{
-		AcceptPaths:   proxy.MakeRegexpArrayOrDie(proxy.DefaultPathAcceptRE),
-		RejectPaths:   proxy.MakeRegexpArrayOrDie(proxy.DefaultPathRejectRE),
-		AcceptHosts:   proxy.MakeRegexpArrayOrDie(proxy.DefaultHostAcceptRE),
-		RejectMethods: proxy.MakeRegexpArrayOrDie(proxy.DefaultMethodRejectRE),
-	}
+func NewPortForward(kubernetesProvider *Provider, namespace string, podName string, localPort uint16, cancel context.CancelFunc) error {
+	logger.Log.Debugf("Starting proxy. namespace: [%v], service name: [%s], port: [%v]", namespace, podName, localPort)
 
-	mizuProxiedUrl := GetMizuCollectorProxiedHostAndPath(mizuPort, mizuNamespace, mizuServiceName)
-	proxyHandler, err := proxy.NewProxyHandler(k8sProxyApiPrefix, filter, &kubernetesProvider.clientConfig, time.Second * 2)
+	dialer := getHttpDialer(kubernetesProvider, namespace, podName)
+	stopChan, readyChan := make(chan struct{}, 1), make(chan struct{}, 1)
+	out, errOut := new(bytes.Buffer), new(bytes.Buffer)
+
+	forwarder, err := portforward.New(dialer, []string{fmt.Sprintf("%d:%d", localPort, shared.DefaultApiServerPort)}, stopChan, readyChan, out, errOut)
 	if err != nil {
-		return err
+		return nil
 	}
-	mux := http.NewServeMux()
-	mux.Handle(k8sProxyApiPrefix, proxyHandler)
-	//work around to make static resources available to the dashboard (all .svgs will not load without this)
-	mux.Handle("/static/", getRerouteHttpHandler(proxyHandler, mizuProxiedUrl))
-
-	l, err := net.Listen("tcp", fmt.Sprintf("%s:%d", proxyHost, int(mizuPort)))
-	if err != nil {
-		return err
-	}
-
-	server := http.Server{
-		Handler: mux,
-	}
-	return server.Serve(l)
+	go func() {
+		err = forwarder.ForwardPorts() // this is blocking
+		if err != nil {
+			fmt.Printf("kubernetes port-forwarding error: %s", err)
+			cancel()
+		}
+	}()
+	return nil
 }
 
-func GetMizuCollectorProxiedHostAndPath(mizuPort uint16, mizuNamespace string, mizuServiceName string) string {
-	return fmt.Sprintf("localhost:%d/api/v1/namespaces/%s/services/%s:80/proxy", mizuPort, mizuNamespace, mizuServiceName)
-}
 
-// rewrites requests, so they end up reaching the mizu-collector k8s service via the k8s proxy handler
-func getRerouteHttpHandler(proxyHandler http.Handler, mizuProxyUrl string) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		newUrl, _ := url.Parse(fmt.Sprintf("http://%s%s", mizuProxyUrl, r.URL.Path))
-		r.URL = newUrl
-		proxyHandler.ServeHTTP(w, r)
-	})
+func getHttpDialer(kubernetesProvider *Provider, namespace string, podName string) httpstream.Dialer {
+	roundTripper, upgrader, err := spdy.RoundTripperFor(&kubernetesProvider.clientConfig)
+	if err != nil {
+		panic(err)
+	}
+	path := fmt.Sprintf("/api/v1/namespaces/%s/pods/%s/portforward", namespace, podName)
+	hostIP := strings.TrimLeft(kubernetesProvider.clientConfig.Host, "htps:/") // no need specify "t" twice
+	serverURL := url.URL{Scheme: "https", Path: path, Host: hostIP}
+
+	return spdy.NewDialer(upgrader, &http.Client{Transport: roundTripper}, http.MethodPost, &serverURL)
 }
