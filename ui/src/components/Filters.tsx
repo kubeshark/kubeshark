@@ -65,7 +65,6 @@ export const QueryForm: React.FC<QueryFormProps> = ({backgroundColor, ws, openWe
     
 
     const handleSubmit = (e) => {
-        debugger;
         ws.close();
         if (query) {
             openWebSocket(`(${query}) and leftOff(-1)`, true);
@@ -75,7 +74,7 @@ export const QueryForm: React.FC<QueryFormProps> = ({backgroundColor, ws, openWe
         e.preventDefault();
     }
 
-    useKeyPress(shortcutsKeyboard.QuerySubmit,handleSubmit);
+    useKeyPress(shortcutsKeyboard.QuerySubmit,handleSubmit, formRef.current);
 
     return <>
         <form
