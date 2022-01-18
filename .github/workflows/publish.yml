@@ -11,8 +11,12 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  docker:
+  base:
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.versioning.outputs.version }}
+      build_timestamp: ${{ steps.version_parameters.outputs.build_timestamp }}
+      branch: ${{ steps.version_parameters.outputs.branch }}
     steps:
       - name: Set up Go 1.16
         uses: actions/setup-go@v2
@@ -43,6 +47,10 @@ jobs:
           echo "##[set-output name=build_timestamp;]$(echo $(date +%s))"
           echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
         id: version_parameters
+  basic-docker:
+    runs-on: ubuntu-latest
+    needs: base
+    steps:
       - name: Get base image name
         shell: bash
         run: echo "##[set-output name=image;]$(echo gcr.io/up9-docker-hub/mizu/${GITHUB_REF#refs/heads/})"
@@ -55,7 +63,7 @@ jobs:
           tags: |
             type=sha
             type=raw,${{ github.sha }}
-            type=raw,${{ steps.versioning.outputs.version }}
+            type=raw,${{ needs.base.outputs.version }}
       - name: Login to DockerHub
         uses: docker/login-action@v1
         with:
@@ -70,21 +78,61 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            SEM_VER=${{ steps.versioning.outputs.version }}
-            BUILD_TIMESTAMP=${{ steps.version_parameters.outputs.build_timestamp }}
-            GIT_BRANCH=${{ steps.version_parameters.outputs.branch }}
+            SEM_VER=${{ needs.base.outputs.version }}
+            BUILD_TIMESTAMP=${{ needs.base.outputs.build_timestamp }}
+            GIT_BRANCH=${{ needs.base.outputs.branch }}
             COMMIT_HASH=${{ github.sha }}
+  standalone-docker:
+    runs-on: ubuntu-latest
+    needs: base
+    steps:
+      - name: Get base image name
+        shell: bash
+        run: echo "##[set-output name=image;]$(echo gcr.io/up9-docker-hub/mizu/standalone/${GITHUB_REF#refs/heads/})"
+        id: base_image_step
+      - name: Docker meta
+        id: meta
+        uses: crazy-max/ghaction-docker-meta@v2
+        with:
+          images: ${{ steps.base_image_step.outputs.image }}
+          tags: |
+            type=sha
+            type=raw,${{ github.sha }}
+            type=raw,${{ needs.base.outputs.version }}
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          registry: gcr.io
+          username: _json_key
+          password: ${{ secrets.GCR_JSON_KEY }}
+      - name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            STANDALONE=true
+            SEM_VER=${{ needs.base.outputs.version }}
+            BUILD_TIMESTAMP=${{ needs.base.outputs.build_timestamp }}
+            GIT_BRANCH=${{ needs.base.outputs.branch }}
+            COMMIT_HASH=${{ github.sha }}
+  publish-cli:
+    runs-on: ubuntu-latest
+    needs: [base, basic-docker, standalone-docker]
+    steps:
       - name: Build and Push CLI
-        run: make push-cli SEM_VER='${{ steps.versioning.outputs.version }}' BUILD_TIMESTAMP='${{ steps.version_parameters.outputs.build_timestamp }}'
+        run: make push-cli SEM_VER='${{ needs.base.outputs.version }}' BUILD_TIMESTAMP='${{ needs.base.outputs.build_timestamp }}'
       - shell: bash
         run: |
-          echo '${{ steps.versioning.outputs.version }}' >> cli/bin/version.txt
+          echo '${{ needs.base.outputs.version }}' >> cli/bin/version.txt
       - name: publish
         uses: ncipollo/release-action@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           artifacts: "cli/bin/*"
-          commit: ${{ steps.version_parameters.outputs.branch }}
-          tag: ${{ steps.versioning.outputs.version }}
+          commit: ${{ needs.base.outputs.branch }}
+          tag: ${{ needs.base.outputs.version }}
           prerelease: ${{ github.ref != 'refs/heads/main' }}
           bodyFile: 'cli/bin/README.md'

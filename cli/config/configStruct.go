@@ -18,6 +18,11 @@ const (
 	KubeConfigPathConfigName         = "kube-config-path"
 )
 
+var (
+	DefaultAgentImage = fmt.Sprintf("gcr.io/up9-docker-hub/mizu/%s:%s", mizu.Branch, mizu.SemVer)
+	DefaultStandaloneAgentImage = fmt.Sprintf("gcr.io/up9-docker-hub/mizu/standalone/%s:%s", mizu.Branch, mizu.SemVer)
+)
+
 type ConfigStruct struct {
 	Tap                    configStructs.TapConfig     `yaml:"tap"`
 	Version                configStructs.VersionConfig `yaml:"version"`
@@ -25,7 +30,7 @@ type ConfigStruct struct {
 	Logs                   configStructs.LogsConfig    `yaml:"logs"`
 	Auth                   configStructs.AuthConfig    `yaml:"auth"`
 	Config                 configStructs.ConfigConfig  `yaml:"config,omitempty"`
-	AgentImage             string                      `yaml:"agent-image,omitempty" readonly:""`
+	AgentImageStr          string                      `yaml:"agent-image,omitempty" readonly:""`
 	ImagePullPolicyStr     string                      `yaml:"image-pull-policy" default:"Always"`
 	MizuResourcesNamespace string                      `yaml:"mizu-resources-namespace" default:"mizu"`
 	Telemetry              bool                        `yaml:"telemetry" default:"true"`
@@ -47,8 +52,19 @@ func (config *ConfigStruct) validate() error {
 }
 
 func (config *ConfigStruct) SetDefaults() {
-	config.AgentImage = fmt.Sprintf("gcr.io/up9-docker-hub/mizu/%s:%s", mizu.Branch, mizu.SemVer)
 	config.ConfigFilePath = path.Join(mizu.GetMizuFolderPath(), "config.yaml")
+}
+
+func (config *ConfigStruct) AgentImage(standalone bool) string {
+	if config.AgentImageStr != "" {
+		return config.AgentImageStr
+	}
+
+	if standalone {
+		return DefaultStandaloneAgentImage
+	}
+
+	return DefaultAgentImage
 }
 
 func (config *ConfigStruct) ImagePullPolicy() v1.PullPolicy {

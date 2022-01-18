@@ -6,8 +6,9 @@ COPY ui/package.json .
 COPY ui/package-lock.json .
 RUN npm i
 COPY ui .
-RUN npm run build
 
+ARG STANDALONE
+RUN if [ "$STANDALONE" = "true" ] ; then npm run build-ent ; else npm run build ; fi
 
 FROM golang:1.16-alpine AS builder
 # Set necessary environment variables needed for our image.

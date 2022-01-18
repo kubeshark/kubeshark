@@ -46,7 +46,7 @@ func runMizuInstall() {
 
 	if err = resources.CreateInstallMizuResources(ctx, kubernetesProvider, serializedValidationRules,
 		serializedContract, serializedMizuConfig, config.Config.IsNsRestrictedMode(),
-		config.Config.MizuResourcesNamespace, config.Config.AgentImage,
+		config.Config.MizuResourcesNamespace, config.Config.AgentImage(true),
 		nil, defaultMaxEntriesDBSizeBytes, defaultResources, config.Config.ImagePullPolicy(),
 		config.Config.LogLevel(), false); err != nil {
 		var statusError *k8serrors.StatusError
@@ -82,7 +82,7 @@ func runMizuInstall() {
 func getInstallMizuAgentConfig(maxDBSizeBytes int64, tapperResources shared.Resources) *shared.MizuAgentConfig {
 	mizuAgentConfig := shared.MizuAgentConfig{
 		MaxDBSizeBytes:         maxDBSizeBytes,
-		AgentImage:             config.Config.AgentImage,
+		AgentImage:             config.Config.AgentImage(true),
 		PullPolicy:             config.Config.ImagePullPolicyStr,
 		LogLevel:               config.Config.LogLevel(),
 		TapperResources:        tapperResources,
