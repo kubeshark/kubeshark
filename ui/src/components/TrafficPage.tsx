@@ -254,7 +254,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus,onTLSD
                       </div>
                   </div>
               </div>
-              {!window["isOasEnabled"] && <div>
+              {window["isOasEnabled"] && <div>
                 <Button
                   type="submit"
                   variant="contained"
@@ -272,7 +272,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus,onTLSD
                 </Button>
               </div>}
             </div>
-            {!window["isOasEnabled"] && <OasModal
+            {window["isOasEnabled"] && <OasModal
               openModal={openOasModal}
               handleCloseModal={handleCloseModal}
               entries={entries}
