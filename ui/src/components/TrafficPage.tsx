@@ -45,8 +45,9 @@ interface TrafficPageProps {
   onTLSDetected: (destAddress: string) => void;
 }
 
-const api = new Api();
-export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus,onTLSDetected,}) => {
+const api = Api.getInstance();
+
+export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus,onTLSDetected}) => {
     const classes = useLayoutStyles();
     const [tappingStatus, setTappingStatus] = useRecoilState(tappingStatusAtom);
     const [entries, setEntries] = useRecoilState(entriesAtom);
@@ -241,7 +242,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus,onTLSD
     return (
         <div className="TrafficPage">
             <div className="TrafficPageHeader">
-              <div className="TrafficPageStreameStatus">
+              <div className="TrafficPageStreamStatus">
                   <img className="playPauseIcon" style={{visibility: wsConnection === WsConnectionStatus.Connected ? "visible" : "hidden"}} alt="pause"
                       src={pauseIcon} onClick={toggleConnection}/>
                   <img className="playPauseIcon" style={{position: "absolute", visibility: wsConnection === WsConnectionStatus.Connected ? "hidden" : "visible"}} alt="play"

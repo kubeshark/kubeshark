@@ -4,20 +4,25 @@ import { RedocStandalone } from "redoc";
 import Api from "../../helpers/api";
 import { Select } from "../UI/Select";
 import closeIcon from "../assets/closeIcon.svg";
+import { arrayElementsComparetion } from "../../helpers/utils";
+import { toast } from 'react-toastify';
 
 const api = new Api();
 
 const OasModal = ({ openModal, handleCloseModal, entries }) => {
   const [oasServices, setOASservices] = useState([]);
   const [selectedOASService, setSelectedOASService] = useState("");
-  const [serviceOAS, setServiceOAS] = useState(null);
+  const [oasService, setServiceOAS] = useState(null);
+
+  const noOasServiceSelectedMessage = "Please Select OasService";
 
   useEffect(() => {
     (async () => {
       try {
         const services = await api.getOASAServices();
-        if (!areEqual(oasServices, services)) setOASservices(services);
+        if (!arrayElementsComparetion(oasServices, services)) setOASservices(services);
       } catch (e) {
+        toast.error(e.message);
         console.error(e);
       }
     })();
@@ -36,18 +41,6 @@ const OasModal = ({ openModal, handleCloseModal, entries }) => {
     }
   };
 
-  function areEqual(array1, array2) {
-    if (array1.length === array2.length) {
-      return array1.every((element) => {
-        if (array2.includes(element)) {
-          return true;
-        }
-        return false;
-      });
-    }
-    return false;
-  }
-
   return (
     <Modal
       aria-labelledby="transition-modal-title"
@@ -56,7 +49,7 @@ const OasModal = ({ openModal, handleCloseModal, entries }) => {
       onClose={handleCloseModal}
       closeAfterTransition
       hideBackdrop={true}
-      style={{ overflow: "auto", backgroundColor: "#ffffff" }}
+      style={{ overflow: "auto", backgroundColor: "#ffffff", color:"black" }}
     >
       <Fade in={openModal}>
         <Box>
@@ -89,7 +82,10 @@ const OasModal = ({ openModal, handleCloseModal, entries }) => {
               <img src={closeIcon} alt="Back" onClick={handleCloseModal} />
             </div>
           </div>
-          {serviceOAS && <RedocStandalone spec={serviceOAS} />}
+          {oasService && <RedocStandalone spec={oasService} />}
+          <div className="NotSelectedMessage">
+            {!selectedOASService && noOasServiceSelectedMessage}
+          </div>
         </Box>
       </Fade>
     </Modal>
