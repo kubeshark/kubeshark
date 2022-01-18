@@ -47,7 +47,7 @@ func runMizuView() {
 			return
 		}
 		logger.Log.Infof("Establishing connection to k8s cluster...")
-		go startProxyReportErrorIfAny(kubernetesProvider, cancel, config.Config.View.ProxyType)
+		go startProxyReportErrorIfAny(kubernetesProvider, cancel)
 
 	}
 

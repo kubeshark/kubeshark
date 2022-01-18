@@ -416,7 +416,7 @@ func watchApiServerEvents(ctx context.Context, kubernetesProvider *kubernetes.Pr
 }
 
 func postApiServerStarted(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc, err error) {
-	go startProxyReportErrorIfAny(kubernetesProvider, cancel, config.Config.Tap.ProxyType)
+	go startProxyReportErrorIfAny(kubernetesProvider, cancel)
 
 	url := GetApiServerUrl()
 	if err := apiProvider.TestConnection(); err != nil {

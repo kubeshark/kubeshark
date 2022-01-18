@@ -19,8 +19,3 @@ const (
 	BasenineImageRepo                = "ghcr.io/up9inc/basenine"
 	BasenineImageTag                 = "v0.3.0"
 )
-
-const (
-	ProxyTypeProxy = "proxy"
-	ProxyTypePortForward = "port-forward"
-)

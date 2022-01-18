@@ -6,18 +6,18 @@ import (
 	"errors"
 	"fmt"
 	"github.com/up9inc/mizu/cli/apiserver"
+	"github.com/up9inc/mizu/cli/config/configStructs"
+	"github.com/up9inc/mizu/cli/errormessage"
 	"github.com/up9inc/mizu/cli/mizu"
 	"github.com/up9inc/mizu/cli/mizu/fsUtils"
 	"github.com/up9inc/mizu/cli/resources"
 	"github.com/up9inc/mizu/cli/telemetry"
+	"github.com/up9inc/mizu/cli/uiUtils"
 	"github.com/up9inc/mizu/shared"
 	"path"
 	"time"
 
 	"github.com/up9inc/mizu/cli/config"
-	"github.com/up9inc/mizu/cli/config/configStructs"
-	"github.com/up9inc/mizu/cli/errormessage"
-	"github.com/up9inc/mizu/cli/uiUtils"
 	"github.com/up9inc/mizu/shared/kubernetes"
 	"github.com/up9inc/mizu/shared/logger"
 )
@@ -26,22 +26,33 @@ func GetApiServerUrl() string {
 	return fmt.Sprintf("http://%s", kubernetes.GetMizuApiServerProxiedHostAndPath(config.Config.Tap.GuiPort))
 }
 
-func startProxyReportErrorIfAny(kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc, proxyType string) {
-	if proxyType == shared.ProxyTypeProxy {
-		err := kubernetes.StartProxy(kubernetesProvider, config.Config.Tap.ProxyHost, config.Config.Tap.GuiPort, config.Config.MizuResourcesNamespace, kubernetes.ApiServerPodName)
-		if err != nil {
-			logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error occured while running k8s proxy %v\n"+
+func startProxyReportErrorIfAny(kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
+	httpServer, err := kubernetes.StartProxy(kubernetesProvider, config.Config.Tap.ProxyHost, config.Config.Tap.GuiPort, config.Config.MizuResourcesNamespace, kubernetes.ApiServerPodName, cancel)
+
+	if err != nil {
+		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error occured while running k8s proxy %v\n"+
+			"Try setting different port by using --%s", errormessage.FormatError(err), configStructs.GuiPortTapName))
+		cancel()
+	}
+
+	apiProvider = apiserver.NewProvider(GetApiServerUrl(), 1, time.Second) // This is happening after pod is running, so we don't need too many retries
+	if err := apiProvider.TestConnection(); err != nil {
+		logger.Log.Warningf("Couldn't connect using proxy, stopping proxy and trying to create port-forward")
+		if err := httpServer.Shutdown(context.Background()); err != nil {
+			logger.Log.Warningf("Error occurred while stopping proxy %v", errormessage.FormatError(err))
+		}
+
+		if err := kubernetes.NewPortForward(kubernetesProvider, config.Config.MizuResourcesNamespace, kubernetes.ApiServerPodName, config.Config.Tap.GuiPort, cancel); err != nil {
+			logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error occured while running port forward %v\n"+
 				"Try setting different port by using --%s", errormessage.FormatError(err), configStructs.GuiPortTapName))
 			cancel()
 		}
-	} else if proxyType == shared.ProxyTypePortForward {
-		err := kubernetes.NewPortForward(kubernetesProvider, config.Config.MizuResourcesNamespace, kubernetes.ApiServerPodName, config.Config.Tap.GuiPort, cancel)
-		if err != nil {
-			logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error occured while running k8s proxy %v\n"+
-				"Try setting different port by using --%s", errormessage.FormatError(err), configStructs.GuiPortTapName))
-			cancel()
+
+		if err := apiProvider.TestConnection(); err != nil {
+			logger.Log.Errorf("Couldn't connect to api server %v", err)
 		}
 	}
+
 	logger.Log.Debugf("proxy ended")
 }
 

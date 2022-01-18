@@ -26,7 +26,6 @@ type ConfigStruct struct {
 	Logs                   configStructs.LogsConfig    `yaml:"logs"`
 	Auth                   configStructs.AuthConfig    `yaml:"auth"`
 	Config                 configStructs.ConfigConfig  `yaml:"config,omitempty"`
-	ProxyType              string                      `yaml:"proxy-type" default:"proxy"`
 	AgentImage             string                      `yaml:"agent-image,omitempty" readonly:""`
 	BasenineImage          string                      `yaml:"basenine-image,omitempty" readonly:""`
 	ImagePullPolicyStr     string                      `yaml:"image-pull-policy" default:"Always"`

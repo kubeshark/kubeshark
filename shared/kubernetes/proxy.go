@@ -21,7 +21,7 @@ import (
 const k8sProxyApiPrefix = "/"
 const mizuServicePort = 80
 
-func StartProxy(kubernetesProvider *Provider, proxyHost string, mizuPort uint16, mizuNamespace string, mizuServiceName string) error {
+func StartProxy(kubernetesProvider *Provider, proxyHost string, mizuPort uint16, mizuNamespace string, mizuServiceName string, cancel context.CancelFunc) (*http.Server, error) {
 	logger.Log.Debugf("Starting proxy. namespace: [%v], service name: [%s], port: [%v]", mizuNamespace, mizuServiceName, mizuPort)
 	filter := &proxy.FilterServer{
 		AcceptPaths:   proxy.MakeRegexpArrayOrDie(proxy.DefaultPathAcceptRE),
@@ -32,7 +32,7 @@ func StartProxy(kubernetesProvider *Provider, proxyHost string, mizuPort uint16,
 
 	proxyHandler, err := proxy.NewProxyHandler(k8sProxyApiPrefix, filter, &kubernetesProvider.clientConfig, time.Second*2)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	mux := http.NewServeMux()
 	mux.Handle(k8sProxyApiPrefix, getRerouteHttpHandlerMizuAPI(proxyHandler, mizuNamespace, mizuServiceName))
@@ -40,14 +40,21 @@ func StartProxy(kubernetesProvider *Provider, proxyHost string, mizuPort uint16,
 
 	l, err := net.Listen("tcp", fmt.Sprintf("%s:%d", proxyHost, int(mizuPort)))
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	server := http.Server{
+	server := &http.Server{
 		Handler: mux,
 	}
 
-	return server.Serve(l)
+	go func() {
+		if err := server.Serve(l); err != nil && err != http.ErrServerClosed {
+			logger.Log.Errorf("Error creating proxy, %v", err)
+			cancel()
+		}
+	}()
+
+	return server, nil
 }
 
 
