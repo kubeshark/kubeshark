@@ -177,8 +177,6 @@ export const EntryItem: React.FC<EntryProps> = ({entry, style, headingMode}) => 
                         query={`dst.name == "${entry.dst.name}"`}
                         displayIconOnMouseOver={true}
                         flipped={true}
-                        // style={{marginTop: "-4px",position: "relative"}}
-                        // iconStyle={{marginTop: "4px", marginLeft: "-2px",position: "absolute",left: "min(221px,100%)"}}
                         style={{marginTop: "-4px"}}
                         iconStyle={{marginTop: "4px", marginLeft: "-2px",left: "173px", position: "absolute"}}
                     >
