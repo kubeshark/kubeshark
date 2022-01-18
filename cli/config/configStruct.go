@@ -5,6 +5,7 @@ import (
 	"github.com/op/go-logging"
 	"github.com/up9inc/mizu/cli/config/configStructs"
 	"github.com/up9inc/mizu/cli/mizu"
+	"github.com/up9inc/mizu/shared"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/util/homedir"
 	"os"
@@ -27,6 +28,7 @@ type ConfigStruct struct {
 	Config                 configStructs.ConfigConfig  `yaml:"config,omitempty"`
 	ProxyType              string                      `yaml:"proxy-type" default:"proxy"`
 	AgentImage             string                      `yaml:"agent-image,omitempty" readonly:""`
+	BasenineImage          string                      `yaml:"basenine-image,omitempty" readonly:""`
 	ImagePullPolicyStr     string                      `yaml:"image-pull-policy" default:"Always"`
 	MizuResourcesNamespace string                      `yaml:"mizu-resources-namespace" default:"mizu"`
 	Telemetry              bool                        `yaml:"telemetry" default:"true"`
@@ -48,6 +50,7 @@ func (config *ConfigStruct) validate() error {
 }
 
 func (config *ConfigStruct) SetDefaults() {
+	config.BasenineImage = fmt.Sprintf("%s:%s", shared.BasenineImageRepo, shared.BasenineImageTag)
 	config.AgentImage = fmt.Sprintf("gcr.io/up9-docker-hub/mizu/%s:%s", mizu.Branch, mizu.SemVer)
 	config.ConfigFilePath = path.Join(mizu.GetMizuFolderPath(), "config.yaml")
 }
