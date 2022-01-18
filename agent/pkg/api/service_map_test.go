@@ -208,12 +208,26 @@ func (s *ServiceMapEnabledSuite) TestServiceMap() {
 	// edges count should be 2, http protocol count should be 2 and redis protocol should be 1
 	assert.Equal(2, s.instance.GetEdgesCount())
 	assert.Equal(2, len(edges))
+	// http and redis protocols
+	httpIndex := -1
+	redisIndex := -1
+	for i, e := range edges {
+		if e.Protocol.Name == ProtocolHttp.Name {
+			httpIndex = i
+			continue
+		}
+		if e.Protocol.Name == ProtocolRedis.Name {
+			redisIndex = i
+		}
+	}
+	assert.NotEqual(-1, httpIndex)
+	assert.NotEqual(-1, redisIndex)
 	// http protocol
-	assert.Equal(2, edges[0].Count)
-	assert.Equal(ProtocolHttp.Name, edges[0].Protocol.Name)
+	assert.Equal(2, edges[httpIndex].Count)
+	assert.Equal(ProtocolHttp.Name, edges[httpIndex].Protocol.Name)
 	// redis protocol
-	assert.Equal(1, edges[1].Count)
-	assert.Equal(ProtocolRedis.Name, edges[1].Protocol.Name)
+	assert.Equal(1, edges[redisIndex].Count)
+	assert.Equal(ProtocolRedis.Name, edges[redisIndex].Protocol.Name)
 
 	// other entries
 	s.instance.NewTCPEntry(TCPEntryUnresolved, TCPEntryA, ProtocolHttp)
