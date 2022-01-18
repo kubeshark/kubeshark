@@ -33,7 +33,7 @@ var (
 	}
 )
 
-var Protocol = &tapApi.Protocol{
+var ProtocolHttp = &tapApi.Protocol{
 	Name:            "http",
 	LongName:        "Hypertext Transfer Protocol -- HTTP/1.1",
 	Abbreviation:    "HTTP",
@@ -60,7 +60,7 @@ func (s *ServiceMapControllerSuite) SetupTest() {
 	s.c.service.SetConfig(&shared.MizuAgentConfig{
 		ServiceMap: true,
 	})
-	s.c.service.NewTCPEntry(TCPEntryA, TCPEntryB, Protocol)
+	s.c.service.NewTCPEntry(TCPEntryA, TCPEntryB, ProtocolHttp)
 
 	s.w = httptest.NewRecorder()
 	s.g, _ = gin.CreateTestContext(s.w)
@@ -99,18 +99,16 @@ func (s *ServiceMapControllerSuite) TestGet() {
 
 	// response nodes
 	aNode := shared.ServiceMapNode{
-		Id:       1,
-		Name:     TCPEntryA.IP,
-		Entry:    TCPEntryA,
-		Protocol: Protocol,
-		Count:    1,
+		Id:    1,
+		Name:  TCPEntryA.IP,
+		Entry: TCPEntryA,
+		Count: 1,
 	}
 	bNode := shared.ServiceMapNode{
-		Id:       2,
-		Name:     TCPEntryB.IP,
-		Entry:    TCPEntryB,
-		Protocol: Protocol,
-		Count:    1,
+		Id:    2,
+		Name:  TCPEntryB.IP,
+		Entry: TCPEntryB,
+		Count: 1,
 	}
 	assert.Contains(response.Nodes, aNode)
 	assert.Contains(response.Nodes, bNode)
@@ -121,6 +119,7 @@ func (s *ServiceMapControllerSuite) TestGet() {
 		{
 			Source:      aNode,
 			Destination: bNode,
+			Protocol:    ProtocolHttp,
 			Count:       1,
 		},
 	}, response.Edges)
