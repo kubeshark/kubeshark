@@ -151,7 +151,7 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 		}
 		connection.SendText(string(data))
 
-		serviceMap.NewTCPEntry(mizuEntry.Source, mizuEntry.Destination, extension.Protocol)
+		serviceMap.NewTCPEntry(mizuEntry.Source, mizuEntry.Destination, &item.Protocol)
 	}
 }
 
