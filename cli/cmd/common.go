@@ -26,14 +26,22 @@ func GetApiServerUrl() string {
 	return fmt.Sprintf("http://%s", kubernetes.GetMizuApiServerProxiedHostAndPath(config.Config.Tap.GuiPort))
 }
 
-func startProxyReportErrorIfAny(kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
-	err := kubernetes.StartProxy(kubernetesProvider, config.Config.Tap.ProxyHost, config.Config.Tap.GuiPort, config.Config.MizuResourcesNamespace, kubernetes.ApiServerPodName)
-	if err != nil {
-		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error occured while running k8s proxy %v\n"+
-			"Try setting different port by using --%s", errormessage.FormatError(err), configStructs.GuiPortTapName))
-		cancel()
+func startProxyReportErrorIfAny(kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc, proxyType string) {
+	if proxyType == shared.ProxyTypeProxy {
+		err := kubernetes.StartProxy(kubernetesProvider, config.Config.Tap.ProxyHost, config.Config.Tap.GuiPort, config.Config.MizuResourcesNamespace, kubernetes.ApiServerPodName)
+		if err != nil {
+			logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error occured while running k8s proxy %v\n"+
+				"Try setting different port by using --%s", errormessage.FormatError(err), configStructs.GuiPortTapName))
+			cancel()
+		}
+	} else if proxyType == shared.ProxyTypePortForward {
+		err := kubernetes.StartPortForward(kubernetesProvider, config.Config.Tap.ProxyHost, config.Config.Tap.GuiPort, config.Config.MizuResourcesNamespace, kubernetes.ApiServerPodName)
+		if err != nil {
+			logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error occured while running k8s proxy %v\n"+
+				"Try setting different port by using --%s", errormessage.FormatError(err), configStructs.GuiPortTapName))
+			cancel()
+		}
 	}
-
 	logger.Log.Debugf("proxy ended")
 }
 

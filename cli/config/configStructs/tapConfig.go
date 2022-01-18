@@ -23,6 +23,7 @@ const (
 	EnforcePolicyFile             = "traffic-validation-file"
 	ContractFile                  = "contract"
 	ServiceMeshName               = "service-mesh"
+	ProxyTypeTapName              = "proxy-type"
 )
 
 type TapConfig struct {
@@ -45,6 +46,7 @@ type TapConfig struct {
 	ApiServerResources      shared.Resources `yaml:"api-server-resources"`
 	TapperResources         shared.Resources `yaml:"tapper-resources"`
 	ServiceMesh             bool             `yaml:"service-mesh" default:"false"`
+	ProxyType               string           `yaml:"proxy-type" default:"proxy"`
 }
 
 func (config *TapConfig) PodRegex() *regexp.Regexp {
@@ -77,6 +79,10 @@ func (config *TapConfig) Validate() error {
 
 	if config.Analysis && config.Workspace != "" {
 		return errors.New(fmt.Sprintf("Can't run with both --%s and --%s flags", AnalysisTapName, WorkspaceTapName))
+	}
+
+	if config.ProxyType != shared.ProxyTypeProxy && config.ProxyType != shared.ProxyTypePortForward {
+		return errors.New(fmt.Sprintf("Invalid proxy type %s", config.ProxyType))
 	}
 
 	return nil
