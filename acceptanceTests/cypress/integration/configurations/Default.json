@@ -4,17 +4,19 @@
   "viewportHeight": 1080,
   "video": false,
   "screenshotOnRunFailure": false,
-
-  "testFiles":
-  ["tests/GuiPort.js",
-  "tests/MultipleNamespaces.js",
-  "tests/Redact.js",
+  "testFiles": [
+    "tests/GuiPort.js",
+    "tests/MultipleNamespaces.js",
+    "tests/Redact.js",
     "tests/NoRedact.js",
-  "tests/Regex.js"],
+    "tests/Regex.js",
+    "tests/RegexMasking.js"
+  ],
 
   "env": {
     "testUrl": "http://localhost:8899/",
     "redactHeaderContent": "User-Header[REDACTED]",
-    "redactBodyContent": "{ \"User\": \"[REDACTED]\" }"
+    "redactBodyContent": "{ \"User\": \"[REDACTED]\" }",
+    "regexMaskingBodyContent": "[REDACTED]"
   }
 }
