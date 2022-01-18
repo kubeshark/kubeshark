@@ -197,8 +197,8 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onOpen
                     graphData.nodes.push({
                         id: serviceMapData.nodes[i].id,
                         value: serviceMapData.nodes[i].count,
-                        label: (serviceMapData.nodes[i].entry.name === "unresolved") ? serviceMapData.nodes[i].name : serviceMapData.nodes[i].entry.name,
-                        title: "Count: " + serviceMapData.nodes[i].name,
+                        label: (serviceMapData.nodes[i].entry.name === "unresolved") ? serviceMapData.nodes[i].name : `${serviceMapData.nodes[i].entry.name} (${serviceMapData.nodes[i].name})`,
+                        title: "Count: " + serviceMapData.nodes[i].count,
                     });
                 }
             }
