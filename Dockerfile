@@ -42,7 +42,7 @@ ARG SEM_VER=0.0.0
 COPY shared ../shared
 COPY tap ../tap
 COPY agent .
-RUN go build -ldflags="-s -w \
+RUN go build -ldflags="-extldflags '-fuse-ld=bfd' -s -w \
      -X 'mizuserver/pkg/version.GitCommitHash=${COMMIT_HASH}' \
      -X 'mizuserver/pkg/version.Branch=${GIT_BRANCH}' \
      -X 'mizuserver/pkg/version.BuildTimestamp=${BUILD_TIMESTAMP}' \
