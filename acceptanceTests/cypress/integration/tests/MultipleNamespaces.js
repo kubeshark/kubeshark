@@ -15,4 +15,3 @@ function doItFunc(number) {
         findLineAndCheck(getExpectedDetailsDict(podName, namespace));
     });
 }
-
