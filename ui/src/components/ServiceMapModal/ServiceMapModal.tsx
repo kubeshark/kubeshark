@@ -5,9 +5,9 @@ import Api from "../../helpers/api";
 import spinnerStyle from '../style/Spinner.module.sass';
 import spinnerImg from '../assets/spinner.svg';
 import Graph from "react-graph-vis";
-import variables from '../../variables.module.scss';
 import debounce from 'lodash/debounce';
 import ServiceMapOptions from './ServiceMapOptions'
+import { useCommonStyles } from "../../helpers/commonStyle";
 
 interface GraphData {
     nodes: Node[];
@@ -88,20 +88,13 @@ const modalStyle = {
     p: 4,
     color: '#000',
 };
-const buttonStyle: any = {
-    margin: "0px 0px 0px 10px",
-    backgroundColor: variables.blueColor,
-    fontWeight: 600,
-    borderRadius: "4px",
-    color: "#fff",
-    textTransform: "none",
-};
 
 const api = Api.getInstance();
 
 export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onOpen, onClose }) => {
+    const commonClasses = useCommonStyles();
     const [isLoading, setIsLoading] = useState<boolean>(true);
-    const [graphData, setGraphData] = useState<GraphData>(null);
+    const [graphData, setGraphData] = useState<GraphData>({ nodes: [], edges: [] });
 
     const getServiceMapData = useCallback(async () => {
         try {
@@ -144,7 +137,8 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onOpen
         } finally {
             setIsLoading(false)
         }
-    }, [])
+        // eslint-disable-next-line
+    }, [isOpen])
 
     useEffect(() => {
         getServiceMapData()
@@ -164,11 +158,8 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onOpen
     }, 500);
 
     const refreshServiceMap = debounce(() => {
-        // close and re-open modal
-        onClose()
-        onOpen()
+        getServiceMapData();
     }, 500);
-
 
     return (
         <Modal
@@ -191,36 +182,31 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onOpen
                     {!isLoading && <div style={{ height: "100%", width: "100%" }}>
                         <Button
                             variant="contained"
-                            style={buttonStyle}
+                            className={commonClasses.button}
+                            style={{ marginRight: 25 }}
                             onClick={() => onClose()}
                         >
                             Close
                         </Button>
                         <Button
                             variant="contained"
-                            style={buttonStyle}
+                            className={commonClasses.button}
+                            style={{ marginRight: 25 }}
                             onClick={resetServiceMap}
                         >
                             Reset
                         </Button>
                         <Button
                             variant="contained"
-                            style={{
-                                margin: "0px 0px 0px 10px",
-                                backgroundColor: variables.blueColor,
-                                fontWeight: 600,
-                                borderRadius: "4px",
-                                color: "#fff",
-                                textTransform: "none",
-                            }}
+                            className={commonClasses.button}
                             onClick={refreshServiceMap}
                         >
                             Refresh
                         </Button>
-                        {graphData && <Graph
+                        <Graph
                             graph={graphData}
                             options={ServiceMapOptions}
-                        />}
+                        />
                     </div>}
                 </Box>
             </Fade>
