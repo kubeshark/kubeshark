@@ -217,10 +217,10 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onOpen
                         >
                             Refresh
                         </Button>
-                        <Graph
+                        {graphData && <Graph
                             graph={graphData}
                             options={ServiceMapOptions}
-                        />
+                        />}
                     </div>}
                 </Box>
             </Fade>
