@@ -21,7 +21,7 @@ const OasModal = ({ openModal, handleCloseModal }) => {
         const services = await api.getOasServices();
         setOasServices(services);
       } catch (e) {
-        toast.error(e.message);
+        toast.error("Error occurred while fetching services list");
         console.error(e);
       }
     })();
@@ -36,7 +36,7 @@ const OasModal = ({ openModal, handleCloseModal }) => {
       const data = await api.getOasByService(selectedService);
       setSelectedServiceSpec(data);
     } catch (e) {
-      toast.error(e.message);
+      toast.error("Error occurred while fetching service OAS spec");
       console.error(e);
     }
   };
