@@ -162,7 +162,7 @@ export const EntryItem: React.FC<EntryProps> = ({entry, style, headingMode}) => 
                         displayIconOnMouseOver={true}
                         flipped={true}
                         style={{marginTop: "-4px", overflow: "visible"}}
-                        iconStyle={!headingMode ? {marginTop: "4px", left: "68px", position: "absolute"} :
+                        iconStyle={!headingMode ? {marginTop: "4px", right: "16px", position: "relative"} :
                         entry.proto.name === "http" ? {marginTop: "4px", left: "calc(50vw + 41px)", position: "absolute"} :
                         {marginTop: "4px", left: "calc(50vw - 9px)", position: "absolute"}}
                     >
@@ -178,7 +178,7 @@ export const EntryItem: React.FC<EntryProps> = ({entry, style, headingMode}) => 
                         displayIconOnMouseOver={true}
                         flipped={true}
                         style={{marginTop: "-4px"}}
-                        iconStyle={{marginTop: "4px", marginLeft: "-2px",left: "173px", position: "absolute"}}
+                        iconStyle={{marginTop: "4px", marginLeft: "-2px",right: "11px", position: "relative"}}
                     >
                         <span
                             title="Destination Name">
