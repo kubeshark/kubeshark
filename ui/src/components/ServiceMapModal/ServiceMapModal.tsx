@@ -7,6 +7,7 @@ import spinnerImg from '../assets/spinner.svg';
 import Graph from "react-graph-vis";
 import variables from '../../variables.module.scss';
 import debounce from 'lodash/debounce';
+import ServiceMapOptions from './ServiceMapOptions'
 
 interface GraphData {
     nodes: Node[];
@@ -74,89 +75,6 @@ interface ServiceMapModalProps {
     onClose: () => void;
 }
 
-const api = Api.getInstance();
-const options = {
-    physics: {
-        enabled: true,
-        solver: 'barnesHut',
-        barnesHut: {
-            theta: 0.5,
-            gravitationalConstant: -2000,
-            centralGravity: 0.3,
-            springLength: 180,
-            springConstant: 0.04,
-            damping: 0.09,
-            avoidOverlap: 1
-        },
-    },
-    layout: {
-        hierarchical: false,
-        randomSeed: 1 // always on node 1
-    },
-    nodes: {
-        shape: 'dot',
-        chosen: true,
-        color: {
-            background: '#27AE60',
-            border: '#000000',
-            highlight: {
-                background: '#27AE60',
-                border: '#000000',
-            },
-        },
-        font: {
-            color: '#343434',
-            size: 14, // px
-            face: 'arial',
-            background: 'none',
-            strokeWidth: 0, // px
-            strokeColor: '#ffffff',
-            align: 'center',
-            multi: false,
-        },
-        borderWidth: 1.5,
-        borderWidthSelected: 2.5,
-        labelHighlightBold: true,
-        opacity: 1,
-        shadow: true,
-    },
-    edges: {
-        chosen: true,
-        dashes: false,
-        arrowStrikethrough: false,
-        arrows: {
-            to: {
-                enabled: true,
-            },
-            middle: {
-                enabled: false,
-            },
-            from: {
-                enabled: false,
-            }
-        },
-        smooth: {
-            enabled: true,
-            type: 'dynamic',
-            roundness: 1.0
-        },
-        font: {
-            color: '#343434',
-            size: 12, // px
-            face: 'arial',
-            background: 'none',
-            strokeWidth: 2, // px
-            strokeColor: '#ffffff',
-            align: 'horizontal',
-            multi: false,
-        },
-        labelHighlightBold: true,
-        selectionWidth: 1,
-        shadow: true,
-    },
-    autoResize: true,
-};
-
 const modalStyle = {
     position: 'absolute',
     top: '10%',
@@ -179,46 +97,46 @@ const buttonStyle: any = {
     textTransform: "none",
 };
 
+const api = Api.getInstance();
+
 export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onOpen, onClose }) => {
     const [isLoading, setIsLoading] = useState<boolean>(true);
-    const [graphData, setGraphData] = useState<GraphData>({
-        nodes: [],
-        edges: []
-    });
+    const [graphData, setGraphData] = useState<GraphData>(null);
 
     const getServiceMapData = useCallback(async () => {
         try {
             setIsLoading(true)
 
             const serviceMapData: ServiceMapGraph = await api.serviceMapData()
+            const newGraphData: GraphData = { nodes: [], edges: [] }
 
             if (serviceMapData.nodes) {
-                for (let i = 0; i < serviceMapData.nodes.length; i++) {
-                    graphData.nodes.push({
-                        id: serviceMapData.nodes[i].id,
-                        value: serviceMapData.nodes[i].count,
-                        label: (serviceMapData.nodes[i].entry.name === "unresolved") ? serviceMapData.nodes[i].name : `${serviceMapData.nodes[i].entry.name} (${serviceMapData.nodes[i].name})`,
-                        title: "Count: " + serviceMapData.nodes[i].count,
-                    });
-                }
+                newGraphData.nodes = serviceMapData.nodes.map(node => {
+                    return {
+                        id: node.id,
+                        value: node.count,
+                        label: (node.entry.name === "unresolved") ? node.name : `${node.entry.name} (${node.name})`,
+                        title: "Count: " + node.name,
+                    }
+                })
             }
 
             if (serviceMapData.edges) {
-                for (let i = 0; i < serviceMapData.edges.length; i++) {
-                    graphData.edges.push({
-                        from: serviceMapData.edges[i].source.id,
-                        to: serviceMapData.edges[i].destination.id,
-                        value: serviceMapData.edges[i].count,
-                        label: serviceMapData.edges[i].count.toString(),
+                newGraphData.edges = serviceMapData.edges.map(edge => {
+                    return {
+                        from: edge.source.id,
+                        to: edge.destination.id,
+                        value: edge.count,
+                        label: edge.count.toString(),
                         color: {
-                            color: serviceMapData.edges[i].protocol.backgroundColor,
-                            highlight: serviceMapData.edges[i].protocol.backgroundColor
+                            color: edge.protocol.backgroundColor,
+                            highlight: edge.protocol.backgroundColor
                         },
-                    });
-                }
+                    }
+                })
             }
 
-            setGraphData(graphData)
+            setGraphData(newGraphData)
 
         } catch (ex) {
             toast.error("An error occurred while loading Mizu Service Map, see console for mode details");
@@ -226,7 +144,7 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onOpen
         } finally {
             setIsLoading(false)
         }
-    }, [graphData])
+    }, [])
 
     useEffect(() => {
         getServiceMapData()
@@ -301,7 +219,7 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onOpen
                         </Button>
                         <Graph
                             graph={graphData}
-                            options={options}
+                            options={ServiceMapOptions}
                         />
                     </div>}
                 </Box>
