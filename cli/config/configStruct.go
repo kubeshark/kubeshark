@@ -2,15 +2,14 @@ package config
 
 import (
 	"fmt"
-	"os"
-	"path"
-	"path/filepath"
-
 	"github.com/op/go-logging"
 	"github.com/up9inc/mizu/cli/config/configStructs"
 	"github.com/up9inc/mizu/cli/mizu"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/util/homedir"
+	"os"
+	"path"
+	"path/filepath"
 )
 
 const (
