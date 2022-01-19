@@ -1,4 +1,4 @@
-package service_map
+package servicemap
 
 import (
 	tapApi "github.com/up9inc/mizu/tap/api"

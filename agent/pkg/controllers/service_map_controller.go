@@ -1,19 +1,19 @@
 package controllers
 
 import (
-	service "mizuserver/pkg/service_map"
+	"mizuserver/pkg/servicemap"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
 type ServiceMapController struct {
-	service service.ServiceMap
+	service servicemap.ServiceMap
 }
 
 func NewServiceMapController() *ServiceMapController {
 	return &ServiceMapController{
-		service: service.GetServiceMapInstance(),
+		service: servicemap.GetInstance(),
 	}
 }
 
@@ -22,7 +22,7 @@ func (s *ServiceMapController) Status(c *gin.Context) {
 }
 
 func (s *ServiceMapController) Get(c *gin.Context) {
-	response := &service.ServiceMapResponse{
+	response := &servicemap.ServiceMapResponse{
 		Status: s.service.GetStatus(),
 		Nodes:  s.service.GetNodes(),
 		Edges:  s.service.GetEdges(),

@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"mizuserver/pkg/config"
 	"mizuserver/pkg/holder"
 	"mizuserver/pkg/providers"
 	"os"
@@ -14,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	serviceMap "mizuserver/pkg/service_map"
+	"mizuserver/pkg/servicemap"
 
 	"github.com/google/martian/har"
 	"github.com/up9inc/mizu/shared"
@@ -117,9 +116,6 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 		disableOASValidation = true
 	}
 
-	serviceMap := serviceMap.GetServiceMapInstance()
-	serviceMap.SetConfig(config.Config)
-
 	for item := range outputItems {
 		providers.EntryAdded()
 
@@ -153,7 +149,7 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 		}
 		connection.SendText(string(data))
 
-		serviceMap.NewTCPEntry(mizuEntry.Source, mizuEntry.Destination, &item.Protocol)
+		servicemap.GetInstance().NewTCPEntry(mizuEntry.Source, mizuEntry.Destination, &item.Protocol)
 	}
 }
 

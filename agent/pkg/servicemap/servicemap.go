@@ -1,4 +1,4 @@
-package service_map
+package servicemap
 
 import (
 	"sync"
@@ -17,7 +17,7 @@ const (
 var instance *serviceMap
 var once sync.Once
 
-func GetServiceMapInstance() ServiceMap {
+func GetInstance() ServiceMap {
 	once.Do(func() {
 		instance = newServiceMap()
 		logger.Log.Debug("Service Map Initialized")

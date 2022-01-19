@@ -13,6 +13,7 @@ import (
 	"mizuserver/pkg/models"
 	"mizuserver/pkg/oas"
 	"mizuserver/pkg/routes"
+	"mizuserver/pkg/servicemap"
 	"mizuserver/pkg/up9"
 	"mizuserver/pkg/utils"
 	"net/http"
@@ -152,6 +153,9 @@ func main() {
 func enableExpFeatureIfNeeded() {
 	if config.Config.OAS {
 		oas.GetOasGeneratorInstance().Start()
+	}
+	if config.Config.ServiceMap {
+		servicemap.GetInstance().SetConfig(config.Config)
 	}
 }
 

@@ -1,4 +1,4 @@
-package service_map
+package servicemap
 
 import (
 	"fmt"
@@ -91,11 +91,11 @@ type ServiceMapEnabledSuite struct {
 }
 
 func (s *ServiceMapDisabledSuite) SetupTest() {
-	s.instance = GetServiceMapInstance()
+	s.instance = GetInstance()
 }
 
 func (s *ServiceMapEnabledSuite) SetupTest() {
-	s.instance = GetServiceMapInstance()
+	s.instance = GetInstance()
 	s.instance.SetConfig(&shared.MizuAgentConfig{
 		ServiceMap: true,
 	})
@@ -110,7 +110,7 @@ func (s *ServiceMapDisabledSuite) TestServiceMapInstance() {
 func (s *ServiceMapDisabledSuite) TestServiceMapSingletonInstance() {
 	assert := s.Assert()
 
-	instance2 := GetServiceMapInstance()
+	instance2 := GetInstance()
 
 	assert.NotNil(s.instance)
 	assert.NotNil(instance2)
