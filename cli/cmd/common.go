@@ -49,11 +49,9 @@ func startProxyReportErrorIfAny(kubernetesProvider *kubernetes.Provider, cancel 
 		}
 
 		if err := apiProvider.TestConnection(); err != nil {
-			logger.Log.Errorf("Couldn't connect to api server %v", err)
+			logger.Log.Debugf("Couldn't connect to api server %v", err)
 		}
 	}
-
-	logger.Log.Debugf("proxy ended")
 }
 
 func getKubernetesProviderForCli() (*kubernetes.Provider, error) {
