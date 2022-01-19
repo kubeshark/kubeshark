@@ -22,7 +22,7 @@ const k8sProxyApiPrefix = "/"
 const mizuServicePort = 80
 
 func StartProxy(kubernetesProvider *Provider, proxyHost string, mizuPort uint16, mizuNamespace string, mizuServiceName string, cancel context.CancelFunc) (*http.Server, error) {
-	logger.Log.Debugf("Starting proxy. namespace: [%v], service name: [%s], port: [%v]", mizuNamespace, mizuServiceName, mizuPort)
+	logger.Log.Debugf("Starting proxy using proxy method. namespace: [%v], service name: [%s], port: [%v]", mizuNamespace, mizuServiceName, mizuPort)
 	filter := &proxy.FilterServer{
 		AcceptPaths:   proxy.MakeRegexpArrayOrDie(proxy.DefaultPathAcceptRE),
 		RejectPaths:   proxy.MakeRegexpArrayOrDie(proxy.DefaultPathRejectRE),
@@ -87,7 +87,7 @@ func getRerouteHttpHandlerMizuStatic(proxyHandler http.Handler, mizuNamespace st
 
 
 func NewPortForward(kubernetesProvider *Provider, namespace string, podName string, localPort uint16, cancel context.CancelFunc) error {
-	logger.Log.Debugf("Starting proxy. namespace: [%v], service name: [%s], port: [%v]", namespace, podName, localPort)
+	logger.Log.Debugf("Starting proxy using port-forward method. namespace: [%v], service name: [%s], port: [%v]", namespace, podName, localPort)
 
 	dialer := getHttpDialer(kubernetesProvider, namespace, podName)
 	stopChan, readyChan := make(chan struct{}, 1), make(chan struct{}, 1)
