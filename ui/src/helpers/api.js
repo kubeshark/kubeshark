@@ -76,6 +76,16 @@ export default class Api {
         return response.data;
     }
 
+    getOasServices = async () => {
+        const response = await this.client.get("/oas");
+        return response.data;
+    }
+
+    getOasByService = async (selectedService) => {
+        const response = await this.client.get(`/oas/${selectedService}`);
+        return response.data;
+    }
+
     validateQuery = async (query) => {
         if (this.source) {
             this.source.cancel();
