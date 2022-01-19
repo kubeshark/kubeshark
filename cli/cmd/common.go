@@ -37,9 +37,9 @@ func startProxyReportErrorIfAny(kubernetesProvider *kubernetes.Provider, cancel 
 
 	apiProvider = apiserver.NewProvider(GetApiServerUrl(), 1, time.Second) // This is happening after pod is running, so we don't need too many retries
 	if err := apiProvider.TestConnection(); err != nil {
-		logger.Log.Warningf("Couldn't connect using proxy, stopping proxy and trying to create port-forward")
+		logger.Log.Debugf("Couldn't connect using proxy, stopping proxy and trying to create port-forward")
 		if err := httpServer.Shutdown(context.Background()); err != nil {
-			logger.Log.Warningf("Error occurred while stopping proxy %v", errormessage.FormatError(err))
+			logger.Log.Debugf("Error occurred while stopping proxy %v", errormessage.FormatError(err))
 		}
 
 		if err := kubernetes.NewPortForward(kubernetesProvider, config.Config.MizuResourcesNamespace, kubernetes.ApiServerPodName, config.Config.Tap.GuiPort, cancel); err != nil {
