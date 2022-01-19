@@ -59,7 +59,6 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({ onTLSDetected, setAnal
     const [noMoreDataTop, setNoMoreDataTop] = useState(false);
     const [isSnappedToBottom, setIsSnappedToBottom] = useState(true);
 
-    const [serviceMapStatus, setServiceMapStatus] = useState(false);
     const [serviceMapModalOpen, setServiceMapModalOpen] = useState(false);
 
     const [queryBackgroundColor, setQueryBackgroundColor] = useState("#f5f5f5");
@@ -235,19 +234,6 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({ onTLSDetected, setAnal
             ws.current.close();
         }
     }
-
-    useEffect(() => {
-        (async () => {
-            try {
-                const serviceMapStatusResponse = await api.serviceMapStatus();
-                if (serviceMapStatusResponse["status"] === "enabled") {
-                    setServiceMapStatus(true);
-                }
-            } catch (error) {
-                console.error(error);
-            }
-        })()
-    }, []);
 
     const openServiceMapModal = debounce(() => {
         setServiceMapModalOpen(true)
