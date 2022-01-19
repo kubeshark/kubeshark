@@ -258,16 +258,17 @@ func hostApi(socketHarOutputChannel chan<- *tapApi.OutputChannelItem) {
 		routes.UserRoutes(app)
 		routes.InstallRoutes(app)
 	}
-
 	if config.Config.OAS {
 		routes.OASRoutes(app)
+	}
+	if config.Config.ServiceMap {
+		routes.ServiceMapRoutes(app)
 	}
 
 	routes.QueryRoutes(app)
 	routes.EntriesRoutes(app)
 	routes.MetadataRoutes(app)
 	routes.StatusRoutes(app)
-	routes.ServiceMapRoutes(app)
 	routes.NotFoundRoute(app)
 	utils.StartServer(app)
 }
@@ -291,6 +292,7 @@ func setUIFlags() error {
 
 	replacedContent := strings.Replace(string(read), "__IS_STANDALONE__", strconv.FormatBool(config.Config.StandaloneMode), 1)
 	replacedContent = strings.Replace(replacedContent, "__IS_OAS_ENABLED__", strconv.FormatBool(config.Config.OAS), 1)
+	replacedContent = strings.Replace(replacedContent, "__IS_SERVICE_MAP_ENABLED__", strconv.FormatBool(config.Config.ServiceMap), 1)
 
 	err = ioutil.WriteFile(uiIndexPath, []byte(replacedContent), 0)
 	if err != nil {

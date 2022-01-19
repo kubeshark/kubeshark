@@ -1,18 +1,18 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Filters } from "./Filters";
-import { EntriesList } from "./EntriesList";
-import { Button, makeStyles } from "@material-ui/core";
+import React, {useEffect, useMemo, useRef, useState} from "react";
+import {Filters} from "./Filters";
+import {EntriesList} from "./EntriesList";
+import {Button, makeStyles} from "@material-ui/core";
 import "./style/TrafficPage.sass";
 import styles from './style/EntriesList.module.sass';
-import { EntryDetailed } from "./EntryDetailed";
+import {EntryDetailed} from "./EntryDetailed";
 import playIcon from './assets/run.svg';
 import pauseIcon from './assets/pause.svg';
 import variables from '../variables.module.scss';
-import { StatusBar } from "./UI/StatusBar";
-import Api, { MizuWebsocketURL } from "../helpers/api";
-import { toast } from 'react-toastify';
+import {StatusBar} from "./UI/StatusBar";
+import Api, {MizuWebsocketURL} from "../helpers/api";
+import {toast} from 'react-toastify';
 import debounce from 'lodash/debounce';
-import { ServiceMapModal } from "./ServiceMapModal/ServiceMapModal";
+import {ServiceMapModal} from "./ServiceMapModal/ServiceMapModal";
 import {useRecoilState, useRecoilValue} from "recoil";
 import tappingStatusAtom from "../recoil/tappingStatus";
 import entriesAtom from "../recoil/entries";
@@ -266,7 +266,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({ onTLSDetected, setAnal
                         <div className={"indicator " + getConnectionStatusClass(false)} />
                     </div>
                 </div>
-                {serviceMapStatus && <Button
+                {window["isServiceMapEnabled"] && <Button
                     variant="contained"
                     style={{
                         margin: "0px 0px 0px 20px",
