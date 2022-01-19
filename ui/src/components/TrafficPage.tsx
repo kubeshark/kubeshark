@@ -1,7 +1,7 @@
-import React, {useEffect, useMemo, useRef, useState} from "react";
-import {Filters} from "./Filters";
-import {EntriesList} from "./EntriesList";
-import {makeStyles} from "@material-ui/core";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { Filters } from "./Filters";
+import { EntriesList } from "./EntriesList";
+import { makeStyles, Button } from "@material-ui/core";
 import "./style/TrafficPage.sass";
 import styles from './style/EntriesList.module.sass';
 import {EntryDetailed} from "./EntryDetailed";
@@ -18,36 +18,36 @@ import entriesAtom from "../recoil/entries";
 import focusedEntryIdAtom from "../recoil/focusedEntryId";
 import websocketConnectionAtom, {WsConnectionStatus} from "../recoil/wsConnection";
 import queryAtom from "../recoil/query";
+import OasModal from "./OasModal/OasModal";
 
 const useLayoutStyles = makeStyles(() => ({
-    details: {
-        flex: "0 0 50%",
-        width: "45vw",
-        padding: "12px 24px",
-        borderRadius: 4,
-        marginTop: 15,
-        background: variables.headerBackgroundColor,
-    },
+  details: {
+    flex: "0 0 50%",
+    width: "45vw",
+    padding: "12px 24px",
+    borderRadius: 4,
+    marginTop: 15,
+    background: variables.headerBackgroundColor,
+  },
 
-    viewer: {
-        display: 'flex',
-        overflowY: 'auto',
-        height: "calc(100% - 70px)",
-        padding: 5,
-        paddingBottom: 0,
-        overflow: "auto",
-    }
+  viewer: {
+    display: "flex",
+    overflowY: "auto",
+    height: "calc(100% - 70px)",
+    padding: 5,
+    paddingBottom: 0,
+    overflow: "auto",
+  },
 }));
 
 interface TrafficPageProps {
-    onTLSDetected: (destAddress: string) => void;
-    setAnalyzeStatus?: (status: any) => void;
+  setAnalyzeStatus?: (status: any) => void;
+  onTLSDetected: (destAddress: string) => void;
 }
 
 const api = Api.getInstance();
 
-export const TrafficPage: React.FC<TrafficPageProps> = ({onTLSDetected, setAnalyzeStatus}) => {
-
+export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus,onTLSDetected}) => {
     const classes = useLayoutStyles();
     const [tappingStatus, setTappingStatus] = useRecoilState(tappingStatusAtom);
     const [entries, setEntries] = useRecoilState(entriesAtom);
@@ -67,24 +67,31 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({onTLSDetected, setAnaly
     const [truncatedTimestamp, setTruncatedTimestamp] = useState(0);
 
     const [startTime, setStartTime] = useState(0);
-
     const scrollableRef = useRef(null);
 
-    const handleQueryChange = useMemo(() => debounce(async (query: string) => {
-        if (!query) {
-            setQueryBackgroundColor("#f5f5f5")
-        } else {
+    const [openOasModal, setOpenOasModal] = useState(false);
+    const handleOpenModal = () => setOpenOasModal(true);
+    const handleCloseModal = () => setOpenOasModal(false);
+
+    const handleQueryChange = useMemo(
+      () =>
+        debounce(async (query: string) => {
+          if (!query) {
+            setQueryBackgroundColor("#f5f5f5");
+          } else {
             const data = await api.validateQuery(query);
             if (!data) {
-                return;
+              return;
             }
             if (data.valid) {
-                setQueryBackgroundColor("#d2fad2");
+              setQueryBackgroundColor("#d2fad2");
             } else {
-                setQueryBackgroundColor("#fad6dc");
+              setQueryBackgroundColor("#fad6dc");
             }
-        }
-    }, 500), []) as (query: string) => void;
+          }
+        }, 500),
+      []
+    ) as (query: string) => void;
 
     useEffect(() => {
         handleQueryChange(query);
@@ -93,7 +100,6 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({onTLSDetected, setAnaly
     const ws = useRef(null);
 
     const listEntry = useRef(null);
-
     const openWebSocket = (query: string, resetEntries: boolean) => {
         if (resetEntries) {
             setFocusedEntryId(null);
@@ -121,89 +127,90 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({onTLSDetected, setAnaly
     }
 
     if (ws.current) {
-        ws.current.onmessage = e => {
-            if (!e?.data) return;
-            const message = JSON.parse(e.data);
-            switch (message.messageType) {
-                case "entry":
-                    const entry = message.data;
-                    if (!focusedEntryId) setFocusedEntryId(entry.id.toString())
-                    const newEntries = [...entries, entry];
-                    if (newEntries.length === 10001) {
-                        setLeftOffTop(newEntries[0].entry.id);
-                        newEntries.shift();
-                        setNoMoreDataTop(false);
-                    }
-                    setEntries(newEntries);
-                    break
-                case "status":
-                    setTappingStatus(message.tappingStatus);
-                    break
-                case "analyzeStatus":
-                    if(setAnalyzeStatus)
-                        setAnalyzeStatus(message.analyzeStatus);
-                    break
-                case "outboundLink":
-                    onTLSDetected(message.Data.DstIP);
-                    break;
-                case "toast":
-                    toast[message.data.type](message.data.text, {
-                        position: "bottom-right",
-                        theme: "colored",
-                        autoClose: message.data.autoClose,
-                        hideProgressBar: false,
-                        closeOnClick: true,
-                        pauseOnHover: true,
-                        draggable: true,
-                        progress: undefined,
-                    });
-                    break;
-                case "queryMetadata":
-                    setQueriedCurrent(queriedCurrent + message.data.current);
-                    setQueriedTotal(message.data.total);
-                    setLeftOffBottom(message.data.leftOff);
-                    setTruncatedTimestamp(message.data.truncatedTimestamp);
-                    if (leftOffTop === null) {
-                        setLeftOffTop(message.data.leftOff - 1);
-                    }
-                    break;
-                case "startTime":
-                    setStartTime(message.data);
-                    break;
-                default:
-                    console.error(`unsupported websocket message type, Got: ${message.messageType}`)
+      ws.current.onmessage = (e) => {
+        if (!e?.data) return;
+        const message = JSON.parse(e.data);
+        switch (message.messageType) {
+          case "entry":
+            const entry = message.data;
+            if (!focusedEntryId) setFocusedEntryId(entry.id.toString());
+            const newEntries = [...entries, entry];
+            if (newEntries.length === 10001) {
+              setLeftOffTop(newEntries[0].entry.id);
+              newEntries.shift();
+              setNoMoreDataTop(false);
             }
+            setEntries(newEntries);
+            break;
+          case "status":
+            setTappingStatus(message.tappingStatus);
+            break;
+          case "analyzeStatus":
+            setAnalyzeStatus(message.analyzeStatus);
+            break;
+          case "outboundLink":
+            onTLSDetected(message.Data.DstIP);
+            break;
+          case "toast":
+            toast[message.data.type](message.data.text, {
+              position: "bottom-right",
+              theme: "colored",
+              autoClose: message.data.autoClose,
+              hideProgressBar: false,
+              closeOnClick: true,
+              pauseOnHover: true,
+              draggable: true,
+              progress: undefined,
+            });
+            break;
+          case "queryMetadata":
+            setQueriedCurrent(queriedCurrent + message.data.current);
+            setQueriedTotal(message.data.total);
+            setLeftOffBottom(message.data.leftOff);
+            setTruncatedTimestamp(message.data.truncatedTimestamp);
+            if (leftOffTop === null) {
+              setLeftOffTop(message.data.leftOff - 1);
+            }
+            break;
+          case "startTime":
+            setStartTime(message.data);
+            break;
+          default:
+            console.error(
+              `unsupported websocket message type, Got: ${message.messageType}`
+            );
         }
+      };
     }
 
     useEffect(() => {
-        (async () => {
-            openWebSocket("leftOff(-1)", true);
-            try{
-                const tapStatusResponse = await api.tapStatus();
-                setTappingStatus(tapStatusResponse);
-                if(setAnalyzeStatus) {
-                    const analyzeStatusResponse = await api.analyzeStatus();
-                    setAnalyzeStatus(analyzeStatusResponse);
+          (async () => {
+                openWebSocket("leftOff(-1)", true);
+                try{
+                    const tapStatusResponse = await api.tapStatus();
+                    setTappingStatus(tapStatusResponse);
+                    if(setAnalyzeStatus) {
+                        const analyzeStatusResponse = await api.analyzeStatus();
+                        setAnalyzeStatus(analyzeStatusResponse);
+                    }
+                } catch (error) {
+                    console.error(error);
                 }
-            } catch (error) {
-                console.error(error);
-            }
-        })()
-        // eslint-disable-next-line
-    }, []);
+            })()
+            // eslint-disable-next-line
+        }, []);
 
     const toggleConnection = () => {
-        ws.current.close();
-        if (wsConnection !== WsConnectionStatus.Connected) {
-            if (query) {
-                openWebSocket(`(${query}) and leftOff(-1)`, true);
-            } else {
-                openWebSocket(`leftOff(-1)`, true);
-            }
-            scrollableRef.current.jumpToBottom();
-            setIsSnappedToBottom(true);
-        }
+      ws.current.close();
+      if (wsConnection !== WsConnectionStatus.Connected) {
+          if (query) {
+              openWebSocket(`(${query}) and leftOff(-1)`, true);
+          } else {
+              openWebSocket(`leftOff(-1)`, true);
+          }
+          scrollableRef.current.jumpToBottom();
+          setIsSnappedToBottom(true);
+      }
     }
 
     const getConnectionStatusClass = (isContainer) => {
@@ -215,7 +222,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({onTLSDetected, setAnaly
                 return "redIndicator" + container;
         }
     }
-
+ 
     const getConnectionTitle = () => {
         switch (wsConnection) {
             case WsConnectionStatus.Connected:
@@ -235,17 +242,40 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({onTLSDetected, setAnaly
     return (
         <div className="TrafficPage">
             <div className="TrafficPageHeader">
-                <img className="playPauseIcon" style={{visibility: wsConnection === WsConnectionStatus.Connected ? "visible" : "hidden"}} alt="pause"
-                    src={pauseIcon} onClick={toggleConnection}/>
-                <img className="playPauseIcon" style={{position: "absolute", visibility: wsConnection === WsConnectionStatus.Connected ? "hidden" : "visible"}} alt="play"
-                    src={playIcon} onClick={toggleConnection}/>
-                <div className="connectionText">
-                    {getConnectionTitle()}
-                    <div className={"indicatorContainer " + getConnectionStatusClass(true)}>
-                        <div className={"indicator " + getConnectionStatusClass(false)}/>
-                    </div>
-                </div>
+              <div className="TrafficPageStreamStatus">
+                  <img className="playPauseIcon" style={{visibility: wsConnection === WsConnectionStatus.Connected ? "visible" : "hidden"}} alt="pause"
+                      src={pauseIcon} onClick={toggleConnection}/>
+                  <img className="playPauseIcon" style={{position: "absolute", visibility: wsConnection === WsConnectionStatus.Connected ? "hidden" : "visible"}} alt="play"
+                      src={playIcon} onClick={toggleConnection}/>
+                  <div className="connectionText">
+                      {getConnectionTitle()}
+                      <div className={"indicatorContainer " + getConnectionStatusClass(true)}>
+                          <div className={"indicator " + getConnectionStatusClass(false)}/>
+                      </div>
+                  </div>
+              </div>
+              {window["isOasEnabled"] && <div>
+                <Button
+                  type="submit"
+                  variant="contained"
+                  style={{
+                    margin: "2px 0px 0px 0px",
+                    backgroundColor: variables.blueColor,
+                    fontWeight: 600,
+                    borderRadius: "4px",
+                    color: "#fff",
+                    textTransform: "none",
+                  }}
+                  onClick={handleOpenModal}
+                >
+                  Show OAS
+                </Button>
+              </div>}
             </div>
+            {window["isOasEnabled"] && <OasModal
+              openModal={openOasModal}
+              handleCloseModal={handleCloseModal}
+            />}
             {<div className="TrafficPage-Container">
                 <div className="TrafficPage-ListContainer">
                     <Filters
@@ -281,7 +311,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({onTLSDetected, setAnaly
                     {focusedEntryId && <EntryDetailed/>}
                 </div>
             </div>}
-            {tappingStatus && <StatusBar/>}
+            {tappingStatus && !openOasModal && <StatusBar/>}
         </div>
-    )
+  );
 };
