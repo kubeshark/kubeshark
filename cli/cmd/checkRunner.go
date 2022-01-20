@@ -120,61 +120,61 @@ func checkAllResourcesExist(ctx context.Context, kubernetesProvider *kubernetes.
 	logger.Log.Infof("\nmizu-existence\n--------------------")
 
 	exist, err := kubernetesProvider.DoesNamespaceExist(ctx, config.Config.MizuResourcesNamespace)
-	allResourcesExists := checkResourceExist(config.Config.MizuResourcesNamespace, "namespace", exist, err)
+	allResourcesExist := checkResourceExist(config.Config.MizuResourcesNamespace, "namespace", exist, err)
 
 	exist, err = kubernetesProvider.DoesConfigMapExist(ctx, config.Config.MizuResourcesNamespace, kubernetes.ConfigMapName)
-	allResourcesExists = checkResourceExist(kubernetes.ConfigMapName, "config map", exist, err)
+	allResourcesExist = checkResourceExist(kubernetes.ConfigMapName, "config map", exist, err)
 
 	exist, err = kubernetesProvider.DoesServiceAccountExist(ctx, config.Config.MizuResourcesNamespace, kubernetes.ServiceAccountName)
-	allResourcesExists = checkResourceExist(kubernetes.ServiceAccountName, "service account", exist, err)
+	allResourcesExist = checkResourceExist(kubernetes.ServiceAccountName, "service account", exist, err)
 
 	if config.Config.IsNsRestrictedMode() {
 		exist, err = kubernetesProvider.DoesRoleExist(ctx, config.Config.MizuResourcesNamespace, kubernetes.RoleName)
-		allResourcesExists = checkResourceExist(kubernetes.RoleName, "role", exist, err)
+		allResourcesExist = checkResourceExist(kubernetes.RoleName, "role", exist, err)
 
 		exist, err = kubernetesProvider.DoesRoleBindingExist(ctx, config.Config.MizuResourcesNamespace, kubernetes.RoleBindingName)
-		allResourcesExists = checkResourceExist(kubernetes.RoleBindingName, "role binding", exist, err)
+		allResourcesExist = checkResourceExist(kubernetes.RoleBindingName, "role binding", exist, err)
 	} else {
 		exist, err = kubernetesProvider.DoesClusterRoleExist(ctx, kubernetes.ClusterRoleName)
-		allResourcesExists = checkResourceExist(kubernetes.ClusterRoleName, "cluster role", exist, err)
+		allResourcesExist = checkResourceExist(kubernetes.ClusterRoleName, "cluster role", exist, err)
 
 		exist, err = kubernetesProvider.DoesClusterRoleBindingExist(ctx, kubernetes.ClusterRoleBindingName)
-		allResourcesExists = checkResourceExist(kubernetes.ClusterRoleBindingName, "cluster role binding", exist, err)
+		allResourcesExist = checkResourceExist(kubernetes.ClusterRoleBindingName, "cluster role binding", exist, err)
 	}
 
 	exist, err = kubernetesProvider.DoesServiceExist(ctx, config.Config.MizuResourcesNamespace, kubernetes.ApiServerPodName)
-	allResourcesExists = checkResourceExist(kubernetes.ApiServerPodName, "service", exist, err)
+	allResourcesExist = checkResourceExist(kubernetes.ApiServerPodName, "service", exist, err)
 
 	if isInstallCommand {
-		allResourcesExists = checkInstallResourcesExist(ctx, kubernetesProvider)
+		allResourcesExist = checkInstallResourcesExist(ctx, kubernetesProvider)
 	} else {
-		allResourcesExists = checkTapResourcesExist(ctx, kubernetesProvider)
+		allResourcesExist = checkTapResourcesExist(ctx, kubernetesProvider)
 	}
 
-	return allResourcesExists
+	return allResourcesExist
 }
 
 func checkInstallResourcesExist(ctx context.Context, kubernetesProvider *kubernetes.Provider) bool {
 	exist, err := kubernetesProvider.DoesRoleExist(ctx, config.Config.MizuResourcesNamespace, kubernetes.DaemonRoleName)
-	installResourcesExists := checkResourceExist(kubernetes.DaemonRoleName, "role", exist, err)
+	installResourcesExist := checkResourceExist(kubernetes.DaemonRoleName, "role", exist, err)
 
 	exist, err = kubernetesProvider.DoesRoleBindingExist(ctx, config.Config.MizuResourcesNamespace, kubernetes.DaemonRoleBindingName)
-	installResourcesExists = checkResourceExist(kubernetes.DaemonRoleBindingName, "role binding", exist, err)
+	installResourcesExist = checkResourceExist(kubernetes.DaemonRoleBindingName, "role binding", exist, err)
 
 	exist, err = kubernetesProvider.DoesPersistentVolumeClaimExist(ctx, config.Config.MizuResourcesNamespace, kubernetes.PersistentVolumeClaimName)
-	installResourcesExists = checkResourceExist(kubernetes.PersistentVolumeClaimName, "persistent volume claim", exist, err)
+	installResourcesExist = checkResourceExist(kubernetes.PersistentVolumeClaimName, "persistent volume claim", exist, err)
 
 	exist, err = kubernetesProvider.DoesDeploymentExist(ctx, config.Config.MizuResourcesNamespace, kubernetes.ApiServerPodName)
-	installResourcesExists = checkResourceExist(kubernetes.ApiServerPodName, "deployment", exist, err)
+	installResourcesExist = checkResourceExist(kubernetes.ApiServerPodName, "deployment", exist, err)
 
-	return installResourcesExists
+	return installResourcesExist
 }
 
 func checkTapResourcesExist(ctx context.Context, kubernetesProvider *kubernetes.Provider) bool {
 	exist, err := kubernetesProvider.DoesPodExist(ctx, config.Config.MizuResourcesNamespace, kubernetes.ApiServerPodName)
-	tapResourcesExists := checkResourceExist(kubernetes.ApiServerPodName, "pod", exist, err)
+	tapResourcesExist := checkResourceExist(kubernetes.ApiServerPodName, "pod", exist, err)
 
-	return tapResourcesExists
+	return tapResourcesExist
 }
 
 func checkResourceExist(resourceName string, resourceType string, exist bool, err error) bool {
