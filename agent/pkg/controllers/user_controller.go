@@ -14,7 +14,7 @@ func Login(c *gin.Context) {
 		c.AbortWithStatusJSON(401, gin.H{"error": "bad login"})
 	} else {
 		c.SetSameSite(http.SameSiteLaxMode)
-		c.SetCookie("x-session-token", *token, 3600, "/", "", false, false)
+		c.SetCookie("x-session-token", *token, 3600, "/", "", false, true)
 		c.JSON(200, "")
 	}
 }
@@ -35,7 +35,7 @@ func Logout(c *gin.Context) {
 	if err = providers.Logout(token, c.Request.Context()); err != nil {
 		c.AbortWithStatusJSON(500, gin.H{"error": "error occured while logging out, the session might still be valid"})
 	} else {
-		c.SetCookie("x-session-token", "", -1, "/", "", false, false)
+		c.SetCookie("x-session-token", "", -1, "/", "", false, true)
 		c.JSON(200, "")
 	}
 }
@@ -61,7 +61,7 @@ func Register(c *gin.Context) {
 		}
 	} else {
 		c.SetSameSite(http.SameSiteLaxMode)
-		c.SetCookie("x-session-token", *token, 3600, "/", "", false, false)
+		c.SetCookie("x-session-token", *token, 3600, "/", "", false, true)
 		c.JSON(200, "")
 	}
 }
