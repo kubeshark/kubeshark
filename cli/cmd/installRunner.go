@@ -46,7 +46,8 @@ func runMizuInstall() {
 
 	if err = resources.CreateInstallMizuResources(ctx, kubernetesProvider, serializedValidationRules,
 		serializedContract, serializedMizuConfig, config.Config.IsNsRestrictedMode(),
-		config.Config.MizuResourcesNamespace, config.Config.AgentImage(true), config.Config.BasenineImage,
+    config.Config.MizuResourcesNamespace, config.Config.AgentImage(true), config.Config.BasenineImage,
+		config.Config.KratosImage,
 		nil, defaultMaxEntriesDBSizeBytes, defaultResources, config.Config.ImagePullPolicy(),
 		config.Config.LogLevel(), false); err != nil {
 		var statusError *k8serrors.StatusError

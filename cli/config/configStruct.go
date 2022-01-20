@@ -33,6 +33,7 @@ type ConfigStruct struct {
 	Config                 configStructs.ConfigConfig  `yaml:"config,omitempty"`
 	AgentImageStr          string                      `yaml:"agent-image,omitempty" readonly:""`
 	BasenineImage          string                      `yaml:"basenine-image,omitempty" readonly:""`
+	KratosImage            string                      `yaml:"kratos-image,omitempty" readonly:""`
 	ImagePullPolicyStr     string                      `yaml:"image-pull-policy" default:"Always"`
 	MizuResourcesNamespace string                      `yaml:"mizu-resources-namespace" default:"mizu"`
 	Telemetry              bool                        `yaml:"telemetry" default:"true"`
@@ -55,6 +56,7 @@ func (config *ConfigStruct) validate() error {
 
 func (config *ConfigStruct) SetDefaults() {
 	config.BasenineImage = fmt.Sprintf("%s:%s", shared.BasenineImageRepo, shared.BasenineImageTag)
+	config.KratosImage = shared.KratosImageDefault
 	config.ConfigFilePath = path.Join(mizu.GetMizuFolderPath(), "config.yaml")
 }
 
