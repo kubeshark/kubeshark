@@ -19,6 +19,7 @@ import focusedEntryIdAtom from "../recoil/focusedEntryId";
 import websocketConnectionAtom, {WsConnectionStatus} from "../recoil/wsConnection";
 import queryAtom from "../recoil/query";
 import OasModal from "./OasModal/OasModal";
+import {useCommonStyles} from "../helpers/commonStyle"
 
 const useLayoutStyles = makeStyles(() => ({
   details: {
@@ -43,11 +44,13 @@ const useLayoutStyles = makeStyles(() => ({
 interface TrafficPageProps {
   setAnalyzeStatus?: (status: any) => void;
   onTLSDetected: (destAddress: string) => void;
+  setOpenServiceMapModal?: (open: boolean) => void;
 }
 
 const api = Api.getInstance();
 
-export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus,onTLSDetected}) => {
+export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus,onTLSDetected, setOpenServiceMapModal}) => {
+    const commonClasses = useCommonStyles();
     const classes = useLayoutStyles();
     const [tappingStatus, setTappingStatus] = useRecoilState(tappingStatusAtom);
     const [entries, setEntries] = useRecoilState(entriesAtom);
@@ -239,79 +242,84 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus,onTLSD
         }
     }
 
-    return (
-        <div className="TrafficPage">
-            <div className="TrafficPageHeader">
-              <div className="TrafficPageStreamStatus">
-                  <img className="playPauseIcon" style={{visibility: wsConnection === WsConnectionStatus.Connected ? "visible" : "hidden"}} alt="pause"
-                      src={pauseIcon} onClick={toggleConnection}/>
-                  <img className="playPauseIcon" style={{position: "absolute", visibility: wsConnection === WsConnectionStatus.Connected ? "hidden" : "visible"}} alt="play"
-                      src={playIcon} onClick={toggleConnection}/>
-                  <div className="connectionText">
-                      {getConnectionTitle()}
-                      <div className={"indicatorContainer " + getConnectionStatusClass(true)}>
-                          <div className={"indicator " + getConnectionStatusClass(false)}/>
-                      </div>
-                  </div>
-              </div>
-              {window["isOasEnabled"] && <div>
-                <Button
-                  type="submit"
-                  variant="contained"
-                  style={{
-                    margin: "2px 0px 0px 0px",
-                    backgroundColor: variables.blueColor,
-                    fontWeight: 600,
-                    borderRadius: "4px",
-                    color: "#fff",
-                    textTransform: "none",
-                  }}
-                  onClick={handleOpenModal}
-                >
-                  Show OAS
-                </Button>
-              </div>}
+    const openServiceMapModalDebounce = debounce(() => {
+        setOpenServiceMapModal(true)
+    }, 500);
+
+  return (
+    <div className="TrafficPage">
+      <div className="TrafficPageHeader">
+        <div className="TrafficPageStreamStatus">
+          <img className="playPauseIcon" style={{ visibility: wsConnection === WsConnectionStatus.Connected ? "visible" : "hidden" }} alt="pause"
+            src={pauseIcon} onClick={toggleConnection} />
+          <img className="playPauseIcon" style={{ position: "absolute", visibility: wsConnection === WsConnectionStatus.Connected ? "hidden" : "visible" }} alt="play"
+            src={playIcon} onClick={toggleConnection} />
+          <div className="connectionText">
+            {getConnectionTitle()}
+            <div className={"indicatorContainer " + getConnectionStatusClass(true)}>
+              <div className={"indicator " + getConnectionStatusClass(false)} />
             </div>
-            {window["isOasEnabled"] && <OasModal
-              openModal={openOasModal}
-              handleCloseModal={handleCloseModal}
-            />}
-            {<div className="TrafficPage-Container">
-                <div className="TrafficPage-ListContainer">
-                    <Filters
-                        backgroundColor={queryBackgroundColor}
-                        ws={ws.current}
-                        openWebSocket={openWebSocket}
-                    />
-                    <div className={styles.container}>
-                        <EntriesList
-                            listEntryREF={listEntry}
-                            onSnapBrokenEvent={onSnapBrokenEvent}
-                            isSnappedToBottom={isSnappedToBottom}
-                            setIsSnappedToBottom={setIsSnappedToBottom}
-                            queriedCurrent={queriedCurrent}
-                            setQueriedCurrent={setQueriedCurrent}
-                            queriedTotal={queriedTotal}
-                            setQueriedTotal={setQueriedTotal}
-                            startTime={startTime}
-                            noMoreDataTop={noMoreDataTop}
-                            setNoMoreDataTop={setNoMoreDataTop}
-                            leftOffTop={leftOffTop}
-                            setLeftOffTop={setLeftOffTop}
-                            ws={ws.current}
-                            openWebSocket={openWebSocket}
-                            leftOffBottom={leftOffBottom}
-                            truncatedTimestamp={truncatedTimestamp}
-                            setTruncatedTimestamp={setTruncatedTimestamp}
-                            scrollableRef={scrollableRef}
-                        />
-                    </div>
-                </div>
-                <div className={classes.details}>
-                    {focusedEntryId && <EntryDetailed/>}
-                </div>
-            </div>}
-            {tappingStatus && !openOasModal && <StatusBar/>}
+          </div>
         </div>
+        <div style={{ display: 'flex' }}>
+          {window["isOasEnabled"] && <Button
+            type="submit"
+            variant="contained"
+            className={commonClasses.button}
+            style={{ marginRight: 25 }}
+            onClick={handleOpenModal}
+          >
+            Show OAS
+          </Button>}
+          {window["isServiceMapEnabled"] && <Button
+            variant="contained"
+            className={commonClasses.button}
+            onClick={openServiceMapModalDebounce}
+          >
+            Service Map
+          </Button>}
+        </div>
+      </div>
+      {window["isOasEnabled"] && <OasModal
+        openModal={openOasModal}
+        handleCloseModal={handleCloseModal}
+      />}
+      {<div className="TrafficPage-Container">
+        <div className="TrafficPage-ListContainer">
+          <Filters
+            backgroundColor={queryBackgroundColor}
+            ws={ws.current}
+            openWebSocket={openWebSocket}
+          />
+          <div className={styles.container}>
+            <EntriesList
+              listEntryREF={listEntry}
+              onSnapBrokenEvent={onSnapBrokenEvent}
+              isSnappedToBottom={isSnappedToBottom}
+              setIsSnappedToBottom={setIsSnappedToBottom}
+              queriedCurrent={queriedCurrent}
+              setQueriedCurrent={setQueriedCurrent}
+              queriedTotal={queriedTotal}
+              setQueriedTotal={setQueriedTotal}
+              startTime={startTime}
+              noMoreDataTop={noMoreDataTop}
+              setNoMoreDataTop={setNoMoreDataTop}
+              leftOffTop={leftOffTop}
+              setLeftOffTop={setLeftOffTop}
+              ws={ws.current}
+              openWebSocket={openWebSocket}
+              leftOffBottom={leftOffBottom}
+              truncatedTimestamp={truncatedTimestamp}
+              setTruncatedTimestamp={setTruncatedTimestamp}
+              scrollableRef={scrollableRef}
+            />
+          </div>
+        </div>
+        <div className={classes.details}>
+          {focusedEntryId && <EntryDetailed />}
+        </div>
+      </div>}
+      {tappingStatus && !openOasModal && <StatusBar />}
+    </div>
   );
 };
