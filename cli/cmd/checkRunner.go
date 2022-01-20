@@ -92,8 +92,8 @@ func checkKubernetesVersion(kubernetesVersion *semver.SemVersion) bool {
 		logger.Log.Errorf("%v not running the minimum Kubernetes API version, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), err)
 		return false
 	}
-	logger.Log.Infof("%v is running the minimum Kubernetes API version", fmt.Sprintf(uiUtils.Green, "√"))
 
+	logger.Log.Infof("%v is running the minimum Kubernetes API version", fmt.Sprintf(uiUtils.Green, "√"))
 	return true
 }
 
