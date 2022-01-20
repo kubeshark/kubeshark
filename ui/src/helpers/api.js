@@ -22,8 +22,6 @@ export default class Api {
     }
 
     constructor() {
-        this.token = localStorage.getItem("token");
-
         this.client = this.getAxiosClient();
         this.source = null;
     }
@@ -128,7 +126,6 @@ export default class Api {
 
         try {
             const response = await this.client.post(`/user/register`, form);
-            this.persistToken(response.data.token);
             return response;
         } catch (e) {
             if (e.response.status === 400) {
@@ -149,31 +146,17 @@ export default class Api {
         form.append('password', password);
 
         const response = await this.client.post(`/user/login`, form);
-        if (response.status >= 200 && response.status < 300) {
-            this.persistToken(response.data.token);
-        }
 
         return response;
     }
 
-    persistToken = (token) => {
-        this.token = token;
-        this.client = this.getAxiosClient();
-        localStorage.setItem('token', token);
-    }
-
     logout = async () => {
         await this.client.post(`/user/logout`);
-        this.persistToken(null);
     }
 
     getAxiosClient = () => {
         const headers = {
             Accept: "application/json"
-        }
-
-        if (this.token) {
-            headers['x-session-token'] = `${this.token}`; // we use `x-session-token` instead of `Authorization` because the latter is reserved by kubectl proxy, making mizu view not work
         }
         return axios.create({
             baseURL: apiURL,
