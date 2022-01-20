@@ -22,7 +22,7 @@ func runMizuCheck() {
 
 	var isInstallCommand bool
 	if checkPassed {
-		checkPassed, isInstallCommand = checkIfInstallCommand(ctx, kubernetesProvider)
+		checkPassed, isInstallCommand = validateCommand(ctx, kubernetesProvider)
 	}
 
 	if checkPassed {
@@ -70,17 +70,17 @@ func checkKubernetesApi() (*kubernetes.Provider, *semver.SemVersion, bool) {
 	return kubernetesProvider, kubernetesVersion, true
 }
 
-func checkIfInstallCommand(ctx context.Context, kubernetesProvider *kubernetes.Provider) (bool, bool) {
+func validateCommand(ctx context.Context, kubernetesProvider *kubernetes.Provider) (bool, bool) {
 	logger.Log.Infof("\nvalidate-mizu-command\n--------------------")
 
 	if exist, err := kubernetesProvider.DoesDeploymentExist(ctx, config.Config.MizuResourcesNamespace, kubernetes.ApiServerPodName); err != nil {
 		logger.Log.Errorf("%v can't validate mizu command, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), err)
 		return false, false
 	} else if exist {
-		logger.Log.Infof("%v mizu running install command", fmt.Sprintf(uiUtils.Green, "√"))
+		logger.Log.Infof("%v mizu running with install command", fmt.Sprintf(uiUtils.Green, "√"))
 		return true, true
 	} else {
-		logger.Log.Infof("%v mizu running tap command", fmt.Sprintf(uiUtils.Green, "√"))
+		logger.Log.Infof("%v mizu running with tap command", fmt.Sprintf(uiUtils.Green, "√"))
 		return true, false
 	}
 }
