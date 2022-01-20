@@ -7,7 +7,7 @@ SERVER_NAME=mizu
 [ "${STANDALONE}" == "true" ] && MODE=standalone || MODE=basic
 GIT_BRANCH=$(git branch | grep \* | cut -d ' ' -f2 | tr '[:upper:]' '[:lower:]')
 
-DOCKER_REPO=$REPOSITORY/$SERVER_NAME/$MODE/$GIT_BRANCH
+DOCKER_REPO=$REPOSITORY/$SERVER_NAME-$MODE/$GIT_BRANCH
 SEM_VER=${SEM_VER=0.0.0}
 
 DOCKER_TAGGED_BUILDS=("$DOCKER_REPO:latest" "$DOCKER_REPO:$SEM_VER")

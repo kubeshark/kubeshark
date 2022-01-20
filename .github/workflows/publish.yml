@@ -53,7 +53,7 @@ jobs:
     steps:
       - name: Get base image name
         shell: bash
-        run: echo "##[set-output name=image;]$(echo gcr.io/up9-docker-hub/mizu/basic/${GITHUB_REF#refs/heads/})"
+        run: echo "##[set-output name=image;]$(echo gcr.io/up9-docker-hub/mizu-basic/${GITHUB_REF#refs/heads/})"
         id: base_image_step
       - name: Docker meta
         id: meta
@@ -88,7 +88,7 @@ jobs:
     steps:
       - name: Get base image name
         shell: bash
-        run: echo "##[set-output name=image;]$(echo gcr.io/up9-docker-hub/mizu/standalone/${GITHUB_REF#refs/heads/})"
+        run: echo "##[set-output name=image;]$(echo gcr.io/up9-docker-hub/mizu-standalone/${GITHUB_REF#refs/heads/})"
         id: base_image_step
       - name: Docker meta
         id: meta

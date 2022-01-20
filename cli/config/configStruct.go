@@ -20,8 +20,8 @@ const (
 )
 
 var (
-	DefaultAgentImage           = fmt.Sprintf("gcr.io/up9-docker-hub/mizu/basic/%s:%s", mizu.Branch, mizu.SemVer)
-	DefaultStandaloneAgentImage = fmt.Sprintf("gcr.io/up9-docker-hub/mizu/standalone/%s:%s", mizu.Branch, mizu.SemVer)
+	DefaultAgentImage           = fmt.Sprintf("gcr.io/up9-docker-hub/mizu-basic/%s:%s", mizu.Branch, mizu.SemVer)
+	DefaultStandaloneAgentImage = fmt.Sprintf("gcr.io/up9-docker-hub/mizu-standalone/%s:%s", mizu.Branch, mizu.SemVer)
 )
 
 type ConfigStruct struct {
