@@ -235,8 +235,8 @@ func checkIsHTTP2ServerStream(b *bufio.Reader) (bool, error) {
 		return false, err
 	}
 
-	// If response starts with this text, it is HTTP/1.x
-	if bytes.Compare(buf, []byte("HTTP/1.0 ")) == 0 || bytes.Compare(buf, []byte("HTTP/1.1 ")) == 0 {
+	// If response starts with HTTP/1. then it's not HTTP/2
+	if bytes.HasPrefix(buf, []byte("HTTP/1.")) {
 		return false, nil
 	}
 

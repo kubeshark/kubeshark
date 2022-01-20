@@ -26,6 +26,21 @@ export default class Api {
         this.source = null;
     }
 
+    serviceMapStatus = async () => {
+        const response = await this.client.get("/servicemap/status");
+        return response.data;
+    }
+
+    serviceMapData = async () => {
+        const response = await this.client.get(`/servicemap/get`);
+        return response.data;
+    }
+
+    serviceMapReset = async () => {
+        const response = await this.client.get(`/servicemap/reset`);
+        return response.data;
+    }
+
     tapStatus = async () => {
         const response = await this.client.get("/status/tap");
         return response.data;
