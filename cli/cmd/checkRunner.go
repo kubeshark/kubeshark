@@ -128,9 +128,6 @@ func checkAllResourcesExist(ctx context.Context, kubernetesProvider *kubernetes.
 	exist, err = kubernetesProvider.DoesServiceAccountExist(ctx, config.Config.MizuResourcesNamespace, kubernetes.ServiceAccountName)
 	allResourcesExists = checkResourceExist(kubernetes.ServiceAccountName, "service account", exist, err)
 
-	exist, err = kubernetesProvider.DoesServiceExist(ctx, config.Config.MizuResourcesNamespace, kubernetes.ApiServerPodName)
-	allResourcesExists = checkResourceExist(kubernetes.ApiServerPodName, "service", exist, err)
-
 	if config.Config.IsNsRestrictedMode() {
 		exist, err = kubernetesProvider.DoesRoleExist(ctx, config.Config.MizuResourcesNamespace, kubernetes.RoleName)
 		allResourcesExists = checkResourceExist(kubernetes.RoleName, "role", exist, err)
@@ -145,8 +142,13 @@ func checkAllResourcesExist(ctx context.Context, kubernetesProvider *kubernetes.
 		allResourcesExists = checkResourceExist(kubernetes.ClusterRoleBindingName, "cluster role binding", exist, err)
 	}
 
+	exist, err = kubernetesProvider.DoesServiceExist(ctx, config.Config.MizuResourcesNamespace, kubernetes.ApiServerPodName)
+	allResourcesExists = checkResourceExist(kubernetes.ApiServerPodName, "service", exist, err)
+
 	if isInstallCommand {
 		allResourcesExists = checkInstallResourcesExist(ctx, kubernetesProvider)
+	} else {
+		allResourcesExists = checkTapResourcesExist(ctx, kubernetesProvider)
 	}
 
 	return allResourcesExists
@@ -166,6 +168,13 @@ func checkInstallResourcesExist(ctx context.Context, kubernetesProvider *kuberne
 	installResourcesExists = checkResourceExist(kubernetes.ApiServerPodName, "deployment", exist, err)
 
 	return installResourcesExists
+}
+
+func checkTapResourcesExist(ctx context.Context, kubernetesProvider *kubernetes.Provider) bool {
+	exist, err := kubernetesProvider.DoesPodExist(ctx, config.Config.MizuResourcesNamespace, kubernetes.ApiServerPodName)
+	tapResourcesExists := checkResourceExist(kubernetes.ApiServerPodName, "pod", exist, err)
+
+	return tapResourcesExists
 }
 
 func checkResourceExist(resourceName string, resourceType string, exist bool, err error) bool {
