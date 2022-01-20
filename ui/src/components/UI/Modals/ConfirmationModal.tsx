@@ -9,7 +9,6 @@ import {useCommonStyles} from "../../../helpers/commonStyle";
 
 interface ConfirmationModalProps {
     title?: string;
-    
     isOpen: boolean;
     onClose: () => void;
     onConfirm: () => void;
@@ -22,16 +21,21 @@ interface ConfirmationModalProps {
     titleColor?: string;
     img?: ReactElement;
     isLoading?: boolean;
+    className?: any;
 }
 
-const ConfirmationModal: React.FC<ConfirmationModalProps> = observer(({title, isOpen, onClose, onConfirm, confirmButtonText, closeButtonText, subContent, confirmDisabled = false, isWide, confirmButtonColor, titleColor, img, isLoading,children}) => {
+const ConfirmationModal: React.FC<ConfirmationModalProps> = observer(({title, isOpen, onClose, onConfirm, confirmButtonText,
+                                                                        closeButtonText, subContent, confirmDisabled = false, isWide,
+                                                                        confirmButtonColor, titleColor, img, isLoading,children,
+                                                                        className}) => {
     const classes = useCommonStyles();
     const confirmStyle = {width: 100, marginLeft: 20}
     return (
-        <CustomModal open={isOpen} onClose={onClose} disableBackdropClick={true} isWide={isWide}>
+        <CustomModal open={isOpen} onClose={onClose} disableBackdropClick={true} isWide={isWide} className={className}>
             <div className="confirmationHeader">
                 <div className="confirmationTitle" style={titleColor ? {color: titleColor} : {}}>{title ?? "CONFIRMATION"}</div>
                 <img src={iconClose} onClick={onClose} alt="close"/>
+                
             </div>
             <div className="confirmationText" style={img ? {display: "flex", alignItems: "center"} : {}}>
                 {img && <div style={{paddingRight: 20}}>

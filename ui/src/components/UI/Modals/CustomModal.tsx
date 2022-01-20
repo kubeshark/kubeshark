@@ -43,15 +43,21 @@ const CustomModal: React.FunctionComponent<CustomModalProps> = ({ open = false, 
         onClose();
     }
 
-    return <Modal disableEnforceFocus open={open} onClose={(event, reason) => onModalClose(reason)}  className={`${classes.modal} ${className ?  className : ''}`}>
-        <div className={`${classes.modalContents} ${globals}`} >
-            <Fade in={open}>
-                <Box>
-                    {children}
-                </Box>
-            </Fade>
-        </div>
-    </Modal>
+    return <Modal disableEnforceFocus open={open} onClose={(event, reason) => onModalClose(reason)}
+                  className={`${classes.modal}`}     
+                  closeAfterTransition
+                  BackdropComponent={Backdrop}
+                  BackdropProps={{
+                      timeout: 500,
+                  }}>
+                <div className={`${classes.modalContents} ${globals} ${className ?  className : ''}`} >
+                    <Fade in={open}>
+                        <Box>
+                            {children}
+                        </Box>
+                    </Fade>
+                </div>
+            </Modal>
 }
 
 export default CustomModal;
