@@ -7,7 +7,7 @@ import {ToastContainer} from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
 import {RecoilRoot} from "recoil";
 
-if (window['isEnt'] == undefined) {
+if (window['isEnt'] === undefined) {
   window['isEnt'] = true;
   window['isOasEnabled'] = true;
 }
