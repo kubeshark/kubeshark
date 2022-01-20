@@ -15,7 +15,6 @@ import { ServiceMapModal } from './components/ServiceMapModal/ServiceMapModal';
 
 const api = Api.getInstance();
 
-
 const EntApp: React.FC = () => {
 
     const [isLoading, setIsLoading] = useState(true);
