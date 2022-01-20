@@ -66,7 +66,7 @@ func handleHTTP2Stream(http2Assembler *Http2Assembler, tcpID *api.TcpID, superTi
 			streamID,
 			"HTTP2",
 		)
-		item = reqResMatcher.registerRequest(ident, &messageHTTP1, superTimer.CaptureTime)
+		item = reqResMatcher.registerRequest(ident, &messageHTTP1, superTimer.CaptureTime, messageHTTP1.ProtoMinor)
 		if item != nil {
 			item.ConnectionInfo = &api.ConnectionInfo{
 				ClientIP:   tcpID.SrcIP,
@@ -86,7 +86,7 @@ func handleHTTP2Stream(http2Assembler *Http2Assembler, tcpID *api.TcpID, superTi
 			streamID,
 			"HTTP2",
 		)
-		item = reqResMatcher.registerResponse(ident, &messageHTTP1, superTimer.CaptureTime)
+		item = reqResMatcher.registerResponse(ident, &messageHTTP1, superTimer.CaptureTime, messageHTTP1.ProtoMinor)
 		if item != nil {
 			item.ConnectionInfo = &api.ConnectionInfo{
 				ClientIP:   tcpID.DstIP,
@@ -135,7 +135,7 @@ func handleHTTP1ClientStream(b *bufio.Reader, tcpID *api.TcpID, counterPair *api
 		counterPair.Request,
 		"HTTP1",
 	)
-	item := reqResMatcher.registerRequest(ident, req, superTimer.CaptureTime)
+	item := reqResMatcher.registerRequest(ident, req, superTimer.CaptureTime, req.ProtoMinor)
 	if item != nil {
 		item.ConnectionInfo = &api.ConnectionInfo{
 			ClientIP:   tcpID.SrcIP,
@@ -175,7 +175,7 @@ func handleHTTP1ServerStream(b *bufio.Reader, tcpID *api.TcpID, counterPair *api
 		counterPair.Response,
 		"HTTP1",
 	)
-	item := reqResMatcher.registerResponse(ident, res, superTimer.CaptureTime)
+	item := reqResMatcher.registerResponse(ident, res, superTimer.CaptureTime, res.ProtoMinor)
 	if item != nil {
 		item.ConnectionInfo = &api.ConnectionInfo{
 			ClientIP:   tcpID.DstIP,
