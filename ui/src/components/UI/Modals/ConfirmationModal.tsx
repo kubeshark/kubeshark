@@ -9,7 +9,7 @@ import {useCommonStyles} from "../../../helpers/commonStyle";
 
 interface ConfirmationModalProps {
     title?: string;
-    content: any;
+    
     isOpen: boolean;
     onClose: () => void;
     onConfirm: () => void;
@@ -24,7 +24,7 @@ interface ConfirmationModalProps {
     isLoading?: boolean;
 }
 
-const ConfirmationModal: React.FC<ConfirmationModalProps> = observer(({title, content, isOpen, onClose, onConfirm, confirmButtonText, closeButtonText, subContent, confirmDisabled = false, isWide, confirmButtonColor, titleColor, img, isLoading}) => {
+const ConfirmationModal: React.FC<ConfirmationModalProps> = observer(({title, isOpen, onClose, onConfirm, confirmButtonText, closeButtonText, subContent, confirmDisabled = false, isWide, confirmButtonColor, titleColor, img, isLoading,children}) => {
     const classes = useCommonStyles();
     const confirmStyle = {width: 100, marginLeft: 20}
     return (
@@ -38,7 +38,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = observer(({title, co
                     {img}
                 </div>}
                 <div>
-                    {content}
+                    {children}
                     {subContent && <div style={{marginTop: 10, color: "#FFFFFF80"}}>
                         {subContent}
                     </div>}

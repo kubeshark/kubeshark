@@ -36,4 +36,17 @@ export const useCommonStyles = makeStyles(() => ({
         fontSize: "14px",
         color: "#494677"
     },
+    modal :{
+        position: 'absolute',
+        top: '10%',
+        left: '50%',
+        transform: 'translate(-50%, 0%)',
+        width: '80vw',
+        bgcolor: 'background.paper',
+        borderRadius: '5px',
+        boxShadow: 24,
+        outline: "none",
+        p: 4,
+        color: '#000',
+    }
 }));

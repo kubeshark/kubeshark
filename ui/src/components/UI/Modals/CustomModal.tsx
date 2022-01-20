@@ -1,5 +1,7 @@
 import React from 'react';
-import { makeStyles, withStyles, Modal, Backdrop } from '@material-ui/core';
+import { makeStyles, withStyles, Modal, Backdrop, Fade, Box } from '@material-ui/core';
+import {useCommonStyles} from "../../../helpers/commonStyle";
+import { PropertiesTable } from 'redoc/typings/common-elements';
 
 const useStyles = makeStyles({
     modal: {
@@ -9,27 +11,14 @@ const useStyles = makeStyles({
     },
     modalContents: {
         borderRadius: "5px",
-        position: "relative",
+        
         outline: "none",
         minWidth: "300px",
         backgroundColor: "rgb(255, 255, 255)"
-    },
-    paddingModal: {
-        padding: "20px"
-    },
-    modalControl: {
-        width: "250px",
-        margin: "20px",
-    },
-    wideModal: {
-        width: "50vw",
-        maxWidth: 700,
-    },
-
-    modalButton: {
-        margin: "0 auto"
-    },
+    }
 });
+
+
 
 
 
@@ -43,8 +32,10 @@ export interface CustomModalProps {
     isWide? :boolean;
 }
 
-const CustomModal: React.FunctionComponent<CustomModalProps> = ({ open = false, onClose, disableBackdropClick = false, children, className, isPadding, isWide }) => {
+const CustomModal: React.FunctionComponent<CustomModalProps> = ({ open = false, onClose, disableBackdropClick = false, children, className}) => {
     const classes = useStyles({});
+    const globals = useCommonStyles().modal
+     
 
     const onModalClose = (reason) => {
         if(reason === 'backdropClick' && disableBackdropClick)
@@ -52,9 +43,13 @@ const CustomModal: React.FunctionComponent<CustomModalProps> = ({ open = false, 
         onClose();
     }
 
-    return <Modal disableEnforceFocus open={open} onClose={onModalClose} disableBackdropClick={disableBackdropClick} className={`${classes.modal} ${className ?  className : ''}`}>
-        <div className={`${classes.modalContents} ${isPadding ?  classes.paddingModal : ''} ${isWide ?  classes.wideModal : ''}`} >
-            {children}
+    return <Modal disableEnforceFocus open={open} onClose={(event, reason) => onModalClose(reason)}  className={`${classes.modal} ${className ?  className : ''}`}>
+        <div className={`${classes.modalContents} ${globals}`} >
+            <Fade in={open}>
+                <Box>
+                    {children}
+                </Box>
+            </Fade>
         </div>
     </Modal>
 }
