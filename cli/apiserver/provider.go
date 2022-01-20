@@ -36,6 +36,16 @@ func NewProvider(url string, retries int, timeout time.Duration) *Provider {
 	}
 }
 
+func NewProviderWithoutRetries(url string, timeout time.Duration) *Provider {
+	return &Provider{
+		url:     url,
+		retries: 1,
+		client: &http.Client{
+			Timeout: timeout,
+		},
+	}
+}
+
 func (provider *Provider) TestConnection() error {
 	retriesLeft := provider.retries
 	for retriesLeft > 0 {
