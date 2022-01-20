@@ -5,7 +5,7 @@ import {observer} from 'mobx-react-lite';
 import {Button} from "@material-ui/core";
 import './ConfirmationModal.sass';
 import spinner from "../../assets/spinner.svg";
-​
+
 interface ConfirmationModalProps {
     title?: string;
     content: any;
@@ -22,9 +22,9 @@ interface ConfirmationModalProps {
     img?: ReactElement;
     isLoading?: boolean;
 }
-​
+
 const ConfirmationModal: React.FC<ConfirmationModalProps> = observer(({title, content, isOpen, onClose, onConfirm, confirmButtonText, closeButtonText, subContent, confirmDisabled = false, isWide, confirmButtonColor, titleColor, img, isLoading}) => {
-​
+
     return (
         <CustomModal open={isOpen} onClose={onClose} disableBackdropClick={true} isWide={isWide}>
             <div className="confirmationHeader">
@@ -42,7 +42,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = observer(({title, co
                     </div>}
                 </div>
             </div>
-​
+
             <div className="confirmationActions">
                 <Button disabled={isLoading} style={{marginRight: 15}} variant="outlined" color="primary" size='large' onClick={onClose}>{closeButtonText ?? "CANCEL"}</Button>
                 <Button disabled={confirmDisabled || isLoading} color='primary' variant='contained' style={confirmButtonColor ? {backgroundColor: confirmButtonColor} : {}} onClick={onConfirm} size='large' endIcon={isLoading && <img src={spinner} alt="spinner"/>}>{confirmButtonText ?? "YES"}</Button>
@@ -50,5 +50,5 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = observer(({title, co
         </CustomModal>
     )
 });
-​
+
 export default ConfirmationModal;
