@@ -170,6 +170,7 @@ type ApiServerOptions struct {
 	PodName               string
 	PodImage              string
 	BasenineImage         string
+	KratosImage           string
 	ServiceAccountName    string
 	IsNamespaceRestricted bool
 	SyncEntriesConfig     *shared.SyncEntriesConfig
@@ -177,6 +178,7 @@ type ApiServerOptions struct {
 	Resources             shared.Resources
 	ImagePullPolicy       core.PullPolicy
 	LogLevel              logging.Level
+
 }
 
 func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, mountVolumeClaim bool, volumeClaimName string, createAuthContainer bool) (*core.Pod, error) {
@@ -306,7 +308,7 @@ func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, moun
 	if createAuthContainer {
 		containers = append(containers, core.Container{
 			Name:            "kratos",
-			Image:           "gcr.io/up9-docker-hub/mizu-kratos/stable:0.0.0",
+			Image:           opts.KratosImage,
 			ImagePullPolicy: opts.ImagePullPolicy,
 			VolumeMounts:    volumeMounts,
 			ReadinessProbe: &core.Probe{
