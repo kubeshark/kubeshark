@@ -24,7 +24,7 @@ Think TCPDump and Wireshark re-invented for Kubernetes.
 
 - Simple and powerful CLI
 - Monitoring network traffic in real-time. Supported protocols:
-  - [HTTP/1.1](https://datatracker.ietf.org/doc/html/rfc2616) (REST, etc.)
+  - [HTTP/1.x](https://datatracker.ietf.org/doc/html/rfc2616) (REST, GraphQL, SOAP, etc.)
   - [HTTP/2](https://datatracker.ietf.org/doc/html/rfc7540) (gRPC)
   - [AMQP](https://www.rabbitmq.com/amqp-0-9-1-reference.html) (RabbitMQ, Apache Qpid, etc.)
   - [Apache Kafka](https://kafka.apache.org/protocol)
