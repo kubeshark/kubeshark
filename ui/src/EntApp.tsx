@@ -11,6 +11,7 @@ import LoadingOverlay from "./components/LoadingOverlay";
 import AuthPageBase from './components/AuthPageBase';
 import entPageAtom, {Page} from "./recoil/entPage";
 import {useRecoilState} from "recoil";
+import { ServiceMapModal } from './components/ServiceMapModal/ServiceMapModal';
 
 const api = Api.getInstance();
 
@@ -23,6 +24,7 @@ const EntApp: React.FC = () => {
     const [addressesWithTLS, setAddressesWithTLS] = useState(new Set<string>());
     const [entPage, setEntPage] = useRecoilState(entPageAtom);
     const [isFirstLogin, setIsFirstLogin] = useState(false);
+    const [openServiceMapModal, setOpenServiceMapModal] = useState(false);
 
     const determinePage =  useCallback(async () => { // TODO: move to state management
         try {
@@ -60,7 +62,7 @@ const EntApp: React.FC = () => {
 
     switch (entPage) { // TODO: move to state management / proper routing
         case Page.Traffic:
-            pageComponent = <TrafficPage onTLSDetected={onTLSDetected}/>;
+            pageComponent = <TrafficPage onTLSDetected={onTLSDetected} setOpenServiceMapModal={setOpenServiceMapModal} />;
             break;
         case Page.Setup:
             pageComponent = <AuthPageBase><InstallPage onFirstLogin={() => setIsFirstLogin(true)}/></AuthPageBase>;
@@ -78,14 +80,19 @@ const EntApp: React.FC = () => {
 
     return (
         <div className="mizuApp">
-            {entPage === Page.Traffic && <EntHeader isFirstLogin={isFirstLogin} setIsFirstLogin={setIsFirstLogin}/>}
+            {entPage === Page.Traffic && <EntHeader isFirstLogin={isFirstLogin} setIsFirstLogin={setIsFirstLogin} />}
             {pageComponent}
             {entPage === Page.Traffic && <TLSWarning showTLSWarning={showTLSWarning}
-                        setShowTLSWarning={setShowTLSWarning}
-                        addressesWithTLS={addressesWithTLS}
-                        setAddressesWithTLS={setAddressesWithTLS}
-                        userDismissedTLSWarning={userDismissedTLSWarning}
-                        setUserDismissedTLSWarning={setUserDismissedTLSWarning}/>}
+                setShowTLSWarning={setShowTLSWarning}
+                addressesWithTLS={addressesWithTLS}
+                setAddressesWithTLS={setAddressesWithTLS}
+                userDismissedTLSWarning={userDismissedTLSWarning}
+                setUserDismissedTLSWarning={setUserDismissedTLSWarning} />}
+            {entPage === Page.Traffic && window["isServiceMapEnabled"] && <ServiceMapModal
+                isOpen={openServiceMapModal}
+                onOpen={() => setOpenServiceMapModal(true)}
+                onClose={() => setOpenServiceMapModal(false)}
+            />}
         </div>
     );
 }
