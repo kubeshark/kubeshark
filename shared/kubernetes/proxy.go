@@ -98,7 +98,7 @@ func NewPortForward(kubernetesProvider *Provider, namespace string, podName stri
 
 	forwarder, err := portforward.New(dialer, []string{fmt.Sprintf("%d:%d", localPort, shared.DefaultApiServerPort)}, stopChan, readyChan, out, errOut)
 	if err != nil {
-		return nil
+		return err
 	}
 	go func() {
 		err = forwarder.ForwardPorts() // this is blocking
