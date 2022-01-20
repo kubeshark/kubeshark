@@ -15,7 +15,7 @@ func Login(c *gin.Context) {
 	} else {
 		c.SetSameSite(http.SameSiteLaxMode)
 		c.SetCookie("x-session-token", *token, 3600, "/", "", false, false)
-		c.JSON(200, gin.H{"token": token})
+		c.JSON(200, "")
 	}
 }
 
@@ -62,6 +62,6 @@ func Register(c *gin.Context) {
 	} else {
 		c.SetSameSite(http.SameSiteLaxMode)
 		c.SetCookie("x-session-token", *token, 3600, "/", "", false, false)
-		c.JSON(200, gin.H{"token": token})
+		c.JSON(200, "")
 	}
 }
