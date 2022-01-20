@@ -16,6 +16,8 @@ export const Summary: React.FC<SummaryProps> = ({method, summary}) => {
             className={`${miscStyles.protocol} ${miscStyles.method}`}
             displayIconOnMouseOver={true}
             style={{whiteSpace: "nowrap"}}
+            flipped={true}
+            iconStyle={{zIndex:"5",position:"relative",right:"22px"}}
         >
             <span>
                 {method}
@@ -24,6 +26,8 @@ export const Summary: React.FC<SummaryProps> = ({method, summary}) => {
         {summary && <Queryable
             query={`summary == "${summary}"`}
             displayIconOnMouseOver={true}
+            flipped={true}
+            iconStyle={{zIndex:"5",position:"relative",right:"14px"}}
         >
             <div
                 className={`${styles.summary}`}
