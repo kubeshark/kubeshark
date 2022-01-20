@@ -1,50 +1,48 @@
 package middlewares
 
 import (
-	"errors"
 	"mizuserver/pkg/config"
 	"mizuserver/pkg/providers"
-	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/patrickmn/go-cache"
 	"github.com/up9inc/mizu/shared/logger"
 )
 
-const errorMessage = "unknown authentication error occured"
+const cachedValidTokensRetainmentTime = time.Minute * 1
+
+var cachedValidTokens = cache.New(cachedValidTokensRetainmentTime, cachedValidTokensRetainmentTime)
 
 func RequiresAuth() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// authentication is irrelevant for ephermeral mizu
+		// auth is irrelevant for ephermeral mizu
 		if !config.Config.StandaloneMode {
 			c.Next()
 			return
 		}
 
-		token, err := c.Cookie("x-session-token")
-		if err != nil {
-			if errors.Is(err, http.ErrNoCookie) {
-				c.AbortWithStatusJSON(401, gin.H{"error": "could not find session cookie"})
-			} else {
-				logger.Log.Errorf("error reading cookie %s", err)
-				c.AbortWithStatusJSON(500, gin.H{"error": errorMessage})
-			}
-
+		token := c.GetHeader("x-session-token")
+		if token == "" {
+			c.AbortWithStatusJSON(401, gin.H{"error": "token header is empty"})
 			return
 		}
 
-		if token == "" {
-			c.AbortWithStatusJSON(401, gin.H{"error": "token cookie is empty"})
+		if _, isTokenCached := cachedValidTokens.Get(token); isTokenCached {
+			c.Next()
 			return
 		}
 
 		if isTokenValid, err := providers.VerifyToken(token, c.Request.Context()); err != nil {
 			logger.Log.Errorf("error verifying token %s", err)
-			c.AbortWithStatusJSON(500, gin.H{"error": errorMessage})
+			c.AbortWithStatusJSON(401, gin.H{"error": "unknown auth error occured"})
 			return
 		} else if !isTokenValid {
 			c.AbortWithStatusJSON(401, gin.H{"error": "invalid token"})
 			return
 		}
+
+		cachedValidTokens.Set(token, true, cachedValidTokensRetainmentTime)
 
 		c.Next()
 	}
