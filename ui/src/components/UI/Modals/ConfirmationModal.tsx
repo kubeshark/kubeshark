@@ -5,6 +5,7 @@ import {observer} from 'mobx-react-lite';
 import {Button} from "@material-ui/core";
 import './ConfirmationModal.sass';
 import spinner from "../../assets/spinner.svg";
+import {useCommonStyles} from "../../../helpers/commonStyle";
 
 interface ConfirmationModalProps {
     title?: string;
@@ -24,7 +25,8 @@ interface ConfirmationModalProps {
 }
 
 const ConfirmationModal: React.FC<ConfirmationModalProps> = observer(({title, content, isOpen, onClose, onConfirm, confirmButtonText, closeButtonText, subContent, confirmDisabled = false, isWide, confirmButtonColor, titleColor, img, isLoading}) => {
-
+    const classes = useCommonStyles();
+    const confirmStyle = {width: 100, marginLeft: 20}
     return (
         <CustomModal open={isOpen} onClose={onClose} disableBackdropClick={true} isWide={isWide}>
             <div className="confirmationHeader">
@@ -44,8 +46,17 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = observer(({title, co
             </div>
 
             <div className="confirmationActions">
-                <Button disabled={isLoading} style={{marginRight: 15}} variant="outlined" color="primary" size='large' onClick={onClose}>{closeButtonText ?? "CANCEL"}</Button>
-                <Button disabled={confirmDisabled || isLoading} color='primary' variant='contained' style={confirmButtonColor ? {backgroundColor: confirmButtonColor} : {}} onClick={onConfirm} size='large' endIcon={isLoading && <img src={spinner} alt="spinner"/>}>{confirmButtonText ?? "YES"}</Button>
+                <Button disabled={isLoading} style={{width: 100}} className={classes.outlinedButton} size={"small"}
+                            variant='outlined' onClick={onClose}>{closeButtonText ?? "CANCEL"}
+                </Button>
+                <Button style={confirmButtonColor ? {backgroundColor: confirmButtonColor,...confirmStyle} : {...confirmStyle}} 
+                    className={classes.button} size={"small"}
+                    
+                    
+                    onClick={onConfirm} 
+                    disabled={confirmDisabled || isLoading} 
+                    endIcon={isLoading && <img src={spinner} alt="spinner"/>}>{confirmButtonText ?? "YES"}
+                </Button>
             </div>
         </CustomModal>
     )

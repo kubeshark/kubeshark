@@ -8,11 +8,11 @@ const useStyles = makeStyles({
         justifyContent: "center"
     },
     modalContents: {
-        borderRadius: "8px",
+        borderRadius: "5px",
         position: "relative",
         outline: "none",
         minWidth: "300px",
-        backgroundColor: "#171C30"
+        backgroundColor: "rgb(255, 255, 255)"
     },
     paddingModal: {
         padding: "20px"
@@ -31,11 +31,7 @@ const useStyles = makeStyles({
     },
 });
 
-const MyBackdrop = withStyles({
-    root: {
-        backgroundColor: '#090b14e6'
-    },
-})(Backdrop);
+
 
 export interface CustomModalProps {
     open: boolean;
@@ -50,7 +46,13 @@ export interface CustomModalProps {
 const CustomModal: React.FunctionComponent<CustomModalProps> = ({ open = false, onClose, disableBackdropClick = false, children, className, isPadding, isWide }) => {
     const classes = useStyles({});
 
-    return <Modal disableEnforceFocus open={open} onClose={onClose} disableBackdropClick={disableBackdropClick} className={`${classes.modal} ${className ?  className : ''}`} BackdropComponent={MyBackdrop}>
+    const onModalClose = (reason) => {
+        if(reason === 'backdropClick' && disableBackdropClick)
+            return;   
+        onClose();
+    }
+
+    return <Modal disableEnforceFocus open={open} onClose={onModalClose} disableBackdropClick={disableBackdropClick} className={`${classes.modal} ${className ?  className : ''}`}>
         <div className={`${classes.modalContents} ${isPadding ?  classes.paddingModal : ''} ${isWide ?  classes.wideModal : ''}`} >
             {children}
         </div>
