@@ -49,9 +49,6 @@ agent-debug: ## Build agent for debug.
 docker: ## Build and publish agent docker image.
 	$(MAKE) push-docker
 
-standalone-docker: ## Build and publish standalone agent docker image.
-	$(MAKE) push-standalone-docker
-
 push: push-docker push-cli ## Build and publish agent docker image & CLI.
 
 push-docker: ## Build and publish agent docker image.
@@ -60,15 +57,11 @@ push-docker: ## Build and publish agent docker image.
 
 push-standalone-docker: ## Build and publish standalone agent docker image.
 	@echo "publishing Docker standalone image .. "
-	devops/build-push-standalone-featurebranch.sh
+	STANDALONE=true devops/build-push-featurebranch.sh
 
 push-docker-debug:
 	@echo "publishing debug Docker image .. "
 	devops/build-push-featurebranch-debug.sh
-
-push-standalone-docker-debug:
-	@echo "publishing standalone debug Docker image .. "
-	devops/build-push-standalone-featurebranch-debug.sh
 
 build-docker-ci: ## Build agent docker image for CI.
 	@echo "building docker image for ci"
