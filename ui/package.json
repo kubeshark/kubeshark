@@ -14,7 +14,7 @@
     "@types/react": "^17.0.3",
     "@types/react-dom": "^17.0.3",
     "@uiw/react-textarea-code-editor": "^1.4.12",
-    "axios": "^0.21.1",
+    "axios": "^0.25.0",
     "core-js": "^3.20.2",
     "highlight.js": "^11.3.1",
     "json-beautify": "^1.1.1",
