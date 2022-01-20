@@ -89,7 +89,10 @@ func getRerouteHttpHandlerMizuStatic(proxyHandler http.Handler, mizuNamespace st
 func NewPortForward(kubernetesProvider *Provider, namespace string, podName string, localPort uint16, cancel context.CancelFunc) error {
 	logger.Log.Debugf("Starting proxy using port-forward method. namespace: [%v], service name: [%s], port: [%v]", namespace, podName, localPort)
 
-	dialer := getHttpDialer(kubernetesProvider, namespace, podName)
+	dialer, err := getHttpDialer(kubernetesProvider, namespace, podName)
+	if err != nil {
+		return err
+	}
 	stopChan, readyChan := make(chan struct{}, 1), make(chan struct{}, 1)
 	out, errOut := new(bytes.Buffer), new(bytes.Buffer)
 
@@ -100,7 +103,7 @@ func NewPortForward(kubernetesProvider *Provider, namespace string, podName stri
 	go func() {
 		err = forwarder.ForwardPorts() // this is blocking
 		if err != nil {
-			fmt.Printf("kubernetes port-forwarding error: %s", err)
+			logger.Log.Errorf("kubernetes port-forwarding error: %v", err)
 			cancel()
 		}
 	}()
@@ -108,14 +111,15 @@ func NewPortForward(kubernetesProvider *Provider, namespace string, podName stri
 }
 
 
-func getHttpDialer(kubernetesProvider *Provider, namespace string, podName string) httpstream.Dialer {
+func getHttpDialer(kubernetesProvider *Provider, namespace string, podName string) (httpstream.Dialer, error) {
 	roundTripper, upgrader, err := spdy.RoundTripperFor(&kubernetesProvider.clientConfig)
 	if err != nil {
-		panic(err)
+		logger.Log.Errorf("Error creating http dialer")
+		return nil, err
 	}
 	path := fmt.Sprintf("/api/v1/namespaces/%s/pods/%s/portforward", namespace, podName)
 	hostIP := strings.TrimLeft(kubernetesProvider.clientConfig.Host, "htps:/") // no need specify "t" twice
 	serverURL := url.URL{Scheme: "https", Path: path, Host: hostIP}
 
-	return spdy.NewDialer(upgrader, &http.Client{Transport: roundTripper}, http.MethodPost, &serverURL)
+	return spdy.NewDialer(upgrader, &http.Client{Transport: roundTripper}, http.MethodPost, &serverURL), nil
 }
