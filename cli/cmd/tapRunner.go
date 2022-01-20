@@ -23,7 +23,6 @@ import (
 	"github.com/up9inc/mizu/cli/config"
 	"github.com/up9inc/mizu/cli/config/configStructs"
 	"github.com/up9inc/mizu/cli/errormessage"
-	"github.com/up9inc/mizu/cli/mizu/fsUtils"
 	"github.com/up9inc/mizu/cli/uiUtils"
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/kubernetes"
@@ -418,18 +417,13 @@ func watchApiServerEvents(ctx context.Context, kubernetesProvider *kubernetes.Pr
 func postApiServerStarted(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc, err error) {
 	startProxyReportErrorIfAny(kubernetesProvider, cancel)
 
-	url := GetApiServerUrl()
-	if err := apiProvider.TestConnection(); err != nil {
-		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Couldn't connect to API server, for more info check logs at %s", fsUtils.GetLogFilePath()))
-		cancel()
-		return
-	}
 	options, _ := getMizuApiFilteringOptions()
 	if err = startTapperSyncer(ctx, cancel, kubernetesProvider, state.targetNamespaces, *options, state.startTime); err != nil {
 		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error starting mizu tapper syncer: %v", err))
 		cancel()
 	}
 
+	url := GetApiServerUrl()
 	logger.Log.Infof("Mizu is available at %s", url)
 	if !config.Config.HeadlessMode {
 		uiUtils.OpenBrowser(url)

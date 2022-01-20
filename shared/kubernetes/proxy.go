@@ -85,7 +85,6 @@ func getRerouteHttpHandlerMizuStatic(proxyHandler http.Handler, mizuNamespace st
 	})
 }
 
-
 func NewPortForward(kubernetesProvider *Provider, namespace string, podName string, localPort uint16, cancel context.CancelFunc) error {
 	logger.Log.Debugf("Starting proxy using port-forward method. namespace: [%v], service name: [%s], port: [%v]", namespace, podName, localPort)
 
@@ -93,6 +92,7 @@ func NewPortForward(kubernetesProvider *Provider, namespace string, podName stri
 	if err != nil {
 		return err
 	}
+
 	stopChan, readyChan := make(chan struct{}, 1), make(chan struct{}, 1)
 	out, errOut := new(bytes.Buffer), new(bytes.Buffer)
 
@@ -100,16 +100,16 @@ func NewPortForward(kubernetesProvider *Provider, namespace string, podName stri
 	if err != nil {
 		return err
 	}
+
 	go func() {
-		err = forwarder.ForwardPorts() // this is blocking
-		if err != nil {
+		if err = forwarder.ForwardPorts(); err != nil {
 			logger.Log.Errorf("kubernetes port-forwarding error: %v", err)
 			cancel()
 		}
 	}()
+
 	return nil
 }
-
 
 func getHttpDialer(kubernetesProvider *Provider, namespace string, podName string) (httpstream.Dialer, error) {
 	roundTripper, upgrader, err := spdy.RoundTripperFor(&kubernetesProvider.clientConfig)

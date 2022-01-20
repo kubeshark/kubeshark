@@ -32,9 +32,10 @@ func startProxyReportErrorIfAny(kubernetesProvider *kubernetes.Provider, cancel 
 		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error occured while running k8s proxy %v\n"+
 			"Try setting different port by using --%s", errormessage.FormatError(err), configStructs.GuiPortTapName))
 		cancel()
+		return
 	}
 
-	apiProvider = apiserver.NewProvider(GetApiServerUrl(), 3, time.Second) // This is happening after pod is running, so we don't need too many retries
+	apiProvider = apiserver.NewProvider(GetApiServerUrl(), 1, time.Second) // This is happening after pod is running, so we don't need too many retries
 	if err := apiProvider.TestConnection(); err != nil {
 		logger.Log.Debugf("Couldn't connect using proxy, stopping proxy and trying to create port-forward")
 		if err := httpServer.Shutdown(context.Background()); err != nil {
@@ -45,10 +46,14 @@ func startProxyReportErrorIfAny(kubernetesProvider *kubernetes.Provider, cancel 
 			logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error occured while running port forward %v\n"+
 				"Try setting different port by using --%s", errormessage.FormatError(err), configStructs.GuiPortTapName))
 			cancel()
+			return
 		}
 
+		apiProvider = apiserver.NewProvider(GetApiServerUrl(), apiserver.DefaultRetries, apiserver.DefaultTimeout) // This is happening after pod is running, so we don't need too many retries
 		if err := apiProvider.TestConnection(); err != nil {
-			logger.Log.Debugf("Couldn't connect to api server %v", err)
+			logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Couldn't connect to API server, for more info check logs at %s", fsUtils.GetLogFilePath()))
+			cancel()
+			return
 		}
 	}
 }
