@@ -1,0 +1,14 @@
+{
+  "watchForFileChanges":false,
+  "viewportWidth": 1920,
+  "viewportHeight": 3500,
+  "video": false,
+  "screenshotOnRunFailure": false,
+  "testFiles": [
+    "tests/IgnoredUserAgents.js"
+  ],
+
+  "env": {
+    "testUrl": "http://localhost:8899/"
+  }
+}

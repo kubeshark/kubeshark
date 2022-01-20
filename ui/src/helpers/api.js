@@ -28,6 +28,21 @@ export default class Api {
         this.source = null;
     }
 
+    serviceMapStatus = async () => {
+        const response = await this.client.get("/servicemap/status");
+        return response.data;
+    }
+
+    serviceMapData = async () => {
+        const response = await this.client.get(`/servicemap/get`);
+        return response.data;
+    }
+
+    serviceMapReset = async () => {
+        const response = await this.client.get(`/servicemap/reset`);
+        return response.data;
+    }
+
     tapStatus = async () => {
         const response = await this.client.get("/status/tap");
         return response.data;
@@ -58,6 +73,16 @@ export default class Api {
 
     getAuthStatus = async () => {
         const response = await this.client.get("/status/auth");
+        return response.data;
+    }
+
+    getOasServices = async () => {
+        const response = await this.client.get("/oas");
+        return response.data;
+    }
+
+    getOasByService = async (selectedService) => {
+        const response = await this.client.get(`/oas/${selectedService}`);
         return response.data;
     }
 
