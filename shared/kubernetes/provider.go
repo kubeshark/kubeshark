@@ -177,6 +177,7 @@ type ApiServerOptions struct {
 	Namespace             string
 	PodName               string
 	PodImage              string
+	BasenineImage         string
 	ServiceAccountName    string
 	IsNamespaceRestricted bool
 	SyncEntriesConfig     *shared.SyncEntriesConfig
@@ -280,7 +281,7 @@ func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, moun
 		},
 		{
 			Name:            "basenine",
-			Image:           fmt.Sprintf("%s:%s", shared.BasenineImageRepo, shared.BasenineImageTag),
+			Image:           opts.BasenineImage,
 			ImagePullPolicy: opts.ImagePullPolicy,
 			VolumeMounts:    volumeMounts,
 			ReadinessProbe: &core.Probe{
