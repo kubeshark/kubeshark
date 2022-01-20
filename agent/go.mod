@@ -19,6 +19,7 @@ require (
 	github.com/orcaman/concurrent-map v0.0.0-20210106121528-16402b402231
 	github.com/ory/kratos-client-go v0.8.2-alpha.1
 	github.com/patrickmn/go-cache v2.1.0+incompatible
+	github.com/stretchr/testify v1.7.0
 	github.com/up9inc/basenine/client/go v0.0.0-20220110083745-04fbc6c2068d
 	github.com/up9inc/mizu/shared v0.0.0
 	github.com/up9inc/mizu/tap v0.0.0

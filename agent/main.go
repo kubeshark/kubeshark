@@ -13,6 +13,7 @@ import (
 	"mizuserver/pkg/models"
 	"mizuserver/pkg/oas"
 	"mizuserver/pkg/routes"
+	"mizuserver/pkg/servicemap"
 	"mizuserver/pkg/up9"
 	"mizuserver/pkg/utils"
 	"net/http"
@@ -153,6 +154,9 @@ func enableExpFeatureIfNeeded() {
 	if config.Config.OAS {
 		oas.GetOasGeneratorInstance().Start()
 	}
+	if config.Config.ServiceMap {
+		servicemap.GetInstance().SetConfig(config.Config)
+	}
 }
 
 func configureBasenineServer(host string, port string) {
@@ -254,9 +258,11 @@ func hostApi(socketHarOutputChannel chan<- *tapApi.OutputChannelItem) {
 		routes.UserRoutes(app)
 		routes.InstallRoutes(app)
 	}
-
 	if config.Config.OAS {
 		routes.OASRoutes(app)
+	}
+	if config.Config.ServiceMap {
+		routes.ServiceMapRoutes(app)
 	}
 
 	routes.QueryRoutes(app)
@@ -286,6 +292,7 @@ func setUIFlags() error {
 
 	replacedContent := strings.Replace(string(read), "__IS_STANDALONE__", strconv.FormatBool(config.Config.StandaloneMode), 1)
 	replacedContent = strings.Replace(replacedContent, "__IS_OAS_ENABLED__", strconv.FormatBool(config.Config.OAS), 1)
+	replacedContent = strings.Replace(replacedContent, "__IS_SERVICE_MAP_ENABLED__", strconv.FormatBool(config.Config.ServiceMap), 1)
 
 	err = ioutil.WriteFile(uiIndexPath, []byte(replacedContent), 0)
 	if err != nil {

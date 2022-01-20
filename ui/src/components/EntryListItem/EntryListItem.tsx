@@ -140,7 +140,7 @@ export const EntryItem: React.FC<EntryProps> = ({entry, style, headingMode}) => 
                 setFocusedEntryId(entry.id.toString());
             }}
             style={{
-                border: isSelected ? `1px ${entry.proto.backgroundColor} solid` : "1px transparent solid",
+                border: isSelected && !headingMode ? `1px ${entry.proto.backgroundColor} solid` : "1px transparent solid",
                 position: !headingMode ? "absolute" : "unset",
                 top: style['top'],
                 marginTop: !headingMode ? style['marginTop'] : "10px",
