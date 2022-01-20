@@ -57,7 +57,6 @@ func StartProxy(kubernetesProvider *Provider, proxyHost string, mizuPort uint16,
 	return server, nil
 }
 
-
 func getMizuApiServerProxiedHostAndPath(mizuNamespace string, mizuServiceName string) string {
 	return fmt.Sprintf("/api/v1/namespaces/%s/services/%s:%d/proxy", mizuNamespace, mizuServiceName, mizuServicePort)
 }
