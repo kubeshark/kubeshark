@@ -44,6 +44,7 @@ func checkKubernetesApi() (*kubernetes.Provider, bool) {
 	}
 
 	logger.Log.Infof("%v can initialize the client", fmt.Sprintf(uiUtils.Green, "√"))
+	logger.Log.Infof("%v can query the Kubernetes API", fmt.Sprintf(uiUtils.Green, "√"))
 	return kubernetesProvider, true
 }
 
