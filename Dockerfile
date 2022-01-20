@@ -1,6 +1,6 @@
 ARG ARCH
 ARG GOARCH
-FROM ${ARCH}/node:14 AS site-build
+FROM ${ARCH}/node:16 AS site-build
 ARG ARCH
 ARG GOARCH
 

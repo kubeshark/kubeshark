@@ -140,7 +140,7 @@ export const EntryItem: React.FC<EntryProps> = ({entry, style, headingMode}) => 
                 setFocusedEntryId(entry.id.toString());
             }}
             style={{
-                border: isSelected ? `1px ${entry.proto.backgroundColor} solid` : "1px transparent solid",
+                border: isSelected && !headingMode ? `1px ${entry.proto.backgroundColor} solid` : "1px transparent solid",
                 position: !headingMode ? "absolute" : "unset",
                 top: style['top'],
                 marginTop: !headingMode ? style['marginTop'] : "10px",
@@ -162,7 +162,7 @@ export const EntryItem: React.FC<EntryProps> = ({entry, style, headingMode}) => 
                         displayIconOnMouseOver={true}
                         flipped={true}
                         style={{marginTop: "-4px", overflow: "visible"}}
-                        iconStyle={!headingMode ? {marginTop: "4px", left: "68px", position: "absolute"} :
+                        iconStyle={!headingMode ? {marginTop: "4px", right: "16px", position: "relative"} :
                         entry.proto.name === "http" ? {marginTop: "4px", left: "calc(50vw + 41px)", position: "absolute"} :
                         {marginTop: "4px", left: "calc(50vw - 9px)", position: "absolute"}}
                     >
@@ -172,16 +172,16 @@ export const EntryItem: React.FC<EntryProps> = ({entry, style, headingMode}) => 
                             {entry.src.name ? entry.src.name : "[Unresolved]"}
                         </span>
                     </Queryable>
-                    <SwapHorizIcon style={{color: entry.proto.backgroundColor, marginTop: "-2px"}}></SwapHorizIcon>
+                    <SwapHorizIcon style={{color: entry.proto.backgroundColor, marginTop: "-2px",marginLeft:"5px",marginRight:"5px"}}></SwapHorizIcon>
                     <Queryable
                         query={`dst.name == "${entry.dst.name}"`}
                         displayIconOnMouseOver={true}
+                        flipped={true}
                         style={{marginTop: "-4px"}}
-                        iconStyle={{marginTop: "4px", marginLeft: "-2px"}}
+                        iconStyle={{marginTop: "4px", marginLeft: "-2px",right: "11px", position: "relative"}}
                     >
                         <span
-                            title="Destination Name"
-                        >
+                            title="Destination Name">
                             {entry.dst.name ? entry.dst.name : "[Unresolved]"}
                         </span>
                     </Queryable>
