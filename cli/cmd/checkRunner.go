@@ -58,7 +58,7 @@ func checkKubernetesApi() (*kubernetes.Provider, *semver.SemVersion, bool) {
 		logger.Log.Errorf("%v mizu doesn't support running through a proxy to k8s server, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), err)
 		return nil, nil, false
 	}
-	logger.Log.Infof("%v not running mizu through a proxy to k8s server", fmt.Sprintf(uiUtils.Green, "√"))
+	logger.Log.Debugf("%v not running mizu through a proxy to k8s server", fmt.Sprintf(uiUtils.Green, "√"))
 
 	kubernetesVersion, err := kubernetesProvider.GetKubernetesVersion()
 	if err != nil {
