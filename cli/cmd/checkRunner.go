@@ -8,18 +8,28 @@ import (
 	"github.com/up9inc/mizu/cli/uiUtils"
 	"github.com/up9inc/mizu/shared/kubernetes"
 	"github.com/up9inc/mizu/shared/logger"
+	"github.com/up9inc/mizu/shared/semver"
 	"net/http"
 )
 
 func runMizuCheck() {
 	logger.Log.Infof("Mizu install checks\n===================")
 
-	kubernetesProvider, checkPassed := checkKubernetesApi()
-
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // cancel will be called when this function exits
 
+	kubernetesProvider, kubernetesVersion, checkPassed := checkKubernetesApi()
+
+	var isInstallCommand bool
 	if checkPassed {
+		checkPassed, isInstallCommand = checkIfInstallCommand(ctx, kubernetesProvider)
+	}
+
+	if checkPassed {
+		checkPassed = checkKubernetesVersion(kubernetesVersion)
+	}
+
+	if checkPassed && isInstallCommand {
 		checkPassed = checkAllResourcesExists(ctx, kubernetesProvider)
 	}
 
@@ -34,31 +44,66 @@ func runMizuCheck() {
 	}
 }
 
-func checkKubernetesApi() (*kubernetes.Provider, bool) {
+func checkKubernetesApi() (*kubernetes.Provider, *semver.SemVersion, bool) {
 	logger.Log.Infof("\nkubernetes-api\n--------------------")
 
 	kubernetesProvider, err := getKubernetesProviderForCli()
 	if err != nil {
 		logger.Log.Errorf("%v can't initialize the client, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), err)
-		return nil, false
+		return nil, nil, false
 	}
-
 	logger.Log.Infof("%v can initialize the client", fmt.Sprintf(uiUtils.Green, "√"))
+
+	if err := kubernetesProvider.ValidateNotProxy(); err != nil {
+		logger.Log.Errorf("%v mizu doesn't support running through a proxy to k8s server, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), err)
+		return nil, nil, false
+	}
+	logger.Log.Infof("%v not running mizu through a proxy to k8s server", fmt.Sprintf(uiUtils.Green, "√"))
+
+	kubernetesVersion, err := kubernetesProvider.GetKubernetesVersion()
+	if err != nil {
+		logger.Log.Errorf("%v can't query the Kubernetes API, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), err)
+		return nil, nil, false
+	}
 	logger.Log.Infof("%v can query the Kubernetes API", fmt.Sprintf(uiUtils.Green, "√"))
-	return kubernetesProvider, true
+
+	return kubernetesProvider, kubernetesVersion, true
+}
+
+func checkIfInstallCommand(ctx context.Context, kubernetesProvider *kubernetes.Provider) (bool, bool) {
+	logger.Log.Infof("\nvalidate-mizu-command\n--------------------")
+
+	if exist, err := kubernetesProvider.DoesDeploymentExist(ctx, config.Config.MizuResourcesNamespace, kubernetes.ApiServerPodName); err != nil {
+		logger.Log.Errorf("%v can't validate mizu command, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), err)
+		return false, false
+	} else if exist {
+		logger.Log.Infof("%v mizu running install command", fmt.Sprintf(uiUtils.Green, "√"))
+		return true, true
+	} else {
+		logger.Log.Infof("%v mizu running tap command", fmt.Sprintf(uiUtils.Green, "√"))
+		return true, false
+	}
+}
+
+func checkKubernetesVersion(kubernetesVersion *semver.SemVersion) bool {
+	logger.Log.Infof("\nkubernetes-version\n--------------------")
+
+	if err := kubernetes.ValidateKubernetesVersion(kubernetesVersion); err != nil {
+		logger.Log.Errorf("%v not running the minimum Kubernetes API version, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), err)
+		return false
+	}
+	logger.Log.Infof("%v is running the minimum Kubernetes API version", fmt.Sprintf(uiUtils.Green, "√"))
+
+	return true
 }
 
 func checkServerConnection(kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) bool {
 	logger.Log.Infof("\nmizu-connectivity\n--------------------")
 
-	serverUrl := config.Config.Check.ServerUrl
+	serverUrl := GetApiServerUrl()
 
-	if serverUrl == "" {
-		serverUrl = GetApiServerUrl()
-
-		if response, err := http.Get(fmt.Sprintf("%s/", serverUrl)); err != nil || response.StatusCode != 200 {
-			go startProxyReportErrorIfAny(kubernetesProvider, cancel)
-		}
+	if response, err := http.Get(fmt.Sprintf("%s/", serverUrl)); err != nil || response.StatusCode != 200 {
+		startProxyReportErrorIfAny(kubernetesProvider, cancel)
 	}
 
 	apiServerProvider := apiserver.NewProvider(serverUrl, apiserver.DefaultRetries, apiserver.DefaultTimeout)
@@ -74,107 +119,49 @@ func checkServerConnection(kubernetesProvider *kubernetes.Provider, cancel conte
 func checkAllResourcesExists(ctx context.Context, kubernetesProvider *kubernetes.Provider) bool {
 	logger.Log.Infof("\nmizu-existence\n--------------------")
 
-	allResourcesExists := true
+	exist, err := kubernetesProvider.DoesNamespaceExist(ctx, config.Config.MizuResourcesNamespace)
+	allResourcesExists := checkResourceExist(config.Config.MizuResourcesNamespace, "namespace", exist, err)
 
-	if doesResourceExist, err := kubernetesProvider.DoesNamespaceExist(ctx, config.Config.MizuResourcesNamespace); err != nil {
-		logger.Log.Errorf("%v error checking if '%v' namespace exists, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), config.Config.MizuResourcesNamespace, err)
-		allResourcesExists = false
-	} else if !doesResourceExist {
-		logger.Log.Errorf("%v '%v' namespace doesn't exist", fmt.Sprintf(uiUtils.Red, "✗"), config.Config.MizuResourcesNamespace)
-		allResourcesExists = false
-	} else {
-		logger.Log.Infof("%v '%v' namespace exists", fmt.Sprintf(uiUtils.Green, "√"), config.Config.MizuResourcesNamespace)
-	}
+	exist, err = kubernetesProvider.DoesConfigMapExist(ctx, config.Config.MizuResourcesNamespace, kubernetes.ConfigMapName)
+	allResourcesExists = checkResourceExist(kubernetes.ConfigMapName, "config map", exist, err)
 
-	if doesResourceExist, err := kubernetesProvider.DoesConfigMapExist(ctx, config.Config.MizuResourcesNamespace, kubernetes.ConfigMapName); err != nil {
-		logger.Log.Errorf("%v error checking if '%v' config map exists, err: %v", fmt.Sprintf(uiUtils.Red, "✗"),  kubernetes.ConfigMapName, err)
-		allResourcesExists = false
-	} else if !doesResourceExist {
-		logger.Log.Errorf("%v '%v' config map doesn't exist", fmt.Sprintf(uiUtils.Red, "✗"), kubernetes.ConfigMapName)
-		allResourcesExists = false
-	} else {
-		logger.Log.Infof("%v '%v' config map exists", fmt.Sprintf(uiUtils.Green, "√"), kubernetes.ConfigMapName)
-	}
+	exist, err = kubernetesProvider.DoesServiceAccountExist(ctx, config.Config.MizuResourcesNamespace, kubernetes.ServiceAccountName)
+	allResourcesExists = checkResourceExist(kubernetes.ServiceAccountName, "service account", exist, err)
 
-	if doesResourceExist, err := kubernetesProvider.DoesServiceAccountExist(ctx, config.Config.MizuResourcesNamespace, kubernetes.ServiceAccountName); err != nil {
-		logger.Log.Errorf("%v error checking if '%v' service account exists, err: %v", fmt.Sprintf(uiUtils.Red, "✗"),  kubernetes.ServiceAccountName, err)
-		allResourcesExists = false
-	} else if !doesResourceExist {
-		logger.Log.Errorf("%v '%v' service account doesn't exist", fmt.Sprintf(uiUtils.Red, "✗"), kubernetes.ServiceAccountName)
-		allResourcesExists = false
-	} else {
-		logger.Log.Infof("%v '%v' service account exists", fmt.Sprintf(uiUtils.Green, "√"), kubernetes.ServiceAccountName)
-	}
+	exist, err = kubernetesProvider.DoesClusterRoleExist(ctx, kubernetes.ClusterRoleName)
+	allResourcesExists = checkResourceExist(kubernetes.ClusterRoleName, "cluster role", exist, err)
 
-	if doesResourceExist, err := kubernetesProvider.DoesClusterRoleExist(ctx, kubernetes.ClusterRoleName); err != nil {
-		logger.Log.Errorf("%v error checking if '%v' cluster role exists, err: %v", fmt.Sprintf(uiUtils.Red, "✗"),  kubernetes.ClusterRoleName, err)
-		allResourcesExists = false
-	} else if !doesResourceExist {
-		logger.Log.Errorf("%v '%v' cluster role doesn't exist", fmt.Sprintf(uiUtils.Red, "✗"), kubernetes.ClusterRoleName)
-		allResourcesExists = false
-	} else {
-		logger.Log.Infof("%v '%v' cluster role exists", fmt.Sprintf(uiUtils.Green, "√"), kubernetes.ClusterRoleName)
-	}
+	exist, err = kubernetesProvider.DoesClusterRoleBindingExist(ctx, kubernetes.ClusterRoleBindingName)
+	allResourcesExists = checkResourceExist(kubernetes.ClusterRoleBindingName, "cluster role binding", exist, err)
 
-	if doesResourceExist, err := kubernetesProvider.DoesClusterRoleBindingExist(ctx, kubernetes.ClusterRoleBindingName); err != nil {
-		logger.Log.Errorf("%v error checking if '%v' cluster role binding exists, err: %v", fmt.Sprintf(uiUtils.Red, "✗"),  kubernetes.ClusterRoleBindingName, err)
-		allResourcesExists = false
-	} else if !doesResourceExist {
-		logger.Log.Errorf("%v '%v' cluster role binding doesn't exist", fmt.Sprintf(uiUtils.Red, "✗"), kubernetes.ClusterRoleBindingName)
-		allResourcesExists = false
-	} else {
-		logger.Log.Infof("%v '%v' cluster role binding exists", fmt.Sprintf(uiUtils.Green, "√"), kubernetes.ClusterRoleBindingName)
-	}
+	exist, err = kubernetesProvider.DoesRoleExist(ctx, config.Config.MizuResourcesNamespace, kubernetes.DaemonRoleName)
+	allResourcesExists = checkResourceExist(kubernetes.DaemonRoleName, "role", exist, err)
 
-	if doesResourceExist, err := kubernetesProvider.DoesRoleExist(ctx, config.Config.MizuResourcesNamespace, kubernetes.DaemonRoleName); err != nil {
-		logger.Log.Errorf("%v error checking if '%v' role exists, err: %v", fmt.Sprintf(uiUtils.Red, "✗"),  kubernetes.DaemonRoleName, err)
-		allResourcesExists = false
-	} else if !doesResourceExist {
-		logger.Log.Errorf("%v '%v' role doesn't exist", fmt.Sprintf(uiUtils.Red, "✗"), kubernetes.DaemonRoleName)
-		allResourcesExists = false
-	} else {
-		logger.Log.Infof("%v '%v' role exists", fmt.Sprintf(uiUtils.Green, "√"), kubernetes.DaemonRoleName)
-	}
+	exist, err = kubernetesProvider.DoesRoleBindingExist(ctx, config.Config.MizuResourcesNamespace, kubernetes.DaemonRoleBindingName)
+	allResourcesExists = checkResourceExist(kubernetes.DaemonRoleBindingName, "role binding", exist, err)
 
-	if doesResourceExist, err := kubernetesProvider.DoesRoleBindingExist(ctx, config.Config.MizuResourcesNamespace, kubernetes.DaemonRoleBindingName); err != nil {
-		logger.Log.Errorf("%v error checking if '%v' role binding exists, err: %v", fmt.Sprintf(uiUtils.Red, "✗"),  kubernetes.DaemonRoleBindingName, err)
-		allResourcesExists = false
-	} else if !doesResourceExist {
-		logger.Log.Errorf("%v '%v' role binding doesn't exist", fmt.Sprintf(uiUtils.Red, "✗"), kubernetes.DaemonRoleBindingName)
-		allResourcesExists = false
-	} else {
-		logger.Log.Infof("%v '%v' role binding exists", fmt.Sprintf(uiUtils.Green, "√"), kubernetes.DaemonRoleBindingName)
-	}
+	exist, err = kubernetesProvider.DoesPersistentVolumeClaimExist(ctx, config.Config.MizuResourcesNamespace, kubernetes.PersistentVolumeClaimName)
+	allResourcesExists = checkResourceExist(kubernetes.PersistentVolumeClaimName, "persistent volume claim", exist, err)
 
-	if doesResourceExist, err := kubernetesProvider.DoesPersistentVolumeClaimExist(ctx, config.Config.MizuResourcesNamespace, kubernetes.PersistentVolumeClaimName); err != nil {
-		logger.Log.Errorf("%v error checking if '%v' persistent volume claim exists, err: %v", fmt.Sprintf(uiUtils.Red, "✗"),  kubernetes.PersistentVolumeClaimName, err)
-		allResourcesExists = false
-	} else if !doesResourceExist {
-		logger.Log.Errorf("%v '%v' persistent volume claim doesn't exist", fmt.Sprintf(uiUtils.Red, "✗"), kubernetes.PersistentVolumeClaimName)
-		allResourcesExists = false
-	} else {
-		logger.Log.Infof("%v '%v' persistent volume claim exists", fmt.Sprintf(uiUtils.Green, "√"), kubernetes.PersistentVolumeClaimName)
-	}
+	exist, err = kubernetesProvider.DoesDeploymentExist(ctx, config.Config.MizuResourcesNamespace, kubernetes.ApiServerPodName)
+	allResourcesExists = checkResourceExist(kubernetes.ApiServerPodName, "deployment", exist, err)
 
-	if doesResourceExist, err := kubernetesProvider.DoesDeploymentExist(ctx, config.Config.MizuResourcesNamespace, kubernetes.ApiServerPodName); err != nil {
-		logger.Log.Errorf("%v error checking if '%v' deployment exists, err: %v", fmt.Sprintf(uiUtils.Red, "✗"),  kubernetes.ApiServerPodName, err)
-		allResourcesExists = false
-	} else if !doesResourceExist {
-		logger.Log.Errorf("%v '%v' deployment doesn't exist", fmt.Sprintf(uiUtils.Red, "✗"), kubernetes.ApiServerPodName)
-		allResourcesExists = false
-	} else {
-		logger.Log.Infof("%v '%v' deployment exists", fmt.Sprintf(uiUtils.Green, "√"), kubernetes.ApiServerPodName)
-	}
-
-	if doesResourceExist, err := kubernetesProvider.DoesServiceExist(ctx, config.Config.MizuResourcesNamespace, kubernetes.ApiServerPodName); err != nil {
-		logger.Log.Errorf("%v error checking if '%v' service exists, err: %v", fmt.Sprintf(uiUtils.Red, "✗"),  kubernetes.ApiServerPodName, err)
-		allResourcesExists = false
-	} else if !doesResourceExist {
-		logger.Log.Errorf("%v '%v' service doesn't exist", fmt.Sprintf(uiUtils.Red, "✗"), kubernetes.ApiServerPodName)
-		allResourcesExists = false
-	} else {
-		logger.Log.Infof("%v '%v' service exists", fmt.Sprintf(uiUtils.Green, "√"), kubernetes.ApiServerPodName)
-	}
+	exist, err = kubernetesProvider.DoesServiceExist(ctx, config.Config.MizuResourcesNamespace, kubernetes.ApiServerPodName)
+	allResourcesExists = checkResourceExist(kubernetes.ApiServerPodName, "service", exist, err)
 
 	return allResourcesExists
+}
+
+func checkResourceExist(resourceName string, resourceType string, exist bool, err error) bool {
+	if err != nil {
+		logger.Log.Errorf("%v error checking if '%v' %v exists, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), resourceName, resourceType, err)
+		return false
+	} else if !exist {
+		logger.Log.Errorf("%v '%v' %v doesn't exist", fmt.Sprintf(uiUtils.Red, "✗"), resourceName, resourceType)
+		return false
+	} else {
+		logger.Log.Infof("%v '%v' %v exists", fmt.Sprintf(uiUtils.Green, "√"), resourceName, resourceType)
+	}
+
+	return true
 }

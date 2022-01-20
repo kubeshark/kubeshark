@@ -76,14 +76,6 @@ func NewProvider(kubeConfigPath string) (*Provider, error) {
 			"you can set alternative kube config file path by adding the kube-config-path field to the mizu config file, err:  %w", kubeConfigPath, err)
 	}
 
-	if err := validateNotProxy(kubernetesConfig, restClientConfig); err != nil {
-		return nil, err
-	}
-
-	if err := validateKubernetesVersion(clientSet); err != nil {
-		return nil, err
-	}
-
 	return &Provider{
 		clientSet:        clientSet,
 		kubernetesConfig: kubernetesConfig,
@@ -1088,6 +1080,44 @@ func (provider *Provider) CreatePersistentVolumeClaim(ctx context.Context, names
 	return provider.clientSet.CoreV1().PersistentVolumeClaims(namespace).Create(ctx, volumeClaim, metav1.CreateOptions{})
 }
 
+// ValidateNotProxy We added this after a customer tried to run mizu from lens, which used len's kube config, which have cluster server configuration, which points to len's local proxy.
+// The workaround was to use the user's local default kube config.
+func (provider *Provider) ValidateNotProxy() error {
+	kubernetesUrl, err := url.Parse(provider.clientConfig.Host)
+	if err != nil {
+		logger.Log.Debugf("ValidateNotProxy - error while parsing kubernetes host, err: %v", err)
+		return nil
+	}
+
+	restProxyClientConfig, _ := provider.kubernetesConfig.ClientConfig()
+	restProxyClientConfig.Host = kubernetesUrl.Host
+
+	clientProxySet, err := getClientSet(restProxyClientConfig)
+	if err == nil {
+		proxyServerVersion, err := clientProxySet.ServerVersion()
+		if err != nil {
+			return nil
+		}
+
+		if *proxyServerVersion == (version.Info{}) {
+			return &ClusterBehindProxyError{}
+		}
+	}
+
+	return nil
+}
+
+func (provider *Provider) GetKubernetesVersion() (*semver.SemVersion, error) {
+	serverVersion, err := provider.clientSet.ServerVersion()
+	if err != nil {
+		logger.Log.Debugf("error while getting kubernetes server version, err: %v", err)
+		return nil, err
+	}
+
+	serverVersionSemVer := semver.SemVersion(serverVersion.GitVersion)
+	return &serverVersionSemVer, nil
+}
+
 func getClientSet(config *restclient.Config) (*kubernetes.Clientset, error) {
 	clientSet, err := kubernetes.NewForConfig(config)
 	if err != nil {
@@ -1095,6 +1125,15 @@ func getClientSet(config *restclient.Config) (*kubernetes.Clientset, error) {
 	}
 
 	return clientSet, nil
+}
+
+func ValidateKubernetesVersion(serverVersionSemVer *semver.SemVersion) error {
+	minKubernetesServerVersionSemVer := semver.SemVersion(MinKubernetesServerVersion)
+	if minKubernetesServerVersionSemVer.GreaterThan(*serverVersionSemVer) {
+		return fmt.Errorf("kubernetes server version %v is not supported, supporting only kubernetes server version of %v or higher", serverVersionSemVer, MinKubernetesServerVersion)
+	}
+
+	return nil
 }
 
 func loadKubernetesConfiguration(kubeConfigPath string) clientcmd.ClientConfig {
@@ -1117,48 +1156,4 @@ func loadKubernetesConfiguration(kubeConfigPath string) clientcmd.ClientConfig {
 
 func isPodRunning(pod *core.Pod) bool {
 	return pod.Status.Phase == core.PodRunning
-}
-
-// We added this after a customer tried to run mizu from lens, which used len's kube config, which have cluster server configuration, which points to len's local proxy.
-// The workaround was to use the user's local default kube config.
-// For now - we are blocking the option to run mizu through a proxy to k8s server
-func validateNotProxy(kubernetesConfig clientcmd.ClientConfig, restClientConfig *restclient.Config) error {
-	kubernetesUrl, err := url.Parse(restClientConfig.Host)
-	if err != nil {
-		logger.Log.Debugf("validateNotProxy - error while parsing kubernetes host, err: %v", err)
-		return nil
-	}
-
-	restProxyClientConfig, _ := kubernetesConfig.ClientConfig()
-	restProxyClientConfig.Host = kubernetesUrl.Host
-
-	clientProxySet, err := getClientSet(restProxyClientConfig)
-	if err == nil {
-		proxyServerVersion, err := clientProxySet.ServerVersion()
-		if err != nil {
-			return nil
-		}
-
-		if *proxyServerVersion == (version.Info{}) {
-			return &ClusterBehindProxyError{}
-		}
-	}
-
-	return nil
-}
-
-func validateKubernetesVersion(clientSet *kubernetes.Clientset) error {
-	serverVersion, err := clientSet.ServerVersion()
-	if err != nil {
-		logger.Log.Debugf("error while getting kubernetes server version, err: %v", err)
-		return nil
-	}
-
-	serverVersionSemVer := semver.SemVersion(serverVersion.GitVersion)
-	minKubernetesServerVersionSemVer := semver.SemVersion(MinKubernetesServerVersion)
-	if minKubernetesServerVersionSemVer.GreaterThan(serverVersionSemVer) {
-		return fmt.Errorf("kubernetes server version %v is not supported, supporting only kubernetes server version of %v or higher", serverVersion.GitVersion, MinKubernetesServerVersion)
-	}
-
-	return nil
 }
