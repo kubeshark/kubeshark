@@ -21,7 +21,7 @@ fi
 
 echo "building ${DOCKER_TAGGED_BUILDS[@]}"
 DOCKER_TAGS_ARGS=$(echo ${DOCKER_TAGGED_BUILDS[@]/#/-t }) # "-t FIRST_TAG -t SECOND_TAG ..."
-docker build -f debug.Dockerfile $DOCKER_TAGS_ARGS --build-arg ARCH=${ARCH} --build-arg GOARCH=${GOARCH} --build-arg SEM_VER=${SEM_VER} --build-arg BUILD_TIMESTAMP=${BUILD_TIMESTAMP} --build-arg GIT_BRANCH=${GIT_BRANCH} --build-arg COMMIT_HASH=${COMMIT_HASH} .
+docker build -f debug.Dockerfile $DOCKER_TAGS_ARGS --build-arg SEM_VER=${SEM_VER} --build-arg BUILD_TIMESTAMP=${BUILD_TIMESTAMP} --build-arg GIT_BRANCH=${GIT_BRANCH} --build-arg COMMIT_HASH=${COMMIT_HASH} .
 
 for DOCKER_TAG in "${DOCKER_TAGGED_BUILDS[@]}"
 do

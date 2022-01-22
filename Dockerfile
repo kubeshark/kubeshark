@@ -1,8 +1,7 @@
-ARG ARCH
-ARG GOARCH
-FROM ${ARCH}/node:16 AS site-build
-ARG ARCH
-ARG GOARCH
+ARG ARCH=amd64
+
+### Front-end
+FROM node:16 AS front-end
 
 WORKDIR /app/ui-build
 
@@ -13,14 +12,16 @@ COPY ui .
 RUN npm run build
 
 
-FROM ${ARCH}/golang:1.17-alpine AS builder
-ARG ARCH
-ARG GOARCH
+### Base of the builder image
+FROM golang:1.17-buster AS builder-base
 
 # Set necessary environment variables needed for our image.
 ENV CGO_ENABLED=1 GOOS=linux GOARCH=${GOARCH}
 
-RUN apk add binutils-gold libpcap-dev gcc g++ make bash perl-utils
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        build-essential \
+        libpcap-dev
 
 # Move to agent working directory (/agent-build).
 WORKDIR /app/agent-build
@@ -33,15 +34,42 @@ RUN go mod download
 # cheap trick to make the build faster (as long as go.mod did not change)
 RUN go list -f '{{.Path}}@{{.Version}}' -m all | sed 1d | grep -e 'go-cache' | xargs go get
 
+# Copy and build agent code
+COPY shared ../shared
+COPY tap ../tap
+COPY agent .
+
+
+### Intermediate builder image for AMD64 architecture
+FROM builder-base AS builder-amd64
+
+ENV GOARCH=amd64
+
+
+### Intermediate builder image for ARM64 architecture
+FROM builder-base AS builder-arm64v8
+
+ENV GOARCH=arm64
+ENV CC=aarch64-linux-gnu-gcc
+ENV PKG_CONFIG_PATH=/usr/lib/aarch64-linux-gnu/pkgconfig
+
+RUN dpkg --add-architecture arm64 \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends \
+        gcc-aarch64-linux-gnu \
+        libpcap-dev:arm64
+
+
+### Final builder image where the building happens
+FROM builder-${ARCH} AS builder
+
 ARG COMMIT_HASH
 ARG GIT_BRANCH
 ARG BUILD_TIMESTAMP
 ARG SEM_VER=0.0.0
 
-# Copy and build agent code
-COPY shared ../shared
-COPY tap ../tap
-COPY agent .
+WORKDIR /app/agent-build
+
 RUN go build -ldflags="-extldflags '-fuse-ld=bfd' -s -w \
      -X 'mizuserver/pkg/version.GitCommitHash=${COMMIT_HASH}' \
      -X 'mizuserver/pkg/version.Branch=${GIT_BRANCH}' \
@@ -51,19 +79,18 @@ RUN go build -ldflags="-extldflags '-fuse-ld=bfd' -s -w \
 COPY devops/build_extensions.sh ..
 RUN cd .. && /bin/bash build_extensions.sh
 
-FROM ${ARCH}/alpine:3.15
-ARG ARCH
-ARG GOARCH
 
-RUN apk add bash libpcap-dev
+
+### The shipped image
+ARG ARCH=amd64
+FROM ${ARCH}/alpine:3.15
 
 WORKDIR /app
 
 # Copy binary and config files from /build to root folder of scratch container.
 COPY --from=builder ["/app/agent-build/mizuagent", "."]
 COPY --from=builder ["/app/agent/build/extensions", "extensions"]
-COPY --from=site-build ["/app/ui-build/build", "site"]
-RUN mkdir /app/data/
+COPY --from=front-end ["/app/ui-build/build", "site"]
 
 # gin-gonic runs in debug mode without this
 ENV GIN_MODE=release

@@ -14,4 +14,4 @@ GOARCH=$ARCH
 DOCKER_TAGGED_BUILD="$DOCKER_REPO:$SEM_VER"
 
 echo "building $DOCKER_TAGGED_BUILD"
-docker build -t ${DOCKER_TAGGED_BUILD} --build-arg ARCH=${ARCH} --build-arg GOARCH=${GOARCH} --build-arg SEM_VER=${SEM_VER} --build-arg BUILD_TIMESTAMP=${BUILD_TIMESTAMP} --build-arg GIT_BRANCH=${GIT_BRANCH} --build-arg COMMIT_HASH=${COMMIT_HASH} .
+docker build -t ${DOCKER_TAGGED_BUILD} --build-arg SEM_VER=${SEM_VER} --build-arg BUILD_TIMESTAMP=${BUILD_TIMESTAMP} --build-arg GIT_BRANCH=${GIT_BRANCH} --build-arg COMMIT_HASH=${COMMIT_HASH} .
