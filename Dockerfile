@@ -83,7 +83,7 @@ RUN cd .. && /bin/bash build_extensions.sh
 
 ### The shipped image
 ARG ARCH=amd64
-FROM ${ARCH}/alpine:3.15
+FROM mertyildiran/debian-pcap:buster-slim-${ARCH}
 
 WORKDIR /app
 
