@@ -52,12 +52,16 @@ jobs:
 
       - name: Docker meta
         id: meta
-        uses: crazy-max/ghaction-docker-meta@v2
+        uses: docker/metadata-action@v3
         with:
           images: |
             up9inc/mizu
           tags: |
             type=raw,${{ steps.versioning.outputs.version }}
+          flavor: |
+            latest=auto
+            prefix=
+            suffix=-${{ matrix.target }},onlatest=true
 
       - name: Login to Docker Hub
         uses: docker/login-action@v1
@@ -73,6 +77,7 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
+            ARCH=${{ matrix.target }}
             SEM_VER=${{ steps.versioning.outputs.version }}
             BUILD_TIMESTAMP=${{ steps.version_parameters.outputs.build_timestamp }}
             GIT_BRANCH=${{ steps.version_parameters.outputs.branch }}
@@ -129,12 +134,16 @@ jobs:
 
       - name: Docker meta
         id: meta
-        uses: crazy-max/ghaction-docker-meta@v2
+        uses: docker/metadata-action@v3
         with:
           images: |
             ${{ steps.base_image_step.outputs.image }}
           tags: |
             type=raw,${{ steps.versioning.outputs.version }}
+          flavor: |
+            latest=auto
+            prefix=
+            suffix=-${{ matrix.target }},onlatest=true
 
       - name: Login to GCR
         uses: docker/login-action@v1
@@ -151,6 +160,7 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
+            ARCH=${{ matrix.target }}
             SEM_VER=${{ steps.versioning.outputs.version }}
             BUILD_TIMESTAMP=${{ steps.version_parameters.outputs.build_timestamp }}
             GIT_BRANCH=${{ steps.version_parameters.outputs.branch }}
@@ -185,7 +195,7 @@ jobs:
 
       - name: Docker meta
         id: meta
-        uses: crazy-max/ghaction-docker-meta@v2
+        uses: docker/metadata-action@v3
         with:
           images: |
             up9inc/mizu
