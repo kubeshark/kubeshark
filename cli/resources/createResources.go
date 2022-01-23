@@ -43,6 +43,7 @@ func CreateTapMizuResources(ctx context.Context, kubernetesProvider *kubernetes.
 		PodName:               kubernetes.ApiServerPodName,
 		PodImage:              agentImage,
 		BasenineImage:         basenineImage,
+		KratosImage:           "",
 		ServiceAccountName:    serviceAccountName,
 		IsNamespaceRestricted: isNsRestrictedMode,
 		SyncEntriesConfig:     syncEntriesConfig,
@@ -66,7 +67,7 @@ func CreateTapMizuResources(ctx context.Context, kubernetesProvider *kubernetes.
 	return mizuServiceAccountExists, nil
 }
 
-func CreateInstallMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, serializedValidationRules string, serializedContract string, serializedMizuConfig string, isNsRestrictedMode bool, mizuResourcesNamespace string, agentImage string, basenineImage string, syncEntriesConfig *shared.SyncEntriesConfig, maxEntriesDBSizeBytes int64, apiServerResources shared.Resources, imagePullPolicy core.PullPolicy, logLevel logging.Level, noPersistentVolumeClaim bool) error {
+func CreateInstallMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, serializedValidationRules string, serializedContract string, serializedMizuConfig string, isNsRestrictedMode bool, mizuResourcesNamespace string, agentImage string, basenineImage string, kratosImage string, syncEntriesConfig *shared.SyncEntriesConfig, maxEntriesDBSizeBytes int64, apiServerResources shared.Resources, imagePullPolicy core.PullPolicy, logLevel logging.Level, noPersistentVolumeClaim bool) error {
 	if err := createMizuNamespace(ctx, kubernetesProvider, mizuResourcesNamespace); err != nil {
 		return err
 	}
@@ -97,6 +98,7 @@ func CreateInstallMizuResources(ctx context.Context, kubernetesProvider *kuberne
 		PodName:               kubernetes.ApiServerPodName,
 		PodImage:              agentImage,
 		BasenineImage:         basenineImage,
+		KratosImage:           kratosImage,
 		ServiceAccountName:    serviceAccountName,
 		IsNamespaceRestricted: isNsRestrictedMode,
 		SyncEntriesConfig:     syncEntriesConfig,
