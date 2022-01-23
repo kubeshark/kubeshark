@@ -20,13 +20,13 @@ func runMizuCheck() {
 
 	kubernetesProvider, kubernetesVersion, checkPassed := checkKubernetesApi()
 
-	var isInstallCommand bool
-	if checkPassed {
-		checkPassed, isInstallCommand = validateCommand(ctx, kubernetesProvider)
-	}
-
 	if checkPassed {
 		checkPassed = checkKubernetesVersion(kubernetesVersion)
+	}
+
+	var isInstallCommand bool
+	if checkPassed {
+		checkPassed, isInstallCommand = checkMizuMode(ctx, kubernetesProvider)
 	}
 
 	if checkPassed {
@@ -47,18 +47,12 @@ func runMizuCheck() {
 func checkKubernetesApi() (*kubernetes.Provider, *semver.SemVersion, bool) {
 	logger.Log.Infof("\nkubernetes-api\n--------------------")
 
-	kubernetesProvider, err := getKubernetesProviderForCli()
+	kubernetesProvider, err := kubernetes.NewProvider(config.Config.KubeConfigPath())
 	if err != nil {
 		logger.Log.Errorf("%v can't initialize the client, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), err)
 		return nil, nil, false
 	}
 	logger.Log.Infof("%v can initialize the client", fmt.Sprintf(uiUtils.Green, "√"))
-
-	if err := kubernetesProvider.ValidateNotProxy(); err != nil {
-		logger.Log.Errorf("%v mizu doesn't support running through a proxy to k8s server, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), err)
-		return nil, nil, false
-	}
-	logger.Log.Debugf("%v not running mizu through a proxy to k8s server", fmt.Sprintf(uiUtils.Green, "√"))
 
 	kubernetesVersion, err := kubernetesProvider.GetKubernetesVersion()
 	if err != nil {
@@ -70,11 +64,11 @@ func checkKubernetesApi() (*kubernetes.Provider, *semver.SemVersion, bool) {
 	return kubernetesProvider, kubernetesVersion, true
 }
 
-func validateCommand(ctx context.Context, kubernetesProvider *kubernetes.Provider) (bool, bool) {
-	logger.Log.Infof("\nvalidate-mizu-command\n--------------------")
+func checkMizuMode(ctx context.Context, kubernetesProvider *kubernetes.Provider) (bool, bool) {
+	logger.Log.Infof("\nmizu-mode\n--------------------")
 
 	if exist, err := kubernetesProvider.DoesDeploymentExist(ctx, config.Config.MizuResourcesNamespace, kubernetes.ApiServerPodName); err != nil {
-		logger.Log.Errorf("%v can't validate mizu command, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), err)
+		logger.Log.Errorf("%v can't check mizu command, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), err)
 		return false, false
 	} else if exist {
 		logger.Log.Infof("%v mizu running with install command", fmt.Sprintf(uiUtils.Green, "√"))

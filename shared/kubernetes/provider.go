@@ -1089,6 +1089,7 @@ func (provider *Provider) CreatePersistentVolumeClaim(ctx context.Context, names
 
 // ValidateNotProxy We added this after a customer tried to run mizu from lens, which used len's kube config, which have cluster server configuration, which points to len's local proxy.
 // The workaround was to use the user's local default kube config.
+// For now - we are blocking the option to run mizu through a proxy to k8s server
 func (provider *Provider) ValidateNotProxy() error {
 	kubernetesUrl, err := url.Parse(provider.clientConfig.Host)
 	if err != nil {
