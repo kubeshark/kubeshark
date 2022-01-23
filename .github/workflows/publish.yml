@@ -55,8 +55,6 @@ jobs:
             ${{ steps.base_image_step.outputs.image }}
             up9inc/mizu
           tags: |
-            type=sha
-            type=raw,${{ github.sha }}
             type=raw,${{ steps.versioning.outputs.version }}
       - name: Login to DockerHub
         uses: docker/login-action@v1
