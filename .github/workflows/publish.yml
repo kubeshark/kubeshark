@@ -53,7 +53,7 @@ jobs:
         with:
           images: |
             ${{ steps.base_image_step.outputs.image }}
-            docker.io/up9inc/mizu
+            up9inc/mizu
           tags: |
             type=sha
             type=raw,${{ github.sha }}
