@@ -71,10 +71,10 @@ ARG SEM_VER=0.0.0
 WORKDIR /app/agent-build
 
 RUN go build -ldflags="-extldflags '-fuse-ld=bfd' -s -w \
-     -X 'mizuserver/pkg/version.GitCommitHash=${COMMIT_HASH}' \
-     -X 'mizuserver/pkg/version.Branch=${GIT_BRANCH}' \
-     -X 'mizuserver/pkg/version.BuildTimestamp=${BUILD_TIMESTAMP}' \
-     -X 'mizuserver/pkg/version.SemVer=${SEM_VER}'" -o mizuagent .
+    -X 'mizuserver/pkg/version.GitCommitHash=${COMMIT_HASH}' \
+    -X 'mizuserver/pkg/version.Branch=${GIT_BRANCH}' \
+    -X 'mizuserver/pkg/version.BuildTimestamp=${BUILD_TIMESTAMP}' \
+    -X 'mizuserver/pkg/version.SemVer=${SEM_VER}'" -o mizuagent .
 
 COPY devops/build_extensions.sh ..
 RUN cd .. && /bin/bash build_extensions.sh
