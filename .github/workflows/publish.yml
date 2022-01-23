@@ -1,6 +1,9 @@
 name: publish
 
 on:
+ pull_request:
+    branches:
+      - 'develop'
   push:
     branches:
       - 'develop'
@@ -45,7 +48,7 @@ jobs:
         id: version_parameters
       - name: Get base image name
         shell: bash
-        run: echo "##[set-output name=image;]$(echo gcr.io/up9-docker-hub/mizu/${GITHUB_REF#refs/heads/})"
+        run: echo "##[set-output name=image;]$(echo up9inc/mizu)"
         id: base_image_step
       - name: Docker meta
         id: meta
@@ -53,15 +56,12 @@ jobs:
         with:
           images: ${{ steps.base_image_step.outputs.image }}
           tags: |
-            type=sha
-            type=raw,${{ github.sha }}
             type=raw,${{ steps.versioning.outputs.version }}
       - name: Login to DockerHub
         uses: docker/login-action@v1
         with:
-          registry: gcr.io
-          username: _json_key
-          password: ${{ secrets.GCR_JSON_KEY }}
+          username: ${{ secrets.DOCKERHUB_USER }}
+          password: ${{ secrets.DOCKERHUB_PASS }}
       - name: Build and push
         uses: docker/build-push-action@v2
         with:
