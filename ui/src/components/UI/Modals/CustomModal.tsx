@@ -10,8 +10,7 @@ const useStyles = makeStyles({
         justifyContent: "center"
     },
     modalContents: {
-        borderRadius: "5px",
-        
+        borderRadius: "5px",      
         outline: "none",
         minWidth: "300px",
         backgroundColor: "rgb(255, 255, 255)"
