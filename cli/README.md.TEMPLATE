@@ -3,22 +3,27 @@ Full changelog for stable release see in [docs](https://github.com/up9inc/mizu/b
 
 ## Download Mizu for your platform
 
-**Mac** (Intel)
+**Mac** (x86-64/Intel)
 ```
 curl -Lo mizu https://github.com/up9inc/mizu/releases/download/_SEM_VER_/mizu_darwin_amd64 && chmod 755 mizu
 ```
 
-**Mac** (Apple M1 silicon)
+**Mac** (AArch64/Apple M1 silicon)
 ```
 curl -Lo mizu https://github.com/up9inc/mizu/releases/download/_SEM_VER_/mizu_darwin_arm64 && chmod 755 mizu
 ```
 
-**Linux** 
+**Linux** (x86-64)
 ```
 curl -Lo mizu https://github.com/up9inc/mizu/releases/download/_SEM_VER_/mizu_linux_amd64 && chmod 755 mizu
 ```
 
-**Windows** (Intel 64bit)
+**Linux** (x86-64)
+```
+curl -Lo mizu https://github.com/up9inc/mizu/releases/download/_SEM_VER_/mizu_linux_arm64 && chmod 755 mizu
+```
+
+**Windows** (x86-64)
 ```
 curl -LO https://github.com/up9inc/mizu/releases/download/_SEM_VER_/mizu.exe
 ```
