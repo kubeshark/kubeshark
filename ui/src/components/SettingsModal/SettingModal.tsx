@@ -1,12 +1,12 @@
-import React, {useEffect, useMemo, useState} from "react";
+import React, {useEffect, useState} from "react";
 import {Modal, Backdrop, Fade, Box, Button} from "@material-ui/core";
 import {modalStyle} from "../Filters";
-import Checkbox from "../UI/Checkbox";
 import './SettingsModal.sass';
 import Api from "../../helpers/api";
 import spinner from "../assets/spinner.svg";
 import {useCommonStyles} from "../../helpers/commonStyle";
 import {toast} from "react-toastify";
+import SelectList from "../UI/SelectList";
 
 interface SettingsModalProps {
     isOpen: boolean
@@ -47,14 +47,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({isOpen, onClose, is
         })()
     }, [isFirstLogin, isOpen])
 
-    const setAllNamespacesTappedValue = (isTap: boolean) => {
-        const newNamespaces = {};
-        Object.keys(namespaces).forEach(key => {
-            newNamespaces[key] = isTap;
-        })
-        setNamespaces(newNamespaces);
-    }
-
     const updateTappingSettings = async () => {
         try {
             await api.setTapConfig(namespaces);
@@ -64,44 +56,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({isOpen, onClose, is
             console.error(e);
             toast.error("Something went wrong, changes may not have been saved.")
         }
-    }
-
-    const toggleTapNamespace = (namespace) => {
-        const newNamespaces = {...namespaces};
-        newNamespaces[namespace] = !namespaces[namespace]
-        setNamespaces(newNamespaces);
-    }
-
-    const toggleAll = () => {
-        const isChecked = Object.values(namespaces).every(tap => tap === true);
-        setAllNamespacesTappedValue(!isChecked);
-    }
-
-    const filteredNamespaces = useMemo(() => {
-        return Object.keys(namespaces).filter((namespace) => namespace.includes(searchValue));
-    },[namespaces, searchValue])
-
-    const buildNamespacesTable = () => {
-        return <table cellPadding={5} style={{borderCollapse: "collapse"}}>
-            <thead>
-            <tr style={{borderBottomWidth: "2px"}}>
-                <th style={{width: 50}}><Checkbox checked={Object.values(namespaces).every(tap => tap === true)}
-                                                  onToggle={toggleAll}/></th>
-                <th>Namespace</th>
-            </tr>
-            </thead>
-            <tbody>
-            {filteredNamespaces?.map(namespace => {
-                    return <tr key={namespace}>
-                        <td style={{width: 50}}>
-                            <Checkbox checked={namespaces[namespace]} onToggle={() => toggleTapNamespace(namespace)}/>
-                        </td>
-                        <td>{namespace}</td>
-                    </tr>
-                }
-            )}
-            </tbody>
-        </table>
     }
 
     const onModalClose = (reason) => {
@@ -133,9 +87,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({isOpen, onClose, is
                             <div style={{margin: "10px 0"}}>
                                 <input className={classes.textField + " searchNamespace"} placeholder="Search" value={searchValue}
                                        onChange={(event) => setSearchValue(event.target.value)}/></div>
-                            <div className="namespacesTable">
-                                {buildNamespacesTable()}
-                            </div>
+                                <SelectList valuesListInput={namespaces} tableName={'Namespace'} multiSelect={true} searchValue={searchValue} setValues={setNamespaces} tabelClassName={'namespacesTable'}/>
                         </div>
                     </>}
                 </div>
