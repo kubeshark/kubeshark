@@ -349,19 +349,19 @@ func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, moun
 			Image:           opts.KetoImage,
 			ImagePullPolicy: opts.ImagePullPolicy,
 			VolumeMounts:    volumeMounts,
-			ReadinessProbe: &core.Probe{
-				FailureThreshold: 3,
-				Handler: core.Handler{
-					HTTPGet: &core.HTTPGetAction{
-						Path:   "/health/ready",
-						Port:   intstr.FromInt(4433),
-						Scheme: core.URISchemeHTTP,
-					},
-				},
-				PeriodSeconds:    1,
-				SuccessThreshold: 1,
-				TimeoutSeconds:   1,
-			},
+			// ReadinessProbe: &core.Probe{
+			// 	FailureThreshold: 3,
+			// 	Handler: core.Handler{
+			// 		HTTPGet: &core.HTTPGetAction{
+			// 			Path:   "/health/ready",
+			// 			Port:   intstr.FromInt(4433),
+			// 			Scheme: core.URISchemeHTTP,
+			// 		},
+			// 	},
+			// 	PeriodSeconds:    1,
+			// 	SuccessThreshold: 1,
+			// 	TimeoutSeconds:   1,
+			// },
 			Resources: core.ResourceRequirements{
 				Limits: core.ResourceList{
 					"cpu":    cpuLimit,
