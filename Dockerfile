@@ -13,7 +13,7 @@ RUN npm run build
 
 
 ### Base of the builder image
-FROM golang:1.17-buster AS builder-base
+FROM golang:1.17-bullseye AS builder-base
 
 # Set necessary environment variables needed for our image.
 ENV CGO_ENABLED=1 GOOS=linux GOARCH=${GOARCH}
@@ -83,7 +83,7 @@ RUN cd .. && /bin/bash build_extensions.sh
 
 ### The shipped image
 ARG ARCH=amd64
-FROM up9inc/debian-pcap:buster-slim-${ARCH}
+FROM up9inc/debian-pcap:stable-slim-${ARCH}
 
 WORKDIR /app
 
