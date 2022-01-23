@@ -183,16 +183,16 @@ func tryExecuteFunc(executeFunc func() error) (err interface{}) {
 }
 
 func waitTapPodsReady(apiServerUrl string) error {
-	resolvingUrl := fmt.Sprintf("%v/status/tappersCount", apiServerUrl)
+	resolvingUrl := fmt.Sprintf("%v/status/connectedTappersCount", apiServerUrl)
 	tapPodsReadyFunc := func() error {
 		requestResult, requestErr := executeHttpGetRequest(resolvingUrl)
 		if requestErr != nil {
 			return requestErr
 		}
 
-		tappersCount := requestResult.(float64)
-		if tappersCount == 0 {
-			return fmt.Errorf("no tappers running")
+		connectedTappersCount := requestResult.(float64)
+		if connectedTappersCount == 0 {
+			return fmt.Errorf("no connected tappers running")
 		}
 		time.Sleep(waitAfterTapPodsReady)
 		return nil

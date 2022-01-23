@@ -1,4 +1,4 @@
-import React, {useContext, useEffect, useState} from "react";
+import React, {useEffect, useState} from "react";
 import logo from '../assets/MizuEntLogo.svg';
 import './Header.sass';
 import userImg from '../assets/user-circle.svg';
@@ -9,7 +9,8 @@ import logoutIcon from '../assets/logout.png';
 import {SettingsModal} from "../SettingsModal/SettingModal";
 import Api from "../../helpers/api";
 import {toast} from "react-toastify";
-import {MizuContext, Page} from "../../EntApp";
+import {useSetRecoilState} from "recoil";
+import entPageAtom, {Page} from "../../recoil/entPage";
 
 const api = Api.getInstance();
 
@@ -49,12 +50,12 @@ export const EntHeader: React.FC<EntHeaderProps> = ({isFirstLogin, setIsFirstLog
 
 const ProfileButton = () => {
 
-    const {setPage} = useContext(MizuContext);
+    const setEntPage = useSetRecoilState(entPageAtom);
 
     const logout = async (popupState) => {
         try {
             await api.logout();
-            setPage(Page.Login);
+            setEntPage(Page.Login);
         } catch (e) {
             toast.error("Something went wrong, please check the console");
             console.error(e);

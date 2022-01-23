@@ -1,12 +1,13 @@
 # creates image in which mizu agent is remotely debuggable using delve
-FROM node:14-slim AS site-build
+FROM node:16-slim AS site-build
 
 WORKDIR /app/ui-build
 
-COPY ui .
+COPY ui/package.json .
+COPY ui/package-lock.json .
 RUN npm i
+COPY ui .
 RUN npm run build
-
 
 FROM golang:1.16-alpine AS builder
 # Set necessary environment variables needed for our image.
@@ -34,15 +35,16 @@ ARG SEM_VER=0.0.0
 COPY shared ../shared
 COPY tap ../tap
 COPY agent .
+# Include gcflags for debugging
 RUN go build -gcflags="all=-N -l" -o mizuagent .
 
 COPY devops/build_extensions_debug.sh ..
 RUN cd .. && /bin/bash build_extensions_debug.sh
 
-
 FROM golang:1.16-alpine
 
-RUN apk add bash libpcap-dev
+# Set necessary environment variables needed for our image.
+RUN apk add bash libpcap-dev gcc g++
 
 WORKDIR /app
 
@@ -50,9 +52,16 @@ WORKDIR /app
 COPY --from=builder ["/app/agent-build/mizuagent", "."]
 COPY --from=builder ["/app/agent/build/extensions", "extensions"]
 COPY --from=site-build ["/app/ui-build/build", "site"]
+RUN mkdir /app/data/
 
-# install remote debugging tool
+# install delve
+ENV CGO_ENABLED=1 GOOS=linux GOARCH=amd64
 RUN go get github.com/go-delve/delve/cmd/dlv
 
+ENV GIN_MODE=debug
+
+# delve ports
+EXPOSE 2345 2346
+
+# this script runs both apiserver and passivetapper and exits either if one of them exits, preventing a scenario where the container runs without one process
 ENTRYPOINT "/app/mizuagent"
-#CMD ["sh", "-c", "dlv --headless=true --listen=:2345 --log --api-version=2 --accept-multiclient exec ./mizuagent -- --api-server"]

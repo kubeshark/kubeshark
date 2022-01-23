@@ -13,12 +13,15 @@ import (
 	"strings"
 	"time"
 
+	"mizuserver/pkg/servicemap"
+
 	"github.com/google/martian/har"
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/logger"
 	tapApi "github.com/up9inc/mizu/tap/api"
 
 	"mizuserver/pkg/models"
+	"mizuserver/pkg/oas"
 	"mizuserver/pkg/resolver"
 	"mizuserver/pkg/utils"
 
@@ -136,6 +139,8 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 				rules, _, _ := models.RunValidationRulesState(*harEntry, mizuEntry.Destination.Name)
 				mizuEntry.Rules = rules
 			}
+
+			oas.GetOasGeneratorInstance().PushEntry(harEntry)
 		}
 
 		data, err := json.Marshal(mizuEntry)
@@ -143,6 +148,8 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 			panic(err)
 		}
 		connection.SendText(string(data))
+
+		servicemap.GetInstance().NewTCPEntry(mizuEntry.Source, mizuEntry.Destination, &item.Protocol)
 	}
 }
 

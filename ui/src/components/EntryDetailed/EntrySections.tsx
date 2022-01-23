@@ -12,14 +12,13 @@ import {default as xmlBeautify} from "xml-formatter";
 interface EntryViewLineProps {
     label: string;
     value: number | string;
-    updateQuery?: any;
     selector?: string;
     overrideQueryValue?: string;
     displayIconOnMouseOver?: boolean;
     useTooltip?: boolean;
 }
 
-const EntryViewLine: React.FC<EntryViewLineProps> = ({label, value, updateQuery = null, selector = "", overrideQueryValue = "", displayIconOnMouseOver = true, useTooltip = true}) => {
+const EntryViewLine: React.FC<EntryViewLineProps> = ({label, value, selector = "", overrideQueryValue = "", displayIconOnMouseOver = true, useTooltip = true}) => {
     let query: string;
     if (!selector) {
         query = "";
@@ -34,7 +33,6 @@ const EntryViewLine: React.FC<EntryViewLineProps> = ({label, value, updateQuery 
                     <td className={`${styles.dataKey}`}>
                         <Queryable
                             query={query}
-                            updateQuery={updateQuery}
                             style={{float: "right", height: "18px"}}
                             iconStyle={{marginRight: "20px"}}
                             flipped={true}
@@ -63,10 +61,9 @@ interface EntrySectionCollapsibleTitleProps {
     expanded: boolean,
     setExpanded: any,
     query?: string,
-    updateQuery?: any,
 }
 
-const EntrySectionCollapsibleTitle: React.FC<EntrySectionCollapsibleTitleProps> = ({title, color, expanded, setExpanded, query = "", updateQuery = null}) => {
+const EntrySectionCollapsibleTitle: React.FC<EntrySectionCollapsibleTitleProps> = ({title, color, expanded, setExpanded, query = ""}) => {
     return <div className={styles.title}>
         <div
             className={`${styles.button} ${expanded ? styles.expanded : ''}`}
@@ -79,9 +76,8 @@ const EntrySectionCollapsibleTitle: React.FC<EntrySectionCollapsibleTitleProps> 
         </div>
         <Queryable
             query={query}
-            updateQuery={updateQuery}
-            useTooltip={updateQuery ? true : false}
-            displayIconOnMouseOver={updateQuery ? true : false}
+            useTooltip={!!query}
+            displayIconOnMouseOver={!!query}
         >
             <span>{title}</span>
         </Queryable>
@@ -92,32 +88,31 @@ interface EntrySectionContainerProps {
     title: string,
     color: string,
     query?: string,
-    updateQuery?: any,
 }
 
-export const EntrySectionContainer: React.FC<EntrySectionContainerProps> = ({title, color, children, query = "", updateQuery = null}) => {
+export const EntrySectionContainer: React.FC<EntrySectionContainerProps> = ({title, color, children, query = ""}) => {
     const [expanded, setExpanded] = useState(true);
     return <CollapsibleContainer
         className={styles.collapsibleContainer}
         expanded={expanded}
-        title={<EntrySectionCollapsibleTitle title={title} color={color} expanded={expanded} setExpanded={setExpanded} query={query} updateQuery={updateQuery}/>}
+        title={<EntrySectionCollapsibleTitle title={title} color={color} expanded={expanded} setExpanded={setExpanded} query={query}/>}
     >
         {children}
     </CollapsibleContainer>
 }
 
 interface EntryBodySectionProps {
+    title: string,
     content: any,
     color: string,
-    updateQuery: any,
     encoding?: string,
     contentType?: string,
     selector?: string,
 }
 
 export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
+    title,
     color,
-    updateQuery,
     content,
     encoding,
     contentType,
@@ -167,10 +162,9 @@ export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
 
     return <React.Fragment>
         {content && content?.length > 0 && <EntrySectionContainer
-                                                title='Body'
+                                                title={title}
                                                 color={color}
                                                 query={`${selector} == r".*"`}
-                                                updateQuery={updateQuery}
                                             >
             <div style={{display: 'flex', alignItems: 'center', alignContent: 'center', margin: "5px 0"}}>
                 {supportsPrettying && <div style={{paddingTop: 3}}>
@@ -201,21 +195,33 @@ interface EntrySectionProps {
     title: string,
     color: string,
     arrayToIterate: any[],
-    updateQuery: any,
 }
 
-export const EntryTableSection: React.FC<EntrySectionProps> = ({title, color, arrayToIterate, updateQuery}) => {
+export const EntryTableSection: React.FC<EntrySectionProps> = ({title, color, arrayToIterate}) => {
+    let arrayToIterateSorted: any[];
+    if (arrayToIterate) {
+        arrayToIterateSorted = arrayToIterate.sort((a, b) => {
+            if (a.name > b.name) {
+                return 1;
+            }
+
+            if (a.name < b.name) {
+                return -1;
+            }
+
+            return 0;
+        });
+    }
     return <React.Fragment>
         {
             arrayToIterate && arrayToIterate.length > 0 ?
                 <EntrySectionContainer title={title} color={color}>
                     <table>
-                        <tbody>
-                            {arrayToIterate.map(({name, value, selector}, index) => <EntryViewLine
+                        <tbody id={`tbody-${title}`}>
+                            {arrayToIterateSorted.map(({name, value, selector}, index) => <EntryViewLine
                                 key={index}
                                 label={name}
                                 value={value}
-                                updateQuery={updateQuery}
                                 selector={selector}
                             />)}
                         </tbody>

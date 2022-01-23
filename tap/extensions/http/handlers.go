@@ -21,7 +21,30 @@ func filterAndEmit(item *api.OutputChannelItem, emitter api.Emitter, options *ap
 		FilterSensitiveData(item, options)
 	}
 
+	replaceForwardedFor(item)
+
 	emitter.Emit(item)
+}
+
+func replaceForwardedFor(item *api.OutputChannelItem) {
+	if item.Protocol.Name != "http" {
+		return
+	}
+
+	request := item.Pair.Request.Payload.(api.HTTPPayload).Data.(*http.Request)
+
+	forwardedFor := request.Header.Get("X-Forwarded-For")
+	if forwardedFor == "" {
+		return
+	}
+
+	ips := strings.Split(forwardedFor, ",")
+	lastIP := strings.TrimSpace(ips[0])
+
+	item.ConnectionInfo.ClientIP = lastIP
+	// Erase the port field. Because the proxy terminates the connection from the client, the port that we see here
+	// is not the source port on the client side.
+	item.ConnectionInfo.ClientPort = ""
 }
 
 func handleHTTP2Stream(http2Assembler *Http2Assembler, tcpID *api.TcpID, superTimer *api.SuperTimer, emitter api.Emitter, options *api.TrafficFilteringOptions) error {
@@ -43,7 +66,7 @@ func handleHTTP2Stream(http2Assembler *Http2Assembler, tcpID *api.TcpID, superTi
 			streamID,
 			"HTTP2",
 		)
-		item = reqResMatcher.registerRequest(ident, &messageHTTP1, superTimer.CaptureTime)
+		item = reqResMatcher.registerRequest(ident, &messageHTTP1, superTimer.CaptureTime, messageHTTP1.ProtoMinor)
 		if item != nil {
 			item.ConnectionInfo = &api.ConnectionInfo{
 				ClientIP:   tcpID.SrcIP,
@@ -63,7 +86,7 @@ func handleHTTP2Stream(http2Assembler *Http2Assembler, tcpID *api.TcpID, superTi
 			streamID,
 			"HTTP2",
 		)
-		item = reqResMatcher.registerResponse(ident, &messageHTTP1, superTimer.CaptureTime)
+		item = reqResMatcher.registerResponse(ident, &messageHTTP1, superTimer.CaptureTime, messageHTTP1.ProtoMinor)
 		if item != nil {
 			item.ConnectionInfo = &api.ConnectionInfo{
 				ClientIP:   tcpID.DstIP,
@@ -112,7 +135,7 @@ func handleHTTP1ClientStream(b *bufio.Reader, tcpID *api.TcpID, counterPair *api
 		counterPair.Request,
 		"HTTP1",
 	)
-	item := reqResMatcher.registerRequest(ident, req, superTimer.CaptureTime)
+	item := reqResMatcher.registerRequest(ident, req, superTimer.CaptureTime, req.ProtoMinor)
 	if item != nil {
 		item.ConnectionInfo = &api.ConnectionInfo{
 			ClientIP:   tcpID.SrcIP,
@@ -152,7 +175,7 @@ func handleHTTP1ServerStream(b *bufio.Reader, tcpID *api.TcpID, counterPair *api
 		counterPair.Response,
 		"HTTP1",
 	)
-	item := reqResMatcher.registerResponse(ident, res, superTimer.CaptureTime)
+	item := reqResMatcher.registerResponse(ident, res, superTimer.CaptureTime, res.ProtoMinor)
 	if item != nil {
 		item.ConnectionInfo = &api.ConnectionInfo{
 			ClientIP:   tcpID.DstIP,

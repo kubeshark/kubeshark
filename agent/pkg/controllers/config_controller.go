@@ -13,7 +13,7 @@ import (
 	"mizuserver/pkg/providers"
 	"mizuserver/pkg/providers/tapConfig"
 	"mizuserver/pkg/providers/tappedPods"
-	"mizuserver/pkg/providers/tappersStatus"
+	"mizuserver/pkg/providers/tappers"
 	"net/http"
 	"regexp"
 	"time"
@@ -33,7 +33,7 @@ func PostTapConfig(c *gin.Context) {
 		cancelTapperSyncer()
 
 		tappedPods.Set([]*shared.PodInfo{})
-		tappersStatus.Reset()
+		tappers.ResetStatus()
 
 		broadcastTappedPodsStatus()
 	}
@@ -142,7 +142,7 @@ func startMizuTapperSyncer(ctx context.Context, provider *kubernetes.Provider, t
 					return
 				}
 
-				tappersStatus.Set(&tapperStatus)
+				tappers.SetStatus(&tapperStatus)
 				broadcastTappedPodsStatus()
 			case <-ctx.Done():
 				logger.Log.Debug("mizuTapperSyncer event listener loop exiting due to context done")

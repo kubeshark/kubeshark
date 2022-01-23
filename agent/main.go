@@ -11,7 +11,9 @@ import (
 	"mizuserver/pkg/controllers"
 	"mizuserver/pkg/middlewares"
 	"mizuserver/pkg/models"
+	"mizuserver/pkg/oas"
 	"mizuserver/pkg/routes"
+	"mizuserver/pkg/servicemap"
 	"mizuserver/pkg/up9"
 	"mizuserver/pkg/utils"
 	"net/http"
@@ -120,14 +122,14 @@ func main() {
 
 		outputItemsChannel := make(chan *tapApi.OutputChannelItem)
 		filteredOutputItemsChannel := make(chan *tapApi.OutputChannelItem)
-
+		enableExpFeatureIfNeeded()
 		go filterItems(outputItemsChannel, filteredOutputItemsChannel)
 		go api.StartReadingEntries(filteredOutputItemsChannel, nil, extensionsMap)
 
 		syncEntriesConfig := getSyncEntriesConfig()
 		if syncEntriesConfig != nil {
 			if err := up9.SyncEntries(syncEntriesConfig); err != nil {
-				panic(fmt.Sprintf("Error syncing entries, err: %v", err))
+				logger.Log.Error("Error syncing entries, err: %v", err)
 			}
 		}
 
@@ -146,6 +148,15 @@ func main() {
 	<-signalChan
 
 	logger.Log.Info("Exiting")
+}
+
+func enableExpFeatureIfNeeded() {
+	if config.Config.OAS {
+		oas.GetOasGeneratorInstance().Start()
+	}
+	if config.Config.ServiceMap {
+		servicemap.GetInstance().SetConfig(config.Config)
+	}
 }
 
 func configureBasenineServer(host string, port string) {
@@ -233,7 +244,7 @@ func hostApi(socketHarOutputChannel chan<- *tapApi.OutputChannelItem) {
 
 	app.Use(DisableRootStaticCache())
 
-	if err := setUIMode(); err != nil {
+	if err := setUIFlags(); err != nil {
 		logger.Log.Errorf("Error setting ui mode, err: %v", err)
 	}
 	app.Use(static.ServeRoot("/", "./site"))
@@ -247,13 +258,18 @@ func hostApi(socketHarOutputChannel chan<- *tapApi.OutputChannelItem) {
 		routes.UserRoutes(app)
 		routes.InstallRoutes(app)
 	}
+	if config.Config.OAS {
+		routes.OASRoutes(app)
+	}
+	if config.Config.ServiceMap {
+		routes.ServiceMapRoutes(app)
+	}
 
 	routes.QueryRoutes(app)
 	routes.EntriesRoutes(app)
 	routes.MetadataRoutes(app)
 	routes.StatusRoutes(app)
 	routes.NotFoundRoute(app)
-
 	utils.StartServer(app)
 }
 
@@ -268,13 +284,15 @@ func DisableRootStaticCache() gin.HandlerFunc {
 	}
 }
 
-func setUIMode() error {
+func setUIFlags() error {
 	read, err := ioutil.ReadFile(uiIndexPath)
 	if err != nil {
 		return err
 	}
 
 	replacedContent := strings.Replace(string(read), "__IS_STANDALONE__", strconv.FormatBool(config.Config.StandaloneMode), 1)
+	replacedContent = strings.Replace(replacedContent, "__IS_OAS_ENABLED__", strconv.FormatBool(config.Config.OAS), 1)
+	replacedContent = strings.Replace(replacedContent, "__IS_SERVICE_MAP_ENABLED__", strconv.FormatBool(config.Config.ServiceMap), 1)
 
 	err = ioutil.WriteFile(uiIndexPath, []byte(replacedContent), 0)
 	if err != nil {

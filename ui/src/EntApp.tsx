@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import './App.sass';
 import {TrafficPage} from "./components/TrafficPage";
 import {TLSWarning} from "./components/TLSWarning/TLSWarning";
@@ -9,24 +9,11 @@ import InstallPage from "./components/InstallPage";
 import LoginPage from "./components/LoginPage";
 import LoadingOverlay from "./components/LoadingOverlay";
 import AuthPageBase from './components/AuthPageBase';
+import entPageAtom, {Page} from "./recoil/entPage";
+import {useRecoilState} from "recoil";
+import { ServiceMapModal } from './components/ServiceMapModal/ServiceMapModal';
 
 const api = Api.getInstance();
-
-// TODO: move to state management
-export enum Page {
-    Traffic,
-    Setup,
-    Login
-}
-
-// TODO: move to state management
-export interface MizuContextModel {
-    page: Page;
-    setPage: (page: Page) => void;
-}
-
-// TODO: move to state management
-export const MizuContext = React.createContext<MizuContextModel>(null);
 
 const EntApp = () => {
 
@@ -34,18 +21,19 @@ const EntApp = () => {
     const [showTLSWarning, setShowTLSWarning] = useState(false);
     const [userDismissedTLSWarning, setUserDismissedTLSWarning] = useState(false);
     const [addressesWithTLS, setAddressesWithTLS] = useState(new Set<string>());
-    const [page, setPage] = useState(Page.Traffic); // TODO: move to state management
+    const [entPage, setEntPage] = useRecoilState(entPageAtom);
     const [isFirstLogin, setIsFirstLogin] = useState(false);
+    const [openServiceMapModal, setOpenServiceMapModal] = useState(false);
 
-    const determinePage = async () => { // TODO: move to state management
+    const determinePage =  useCallback(async () => { // TODO: move to state management
         try {
             const isInstallNeeded = await api.isInstallNeeded();
             if (isInstallNeeded) {
-                setPage(Page.Setup);
+                setEntPage(Page.Setup);
             } else {
                 const isAuthNeeded = await api.isAuthenticationNeeded();
                 if(isAuthNeeded) {
-                    setPage(Page.Login);
+                    setEntPage(Page.Login);
                 }
             }
         } catch (e) {
@@ -54,11 +42,11 @@ const EntApp = () => {
         } finally {
             setIsLoading(false);
         }
-    }
+    },[setEntPage]);
 
     useEffect(() => {
         determinePage();
-    }, []);
+    }, [determinePage]);
 
     const onTLSDetected = (destAddress: string) => {
         addressesWithTLS.add(destAddress);
@@ -71,9 +59,9 @@ const EntApp = () => {
 
     let pageComponent: any;
 
-    switch (page) { // TODO: move to state management / proper routing
+    switch (entPage) { // TODO: move to state management / proper routing
         case Page.Traffic:
-            pageComponent = <TrafficPage onTLSDetected={onTLSDetected}/>;
+            pageComponent = <TrafficPage onTLSDetected={onTLSDetected} setOpenServiceMapModal={setOpenServiceMapModal} />;
             break;
         case Page.Setup:
             pageComponent = <AuthPageBase><InstallPage onFirstLogin={() => setIsFirstLogin(true)}/></AuthPageBase>;
@@ -91,16 +79,19 @@ const EntApp = () => {
 
     return (
         <div className="mizuApp">
-            <MizuContext.Provider value={{page, setPage}}>
-                {page === Page.Traffic && <EntHeader isFirstLogin={isFirstLogin} setIsFirstLogin={setIsFirstLogin}/>}
-                {pageComponent}
-                {page === Page.Traffic && <TLSWarning showTLSWarning={showTLSWarning}
-                            setShowTLSWarning={setShowTLSWarning}
-                            addressesWithTLS={addressesWithTLS}
-                            setAddressesWithTLS={setAddressesWithTLS}
-                            userDismissedTLSWarning={userDismissedTLSWarning}
-                            setUserDismissedTLSWarning={setUserDismissedTLSWarning}/>}
-            </MizuContext.Provider>
+            {entPage === Page.Traffic && <EntHeader isFirstLogin={isFirstLogin} setIsFirstLogin={setIsFirstLogin} />}
+            {pageComponent}
+            {entPage === Page.Traffic && <TLSWarning showTLSWarning={showTLSWarning}
+                setShowTLSWarning={setShowTLSWarning}
+                addressesWithTLS={addressesWithTLS}
+                setAddressesWithTLS={setAddressesWithTLS}
+                userDismissedTLSWarning={userDismissedTLSWarning}
+                setUserDismissedTLSWarning={setUserDismissedTLSWarning} />}
+            {entPage === Page.Traffic && window["isServiceMapEnabled"] && <ServiceMapModal
+                isOpen={openServiceMapModal}
+                onOpen={() => setOpenServiceMapModal(true)}
+                onClose={() => setOpenServiceMapModal(false)}
+            />}
         </div>
     );
 }

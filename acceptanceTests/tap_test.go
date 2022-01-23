@@ -3,7 +3,6 @@ package acceptanceTests
 import (
 	"archive/zip"
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -139,7 +138,7 @@ func TestTapGuiPort(t *testing.T) {
 				return
 			}
 
-			runCypressTests(t, fmt.Sprintf("npx cypress run --spec \"cypress/integration/tests/GuiPort.js\" --env port=%d", guiPort))
+			runCypressTests(t, fmt.Sprintf("npx cypress run --spec \"cypress/integration/tests/GuiPort.js\" --env port=%d --config-file cypress/integration/configurations/Default.json", guiPort))
 		})
 	}
 }
@@ -185,7 +184,7 @@ func TestTapAllNamespaces(t *testing.T) {
 		return
 	}
 
-	runCypressTests(t, fmt.Sprintf("npx cypress run --spec  \"cypress/integration/tests/MultipleNamespaces.js\" --env name1=%v,name2=%v,name3=%v,namespace1=%v,namespace2=%v,namespace3=%v",
+	runCypressTests(t, fmt.Sprintf("npx cypress run --spec  \"cypress/integration/tests/MultipleNamespaces.js\" --env name1=%v,name2=%v,name3=%v,namespace1=%v,namespace2=%v,namespace3=%v --config-file cypress/integration/configurations/Default.json",
 		expectedPods[0].Name, expectedPods[1].Name, expectedPods[2].Name, expectedPods[0].Namespace, expectedPods[1].Namespace, expectedPods[2].Namespace))
 }
 
@@ -234,7 +233,7 @@ func TestTapMultipleNamespaces(t *testing.T) {
 		return
 	}
 
-	runCypressTests(t, fmt.Sprintf("npx cypress run --spec  \"cypress/integration/tests/MultipleNamespaces.js\" --env name1=%v,name2=%v,name3=%v,namespace1=%v,namespace2=%v,namespace3=%v",
+	runCypressTests(t, fmt.Sprintf("npx cypress run --spec  \"cypress/integration/tests/MultipleNamespaces.js\" --env name1=%v,name2=%v,name3=%v,namespace1=%v,namespace2=%v,namespace3=%v --config-file cypress/integration/configurations/Default.json",
 		expectedPods[0].Name, expectedPods[1].Name, expectedPods[2].Name, expectedPods[0].Namespace, expectedPods[1].Namespace, expectedPods[2].Namespace))
 }
 
@@ -280,7 +279,7 @@ func TestTapRegex(t *testing.T) {
 		return
 	}
 
-	runCypressTests(t, fmt.Sprintf("npx cypress run --spec  \"cypress/integration/tests/Regex.js\" --env name=%v,namespace=%v",
+	runCypressTests(t, fmt.Sprintf("npx cypress run --spec  \"cypress/integration/tests/Regex.js\" --env name=%v,namespace=%v --config-file cypress/integration/configurations/Default.json",
 		expectedPods[0].Name, expectedPods[0].Namespace))
 }
 
@@ -378,59 +377,7 @@ func TestTapRedact(t *testing.T) {
 		}
 	}
 
-	redactCheckFunc := func() error {
-		timestamp := time.Now().UnixNano() / int64(time.Millisecond)
-
-		entries, err := getDBEntries(timestamp, defaultEntriesCount, 1*time.Second)
-		if err != nil {
-			return err
-		}
-		err = checkEntriesAtLeast(entries, 1)
-		if err != nil {
-			return err
-		}
-		firstEntry := entries[0]
-
-		entryUrl := fmt.Sprintf("%v/entries/%v", apiServerUrl, firstEntry["id"])
-		requestResult, requestErr := executeHttpGetRequest(entryUrl)
-		if requestErr != nil {
-			return fmt.Errorf("failed to get entry, err: %v", requestErr)
-		}
-
-		entry := requestResult.(map[string]interface{})["data"].(map[string]interface{})
-		request := entry["request"].(map[string]interface{})
-
-		headers := request["_headers"].([]interface{})
-		for _, headerInterface := range headers {
-			header := headerInterface.(map[string]interface{})
-			if header["name"].(string) != "User-Header" {
-				continue
-			}
-
-			userHeader := header["value"].(string)
-			if userHeader != "[REDACTED]" {
-				return fmt.Errorf("unexpected result - user agent is not redacted")
-			}
-		}
-
-		postData := request["postData"].(map[string]interface{})
-		textDataStr := postData["text"].(string)
-
-		var textData map[string]string
-		if parseErr := json.Unmarshal([]byte(textDataStr), &textData); parseErr != nil {
-			return fmt.Errorf("failed to parse text data, err: %v", parseErr)
-		}
-
-		if textData["User"] != "[REDACTED]" {
-			return fmt.Errorf("unexpected result - user in body is not redacted")
-		}
-
-		return nil
-	}
-	if err := retriesExecute(shortRetriesCount, redactCheckFunc); err != nil {
-		t.Errorf("%v", err)
-		return
-	}
+	runCypressTests(t, fmt.Sprintf("npx cypress run --spec  \"cypress/integration/tests/Redact.js\" --config-file cypress/integration/configurations/Default.json"))
 }
 
 func TestTapNoRedact(t *testing.T) {
@@ -482,59 +429,7 @@ func TestTapNoRedact(t *testing.T) {
 		}
 	}
 
-	redactCheckFunc := func() error {
-		timestamp := time.Now().UnixNano() / int64(time.Millisecond)
-
-		entries, err := getDBEntries(timestamp, defaultEntriesCount, 1*time.Second)
-		if err != nil {
-			return err
-		}
-		err = checkEntriesAtLeast(entries, 1)
-		if err != nil {
-			return err
-		}
-		firstEntry := entries[0]
-
-		entryUrl := fmt.Sprintf("%v/entries/%v", apiServerUrl, firstEntry["id"])
-		requestResult, requestErr := executeHttpGetRequest(entryUrl)
-		if requestErr != nil {
-			return fmt.Errorf("failed to get entry, err: %v", requestErr)
-		}
-
-		entry := requestResult.(map[string]interface{})["data"].(map[string]interface{})
-		request := entry["request"].(map[string]interface{})
-
-		headers := request["_headers"].([]interface{})
-		for _, headerInterface := range headers {
-			header := headerInterface.(map[string]interface{})
-			if header["name"].(string) != "User-Header" {
-				continue
-			}
-
-			userHeader := header["value"].(string)
-			if userHeader == "[REDACTED]" {
-				return fmt.Errorf("unexpected result - user agent is redacted")
-			}
-		}
-
-		postData := request["postData"].(map[string]interface{})
-		textDataStr := postData["text"].(string)
-
-		var textData map[string]string
-		if parseErr := json.Unmarshal([]byte(textDataStr), &textData); parseErr != nil {
-			return fmt.Errorf("failed to parse text data, err: %v", parseErr)
-		}
-
-		if textData["User"] == "[REDACTED]" {
-			return fmt.Errorf("unexpected result - user in body is redacted")
-		}
-
-		return nil
-	}
-	if err := retriesExecute(shortRetriesCount, redactCheckFunc); err != nil {
-		t.Errorf("%v", err)
-		return
-	}
+	runCypressTests(t, "npx cypress run --spec  \"cypress/integration/tests/NoRedact.js\" --config-file cypress/integration/configurations/Default.json")
 }
 
 func TestTapRegexMasking(t *testing.T) {
@@ -585,41 +480,8 @@ func TestTapRegexMasking(t *testing.T) {
 		}
 	}
 
-	redactCheckFunc := func() error {
-		timestamp := time.Now().UnixNano() / int64(time.Millisecond)
+	runCypressTests(t, "npx cypress run --spec \"cypress/integration/tests/RegexMasking.js\" --config-file cypress/integration/configurations/Default.json")
 
-		entries, err := getDBEntries(timestamp, defaultEntriesCount, 1*time.Second)
-		if err != nil {
-			return err
-		}
-		err = checkEntriesAtLeast(entries, 1)
-		if err != nil {
-			return err
-		}
-		firstEntry := entries[0]
-
-		entryUrl := fmt.Sprintf("%v/entries/%v", apiServerUrl, firstEntry["id"])
-		requestResult, requestErr := executeHttpGetRequest(entryUrl)
-		if requestErr != nil {
-			return fmt.Errorf("failed to get entry, err: %v", requestErr)
-		}
-
-		entry := requestResult.(map[string]interface{})["data"].(map[string]interface{})
-		request := entry["request"].(map[string]interface{})
-
-		postData := request["postData"].(map[string]interface{})
-		textData := postData["text"].(string)
-
-		if textData != "[REDACTED]" {
-			return fmt.Errorf("unexpected result - body is not redacted")
-		}
-
-		return nil
-	}
-	if err := retriesExecute(shortRetriesCount, redactCheckFunc); err != nil {
-		t.Errorf("%v", err)
-		return
-	}
 }
 
 func TestTapIgnoredUserAgents(t *testing.T) {
@@ -680,45 +542,7 @@ func TestTapIgnoredUserAgents(t *testing.T) {
 		}
 	}
 
-	ignoredUserAgentsCheckFunc := func() error {
-		timestamp := time.Now().UnixNano() / int64(time.Millisecond)
-
-		entries, err := getDBEntries(timestamp, defaultEntriesCount, 1*time.Second)
-		if err != nil {
-			return err
-		}
-		err = checkEntriesAtLeast(entries, 1)
-		if err != nil {
-			return err
-		}
-
-		for _, entryInterface := range entries {
-			entryUrl := fmt.Sprintf("%v/entries/%v", apiServerUrl, entryInterface["id"])
-			requestResult, requestErr := executeHttpGetRequest(entryUrl)
-			if requestErr != nil {
-				return fmt.Errorf("failed to get entry, err: %v", requestErr)
-			}
-
-			entry := requestResult.(map[string]interface{})["data"].(map[string]interface{})
-			request := entry["request"].(map[string]interface{})
-
-			headers := request["_headers"].([]interface{})
-			for _, headerInterface := range headers {
-				header := headerInterface.(map[string]interface{})
-				if header["name"].(string) != ignoredUserAgentCustomHeader {
-					continue
-				}
-
-				return fmt.Errorf("unexpected result - user agent is not ignored")
-			}
-		}
-
-		return nil
-	}
-	if err := retriesExecute(shortRetriesCount, ignoredUserAgentsCheckFunc); err != nil {
-		t.Errorf("%v", err)
-		return
-	}
+	runCypressTests(t, "npx cypress run --spec  \"cypress/integration/tests/IgnoredUserAgents.js\" --config-file cypress/integration/configurations/HugeMizu.json")
 }
 
 func TestTapDumpLogs(t *testing.T) {
