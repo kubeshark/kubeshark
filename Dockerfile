@@ -13,7 +13,7 @@ RUN npm run build
 
 
 ### Base of the builder image
-FROM golang:1.17-bullseye AS builder-base
+FROM golang:1.16-bullseye AS builder-base
 
 # Set necessary environment variables needed for our image.
 ENV CGO_ENABLED=1 GOOS=linux GOARCH=${GOARCH}
