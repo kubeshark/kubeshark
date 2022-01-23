@@ -233,6 +233,12 @@ jobs:
       - name: Check out the repo
         uses: actions/checkout@v2
 
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@master
+        with:
+          service_account_key: ${{ secrets.GCR_JSON_KEY }}
+          export_default_credentials: true
+
       - uses: haya14busa/action-cond@v1
         id: condval
         with:
