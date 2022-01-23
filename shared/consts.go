@@ -14,6 +14,7 @@ const (
 	GoGCEnvVar                       = "GOGC"
 	DefaultApiServerPort             = 8899
 	LogLevelEnvVar                   = "LOG_LEVEL"
+	MizuAgentImageRepo               = "docker.io/up9inc/mizu"
 	BasenineHost                     = "127.0.0.1"
 	BaseninePort                     = "9099"
 	BasenineImageRepo                = "docker.io/up9inc/basenine"

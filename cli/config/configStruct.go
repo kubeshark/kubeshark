@@ -2,15 +2,16 @@ package config
 
 import (
 	"fmt"
+	"os"
+	"path"
+	"path/filepath"
+
 	"github.com/op/go-logging"
 	"github.com/up9inc/mizu/cli/config/configStructs"
 	"github.com/up9inc/mizu/cli/mizu"
 	"github.com/up9inc/mizu/shared"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/util/homedir"
-	"os"
-	"path"
-	"path/filepath"
 )
 
 const (
@@ -52,7 +53,7 @@ func (config *ConfigStruct) validate() error {
 func (config *ConfigStruct) SetDefaults() {
 	config.BasenineImage = fmt.Sprintf("%s:%s", shared.BasenineImageRepo, shared.BasenineImageTag)
 	config.KratosImage = shared.KratosImageDefault
-	config.AgentImage = fmt.Sprintf("gcr.io/up9-docker-hub/mizu/%s:%s", mizu.Branch, mizu.SemVer)
+	config.AgentImage = fmt.Sprintf("%s:%s", shared.MizuAgentImageRepo, mizu.SemVer)
 	config.ConfigFilePath = path.Join(mizu.GetMizuFolderPath(), "config.yaml")
 }
 

@@ -1,4 +1,4 @@
-name: Publish a Docker image
+name: Release
 
 on:
   push:
@@ -221,7 +221,7 @@ jobs:
           done <<< "${{ steps.meta.outputs.tags }}"
 
   cli:
-    name: Build the CLI and release
+    name: Build the CLI and publish
     runs-on: ubuntu-latest
     needs: [docker-manifest, gcp-registry]
     steps:
