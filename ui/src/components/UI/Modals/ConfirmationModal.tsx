@@ -29,9 +29,9 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = observer(({title, is
                                                                         confirmButtonColor, titleColor, img, isLoading,children,
                                                                         className}) => {
     const classes = useCommonStyles();
-    const confirmStyle = {width: 100, marginLeft: 20}
+    const confirmStyle = {width: 100, marginLeft: 20}                                                                  
     return (
-        <CustomModal open={isOpen} onClose={onClose} disableBackdropClick={true} isWide={isWide} className={className}>
+        <CustomModal open={isOpen} onClose={onClose} disableBackdropClick={true} isWide={isWide} className={`${className}`}>
             <div className="confirmationHeader">
                 <div className="confirmationTitle" style={titleColor ? {color: titleColor} : {}}>{title ?? "CONFIRMATION"}</div>
                 <img src={iconClose} onClick={onClose} alt="close"/>
@@ -55,8 +55,6 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = observer(({title, is
                 </Button>
                 <Button style={confirmButtonColor ? {backgroundColor: confirmButtonColor,...confirmStyle} : {...confirmStyle}} 
                     className={classes.button} size={"small"}
-                    
-                    
                     onClick={onConfirm} 
                     disabled={confirmDisabled || isLoading} 
                     endIcon={isLoading && <img src={spinner} alt="spinner"/>}>{confirmButtonText ?? "YES"}

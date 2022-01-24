@@ -41,7 +41,7 @@ export const useCommonStyles = makeStyles(() => ({
         top: '10%',
         left: '50%',
         transform: 'translate(-50%, 0%)',
-        width: '80vw',
+        width: "MAX(40vw, 600px)",
         bgcolor: 'background.paper',
         borderRadius: '5px',
         boxShadow: 24,
