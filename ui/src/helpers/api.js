@@ -177,8 +177,8 @@ export default class Api {
     }
 
     logout = async () => {
-        await this.client.post(`/user/logout`);
         this.persistToken(null);
+        await this.client.post(`/user/logout`);
     }
 
     getAxiosClient = () => {
