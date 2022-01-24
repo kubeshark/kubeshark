@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/denisbrodbeck/machineid"
 	"github.com/up9inc/mizu/cli/apiserver"
@@ -16,11 +17,15 @@ import (
 
 const telemetryUrl = "https://us-east4-up9-prod.cloudfunctions.net/mizu-telemetry"
 
+var runStartTime time.Time
+
 func ReportRun(cmd string, args interface{}) {
 	if !shouldRunTelemetry() {
 		logger.Log.Debugf("not reporting telemetry")
 		return
 	}
+
+	runStartTime = time.Now()
 
 	argsBytes, _ := json.Marshal(args)
 	argsMap := map[string]interface{}{
@@ -34,6 +39,25 @@ func ReportRun(cmd string, args interface{}) {
 	}
 
 	logger.Log.Debugf("successfully reported telemetry for cmd %v", cmd)
+}
+
+func ReportExecutionTime() {
+	if !shouldRunTelemetry() {
+		logger.Log.Debugf("not reporting telemetry")
+		return
+	}
+
+	executionTime := getExecutionTime()
+	argsMap := map[string]interface{}{
+		"timeInSeconds": executionTime.Seconds(),
+	}
+
+	if err := sendTelemetry("ExecutionTime", argsMap); err != nil {
+		logger.Log.Debug(err)
+		return
+	}
+
+	logger.Log.Debugf("successfully reported telemetry for execution time %v", executionTime.String())
 }
 
 func ReportAPICalls(apiProvider *apiserver.Provider) {
@@ -62,6 +86,10 @@ func ReportAPICalls(apiProvider *apiserver.Provider) {
 	logger.Log.Debugf("successfully reported telemetry of api calls")
 }
 
+func getExecutionTime() time.Duration {
+	return time.Since(runStartTime)
+}
+
 func shouldRunTelemetry() bool {
 	if _, present := os.LookupEnv(mizu.DEVENVVAR); present {
 		return false
@@ -84,6 +112,7 @@ func sendTelemetry(telemetryType string, argsMap map[string]interface{}) error {
 	argsMap["branch"] = mizu.Branch
 	argsMap["version"] = mizu.SemVer
 	argsMap["Platform"] = mizu.Platform
+	argsMap["executionTime"] = getExecutionTime().String()
 
 	if machineId, err := machineid.ProtectedID("mizu"); err == nil {
 		argsMap["machineId"] = machineId
