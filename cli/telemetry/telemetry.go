@@ -109,7 +109,6 @@ func shouldRunTelemetry() bool {
 }
 
 func sendTelemetry(argsMap map[string]interface{}) error {
-	argsMap["telemetryType"] = "Execution"
 	argsMap["component"] = "mizu_cli"
 	argsMap["buildTimestamp"] = mizu.BuildTimestamp
 	argsMap["branch"] = mizu.Branch
