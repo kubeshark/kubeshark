@@ -1,5 +1,18 @@
 package providers
 
+/*
+This provider abstracts keto role management down to what we need for mizu
+
+Keto, in the configuration we use it, is basically a tuple database. Each tuple consists of 4 strings (namespace, object, relation, subjectID) - for example ("workspaces", "all_workspace", "viewer", "ramiberman")
+
+namespace - used to organize tuples into groups - we currently use "system" for defining admins and "workspaces" for defining workspace permissions
+objects - represents something one can have permissions to (files, mizu workspaces etc)
+relation - represents the permission (viewer, editor, owner etc) - we currently use only viewer and admin
+subject - represents the user or group that has the permission - we currently use usernames
+
+more on keto here: https://www.ory.sh/keto/docs/
+*/
+
 import (
 	"fmt"
 	"mizuserver/pkg/utils"
@@ -83,7 +96,7 @@ func createObjectRelationForSubjectID(namespace string, object string, subjectID
 }
 
 func getObjectRelationsForSubjectID(namespace string, object string, subjectID string) ([]string, error) {
-	relationTuples, err := getRelationTuples(&namespace, &object, &subjectID, nil)
+	relationTuples, err := queryRelationTuples(&namespace, &object, &subjectID, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -98,8 +111,7 @@ func getObjectRelationsForSubjectID(namespace string, object string, subjectID s
 }
 
 func deleteAllNamespacedRelationsForSubjectID(namespace string, subjectID string) error {
-
-	relationTuples, err := getRelationTuples(&namespace, nil, &subjectID, nil)
+	relationTuples, err := queryRelationTuples(&namespace, nil, &subjectID, nil)
 	if err != nil {
 		return err
 	}
@@ -120,7 +132,7 @@ func deleteAllNamespacedRelationsForSubjectID(namespace string, subjectID string
 	return nil
 }
 
-func getRelationTuples(namespace *string, object *string, subjectID *string, role *string) ([]*ketoModels.InternalRelationTuple, error) {
+func queryRelationTuples(namespace *string, object *string, subjectID *string, role *string) ([]*ketoModels.InternalRelationTuple, error) {
 	relationTuplesQuery := ketoRead.NewGetRelationTuplesParams()
 	if namespace != nil {
 		relationTuplesQuery = relationTuplesQuery.WithNamespace(*namespace)

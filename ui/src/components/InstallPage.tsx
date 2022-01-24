@@ -28,7 +28,7 @@ export const InstallPage: React.FC<InstallPageProps> = ({onFirstLogin}) => {
     const setEntPage = useSetRecoilState(entPageAtom);
 
     const onFormSubmit = async () => {
-        if (password.length < 1) {
+        if (password.length < 4) {
             toast.error("Password must be at least 4 characters long");
             return;
         } else if (password !== passwordConfirm) {
