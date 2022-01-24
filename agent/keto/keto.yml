@@ -17,4 +17,6 @@ serve:
 
 namespaces:
   - id: 0
-    name: users
+    name: system
+  - id: 1
+    name: workspaces

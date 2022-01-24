@@ -1,15 +1,16 @@
 package routes
 
 import (
-	"github.com/gin-gonic/gin"
 	"mizuserver/pkg/controllers"
 	"mizuserver/pkg/middlewares"
+
+	"github.com/gin-gonic/gin"
 )
 
 func ConfigRoutes(ginApp *gin.Engine) {
 	routeGroup := ginApp.Group("/config")
 	routeGroup.Use(middlewares.RequiresAuth())
 
-	routeGroup.POST("/tapConfig", controllers.PostTapConfig)
+	routeGroup.POST("/tapConfig", middlewares.RequiresAdmin(), controllers.PostTapConfig)
 	routeGroup.GET("/tapConfig", controllers.GetTapConfig)
 }

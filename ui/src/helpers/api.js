@@ -136,13 +136,12 @@ export default class Api {
         }
     }
 
-    register = async (username, password) => {
+    setupAdminUser = async (password) => {
         const form = new FormData();
-        form.append('username', username);
         form.append('password', password);
 
         try {
-            const response = await this.client.post(`/user/register`, form);
+            const response = await this.client.post(`/install/admin`, form);
             this.persistToken(response.data.token);
             return response;
         } catch (e) {
