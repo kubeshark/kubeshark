@@ -3,7 +3,7 @@ package providers
 /*
 This provider abstracts keto role management down to what we need for mizu
 
-Keto, in the configuration we use it, is basically a tuple database. Each tuple consists of 4 strings (namespace, object, relation, subjectID) - for example ("workspaces", "all_workspace", "viewer", "ramiberman")
+Keto, in the configuration we use it, is basically a tuple database. Each tuple consists of 4 strings (namespace, object, relation, subjectID) - for example ("workspaces", "sock-shop-workspace", "viewer", "ramiberman")
 
 namespace - used to organize tuples into groups - we currently use "system" for defining admins and "workspaces" for defining workspace permissions
 objects - represents something one can have permissions to (files, mizu workspaces etc)
