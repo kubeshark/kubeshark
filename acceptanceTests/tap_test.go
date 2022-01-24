@@ -62,35 +62,7 @@ func TestTap(t *testing.T) {
 				}
 			}
 
-			entriesCheckFunc := func() error {
-				timestamp := time.Now().UnixNano() / int64(time.Millisecond)
-
-				entries, err := getDBEntries(timestamp, entriesCount, 1*time.Second)
-				if err != nil {
-					return err
-				}
-				err = checkEntriesAtLeast(entries, 1)
-				if err != nil {
-					return err
-				}
-				entry := entries[0]
-
-				entryUrl := fmt.Sprintf("%v/entries/%v", apiServerUrl, entry["id"])
-				requestResult, requestErr := executeHttpGetRequest(entryUrl)
-				if requestErr != nil {
-					return fmt.Errorf("failed to get entry, err: %v", requestErr)
-				}
-
-				if requestResult == nil {
-					return fmt.Errorf("unexpected nil entry result")
-				}
-
-				return nil
-			}
-			if err := retriesExecute(shortRetriesCount, entriesCheckFunc); err != nil {
-				t.Errorf("%v", err)
-				return
-			}
+			runCypressTests(t, "npx cypress run --spec  \"cypress/integration/tests/UiTest.js\" --config-file cypress/integration/configurations/Default.json")
 		})
 	}
 }
