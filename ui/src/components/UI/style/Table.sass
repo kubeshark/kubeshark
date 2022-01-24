@@ -1,0 +1,92 @@
+@import '../../../variables.module'
+
+.mui-table
+    width: 100%
+    margin-top: 20px
+
+    &__tbody
+      max-height: calc(70vh - 355px)
+      overflow-y: auto
+      display: block
+
+    &__th
+      color: $blue-gray
+      text-align: left
+      padding: 10px
+
+    &__tr
+      border-bottom-width: 1px
+      border-bottom-color: $data-background-color
+      border-bottom-style: solid
+      display: table
+      table-layout: fixed
+      width: 100%
+
+    &__no-data
+        display: flex;
+        justify-content: space-between;
+        flex-direction: column;
+        height: 95px;
+        overflow-y: auto;
+        margin: 2%;
+        align-items: center;
+        align-content: center;
+        padding-top: 3%;
+        padding-bottom: 3%;
+
+        &-message
+            font-style: normal;
+            font-weight: 600;
+            font-size: 12px;
+            line-height: 15px;
+            color: $light-gray;
+
+    &__tr:hover
+        background: #F7F9FC
+
+        & .mui-table__row-actions
+            &--delete
+                cursor: pointer;
+                path
+                    fill:#DB2156 
+            &--edit 
+                cursor: pointer;
+                path
+                    fill: $blue-color
+
+    &__row-actions
+        display: flex
+        justify-content: flex-end
+                 
+
+    &__td
+      color: $light-gray
+      padding: 10px
+      font-size: 16px
+
+@mixin row-actions
+        display: flex
+        justify-content: flex-end
+
+
+@mixin status-base($bg_color, $color, $border)
+    box-sizing: border-box
+    border-radius: 4px
+    height : 20px
+    width : 63px
+    display: flex
+    align-content: center
+    justify-content: center
+    align-items: center
+    background: $bg_color
+    color: $color
+    border: $border
+
+.status
+    &--active
+        @include status-base(rgba(111, 207, 151, 0.5), #247E4B, 1px solid #219653)
+
+    &--pending
+        @include status-base(rgba(242, 201, 76, 0.5), #8C7325, 1px solid #F2994A)
+
+    
