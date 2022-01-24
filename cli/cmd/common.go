@@ -64,6 +64,23 @@ func getKubernetesProviderForCli() (*kubernetes.Provider, error) {
 		handleKubernetesProviderError(err)
 		return nil, err
 	}
+
+	if err := kubernetesProvider.ValidateNotProxy(); err != nil {
+		handleKubernetesProviderError(err)
+		return nil, err
+	}
+
+	kubernetesVersion, err := kubernetesProvider.GetKubernetesVersion()
+	if err != nil {
+		handleKubernetesProviderError(err)
+		return nil, err
+	}
+
+	if err := kubernetes.ValidateKubernetesVersion(kubernetesVersion); err != nil {
+		handleKubernetesProviderError(err)
+		return nil, err
+	}
+
 	return kubernetesProvider, nil
 }
 

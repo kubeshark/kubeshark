@@ -239,7 +239,8 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 	resDetails["cookies"] = mapSliceRebuildAsMap(resDetails["_cookies"].([]interface{}))
 
 	reqDetails["_queryString"] = reqDetails["queryString"]
-	reqDetails["queryString"] = mapSliceRebuildAsMap(reqDetails["_queryString"].([]interface{}))
+	reqDetails["_queryStringMerged"] = mapSliceMergeRepeatedKeys(reqDetails["_queryString"].([]interface{}))
+	reqDetails["queryString"] = mapSliceRebuildAsMap(reqDetails["_queryStringMerged"].([]interface{}))
 
 	method := reqDetails["method"].(string)
 	statusCode := int(resDetails["status"].(float64))
@@ -336,7 +337,7 @@ func representRequest(request map[string]interface{}) (repRequest []interface{})
 	repRequest = append(repRequest, api.SectionData{
 		Type:  api.TABLE,
 		Title: "Query String",
-		Data:  representMapSliceAsTable(request["_queryString"].([]interface{}), `request.queryString`),
+		Data:  representMapSliceAsTable(request["_queryStringMerged"].([]interface{}), `request.queryString`),
 	})
 
 	postData, _ := request["postData"].(map[string]interface{})
