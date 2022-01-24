@@ -11,6 +11,7 @@ import (
 	"github.com/denisbrodbeck/machineid"
 	"github.com/up9inc/mizu/cli/apiserver"
 	"github.com/up9inc/mizu/cli/config"
+	"github.com/up9inc/mizu/cli/config/configStructs"
 	"github.com/up9inc/mizu/cli/mizu"
 	"github.com/up9inc/mizu/shared/logger"
 )
@@ -38,15 +39,19 @@ func (t telemetryType) String() string {
 	}
 }
 
-var runStartTime time.Time
+type tapTelemetry struct {
+	cmd       string
+	args      string
+	startTime time.Time
+}
+
+var tapTelemetryData *tapTelemetry
 
 func ReportRun(cmd string, args interface{}) {
 	if !shouldRunTelemetry() {
-		logger.Log.Debugf("not reporting telemetry")
+		logger.Log.Debug("not reporting telemetry")
 		return
 	}
-
-	runStartTime = time.Now()
 
 	argsBytes, _ := json.Marshal(args)
 	argsMap := map[string]interface{}{
@@ -62,38 +67,36 @@ func ReportRun(cmd string, args interface{}) {
 	logger.Log.Debugf("successfully reported telemetry for cmd %v", cmd)
 }
 
-func ReportExecutionTime() {
-	if !shouldRunTelemetry() {
-		logger.Log.Debugf("not reporting telemetry")
-		return
+func StartTapTelemetry(args configStructs.TapConfig) {
+	argsBytes, _ := json.Marshal(args)
+	tapTelemetryData = &tapTelemetry{
+		cmd:       "tap",
+		args:      string(argsBytes),
+		startTime: time.Now(),
 	}
-
-	executionTime := getExecutionTime()
-	argsMap := map[string]interface{}{
-		"timeInSeconds": executionTime.Seconds(),
-	}
-
-	if err := sendTelemetry(ExecutionTime, argsMap); err != nil {
-		logger.Log.Debug(err)
-		return
-	}
-
-	logger.Log.Debugf("successfully reported telemetry for execution time %v", executionTime.String())
 }
 
-func ReportAPICalls(apiProvider *apiserver.Provider) {
+func ReportTapTelemetry(apiProvider *apiserver.Provider) {
 	if !shouldRunTelemetry() {
-		logger.Log.Debugf("not reporting telemetry")
+		logger.Log.Debug("not reporting telemetry")
+		return
+	}
+
+	if tapTelemetryData == nil {
+		logger.Log.Debug(`[ERROR] tap telemetry data is nil, you must call "StartTapTelemetry"`)
 		return
 	}
 
 	generalStats, err := apiProvider.GetGeneralStats()
 	if err != nil {
-		logger.Log.Debugf("[ERROR] failed get general stats from api server %v", err)
+		logger.Log.Debugf("[ERROR] failed to get general stats from api server %v", err)
 		return
 	}
 
 	argsMap := map[string]interface{}{
+		"cmd":                   tapTelemetryData.cmd,
+		"args":                  tapTelemetryData.args,
+		"executionTime":         getExecutionTime(tapTelemetryData.startTime).Seconds(),
 		"apiCallsCount":         generalStats["EntriesCount"],
 		"firstAPICallTimestamp": generalStats["FirstEntryTimestamp"],
 		"lastAPICallTimestamp":  generalStats["LastEntryTimestamp"],
@@ -104,11 +107,11 @@ func ReportAPICalls(apiProvider *apiserver.Provider) {
 		return
 	}
 
-	logger.Log.Debugf("successfully reported telemetry of api calls")
+	logger.Log.Debug("successfully reported telemetry of tap command")
 }
 
-func getExecutionTime() time.Duration {
-	return time.Since(runStartTime)
+func getExecutionTime(start time.Time) time.Duration {
+	return time.Since(start)
 }
 
 func shouldRunTelemetry() bool {
@@ -133,7 +136,6 @@ func sendTelemetry(telemetryType telemetryType, argsMap map[string]interface{}) 
 	argsMap["branch"] = mizu.Branch
 	argsMap["version"] = mizu.SemVer
 	argsMap["Platform"] = mizu.Platform
-	argsMap["executionTime"] = getExecutionTime().String()
 
 	if machineId, err := machineid.ProtectedID("mizu"); err == nil {
 		argsMap["machineId"] = machineId

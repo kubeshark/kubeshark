@@ -26,7 +26,7 @@ var tapCmd = &cobra.Command{
 	Long: `Record the ingoing traffic of a kubernetes pod.
 Supported protocols are HTTP and gRPC.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		go telemetry.ReportRun("tap", config.Config.Tap)
+		telemetry.StartTapTelemetry(config.Config.Tap)
 		RunMizuTap()
 		return nil
 	},
