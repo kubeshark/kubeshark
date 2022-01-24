@@ -36,19 +36,23 @@ func ReportRun(cmd string, args interface{}) {
 	logger.Log.Debugf("successfully reported telemetry for cmd %v", cmd)
 }
 
-func ReportAPICalls(apiProvider *apiserver.Provider) {
+func ReportTapTelemetry(apiProvider *apiserver.Provider) {
 	if !shouldRunTelemetry() {
 		logger.Log.Debugf("not reporting telemetry")
 		return
 	}
 
-	generalStats, err := apiProvider.GetGeneralStats()
+	generalStats, err := apiProvider.GetGeneralStats() // Here we can get the stats of traffic volume
 	if err != nil {
 		logger.Log.Debugf("[ERROR] failed get general stats from api server %v", err)
 		return
 	}
 
 	argsMap := map[string]interface{}{
+		"cmd":                   "tap",
+		"args":                  "",         // Configuration should come here
+		"executionTime":         60_000_000, //execution time should come here
+		"trafficValumeInGB":     0.5,        // traffic volume should come here
 		"apiCallsCount":         generalStats["EntriesCount"],
 		"firstAPICallTimestamp": generalStats["FirstEntryTimestamp"],
 		"lastAPICallTimestamp":  generalStats["LastEntryTimestamp"],

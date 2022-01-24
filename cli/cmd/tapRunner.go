@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/up9inc/mizu/cli/telemetry"
 	"io/ioutil"
 	"regexp"
 	"strings"
@@ -136,14 +137,18 @@ func RunMizuTap() {
 
 		return
 	}
-
-	defer finishMizuExecution(kubernetesProvider, apiProvider, config.Config.IsNsRestrictedMode(), config.Config.MizuResourcesNamespace)
+	defer reportTapTelemetry(apiProvider)
+	defer finishMizuExecution(kubernetesProvider, config.Config.IsNsRestrictedMode(), config.Config.MizuResourcesNamespace)
 
 	go goUtils.HandleExcWrapper(watchApiServerEvents, ctx, kubernetesProvider, cancel)
 	go goUtils.HandleExcWrapper(watchApiServerPod, ctx, kubernetesProvider, cancel)
 
 	// block until exit signal or error
 	utils.WaitForFinish(ctx, cancel)
+}
+
+func reportTapTelemetry(apiProvider *apiserver.Provider) {
+	telemetry.ReportTapTelemetry(apiProvider)
 }
 
 func getTapMizuAgentConfig() *shared.MizuAgentConfig {
