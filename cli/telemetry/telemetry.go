@@ -91,12 +91,12 @@ func ReportTapTelemetry(apiProvider *apiserver.Provider) {
 	}
 
 	argsMap := map[string]interface{}{
-		"cmd":                   tapTelemetryData.cmd,
-		"args":                  tapTelemetryData.args,
-		"executionTime":         getExecutionTime(tapTelemetryData.startTime).Seconds(),
-		"apiCallsCount":         generalStats["EntriesCount"],
-		"firstAPICallTimestamp": generalStats["FirstEntryTimestamp"],
-		"lastAPICallTimestamp":  generalStats["LastEntryTimestamp"],
+		"cmd":                    tapTelemetryData.cmd,
+		"args":                   tapTelemetryData.args,
+		"executionTimeInSeconds": getExecutionTime(tapTelemetryData.startTime).Seconds(),
+		"apiCallsCount":          generalStats["EntriesCount"],
+		"firstAPICallTimestamp":  generalStats["FirstEntryTimestamp"],
+		"lastAPICallTimestamp":   generalStats["LastEntryTimestamp"],
 	}
 
 	if err := sendTelemetry(TapExecution, argsMap); err != nil {
