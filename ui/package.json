@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@craco/craco": "^6.4.3",
     "@material-ui/core": "^4.11.3",
     "@material-ui/icons": "^4.11.2",
     "@material-ui/lab": "^4.0.0-alpha.60",
@@ -32,7 +33,6 @@
     "react-dom": "^17.0.2",
     "react-graph-vis": "^1.0.7",
     "react-lowlight": "^3.0.0",
-    "react-scripts": "4.0.3",
     "react-scrollable-feed-virtualized": "^1.4.9",
     "react-syntax-highlighter": "^15.4.3",
     "react-toastify": "^8.0.3",
@@ -43,11 +43,15 @@
     "web-vitals": "^1.1.1",
     "xml-formatter": "^2.6.0"
   },
+  "devDependencies": {
+    "env-cmd": "^10.0.1"
+  },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "start": "craco start",
+    "start-ent": "./node_modules/.bin/env-cmd -f .env.enterprise craco start",
+    "build": "./node_modules/.bin/env-cmd -f .env.basic craco build & BUILD_PATH='./build-ent' ./node_modules/.bin/env-cmd -f .env.enterprise craco build",
+    "test": "craco test",
+    "eject": "craco eject"
   },
   "eslintConfig": {
     "extends": [

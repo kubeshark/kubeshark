@@ -91,6 +91,7 @@ WORKDIR /app
 COPY --from=builder ["/app/agent-build/mizuagent", "."]
 COPY --from=builder ["/app/agent/build/extensions", "extensions"]
 COPY --from=front-end ["/app/ui-build/build", "site"]
+COPY --from=front-end ["/app/ui-build/build-ent", "site-standalone"]
 
 # gin-gonic runs in debug mode without this
 ENV GIN_MODE=release
