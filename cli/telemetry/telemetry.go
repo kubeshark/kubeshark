@@ -17,6 +17,27 @@ import (
 
 const telemetryUrl = "https://us-east4-up9-prod.cloudfunctions.net/mizu-telemetry"
 
+type telemetryType int
+
+const (
+	Execution telemetryType = iota
+	ExecutionTime
+	APICalls
+)
+
+func (t telemetryType) String() string {
+	switch t {
+	case Execution:
+		return "Execution"
+	case ExecutionTime:
+		return "ExecutionTime"
+	case APICalls:
+		return "APICalls"
+	default:
+		return "Unkown"
+	}
+}
+
 var runStartTime time.Time
 
 func ReportRun(cmd string, args interface{}) {
@@ -33,7 +54,7 @@ func ReportRun(cmd string, args interface{}) {
 		"args": string(argsBytes),
 	}
 
-	if err := sendTelemetry("Execution", argsMap); err != nil {
+	if err := sendTelemetry(Execution, argsMap); err != nil {
 		logger.Log.Debug(err)
 		return
 	}
@@ -52,7 +73,7 @@ func ReportExecutionTime() {
 		"timeInSeconds": executionTime.Seconds(),
 	}
 
-	if err := sendTelemetry("ExecutionTime", argsMap); err != nil {
+	if err := sendTelemetry(ExecutionTime, argsMap); err != nil {
 		logger.Log.Debug(err)
 		return
 	}
@@ -78,7 +99,7 @@ func ReportAPICalls(apiProvider *apiserver.Provider) {
 		"lastAPICallTimestamp":  generalStats["LastEntryTimestamp"],
 	}
 
-	if err := sendTelemetry("APICalls", argsMap); err != nil {
+	if err := sendTelemetry(APICalls, argsMap); err != nil {
 		logger.Log.Debug(err)
 		return
 	}
@@ -105,8 +126,8 @@ func shouldRunTelemetry() bool {
 	return true
 }
 
-func sendTelemetry(telemetryType string, argsMap map[string]interface{}) error {
-	argsMap["telemetryType"] = telemetryType
+func sendTelemetry(telemetryType telemetryType, argsMap map[string]interface{}) error {
+	argsMap["telemetryType"] = telemetryType.String()
 	argsMap["component"] = "mizu_cli"
 	argsMap["buildTimestamp"] = mizu.BuildTimestamp
 	argsMap["branch"] = mizu.Branch
