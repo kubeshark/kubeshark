@@ -1,5 +1,5 @@
 # creates image in which mizu agent is remotely debuggable using delve
-FROM node:14-slim AS site-build
+FROM node:16-slim AS site-build
 
 WORKDIR /app/ui-build
 
