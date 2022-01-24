@@ -247,7 +247,12 @@ func hostApi(socketHarOutputChannel chan<- *tapApi.OutputChannelItem) {
 	if err := setUIFlags(); err != nil {
 		logger.Log.Errorf("Error setting ui mode, err: %v", err)
 	}
-	app.Use(static.ServeRoot("/", "./site"))
+
+	if config.Config.StandaloneMode {
+		app.Use(static.ServeRoot("/", "./site-standalone"))
+	} else {
+		app.Use(static.ServeRoot("/", "./site"))
+	}
 
 	app.Use(middlewares.CORSMiddleware()) // This has to be called after the static middleware, does not work if its called before
 
@@ -290,8 +295,7 @@ func setUIFlags() error {
 		return err
 	}
 
-	replacedContent := strings.Replace(string(read), "__IS_STANDALONE__", strconv.FormatBool(config.Config.StandaloneMode), 1)
-	replacedContent = strings.Replace(replacedContent, "__IS_OAS_ENABLED__", strconv.FormatBool(config.Config.OAS), 1)
+	replacedContent := strings.Replace(string(read), "__IS_OAS_ENABLED__", strconv.FormatBool(config.Config.OAS), 1)
 	replacedContent = strings.Replace(replacedContent, "__IS_SERVICE_MAP_ENABLED__", strconv.FormatBool(config.Config.ServiceMap), 1)
 
 	err = ioutil.WriteFile(uiIndexPath, []byte(replacedContent), 0)
