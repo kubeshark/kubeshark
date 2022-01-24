@@ -18,24 +18,6 @@ import (
 
 const telemetryUrl = "https://us-east4-up9-prod.cloudfunctions.net/mizu-telemetry"
 
-type telemetryType int
-
-const (
-	Execution telemetryType = iota
-	TapExecution
-)
-
-func (t telemetryType) String() string {
-	switch t {
-	case Execution:
-		return "Execution"
-	case TapExecution:
-		return "TapExecution"
-	default:
-		return "Unkown"
-	}
-}
-
 type tapTelemetry struct {
 	cmd       string
 	args      string
@@ -56,7 +38,7 @@ func ReportRun(cmd string, args interface{}) {
 		"args": string(argsBytes),
 	}
 
-	if err := sendTelemetry(Execution, argsMap); err != nil {
+	if err := sendTelemetry(argsMap); err != nil {
 		logger.Log.Debug(err)
 		return
 	}
@@ -99,7 +81,7 @@ func ReportTapTelemetry(apiProvider *apiserver.Provider) {
 		"lastAPICallTimestamp":   generalStats["LastEntryTimestamp"],
 	}
 
-	if err := sendTelemetry(TapExecution, argsMap); err != nil {
+	if err := sendTelemetry(argsMap); err != nil {
 		logger.Log.Debug(err)
 		return
 	}
@@ -126,8 +108,8 @@ func shouldRunTelemetry() bool {
 	return true
 }
 
-func sendTelemetry(telemetryType telemetryType, argsMap map[string]interface{}) error {
-	argsMap["telemetryType"] = telemetryType.String()
+func sendTelemetry(argsMap map[string]interface{}) error {
+	argsMap["telemetryType"] = "Execution"
 	argsMap["component"] = "mizu_cli"
 	argsMap["buildTimestamp"] = mizu.BuildTimestamp
 	argsMap["branch"] = mizu.Branch
