@@ -9,7 +9,7 @@ import (
 	"github.com/up9inc/mizu/shared/kubernetes"
 	"github.com/up9inc/mizu/shared/logger"
 	"github.com/up9inc/mizu/shared/semver"
-	"net/http"
+	"regexp"
 )
 
 func runMizuCheck() {
@@ -34,7 +34,7 @@ func runMizuCheck() {
 	}
 
 	if checkPassed {
-		checkPassed = checkServerConnection(kubernetesProvider, cancel)
+		checkPassed = checkServerConnection(kubernetesProvider)
 	}
 
 	if checkPassed {
@@ -91,23 +91,69 @@ func checkKubernetesVersion(kubernetesVersion *semver.SemVersion) bool {
 	return true
 }
 
-func checkServerConnection(kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) bool {
+func checkServerConnection(kubernetesProvider *kubernetes.Provider) bool {
 	logger.Log.Infof("\nmizu-connectivity\n--------------------")
 
 	serverUrl := GetApiServerUrl()
 
-	if response, err := http.Get(fmt.Sprintf("%s/", serverUrl)); err != nil || response.StatusCode != 200 {
-		startProxyReportErrorIfAny(kubernetesProvider, cancel)
+	connectedToApiServer := false
+
+	if err := checkProxy(serverUrl, kubernetesProvider); err != nil {
+		logger.Log.Errorf("%v couldn't connect to API server using proxy, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), err)
+	} else {
+		connectedToApiServer = true
+		logger.Log.Infof("%v connected successfully to API server using proxy", fmt.Sprintf(uiUtils.Green, "√"))
+	}
+
+	if err := checkPortForward(serverUrl, kubernetesProvider); err != nil {
+		logger.Log.Errorf("%v couldn't connect to API server using port-forward, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), err)
+	} else {
+		connectedToApiServer = true
+		logger.Log.Infof("%v connected successfully to API server using port-forward", fmt.Sprintf(uiUtils.Green, "√"))
+	}
+
+	return connectedToApiServer
+}
+
+func checkProxy(serverUrl string, kubernetesProvider *kubernetes.Provider) error {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	httpServer, err := kubernetes.StartProxy(kubernetesProvider, config.Config.Tap.ProxyHost, config.Config.Tap.GuiPort, config.Config.MizuResourcesNamespace, kubernetes.ApiServerPodName, cancel)
+	if err != nil {
+		return err
 	}
 
 	apiServerProvider := apiserver.NewProvider(serverUrl, apiserver.DefaultRetries, apiserver.DefaultTimeout)
 	if err := apiServerProvider.TestConnection(); err != nil {
-		logger.Log.Errorf("%v couldn't connect to API server, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), err)
-		return false
+		return err
 	}
 
-	logger.Log.Infof("%v connected successfully to API server", fmt.Sprintf(uiUtils.Green, "√"))
-	return true
+	if err := httpServer.Shutdown(ctx); err != nil {
+		logger.Log.Debugf("Error occurred while stopping proxy, err: %v", err)
+	}
+
+	return nil
+}
+
+func checkPortForward(serverUrl string, kubernetesProvider *kubernetes.Provider) error {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	podRegex, _ := regexp.Compile(kubernetes.ApiServerPodName)
+	forwarder, err := kubernetes.NewPortForward(kubernetesProvider, config.Config.MizuResourcesNamespace, podRegex, config.Config.Tap.GuiPort, ctx, cancel)
+	if err != nil {
+		return err
+	}
+
+	apiServerProvider := apiserver.NewProvider(serverUrl, apiserver.DefaultRetries, apiserver.DefaultTimeout)
+	if err := apiServerProvider.TestConnection(); err != nil {
+		return err
+	}
+
+	forwarder.Close()
+
+	return nil
 }
 
 func checkAllResourcesExist(ctx context.Context, kubernetesProvider *kubernetes.Provider, isInstallCommand bool) bool {

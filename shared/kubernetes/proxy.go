@@ -11,6 +11,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strings"
 	"time"
 
@@ -84,12 +85,21 @@ func getRerouteHttpHandlerMizuStatic(proxyHandler http.Handler, mizuNamespace st
 	})
 }
 
-func NewPortForward(kubernetesProvider *Provider, namespace string, podName string, localPort uint16, cancel context.CancelFunc) error {
-	logger.Log.Debugf("Starting proxy using port-forward method. namespace: [%v], service name: [%s], port: [%v]", namespace, podName, localPort)
+func NewPortForward(kubernetesProvider *Provider, namespace string, podRegex *regexp.Regexp, localPort uint16, ctx context.Context, cancel context.CancelFunc) (*portforward.PortForwarder, error) {
+	pods, err := kubernetesProvider.ListAllRunningPodsMatchingRegex(ctx, podRegex, []string{namespace})
+	if err != nil {
+		return nil, err
+	} else if len(pods) == 0 {
+		return nil, fmt.Errorf("didn't find pod to port-forward")
+	}
+
+	podName := pods[0].Name
+
+	logger.Log.Debugf("Starting proxy using port-forward method. namespace: [%v], pod name: [%s], port: [%v]", namespace, podName, localPort)
 
 	dialer, err := getHttpDialer(kubernetesProvider, namespace, podName)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	stopChan, readyChan := make(chan struct{}, 1), make(chan struct{}, 1)
@@ -97,7 +107,7 @@ func NewPortForward(kubernetesProvider *Provider, namespace string, podName stri
 
 	forwarder, err := portforward.New(dialer, []string{fmt.Sprintf("%d:%d", localPort, shared.DefaultApiServerPort)}, stopChan, readyChan, out, errOut)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	go func() {
@@ -107,7 +117,7 @@ func NewPortForward(kubernetesProvider *Provider, namespace string, podName stri
 		}
 	}()
 
-	return nil
+	return forwarder, nil
 }
 
 func getHttpDialer(kubernetesProvider *Provider, namespace string, podName string) (httpstream.Dialer, error) {
@@ -116,6 +126,7 @@ func getHttpDialer(kubernetesProvider *Provider, namespace string, podName strin
 		logger.Log.Errorf("Error creating http dialer")
 		return nil, err
 	}
+
 	path := fmt.Sprintf("/api/v1/namespaces/%s/pods/%s/portforward", namespace, podName)
 	hostIP := strings.TrimLeft(kubernetesProvider.clientConfig.Host, "htps:/") // no need specify "t" twice
 	serverURL := url.URL{Scheme: "https", Path: path, Host: hostIP}
