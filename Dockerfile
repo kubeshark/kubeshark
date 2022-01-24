@@ -7,7 +7,7 @@ COPY ui/package-lock.json .
 RUN npm i
 COPY ui .
 RUN npm run build
-
+RUN npm run build-ent
 
 FROM golang:1.16-alpine AS builder
 # Set necessary environment variables needed for our image.
