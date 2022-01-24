@@ -22,18 +22,15 @@ type telemetryType int
 
 const (
 	Execution telemetryType = iota
-	ExecutionTime
-	APICalls
+	TapExecution
 )
 
 func (t telemetryType) String() string {
 	switch t {
 	case Execution:
 		return "Execution"
-	case ExecutionTime:
-		return "ExecutionTime"
-	case APICalls:
-		return "APICalls"
+	case TapExecution:
+		return "TapExecution"
 	default:
 		return "Unkown"
 	}
@@ -102,7 +99,7 @@ func ReportTapTelemetry(apiProvider *apiserver.Provider) {
 		"lastAPICallTimestamp":  generalStats["LastEntryTimestamp"],
 	}
 
-	if err := sendTelemetry(APICalls, argsMap); err != nil {
+	if err := sendTelemetry(TapExecution, argsMap); err != nil {
 		logger.Log.Debug(err)
 		return
 	}
