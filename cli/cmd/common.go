@@ -11,7 +11,6 @@ import (
 	"github.com/up9inc/mizu/cli/mizu"
 	"github.com/up9inc/mizu/cli/mizu/fsUtils"
 	"github.com/up9inc/mizu/cli/resources"
-	"github.com/up9inc/mizu/cli/telemetry"
 	"github.com/up9inc/mizu/cli/uiUtils"
 	"github.com/up9inc/mizu/shared"
 	"path"
@@ -93,10 +92,7 @@ func handleKubernetesProviderError(err error) {
 	}
 }
 
-func finishMizuExecution(kubernetesProvider *kubernetes.Provider, apiProvider *apiserver.Provider, isNsRestrictedMode bool, mizuResourcesNamespace string) {
-	telemetry.ReportAPICalls(apiProvider)
-	telemetry.ReportExecutionTime()
-
+func finishMizuExecution(kubernetesProvider *kubernetes.Provider, isNsRestrictedMode bool, mizuResourcesNamespace string) {
 	removalCtx, cancel := context.WithTimeout(context.Background(), cleanupTimeout)
 	defer cancel()
 	dumpLogsIfNeeded(removalCtx, kubernetesProvider)
