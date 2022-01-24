@@ -103,7 +103,7 @@ func (s *sslHooks) installSslHooks(bpfObjects *tlsTapperObjects, sslLibrary *lin
 }
 
 func (s *sslHooks) close() []error {
-	errors := make([]error, 0, 0)
+	errors := make([]error, 0)
 
 	if err := s.sslWriteProbe.Close(); err != nil {
 		errors = append(errors, err)

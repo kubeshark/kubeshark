@@ -249,12 +249,16 @@ func startTlsTapper(httpExtension *api.Extension, outputItems chan *api.OutputCh
 		return nil, tlstapper.LogError(err)
 	}
 
-	// Used for debuging and troubleshooting - a quick way to instrument libssl.so without PID filtering.
+	// A quick way to instrument libssl.so without PID filtering - used for debuging and troubleshooting
 	//
 	if os.Getenv("MIZU_GLOBAL_SSL_LIBRARY") != "" {
 		if err := tls.GlobalTap(os.Getenv("MIZU_GLOBAL_SSL_LIBRARY")); err != nil {
 			return nil, tlstapper.LogError(err)
 		}
+	}
+
+	if err := tlstapper.UpdateTapTargets(&tls, &tapTargets, *procfs); err != nil {
+		return nil, tlstapper.LogError(err)
 	}
 
 	var emitter api.Emitter = &api.Emitting{

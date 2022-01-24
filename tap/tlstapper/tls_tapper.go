@@ -101,7 +101,7 @@ func (t *TlsTapper) RemovePid(pid uint32) error {
 }
 
 func (t *TlsTapper) Close() []error {
-	errors := make([]error, 0, 0)
+	errors := make([]error, 0)
 
 	if err := t.bpfObjects.Close(); err != nil {
 		errors = append(errors, err)
@@ -143,7 +143,7 @@ func (t *TlsTapper) initChunksReader(bufferSize int) error {
 }
 
 func (t *TlsTapper) tapPid(pid uint32, sslLibrary string) error {
-	logger.Log.Infof("Tapping PID (pid: %v) (sslLibrary: %v)", pid, sslLibrary)
+	logger.Log.Infof("Tapping TLS (pid: %v) (sslLibrary: %v)", pid, sslLibrary)
 
 	newSsl := sslHooks{}
 

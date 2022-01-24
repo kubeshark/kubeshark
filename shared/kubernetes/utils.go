@@ -30,9 +30,22 @@ func getMinimizedPod(fullPod core.Pod) core.Pod {
 			Name: fullPod.Name,
 		},
 		Status: v1.PodStatus{
-			PodIP: fullPod.Status.PodIP,
+			PodIP:             fullPod.Status.PodIP,
+			ContainerStatuses: getMinimizedContainerStatuses(fullPod),
 		},
 	}
+}
+
+func getMinimizedContainerStatuses(fullPod core.Pod) []v1.ContainerStatus {
+	result := make([]v1.ContainerStatus, len(fullPod.Status.ContainerStatuses))
+
+	for i, container := range fullPod.Status.ContainerStatuses {
+		result[i] = v1.ContainerStatus{
+			ContainerID: container.ContainerID,
+		}
+	}
+
+	return result
 }
 
 func excludeMizuPods(pods []core.Pod) []core.Pod {

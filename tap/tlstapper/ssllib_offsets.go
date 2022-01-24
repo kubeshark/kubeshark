@@ -36,7 +36,7 @@ func getSslOffsets(sslLibraryPath string) (sslOffsets, error) {
 		return sslOffsets{}, errors.Wrap(err, 0)
 	}
 
-	logger.Log.Infof("Found offsets (base: 0x%X) (write: 0x%X) (read: 0x%X)", base, offsets.SslWriteOffset, offsets.SslReadOffset)
+	logger.Log.Debugf("Found TLS offsets (base: 0x%X) (write: 0x%X) (read: 0x%X)", base, offsets.SslWriteOffset, offsets.SslReadOffset)
 	return offsets, nil
 }
 
@@ -65,19 +65,19 @@ func findSslOffsets(sslElf *elf.File, base uint64) (sslOffsets, error) {
 	var ok bool
 
 	if sslWriteOffset, ok = symbolsMap["SSL_write"]; !ok {
-		return sslOffsets{}, errors.New(fmt.Sprintf("SSL_write symbol not found"))
+		return sslOffsets{}, errors.New("SSL_write symbol not found")
 	}
 
 	if sslReadOffset, ok = symbolsMap["SSL_read"]; !ok {
-		return sslOffsets{}, errors.New(fmt.Sprintf("SSL_read symbol not found"))
+		return sslOffsets{}, errors.New("SSL_read symbol not found")
 	}
 
 	if sslWriteExOffset, ok = symbolsMap["SSL_write_ex"]; !ok {
-		return sslOffsets{}, errors.New(fmt.Sprintf("SSL_write_ex symbol not found"))
+		return sslOffsets{}, errors.New("SSL_write_ex symbol not found")
 	}
 
 	if sslReadExOffset, ok = symbolsMap["SSL_read_ex"]; !ok {
-		return sslOffsets{}, errors.New(fmt.Sprintf("SSL_read_ex symbol not found"))
+		return sslOffsets{}, errors.New("SSL_read_ex symbol not found")
 	}
 
 	return sslOffsets{

@@ -17,7 +17,7 @@ func findSsllib(procfs string, pid uint32) (string, error) {
 		return "", errors.Wrap(err, 0)
 	}
 
-	logger.Log.Infof("Binary file for %v = %v", pid, binary)
+	logger.Log.Debugf("Binary file for %v = %v", pid, binary)
 
 	if strings.HasSuffix(binary, "/node") {
 		return findLibraryByPid(procfs, pid, binary)
