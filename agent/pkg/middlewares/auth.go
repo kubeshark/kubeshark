@@ -43,7 +43,7 @@ func RequiresAdmin() gin.HandlerFunc {
 		isAdmin, err := providers.CheckIfUserHasSystemRole(username, providers.AdminRole)
 		if err != nil {
 			logger.Log.Errorf("error checking user role %v", err)
-			c.AbortWithStatusJSON(500, gin.H{"error": "unknown auth error occured"})
+			c.AbortWithStatusJSON(403, gin.H{"error": "unknown auth error occured"})
 		} else if !isAdmin {
 			logger.Log.Warningf("user %s attempted to call an admin only endpoint with insufficient privileges", username)
 			c.AbortWithStatusJSON(403, gin.H{"error": "unauthorized"})
@@ -62,7 +62,7 @@ func verifyKratosSessionForRequest(c *gin.Context) *ory.Session {
 
 	if session, err := providers.VerifyToken(token, c.Request.Context()); err != nil {
 		logger.Log.Errorf("error verifying token %v", err)
-		c.AbortWithStatusJSON(500, gin.H{"error": "unknown auth error occured"})
+		c.AbortWithStatusJSON(401, gin.H{"error": "unknown auth error occured"})
 		return nil
 	} else if session == nil {
 		c.AbortWithStatusJSON(401, gin.H{"error": "invalid token"})
