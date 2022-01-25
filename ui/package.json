@@ -33,6 +33,7 @@
     "react-dom": "^17.0.2",
     "react-graph-vis": "^1.0.7",
     "react-lowlight": "^3.0.0",
+    "react-router-dom": "^6.2.1",
     "react-scrollable-feed-virtualized": "^1.4.9",
     "react-syntax-highlighter": "^15.4.3",
     "react-toastify": "^8.0.3",
