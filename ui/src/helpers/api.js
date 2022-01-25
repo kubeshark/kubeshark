@@ -110,12 +110,12 @@ export default class Api {
     }
 
     getTapConfig = async () => {
-        const response = await this.client.get("/config/tapConfig");
+        const response = await this.client.get("/config/tap");
         return response.data;
     }
 
     setTapConfig = async (config) => {
-        const response = await this.client.post("/config/tapConfig", {tappedNamespaces: config});
+        const response = await this.client.post("/config/tap", {tappedNamespaces: config});
         return response.data;
     }
 
@@ -136,13 +136,12 @@ export default class Api {
         }
     }
 
-    register = async (username, password) => {
+    setupAdminUser = async (password) => {
         const form = new FormData();
-        form.append('username', username);
         form.append('password', password);
 
         try {
-            const response = await this.client.post(`/user/register`, form);
+            const response = await this.client.post(`/install/admin`, form);
             this.persistToken(response.data.token);
             return response;
         } catch (e) {
