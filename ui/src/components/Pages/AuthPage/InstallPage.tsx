@@ -38,7 +38,7 @@ export const InstallPage: React.FC<InstallPageProps> = ({onFirstLogin}) => {
 
         try {
             setIsLoading(true);
-            await api.register(adminUsername, password);
+            await api.setupAdminUser(password);
             if (!await api.isAuthenticationNeeded()) {
                 setEntPage(Page.Traffic);
                 onFirstLogin();
@@ -50,6 +50,8 @@ export const InstallPage: React.FC<InstallPageProps> = ({onFirstLogin}) => {
                         toast.error(message.text);
                     }
                 }
+            } else {
+                toast.error("An unknown error has occured");
             }
             console.error(e);
         } finally {

@@ -85,3 +85,18 @@ func SaveJsonFile(filePath string, value interface{}) error {
 
 	return nil
 }
+
+func UniqueStringSlice(s []string) []string {
+	uniqueSlice := make([]string, 0)
+	uniqueMap := map[string]bool{}
+
+	for _, val := range s {
+		if uniqueMap[val] == true {
+			continue
+		}
+		uniqueMap[val] = true
+		uniqueSlice = append(uniqueSlice, val)
+	}
+
+	return uniqueSlice
+}

@@ -171,6 +171,7 @@ type ApiServerOptions struct {
 	PodImage              string
 	BasenineImage         string
 	KratosImage           string
+	KetoImage             string
 	ServiceAccountName    string
 	IsNamespaceRestricted bool
 	SyncEntriesConfig     *shared.SyncEntriesConfig
@@ -178,7 +179,6 @@ type ApiServerOptions struct {
 	Resources             shared.Resources
 	ImagePullPolicy       core.PullPolicy
 	LogLevel              logging.Level
-
 }
 
 func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, mountVolumeClaim bool, volumeClaimName string, createAuthContainer bool) (*core.Pod, error) {
@@ -336,6 +336,35 @@ func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, moun
 			},
 		})
 
+		containers = append(containers, core.Container{
+			Name:            "keto",
+			Image:           opts.KetoImage,
+			ImagePullPolicy: opts.ImagePullPolicy,
+			VolumeMounts:    volumeMounts,
+			ReadinessProbe: &core.Probe{
+				FailureThreshold: 3,
+				Handler: core.Handler{
+					HTTPGet: &core.HTTPGetAction{
+						Path:   "/health/ready",
+						Port:   intstr.FromInt(4466),
+						Scheme: core.URISchemeHTTP,
+					},
+				},
+				PeriodSeconds:    1,
+				SuccessThreshold: 1,
+				TimeoutSeconds:   1,
+			},
+			Resources: core.ResourceRequirements{
+				Limits: core.ResourceList{
+					"cpu":    cpuLimit,
+					"memory": memLimit,
+				},
+				Requests: core.ResourceList{
+					"cpu":    cpuRequests,
+					"memory": memRequests,
+				},
+			},
+		})
 	}
 
 	pod := &core.Pod{

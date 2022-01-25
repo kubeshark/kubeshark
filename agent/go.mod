@@ -17,6 +17,7 @@ require (
 	github.com/gorilla/websocket v1.4.2
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/orcaman/concurrent-map v0.0.0-20210106121528-16402b402231
+	github.com/ory/keto-client-go v0.7.0-alpha.1
 	github.com/ory/kratos-client-go v0.8.2-alpha.1
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/stretchr/testify v1.7.0
