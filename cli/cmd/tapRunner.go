@@ -148,7 +148,7 @@ func RunMizuTap() {
 }
 
 func finishTapExecution(kubernetesProvider *kubernetes.Provider) {
-	telemetry.ReportTapTelemetry(apiProvider, config.Config.Tap, int(time.Since(state.startTime).Seconds()))
+	telemetry.ReportTapTelemetry(apiProvider, config.Config.Tap, state.startTime)
 
 	finishMizuExecution(kubernetesProvider, config.Config.IsNsRestrictedMode(), config.Config.MizuResourcesNamespace)
 }

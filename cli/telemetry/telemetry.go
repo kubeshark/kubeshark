@@ -11,6 +11,7 @@ import (
 	"github.com/up9inc/mizu/shared/logger"
 	"net/http"
 	"os"
+	"time"
 )
 
 const telemetryUrl = "https://us-east4-up9-prod.cloudfunctions.net/mizu-telemetry"
@@ -35,7 +36,7 @@ func ReportRun(cmd string, args interface{}) {
 	logger.Log.Debugf("successfully reported telemetry for cmd %v", cmd)
 }
 
-func ReportTapTelemetry(apiProvider *apiserver.Provider, args interface{}, executionTimeInSeconds int) {
+func ReportTapTelemetry(apiProvider *apiserver.Provider, args interface{}, startTime time.Time) {
 	if !shouldRunTelemetry() {
 		logger.Log.Debug("not reporting telemetry")
 		return
@@ -50,7 +51,7 @@ func ReportTapTelemetry(apiProvider *apiserver.Provider, args interface{}, execu
 	argsMap := map[string]interface{}{
 		"cmd":                    "tap",
 		"args":                   string(argsBytes),
-		"executionTimeInSeconds": executionTimeInSeconds,
+		"executionTimeInSeconds": int(time.Since(startTime).Seconds()),
 		"apiCallsCount":          generalStats["EntriesCount"],
 	}
 
