@@ -1,4 +1,4 @@
-FROM dockcross/linux-arm64-musl AS builder-from-amd64-to-arm64v8
+FROM dockcross/linux-arm64-musl:latest AS builder-from-amd64-to-arm64v8
 
 # Install Go
 RUN curl https://go.dev/dl/go1.16.13.linux-amd64.tar.gz -Lo ./go.linux-amd64.tar.gz
