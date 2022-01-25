@@ -16,7 +16,7 @@ RUN npm run build
 ### Base builder image for native builds architecture
 FROM golang:1.16-alpine AS builder-native-base
 ENV CGO_ENABLED=1 GOOS=linux
-RUN apk add libpcap-dev gcc g++ make bash perl-utils
+RUN apk add libpcap-dev g++
 
 
 ### Intermediate builder image for from AMD64 to AMD64 native builds
