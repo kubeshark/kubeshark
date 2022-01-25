@@ -11,7 +11,7 @@ COPY ui/package-lock.json .
 RUN npm i
 COPY ui .
 RUN npm run build
-
+RUN npm run build-ent
 
 ### Base builder image for native builds architecture
 FROM golang:1.16-alpine AS builder-native-base
