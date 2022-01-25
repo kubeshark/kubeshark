@@ -1,15 +1,17 @@
-import BasicTabs from "../UI/BasicTab/BasicTabs";
-import Tab from "../UI/BasicTab/Tab";
+import { useState } from "react";
+import Tabs from "../UI/Tabs"
 
-const AdminSettings: React.FC = () => {
-  return (
-      <div style={{overflowY:"auto", height:"100%", backgroundColor:"white",color:"$494677",borderRadius:"4px",padding:"10px",position:"relative",display: 'inline-block',}}>
-        <BasicTabs>
-            <Tab title="USERS">USERS</Tab>
-            <Tab title="WORKSPACE">WORKSPACE</Tab>
-        </BasicTabs>
+const AdminSettings: React.FC<any> = ({color}) => {
+    var TABS = [
+        {tab:"USERS"}, {tab:"WORKSPACE"}
+    ];
+    
+    const [currentTab, setCurrentTab] = useState(TABS[0].tab);
+    return (
+        <div style={{padding:" 0 1rem"}}>
+        <Tabs tabs={TABS} currentTab={currentTab} color={color} onChange={setCurrentTab} leftAligned/>
     </div>
-  )
-}
+    )
+  }
 
 export default AdminSettings;

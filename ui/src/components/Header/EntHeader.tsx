@@ -11,6 +11,7 @@ import Api from "../../helpers/api";
 import {toast} from "react-toastify";
 import {useSetRecoilState} from "recoil";
 import entPageAtom, {Page} from "../../recoil/entPage";
+import AdminSettings from "../AdminSettings/AdminSettings";
 
 const api = Api.getInstance();
 
@@ -44,7 +45,8 @@ export const EntHeader: React.FC<EntHeaderProps> = ({isFirstLogin, setIsFirstLog
             <img className="headerIcon" alt="settings" src={settingImg} style={{marginRight: 25}} onClick={() => setIsSettingsModalOpen(true)}/>
             <ProfileButton/>
         </div>
-        <SettingsModal isOpen={isSettingsModalOpen} onClose={onSettingsModalClose} isFirstLogin={isFirstLogin}/>
+        {/* <SettingsModal isOpen={isSettingsModalOpen} onClose={onSettingsModalClose} isFirstLogin={isFirstLogin}/> */}
+        {/* <AdminSettings isOpen={isSettingsModalOpen} onClose={onSettingsModalClose}/> */}
     </div>;
 }
 
