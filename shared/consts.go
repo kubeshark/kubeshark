@@ -18,6 +18,6 @@ const (
 	BasenineHost                     = "127.0.0.1"
 	BaseninePort                     = "9099"
 	BasenineImageRepo                = "docker.io/up9inc/basenine"
-	BasenineImageTag                 = "v0.4.12"
+	BasenineImageTag                 = "v0.4.13"
 	KratosImageDefault               = "gcr.io/up9-docker-hub/mizu-kratos/stable:0.0.0"
 )
