@@ -26,7 +26,7 @@ ENV GOARCH=amd64
 
 ### Intermediate builder image for AArch64 to AArch64 native builds
 FROM builder-native-base AS builder-from-arm64v8-to-arm64v8
-ENV GOARCH=arm64v8
+ENV GOARCH=arm64
 
 
 ### Builder image for x86-64 to AArch64 cross-compilation
@@ -36,7 +36,7 @@ ENV GOARCH=arm64 CGO_CFLAGS="-I/work/libpcap"
 
 
 ### Final builder image where the build happens
-# Possible combinations:
+# Possible build strategies:
 # BUILDARCH=amd64 TARGETARCH=amd64
 # BUILDARCH=arm64v8 TARGETARCH=arm64v8
 # BUILDARCH=amd64 TARGETARCH=arm64v8
