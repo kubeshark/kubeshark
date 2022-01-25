@@ -3,8 +3,8 @@ package oas
 import (
 	"encoding/json"
 	"github.com/chanced/openapi"
-	"github.com/google/martian/har"
 	"github.com/up9inc/mizu/shared/logger"
+	"github.com/up9inc/mizu/tap/api/har"
 	"io/ioutil"
 	"os"
 	"strings"

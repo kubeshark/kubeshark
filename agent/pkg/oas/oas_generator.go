@@ -3,8 +3,8 @@ package oas
 import (
 	"context"
 	"encoding/json"
-	"github.com/google/martian/har"
 	"github.com/up9inc/mizu/shared/logger"
+	"github.com/up9inc/mizu/tap/api/har"
 	"net/url"
 	"sync"
 )

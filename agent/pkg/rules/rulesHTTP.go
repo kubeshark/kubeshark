@@ -10,8 +10,8 @@ import (
 
 	"github.com/up9inc/mizu/shared/logger"
 
-	"github.com/google/martian/har"
 	"github.com/up9inc/mizu/shared"
+	"github.com/up9inc/mizu/tap/api/har"
 	jsonpath "github.com/yalp/jsonpath"
 )
 

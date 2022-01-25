@@ -15,10 +15,10 @@ import (
 
 	"mizuserver/pkg/servicemap"
 
-	"github.com/google/martian/har"
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/logger"
 	tapApi "github.com/up9inc/mizu/tap/api"
+	"github.com/up9inc/mizu/tap/api/har"
 
 	"mizuserver/pkg/models"
 	"mizuserver/pkg/oas"

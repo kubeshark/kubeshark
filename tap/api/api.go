@@ -6,13 +6,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/up9inc/mizu/tap/api/har"
 	"io/ioutil"
 	"net/http"
 	"plugin"
 	"sync"
 	"time"
-
-	"github.com/google/martian/har"
 )
 
 type Protocol struct {

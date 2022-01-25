@@ -6,10 +6,10 @@ import (
 
 	tapApi "github.com/up9inc/mizu/tap/api"
 
-	"github.com/google/martian/har"
 	basenine "github.com/up9inc/basenine/client/go"
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/tap"
+	"github.com/up9inc/mizu/tap/api/har"
 )
 
 func GetEntry(r *tapApi.Entry, v tapApi.DataUnmarshaler) error {
