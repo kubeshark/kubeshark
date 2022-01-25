@@ -12,6 +12,7 @@ import {toast} from "react-toastify";
 import {useSetRecoilState} from "recoil";
 import entPageAtom, {Page} from "../../recoil/entPage";
 import AdminSettings from "../AdminSettings/AdminSettings";
+import {useNavigate} from "react-router-dom";
 
 const api = Api.getInstance();
 
@@ -21,7 +22,7 @@ interface EntHeaderProps {
 }
 
 export const EntHeader: React.FC<EntHeaderProps> = ({isFirstLogin, setIsFirstLogin}) => {
-
+    const navigate = useNavigate();
     const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 
     useEffect(() => {
@@ -38,7 +39,7 @@ export const EntHeader: React.FC<EntHeaderProps> = ({isFirstLogin, setIsFirstLog
     return <div className="header">
         <div>
             <div className="title">
-                <img style={{height: 55}} src={logo} alt="logo"/>
+                <img className="entLogo" style={{height: 55}} src={logo} alt="logo" onClick={() => navigate("/")}/>
             </div>
         </div>
         <div style={{display: "flex", alignItems: "center"}}>

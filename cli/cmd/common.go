@@ -11,7 +11,6 @@ import (
 	"github.com/up9inc/mizu/cli/mizu"
 	"github.com/up9inc/mizu/cli/mizu/fsUtils"
 	"github.com/up9inc/mizu/cli/resources"
-	"github.com/up9inc/mizu/cli/telemetry"
 	"github.com/up9inc/mizu/cli/uiUtils"
 	"github.com/up9inc/mizu/shared"
 	"path"
@@ -35,7 +34,7 @@ func startProxyReportErrorIfAny(kubernetesProvider *kubernetes.Provider, cancel 
 		return
 	}
 
-	apiProvider = apiserver.NewProviderWithoutRetries(GetApiServerUrl(), time.Second)  // short check for proxy
+	apiProvider = apiserver.NewProviderWithoutRetries(GetApiServerUrl(), time.Second) // short check for proxy
 	if err := apiProvider.TestConnection(); err != nil {
 		logger.Log.Debugf("Couldn't connect using proxy, stopping proxy and trying to create port-forward")
 		if err := httpServer.Shutdown(context.Background()); err != nil {
@@ -64,6 +63,23 @@ func getKubernetesProviderForCli() (*kubernetes.Provider, error) {
 		handleKubernetesProviderError(err)
 		return nil, err
 	}
+
+	if err := kubernetesProvider.ValidateNotProxy(); err != nil {
+		handleKubernetesProviderError(err)
+		return nil, err
+	}
+
+	kubernetesVersion, err := kubernetesProvider.GetKubernetesVersion()
+	if err != nil {
+		handleKubernetesProviderError(err)
+		return nil, err
+	}
+
+	if err := kubernetes.ValidateKubernetesVersion(kubernetesVersion); err != nil {
+		handleKubernetesProviderError(err)
+		return nil, err
+	}
+
 	return kubernetesProvider, nil
 }
 
@@ -76,8 +92,7 @@ func handleKubernetesProviderError(err error) {
 	}
 }
 
-func finishMizuExecution(kubernetesProvider *kubernetes.Provider, apiProvider *apiserver.Provider, isNsRestrictedMode bool, mizuResourcesNamespace string) {
-	telemetry.ReportAPICalls(apiProvider)
+func finishMizuExecution(kubernetesProvider *kubernetes.Provider, isNsRestrictedMode bool, mizuResourcesNamespace string) {
 	removalCtx, cancel := context.WithTimeout(context.Background(), cleanupTimeout)
 	defer cancel()
 	dumpLogsIfNeeded(removalCtx, kubernetesProvider)
