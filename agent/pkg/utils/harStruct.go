@@ -1,4 +1,4 @@
-package har
+package utils
 
 import "time"
 
@@ -337,3 +337,10 @@ type TestResult struct {
 	Method    string    `json:"method"`
 	HarFile   string    `json:"harfile"`
 }
+
+// aliases for martian lib compatibility
+
+type Header = NVP
+type QueryString = NVP
+type Param = PostParam
+type Timings = PageTimings
