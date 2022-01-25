@@ -72,7 +72,7 @@ ARG SEM_VER=0.0.0
 
 WORKDIR /app/agent-build
 
-RUN go build -ldflags="-extldflags=-static \
+RUN go build -ldflags="-extldflags=-static -s -w \
     -X 'mizuserver/pkg/version.GitCommitHash=${COMMIT_HASH}' \
     -X 'mizuserver/pkg/version.Branch=${GIT_BRANCH}' \
     -X 'mizuserver/pkg/version.BuildTimestamp=${BUILD_TIMESTAMP}' \
