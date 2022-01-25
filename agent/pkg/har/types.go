@@ -214,7 +214,7 @@ type Cookie struct {
 	// otherwise.
 	Secure bool `json:"secure,omitempty"`
 	// optional (new in 1.2) A comment provided by the user or the application.
-	Comment bool `json:"comment,omitempty"`
+	Comment string `json:"comment,omitempty"`
 }
 
 // NVP is simply a name/value pair with a comment
