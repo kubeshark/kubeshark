@@ -21,23 +21,23 @@ pod:
 container:
   mizuAgent:
     image:
-      repository: "709825985650.dkr.ecr.us-east-1.amazonaws.com/up9/mizufree"
-      tag: "0.21.29"
+      repository: "gcr.io/up9-docker-hub/mizu/main"
+      tag: "0.22.0"
   tapper:
     image:
-      repository: "709825985650.dkr.ecr.us-east-1.amazonaws.com/up9/mizufree"
-      tag: "0.21.29"
+      repository: "gcr.io/up9-docker-hub/mizu/main"
+      tag: "0.22.0"
   basenine:
     name: "basenine"
     port: 9099
     image:
-      repository: "709825985650.dkr.ecr.us-east-1.amazonaws.com/up9/basenine"
+      repository: "ghcr.io/up9inc/basenine"
       tag: "v0.3.0"
   kratos:
     name: "kratos"
     port: 4433
     image:
-      repository: "709825985650.dkr.ecr.us-east-1.amazonaws.com/up9/kratos"
+      repository: "gcr.io/up9-docker-hub/mizu-kratos/stable"
       tag: "0.0.0"
 
 deployment:
