@@ -19,5 +19,5 @@ const (
 	BasenineImageRepo                = "ghcr.io/up9inc/basenine"
 	BasenineImageTag                 = "v0.3.0"
 	KratosImageDefault               = "gcr.io/up9-docker-hub/mizu-kratos/stable:0.0.0"
-	KetoImageDefault                 = "gcr.io/up9-docker-hub/mizu-keto/feature/tra-4202_role_management"
+	KetoImageDefault                 = "gcr.io/up9-docker-hub/mizu-keto/stable:0.0.0"
 )
