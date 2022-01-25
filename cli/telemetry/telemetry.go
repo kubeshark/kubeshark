@@ -4,27 +4,16 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"net/http"
-	"os"
-	"time"
-
 	"github.com/denisbrodbeck/machineid"
 	"github.com/up9inc/mizu/cli/apiserver"
 	"github.com/up9inc/mizu/cli/config"
-	"github.com/up9inc/mizu/cli/config/configStructs"
 	"github.com/up9inc/mizu/cli/mizu"
 	"github.com/up9inc/mizu/shared/logger"
+	"net/http"
+	"os"
 )
 
 const telemetryUrl = "https://us-east4-up9-prod.cloudfunctions.net/mizu-telemetry"
-
-type tapTelemetry struct {
-	cmd       string
-	args      string
-	startTime time.Time
-}
-
-var tapTelemetryData *tapTelemetry
 
 func ReportRun(cmd string, args interface{}) {
 	if !shouldRunTelemetry() {
@@ -46,23 +35,9 @@ func ReportRun(cmd string, args interface{}) {
 	logger.Log.Debugf("successfully reported telemetry for cmd %v", cmd)
 }
 
-func StartTapTelemetry(args configStructs.TapConfig) {
-	argsBytes, _ := json.Marshal(args)
-	tapTelemetryData = &tapTelemetry{
-		cmd:       "tap",
-		args:      string(argsBytes),
-		startTime: time.Now(),
-	}
-}
-
-func ReportTapTelemetry(apiProvider *apiserver.Provider) {
+func ReportTapTelemetry(apiProvider *apiserver.Provider, args interface{}, executionTimeInSeconds int) {
 	if !shouldRunTelemetry() {
 		logger.Log.Debug("not reporting telemetry")
-		return
-	}
-
-	if tapTelemetryData == nil {
-		logger.Log.Debug(`[ERROR] tap telemetry data is nil, you must call "StartTapTelemetry"`)
 		return
 	}
 
@@ -71,14 +46,12 @@ func ReportTapTelemetry(apiProvider *apiserver.Provider) {
 		logger.Log.Debugf("[ERROR] failed to get general stats from api server %v", err)
 		return
 	}
-
+	argsBytes, _ := json.Marshal(args)
 	argsMap := map[string]interface{}{
-		"cmd":                    tapTelemetryData.cmd,
-		"args":                   tapTelemetryData.args,
-		"executionTimeInSeconds": getExecutionTime(tapTelemetryData.startTime).Seconds(),
+		"cmd":                    "tap",
+		"args":                   string(argsBytes),
+		"executionTimeInSeconds": executionTimeInSeconds,
 		"apiCallsCount":          generalStats["EntriesCount"],
-		"firstAPICallTimestamp":  generalStats["FirstEntryTimestamp"],
-		"lastAPICallTimestamp":   generalStats["LastEntryTimestamp"],
 	}
 
 	if err := sendTelemetry(argsMap); err != nil {
@@ -87,10 +60,6 @@ func ReportTapTelemetry(apiProvider *apiserver.Provider) {
 	}
 
 	logger.Log.Debug("successfully reported telemetry of tap command")
-}
-
-func getExecutionTime(start time.Time) time.Duration {
-	return time.Since(start)
 }
 
 func shouldRunTelemetry() bool {
