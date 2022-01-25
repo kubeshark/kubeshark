@@ -1,5 +1,5 @@
 import { useState } from "react";
-import Tabs from "../UI/Tabs"
+import Tabs from "../../UI/Tabs"
 
 const AdminSettings: React.FC<any> = ({color}) => {
     var TABS = [

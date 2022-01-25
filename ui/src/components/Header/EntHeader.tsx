@@ -11,7 +11,7 @@ import Api from "../../helpers/api";
 import {toast} from "react-toastify";
 import {useSetRecoilState} from "recoil";
 import entPageAtom, {Page} from "../../recoil/entPage";
-import AdminSettings from "../AdminSettings/AdminSettings";
+import AdminSettings from "../Pages/SettingsPage/SettingsPage";
 import {useNavigate} from "react-router-dom";
 
 const api = Api.getInstance();
