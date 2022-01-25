@@ -51,7 +51,11 @@ WORKDIR /app/agent-build
 COPY agent/go.mod agent/go.sum ./
 COPY shared/go.mod shared/go.mod ../shared/
 COPY tap/go.mod tap/go.mod ../tap/
-COPY tap/api/go.* ../tap/api/
+COPY tap/api/go.mod ../tap/api/
+COPY tap/extensions/amqp/go.mod ../tap/extensions/amqp/
+COPY tap/extensions/http/go.mod ../tap/extensions/http/
+COPY tap/extensions/kafka/go.mod ../tap/extensions/kafka/
+COPY tap/extensions/redis/go.mod ../tap/extensions/redis/
 RUN go mod download
 # cheap trick to make the build faster (as long as go.mod did not change)
 RUN go list -f '{{.Path}}@{{.Version}}' -m all | sed 1d | grep -e 'go-cache' | xargs go get
@@ -84,7 +88,6 @@ WORKDIR /app
 
 # Copy binary and config files from /build to root folder of scratch container.
 COPY --from=builder ["/app/agent-build/mizuagent", "."]
-COPY --from=builder ["/app/agent/build/extensions", "extensions"]
 COPY --from=front-end ["/app/ui-build/build", "site"]
 COPY --from=front-end ["/app/ui-build/build-ent", "site-standalone"]
 
