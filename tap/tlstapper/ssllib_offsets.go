@@ -61,30 +61,36 @@ func findSslOffsets(sslElf *elf.File, base uint64) (sslOffsets, error) {
 		return sslOffsets{}, errors.Wrap(err, 0)
 	}
 
-	var sslWriteOffset, sslReadOffset, sslWriteExOffset, sslReadExOffset elf.Symbol
+	var sslWriteSymbol, sslReadSymbol, sslWriteExSymbol, sslReadExSymbol elf.Symbol
 	var ok bool
 
-	if sslWriteOffset, ok = symbolsMap["SSL_write"]; !ok {
+	if sslWriteSymbol, ok = symbolsMap["SSL_write"]; !ok {
 		return sslOffsets{}, errors.New("SSL_write symbol not found")
 	}
 
-	if sslReadOffset, ok = symbolsMap["SSL_read"]; !ok {
+	if sslReadSymbol, ok = symbolsMap["SSL_read"]; !ok {
 		return sslOffsets{}, errors.New("SSL_read symbol not found")
 	}
+	
+	var sslWriteExOffset, sslReadExOffset uint64
 
-	if sslWriteExOffset, ok = symbolsMap["SSL_write_ex"]; !ok {
-		return sslOffsets{}, errors.New("SSL_write_ex symbol not found")
+	if sslWriteExSymbol, ok = symbolsMap["SSL_write_ex"]; !ok {
+		sslWriteExOffset = 0; // libssl.so.1.0 doesn't have the _ex functions
+	} else {
+		sslWriteExOffset = sslWriteExSymbol.Value - base
 	}
 
-	if sslReadExOffset, ok = symbolsMap["SSL_read_ex"]; !ok {
-		return sslOffsets{}, errors.New("SSL_read_ex symbol not found")
+	if sslReadExSymbol, ok = symbolsMap["SSL_read_ex"]; !ok {
+		sslReadExOffset = 0; // libssl.so.1.0 doesn't have the _ex functions
+	} else {
+		sslReadExOffset = sslReadExSymbol.Value - base
 	}
 
 	return sslOffsets{
-		SslWriteOffset:   sslWriteOffset.Value - base,
-		SslReadOffset:    sslReadOffset.Value - base,
-		SslWriteExOffset: sslWriteExOffset.Value - base,
-		SslReadExOffset:  sslReadExOffset.Value - base,
+		SslWriteOffset:   sslWriteSymbol.Value - base,
+		SslReadOffset:    sslReadSymbol.Value - base,
+		SslWriteExOffset: sslWriteExOffset,
+		SslReadExOffset:  sslReadExOffset,
 	}, nil
 }
 

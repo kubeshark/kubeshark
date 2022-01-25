@@ -67,36 +67,40 @@ func (s *sslHooks) installSslHooks(bpfObjects *tlsTapperObjects, sslLibrary *lin
 		return errors.Wrap(err, 0)
 	}
 
-	s.sslWriteExProbe, err = sslLibrary.Uprobe("SSL_write_ex", bpfObjects.SslWriteEx, &link.UprobeOptions{
-		Offset: offsets.SslWriteExOffset,
-	})
+	if offsets.SslWriteExOffset != 0 {
+		s.sslWriteExProbe, err = sslLibrary.Uprobe("SSL_write_ex", bpfObjects.SslWriteEx, &link.UprobeOptions{
+			Offset: offsets.SslWriteExOffset,
+		})
 
-	if err != nil {
-		return errors.Wrap(err, 0)
+		if err != nil {
+			return errors.Wrap(err, 0)
+		}
+
+		s.sslWriteExRetProbe, err = sslLibrary.Uretprobe("SSL_write_ex", bpfObjects.SslRetWriteEx, &link.UprobeOptions{
+			Offset: offsets.SslWriteExOffset,
+		})
+
+		if err != nil {
+			return errors.Wrap(err, 0)
+		}
 	}
 
-	s.sslWriteExRetProbe, err = sslLibrary.Uretprobe("SSL_write_ex", bpfObjects.SslRetWriteEx, &link.UprobeOptions{
-		Offset: offsets.SslWriteExOffset,
-	})
+	if offsets.SslReadExOffset != 0 {
+		s.sslReadExProbe, err = sslLibrary.Uprobe("SSL_read_ex", bpfObjects.SslReadEx, &link.UprobeOptions{
+			Offset: offsets.SslReadExOffset,
+		})
 
-	if err != nil {
-		return errors.Wrap(err, 0)
-	}
+		if err != nil {
+			return errors.Wrap(err, 0)
+		}
 
-	s.sslReadExProbe, err = sslLibrary.Uprobe("SSL_read_ex", bpfObjects.SslReadEx, &link.UprobeOptions{
-		Offset: offsets.SslReadExOffset,
-	})
+		s.sslReadExRetProbe, err = sslLibrary.Uretprobe("SSL_read_ex", bpfObjects.SslRetReadEx, &link.UprobeOptions{
+			Offset: offsets.SslReadExOffset,
+		})
 
-	if err != nil {
-		return errors.Wrap(err, 0)
-	}
-
-	s.sslReadExRetProbe, err = sslLibrary.Uretprobe("SSL_read_ex", bpfObjects.SslRetReadEx, &link.UprobeOptions{
-		Offset: offsets.SslReadExOffset,
-	})
-
-	if err != nil {
-		return errors.Wrap(err, 0)
+		if err != nil {
+			return errors.Wrap(err, 0)
+		}
 	}
 
 	return nil
@@ -121,20 +125,28 @@ func (s *sslHooks) close() []error {
 		errors = append(errors, err)
 	}
 
-	if err := s.sslWriteExProbe.Close(); err != nil {
-		errors = append(errors, err)
+	if s.sslWriteExProbe != nil {
+		if err := s.sslWriteExProbe.Close(); err != nil {
+			errors = append(errors, err)
+		}
 	}
 
-	if err := s.sslWriteExRetProbe.Close(); err != nil {
-		errors = append(errors, err)
+	if s.sslWriteExRetProbe != nil {
+		if err := s.sslWriteExRetProbe.Close(); err != nil {
+			errors = append(errors, err)
+		}
 	}
 
-	if err := s.sslReadExProbe.Close(); err != nil {
-		errors = append(errors, err)
+	if s.sslReadExProbe != nil {
+		if err := s.sslReadExProbe.Close(); err != nil {
+			errors = append(errors, err)
+		}
 	}
 
-	if err := s.sslReadExRetProbe.Close(); err != nil {
-		errors = append(errors, err)
+	if s.sslReadExRetProbe != nil {
+		if err := s.sslReadExRetProbe.Close(); err != nil {
+			errors = append(errors, err)
+		}
 	}
 
 	return errors
