@@ -19,28 +19,32 @@ ENV CGO_ENABLED=1 GOOS=linux
 RUN apk add libpcap-dev g++
 
 
-### Intermediate builder image for from AMD64 to AMD64 native builds
+### Intermediate builder image for x86-64 to x86-64 native builds
 FROM builder-native-base AS builder-from-amd64-to-amd64
 ENV GOARCH=amd64
 
 
-### Intermediate builder image for from AMD64 to AMD64 native builds
+### Intermediate builder image for AArch64 to AArch64 native builds
 FROM builder-native-base AS builder-from-arm64v8-to-arm64v8
 ENV GOARCH=arm64v8
 
 
-### Builder image for from AMD64 to ARM64 cross-compilation
+### Builder image for x86-64 to AArch64 cross-compilation
 FROM up9inc/linux-arm64-musl-go-libpcap AS builder-from-amd64-to-arm64v8
 ENV CGO_ENABLED=1 GOOS=linux
 ENV GOARCH=arm64 CGO_CFLAGS="-I/work/libpcap"
 
 
 ### Final builder image where the build happens
+# Possible combinations:
+# BUILDARCH=amd64 TARGETARCH=amd64
+# BUILDARCH=arm64v8 TARGETARCH=arm64v8
+# BUILDARCH=amd64 TARGETARCH=arm64v8
 ARG BUILDARCH=amd64
 ARG TARGETARCH=amd64
 FROM builder-from-${BUILDARCH}-to-${TARGETARCH} AS builder
 
-# Move to agent working directory (/agent-build).
+# Move to agent working directory (/agent-build)
 WORKDIR /app/agent-build
 
 COPY agent/go.mod agent/go.sum ./
