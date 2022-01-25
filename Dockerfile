@@ -46,18 +46,18 @@ RUN cd .. && /bin/bash build_extensions.sh
 
 FROM alpine:3.15
 
-RUN apk add bash libpcap-dev
+# gin-gonic runs in debug mode without this
+ENV GIN_MODE=release
 
+RUN apk add --no-cache bash libpcap-dev
+
+WORKDIR /app/data/
 WORKDIR /app
 
 # Copy binary and config files from /build to root folder of scratch container.
 COPY --from=builder ["/app/agent-build/mizuagent", "."]
 COPY --from=builder ["/app/agent/build/extensions", "extensions"]
 COPY --from=site-build ["/app/ui-build/build", "site"]
-RUN mkdir /app/data/
-
-# gin-gonic runs in debug mode without this
-ENV GIN_MODE=release
 
 # this script runs both apiserver and passivetapper and exits either if one of them exits, preventing a scenario where the container runs without one process
-ENTRYPOINT "/app/mizuagent"
+ENTRYPOINT ["/app/mizuagent"]
