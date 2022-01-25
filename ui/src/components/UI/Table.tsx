@@ -1,22 +1,26 @@
 import React, {useEffect, useState} from "react";
 import './style/Table.sass';
-import editImg from "../assets/edit.svg";
-import deleteImg from "../assets/delete.svg"
 import circleImg from "../assets/dotted-circle.svg"
 import Delete from '@material-ui/icons/Delete';
 import Edit from '@material-ui/icons/Edit';
 
+export interface ColsType {
+    field:string,
+    cellClassName?: string,
+    header:string,
+    width?:number,
+    getCellClassName?:(field:string,value : any) => string
+};
 
-interface Props {
+interface TableProps {
     rows : any[];
-    cols : {field:string, cellClassName?: string,header:string, width?:number,
-            getCellClassName?:(field:string,value : any) => string}[];
+    cols : ColsType[]
     onRowEdit : (any) => void;
     onRowDelete : (any) => void;
-    noDataMeesage : string;
+    noDataMeesage? : string;
 }
 
-export const Table: React.FC<Props> = ({rows, cols, onRowDelete, onRowEdit,noDataMeesage}) => {
+export const Table: React.FC<TableProps> = ({rows, cols, onRowDelete, onRowEdit, noDataMeesage = "No Data Found"}) => {
 
     const [tableRows, updateTableRows] = useState(rows);
 

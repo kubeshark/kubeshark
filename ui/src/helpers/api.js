@@ -48,6 +48,11 @@ export default class Api {
         return response.data;
     }
 
+    getUsers = async(filter = "") =>{
+        const response = await this.client.get(`/user/listUsers?usernameFilter=${filter}`);
+        return response.data;
+    }
+
     analyzeStatus = async () => {
         const response = await this.client.get("/status/analyze");
         return response.data;
