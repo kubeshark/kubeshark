@@ -17,7 +17,7 @@ var (
 func GetOasGeneratorInstance() *oasGenerator {
 	syncOnce.Do(func() {
 		instance = newOasGenerator()
-		logger.Log.Debug("Oas Generator Initialized")
+		logger.Log.Debug("OAS Generator Initialized")
 	})
 	return instance
 }
@@ -29,7 +29,7 @@ func (g *oasGenerator) Start() {
 	ctx, cancel := context.WithCancel(context.Background())
 	g.cancel = cancel
 	g.ctx = ctx
-	g.entriesChan = make(chan har.Entry, 100) // buffer up to 100 entries for OAS processing
+	g.entriesChan = make(chan har.Entry, 1000) // buffer up to 1000 entries for OAS processing
 	g.ServiceSpecs = &sync.Map{}
 	g.started = true
 	go instance.runGeneretor()
