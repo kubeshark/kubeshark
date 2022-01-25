@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import Checkbox from "./Checkbox"
+import Radio from "./Radio";
 
 export interface Props {
     valuesListInput;
@@ -73,10 +74,11 @@ const SelectList: React.FC<Props> = ({valuesListInput,tableName,multiSelect=true
                     {filteredValues?.map(listValue => {
                             return <tr key={listValue}>
                                 <td style={{width: 50}}>
-                                    <Checkbox checked={valuesList[listValue]} onToggle={() => toggleValues(listValue)}/>
+                                    {multiSelect && <Checkbox checked={valuesList[listValue]} onToggle={() => toggleValues(listValue)}/>}
+                                    {!multiSelect && <Radio checked={valuesList[listValue]} onToggle={() => toggleValues(listValue)}/>}
                                 </td>
                                 <td>{listValue}</td>
-                            </tr>
+                            </tr>   
                         }
                     )}
                     </tbody>
