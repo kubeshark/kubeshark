@@ -13,6 +13,7 @@ import {useSetRecoilState} from "recoil";
 import entPageAtom, {Page} from "../../recoil/entPage";
 import AdminSettings from "../Pages/SettingsPage/SettingsPage";
 import {useNavigate} from "react-router-dom";
+import {RouterRoutes} from "../../helpers/routes";
 
 const api = Api.getInstance();
 
@@ -43,7 +44,7 @@ export const EntHeader: React.FC<EntHeaderProps> = ({isFirstLogin, setIsFirstLog
             </div>
         </div>
         <div style={{display: "flex", alignItems: "center"}}>
-            <img className="headerIcon" alt="settings" src={settingImg} style={{marginRight: 25}} onClick={() => setIsSettingsModalOpen(true)}/>
+            <img className="headerIcon" alt="settings" src={settingImg} style={{marginRight: 25}} onClick={() => navigate(RouterRoutes.SETTINGS)}/>
             <ProfileButton/>
         </div>
         {/* <SettingsModal isOpen={isSettingsModalOpen} onClose={onSettingsModalClose} isFirstLogin={isFirstLogin}/> */}

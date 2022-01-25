@@ -35,11 +35,16 @@ export const Table: React.FC<TableProps> = ({rows, cols, onRowDelete, onRowEdit,
     const _onRowDelete = (row) => {
         onRowDelete(row);
     }
+
+    // const filteredValues = useMemo(() => {
+    //     return tableRows.filter((listValue) => listValue.find(row));
+    // },[tableRows, searchValue])
+
     return <table cellPadding={5} style={{borderCollapse: "collapse"}} className="mui-table">
     <thead className="mui-table__thead">
     <tr style={{borderBottomWidth: "2px"}} className="mui-table__tr">
         {cols?.map((col)=> {
-            return <th className="mui-table__th">{col.header}</th>
+            return <th key={col.header} className="mui-table__th">{col.header}</th>
         })}
         <th></th>
     </tr>
@@ -48,18 +53,19 @@ export const Table: React.FC<TableProps> = ({rows, cols, onRowDelete, onRowEdit,
         {
             ((tableRows == null) || (tableRows.length === 0)) ?
             <tr className="mui-table__no-data">
-            <img src={circleImg} alt="No data Found"></img>
-            <div className="mui-table__no-data-message">{noDataMeesage}</div>
+                {/* <img src={circleImg} alt="No data Found"></img>
+                <div className="mui-table__no-data-message">{noDataMeesage}</div> */}
             </tr>
 
             :
         
-            tableRows?.map(rowData => {
-                return <tr key={rowData?.id} className="mui-table__tr">
-                    {cols.map(col => {                        
-                        return <td className={`${col.getCellClassName ? col.getCellClassName(col.field, rowData[col.field]) : ""}
-                                ${col?.cellClassName ?? ""} mui-table__td`}>
-                                    {rowData[col.field]}
+            tableRows?.map((rowData,index) => {
+                return <tr key={rowData?.id ?? index} className="mui-table__tr">
+                    {cols.map((col,index) => {                        
+                        return <td key={`${rowData?.id} + ${index}`} className="mui-table__td">
+                                 <span key={Math.random().toString()} className={`${col.getCellClassName ? col.getCellClassName(col.field, rowData[col.field]) : ""}${col?.cellClassName ?? ""}`}>
+                                     {rowData[col.field]}
+                                </span>
                             </td>
                     })}
                     <td className="mui-table__td mui-table__row-actions">        

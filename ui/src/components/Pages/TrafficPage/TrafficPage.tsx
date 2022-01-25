@@ -18,7 +18,7 @@ import entriesAtom from "../../../recoil/entries";
 import focusedEntryIdAtom from "../../../recoil/focusedEntryId";
 import websocketConnectionAtom, {WsConnectionStatus} from "../../../recoil/wsConnection";
 import queryAtom from "../../../recoil/query";
-import OasModal from "../../OasModal/OasModal";
+import OasModal from "../../Modals/OasModal/OasModal";
 import {useCommonStyles} from "../../../helpers/commonStyle"
 import {TLSWarning} from "../../TLSWarning/TLSWarning";
 import serviceMapModalOpenAtom from "../../../recoil/serviceMapModalOpen";

@@ -1,5 +1,5 @@
 import { Button } from "@material-ui/core";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Table } from "./Table";
 import {useCommonStyles} from "../../helpers/commonStyle";
 import {ColsType} from "../UI/Table"
@@ -24,27 +24,30 @@ export const FilterableTableAction: React.FC<Props> = ({onRowDelete,onRowEdit, s
 
     const [tableRows,setRows] = useState(rows as any[])
     const [inputSearch, setInputSearch] = useState("")
-    let allRows = rows;
 
     useEffect(() => {
-        allRows = rows;
         setRows(rows);
     },[rows])
 
-    useEffect(()=> {  
-        if(inputSearch !== ""){
-            const searchFunc = searchConfig.filterRows(inputSearch)
-            const filtered = tableRows.filter(searchFunc)
-            setRows(filtered)
-        }
-        else{
-            setRows(allRows);
-        }
-    },[inputSearch])
+    // useEffect(()=> {  
+    //     if(inputSearch !== ""){
+    //         const searchFunc = searchConfig.filterRows(inputSearch)
+    //         const filtered = tableRows.filter(searchFunc)
+    //         setRows(filtered)
+    //     }
+    //     else{
+    //         setRows(allRows);
+    //     }
+    // },[inputSearch])
 
     const onChange = (e) => {
         setInputSearch(e.target.value)
     }
+
+    const filteredValues = useMemo(() => {
+        const searchFunc = searchConfig.filterRows(inputSearch)
+        return tableRows.filter(searchFunc)
+    },[tableRows, inputSearch])
 
     return (<>
         <div className="filterable-table">
@@ -54,7 +57,7 @@ export const FilterableTableAction: React.FC<Props> = ({onRowDelete,onRowEdit, s
                             {buttonConfig.text}
                 </Button>
             </div>
-            <Table rows={tableRows} cols={cols} onRowEdit={onRowEdit} onRowDelete={onRowDelete}></Table>
+            <Table rows={filteredValues} cols={cols} onRowEdit={onRowEdit} onRowDelete={onRowDelete}></Table>
         </div>
     </>);
 };

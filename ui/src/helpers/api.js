@@ -53,6 +53,11 @@ export default class Api {
         return response.data;
     }
 
+    getWorkspaces = async() =>{
+        const response = await this.client.get(``);
+        return response.data;
+    }
+
     analyzeStatus = async () => {
         const response = await this.client.get("/status/analyze");
         return response.data;
