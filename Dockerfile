@@ -1,4 +1,5 @@
-ARG ARCH=amd64
+ARG BUILDARCH=amd64
+ARG TARGETARCH=amd64
 
 ### Front-end
 FROM node:16 AS front-end
@@ -13,18 +14,25 @@ RUN npm run build
 
 
 
-### Builder image for AMD64 architecture
-FROM golang:1.16-alpine AS builder-amd64
-
+### Base builder image for native builds architecture
+FROM golang:1.16-alpine AS builder-native-base
 ENV CGO_ENABLED=1 GOOS=linux
-ENV GOARCH=amd64
-
 RUN apk add libpcap-dev gcc g++ make bash perl-utils
 
 
+### Intermediate builder image for AMD64 to AMD64 native builds
+FROM builder-native-base AS builder-from-amd64-to-amd64
+ENV GOARCH=amd64
 
-### Builder image for ARM64 architecture
-FROM dockcross/linux-arm64-musl AS builder-arm64v8
+
+### Intermediate builder image for AMD64 to AMD64 native builds
+FROM builder-native-base AS builder-from-arm64v8-to-arm64v8
+ENV GOARCH=arm64v8
+
+
+
+### Builder image for AMD64 to ARM64 cross-compilation
+FROM dockcross/linux-arm64-musl AS builder-from-amd64-to-arm64v8
 
 ENV CGO_ENABLED=1 GOOS=linux
 ENV GOARCH=arm64 CGO_CFLAGS="-I/work/libpcap"
@@ -49,7 +57,9 @@ RUN cp /work/libpcap/libpcap.a /usr/xcc/aarch64-linux-musl-cross/lib/gcc/aarch64
 
 
 ### Final builder image where the build happens
-FROM builder-${ARCH} AS builder
+ARG BUILDARCH=amd64
+ARG TARGETARCH=amd64
+FROM builder-from-${BUILDARCH}-to-${TARGETARCH} AS builder
 
 # Move to agent working directory (/agent-build).
 WORKDIR /app/agent-build
@@ -87,8 +97,8 @@ RUN go build -ldflags="-extldflags=-static -s -w \
 
 
 ### The shipped image
-ARG ARCH=amd64
-FROM ${ARCH}/busybox:latest
+ARG TARGETARCH=amd64
+FROM ${TARGETARCH}/busybox:latest
 
 WORKDIR /app
 
