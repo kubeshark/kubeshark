@@ -1,13 +1,18 @@
-package utils
+package har
 
-import "time"
+import (
+	"encoding/base64"
+	"github.com/up9inc/mizu/shared/logger"
+	"time"
+	"unicode/utf8"
+)
 
 /*
 HTTP Archive (HAR) format
 https://w3c.github.io/web-performance/specs/HAR/Overview.html
 */
 
-// Har is a container type for deserialization
+// HAR is a container type for deserialization
 type HAR struct {
 	Log Log `json:"log"`
 }
@@ -232,6 +237,12 @@ type PostData struct {
 	Comment string `json:"comment,omitempty"`
 }
 
+func (d PostData) B64Decoded() (bool, []byte, string) {
+	// there is a weird gap in HAR spec 1.2, that does not define encoding for binary POST bodies
+	// we have own convention of putting `base64` into comment field to handle it similar to response `Content`
+	return b64Decoded(d.Comment, d.Text)
+}
+
 // PostParam is a list of posted parameters, if any (embedded in <postData> object).
 type PostParam struct {
 	// name of a posted parameter.
@@ -272,6 +283,24 @@ type Content struct {
 	Encoding string `json:"encoding,omitempty"`
 	// optional (new in 1.2) A comment provided by the user or the application.
 	Comment string `json:"comment,omitempty"`
+}
+
+func (c Content) B64Decoded() (bool, []byte, string) {
+	return b64Decoded(c.Encoding, c.Text)
+}
+
+func b64Decoded(enc string, text string) (isBinary bool, asBytes []byte, asString string) {
+	if enc == "base64" {
+		decoded, err := base64.StdEncoding.DecodeString(text)
+		if err != nil {
+			logger.Log.Warningf("Failed to decode content as base64: %s", text)
+			return false, []byte(text), text
+		}
+		valid := utf8.Valid(decoded)
+		return !valid, decoded, string(decoded)
+	} else {
+		return false, nil, text
+	}
 }
 
 // Cache contains info about a request coming from browser cache.
