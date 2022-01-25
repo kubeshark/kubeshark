@@ -7,20 +7,20 @@ import {SyntaxHighlighter} from "./UI/SyntaxHighlighter/index";
 import filterUIExample1 from "./assets/filter-ui-example-1.png"
 import filterUIExample2 from "./assets/filter-ui-example-2.png"
 import variables from '../variables.module.scss';
+import {useRecoilState} from "recoil";
+import queryAtom from "../recoil/query";
+import useKeyPress from "../hooks/useKeyPress"
+import shortcutsKeyboard from "../configs/shortcutsKeyboard"
 
 interface FiltersProps {
-    query: string
-    setQuery: any
     backgroundColor: string
     ws: any
     openWebSocket: (query: string, resetEntries: boolean) => void;
 }
 
-export const Filters: React.FC<FiltersProps> = ({query, setQuery, backgroundColor, ws, openWebSocket}) => {
+export const Filters: React.FC<FiltersProps> = ({backgroundColor, ws, openWebSocket}) => {
     return <div className={styles.container}>
         <QueryForm
-            query={query}
-            setQuery={setQuery}
             backgroundColor={backgroundColor}
             ws={ws}
             openWebSocket={openWebSocket}
@@ -29,8 +29,6 @@ export const Filters: React.FC<FiltersProps> = ({query, setQuery, backgroundColo
 };
 
 interface QueryFormProps {
-    query: string
-    setQuery: any
     backgroundColor: string
     ws: any
     openWebSocket: (query: string, resetEntries: boolean) => void;
@@ -50,9 +48,10 @@ export const modalStyle = {
     color: '#000',
 };
 
-export const QueryForm: React.FC<QueryFormProps> = ({query, setQuery, backgroundColor, ws, openWebSocket}) => {
+export const QueryForm: React.FC<QueryFormProps> = ({backgroundColor, ws, openWebSocket}) => {
 
     const formRef = useRef<HTMLFormElement>(null);
+    const [query, setQuery] = useRecoilState(queryAtom);
 
     const [openModal, setOpenModal] = useState(false);
 
@@ -63,6 +62,8 @@ export const QueryForm: React.FC<QueryFormProps> = ({query, setQuery, background
         setQuery(e.target.value);
     }
 
+    
+
     const handleSubmit = (e) => {
         ws.close();
         if (query) {
@@ -72,6 +73,8 @@ export const QueryForm: React.FC<QueryFormProps> = ({query, setQuery, background
         }
         e.preventDefault();
     }
+
+    useKeyPress(shortcutsKeyboard.ctrlEnter, handleSubmit, formRef.current);
 
     return <>
         <form

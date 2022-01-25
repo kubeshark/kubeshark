@@ -16,3 +16,8 @@ func IsSetupNecessary(c *gin.Context) {
 		c.JSON(http.StatusOK, IsInstallNeeded)
 	}
 }
+
+func SetupAdminUser(c *gin.Context) {
+	token, err, formErrorMessages := providers.CreateAdminUser(c.PostForm("password"), c.Request.Context())
+	handleRegistration(token, err, formErrorMessages, c)
+}

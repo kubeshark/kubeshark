@@ -1,7 +1,8 @@
 import React from "react";
-import background from "./assets/authBackground.png";
-import logo from './assets/MizuEntLogoFull.svg';
-import "./style/AuthBasePage.sass";
+import background from "../../assets/authBackground.png";
+import logo from '../../assets/MizuEntLogoNoPowBy.svg';
+import poweredBy from '../../assets/powered-by.svg'
+import "./AuthBasePage.sass";
 
 
 export const AuthPageBase: React.FC = ({children}) => {
@@ -10,6 +11,9 @@ export const AuthPageBase: React.FC = ({children}) => {
                 <img alt="logo" src={logo}/>
             </div>
             {children}
+            <div className="authFooter">
+                <img alt="logo" src={poweredBy}/>
+            </div>
     </div>;
 };
 

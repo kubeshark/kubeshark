@@ -1,15 +1,12 @@
 {
   "watchForFileChanges":false,
   "viewportWidth": 1920,
-  "viewportHeight": 1080,
+  "viewportHeight": 3500,
   "video": false,
   "screenshotOnRunFailure": false,
-
-  "testFiles":
-  ["tests/GuiPort.js",
-  "tests/MultipleNamespaces.js",
-  "tests/RedactTests.js",
-  "tests/Regex.js"],
+  "testFiles": [
+    "tests/IgnoredUserAgents.js"
+  ],
 
   "env": {
     "testUrl": "http://localhost:8899/"

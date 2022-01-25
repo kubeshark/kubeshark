@@ -1,5 +1,5 @@
 # creates image in which mizu agent is remotely debuggable using delve
-FROM node:14-slim AS site-build
+FROM node:16-slim AS site-build
 
 WORKDIR /app/ui-build
 
@@ -8,6 +8,7 @@ COPY ui/package-lock.json .
 RUN npm i
 COPY ui .
 RUN npm run build
+RUN npm run build-ent
 
 FROM golang:1.16-alpine AS builder
 # Set necessary environment variables needed for our image.
@@ -52,6 +53,7 @@ WORKDIR /app
 COPY --from=builder ["/app/agent-build/mizuagent", "."]
 COPY --from=builder ["/app/agent/build/extensions", "extensions"]
 COPY --from=site-build ["/app/ui-build/build", "site"]
+COPY --from=site-build ["/app/ui-build/build-ent", "site-standalone"]
 RUN mkdir /app/data/
 
 # install delve

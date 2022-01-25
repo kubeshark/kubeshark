@@ -1,4 +1,4 @@
-import React, {useContext, useEffect, useState} from "react";
+import React, {useEffect, useState} from "react";
 import logo from '../assets/MizuEntLogo.svg';
 import './Header.sass';
 import userImg from '../assets/user-circle.svg';
@@ -9,7 +9,9 @@ import logoutIcon from '../assets/logout.png';
 import {SettingsModal} from "../SettingsModal/SettingModal";
 import Api from "../../helpers/api";
 import {toast} from "react-toastify";
-import {MizuContext, Page} from "../../EntApp";
+import {useSetRecoilState} from "recoil";
+import entPageAtom, {Page} from "../../recoil/entPage";
+import {useNavigate} from "react-router-dom";
 
 const api = Api.getInstance();
 
@@ -19,7 +21,7 @@ interface EntHeaderProps {
 }
 
 export const EntHeader: React.FC<EntHeaderProps> = ({isFirstLogin, setIsFirstLogin}) => {
-
+    const navigate = useNavigate();
     const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 
     useEffect(() => {
@@ -36,7 +38,7 @@ export const EntHeader: React.FC<EntHeaderProps> = ({isFirstLogin, setIsFirstLog
     return <div className="header">
         <div>
             <div className="title">
-                <img style={{height: 55}} src={logo} alt="logo"/>
+                <img className="entLogo" style={{height: 55}} src={logo} alt="logo" onClick={() => navigate("/")}/>
             </div>
         </div>
         <div style={{display: "flex", alignItems: "center"}}>
@@ -49,12 +51,12 @@ export const EntHeader: React.FC<EntHeaderProps> = ({isFirstLogin, setIsFirstLog
 
 const ProfileButton = () => {
 
-    const {setPage} = useContext(MizuContext);
+    const setEntPage = useSetRecoilState(entPageAtom);
 
     const logout = async (popupState) => {
         try {
             await api.logout();
-            setPage(Page.Login);
+            setEntPage(Page.Login);
         } catch (e) {
             toast.error("Something went wrong, please check the console");
             console.error(e);

@@ -6,18 +6,18 @@ import Queryable from "./Queryable";
 interface SummaryProps {
     method: string
     summary: string
-    updateQuery: any
 }
 
-export const Summary: React.FC<SummaryProps> = ({method, summary, updateQuery}) => {
+export const Summary: React.FC<SummaryProps> = ({method, summary}) => {
 
     return <div className={styles.container}>
         {method && <Queryable
             query={`method == "${method}"`}
             className={`${miscStyles.protocol} ${miscStyles.method}`}
-            updateQuery={updateQuery}
             displayIconOnMouseOver={true}
             style={{whiteSpace: "nowrap"}}
+            flipped={true}
+            iconStyle={{zIndex:"5",position:"relative",right:"22px"}}
         >
             <span>
                 {method}
@@ -25,8 +25,9 @@ export const Summary: React.FC<SummaryProps> = ({method, summary, updateQuery}) 
         </Queryable>}
         {summary && <Queryable
             query={`summary == "${summary}"`}
-            updateQuery={updateQuery}
             displayIconOnMouseOver={true}
+            flipped={true}
+            iconStyle={{zIndex:"5",position:"relative",right:"14px"}}
         >
             <div
                 className={`${styles.summary}`}
