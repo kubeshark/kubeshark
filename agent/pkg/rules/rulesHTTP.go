@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"mizuserver/pkg/har"
 	"reflect"
 	"regexp"
 	"strings"
@@ -11,8 +12,7 @@ import (
 	"github.com/up9inc/mizu/shared/logger"
 
 	"github.com/up9inc/mizu/shared"
-	"github.com/up9inc/mizu/tap/api/har"
-	jsonpath "github.com/yalp/jsonpath"
+	"github.com/yalp/jsonpath"
 )
 
 type RulesMatched struct {

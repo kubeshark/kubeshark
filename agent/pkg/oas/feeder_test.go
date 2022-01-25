@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/up9inc/mizu/shared/logger"
-	"github.com/up9inc/mizu/tap/api/har"
 	"io"
 	"io/ioutil"
+	"mizuserver/pkg/har"
 	"os"
 	"path/filepath"
 	"sort"
@@ -96,7 +96,7 @@ func feedFromHAR(file string) error {
 	}
 
 	for _, entry := range harDoc.Log.Entries {
-		GetOasGeneratorInstance().PushEntry(entry)
+		GetOasGeneratorInstance().PushEntry(&entry)
 	}
 
 	return nil

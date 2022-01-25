@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/up9inc/mizu/shared/logger"
-	"github.com/up9inc/mizu/tap/api/har"
+	"mizuserver/pkg/har"
 	"net/url"
 	"sync"
 )
