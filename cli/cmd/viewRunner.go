@@ -27,7 +27,7 @@ func runMizuView() {
 	url := config.Config.View.Url
 
 	if url == "" {
-		exists, err := kubernetesProvider.DoesServicesExist(ctx, config.Config.MizuResourcesNamespace, kubernetes.ApiServerPodName)
+		exists, err := kubernetesProvider.DoesServiceExist(ctx, config.Config.MizuResourcesNamespace, kubernetes.ApiServerPodName)
 		if err != nil {
 			logger.Log.Errorf("Failed to found mizu service %v", err)
 			cancel()

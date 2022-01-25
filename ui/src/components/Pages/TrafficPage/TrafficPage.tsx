@@ -1,25 +1,27 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Filters } from "./Filters";
-import { EntriesList } from "./EntriesList";
+import { Filters } from "../../Filters";
+import { EntriesList } from "../../EntriesList";
 import { makeStyles, Button } from "@material-ui/core";
-import "./style/TrafficPage.sass";
-import styles from './style/EntriesList.module.sass';
-import {EntryDetailed} from "./EntryDetailed";
-import playIcon from './assets/run.svg';
-import pauseIcon from './assets/pause.svg';
-import variables from '../variables.module.scss';
-import {StatusBar} from "./UI/StatusBar";
-import Api, {MizuWebsocketURL} from "../helpers/api";
+import "./TrafficPage.sass";
+import styles from '../../style/EntriesList.module.sass';
+import {EntryDetailed} from "../../EntryDetailed";
+import playIcon from '../../assets/run.svg';
+import pauseIcon from '../../assets/pause.svg';
+import variables from '../../../variables.module.scss';
+import {StatusBar} from "../../UI/StatusBar";
+import Api, {MizuWebsocketURL} from "../../../helpers/api";
 import { toast } from 'react-toastify';
 import debounce from 'lodash/debounce';
-import {useRecoilState, useRecoilValue} from "recoil";
-import tappingStatusAtom from "../recoil/tappingStatus";
-import entriesAtom from "../recoil/entries";
-import focusedEntryIdAtom from "../recoil/focusedEntryId";
-import websocketConnectionAtom, {WsConnectionStatus} from "../recoil/wsConnection";
-import queryAtom from "../recoil/query";
-import OasModal from "./OasModal/OasModal";
-import {useCommonStyles} from "../helpers/commonStyle"
+import {useRecoilState, useRecoilValue, useSetRecoilState} from "recoil";
+import tappingStatusAtom from "../../../recoil/tappingStatus";
+import entriesAtom from "../../../recoil/entries";
+import focusedEntryIdAtom from "../../../recoil/focusedEntryId";
+import websocketConnectionAtom, {WsConnectionStatus} from "../../../recoil/wsConnection";
+import queryAtom from "../../../recoil/query";
+import OasModal from "../../OasModal/OasModal";
+import {useCommonStyles} from "../../../helpers/commonStyle"
+import {TLSWarning} from "../../TLSWarning/TLSWarning";
+import serviceMapModalOpenAtom from "../../../recoil/serviceMapModalOpen";
 
 const useLayoutStyles = makeStyles(() => ({
   details: {
@@ -43,19 +45,18 @@ const useLayoutStyles = makeStyles(() => ({
 
 interface TrafficPageProps {
   setAnalyzeStatus?: (status: any) => void;
-  onTLSDetected: (destAddress: string) => void;
-  setOpenServiceMapModal?: (open: boolean) => void;
 }
 
 const api = Api.getInstance();
 
-export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus,onTLSDetected, setOpenServiceMapModal}) => {
+export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus}) => {
     const commonClasses = useCommonStyles();
     const classes = useLayoutStyles();
     const [tappingStatus, setTappingStatus] = useRecoilState(tappingStatusAtom);
     const [entries, setEntries] = useRecoilState(entriesAtom);
     const [focusedEntryId, setFocusedEntryId] = useRecoilState(focusedEntryIdAtom);
     const [wsConnection, setWsConnection] = useRecoilState(websocketConnectionAtom);
+    const setServiceMapModalOpen = useSetRecoilState(serviceMapModalOpenAtom);
     const query = useRecoilValue(queryAtom);
 
     const [noMoreDataTop, setNoMoreDataTop] = useState(false);
@@ -75,6 +76,10 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus,onTLSD
     const [openOasModal, setOpenOasModal] = useState(false);
     const handleOpenModal = () => setOpenOasModal(true);
     const handleCloseModal = () => setOpenOasModal(false);
+
+    const [showTLSWarning, setShowTLSWarning] = useState(false);
+    const [userDismissedTLSWarning, setUserDismissedTLSWarning] = useState(false);
+    const [addressesWithTLS, setAddressesWithTLS] = useState(new Set<string>());
 
     const handleQueryChange = useMemo(
       () =>
@@ -216,6 +221,15 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus,onTLSD
       }
     }
 
+    const onTLSDetected = (destAddress: string) => {
+        addressesWithTLS.add(destAddress);
+        setAddressesWithTLS(new Set(addressesWithTLS));
+
+        if (!userDismissedTLSWarning) {
+            setShowTLSWarning(true);
+        }
+    };
+
     const getConnectionStatusClass = (isContainer) => {
         const container = isContainer ? "Container" : "";
         switch (wsConnection) {
@@ -225,7 +239,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus,onTLSD
                 return "redIndicator" + container;
         }
     }
- 
+
     const getConnectionTitle = () => {
         switch (wsConnection) {
             case WsConnectionStatus.Connected:
@@ -243,7 +257,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus,onTLSD
     }
 
     const openServiceMapModalDebounce = debounce(() => {
-        setOpenServiceMapModal(true)
+        setServiceMapModalOpen(true)
     }, 500);
 
   return (
@@ -320,6 +334,12 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus,onTLSD
         </div>
       </div>}
       {tappingStatus && !openOasModal && <StatusBar />}
+       <TLSWarning showTLSWarning={showTLSWarning}
+                   setShowTLSWarning={setShowTLSWarning}
+                   addressesWithTLS={addressesWithTLS}
+                   setAddressesWithTLS={setAddressesWithTLS}
+                   userDismissedTLSWarning={userDismissedTLSWarning}
+                   setUserDismissedTLSWarning={setUserDismissedTLSWarning} />
     </div>
   );
 };
