@@ -12,16 +12,38 @@ COPY ui .
 RUN npm run build
 
 
-### Base of the builder image
-FROM golang:1.16-bullseye AS builder-base
 
-# Set necessary environment variables needed for our image.
-ENV CGO_ENABLED=1 GOOS=linux GOARCH=${GOARCH}
+### Builder image for AMD64 architecture
+FROM golang:1.16-alpine AS builder-amd64
 
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
-        build-essential \
-        libpcap-dev
+ENV CGO_ENABLED=1 GOOS=linux
+ENV GOARCH=amd64
+
+RUN apk add libpcap-dev gcc g++ make bash perl-utils
+
+
+
+### Builder image for ARM64 architecture
+FROM dockcross/linux-arm64-musl AS builder-arm64v8
+
+ENV CGO_ENABLED=1 GOOS=linux
+ENV GOARCH=arm64 CGO_CFLAGS="-I/work/libpcap"
+
+# Install Go
+RUN curl https://go.dev/dl/go1.16.13.linux-amd64.tar.gz -Lo ./go.linux-amd64.tar.gz
+RUN rm -rf /usr/local/go && tar -C /usr/local -xzf go.linux-amd64.tar.gz
+ENV PATH "$PATH:/usr/local/go/bin"
+
+# Compile libpcap
+RUN curl https://www.tcpdump.org/release/libpcap-1.10.1.tar.gz -Lo ./libpcap.tar.gz
+RUN tar -xzf libpcap.tar.gz && mv ./libpcap-* ./libpcap
+RUN cd ./libpcap && ./configure --host=arm && make
+RUN cp /work/libpcap/libpcap.a /usr/xcc/aarch64-linux-musl-cross/lib/gcc/aarch64-linux-musl/*/
+
+
+
+### Final builder image where the build happens
+FROM builder-${ARCH} AS builder
 
 # Move to agent working directory (/agent-build).
 WORKDIR /app/agent-build
@@ -39,30 +61,6 @@ COPY shared ../shared
 COPY tap ../tap
 COPY agent .
 
-
-### Intermediate builder image for AMD64 architecture
-FROM builder-base AS builder-amd64
-
-ENV GOARCH=amd64
-
-
-### Intermediate builder image for ARM64 architecture
-FROM builder-base AS builder-arm64v8
-
-ENV GOARCH=arm64
-ENV CC=aarch64-linux-gnu-gcc
-ENV PKG_CONFIG_PATH=/usr/lib/aarch64-linux-gnu/pkgconfig
-
-RUN dpkg --add-architecture arm64 \
-    && apt-get update \
-    && apt-get install -y --no-install-recommends \
-        gcc-aarch64-linux-gnu \
-        libpcap-dev:arm64
-
-
-### Final builder image where the building happens
-FROM builder-${ARCH} AS builder
-
 ARG COMMIT_HASH
 ARG GIT_BRANCH
 ARG BUILD_TIMESTAMP
@@ -70,7 +68,7 @@ ARG SEM_VER=0.0.0
 
 WORKDIR /app/agent-build
 
-RUN go build -ldflags="-extldflags '-fuse-ld=bfd' -s -w \
+RUN go build -ldflags="-extldflags=-static \
     -X 'mizuserver/pkg/version.GitCommitHash=${COMMIT_HASH}' \
     -X 'mizuserver/pkg/version.Branch=${GIT_BRANCH}' \
     -X 'mizuserver/pkg/version.BuildTimestamp=${BUILD_TIMESTAMP}' \
@@ -83,7 +81,7 @@ RUN cd .. && /bin/bash build_extensions.sh
 
 ### The shipped image
 ARG ARCH=amd64
-FROM up9inc/debian-pcap:stable-slim-${ARCH}
+FROM ${ARCH}/busybox:latest
 
 WORKDIR /app
 
