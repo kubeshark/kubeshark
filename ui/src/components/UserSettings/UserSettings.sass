@@ -1,0 +1,21 @@
+@import '../../variables.module'
+
+@mixin status-base($bg_color, $color, $border)
+    box-sizing: border-box
+    border-radius: 4px
+    height : 20px
+    width : 63px
+    display: flex
+    align-content: center
+    justify-content: center
+    align-items: center
+    background: $bg_color
+    color: $color
+    border: $border
+
+.status
+    &--active
+        @include status-base(rgba(111, 207, 151, 0.5), #247E4B, 1px solid #219653)
+
+    &--pending
+        @include status-base(rgba(242, 201, 76, 0.5), #8C7325, 1px solid #F2994A)

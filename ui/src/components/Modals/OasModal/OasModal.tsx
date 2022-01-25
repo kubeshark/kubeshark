@@ -1,9 +1,9 @@
 import { Box, Fade, FormControl, MenuItem, Modal } from "@material-ui/core";
 import { useEffect, useState } from "react";
 import { RedocStandalone } from "redoc";
-import Api from "../../helpers/api";
-import { Select } from "../UI/Select";
-import closeIcon from "../assets/closeIcon.svg";
+import Api from "../../../helpers/api";
+import { Select } from "../../UI/Select";
+import closeIcon from "../../assets/closeIcon.svg";
 import { toast } from 'react-toastify';
 import './OasModal.sass'
 

@@ -11,6 +11,7 @@ import LoadingOverlay from "./LoadingOverlay";
 import SystemViewer from "./Pages/SystemViewer/SystemViewer";
 import Api from "../helpers/api";
 import {TrafficPage} from "./Pages/TrafficPage/TrafficPage";
+import SettingsPage from "./Pages/SettingsPage/SettingsPage";
 
 const api = Api.getInstance();
 
@@ -69,8 +70,9 @@ const AppSwitchRoutes = () => {
 
     return <Routes>
         <Route path={"/"} element={<SystemViewer isFirstLogin={isFirstLogin} setIsFirstLogin={setIsFirstLogin}/>}>
+            <Route path={RouterRoutes.SETTINGS} element={<SettingsPage/>} /> {/*todo: set settings component*/}
             <Route path={"/"} element={<TrafficPage/>} />
-            <Route path={RouterRoutes.SETTINGS} element={<></>} /> {/*todo: set settings component*/}
+            
         </Route>
         <Route path={RouterRoutes.LOGIN} element={<AuthPageBase><LoginPage/></AuthPageBase>}/>
         <Route path={RouterRoutes.SETUP} element={<AuthPageBase><InstallPage onFirstLogin={() => setIsFirstLogin(true)}/></AuthPageBase>}/>

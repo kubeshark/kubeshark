@@ -1,0 +1,61 @@
+import "./UserSettings.sass"
+import {ColsType, FilterableTableAction} from "../UI/FilterableTableAction"
+// import Api from "../../helpers/api"
+import { useEffect, useState } from "react";
+import AddUserModal from "../Modals/AddUserModal/AddUserModal";
+
+interface Props {
+
+}
+
+// const api = Api.getInstance();
+
+export const UserSettings : React.FC<Props> = ({}) => {
+
+    const [usersRows, setUserRows] = useState([]);
+    const cols : ColsType[] = [{field : "userName",header:"User"},
+                               {field : "role",header:"Role"},
+                               {field : "status",header:"Status",getCellClassName : (field, val) =>{
+                                   return val === "Active" ? "status--active" : "status--pending"
+                               }}]
+    const [isOpenModal,setIsOpen] = useState(false)
+
+    useEffect(() => {
+        (async () => {
+            try {
+                const users = [{userName:"asd",role:"Admin",status:"Active"}]//await api.getUsers() 
+                setUserRows(users)                  
+            } catch (e) {
+                console.error(e);
+            }
+        })();
+    },[])
+
+    const filterFuncFactory = (searchQuery: string) => {
+        return (row) => {
+            return row.userName.toLowerCase().includes(searchQuery.toLowerCase())
+        }
+    }
+
+    const searchConfig = { searchPlaceholder: "Search User",filterRows: filterFuncFactory}
+    
+    const onRowDelete = (row) => {
+        const filterFunc = filterFuncFactory(row.userName)
+        const newUserList = usersRows.filter(filterFunc)
+        setUserRows(newUserList)
+    }
+
+    const onRowEdit = (row) => {
+        // open Edit user Modal
+    }
+
+    const buttonConfig = {onClick: () => {setIsOpen(true)}, text:"Add User"}
+    return (<>
+        <FilterableTableAction onRowEdit={onRowEdit} onRowDelete={onRowDelete} searchConfig={searchConfig} 
+                               buttonConfig={buttonConfig} rows={usersRows} cols={cols}>
+        </FilterableTableAction>
+        <AddUserModal isOpen={isOpenModal}>
+
+        </AddUserModal>
+    </>);
+}

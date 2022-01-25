@@ -1,7 +1,6 @@
 import React from 'react';
-import { makeStyles, withStyles, Modal, Backdrop, Fade, Box } from '@material-ui/core';
+import { makeStyles, Modal, Backdrop, Fade, Box } from '@material-ui/core';
 import {useCommonStyles} from "../../../helpers/commonStyle";
-import { PropertiesTable } from 'redoc/typings/common-elements';
 
 const useStyles = makeStyles({
     modal: {
