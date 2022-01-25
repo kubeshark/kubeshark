@@ -22,7 +22,7 @@ const AppSwitchRoutes = () => {
     const [entPage, setEntPage] = useRecoilState(entPageAtom);
     const [isFirstLogin, setIsFirstLogin] = useState(false);
 
-    const determinePage =  useCallback(async () => { // TODO: move to state management
+    const determinePage =  useCallback(async () => {
         try {
             const isInstallNeeded = await api.isInstallNeeded();
             if (isInstallNeeded) {
