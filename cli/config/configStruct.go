@@ -55,7 +55,7 @@ func (config *ConfigStruct) SetDefaults() {
 	config.BasenineImage = fmt.Sprintf("%s:%s", shared.BasenineImageRepo, shared.BasenineImageTag)
 	config.KratosImage = shared.KratosImageDefault
 	config.KetoImage = shared.KetoImageDefault
-	config.AgentImage = fmt.Sprintf("gcr.io/up9-docker-hub/mizu/%s:%s", mizu.Branch, mizu.SemVer)
+	config.AgentImage = fmt.Sprintf("%s:%s", shared.MizuAgentImageRepo, mizu.SemVer)
 	config.ConfigFilePath = path.Join(mizu.GetMizuFolderPath(), "config.yaml")
 }
 
