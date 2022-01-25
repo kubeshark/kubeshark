@@ -1,13 +1,13 @@
 import { Button } from "@material-ui/core";
 import React, { useState,useRef } from "react";
 import { toast } from "react-toastify";
-import Api from "../helpers/api";
-import { useCommonStyles } from "../helpers/commonStyle";
-import LoadingOverlay from "./LoadingOverlay";
-import entPageAtom, {Page} from "../recoil/entPage";
+import Api from "../../../helpers/api";
+import { useCommonStyles } from "../../../helpers/commonStyle";
+import LoadingOverlay from "../../LoadingOverlay";
+import entPageAtom, {Page} from "../../../recoil/entPage";
 import {useSetRecoilState} from "recoil";
-import useKeyPress from "../hooks/useKeyPress"
-import shortcutsKeyboard from "../configs/shortcutsKeyboard"
+import useKeyPress from "../../../hooks/useKeyPress"
+import shortcutsKeyboard from "../../../configs/shortcutsKeyboard"
 
 
 const api = Api.getInstance();

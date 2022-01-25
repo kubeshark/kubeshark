@@ -1,14 +1,14 @@
 import { Button } from "@material-ui/core";
 import React, { useState,useRef } from "react";
-import { adminUsername } from "../consts";
-import Api, { FormValidationErrorType } from "../helpers/api";
+import { adminUsername } from "../../../consts";
+import Api, { FormValidationErrorType } from "../../../helpers/api";
 import { toast } from 'react-toastify';
-import LoadingOverlay from "./LoadingOverlay";
-import { useCommonStyles } from "../helpers/commonStyle";
+import LoadingOverlay from "../../LoadingOverlay";
+import { useCommonStyles } from "../../../helpers/commonStyle";
 import {useSetRecoilState} from "recoil";
-import entPageAtom, {Page} from "../recoil/entPage";
-import useKeyPress from "../hooks/useKeyPress"
-import shortcutsKeyboard from "../configs/shortcutsKeyboard"
+import entPageAtom, {Page} from "../../../recoil/entPage";
+import useKeyPress from "../../../hooks/useKeyPress"
+import shortcutsKeyboard from "../../../configs/shortcutsKeyboard"
 
 
 const api = Api.getInstance();
