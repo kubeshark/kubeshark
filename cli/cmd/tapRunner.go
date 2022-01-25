@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/up9inc/mizu/cli/resources"
+	"github.com/up9inc/mizu/cli/telemetry"
 	"github.com/up9inc/mizu/cli/utils"
 
 	"github.com/getkin/kin-openapi/openapi3"
@@ -137,13 +138,19 @@ func RunMizuTap() {
 		return
 	}
 
-	defer finishMizuExecution(kubernetesProvider, apiProvider, config.Config.IsNsRestrictedMode(), config.Config.MizuResourcesNamespace)
+	defer finishTapExecution(kubernetesProvider)
 
 	go goUtils.HandleExcWrapper(watchApiServerEvents, ctx, kubernetesProvider, cancel)
 	go goUtils.HandleExcWrapper(watchApiServerPod, ctx, kubernetesProvider, cancel)
 
 	// block until exit signal or error
 	utils.WaitForFinish(ctx, cancel)
+}
+
+func finishTapExecution(kubernetesProvider *kubernetes.Provider) {
+	telemetry.ReportTapTelemetry(apiProvider, config.Config.Tap, state.startTime)
+
+	finishMizuExecution(kubernetesProvider, config.Config.IsNsRestrictedMode(), config.Config.MizuResourcesNamespace)
 }
 
 func getTapMizuAgentConfig() *shared.MizuAgentConfig {
