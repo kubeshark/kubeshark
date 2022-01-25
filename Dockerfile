@@ -74,9 +74,6 @@ RUN go build -ldflags="-extldflags=-static \
     -X 'mizuserver/pkg/version.BuildTimestamp=${BUILD_TIMESTAMP}' \
     -X 'mizuserver/pkg/version.SemVer=${SEM_VER}'" -o mizuagent .
 
-COPY devops/build_extensions.sh ..
-RUN cd .. && /bin/bash build_extensions.sh
-
 
 
 ### The shipped image

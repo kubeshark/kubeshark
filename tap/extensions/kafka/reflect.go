@@ -1,6 +1,6 @@
 // +build !unsafe
 
-package main
+package kafka
 
 import (
 	"reflect"

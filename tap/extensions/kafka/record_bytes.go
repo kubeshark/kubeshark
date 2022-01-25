@@ -1,4 +1,4 @@
-package main
+package kafka
 
 import (
 	"github.com/segmentio/kafka-go/protocol"

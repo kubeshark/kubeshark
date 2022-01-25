@@ -24,8 +24,11 @@ require (
 	github.com/up9inc/mizu/shared v0.0.0
 	github.com/up9inc/mizu/tap v0.0.0
 	github.com/up9inc/mizu/tap/api v0.0.0
+	github.com/up9inc/mizu/tap/extensions/amqp v0.0.0
+	github.com/up9inc/mizu/tap/extensions/http v0.0.0
+	github.com/up9inc/mizu/tap/extensions/kafka v0.0.0
+	github.com/up9inc/mizu/tap/extensions/redis v0.0.0
 	github.com/yalp/jsonpath v0.0.0-20180802001716-5cc68e5049a0
-	golang.org/x/text v0.3.5 // indirect
 	k8s.io/api v0.21.2
 	k8s.io/apimachinery v0.21.2
 	k8s.io/client-go v0.21.2
@@ -36,3 +39,11 @@ replace github.com/up9inc/mizu/shared v0.0.0 => ../shared
 replace github.com/up9inc/mizu/tap v0.0.0 => ../tap
 
 replace github.com/up9inc/mizu/tap/api v0.0.0 => ../tap/api
+
+replace github.com/up9inc/mizu/tap/extensions/amqp v0.0.0 => ../tap/extensions/amqp
+
+replace github.com/up9inc/mizu/tap/extensions/http v0.0.0 => ../tap/extensions/http
+
+replace github.com/up9inc/mizu/tap/extensions/kafka v0.0.0 => ../tap/extensions/kafka
+
+replace github.com/up9inc/mizu/tap/extensions/redis v0.0.0 => ../tap/extensions/redis
