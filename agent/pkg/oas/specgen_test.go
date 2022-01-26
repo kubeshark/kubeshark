@@ -47,7 +47,7 @@ func TestEntries(t *testing.T) {
 	GetOasGeneratorInstance().Start()
 	loadStartingOAS()
 
-	cnt, err := feedEntries(files)
+	cnt, err := feedEntries(files, true)
 	if err != nil {
 		t.Log(err)
 		t.Fail()
@@ -106,13 +106,11 @@ func TestFileSingle(t *testing.T) {
 	loadStartingOAS()
 	file := "test_artifacts/output_rdwtyeoyrj.har.ldjson"
 	files := []string{file}
-	cnt, err := feedEntries(files)
+	cnt, err := feedEntries(files, true)
 	if err != nil {
 		logger.Log.Warning("Failed processing file: " + err.Error())
 		t.Fail()
 	}
-
-	logger.Log.Infof("Processed entries: %d", cnt)
 
 	waitQueueProcessed()
 
@@ -136,7 +134,7 @@ func TestFileSingle(t *testing.T) {
 		return true
 	})
 
-	logger.Log.Info("Done")
+	logger.Log.Infof("Processed entries: %d", cnt)
 }
 
 func waitQueueProcessed() {
@@ -180,7 +178,7 @@ func loadStartingOAS() {
 
 func TestEntriesNegative(t *testing.T) {
 	files := []string{"invalid"}
-	_, err := feedEntries(files)
+	_, err := feedEntries(files, false)
 	if err == nil {
 		t.Logf("Should have failed")
 		t.Fail()

@@ -51,7 +51,7 @@ func fileSize(fname string) int64 {
 	return fi.Size()
 }
 
-func feedEntries(fromFiles []string) (count int, err error) {
+func feedEntries(fromFiles []string, isSync bool) (count int, err error) {
 	badFiles := make([]string, 0)
 	cnt := 0
 	for _, file := range fromFiles {
@@ -60,14 +60,14 @@ func feedEntries(fromFiles []string) (count int, err error) {
 		eCnt := 0
 		switch ext {
 		case ".har":
-			eCnt, err = feedFromHAR(file)
+			eCnt, err = feedFromHAR(file, isSync)
 			if err != nil {
 				logger.Log.Warning("Failed processing file: " + err.Error())
 				badFiles = append(badFiles, file)
 				continue
 			}
 		case ".ldjson":
-			eCnt, err = feedFromLDJSON(file)
+			eCnt, err = feedFromLDJSON(file, isSync)
 			if err != nil {
 				logger.Log.Warning("Failed processing file: " + err.Error())
 				badFiles = append(badFiles, file)
@@ -86,7 +86,7 @@ func feedEntries(fromFiles []string) (count int, err error) {
 	return cnt, nil
 }
 
-func feedFromHAR(file string) (int, error) {
+func feedFromHAR(file string, isSync bool) (int, error) {
 	fd, err := os.Open(file)
 	if err != nil {
 		panic(err)
@@ -108,21 +108,25 @@ func feedFromHAR(file string) (int, error) {
 	cnt := 0
 	for _, entry := range harDoc.Log.Entries {
 		cnt += 1
-		feedEntry(&entry)
+		feedEntry(&entry, isSync)
 	}
 
 	return cnt, nil
 }
 
-func feedEntry(entry *har.Entry) {
+func feedEntry(entry *har.Entry, isSync bool) {
 	if entry.Response.Status == 302 {
 		logger.Log.Debugf("Dropped traffic entry due to permanent redirect status: %s", entry.StartedDateTime)
 	}
-	// GetOasGeneratorInstance().PushEntry(entry)
-	GetOasGeneratorInstance().entriesChan <- *entry // blocking variant
+
+	if isSync {
+		GetOasGeneratorInstance().entriesChan <- *entry // blocking variant, right?
+	} else {
+		GetOasGeneratorInstance().PushEntry(entry)
+	}
 }
 
-func feedFromLDJSON(file string) (int, error) {
+func feedFromLDJSON(file string, isSync bool) (int, error) {
 	fd, err := os.Open(file)
 	if err != nil {
 		panic(err)
@@ -161,7 +165,7 @@ func feedFromLDJSON(file string) (int, error) {
 				logger.Log.Warningf("Failed decoding entry: %s", line)
 			} else {
 				cnt += 1
-				feedEntry(&entry)
+				feedEntry(&entry, isSync)
 			}
 		}
 	}
