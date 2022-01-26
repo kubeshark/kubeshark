@@ -22,7 +22,7 @@ var ignoredHeaders = []string{
 	"expires", "set-cookie", "p3p", "content-security-policy", "content-security-policy-report-only",
 	"last-modified", "content-language", "x-varnish", "true-client-ip", "akamai-origin-hop",
 	"keep-alive", "etag", "alt-svc", "x-csrf-token", "x-ua-compatible", "vary", "x-powered-by",
-	"age", "allow", "www-authenticate", "expect-ct", "timing-allow-origin",
+	"age", "allow", "www-authenticate", "expect-ct", "timing-allow-origin", "referrer-policy",
 	"duration_ms", // UP9 custom
 }
 
