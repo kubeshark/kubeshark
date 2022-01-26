@@ -22,14 +22,26 @@ interface ConfirmationModalProps {
     img?: ReactElement;
     isLoading?: boolean;
     className?: any;
+    customActions? : ReactElement
 }
 
 const ConfirmationModal: React.FC<ConfirmationModalProps> = observer(({title, isOpen, onClose, onConfirm, confirmButtonText,
                                                                         closeButtonText, subContent, confirmDisabled = false, isWide,
                                                                         confirmButtonColor, titleColor, img, isLoading,children,
-                                                                        className}) => {
+                                                                        className, customActions}) => {
     const classes = useCommonStyles();
-    const confirmStyle = {width: 100, marginLeft: 20}                                                                  
+    const confirmStyle = {width: 100, marginLeft: 20}
+    
+    const defualtActions =                 <><Button disabled={isLoading} style={{width: 100}} className={classes.outlinedButton} size={"small"}
+                                                variant='outlined' onClick={onClose}>{closeButtonText ?? "CANCEL"}
+                                            </Button>
+                                            <Button style={confirmButtonColor ? {backgroundColor: confirmButtonColor,...confirmStyle} : {...confirmStyle}} 
+                                            className={classes.button} size={"small"}
+                                            onClick={onConfirm} 
+                                            disabled={confirmDisabled || isLoading} 
+                                            endIcon={isLoading && <img src={spinner} alt="spinner"/>}>{confirmButtonText ?? "YES"}
+                                            </Button></>
+    
     return (
         <CustomModal open={isOpen} onClose={onClose} disableBackdropClick={true} isWide={isWide} className={`${className} comfirmation-modal`}>
             <div className="confirmationHeader">
@@ -50,15 +62,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = observer(({title, is
             </div>
 
             <div className="confirmationActions">
-                <Button disabled={isLoading} style={{width: 100}} className={classes.outlinedButton} size={"small"}
-                            variant='outlined' onClick={onClose}>{closeButtonText ?? "CANCEL"}
-                </Button>
-                <Button style={confirmButtonColor ? {backgroundColor: confirmButtonColor,...confirmStyle} : {...confirmStyle}} 
-                    className={classes.button} size={"small"}
-                    onClick={onConfirm} 
-                    disabled={confirmDisabled || isLoading} 
-                    endIcon={isLoading && <img src={spinner} alt="spinner"/>}>{confirmButtonText ?? "YES"}
-                </Button>
+                {customActions}
             </div>
         </CustomModal>
     )
