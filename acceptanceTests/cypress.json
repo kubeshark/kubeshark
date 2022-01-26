@@ -4,6 +4,7 @@
   "viewportHeight": 1080,
   "video": false,
   "screenshotOnRunFailure": false,
+  "defaultCommandTimeout": 5000,
   "testFiles": [
     "tests/GuiPort.js",
     "tests/MultipleNamespaces.js",
@@ -11,6 +12,7 @@
     "tests/NoRedact.js",
     "tests/Regex.js",
     "tests/RegexMasking.js",
+    "tests/IgnoredUserAgents.js",
     "tests/UiTest.js"
   ],
 
