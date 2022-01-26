@@ -51,32 +51,42 @@ func fileSize(fname string) int64 {
 	return fi.Size()
 }
 
-func feedEntries(fromFiles []string) (err error) {
+func feedEntries(fromFiles []string) (count int, err error) {
+	badFiles := make([]string, 0)
+	cnt := 0
 	for _, file := range fromFiles {
 		logger.Log.Info("Processing file: " + file)
 		ext := strings.ToLower(filepath.Ext(file))
+		eCnt := 0
 		switch ext {
 		case ".har":
-			err = feedFromHAR(file)
+			eCnt, err = feedFromHAR(file)
 			if err != nil {
 				logger.Log.Warning("Failed processing file: " + err.Error())
+				badFiles = append(badFiles, file)
 				continue
 			}
 		case ".ldjson":
-			err = feedFromLDJSON(file)
+			eCnt, err = feedFromLDJSON(file)
 			if err != nil {
 				logger.Log.Warning("Failed processing file: " + err.Error())
+				badFiles = append(badFiles, file)
 				continue
 			}
 		default:
-			return errors.New("Unsupported file extension: " + ext)
+			return 0, errors.New("Unsupported file extension: " + ext)
 		}
+		cnt += eCnt
 	}
 
-	return nil
+	for _, f := range badFiles {
+		logger.Log.Infof("Bad file: %s", f)
+	}
+
+	return cnt, nil
 }
 
-func feedFromHAR(file string) error {
+func feedFromHAR(file string) (int, error) {
 	fd, err := os.Open(file)
 	if err != nil {
 		panic(err)
@@ -86,23 +96,33 @@ func feedFromHAR(file string) error {
 
 	data, err := ioutil.ReadAll(fd)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	var harDoc har.HAR
 	err = json.Unmarshal(data, &harDoc)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
+	cnt := 0
 	for _, entry := range harDoc.Log.Entries {
-		GetOasGeneratorInstance().PushEntry(&entry)
+		cnt += 1
+		feedEntry(&entry)
 	}
 
-	return nil
+	return cnt, nil
 }
 
-func feedFromLDJSON(file string) error {
+func feedEntry(entry *har.Entry) {
+	if entry.Response.Status == 302 {
+		logger.Log.Debugf("Dropped traffic entry due to permanent redirect status: %s", entry.StartedDateTime)
+	}
+	// GetOasGeneratorInstance().PushEntry(entry)
+	GetOasGeneratorInstance().entriesChan <- *entry // blocking variant
+}
+
+func feedFromLDJSON(file string) (int, error) {
 	fd, err := os.Open(file)
 	if err != nil {
 		panic(err)
@@ -113,8 +133,8 @@ func feedFromLDJSON(file string) error {
 	reader := bufio.NewReader(fd)
 
 	var meta map[string]interface{}
-
 	buf := strings.Builder{}
+	cnt := 0
 	for {
 		substr, isPrefix, err := reader.ReadLine()
 		if err == io.EOF {
@@ -132,19 +152,21 @@ func feedFromLDJSON(file string) error {
 		if meta == nil {
 			err := json.Unmarshal([]byte(line), &meta)
 			if err != nil {
-				return err
+				return 0, err
 			}
 		} else {
 			var entry har.Entry
 			err := json.Unmarshal([]byte(line), &entry)
 			if err != nil {
 				logger.Log.Warningf("Failed decoding entry: %s", line)
+			} else {
+				cnt += 1
+				feedEntry(&entry)
 			}
-			GetOasGeneratorInstance().PushEntry(&entry)
 		}
 	}
 
-	return nil
+	return cnt, nil
 }
 
 func TestFilesList(t *testing.T) {

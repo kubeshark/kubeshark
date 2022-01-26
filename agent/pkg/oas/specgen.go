@@ -194,6 +194,11 @@ func (g *SpecGen) handlePathObj(entry *har.Entry) (string, error) {
 		return "", nil
 	}
 
+	if entry.Response.Status == 502 || entry.Response.Status == 503 || entry.Response.Status == 504 {
+		logger.Log.Debugf("Dropped traffic entry due to temporary server error: %s", entry.StartedDateTime)
+		return "", nil
+	}
+
 	split := strings.Split(urlParsed.Path, "/")
 	node := g.tree.getOrSet(split, new(openapi.PathObj))
 	opObj, err := handleOpObj(entry, node.ops)

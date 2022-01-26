@@ -10,6 +10,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 )
 
 // if started via env, write file into subdir
@@ -29,6 +30,7 @@ func outputSpec(label string, spec *openapi.OpenAPI, t *testing.T) {
 		if err != nil {
 			panic(err)
 		}
+		t.Logf("Written: %s", label)
 	} else {
 		t.Logf("%s", string(content))
 	}
@@ -43,13 +45,15 @@ func TestEntries(t *testing.T) {
 		t.FailNow()
 	}
 	GetOasGeneratorInstance().Start()
+	loadStartingOAS()
 
-	if err := feedEntries(files); err != nil {
+	cnt, err := feedEntries(files)
+	if err != nil {
 		t.Log(err)
 		t.Fail()
 	}
 
-	loadStartingOAS()
+	waitQueueProcessed()
 
 	svcs := strings.Builder{}
 	GetOasGeneratorInstance().ServiceSpecs.Range(func(key, val interface{}) bool {
@@ -94,20 +98,26 @@ func TestEntries(t *testing.T) {
 		return true
 	})
 
+	logger.Log.Infof("Total entries: %d", cnt)
 }
 
-func TestFileLDJSON(t *testing.T) {
+func TestFileSingle(t *testing.T) {
 	GetOasGeneratorInstance().Start()
+	loadStartingOAS()
 	file := "test_artifacts/output_rdwtyeoyrj.har.ldjson"
-	_, err := feedFromLDJSON(file)
+	files := []string{file}
+	cnt, err := feedEntries(files)
 	if err != nil {
 		logger.Log.Warning("Failed processing file: " + err.Error())
 		t.Fail()
 	}
 
-	loadStartingOAS()
+	logger.Log.Infof("Processed entries: %d", cnt)
 
-	GetOasGeneratorInstance().ServiceSpecs.Range(func(_, val interface{}) bool {
+	waitQueueProcessed()
+
+	GetOasGeneratorInstance().ServiceSpecs.Range(func(key, val interface{}) bool {
+		svc := key.(string)
 		gen := val.(*SpecGen)
 		spec, err := gen.GetSpec()
 		if err != nil {
@@ -115,8 +125,7 @@ func TestFileLDJSON(t *testing.T) {
 			t.FailNow()
 		}
 
-		specText, _ := json.MarshalIndent(spec, "", "\t")
-		t.Logf("%s", string(specText))
+		outputSpec(svc, spec, t)
 
 		err = spec.Validate()
 		if err != nil {
@@ -126,6 +135,19 @@ func TestFileLDJSON(t *testing.T) {
 
 		return true
 	})
+
+	logger.Log.Info("Done")
+}
+
+func waitQueueProcessed() {
+	for {
+		queue := len(GetOasGeneratorInstance().entriesChan)
+		logger.Log.Infof("Queue: %d", queue)
+		if queue < 1 {
+			break
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
 }
 
 func loadStartingOAS() {
@@ -158,7 +180,7 @@ func loadStartingOAS() {
 
 func TestEntriesNegative(t *testing.T) {
 	files := []string{"invalid"}
-	err := feedEntries(files)
+	_, err := feedEntries(files)
 	if err == nil {
 		t.Logf("Should have failed")
 		t.Fail()
