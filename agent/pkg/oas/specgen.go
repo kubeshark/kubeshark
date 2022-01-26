@@ -234,20 +234,16 @@ func handleRequest(req *har.Request, opObj *openapi.Operation, isSuccess bool) e
 	// TODO: we don't handle the situation when header/qstr param can be defined on pathObj level. Also the path param defined on opObj
 
 	qstrGW := nvParams{
-		In: openapi.InQuery,
-		Pairs: func() []NVPair {
-			return qstrToNVP(req.QueryString)
-		},
+		In:             openapi.InQuery,
+		Pairs:          req.QueryString,
 		IsIgnored:      func(name string) bool { return false },
 		GeneralizeName: func(name string) string { return name },
 	}
 	handleNameVals(qstrGW, &opObj.Parameters)
 
 	hdrGW := nvParams{
-		In: openapi.InHeader,
-		Pairs: func() []NVPair {
-			return hdrToNVP(req.Headers)
-		},
+		In:             openapi.InHeader,
+		Pairs:          req.Headers,
 		IsIgnored:      isHeaderIgnored,
 		GeneralizeName: strings.ToLower,
 	}

@@ -107,37 +107,16 @@ func findHeaderByName(headers *openapi.Headers, name string) *openapi.HeaderObj 
 	return nil
 }
 
-type NVPair struct {
-	Name  string
-	Value string
-}
-
 type nvParams struct {
 	In             openapi.In
-	Pairs          func() []NVPair
+	Pairs          []har.NVP
 	IsIgnored      func(name string) bool
 	GeneralizeName func(name string) string
 }
 
-func qstrToNVP(list []har.QueryString) []NVPair {
-	res := make([]NVPair, len(list))
-	for idx, val := range list {
-		res[idx] = NVPair{Name: val.Name, Value: val.Value}
-	}
-	return res
-}
-
-func hdrToNVP(list []har.Header) []NVPair {
-	res := make([]NVPair, len(list))
-	for idx, val := range list {
-		res[idx] = NVPair{Name: val.Name, Value: val.Value}
-	}
-	return res
-}
-
 func handleNameVals(gw nvParams, params **openapi.ParameterList) {
 	visited := map[string]*openapi.ParameterObj{}
-	for _, pair := range gw.Pairs() {
+	for _, pair := range gw.Pairs {
 		if gw.IsIgnored(pair.Name) {
 			continue
 		}
