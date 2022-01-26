@@ -422,7 +422,7 @@ func watchApiServerEvents(ctx context.Context, kubernetesProvider *kubernetes.Pr
 }
 
 func postApiServerStarted(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc, err error) {
-	startProxyReportErrorIfAny(kubernetesProvider, cancel)
+	startProxyReportErrorIfAny(kubernetesProvider, ctx, cancel)
 
 	options, _ := getMizuApiFilteringOptions()
 	if err = startTapperSyncer(ctx, cancel, kubernetesProvider, state.targetNamespaces, *options, state.startTime); err != nil {
