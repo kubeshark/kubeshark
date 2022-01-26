@@ -2,11 +2,11 @@ import React, { FC, useEffect, useState } from 'react';
 import ConfirmationModal from '../../UI/Modals/ConfirmationModal';
 // import './AddUserModal.sass';
 
-interface AddUserModalProps {
+interface AddWorkspaceModal {
   isOpen : boolean
 }
 
-const AddUserModal: FC<AddUserModalProps> = ({isOpen}) => {
+const AddWorkspaceModal: FC<AddWorkspaceModal> = ({isOpen,children}) => {
 
   const [isOpenModal,setIsOpen] = useState(isOpen)
 
@@ -20,9 +20,9 @@ const AddUserModal: FC<AddUserModalProps> = ({isOpen}) => {
 
   return (<>
     <ConfirmationModal isOpen={isOpenModal} onClose={onClose} onConfirm={onConfirm} title=''>
-      
+      {children}
     </ConfirmationModal>
     </>); 
 };
 
-export default AddUserModal;
+export default AddWorkspaceModal;

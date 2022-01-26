@@ -1,6 +1,6 @@
 import React, { FC, useEffect, useState } from 'react';
 import ConfirmationModal from '../../UI/Modals/ConfirmationModal';
-import './AddUserModal.less';
+import './AddUserModal.sass';
 
 interface AddUserModalProps {
   isOpen : boolean

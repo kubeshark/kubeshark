@@ -2,6 +2,8 @@ import "../UserSettings/UserSettings.sass"
 import {ColsType, FilterableTableAction} from "../UI/FilterableTableAction"
 // import Api from "../../helpers/api"
 import { useEffect, useState } from "react";
+import AddWorkspaceModal from "../Modals/AddWorkspaceModal/AddWorkspaceModal";
+import SelectList from "../UI/SelectList";
 
 interface Props {}
 
@@ -10,7 +12,10 @@ interface Props {}
 export const WorkspaceSettings : React.FC<Props> = ({}) => {
 
     const [workspacesRows, setWorkspaces] = useState([]);
-    const cols : ColsType[] = [{field : "id",header:"Id"},{field : "name",header:"Name"}]
+    const [isOpenModal,setIsOpen] = useState(false);
+    const cols : ColsType[] = [{field : "id",header:"Id"},{field : "name",header:"Name"}];
+
+    const namespaces = {"default": false, "blabla": false, "test":true};
 
 
     useEffect(() => {
@@ -25,10 +30,8 @@ export const WorkspaceSettings : React.FC<Props> = ({}) => {
     },[])
 
     const filterFuncFactory = (searchQuery: string) => {
-        return (row) => {
-            return row.name.toLowerCase().includes(searchQuery.toLowerCase())
+            return (row) => row.name.toLowerCase().includes(searchQuery.toLowerCase())
         }
-    }
 
     const searchConfig = { searchPlaceholder: "Search Workspace",filterRows: filterFuncFactory}
     
@@ -42,10 +45,17 @@ export const WorkspaceSettings : React.FC<Props> = ({}) => {
 
     }
 
-    const buttonConfig = {onClick: () => {}, text:"Add Workspace"}
+    const buttonConfig = {onClick: () => {setIsOpen(true)}, text:"Add Workspace"}
     return (<>
         <FilterableTableAction onRowEdit={onRowEdit} onRowDelete={onRowDelete} searchConfig={searchConfig} 
                                buttonConfig={buttonConfig} rows={workspacesRows} cols={cols}>
         </FilterableTableAction>
+        <AddWorkspaceModal isOpen={isOpenModal}>
+            <SelectList valuesListInput={namespaces} tableName={"Namespaces"} multiSelect={false} setValues={function (newValues: any): void {
+                throw new Error("Function not implemented.");
+            } } tabelClassName={undefined}></SelectList>
+            
+        </AddWorkspaceModal>
     </>);
 }
+
