@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/chanced/openapi"
-	"github.com/google/martian/har"
 	"github.com/up9inc/mizu/shared/logger"
+	"mizuserver/pkg/har"
 	"strconv"
 	"strings"
 )

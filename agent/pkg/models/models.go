@@ -2,11 +2,10 @@ package models
 
 import (
 	"encoding/json"
+	tapApi "github.com/up9inc/mizu/tap/api"
+	"mizuserver/pkg/har"
 	"mizuserver/pkg/rules"
 
-	tapApi "github.com/up9inc/mizu/tap/api"
-
-	"github.com/google/martian/har"
 	basenine "github.com/up9inc/basenine/client/go"
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/tap"
