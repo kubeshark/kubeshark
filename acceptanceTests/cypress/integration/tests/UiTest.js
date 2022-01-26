@@ -158,7 +158,7 @@ function checkFilter(filterDetails){
             if (!applyByEnter)
                 cy.get('[type="submit"]').click();
 
-            // still one entry only, so checking all four checks on it
+            // only one entry in DOM after filtering, checking all four checks on it
             leftTextCheck(totalEntries - 1, leftSidePath, leftSideExpectedText);
             leftOnHoverCheck(totalEntries - 1, leftSidePath, name);
             rightTextCheck(rightSidePath, rightSideExpectedText);
