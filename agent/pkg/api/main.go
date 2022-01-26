@@ -116,8 +116,6 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 	}
 
 	for item := range outputItems {
-		providers.EntryAdded()
-
 		extension := extensionsMap[item.Protocol.Name]
 		resolvedSource, resolvedDestionation := resolveIP(item.ConnectionInfo)
 		mizuEntry := extension.Dissector.Analyze(item, resolvedSource, resolvedDestionation)
@@ -146,6 +144,9 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 		if err != nil {
 			panic(err)
 		}
+
+		providers.EntryAdded(len(data))
+
 		connection.SendText(string(data))
 
 		servicemap.GetInstance().NewTCPEntry(mizuEntry.Source, mizuEntry.Destination, &item.Protocol)

@@ -9,7 +9,6 @@ import (
 	"github.com/google/martian/har"
 	"io/ioutil"
 	"net/http"
-	"plugin"
 	"sync"
 	"time"
 )
@@ -37,7 +36,6 @@ type TCP struct {
 type Extension struct {
 	Protocol   *Protocol
 	Path       string
-	Plug       *plugin.Plugin
 	Dissector  Dissector
 	MatcherMap *sync.Map
 }
