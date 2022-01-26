@@ -71,30 +71,35 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
 
   return (<>
     <ConfirmationModal isOpen={isOpen} onClose={onCloseModal} onConfirm={onConfirm} title='Add User'>
-      <h3>DETAILS</h3>
-      <div>
+      <h3 className='comfirmation-modal__sub-section-header'>DETAILS</h3>
+      <div className='comfirmation-modal__sub-section'>
+      <div className='user__details'>
         <input type="text" value={userDataModel?.email ?? ""} className={classes.textField + " user__email"} placeholder={"User Email"} 
                onChange={(e) => {}}></input>
-        <TextField select size='small' onChange={userRoleChange} value={userDataModel.role}>
+        {/* <TextField select size='small' onChange={userRoleChange} value={userDataModel.role} fullWidth variant="filled">
           {roles.map((role) => (
                 <MenuItem key={role.value} value={role.value}>
                   {role.value}
                 </MenuItem>
               ))}
-        </TextField>
-        {/* <FormControl fullWidth size="small">
-          <InputLabel>Select Role</InputLabel>
-          <Select className="user__role" label="Select Role" placeholder='Select Role' onChange={userRoleChange} value={userDataModel.role}>
-
-            {roles.map((role) => (
+        </TextField> */}
+        <FormControl size='small' variant="outlined" className='user__role'>
+        <InputLabel>User Role</InputLabel>
+        <Select value={userDataModel.role} onChange={userRoleChange} >
+          <MenuItem value="">
+            <em>None</em>
+          </MenuItem>
+          {roles.map((role) => (
                 <MenuItem key={role.value} value={role.value}>
                   {role.value}
                 </MenuItem>
               ))}
-          </Select>
-        </FormControl> */}
+        </Select>
+      </FormControl>
       </div>
-      <h3>WORKSPACE ACCESS </h3>     
+      </div>
+
+      <h3 className='comfirmation-modal__sub-section-header'>WORKSPACE ACCESS </h3>     
       <div className="namespacesSettingsContainer">
         <div style={{margin: "10px 0"}}>
             <input className={classes.textField + " searchNamespace"} placeholder="Search" value={searchValue}

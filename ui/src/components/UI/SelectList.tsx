@@ -66,7 +66,7 @@ const SelectList: React.FC<Props> = ({valuesListInput,tableName,multiSelect=true
         return Object.keys(valuesList).filter((listValue) => listValue.includes(searchValue));
     },[valuesList, searchValue])
 
-        return <div className={tabelClassName + " namespacesTable"}>
+        return <div className={tabelClassName + " select-list-table"}>
                 <table cellPadding={5} style={{borderCollapse: "collapse"}}>
                     <thead>
                     {tableHead}
