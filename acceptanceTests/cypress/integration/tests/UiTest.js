@@ -21,7 +21,6 @@ it('filtering guide check', function () {
     cy.get('#modal-modal-title').should('be.visible');
     cy.get('[lang="en"]').click(0, 0);
     cy.get('#modal-modal-title').should('not.exist');
-
 });
 
 checkIllegalFilter('invalid filter');
@@ -101,6 +100,7 @@ function checkFilterNoResults(filterName) {
             cy.get('.w-tc-editor').should('have.attr', 'style').and('include', greenFilterColor);
             cy.get('[type="submit"]').click();
 
+            // waiting for the entries number to load
             cy.get('#total-entries', {timeout: 10000}).should('have.text', totalEntries);
 
             // the DOM should show 0 entries
@@ -113,6 +113,7 @@ function checkFilterNoResults(filterName) {
             cy.get('#noMoreDataTop', {timeout: 10000}).should('be.visible');
             cy.get('#entries-length').should('have.text', '0'); // after loading all entries there should still be 0 entries
 
+            // reloading then waiting for the entries number to load
             cy.reload();
             cy.get('#total-entries', {timeout: 10000}).should('have.text', totalEntries);
         });
@@ -135,6 +136,7 @@ function checkIllegalFilter(illegalFilterName) {
             cy.get('[role="alert"]').should('be.visible');
             cy.get('.w-tc-editor-text').clear();
 
+            // reloading then waiting for the entries number to load
             cy.reload();
             cy.get('#total-entries', {timeout: 10000}).should('have.text', totalEntries);
         });
@@ -165,6 +167,7 @@ function checkFilter(filterDetails){
             cy.get('[title="Fetch old records"]').click();
             cy.viewport(1920, 3500); // resizing the window so all entries will be in DOM
 
+            // waiting for the entries number to load
             cy.get('#entries-length', {timeout: 10000}).should('have.text', totalEntries);
 
             // checking only 'leftTextCheck' on all entries because the rest of the checks require more time
@@ -173,24 +176,25 @@ function checkFilter(filterDetails){
             });
 
             // making the other 3 checks on the first five entries (longer time for each check)
-            firstFiveDeeperChcek(leftSidePath, rightSidePath, name, leftSideExpectedText, rightSideExpectedText);
+            firstFiveDeeperChcek(leftSidePath, rightSidePath, name, leftSideExpectedText, rightSideExpectedText, 5);
 
+            // resizing to normal size
             cy.viewport(1920, 1080);
+
+            // reloading then waiting for the entries number to load
             cy.reload();
             cy.get('#total-entries', {timeout: 10000}).should('have.text', totalEntries);
-
         });
     });
 }
 
-function firstFiveDeeperChcek(leftSidePath, rightSidePath, filterName, leftSideExpectedText, rightSideExpectedText) {
-    [0, 1, 2, 3, 4].forEach(entryNum => {
+function firstFiveDeeperChcek(leftSidePath, rightSidePath, filterName, leftSideExpectedText, rightSideExpectedText, entriesNumToCheck) {
+    [...Array(entriesNumToCheck).keys()].forEach(entryNum => {
         leftOnHoverCheck(entryNum, leftSidePath, filterName);
 
         cy.get(`#list #entry-${entryNum}`).click();
         rightTextCheck(rightSidePath, rightSideExpectedText);
         rightOnHoverCheck(rightSidePath, filterName);
-
     });
 }
 
