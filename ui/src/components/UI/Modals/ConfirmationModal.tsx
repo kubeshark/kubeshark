@@ -31,7 +31,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = observer(({title, is
     const classes = useCommonStyles();
     const confirmStyle = {width: 100, marginLeft: 20}                                                                  
     return (
-        <CustomModal open={isOpen} onClose={onClose} disableBackdropClick={true} isWide={isWide} className={`${className}`}>
+        <CustomModal open={isOpen} onClose={onClose} disableBackdropClick={true} isWide={isWide} className={`${className} comfirmation-modal`}>
             <div className="confirmationHeader">
                 <div className="confirmationTitle" style={titleColor ? {color: titleColor} : {}}>{title ?? "CONFIRMATION"}</div>
                 <img src={iconClose} onClick={onClose} alt="close"/>

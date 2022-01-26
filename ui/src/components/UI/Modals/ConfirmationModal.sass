@@ -27,3 +27,29 @@
 .confirmationActions
   padding: 20px
   text-align: right
+
+.comfirmation-modal
+  &__sub-section
+    margin-bottom: 35px;
+  
+  &__sub-section-header
+    position: relative;
+    font-style: normal;
+    font-weight: bold;
+    font-size: 12px;
+    line-height: 15px;
+    color: $font-color;
+
+  &__sub-section-header:after
+    content: "";
+    border: 1px solid #E9EBF8;
+    transform: rotate(180deg);
+    position: absolute;
+    left: 0px;
+    right: -100%;
+    top: 100%;
+    bottom: 0%;
+    width: 100%;
+    width: -moz-available;
+    width: -webkit-fill-available;
+    width: fill-available;
