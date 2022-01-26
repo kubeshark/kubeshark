@@ -3,6 +3,7 @@ package oas
 import (
 	"github.com/chanced/openapi"
 	"github.com/up9inc/mizu/shared/logger"
+	"net/url"
 	"strconv"
 	"strings"
 )
@@ -23,6 +24,18 @@ func (n *Node) getOrSet(path NodePath, pathObjToSet *openapi.PathObj) (node *Nod
 	}
 
 	pathChunk := path[0]
+	potentialMatrix := strings.SplitN(pathChunk, ";", 2)
+	if len(potentialMatrix) > 1 {
+		pathChunk = potentialMatrix[0]
+		logger.Log.Warningf("URI matrix params are not supported: %s", potentialMatrix[1])
+	}
+
+	pathChunk, err := url.PathUnescape(pathChunk)
+	if err != nil {
+		logger.Log.Warningf("URI segment is not correctly encoded: %s", pathChunk)
+		// any side effects on continuing
+	}
+
 	chunkIsParam := strings.HasPrefix(pathChunk, "{") && strings.HasSuffix(pathChunk, "}")
 	chunkIsGibberish := IsGibberish(pathChunk) && !IsVersionString(pathChunk)
 
