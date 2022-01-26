@@ -50,7 +50,7 @@ export const WorkspaceSettings : React.FC<Props> = ({}) => {
         <FilterableTableAction onRowEdit={onRowEdit} onRowDelete={onRowDelete} searchConfig={searchConfig} 
                                buttonConfig={buttonConfig} rows={workspacesRows} cols={cols}>
         </FilterableTableAction>
-        <AddWorkspaceModal isOpen={isOpenModal}>
+        <AddWorkspaceModal isOpen={isOpenModal} onCloseModal={() => { setIsOpen(false); } }>
             <SelectList valuesListInput={namespaces} tableName={"Namespaces"} multiSelect={false} setValues={function (newValues: any): void {
                 throw new Error("Function not implemented.");
             } } tabelClassName={undefined}></SelectList>

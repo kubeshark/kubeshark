@@ -3,10 +3,11 @@ import ConfirmationModal from '../../UI/Modals/ConfirmationModal';
 // import './AddUserModal.sass';
 
 interface AddWorkspaceModal {
-  isOpen : boolean
+  isOpen : boolean,
+  onCloseModal: () => void
 }
 
-const AddWorkspaceModal: FC<AddWorkspaceModal> = ({isOpen,children}) => {
+const AddWorkspaceModal: FC<AddWorkspaceModal> = ({isOpen,onCloseModal,children}) => {
 
   const [isOpenModal,setIsOpen] = useState(isOpen)
 
