@@ -3,9 +3,9 @@ package oas
 import (
 	"encoding/json"
 	"github.com/chanced/openapi"
-	"github.com/google/martian/har"
 	"github.com/up9inc/mizu/shared/logger"
 	"io/ioutil"
+	"mizuserver/pkg/har"
 	"os"
 	"strings"
 	"testing"

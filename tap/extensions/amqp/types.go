@@ -3,7 +3,7 @@
 // license that can be found in the LICENSE file.
 // Source code and contact info at http://github.com/streadway/amqp
 
-package main
+package amqp
 
 import (
 	"fmt"

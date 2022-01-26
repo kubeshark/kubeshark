@@ -1,4 +1,4 @@
-package main
+package amqp
 
 import (
 	"bufio"
@@ -328,3 +328,7 @@ func (d dissecting) Macros() map[string]string {
 }
 
 var Dissector dissecting
+
+func NewDissector() api.Dissector {
+	return Dissector
+}

@@ -10,7 +10,8 @@
     "tests/Redact.js",
     "tests/NoRedact.js",
     "tests/Regex.js",
-    "tests/RegexMasking.js"
+    "tests/RegexMasking.js",
+    "tests/UiTest.js"
   ],
 
   "env": {
