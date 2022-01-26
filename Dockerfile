@@ -82,6 +82,9 @@ RUN go build -ldflags="-extldflags=-static -s -w \
 ARG TARGETARCH=amd64
 FROM ${TARGETARCH}/busybox:latest
 
+# gin-gonic runs in debug mode without this
+ENV GIN_MODE=release
+
 WORKDIR /app
 
 # Copy binary and config files from /build to root folder of scratch container.
@@ -89,8 +92,5 @@ COPY --from=builder ["/app/agent-build/mizuagent", "."]
 COPY --from=front-end ["/app/ui-build/build", "site"]
 COPY --from=front-end ["/app/ui-build/build-ent", "site-standalone"]
 
-# gin-gonic runs in debug mode without this
-ENV GIN_MODE=release
-
 # this script runs both apiserver and passivetapper and exits either if one of them exits, preventing a scenario where the container runs without one process
-ENTRYPOINT "/app/mizuagent"
+ENTRYPOINT ["/app/mizuagent"]
