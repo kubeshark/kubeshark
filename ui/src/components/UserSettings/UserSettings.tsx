@@ -2,7 +2,7 @@ import "./UserSettings.sass"
 import {ColsType, FilterableTableAction} from "../UI/FilterableTableAction"
 // import Api from "../../helpers/api"
 import { useEffect, useState } from "react";
-import AddUserModal, { UserData } from "../Modals/AddUserModal/AddUserModal";
+import { UserData,AddUserModal } from "../Modals/AddUserModal/AddUserModal";
 
 interface Props {
 

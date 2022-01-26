@@ -1,5 +1,30 @@
 @import '../../../variables.module'
 
+@mixin generate-icon
+        display: block
+        text-indent: -9999px
+        width: 26px
+        height: 26px
+        background-repeat: no-repeat
+        background-size: 26px
+        margin-right: 10px
+
+
+.generate-link-button
+    &:disabled
+        background: #BCC6DD;
+        .generate-link-button__icon
+            @include generate-icon
+            background-image: url('../../assets/copy-disabled.svg')
+               
+    &__icon
+        @include generate-icon
+        background-image: url('../../assets/copy-enabled.svg')
+
+
+        
+
+
 .user
     &__details
         display: flex;
