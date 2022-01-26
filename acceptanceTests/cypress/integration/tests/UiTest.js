@@ -1,6 +1,8 @@
 import {findLineAndCheck, getExpectedDetailsDict} from "../testHelpers/StatusBarHelper";
+import {resizeToHugeMizu, resizeToNormalMizu} from "../testHelpers/TrafficHelper";
 const greenFilterColor = 'rgb(210, 250, 210)';
 const redFilterColor = 'rgb(250, 214, 220)';
+const refreshWaitTimeout = 10000;
 
 it('opening mizu', function () {
     cy.visit(Cypress.env('testUrl'));
@@ -101,7 +103,7 @@ function checkFilterNoResults(filterName) {
             cy.get('[type="submit"]').click();
 
             // waiting for the entries number to load
-            cy.get('#total-entries', {timeout: 10000}).should('have.text', totalEntries);
+            cy.get('#total-entries', {timeout: refreshWaitTimeout}).should('have.text', totalEntries);
 
             // the DOM should show 0 entries
             cy.get('#entries-length').should('have.text', '0');
@@ -110,12 +112,12 @@ function checkFilterNoResults(filterName) {
             [...Array(parseInt(totalEntries)).keys()].map(shouldNotExist);
 
             cy.get('[title="Fetch old records"]').click();
-            cy.get('#noMoreDataTop', {timeout: 10000}).should('be.visible');
+            cy.get('#noMoreDataTop', {timeout: refreshWaitTimeout}).should('be.visible');
             cy.get('#entries-length').should('have.text', '0'); // after loading all entries there should still be 0 entries
 
             // reloading then waiting for the entries number to load
             cy.reload();
-            cy.get('#total-entries', {timeout: 10000}).should('have.text', totalEntries);
+            cy.get('#total-entries', {timeout: refreshWaitTimeout}).should('have.text', totalEntries);
         });
     });
 }
@@ -138,12 +140,13 @@ function checkIllegalFilter(illegalFilterName) {
 
             // reloading then waiting for the entries number to load
             cy.reload();
-            cy.get('#total-entries', {timeout: 10000}).should('have.text', totalEntries);
+            cy.get('#total-entries', {timeout: refreshWaitTimeout}).should('have.text', totalEntries);
         });
     });
 }
 function checkFilter(filterDetails){
     const {name, leftSidePath, rightSidePath, rightSideExpectedText, leftSideExpectedText, applyByEnter} = filterDetails;
+    const entriesForDeeperCheck = 5;
 
     it(`checking the filter: ${name}`, function () {
         cy.get('#total-entries').then(number => {
@@ -165,30 +168,28 @@ function checkFilter(filterDetails){
             rightOnHoverCheck(rightSidePath, name);
 
             cy.get('[title="Fetch old records"]').click();
-            cy.viewport(1920, 3500); // resizing the window so all entries will be in DOM
+            resizeToHugeMizu();
 
             // waiting for the entries number to load
-            cy.get('#entries-length', {timeout: 10000}).should('have.text', totalEntries);
+            cy.get('#entries-length', {timeout: refreshWaitTimeout}).should('have.text', totalEntries);
 
             // checking only 'leftTextCheck' on all entries because the rest of the checks require more time
             [...Array(parseInt(totalEntries)).keys()].forEach(entryNum => {
                 leftTextCheck(entryNum, leftSidePath, leftSideExpectedText);
             });
 
-            // making the other 3 checks on the first five entries (longer time for each check)
-            firstFiveDeeperChcek(leftSidePath, rightSidePath, name, leftSideExpectedText, rightSideExpectedText, 5);
-
-            // resizing to normal size
-            cy.viewport(1920, 1080);
+            // making the other 3 checks on the first X entries (longer time for each check)
+            deeperChcek(leftSidePath, rightSidePath, name, leftSideExpectedText, rightSideExpectedText, entriesForDeeperCheck);
 
             // reloading then waiting for the entries number to load
+            resizeToNormalMizu();
             cy.reload();
-            cy.get('#total-entries', {timeout: 10000}).should('have.text', totalEntries);
+            cy.get('#total-entries', {timeout: refreshWaitTimeout}).should('have.text', totalEntries);
         });
     });
 }
 
-function firstFiveDeeperChcek(leftSidePath, rightSidePath, filterName, leftSideExpectedText, rightSideExpectedText, entriesNumToCheck) {
+function deeperChcek(leftSidePath, rightSidePath, filterName, leftSideExpectedText, rightSideExpectedText, entriesNumToCheck) {
     [...Array(entriesNumToCheck).keys()].forEach(entryNum => {
         leftOnHoverCheck(entryNum, leftSidePath, filterName);
 
