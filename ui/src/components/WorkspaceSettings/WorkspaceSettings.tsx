@@ -2,7 +2,7 @@ import "../UserSettings/UserSettings.sass"
 import {ColsType, FilterableTableAction} from "../UI/FilterableTableAction"
 // import Api from "../../helpers/api"
 import { useEffect, useState } from "react";
-import AddWorkspaceModal from "../Modals/AddWorkspaceModal/AddWorkspaceModal";
+import AddWorkspaceModal, { WorkspaceData } from "../Modals/AddWorkspaceModal/AddWorkspaceModal";
 import SelectList from "../UI/SelectList";
 
 interface Props {}
@@ -12,10 +12,9 @@ interface Props {}
 export const WorkspaceSettings : React.FC<Props> = ({}) => {
 
     const [workspacesRows, setWorkspaces] = useState([]);
+    const [workspaceData,SetWorkspaceData] = useState({} as WorkspaceData);
     const [isOpenModal,setIsOpen] = useState(false);
     const cols : ColsType[] = [{field : "id",header:"Id"},{field : "name",header:"Name"}];
-
-    const namespaces = {"default": false, "blabla": false, "test":true};
 
 
     useEffect(() => {
@@ -50,10 +49,8 @@ export const WorkspaceSettings : React.FC<Props> = ({}) => {
         <FilterableTableAction onRowEdit={onRowEdit} onRowDelete={onRowDelete} searchConfig={searchConfig} 
                                buttonConfig={buttonConfig} rows={workspacesRows} cols={cols}>
         </FilterableTableAction>
-        <AddWorkspaceModal isOpen={isOpenModal} onCloseModal={() => { setIsOpen(false); } }>
-            <SelectList valuesListInput={namespaces} tableName={"Namespaces"} multiSelect={false} setValues={function (newValues: any): void {
-                throw new Error("Function not implemented.");
-            } } tabelClassName={undefined}></SelectList>
+        <AddWorkspaceModal isOpen={isOpenModal} workspaceData={workspaceData} onCloseModal={() => { setIsOpen(false); } } >
+
             
         </AddWorkspaceModal>
     </>);
