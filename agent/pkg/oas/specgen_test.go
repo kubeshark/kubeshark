@@ -3,6 +3,7 @@ package oas
 import (
 	"encoding/json"
 	"github.com/chanced/openapi"
+	"github.com/op/go-logging"
 	"github.com/up9inc/mizu/shared/logger"
 	"io/ioutil"
 	"mizuserver/pkg/har"
@@ -12,14 +13,15 @@ import (
 )
 
 // if started via env, write file into subdir
-func writeFiles(label string, spec *openapi.OpenAPI) {
+func outputSpec(label string, spec *openapi.OpenAPI, t *testing.T) {
+	content, err := json.MarshalIndent(spec, "", "\t")
+	if err != nil {
+		panic(err)
+	}
+
 	if os.Getenv("MIZU_OAS_WRITE_FILES") != "" {
 		path := "./oas-samples"
 		err := os.MkdirAll(path, 0o755)
-		if err != nil {
-			panic(err)
-		}
-		content, err := json.MarshalIndent(spec, "", "\t")
 		if err != nil {
 			panic(err)
 		}
@@ -27,10 +29,13 @@ func writeFiles(label string, spec *openapi.OpenAPI) {
 		if err != nil {
 			panic(err)
 		}
+	} else {
+		t.Logf("%s", string(content))
 	}
 }
 
 func TestEntries(t *testing.T) {
+	logger.InitLoggerStderrOnly(logging.INFO)
 	files, err := getFiles("./test_artifacts/")
 	// files, err = getFiles("/media/bigdisk/UP9")
 	if err != nil {
@@ -78,15 +83,13 @@ func TestEntries(t *testing.T) {
 			t.FailNow()
 		}
 
-		specText, _ := json.MarshalIndent(spec, "", "\t")
-		t.Logf("%s", string(specText))
+		outputSpec(svc, spec, t)
 
 		err = spec.Validate()
 		if err != nil {
 			t.Log(err)
 			t.FailNow()
 		}
-		writeFiles(svc, spec)
 
 		return true
 	})
@@ -96,7 +99,7 @@ func TestEntries(t *testing.T) {
 func TestFileLDJSON(t *testing.T) {
 	GetOasGeneratorInstance().Start()
 	file := "test_artifacts/output_rdwtyeoyrj.har.ldjson"
-	err := feedFromLDJSON(file)
+	_, err := feedFromLDJSON(file)
 	if err != nil {
 		logger.Log.Warning("Failed processing file: " + err.Error())
 		t.Fail()
@@ -168,7 +171,7 @@ func TestLoadValidHAR(t *testing.T) {
 	var err = json.Unmarshal([]byte(inp), &entry)
 	if err != nil {
 		t.Logf("Failed to decode entry: %s", err)
-		// t.FailNow() demonstrates the problem of library
+		t.FailNow() // demonstrates the problem of `martian` HAR library
 	}
 }
 

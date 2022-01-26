@@ -12,6 +12,7 @@ func TestTree(t *testing.T) {
 	}{
 		{"/"},
 		{"/v1.0.0/config/launcher/sp_nKNHCzsN/f34efcae-6583-11eb-908a-00b0fcb9d4f6/vendor,init,conversation"},
+		{"/v1.0.0/config/launcher/sp_nKNHCzsN/{f34efcae-6583-11eb-908a-00b0fcb9d4f6}/vendor,init,conversation"},
 	}
 
 	tree := new(Node)
