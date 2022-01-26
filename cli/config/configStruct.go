@@ -22,6 +22,7 @@ const (
 
 type ConfigStruct struct {
 	Tap                    configStructs.TapConfig     `yaml:"tap"`
+	Check                  configStructs.CheckConfig   `yaml:"check"`
 	Version                configStructs.VersionConfig `yaml:"version"`
 	View                   configStructs.ViewConfig    `yaml:"view"`
 	Logs                   configStructs.LogsConfig    `yaml:"logs"`

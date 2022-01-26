@@ -24,17 +24,23 @@ func runMizuCheck() {
 		checkPassed = checkKubernetesVersion(kubernetesVersion)
 	}
 
-	var isInstallCommand bool
-	if checkPassed {
-		checkPassed, isInstallCommand = checkMizuMode(ctx, kubernetesProvider)
-	}
+	if config.Config.Check.PreInstall || config.Config.Check.PreTap {
+		if checkPassed {
+			checkPassed = checkAllResourcesPermission(ctx, kubernetesProvider, config.Config.Check.PreInstall, config.Config.Check.PreTap)
+		}
+	} else {
+		var isInstallCommand bool
+		if checkPassed {
+			checkPassed, isInstallCommand = checkMizuMode(ctx, kubernetesProvider)
+		}
 
-	if checkPassed {
-		checkPassed = checkAllResourcesExist(ctx, kubernetesProvider, isInstallCommand)
-	}
+		if checkPassed {
+			checkPassed = checkAllResourcesExist(ctx, kubernetesProvider, isInstallCommand)
+		}
 
-	if checkPassed {
-		checkPassed = checkServerConnection(kubernetesProvider)
+		if checkPassed {
+			checkPassed = checkServerConnection(kubernetesProvider)
+		}
 	}
 
 	if checkPassed {
@@ -162,6 +168,147 @@ func checkPortForward(serverUrl string, kubernetesProvider *kubernetes.Provider)
 	return nil
 }
 
+func checkAllResourcesPermission(ctx context.Context, kubernetesProvider *kubernetes.Provider, checkInstall bool, checkTap bool) bool {
+	logger.Log.Infof("\nmizu-resource-permission\n--------------------")
+
+	allPermissionsExist := true
+
+	var namespace string
+	if config.Config.IsNsRestrictedMode() {
+		namespace = config.Config.MizuResourcesNamespace
+	} else {
+		namespace = ""
+	}
+
+	if !config.Config.IsNsRestrictedMode() {
+		namespaceVerbs := []string{"get", "delete", "list", "create", "watch"}
+		for _, namespaceVerb := range namespaceVerbs {
+			permission, err := kubernetesProvider.CanI(ctx, namespace, "namespaces", namespaceVerb)
+			allPermissionsExist = checkResourcePermission("namespaces", namespaceVerb, permission, err) && allPermissionsExist
+		}
+
+		clusterRoleVerbs := []string{"get", "delete", "list", "create"}
+		for _, clusterRoleVerb := range clusterRoleVerbs {
+			permission, err := kubernetesProvider.CanI(ctx, namespace, "clusterroles", clusterRoleVerb)
+			allPermissionsExist = checkResourcePermission("clusterroles", clusterRoleVerb, permission, err) && allPermissionsExist
+		}
+
+		clusterRoleBindingVerbs := []string{"get", "delete", "list", "create"}
+		for _, clusterRoleBindingVerb := range clusterRoleBindingVerbs {
+			permission, err := kubernetesProvider.CanI(ctx, namespace, "clusterrolebindings", clusterRoleBindingVerb)
+			allPermissionsExist = checkResourcePermission("clusterrolebindings", clusterRoleBindingVerb, permission, err) && allPermissionsExist
+		}
+	}
+
+	configMapVerbs := []string{"get", "delete", "create"}
+	for _, configMapVerb := range configMapVerbs {
+		permission, err := kubernetesProvider.CanI(ctx, namespace, "configmaps", configMapVerb)
+		allPermissionsExist = checkResourcePermission("configmaps", configMapVerb, permission, err) && allPermissionsExist
+	}
+
+	serviceAccountVerbs := []string{"get", "delete", "list", "create"}
+	for _, serviceAccountVerb := range serviceAccountVerbs {
+		permission, err := kubernetesProvider.CanI(ctx, namespace, "serviceaccounts", serviceAccountVerb)
+		allPermissionsExist = checkResourcePermission("serviceaccounts", serviceAccountVerb, permission, err) && allPermissionsExist
+	}
+
+	roleVerbs := []string{"get", "delete", "list", "create"}
+	for _, roleVerb := range roleVerbs {
+		permission, err := kubernetesProvider.CanI(ctx, namespace, "roles", roleVerb)
+		allPermissionsExist = checkResourcePermission("roles", roleVerb, permission, err) && allPermissionsExist
+	}
+
+	roleBindingVerbs := []string{"get", "delete", "list", "create"}
+	for _, roleBindingVerb := range roleBindingVerbs {
+		permission, err := kubernetesProvider.CanI(ctx, namespace, "rolebindings", roleBindingVerb)
+		allPermissionsExist = checkResourcePermission("rolebindings", roleBindingVerb, permission, err) && allPermissionsExist
+	}
+
+	serviceVerbs := []string{"get", "delete", "create", "watch"}
+	for _, serviceVerb := range serviceVerbs {
+		permission, err := kubernetesProvider.CanI(ctx, namespace, "services", serviceVerb)
+		allPermissionsExist = checkResourcePermission("services", serviceVerb, permission, err) && allPermissionsExist
+	}
+
+	podVerbs := []string{"get", "delete", "list", "watch"}
+	for _, podVerb := range podVerbs {
+		permission, err := kubernetesProvider.CanI(ctx, namespace, "pods", podVerb)
+		allPermissionsExist = checkResourcePermission("pods", podVerb, permission, err) && allPermissionsExist
+	}
+
+	daemonSetVerbs := []string{"delete", "create", "patch"}
+	for _, daemonSetVerb := range daemonSetVerbs {
+		permission, err := kubernetesProvider.CanI(ctx, namespace, "daemonsets", daemonSetVerb)
+		allPermissionsExist = checkResourcePermission("daemonsets", daemonSetVerb, permission, err) && allPermissionsExist
+	}
+
+	eventVerbs := []string{"list", "watch"}
+	for _, eventVerb := range eventVerbs {
+		permission, err := kubernetesProvider.CanI(ctx, namespace, "events", eventVerb)
+		allPermissionsExist = checkResourcePermission("events", eventVerb, permission, err) && allPermissionsExist
+	}
+
+	endpointVerbs := []string{"watch"}
+	for _, endpointVerb := range endpointVerbs {
+		permission, err := kubernetesProvider.CanI(ctx, namespace, "endpoints", endpointVerb)
+		allPermissionsExist = checkResourcePermission("endpoints", endpointVerb, permission, err) && allPermissionsExist
+	}
+
+	if checkInstall {
+		allPermissionsExist = checkInstallResourcesPermission(ctx, kubernetesProvider, namespace) && allPermissionsExist
+	}
+
+	if checkTap {
+		allPermissionsExist = checkTapResourcesPermission(ctx, kubernetesProvider, namespace) && allPermissionsExist
+	}
+
+	return allPermissionsExist
+}
+
+func checkInstallResourcesPermission(ctx context.Context, kubernetesProvider *kubernetes.Provider, namespace string) bool {
+	installPermissionsExist := true
+
+	persistentVolumeClaimVerbs := []string{"get", "delete", "create"}
+	for _, persistentVolumeClaimVerb := range persistentVolumeClaimVerbs {
+		permission, err := kubernetesProvider.CanI(ctx, namespace, "persistentvolumeclaims", persistentVolumeClaimVerb)
+		installPermissionsExist = checkResourcePermission("persistentvolumeclaims", persistentVolumeClaimVerb, permission, err) && installPermissionsExist
+	}
+
+	deploymentVerbs := []string{"get", "delete", "create"}
+	for _, deploymentVerb := range deploymentVerbs {
+		permission, err := kubernetesProvider.CanI(ctx, namespace, "deployments", deploymentVerb)
+		installPermissionsExist = checkResourcePermission("deployments", deploymentVerb, permission, err) && installPermissionsExist
+	}
+
+	return installPermissionsExist
+}
+
+func checkTapResourcesPermission(ctx context.Context, kubernetesProvider *kubernetes.Provider, namespace string) bool {
+	tapPermissionsExist := true
+
+	podVerbs := []string{"create"}
+	for _, podVerb := range podVerbs {
+		permission, err := kubernetesProvider.CanI(ctx, namespace, "pods", podVerb)
+		tapPermissionsExist = checkResourcePermission("pods", podVerb, permission, err) && tapPermissionsExist
+	}
+
+	return tapPermissionsExist
+}
+
+func checkResourcePermission(resource string, verb string, permission bool, err error) bool {
+	if err != nil {
+		logger.Log.Errorf("%v error checking if permission for %v %v exists, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), verb, resource, err)
+		return false
+	} else if !permission {
+		logger.Log.Errorf("%v can't %v %v", fmt.Sprintf(uiUtils.Red, "✗"), verb, resource)
+		return false
+	} else {
+		logger.Log.Infof("%v can %v %v", fmt.Sprintf(uiUtils.Green, "√"), verb, resource)
+	}
+
+	return true
+}
+
 func checkAllResourcesExist(ctx context.Context, kubernetesProvider *kubernetes.Provider, isInstallCommand bool) bool {
 	logger.Log.Infof("\nmizu-existence\n--------------------")
 
@@ -169,32 +316,32 @@ func checkAllResourcesExist(ctx context.Context, kubernetesProvider *kubernetes.
 	allResourcesExist := checkResourceExist(config.Config.MizuResourcesNamespace, "namespace", exist, err)
 
 	exist, err = kubernetesProvider.DoesConfigMapExist(ctx, config.Config.MizuResourcesNamespace, kubernetes.ConfigMapName)
-	allResourcesExist = checkResourceExist(kubernetes.ConfigMapName, "config map", exist, err)
+	allResourcesExist = checkResourceExist(kubernetes.ConfigMapName, "config map", exist, err) && allResourcesExist
 
 	exist, err = kubernetesProvider.DoesServiceAccountExist(ctx, config.Config.MizuResourcesNamespace, kubernetes.ServiceAccountName)
-	allResourcesExist = checkResourceExist(kubernetes.ServiceAccountName, "service account", exist, err)
+	allResourcesExist = checkResourceExist(kubernetes.ServiceAccountName, "service account", exist, err) && allResourcesExist
 
 	if config.Config.IsNsRestrictedMode() {
 		exist, err = kubernetesProvider.DoesRoleExist(ctx, config.Config.MizuResourcesNamespace, kubernetes.RoleName)
-		allResourcesExist = checkResourceExist(kubernetes.RoleName, "role", exist, err)
+		allResourcesExist = checkResourceExist(kubernetes.RoleName, "role", exist, err) && allResourcesExist
 
 		exist, err = kubernetesProvider.DoesRoleBindingExist(ctx, config.Config.MizuResourcesNamespace, kubernetes.RoleBindingName)
-		allResourcesExist = checkResourceExist(kubernetes.RoleBindingName, "role binding", exist, err)
+		allResourcesExist = checkResourceExist(kubernetes.RoleBindingName, "role binding", exist, err) && allResourcesExist
 	} else {
 		exist, err = kubernetesProvider.DoesClusterRoleExist(ctx, kubernetes.ClusterRoleName)
-		allResourcesExist = checkResourceExist(kubernetes.ClusterRoleName, "cluster role", exist, err)
+		allResourcesExist = checkResourceExist(kubernetes.ClusterRoleName, "cluster role", exist, err) && allResourcesExist
 
 		exist, err = kubernetesProvider.DoesClusterRoleBindingExist(ctx, kubernetes.ClusterRoleBindingName)
-		allResourcesExist = checkResourceExist(kubernetes.ClusterRoleBindingName, "cluster role binding", exist, err)
+		allResourcesExist = checkResourceExist(kubernetes.ClusterRoleBindingName, "cluster role binding", exist, err) && allResourcesExist
 	}
 
 	exist, err = kubernetesProvider.DoesServiceExist(ctx, config.Config.MizuResourcesNamespace, kubernetes.ApiServerPodName)
-	allResourcesExist = checkResourceExist(kubernetes.ApiServerPodName, "service", exist, err)
+	allResourcesExist = checkResourceExist(kubernetes.ApiServerPodName, "service", exist, err) && allResourcesExist
 
 	if isInstallCommand {
-		allResourcesExist = checkInstallResourcesExist(ctx, kubernetesProvider)
+		allResourcesExist = checkInstallResourcesExist(ctx, kubernetesProvider) && allResourcesExist
 	} else {
-		allResourcesExist = checkTapResourcesExist(ctx, kubernetesProvider)
+		allResourcesExist = checkTapResourcesExist(ctx, kubernetesProvider) && allResourcesExist
 	}
 
 	return allResourcesExist
@@ -205,13 +352,13 @@ func checkInstallResourcesExist(ctx context.Context, kubernetesProvider *kuberne
 	installResourcesExist := checkResourceExist(kubernetes.DaemonRoleName, "role", exist, err)
 
 	exist, err = kubernetesProvider.DoesRoleBindingExist(ctx, config.Config.MizuResourcesNamespace, kubernetes.DaemonRoleBindingName)
-	installResourcesExist = checkResourceExist(kubernetes.DaemonRoleBindingName, "role binding", exist, err)
+	installResourcesExist = checkResourceExist(kubernetes.DaemonRoleBindingName, "role binding", exist, err) && installResourcesExist
 
 	exist, err = kubernetesProvider.DoesPersistentVolumeClaimExist(ctx, config.Config.MizuResourcesNamespace, kubernetes.PersistentVolumeClaimName)
-	installResourcesExist = checkResourceExist(kubernetes.PersistentVolumeClaimName, "persistent volume claim", exist, err)
+	installResourcesExist = checkResourceExist(kubernetes.PersistentVolumeClaimName, "persistent volume claim", exist, err) && installResourcesExist
 
 	exist, err = kubernetesProvider.DoesDeploymentExist(ctx, config.Config.MizuResourcesNamespace, kubernetes.ApiServerPodName)
-	installResourcesExist = checkResourceExist(kubernetes.ApiServerPodName, "deployment", exist, err)
+	installResourcesExist = checkResourceExist(kubernetes.ApiServerPodName, "deployment", exist, err) && installResourcesExist
 
 	return installResourcesExist
 }
