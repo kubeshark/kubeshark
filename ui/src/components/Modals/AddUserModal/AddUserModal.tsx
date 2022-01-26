@@ -1,6 +1,6 @@
-import { FormControl, InputLabel, MenuItem, Select, TextField } from '@material-ui/core';
-import React, { FC, useEffect, useState } from 'react';
-import Api from '../../../helpers/api';
+import { FormControl, InputLabel, MenuItem, Select } from '@material-ui/core';
+import { FC, useEffect, useState } from 'react';
+// import Api from '../../../helpers/api';
 import { useCommonStyles } from '../../../helpers/commonStyle';
 import ConfirmationModal from '../../UI/Modals/ConfirmationModal';
 import SelectList from '../../UI/SelectList';
@@ -18,11 +18,10 @@ interface AddUserModalProps {
   userData : UserData;
 }
 
-const api = Api.getInstance();
+// const api = Api.getInstance();
 
 export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userData = {}}) => {
 
-  const [isOpenModal,setIsOpen] = useState(isOpen)
   //const [editUserData, setEditUserData] = useState(userData)
   const [searchValue, setSearchValue] = useState("");
   //const [userRole,setUserRole] = useState("")

@@ -3,7 +3,6 @@ import {ColsType, FilterableTableAction} from "../UI/FilterableTableAction"
 // import Api from "../../helpers/api"
 import { useEffect, useState } from "react";
 import AddWorkspaceModal, { WorkspaceData } from "../Modals/AddWorkspaceModal/AddWorkspaceModal";
-import SelectList from "../UI/SelectList";
 
 interface Props {}
 

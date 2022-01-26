@@ -1,49 +1,57 @@
-import React, { FC, useEffect, useState } from 'react';
+import { FC, useEffect, useState } from 'react';
+import Api from '../../../helpers/api';
 import { useCommonStyles } from '../../../helpers/commonStyle';
 import ConfirmationModal from '../../UI/Modals/ConfirmationModal';
 import SelectList from '../../UI/SelectList';
 import './AddWorkspaceModal.sass'
-// import './AddUserModal.sass';
 
 export type WorkspaceData = {
     name:string;
     namespaces: string[];
   }
 
-interface AddWorkspaceModal {
+interface AddWorkspaceModalProp {
   isOpen : boolean,
   onCloseModal: () => void,
   workspaceData: WorkspaceData
 }
 
-const AddWorkspaceModal: FC<AddWorkspaceModal> = ({isOpen,onCloseModal, workspaceData ={}}) => {
+const api = Api.getInstance();
 
-  const [isOpenModal,setIsOpen] = useState(isOpen);
+const AddWorkspaceModal: FC<AddWorkspaceModalProp> = ({isOpen,onCloseModal, workspaceData ={}}) => {
+
   const [workspaceDataModel, setUserData] = useState(workspaceData as WorkspaceData);
   const [searchValue, setSearchValue] = useState("");
   const classes = useCommonStyles()
-  const [namespaces, SetNamespaces] = useState({})
+  const [namespaces, setNamespaces] = useState({})
 
   useEffect(() => {
-    setIsOpen(isOpen)
-  },[isOpen])
-
-  useEffect(() => {
+    if(!isOpen) return;
     (async () => {
         try {
-            const namespacesList = {"default": false, "blabla": false, "test":true};
-            SetNamespaces(namespacesList)    
-                          
+            setSearchValue(""); 
+            const tapConfig = await api.getTapConfig();
+            console.log(tapConfig);
+            // if(isFirstLogin) {
+                const namespacesObj = {...tapConfig?.tappedNamespaces}
+                Object.keys(tapConfig?.tappedNamespaces ?? {}).forEach(namespace => {
+                    namespacesObj[namespace] = true;
+                })
+                setNamespaces(namespacesObj);
+            // } else {
+                setNamespaces(tapConfig?.tappedNamespaces);
+            // }
         } catch (e) {
             console.error(e);
+        } finally {
         }
-    })();
-},[])
+    })()
+}, [isOpen])
 
   const onConfirm = () => {}
 
   return (<>
-    <ConfirmationModal isOpen={isOpenModal} onClose={onCloseModal} onConfirm={onConfirm} title='Add Workspace'>
+    <ConfirmationModal isOpen={isOpen} onClose={onCloseModal} onConfirm={onConfirm} title='Add Workspace'>
     <h3 className='headline'>DETAILS</h3>
       <div>
         <input type="text" value={workspaceDataModel?.name ?? ""} className={classes.textField + " workspace__name"} placeholder={"Workspace Name"} 

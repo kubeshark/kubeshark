@@ -47,7 +47,7 @@ export const FilterableTableAction: React.FC<Props> = ({onRowDelete,onRowEdit, s
     const filteredValues = useMemo(() => {
         const searchFunc = searchConfig.filterRows(inputSearch)
         return tableRows.filter(searchFunc)
-    },[tableRows, inputSearch])
+    },[tableRows, inputSearch,searchConfig])
 
     return (<>
         <div className="filterable-table">

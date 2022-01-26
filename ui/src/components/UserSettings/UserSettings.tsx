@@ -3,11 +3,6 @@ import {ColsType, FilterableTableAction} from "../UI/FilterableTableAction"
 // import Api from "../../helpers/api"
 import { useEffect, useState } from "react";
 import AddUserModal, { UserData } from "../Modals/AddUserModal/AddUserModal";
-import { Select } from "../UI/Select";
-import { MenuItem } from "@material-ui/core";
-import { settings } from "cluster";
-import { SettingsModal } from "../SettingsModal/SettingModal";
-import OasModal from "../Modals/OasModal/OasModal";
 
 interface Props {
 
