@@ -52,7 +52,6 @@ WORKDIR /app
 COPY --from=builder ["/app/agent-build/mizuagent", "."]
 COPY --from=builder ["/app/agent/build/extensions", "extensions"]
 COPY --from=site-build ["/app/ui-build/build", "site"]
-COPY --from=site-build ["/app/ui-build/build-ent", "site-standalone"]
 RUN mkdir /app/data/
 
 # install delve
