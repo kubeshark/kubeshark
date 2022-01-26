@@ -4,10 +4,10 @@ import (
 	"bufio"
 	"encoding/json"
 	"errors"
-	"github.com/google/martian/har"
 	"github.com/up9inc/mizu/shared/logger"
 	"io"
 	"io/ioutil"
+	"mizuserver/pkg/har"
 	"os"
 	"path/filepath"
 	"sort"
@@ -96,7 +96,7 @@ func feedFromHAR(file string) error {
 	}
 
 	for _, entry := range harDoc.Log.Entries {
-		GetOasGeneratorInstance().PushEntry(entry)
+		GetOasGeneratorInstance().PushEntry(&entry)
 	}
 
 	return nil

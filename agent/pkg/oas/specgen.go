@@ -1,14 +1,13 @@
 package oas
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"github.com/chanced/openapi"
-	"github.com/google/martian/har"
 	"github.com/google/uuid"
 	"github.com/up9inc/mizu/shared/logger"
 	"mime"
+	"mizuserver/pkg/har"
 	"net/url"
 	"strconv"
 	"strings"
@@ -178,7 +177,7 @@ func (g *SpecGen) handlePathObj(entry *har.Entry) (string, error) {
 		logger.Log.Debugf("Dropped traffic entry due to ignored extension: %s", urlParsed.Path)
 	}
 
-	ctype := getRespCtype(entry.Response)
+	ctype := getRespCtype(&entry.Response)
 	if isCtypeIgnored(ctype) {
 		logger.Log.Debugf("Dropped traffic entry due to ignored response ctype: %s", ctype)
 	}
@@ -216,12 +215,12 @@ func handleOpObj(entry *har.Entry, pathObj *openapi.PathObj) (*openapi.Operation
 		return nil, nil
 	}
 
-	err = handleRequest(entry.Request, opObj, isSuccess)
+	err = handleRequest(&entry.Request, opObj, isSuccess)
 	if err != nil {
 		return nil, err
 	}
 
-	err = handleResponse(entry.Response, opObj, isSuccess)
+	err = handleResponse(&entry.Response, opObj, isSuccess)
 	if err != nil {
 		return nil, err
 	}
@@ -252,7 +251,7 @@ func handleRequest(req *har.Request, opObj *openapi.Operation, isSuccess bool) e
 	}
 	handleNameVals(hdrGW, &opObj.Parameters)
 
-	if req.PostData != nil && req.PostData.Text != "" && isSuccess {
+	if req.PostData.Text != "" && isSuccess {
 		reqBody, err := getRequestBody(req, opObj, isSuccess)
 		if err != nil {
 			return err
@@ -342,43 +341,34 @@ func fillContent(reqResp reqResp, respContent openapi.Content, ctype string, err
 	}
 
 	var text string
+	var isBinary bool
 	if reqResp.Req != nil {
-		text = reqResp.Req.PostData.Text
+		isBinary, _, text = reqResp.Req.PostData.B64Decoded()
 	} else {
-		text = decRespText(reqResp.Resp.Content)
+		isBinary, _, text = reqResp.Resp.Content.B64Decoded()
 	}
 
-	var exampleMsg []byte
-	// try treating it as json
-	any, isJSON := anyJSON(text)
-	if isJSON {
-		// re-marshal with forced indent
-		exampleMsg, err = json.MarshalIndent(any, "", "\t")
-		if err != nil {
-			panic("Failed to re-marshal value, super-strange")
-		}
-	} else {
-		exampleMsg, err = json.Marshal(text)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	content.Example = exampleMsg
-	return respContent[ctype], nil
-}
-
-func decRespText(content *har.Content) (res string) {
-	res = string(content.Text)
-	if content.Encoding == "base64" {
-		data, err := base64.StdEncoding.DecodeString(res)
-		if err != nil {
-			logger.Log.Warningf("error decoding response text as base64: %s", err)
+	if !isBinary {
+		var exampleMsg []byte
+		// try treating it as json
+		any, isJSON := anyJSON(text)
+		if isJSON {
+			// re-marshal with forced indent
+			exampleMsg, err = json.MarshalIndent(any, "", "\t")
+			if err != nil {
+				panic("Failed to re-marshal value, super-strange")
+			}
 		} else {
-			res = string(data)
+			exampleMsg, err = json.Marshal(text)
+			if err != nil {
+				return nil, err
+			}
 		}
+
+		content.Example = exampleMsg
 	}
-	return
+
+	return respContent[ctype], nil
 }
 
 func getRespCtype(resp *har.Response) string {

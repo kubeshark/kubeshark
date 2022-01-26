@@ -2,8 +2,8 @@ package controllers
 
 import (
 	"encoding/json"
+	"mizuserver/pkg/har"
 	"mizuserver/pkg/models"
-	"mizuserver/pkg/utils"
 	"mizuserver/pkg/validation"
 	"net/http"
 	"strconv"
@@ -127,7 +127,7 @@ func GetEntry(c *gin.Context) {
 	var rules []map[string]interface{}
 	var isRulesEnabled bool
 	if entry.Protocol.Name == "http" {
-		harEntry, _ := utils.NewEntry(entry.Request, entry.Response, entry.StartTime, entry.ElapsedTime)
+		harEntry, _ := har.NewEntry(entry.Request, entry.Response, entry.StartTime, entry.ElapsedTime)
 		_, rulesMatched, _isRulesEnabled := models.RunValidationRulesState(*harEntry, entry.Destination.Name)
 		isRulesEnabled = _isRulesEnabled
 		inrec, _ := json.Marshal(rulesMatched)
