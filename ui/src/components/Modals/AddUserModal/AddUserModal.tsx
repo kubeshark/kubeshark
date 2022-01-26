@@ -1,4 +1,4 @@
-import { FormControl, MenuItem, Select } from '@material-ui/core';
+import { FormControl, InputLabel, MenuItem, Select, TextField } from '@material-ui/core';
 import React, { FC, useEffect, useState } from 'react';
 import Api from '../../../helpers/api';
 import { useCommonStyles } from '../../../helpers/commonStyle';
@@ -6,7 +6,7 @@ import ConfirmationModal from '../../UI/Modals/ConfirmationModal';
 import SelectList from '../../UI/SelectList';
 import './AddUserModal.sass';
 
-type UserData = {
+export type UserData = {
   role:string;
   email : string;
   workspace : string;
@@ -20,13 +20,13 @@ interface AddUserModalProps {
 
 const api = Api.getInstance();
 
-const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userData = {}}) => {
+export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userData = {}}) => {
 
   const [isOpenModal,setIsOpen] = useState(isOpen)
   //const [editUserData, setEditUserData] = useState(userData)
   const [searchValue, setSearchValue] = useState("");
   //const [userRole,setUserRole] = useState("")
-  const [workspaces, setWorkspaces] = useState([])
+  const [workspaces, setWorkspaces] = useState({})
   const roles = [{key:"1",value:"Admin"}]
   const classes = useCommonStyles()
 
@@ -39,7 +39,7 @@ const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userData = {
   useEffect(() => {
     (async () => {
         try {
-            const workspacesList = [{"default":true}] //await api.getWorkspaces() 
+            const workspacesList = {"default":true} //await api.getWorkspaces() 
             setWorkspaces(workspacesList)    
                           
         } catch (e) {
@@ -75,15 +75,24 @@ const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userData = {
       <div>
         <input type="text" value={userDataModel?.email ?? ""} className={classes.textField + " user__email"} placeholder={"User Email"} 
                onChange={(e) => {}}></input>
-        <FormControl>
+        <TextField select size='small' onChange={userRoleChange} value={userDataModel.role}>
+          {roles.map((role) => (
+                <MenuItem key={role.value} value={role.value}>
+                  {role.value}
+                </MenuItem>
+              ))}
+        </TextField>
+        {/* <FormControl fullWidth size="small">
+          <InputLabel>Select Role</InputLabel>
           <Select className="user__role" label="Select Role" placeholder='Select Role' onChange={userRoleChange} value={userDataModel.role}>
+
             {roles.map((role) => (
-                <MenuItem key={role.key} value={role.key}>
+                <MenuItem key={role.value} value={role.value}>
                   {role.value}
                 </MenuItem>
               ))}
           </Select>
-        </FormControl>
+        </FormControl> */}
       </div>
       <h3>WORKSPACE ACCESS </h3>     
       <div className="namespacesSettingsContainer">
@@ -91,7 +100,7 @@ const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userData = {
             <input className={classes.textField + " searchNamespace"} placeholder="Search" value={searchValue}
                     onChange={(event) => setSearchValue(event.target.value)}/>
         </div>
-        <SelectList valuesListInput={workspaces} tableName={'Workspace'} multiSelect={false} setValues={workspaceChange} tabelClassName={''} ></SelectList>
+        <SelectList valuesListInput={workspaces} tableName={'Workspace'} multiSelect={false} searchValue={searchValue} setValues={workspaceChange} tabelClassName={''} ></SelectList>
       </div>
     </ConfirmationModal>
     </>); 

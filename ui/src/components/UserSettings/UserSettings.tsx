@@ -3,7 +3,7 @@ import {useCommonStyles} from "../../helpers/commonStyle";
 import {ColsType, FilterableTableAction} from "../UI/FilterableTableAction"
 import Api from "../../helpers/api"
 import { useEffect, useState } from "react";
-import AddUserModal from "../Modals/AddUserModal/AddUserModal";
+import AddUserModal, { UserData } from "../Modals/AddUserModal/AddUserModal";
 import { Select } from "../UI/Select";
 import { MenuItem } from "@material-ui/core";
 import { settings } from "cluster";
@@ -19,6 +19,7 @@ const api = Api.getInstance();
 export const UserSettings : React.FC<Props> = ({}) => {
 
     const [usersRows, setUserRows] = useState([]);
+    const [userData,SetUsetData] = useState({} as UserData)
     const cols : ColsType[] = [{field : "userName",header:"User"},
                                {field : "role",header:"Role"},
                                {field : "status",header:"Status",getCellClassName : (field, val) =>{
@@ -65,7 +66,7 @@ export const UserSettings : React.FC<Props> = ({}) => {
         <FilterableTableAction onRowEdit={onRowEdit} onRowDelete={onRowDelete} searchConfig={searchConfig} 
                                buttonConfig={buttonConfig} rows={usersRows} cols={cols}>
         </FilterableTableAction>
-        <AddUserModal isOpen={false} onCloseModal={()=> {setIsOpen(false)}}></AddUserModal>
+        <AddUserModal isOpen={isOpenModal} onCloseModal={() => { setIsOpen(false); } } userData={userData}></AddUserModal>
         {/* <SettingsModal isOpen={false} onClose={function (): void {
             throw new Error("Function not implemented.");
         } } isFirstLogin={false}></SettingsModal> */}

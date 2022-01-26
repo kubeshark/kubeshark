@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import Checkbox from "./Checkbox"
-import '../style/SelectList.sass';
+import './style/SelectList.sass';
 
 export interface Props {
     valuesListInput;
