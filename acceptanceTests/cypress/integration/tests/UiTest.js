@@ -156,7 +156,7 @@ function checkFilter(filterDetails){
             leftOnHoverCheck(totalEntries - 1, leftSidePath, name);
 
             // applying the filter with alt+enter or with the button
-            cy.get('.w-tc-editor-text').type(`${name}${applyByEnter ? '{alt+enter}' : ''}`);
+            cy.get('.w-tc-editor-text').type(`${name}${applyByEnter ? '{enter}' : ''}`);
             cy.get('.w-tc-editor').should('have.attr', 'style').and('include', greenFilterColor);
             if (!applyByEnter)
                 cy.get('[type="submit"]').click();
