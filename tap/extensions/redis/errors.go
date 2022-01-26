@@ -1,4 +1,4 @@
-package main
+package redis
 
 //ConnectError redis connection error,such as io timeout
 type ConnectError struct {

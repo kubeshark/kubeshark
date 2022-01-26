@@ -19,9 +19,6 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"path"
-	"path/filepath"
-	"plugin"
 	"sort"
 	"strconv"
 	"strings"
@@ -40,6 +37,11 @@ import (
 	"github.com/up9inc/mizu/shared/logger"
 	"github.com/up9inc/mizu/tap"
 	tapApi "github.com/up9inc/mizu/tap/api"
+
+	amqpExt "github.com/up9inc/mizu/tap/extensions/amqp"
+	httpExt "github.com/up9inc/mizu/tap/extensions/http"
+	kafkaExt "github.com/up9inc/mizu/tap/extensions/kafka"
+	redisExt "github.com/up9inc/mizu/tap/extensions/redis"
 )
 
 var tapperMode = flag.Bool("tap", false, "Run in tapper mode without API")
@@ -189,36 +191,36 @@ func configureBasenineServer(host string, port string) {
 }
 
 func loadExtensions() {
-	dir, _ := filepath.Abs(filepath.Dir(os.Args[0]))
-	extensionsDir := path.Join(dir, "./extensions/")
-
-	files, err := ioutil.ReadDir(extensionsDir)
-	if err != nil {
-		logger.Log.Fatal(err)
-	}
-	extensions = make([]*tapApi.Extension, len(files))
+	extensions = make([]*tapApi.Extension, 4)
 	extensionsMap = make(map[string]*tapApi.Extension)
-	for i, file := range files {
-		filename := file.Name()
-		logger.Log.Infof("Loading extension: %s", filename)
-		extension := &tapApi.Extension{
-			Path: path.Join(extensionsDir, filename),
-		}
-		plug, _ := plugin.Open(extension.Path)
-		extension.Plug = plug
-		symDissector, err := plug.Lookup("Dissector")
 
-		var dissector tapApi.Dissector
-		var ok bool
-		dissector, ok = symDissector.(tapApi.Dissector)
-		if err != nil || !ok {
-			panic(fmt.Sprintf("Failed to load the extension: %s", extension.Path))
-		}
-		dissector.Register(extension)
-		extension.Dissector = dissector
-		extensions[i] = extension
-		extensionsMap[extension.Protocol.Name] = extension
-	}
+	extensionAmqp := &tapApi.Extension{}
+	dissectorAmqp := amqpExt.NewDissector()
+	dissectorAmqp.Register(extensionAmqp)
+	extensionAmqp.Dissector = dissectorAmqp
+	extensions[0] = extensionAmqp
+	extensionsMap[extensionAmqp.Protocol.Name] = extensionAmqp
+
+	extensionHttp := &tapApi.Extension{}
+	dissectorHttp := httpExt.NewDissector()
+	dissectorHttp.Register(extensionHttp)
+	extensionHttp.Dissector = dissectorHttp
+	extensions[1] = extensionHttp
+	extensionsMap[extensionHttp.Protocol.Name] = extensionHttp
+
+	extensionKafka := &tapApi.Extension{}
+	dissectorKafka := kafkaExt.NewDissector()
+	dissectorKafka.Register(extensionKafka)
+	extensionKafka.Dissector = dissectorKafka
+	extensions[2] = extensionKafka
+	extensionsMap[extensionKafka.Protocol.Name] = extensionKafka
+
+	extensionRedis := &tapApi.Extension{}
+	dissectorRedis := redisExt.NewDissector()
+	dissectorRedis.Register(extensionRedis)
+	extensionRedis.Dissector = dissectorRedis
+	extensions[3] = extensionRedis
+	extensionsMap[extensionRedis.Protocol.Name] = extensionRedis
 
 	sort.Slice(extensions, func(i, j int) bool {
 		return extensions[i].Protocol.Priority < extensions[j].Protocol.Priority
