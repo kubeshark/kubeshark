@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import Checkbox from "./Checkbox"
+import '../style/SelectList.sass';
 
 export interface Props {
     valuesListInput;
@@ -64,7 +65,7 @@ const SelectList: React.FC<Props> = ({valuesListInput,tableName,multiSelect=true
         return Object.keys(valuesList).filter((listValue) => listValue.includes(searchValue));
     },[valuesList, searchValue])
 
-        return <div className={tabelClassName}>
+        return <div className={tabelClassName + " namespacesTable"}>
                 <table cellPadding={5} style={{borderCollapse: "collapse"}}>
                     <thead>
                     {tableHead}
