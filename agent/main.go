@@ -18,7 +18,6 @@ import (
 	"mizuserver/pkg/utils"
 	"net/http"
 	"os"
-	"os/exec"
 	"os/signal"
 	"sort"
 	"strconv"
@@ -119,7 +118,7 @@ func main() {
 
 		go pipeTapChannelToSocket(socketConnection, filteredOutputItemsChannel)
 	} else if *apiServerMode {
-		startBasenineServer(shared.BasenineHost, shared.BaseninePort)
+		configureBasenineServer(shared.BasenineHost, shared.BaseninePort)
 		startTime = time.Now().UnixNano() / int64(time.Millisecond)
 		api.StartResolving(*namespace)
 
@@ -162,16 +161,7 @@ func enableExpFeatureIfNeeded() {
 	}
 }
 
-func startBasenineServer(host string, port string) {
-	cmd := exec.Command("basenine", "-addr", host, "-port", port, "-persistent")
-	cmd.Dir = config.Config.AgentDatabasePath
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err := cmd.Start()
-	if err != nil {
-		logger.Log.Panicf("Failed starting Basenine: %v", err)
-	}
-
+func configureBasenineServer(host string, port string) {
 	if !wait.New(
 		wait.WithProto("tcp"),
 		wait.WithWait(200*time.Millisecond),
@@ -182,18 +172,8 @@ func startBasenineServer(host string, port string) {
 		logger.Log.Panicf("Basenine is not available!")
 	}
 
-	// Make a channel to gracefully exit Basenine.
-	channel := make(chan os.Signal)
-	signal.Notify(channel, os.Interrupt, syscall.SIGTERM)
-
-	// Handle the channel.
-	go func() {
-		<-channel
-		cmd.Process.Signal(syscall.SIGTERM)
-	}()
-
 	// Limit the database size to default 200MB
-	err = basenine.Limit(host, port, config.Config.MaxDBSizeBytes)
+	err := basenine.Limit(host, port, config.Config.MaxDBSizeBytes)
 	if err != nil {
 		logger.Log.Panicf("Error while limiting database size: %v", err)
 	}
