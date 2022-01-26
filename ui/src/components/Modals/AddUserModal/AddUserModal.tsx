@@ -1,10 +1,11 @@
-import { FormControl, InputLabel, MenuItem, Select, TextField } from '@material-ui/core';
-import React, { FC, useEffect, useState } from 'react';
+import { Button, FormControl, InputLabel, MenuItem, Select } from '@material-ui/core';
+import { FC, useEffect, useState } from 'react';
 import Api from '../../../helpers/api';
 import { useCommonStyles } from '../../../helpers/commonStyle';
 import ConfirmationModal from '../../UI/Modals/ConfirmationModal';
 import SelectList from '../../UI/SelectList';
 import './AddUserModal.sass';
+import spinner from "../../assets/spinner.svg";
 
 export type UserData = {
   role:string;
@@ -25,12 +26,12 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
   const [isOpenModal,setIsOpen] = useState(isOpen)
   //const [editUserData, setEditUserData] = useState(userData)
   const [searchValue, setSearchValue] = useState("");
-  //const [userRole,setUserRole] = useState("")
   const [workspaces, setWorkspaces] = useState({})
   const roles = [{key:"1",value:"Admin"}]
   const classes = useCommonStyles()
 
   const [userDataModel, setUserData] = useState(userData as UserData)
+  const isLoading = false;
 
   // useEffect(() => {
   //   setIsOpen(isOpen)
@@ -69,20 +70,39 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
     setUserData(data)
   }
 
+  function isFormValid(): boolean {
+    return true;
+  }
+
+  const generateLink = () => {
+    try {
+      api.genareteInviteLink(userDataModel)                
+  } catch (e) {
+      console.error(e);
+  }
+    
+  }
+
+  const modalCustomActions = <>
+
+                            </>;
+
   return (<>
+
     <ConfirmationModal isOpen={isOpen} onClose={onCloseModal} onConfirm={onConfirm} title='Add User'>
+      <Button 
+                                            className={classes.button + " generate-link-button"} size={"small"} onClick={generateLink}
+                                            //disabled={isFormValid()}  
+                                            endIcon={isLoading && <img src={spinner} alt="spinner"/>}>
+                                              <span className='generate-link-button__icon'></span>
+                                              
+                                              {"Generate Invite Link"}
+      </Button>
       <h3 className='comfirmation-modal__sub-section-header'>DETAILS</h3>
       <div className='comfirmation-modal__sub-section'>
       <div className='user__details'>
         <input type="text" value={userDataModel?.email ?? ""} className={classes.textField + " user__email"} placeholder={"User Email"} 
                onChange={(e) => {}}></input>
-        {/* <TextField select size='small' onChange={userRoleChange} value={userDataModel.role} fullWidth variant="filled">
-          {roles.map((role) => (
-                <MenuItem key={role.value} value={role.value}>
-                  {role.value}
-                </MenuItem>
-              ))}
-        </TextField> */}
         <FormControl size='small' variant="outlined" className='user__role'>
         <InputLabel>User Role</InputLabel>
         <Select value={userDataModel.role} onChange={userRoleChange} >
@@ -111,4 +131,3 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
     </>); 
 };
 
-export default AddUserModal;

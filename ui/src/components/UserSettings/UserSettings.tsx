@@ -3,7 +3,7 @@ import {useCommonStyles} from "../../helpers/commonStyle";
 import {ColsType, FilterableTableAction} from "../UI/FilterableTableAction"
 import Api from "../../helpers/api"
 import { useEffect, useState } from "react";
-import AddUserModal, { UserData } from "../Modals/AddUserModal/AddUserModal";
+import { UserData,AddUserModal } from "../Modals/AddUserModal/AddUserModal";
 import { Select } from "../UI/Select";
 import { MenuItem } from "@material-ui/core";
 import { settings } from "cluster";
