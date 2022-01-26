@@ -1,10 +1,11 @@
-import {isValueExistsInElement} from "../testHelpers/TrafficHelper";
+import {isValueExistsInElement, resizeToHugeMizu} from "../testHelpers/TrafficHelper";
 
 it('Loading Mizu', function () {
     cy.visit(Cypress.env('testUrl'));
 });
 
 it('going through each entry', function () {
+    resizeToHugeMizu();
     cy.get('#total-entries').then(number => {
         const getNum = () => {
             const numOfEntries = number.text();
