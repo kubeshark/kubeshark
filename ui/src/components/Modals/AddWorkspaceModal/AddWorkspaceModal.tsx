@@ -13,17 +13,21 @@ export type WorkspaceData = {
 interface AddWorkspaceModalProp {
   isOpen : boolean,
   onCloseModal: () => void,
-  workspaceData: WorkspaceData
+  workspaceData: WorkspaceData,
+  onEdit: boolean
 }
 
 const api = Api.getInstance();
 
-const AddWorkspaceModal: FC<AddWorkspaceModalProp> = ({isOpen,onCloseModal, workspaceData ={}}) => {
+const AddWorkspaceModal: FC<AddWorkspaceModalProp> = ({isOpen,onCloseModal, workspaceData ={}, onEdit}) => {
 
   const [workspaceDataModel, setUserData] = useState(workspaceData as WorkspaceData);
   const [searchValue, setSearchValue] = useState("");
   const classes = useCommonStyles()
-  const [namespaces, setNamespaces] = useState({})
+  const [namespaces, setNamespaces] = useState({});
+
+  const title = onEdit ? "Edit Workspace" : "Add Workspace";
+
 
   useEffect(() => {
     if(!isOpen) return;
@@ -51,10 +55,10 @@ const AddWorkspaceModal: FC<AddWorkspaceModalProp> = ({isOpen,onCloseModal, work
   const onConfirm = () => {}
 
   return (<>
-    <ConfirmationModal isOpen={isOpen} onClose={onCloseModal} onConfirm={onConfirm} title='Add Workspace'>
+    <ConfirmationModal isOpen={isOpen} onClose={onCloseModal} onConfirm={onConfirm} title={title}>
     <h3 className='headline'>DETAILS</h3>
       <div>
-        <input type="text" value={workspaceDataModel?.name ?? ""} className={classes.textField + " workspace__name"} placeholder={"Workspace Name"} 
+        <input type="text" value={workspaceData?.name ?? ""} className={classes.textField + " workspace__name"} placeholder={"Workspace Name"} 
                onChange={(e) => {}}></input>
         </div>
         <h3 className='headline'>TAP SETTINGS</h3>     

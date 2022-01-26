@@ -10,17 +10,20 @@ interface Props {}
 
 export const WorkspaceSettings : React.FC<Props> = ({}) => {
 
-    const [workspacesRows, setWorkspaces] = useState([]);
+    const [workspacesRows, setWorkspacesRows] = useState([]);
     const [workspaceData,SetWorkspaceData] = useState({} as WorkspaceData);
     const [isOpenModal,setIsOpen] = useState(false);
+    const [isEditMode,setIsEditMode] = useState(false);
+
     const cols : ColsType[] = [{field : "id",header:"Id"},{field : "name",header:"Name"}];
 
+    const buttonConfig = {onClick: () => {setIsOpen(true); setIsEditMode(false);SetWorkspaceData({} as WorkspaceData)}, text:"Add Workspace"}
 
     useEffect(() => {
         (async () => {
             try {
                 const workspacesDemo = [{id:"1", name:"Worksapce1"}] 
-                setWorkspaces(workspacesDemo)                  
+                setWorkspacesRows(workspacesDemo)                  
             } catch (e) {
                 console.error(e);
             }
@@ -36,19 +39,21 @@ export const WorkspaceSettings : React.FC<Props> = ({}) => {
     const onRowDelete = (row) => {
         const filterFunc = filterFuncFactory(row.name)
         const newWorkspaceList = workspacesRows.filter(filterFunc)
-        setWorkspaces(newWorkspaceList)
+        setWorkspacesRows(newWorkspaceList)
     }
 
     const onRowEdit = (row) => {
-
+       setIsOpen(true);
+       setIsEditMode(true);
+       SetWorkspaceData(row);
     }
 
-    const buttonConfig = {onClick: () => {setIsOpen(true)}, text:"Add Workspace"}
+    
     return (<>
         <FilterableTableAction onRowEdit={onRowEdit} onRowDelete={onRowDelete} searchConfig={searchConfig} 
                                buttonConfig={buttonConfig} rows={workspacesRows} cols={cols}>
         </FilterableTableAction>
-        <AddWorkspaceModal isOpen={isOpenModal} workspaceData={workspaceData} onCloseModal={() => { setIsOpen(false); } } >
+        <AddWorkspaceModal isOpen={isOpenModal} workspaceData={workspaceData} onEdit={isEditMode} onCloseModal={() => { setIsOpen(false);} } >
 
             
         </AddWorkspaceModal>
