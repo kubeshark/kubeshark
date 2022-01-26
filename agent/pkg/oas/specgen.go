@@ -30,7 +30,7 @@ func NewGen(server string) *SpecGen {
 	spec.Version = "3.1.0"
 
 	info := openapi.Info{Title: server}
-	info.Version = "0.0"
+	info.Version = "1.0"
 	spec.Info = &info
 	spec.Paths = &openapi.Paths{Items: map[openapi.PathValue]*openapi.PathObj{}}
 
@@ -175,11 +175,13 @@ func (g *SpecGen) handlePathObj(entry *har.Entry) (string, error) {
 
 	if isExtIgnored(urlParsed.Path) {
 		logger.Log.Debugf("Dropped traffic entry due to ignored extension: %s", urlParsed.Path)
+		return "", nil
 	}
 
 	ctype := getRespCtype(&entry.Response)
 	if isCtypeIgnored(ctype) {
 		logger.Log.Debugf("Dropped traffic entry due to ignored response ctype: %s", ctype)
+		return "", nil
 	}
 
 	if entry.Response.Status < 100 {
@@ -348,7 +350,7 @@ func fillContent(reqResp reqResp, respContent openapi.Content, ctype string, err
 		isBinary, _, text = reqResp.Resp.Content.B64Decoded()
 	}
 
-	if !isBinary {
+	if !isBinary && text != "" {
 		var exampleMsg []byte
 		// try treating it as json
 		any, isJSON := anyJSON(text)
