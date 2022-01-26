@@ -11,7 +11,7 @@ const AdminSettings: React.FC<any> = ({color}) => {
     
     const [currentTab, setCurrentTab] = useState(TABS[0].tab);
     return (
-        <div style={{padding:" 0 1rem"}}>
+        <div style={{padding:" 0 24px"}}>
         <Tabs tabs={TABS} currentTab={currentTab} color={color} onChange={setCurrentTab} leftAligned/>
         {currentTab === TABS[0].tab && <React.Fragment>
                 <UserSettings/>
