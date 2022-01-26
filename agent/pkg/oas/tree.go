@@ -91,11 +91,13 @@ func (n *Node) createParam() *openapi.ParameterObj {
 			name = *n.constant
 			name = name[:len(name)-1] + "Id"
 		}
+
+		name = cleanNonAlnum([]byte(name))
 	}
 
 	newParam := createSimpleParam(name, "path", "string")
 	x := n.countParentParams()
-	if x > 1 {
+	if x > 0 {
 		newParam.Name = newParam.Name + strconv.Itoa(x)
 	}
 
