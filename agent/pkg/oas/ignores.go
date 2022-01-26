@@ -19,10 +19,11 @@ var ignoredHeaders = []string{
 	"x-same-domain", "x-content-type-options", "x-frame-options", "x-xss-protection",
 	"x-wap-profile", "x-scheme",
 	"newrelic", "x-cloud-trace-context", "sentry-trace",
-	"expires", "set-cookie", "p3p", "location", "content-security-policy", "content-security-policy-report-only",
-	"last-modified", "content-language",
+	"expires", "set-cookie", "p3p", "content-security-policy", "content-security-policy-report-only",
+	"last-modified", "content-language", "x-varnish", "true-client-ip", "akamai-origin-hop",
 	"keep-alive", "etag", "alt-svc", "x-csrf-token", "x-ua-compatible", "vary", "x-powered-by",
-	"age", "allow", "www-authenticate",
+	"age", "allow", "www-authenticate", "expect-ct", "timing-allow-origin",
+	"duration_ms", // UP9 custom
 }
 
 var ignoredHeaderPrefixes = []string{
