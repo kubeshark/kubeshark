@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"mizuserver/pkg/config"
+	"mizuserver/pkg/models"
 
 	ory "github.com/ory/kratos-client-go"
 )
@@ -29,7 +30,7 @@ func CreateAdminUser(password string, ctx context.Context) (token *string, err e
 		return nil, errors.New("The admin user has already been created"), nil
 	}
 
-	token, identityId, err, formErrors := RegisterUser(AdminUsername, password, ctx)
+	token, identityId, err, formErrors := RegisterUser(AdminUsername, password, models.AcceptedInviteStatus, ctx)
 	if err != nil {
 		return nil, err, formErrors
 	}

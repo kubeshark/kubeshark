@@ -5,17 +5,49 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"mizuserver/pkg/models"
 	"net/http"
 	"net/http/cookiejar"
+	"strings"
+	"time"
+
+	"github.com/google/uuid"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 
 	ory "github.com/ory/kratos-client-go"
 	"github.com/up9inc/mizu/shared/logger"
 )
 
-var client = getKratosClient("http://127.0.0.1:4433", "http://127.0.0.1:4434")
+const (
+	databasePath     = "/app/data/kratos.sqlite"
+	inviteTTLSeconds = 60 * 60 * 24 * 14 // two weeks
+	listUsersPerPage = 500
+)
+
+var (
+	client = getKratosClient("http://127.0.0.1:4433", "http://127.0.0.1:4434")
+	db     *gorm.DB
+)
+
+func init() {
+	var err error
+	db, err = gorm.Open(sqlite.Open(databasePath), &gorm.Config{})
+	if err != nil {
+		panic(fmt.Sprintf("failed to connect local sqlite database at %s", databasePath))
+	}
+	if db.Error != nil {
+		logger.Log.Errorf("db error %v", db.Error)
+	}
+
+	err = db.AutoMigrate(&models.Invite{})
+	if err != nil {
+		panic(fmt.Sprintf("failed to migrate schema to local sqlite database at %s", databasePath))
+	}
+}
 
 // returns session token if successful
-func RegisterUser(username string, password string, ctx context.Context) (token *string, identityId string, err error, formErrorMessages map[string][]ory.UiText) {
+func RegisterUser(username string, password string, inviteStatus models.InviteStatus, ctx context.Context) (token *string, identityId string, err error, formErrorMessages map[string][]ory.UiText) {
 	flow, _, err := client.V0alpha2Api.InitializeSelfServiceRegistrationFlowWithoutBrowser(ctx).Execute()
 	if err != nil {
 		return nil, "", err, nil
@@ -25,7 +57,7 @@ func RegisterUser(username string, password string, ctx context.Context) (token 
 		ory.SubmitSelfServiceRegistrationFlowWithPasswordMethodBodyAsSubmitSelfServiceRegistrationFlowBody(&ory.SubmitSelfServiceRegistrationFlowWithPasswordMethodBody{
 			Method:   "password",
 			Password: password,
-			Traits:   map[string]interface{}{"username": username},
+			Traits:   map[string]interface{}{"username": username, "inviteStatus": inviteStatus},
 		}),
 	).Execute()
 
@@ -80,6 +112,14 @@ func VerifyToken(token string, ctx context.Context) (*ory.Session, error) {
 }
 
 func DeleteUser(identityId string, ctx context.Context) error {
+	identity, _, err := client.V0alpha2Api.AdminGetIdentity(ctx, identityId).Execute()
+	if err != nil {
+		return err
+	}
+
+	traits := identity.Traits.(map[string]interface{})
+	username := traits["username"].(string)
+
 	result, err := client.V0alpha2Api.AdminDeleteIdentity(ctx, identityId).Execute()
 	if err != nil {
 		return err
@@ -91,7 +131,7 @@ func DeleteUser(identityId string, ctx context.Context) error {
 	if result.StatusCode < 200 || result.StatusCode > 299 {
 		return errors.New(fmt.Sprintf("user deletion returned bad status %d", result.StatusCode))
 	} else {
-		return nil
+		return DeleteAllUserRoles(username)
 	}
 }
 
@@ -118,6 +158,185 @@ func Logout(token string, ctx context.Context) error {
 	}
 
 	return nil
+}
+
+func CreateUserInvite(username string, workspace string, systemRole string, ctx context.Context) (inviteToken string, identityId string, err error) {
+	inviteToken = uuid.New().String()
+
+	// use inviteToken as a temporary password
+	_, identityId, err, _ = RegisterUser(username, inviteToken, models.PendingInviteStatus, ctx)
+	if err != nil {
+		return "", "", err
+	}
+	invite := &models.Invite{
+		Token:      inviteToken,
+		Username:   username,
+		IdentityId: identityId,
+		CreatedAt:  time.Now().Unix(),
+	}
+
+	if err = db.Create(invite).Error; err != nil {
+		//Delete the user to prevent a locked user scenario
+		DeleteUser(identityId, ctx)
+
+		return "", "", err
+	}
+
+	return inviteToken, identityId, nil
+}
+
+func RegisterWithInvite(inviteToken string, password string, ctx context.Context) (token *string, err error, formErrorMessages map[string][]ory.UiText) {
+	invite := models.Invite{}
+	if err = db.Where("token = ?", inviteToken).First(&invite).Error; err != nil {
+		return nil, err, nil
+	}
+
+	if time.Now().Unix()-invite.CreatedAt > inviteTTLSeconds {
+		return nil, errors.New("invite expired"), nil
+	}
+
+	// TODO: kratos are planning to add an admin endpoint that allows changing user passwords without having to log in
+	sessionToken, err := PerformLogin(invite.Username, inviteToken, ctx)
+	if err != nil {
+		return nil, err, nil
+	}
+
+	flow, _, err := client.V0alpha2Api.InitializeSelfServiceSettingsFlowWithoutBrowser(ctx).XSessionToken(*sessionToken).Execute()
+	if err != nil {
+		return nil, err, nil
+	}
+	_, _, err = client.V0alpha2Api.SubmitSelfServiceSettingsFlow(ctx).Flow(flow.Id).XSessionToken(*sessionToken).SubmitSelfServiceSettingsFlowBody(
+		ory.SubmitSelfServiceSettingsFlowWithPasswordMethodBodyAsSubmitSelfServiceSettingsFlowBody(&ory.SubmitSelfServiceSettingsFlowWithPasswordMethodBody{
+			Method:   "password",
+			Password: password,
+		}),
+	).Execute()
+
+	if err != nil {
+		parsedKratosError, parsingErr := parseKratosRegistrationFormError(err)
+		if parsingErr != nil {
+			logger.Log.Debugf("error parsing kratos error: %v", parsingErr)
+			return nil, err, nil
+		} else {
+			return nil, err, parsedKratosError
+		}
+	}
+
+	if err = db.Delete(&invite).Error; err != nil {
+		logger.Log.Warningf("error deleting invite: %v", err)
+	}
+
+	traits := flow.Identity.Traits.(map[string]interface{})
+	traits["inviteStatus"] = models.AcceptedInviteStatus
+	if err = UpdateUserTraits(flow.Identity.Id, traits, ctx); err != nil {
+		logger.Log.Warningf("error updating user invite status: %v", err)
+	}
+
+	return sessionToken, nil, nil
+}
+
+func UpdateUserRoles(identityId string, workspace string, systemRole string, ctx context.Context) error {
+	identity, _, err := client.V0alpha2Api.AdminGetIdentity(ctx, identityId).Execute()
+	if err != nil {
+		return err
+	}
+
+	traits := identity.Traits.(map[string]interface{})
+	username := traits["username"].(string)
+
+	if err = SetUserWorkspaceRole(username, workspace, UserRole); err != nil {
+		return err
+	}
+	if err = SetUserSystemRole(username, systemRole); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func UpdateUserTraits(identityId string, traits map[string]interface{}, ctx context.Context) error {
+	_, _, err := client.V0alpha2Api.AdminUpdateIdentity(ctx, identityId).AdminUpdateIdentityBody(ory.AdminUpdateIdentityBody{Traits: traits}).Execute()
+	return err
+}
+
+func GetUser(identityId string, ctx context.Context) (*models.User, error) {
+	user := &models.User{
+		UserId: identityId,
+	}
+
+	identity, _, err := client.V0alpha2Api.AdminGetIdentity(ctx, identityId).Execute()
+	if err != nil {
+		return nil, err
+	}
+
+	traits := identity.Traits.(map[string]interface{})
+	username := traits["username"].(string)
+	user.Username = username
+	user.InviteStatus = models.InviteStatus(traits["inviteStatus"].(string))
+
+	if systemRole, err := GetUserSystemRole(username); err != nil {
+		return nil, err
+	} else {
+		user.SystemRole = systemRole
+	}
+
+	if workspace, err := GetUserWorkspace(username); err != nil {
+		return nil, err
+	} else {
+		user.Workspace = workspace
+	}
+
+	return user, nil
+}
+
+func ListUsers(usernameFilterQuery string, ctx context.Context) ([]models.UserListItem, error) {
+	var users []models.UserListItem
+
+	identities, err := getAllUsersRecursively(ctx, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, identity := range identities {
+		traits := identity.Traits.(map[string]interface{})
+		username := traits["username"].(string)
+
+		if usernameFilterQuery == "" || strings.Contains(username, usernameFilterQuery) {
+			inviteStatus := models.AcceptedInviteStatus
+			if traits["inviteStatus"] != nil {
+				inviteStatus = models.InviteStatus(traits["inviteStatus"].(string))
+			}
+
+			users = append(users, models.UserListItem{
+				Username:     username,
+				UserId:       identity.Id,
+				InviteStatus: models.InviteStatus(inviteStatus),
+			})
+		}
+	}
+
+	return users, nil
+}
+
+func getAllUsersRecursively(ctx context.Context, page int) ([]ory.Identity, error) {
+	var users []ory.Identity
+
+	result, _, err := client.V0alpha2Api.AdminListIdentities(ctx).PerPage(listUsersPerPage).Page(int64(page)).Execute()
+	if err != nil {
+		return nil, err
+	}
+
+	users = append(users, result...)
+
+	if len(result) == listUsersPerPage {
+		nextPages, err := getAllUsersRecursively(ctx, page+1)
+		if err != nil {
+			return nil, err
+		}
+		return append(users, nextPages...), nil
+	} else {
+		return users, nil
+	}
 }
 
 func getKratosClient(url string, adminUrl string) *ory.APIClient {
