@@ -6,7 +6,6 @@ import ConfirmationModal from '../../UI/Modals/ConfirmationModal';
 import SelectList from '../../UI/SelectList';
 import './AddUserModal.sass';
 import spinner from "../../assets/spinner.svg";
-import { useForm,Controller } from "react-hook-form";
 
 export type UserData = {
   role:string;
@@ -25,7 +24,6 @@ const api = Api.getInstance();
 
 export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userData = {}, setShowAlert}) => {
 
-  const [isOpenModal,setIsOpen] = useState(isOpen)
   //const [editUserData, setEditUserData] = useState(userData)
   const [searchValue, setSearchValue] = useState("");
   const [workspaces, setWorkspaces] = useState([])

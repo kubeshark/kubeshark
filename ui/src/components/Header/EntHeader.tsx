@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react";
+import React from "react";
 import logo from '../assets/MizuEntLogo.svg';
 import './Header.sass';
 import userImg from '../assets/user-circle.svg';
@@ -6,12 +6,10 @@ import settingImg from '../assets/settings.svg';
 import {Menu, MenuItem} from "@material-ui/core";
 import PopupState, {bindMenu, bindTrigger} from "material-ui-popup-state";
 import logoutIcon from '../assets/logout.png';
-import {SettingsModal} from "../SettingsModal/SettingModal";
 import Api from "../../helpers/api";
 import {toast} from "react-toastify";
 import {useSetRecoilState} from "recoil";
 import entPageAtom, {Page} from "../../recoil/entPage";
-import AdminSettings from "../Pages/SettingsPage/SettingsPage";
 import {useNavigate} from "react-router-dom";
 import {RouterRoutes} from "../../helpers/routes";
 
@@ -24,18 +22,6 @@ interface EntHeaderProps {
 
 export const EntHeader: React.FC<EntHeaderProps> = ({isFirstLogin, setIsFirstLogin}) => {
     const navigate = useNavigate();
-    const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
-
-    useEffect(() => {
-        if(isFirstLogin) {
-            setIsSettingsModalOpen(true)
-        }
-    }, [isFirstLogin])
-
-    const onSettingsModalClose = () => {
-        setIsSettingsModalOpen(false);
-        setIsFirstLogin(false);
-    }
 
     return <div className="header">
         <div>
@@ -47,8 +33,6 @@ export const EntHeader: React.FC<EntHeaderProps> = ({isFirstLogin, setIsFirstLog
             <img className="headerIcon" alt="settings" src={settingImg} style={{marginRight: 25}} onClick={() => navigate(RouterRoutes.SETTINGS)}/>
             <ProfileButton/>
         </div>
-        {/* <SettingsModal isOpen={isSettingsModalOpen} onClose={onSettingsModalClose} isFirstLogin={isFirstLogin}/> */}
-        {/* <AdminSettings isOpen={isSettingsModalOpen} onClose={onSettingsModalClose}/> */}
     </div>;
 }
 

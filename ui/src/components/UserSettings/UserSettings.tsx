@@ -1,7 +1,6 @@
 import "./UserSettings.sass"
-import {useCommonStyles} from "../../helpers/commonStyle";
 import {ColsType, FilterableTableAction} from "../UI/FilterableTableAction"
-import Api from "../../helpers/api"
+// import Api from "../../helpers/api"
 import { useEffect, useState } from "react";
 import { UserData,AddUserModal } from "../Modals/AddUserModal/AddUserModal";
 import {Snackbar} from "@material-ui/core";
@@ -16,7 +15,7 @@ interface Props {
 
 }
 
-const api = Api.getInstance();
+// const api = Api.getInstance();
 
 export const UserSettings : React.FC<Props> = ({}) => {
 

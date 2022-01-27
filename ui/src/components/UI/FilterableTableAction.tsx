@@ -47,14 +47,14 @@ export const FilterableTableAction: React.FC<Props> = ({onRowDelete,onRowEdit, s
     const filteredValues = useMemo(() => {
         const searchFunc = searchConfig.filterRows(inputSearch)
         return tableRows.filter(searchFunc)
-    },[tableRows, inputSearch])
+    },[tableRows, inputSearch,searchConfig])
 
     return (<>
         <div className="filterable-table">
             <div className="actions-header">
                 <input type="text" className={classes.textField + " actions-header__search-box"} placeholder={searchConfig.searchPlaceholder} onChange={onChange}></input>
                 <Button style={{height: '100%'}} className={classes.button + " actions-header__action-button"} size={"small"} onClick={buttonConfig.onClick}>
-                            {buttonConfig.text}
+                            {buttonConfig.text} 
                 </Button>
             </div>
             <Table rows={filteredValues} cols={cols} onRowEdit={onRowEdit} onRowDelete={onRowDelete}></Table>

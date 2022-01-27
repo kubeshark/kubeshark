@@ -2,6 +2,7 @@ import React from "react";
 import { useState } from "react";
 import Tabs from "../../UI/Tabs"
 import { UserSettings } from "../../UserSettings/UserSettings";
+import { WorkspaceSettings } from "../../WorkspaceSettings/WorkspaceSettings";
 
 const AdminSettings: React.FC<any> = ({color}) => {
     var TABS = [
@@ -16,7 +17,7 @@ const AdminSettings: React.FC<any> = ({color}) => {
                 <UserSettings/>
             </React.Fragment>}
         {currentTab === TABS[1].tab && <React.Fragment>
-            
+            <WorkspaceSettings/>
         </React.Fragment>}
     </div>
     )
