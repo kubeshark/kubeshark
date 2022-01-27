@@ -30,7 +30,7 @@ func NewGen(server string) *SpecGen {
 	spec.Version = "3.1.0"
 
 	info := openapi.Info{Title: server}
-	info.Version = "0.0"
+	info.Version = "1.0"
 	spec.Info = &info
 	spec.Paths = &openapi.Paths{Items: map[openapi.PathValue]*openapi.PathObj{}}
 
@@ -175,11 +175,18 @@ func (g *SpecGen) handlePathObj(entry *har.Entry) (string, error) {
 
 	if isExtIgnored(urlParsed.Path) {
 		logger.Log.Debugf("Dropped traffic entry due to ignored extension: %s", urlParsed.Path)
+		return "", nil
+	}
+
+	if entry.Request.Method == "OPTIONS" {
+		logger.Log.Debugf("Dropped traffic entry due to its method: %s", urlParsed.Path)
+		return "", nil
 	}
 
 	ctype := getRespCtype(&entry.Response)
 	if isCtypeIgnored(ctype) {
 		logger.Log.Debugf("Dropped traffic entry due to ignored response ctype: %s", ctype)
+		return "", nil
 	}
 
 	if entry.Response.Status < 100 {
@@ -192,9 +199,19 @@ func (g *SpecGen) handlePathObj(entry *har.Entry) (string, error) {
 		return "", nil
 	}
 
-	split := strings.Split(urlParsed.Path, "/")
+	if entry.Response.Status == 502 || entry.Response.Status == 503 || entry.Response.Status == 504 {
+		logger.Log.Debugf("Dropped traffic entry due to temporary server error: %s", entry.StartedDateTime)
+		return "", nil
+	}
+
+	var split []string
+	if urlParsed.RawPath != "" {
+		split = strings.Split(urlParsed.RawPath, "/")
+	} else {
+		split = strings.Split(urlParsed.Path, "/")
+	}
 	node := g.tree.getOrSet(split, new(openapi.PathObj))
-	opObj, err := handleOpObj(entry, node.ops)
+	opObj, err := handleOpObj(entry, node.pathObj)
 
 	if opObj != nil {
 		return opObj.OperationID, err
@@ -232,20 +249,16 @@ func handleRequest(req *har.Request, opObj *openapi.Operation, isSuccess bool) e
 	// TODO: we don't handle the situation when header/qstr param can be defined on pathObj level. Also the path param defined on opObj
 
 	qstrGW := nvParams{
-		In: openapi.InQuery,
-		Pairs: func() []NVPair {
-			return qstrToNVP(req.QueryString)
-		},
+		In:             openapi.InQuery,
+		Pairs:          req.QueryString,
 		IsIgnored:      func(name string) bool { return false },
 		GeneralizeName: func(name string) string { return name },
 	}
 	handleNameVals(qstrGW, &opObj.Parameters)
 
 	hdrGW := nvParams{
-		In: openapi.InHeader,
-		Pairs: func() []NVPair {
-			return hdrToNVP(req.Headers)
-		},
+		In:             openapi.InHeader,
+		Pairs:          req.Headers,
 		IsIgnored:      isHeaderIgnored,
 		GeneralizeName: strings.ToLower,
 	}
@@ -348,7 +361,7 @@ func fillContent(reqResp reqResp, respContent openapi.Content, ctype string, err
 		isBinary, _, text = reqResp.Resp.Content.B64Decoded()
 	}
 
-	if !isBinary {
+	if !isBinary && text != "" {
 		var exampleMsg []byte
 		// try treating it as json
 		any, isJSON := anyJSON(text)

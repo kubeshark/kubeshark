@@ -17,17 +17,19 @@ var ignoredHeaders = []string{
 	"x-att-deviceid", "x-correlation-id", "correlation-id", "x-client-data",
 	"x-http-method-override", "x-real-ip", "x-request-id", "x-request-start", "x-requested-with", "x-uidh",
 	"x-same-domain", "x-content-type-options", "x-frame-options", "x-xss-protection",
-	"x-wap-profile", "x-scheme",
-	"newrelic", "x-cloud-trace-context", "sentry-trace",
-	"expires", "set-cookie", "p3p", "location", "content-security-policy", "content-security-policy-report-only",
-	"last-modified", "content-language",
+	"x-wap-profile", "x-scheme", "status", "x-cache", "x-application-context", "retry-after",
+	"newrelic", "x-cloud-trace-context", "sentry-trace", "x-cache-hits", "x-served-by", "x-span-name",
+	"expires", "set-cookie", "p3p", "content-security-policy", "content-security-policy-report-only",
+	"last-modified", "content-language", "x-varnish", "true-client-ip", "akamai-origin-hop",
 	"keep-alive", "etag", "alt-svc", "x-csrf-token", "x-ua-compatible", "vary", "x-powered-by",
-	"age", "allow", "www-authenticate",
+	"age", "allow", "www-authenticate", "expect-ct", "timing-allow-origin", "referrer-policy",
+	"x-aspnet-version", "x-aspnetmvc-version", "x-timer", "x-abuse-info", "x-mod-pagespeed",
+	"duration_ms", // UP9 custom
 }
 
 var ignoredHeaderPrefixes = []string{
 	":", "accept-", "access-control-", "if-", "sec-", "grpc-",
-	"x-forwarded-", "x-original-",
+	"x-forwarded-", "x-original-", "cf-",
 	"x-up9-", "x-envoy-", "x-hasura-", "x-b3-", "x-datadog-", "x-envoy-", "x-amz-", "x-newrelic-", "x-prometheus-",
 	"x-akamai-", "x-spotim-", "x-amzn-", "x-ratelimit-",
 }
