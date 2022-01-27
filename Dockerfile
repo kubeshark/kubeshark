@@ -16,7 +16,7 @@ RUN npm run build-ent
 ### Base builder image for native builds architecture
 FROM golang:1.16-alpine AS builder-native-base
 ENV CGO_ENABLED=1 GOOS=linux
-RUN apk add libpcap-dev g++
+RUN apk add libpcap-dev g++ perl-utils
 
 
 ### Intermediate builder image for x86-64 to x86-64 native builds
@@ -77,6 +77,13 @@ RUN go build -ldflags="-extldflags=-static -s -w \
     -X 'mizuserver/pkg/version.BuildTimestamp=${BUILD_TIMESTAMP}' \
     -X 'mizuserver/pkg/version.SemVer=${SEM_VER}'" -o mizuagent .
 
+# Download Basenine executable, verify the sha1sum
+ADD https://github.com/up9inc/basenine/releases/download/v0.4.13/basenine_linux_${GOARCH} ./basenine_linux_${GOARCH}
+ADD https://github.com/up9inc/basenine/releases/download/v0.4.13/basenine_linux_${GOARCH}.sha256 ./basenine_linux_${GOARCH}.sha256
+RUN shasum -a 256 -c basenine_linux_${GOARCH}.sha256
+RUN chmod +x ./basenine_linux_${GOARCH}
+RUN mv ./basenine_linux_${GOARCH} ./basenine
+
 
 ### The shipped image
 ARG TARGETARCH=amd64
@@ -85,10 +92,12 @@ FROM ${TARGETARCH}/busybox:latest
 # gin-gonic runs in debug mode without this
 ENV GIN_MODE=release
 
+WORKDIR /app/data/
 WORKDIR /app
 
 # Copy binary and config files from /build to root folder of scratch container.
 COPY --from=builder ["/app/agent-build/mizuagent", "."]
+COPY --from=builder ["/app/agent-build/basenine", "/usr/local/bin/basenine"]
 COPY --from=front-end ["/app/ui-build/build", "site"]
 COPY --from=front-end ["/app/ui-build/build-ent", "site-standalone"]
 
