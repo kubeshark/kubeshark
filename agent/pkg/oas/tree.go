@@ -41,7 +41,7 @@ func (n *Node) getOrSet(path NodePath, existingPathObj *openapi.PathObj) (node *
 
 	var paramObj *openapi.ParameterObj
 	if chunkIsParam && existingPathObj != nil && existingPathObj.Parameters != nil {
-		paramObj = findParamByName(existingPathObj.Parameters, openapi.InPath, pathChunk[1:len(pathChunk)-1])
+		_, paramObj = findParamByName(existingPathObj.Parameters, openapi.InPath, pathChunk[1:len(pathChunk)-1])
 	}
 
 	if paramObj == nil {
@@ -64,10 +64,6 @@ func (n *Node) getOrSet(path NodePath, existingPathObj *openapi.PathObj) (node *
 
 			newParam := n.createParam()
 			node.pathParam = newParam
-
-			//initParams(&existingPathObj.Parameters)
-			//appended := append(*existingPathObj.Parameters, newParam)
-			//existingPathObj.Parameters = &appended
 		} else {
 			node.constant = &pathChunk
 		}
@@ -181,6 +177,7 @@ func (n *Node) listPaths() *openapi.Paths {
 
 	// add self
 	if n.pathObj != nil {
+		fillPathParams(n, n.pathObj)
 		paths.Items[openapi.PathValue(strChunk)] = n.pathObj
 	}
 
@@ -199,6 +196,29 @@ func (n *Node) listPaths() *openapi.Paths {
 	}
 
 	return paths
+}
+
+func fillPathParams(n *Node, pathObj *openapi.PathObj) {
+	// collect all path parameters from parent hierarchy
+	node := n
+	for {
+		if node.pathParam != nil {
+			initParams(&pathObj.Parameters)
+
+			idx, paramObj := findParamByName(pathObj.Parameters, openapi.InPath, node.pathParam.Name)
+			if paramObj == nil {
+				appended := append(*pathObj.Parameters, node.pathParam)
+				pathObj.Parameters = &appended
+			} else {
+				(*pathObj.Parameters)[idx] = paramObj
+			}
+		}
+
+		node = node.parent
+		if node == nil {
+			break
+		}
+	}
 }
 
 type PathAndOp struct {

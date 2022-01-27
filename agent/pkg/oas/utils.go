@@ -71,9 +71,10 @@ func createSimpleParam(name string, in openapi.In, ptype openapi.SchemaType) *op
 	return &newParam
 }
 
-func findParamByName(params *openapi.ParameterList, in openapi.In, name string) (pathParam *openapi.ParameterObj) {
+func findParamByName(params *openapi.ParameterList, in openapi.In, name string) (idx int, pathParam *openapi.ParameterObj) {
 	caseInsensitive := in == openapi.InHeader
-	for _, param := range *params {
+	for i, param := range *params {
+		idx = i
 		paramObj, err := param.ResolveParameter(paramResolver)
 		if err != nil {
 			logger.Log.Warningf("Failed to resolve reference: %s", err)
@@ -89,7 +90,8 @@ func findParamByName(params *openapi.ParameterList, in openapi.In, name string) 
 			break
 		}
 	}
-	return pathParam
+
+	return idx, pathParam
 }
 
 func findHeaderByName(headers *openapi.Headers, name string) *openapi.HeaderObj {
@@ -124,7 +126,7 @@ func handleNameVals(gw nvParams, params **openapi.ParameterList) {
 		nameGeneral := gw.GeneralizeName(pair.Name)
 
 		initParams(params)
-		param := findParamByName(*params, gw.In, pair.Name)
+		_, param := findParamByName(*params, gw.In, pair.Name)
 		if param == nil {
 			param = createSimpleParam(nameGeneral, gw.In, openapi.TypeString)
 			appended := append(**params, param)
