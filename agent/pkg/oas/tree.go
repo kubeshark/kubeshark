@@ -30,13 +30,13 @@ func (n *Node) getOrSet(path NodePath, pathObjToSet *openapi.PathObj) (node *Nod
 		logger.Log.Warningf("URI matrix params are not supported: %s", potentialMatrix[1])
 	}
 
+	chunkIsParam := strings.HasPrefix(pathChunk, "{") && strings.HasSuffix(pathChunk, "}")
 	pathChunk, err := url.PathUnescape(pathChunk)
 	if err != nil {
 		logger.Log.Warningf("URI segment is not correctly encoded: %s", pathChunk)
 		// any side effects on continuing
 	}
 
-	chunkIsParam := strings.HasPrefix(pathChunk, "{") && strings.HasSuffix(pathChunk, "}")
 	chunkIsGibberish := IsGibberish(pathChunk) && !IsVersionString(pathChunk)
 
 	var paramObj *openapi.ParameterObj
@@ -74,7 +74,7 @@ func (n *Node) getOrSet(path NodePath, pathObjToSet *openapi.PathObj) (node *Nod
 	}
 
 	// add example if it's a param
-	if node.param != nil && !chunkIsParam {
+	if node.param != nil {
 		exmp := &node.param.Examples
 		err := fillParamExample(&exmp, pathChunk)
 		if err != nil {
