@@ -3,14 +3,17 @@ import { FC, useEffect, useState } from 'react';
 import Api from '../../../helpers/api';
 import { useCommonStyles } from '../../../helpers/commonStyle';
 import ConfirmationModal from '../../UI/Modals/ConfirmationModal';
+import {toast} from "react-toastify";
 import SelectList from '../../UI/SelectList';
 import './AddUserModal.sass';
 import spinner from "../../assets/spinner.svg";
+import { values } from 'mobx';
 
 export type UserData = {
   role:string;
   username : string;
   workspace : string;
+  userId: string;
 }
 
 interface AddUserModalProps {
@@ -53,26 +56,37 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
                   "id": "c7ad9158-d840-46c0-b5ce-2487c013723f",
                   "name": "test"
               }
-          ]//{"default":true} //await api.getWorkspaces() 
-            setWorkspaces(workspacesList)    
+          ].map((obj) => {return {key:obj.id, value:obj.name,isChecked:false}})
+          //await api.getWorkspaces() 
+          setWorkspaces(workspacesList)    
                           
         } catch (e) {
-            console.error(e);
+            toast.error("Error finding workspaces")
         }
     })();
 },[])
 
   useEffect(()=> {
-    setUserData(userData as UserData)
+    (async () => {
+      try { 
+         //if edit
+        //  const userDetails = await api.getUserDetails(userData)
+        //  setUserData(userDetails)
+        setUserData(userData as UserData)
+      } catch (e) {
+          toast.error("Error getting user details")
+      }
+  })();
   },[userData])
 
   // const onClose = () => {
   //   setIsOpen(false)
   // }
 
-  const onConfirm = () => {
-    setUserData({} as UserData)
+  const onClose = () => {
     onCloseModal()
+    setUserData({} as UserData)
+    
   }
 
   const workspaceChange = (newVal) => {
@@ -105,18 +119,20 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
   const setGenarateDisabledState = () => {
     const isValid = isFormValid()
     setDisable(!isValid)
-    
   }
 
   const generateLink =  () => {
     try {
       //const res = await api.genareteInviteLink(userDataModel) 
       //setInvite({...invite,isSuceeded:true,sent:true,link:res})
+      //toast.success("User has been added") 
 
+      //if edit
+      api.updateUser(userDataModel)
       setInvite({...invite,isSuceeded:true,sent:true,link:"asdasdasdasdasdasdasdasdads"})
-      setShowAlert({open:true,sevirity:"error"})             
+      toast.success("User has been modified")     
   } catch (e) {
-    setShowAlert({open:true,sevirity:"error"}) 
+    toast.error("Error accrued generating link") 
   }
     
   }
@@ -148,7 +164,7 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
             label="Invite link"
           />
         </FormControl>
-            <Button style={{height: '100%'}} className={classes.button} size={"small"} onClick={onConfirm}>
+            <Button style={{height: '100%'}} className={classes.button} size={"small"} onClick={onClose}>
                         Done
             </Button>
       </div>}
@@ -156,7 +172,7 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
 
   return (<>
 
-    <ConfirmationModal isOpen={isOpen} onClose={onCloseModal} onConfirm={onConfirm} title='Add User' customActions={modalCustomActions}>
+    <ConfirmationModal isOpen={isOpen} onClose={onClose} onConfirm={onClose} title='Add User' customActions={modalCustomActions}>
 
       <h3 className='comfirmation-modal__sub-section-header'>DETAILS</h3>
       <div className='comfirmation-modal__sub-section'>

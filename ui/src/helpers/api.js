@@ -53,6 +53,21 @@ export default class Api {
         return response.data;
     }
 
+    getUserDetails = async(user) => {
+        const response = await this.client.get(`/user/${user.userId}`);
+        return response.data;
+    }
+
+    updateUser = async(user) => {
+        const response = await this.client.put(`/user/${user.userId}`,user);
+        return response.data;
+    }
+
+    deleteUser = async(user) => {
+        const response = await this.client.delete(`/user/${user.userId}`);
+        return response.data;
+    }
+
     genareteInviteLink = async(userData)  =>{
         const response = await this.client.post(`/user/createUserAndInvite`,userData);
         return response.data;
