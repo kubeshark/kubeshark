@@ -183,75 +183,115 @@ func checkAllResourcesPermission(ctx context.Context, kubernetesProvider *kubern
 	if !config.Config.IsNsRestrictedMode() {
 		namespaceVerbs := []string{"get", "delete", "list", "create", "watch"}
 		for _, namespaceVerb := range namespaceVerbs {
-			permission, err := kubernetesProvider.CanI(ctx, namespace, "namespaces", namespaceVerb)
-			allPermissionsExist = checkResourcePermission("namespaces", namespaceVerb, permission, err) && allPermissionsExist
+			resource := "namespaces"
+			group := ""
+			permission, err := kubernetesProvider.CanI(ctx, namespace, resource, namespaceVerb, group)
+			allPermissionsExist = checkResourcePermission(resource, namespaceVerb, group, permission, err) && allPermissionsExist
 		}
 
 		clusterRoleVerbs := []string{"get", "delete", "list", "create"}
 		for _, clusterRoleVerb := range clusterRoleVerbs {
-			permission, err := kubernetesProvider.CanI(ctx, namespace, "clusterroles", clusterRoleVerb)
-			allPermissionsExist = checkResourcePermission("clusterroles", clusterRoleVerb, permission, err) && allPermissionsExist
+			resource := "clusterroles"
+			group := "rbac.authorization.k8s.io"
+			permission, err := kubernetesProvider.CanI(ctx, namespace, resource, clusterRoleVerb, group)
+			allPermissionsExist = checkResourcePermission(resource, clusterRoleVerb, group, permission, err) && allPermissionsExist
 		}
 
 		clusterRoleBindingVerbs := []string{"get", "delete", "list", "create"}
 		for _, clusterRoleBindingVerb := range clusterRoleBindingVerbs {
-			permission, err := kubernetesProvider.CanI(ctx, namespace, "clusterrolebindings", clusterRoleBindingVerb)
-			allPermissionsExist = checkResourcePermission("clusterrolebindings", clusterRoleBindingVerb, permission, err) && allPermissionsExist
+			resource := "clusterrolebindings"
+			group := "rbac.authorization.k8s.io"
+			permission, err := kubernetesProvider.CanI(ctx, namespace, resource, clusterRoleBindingVerb, group)
+			allPermissionsExist = checkResourcePermission(resource, clusterRoleBindingVerb, group, permission, err) && allPermissionsExist
 		}
 	}
 
 	configMapVerbs := []string{"get", "delete", "create"}
 	for _, configMapVerb := range configMapVerbs {
-		permission, err := kubernetesProvider.CanI(ctx, namespace, "configmaps", configMapVerb)
-		allPermissionsExist = checkResourcePermission("configmaps", configMapVerb, permission, err) && allPermissionsExist
+		resource := "configmaps"
+		group := ""
+		permission, err := kubernetesProvider.CanI(ctx, namespace, resource, configMapVerb, group)
+		allPermissionsExist = checkResourcePermission(resource, configMapVerb, group, permission, err) && allPermissionsExist
 	}
 
 	serviceAccountVerbs := []string{"get", "delete", "list", "create"}
 	for _, serviceAccountVerb := range serviceAccountVerbs {
-		permission, err := kubernetesProvider.CanI(ctx, namespace, "serviceaccounts", serviceAccountVerb)
-		allPermissionsExist = checkResourcePermission("serviceaccounts", serviceAccountVerb, permission, err) && allPermissionsExist
+		resource := "serviceaccounts"
+		group := ""
+		permission, err := kubernetesProvider.CanI(ctx, namespace, resource, serviceAccountVerb, group)
+		allPermissionsExist = checkResourcePermission(resource, serviceAccountVerb, group, permission, err) && allPermissionsExist
 	}
 
 	roleVerbs := []string{"get", "delete", "list", "create"}
 	for _, roleVerb := range roleVerbs {
-		permission, err := kubernetesProvider.CanI(ctx, namespace, "roles", roleVerb)
-		allPermissionsExist = checkResourcePermission("roles", roleVerb, permission, err) && allPermissionsExist
+		resource := "roles"
+		group := "rbac.authorization.k8s.io"
+		permission, err := kubernetesProvider.CanI(ctx, namespace, resource, roleVerb, group)
+		allPermissionsExist = checkResourcePermission(resource, roleVerb, group, permission, err) && allPermissionsExist
 	}
 
 	roleBindingVerbs := []string{"get", "delete", "list", "create"}
 	for _, roleBindingVerb := range roleBindingVerbs {
-		permission, err := kubernetesProvider.CanI(ctx, namespace, "rolebindings", roleBindingVerb)
-		allPermissionsExist = checkResourcePermission("rolebindings", roleBindingVerb, permission, err) && allPermissionsExist
+		resource := "rolebindings"
+		group := "rbac.authorization.k8s.io"
+		permission, err := kubernetesProvider.CanI(ctx, namespace, resource, roleBindingVerb, group)
+		allPermissionsExist = checkResourcePermission(resource, roleBindingVerb, group, permission, err) && allPermissionsExist
 	}
 
 	serviceVerbs := []string{"get", "delete", "create", "watch"}
 	for _, serviceVerb := range serviceVerbs {
-		permission, err := kubernetesProvider.CanI(ctx, namespace, "services", serviceVerb)
-		allPermissionsExist = checkResourcePermission("services", serviceVerb, permission, err) && allPermissionsExist
+		resource := "services"
+		group := ""
+		permission, err := kubernetesProvider.CanI(ctx, namespace, resource, serviceVerb, group)
+		allPermissionsExist = checkResourcePermission(resource, serviceVerb, group, permission, err) && allPermissionsExist
 	}
 
 	podVerbs := []string{"get", "delete", "list", "watch"}
 	for _, podVerb := range podVerbs {
-		permission, err := kubernetesProvider.CanI(ctx, namespace, "pods", podVerb)
-		allPermissionsExist = checkResourcePermission("pods", podVerb, permission, err) && allPermissionsExist
+		resource := "pods"
+		group := ""
+		permission, err := kubernetesProvider.CanI(ctx, namespace, resource, podVerb, group)
+		allPermissionsExist = checkResourcePermission(resource, podVerb, group, permission, err) && allPermissionsExist
 	}
 
 	daemonSetVerbs := []string{"delete", "create", "patch"}
 	for _, daemonSetVerb := range daemonSetVerbs {
-		permission, err := kubernetesProvider.CanI(ctx, namespace, "daemonsets", daemonSetVerb)
-		allPermissionsExist = checkResourcePermission("daemonsets", daemonSetVerb, permission, err) && allPermissionsExist
+		resource := "daemonsets"
+		group := "apps"
+		permission, err := kubernetesProvider.CanI(ctx, namespace, resource, daemonSetVerb, group)
+		allPermissionsExist = checkResourcePermission(resource, daemonSetVerb, group, permission, err) && allPermissionsExist
 	}
 
 	eventVerbs := []string{"list", "watch"}
 	for _, eventVerb := range eventVerbs {
-		permission, err := kubernetesProvider.CanI(ctx, namespace, "events", eventVerb)
-		allPermissionsExist = checkResourcePermission("events", eventVerb, permission, err) && allPermissionsExist
+		resource := "events"
+		group := "events.k8s.io"
+		permission, err := kubernetesProvider.CanI(ctx, namespace, resource, eventVerb, group)
+		allPermissionsExist = checkResourcePermission(resource, eventVerb, group, permission, err) && allPermissionsExist
 	}
 
 	endpointVerbs := []string{"watch"}
 	for _, endpointVerb := range endpointVerbs {
-		permission, err := kubernetesProvider.CanI(ctx, namespace, "endpoints", endpointVerb)
-		allPermissionsExist = checkResourcePermission("endpoints", endpointVerb, permission, err) && allPermissionsExist
+		resource := "endpoints"
+		group := ""
+		permission, err := kubernetesProvider.CanI(ctx, namespace, resource, endpointVerb, group)
+		allPermissionsExist = checkResourcePermission(resource, endpointVerb, group, permission, err) && allPermissionsExist
+	}
+
+	proxyVerbs := []string{"get"}
+	for _, proxyVerb := range proxyVerbs {
+		resource := "services/proxy"
+		group := ""
+		permission, err := kubernetesProvider.CanI(ctx, namespace, resource, proxyVerb, group)
+		allPermissionsExist = checkResourcePermission(resource, proxyVerb, group, permission, err) && allPermissionsExist
+	}
+
+	portForwardVerbs := []string{"create"}
+	for _, portForwardVerb := range portForwardVerbs {
+		resource := "pods/portforward"
+		group := ""
+		permission, err := kubernetesProvider.CanI(ctx, namespace, resource, portForwardVerb, group)
+		allPermissionsExist = checkResourcePermission(resource, portForwardVerb, group, permission, err) && allPermissionsExist
 	}
 
 	if checkInstall {
@@ -270,14 +310,18 @@ func checkInstallResourcesPermission(ctx context.Context, kubernetesProvider *ku
 
 	persistentVolumeClaimVerbs := []string{"get", "delete", "create"}
 	for _, persistentVolumeClaimVerb := range persistentVolumeClaimVerbs {
-		permission, err := kubernetesProvider.CanI(ctx, namespace, "persistentvolumeclaims", persistentVolumeClaimVerb)
-		installPermissionsExist = checkResourcePermission("persistentvolumeclaims", persistentVolumeClaimVerb, permission, err) && installPermissionsExist
+		resource := "persistentvolumeclaims"
+		group := ""
+		permission, err := kubernetesProvider.CanI(ctx, namespace, resource, persistentVolumeClaimVerb, group)
+		installPermissionsExist = checkResourcePermission(resource, persistentVolumeClaimVerb, group, permission, err) && installPermissionsExist
 	}
 
 	deploymentVerbs := []string{"get", "delete", "create"}
 	for _, deploymentVerb := range deploymentVerbs {
-		permission, err := kubernetesProvider.CanI(ctx, namespace, "deployments", deploymentVerb)
-		installPermissionsExist = checkResourcePermission("deployments", deploymentVerb, permission, err) && installPermissionsExist
+		resource := "deployments"
+		group := "apps"
+		permission, err := kubernetesProvider.CanI(ctx, namespace, resource, deploymentVerb, group)
+		installPermissionsExist = checkResourcePermission(resource, deploymentVerb, group, permission, err) && installPermissionsExist
 	}
 
 	return installPermissionsExist
@@ -288,22 +332,24 @@ func checkTapResourcesPermission(ctx context.Context, kubernetesProvider *kubern
 
 	podVerbs := []string{"create"}
 	for _, podVerb := range podVerbs {
-		permission, err := kubernetesProvider.CanI(ctx, namespace, "pods", podVerb)
-		tapPermissionsExist = checkResourcePermission("pods", podVerb, permission, err) && tapPermissionsExist
+		resource := "pods"
+		group := ""
+		permission, err := kubernetesProvider.CanI(ctx, namespace, resource, podVerb, group)
+		tapPermissionsExist = checkResourcePermission(resource, podVerb, group, permission, err) && tapPermissionsExist
 	}
 
 	return tapPermissionsExist
 }
 
-func checkResourcePermission(resource string, verb string, permission bool, err error) bool {
+func checkResourcePermission(resource string, verb string, group string, permission bool, err error) bool {
 	if err != nil {
-		logger.Log.Errorf("%v error checking if permission for %v %v exists, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), verb, resource, err)
+		logger.Log.Errorf("%v error checking if permission for %v %v in group '%v' exists, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), verb, resource, group, err)
 		return false
 	} else if !permission {
-		logger.Log.Errorf("%v can't %v %v", fmt.Sprintf(uiUtils.Red, "✗"), verb, resource)
+		logger.Log.Errorf("%v can't %v %v in group '%v'", fmt.Sprintf(uiUtils.Red, "✗"), verb, resource, group)
 		return false
 	} else {
-		logger.Log.Infof("%v can %v %v", fmt.Sprintf(uiUtils.Green, "√"), verb, resource)
+		logger.Log.Infof("%v can %v %v in group '%v'", fmt.Sprintf(uiUtils.Green, "√"), verb, resource, group)
 	}
 
 	return true

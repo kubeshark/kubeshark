@@ -441,13 +441,14 @@ func (provider *Provider) CreateService(ctx context.Context, namespace string, s
 	return provider.clientSet.CoreV1().Services(namespace).Create(ctx, &service, metav1.CreateOptions{})
 }
 
-func (provider *Provider) CanI(ctx context.Context, namespace string, resource string, verb string) (bool, error) {
+func (provider *Provider) CanI(ctx context.Context, namespace string, resource string, verb string, group string) (bool, error) {
 	selfSubjectAccessReview := &auth.SelfSubjectAccessReview{
 		Spec: auth.SelfSubjectAccessReviewSpec{
 			ResourceAttributes: &auth.ResourceAttributes{
 				Namespace: namespace,
 				Resource: resource,
 				Verb: verb,
+				Group: group,
 			},
 		},
 	}
