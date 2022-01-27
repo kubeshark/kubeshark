@@ -39,7 +39,6 @@ func outputSpec(label string, spec *openapi.OpenAPI, t *testing.T) {
 func TestEntries(t *testing.T) {
 	logger.InitLoggerStderrOnly(logging.INFO)
 	files, err := getFiles("./test_artifacts/")
-	// files, err = getFiles("/media/bigdisk/UP9")
 	if err != nil {
 		t.Log(err)
 		t.FailNow()
@@ -103,8 +102,8 @@ func TestEntries(t *testing.T) {
 
 func TestFileSingle(t *testing.T) {
 	GetOasGeneratorInstance().Start()
-	loadStartingOAS()
-	file := "test_artifacts/output_rdwtyeoyrj.har.ldjson"
+	// loadStartingOAS()
+	file := "test_artifacts/params.har"
 	files := []string{file}
 	cnt, err := feedEntries(files, true)
 	if err != nil {
@@ -139,12 +138,12 @@ func TestFileSingle(t *testing.T) {
 
 func waitQueueProcessed() {
 	for {
+		time.Sleep(100 * time.Millisecond)
 		queue := len(GetOasGeneratorInstance().entriesChan)
 		logger.Log.Infof("Queue: %d", queue)
 		if queue < 1 {
 			break
 		}
-		time.Sleep(100 * time.Millisecond)
 	}
 }
 
