@@ -119,6 +119,12 @@ func feedEntry(entry *har.Entry, isSync bool) {
 		logger.Log.Debugf("Dropped traffic entry due to permanent redirect status: %s", entry.StartedDateTime)
 	}
 
+	if strings.Contains(entry.Request.URL, "taboola") {
+		logger.Log.Debugf("Interesting: %s", entry.Request.URL)
+	} else {
+		//return
+	}
+
 	if isSync {
 		GetOasGeneratorInstance().entriesChan <- *entry // blocking variant, right?
 	} else {
@@ -177,7 +183,7 @@ func TestFilesList(t *testing.T) {
 	res, err := getFiles("./test_artifacts/")
 	t.Log(len(res))
 	t.Log(res)
-	if err != nil || len(res) != 2 {
+	if err != nil || len(res) != 3 {
 		t.Logf("Should return 2 files but returned %d", len(res))
 		t.FailNow()
 	}
