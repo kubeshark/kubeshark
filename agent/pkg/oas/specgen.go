@@ -211,7 +211,7 @@ func (g *SpecGen) handlePathObj(entry *har.Entry) (string, error) {
 		split = strings.Split(urlParsed.Path, "/")
 	}
 	node := g.tree.getOrSet(split, new(openapi.PathObj))
-	opObj, err := handleOpObj(entry, node.ops)
+	opObj, err := handleOpObj(entry, node.pathObj)
 
 	if opObj != nil {
 		return opObj.OperationID, err
