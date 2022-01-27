@@ -23,6 +23,8 @@ it('filtering guide check', function () {
     cy.get('#modal-modal-title').should('be.visible');
     cy.get('[lang="en"]').click(0, 0);
     cy.get('#modal-modal-title').should('not.exist');
+
+    checkRightSide();
 });
 
 checkIllegalFilter('invalid filter');
@@ -215,4 +217,10 @@ function rightTextCheck(path, expectedText) {
 function rightOnHoverCheck(path, expectedText) {
     cy.get(`.TrafficPage-Container > :nth-child(2) ${path}`).trigger('mouseover');
     cy.get(`.TrafficPage-Container > :nth-child(2) .Queryable-Tooltip`).should('have.text', expectedText);
+}
+
+function checkRightSide() {
+    const pathToBodySize = '.TrafficPage-Container > :nth-child(2) > :nth-child(1) > :nth-child(2) > :nth-child(1) > :nth-child(1)';
+
+    cy.contains('Response').click();
 }
