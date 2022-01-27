@@ -18,6 +18,10 @@ selfservice:
   methods:
     password:
       enabled: true
+      config:
+        min_password_length: 4
+        identifier_similarity_check_enabled: false
+        haveibeenpwned_enabled: false
 
   flows:
     error:

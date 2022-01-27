@@ -160,14 +160,33 @@ func Logout(token string, ctx context.Context) error {
 	return nil
 }
 
-func CreateUserInvite(username string, workspace string, systemRole string, ctx context.Context) (inviteToken string, identityId string, err error) {
-	inviteToken = uuid.New().String()
-
-	// use inviteToken as a temporary password
-	_, identityId, err, _ = RegisterUser(username, inviteToken, models.PendingInviteStatus, ctx)
+func CreateNewUserWithInvite(username string, workspace string, systemRole string, ctx context.Context) (inviteToken string, identityId string, err error) {
+	_, identityId, err, _ = RegisterUser(username, uuid.New().String(), models.PendingInviteStatus, ctx)
 	if err != nil {
 		return "", "", err
 	}
+
+	if inviteToken, err := CreateInvite(identityId, ctx); err != nil {
+		//Delete the user to prevent a locked user scenario
+		DeleteUser(identityId, ctx)
+
+		return "", "", err
+	} else {
+		return inviteToken, identityId, nil
+	}
+}
+
+func CreateInvite(identityId string, ctx context.Context) (inviteToken string, err error) {
+	identity, _, err := client.V0alpha2Api.AdminGetIdentity(ctx, identityId).Execute()
+	if err != nil {
+		return "", err
+	}
+
+	traits := identity.Traits.(map[string]interface{})
+	username := traits["username"].(string)
+
+	inviteToken = uuid.New().String()
+
 	invite := &models.Invite{
 		Token:      inviteToken,
 		Username:   username,
@@ -176,16 +195,13 @@ func CreateUserInvite(username string, workspace string, systemRole string, ctx 
 	}
 
 	if err = db.Create(invite).Error; err != nil {
-		//Delete the user to prevent a locked user scenario
-		DeleteUser(identityId, ctx)
-
-		return "", "", err
+		return "", err
 	}
 
-	return inviteToken, identityId, nil
+	return invite.Token, nil
 }
 
-func RegisterWithInvite(inviteToken string, password string, ctx context.Context) (token *string, err error, formErrorMessages map[string][]ory.UiText) {
+func ResetPasswordWithInvite(inviteToken string, password string, ctx context.Context) (token *string, err error, formErrorMessages map[string][]ory.UiText) {
 	invite := models.Invite{}
 	if err = db.Where("token = ?", inviteToken).First(&invite).Error; err != nil {
 		return nil, err, nil
@@ -195,20 +211,67 @@ func RegisterWithInvite(inviteToken string, password string, ctx context.Context
 		return nil, errors.New("invite expired"), nil
 	}
 
-	// TODO: kratos are planning to add an admin endpoint that allows changing user passwords without having to log in
-	sessionToken, err := PerformLogin(invite.Username, inviteToken, ctx)
+	sessionToken, err := GetUserSessionTokenUsingAdminAccess(invite.IdentityId, ctx)
 	if err != nil {
 		return nil, err, nil
 	}
 
-	flow, _, err := client.V0alpha2Api.InitializeSelfServiceSettingsFlowWithoutBrowser(ctx).XSessionToken(*sessionToken).Execute()
+	err, formErrors := ChangePassword(sessionToken, password, ctx)
+	if err != nil || formErrors != nil {
+		return nil, err, formErrors
+	}
+
+	identity, _, err := client.V0alpha2Api.AdminGetIdentity(ctx, invite.IdentityId).Execute()
 	if err != nil {
 		return nil, err, nil
 	}
-	_, _, err = client.V0alpha2Api.SubmitSelfServiceSettingsFlow(ctx).Flow(flow.Id).XSessionToken(*sessionToken).SubmitSelfServiceSettingsFlowBody(
+
+	if err = db.Delete(&invite).Error; err != nil {
+		logger.Log.Warningf("error deleting invite: %v", err)
+	}
+
+	traits := identity.Traits.(map[string]interface{})
+	traits["inviteStatus"] = models.AcceptedInviteStatus
+	if err = UpdateUserTraits(identity.Id, traits, ctx); err != nil {
+		logger.Log.Warningf("error updating user invite status: %v", err)
+	}
+
+	return &sessionToken, nil, nil
+}
+
+func GetUserSessionTokenUsingAdminAccess(identityId string, ctx context.Context) (string, error) {
+	recoveryLink, _, err := client.V0alpha2Api.AdminCreateSelfServiceRecoveryLink(ctx).AdminCreateSelfServiceRecoveryLinkBody(ory.AdminCreateSelfServiceRecoveryLinkBody{
+		IdentityId: identityId,
+	}).Execute()
+
+	if err != nil {
+		return "", err
+	}
+
+	client := &http.Client{}
+
+	resp, err := client.Get(recoveryLink.RecoveryLink)
+	if err != nil {
+		return "", err
+	} else {
+		defer resp.Body.Close()
+		tokenResponse := &models.TokenResponse{}
+		if err := json.NewDecoder(resp.Body).Decode(&tokenResponse); err != nil {
+			return "", err
+		}
+		return tokenResponse.Token, nil
+	}
+}
+
+func ChangePassword(sessionToken string, newPassword string, ctx context.Context) (err error, formErrorMessages map[string][]ory.UiText) {
+	flow, _, err := client.V0alpha2Api.InitializeSelfServiceSettingsFlowWithoutBrowser(ctx).XSessionToken(sessionToken).Execute()
+	if err != nil {
+		return err, nil
+	}
+	_, _, err = client.V0alpha2Api.SubmitSelfServiceSettingsFlow(ctx).Flow(flow.Id).XSessionToken(sessionToken).SubmitSelfServiceSettingsFlowBody(
 		ory.SubmitSelfServiceSettingsFlowWithPasswordMethodBodyAsSubmitSelfServiceSettingsFlowBody(&ory.SubmitSelfServiceSettingsFlowWithPasswordMethodBody{
 			Method:   "password",
-			Password: password,
+			Password: newPassword,
 		}),
 	).Execute()
 
@@ -216,23 +279,13 @@ func RegisterWithInvite(inviteToken string, password string, ctx context.Context
 		parsedKratosError, parsingErr := parseKratosRegistrationFormError(err)
 		if parsingErr != nil {
 			logger.Log.Debugf("error parsing kratos error: %v", parsingErr)
-			return nil, err, nil
+			return err, nil
 		} else {
-			return nil, err, parsedKratosError
+			return err, parsedKratosError
 		}
 	}
 
-	if err = db.Delete(&invite).Error; err != nil {
-		logger.Log.Warningf("error deleting invite: %v", err)
-	}
-
-	traits := flow.Identity.Traits.(map[string]interface{})
-	traits["inviteStatus"] = models.AcceptedInviteStatus
-	if err = UpdateUserTraits(flow.Identity.Id, traits, ctx); err != nil {
-		logger.Log.Warningf("error updating user invite status: %v", err)
-	}
-
-	return sessionToken, nil, nil
+	return nil, nil
 }
 
 func UpdateUserRoles(identityId string, workspace string, systemRole string, ctx context.Context) error {

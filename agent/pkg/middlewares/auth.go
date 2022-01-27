@@ -40,11 +40,11 @@ func RequiresAdmin() gin.HandlerFunc {
 		traits := session.Identity.Traits.(map[string]interface{})
 		username := traits["username"].(string)
 
-		isAdmin, err := providers.CheckIfUserHasSystemRole(username, providers.AdminRole)
+		userRole, err := providers.GetUserSystemRole(username)
 		if err != nil {
 			logger.Log.Errorf("error checking user role %v", err)
 			c.AbortWithStatusJSON(403, gin.H{"error": "unknown auth error occured"})
-		} else if !isAdmin {
+		} else if userRole != providers.AdminRole {
 			logger.Log.Warningf("user %s attempted to call an admin only endpoint with insufficient privileges", username)
 			c.AbortWithStatusJSON(403, gin.H{"error": "unauthorized"})
 		} else {

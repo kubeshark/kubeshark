@@ -23,6 +23,10 @@ const (
 	AcceptedInviteStatus InviteStatus = "accepted"
 )
 
+type TokenResponse struct {
+	Token string `json:"token"`
+}
+
 type User struct {
 	Username     string       `json:"username"`
 	UserId       string       `json:"userId"`

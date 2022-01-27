@@ -29,8 +29,8 @@ func Logout(c *gin.Context) {
 	}
 }
 
-func RegisterWithToken(c *gin.Context) {
-	token, err, formErrorMessages := providers.RegisterWithInvite(c.PostForm("inviteToken"), c.PostForm("password"), c.Request.Context())
+func RecoverUserWithInviteToken(c *gin.Context) {
+	token, err, formErrorMessages := providers.ResetPasswordWithInvite(c.PostForm("inviteToken"), c.PostForm("password"), c.Request.Context())
 	handleRegistration(token, err, formErrorMessages, c)
 }
 
@@ -42,12 +42,22 @@ func CreateUserAndInvite(c *gin.Context) {
 		return
 	}
 
-	if inviteToken, identityId, err := providers.CreateUserInvite(requestCreateUser.Username, requestCreateUser.Workspace, requestCreateUser.SystemRole, c.Request.Context()); err != nil {
+	if inviteToken, identityId, err := providers.CreateNewUserWithInvite(requestCreateUser.Username, requestCreateUser.Workspace, requestCreateUser.SystemRole, c.Request.Context()); err != nil {
 		logger.Log.Errorf("internal error while creating user invite %v", err)
 		c.JSON(http.StatusInternalServerError, err)
 	} else {
 		c.JSON(201, gin.H{"inviteToken": inviteToken, "userId": identityId})
 	}
+}
+
+func CreateInviteForExistingUser(c *gin.Context) {
+	if inviteToken, err := providers.CreateInvite(c.Param("userId"), c.Request.Context()); err != nil {
+		logger.Log.Errorf("internal error while creating existing user invite %v", err)
+		c.JSON(http.StatusInternalServerError, err)
+	} else {
+		c.JSON(201, gin.H{"inviteToken": inviteToken})
+	}
+
 }
 
 func UpdateUser(c *gin.Context) {

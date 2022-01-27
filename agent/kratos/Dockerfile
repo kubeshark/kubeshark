@@ -1,4 +1,4 @@
-FROM gcr.io/up9-docker-hub/mizu-kratos-base/simple-password-policy:latest
+FROM gcr.io/up9-docker-hub/mizu-kratos-base/api-recovery-fix:0.0.2
 
 USER root
 
