@@ -43,6 +43,12 @@ type MizuAgentConfig struct {
 	StandaloneMode         bool          `json:"standaloneMode"`
 	ServiceMap             bool          `json:"serviceMap"`
 	OAS                    bool          `json:"oas"`
+	Elastic                ElasticConfig `json:"elastic"`
+}
+
+type ElasticConfig struct {
+	CloudID string `yaml:"cloud-id,omitempty" default:"" readonly:""`
+	APIKey  string `yaml:"api-key,omitempty" default:"" readonly:""`
 }
 
 type WebSocketMessageMetadata struct {

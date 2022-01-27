@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"mizuserver/pkg/elastic"
 	"mizuserver/pkg/har"
 	"mizuserver/pkg/holder"
 	"mizuserver/pkg/providers"
@@ -138,6 +139,7 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 			}
 
 			oas.GetOasGeneratorInstance().PushEntry(harEntry)
+			elastic.GetInstance().PushEntry(mizuEntry)
 		}
 
 		data, err := json.Marshal(mizuEntry)
