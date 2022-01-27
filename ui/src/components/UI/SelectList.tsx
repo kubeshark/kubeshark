@@ -27,37 +27,29 @@ const SelectList: React.FC<Props> = ({valuesListInput ,tableName,multiSelect=tru
         }
         else {
             const newValues: ValuesListInput = [...valuesList];
-            newValues[checkedKey].isChecked = !valuesList[checkedKey].isChecked;
+            newValues.map(item => item.key === checkedKey ? item.isChecked = !item.isChecked : item.isChecked);
             setValuesList(newValues);
             setValues(newValues);
         }
     }
 
     const unToggleAll = (checkedKey) => {
-        const newValues = [];
-        valuesList.forEach(valueList => {
-            if (valueList.key !== checkedKey)
-                newValues[checkedKey] = false;
-            else
-                newValues[checkedKey] = true;
+        const list = valuesList.map((obj) => {
+            return {...obj, isChecked:checkedKey === obj.key}
         })
-        setValuesList(newValues);
-        setValues(newValues);
+        setValuesList(list);
+        setValues(list);
     }
+
 
     const toggleAll = () => {
-        const isChecked = valuesList.every(valueTap => valueTap.isChecked === true);
-        setAllCheckedValue(!isChecked);
+        const list = valuesList.map((obj) => {
+            return {...obj, isChecked: true}
+        })
+        setValuesList(list);
+        setValues(list);
     }
 
-    const setAllCheckedValue = (isTap: boolean) => {
-        const newValues = [];
-        valuesList.forEach(valueList => {
-            newValues[valueList.key] = isTap;
-        })
-        setValuesList(newValues);
-        setValues(newValues);
-    }
 
     const tableHead = multiSelect ? <tr style={{borderBottomWidth: "2px"}}>
             <th style={{width: 50}}><Checkbox checked={valuesList.every(valueTap => valueTap.isChecked === false)}
@@ -69,7 +61,7 @@ const SelectList: React.FC<Props> = ({valuesListInput ,tableName,multiSelect=tru
         </tr>
 
     const filteredValues = useMemo(() => {
-        return valuesList.filter((listValue) => listValue.value.includes(searchValue));
+        return valuesList.filter((listValue) => listValue?.value?.includes(searchValue));
     },[valuesList, searchValue])
 
         return <div className={tabelClassName + " select-list-table"}>
@@ -81,10 +73,10 @@ const SelectList: React.FC<Props> = ({valuesListInput ,tableName,multiSelect=tru
                     {filteredValues?.map(listValue => {
                             return <tr key={listValue.key}>
                                 <td style={{width: 50}}>
-                                    {multiSelect && <Checkbox checked={valuesList[listValue.key].isChecked} onToggle={() => toggleValues(listValue.key)}/>}
-                                    {!multiSelect && <Radio checked={valuesList[listValue.key].isChecked} onToggle={() => toggleValues(listValue.key)}/>}
+                                    {multiSelect && <Checkbox checked={valuesList.find(item => item.key === listValue.key)?.isChecked} onToggle={() => toggleValues(listValue.key)}/>}
+                                    {!multiSelect && <Radio checked={valuesList.find(item => item.key === listValue.key)?.isChecked} onToggle={() => toggleValues(listValue.key)}/>}
                                 </td>
-                                <td>{listValue}</td>
+                                <td>{listValue.value}</td>
                             </tr>   
                         }
                     )}

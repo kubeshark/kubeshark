@@ -35,17 +35,13 @@ const AddWorkspaceModal: FC<AddWorkspaceModalProp> = ({isOpen,onCloseModal, work
         try {
             setSearchValue(""); 
             const tapConfig = await api.getTapConfig();
-            console.log(tapConfig);
-            // if(isFirstLogin) {
-                const namespacesObj = {...tapConfig?.tappedNamespaces}
-                Object.keys(tapConfig?.tappedNamespaces ?? {}).forEach(namespace => {
-                    namespacesObj[namespace] = true;
-                })
-                setNamespaces(namespacesObj);
-            // } else {
-                setNamespaces(tapConfig?.tappedNamespaces);
-            // }
-        } catch (e) {
+            const namespacesObj = {...tapConfig?.tappedNamespaces}
+            Object.keys(tapConfig?.tappedNamespaces ?? {}).forEach(namespace => {
+                namespacesObj[namespace] = true;
+            })
+            setNamespaces(namespacesObj);
+            setNamespaces(tapConfig?.tappedNamespaces);
+    } catch (e) {
             console.error(e);
         } finally {
         }
