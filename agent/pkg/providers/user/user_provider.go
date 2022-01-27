@@ -1,4 +1,4 @@
-package providers
+package user
 
 import (
 	"context"
@@ -47,7 +47,7 @@ func init() {
 }
 
 // returns session token if successful
-func RegisterUser(username string, password string, inviteStatus models.InviteStatus, ctx context.Context) (token *string, identityId string, err error, formErrorMessages map[string][]ory.UiText) {
+func RegisterUser(username string, password string, inviteStatus InviteStatus, ctx context.Context) (token *string, identityId string, err error, formErrorMessages map[string][]ory.UiText) {
 	flow, _, err := client.V0alpha2Api.InitializeSelfServiceRegistrationFlowWithoutBrowser(ctx).Execute()
 	if err != nil {
 		return nil, "", err, nil
@@ -161,7 +161,7 @@ func Logout(token string, ctx context.Context) error {
 }
 
 func CreateNewUserWithInvite(username string, workspace string, systemRole string, ctx context.Context) (inviteToken string, identityId string, err error) {
-	_, identityId, err, _ = RegisterUser(username, uuid.New().String(), models.PendingInviteStatus, ctx)
+	_, identityId, err, _ = RegisterUser(username, uuid.New().String(), PendingInviteStatus, ctx)
 	if err != nil {
 		return "", "", err
 	}
@@ -231,7 +231,7 @@ func ResetPasswordWithInvite(inviteToken string, password string, ctx context.Co
 	}
 
 	traits := identity.Traits.(map[string]interface{})
-	traits["inviteStatus"] = models.AcceptedInviteStatus
+	traits["inviteStatus"] = AcceptedInviteStatus
 	if err = UpdateUserTraits(identity.Id, traits, ctx); err != nil {
 		logger.Log.Warningf("error updating user invite status: %v", err)
 	}
@@ -255,7 +255,7 @@ func GetUserSessionTokenUsingAdminAccess(identityId string, ctx context.Context)
 		return "", err
 	} else {
 		defer resp.Body.Close()
-		tokenResponse := &models.TokenResponse{}
+		tokenResponse := &TokenResponse{}
 		if err := json.NewDecoder(resp.Body).Decode(&tokenResponse); err != nil {
 			return "", err
 		}
@@ -312,8 +312,8 @@ func UpdateUserTraits(identityId string, traits map[string]interface{}, ctx cont
 	return err
 }
 
-func GetUser(identityId string, ctx context.Context) (*models.User, error) {
-	user := &models.User{
+func GetUser(identityId string, ctx context.Context) (*User, error) {
+	user := &User{
 		UserId: identityId,
 	}
 
@@ -325,7 +325,7 @@ func GetUser(identityId string, ctx context.Context) (*models.User, error) {
 	traits := identity.Traits.(map[string]interface{})
 	username := traits["username"].(string)
 	user.Username = username
-	user.InviteStatus = models.InviteStatus(traits["inviteStatus"].(string))
+	user.InviteStatus = InviteStatus(traits["inviteStatus"].(string))
 
 	if systemRole, err := GetUserSystemRole(username); err != nil {
 		return nil, err
@@ -342,8 +342,8 @@ func GetUser(identityId string, ctx context.Context) (*models.User, error) {
 	return user, nil
 }
 
-func ListUsers(usernameFilterQuery string, ctx context.Context) ([]models.UserListItem, error) {
-	var users []models.UserListItem
+func ListUsers(usernameFilterQuery string, ctx context.Context) ([]UserListItem, error) {
+	var users []UserListItem
 
 	identities, err := getAllUsersRecursively(ctx, 0)
 	if err != nil {
@@ -355,20 +355,37 @@ func ListUsers(usernameFilterQuery string, ctx context.Context) ([]models.UserLi
 		username := traits["username"].(string)
 
 		if usernameFilterQuery == "" || strings.Contains(username, usernameFilterQuery) {
-			inviteStatus := models.AcceptedInviteStatus
+			inviteStatus := AcceptedInviteStatus
 			if traits["inviteStatus"] != nil {
-				inviteStatus = models.InviteStatus(traits["inviteStatus"].(string))
+				inviteStatus = InviteStatus(traits["inviteStatus"].(string))
 			}
 
-			users = append(users, models.UserListItem{
+			users = append(users, UserListItem{
 				Username:     username,
 				UserId:       identity.Id,
-				InviteStatus: models.InviteStatus(inviteStatus),
+				InviteStatus: InviteStatus(inviteStatus),
 			})
 		}
 	}
 
 	return users, nil
+}
+
+func WhoAmI(sessionToken string, ctx context.Context) (*WhoAmIResponse, error) {
+	session, err := VerifyToken(sessionToken, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if user, err := GetUser(session.Identity.Id, ctx); err != nil {
+		return nil, err
+	} else {
+		return &WhoAmIResponse{
+			Username:   user.Username,
+			SystemRole: user.SystemRole,
+			Workspace:  user.Workspace,
+		}, nil
+	}
 }
 
 func getAllUsersRecursively(ctx context.Context, page int) ([]ory.Identity, error) {

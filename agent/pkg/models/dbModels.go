@@ -9,3 +9,9 @@ type Invite struct {
 	Username   string
 	CreatedAt  int64
 }
+
+type Workspace struct {
+	gorm.Model
+	Name       string
+	Namespaces []string
+}

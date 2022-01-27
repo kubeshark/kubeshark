@@ -1,4 +1,4 @@
-package providers
+package user
 
 /*
 This provider abstracts keto role management down to what we need for mizu

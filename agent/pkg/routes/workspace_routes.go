@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func UserRoutes(ginApp *gin.Engine) {
+func WorkspaceRoutes(ginApp *gin.Engine) {
 	routeGroup := ginApp.Group("/user")
 
 	routeGroup.GET("/:userId", middlewares.RequiresAdmin(), controllers.GetUser)
