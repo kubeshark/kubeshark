@@ -184,6 +184,15 @@ func TestEntriesNegative(t *testing.T) {
 	}
 }
 
+func TestEntriesPositive(t *testing.T) {
+	files := []string{"test_artifacts/params.har"}
+	_, err := feedEntries(files, false)
+	if err != nil {
+		t.Logf("Failed")
+		t.Fail()
+	}
+}
+
 func TestLoadValidHAR(t *testing.T) {
 	inp := `{"startedDateTime": "2021-02-03T07:48:12.959000+00:00", "time": 1, "request": {"method": "GET", "url": "http://unresolved_target/1.0.0/health", "httpVersion": "HTTP/1.1", "cookies": [], "headers": [], "queryString": [], "headersSize": -1, "bodySize": -1}, "response": {"status": 200, "statusText": "OK", "httpVersion": "HTTP/1.1", "cookies": [], "headers": [], "content": {"size": 2, "mimeType": "", "text": "OK"}, "redirectURL": "", "headersSize": -1, "bodySize": 2}, "cache": {}, "timings": {"send": -1, "wait": -1, "receive": 1}}`
 	var entry *har.Entry
