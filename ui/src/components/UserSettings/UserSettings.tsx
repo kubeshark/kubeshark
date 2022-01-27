@@ -22,7 +22,7 @@ export const UserSettings : React.FC<Props> = ({}) => {
 
     const [usersRows, setUserRows] = useState([]);
     const [userData,SetUsetData] = useState({} as UserData)
-    const cols : ColsType[] = [{field : "userName",header:"User"},
+    const cols : ColsType[] = [{field : "username",header:"User"},
                                {field : "role",header:"Role"},
                                {field : "status",header:"Status",getCellClassName : (field, val) =>{
                                    return val === "Active" ? "status--active" : "status--pending"
@@ -34,7 +34,7 @@ export const UserSettings : React.FC<Props> = ({}) => {
     useEffect(() => {
         (async () => {
             try {
-                const users = [{userName:"asd",role:"Admin",status:"Active"}]//await api.getUsers() 
+                const users = [{username:"asd",role:"Admin",status:"Active"}]//await api.getUsers() 
                 setUserRows(users)                                
             } catch (e) {
                 console.error(e);
@@ -44,21 +44,21 @@ export const UserSettings : React.FC<Props> = ({}) => {
 
     const filterFuncFactory = (searchQuery: string) => {
         return (row) => {
-            return row.userName.toLowerCase().includes(searchQuery.toLowerCase())
+            return row.username.toLowerCase().includes(searchQuery.toLowerCase())
         }
     }
 
     const searchConfig = { searchPlaceholder: "Search User",filterRows: filterFuncFactory}
     
     const onRowDelete = (row) => {
-        const filterFunc = filterFuncFactory(row.userName)
+        const filterFunc = filterFuncFactory(row.username)
         const newUserList = usersRows.filter(filterFunc)
         setUserRows(newUserList)
     }
 
     const onRowEdit = (row) => {
-        SetUsetData(row)
-        setIsOpen(true)
+        //SetUsetData(row)
+        //setIsOpen(true)
     }
 
 
