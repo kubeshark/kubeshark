@@ -178,6 +178,11 @@ func (g *SpecGen) handlePathObj(entry *har.Entry) (string, error) {
 		return "", nil
 	}
 
+	if entry.Request.Method == "OPTIONS" {
+		logger.Log.Debugf("Dropped traffic entry due to its method: %s", urlParsed.Path)
+		return "", nil
+	}
+
 	ctype := getRespCtype(&entry.Response)
 	if isCtypeIgnored(ctype) {
 		logger.Log.Debugf("Dropped traffic entry due to ignored response ctype: %s", ctype)

@@ -103,6 +103,8 @@ func (n *Node) createParam() *openapi.ParameterObj {
 		} else if strings.HasSuffix(*n.constant, "s") && len(*n.constant) > 3 {
 			name = *n.constant
 			name = name[:len(name)-1] + "Id"
+		} else if isAlpha(*n.constant) {
+			name = *n.constant + "Id"
 		}
 
 		name = cleanNonAlnum([]byte(name))
@@ -115,6 +117,15 @@ func (n *Node) createParam() *openapi.ParameterObj {
 	}
 
 	return newParam
+}
+
+func isAlpha(s string) bool {
+	for _, r := range s {
+		if (r < 'a' || r > 'z') && (r < 'A' || r > 'Z') {
+			return false
+		}
+	}
+	return true
 }
 
 func (n *Node) searchInParams(paramObj *openapi.ParameterObj, chunkIsGibberish bool) *Node {
