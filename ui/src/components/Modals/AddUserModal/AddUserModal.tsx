@@ -1,4 +1,4 @@
-import { Button, FormControl, InputLabel, MenuItem, Select } from '@material-ui/core';
+import { Button, FormControl, IconButton, InputAdornment, InputLabel, MenuItem, OutlinedInput, Select } from '@material-ui/core';
 import { FC, useEffect, useState } from 'react';
 import Api from '../../../helpers/api';
 import { useCommonStyles } from '../../../helpers/commonStyle';
@@ -6,10 +6,11 @@ import ConfirmationModal from '../../UI/Modals/ConfirmationModal';
 import SelectList from '../../UI/SelectList';
 import './AddUserModal.sass';
 import spinner from "../../assets/spinner.svg";
+import { useForm,Controller } from "react-hook-form";
 
 export type UserData = {
   role:string;
-  email : string;
+  username : string;
   workspace : string;
 }
 
@@ -17,17 +18,22 @@ interface AddUserModalProps {
   isOpen : boolean,
   onCloseModal : () => void
   userData : UserData;
+  setShowAlert : ({open:boolean,sevirity: Color}) => void;
 }
 
 const api = Api.getInstance();
 
-export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userData = {}}) => {
+export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userData = {}, setShowAlert}) => {
 
   const [isOpenModal,setIsOpen] = useState(isOpen)
   //const [editUserData, setEditUserData] = useState(userData)
   const [searchValue, setSearchValue] = useState("");
-  const [workspaces, setWorkspaces] = useState({})
-  const roles = [{key:"1",value:"Admin"}]
+  const [workspaces, setWorkspaces] = useState([])
+  //const { control, handleSubmit,register } = useForm<UserData>();
+  const [disable, setDisable] = useState(true);
+  
+  const [invite, setInvite] = useState({sent:false,isSuceeded:false,link : null});
+  const roles = [{key:"1",value:"Admin"},{key:"2",value:"User"}]
   const classes = useCommonStyles()
 
   const [userDataModel, setUserData] = useState(userData as UserData)
@@ -40,7 +46,16 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
   useEffect(() => {
     (async () => {
         try {
-            const workspacesList = {"default":true} //await api.getWorkspaces() 
+            const workspacesList = [
+              {
+                  "id": "f54b18ec-aa15-4b2c-a4d5-8eda17e44c93",
+                  "name": "sock-shop"
+              },
+              {
+                  "id": "c7ad9158-d840-46c0-b5ce-2487c013723f",
+                  "name": "test"
+              }
+          ]//{"default":true} //await api.getWorkspaces() 
             setWorkspaces(workspacesList)    
                           
         } catch (e) {
@@ -57,56 +72,109 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
   //   setIsOpen(false)
   // }
 
-  const onConfirm = () => {}
+  const onConfirm = () => {
+    setUserData({} as UserData)
+    onCloseModal()
+  }
 
   const workspaceChange = (newVal) => {
-    setWorkspaces(newVal);
+    //setWorkspaces(newVal);
     const  data = {...userDataModel, workspace : newVal}
     setUserData(data)
+    setGenarateDisabledState()
   }
 
   const userRoleChange = (e) => {
-    const  data = {...userDataModel, role : e.currentTarget.value}
+    const  data = {...userDataModel, role : e.target.value}
     setUserData(data)
+    setGenarateDisabledState()
   }
 
-  function isFormValid(): boolean {
-    return true;
+  const userNameChange = (e) => {
+    const  data = {...userDataModel, username : e.currentTarget.value}
+    setUserData(data)
+    setGenarateDisabledState()
   }
 
-  const generateLink = () => {
+  const handleChange = (prop) => (event) => {
+    //setValues({ ...values, [prop]: event.target.value });
+  };
+
+  const isFormValid = () : boolean => {
+    return (Object.values(userDataModel).length === 3) && Object.values(userDataModel).every(val => val !== null)
+  }
+
+  const setGenarateDisabledState = () => {
+    const isValid = isFormValid()
+    setDisable(!isValid)
+    
+  }
+
+  const generateLink =  () => {
     try {
-      api.genareteInviteLink(userDataModel)                
+      //const res = await api.genareteInviteLink(userDataModel) 
+      //setInvite({...invite,isSuceeded:true,sent:true,link:res})
+
+      setInvite({...invite,isSuceeded:true,sent:true,link:"asdasdasdasdasdasdasdasdads"})
+      setShowAlert({open:true,sevirity:"error"})             
   } catch (e) {
-      console.error(e);
+    setShowAlert({open:true,sevirity:"error"}) 
   }
     
   }
 
-  const modalCustomActions = <>
+  const handleCopyinviteLink = (e) => {navigator.clipboard.writeText(invite.link)}
 
+  const modalCustomActions = <>
+            {(!invite.isSuceeded || !(invite.link && invite.sent)) && <Button 
+                                            className={classes.button + " generate-link-button"} size={"small"} onClick={generateLink}
+                                            disabled={disable}  
+                                            endIcon={isLoading && <img src={spinner} alt="spinner"/>}>
+                                              <span className='generate-link-button__icon'></span>
+                                              {"Generate Invite Link"}
+                              </Button>}
+                              {invite.isSuceeded && invite.link && <div className="invite-link-row">
+        <FormControl variant="outlined" size={"small"} className='invite-link-field'>
+          <InputLabel htmlFor="outlined-adornment-password">Invite link</InputLabel>
+          <OutlinedInput 
+            type={'text'}
+            value={invite.link}           
+            onChange={handleChange('password')}
+            endAdornment={
+              <InputAdornment position="end">
+                <IconButton aria-label="cpoy invite link" onClick={handleCopyinviteLink} edge="end">
+                  {<span className='generate-link-button__icon'></span>}
+                </IconButton>
+              </InputAdornment>
+            }
+            label="Invite link"
+          />
+        </FormControl>
+            <Button style={{height: '100%'}} className={classes.button} size={"small"} onClick={onConfirm}>
+                        Done
+            </Button>
+      </div>}
                             </>;
 
   return (<>
 
-    <ConfirmationModal isOpen={isOpen} onClose={onCloseModal} onConfirm={onConfirm} title='Add User'>
-      <Button 
-                                            className={classes.button + " generate-link-button"} size={"small"} onClick={generateLink}
-                                            //disabled={isFormValid()}  
-                                            endIcon={isLoading && <img src={spinner} alt="spinner"/>}>
-                                              <span className='generate-link-button__icon'></span>
-                                              
-                                              {"Generate Invite Link"}
-      </Button>
+    <ConfirmationModal isOpen={isOpen} onClose={onCloseModal} onConfirm={onConfirm} title='Add User' customActions={modalCustomActions}>
+
       <h3 className='comfirmation-modal__sub-section-header'>DETAILS</h3>
       <div className='comfirmation-modal__sub-section'>
       <div className='user__details'>
-        <input type="text" value={userDataModel?.email ?? ""} className={classes.textField + " user__email"} placeholder={"User Email"} 
-               onChange={(e) => {}}></input>
-        <FormControl size='small' variant="outlined" className='user__role'>
+        <input type="text" value={userDataModel?.username ?? ""} className={classes.textField + " user__email"} 
+                placeholder={"User Email"} onChange={userNameChange}>
+        </input>
+        
+              {/* <Controller name="role" control={control} rules={{ required: true }}
+        render={({ field }) =>    }
+      /> */}
+
+      <FormControl size='small' variant="outlined" className='user__role'>
         <InputLabel>User Role</InputLabel>
-        <Select value={userDataModel.role} onChange={userRoleChange} >
-          <MenuItem value="">
+        <Select value={userDataModel.role ?? ""} onChange={userRoleChange} >
+          <MenuItem value="0">
             <em>None</em>
           </MenuItem>
           {roles.map((role) => (
@@ -118,16 +186,17 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
       </FormControl>
       </div>
       </div>
-
       <h3 className='comfirmation-modal__sub-section-header'>WORKSPACE ACCESS </h3>     
       <div className="namespacesSettingsContainer">
         <div style={{margin: "10px 0"}}>
             <input className={classes.textField + " searchNamespace"} placeholder="Search" value={searchValue}
                     onChange={(event) => setSearchValue(event.target.value)}/>
         </div>
-        <SelectList valuesListInput={workspaces} tableName={''} multiSelect={false} searchValue={searchValue} setValues={workspaceChange} tabelClassName={''} ></SelectList>
+        <SelectList valuesListInput={workspaces} tableName={''} multiSelect={false} searchValue={searchValue} 
+                    setValues= {workspaceChange} tabelClassName={''} >
+        </SelectList>
       </div>
+
     </ConfirmationModal>
     </>); 
 };
-

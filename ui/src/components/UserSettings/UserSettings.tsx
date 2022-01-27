@@ -4,6 +4,8 @@ import {ColsType, FilterableTableAction} from "../UI/FilterableTableAction"
 import Api from "../../helpers/api"
 import { useEffect, useState } from "react";
 import { UserData,AddUserModal } from "../Modals/AddUserModal/AddUserModal";
+import {Snackbar} from "@material-ui/core";
+import MuiAlert from "@material-ui/lab/Alert";
 import { Select } from "../UI/Select";
 import { MenuItem } from "@material-ui/core";
 import { settings } from "cluster";
@@ -26,14 +28,14 @@ export const UserSettings : React.FC<Props> = ({}) => {
                                    return val === "Active" ? "status--active" : "status--pending"
                                }}]
     const [isOpenModal,setIsOpen] = useState(false)
+    const [alert,setAlert] = useState({open:false,sevirity:"success"})
     
 
     useEffect(() => {
         (async () => {
             try {
                 const users = [{userName:"asd",role:"Admin",status:"Active"}]//await api.getUsers() 
-                setUserRows(users)    
-                              
+                setUserRows(users)                                
             } catch (e) {
                 console.error(e);
             }
@@ -55,7 +57,8 @@ export const UserSettings : React.FC<Props> = ({}) => {
     }
 
     const onRowEdit = (row) => {
-        // open Edit user Modal
+        SetUsetData(row)
+        setIsOpen(true)
     }
 
 
@@ -66,7 +69,14 @@ export const UserSettings : React.FC<Props> = ({}) => {
         <FilterableTableAction onRowEdit={onRowEdit} onRowDelete={onRowDelete} searchConfig={searchConfig} 
                                buttonConfig={buttonConfig} rows={usersRows} cols={cols}>
         </FilterableTableAction>
-        <AddUserModal isOpen={isOpenModal} onCloseModal={() => { setIsOpen(false); } } userData={userData}></AddUserModal>
+        <AddUserModal isOpen={isOpenModal} onCloseModal={() => { setIsOpen(false); } } userData={userData} setShowAlert={setAlert}>
+        </AddUserModal>
+        <Snackbar open={alert.open} classes={{root: "alert--right"}}>
+        <MuiAlert classes={{filledWarning: 'customWarningStyle'}} elevation={6} variant="filled"
+                  onClose={() => setAlert({...alert,open:false})} severity={"success"}>
+                    User has been added
+        </MuiAlert>
+    </Snackbar>
         {/* <SettingsModal isOpen={false} onClose={function (): void {
             throw new Error("Function not implemented.");
         } } isFirstLogin={false}></SettingsModal> */}

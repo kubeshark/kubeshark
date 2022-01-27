@@ -62,7 +62,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = observer(({title, is
             </div>
 
             <div className="confirmationActions">
-                {customActions}
+                {customActions ?? defualtActions}
             </div>
         </CustomModal>
     )

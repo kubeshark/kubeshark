@@ -7,7 +7,7 @@ export const useCommonStyles = makeStyles(() => ({
         color: "white",
         fontWeight: "600 !important",
         fontSize: 12,
-        padding: "8px 12px",
+        padding: "9px 12px",
         borderRadius: "6px ! important",
 
         "&:hover": {
@@ -34,7 +34,9 @@ export const useCommonStyles = makeStyles(() => ({
         padding: "8px 10px",
         border: "1px #9D9D9D solid",
         fontSize: "14px",
-        color: "#494677"
+        color: "#494677",
+        height: "30px",
+        boxSizing: "border-box"
     },
     modal :{
         position: 'absolute',

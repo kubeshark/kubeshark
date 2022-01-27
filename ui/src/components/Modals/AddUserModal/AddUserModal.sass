@@ -9,6 +9,21 @@
         background-size: 26px
         margin-right: 10px
 
+.invite-link
+    &-row
+        display: flex
+        justify-content: space-between
+        align-items: center
+        align-content: center
+
+        & .done-btn
+            box-sizing: border-box
+            height: 30px
+            width: 78px
+
+    &-field
+        width: 80%
+        max-width: 435px
 
 .generate-link-button
     &:disabled
@@ -20,11 +35,7 @@
     &__icon
         @include generate-icon
         background-image: url('../../assets/copy-enabled.svg')
-
-
         
-
-
 .user
     &__details
         display: flex;
@@ -35,6 +46,10 @@
 
         & .user__email
             width : 40%
+            height: 30px;
+            box-sizing: border-box;
 
         & .user__role
             width : 40%
+
+
