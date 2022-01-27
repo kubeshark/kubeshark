@@ -39,7 +39,7 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
   useEffect(() => {
     (async () => {
         try {
-            const workspacesList = {"default":true} //await api.getWorkspaces() 
+            const workspacesList = [{"default":true}] //await api.getWorkspaces() 
             setWorkspaces(workspacesList)    
                           
         } catch (e) {
@@ -75,7 +75,8 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
 
   const generateLink = () => {
     try {
-      api.genareteInviteLink(userDataModel)                
+      api.genareteInviteLink(userDataModel)    
+      console.log(workspaces);          
   } catch (e) {
       console.error(e);
   }

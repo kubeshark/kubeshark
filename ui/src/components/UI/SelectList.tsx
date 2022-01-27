@@ -12,58 +12,64 @@ export interface Props {
     tabelClassName
 }
 
-const SelectList: React.FC<Props> = ({valuesListInput,tableName,multiSelect=true,searchValue="",setValues,tabelClassName}) => {
-    const [valuesList, setValuesList] = useState(valuesListInput);
+export type ValuesListInput = {
+    key: string;
+    value: string;
+    isChecked: boolean;
+}[]
 
-    const toggleValues = (value) => {
+const SelectList: React.FC<Props> = ({valuesListInput ,tableName,multiSelect=true,searchValue="",setValues,tabelClassName}) => {
+    const [valuesList, setValuesList] = useState(valuesListInput as ValuesListInput);
+
+    const toggleValues = (checkedKey) => {
         if (!multiSelect){
-            unToggleAll(value);
+            unToggleAll(checkedKey);
         }
         else {
-            const newValues = {...valuesList};
-            newValues[value] = !valuesList[value];
+            const newValues: ValuesListInput = [...valuesList];
+            newValues[checkedKey].isChecked = !valuesList[checkedKey].isChecked;
             setValuesList(newValues);
             setValues(newValues);
         }
     }
 
-    const unToggleAll = (value) => {
-        const newValues = {};
-        Object.keys(valuesList).forEach(key => {
-            if (key !== value)
-                newValues[key] = false;
+    const unToggleAll = (checkedKey) => {
+        const newValues = [];
+        valuesList.forEach(valueList => {
+            if (valueList.key !== checkedKey)
+                newValues[checkedKey] = false;
             else
-                newValues[key] = true;
+                newValues[checkedKey] = true;
         })
         setValuesList(newValues);
         setValues(newValues);
     }
 
     const toggleAll = () => {
-        const isChecked = Object.values(valuesList).every(tap => tap === true);
+        const isChecked = valuesList.every(valueTap => valueTap.isChecked === true);
         setAllCheckedValue(!isChecked);
     }
 
     const setAllCheckedValue = (isTap: boolean) => {
-        const newValues = {};
-        Object.keys(valuesList).forEach(key => {
-            newValues[key] = isTap;
+        const newValues = [];
+        valuesList.forEach(valueList => {
+            newValues[valueList.key] = isTap;
         })
         setValuesList(newValues);
         setValues(newValues);
     }
 
     const tableHead = multiSelect ? <tr style={{borderBottomWidth: "2px"}}>
-            <th style={{width: 50}}><Checkbox checked={Object.values(valuesList).every(tap => tap === true)}
+            <th style={{width: 50}}><Checkbox checked={valuesList.every(valueTap => valueTap.isChecked === false)}
                 onToggle={toggleAll}/></th>
             <th>{tableName}</th>
         </tr> : 
         <tr style={{borderBottomWidth: "2px"}}>
-            <th>{tableName}</th>
+            <th>{tableName}</th>    
         </tr>
 
     const filteredValues = useMemo(() => {
-        return Object.keys(valuesList).filter((listValue) => listValue.includes(searchValue));
+        return valuesList.filter((listValue) => listValue.value.includes(searchValue));
     },[valuesList, searchValue])
 
         return <div className={tabelClassName + " select-list-table"}>
@@ -73,10 +79,10 @@ const SelectList: React.FC<Props> = ({valuesListInput,tableName,multiSelect=true
                     </thead>
                     <tbody>
                     {filteredValues?.map(listValue => {
-                            return <tr key={listValue}>
+                            return <tr key={listValue.key}>
                                 <td style={{width: 50}}>
-                                    {multiSelect && <Checkbox checked={valuesList[listValue]} onToggle={() => toggleValues(listValue)}/>}
-                                    {!multiSelect && <Radio checked={valuesList[listValue]} onToggle={() => toggleValues(listValue)}/>}
+                                    {multiSelect && <Checkbox checked={valuesList[listValue.key].isChecked} onToggle={() => toggleValues(listValue.key)}/>}
+                                    {!multiSelect && <Radio checked={valuesList[listValue.key].isChecked} onToggle={() => toggleValues(listValue.key)}/>}
                                 </td>
                                 <td>{listValue}</td>
                             </tr>   
