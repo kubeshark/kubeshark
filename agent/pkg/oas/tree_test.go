@@ -23,13 +23,15 @@ func TestTree(t *testing.T) {
 		split := strings.Split(tc.inp, "/")
 		pathObj := new(openapi.PathObj)
 		node := tree.getOrSet(split, pathObj)
+		
+		fillPathParams(node, pathObj)
 
 		if node.constant != nil && *node.constant != tc.label {
 			t.Errorf("Constant does not match: %s != %s", *node.constant, tc.label)
 		}
 
-		if tc.numParams > 0 && len(*pathObj.Parameters) < tc.numParams {
-			t.Errorf("Wrong num of params: %d != %d", tc.numParams, len(*pathObj.Parameters))
+		if tc.numParams > 0 && (pathObj.Parameters == nil || len(*pathObj.Parameters) < tc.numParams) {
+			t.Errorf("Wrong num of params, expected: %d", tc.numParams)
 		}
 	}
 }
