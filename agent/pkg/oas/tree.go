@@ -115,15 +115,6 @@ func (n *Node) createParam() *openapi.ParameterObj {
 	return newParam
 }
 
-func isAlpha(s string) bool {
-	for _, r := range s {
-		if (r < 'a' || r > 'z') && (r < 'A' || r > 'Z') {
-			return false
-		}
-	}
-	return true
-}
-
 func (n *Node) searchInParams(paramObj *openapi.ParameterObj, chunkIsGibberish bool) *Node {
 	// look among params
 	if paramObj != nil || chunkIsGibberish {
