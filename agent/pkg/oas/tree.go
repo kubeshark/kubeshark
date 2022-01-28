@@ -61,7 +61,6 @@ func (n *Node) getOrSet(path NodePath, existingPathObj *openapi.PathObj) (node *
 		if paramObj != nil {
 			node.pathParam = paramObj
 		} else if chunkIsGibberish {
-
 			newParam := n.createParam()
 			node.pathParam = newParam
 		} else {
@@ -103,7 +102,7 @@ func (n *Node) createParam() *openapi.ParameterObj {
 			name = *n.constant + "Id"
 		}
 
-		name = cleanNonAlnum(name)
+		name = cleanStr(name, isAlNumRune)
 	}
 
 	newParam := createSimpleParam(name, "path", "string")

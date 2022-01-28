@@ -324,11 +324,11 @@ func anyJSON(text string) (anyVal interface{}, isJSON bool) {
 	return nil, false
 }
 
-func cleanNonAlnum(str string) string {
+func cleanStr(str string, criterion func(r rune) bool) string {
 	s := []byte(str)
 	j := 0
 	for _, b := range s {
-		if isAlNumRune(rune(b)) {
+		if criterion(rune(b)) {
 			s[j] = b
 			j++
 		}
@@ -338,16 +338,17 @@ func cleanNonAlnum(str string) string {
 
 func isAlpha(s string) bool {
 	for _, r := range s {
-		if (r < 'a' || r > 'z') && (r < 'A' || r > 'Z') {
+		if isAlphaRune(r) {
 			return false
 		}
 	}
 	return true
 }
 
+func isAlphaRune(r rune) bool {
+	return !((r < 'a' || r > 'z') && (r < 'A' || r > 'Z'))
+}
+
 func isAlNumRune(b rune) bool {
-	return ('a' <= b && b <= 'z') ||
-		('A' <= b && b <= 'Z') ||
-		('0' <= b && b <= '9') ||
-		b == ' '
+	return isAlphaRune(b) || ('0' <= b && b <= '9')
 }
