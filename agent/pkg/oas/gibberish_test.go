@@ -116,3 +116,18 @@ func TestPositive(t *testing.T) {
 		}
 	}
 }
+
+func TestVersionStrings(t *testing.T) {
+	cases := []string{
+		"1.0",
+		"1.0.0",
+		"v2.1.3",
+		"2.1.73",
+	}
+
+	for _, str := range cases {
+		if !IsVersionString(str) {
+			t.Errorf("Mistakenly false: %s", str)
+		}
+	}
+}

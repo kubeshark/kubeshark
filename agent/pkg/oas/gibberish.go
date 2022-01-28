@@ -16,6 +16,10 @@ var (
 )
 
 func IsGibberish(str string) bool {
+	if IsVersionString(str) {
+		return false
+	}
+
 	if patBase64.MatchString(str) && len(str) > 32 {
 		return true
 	}
@@ -37,6 +41,10 @@ func IsGibberish(str string) bool {
 		return true
 	}
 
+	if isTrigramUnreal(str) {
+		return true
+	}
+
 	return false
 }
 
@@ -55,7 +63,7 @@ func noiseLevel(str string) (score float64) {
 
 			// upper =>
 			case unicode.IsUpper(prev) && unicode.IsLower(char):
-				score += 0.25
+				score += 0.20
 			case unicode.IsUpper(prev) && unicode.IsDigit(char):
 				score += 0.25
 
@@ -69,7 +77,7 @@ func noiseLevel(str string) (score float64) {
 			case unicode.IsDigit(prev) && unicode.IsUpper(char):
 				score += 0.75
 			case unicode.IsDigit(prev) && unicode.IsLower(char):
-				score += 0.75
+				score += 1.0
 
 			// the rest is 100% noise
 			default:
@@ -101,9 +109,43 @@ func IsVersionString(component string) bool {
 		}
 	}
 
-	if !hasV && strings.Contains(component, ".") {
+	if !hasV && !strings.Contains(component, ".") {
 		return false
 	}
 
 	return true
+}
+
+func isTrigramUnreal(str string) bool {
+	tgScore := 0.0
+	trigrams := ngrams(strings.ToLower(str), 3)
+	hasAlphaTrigrams := false
+	if len(trigrams) > 0 {
+		for _, trigram := range trigrams {
+			score, found := corpus_trigrams[trigram]
+			if found {
+				tgScore += score
+			}
+
+			if isAlpha(trigram) {
+				hasAlphaTrigrams = true
+			}
+		}
+
+		tgScore /= float64(len(trigrams))
+	}
+
+	if hasAlphaTrigrams && tgScore < 0.01 {
+		return true
+	}
+
+	return false
+}
+
+func ngrams(s string, n int) []string {
+	result := make([]string, 0)
+	for i := 0; i < len(s)-n+1; i++ {
+		result = append(result, s[i:i+n])
+	}
+	return result
 }
