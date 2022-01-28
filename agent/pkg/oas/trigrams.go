@@ -7702,4 +7702,5 @@ var corpus_trigrams = map[string]float64{
 	"uur": 0.00011012003083360864,
 	"zwa": 0.00011012003083360864,
 	"zyt": 0.00022024006166721728,
+	"cgi": 0.0015, // had to make it up because of `fcgi`
 }

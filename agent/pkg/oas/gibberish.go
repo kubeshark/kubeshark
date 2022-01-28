@@ -11,9 +11,9 @@ var (
 	patBase64   = regexp.MustCompile(`^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$`)
 	patUuid4    = regexp.MustCompile(`(?i)[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}`)
 	patEmail    = regexp.MustCompile(`^\w+([-+.']\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$`)
-	patHexLower = regexp.MustCompile(`(0x)?[0-9a-f]{6,}`)
-	patHexUpper = regexp.MustCompile(`(0x)?[0-9A-F]{6,}`)
 	patLongNum  = regexp.MustCompile(`^\d{3,}$`)
+	patLongNumB = regexp.MustCompile(`[^\d]\d{4,}`)
+	patLongNumA = regexp.MustCompile(`\d{4,}[^\d]`)
 )
 
 func IsGibberish(str string) bool {
@@ -33,25 +33,24 @@ func IsGibberish(str string) bool {
 		return true
 	}
 
-	if patLongNum.MatchString(str) {
+	if patLongNum.MatchString(str) || patLongNumB.MatchString(str) || patLongNumA.MatchString(str) {
 		return true
 	}
 
-	noAlNum := cleanStr(str, isAlNumRune)
-	noiseAll := noiseLevel(noAlNum)
-	triAll := isTrigramBad(strings.ToLower(noAlNum))
-	_, _ = noiseAll, triAll
+	alNum := cleanStr(str, isAlNumRune)
+	noiseAll := isNoisy(alNum)
+	triAll := isTrigramBad(strings.ToLower(alNum))
+	_ = noiseAll
 
-	isNotAlNum := func(r rune) bool {
-		return !isAlNumRune(r)
-	}
+	isNotAlNum := func(r rune) bool { return !isAlNumRune(r) }
 	chunks := strings.FieldsFunc(str, isNotAlNum)
 	noisyLen := 0
 	alnumLen := 0
 	for _, chunk := range chunks {
 		alnumLen += len(chunk)
-		noise := noiseLevel(chunk)
-		if noise >= 0.25 || isTrigramBad(strings.ToLower(chunk)) {
+		noise := isNoisy(chunk)
+		tri := isTrigramBad(strings.ToLower(chunk))
+		if noise || tri {
 			noisyLen += len(chunk)
 		}
 	}
@@ -82,15 +81,15 @@ func noiseLevel(str string) (score float64) {
 
 			// upper =>
 			case unicode.IsUpper(prev) && unicode.IsLower(char):
-				score += 0.20
+				score += 0.10
 			case unicode.IsUpper(prev) && unicode.IsDigit(char):
-				score += 0.25
+				score += 0.5
 
 			// lower =>
 			case unicode.IsLower(prev) && unicode.IsUpper(char):
 				score += 0.75
 			case unicode.IsLower(prev) && unicode.IsDigit(char):
-				score += 0.25
+				score += 0.5
 
 			// digit =>
 			case unicode.IsDigit(prev) && unicode.IsUpper(char):
@@ -157,7 +156,19 @@ func isTrigramBad(s string) bool {
 
 	if cnt > 0 {
 		threshold := 0.001 * math.Log(float64(cnt))
-		return tgScore < threshold
+		bad := tgScore < threshold
+		return bad
+	}
+	return false
+}
+
+func isNoisy(s string) bool {
+	noise := noiseLevel(s)
+
+	if len(s) > 0 {
+		threshold := 0.25 * math.Log(float64(len(s)))
+		bad := noise > threshold
+		return bad
 	}
 	return false
 }
