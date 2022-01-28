@@ -41,7 +41,7 @@ func IsGibberish(str string) bool {
 		return true
 	}
 
-	if isTrigramUnreal(str) {
+	if trigramScore(str) < 0.1 {
 		return true
 	}
 
@@ -116,30 +116,21 @@ func IsVersionString(component string) bool {
 	return true
 }
 
-func isTrigramUnreal(str string) bool {
+func trigramScore(str string) float64 {
 	tgScore := 0.0
-	trigrams := ngrams(strings.ToLower(str), 3)
-	hasAlphaTrigrams := false
+	trigrams := ngrams(cleanNonAlnum(strings.ToLower(str)), 3)
 	if len(trigrams) > 0 {
 		for _, trigram := range trigrams {
 			score, found := corpus_trigrams[trigram]
 			if found {
 				tgScore += score
 			}
-
-			if isAlpha(trigram) {
-				hasAlphaTrigrams = true
-			}
 		}
 
 		tgScore /= float64(len(trigrams))
 	}
 
-	if hasAlphaTrigrams && tgScore < 0.01 {
-		return true
-	}
-
-	return false
+	return tgScore
 }
 
 func ngrams(s string, n int) []string {

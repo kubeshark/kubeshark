@@ -324,7 +324,8 @@ func anyJSON(text string) (anyVal interface{}, isJSON bool) {
 	return nil, false
 }
 
-func cleanNonAlnum(s []byte) string {
+func cleanNonAlnum(str string) string {
+	s := []byte(str)
 	j := 0
 	for _, b := range s {
 		if ('a' <= b && b <= 'z') ||

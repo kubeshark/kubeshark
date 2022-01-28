@@ -103,7 +103,7 @@ func (n *Node) createParam() *openapi.ParameterObj {
 			name = *n.constant + "Id"
 		}
 
-		name = cleanNonAlnum([]byte(name))
+		name = cleanNonAlnum(name)
 	}
 
 	newParam := createSimpleParam(name, "path", "string")
