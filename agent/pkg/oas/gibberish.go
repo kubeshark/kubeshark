@@ -8,12 +8,11 @@ import (
 )
 
 var (
-	patBase64   = regexp.MustCompile(`^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$`)
 	patUuid4    = regexp.MustCompile(`(?i)[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}`)
 	patEmail    = regexp.MustCompile(`^\w+([-+.']\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$`)
 	patLongNum  = regexp.MustCompile(`^\d{3,}$`)
-	patLongNumB = regexp.MustCompile(`[^\d]\d{4,}`)
-	patLongNumA = regexp.MustCompile(`\d{4,}[^\d]`)
+	patLongNumB = regexp.MustCompile(`[^\d]\d{3,}`)
+	patLongNumA = regexp.MustCompile(`\d{3,}[^\d]`)
 )
 
 func IsGibberish(str string) bool {
@@ -21,15 +20,11 @@ func IsGibberish(str string) bool {
 		return false
 	}
 
-	if patBase64.MatchString(str) && len(str) > 32 {
+	if patEmail.MatchString(str) {
 		return true
 	}
 
 	if patUuid4.MatchString(str) {
-		return true
-	}
-
-	if patEmail.MatchString(str) {
 		return true
 	}
 
@@ -38,8 +33,9 @@ func IsGibberish(str string) bool {
 	}
 
 	alNum := cleanStr(str, isAlNumRune)
+	alpha := cleanStr(str, isAlphaRune)
 	noiseAll := isNoisy(alNum)
-	triAll := isTrigramBad(strings.ToLower(alNum))
+	triAll := isTrigramBad(strings.ToLower(alpha))
 	_ = noiseAll
 
 	isNotAlNum := func(r rune) bool { return !isAlNumRune(r) }
@@ -60,7 +56,7 @@ func IsGibberish(str string) bool {
 	}
 
 	if triAll {
-		return true
+		//return true
 	}
 
 	return false
@@ -142,8 +138,6 @@ func trigramScore(str string) (float64, int) {
 				tgScore += score
 			}
 		}
-
-		tgScore /= float64(len(trigrams))
 	}
 
 	return tgScore, len(trigrams)
@@ -153,9 +147,13 @@ func isTrigramBad(s string) bool {
 	tgScore, cnt := trigramScore(s)
 
 	if cnt > 0 {
-		threshold := 0.001 * math.Log(float64(cnt))
-		bad := tgScore < threshold
-		return bad
+		val := math.Sqrt(tgScore) / float64(cnt)
+		val2 := tgScore / float64(cnt)
+		threshold := 0.005
+		bad := val < threshold
+		threshold2 := math.Log(float64(cnt)-2) * 0.1
+		bad2 := val2 < threshold2
+		return bad && bad2
 	}
 	return false
 }
