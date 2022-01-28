@@ -47,7 +47,7 @@ func newTcpPacketSource(name, filename string, interfaceName string,
 
 	if filename != "" {
 		if result.handle, err = pcap.OpenOffline(filename); err != nil {
-			return result, fmt.Errorf("PCAP OpenOffline error: %v", err)
+			return result, fmt.Errorf("PCAP OpenOffline error for file %s: %v", filename, err)
 		}
 	} else {
 		// This is a little complicated because we want to allow all possible options

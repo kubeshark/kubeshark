@@ -1,0 +1,6 @@
+{
+    "maxDBSizeBytes": 200000000,
+    "agentDatabasePath": "./entries",
+    "serviceMap": true,
+    "oas": false
+}
