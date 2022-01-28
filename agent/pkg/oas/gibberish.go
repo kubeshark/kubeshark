@@ -105,8 +105,6 @@ func noiseLevel(str string) (score float64) {
 		prev = char
 	}
 
-	score /= cnt // weigh it
-
 	return score
 }
 
@@ -166,8 +164,9 @@ func isNoisy(s string) bool {
 	noise := noiseLevel(s)
 
 	if len(s) > 0 {
-		threshold := 0.25 * math.Log(float64(len(s)))
-		bad := noise > threshold
+		val := (noise * noise) / float64(len(s))
+		threshold := 0.6
+		bad := val > threshold
 		return bad
 	}
 	return false
