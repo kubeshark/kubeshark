@@ -25,13 +25,12 @@ var once sync.Once
 func GetInstance() *client {
 	once.Do(func() {
 		instance = newClient()
-		logger.Log.Debug("Service Map Initialized")
 	})
 	return instance
 }
 
 func (client *client) Configure(config shared.ElasticConfig) {
-	if config.CloudID == "" {
+	if config.Url == "" || config.User == "" || config.Password == "" {
 		logger.Log.Infof("No elastic configuration was supplied, elastic exporter disabled")
 		return
 	}
@@ -39,8 +38,9 @@ func (client *client) Configure(config shared.ElasticConfig) {
 	tlsClientConfig := &tls.Config{InsecureSkipVerify: true}
 	transport.(*http.Transport).TLSClientConfig = tlsClientConfig
 	cfg := elasticsearch.Config{
-		CloudID:   config.CloudID,
-		APIKey:    config.APIKey,
+		Addresses: []string{config.Url},
+		Username:  config.User,
+		Password:  config.Password,
 		Transport: transport,
 	}
 
@@ -55,7 +55,7 @@ func (client *client) Configure(config shared.ElasticConfig) {
 		logger.Log.Fatalf("Elastic client.Info() ERROR: %v", err)
 	} else {
 		client.es = es
-		client.index = "mizu_traffic_" + time.Now().Format("2006_01_02_15_04")
+		client.index = "mizu_traffic_http_" + time.Now().Format("2006_01_02_15_04")
 		client.insertedCount = 0
 		logger.Log.Infof("Elastic client configured, index: %s, cluster info: %v", client.index, res)
 	}
@@ -73,7 +73,7 @@ type httpEntry struct {
 	Source      *api.TCP               `json:"src"`
 	Destination *api.TCP               `json:"dst"`
 	Outgoing    bool                   `json:"outgoing"`
-	createdAt   time.Time              `json:"createdAt"`
+	CreatedAt   time.Time              `json:"createdAt"`
 	Request     map[string]interface{} `json:"request"`
 	Response    map[string]interface{} `json:"response"`
 	Summary     string                 `json:"summary"`
@@ -96,7 +96,7 @@ func (client *client) PushEntry(entry *api.Entry) {
 		Source:      entry.Source,
 		Destination: entry.Destination,
 		Outgoing:    entry.Outgoing,
-		createdAt:   entry.StartTime,
+		CreatedAt:   entry.StartTime,
 		Request:     entry.Request,
 		Response:    entry.Response,
 		Summary:     entry.Summary,

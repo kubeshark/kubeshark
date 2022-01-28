@@ -47,8 +47,9 @@ type MizuAgentConfig struct {
 }
 
 type ElasticConfig struct {
-	CloudID string `yaml:"cloud-id,omitempty" default:"" readonly:""`
-	APIKey  string `yaml:"api-key,omitempty" default:"" readonly:""`
+	User     string `yaml:"user,omitempty" default:"" readonly:""`
+	Password string `yaml:"password,omitempty" default:"" readonly:""`
+	Url      string `yaml:"url,omitempty" default:"" readonly:""`
 }
 
 type WebSocketMessageMetadata struct {
