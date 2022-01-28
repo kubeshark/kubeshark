@@ -1,6 +1,7 @@
 package oas
 
 import (
+	"math"
 	"regexp"
 	"strings"
 	"unicode"
@@ -12,7 +13,7 @@ var (
 	patEmail    = regexp.MustCompile(`^\w+([-+.']\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$`)
 	patHexLower = regexp.MustCompile(`(0x)?[0-9a-f]{6,}`)
 	patHexUpper = regexp.MustCompile(`(0x)?[0-9A-F]{6,}`)
-	patLongNum  = regexp.MustCompile(`\d{6,}`)
+	patLongNum  = regexp.MustCompile(`^\d{3,}$`)
 )
 
 func IsGibberish(str string) bool {
@@ -32,30 +33,34 @@ func IsGibberish(str string) bool {
 		return true
 	}
 
-	if patHexLower.MatchString(str) || patHexUpper.MatchString(str) || patLongNum.MatchString(str) {
+	if patLongNum.MatchString(str) {
 		return true
 	}
 
-	notAlNum := func(r rune) bool { return !isAlNumRune(r) || r == ' ' }
-	chunks := strings.FieldsFunc(str, notAlNum)
-	gibberishLen := 0
+	noAlNum := cleanStr(str, isAlNumRune)
+	noiseAll := noiseLevel(noAlNum)
+	triAll := isTrigramBad(strings.ToLower(noAlNum))
+	_, _ = noiseAll, triAll
+
+	isNotAlNum := func(r rune) bool {
+		return !isAlNumRune(r)
+	}
+	chunks := strings.FieldsFunc(str, isNotAlNum)
+	noisyLen := 0
 	alnumLen := 0
 	for _, chunk := range chunks {
 		alnumLen += len(chunk)
 		noise := noiseLevel(chunk)
-		tri := trigramScore(chunk)
-		if noise >= 0.25 || (len(chunk) >= 3 && tri < 0.01) {
-			gibberishLen += len(chunk)
+		if noise >= 0.25 || isTrigramBad(strings.ToLower(chunk)) {
+			noisyLen += len(chunk)
 		}
 	}
 
-	if len(chunks) > 0 && float64(gibberishLen) >= float64(alnumLen)/3.0 {
+	if len(chunks) > 0 && float64(noisyLen) >= float64(alnumLen)/3.0 {
 		return true
 	}
 
-	noAlNum := cleanNonAlnum(str)
-	tri := trigramScore(noAlNum)
-	if len(noAlNum) >= 3 && tri < 0.01 {
+	if triAll {
 		return true
 	}
 
@@ -130,9 +135,9 @@ func IsVersionString(component string) bool {
 	return true
 }
 
-func trigramScore(str string) float64 {
+func trigramScore(str string) (float64, int) {
 	tgScore := 0.0
-	trigrams := ngrams(cleanNonAlnum(strings.ToLower(str)), 3)
+	trigrams := ngrams(str, 3)
 	if len(trigrams) > 0 {
 		for _, trigram := range trigrams {
 			score, found := corpus_trigrams[trigram]
@@ -144,7 +149,17 @@ func trigramScore(str string) float64 {
 		tgScore /= float64(len(trigrams))
 	}
 
-	return tgScore
+	return tgScore, len(trigrams)
+}
+
+func isTrigramBad(s string) bool {
+	tgScore, cnt := trigramScore(s)
+
+	if cnt > 0 {
+		threshold := 0.001 * math.Log(float64(cnt))
+		return tgScore < threshold
+	}
+	return false
 }
 
 func ngrams(s string, n int) []string {
