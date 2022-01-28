@@ -2,7 +2,6 @@ package config
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/up9inc/mizu/shared"
 	"io/ioutil"
 	"os"
@@ -16,13 +15,12 @@ const (
 
 var Config *shared.MizuAgentConfig
 
-func LoadConfig() error {
+func LoadConfig(configPath string) error {
 	if Config != nil {
 		return nil
 	}
-	filePath := fmt.Sprintf("%s%s", shared.ConfigDirPath, shared.ConfigFileName)
 
-	content, err := ioutil.ReadFile(filePath)
+	content, err := ioutil.ReadFile(configPath)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return applyDefaultConfig()

@@ -51,6 +51,7 @@ var apiServerAddress = flag.String("api-server-address", "", "Address of mizu AP
 var namespace = flag.String("namespace", "", "Resolve IPs if they belong to resources in this namespace (default is all)")
 var harsReaderMode = flag.Bool("hars-read", false, "Run in hars-read mode")
 var harsDir = flag.String("hars-dir", "", "Directory to read hars from")
+var configPath = flag.String("config-path", fmt.Sprintf("%s%s", shared.ConfigDirPath, shared.ConfigFileName), "Mizu config path")
 
 var extensions []*tapApi.Extension             // global
 var extensionsMap map[string]*tapApi.Extension // global
@@ -68,7 +69,7 @@ func main() {
 	logLevel := determineLogLevel()
 	logger.InitLoggerStderrOnly(logLevel)
 	flag.Parse()
-	if err := config.LoadConfig(); err != nil {
+	if err := config.LoadConfig(*configPath); err != nil {
 		logger.Log.Fatalf("Error loading config file %v", err)
 	}
 	loadExtensions()
