@@ -36,12 +36,26 @@ func IsGibberish(str string) bool {
 		return true
 	}
 
-	noise := noiseLevel(str)
-	if noise >= 0.2 {
+	notAlNum := func(r rune) bool { return !isAlNumRune(r) || r == ' ' }
+	chunks := strings.FieldsFunc(str, notAlNum)
+	gibberishLen := 0
+	alnumLen := 0
+	for _, chunk := range chunks {
+		alnumLen += len(chunk)
+		noise := noiseLevel(chunk)
+		tri := trigramScore(chunk)
+		if noise >= 0.25 || (len(chunk) >= 3 && tri < 0.01) {
+			gibberishLen += len(chunk)
+		}
+	}
+
+	if len(chunks) > 0 && float64(gibberishLen) >= float64(alnumLen)/3.0 {
 		return true
 	}
 
-	if trigramScore(str) < 0.1 {
+	noAlNum := cleanNonAlnum(str)
+	tri := trigramScore(noAlNum)
+	if len(noAlNum) >= 3 && tri < 0.01 {
 		return true
 	}
 

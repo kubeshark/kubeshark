@@ -328,10 +328,7 @@ func cleanNonAlnum(str string) string {
 	s := []byte(str)
 	j := 0
 	for _, b := range s {
-		if ('a' <= b && b <= 'z') ||
-			('A' <= b && b <= 'Z') ||
-			('0' <= b && b <= '9') ||
-			b == ' ' {
+		if isAlNumRune(rune(b)) {
 			s[j] = b
 			j++
 		}
@@ -346,4 +343,11 @@ func isAlpha(s string) bool {
 		}
 	}
 	return true
+}
+
+func isAlNumRune(b rune) bool {
+	return ('a' <= b && b <= 'z') ||
+		('A' <= b && b <= 'Z') ||
+		('0' <= b && b <= '9') ||
+		b == ' '
 }
