@@ -98,7 +98,7 @@ func (n *Node) createParam() *openapi.ParameterObj {
 		} else if strings.HasSuffix(*n.constant, "s") && len(*n.constant) > 3 {
 			name = *n.constant
 			name = name[:len(name)-1] + "Id"
-		} else if isAlpha(*n.constant) {
+		} else {
 			name = *n.constant + "Id"
 		}
 

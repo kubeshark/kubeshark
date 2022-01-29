@@ -130,22 +130,6 @@ func suggestTags(oas *openapi.OpenAPI) {
 	}
 }
 
-func getSimilarPrefix(strs []string) string {
-	chunked := make([][]string, 0)
-	for _, item := range strs {
-		chunked = append(chunked, strings.Split(item, "/"))
-	}
-
-	cmn := longestCommonXfix(chunked, true)
-	res := make([]string, 0)
-	for _, chunk := range cmn {
-		if chunk != "api" && !IsVersionString(chunk) && !strings.HasPrefix(chunk, "{") {
-			res = append(res, chunk)
-		}
-	}
-	return strings.Join(res[1:], ".")
-}
-
 func deleteFromSlice(s []string, val string) []string {
 	temp := s[:0]
 	for _, x := range s {

@@ -31,7 +31,7 @@ var ignoredHeaderPrefixes = []string{
 	":", "accept-", "access-control-", "if-", "sec-", "grpc-",
 	"x-forwarded-", "x-original-", "cf-",
 	"x-up9-", "x-envoy-", "x-hasura-", "x-b3-", "x-datadog-", "x-envoy-", "x-amz-", "x-newrelic-", "x-prometheus-",
-	"x-akamai-", "x-spotim-", "x-amzn-", "x-ratelimit-",
+	"x-akamai-", "x-spotim-", "x-amzn-", "x-ratelimit-", "x-goog-",
 }
 
 func isCtypeIgnored(ctype string) bool {
