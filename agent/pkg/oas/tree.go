@@ -103,6 +103,9 @@ func (n *Node) createParam() *openapi.ParameterObj {
 		}
 
 		name = cleanStr(name, isAlNumRune)
+		if !isAlphaRune(rune(name[0])) {
+			name = "_" + name
+		}
 	}
 
 	newParam := createSimpleParam(name, "path", "string")

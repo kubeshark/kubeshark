@@ -32,11 +32,11 @@ func IsGibberish(str string) bool {
 		return true
 	}
 
-	alNum := cleanStr(str, isAlNumRune)
-	alpha := cleanStr(str, isAlphaRune)
-	noiseAll := isNoisy(alNum)
-	triAll := isTrigramBad(strings.ToLower(alpha))
-	_ = noiseAll
+	//alNum := cleanStr(str, isAlNumRune)
+	//alpha := cleanStr(str, isAlphaRune)
+	// noiseAll := isNoisy(alNum)
+	//triAll := isTrigramBad(strings.ToLower(alpha))
+	//_ = noiseAll
 
 	isNotAlNum := func(r rune) bool { return !isAlNumRune(r) }
 	chunks := strings.FieldsFunc(str, isNotAlNum)
@@ -51,13 +51,17 @@ func IsGibberish(str string) bool {
 		}
 	}
 
-	if len(chunks) > 0 && float64(noisyLen) >= float64(alnumLen)/3.0 {
+	if float64(noisyLen) > 0 {
 		return true
 	}
 
-	if triAll {
-		//return true
-	}
+	//if len(chunks) > 0 && float64(noisyLen) >= float64(alnumLen)/3.0 {
+	//	return true
+	//}
+
+	//if triAll {
+	//return true
+	//}
 
 	return false
 }
