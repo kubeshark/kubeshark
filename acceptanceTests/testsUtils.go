@@ -2,9 +2,11 @@ package acceptanceTests
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -420,4 +422,19 @@ func ContainsPartOfValue(slice []string, containsValue string) bool {
 	}
 
 	return false
+}
+
+func RunCommandAsyncWithPipe(ctx context.Context, command string, args []string) (stdout bytes.Buffer, stderr bytes.Buffer, err error) {
+	cmd := exec.CommandContext(ctx, command, args...)
+
+	// Set output to Byte Buffers
+	cmd.Stdout = io.MultiWriter(os.Stdout, &stdout)
+	cmd.Stderr = io.MultiWriter(os.Stderr, &stderr)
+
+	err = cmd.Start()
+	if err != nil {
+		return stdout, stderr, fmt.Errorf("cmd.Start() failed: %s", err)
+	}
+
+	return stdout, stderr, nil
 }
