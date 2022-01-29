@@ -327,7 +327,7 @@ func handleCounters(opObj *openapi.Operation, success bool, entryWithSource *Ent
 		return err
 	}
 
-	ts := float64(started.UnixMilli()) / 1000
+	ts := float64(started.UnixNano()) / float64(time.Millisecond) / 1000
 	rt := float64(entryWithSource.Entry.Time) / 1000
 
 	counter.addEntry(ts, rt, success)
