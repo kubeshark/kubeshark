@@ -36,7 +36,7 @@ func IsGibberish(str string) bool {
 	//alpha := cleanStr(str, isAlphaRune)
 	// noiseAll := isNoisy(alNum)
 	//triAll := isTrigramBad(strings.ToLower(alpha))
-	//_ = noiseAll
+	// _ = noiseAll
 
 	isNotAlNum := func(r rune) bool { return !isAlNumRune(r) }
 	chunks := strings.FieldsFunc(str, isNotAlNum)
@@ -157,7 +157,7 @@ func isTrigramBad(s string) bool {
 		bad := val < threshold
 		threshold2 := math.Log(float64(cnt)-2) * 0.1
 		bad2 := val2 < threshold2
-		return bad && bad2
+		return bad && bad2 // TODO: improve this logic to be clearer
 	}
 	return false
 }
