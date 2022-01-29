@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/chanced/openapi"
 	"github.com/google/uuid"
+	"github.com/nav-inc/datetime"
 	"github.com/up9inc/mizu/shared/logger"
 	"mime"
 	"mizuserver/pkg/har"
@@ -12,7 +13,11 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 )
+
+const CountersTotal = "x-counters-total"
+const CountersPerSource = "x-counters-per-source"
 
 type reqResp struct { // hello, generics in Go
 	Req  *har.Request
@@ -49,11 +54,11 @@ func (g *SpecGen) StartFromSpec(oas *openapi.OpenAPI) {
 	}
 }
 
-func (g *SpecGen) feedEntry(entry har.Entry) (string, error) {
+func (g *SpecGen) feedEntry(entryWithSource EntryWithSource) (string, error) {
 	g.lock.Lock()
 	defer g.lock.Unlock()
 
-	opId, err := g.handlePathObj(&entry)
+	opId, err := g.handlePathObj(&entryWithSource)
 	if err != nil {
 		return "", err
 	}
@@ -167,7 +172,8 @@ func getPathsKeys(mymap map[openapi.PathValue]*openapi.PathObj) []string {
 	return keys
 }
 
-func (g *SpecGen) handlePathObj(entry *har.Entry) (string, error) {
+func (g *SpecGen) handlePathObj(entryWithSource *EntryWithSource) (string, error) {
+	entry := entryWithSource.Entry
 	urlParsed, err := url.Parse(entry.Request.URL)
 	if err != nil {
 		return "", err
@@ -211,7 +217,7 @@ func (g *SpecGen) handlePathObj(entry *har.Entry) (string, error) {
 		split = strings.Split(urlParsed.Path, "/")
 	}
 	node := g.tree.getOrSet(split, new(openapi.PathObj))
-	opObj, err := handleOpObj(entry, node.pathObj)
+	opObj, err := handleOpObj(entryWithSource, node.pathObj)
 
 	if opObj != nil {
 		return opObj.OperationID, err
@@ -220,7 +226,8 @@ func (g *SpecGen) handlePathObj(entry *har.Entry) (string, error) {
 	return "", err
 }
 
-func handleOpObj(entry *har.Entry, pathObj *openapi.PathObj) (*openapi.Operation, error) {
+func handleOpObj(entryWithSource *EntryWithSource, pathObj *openapi.PathObj) (*openapi.Operation, error) {
+	entry := entryWithSource.Entry
 	isSuccess := 100 <= entry.Response.Status && entry.Response.Status < 400
 	opObj, wasMissing, err := getOpObj(pathObj, entry.Request.Method, isSuccess)
 	if err != nil {
@@ -242,7 +249,65 @@ func handleOpObj(entry *har.Entry, pathObj *openapi.PathObj) (*openapi.Operation
 		return nil, err
 	}
 
+	err = handleCounters(opObj, isSuccess, entryWithSource)
+	if err != nil {
+		return nil, err
+	}
+
 	return opObj, nil
+}
+
+func handleCounters(opObj *openapi.Operation, success bool, entryWithSource *EntryWithSource) error {
+	counter := Counter{}
+	counterMap := CounterMap{}
+	if opObj.Extensions == nil {
+		opObj.Extensions = openapi.Extensions{}
+	} else {
+		if _, ok := opObj.Extensions.Extension(CountersTotal); ok {
+			err := opObj.Extensions.DecodeExtension(CountersTotal, &counter)
+			if err != nil {
+				return err
+			}
+		}
+
+		if _, ok := opObj.Extensions.Extension(CountersPerSource); ok {
+			err := opObj.Extensions.DecodeExtension(CountersPerSource, &counterMap)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	var counterPerSource *Counter
+	if existing, ok := counterMap[entryWithSource.Source]; ok {
+		counterPerSource = existing
+	} else {
+		counterPerSource = new(Counter)
+		counterMap[entryWithSource.Source] = counterPerSource
+	}
+
+	started, err := datetime.Parse(entryWithSource.Entry.StartedDateTime, time.UTC)
+	if err != nil {
+		return err
+	}
+
+	ts := float64(started.UnixMilli()) / 1000
+	rt := float64(entryWithSource.Entry.Time) / 1000
+
+	counter.addEntry(ts, rt, success)
+	counterPerSource.addEntry(ts, rt, success)
+
+	err = opObj.Extensions.SetExtension(CountersTotal, counter)
+	if err != nil {
+		return err
+	}
+
+	err = opObj.Extensions.SetExtension(CountersPerSource, counterMap)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func handleRequest(req *har.Request, opObj *openapi.Operation, isSuccess bool) error {
