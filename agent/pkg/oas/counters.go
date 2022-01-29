@@ -26,6 +26,29 @@ func (c *Counter) addEntry(ts float64, rt float64, succ bool) {
 	c.LastSeen = math.Max(c.LastSeen, ts)
 }
 
-// TODO: addOther
+func (c *Counter) addOther(other *Counter) {
+	c.Entries += other.Entries
+	c.SumRT += other.SumRT
+	c.Failures += other.Failures
 
-type CounterMap = map[string]*Counter
+	if c.FirstSeen == 0 {
+		c.FirstSeen = other.FirstSeen
+	} else {
+		c.FirstSeen = math.Min(c.FirstSeen, other.FirstSeen)
+	}
+
+	c.LastSeen = math.Max(c.LastSeen, other.LastSeen)
+}
+
+type CounterMap map[string]*Counter
+
+func (m *CounterMap) addOther(other *CounterMap) {
+	for src, cmap := range *other {
+		if existing, ok := (*m)[src]; ok {
+			existing.addOther(cmap)
+		} else {
+			copied := *cmap
+			(*m)[src] = &copied
+		}
+	}
+}

@@ -73,10 +73,46 @@ func (g *SpecGen) GetSpec() (*openapi.OpenAPI, error) {
 
 	g.tree.compact()
 
+	counterTotal := Counter{}
+	counterMapTotal := CounterMap{}
+
 	for _, pathop := range g.tree.listOps() {
-		if pathop.op.Summary == "" {
-			pathop.op.Summary = pathop.path
+		opObj := pathop.op
+		if opObj.Summary == "" {
+			opObj.Summary = pathop.path
 		}
+
+		if _, ok := opObj.Extensions.Extension(CountersTotal); ok {
+			counter := new(Counter)
+			err := opObj.Extensions.DecodeExtension(CountersTotal, counter)
+			if err != nil {
+				return nil, err
+			}
+			counterTotal.addOther(counter)
+		}
+
+		if _, ok := opObj.Extensions.Extension(CountersPerSource); ok {
+			counterMap := new(CounterMap)
+			err := opObj.Extensions.DecodeExtension(CountersPerSource, counterMap)
+			if err != nil {
+				return nil, err
+			}
+			counterMapTotal.addOther(counterMap)
+		}
+	}
+
+	if g.oas.Extensions == nil {
+		g.oas.Extensions = openapi.Extensions{}
+	}
+
+	err := g.oas.Extensions.SetExtension(CountersTotal, counterTotal)
+	if err != nil {
+		return nil, err
+	}
+
+	err = g.oas.Extensions.SetExtension(CountersPerSource, counterMapTotal)
+	if err != nil {
+		return nil, err
 	}
 
 	// put paths back from tree into OAS
