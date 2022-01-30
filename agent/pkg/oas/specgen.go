@@ -126,6 +126,11 @@ func (g *SpecGen) GetSpec() (*openapi.OpenAPI, error) {
 
 	suggestTags(g.oas)
 
+	tpl := "Mizu observed %d entries (%d failed), average response time is %.3f seconds"
+	if g.oas.Info.Description == "" || (strings.HasPrefix(g.oas.Info.Description, "Mizu ") && strings.HasSuffix(g.oas.Info.Description, " seconds")) {
+		g.oas.Info.Description = fmt.Sprintf(tpl, counterTotal.Entries, counterTotal.Failures, counterTotal.SumRT/float64(counterTotal.Entries))
+	}
+
 	// to make a deep copy, no better idea than marshal+unmarshal
 	specText, err := json.MarshalIndent(g.oas, "", "\t")
 	if err != nil {
