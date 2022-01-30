@@ -164,6 +164,7 @@ func getTapMizuAgentConfig() *shared.MizuAgentConfig {
 		AgentDatabasePath:      shared.DataDirPath,
 		ServiceMap:             config.Config.ServiceMap,
 		OAS:                    config.Config.OAS,
+		Elastic:                config.Config.Elastic,
 	}
 
 	return &mizuAgentConfig
