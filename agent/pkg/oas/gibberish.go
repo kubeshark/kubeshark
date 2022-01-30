@@ -12,6 +12,7 @@ var (
 	patEmail    = regexp.MustCompile(`^\w+([-+.']\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$`)
 	patHexLower = regexp.MustCompile(`(0x)?[0-9a-f]{6,}`)
 	patHexUpper = regexp.MustCompile(`(0x)?[0-9A-F]{6,}`)
+	patLongNum  = regexp.MustCompile(`\d{6,}`)
 )
 
 func IsGibberish(str string) bool {
@@ -27,7 +28,7 @@ func IsGibberish(str string) bool {
 		return true
 	}
 
-	if patHexLower.MatchString(str) || patHexUpper.MatchString(str) {
+	if patHexLower.MatchString(str) || patHexUpper.MatchString(str) || patLongNum.MatchString(str) {
 		return true
 	}
 
