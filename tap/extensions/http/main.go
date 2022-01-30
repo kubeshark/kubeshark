@@ -100,7 +100,6 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 		http2Assembler = createHTTP2Assembler(b)
 	}
 
-	dissected := false
 	switchingProtocolsHTTP2 := false
 	for {
 		if switchingProtocolsHTTP2 {
@@ -122,7 +121,6 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 				continue
 			}
 			superIdentifier.Protocol = &http11protocol
-			dissected = true
 		} else if isClient {
 			var req *http.Request
 			switchingProtocolsHTTP2, req, err = handleHTTP1ClientStream(b, tcpID, counterPair, superTimer, emitter, options)
@@ -132,7 +130,6 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 				continue
 			}
 			superIdentifier.Protocol = &http11protocol
-			dissected = true
 
 			// In case of an HTTP2 upgrade, duplicate the HTTP1 request into HTTP2 with stream ID 1
 			if switchingProtocolsHTTP2 {
@@ -164,11 +161,10 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 				continue
 			}
 			superIdentifier.Protocol = &http11protocol
-			dissected = true
 		}
 	}
 
-	if !dissected {
+	if superIdentifier.Protocol == nil {
 		return err
 	}
 
