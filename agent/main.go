@@ -9,6 +9,7 @@ import (
 	"mizuserver/pkg/api"
 	"mizuserver/pkg/config"
 	"mizuserver/pkg/controllers"
+	"mizuserver/pkg/elastic"
 	"mizuserver/pkg/middlewares"
 	"mizuserver/pkg/models"
 	"mizuserver/pkg/oas"
@@ -159,6 +160,7 @@ func enableExpFeatureIfNeeded() {
 	if config.Config.ServiceMap {
 		servicemap.GetInstance().SetConfig(config.Config)
 	}
+	elastic.GetInstance().Configure(config.Config.Elastic)
 }
 
 func configureBasenineServer(host string, port string) {
@@ -167,7 +169,7 @@ func configureBasenineServer(host string, port string) {
 		wait.WithWait(200*time.Millisecond),
 		wait.WithBreak(50*time.Millisecond),
 		wait.WithDeadline(5*time.Second),
-		wait.WithDebug(true),
+		wait.WithDebug(config.Config.LogLevel == logging.DEBUG),
 	).Do([]string{fmt.Sprintf("%s:%s", host, port)}) {
 		logger.Log.Panicf("Basenine is not available!")
 	}
