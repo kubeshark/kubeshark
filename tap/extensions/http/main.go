@@ -121,6 +121,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 			} else if err != nil {
 				continue
 			}
+			superIdentifier.Protocol = &http11protocol
 			dissected = true
 		} else if isClient {
 			var req *http.Request
@@ -130,6 +131,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 			} else if err != nil {
 				continue
 			}
+			superIdentifier.Protocol = &http11protocol
 			dissected = true
 
 			// In case of an HTTP2 upgrade, duplicate the HTTP1 request into HTTP2 with stream ID 1
@@ -161,6 +163,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 			} else if err != nil {
 				continue
 			}
+			superIdentifier.Protocol = &http11protocol
 			dissected = true
 		}
 	}
@@ -168,7 +171,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 	if !dissected {
 		return err
 	}
-	superIdentifier.Protocol = &http11protocol
+
 	return nil
 }
 
