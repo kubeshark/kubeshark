@@ -97,7 +97,7 @@ func checkServerConnection(kubernetesProvider *kubernetes.Provider) bool {
 
 	serverUrl := GetApiServerUrl()
 
-	apiServerProvider := apiserver.NewProviderWithoutRetries(serverUrl, apiserver.DefaultTimeout)
+	apiServerProvider := apiserver.NewProvider(serverUrl, 1, apiserver.DefaultTimeout)
 	if err := apiServerProvider.TestConnection(); err == nil {
 		logger.Log.Infof("%v found Mizu server tunnel available and connected successfully to API server", fmt.Sprintf(uiUtils.Green, "√"))
 		return true

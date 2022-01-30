@@ -5,6 +5,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"path"
+	"regexp"
+	"time"
+
 	"github.com/up9inc/mizu/cli/apiserver"
 	"github.com/up9inc/mizu/cli/config/configStructs"
 	"github.com/up9inc/mizu/cli/errormessage"
@@ -13,9 +17,6 @@ import (
 	"github.com/up9inc/mizu/cli/resources"
 	"github.com/up9inc/mizu/cli/uiUtils"
 	"github.com/up9inc/mizu/shared"
-	"path"
-	"regexp"
-	"time"
 
 	"github.com/up9inc/mizu/cli/config"
 	"github.com/up9inc/mizu/shared/kubernetes"
@@ -35,7 +36,7 @@ func startProxyReportErrorIfAny(kubernetesProvider *kubernetes.Provider, ctx con
 		return
 	}
 
-	apiProvider = apiserver.NewProviderWithoutRetries(GetApiServerUrl(), time.Second) // short check for proxy
+	apiProvider = apiserver.NewProvider(GetApiServerUrl(), apiserver.DefaultRetries, apiserver.DefaultTimeout)
 	if err := apiProvider.TestConnection(); err != nil {
 		logger.Log.Debugf("Couldn't connect using proxy, stopping proxy and trying to create port-forward")
 		if err := httpServer.Shutdown(context.Background()); err != nil {
@@ -50,7 +51,7 @@ func startProxyReportErrorIfAny(kubernetesProvider *kubernetes.Provider, ctx con
 			return
 		}
 
-		apiProvider = apiserver.NewProvider(GetApiServerUrl(), apiserver.DefaultRetries, apiserver.DefaultTimeout) // long check for port-forward
+		apiProvider = apiserver.NewProvider(GetApiServerUrl(), apiserver.DefaultRetries, apiserver.DefaultTimeout)
 		if err := apiProvider.TestConnection(); err != nil {
 			logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Couldn't connect to API server, for more info check logs at %s", fsUtils.GetLogFilePath()))
 			cancel()
