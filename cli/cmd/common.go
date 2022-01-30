@@ -39,7 +39,7 @@ func startProxyReportErrorIfAny(kubernetesProvider *kubernetes.Provider, ctx con
 	apiProvider = apiserver.NewProvider(GetApiServerUrl(), apiserver.DefaultRetries, apiserver.DefaultTimeout)
 	if err := apiProvider.TestConnection(); err != nil {
 		logger.Log.Debugf("Couldn't connect using proxy, stopping proxy and trying to create port-forward")
-		if err := httpServer.Shutdown(context.Background()); err != nil {
+		if err := httpServer.Shutdown(ctx); err != nil {
 			logger.Log.Debugf("Error occurred while stopping proxy %v", errormessage.FormatError(err))
 		}
 
