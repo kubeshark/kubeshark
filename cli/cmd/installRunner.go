@@ -74,6 +74,7 @@ func getInstallMizuAgentConfig(maxDBSizeBytes int64, tapperResources shared.Reso
 		StandaloneMode:         true,
 		ServiceMap:             config.Config.ServiceMap,
 		OAS:                    config.Config.OAS,
+		Elastic:                config.Config.Elastic,
 	}
 
 	return &mizuAgentConfig

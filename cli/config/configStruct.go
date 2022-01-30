@@ -40,6 +40,7 @@ type ConfigStruct struct {
 	LogLevelStr            string                      `yaml:"log-level,omitempty" default:"INFO" readonly:""`
 	ServiceMap             bool                        `yaml:"service-map,omitempty" default:"false" readonly:""`
 	OAS                    bool                        `yaml:"oas,omitempty" default:"false" readonly:""`
+	Elastic                shared.ElasticConfig        `yaml:"elastic"`
 }
 
 func (config *ConfigStruct) validate() error {
