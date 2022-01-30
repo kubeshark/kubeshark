@@ -9,6 +9,7 @@ import (
 	"mizuserver/pkg/api"
 	"mizuserver/pkg/config"
 	"mizuserver/pkg/controllers"
+	"mizuserver/pkg/elastic"
 	"mizuserver/pkg/middlewares"
 	"mizuserver/pkg/models"
 	"mizuserver/pkg/oas"
@@ -159,6 +160,7 @@ func enableExpFeatureIfNeeded() {
 	if config.Config.ServiceMap {
 		servicemap.GetInstance().SetConfig(config.Config)
 	}
+	elastic.GetInstance().Configure(config.Config.Elastic)
 }
 
 func configureBasenineServer(host string, port string) {

@@ -197,6 +197,12 @@ func (r *RedisInputStream) readLineBytes() ([]byte, error) {
 	line := make([]byte, N)
 	j := 0
 	for i := r.count; i <= N; i++ {
+		if i >= len(buf) {
+			return nil, errors.New("Redis buffer index mismatch.")
+		}
+		if i >= len(line) {
+			return nil, errors.New("Redis line index mismatch.")
+		}
 		line[j] = buf[i]
 		j++
 	}
@@ -295,27 +301,44 @@ func (p *RedisProtocol) Read() (packet *RedisPacket, err error) {
 	switch x.(type) {
 	case []interface{}:
 		array := x.([]interface{})
-		switch array[0].(type) {
-		case []uint8:
-			packet.Command = RedisCommand(strings.ToUpper(string(array[0].([]uint8))))
-			if len(array) > 1 {
-				packet.Key = string(array[1].([]uint8))
-			}
-			if len(array) > 2 {
-				packet.Value = string(array[2].([]uint8))
-			}
-			if len(array) > 3 {
-				packet.Value = fmt.Sprintf("[%s", packet.Value)
-				for _, item := range array[3:] {
-					packet.Value = fmt.Sprintf("%s, %s", packet.Value, item.([]uint8))
+		if len(array) > 0 {
+			switch array[0].(type) {
+			case []uint8:
+				packet.Command = RedisCommand(strings.ToUpper(string(array[0].([]uint8))))
+				if len(array) > 1 {
+					switch array[1].(type) {
+					case []uint8:
+						packet.Key = string(array[1].([]uint8))
+					case int64:
+						packet.Key = fmt.Sprintf("%d", array[1].(int64))
+					}
 				}
-				packet.Value = strings.TrimSuffix(packet.Value, ", ")
-				packet.Value = fmt.Sprintf("%s]", packet.Value)
+				if len(array) > 2 {
+					switch array[2].(type) {
+					case []uint8:
+						packet.Value = string(array[2].([]uint8))
+					case int64:
+						packet.Value = fmt.Sprintf("%d", array[2].(int64))
+					}
+				}
+				if len(array) > 3 {
+					packet.Value = fmt.Sprintf("[%s", packet.Value)
+					for _, item := range array[3:] {
+						switch item.(type) {
+						case []uint8:
+							packet.Value = fmt.Sprintf("%s, %s", packet.Value, item.([]uint8))
+						case int64:
+							packet.Value = fmt.Sprintf("%s, %d", packet.Value, item.(int64))
+						}
+					}
+					packet.Value = strings.TrimSuffix(packet.Value, ", ")
+					packet.Value = fmt.Sprintf("%s]", packet.Value)
+				}
+			default:
+				msg := fmt.Sprintf("Unrecognized element in Redis array: %v", reflect.TypeOf(array[0]))
+				err = errors.New(msg)
+				return
 			}
-		default:
-			msg := fmt.Sprintf("Unrecognized element in Redis array: %v", reflect.TypeOf(array[0]))
-			err = errors.New(msg)
-			return
 		}
 	case []uint8:
 		val := string(x.([]uint8))

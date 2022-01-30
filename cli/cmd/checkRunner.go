@@ -3,13 +3,14 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"regexp"
+
 	"github.com/up9inc/mizu/cli/apiserver"
 	"github.com/up9inc/mizu/cli/config"
 	"github.com/up9inc/mizu/cli/uiUtils"
 	"github.com/up9inc/mizu/shared/kubernetes"
 	"github.com/up9inc/mizu/shared/logger"
 	"github.com/up9inc/mizu/shared/semver"
-	"regexp"
 )
 
 func runMizuCheck() {
