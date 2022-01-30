@@ -124,7 +124,7 @@ func RunMizuTap() {
 	}
 
 	logger.Log.Infof("Waiting for Mizu Agent to start...")
-	if state.mizuServiceAccountExists, err = resources.CreateTapMizuResources(ctx, kubernetesProvider, serializedValidationRules, serializedContract, serializedMizuConfig, config.Config.IsNsRestrictedMode(), config.Config.MizuResourcesNamespace, config.Config.AgentImage, config.Config.BasenineImage, getSyncEntriesConfig(), config.Config.Tap.MaxEntriesDBSizeBytes(), config.Config.Tap.ApiServerResources, config.Config.ImagePullPolicy(), config.Config.LogLevel()); err != nil {
+	if state.mizuServiceAccountExists, err = resources.CreateTapMizuResources(ctx, kubernetesProvider, serializedValidationRules, serializedContract, serializedMizuConfig, config.Config.IsNsRestrictedMode(), config.Config.MizuResourcesNamespace, config.Config.AgentImage, getSyncEntriesConfig(), config.Config.Tap.MaxEntriesDBSizeBytes(), config.Config.Tap.ApiServerResources, config.Config.ImagePullPolicy(), config.Config.LogLevel()); err != nil {
 		var statusError *k8serrors.StatusError
 		if errors.As(err, &statusError) {
 			if statusError.ErrStatus.Reason == metav1.StatusReasonAlreadyExists {
@@ -164,6 +164,7 @@ func getTapMizuAgentConfig() *shared.MizuAgentConfig {
 		AgentDatabasePath:      shared.DataDirPath,
 		ServiceMap:             config.Config.ServiceMap,
 		OAS:                    config.Config.OAS,
+		Elastic:                config.Config.Elastic,
 	}
 
 	return &mizuAgentConfig
@@ -343,7 +344,7 @@ func watchApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 
 				if modifiedPod.Status.Phase == core.PodRunning && !isPodReady {
 					isPodReady = true
-					postApiServerStarted(ctx, kubernetesProvider, cancel, err)
+					postApiServerStarted(ctx, kubernetesProvider, cancel)
 				}
 			case kubernetes.EventBookmark:
 				break
@@ -406,7 +407,7 @@ func watchApiServerEvents(ctx context.Context, kubernetesProvider *kubernetes.Pr
 			case "FailedScheduling", "Failed":
 				logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Mizu API Server status: %s - %s", event.Reason, event.Note))
 				cancel()
-				break
+				
 			}
 		case err, ok := <-errorChan:
 			if !ok {
@@ -422,11 +423,11 @@ func watchApiServerEvents(ctx context.Context, kubernetesProvider *kubernetes.Pr
 	}
 }
 
-func postApiServerStarted(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc, err error) {
+func postApiServerStarted(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
 	startProxyReportErrorIfAny(kubernetesProvider, ctx, cancel)
 
 	options, _ := getMizuApiFilteringOptions()
-	if err = startTapperSyncer(ctx, cancel, kubernetesProvider, state.targetNamespaces, *options, state.startTime); err != nil {
+	if err := startTapperSyncer(ctx, cancel, kubernetesProvider, state.targetNamespaces, *options, state.startTime); err != nil {
 		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error starting mizu tapper syncer: %v", err))
 		cancel()
 	}

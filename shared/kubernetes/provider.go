@@ -171,7 +171,6 @@ type ApiServerOptions struct {
 	Namespace             string
 	PodName               string
 	PodImage              string
-	BasenineImage         string
 	KratosImage           string
 	KetoImage             string
 	ServiceAccountName    string
@@ -277,7 +276,7 @@ func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, moun
 		},
 		{
 			Name:            "basenine",
-			Image:           opts.BasenineImage,
+			Image:           opts.PodImage,
 			ImagePullPolicy: opts.ImagePullPolicy,
 			VolumeMounts:    volumeMounts,
 			ReadinessProbe: &core.Probe{
@@ -301,7 +300,7 @@ func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, moun
 					"memory": memRequests,
 				},
 			},
-			Command:    []string{"/basenine"},
+			Command:    []string{"basenine"},
 			Args:       []string{"-addr", "0.0.0.0", "-port", shared.BaseninePort, "-persistent"},
 			WorkingDir: shared.DataDirPath,
 		},

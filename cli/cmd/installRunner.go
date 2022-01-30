@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	"github.com/creasty/defaults"
 	"github.com/up9inc/mizu/cli/config"
 	"github.com/up9inc/mizu/cli/errormessage"
@@ -41,7 +42,7 @@ func runMizuInstall() {
 
 	if err = resources.CreateInstallMizuResources(ctx, kubernetesProvider, serializedValidationRules,
 		serializedContract, serializedMizuConfig, config.Config.IsNsRestrictedMode(),
-		config.Config.MizuResourcesNamespace, config.Config.AgentImage, config.Config.BasenineImage,
+		config.Config.MizuResourcesNamespace, config.Config.AgentImage,
 		config.Config.KratosImage, config.Config.KetoImage,
 		nil, defaultMaxEntriesDBSizeBytes, defaultResources, config.Config.ImagePullPolicy(),
 		config.Config.LogLevel(), false); err != nil {
@@ -73,6 +74,7 @@ func getInstallMizuAgentConfig(maxDBSizeBytes int64, tapperResources shared.Reso
 		StandaloneMode:         true,
 		ServiceMap:             config.Config.ServiceMap,
 		OAS:                    config.Config.OAS,
+		Elastic:                config.Config.Elastic,
 	}
 
 	return &mizuAgentConfig

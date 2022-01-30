@@ -23,23 +23,13 @@ type Provider struct {
 	client  *http.Client
 }
 
-const DefaultRetries = 20
-const DefaultTimeout = 5 * time.Second
+const DefaultRetries = 3
+const DefaultTimeout = 2 * time.Second
 
 func NewProvider(url string, retries int, timeout time.Duration) *Provider {
 	return &Provider{
 		url:     url,
 		retries: config.GetIntEnvConfig(config.ApiServerRetries, retries),
-		client: &http.Client{
-			Timeout: timeout,
-		},
-	}
-}
-
-func NewProviderWithoutRetries(url string, timeout time.Duration) *Provider {
-	return &Provider{
-		url:     url,
-		retries: 1,
 		client: &http.Client{
 			Timeout: timeout,
 		},
