@@ -17,13 +17,14 @@ import (
 
 	"mizuserver/pkg/servicemap"
 
-	"github.com/up9inc/mizu/shared"
-	"github.com/up9inc/mizu/shared/logger"
-	tapApi "github.com/up9inc/mizu/tap/api"
 	"mizuserver/pkg/models"
 	"mizuserver/pkg/oas"
 	"mizuserver/pkg/resolver"
 	"mizuserver/pkg/utils"
+
+	"github.com/up9inc/mizu/shared"
+	"github.com/up9inc/mizu/shared/logger"
+	tapApi "github.com/up9inc/mizu/tap/api"
 
 	basenine "github.com/up9inc/basenine/client/go"
 )
@@ -139,7 +140,6 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 			}
 
 			oas.GetOasGeneratorInstance().PushEntry(harEntry)
-			elastic.GetInstance().PushEntry(mizuEntry)
 		}
 
 		data, err := json.Marshal(mizuEntry)
@@ -152,6 +152,7 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 		connection.SendText(string(data))
 
 		servicemap.GetInstance().NewTCPEntry(mizuEntry.Source, mizuEntry.Destination, &item.Protocol)
+		elastic.GetInstance().PushEntry(mizuEntry)
 	}
 }
 

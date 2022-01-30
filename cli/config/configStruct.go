@@ -27,7 +27,7 @@ type ConfigStruct struct {
 	Logs                   configStructs.LogsConfig    `yaml:"logs"`
 	Auth                   configStructs.AuthConfig    `yaml:"auth"`
 	Config                 configStructs.ConfigConfig  `yaml:"config,omitempty"`
-	AgentImage             string                      `yaml:"agent-image"`
+	AgentImage             string                      `yaml:"agent-image,omitempty" readonly:""`
 	KratosImage            string                      `yaml:"kratos-image,omitempty" readonly:""`
 	KetoImage              string                      `yaml:"keto-image,omitempty" readonly:""`
 	ImagePullPolicyStr     string                      `yaml:"image-pull-policy" default:"Always"`
