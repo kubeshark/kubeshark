@@ -23,7 +23,7 @@ var logsCmd = &cobra.Command{
 		if err != nil {
 			return nil
 		}
-		ctx, _ := context.WithCancel(context.Background())
+		ctx := context.Background()
 
 		if validationErr := config.Config.Logs.Validate(); validationErr != nil {
 			return errormessage.FormatError(validationErr)
