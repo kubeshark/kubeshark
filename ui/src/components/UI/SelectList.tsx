@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Checkbox from "./Checkbox"
 import Radio from "./Radio";
 import './style/SelectList.sass';
@@ -6,6 +6,7 @@ import './style/SelectList.sass';
 export interface Props {
     valuesListInput;
     tableName:string;
+    checkedValues?:string[];
     multiSelect:boolean;
     searchValue?:string;
     setValues: (newValues)=> void;
@@ -18,8 +19,16 @@ export type ValuesListInput = {
     isChecked: boolean;
 }[]
 
-const SelectList: React.FC<Props> = ({valuesListInput ,tableName,multiSelect=true,searchValue="",setValues,tabelClassName}) => {
+const SelectList: React.FC<Props> = ({valuesListInput ,tableName,checkedValues=[],multiSelect=true,searchValue="",setValues,tabelClassName}) => {
     const [valuesList, setValuesList] = useState(valuesListInput as ValuesListInput);
+
+    useEffect(() => {   
+            const list = valuesList.map(obj => {
+                const isValueChecked = checkedValues.some(checkedValueKey => obj.key === checkedValueKey)
+                return {...obj, isChecked: isValueChecked}
+            })
+        setValuesList(list);
+    },[valuesListInput,checkedValues]);
 
     const toggleValues = (checkedKey) => {
         if (!multiSelect){
@@ -43,8 +52,9 @@ const SelectList: React.FC<Props> = ({valuesListInput ,tableName,multiSelect=tru
 
 
     const toggleAll = () => {
+        const isChecked = valuesList.every(valueTap => valueTap.isChecked === true);
         const list = valuesList.map((obj) => {
-            return {...obj, isChecked: true}
+            return {...obj, isChecked: !isChecked}
         })
         setValuesList(list);
         setValues(list);
@@ -52,7 +62,7 @@ const SelectList: React.FC<Props> = ({valuesListInput ,tableName,multiSelect=tru
 
 
     const tableHead = multiSelect ? <tr style={{borderBottomWidth: "2px"}}>
-            <th style={{width: 50}}><Checkbox checked={valuesList.every(valueTap => valueTap.isChecked === false)}
+            <th style={{width: 50}}><Checkbox checked={valuesList.every(valueTap => valueTap.isChecked === true)}
                 onToggle={toggleAll}/></th>
             <th>{tableName}</th>
         </tr> : 

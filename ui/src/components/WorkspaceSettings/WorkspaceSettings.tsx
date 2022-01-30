@@ -3,6 +3,8 @@ import {ColsType, FilterableTableAction} from "../UI/FilterableTableAction"
 // import Api from "../../helpers/api"
 import { useEffect, useState } from "react";
 import AddWorkspaceModal, { WorkspaceData } from "../Modals/AddWorkspaceModal/AddWorkspaceModal";
+import { toast } from "react-toastify";
+import ConfirmationModal from "../UI/Modals/ConfirmationModal";
 
 interface Props {}
 
@@ -14,6 +16,7 @@ export const WorkspaceSettings : React.FC<Props> = ({}) => {
     const [workspaceData,SetWorkspaceData] = useState({} as WorkspaceData);
     const [isOpenModal,setIsOpen] = useState(false);
     const [isEditMode,setIsEditMode] = useState(false);
+    const [isOpenDeleteModal, setIsOpenDeleteModal] = useState(false);
 
     const cols : ColsType[] = [{field : "id",header:"Id"},{field : "name",header:"Name"}];
 
@@ -37,9 +40,20 @@ export const WorkspaceSettings : React.FC<Props> = ({}) => {
     const searchConfig = { searchPlaceholder: "Search Workspace",filterRows: filterFuncFactory}
     
     const onRowDelete = (row) => {
-        const filterFunc = filterFuncFactory(row.name)
-        const newWorkspaceList = workspacesRows.filter(filterFunc)
-        setWorkspacesRows(newWorkspaceList)
+        setIsOpenDeleteModal(true);
+        const findFunc = filterFuncFactory(row.id)
+        const newWorkspaceList = workspacesRows.find(findFunc)
+        setWorkspacesRows(newWorkspaceList);
+        (async() => {
+            try {
+                //await api.deleteUser(user)
+                const usersLeft = workspacesRows.filter(e => !findFunc(e))
+                setWorkspacesRows(usersLeft)
+                toast.success("Workspace Succesesfully Deleted")
+            } catch (error) {
+                toast.error("Unable To Delete")
+            }
+        })()
     }
 
     const onRowEdit = (row) => {
@@ -53,10 +67,13 @@ export const WorkspaceSettings : React.FC<Props> = ({}) => {
         <FilterableTableAction onRowEdit={onRowEdit} onRowDelete={onRowDelete} searchConfig={searchConfig} 
                                buttonConfig={buttonConfig} rows={workspacesRows} cols={cols}>
         </FilterableTableAction>
-        <AddWorkspaceModal isOpen={isOpenModal} workspaceData={workspaceData} onEdit={isEditMode} onCloseModal={() => { setIsOpen(false);} } >
-
-            
+        <AddWorkspaceModal isOpen={isOpenModal} workspaceDataInput={workspaceData} onEdit={isEditMode} onCloseModal={() => { setIsOpen(false);} } >            
         </AddWorkspaceModal>
+        <ConfirmationModal isOpen={isOpenDeleteModal} onClose={function (): void {
+            throw new Error("Function not implemented.");
+        } } onConfirm={function (): void {
+            throw new Error("Function not implemented.");
+        } }></ConfirmationModal>
     </>);
 }
 

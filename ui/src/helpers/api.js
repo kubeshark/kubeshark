@@ -166,13 +166,34 @@ export default class Api {
         }
     }
 
-    register = async (username, password) => {
+    // register = async (username, password) => {
+    //     const form = new FormData();
+    //     form.append('username', username);
+    //     form.append('password', password);
+
+    //     try {
+    //         const response = await this.client.post(`/user/register`, form);
+    //         this.persistToken(response.data.token);
+    //         return response;
+    //     } catch (e) {
+    //         if (e.response.status === 400) {
+    //             const error = {
+    //                 'type': FormValidationErrorType,
+    //                 'messages': e.response.data
+    //             };
+    //             throw error;
+    //         } else {
+    //             throw e;
+    //         }
+    //     }
+    // }
+
+    setupAdminUser = async (password) => {
         const form = new FormData();
-        form.append('username', username);
         form.append('password', password);
 
         try {
-            const response = await this.client.post(`/user/register`, form);
+            const response = await this.client.post(`/install/admin`, form);
             this.persistToken(response.data.token);
             return response;
         } catch (e) {

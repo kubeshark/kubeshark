@@ -206,8 +206,8 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
             <input className={classes.textField + " searchNamespace"} placeholder="Search" value={searchValue}
                     onChange={(event) => setSearchValue(event.target.value)}/>
         </div>
-        <SelectList valuesListInput={workspaces} tableName={''} multiSelect={false} searchValue={searchValue} 
-                    setValues= {workspaceChange} tabelClassName={''} >
+        <SelectList valuesListInput={workspaces} tableName={''} multiSelect={false} searchValue={searchValue}
+        setValues={workspaceChange} tabelClassName={''} checkedValues={[]} >
         </SelectList>
       </div>
 
