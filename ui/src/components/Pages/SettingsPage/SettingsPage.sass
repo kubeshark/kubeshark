@@ -1,23 +1,28 @@
 @import "../../../variables.module"
 
+@mixin tab-container
+        max-width: 513px
+        margin: 0 auto
+
 .settings-page
-    max-width: 513px
+    background: #F7F9FC;
     display: flex;
     flex-direction: column;
     align-content: center;
-    justify-content: center;
+    /* justify-content: center; */
     margin: 0 auto;
+    height: 100vh;
     
-
-
     & .tabs-nav
         padding-top: 0px;
 
 
 
 .header-section
-    margin-bottom: 30px;
-    background: #F7F9FC;
+    
+
+    &__container
+        @include tab-container
    
 
     &__title
@@ -25,5 +30,10 @@
         color: $blue-gray
         font-weight: 600 
         margin-bottom: 60px;
-        margin-top: 20px;  
+        margin-top: 20px;
+
+.tab-content
+    padding-top: 30px;
+    &__container
+        @include tab-container
     

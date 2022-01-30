@@ -13,19 +13,22 @@ const AdminSettings: React.FC<any> = ({color}) => {
     const [currentTab, setCurrentTab] = useState(TABS[0].tab);
     return (<>
         <div className="settings-page">
-        <div className="header-section">
-            <div className="header-section__title">Settings</div>
-            <Tabs tabs={TABS} currentTab={currentTab} color={color} onChange={setCurrentTab} leftAligned classes={{root:"tabs-nav"}}/>
-        </div>
-        <div>
-        
-        {currentTab === TABS[0].tab && <React.Fragment>
-                <UserSettings/>
-            </React.Fragment>}
-        {currentTab === TABS[1].tab && <React.Fragment>
-            <WorkspaceSettings/>
-        </React.Fragment>}
-    </div>
+            <div className="header-section">
+                <div className="header-section__container">
+                    <div className="header-section__title">Settings</div>
+                    <Tabs tabs={TABS} currentTab={currentTab} color={color} onChange={setCurrentTab} leftAligned classes={{root:"tabs-nav"}}/>
+                </div>
+            </div>
+            <div className="tab-content">
+                <div className="tab-content__container">
+                {currentTab === TABS[0].tab && <React.Fragment>
+                        <UserSettings/>
+                    </React.Fragment>}
+                {currentTab === TABS[1].tab && <React.Fragment>
+                    <WorkspaceSettings/>
+                </React.Fragment>}
+                </div>
+            </div>
     </div>
     </>
     )
