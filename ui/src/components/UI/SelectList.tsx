@@ -22,6 +22,10 @@ export type ValuesListInput = {
 const SelectList: React.FC<Props> = ({valuesListInput ,tableName,checkedValues=[],multiSelect=true,searchValue="",setValues,tabelClassName}) => {
     const [valuesList, setValuesList] = useState(valuesListInput as ValuesListInput);
 
+    const filteredValues = useMemo(() => {
+        return valuesList.filter((listValue) => listValue?.value?.includes(searchValue));
+    },[valuesList, searchValue])
+
     useEffect(() => {   
             const list = valuesList.map(obj => {
                 const isValueChecked = checkedValues.some(checkedValueKey => obj.key === checkedValueKey)
@@ -70,9 +74,7 @@ const SelectList: React.FC<Props> = ({valuesListInput ,tableName,checkedValues=[
             <th>{tableName}</th>    
         </tr>
 
-    const filteredValues = useMemo(() => {
-        return valuesList.filter((listValue) => listValue?.value?.includes(searchValue));
-    },[valuesList, searchValue])
+
 
         return <div className={tabelClassName + " select-list-table"}>
                 <table cellPadding={5} style={{borderCollapse: "collapse"}}>

@@ -3,6 +3,7 @@ import { useState } from "react";
 import Tabs from "../../UI/Tabs"
 import { UserSettings } from "../../UserSettings/UserSettings";
 import { WorkspaceSettings } from "../../WorkspaceSettings/WorkspaceSettings";
+import "./SettingsPage.sass"
 
 const AdminSettings: React.FC<any> = ({color}) => {
     var TABS = [
@@ -10,9 +11,14 @@ const AdminSettings: React.FC<any> = ({color}) => {
     ];
     
     const [currentTab, setCurrentTab] = useState(TABS[0].tab);
-    return (
-        <div style={{padding:" 0 24px"}}>
-        <Tabs tabs={TABS} currentTab={currentTab} color={color} onChange={setCurrentTab} leftAligned/>
+    return (<>
+        <div className="settings-page">
+        <div className="header-section">
+            <div className="header-section__title">Settings</div>
+            <Tabs tabs={TABS} currentTab={currentTab} color={color} onChange={setCurrentTab} leftAligned classes={{root:"tabs-nav"}}/>
+        </div>
+        <div>
+        
         {currentTab === TABS[0].tab && <React.Fragment>
                 <UserSettings/>
             </React.Fragment>}
@@ -20,6 +26,8 @@ const AdminSettings: React.FC<any> = ({color}) => {
             <WorkspaceSettings/>
         </React.Fragment>}
     </div>
+    </div>
+    </>
     )
   }
 
