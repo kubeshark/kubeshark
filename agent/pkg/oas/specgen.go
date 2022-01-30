@@ -3,6 +3,7 @@ package oas
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/chanced/openapi"
 	"github.com/google/uuid"
 	"github.com/nav-inc/datetime"
@@ -89,6 +90,11 @@ func (g *SpecGen) GetSpec() (*openapi.OpenAPI, error) {
 				return nil, err
 			}
 			counterTotal.addOther(counter)
+
+			tpl := "Mizu observed %d entries (%d failed), average response time is %.3f seconds"
+			if opObj.Description == "" || (strings.HasPrefix(opObj.Description, "Mizu ") && strings.HasSuffix(opObj.Description, " seconds")) {
+				opObj.Description = fmt.Sprintf(tpl, counter.Entries, counter.Failures, counter.SumRT/float64(counter.Entries))
+			}
 		}
 
 		if _, ok := opObj.Extensions.Extension(CountersPerSource); ok {
@@ -294,6 +300,7 @@ func handleOpObj(entryWithSource *EntryWithSource, pathObj *openapi.PathObj) (*o
 }
 
 func handleCounters(opObj *openapi.Operation, success bool, entryWithSource *EntryWithSource) error {
+	// TODO: if performance around DecodeExtension+SetExtension is bad, store counters as separate maps
 	counter := Counter{}
 	counterMap := CounterMap{}
 	if opObj.Extensions == nil {
