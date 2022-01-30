@@ -51,12 +51,13 @@ const SelectList: React.FC<Props> = ({valuesListInput ,tableName,multiSelect=tru
     }
 
 
-    const tableHead = multiSelect ? <tr style={{borderBottomWidth: "2px"}}>
+    const tableHead = multiSelect ? 
+        <tr style={{borderBottomWidth: "2px"}}>
             <th style={{width: 50}}><Checkbox checked={valuesList.every(valueTap => valueTap.isChecked === false)}
                 onToggle={toggleAll}/></th>
             <th>{tableName}</th>
         </tr> : 
-        <tr style={{borderBottomWidth: "2px"}}>
+         <tr style={{borderBottomWidth: "2px",display: !tableName ? "none" : "table"}}>
             <th>{tableName}</th>    
         </tr>
 

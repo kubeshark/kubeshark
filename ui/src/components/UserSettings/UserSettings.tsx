@@ -14,6 +14,7 @@ import { SettingsModal } from "../SettingsModal/SettingModal";
 import OasModal from "../Modals/OasModal/OasModal";
 import { apiDefineProperty } from "mobx/dist/internal";
 import { toast } from "react-toastify";
+import ConfirmationModal from "../UI/Modals/ConfirmationModal";
 
 interface Props {
 
@@ -31,19 +32,22 @@ export const UserSettings : React.FC<Props> = ({}) => {
                                    return val === "Active" ? "status--active" : "status--pending"
                                }}]
     const [isOpenModal,setIsOpen] = useState(false)
-    const [alert,setAlert] = useState({open:false,sevirity:"success"})
+    const [editMode, setEditMode] = useState(false);
+    const [confirmModalOpen,setConfirmModalOpen] = useState(false)
+
+    const getUserList =         (async () => {
+        try {
+            let users = [{username:"asd",role:"Admin",status:"Active",userId : "1"},
+                           {username:"aaaaaaa",role:"User",status:"Active",userId : "2"}]//await api.getUsers() 
+            setUserRows(users)                                
+        } catch (e) {
+            console.error(e);
+        }
+    })
     
 
     useEffect(() => {
-        (async () => {
-            try {
-                const users = [{username:"asd",role:"Admin",status:"Active",userId : "1"},
-                               {username:"aaaaaaa",role:"User",status:"Active",userId : "2"}]//await api.getUsers() 
-                setUserRows(users)                                
-            } catch (e) {
-                console.error(e);
-            }
-        })();
+        getUserList();
     },[])
 
     const filterFuncFactory = (searchQuery: string) => {
@@ -55,28 +59,40 @@ export const UserSettings : React.FC<Props> = ({}) => {
 
     const searchConfig = { searchPlaceholder: "Search User",filterRows: filterFuncFactory}
     
+    const findUser = (userId) => {
+        const findFunc = filterFuncFactory(userId);
+        return usersRows.find(findFunc);
+    }
+    
     const onRowDelete = (user) => {
-        const findFunc = filterFuncFactory(user.userId);
-        const userToDelete = usersRows.find(findFunc);
+        setConfirmModalOpen(true);
+        const userForDel = findUser(user.userId);
+        userUserData(userForDel)
+    }
+
+    const onConfirmDelete = () => {
         (async() => {
             try {
                 //await api.deleteUser(user)
+                const findFunc = filterFuncFactory(userData.userId);
                 const usersLeft = usersRows.filter(e => !findFunc(e))
                 setUserRows(usersLeft)
                 toast.success("User Deleted succesesfully")
             } catch (error) {
                 toast.error("User want not deleted")
             }
-        })()
-        
+        })()   
     }
 
     const onRowEdit = (row) => {
         userUserData(row)
+        setEditMode(true)
         setIsOpen(true)
     }
 
-
+    const onUserChange = (user) =>{
+        getUserList()
+    }
 
     const buttonConfig = {onClick: () => {setIsOpen(true)}, text:"Add User"}
 
@@ -84,8 +100,15 @@ export const UserSettings : React.FC<Props> = ({}) => {
         <FilterableTableAction onRowEdit={onRowEdit} onRowDelete={onRowDelete} searchConfig={searchConfig} 
                                buttonConfig={buttonConfig} rows={usersRows} cols={cols}>
         </FilterableTableAction>
-        <AddUserModal isOpen={isOpenModal} onCloseModal={() => { setIsOpen(false);userUserData({} as UserData) } } userData={userData} setShowAlert={setAlert}>
+        <AddUserModal isOpen={isOpenModal} onCloseModal={() => { 
+                     setIsOpen(false);userUserData({} as UserData) } }
+                      userData={userData} isEditMode={editMode} onUserChange={onUserChange}>
         </AddUserModal>
+        <ConfirmationModal isOpen={confirmModalOpen} onClose={() => setConfirmModalOpen(false)} 
+                           onConfirm={onConfirmDelete} confirmButtonText="Delete user" title="Delete User"
+                           confirmButtonColor="#DB2156">
+            <p>Are you sure you want to delete this user?</p>
+        </ConfirmationModal>
         {/* <Snackbar open={alert.open} classes={{root: "alert--right"}}>
         <MuiAlert classes={{filledWarning: 'customWarningStyle'}} elevation={6} variant="filled"
                   onClose={() => setAlert({...alert,open:false})} severity={"success"}>

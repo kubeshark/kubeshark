@@ -1,4 +1,5 @@
 import { Button, FormControl, IconButton, InputAdornment, InputLabel, MenuItem, OutlinedInput, Select } from '@material-ui/core';
+
 import { FC, useEffect, useState } from 'react';
 import Api from '../../../helpers/api';
 import { useCommonStyles } from '../../../helpers/commonStyle';
@@ -18,21 +19,23 @@ export type UserData = {
 
 interface AddUserModalProps {
   isOpen : boolean,
-  onCloseModal : () => void
-  userData : UserData;
-  setShowAlert : ({open:boolean,sevirity: Color}) => void;
+  onCloseModal : () => void,
+  userData : UserData,
+  isEditMode : boolean,
+  onUserChange: (UserData) => void,
 }
 
 const api = Api.getInstance();
 
-export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userData = {}, setShowAlert}) => {
+export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userData, isEditMode,onUserChange}) => {
+
 
   //const [editUserData, setEditUserData] = useState(userData)
   const [searchValue, setSearchValue] = useState("");
   const [workspaces, setWorkspaces] = useState([])
   //const { control, handleSubmit,register } = useForm<UserData>();
   const [disable, setDisable] = useState(true);
-  
+  const [editMode, setEditMode] = useState(isEditMode);
   const [invite, setInvite] = useState({sent:false,isSuceeded:false,link : null});
   const roles = [{key:"1",value:"Admin"},{key:"2",value:"User"}]
   const classes = useCommonStyles()
@@ -69,15 +72,22 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
   useEffect(()=> {
     (async () => {
       try { 
-         //if edit
-        //  const userDetails = await api.getUserDetails(userData)
-        //  setUserData(userDetails)
-        setUserData(userData as UserData)
+          setEditMode(isEditMode)
+          if (isEditMode) {
+            
+            //const userDetails = await api.getUserDetails(userData)
+            //const data = {...userData,...userDetails}
+            
+          }
+          else{
+            
+          }
+          setUserData(userData as UserData)
       } catch (e) {
           toast.error("Error getting user details")
       }
   })();
-  },[userData])
+  },[isEditMode, userData])
 
   // const onClose = () => {
   //   setIsOpen(false)
@@ -86,12 +96,13 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
   const onClose = () => {
     onCloseModal()
     setUserData({} as UserData)
-    
+    setInvite({sent:false,isSuceeded:false,link:""})
   }
 
-  const workspaceChange = (newVal) => {
+  const workspaceChange = (workspaces) => {
     //setWorkspaces(newVal);
-    const  data = {...userDataModel, workspace : newVal}
+    const selectedWorksapce = workspaces.find(x=> x.isChecked)
+    const  data = {...userDataModel, workspace : selectedWorksapce.key}
     setUserData(data)
     setGenarateDisabledState()
   }
@@ -113,7 +124,8 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
   };
 
   const isFormValid = () : boolean => {
-    return (Object.values(userDataModel).length === 3) && Object.values(userDataModel).every(val => val !== null)
+    return true;
+    //return (Object.values(userDataModel).length === 3) && Object.values(userDataModel).every(val => val !== null)
   }
 
   const setGenarateDisabledState = () => {
@@ -123,14 +135,19 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
 
   const generateLink =  () => {
     try {
-      //const res = await api.genareteInviteLink(userDataModel) 
-      //setInvite({...invite,isSuceeded:true,sent:true,link:res})
-      //toast.success("User has been added") 
+      if (editMode) {
+        //await api.updateUser(userDataModel)
+        setInvite({...invite,isSuceeded:true,sent:true,link:"asdasdasdasdasdasdasdasdads"})
+        toast.success("User has been modified")  
+      }
+      else{
+        //const res = await api.genareteInviteLink(userDataModel) 
+        setInvite({...invite,isSuceeded:true,sent:true, link:"asdasdasdasdasdasdasdasdads"})
+        toast.success("User has been added") 
+      }
 
-      //if edit
-      api.updateUser(userDataModel)
-      setInvite({...invite,isSuceeded:true,sent:true,link:"asdasdasdasdasdasdasdasdads"})
-      toast.success("User has been modified")     
+      onUserChange(userDataModel)
+   
   } catch (e) {
     toast.error("Error accrued generating link") 
   }
@@ -172,13 +189,14 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
 
   return (<>
 
-    <ConfirmationModal isOpen={isOpen} onClose={onClose} onConfirm={onClose} title='Add User' customActions={modalCustomActions}>
+    <ConfirmationModal isOpen={isOpen} onClose={onClose} onConfirm={onClose} 
+                       title={`${editMode ? "Edit" : "Add"} User`} customActions={modalCustomActions}>
 
       <h3 className='comfirmation-modal__sub-section-header'>DETAILS</h3>
       <div className='comfirmation-modal__sub-section'>
       <div className='user__details'>
         <input type="text" value={userDataModel?.username ?? ""} className={classes.textField + " user__email"} 
-                placeholder={"User Email"} onChange={userNameChange}>
+                placeholder={"User Email"} onChange={userNameChange} disabled={editMode}>
         </input>
         
               {/* <Controller name="role" control={control} rules={{ required: true }}
@@ -187,7 +205,7 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
 
       <FormControl size='small' variant="outlined" className='user__role'>
         <InputLabel>User Role</InputLabel>
-        <Select value={userDataModel.role ?? ""} onChange={userRoleChange} >
+        <Select value={userDataModel.role ?? ""} onChange={userRoleChange} classes={{ root : 'my-class-name' }} >
           <MenuItem value="0">
             <em>None</em>
           </MenuItem>
@@ -203,7 +221,7 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
       <h3 className='comfirmation-modal__sub-section-header'>WORKSPACE ACCESS </h3>     
       <div className="namespacesSettingsContainer">
         <div style={{margin: "10px 0"}}>
-            <input className={classes.textField + " searchNamespace"} placeholder="Search" value={searchValue}
+            <input className={classes.textField + " search-workspace"} placeholder="Search" value={searchValue}
                     onChange={(event) => setSearchValue(event.target.value)}/>
         </div>
         <SelectList valuesListInput={workspaces} tableName={''} multiSelect={false} searchValue={searchValue} 

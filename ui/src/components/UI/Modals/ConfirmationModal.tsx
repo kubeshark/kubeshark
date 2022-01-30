@@ -30,7 +30,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = observer(({title, is
                                                                         confirmButtonColor, titleColor, img, isLoading,children,
                                                                         className, customActions}) => {
     const classes = useCommonStyles();
-    const confirmStyle = {width: 100, marginLeft: 20}
+    const confirmStyle = {minWidth: 100, marginLeft: 20}
     
     const defualtActions =                 <><Button disabled={isLoading} style={{width: 100}} className={classes.outlinedButton} size={"small"}
                                                 variant='outlined' onClick={onClose}>{closeButtonText ?? "CANCEL"}
