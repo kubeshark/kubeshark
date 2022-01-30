@@ -1,11 +1,14 @@
 import { FC, useEffect, useMemo, useState } from 'react';
+import { workerData } from 'worker_threads';
 import Api from '../../../helpers/api';
 import { useCommonStyles } from '../../../helpers/commonStyle';
 import ConfirmationModal from '../../UI/Modals/ConfirmationModal';
 import SelectList from '../../UI/SelectList';
 import './AddWorkspaceModal.sass'
+import { toast } from "react-toastify";
 
 export type WorkspaceData = {
+    id:string;
     name:string;
     namespaces: string[];
   }
@@ -13,42 +16,35 @@ export type WorkspaceData = {
 interface AddWorkspaceModalProp {
   isOpen : boolean,
   onCloseModal: () => void,
-  workspaceDataInput: WorkspaceData,
+  workspaceId: string,
   onEdit: boolean
 }
-
+export const workspacesDemo = [{id:"1", name:"Worksapce1" , namespaces: [{key:"namespace1", value:"namespace1"},{key:"namespace2", value:"namespace2"}]}]; 
 const api = Api.getInstance();
 
-const AddWorkspaceModal: FC<AddWorkspaceModalProp> = ({isOpen,onCloseModal, workspaceDataInput ={}, onEdit}) => {
+const AddWorkspaceModal: FC<AddWorkspaceModalProp> = ({isOpen,onCloseModal, workspaceId, onEdit}) => {
 
-  const [workspaceDataModal, setWorkspaceData] = useState({} as WorkspaceData);
   const [searchValue, setSearchValue] = useState("");
-  const [namespaces, setNamespaces] = useState([]);
-  const [namespacesNames, setNamespaceNames] = useState([]);
-  const [workspaceName, setWorkspaceName] = useState("");
-  const [disable, setDisable] = useState(true);
 
-  console.log(workspaceDataInput);
-  console.log(workspaceDataModal);
+  const [workspaceName, setWorkspaceName] = useState("");
+  const [checkedNamespacesKeys, setCheckedNamespacesKeys] = useState([]);
+  const [namespaces, setNamespaces] = useState([]);
 
   const classes = useCommonStyles();
 
   const title = onEdit ? "Edit Workspace" : "Add Workspace";
 
   useEffect(() => {
-    setWorkspaceData(workspaceDataInput as WorkspaceData);
-  },[workspaceDataInput])
-
-  useEffect(() => {
     if(!isOpen) return;
     (async () => {
         try {
+          if(onEdit){
+            const workspace = workspacesDemo.find(obj => obj.id = workspaceId);
+            setWorkspaceName(workspace.name);
+            setCheckedNamespacesKeys(workspace.namespaces);   
+          }
             setSearchValue("");     
-            const namespaces = [{key:"1", value:"namespace1",isChecked:false},{key:"2", value:"namespace2",isChecked:false}];
-            const list = namespaces.map(obj => {
-            const isValueChecked = workspaceDataModal.namespaces.some(checkedValueKey => obj.key === checkedValueKey)
-            return {...obj, isChecked: isValueChecked}
-          })
+            const namespaces = [{key:"namespace1", value:"namespace1"},{key:"namespace2", value:"namespace2"},{key:"namespace3",value:"namespace3"}];
             setNamespaces(namespaces);
     } catch (e) {
             console.error(e);
@@ -58,49 +54,39 @@ const AddWorkspaceModal: FC<AddWorkspaceModalProp> = ({isOpen,onCloseModal, work
 }, [isOpen])
 
   const onWorkspaceNameChange = (event) => {
-    // const data = {...workspaceData, name: event.target.value};
-    //setWorkspaceData(data);
     setWorkspaceName(event.target.value);
-    setGenarateDisabledState();
   }
 
-
-  const onNamespaceChange = (newVal) => {
-    var filteredValues = newVal.filter(obj => obj.isChecked);
-    var namespaceNames = filteredValues.map(obj => obj.value);
-    setNamespaceNames(namespaceNames);
-
-    // var filteredValues = newVal.filter(obj => obj.isChecked);
-    // var namespaceNames = filteredValues.map(obj => obj.value);
-    // const data = {...workspaceData, namespaces: namespaceNames};
-    // setWorkspaceData(data);
-    setGenarateDisabledState();
-  }
-
-  const isFormValid = () : boolean => {
-    return (Object.values(workspaceDataModal).length === 2) && Object.values(workspaceDataModal).every(val => val !== null)
-  }
-
-  const setGenarateDisabledState = () => {
-    const isValid = isFormValid()
-    setDisable(!isValid)
-  }
+  // const isFormValid = () : boolean => {
+  //   return (Object.values(workspaceDataModal).length === 2) && Object.values(workspaceDataModal).every(val => val !== null)
+  // }
 
   const onConfirm = () => {
-    const data = {name: workspaceName, namespaces: namespacesNames};
-    setWorkspaceData(data);
+    try{
+      const workspaceData = {
+        name: workspaceName,
+        namespaces: checkedNamespacesKeys
+      }
+      console.log(workspaceData);
+      onCloseModal();
+      toast.success("Workspace Succesesfully Created ");
+    } catch{
+      toast.error("Couldn't Creat The Worksapce");
+    }
   }
 
   const onClose = () => {
     onCloseModal();
-    setWorkspaceData({} as WorkspaceData);
+    setWorkspaceName("");
+    setCheckedNamespacesKeys([]);
+    setNamespaces([]);
   }
 
   return (<>
     <ConfirmationModal isOpen={isOpen} onClose={onClose} onConfirm={onConfirm} title={title}>
     <h3 className='headline'>DETAILS</h3>
       <div>
-        <input type="text" value={workspaceDataModal?.name ?? ""} className={classes.textField + " workspace__name"} placeholder={"Workspace Name"} 
+        <input type="text" value={workspaceName ?? ""} className={classes.textField + " workspace__name"} placeholder={"Workspace Name"} 
                onChange={onWorkspaceNameChange}></input>
         </div>
         <h3 className='headline'>TAP SETTINGS</h3>     
@@ -109,12 +95,12 @@ const AddWorkspaceModal: FC<AddWorkspaceModalProp> = ({isOpen,onCloseModal, work
             <input className={classes.textField + " searchNamespace"} placeholder="Search" value={searchValue}
                     onChange={(event) => setSearchValue(event.target.value)}/>
         </div>
-        <SelectList valuesListInput={namespaces}
+        <SelectList items={namespaces}
                     tableName={"Namespaces"}
                     multiSelect={true} 
-                    checkedValues={workspaceDataModal.namespaces} 
+                    checkedValues={checkedNamespacesKeys} 
                     searchValue={searchValue} 
-                    setValues={onNamespaceChange} 
+                    setCheckedValues={setCheckedNamespacesKeys} 
                     tabelClassName={undefined}>
                     </SelectList>
             </div>

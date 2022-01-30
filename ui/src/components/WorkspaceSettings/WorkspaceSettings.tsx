@@ -13,12 +13,12 @@ interface Props {}
 export const WorkspaceSettings : React.FC<Props> = ({}) => {
 
     const [workspacesRows, setWorkspacesRows] = useState([]);
+    const cols : ColsType[] = [{field : "id",header:"Id"},{field : "name",header:"Name"}];
+
     const [workspaceData,SetWorkspaceData] = useState({} as WorkspaceData);
     const [isOpenModal,setIsOpen] = useState(false);
     const [isEditMode,setIsEditMode] = useState(false);
-    const [isOpenDeleteModal, setIsOpenDeleteModal] = useState(false);
-
-    const cols : ColsType[] = [{field : "id",header:"Id"},{field : "name",header:"Name"}];
+    const [isOpenDeleteModal, setIsOpenDeleteModal] = useState(false);    
 
     const buttonConfig = {onClick: () => {setIsOpen(true); setIsEditMode(false);SetWorkspaceData({} as WorkspaceData)}, text:"Add Workspace"}
 
@@ -34,27 +34,38 @@ export const WorkspaceSettings : React.FC<Props> = ({}) => {
     },[])
 
     const filterFuncFactory = (searchQuery: string) => {
-            return (row) => row.name.toLowerCase().includes(searchQuery.toLowerCase())
+        return (row) => {
+            return row.name.toLowerCase().includes(searchQuery.toLowerCase());
         }
-
-    const searchConfig = { searchPlaceholder: "Search Workspace",filterRows: filterFuncFactory}
-    
-    const onRowDelete = (row) => {
-        setIsOpenDeleteModal(true);
-        const findFunc = filterFuncFactory(row.id)
-        const newWorkspaceList = workspacesRows.find(findFunc)
-        setWorkspacesRows(newWorkspaceList);
-        (async() => {
-            try {
-                //await api.deleteUser(user)
-                const usersLeft = workspacesRows.filter(e => !findFunc(e))
-                setWorkspacesRows(usersLeft)
-                toast.success("Workspace Succesesfully Deleted")
-            } catch (error) {
-                toast.error("Unable To Delete")
-            }
-        })()
     }
+
+    const searchConfig = { searchPlaceholder: "Search Workspace",filterRows: filterFuncFactory};
+
+    const findWorkspace = (workspaceId) => {
+        const findFunc = filterFuncFactory(workspaceId);
+        return workspacesRows.find(findFunc);
+    }
+    
+    const onRowDelete = (workspace) => {
+        setIsOpenDeleteModal(true);
+        const workspaceForDel = findWorkspace(workspace.id);
+        SetWorkspaceData(workspaceForDel);
+    }
+    
+    const onDeleteConfirmation = () => {
+        (async() => {
+            try{
+                const findFunc = filterFuncFactory(workspaceData.id);
+                const workspaceLeft = workspacesRows.filter(ws => !findFunc(ws));
+                setWorkspacesRows(workspaceLeft);
+                setIsOpenDeleteModal(false);
+                toast.success("Workspace Succesesfully Deleted ");
+            } catch {
+                toast.error("Workspace hasn't deleted");
+            }
+        })();
+    }
+
 
     const onRowEdit = (row) => {
        setIsOpen(true);
@@ -67,13 +78,13 @@ export const WorkspaceSettings : React.FC<Props> = ({}) => {
         <FilterableTableAction onRowEdit={onRowEdit} onRowDelete={onRowDelete} searchConfig={searchConfig} 
                                buttonConfig={buttonConfig} rows={workspacesRows} cols={cols}>
         </FilterableTableAction>
-        <AddWorkspaceModal isOpen={isOpenModal} workspaceDataInput={workspaceData} onEdit={isEditMode} onCloseModal={() => { setIsOpen(false);} } >            
+        <AddWorkspaceModal isOpen={isOpenModal} workspaceId={workspaceData.id} onEdit={isEditMode} onCloseModal={() => { setIsOpen(false);} } >            
         </AddWorkspaceModal>
-        <ConfirmationModal isOpen={isOpenDeleteModal} onClose={function (): void {
-            throw new Error("Function not implemented.");
-        } } onConfirm={function (): void {
-            throw new Error("Function not implemented.");
-        } }></ConfirmationModal>
+        <ConfirmationModal isOpen={isOpenDeleteModal} onClose={() => setIsOpenDeleteModal(false)} 
+                           onConfirm={onDeleteConfirmation} confirmButtonText="Delete Workspace" title="Delete Workspace"
+                           confirmButtonColor="#DB2156">
+            <p>Are you sure you want to delete this workspace?</p>
+        </ConfirmationModal>
     </>);
 }
 

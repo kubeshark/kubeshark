@@ -4,15 +4,6 @@ import {ColsType, FilterableTableAction} from "../UI/FilterableTableAction"
 import { useEffect, useState } from "react";
 import { UserData,AddUserModal } from "../Modals/AddUserModal/AddUserModal";
 import Api from '../../helpers/api';
-
-import {Snackbar} from "@material-ui/core";
-import MuiAlert from "@material-ui/lab/Alert";
-import { Select } from "../UI/Select";
-import { MenuItem } from "@material-ui/core";
-import { settings } from "cluster";
-import { SettingsModal } from "../SettingsModal/SettingModal";
-import OasModal from "../Modals/OasModal/OasModal";
-import { apiDefineProperty } from "mobx/dist/internal";
 import { toast } from "react-toastify";
 import ConfirmationModal from "../UI/Modals/ConfirmationModal";
 

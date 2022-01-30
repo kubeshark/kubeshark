@@ -87,7 +87,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({isOpen, onClose, is
                             <div style={{margin: "10px 0"}}>
                                 <input className={classes.textField + " searchNamespace"} placeholder="Search" value={searchValue}
                                        onChange={(event) => setSearchValue(event.target.value)}/></div>
-                                <SelectList valuesListInput={namespaces} tableName={'Namespace'} multiSelect={true} searchValue={searchValue} setValues={setNamespaces} tabelClassName={'namespacesTable'} checkedValues={[]}/>
+                                <SelectList items={namespaces} tableName={'Namespace'} multiSelect={true} searchValue={searchValue} setCheckedValues={setNamespaces} tabelClassName={'namespacesTable'} checkedValues={[]}/>
                         </div>
                     </>}
                 </div>
