@@ -13,7 +13,7 @@
     "/form-urlencoded": {
       "post": {
         "summary": "/form-urlencoded",
-        "operationId": "588a3cf1-3712-492c-9dd6-2fc16ffbe1b4",
+        "operationId": "b2e250b0-29a0-495c-b1fe-bafb5aa75fd8",
         "responses": {
           "200": {
             "description": "Successful call with status 200",
@@ -57,7 +57,7 @@
     "/{Id}": {
       "get": {
         "summary": "/{Id}",
-        "operationId": "1a1cfeee-a612-4f1f-b153-7f25ba637729",
+        "operationId": "0b94748f-acad-4a25-8df2-15b465c472cc",
         "responses": {
           "200": {
             "description": "Successful call with status 200",
@@ -92,7 +92,7 @@
     "/{Id}/sub1": {
       "get": {
         "summary": "/{Id}/sub1",
-        "operationId": "0eeaaefc-197b-453f-b6aa-6476bcedd572",
+        "operationId": "bb628dfb-ca52-425b-a2af-2fbc66ab0b93",
         "responses": {
           "200": {
             "description": "Successful call with status 200",
@@ -125,7 +125,7 @@
     "/{Id}/sub2": {
       "get": {
         "summary": "/{Id}/sub2",
-        "operationId": "9e678be5-605c-470e-942f-ee5aaea8ee8c",
+        "operationId": "16791635-335e-4e49-9230-798278c0cbe8",
         "responses": {
           "200": {
             "description": "Successful call with status 200",
@@ -135,9 +135,11 @@
               }
             }
           }
+        }
       },
       "parameters": [
         {
+          "name": "Id",
           "in": "path",
           "required": true,
           "style": "simple",

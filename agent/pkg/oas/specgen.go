@@ -125,8 +125,6 @@ func suggestTags(oas *openapi.OpenAPI) {
 				}
 			}
 		}
-
-		//groups[common] = group
 	}
 }
 
@@ -378,10 +376,65 @@ func fillContent(reqResp reqResp, respContent openapi.Content, ctype string, err
 			}
 		}
 
-		content.Example = exampleMsg
+		if ctype == "application/x-www-form-urlencoded" && reqResp.Req != nil {
+			handleFormDataUrlencoded(text, content, ctype)
+		}
+
+		if content.Example == nil && len(exampleMsg) > len(content.Example) {
+			content.Example = exampleMsg
+		}
 	}
 
 	return respContent[ctype], nil
+}
+
+func handleFormDataUrlencoded(text string, content *openapi.MediaType, ctype string) {
+	formData, err := url.ParseQuery(text)
+	if err != nil {
+		logger.Log.Warningf("Could not decode %s: %s", ctype, err)
+		return
+	}
+
+	if content.Schema == nil {
+		content.Schema = new(openapi.SchemaObj)
+		content.Schema.Type = openapi.Types{openapi.TypeObject}
+		content.Schema.Properties = openapi.Schemas{}
+	}
+
+	props := &content.Schema.Properties
+	for name, vals := range formData {
+		existing, found := (*props)[name]
+		if !found {
+			existing = new(openapi.SchemaObj)
+			(*props)[name] = existing
+		}
+
+		examples := make([]string, 0)
+		if existing.Examples != nil {
+			err := json.Unmarshal(existing.Examples, &examples)
+			if err != nil {
+				continue
+			}
+		}
+
+		if len(examples) < 5 {
+		byVals:
+			for _, val := range vals {
+				for _, eVal := range examples {
+					if eVal == val {
+						continue byVals
+					}
+				}
+				examples = append(examples, val)
+			}
+		}
+
+		raw, err := json.Marshal(examples)
+		if err != nil {
+			continue
+		}
+		existing.Examples = raw
+	}
 }
 
 func getRespCtype(resp *har.Response) string {
