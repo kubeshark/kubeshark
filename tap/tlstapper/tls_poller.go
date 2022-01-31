@@ -12,7 +12,7 @@ import (
 	"github.com/up9inc/mizu/tap/api"
 )
 
-const UNKWONW_PORT string = "80"
+const UNKNOWN_PORT string = "80"
 const UNKNOWN_HOST string = "127.0.0.1"
 
 func Poll(tls *TlsTapper, httpExtension *api.Extension,
