@@ -13,7 +13,7 @@ import (
 )
 
 const UNKWONW_PORT string = "80"
-const UNKWONW_HOST string = "127.0.0.1"
+const UNKNOWN_HOST string = "127.0.0.1"
 
 func Poll(tls *TlsTapper, httpExtension *api.Extension,
 	emitter api.Emitter, options *api.TrafficFilteringOptions) {
