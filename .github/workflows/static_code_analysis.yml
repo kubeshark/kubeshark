@@ -30,25 +30,25 @@ jobs:
         with:
           version: latest
           working-directory: agent
-          args: --timeout=5m
+          args: --timeout=3m
 
       - name: Go lint - shared
         uses: golangci/golangci-lint-action@v2
         with:
           version: latest
           working-directory: shared
-          args: --timeout=5m
+          args: --timeout=3m
 
       - name: Go lint - tap
         uses: golangci/golangci-lint-action@v2
         with:
           version: latest
           working-directory: tap
-          args: --timeout=5m
+          args: --timeout=3m
 
       - name: Go lint - CLI
         uses: golangci/golangci-lint-action@v2
         with:
           version: latest
           working-directory: cli
-          args: --timeout=5m
+          args: --timeout=3m
