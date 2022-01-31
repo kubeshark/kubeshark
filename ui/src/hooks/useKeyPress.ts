@@ -10,7 +10,6 @@ const useKeyPress = (eventConfigs, callback, node = null) => {
   // handle what happens on key press
   const handleKeyPress = useCallback(
     (event) => {
-      event.preventDefault();
       
       // check if one of the key is part of the ones we want
       if (eventConfigs.some((eventConfig) => Object.keys(eventConfig).every(nameKey => eventConfig[nameKey] === event[nameKey]))) {
