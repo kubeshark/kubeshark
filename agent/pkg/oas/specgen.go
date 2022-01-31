@@ -9,6 +9,7 @@ import (
 	"mime"
 	"mizuserver/pkg/har"
 	"net/url"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -96,6 +97,7 @@ func (g *SpecGen) GetSpec() (*openapi.OpenAPI, error) {
 
 func suggestTags(oas *openapi.OpenAPI) {
 	paths := getPathsKeys(oas.Paths.Items)
+	sort.Strings(paths) // make it stable in case of multiple candidates
 	for len(paths) > 0 {
 		group := make([]string, 0)
 		group = append(group, paths[0])
