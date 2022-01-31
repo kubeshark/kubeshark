@@ -1,13 +1,13 @@
-name: golangci-lint
+name: Static code analysis
 
-on: [push, pull_request]
+on: [pull_request]
 
 permissions:
   contents: read
 
 jobs:
   golangci:
-    name: lint
+    name: Go lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -22,21 +22,25 @@ jobs:
         with:
           version: latest
           working-directory: agent
+          args: --timeout=5m
 
       - name: golangci-lint (shared)
         uses: golangci/golangci-lint-action@v2
         with:
           version: latest
           working-directory: shared
+          args: --timeout=5m
 
       - name: golangci-lint (tap)
         uses: golangci/golangci-lint-action@v2
         with:
           version: latest
           working-directory: tap
+          args: --timeout=5m
 
       - name: golangci-lint (cli)
         uses: golangci/golangci-lint-action@v2
         with:
           version: latest
           working-directory: cli
+          args: --timeout=5m
