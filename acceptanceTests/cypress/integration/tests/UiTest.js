@@ -25,6 +25,37 @@ it('filtering guide check', function () {
     cy.get('#modal-modal-title').should('not.exist');
 });
 
+it('right side sanity test', function () {
+    cy.get('.TrafficPage-Container > :nth-child(2) > :nth-child(1) > :nth-child(2) > :nth-child(1) > :nth-child(1)').then(sizeTopLine => {
+        const sizeOnTopLine = sizeTopLine.text().replace(' B', '');
+        cy.contains('Response').click();
+        cy.contains('Body Size (bytes)').parent().next().then(size => {
+            const bodySizeByDetails = size.text();
+            expect(sizeOnTopLine).to.equal(bodySizeByDetails, 'The body size in the top line should match the details in the response');
+
+            if (parseInt(bodySizeByDetails) < 0) {
+                throw new Error(`The body size cannot be negative. got the size: ${bodySizeByDetails}`)
+            }
+
+            cy.get('.TrafficPage-Container > :nth-child(2) > :nth-child(1) > :nth-child(2) > :nth-child(2) > :nth-child(1)').then(timeInMs => {
+                const time = timeInMs.text();
+                if (time < '0ms') {
+                    throw new Error(`The time in the top line cannot be negative ${time}`);
+                }
+
+                cy.get('.TrafficPage-Container > :nth-child(2) > :nth-child(2) > :nth-child(1) > > :nth-child(2)').then(status => {
+                    const statusCode = status.text();
+                    cy.contains('Status').parent().next().then(statusInDetails => {
+                        const statusCodeInDetails = statusInDetails.text();
+
+                        expect(statusCode).to.equal(statusCodeInDetails, 'The status code in the top line should match the status code in details');
+                    });
+                });
+            });
+        });
+    });
+});
+
 checkIllegalFilter('invalid filter');
 
 checkFilter({
