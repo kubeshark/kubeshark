@@ -40,17 +40,18 @@ agent: ## Build agent.
 	@ls -l agent/build
 
 agent-debug: ## Build agent for debug.
-	@(echo "building mizu agent for debug.." )
+	@(echo "uilding mizu agent for debug.." )
 	@(cd agent; go build -gcflags="all=-N -l" -o build/mizuagent main.go)
 	@ls -l agent/build
 
-docker: ## Build and publish agent docker image.
-	$(MAKE) push-docker
+agent-docker: ## Build agent docker image.
+	@echo "Building agent docker image"
+	@docker build -t up9inc/mizu:latest .
 
 push: push-docker push-cli ## Build and publish agent docker image & CLI.
 
-push-docker: ## Build and publish agent docker image.
-	@echo "publishing Docker image .. "
+agent-docker-build-push: ## Build and publish agent docker image.
+	@echo "Building agent docker image and publishing to GCR (for development)"
 	devops/build-push-featurebranch.sh
 
 build-docker-ci: ## Build agent docker image for CI.
