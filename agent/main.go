@@ -62,7 +62,6 @@ const (
 	socketConnectionRetries    = 30
 	socketConnectionRetryDelay = time.Second * 2
 	socketHandshakeTimeout     = time.Second * 2
-	uiIndexPath                = "./site/index.html"
 )
 
 func main() {
@@ -248,15 +247,22 @@ func hostApi(socketHarOutputChannel chan<- *tapApi.OutputChannelItem) {
 
 	app.Use(DisableRootStaticCache())
 
-	if err := setUIFlags(); err != nil {
-		logger.Log.Errorf("Error setting ui mode, err: %v", err)
+	var staticFolder string
+	if config.Config.StandaloneMode {
+		staticFolder = "./site-standalone"
+	} else {
+		staticFolder = "./site"
 	}
 
-	if config.Config.StandaloneMode {
-		app.Use(static.ServeRoot("/", "./site-standalone"))
-	} else {
-		app.Use(static.ServeRoot("/", "./site"))
+	indexStaticFile := staticFolder + "/index.html"
+	if err := setUIFlags(indexStaticFile); err != nil {
+		logger.Log.Errorf("Error setting ui flags, err: %v", err)
 	}
+
+	app.Use(static.ServeRoot("/", staticFolder))
+	app.NoRoute(func(c *gin.Context) {
+		c.File(indexStaticFile)
+	})
 
 	app.Use(middlewares.CORSMiddleware()) // This has to be called after the static middleware, does not work if its called before
 
@@ -278,7 +284,6 @@ func hostApi(socketHarOutputChannel chan<- *tapApi.OutputChannelItem) {
 	routes.EntriesRoutes(app)
 	routes.MetadataRoutes(app)
 	routes.StatusRoutes(app)
-	routes.NotFoundRoute(app)
 	utils.StartServer(app)
 }
 
@@ -293,7 +298,7 @@ func DisableRootStaticCache() gin.HandlerFunc {
 	}
 }
 
-func setUIFlags() error {
+func setUIFlags(uiIndexPath string) error {
 	read, err := ioutil.ReadFile(uiIndexPath)
 	if err != nil {
 		return err
