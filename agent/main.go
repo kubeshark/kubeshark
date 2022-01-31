@@ -9,6 +9,7 @@ import (
 	"mizuserver/pkg/api"
 	"mizuserver/pkg/config"
 	"mizuserver/pkg/controllers"
+	"mizuserver/pkg/elastic"
 	"mizuserver/pkg/middlewares"
 	"mizuserver/pkg/models"
 	"mizuserver/pkg/oas"
@@ -19,9 +20,6 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"path"
-	"path/filepath"
-	"plugin"
 	"sort"
 	"strconv"
 	"strings"
@@ -40,6 +38,11 @@ import (
 	"github.com/up9inc/mizu/shared/logger"
 	"github.com/up9inc/mizu/tap"
 	tapApi "github.com/up9inc/mizu/tap/api"
+
+	amqpExt "github.com/up9inc/mizu/tap/extensions/amqp"
+	httpExt "github.com/up9inc/mizu/tap/extensions/http"
+	kafkaExt "github.com/up9inc/mizu/tap/extensions/kafka"
+	redisExt "github.com/up9inc/mizu/tap/extensions/redis"
 )
 
 var tapperMode = flag.Bool("tap", false, "Run in tapper mode without API")
@@ -59,7 +62,6 @@ const (
 	socketConnectionRetries    = 30
 	socketConnectionRetryDelay = time.Second * 2
 	socketHandshakeTimeout     = time.Second * 2
-	uiIndexPath                = "./site/index.html"
 )
 
 func main() {
@@ -157,6 +159,7 @@ func enableExpFeatureIfNeeded() {
 	if config.Config.ServiceMap {
 		servicemap.GetInstance().SetConfig(config.Config)
 	}
+	elastic.GetInstance().Configure(config.Config.Elastic)
 }
 
 func configureBasenineServer(host string, port string) {
@@ -165,7 +168,7 @@ func configureBasenineServer(host string, port string) {
 		wait.WithWait(200*time.Millisecond),
 		wait.WithBreak(50*time.Millisecond),
 		wait.WithDeadline(5*time.Second),
-		wait.WithDebug(true),
+		wait.WithDebug(config.Config.LogLevel == logging.DEBUG),
 	).Do([]string{fmt.Sprintf("%s:%s", host, port)}) {
 		logger.Log.Panicf("Basenine is not available!")
 	}
@@ -189,36 +192,36 @@ func configureBasenineServer(host string, port string) {
 }
 
 func loadExtensions() {
-	dir, _ := filepath.Abs(filepath.Dir(os.Args[0]))
-	extensionsDir := path.Join(dir, "./extensions/")
-
-	files, err := ioutil.ReadDir(extensionsDir)
-	if err != nil {
-		logger.Log.Fatal(err)
-	}
-	extensions = make([]*tapApi.Extension, len(files))
+	extensions = make([]*tapApi.Extension, 4)
 	extensionsMap = make(map[string]*tapApi.Extension)
-	for i, file := range files {
-		filename := file.Name()
-		logger.Log.Infof("Loading extension: %s", filename)
-		extension := &tapApi.Extension{
-			Path: path.Join(extensionsDir, filename),
-		}
-		plug, _ := plugin.Open(extension.Path)
-		extension.Plug = plug
-		symDissector, err := plug.Lookup("Dissector")
 
-		var dissector tapApi.Dissector
-		var ok bool
-		dissector, ok = symDissector.(tapApi.Dissector)
-		if err != nil || !ok {
-			panic(fmt.Sprintf("Failed to load the extension: %s", extension.Path))
-		}
-		dissector.Register(extension)
-		extension.Dissector = dissector
-		extensions[i] = extension
-		extensionsMap[extension.Protocol.Name] = extension
-	}
+	extensionAmqp := &tapApi.Extension{}
+	dissectorAmqp := amqpExt.NewDissector()
+	dissectorAmqp.Register(extensionAmqp)
+	extensionAmqp.Dissector = dissectorAmqp
+	extensions[0] = extensionAmqp
+	extensionsMap[extensionAmqp.Protocol.Name] = extensionAmqp
+
+	extensionHttp := &tapApi.Extension{}
+	dissectorHttp := httpExt.NewDissector()
+	dissectorHttp.Register(extensionHttp)
+	extensionHttp.Dissector = dissectorHttp
+	extensions[1] = extensionHttp
+	extensionsMap[extensionHttp.Protocol.Name] = extensionHttp
+
+	extensionKafka := &tapApi.Extension{}
+	dissectorKafka := kafkaExt.NewDissector()
+	dissectorKafka.Register(extensionKafka)
+	extensionKafka.Dissector = dissectorKafka
+	extensions[2] = extensionKafka
+	extensionsMap[extensionKafka.Protocol.Name] = extensionKafka
+
+	extensionRedis := &tapApi.Extension{}
+	dissectorRedis := redisExt.NewDissector()
+	dissectorRedis.Register(extensionRedis)
+	extensionRedis.Dissector = dissectorRedis
+	extensions[3] = extensionRedis
+	extensionsMap[extensionRedis.Protocol.Name] = extensionRedis
 
 	sort.Slice(extensions, func(i, j int) bool {
 		return extensions[i].Protocol.Priority < extensions[j].Protocol.Priority
@@ -244,15 +247,22 @@ func hostApi(socketHarOutputChannel chan<- *tapApi.OutputChannelItem) {
 
 	app.Use(DisableRootStaticCache())
 
-	if err := setUIFlags(); err != nil {
-		logger.Log.Errorf("Error setting ui mode, err: %v", err)
+	var staticFolder string
+	if config.Config.StandaloneMode {
+		staticFolder = "./site-standalone"
+	} else {
+		staticFolder = "./site"
 	}
 
-	if config.Config.StandaloneMode {
-		app.Use(static.ServeRoot("/", "./site-standalone"))
-	} else {
-		app.Use(static.ServeRoot("/", "./site"))
+	indexStaticFile := staticFolder + "/index.html"
+	if err := setUIFlags(indexStaticFile); err != nil {
+		logger.Log.Errorf("Error setting ui flags, err: %v", err)
 	}
+
+	app.Use(static.ServeRoot("/", staticFolder))
+	app.NoRoute(func(c *gin.Context) {
+		c.File(indexStaticFile)
+	})
 
 	app.Use(middlewares.CORSMiddleware()) // This has to be called after the static middleware, does not work if its called before
 
@@ -274,7 +284,6 @@ func hostApi(socketHarOutputChannel chan<- *tapApi.OutputChannelItem) {
 	routes.EntriesRoutes(app)
 	routes.MetadataRoutes(app)
 	routes.StatusRoutes(app)
-	routes.NotFoundRoute(app)
 	utils.StartServer(app)
 }
 
@@ -289,7 +298,7 @@ func DisableRootStaticCache() gin.HandlerFunc {
 	}
 }
 
-func setUIFlags() error {
+func setUIFlags(uiIndexPath string) error {
 	read, err := ioutil.ReadFile(uiIndexPath)
 	if err != nil {
 		return err

@@ -3,13 +3,14 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"regexp"
+
 	"github.com/up9inc/mizu/cli/apiserver"
 	"github.com/up9inc/mizu/cli/config"
 	"github.com/up9inc/mizu/cli/uiUtils"
 	"github.com/up9inc/mizu/shared/kubernetes"
 	"github.com/up9inc/mizu/shared/logger"
 	"github.com/up9inc/mizu/shared/semver"
-	"net/http"
 )
 
 func runMizuCheck() {
@@ -34,7 +35,7 @@ func runMizuCheck() {
 	}
 
 	if checkPassed {
-		checkPassed = checkServerConnection(kubernetesProvider, cancel)
+		checkPassed = checkServerConnection(kubernetesProvider)
 	}
 
 	if checkPassed {
@@ -91,23 +92,75 @@ func checkKubernetesVersion(kubernetesVersion *semver.SemVersion) bool {
 	return true
 }
 
-func checkServerConnection(kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) bool {
+func checkServerConnection(kubernetesProvider *kubernetes.Provider) bool {
 	logger.Log.Infof("\nmizu-connectivity\n--------------------")
 
 	serverUrl := GetApiServerUrl()
 
-	if response, err := http.Get(fmt.Sprintf("%s/", serverUrl)); err != nil || response.StatusCode != 200 {
-		startProxyReportErrorIfAny(kubernetesProvider, cancel)
+	apiServerProvider := apiserver.NewProvider(serverUrl, 1, apiserver.DefaultTimeout)
+	if err := apiServerProvider.TestConnection(); err == nil {
+		logger.Log.Infof("%v found Mizu server tunnel available and connected successfully to API server", fmt.Sprintf(uiUtils.Green, "√"))
+		return true
+	}
+
+	connectedToApiServer := false
+
+	if err := checkProxy(serverUrl, kubernetesProvider); err != nil {
+		logger.Log.Errorf("%v couldn't connect to API server using proxy, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), err)
+	} else {
+		connectedToApiServer = true
+		logger.Log.Infof("%v connected successfully to API server using proxy", fmt.Sprintf(uiUtils.Green, "√"))
+	}
+
+	if err := checkPortForward(serverUrl, kubernetesProvider); err != nil {
+		logger.Log.Errorf("%v couldn't connect to API server using port-forward, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), err)
+	} else {
+		connectedToApiServer = true
+		logger.Log.Infof("%v connected successfully to API server using port-forward", fmt.Sprintf(uiUtils.Green, "√"))
+	}
+
+	return connectedToApiServer
+}
+
+func checkProxy(serverUrl string, kubernetesProvider *kubernetes.Provider) error {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	httpServer, err := kubernetes.StartProxy(kubernetesProvider, config.Config.Tap.ProxyHost, config.Config.Tap.GuiPort, config.Config.MizuResourcesNamespace, kubernetes.ApiServerPodName, cancel)
+	if err != nil {
+		return err
 	}
 
 	apiServerProvider := apiserver.NewProvider(serverUrl, apiserver.DefaultRetries, apiserver.DefaultTimeout)
 	if err := apiServerProvider.TestConnection(); err != nil {
-		logger.Log.Errorf("%v couldn't connect to API server, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), err)
-		return false
+		return err
 	}
 
-	logger.Log.Infof("%v connected successfully to API server", fmt.Sprintf(uiUtils.Green, "√"))
-	return true
+	if err := httpServer.Shutdown(ctx); err != nil {
+		logger.Log.Debugf("Error occurred while stopping proxy, err: %v", err)
+	}
+
+	return nil
+}
+
+func checkPortForward(serverUrl string, kubernetesProvider *kubernetes.Provider) error {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	podRegex, _ := regexp.Compile(kubernetes.ApiServerPodName)
+	forwarder, err := kubernetes.NewPortForward(kubernetesProvider, config.Config.MizuResourcesNamespace, podRegex, config.Config.Tap.GuiPort, ctx, cancel)
+	if err != nil {
+		return err
+	}
+
+	apiServerProvider := apiserver.NewProvider(serverUrl, apiserver.DefaultRetries, apiserver.DefaultTimeout)
+	if err := apiServerProvider.TestConnection(); err != nil {
+		return err
+	}
+
+	forwarder.Close()
+
+	return nil
 }
 
 func checkAllResourcesExist(ctx context.Context, kubernetesProvider *kubernetes.Provider, isInstallCommand bool) bool {
@@ -117,32 +170,32 @@ func checkAllResourcesExist(ctx context.Context, kubernetesProvider *kubernetes.
 	allResourcesExist := checkResourceExist(config.Config.MizuResourcesNamespace, "namespace", exist, err)
 
 	exist, err = kubernetesProvider.DoesConfigMapExist(ctx, config.Config.MizuResourcesNamespace, kubernetes.ConfigMapName)
-	allResourcesExist = checkResourceExist(kubernetes.ConfigMapName, "config map", exist, err)
+	allResourcesExist = checkResourceExist(kubernetes.ConfigMapName, "config map", exist, err) && allResourcesExist
 
 	exist, err = kubernetesProvider.DoesServiceAccountExist(ctx, config.Config.MizuResourcesNamespace, kubernetes.ServiceAccountName)
-	allResourcesExist = checkResourceExist(kubernetes.ServiceAccountName, "service account", exist, err)
+	allResourcesExist = checkResourceExist(kubernetes.ServiceAccountName, "service account", exist, err) && allResourcesExist
 
 	if config.Config.IsNsRestrictedMode() {
 		exist, err = kubernetesProvider.DoesRoleExist(ctx, config.Config.MizuResourcesNamespace, kubernetes.RoleName)
-		allResourcesExist = checkResourceExist(kubernetes.RoleName, "role", exist, err)
+		allResourcesExist = checkResourceExist(kubernetes.RoleName, "role", exist, err) && allResourcesExist
 
 		exist, err = kubernetesProvider.DoesRoleBindingExist(ctx, config.Config.MizuResourcesNamespace, kubernetes.RoleBindingName)
-		allResourcesExist = checkResourceExist(kubernetes.RoleBindingName, "role binding", exist, err)
+		allResourcesExist = checkResourceExist(kubernetes.RoleBindingName, "role binding", exist, err) && allResourcesExist
 	} else {
 		exist, err = kubernetesProvider.DoesClusterRoleExist(ctx, kubernetes.ClusterRoleName)
-		allResourcesExist = checkResourceExist(kubernetes.ClusterRoleName, "cluster role", exist, err)
+		allResourcesExist = checkResourceExist(kubernetes.ClusterRoleName, "cluster role", exist, err) && allResourcesExist
 
 		exist, err = kubernetesProvider.DoesClusterRoleBindingExist(ctx, kubernetes.ClusterRoleBindingName)
-		allResourcesExist = checkResourceExist(kubernetes.ClusterRoleBindingName, "cluster role binding", exist, err)
+		allResourcesExist = checkResourceExist(kubernetes.ClusterRoleBindingName, "cluster role binding", exist, err) && allResourcesExist
 	}
 
 	exist, err = kubernetesProvider.DoesServiceExist(ctx, config.Config.MizuResourcesNamespace, kubernetes.ApiServerPodName)
-	allResourcesExist = checkResourceExist(kubernetes.ApiServerPodName, "service", exist, err)
+	allResourcesExist = checkResourceExist(kubernetes.ApiServerPodName, "service", exist, err) && allResourcesExist
 
 	if isInstallCommand {
-		allResourcesExist = checkInstallResourcesExist(ctx, kubernetesProvider)
+		allResourcesExist = checkInstallResourcesExist(ctx, kubernetesProvider) && allResourcesExist
 	} else {
-		allResourcesExist = checkTapResourcesExist(ctx, kubernetesProvider)
+		allResourcesExist = checkTapResourcesExist(ctx, kubernetesProvider) && allResourcesExist
 	}
 
 	return allResourcesExist
@@ -153,13 +206,13 @@ func checkInstallResourcesExist(ctx context.Context, kubernetesProvider *kuberne
 	installResourcesExist := checkResourceExist(kubernetes.DaemonRoleName, "role", exist, err)
 
 	exist, err = kubernetesProvider.DoesRoleBindingExist(ctx, config.Config.MizuResourcesNamespace, kubernetes.DaemonRoleBindingName)
-	installResourcesExist = checkResourceExist(kubernetes.DaemonRoleBindingName, "role binding", exist, err)
+	installResourcesExist = checkResourceExist(kubernetes.DaemonRoleBindingName, "role binding", exist, err) && installResourcesExist
 
 	exist, err = kubernetesProvider.DoesPersistentVolumeClaimExist(ctx, config.Config.MizuResourcesNamespace, kubernetes.PersistentVolumeClaimName)
-	installResourcesExist = checkResourceExist(kubernetes.PersistentVolumeClaimName, "persistent volume claim", exist, err)
+	installResourcesExist = checkResourceExist(kubernetes.PersistentVolumeClaimName, "persistent volume claim", exist, err) && installResourcesExist
 
 	exist, err = kubernetesProvider.DoesDeploymentExist(ctx, config.Config.MizuResourcesNamespace, kubernetes.ApiServerPodName)
-	installResourcesExist = checkResourceExist(kubernetes.ApiServerPodName, "deployment", exist, err)
+	installResourcesExist = checkResourceExist(kubernetes.ApiServerPodName, "deployment", exist, err) && installResourcesExist
 
 	return installResourcesExist
 }

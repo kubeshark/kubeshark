@@ -62,35 +62,7 @@ func TestTap(t *testing.T) {
 				}
 			}
 
-			entriesCheckFunc := func() error {
-				timestamp := time.Now().UnixNano() / int64(time.Millisecond)
-
-				entries, err := getDBEntries(timestamp, entriesCount, 1*time.Second)
-				if err != nil {
-					return err
-				}
-				err = checkEntriesAtLeast(entries, 1)
-				if err != nil {
-					return err
-				}
-				entry := entries[0]
-
-				entryUrl := fmt.Sprintf("%v/entries/%v", apiServerUrl, entry["id"])
-				requestResult, requestErr := executeHttpGetRequest(entryUrl)
-				if requestErr != nil {
-					return fmt.Errorf("failed to get entry, err: %v", requestErr)
-				}
-
-				if requestResult == nil {
-					return fmt.Errorf("unexpected nil entry result")
-				}
-
-				return nil
-			}
-			if err := retriesExecute(shortRetriesCount, entriesCheckFunc); err != nil {
-				t.Errorf("%v", err)
-				return
-			}
+			runCypressTests(t, "npx cypress run --spec  \"cypress/integration/tests/UiTest.js\"")
 		})
 	}
 }
@@ -138,7 +110,7 @@ func TestTapGuiPort(t *testing.T) {
 				return
 			}
 
-			runCypressTests(t, fmt.Sprintf("npx cypress run --spec \"cypress/integration/tests/GuiPort.js\" --env port=%d --config-file cypress/integration/configurations/Default.json", guiPort))
+			runCypressTests(t, fmt.Sprintf("npx cypress run --spec \"cypress/integration/tests/GuiPort.js\" --env port=%d", guiPort))
 		})
 	}
 }
@@ -184,7 +156,7 @@ func TestTapAllNamespaces(t *testing.T) {
 		return
 	}
 
-	runCypressTests(t, fmt.Sprintf("npx cypress run --spec  \"cypress/integration/tests/MultipleNamespaces.js\" --env name1=%v,name2=%v,name3=%v,namespace1=%v,namespace2=%v,namespace3=%v --config-file cypress/integration/configurations/Default.json",
+	runCypressTests(t, fmt.Sprintf("npx cypress run --spec  \"cypress/integration/tests/MultipleNamespaces.js\" --env name1=%v,name2=%v,name3=%v,namespace1=%v,namespace2=%v,namespace3=%v",
 		expectedPods[0].Name, expectedPods[1].Name, expectedPods[2].Name, expectedPods[0].Namespace, expectedPods[1].Namespace, expectedPods[2].Namespace))
 }
 
@@ -233,7 +205,7 @@ func TestTapMultipleNamespaces(t *testing.T) {
 		return
 	}
 
-	runCypressTests(t, fmt.Sprintf("npx cypress run --spec  \"cypress/integration/tests/MultipleNamespaces.js\" --env name1=%v,name2=%v,name3=%v,namespace1=%v,namespace2=%v,namespace3=%v --config-file cypress/integration/configurations/Default.json",
+	runCypressTests(t, fmt.Sprintf("npx cypress run --spec  \"cypress/integration/tests/MultipleNamespaces.js\" --env name1=%v,name2=%v,name3=%v,namespace1=%v,namespace2=%v,namespace3=%v",
 		expectedPods[0].Name, expectedPods[1].Name, expectedPods[2].Name, expectedPods[0].Namespace, expectedPods[1].Namespace, expectedPods[2].Namespace))
 }
 
@@ -279,7 +251,7 @@ func TestTapRegex(t *testing.T) {
 		return
 	}
 
-	runCypressTests(t, fmt.Sprintf("npx cypress run --spec  \"cypress/integration/tests/Regex.js\" --env name=%v,namespace=%v --config-file cypress/integration/configurations/Default.json",
+	runCypressTests(t, fmt.Sprintf("npx cypress run --spec  \"cypress/integration/tests/Regex.js\" --env name=%v,namespace=%v",
 		expectedPods[0].Name, expectedPods[0].Namespace))
 }
 
@@ -377,7 +349,7 @@ func TestTapRedact(t *testing.T) {
 		}
 	}
 
-	runCypressTests(t, fmt.Sprintf("npx cypress run --spec  \"cypress/integration/tests/Redact.js\" --config-file cypress/integration/configurations/Default.json"))
+	runCypressTests(t, "npx cypress run --spec  \"cypress/integration/tests/Redact.js\"")
 }
 
 func TestTapNoRedact(t *testing.T) {
@@ -429,7 +401,7 @@ func TestTapNoRedact(t *testing.T) {
 		}
 	}
 
-	runCypressTests(t, "npx cypress run --spec  \"cypress/integration/tests/NoRedact.js\" --config-file cypress/integration/configurations/Default.json")
+	runCypressTests(t, "npx cypress run --spec  \"cypress/integration/tests/NoRedact.js\"")
 }
 
 func TestTapRegexMasking(t *testing.T) {
@@ -480,7 +452,7 @@ func TestTapRegexMasking(t *testing.T) {
 		}
 	}
 
-	runCypressTests(t, "npx cypress run --spec \"cypress/integration/tests/RegexMasking.js\" --config-file cypress/integration/configurations/Default.json")
+	runCypressTests(t, "npx cypress run --spec \"cypress/integration/tests/RegexMasking.js\"")
 
 }
 
@@ -542,7 +514,7 @@ func TestTapIgnoredUserAgents(t *testing.T) {
 		}
 	}
 
-	runCypressTests(t, "npx cypress run --spec  \"cypress/integration/tests/IgnoredUserAgents.js\" --config-file cypress/integration/configurations/HugeMizu.json")
+	runCypressTests(t, "npx cypress run --spec  \"cypress/integration/tests/IgnoredUserAgents.js\"")
 }
 
 func TestTapDumpLogs(t *testing.T) {

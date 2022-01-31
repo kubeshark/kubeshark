@@ -1,14 +1,12 @@
 import * as axios from "axios";
 
-// When working locally cp `cp .env.example .env`
 export const MizuWebsocketURL = process.env.REACT_APP_OVERRIDE_WS_URL ? process.env.REACT_APP_OVERRIDE_WS_URL :
-                        window.location.protocol === 'https:' ? `wss://${window.location.host}/ws` : `ws://${window.location.host}/ws`;
+    window.location.protocol === 'https:' ? `wss://${window.location.host}/ws` : `ws://${window.location.host}/ws`;
 
 export const FormValidationErrorType = "formError";
 
 const CancelToken = axios.CancelToken;
 
-// When working locally cp `cp .env.example .env`
 const apiURL = process.env.REACT_APP_OVERRIDE_API_URL ? process.env.REACT_APP_OVERRIDE_API_URL : `${window.location.origin}/`;
 
 export default class Api {
@@ -110,12 +108,12 @@ export default class Api {
     }
 
     getTapConfig = async () => {
-        const response = await this.client.get("/config/tapConfig");
+        const response = await this.client.get("/config/tap");
         return response.data;
     }
 
     setTapConfig = async (config) => {
-        const response = await this.client.post("/config/tapConfig", {tappedNamespaces: config});
+        const response = await this.client.post("/config/tap", {tappedNamespaces: config});
         return response.data;
     }
 
@@ -136,13 +134,12 @@ export default class Api {
         }
     }
 
-    register = async (username, password) => {
+    setupAdminUser = async (password) => {
         const form = new FormData();
-        form.append('username', username);
         form.append('password', password);
 
         try {
-            const response = await this.client.post(`/user/register`, form);
+            const response = await this.client.post(`/install/admin`, form);
             this.persistToken(response.data.token);
             return response;
         } catch (e) {

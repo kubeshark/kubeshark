@@ -1,4 +1,4 @@
-package main
+package kafka
 
 import (
 	"fmt"
@@ -251,10 +251,10 @@ func ReadResponse(r io.Reader, tcpID *api.TcpID, superTimer *api.SuperTimer, emi
 	}
 
 	connectionInfo := &api.ConnectionInfo{
-		ClientIP:   tcpID.SrcIP,
-		ClientPort: tcpID.SrcPort,
-		ServerIP:   tcpID.DstIP,
-		ServerPort: tcpID.DstPort,
+		ClientIP:   tcpID.DstIP,
+		ClientPort: tcpID.DstPort,
+		ServerIP:   tcpID.SrcIP,
+		ServerPort: tcpID.SrcPort,
 		IsOutgoing: true,
 	}
 

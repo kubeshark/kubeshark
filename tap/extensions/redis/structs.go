@@ -1,4 +1,4 @@
-package main
+package redis
 
 type RedisType string
 type RedisCommand string

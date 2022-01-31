@@ -7,6 +7,7 @@ import (
 
 type GeneralStats struct {
 	EntriesCount        int
+	EntriesVolumeInGB   float64
 	FirstEntryTimestamp int
 	LastEntryTimestamp  int
 }
@@ -21,8 +22,9 @@ func GetGeneralStats() GeneralStats {
 	return generalStats
 }
 
-func EntryAdded() {
+func EntryAdded(size int) {
 	generalStats.EntriesCount++
+	generalStats.EntriesVolumeInGB += float64(size) / (1 << 30)
 
 	currentTimestamp := int(time.Now().Unix())
 
@@ -32,5 +34,3 @@ func EntryAdded() {
 
 	generalStats.LastEntryTimestamp = currentTimestamp
 }
-
-

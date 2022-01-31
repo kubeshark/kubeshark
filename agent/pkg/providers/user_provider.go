@@ -66,17 +66,17 @@ func PerformLogin(username string, password string, ctx context.Context) (*strin
 	return result.SessionToken, nil
 }
 
-func VerifyToken(token string, ctx context.Context) (bool, error) {
+func VerifyToken(token string, ctx context.Context) (*ory.Session, error) {
 	flow, _, err := client.V0alpha2Api.ToSession(ctx).XSessionToken(token).Execute()
 	if err != nil {
-		return false, err
+		return nil, err
 	}
 
 	if flow == nil {
-		return false, nil
+		return nil, nil
 	}
 
-	return true, nil
+	return flow, nil
 }
 
 func DeleteUser(identityId string, ctx context.Context) error {
