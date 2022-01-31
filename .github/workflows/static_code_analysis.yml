@@ -1,6 +1,14 @@
 name: Static code analysis
 
-on: [pull_request]
+on:
+  pull_request:
+    branches:
+      - 'develop'
+      - 'main'
+  push:
+    branches:
+      - 'develop'
+      - 'main'
 
 permissions:
   contents: read
