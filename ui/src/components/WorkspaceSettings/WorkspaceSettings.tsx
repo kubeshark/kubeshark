@@ -1,6 +1,6 @@
 import "../UserSettings/UserSettings.sass"
 import {ColsType, FilterableTableAction} from "../UI/FilterableTableAction"
-// import Api from "../../helpers/api"
+import Api from "../../helpers/api"
 import { useEffect, useState } from "react";
 import AddWorkspaceModal, { WorkspaceData } from "../Modals/AddWorkspaceModal/AddWorkspaceModal";
 import { toast } from "react-toastify";
@@ -8,12 +8,12 @@ import ConfirmationModal from "../UI/Modals/ConfirmationModal";
 
 interface Props {}
 
-// const api = Api.getInstance();
+const api = Api.getInstance();
 
 export const WorkspaceSettings : React.FC<Props> = ({}) => {
 
     const [workspacesRows, setWorkspacesRows] = useState([]);
-    const cols : ColsType[] = [{field : "id",header:"Id"},{field : "name",header:"Name"}];
+    const cols : ColsType[] = [{field : "name",header:"Name"}];
 
     const [workspaceData,SetWorkspaceData] = useState({} as WorkspaceData);
     const [isOpenModal,setIsOpen] = useState(false);
@@ -25,8 +25,8 @@ export const WorkspaceSettings : React.FC<Props> = ({}) => {
     useEffect(() => {
         (async () => {
             try {
-                const workspacesDemo = [{id:"1", name:"Worksapce1"}] 
-                setWorkspacesRows(workspacesDemo)                  
+                const workspaces = await api.getWorkspaces();
+                setWorkspacesRows(workspaces)                 
             } catch (e) {
                 console.error(e);
             }
@@ -66,14 +66,12 @@ export const WorkspaceSettings : React.FC<Props> = ({}) => {
         })();
     }
 
-
     const onRowEdit = (row) => {
        setIsOpen(true);
        setIsEditMode(true);
        SetWorkspaceData(row);
     }
-
-    
+   
     return (<>
         <FilterableTableAction onRowEdit={onRowEdit} onRowDelete={onRowDelete} searchConfig={searchConfig} 
                                buttonConfig={buttonConfig} rows={workspacesRows} cols={cols}>

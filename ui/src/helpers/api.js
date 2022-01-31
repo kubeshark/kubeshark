@@ -74,9 +74,24 @@ export default class Api {
     }
 
     getWorkspaces = async() =>{
-        const response = await this.client.get(``);
+        const response = await this.client.get(`/workspace`);
         return response.data;
     }
+
+    getSpecificWorkspace = async(workspaceId) =>{
+        const response = await this.client.get(`/workspace/${workspaceId}`);
+        return response.data;
+    }
+
+    createWorkspace = async(workspaceData) =>{
+        const response = await this.client.post(`/workspace`,workspaceData);
+        return response.data;
+    }    
+
+    editWorkspace = async(workspaceId, workspaceData) =>{
+        const response = await this.client.post(`/workspace${workspaceId}`,workspaceData);
+        return response.data;
+    }   
 
     analyzeStatus = async () => {
         const response = await this.client.get("/status/analyze");
@@ -140,7 +155,7 @@ export default class Api {
     }
 
     getTapConfig = async () => {
-        const response = await this.client.get("/config/tapConfig");
+        const response = await this.client.get("/config/tap");
         return response.data;
     }
 

@@ -1,5 +1,4 @@
-import { FC, useEffect, useMemo, useState } from 'react';
-import { workerData } from 'worker_threads';
+import { FC, useEffect, useState } from 'react';
 import Api from '../../../helpers/api';
 import { useCommonStyles } from '../../../helpers/commonStyle';
 import ConfirmationModal from '../../UI/Modals/ConfirmationModal';
@@ -19,7 +18,6 @@ interface AddWorkspaceModalProp {
   workspaceId: string,
   onEdit: boolean
 }
-export const workspacesDemo = [{id:"1", name:"Worksapce1" , namespaces: [{key:"namespace1", value:"namespace1"},{key:"namespace2", value:"namespace2"}]}]; 
 const api = Api.getInstance();
 
 const AddWorkspaceModal: FC<AddWorkspaceModalProp> = ({isOpen,onCloseModal, workspaceId, onEdit}) => {
@@ -39,13 +37,16 @@ const AddWorkspaceModal: FC<AddWorkspaceModalProp> = ({isOpen,onCloseModal, work
     (async () => {
         try {
           if(onEdit){
-            const workspace = workspacesDemo.find(obj => obj.id = workspaceId);
+            const workspace = await api.getSpecificWorkspace(workspaceId);
             setWorkspaceName(workspace.name);
             setCheckedNamespacesKeys(workspace.namespaces);   
           }
             setSearchValue("");     
-            const namespaces = [{key:"namespace1", value:"namespace1"},{key:"namespace2", value:"namespace2"},{key:"namespace3",value:"namespace3"}];
-            setNamespaces(namespaces);
+            const namespaces = await api.getTapConfig();
+            const namespacesMapped = namespaces.map(namespace => {
+              return {key: namespace, value: namespace}
+            })
+            setNamespaces(namespacesMapped);
     } catch (e) {
             console.error(e);
         } finally {
@@ -57,9 +58,9 @@ const AddWorkspaceModal: FC<AddWorkspaceModalProp> = ({isOpen,onCloseModal, work
     setWorkspaceName(event.target.value);
   }
 
-  // const isFormValid = () : boolean => {
-  //   return (Object.values(workspaceDataModal).length === 2) && Object.values(workspaceDataModal).every(val => val !== null)
-  // }
+  const isFormValid = () : boolean => {
+    return (workspaceName.length > 0) && (checkedNamespacesKeys.length > 0);
+  }
 
   const onConfirm = () => {
     try{
@@ -84,26 +85,28 @@ const AddWorkspaceModal: FC<AddWorkspaceModalProp> = ({isOpen,onCloseModal, work
 
   return (<>
     <ConfirmationModal isOpen={isOpen} onClose={onClose} onConfirm={onConfirm} title={title}>
-    <h3 className='headline'>DETAILS</h3>
-      <div>
-        <input type="text" value={workspaceName ?? ""} className={classes.textField + " workspace__name"} placeholder={"Workspace Name"} 
-               onChange={onWorkspaceNameChange}></input>
-        </div>
-        <h3 className='headline'>TAP SETTINGS</h3>     
-      <div className="namespacesSettingsContainer">
-        <div>
-            <input className={classes.textField + " searchNamespace"} placeholder="Search" value={searchValue}
-                    onChange={(event) => setSearchValue(event.target.value)}/>
-        </div>
-        <SelectList items={namespaces}
-                    tableName={"Namespaces"}
-                    multiSelect={true} 
-                    checkedValues={checkedNamespacesKeys} 
-                    searchValue={searchValue} 
-                    setCheckedValues={setCheckedNamespacesKeys} 
-                    tabelClassName={undefined}>
-                    </SelectList>
+      <h3 className='comfirmation-modal__sub-section-header'>DETAILS</h3>
+        <div className='comfirmation-modal__sub-section'>
+          <div>
+            <input type="text" value={workspaceName ?? ""} className={classes.textField + " workspace__name"} placeholder={"Workspace Name"} 
+                  onChange={onWorkspaceNameChange}></input>
             </div>
+            </div>
+            <h3 className='comfirmation-modal__sub-section-header'>TAP SETTINGS</h3>     
+          <div className="namespacesSettingsContainer">
+            <div>
+                <input className={classes.textField + " searchNamespace"} placeholder="Search" value={searchValue}
+                        onChange={(event) => setSearchValue(event.target.value)}/>
+            </div>
+            <SelectList items={namespaces}
+                        tableName={"Namespaces"}
+                        multiSelect={true} 
+                        checkedValues={checkedNamespacesKeys} 
+                        searchValue={searchValue} 
+                        setCheckedValues={setCheckedNamespacesKeys} 
+                        tabelClassName={undefined}>
+                        </SelectList>
+          </div>
     </ConfirmationModal>
     </>); 
 };

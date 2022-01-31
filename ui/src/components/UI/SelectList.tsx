@@ -18,10 +18,10 @@ export interface Props {
 }
 
 const SelectList: React.FC<Props> = ({items ,tableName,checkedValues=[],multiSelect=true,searchValue="",setCheckedValues,tabelClassName}) => {
-
+    
     const filteredValues = useMemo(() => {
         return items.filter((listValue) => listValue?.value?.includes(searchValue));
-    },[items, searchValue,checkedValues])
+    },[items, searchValue])
 
     const toggleValue = (checkedKey) => {
         if (!multiSelect){
@@ -31,7 +31,6 @@ const SelectList: React.FC<Props> = ({items ,tableName,checkedValues=[],multiSel
         if(index > -1) checkedValues.splice(index,1);
         else checkedValues.push(checkedKey);   
         setCheckedValues(checkedValues);
-        console.log(checkedValues);
     }
 
     const unToggleAll = () => {
@@ -40,8 +39,9 @@ const SelectList: React.FC<Props> = ({items ,tableName,checkedValues=[],multiSel
     }
 
     const toggleAll = () => {
-        if(checkedValues.length > 0) checkedValues = [];
-        else filteredValues.forEach((obj) => {
+        if(checkedValues.length === items.length) checkedValues = [];
+        else items.forEach((obj) => {
+            if(!checkedValues.includes(obj.key))
             checkedValues.push(obj.key);
         })
         setCheckedValues(checkedValues);
