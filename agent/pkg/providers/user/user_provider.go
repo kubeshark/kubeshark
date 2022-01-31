@@ -5,46 +5,24 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"mizuserver/pkg/models"
+	"mizuserver/pkg/providers/database"
 	"net/http"
 	"net/http/cookiejar"
 	"strings"
 	"time"
 
 	"github.com/google/uuid"
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
 
 	ory "github.com/ory/kratos-client-go"
 	"github.com/up9inc/mizu/shared/logger"
 )
 
 const (
-	databasePath     = "/app/data/kratos.sqlite"
 	inviteTTLSeconds = 60 * 60 * 24 * 14 // two weeks
 	listUsersPerPage = 500
 )
 
-var (
-	client = getKratosClient("http://127.0.0.1:4433", "http://127.0.0.1:4434")
-	db     *gorm.DB
-)
-
-func init() {
-	var err error
-	db, err = gorm.Open(sqlite.Open(databasePath), &gorm.Config{})
-	if err != nil {
-		panic(fmt.Sprintf("failed to connect local sqlite database at %s", databasePath))
-	}
-	if db.Error != nil {
-		logger.Log.Errorf("db error %v", db.Error)
-	}
-
-	err = db.AutoMigrate(&models.Invite{})
-	if err != nil {
-		panic(fmt.Sprintf("failed to migrate schema to local sqlite database at %s", databasePath))
-	}
-}
+var client = getKratosClient("http://127.0.0.1:4433", "http://127.0.0.1:4434")
 
 // returns session token if successful
 func RegisterUser(username string, password string, inviteStatus InviteStatus, ctx context.Context) (token *string, identityId string, err error, formErrorMessages map[string][]ory.UiText) {
@@ -166,10 +144,18 @@ func CreateNewUserWithInvite(username string, workspace string, systemRole strin
 		return "", "", err
 	}
 
-	if inviteToken, err := CreateInvite(identityId, ctx); err != nil {
-		//Delete the user to prevent a locked user scenario
+	if err = SetUserSystemRole(username, systemRole); err != nil {
 		DeleteUser(identityId, ctx)
+		return "", "", err
+	}
 
+	if err = SetUserWorkspaceRole(username, workspace, UserRole); err != nil {
+		DeleteUser(identityId, ctx)
+		return "", "", err
+	}
+
+	if inviteToken, err := CreateInvite(identityId, ctx); err != nil {
+		DeleteUser(identityId, ctx)
 		return "", "", err
 	} else {
 		return inviteToken, identityId, nil
@@ -187,23 +173,16 @@ func CreateInvite(identityId string, ctx context.Context) (inviteToken string, e
 
 	inviteToken = uuid.New().String()
 
-	invite := &models.Invite{
-		Token:      inviteToken,
-		Username:   username,
-		IdentityId: identityId,
-		CreatedAt:  time.Now().Unix(),
-	}
-
-	if err = db.Create(invite).Error; err != nil {
+	if err := database.CreateInvite(inviteToken, username, identityId, time.Now().Unix()); err != nil {
 		return "", err
 	}
 
-	return invite.Token, nil
+	return inviteToken, nil
 }
 
 func ResetPasswordWithInvite(inviteToken string, password string, ctx context.Context) (token *string, err error, formErrorMessages map[string][]ory.UiText) {
-	invite := models.Invite{}
-	if err = db.Where("token = ?", inviteToken).First(&invite).Error; err != nil {
+	invite, err := database.GetInviteByInviteToken(inviteToken)
+	if err != nil {
 		return nil, err, nil
 	}
 
@@ -226,7 +205,7 @@ func ResetPasswordWithInvite(inviteToken string, password string, ctx context.Co
 		return nil, err, nil
 	}
 
-	if err = db.Delete(&invite).Error; err != nil {
+	if err = database.DeleteInvite(invite.Token); err != nil {
 		logger.Log.Warningf("error deleting invite: %v", err)
 	}
 
@@ -325,7 +304,7 @@ func GetUser(identityId string, ctx context.Context) (*User, error) {
 	traits := identity.Traits.(map[string]interface{})
 	username := traits["username"].(string)
 	user.Username = username
-	user.InviteStatus = InviteStatus(traits["inviteStatus"].(string))
+	user.Status = InviteStatus(traits["inviteStatus"].(string))
 
 	if systemRole, err := GetUserSystemRole(username); err != nil {
 		return nil, err
@@ -360,10 +339,16 @@ func ListUsers(usernameFilterQuery string, ctx context.Context) ([]UserListItem,
 				inviteStatus = InviteStatus(traits["inviteStatus"].(string))
 			}
 
+			systemRole, err := GetUserSystemRole(username)
+			if err != nil {
+				return nil, err
+			}
+
 			users = append(users, UserListItem{
-				Username:     username,
-				UserId:       identity.Id,
-				InviteStatus: InviteStatus(inviteStatus),
+				Username:   username,
+				UserId:     identity.Id,
+				Status:     InviteStatus(inviteStatus),
+				SystemRole: systemRole,
 			})
 		}
 	}
