@@ -108,13 +108,14 @@ func feedFromHAR(file string, isSync bool) (int, error) {
 	cnt := 0
 	for _, entry := range harDoc.Log.Entries {
 		cnt += 1
-		feedEntry(&entry, isSync)
+		feedEntry(&entry, isSync, file)
 	}
 
 	return cnt, nil
 }
 
-func feedEntry(entry *har.Entry, isSync bool) {
+func feedEntry(entry *har.Entry, isSync bool, file string) {
+	entry.Comment = file
 	if entry.Response.Status == 302 {
 		logger.Log.Debugf("Dropped traffic entry due to permanent redirect status: %s", entry.StartedDateTime)
 	}
@@ -171,7 +172,7 @@ func feedFromLDJSON(file string, isSync bool) (int, error) {
 				logger.Log.Warningf("Failed decoding entry: %s", line)
 			} else {
 				cnt += 1
-				feedEntry(&entry, isSync)
+				feedEntry(&entry, isSync, file)
 			}
 		}
 	}

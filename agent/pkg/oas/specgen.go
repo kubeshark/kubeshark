@@ -6,7 +6,10 @@ import (
 	"github.com/chanced/openapi"
 	"github.com/google/uuid"
 	"github.com/up9inc/mizu/shared/logger"
+	"io"
+	"io/ioutil"
 	"mime"
+	"mime/multipart"
 	"mizuserver/pkg/har"
 	"net/url"
 	"sort"
@@ -271,7 +274,7 @@ func handleRequest(req *har.Request, opObj *openapi.Operation, isSuccess bool) e
 		}
 
 		if reqBody != nil {
-			reqCtype := getReqCtype(req)
+			reqCtype, _ := getReqCtype(req)
 			reqMedia, err := fillContent(reqResp{Req: req}, reqBody.Content, reqCtype, err)
 			if err != nil {
 				return err
@@ -379,7 +382,10 @@ func fillContent(reqResp reqResp, respContent openapi.Content, ctype string, err
 		}
 
 		if ctype == "application/x-www-form-urlencoded" && reqResp.Req != nil {
-			handleFormDataUrlencoded(text, content, ctype)
+			handleFormDataUrlencoded(text, content)
+		} else if strings.HasPrefix(ctype, "multipart/form-data") && reqResp.Req != nil {
+			_, params := getReqCtype(reqResp.Req)
+			handleFormDataMultipart(text, content, params)
 		}
 
 		if content.Example == nil && len(exampleMsg) > len(content.Example) {
@@ -390,10 +396,10 @@ func fillContent(reqResp reqResp, respContent openapi.Content, ctype string, err
 	return respContent[ctype], nil
 }
 
-func handleFormDataUrlencoded(text string, content *openapi.MediaType, ctype string) {
+func handleFormDataUrlencoded(text string, content *openapi.MediaType) {
 	formData, err := url.ParseQuery(text)
 	if err != nil {
-		logger.Log.Warningf("Could not decode %s: %s", ctype, err)
+		logger.Log.Warningf("Could not decode urlencoded: %s", err)
 		return
 	}
 
@@ -440,6 +446,43 @@ func handleFormDataUrlencoded(text string, content *openapi.MediaType, ctype str
 	}
 }
 
+func handleFormDataMultipart(text string, content *openapi.MediaType, params map[string]string) {
+	boundary, ok := params["boundary"]
+	if !ok {
+		logger.Log.Errorf("Multipart header has no boundary")
+		return
+	}
+	mpr := multipart.NewReader(strings.NewReader(text), boundary)
+
+	for {
+		part, err := mpr.NextPart()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			logger.Log.Errorf("Cannot parse multipart body: %v", err)
+			break
+		}
+		// defer part.Close() TODO: restore it
+
+		body, err := ioutil.ReadAll(part)
+		if err != nil {
+			logger.Log.Errorf("Error reading multipart Part %s: %v", part.Header, err)
+		}
+
+		/*
+			pd.Params = append(pd.Params, Param{
+				Name:        part.FormName(),
+				Filename:    part.FileName(),
+				ContentType: part.Header.Get("Content-Type"),
+				Value:       string(body),
+			})
+
+		*/
+		_ = body
+	}
+}
+
 func getRespCtype(resp *har.Response) string {
 	var ctype string
 	ctype = resp.Content.MimeType
@@ -456,8 +499,7 @@ func getRespCtype(resp *har.Response) string {
 	return mediaType
 }
 
-func getReqCtype(req *har.Request) string {
-	var ctype string
+func getReqCtype(req *har.Request) (ctype string, params map[string]string) {
 	ctype = req.PostData.MimeType
 	for _, hdr := range req.Headers {
 		if strings.ToLower(hdr.Name) == "content-type" {
@@ -465,11 +507,12 @@ func getReqCtype(req *har.Request) string {
 		}
 	}
 
-	mediaType, _, err := mime.ParseMediaType(ctype)
+	mediaType, params, err := mime.ParseMediaType(ctype)
 	if err != nil {
-		return ""
+		logger.Log.Errorf("Cannot parse Content-Type header %q: %v", ctype, err)
+		return "", map[string]string{}
 	}
-	return mediaType
+	return mediaType, params
 }
 
 func getResponseObj(resp *har.Response, opObj *openapi.Operation, isSuccess bool) (*openapi.ResponseObj, error) {
