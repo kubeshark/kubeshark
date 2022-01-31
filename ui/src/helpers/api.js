@@ -1,12 +1,13 @@
 import * as axios from "axios";
 
-export const MizuWebsocketURL = window.location.protocol === 'https:' ? `wss://${window.location.host}/ws` : `ws://${window.location.host}/ws`;
+export const MizuWebsocketURL = process.env.REACT_APP_OVERRIDE_WS_URL ? process.env.REACT_APP_OVERRIDE_WS_URL :
+    window.location.protocol === 'https:' ? `wss://${window.location.host}/ws` : `ws://${window.location.host}/ws`;
 
 export const FormValidationErrorType = "formError";
 
 const CancelToken = axios.CancelToken;
 
-const apiURL =`${window.location.origin}/`;
+const apiURL = process.env.REACT_APP_OVERRIDE_API_URL ? process.env.REACT_APP_OVERRIDE_API_URL : `${window.location.origin}/`;
 
 export default class Api {
     static instance;
