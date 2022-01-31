@@ -5,6 +5,7 @@ import (
 	"github.com/chanced/openapi"
 	"github.com/op/go-logging"
 	"github.com/up9inc/mizu/shared/logger"
+	"github.com/wI2L/jsondiff"
 	"io/ioutil"
 	"mizuserver/pkg/har"
 	"os"
@@ -14,7 +15,7 @@ import (
 )
 
 // if started via env, write file into subdir
-func outputSpec(label string, spec *openapi.OpenAPI, t *testing.T) {
+func outputSpec(label string, spec *openapi.OpenAPI, t *testing.T) string {
 	content, err := json.MarshalIndent(spec, "", "\t")
 	if err != nil {
 		panic(err)
@@ -34,6 +35,7 @@ func outputSpec(label string, spec *openapi.OpenAPI, t *testing.T) {
 	} else {
 		t.Logf("%s", string(content))
 	}
+	return string(content)
 }
 
 func TestEntries(t *testing.T) {
@@ -122,12 +124,31 @@ func TestFileSingle(t *testing.T) {
 			t.FailNow()
 		}
 
-		outputSpec(svc, spec, t)
+		specText := outputSpec(svc, spec, t)
 
 		err = spec.Validate()
 		if err != nil {
 			t.Log(err)
 			t.FailNow()
+		}
+
+		expected, err := ioutil.ReadFile(file + ".spec.json")
+		if err != nil {
+			t.Errorf(err.Error())
+			t.FailNow()
+		}
+
+		expected = []byte(patUuid4.ReplaceAllString(string(expected), "<UUID4>"))
+		specText = patUuid4.ReplaceAllString(specText, "<UUID4>")
+
+		diff, err := jsondiff.CompareJSON(expected, []byte(specText))
+		if err != nil {
+			t.Errorf(err.Error())
+			t.FailNow()
+		}
+
+		if len(diff) > 0 {
+			t.Errorf("Generated spec does not match expected:\n%s", diff.String())
 		}
 
 		return true

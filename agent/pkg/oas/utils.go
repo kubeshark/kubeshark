@@ -52,8 +52,7 @@ func createSimpleParam(name string, in openapi.In, ptype openapi.SchemaType) *op
 	}
 	required := true // FFS! https://stackoverflow.com/questions/32364027/reference-a-boolean-for-assignment-in-a-struct/32364093
 	schema := new(openapi.SchemaObj)
-	schema.Type = make(openapi.Types, 0)
-	schema.Type = append(schema.Type, ptype)
+	schema.Type = openapi.Types{ptype}
 
 	style := openapi.StyleSimple
 	if in == openapi.InQuery {

@@ -119,7 +119,7 @@ func feedEntry(entry *har.Entry, isSync bool) {
 		logger.Log.Debugf("Dropped traffic entry due to permanent redirect status: %s", entry.StartedDateTime)
 	}
 
-	if strings.Contains(entry.Request.URL, "taboola") {
+	if strings.Contains(entry.Request.URL, "http://10.135.50.198:80/rsso/agent") {
 		logger.Log.Debugf("Interesting: %s", entry.Request.URL)
 	} else {
 		//return
