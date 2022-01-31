@@ -247,16 +247,18 @@ func hostApi(socketHarOutputChannel chan<- *tapApi.OutputChannelItem) {
 
 	app.Use(DisableRootStaticCache())
 
-	staticFolder := ""
+	var staticFolder string
 	if config.Config.StandaloneMode {
 		staticFolder = "./site-standalone"
 	} else {
 		staticFolder = "./site"
 	}
+
 	indexStaticFile := staticFolder + "/index.html"
 	if err := setUIFlags(indexStaticFile); err != nil {
-		logger.Log.Errorf("Error setting ui mode, err: %v", err)
+		logger.Log.Errorf("Error setting ui flags, err: %v", err)
 	}
+
 	app.Use(static.ServeRoot("/", staticFolder))
 	app.NoRoute(func(c *gin.Context) {
 		c.File(indexStaticFile)
