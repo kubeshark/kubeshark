@@ -68,7 +68,12 @@ export default class Api {
         return response.data;
     }
 
-    genareteInviteLink = async(userData)  =>{
+    inviteExistingUser = async(userId)  =>{
+        const response = await this.client.post(`/user/${userId}/invite`);
+        return response.data;
+    }
+
+     genareteInviteLink = async(userData)  =>{
         const response = await this.client.post(`/user/createUserAndInvite`,userData);
         return response.data;
     }
@@ -223,6 +228,7 @@ export default class Api {
             }
         }
     }
+    
 
     login = async (username, password) => {
         const form = new FormData();
