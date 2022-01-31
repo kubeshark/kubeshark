@@ -196,7 +196,7 @@ func fillParamExample(param **openapi.Examples, exampleValue string) error {
 			continue
 		}
 
-		if value == exampleValue || cnt > 5 { // 5 examples is enough
+		if value == exampleValue || cnt >= 5 { // 5 examples is enough
 			return nil
 		}
 	}
