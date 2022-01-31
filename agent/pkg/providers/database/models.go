@@ -18,6 +18,14 @@ type Workspace struct {
 	Namespaces []Namespace `gorm:"foreignKey:WorkspaceID"`
 }
 
-type UniqueConstraintError struct {
-	err error
+type ErrorUniqueConstraintViolation struct{}
+
+func (e *ErrorUniqueConstraintViolation) Error() string {
+	return "database unique constraint violated"
+}
+
+type ErrorNotFound struct{}
+
+func (e *ErrorNotFound) Error() string {
+	return "database row not found"
 }

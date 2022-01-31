@@ -12,6 +12,8 @@ func WorkspaceRoutes(ginApp *gin.Engine) {
 
 	routeGroup.GET("/:workspaceId", middlewares.RequiresAdmin(), controllers.GetWorkspace)
 	routeGroup.PUT("/:workspaceId", middlewares.RequiresAdmin(), controllers.UpdateWorkspace)
+	routeGroup.DELETE("/:workspaceId", middlewares.RequiresAdmin(), controllers.DeleteWorkspace)
+
 	routeGroup.POST("/", middlewares.RequiresAdmin(), controllers.CreateWorkspace)
 	routeGroup.GET("/", middlewares.RequiresAdmin(), controllers.ListWorkspace)
 }

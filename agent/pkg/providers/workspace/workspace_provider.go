@@ -1,15 +1,13 @@
 package workspace
 
 import (
-	"errors"
 	"mizuserver/pkg/providers/database"
-
-	"github.com/mattn/go-sqlite3"
+	"mizuserver/pkg/providers/userRoles"
 )
 
 func CreateWorkspace(name string, namespaces []string) (*WorkspaceResponse, error) {
 	if workspace, err := database.CreateWorkspace(name, namespaces); err != nil {
-		return nil, handleDatabaseError(err)
+		return nil, err
 	} else {
 		return &WorkspaceResponse{
 			Id:         workspace.Id,
@@ -21,7 +19,7 @@ func CreateWorkspace(name string, namespaces []string) (*WorkspaceResponse, erro
 
 func ListWorkspaces() ([]*WorkspaceListItemResponse, error) {
 	if workspaces, err := database.ListWorkspaces(); err != nil {
-		return nil, handleDatabaseError(err)
+		return nil, err
 	} else {
 		workspaceResponseListItems := make([]*WorkspaceListItemResponse, len(workspaces))
 		for i, workspace := range workspaces {
@@ -36,7 +34,7 @@ func ListWorkspaces() ([]*WorkspaceListItemResponse, error) {
 
 func GetWorkspace(workspaceId string) (*WorkspaceResponse, error) {
 	if workspace, err := database.GetWorkspaceWithRelations(workspaceId); err != nil {
-		return nil, handleDatabaseError(err)
+		return nil, err
 	} else {
 		return &WorkspaceResponse{
 			Id:         workspace.Id,
@@ -48,7 +46,7 @@ func GetWorkspace(workspaceId string) (*WorkspaceResponse, error) {
 
 func UpdateWorkspace(workspaceId string, name string, namespaces []string) (*WorkspaceResponse, error) {
 	if workspace, err := database.UpdateWorkspace(workspaceId, name, namespaces); err != nil {
-		return nil, handleDatabaseError(err)
+		return nil, err
 	} else {
 		return &WorkspaceResponse{
 			Id:         workspace.Id,
@@ -56,6 +54,13 @@ func UpdateWorkspace(workspaceId string, name string, namespaces []string) (*Wor
 			Namespaces: namespaceSliceToStringSlice(workspace.Namespaces),
 		}, nil
 	}
+}
+
+func DeleteWorkspace(workspaceId string) error {
+	if err := database.DeleteWorkspace(workspaceId); err != nil {
+		return err
+	}
+	return userRoles.DeleteAllWorkspaceRolesByWorkspace(workspaceId)
 }
 
 func namespaceSliceToStringSlice(namespacesObjects []database.Namespace) []string {
@@ -66,14 +71,4 @@ func namespaceSliceToStringSlice(namespacesObjects []database.Namespace) []strin
 	}
 
 	return namespaces
-}
-
-func handleDatabaseError(err error) error {
-	var sqliteError sqlite3.Error
-	if errors.As(err, &sqliteError) {
-		if sqliteError.ExtendedCode == sqlite3.ErrConstraintUnique {
-			return &ErrorWorkspaceNameAlreadyExists{}
-		}
-	}
-	return err
 }

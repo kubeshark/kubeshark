@@ -15,10 +15,3 @@ type WorkspaceResponse struct {
 	Name       string   `json:"name"`
 	Namespaces []string `json:"namespaces"`
 }
-
-type ErrorWorkspaceNameAlreadyExists struct {
-}
-
-func (e *ErrorWorkspaceNameAlreadyExists) Error() string {
-	return "workspace name already exists"
-}

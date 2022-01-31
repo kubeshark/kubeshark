@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"errors"
+	"mizuserver/pkg/providers/database"
 	"mizuserver/pkg/providers/workspace"
 	"net/http"
 
@@ -17,7 +18,7 @@ func CreateWorkspace(c *gin.Context) {
 	}
 
 	if newWorkspace, err := workspace.CreateWorkspace(requestCreateWorkspace.Name, requestCreateWorkspace.Namespaces); err != nil {
-		if errors.Is(err, &workspace.ErrorWorkspaceNameAlreadyExists{}) {
+		if errors.Is(err, &database.ErrorUniqueConstraintViolation{}) {
 			c.JSON(http.StatusConflict, gin.H{"error": "a workspace with this name already exists"})
 		} else {
 			c.JSON(http.StatusInternalServerError, err)
@@ -39,7 +40,11 @@ func ListWorkspace(c *gin.Context) {
 
 func GetWorkspace(c *gin.Context) {
 	if workspace, err := workspace.GetWorkspace(c.Param("workspaceId")); err != nil {
-		c.JSON(http.StatusInternalServerError, err)
+		if errors.Is(err, &database.ErrorNotFound{}) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "no workspace with this id was found"})
+		} else {
+			c.JSON(http.StatusInternalServerError, err)
+		}
 		return
 	} else {
 		c.JSON(http.StatusOK, workspace)
@@ -55,7 +60,9 @@ func UpdateWorkspace(c *gin.Context) {
 	}
 
 	if updatedWorkspace, err := workspace.UpdateWorkspace(c.Param("workspaceId"), requestUpdateWorkspace.Name, requestUpdateWorkspace.Namespaces); err != nil {
-		if errors.Is(err, &workspace.ErrorWorkspaceNameAlreadyExists{}) {
+		if errors.Is(err, &database.ErrorNotFound{}) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "no workspace with this id was found"})
+		} else if errors.Is(err, &database.ErrorUniqueConstraintViolation{}) {
 			c.JSON(http.StatusConflict, gin.H{"error": "a workspace with this name already exists"})
 		} else {
 			c.JSON(http.StatusInternalServerError, err)
@@ -63,5 +70,14 @@ func UpdateWorkspace(c *gin.Context) {
 		return
 	} else {
 		c.JSON(http.StatusOK, updatedWorkspace)
+	}
+}
+
+func DeleteWorkspace(c *gin.Context) {
+	if err := workspace.DeleteWorkspace(c.Param("workspaceId")); err != nil {
+		c.JSON(http.StatusInternalServerError, err)
+		return
+	} else {
+		c.JSON(http.StatusOK, "")
 	}
 }

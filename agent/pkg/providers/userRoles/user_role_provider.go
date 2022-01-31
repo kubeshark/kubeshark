@@ -1,4 +1,4 @@
-package user
+package userRoles
 
 /*
 This provider abstracts keto role management down to what we need for mizu
@@ -96,6 +96,14 @@ func DeleteAllUserRoles(username string) error {
 	return deleteAllNamespacedRelationsForSubjectID(workspacesRoleNamespace, username)
 }
 
+func DeleteAllWorkspaceRolesByWorkspace(workspaceId string) error {
+	relationTuples, err := queryRelationTuples(&workspacesRoleNamespace, &workspaceId, nil, nil)
+	if err != nil {
+		return err
+	}
+	return deleteTuples(relationTuples)
+}
+
 func createObjectRelationForSubjectID(namespace string, object string, subjectID string, relation string) error {
 	tuple := ketoModels.RelationQuery{
 		Namespace: &namespace,
@@ -135,8 +143,11 @@ func deleteAllNamespacedRelationsForSubjectID(namespace string, subjectID string
 	if err != nil {
 		return err
 	}
+	return deleteTuples(relationTuples)
+}
 
-	for _, clientRelation := range relationTuples {
+func deleteTuples(tuples []*ketoModels.InternalRelationTuple) error {
+	for _, clientRelation := range tuples {
 		_, err := writeClient.Write.DeleteRelationTuple(ketoWrite.
 			NewDeleteRelationTupleParams().
 			WithNamespace(*clientRelation.Namespace).
@@ -148,7 +159,6 @@ func deleteAllNamespacedRelationsForSubjectID(namespace string, subjectID string
 			return err
 		}
 	}
-
 	return nil
 }
 

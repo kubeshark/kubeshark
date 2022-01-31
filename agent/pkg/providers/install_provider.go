@@ -5,6 +5,7 @@ import (
 	"errors"
 	"mizuserver/pkg/config"
 	"mizuserver/pkg/providers/user"
+	"mizuserver/pkg/providers/userRoles"
 
 	ory "github.com/ory/kratos-client-go"
 )
@@ -35,7 +36,7 @@ func CreateAdminUser(password string, ctx context.Context) (token *string, err e
 		return nil, err, formErrors
 	}
 
-	err = user.SetUserSystemRole(AdminUsername, user.AdminRole)
+	err = userRoles.SetUserSystemRole(AdminUsername, userRoles.AdminRole)
 
 	if err != nil {
 		//Delete the user to prevent a half-setup situation where admin user is created without admin privileges

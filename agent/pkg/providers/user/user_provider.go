@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"mizuserver/pkg/providers/database"
+	"mizuserver/pkg/providers/userRoles"
 	"mizuserver/pkg/providers/workspace"
 	"net/http"
 	"net/http/cookiejar"
@@ -110,7 +111,7 @@ func DeleteUser(identityId string, ctx context.Context) error {
 	if result.StatusCode < 200 || result.StatusCode > 299 {
 		return errors.New(fmt.Sprintf("user deletion returned bad status %d", result.StatusCode))
 	} else {
-		return DeleteAllUserRoles(username)
+		return userRoles.DeleteAllUserRoles(username)
 	}
 }
 
@@ -145,12 +146,12 @@ func CreateNewUserWithInvite(username string, workspaceId string, systemRole str
 		return "", "", err
 	}
 
-	if err = SetUserSystemRole(username, systemRole); err != nil {
+	if err = userRoles.SetUserSystemRole(username, systemRole); err != nil {
 		DeleteUser(identityId, ctx)
 		return "", "", err
 	}
 
-	if err = SetUserWorkspaceRole(username, workspaceId, UserRole); err != nil {
+	if err = userRoles.SetUserWorkspaceRole(username, workspaceId, userRoles.UserRole); err != nil {
 		DeleteUser(identityId, ctx)
 		return "", "", err
 	}
@@ -277,10 +278,10 @@ func UpdateUserRoles(identityId string, workspaceId string, systemRole string, c
 	traits := identity.Traits.(map[string]interface{})
 	username := traits["username"].(string)
 
-	if err = SetUserWorkspaceRole(username, workspaceId, UserRole); err != nil {
+	if err = userRoles.SetUserWorkspaceRole(username, workspaceId, userRoles.UserRole); err != nil {
 		return err
 	}
-	if err = SetUserSystemRole(username, systemRole); err != nil {
+	if err = userRoles.SetUserSystemRole(username, systemRole); err != nil {
 		return err
 	}
 
@@ -307,13 +308,13 @@ func GetUser(identityId string, ctx context.Context) (*User, error) {
 	user.Username = username
 	user.Status = InviteStatus(traits["inviteStatus"].(string))
 
-	if systemRole, err := GetUserSystemRole(username); err != nil {
+	if systemRole, err := userRoles.GetUserSystemRole(username); err != nil {
 		return nil, err
 	} else {
 		user.SystemRole = systemRole
 	}
 
-	if workspaceId, err := GetUserWorkspaceId(username); err != nil {
+	if workspaceId, err := userRoles.GetUserWorkspaceId(username); err != nil {
 		return nil, err
 	} else {
 		user.WorkspaceId = workspaceId
@@ -340,7 +341,7 @@ func ListUsers(usernameFilterQuery string, ctx context.Context) ([]UserListItem,
 				inviteStatus = InviteStatus(traits["inviteStatus"].(string))
 			}
 
-			systemRole, err := GetUserSystemRole(username)
+			systemRole, err := userRoles.GetUserSystemRole(username)
 			if err != nil {
 				return nil, err
 			}

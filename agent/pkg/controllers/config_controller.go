@@ -2,12 +2,6 @@ package controllers
 
 import (
 	"context"
-	"github.com/gin-gonic/gin"
-	"github.com/up9inc/mizu/shared"
-	"github.com/up9inc/mizu/shared/kubernetes"
-	"github.com/up9inc/mizu/shared/logger"
-	tapApi "github.com/up9inc/mizu/tap/api"
-	v1 "k8s.io/api/core/v1"
 	"mizuserver/pkg/config"
 	"mizuserver/pkg/models"
 	"mizuserver/pkg/providers"
@@ -17,6 +11,13 @@ import (
 	"net/http"
 	"regexp"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/up9inc/mizu/shared"
+	"github.com/up9inc/mizu/shared/kubernetes"
+	"github.com/up9inc/mizu/shared/logger"
+	tapApi "github.com/up9inc/mizu/tap/api"
+	v1 "k8s.io/api/core/v1"
 )
 
 var cancelTapperSyncer context.CancelFunc
@@ -96,6 +97,30 @@ func GetTapConfig(c *gin.Context) {
 
 	tapConfigToReturn := models.TapConfig{TappedNamespaces: tappedNamespaces}
 	c.JSON(http.StatusOK, tapConfigToReturn)
+}
+
+func GetNamespaces(c *gin.Context) {
+	kubernetesProvider, err := providers.GetKubernetesProvider()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err)
+		return
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	namespaces, err := kubernetesProvider.ListAllNamespaces(ctx)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err)
+		return
+	}
+
+	namespaceNames := make([]string, len(namespaces))
+	for i, namespace := range namespaces {
+		namespaceNames[i] = namespace.Name
+	}
+
+	c.JSON(http.StatusOK, namespaceNames)
 }
 
 func startMizuTapperSyncer(ctx context.Context, provider *kubernetes.Provider, targetNamespaces []string, podFilterRegex regexp.Regexp, ignoredUserAgents []string, mizuApiFilteringOptions tapApi.TrafficFilteringOptions, serviceMesh bool) (*kubernetes.MizuTapperSyncer, error) {

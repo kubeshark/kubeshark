@@ -13,4 +13,5 @@ func ConfigRoutes(ginApp *gin.Engine) {
 
 	routeGroup.POST("/tap", middlewares.RequiresAdmin(), controllers.PostTapConfig)
 	routeGroup.GET("/tap", controllers.GetTapConfig)
+	routeGroup.GET("/namespaces", controllers.GetNamespaces)
 }

@@ -1,19 +1,27 @@
 package database
 
 import (
+	"errors"
 	"fmt"
+	"mizuserver/pkg/config"
 
 	"github.com/google/uuid"
+	"github.com/mattn/go-sqlite3"
 	"github.com/up9inc/mizu/shared/logger"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
-const databasePath = "/app/data/kratos.sqlite"
+const (
+	databaseFileName               = "kratos.sqlite"
+	gormRecordNotFoundErrorMessage = "record not found"
+)
 
 var db *gorm.DB
 
-func init() {
+func InitializeApplicationDatabase() {
+	databasePath := config.Config.AgentDatabasePath + databaseFileName
+
 	var err error
 	db, err = gorm.Open(sqlite.Open(databasePath), &gorm.Config{})
 	if err != nil {
@@ -38,7 +46,7 @@ func CreateInvite(inviteToken string, username string, identityId string, creati
 	}
 
 	if err := db.Create(invite).Error; err != nil {
-		return err
+		return handleDatabaseError(err)
 	}
 	return nil
 }
@@ -46,14 +54,14 @@ func CreateInvite(inviteToken string, username string, identityId string, creati
 func GetInviteByInviteToken(inviteToken string) (*Invite, error) {
 	var invite Invite
 	if err := db.Where("token = ?", inviteToken).First(&invite).Error; err != nil {
-		return nil, err
+		return nil, handleDatabaseError(err)
 	}
 	return &invite, nil
 }
 
 func DeleteInvite(inviteToken string) error {
 	if err := db.Where("token = ?", inviteToken).Delete(&Invite{}).Error; err != nil {
-		return err
+		return handleDatabaseError(err)
 	}
 	return nil
 }
@@ -74,7 +82,7 @@ func CreateWorkspace(name string, namespaces []string) (*Workspace, error) {
 	}
 
 	if err := db.Create(workspace).Error; err != nil {
-		return nil, err
+		return nil, handleDatabaseError(err)
 	}
 
 	return workspace, nil
@@ -83,7 +91,7 @@ func CreateWorkspace(name string, namespaces []string) (*Workspace, error) {
 func ListWorkspaces() ([]*Workspace, error) {
 	var workspaces []*Workspace
 	if err := db.Find(&workspaces).Error; err != nil {
-		return nil, err
+		return nil, handleDatabaseError(err)
 	}
 	return workspaces, nil
 }
@@ -91,7 +99,7 @@ func ListWorkspaces() ([]*Workspace, error) {
 func GetWorkspaceWithRelations(workspaceId string) (*Workspace, error) {
 	var workspace Workspace
 	if err := db.Preload("Namespaces").First(&workspace, "id = ?", workspaceId).Error; err != nil {
-		return nil, err
+		return nil, handleDatabaseError(err)
 	}
 	return &workspace, nil
 }
@@ -112,17 +120,49 @@ func UpdateWorkspace(workspaceId string, name string, namespaces []string) (*Wor
 	}
 
 	if err := db.Transaction(func(tx *gorm.DB) error {
+		// ensure workspace exists, tx.Save will create it if it doesn't exist so we must check
+		if err := tx.First(&Workspace{}, "id = ?", workspaceId).Error; err != nil {
+			return err
+		}
 		// delete old namespaces
 		if err := tx.Delete(&Namespace{}, "workspace_id = ?", workspaceId).Error; err != nil {
 			return err
 		}
+		// this also creates the new namespace rows
 		if err := tx.Save(workspace).Error; err != nil {
 			return err
 		}
 		return nil
 	}); err != nil {
-		return nil, err
+		return nil, handleDatabaseError(err)
 	}
 
 	return workspace, nil
+}
+
+func DeleteWorkspace(workspaceId string) error {
+	if err := db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Delete(&Namespace{}, "workspace_id = ?", workspaceId).Error; err != nil {
+			return err
+		}
+		if err := tx.Delete(&Workspace{}, "id = ?", workspaceId).Error; err != nil {
+			return err
+		}
+		return nil
+	}); err != nil {
+		return handleDatabaseError(err)
+	}
+	return nil
+}
+
+func handleDatabaseError(err error) error {
+	var sqliteError sqlite3.Error
+	if errors.As(err, &sqliteError) {
+		if sqliteError.ExtendedCode == sqlite3.ErrConstraintUnique {
+			return &ErrorUniqueConstraintViolation{}
+		}
+	} else if err.Error() == gormRecordNotFoundErrorMessage {
+		return &ErrorNotFound{}
+	}
+	return err
 }

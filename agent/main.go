@@ -12,6 +12,7 @@ import (
 	"mizuserver/pkg/middlewares"
 	"mizuserver/pkg/models"
 	"mizuserver/pkg/oas"
+	"mizuserver/pkg/providers/database"
 	"mizuserver/pkg/routes"
 	"mizuserver/pkg/servicemap"
 	"mizuserver/pkg/up9"
@@ -70,6 +71,7 @@ func main() {
 		logger.Log.Fatalf("Error loading config file %v", err)
 	}
 	loadExtensions()
+	database.InitializeApplicationDatabase()
 
 	if !*tapperMode && !*apiServerMode && !*standaloneMode && !*harsReaderMode {
 		panic("One of the flags --tap, --api or --standalone or --hars-read must be provided")

@@ -3,6 +3,7 @@ package middlewares
 import (
 	"mizuserver/pkg/config"
 	"mizuserver/pkg/providers/user"
+	"mizuserver/pkg/providers/userRoles"
 
 	"github.com/gin-gonic/gin"
 	ory "github.com/ory/kratos-client-go"
@@ -40,11 +41,11 @@ func RequiresAdmin() gin.HandlerFunc {
 		traits := session.Identity.Traits.(map[string]interface{})
 		username := traits["username"].(string)
 
-		userRole, err := user.GetUserSystemRole(username)
+		userRole, err := userRoles.GetUserSystemRole(username)
 		if err != nil {
 			logger.Log.Errorf("error checking user role %v", err)
 			c.AbortWithStatusJSON(403, gin.H{"error": "unknown auth error occured"})
-		} else if userRole != user.AdminRole {
+		} else if userRole != userRoles.AdminRole {
 			logger.Log.Warningf("user %s attempted to call an admin only endpoint with insufficient privileges", username)
 			c.AbortWithStatusJSON(403, gin.H{"error": "unauthorized"})
 		} else {
