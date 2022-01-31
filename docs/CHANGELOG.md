@@ -17,7 +17,7 @@ Ongoing work and development releases are under `develop` branch.
 
 ### improvements
 * Mizu container images are now served from [Docker Hub](https://hub.docker.com/r/up9inc/mizu), as multi-architecture images (arm64, amd64)
-* in Mizu GUI the filter query can now applied by pressing ENTER
+* in Mizu GUI the filter query can now be applied by pressing CONTROL/COMMAND + ENTER
 * try port-forwarding if http-proxy connection to Mizu API server is not available
 
 ### notable bug fixes
