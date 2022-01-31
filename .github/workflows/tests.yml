@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   run-tests-cli:
-    name: CLI
+    name: CLI Tests
     runs-on: ubuntu-latest
     steps:
       - name: Set up Go 1.16
@@ -34,7 +34,7 @@ jobs:
         uses: codecov/codecov-action@v2
 
   run-tests-agent:
-    name: Agent
+    name: Agent Tests
     runs-on: ubuntu-latest
     steps:
       - name: Set up Go 1.16
