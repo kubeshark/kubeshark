@@ -60,6 +60,7 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
                   "name": "test"
               }
           ].map((obj) => {return {key:obj.id, value:obj.name,isChecked:false}})
+          
           //await api.getWorkspaces() 
           setWorkspaces(workspacesList)    
                           
@@ -73,15 +74,6 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
     (async () => {
       try { 
           setEditMode(isEditMode)
-          if (isEditMode) {
-            
-            //const userDetails = await api.getUserDetails(userData)
-            //const data = {...userData,...userDetails}
-            
-          }
-          else{
-            
-          }
           setUserData(userData as UserData)
       } catch (e) {
           toast.error("Error getting user details")
@@ -97,6 +89,18 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
     onCloseModal()
     setUserData({} as UserData)
     setInvite({sent:false,isSuceeded:false,link:""})
+    setEditMode(false)
+    setDisable(true)
+  }
+
+  const updateUser = async() =>{
+      try {
+        const res = await api.updateUser(userDataModel)
+        onClose()
+        toast.success("User has been modified")  
+      } catch (error) {
+        toast.error("Error accured modifing user")  
+      }
   }
 
   const workspaceChange = (workspaces) => {
@@ -124,8 +128,7 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
   };
 
   const isFormValid = () : boolean => {
-    return true;
-    //return (Object.values(userDataModel).length === 3) && Object.values(userDataModel).every(val => val !== null)
+    return (Object.values(userDataModel).length >= 3) && Object.values(userDataModel).every(val => val !== null)
   }
 
   const setGenarateDisabledState = () => {
@@ -133,39 +136,59 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
     setDisable(!isValid)
   }
 
-  const generateLink =  () => {
-    try {
-      if (editMode) {
-        //await api.updateUser(userDataModel)
-        setInvite({...invite,isSuceeded:true,sent:true,link:"asdasdasdasdasdasdasdasdads"})
-        toast.success("User has been modified")  
-      }
-      else{
-        //const res = await api.genareteInviteLink(userDataModel) 
-        setInvite({...invite,isSuceeded:true,sent:true, link:"asdasdasdasdasdasdasdasdads"})
-        toast.success("User has been added") 
-      }
+  const mapTokenToLink = (token) => {
+    return`${window.location.origin}/${token}`
+  }
 
-      onUserChange(userDataModel)
-   
+  const generateLink =  async() => {
+      try {
+        const res = await api.genareteInviteLink(userDataModel) 
+        setInvite({...invite,isSuceeded:true,sent:true, link: mapTokenToLink(res.inviteToken)})
+        toast.success("User has been added") 
+        onUserChange(userDataModel)   
+    } catch (e) {
+      toast.error("Error accrued generating link") 
+    }
+  }
+
+  const inviteExistingUser = async() => {
+    try {
+      const res = await api.inviteExistingUser(userDataModel.userId) 
+      setInvite({...invite,isSuceeded:true,sent:true, link: mapTokenToLink(res.inviteToken)})
+      toast.success("Invite link created") 
+      onUserChange(userDataModel)   
   } catch (e) {
     toast.error("Error accrued generating link") 
   }
-    
+  }
+
+  const isShowInviteLink = () => {
+    return ((invite.isSuceeded && invite.link));
+  }
+
+  const showGenerateButton = () => {
+    return (!invite.isSuceeded || !(invite.link && invite.sent)) 
   }
 
   const handleCopyinviteLink = (e) => {navigator.clipboard.writeText(invite.link)}
 
-  const modalCustomActions = <>
-            {(!invite.isSuceeded || !(invite.link && invite.sent)) && <Button 
-                                            className={classes.button + " generate-link-button"} size={"small"} onClick={generateLink}
+  const addUsermodalCustomActions = <>
+            {showGenerateButton() && <Button 
+                                            className={classes.button + " generate-link-button"} size={"small"} 
+                                            onClick={!isEditMode ? generateLink : inviteExistingUser}
                                             disabled={disable}  
                                             endIcon={isLoading && <img src={spinner} alt="spinner"/>}>
                                               <span className='generate-link-button__icon'></span>
                                               {"Generate Invite Link"}
                               </Button>}
-                              {invite.isSuceeded && invite.link && <div className="invite-link-row">
-        <FormControl variant="outlined" size={"small"} className='invite-link-field'>
+                              {
+              isEditMode && <Button style={{height: '100%'}} disabled={disable} className={classes.button + " u-margin-left"} size={"small"} onClick={updateUser}>
+              Save
+            </Button>
+          }
+      
+      <div className="invite-link-row">
+      {isShowInviteLink() && <FormControl variant="outlined" size={"small"} className='invite-link-field'>
           <InputLabel htmlFor="outlined-adornment-password">Invite link</InputLabel>
           <OutlinedInput 
             type={'text'}
@@ -177,20 +200,20 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
                   {<span className='generate-link-button__icon'></span>}
                 </IconButton>
               </InputAdornment>
-            }
-            label="Invite link"
-          />
-        </FormControl>
-            <Button style={{height: '100%'}} className={classes.button} size={"small"} onClick={onClose}>
+            } label="Invite link"/>
+        </FormControl>}
+           {!isEditMode &&  isShowInviteLink() &&  <Button style={{height: '100%'}} className={classes.button + " u-margin-left"} size={"small"} onClick={onClose}>
                         Done
-            </Button>
-      </div>}
-                            </>;
+            </Button>}
+
+      </div>
+
+   </>;
 
   return (<>
 
     <ConfirmationModal isOpen={isOpen} onClose={onClose} onConfirm={onClose} 
-                       title={`${editMode ? "Edit" : "Add"} User`} customActions={modalCustomActions}>
+                       title={`${editMode ? "Edit" : "Add"} User`} customActions={addUsermodalCustomActions}>
 
       <h3 className='comfirmation-modal__sub-section-header'>DETAILS</h3>
       <div className='comfirmation-modal__sub-section'>
@@ -225,7 +248,7 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
                     onChange={(event) => setSearchValue(event.target.value)}/>
         </div>
         <SelectList valuesListInput={workspaces} tableName={''} multiSelect={false} searchValue={searchValue} 
-                    setValues= {workspaceChange} tabelClassName={''} >
+                    setValues= {workspaceChange} tabelClassName={''}>
         </SelectList>
       </div>
 

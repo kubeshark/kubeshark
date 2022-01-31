@@ -22,6 +22,11 @@ interface Props {
 
 const api = Api.getInstance();
 
+enum InviteStatus{
+    active = "Active",
+    pending = "Pending"
+}
+
 export const UserSettings : React.FC<Props> = ({}) => {
 
     const [usersRows, setUserRows] = useState([]);
@@ -29,7 +34,7 @@ export const UserSettings : React.FC<Props> = ({}) => {
     const cols : ColsType[] = [{field : "username",header:"User"},
                                {field : "role",header:"Role"},
                                {field : "status",header:"Status",getCellClassName : (field, val) =>{
-                                   return val === "Active" ? "status--active" : "status--pending"
+                                   return val === InviteStatus.active ? "status--active" : "status--pending"
                                }}]
     const [isOpenModal,setIsOpen] = useState(false)
     const [editMode, setEditMode] = useState(false);
@@ -37,9 +42,13 @@ export const UserSettings : React.FC<Props> = ({}) => {
 
     const getUserList =         (async () => {
         try {
-            let users = [{username:"asd",role:"Admin",status:"Active",userId : "1"},
-                           {username:"asdasdasdasdasdasd",role:"User",status:"Active",userId : "2"}]//await api.getUsers() 
-            setUserRows(users)                                
+            // let users = [{username:"asd",role:"Admin",status:"Active",userId : "1"},
+            //                {username:"asdasdasdasdasdasd",role:"User",status:"Active",userId : "2"}]
+            let users  = await api.getUsers()
+            const mappedUsers = users.map((user) => {
+                return {...user,status: capitalizeFirstLetter(user.status), role: capitalizeFirstLetter(user.role)}
+            })
+            setUserRows(mappedUsers)                                
         } catch (e) {
             console.error(e);
         }
@@ -49,6 +58,10 @@ export const UserSettings : React.FC<Props> = ({}) => {
     useEffect(() => {
         getUserList();
     },[])
+
+    function capitalizeFirstLetter(string) {
+        return string.charAt(0).toUpperCase() + string.slice(1);
+      }
 
     const filterFuncFactory = (searchQuery: string) => {
         return (row) => {
@@ -73,7 +86,7 @@ export const UserSettings : React.FC<Props> = ({}) => {
     const onConfirmDelete = () => {
         (async() => {
             try {
-                //await api.deleteUser(user)
+                await api.deleteUser(userData)
                 const findFunc = filterFuncFactory(userData.userId);
                 const usersLeft = usersRows.filter(e => !findFunc(e))
                 setUserRows(usersLeft)
@@ -81,6 +94,7 @@ export const UserSettings : React.FC<Props> = ({}) => {
             } catch (error) {
                 toast.error("User want not deleted")
             }
+            setConfirmModalOpen(false);
         })()   
     }
 
@@ -94,7 +108,7 @@ export const UserSettings : React.FC<Props> = ({}) => {
         getUserList()
     }
 
-    const buttonConfig = {onClick: () => {setIsOpen(true)}, text:"Add User"}
+    const buttonConfig = {onClick: () => {setIsOpen(true);setEditMode(false);}, text:"Add User"}
 
     return (<>
         <FilterableTableAction onRowEdit={onRowEdit} onRowDelete={onRowDelete} searchConfig={searchConfig} 
