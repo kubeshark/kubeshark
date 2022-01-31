@@ -14,26 +14,28 @@ help: ## This help.
 install:
 	go install mizu.go
 
+build-debug:
+	export GCLFAGS='-gcflags="all=-N -l"'
+	${MAKE} build
+
 build: ## Build mizu CLI binary (select platform via GOOS / GOARCH env variables).
-	go build -ldflags="-X 'github.com/up9inc/mizu/cli/mizu.GitCommitHash=$(COMMIT_HASH)' \
+	go build ${GCLFAGS} -ldflags="-X 'github.com/up9inc/mizu/cli/mizu.GitCommitHash=$(COMMIT_HASH)' \
 					   -X 'github.com/up9inc/mizu/cli/mizu.Branch=$(GIT_BRANCH)' \
 					   -X 'github.com/up9inc/mizu/cli/mizu.BuildTimestamp=$(BUILD_TIMESTAMP)' \
+					   -X 'github.com/up9inc/mizu/cli/mizu.Platform=$(SUFFIX)' \
 					   -X 'github.com/up9inc/mizu/cli/mizu.SemVer=$(SEM_VER)'" \
-					   -o bin/mizu_$(SUFFIX) mizu.go 
+					   -o bin/mizu_$(SUFFIX) mizu.go
 	(cd bin && shasum -a 256 mizu_${SUFFIX} > mizu_${SUFFIX}.sha256)
 
 build-all: ## Build for all supported platforms.
 	@echo "Compiling for every OS and Platform"
 	@mkdir -p bin && sed s/_SEM_VER_/$(SEM_VER)/g README.md.TEMPLATE >  bin/README.md
-	@$(MAKE) build GOOS=darwin GOARCH=amd64
 	@$(MAKE) build GOOS=linux GOARCH=amd64
+	@$(MAKE) build GOOS=linux GOARCH=arm64
+	@$(MAKE) build GOOS=darwin GOARCH=amd64
 	@$(MAKE) build GOOS=darwin GOARCH=arm64
 	@$(MAKE) build GOOS=windows GOARCH=amd64
 	@mv ./bin/mizu_windows_amd64 ./bin/mizu.exe
-	@# $(MAKE) GOOS=linux GOARCH=386
-	@# $(MAKE) GOOS=windows GOARCH=386
-	@# $(MAKE) GOOS=linux GOARCH=arm64
-	@# $(MAKE) GOOS=windows GOARCH=arm64
 	@echo "---------"
 	@find ./bin -ls
 

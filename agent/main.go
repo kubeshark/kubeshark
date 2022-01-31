@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"flag"
@@ -10,23 +9,23 @@ import (
 	"mizuserver/pkg/api"
 	"mizuserver/pkg/config"
 	"mizuserver/pkg/controllers"
+	"mizuserver/pkg/elastic"
+	"mizuserver/pkg/middlewares"
 	"mizuserver/pkg/models"
-	"mizuserver/pkg/providers"
+	"mizuserver/pkg/oas"
 	"mizuserver/pkg/routes"
+	"mizuserver/pkg/servicemap"
 	"mizuserver/pkg/up9"
 	"mizuserver/pkg/utils"
 	"net/http"
 	"os"
-	"os/exec"
 	"os/signal"
-	"path"
-	"path/filepath"
-	"plugin"
 	"sort"
+	"strconv"
+	"strings"
 	"syscall"
 	"time"
 
-	"github.com/up9inc/mizu/shared/kubernetes"
 	v1 "k8s.io/api/core/v1"
 
 	"github.com/antelman107/net-wait-go/wait"
@@ -39,6 +38,11 @@ import (
 	"github.com/up9inc/mizu/shared/logger"
 	"github.com/up9inc/mizu/tap"
 	tapApi "github.com/up9inc/mizu/tap/api"
+
+	amqpExt "github.com/up9inc/mizu/tap/extensions/amqp"
+	httpExt "github.com/up9inc/mizu/tap/extensions/http"
+	kafkaExt "github.com/up9inc/mizu/tap/extensions/kafka"
+	redisExt "github.com/up9inc/mizu/tap/extensions/redis"
 )
 
 var tapperMode = flag.Bool("tap", false, "Run in tapper mode without API")
@@ -55,7 +59,7 @@ var extensionsMap map[string]*tapApi.Extension // global
 var startTime int64
 
 const (
-	socketConnectionRetries    = 10
+	socketConnectionRetries    = 30
 	socketConnectionRetryDelay = time.Second * 2
 	socketHandshakeTimeout     = time.Second * 2
 )
@@ -94,17 +98,17 @@ func main() {
 			panic("API server address must be provided with --api-server-address when using --tap")
 		}
 
+		hostMode := os.Getenv(shared.HostModeEnvVar) == "1"
+		tapOpts := &tap.TapOpts{HostMode: hostMode}
 		tapTargets := getTapTargets()
 		if tapTargets != nil {
-			tap.SetFilterAuthorities(tapTargets)
-			logger.Log.Infof("Filtering for the following authorities: %v", tap.GetFilterIPs())
+			tapOpts.FilterAuthorities = tapTargets
+			logger.Log.Infof("Filtering for the following authorities: %v", tapOpts.FilterAuthorities)
 		}
 
 		filteredOutputItemsChannel := make(chan *tapApi.OutputChannelItem)
 
 		filteringOptions := getTrafficFilteringOptions()
-		hostMode := os.Getenv(shared.HostModeEnvVar) == "1"
-		tapOpts := &tap.TapOpts{HostMode: hostMode}
 		tap.StartPassiveTapper(tapOpts, filteredOutputItemsChannel, extensions, filteringOptions)
 		socketConnection, err := dialSocketWithRetry(*apiServerAddress, socketConnectionRetries, socketConnectionRetryDelay)
 		if err != nil {
@@ -114,20 +118,20 @@ func main() {
 
 		go pipeTapChannelToSocket(socketConnection, filteredOutputItemsChannel)
 	} else if *apiServerMode {
-		startBasenineServer(shared.BasenineHost, shared.BaseninePort)
+		configureBasenineServer(shared.BasenineHost, shared.BaseninePort)
 		startTime = time.Now().UnixNano() / int64(time.Millisecond)
 		api.StartResolving(*namespace)
 
 		outputItemsChannel := make(chan *tapApi.OutputChannelItem)
 		filteredOutputItemsChannel := make(chan *tapApi.OutputChannelItem)
-
+		enableExpFeatureIfNeeded()
 		go filterItems(outputItemsChannel, filteredOutputItemsChannel)
 		go api.StartReadingEntries(filteredOutputItemsChannel, nil, extensionsMap)
 
 		syncEntriesConfig := getSyncEntriesConfig()
 		if syncEntriesConfig != nil {
 			if err := up9.SyncEntries(syncEntriesConfig); err != nil {
-				panic(fmt.Sprintf("Error syncing entries, err: %v", err))
+				logger.Log.Error("Error syncing entries, err: %v", err)
 			}
 		}
 
@@ -148,42 +152,34 @@ func main() {
 	logger.Log.Info("Exiting")
 }
 
-func startBasenineServer(host string, port string) {
-	cmd := exec.Command("basenine", "-addr", host, "-port", port, "-persistent")
-	cmd.Dir = config.Config.AgentDatabasePath
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err := cmd.Start()
-	if err != nil {
-		logger.Log.Panicf("Failed starting Basenine: %v", err)
+func enableExpFeatureIfNeeded() {
+	if config.Config.OAS {
+		oas.GetOasGeneratorInstance().Start()
 	}
+	if config.Config.ServiceMap {
+		servicemap.GetInstance().SetConfig(config.Config)
+	}
+	elastic.GetInstance().Configure(config.Config.Elastic)
+}
 
+func configureBasenineServer(host string, port string) {
 	if !wait.New(
 		wait.WithProto("tcp"),
 		wait.WithWait(200*time.Millisecond),
 		wait.WithBreak(50*time.Millisecond),
 		wait.WithDeadline(5*time.Second),
-		wait.WithDebug(true),
+		wait.WithDebug(config.Config.LogLevel == logging.DEBUG),
 	).Do([]string{fmt.Sprintf("%s:%s", host, port)}) {
-		logger.Log.Panicf("Basenine is not available: %v", err)
+		logger.Log.Panicf("Basenine is not available!")
 	}
 
-	// Make a channel to gracefully exit Basenine.
-	channel := make(chan os.Signal)
-	signal.Notify(channel, os.Interrupt, syscall.SIGTERM)
-
-	// Handle the channel.
-	go func() {
-		<-channel
-		cmd.Process.Signal(syscall.SIGTERM)
-	}()
-
 	// Limit the database size to default 200MB
-	err = basenine.Limit(host, port, config.Config.MaxDBSizeBytes)
+	err := basenine.Limit(host, port, config.Config.MaxDBSizeBytes)
 	if err != nil {
 		logger.Log.Panicf("Error while limiting database size: %v", err)
 	}
 
+	// Define the macros
 	for _, extension := range extensions {
 		macros := extension.Dissector.Macros()
 		for macro, expanded := range macros {
@@ -196,36 +192,36 @@ func startBasenineServer(host string, port string) {
 }
 
 func loadExtensions() {
-	dir, _ := filepath.Abs(filepath.Dir(os.Args[0]))
-	extensionsDir := path.Join(dir, "./extensions/")
-
-	files, err := ioutil.ReadDir(extensionsDir)
-	if err != nil {
-		logger.Log.Fatal(err)
-	}
-	extensions = make([]*tapApi.Extension, len(files))
+	extensions = make([]*tapApi.Extension, 4)
 	extensionsMap = make(map[string]*tapApi.Extension)
-	for i, file := range files {
-		filename := file.Name()
-		logger.Log.Infof("Loading extension: %s", filename)
-		extension := &tapApi.Extension{
-			Path: path.Join(extensionsDir, filename),
-		}
-		plug, _ := plugin.Open(extension.Path)
-		extension.Plug = plug
-		symDissector, err := plug.Lookup("Dissector")
 
-		var dissector tapApi.Dissector
-		var ok bool
-		dissector, ok = symDissector.(tapApi.Dissector)
-		if err != nil || !ok {
-			panic(fmt.Sprintf("Failed to load the extension: %s", extension.Path))
-		}
-		dissector.Register(extension)
-		extension.Dissector = dissector
-		extensions[i] = extension
-		extensionsMap[extension.Protocol.Name] = extension
-	}
+	extensionAmqp := &tapApi.Extension{}
+	dissectorAmqp := amqpExt.NewDissector()
+	dissectorAmqp.Register(extensionAmqp)
+	extensionAmqp.Dissector = dissectorAmqp
+	extensions[0] = extensionAmqp
+	extensionsMap[extensionAmqp.Protocol.Name] = extensionAmqp
+
+	extensionHttp := &tapApi.Extension{}
+	dissectorHttp := httpExt.NewDissector()
+	dissectorHttp.Register(extensionHttp)
+	extensionHttp.Dissector = dissectorHttp
+	extensions[1] = extensionHttp
+	extensionsMap[extensionHttp.Protocol.Name] = extensionHttp
+
+	extensionKafka := &tapApi.Extension{}
+	dissectorKafka := kafkaExt.NewDissector()
+	dissectorKafka.Register(extensionKafka)
+	extensionKafka.Dissector = dissectorKafka
+	extensions[2] = extensionKafka
+	extensionsMap[extensionKafka.Protocol.Name] = extensionKafka
+
+	extensionRedis := &tapApi.Extension{}
+	dissectorRedis := redisExt.NewDissector()
+	dissectorRedis.Register(extensionRedis)
+	extensionRedis.Dissector = dissectorRedis
+	extensions[3] = extensionRedis
+	extensionsMap[extensionRedis.Protocol.Name] = extensionRedis
 
 	sort.Slice(extensions, func(i, j int) bool {
 		return extensions[i].Protocol.Priority < extensions[j].Protocol.Priority
@@ -250,25 +246,44 @@ func hostApi(socketHarOutputChannel chan<- *tapApi.OutputChannelItem) {
 	}
 
 	app.Use(DisableRootStaticCache())
-	app.Use(static.ServeRoot("/", "./site"))
-	app.Use(CORSMiddleware()) // This has to be called after the static middleware, does not work if its called before
+
+	var staticFolder string
+	if config.Config.StandaloneMode {
+		staticFolder = "./site-standalone"
+	} else {
+		staticFolder = "./site"
+	}
+
+	indexStaticFile := staticFolder + "/index.html"
+	if err := setUIFlags(indexStaticFile); err != nil {
+		logger.Log.Errorf("Error setting ui flags, err: %v", err)
+	}
+
+	app.Use(static.ServeRoot("/", staticFolder))
+	app.NoRoute(func(c *gin.Context) {
+		c.File(indexStaticFile)
+	})
+
+	app.Use(middlewares.CORSMiddleware()) // This has to be called after the static middleware, does not work if its called before
 
 	api.WebSocketRoutes(app, &eventHandlers, startTime)
+
+	if config.Config.StandaloneMode {
+		routes.ConfigRoutes(app)
+		routes.UserRoutes(app)
+		routes.InstallRoutes(app)
+	}
+	if config.Config.OAS {
+		routes.OASRoutes(app)
+	}
+	if config.Config.ServiceMap {
+		routes.ServiceMapRoutes(app)
+	}
+
 	routes.QueryRoutes(app)
 	routes.EntriesRoutes(app)
 	routes.MetadataRoutes(app)
 	routes.StatusRoutes(app)
-	routes.NotFoundRoute(app)
-
-	if config.Config.DaemonMode {
-		ctx, cancel := context.WithCancel(context.Background())
-		defer cancel()
-
-		if _, err := startMizuTapperSyncer(ctx); err != nil {
-			logger.Log.Fatalf("error initializing tapper syncer: %+v", err)
-		}
-	}
-
 	utils.StartServer(app)
 }
 
@@ -283,24 +298,25 @@ func DisableRootStaticCache() gin.HandlerFunc {
 	}
 }
 
-func CORSMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
-		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
-		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
-		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT")
-
-		if c.Request.Method == "OPTIONS" {
-			c.AbortWithStatus(204)
-			return
-		}
-
-		c.Next()
+func setUIFlags(uiIndexPath string) error {
+	read, err := ioutil.ReadFile(uiIndexPath)
+	if err != nil {
+		return err
 	}
+
+	replacedContent := strings.Replace(string(read), "__IS_OAS_ENABLED__", strconv.FormatBool(config.Config.OAS), 1)
+	replacedContent = strings.Replace(replacedContent, "__IS_SERVICE_MAP_ENABLED__", strconv.FormatBool(config.Config.ServiceMap), 1)
+
+	err = ioutil.WriteFile(uiIndexPath, []byte(replacedContent), 0)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
-func parseEnvVar(env string) map[string][]string {
-	var mapOfList map[string][]string
+func parseEnvVar(env string) map[string][]v1.Pod {
+	var mapOfList map[string][]v1.Pod
 
 	val, present := os.LookupEnv(env)
 
@@ -310,12 +326,12 @@ func parseEnvVar(env string) map[string][]string {
 
 	err := json.Unmarshal([]byte(val), &mapOfList)
 	if err != nil {
-		panic(fmt.Sprintf("env var %s's value of %s is invalid! must be map[string][]string %v", env, mapOfList, err))
+		panic(fmt.Sprintf("env var %s's value of %v is invalid! must be map[string][]v1.Pod %v", env, mapOfList, err))
 	}
 	return mapOfList
 }
 
-func getTapTargets() []string {
+func getTapTargets() []v1.Pod {
 	nodeName := os.Getenv(shared.NodeNameEnvVar)
 	tappedAddressesPerNodeDict := parseEnvVar(shared.TappedAddressesPerNodeDictEnvVar)
 	return tappedAddressesPerNodeDict[nodeName]
@@ -420,65 +436,38 @@ func dialSocketWithRetry(socketAddress string, retryAmount int, retryDelay time.
 				time.Sleep(retryDelay)
 			}
 		} else {
+			go handleIncomingMessageAsTapper(socketConnection)
 			return socketConnection, nil
 		}
 	}
 	return nil, lastErr
 }
 
-func startMizuTapperSyncer(ctx context.Context) (*kubernetes.MizuTapperSyncer, error) {
-	provider, err := kubernetes.NewProviderInCluster()
-	if err != nil {
-		return nil, err
-	}
-
-	tapperSyncer, err := kubernetes.CreateAndStartMizuTapperSyncer(ctx, provider, kubernetes.TapperSyncerConfig{
-		TargetNamespaces:         config.Config.TargetNamespaces,
-		PodFilterRegex:           config.Config.TapTargetRegex.Regexp,
-		MizuResourcesNamespace:   config.Config.MizuResourcesNamespace,
-		AgentImage:               config.Config.AgentImage,
-		TapperResources:          config.Config.TapperResources,
-		ImagePullPolicy:          v1.PullPolicy(config.Config.PullPolicy),
-		LogLevel:                 config.Config.LogLevel,
-		IgnoredUserAgents:        config.Config.IgnoredUserAgents,
-		MizuApiFilteringOptions:  config.Config.MizuApiFilteringOptions,
-		MizuServiceAccountExists: true, //assume service account exists since daemon mode will not function without it anyway
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	// handle tapperSyncer events (pod changes and errors)
-	go func() {
-		for {
-			select {
-			case syncerErr, ok := <-tapperSyncer.ErrorOut:
-				if !ok {
-					logger.Log.Debug("mizuTapperSyncer err channel closed, ending listener loop")
-					return
-				}
-				logger.Log.Fatalf("fatal tap syncer error: %v", syncerErr)
-			case tapPodChangeEvent, ok := <-tapperSyncer.TapPodChangesOut:
-				if !ok {
-					logger.Log.Debug("mizuTapperSyncer pod changes channel closed, ending listener loop")
-					return
-				}
-				tapStatus := shared.TapStatus{Pods: kubernetes.GetPodInfosForPods(tapperSyncer.CurrentlyTappedPods)}
-
-				serializedTapStatus, err := json.Marshal(shared.CreateWebSocketStatusMessage(tapStatus))
-				if err != nil {
-					logger.Log.Fatalf("error serializing tap status: %v", err)
-				}
-				api.BroadcastToBrowserClients(serializedTapStatus)
-				providers.TapStatus.Pods = tapStatus.Pods
-				providers.ExpectedTapperAmount = tapPodChangeEvent.ExpectedTapperAmount
-			case <-ctx.Done():
-				logger.Log.Debug("mizuTapperSyncer event listener loop exiting due to context done")
+func handleIncomingMessageAsTapper(socketConnection *websocket.Conn) {
+	for {
+		if _, message, err := socketConnection.ReadMessage(); err != nil {
+			logger.Log.Errorf("error reading message from socket connection, err: %s, (%v,%+v)", err, err, err)
+			if errors.Is(err, syscall.EPIPE) {
+				// socket has disconnected, we can safely stop this goroutine
 				return
 			}
+		} else {
+			var socketMessageBase shared.WebSocketMessageMetadata
+			if err := json.Unmarshal(message, &socketMessageBase); err != nil {
+				logger.Log.Errorf("Could not unmarshal websocket message %v", err)
+			} else {
+				switch socketMessageBase.MessageType {
+				case shared.WebSocketMessageTypeTapConfig:
+					var tapConfigMessage *shared.WebSocketTapConfigMessage
+					if err := json.Unmarshal(message, &tapConfigMessage); err != nil {
+						logger.Log.Errorf("received unknown message from socket connection: %s, err: %s, (%v,%+v)", string(message), err, err, err)
+					} else {
+						tap.UpdateTapTargets(tapConfigMessage.TapTargets)
+					}
+				default:
+					logger.Log.Warningf("Received socket message of type %s for which no handlers are defined", socketMessageBase.MessageType)
+				}
+			}
 		}
-	}()
-
-	return tapperSyncer, nil
+	}
 }

@@ -19,7 +19,6 @@
 
 .rowSelected
   border: 1px $blue-color solid
-  margin-right: 3px
 
 .ruleSuccessRow
   background: #E8FFF1
@@ -46,13 +45,11 @@
 .ruleNumberTextSuccess
   color: #219653
 
-.service
+.resolvedName
   text-overflow: ellipsis
-  overflow: hidden
   white-space: nowrap
   color: $secondary-font-color
   padding-left: 4px
-  padding-top: 3px
   padding-right: 10px
   display: flex
   font-size: 12px
@@ -62,7 +59,7 @@
   color: $secondary-font-color
   padding-left: 12px
   flex-shrink: 0
-  width: 145px
+  width: 185px
   text-align: left
 
 .endpointServiceContainer
@@ -70,13 +67,12 @@
   flex-direction: column
   overflow: hidden
   padding-right: 10px
-  padding-left: 10px
+  padding-top: 4px
   flex-grow: 1
 
 .separatorRight
   display: flex
   border-right: 1px solid $data-background-color
-  padding: 4px
   padding-right: 12px
 
 .separatorLeft
@@ -95,3 +91,13 @@
 
 .ip
   margin-left: 5px
+
+@media (max-width: 1760px)
+  .timestamp
+    display: none
+  .separatorRight
+    border-right: 0px
+
+@media (max-width: 1340px)
+  .separatorRight
+    display: none

@@ -1,9 +1,13 @@
-import React from "react";
+import React, {useEffect, useState} from "react";
 import EntryViewer from "./EntryDetailed/EntryViewer";
+import {EntryItem} from "./EntryListItem/EntryListItem";
 import {makeStyles} from "@material-ui/core";
 import Protocol from "./UI/Protocol"
-import StatusCode from "./UI/StatusCode";
-import {Summary} from "./UI/Summary";
+import Queryable from "./UI/Queryable";
+import {toast} from "react-toastify";
+import {useRecoilValue} from "recoil";
+import focusedEntryIdAtom from "../recoil/focusedEntryId";
+import Api from "../helpers/api";
 
 const useStyles = makeStyles(() => ({
     entryTitle: {
@@ -12,6 +16,7 @@ const useStyles = makeStyles(() => ({
         maxHeight: 46,
         alignItems: 'center',
         marginBottom: 4,
+        marginLeft: 6,
         padding: 2,
         paddingBottom: 0
     },
@@ -26,70 +31,93 @@ const useStyles = makeStyles(() => ({
     }
 }));
 
-interface EntryDetailedProps {
-    entryData: any
-    updateQuery: any
-}
-
 export const formatSize = (n: number) => n > 1000 ? `${Math.round(n / 1000)}KB` : `${n} B`;
 
-const EntryTitle: React.FC<any> = ({protocol, data, bodySize, elapsedTime, updateQuery}) => {
+const EntryTitle: React.FC<any> = ({protocol, data, bodySize, elapsedTime}) => {
     const classes = useStyles();
     const response = data.response;
-
 
     return <div className={classes.entryTitle}>
-        <Protocol protocol={protocol} horizontal={true} updateQuery={null}/>
+        <Protocol protocol={protocol} horizontal={true}/>
         <div style={{right: "30px", position: "absolute", display: "flex"}}>
-            {response && <div
-                className="queryable"
-                style={{margin: "0 18px", opacity: 0.5}}
-                onClick={() => {
-                    updateQuery(`response.bodySize == ${bodySize}`)
-                }}
+            {response && <Queryable
+                query={`response.bodySize == ${bodySize}`}
+                style={{margin: "0 18px"}}
+                displayIconOnMouseOver={true}
             >
-                {formatSize(bodySize)}
-            </div>}
-            {response && <div
-                className="queryable"
-                style={{marginRight: 18, opacity: 0.5}}
-                onClick={() => {
-                    updateQuery(`elapsedTime >= ${elapsedTime}`)
-                }}
+                <div
+                    style={{opacity: 0.5}}
+                >
+                    {formatSize(bodySize)}
+                </div>
+            </Queryable>}
+            {response && <Queryable
+                query={`elapsedTime >= ${elapsedTime}`}
+                style={{marginRight: 18}}
+                displayIconOnMouseOver={true}
             >
-                {Math.round(elapsedTime)}ms
-            </div>}
+                <div
+                    style={{opacity: 0.5}}
+                >
+                    {Math.round(elapsedTime)}ms
+                </div>
+            </Queryable>}
         </div>
     </div>;
 };
 
-const EntrySummary: React.FC<any> = ({data, updateQuery}) => {
-    const classes = useStyles();
-
-    const response = data.response;
-
-    return <div className={classes.entrySummary}>
-        {response && "status" in response && <div style={{marginRight: 8}}>
-            <StatusCode statusCode={response.status} updateQuery={updateQuery}/>
-        </div>}
-        <div style={{flexGrow: 1, overflow: 'hidden'}}>
-            <Summary method={data.method} summary={data.summary} updateQuery={updateQuery}/>
-        </div>
-    </div>;
+const EntrySummary: React.FC<any> = ({entry}) => {
+    return <EntryItem
+        key={`entry-${entry.id}`}
+        entry={entry}
+        style={{}}
+        headingMode={true}
+    />;
 };
 
-export const EntryDetailed: React.FC<EntryDetailedProps> = ({entryData, updateQuery}) => {
+const api = Api.getInstance();
+
+export const EntryDetailed = () => {
+
+    const focusedEntryId = useRecoilValue(focusedEntryIdAtom);
+    const [entryData, setEntryData] = useState(null);
+
+    useEffect(() => {
+        if (!focusedEntryId) return;
+        setEntryData(null);
+        (async () => {
+            try {
+                const entryData = await api.getEntry(focusedEntryId);
+                setEntryData(entryData);
+            } catch (error) {
+                if (error.response?.data?.type) {
+                    toast[error.response.data.type](`Entry[${focusedEntryId}]: ${error.response.data.msg}`, {
+                        position: "bottom-right",
+                        theme: "colored",
+                        autoClose: error.response.data.autoClose,
+                        hideProgressBar: false,
+                        closeOnClick: true,
+                        pauseOnHover: true,
+                        draggable: true,
+                        progress: undefined,
+                    });
+                }
+                console.error(error);
+            }
+        })();
+        // eslint-disable-next-line
+    }, [focusedEntryId]);
+
     return <>
-        <EntryTitle
+        {entryData && <EntryTitle
             protocol={entryData.protocol}
             data={entryData.data}
             bodySize={entryData.bodySize}
             elapsedTime={entryData.data.elapsedTime}
-            updateQuery={updateQuery}
-        />
-        {entryData.data && <EntrySummary data={entryData.data} updateQuery={updateQuery}/>}
+        />}
+        {entryData && <EntrySummary entry={entryData.data}/>}
         <>
-            {entryData.data && <EntryViewer
+            {entryData && <EntryViewer
                 representation={entryData.representation}
                 isRulesEnabled={entryData.isRulesEnabled}
                 rulesMatched={entryData.rulesMatched}
@@ -99,7 +127,6 @@ export const EntryDetailed: React.FC<EntryDetailedProps> = ({entryData, updateQu
                 contractContent={entryData.data.contractContent}
                 elapsedTime={entryData.data.elapsedTime}
                 color={entryData.protocol.backgroundColor}
-                updateQuery={updateQuery}
             />}
         </>
     </>

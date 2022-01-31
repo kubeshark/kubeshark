@@ -2,14 +2,16 @@ package config
 
 import (
 	"fmt"
-	"github.com/op/go-logging"
-	"github.com/up9inc/mizu/cli/config/configStructs"
-	"github.com/up9inc/mizu/cli/mizu"
-	v1 "k8s.io/api/core/v1"
-	"k8s.io/client-go/util/homedir"
 	"os"
 	"path"
 	"path/filepath"
+
+	"github.com/op/go-logging"
+	"github.com/up9inc/mizu/cli/config/configStructs"
+	"github.com/up9inc/mizu/cli/mizu"
+	"github.com/up9inc/mizu/shared"
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/client-go/util/homedir"
 )
 
 const (
@@ -26,6 +28,8 @@ type ConfigStruct struct {
 	Auth                   configStructs.AuthConfig    `yaml:"auth"`
 	Config                 configStructs.ConfigConfig  `yaml:"config,omitempty"`
 	AgentImage             string                      `yaml:"agent-image,omitempty" readonly:""`
+	KratosImage            string                      `yaml:"kratos-image,omitempty" readonly:""`
+	KetoImage              string                      `yaml:"keto-image,omitempty" readonly:""`
 	ImagePullPolicyStr     string                      `yaml:"image-pull-policy" default:"Always"`
 	MizuResourcesNamespace string                      `yaml:"mizu-resources-namespace" default:"mizu"`
 	Telemetry              bool                        `yaml:"telemetry" default:"true"`
@@ -34,9 +38,12 @@ type ConfigStruct struct {
 	ConfigFilePath         string                      `yaml:"config-path,omitempty" readonly:""`
 	HeadlessMode           bool                        `yaml:"headless" default:"false"`
 	LogLevelStr            string                      `yaml:"log-level,omitempty" default:"INFO" readonly:""`
+	ServiceMap             bool                        `yaml:"service-map,omitempty" default:"false" readonly:""`
+	OAS                    bool                        `yaml:"oas,omitempty" default:"false" readonly:""`
+	Elastic                shared.ElasticConfig        `yaml:"elastic"`
 }
 
-func(config *ConfigStruct) validate() error {
+func (config *ConfigStruct) validate() error {
 	if _, err := logging.LogLevel(config.LogLevelStr); err != nil {
 		return fmt.Errorf("%s is not a valid log level, err: %v", config.LogLevelStr, err)
 	}
@@ -45,7 +52,9 @@ func(config *ConfigStruct) validate() error {
 }
 
 func (config *ConfigStruct) SetDefaults() {
-	config.AgentImage = fmt.Sprintf("gcr.io/up9-docker-hub/mizu/%s:%s", mizu.Branch, mizu.SemVer)
+	config.KratosImage = shared.KratosImageDefault
+	config.KetoImage = shared.KetoImageDefault
+	config.AgentImage = fmt.Sprintf("%s:%s", shared.MizuAgentImageRepo, mizu.SemVer)
 	config.ConfigFilePath = path.Join(mizu.GetMizuFolderPath(), "config.yaml")
 }
 

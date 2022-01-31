@@ -1,4 +1,4 @@
-package main
+package http
 
 import (
 	"bufio"
@@ -7,6 +7,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"strings"
 
 	"github.com/up9inc/mizu/tap/api"
 )
@@ -20,11 +21,34 @@ func filterAndEmit(item *api.OutputChannelItem, emitter api.Emitter, options *ap
 		FilterSensitiveData(item, options)
 	}
 
+	replaceForwardedFor(item)
+
 	emitter.Emit(item)
 }
 
-func handleHTTP2Stream(grpcAssembler *GrpcAssembler, tcpID *api.TcpID, superTimer *api.SuperTimer, emitter api.Emitter, options *api.TrafficFilteringOptions) error {
-	streamID, messageHTTP1, err := grpcAssembler.readMessage()
+func replaceForwardedFor(item *api.OutputChannelItem) {
+	if item.Protocol.Name != "http" {
+		return
+	}
+
+	request := item.Pair.Request.Payload.(api.HTTPPayload).Data.(*http.Request)
+
+	forwardedFor := request.Header.Get("X-Forwarded-For")
+	if forwardedFor == "" {
+		return
+	}
+
+	ips := strings.Split(forwardedFor, ",")
+	lastIP := strings.TrimSpace(ips[0])
+
+	item.ConnectionInfo.ClientIP = lastIP
+	// Erase the port field. Because the proxy terminates the connection from the client, the port that we see here
+	// is not the source port on the client side.
+	item.ConnectionInfo.ClientPort = ""
+}
+
+func handleHTTP2Stream(http2Assembler *Http2Assembler, tcpID *api.TcpID, superTimer *api.SuperTimer, emitter api.Emitter, options *api.TrafficFilteringOptions) error {
+	streamID, messageHTTP1, isGrpc, err := http2Assembler.readMessage()
 	if err != nil {
 		return err
 	}
@@ -34,14 +58,15 @@ func handleHTTP2Stream(grpcAssembler *GrpcAssembler, tcpID *api.TcpID, superTime
 	switch messageHTTP1 := messageHTTP1.(type) {
 	case http.Request:
 		ident := fmt.Sprintf(
-			"%s->%s %s->%s %d",
+			"%s->%s %s->%s %d %s",
 			tcpID.SrcIP,
 			tcpID.DstIP,
 			tcpID.SrcPort,
 			tcpID.DstPort,
 			streamID,
+			"HTTP2",
 		)
-		item = reqResMatcher.registerRequest(ident, &messageHTTP1, superTimer.CaptureTime)
+		item = reqResMatcher.registerRequest(ident, &messageHTTP1, superTimer.CaptureTime, messageHTTP1.ProtoMinor)
 		if item != nil {
 			item.ConnectionInfo = &api.ConnectionInfo{
 				ClientIP:   tcpID.SrcIP,
@@ -53,14 +78,15 @@ func handleHTTP2Stream(grpcAssembler *GrpcAssembler, tcpID *api.TcpID, superTime
 		}
 	case http.Response:
 		ident := fmt.Sprintf(
-			"%s->%s %s->%s %d",
+			"%s->%s %s->%s %d %s",
 			tcpID.DstIP,
 			tcpID.SrcIP,
 			tcpID.DstPort,
 			tcpID.SrcPort,
 			streamID,
+			"HTTP2",
 		)
-		item = reqResMatcher.registerResponse(ident, &messageHTTP1, superTimer.CaptureTime)
+		item = reqResMatcher.registerResponse(ident, &messageHTTP1, superTimer.CaptureTime, messageHTTP1.ProtoMinor)
 		if item != nil {
 			item.ConnectionInfo = &api.ConnectionInfo{
 				ClientIP:   tcpID.DstIP,
@@ -73,32 +99,43 @@ func handleHTTP2Stream(grpcAssembler *GrpcAssembler, tcpID *api.TcpID, superTime
 	}
 
 	if item != nil {
-		item.Protocol = http2Protocol
+		if isGrpc {
+			item.Protocol = grpcProtocol
+		} else {
+			item.Protocol = http2Protocol
+		}
 		filterAndEmit(item, emitter, options)
 	}
 
 	return nil
 }
 
-func handleHTTP1ClientStream(b *bufio.Reader, tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, emitter api.Emitter, options *api.TrafficFilteringOptions) error {
-	req, err := http.ReadRequest(b)
+func handleHTTP1ClientStream(b *bufio.Reader, tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, emitter api.Emitter, options *api.TrafficFilteringOptions) (switchingProtocolsHTTP2 bool, req *http.Request, err error) {
+	req, err = http.ReadRequest(b)
 	if err != nil {
-		return err
+		return
 	}
 	counterPair.Request++
 
-	body, err := ioutil.ReadAll(req.Body)
+	// Check HTTP2 upgrade - HTTP2 Over Cleartext (H2C)
+	if strings.Contains(strings.ToLower(req.Header.Get("Connection")), "upgrade") && strings.ToLower(req.Header.Get("Upgrade")) == "h2c" {
+		switchingProtocolsHTTP2 = true
+	}
+
+	var body []byte
+	body, err = ioutil.ReadAll(req.Body)
 	req.Body = io.NopCloser(bytes.NewBuffer(body)) // rewind
 
 	ident := fmt.Sprintf(
-		"%s->%s %s->%s %d",
+		"%s->%s %s->%s %d %s",
 		tcpID.SrcIP,
 		tcpID.DstIP,
 		tcpID.SrcPort,
 		tcpID.DstPort,
 		counterPair.Request,
+		"HTTP1",
 	)
-	item := reqResMatcher.registerRequest(ident, req, superTimer.CaptureTime)
+	item := reqResMatcher.registerRequest(ident, req, superTimer.CaptureTime, req.ProtoMinor)
 	if item != nil {
 		item.ConnectionInfo = &api.ConnectionInfo{
 			ClientIP:   tcpID.SrcIP,
@@ -109,28 +146,36 @@ func handleHTTP1ClientStream(b *bufio.Reader, tcpID *api.TcpID, counterPair *api
 		}
 		filterAndEmit(item, emitter, options)
 	}
-	return nil
+	return
 }
 
-func handleHTTP1ServerStream(b *bufio.Reader, tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, emitter api.Emitter, options *api.TrafficFilteringOptions) error {
-	res, err := http.ReadResponse(b, nil)
+func handleHTTP1ServerStream(b *bufio.Reader, tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, emitter api.Emitter, options *api.TrafficFilteringOptions) (switchingProtocolsHTTP2 bool, err error) {
+	var res *http.Response
+	res, err = http.ReadResponse(b, nil)
 	if err != nil {
-		return err
+		return
 	}
 	counterPair.Response++
 
-	body, err := ioutil.ReadAll(res.Body)
+	// Check HTTP2 upgrade - HTTP2 Over Cleartext (H2C)
+	if res.StatusCode == 101 && strings.Contains(strings.ToLower(res.Header.Get("Connection")), "upgrade") && strings.ToLower(res.Header.Get("Upgrade")) == "h2c" {
+		switchingProtocolsHTTP2 = true
+	}
+
+	var body []byte
+	body, err = ioutil.ReadAll(res.Body)
 	res.Body = io.NopCloser(bytes.NewBuffer(body)) // rewind
 
 	ident := fmt.Sprintf(
-		"%s->%s %s->%s %d",
+		"%s->%s %s->%s %d %s",
 		tcpID.DstIP,
 		tcpID.SrcIP,
 		tcpID.DstPort,
 		tcpID.SrcPort,
 		counterPair.Response,
+		"HTTP1",
 	)
-	item := reqResMatcher.registerResponse(ident, res, superTimer.CaptureTime)
+	item := reqResMatcher.registerResponse(ident, res, superTimer.CaptureTime, res.ProtoMinor)
 	if item != nil {
 		item.ConnectionInfo = &api.ConnectionInfo{
 			ClientIP:   tcpID.DstIP,
@@ -141,5 +186,5 @@ func handleHTTP1ServerStream(b *bufio.Reader, tcpID *api.TcpID, counterPair *api
 		}
 		filterAndEmit(item, emitter, options)
 	}
-	return nil
+	return
 }

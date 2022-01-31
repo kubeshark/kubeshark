@@ -3,35 +3,45 @@ import React, {useState} from "react";
 import {SyntaxHighlighter} from "../UI/SyntaxHighlighter/index";
 import CollapsibleContainer from "../UI/CollapsibleContainer";
 import FancyTextDisplay from "../UI/FancyTextDisplay";
+import Queryable from "../UI/Queryable";
 import Checkbox from "../UI/Checkbox";
 import ProtobufDecoder from "protobuf-decoder";
+import {default as jsonBeautify} from "json-beautify";
+import {default as xmlBeautify} from "xml-formatter";
 
 interface EntryViewLineProps {
     label: string;
     value: number | string;
-    updateQuery: any;
-    selector: string;
+    selector?: string;
     overrideQueryValue?: string;
+    displayIconOnMouseOver?: boolean;
+    useTooltip?: boolean;
 }
 
-const EntryViewLine: React.FC<EntryViewLineProps> = ({label, value, updateQuery, selector, overrideQueryValue}) => {
+const EntryViewLine: React.FC<EntryViewLineProps> = ({label, value, selector = "", overrideQueryValue = "", displayIconOnMouseOver = true, useTooltip = true}) => {
+    let query: string;
+    if (!selector) {
+        query = "";
+    } else if (overrideQueryValue) {
+        query = `${selector} == ${overrideQueryValue}`;
+    } else if (typeof(value) == "string") {
+        query = `${selector} == "${JSON.stringify(value).slice(1, -1)}"`;
+    } else {
+        query = `${selector} == ${value}`;
+    }
     return (label && <tr className={styles.dataLine}>
-                <td
-                    className={`queryable ${styles.dataKey}`}
-                    onClick={() => {
-                        if (!selector) {
-                            return
-                        } else if (overrideQueryValue) {
-                            updateQuery(`${selector} == ${overrideQueryValue}`)
-                        } else if (typeof(value) === "string") {
-                            updateQuery(`${selector} == "${JSON.stringify(value).slice(1, -1)}"`)
-                        } else {
-                            updateQuery(`${selector} == ${value}`)
-                        }
-                    }}
-                >
-                    {label}
-                </td>
+                    <td className={`${styles.dataKey}`}>
+                        <Queryable
+                            query={query}
+                            style={{float: "right", height: "18px"}}
+                            iconStyle={{marginRight: "20px"}}
+                            flipped={true}
+                            useTooltip={useTooltip}
+                            displayIconOnMouseOver={displayIconOnMouseOver}
+                        >
+                            {label}
+                        </Queryable>
+                    </td>
                 <td>
                     <FancyTextDisplay
                         className={styles.dataValue}
@@ -48,69 +58,101 @@ const EntryViewLine: React.FC<EntryViewLineProps> = ({label, value, updateQuery,
 interface EntrySectionCollapsibleTitleProps {
     title: string,
     color: string,
-    isExpanded: boolean,
+    expanded: boolean,
+    setExpanded: any,
+    query?: string,
 }
 
-const EntrySectionCollapsibleTitle: React.FC<EntrySectionCollapsibleTitleProps> = ({title, color, isExpanded}) => {
+const EntrySectionCollapsibleTitle: React.FC<EntrySectionCollapsibleTitleProps> = ({title, color, expanded, setExpanded, query = ""}) => {
     return <div className={styles.title}>
-        <span className={`${styles.button} ${isExpanded ? styles.expanded : ''}`} style={{backgroundColor: color}}>
-            {isExpanded ? '-' : '+'}
-        </span>
-        <span>{title}</span>
+        <div
+            className={`${styles.button} ${expanded ? styles.expanded : ''}`}
+            style={{backgroundColor: color}}
+            onClick={() => {
+                setExpanded(!expanded)
+            }}
+        >
+            {expanded ? '-' : '+'}
+        </div>
+        <Queryable
+            query={query}
+            useTooltip={!!query}
+            displayIconOnMouseOver={!!query}
+        >
+            <span>{title}</span>
+        </Queryable>
     </div>
 }
 
 interface EntrySectionContainerProps {
     title: string,
     color: string,
+    query?: string,
 }
 
-export const EntrySectionContainer: React.FC<EntrySectionContainerProps> = ({title, color, children}) => {
+export const EntrySectionContainer: React.FC<EntrySectionContainerProps> = ({title, color, children, query = ""}) => {
     const [expanded, setExpanded] = useState(true);
     return <CollapsibleContainer
         className={styles.collapsibleContainer}
-        isExpanded={expanded}
-        onClick={() => setExpanded(!expanded)}
-        title={<EntrySectionCollapsibleTitle title={title} color={color} isExpanded={expanded}/>}
+        expanded={expanded}
+        title={<EntrySectionCollapsibleTitle title={title} color={color} expanded={expanded} setExpanded={setExpanded} query={query}/>}
     >
         {children}
     </CollapsibleContainer>
 }
 
 interface EntryBodySectionProps {
+    title: string,
     content: any,
     color: string,
-    updateQuery: any,
     encoding?: string,
     contentType?: string,
     selector?: string,
 }
 
 export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
+    title,
     color,
-    updateQuery,
     content,
     encoding,
     contentType,
     selector,
 }) => {
-    const MAXIMUM_BYTES_TO_HIGHLIGHT = 10000; // The maximum of chars to highlight in body, in case the response can be megabytes
-    const supportedLanguages = [['html', 'html'], ['json', 'json'], ['application/grpc', 'json']]; // [[indicator, languageToUse],...]
-    const jsonLikeFormats = ['json'];
+    const MAXIMUM_BYTES_TO_FORMAT = 1000000; // The maximum of chars to highlight in body, in case the response can be megabytes
+    const jsonLikeFormats = ['json', 'yaml', 'yml'];
+    const xmlLikeFormats = ['xml', 'html'];
     const protobufFormats = ['application/grpc'];
-    const [isWrapped, setIsWrapped] = useState(false);
+    const supportedFormats = jsonLikeFormats.concat(xmlLikeFormats, protobufFormats);
 
-    const formatTextBody = (body): string => {
-        const chunk = body.slice(0, MAXIMUM_BYTES_TO_HIGHLIGHT);
-        const bodyBuf = encoding === 'base64' ? atob(chunk) : chunk;
+    const [isPretty, setIsPretty] = useState(true);
+    const [showLineNumbers, setShowLineNumbers] = useState(true);
+    const [decodeBase64, setDecodeBase64] = useState(true);
+
+    const isBase64Encoding = encoding === 'base64';
+    const supportsPrettying = supportedFormats.some(format => contentType?.indexOf(format) > -1);
+
+    const formatTextBody = (body: any): string => {
+        if (!decodeBase64) return body;
+
+        const chunk = body.slice(0, MAXIMUM_BYTES_TO_FORMAT);
+        const bodyBuf = isBase64Encoding ? atob(chunk) : chunk;
+
+        if (!isPretty) return bodyBuf;
 
         try {
             if (jsonLikeFormats.some(format => contentType?.indexOf(format) > -1)) {
-                return JSON.stringify(JSON.parse(bodyBuf), null, 2);
+                return jsonBeautify(JSON.parse(bodyBuf), null, 2, 80);
+            }  else if (xmlLikeFormats.some(format => contentType?.indexOf(format) > -1)) {
+                return xmlBeautify(bodyBuf, {
+                    indentation: '  ',
+                    filter: (node) => node.type !== 'Comment',
+                    collapseContent: true,
+                    lineSeparator: '\n'
+                });
             } else if (protobufFormats.some(format => contentType?.indexOf(format) > -1)) {
                 // Replace all non printable characters (ASCII)
                 const protobufDecoder = new ProtobufDecoder(bodyBuf, true);
-                return JSON.stringify(protobufDecoder.decode().toSimple(), null, 2);
+                return jsonBeautify(protobufDecoder.decode().toSimple(), null, 2, 80);
             }
         } catch (error) {
             console.error(error);
@@ -118,33 +160,32 @@ export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
         return bodyBuf;
     }
 
-    const getLanguage = (mimetype) => {
-        const chunk = content?.slice(0, 100);
-        if (chunk.indexOf('html') > 0 || chunk.indexOf('HTML') > 0) return supportedLanguages[0][1];
-        const language = supportedLanguages.find(el => (mimetype + contentType).indexOf(el[0]) > -1);
-        return language ? language[1] : 'default';
-    }
-
     return <React.Fragment>
-        {content && content?.length > 0 && <EntrySectionContainer title='Body' color={color}>
-            <table>
-                <tbody>
-                    <EntryViewLine label={'Mime type'} value={contentType} updateQuery={updateQuery} selector={selector} overrideQueryValue={`r".*"`}/>
-                    <EntryViewLine label={'Encoding'} value={encoding} updateQuery={updateQuery} selector={selector} overrideQueryValue={`r".*"`}/>
-                </tbody>
-            </table>
+        {content && content?.length > 0 && <EntrySectionContainer
+                                                title={title}
+                                                color={color}
+                                                query={`${selector} == r".*"`}
+                                            >
+            <div style={{display: 'flex', alignItems: 'center', alignContent: 'center', margin: "5px 0"}}>
+                {supportsPrettying && <div style={{paddingTop: 3}}>
+                    <Checkbox checked={isPretty} onToggle={() => {setIsPretty(!isPretty)}}/>
+                </div>}
+                {supportsPrettying && <span style={{marginLeft: '.2rem'}}>Pretty</span>}
 
-            <div style={{display: 'flex', alignItems: 'center', alignContent: 'center', margin: "5px 0"}} onClick={() => setIsWrapped(!isWrapped)}>
-                <div style={{paddingTop: 3}}>
-                    <Checkbox checked={isWrapped} onToggle={() => {}}/>
+                <div style={{paddingTop: 3, paddingLeft: supportsPrettying ? 20 : 0}}>
+                    <Checkbox checked={showLineNumbers} onToggle={() => {setShowLineNumbers(!showLineNumbers)}}/>
                 </div>
-                <span style={{marginLeft: '.5rem'}}>Wrap text</span>
+                <span style={{marginLeft: '.2rem'}}>Line numbers</span>
+
+                {isBase64Encoding && <div style={{paddingTop: 3, paddingLeft: 20}}>
+                    <Checkbox checked={decodeBase64} onToggle={() => {setDecodeBase64(!decodeBase64)}}/>
+                </div>}
+                {isBase64Encoding && <span style={{marginLeft: '.2rem'}}>Decode Base64</span>}
             </div>
 
             <SyntaxHighlighter
-                isWrapped={isWrapped}
                 code={formatTextBody(content)}
-                language={content?.mimeType ? getLanguage(content.mimeType) : 'default'}
+                showLineNumbers={showLineNumbers}
             />
         </EntrySectionContainer>}
     </React.Fragment>
@@ -154,21 +195,33 @@ interface EntrySectionProps {
     title: string,
     color: string,
     arrayToIterate: any[],
-    updateQuery: any,
 }
 
-export const EntryTableSection: React.FC<EntrySectionProps> = ({title, color, arrayToIterate, updateQuery}) => {
+export const EntryTableSection: React.FC<EntrySectionProps> = ({title, color, arrayToIterate}) => {
+    let arrayToIterateSorted: any[];
+    if (arrayToIterate) {
+        arrayToIterateSorted = arrayToIterate.sort((a, b) => {
+            if (a.name > b.name) {
+                return 1;
+            }
+
+            if (a.name < b.name) {
+                return -1;
+            }
+
+            return 0;
+        });
+    }
     return <React.Fragment>
         {
             arrayToIterate && arrayToIterate.length > 0 ?
                 <EntrySectionContainer title={title} color={color}>
                     <table>
-                        <tbody>
-                            {arrayToIterate.map(({name, value, selector}, index) => <EntryViewLine
+                        <tbody id={`tbody-${title}`}>
+                            {arrayToIterateSorted.map(({name, value, selector}, index) => <EntryViewLine
                                 key={index}
                                 label={name}
                                 value={value}
-                                updateQuery={updateQuery}
                                 selector={selector}
                             />)}
                         </tbody>
@@ -188,13 +241,20 @@ interface EntryPolicySectionProps {
 interface EntryPolicySectionCollapsibleTitleProps {
     label: string;
     matched: string;
-    isExpanded: boolean;
+    expanded: boolean;
+    setExpanded: any;
 }
 
-const EntryPolicySectionCollapsibleTitle: React.FC<EntryPolicySectionCollapsibleTitleProps> = ({label, matched, isExpanded}) => {
+const EntryPolicySectionCollapsibleTitle: React.FC<EntryPolicySectionCollapsibleTitleProps> = ({label, matched, expanded, setExpanded}) => {
     return <div className={styles.title}>
-        <span className={`${styles.button} ${isExpanded ? styles.expanded : ''}`}>
-            {isExpanded ? '-' : '+'}
+        <span
+            className={`${styles.button}
+            ${expanded ? styles.expanded : ''}`}
+            onClick={() => {
+                setExpanded(!expanded)
+            }}
+        >
+            {expanded ? '-' : '+'}
         </span>
         <span>
             <tr className={styles.dataLine}>
@@ -215,9 +275,8 @@ export const EntryPolicySectionContainer: React.FC<EntryPolicySectionContainerPr
     const [expanded, setExpanded] = useState(false);
     return <CollapsibleContainer
         className={styles.collapsibleContainer}
-        isExpanded={expanded}
-        onClick={() => setExpanded(!expanded)}
-        title={<EntryPolicySectionCollapsibleTitle label={label} matched={matched} isExpanded={expanded}/>}
+        expanded={expanded}
+        title={<EntryPolicySectionCollapsibleTitle label={label} matched={matched} expanded={expanded} setExpanded={setExpanded}/>}
     >
         {children}
     </CollapsibleContainer>
@@ -296,7 +355,6 @@ export const EntryContractSection: React.FC<EntryContractSectionProps> = ({color
         </EntrySectionContainer>}
         {contractContent && <EntrySectionContainer title="Contract" color={color}>
             <SyntaxHighlighter
-                isWrapped={false}
                 code={contractContent}
                 language={"yaml"}
             />

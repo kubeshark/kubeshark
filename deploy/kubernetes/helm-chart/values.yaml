@@ -1,0 +1,51 @@
+# Default values for mizu.
+rbac:
+  create: true
+  name: "mizu-cluster-role"
+  roleBindingName: "mizu-role-binding"
+
+serviceAccountName: "mizu-service-account"
+
+roleName: "mizu-role-daemon"
+roleBindingName: "mizu-role-binding-daemon"
+
+service:
+  name: "mizu-api-server"
+  type: ClusterIP
+  port: 80
+
+pod:
+  name: "mizu-api-server"
+  port: 8899
+
+container:
+  mizuAgent:
+    image:
+      repository: "gcr.io/up9-docker-hub/mizu/main"
+      tag: "0.22.0"
+  tapper:
+    image:
+      repository: "gcr.io/up9-docker-hub/mizu/main"
+      tag: "0.22.0"
+  basenine:
+    name: "basenine"
+    port: 9099
+    image:
+      repository: "ghcr.io/up9inc/basenine"
+      tag: "v0.3.0"
+  kratos:
+    name: "kratos"
+    port: 4433
+    image:
+      repository: "gcr.io/up9-docker-hub/mizu-kratos/stable"
+      tag: "0.0.0"
+
+deployment:
+  replicaCount: 1
+
+configMap:
+  name: "mizu-config"
+
+volumeClaim:
+  create: true
+  name: "mizu-volume-claim"

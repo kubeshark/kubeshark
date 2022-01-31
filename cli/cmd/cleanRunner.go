@@ -1,6 +1,8 @@
 package cmd
 
-import "github.com/up9inc/mizu/cli/apiserver"
+import (
+	"github.com/up9inc/mizu/cli/config"
+)
 
 func performCleanCommand() {
 	kubernetesProvider, err := getKubernetesProviderForCli()
@@ -8,5 +10,5 @@ func performCleanCommand() {
 		return
 	}
 
-	finishMizuExecution(kubernetesProvider, apiserver.NewProvider(GetApiServerUrl(), apiserver.DefaultRetries, apiserver.DefaultTimeout))
+	finishMizuExecution(kubernetesProvider, config.Config.IsNsRestrictedMode(), config.Config.MizuResourcesNamespace)
 }

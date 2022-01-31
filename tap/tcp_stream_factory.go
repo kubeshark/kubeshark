@@ -7,6 +7,7 @@ import (
 
 	"github.com/up9inc/mizu/shared/logger"
 	"github.com/up9inc/mizu/tap/api"
+	v1 "k8s.io/api/core/v1"
 
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers" // pulls in all layers decoders
@@ -24,6 +25,7 @@ type tcpStreamFactory struct {
 	Emitter            api.Emitter
 	streamsMap         *tcpStreamMap
 	ownIps             []string
+	opts               *TapOpts
 }
 
 type tcpStreamWrapper struct {
@@ -31,7 +33,7 @@ type tcpStreamWrapper struct {
 	createdAt time.Time
 }
 
-func NewTcpStreamFactory(emitter api.Emitter, streamsMap *tcpStreamMap) *tcpStreamFactory {
+func NewTcpStreamFactory(emitter api.Emitter, streamsMap *tcpStreamMap, opts *TapOpts) *tcpStreamFactory {
 	var ownIps []string
 
 	if localhostIPs, err := getLocalhostIPs(); err != nil {
@@ -47,11 +49,11 @@ func NewTcpStreamFactory(emitter api.Emitter, streamsMap *tcpStreamMap) *tcpStre
 		Emitter:    emitter,
 		streamsMap: streamsMap,
 		ownIps:     ownIps,
+		opts:       opts,
 	}
 }
 
 func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.TCP, ac reassembly.AssemblerContext) reassembly.Stream {
-	logger.Log.Debugf("* NEW: %s %s", net, transport)
 	fsmOptions := reassembly.TCPSimpleFSMOptions{
 		SupportMissingEstablishment: *allowmissinginit,
 	}
@@ -138,24 +140,28 @@ func (factory *tcpStreamFactory) WaitGoRoutines() {
 	factory.wg.Wait()
 }
 
+func inArrayPod(pods []v1.Pod, address string) bool {
+	for _, pod := range pods {
+		if pod.Status.PodIP == address {
+			return true
+		}
+	}
+	return false
+}
+
 func (factory *tcpStreamFactory) getStreamProps(srcIP string, srcPort string, dstIP string, dstPort string) *streamProps {
-	if hostMode {
-		if inArrayString(gSettings.filterAuthorities, fmt.Sprintf("%s:%s", dstIP, dstPort)) {
-			logger.Log.Debugf("getStreamProps %s", fmt.Sprintf("+ host1 %s:%s", dstIP, dstPort))
+	if factory.opts.HostMode {
+		if inArrayPod(tapTargets, fmt.Sprintf("%s:%s", dstIP, dstPort)) {
 			return &streamProps{isTapTarget: true, isOutgoing: false}
-		} else if inArrayString(gSettings.filterAuthorities, dstIP) {
-			logger.Log.Debugf("getStreamProps %s", fmt.Sprintf("+ host2 %s", dstIP))
+		} else if inArrayPod(tapTargets, dstIP) {
 			return &streamProps{isTapTarget: true, isOutgoing: false}
-		} else if inArrayString(gSettings.filterAuthorities, fmt.Sprintf("%s:%s", srcIP, srcPort)) {
-			logger.Log.Debugf("getStreamProps %s", fmt.Sprintf("+ host3 %s:%s", srcIP, srcPort))
+		} else if inArrayPod(tapTargets, fmt.Sprintf("%s:%s", srcIP, srcPort)) {
 			return &streamProps{isTapTarget: true, isOutgoing: true}
-		} else if inArrayString(gSettings.filterAuthorities, srcIP) {
-			logger.Log.Debugf("getStreamProps %s", fmt.Sprintf("+ host4 %s", srcIP))
+		} else if inArrayPod(tapTargets, srcIP) {
 			return &streamProps{isTapTarget: true, isOutgoing: true}
 		}
 		return &streamProps{isTapTarget: false, isOutgoing: false}
 	} else {
-		logger.Log.Debugf("getStreamProps %s", fmt.Sprintf("+ notHost3 %s:%s -> %s:%s", srcIP, srcPort, dstIP, dstPort))
 		return &streamProps{isTapTarget: true}
 	}
 }

@@ -30,3 +30,15 @@ jobs:
 
       - name: Test
         run: make acceptance-test
+
+      - name: Slack notification on failure
+        uses: ravsamhq/notify-slack-action@v1
+        if: always()
+        with:
+          status: ${{ job.status }}
+          notification_title: 'Mizu {workflow} has {status_message}'
+          message_format: '{emoji} *{workflow}* {status_message} during <{run_url}|run>, after commit: <{commit_url}|{commit_sha}>'
+          footer: 'Linked Repo <{repo_url}|{repo}>'
+          notify_when: 'failure'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

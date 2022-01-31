@@ -3,10 +3,10 @@ package up9
 import (
 	"bytes"
 	"compress/zlib"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"mizuserver/pkg/har"
 	"mizuserver/pkg/utils"
 	"net/http"
 	"net/url"
@@ -15,7 +15,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/google/martian/har"
 	basenine "github.com/up9inc/basenine/client/go"
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/logger"
@@ -243,25 +242,20 @@ func syncEntriesImpl(token string, model string, envPrefix string, uploadInterva
 			var dataMap map[string]interface{}
 			err = json.Unmarshal(dataBytes, &dataMap)
 
-			var entry tapApi.MizuEntry
+			var entry tapApi.Entry
 			if err := json.Unmarshal([]byte(dataBytes), &entry); err != nil {
 				continue
 			}
-			harEntry, err := utils.NewEntry(entry.Request, entry.Response, entry.StartTime, entry.ElapsedTime)
+			harEntry, err := har.NewEntry(entry.Request, entry.Response, entry.StartTime, entry.ElapsedTime)
 			if err != nil {
 				continue
 			}
-			if entry.ResolvedSource != "" {
-				harEntry.Request.Headers = append(harEntry.Request.Headers, har.Header{Name: "x-mizu-source", Value: entry.ResolvedSource})
+			if entry.Source.Name != "" {
+				harEntry.Request.Headers = append(harEntry.Request.Headers, har.Header{Name: "x-mizu-source", Value: entry.Source.Name})
 			}
-			if entry.ResolvedDestination != "" {
-				harEntry.Request.Headers = append(harEntry.Request.Headers, har.Header{Name: "x-mizu-destination", Value: entry.ResolvedDestination})
-				harEntry.Request.URL = utils.SetHostname(harEntry.Request.URL, entry.ResolvedDestination)
-			}
-
-			// go's default marshal behavior is to encode []byte fields to base64, python's default unmarshal behavior is to not decode []byte fields from base64
-			if harEntry.Response.Content.Text, err = base64.StdEncoding.DecodeString(string(harEntry.Response.Content.Text)); err != nil {
-				continue
+			if entry.Destination.Name != "" {
+				harEntry.Request.Headers = append(harEntry.Request.Headers, har.Header{Name: "x-mizu-destination", Value: entry.Destination.Name})
+				harEntry.Request.URL = utils.SetHostname(harEntry.Request.URL, entry.Destination.Name)
 			}
 
 			batch = append(batch, *harEntry)

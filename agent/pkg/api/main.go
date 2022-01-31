@@ -5,6 +5,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"mizuserver/pkg/elastic"
+	"mizuserver/pkg/har"
 	"mizuserver/pkg/holder"
 	"mizuserver/pkg/providers"
 	"os"
@@ -13,14 +15,16 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/martian/har"
+	"mizuserver/pkg/servicemap"
+
+	"mizuserver/pkg/models"
+	"mizuserver/pkg/oas"
+	"mizuserver/pkg/resolver"
+	"mizuserver/pkg/utils"
+
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/logger"
 	tapApi "github.com/up9inc/mizu/tap/api"
-
-	"mizuserver/pkg/models"
-	"mizuserver/pkg/resolver"
-	"mizuserver/pkg/utils"
 
 	basenine "github.com/up9inc/basenine/client/go"
 )
@@ -114,38 +118,41 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 	}
 
 	for item := range outputItems {
-		providers.EntryAdded()
-
 		extension := extensionsMap[item.Protocol.Name]
 		resolvedSource, resolvedDestionation := resolveIP(item.ConnectionInfo)
 		mizuEntry := extension.Dissector.Analyze(item, resolvedSource, resolvedDestionation)
-		baseEntry := extension.Dissector.Summarize(mizuEntry)
-		mizuEntry.Base = baseEntry
 		if extension.Protocol.Name == "http" {
 			if !disableOASValidation {
 				var httpPair tapApi.HTTPRequestResponsePair
 				json.Unmarshal([]byte(mizuEntry.HTTPPair), &httpPair)
 
 				contract := handleOAS(ctx, doc, router, httpPair.Request.Payload.RawRequest, httpPair.Response.Payload.RawResponse, contractContent)
-				baseEntry.ContractStatus = contract.Status
 				mizuEntry.ContractStatus = contract.Status
 				mizuEntry.ContractRequestReason = contract.RequestReason
 				mizuEntry.ContractResponseReason = contract.ResponseReason
 				mizuEntry.ContractContent = contract.Content
 			}
 
-			harEntry, err := utils.NewEntry(mizuEntry.Request, mizuEntry.Response, mizuEntry.StartTime, mizuEntry.ElapsedTime)
+			harEntry, err := har.NewEntry(mizuEntry.Request, mizuEntry.Response, mizuEntry.StartTime, mizuEntry.ElapsedTime)
 			if err == nil {
-				rules, _, _ := models.RunValidationRulesState(*harEntry, mizuEntry.Service)
-				baseEntry.Rules = rules
+				rules, _, _ := models.RunValidationRulesState(*harEntry, mizuEntry.Destination.Name)
+				mizuEntry.Rules = rules
 			}
+
+			oas.GetOasGeneratorInstance().PushEntry(harEntry)
 		}
 
 		data, err := json.Marshal(mizuEntry)
 		if err != nil {
 			panic(err)
 		}
+
+		providers.EntryAdded(len(data))
+
 		connection.SendText(string(data))
+
+		servicemap.GetInstance().NewTCPEntry(mizuEntry.Source, mizuEntry.Destination, &item.Protocol)
+		elastic.GetInstance().PushEntry(mizuEntry)
 	}
 }
 

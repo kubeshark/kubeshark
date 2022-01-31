@@ -1,4 +1,4 @@
-package main
+package redis
 
 import (
 	"bufio"
@@ -59,18 +59,11 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 	}
 }
 
-func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, resolvedDestination string) *api.MizuEntry {
+func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, resolvedDestination string) *api.Entry {
 	request := item.Pair.Request.Payload.(map[string]interface{})
 	response := item.Pair.Response.Payload.(map[string]interface{})
 	reqDetails := request["details"].(map[string]interface{})
 	resDetails := response["details"].(map[string]interface{})
-
-	service := "redis"
-	if resolvedDestination != "" {
-		service = resolvedDestination
-	} else if resolvedSource != "" {
-		service = resolvedSource
-	}
 
 	method := ""
 	if reqDetails["command"] != nil {
@@ -87,7 +80,7 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 	if elapsedTime < 0 {
 		elapsedTime = 0
 	}
-	return &api.MizuEntry{
+	return &api.Entry{
 		Protocol: protocol,
 		Source: &api.TCP{
 			Name: resolvedSource,
@@ -99,55 +92,21 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 			IP:   item.ConnectionInfo.ServerIP,
 			Port: item.ConnectionInfo.ServerPort,
 		},
-		Outgoing:            item.ConnectionInfo.IsOutgoing,
-		Request:             reqDetails,
-		Response:            resDetails,
-		Url:                 fmt.Sprintf("%s%s", service, summary),
-		Method:              method,
-		Status:              0,
-		RequestSenderIp:     item.ConnectionInfo.ClientIP,
-		Service:             service,
-		Timestamp:           item.Timestamp,
-		StartTime:           item.Pair.Request.CaptureTime,
-		ElapsedTime:         elapsedTime,
-		Summary:             summary,
-		ResolvedSource:      resolvedSource,
-		ResolvedDestination: resolvedDestination,
-		SourceIp:            item.ConnectionInfo.ClientIP,
-		DestinationIp:       item.ConnectionInfo.ServerIP,
-		SourcePort:          item.ConnectionInfo.ClientPort,
-		DestinationPort:     item.ConnectionInfo.ServerPort,
-		IsOutgoing:          item.ConnectionInfo.IsOutgoing,
+		Outgoing:    item.ConnectionInfo.IsOutgoing,
+		Request:     reqDetails,
+		Response:    resDetails,
+		Method:      method,
+		Status:      0,
+		Timestamp:   item.Timestamp,
+		StartTime:   item.Pair.Request.CaptureTime,
+		ElapsedTime: elapsedTime,
+		Summary:     summary,
+		IsOutgoing:  item.ConnectionInfo.IsOutgoing,
 	}
 
 }
 
-func (d dissecting) Summarize(entry *api.MizuEntry) *api.BaseEntryDetails {
-	return &api.BaseEntryDetails{
-		Id:              entry.Id,
-		Protocol:        protocol,
-		Url:             entry.Url,
-		RequestSenderIp: entry.RequestSenderIp,
-		Service:         entry.Service,
-		Summary:         entry.Summary,
-		StatusCode:      entry.Status,
-		Method:          entry.Method,
-		Timestamp:       entry.Timestamp,
-		SourceIp:        entry.SourceIp,
-		DestinationIp:   entry.DestinationIp,
-		SourcePort:      entry.SourcePort,
-		DestinationPort: entry.DestinationPort,
-		IsOutgoing:      entry.IsOutgoing,
-		Latency:         entry.ElapsedTime,
-		Rules: api.ApplicableRules{
-			Latency: 0,
-			Status:  false,
-		},
-	}
-}
-
-func (d dissecting) Represent(protoIn api.Protocol, request map[string]interface{}, response map[string]interface{}) (protoOut api.Protocol, object []byte, bodySize int64, err error) {
-	protoOut = protocol
+func (d dissecting) Represent(request map[string]interface{}, response map[string]interface{}) (object []byte, bodySize int64, err error) {
 	bodySize = 0
 	representation := make(map[string]interface{}, 0)
 	repRequest := representGeneric(request, `request.`)
@@ -160,8 +119,12 @@ func (d dissecting) Represent(protoIn api.Protocol, request map[string]interface
 
 func (d dissecting) Macros() map[string]string {
 	return map[string]string{
-		`redis`: fmt.Sprintf(`proto.abbr == "%s"`, protocol.Abbreviation),
+		`redis`: fmt.Sprintf(`proto.name == "%s"`, protocol.Name),
 	}
 }
 
 var Dissector dissecting
+
+func NewDissector() api.Dissector {
+	return Dissector
+}

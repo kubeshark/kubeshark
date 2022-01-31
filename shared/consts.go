@@ -14,6 +14,9 @@ const (
 	GoGCEnvVar                       = "GOGC"
 	DefaultApiServerPort             = 8899
 	LogLevelEnvVar                   = "LOG_LEVEL"
-	BasenineHost                     = "localhost"
+	MizuAgentImageRepo               = "docker.io/up9inc/mizu"
+	BasenineHost                     = "127.0.0.1"
 	BaseninePort                     = "9099"
+	KratosImageDefault               = "gcr.io/up9-docker-hub/mizu-kratos/stable:0.0.0"
+	KetoImageDefault                 = "gcr.io/up9-docker-hub/mizu-keto/stable:0.0.0"
 )

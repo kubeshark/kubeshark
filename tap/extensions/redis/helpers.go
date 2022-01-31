@@ -1,4 +1,4 @@
-package main
+package redis
 
 import (
 	"encoding/json"
@@ -43,11 +43,6 @@ func representGeneric(generic map[string]interface{}, selectorPrefix string) (re
 			Selector: fmt.Sprintf("%skey", selectorPrefix),
 		},
 		{
-			Name:     "Value",
-			Value:    generic["value"].(string),
-			Selector: fmt.Sprintf("%svalue", selectorPrefix),
-		},
-		{
 			Name:     "Keyword",
 			Value:    generic["keyword"].(string),
 			Selector: fmt.Sprintf("%skeyword", selectorPrefix),
@@ -57,6 +52,13 @@ func representGeneric(generic map[string]interface{}, selectorPrefix string) (re
 		Type:  api.TABLE,
 		Title: "Details",
 		Data:  string(details),
+	})
+
+	representation = append(representation, api.SectionData{
+		Type:     api.BODY,
+		Title:    "Value",
+		Data:     generic["value"].(string),
+		Selector: fmt.Sprintf("%svalue", selectorPrefix),
 	})
 
 	return

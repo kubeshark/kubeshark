@@ -1,5 +1,6 @@
 import React from "react";
 import styles from './style/Protocol.module.sass';
+import Queryable from "./Queryable";
 
 export interface ProtocolInterface {
     name: string
@@ -17,39 +18,48 @@ export interface ProtocolInterface {
 interface ProtocolProps {
     protocol: ProtocolInterface
     horizontal: boolean
-    updateQuery: any
 }
 
-const Protocol: React.FC<ProtocolProps> = ({protocol, horizontal, updateQuery}) => {
+const Protocol: React.FC<ProtocolProps> = ({protocol, horizontal}) => {
     if (horizontal) {
-        return <a target="_blank" rel="noopener noreferrer" href={protocol.referenceLink}>
+        return <Queryable
+            query={protocol.macro}
+            displayIconOnMouseOver={true}
+        >
+            <a target="_blank" rel="noopener noreferrer" href={protocol.referenceLink}>
+                <span
+                    className={`${styles.base} ${styles.horizontal}`}
+                    style={{
+                        backgroundColor: protocol.backgroundColor,
+                        color: protocol.foregroundColor,
+                        fontSize: 13,
+                    }}
+                    title={protocol.abbr}
+                >
+                    {protocol.longName}
+                </span>
+            </a>
+        </Queryable>
+    } else {
+        return <Queryable
+            query={protocol.macro}
+            displayIconOnMouseOver={true}
+            flipped={false}
+            iconStyle={{marginTop: "52px", marginRight: "10px", zIndex: 1000}}
+        >
             <span
-                className={`${styles.base} ${styles.horizontal}`}
+                className={`${styles.base} ${styles.vertical}`}
                 style={{
                     backgroundColor: protocol.backgroundColor,
                     color: protocol.foregroundColor,
-                    fontSize: 13,
+                    fontSize: protocol.fontSize,
+                    marginRight: "-20px",
                 }}
-                title={protocol.abbr}
+                title={protocol.longName}
             >
-                {protocol.longName}
+                {protocol.abbr}
             </span>
-        </a>
-    } else {
-        return <span
-            className={`${styles.base} ${styles.vertical}`}
-            style={{
-                backgroundColor: protocol.backgroundColor,
-                color: protocol.foregroundColor,
-                fontSize: protocol.fontSize,
-            }}
-            title={protocol.longName}
-            onClick={() => {
-                updateQuery(protocol.macro)
-            }}
-        >
-            {protocol.abbr}
-        </span>
+        </Queryable>
     }
 };
 

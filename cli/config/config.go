@@ -9,9 +9,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/up9inc/mizu/tap/api"
-	"k8s.io/apimachinery/pkg/util/json"
-
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/logger"
 
@@ -370,38 +367,4 @@ func setZeroForReadonlyFields(currentElem reflect.Value) {
 			currentFieldByName.Set(reflect.Zero(currentField.Type))
 		}
 	}
-}
-
-func GetSerializedMizuAgentConfig(targetNamespaces []string, mizuApiFilteringOptions *api.TrafficFilteringOptions) (string, error) {
-	mizuConfig, err := getMizuAgentConfig(targetNamespaces, mizuApiFilteringOptions)
-	if err != nil {
-		return "", err
-	}
-	serializedConfig, err := json.Marshal(mizuConfig)
-	if err != nil {
-		return "", err
-	}
-	return string(serializedConfig), nil
-}
-
-func getMizuAgentConfig(targetNamespaces []string, mizuApiFilteringOptions *api.TrafficFilteringOptions) (*shared.MizuAgentConfig, error) {
-	serializableRegex, err := api.CompileRegexToSerializableRegexp(Config.Tap.PodRegexStr)
-	if err != nil {
-		return nil, err
-	}
-	config := shared.MizuAgentConfig{
-		TapTargetRegex:          *serializableRegex,
-		MaxDBSizeBytes:          Config.Tap.MaxEntriesDBSizeBytes(),
-		DaemonMode:              Config.Tap.DaemonMode,
-		TargetNamespaces:        targetNamespaces,
-		AgentImage:              Config.AgentImage,
-		PullPolicy:              Config.ImagePullPolicyStr,
-		LogLevel:                Config.LogLevel(),
-		IgnoredUserAgents:       Config.Tap.IgnoredUserAgents,
-		TapperResources:         Config.Tap.TapperResources,
-		MizuResourcesNamespace:  Config.MizuResourcesNamespace,
-		MizuApiFilteringOptions: *mizuApiFilteringOptions,
-		AgentDatabasePath:       shared.DataDirPath,
-	}
-	return &config, nil
 }

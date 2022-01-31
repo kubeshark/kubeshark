@@ -49,6 +49,9 @@ rules:
   - apiGroups: ["", "apps", "extensions"]
     resources: ["endpoints"]
     verbs: ["get", "list", "watch"]
+  - apiGroups: ["events.k8s.io"]
+    resources: ["events"]
+    verbs: ["list", "watch"]
 ---
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1

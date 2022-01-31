@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"github.com/up9inc/mizu/cli/utils"
 	"net/http"
 
 	"github.com/up9inc/mizu/cli/apiserver"
@@ -26,7 +27,7 @@ func runMizuView() {
 	url := config.Config.View.Url
 
 	if url == "" {
-		exists, err := kubernetesProvider.DoesServicesExist(ctx, config.Config.MizuResourcesNamespace, kubernetes.ApiServerPodName)
+		exists, err := kubernetesProvider.DoesServiceExist(ctx, config.Config.MizuResourcesNamespace, kubernetes.ApiServerPodName)
 		if err != nil {
 			logger.Log.Errorf("Failed to found mizu service %v", err)
 			cancel()
@@ -46,8 +47,7 @@ func runMizuView() {
 			return
 		}
 		logger.Log.Infof("Establishing connection to k8s cluster...")
-		go startProxyReportErrorIfAny(kubernetesProvider, cancel)
-
+		startProxyReportErrorIfAny(kubernetesProvider, ctx, cancel)
 	}
 
 	apiServerProvider := apiserver.NewProvider(url, apiserver.DefaultRetries, apiserver.DefaultTimeout)
@@ -71,5 +71,5 @@ func runMizuView() {
 		return
 	}
 
-	waitForFinish(ctx, cancel)
+	utils.WaitForFinish(ctx, cancel)
 }

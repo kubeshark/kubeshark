@@ -7,20 +7,20 @@ import {SyntaxHighlighter} from "./UI/SyntaxHighlighter/index";
 import filterUIExample1 from "./assets/filter-ui-example-1.png"
 import filterUIExample2 from "./assets/filter-ui-example-2.png"
 import variables from '../variables.module.scss';
+import {useRecoilState} from "recoil";
+import queryAtom from "../recoil/query";
+import useKeyPress from "../hooks/useKeyPress"
+import shortcutsKeyboard from "../configs/shortcutsKeyboard"
 
 interface FiltersProps {
-    query: string
-    setQuery: any
     backgroundColor: string
     ws: any
-    openWebSocket: (query: string) => void;
+    openWebSocket: (query: string, resetEntries: boolean) => void;
 }
 
-export const Filters: React.FC<FiltersProps> = ({query, setQuery, backgroundColor, ws, openWebSocket}) => {
+export const Filters: React.FC<FiltersProps> = ({backgroundColor, ws, openWebSocket}) => {
     return <div className={styles.container}>
         <QueryForm
-            query={query}
-            setQuery={setQuery}
             backgroundColor={backgroundColor}
             ws={ws}
             openWebSocket={openWebSocket}
@@ -29,14 +29,12 @@ export const Filters: React.FC<FiltersProps> = ({query, setQuery, backgroundColo
 };
 
 interface QueryFormProps {
-    query: string
-    setQuery: any
     backgroundColor: string
     ws: any
-    openWebSocket: (query: string) => void;
+    openWebSocket: (query: string, resetEntries: boolean) => void;
 }
 
-const style = {
+export const modalStyle = {
     position: 'absolute',
     top: '10%',
     left: '50%',
@@ -45,13 +43,15 @@ const style = {
     bgcolor: 'background.paper',
     borderRadius: '5px',
     boxShadow: 24,
+    outline: "none",
     p: 4,
     color: '#000',
 };
 
-export const QueryForm: React.FC<QueryFormProps> = ({query, setQuery, backgroundColor, ws, openWebSocket}) => {
+export const QueryForm: React.FC<QueryFormProps> = ({backgroundColor, ws, openWebSocket}) => {
 
     const formRef = useRef<HTMLFormElement>(null);
+    const [query, setQuery] = useRecoilState(queryAtom);
 
     const [openModal, setOpenModal] = useState(false);
 
@@ -62,11 +62,19 @@ export const QueryForm: React.FC<QueryFormProps> = ({query, setQuery, background
         setQuery(e.target.value);
     }
 
+    
+
     const handleSubmit = (e) => {
-        ws.close()
-        openWebSocket(query)
+        ws.close();
+        if (query) {
+            openWebSocket(`(${query}) and leftOff(-1)`, true);
+        } else {
+            openWebSocket(`leftOff(-1)`, true);
+        }
         e.preventDefault();
     }
+
+    useKeyPress(shortcutsKeyboard.ctrlEnter, handleSubmit, formRef.current);
 
     return <>
         <form
@@ -149,11 +157,11 @@ export const QueryForm: React.FC<QueryFormProps> = ({query, setQuery, background
             style={{overflow: 'auto'}}
         >
             <Fade in={openModal}>
-                <Box sx={style}>
+                <Box sx={modalStyle}>
                     <Typography id="modal-modal-title" variant="h5" component="h2" style={{textAlign: 'center'}}>
                         Filtering Guide (Cheatsheet)
                     </Typography>
-                    <Typography id="modal-modal-description">
+                    <Typography component={'span'} id="modal-modal-description">
                         <p>Mizu has a rich filtering syntax that let's you query the results both flexibly and efficiently.</p>
                         <p>Here are some examples that you can try;</p>
                     </Typography>
@@ -163,7 +171,6 @@ export const QueryForm: React.FC<QueryFormProps> = ({query, setQuery, background
                                 This is a simple query that matches to HTTP packets with request path "/catalogue":
                             </Typography>
                             <SyntaxHighlighter
-                                isWrapped={false}
                                 showLineNumbers={false}
                                 code={`http and request.path == "/catalogue"`}
                                 language="python"
@@ -172,7 +179,6 @@ export const QueryForm: React.FC<QueryFormProps> = ({query, setQuery, background
                                 The same query can be negated for HTTP path and written like this:
                             </Typography>
                             <SyntaxHighlighter
-                                isWrapped={false}
                                 showLineNumbers={false}
                                 code={`http and request.path != "/catalogue"`}
                                 language="python"
@@ -181,7 +187,6 @@ export const QueryForm: React.FC<QueryFormProps> = ({query, setQuery, background
                                 The syntax supports regular expressions. Here is a query that matches the HTTP requests that send JSON to a server:
                             </Typography>
                             <SyntaxHighlighter
-                                isWrapped={false}
                                 showLineNumbers={false}
                                 code={`http and request.headers["Accept"] == r"application/json.*"`}
                                 language="python"
@@ -190,7 +195,6 @@ export const QueryForm: React.FC<QueryFormProps> = ({query, setQuery, background
                                 Here is another query that matches HTTP responses with status code 4xx:
                             </Typography>
                             <SyntaxHighlighter
-                                isWrapped={false}
                                 showLineNumbers={false}
                                 code={`http and response.status == r"4.*"`}
                                 language="python"
@@ -199,7 +203,6 @@ export const QueryForm: React.FC<QueryFormProps> = ({query, setQuery, background
                                 The same exact query can be as integer comparison:
                             </Typography>
                             <SyntaxHighlighter
-                                isWrapped={false}
                                 showLineNumbers={false}
                                 code={`http and response.status >= 400`}
                                 language="python"
@@ -208,9 +211,8 @@ export const QueryForm: React.FC<QueryFormProps> = ({query, setQuery, background
                                 The results can be queried based on their timestamps:
                             </Typography>
                             <SyntaxHighlighter
-                                isWrapped={false}
                                 showLineNumbers={false}
-                                code={`timestamp < datetime("10/28/2021, 9:13:02 PM")`}
+                                code={`timestamp < datetime("10/28/2021, 9:13:02.905 PM")`}
                                 language="python"
                             />
                         </Grid>
@@ -220,13 +222,12 @@ export const QueryForm: React.FC<QueryFormProps> = ({query, setQuery, background
                                 Since Mizu supports various protocols like gRPC, AMQP, Kafka and Redis. It's possible to write complex queries that match multiple protocols like this:
                             </Typography>
                             <SyntaxHighlighter
-                                isWrapped={false}
                                 showLineNumbers={false}
                                 code={`(http and request.method == "PUT") or (amqp and request.queue.startsWith("test"))\n or (kafka and response.payload.errorCode == 2) or (redis and request.key == "example")\n or (grpc and request.headers[":path"] == r".*foo.*")`}
                                 language="python"
                             />
                             <Typography id="modal-modal-description">
-                                By clicking the UI elements in both left-pane and right-pane, you can automatically select a field and update the query:
+                                By clicking the plus icon that appears beside the queryable UI elements on hovering in both left-pane and right-pane, you can automatically select a field and update the query:
                             </Typography>
                             <img
                                 src={filterUIExample1}
@@ -235,12 +236,11 @@ export const QueryForm: React.FC<QueryFormProps> = ({query, setQuery, background
                                 title="Clicking to UI elements (left-pane)"
                             />
                             <Typography id="modal-modal-description">
-                                Such that; clicking this in left-pane, would append the query below:
+                                Such that; clicking this icon in left-pane, would append the query below:
                             </Typography>
                             <SyntaxHighlighter
-                                isWrapped={false}
                                 showLineNumbers={false}
-                                code={`and service == "http://carts.sock-shop"`}
+                                code={`and dst.name == "carts.sock-shop"`}
                                 language="python"
                             />
                             <Typography id="modal-modal-description">
@@ -256,7 +256,6 @@ export const QueryForm: React.FC<QueryFormProps> = ({query, setQuery, background
                                 A query that compares one selector to another is also a valid query:
                             </Typography>
                             <SyntaxHighlighter
-                                isWrapped={false}
                                 showLineNumbers={false}
                                 code={`http and (request.query["x"] == response.headers["y"]\n or response.content.text.contains(request.query["x"]))`}
                                 language="python"
@@ -269,46 +268,41 @@ export const QueryForm: React.FC<QueryFormProps> = ({query, setQuery, background
                             </Typography>
                             <br></br>
                             <Typography id="modal-modal-description">
-                                true if the given selector's value starts with the string:
+                                true if the given selector's value starts with (similarly <code style={{fontSize: "14px"}}>endsWith</code>, <code style={{fontSize: "14px"}}>contains</code>) the string:
                             </Typography>
                             <SyntaxHighlighter
-                                isWrapped={false}
                                 showLineNumbers={false}
                                 code={`request.path.startsWith("something")`}
                                 language="python"
                             />
                             <Typography id="modal-modal-description">
-                                true if the given selector's value ends with the string:
+                                a field that contains a JSON encoded string can be filtered based a JSONPath:
                             </Typography>
                             <SyntaxHighlighter
-                                isWrapped={false}
                                 showLineNumbers={false}
-                                code={`request.path.endsWith("something")`}
+                                code={`response.content.text.json().some.path == "somevalue"`}
                                 language="python"
                             />
                             <Typography id="modal-modal-description">
-                                true if the given selector's value contains the string:
+                                fields that contain sensitive information can be redacted:
                             </Typography>
                             <SyntaxHighlighter
-                                isWrapped={false}
                                 showLineNumbers={false}
-                                code={`request.path.contains("something")`}
+                                code={`and redact("request.path", "src.name")`}
                                 language="python"
                             />
                             <Typography id="modal-modal-description">
                                 returns the UNIX timestamp which is the equivalent of the time that's provided by the string. Invalid input evaluates to false:
                             </Typography>
                             <SyntaxHighlighter
-                                isWrapped={false}
                                 showLineNumbers={false}
-                                code={`timestamp >= datetime("10/19/2021, 6:29:02 PM")`}
+                                code={`timestamp >= datetime("10/19/2021, 6:29:02.593 PM")`}
                                 language="python"
                             />
                             <Typography id="modal-modal-description">
                                 limits the number of records that are streamed back as a result of a query. Always evaluates to true:
                             </Typography>
                             <SyntaxHighlighter
-                                isWrapped={false}
                                 showLineNumbers={false}
                                 code={`and limit(100)`}
                                 language="python"

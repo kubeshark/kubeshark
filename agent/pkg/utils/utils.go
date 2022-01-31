@@ -2,12 +2,13 @@ package utils
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
 	"os/signal"
-	"reflect"
 	"syscall"
 	"time"
 
@@ -44,17 +45,6 @@ func StartServer(app *gin.Engine) {
 	}
 }
 
-func ReverseSlice(data interface{}) {
-	value := reflect.ValueOf(data)
-	valueLen := value.Len()
-	for i := 0; i <= int((valueLen-1)/2); i++ {
-		reverseIndex := valueLen - 1 - i
-		tmp := value.Index(reverseIndex).Interface()
-		value.Index(reverseIndex).Set(value.Index(i))
-		value.Index(i).Set(reflect.ValueOf(tmp))
-	}
-}
-
 func CheckErr(e error) {
 	if e != nil {
 		logger.Log.Errorf("%v", e)
@@ -70,4 +60,43 @@ func SetHostname(address, newHostname string) string {
 	replacedUrl.Host = newHostname
 	return replacedUrl.String()
 
+}
+
+func ReadJsonFile(filePath string, value interface{}) error {
+	if content, err := ioutil.ReadFile(filePath); err != nil {
+		return err
+	} else {
+		if err = json.Unmarshal(content, value); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func SaveJsonFile(filePath string, value interface{}) error {
+	if data, err := json.Marshal(value); err != nil {
+		return err
+	} else {
+		if err = ioutil.WriteFile(filePath, data, 0644); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func UniqueStringSlice(s []string) []string {
+	uniqueSlice := make([]string, 0)
+	uniqueMap := map[string]bool{}
+
+	for _, val := range s {
+		if uniqueMap[val] == true {
+			continue
+		}
+		uniqueMap[val] = true
+		uniqueSlice = append(uniqueSlice, val)
+	}
+
+	return uniqueSlice
 }
