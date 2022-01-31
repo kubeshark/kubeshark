@@ -54,7 +54,7 @@ var promisc = flag.Bool("promisc", true, "Set promiscuous mode")
 var staleTimeoutSeconds = flag.Int("staletimout", 120, "Max time in seconds to keep connections which don't transmit data")
 var pids = flag.String("pids", "", "A comma separated list of PIDs to capture their network namespaces")
 var servicemesh = flag.Bool("servicemesh", false, "Record decrypted traffic if the cluster is configured with a service mesh and with mtls")
-var tls = flag.Bool("tls", false, "Enable Tls tapper")
+var tls = flag.Bool("tls", false, "Enable TLS tapper")
 
 var memprofile = flag.String("memprofile", "", "Write memory profile")
 
