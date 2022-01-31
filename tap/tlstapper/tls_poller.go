@@ -36,7 +36,6 @@ func Poll(tls *TlsTapper, httpExtension *api.Extension,
 
 		reader := bufio.NewReader(bytes.NewReader(chunk.Data[0:chunk.Recorded]))
 		isRequest := (chunk.isClient() && chunk.isWrite()) || (chunk.isServer() && chunk.isRead())
-		
 		if isRequest {
 			id = api.TcpID{
 				SrcIP:   UNKNOWN_HOST,
