@@ -262,6 +262,7 @@ func hostApi(socketHarOutputChannel chan<- *tapApi.OutputChannelItem) {
 		routes.ConfigRoutes(app)
 		routes.UserRoutes(app)
 		routes.InstallRoutes(app)
+		routes.WorkspaceRoutes(app)
 	}
 	if config.Config.OAS {
 		routes.OASRoutes(app)

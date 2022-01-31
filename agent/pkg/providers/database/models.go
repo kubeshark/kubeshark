@@ -1,17 +1,23 @@
 package database
 
-import "gorm.io/gorm"
-
 type Invite struct {
-	gorm.Model
-	Token      string
+	Token      string `gorm:"primary_key"`
 	IdentityId string
 	Username   string
 	CreatedAt  int64
 }
 
+type Namespace struct {
+	Name        string `gorm:"primary_key"`
+	WorkspaceID string `gorm:"primary_key"`
+}
+
 type Workspace struct {
-	gorm.Model
-	Name       string
-	Namespaces []string
+	Id         string      `gorm:"primaryKey"`
+	Name       string      `gorm:"unique"`
+	Namespaces []Namespace `gorm:"foreignKey:WorkspaceID"`
+}
+
+type UniqueConstraintError struct {
+	err error
 }

@@ -41,7 +41,7 @@ func CreateUserAndInvite(c *gin.Context) {
 		return
 	}
 
-	if inviteToken, identityId, err := user.CreateNewUserWithInvite(requestCreateUser.Username, requestCreateUser.Workspace, requestCreateUser.SystemRole, c.Request.Context()); err != nil {
+	if inviteToken, identityId, err := user.CreateNewUserWithInvite(requestCreateUser.Username, requestCreateUser.WorkspaceId, requestCreateUser.SystemRole, c.Request.Context()); err != nil {
 		logger.Log.Errorf("internal error while creating user invite %v", err)
 		c.JSON(http.StatusInternalServerError, err)
 	} else {
@@ -68,7 +68,7 @@ func UpdateUser(c *gin.Context) {
 	}
 
 	identityId := c.Param("userId")
-	if err := user.UpdateUserRoles(identityId, requestEditUser.Workspace, requestEditUser.SystemRole, c.Request.Context()); err != nil {
+	if err := user.UpdateUserRoles(identityId, requestEditUser.WorkspaceId, requestEditUser.SystemRole, c.Request.Context()); err != nil {
 		logger.Log.Errorf("internal error while updating specific user %v", err)
 		c.JSON(http.StatusInternalServerError, err)
 	} else {

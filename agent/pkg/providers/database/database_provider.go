@@ -3,6 +3,7 @@ package database
 import (
 	"fmt"
 
+	"github.com/google/uuid"
 	"github.com/up9inc/mizu/shared/logger"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -22,7 +23,7 @@ func init() {
 		logger.Log.Errorf("db error %v", db.Error)
 	}
 
-	err = db.AutoMigrate(&Invite{})
+	err = db.AutoMigrate(&Invite{}, &Namespace{}, &Workspace{})
 	if err != nil {
 		panic(fmt.Sprintf("failed to migrate schema to local sqlite database at %s", databasePath))
 	}
@@ -57,16 +58,26 @@ func DeleteInvite(inviteToken string) error {
 	return nil
 }
 
-func CreateWorkspace(name string, namespaces []string) error {
+func CreateWorkspace(name string, namespaces []string) (*Workspace, error) {
+	namespaceRows := make([]Namespace, len(namespaces))
+
+	for i, namespace := range namespaces {
+		namespaceRows[i] = Namespace{
+			Name: namespace,
+		}
+	}
+
 	workspace := &Workspace{
+		Id:         uuid.New().String(),
 		Name:       name,
-		Namespaces: namespaces,
+		Namespaces: namespaceRows,
 	}
 
 	if err := db.Create(workspace).Error; err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+
+	return workspace, nil
 }
 
 func ListWorkspaces() ([]*Workspace, error) {
@@ -75,4 +86,43 @@ func ListWorkspaces() ([]*Workspace, error) {
 		return nil, err
 	}
 	return workspaces, nil
+}
+
+func GetWorkspaceWithRelations(workspaceId string) (*Workspace, error) {
+	var workspace Workspace
+	if err := db.Preload("Namespaces").First(&workspace, "id = ?", workspaceId).Error; err != nil {
+		return nil, err
+	}
+	return &workspace, nil
+}
+
+func UpdateWorkspace(workspaceId string, name string, namespaces []string) (*Workspace, error) {
+	namespaceRows := make([]Namespace, len(namespaces))
+
+	for i, namespace := range namespaces {
+		namespaceRows[i] = Namespace{
+			Name: namespace,
+		}
+	}
+
+	workspace := &Workspace{
+		Id:         workspaceId,
+		Name:       name,
+		Namespaces: namespaceRows,
+	}
+
+	if err := db.Transaction(func(tx *gorm.DB) error {
+		// delete old namespaces
+		if err := tx.Delete(&Namespace{}, "workspace_id = ?", workspaceId).Error; err != nil {
+			return err
+		}
+		if err := tx.Save(workspace).Error; err != nil {
+			return err
+		}
+		return nil
+	}); err != nil {
+		return nil, err
+	}
+
+	return workspace, nil
 }

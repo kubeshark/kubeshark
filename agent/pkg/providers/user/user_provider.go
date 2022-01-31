@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"mizuserver/pkg/providers/database"
+	"mizuserver/pkg/providers/workspace"
 	"net/http"
 	"net/http/cookiejar"
 	"strings"
@@ -138,7 +139,7 @@ func Logout(token string, ctx context.Context) error {
 	return nil
 }
 
-func CreateNewUserWithInvite(username string, workspace string, systemRole string, ctx context.Context) (inviteToken string, identityId string, err error) {
+func CreateNewUserWithInvite(username string, workspaceId string, systemRole string, ctx context.Context) (inviteToken string, identityId string, err error) {
 	_, identityId, err, _ = RegisterUser(username, uuid.New().String(), PendingInviteStatus, ctx)
 	if err != nil {
 		return "", "", err
@@ -149,7 +150,7 @@ func CreateNewUserWithInvite(username string, workspace string, systemRole strin
 		return "", "", err
 	}
 
-	if err = SetUserWorkspaceRole(username, workspace, UserRole); err != nil {
+	if err = SetUserWorkspaceRole(username, workspaceId, UserRole); err != nil {
 		DeleteUser(identityId, ctx)
 		return "", "", err
 	}
@@ -267,7 +268,7 @@ func ChangePassword(sessionToken string, newPassword string, ctx context.Context
 	return nil, nil
 }
 
-func UpdateUserRoles(identityId string, workspace string, systemRole string, ctx context.Context) error {
+func UpdateUserRoles(identityId string, workspaceId string, systemRole string, ctx context.Context) error {
 	identity, _, err := client.V0alpha2Api.AdminGetIdentity(ctx, identityId).Execute()
 	if err != nil {
 		return err
@@ -276,7 +277,7 @@ func UpdateUserRoles(identityId string, workspace string, systemRole string, ctx
 	traits := identity.Traits.(map[string]interface{})
 	username := traits["username"].(string)
 
-	if err = SetUserWorkspaceRole(username, workspace, UserRole); err != nil {
+	if err = SetUserWorkspaceRole(username, workspaceId, UserRole); err != nil {
 		return err
 	}
 	if err = SetUserSystemRole(username, systemRole); err != nil {
@@ -312,10 +313,10 @@ func GetUser(identityId string, ctx context.Context) (*User, error) {
 		user.SystemRole = systemRole
 	}
 
-	if workspace, err := GetUserWorkspace(username); err != nil {
+	if workspaceId, err := GetUserWorkspaceId(username); err != nil {
 		return nil, err
 	} else {
-		user.Workspace = workspace
+		user.WorkspaceId = workspaceId
 	}
 
 	return user, nil
@@ -362,15 +363,23 @@ func WhoAmI(sessionToken string, ctx context.Context) (*WhoAmIResponse, error) {
 		return nil, err
 	}
 
-	if user, err := GetUser(session.Identity.Id, ctx); err != nil {
+	user, err := GetUser(session.Identity.Id, ctx)
+	if err != nil {
 		return nil, err
-	} else {
-		return &WhoAmIResponse{
-			Username:   user.Username,
-			SystemRole: user.SystemRole,
-			Workspace:  user.Workspace,
-		}, nil
 	}
+
+	var userWorkspace *workspace.WorkspaceResponse
+	if user.WorkspaceId != "" {
+		if userWorkspace, err = workspace.GetWorkspace(user.WorkspaceId); err != nil {
+			return nil, err
+		}
+	}
+
+	return &WhoAmIResponse{
+		Username:   user.Username,
+		SystemRole: user.SystemRole,
+		Workspace:  userWorkspace,
+	}, nil
 }
 
 func getAllUsersRecursively(ctx context.Context, page int) ([]ory.Identity, error) {

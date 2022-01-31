@@ -52,7 +52,7 @@ func GetUserSystemRole(username string) (string, error) {
 	}
 }
 
-func GetUserWorkspace(username string) (string, error) {
+func GetUserWorkspaceId(username string) (string, error) {
 	if relations, err := queryRelationTuples(&workspacesRoleNamespace, nil, &username, nil); err != nil {
 		return "", err
 	} else if len(relations) == 0 {
@@ -69,16 +69,16 @@ func GetUserWorkspace(username string) (string, error) {
 	}
 }
 
-func GetUserWorkspaceRole(username string, workspace string) ([]string, error) {
-	return getObjectRelationsForSubjectID(workspacesRoleNamespace, &workspace, username)
+func GetUserWorkspaceRole(username string, workspaceId string) ([]string, error) {
+	return getObjectRelationsForSubjectID(workspacesRoleNamespace, &workspaceId, username)
 }
 
-func SetUserWorkspaceRole(username string, workspace string, role string) error {
+func SetUserWorkspaceRole(username string, workspaceId string, role string) error {
 	//enforce one workspace role per user
 	if err := deleteAllNamespacedRelationsForSubjectID(workspacesRoleNamespace, username); err != nil {
 		return err
 	}
-	return createObjectRelationForSubjectID(workspacesRoleNamespace, workspace, username, role)
+	return createObjectRelationForSubjectID(workspacesRoleNamespace, workspaceId, username, role)
 }
 
 func SetUserSystemRole(username string, role string) error {
