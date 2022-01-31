@@ -46,7 +46,7 @@ agent-debug: ## Build agent for debug.
 
 agent-docker: ## Build agent docker image.
 	@echo "Building agent docker image"
-	@docker build -t up9inc/mizu:latest .
+	@docker build -t up9inc/mizu:devlatest .
 
 push: push-docker push-cli ## Build and publish agent docker image & CLI.
 
