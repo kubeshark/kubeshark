@@ -76,14 +76,6 @@ func NewProvider(kubeConfigPath string) (*Provider, error) {
 			"you can set alternative kube config file path by adding the kube-config-path field to the mizu config file, err:  %w", kubeConfigPath, err)
 	}
 
-	if err := validateNotProxy(kubernetesConfig, restClientConfig); err != nil {
-		return nil, err
-	}
-
-	if err := validateKubernetesVersion(clientSet); err != nil {
-		return nil, err
-	}
-
 	return &Provider{
 		clientSet:        clientSet,
 		kubernetesConfig: kubernetesConfig,
@@ -177,6 +169,8 @@ type ApiServerOptions struct {
 	Namespace             string
 	PodName               string
 	PodImage              string
+	BasenineImage         string
+	KratosImage           string
 	ServiceAccountName    string
 	IsNamespaceRestricted bool
 	SyncEntriesConfig     *shared.SyncEntriesConfig
@@ -184,6 +178,7 @@ type ApiServerOptions struct {
 	Resources             shared.Resources
 	ImagePullPolicy       core.PullPolicy
 	LogLevel              logging.Level
+
 }
 
 func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, mountVolumeClaim bool, volumeClaimName string, createAuthContainer bool) (*core.Pod, error) {
@@ -280,7 +275,7 @@ func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, moun
 		},
 		{
 			Name:            "basenine",
-			Image:           fmt.Sprintf("%s:%s", shared.BasenineImageRepo, shared.BasenineImageTag),
+			Image:           opts.BasenineImage,
 			ImagePullPolicy: opts.ImagePullPolicy,
 			VolumeMounts:    volumeMounts,
 			ReadinessProbe: &core.Probe{
@@ -313,7 +308,7 @@ func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, moun
 	if createAuthContainer {
 		containers = append(containers, core.Container{
 			Name:            "kratos",
-			Image:           "gcr.io/up9-docker-hub/mizu-kratos/stable:0.0.0",
+			Image:           opts.KratosImage,
 			ImagePullPolicy: opts.ImagePullPolicy,
 			VolumeMounts:    volumeMounts,
 			ReadinessProbe: &core.Probe{
@@ -416,9 +411,59 @@ func (provider *Provider) CreateService(ctx context.Context, namespace string, s
 	return provider.clientSet.CoreV1().Services(namespace).Create(ctx, &service, metav1.CreateOptions{})
 }
 
-func (provider *Provider) DoesServicesExist(ctx context.Context, namespace string, name string) (bool, error) {
+func (provider *Provider) DoesNamespaceExist(ctx context.Context, name string) (bool, error) {
+	namespaceResource, err := provider.clientSet.CoreV1().Namespaces().Get(ctx, name, metav1.GetOptions{})
+	return provider.doesResourceExist(namespaceResource, err)
+}
+
+func (provider *Provider) DoesConfigMapExist(ctx context.Context, namespace string, name string) (bool, error) {
+	configMapResource, err := provider.clientSet.CoreV1().ConfigMaps(namespace).Get(ctx, name, metav1.GetOptions{})
+	return provider.doesResourceExist(configMapResource, err)
+}
+
+func (provider *Provider) DoesServiceAccountExist(ctx context.Context, namespace string, name string) (bool, error) {
+	serviceAccountResource, err := provider.clientSet.CoreV1().ServiceAccounts(namespace).Get(ctx, name, metav1.GetOptions{})
+	return provider.doesResourceExist(serviceAccountResource, err)
+}
+
+func (provider *Provider) DoesPersistentVolumeClaimExist(ctx context.Context, namespace string, name string) (bool, error) {
+	persistentVolumeClaimResource, err := provider.clientSet.CoreV1().PersistentVolumeClaims(namespace).Get(ctx, name, metav1.GetOptions{})
+	return provider.doesResourceExist(persistentVolumeClaimResource, err)
+}
+
+func (provider *Provider) DoesDeploymentExist(ctx context.Context, namespace string, name string) (bool, error) {
+	deploymentResource, err := provider.clientSet.AppsV1().Deployments(namespace).Get(ctx, name, metav1.GetOptions{})
+	return provider.doesResourceExist(deploymentResource, err)
+}
+
+func (provider *Provider) DoesPodExist(ctx context.Context, namespace string, name string) (bool, error) {
+	podResource, err := provider.clientSet.CoreV1().Pods(namespace).Get(ctx, name, metav1.GetOptions{})
+	return provider.doesResourceExist(podResource, err)
+}
+
+func (provider *Provider) DoesServiceExist(ctx context.Context, namespace string, name string) (bool, error) {
 	serviceResource, err := provider.clientSet.CoreV1().Services(namespace).Get(ctx, name, metav1.GetOptions{})
 	return provider.doesResourceExist(serviceResource, err)
+}
+
+func (provider *Provider) DoesClusterRoleExist(ctx context.Context, name string) (bool, error) {
+	clusterRoleResource, err := provider.clientSet.RbacV1().ClusterRoles().Get(ctx, name, metav1.GetOptions{})
+	return provider.doesResourceExist(clusterRoleResource, err)
+}
+
+func (provider *Provider) DoesClusterRoleBindingExist(ctx context.Context, name string) (bool, error) {
+	clusterRoleBindingResource, err := provider.clientSet.RbacV1().ClusterRoleBindings().Get(ctx, name, metav1.GetOptions{})
+	return provider.doesResourceExist(clusterRoleBindingResource, err)
+}
+
+func (provider *Provider) DoesRoleExist(ctx context.Context, namespace string, name string) (bool, error) {
+	roleResource, err := provider.clientSet.RbacV1().Roles(namespace).Get(ctx, name, metav1.GetOptions{})
+	return provider.doesResourceExist(roleResource, err)
+}
+
+func (provider *Provider) DoesRoleBindingExist(ctx context.Context, namespace string, name string) (bool, error) {
+	roleBindingResource, err := provider.clientSet.RbacV1().RoleBindings(namespace).Get(ctx, name, metav1.GetOptions{})
+	return provider.doesResourceExist(roleBindingResource, err)
 }
 
 func (provider *Provider) doesResourceExist(resource interface{}, err error) (bool, error) {
@@ -1042,6 +1087,45 @@ func (provider *Provider) CreatePersistentVolumeClaim(ctx context.Context, names
 	return provider.clientSet.CoreV1().PersistentVolumeClaims(namespace).Create(ctx, volumeClaim, metav1.CreateOptions{})
 }
 
+// ValidateNotProxy We added this after a customer tried to run mizu from lens, which used len's kube config, which have cluster server configuration, which points to len's local proxy.
+// The workaround was to use the user's local default kube config.
+// For now - we are blocking the option to run mizu through a proxy to k8s server
+func (provider *Provider) ValidateNotProxy() error {
+	kubernetesUrl, err := url.Parse(provider.clientConfig.Host)
+	if err != nil {
+		logger.Log.Debugf("ValidateNotProxy - error while parsing kubernetes host, err: %v", err)
+		return nil
+	}
+
+	restProxyClientConfig, _ := provider.kubernetesConfig.ClientConfig()
+	restProxyClientConfig.Host = kubernetesUrl.Host
+
+	clientProxySet, err := getClientSet(restProxyClientConfig)
+	if err == nil {
+		proxyServerVersion, err := clientProxySet.ServerVersion()
+		if err != nil {
+			return nil
+		}
+
+		if *proxyServerVersion == (version.Info{}) {
+			return &ClusterBehindProxyError{}
+		}
+	}
+
+	return nil
+}
+
+func (provider *Provider) GetKubernetesVersion() (*semver.SemVersion, error) {
+	serverVersion, err := provider.clientSet.ServerVersion()
+	if err != nil {
+		logger.Log.Debugf("error while getting kubernetes server version, err: %v", err)
+		return nil, err
+	}
+
+	serverVersionSemVer := semver.SemVersion(serverVersion.GitVersion)
+	return &serverVersionSemVer, nil
+}
+
 func getClientSet(config *restclient.Config) (*kubernetes.Clientset, error) {
 	clientSet, err := kubernetes.NewForConfig(config)
 	if err != nil {
@@ -1049,6 +1133,15 @@ func getClientSet(config *restclient.Config) (*kubernetes.Clientset, error) {
 	}
 
 	return clientSet, nil
+}
+
+func ValidateKubernetesVersion(serverVersionSemVer *semver.SemVersion) error {
+	minKubernetesServerVersionSemVer := semver.SemVersion(MinKubernetesServerVersion)
+	if minKubernetesServerVersionSemVer.GreaterThan(*serverVersionSemVer) {
+		return fmt.Errorf("kubernetes server version %v is not supported, supporting only kubernetes server version of %v or higher", serverVersionSemVer, MinKubernetesServerVersion)
+	}
+
+	return nil
 }
 
 func loadKubernetesConfiguration(kubeConfigPath string) clientcmd.ClientConfig {
@@ -1071,48 +1164,4 @@ func loadKubernetesConfiguration(kubeConfigPath string) clientcmd.ClientConfig {
 
 func isPodRunning(pod *core.Pod) bool {
 	return pod.Status.Phase == core.PodRunning
-}
-
-// We added this after a customer tried to run mizu from lens, which used len's kube config, which have cluster server configuration, which points to len's local proxy.
-// The workaround was to use the user's local default kube config.
-// For now - we are blocking the option to run mizu through a proxy to k8s server
-func validateNotProxy(kubernetesConfig clientcmd.ClientConfig, restClientConfig *restclient.Config) error {
-	kubernetesUrl, err := url.Parse(restClientConfig.Host)
-	if err != nil {
-		logger.Log.Debugf("validateNotProxy - error while parsing kubernetes host, err: %v", err)
-		return nil
-	}
-
-	restProxyClientConfig, _ := kubernetesConfig.ClientConfig()
-	restProxyClientConfig.Host = kubernetesUrl.Host
-
-	clientProxySet, err := getClientSet(restProxyClientConfig)
-	if err == nil {
-		proxyServerVersion, err := clientProxySet.ServerVersion()
-		if err != nil {
-			return nil
-		}
-
-		if *proxyServerVersion == (version.Info{}) {
-			return &ClusterBehindProxyError{}
-		}
-	}
-
-	return nil
-}
-
-func validateKubernetesVersion(clientSet *kubernetes.Clientset) error {
-	serverVersion, err := clientSet.ServerVersion()
-	if err != nil {
-		logger.Log.Debugf("error while getting kubernetes server version, err: %v", err)
-		return nil
-	}
-
-	serverVersionSemVer := semver.SemVersion(serverVersion.GitVersion)
-	minKubernetesServerVersionSemVer := semver.SemVersion(MinKubernetesServerVersion)
-	if minKubernetesServerVersionSemVer.GreaterThan(serverVersionSemVer) {
-		return fmt.Errorf("kubernetes server version %v is not supported, supporting only kubernetes server version of %v or higher", serverVersion.GitVersion, MinKubernetesServerVersion)
-	}
-
-	return nil
 }

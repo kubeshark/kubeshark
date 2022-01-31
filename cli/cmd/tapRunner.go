@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/up9inc/mizu/cli/resources"
+	"github.com/up9inc/mizu/cli/telemetry"
 	"github.com/up9inc/mizu/cli/utils"
 
 	"github.com/getkin/kin-openapi/openapi3"
@@ -23,7 +24,6 @@ import (
 	"github.com/up9inc/mizu/cli/config"
 	"github.com/up9inc/mizu/cli/config/configStructs"
 	"github.com/up9inc/mizu/cli/errormessage"
-	"github.com/up9inc/mizu/cli/mizu/fsUtils"
 	"github.com/up9inc/mizu/cli/uiUtils"
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/kubernetes"
@@ -124,7 +124,7 @@ func RunMizuTap() {
 	}
 
 	logger.Log.Infof("Waiting for Mizu Agent to start...")
-	if state.mizuServiceAccountExists, err = resources.CreateTapMizuResources(ctx, kubernetesProvider, serializedValidationRules, serializedContract, serializedMizuConfig, config.Config.IsNsRestrictedMode(), config.Config.MizuResourcesNamespace, config.Config.AgentImage, getSyncEntriesConfig(), config.Config.Tap.MaxEntriesDBSizeBytes(), config.Config.Tap.ApiServerResources, config.Config.ImagePullPolicy(), config.Config.LogLevel()); err != nil {
+	if state.mizuServiceAccountExists, err = resources.CreateTapMizuResources(ctx, kubernetesProvider, serializedValidationRules, serializedContract, serializedMizuConfig, config.Config.IsNsRestrictedMode(), config.Config.MizuResourcesNamespace, config.Config.AgentImage, config.Config.BasenineImage, getSyncEntriesConfig(), config.Config.Tap.MaxEntriesDBSizeBytes(), config.Config.Tap.ApiServerResources, config.Config.ImagePullPolicy(), config.Config.LogLevel()); err != nil {
 		var statusError *k8serrors.StatusError
 		if errors.As(err, &statusError) {
 			if statusError.ErrStatus.Reason == metav1.StatusReasonAlreadyExists {
@@ -138,13 +138,19 @@ func RunMizuTap() {
 		return
 	}
 
-	defer finishMizuExecution(kubernetesProvider, apiProvider, config.Config.IsNsRestrictedMode(), config.Config.MizuResourcesNamespace)
+	defer finishTapExecution(kubernetesProvider)
 
 	go goUtils.HandleExcWrapper(watchApiServerEvents, ctx, kubernetesProvider, cancel)
 	go goUtils.HandleExcWrapper(watchApiServerPod, ctx, kubernetesProvider, cancel)
 
 	// block until exit signal or error
 	utils.WaitForFinish(ctx, cancel)
+}
+
+func finishTapExecution(kubernetesProvider *kubernetes.Provider) {
+	telemetry.ReportTapTelemetry(apiProvider, config.Config.Tap, state.startTime)
+
+	finishMizuExecution(kubernetesProvider, config.Config.IsNsRestrictedMode(), config.Config.MizuResourcesNamespace)
 }
 
 func getTapMizuAgentConfig() *shared.MizuAgentConfig {
@@ -416,20 +422,15 @@ func watchApiServerEvents(ctx context.Context, kubernetesProvider *kubernetes.Pr
 }
 
 func postApiServerStarted(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc, err error) {
-	go startProxyReportErrorIfAny(kubernetesProvider, cancel)
+	startProxyReportErrorIfAny(kubernetesProvider, cancel)
 
-	url := GetApiServerUrl()
-	if err := apiProvider.TestConnection(); err != nil {
-		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Couldn't connect to API server, for more info check logs at %s", fsUtils.GetLogFilePath()))
-		cancel()
-		return
-	}
 	options, _ := getMizuApiFilteringOptions()
 	if err = startTapperSyncer(ctx, cancel, kubernetesProvider, state.targetNamespaces, *options, state.startTime); err != nil {
 		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error starting mizu tapper syncer: %v", err))
 		cancel()
 	}
 
+	url := GetApiServerUrl()
 	logger.Log.Infof("Mizu is available at %s", url)
 	if !config.Config.HeadlessMode {
 		uiUtils.OpenBrowser(url)

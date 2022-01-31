@@ -15,7 +15,21 @@ import (
 	"github.com/up9inc/mizu/tap/api"
 )
 
-var protocol api.Protocol = api.Protocol{
+var http10protocol api.Protocol = api.Protocol{
+	Name:            "http",
+	LongName:        "Hypertext Transfer Protocol -- HTTP/1.0",
+	Abbreviation:    "HTTP",
+	Macro:           "http",
+	Version:         "1.0",
+	BackgroundColor: "#205cf5",
+	ForegroundColor: "#ffffff",
+	FontSize:        12,
+	ReferenceLink:   "https://datatracker.ietf.org/doc/html/rfc1945",
+	Ports:           []string{"80", "443", "8080"},
+	Priority:        0,
+}
+
+var http11protocol api.Protocol = api.Protocol{
 	Name:            "http",
 	LongName:        "Hypertext Transfer Protocol -- HTTP/1.1",
 	Abbreviation:    "HTTP",
@@ -69,12 +83,12 @@ func init() {
 type dissecting string
 
 func (d dissecting) Register(extension *api.Extension) {
-	extension.Protocol = &protocol
+	extension.Protocol = &http11protocol
 	extension.MatcherMap = reqResMatcher.openMessagesMap
 }
 
 func (d dissecting) Ping() {
-	log.Printf("pong %s", protocol.Name)
+	log.Printf("pong %s", http11protocol.Name)
 }
 
 func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, superIdentifier *api.SuperIdentifier, emitter api.Emitter, options *api.TrafficFilteringOptions) error {
@@ -96,7 +110,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 			http2Assembler = createHTTP2Assembler(b)
 		}
 
-		if superIdentifier.Protocol != nil && superIdentifier.Protocol != &protocol {
+		if superIdentifier.Protocol != nil && superIdentifier.Protocol != &http11protocol {
 			return errors.New("Identified by another protocol")
 		}
 
@@ -128,7 +142,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 					tcpID.DstPort,
 					"HTTP2",
 				)
-				item := reqResMatcher.registerRequest(ident, req, superTimer.CaptureTime)
+				item := reqResMatcher.registerRequest(ident, req, superTimer.CaptureTime, req.ProtoMinor)
 				if item != nil {
 					item.ConnectionInfo = &api.ConnectionInfo{
 						ClientIP:   tcpID.SrcIP,
@@ -154,7 +168,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 	if !dissected {
 		return err
 	}
-	superIdentifier.Protocol = &protocol
+	superIdentifier.Protocol = &http11protocol
 	return nil
 }
 
@@ -225,7 +239,8 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 	resDetails["cookies"] = mapSliceRebuildAsMap(resDetails["_cookies"].([]interface{}))
 
 	reqDetails["_queryString"] = reqDetails["queryString"]
-	reqDetails["queryString"] = mapSliceRebuildAsMap(reqDetails["_queryString"].([]interface{}))
+	reqDetails["_queryStringMerged"] = mapSliceMergeRepeatedKeys(reqDetails["_queryString"].([]interface{}))
+	reqDetails["queryString"] = mapSliceRebuildAsMap(reqDetails["_queryStringMerged"].([]interface{}))
 
 	method := reqDetails["method"].(string)
 	statusCode := int(resDetails["status"].(float64))
@@ -322,7 +337,7 @@ func representRequest(request map[string]interface{}) (repRequest []interface{})
 	repRequest = append(repRequest, api.SectionData{
 		Type:  api.TABLE,
 		Title: "Query String",
-		Data:  representMapSliceAsTable(request["_queryString"].([]interface{}), `request.queryString`),
+		Data:  representMapSliceAsTable(request["_queryStringMerged"].([]interface{}), `request.queryString`),
 	})
 
 	postData, _ := request["postData"].(map[string]interface{})
@@ -442,9 +457,9 @@ func (d dissecting) Represent(request map[string]interface{}, response map[strin
 
 func (d dissecting) Macros() map[string]string {
 	return map[string]string{
-		`http`:  fmt.Sprintf(`proto.name == "%s" and proto.version == "%s"`, protocol.Name, protocol.Version),
-		`http2`: fmt.Sprintf(`proto.name == "%s" and proto.version == "%s"`, protocol.Name, http2Protocol.Version),
-		`grpc`:  fmt.Sprintf(`proto.name == "%s" and proto.version == "%s" and proto.macro == "%s"`, protocol.Name, grpcProtocol.Version, grpcProtocol.Macro),
+		`http`:  fmt.Sprintf(`proto.name == "%s" and proto.version.startsWith("%c")`, http11protocol.Name, http11protocol.Version[0]),
+		`http2`: fmt.Sprintf(`proto.name == "%s" and proto.version == "%s"`, http11protocol.Name, http2Protocol.Version),
+		`grpc`:  fmt.Sprintf(`proto.name == "%s" and proto.version == "%s" and proto.macro == "%s"`, http11protocol.Name, grpcProtocol.Version, grpcProtocol.Macro),
 	}
 }
 
