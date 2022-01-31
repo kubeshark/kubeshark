@@ -17,4 +17,5 @@ chmod +x ./basenine_linux_$GOARCH
 mv ./basenine_linux_$GOARCH "$PREFIX/basenine"
 
 echo "Build agent"
+rm -rf entries/ && mkdir -p entries && rm -rf pprof/*
 make agent

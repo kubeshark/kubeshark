@@ -32,6 +32,7 @@ PCAP=$PWD/$2
 echo "PCAP file path: $PCAP"
 
 rm -rf entries/ && mkdir -p entries && rm -rf pprof/* && \
+make agent-debug && \
 basenine -port 9099 & \
 PID1=$! && \
 dlv-dap --headless=true --listen=:2345 --api-version=2 exec ./agent/build/mizuagent -- \

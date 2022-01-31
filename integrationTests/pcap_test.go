@@ -15,7 +15,7 @@ const (
 	AgentBin                = "../agent/build/mizuagent"
 	BaseninePort            = "9099"
 	BasenineCommandTimeout  = 5 * time.Second
-	APIServerCommandTimeout = 30 * time.Second
+	APIServerCommandTimeout = 10 * time.Second
 )
 
 func fileExists(path string) bool {
@@ -179,18 +179,22 @@ func Test(t *testing.T) {
 	if testing.Short() {
 		t.Skip("ignored acceptance test")
 	}
+	expectedBasenineOutput := fmt.Sprintf("Listening on :%s\n", BaseninePort)
+	expectedAgentOutput := "Initializing"
+
 	_, output := startBasenine(t)
-	if !strings.HasSuffix(output, fmt.Sprintf("Listening on :%s\n", BaseninePort)) {
-		t.Errorf("basenine is not running as expected: %s", output)
+
+	if !strings.HasSuffix(output, expectedBasenineOutput) {
+		t.Errorf("basenine is not running as expected - expected: %s, actual: %s", expectedBasenineOutput, output)
 	}
 
 	_, output = startAPIServer(t, "")
-	if !strings.HasSuffix(output, "Initializing") {
-		t.Errorf("API Server is not running as expected: %s", output)
+	if !strings.HasSuffix(output, expectedAgentOutput) {
+		t.Errorf("API Server is not running as expected - expected: %s, actual: %s", expectedAgentOutput, output)
 	}
 
 	_, output = startTapper(t, "http.cap")
-	if !strings.HasSuffix(output, "Initializing") {
-		t.Errorf("Tapper is not running as expected: %s", output)
+	if !strings.HasSuffix(output, expectedAgentOutput) {
+		t.Errorf("Tapper is not running as expected - expected: %s, actual: %s", expectedAgentOutput, output)
 	}
 }
