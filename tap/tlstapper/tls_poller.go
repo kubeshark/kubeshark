@@ -41,7 +41,7 @@ func Poll(tls *TlsTapper, httpExtension *api.Extension,
 			id = api.TcpID{
 				SrcIP:   UNKWONW_HOST,
 				DstIP:   ip.String(),
-				SrcPort: UNKWONW_PORT,
+				SrcPort: UNKNOWN_PORT,
 				DstPort: strconv.FormatInt(int64(port), 10),
 			}
 		} else {
