@@ -6,8 +6,7 @@ PREFIX=$HOME/local/bin
 VERSION=v0.4.13
 GOARCH=amd64
 
-echo "Attempting to install basenine to $PREFIX"
-echo "Tocson $GOARCH"
+echo "Attempting to install basenine $GOARCH to $PREFIX"
 
 # Download Basenine executable, verify the sha1sum
 curl -LO "https://github.com/up9inc/basenine/releases/download/$VERSION/basenine_linux_$GOARCH"
