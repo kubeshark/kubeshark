@@ -96,7 +96,6 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
   const updateUser = async() =>{
       try {
         const res = await api.updateUser(userDataModel)
-        onClose()
         toast.success("User has been modified")  
       } catch (error) {
         toast.error("Error accured modifing user")  
@@ -173,27 +172,11 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
   const handleCopyinviteLink = (e) => {navigator.clipboard.writeText(invite.link)}
 
   const addUsermodalCustomActions = <>
-            {showGenerateButton() && <Button 
-                                            className={classes.button + " generate-link-button"} size={"small"} 
-                                            onClick={!isEditMode ? generateLink : inviteExistingUser}
-                                            disabled={disable}  
-                                            endIcon={isLoading && <img src={spinner} alt="spinner"/>}>
-                                              <span className='generate-link-button__icon'></span>
-                                              {"Generate Invite Link"}
-                              </Button>}
-                              {
-              isEditMode && <Button style={{height: '100%'}} disabled={disable} className={classes.button + " u-margin-left"} size={"small"} onClick={updateUser}>
-              Save
-            </Button>
-          }
       
-      <div className="invite-link-row">
-      {isShowInviteLink() && <FormControl variant="outlined" size={"small"} className='invite-link-field'>
+      <div className={isShowInviteLink() ? "invite-link-row" : ""}>
+      {isShowInviteLink() && <FormControl variant="outlined" size={"small"} className='invite-link-field'> 
           <InputLabel htmlFor="outlined-adornment-password">Invite link</InputLabel>
-          <OutlinedInput 
-            type={'text'}
-            value={invite.link}           
-            onChange={handleChange('password')}
+          <OutlinedInput type={'text'} value={invite.link} onChange={handleChange('password')}  classes={{input: "u-input-padding"}}
             endAdornment={
               <InputAdornment position="end">
                 <IconButton aria-label="cpoy invite link" onClick={handleCopyinviteLink} edge="end">
@@ -202,9 +185,22 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
               </InputAdornment>
             } label="Invite link"/>
         </FormControl>}
-           {!isEditMode &&  isShowInviteLink() &&  <Button style={{height: '100%'}} className={classes.button + " u-margin-left"} size={"small"} onClick={onClose}>
+        {showGenerateButton() && <Button 
+                                            className={classes.button + " generate-link-button"} size={"small"} 
+                                            onClick={!isEditMode ? generateLink : inviteExistingUser}
+                                            disabled={disable}  
+                                            endIcon={isLoading && <img src={spinner} alt="spinner"/>}
+                                            startIcon={<span className='generate-link-button__icon'></span>}>
+                                              
+                                              {"Generate Invite Link"}
+                              </Button>}
+           {!isEditMode &&  isShowInviteLink() &&  <Button style={{height: '100%',marginLeft:'20px'}} className={classes.button} size={"small"} onClick={onClose}>
                         Done
-            </Button>}
+            </Button>}                            
+              {isEditMode && <Button style={{height: '100%', marginLeft:'20px'}} disabled={disable} className={classes.button} size={"small"} onClick={updateUser}>
+              Save
+            </Button>
+          }
 
       </div>
 
@@ -226,9 +222,9 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
         render={({ field }) =>    }
       /> */}
 
-      <FormControl size='small' variant="outlined" className='user__role'>
+      <FormControl size='small' variant="outlined" className='user__role u-input-padding'>
         <InputLabel>User Role</InputLabel>
-        <Select value={userDataModel.role ?? ""} onChange={userRoleChange} classes={{ root : 'my-class-name' }} >
+        <Select value={userDataModel.role ?? ""} onChange={userRoleChange} classes={{ select : 'u-input-padding' }} >
           <MenuItem value="0">
             <em>None</em>
           </MenuItem>

@@ -1,13 +1,13 @@
 @import '../../../variables.module'
 
 @mixin generate-icon
-        display: block
-        text-indent: -9999px
-        width: 26px
-        height: 26px
-        background-repeat: no-repeat
-        background-size: 26px
-        margin-right: 10px
+    display: block;
+    text-indent: -9999px;
+    width: 17px;
+    height: 17px;
+    background-repeat: no-repeat;
+    background-size: 19px;
+    background-size: cover;
 
 .invite-link
     &-row
@@ -24,8 +24,10 @@
     &-field
         width: 80%
         max-width: 435px
-
+        
 .generate-link-button
+    &.MuiButtonBase-root
+        padding: 6.5px 13px
     &:disabled
         background: #BCC6DD;
         .generate-link-button__icon
@@ -55,7 +57,14 @@
 .search-workspace
     width: 186px
 
-.u-margin-left
-    margin-left : 20px
+.u-input-padding
+    & .MuiInputLabel-outlined.MuiInputLabel-marginDense 
+        transform: translate(14px, 8px) scale(1);
+    & .MuiInputLabel-outlined.MuiInputLabel-shrink
+        transform: translate(14px, -6px) scale(0.75);
+        font-size: 12px;
 
-
+    &.MuiOutlinedInput-input, &.MuiSelect-outlined, 
+        padding-top: 5.5px
+        padding-bottom: 5.5px
+        font-size: 12px;
