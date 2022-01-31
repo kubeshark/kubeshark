@@ -1,5 +1,4 @@
 #!/bin/bash
-#set -e
 
 if [ "$EUID" -eq 0 ]
   then echo "Run without sudo!"
@@ -32,10 +31,7 @@ fi
 PCAP=$PWD/$2
 echo "PCAP file path: $PCAP"
 
-cd ..
 rm -rf entries/ && mkdir -p entries && rm -rf pprof/* && \
-#rm -rf pprof/* && make clean && make agent && \
-#sudo setcap cap_net_raw,cap_net_admin=eip ./agent/build/mizuagent
 basenine -port 9099 & \
 PID1=$! && \
 dlv-dap --headless=true --listen=:2345 --api-version=2 exec ./agent/build/mizuagent -- \

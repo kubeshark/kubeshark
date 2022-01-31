@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# TODO: ARCH parameter to use on basenine and build agent
+
+PREFIX=$HOME/local/bin
+VERSION=v0.4.13
+GOARCH=amd64
+
+echo "Attempting to install basenine to $PREFIX"
+echo "Tocson $GOARCH"
+
+# Download Basenine executable, verify the sha1sum
+curl -LO "https://github.com/up9inc/basenine/releases/download/$VERSION/basenine_linux_$GOARCH"
+curl -LO "https://github.com/up9inc/basenine/releases/download/$VERSION/basenine_linux_$GOARCH.sha256"
+shasum -a 256 -c basenine_linux_$GOARCH.sha256
+rm -rf basenine_linux_$GOARCH.sha256
+chmod +x ./basenine_linux_$GOARCH
+mv ./basenine_linux_$GOARCH "$PREFIX/basenine"
+
+echo "Build agent"
+make agent
