@@ -40,8 +40,7 @@ func initParams(obj **openapi.ParameterList) {
 
 func initHeaders(respObj *openapi.ResponseObj) {
 	if respObj.Headers == nil {
-		var created openapi.Headers
-		created = map[string]openapi.Header{}
+		var created openapi.Headers = map[string]openapi.Header{}
 		respObj.Headers = created
 	}
 }
@@ -85,7 +84,7 @@ func findParamByName(params *openapi.ParameterList, in openapi.In, name string) 
 			continue
 		}
 
-		if paramObj.Name == name || (caseInsensitive && strings.ToLower(paramObj.Name) == strings.ToLower(name)) {
+		if paramObj.Name == name || (caseInsensitive && strings.EqualFold(paramObj.Name, name)) {
 			pathParam = paramObj
 			break
 		}
@@ -102,7 +101,7 @@ func findHeaderByName(headers *openapi.Headers, name string) *openapi.HeaderObj 
 			continue
 		}
 
-		if strings.ToLower(hname) == strings.ToLower(name) {
+		if strings.EqualFold(hname, name) {
 			return hdrObj
 		}
 	}

@@ -1,7 +1,6 @@
 package fsUtils
 
 import (
-	"errors"
 	"fmt"
 	"os"
 )
@@ -18,7 +17,7 @@ func EnsureDir(dirName string) error {
 			return err
 		}
 		if !info.IsDir() {
-			return errors.New(fmt.Sprintf("path exists but is not a directory: %s", dirName))
+			return fmt.Errorf("path exists but is not a directory: %s", dirName)
 		}
 		return nil
 	}

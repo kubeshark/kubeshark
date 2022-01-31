@@ -42,10 +42,8 @@ func StartResolving(namespace string) {
 	res.Start(ctx)
 	go func() {
 		for {
-			select {
-			case err := <-errOut:
-				logger.Log.Infof("name resolving error %s", err)
-			}
+			err := <-errOut
+			logger.Log.Infof("name resolving error %s", err)
 		}
 	}()
 
@@ -67,7 +65,7 @@ func startReadingFiles(workingDir string) {
 		return
 	}
 
-	for true {
+	for {
 		dir, _ := os.Open(workingDir)
 		dirFiles, _ := dir.Readdir(-1)
 

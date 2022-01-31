@@ -33,11 +33,7 @@ func IsGibberish(str string) bool {
 	}
 
 	noise := noiseLevel(str)
-	if noise >= 0.2 {
-		return true
-	}
-
-	return false
+	return noise >= 0.2
 }
 
 func noiseLevel(str string) (score float64) {

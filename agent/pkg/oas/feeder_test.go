@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"encoding/json"
 	"errors"
-	"github.com/up9inc/mizu/shared/logger"
 	"io"
 	"io/ioutil"
 	"mizuserver/pkg/har"
@@ -13,10 +12,12 @@ import (
 	"sort"
 	"strings"
 	"testing"
+
+	"github.com/up9inc/mizu/shared/logger"
 )
 
 func getFiles(baseDir string) (result []string, err error) {
-	result = make([]string, 0, 0)
+	result = make([]string, 0)
 	logger.Log.Infof("Reading files from tree: %s", baseDir)
 
 	// https://yourbasic.org/golang/list-files-in-directory/
@@ -121,8 +122,6 @@ func feedEntry(entry *har.Entry, isSync bool) {
 
 	if strings.Contains(entry.Request.URL, "taboola") {
 		logger.Log.Debugf("Interesting: %s", entry.Request.URL)
-	} else {
-		//return
 	}
 
 	if isSync {
