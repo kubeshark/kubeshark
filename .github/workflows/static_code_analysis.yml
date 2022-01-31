@@ -17,28 +17,28 @@ jobs:
           sudo apt update
           sudo apt install -y libpcap-dev
 
-      - name: golangci-lint (agent)
+      - name: Go lint - agent
         uses: golangci/golangci-lint-action@v2
         with:
           version: latest
           working-directory: agent
           args: --timeout=5m
 
-      - name: golangci-lint (shared)
+      - name: Go lint - shared
         uses: golangci/golangci-lint-action@v2
         with:
           version: latest
           working-directory: shared
           args: --timeout=5m
 
-      - name: golangci-lint (tap)
+      - name: Go lint - tap
         uses: golangci/golangci-lint-action@v2
         with:
           version: latest
           working-directory: tap
           args: --timeout=5m
 
-      - name: golangci-lint (cli)
+      - name: Go lint - CLI
         uses: golangci/golangci-lint-action@v2
         with:
           version: latest

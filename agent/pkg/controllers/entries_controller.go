@@ -26,7 +26,7 @@ func InitExtensionsMap(ref map[string]*tapApi.Extension) {
 func Error(c *gin.Context, err error) bool {
 	if err != nil {
 		logger.Log.Errorf("Error getting entry: %v", err)
-		c.Error(err)
+		_ = c.Error(err)
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
 			"error":     true,
 			"type":      "error",
@@ -131,7 +131,9 @@ func GetEntry(c *gin.Context) {
 		_, rulesMatched, _isRulesEnabled := models.RunValidationRulesState(*harEntry, entry.Destination.Name)
 		isRulesEnabled = _isRulesEnabled
 		inrec, _ := json.Marshal(rulesMatched)
-		json.Unmarshal(inrec, &rules)
+		if err := json.Unmarshal(inrec, &rules); err != nil {
+			logger.Log.Error(err)
+		}
 	}
 
 	c.JSON(http.StatusOK, tapApi.EntryWrapper{

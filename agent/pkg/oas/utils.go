@@ -3,11 +3,12 @@ package oas
 import (
 	"encoding/json"
 	"errors"
-	"github.com/chanced/openapi"
-	"github.com/up9inc/mizu/shared/logger"
 	"mizuserver/pkg/har"
 	"strconv"
 	"strings"
+
+	"github.com/chanced/openapi"
+	"github.com/up9inc/mizu/shared/logger"
 )
 
 func exampleResolver(ref string) (*openapi.ExampleObj, error) {
@@ -32,8 +33,7 @@ func headerResolver(ref string) (*openapi.HeaderObj, error) {
 
 func initParams(obj **openapi.ParameterList) {
 	if *obj == nil {
-		var params openapi.ParameterList
-		params = make([]openapi.Parameter, 0)
+		var params openapi.ParameterList = make([]openapi.Parameter, 0)
 		*obj = &params
 	}
 }

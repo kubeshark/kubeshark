@@ -124,7 +124,9 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 		if extension.Protocol.Name == "http" {
 			if !disableOASValidation {
 				var httpPair tapApi.HTTPRequestResponsePair
-				json.Unmarshal([]byte(mizuEntry.HTTPPair), &httpPair)
+				if err := json.Unmarshal([]byte(mizuEntry.HTTPPair), &httpPair); err != nil {
+					logger.Log.Error(err)
+				}
 
 				contract := handleOAS(ctx, doc, router, httpPair.Request.Payload.RawRequest, httpPair.Response.Payload.RawResponse, contractContent)
 				mizuEntry.ContractStatus = contract.Status
