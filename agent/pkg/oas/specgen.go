@@ -408,6 +408,7 @@ func handleFormDataUrlencoded(text string, content *openapi.MediaType, ctype str
 		existing, found := (*props)[name]
 		if !found {
 			existing = new(openapi.SchemaObj)
+			existing.Type = openapi.Types{openapi.TypeString}
 			(*props)[name] = existing
 		}
 

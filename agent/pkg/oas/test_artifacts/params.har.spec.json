@@ -30,16 +30,19 @@
                 "type": "object",
                 "properties": {
                   "agent-id": {
+                    "type": "string",
                     "examples": [
                       "ade"
                     ]
                   },
                   "callback-url": {
+                    "type": "string",
                     "examples": [
                       ""
                     ]
                   },
                   "token": {
+                    "type": "string",
                     "examples": [
                       "sometoken",
                       "sometoken-second-val"
