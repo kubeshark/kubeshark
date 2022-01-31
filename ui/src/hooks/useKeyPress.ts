@@ -14,6 +14,8 @@ const useKeyPress = (eventConfigs, callback, node = null) => {
       
       // check if one of the key is part of the ones we want
       if (eventConfigs.some((eventConfig) => Object.keys(eventConfig).every(nameKey => eventConfig[nameKey] === event[nameKey]))) {
+        event.stopPropagation()
+        event.preventDefault();
         callbackRef.current(event);
       }
     },
