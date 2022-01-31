@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/chanced/openapi"
-	"github.com/google/martian/har"
 	"github.com/up9inc/mizu/shared/logger"
+	"mizuserver/pkg/har"
 	"strconv"
 	"strings"
 )
@@ -71,9 +71,10 @@ func createSimpleParam(name string, in openapi.In, ptype openapi.SchemaType) *op
 	return &newParam
 }
 
-func findParamByName(params *openapi.ParameterList, in openapi.In, name string) (pathParam *openapi.ParameterObj) {
+func findParamByName(params *openapi.ParameterList, in openapi.In, name string) (idx int, pathParam *openapi.ParameterObj) {
 	caseInsensitive := in == openapi.InHeader
-	for _, param := range *params {
+	for i, param := range *params {
+		idx = i
 		paramObj, err := param.ResolveParameter(paramResolver)
 		if err != nil {
 			logger.Log.Warningf("Failed to resolve reference: %s", err)
@@ -89,7 +90,8 @@ func findParamByName(params *openapi.ParameterList, in openapi.In, name string) 
 			break
 		}
 	}
-	return pathParam
+
+	return idx, pathParam
 }
 
 func findHeaderByName(headers *openapi.Headers, name string) *openapi.HeaderObj {
@@ -107,37 +109,16 @@ func findHeaderByName(headers *openapi.Headers, name string) *openapi.HeaderObj 
 	return nil
 }
 
-type NVPair struct {
-	Name  string
-	Value string
-}
-
 type nvParams struct {
 	In             openapi.In
-	Pairs          func() []NVPair
+	Pairs          []har.NVP
 	IsIgnored      func(name string) bool
 	GeneralizeName func(name string) string
 }
 
-func qstrToNVP(list []har.QueryString) []NVPair {
-	res := make([]NVPair, len(list))
-	for idx, val := range list {
-		res[idx] = NVPair{Name: val.Name, Value: val.Value}
-	}
-	return res
-}
-
-func hdrToNVP(list []har.Header) []NVPair {
-	res := make([]NVPair, len(list))
-	for idx, val := range list {
-		res[idx] = NVPair{Name: val.Name, Value: val.Value}
-	}
-	return res
-}
-
 func handleNameVals(gw nvParams, params **openapi.ParameterList) {
 	visited := map[string]*openapi.ParameterObj{}
-	for _, pair := range gw.Pairs() {
+	for _, pair := range gw.Pairs {
 		if gw.IsIgnored(pair.Name) {
 			continue
 		}
@@ -145,7 +126,7 @@ func handleNameVals(gw nvParams, params **openapi.ParameterList) {
 		nameGeneral := gw.GeneralizeName(pair.Name)
 
 		initParams(params)
-		param := findParamByName(*params, gw.In, pair.Name)
+		_, param := findParamByName(*params, gw.In, pair.Name)
 		if param == nil {
 			param = createSimpleParam(nameGeneral, gw.In, openapi.TypeString)
 			appended := append(**params, param)
@@ -341,4 +322,27 @@ func anyJSON(text string) (anyVal interface{}, isJSON bool) {
 	}
 
 	return nil, false
+}
+
+func cleanNonAlnum(s []byte) string {
+	j := 0
+	for _, b := range s {
+		if ('a' <= b && b <= 'z') ||
+			('A' <= b && b <= 'Z') ||
+			('0' <= b && b <= '9') ||
+			b == ' ' {
+			s[j] = b
+			j++
+		}
+	}
+	return string(s[:j])
+}
+
+func isAlpha(s string) bool {
+	for _, r := range s {
+		if (r < 'a' || r > 'z') && (r < 'A' || r > 'Z') {
+			return false
+		}
+	}
+	return true
 }

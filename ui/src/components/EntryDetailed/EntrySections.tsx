@@ -137,12 +137,12 @@ export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
         const chunk = body.slice(0, MAXIMUM_BYTES_TO_FORMAT);
         const bodyBuf = isBase64Encoding ? atob(chunk) : chunk;
 
-        if (!isPretty) return bodyBuf;
-
         try {
             if (jsonLikeFormats.some(format => contentType?.indexOf(format) > -1)) {
+                if (!isPretty) return bodyBuf;
                 return jsonBeautify(JSON.parse(bodyBuf), null, 2, 80);
             }  else if (xmlLikeFormats.some(format => contentType?.indexOf(format) > -1)) {
+                if (!isPretty) return bodyBuf;
                 return xmlBeautify(bodyBuf, {
                     indentation: '  ',
                     filter: (node) => node.type !== 'Comment',
@@ -152,7 +152,9 @@ export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
             } else if (protobufFormats.some(format => contentType?.indexOf(format) > -1)) {
                 // Replace all non printable characters (ASCII)
                 const protobufDecoder = new ProtobufDecoder(bodyBuf, true);
-                return jsonBeautify(protobufDecoder.decode().toSimple(), null, 2, 80);
+                const protobufDecoded = protobufDecoder.decode().toSimple();
+                if (!isPretty) return JSON.stringify(protobufDecoded);
+                return jsonBeautify(protobufDecoded, null, 2, 80);
             }
         } catch (error) {
             console.error(error);

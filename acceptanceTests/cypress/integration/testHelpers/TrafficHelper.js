@@ -7,3 +7,12 @@ export function isValueExistsInElement(shouldInclude, content, domPathToContaine
         });
     });
 }
+
+export function resizeToHugeMizu() {
+    cy.viewport(1920, 3500);
+}
+
+export function resizeToNormalMizu() {
+    cy.viewport(1920, 1080);
+}
+

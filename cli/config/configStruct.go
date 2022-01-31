@@ -28,7 +28,6 @@ type ConfigStruct struct {
 	Auth                   configStructs.AuthConfig    `yaml:"auth"`
 	Config                 configStructs.ConfigConfig  `yaml:"config,omitempty"`
 	AgentImage             string                      `yaml:"agent-image,omitempty" readonly:""`
-	BasenineImage          string                      `yaml:"basenine-image,omitempty" readonly:""`
 	KratosImage            string                      `yaml:"kratos-image,omitempty" readonly:""`
 	KetoImage              string                      `yaml:"keto-image,omitempty" readonly:""`
 	ImagePullPolicyStr     string                      `yaml:"image-pull-policy" default:"Always"`
@@ -39,8 +38,9 @@ type ConfigStruct struct {
 	ConfigFilePath         string                      `yaml:"config-path,omitempty" readonly:""`
 	HeadlessMode           bool                        `yaml:"headless" default:"false"`
 	LogLevelStr            string                      `yaml:"log-level,omitempty" default:"INFO" readonly:""`
-	ServiceMap             bool                        `yaml:"service-map,omitempty" default:"false" readonly:""`
+	ServiceMap             bool                        `yaml:"service-map" default:"false"`
 	OAS                    bool                        `yaml:"oas,omitempty" default:"false" readonly:""`
+	Elastic                shared.ElasticConfig        `yaml:"elastic"`
 }
 
 func (config *ConfigStruct) validate() error {
@@ -52,10 +52,9 @@ func (config *ConfigStruct) validate() error {
 }
 
 func (config *ConfigStruct) SetDefaults() {
-	config.BasenineImage = fmt.Sprintf("%s:%s", shared.BasenineImageRepo, shared.BasenineImageTag)
 	config.KratosImage = shared.KratosImageDefault
 	config.KetoImage = shared.KetoImageDefault
-	config.AgentImage = fmt.Sprintf("gcr.io/up9-docker-hub/mizu/%s:%s", mizu.Branch, mizu.SemVer)
+	config.AgentImage = fmt.Sprintf("%s:%s", shared.MizuAgentImageRepo, mizu.SemVer)
 	config.ConfigFilePath = path.Join(mizu.GetMizuFolderPath(), "config.yaml")
 }
 
