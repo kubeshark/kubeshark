@@ -40,7 +40,7 @@ agent: ## Build agent.
 	@ls -l agent/build
 
 agent-debug: ## Build agent for debug.
-	@(echo "uilding mizu agent for debug.." )
+	@(echo "building mizu agent for debug.." )
 	@(cd agent; go build -gcflags="all=-N -l" -o build/mizuagent main.go)
 	@ls -l agent/build
 
