@@ -1,0 +1,159 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "https://httpbin.org",
+    "version": "1.0"
+  },
+  "servers": [
+    {
+      "url": "https://httpbin.org"
+    }
+  ],
+  "paths": {
+    "/form-urlencoded": {
+      "post": {
+        "summary": "/form-urlencoded",
+        "operationId": "588a3cf1-3712-492c-9dd6-2fc16ffbe1b4",
+        "responses": {
+          "200": {
+            "description": "Successful call with status 200",
+            "content": {
+              "": {}
+            }
+          }
+        },
+        "requestBody": {
+          "description": "Generic request body",
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "agent-id": {
+                    "examples": [
+                      "ade"
+                    ]
+                  },
+                  "callback-url": {
+                    "examples": [
+                      ""
+                    ]
+                  },
+                  "token": {
+                    "examples": [
+                      "sometoken",
+                      "sometoken-second-val"
+                    ]
+                  }
+                }
+              },
+              "example": "agent-id=ade\u0026callback-url=\u0026token=sometoken"
+            }
+          },
+          "required": true
+        }
+      }
+    },
+    "/{Id}": {
+      "get": {
+        "summary": "/{Id}",
+        "operationId": "1a1cfeee-a612-4f1f-b153-7f25ba637729",
+        "responses": {
+          "200": {
+            "description": "Successful call with status 200",
+            "content": {
+              "application/json": {
+                "example": null
+              }
+            }
+          }
+        }
+      },
+      "parameters": [
+        {
+          "name": "Id",
+          "in": "path",
+          "required": true,
+          "style": "simple",
+          "schema": {
+            "type": "string"
+          },
+          "examples": {
+            "example #0": {
+              "value": "e21f7112-3d3b-4632-9da3-a4af2e0e9166"
+            },
+            "example #1": {
+              "value": "952bea17-3776-11ea-9341-42010a84012a"
+            }
+          }
+        }
+      ]
+    },
+    "/{Id}/sub1": {
+      "get": {
+        "summary": "/{Id}/sub1",
+        "operationId": "0eeaaefc-197b-453f-b6aa-6476bcedd572",
+        "responses": {
+          "200": {
+            "description": "Successful call with status 200",
+            "content": {
+              "text/html": {}
+            }
+          }
+        }
+      },
+      "parameters": [
+        {
+          "name": "Id",
+          "in": "path",
+          "required": true,
+          "style": "simple",
+          "schema": {
+            "type": "string"
+          },
+          "examples": {
+            "example #0": {
+              "value": "e21f7112-3d3b-4632-9da3-a4af2e0e9166"
+            },
+            "example #1": {
+              "value": "952bea17-3776-11ea-9341-42010a84012a"
+            }
+          }
+        }
+      ]
+    },
+    "/{Id}/sub2": {
+      "get": {
+        "summary": "/{Id}/sub2",
+        "operationId": "9e678be5-605c-470e-942f-ee5aaea8ee8c",
+        "responses": {
+          "200": {
+            "description": "Successful call with status 200",
+            "content": {
+              "application/json": {
+                "example": null
+              }
+            }
+          }
+      },
+      "parameters": [
+        {
+          "in": "path",
+          "required": true,
+          "style": "simple",
+          "schema": {
+            "type": "string"
+          },
+          "examples": {
+            "example #0": {
+              "value": "e21f7112-3d3b-4632-9da3-a4af2e0e9166"
+            },
+            "example #1": {
+              "value": "952bea17-3776-11ea-9341-42010a84012a"
+            }
+          }
+        }
+      ]
+    }
+  }
+}
