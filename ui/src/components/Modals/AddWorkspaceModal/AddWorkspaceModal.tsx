@@ -42,7 +42,7 @@ const AddWorkspaceModal: FC<AddWorkspaceModalProp> = ({isOpen,onCloseModal, work
             setCheckedNamespacesKeys(workspace.namespaces);   
           }
             setSearchValue("");     
-            const namespaces = await api.getTapConfig();
+            const namespaces = ["cert-manager", "default", "google-demo"]
             const namespacesMapped = namespaces.map(namespace => {
               return {key: namespace, value: namespace}
             })

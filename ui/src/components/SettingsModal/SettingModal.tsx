@@ -49,7 +49,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({isOpen, onClose, is
 
     const updateTappingSettings = async () => {
         try {
-            await api.setTapConfig(namespaces);
+            const defaultWorkspace = {
+                name: "default",
+                namespaces: Object.keys(namespaces)
+            }
+            await api.createWorkspace(defaultWorkspace);
+            // await api.setTapConfig(namespaces);
             onClose();
             toast.success("Saved successfully");
         } catch (e) {
@@ -78,7 +83,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({isOpen, onClose, is
                 <div style={{padding: 32, paddingBottom: 0}}>
                     <div className="settingsTitle">Tapping Settings</div>
                     <div className="settingsSubtitle" style={{marginTop: 20}}>
-                        Please choose from below the namespaces for tapping, traffic for namespaces selected will be displayed
+                        Please choose from below the namespaces for tapping, traffic for namespaces selected will be displayed as default workspace.
                     </div>
                     {isLoading ? <div style={{textAlign: "center", padding: 20}}>
                         <img alt="spinner" src={spinner} style={{height: 35}}/>
