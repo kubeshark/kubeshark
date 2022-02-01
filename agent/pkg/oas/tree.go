@@ -1,11 +1,12 @@
 package oas
 
 import (
-	"github.com/chanced/openapi"
-	"github.com/up9inc/mizu/shared/logger"
 	"net/url"
 	"strconv"
 	"strings"
+
+	"github.com/chanced/openapi"
+	"github.com/up9inc/mizu/shared/logger"
 )
 
 type NodePath = []string
@@ -162,9 +163,7 @@ func (n *Node) listPaths() *openapi.Paths {
 		strChunk = *n.constant
 	} else if n.pathParam != nil {
 		strChunk = "{" + n.pathParam.Name + "}"
-	} else {
-		// this is the root node
-	}
+	} // else -> this is the root node
 
 	// add self
 	if n.pathObj != nil {

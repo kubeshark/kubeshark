@@ -10,7 +10,7 @@ import (
 )
 
 func GetNodeHostToTappedPodsMap(tappedPods []core.Pod) map[string][]core.Pod {
-	nodeToTappedPodMap := make(map[string][]core.Pod, 0)
+	nodeToTappedPodMap := make(map[string][]core.Pod)
 	for _, pod := range tappedPods {
 		minimizedPod := getMinimizedPod(pod)
 

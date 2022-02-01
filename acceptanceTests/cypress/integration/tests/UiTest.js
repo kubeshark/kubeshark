@@ -3,6 +3,7 @@ import {resizeToHugeMizu, resizeToNormalMizu} from "../testHelpers/TrafficHelper
 const greenFilterColor = 'rgb(210, 250, 210)';
 const redFilterColor = 'rgb(250, 214, 220)';
 const refreshWaitTimeout = 10000;
+const bodyJsonClass = '.hljs';
 
 it('opening mizu', function () {
     cy.visit(Cypress.env('testUrl'));
@@ -23,6 +24,37 @@ it('filtering guide check', function () {
     cy.get('#modal-modal-title').should('be.visible');
     cy.get('[lang="en"]').click(0, 0);
     cy.get('#modal-modal-title').should('not.exist');
+});
+
+it('right side sanity test', function () {
+    cy.get('#entryDetailedTitleBodySize').then(sizeTopLine => {
+        const sizeOnTopLine = sizeTopLine.text().replace(' B', '');
+        cy.contains('Response').click();
+        cy.contains('Body Size (bytes)').parent().next().then(size => {
+            const bodySizeByDetails = size.text();
+            expect(sizeOnTopLine).to.equal(bodySizeByDetails, 'The body size in the top line should match the details in the response');
+
+            if (parseInt(bodySizeByDetails) < 0) {
+                throw new Error(`The body size cannot be negative. got the size: ${bodySizeByDetails}`)
+            }
+
+            cy.get('#entryDetailedTitleElapsedTime').then(timeInMs => {
+                const time = timeInMs.text();
+                if (time < '0ms') {
+                    throw new Error(`The time in the top line cannot be negative ${time}`);
+                }
+
+                cy.get('#rightSideContainer [title="Status Code"]').then(status => {
+                    const statusCode = status.text();
+                    cy.contains('Status').parent().next().then(statusInDetails => {
+                        const statusCodeInDetails = statusInDetails.text();
+
+                        expect(statusCode).to.equal(statusCodeInDetails, 'The status code in the top line should match the status code in details');
+                    });
+                });
+            });
+        });
+    });
 });
 
 checkIllegalFilter('invalid filter');
@@ -161,11 +193,12 @@ function checkFilter(filterDetails){
             if (!applyByEnter)
                 cy.get('[type="submit"]').click();
 
-            // only one entry in DOM after filtering, checking all four checks on it
+            // only one entry in DOM after filtering, checking all checks on it
             leftTextCheck(totalEntries - 1, leftSidePath, leftSideExpectedText);
             leftOnHoverCheck(totalEntries - 1, leftSidePath, name);
             rightTextCheck(rightSidePath, rightSideExpectedText);
             rightOnHoverCheck(rightSidePath, name);
+            checkRightSideResponseBody();
 
             cy.get('[title="Fetch old records"]').click();
             resizeToHugeMizu();
@@ -196,6 +229,7 @@ function deeperChcek(leftSidePath, rightSidePath, filterName, leftSideExpectedTe
         cy.get(`#list #entry-${entryNum}`).click();
         rightTextCheck(rightSidePath, rightSideExpectedText);
         rightOnHoverCheck(rightSidePath, filterName);
+        checkRightSideResponseBody();
     });
 }
 
@@ -215,4 +249,89 @@ function rightTextCheck(path, expectedText) {
 function rightOnHoverCheck(path, expectedText) {
     cy.get(`.TrafficPage-Container > :nth-child(2) ${path}`).trigger('mouseover');
     cy.get(`.TrafficPage-Container > :nth-child(2) .Queryable-Tooltip`).should('have.text', expectedText);
+}
+
+
+function checkRightSideResponseBody() {
+    cy.contains('Response').click();
+    clickCheckbox('Decode Base64');
+
+    cy.get(`${bodyJsonClass}`).then(value => {
+        const encodedBody = value.text();
+        cy.log(encodedBody);
+
+        const decodedBody = atob(encodedBody);
+        const responseBody = JSON.parse(decodedBody);
+
+        const expectdJsonBody = {
+            args: RegExp({}),
+            url: RegExp('http://.*/get'),
+            headers: {
+                "User-Agent": RegExp('[REDACTED]'),
+                "Accept-Encoding": RegExp('gzip'),
+                "X-Forwarded-Uri": RegExp('/api/v1/namespaces/.*/services/.*/proxy/get')
+            }
+        };
+
+        expect(responseBody.args).to.match(expectdJsonBody.args);
+        expect(responseBody.url).to.match(expectdJsonBody.url);
+        expect(responseBody.headers['User-Agent']).to.match(expectdJsonBody.headers['User-Agent']);
+        expect(responseBody.headers['Accept-Encoding']).to.match(expectdJsonBody.headers['Accept-Encoding']);
+        expect(responseBody.headers['X-Forwarded-Uri']).to.match(expectdJsonBody.headers['X-Forwarded-Uri']);
+
+        cy.get(`${bodyJsonClass}`).should('have.text', encodedBody);
+        clickCheckbox('Decode Base64');
+
+        cy.get(`${bodyJsonClass} > `).its('length').should('be.gt', 1).then(linesNum => {
+            cy.get(`${bodyJsonClass} > >`).its('length').should('be.gt', linesNum).then(jsonItemsNum => {
+                checkPrettyAndLineNums(jsonItemsNum, decodedBody);
+
+                clickCheckbox('Line numbers');
+                checkPrettyOrNothing(jsonItemsNum, decodedBody);
+
+                clickCheckbox('Pretty');
+                checkPrettyOrNothing(jsonItemsNum, decodedBody);
+
+                clickCheckbox('Line numbers');
+                checkOnlyLineNumberes(jsonItemsNum, decodedBody);
+            });
+        });
+    });
+}
+
+function clickCheckbox(type) {
+    cy.contains(`${type}`).prev().children().click();
+}
+
+function checkPrettyAndLineNums(jsonItemsLen, decodedBody) {
+    decodedBody = decodedBody.replaceAll(' ', '');
+    cy.get(`${bodyJsonClass} >`).then(elements => {
+        const lines = Object.values(elements);
+        lines.forEach((line, index) => {
+            if (line.getAttribute) {
+                const cleanLine = getCleanLine(line);
+                const currentLineFromDecodedText = decodedBody.substring(0, cleanLine.length);
+
+                expect(cleanLine).to.equal(currentLineFromDecodedText, `expected the text in line number ${index + 1} to match the text that generated by the base64 decoding`)
+
+                decodedBody = decodedBody.substring(cleanLine.length);
+            }
+        });
+    });
+}
+
+function getCleanLine(lineElement) {
+    return (lineElement.innerText.substring(0, lineElement.innerText.length - 1)).replaceAll(' ', '');
+}
+
+function checkPrettyOrNothing(jsonItems, decodedBody) {
+    cy.get(`${bodyJsonClass} > `).should('have.length', jsonItems).then(text => {
+        const json = text.text();
+        expect(json).to.equal(decodedBody);
+    });
+}
+
+function checkOnlyLineNumberes(jsonItems, decodedText) {
+    cy.get(`${bodyJsonClass} >`).should('have.length', 1).and('have.text', decodedText);
+    cy.get(`${bodyJsonClass} > >`).should('have.length', jsonItems)
 }

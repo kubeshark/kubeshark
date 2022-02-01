@@ -1,8 +1,8 @@
 package routes
 
 import (
-	"mizuserver/pkg/controllers"
-	"mizuserver/pkg/middlewares"
+	"github.com/up9inc/mizu/agent/pkg/controllers"
+	"github.com/up9inc/mizu/agent/pkg/middlewares"
 
 	"github.com/gin-gonic/gin"
 )
