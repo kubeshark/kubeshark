@@ -250,26 +250,50 @@ function rightOnHoverCheck(path, expectedText) {
 }
 
 function checkRightSide() {
-    const encodedBody = 'eyJhcmdzIjp7fSwiaGVhZGVycyI6eyJBY2NlcHQtRW5jb2RpbmciOiJnemlwIiwiSG9zdCI6IjEyNy4wLjAuMTo1MDY2OCIsIlVzZXItQWdlbnQiOiJbUkVEQUNURURdIiwiWC1Gb3J3YXJkZWQtVXJpIjoiL2FwaS92MS9uYW1lc3BhY2VzL21penUtdGVzdHMvc2VydmljZXMvaHR0cGJpbi9wcm94eS9nZXQifSwib3JpZ2luIjoiMTI3LjAuMC4xLCAxOTIuMTY4LjQ5LjEiLCJ1cmwiOiJodHRwOi8vMTI3LjAuMC4xOjUwNjY4L2dldCJ9';
-    const decodedBody = atob(encodedBody);
+    const jsonClass = '.hljs';
 
     cy.contains('Response').click();
     clickCheckbox('Decode Base64');
-    cy.get('.hljs').should('have.text', encodedBody);
-    clickCheckbox('Decode Base64');
 
-    cy.get('.hljs > ').its('length').should('be.gt', 1).then(linesNum => {
-        cy.get('.hljs > >').its('length').should('be.gt', linesNum).then(jsonItemsNum => {
-            checkPrettyAndLineNums(jsonItemsNum, decodedBody);
+    cy.get(`${jsonClass}`).then(value => {
+        const encodedBody = value.text();
+        cy.log(encodedBody);
 
-            clickCheckbox('Line numbers');
-            checkPrettyOrNothing(jsonItemsNum, decodedBody);
+        const decodedBody = atob(encodedBody);
+        const responseBody = JSON.parse(decodedBody);
 
-            clickCheckbox('Pretty');
-            checkPrettyOrNothing(jsonItemsNum, decodedBody);
+        const expectdJsonBody = {
+            args: RegExp({}),
+            url: RegExp("http://.*/get"),
+            headers: {
+                "User-Agent": RegExp('[REDACTED]'),
+                "Accept-Encoding": RegExp('gzip'),
+                "X-Forwarded-Uri": RegExp("/api/v1/namespaces/.*/services/.*/proxy/get")
+            }
+        }
 
-            clickCheckbox('Line numbers');
-            checkOnlyLineNumberes(jsonItemsNum, decodedBody);
+        expect(responseBody.args).to.match(expectdJsonBody.args);
+        expect(responseBody.url).to.match(expectdJsonBody.url);
+        expect(responseBody.headers["User-Agent"]).to.match(expectdJsonBody.headers["User-Agent"]);
+        expect(responseBody.headers["Accept-Encoding"]).to.match(expectdJsonBody.headers["Accept-Encoding"]);
+        expect(responseBody.headers["X-Forwarded-Uri"]).to.match(expectdJsonBody.headers["X-Forwarded-Uri"]);
+
+        cy.get('.hljs').should('have.text', encodedBody);
+        clickCheckbox('Decode Base64');
+
+        cy.get('.hljs > ').its('length').should('be.gt', 1).then(linesNum => {
+            cy.get('.hljs > >').its('length').should('be.gt', linesNum).then(jsonItemsNum => {
+                checkPrettyAndLineNums(jsonItemsNum, decodedBody);
+
+                clickCheckbox('Line numbers');
+                checkPrettyOrNothing(jsonItemsNum, decodedBody);
+
+                clickCheckbox('Pretty');
+                checkPrettyOrNothing(jsonItemsNum, decodedBody);
+
+                clickCheckbox('Line numbers');
+                checkOnlyLineNumberes(jsonItemsNum, decodedBody);
+            });
         });
     });
 }
