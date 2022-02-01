@@ -62,35 +62,7 @@ func TestTap(t *testing.T) {
 				}
 			}
 
-			entriesCheckFunc := func() error {
-				timestamp := time.Now().UnixNano() / int64(time.Millisecond)
-
-				entries, err := getDBEntries(timestamp, entriesCount, 1*time.Second)
-				if err != nil {
-					return err
-				}
-				err = checkEntriesAtLeast(entries, 1)
-				if err != nil {
-					return err
-				}
-				entry := entries[0]
-
-				entryUrl := fmt.Sprintf("%v/entries/%v", apiServerUrl, entry["id"])
-				requestResult, requestErr := executeHttpGetRequest(entryUrl)
-				if requestErr != nil {
-					return fmt.Errorf("failed to get entry, err: %v", requestErr)
-				}
-
-				if requestResult == nil {
-					return fmt.Errorf("unexpected nil entry result")
-				}
-
-				return nil
-			}
-			if err := retriesExecute(shortRetriesCount, entriesCheckFunc); err != nil {
-				t.Errorf("%v", err)
-				return
-			}
+			runCypressTests(t, "npx cypress run --spec  \"cypress/integration/tests/UiTest.js\"")
 		})
 	}
 }
@@ -377,7 +349,7 @@ func TestTapRedact(t *testing.T) {
 		}
 	}
 
-	runCypressTests(t, fmt.Sprintf("npx cypress run --spec  \"cypress/integration/tests/RedactTests.js\" --env shouldExist=true"))
+	runCypressTests(t, "npx cypress run --spec  \"cypress/integration/tests/Redact.js\"")
 }
 
 func TestTapNoRedact(t *testing.T) {
@@ -429,7 +401,7 @@ func TestTapNoRedact(t *testing.T) {
 		}
 	}
 
-	runCypressTests(t, "npx cypress run --spec  \"cypress/integration/tests/RedactTests.js\" --env shouldExist=false")
+	runCypressTests(t, "npx cypress run --spec  \"cypress/integration/tests/NoRedact.js\"")
 }
 
 func TestTapRegexMasking(t *testing.T) {
@@ -480,41 +452,8 @@ func TestTapRegexMasking(t *testing.T) {
 		}
 	}
 
-	redactCheckFunc := func() error {
-		timestamp := time.Now().UnixNano() / int64(time.Millisecond)
+	runCypressTests(t, "npx cypress run --spec \"cypress/integration/tests/RegexMasking.js\"")
 
-		entries, err := getDBEntries(timestamp, defaultEntriesCount, 1*time.Second)
-		if err != nil {
-			return err
-		}
-		err = checkEntriesAtLeast(entries, 1)
-		if err != nil {
-			return err
-		}
-		firstEntry := entries[0]
-
-		entryUrl := fmt.Sprintf("%v/entries/%v", apiServerUrl, firstEntry["id"])
-		requestResult, requestErr := executeHttpGetRequest(entryUrl)
-		if requestErr != nil {
-			return fmt.Errorf("failed to get entry, err: %v", requestErr)
-		}
-
-		entry := requestResult.(map[string]interface{})["data"].(map[string]interface{})
-		request := entry["request"].(map[string]interface{})
-
-		postData := request["postData"].(map[string]interface{})
-		textData := postData["text"].(string)
-
-		if textData != "[REDACTED]" {
-			return fmt.Errorf("unexpected result - body is not redacted")
-		}
-
-		return nil
-	}
-	if err := retriesExecute(shortRetriesCount, redactCheckFunc); err != nil {
-		t.Errorf("%v", err)
-		return
-	}
 }
 
 func TestTapIgnoredUserAgents(t *testing.T) {
@@ -575,45 +514,7 @@ func TestTapIgnoredUserAgents(t *testing.T) {
 		}
 	}
 
-	ignoredUserAgentsCheckFunc := func() error {
-		timestamp := time.Now().UnixNano() / int64(time.Millisecond)
-
-		entries, err := getDBEntries(timestamp, defaultEntriesCount, 1*time.Second)
-		if err != nil {
-			return err
-		}
-		err = checkEntriesAtLeast(entries, 1)
-		if err != nil {
-			return err
-		}
-
-		for _, entryInterface := range entries {
-			entryUrl := fmt.Sprintf("%v/entries/%v", apiServerUrl, entryInterface["id"])
-			requestResult, requestErr := executeHttpGetRequest(entryUrl)
-			if requestErr != nil {
-				return fmt.Errorf("failed to get entry, err: %v", requestErr)
-			}
-
-			entry := requestResult.(map[string]interface{})["data"].(map[string]interface{})
-			request := entry["request"].(map[string]interface{})
-
-			headers := request["_headers"].([]interface{})
-			for _, headerInterface := range headers {
-				header := headerInterface.(map[string]interface{})
-				if header["name"].(string) != ignoredUserAgentCustomHeader {
-					continue
-				}
-
-				return fmt.Errorf("unexpected result - user agent is not ignored")
-			}
-		}
-
-		return nil
-	}
-	if err := retriesExecute(shortRetriesCount, ignoredUserAgentsCheckFunc); err != nil {
-		t.Errorf("%v", err)
-		return
-	}
+	runCypressTests(t, "npx cypress run --spec  \"cypress/integration/tests/IgnoredUserAgents.js\"")
 }
 
 func TestTapDumpLogs(t *testing.T) {

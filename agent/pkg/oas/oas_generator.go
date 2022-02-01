@@ -3,8 +3,8 @@ package oas
 import (
 	"context"
 	"encoding/json"
-	"github.com/google/martian/har"
 	"github.com/up9inc/mizu/shared/logger"
+	"mizuserver/pkg/har"
 	"net/url"
 	"sync"
 )
@@ -17,7 +17,7 @@ var (
 func GetOasGeneratorInstance() *oasGenerator {
 	syncOnce.Do(func() {
 		instance = newOasGenerator()
-		logger.Log.Debug("Oas Generator Initialized")
+		logger.Log.Debug("OAS Generator Initialized")
 	})
 	return instance
 }

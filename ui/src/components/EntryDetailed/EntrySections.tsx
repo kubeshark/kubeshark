@@ -12,14 +12,13 @@ import {default as xmlBeautify} from "xml-formatter";
 interface EntryViewLineProps {
     label: string;
     value: number | string;
-    updateQuery?: any;
     selector?: string;
     overrideQueryValue?: string;
     displayIconOnMouseOver?: boolean;
     useTooltip?: boolean;
 }
 
-const EntryViewLine: React.FC<EntryViewLineProps> = ({label, value, updateQuery = null, selector = "", overrideQueryValue = "", displayIconOnMouseOver = true, useTooltip = true}) => {
+const EntryViewLine: React.FC<EntryViewLineProps> = ({label, value, selector = "", overrideQueryValue = "", displayIconOnMouseOver = true, useTooltip = true}) => {
     let query: string;
     if (!selector) {
         query = "";
@@ -34,7 +33,6 @@ const EntryViewLine: React.FC<EntryViewLineProps> = ({label, value, updateQuery 
                     <td className={`${styles.dataKey}`}>
                         <Queryable
                             query={query}
-                            updateQuery={updateQuery}
                             style={{float: "right", height: "18px"}}
                             iconStyle={{marginRight: "20px"}}
                             flipped={true}
@@ -63,10 +61,9 @@ interface EntrySectionCollapsibleTitleProps {
     expanded: boolean,
     setExpanded: any,
     query?: string,
-    updateQuery?: any,
 }
 
-const EntrySectionCollapsibleTitle: React.FC<EntrySectionCollapsibleTitleProps> = ({title, color, expanded, setExpanded, query = "", updateQuery = null}) => {
+const EntrySectionCollapsibleTitle: React.FC<EntrySectionCollapsibleTitleProps> = ({title, color, expanded, setExpanded, query = ""}) => {
     return <div className={styles.title}>
         <div
             className={`${styles.button} ${expanded ? styles.expanded : ''}`}
@@ -79,9 +76,8 @@ const EntrySectionCollapsibleTitle: React.FC<EntrySectionCollapsibleTitleProps> 
         </div>
         <Queryable
             query={query}
-            updateQuery={updateQuery}
-            useTooltip={updateQuery ? true : false}
-            displayIconOnMouseOver={updateQuery ? true : false}
+            useTooltip={!!query}
+            displayIconOnMouseOver={!!query}
         >
             <span>{title}</span>
         </Queryable>
@@ -92,15 +88,14 @@ interface EntrySectionContainerProps {
     title: string,
     color: string,
     query?: string,
-    updateQuery?: any,
 }
 
-export const EntrySectionContainer: React.FC<EntrySectionContainerProps> = ({title, color, children, query = "", updateQuery = null}) => {
+export const EntrySectionContainer: React.FC<EntrySectionContainerProps> = ({title, color, children, query = ""}) => {
     const [expanded, setExpanded] = useState(true);
     return <CollapsibleContainer
         className={styles.collapsibleContainer}
         expanded={expanded}
-        title={<EntrySectionCollapsibleTitle title={title} color={color} expanded={expanded} setExpanded={setExpanded} query={query} updateQuery={updateQuery}/>}
+        title={<EntrySectionCollapsibleTitle title={title} color={color} expanded={expanded} setExpanded={setExpanded} query={query}/>}
     >
         {children}
     </CollapsibleContainer>
@@ -110,7 +105,6 @@ interface EntryBodySectionProps {
     title: string,
     content: any,
     color: string,
-    updateQuery: any,
     encoding?: string,
     contentType?: string,
     selector?: string,
@@ -119,7 +113,6 @@ interface EntryBodySectionProps {
 export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
     title,
     color,
-    updateQuery,
     content,
     encoding,
     contentType,
@@ -144,12 +137,12 @@ export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
         const chunk = body.slice(0, MAXIMUM_BYTES_TO_FORMAT);
         const bodyBuf = isBase64Encoding ? atob(chunk) : chunk;
 
-        if (!isPretty) return bodyBuf;
-
         try {
             if (jsonLikeFormats.some(format => contentType?.indexOf(format) > -1)) {
+                if (!isPretty) return bodyBuf;
                 return jsonBeautify(JSON.parse(bodyBuf), null, 2, 80);
             }  else if (xmlLikeFormats.some(format => contentType?.indexOf(format) > -1)) {
+                if (!isPretty) return bodyBuf;
                 return xmlBeautify(bodyBuf, {
                     indentation: '  ',
                     filter: (node) => node.type !== 'Comment',
@@ -159,7 +152,9 @@ export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
             } else if (protobufFormats.some(format => contentType?.indexOf(format) > -1)) {
                 // Replace all non printable characters (ASCII)
                 const protobufDecoder = new ProtobufDecoder(bodyBuf, true);
-                return jsonBeautify(protobufDecoder.decode().toSimple(), null, 2, 80);
+                const protobufDecoded = protobufDecoder.decode().toSimple();
+                if (!isPretty) return JSON.stringify(protobufDecoded);
+                return jsonBeautify(protobufDecoded, null, 2, 80);
             }
         } catch (error) {
             console.error(error);
@@ -172,7 +167,6 @@ export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
                                                 title={title}
                                                 color={color}
                                                 query={`${selector} == r".*"`}
-                                                updateQuery={updateQuery}
                                             >
             <div style={{display: 'flex', alignItems: 'center', alignContent: 'center', margin: "5px 0"}}>
                 {supportsPrettying && <div style={{paddingTop: 3}}>
@@ -203,10 +197,9 @@ interface EntrySectionProps {
     title: string,
     color: string,
     arrayToIterate: any[],
-    updateQuery: any,
 }
 
-export const EntryTableSection: React.FC<EntrySectionProps> = ({title, color, arrayToIterate, updateQuery}) => {
+export const EntryTableSection: React.FC<EntrySectionProps> = ({title, color, arrayToIterate}) => {
     let arrayToIterateSorted: any[];
     if (arrayToIterate) {
         arrayToIterateSorted = arrayToIterate.sort((a, b) => {
@@ -226,12 +219,11 @@ export const EntryTableSection: React.FC<EntrySectionProps> = ({title, color, ar
             arrayToIterate && arrayToIterate.length > 0 ?
                 <EntrySectionContainer title={title} color={color}>
                     <table>
-                        <tbody>
+                        <tbody id={`tbody-${title}`}>
                             {arrayToIterateSorted.map(({name, value, selector}, index) => <EntryViewLine
                                 key={index}
                                 label={name}
                                 value={value}
-                                updateQuery={updateQuery}
                                 selector={selector}
                             />)}
                         </tbody>

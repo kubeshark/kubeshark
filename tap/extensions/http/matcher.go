@@ -1,4 +1,4 @@
-package main
+package http
 
 import (
 	"fmt"
@@ -22,7 +22,7 @@ func createResponseRequestMatcher() requestResponseMatcher {
 	return *newMatcher
 }
 
-func (matcher *requestResponseMatcher) registerRequest(ident string, request *http.Request, captureTime time.Time) *api.OutputChannelItem {
+func (matcher *requestResponseMatcher) registerRequest(ident string, request *http.Request, captureTime time.Time, protoMinor int) *api.OutputChannelItem {
 	split := splitIdent(ident)
 	key := genKey(split)
 
@@ -41,14 +41,14 @@ func (matcher *requestResponseMatcher) registerRequest(ident string, request *ht
 		if responseHTTPMessage.IsRequest {
 			return nil
 		}
-		return matcher.preparePair(&requestHTTPMessage, responseHTTPMessage)
+		return matcher.preparePair(&requestHTTPMessage, responseHTTPMessage, protoMinor)
 	}
 
 	matcher.openMessagesMap.Store(key, &requestHTTPMessage)
 	return nil
 }
 
-func (matcher *requestResponseMatcher) registerResponse(ident string, response *http.Response, captureTime time.Time) *api.OutputChannelItem {
+func (matcher *requestResponseMatcher) registerResponse(ident string, response *http.Response, captureTime time.Time, protoMinor int) *api.OutputChannelItem {
 	split := splitIdent(ident)
 	key := genKey(split)
 
@@ -67,14 +67,18 @@ func (matcher *requestResponseMatcher) registerResponse(ident string, response *
 		if !requestHTTPMessage.IsRequest {
 			return nil
 		}
-		return matcher.preparePair(requestHTTPMessage, &responseHTTPMessage)
+		return matcher.preparePair(requestHTTPMessage, &responseHTTPMessage, protoMinor)
 	}
 
 	matcher.openMessagesMap.Store(key, &responseHTTPMessage)
 	return nil
 }
 
-func (matcher *requestResponseMatcher) preparePair(requestHTTPMessage *api.GenericMessage, responseHTTPMessage *api.GenericMessage) *api.OutputChannelItem {
+func (matcher *requestResponseMatcher) preparePair(requestHTTPMessage *api.GenericMessage, responseHTTPMessage *api.GenericMessage, protoMinor int) *api.OutputChannelItem {
+	protocol := http11protocol
+	if protoMinor == 0 {
+		protocol = http10protocol
+	}
 	return &api.OutputChannelItem{
 		Protocol:       protocol,
 		Timestamp:      requestHTTPMessage.CaptureTime.UnixNano() / int64(time.Millisecond),

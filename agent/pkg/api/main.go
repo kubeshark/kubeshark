@@ -5,6 +5,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"mizuserver/pkg/elastic"
+	"mizuserver/pkg/har"
 	"mizuserver/pkg/holder"
 	"mizuserver/pkg/providers"
 	"os"
@@ -13,15 +15,16 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/martian/har"
-	"github.com/up9inc/mizu/shared"
-	"github.com/up9inc/mizu/shared/logger"
-	tapApi "github.com/up9inc/mizu/tap/api"
+	"mizuserver/pkg/servicemap"
 
 	"mizuserver/pkg/models"
 	"mizuserver/pkg/oas"
 	"mizuserver/pkg/resolver"
 	"mizuserver/pkg/utils"
+
+	"github.com/up9inc/mizu/shared"
+	"github.com/up9inc/mizu/shared/logger"
+	tapApi "github.com/up9inc/mizu/tap/api"
 
 	basenine "github.com/up9inc/basenine/client/go"
 )
@@ -115,8 +118,6 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 	}
 
 	for item := range outputItems {
-		providers.EntryAdded()
-
 		extension := extensionsMap[item.Protocol.Name]
 		resolvedSource, resolvedDestionation := resolveIP(item.ConnectionInfo)
 		mizuEntry := extension.Dissector.Analyze(item, resolvedSource, resolvedDestionation)
@@ -132,7 +133,7 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 				mizuEntry.ContractContent = contract.Content
 			}
 
-			harEntry, err := utils.NewEntry(mizuEntry.Request, mizuEntry.Response, mizuEntry.StartTime, mizuEntry.ElapsedTime)
+			harEntry, err := har.NewEntry(mizuEntry.Request, mizuEntry.Response, mizuEntry.StartTime, mizuEntry.ElapsedTime)
 			if err == nil {
 				rules, _, _ := models.RunValidationRulesState(*harEntry, mizuEntry.Destination.Name)
 				mizuEntry.Rules = rules
@@ -145,7 +146,13 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 		if err != nil {
 			panic(err)
 		}
+
+		providers.EntryAdded(len(data))
+
 		connection.SendText(string(data))
+
+		servicemap.GetInstance().NewTCPEntry(mizuEntry.Source, mizuEntry.Destination, &item.Protocol)
+		elastic.GetInstance().PushEntry(mizuEntry)
 	}
 }
 

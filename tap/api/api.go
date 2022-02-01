@@ -6,13 +6,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/google/martian/har"
 	"io/ioutil"
 	"net/http"
-	"plugin"
 	"sync"
 	"time"
-
-	"github.com/google/martian/har"
 )
 
 type Protocol struct {
@@ -38,7 +36,6 @@ type TCP struct {
 type Extension struct {
 	Protocol   *Protocol
 	Path       string
-	Plug       *plugin.Plugin
 	Dissector  Dissector
 	MatcherMap *sync.Map
 }

@@ -3,6 +3,7 @@ package oas
 import (
 	"github.com/chanced/openapi"
 	"github.com/up9inc/mizu/shared/logger"
+	"net/url"
 	"strconv"
 	"strings"
 )
@@ -10,25 +11,37 @@ import (
 type NodePath = []string
 
 type Node struct {
-	constant *string
-	param    *openapi.ParameterObj
-	ops      *openapi.PathObj
-	parent   *Node
-	children []*Node
+	constant  *string
+	pathParam *openapi.ParameterObj
+	pathObj   *openapi.PathObj
+	parent    *Node
+	children  []*Node
 }
 
-func (n *Node) getOrSet(path NodePath, pathObjToSet *openapi.PathObj) (node *Node) {
-	if pathObjToSet == nil {
+func (n *Node) getOrSet(path NodePath, existingPathObj *openapi.PathObj) (node *Node) {
+	if existingPathObj == nil {
 		panic("Invalid function call")
 	}
 
 	pathChunk := path[0]
+	potentialMatrix := strings.SplitN(pathChunk, ";", 2)
+	if len(potentialMatrix) > 1 {
+		pathChunk = potentialMatrix[0]
+		logger.Log.Warningf("URI matrix params are not supported: %s", potentialMatrix[1])
+	}
+
 	chunkIsParam := strings.HasPrefix(pathChunk, "{") && strings.HasSuffix(pathChunk, "}")
+	pathChunk, err := url.PathUnescape(pathChunk)
+	if err != nil {
+		logger.Log.Warningf("URI segment is not correctly encoded: %s", pathChunk)
+		// any side effects on continuing?
+	}
+
 	chunkIsGibberish := IsGibberish(pathChunk) && !IsVersionString(pathChunk)
 
 	var paramObj *openapi.ParameterObj
-	if chunkIsParam && pathObjToSet != nil {
-		paramObj = findParamByName(pathObjToSet.Parameters, openapi.InPath, pathChunk[1:len(pathChunk)-1])
+	if chunkIsParam && existingPathObj != nil && existingPathObj.Parameters != nil {
+		_, paramObj = findParamByName(existingPathObj.Parameters, openapi.InPath, pathChunk[1:len(pathChunk)-1])
 	}
 
 	if paramObj == nil {
@@ -46,34 +59,30 @@ func (n *Node) getOrSet(path NodePath, pathObjToSet *openapi.PathObj) (node *Nod
 		n.children = append(n.children, node)
 
 		if paramObj != nil {
-			node.param = paramObj
+			node.pathParam = paramObj
 		} else if chunkIsGibberish {
-			initParams(&pathObjToSet.Parameters)
 
 			newParam := n.createParam()
-			node.param = newParam
-
-			appended := append(*pathObjToSet.Parameters, newParam)
-			pathObjToSet.Parameters = &appended
+			node.pathParam = newParam
 		} else {
 			node.constant = &pathChunk
 		}
 	}
 
-	// add example if it's a param
-	if node.param != nil && !chunkIsParam {
-		exmp := &node.param.Examples
+	// add example if it's a gibberish chunk
+	if node.pathParam != nil && !chunkIsParam {
+		exmp := &node.pathParam.Examples
 		err := fillParamExample(&exmp, pathChunk)
 		if err != nil {
 			logger.Log.Warningf("Failed to add example to a parameter: %s", err)
 		}
 	}
 
-	// TODO: eat up trailing slash, in a smart way: node.ops!=nil && path[1]==""
+	// TODO: eat up trailing slash, in a smart way: node.pathObj!=nil && path[1]==""
 	if len(path) > 1 {
-		return node.getOrSet(path[1:], pathObjToSet)
-	} else if node.ops == nil {
-		node.ops = pathObjToSet
+		return node.getOrSet(path[1:], existingPathObj)
+	} else if node.pathObj == nil {
+		node.pathObj = existingPathObj
 	}
 
 	return node
@@ -82,18 +91,24 @@ func (n *Node) getOrSet(path NodePath, pathObjToSet *openapi.PathObj) (node *Nod
 func (n *Node) createParam() *openapi.ParameterObj {
 	name := "param"
 
-	// REST assumption, not always correct
-	if strings.HasSuffix(*n.constant, "es") && len(*n.constant) > 4 {
-		name = *n.constant
-		name = name[:len(name)-2] + "Id"
-	} else if strings.HasSuffix(*n.constant, "s") && len(*n.constant) > 3 {
-		name = *n.constant
-		name = name[:len(name)-1] + "Id"
+	if n.constant != nil { // the node is already a param
+		// REST assumption, not always correct
+		if strings.HasSuffix(*n.constant, "es") && len(*n.constant) > 4 {
+			name = *n.constant
+			name = name[:len(name)-2] + "Id"
+		} else if strings.HasSuffix(*n.constant, "s") && len(*n.constant) > 3 {
+			name = *n.constant
+			name = name[:len(name)-1] + "Id"
+		} else if isAlpha(*n.constant) {
+			name = *n.constant + "Id"
+		}
+
+		name = cleanNonAlnum([]byte(name))
 	}
 
 	newParam := createSimpleParam(name, "path", "string")
 	x := n.countParentParams()
-	if x > 1 {
+	if x > 0 {
 		newParam.Name = newParam.Name + strconv.Itoa(x)
 	}
 
@@ -111,7 +126,7 @@ func (n *Node) searchInParams(paramObj *openapi.ParameterObj, chunkIsGibberish b
 			// TODO: check the regex pattern of param? for exceptions etc
 
 			if paramObj != nil {
-				// TODO: mergeParam(subnode.param, paramObj)
+				// TODO: mergeParam(subnode.pathParam, paramObj)
 				return subnode
 			} else {
 				return subnode
@@ -145,15 +160,16 @@ func (n *Node) listPaths() *openapi.Paths {
 	var strChunk string
 	if n.constant != nil {
 		strChunk = *n.constant
-	} else if n.param != nil {
-		strChunk = "{" + n.param.Name + "}"
+	} else if n.pathParam != nil {
+		strChunk = "{" + n.pathParam.Name + "}"
 	} else {
 		// this is the root node
 	}
 
 	// add self
-	if n.ops != nil {
-		paths.Items[openapi.PathValue(strChunk)] = n.ops
+	if n.pathObj != nil {
+		fillPathParams(n, n.pathObj)
+		paths.Items[openapi.PathValue(strChunk)] = n.pathObj
 	}
 
 	// recurse into children
@@ -171,6 +187,29 @@ func (n *Node) listPaths() *openapi.Paths {
 	}
 
 	return paths
+}
+
+func fillPathParams(n *Node, pathObj *openapi.PathObj) {
+	// collect all path parameters from parent hierarchy
+	node := n
+	for {
+		if node.pathParam != nil {
+			initParams(&pathObj.Parameters)
+
+			idx, paramObj := findParamByName(pathObj.Parameters, openapi.InPath, node.pathParam.Name)
+			if paramObj == nil {
+				appended := append(*pathObj.Parameters, node.pathParam)
+				pathObj.Parameters = &appended
+			} else {
+				(*pathObj.Parameters)[idx] = paramObj
+			}
+		}
+
+		node = node.parent
+		if node == nil {
+			break
+		}
+	}
 }
 
 type PathAndOp struct {
@@ -192,7 +231,7 @@ func (n *Node) countParentParams() int {
 	res := 0
 	node := n
 	for {
-		if node.param != nil {
+		if node.pathParam != nil {
 			res++
 		}
 

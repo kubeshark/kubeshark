@@ -10,4 +10,5 @@ func InstallRoutes(ginApp *gin.Engine) {
 	routeGroup := ginApp.Group("/install")
 
 	routeGroup.GET("/isNeeded", controllers.IsSetupNecessary)
+	routeGroup.POST("/admin", controllers.SetupAdminUser)
 }

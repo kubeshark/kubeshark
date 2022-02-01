@@ -5,19 +5,20 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"path"
+	"regexp"
+	"time"
+
 	"github.com/up9inc/mizu/cli/apiserver"
+	"github.com/up9inc/mizu/cli/config/configStructs"
+	"github.com/up9inc/mizu/cli/errormessage"
 	"github.com/up9inc/mizu/cli/mizu"
 	"github.com/up9inc/mizu/cli/mizu/fsUtils"
 	"github.com/up9inc/mizu/cli/resources"
-	"github.com/up9inc/mizu/cli/telemetry"
+	"github.com/up9inc/mizu/cli/uiUtils"
 	"github.com/up9inc/mizu/shared"
-	"path"
-	"time"
 
 	"github.com/up9inc/mizu/cli/config"
-	"github.com/up9inc/mizu/cli/config/configStructs"
-	"github.com/up9inc/mizu/cli/errormessage"
-	"github.com/up9inc/mizu/cli/uiUtils"
 	"github.com/up9inc/mizu/shared/kubernetes"
 	"github.com/up9inc/mizu/shared/logger"
 )
@@ -26,15 +27,37 @@ func GetApiServerUrl() string {
 	return fmt.Sprintf("http://%s", kubernetes.GetMizuApiServerProxiedHostAndPath(config.Config.Tap.GuiPort))
 }
 
-func startProxyReportErrorIfAny(kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
-	err := kubernetes.StartProxy(kubernetesProvider, config.Config.Tap.ProxyHost, config.Config.Tap.GuiPort, config.Config.MizuResourcesNamespace, kubernetes.ApiServerPodName)
+func startProxyReportErrorIfAny(kubernetesProvider *kubernetes.Provider, ctx context.Context, cancel context.CancelFunc) {
+	httpServer, err := kubernetes.StartProxy(kubernetesProvider, config.Config.Tap.ProxyHost, config.Config.Tap.GuiPort, config.Config.MizuResourcesNamespace, kubernetes.ApiServerPodName, cancel)
 	if err != nil {
 		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error occured while running k8s proxy %v\n"+
 			"Try setting different port by using --%s", errormessage.FormatError(err), configStructs.GuiPortTapName))
 		cancel()
+		return
 	}
 
-	logger.Log.Debugf("proxy ended")
+	apiProvider = apiserver.NewProvider(GetApiServerUrl(), apiserver.DefaultRetries, apiserver.DefaultTimeout)
+	if err := apiProvider.TestConnection(); err != nil {
+		logger.Log.Debugf("Couldn't connect using proxy, stopping proxy and trying to create port-forward")
+		if err := httpServer.Shutdown(ctx); err != nil {
+			logger.Log.Debugf("Error occurred while stopping proxy %v", errormessage.FormatError(err))
+		}
+
+		podRegex, _ := regexp.Compile(kubernetes.ApiServerPodName)
+		if _, err := kubernetes.NewPortForward(kubernetesProvider, config.Config.MizuResourcesNamespace, podRegex, config.Config.Tap.GuiPort, ctx, cancel); err != nil {
+			logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error occured while running port forward %v\n"+
+				"Try setting different port by using --%s", errormessage.FormatError(err), configStructs.GuiPortTapName))
+			cancel()
+			return
+		}
+
+		apiProvider = apiserver.NewProvider(GetApiServerUrl(), apiserver.DefaultRetries, apiserver.DefaultTimeout)
+		if err := apiProvider.TestConnection(); err != nil {
+			logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Couldn't connect to API server, for more info check logs at %s", fsUtils.GetLogFilePath()))
+			cancel()
+			return
+		}
+	}
 }
 
 func getKubernetesProviderForCli() (*kubernetes.Provider, error) {
@@ -43,6 +66,23 @@ func getKubernetesProviderForCli() (*kubernetes.Provider, error) {
 		handleKubernetesProviderError(err)
 		return nil, err
 	}
+
+	if err := kubernetesProvider.ValidateNotProxy(); err != nil {
+		handleKubernetesProviderError(err)
+		return nil, err
+	}
+
+	kubernetesVersion, err := kubernetesProvider.GetKubernetesVersion()
+	if err != nil {
+		handleKubernetesProviderError(err)
+		return nil, err
+	}
+
+	if err := kubernetes.ValidateKubernetesVersion(kubernetesVersion); err != nil {
+		handleKubernetesProviderError(err)
+		return nil, err
+	}
+
 	return kubernetesProvider, nil
 }
 
@@ -55,8 +95,7 @@ func handleKubernetesProviderError(err error) {
 	}
 }
 
-func finishMizuExecution(kubernetesProvider *kubernetes.Provider, apiProvider *apiserver.Provider, isNsRestrictedMode bool, mizuResourcesNamespace string) {
-	telemetry.ReportAPICalls(apiProvider)
+func finishMizuExecution(kubernetesProvider *kubernetes.Provider, isNsRestrictedMode bool, mizuResourcesNamespace string) {
 	removalCtx, cancel := context.WithTimeout(context.Background(), cleanupTimeout)
 	defer cancel()
 	dumpLogsIfNeeded(removalCtx, kubernetesProvider)
