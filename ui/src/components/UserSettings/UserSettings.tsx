@@ -31,7 +31,7 @@ export const UserSettings : React.FC<Props> = ({}) => {
 
     const [usersRows, setUserRows] = useState([]);
     const [userData,userUserData] = useState({} as UserData)
-    const cols : ColsType[] = [{field : "username",header:"User"},
+    const cols : ColsType[] = [{field : "username",header:"User", width: '35%'},
                                {field : "role",header:"Role"},
                                {field : "status",header:"Status",getCellClassName : (field, val) =>{
                                    return val === InviteStatus.active ? "status--active" : "status--pending"

@@ -7,7 +7,7 @@ export interface ColsType {
     field:string,
     cellClassName?: string,
     header:string,
-    width?:number,
+    width?:string,
     getCellClassName?:(field:string,value : any) => string
 };
 
@@ -43,7 +43,7 @@ export const Table: React.FC<TableProps> = ({rows, cols, onRowDelete, onRowEdit,
     <thead className="mui-table__thead">
     <tr style={{borderBottomWidth: "2px"}} className="mui-table__tr">
         {cols?.map((col)=> {
-            return <th key={col.header} className="mui-table__th">{col.header}</th>
+            return <th key={col.header} className="mui-table__th" style={{width: col.width}}>{col.header}</th>
         })}
         <th></th>
     </tr>
@@ -61,7 +61,7 @@ export const Table: React.FC<TableProps> = ({rows, cols, onRowDelete, onRowEdit,
             tableRows?.map((rowData,index) => {
                 return <tr key={rowData?.id ?? index} className="mui-table__tr">
                     {cols.map((col,index) => {                        
-                        return <td key={`${rowData?.id} + ${index}`} className="mui-table__td">
+                        return <td key={`${rowData?.id} + ${index}`} className="mui-table__td" style={{width: col.width}}>
                                  <span key={Math.random().toString()} className={`${col.getCellClassName ? col.getCellClassName(col.field, rowData[col.field]) : ""}${col?.cellClassName ?? ""}`}>
                                      {rowData[col.field]}
                                 </span>

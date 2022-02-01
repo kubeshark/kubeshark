@@ -57,14 +57,22 @@
 .search-workspace
     width: 186px
 
+@mixin label-size
+    font-style: normal;
+    font-weight: normal;
+    font-size: 12px;
+    line-height: 15px;
+
 .u-input-padding
     & .MuiInputLabel-outlined.MuiInputLabel-marginDense 
-        transform: translate(14px, 8px) scale(1);
+        transform: translate(14px, 8px) scale(1)
+        @include label-size
     & .MuiInputLabel-outlined.MuiInputLabel-shrink
         transform: translate(14px, -6px) scale(0.75);
-        font-size: 12px;
+        @include label-size
 
     &.MuiOutlinedInput-input, &.MuiSelect-outlined, 
         padding-top: 5.5px
         padding-bottom: 5.5px
-        font-size: 12px;
+        @include label-size
+

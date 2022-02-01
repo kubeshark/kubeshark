@@ -79,7 +79,7 @@ export default class Api {
     }
 
     getWorkspaces = async() =>{
-        const response = await this.client.get(`/workspace`);
+        const response = await this.client.get(`/workspace/`);
         return response.data;
     }
 
