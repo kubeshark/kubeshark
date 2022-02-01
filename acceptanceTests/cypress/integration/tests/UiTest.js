@@ -251,8 +251,8 @@ function rightOnHoverCheck(path, expectedText) {
     cy.get(`.TrafficPage-Container > :nth-child(2) .Queryable-Tooltip`).should('have.text', expectedText);
 }
 
-function checkRightSideResponseBody() {
 
+function checkRightSideResponseBody() {
     cy.contains('Response').click();
     clickCheckbox('Decode Base64');
 
