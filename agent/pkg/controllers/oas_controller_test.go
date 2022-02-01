@@ -1,9 +1,10 @@
 package controllers
 
 import (
-	"mizuserver/pkg/oas"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/up9inc/mizu/agent/pkg/oas"
 
 	"github.com/gin-gonic/gin"
 )
