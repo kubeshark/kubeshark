@@ -81,7 +81,7 @@ func representSliceAsTable(slice []interface{}, selectorPrefix string) (represen
 		selector := fmt.Sprintf("%s[%d]", selectorPrefix, i)
 		table = append(table, api.TableData{
 			Name:     strconv.Itoa(i),
-			Value:    item.(interface{}),
+			Value:    item,
 			Selector: selector,
 		})
 	}

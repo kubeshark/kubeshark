@@ -346,7 +346,13 @@ func representProduceRequest(data map[string]interface{}) []interface{} {
 			})
 
 			obj, err := oj.ParseString(string(partitionsJson))
+			if err != nil {
+				return rep
+			}
 			recordBatchPath, err := jp.ParseString(`partitionData.records.recordBatch`)
+			if err != nil {
+				return rep
+			}
 			recordBatchresults := recordBatchPath.Get(obj)
 			if len(recordBatchresults) > 0 {
 				rep = append(rep, api.SectionData{
@@ -357,6 +363,9 @@ func representProduceRequest(data map[string]interface{}) []interface{} {
 			}
 
 			recordsPath, err := jp.ParseString(`partitionData.records.recordBatch.record`)
+			if err != nil {
+				return rep
+			}
 			recordsResults := recordsPath.Get(obj)
 			if len(recordsResults) > 0 {
 				records := recordsResults[0].([]interface{})

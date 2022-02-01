@@ -40,7 +40,7 @@ var connectedWebsocketIdCounter = 0
 
 func init() {
 	websocketUpgrader.CheckOrigin = func(r *http.Request) bool { return true } // like cors for web socket
-	connectedWebsockets = make(map[int]*SocketConnection, 0)
+	connectedWebsockets = make(map[int]*SocketConnection)
 }
 
 func WebSocketRoutes(app *gin.Engine, eventHandlers EventHandlers, startTime int64) {

@@ -167,10 +167,6 @@ type messageType struct {
 	encode   encodeFunc
 }
 
-func (t *messageType) new() Message {
-	return reflect.New(t.gotype).Interface().(Message)
-}
-
 type apiType struct {
 	requests  []messageType
 	responses []messageType
@@ -389,16 +385,16 @@ func (b Broker) String() string {
 func (b Broker) Format(w fmt.State, v rune) {
 	switch v {
 	case 'd':
-		io.WriteString(w, itoa(b.ID))
+		_, _ = io.WriteString(w, itoa(b.ID))
 	case 's':
-		io.WriteString(w, b.String())
+		_, _ = io.WriteString(w, b.String())
 	case 'v':
-		io.WriteString(w, itoa(b.ID))
-		io.WriteString(w, " ")
-		io.WriteString(w, b.String())
+		_, _ = io.WriteString(w, itoa(b.ID))
+		_, _ = io.WriteString(w, " ")
+		_, _ = io.WriteString(w, b.String())
 		if b.Rack != "" {
-			io.WriteString(w, " ")
-			io.WriteString(w, b.Rack)
+			_, _ = io.WriteString(w, " ")
+			_, _ = io.WriteString(w, b.Rack)
 		}
 	}
 }
