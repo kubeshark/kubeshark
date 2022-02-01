@@ -49,6 +49,7 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
   useEffect(() => {
     (async () => {
         try {
+<<<<<<< HEAD
           //   const workspacesList = [
           //     {
           //         "id": "f54b18ec-aa15-4b2c-a4d5-8eda17e44c93",
@@ -63,6 +64,21 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
           const list = await api.getWorkspaces() 
           const workspacesList = list.map((obj) => {return {key:obj.id, value:obj.name,isChecked:false}})
           setWorkspaces(workspacesList)                         
+=======
+            const workspacesList = [
+              {
+                  "id": "f54b18ec-aa15-4b2c-a4d5-8eda17e44c93",
+                  "name": "sock-shop"
+              },
+              {
+                  "id": "c7ad9158-d840-46c0-b5ce-2487c013723f",
+                  "name": "test"
+              }
+          ].map((obj) => {return {key:obj.id, value:obj.name}})
+          //await api.getWorkspaces() 
+          setWorkspaces(workspacesList)    
+                          
+>>>>>>> origin/feature/ui/TRA-4192_workspace_management
         } catch (e) {
             toast.error("Error finding workspaces")
         }
@@ -256,8 +272,8 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
             <input className={classes.textField + " search-workspace"} placeholder="Search" value={searchValue}
                     onChange={(event) => setSearchValue(event.target.value)}/>
         </div>
-        <SelectList valuesListInput={workspaces} tableName={''} multiSelect={false} searchValue={searchValue} 
-                    setValues= {workspaceChange} tabelClassName={''}>
+        <SelectList items={workspaces} tableName={''} multiSelect={false} searchValue={searchValue}
+        setCheckedValues={workspaceChange} tabelClassName={''} checkedValues={[]} >
         </SelectList>
       </div>
 

@@ -83,6 +83,31 @@ export default class Api {
         return response.data;
     }
 
+    getSpecificWorkspace = async(workspaceId) =>{
+        const response = await this.client.get(`/workspace/${workspaceId}`);
+        return response.data;
+    }
+
+    createWorkspace = async(workspaceData) =>{
+        const response = await this.client.post(`/workspace`,workspaceData);
+        return response.data;
+    }    
+
+    editWorkspace = async(workspaceId, workspaceData) =>{
+        const response = await this.client.put(`/workspace/${workspaceId}`,workspaceData);
+        return response.data;
+    }   
+
+    deleteWorkspace = async(workspaceId) => {
+        const response = await this.client.delete(`/workspace/${workspaceId}`);
+        return response.data;
+    }
+
+    getNamespaces = async() =>{
+        const response = await this.client.get(`/config/namespaces`);
+        return response.data;
+    }
+
     analyzeStatus = async () => {
         const response = await this.client.get("/status/analyze");
         return response.data;
@@ -145,7 +170,7 @@ export default class Api {
     }
 
     getTapConfig = async () => {
-        const response = await this.client.get("/config/tapConfig");
+        const response = await this.client.get("/config/tap");
         return response.data;
     }
 
@@ -171,27 +196,48 @@ export default class Api {
         }
     }
 
-    register = async (username, password) => {
+    // register = async (username, password) => {
+    //     const form = new FormData();
+    //     form.append('username', username);
+    //     form.append('password', password);
 
-            const form = new FormData();
-            form.append('password', password);
-    
-            try {
-                const response = await this.client.post(`/install/admin`, form);
-                this.persistToken(response.data.token);
-                return response;
-            } catch (e) {
-                if (e.response.status === 400) {
-                    const error = {
-                        'type': FormValidationErrorType,
-                        'messages': e.response.data
-                    };
-                    throw error;
-                } else {
-                    throw e;
-                }
+    //     try {
+    //         const response = await this.client.post(`/user/register`, form);
+    //         this.persistToken(response.data.token);
+    //         return response;
+    //     } catch (e) {
+    //         if (e.response.status === 400) {
+    //             const error = {
+    //                 'type': FormValidationErrorType,
+    //                 'messages': e.response.data
+    //             };
+    //             throw error;
+    //         } else {
+    //             throw e;
+    //         }
+    //     }
+    // }
+
+    setupAdminUser = async (password) => {
+        const form = new FormData();
+        form.append('password', password);
+
+        try {
+            const response = await this.client.post(`/install/admin`, form);
+            this.persistToken(response.data.token);
+            return response;
+        } catch (e) {
+            if (e.response.status === 400) {
+                const error = {
+                    'type': FormValidationErrorType,
+                    'messages': e.response.data
+                };
+                throw error;
+            } else {
+                throw e;
             }
         }
+    }
     
 
     login = async (username, password) => {

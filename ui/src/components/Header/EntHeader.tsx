@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import logo from '../assets/MizuEntLogo.svg';
 import './Header.sass';
 import userImg from '../assets/user-circle.svg';
@@ -12,6 +12,7 @@ import {useSetRecoilState} from "recoil";
 import entPageAtom, {Page} from "../../recoil/entPage";
 import {useNavigate} from "react-router-dom";
 import {RouterRoutes} from "../../helpers/routes";
+import { SettingsModal } from "../SettingsModal/SettingModal";
 
 const api = Api.getInstance();
 
@@ -23,6 +24,19 @@ interface EntHeaderProps {
 export const EntHeader: React.FC<EntHeaderProps> = ({isFirstLogin, setIsFirstLogin}) => {
     const navigate = useNavigate();
 
+    const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+
+    useEffect(() => {
+        if(isFirstLogin) {
+            setIsSettingsModalOpen(true)
+        }
+    }, [isFirstLogin])
+
+    const onSettingsModalClose = () => {
+        setIsSettingsModalOpen(false);
+        setIsFirstLogin(false);
+    }
+
     return <div className="header">
         <div>
             <div className="title">
@@ -33,8 +47,10 @@ export const EntHeader: React.FC<EntHeaderProps> = ({isFirstLogin, setIsFirstLog
             <img className="headerIcon" alt="settings" src={settingImg} style={{marginRight: 25}} onClick={() => navigate(RouterRoutes.SETTINGS)}/>
             <ProfileButton/>
         </div>
+        <SettingsModal isOpen={isSettingsModalOpen} onClose={onSettingsModalClose} isFirstLogin={isFirstLogin}/>
     </div>;
 }
+
 
 const ProfileButton = () => {
 

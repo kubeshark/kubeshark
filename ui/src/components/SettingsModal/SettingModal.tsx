@@ -19,7 +19,8 @@ const api = Api.getInstance();
 export const SettingsModal: React.FC<SettingsModalProps> = ({isOpen, onClose, isFirstLogin}) => {
 
     const classes = useCommonStyles();
-    const [namespaces, setNamespaces] = useState({});
+    const [namespaces, setNamespaces] = useState([]);
+    const [checkedNamespacesKeys, setCheckedNamespacesKeys] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [searchValue, setSearchValue] = useState("");
 
@@ -29,16 +30,21 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({isOpen, onClose, is
             try {
                 setSearchValue("");
                 setIsLoading(true);
-                const tapConfig = await api.getTapConfig()
-                if(isFirstLogin) {
-                    const namespacesObj = {...tapConfig?.tappedNamespaces}
-                    Object.keys(tapConfig?.tappedNamespaces ?? {}).forEach(namespace => {
-                        namespacesObj[namespace] = true;
-                    })
-                    setNamespaces(namespacesObj);
-                } else {
-                    setNamespaces(tapConfig?.tappedNamespaces);
-                }
+                // const tapConfig = await api.getTapConfig()
+                const namespaces = await api.getNamespaces();
+                const namespacesMapped = namespaces.map(namespace => {
+                    return {key: namespace, value: namespace}
+                  })
+                setNamespaces(namespacesMapped);
+                // if(isFirstLogin) {
+                //     const namespacesObj = {...tapConfig?.tappedNamespaces}
+                //     Object.keys(tapConfig?.tappedNamespaces ?? {}).forEach(namespace => {
+                //         namespacesObj[namespace] = true;
+                //     })
+                //     setNamespaces(namespacesObj);
+                // } else {
+                //     setNamespaces(tapConfig?.tappedNamespaces);
+                // }
             } catch (e) {
                 console.error(e);
             } finally {
@@ -49,7 +55,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({isOpen, onClose, is
 
     const updateTappingSettings = async () => {
         try {
-            await api.setTapConfig(namespaces);
+            const defaultWorkspace = {
+                name: "default",
+                namespaces: checkedNamespacesKeys
+            }
+            await api.createWorkspace(defaultWorkspace);
             onClose();
             toast.success("Saved successfully");
         } catch (e) {
@@ -78,7 +88,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({isOpen, onClose, is
                 <div style={{padding: 32, paddingBottom: 0}}>
                     <div className="settingsTitle">Tapping Settings</div>
                     <div className="settingsSubtitle" style={{marginTop: 20}}>
-                        Please choose from below the namespaces for tapping, traffic for namespaces selected will be displayed
+                        Please choose from below the namespaces for tapping, traffic for namespaces selected will be displayed as default workspace.
                     </div>
                     {isLoading ? <div style={{textAlign: "center", padding: 20}}>
                         <img alt="spinner" src={spinner} style={{height: 35}}/>
@@ -87,7 +97,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({isOpen, onClose, is
                             <div style={{margin: "10px 0"}}>
                                 <input className={classes.textField + " searchNamespace"} placeholder="Search" value={searchValue}
                                        onChange={(event) => setSearchValue(event.target.value)}/></div>
-                                <SelectList valuesListInput={namespaces} tableName={'Namespace'} multiSelect={true} searchValue={searchValue} setValues={setNamespaces} tabelClassName={'namespacesTable'}/>
+                                <SelectList items={namespaces} tableName={'Namespace'} multiSelect={true} searchValue={searchValue} setCheckedValues={setCheckedNamespacesKeys} tabelClassName={'namespacesTable'} checkedValues={checkedNamespacesKeys}/>
                         </div>
                     </>}
                 </div>

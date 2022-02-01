@@ -38,7 +38,7 @@ export const InstallPage: React.FC<InstallPageProps> = ({onFirstLogin}) => {
 
         try {
             setIsLoading(true);
-            await api.register(adminUsername, password);
+            await api.setupAdminUser(adminUsername, password);
             if (!await api.isAuthenticationNeeded()) {
                 setEntPage(Page.Traffic);
                 onFirstLogin();
