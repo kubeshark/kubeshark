@@ -294,7 +294,10 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus}) => {
           </Button>}
         </div>
       </div>
-
+      {window["isOasEnabled"] && <OasModal
+        openModal={openOasModal}
+        handleCloseModal={handleCloseModal}
+      />}
       {<div className="TrafficPage-Container">
         <div className="TrafficPage-ListContainer">
           <Filters
