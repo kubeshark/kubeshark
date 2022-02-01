@@ -197,12 +197,6 @@ func (r *RedisInputStream) readLineBytes() ([]byte, error) {
 	line := make([]byte, N)
 	j := 0
 	for i := r.count; i <= N; i++ {
-		if i >= len(buf) {
-			return nil, errors.New("Redis buffer index mismatch.")
-		}
-		if i >= len(line) {
-			return nil, errors.New("Redis line index mismatch.")
-		}
 		line[j] = buf[i]
 		j++
 	}
