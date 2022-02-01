@@ -1,8 +1,8 @@
 package middlewares
 
 import (
-	"mizuserver/pkg/config"
-	"mizuserver/pkg/providers"
+	"github.com/up9inc/mizu/agent/pkg/config"
+	"github.com/up9inc/mizu/agent/pkg/providers"
 
 	"github.com/gin-gonic/gin"
 	ory "github.com/ory/kratos-client-go"
