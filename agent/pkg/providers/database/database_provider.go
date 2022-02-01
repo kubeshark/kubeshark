@@ -155,6 +155,14 @@ func DeleteWorkspace(workspaceId string) error {
 	return nil
 }
 
+func GetAllUniqueNamespaces() ([]string, error) {
+	var namespaces []string
+	if err := db.Model(&Namespace{}).Distinct("Name").Pluck("Name", &namespaces).Error; err != nil {
+		return nil, handleDatabaseError(err)
+	}
+	return namespaces, nil
+}
+
 func handleDatabaseError(err error) error {
 	var sqliteError sqlite3.Error
 	if errors.As(err, &sqliteError) {

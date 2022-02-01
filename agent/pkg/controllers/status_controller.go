@@ -2,9 +2,6 @@ package controllers
 
 import (
 	"encoding/json"
-	"github.com/gin-gonic/gin"
-	"github.com/up9inc/mizu/shared"
-	"github.com/up9inc/mizu/shared/logger"
 	"mizuserver/pkg/api"
 	"mizuserver/pkg/holder"
 	"mizuserver/pkg/providers"
@@ -13,6 +10,10 @@ import (
 	"mizuserver/pkg/up9"
 	"mizuserver/pkg/validation"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
+	"github.com/up9inc/mizu/shared"
+	"github.com/up9inc/mizu/shared/logger"
 )
 
 func HealthCheck(c *gin.Context) {

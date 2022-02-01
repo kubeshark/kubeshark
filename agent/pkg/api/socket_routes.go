@@ -220,8 +220,8 @@ func getNamespaceListForUserWorkspace(token string, workspaceOverride string, ct
 		return nil, errors.New("workspace not found")
 	}
 
-	if workspaceObject.Namespaces == nil || len(workspaceObject.Namespaces) == 0 {
-		return nil, errors.New("only admins can use workspaceOverride")
+	if workspaceObject.Namespaces == nil {
+		return make([]string, 0), nil
 	}
 
 	return workspaceObject.Namespaces, nil

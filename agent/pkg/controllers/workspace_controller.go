@@ -3,10 +3,13 @@ package controllers
 import (
 	"errors"
 	"mizuserver/pkg/providers/database"
+	"mizuserver/pkg/providers/tapConfig"
+	"mizuserver/pkg/providers/userRoles"
 	"mizuserver/pkg/providers/workspace"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/up9inc/mizu/shared/logger"
 )
 
 func CreateWorkspace(c *gin.Context) {
@@ -25,6 +28,15 @@ func CreateWorkspace(c *gin.Context) {
 		}
 		return
 	} else {
+		if c.Query("linkUser") != "" {
+			if err := userRoles.SetUserWorkspaceRole(c.Query("linkUser"), newWorkspace.Id, userRoles.UserRole); err != nil {
+				c.JSON(http.StatusInternalServerError, err)
+				return
+			}
+		}
+		if err := tapConfig.SyncTappingConfigWithWorkspaceNamespaces(); err != nil {
+			logger.Log.Errorf("Error while syncing tapping config: %v", err)
+		}
 		c.JSON(http.StatusOK, newWorkspace)
 	}
 }
@@ -69,6 +81,9 @@ func UpdateWorkspace(c *gin.Context) {
 		}
 		return
 	} else {
+		if err := tapConfig.SyncTappingConfigWithWorkspaceNamespaces(); err != nil {
+			logger.Log.Errorf("Error while syncing tapping config: %v", err)
+		}
 		c.JSON(http.StatusOK, updatedWorkspace)
 	}
 }
@@ -78,6 +93,9 @@ func DeleteWorkspace(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, err)
 		return
 	} else {
+		if err := tapConfig.SyncTappingConfigWithWorkspaceNamespaces(); err != nil {
+			logger.Log.Errorf("Error while syncing tapping config: %v", err)
+		}
 		c.JSON(http.StatusOK, "")
 	}
 }

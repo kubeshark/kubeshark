@@ -1,8 +1,9 @@
-package providers
+package kubernetes
 
 import (
-	"github.com/up9inc/mizu/shared/kubernetes"
 	"sync"
+
+	"github.com/up9inc/mizu/shared/kubernetes"
 )
 
 var lock = &sync.Mutex{}
