@@ -26,7 +26,7 @@ it('filtering guide check', function () {
 });
 
 it('right side sanity test', function () {
-    cy.get('.TrafficPage-Container > :nth-child(2) > :nth-child(1) > :nth-child(2) > :nth-child(1) > :nth-child(1)').then(sizeTopLine => {
+    cy.get('#entryDetailedTitleBodySize').then(sizeTopLine => {
         const sizeOnTopLine = sizeTopLine.text().replace(' B', '');
         cy.contains('Response').click();
         cy.contains('Body Size (bytes)').parent().next().then(size => {
@@ -37,13 +37,13 @@ it('right side sanity test', function () {
                 throw new Error(`The body size cannot be negative. got the size: ${bodySizeByDetails}`)
             }
 
-            cy.get('.TrafficPage-Container > :nth-child(2) > :nth-child(1) > :nth-child(2) > :nth-child(2) > :nth-child(1)').then(timeInMs => {
+            cy.get('#entryDetailedTitleElapsedTime').then(timeInMs => {
                 const time = timeInMs.text();
                 if (time < '0ms') {
                     throw new Error(`The time in the top line cannot be negative ${time}`);
                 }
 
-                cy.get('.TrafficPage-Container > :nth-child(2) > :nth-child(2) > :nth-child(1) > > :nth-child(2)').then(status => {
+                cy.get('#rightSideContainer [title="Status Code"]').then(status => {
                     const statusCode = status.text();
                     cy.contains('Status').parent().next().then(statusInDetails => {
                         const statusCodeInDetails = statusInDetails.text();
