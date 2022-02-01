@@ -18,7 +18,7 @@ export interface Props {
 }
 
 const SelectList: React.FC<Props> = ({items ,tableName,checkedValues=[],multiSelect=true,searchValue="",setCheckedValues,tabelClassName}) => {
-    
+ 
     const filteredValues = useMemo(() => {
         return items.filter((listValue) => listValue?.value?.includes(searchValue));
     },[items, searchValue])
@@ -27,24 +27,27 @@ const SelectList: React.FC<Props> = ({items ,tableName,checkedValues=[],multiSel
         if (!multiSelect){
             unToggleAll();
         }
-        let index = checkedValues.indexOf(checkedKey);
-        if(index > -1) checkedValues.splice(index,1);
-        else checkedValues.push(checkedKey);   
-        setCheckedValues(checkedValues);
+        const newCheckedValues = [...checkedValues];
+        let index = newCheckedValues.indexOf(checkedKey);
+        if(index > -1) newCheckedValues.splice(index,1);
+        else newCheckedValues.push(checkedKey);   
+        setCheckedValues(newCheckedValues);
     }
 
     const unToggleAll = () => {
-        checkedValues = [];
         setCheckedValues([]);
     }
 
     const toggleAll = () => {
-        if(checkedValues.length === items.length) checkedValues = [];
-        else items.forEach((obj) => {
-            if(!checkedValues.includes(obj.key))
-            checkedValues.push(obj.key);
-        })
-        setCheckedValues(checkedValues);
+        const newCheckedValues = [...checkedValues];
+        if(newCheckedValues.length === items.length) setCheckedValues([]);
+        else {
+            items.forEach((obj) => {
+            if(!newCheckedValues.includes(obj.key))
+                newCheckedValues.push(obj.key);
+            })
+            setCheckedValues(newCheckedValues);
+        }
     }
 
     const tableHead = multiSelect ? <tr style={{borderBottomWidth: "2px"}}>

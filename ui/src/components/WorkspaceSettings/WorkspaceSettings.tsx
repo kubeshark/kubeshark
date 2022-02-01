@@ -31,7 +31,7 @@ export const WorkspaceSettings : React.FC<Props> = ({}) => {
                 console.error(e);
             }
         })();
-    },[])
+    },[isOpenModal])
 
     const filterFuncFactory = (searchQuery: string) => {
         return (row) => {
@@ -40,25 +40,20 @@ export const WorkspaceSettings : React.FC<Props> = ({}) => {
     }
 
     const searchConfig = { searchPlaceholder: "Search Workspace",filterRows: filterFuncFactory};
-
-    const findWorkspace = (workspaceId) => {
-        const findFunc = filterFuncFactory(workspaceId);
-        return workspacesRows.find(findFunc);
-    }
     
-    const onRowDelete = (workspace) => {
-        setIsOpenDeleteModal(true);
-        const workspaceForDel = findWorkspace(workspace.id);
-        SetWorkspaceData(workspaceForDel);
+    const onRowDelete = async (workspace) => {
+        setIsOpenDeleteModal(true); 
+        SetWorkspaceData(workspace);  
     }
     
     const onDeleteConfirmation = () => {
         (async() => {
             try{
-                const findFunc = filterFuncFactory(workspaceData.id);
-                const workspaceLeft = workspacesRows.filter(ws => !findFunc(ws));
+                const workspaceLeft = workspacesRows.filter(ws => ws.id != workspaceData.id);
                 setWorkspacesRows(workspaceLeft);
+                await api.deleteWorkspace(workspaceData.id);
                 setIsOpenDeleteModal(false);
+                SetWorkspaceData({} as WorkspaceData);
                 toast.success("Workspace Succesesfully Deleted ");
             } catch {
                 toast.error("Workspace hasn't deleted");

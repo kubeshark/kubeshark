@@ -94,9 +94,19 @@ export default class Api {
     }    
 
     editWorkspace = async(workspaceId, workspaceData) =>{
-        const response = await this.client.post(`/workspace${workspaceId}`,workspaceData);
+        const response = await this.client.put(`/workspace/${workspaceId}`,workspaceData);
         return response.data;
     }   
+
+    deleteWorkspace = async(workspaceId) => {
+        const response = await this.client.delete(`/workspace/${workspaceId}`);
+        return response.data;
+    }
+
+    getNamespaces = async() =>{
+        const response = await this.client.get(`/config/namespaces`);
+        return response.data;
+    }
 
     analyzeStatus = async () => {
         const response = await this.client.get("/status/analyze");

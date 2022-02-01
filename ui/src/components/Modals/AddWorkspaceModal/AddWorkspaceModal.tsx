@@ -42,7 +42,7 @@ const AddWorkspaceModal: FC<AddWorkspaceModalProp> = ({isOpen,onCloseModal, work
             setCheckedNamespacesKeys(workspace.namespaces);   
           }
             setSearchValue("");     
-            const namespaces = ["cert-manager", "default", "google-demo"]
+            const namespaces = await api.getNamespaces();
             const namespacesMapped = namespaces.map(namespace => {
               return {key: namespace, value: namespace}
             })
@@ -62,15 +62,22 @@ const AddWorkspaceModal: FC<AddWorkspaceModalProp> = ({isOpen,onCloseModal, work
     return (workspaceName.length > 0) && (checkedNamespacesKeys.length > 0);
   }
 
-  const onConfirm = () => {
+  const onConfirm = async () => {
     try{
       const workspaceData = {
         name: workspaceName,
         namespaces: checkedNamespacesKeys
       }
-      console.log(workspaceData);
-      onCloseModal();
-      toast.success("Workspace Succesesfully Created ");
+      if(onEdit){
+        await api.editWorkspace(workspaceId, workspaceData);
+        toast.success("Workspace Succesesfully Updated");
+      }
+      else{
+        await api.createWorkspace(workspaceData);
+        toast.success("Workspace Succesesfully Created ");
+      }
+      resetForm();
+      onCloseModal();   
     } catch{
       toast.error("Couldn't Creat The Worksapce");
     }
@@ -78,6 +85,10 @@ const AddWorkspaceModal: FC<AddWorkspaceModalProp> = ({isOpen,onCloseModal, work
 
   const onClose = () => {
     onCloseModal();
+    resetForm();
+  }
+
+  const resetForm = () => {
     setWorkspaceName("");
     setCheckedNamespacesKeys([]);
     setNamespaces([]);
