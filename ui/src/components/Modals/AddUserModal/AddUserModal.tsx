@@ -32,7 +32,6 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
   //const [editUserData, setEditUserData] = useState(userData)
   const [searchValue, setSearchValue] = useState("");
   const [workspaces, setWorkspaces] = useState([]);
-  const [checkedWorkspaceKeys, setCheckedWorkspaceKeys] = useState([]);
   //const { control, handleSubmit,register } = useForm<UserData>();
   const [disable, setDisable] = useState(true);
   const [editMode, setEditMode] = useState(isEditMode);
@@ -104,9 +103,8 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
 
   const workspaceChange = (workspaces) => {
     //setWorkspaces(newVal);
-    const selectedWorksapce = workspaces.find(x=> x.isChecked)
-    const  data = {...userDataModel, workspaceId : selectedWorksapce.key}
-    setUserData(data)
+    const  data = {...userDataModel, workspaceId : workspaces.length ? workspaces[0] : ""}
+    setUserData((prevState) => {return data});
     setGenarateDisabledState()
   }
 
@@ -258,7 +256,7 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
                     onChange={(event) => setSearchValue(event.target.value)}/>
         </div>
         <SelectList items={workspaces} tableName={''} multiSelect={false} searchValue={searchValue}
-        setCheckedValues={workspaceChange} tabelClassName={''} checkedValues={[]} >
+        setCheckedValues={workspaceChange} tabelClassName={''} checkedValues={[userDataModel.workspaceId]} >
         </SelectList>
       </div>
 
