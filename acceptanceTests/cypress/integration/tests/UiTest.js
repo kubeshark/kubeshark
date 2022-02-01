@@ -3,6 +3,7 @@ import {resizeToHugeMizu, resizeToNormalMizu} from "../testHelpers/TrafficHelper
 const greenFilterColor = 'rgb(210, 250, 210)';
 const redFilterColor = 'rgb(250, 214, 220)';
 const refreshWaitTimeout = 10000;
+const bodyJsonClass = '.hljs';
 
 it('opening mizu', function () {
     cy.visit(Cypress.env('testUrl'));
@@ -192,11 +193,12 @@ function checkFilter(filterDetails){
             if (!applyByEnter)
                 cy.get('[type="submit"]').click();
 
-            // only one entry in DOM after filtering, checking all four checks on it
+            // only one entry in DOM after filtering, checking all checks on it
             leftTextCheck(totalEntries - 1, leftSidePath, leftSideExpectedText);
             leftOnHoverCheck(totalEntries - 1, leftSidePath, name);
             rightTextCheck(rightSidePath, rightSideExpectedText);
             rightOnHoverCheck(rightSidePath, name);
+            checkRightSideResponseBody();
 
             cy.get('[title="Fetch old records"]').click();
             resizeToHugeMizu();
@@ -227,7 +229,7 @@ function deeperChcek(leftSidePath, rightSidePath, filterName, leftSideExpectedTe
         cy.get(`#list #entry-${entryNum}`).click();
         rightTextCheck(rightSidePath, rightSideExpectedText);
         rightOnHoverCheck(rightSidePath, filterName);
-        checkRightSide();
+        checkRightSideResponseBody();
     });
 }
 
@@ -249,13 +251,12 @@ function rightOnHoverCheck(path, expectedText) {
     cy.get(`.TrafficPage-Container > :nth-child(2) .Queryable-Tooltip`).should('have.text', expectedText);
 }
 
-function checkRightSide() {
-    const jsonClass = '.hljs';
+function checkRightSideResponseBody() {
 
     cy.contains('Response').click();
     clickCheckbox('Decode Base64');
 
-    cy.get(`${jsonClass}`).then(value => {
+    cy.get(`${bodyJsonClass}`).then(value => {
         const encodedBody = value.text();
         cy.log(encodedBody);
 
@@ -264,25 +265,25 @@ function checkRightSide() {
 
         const expectdJsonBody = {
             args: RegExp({}),
-            url: RegExp("http://.*/get"),
+            url: RegExp('http://.*/get'),
             headers: {
                 "User-Agent": RegExp('[REDACTED]'),
                 "Accept-Encoding": RegExp('gzip'),
-                "X-Forwarded-Uri": RegExp("/api/v1/namespaces/.*/services/.*/proxy/get")
+                "X-Forwarded-Uri": RegExp('/api/v1/namespaces/.*/services/.*/proxy/get')
             }
-        }
+        };
 
         expect(responseBody.args).to.match(expectdJsonBody.args);
         expect(responseBody.url).to.match(expectdJsonBody.url);
-        expect(responseBody.headers["User-Agent"]).to.match(expectdJsonBody.headers["User-Agent"]);
-        expect(responseBody.headers["Accept-Encoding"]).to.match(expectdJsonBody.headers["Accept-Encoding"]);
-        expect(responseBody.headers["X-Forwarded-Uri"]).to.match(expectdJsonBody.headers["X-Forwarded-Uri"]);
+        expect(responseBody.headers['User-Agent']).to.match(expectdJsonBody.headers['User-Agent']);
+        expect(responseBody.headers['Accept-Encoding']).to.match(expectdJsonBody.headers['Accept-Encoding']);
+        expect(responseBody.headers['X-Forwarded-Uri']).to.match(expectdJsonBody.headers['X-Forwarded-Uri']);
 
-        cy.get('.hljs').should('have.text', encodedBody);
+        cy.get(`${bodyJsonClass}`).should('have.text', encodedBody);
         clickCheckbox('Decode Base64');
 
-        cy.get('.hljs > ').its('length').should('be.gt', 1).then(linesNum => {
-            cy.get('.hljs > >').its('length').should('be.gt', linesNum).then(jsonItemsNum => {
+        cy.get(`${bodyJsonClass} > `).its('length').should('be.gt', 1).then(linesNum => {
+            cy.get(`${bodyJsonClass} > >`).its('length').should('be.gt', linesNum).then(jsonItemsNum => {
                 checkPrettyAndLineNums(jsonItemsNum, decodedBody);
 
                 clickCheckbox('Line numbers');
@@ -304,7 +305,7 @@ function clickCheckbox(type) {
 
 function checkPrettyAndLineNums(jsonItemsLen, decodedBody) {
     decodedBody = decodedBody.replaceAll(' ', '');
-    cy.get('.hljs >').then(elements => {
+    cy.get(`${bodyJsonClass} >`).then(elements => {
         const lines = Object.values(elements);
         lines.forEach((line, index) => {
             if (line.getAttribute) {
@@ -324,13 +325,13 @@ function getCleanLine(lineElement) {
 }
 
 function checkPrettyOrNothing(jsonItems, decodedBody) {
-    cy.get('.hljs > ').should('have.length', jsonItems).then(text => {
+    cy.get(`${bodyJsonClass} > `).should('have.length', jsonItems).then(text => {
         const json = text.text();
         expect(json).to.equal(decodedBody);
     });
 }
 
 function checkOnlyLineNumberes(jsonItems, decodedText) {
-    cy.get('.hljs >').should('have.length', 1).and('have.text', decodedText);
-    cy.get('.hljs > >').should('have.length', jsonItems)
+    cy.get(`${bodyJsonClass} >`).should('have.length', 1).and('have.text', decodedText);
+    cy.get(`${bodyJsonClass} > >`).should('have.length', jsonItems)
 }
