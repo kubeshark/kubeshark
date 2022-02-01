@@ -5,10 +5,6 @@ on:
     branches:
       - 'develop'
       - 'main'
-  push:
-    branches:
-      - 'develop'
-      - 'main'
 
 permissions:
   contents: read

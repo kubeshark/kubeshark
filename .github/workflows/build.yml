@@ -1,4 +1,4 @@
-name: Build checks
+name: Build
 
 on:
   pull_request:
