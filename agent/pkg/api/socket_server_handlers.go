@@ -3,11 +3,12 @@ package api
 import (
 	"encoding/json"
 	"fmt"
-	"mizuserver/pkg/models"
-	"mizuserver/pkg/providers"
-	"mizuserver/pkg/providers/tappers"
-	"mizuserver/pkg/up9"
 	"sync"
+
+	"github.com/up9inc/mizu/agent/pkg/models"
+	"github.com/up9inc/mizu/agent/pkg/providers"
+	"github.com/up9inc/mizu/agent/pkg/providers/tappers"
+	"github.com/up9inc/mizu/agent/pkg/up9"
 
 	tapApi "github.com/up9inc/mizu/tap/api"
 

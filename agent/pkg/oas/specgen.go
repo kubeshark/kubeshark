@@ -4,11 +4,12 @@ import (
 	"encoding/json"
 	"errors"
 	"mime"
-	"mizuserver/pkg/har"
 	"net/url"
 	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/up9inc/mizu/agent/pkg/har"
 
 	"github.com/chanced/openapi"
 	"github.com/google/uuid"

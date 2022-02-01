@@ -3,7 +3,8 @@ package providers
 import (
 	"context"
 	"errors"
-	"mizuserver/pkg/config"
+
+	"github.com/up9inc/mizu/agent/pkg/config"
 
 	"github.com/up9inc/mizu/shared/logger"
 
