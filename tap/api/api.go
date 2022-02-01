@@ -6,11 +6,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/google/martian/har"
 	"io/ioutil"
 	"net/http"
 	"sync"
 	"time"
+
+	"github.com/google/martian/har"
 )
 
 type Protocol struct {
@@ -282,7 +283,7 @@ func (h HTTPPayload) MarshalJSON() ([]byte, error) {
 			RawResponse: &HTTPResponseWrapper{Response: h.Data.(*http.Response)},
 		})
 	default:
-		panic(fmt.Sprintf("HTTP payload cannot be marshaled: %s", h.Type))
+		panic(fmt.Sprintf("HTTP payload cannot be marshaled: %v", h.Type))
 	}
 }
 

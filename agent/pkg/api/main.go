@@ -42,10 +42,8 @@ func StartResolving(namespace string) {
 	res.Start(ctx)
 	go func() {
 		for {
-			select {
-			case err := <-errOut:
-				logger.Log.Infof("name resolving error %s", err)
-			}
+			err := <-errOut
+			logger.Log.Infof("name resolving error %s", err)
 		}
 	}()
 
@@ -67,7 +65,7 @@ func startReadingFiles(workingDir string) {
 		return
 	}
 
-	for true {
+	for {
 		dir, _ := os.Open(workingDir)
 		dirFiles, _ := dir.Readdir(-1)
 
@@ -124,7 +122,9 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 		if extension.Protocol.Name == "http" {
 			if !disableOASValidation {
 				var httpPair tapApi.HTTPRequestResponsePair
-				json.Unmarshal([]byte(mizuEntry.HTTPPair), &httpPair)
+				if err := json.Unmarshal([]byte(mizuEntry.HTTPPair), &httpPair); err != nil {
+					logger.Log.Error(err)
+				}
 
 				contract := handleOAS(ctx, doc, router, httpPair.Request.Payload.RawRequest, httpPair.Response.Payload.RawResponse, contractContent)
 				mizuEntry.ContractStatus = contract.Status

@@ -1,4 +1,4 @@
-name: PR validation
+name: Build
 
 on:
   pull_request:
@@ -12,7 +12,7 @@ concurrency:
 
 jobs:
   build-cli:
-    name: Build CLI executable
+    name: CLI executable build
     runs-on: ubuntu-latest
     steps:
       - name: Set up Go 1.16
@@ -27,7 +27,7 @@ jobs:
         run: make cli
 
   build-agent:
-    name: Build Agent docker image
+    name: Agent docker image build
     runs-on: ubuntu-latest
     steps:
       - name: Check out code into the Go module directory
