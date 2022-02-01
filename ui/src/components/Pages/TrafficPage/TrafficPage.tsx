@@ -329,7 +329,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus}) => {
             />
           </div>
         </div>
-        <div className={classes.details}>
+        <div className={classes.details} id="rightSideContainer">
           {focusedEntryId && <EntryDetailed />}
         </div>
       </div>}
