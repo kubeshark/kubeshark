@@ -15,6 +15,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2
+        with:
+            go-version: '^1.16'
 
       - name: Install dependencies
         run: |
@@ -48,3 +51,40 @@ jobs:
           version: latest
           working-directory: cli
           args: --timeout=3m
+
+      - name: Go lint - acceptanceTests
+        uses: golangci/golangci-lint-action@v2
+        with:
+          version: latest
+          working-directory: acceptanceTests
+          args: --timeout=3m
+
+      - name: Go lint - tap/api
+        uses: golangci/golangci-lint-action@v2
+        with:
+          version: latest
+          working-directory: tap/api
+
+      - name: Go lint - tap/extensions/amqp
+        uses: golangci/golangci-lint-action@v2
+        with:
+          version: latest
+          working-directory: tap/extensions/amqp
+
+      - name: Go lint - tap/extensions/http
+        uses: golangci/golangci-lint-action@v2
+        with:
+          version: latest
+          working-directory: tap/extensions/http
+
+      - name: Go lint - tap/extensions/kafka
+        uses: golangci/golangci-lint-action@v2
+        with:
+          version: latest
+          working-directory: tap/extensions/kafka
+
+      - name: Go lint - tap/extensions/redis
+        uses: golangci/golangci-lint-action@v2
+        with:
+          version: latest
+          working-directory: tap/extensions/redis

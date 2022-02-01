@@ -2,21 +2,22 @@ package controllers
 
 import (
 	"context"
+	"net/http"
+	"regexp"
+	"time"
+
 	"github.com/gin-gonic/gin"
+	"github.com/up9inc/mizu/agent/pkg/config"
+	"github.com/up9inc/mizu/agent/pkg/models"
+	"github.com/up9inc/mizu/agent/pkg/providers"
+	"github.com/up9inc/mizu/agent/pkg/providers/tapConfig"
+	"github.com/up9inc/mizu/agent/pkg/providers/tappedPods"
+	"github.com/up9inc/mizu/agent/pkg/providers/tappers"
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/kubernetes"
 	"github.com/up9inc/mizu/shared/logger"
 	tapApi "github.com/up9inc/mizu/tap/api"
 	v1 "k8s.io/api/core/v1"
-	"mizuserver/pkg/config"
-	"mizuserver/pkg/models"
-	"mizuserver/pkg/providers"
-	"mizuserver/pkg/providers/tapConfig"
-	"mizuserver/pkg/providers/tappedPods"
-	"mizuserver/pkg/providers/tappers"
-	"net/http"
-	"regexp"
-	"time"
 )
 
 var cancelTapperSyncer context.CancelFunc

@@ -3,9 +3,10 @@ package oas
 import (
 	"encoding/json"
 	"errors"
-	"mizuserver/pkg/har"
 	"strconv"
 	"strings"
+
+	"github.com/up9inc/mizu/agent/pkg/har"
 
 	"github.com/chanced/openapi"
 	"github.com/up9inc/mizu/shared/logger"

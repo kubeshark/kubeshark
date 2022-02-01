@@ -6,17 +6,6 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
-	"mizuserver/pkg/api"
-	"mizuserver/pkg/config"
-	"mizuserver/pkg/controllers"
-	"mizuserver/pkg/elastic"
-	"mizuserver/pkg/middlewares"
-	"mizuserver/pkg/models"
-	"mizuserver/pkg/oas"
-	"mizuserver/pkg/routes"
-	"mizuserver/pkg/servicemap"
-	"mizuserver/pkg/up9"
-	"mizuserver/pkg/utils"
 	"net/http"
 	"os"
 	"os/signal"
@@ -25,6 +14,21 @@ import (
 	"strings"
 	"syscall"
 	"time"
+
+	"github.com/up9inc/mizu/agent/pkg/middlewares"
+	"github.com/up9inc/mizu/agent/pkg/models"
+	"github.com/up9inc/mizu/agent/pkg/oas"
+	"github.com/up9inc/mizu/agent/pkg/routes"
+	"github.com/up9inc/mizu/agent/pkg/servicemap"
+	"github.com/up9inc/mizu/agent/pkg/up9"
+	"github.com/up9inc/mizu/agent/pkg/utils"
+
+	"github.com/up9inc/mizu/agent/pkg/elastic"
+
+	"github.com/up9inc/mizu/agent/pkg/controllers"
+
+	"github.com/up9inc/mizu/agent/pkg/api"
+	"github.com/up9inc/mizu/agent/pkg/config"
 
 	v1 "k8s.io/api/core/v1"
 

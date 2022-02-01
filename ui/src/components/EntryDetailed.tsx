@@ -47,6 +47,7 @@ const EntryTitle: React.FC<any> = ({protocol, data, bodySize, elapsedTime}) => {
             >
                 <div
                     style={{opacity: 0.5}}
+                    id="entryDetailedTitleBodySize"
                 >
                     {formatSize(bodySize)}
                 </div>
@@ -58,6 +59,7 @@ const EntryTitle: React.FC<any> = ({protocol, data, bodySize, elapsedTime}) => {
             >
                 <div
                     style={{opacity: 0.5}}
+                    id="entryDetailedTitleElapsedTime"
                 >
                     {Math.round(elapsedTime)}ms
                 </div>

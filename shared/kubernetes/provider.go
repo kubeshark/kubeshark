@@ -764,7 +764,7 @@ func (provider *Provider) handleRemovalError(err error) error {
 }
 
 func (provider *Provider) CreateConfigMap(ctx context.Context, namespace string, configMapName string, serializedValidationRules string, serializedContract string, serializedMizuConfig string) error {
-	configMapData := make(map[string]string, 0)
+	configMapData := make(map[string]string)
 	if serializedValidationRules != "" {
 		configMapData[shared.ValidationRulesFileName] = serializedValidationRules
 	}

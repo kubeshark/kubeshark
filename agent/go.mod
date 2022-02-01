@@ -1,4 +1,4 @@
-module mizuserver
+module github.com/up9inc/mizu/agent
 
 go 1.16
 
