@@ -171,8 +171,6 @@ func loadStartingOAS() {
 	gen.StartFromSpec(doc)
 
 	GetOasGeneratorInstance().ServiceSpecs.Store("catalogue", gen)
-
-	return
 }
 
 func TestEntriesNegative(t *testing.T) {
@@ -224,5 +222,4 @@ func TestLoadValid3_1(t *testing.T) {
 		t.Log(err)
 		t.FailNow()
 	}
-	return
 }

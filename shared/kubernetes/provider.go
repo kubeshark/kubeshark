@@ -194,19 +194,19 @@ func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, moun
 
 	cpuLimit, err := resource.ParseQuantity(opts.Resources.CpuLimit)
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("invalid cpu limit for %s container", opts.PodName))
+		return nil, fmt.Errorf("invalid cpu limit for %s container", opts.PodName)
 	}
 	memLimit, err := resource.ParseQuantity(opts.Resources.MemoryLimit)
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("invalid memory limit for %s container", opts.PodName))
+		return nil, fmt.Errorf("invalid memory limit for %s container", opts.PodName)
 	}
 	cpuRequests, err := resource.ParseQuantity(opts.Resources.CpuRequests)
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("invalid cpu request for %s container", opts.PodName))
+		return nil, fmt.Errorf("invalid cpu request for %s container", opts.PodName)
 	}
 	memRequests, err := resource.ParseQuantity(opts.Resources.MemoryRequests)
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("invalid memory request for %s container", opts.PodName))
+		return nil, fmt.Errorf("invalid memory request for %s container", opts.PodName)
 	}
 
 	command := []string{"./mizuagent", "--api-server"}
@@ -395,7 +395,7 @@ func (provider *Provider) CreatePod(ctx context.Context, namespace string, podSp
 }
 
 func (provider *Provider) CreateDeployment(ctx context.Context, namespace string, deploymentName string, podSpec *core.Pod) (*v1.Deployment, error) {
-	if _, keyExists := podSpec.ObjectMeta.Labels["app"]; keyExists == false {
+	if _, keyExists := podSpec.ObjectMeta.Labels["app"]; !keyExists {
 		return nil, errors.New("pod spec must contain 'app' label")
 	}
 	podTemplate := &core.PodTemplateSpec{
@@ -854,19 +854,19 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	)
 	cpuLimit, err := resource.ParseQuantity(resources.CpuLimit)
 	if err != nil {
-		return errors.New(fmt.Sprintf("invalid cpu limit for %s container", tapperPodName))
+		return fmt.Errorf("invalid cpu limit for %s container", tapperPodName)
 	}
 	memLimit, err := resource.ParseQuantity(resources.MemoryLimit)
 	if err != nil {
-		return errors.New(fmt.Sprintf("invalid memory limit for %s container", tapperPodName))
+		return fmt.Errorf("invalid memory limit for %s container", tapperPodName)
 	}
 	cpuRequests, err := resource.ParseQuantity(resources.CpuRequests)
 	if err != nil {
-		return errors.New(fmt.Sprintf("invalid cpu request for %s container", tapperPodName))
+		return fmt.Errorf("invalid cpu request for %s container", tapperPodName)
 	}
 	memRequests, err := resource.ParseQuantity(resources.MemoryRequests)
 	if err != nil {
-		return errors.New(fmt.Sprintf("invalid memory request for %s container", tapperPodName))
+		return fmt.Errorf("invalid memory request for %s container", tapperPodName)
 	}
 	agentResourceLimits := core.ResourceList{
 		"cpu":    cpuLimit,

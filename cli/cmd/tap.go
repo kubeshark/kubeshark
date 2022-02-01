@@ -104,7 +104,9 @@ func init() {
 	rootCmd.AddCommand(tapCmd)
 
 	defaultTapConfig := configStructs.TapConfig{}
-	defaults.Set(&defaultTapConfig)
+	if err := defaults.Set(&defaultTapConfig); err != nil {
+		logger.Log.Debug(err)
+	}
 
 	tapCmd.Flags().Uint16P(configStructs.GuiPortTapName, "p", defaultTapConfig.GuiPort, "Provide a custom port for the web interface webserver")
 	tapCmd.Flags().StringSliceP(configStructs.NamespacesTapName, "n", defaultTapConfig.Namespaces, "Namespaces selector")

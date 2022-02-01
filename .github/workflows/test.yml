@@ -1,4 +1,4 @@
-name: PR validation
+name: Test
 
 on:
   pull_request:
@@ -7,33 +7,36 @@ on:
       - 'main'
 
 concurrency:
-  group: mizu-pr-validation-${{ github.ref }}
+  group: mizu-tests-validation-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  build-cli:
-    name: Build CLI
+  run-tests-cli:
+    name: CLI Tests
     runs-on: ubuntu-latest
     steps:
       - name: Set up Go 1.16
         uses: actions/setup-go@v2
         with:
-          go-version: '1.16'
+          go-version: '^1.16'
 
       - name: Check out code into the Go module directory
         uses: actions/checkout@v2
 
-      - name: Build CLI
-        run: make cli
+      - name: Test
+        run: make test-cli
 
-  build-agent:
-    name: Build Agent
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v2
+
+  run-tests-agent:
+    name: Agent Tests
     runs-on: ubuntu-latest
     steps:
       - name: Set up Go 1.16
         uses: actions/setup-go@v2
         with:
-          go-version: '1.16'
+          go-version: '^1.16'
 
       - name: Check out code into the Go module directory
         uses: actions/checkout@v2
@@ -42,20 +45,8 @@ jobs:
         run: |
           sudo apt-get install libpcap-dev
 
-      - name: Build Agent
-        run: make agent
+      - name: Test
+        run: make test-agent
 
-  build-ui:
-    name: Build UI
-    runs-on: ubuntu-latest
-    steps:
-      - name: Set up Node 16
-        uses: actions/setup-node@v2
-        with:
-          node-version: '16'
-
-      - name: Check out code into the Go module directory
-        uses: actions/checkout@v2
-
-      - name: Build UI
-        run: make ui
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v2
