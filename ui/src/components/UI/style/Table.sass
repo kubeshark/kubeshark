@@ -9,6 +9,9 @@
       overflow-y: auto
       display: block
 
+    &__tbody &__tr:hover
+      background: $header-background-color
+
     &__th
       color: $blue-gray
       text-align: left
@@ -41,9 +44,7 @@
             line-height: 15px;
             color: $light-gray;
 
-    &__tr:hover
-        background: #F7F9FC
-
+    &__tr:hover        
         & .mui-table__row-actions
             &--delete
                 cursor: pointer;
@@ -67,4 +68,5 @@
 @mixin row-actions
         display: flex
         justify-content: flex-end
+
  

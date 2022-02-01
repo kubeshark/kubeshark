@@ -1,7 +1,7 @@
 @import "../../../variables.module"
 
 @mixin tab-container
-        max-width: 513px
+        width: clamp(50%,513px,80%);
         margin: 0 auto
 
 .settings-page
@@ -19,7 +19,7 @@
 
 
 .header-section
-    
+    background-color: $header-background-color
 
     &__container
         @include tab-container
@@ -34,6 +34,8 @@
 
 .tab-content
     padding-top: 30px;
+    background-color: $data-background-color
+    height: 100vh;
     &__container
         @include tab-container
     

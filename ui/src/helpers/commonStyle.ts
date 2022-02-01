@@ -13,6 +13,9 @@ export const useCommonStyles = makeStyles(() => ({
         "&:hover": {
             backgroundColor: "#205cf5",
         },
+        "&:disabled":{
+            backgroundColor: "rgba(0, 0, 0, 0.26)"
+        }
     },
     outlinedButton: {
         backgroundColor: "transparent",
