@@ -96,6 +96,6 @@ func (h *tcpReader) run(wg *sync.WaitGroup) {
 	b := bufio.NewReader(h)
 	err := h.extension.Dissector.Dissect(b, h.isClient, h.tcpID, h.counterPair, h.superTimer, h.parent.superIdentifier, h.emitter, filteringOptions)
 	if err != nil {
-		io.Copy(ioutil.Discard, b)
+		io.Copy(ioutil.Discard, b) //nolint
 	}
 }

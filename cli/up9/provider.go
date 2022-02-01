@@ -23,9 +23,5 @@ func IsTokenValid(tokenString string, envName string) bool {
 	}
 	defer response.Body.Close()
 
-	if response.StatusCode != http.StatusOK {
-		return false
-	}
-
-	return true
+	return response.StatusCode == http.StatusOK
 }
