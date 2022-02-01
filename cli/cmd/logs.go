@@ -43,7 +43,9 @@ func init() {
 	rootCmd.AddCommand(logsCmd)
 
 	defaultLogsConfig := configStructs.LogsConfig{}
-	defaults.Set(&defaultLogsConfig)
+	if err := defaults.Set(&defaultLogsConfig); err != nil {
+		logger.Log.Debug(err)
+	}
 
 	logsCmd.Flags().StringP(configStructs.FileLogsName, "f", defaultLogsConfig.FileStr, "Path for zip file (default current <pwd>\\mizu_logs.zip)")
 }
