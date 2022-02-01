@@ -13,7 +13,7 @@ func CreateWorkspace(c *gin.Context) {
 	requestCreateWorkspace := &workspace.WorkspaceCreateRequest{}
 
 	if err := c.Bind(requestCreateWorkspace); err != nil {
-		c.JSON(http.StatusBadRequest, err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -55,7 +55,7 @@ func UpdateWorkspace(c *gin.Context) {
 	requestUpdateWorkspace := &workspace.WorkspaceCreateRequest{}
 
 	if err := c.Bind(requestUpdateWorkspace); err != nil {
-		c.JSON(http.StatusBadRequest, err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 

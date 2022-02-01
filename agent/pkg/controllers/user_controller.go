@@ -37,7 +37,7 @@ func CreateUserAndInvite(c *gin.Context) {
 	requestCreateUser := &user.InviteUserRequest{}
 
 	if err := c.Bind(requestCreateUser); err != nil {
-		c.JSON(http.StatusBadRequest, err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -63,7 +63,7 @@ func UpdateUser(c *gin.Context) {
 	requestEditUser := &user.EditUserRequest{}
 
 	if err := c.Bind(requestEditUser); err != nil {
-		c.JSON(http.StatusBadRequest, err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
