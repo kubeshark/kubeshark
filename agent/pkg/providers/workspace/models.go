@@ -1,8 +1,8 @@
 package workspace
 
 type WorkspaceCreateRequest struct {
-	Name       string   `json:"name"`
-	Namespaces []string `json:"namespaces"`
+	Name       string   `json:"name" binding:"required"`
+	Namespaces []string `json:"namespaces" binding:"required"`
 }
 
 type WorkspaceListItemResponse struct {

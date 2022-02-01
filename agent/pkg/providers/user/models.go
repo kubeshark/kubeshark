@@ -29,14 +29,14 @@ type UserListItem struct {
 }
 
 type InviteUserRequest struct {
-	Username    string `json:"username"`
-	WorkspaceId string `json:"workspaceId"`
-	SystemRole  string `json:"role"`
+	Username    string `json:"username" binding:"required"`
+	WorkspaceId string `json:"workspaceId" binding:"required"`
+	SystemRole  string `json:"role" binding:"required,eq=admin|eq=user"`
 }
 
 type EditUserRequest struct {
 	WorkspaceId string `json:"workspaceId"`
-	SystemRole  string `json:"role"`
+	SystemRole  string `json:"role" binding:"required,eq=admin|eq=user"`
 }
 
 type WhoAmIResponse struct {

@@ -42,7 +42,7 @@ func CreateAdminUser(password string, ctx context.Context) (token *string, err e
 
 	if err != nil {
 		//Delete the user to prevent a half-setup situation where admin user is created without admin privileges
-		if err := DeleteUser(identityId, ctx); err != nil {
+		if err := user.DeleteUser(identityId, ctx); err != nil {
 			logger.Log.Error(err)
 		}
 
