@@ -57,8 +57,11 @@ func RequiresAdmin() gin.HandlerFunc {
 func verifyKratosSessionForRequest(c *gin.Context) *ory.Session {
 	token := c.GetHeader("x-session-token")
 	if token == "" {
-		c.AbortWithStatusJSON(401, gin.H{"error": "token header is empty"})
-		return nil
+		token = c.Query("sessionToken")
+		if token == "" {
+			c.AbortWithStatusJSON(401, gin.H{"error": "this request has no token"})
+			return nil
+		}
 	}
 
 	if session, err := user.VerifyToken(token, c.Request.Context()); err != nil {

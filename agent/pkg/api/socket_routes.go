@@ -1,9 +1,16 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"mizuserver/pkg/config"
+	"mizuserver/pkg/middlewares"
 	"mizuserver/pkg/models"
+	"mizuserver/pkg/providers/user"
+	"mizuserver/pkg/providers/userRoles"
+	"mizuserver/pkg/providers/workspace"
 	"net/http"
 	"sync"
 	"time"
@@ -44,7 +51,7 @@ func init() {
 }
 
 func WebSocketRoutes(app *gin.Engine, eventHandlers EventHandlers, startTime int64) {
-	app.GET("/ws", func(c *gin.Context) {
+	app.GET("/ws", middlewares.RequiresAuth(), func(c *gin.Context) {
 		websocketHandler(c.Writer, c.Request, eventHandlers, false, startTime)
 	})
 
@@ -70,9 +77,20 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 
 	var connection *basenine.Connection
 	var isQuerySet bool
+	var namespaceFilter []string
 
 	// `!isTapper` means it's a connection from the web UI
 	if !isTapper {
+		if config.Config.StandaloneMode {
+			sessionToken := r.URL.Query().Get("sessionToken")
+			workspaceOverride := r.URL.Query().Get("workspaceOverride")
+
+			if namespaceFilter, err = getNamespaceListForUserWorkspace(sessionToken, workspaceOverride, r.Context()); err != nil {
+				logger.Log.Errorf("Failed to get namespace filter for user: %v", err)
+				return
+			}
+		}
+
 		connection, err = basenine.NewConnection(shared.BasenineHost, shared.BaseninePort)
 		if err != nil {
 			panic(err)
@@ -137,6 +155,12 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 					var entry *tapApi.Entry
 					err = json.Unmarshal(bytes, &entry)
 
+					if namespaceFilter != nil {
+						if !shared.Contains(namespaceFilter, entry.Namespace) {
+							continue
+						}
+					}
+
 					base := tapApi.Summarize(entry)
 
 					baseEntryBytes, _ := models.CreateBaseEntryWebSocketMessage(base)
@@ -175,6 +199,32 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 			eventHandlers.WebSocketMessage(socketId, msg)
 		}
 	}
+}
+
+func getNamespaceListForUserWorkspace(token string, workspaceOverride string, ctx context.Context) ([]string, error) {
+	user, err := user.WhoAmI(token, ctx)
+	if err != nil {
+		return nil, err
+	}
+	workspaceObject := user.Workspace
+	if workspaceOverride != "" {
+		if user.SystemRole != userRoles.AdminRole {
+			return nil, errors.New("only admins can use workspaceOverride")
+		}
+		if workspaceObject, err = workspace.GetWorkspace(workspaceOverride); err != nil {
+			return nil, err
+		}
+	}
+
+	if workspaceObject == nil {
+		return nil, errors.New("workspace not found")
+	}
+
+	if workspaceObject.Namespaces == nil || len(workspaceObject.Namespaces) == 0 {
+		return nil, errors.New("only admins can use workspaceOverride")
+	}
+
+	return workspaceObject.Namespaces, nil
 }
 
 func socketCleanup(socketId int, socketConnection *SocketConnection) {
