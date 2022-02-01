@@ -3,10 +3,11 @@ package api
 import (
 	"encoding/json"
 	"fmt"
-	"mizuserver/pkg/models"
 	"net/http"
 	"sync"
 	"time"
+
+	"github.com/up9inc/mizu/agent/pkg/models"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"

@@ -4,10 +4,11 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"mizuserver/pkg/har"
 	"reflect"
 	"regexp"
 	"strings"
+
+	"github.com/up9inc/mizu/agent/pkg/har"
 
 	"github.com/up9inc/mizu/shared/logger"
 

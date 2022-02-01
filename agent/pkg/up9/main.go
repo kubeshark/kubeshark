@@ -6,14 +6,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"mizuserver/pkg/har"
-	"mizuserver/pkg/utils"
 	"net/http"
 	"net/url"
 	"regexp"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/up9inc/mizu/agent/pkg/har"
+	"github.com/up9inc/mizu/agent/pkg/utils"
 
 	basenine "github.com/up9inc/basenine/client/go"
 	"github.com/up9inc/mizu/shared"
