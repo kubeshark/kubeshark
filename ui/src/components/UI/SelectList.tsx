@@ -25,13 +25,20 @@ const SelectList: React.FC<Props> = ({items ,tableName,checkedValues=[],multiSel
 
     const toggleValue = (checkedKey) => {
         if (!multiSelect){
-            unToggleAll();
+            // unToggleAll();
+            const newCheckedValues = [];
+            newCheckedValues.push(checkedKey);
+            setCheckedValues(newCheckedValues);
         }
-        const newCheckedValues = [...checkedValues];
-        let index = newCheckedValues.indexOf(checkedKey);
-        if(index > -1) newCheckedValues.splice(index,1);
-        else newCheckedValues.push(checkedKey);   
-        setCheckedValues(newCheckedValues);
+        else {
+            const newCheckedValues = [...checkedValues];
+            let index = newCheckedValues.indexOf(checkedKey);
+            if(index > -1) 
+                newCheckedValues.splice(index,1);
+            else 
+                newCheckedValues.push(checkedKey);   
+            setCheckedValues(newCheckedValues);
+        }
     }
 
     const unToggleAll = () => {
