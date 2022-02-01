@@ -48,7 +48,7 @@ jobs:
           version: latest
           working-directory: cli
           args: --timeout=3m
-      
+
       - name: Go lint - acceptanceTests
         uses: golangci/golangci-lint-action@v2
         with:
@@ -67,19 +67,19 @@ jobs:
         with:
           version: latest
           working-directory: tap/extensions/amqp
-      
+
       - name: Go lint - tap/extensions/http
         uses: golangci/golangci-lint-action@v2
         with:
           version: latest
           working-directory: tap/extensions/http
-      
+
       - name: Go lint - tap/extensions/kafka
         uses: golangci/golangci-lint-action@v2
         with:
           version: latest
           working-directory: tap/extensions/kafka
-      
+
       - name: Go lint - tap/extensions/redis
         uses: golangci/golangci-lint-action@v2
         with:
