@@ -85,11 +85,11 @@ func DeleteUser(identityId string, ctx context.Context) error {
 		return err
 	}
 	if result == nil {
-		return errors.New("unknown error occured during user deletion")
+		return fmt.Errorf("unknown error occured during user deletion %v", identityId)
 	}
 
 	if result.StatusCode < 200 || result.StatusCode > 299 {
-		return errors.New(fmt.Sprintf("user deletion returned bad status %d", result.StatusCode))
+		return fmt.Errorf("user deletion %v returned bad status %d", identityId, result.StatusCode)
 	} else {
 		return nil
 	}

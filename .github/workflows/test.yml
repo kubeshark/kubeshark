@@ -1,11 +1,7 @@
-name: tests validation
+name: Test
 
 on:
   pull_request:
-    branches:
-      - 'develop'
-      - 'main'
-  push:
     branches:
       - 'develop'
       - 'main'
@@ -16,7 +12,7 @@ concurrency:
 
 jobs:
   run-tests-cli:
-    name: Run CLI tests
+    name: CLI Tests
     runs-on: ubuntu-latest
     steps:
       - name: Set up Go 1.16
@@ -34,7 +30,7 @@ jobs:
         uses: codecov/codecov-action@v2
 
   run-tests-agent:
-    name: Run Agent tests
+    name: Agent Tests
     runs-on: ubuntu-latest
     steps:
       - name: Set up Go 1.16

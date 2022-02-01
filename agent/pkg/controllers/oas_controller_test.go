@@ -1,10 +1,11 @@
 package controllers
 
 import (
-	"github.com/gin-gonic/gin"
 	"mizuserver/pkg/oas"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/gin-gonic/gin"
 )
 
 func TestGetOASServers(t *testing.T) {
@@ -15,7 +16,6 @@ func TestGetOASServers(t *testing.T) {
 
 	GetOASServers(c)
 	t.Logf("Written body: %s", recorder.Body.String())
-	return
 }
 
 func TestGetOASAllSpecs(t *testing.T) {
@@ -26,7 +26,6 @@ func TestGetOASAllSpecs(t *testing.T) {
 
 	GetOASAllSpecs(c)
 	t.Logf("Written body: %s", recorder.Body.String())
-	return
 }
 
 func TestGetOASSpec(t *testing.T) {
@@ -39,5 +38,4 @@ func TestGetOASSpec(t *testing.T) {
 
 	GetOASSpec(c)
 	t.Logf("Written body: %s", recorder.Body.String())
-	return
 }

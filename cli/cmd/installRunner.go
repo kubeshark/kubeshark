@@ -31,7 +31,9 @@ func runMizuInstall() {
 	var defaultMaxEntriesDBSizeBytes int64 = 200 * 1000 * 1000
 
 	defaultResources := shared.Resources{}
-	defaults.Set(&defaultResources)
+	if err := defaults.Set(&defaultResources); err != nil {
+		logger.Log.Debug(err)
+	}
 
 	mizuAgentConfig := getInstallMizuAgentConfig(defaultMaxEntriesDBSizeBytes, defaultResources)
 	serializedMizuConfig, err := getSerializedMizuAgentConfig(mizuAgentConfig)

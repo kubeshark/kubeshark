@@ -345,7 +345,7 @@ func (p *RedisProtocol) Read() (packet *RedisPacket, err error) {
 		if packet.Type == types[plusByte] {
 			packet.Keyword = RedisKeyword(strings.ToUpper(val))
 			if !isValidRedisKeyword(keywords, packet.Keyword) {
-				err = errors.New(fmt.Sprintf("Unrecognized keyword: %s", string(packet.Command)))
+				err = fmt.Errorf("Unrecognized keyword: %s", string(packet.Command))
 				return
 			}
 		} else {
@@ -363,7 +363,7 @@ func (p *RedisProtocol) Read() (packet *RedisPacket, err error) {
 
 	if packet.Command != "" {
 		if !isValidRedisCommand(commands, packet.Command) {
-			err = errors.New(fmt.Sprintf("Unrecognized command: %s", string(packet.Command)))
+			err = fmt.Errorf("Unrecognized command: %s", string(packet.Command))
 			return
 		}
 	}

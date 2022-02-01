@@ -108,7 +108,7 @@ func PassedValidationRules(rulesMatched []RulesMatched) (bool, int64, int) {
 	}
 
 	for _, rule := range rulesMatched {
-		if rule.Matched == false {
+		if !rule.Matched {
 			return false, responseTime, numberOfRulesMatched
 		} else {
 			if strings.ToLower(rule.Rule.Type) == "slo" {

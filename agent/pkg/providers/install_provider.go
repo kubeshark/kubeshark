@@ -5,6 +5,8 @@ import (
 	"errors"
 	"mizuserver/pkg/config"
 
+	"github.com/up9inc/mizu/shared/logger"
+
 	ory "github.com/ory/kratos-client-go"
 )
 
@@ -38,7 +40,9 @@ func CreateAdminUser(password string, ctx context.Context) (token *string, err e
 
 	if err != nil {
 		//Delete the user to prevent a half-setup situation where admin user is created without admin privileges
-		DeleteUser(identityId, ctx)
+		if err := DeleteUser(identityId, ctx); err != nil {
+			logger.Log.Error(err)
+		}
 
 		return nil, err, nil
 	}
