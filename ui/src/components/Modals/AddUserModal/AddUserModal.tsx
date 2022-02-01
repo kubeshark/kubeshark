@@ -104,7 +104,7 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
   const workspaceChange = (workspaces) => {
     //setWorkspaces(newVal);
     const  data = {...userDataModel, workspaceId : workspaces.length ? workspaces[0] : ""}
-    setUserData((prevState) => {return data});
+    setUserData(data)
     setGenarateDisabledState()
   }
 

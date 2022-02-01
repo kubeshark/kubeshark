@@ -104,7 +104,7 @@ export default class Api {
     }
 
     getNamespaces = async() =>{
-        const response = await this.client.get(`/config/namespaces`);
+        const response = await this.client.get(`/kube/namespaces`);
         return response.data;
     }
 
