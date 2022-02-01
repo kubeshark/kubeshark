@@ -35,7 +35,6 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
   const [workspaces, setWorkspaces] = useState([])
 
   //const { control, handleSubmit,register } = useForm<UserData>();
-  const [disable, setDisable] = useState(true);
   const [editMode, setEditMode] = useState(isEditMode);
   const [invite, setInvite] = useState({sent:false,isSuceeded:false,link : null});
   const roles = [{key:"1",value:"admin"},{key:"2",value:"user"}]
@@ -91,7 +90,6 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
     setUserData({} as UserData)
     setInvite({sent:false,isSuceeded:false,link:""})
     setEditMode(false)
-    setDisable(true)
   }
 
   const updateUser = async() =>{
@@ -107,33 +105,26 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
     //setWorkspaces(newVal);
     const  data = {...userDataModel, workspaceId : workspaces.length ? workspaces[0] : ""}
     setUserData((prevState) => {return data});
-    setGenarateDisabledState()
   }
 
   const userRoleChange = (e) => {
     const  data = {...userDataModel, role : e.target.value}
     setUserData(data)
-    setGenarateDisabledState()
   }
 
   const userNameChange = (e) => {
     const  data = {...userDataModel, username : e.currentTarget.value}
     setUserData(data)
-    setGenarateDisabledState()
   }
 
   const handleChange = (prop) => (event) => {
     //setValues({ ...values, [prop]: event.target.value });
   };
 
-  const isFormValid = () : boolean => {
-    return (Object.values(userDataModel).length >= 3) && Object.values(userDataModel).every(val => val !== null)
+  const isFormDisabled = () : boolean => {
+    return !(Object.values(userDataModel).length >= 3) && Object.values(userDataModel).every(val => val !== null)
   }
 
-  const setGenarateDisabledState = () => {
-    const isValid = isFormValid()
-    setDisable(!isValid)
-  }
 
   const mapTokenToLink = (token) => {
     return`${window.location.origin}/${token}`
@@ -188,7 +179,7 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
         {showGenerateButton() && <Button 
                                             className={classes.button + " generate-link-button"} size={"small"} 
                                             onClick={!isEditMode ? generateLink : inviteExistingUser}
-                                            disabled={disable}  
+                                            disabled={isFormDisabled()}  
                                             endIcon={isLoading && <img src={spinner} alt="spinner"/>}
                                             startIcon={<span className='generate-link-button__icon'></span>}>
                                               
@@ -197,7 +188,7 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
            {!isEditMode &&  isShowInviteLink() &&  <Button style={{height: '100%',marginLeft:'20px'}} className={classes.button} size={"small"} onClick={onClose}>
                         Done
             </Button>}                            
-              {isEditMode && <Button style={{height: '100%', marginLeft:'20px'}} disabled={disable} className={classes.button} size={"small"} onClick={updateUser}>
+              {isEditMode && <Button style={{height: '100%', marginLeft:'20px'}} disabled={isFormDisabled()} className={classes.button} size={"small"} onClick={updateUser}>
               Save
             </Button>
           }
