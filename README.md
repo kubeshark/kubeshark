@@ -1,11 +1,17 @@
 ![Mizu: The API Traffic Viewer for Kubernetes](assets/mizu-logo.svg)
 
 <p align="center">
+    <a href="https://github.com/up9inc/mizu/blob/main/LICENSE">
+        <img alt="GitHub License" src="https://img.shields.io/github/license/up9inc/mizu?logo=GitHub&style=flat-square">
+    </a>
     <a href="https://github.com/up9inc/mizu/releases/latest">
         <img alt="GitHub Latest Release" src="https://img.shields.io/github/v/release/up9inc/mizu?logo=GitHub&style=flat-square">
     </a>
-    <a href="https://github.com/up9inc/mizu/blob/main/LICENSE">
-        <img alt="GitHub License" src="https://img.shields.io/github/license/up9inc/mizu?logo=GitHub&style=flat-square">
+    <a href="https://hub.docker.com/r/up9inc/mizu">
+      <img alt="Slack" src="https://img.shields.io/docker/pulls/up9inc/mizu?color=%23099cec">
+    </a>
+    <a href="https://hub.docker.com/r/up9inc/mizu">
+      <img alt="Slack" src="https://img.shields.io/docker/image-size/up9inc/mizu/latest">
     </a>
     <a href="https://join.slack.com/t/up9/shared_invite/zt-tfjnduli-QzlR8VV4Z1w3YnPIAJfhlQ">
       <img alt="Slack" src="https://img.shields.io/badge/slack-join_chat-white.svg?logo=slack&style=social">
