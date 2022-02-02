@@ -51,9 +51,11 @@ func IsGibberish(str string) bool {
 		}
 	}
 
-	if float64(noisyLen) > 0 {
-		return true
-	}
+	return float64(noisyLen) > 0
+
+	//if float64(noisyLen) > 0 {
+	//	return true
+	//}
 
 	//if len(chunks) > 0 && float64(noisyLen) >= float64(alnumLen)/3.0 {
 	//	return true
@@ -63,7 +65,7 @@ func IsGibberish(str string) bool {
 	//return true
 	//}
 
-	return false
+	// return false
 }
 
 func noiseLevel(str string) (score float64) {
