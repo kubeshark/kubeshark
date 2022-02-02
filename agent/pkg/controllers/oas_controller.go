@@ -1,11 +1,12 @@
 package controllers
 
 import (
+	"net/http"
+
 	"github.com/chanced/openapi"
 	"github.com/gin-gonic/gin"
+	"github.com/up9inc/mizu/agent/pkg/oas"
 	"github.com/up9inc/mizu/shared/logger"
-	"mizuserver/pkg/oas"
-	"net/http"
 )
 
 func GetOASServers(c *gin.Context) {

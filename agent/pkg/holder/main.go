@@ -1,6 +1,6 @@
 package holder
 
-import "mizuserver/pkg/resolver"
+import "github.com/up9inc/mizu/agent/pkg/resolver"
 
 var k8sResolver *resolver.Resolver
 
@@ -11,4 +11,3 @@ func SetResolver(param *resolver.Resolver) {
 func GetResolver() *resolver.Resolver {
 	return k8sResolver
 }
-

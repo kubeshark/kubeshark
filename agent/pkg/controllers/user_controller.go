@@ -1,7 +1,7 @@
 package controllers
 
 import (
-	"mizuserver/pkg/providers"
+	"github.com/up9inc/mizu/agent/pkg/providers"
 
 	"github.com/gin-gonic/gin"
 	"github.com/up9inc/mizu/shared/logger"

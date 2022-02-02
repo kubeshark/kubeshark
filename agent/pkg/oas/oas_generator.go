@@ -3,10 +3,11 @@ package oas
 import (
 	"context"
 	"encoding/json"
-	"github.com/up9inc/mizu/shared/logger"
-	"mizuserver/pkg/har"
 	"net/url"
 	"sync"
+
+	"github.com/up9inc/mizu/agent/pkg/har"
+	"github.com/up9inc/mizu/shared/logger"
 )
 
 var (

@@ -92,21 +92,30 @@ func (d dissecting) Ping() {
 }
 
 func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, superIdentifier *api.SuperIdentifier, emitter api.Emitter, options *api.TrafficFilteringOptions) error {
-	isHTTP2, err := checkIsHTTP2Connection(b, isClient)
+	var err error
+	isHTTP2, _ := checkIsHTTP2Connection(b, isClient)
 
 	var http2Assembler *Http2Assembler
 	if isHTTP2 {
-		prepareHTTP2Connection(b, isClient)
+		err = prepareHTTP2Connection(b, isClient)
+		if err != nil {
+			return err
+		}
 		http2Assembler = createHTTP2Assembler(b)
 	}
 
-	dissected := false
 	switchingProtocolsHTTP2 := false
 	for {
 		if switchingProtocolsHTTP2 {
 			switchingProtocolsHTTP2 = false
 			isHTTP2, err = checkIsHTTP2Connection(b, isClient)
-			prepareHTTP2Connection(b, isClient)
+			if err != nil {
+				break
+			}
+			err = prepareHTTP2Connection(b, isClient)
+			if err != nil {
+				break
+			}
 			http2Assembler = createHTTP2Assembler(b)
 		}
 
@@ -121,7 +130,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 			} else if err != nil {
 				continue
 			}
-			dissected = true
+			superIdentifier.Protocol = &http11protocol
 		} else if isClient {
 			var req *http.Request
 			switchingProtocolsHTTP2, req, err = handleHTTP1ClientStream(b, tcpID, counterPair, superTimer, emitter, options)
@@ -130,7 +139,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 			} else if err != nil {
 				continue
 			}
-			dissected = true
+			superIdentifier.Protocol = &http11protocol
 
 			// In case of an HTTP2 upgrade, duplicate the HTTP1 request into HTTP2 with stream ID 1
 			if switchingProtocolsHTTP2 {
@@ -161,14 +170,14 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 			} else if err != nil {
 				continue
 			}
-			dissected = true
+			superIdentifier.Protocol = &http11protocol
 		}
 	}
 
-	if !dissected {
+	if superIdentifier.Protocol == nil {
 		return err
 	}
-	superIdentifier.Protocol = &http11protocol
+
 	return nil
 }
 
@@ -341,11 +350,11 @@ func representRequest(request map[string]interface{}) (repRequest []interface{})
 	})
 
 	postData, _ := request["postData"].(map[string]interface{})
-	mimeType, _ := postData["mimeType"]
+	mimeType := postData["mimeType"]
 	if mimeType == nil || len(mimeType.(string)) == 0 {
 		mimeType = "text/html"
 	}
-	text, _ := postData["text"]
+	text := postData["text"]
 	if text != nil {
 		repRequest = append(repRequest, api.SectionData{
 			Type:     api.BODY,
@@ -425,12 +434,12 @@ func representResponse(response map[string]interface{}) (repResponse []interface
 	})
 
 	content, _ := response["content"].(map[string]interface{})
-	mimeType, _ := content["mimeType"]
+	mimeType := content["mimeType"]
 	if mimeType == nil || len(mimeType.(string)) == 0 {
 		mimeType = "text/html"
 	}
-	encoding, _ := content["encoding"]
-	text, _ := content["text"]
+	encoding := content["encoding"]
+	text := content["text"]
 	if text != nil {
 		repResponse = append(repResponse, api.SectionData{
 			Type:     api.BODY,
@@ -446,7 +455,7 @@ func representResponse(response map[string]interface{}) (repResponse []interface
 }
 
 func (d dissecting) Represent(request map[string]interface{}, response map[string]interface{}) (object []byte, bodySize int64, err error) {
-	representation := make(map[string]interface{}, 0)
+	representation := make(map[string]interface{})
 	repRequest := representRequest(request)
 	repResponse, bodySize := representResponse(response)
 	representation["request"] = repRequest

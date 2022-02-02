@@ -31,7 +31,9 @@ func runMizuInstall() {
 	var defaultMaxEntriesDBSizeBytes int64 = 200 * 1000 * 1000
 
 	defaultResources := shared.Resources{}
-	defaults.Set(&defaultResources)
+	if err := defaults.Set(&defaultResources); err != nil {
+		logger.Log.Debug(err)
+	}
 
 	mizuAgentConfig := getInstallMizuAgentConfig(defaultMaxEntriesDBSizeBytes, defaultResources)
 	serializedMizuConfig, err := getSerializedMizuAgentConfig(mizuAgentConfig)
@@ -74,6 +76,7 @@ func getInstallMizuAgentConfig(maxDBSizeBytes int64, tapperResources shared.Reso
 		StandaloneMode:         true,
 		ServiceMap:             config.Config.ServiceMap,
 		OAS:                    config.Config.OAS,
+		Elastic:                config.Config.Elastic,
 	}
 
 	return &mizuAgentConfig

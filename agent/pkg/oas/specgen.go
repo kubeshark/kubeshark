@@ -9,11 +9,16 @@ import (
 	"github.com/nav-inc/datetime"
 	"github.com/up9inc/mizu/shared/logger"
 	"mime"
-	"mizuserver/pkg/har"
 	"net/url"
 	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/up9inc/mizu/agent/pkg/har"
+
+	"github.com/chanced/openapi"
+	"github.com/google/uuid"
+	"github.com/up9inc/mizu/shared/logger"
 	"time"
 )
 
@@ -385,7 +390,7 @@ func handleRequest(req *har.Request, opObj *openapi.Operation, isSuccess bool) e
 
 		if reqBody != nil {
 			reqCtype := getReqCtype(req)
-			reqMedia, err := fillContent(reqResp{Req: req}, reqBody.Content, reqCtype, err)
+			reqMedia, err := fillContent(reqResp{Req: req}, reqBody.Content, reqCtype)
 			if err != nil {
 				return err
 			}
@@ -407,7 +412,7 @@ func handleResponse(resp *har.Response, opObj *openapi.Operation, isSuccess bool
 
 	respCtype := getRespCtype(resp)
 	respContent := respObj.Content
-	respMedia, err := fillContent(reqResp{Resp: resp}, respContent, respCtype, err)
+	respMedia, err := fillContent(reqResp{Resp: resp}, respContent, respCtype)
 	if err != nil {
 		return err
 	}
@@ -455,11 +460,9 @@ func handleRespHeaders(reqHeaders []har.Header, respObj *openapi.ResponseObj) {
 			}
 		}
 	}
-
-	return
 }
 
-func fillContent(reqResp reqResp, respContent openapi.Content, ctype string, err error) (*openapi.MediaType, error) {
+func fillContent(reqResp reqResp, respContent openapi.Content, ctype string) (*openapi.MediaType, error) {
 	content, found := respContent[ctype]
 	if !found {
 		respContent[ctype] = &openapi.MediaType{}
@@ -480,14 +483,16 @@ func fillContent(reqResp reqResp, respContent openapi.Content, ctype string, err
 		any, isJSON := anyJSON(text)
 		if isJSON {
 			// re-marshal with forced indent
-			exampleMsg, err = json.MarshalIndent(any, "", "\t")
-			if err != nil {
+			if msg, err := json.MarshalIndent(any, "", "\t"); err != nil {
 				panic("Failed to re-marshal value, super-strange")
+			} else {
+				exampleMsg = msg
 			}
 		} else {
-			exampleMsg, err = json.Marshal(text)
-			if err != nil {
+			if msg, err := json.Marshal(text); err != nil {
 				return nil, err
+			} else {
+				exampleMsg = msg
 			}
 		}
 

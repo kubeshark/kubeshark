@@ -2,8 +2,9 @@ package providers_test
 
 import (
 	"fmt"
-	"mizuserver/pkg/providers"
 	"testing"
+
+	"github.com/up9inc/mizu/agent/pkg/providers"
 )
 
 func TestNoEntryAddedCount(t *testing.T) {

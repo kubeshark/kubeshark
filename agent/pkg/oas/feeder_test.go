@@ -4,19 +4,21 @@ import (
 	"bufio"
 	"encoding/json"
 	"errors"
-	"github.com/up9inc/mizu/shared/logger"
 	"io"
 	"io/ioutil"
-	"mizuserver/pkg/har"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
 	"testing"
+
+	"github.com/up9inc/mizu/agent/pkg/har"
+
+	"github.com/up9inc/mizu/shared/logger"
 )
 
 func getFiles(baseDir string) (result []string, err error) {
-	result = make([]string, 0, 0)
+	result = make([]string, 0)
 	logger.Log.Infof("Reading files from tree: %s", baseDir)
 
 	// https://yourbasic.org/golang/list-files-in-directory/
@@ -121,8 +123,6 @@ func feedEntry(entry *har.Entry, source string, isSync bool) {
 
 	if strings.Contains(entry.Request.URL, "some") { // for debugging
 		logger.Log.Debugf("Interesting: %s", entry.Request.URL)
-	} else {
-		//return
 	}
 
 	ews := EntryWithSource{Entry: *entry, Source: source}
