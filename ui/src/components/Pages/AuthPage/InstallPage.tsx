@@ -57,7 +57,6 @@ export const InstallPage: React.FC<InstallPageProps> = ({onFirstLogin}) => {
             setEntPage(Page.Traffic);
             if (!await api.isAuthenticationNeeded()) {
                 navigate('/');
-                setEntPage(Page.Traffic);
                 onFirstLogin();
             }
         } catch (e) {

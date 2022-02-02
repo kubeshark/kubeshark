@@ -219,7 +219,7 @@ export default class Api {
 
     isAuthenticationNeeded = async () => {
         try {
-            await this.client.get("/status/tap");
+            await this.client.get("/user/whoAmI");
             return false;
         } catch (e) {
             if (e.response.status === 401) {

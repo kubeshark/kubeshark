@@ -60,12 +60,12 @@ export const EntHeader: React.FC<EntHeaderProps> = ({isFirstLogin, setIsFirstLog
 
 const ProfileButton = () => {
 
-    const setEntPage = useSetRecoilState(entPageAtom);
+    const navigate = useNavigate();
 
     const logout = async (popupState) => {
         try {
             await api.logout();
-            setEntPage(Page.Login);
+            navigate(RouterRoutes.LOGIN);
         } catch (e) {
             toast.error("Something went wrong, please check the console");
             console.error(e);
