@@ -18,5 +18,6 @@ mv basenine_linux_$GOARCH basenine
 mv basenine "$PREFIX"
 
 echo "Build agent"
+sudo apt-get install libpcap-dev
 rm -rf entries/ && mkdir -p entries && rm -rf pprof/*
 make agent
