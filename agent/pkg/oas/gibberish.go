@@ -1,22 +1,26 @@
 package oas
 
 import (
+	"math"
 	"regexp"
 	"strings"
 	"unicode"
 )
 
 var (
-	patBase64   = regexp.MustCompile(`^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$`)
 	patUuid4    = regexp.MustCompile(`(?i)[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}`)
 	patEmail    = regexp.MustCompile(`^\w+([-+.']\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$`)
-	patHexLower = regexp.MustCompile(`(0x)?[0-9a-f]{6,}`)
-	patHexUpper = regexp.MustCompile(`(0x)?[0-9A-F]{6,}`)
-	patLongNum  = regexp.MustCompile(`\d{6,}`)
+	patLongNum  = regexp.MustCompile(`^\d{3,}$`)
+	patLongNumB = regexp.MustCompile(`[^\d]\d{3,}`)
+	patLongNumA = regexp.MustCompile(`\d{3,}[^\d]`)
 )
 
 func IsGibberish(str string) bool {
-	if patBase64.MatchString(str) && len(str) > 32 {
+	if IsVersionString(str) {
+		return false
+	}
+
+	if patEmail.MatchString(str) {
 		return true
 	}
 
@@ -24,16 +28,44 @@ func IsGibberish(str string) bool {
 		return true
 	}
 
-	if patEmail.MatchString(str) {
+	if patLongNum.MatchString(str) || patLongNumB.MatchString(str) || patLongNumA.MatchString(str) {
 		return true
 	}
 
-	if patHexLower.MatchString(str) || patHexUpper.MatchString(str) || patLongNum.MatchString(str) {
-		return true
+	//alNum := cleanStr(str, isAlNumRune)
+	//alpha := cleanStr(str, isAlphaRune)
+	// noiseAll := isNoisy(alNum)
+	//triAll := isTrigramBad(strings.ToLower(alpha))
+	// _ = noiseAll
+
+	isNotAlNum := func(r rune) bool { return !isAlNumRune(r) }
+	chunks := strings.FieldsFunc(str, isNotAlNum)
+	noisyLen := 0
+	alnumLen := 0
+	for _, chunk := range chunks {
+		alnumLen += len(chunk)
+		noise := isNoisy(chunk)
+		tri := isTrigramBad(strings.ToLower(chunk))
+		if noise || tri {
+			noisyLen += len(chunk)
+		}
 	}
 
-	noise := noiseLevel(str)
-	return noise >= 0.2
+	return float64(noisyLen) > 0
+
+	//if float64(noisyLen) > 0 {
+	//	return true
+	//}
+
+	//if len(chunks) > 0 && float64(noisyLen) >= float64(alnumLen)/3.0 {
+	//	return true
+	//}
+
+	//if triAll {
+	//return true
+	//}
+
+	// return false
 }
 
 func noiseLevel(str string) (score float64) {
@@ -51,21 +83,21 @@ func noiseLevel(str string) (score float64) {
 
 			// upper =>
 			case unicode.IsUpper(prev) && unicode.IsLower(char):
-				score += 0.25
+				score += 0.10
 			case unicode.IsUpper(prev) && unicode.IsDigit(char):
-				score += 0.25
+				score += 0.5
 
 			// lower =>
 			case unicode.IsLower(prev) && unicode.IsUpper(char):
 				score += 0.75
 			case unicode.IsLower(prev) && unicode.IsDigit(char):
-				score += 0.25
+				score += 0.5
 
 			// digit =>
 			case unicode.IsDigit(prev) && unicode.IsUpper(char):
 				score += 0.75
 			case unicode.IsDigit(prev) && unicode.IsLower(char):
-				score += 0.75
+				score += 1.0
 
 			// the rest is 100% noise
 			default:
@@ -74,8 +106,6 @@ func noiseLevel(str string) (score float64) {
 		}
 		prev = char
 	}
-
-	score /= cnt // weigh it
 
 	return score
 }
@@ -97,9 +127,59 @@ func IsVersionString(component string) bool {
 		}
 	}
 
-	if !hasV && strings.Contains(component, ".") {
+	if !hasV && !strings.Contains(component, ".") {
 		return false
 	}
 
 	return true
+}
+
+func trigramScore(str string) (float64, int) {
+	tgScore := 0.0
+	trigrams := ngrams(str, 3)
+	if len(trigrams) > 0 {
+		for _, trigram := range trigrams {
+			score, found := corpus_trigrams[trigram]
+			if found {
+				tgScore += score
+			}
+		}
+	}
+
+	return tgScore, len(trigrams)
+}
+
+func isTrigramBad(s string) bool {
+	tgScore, cnt := trigramScore(s)
+
+	if cnt > 0 {
+		val := math.Sqrt(tgScore) / float64(cnt)
+		val2 := tgScore / float64(cnt)
+		threshold := 0.005
+		bad := val < threshold
+		threshold2 := math.Log(float64(cnt)-2) * 0.1
+		bad2 := val2 < threshold2
+		return bad && bad2 // TODO: improve this logic to be clearer
+	}
+	return false
+}
+
+func isNoisy(s string) bool {
+	noise := noiseLevel(s)
+
+	if len(s) > 0 {
+		val := (noise * noise) / float64(len(s))
+		threshold := 0.6
+		bad := val > threshold
+		return bad
+	}
+	return false
+}
+
+func ngrams(s string, n int) []string {
+	result := make([]string, 0)
+	for i := 0; i < len(s)-n+1; i++ {
+		result = append(result, s[i:i+n])
+	}
+	return result
 }
