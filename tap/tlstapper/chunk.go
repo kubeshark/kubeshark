@@ -64,3 +64,7 @@ func (c *tlsChunk) isRead() bool {
 func (c *tlsChunk) isWrite() bool {
 	return !c.isRead()
 }
+
+func (c *tlsChunk) getRecordedData() []byte {
+	return c.Data[:c.Recorded]
+}

@@ -2,8 +2,10 @@ package tlstapper
 
 import (
 	"bufio"
-	"bytes"
+	"fmt"
 	"net"
+
+	"encoding/hex"
 	"os"
 	"strconv"
 	"strings"
@@ -12,50 +14,109 @@ import (
 	"github.com/up9inc/mizu/tap/api"
 )
 
-const UNKNOWN_PORT string = "80"
+const UNKNOWN_PORT uint16 = 80
 const UNKNOWN_HOST string = "127.0.0.1"
 
-func Poll(tls *TlsTapper, httpExtension *api.Extension,
+type tlsPoller struct {
+	tls           *TlsTapper
+	readers       map[string]*tlsReader
+	closedReaders chan string
+}
+
+func NewTlsPoller(tls *TlsTapper) *tlsPoller {
+	return &tlsPoller{
+		tls:           tls,
+		readers:       make(map[string]*tlsReader),
+		closedReaders: make(chan string, 100),
+	}
+}
+
+func (p *tlsPoller) Poll(httpExtension *api.Extension,
 	emitter api.Emitter, options *api.TrafficFilteringOptions) {
 
 	chunks := make(chan *tlsChunk)
 
-	go tls.pollPerf(chunks)
+	go p.tls.pollPerf(chunks)
 
 	for {
-		chunk := <-chunks
-
-		ip, port, err := chunk.getAddress()
-
-		if err != nil {
-			logger.Log.Warningf("Error getting address from tls chunk %v", err)
-			continue
+		select {
+		case chunk := <-chunks:
+			p.handleTlsChunk(chunk, httpExtension, emitter, options)
+		case key := <-p.closedReaders:
+			delete(p.readers, key)
 		}
+	}
+}
 
-		var id api.TcpID
+func (p *tlsPoller) handleTlsChunk(chunk *tlsChunk, httpExtension *api.Extension,
+	emitter api.Emitter, options *api.TrafficFilteringOptions) error {
+	ip, port, err := chunk.getAddress()
 
-		reader := bufio.NewReader(bytes.NewReader(chunk.Data[0:chunk.Recorded]))
-		isRequest := (chunk.isClient() && chunk.isWrite()) || (chunk.isServer() && chunk.isRead())
-		if isRequest {
-			id = api.TcpID{
-				SrcIP:   UNKNOWN_HOST,
-				DstIP:   ip.String(),
-				SrcPort: UNKNOWN_PORT,
-				DstPort: strconv.FormatInt(int64(port), 10),
-			}
-		} else {
-			id = api.TcpID{
-				SrcIP:   ip.String(),
-				DstIP:   UNKNOWN_HOST,
-				SrcPort: strconv.FormatInt(int64(port), 10),
-				DstPort: UNKNOWN_PORT,
-			}
+	if err != nil {
+		logger.Log.Warningf("Error getting address from tls chunk %v", err)
+		return err
+	}
+
+	key := buildTlsKey(chunk, ip, port)
+	reader, exists := p.readers[key]
+
+	if !exists {
+		reader = p.startNewTlsReader(chunk, ip, port, key, httpExtension, emitter, options)
+		p.readers[key] = reader
+	}
+
+	reader.chunks <- chunk
+
+	if os.Getenv("MIZU_VERBOSE_TLS_TAPPER") == "true" {
+		logTls(chunk, ip, port)
+	}
+
+	return nil
+}
+
+func (p *tlsPoller) startNewTlsReader(chunk *tlsChunk, ip net.IP, port uint16, key string, httpExtension *api.Extension,
+	emitter api.Emitter, options *api.TrafficFilteringOptions) *tlsReader {
+
+	reader := &tlsReader{
+		key:    key,
+		chunks: make(chan *tlsChunk, 1),
+		doneHandler: func(r *tlsReader) {
+			p.closeReader(key, r)
+		},
+	}
+
+	isRequest := (chunk.isClient() && chunk.isWrite()) || (chunk.isServer() && chunk.isRead())
+	tcpid := buildTcpId(isRequest, ip, port)
+	b := bufio.NewReader(reader)
+	go httpExtension.Dissector.Dissect(b, isRequest, &tcpid, &api.CounterPair{}, &api.SuperTimer{}, &api.SuperIdentifier{}, emitter, options)
+	return reader
+}
+
+func (p *tlsPoller) closeReader(key string, r *tlsReader) {
+	close(r.chunks)
+	p.closedReaders <- key
+}
+
+func buildTlsKey(chunk *tlsChunk, ip net.IP, port uint16) string {
+	return fmt.Sprintf("%v:%v-%v:%v", chunk.isClient(), chunk.isRead(), ip, port)
+}
+
+func buildTcpId(isRequest bool, ip net.IP, port uint16) api.TcpID {
+	if isRequest {
+		return api.TcpID{
+			SrcIP:   UNKNOWN_HOST,
+			DstIP:   ip.String(),
+			SrcPort: strconv.Itoa(int(UNKNOWN_PORT)),
+			DstPort: strconv.FormatInt(int64(port), 10),
+			Ident:   "",
 		}
-
-		httpExtension.Dissector.Dissect(reader, isRequest, &id, &api.CounterPair{}, &api.SuperTimer{}, &api.SuperIdentifier{}, emitter, options)
-
-		if os.Getenv("MIZU_VERBOSE_TLS_TAPPER") == "true" {
-			logTls(chunk, ip, port)
+	} else {
+		return api.TcpID{
+			SrcIP:   ip.String(),
+			DstIP:   UNKNOWN_HOST,
+			SrcPort: strconv.FormatInt(int64(port), 10),
+			DstPort: strconv.Itoa(int(UNKNOWN_PORT)),
+			Ident:   "",
 		}
 	}
 }
@@ -77,6 +138,6 @@ func logTls(chunk *tlsChunk, ip net.IP, port uint16) {
 
 	str := strings.ReplaceAll(strings.ReplaceAll(string(chunk.Data[0:chunk.Recorded]), "\n", " "), "\r", "")
 
-	logger.Log.Infof("PID: %v (tid: %v) (fd: %v) (client: %v) (addr: %v:%v) (recorded %v out of %v) - %v",
-		chunk.Pid, chunk.Tgid, chunk.Fd, flagsStr, ip, port, chunk.Recorded, chunk.Len, str)
+	logger.Log.Infof("PID: %v (tid: %v) (fd: %v) (client: %v) (addr: %v:%v) (recorded %v out of %v) - %v - %v",
+		chunk.Pid, chunk.Tgid, chunk.Fd, flagsStr, ip, port, chunk.Recorded, chunk.Len, str, hex.EncodeToString(chunk.Data[0:chunk.Recorded]))
 }

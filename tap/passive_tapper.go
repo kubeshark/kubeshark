@@ -266,6 +266,8 @@ func startTlsTapper(httpExtension *api.Extension, outputItems chan *api.OutputCh
 		OutputChannel: outputItems,
 	}
 
-	go tlstapper.Poll(&tls, httpExtension, emitter, options)
+	poller := tlstapper.NewTlsPoller(&tls)
+	go poller.Poll(httpExtension, emitter, options)
+
 	return &tls, nil
 }
