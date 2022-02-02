@@ -17,14 +17,14 @@ export function resizeToNormalMizu() {
 }
 
 export function verifyMinimumEntries() {
-    const xEntries = Cypress.env('minimumEntries');
+    const minimumEntries = Cypress.env('minimumEntries');
     it(`Making sure that mizu shows at least ${xEntries} entries`, async function () {
         cy.get('#total-entries').then(number => {
             const getNum = () => {
                 const numOfEntries = number.text();
                 return parseInt(numOfEntries);
             };
-            cy.wrap({ there: getNum }).invoke('there').should('be.gte', xEntries);
+            cy.wrap({ there: getNum }).invoke('there').should('be.gte', minimumEntries);
         });
     });
 }

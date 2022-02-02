@@ -23,7 +23,7 @@ function checkEntries() {
 function checkThatAllEntriesShown() {
     cy.get('#entries-length').then(number => {
         if (number.text() === '1')
-                cy.get('[title="Fetch old records"]').click();
+            cy.get('[title="Fetch old records"]').click();
     });
 }
 
