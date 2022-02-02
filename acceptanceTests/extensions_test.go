@@ -91,5 +91,5 @@ func TestRedis(t *testing.T) {
 		}
 	}
 
-	time.Sleep(10 * time.Minute)
+	time.Sleep(1 * time.Hour)
 }

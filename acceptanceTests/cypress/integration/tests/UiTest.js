@@ -1,5 +1,11 @@
 import {findLineAndCheck, getExpectedDetailsDict} from "../testHelpers/StatusBarHelper";
-import {resizeToHugeMizu, resizeToNormalMizu, verifyMinimumEntries} from "../testHelpers/TrafficHelper";
+import {
+    leftTextCheck,
+    resizeToHugeMizu,
+    resizeToNormalMizu,
+    rightOnHoverCheck,
+    rightTextCheck
+} from "../testHelpers/TrafficHelper";
 const greenFilterColor = 'rgb(210, 250, 210)';
 const redFilterColor = 'rgb(250, 214, 220)';
 const refreshWaitTimeout = 10000;
@@ -234,23 +240,7 @@ function deeperChcek(leftSidePath, rightSidePath, filterName, leftSideExpectedTe
     });
 }
 
-function leftTextCheck(entryNum, path, expectedText) {
-    cy.get(`#list #entry-${entryNum} ${path}`).invoke('text').should('eq', expectedText);
-}
 
-function leftOnHoverCheck(entryNum, path, filterName) {
-    cy.get(`#list #entry-${entryNum} ${path}`).trigger('mouseover');
-    cy.get(`#list #entry-${entryNum} .Queryable-Tooltip`).should('have.text', filterName);
-}
-
-function rightTextCheck(path, expectedText) {
-    cy.get(`.TrafficPage-Container > :nth-child(2) ${path}`).should('have.text', expectedText);
-}
-
-function rightOnHoverCheck(path, expectedText) {
-    cy.get(`.TrafficPage-Container > :nth-child(2) ${path}`).trigger('mouseover');
-    cy.get(`.TrafficPage-Container > :nth-child(2) .Queryable-Tooltip`).should('have.text', expectedText);
-}
 
 
 function checkRightSideResponseBody() {
