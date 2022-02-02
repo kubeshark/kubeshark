@@ -58,14 +58,6 @@ func (d *decoder) ReadByte() (byte, error) {
 	return c, d.err
 }
 
-func (d *decoder) done() bool {
-	return d.remain == 0 || d.err != nil
-}
-
-func (d *decoder) setCRC(table *crc32.Table) {
-	d.table, d.crc32 = table, 0
-}
-
 func (d *decoder) decodeBool(v value) {
 	v.setBool(d.readBool())
 }
@@ -199,19 +191,6 @@ func (d *decoder) read(n int) []byte {
 	return b
 }
 
-func (d *decoder) writeTo(w io.Writer, n int) {
-	limit := d.remain
-	if n < limit {
-		d.remain = n
-	}
-	c, err := io.Copy(w, d)
-	if int(c) < n && err == nil {
-		err = io.ErrUnexpectedEOF
-	}
-	d.remain = limit - int(c)
-	d.setError(err)
-}
-
 func (d *decoder) setError(err error) {
 	if d.err == nil && err != nil {
 		d.err = err
@@ -272,14 +251,6 @@ func (d *decoder) readString() string {
 	}
 }
 
-func (d *decoder) readVarString() string {
-	if n := d.readVarInt(); n < 0 {
-		return ""
-	} else {
-		return bytesToString(d.read(int(n)))
-	}
-}
-
 func (d *decoder) readCompactString() string {
 	if n := d.readUnsignedVarInt(); n < 1 {
 		return ""
@@ -296,46 +267,11 @@ func (d *decoder) readBytes() []byte {
 	}
 }
 
-func (d *decoder) readBytesTo(w io.Writer) bool {
-	if n := d.readInt32(); n < 0 {
-		return false
-	} else {
-		d.writeTo(w, int(n))
-		return d.err == nil
-	}
-}
-
-func (d *decoder) readVarBytes() []byte {
-	if n := d.readVarInt(); n < 0 {
-		return nil
-	} else {
-		return d.read(int(n))
-	}
-}
-
-func (d *decoder) readVarBytesTo(w io.Writer) bool {
-	if n := d.readVarInt(); n < 0 {
-		return false
-	} else {
-		d.writeTo(w, int(n))
-		return d.err == nil
-	}
-}
-
 func (d *decoder) readCompactBytes() []byte {
 	if n := d.readUnsignedVarInt(); n < 1 {
 		return nil
 	} else {
 		return d.read(int(n - 1))
-	}
-}
-
-func (d *decoder) readCompactBytesTo(w io.Writer) bool {
-	if n := d.readUnsignedVarInt(); n < 1 {
-		return false
-	} else {
-		d.writeTo(w, int(n-1))
-		return d.err == nil
 	}
 }
 

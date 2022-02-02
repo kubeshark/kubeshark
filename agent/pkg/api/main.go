@@ -5,24 +5,27 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"mizuserver/pkg/har"
-	"mizuserver/pkg/holder"
-	"mizuserver/pkg/providers"
 	"os"
 	"path"
 	"sort"
 	"strings"
 	"time"
 
-	"mizuserver/pkg/servicemap"
+	"github.com/up9inc/mizu/agent/pkg/elastic"
+	"github.com/up9inc/mizu/agent/pkg/har"
+	"github.com/up9inc/mizu/agent/pkg/holder"
+	"github.com/up9inc/mizu/agent/pkg/providers"
+
+	"github.com/up9inc/mizu/agent/pkg/servicemap"
+
+	"github.com/up9inc/mizu/agent/pkg/models"
+	"github.com/up9inc/mizu/agent/pkg/oas"
+	"github.com/up9inc/mizu/agent/pkg/resolver"
+	"github.com/up9inc/mizu/agent/pkg/utils"
 
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/logger"
 	tapApi "github.com/up9inc/mizu/tap/api"
-	"mizuserver/pkg/models"
-	"mizuserver/pkg/oas"
-	"mizuserver/pkg/resolver"
-	"mizuserver/pkg/utils"
 
 	basenine "github.com/up9inc/basenine/client/go"
 )
@@ -40,10 +43,8 @@ func StartResolving(namespace string) {
 	res.Start(ctx)
 	go func() {
 		for {
-			select {
-			case err := <-errOut:
-				logger.Log.Infof("name resolving error %s", err)
-			}
+			err := <-errOut
+			logger.Log.Infof("name resolving error %s", err)
 		}
 	}()
 
@@ -65,7 +66,7 @@ func startReadingFiles(workingDir string) {
 		return
 	}
 
-	for true {
+	for {
 		dir, _ := os.Open(workingDir)
 		dirFiles, _ := dir.Readdir(-1)
 
@@ -122,7 +123,9 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 		if extension.Protocol.Name == "http" {
 			if !disableOASValidation {
 				var httpPair tapApi.HTTPRequestResponsePair
-				json.Unmarshal([]byte(mizuEntry.HTTPPair), &httpPair)
+				if err := json.Unmarshal([]byte(mizuEntry.HTTPPair), &httpPair); err != nil {
+					logger.Log.Error(err)
+				}
 
 				contract := handleOAS(ctx, doc, router, httpPair.Request.Payload.RawRequest, httpPair.Response.Payload.RawResponse, contractContent)
 				mizuEntry.ContractStatus = contract.Status
@@ -150,6 +153,7 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 		connection.SendText(string(data))
 
 		servicemap.GetInstance().NewTCPEntry(mizuEntry.Source, mizuEntry.Destination, &item.Protocol)
+		elastic.GetInstance().PushEntry(mizuEntry)
 	}
 }
 

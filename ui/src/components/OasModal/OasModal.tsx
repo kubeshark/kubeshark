@@ -21,7 +21,6 @@ const OasModal = ({ openModal, handleCloseModal }) => {
         const services = await api.getOasServices();
         setOasServices(services);
       } catch (e) {
-        toast.error("Error occurred while fetching services list");
         console.error(e);
       }
     })();

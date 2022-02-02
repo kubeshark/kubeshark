@@ -34,10 +34,6 @@ func valueOf(x interface{}) value {
 	return value{val: reflect.ValueOf(x).Elem()}
 }
 
-func makeValue(t reflect.Type) value {
-	return value{val: reflect.New(t).Elem()}
-}
-
 func (v value) bool() bool { return v.val.Bool() }
 
 func (v value) int8() int8 { return int8(v.int64()) }
@@ -54,7 +50,7 @@ func (v value) bytes() []byte { return v.val.Bytes() }
 
 func (v value) iface(t reflect.Type) interface{} { return v.val.Addr().Interface() }
 
-func (v value) array(t reflect.Type) array { return array{val: v.val} }
+func (v value) array(t reflect.Type) array { return array{val: v.val} } //nolint
 
 func (v value) setBool(b bool) { v.val.SetBool(b) }
 

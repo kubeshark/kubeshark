@@ -123,11 +123,11 @@ func NewRequest(request map[string]interface{}) (harRequest *Request, err error)
 	cookies := make([]Cookie, 0) // BuildCookies(request["_cookies"].([]interface{}))
 
 	postData, _ := request["postData"].(map[string]interface{})
-	mimeType, _ := postData["mimeType"]
+	mimeType := postData["mimeType"]
 	if mimeType == nil || len(mimeType.(string)) == 0 {
 		mimeType = "text/html"
 	}
-	text, _ := postData["text"]
+	text := postData["text"]
 	postDataText := ""
 	if text != nil {
 		postDataText = text.(string)
@@ -176,12 +176,12 @@ func NewResponse(response map[string]interface{}) (harResponse *Response, err er
 	cookies := make([]Cookie, 0) // BuildCookies(response["_cookies"].([]interface{}))
 
 	content, _ := response["content"].(map[string]interface{})
-	mimeType, _ := content["mimeType"]
+	mimeType := content["mimeType"]
 	if mimeType == nil || len(mimeType.(string)) == 0 {
 		mimeType = "text/html"
 	}
-	encoding, _ := content["encoding"]
-	text, _ := content["text"]
+	encoding := content["encoding"]
+	text := content["text"]
 	bodyText := ""
 	if text != nil {
 		bodyText = text.(string)

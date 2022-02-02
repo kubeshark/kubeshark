@@ -2,18 +2,17 @@ package api
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
-	"mizuserver/pkg/models"
 	"net/http"
 	"sync"
 	"time"
+
+	"github.com/up9inc/mizu/agent/pkg/models"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	basenine "github.com/up9inc/basenine/client/go"
 	"github.com/up9inc/mizu/shared"
-	"github.com/up9inc/mizu/shared/debounce"
 	"github.com/up9inc/mizu/shared/logger"
 	tapApi "github.com/up9inc/mizu/tap/api"
 )
@@ -42,7 +41,7 @@ var connectedWebsocketIdCounter = 0
 
 func init() {
 	websocketUpgrader.CheckOrigin = func(r *http.Request) bool { return true } // like cors for web socket
-	connectedWebsockets = make(map[int]*SocketConnection, 0)
+	connectedWebsockets = make(map[int]*SocketConnection)
 }
 
 func WebSocketRoutes(app *gin.Engine, eventHandlers EventHandlers, startTime int64) {
@@ -94,7 +93,10 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 	eventHandlers.WebSocketConnect(socketId, isTapper)
 
 	startTimeBytes, _ := models.CreateWebsocketStartTimeMessage(startTime)
-	SendToSocket(socketId, startTimeBytes)
+
+	if err = SendToSocket(socketId, startTimeBytes); err != nil {
+		logger.Log.Error(err)
+	}
 
 	for {
 		_, msg, err := ws.ReadMessage()
@@ -117,7 +119,9 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 					AutoClose: 5000,
 					Text:      fmt.Sprintf("Syntax error: %s", err.Error()),
 				})
-				SendToSocket(socketId, toastBytes)
+				if err := SendToSocket(socketId, toastBytes); err != nil {
+					logger.Log.Error(err)
+				}
 				break
 			}
 
@@ -137,7 +141,9 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 					base := tapApi.Summarize(entry)
 
 					baseEntryBytes, _ := models.CreateBaseEntryWebSocketMessage(base)
-					SendToSocket(socketId, baseEntryBytes)
+					if err := SendToSocket(socketId, baseEntryBytes); err != nil {
+						logger.Log.Error(err)
+					}
 				}
 			}
 
@@ -156,7 +162,9 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 					}
 
 					metadataBytes, _ := models.CreateWebsocketQueryMetadataMessage(metadata)
-					SendToSocket(socketId, metadataBytes)
+					if err := SendToSocket(socketId, metadataBytes); err != nil {
+						logger.Log.Error(err)
+					}
 				}
 			}
 
@@ -183,14 +191,10 @@ func socketCleanup(socketId int, socketConnection *SocketConnection) {
 	socketConnection.eventHandlers.WebSocketDisconnect(socketId, socketConnection.isTapper)
 }
 
-var db = debounce.NewDebouncer(time.Second*5, func() {
-	logger.Log.Error("Successfully sent to socket")
-})
-
 func SendToSocket(socketId int, message []byte) error {
 	socketObj := connectedWebsockets[socketId]
 	if socketObj == nil {
-		return errors.New("Socket is disconnected")
+		return fmt.Errorf("Socket %v is disconnected", socketId)
 	}
 
 	var sent = false
@@ -204,7 +208,10 @@ func SendToSocket(socketId int, message []byte) error {
 	socketObj.lock.Lock() // gorilla socket panics from concurrent writes to a single socket
 	err := socketObj.connection.WriteMessage(1, message)
 	socketObj.lock.Unlock()
-
 	sent = true
-	return err
+
+	if err != nil {
+		return fmt.Errorf("Failed to write message to socket %v, err: %w", socketId, err)
+	}
+	return nil
 }

@@ -4,10 +4,11 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"mizuserver/pkg/har"
 	"reflect"
 	"regexp"
 	"strings"
+
+	"github.com/up9inc/mizu/agent/pkg/har"
 
 	"github.com/up9inc/mizu/shared/logger"
 
@@ -108,7 +109,7 @@ func PassedValidationRules(rulesMatched []RulesMatched) (bool, int64, int) {
 	}
 
 	for _, rule := range rulesMatched {
-		if rule.Matched == false {
+		if !rule.Matched {
 			return false, responseTime, numberOfRulesMatched
 		} else {
 			if strings.ToLower(rule.Rule.Type) == "slo" {

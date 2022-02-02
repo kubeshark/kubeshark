@@ -99,10 +99,8 @@ func (k apiKey) String() string {
 	return strconv.Itoa(int(k))
 }
 
-type apiVersion int16
-
 const (
-	v0  = 0
+	// v0  = 0
 	v1  = 1
 	v2  = 2
 	v3  = 3
@@ -113,6 +111,7 @@ const (
 	v8  = 8
 	v9  = 9
 	v10 = 10
+	v11 = 11
 )
 
 var apiKeyStrings = [...]string{
@@ -166,35 +165,6 @@ var apiKeyStrings = [...]string{
 	offsetDelete:                "OffsetDelete",
 }
 
-type requestHeader struct {
-	Size          int32
-	ApiKey        int16
-	ApiVersion    int16
-	CorrelationID int32
-	ClientID      string
-}
-
-func sizeofString(s string) int32 {
-	return 2 + int32(len(s))
-}
-
-func (h requestHeader) size() int32 {
-	return 4 + 2 + 2 + 4 + sizeofString(h.ClientID)
-}
-
-// func (h requestHeader) writeTo(wb *writeBuffer) {
-// 	wb.writeInt32(h.Size)
-// 	wb.writeInt16(h.ApiKey)
-// 	wb.writeInt16(h.ApiVersion)
-// 	wb.writeInt32(h.CorrelationID)
-// 	wb.writeString(h.ClientID)
-// }
-
-type request interface {
-	size() int32
-	// writable
-}
-
 func makeInt8(b []byte) int8 {
 	return int8(b[0])
 }
@@ -209,11 +179,4 @@ func makeInt32(b []byte) int32 {
 
 func makeInt64(b []byte) int64 {
 	return int64(binary.BigEndian.Uint64(b))
-}
-
-func expectZeroSize(sz int, err error) error {
-	if err == nil && sz != 0 {
-		err = fmt.Errorf("reading a response left %d unread bytes", sz)
-	}
-	return err
 }
