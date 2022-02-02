@@ -3,6 +3,7 @@ package source
 import (
 	"fmt"
 	"io"
+	"os"
 	"time"
 
 	"github.com/google/gopacket"
@@ -112,6 +113,12 @@ func (source *tcpPacketSource) readPackets(ipdefrag bool, packets chan<- TcpPack
 
 		if err == io.EOF {
 			logger.Log.Infof("Got EOF while reading packets from %v", source.name)
+			// TODO: Don't look up everytime
+			_, present := os.LookupEnv("MIZU_TEST")
+			if present {
+				fmt.Printf("Exiting because MIZU_TEST is set!\n")
+				os.Exit(0)
+			}
 			return
 		} else if err != nil {
 			if err.Error() != "Timeout Expired" {

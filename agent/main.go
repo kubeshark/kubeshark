@@ -440,7 +440,8 @@ func dialSocketWithRetry(socketAddress string, retryAmount int, retryDelay time.
 				time.Sleep(retryDelay)
 			}
 		} else {
-			go handleIncomingMessageAsTapper(socketConnection)
+			// TODO: Throwing error
+			// go handleIncomingMessageAsTapper(socketConnection)
 			return socketConnection, nil
 		}
 	}
