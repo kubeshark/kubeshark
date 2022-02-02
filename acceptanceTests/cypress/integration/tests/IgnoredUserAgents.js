@@ -1,10 +1,10 @@
-import {isValueExistsInElement, resizeToHugeMizu, verifyAtLeastXentries} from "../testHelpers/TrafficHelper";
+import {isValueExistsInElement, resizeToHugeMizu, verifyMinimumEntries} from "../testHelpers/TrafficHelper";
 
 it('Loading Mizu', function () {
     cy.visit(Cypress.env('testUrl'));
 });
 
-verifyAtLeastXentries();
+verifyMinimumEntries();
 
 checkEntries();
 

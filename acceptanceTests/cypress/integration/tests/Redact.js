@@ -1,10 +1,10 @@
-import {isValueExistsInElement, verifyAtLeastXentries} from '../testHelpers/TrafficHelper';
+import {isValueExistsInElement, verifyMinimumEntries} from '../testHelpers/TrafficHelper';
 
 it('Loading Mizu', function () {
     cy.visit(Cypress.env('testUrl'));
 });
 
-verifyAtLeastXentries();
+verifyMinimumEntries();
 
 isValueExistsInElement(true, Cypress.env('redactHeaderContent'), '#tbody-Headers');
 isValueExistsInElement(true, Cypress.env('redactBodyContent'), '.hljs');
