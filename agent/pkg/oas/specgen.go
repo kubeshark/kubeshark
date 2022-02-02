@@ -16,9 +16,6 @@ import (
 
 	"github.com/up9inc/mizu/agent/pkg/har"
 
-	"github.com/chanced/openapi"
-	"github.com/google/uuid"
-	"github.com/up9inc/mizu/shared/logger"
 	"time"
 )
 
