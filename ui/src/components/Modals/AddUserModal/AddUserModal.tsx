@@ -132,7 +132,7 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
 
 
   const mapTokenToLink = (token) => {
-    return`${window.location.origin}/${RouterRoutes.SETUP}/${token}`
+    return`${window.location.origin}${RouterRoutes.SETUP}/${token}`
   }
 
   const generateLink =  async() => {
