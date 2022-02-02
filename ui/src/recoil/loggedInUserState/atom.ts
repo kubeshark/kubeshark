@@ -3,7 +3,16 @@ import {Roles} from "./index";
 
 const loggedInUserStateAtom = atom({
     key: "loggedInUserState",
-    default: Roles.unAuthorise
+    default: {
+            "username": "",
+            "role": "",
+            "workspace": {
+                "id": "",
+                "name": "",
+                "namespaces": [
+                ]
+        }
+    }
 });
 
 export default loggedInUserStateAtom;

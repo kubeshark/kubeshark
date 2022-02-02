@@ -30,7 +30,8 @@ const LoginPage: React.FC = () => {
         try {
             await api.login(username, password);
             const userDetails = await api.whoAmI();
-            setUserRole(userDetails.role);
+            console.log(userDetails)
+            setUserRole(userDetails);
             if (!await api.isAuthenticationNeeded()) {
                 setEntPage(Page.Traffic);
             } else {

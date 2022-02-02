@@ -69,7 +69,7 @@ export const WorkspaceSettings : React.FC<Props> = ({}) => {
    
     return (<>
         <FilterableTableAction onRowEdit={onRowEdit} onRowDelete={onRowDelete} searchConfig={searchConfig} 
-                               buttonConfig={buttonConfig} rows={workspacesRows} cols={cols}>
+                               buttonConfig={buttonConfig} rows={workspacesRows} cols={cols} bodyClass="table-body-style">
         </FilterableTableAction>
         <AddWorkspaceModal isOpen={isOpenModal} workspaceId={workspaceData.id} onEdit={isEditMode} onCloseModal={() => { setIsOpen(false);} } >            
         </AddWorkspaceModal>

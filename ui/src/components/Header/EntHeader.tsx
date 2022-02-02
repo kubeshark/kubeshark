@@ -27,7 +27,7 @@ export const EntHeader: React.FC<EntHeaderProps> = ({isFirstLogin, setIsFirstLog
     const navigate = useNavigate();
     const userState = useRecoilValue(loggedInUserStateAtom);
     console.log(userState);
-    const isAdmin = userState === Roles.admin;
+    // const isAdmin = userState === Roles.admin;
 
 
     const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
@@ -47,13 +47,13 @@ export const EntHeader: React.FC<EntHeaderProps> = ({isFirstLogin, setIsFirstLog
         <div>
             <div className="title">
                 <img className="entLogo" style={{height: 55}} src={logo} alt="logo" onClick={() => navigate("/")}/>
-            </div>
+            </div>  
         </div>
         <div style={{display: "flex", alignItems: "center"}}>
-        {userState === Roles.admin && <img className="headerIcon" alt="settings" src={settingImg} style={{marginRight: 25}} onClick={() => navigate(RouterRoutes.SETTINGS)}/>}
+        {userState.role === Roles.admin && <img className="headerIcon" alt="settings" src={settingImg} style={{marginRight: 25}} onClick={() => navigate(RouterRoutes.SETTINGS)}/>}
             <ProfileButton/>
         </div>
-        {isAdmin && <SettingsModal isOpen={isSettingsModalOpen} onClose={onSettingsModalClose} isFirstLogin={isFirstLogin}/>}
+        {userState.role === Roles.admin && !userState.workspace && <SettingsModal isOpen={isSettingsModalOpen} onClose={onSettingsModalClose} isFirstLogin={isFirstLogin}/>}
     </div>;
 }
 

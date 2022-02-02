@@ -209,6 +209,9 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus}) => {
                     console.error(error);
                 }
             })()
+            return () => {
+              //clean socket
+            };
             // eslint-disable-next-line
         }, []);
 
