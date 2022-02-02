@@ -18,7 +18,7 @@ export function resizeToNormalMizu() {
 
 export function verifyMinimumEntries() {
     const minimumEntries = Cypress.env('minimumEntries');
-    it(`Making sure that mizu shows at least ${xEntries} entries`, async function () {
+    it(`Making sure that mizu shows at least ${minimumEntries} entries`, async function () {
         cy.get('#total-entries').then(number => {
             const getNum = () => {
                 const numOfEntries = number.text();

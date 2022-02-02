@@ -2,19 +2,14 @@ import {findLineAndCheck, getExpectedDetailsDict} from "../testHelpers/StatusBar
 import {verifyMinimumEntries} from "../testHelpers/TrafficHelper";
 
 it('check', function () {
-    const podName = 'httpbin', namespace = 'mizu-tests';
-    cy.intercept('GET', 'http://localhost:8898/status/tap').as('statusTap');
+    const podName = Cypress.env('name'), namespace = Cypress.env('namespace');
+    cy.intercept('GET', `http://localhost:${Cypress.env('port')}/status/tap`).as('statusTap');
 
-    cy.visit(`http://localhost:8898`);
+    cy.visit(`http://localhost:${Cypress.env('port')}`);
     cy.wait('@statusTap').its('response.statusCode').should('match', /^2\d{2}/)
 
     verifyMinimumEntries();
 
     cy.get('.podsCount').trigger('mouseover');
     findLineAndCheck(getExpectedDetailsDict(podName, namespace));
-
-    cy.get('.header').should('be.visible');
-    cy.get('.TrafficPageHeader').should('be.visible');
-    cy.get('.TrafficPage-ListContainer').should('be.visible');
-    cy.get('.TrafficPage-Container').should('be.visible');
 });

@@ -118,7 +118,8 @@ func TestTapGuiPort(t *testing.T) {
 				}
 			}
 
-			runCypressTests(t, fmt.Sprintf("npx cypress run --spec \"cypress/integration/tests/GuiPort.js\" --env port=%d", guiPort))
+			runCypressTests(t, fmt.Sprintf("npx cypress run --spec \"cypress/integration/tests/GuiPort.js\" --env name=%v,namespace=%v,port=%d",
+				"httpbin", "mizu-tests", guiPort))
 		})
 	}
 }
