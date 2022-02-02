@@ -274,10 +274,16 @@ func validateAPIServer(t *testing.T, wg *sync.WaitGroup, init string, rc io.Read
 		t.Errorf("/status/connectedTappersCount request failed: %v", requestErr)
 		return
 	}
-	connectedTappersCount := requestResult.(float64)
-	if connectedTappersCount != 1 {
-		t.Errorf("no connected tappers running - expected: 1, actual: %v", connectedTappersCount)
+
+	if connectedTappersCount, ok := requestResult.(float64); !ok {
+		t.Error("failed to parse /status/connectedTappersCount response")
 		return
+
+	} else {
+		if connectedTappersCount != 1 {
+			t.Errorf("no connected tappers running - expected: 1, actual: %v", connectedTappersCount)
+			return
+		}
 	}
 
 	requestResult, requestErr = executeHttpGetRequest(fmt.Sprintf("%v/status/general", apiServerUrl))
@@ -286,8 +292,15 @@ func validateAPIServer(t *testing.T, wg *sync.WaitGroup, init string, rc io.Read
 		return
 	}
 	generalStats := requestResult.(map[string]interface{})
-	fmt.Println(generalStats)
-
+	if entriesCount, ok := generalStats["EntriesCount"].(float64); !ok {
+		t.Error("failed to parse /status/general EntriesCount response")
+		return
+	} else {
+		if entriesCount != 1 {
+			t.Errorf("wrong entries count - expected: 1, actual: %v", entriesCount)
+			return
+		}
+	}
 }
 
 func jsonBytesToInterface(jsonBytes []byte) (interface{}, error) {
