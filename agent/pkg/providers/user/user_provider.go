@@ -368,7 +368,12 @@ func WhoAmI(sessionToken string, ctx context.Context) (*WhoAmIResponse, error) {
 	var userWorkspace *workspace.WorkspaceResponse
 	if user.WorkspaceId != "" {
 		if userWorkspace, err = workspace.GetWorkspace(user.WorkspaceId); err != nil {
-			return nil, err
+			if errors.Is(err, &database.ErrorNotFound{}) {
+				logger.Log.Warningf("user %s has workspace id %s with no associated database entry", user.Username, user.WorkspaceId)
+				userWorkspace = nil
+			} else {
+				return nil, err
+			}
 		}
 	}
 
