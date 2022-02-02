@@ -16,14 +16,16 @@ interface FiltersProps {
     backgroundColor: string
     ws: any
     openWebSocket: (query: string, resetEntries: boolean) => void;
+    getOldEntries: () => void;
 }
 
-export const Filters: React.FC<FiltersProps> = ({backgroundColor, ws, openWebSocket}) => {
+export const Filters: React.FC<FiltersProps> = ({backgroundColor, ws, openWebSocket, getOldEntries}) => {
     return <div className={styles.container}>
         <QueryForm
             backgroundColor={backgroundColor}
             ws={ws}
             openWebSocket={openWebSocket}
+            getOldEntries={getOldEntries}
         />
     </div>;
 };
@@ -32,6 +34,7 @@ interface QueryFormProps {
     backgroundColor: string
     ws: any
     openWebSocket: (query: string, resetEntries: boolean) => void;
+    getOldEntries: () => void;
 }
 
 export const modalStyle = {
@@ -48,7 +51,7 @@ export const modalStyle = {
     color: '#000',
 };
 
-export const QueryForm: React.FC<QueryFormProps> = ({backgroundColor, ws, openWebSocket}) => {
+export const QueryForm: React.FC<QueryFormProps> = ({backgroundColor, ws, openWebSocket, getOldEntries}) => {
 
     const formRef = useRef<HTMLFormElement>(null);
     const [query, setQuery] = useRecoilState(queryAtom);
@@ -66,6 +69,7 @@ export const QueryForm: React.FC<QueryFormProps> = ({backgroundColor, ws, openWe
 
     const handleSubmit = (e) => {
         ws.close();
+        getOldEntries();
         if (query) {
             openWebSocket(`(${query}) and leftOff(-1)`, true);
         } else {

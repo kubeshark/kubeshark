@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { Filters } from "../../Filters";
 import { EntriesList } from "../../EntriesList";
 import { makeStyles, Button } from "@material-ui/core";
@@ -59,6 +59,8 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus}) => {
     const setServiceMapModalOpen = useSetRecoilState(serviceMapModalOpenAtom);
     const query = useRecoilValue(queryAtom);
 
+    const [loadMoreTop, setLoadMoreTop] = useState(false);
+    const [isLoadingTop, setIsLoadingTop] = useState(false);
     const [noMoreDataTop, setNoMoreDataTop] = useState(false);
     const [isSnappedToBottom, setIsSnappedToBottom] = useState(true);
 
@@ -191,8 +193,45 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus}) => {
       };
     }
 
+    const getOldEntries = useCallback(async () => {
+        setLoadMoreTop(false);
+        let leftOffTopLocal = leftOffTop;
+        if (leftOffTop === null) {
+            leftOffTopLocal = -1
+        }
+        setIsLoadingTop(true);
+        const data = await api.fetchEntries(leftOffTopLocal, -1, query, 100, 3000);
+        if (!data || data.data === null || data.meta === null) {
+            setNoMoreDataTop(true);
+            setIsLoadingTop(false);
+            return;
+        }
+        setLeftOffTop(data.meta.leftOff);
+
+        let scrollTo: boolean;
+        if (data.meta.leftOff === 0) {
+            setNoMoreDataTop(true);
+            scrollTo = false;
+        } else {
+            scrollTo = true;
+        }
+        setIsLoadingTop(false);
+
+        const newEntries = [...data.data.reverse(), ...entries];
+        setEntries(newEntries);
+
+        setQueriedCurrent(queriedCurrent + data.meta.current);
+        setQueriedTotal(data.meta.total);
+        setTruncatedTimestamp(data.meta.truncatedTimestamp);
+
+        if (scrollTo) {
+            scrollableRef.current.scrollToIndex(data.data.length - 1);
+        }
+    },[setLoadMoreTop, setIsLoadingTop, entries, setEntries, query, setNoMoreDataTop, leftOffTop, setLeftOffTop, queriedCurrent, setQueriedCurrent, setQueriedTotal, setTruncatedTimestamp, scrollableRef]);
+
     useEffect(() => {
           (async () => {
+                getOldEntries();
                 openWebSocket("leftOff(-1)", true);
                 try{
                     const tapStatusResponse = await api.tapStatus();
@@ -211,6 +250,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus}) => {
     const toggleConnection = () => {
       ws.current.close();
       if (wsConnection !== WsConnectionStatus.Connected) {
+          getOldEntries();
           if (query) {
               openWebSocket(`(${query}) and leftOff(-1)`, true);
           } else {
@@ -304,6 +344,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus}) => {
             backgroundColor={queryBackgroundColor}
             ws={ws.current}
             openWebSocket={openWebSocket}
+            getOldEntries={getOldEntries}
           />
           <div className={styles.container}>
             <EntriesList
@@ -311,10 +352,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus}) => {
               onSnapBrokenEvent={onSnapBrokenEvent}
               isSnappedToBottom={isSnappedToBottom}
               setIsSnappedToBottom={setIsSnappedToBottom}
-              queriedCurrent={queriedCurrent}
-              setQueriedCurrent={setQueriedCurrent}
               queriedTotal={queriedTotal}
-              setQueriedTotal={setQueriedTotal}
               startTime={startTime}
               noMoreDataTop={noMoreDataTop}
               setNoMoreDataTop={setNoMoreDataTop}
@@ -324,8 +362,11 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus}) => {
               openWebSocket={openWebSocket}
               leftOffBottom={leftOffBottom}
               truncatedTimestamp={truncatedTimestamp}
-              setTruncatedTimestamp={setTruncatedTimestamp}
               scrollableRef={scrollableRef}
+              loadMoreTop={loadMoreTop}
+              setLoadMoreTop={setLoadMoreTop}
+              isLoadingTop={isLoadingTop}
+              getOldEntries={getOldEntries}
             />
           </div>
         </div>

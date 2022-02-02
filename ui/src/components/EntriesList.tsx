@@ -1,11 +1,10 @@
-import React, {useCallback, useEffect, useMemo, useState} from "react";
+import React, {useEffect, useMemo} from "react";
 import styles from './style/EntriesList.module.sass';
 import ScrollableFeedVirtualized from "react-scrollable-feed-virtualized";
 import Moment from 'moment';
 import {EntryItem} from "./EntryListItem/EntryListItem";
 import down from "./assets/downImg.svg";
 import spinner from './assets/spinner.svg';
-import Api from "../helpers/api";
 import {useRecoilState, useRecoilValue} from "recoil";
 import entriesAtom from "../recoil/entries";
 import wsConnectionAtom, {WsConnectionStatus} from "../recoil/wsConnection";
@@ -16,10 +15,7 @@ interface EntriesListProps {
     onSnapBrokenEvent: () => void;
     isSnappedToBottom: boolean;
     setIsSnappedToBottom: any;
-    queriedCurrent: number;
-    setQueriedCurrent: any;
     queriedTotal: number;
-    setQueriedTotal: any;
     startTime: number;
     noMoreDataTop: boolean;
     setNoMoreDataTop: (flag: boolean) => void;
@@ -29,21 +25,19 @@ interface EntriesListProps {
     openWebSocket: (query: string, resetEntries: boolean) => void;
     leftOffBottom: number;
     truncatedTimestamp: number;
-    setTruncatedTimestamp: any;
     scrollableRef: any;
+    loadMoreTop: boolean;
+    setLoadMoreTop: any;
+    isLoadingTop: boolean;
+    getOldEntries: () => void;
 }
 
-const api = Api.getInstance();
+export const EntriesList: React.FC<EntriesListProps> = ({listEntryREF, onSnapBrokenEvent, isSnappedToBottom, setIsSnappedToBottom, queriedTotal, startTime, noMoreDataTop, setNoMoreDataTop, leftOffTop, setLeftOffTop, ws, openWebSocket, leftOffBottom, truncatedTimestamp, scrollableRef, loadMoreTop, setLoadMoreTop, isLoadingTop, getOldEntries}) => {
 
-export const EntriesList: React.FC<EntriesListProps> = ({listEntryREF, onSnapBrokenEvent, isSnappedToBottom, setIsSnappedToBottom, queriedCurrent, setQueriedCurrent, queriedTotal, setQueriedTotal, startTime, noMoreDataTop, setNoMoreDataTop, leftOffTop, setLeftOffTop, ws, openWebSocket, leftOffBottom, truncatedTimestamp, setTruncatedTimestamp, scrollableRef}) => {
-
-    const [entries, setEntries] = useRecoilState(entriesAtom);
+    const [entries] = useRecoilState(entriesAtom);
     const wsConnection = useRecoilValue(wsConnectionAtom);
     const query = useRecoilValue(queryAtom);
     const isWsConnectionClosed = wsConnection === WsConnectionStatus.Closed;
-
-    const [loadMoreTop, setLoadMoreTop] = useState(false);
-    const [isLoadingTop, setIsLoadingTop] = useState(false);
 
     useEffect(() => {
         const list = document.getElementById('list').firstElementChild;
@@ -61,41 +55,6 @@ export const EntriesList: React.FC<EntriesListProps> = ({listEntryREF, onSnapBro
     const memoizedEntries = useMemo(() => {
         return entries;
     },[entries]);
-
-    const getOldEntries = useCallback(async () => {
-        setLoadMoreTop(false);
-        if (leftOffTop === null || leftOffTop <= 0) {
-            return;
-        }
-        setIsLoadingTop(true);
-        const data = await api.fetchEntries(leftOffTop, -1, query, 100, 3000);
-        if (!data || data.data === null || data.meta === null) {
-            setNoMoreDataTop(true);
-            setIsLoadingTop(false);
-            return;
-        }
-        setLeftOffTop(data.meta.leftOff);
-
-        let scrollTo: boolean;
-        if (data.meta.leftOff === 0) {
-            setNoMoreDataTop(true);
-            scrollTo = false;
-        } else {
-            scrollTo = true;
-        }
-        setIsLoadingTop(false);
-
-        const newEntries = [...data.data.reverse(), ...entries];
-        setEntries(newEntries);
-
-        setQueriedCurrent(queriedCurrent + data.meta.current);
-        setQueriedTotal(data.meta.total);
-        setTruncatedTimestamp(data.meta.truncatedTimestamp);
-
-        if (scrollTo) {
-            scrollableRef.current.scrollToIndex(data.data.length - 1);
-        }
-    },[setLoadMoreTop, setIsLoadingTop, entries, setEntries, query, setNoMoreDataTop, leftOffTop, setLeftOffTop, queriedCurrent, setQueriedCurrent, setQueriedTotal, setTruncatedTimestamp, scrollableRef]);
 
     useEffect(() => {
         if(!isWsConnectionClosed || !loadMoreTop || noMoreDataTop) return;
@@ -122,7 +81,7 @@ export const EntriesList: React.FC<EntriesListProps> = ({listEntryREF, onSnapBro
                     </ScrollableFeedVirtualized>
                     <button type="button"
                         title="Fetch old records"
-                        className={`${styles.btnOld} ${!scrollbarVisible && leftOffTop > 0 ? styles.showButton : styles.hideButton}`}
+                        className={`${styles.btnOld} ${!scrollbarVisible}`}
                         onClick={(_) => {
                             ws.close();
                             getOldEntries();
