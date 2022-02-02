@@ -231,7 +231,6 @@ function deeperChcek(leftSidePath, rightSidePath, filterName, leftSideExpectedTe
         cy.get(`#list #entry-${entryNum}`).click();
         rightTextCheck(rightSidePath, rightSideExpectedText);
         rightOnHoverCheck(rightSidePath, filterName);
-        checkRightSideResponseBody();
     });
 }
 
