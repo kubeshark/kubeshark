@@ -28,6 +28,9 @@ jobs:
       - name: Check out code into the Go module directory
         uses: actions/checkout@v2
 
+      - name: Install libpcap-dev
+        run: sudo apt-get install -y libpcap-dev
+
       - name: Setup integration test
         run: source ./integrationTests/setup.sh
 
