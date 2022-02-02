@@ -8,6 +8,7 @@ import (
 	"github.com/wI2L/jsondiff"
 	"io/ioutil"
 	"os"
+	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -139,8 +140,12 @@ func TestFileSingle(t *testing.T) {
 			t.FailNow()
 		}
 
+		patFloatPrecision := regexp.MustCompile(`(\d+\.\d{1,2})(\d*)`)
+
 		expected = []byte(patUuid4.ReplaceAllString(string(expected), "<UUID4>"))
 		specText = patUuid4.ReplaceAllString(specText, "<UUID4>")
+		expected = []byte(patFloatPrecision.ReplaceAllString(string(expected), "$1"))
+		specText = patFloatPrecision.ReplaceAllString(specText, "$1")
 
 		diff, err := jsondiff.CompareJSON(expected, []byte(specText))
 		if err != nil {
