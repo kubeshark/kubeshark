@@ -13,9 +13,9 @@ curl -LO "https://github.com/up9inc/basenine/releases/download/$VERSION/basenine
 curl -LO "https://github.com/up9inc/basenine/releases/download/$VERSION/basenine_linux_$GOARCH.sha256"
 shasum -a 256 -c basenine_linux_$GOARCH.sha256
 rm -rf basenine_linux_$GOARCH.sha256
-chmod +x ./basenine_linux_$GOARCH
-mv ./basenine_linux_$GOARCH ./basenine
-mv ./basenine "$PREFIX/"
+chmod +x basenine_linux_$GOARCH
+mv basenine_linux_$GOARCH basenine
+mv basenine "$PREFIX"
 
 echo "Build agent"
 rm -rf entries/ && mkdir -p entries && rm -rf pprof/*
