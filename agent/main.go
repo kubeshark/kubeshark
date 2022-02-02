@@ -14,6 +14,7 @@ import (
 	"mizuserver/pkg/models"
 	"mizuserver/pkg/oas"
 	"mizuserver/pkg/providers/database"
+	"mizuserver/pkg/providers/tapConfig"
 	"mizuserver/pkg/routes"
 	"mizuserver/pkg/servicemap"
 	"mizuserver/pkg/up9"
@@ -251,6 +252,9 @@ func hostApi(socketHarOutputChannel chan<- *tapApi.OutputChannelItem) {
 
 	var staticFolder string
 	if config.Config.StandaloneMode {
+		if err := tapConfig.SyncTappingConfigWithWorkspaceNamespaces(); err != nil {
+			logger.Log.Errorf("Error while syncing tapping config: %v", err)
+		}
 		staticFolder = "./site-standalone"
 	} else {
 		staticFolder = "./site"
@@ -271,10 +275,10 @@ func hostApi(socketHarOutputChannel chan<- *tapApi.OutputChannelItem) {
 	api.WebSocketRoutes(app, &eventHandlers, startTime)
 
 	if config.Config.StandaloneMode {
-		routes.ConfigRoutes(app)
 		routes.UserRoutes(app)
 		routes.InstallRoutes(app)
 		routes.WorkspaceRoutes(app)
+		routes.KubernetesRoutes(app)
 	}
 	if config.Config.OAS {
 		routes.OASRoutes(app)
