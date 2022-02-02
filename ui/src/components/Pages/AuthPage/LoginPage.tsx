@@ -8,6 +8,7 @@ import entPageAtom, {Page} from "../../../recoil/entPage";
 import {useSetRecoilState} from "recoil";
 import useKeyPress from "../../../hooks/useKeyPress"
 import shortcutsKeyboard from "../../../configs/shortcutsKeyboard"
+import loggedInUserStateAtom from "../../../recoil/loggedInUserState/atom";
 
 
 const api = Api.getInstance();
@@ -21,12 +22,15 @@ const LoginPage: React.FC = () => {
     const formRef = useRef(null);
 
     const setEntPage = useSetRecoilState(entPageAtom);
+    const setUserRole = useSetRecoilState(loggedInUserStateAtom);
 
     const onFormSubmit = async () => {
         setIsLoading(true);
 
         try {
             await api.login(username, password);
+            const userDetails = await api.whoAmI();
+            setUserRole(userDetails.role);
             if (!await api.isAuthenticationNeeded()) {
                 setEntPage(Page.Traffic);
             } else {

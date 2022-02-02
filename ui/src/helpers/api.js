@@ -200,6 +200,11 @@ export default class Api {
         }
     }
 
+    whoAmI = async () => {
+        const response = await this.client.get("/user/whoAmI");
+        return response.data;
+    }
+
 
     setupAdminUser = async (password) => {
         const form = new FormData();

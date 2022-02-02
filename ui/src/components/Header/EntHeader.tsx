@@ -8,11 +8,13 @@ import PopupState, {bindMenu, bindTrigger} from "material-ui-popup-state";
 import logoutIcon from '../assets/logout.png';
 import Api from "../../helpers/api";
 import {toast} from "react-toastify";
-import {useSetRecoilState} from "recoil";
+import {useRecoilValue, useSetRecoilState} from "recoil";
 import entPageAtom, {Page} from "../../recoil/entPage";
 import {useNavigate} from "react-router-dom";
 import {RouterRoutes} from "../../helpers/routes";
 import { SettingsModal } from "../SettingsModal/SettingModal";
+import loggedInUserStateAtom from "../../recoil/loggedInUserState/atom";
+import { Roles } from "../../recoil/loggedInUserState";
 
 const api = Api.getInstance();
 
@@ -23,6 +25,10 @@ interface EntHeaderProps {
 
 export const EntHeader: React.FC<EntHeaderProps> = ({isFirstLogin, setIsFirstLogin}) => {
     const navigate = useNavigate();
+    const userState = useRecoilValue(loggedInUserStateAtom);
+    console.log(userState);
+    const isAdmin = userState === Roles.admin;
+
 
     const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 
@@ -44,10 +50,10 @@ export const EntHeader: React.FC<EntHeaderProps> = ({isFirstLogin, setIsFirstLog
             </div>
         </div>
         <div style={{display: "flex", alignItems: "center"}}>
-            <img className="headerIcon" alt="settings" src={settingImg} style={{marginRight: 25}} onClick={() => navigate(RouterRoutes.SETTINGS)}/>
+        {userState === Roles.admin && <img className="headerIcon" alt="settings" src={settingImg} style={{marginRight: 25}} onClick={() => navigate(RouterRoutes.SETTINGS)}/>}
             <ProfileButton/>
         </div>
-        <SettingsModal isOpen={isSettingsModalOpen} onClose={onSettingsModalClose} isFirstLogin={isFirstLogin}/>
+        {isAdmin && <SettingsModal isOpen={isSettingsModalOpen} onClose={onSettingsModalClose} isFirstLogin={isFirstLogin}/>}
     </div>;
 }
 
