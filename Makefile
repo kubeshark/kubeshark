@@ -91,3 +91,5 @@ test-agent:
 
 acceptance-test:
 	@echo "running acceptance tests"; cd acceptanceTests && $(MAKE) test
+integration-test:
+	@echo "running integration tests"; cd integrationTests && $(MAKE) test

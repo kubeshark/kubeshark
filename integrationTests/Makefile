@@ -1,2 +1,2 @@
-test: ## Run acceptance tests.
-	@go test ./... -timeout 1h -v
+test: ## Run integration tests.
+	@go test -race ./... -timeout 60s -v
