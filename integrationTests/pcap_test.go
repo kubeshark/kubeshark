@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"sync"
 	"syscall"
 	"testing"
 	"time"
@@ -19,6 +20,7 @@ const (
 	BasenineCommandTimeout  = 5 * time.Second
 	APIServerCommandTimeout = 10 * time.Second
 	TestTimeout             = 60 * time.Second
+	PCAPFile                = "http.cap"
 )
 
 func fileExists(path string) bool {
@@ -182,10 +184,48 @@ func startTapper(t *testing.T, pcapPath string) (*exec.Cmd, io.ReadCloser, strin
 	return nil, nil, ""
 }
 
+func readOutput(output chan []byte, rc io.ReadCloser) {
+	buff := make([]byte, 4096)
+	for {
+		n, err := rc.Read(buff)
+		if err != nil {
+			break
+		}
+		output <- buff[:n]
+	}
+}
+
+func readTapperOutput(t *testing.T, wg *sync.WaitGroup, rc io.ReadCloser) {
+	wg.Add(1)
+
+	tapperOutputChan := make(chan []byte)
+	go readOutput(tapperOutputChan, rc)
+	tapperOutput := <-tapperOutputChan
+	rc.Close()
+
+	output := string(tapperOutput)
+	t.Logf("tapper output: %s\n", output)
+
+	if !strings.Contains(output, "Starting tapper, websocket address: ws://localhost:8899/wsTapper") {
+		t.Error("failed to validate tapper output")
+	}
+
+	if !strings.Contains(output, fmt.Sprintf("Start reading packets from file-%s", PCAPFile)) {
+		t.Error("failed to validate tapper output")
+	}
+
+	if !strings.Contains(output, fmt.Sprintf("Got EOF while reading packets from file-%s", PCAPFile)) {
+		t.Error("failed to validate tapper output")
+	}
+
+	wg.Done()
+}
+
 func Test(t *testing.T) {
 	if testing.Short() {
 		t.Skip("ignored acceptance test")
 	}
+
 	expectedBasenineOutput := fmt.Sprintf("Listening on :%s\n", BaseninePort)
 	expectedAgentOutput := "Initializing"
 
@@ -194,42 +234,19 @@ func Test(t *testing.T) {
 		t.Errorf("basenine is not running as expected - expected: %s, actual: %s", expectedBasenineOutput, basenineOutput)
 	}
 
-	_, tapperOutput, tapperInit := startTapper(t, "http.cap")
+	_, tapperReader, tapperInit := startTapper(t, PCAPFile)
 	if !strings.HasSuffix(tapperInit, expectedAgentOutput) {
 		t.Errorf("Tapper is not running as expected - expected: %s, actual: %s", expectedAgentOutput, tapperInit)
 	}
 
-	apiServerCmd, _, apiServerInit := startAPIServer(t, "")
+	_, _, apiServerInit := startAPIServer(t, "")
 	if !strings.HasSuffix(apiServerInit, expectedAgentOutput) {
 		t.Errorf("API Server is not running as expected - expected: %s, actual: %s", expectedAgentOutput, apiServerInit)
 	}
 
-	resultChannel := make(chan error, 1)
+	var wg = sync.WaitGroup{}
 
-	go func() {
-		// lets give x seconds to read the output we need from the tapper
-		buff := make([]byte, 1024)
-		for stay, timeout := true, time.After(APIServerCommandTimeout); stay; {
-			if n, err := tapperOutput.Read(buff); err == nil {
-				fmt.Println(string(buff[:n]))
-			}
-			select {
-			case <-timeout:
-				stay = false
-			default:
-			}
-		}
+	readTapperOutput(t, &wg, tapperReader)
 
-		if err := apiServerCmd.Wait(); err != nil {
-			resultChannel <- err
-			return
-		}
-
-		resultChannel <- nil
-	}()
-
-	testResult := <-resultChannel
-	if testResult != nil {
-		t.Errorf("unexpected result: %v", testResult)
-	}
+	wg.Wait()
 }
