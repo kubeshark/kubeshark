@@ -21,6 +21,7 @@ import (
 
 const (
 	AgentBin              = "../agent/build/mizuagent"
+	AgentConfigFile       = "agent_config.json"
 	InitializationTimeout = 5 * time.Second
 	TestTimeout           = 60 * time.Second
 	PCAPFile              = "http.cap"
@@ -269,14 +270,15 @@ func validateAPIServer(t *testing.T, wg *sync.WaitGroup, init string, rc io.Read
 	}
 
 	apiServerUrl := getApiServerUrl()
-	requestResult, requestErr := executeHttpGetRequest(fmt.Sprintf("%v/status/connectedTappersCount", apiServerUrl))
+	tappersCountEndpoint := "/status/connectedTappersCount"
+	requestResult, requestErr := executeHttpGetRequest(fmt.Sprintf("%s%s", apiServerUrl, tappersCountEndpoint))
 	if requestErr != nil {
-		t.Errorf("/status/connectedTappersCount request failed: %v", requestErr)
+		t.Errorf("%s request failed: %v", tappersCountEndpoint, requestErr)
 		return
 	}
 
 	if connectedTappersCount, ok := requestResult.(float64); !ok {
-		t.Error("failed to parse /status/connectedTappersCount response")
+		t.Errorf("failed to parse %s response", tappersCountEndpoint)
 		return
 
 	} else {
@@ -286,20 +288,83 @@ func validateAPIServer(t *testing.T, wg *sync.WaitGroup, init string, rc io.Read
 		}
 	}
 
-	requestResult, requestErr = executeHttpGetRequest(fmt.Sprintf("%v/status/general", apiServerUrl))
+	generalStatusEndpoint := "/status/general"
+	requestResult, requestErr = executeHttpGetRequest(fmt.Sprintf("%s%s", apiServerUrl, generalStatusEndpoint))
 	if requestErr != nil {
-		t.Errorf("/status/general request failed: %v", requestErr)
+		t.Errorf("%s request failed: %v", generalStatusEndpoint, requestErr)
 		return
 	}
-	generalStats := requestResult.(map[string]interface{})
-	if entriesCount, ok := generalStats["EntriesCount"].(float64); !ok {
-		t.Error("failed to parse /status/general EntriesCount response")
+	if generalStats, ok := requestResult.(map[string]interface{}); !ok {
+		t.Errorf("failed to parse %s response", generalStatusEndpoint)
 		return
+
 	} else {
-		if entriesCount != 1 {
-			t.Errorf("wrong entries count - expected: 1, actual: %v", entriesCount)
+		if entriesCount, ok := generalStats["EntriesCount"].(float64); !ok {
+			t.Errorf("failed to parse %s EntriesCount response", generalStatusEndpoint)
 			return
+		} else {
+			if entriesCount != 1 {
+				t.Errorf("wrong entries count - expected: 1, actual: %v", entriesCount)
+				return
+			}
 		}
+	}
+
+	serviceMapStatusEndpoint := "/servicemap/status"
+	requestResult, requestErr = executeHttpGetRequest(fmt.Sprintf("%v%s", apiServerUrl, serviceMapStatusEndpoint))
+	if requestErr != nil {
+		t.Errorf("%s request failed: %v", serviceMapStatusEndpoint, requestErr)
+		return
+	}
+	if serviceMap, ok := requestResult.(map[string]interface{}); !ok {
+		t.Errorf("failed to parse %s response", serviceMapStatusEndpoint)
+		return
+
+	} else {
+		// status
+		if status, ok := serviceMap["status"].(string); !ok {
+			t.Errorf("failed to parse %s status response", serviceMapStatusEndpoint)
+			return
+		} else {
+			if status != "enabled" {
+				t.Errorf("wrong service-map status - expected: enabled, actual: %s", status)
+				return
+			}
+		}
+
+		// entriesProcessedCount
+		if entriesProcessedCount, ok := serviceMap["entriesProcessedCount"].(float64); !ok {
+			t.Errorf("failed to parse %s entriesProcessedCount response", serviceMapStatusEndpoint)
+			return
+		} else {
+			if entriesProcessedCount != 1 {
+				t.Errorf("wrong service-map entriesProcessedCount - expected: 1, actual: %v", entriesProcessedCount)
+				return
+			}
+		}
+
+		// nodeCount
+		if nodeCount, ok := serviceMap["nodeCount"].(float64); !ok {
+			t.Errorf("failed to parse %s nodeCount response", serviceMapStatusEndpoint)
+			return
+		} else {
+			if nodeCount != 2 {
+				t.Errorf("wrong service-map nodeCount - expected: 2, actual: %v", nodeCount)
+				return
+			}
+		}
+
+		// edgeCount
+		if edgeCount, ok := serviceMap["edgeCount"].(float64); !ok {
+			t.Errorf("failed to parse %s edgeCount response", serviceMapStatusEndpoint)
+			return
+		} else {
+			if edgeCount != 1 {
+				t.Errorf("wrong service-map edgeCount - expected: 1, actual: %v", edgeCount)
+				return
+			}
+		}
+
 	}
 }
 
@@ -345,16 +410,19 @@ func Test(t *testing.T) {
 	_, basenineOutput := startBasenine(t)
 	if !strings.HasSuffix(basenineOutput, expectedBasenineOutput) {
 		t.Errorf("basenine is not running as expected - expected: %s, actual: %s", expectedBasenineOutput, basenineOutput)
+		return
 	}
 
-	_, apiServerReader, apiServerInit := startAPIServer(t, "")
+	_, apiServerReader, apiServerInit := startAPIServer(t, AgentConfigFile)
 	if !strings.HasSuffix(apiServerInit, expectedAgentOutput) {
 		t.Errorf("API Server is not running as expected - expected: %s, actual: %s", expectedAgentOutput, apiServerInit)
+		return
 	}
 
 	_, tapperReader, tapperInit := startTapper(t, PCAPFile)
 	if !strings.HasSuffix(tapperInit, expectedAgentOutput) {
 		t.Errorf("Tapper is not running as expected - expected: %s, actual: %s", expectedAgentOutput, tapperInit)
+		return
 	}
 
 	// gives some time for api-server and tapper to initialize properly before validating the output
