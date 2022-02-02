@@ -22,7 +22,7 @@ struct tlsChunk {
     __u32 fd;
     __u32 flags;
     __u8 address[16];
-    __u8 data[4096];
+    __u8 data[4096]; // Must be N^2
 };
 
 struct ssl_info {

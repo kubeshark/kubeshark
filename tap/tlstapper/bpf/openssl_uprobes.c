@@ -122,13 +122,14 @@ static __always_inline int ssl_uretprobe(struct pt_regs *ctx, struct bpf_map_def
 	c->recorded = recorded;
 	c->fd = info.fd;
 	
-	// Should never happen, its here for the eBPF verifier
+	// This ugly trick is for the ebpf verifier happiness
 	//
-	if (recorded >= sizeof(c->data)) {
-		return 0;
+	if (recorded == sizeof(c->data)) {
+		err = bpf_probe_read(c->data, sizeof(c->data), info.buffer);
+	} else {
+		recorded &= sizeof(c->data) - 1; // Buffer must be N^2
+		err = bpf_probe_read(c->data, recorded, info.buffer);
 	}
-	
-	err = bpf_probe_read(c->data, recorded, info.buffer);
 	
 	if (err != 0) {
 		char msg[] = "Error reading from ssl buffer %ld - %ld";
