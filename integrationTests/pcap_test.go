@@ -15,12 +15,11 @@ import (
 )
 
 const (
-	AgentBin                = "../agent/build/mizuagent"
-	BaseninePort            = "9099"
-	BasenineCommandTimeout  = 5 * time.Second
-	APIServerCommandTimeout = 10 * time.Second
-	TestTimeout             = 60 * time.Second
-	PCAPFile                = "http.cap"
+	AgentBin              = "../agent/build/mizuagent"
+	BaseninePort          = "9099"
+	InitializationTimeout = 5 * time.Second
+	TestTimeout           = 60 * time.Second
+	PCAPFile              = "http.cap"
 )
 
 func fileExists(path string) bool {
@@ -70,7 +69,7 @@ func startBasenine(t *testing.T) (*exec.Cmd, string) {
 
 	// wait for some output
 	buff := make([]byte, 64)
-	for stay, timeout := true, time.After(BasenineCommandTimeout); stay; {
+	for stay, timeout := true, time.After(InitializationTimeout); stay; {
 		if n, err := out.Read(buff); err == nil {
 			return basenineCmd, string(buff[:n])
 		}
@@ -114,7 +113,7 @@ func startAPIServer(t *testing.T, configPath string) (*exec.Cmd, io.ReadCloser, 
 
 	// wait for some output
 	buff := make([]byte, 32)
-	for stay, timeout := true, time.After(APIServerCommandTimeout); stay; {
+	for stay, timeout := true, time.After(InitializationTimeout); stay; {
 		if n, err := out.Read(buff); err == nil {
 			return apiServerCmd, out, string(buff[:n])
 		}
@@ -169,7 +168,7 @@ func startTapper(t *testing.T, pcapPath string) (*exec.Cmd, io.ReadCloser, strin
 
 	// wait for some output
 	buff := make([]byte, 32)
-	for stay, timeout := true, time.After(APIServerCommandTimeout); stay; {
+	for stay, timeout := true, time.After(InitializationTimeout); stay; {
 		if n, err := out.Read(buff); err == nil {
 			return tapperCmd, out, string(buff[:n])
 		}
@@ -195,7 +194,7 @@ func readOutput(output chan []byte, rc io.ReadCloser) {
 	}
 }
 
-func readTapperOutput(t *testing.T, wg *sync.WaitGroup, rc io.ReadCloser) {
+func readTapperOutput(t *testing.T, wg *sync.WaitGroup, init string, rc io.ReadCloser) {
 	wg.Add(1)
 
 	tapperOutputChan := make(chan []byte)
@@ -203,8 +202,8 @@ func readTapperOutput(t *testing.T, wg *sync.WaitGroup, rc io.ReadCloser) {
 	tapperOutput := <-tapperOutputChan
 	rc.Close()
 
-	output := string(tapperOutput)
-	t.Logf("tapper output: %s\n", output)
+	output := fmt.Sprintf("%s%s", init, string(tapperOutput))
+	t.Logf("Tapper output: %s\n", output)
 
 	if !strings.Contains(output, "Starting tapper, websocket address: ws://localhost:8899/wsTapper") {
 		t.Error("failed to validate tapper output")
@@ -216,6 +215,39 @@ func readTapperOutput(t *testing.T, wg *sync.WaitGroup, rc io.ReadCloser) {
 
 	if !strings.Contains(output, fmt.Sprintf("Got EOF while reading packets from file-%s", PCAPFile)) {
 		t.Error("failed to validate tapper output")
+	}
+
+	wg.Done()
+}
+
+func readAPIServerOutput(t *testing.T, wg *sync.WaitGroup, init string, rc io.ReadCloser) {
+	wg.Add(1)
+
+	apiServerOutputChan := make(chan []byte)
+	go readOutput(apiServerOutputChan, rc)
+	apiServerOutput := <-apiServerOutputChan
+	rc.Close()
+
+	output := fmt.Sprintf("%s%s", init, string(apiServerOutput))
+	t.Logf("API Server output: %s\n", output)
+
+	// validate extensions
+	if !strings.Contains(output, "Initializing AMQP extension") {
+		t.Error("failed to validate API Server AMQP extension initialization")
+	}
+	if !strings.Contains(output, "Initializing HTTP extension") {
+		t.Error("failed to validate API Server HTTP extension initialization")
+	}
+	if !strings.Contains(output, "Initializing Kafka extension") {
+		t.Error("failed to validate API Server Kafka extension initialization")
+	}
+	if !strings.Contains(output, "Initializing Redis extension") {
+		t.Error("failed to validate API Server Redis extension initialization")
+	}
+
+	// server
+	if !strings.Contains(output, "Starting the server") {
+		t.Error("failed to validate API Server initialization")
 	}
 
 	wg.Done()
@@ -234,19 +266,25 @@ func Test(t *testing.T) {
 		t.Errorf("basenine is not running as expected - expected: %s, actual: %s", expectedBasenineOutput, basenineOutput)
 	}
 
+	_, apiServerReader, apiServerInit := startAPIServer(t, "")
+	if !strings.HasSuffix(apiServerInit, expectedAgentOutput) {
+		t.Errorf("API Server is not running as expected - expected: %s, actual: %s", expectedAgentOutput, apiServerInit)
+	}
+
 	_, tapperReader, tapperInit := startTapper(t, PCAPFile)
 	if !strings.HasSuffix(tapperInit, expectedAgentOutput) {
 		t.Errorf("Tapper is not running as expected - expected: %s, actual: %s", expectedAgentOutput, tapperInit)
 	}
 
-	_, _, apiServerInit := startAPIServer(t, "")
-	if !strings.HasSuffix(apiServerInit, expectedAgentOutput) {
-		t.Errorf("API Server is not running as expected - expected: %s, actual: %s", expectedAgentOutput, apiServerInit)
+	// gives some time for api-server and tapper to initialize properly before validating the output
+	for start := time.Now(); time.Since(start) < InitializationTimeout; {
+		time.Sleep(1 * time.Second)
 	}
 
 	var wg = sync.WaitGroup{}
 
-	readTapperOutput(t, &wg, tapperReader)
+	readTapperOutput(t, &wg, tapperInit, tapperReader)
+	readAPIServerOutput(t, &wg, apiServerInit, apiServerReader)
 
 	wg.Wait()
 }
