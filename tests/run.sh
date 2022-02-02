@@ -20,6 +20,6 @@ do
     sleep 1
 done
 
-sleep 5 && \
+sleep 30 && \
 
 kill -TERM -- -$PGID_MAIN

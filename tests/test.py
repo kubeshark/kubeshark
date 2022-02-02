@@ -12,7 +12,7 @@ import json
 import sys
 import os
 from functools import partial
-from typing import List
+from typing import List, Union
 
 import websocket
 import jsonpickle
@@ -21,7 +21,7 @@ import requests
 
 HOST = 'localhost'
 PORT = '8899'
-WEBSOCKET_TIMEOUT = 3
+WEBSOCKET_TIMEOUT = 5
 ENTRIES_ENDPOINT = 'http://%s:%s/entries' % (HOST, PORT)
 WEBSOCKET_ENDPOINT = 'ws://%s:%s/ws' % (HOST, PORT)
 
@@ -42,7 +42,7 @@ class DataGroup:
 
     def __init__(self, query: str) -> None:
         self.query = query # type: str
-        self.entries = [] # type: List[Entry]
+        self.entries = [] # type: List[Union[Entry, str]]
 
 
 class Suite:
@@ -108,6 +108,14 @@ if __name__ == "__main__":
             resp = requests.get(url=url, params={'query': data_group.query})
             data = resp.json()
             entry.set_data(data)
+
+    for data_group in suite.data_groups:
+        entries = []
+        data_group.entries = sorted(data_group.entries, key=lambda x: (x.base['data']['timestamp'], jsonpickle.encode(entry.base)))
+        for i, entry in enumerate(data_group.entries):
+            entry.base['data']['id'] = 0
+            entries.append(jsonpickle.encode(entry.base))
+        data_group.entries = entries
 
     if len(sys.argv) > 1 and sys.argv[1] == "update":
         serialized = jsonpickle.encode(suite)

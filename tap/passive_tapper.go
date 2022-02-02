@@ -189,7 +189,7 @@ func initializePacketSources() error {
 
 func startPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem) {
 	streamsMap := NewTcpStreamMap()
-	go streamsMap.closeTimedoutTcpStreamChannels()
+	// go streamsMap.closeTimedoutTcpStreamChannels()
 
 	diagnose.InitializeErrorsMap(*debug, *verbose, *quiet)
 	diagnose.InitializeTapperInternalStats()
