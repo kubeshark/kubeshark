@@ -1,5 +1,5 @@
 import React, {useCallback, useEffect, useState} from "react";
-import {Route, Routes, useNavigate} from "react-router-dom";
+import {Route, Routes, useLocation, useNavigate, useParams, useSearchParams} from "react-router-dom";
 import {RouterRoutes} from "../helpers/routes";
 import {useRecoilState} from "recoil";
 import entPageAtom, {Page} from "../recoil/entPage";
@@ -22,6 +22,10 @@ const AppSwitchRoutes = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [entPage, setEntPage] = useRecoilState(entPageAtom);
     const [isFirstLogin, setIsFirstLogin] = useState(false);
+    let {inviteToken} = useParams()
+    const location = useLocation();
+
+    
 
     const determinePage =  useCallback(async () => {
         try {
@@ -30,9 +34,11 @@ const AppSwitchRoutes = () => {
                 setEntPage(Page.Setup);
             } else {
                 const isAuthNeeded = await api.isAuthenticationNeeded();
-                if(isAuthNeeded) {
-                    setEntPage(Page.Login);
+                if(isAuthNeeded && inviteToken) {
+                    setEntPage(Page.Setup)
                 }
+                else if(isAuthNeeded)
+                    setEntPage(Page.Login);
             }
         } catch (e) {
             toast.error("Error occured while checking Mizu API status, see console for mode details");
@@ -47,6 +53,10 @@ const AppSwitchRoutes = () => {
     }, [determinePage]);
 
     useEffect(() => {
+        if(!location.pathname || location.pathname !== '/') {
+            return;
+        }
+        
         switch (entPage) {
             case Page.Traffic:
                 navigate("/");
@@ -60,8 +70,8 @@ const AppSwitchRoutes = () => {
             default:
                 navigate(RouterRoutes.LOGIN);
         }
-        // eslint-disable-next-line
-    },[entPage])
+       // eslint-disable-next-line
+    },[entPage, location])
 
 
     if (isLoading) {
@@ -71,11 +81,12 @@ const AppSwitchRoutes = () => {
     return <Routes>
         <Route path={"/"} element={<SystemViewer isFirstLogin={isFirstLogin} setIsFirstLogin={setIsFirstLogin}/>}>
             <Route path={RouterRoutes.SETTINGS} element={<SettingsPage/>} /> {/*todo: set settings component*/}
-            <Route path={"/"} element={<TrafficPage/>} />
+            <Route path={"/"} element={<TrafficPage/>}/>
             
         </Route>
+        <Route path={RouterRoutes.SETUP+ "/:inviteToken"} element={<AuthPageBase><InstallPage onFirstLogin={() => setIsFirstLogin(true)}/></AuthPageBase>}/>
         <Route path={RouterRoutes.LOGIN} element={<AuthPageBase><LoginPage/></AuthPageBase>}/>
-        <Route path={RouterRoutes.SETUP} element={<AuthPageBase><InstallPage onFirstLogin={() => setIsFirstLogin(true)}/></AuthPageBase>}/>
+        
     </Routes>
 }
 

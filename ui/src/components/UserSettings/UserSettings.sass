@@ -12,6 +12,7 @@
     background: $bg_color
     color: $color
     border: $border
+    padding: 12px 19px;
 
 .status
     &--active
@@ -19,10 +20,3 @@
 
     &--pending
         @include status-base(rgba(242, 201, 76, 0.5), #8C7325, 1px solid #F2994A)
-
-.alert--right.MuiSnackbar-root
-    display: flex;
-    justify-content: flex-end;
-    left: auto;
-    right: 1vw;
-    transform: unset;

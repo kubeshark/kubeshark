@@ -105,7 +105,7 @@ const AddWorkspaceModal: FC<AddWorkspaceModalProp> = ({isOpen,onCloseModal, work
             </div>
             <h3 className='comfirmation-modal__sub-section-header'>TAP SETTINGS</h3>     
           <div className="namespacesSettingsContainer">
-            <div>
+            <div style={{marginTop: "17px"}}>
                 <input className={classes.textField + " searchNamespace"} placeholder="Search" value={searchValue}
                         onChange={(event) => setSearchValue(event.target.value)}/>
             </div>

@@ -48,6 +48,8 @@ export default class Api {
         return response.data;
     }
 
+    //#region User api
+
     getUsers = async(filter = "") =>{
         const response = await this.client.get(`/user/listUsers?usernameFilter=${filter}`);
         return response.data;
@@ -68,6 +70,28 @@ export default class Api {
         return response.data;
     }
 
+    recoverUser = async(data) => {
+        const form = new FormData();
+        form.append('password', data.password);
+        form.append('inviteToken', data.inviteToken);
+
+        try {
+            const response = await this.client.post(`/user/recover`, form);
+            this.persistToken(response.data.token);
+            return response;
+        } catch (e) {
+            if (e.response.status === 400) {
+                const error = {
+                    'type': FormValidationErrorType,
+                    'messages': e.response.data
+                };
+                throw error;
+            } else {
+                throw e;
+            }
+        }
+    }
+
     inviteExistingUser = async(userId)  =>{
         const response = await this.client.post(`/user/${userId}/invite`);
         return response.data;
@@ -78,6 +102,9 @@ export default class Api {
         return response.data;
     }
 
+    //#endregion 
+
+    //#region Workspace api
     getWorkspaces = async() =>{
         const response = await this.client.get(`/workspace/`);
         return response.data;
@@ -111,6 +138,8 @@ export default class Api {
         const response = await this.client.get(`/kube/namespaces`);
         return response.data;
     }
+
+    //#endregion
 
     analyzeStatus = async () => {
         const response = await this.client.get("/status/analyze");

@@ -6,6 +6,8 @@ import { UserData,AddUserModal } from "../Modals/AddUserModal/AddUserModal";
 import Api from '../../helpers/api';
 import { toast } from "react-toastify";
 import ConfirmationModal from "../UI/Modals/ConfirmationModal";
+import {Utils} from "../../helpers/Utils"
+
 
 interface Props {
 
@@ -23,7 +25,7 @@ export const UserSettings : React.FC<Props> = ({}) => {
     const [usersRows, setUserRows] = useState([]);
     const [userData,userUserData] = useState({} as UserData)
     const cols : ColsType[] = [{field : "username",header:"User", width: '35%'},
-                               {field : "role",header:"Role"},
+                               {field : "role",header:"Role",mapValue : (val) => Utils.capitalizeFirstLetter(val)},
                                {field : "status",header:"Status",getCellClassName : (field, val) =>{
                                    return val === InviteStatus.active ? "status--active" : "status--pending"
                                }}]
@@ -36,8 +38,9 @@ export const UserSettings : React.FC<Props> = ({}) => {
             // let users = [{username:"asd",role:"Admin",status:"Active",userId : "1"},
             //                {username:"asdasdasdasdasdasd",role:"User",status:"Active",userId : "2"}]
             let users  = await api.getUsers()
-            const mappedUsers = users.map((user) => {
-                return {...user,status: capitalizeFirstLetter(user.status), role: capitalizeFirstLetter(user.role)}
+            const mappedUsers = users
+            .map((user) => {
+                return {...user,status: Utils.capitalizeFirstLetter(user.status), role: user.role}
             })
             setUserRows(mappedUsers)                                
         } catch (e) {
@@ -49,10 +52,6 @@ export const UserSettings : React.FC<Props> = ({}) => {
     useEffect(() => {
         getUserList();
     },[])
-
-    function capitalizeFirstLetter(string) {
-        return string.charAt(0).toUpperCase() + string.slice(1);
-      }
 
     const filterFuncFactory = (searchQuery: string) => {
         return (row) => {
@@ -103,7 +102,7 @@ export const UserSettings : React.FC<Props> = ({}) => {
 
     return (<>
         <FilterableTableAction onRowEdit={onRowEdit} onRowDelete={onRowDelete} searchConfig={searchConfig} 
-                               buttonConfig={buttonConfig} rows={usersRows} cols={cols}>
+                               buttonConfig={buttonConfig} rows={usersRows} cols={cols} bodyClass="table-body-style">
         </FilterableTableAction>
         <AddUserModal isOpen={isOpenModal} onCloseModal={() => { 
                      setIsOpen(false);userUserData({} as UserData) } }

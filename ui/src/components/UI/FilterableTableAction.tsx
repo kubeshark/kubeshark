@@ -16,9 +16,10 @@ export interface Props {
     buttonConfig : {onClick : () => void, text:string}
     rows: any[];
     cols: ColsType[];
+    bodyClass?: string;
 }
 
-export const FilterableTableAction: React.FC<Props> = ({onRowDelete,onRowEdit, searchConfig, buttonConfig, rows, cols}) => {
+export const FilterableTableAction: React.FC<Props> = ({onRowDelete,onRowEdit, searchConfig, buttonConfig, rows, cols, bodyClass}) => {
 
     const classes = useCommonStyles()
 
@@ -57,7 +58,7 @@ export const FilterableTableAction: React.FC<Props> = ({onRowDelete,onRowEdit, s
                             {buttonConfig.text} 
                 </Button>
             </div>
-            <Table rows={filteredValues} cols={cols} onRowEdit={onRowEdit} onRowDelete={onRowDelete}></Table>
+            <Table rows={filteredValues} cols={cols} onRowEdit={onRowEdit} onRowDelete={onRowDelete} bodyClass={bodyClass}></Table>
         </div>
     </>);
 };

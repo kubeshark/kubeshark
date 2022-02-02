@@ -9,6 +9,8 @@ import {useSetRecoilState} from "recoil";
 import entPageAtom, {Page} from "../../../recoil/entPage";
 import useKeyPress from "../../../hooks/useKeyPress"
 import shortcutsKeyboard from "../../../configs/shortcutsKeyboard"
+import { useNavigate, useParams } from "react-router-dom";
+
 
 
 const api = Api.getInstance();
@@ -24,7 +26,10 @@ export const InstallPage: React.FC<InstallPageProps> = ({onFirstLogin}) => {
     const [isLoading, setIsLoading] = useState(false);
     const [password, setPassword] = useState("");
     const [passwordConfirm, setPasswordConfirm] = useState("");
-
+    const {inviteToken} = useParams()
+    const navigate = useNavigate();
+    
+    console.log("inviteToken : ",inviteToken)
     const setEntPage = useSetRecoilState(entPageAtom);
 
     const onFormSubmit = async () => {
@@ -36,10 +41,22 @@ export const InstallPage: React.FC<InstallPageProps> = ({onFirstLogin}) => {
             return;
         }
 
+        if(inviteToken){
+            registerUser(async ()=> await api.recoverUser({password: password, inviteToken: inviteToken}))
+        }
+        else{
+            registerUser(async () => await api.setupAdminUser(adminUsername, password))
+        }
+    }
+
+    const registerUser = async(registerFunc) => {
         try {
-            setIsLoading(true);
-            await api.setupAdminUser(adminUsername, password);
+    
+            setIsLoading(true);           
+            await registerFunc();
+            setEntPage(Page.Traffic);
             if (!await api.isAuthenticationNeeded()) {
+                navigate('/');
                 setEntPage(Page.Traffic);
                 onFirstLogin();
             }
@@ -55,7 +72,6 @@ export const InstallPage: React.FC<InstallPageProps> = ({onFirstLogin}) => {
         } finally {
             setIsLoading(false);
         }
-
     }
 
     useKeyPress(shortcutsKeyboard.enter, onFormSubmit, formRef.current);
@@ -63,11 +79,12 @@ export const InstallPage: React.FC<InstallPageProps> = ({onFirstLogin}) => {
     return <div className="centeredForm" ref={formRef}>
             {isLoading && <LoadingOverlay/>}
             <div className="form-title left-text">Setup</div>
-            <span className="form-subtitle">Welcome to Mizu, please set up the admin user to continue</span>
-            <div className="form-input">
+            {inviteToken && <span className="form-subtitle">you have been invited to join Mizu, please set password in order to complete the registration process</span>}
+            {!inviteToken && <span className="form-subtitle">Welcome to Mizu, please set up the admin user to continue</span>}
+            {!inviteToken && <div className="form-input">
                 <label htmlFor="inputUsername">Username</label>
                 <input id="inputUsername" className={classes.textField} value={adminUsername} disabled={true} />
-            </div>
+            </div>}
             <div className="form-input">
                 <label htmlFor="inputUsername">Password</label>
                 <input id="inputUsername" className={classes.textField} value={password} type="password" onChange={(event) => setPassword(event.target.value)}/>    

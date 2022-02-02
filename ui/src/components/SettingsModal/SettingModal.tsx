@@ -95,7 +95,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({isOpen, onClose, is
                         <img alt="spinner" src={spinner} style={{height: 35}}/>
                     </div> : <>
                         <div className="namespacesSettingsContainer">
-                            <div style={{margin: "10px 0"}}>
+                            <div style={{marginTop: "17px"}}>
                                 <input className={classes.textField + " searchNamespace"} placeholder="Search" value={searchValue}
                                        onChange={(event) => setSearchValue(event.target.value)}/></div>
                                 <SelectList items={namespaces} tableName={'Namespace'} multiSelect={true} searchValue={searchValue} setCheckedValues={setCheckedNamespacesKeys} tabelClassName={'namespacesTable'} checkedValues={checkedNamespacesKeys}/>
