@@ -1,7 +1,6 @@
 package tlstapper
 
 import (
-	"fmt"
 	"io"
 	"time"
 )
