@@ -21,6 +21,6 @@
     "redactHeaderContent": "User-Header[REDACTED]",
     "redactBodyContent": "{ \"User\": \"[REDACTED]\" }",
     "regexMaskingBodyContent": "[REDACTED]",
-    "xEntries": 25
+    "minimumEntries": 25
   }
 }
