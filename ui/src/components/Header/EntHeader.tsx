@@ -27,8 +27,6 @@ export const EntHeader: React.FC<EntHeaderProps> = ({isFirstLogin, setIsFirstLog
     const navigate = useNavigate();
     const userState = useRecoilValue(loggedInUserStateAtom);
     console.log(userState);
-    // const isAdmin = userState === Roles.admin;
-
 
     const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 
