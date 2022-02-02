@@ -140,7 +140,8 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 				mizuEntry.Rules = rules
 			}
 
-			oas.GetOasGeneratorInstance().PushEntry(harEntry)
+			entryWSource := oas.EntryWithSource{Entry: *harEntry, Source: mizuEntry.Source.Name}
+			oas.GetOasGeneratorInstance().PushEntry(&entryWSource)
 		}
 
 		data, err := json.Marshal(mizuEntry)

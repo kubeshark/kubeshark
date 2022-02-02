@@ -261,6 +261,22 @@ func longestCommonXfix(strs [][]string, pre bool) []string { // https://github.c
 	return xfix
 }
 
+func getSimilarPrefix(strs []string) string {
+	chunked := make([][]string, 0)
+	for _, item := range strs {
+		chunked = append(chunked, strings.Split(item, "/"))
+	}
+
+	cmn := longestCommonXfix(chunked, true)
+	res := make([]string, 0)
+	for _, chunk := range cmn {
+		if chunk != "api" && !IsVersionString(chunk) && !strings.HasPrefix(chunk, "{") {
+			res = append(res, chunk)
+		}
+	}
+	return strings.Join(res[1:], ".")
+}
+
 // returns all non-nil ops in PathObj
 func getOps(pathObj *openapi.PathObj) []*openapi.Operation {
 	ops := []**openapi.Operation{&pathObj.Get, &pathObj.Patch, &pathObj.Put, &pathObj.Options, &pathObj.Post, &pathObj.Trace, &pathObj.Head, &pathObj.Delete}
@@ -324,13 +340,11 @@ func anyJSON(text string) (anyVal interface{}, isJSON bool) {
 	return nil, false
 }
 
-func cleanNonAlnum(s []byte) string {
+func cleanStr(str string, criterion func(r rune) bool) string {
+	s := []byte(str)
 	j := 0
 	for _, b := range s {
-		if ('a' <= b && b <= 'z') ||
-			('A' <= b && b <= 'Z') ||
-			('0' <= b && b <= '9') ||
-			b == ' ' {
+		if criterion(rune(b)) {
 			s[j] = b
 			j++
 		}
@@ -338,11 +352,21 @@ func cleanNonAlnum(s []byte) string {
 	return string(s[:j])
 }
 
+/*
 func isAlpha(s string) bool {
 	for _, r := range s {
-		if (r < 'a' || r > 'z') && (r < 'A' || r > 'Z') {
+		if isAlphaRune(r) {
 			return false
 		}
 	}
 	return true
+}
+*/
+
+func isAlphaRune(r rune) bool {
+	return !((r < 'a' || r > 'z') && (r < 'A' || r > 'Z'))
+}
+
+func isAlNumRune(b rune) bool {
+	return isAlphaRune(b) || ('0' <= b && b <= '9')
 }
