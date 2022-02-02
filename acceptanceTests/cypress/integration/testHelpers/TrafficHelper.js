@@ -16,3 +16,15 @@ export function resizeToNormalMizu() {
     cy.viewport(1920, 1080);
 }
 
+export function verifyAtLeastXentries() {
+    const xEntries = Cypress.env('minimumEntries');
+    it(`Making sure that mizu shows at least ${xEntries} entries`, async function () {
+        cy.get('#total-entries').then(number => {
+            const getNum = () => {
+                const numOfEntries = number.text();
+                return parseInt(numOfEntries);
+            };
+            cy.wrap({ there: getNum }).invoke('there').should('be.gte', 25);
+        });
+    });
+}

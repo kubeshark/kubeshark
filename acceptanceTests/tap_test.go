@@ -110,6 +110,14 @@ func TestTapGuiPort(t *testing.T) {
 				return
 			}
 
+			proxyUrl := getProxyUrl(defaultNamespaceName, defaultServiceName)
+			for i := 0; i < defaultEntriesCount; i++ {
+				if _, requestErr := executeHttpGetRequest(fmt.Sprintf("%v/get", proxyUrl)); requestErr != nil {
+					t.Errorf("failed to send proxy request, err: %v", requestErr)
+					return
+				}
+			}
+
 			runCypressTests(t, fmt.Sprintf("npx cypress run --spec \"cypress/integration/tests/GuiPort.js\" --env port=%d", guiPort))
 		})
 	}

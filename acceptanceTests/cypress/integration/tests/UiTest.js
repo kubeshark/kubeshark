@@ -1,5 +1,5 @@
 import {findLineAndCheck, getExpectedDetailsDict} from "../testHelpers/StatusBarHelper";
-import {resizeToHugeMizu, resizeToNormalMizu} from "../testHelpers/TrafficHelper";
+import {resizeToHugeMizu, resizeToNormalMizu, verifyAtLeastXentries} from "../testHelpers/TrafficHelper";
 const greenFilterColor = 'rgb(210, 250, 210)';
 const redFilterColor = 'rgb(250, 214, 220)';
 const refreshWaitTimeout = 10000;
@@ -8,6 +8,8 @@ const bodyJsonClass = '.hljs';
 it('opening mizu', function () {
     cy.visit(Cypress.env('testUrl'));
 });
+
+verifyAtLeastXentries();
 
 it('top bar check', function () {
     const podName1 = 'httpbin', namespace1 = 'mizu-tests';

@@ -1,28 +1,29 @@
-import {isValueExistsInElement, resizeToHugeMizu} from "../testHelpers/TrafficHelper";
+import {isValueExistsInElement, resizeToHugeMizu, verifyAtLeastXentries} from "../testHelpers/TrafficHelper";
 
 it('Loading Mizu', function () {
     cy.visit(Cypress.env('testUrl'));
 });
 
-it('going through each entry', function () {
-    resizeToHugeMizu();
-    cy.get('#total-entries').then(number => {
-        const getNum = () => {
-            const numOfEntries = number.text();
-            return parseInt(numOfEntries);
-        };
-        cy.wrap({ there: getNum }).invoke('there').should('be.gte', 25);
+verifyAtLeastXentries();
 
+checkEntries();
+
+function checkEntries() {
+    it('checking all entries', function () {
         checkThatAllEntriesShown();
+        resizeToHugeMizu();
 
-        const entriesNum = getNum();
-        [...Array(entriesNum).keys()].map(checkEntry);
+        cy.get('#total-entries').then(number => {
+            const numOfEntries = parseInt(number.text());
+            [...Array(numOfEntries).keys()].map(checkEntry);
+        });
     });
-});
+}
 
 function checkThatAllEntriesShown() {
     cy.get('#entries-length').then(number => {
         if (number.text() === '1')
+            cy.log('clicked the fetch old records butotn');
             cy.get('[title="Fetch old records"]').click();
     });
 }
