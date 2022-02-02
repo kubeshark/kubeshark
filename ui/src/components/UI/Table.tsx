@@ -2,6 +2,7 @@ import React, {useEffect, useState} from "react";
 import './style/Table.sass';
 import Delete from '@material-ui/icons/Delete';
 import Edit from '@material-ui/icons/Edit';
+import circleImg from '../assets/dotted-circle.svg';
 
 export interface ColsType {
     field:string,
@@ -9,6 +10,7 @@ export interface ColsType {
     header:string,
     width?:string,
     getCellClassName?:(field:string,value : any) => string
+    mapValue? : (val : any) => any
 };
 
 interface TableProps {
@@ -17,9 +19,10 @@ interface TableProps {
     onRowEdit : (any) => void;
     onRowDelete : (any) => void;
     noDataMeesage? : string;
+    bodyClass?: string;
 }
 
-export const Table: React.FC<TableProps> = ({rows, cols, onRowDelete, onRowEdit, noDataMeesage = "No Data Found"}) => {
+export const Table: React.FC<TableProps> = ({rows, cols, onRowDelete, onRowEdit, noDataMeesage = "No Data Found",bodyClass}) => {
 
     const [tableRows, updateTableRows] = useState(rows);
 
@@ -48,12 +51,17 @@ export const Table: React.FC<TableProps> = ({rows, cols, onRowDelete, onRowEdit,
         <th></th>
     </tr>
     </thead>
-    <tbody className="mui-table__tbody">
+    <tbody className={`mui-table__tbody ${bodyClass}`}>
         {
             ((tableRows == null) || (tableRows.length === 0)) ?
             <tr className="mui-table__no-data">
-                {/* <img src={circleImg} alt="No data Found"></img>
-                <div className="mui-table__no-data-message">{noDataMeesage}</div> */}
+                <td>
+                    <div className="container">
+                        <img src={circleImg} alt="No data Found"></img>
+                        <div className="mui-table__no-data-message">{noDataMeesage}</div>
+                    </div>
+
+                </td>
             </tr>
 
             :
@@ -63,7 +71,7 @@ export const Table: React.FC<TableProps> = ({rows, cols, onRowDelete, onRowEdit,
                     {cols.map((col,index) => {                        
                         return <td key={`${rowData?.id} + ${index}`} className="mui-table__td" style={{width: col.width}}>
                                  <span key={Math.random().toString()} className={`${col.getCellClassName ? col.getCellClassName(col.field, rowData[col.field]) : ""}${col?.cellClassName ?? ""}`}>
-                                     {rowData[col.field]}
+                                     {col.mapValue ? col.mapValue(rowData[col.field]) : rowData[col.field]}
                                 </span>
                             </td>
                     })}

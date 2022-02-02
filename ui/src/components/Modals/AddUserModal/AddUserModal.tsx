@@ -1,4 +1,4 @@
-import { Button, FormControl, IconButton, InputAdornment, InputLabel, MenuItem, OutlinedInput,Select } from '@material-ui/core';
+import { Button, FormControl, IconButton, InputAdornment, InputLabel, MenuItem, OutlinedInput,Select, TextField } from '@material-ui/core';
 
 import { FC, useEffect, useState } from 'react';
 import Api from '../../../helpers/api';
@@ -8,6 +8,10 @@ import {toast} from "react-toastify";
 import SelectList from '../../UI/SelectList';
 import './AddUserModal.sass';
 import spinner from "../../assets/spinner.svg";
+import {FormService} from "../../../helpers/FormService"
+import {RouterRoutes} from "../../../helpers/routes";
+import {Utils} from "../../../helpers/Utils"
+
 
 export type UserData = {
   role:string;
@@ -25,6 +29,7 @@ interface AddUserModalProps {
 }
 
 const api = Api.getInstance();
+const fromService = new FormService()
 
 export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userData, isEditMode,onUserChange}) => {
 
@@ -127,7 +132,7 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
 
 
   const mapTokenToLink = (token) => {
-    return`${window.location.origin}/${token}`
+    return`${window.location.origin}/${RouterRoutes.SETUP}/${token}`
   }
 
   const generateLink =  async() => {
@@ -170,7 +175,7 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
           <OutlinedInput type={'text'} value={invite.link} onChange={handleChange('password')}  classes={{input: "u-input-padding"}}
             endAdornment={
               <InputAdornment position="end">
-                <IconButton aria-label="cpoy invite link" onClick={handleCopyinviteLink} edge="end">
+                <IconButton aria-label="copy invite link" onClick={handleCopyinviteLink} edge="end">
                   {<span className='generate-link-button__icon'></span>}
                 </IconButton>
               </InputAdornment>
@@ -214,9 +219,10 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
           placeholder={"User Email"} onChange={userNameChange} disabled={editMode}/>
       </div> */}
       <FormControl variant="outlined" size={"small"} className={"user__email"}> 
-          <InputLabel htmlFor="">User Name</InputLabel>
-          <OutlinedInput type={'text'} onChange={userNameChange} disabled={editMode} value={userDataModel?.username ?? ""}  classes={{input: "u-input-padding"}}
-            label="User Name"/>
+          <InputLabel htmlFor="">User email</InputLabel>
+          <OutlinedInput type={'text'} onChange={userNameChange} disabled={editMode} value={userDataModel?.username ?? ""}  
+            label="User email"/>
+            {/* {!fromService.isValidEmail(userDataModel?.username) && <label>*Invalid email</label>} */}
         </FormControl>
         
               {/* <Controller name="role" control={control} rules={{ required: true }}
@@ -226,7 +232,7 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
 
   {/* className='user__role u-input-padding' */}
   {/* classes={{ select : 'u-input-padding' }}  */}
-      <FormControl variant="outlined" className='user__role'>
+      <FormControl variant="outlined" className='user__role' size={"small"}>
         <InputLabel id="user-role-outlined-label">User role</InputLabel>
         <Select
           labelId="user-role-outlined-label"
@@ -235,7 +241,7 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
           label="User role">
            {roles.map((role) => (
                 <MenuItem key={role.value} value={role.value}>
-                  {role.value}
+                  {Utils.capitalizeFirstLetter(role.value)}
                 </MenuItem>
               ))}
         </Select>
@@ -244,7 +250,7 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
       </div>
       <h3 className='comfirmation-modal__sub-section-header'>WORKSPACE ACCESS </h3>     
       <div className="namespacesSettingsContainer">
-        <div style={{margin: "10px 0"}}>
+        <div style={{marginTop: "17px"}}>
             <input className={classes.textField + " search-workspace"} placeholder="Search" value={searchValue}
                     onChange={(event) => setSearchValue(event.target.value)}/>
         </div>
