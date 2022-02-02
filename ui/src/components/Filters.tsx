@@ -62,10 +62,8 @@ export const QueryForm: React.FC<QueryFormProps> = ({backgroundColor, ws, openWe
     const handleCloseModal = () => setOpenModal(false);
 
     const handleChange = async (e) => {
-        setQuery(e.target.value);
+        setQuery(e.target.value.trim());
     }
-
-    
 
     const handleSubmit = (e) => {
         ws.close();
