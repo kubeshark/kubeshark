@@ -77,9 +77,14 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
 
   useEffect(()=> {
     (async () => {
-      try { 
+      try {
+          let specificUser : any = {}
+          if (isEditMode && userData.userId){
+            specificUser= await api.getUserDetails(userData)
+          }
+          
           setEditMode(isEditMode)
-          setUserData(userData as UserData)
+          setUserData({...userData,workspaceId : specificUser.workspaceId} as UserData)
       } catch (e) {
           toast.error("Error getting user details")
       }
@@ -132,7 +137,7 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
 
 
   const mapTokenToLink = (token) => {
-    return`${window.location.origin}/${RouterRoutes.SETUP}/${token}`
+    return`${window.location.origin}${RouterRoutes.SETUP}/${token}`
   }
 
   const generateLink =  async() => {
