@@ -10,6 +10,7 @@ import _thread
 import time
 import json
 import sys
+import os
 from functools import partial
 from typing import List
 
@@ -23,6 +24,8 @@ PORT = '8899'
 WEBSOCKET_TIMEOUT = 3
 ENTRIES_ENDPOINT = 'http://%s:%s/entries' % (HOST, PORT)
 WEBSOCKET_ENDPOINT = 'ws://%s:%s/ws' % (HOST, PORT)
+
+dir_path = os.path.dirname(os.path.realpath(__file__))
 
 
 class Entry:
@@ -57,7 +60,6 @@ queries = [
 current_data_group = None # type: List[DataGroup]
 
 def on_message(ws, message):
-    global current_data_group
     data = json.loads(message)
     if data['messageType'] == 'entry':
         entry = Entry(_id=data['data']['id'], base=data)
@@ -67,7 +69,7 @@ def on_error(ws, error):
     print(error)
 
 def on_close(ws, close_status_code, close_msg):
-    print('WebSocket closed.')
+    print('WebSocket is closed.')
 
 def on_open(ws, query):
     def run(*args):
@@ -99,14 +101,19 @@ if __name__ == "__main__":
         print('Streamed %d entries.' % len(data_group.entries))
 
     for data_group in suite.data_groups:
-        print('Query: "%s" Fetching full entries...' % data_group.query)
+        print('[Query: "%s"] Fetching full entries...' % data_group.query)
         for i, entry in enumerate(data_group.entries):
-            sys.stdout.write("Fetch progress: %d/%d \r" % (i, len(data_group.entries)))
+            # print("Fetch progress: %d/%d \r" % (i, len(data_group.entries)), end='\r')
             url = '%s/%d' % (ENTRIES_ENDPOINT, entry.id)
             resp = requests.get(url=url, params={'query': data_group.query})
             data = resp.json()
             entry.set_data(data)
 
-    # Print everything
-    serialized = jsonpickle.encode(suite)
-    print(json.dumps(json.loads(serialized), indent=2))
+    if len(sys.argv) > 1 and sys.argv[1] == "update":
+        serialized = jsonpickle.encode(suite)
+        suite_path = '%s/suite.json' % dir_path
+
+        with open('%s/suite.json' % dir_path, 'w') as outfile:
+            outfile.write(json.dumps(json.loads(serialized), indent=2))
+
+        print("The test suite is saved into: %s" % suite_path)
