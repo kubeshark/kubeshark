@@ -517,6 +517,7 @@ func handleFormData(content *openapi.MediaType, parts []PartWithBody) {
 	}
 
 	props := &content.Schema.Properties
+	// FIXME: required flag
 	for _, pwb := range parts {
 		name := pwb.part.FormName()
 		existing, found := (*props)[name]
@@ -524,6 +525,14 @@ func handleFormData(content *openapi.MediaType, parts []PartWithBody) {
 			existing = new(openapi.SchemaObj)
 			existing.Type = openapi.Types{openapi.TypeString}
 			(*props)[name] = existing
+
+			ctype := pwb.part.Header.Get("content-type")
+			if ctype != "" {
+				if existing.Keywords == nil {
+					existing.Keywords = map[string]json.RawMessage{}
+				}
+				existing.Keywords["contentMediaType"], _ = json.Marshal(ctype)
+			}
 		}
 
 		bodyStr := string(pwb.body)
