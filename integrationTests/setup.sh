@@ -2,7 +2,7 @@
 
 # TODO: ARCH parameter to use on basenine and build agent
 
-PREFIX=$HOME/local/bin
+PREFIX=/usr/local/bin
 VERSION=v0.4.13
 GOARCH=amd64
 
