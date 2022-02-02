@@ -79,6 +79,10 @@ func (g *oasGenerator) runGeneretor() {
 	}
 }
 
+func (g *oasGenerator) Reset() {
+	g.ServiceSpecs = &sync.Map{}
+}
+
 func (g *oasGenerator) PushEntry(entryWithSource *EntryWithSource) {
 	if !g.started {
 		return

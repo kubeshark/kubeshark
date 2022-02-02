@@ -106,6 +106,7 @@ func TestEntries(t *testing.T) {
 
 func TestFileSingle(t *testing.T) {
 	GetOasGeneratorInstance().Start()
+	GetOasGeneratorInstance().Reset()
 	// loadStartingOAS()
 	file := "test_artifacts/params.har"
 	files := []string{file}
