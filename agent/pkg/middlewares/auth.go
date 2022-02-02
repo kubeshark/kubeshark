@@ -55,7 +55,7 @@ func RequiresAdmin() gin.HandlerFunc {
 }
 
 func verifyKratosSessionForRequest(c *gin.Context) *ory.Session {
-	token := c.GetHeader("x-session-token")
+	token := c.GetHeader(user.SessionTokenHeader)
 	if token == "" {
 		token = c.Query("sessionToken")
 		if token == "" {

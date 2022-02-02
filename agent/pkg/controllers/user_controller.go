@@ -20,7 +20,7 @@ func Login(c *gin.Context) {
 }
 
 func Logout(c *gin.Context) {
-	token := c.GetHeader("x-session-token")
+	token := c.GetHeader(user.SessionTokenHeader)
 	if err := user.Logout(token, c.Request.Context()); err != nil {
 		logger.Log.Errorf("internal error while logging out %v", err)
 		c.AbortWithStatusJSON(500, gin.H{"error": "error occured while logging out, the session might still be valid"})
@@ -105,7 +105,7 @@ func GetUser(c *gin.Context) {
 }
 
 func WhoAmI(c *gin.Context) {
-	if whoAmI, err := user.WhoAmI(c.GetHeader("x-session-token"), c.Request.Context()); err != nil {
+	if whoAmI, err := user.WhoAmI(c.GetHeader(user.SessionTokenHeader), c.Request.Context()); err != nil {
 		logger.Log.Errorf("internal error while fetching whoAmI %v", err)
 		c.JSON(http.StatusInternalServerError, err)
 	} else {

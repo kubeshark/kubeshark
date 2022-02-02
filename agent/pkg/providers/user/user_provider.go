@@ -20,11 +20,6 @@ import (
 	"github.com/up9inc/mizu/shared/logger"
 )
 
-const (
-	inviteTTLSeconds = 60 * 60 * 24 * 14 // two weeks
-	listUsersPerPage = 500
-)
-
 var client = getKratosClient("http://127.0.0.1:4433", "http://127.0.0.1:4434")
 
 // returns session token if successful
