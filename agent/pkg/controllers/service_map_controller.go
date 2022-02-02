@@ -1,8 +1,9 @@
 package controllers
 
 import (
-	"mizuserver/pkg/servicemap"
 	"net/http"
+
+	"github.com/up9inc/mizu/agent/pkg/servicemap"
 
 	"github.com/gin-gonic/gin"
 )

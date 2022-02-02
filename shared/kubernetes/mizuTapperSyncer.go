@@ -3,21 +3,22 @@ package kubernetes
 import (
 	"context"
 	"fmt"
+	"regexp"
+	"time"
+
 	"github.com/op/go-logging"
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/debounce"
 	"github.com/up9inc/mizu/shared/logger"
 	"github.com/up9inc/mizu/tap/api"
 	core "k8s.io/api/core/v1"
-	"regexp"
-	"time"
 )
 
 const updateTappersDelay = 5 * time.Second
 
 type TappedPodChangeEvent struct {
-	Added                []core.Pod
-	Removed              []core.Pod
+	Added   []core.Pod
+	Removed []core.Pod
 }
 
 // MizuTapperSyncer uses a k8s pod watch to update tapper daemonsets when targeted pods are removed or created
@@ -223,10 +224,14 @@ func (tapperSyncer *MizuTapperSyncer) watchPodsForTapping() {
 			switch wEvent.Type {
 			case EventAdded:
 				logger.Log.Debugf("Added matching pod %s, ns: %s", pod.Name, pod.Namespace)
-				restartTappersDebouncer.SetOn()
+				if err := restartTappersDebouncer.SetOn(); err != nil {
+					logger.Log.Error(err)
+				}
 			case EventDeleted:
 				logger.Log.Debugf("Removed matching pod %s, ns: %s", pod.Name, pod.Namespace)
-				restartTappersDebouncer.SetOn()
+				if err := restartTappersDebouncer.SetOn(); err != nil {
+					logger.Log.Error(err)
+				}
 			case EventModified:
 				logger.Log.Debugf("Modified matching pod %s, ns: %s, phase: %s, ip: %s", pod.Name, pod.Namespace, pod.Status.Phase, pod.Status.PodIP)
 				// Act only if the modified pod has already obtained an IP address.
@@ -236,7 +241,9 @@ func (tapperSyncer *MizuTapperSyncer) watchPodsForTapping() {
 				// - Pod reaches ready state
 				// Ready/unready transitions might also trigger this event.
 				if pod.Status.PodIP != "" {
-					restartTappersDebouncer.SetOn()
+					if err := restartTappersDebouncer.SetOn(); err != nil {
+						logger.Log.Error(err)
+					}
 				}
 			case EventBookmark:
 				break
@@ -286,8 +293,8 @@ func (tapperSyncer *MizuTapperSyncer) updateCurrentlyTappedPods() (err error, ch
 			tapperSyncer.CurrentlyTappedPods = podsToTap
 			tapperSyncer.nodeToTappedPodMap = GetNodeHostToTappedPodsMap(tapperSyncer.CurrentlyTappedPods)
 			tapperSyncer.TapPodChangesOut <- TappedPodChangeEvent{
-				Added:                addedPods,
-				Removed:              removedPods,
+				Added:   addedPods,
+				Removed: removedPods,
 			}
 			return nil, true
 		}

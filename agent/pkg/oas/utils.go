@@ -3,11 +3,13 @@ package oas
 import (
 	"encoding/json"
 	"errors"
-	"github.com/chanced/openapi"
-	"github.com/up9inc/mizu/shared/logger"
-	"mizuserver/pkg/har"
 	"strconv"
 	"strings"
+
+	"github.com/up9inc/mizu/agent/pkg/har"
+
+	"github.com/chanced/openapi"
+	"github.com/up9inc/mizu/shared/logger"
 )
 
 func exampleResolver(ref string) (*openapi.ExampleObj, error) {
@@ -32,16 +34,14 @@ func headerResolver(ref string) (*openapi.HeaderObj, error) {
 
 func initParams(obj **openapi.ParameterList) {
 	if *obj == nil {
-		var params openapi.ParameterList
-		params = make([]openapi.Parameter, 0)
+		var params openapi.ParameterList = make([]openapi.Parameter, 0)
 		*obj = &params
 	}
 }
 
 func initHeaders(respObj *openapi.ResponseObj) {
 	if respObj.Headers == nil {
-		var created openapi.Headers
-		created = map[string]openapi.Header{}
+		var created openapi.Headers = map[string]openapi.Header{}
 		respObj.Headers = created
 	}
 }
@@ -85,7 +85,7 @@ func findParamByName(params *openapi.ParameterList, in openapi.In, name string) 
 			continue
 		}
 
-		if paramObj.Name == name || (caseInsensitive && strings.ToLower(paramObj.Name) == strings.ToLower(name)) {
+		if paramObj.Name == name || (caseInsensitive && strings.EqualFold(paramObj.Name, name)) {
 			pathParam = paramObj
 			break
 		}
@@ -102,7 +102,7 @@ func findHeaderByName(headers *openapi.Headers, name string) *openapi.HeaderObj 
 			continue
 		}
 
-		if strings.ToLower(hname) == strings.ToLower(name) {
+		if strings.EqualFold(hname, name) {
 			return hdrObj
 		}
 	}

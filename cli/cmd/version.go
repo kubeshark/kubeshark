@@ -36,7 +36,9 @@ func init() {
 	rootCmd.AddCommand(versionCmd)
 
 	defaultVersionConfig := configStructs.VersionConfig{}
-	defaults.Set(&defaultVersionConfig)
+	if err := defaults.Set(&defaultVersionConfig); err != nil {
+		logger.Log.Debug(err)
+	}
 
 	versionCmd.Flags().BoolP(configStructs.DebugInfoVersionName, "d", defaultVersionConfig.DebugInfo, "Provide all information about version")
 

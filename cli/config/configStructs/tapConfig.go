@@ -62,12 +62,12 @@ func (config *TapConfig) MaxEntriesDBSizeBytes() int64 {
 func (config *TapConfig) Validate() error {
 	_, compileErr := regexp.Compile(config.PodRegexStr)
 	if compileErr != nil {
-		return errors.New(fmt.Sprintf("%s is not a valid regex %s", config.PodRegexStr, compileErr))
+		return fmt.Errorf("%s is not a valid regex %s", config.PodRegexStr, compileErr)
 	}
 
 	_, parseHumanDataSizeErr := units.HumanReadableToBytes(config.HumanMaxEntriesDBSize)
 	if parseHumanDataSizeErr != nil {
-		return errors.New(fmt.Sprintf("Could not parse --%s value %s", HumanMaxEntriesDBSizeTapName, config.HumanMaxEntriesDBSize))
+		return fmt.Errorf("Could not parse --%s value %s", HumanMaxEntriesDBSizeTapName, config.HumanMaxEntriesDBSize)
 	}
 
 	if config.Workspace != "" {
@@ -78,7 +78,7 @@ func (config *TapConfig) Validate() error {
 	}
 
 	if config.Analysis && config.Workspace != "" {
-		return errors.New(fmt.Sprintf("Can't run with both --%s and --%s flags", AnalysisTapName, WorkspaceTapName))
+		return fmt.Errorf("Can't run with both --%s and --%s flags", AnalysisTapName, WorkspaceTapName)
 	}
 
 	return nil

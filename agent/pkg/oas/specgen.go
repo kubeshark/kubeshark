@@ -3,16 +3,25 @@ package oas
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/chanced/openapi"
 	"github.com/google/uuid"
+	"github.com/nav-inc/datetime"
 	"github.com/up9inc/mizu/shared/logger"
 	"mime"
-	"mizuserver/pkg/har"
 	"net/url"
 	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/up9inc/mizu/agent/pkg/har"
+
+	"time"
 )
+
+const LastSeenTS = "x-last-seen-ts"
+const CountersTotal = "x-counters-total"
+const CountersPerSource = "x-counters-per-source"
 
 type reqResp struct { // hello, generics in Go
 	Req  *har.Request
@@ -43,17 +52,23 @@ func NewGen(server string) *SpecGen {
 
 func (g *SpecGen) StartFromSpec(oas *openapi.OpenAPI) {
 	g.oas = oas
+	g.tree = new(Node)
 	for pathStr, pathObj := range oas.Paths.Items {
 		pathSplit := strings.Split(string(pathStr), "/")
 		g.tree.getOrSet(pathSplit, pathObj)
+
+		// clean "last entry timestamp" markers from the past
+		for _, pathAndOp := range g.tree.listOps() {
+			delete(pathAndOp.op.Extensions, LastSeenTS)
+		}
 	}
 }
 
-func (g *SpecGen) feedEntry(entry har.Entry) (string, error) {
+func (g *SpecGen) feedEntry(entryWithSource EntryWithSource) (string, error) {
 	g.lock.Lock()
 	defer g.lock.Unlock()
 
-	opId, err := g.handlePathObj(&entry)
+	opId, err := g.handlePathObj(&entryWithSource)
 	if err != nil {
 		return "", err
 	}
@@ -68,16 +83,31 @@ func (g *SpecGen) GetSpec() (*openapi.OpenAPI, error) {
 
 	g.tree.compact()
 
-	for _, pathop := range g.tree.listOps() {
-		if pathop.op.Summary == "" {
-			pathop.op.Summary = pathop.path
+	counters := CounterMaps{counterTotal: Counter{}, counterMapTotal: CounterMap{}}
+
+	for _, pathAndOp := range g.tree.listOps() {
+		opObj := pathAndOp.op
+		if opObj.Summary == "" {
+			opObj.Summary = pathAndOp.path
 		}
+
+		err := counters.processOp(opObj)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	err := counters.processOas(g.oas)
+	if err != nil {
+		return nil, err
 	}
 
 	// put paths back from tree into OAS
 	g.oas.Paths = g.tree.listPaths()
 
 	suggestTags(g.oas)
+
+	g.oas.Info.Description = setCounterMsgIfOk(g.oas.Info.Description, &counters.counterTotal)
 
 	// to make a deep copy, no better idea than marshal+unmarshal
 	specText, err := json.MarshalIndent(g.oas, "", "\t")
@@ -167,7 +197,8 @@ func getPathsKeys(mymap map[openapi.PathValue]*openapi.PathObj) []string {
 	return keys
 }
 
-func (g *SpecGen) handlePathObj(entry *har.Entry) (string, error) {
+func (g *SpecGen) handlePathObj(entryWithSource *EntryWithSource) (string, error) {
+	entry := entryWithSource.Entry
 	urlParsed, err := url.Parse(entry.Request.URL)
 	if err != nil {
 		return "", err
@@ -211,7 +242,7 @@ func (g *SpecGen) handlePathObj(entry *har.Entry) (string, error) {
 		split = strings.Split(urlParsed.Path, "/")
 	}
 	node := g.tree.getOrSet(split, new(openapi.PathObj))
-	opObj, err := handleOpObj(entry, node.pathObj)
+	opObj, err := handleOpObj(entryWithSource, node.pathObj)
 
 	if opObj != nil {
 		return opObj.OperationID, err
@@ -220,7 +251,8 @@ func (g *SpecGen) handlePathObj(entry *har.Entry) (string, error) {
 	return "", err
 }
 
-func handleOpObj(entry *har.Entry, pathObj *openapi.PathObj) (*openapi.Operation, error) {
+func handleOpObj(entryWithSource *EntryWithSource, pathObj *openapi.PathObj) (*openapi.Operation, error) {
+	entry := entryWithSource.Entry
 	isSuccess := 100 <= entry.Response.Status && entry.Response.Status < 400
 	opObj, wasMissing, err := getOpObj(pathObj, entry.Request.Method, isSuccess)
 	if err != nil {
@@ -242,7 +274,84 @@ func handleOpObj(entry *har.Entry, pathObj *openapi.PathObj) (*openapi.Operation
 		return nil, err
 	}
 
+	err = handleCounters(opObj, isSuccess, entryWithSource)
+	if err != nil {
+		return nil, err
+	}
+
 	return opObj, nil
+}
+
+func handleCounters(opObj *openapi.Operation, success bool, entryWithSource *EntryWithSource) error {
+	// TODO: if performance around DecodeExtension+SetExtension is bad, store counters as separate maps
+	counter := Counter{}
+	counterMap := CounterMap{}
+	prevTs := 0.0
+	if opObj.Extensions == nil {
+		opObj.Extensions = openapi.Extensions{}
+	} else {
+		if _, ok := opObj.Extensions.Extension(CountersTotal); ok {
+			err := opObj.Extensions.DecodeExtension(CountersTotal, &counter)
+			if err != nil {
+				return err
+			}
+		}
+
+		if _, ok := opObj.Extensions.Extension(CountersPerSource); ok {
+			err := opObj.Extensions.DecodeExtension(CountersPerSource, &counterMap)
+			if err != nil {
+				return err
+			}
+		}
+
+		if _, ok := opObj.Extensions.Extension(LastSeenTS); ok {
+			err := opObj.Extensions.DecodeExtension(LastSeenTS, &prevTs)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	var counterPerSource *Counter
+	if existing, ok := counterMap[entryWithSource.Source]; ok {
+		counterPerSource = existing
+	} else {
+		counterPerSource = new(Counter)
+		counterMap[entryWithSource.Source] = counterPerSource
+	}
+
+	started, err := datetime.Parse(entryWithSource.Entry.StartedDateTime, time.UTC)
+	if err != nil {
+		return err
+	}
+
+	ts := float64(started.UnixNano()) / float64(time.Millisecond) / 1000
+	rt := float64(entryWithSource.Entry.Time) / 1000
+
+	dur := 0.0
+	if prevTs != 0 {
+		dur = ts - prevTs
+	}
+
+	counter.addEntry(ts, rt, success, dur)
+	counterPerSource.addEntry(ts, rt, success, dur)
+
+	err = opObj.Extensions.SetExtension(LastSeenTS, ts)
+	if err != nil {
+		return err
+	}
+
+	err = opObj.Extensions.SetExtension(CountersTotal, counter)
+	if err != nil {
+		return err
+	}
+
+	err = opObj.Extensions.SetExtension(CountersPerSource, counterMap)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func handleRequest(req *har.Request, opObj *openapi.Operation, isSuccess bool) error {
@@ -272,7 +381,7 @@ func handleRequest(req *har.Request, opObj *openapi.Operation, isSuccess bool) e
 
 		if reqBody != nil {
 			reqCtype := getReqCtype(req)
-			reqMedia, err := fillContent(reqResp{Req: req}, reqBody.Content, reqCtype, err)
+			reqMedia, err := fillContent(reqResp{Req: req}, reqBody.Content, reqCtype)
 			if err != nil {
 				return err
 			}
@@ -294,7 +403,7 @@ func handleResponse(resp *har.Response, opObj *openapi.Operation, isSuccess bool
 
 	respCtype := getRespCtype(resp)
 	respContent := respObj.Content
-	respMedia, err := fillContent(reqResp{Resp: resp}, respContent, respCtype, err)
+	respMedia, err := fillContent(reqResp{Resp: resp}, respContent, respCtype)
 	if err != nil {
 		return err
 	}
@@ -342,11 +451,9 @@ func handleRespHeaders(reqHeaders []har.Header, respObj *openapi.ResponseObj) {
 			}
 		}
 	}
-
-	return
 }
 
-func fillContent(reqResp reqResp, respContent openapi.Content, ctype string, err error) (*openapi.MediaType, error) {
+func fillContent(reqResp reqResp, respContent openapi.Content, ctype string) (*openapi.MediaType, error) {
 	content, found := respContent[ctype]
 	if !found {
 		respContent[ctype] = &openapi.MediaType{}
@@ -367,14 +474,16 @@ func fillContent(reqResp reqResp, respContent openapi.Content, ctype string, err
 		any, isJSON := anyJSON(text)
 		if isJSON {
 			// re-marshal with forced indent
-			exampleMsg, err = json.MarshalIndent(any, "", "\t")
-			if err != nil {
+			if msg, err := json.MarshalIndent(any, "", "\t"); err != nil {
 				panic("Failed to re-marshal value, super-strange")
+			} else {
+				exampleMsg = msg
 			}
 		} else {
-			exampleMsg, err = json.Marshal(text)
-			if err != nil {
+			if msg, err := json.Marshal(text); err != nil {
 				return nil, err
+			} else {
+				exampleMsg = msg
 			}
 		}
 
@@ -497,4 +606,57 @@ func getOpObj(pathObj *openapi.PathObj, method string, createIfNone bool) (*open
 	}
 
 	return *op, isMissing, nil
+}
+
+type CounterMaps struct {
+	counterTotal    Counter
+	counterMapTotal CounterMap
+}
+
+func (m *CounterMaps) processOp(opObj *openapi.Operation) error {
+	if _, ok := opObj.Extensions.Extension(CountersTotal); ok {
+		counter := new(Counter)
+		err := opObj.Extensions.DecodeExtension(CountersTotal, counter)
+		if err != nil {
+			return err
+		}
+		m.counterTotal.addOther(counter)
+
+		opObj.Description = setCounterMsgIfOk(opObj.Description, counter)
+	}
+
+	if _, ok := opObj.Extensions.Extension(CountersPerSource); ok {
+		counterMap := new(CounterMap)
+		err := opObj.Extensions.DecodeExtension(CountersPerSource, counterMap)
+		if err != nil {
+			return err
+		}
+		m.counterMapTotal.addOther(counterMap)
+	}
+	return nil
+}
+
+func (m *CounterMaps) processOas(oas *openapi.OpenAPI) error {
+	if oas.Extensions == nil {
+		oas.Extensions = openapi.Extensions{}
+	}
+
+	err := oas.Extensions.SetExtension(CountersTotal, m.counterTotal)
+	if err != nil {
+		return err
+	}
+
+	err = oas.Extensions.SetExtension(CountersPerSource, m.counterMapTotal)
+	if err != nil {
+		return nil
+	}
+	return nil
+}
+
+func setCounterMsgIfOk(oldStr string, cnt *Counter) string {
+	tpl := "Mizu observed %d entries (%d failed), at %.3f hits/s, average response time is %.3f seconds"
+	if oldStr == "" || (strings.HasPrefix(oldStr, "Mizu ") && strings.HasSuffix(oldStr, " seconds")) {
+		return fmt.Sprintf(tpl, cnt.Entries, cnt.Failures, cnt.SumDuration/float64(cnt.Entries), cnt.SumRT/float64(cnt.Entries))
+	}
+	return oldStr
 }

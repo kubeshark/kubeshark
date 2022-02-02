@@ -7,7 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"mizuserver/pkg/servicemap"
+	"github.com/up9inc/mizu/agent/pkg/servicemap"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/suite"
