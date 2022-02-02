@@ -7,7 +7,7 @@ PGID_MAIN=$! && \
 # Wait for Basenine to be up
 timeout 3 sh -c 'until nc -z $0 $1; do sleep 0.1; done' localhost 9099 && \
 # Wait for Mizu API Server to be up
-timeout 5 sh -c 'until nc -z $0 $1; do sleep 0.11; done' localhost 8899
+timeout 5 sh -c 'until nc -z $0 $1; do sleep 0.1; done' localhost 8899
 
 PCAPS="tests/pcaps/*"
 for file in $PCAPS
