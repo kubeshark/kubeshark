@@ -2,9 +2,12 @@ package integrationTests
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
+	"net/http"
 	"os"
 	"os/exec"
 	"strings"
@@ -12,15 +15,20 @@ import (
 	"syscall"
 	"testing"
 	"time"
+
+	"github.com/up9inc/mizu/shared"
 )
 
 const (
 	AgentBin              = "../agent/build/mizuagent"
-	BaseninePort          = "9099"
 	InitializationTimeout = 5 * time.Second
 	TestTimeout           = 60 * time.Second
 	PCAPFile              = "http.cap"
 )
+
+func getApiServerUrl() string {
+	return fmt.Sprintf("http://localhost:%v", shared.DefaultApiServerPort)
+}
 
 func fileExists(path string) bool {
 	_, err := os.Stat(path)
@@ -46,7 +54,7 @@ func cleanupCommand(cmd *exec.Cmd) error {
 
 func startBasenine(t *testing.T) (*exec.Cmd, string) {
 	ctx, _ := context.WithTimeout(context.Background(), TestTimeout)
-	basenineCmd := exec.CommandContext(ctx, "basenine", "-port", BaseninePort)
+	basenineCmd := exec.CommandContext(ctx, "basenine", "-port", shared.BaseninePort)
 	t.Logf("running command: %v\n", basenineCmd.String())
 
 	t.Cleanup(func() {
@@ -194,7 +202,7 @@ func readOutput(output chan []byte, rc io.ReadCloser) {
 	}
 }
 
-func readTapperOutput(t *testing.T, wg *sync.WaitGroup, init string, rc io.ReadCloser) {
+func validateTapper(t *testing.T, wg *sync.WaitGroup, init string, rc io.ReadCloser) {
 	wg.Add(1)
 
 	tapperOutputChan := make(chan []byte)
@@ -202,25 +210,28 @@ func readTapperOutput(t *testing.T, wg *sync.WaitGroup, init string, rc io.ReadC
 	tapperOutput := <-tapperOutputChan
 	rc.Close()
 
+	defer wg.Done()
+
 	output := fmt.Sprintf("%s%s", init, string(tapperOutput))
 	t.Logf("Tapper output: %s\n", output)
 
 	if !strings.Contains(output, "Starting tapper, websocket address: ws://localhost:8899/wsTapper") {
 		t.Error("failed to validate tapper output")
+		return
 	}
 
 	if !strings.Contains(output, fmt.Sprintf("Start reading packets from file-%s", PCAPFile)) {
 		t.Error("failed to validate tapper output")
+		return
 	}
 
 	if !strings.Contains(output, fmt.Sprintf("Got EOF while reading packets from file-%s", PCAPFile)) {
 		t.Error("failed to validate tapper output")
+		return
 	}
-
-	wg.Done()
 }
 
-func readAPIServerOutput(t *testing.T, wg *sync.WaitGroup, init string, rc io.ReadCloser) {
+func validateAPIServer(t *testing.T, wg *sync.WaitGroup, init string, rc io.ReadCloser) {
 	wg.Add(1)
 
 	apiServerOutputChan := make(chan []byte)
@@ -228,29 +239,86 @@ func readAPIServerOutput(t *testing.T, wg *sync.WaitGroup, init string, rc io.Re
 	apiServerOutput := <-apiServerOutputChan
 	rc.Close()
 
+	defer wg.Done()
+
 	output := fmt.Sprintf("%s%s", init, string(apiServerOutput))
 	t.Logf("API Server output: %s\n", output)
 
 	// validate extensions
 	if !strings.Contains(output, "Initializing AMQP extension") {
 		t.Error("failed to validate API Server AMQP extension initialization")
+		return
 	}
 	if !strings.Contains(output, "Initializing HTTP extension") {
 		t.Error("failed to validate API Server HTTP extension initialization")
+		return
 	}
 	if !strings.Contains(output, "Initializing Kafka extension") {
 		t.Error("failed to validate API Server Kafka extension initialization")
+		return
 	}
 	if !strings.Contains(output, "Initializing Redis extension") {
 		t.Error("failed to validate API Server Redis extension initialization")
+		return
 	}
 
 	// server
 	if !strings.Contains(output, "Starting the server") {
 		t.Error("failed to validate API Server initialization")
+		return
 	}
 
-	wg.Done()
+	apiServerUrl := getApiServerUrl()
+	requestResult, requestErr := executeHttpGetRequest(fmt.Sprintf("%v/status/connectedTappersCount", apiServerUrl))
+	if requestErr != nil {
+		t.Errorf("/status/connectedTappersCount request failed: %v", requestErr)
+		return
+	}
+	connectedTappersCount := requestResult.(float64)
+	if connectedTappersCount != 1 {
+		t.Errorf("no connected tappers running - expected: 1, actual: %v", connectedTappersCount)
+		return
+	}
+
+	requestResult, requestErr = executeHttpGetRequest(fmt.Sprintf("%v/status/general", apiServerUrl))
+	if requestErr != nil {
+		t.Errorf("/status/general request failed: %v", requestErr)
+		return
+	}
+	generalStats := requestResult.(map[string]interface{})
+	fmt.Println(generalStats)
+
+}
+
+func jsonBytesToInterface(jsonBytes []byte) (interface{}, error) {
+	var result interface{}
+	if parseErr := json.Unmarshal(jsonBytes, &result); parseErr != nil {
+		return nil, parseErr
+	}
+
+	return result, nil
+}
+
+func executeHttpRequest(response *http.Response, requestErr error) (interface{}, error) {
+	if requestErr != nil {
+		return nil, requestErr
+	} else if response.StatusCode != 200 {
+		return nil, fmt.Errorf("invalid status code %v", response.StatusCode)
+	}
+
+	defer func() { response.Body.Close() }()
+
+	data, readErr := ioutil.ReadAll(response.Body)
+	if readErr != nil {
+		return nil, readErr
+	}
+
+	return jsonBytesToInterface(data)
+}
+
+func executeHttpGetRequest(url string) (interface{}, error) {
+	response, requestErr := http.Get(url)
+	return executeHttpRequest(response, requestErr)
 }
 
 func Test(t *testing.T) {
@@ -258,7 +326,7 @@ func Test(t *testing.T) {
 		t.Skip("ignored acceptance test")
 	}
 
-	expectedBasenineOutput := fmt.Sprintf("Listening on :%s\n", BaseninePort)
+	expectedBasenineOutput := fmt.Sprintf("Listening on :%s\n", shared.BaseninePort)
 	expectedAgentOutput := "Initializing"
 
 	_, basenineOutput := startBasenine(t)
@@ -283,8 +351,8 @@ func Test(t *testing.T) {
 
 	var wg = sync.WaitGroup{}
 
-	readTapperOutput(t, &wg, tapperInit, tapperReader)
-	readAPIServerOutput(t, &wg, apiServerInit, apiServerReader)
+	validateTapper(t, &wg, tapperInit, tapperReader)
+	validateAPIServer(t, &wg, apiServerInit, apiServerReader)
 
 	wg.Wait()
 }
