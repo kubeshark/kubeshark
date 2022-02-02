@@ -2,8 +2,9 @@ package controllers
 
 import (
 	"context"
-	"mizuserver/pkg/providers/kubernetes"
 	"net/http"
+
+	"github.com/up9inc/mizu/agent/pkg/providers/kubernetes"
 
 	"github.com/gin-gonic/gin"
 )

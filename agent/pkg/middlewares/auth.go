@@ -1,9 +1,9 @@
 package middlewares
 
 import (
-	"mizuserver/pkg/config"
-	"mizuserver/pkg/providers/user"
-	"mizuserver/pkg/providers/userRoles"
+	"github.com/up9inc/mizu/agent/pkg/config"
+	"github.com/up9inc/mizu/agent/pkg/providers/user"
+	"github.com/up9inc/mizu/agent/pkg/providers/userRoles"
 
 	"github.com/gin-gonic/gin"
 	ory "github.com/ory/kratos-client-go"

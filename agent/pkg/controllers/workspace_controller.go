@@ -2,11 +2,12 @@ package controllers
 
 import (
 	"errors"
-	"mizuserver/pkg/providers/database"
-	"mizuserver/pkg/providers/tapConfig"
-	"mizuserver/pkg/providers/userRoles"
-	"mizuserver/pkg/providers/workspace"
 	"net/http"
+
+	"github.com/up9inc/mizu/agent/pkg/providers/database"
+	"github.com/up9inc/mizu/agent/pkg/providers/tapConfig"
+	"github.com/up9inc/mizu/agent/pkg/providers/userRoles"
+	"github.com/up9inc/mizu/agent/pkg/providers/workspace"
 
 	"github.com/gin-gonic/gin"
 	"github.com/up9inc/mizu/shared/logger"

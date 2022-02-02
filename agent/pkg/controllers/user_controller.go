@@ -1,8 +1,9 @@
 package controllers
 
 import (
-	"mizuserver/pkg/providers/user"
 	"net/http"
+
+	"github.com/up9inc/mizu/agent/pkg/providers/user"
 
 	"github.com/gin-gonic/gin"
 	"github.com/up9inc/mizu/shared/logger"

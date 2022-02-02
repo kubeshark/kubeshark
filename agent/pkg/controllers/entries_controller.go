@@ -2,12 +2,13 @@ package controllers
 
 import (
 	"encoding/json"
-	"mizuserver/pkg/har"
-	"mizuserver/pkg/models"
-	"mizuserver/pkg/validation"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/up9inc/mizu/agent/pkg/har"
+	"github.com/up9inc/mizu/agent/pkg/models"
+	"github.com/up9inc/mizu/agent/pkg/validation"
 
 	"github.com/gin-gonic/gin"
 

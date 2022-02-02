@@ -1,8 +1,8 @@
 package workspace
 
 import (
-	"mizuserver/pkg/providers/database"
-	"mizuserver/pkg/providers/userRoles"
+	"github.com/up9inc/mizu/agent/pkg/providers/database"
+	"github.com/up9inc/mizu/agent/pkg/providers/userRoles"
 )
 
 func CreateWorkspace(name string, namespaces []string) (*WorkspaceResponse, error) {

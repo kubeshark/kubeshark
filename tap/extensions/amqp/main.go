@@ -47,7 +47,6 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 
 	var remaining int
 	var header *HeaderFrame
-	var body []byte
 
 	connectionInfo := &api.ConnectionInfo{
 		ClientIP:   tcpID.SrcIP,
@@ -102,13 +101,10 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 				eventBasicPublish.Properties = header.Properties
 			case *BasicDeliver:
 				eventBasicDeliver.Properties = header.Properties
-			default:
-				frame = nil
 			}
 
 		case *BodyFrame:
 			// continue until terminated
-			body = append(body, f.Body...)
 			remaining -= len(f.Body)
 			switch lastMethodFrameMessage.(type) {
 			case *BasicPublish:
@@ -119,9 +115,6 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 				eventBasicDeliver.Body = f.Body
 				superIdentifier.Protocol = &protocol
 				emitAMQP(*eventBasicDeliver, amqpRequest, basicMethodMap[60], connectionInfo, superTimer.CaptureTime, emitter)
-			default:
-				body = nil
-				frame = nil
 			}
 
 		case *MethodFrame:
@@ -211,10 +204,6 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 				}
 				superIdentifier.Protocol = &protocol
 				emitAMQP(*eventConnectionClose, amqpRequest, connectionMethodMap[50], connectionInfo, superTimer.CaptureTime, emitter)
-
-			default:
-				frame = nil
-
 			}
 
 		default:
@@ -231,32 +220,24 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 	switch request["method"] {
 	case basicMethodMap[40]:
 		summary = reqDetails["exchange"].(string)
-		break
 	case basicMethodMap[60]:
 		summary = reqDetails["exchange"].(string)
-		break
 	case exchangeMethodMap[10]:
 		summary = reqDetails["exchange"].(string)
-		break
 	case queueMethodMap[10]:
 		summary = reqDetails["queue"].(string)
-		break
 	case connectionMethodMap[10]:
 		summary = fmt.Sprintf(
 			"%s.%s",
 			strconv.Itoa(int(reqDetails["versionMajor"].(float64))),
 			strconv.Itoa(int(reqDetails["versionMinor"].(float64))),
 		)
-		break
 	case connectionMethodMap[50]:
 		summary = reqDetails["replyText"].(string)
-		break
 	case queueMethodMap[20]:
 		summary = reqDetails["queue"].(string)
-		break
 	case basicMethodMap[20]:
 		summary = reqDetails["queue"].(string)
-		break
 	}
 
 	request["url"] = summary
@@ -289,33 +270,25 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 
 func (d dissecting) Represent(request map[string]interface{}, response map[string]interface{}) (object []byte, bodySize int64, err error) {
 	bodySize = 0
-	representation := make(map[string]interface{}, 0)
+	representation := make(map[string]interface{})
 	var repRequest []interface{}
 	switch request["method"].(string) {
 	case basicMethodMap[40]:
 		repRequest = representBasicPublish(request)
-		break
 	case basicMethodMap[60]:
 		repRequest = representBasicDeliver(request)
-		break
 	case queueMethodMap[10]:
 		repRequest = representQueueDeclare(request)
-		break
 	case exchangeMethodMap[10]:
 		repRequest = representExchangeDeclare(request)
-		break
 	case connectionMethodMap[10]:
 		repRequest = representConnectionStart(request)
-		break
 	case connectionMethodMap[50]:
 		repRequest = representConnectionClose(request)
-		break
 	case queueMethodMap[20]:
 		repRequest = representQueueBind(request)
-		break
 	case basicMethodMap[20]:
 		repRequest = representBasicConsume(request)
-		break
 	}
 	representation["request"] = repRequest
 	object, err = json.Marshal(representation)

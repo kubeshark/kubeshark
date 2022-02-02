@@ -1,6 +1,6 @@
 package user
 
-import "mizuserver/pkg/providers/workspace"
+import "github.com/up9inc/mizu/agent/pkg/providers/workspace"
 
 type InviteStatus string
 

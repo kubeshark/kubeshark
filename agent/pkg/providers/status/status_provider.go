@@ -2,8 +2,9 @@ package status
 
 import (
 	"encoding/json"
-	"mizuserver/pkg/api"
-	"mizuserver/pkg/providers/tappedPods"
+
+	"github.com/up9inc/mizu/agent/pkg/api"
+	"github.com/up9inc/mizu/agent/pkg/providers/tappedPods"
 
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/logger"

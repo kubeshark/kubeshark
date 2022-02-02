@@ -5,13 +5,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"mizuserver/pkg/providers/database"
-	"mizuserver/pkg/providers/userRoles"
-	"mizuserver/pkg/providers/workspace"
 	"net/http"
 	"net/http/cookiejar"
 	"strings"
 	"time"
+
+	"github.com/up9inc/mizu/agent/pkg/providers/database"
+	"github.com/up9inc/mizu/agent/pkg/providers/userRoles"
+	"github.com/up9inc/mizu/agent/pkg/providers/workspace"
 
 	"github.com/google/uuid"
 

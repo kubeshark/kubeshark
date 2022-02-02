@@ -3,7 +3,8 @@ package database
 import (
 	"errors"
 	"fmt"
-	"mizuserver/pkg/config"
+
+	"github.com/up9inc/mizu/agent/pkg/config"
 
 	"github.com/google/uuid"
 	"github.com/mattn/go-sqlite3"

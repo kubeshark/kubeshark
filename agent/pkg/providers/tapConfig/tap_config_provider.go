@@ -2,19 +2,20 @@ package tapConfig
 
 import (
 	"context"
-	"mizuserver/pkg/config"
-	"mizuserver/pkg/models"
-	"mizuserver/pkg/providers/database"
-	"mizuserver/pkg/providers/status"
-	"mizuserver/pkg/providers/tappedPods"
-	"mizuserver/pkg/providers/tappers"
-	"mizuserver/pkg/utils"
 	"os"
 	"regexp"
 	"sync"
 	"time"
 
-	kubernetesProvider "mizuserver/pkg/providers/kubernetes"
+	"github.com/up9inc/mizu/agent/pkg/config"
+	"github.com/up9inc/mizu/agent/pkg/models"
+	"github.com/up9inc/mizu/agent/pkg/providers/database"
+	"github.com/up9inc/mizu/agent/pkg/providers/status"
+	"github.com/up9inc/mizu/agent/pkg/providers/tappedPods"
+	"github.com/up9inc/mizu/agent/pkg/providers/tappers"
+	"github.com/up9inc/mizu/agent/pkg/utils"
+
+	kubernetesProvider "github.com/up9inc/mizu/agent/pkg/providers/kubernetes"
 
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/kubernetes"

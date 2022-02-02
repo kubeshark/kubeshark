@@ -16,7 +16,8 @@ more on keto here: https://www.ory.sh/keto/docs/
 import (
 	"errors"
 	"fmt"
-	"mizuserver/pkg/utils"
+
+	"github.com/up9inc/mizu/agent/pkg/utils"
 
 	ketoClient "github.com/ory/keto-client-go/client"
 	ketoRead "github.com/ory/keto-client-go/client/read"

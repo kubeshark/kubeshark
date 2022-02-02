@@ -5,15 +5,16 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"mizuserver/pkg/config"
-	"mizuserver/pkg/middlewares"
-	"mizuserver/pkg/models"
-	"mizuserver/pkg/providers/user"
-	"mizuserver/pkg/providers/userRoles"
-	"mizuserver/pkg/providers/workspace"
 	"net/http"
 	"sync"
 	"time"
+
+	"github.com/up9inc/mizu/agent/pkg/config"
+	"github.com/up9inc/mizu/agent/pkg/middlewares"
+	"github.com/up9inc/mizu/agent/pkg/models"
+	"github.com/up9inc/mizu/agent/pkg/providers/user"
+	"github.com/up9inc/mizu/agent/pkg/providers/userRoles"
+	"github.com/up9inc/mizu/agent/pkg/providers/workspace"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -47,7 +48,7 @@ var connectedWebsocketIdCounter = 0
 
 func init() {
 	websocketUpgrader.CheckOrigin = func(r *http.Request) bool { return true } // like cors for web socket
-	connectedWebsockets = make(map[int]*SocketConnection, 0)
+	connectedWebsockets = make(map[int]*SocketConnection)
 }
 
 func WebSocketRoutes(app *gin.Engine, eventHandlers EventHandlers, startTime int64) {

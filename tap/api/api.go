@@ -314,7 +314,7 @@ type HTTPRequestWrapper struct {
 func (r *HTTPRequestWrapper) MarshalJSON() ([]byte, error) {
 	body, _ := ioutil.ReadAll(r.Request.Body)
 	r.Request.Body = ioutil.NopCloser(bytes.NewBuffer(body))
-	return json.Marshal(&struct {
+	return json.Marshal(&struct { //nolint
 		Body    string `json:"Body,omitempty"`
 		GetBody string `json:"GetBody,omitempty"`
 		Cancel  string `json:"Cancel,omitempty"`
@@ -332,7 +332,7 @@ type HTTPResponseWrapper struct {
 func (r *HTTPResponseWrapper) MarshalJSON() ([]byte, error) {
 	body, _ := ioutil.ReadAll(r.Response.Body)
 	r.Response.Body = ioutil.NopCloser(bytes.NewBuffer(body))
-	return json.Marshal(&struct {
+	return json.Marshal(&struct { //nolint
 		Body    string `json:"Body,omitempty"`
 		GetBody string `json:"GetBody,omitempty"`
 		Cancel  string `json:"Cancel,omitempty"`

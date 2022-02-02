@@ -52,9 +52,13 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 		}
 
 		if isClient {
-			handleClientStream(tcpID, counterPair, superTimer, emitter, redisPacket)
+			err = handleClientStream(tcpID, counterPair, superTimer, emitter, redisPacket)
 		} else {
-			handleServerStream(tcpID, counterPair, superTimer, emitter, redisPacket)
+			err = handleServerStream(tcpID, counterPair, superTimer, emitter, redisPacket)
+		}
+
+		if err != nil {
+			return err
 		}
 	}
 }
@@ -109,7 +113,7 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 
 func (d dissecting) Represent(request map[string]interface{}, response map[string]interface{}) (object []byte, bodySize int64, err error) {
 	bodySize = 0
-	representation := make(map[string]interface{}, 0)
+	representation := make(map[string]interface{})
 	repRequest := representGeneric(request, `request.`)
 	repResponse := representGeneric(response, `response.`)
 	representation["request"] = repRequest

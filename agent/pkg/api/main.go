@@ -5,22 +5,23 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"mizuserver/pkg/elastic"
-	"mizuserver/pkg/har"
-	"mizuserver/pkg/holder"
-	"mizuserver/pkg/providers"
 	"os"
 	"path"
 	"sort"
 	"strings"
 	"time"
 
-	"mizuserver/pkg/servicemap"
+	"github.com/up9inc/mizu/agent/pkg/elastic"
+	"github.com/up9inc/mizu/agent/pkg/har"
+	"github.com/up9inc/mizu/agent/pkg/holder"
+	"github.com/up9inc/mizu/agent/pkg/providers"
 
-	"mizuserver/pkg/models"
-	"mizuserver/pkg/oas"
-	"mizuserver/pkg/resolver"
-	"mizuserver/pkg/utils"
+	"github.com/up9inc/mizu/agent/pkg/servicemap"
+
+	"github.com/up9inc/mizu/agent/pkg/models"
+	"github.com/up9inc/mizu/agent/pkg/oas"
+	"github.com/up9inc/mizu/agent/pkg/resolver"
+	"github.com/up9inc/mizu/agent/pkg/utils"
 
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/logger"
@@ -139,7 +140,8 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 				mizuEntry.Rules = rules
 			}
 
-			oas.GetOasGeneratorInstance().PushEntry(harEntry)
+			entryWSource := oas.EntryWithSource{Entry: *harEntry, Source: mizuEntry.Source.Name}
+			oas.GetOasGeneratorInstance().PushEntry(&entryWSource)
 		}
 
 		data, err := json.Marshal(mizuEntry)

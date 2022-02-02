@@ -2,18 +2,19 @@ package controllers
 
 import (
 	"encoding/json"
-	"mizuserver/pkg/api"
-	"mizuserver/pkg/holder"
-	"mizuserver/pkg/providers"
-	"mizuserver/pkg/providers/tappedPods"
-	"mizuserver/pkg/providers/tappers"
-	"mizuserver/pkg/up9"
-	"mizuserver/pkg/validation"
 	"net/http"
 
-	"github.com/gin-gonic/gin"
+	"github.com/up9inc/mizu/agent/pkg/api"
+	"github.com/up9inc/mizu/agent/pkg/holder"
+	"github.com/up9inc/mizu/agent/pkg/providers"
+	"github.com/up9inc/mizu/agent/pkg/providers/tappedPods"
+	"github.com/up9inc/mizu/agent/pkg/providers/tappers"
+	"github.com/up9inc/mizu/agent/pkg/up9"
+	"github.com/up9inc/mizu/agent/pkg/validation"
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/logger"
+
+	"github.com/gin-gonic/gin"
 )
 
 func HealthCheck(c *gin.Context) {
