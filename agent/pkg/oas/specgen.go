@@ -403,6 +403,10 @@ func handleFormDataUrlencoded(text string, content *openapi.MediaType) {
 		return
 	}
 
+	handleFormData(text, content, nil)
+}
+
+func handleFormData(text string, content *openapi.MediaType, parts []PartWithBody) {
 	if content.Schema == nil {
 		content.Schema = new(openapi.SchemaObj)
 		content.Schema.Type = openapi.Types{openapi.TypeObject}
@@ -410,7 +414,8 @@ func handleFormDataUrlencoded(text string, content *openapi.MediaType) {
 	}
 
 	props := &content.Schema.Properties
-	for name, vals := range formData {
+	for _, pwb := range parts {
+		name := pwb.part.FormName()
 		existing, found := (*props)[name]
 		if !found {
 			existing = new(openapi.SchemaObj)
@@ -446,14 +451,20 @@ func handleFormDataUrlencoded(text string, content *openapi.MediaType) {
 	}
 }
 
-func handleFormDataMultipart(text string, content *openapi.MediaType, params map[string]string) {
-	boundary, ok := params["boundary"]
+type PartWithBody struct {
+	part *multipart.Part
+	body []byte
+}
+
+func handleFormDataMultipart(text string, content *openapi.MediaType, ctypeParams map[string]string) {
+	boundary, ok := ctypeParams["boundary"]
 	if !ok {
 		logger.Log.Errorf("Multipart header has no boundary")
 		return
 	}
 	mpr := multipart.NewReader(strings.NewReader(text), boundary)
 
+	parts := make([]PartWithBody, 0)
 	for {
 		part, err := mpr.NextPart()
 		if err == io.EOF {
@@ -463,24 +474,17 @@ func handleFormDataMultipart(text string, content *openapi.MediaType, params map
 			logger.Log.Errorf("Cannot parse multipart body: %v", err)
 			break
 		}
-		// defer part.Close() TODO: restore it
+		defer part.Close()
 
 		body, err := ioutil.ReadAll(part)
 		if err != nil {
 			logger.Log.Errorf("Error reading multipart Part %s: %v", part.Header, err)
 		}
 
-		/*
-			pd.Params = append(pd.Params, Param{
-				Name:        part.FormName(),
-				Filename:    part.FileName(),
-				ContentType: part.Header.Get("Content-Type"),
-				Value:       string(body),
-			})
-
-		*/
-		_ = body
+		parts = append(parts, PartWithBody{part: part, body: body})
 	}
+
+	handleFormData(text, content, parts)
 }
 
 func getRespCtype(resp *har.Response) string {

@@ -95,8 +95,8 @@ github.com/chanced/cmpjson v0.0.0-20210415035445-da9262c1f20a h1:zG6t+4krPXcCKtL
 github.com/chanced/cmpjson v0.0.0-20210415035445-da9262c1f20a/go.mod h1:yhcmlFk1hxuZ+5XZbupzT/cEm/eE4ZvWbmsW1+Q/aZE=
 github.com/chanced/dynamic v0.0.0-20210502140838-c010b5fc3e44 h1:4NOJMtvZaOA6cI2gkIuXk/2b5KTOvm/R4zyPy/yLCM4=
 github.com/chanced/dynamic v0.0.0-20210502140838-c010b5fc3e44/go.mod h1:XVNfXN5kgZST4PQ0W/oBAHJku2OteCeHxjAbvfd0ARM=
-github.com/chanced/openapi v0.0.6 h1:2giGS47+T8/7MN2hfRHSIUPx86Qksk+J/ciIWcAM7hY=
-github.com/chanced/openapi v0.0.6/go.mod h1:SxE2VMLPw+T7Vq8nwbVVhDF2PigvRF4n5XyqsVpRJGU=
+github.com/chanced/openapi v0.0.7 h1:OmOBHCg/5ViUg0gaGxXBeEFoVBE8C2pHK4BO/AiD6k8=
+github.com/chanced/openapi v0.0.7/go.mod h1:SxE2VMLPw+T7Vq8nwbVVhDF2PigvRF4n5XyqsVpRJGU=
 github.com/chzyer/logex v1.1.10/go.mod h1:+Ywpsq7O8HXn0nuIou7OrIPyXbp3wmkHB+jjWRnGsAI=
 github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e/go.mod h1:nSuG5e5PlCu98SY8svDHJxuZscDgtXS6KTTbou5AhLI=
 github.com/chzyer/test v0.0.0-20180213035817-a1ea475d72b1/go.mod h1:Q3SI9o4m/ZMnBNeIyt5eFwwo7qiLfzFZmjNmxjkiQlU=
