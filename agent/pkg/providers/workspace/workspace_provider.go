@@ -32,6 +32,22 @@ func ListWorkspaces() ([]*WorkspaceListItemResponse, error) {
 	}
 }
 
+func ListWorkspacesFull() ([]*WorkspaceResponse, error) {
+	if workspaces, err := database.ListWorkspacesWithRelations(); err != nil {
+		return nil, err
+	} else {
+		workspaceResponseItems := make([]*WorkspaceResponse, len(workspaces))
+		for i, workspace := range workspaces {
+			workspaceResponseItems[i] = &WorkspaceResponse{
+				Id:         workspace.Id,
+				Name:       workspace.Name,
+				Namespaces: namespaceSliceToStringSlice(workspace.Namespaces),
+			}
+		}
+		return workspaceResponseItems, nil
+	}
+}
+
 func GetWorkspace(workspaceId string) (*WorkspaceResponse, error) {
 	if workspace, err := database.GetWorkspaceWithRelations(workspaceId); err != nil {
 		return nil, err

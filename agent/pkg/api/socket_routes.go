@@ -25,7 +25,7 @@ import (
 )
 
 type EventHandlers interface {
-	WebSocketConnect(socketId int, isTapper bool)
+	WebSocketConnect(socketId int, isTapper bool, topic string)
 	WebSocketDisconnect(socketId int, isTapper bool)
 	WebSocketMessage(socketId int, message []byte)
 }
@@ -79,6 +79,7 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 	var connection *basenine.Connection
 	var isQuerySet bool
 	var namespaceFilter []string
+	var socketTopic string
 
 	// `!isTapper` means it's a connection from the web UI
 	if !isTapper {
@@ -86,10 +87,13 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 			sessionToken := r.URL.Query().Get("sessionToken")
 			workspaceOverride := r.URL.Query().Get("workspaceOverride")
 
-			if namespaceFilter, err = getNamespaceListForUserWorkspace(sessionToken, workspaceOverride, r.Context()); err != nil {
+			var workspaceId string
+			if namespaceFilter, workspaceId, err = getNamespaceListForUserWorkspace(sessionToken, workspaceOverride, r.Context()); err != nil {
 				logger.Log.Errorf("Failed to get namespace filter for user: %v", err)
 				return
 			}
+
+			socketTopic = workspaceId
 		}
 
 		connection, err = basenine.NewConnection(shared.BasenineHost, shared.BaseninePort)
@@ -108,7 +112,7 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 		connection.Close()
 	}()
 
-	eventHandlers.WebSocketConnect(socketId, isTapper)
+	eventHandlers.WebSocketConnect(socketId, isTapper, socketTopic)
 
 	startTimeBytes, _ := models.CreateWebsocketStartTimeMessage(startTime)
 
@@ -202,30 +206,30 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 	}
 }
 
-func getNamespaceListForUserWorkspace(token string, workspaceOverride string, ctx context.Context) ([]string, error) {
+func getNamespaceListForUserWorkspace(token string, workspaceOverride string, ctx context.Context) (namespaces []string, workspaceId string, err error) {
 	user, err := user.WhoAmI(token, ctx)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 	workspaceObject := user.Workspace
 	if workspaceOverride != "" {
 		if user.SystemRole != userRoles.AdminRole {
-			return nil, errors.New("only admins can use workspaceOverride")
+			return nil, "", errors.New("only admins can use workspaceOverride")
 		}
 		if workspaceObject, err = workspace.GetWorkspace(workspaceOverride); err != nil {
-			return nil, err
+			return nil, "", err
 		}
 	}
 
 	if workspaceObject == nil {
-		return nil, errors.New("workspace not found")
+		return nil, "", errors.New("workspace not found")
 	}
 
 	if workspaceObject.Namespaces == nil {
-		return make([]string, 0), nil
+		return make([]string, 0), workspaceObject.Id, nil
 	}
 
-	return workspaceObject.Namespaces, nil
+	return workspaceObject.Namespaces, workspaceObject.Id, nil
 }
 
 func socketCleanup(socketId int, socketConnection *SocketConnection) {

@@ -12,6 +12,7 @@ import (
 	"github.com/up9inc/mizu/agent/pkg/providers/tappers"
 	"github.com/up9inc/mizu/agent/pkg/providers/user"
 	"github.com/up9inc/mizu/agent/pkg/up9"
+	"github.com/up9inc/mizu/agent/pkg/utils"
 	"github.com/up9inc/mizu/agent/pkg/validation"
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/logger"
@@ -124,12 +125,5 @@ func filterTapStatusForUser(tappedPodStatus []shared.TappedPodStatus, sessionTok
 		return make([]shared.TappedPodStatus, 0), nil
 	}
 
-	filteredTappedPodStatus := make([]shared.TappedPodStatus, 0)
-	for _, tappedPod := range tappedPodStatus {
-		if shared.Contains(user.Workspace.Namespaces, tappedPod.Namespace) {
-			filteredTappedPodStatus = append(filteredTappedPodStatus, tappedPod)
-		}
-	}
-
-	return filteredTappedPodStatus, nil
+	return utils.FilterTapStatusByNamespaces(tappedPodStatus, user.Workspace.Namespaces), nil
 }

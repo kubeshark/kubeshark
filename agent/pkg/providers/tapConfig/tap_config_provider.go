@@ -2,15 +2,16 @@ package tapConfig
 
 import (
 	"context"
+	"encoding/json"
 	"os"
 	"regexp"
 	"sync"
 	"time"
 
+	"github.com/up9inc/mizu/agent/pkg/api"
 	"github.com/up9inc/mizu/agent/pkg/config"
 	"github.com/up9inc/mizu/agent/pkg/models"
 	"github.com/up9inc/mizu/agent/pkg/providers/database"
-	"github.com/up9inc/mizu/agent/pkg/providers/status"
 	"github.com/up9inc/mizu/agent/pkg/providers/tappedPods"
 	"github.com/up9inc/mizu/agent/pkg/providers/tappers"
 	"github.com/up9inc/mizu/agent/pkg/utils"
@@ -71,7 +72,7 @@ func SyncTappingConfigWithWorkspaceNamespaces() error {
 		tappedPods.Set([]*shared.PodInfo{})
 		tappers.ResetStatus()
 
-		status.BroadcastTappedPodsStatus()
+		broadcastTappedPodsStatusPerWorkspace()
 	}
 
 	podRegex, _ := regexp.Compile(".*")
@@ -128,7 +129,7 @@ func startMizuTapperSyncer(ctx context.Context, provider *kubernetes.Provider, t
 				}
 
 				tappedPods.Set(kubernetes.GetPodInfosForPods(tapperSyncer.CurrentlyTappedPods))
-				status.BroadcastTappedPodsStatus()
+				broadcastTappedPodsStatusPerWorkspace()
 			case tapperStatus, ok := <-tapperSyncer.TapperStatusChangedOut:
 				if !ok {
 					logger.Log.Debug("mizuTapperSyncer tapper status changed channel closed, ending listener loop")
@@ -136,7 +137,7 @@ func startMizuTapperSyncer(ctx context.Context, provider *kubernetes.Provider, t
 				}
 
 				tappers.SetStatus(&tapperStatus)
-				status.BroadcastTappedPodsStatus()
+				broadcastTappedPodsStatusPerWorkspace()
 			case <-ctx.Done():
 				logger.Log.Debug("mizuTapperSyncer event listener loop exiting due to context done")
 				return
@@ -145,4 +146,32 @@ func startMizuTapperSyncer(ctx context.Context, provider *kubernetes.Provider, t
 	}()
 
 	return tapperSyncer, nil
+}
+
+func broadcastTappedPodsStatusPerWorkspace() {
+	tappedPodsStatus := tappedPods.GetTappedPodsStatus()
+	workspaces, err := database.ListWorkspacesWithRelations()
+	if err != nil {
+		logger.Log.Errorf("Error listing workspaces for tap pod status update %v", err)
+	}
+
+	for _, workspace := range workspaces {
+		workspaceTapStatus := filterTapStatusByNamespaceObjects(tappedPodsStatus, workspace.Namespaces)
+		message := shared.CreateWebSocketStatusMessage(workspaceTapStatus)
+		if jsonBytes, err := json.Marshal(message); err != nil {
+			logger.Log.Errorf("Could not Marshal message %v", err)
+		} else {
+			logger.Log.Infof("broadcasting for workspace")
+			api.BroadcastToBrowserClientsByTopic(jsonBytes, &workspace.Id)
+		}
+	}
+}
+
+func filterTapStatusByNamespaceObjects(tappedPodStatus []shared.TappedPodStatus, namespaceObjects []database.Namespace) []shared.TappedPodStatus {
+	namespaces := make([]string, len(namespaceObjects))
+	for i, namespaceObject := range namespaceObjects {
+		namespaces[i] = namespaceObject.Name
+	}
+
+	return utils.FilterTapStatusByNamespaces(tappedPodStatus, namespaces)
 }

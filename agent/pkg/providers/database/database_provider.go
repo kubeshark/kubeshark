@@ -97,6 +97,14 @@ func ListWorkspaces() ([]*Workspace, error) {
 	return workspaces, nil
 }
 
+func ListWorkspacesWithRelations() ([]*Workspace, error) {
+	var workspaces []*Workspace
+	if err := db.Preload("Namespaces").Find(&workspaces).Error; err != nil {
+		return nil, handleDatabaseError(err)
+	}
+	return workspaces, nil
+}
+
 func GetWorkspaceWithRelations(workspaceId string) (*Workspace, error) {
 	var workspace Workspace
 	if err := db.Preload("Namespaces").First(&workspace, "id = ?", workspaceId).Error; err != nil {
