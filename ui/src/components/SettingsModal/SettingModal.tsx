@@ -7,6 +7,7 @@ import spinner from "../assets/spinner.svg";
 import {useCommonStyles} from "../../helpers/commonStyle";
 import {toast} from "react-toastify";
 import SelectList from "../UI/SelectList";
+import { adminUsername } from "../../consts";
 
 interface SettingsModalProps {
     isOpen: boolean
@@ -59,7 +60,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({isOpen, onClose, is
                 name: "default",
                 namespaces: checkedNamespacesKeys
             }
-            await api.createWorkspace(defaultWorkspace);
+            await api.createWorkspace(defaultWorkspace,adminUsername);
             onClose();
             toast.success("Saved successfully");
         } catch (e) {

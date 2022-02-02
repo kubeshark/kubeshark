@@ -116,7 +116,11 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus}) => {
             setLeftOffTop(null);
             setNoMoreDataTop(false);
         }
-        ws.current = new WebSocket(MizuWebsocketURL);
+        let websocketUrl = MizuWebsocketURL;
+        if (api.token) {
+          websocketUrl += `?sessionToken=${api.token}`;
+        }
+        ws.current = new WebSocket(websocketUrl);
         ws.current.onopen = () => {
             setWsConnection(WsConnectionStatus.Connected);
             ws.current.send(query);
