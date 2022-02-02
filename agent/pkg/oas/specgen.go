@@ -12,7 +12,6 @@ import (
 	"io/ioutil"
 	"mime"
 	"mime/multipart"
-	"mizuserver/pkg/har"
 	"net/textproto"
 	"net/url"
 	"sort"
@@ -503,16 +502,14 @@ func handleFormDataUrlencoded(text string, content *openapi.MediaType) {
 		for _, val := range vals {
 			part := new(multipart.Part)
 			part.Header = textproto.MIMEHeader{}
-			if name != part.FormName() {
-				panic("")
-			}
+			part.Header.Add("Content-Disposition", "form-data; name=\""+name+"\";")
 			parts = append(parts, PartWithBody{part: part, body: []byte(val)})
 		}
 	}
-	handleFormData(text, content, parts)
+	handleFormData(content, parts)
 }
 
-func handleFormData(text string, content *openapi.MediaType, parts []PartWithBody) {
+func handleFormData(content *openapi.MediaType, parts []PartWithBody) {
 	if content.Schema == nil {
 		content.Schema = new(openapi.SchemaObj)
 		content.Schema.Type = openapi.Types{openapi.TypeObject}
@@ -529,31 +526,30 @@ func handleFormData(text string, content *openapi.MediaType, parts []PartWithBod
 			(*props)[name] = existing
 		}
 
-		examples := make([]string, 0)
-		if existing.Examples != nil {
-			err := json.Unmarshal(existing.Examples, &examples)
-			if err != nil {
-				continue
-			}
-		}
-
-		if len(examples) < 5 {
-		byVals:
-			for _, val := range vals {
-				for _, eVal := range examples {
-					if eVal == val {
-						continue byVals
-					}
+		bodyStr := string(pwb.body)
+		if len(existing.Examples) < 5 {
+			found := false
+			for _, eVal := range existing.Examples {
+				existingExample := ""
+				err := json.Unmarshal(eVal, &existingExample)
+				if err != nil {
+					continue
 				}
-				examples = append(examples, val)
+
+				if existingExample == bodyStr {
+					found = true
+					break
+				}
+			}
+
+			if !found {
+				example, err := json.Marshal(bodyStr)
+				if err != nil {
+					continue
+				}
+				existing.Examples = append(existing.Examples, example)
 			}
 		}
-
-		raw, err := json.Marshal(examples)
-		if err != nil {
-			continue
-		}
-		existing.Examples = raw
 	}
 }
 
@@ -590,7 +586,7 @@ func handleFormDataMultipart(text string, content *openapi.MediaType, ctypeParam
 		parts = append(parts, PartWithBody{part: part, body: body})
 	}
 
-	handleFormData(text, content, parts)
+	handleFormData(content, parts)
 }
 
 func getRespCtype(resp *har.Response) string {

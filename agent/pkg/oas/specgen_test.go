@@ -12,10 +12,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/chanced/openapi"
-	"github.com/op/go-logging"
 	"github.com/up9inc/mizu/agent/pkg/har"
-	"github.com/up9inc/mizu/shared/logger"
 )
 
 // if started via env, write file into subdir
