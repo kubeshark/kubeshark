@@ -8,6 +8,7 @@ import entPageAtom, {Page} from "../../../recoil/entPage";
 import {useSetRecoilState} from "recoil";
 import useKeyPress from "../../../hooks/useKeyPress"
 import shortcutsKeyboard from "../../../configs/shortcutsKeyboard"
+import { useNavigate } from "react-router-dom";
 
 
 const api = Api.getInstance();
@@ -19,6 +20,8 @@ const LoginPage: React.FC = () => {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const formRef = useRef(null);
+    const navigate = useNavigate();
+
 
     const setEntPage = useSetRecoilState(entPageAtom);
 
@@ -29,6 +32,7 @@ const LoginPage: React.FC = () => {
             await api.login(username, password);
             if (!await api.isAuthenticationNeeded()) {
                 setEntPage(Page.Traffic);
+                navigate("/");
             } else {
                 toast.error("Invalid credentials");
             }

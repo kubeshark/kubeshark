@@ -1,87 +1,27 @@
-import React, {useCallback, useEffect, useState} from "react";
-import {Route, Routes, useLocation, useNavigate, useParams, useSearchParams} from "react-router-dom";
+import React, { useState} from "react";
+import {Route, Routes} from "react-router-dom";
 import {RouterRoutes} from "../helpers/routes";
-import {useRecoilState} from "recoil";
-import entPageAtom, {Page} from "../recoil/entPage";
-import {toast} from "react-toastify";
 import AuthPageBase from "./Pages/AuthPage/AuthPageBase";
 import InstallPage from "./Pages/AuthPage/InstallPage";
 import LoginPage from "./Pages/AuthPage/LoginPage";
-import LoadingOverlay from "./LoadingOverlay";
 import SystemViewer from "./Pages/SystemViewer/SystemViewer";
-import Api from "../helpers/api";
+
 import {TrafficPage} from "./Pages/TrafficPage/TrafficPage";
 import SettingsPage from "./Pages/SettingsPage/SettingsPage";
+import { AuthenticatedRoute } from "../helpers/AuthenticatedRoute";
 
-const api = Api.getInstance();
 
 const AppSwitchRoutes = () => {
 
-    const navigate = useNavigate();
-
-    const [isLoading, setIsLoading] = useState(true);
-    const [entPage, setEntPage] = useRecoilState(entPageAtom);
     const [isFirstLogin, setIsFirstLogin] = useState(false);
-    let {inviteToken} = useParams()
-    const location = useLocation();
-
     
 
-    const determinePage =  useCallback(async () => {
-        try {
-            const isInstallNeeded = await api.isInstallNeeded();
-            if (isInstallNeeded) {
-                setEntPage(Page.Setup);
-            } else {
-                const isAuthNeeded = await api.isAuthenticationNeeded();
-                if(isAuthNeeded && inviteToken) {
-                    setEntPage(Page.Setup)
-                }
-                else if(isAuthNeeded)
-                    setEntPage(Page.Login);
-            }
-        } catch (e) {
-            toast.error("Error occured while checking Mizu API status, see console for mode details");
-            console.error(e);
-        } finally {
-            setIsLoading(false);
-        }
-    },[setEntPage]);
 
-    useEffect(() => {
-        determinePage();
-    }, [determinePage]);
-
-    useEffect(() => {
-        if(!location.pathname || location.pathname !== '/') {
-            return;
-        }
-        
-        switch (entPage) {
-            case Page.Traffic:
-                navigate("/");
-                break;
-            case Page.Setup:
-                navigate(RouterRoutes.SETUP);
-                break;
-            case Page.Login:
-                navigate(RouterRoutes.LOGIN);
-                break;
-            default:
-                navigate(RouterRoutes.LOGIN);
-        }
-       // eslint-disable-next-line
-    },[entPage, location])
-
-
-    if (isLoading) {
-        return <LoadingOverlay/>;
-    }
 
     return <Routes>
         <Route path={"/"} element={<SystemViewer isFirstLogin={isFirstLogin} setIsFirstLogin={setIsFirstLogin}/>}>
-            <Route path={RouterRoutes.SETTINGS} element={<SettingsPage/>} /> {/*todo: set settings component*/}
-            <Route path={"/"} element={<TrafficPage/>}/>
+            <Route path={RouterRoutes.SETTINGS} element={<AuthenticatedRoute><SettingsPage/></AuthenticatedRoute>} /> {/*todo: set settings component*/}
+            <Route path={"/"} element={<AuthenticatedRoute><TrafficPage/></AuthenticatedRoute>}/>
             
         </Route>
         <Route path={RouterRoutes.SETUP+ "/:inviteToken"} element={<AuthPageBase><InstallPage onFirstLogin={() => setIsFirstLogin(true)}/></AuthPageBase>}/>
