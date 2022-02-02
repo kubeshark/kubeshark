@@ -11,6 +11,7 @@ import (
 	"mime"
 	"mime/multipart"
 	"mizuserver/pkg/har"
+	"net/textproto"
 	"net/url"
 	"sort"
 	"strconv"
@@ -403,7 +404,18 @@ func handleFormDataUrlencoded(text string, content *openapi.MediaType) {
 		return
 	}
 
-	handleFormData(text, content, nil)
+	parts := make([]PartWithBody, 0)
+	for name, vals := range formData {
+		for _, val := range vals {
+			part := new(multipart.Part)
+			part.Header = textproto.MIMEHeader{}
+			if name != part.FormName() {
+				panic("")
+			}
+			parts = append(parts, PartWithBody{part: part, body: []byte(val)})
+		}
+	}
+	handleFormData(text, content, parts)
 }
 
 func handleFormData(text string, content *openapi.MediaType, parts []PartWithBody) {
