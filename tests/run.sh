@@ -17,7 +17,7 @@ for file in $PCAPS
 do
     echo "Dissecting $file"
     pcap=$file setsid sh -c 'MIZU_TEST=1 GOGC=12800 NODE_NAME=dev ./agent/build/mizuagent -r $pcap --tap --api-server-address ws://localhost:8899/wsTapper' && \
-    sleep 1
+    sleep 0.1
 done
 
 sleep 30 && \
