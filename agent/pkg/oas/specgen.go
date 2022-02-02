@@ -19,6 +19,7 @@ import (
 	"time"
 )
 
+const LastSeenTS = "x-last-seen-ts"
 const CountersTotal = "x-counters-total"
 const CountersPerSource = "x-counters-per-source"
 
@@ -51,9 +52,15 @@ func NewGen(server string) *SpecGen {
 
 func (g *SpecGen) StartFromSpec(oas *openapi.OpenAPI) {
 	g.oas = oas
+	g.tree = new(Node)
 	for pathStr, pathObj := range oas.Paths.Items {
 		pathSplit := strings.Split(string(pathStr), "/")
 		g.tree.getOrSet(pathSplit, pathObj)
+
+		// clean "last entry timestamp" markers from the past
+		for _, pathAndOp := range g.tree.listOps() {
+			delete(pathAndOp.op.Extensions, LastSeenTS)
+		}
 	}
 }
 
@@ -76,49 +83,21 @@ func (g *SpecGen) GetSpec() (*openapi.OpenAPI, error) {
 
 	g.tree.compact()
 
-	counterTotal := Counter{}
-	counterMapTotal := CounterMap{}
+	counters := CounterMaps{counterTotal: Counter{}, counterMapTotal: CounterMap{}}
 
-	for _, pathop := range g.tree.listOps() {
-		opObj := pathop.op
+	for _, pathAndOp := range g.tree.listOps() {
+		opObj := pathAndOp.op
 		if opObj.Summary == "" {
-			opObj.Summary = pathop.path
+			opObj.Summary = pathAndOp.path
 		}
 
-		if _, ok := opObj.Extensions.Extension(CountersTotal); ok {
-			counter := new(Counter)
-			err := opObj.Extensions.DecodeExtension(CountersTotal, counter)
-			if err != nil {
-				return nil, err
-			}
-			counterTotal.addOther(counter)
-
-			tpl := "Mizu observed %d entries (%d failed), average response time is %.3f seconds"
-			if opObj.Description == "" || (strings.HasPrefix(opObj.Description, "Mizu ") && strings.HasSuffix(opObj.Description, " seconds")) {
-				opObj.Description = fmt.Sprintf(tpl, counter.Entries, counter.Failures, counter.SumRT/float64(counter.Entries))
-			}
-		}
-
-		if _, ok := opObj.Extensions.Extension(CountersPerSource); ok {
-			counterMap := new(CounterMap)
-			err := opObj.Extensions.DecodeExtension(CountersPerSource, counterMap)
-			if err != nil {
-				return nil, err
-			}
-			counterMapTotal.addOther(counterMap)
+		err := counters.processOp(opObj)
+		if err != nil {
+			return nil, err
 		}
 	}
 
-	if g.oas.Extensions == nil {
-		g.oas.Extensions = openapi.Extensions{}
-	}
-
-	err := g.oas.Extensions.SetExtension(CountersTotal, counterTotal)
-	if err != nil {
-		return nil, err
-	}
-
-	err = g.oas.Extensions.SetExtension(CountersPerSource, counterMapTotal)
+	err := counters.processOas(g.oas)
 	if err != nil {
 		return nil, err
 	}
@@ -128,10 +107,7 @@ func (g *SpecGen) GetSpec() (*openapi.OpenAPI, error) {
 
 	suggestTags(g.oas)
 
-	tpl := "Mizu observed %d entries (%d failed), average response time is %.3f seconds"
-	if g.oas.Info.Description == "" || (strings.HasPrefix(g.oas.Info.Description, "Mizu ") && strings.HasSuffix(g.oas.Info.Description, " seconds")) {
-		g.oas.Info.Description = fmt.Sprintf(tpl, counterTotal.Entries, counterTotal.Failures, counterTotal.SumRT/float64(counterTotal.Entries))
-	}
+	g.oas.Info.Description = setCounterMsgIfOk(g.oas.Info.Description, &counters.counterTotal)
 
 	// to make a deep copy, no better idea than marshal+unmarshal
 	specText, err := json.MarshalIndent(g.oas, "", "\t")
@@ -310,6 +286,7 @@ func handleCounters(opObj *openapi.Operation, success bool, entryWithSource *Ent
 	// TODO: if performance around DecodeExtension+SetExtension is bad, store counters as separate maps
 	counter := Counter{}
 	counterMap := CounterMap{}
+	prevTs := 0.0
 	if opObj.Extensions == nil {
 		opObj.Extensions = openapi.Extensions{}
 	} else {
@@ -322,6 +299,13 @@ func handleCounters(opObj *openapi.Operation, success bool, entryWithSource *Ent
 
 		if _, ok := opObj.Extensions.Extension(CountersPerSource); ok {
 			err := opObj.Extensions.DecodeExtension(CountersPerSource, &counterMap)
+			if err != nil {
+				return err
+			}
+		}
+
+		if _, ok := opObj.Extensions.Extension(LastSeenTS); ok {
+			err := opObj.Extensions.DecodeExtension(LastSeenTS, &prevTs)
 			if err != nil {
 				return err
 			}
@@ -344,8 +328,18 @@ func handleCounters(opObj *openapi.Operation, success bool, entryWithSource *Ent
 	ts := float64(started.UnixNano()) / float64(time.Millisecond) / 1000
 	rt := float64(entryWithSource.Entry.Time) / 1000
 
-	counter.addEntry(ts, rt, success)
-	counterPerSource.addEntry(ts, rt, success)
+	dur := 0.0
+	if prevTs != 0 {
+		dur = ts - prevTs
+	}
+
+	counter.addEntry(ts, rt, success, dur)
+	counterPerSource.addEntry(ts, rt, success, dur)
+
+	err = opObj.Extensions.SetExtension(LastSeenTS, ts)
+	if err != nil {
+		return err
+	}
 
 	err = opObj.Extensions.SetExtension(CountersTotal, counter)
 	if err != nil {
@@ -612,4 +606,57 @@ func getOpObj(pathObj *openapi.PathObj, method string, createIfNone bool) (*open
 	}
 
 	return *op, isMissing, nil
+}
+
+type CounterMaps struct {
+	counterTotal    Counter
+	counterMapTotal CounterMap
+}
+
+func (m *CounterMaps) processOp(opObj *openapi.Operation) error {
+	if _, ok := opObj.Extensions.Extension(CountersTotal); ok {
+		counter := new(Counter)
+		err := opObj.Extensions.DecodeExtension(CountersTotal, counter)
+		if err != nil {
+			return err
+		}
+		m.counterTotal.addOther(counter)
+
+		opObj.Description = setCounterMsgIfOk(opObj.Description, counter)
+	}
+
+	if _, ok := opObj.Extensions.Extension(CountersPerSource); ok {
+		counterMap := new(CounterMap)
+		err := opObj.Extensions.DecodeExtension(CountersPerSource, counterMap)
+		if err != nil {
+			return err
+		}
+		m.counterMapTotal.addOther(counterMap)
+	}
+	return nil
+}
+
+func (m *CounterMaps) processOas(oas *openapi.OpenAPI) error {
+	if oas.Extensions == nil {
+		oas.Extensions = openapi.Extensions{}
+	}
+
+	err := oas.Extensions.SetExtension(CountersTotal, m.counterTotal)
+	if err != nil {
+		return err
+	}
+
+	err = oas.Extensions.SetExtension(CountersPerSource, m.counterMapTotal)
+	if err != nil {
+		return nil
+	}
+	return nil
+}
+
+func setCounterMsgIfOk(oldStr string, cnt *Counter) string {
+	tpl := "Mizu observed %d entries (%d failed), at %.3f hits/s, average response time is %.3f seconds"
+	if oldStr == "" || (strings.HasPrefix(oldStr, "Mizu ") && strings.HasSuffix(oldStr, " seconds")) {
+		return fmt.Sprintf(tpl, cnt.Entries, cnt.Failures, cnt.SumDuration/float64(cnt.Entries), cnt.SumRT/float64(cnt.Entries))
+	}
+	return oldStr
 }
