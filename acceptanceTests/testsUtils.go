@@ -3,7 +3,6 @@ package acceptanceTests
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -11,12 +10,10 @@ import (
 	"os/exec"
 	"path"
 	"strings"
-	"sync"
 	"syscall"
 	"testing"
 	"time"
 
-	"github.com/gorilla/websocket"
 	"github.com/up9inc/mizu/shared"
 )
 
@@ -28,24 +25,11 @@ const (
 	defaultServiceName    = "httpbin"
 	defaultEntriesCount   = 50
 	waitAfterTapPodsReady = 3 * time.Second
-	cleanCommandTimeout   = 1 * time.Minute
 )
 
 type PodDescriptor struct {
 	Name      string
 	Namespace string
-}
-
-func isPodDescriptorInPodArray(pods []map[string]interface{}, podDescriptor PodDescriptor) bool {
-	for _, pod := range pods {
-		podNamespace := pod["namespace"].(string)
-		podName := pod["name"].(string)
-
-		if podDescriptor.Namespace == podNamespace && strings.Contains(podName, podDescriptor.Name) {
-			return true
-		}
-	}
-	return false
 }
 
 func getCliPath() (string, error) {
@@ -82,10 +66,6 @@ func getProxyUrl(namespace string, service string) string {
 
 func getApiServerUrl(port uint16) string {
 	return fmt.Sprintf("http://localhost:%v", port)
-}
-
-func getWebSocketUrl(port uint16) string {
-	return fmt.Sprintf("ws://localhost:%v/ws", port)
 }
 
 func getDefaultCommandArgs() []string {
@@ -128,20 +108,6 @@ func getDefaultConfigCommandArgs() []string {
 	defaultCmdArgs := getDefaultCommandArgs()
 
 	return append([]string{configCommand}, defaultCmdArgs...)
-}
-
-func getDefaultCleanCommandArgs() []string {
-	cleanCommand := "clean"
-	defaultCmdArgs := getDefaultCommandArgs()
-
-	return append([]string{cleanCommand}, defaultCmdArgs...)
-}
-
-func getDefaultViewCommandArgs() []string {
-	viewCommand := "view"
-	defaultCmdArgs := getDefaultCommandArgs()
-
-	return append([]string{viewCommand}, defaultCmdArgs...)
 }
 
 func runCypressTests(t *testing.T, cypressRunCmd string) {
@@ -268,36 +234,6 @@ func executeHttpPostRequestWithHeaders(url string, headers map[string]string, bo
 	return executeHttpRequest(response, requestErr)
 }
 
-func runMizuClean() error {
-	cliPath, err := getCliPath()
-	if err != nil {
-		return err
-	}
-
-	cleanCmdArgs := getDefaultCleanCommandArgs()
-
-	cleanCmd := exec.Command(cliPath, cleanCmdArgs...)
-
-	commandDone := make(chan error)
-	go func() {
-		if err := cleanCmd.Run(); err != nil {
-			commandDone <- err
-		}
-		commandDone <- nil
-	}()
-
-	select {
-	case err = <-commandDone:
-		if err != nil {
-			return err
-		}
-	case <-time.After(cleanCommandTimeout):
-		return errors.New("clean command timed out")
-	}
-
-	return nil
-}
-
 func cleanupCommand(cmd *exec.Cmd) error {
 	if err := cmd.Process.Signal(syscall.SIGQUIT); err != nil {
 		return err
@@ -310,17 +246,6 @@ func cleanupCommand(cmd *exec.Cmd) error {
 	return nil
 }
 
-func getPods(tapStatusInterface interface{}) ([]map[string]interface{}, error) {
-	tapPodsInterface := tapStatusInterface.([]interface{})
-
-	var pods []map[string]interface{}
-	for _, podInterface := range tapPodsInterface {
-		pods = append(pods, podInterface.(map[string]interface{}))
-	}
-
-	return pods, nil
-}
-
 func getLogsPath() (string, error) {
 	dir, filePathErr := os.Getwd()
 	if filePathErr != nil {
@@ -329,77 +254,6 @@ func getLogsPath() (string, error) {
 
 	logsPath := path.Join(dir, "mizu_logs.zip")
 	return logsPath, nil
-}
-
-// waitTimeout waits for the waitgroup for the specified max timeout.
-// Returns true if waiting timed out.
-func waitTimeout(wg *sync.WaitGroup, timeout time.Duration) bool {
-	channel := make(chan struct{})
-	go func() {
-		defer close(channel)
-		wg.Wait()
-	}()
-	select {
-	case <-channel:
-		return false // completed normally
-	case <-time.After(timeout):
-		return true // timed out
-	}
-}
-
-// checkEntriesAtLeast checks whether the number of entries greater than or equal to n
-func checkEntriesAtLeast(entries []map[string]interface{}, n int) error {
-	if len(entries) < n {
-		return fmt.Errorf("Unexpected entries result - Expected more than %d entries", n-1)
-	}
-	return nil
-}
-
-// getDBEntries retrieves the entries from the database before the given timestamp.
-// Also limits the results according to the limit parameter.
-// Timeout for the WebSocket connection is defined by the timeout parameter.
-func getDBEntries(timestamp int64, limit int, timeout time.Duration) (entries []map[string]interface{}, err error) {
-	query := fmt.Sprintf("timestamp < %d and limit(%d)", timestamp, limit)
-	webSocketUrl := getWebSocketUrl(defaultApiServerPort)
-
-	var connection *websocket.Conn
-	connection, _, err = websocket.DefaultDialer.Dial(webSocketUrl, nil)
-	if err != nil {
-		return
-	}
-	defer connection.Close()
-
-	handleWSConnection := func(wg *sync.WaitGroup) {
-		defer wg.Done()
-		for {
-			_, message, err := connection.ReadMessage()
-			if err != nil {
-				return
-			}
-
-			var data map[string]interface{}
-			if err = json.Unmarshal([]byte(message), &data); err != nil {
-				return
-			}
-
-			if data["messageType"] == "entry" {
-				entries = append(entries, data)
-			}
-		}
-	}
-
-	err = connection.WriteMessage(websocket.TextMessage, []byte(query))
-	if err != nil {
-		return
-	}
-
-	var wg sync.WaitGroup
-	go handleWSConnection(&wg)
-	wg.Add(1)
-
-	waitTimeout(&wg, timeout)
-
-	return
 }
 
 func Contains(slice []string, containsValue string) bool {

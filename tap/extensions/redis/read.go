@@ -4,11 +4,9 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
-	"math"
 	"reflect"
 	"strconv"
 	"strings"
-	"time"
 )
 
 const (
@@ -18,90 +16,12 @@ const (
 	busyPrefix        = "BUSY "
 	noscriptPrefix    = "NOSCRIPT "
 
-	defaultHost         = "localhost"
-	defaultPort         = 6379
-	defaultSentinelPort = 26379
-	defaultTimeout      = 5 * time.Second
-	defaultDatabase     = 2 * time.Second
-
 	dollarByte        = '$'
 	asteriskByte      = '*'
 	plusByte          = '+'
 	minusByte         = '-'
 	colonByte         = ':'
 	notApplicableByte = '0'
-
-	sentinelMasters             = "masters"
-	sentinelGetMasterAddrByName = "get-master-addr-by-name"
-	sentinelReset               = "reset"
-	sentinelSlaves              = "slaves"
-	sentinelFailOver            = "failover"
-	sentinelMonitor             = "monitor"
-	sentinelRemove              = "remove"
-	sentinelSet                 = "set"
-
-	clusterNodes            = "nodes"
-	clusterMeet             = "meet"
-	clusterReset            = "reset"
-	clusterAddSlots         = "addslots"
-	clusterDelSlots         = "delslots"
-	clusterInfo             = "info"
-	clusterGetKeysInSlot    = "getkeysinslot"
-	clusterSetSlot          = "setslot"
-	clusterSetSlotNode      = "node"
-	clusterSetSlotMigrating = "migrating"
-	clusterSetSlotImporting = "importing"
-	clusterSetSlotStable    = "stable"
-	clusterForget           = "forget"
-	clusterFlushSlot        = "flushslots"
-	clusterKeySlot          = "keyslot"
-	clusterCountKeyInSlot   = "countkeysinslot"
-	clusterSaveConfig       = "saveconfig"
-	clusterReplicate        = "replicate"
-	clusterSlaves           = "slaves"
-	clusterFailOver         = "failover"
-	clusterSlots            = "slots"
-	pubSubChannels          = "channels"
-	pubSubNumSub            = "numsub"
-	pubSubNumPat            = "numpat"
-)
-
-//intToByteArr convert int to byte array
-func intToByteArr(a int) []byte {
-	buf := make([]byte, 0)
-	return strconv.AppendInt(buf, int64(a), 10)
-}
-
-var (
-	bytesTrue  = intToByteArr(1)
-	bytesFalse = intToByteArr(0)
-	bytesTilde = []byte("~")
-
-	positiveInfinityBytes = []byte("+inf")
-	negativeInfinityBytes = []byte("-inf")
-)
-
-var (
-	sizeTable = []int{9, 99, 999, 9999, 99999, 999999, 9999999, 99999999,
-		999999999, math.MaxInt32}
-
-	digitTens = []byte{'0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '1',
-		'1', '1', '1', '1', '1', '1', '1', '1', '1', '2', '2', '2', '2', '2', '2', '2', '2', '2',
-		'2', '3', '3', '3', '3', '3', '3', '3', '3', '3', '3', '4', '4', '4', '4', '4', '4', '4',
-		'4', '4', '4', '5', '5', '5', '5', '5', '5', '5', '5', '5', '5', '6', '6', '6', '6', '6',
-		'6', '6', '6', '6', '6', '7', '7', '7', '7', '7', '7', '7', '7', '7', '7', '8', '8', '8',
-		'8', '8', '8', '8', '8', '8', '8', '9', '9', '9', '9', '9', '9', '9', '9', '9', '9'}
-
-	digitOnes = []byte{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0',
-		'1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '1', '2', '3', '4', '5', '6', '7', '8',
-		'9', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '1', '2', '3', '4', '5', '6',
-		'7', '8', '9', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '1', '2', '3', '4',
-		'5', '6', '7', '8', '9', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '1', '2',
-		'3', '4', '5', '6', '7', '8', '9', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'}
-
-	digits = []byte{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a',
-		'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's',
-		't', 'u', 'v', 'w', 'x', 'y', 'z'}
 )
 
 // receive message from redis
@@ -197,12 +117,6 @@ func (r *RedisInputStream) readLineBytes() ([]byte, error) {
 	line := make([]byte, N)
 	j := 0
 	for i := r.count; i <= N; i++ {
-		if i >= len(buf) {
-			return nil, errors.New("Redis buffer index mismatch.")
-		}
-		if i >= len(line) {
-			return nil, errors.New("Redis line index mismatch.")
-		}
 		line[j] = buf[i]
 		j++
 	}
@@ -298,9 +212,9 @@ func (p *RedisProtocol) Read() (packet *RedisPacket, err error) {
 	packet = &RedisPacket{}
 	packet.Type = r
 
-	switch x.(type) {
+	switch v := x.(type) {
 	case []interface{}:
-		array := x.([]interface{})
+		array := v
 		if len(array) > 0 {
 			switch array[0].(type) {
 			case []uint8:
@@ -324,11 +238,11 @@ func (p *RedisProtocol) Read() (packet *RedisPacket, err error) {
 				if len(array) > 3 {
 					packet.Value = fmt.Sprintf("[%s", packet.Value)
 					for _, item := range array[3:] {
-						switch item.(type) {
+						switch j := item.(type) {
 						case []uint8:
-							packet.Value = fmt.Sprintf("%s, %s", packet.Value, item.([]uint8))
+							packet.Value = fmt.Sprintf("%s, %s", packet.Value, j)
 						case int64:
-							packet.Value = fmt.Sprintf("%s, %d", packet.Value, item.(int64))
+							packet.Value = fmt.Sprintf("%s, %d", packet.Value, j)
 						}
 					}
 					packet.Value = strings.TrimSuffix(packet.Value, ", ")
@@ -341,20 +255,20 @@ func (p *RedisProtocol) Read() (packet *RedisPacket, err error) {
 			}
 		}
 	case []uint8:
-		val := string(x.([]uint8))
+		val := string(v)
 		if packet.Type == types[plusByte] {
 			packet.Keyword = RedisKeyword(strings.ToUpper(val))
 			if !isValidRedisKeyword(keywords, packet.Keyword) {
-				err = errors.New(fmt.Sprintf("Unrecognized keyword: %s", string(packet.Command)))
+				err = fmt.Errorf("Unrecognized keyword: %s", string(packet.Command))
 				return
 			}
 		} else {
 			packet.Value = val
 		}
 	case string:
-		packet.Value = x.(string)
+		packet.Value = v
 	case int64:
-		packet.Value = fmt.Sprintf("%d", x.(int64))
+		packet.Value = fmt.Sprintf("%d", v)
 	default:
 		msg := fmt.Sprintf("Unrecognized Redis data type: %v", reflect.TypeOf(x))
 		err = errors.New(msg)
@@ -363,7 +277,7 @@ func (p *RedisProtocol) Read() (packet *RedisPacket, err error) {
 
 	if packet.Command != "" {
 		if !isValidRedisCommand(commands, packet.Command) {
-			err = errors.New(fmt.Sprintf("Unrecognized command: %s", string(packet.Command)))
+			err = fmt.Errorf("Unrecognized command: %s", string(packet.Command))
 			return
 		}
 	}
@@ -493,7 +407,7 @@ func (p *RedisProtocol) processError() (interface{}, error) {
 func (p *RedisProtocol) parseTargetHostAndSlot(clusterRedirectResponse string) (host string, po int, slot int, err error) {
 	arr := strings.Split(clusterRedirectResponse, " ")
 	host, port := p.extractParts(arr[2])
-	slot, err = strconv.Atoi(arr[1])
+	slot, _ = strconv.Atoi(arr[1])
 	po, err = strconv.Atoi(port)
 	return
 }

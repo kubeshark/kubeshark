@@ -6,6 +6,7 @@ import (
 	"github.com/up9inc/mizu/cli/config"
 	"github.com/up9inc/mizu/cli/config/configStructs"
 	"github.com/up9inc/mizu/cli/telemetry"
+	"github.com/up9inc/mizu/shared/logger"
 )
 
 var viewCmd = &cobra.Command{
@@ -22,10 +23,14 @@ func init() {
 	rootCmd.AddCommand(viewCmd)
 
 	defaultViewConfig := configStructs.ViewConfig{}
-	defaults.Set(&defaultViewConfig)
+	if err := defaults.Set(&defaultViewConfig); err != nil {
+		logger.Log.Debug(err)
+	}
 
 	viewCmd.Flags().Uint16P(configStructs.GuiPortViewName, "p", defaultViewConfig.GuiPort, "Provide a custom port for the web interface webserver")
 	viewCmd.Flags().StringP(configStructs.UrlViewName, "u", defaultViewConfig.Url, "Provide a custom host")
 
-	viewCmd.Flags().MarkHidden(configStructs.UrlViewName)
+	if err := viewCmd.Flags().MarkHidden(configStructs.UrlViewName); err != nil {
+		logger.Log.Debug(err)
+	}
 }

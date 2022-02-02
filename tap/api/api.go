@@ -6,11 +6,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/google/martian/har"
 	"io/ioutil"
 	"net/http"
 	"sync"
 	"time"
+
+	"github.com/google/martian/har"
 )
 
 type Protocol struct {
@@ -282,7 +283,7 @@ func (h HTTPPayload) MarshalJSON() ([]byte, error) {
 			RawResponse: &HTTPResponseWrapper{Response: h.Data.(*http.Response)},
 		})
 	default:
-		panic(fmt.Sprintf("HTTP payload cannot be marshaled: %s", h.Type))
+		panic(fmt.Sprintf("HTTP payload cannot be marshaled: %v", h.Type))
 	}
 }
 
@@ -312,7 +313,7 @@ type HTTPRequestWrapper struct {
 func (r *HTTPRequestWrapper) MarshalJSON() ([]byte, error) {
 	body, _ := ioutil.ReadAll(r.Request.Body)
 	r.Request.Body = ioutil.NopCloser(bytes.NewBuffer(body))
-	return json.Marshal(&struct {
+	return json.Marshal(&struct { //nolint
 		Body    string `json:"Body,omitempty"`
 		GetBody string `json:"GetBody,omitempty"`
 		Cancel  string `json:"Cancel,omitempty"`
@@ -330,7 +331,7 @@ type HTTPResponseWrapper struct {
 func (r *HTTPResponseWrapper) MarshalJSON() ([]byte, error) {
 	body, _ := ioutil.ReadAll(r.Response.Body)
 	r.Response.Body = ioutil.NopCloser(bytes.NewBuffer(body))
-	return json.Marshal(&struct {
+	return json.Marshal(&struct { //nolint
 		Body    string `json:"Body,omitempty"`
 		GetBody string `json:"GetBody,omitempty"`
 		Cancel  string `json:"Cancel,omitempty"`

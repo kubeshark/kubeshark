@@ -34,7 +34,7 @@ func (wh *EventWatchHelper) Filter(wEvent *WatchEvent) (bool, error) {
 		return false, nil
 	}
 
-	if strings.ToLower(event.Regarding.Kind) != strings.ToLower(wh.Kind) {
+	if strings.EqualFold(event.Regarding.Kind, wh.Kind) {
 		return false, nil
 	}
 

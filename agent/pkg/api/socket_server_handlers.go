@@ -3,11 +3,12 @@ package api
 import (
 	"encoding/json"
 	"fmt"
-	"mizuserver/pkg/models"
-	"mizuserver/pkg/providers"
-	"mizuserver/pkg/providers/tappers"
-	"mizuserver/pkg/up9"
 	"sync"
+
+	"github.com/up9inc/mizu/agent/pkg/models"
+	"github.com/up9inc/mizu/agent/pkg/providers"
+	"github.com/up9inc/mizu/agent/pkg/providers/tappers"
+	"github.com/up9inc/mizu/agent/pkg/up9"
 
 	tapApi "github.com/up9inc/mizu/tap/api"
 
@@ -54,9 +55,8 @@ func (h *RoutesEventHandlers) WebSocketDisconnect(socketId int, isTapper bool) {
 func BroadcastToBrowserClients(message []byte) {
 	for _, socketId := range browserClientSocketUUIDs {
 		go func(socketId int) {
-			err := SendToSocket(socketId, message)
-			if err != nil {
-				logger.Log.Errorf("error sending message to socket ID %d: %v", socketId, err)
+			if err := SendToSocket(socketId, message); err != nil {
+				logger.Log.Error(err)
 			}
 		}(socketId)
 	}

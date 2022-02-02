@@ -7,11 +7,15 @@ import (
 	"github.com/up9inc/mizu/shared/logger"
 	"github.com/wI2L/jsondiff"
 	"io/ioutil"
-	"mizuserver/pkg/har"
 	"os"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/chanced/openapi"
+	"github.com/op/go-logging"
+	"github.com/up9inc/mizu/agent/pkg/har"
+	"github.com/up9inc/mizu/shared/logger"
 )
 
 // if started via env, write file into subdir
@@ -192,8 +196,6 @@ func loadStartingOAS() {
 	gen.StartFromSpec(doc)
 
 	GetOasGeneratorInstance().ServiceSpecs.Store("catalogue", gen)
-
-	return
 }
 
 func TestEntriesNegative(t *testing.T) {
@@ -245,5 +247,4 @@ func TestLoadValid3_1(t *testing.T) {
 		t.Log(err)
 		t.FailNow()
 	}
-	return
 }

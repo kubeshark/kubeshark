@@ -81,10 +81,8 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 		if len(summary) > 0 {
 			summary = summary[:len(summary)-2]
 		}
-		break
 	case ApiVersions:
 		summary = reqDetails["clientID"].(string)
-		break
 	case Produce:
 		_topics := reqDetails["payload"].(map[string]interface{})["topicData"]
 		if _topics == nil {
@@ -97,7 +95,6 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 		if len(summary) > 0 {
 			summary = summary[:len(summary)-2]
 		}
-		break
 	case Fetch:
 		_topics := reqDetails["payload"].(map[string]interface{})["topics"]
 		if _topics == nil {
@@ -110,7 +107,6 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 		if len(summary) > 0 {
 			summary = summary[:len(summary)-2]
 		}
-		break
 	case ListOffsets:
 		_topics := reqDetails["payload"].(map[string]interface{})["topics"]
 		if _topics == nil {
@@ -123,7 +119,6 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 		if len(summary) > 0 {
 			summary = summary[:len(summary)-2]
 		}
-		break
 	case CreateTopics:
 		topics := reqDetails["payload"].(map[string]interface{})["topics"].([]interface{})
 		for _, topic := range topics {
@@ -132,13 +127,11 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 		if len(summary) > 0 {
 			summary = summary[:len(summary)-2]
 		}
-		break
 	case DeleteTopics:
 		topicNames := reqDetails["topicNames"].([]string)
 		for _, name := range topicNames {
 			summary += fmt.Sprintf("%s, ", name)
 		}
-		break
 	}
 
 	request["url"] = summary
@@ -173,7 +166,7 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 
 func (d dissecting) Represent(request map[string]interface{}, response map[string]interface{}) (object []byte, bodySize int64, err error) {
 	bodySize = 0
-	representation := make(map[string]interface{}, 0)
+	representation := make(map[string]interface{})
 
 	apiKey := ApiKey(request["apiKey"].(float64))
 
@@ -183,31 +176,24 @@ func (d dissecting) Represent(request map[string]interface{}, response map[strin
 	case Metadata:
 		repRequest = representMetadataRequest(request)
 		repResponse = representMetadataResponse(response)
-		break
 	case ApiVersions:
 		repRequest = representApiVersionsRequest(request)
 		repResponse = representApiVersionsResponse(response)
-		break
 	case Produce:
 		repRequest = representProduceRequest(request)
 		repResponse = representProduceResponse(response)
-		break
 	case Fetch:
 		repRequest = representFetchRequest(request)
 		repResponse = representFetchResponse(response)
-		break
 	case ListOffsets:
 		repRequest = representListOffsetsRequest(request)
 		repResponse = representListOffsetsResponse(response)
-		break
 	case CreateTopics:
 		repRequest = representCreateTopicsRequest(request)
 		repResponse = representCreateTopicsResponse(response)
-		break
 	case DeleteTopics:
 		repRequest = representDeleteTopicsRequest(request)
 		repResponse = representDeleteTopicsResponse(response)
-		break
 	}
 
 	representation["request"] = repRequest

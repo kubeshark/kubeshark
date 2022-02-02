@@ -4,19 +4,21 @@ import (
 	"bufio"
 	"encoding/json"
 	"errors"
-	"github.com/up9inc/mizu/shared/logger"
 	"io"
 	"io/ioutil"
-	"mizuserver/pkg/har"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
 	"testing"
+
+	"github.com/up9inc/mizu/agent/pkg/har"
+
+	"github.com/up9inc/mizu/shared/logger"
 )
 
 func getFiles(baseDir string) (result []string, err error) {
-	result = make([]string, 0, 0)
+	result = make([]string, 0)
 	logger.Log.Infof("Reading files from tree: %s", baseDir)
 
 	// https://yourbasic.org/golang/list-files-in-directory/
@@ -108,28 +110,27 @@ func feedFromHAR(file string, isSync bool) (int, error) {
 	cnt := 0
 	for _, entry := range harDoc.Log.Entries {
 		cnt += 1
-		feedEntry(&entry, isSync, file)
+		feedEntry(&entry, "", isSync, file)
 	}
 
 	return cnt, nil
 }
 
-func feedEntry(entry *har.Entry, isSync bool, file string) {
+func feedEntry(entry *har.Entry, source string, isSync bool, file string) {
 	entry.Comment = file
 	if entry.Response.Status == 302 {
 		logger.Log.Debugf("Dropped traffic entry due to permanent redirect status: %s", entry.StartedDateTime)
 	}
 
-	if strings.Contains(entry.Request.URL, "http://10.135.50.198:80/rsso/agent") {
+	if strings.Contains(entry.Request.URL, "some") { // for debugging
 		logger.Log.Debugf("Interesting: %s", entry.Request.URL)
-	} else {
-		//return
 	}
 
+	ews := EntryWithSource{Entry: *entry, Source: source}
 	if isSync {
-		GetOasGeneratorInstance().entriesChan <- *entry // blocking variant, right?
+		GetOasGeneratorInstance().entriesChan <- ews // blocking variant, right?
 	} else {
-		GetOasGeneratorInstance().PushEntry(entry)
+		GetOasGeneratorInstance().PushEntry(&ews)
 	}
 }
 
@@ -146,6 +147,7 @@ func feedFromLDJSON(file string, isSync bool) (int, error) {
 	var meta map[string]interface{}
 	buf := strings.Builder{}
 	cnt := 0
+	source := ""
 	for {
 		substr, isPrefix, err := reader.ReadLine()
 		if err == io.EOF {
@@ -165,6 +167,9 @@ func feedFromLDJSON(file string, isSync bool) (int, error) {
 			if err != nil {
 				return 0, err
 			}
+			if s, ok := meta["_source"]; ok && s != nil {
+				source = s.(string)
+			}
 		} else {
 			var entry har.Entry
 			err := json.Unmarshal([]byte(line), &entry)
@@ -172,7 +177,7 @@ func feedFromLDJSON(file string, isSync bool) (int, error) {
 				logger.Log.Warningf("Failed decoding entry: %s", line)
 			} else {
 				cnt += 1
-				feedEntry(&entry, isSync, file)
+				feedEntry(&entry, source, isSync, file)
 			}
 		}
 	}

@@ -6,7 +6,6 @@
 package amqp
 
 import (
-	"bufio"
 	"bytes"
 	"encoding/binary"
 	"errors"
@@ -14,18 +13,6 @@ import (
 	"math"
 	"time"
 )
-
-func (w *writer) WriteFrame(frame frame) (err error) {
-	if err = frame.write(w.w); err != nil {
-		return
-	}
-
-	if buf, ok := w.w.(*bufio.Writer); ok {
-		err = buf.Flush()
-	}
-
-	return
-}
 
 func (f *MethodFrame) write(w io.Writer) (err error) {
 	var payload bytes.Buffer
@@ -412,5 +399,5 @@ func writeTable(w io.Writer, table Table) (err error) {
 		}
 	}
 
-	return writeLongstr(w, string(buf.Bytes()))
+	return writeLongstr(w, buf.String())
 }

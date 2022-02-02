@@ -31,10 +31,14 @@ func StartServer(app *gin.Engine) {
 	}
 
 	go func() {
-		_ = <-signals
+		<-signals
 		logger.Log.Infof("Shutting down...")
-		ctx, _ := context.WithTimeout(context.Background(), 5*time.Second)
-		_ = srv.Shutdown(ctx)
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		err := srv.Shutdown(ctx)
+		if err != nil {
+			logger.Log.Errorf("%v", err)
+		}
 		os.Exit(0)
 	}()
 
@@ -91,7 +95,7 @@ func UniqueStringSlice(s []string) []string {
 	uniqueMap := map[string]bool{}
 
 	for _, val := range s {
-		if uniqueMap[val] == true {
+		if uniqueMap[val] {
 			continue
 		}
 		uniqueMap[val] = true
