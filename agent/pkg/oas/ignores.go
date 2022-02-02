@@ -12,9 +12,9 @@ var ignoredHeaders = []string{
 	"authorization", "cache-control", "connection", "content-encoding", "content-length", "content-type", "cookie",
 	"date", "dnt", "expect", "forwarded", "from", "front-end-https", "host", "http2-settings",
 	"max-forwards", "origin", "pragma", "proxy-authorization", "proxy-connection", "range", "referer",
-	"save-data", "te", "trailer", "transfer-encoding", "upgrade", "upgrade-insecure-requests",
-	"server", "user-agent", "via", "warning", "strict-transport-security",
-	"x-att-deviceid", "x-correlation-id", "correlation-id", "x-client-data",
+	"save-data", "te", "trailer", "transfer-encoding", "upgrade", "upgrade-insecure-requests", "x-download-options",
+	"server", "user-agent", "via", "warning", "strict-transport-security", "x-permitted-cross-domain-policies",
+	"x-att-deviceid", "x-correlation-id", "correlation-id", "x-client-data", "x-dns-prefetch-control",
 	"x-http-method-override", "x-real-ip", "x-request-id", "x-request-start", "x-requested-with", "x-uidh",
 	"x-same-domain", "x-content-type-options", "x-frame-options", "x-xss-protection",
 	"x-wap-profile", "x-scheme", "status", "x-cache", "x-application-context", "retry-after",
@@ -31,7 +31,7 @@ var ignoredHeaderPrefixes = []string{
 	":", "accept-", "access-control-", "if-", "sec-", "grpc-",
 	"x-forwarded-", "x-original-", "cf-",
 	"x-up9-", "x-envoy-", "x-hasura-", "x-b3-", "x-datadog-", "x-envoy-", "x-amz-", "x-newrelic-", "x-prometheus-",
-	"x-akamai-", "x-spotim-", "x-amzn-", "x-ratelimit-",
+	"x-akamai-", "x-spotim-", "x-amzn-", "x-ratelimit-", "x-goog-",
 }
 
 func isCtypeIgnored(ctype string) bool {
