@@ -352,6 +352,7 @@ func cleanStr(str string, criterion func(r rune) bool) string {
 	return string(s[:j])
 }
 
+/*
 func isAlpha(s string) bool {
 	for _, r := range s {
 		if isAlphaRune(r) {
@@ -360,6 +361,7 @@ func isAlpha(s string) bool {
 	}
 	return true
 }
+*/
 
 func isAlphaRune(r rune) bool {
 	return !((r < 'a' || r > 'z') && (r < 'A' || r > 'Z'))
