@@ -260,8 +260,6 @@ function checkRightSideResponseBody() {
 
     cy.get(`${bodyJsonClass}`).then(value => {
         const encodedBody = value.text();
-        cy.log(encodedBody);
-
         const decodedBody = atob(encodedBody);
         const responseBody = JSON.parse(decodedBody);
 
