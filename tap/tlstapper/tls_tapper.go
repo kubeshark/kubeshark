@@ -65,7 +65,7 @@ func (t *TlsTapper) pollPerf(chunks chan<- *tlsChunk) {
 			continue
 		}
 
-		buffer := bytes.NewBuffer(record.RawSample)
+		buffer := bytes.NewReader(record.RawSample)
 
 		var chunk tlsChunk
 

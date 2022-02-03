@@ -101,6 +101,7 @@ func StartPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem, 
 		for _, e := range extensions {
 			if e.Protocol.Name == "http" {
 				startTlsTapper(e, outputItems, options)
+				break
 			}
 		}
 	}
@@ -244,8 +245,9 @@ func startPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem) 
 
 func startTlsTapper(httpExtension *api.Extension, outputItems chan *api.OutputChannelItem, options *api.TrafficFilteringOptions) {
 	tls := tlstapper.TlsTapper{}
+	tlsPerfBufferSize := os.Getpagesize() * 100
 
-	if err := tls.Init(os.Getpagesize() * 100); err != nil {
+	if err := tls.Init(tlsPerfBufferSize); err != nil {
 		tlstapper.LogError(err)
 		return
 	}
