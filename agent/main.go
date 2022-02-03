@@ -376,7 +376,12 @@ func pipeTapChannelToSocket(connection *websocket.Conn, messageDataChannel <-cha
 		panic("Channel of captured messages is nil")
 	}
 
+	var messageDataChannelCounter int64 = 0
+
+	// TODO: The issue is before this channel [Tapper]
 	for messageData := range messageDataChannel {
+		messageDataChannelCounter++
+		fmt.Printf("messageDataChannelCounter: %v\n", messageDataChannelCounter)
 		marshaledData, err := models.CreateWebsocketTappedEntryMessage(messageData)
 		if err != nil {
 			logger.Log.Errorf("error converting message to json %v, err: %s, (%v,%+v)", messageData, err, err, err)

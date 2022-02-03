@@ -118,7 +118,7 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 
 	var itemCounter int64 = 0
 
-	// TODO: The issue is before this channel
+	// TODO: The issue is before this channel [API server]
 	for item := range outputItems {
 		itemCounter++
 		fmt.Printf("itemCounter: %v\n", itemCounter)
