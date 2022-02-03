@@ -128,6 +128,9 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 			summary = summary[:len(summary)-2]
 		}
 	case DeleteTopics:
+		if reqDetails["topicNames"] == nil {
+			break
+		}
 		topicNames := reqDetails["topicNames"].([]string)
 		for _, name := range topicNames {
 			summary += fmt.Sprintf("%s, ", name)
