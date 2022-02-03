@@ -1,9 +1,8 @@
-package main
+package kafka
 
 import (
 	"bytes"
 	"encoding/binary"
-	"fmt"
 	"hash/crc32"
 	"io"
 	"reflect"
@@ -95,10 +94,6 @@ func (e *encoder) WriteString(s string) (int, error) {
 	return n, nil
 }
 
-func (e *encoder) setCRC(table *crc32.Table) {
-	e.table, e.crc32 = table, 0
-}
-
 func (e *encoder) update(b []byte) {
 	if e.table != nil {
 		e.crc32 = crc32.Update(e.crc32, e.table, b)
@@ -133,20 +128,12 @@ func (e *encoder) encodeString(v value) {
 	e.writeString(v.string())
 }
 
-func (e *encoder) encodeVarString(v value) {
-	e.writeVarString(v.string())
-}
-
 func (e *encoder) encodeCompactString(v value) {
 	e.writeCompactString(v.string())
 }
 
 func (e *encoder) encodeNullString(v value) {
 	e.writeNullString(v.string())
-}
-
-func (e *encoder) encodeVarNullString(v value) {
-	e.writeVarNullString(v.string())
 }
 
 func (e *encoder) encodeCompactNullString(v value) {
@@ -157,20 +144,12 @@ func (e *encoder) encodeBytes(v value) {
 	e.writeBytes(v.bytes())
 }
 
-func (e *encoder) encodeVarBytes(v value) {
-	e.writeVarBytes(v.bytes())
-}
-
 func (e *encoder) encodeCompactBytes(v value) {
 	e.writeCompactBytes(v.bytes())
 }
 
 func (e *encoder) encodeNullBytes(v value) {
 	e.writeNullBytes(v.bytes())
-}
-
-func (e *encoder) encodeVarNullBytes(v value) {
-	e.writeVarNullBytes(v.bytes())
 }
 
 func (e *encoder) encodeCompactNullBytes(v value) {
@@ -228,37 +207,32 @@ func (e *encoder) encodeCompactNullArray(v value, elemType reflect.Type, encodeE
 
 func (e *encoder) writeInt8(i int8) {
 	writeInt8(e.buffer[:1], i)
-	e.Write(e.buffer[:1])
+	_, _ = e.Write(e.buffer[:1])
 }
 
 func (e *encoder) writeInt16(i int16) {
 	writeInt16(e.buffer[:2], i)
-	e.Write(e.buffer[:2])
+	_, _ = e.Write(e.buffer[:2])
 }
 
 func (e *encoder) writeInt32(i int32) {
 	writeInt32(e.buffer[:4], i)
-	e.Write(e.buffer[:4])
+	_, _ = e.Write(e.buffer[:4])
 }
 
 func (e *encoder) writeInt64(i int64) {
 	writeInt64(e.buffer[:8], i)
-	e.Write(e.buffer[:8])
+	_, _ = e.Write(e.buffer[:8])
 }
 
 func (e *encoder) writeString(s string) {
 	e.writeInt16(int16(len(s)))
-	e.WriteString(s)
-}
-
-func (e *encoder) writeVarString(s string) {
-	e.writeVarInt(int64(len(s)))
-	e.WriteString(s)
+	_, _ = e.WriteString(s)
 }
 
 func (e *encoder) writeCompactString(s string) {
 	e.writeUnsignedVarInt(uint64(len(s)) + 1)
-	e.WriteString(s)
+	_, _ = e.WriteString(s)
 }
 
 func (e *encoder) writeNullString(s string) {
@@ -266,16 +240,7 @@ func (e *encoder) writeNullString(s string) {
 		e.writeInt16(-1)
 	} else {
 		e.writeInt16(int16(len(s)))
-		e.WriteString(s)
-	}
-}
-
-func (e *encoder) writeVarNullString(s string) {
-	if s == "" {
-		e.writeVarInt(-1)
-	} else {
-		e.writeVarInt(int64(len(s)))
-		e.WriteString(s)
+		_, _ = e.WriteString(s)
 	}
 }
 
@@ -284,23 +249,18 @@ func (e *encoder) writeCompactNullString(s string) {
 		e.writeUnsignedVarInt(0)
 	} else {
 		e.writeUnsignedVarInt(uint64(len(s)) + 1)
-		e.WriteString(s)
+		_, _ = e.WriteString(s)
 	}
 }
 
 func (e *encoder) writeBytes(b []byte) {
 	e.writeInt32(int32(len(b)))
-	e.Write(b)
-}
-
-func (e *encoder) writeVarBytes(b []byte) {
-	e.writeVarInt(int64(len(b)))
-	e.Write(b)
+	_, _ = e.Write(b)
 }
 
 func (e *encoder) writeCompactBytes(b []byte) {
 	e.writeUnsignedVarInt(uint64(len(b)) + 1)
-	e.Write(b)
+	_, _ = e.Write(b)
 }
 
 func (e *encoder) writeNullBytes(b []byte) {
@@ -308,16 +268,7 @@ func (e *encoder) writeNullBytes(b []byte) {
 		e.writeInt32(-1)
 	} else {
 		e.writeInt32(int32(len(b)))
-		e.Write(b)
-	}
-}
-
-func (e *encoder) writeVarNullBytes(b []byte) {
-	if b == nil {
-		e.writeVarInt(-1)
-	} else {
-		e.writeVarInt(int64(len(b)))
-		e.Write(b)
+		_, _ = e.Write(b)
 	}
 }
 
@@ -326,67 +277,8 @@ func (e *encoder) writeCompactNullBytes(b []byte) {
 		e.writeUnsignedVarInt(0)
 	} else {
 		e.writeUnsignedVarInt(uint64(len(b)) + 1)
-		e.Write(b)
+		_, _ = e.Write(b)
 	}
-}
-
-func (e *encoder) writeBytesFrom(b Bytes) error {
-	size := int64(b.Len())
-	e.writeInt32(int32(size))
-	n, err := io.Copy(e, b)
-	if err == nil && n != size {
-		err = fmt.Errorf("size of bytes does not match the number of bytes that were written (size=%d, written=%d): %w", size, n, io.ErrUnexpectedEOF)
-	}
-	return err
-}
-
-func (e *encoder) writeNullBytesFrom(b Bytes) error {
-	if b == nil {
-		e.writeInt32(-1)
-		return nil
-	} else {
-		size := int64(b.Len())
-		e.writeInt32(int32(size))
-		n, err := io.Copy(e, b)
-		if err == nil && n != size {
-			err = fmt.Errorf("size of nullable bytes does not match the number of bytes that were written (size=%d, written=%d): %w", size, n, io.ErrUnexpectedEOF)
-		}
-		return err
-	}
-}
-
-func (e *encoder) writeVarNullBytesFrom(b Bytes) error {
-	if b == nil {
-		e.writeVarInt(-1)
-		return nil
-	} else {
-		size := int64(b.Len())
-		e.writeVarInt(size)
-		n, err := io.Copy(e, b)
-		if err == nil && n != size {
-			err = fmt.Errorf("size of nullable bytes does not match the number of bytes that were written (size=%d, written=%d): %w", size, n, io.ErrUnexpectedEOF)
-		}
-		return err
-	}
-}
-
-func (e *encoder) writeCompactNullBytesFrom(b Bytes) error {
-	if b == nil {
-		e.writeUnsignedVarInt(0)
-		return nil
-	} else {
-		size := int64(b.Len())
-		e.writeUnsignedVarInt(uint64(size + 1))
-		n, err := io.Copy(e, b)
-		if err == nil && n != size {
-			err = fmt.Errorf("size of compact nullable bytes does not match the number of bytes that were written (size=%d, written=%d): %w", size, n, io.ErrUnexpectedEOF)
-		}
-		return err
-	}
-}
-
-func (e *encoder) writeVarInt(i int64) {
-	e.writeUnsignedVarInt(uint64((i << 1) ^ (i >> 63)))
 }
 
 func (e *encoder) writeUnsignedVarInt(i uint64) {
@@ -404,7 +296,7 @@ func (e *encoder) writeUnsignedVarInt(i uint64) {
 		n++
 	}
 
-	e.Write(b[:n])
+	_, _ = e.Write(b[:n])
 }
 
 type encodeFunc func(*encoder, value)
@@ -530,7 +422,7 @@ func structEncodeFuncOf(typ reflect.Type, version int16, flexible bool) encodeFu
 				se := &encoder{writer: buf}
 				f.encode(se, v.fieldByIndex(f.index))
 				e.writeUnsignedVarInt(uint64(buf.Len()))
-				e.Write(buf.Bytes())
+				_, _ = e.Write(buf.Bytes())
 			}
 		}
 	}

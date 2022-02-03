@@ -1,4 +1,4 @@
-package main
+package amqp
 
 import (
 	"encoding/json"
@@ -24,14 +24,14 @@ var connectionMethodMap = map[int]string{
 	61: "connection unblocked",
 }
 
-var channelMethodMap = map[int]string{
-	10: "channel open",
-	11: "channel open-ok",
-	20: "channel flow",
-	21: "channel flow-ok",
-	40: "channel close",
-	41: "channel close-ok",
-}
+// var channelMethodMap = map[int]string{
+// 	10: "channel open",
+// 	11: "channel open-ok",
+// 	20: "channel flow",
+// 	21: "channel flow-ok",
+// 	40: "channel close",
+// 	41: "channel close-ok",
+// }
 
 var exchangeMethodMap = map[int]string{
 	10: "exchange declare",
@@ -78,14 +78,14 @@ var basicMethodMap = map[int]string{
 	120: "basic nack",
 }
 
-var txMethodMap = map[int]string{
-	10: "tx select",
-	11: "tx select-ok",
-	20: "tx commit",
-	21: "tx commit-ok",
-	30: "tx rollback",
-	31: "tx rollback-ok",
-}
+// var txMethodMap = map[int]string{
+// 	10: "tx select",
+// 	11: "tx select-ok",
+// 	20: "tx commit",
+// 	21: "tx commit-ok",
+// 	30: "tx rollback",
+// 	31: "tx rollback-ok",
+// }
 
 type AMQPWrapper struct {
 	Method  string      `json:"method"`
@@ -550,14 +550,12 @@ func representConnectionStart(event map[string]interface{}) []interface{} {
 		headers := make([]api.TableData, 0)
 		for name, value := range event["serverProperties"].(map[string]interface{}) {
 			var outcome string
-			switch value.(type) {
+			switch v := value.(type) {
 			case string:
-				outcome = value.(string)
-				break
+				outcome = v
 			case map[string]interface{}:
 				x, _ := json.Marshal(value)
 				outcome = string(x)
-				break
 			default:
 				panic("Unknown data type for the server property!")
 			}

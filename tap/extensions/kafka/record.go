@@ -1,4 +1,4 @@
-package main
+package kafka
 
 import (
 	"encoding/binary"
@@ -109,25 +109,6 @@ type RecordSet struct {
 	// underlying types of each batch.
 	Records RecordReader
 }
-
-// bufferedReader is an interface implemented by types like bufio.Reader, which
-// we use to optimize prefix reads by accessing the internal buffer directly
-// through calls to Peek.
-type bufferedReader interface {
-	Discard(int) (int, error)
-	Peek(int) ([]byte, error)
-}
-
-// bytesBuffer is an interface implemented by types like bytes.Buffer, which we
-// use to optimize prefix reads by accessing the internal buffer directly
-// through calls to Bytes.
-type bytesBuffer interface {
-	Bytes() []byte
-}
-
-// magicByteOffset is the position of the magic byte in all versions of record
-// sets in the kafka protocol.
-const magicByteOffset = 16
 
 // ReadFrom reads the representation of a record set from r into rs, returning
 // the number of bytes consumed from r, and an non-nil error if the record set
@@ -292,23 +273,7 @@ func (rs *RecordSet) WriteTo(w io.Writer) (int64, error) {
 	return 0, nil
 }
 
-func makeTime(t int64) time.Time {
-	return time.Unix(t/1000, (t%1000)*int64(time.Millisecond))
-}
-
-func timestamp(t time.Time) int64 {
-	if t.IsZero() {
-		return 0
-	}
-	return t.UnixNano() / int64(time.Millisecond)
-}
-
 func packUint32(u uint32) (b [4]byte) {
 	binary.BigEndian.PutUint32(b[:], u)
-	return
-}
-
-func packUint64(u uint64) (b [8]byte) {
-	binary.BigEndian.PutUint64(b[:], u)
 	return
 }

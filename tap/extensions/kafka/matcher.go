@@ -1,4 +1,4 @@
-package main
+package kafka
 
 import (
 	"sync"
@@ -26,9 +26,9 @@ func CreateResponseRequestMatcher() requestResponseMatcher {
 func (matcher *requestResponseMatcher) registerRequest(key string, request *Request) *RequestResponsePair {
 	if response, found := matcher.openMessagesMap.LoadAndDelete(key); found {
 		// Check for a situation that only occurs when a Kafka broker is initiating
-		switch response.(type) {
+		switch v := response.(type) {
 		case *Response:
-			return matcher.preparePair(request, response.(*Response))
+			return matcher.preparePair(request, v)
 		}
 	}
 

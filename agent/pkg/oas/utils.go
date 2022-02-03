@@ -3,11 +3,13 @@ package oas
 import (
 	"encoding/json"
 	"errors"
-	"github.com/chanced/openapi"
-	"github.com/google/martian/har"
-	"github.com/up9inc/mizu/shared/logger"
 	"strconv"
 	"strings"
+
+	"github.com/up9inc/mizu/agent/pkg/har"
+
+	"github.com/chanced/openapi"
+	"github.com/up9inc/mizu/shared/logger"
 )
 
 func exampleResolver(ref string) (*openapi.ExampleObj, error) {
@@ -32,16 +34,14 @@ func headerResolver(ref string) (*openapi.HeaderObj, error) {
 
 func initParams(obj **openapi.ParameterList) {
 	if *obj == nil {
-		var params openapi.ParameterList
-		params = make([]openapi.Parameter, 0)
+		var params openapi.ParameterList = make([]openapi.Parameter, 0)
 		*obj = &params
 	}
 }
 
 func initHeaders(respObj *openapi.ResponseObj) {
 	if respObj.Headers == nil {
-		var created openapi.Headers
-		created = map[string]openapi.Header{}
+		var created openapi.Headers = map[string]openapi.Header{}
 		respObj.Headers = created
 	}
 }
@@ -52,8 +52,7 @@ func createSimpleParam(name string, in openapi.In, ptype openapi.SchemaType) *op
 	}
 	required := true // FFS! https://stackoverflow.com/questions/32364027/reference-a-boolean-for-assignment-in-a-struct/32364093
 	schema := new(openapi.SchemaObj)
-	schema.Type = make(openapi.Types, 0)
-	schema.Type = append(schema.Type, ptype)
+	schema.Type = openapi.Types{ptype}
 
 	style := openapi.StyleSimple
 	if in == openapi.InQuery {
@@ -71,9 +70,10 @@ func createSimpleParam(name string, in openapi.In, ptype openapi.SchemaType) *op
 	return &newParam
 }
 
-func findParamByName(params *openapi.ParameterList, in openapi.In, name string) (pathParam *openapi.ParameterObj) {
+func findParamByName(params *openapi.ParameterList, in openapi.In, name string) (idx int, pathParam *openapi.ParameterObj) {
 	caseInsensitive := in == openapi.InHeader
-	for _, param := range *params {
+	for i, param := range *params {
+		idx = i
 		paramObj, err := param.ResolveParameter(paramResolver)
 		if err != nil {
 			logger.Log.Warningf("Failed to resolve reference: %s", err)
@@ -84,12 +84,13 @@ func findParamByName(params *openapi.ParameterList, in openapi.In, name string) 
 			continue
 		}
 
-		if paramObj.Name == name || (caseInsensitive && strings.ToLower(paramObj.Name) == strings.ToLower(name)) {
+		if paramObj.Name == name || (caseInsensitive && strings.EqualFold(paramObj.Name, name)) {
 			pathParam = paramObj
 			break
 		}
 	}
-	return pathParam
+
+	return idx, pathParam
 }
 
 func findHeaderByName(headers *openapi.Headers, name string) *openapi.HeaderObj {
@@ -100,44 +101,23 @@ func findHeaderByName(headers *openapi.Headers, name string) *openapi.HeaderObj 
 			continue
 		}
 
-		if strings.ToLower(hname) == strings.ToLower(name) {
+		if strings.EqualFold(hname, name) {
 			return hdrObj
 		}
 	}
 	return nil
 }
 
-type NVPair struct {
-	Name  string
-	Value string
-}
-
 type nvParams struct {
 	In             openapi.In
-	Pairs          func() []NVPair
+	Pairs          []har.NVP
 	IsIgnored      func(name string) bool
 	GeneralizeName func(name string) string
 }
 
-func qstrToNVP(list []har.QueryString) []NVPair {
-	res := make([]NVPair, len(list))
-	for idx, val := range list {
-		res[idx] = NVPair{Name: val.Name, Value: val.Value}
-	}
-	return res
-}
-
-func hdrToNVP(list []har.Header) []NVPair {
-	res := make([]NVPair, len(list))
-	for idx, val := range list {
-		res[idx] = NVPair{Name: val.Name, Value: val.Value}
-	}
-	return res
-}
-
 func handleNameVals(gw nvParams, params **openapi.ParameterList) {
 	visited := map[string]*openapi.ParameterObj{}
-	for _, pair := range gw.Pairs() {
+	for _, pair := range gw.Pairs {
 		if gw.IsIgnored(pair.Name) {
 			continue
 		}
@@ -145,7 +125,7 @@ func handleNameVals(gw nvParams, params **openapi.ParameterList) {
 		nameGeneral := gw.GeneralizeName(pair.Name)
 
 		initParams(params)
-		param := findParamByName(*params, gw.In, pair.Name)
+		_, param := findParamByName(*params, gw.In, pair.Name)
 		if param == nil {
 			param = createSimpleParam(nameGeneral, gw.In, openapi.TypeString)
 			appended := append(**params, param)
@@ -216,7 +196,7 @@ func fillParamExample(param **openapi.Examples, exampleValue string) error {
 			continue
 		}
 
-		if value == exampleValue || cnt > 5 { // 5 examples is enough
+		if value == exampleValue || cnt >= 5 { // 5 examples is enough
 			return nil
 		}
 	}
@@ -230,6 +210,36 @@ func fillParamExample(param **openapi.Examples, exampleValue string) error {
 	themap["example #"+strconv.Itoa(cnt)] = &openapi.ExampleObj{Value: valMsg}
 
 	return nil
+}
+
+// TODO: somehow generalize the two example setting functions, plus add body example handling
+
+func addSchemaExample(existing *openapi.SchemaObj, bodyStr string) {
+	if len(existing.Examples) < 5 {
+		found := false
+		for _, eVal := range existing.Examples {
+			existingExample := ""
+			err := json.Unmarshal(eVal, &existingExample)
+			if err != nil {
+				logger.Log.Debugf("Failed to unmarshal example: %v", eVal)
+				continue
+			}
+
+			if existingExample == bodyStr {
+				found = true
+				break
+			}
+		}
+
+		if !found {
+			example, err := json.Marshal(bodyStr)
+			if err != nil {
+				logger.Log.Debugf("Failed to marshal example: %v", bodyStr)
+				return
+			}
+			existing.Examples = append(existing.Examples, example)
+		}
+	}
 }
 
 func longestCommonXfix(strs [][]string, pre bool) []string { // https://github.com/jpillora/longestcommon
@@ -278,6 +288,22 @@ func longestCommonXfix(strs [][]string, pre bool) []string { // https://github.c
 		}
 	}
 	return xfix
+}
+
+func getSimilarPrefix(strs []string) string {
+	chunked := make([][]string, 0)
+	for _, item := range strs {
+		chunked = append(chunked, strings.Split(item, "/"))
+	}
+
+	cmn := longestCommonXfix(chunked, true)
+	res := make([]string, 0)
+	for _, chunk := range cmn {
+		if chunk != "api" && !IsVersionString(chunk) && !strings.HasPrefix(chunk, "{") {
+			res = append(res, chunk)
+		}
+	}
+	return strings.Join(res[1:], ".")
 }
 
 // returns all non-nil ops in PathObj
@@ -341,4 +367,63 @@ func anyJSON(text string) (anyVal interface{}, isJSON bool) {
 	}
 
 	return nil, false
+}
+
+func cleanStr(str string, criterion func(r rune) bool) string {
+	s := []byte(str)
+	j := 0
+	for _, b := range s {
+		if criterion(rune(b)) {
+			s[j] = b
+			j++
+		}
+	}
+	return string(s[:j])
+}
+
+/*
+func isAlpha(s string) bool {
+	for _, r := range s {
+		if isAlphaRune(r) {
+			return false
+		}
+	}
+	return true
+}
+*/
+
+func isAlphaRune(r rune) bool {
+	return !((r < 'a' || r > 'z') && (r < 'A' || r > 'Z'))
+}
+
+func isAlNumRune(b rune) bool {
+	return isAlphaRune(b) || ('0' <= b && b <= '9')
+}
+
+func deleteFromSlice(s []string, val string) []string {
+	temp := s[:0]
+	for _, x := range s {
+		if x != val {
+			temp = append(temp, x)
+		}
+	}
+	return temp
+}
+
+func sliceContains(s []string, e string) bool {
+	for _, a := range s {
+		if a == e {
+			return true
+		}
+	}
+	return false
+}
+
+func intersectSliceWithMap(required []string, names map[string]struct{}) []string {
+	for name := range names {
+		if !sliceContains(required, name) {
+			required = deleteFromSlice(required, name)
+		}
+	}
+	return required
 }

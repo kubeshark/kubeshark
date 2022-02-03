@@ -50,7 +50,8 @@
   },
   "scripts": {
     "start": "craco start",
-    "start-ent": "./node_modules/.bin/env-cmd -f .env.enterprise craco start",
+    "start-dev": "./node_modules/.bin/env-cmd -f .env.dev.basic craco start",
+    "start-dev-ent": "./node_modules/.bin/env-cmd -f .env.dev.enterprise craco start",
     "build": "./node_modules/.bin/env-cmd -f .env.basic craco build",
     "build-ent": "BUILD_PATH='./build-ent' ./node_modules/.bin/env-cmd -f .env.enterprise craco build",
     "test": "craco test",

@@ -3,12 +3,13 @@ package providers
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/patrickmn/go-cache"
-	"github.com/up9inc/mizu/shared"
-	"github.com/up9inc/mizu/tap"
-	"mizuserver/pkg/models"
 	"os"
 	"time"
+
+	"github.com/patrickmn/go-cache"
+	"github.com/up9inc/mizu/agent/pkg/models"
+	"github.com/up9inc/mizu/shared"
+	"github.com/up9inc/mizu/tap"
 )
 
 const tlsLinkRetainmentTime = time.Minute * 15

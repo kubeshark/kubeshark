@@ -1,4 +1,4 @@
-package main
+package http
 
 import (
 	"bytes"
@@ -89,7 +89,7 @@ func filterResponseBody(response *http.Response, options *api.TrafficFilteringOp
 }
 
 func filterHeaders(headers *http.Header) {
-	for key, _ := range *headers {
+	for key := range *headers {
 		if strings.ToLower(key) == userAgent {
 			continue
 		}
@@ -103,7 +103,7 @@ func filterHeaders(headers *http.Header) {
 }
 
 func getContentTypeHeaderValue(headers http.Header) string {
-	for key, _ := range headers {
+	for key := range headers {
 		if strings.ToLower(key) == "content-type" {
 			return headers.Get(key)
 		}

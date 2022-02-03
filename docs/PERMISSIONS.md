@@ -4,7 +4,7 @@
 
 This document describes in details all permissions required for full and correct operation of Mizu.
 
-## Editting permissions
+## Editing permissions
 
 During installation, Mizu creates a `ServiceAccount` and the roles it requires. No further action is required.
 However, if there is a need, it is possible to make changes to Mizu permissions.

@@ -7,3 +7,24 @@ export function isValueExistsInElement(shouldInclude, content, domPathToContaine
         });
     });
 }
+
+export function resizeToHugeMizu() {
+    cy.viewport(1920, 3500);
+}
+
+export function resizeToNormalMizu() {
+    cy.viewport(1920, 1080);
+}
+
+export function verifyMinimumEntries() {
+    const minimumEntries = Cypress.env('minimumEntries');
+    it(`Making sure that mizu shows at least ${minimumEntries} entries`, async function () {
+        cy.get('#total-entries').then(number => {
+            const getNum = () => {
+                const numOfEntries = number.text();
+                return parseInt(numOfEntries);
+            };
+            cy.wrap({ there: getNum }).invoke('there').should('be.gte', minimumEntries);
+        });
+    });
+}

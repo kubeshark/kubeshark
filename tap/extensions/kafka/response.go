@@ -1,4 +1,4 @@
-package main
+package kafka
 
 import (
 	"fmt"
@@ -62,35 +62,35 @@ func ReadResponse(r io.Reader, tcpID *api.TcpID, superTimer *api.SuperTimer, emi
 	case Metadata:
 		var mt interface{}
 		var metadataResponse interface{}
-		if apiVersion >= 11 {
+		if apiVersion >= v11 {
 			types := makeTypes(reflect.TypeOf(&MetadataResponseV11{}).Elem())
 			mt = types[0]
 			metadataResponse = &MetadataResponseV11{}
-		} else if apiVersion >= 10 {
+		} else if apiVersion >= v10 {
 			types := makeTypes(reflect.TypeOf(&MetadataResponseV10{}).Elem())
 			mt = types[0]
 			metadataResponse = &MetadataResponseV10{}
-		} else if apiVersion >= 8 {
+		} else if apiVersion >= v8 {
 			types := makeTypes(reflect.TypeOf(&MetadataResponseV8{}).Elem())
 			mt = types[0]
 			metadataResponse = &MetadataResponseV8{}
-		} else if apiVersion >= 7 {
+		} else if apiVersion >= v7 {
 			types := makeTypes(reflect.TypeOf(&MetadataResponseV7{}).Elem())
 			mt = types[0]
 			metadataResponse = &MetadataResponseV7{}
-		} else if apiVersion >= 5 {
+		} else if apiVersion >= v5 {
 			types := makeTypes(reflect.TypeOf(&MetadataResponseV5{}).Elem())
 			mt = types[0]
 			metadataResponse = &MetadataResponseV5{}
-		} else if apiVersion >= 3 {
+		} else if apiVersion >= v3 {
 			types := makeTypes(reflect.TypeOf(&MetadataResponseV3{}).Elem())
 			mt = types[0]
 			metadataResponse = &MetadataResponseV3{}
-		} else if apiVersion >= 2 {
+		} else if apiVersion >= v2 {
 			types := makeTypes(reflect.TypeOf(&MetadataResponseV2{}).Elem())
 			mt = types[0]
 			metadataResponse = &MetadataResponseV2{}
-		} else if apiVersion >= 1 {
+		} else if apiVersion >= v1 {
 			types := makeTypes(reflect.TypeOf(&MetadataResponseV1{}).Elem())
 			mt = types[0]
 			metadataResponse = &MetadataResponseV1{}
@@ -101,11 +101,10 @@ func ReadResponse(r io.Reader, tcpID *api.TcpID, superTimer *api.SuperTimer, emi
 		}
 		mt.(messageType).decode(d, valueOf(metadataResponse))
 		reqResPair.Response.Payload = metadataResponse
-		break
 	case ApiVersions:
 		var mt interface{}
 		var apiVersionsResponse interface{}
-		if apiVersion >= 1 {
+		if apiVersion >= v1 {
 			types := makeTypes(reflect.TypeOf(&ApiVersionsResponseV1{}).Elem())
 			mt = types[0]
 			apiVersionsResponse = &ApiVersionsResponseV1{}
@@ -116,23 +115,22 @@ func ReadResponse(r io.Reader, tcpID *api.TcpID, superTimer *api.SuperTimer, emi
 		}
 		mt.(messageType).decode(d, valueOf(apiVersionsResponse))
 		reqResPair.Response.Payload = apiVersionsResponse
-		break
 	case Produce:
 		var mt interface{}
 		var produceResponse interface{}
-		if apiVersion >= 8 {
+		if apiVersion >= v8 {
 			types := makeTypes(reflect.TypeOf(&ProduceResponseV8{}).Elem())
 			mt = types[0]
 			produceResponse = &ProduceResponseV8{}
-		} else if apiVersion >= 5 {
+		} else if apiVersion >= v5 {
 			types := makeTypes(reflect.TypeOf(&ProduceResponseV5{}).Elem())
 			mt = types[0]
 			produceResponse = &ProduceResponseV5{}
-		} else if apiVersion >= 2 {
+		} else if apiVersion >= v2 {
 			types := makeTypes(reflect.TypeOf(&ProduceResponseV2{}).Elem())
 			mt = types[0]
 			produceResponse = &ProduceResponseV2{}
-		} else if apiVersion >= 1 {
+		} else if apiVersion >= v1 {
 			types := makeTypes(reflect.TypeOf(&ProduceResponseV1{}).Elem())
 			mt = types[0]
 			produceResponse = &ProduceResponseV1{}
@@ -143,27 +141,26 @@ func ReadResponse(r io.Reader, tcpID *api.TcpID, superTimer *api.SuperTimer, emi
 		}
 		mt.(messageType).decode(d, valueOf(produceResponse))
 		reqResPair.Response.Payload = produceResponse
-		break
 	case Fetch:
 		var mt interface{}
 		var fetchResponse interface{}
-		if apiVersion >= 11 {
+		if apiVersion >= v11 {
 			types := makeTypes(reflect.TypeOf(&FetchResponseV11{}).Elem())
 			mt = types[0]
 			fetchResponse = &FetchResponseV11{}
-		} else if apiVersion >= 7 {
+		} else if apiVersion >= v7 {
 			types := makeTypes(reflect.TypeOf(&FetchResponseV7{}).Elem())
 			mt = types[0]
 			fetchResponse = &FetchResponseV7{}
-		} else if apiVersion >= 5 {
+		} else if apiVersion >= v5 {
 			types := makeTypes(reflect.TypeOf(&FetchResponseV5{}).Elem())
 			mt = types[0]
 			fetchResponse = &FetchResponseV5{}
-		} else if apiVersion >= 4 {
+		} else if apiVersion >= v4 {
 			types := makeTypes(reflect.TypeOf(&FetchResponseV4{}).Elem())
 			mt = types[0]
 			fetchResponse = &FetchResponseV4{}
-		} else if apiVersion >= 1 {
+		} else if apiVersion >= v1 {
 			types := makeTypes(reflect.TypeOf(&FetchResponseV1{}).Elem())
 			mt = types[0]
 			fetchResponse = &FetchResponseV1{}
@@ -174,19 +171,18 @@ func ReadResponse(r io.Reader, tcpID *api.TcpID, superTimer *api.SuperTimer, emi
 		}
 		mt.(messageType).decode(d, valueOf(fetchResponse))
 		reqResPair.Response.Payload = fetchResponse
-		break
 	case ListOffsets:
 		var mt interface{}
 		var listOffsetsResponse interface{}
-		if apiVersion >= 4 {
+		if apiVersion >= v4 {
 			types := makeTypes(reflect.TypeOf(&ListOffsetsResponseV4{}).Elem())
 			mt = types[0]
 			listOffsetsResponse = &ListOffsetsResponseV4{}
-		} else if apiVersion >= 2 {
+		} else if apiVersion >= v2 {
 			types := makeTypes(reflect.TypeOf(&ListOffsetsResponseV2{}).Elem())
 			mt = types[0]
 			listOffsetsResponse = &ListOffsetsResponseV2{}
-		} else if apiVersion >= 1 {
+		} else if apiVersion >= v1 {
 			types := makeTypes(reflect.TypeOf(&ListOffsetsResponseV1{}).Elem())
 			mt = types[0]
 			listOffsetsResponse = &ListOffsetsResponseV1{}
@@ -200,19 +196,19 @@ func ReadResponse(r io.Reader, tcpID *api.TcpID, superTimer *api.SuperTimer, emi
 	case CreateTopics:
 		var mt interface{}
 		var createTopicsResponse interface{}
-		if apiVersion >= 7 {
+		if apiVersion >= v7 {
 			types := makeTypes(reflect.TypeOf(&CreateTopicsResponseV0{}).Elem())
 			mt = types[0]
 			createTopicsResponse = &CreateTopicsResponseV0{}
-		} else if apiVersion >= 5 {
+		} else if apiVersion >= v5 {
 			types := makeTypes(reflect.TypeOf(&CreateTopicsResponseV5{}).Elem())
 			mt = types[0]
 			createTopicsResponse = &CreateTopicsResponseV5{}
-		} else if apiVersion >= 2 {
+		} else if apiVersion >= v2 {
 			types := makeTypes(reflect.TypeOf(&CreateTopicsResponseV2{}).Elem())
 			mt = types[0]
 			createTopicsResponse = &CreateTopicsResponseV2{}
-		} else if apiVersion >= 1 {
+		} else if apiVersion >= v1 {
 			types := makeTypes(reflect.TypeOf(&CreateTopicsResponseV1{}).Elem())
 			mt = types[0]
 			createTopicsResponse = &CreateTopicsResponseV1{}
@@ -223,19 +219,18 @@ func ReadResponse(r io.Reader, tcpID *api.TcpID, superTimer *api.SuperTimer, emi
 		}
 		mt.(messageType).decode(d, valueOf(createTopicsResponse))
 		reqResPair.Response.Payload = createTopicsResponse
-		break
 	case DeleteTopics:
 		var mt interface{}
 		var deleteTopicsResponse interface{}
-		if apiVersion >= 6 {
+		if apiVersion >= v6 {
 			types := makeTypes(reflect.TypeOf(&DeleteTopicsReponseV6{}).Elem())
 			mt = types[0]
 			deleteTopicsResponse = &DeleteTopicsReponseV6{}
-		} else if apiVersion >= 5 {
+		} else if apiVersion >= v5 {
 			types := makeTypes(reflect.TypeOf(&DeleteTopicsReponseV5{}).Elem())
 			mt = types[0]
 			deleteTopicsResponse = &DeleteTopicsReponseV5{}
-		} else if apiVersion >= 1 {
+		} else if apiVersion >= v1 {
 			types := makeTypes(reflect.TypeOf(&DeleteTopicsReponseV1{}).Elem())
 			mt = types[0]
 			deleteTopicsResponse = &DeleteTopicsReponseV1{}
@@ -251,10 +246,10 @@ func ReadResponse(r io.Reader, tcpID *api.TcpID, superTimer *api.SuperTimer, emi
 	}
 
 	connectionInfo := &api.ConnectionInfo{
-		ClientIP:   tcpID.SrcIP,
-		ClientPort: tcpID.SrcPort,
-		ServerIP:   tcpID.DstIP,
-		ServerPort: tcpID.DstPort,
+		ClientIP:   tcpID.DstIP,
+		ClientPort: tcpID.DstPort,
+		ServerIP:   tcpID.SrcIP,
+		ServerPort: tcpID.SrcPort,
 		IsOutgoing: true,
 	}
 
@@ -337,7 +332,7 @@ func WriteResponse(w io.Writer, apiVersion int16, correlationID int32, msg Messa
 
 	if err == nil {
 		size := packUint32(uint32(b.Size()) - 4)
-		b.WriteAt(size[:], 0)
+		_, _ = b.WriteAt(size[:], 0)
 		_, err = b.WriteTo(w)
 	}
 

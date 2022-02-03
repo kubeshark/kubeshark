@@ -1,19 +1,31 @@
 package oas
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"github.com/chanced/openapi"
-	"github.com/google/martian/har"
 	"github.com/google/uuid"
+	"github.com/nav-inc/datetime"
 	"github.com/up9inc/mizu/shared/logger"
+	"io"
+	"io/ioutil"
 	"mime"
+	"mime/multipart"
+	"net/textproto"
 	"net/url"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/up9inc/mizu/agent/pkg/har"
+
+	"time"
 )
+
+const LastSeenTS = "x-last-seen-ts"
+const CountersTotal = "x-counters-total"
+const CountersPerSource = "x-counters-per-source"
 
 type reqResp struct { // hello, generics in Go
 	Req  *har.Request
@@ -31,7 +43,7 @@ func NewGen(server string) *SpecGen {
 	spec.Version = "3.1.0"
 
 	info := openapi.Info{Title: server}
-	info.Version = "0.0"
+	info.Version = "1.0"
 	spec.Info = &info
 	spec.Paths = &openapi.Paths{Items: map[openapi.PathValue]*openapi.PathObj{}}
 
@@ -44,17 +56,23 @@ func NewGen(server string) *SpecGen {
 
 func (g *SpecGen) StartFromSpec(oas *openapi.OpenAPI) {
 	g.oas = oas
+	g.tree = new(Node)
 	for pathStr, pathObj := range oas.Paths.Items {
 		pathSplit := strings.Split(string(pathStr), "/")
 		g.tree.getOrSet(pathSplit, pathObj)
+
+		// clean "last entry timestamp" markers from the past
+		for _, pathAndOp := range g.tree.listOps() {
+			delete(pathAndOp.op.Extensions, LastSeenTS)
+		}
 	}
 }
 
-func (g *SpecGen) feedEntry(entry har.Entry) (string, error) {
+func (g *SpecGen) feedEntry(entryWithSource EntryWithSource) (string, error) {
 	g.lock.Lock()
 	defer g.lock.Unlock()
 
-	opId, err := g.handlePathObj(&entry)
+	opId, err := g.handlePathObj(&entryWithSource)
 	if err != nil {
 		return "", err
 	}
@@ -69,16 +87,31 @@ func (g *SpecGen) GetSpec() (*openapi.OpenAPI, error) {
 
 	g.tree.compact()
 
-	for _, pathop := range g.tree.listOps() {
-		if pathop.op.Summary == "" {
-			pathop.op.Summary = pathop.path
+	counters := CounterMaps{counterTotal: Counter{}, counterMapTotal: CounterMap{}}
+
+	for _, pathAndOp := range g.tree.listOps() {
+		opObj := pathAndOp.op
+		if opObj.Summary == "" {
+			opObj.Summary = pathAndOp.path
 		}
+
+		err := counters.processOp(opObj)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	err := counters.processOas(g.oas)
+	if err != nil {
+		return nil, err
 	}
 
 	// put paths back from tree into OAS
 	g.oas.Paths = g.tree.listPaths()
 
 	suggestTags(g.oas)
+
+	g.oas.Info.Description = setCounterMsgIfOk(g.oas.Info.Description, &counters.counterTotal)
 
 	// to make a deep copy, no better idea than marshal+unmarshal
 	specText, err := json.MarshalIndent(g.oas, "", "\t")
@@ -97,6 +130,7 @@ func (g *SpecGen) GetSpec() (*openapi.OpenAPI, error) {
 
 func suggestTags(oas *openapi.OpenAPI) {
 	paths := getPathsKeys(oas.Paths.Items)
+	sort.Strings(paths) // make it stable in case of multiple candidates
 	for len(paths) > 0 {
 		group := make([]string, 0)
 		group = append(group, paths[0])
@@ -126,35 +160,7 @@ func suggestTags(oas *openapi.OpenAPI) {
 				}
 			}
 		}
-
-		//groups[common] = group
 	}
-}
-
-func getSimilarPrefix(strs []string) string {
-	chunked := make([][]string, 0)
-	for _, item := range strs {
-		chunked = append(chunked, strings.Split(item, "/"))
-	}
-
-	cmn := longestCommonXfix(chunked, true)
-	res := make([]string, 0)
-	for _, chunk := range cmn {
-		if chunk != "api" && !IsVersionString(chunk) && !strings.HasPrefix(chunk, "{") {
-			res = append(res, chunk)
-		}
-	}
-	return strings.Join(res[1:], ".")
-}
-
-func deleteFromSlice(s []string, val string) []string {
-	temp := s[:0]
-	for _, x := range s {
-		if x != val {
-			temp = append(temp, x)
-		}
-	}
-	return temp
 }
 
 func getPathsKeys(mymap map[openapi.PathValue]*openapi.PathObj) []string {
@@ -168,7 +174,8 @@ func getPathsKeys(mymap map[openapi.PathValue]*openapi.PathObj) []string {
 	return keys
 }
 
-func (g *SpecGen) handlePathObj(entry *har.Entry) (string, error) {
+func (g *SpecGen) handlePathObj(entryWithSource *EntryWithSource) (string, error) {
+	entry := entryWithSource.Entry
 	urlParsed, err := url.Parse(entry.Request.URL)
 	if err != nil {
 		return "", err
@@ -176,11 +183,18 @@ func (g *SpecGen) handlePathObj(entry *har.Entry) (string, error) {
 
 	if isExtIgnored(urlParsed.Path) {
 		logger.Log.Debugf("Dropped traffic entry due to ignored extension: %s", urlParsed.Path)
+		return "", nil
 	}
 
-	ctype := getRespCtype(entry.Response)
+	if entry.Request.Method == "OPTIONS" {
+		logger.Log.Debugf("Dropped traffic entry due to its method: %s", urlParsed.Path)
+		return "", nil
+	}
+
+	ctype := getRespCtype(&entry.Response)
 	if isCtypeIgnored(ctype) {
 		logger.Log.Debugf("Dropped traffic entry due to ignored response ctype: %s", ctype)
+		return "", nil
 	}
 
 	if entry.Response.Status < 100 {
@@ -193,9 +207,19 @@ func (g *SpecGen) handlePathObj(entry *har.Entry) (string, error) {
 		return "", nil
 	}
 
-	split := strings.Split(urlParsed.Path, "/")
+	if entry.Response.Status == 502 || entry.Response.Status == 503 || entry.Response.Status == 504 {
+		logger.Log.Debugf("Dropped traffic entry due to temporary server error: %s", entry.StartedDateTime)
+		return "", nil
+	}
+
+	var split []string
+	if urlParsed.RawPath != "" {
+		split = strings.Split(urlParsed.RawPath, "/")
+	} else {
+		split = strings.Split(urlParsed.Path, "/")
+	}
 	node := g.tree.getOrSet(split, new(openapi.PathObj))
-	opObj, err := handleOpObj(entry, node.ops)
+	opObj, err := handleOpObj(entryWithSource, node.pathObj)
 
 	if opObj != nil {
 		return opObj.OperationID, err
@@ -204,7 +228,8 @@ func (g *SpecGen) handlePathObj(entry *har.Entry) (string, error) {
 	return "", err
 }
 
-func handleOpObj(entry *har.Entry, pathObj *openapi.PathObj) (*openapi.Operation, error) {
+func handleOpObj(entryWithSource *EntryWithSource, pathObj *openapi.PathObj) (*openapi.Operation, error) {
+	entry := entryWithSource.Entry
 	isSuccess := 100 <= entry.Response.Status && entry.Response.Status < 400
 	opObj, wasMissing, err := getOpObj(pathObj, entry.Request.Method, isSuccess)
 	if err != nil {
@@ -216,12 +241,17 @@ func handleOpObj(entry *har.Entry, pathObj *openapi.PathObj) (*openapi.Operation
 		return nil, nil
 	}
 
-	err = handleRequest(entry.Request, opObj, isSuccess)
+	err = handleRequest(&entry.Request, opObj, isSuccess)
 	if err != nil {
 		return nil, err
 	}
 
-	err = handleResponse(entry.Response, opObj, isSuccess)
+	err = handleResponse(&entry.Response, opObj, isSuccess)
+	if err != nil {
+		return nil, err
+	}
+
+	err = handleCounters(opObj, isSuccess, entryWithSource)
 	if err != nil {
 		return nil, err
 	}
@@ -229,38 +259,106 @@ func handleOpObj(entry *har.Entry, pathObj *openapi.PathObj) (*openapi.Operation
 	return opObj, nil
 }
 
+func handleCounters(opObj *openapi.Operation, success bool, entryWithSource *EntryWithSource) error {
+	// TODO: if performance around DecodeExtension+SetExtension is bad, store counters as separate maps
+	counter := Counter{}
+	counterMap := CounterMap{}
+	prevTs := 0.0
+	if opObj.Extensions == nil {
+		opObj.Extensions = openapi.Extensions{}
+	} else {
+		if _, ok := opObj.Extensions.Extension(CountersTotal); ok {
+			err := opObj.Extensions.DecodeExtension(CountersTotal, &counter)
+			if err != nil {
+				return err
+			}
+		}
+
+		if _, ok := opObj.Extensions.Extension(CountersPerSource); ok {
+			err := opObj.Extensions.DecodeExtension(CountersPerSource, &counterMap)
+			if err != nil {
+				return err
+			}
+		}
+
+		if _, ok := opObj.Extensions.Extension(LastSeenTS); ok {
+			err := opObj.Extensions.DecodeExtension(LastSeenTS, &prevTs)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	var counterPerSource *Counter
+	if existing, ok := counterMap[entryWithSource.Source]; ok {
+		counterPerSource = existing
+	} else {
+		counterPerSource = new(Counter)
+		counterMap[entryWithSource.Source] = counterPerSource
+	}
+
+	started, err := datetime.Parse(entryWithSource.Entry.StartedDateTime, time.UTC)
+	if err != nil {
+		return err
+	}
+
+	ts := float64(started.UnixNano()) / float64(time.Millisecond) / 1000
+	rt := float64(entryWithSource.Entry.Time) / 1000
+
+	dur := 0.0
+	if prevTs != 0 {
+		dur = ts - prevTs
+	}
+
+	counter.addEntry(ts, rt, success, dur)
+	counterPerSource.addEntry(ts, rt, success, dur)
+
+	err = opObj.Extensions.SetExtension(LastSeenTS, ts)
+	if err != nil {
+		return err
+	}
+
+	err = opObj.Extensions.SetExtension(CountersTotal, counter)
+	if err != nil {
+		return err
+	}
+
+	err = opObj.Extensions.SetExtension(CountersPerSource, counterMap)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func handleRequest(req *har.Request, opObj *openapi.Operation, isSuccess bool) error {
 	// TODO: we don't handle the situation when header/qstr param can be defined on pathObj level. Also the path param defined on opObj
 
 	qstrGW := nvParams{
-		In: openapi.InQuery,
-		Pairs: func() []NVPair {
-			return qstrToNVP(req.QueryString)
-		},
+		In:             openapi.InQuery,
+		Pairs:          req.QueryString,
 		IsIgnored:      func(name string) bool { return false },
 		GeneralizeName: func(name string) string { return name },
 	}
 	handleNameVals(qstrGW, &opObj.Parameters)
 
 	hdrGW := nvParams{
-		In: openapi.InHeader,
-		Pairs: func() []NVPair {
-			return hdrToNVP(req.Headers)
-		},
+		In:             openapi.InHeader,
+		Pairs:          req.Headers,
 		IsIgnored:      isHeaderIgnored,
 		GeneralizeName: strings.ToLower,
 	}
 	handleNameVals(hdrGW, &opObj.Parameters)
 
-	if req.PostData != nil && req.PostData.Text != "" && isSuccess {
+	if req.PostData.Text != "" && isSuccess {
 		reqBody, err := getRequestBody(req, opObj, isSuccess)
 		if err != nil {
 			return err
 		}
 
 		if reqBody != nil {
-			reqCtype := getReqCtype(req)
-			reqMedia, err := fillContent(reqResp{Req: req}, reqBody.Content, reqCtype, err)
+			reqCtype, _ := getReqCtype(req)
+			reqMedia, err := fillContent(reqResp{Req: req}, reqBody.Content, reqCtype)
 			if err != nil {
 				return err
 			}
@@ -282,7 +380,7 @@ func handleResponse(resp *har.Response, opObj *openapi.Operation, isSuccess bool
 
 	respCtype := getRespCtype(resp)
 	respContent := respObj.Content
-	respMedia, err := fillContent(reqResp{Resp: resp}, respContent, respCtype, err)
+	respMedia, err := fillContent(reqResp{Resp: resp}, respContent, respCtype)
 	if err != nil {
 		return err
 	}
@@ -330,11 +428,9 @@ func handleRespHeaders(reqHeaders []har.Header, respObj *openapi.ResponseObj) {
 			}
 		}
 	}
-
-	return
 }
 
-func fillContent(reqResp reqResp, respContent openapi.Content, ctype string, err error) (*openapi.MediaType, error) {
+func fillContent(reqResp reqResp, respContent openapi.Content, ctype string) (*openapi.MediaType, error) {
 	content, found := respContent[ctype]
 	if !found {
 		respContent[ctype] = &openapi.MediaType{}
@@ -342,43 +438,145 @@ func fillContent(reqResp reqResp, respContent openapi.Content, ctype string, err
 	}
 
 	var text string
+	var isBinary bool
 	if reqResp.Req != nil {
-		text = reqResp.Req.PostData.Text
+		isBinary, _, text = reqResp.Req.PostData.B64Decoded()
 	} else {
-		text = decRespText(reqResp.Resp.Content)
+		isBinary, _, text = reqResp.Resp.Content.B64Decoded()
 	}
 
-	var exampleMsg []byte
-	// try treating it as json
-	any, isJSON := anyJSON(text)
-	if isJSON {
-		// re-marshal with forced indent
-		exampleMsg, err = json.MarshalIndent(any, "", "\t")
-		if err != nil {
-			panic("Failed to re-marshal value, super-strange")
+	if !isBinary && text != "" {
+		var exampleMsg []byte
+		// try treating it as json
+		any, isJSON := anyJSON(text)
+		if isJSON {
+			// re-marshal with forced indent
+			if msg, err := json.MarshalIndent(any, "", "\t"); err != nil {
+				panic("Failed to re-marshal value, super-strange")
+			} else {
+				exampleMsg = msg
+			}
+		} else {
+			if msg, err := json.Marshal(text); err != nil {
+				return nil, err
+			} else {
+				exampleMsg = msg
+			}
 		}
-	} else {
-		exampleMsg, err = json.Marshal(text)
-		if err != nil {
-			return nil, err
+
+		if ctype == "application/x-www-form-urlencoded" && reqResp.Req != nil {
+			handleFormDataUrlencoded(text, content)
+		} else if strings.HasPrefix(ctype, "multipart/form-data") && reqResp.Req != nil {
+			_, params := getReqCtype(reqResp.Req)
+			handleFormDataMultipart(text, content, params)
+		}
+
+		if content.Example == nil && len(exampleMsg) > len(content.Example) {
+			content.Example = exampleMsg
 		}
 	}
 
-	content.Example = exampleMsg
 	return respContent[ctype], nil
 }
 
-func decRespText(content *har.Content) (res string) {
-	res = string(content.Text)
-	if content.Encoding == "base64" {
-		data, err := base64.StdEncoding.DecodeString(res)
-		if err != nil {
-			logger.Log.Warningf("error decoding response text as base64: %s", err)
-		} else {
-			res = string(data)
+func handleFormDataUrlencoded(text string, content *openapi.MediaType) {
+	formData, err := url.ParseQuery(text)
+	if err != nil {
+		logger.Log.Warningf("Could not decode urlencoded: %s", err)
+		return
+	}
+
+	parts := make([]PartWithBody, 0)
+	for name, vals := range formData {
+		for _, val := range vals {
+			part := new(multipart.Part)
+			part.Header = textproto.MIMEHeader{}
+			part.Header.Add("Content-Disposition", "form-data; name=\""+name+"\";")
+			parts = append(parts, PartWithBody{part: part, body: []byte(val)})
 		}
 	}
-	return
+	handleFormData(content, parts)
+}
+
+func handleFormData(content *openapi.MediaType, parts []PartWithBody) {
+	hadSchema := true
+	if content.Schema == nil {
+		hadSchema = false // will use it for required flags
+		content.Schema = new(openapi.SchemaObj)
+		content.Schema.Type = openapi.Types{openapi.TypeObject}
+		content.Schema.Properties = openapi.Schemas{}
+	}
+
+	props := &content.Schema.Properties
+	seenNames := map[string]struct{}{} // set equivalent in Go, yikes
+	for _, pwb := range parts {
+		name := pwb.part.FormName()
+		seenNames[name] = struct{}{}
+		existing, found := (*props)[name]
+		if !found {
+			existing = new(openapi.SchemaObj)
+			existing.Type = openapi.Types{openapi.TypeString}
+			(*props)[name] = existing
+
+			ctype := pwb.part.Header.Get("content-type")
+			if ctype != "" {
+				if existing.Keywords == nil {
+					existing.Keywords = map[string]json.RawMessage{}
+				}
+				existing.Keywords["contentMediaType"], _ = json.Marshal(ctype)
+			}
+		}
+
+		addSchemaExample(existing, string(pwb.body))
+	}
+
+	// handle required flag
+	if content.Schema.Required == nil {
+		if !hadSchema {
+			content.Schema.Required = make([]string, 0)
+			for name := range seenNames {
+				content.Schema.Required = append(content.Schema.Required, name)
+			}
+		} // else it's a known schema with no required fields
+	} else {
+		content.Schema.Required = intersectSliceWithMap(content.Schema.Required, seenNames)
+	}
+}
+
+type PartWithBody struct {
+	part *multipart.Part
+	body []byte
+}
+
+func handleFormDataMultipart(text string, content *openapi.MediaType, ctypeParams map[string]string) {
+	boundary, ok := ctypeParams["boundary"]
+	if !ok {
+		logger.Log.Errorf("Multipart header has no boundary")
+		return
+	}
+	mpr := multipart.NewReader(strings.NewReader(text), boundary)
+
+	parts := make([]PartWithBody, 0)
+	for {
+		part, err := mpr.NextPart()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			logger.Log.Errorf("Cannot parse multipart body: %v", err)
+			break
+		}
+		defer part.Close()
+
+		body, err := ioutil.ReadAll(part)
+		if err != nil {
+			logger.Log.Errorf("Error reading multipart Part %s: %v", part.Header, err)
+		}
+
+		parts = append(parts, PartWithBody{part: part, body: body})
+	}
+
+	handleFormData(content, parts)
 }
 
 func getRespCtype(resp *har.Response) string {
@@ -397,8 +595,7 @@ func getRespCtype(resp *har.Response) string {
 	return mediaType
 }
 
-func getReqCtype(req *har.Request) string {
-	var ctype string
+func getReqCtype(req *har.Request) (ctype string, params map[string]string) {
 	ctype = req.PostData.MimeType
 	for _, hdr := range req.Headers {
 		if strings.ToLower(hdr.Name) == "content-type" {
@@ -406,11 +603,12 @@ func getReqCtype(req *har.Request) string {
 		}
 	}
 
-	mediaType, _, err := mime.ParseMediaType(ctype)
+	mediaType, params, err := mime.ParseMediaType(ctype)
 	if err != nil {
-		return ""
+		logger.Log.Errorf("Cannot parse Content-Type header %q: %v", ctype, err)
+		return "", map[string]string{}
 	}
-	return mediaType
+	return mediaType, params
 }
 
 func getResponseObj(resp *har.Response, opObj *openapi.Operation, isSuccess bool) (*openapi.ResponseObj, error) {

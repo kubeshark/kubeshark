@@ -66,17 +66,17 @@ func PerformLogin(username string, password string, ctx context.Context) (*strin
 	return result.SessionToken, nil
 }
 
-func VerifyToken(token string, ctx context.Context) (bool, error) {
+func VerifyToken(token string, ctx context.Context) (*ory.Session, error) {
 	flow, _, err := client.V0alpha2Api.ToSession(ctx).XSessionToken(token).Execute()
 	if err != nil {
-		return false, err
+		return nil, err
 	}
 
 	if flow == nil {
-		return false, nil
+		return nil, nil
 	}
 
-	return true, nil
+	return flow, nil
 }
 
 func DeleteUser(identityId string, ctx context.Context) error {
@@ -85,11 +85,11 @@ func DeleteUser(identityId string, ctx context.Context) error {
 		return err
 	}
 	if result == nil {
-		return errors.New("unknown error occured during user deletion")
+		return fmt.Errorf("unknown error occured during user deletion %v", identityId)
 	}
 
 	if result.StatusCode < 200 || result.StatusCode > 299 {
-		return errors.New(fmt.Sprintf("user deletion returned bad status %d", result.StatusCode))
+		return fmt.Errorf("user deletion %v returned bad status %d", identityId, result.StatusCode)
 	} else {
 		return nil
 	}

@@ -3,23 +3,29 @@ package oas
 import (
 	"encoding/json"
 	"github.com/chanced/openapi"
-	"github.com/google/martian/har"
+	"github.com/op/go-logging"
 	"github.com/up9inc/mizu/shared/logger"
+	"github.com/wI2L/jsondiff"
 	"io/ioutil"
 	"os"
+	"regexp"
 	"strings"
 	"testing"
+	"time"
+
+	"github.com/up9inc/mizu/agent/pkg/har"
 )
 
 // if started via env, write file into subdir
-func writeFiles(label string, spec *openapi.OpenAPI) {
+func outputSpec(label string, spec *openapi.OpenAPI, t *testing.T) string {
+	content, err := json.MarshalIndent(spec, "", "\t")
+	if err != nil {
+		panic(err)
+	}
+
 	if os.Getenv("MIZU_OAS_WRITE_FILES") != "" {
 		path := "./oas-samples"
 		err := os.MkdirAll(path, 0o755)
-		if err != nil {
-			panic(err)
-		}
-		content, err := json.MarshalIndent(spec, "", "\t")
 		if err != nil {
 			panic(err)
 		}
@@ -27,24 +33,30 @@ func writeFiles(label string, spec *openapi.OpenAPI) {
 		if err != nil {
 			panic(err)
 		}
+		t.Logf("Written: %s", label)
+	} else {
+		t.Logf("%s", string(content))
 	}
+	return string(content)
 }
 
 func TestEntries(t *testing.T) {
+	logger.InitLoggerStderrOnly(logging.INFO)
 	files, err := getFiles("./test_artifacts/")
-	// files, err = getFiles("/media/bigdisk/UP9")
 	if err != nil {
 		t.Log(err)
 		t.FailNow()
 	}
 	GetOasGeneratorInstance().Start()
+	loadStartingOAS()
 
-	if err := feedEntries(files); err != nil {
+	cnt, err := feedEntries(files, true)
+	if err != nil {
 		t.Log(err)
 		t.Fail()
 	}
 
-	loadStartingOAS()
+	waitQueueProcessed()
 
 	svcs := strings.Builder{}
 	GetOasGeneratorInstance().ServiceSpecs.Range(func(key, val interface{}) bool {
@@ -78,33 +90,36 @@ func TestEntries(t *testing.T) {
 			t.FailNow()
 		}
 
-		specText, _ := json.MarshalIndent(spec, "", "\t")
-		t.Logf("%s", string(specText))
+		outputSpec(svc, spec, t)
 
 		err = spec.Validate()
 		if err != nil {
 			t.Log(err)
 			t.FailNow()
 		}
-		writeFiles(svc, spec)
 
 		return true
 	})
 
+	logger.Log.Infof("Total entries: %d", cnt)
 }
 
-func TestFileLDJSON(t *testing.T) {
+func TestFileSingle(t *testing.T) {
 	GetOasGeneratorInstance().Start()
-	file := "test_artifacts/output_rdwtyeoyrj.har.ldjson"
-	err := feedFromLDJSON(file)
+	GetOasGeneratorInstance().Reset()
+	// loadStartingOAS()
+	file := "test_artifacts/params.har"
+	files := []string{file}
+	cnt, err := feedEntries(files, true)
 	if err != nil {
 		logger.Log.Warning("Failed processing file: " + err.Error())
 		t.Fail()
 	}
 
-	loadStartingOAS()
+	waitQueueProcessed()
 
-	GetOasGeneratorInstance().ServiceSpecs.Range(func(_, val interface{}) bool {
+	GetOasGeneratorInstance().ServiceSpecs.Range(func(key, val interface{}) bool {
+		svc := key.(string)
 		gen := val.(*SpecGen)
 		spec, err := gen.GetSpec()
 		if err != nil {
@@ -112,8 +127,7 @@ func TestFileLDJSON(t *testing.T) {
 			t.FailNow()
 		}
 
-		specText, _ := json.MarshalIndent(spec, "", "\t")
-		t.Logf("%s", string(specText))
+		specText := outputSpec(svc, spec, t)
 
 		err = spec.Validate()
 		if err != nil {
@@ -121,8 +135,44 @@ func TestFileLDJSON(t *testing.T) {
 			t.FailNow()
 		}
 
+		expected, err := ioutil.ReadFile(file + ".spec.json")
+		if err != nil {
+			t.Errorf(err.Error())
+			t.FailNow()
+		}
+
+		patFloatPrecision := regexp.MustCompile(`(\d+\.\d{1,2})(\d*)`)
+
+		expected = []byte(patUuid4.ReplaceAllString(string(expected), "<UUID4>"))
+		specText = patUuid4.ReplaceAllString(specText, "<UUID4>")
+		expected = []byte(patFloatPrecision.ReplaceAllString(string(expected), "$1"))
+		specText = patFloatPrecision.ReplaceAllString(specText, "$1")
+
+		diff, err := jsondiff.CompareJSON(expected, []byte(specText))
+		if err != nil {
+			t.Errorf(err.Error())
+			t.FailNow()
+		}
+
+		if len(diff) > 0 {
+			t.Errorf("Generated spec does not match expected:\n%s", diff.String())
+		}
+
 		return true
 	})
+
+	logger.Log.Infof("Processed entries: %d", cnt)
+}
+
+func waitQueueProcessed() {
+	for {
+		time.Sleep(100 * time.Millisecond)
+		queue := len(GetOasGeneratorInstance().entriesChan)
+		logger.Log.Infof("Queue: %d", queue)
+		if queue < 1 {
+			break
+		}
+	}
 }
 
 func loadStartingOAS() {
@@ -149,15 +199,22 @@ func loadStartingOAS() {
 	gen.StartFromSpec(doc)
 
 	GetOasGeneratorInstance().ServiceSpecs.Store("catalogue", gen)
-
-	return
 }
 
 func TestEntriesNegative(t *testing.T) {
 	files := []string{"invalid"}
-	err := feedEntries(files)
+	_, err := feedEntries(files, false)
 	if err == nil {
 		t.Logf("Should have failed")
+		t.Fail()
+	}
+}
+
+func TestEntriesPositive(t *testing.T) {
+	files := []string{"test_artifacts/params.har"}
+	_, err := feedEntries(files, false)
+	if err != nil {
+		t.Logf("Failed")
 		t.Fail()
 	}
 }
@@ -168,7 +225,7 @@ func TestLoadValidHAR(t *testing.T) {
 	var err = json.Unmarshal([]byte(inp), &entry)
 	if err != nil {
 		t.Logf("Failed to decode entry: %s", err)
-		// t.FailNow() demonstrates the problem of library
+		t.FailNow() // demonstrates the problem of `martian` HAR library
 	}
 }
 
@@ -193,5 +250,4 @@ func TestLoadValid3_1(t *testing.T) {
 		t.Log(err)
 		t.FailNow()
 	}
-	return
 }

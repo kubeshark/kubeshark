@@ -1,10 +1,9 @@
-package main
+package kafka
 
 import (
 	"bytes"
 	"fmt"
 	"io"
-	"math"
 	"sync"
 	"sync/atomic"
 )
@@ -201,25 +200,6 @@ func newPageBuffer() *pageBuffer {
 	return b
 }
 
-func (pb *pageBuffer) refTo(ref *pageRef, begin, end int64) {
-	length := end - begin
-
-	if length > math.MaxUint32 {
-		panic("reference to contiguous buffer pages exceeds the maximum size of 4 GB")
-	}
-
-	ref.pages = append(ref.buffer[:0], pb.pages.slice(begin, end)...)
-	ref.pages.ref()
-	ref.offset = begin
-	ref.length = uint32(length)
-}
-
-func (pb *pageBuffer) ref(begin, end int64) *pageRef {
-	ref := new(pageRef)
-	pb.refTo(ref, begin, end)
-	return ref
-}
-
 func (pb *pageBuffer) unref() {
 	pb.refc.unref(func() {
 		pb.pages.unref()
@@ -353,12 +333,12 @@ func (pb *pageBuffer) Write(b []byte) (int, error) {
 		free := tail.Cap() - tail.Len()
 
 		if len(b) <= free {
-			tail.Write(b)
+			_, _ = tail.Write(b)
 			pb.length += len(b)
 			break
 		}
 
-		tail.Write(b[:free])
+		_, _ = tail.Write(b[:free])
 		b = b[free:]
 
 		pb.length += free
@@ -374,7 +354,7 @@ func (pb *pageBuffer) WriteAt(b []byte, off int64) (int, error) {
 		return n, err
 	}
 	if n < len(b) {
-		pb.Write(b[n:])
+		_, _ = pb.Write(b[n:])
 	}
 	return len(b), nil
 }
@@ -405,12 +385,6 @@ var (
 )
 
 type contiguousPages []*page
-
-func (pages contiguousPages) ref() {
-	for _, p := range pages {
-		p.ref()
-	}
-}
 
 func (pages contiguousPages) unref() {
 	for _, p := range pages {
@@ -480,7 +454,6 @@ var (
 )
 
 type pageRef struct {
-	buffer [2]*page
 	pages  contiguousPages
 	offset int64
 	cursor int64
@@ -590,28 +563,6 @@ var (
 	_ io.WriterTo = (*pageRef)(nil)
 )
 
-type pageRefAllocator struct {
-	refs []pageRef
-	head int
-	size int
-}
-
-func (a *pageRefAllocator) newPageRef() *pageRef {
-	if a.head == len(a.refs) {
-		a.refs = make([]pageRef, a.size)
-		a.head = 0
-	}
-	ref := &a.refs[a.head]
-	a.head++
-	return ref
-}
-
-func unref(x interface{}) {
-	if r, _ := x.(interface{ unref() }); r != nil {
-		r.unref()
-	}
-}
-
 func seek(cursor, limit, offset int64, whence int) (int64, error) {
 	switch whence {
 	case io.SeekStart:
@@ -630,16 +581,4 @@ func seek(cursor, limit, offset int64, whence int) (int64, error) {
 		offset = limit
 	}
 	return offset, nil
-}
-
-func closeBytes(b Bytes) {
-	if b != nil {
-		b.Close()
-	}
-}
-
-func resetBytes(b Bytes) {
-	if r, _ := b.(interface{ Reset() }); r != nil {
-		r.Reset()
-	}
 }

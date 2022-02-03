@@ -169,8 +169,8 @@ type ApiServerOptions struct {
 	Namespace             string
 	PodName               string
 	PodImage              string
-	BasenineImage         string
 	KratosImage           string
+	KetoImage             string
 	ServiceAccountName    string
 	IsNamespaceRestricted bool
 	SyncEntriesConfig     *shared.SyncEntriesConfig
@@ -178,7 +178,6 @@ type ApiServerOptions struct {
 	Resources             shared.Resources
 	ImagePullPolicy       core.PullPolicy
 	LogLevel              logging.Level
-
 }
 
 func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, mountVolumeClaim bool, volumeClaimName string, createAuthContainer bool) (*core.Pod, error) {
@@ -195,19 +194,19 @@ func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, moun
 
 	cpuLimit, err := resource.ParseQuantity(opts.Resources.CpuLimit)
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("invalid cpu limit for %s container", opts.PodName))
+		return nil, fmt.Errorf("invalid cpu limit for %s container", opts.PodName)
 	}
 	memLimit, err := resource.ParseQuantity(opts.Resources.MemoryLimit)
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("invalid memory limit for %s container", opts.PodName))
+		return nil, fmt.Errorf("invalid memory limit for %s container", opts.PodName)
 	}
 	cpuRequests, err := resource.ParseQuantity(opts.Resources.CpuRequests)
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("invalid cpu request for %s container", opts.PodName))
+		return nil, fmt.Errorf("invalid cpu request for %s container", opts.PodName)
 	}
 	memRequests, err := resource.ParseQuantity(opts.Resources.MemoryRequests)
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("invalid memory request for %s container", opts.PodName))
+		return nil, fmt.Errorf("invalid memory request for %s container", opts.PodName)
 	}
 
 	command := []string{"./mizuagent", "--api-server"}
@@ -275,7 +274,7 @@ func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, moun
 		},
 		{
 			Name:            "basenine",
-			Image:           opts.BasenineImage,
+			Image:           opts.PodImage,
 			ImagePullPolicy: opts.ImagePullPolicy,
 			VolumeMounts:    volumeMounts,
 			ReadinessProbe: &core.Probe{
@@ -299,7 +298,7 @@ func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, moun
 					"memory": memRequests,
 				},
 			},
-			Command:    []string{"/basenine"},
+			Command:    []string{"basenine"},
 			Args:       []string{"-addr", "0.0.0.0", "-port", shared.BaseninePort, "-persistent"},
 			WorkingDir: shared.DataDirPath,
 		},
@@ -336,6 +335,35 @@ func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, moun
 			},
 		})
 
+		containers = append(containers, core.Container{
+			Name:            "keto",
+			Image:           opts.KetoImage,
+			ImagePullPolicy: opts.ImagePullPolicy,
+			VolumeMounts:    volumeMounts,
+			ReadinessProbe: &core.Probe{
+				FailureThreshold: 3,
+				Handler: core.Handler{
+					HTTPGet: &core.HTTPGetAction{
+						Path:   "/health/ready",
+						Port:   intstr.FromInt(4466),
+						Scheme: core.URISchemeHTTP,
+					},
+				},
+				PeriodSeconds:    1,
+				SuccessThreshold: 1,
+				TimeoutSeconds:   1,
+			},
+			Resources: core.ResourceRequirements{
+				Limits: core.ResourceList{
+					"cpu":    cpuLimit,
+					"memory": memLimit,
+				},
+				Requests: core.ResourceList{
+					"cpu":    cpuRequests,
+					"memory": memRequests,
+				},
+			},
+		})
 	}
 
 	pod := &core.Pod{
@@ -367,7 +395,7 @@ func (provider *Provider) CreatePod(ctx context.Context, namespace string, podSp
 }
 
 func (provider *Provider) CreateDeployment(ctx context.Context, namespace string, deploymentName string, podSpec *core.Pod) (*v1.Deployment, error) {
-	if _, keyExists := podSpec.ObjectMeta.Labels["app"]; keyExists == false {
+	if _, keyExists := podSpec.ObjectMeta.Labels["app"]; !keyExists {
 		return nil, errors.New("pod spec must contain 'app' label")
 	}
 	podTemplate := &core.PodTemplateSpec{
@@ -736,7 +764,7 @@ func (provider *Provider) handleRemovalError(err error) error {
 }
 
 func (provider *Provider) CreateConfigMap(ctx context.Context, namespace string, configMapName string, serializedValidationRules string, serializedContract string, serializedMizuConfig string) error {
-	configMapData := make(map[string]string, 0)
+	configMapData := make(map[string]string)
 	if serializedValidationRules != "" {
 		configMapData[shared.ValidationRulesFileName] = serializedValidationRules
 	}
@@ -826,19 +854,19 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	)
 	cpuLimit, err := resource.ParseQuantity(resources.CpuLimit)
 	if err != nil {
-		return errors.New(fmt.Sprintf("invalid cpu limit for %s container", tapperPodName))
+		return fmt.Errorf("invalid cpu limit for %s container", tapperPodName)
 	}
 	memLimit, err := resource.ParseQuantity(resources.MemoryLimit)
 	if err != nil {
-		return errors.New(fmt.Sprintf("invalid memory limit for %s container", tapperPodName))
+		return fmt.Errorf("invalid memory limit for %s container", tapperPodName)
 	}
 	cpuRequests, err := resource.ParseQuantity(resources.CpuRequests)
 	if err != nil {
-		return errors.New(fmt.Sprintf("invalid cpu request for %s container", tapperPodName))
+		return fmt.Errorf("invalid cpu request for %s container", tapperPodName)
 	}
 	memRequests, err := resource.ParseQuantity(resources.MemoryRequests)
 	if err != nil {
-		return errors.New(fmt.Sprintf("invalid memory request for %s container", tapperPodName))
+		return fmt.Errorf("invalid memory request for %s container", tapperPodName)
 	}
 	agentResourceLimits := core.ResourceList{
 		"cpu":    cpuLimit,

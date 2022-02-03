@@ -8,11 +8,12 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/up9inc/mizu/agent/pkg/har"
+
 	"github.com/up9inc/mizu/shared/logger"
 
-	"github.com/google/martian/har"
 	"github.com/up9inc/mizu/shared"
-	jsonpath "github.com/yalp/jsonpath"
+	"github.com/yalp/jsonpath"
 )
 
 type RulesMatched struct {
@@ -108,7 +109,7 @@ func PassedValidationRules(rulesMatched []RulesMatched) (bool, int64, int) {
 	}
 
 	for _, rule := range rulesMatched {
-		if rule.Matched == false {
+		if !rule.Matched {
 			return false, responseTime, numberOfRulesMatched
 		} else {
 			if strings.ToLower(rule.Rule.Type) == "slo" {

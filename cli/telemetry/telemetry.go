@@ -53,6 +53,7 @@ func ReportTapTelemetry(apiProvider *apiserver.Provider, args interface{}, start
 		"args":                   string(argsBytes),
 		"executionTimeInSeconds": int(time.Since(startTime).Seconds()),
 		"apiCallsCount":          generalStats["EntriesCount"],
+		"trafficVolumeInGB":      generalStats["EntriesVolumeInGB"],
 	}
 
 	if err := sendTelemetry(argsMap); err != nil {

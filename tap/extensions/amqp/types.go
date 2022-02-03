@@ -3,7 +3,7 @@
 // license that can be found in the LICENSE file.
 // Source code and contact info at http://github.com/streadway/amqp
 
-package main
+package amqp
 
 import (
 	"fmt"
@@ -76,15 +76,6 @@ type Error struct {
 	Reason  string // description of the error
 	Server  bool   // true when initiated from the server, false when from this library
 	Recover bool   // true when this error can be recovered by retrying later or with different parameters
-}
-
-func newError(code uint16, text string) *Error {
-	return &Error{
-		Code:    int(code),
-		Reason:  text,
-		Recover: isSoftExceptionCode(int(code)),
-		Server:  true,
-	}
 }
 
 func (e Error) Error() string {
@@ -262,30 +253,11 @@ func (t Table) Validate() error {
 	return validateField(t)
 }
 
-// Heap interface for maintaining delivery tags
-type tagSet []uint64
-
-func (set tagSet) Len() int              { return len(set) }
-func (set tagSet) Less(i, j int) bool    { return (set)[i] < (set)[j] }
-func (set tagSet) Swap(i, j int)         { (set)[i], (set)[j] = (set)[j], (set)[i] }
-func (set *tagSet) Push(tag interface{}) { *set = append(*set, tag.(uint64)) }
-func (set *tagSet) Pop() interface{} {
-	val := (*set)[len(*set)-1]
-	*set = (*set)[:len(*set)-1]
-	return val
-}
-
 type Message interface {
 	id() (uint16, uint16)
 	wait() bool
 	read(io.Reader) error
 	write(io.Writer) error
-}
-
-type messageWithContent interface {
-	Message
-	getContent() (Properties, []byte)
-	setContent(Properties, []byte)
 }
 
 /*
@@ -320,22 +292,6 @@ type frame interface {
 
 type AmqpReader struct {
 	R io.Reader
-}
-
-type writer struct {
-	w io.Writer
-}
-
-// Implements the frame interface for Connection RPC
-type protocolHeader struct{}
-
-func (protocolHeader) write(w io.Writer) error {
-	_, err := w.Write([]byte{'A', 'M', 'Q', 'P', 0, 0, 9, 1})
-	return err
-}
-
-func (protocolHeader) channel() uint16 {
-	panic("only valid as initial handshake")
 }
 
 /*
