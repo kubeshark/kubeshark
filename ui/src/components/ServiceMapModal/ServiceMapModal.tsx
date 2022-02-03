@@ -29,6 +29,7 @@ interface Edge {
     label: string;
     title?: string;
     color?: object;
+    font?: object;
 }
 
 interface ServiceMapNode {
@@ -104,7 +105,7 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onOpen
             const newGraphData: GraphData = { nodes: [], edges: [] }
 
             if (serviceMapData.nodes) {
-                newGraphData.nodes = serviceMapData.nodes.map(node => {
+                newGraphData.nodes = serviceMapData.nodes.map<Node>(node => {
                     return {
                         id: node.id,
                         value: node.count,
@@ -115,7 +116,7 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onOpen
             }
 
             if (serviceMapData.edges) {
-                newGraphData.edges = serviceMapData.edges.map(edge => {
+                newGraphData.edges = serviceMapData.edges.map<Edge>(edge => {
                     return {
                         from: edge.source.id,
                         to: edge.destination.id,
@@ -124,6 +125,11 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onOpen
                         color: {
                             color: edge.protocol.backgroundColor,
                             highlight: edge.protocol.backgroundColor
+                        },
+                        font: {
+                            color: edge.protocol.backgroundColor,
+                            strokeColor: edge.protocol.backgroundColor,
+                            background: edge.protocol.foregroundColor,
                         },
                     }
                 })
