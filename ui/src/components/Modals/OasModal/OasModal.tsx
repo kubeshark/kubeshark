@@ -62,7 +62,7 @@ const OasModal = ({ openModal, handleCloseModal }) => {
           >
             <div style={{ marginLeft: "40%" }}>
               <FormControl>
-                {/* <Select
+                <Select
                   labelId="service-select-label"
                   id="service-select"
                   label="Show OAS"
@@ -75,7 +75,7 @@ const OasModal = ({ openModal, handleCloseModal }) => {
                       {service}
                     </MenuItem>
                   ))}
-                </Select> */}
+                </Select>
               </FormControl>
             </div>
             <div style={{ cursor: "pointer" }}>
