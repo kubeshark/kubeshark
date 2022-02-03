@@ -1,5 +1,4 @@
 import { atom } from "recoil";
-import {Roles} from "./index";
 
 const loggedInUserStateAtom = atom({
     key: "loggedInUserState",
@@ -9,8 +8,7 @@ const loggedInUserStateAtom = atom({
             "workspace": {
                 "id": "",
                 "name": "",
-                "namespaces": [
-                ]
+                "namespaces": []
         }
     }
 });

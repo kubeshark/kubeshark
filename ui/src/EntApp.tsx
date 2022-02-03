@@ -9,14 +9,14 @@ import Api from './helpers/api';
 const api = Api.getInstance();
 
 const EntApp = () => {
-    const setUserRole = useSetRecoilState(loggedInUserStateAtom);
+    const setUserDetails = useSetRecoilState(loggedInUserStateAtom);
 
     useEffect(()=>{
         (async () => {
             const userDetails = await api.whoAmI();
-            setUserRole(userDetails);
+            setUserDetails(userDetails);
         })()
-    },[])
+    },[setUserDetails])
 
     return (
         <div className="mizuApp">

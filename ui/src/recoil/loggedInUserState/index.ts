@@ -2,8 +2,7 @@ import atom from "./atom";
 
 enum Roles {
     admin='admin',
-    user='user',
-    unAuthorise='unAuthorise'
+    user='user'
 }
 
 export {Roles};

@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import Checkbox from "./Checkbox"
 import Radio from "./Radio";
 import './style/SelectList.sass';
@@ -25,7 +25,6 @@ const SelectList: React.FC<Props> = ({items ,tableName,checkedValues=[],multiSel
 
     const toggleValue = (checkedKey) => {
         if (!multiSelect){
-            // unToggleAll();
             const newCheckedValues = [];
             newCheckedValues.push(checkedKey);
             setCheckedValues(newCheckedValues);
@@ -39,10 +38,6 @@ const SelectList: React.FC<Props> = ({items ,tableName,checkedValues=[],multiSel
                 newCheckedValues.push(checkedKey);   
             setCheckedValues(newCheckedValues);
         }
-    }
-
-    const unToggleAll = () => {
-        setCheckedValues([]);
     }
 
     const toggleAll = () => {

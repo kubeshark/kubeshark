@@ -10,7 +10,7 @@ interface Props {}
 
 const api = Api.getInstance();
 
-export const WorkspaceSettings : React.FC<Props> = ({}) => {
+export const WorkspaceSettings : React.FC<Props> = () => {
 
     const [workspacesRows, setWorkspacesRows] = useState([]);
     const cols : ColsType[] = [{field : "name",header:"Name"}];
@@ -49,7 +49,7 @@ export const WorkspaceSettings : React.FC<Props> = ({}) => {
     const onDeleteConfirmation = () => {
         (async() => {
             try{
-                const workspaceLeft = workspacesRows.filter(ws => ws.id != workspaceData.id);
+                const workspaceLeft = workspacesRows.filter(ws => ws.id !== workspaceData.id);
                 setWorkspacesRows(workspaceLeft);
                 await api.deleteWorkspace(workspaceData.id);
                 setIsOpenDeleteModal(false);

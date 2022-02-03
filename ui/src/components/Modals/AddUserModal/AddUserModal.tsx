@@ -43,7 +43,6 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
   const [editMode, setEditMode] = useState(isEditMode);
   const [invite, setInvite] = useState({sent:false,isSuceeded:false,link : null});
   const roles = [{key:"1",value:"admin"},{key:"2",value:"user"}]
-  const [isValidEmail, setIsValidEmail] = useState(true)
   const [isDisplayErrorMessage, setIsDisplayErrorMessage] = useState(false)
   const classes = useCommonStyles()
 
@@ -64,10 +63,7 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
             toast.error("Error finding workspaces")
         }
     })();
-
-    return () => {
-      setWorkspaces([])     
-    }
+    return () => setWorkspaces([]);
 },[])
 
   useEffect(()=> {
@@ -163,7 +159,6 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
 
   const onBlurEmail = (e) => {
     const isValid = fromService.isValidEmail(e.target.value)
-    setIsValidEmail(isValid)
     const isErrorDisplay = (!isValid && !!userDataModel?.username)
     setIsDisplayErrorMessage(isErrorDisplay)
   }

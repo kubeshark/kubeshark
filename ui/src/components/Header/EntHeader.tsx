@@ -8,8 +8,7 @@ import PopupState, {bindMenu, bindTrigger} from "material-ui-popup-state";
 import logoutIcon from '../assets/logout.png';
 import Api from "../../helpers/api";
 import {toast} from "react-toastify";
-import {useRecoilValue, useSetRecoilState} from "recoil";
-import entPageAtom, {Page} from "../../recoil/entPage";
+import { useRecoilValue, useSetRecoilState } from "recoil";
 import {useNavigate} from "react-router-dom";
 import {RouterRoutes} from "../../helpers/routes";
 import { SettingsModal } from "../SettingsModal/SettingModal";
@@ -26,7 +25,6 @@ interface EntHeaderProps {
 export const EntHeader: React.FC<EntHeaderProps> = ({isFirstLogin, setIsFirstLogin}) => {
     const navigate = useNavigate();
     const userState = useRecoilValue(loggedInUserStateAtom);
-    console.log(userState);
 
     const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 
@@ -59,10 +57,20 @@ export const EntHeader: React.FC<EntHeaderProps> = ({isFirstLogin, setIsFirstLog
 const ProfileButton = () => {
 
     const navigate = useNavigate();
+    const setUserState = useSetRecoilState(loggedInUserStateAtom);
 
     const logout = async (popupState) => {
         try {
             await api.logout();
+            setUserState({
+                "username": "",
+                "role": "",
+                "workspace": {
+                    "id": "",
+                    "name": "",
+                    "namespaces": []
+            }
+        });
             navigate(RouterRoutes.LOGIN);
         } catch (e) {
             toast.error("Something went wrong, please check the console");
