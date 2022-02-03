@@ -16,13 +16,11 @@ PCAPS="$PCAPS_DIR/*"
 for file in $PCAPS
 do
     echo "Dissecting $file"
-    pcap=$file timeout 3 sh -c 'GOGC=12800 NODE_NAME=dev ./agent/build/mizuagent -r $pcap --tap --api-server-address ws://localhost:8899/wsTapper'
+    pcap=$file timeout 5 sh -c 'GOGC=12800 NODE_NAME=dev ./agent/build/mizuagent -r $pcap --tap --api-server-address ws://localhost:8899/wsTapper'
 done
-
-sleep 5 && \
 
 python3 tests/test.py update && \
 
-sleep 30 && \
+sleep 5 && \
 
 kill -TERM -- -$PGID_MAIN

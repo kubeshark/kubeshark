@@ -87,6 +87,7 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.T
 		stream.id = factory.streamsMap.nextId()
 		for i, extension := range extensions {
 			counterPair := &api.CounterPair{
+				StreamId: stream.id,
 				Request:  0,
 				Response: 0,
 			}

@@ -112,7 +112,9 @@ if __name__ == "__main__":
 
     for data_group in suite.data_groups:
         entries = []
+        data_group.entries = sorted(data_group.entries, key=lambda x: (x.base['data']['timestamp']))
         for i, entry in enumerate(data_group.entries):
+            entry.base['data']['id'] = 0
             entries.append(jsonpickle.encode(entry.base))
         data_group.entries = entries
 
