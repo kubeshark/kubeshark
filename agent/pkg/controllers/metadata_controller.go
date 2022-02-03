@@ -3,8 +3,9 @@ package controllers
 import (
 	"net/http"
 
-	"github.com/gin-gonic/gin"
 	"github.com/up9inc/mizu/agent/pkg/version"
+
+	"github.com/gin-gonic/gin"
 	"github.com/up9inc/mizu/shared"
 )
 

@@ -20,18 +20,12 @@
 						}
 					}
 				},
-				"name": {
-					"type": "object",
-					"properties": {
-						"first": {
-							"title": "First Name",
-							"type": "string"
-						},
-						"last": {
-							"title": "Last Name",
-							"type": "string"
-						}
-					}
+				"inviteStatus": {
+					"type": "string",
+					"enum": [
+						"pending",
+						"active"
+					]
 				}
 			},
 			"required": [

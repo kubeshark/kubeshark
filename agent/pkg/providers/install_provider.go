@@ -5,6 +5,8 @@ import (
 	"errors"
 
 	"github.com/up9inc/mizu/agent/pkg/config"
+	"github.com/up9inc/mizu/agent/pkg/providers/user"
+	"github.com/up9inc/mizu/agent/pkg/providers/userRoles"
 
 	"github.com/up9inc/mizu/shared/logger"
 
@@ -18,7 +20,7 @@ func IsInstallNeeded() (bool, error) {
 		return false, nil
 	}
 
-	if anyUserExists, err := AnyUserExists(context.Background()); err != nil {
+	if anyUserExists, err := user.AnyUserExists(context.Background()); err != nil {
 		return false, err
 	} else {
 		return !anyUserExists, nil
@@ -32,16 +34,16 @@ func CreateAdminUser(password string, ctx context.Context) (token *string, err e
 		return nil, errors.New("The admin user has already been created"), nil
 	}
 
-	token, identityId, err, formErrors := RegisterUser(AdminUsername, password, ctx)
+	token, identityId, err, formErrors := user.RegisterUser(AdminUsername, password, user.AcceptedInviteStatus, ctx)
 	if err != nil {
 		return nil, err, formErrors
 	}
 
-	err = SetUserSystemRole(AdminUsername, AdminRole)
+	err = userRoles.SetUserSystemRole(AdminUsername, userRoles.AdminRole)
 
 	if err != nil {
 		//Delete the user to prevent a half-setup situation where admin user is created without admin privileges
-		if err := DeleteUser(identityId, ctx); err != nil {
+		if err := user.DeleteUser(identityId, ctx); err != nil {
 			logger.Log.Error(err)
 		}
 

@@ -4,11 +4,11 @@ dsn: sqlite:///app/data/kratos.sqlite?_fk=true
 
 serve:
   public:
-    base_url: http://127.0.0.1:4433/
+    base_url: http://0.0.0.0:4433/
     cors:
       enabled: true
   admin:
-    base_url: http://kratos:4434/
+    base_url: http://0.0.0.0:4434/
 
 selfservice:
   default_browser_return_url: http://127.0.0.1:4455/
@@ -18,6 +18,10 @@ selfservice:
   methods:
     password:
       enabled: true
+      config:
+        min_password_length: 4
+        identifier_similarity_check_enabled: false
+        haveibeenpwned_enabled: false
 
   flows:
     error:

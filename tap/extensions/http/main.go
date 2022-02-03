@@ -181,7 +181,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 	return nil
 }
 
-func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, resolvedDestination string) *api.Entry {
+func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, resolvedDestination string, namespace string) *api.Entry {
 	var host, authority, path string
 
 	request := item.Pair.Request.Payload.(map[string]interface{})
@@ -290,6 +290,7 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 		Summary:     path,
 		IsOutgoing:  item.ConnectionInfo.IsOutgoing,
 		HTTPPair:    string(httpPair),
+		Namespace:   namespace,
 	}
 }
 

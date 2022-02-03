@@ -15,20 +15,19 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/up9inc/mizu/agent/pkg/api"
+	"github.com/up9inc/mizu/agent/pkg/config"
+	"github.com/up9inc/mizu/agent/pkg/controllers"
+	"github.com/up9inc/mizu/agent/pkg/elastic"
 	"github.com/up9inc/mizu/agent/pkg/middlewares"
 	"github.com/up9inc/mizu/agent/pkg/models"
 	"github.com/up9inc/mizu/agent/pkg/oas"
+	"github.com/up9inc/mizu/agent/pkg/providers/database"
+	"github.com/up9inc/mizu/agent/pkg/providers/tapConfig"
 	"github.com/up9inc/mizu/agent/pkg/routes"
 	"github.com/up9inc/mizu/agent/pkg/servicemap"
 	"github.com/up9inc/mizu/agent/pkg/up9"
 	"github.com/up9inc/mizu/agent/pkg/utils"
-
-	"github.com/up9inc/mizu/agent/pkg/elastic"
-
-	"github.com/up9inc/mizu/agent/pkg/controllers"
-
-	"github.com/up9inc/mizu/agent/pkg/api"
-	"github.com/up9inc/mizu/agent/pkg/config"
 
 	v1 "k8s.io/api/core/v1"
 
@@ -76,6 +75,7 @@ func main() {
 		logger.Log.Fatalf("Error loading config file %v", err)
 	}
 	loadExtensions()
+	database.InitializeApplicationDatabase()
 
 	if !*tapperMode && !*apiServerMode && !*standaloneMode && !*harsReaderMode {
 		panic("One of the flags --tap, --api or --standalone or --hars-read must be provided")
@@ -253,6 +253,9 @@ func hostApi(socketHarOutputChannel chan<- *tapApi.OutputChannelItem) {
 
 	var staticFolder string
 	if config.Config.StandaloneMode {
+		if err := tapConfig.SyncTappingConfigWithWorkspaceNamespaces(); err != nil {
+			logger.Log.Errorf("Error while syncing tapping config: %v", err)
+		}
 		staticFolder = "./site-standalone"
 	} else {
 		staticFolder = "./site"
@@ -273,9 +276,10 @@ func hostApi(socketHarOutputChannel chan<- *tapApi.OutputChannelItem) {
 	api.WebSocketRoutes(app, &eventHandlers, startTime)
 
 	if config.Config.StandaloneMode {
-		routes.ConfigRoutes(app)
 		routes.UserRoutes(app)
 		routes.InstallRoutes(app)
+		routes.WorkspaceRoutes(app)
+		routes.KubernetesRoutes(app)
 	}
 	if config.Config.OAS {
 		routes.OASRoutes(app)

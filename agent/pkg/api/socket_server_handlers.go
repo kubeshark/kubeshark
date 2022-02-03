@@ -16,7 +16,7 @@ import (
 	"github.com/up9inc/mizu/shared/logger"
 )
 
-var browserClientSocketUUIDs = make([]int, 0)
+var browserClientSocketUUIDToTopic = make(map[int]string)
 var socketListLock = sync.Mutex{}
 
 type RoutesEventHandlers struct {
@@ -28,14 +28,14 @@ func init() {
 	go up9.UpdateAnalyzeStatus(BroadcastToBrowserClients)
 }
 
-func (h *RoutesEventHandlers) WebSocketConnect(socketId int, isTapper bool) {
+func (h *RoutesEventHandlers) WebSocketConnect(socketId int, isTapper bool, topic string) {
 	if isTapper {
 		logger.Log.Infof("Websocket event - Tapper connected, socket ID: %d", socketId)
 		tappers.Connected()
 	} else {
 		logger.Log.Infof("Websocket event - Browser socket connected, socket ID: %d", socketId)
 		socketListLock.Lock()
-		browserClientSocketUUIDs = append(browserClientSocketUUIDs, socketId)
+		browserClientSocketUUIDToTopic[socketId] = topic
 		socketListLock.Unlock()
 	}
 }
@@ -47,18 +47,32 @@ func (h *RoutesEventHandlers) WebSocketDisconnect(socketId int, isTapper bool) {
 	} else {
 		logger.Log.Infof("Websocket event - Browser socket disconnected, socket ID:  %d", socketId)
 		socketListLock.Lock()
-		removeSocketUUIDFromBrowserSlice(socketId)
+		delete(browserClientSocketUUIDToTopic, socketId)
 		socketListLock.Unlock()
 	}
 }
 
 func BroadcastToBrowserClients(message []byte) {
-	for _, socketId := range browserClientSocketUUIDs {
-		go func(socketId int) {
-			if err := SendToSocket(socketId, message); err != nil {
-				logger.Log.Error(err)
-			}
-		}(socketId)
+	BroadcastToBrowserClientsByTopic(message, nil)
+}
+
+func BroadcastToBrowserClientsByTopic(message []byte, topic *string) {
+	var t string
+	if topic == nil {
+		t = "nil"
+	} else {
+		t = *topic
+	}
+
+	logger.Log.Infof("Broadcasting message %s to browser clients of topic %s", string(message), t)
+	for socketId, socketTopic := range browserClientSocketUUIDToTopic {
+		if topic == nil || socketTopic == *topic {
+			go func(socketId int) {
+				if err := SendToSocket(socketId, message); err != nil {
+					logger.Log.Error(err)
+				}
+			}(socketId)
+		}
 	}
 }
 
@@ -81,6 +95,7 @@ func (h *RoutesEventHandlers) WebSocketMessage(_ int, message []byte) {
 		case shared.WebSocketMessageTypeUpdateStatus:
 			var statusMessage shared.WebSocketStatusMessage
 			err := json.Unmarshal(message, &statusMessage)
+			logger.Log.Infof("received message of type %s", socketMessageBase.MessageType)
 			if err != nil {
 				logger.Log.Infof("Could not unmarshal message of message type %s %v", socketMessageBase.MessageType, err)
 			} else {
@@ -101,9 +116,9 @@ func (h *RoutesEventHandlers) WebSocketMessage(_ int, message []byte) {
 }
 
 func handleTLSLink(outboundLinkMessage models.WebsocketOutboundLinkMessage) {
-	resolvedName := k8sResolver.Resolve(outboundLinkMessage.Data.DstIP)
-	if resolvedName != "" {
-		outboundLinkMessage.Data.DstIP = resolvedName
+	resolvedNameObject := k8sResolver.Resolve(outboundLinkMessage.Data.DstIP)
+	if resolvedNameObject != nil {
+		outboundLinkMessage.Data.DstIP = resolvedNameObject.FullAddress
 	} else if outboundLinkMessage.Data.SuggestedResolvedName != "" {
 		outboundLinkMessage.Data.DstIP = outboundLinkMessage.Data.SuggestedResolvedName
 	}
@@ -121,14 +136,4 @@ func handleTLSLink(outboundLinkMessage models.WebsocketOutboundLinkMessage) {
 		logger.Log.Errorf("Broadcasting outboundlink message %s", string(marshaledMessage))
 		BroadcastToBrowserClients(marshaledMessage)
 	}
-}
-
-func removeSocketUUIDFromBrowserSlice(uuidToRemove int) {
-	newUUIDSlice := make([]int, 0, len(browserClientSocketUUIDs))
-	for _, uuid := range browserClientSocketUUIDs {
-		if uuid != uuidToRemove {
-			newUUIDSlice = append(newUUIDSlice, uuid)
-		}
-	}
-	browserClientSocketUUIDs = newUUIDSlice
 }

@@ -2,7 +2,8 @@ package middlewares
 
 import (
 	"github.com/up9inc/mizu/agent/pkg/config"
-	"github.com/up9inc/mizu/agent/pkg/providers"
+	"github.com/up9inc/mizu/agent/pkg/providers/user"
+	"github.com/up9inc/mizu/agent/pkg/providers/userRoles"
 
 	"github.com/gin-gonic/gin"
 	ory "github.com/ory/kratos-client-go"
@@ -40,11 +41,11 @@ func RequiresAdmin() gin.HandlerFunc {
 		traits := session.Identity.Traits.(map[string]interface{})
 		username := traits["username"].(string)
 
-		isAdmin, err := providers.CheckIfUserHasSystemRole(username, providers.AdminRole)
+		userRole, err := userRoles.GetUserSystemRole(username)
 		if err != nil {
 			logger.Log.Errorf("error checking user role %v", err)
 			c.AbortWithStatusJSON(403, gin.H{"error": "unknown auth error occured"})
-		} else if !isAdmin {
+		} else if userRole != userRoles.AdminRole {
 			logger.Log.Warningf("user %s attempted to call an admin only endpoint with insufficient privileges", username)
 			c.AbortWithStatusJSON(403, gin.H{"error": "unauthorized"})
 		} else {
@@ -54,13 +55,16 @@ func RequiresAdmin() gin.HandlerFunc {
 }
 
 func verifyKratosSessionForRequest(c *gin.Context) *ory.Session {
-	token := c.GetHeader("x-session-token")
+	token := c.GetHeader(user.SessionTokenHeader)
 	if token == "" {
-		c.AbortWithStatusJSON(401, gin.H{"error": "token header is empty"})
-		return nil
+		token = c.Query("sessionToken")
+		if token == "" {
+			c.AbortWithStatusJSON(401, gin.H{"error": "this request has no token"})
+			return nil
+		}
 	}
 
-	if session, err := providers.VerifyToken(token, c.Request.Context()); err != nil {
+	if session, err := user.VerifyToken(token, c.Request.Context()); err != nil {
 		logger.Log.Errorf("error verifying token %v", err)
 		c.AbortWithStatusJSON(401, gin.H{"error": "unknown auth error occured"})
 		return nil

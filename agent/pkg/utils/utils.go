@@ -104,3 +104,14 @@ func UniqueStringSlice(s []string) []string {
 
 	return uniqueSlice
 }
+
+func FilterTapStatusByNamespaces(tappedPodStatus []shared.TappedPodStatus, namespaces []string) []shared.TappedPodStatus {
+	filteredTappedPodStatus := make([]shared.TappedPodStatus, 0)
+	for _, tappedPod := range tappedPodStatus {
+		if shared.Contains(namespaces, tappedPod.Namespace) {
+			filteredTappedPodStatus = append(filteredTappedPodStatus, tappedPod)
+		}
+	}
+
+	return filteredTappedPodStatus
+}

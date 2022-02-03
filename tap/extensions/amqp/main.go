@@ -212,7 +212,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 	}
 }
 
-func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, resolvedDestination string) *api.Entry {
+func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, resolvedDestination string, namespace string) *api.Entry {
 	request := item.Pair.Request.Payload.(map[string]interface{})
 	reqDetails := request["details"].(map[string]interface{})
 
@@ -263,6 +263,7 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 		ElapsedTime: 0,
 		Summary:     summary,
 		IsOutgoing:  item.ConnectionInfo.IsOutgoing,
+		Namespace:   namespace,
 	}
 
 }

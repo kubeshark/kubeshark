@@ -15,6 +15,7 @@ require (
 	github.com/go-playground/validator/v10 v10.5.0
 	github.com/google/uuid v1.1.2
 	github.com/gorilla/websocket v1.4.2
+	github.com/mattn/go-sqlite3 v1.14.10 // indirect
 	github.com/nav-inc/datetime v0.1.3
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/orcaman/concurrent-map v0.0.0-20210106121528-16402b402231
@@ -32,6 +33,8 @@ require (
 	github.com/up9inc/mizu/tap/extensions/redis v0.0.0
 	github.com/wI2L/jsondiff v0.1.1
 	github.com/yalp/jsonpath v0.0.0-20180802001716-5cc68e5049a0
+	gorm.io/driver/sqlite v1.2.6 // indirect
+	gorm.io/gorm v1.22.5 // indirect
 	k8s.io/api v0.21.2
 	k8s.io/apimachinery v0.21.2
 	k8s.io/client-go v0.21.2

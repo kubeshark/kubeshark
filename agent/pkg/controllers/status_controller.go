@@ -1,19 +1,23 @@
 package controllers
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 
-	"github.com/gin-gonic/gin"
 	"github.com/up9inc/mizu/agent/pkg/api"
 	"github.com/up9inc/mizu/agent/pkg/holder"
 	"github.com/up9inc/mizu/agent/pkg/providers"
 	"github.com/up9inc/mizu/agent/pkg/providers/tappedPods"
 	"github.com/up9inc/mizu/agent/pkg/providers/tappers"
+	"github.com/up9inc/mizu/agent/pkg/providers/user"
 	"github.com/up9inc/mizu/agent/pkg/up9"
+	"github.com/up9inc/mizu/agent/pkg/utils"
 	"github.com/up9inc/mizu/agent/pkg/validation"
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/logger"
+
+	"github.com/gin-gonic/gin"
 )
 
 func HealthCheck(c *gin.Context) {
@@ -86,7 +90,13 @@ func GetAuthStatus(c *gin.Context) {
 
 func GetTappingStatus(c *gin.Context) {
 	tappedPodsStatus := tappedPods.GetTappedPodsStatus()
-	c.JSON(http.StatusOK, tappedPodsStatus)
+	var err error
+	if tappedPodsStatus, err = filterTapStatusForUser(tappedPodsStatus, c.GetHeader(user.SessionTokenHeader), c.Request.Context()); err != nil {
+		logger.Log.Errorf("Could not filter tapped pods status for user: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "unknown error occured"})
+	} else {
+		c.JSON(http.StatusOK, tappedPodsStatus)
+	}
 }
 
 func AnalyzeInformation(c *gin.Context) {
@@ -103,4 +113,17 @@ func GetRecentTLSLinks(c *gin.Context) {
 
 func GetCurrentResolvingInformation(c *gin.Context) {
 	c.JSON(http.StatusOK, holder.GetResolver().GetMap())
+}
+
+func filterTapStatusForUser(tappedPodStatus []shared.TappedPodStatus, sessionToken string, ctx context.Context) ([]shared.TappedPodStatus, error) {
+	user, err := user.WhoAmI(sessionToken, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if user.Workspace == nil {
+		return make([]shared.TappedPodStatus, 0), nil
+	}
+
+	return utils.FilterTapStatusByNamespaces(tappedPodStatus, user.Workspace.Namespaces), nil
 }

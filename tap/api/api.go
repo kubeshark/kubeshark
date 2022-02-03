@@ -95,7 +95,7 @@ type Dissector interface {
 	Register(*Extension)
 	Ping()
 	Dissect(b *bufio.Reader, isClient bool, tcpID *TcpID, counterPair *CounterPair, superTimer *SuperTimer, superIdentifier *SuperIdentifier, emitter Emitter, options *TrafficFilteringOptions) error
-	Analyze(item *OutputChannelItem, resolvedSource string, resolvedDestination string) *Entry
+	Analyze(item *OutputChannelItem, resolvedSource string, resolvedDestination string, namespace string) *Entry
 	Represent(request map[string]interface{}, response map[string]interface{}) (object []byte, bodySize int64, err error)
 	Macros() map[string]string
 }
@@ -136,6 +136,7 @@ type Entry struct {
 	ContractResponseReason string                 `json:"contractResponseReason,omitempty"`
 	ContractContent        string                 `json:"contractContent,omitempty"`
 	HTTPPair               string                 `json:"httpPair,omitempty"`
+	Namespace              string                 `json:"namespace,omitempty"`
 }
 
 type EntryWrapper struct {

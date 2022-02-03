@@ -1,13 +1,20 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"sync"
 	"time"
 
+	"github.com/up9inc/mizu/agent/pkg/config"
+	"github.com/up9inc/mizu/agent/pkg/middlewares"
 	"github.com/up9inc/mizu/agent/pkg/models"
+	"github.com/up9inc/mizu/agent/pkg/providers/user"
+	"github.com/up9inc/mizu/agent/pkg/providers/userRoles"
+	"github.com/up9inc/mizu/agent/pkg/providers/workspace"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -18,7 +25,7 @@ import (
 )
 
 type EventHandlers interface {
-	WebSocketConnect(socketId int, isTapper bool)
+	WebSocketConnect(socketId int, isTapper bool, topic string)
 	WebSocketDisconnect(socketId int, isTapper bool)
 	WebSocketMessage(socketId int, message []byte)
 }
@@ -45,7 +52,7 @@ func init() {
 }
 
 func WebSocketRoutes(app *gin.Engine, eventHandlers EventHandlers, startTime int64) {
-	app.GET("/ws", func(c *gin.Context) {
+	app.GET("/ws", middlewares.RequiresAuth(), func(c *gin.Context) {
 		websocketHandler(c.Writer, c.Request, eventHandlers, false, startTime)
 	})
 
@@ -71,9 +78,24 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 
 	var connection *basenine.Connection
 	var isQuerySet bool
+	var namespaceFilter []string
+	var socketTopic string
 
 	// `!isTapper` means it's a connection from the web UI
 	if !isTapper {
+		if config.Config.StandaloneMode {
+			sessionToken := r.URL.Query().Get("sessionToken")
+			workspaceOverride := r.URL.Query().Get("workspaceOverride")
+
+			var workspaceId string
+			if namespaceFilter, workspaceId, err = getNamespaceListForUserWorkspace(sessionToken, workspaceOverride, r.Context()); err != nil {
+				logger.Log.Errorf("Failed to get namespace filter for user: %v", err)
+				return
+			}
+
+			socketTopic = workspaceId
+		}
+
 		connection, err = basenine.NewConnection(shared.BasenineHost, shared.BaseninePort)
 		if err != nil {
 			panic(err)
@@ -90,7 +112,7 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 		connection.Close()
 	}()
 
-	eventHandlers.WebSocketConnect(socketId, isTapper)
+	eventHandlers.WebSocketConnect(socketId, isTapper, socketTopic)
 
 	startTimeBytes, _ := models.CreateWebsocketStartTimeMessage(startTime)
 
@@ -138,6 +160,12 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 					var entry *tapApi.Entry
 					err = json.Unmarshal(bytes, &entry)
 
+					if namespaceFilter != nil {
+						if !shared.Contains(namespaceFilter, entry.Namespace) {
+							continue
+						}
+					}
+
 					base := tapApi.Summarize(entry)
 
 					baseEntryBytes, _ := models.CreateBaseEntryWebSocketMessage(base)
@@ -176,6 +204,32 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 			eventHandlers.WebSocketMessage(socketId, msg)
 		}
 	}
+}
+
+func getNamespaceListForUserWorkspace(token string, workspaceOverride string, ctx context.Context) (namespaces []string, workspaceId string, err error) {
+	user, err := user.WhoAmI(token, ctx)
+	if err != nil {
+		return nil, "", err
+	}
+	workspaceObject := user.Workspace
+	if workspaceOverride != "" {
+		if user.SystemRole != userRoles.AdminRole {
+			return nil, "", errors.New("only admins can use workspaceOverride")
+		}
+		if workspaceObject, err = workspace.GetWorkspace(workspaceOverride); err != nil {
+			return nil, "", err
+		}
+	}
+
+	if workspaceObject == nil {
+		return nil, "", errors.New("workspace not found")
+	}
+
+	if workspaceObject.Namespaces == nil {
+		return make([]string, 0), workspaceObject.Id, nil
+	}
+
+	return workspaceObject.Namespaces, workspaceObject.Id, nil
 }
 
 func socketCleanup(socketId int, socketConnection *SocketConnection) {

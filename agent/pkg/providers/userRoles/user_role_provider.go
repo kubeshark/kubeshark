@@ -1,4 +1,4 @@
-package providers
+package userRoles
 
 /*
 This provider abstracts keto role management down to what we need for mizu
@@ -7,13 +7,14 @@ Keto, in the configuration we use it, is basically a tuple database. Each tuple 
 
 namespace - used to organize tuples into groups - we currently use "system" for defining admins and "workspaces" for defining workspace permissions
 objects - represents something one can have permissions to (files, mizu workspaces etc)
-relation - represents the permission (viewer, editor, owner etc) - we currently use only viewer and admin
+relation - represents the permission (viewer, editor, owner etc) - we currently use only user and admin
 subject - represents the user or group that has the permission - we currently use usernames
 
 more on keto here: https://www.ory.sh/keto/docs/
 */
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/up9inc/mizu/agent/pkg/utils"
@@ -38,43 +39,70 @@ var (
 
 	systemObject = "system"
 
-	AdminRole  = "admin"
-	ViewerRole = "viewer"
+	AdminRole = "admin"
+	UserRole  = "user"
 )
 
-func GetUserSystemRoles(username string) ([]string, error) {
-	return getObjectRelationsForSubjectID(systemRoleNamespace, systemObject, username)
+func GetUserSystemRole(username string) (string, error) {
+	if relations, err := getObjectRelationsForSubjectID(systemRoleNamespace, &systemObject, username); err != nil {
+		return "", err
+	} else if len(relations) == 0 {
+		return "", nil
+	} else {
+		return relations[0], nil
+	}
 }
 
-func CheckIfUserHasSystemRole(username string, role string) (bool, error) {
-	systemRoles, err := GetUserSystemRoles(username)
-	if err != nil {
-		return false, err
-	}
-
-	for _, systemRole := range systemRoles {
-		if systemRole == role {
-			return true, nil
+func GetUserWorkspaceId(username string) (string, error) {
+	if relations, err := queryRelationTuples(&workspacesRoleNamespace, nil, &username, nil); err != nil {
+		return "", err
+	} else if len(relations) == 0 {
+		return "", nil
+	} else {
+		workspaces := make([]string, 0)
+		for _, relation := range relations {
+			workspaces = append(workspaces, *relation.Object)
 		}
+		if len(workspaces) > 1 {
+			return "", errors.New(fmt.Sprintf("User %s has more than one workspace: %v", username, workspaces))
+		}
+		return workspaces[0], nil
 	}
-
-	return false, nil
 }
 
-func GetUserWorkspaceRole(username string, workspace string) ([]string, error) {
-	return getObjectRelationsForSubjectID(workspacesRoleNamespace, workspace, username)
+func GetUserWorkspaceRole(username string, workspaceId string) ([]string, error) {
+	return getObjectRelationsForSubjectID(workspacesRoleNamespace, &workspaceId, username)
 }
 
-func SetUserWorkspaceRole(username string, workspace string, role string) error {
-	return createObjectRelationForSubjectID(workspacesRoleNamespace, workspace, username, role)
+func SetUserWorkspaceRole(username string, workspaceId string, role string) error {
+	//enforce one workspace role per user
+	if err := deleteAllNamespacedRelationsForSubjectID(workspacesRoleNamespace, username); err != nil {
+		return err
+	}
+	return createObjectRelationForSubjectID(workspacesRoleNamespace, workspaceId, username, role)
 }
 
 func SetUserSystemRole(username string, role string) error {
+	//enforce one system role per user
+	if err := deleteAllNamespacedRelationsForSubjectID(systemRoleNamespace, username); err != nil {
+		return err
+	}
 	return createObjectRelationForSubjectID(systemRoleNamespace, systemObject, username, role)
 }
 
-func DeleteAllUserWorkspaceRoles(username string) error {
+func DeleteAllUserRoles(username string) error {
+	if err := deleteAllNamespacedRelationsForSubjectID(systemRoleNamespace, username); err != nil {
+		return err
+	}
 	return deleteAllNamespacedRelationsForSubjectID(workspacesRoleNamespace, username)
+}
+
+func DeleteAllWorkspaceRolesByWorkspace(workspaceId string) error {
+	relationTuples, err := queryRelationTuples(&workspacesRoleNamespace, &workspaceId, nil, nil)
+	if err != nil {
+		return err
+	}
+	return deleteTuples(relationTuples)
 }
 
 func createObjectRelationForSubjectID(namespace string, object string, subjectID string, relation string) error {
@@ -96,8 +124,8 @@ func createObjectRelationForSubjectID(namespace string, object string, subjectID
 	return nil
 }
 
-func getObjectRelationsForSubjectID(namespace string, object string, subjectID string) ([]string, error) {
-	relationTuples, err := queryRelationTuples(&namespace, &object, &subjectID, nil)
+func getObjectRelationsForSubjectID(namespace string, object *string, subjectID string) ([]string, error) {
+	relationTuples, err := queryRelationTuples(&namespace, object, &subjectID, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -116,8 +144,11 @@ func deleteAllNamespacedRelationsForSubjectID(namespace string, subjectID string
 	if err != nil {
 		return err
 	}
+	return deleteTuples(relationTuples)
+}
 
-	for _, clientRelation := range relationTuples {
+func deleteTuples(tuples []*ketoModels.InternalRelationTuple) error {
+	for _, clientRelation := range tuples {
 		_, err := writeClient.Write.DeleteRelationTuple(ketoWrite.
 			NewDeleteRelationTupleParams().
 			WithNamespace(*clientRelation.Namespace).
@@ -129,7 +160,6 @@ func deleteAllNamespacedRelationsForSubjectID(namespace string, subjectID string
 			return err
 		}
 	}
-
 	return nil
 }
 
