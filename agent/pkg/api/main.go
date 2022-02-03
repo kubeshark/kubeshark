@@ -116,7 +116,12 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 		disableOASValidation = true
 	}
 
+	var itemCounter int64 = 0
+
+	// TODO: The issue is before this channel
 	for item := range outputItems {
+		itemCounter++
+		fmt.Printf("itemCounter: %v\n", itemCounter)
 		extension := extensionsMap[item.Protocol.Name]
 		resolvedSource, resolvedDestionation := resolveIP(item.ConnectionInfo)
 		mizuEntry := extension.Dissector.Analyze(item, resolvedSource, resolvedDestionation)
