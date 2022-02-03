@@ -40,8 +40,14 @@ func (p *tlsPoller) Poll(httpExtension *api.Extension,
 
 	for {
 		select {
-		case chunk := <-chunks:
-			p.handleTlsChunk(chunk, httpExtension, emitter, options)
+		case chunk, ok := <-chunks:
+			if !ok {
+				return
+			}
+
+			if err := p.handleTlsChunk(chunk, httpExtension, emitter, options); err != nil {
+				LogError(err)
+			}
 		case key := <-p.closedReaders:
 			delete(p.readers, key)
 		}
@@ -53,7 +59,6 @@ func (p *tlsPoller) handleTlsChunk(chunk *tlsChunk, httpExtension *api.Extension
 	ip, port, err := chunk.getAddress()
 
 	if err != nil {
-		logger.Log.Warningf("Error getting address from tls chunk %v", err)
 		return err
 	}
 
@@ -87,9 +92,19 @@ func (p *tlsPoller) startNewTlsReader(chunk *tlsChunk, ip net.IP, port uint16, k
 
 	isRequest := (chunk.isClient() && chunk.isWrite()) || (chunk.isServer() && chunk.isRead())
 	tcpid := buildTcpId(isRequest, ip, port)
-	b := bufio.NewReader(reader)
-	go httpExtension.Dissector.Dissect(b, isRequest, &tcpid, &api.CounterPair{}, &api.SuperTimer{}, &api.SuperIdentifier{}, emitter, options)
+
+	go dissect(httpExtension, reader, isRequest, &tcpid, emitter, options)
 	return reader
+}
+
+func dissect(httpExtension *api.Extension, reader *tlsReader, isRequest bool, tcpid *api.TcpID,
+	emitter api.Emitter, options *api.TrafficFilteringOptions) {
+	b := bufio.NewReader(reader)
+	err := httpExtension.Dissector.Dissect(b, isRequest, tcpid, &api.CounterPair{}, &api.SuperTimer{}, &api.SuperIdentifier{}, emitter, options)
+
+	if err != nil {
+		logger.Log.Warningf("Error dissecting TLS %v - %v", tcpid, err)
+	}
 }
 
 func (p *tlsPoller) closeReader(key string, r *tlsReader) {

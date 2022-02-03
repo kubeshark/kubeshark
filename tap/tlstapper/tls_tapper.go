@@ -43,18 +43,21 @@ func (t *TlsTapper) Init(bufferSize int) error {
 	return t.initChunksReader(bufferSize)
 }
 
-func (t *TlsTapper) pollPerf(chunks chan<- *tlsChunk) error {
+func (t *TlsTapper) pollPerf(chunks chan<- *tlsChunk) {
 	logger.Log.Infof("Start polling for tls events")
 
 	for {
 		record, err := t.reader.Read()
 
 		if err != nil {
+			close(chunks)
+
 			if errors.Is(err, perf.ErrClosed) {
-				return nil
+				return
 			}
 
-			return errors.Wrap(err, 0)
+			LogError(errors.Errorf("Error reading chunks from tls perf, aborting TLS! %v", err))
+			return
 		}
 
 		if record.LostSamples != 0 {
@@ -67,7 +70,8 @@ func (t *TlsTapper) pollPerf(chunks chan<- *tlsChunk) error {
 		var chunk tlsChunk
 
 		if err := binary.Read(buffer, binary.LittleEndian, &chunk); err != nil {
-			return errors.Errorf("Error parsing chunk %v", err)
+			LogError(errors.Errorf("Error parsing chunk %v", err))
+			continue
 		}
 
 		chunks <- &chunk
@@ -162,13 +166,11 @@ func (t *TlsTapper) tapPid(pid uint32, sslLibrary string) error {
 	return nil
 }
 
-func LogError(err error) error {
+func LogError(err error) {
 	switch err := err.(type) {
 	case *errors.Error:
 		logger.Log.Errorf("Error: %v", err.ErrorStack())
 	default:
 		logger.Log.Errorf("Error: %v", err)
 	}
-
-	return err
 }

@@ -242,23 +242,26 @@ func startPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem) 
 	logger.Log.Infof("AppStats: %v", diagnose.AppStats)
 }
 
-func startTlsTapper(httpExtension *api.Extension, outputItems chan *api.OutputChannelItem, options *api.TrafficFilteringOptions) (*tlstapper.TlsTapper, error) {
+func startTlsTapper(httpExtension *api.Extension, outputItems chan *api.OutputChannelItem, options *api.TrafficFilteringOptions) {
 	tls := tlstapper.TlsTapper{}
 
 	if err := tls.Init(os.Getpagesize() * 100); err != nil {
-		return nil, tlstapper.LogError(err)
+		tlstapper.LogError(err)
+		return
 	}
 
 	// A quick way to instrument libssl.so without PID filtering - used for debuging and troubleshooting
 	//
 	if os.Getenv("MIZU_GLOBAL_SSL_LIBRARY") != "" {
 		if err := tls.GlobalTap(os.Getenv("MIZU_GLOBAL_SSL_LIBRARY")); err != nil {
-			return nil, tlstapper.LogError(err)
+			tlstapper.LogError(err)
+			return
 		}
 	}
 
 	if err := tlstapper.UpdateTapTargets(&tls, &tapTargets, *procfs); err != nil {
-		return nil, tlstapper.LogError(err)
+		tlstapper.LogError(err)
+		return
 	}
 
 	var emitter api.Emitter = &api.Emitting{
@@ -268,6 +271,4 @@ func startTlsTapper(httpExtension *api.Extension, outputItems chan *api.OutputCh
 
 	poller := tlstapper.NewTlsPoller(&tls)
 	go poller.Poll(httpExtension, emitter, options)
-
-	return &tls, nil
 }

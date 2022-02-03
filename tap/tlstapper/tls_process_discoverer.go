@@ -24,7 +24,9 @@ func UpdateTapTargets(tls *TlsTapper, pods *[]v1.Pod, procfs string) error {
 	}
 
 	for _, pid := range containerPids {
-		tls.AddPid(procfs, pid)
+		if err := tls.AddPid(procfs, pid); err != nil {
+			LogError(err)
+		}
 	}
 
 	return nil
