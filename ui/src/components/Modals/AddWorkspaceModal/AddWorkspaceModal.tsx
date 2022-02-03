@@ -5,6 +5,7 @@ import ConfirmationModal from '../../UI/Modals/ConfirmationModal';
 import SelectList from '../../UI/SelectList';
 import './AddWorkspaceModal.sass'
 import { toast } from "react-toastify";
+import { TextField } from '@material-ui/core';
 
 export type WorkspaceData = {
     id:string;
@@ -99,8 +100,10 @@ const AddWorkspaceModal: FC<AddWorkspaceModalProp> = ({isOpen,onCloseModal, work
       <h3 className='comfirmation-modal__sub-section-header'>DETAILS</h3>
         <div className='comfirmation-modal__sub-section'>
           <div>
-            <input type="text" value={workspaceName ?? ""} className={classes.textField + " workspace__name"} placeholder={"Workspace Name"} 
-                  onChange={onWorkspaceNameChange}></input>
+            {/* <input type="text" value={workspaceName ?? ""} className={classes.textField + " workspace__name"} placeholder={"Workspace Name"} 
+                  onChange={onWorkspaceNameChange}></input> */}
+                   <TextField value={workspaceName ?? ""} className={"user__email"} size='small' label="Workspace Name" onChange={onWorkspaceNameChange}
+                              variant="outlined"/>
             </div>
             </div>
             <h3 className='comfirmation-modal__sub-section-header'>TAP SETTINGS</h3>     

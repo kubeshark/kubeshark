@@ -203,7 +203,7 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
 
     <ConfirmationModal isOpen={isOpen} onClose={onClose} onConfirm={onClose} 
                        title={`${editMode ? "Edit" : "Add"} User`} customActions={addUsermodalCustomActions}>
-
+ 
       <h3 className='comfirmation-modal__sub-section-header'>DETAILS</h3>
       <div className='comfirmation-modal__sub-section'>
       <div className='user__details'>
