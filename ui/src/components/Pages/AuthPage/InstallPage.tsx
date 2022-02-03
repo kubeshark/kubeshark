@@ -5,8 +5,6 @@ import Api, { FormValidationErrorType } from "../../../helpers/api";
 import { toast } from 'react-toastify';
 import LoadingOverlay from "../../LoadingOverlay";
 import { useCommonStyles } from "../../../helpers/commonStyle";
-import {useSetRecoilState} from "recoil";
-import entPageAtom, {Page} from "../../../recoil/entPage";
 import useKeyPress from "../../../hooks/useKeyPress"
 import shortcutsKeyboard from "../../../configs/shortcutsKeyboard"
 import { useNavigate, useParams } from "react-router-dom";
@@ -29,9 +27,6 @@ export const InstallPage: React.FC<InstallPageProps> = ({onFirstLogin}) => {
     const {inviteToken} = useParams()
     const navigate = useNavigate();
     
-    console.log("inviteToken : ",inviteToken)
-    const setEntPage = useSetRecoilState(entPageAtom);
-
     const onFormSubmit = async () => {
         if (password.length < 4) {
             toast.error("Password must be at least 4 characters long");

@@ -52,7 +52,7 @@ const AddWorkspaceModal: FC<AddWorkspaceModalProp> = ({isOpen,onCloseModal, work
         } finally {
         }
     })()
-}, [isOpen])
+}, [isOpen,onEdit,workspaceId])
 
   const onWorkspaceNameChange = (event) => {
     setWorkspaceName(event.target.value);
@@ -63,24 +63,24 @@ const AddWorkspaceModal: FC<AddWorkspaceModalProp> = ({isOpen,onCloseModal, work
   }
 
   const onConfirm = async () => {
-    try{
-      const workspaceData = {
-        name: workspaceName,
-        namespaces: checkedNamespacesKeys
+      try{
+        const workspaceData = {
+          name: workspaceName,
+          namespaces: checkedNamespacesKeys
+        }
+        if(onEdit){
+          await api.editWorkspace(workspaceId, workspaceData);
+          toast.success("Workspace Succesesfully Updated");
+        }
+        else{
+          await api.createWorkspace(workspaceData);
+          toast.success("Workspace Succesesfully Created ");
+        }
+        resetForm();
+        onCloseModal();   
+      } catch{
+        toast.error("Couldn't Create The Worksapce");
       }
-      if(onEdit){
-        await api.editWorkspace(workspaceId, workspaceData);
-        toast.success("Workspace Succesesfully Updated");
-      }
-      else{
-        await api.createWorkspace(workspaceData);
-        toast.success("Workspace Succesesfully Created ");
-      }
-      resetForm();
-      onCloseModal();   
-    } catch{
-      toast.error("Couldn't Creat The Worksapce");
-    }
   }
 
   const onClose = () => {
@@ -95,7 +95,7 @@ const AddWorkspaceModal: FC<AddWorkspaceModalProp> = ({isOpen,onCloseModal, work
   }
 
   return (<>
-    <ConfirmationModal isOpen={isOpen} onClose={onClose} onConfirm={onConfirm} title={title}>
+    <ConfirmationModal isOpen={isOpen} onClose={onClose} onConfirm={onConfirm} title={title} confirmButtonText={"add"} confirmDisabled={!isFormValid()}>
       <h3 className='comfirmation-modal__sub-section-header'>DETAILS</h3>
         <div className='comfirmation-modal__sub-section'>
           <div>

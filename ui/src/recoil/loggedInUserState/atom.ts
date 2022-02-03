@@ -9,8 +9,7 @@ const loggedInUserStateAtom = atom({
             "workspace": {
                 "id": "",
                 "name": "",
-                "namespaces": [
-                ]
+                "namespaces": []
         }
     }
 });
