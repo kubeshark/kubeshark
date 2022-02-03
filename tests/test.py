@@ -21,10 +21,10 @@ import requests
 
 HOST = 'localhost'
 PORT = '8899'
-WEBSOCKET_TIMEOUT = 3
+WEBSOCKET_TIMEOUT = 0.01
 ENTRIES_ENDPOINT = 'http://%s:%s/entries' % (HOST, PORT)
 WEBSOCKET_ENDPOINT = 'ws://%s:%s/ws' % (HOST, PORT)
-TOLERANCE = 5
+TOLERANCE = 10
 
 queries = [
     ('', False),
@@ -65,8 +65,13 @@ current_query = None # type: Union[None, Query]
 def on_message(ws, message):
     data = json.loads(message)
     if data['messageType'] == 'entry':
-        data['data'].pop('isOutgoing', None)
         current_query.ids.append(data['data']['id'])
+    elif data['messageType'] == 'queryMetadata':
+        if data['data']['leftOff'] == data['data']['total']:
+            def run(*args):
+                time.sleep(WEBSOCKET_TIMEOUT)
+                ws.close()
+            _thread.start_new_thread(run, ())
 
 def on_error(ws, error):
     print(error)
@@ -75,12 +80,7 @@ def on_close(ws, close_status_code, close_msg):
     print('WebSocket is closed.')
 
 def on_open(ws, query):
-    def run(*args):
-        ws.send(query) # query
-        time.sleep(WEBSOCKET_TIMEOUT)
-        ws.close()
-        print('thread terminating...')
-    _thread.start_new_thread(run, ())
+    ws.send(query) # query
 
 
 if __name__ == "__main__":
@@ -115,7 +115,7 @@ if __name__ == "__main__":
         serialized = jsonpickle.encode(suite)
 
         with open(suite_path, 'w') as outfile:
-            outfile.write(json.dumps(json.loads(serialized), indent=2))
+            outfile.write(json.dumps(json.loads(serialized), indent=2) + '\n')
 
         print("The test suite is saved into: %s" % suite_path)
     else:
