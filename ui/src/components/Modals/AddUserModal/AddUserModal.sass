@@ -42,16 +42,15 @@
     &__details
         display: flex;
         align-content: center;
-        align-items: center;
         justify-content: space-between;
 
 
         & .user__email
-            width : 300px
+            width: clamp(300px,60%,600px);
             box-sizing: border-box;
 
         & .user__role
-            width : 186px
+            width : clamp(186px,30%,230px)
 
 .search-workspace
     width: 186px

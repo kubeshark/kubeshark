@@ -43,6 +43,8 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
   const [editMode, setEditMode] = useState(isEditMode);
   const [invite, setInvite] = useState({sent:false,isSuceeded:false,link : null});
   const roles = [{key:"1",value:"admin"},{key:"2",value:"user"}]
+  const [isValidEmail, setIsValidEmail] = useState(true)
+  const [isDisplayErrorMessage, setIsDisplayErrorMessage] = useState(false)
   const classes = useCommonStyles()
 
   const [userDataModel, setUserData] = useState(userData as UserData)
@@ -54,18 +56,7 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
 
   useEffect(() => {
     (async () => {
-        try {
-          //   const workspacesList = [
-          //     {
-          //         "id": "f54b18ec-aa15-4b2c-a4d5-8eda17e44c93",
-          //         "name": "sock-shop"
-          //     },
-          //     {
-          //         "id": "c7ad9158-d840-46c0-b5ce-2487c013723f",
-          //         "name": "test"
-          //     }
-          // ]
-          
+        try {          
           const list = await api.getWorkspaces() 
           const workspacesList = list.map((obj) => {return {key:obj.id, value:obj.name,isChecked:false}})
           setWorkspaces(workspacesList)                         
@@ -91,10 +82,6 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
   })();
   },[isEditMode, userData])
 
-  // const onClose = () => {
-  //   setIsOpen(false)
-  // }
-
   const onClose = () => {
     onCloseModal()
     setUserData({} as UserData)
@@ -113,7 +100,6 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
   }
 
   const workspaceChange = (workspaces) => {
-    //setWorkspaces(newVal);
     const  data = {...userDataModel, workspaceId : workspaces.length ? workspaces[0] : ""}
     setUserData((prevState) => {return data});
   }
@@ -133,7 +119,7 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
   };
 
   const isFormDisabled = () : boolean => {
-    return !(Object.values(userDataModel).length >= 3) && Object.values(userDataModel).every(val => val !== null)
+    return !(userDataModel?.role && userDataModel?.username && userDataModel?.workspaceId)
   }
 
 
@@ -171,6 +157,13 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
     return (!invite.isSuceeded || !(invite.link && invite.sent)) 
   }
 
+  const onBlurEmail = (e) => {
+    const isValid = fromService.isValidEmail(e.target.value)
+    setIsValidEmail(isValid)
+    const isErrorDisplay = (!isValid && !!userDataModel?.username)
+    setIsDisplayErrorMessage(isErrorDisplay)
+  }
+
   const handleCopyinviteLink = (e) => {navigator.clipboard.writeText(invite.link)}
 
   const addUsermodalCustomActions = <>
@@ -193,7 +186,6 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
                                             disabled={isFormDisabled()}  
                                             endIcon={isLoading && <img src={spinner} alt="spinner"/>}
                                             startIcon={<span className='generate-link-button__icon'></span>}>
-                                              
                                               {"Generate Invite Link"}
                               </Button>}
            {!isEditMode &&  isShowInviteLink() &&  <Button style={{height: '100%',marginLeft:'20px'}} className={classes.button} size={"small"} onClick={onClose}>
@@ -216,35 +208,16 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
       <h3 className='comfirmation-modal__sub-section-header'>DETAILS</h3>
       <div className='comfirmation-modal__sub-section'>
       <div className='user__details'>
-        {/* <input type="text" value={userDataModel?.username ?? ""} className={classes.textField + " user__email"} 
-                placeholder={"User Email"} onChange={userNameChange} disabled={editMode}>
-        </input> */}
-      {/* <div className="">
-          <label htmlFor="input-user-name">User email</label>
-          <input id="input-user-name" type="text" value={userDataModel?.username ?? ""} className={classes.textField + " user__email"} 
-          placeholder={"User Email"} onChange={userNameChange} disabled={editMode}/>
-      </div> */}
-      <FormControl variant="outlined" size={"small"} className={"user__email"}> 
-          <InputLabel htmlFor="">User email</InputLabel>
-          <OutlinedInput type={'text'} onChange={userNameChange} disabled={editMode} value={userDataModel?.username ?? ""}  
-            label="User email"/>
-            {/* {!fromService.isValidEmail(userDataModel?.username) && <label>*Invalid email</label>} */}
-        </FormControl>
+        <TextField value={userDataModel?.username ?? ""} className={"user__email"} size='small' label="User email" onChange={userNameChange} onBlur={onBlurEmail}
+                   error={isDisplayErrorMessage} helperText={(isDisplayErrorMessage) ? "*Email is not valid" : ""} variant="outlined" disabled={editMode}/>
         
-              {/* <Controller name="role" control={control} rules={{ required: true }}
-        render={({ field }) =>    }
-      /> */}
 
 
   {/* className='user__role u-input-padding' */}
   {/* classes={{ select : 'u-input-padding' }}  */}
       <FormControl variant="outlined" className='user__role' size={"small"}>
         <InputLabel id="user-role-outlined-label">User role</InputLabel>
-        <Select
-          labelId="user-role-outlined-label"
-          id="demo-simple-select-outlined"
-          value={userDataModel.role ?? ""} onChange={userRoleChange}
-          label="User role">
+        <Select labelId="user-role-outlined-label" id="demo-simple-select-outlined" value={userDataModel.role ?? ""} onChange={userRoleChange} label="User role">
            {roles.map((role) => (
                 <MenuItem key={role.value} value={role.value}>
                   {Utils.capitalizeFirstLetter(role.value)}

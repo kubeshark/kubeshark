@@ -1,7 +1,5 @@
 import React, {useEffect, useState} from "react";
 import './style/Table.sass';
-import Delete from '@material-ui/icons/Delete';
-import Edit from '@material-ui/icons/Edit';
 import circleImg from '../assets/dotted-circle.svg';
 
 export interface ColsType {

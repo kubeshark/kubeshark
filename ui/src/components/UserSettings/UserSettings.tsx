@@ -24,7 +24,8 @@ export const UserSettings : React.FC<Props> = ({}) => {
 
     const [usersRows, setUserRows] = useState([]);
     const [userData,userUserData] = useState({} as UserData)
-    const cols : ColsType[] = [{field : "username",header:"User", width: '35%'},
+    const cols : ColsType[] = [{field : "username",header:"User", width: '30%'},
+                               {field : "workspace",header:"Worksapce", width: '20%'},
                                {field : "role",header:"Role",mapValue : (val) => Utils.capitalizeFirstLetter(val)},
                                {field : "status",header:"Status",getCellClassName : (field, val) =>{
                                    return val === InviteStatus.active ? "status--active" : "status--pending"
@@ -35,12 +36,10 @@ export const UserSettings : React.FC<Props> = ({}) => {
 
     const getUserList =         (async () => {
         try {
-            // let users = [{username:"asd",role:"Admin",status:"Active",userId : "1"},
-            //                {username:"asdasdasdasdasdasd",role:"User",status:"Active",userId : "2"}]
             let users  = await api.getUsers()
             const mappedUsers = users
             .map((user) => {
-                return {...user,status: Utils.capitalizeFirstLetter(user.status), role: user.role}
+                return {...user,status: Utils.capitalizeFirstLetter(user.status), role: user.role, workspace : user?.workspace?.name}
             })
             setUserRows(mappedUsers)                                
         } catch (e) {
@@ -113,14 +112,5 @@ export const UserSettings : React.FC<Props> = ({}) => {
                            confirmButtonColor="#DB2156">
             <p>Are you sure you want to delete this user?</p>
         </ConfirmationModal>
-        {/* <Snackbar open={alert.open} classes={{root: "alert--right"}}>
-        <MuiAlert classes={{filledWarning: 'customWarningStyle'}} elevation={6} variant="filled"
-                  onClose={() => setAlert({...alert,open:false})} severity={"success"}>
-                    User has been added
-        </MuiAlert>
-    </Snackbar> */}
-        {/* <SettingsModal isOpen={false} onClose={function (): void {
-            throw new Error("Function not implemented.");
-        } } isFirstLogin={false}></SettingsModal> */}
     </>);
 }
