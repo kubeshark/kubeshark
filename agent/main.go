@@ -399,6 +399,13 @@ func pipeTapChannelToSocket(connection *websocket.Conn, messageDataChannel <-cha
 			}
 			continue
 		}
+
+		// TODO: Don't look up everytime
+		_, present := os.LookupEnv("MIZU_TEST")
+		if present {
+			fmt.Printf("Exiting because MIZU_TEST is set!\n")
+			os.Exit(0)
+		}
 	}
 }
 

@@ -62,6 +62,7 @@ current_data_group = None # type: List[DataGroup]
 def on_message(ws, message):
     data = json.loads(message)
     if data['messageType'] == 'entry':
+        data['data'].pop('isOutgoing', None)
         entry = Entry(_id=data['data']['id'], base=data)
         current_data_group.entries.append(entry)
 

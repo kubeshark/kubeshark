@@ -16,8 +16,12 @@ PCAPS="$PCAPS_DIR/*"
 for file in $PCAPS
 do
     echo "Dissecting $file"
-    pcap=$file setsid sh -c 'MIZU_TEST=1 GOGC=12800 NODE_NAME=dev ./agent/build/mizuagent -r $pcap --tap --api-server-address ws://localhost:8899/wsTapper' && \
-    sleep 0.1
+    pcap=$file timeout 5 sh -c 'MIZU_TEST=1 GOGC=12800 NODE_NAME=dev ./agent/build/mizuagent -r $pcap --tap --api-server-address ws://localhost:8899/wsTapper'
+    exit_status=$?
+    if [[ $exit_status -eq 124 ]]; then
+        echo "Tapper timed out. Removing $file"
+        rm $file
+    fi
 done
 
 sleep 30 && \
