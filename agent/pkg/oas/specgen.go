@@ -610,6 +610,10 @@ func getReqCtype(req *har.Request) (ctype string, params map[string]string) {
 		}
 	}
 
+	if ctype == "" {
+		return "", map[string]string{}
+	}
+
 	mediaType, params, err := mime.ParseMediaType(ctype)
 	if err != nil {
 		logger.Log.Errorf("Cannot parse Content-Type header %q: %v", ctype, err)
