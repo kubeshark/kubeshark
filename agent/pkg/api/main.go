@@ -9,6 +9,7 @@ import (
 	"path"
 	"sort"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"github.com/up9inc/mizu/agent/pkg/elastic"
@@ -116,11 +117,11 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 		disableOASValidation = true
 	}
 
-	var itemCounter int64 = 0
+	var itemCounter uint64
 
 	// TODO: The issue is before this channel [API server]
 	for item := range outputItems {
-		itemCounter++
+		atomic.AddUint64(&itemCounter, 1)
 		fmt.Printf("itemCounter: %v\n", itemCounter)
 		extension := extensionsMap[item.Protocol.Name]
 		resolvedSource, resolvedDestionation := resolveIP(item.ConnectionInfo)
