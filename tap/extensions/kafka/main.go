@@ -47,13 +47,13 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 		}
 
 		if isClient {
-			_, _, err := ReadRequest(b, tcpID, superTimer)
+			_, _, err := ReadRequest(b, tcpID, counterPair, superTimer)
 			if err != nil {
 				return err
 			}
 			superIdentifier.Protocol = &_protocol
 		} else {
-			err := ReadResponse(b, tcpID, superTimer, emitter)
+			err := ReadResponse(b, tcpID, counterPair, superTimer, emitter)
 			if err != nil {
 				return err
 			}

@@ -130,7 +130,8 @@ func handleHTTP1ClientStream(b *bufio.Reader, tcpID *api.TcpID, counterPair *api
 	req.Body = io.NopCloser(bytes.NewBuffer(body)) // rewind
 
 	ident := fmt.Sprintf(
-		"%s->%s %s->%s %d %s",
+		"%d_%s:%s_%s:%s_%d_%s",
+		counterPair.StreamId,
 		tcpID.SrcIP,
 		tcpID.DstIP,
 		tcpID.SrcPort,
@@ -173,7 +174,8 @@ func handleHTTP1ServerStream(b *bufio.Reader, tcpID *api.TcpID, counterPair *api
 	res.Body = io.NopCloser(bytes.NewBuffer(body)) // rewind
 
 	ident := fmt.Sprintf(
-		"%s->%s %s->%s %d %s",
+		"%d_%s:%s_%s:%s_%d_%s",
+		counterPair.StreamId,
 		tcpID.DstIP,
 		tcpID.SrcIP,
 		tcpID.DstPort,
