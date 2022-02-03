@@ -21,50 +21,44 @@ import requests
 
 HOST = 'localhost'
 PORT = '8899'
-WEBSOCKET_TIMEOUT = 5
+WEBSOCKET_TIMEOUT = 3
 ENTRIES_ENDPOINT = 'http://%s:%s/entries' % (HOST, PORT)
 WEBSOCKET_ENDPOINT = 'ws://%s:%s/ws' % (HOST, PORT)
+
+queries = [
+    ('', False),
+    ('amqp', True),
+    ('redis', False),
+    ('redis and method == "PING"', False),
+    ('redis and method == "FLUSHDB"', False),
+]
+
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
 
-class Entry:
-
-    def __init__(self, _id: int, base: dict) -> None:
-        self.id = _id # type: int
-        self.base = base # type: dict
-        self.data = {} # type: dict
-
-    def set_data(self, data: dict) -> None:
-        self.data = data
-
-class DataGroup:
+class Query:
 
     def __init__(self, query: str) -> None:
         self.query = query # type: str
-        self.entries = [] # type: List[Union[Entry, str]]
+        self.number_of_records = 0
+        self.consistent = False
+        self.ids = [] # type: List[int]
 
 
 class Suite:
 
     def __init__(self) -> None:
-        self.data_groups = [] # type: List[DataGroup]
+        self.queries = [] # type: List[DataGroup]
 
 
-queries = [
-    '',
-    # 'method == "PING"',
-    # 'method == "FLUSHDB"',
-]
-
-current_data_group = None # type: List[DataGroup]
+current_query = None # type: Union[None, Query]
 
 def on_message(ws, message):
     data = json.loads(message)
     if data['messageType'] == 'entry':
         data['data'].pop('isOutgoing', None)
-        entry = Entry(_id=data['data']['id'], base=data)
-        current_data_group.entries.append(entry)
+        current_query.ids.append(data['data']['id'])
 
 def on_error(ws, error):
     print(error)
@@ -84,11 +78,12 @@ def on_open(ws, query):
 if __name__ == "__main__":
     suite = Suite()
     # websocket.enableTrace(True)
-    for query in queries:
+    for query, consistent in queries:
         print('Running query "%s"...' % query)
-        data_group = DataGroup(query=query)
-        suite.data_groups.append(data_group)
-        current_data_group = data_group
+        q = Query(query=query)
+        q.consistent = consistent
+        suite.queries.append(q)
+        current_query = q
         on_open_extended = partial(on_open, query=query)
         ws = websocket.WebSocketApp(
             WEBSOCKET_ENDPOINT,
@@ -99,24 +94,18 @@ if __name__ == "__main__":
         )
         ws.run_forever()
 
-        print('Streamed %d entries.' % len(data_group.entries))
+        q.number_of_records = len(q.ids)
+        del q.ids
 
-    for data_group in suite.data_groups:
-        print('[Query: "%s"] Fetching full entries...' % data_group.query)
-        for i, entry in enumerate(data_group.entries):
-            # print("Fetch progress: %d/%d \r" % (i, len(data_group.entries)), end='\r')
-            url = '%s/%d' % (ENTRIES_ENDPOINT, entry.id)
-            resp = requests.get(url=url, params={'query': data_group.query})
-            data = resp.json()
-            entry.set_data(data)
+        print('Streamed %d entries.' % q.number_of_records)
 
-    for data_group in suite.data_groups:
-        entries = []
-        data_group.entries = sorted(data_group.entries, key=lambda x: (x.base['data']['timestamp']))
-        for i, entry in enumerate(data_group.entries):
-            entry.base['data']['id'] = 0
-            entries.append(jsonpickle.encode(entry.base))
-        data_group.entries = entries
+    # for q in suite.queries:
+    #     print('[Query: "%s"] Fetching full entries...' % q.query)
+    #     for _id in q.ids:
+    #         # print("Fetch progress: %d/%d \r" % (i, len(data_group.entries)), end='\r')
+    #         url = '%s/%d' % (ENTRIES_ENDPOINT, _id)
+    #         resp = requests.get(url=url, params={'query': q.query})
+    #         data = resp.json()
 
     if len(sys.argv) > 1 and sys.argv[1] == "update":
         serialized = jsonpickle.encode(suite)
