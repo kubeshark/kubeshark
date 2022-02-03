@@ -534,7 +534,7 @@ func handleFormData(content *openapi.MediaType, parts []PartWithBody) {
 	if content.Schema.Required == nil {
 		if !hadSchema {
 			content.Schema.Required = make([]string, 0)
-			for name, _ := range seenNames {
+			for name := range seenNames {
 				content.Schema.Required = append(content.Schema.Required, name)
 			}
 		} // else it's a known schema with no required fields

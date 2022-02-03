@@ -420,7 +420,7 @@ func sliceContains(s []string, e string) bool {
 }
 
 func intersectSliceWithMap(required []string, names map[string]struct{}) []string {
-	for name, _ := range names {
+	for name := range names {
 		if !sliceContains(required, name) {
 			required = deleteFromSlice(required, name)
 		}
