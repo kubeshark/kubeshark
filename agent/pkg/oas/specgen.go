@@ -357,20 +357,25 @@ func handleRequest(req *har.Request, opObj *openapi.Operation, isSuccess bool) e
 	}
 	handleNameVals(hdrGW, &opObj.Parameters)
 
-	if req.PostData.Text != "" && isSuccess {
-		reqBody, err := getRequestBody(req, opObj, isSuccess)
+	if isSuccess {
+		reqBody, err := getRequestBody(req, opObj)
 		if err != nil {
 			return err
 		}
 
 		if reqBody != nil {
-			reqCtype := getReqCtype(req)
-			reqMedia, err := fillContent(reqResp{Req: req}, reqBody.Content, reqCtype)
-			if err != nil {
-				return err
-			}
+			if req.PostData.Text == "" {
+				reqBody.Required = false
+			} else {
 
-			_ = reqMedia
+				reqCtype := getReqCtype(req)
+				reqMedia, err := fillContent(reqResp{Req: req}, reqBody.Content, reqCtype)
+				if err != nil {
+					return err
+				}
+
+				_ = reqMedia
+			}
 		}
 	}
 	return nil
@@ -536,18 +541,20 @@ func getResponseObj(resp *har.Response, opObj *openapi.Operation, isSuccess bool
 	return resResponse, nil
 }
 
-func getRequestBody(req *har.Request, opObj *openapi.Operation, isSuccess bool) (*openapi.RequestBodyObj, error) {
+func getRequestBody(req *har.Request, opObj *openapi.Operation) (*openapi.RequestBodyObj, error) {
 	if opObj.RequestBody == nil {
-		opObj.RequestBody = &openapi.RequestBodyObj{Description: "Generic request body", Required: true, Content: map[string]*openapi.MediaType{}}
+		// create if there is body in request
+		if req.PostData.Text != "" {
+			opObj.RequestBody = &openapi.RequestBodyObj{Description: "Generic request body", Required: true, Content: map[string]*openapi.MediaType{}}
+		} else {
+			return nil, nil
+		}
 	}
 
 	reqBody, err := opObj.RequestBody.ResolveRequestBody(reqBodyResolver)
 	if err != nil {
 		return nil, err
 	}
-
-	// TODO: maintain required flag for it, but only consider successful responses
-	//reqBody.Content[]
 
 	return reqBody, nil
 }
