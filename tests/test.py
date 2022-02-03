@@ -28,9 +28,16 @@ WEBSOCKET_ENDPOINT = 'ws://%s:%s/ws' % (HOST, PORT)
 queries = [
     ('', False),
     ('amqp', True),
+    ('method == "connection start"', True),
+    ('method == "connection close"', True),
+    ('method == "connection start" and request.versionMajor == "0" and request.versionMinor == "9"', True),
+    ('method == "queue declare" and request.queue == "test-integration-declared-passive-queue"', True),
     ('redis', False),
     ('redis and method == "PING"', False),
     ('redis and method == "FLUSHDB"', False),
+    ('request.command == "GET" and request.key == "counter3"', False),
+    ('request.command == "MULTI" and request.type == "Array"', False),
+    ('request.command == "SUBSCRIBE" and request.key == "mychannel1"', False),
 ]
 
 

@@ -15,6 +15,30 @@
     },
     {
       "py/object": "__main__.Query",
+      "query": "method == \"connection start\"",
+      "number_of_records": 120,
+      "consistent": true
+    },
+    {
+      "py/object": "__main__.Query",
+      "query": "method == \"connection close\"",
+      "number_of_records": 91,
+      "consistent": true
+    },
+    {
+      "py/object": "__main__.Query",
+      "query": "method == \"connection start\" and request.versionMajor == \"0\" and request.versionMinor == \"9\"",
+      "number_of_records": 120,
+      "consistent": true
+    },
+    {
+      "py/object": "__main__.Query",
+      "query": "method == \"queue declare\" and request.queue == \"test-integration-declared-passive-queue\"",
+      "number_of_records": 2,
+      "consistent": true
+    },
+    {
+      "py/object": "__main__.Query",
       "query": "redis",
       "number_of_records": 1263,
       "consistent": false
@@ -22,13 +46,31 @@
     {
       "py/object": "__main__.Query",
       "query": "redis and method == \"PING\"",
-      "number_of_records": 559,
+      "number_of_records": 557,
       "consistent": false
     },
     {
       "py/object": "__main__.Query",
       "query": "redis and method == \"FLUSHDB\"",
       "number_of_records": 101,
+      "consistent": false
+    },
+    {
+      "py/object": "__main__.Query",
+      "query": "request.command == \"GET\" and request.key == \"counter3\"",
+      "number_of_records": 8,
+      "consistent": false
+    },
+    {
+      "py/object": "__main__.Query",
+      "query": "request.command == \"MULTI\" and request.type == \"Array\"",
+      "number_of_records": 38,
+      "consistent": false
+    },
+    {
+      "py/object": "__main__.Query",
+      "query": "request.command == \"SUBSCRIBE\" and request.key == \"mychannel1\"",
+      "number_of_records": 1,
       "consistent": false
     }
   ]

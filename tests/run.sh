@@ -21,4 +21,6 @@ done
 
 python3 tests/test.py update && \
 
+sleep 60 && \
+
 kill -TERM -- -$PGID_MAIN
