@@ -100,6 +100,7 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
     setUserData({} as UserData)
     setInvite({sent:false,isSuceeded:false,link:""})
     setEditMode(false)
+    setSearchValue("")
   }
 
   const updateUser = async() =>{
