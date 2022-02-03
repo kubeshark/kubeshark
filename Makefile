@@ -86,6 +86,9 @@ clean-docker:
 test:
 	tests/run.sh
 
+test-update:
+	tests/run.sh update
+
 test-cli:
 	@echo "running cli tests"; cd cli && $(MAKE) test
 

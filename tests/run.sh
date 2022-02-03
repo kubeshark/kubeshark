@@ -19,8 +19,11 @@ do
     pcap=$file timeout 3 sh -c 'MIZU_TEST=1 GOGC=12800 NODE_NAME=dev ./agent/build/mizuagent -r $pcap --tap --api-server-address ws://localhost:8899/wsTapper'
 done
 
-python3 tests/test.py update && \
+python3 tests/test.py "$@"
+exit_code=$?
 
 # sleep 60 && \
 
 kill -TERM -- -$PGID_MAIN
+
+exit $exit_code
