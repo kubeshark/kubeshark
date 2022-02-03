@@ -115,7 +115,10 @@ func handleHTTP1ClientStream(b *bufio.Reader, tcpID *api.TcpID, counterPair *api
 	if err != nil {
 		return
 	}
+	counterPair.Lock()
 	counterPair.Request++
+	requestCounter := counterPair.Request
+	counterPair.Unlock()
 
 	// Check HTTP2 upgrade - HTTP2 Over Cleartext (H2C)
 	if strings.Contains(strings.ToLower(req.Header.Get("Connection")), "upgrade") && strings.ToLower(req.Header.Get("Upgrade")) == "h2c" {
@@ -132,7 +135,7 @@ func handleHTTP1ClientStream(b *bufio.Reader, tcpID *api.TcpID, counterPair *api
 		tcpID.DstIP,
 		tcpID.SrcPort,
 		tcpID.DstPort,
-		counterPair.Request,
+		requestCounter,
 		"HTTP1",
 	)
 	item := reqResMatcher.registerRequest(ident, req, superTimer.CaptureTime, req.ProtoMinor)
@@ -155,7 +158,10 @@ func handleHTTP1ServerStream(b *bufio.Reader, tcpID *api.TcpID, counterPair *api
 	if err != nil {
 		return
 	}
+	counterPair.Lock()
 	counterPair.Response++
+	responseCounter := counterPair.Response
+	counterPair.Unlock()
 
 	// Check HTTP2 upgrade - HTTP2 Over Cleartext (H2C)
 	if res.StatusCode == 101 && strings.Contains(strings.ToLower(res.Header.Get("Connection")), "upgrade") && strings.ToLower(res.Header.Get("Upgrade")) == "h2c" {
@@ -172,7 +178,7 @@ func handleHTTP1ServerStream(b *bufio.Reader, tcpID *api.TcpID, counterPair *api
 		tcpID.SrcIP,
 		tcpID.DstPort,
 		tcpID.SrcPort,
-		counterPair.Response,
+		responseCounter,
 		"HTTP1",
 	)
 	item := reqResMatcher.registerResponse(ident, res, superTimer.CaptureTime, res.ProtoMinor)
