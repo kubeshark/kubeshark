@@ -212,6 +212,36 @@ func fillParamExample(param **openapi.Examples, exampleValue string) error {
 	return nil
 }
 
+// TODO: somehow generalize the two example setting functions, plus add body example handling
+
+func addSchemaExample(existing *openapi.SchemaObj, bodyStr string) {
+	if len(existing.Examples) < 5 {
+		found := false
+		for _, eVal := range existing.Examples {
+			existingExample := ""
+			err := json.Unmarshal(eVal, &existingExample)
+			if err != nil {
+				logger.Log.Debugf("Failed to unmarshal example: %v", eVal)
+				continue
+			}
+
+			if existingExample == bodyStr {
+				found = true
+				break
+			}
+		}
+
+		if !found {
+			example, err := json.Marshal(bodyStr)
+			if err != nil {
+				logger.Log.Debugf("Failed to marshal example: %v", bodyStr)
+				return
+			}
+			existing.Examples = append(existing.Examples, example)
+		}
+	}
+}
+
 func longestCommonXfix(strs [][]string, pre bool) []string { // https://github.com/jpillora/longestcommon
 	empty := make([]string, 0)
 	//short-circuit empty list

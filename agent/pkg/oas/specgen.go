@@ -535,30 +535,7 @@ func handleFormData(content *openapi.MediaType, parts []PartWithBody) {
 			}
 		}
 
-		bodyStr := string(pwb.body)
-		if len(existing.Examples) < 5 {
-			found := false
-			for _, eVal := range existing.Examples {
-				existingExample := ""
-				err := json.Unmarshal(eVal, &existingExample)
-				if err != nil {
-					continue
-				}
-
-				if existingExample == bodyStr {
-					found = true
-					break
-				}
-			}
-
-			if !found {
-				example, err := json.Marshal(bodyStr)
-				if err != nil {
-					continue
-				}
-				existing.Examples = append(existing.Examples, example)
-			}
-		}
+		addSchemaExample(existing, string(pwb.body))
 	}
 }
 
