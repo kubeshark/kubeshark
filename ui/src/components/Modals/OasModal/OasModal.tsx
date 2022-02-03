@@ -24,6 +24,7 @@ const OasModal = ({ openModal, handleCloseModal }) => {
         console.error(e);
       }
     })();
+    return () => setOasServices([]);
   }, [openModal]);
 
   const onSelectedOASService = async (selectedService) => {

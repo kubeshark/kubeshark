@@ -1,4 +1,4 @@
-import { Button, FormControl, IconButton, InputAdornment, InputLabel, MenuItem, OutlinedInput,Select, TextField } from '@material-ui/core';
+import { Button, FormControl, IconButton, InputAdornment, InputLabel, MenuItem, OutlinedInput,Select } from '@material-ui/core';
 
 import { FC, useEffect, useState } from 'react';
 import Api from '../../../helpers/api';
@@ -73,6 +73,7 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
             toast.error("Error finding workspaces")
         }
     })();
+    return () => setWorkspaces([]);
 },[])
 
   useEffect(()=> {

@@ -20,7 +20,7 @@ enum InviteStatus{
     pending = "Pending"
 }
 
-export const UserSettings : React.FC<Props> = ({}) => {
+export const UserSettings : React.FC<Props> = () => {
 
     const [usersRows, setUserRows] = useState([]);
     const [userData,userUserData] = useState({} as UserData)
@@ -51,6 +51,7 @@ export const UserSettings : React.FC<Props> = ({}) => {
 
     useEffect(() => {
         getUserList();
+        return ()=> setUserRows([]);
     },[])
 
     const filterFuncFactory = (searchQuery: string) => {

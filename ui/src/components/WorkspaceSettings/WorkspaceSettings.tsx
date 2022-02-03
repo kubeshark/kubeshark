@@ -10,7 +10,7 @@ interface Props {}
 
 const api = Api.getInstance();
 
-export const WorkspaceSettings : React.FC<Props> = ({}) => {
+export const WorkspaceSettings : React.FC<Props> = () => {
 
     const [workspacesRows, setWorkspacesRows] = useState([]);
     const cols : ColsType[] = [{field : "name",header:"Name"}];
