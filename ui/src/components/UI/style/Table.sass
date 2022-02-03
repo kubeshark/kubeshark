@@ -1,5 +1,10 @@
 @import '../../../variables.module'
 
+@mixin icon($url)
+    background: $url
+    background-repeat: no-repeat
+    background-position: center
+
 .mui-table
     width: 100%
     margin-top: 20px
@@ -55,21 +60,39 @@
             line-height: 15px;
             color: $light-gray;
 
-    &__tr:hover        
+    &__tr       
         & .mui-table__row-actions
             &--delete
                 cursor: pointer;
                 path
                     fill:#DB2156 
             &--edit 
-                cursor: pointer;
                 path
                     fill: $blue-color
 
     &__row-actions
         display: flex
         justify-content: flex-end
-                 
+
+    &__action
+      cursor: pointer
+      display: inline-flex
+      height: 17px
+      width: 17px
+      padding: 6.5px;
+           
+      &--delete
+        margin-left: 15%;
+        @include icon(url("../../assets/delete.svg"))
+        
+        &:hover
+          @include icon(url("../../assets/delete-active.svg"))
+
+      &--edit
+        @include icon(url("../../assets/edit.svg"))
+                
+        &:hover
+          @include icon(url("../../assets/edit-active.svg"))
 
     &__td
       color: $light-gray

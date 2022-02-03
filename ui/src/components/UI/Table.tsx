@@ -76,12 +76,8 @@ export const Table: React.FC<TableProps> = ({rows, cols, onRowDelete, onRowEdit,
                             </td>
                     })}
                     <td className="mui-table__td mui-table__row-actions">        
-                        <span onClick={() => _onRowEdit(rowData)}>
-                            <Edit className="mui-table__row-actions--edit"></Edit>
-                        </span>
-                        <span  onClick={() => _onRowDelete(rowData)}>
-                            <Delete className="mui-table__row-actions--delete"></Delete>
-                        </span>
+                        <span onClick={() => _onRowEdit(rowData)} className="mui-table__action mui-table__action--edit"></span>
+                        <span  onClick={() => _onRowDelete(rowData)} className="mui-table__action mui-table__action--delete"></span>
                     </td>
                 </tr>
             })

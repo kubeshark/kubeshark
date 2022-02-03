@@ -24,7 +24,8 @@ const AppSwitchRoutes = () => {
             <Route path={"/"} element={<AuthenticatedRoute><TrafficPage/></AuthenticatedRoute>}/>
             
         </Route>
-        <Route path={RouterRoutes.SETUP+ "/:inviteToken"} element={<AuthPageBase><InstallPage onFirstLogin={() => setIsFirstLogin(true)}/></AuthPageBase>}/>
+        <Route path={RouterRoutes.SETUP} element={<AuthPageBase><InstallPage onFirstLogin={() => setIsFirstLogin(true)}/></AuthPageBase>}/>
+        <Route path={RouterRoutes.SETUP + "/:inviteToken"} element={<AuthPageBase><InstallPage onFirstLogin={() => setIsFirstLogin(true)}/></AuthPageBase>}/>
         <Route path={RouterRoutes.LOGIN} element={<AuthPageBase><LoginPage/></AuthPageBase>}/>
         
     </Routes>
