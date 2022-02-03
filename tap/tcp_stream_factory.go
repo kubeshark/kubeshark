@@ -33,8 +33,6 @@ type tcpStreamWrapper struct {
 	createdAt time.Time
 }
 
-// var totalStreams int64 = 0
-
 func NewTcpStreamFactory(emitter api.Emitter, streamsMap *tcpStreamMap, opts *TapOpts) *tcpStreamFactory {
 	var ownIps []string
 
@@ -63,9 +61,6 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.T
 	dstIp := net.Dst().String()
 	srcPort := transport.Src().String()
 	dstPort := transport.Dst().String()
-
-	// totalStreams++
-	// fmt.Printf("totalStreams: %v\n", totalStreams)
 
 	// if factory.shouldNotifyOnOutboundLink(dstIp, dstPort) {
 	// 	factory.outboundLinkWriter.WriteOutboundLink(net.Src().String(), dstIp, dstPort, "", "")

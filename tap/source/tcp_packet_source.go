@@ -106,15 +106,12 @@ func (source *tcpPacketSource) close() {
 
 func (source *tcpPacketSource) readPackets(ipdefrag bool, packets chan<- TcpPacketInfo) {
 	logger.Log.Infof("Start reading packets from %v", source.name)
-	var numberOfPackets int64 = 0
 
 	for {
 		packet, err := source.source.NextPacket()
-		numberOfPackets++
 
 		if err == io.EOF {
 			logger.Log.Infof("Got EOF while reading packets from %v", source.name)
-			fmt.Printf("numberOfPackets: %v\n", numberOfPackets)
 			return
 		} else if err != nil {
 			if err.Error() != "Timeout Expired" {

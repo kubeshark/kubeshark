@@ -12,7 +12,6 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"sync/atomic"
 	"syscall"
 	"time"
 
@@ -377,12 +376,7 @@ func pipeTapChannelToSocket(connection *websocket.Conn, messageDataChannel <-cha
 		panic("Channel of captured messages is nil")
 	}
 
-	var messageDataChannelCounter uint64
-
-	// TODO: The issue is before this channel [Tapper]
 	for messageData := range messageDataChannel {
-		atomic.AddUint64(&messageDataChannelCounter, 1)
-		fmt.Printf("messageDataChannelCounter: %v\n", messageDataChannelCounter)
 		marshaledData, err := models.CreateWebsocketTappedEntryMessage(messageData)
 		if err != nil {
 			logger.Log.Errorf("error converting message to json %v, err: %s, (%v,%+v)", messageData, err, err, err)
@@ -446,8 +440,10 @@ func dialSocketWithRetry(socketAddress string, retryAmount int, retryDelay time.
 				time.Sleep(retryDelay)
 			}
 		} else {
-			// TODO: Throwing an error
-			// go handleIncomingMessageAsTapper(socketConnection)
+			_, present := os.LookupEnv("MIZU_TEST")
+			if !present {
+				go handleIncomingMessageAsTapper(socketConnection)
+			}
 			return socketConnection, nil
 		}
 	}

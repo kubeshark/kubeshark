@@ -4,7 +4,7 @@
     {
       "py/object": "__main__.Query",
       "query": "",
-      "number_of_records": 4603,
+      "number_of_records": 4607,
       "consistent": false
     },
     {
@@ -40,13 +40,13 @@
     {
       "py/object": "__main__.Query",
       "query": "redis",
-      "number_of_records": 1263,
+      "number_of_records": 1267,
       "consistent": false
     },
     {
       "py/object": "__main__.Query",
       "query": "redis and method == \"PING\"",
-      "number_of_records": 557,
+      "number_of_records": 560,
       "consistent": false
     },
     {
