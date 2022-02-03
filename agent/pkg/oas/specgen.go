@@ -350,20 +350,25 @@ func handleRequest(req *har.Request, opObj *openapi.Operation, isSuccess bool) e
 	}
 	handleNameVals(hdrGW, &opObj.Parameters)
 
-	if req.PostData.Text != "" && isSuccess {
-		reqBody, err := getRequestBody(req, opObj, isSuccess)
+	if isSuccess {
+		reqBody, err := getRequestBody(req, opObj)
 		if err != nil {
 			return err
 		}
 
 		if reqBody != nil {
-			reqCtype, _ := getReqCtype(req)
-			reqMedia, err := fillContent(reqResp{Req: req}, reqBody.Content, reqCtype)
-			if err != nil {
-				return err
-			}
+			if req.PostData.Text == "" {
+				reqBody.Required = false
+			} else {
 
-			_ = reqMedia
+				reqCtype, _ := getReqCtype(req)
+				reqMedia, err := fillContent(reqResp{Req: req}, reqBody.Content, reqCtype)
+				if err != nil {
+					return err
+				}
+
+				_ = reqMedia
+			}
 		}
 	}
 	return nil
@@ -537,9 +542,11 @@ func handleFormData(content *openapi.MediaType, parts []PartWithBody) {
 			for name := range seenNames {
 				content.Schema.Required = append(content.Schema.Required, name)
 			}
+			sort.Strings(content.Schema.Required)
 		} // else it's a known schema with no required fields
 	} else {
 		content.Schema.Required = intersectSliceWithMap(content.Schema.Required, seenNames)
+		sort.Strings(content.Schema.Required)
 	}
 }
 
@@ -603,6 +610,10 @@ func getReqCtype(req *har.Request) (ctype string, params map[string]string) {
 		}
 	}
 
+	if ctype == "" {
+		return "", map[string]string{}
+	}
+
 	mediaType, params, err := mime.ParseMediaType(ctype)
 	if err != nil {
 		logger.Log.Errorf("Cannot parse Content-Type header %q: %v", ctype, err)
@@ -638,18 +649,20 @@ func getResponseObj(resp *har.Response, opObj *openapi.Operation, isSuccess bool
 	return resResponse, nil
 }
 
-func getRequestBody(req *har.Request, opObj *openapi.Operation, isSuccess bool) (*openapi.RequestBodyObj, error) {
+func getRequestBody(req *har.Request, opObj *openapi.Operation) (*openapi.RequestBodyObj, error) {
 	if opObj.RequestBody == nil {
-		opObj.RequestBody = &openapi.RequestBodyObj{Description: "Generic request body", Required: true, Content: map[string]*openapi.MediaType{}}
+		// create if there is body in request
+		if req.PostData.Text != "" {
+			opObj.RequestBody = &openapi.RequestBodyObj{Description: "Generic request body", Required: true, Content: map[string]*openapi.MediaType{}}
+		} else {
+			return nil, nil
+		}
 	}
 
 	reqBody, err := opObj.RequestBody.ResolveRequestBody(reqBodyResolver)
 	if err != nil {
 		return nil, err
 	}
-
-	// TODO: maintain required flag for it, but only consider successful responses
-	//reqBody.Content[]
 
 	return reqBody, nil
 }
