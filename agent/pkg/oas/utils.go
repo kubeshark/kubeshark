@@ -399,3 +399,13 @@ func isAlphaRune(r rune) bool {
 func isAlNumRune(b rune) bool {
 	return isAlphaRune(b) || ('0' <= b && b <= '9')
 }
+
+func deleteFromSlice(s []string, val string) []string {
+	temp := s[:0]
+	for _, x := range s {
+		if x != val {
+			temp = append(temp, x)
+		}
+	}
+	return temp
+}
