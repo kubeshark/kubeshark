@@ -4,7 +4,7 @@ go 1.16
 
 require (
 	github.com/antelman107/net-wait-go v0.0.0-20210623112055-cf684aebda7b
-	github.com/chanced/openapi v0.0.6
+	github.com/chanced/openapi v0.0.7
 	github.com/djherbis/atime v1.0.0
 	github.com/elastic/go-elasticsearch/v7 v7.16.0
 	github.com/getkin/kin-openapi v0.76.0
@@ -30,6 +30,7 @@ require (
 	github.com/up9inc/mizu/tap/extensions/http v0.0.0
 	github.com/up9inc/mizu/tap/extensions/kafka v0.0.0
 	github.com/up9inc/mizu/tap/extensions/redis v0.0.0
+	github.com/wI2L/jsondiff v0.1.1
 	github.com/yalp/jsonpath v0.0.0-20180802001716-5cc68e5049a0
 	k8s.io/api v0.21.2
 	k8s.io/apimachinery v0.21.2
