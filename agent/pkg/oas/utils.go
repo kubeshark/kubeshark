@@ -409,3 +409,21 @@ func deleteFromSlice(s []string, val string) []string {
 	}
 	return temp
 }
+
+func sliceContains(s []string, e string) bool {
+	for _, a := range s {
+		if a == e {
+			return true
+		}
+	}
+	return false
+}
+
+func intersectSliceWithMap(required []string, names map[string]struct{}) []string {
+	for name, _ := range names {
+		if !sliceContains(required, name) {
+			required = deleteFromSlice(required, name)
+		}
+	}
+	return required
+}

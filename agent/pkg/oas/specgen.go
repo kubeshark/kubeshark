@@ -499,16 +499,19 @@ func handleFormDataUrlencoded(text string, content *openapi.MediaType) {
 }
 
 func handleFormData(content *openapi.MediaType, parts []PartWithBody) {
+	hadSchema := true
 	if content.Schema == nil {
+		hadSchema = false // will use it for required flags
 		content.Schema = new(openapi.SchemaObj)
 		content.Schema.Type = openapi.Types{openapi.TypeObject}
 		content.Schema.Properties = openapi.Schemas{}
 	}
 
 	props := &content.Schema.Properties
-
+	seenNames := map[string]struct{}{} // set equivalent in Go, yikes
 	for _, pwb := range parts {
 		name := pwb.part.FormName()
+		seenNames[name] = struct{}{}
 		existing, found := (*props)[name]
 		if !found {
 			existing = new(openapi.SchemaObj)
@@ -525,6 +528,18 @@ func handleFormData(content *openapi.MediaType, parts []PartWithBody) {
 		}
 
 		addSchemaExample(existing, string(pwb.body))
+	}
+
+	// handle required flag
+	if content.Schema.Required == nil {
+		if !hadSchema {
+			content.Schema.Required = make([]string, 0)
+			for name, _ := range seenNames {
+				content.Schema.Required = append(content.Schema.Required, name)
+			}
+		} // else it's a known schema with no required fields
+	} else {
+		content.Schema.Required = intersectSliceWithMap(content.Schema.Required, seenNames)
 	}
 }
 
