@@ -22,10 +22,11 @@ type User struct {
 }
 
 type UserListItem struct {
-	Username   string       `json:"username"`
-	UserId     string       `json:"userId"`
-	Status     InviteStatus `json:"status"`
-	SystemRole string       `json:"role"`
+	Username   string                               `json:"username"`
+	UserId     string                               `json:"userId"`
+	Status     InviteStatus                         `json:"status"`
+	SystemRole string                               `json:"role"`
+	Workspace  *workspace.WorkspaceListItemResponse `json:"workspace"`
 }
 
 type InviteUserRequest struct {
@@ -43,4 +44,10 @@ type WhoAmIResponse struct {
 	Username   string                       `json:"username"`
 	SystemRole string                       `json:"role"`
 	Workspace  *workspace.WorkspaceResponse `json:"workspace"`
+}
+
+type ErrorUserNotFound struct{}
+
+func (e *ErrorUserNotFound) Error() string {
+	return "user not found"
 }

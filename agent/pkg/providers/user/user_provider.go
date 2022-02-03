@@ -175,6 +175,11 @@ func CreateInvite(identityId string, ctx context.Context) (inviteToken string, e
 		return "", err
 	}
 
+	traits["inviteStatus"] = PendingInviteStatus
+	if err = UpdateUserTraits(identity.Id, traits, ctx); err != nil {
+		logger.Log.Warningf("error updating user invite status: %v", err)
+	}
+
 	return inviteToken, nil
 }
 
@@ -327,6 +332,15 @@ func ListUsers(usernameFilterQuery string, ctx context.Context) ([]UserListItem,
 		return nil, err
 	}
 
+	workspaces, err := workspace.ListWorkspaces()
+	if err != nil {
+		return nil, err
+	}
+	workspaceMap := make(map[string]*workspace.WorkspaceListItemResponse)
+	for _, workspace := range workspaces {
+		workspaceMap[workspace.Id] = workspace
+	}
+
 	for _, identity := range identities {
 		traits := identity.Traits.(map[string]interface{})
 		username := traits["username"].(string)
@@ -342,11 +356,18 @@ func ListUsers(usernameFilterQuery string, ctx context.Context) ([]UserListItem,
 				return nil, err
 			}
 
+			workspaceId, err := userRoles.GetUserWorkspaceId(username)
+			if err != nil {
+				return nil, err
+			}
+			workspace := workspaceMap[workspaceId]
+
 			users = append(users, UserListItem{
 				Username:   username,
 				UserId:     identity.Id,
 				Status:     InviteStatus(inviteStatus),
 				SystemRole: systemRole,
+				Workspace:  workspace,
 			})
 		}
 	}
@@ -444,4 +465,18 @@ func parseKratosRegistrationFormError(err error) (map[string][]ory.UiText, error
 	} else {
 		return nil, errors.New("error is not a generic openapi error")
 	}
+}
+
+func handleKratosError(err error) error {
+	var openApiErr *ory.GenericOpenAPIError
+	if errors.As(err, &openApiErr) {
+		switch innerErr := openApiErr.Model().(type) {
+		case ory.JsonError:
+			if *innerErr.Error.Code == 404 {
+				return &ErrorUserNotFound{}
+			}
+		}
+	}
+
+	return err
 }
