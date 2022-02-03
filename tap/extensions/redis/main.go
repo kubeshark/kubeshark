@@ -5,10 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"sync/atomic"
 	"time"
 
 	"github.com/up9inc/mizu/tap/api"
 )
+
+var redisDissectCallsCounter uint64
 
 var protocol api.Protocol = api.Protocol{
 	Name:            "redis",
@@ -40,6 +43,8 @@ func (d dissecting) Ping() {
 }
 
 func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, superIdentifier *api.SuperIdentifier, emitter api.Emitter, options *api.TrafficFilteringOptions) error {
+	atomic.AddUint64(&redisDissectCallsCounter, 1)
+	fmt.Printf("redisDissectCallsCounter: %v\n", redisDissectCallsCounter)
 	is := &RedisInputStream{
 		Reader: b,
 		Buf:    make([]byte, 8192),

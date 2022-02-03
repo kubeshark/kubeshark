@@ -382,7 +382,7 @@ func pipeTapChannelToSocket(connection *websocket.Conn, messageDataChannel <-cha
 	// TODO: The issue is before this channel [Tapper]
 	for messageData := range messageDataChannel {
 		atomic.AddUint64(&messageDataChannelCounter, 1)
-		fmt.Printf("messageDataChannelCounter: %v\n", messageDataChannelCounter)
+		// fmt.Printf("messageDataChannelCounter: %v\n", messageDataChannelCounter)
 		marshaledData, err := models.CreateWebsocketTappedEntryMessage(messageData)
 		if err != nil {
 			logger.Log.Errorf("error converting message to json %v, err: %s, (%v,%+v)", messageData, err, err, err)

@@ -122,7 +122,7 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 	// TODO: The issue is before this channel [API server]
 	for item := range outputItems {
 		atomic.AddUint64(&itemCounter, 1)
-		fmt.Printf("itemCounter: %v\n", itemCounter)
+		// fmt.Printf("itemCounter: %v\n", itemCounter)
 		extension := extensionsMap[item.Protocol.Name]
 		resolvedSource, resolvedDestionation := resolveIP(item.ConnectionInfo)
 		mizuEntry := extension.Dissector.Analyze(item, resolvedSource, resolvedDestionation)
