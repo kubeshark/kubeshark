@@ -50,6 +50,9 @@ export const UserSettings : React.FC<Props> = ({}) => {
 
     useEffect(() => {
         getUserList();
+        return () => {
+            setUserRows([])  
+        }
     },[])
 
     const filterFuncFactory = (searchQuery: string) => {

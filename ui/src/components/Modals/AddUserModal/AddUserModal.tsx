@@ -64,6 +64,10 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
             toast.error("Error finding workspaces")
         }
     })();
+
+    return () => {
+      setWorkspaces([])     
+    }
 },[])
 
   useEffect(()=> {
@@ -92,7 +96,7 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
 
   const updateUser = async() =>{
       try {
-        const res = await api.updateUser(userDataModel)
+        await api.updateUser(userDataModel)
         toast.success("User has been modified")  
       } catch (error) {
         toast.error("Error accured modifing user")  
