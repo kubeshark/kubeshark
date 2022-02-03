@@ -542,9 +542,11 @@ func handleFormData(content *openapi.MediaType, parts []PartWithBody) {
 			for name := range seenNames {
 				content.Schema.Required = append(content.Schema.Required, name)
 			}
+			sort.Strings(content.Schema.Required)
 		} // else it's a known schema with no required fields
 	} else {
 		content.Schema.Required = intersectSliceWithMap(content.Schema.Required, seenNames)
+		sort.Strings(content.Schema.Required)
 	}
 }
 
