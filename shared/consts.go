@@ -6,6 +6,7 @@ const (
 	HostModeEnvVar                   = "HOST_MODE"
 	NodeNameEnvVar                   = "NODE_NAME"
 	TappedAddressesPerNodeDictEnvVar = "TAPPED_ADDRESSES_PER_HOST"
+	MizuTestEnvVar                   = "MIZU_TEST"
 	ConfigDirPath                    = "/app/config/"
 	DataDirPath                      = "/app/data/"
 	ValidationRulesFileName          = "validation-rules.yaml"
