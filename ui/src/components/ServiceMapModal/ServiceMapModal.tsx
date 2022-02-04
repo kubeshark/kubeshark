@@ -128,8 +128,7 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onOpen
                         },
                         font: {
                             color: edge.protocol.backgroundColor,
-                            strokeColor: edge.protocol.backgroundColor,
-                            background: edge.protocol.foregroundColor,
+                            strokeColor: edge.protocol.backgroundColor
                         },
                     }
                 })

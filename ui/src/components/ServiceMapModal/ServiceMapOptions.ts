@@ -1,29 +1,43 @@
 
 const minNodeScaling = 10
 const maxNodeScaling = 30
+
 const minEdgeScaling = 1
 const maxEdgeScaling = maxNodeScaling / 2
+
 const minLabelScaling = 11
 const maxLabelScaling = 16
+const selectedNodeColor = "#0C0B1A"
+const selectedNodeBorderColor = "#205CF5"
+const selectedNodeLabelColor = "#205CF5"
+const selectedEdgeLabelColor = "#205CF5"
 
 const nodeOptions = {
     shape: 'dot',
-    chosen: true,
+    chosen: {
+        node: function (values, id, selected, hovering) {
+            values.color = selectedNodeColor;
+            values.borderColor = selectedNodeBorderColor;
+            values.borderWidth = 4;
+        },
+        label: function (values, id, selected, hovering) {
+            values.size = values.size + 1;
+            values.color = selectedNodeLabelColor;
+            values.strokeColor = selectedNodeLabelColor;
+            values.strokeWidth = 0.2
+        }
+    },
     color: {
         background: '#494677',
-        border: '#0C0B1A',
-        highlight: {
-            background: '#0C0B1A',
-            border: '#205CF5',
-        },
+        border: selectedNodeColor,
     },
     font: {
-        color: '#0C0B1A',
+        color: selectedNodeColor,
         size: 11, // px
         face: 'Roboto',
         background: '#FFFFFFBF',
         strokeWidth: 0.2, // px
-        strokeColor: '#0C0B1A',
+        strokeColor: selectedNodeColor,
         align: 'center',
         multi: false,
     },
@@ -50,14 +64,24 @@ const nodeOptions = {
         }
     },
     borderWidth: 2,
-    borderWidthSelected: 4,
     labelHighlightBold: true,
     opacity: 1,
     shadow: true,
 }
 
 const edgeOptions = {
-    chosen: true,
+    chosen: {
+        edge: function (values, id, selected, hovering) {
+            values.opacity = 0.4;
+            values.width = values.width + 1;
+        },
+        label: function (values, id, selected, hovering) {
+            values.size = values.size + 1;
+            values.color = selectedEdgeLabelColor;
+            values.strokeColor = selectedEdgeLabelColor;
+            values.strokeWidth = 0.2
+        }
+    },
     dashes: false,
     arrowStrikethrough: false,
     arrows: {
@@ -132,6 +156,17 @@ const ServiceMapOptions = {
     nodes: nodeOptions,
     edges: edgeOptions,
     autoResize: true,
+    interaction: {
+        selectable: true,
+        selectConnectedEdges: true,
+        multiselect: false,
+        dragNodes: true,
+        dragView: true,
+        hover: true,
+        hoverConnectedEdges: true,
+        zoomView: true,
+        zoomSpeed: 1,
+    },
 };
 
 export default ServiceMapOptions
