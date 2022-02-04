@@ -120,7 +120,11 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 			summary = summary[:len(summary)-2]
 		}
 	case CreateTopics:
-		topics := reqDetails["payload"].(map[string]interface{})["topics"].([]interface{})
+		_topics := reqDetails["payload"].(map[string]interface{})["topics"]
+		if _topics == nil {
+			break
+		}
+		topics := _topics.([]interface{})
 		for _, topic := range topics {
 			summary += fmt.Sprintf("%s, ", topic.(map[string]interface{})["name"].(string))
 		}

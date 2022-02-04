@@ -734,6 +734,9 @@ func representCreateTopicsRequest(data map[string]interface{}) []interface{} {
 		Data:  string(repPayload),
 	})
 
+	if payload["topics"] == nil {
+		return rep
+	}
 	for i, _topic := range payload["topics"].([]interface{}) {
 		topic := _topic.(map[string]interface{})
 
@@ -770,6 +773,9 @@ func representCreateTopicsResponse(data map[string]interface{}) []interface{} {
 		Data:  string(repPayload),
 	})
 
+	if payload["topics"] == nil {
+		return rep
+	}
 	for i, _topic := range payload["topics"].([]interface{}) {
 		topic := _topic.(map[string]interface{})
 
