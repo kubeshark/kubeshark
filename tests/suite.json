@@ -4,7 +4,7 @@
     {
       "py/object": "__main__.Query",
       "query": "",
-      "number_of_records": 4762,
+      "number_of_records": 4825,
       "consistent": false
     },
     {
@@ -21,8 +21,8 @@
     },
     {
       "py/object": "__main__.Query",
-      "query": "amqp and method == \"connection close\"",
-      "number_of_records": 91,
+      "query": "amqp and method == \"connection close\" and request.replyText == \"kthxbai\"",
+      "number_of_records": 87,
       "consistent": true
     },
     {
@@ -39,51 +39,267 @@
     },
     {
       "py/object": "__main__.Query",
-      "query": "http",
+      "query": "amqp and request.redelivered == \"false\" and request.routingKey == \"test-corrupted-message-regression\"",
+      "number_of_records": 624,
+      "consistent": true
+    },
+    {
+      "py/object": "__main__.Query",
+      "query": "amqp and timestamp >= datetime(\"02/03/2022, 9:02:18.034 AM\") and timestamp <= datetime(\"02/03/2022, 9:02:32.634 AM\")",
+      "number_of_records": 13,
+      "consistent": true
+    },
+    {
+      "py/object": "__main__.Query",
+      "query": "amqp and src.port == \"49346\" and dst.port == \"5672\"",
+      "number_of_records": 0,
+      "consistent": true
+    },
+    {
+      "py/object": "__main__.Query",
+      "query": "amqp and method == \"basic publish\" and summary == \"not-existing-exchange\" and src.port == \"49332\" and dst.port == \"5672\" and timestamp >= datetime(\"02/03/2022, 9:02:17.935 AM\")",
+      "number_of_records": 180,
+      "consistent": true
+    },
+    {
+      "py/object": "__main__.Query",
+      "query": "amqp and method == \"basic publish\" and summary == \"not-existing-exchange\" and request.routingKey == \"some-key\"",
+      "number_of_records": 1974,
+      "consistent": true
+    },
+    {
+      "py/object": "__main__.Query",
+      "query": "amqp and method == \"queue bind\" and summary == \"test-basic-ops-queue\"",
       "number_of_records": 4,
+      "consistent": true
+    },
+    {
+      "py/object": "__main__.Query",
+      "query": "amqp and method == \"exchange declare\" and summary == \"test-integration-declared-passive-exchange\" and request.autoDelete == \"true\" and request.durable == \"false\" and request.exchange == \"test-integration-declared-passive-exchange\" and request.internal == \"false\" and request.noWait == \"false\" and request.passive == \"true\" and request.type == \"direct\"",
+      "number_of_records": 2,
+      "consistent": true
+    },
+    {
+      "py/object": "__main__.Query",
+      "query": "amqp and method == \"queue declare\" and summary == \"test-integration-declared-passive-queue\" and request.autoDelete == \"true\" and request.durable == \"true\" and request.exclusive == \"false\" and request.noWait == \"false\" and request.queue == \"true\" and request.queue == \"test-integration-declared-passive-queue\"",
+      "number_of_records": 0,
+      "consistent": true
+    },
+    {
+      "py/object": "__main__.Query",
+      "query": "amqp and method == \"connection close\" and summary == \"NOT_IMPLEMENTED - active=false\" and request.classId == \"20\" and request.methodId == \"20\" and request.replyCode == \"\" and request.replyText == \"NOT_IMPLEMENTED - active=false\"",
+      "number_of_records": 0,
+      "consistent": true
+    },
+    {
+      "py/object": "__main__.Query",
+      "query": "amqp and method == \"basic consume\" and summary == \"test.integration.consumer-flow\" and timestamp >= datetime(\"02/03/2022, 9:02:01.291 AM\") and request.consumerTag == \"ctag-/tmp/go-build1228491040/b001/amqp.test-7\" and request.queue == \"test.integration.consumer-flow\"",
+      "number_of_records": 1,
+      "consistent": true
+    },
+    {
+      "py/object": "__main__.Query",
+      "query": "grpc",
+      "number_of_records": 0,
+      "consistent": true
+    },
+    {
+      "py/object": "__main__.Query",
+      "query": "http",
+      "number_of_records": 16,
+      "consistent": false
+    },
+    {
+      "py/object": "__main__.Query",
+      "query": "http2",
+      "number_of_records": 0,
       "consistent": false
     },
     {
       "py/object": "__main__.Query",
       "query": "kafka",
-      "number_of_records": 164,
+      "number_of_records": 195,
+      "consistent": true
+    },
+    {
+      "py/object": "__main__.Query",
+      "query": "kafka and request.apiKey == \"Produce\" and request.apiVersion == \"8\" and request.correlationID == \"2\" and request.payload.topicData.partitions.partitionData.records.recordBatch[\"firstTimestamp\"] == 1643962317412",
+      "number_of_records": 0,
+      "consistent": true
+    },
+    {
+      "py/object": "__main__.Query",
+      "query": "kafka and request.apiKey == \"Fetch\" and request.apiVersion == \"11\" and request.size == \"104\" and request.payload.maxBytes == \"262144\" and request.payload.topics[0].partitions[0][\"fetchOffset\"] == 640",
+      "number_of_records": 0,
+      "consistent": true
+    },
+    {
+      "py/object": "__main__.Query",
+      "query": "kafka and request.apiKey == \"ApiVersions\" and request.apiVersion == \"0\" and request.correlationID == \"1\"",
+      "number_of_records": 0,
+      "consistent": true
+    },
+    {
+      "py/object": "__main__.Query",
+      "query": "kafka and request.apiKey == \"ListOffsets\" and request.apiVersion == \"1\" and summary == \"kafka-go-4619ebd3231b3901\" and response.correlationID == \"3\"",
+      "number_of_records": 0,
+      "consistent": true
+    },
+    {
+      "py/object": "__main__.Query",
+      "query": "kafka and request.apiKey == \"Metadata\" and request.apiVersion == \"1\" and request.correlationID == \"2\" and request.size == \"94\" and response.payload.brokers == \"[{\"host\":\"localhost\",\"nodeId\":0,\"port\":9092,\"rack\":\"\"}]\" and response.payload.controllerID == \"0\"",
+      "number_of_records": 0,
+      "consistent": true
+    },
+    {
+      "py/object": "__main__.Query",
+      "query": "kafka and request.apiKey == \"Produce\" and request.apiVersion == \"7\" and request.clientID == \"kafka-go.test@Corsair (github.com/segmentio/kafka-go)\" and request.correlationID == \"13\" and request.size == \"183\" and request.payload.timeout == \"2147483647\" and request.payload.transactionalID == 1 and request.payload.topicData.partitions.partitionData.records.recordBatch[\"firstTimestamp\"] == 1643962320535 and request.payload.topicData.partitions.partitionData.records.recordBatch.record[0][\"attributes\"] == 0 and request.payload.topicData.partitions.partitionData.records.recordBatch.record[0].value == \"6\"",
+      "number_of_records": 0,
+      "consistent": true
+    },
+    {
+      "py/object": "__main__.Query",
+      "query": "kafka and request.apiKey == \"Fetch\" and request.apiVersion == \"10\" and summary == \"kafka-go-260b77aad1937b0f\" and response.payload.responses[0].partitionResponses[0].recordSet.recordBatch.record[0].value == \"3\"",
+      "number_of_records": 0,
       "consistent": true
     },
     {
       "py/object": "__main__.Query",
       "query": "redis",
-      "number_of_records": 1254,
+      "number_of_records": 1274,
       "consistent": false
     },
     {
       "py/object": "__main__.Query",
       "query": "redis and method == \"PING\"",
-      "number_of_records": 559,
+      "number_of_records": 561,
       "consistent": false
     },
     {
       "py/object": "__main__.Query",
       "query": "redis and method == \"FLUSHDB\"",
-      "number_of_records": 101,
+      "number_of_records": 99,
       "consistent": false
     },
     {
       "py/object": "__main__.Query",
       "query": "redis and request.command == \"GET\" and request.key == \"counter3\"",
       "number_of_records": 8,
-      "consistent": false
+      "consistent": true
     },
     {
       "py/object": "__main__.Query",
       "query": "redis and request.command == \"MULTI\" and request.type == \"Array\"",
-      "number_of_records": 37,
+      "number_of_records": 38,
       "consistent": false
     },
     {
       "py/object": "__main__.Query",
       "query": "redis and request.command == \"SUBSCRIBE\" and request.key == \"mychannel1\"",
       "number_of_records": 1,
+      "consistent": true
+    },
+    {
+      "py/object": "__main__.Query",
+      "query": "redis and request.command == \"PING\" and request.type == \"Array\"",
+      "number_of_records": 561,
       "consistent": false
+    },
+    {
+      "py/object": "__main__.Query",
+      "query": "redis and request.command == \"GET\" and request.key == \"A\" and request.type == \"Array\"",
+      "number_of_records": 7,
+      "consistent": true
+    },
+    {
+      "py/object": "__main__.Query",
+      "query": "redis and request.command == \"DEL\" and request.key == \"A\" and request.type == \"Array\"",
+      "number_of_records": 2,
+      "consistent": true
+    },
+    {
+      "py/object": "__main__.Query",
+      "query": "redis and request.command == \"SET\" and request.key == \"key6\" and request.type == \"Array\" and request.value == \"value\"",
+      "number_of_records": 2,
+      "consistent": false
+    },
+    {
+      "py/object": "__main__.Query",
+      "query": "redis and request.command == \"INFO\" and request.key == \"keyspace\" and request.type == \"Array\" and response.type == \"Bulk String\" and response.value == \"# Keyspace\"",
+      "number_of_records": 10,
+      "consistent": false
+    },
+    {
+      "py/object": "__main__.Query",
+      "query": "redis and response.keyword == \"OK\" and response.type == \"Simple String\"",
+      "number_of_records": 634,
+      "consistent": false
+    },
+    {
+      "py/object": "__main__.Query",
+      "query": "redis and request.command == \"EVALSHA\" and request.key == \"b3b5be469962cc72e488ee86a39ed8b552e3ed35\" and request.type == \"Array\" and request.value == \"[1, key2, value]\" and response.type == \"Error\" and response.value == \"NoScriptError: NOSCRIPT No matching script. Please use EVAL.\"",
+      "number_of_records": 2,
+      "consistent": false
+    },
+    {
+      "py/object": "__main__.Query",
+      "query": "redis and request.command == \"EVAL\" and request.key == \"\n\t\t\t\tlocal r = redis.call('SET', KEYS[1], ARGV[1])\n\t\t\t\treturn r\n\t\t\t\" and request.type == \"Array\" and response.keyword == \"OK\" and response.type == \"Simple String\"",
+      "number_of_records": 0,
+      "consistent": true
+    },
+    {
+      "py/object": "__main__.Query",
+      "query": "redis and request.command == \"SCRIPT\" and request.key == \"flush\" and request.type == \"Array\"",
+      "number_of_records": 8,
+      "consistent": true
+    },
+    {
+      "py/object": "__main__.Query",
+      "query": "redis and request.command == \"SCRIPT\" and request.key == \"load\" and request.type == \"Array\" and request.value == \"return 'Unique script'\" and response.value == \"586deab7f5d7baecfdab4753abeff059e87bebe0\"",
+      "number_of_records": 4,
+      "consistent": true
+    },
+    {
+      "py/object": "__main__.Query",
+      "query": "redis and request.command == \"EXPIRE\" and request.key == \"D\" and request.type == \"Array\" and request.value == \"14400\" and response.type == \"Integer\" and response.value == \"1\"",
+      "number_of_records": 2,
+      "consistent": true
+    },
+    {
+      "py/object": "__main__.Query",
+      "query": "redis and (request.command == \"DBSIZE\" or request.command == \"TTL\" or request.command == \"WATCH\" or request.command == \"UNWATCH\")",
+      "number_of_records": 38,
+      "consistent": false
+    },
+    {
+      "py/object": "__main__.Query",
+      "query": "redis and request.command == \"WATCH\" and request.key == \"{shard}key1\" and request.value == \"{shard}key2\"",
+      "number_of_records": 1,
+      "consistent": true
+    },
+    {
+      "py/object": "__main__.Query",
+      "query": "redis and request.command == \"SET\" and request.key == \";\ufffd\ufffdQ&\ufffd\ufffd\ufffd_\ufffdZ7\ufffd\u001e\u03c9;\ufffd;\ufffd\ufffd\ufffdsh\ufffd\ufffd\u0019\u0014\ufffd\ufffd\ufffd\u0001?\ufffd\ufffd.x\ufffd\ufffd\ufffd\ufffdW\ufffd;kE7\n!)\u001d\ufffdz7\ufffd\ufffd\u07ef\ufffdQe\u0016N\ufffd\"",
+      "number_of_records": 0,
+      "consistent": true
+    },
+    {
+      "py/object": "__main__.Query",
+      "query": "redis and request.command == \"AUTH\" and request.key == \"password1\" and response.type == \"Error\" and response.value == \"DataError: ERR AUTH <password> called without any password configured for the default user. Are you sure your configuration is correct?\"",
+      "number_of_records": 3,
+      "consistent": true
+    },
+    {
+      "py/object": "__main__.Query",
+      "query": "redis and request.command == \"CLIENT\" and request.key == \"setname\" and request.type == \"Array\" and request.value == \"foobar\"",
+      "number_of_records": 1,
+      "consistent": true
+    },
+    {
+      "py/object": "__main__.Query",
+      "query": "redis and request.command == \"CLIENT\" and request.key == \"getname\" and request.type == \"Array\" and response.type == \"Bulk String\" and response.value == \"foobar\"",
+      "number_of_records": 1,
+      "consistent": true
     }
   ]
 }
