@@ -4,7 +4,7 @@
     {
       "py/object": "__main__.Query",
       "query": "",
-      "number_of_records": 4607,
+      "number_of_records": 4762,
       "consistent": false
     },
     {
@@ -15,38 +15,50 @@
     },
     {
       "py/object": "__main__.Query",
-      "query": "method == \"connection start\"",
+      "query": "amqp and method == \"connection start\"",
       "number_of_records": 120,
       "consistent": true
     },
     {
       "py/object": "__main__.Query",
-      "query": "method == \"connection close\"",
+      "query": "amqp and method == \"connection close\"",
       "number_of_records": 91,
       "consistent": true
     },
     {
       "py/object": "__main__.Query",
-      "query": "method == \"connection start\" and request.versionMajor == \"0\" and request.versionMinor == \"9\"",
+      "query": "amqp and method == \"connection start\" and request.versionMajor == \"0\" and request.versionMinor == \"9\"",
       "number_of_records": 120,
       "consistent": true
     },
     {
       "py/object": "__main__.Query",
-      "query": "method == \"queue declare\" and request.queue == \"test-integration-declared-passive-queue\"",
+      "query": "amqp and method == \"queue declare\" and request.queue == \"test-integration-declared-passive-queue\"",
       "number_of_records": 2,
       "consistent": true
     },
     {
       "py/object": "__main__.Query",
+      "query": "http",
+      "number_of_records": 4,
+      "consistent": false
+    },
+    {
+      "py/object": "__main__.Query",
+      "query": "kafka",
+      "number_of_records": 164,
+      "consistent": true
+    },
+    {
+      "py/object": "__main__.Query",
       "query": "redis",
-      "number_of_records": 1267,
+      "number_of_records": 1254,
       "consistent": false
     },
     {
       "py/object": "__main__.Query",
       "query": "redis and method == \"PING\"",
-      "number_of_records": 560,
+      "number_of_records": 559,
       "consistent": false
     },
     {
@@ -57,19 +69,19 @@
     },
     {
       "py/object": "__main__.Query",
-      "query": "request.command == \"GET\" and request.key == \"counter3\"",
+      "query": "redis and request.command == \"GET\" and request.key == \"counter3\"",
       "number_of_records": 8,
       "consistent": false
     },
     {
       "py/object": "__main__.Query",
-      "query": "request.command == \"MULTI\" and request.type == \"Array\"",
-      "number_of_records": 38,
+      "query": "redis and request.command == \"MULTI\" and request.type == \"Array\"",
+      "number_of_records": 37,
       "consistent": false
     },
     {
       "py/object": "__main__.Query",
-      "query": "request.command == \"SUBSCRIBE\" and request.key == \"mychannel1\"",
+      "query": "redis and request.command == \"SUBSCRIBE\" and request.key == \"mychannel1\"",
       "number_of_records": 1,
       "consistent": false
     }
