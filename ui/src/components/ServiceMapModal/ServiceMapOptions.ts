@@ -159,7 +159,7 @@ const ServiceMapOptions = {
     interaction: {
         selectable: true,
         selectConnectedEdges: true,
-        multiselect: false,
+        multiselect: true,
         dragNodes: true,
         dragView: true,
         hover: true,
