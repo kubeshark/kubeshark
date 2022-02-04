@@ -19,12 +19,13 @@ build-debug:
 	${MAKE} build
 
 build: ## Build mizu CLI binary (select platform via GOOS / GOARCH env variables).
-	go build ${GCLFAGS} -ldflags="-X 'github.com/up9inc/mizu/cli/mizu.GitCommitHash=$(COMMIT_HASH)' \
-					   -X 'github.com/up9inc/mizu/cli/mizu.Branch=$(GIT_BRANCH)' \
-					   -X 'github.com/up9inc/mizu/cli/mizu.BuildTimestamp=$(BUILD_TIMESTAMP)' \
-					   -X 'github.com/up9inc/mizu/cli/mizu.Platform=$(SUFFIX)' \
-					   -X 'github.com/up9inc/mizu/cli/mizu.SemVer=$(SEM_VER)'" \
-					   -o bin/mizu_$(SUFFIX) mizu.go
+	go build ${GCLFAGS} -ldflags="-extldflags=-static -s -w \
+					-X 'github.com/up9inc/mizu/cli/mizu.GitCommitHash=$(COMMIT_HASH)' \
+					-X 'github.com/up9inc/mizu/cli/mizu.Branch=$(GIT_BRANCH)' \
+					-X 'github.com/up9inc/mizu/cli/mizu.BuildTimestamp=$(BUILD_TIMESTAMP)' \
+					-X 'github.com/up9inc/mizu/cli/mizu.Platform=$(SUFFIX)' \
+					-X 'github.com/up9inc/mizu/cli/mizu.SemVer=$(SEM_VER)'" \
+					-o bin/mizu_$(SUFFIX) mizu.go
 	(cd bin && shasum -a 256 mizu_${SUFFIX} > mizu_${SUFFIX}.sha256)
 
 build-all: ## Build for all supported platforms.
