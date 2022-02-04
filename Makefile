@@ -92,7 +92,7 @@ test-lint:
 	cd cli && golangci-lint run
 	cd acceptanceTests && golangci-lint run
 	cd tap/api && golangci-lint run
-	cd tap/extensions/ && for D in */; do cd $D && golangci-lint run && cd ..; done
+	cd tap/extensions/ && for D in */; do cd $$D && golangci-lint run && cd ..; done
 
 test-run:
 	tests/run.sh
