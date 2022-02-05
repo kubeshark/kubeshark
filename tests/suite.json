@@ -4,31 +4,31 @@
     {
       "py/object": "__main__.Query",
       "query": "",
-      "number_of_records": 4825,
+      "number_of_records": 22861,
       "consistent": false
     },
     {
       "py/object": "__main__.Query",
       "query": "amqp",
-      "number_of_records": 3340,
+      "number_of_records": 3611,
       "consistent": true
     },
     {
       "py/object": "__main__.Query",
       "query": "amqp and method == \"connection start\"",
-      "number_of_records": 120,
+      "number_of_records": 152,
       "consistent": true
     },
     {
       "py/object": "__main__.Query",
       "query": "amqp and method == \"connection close\" and request.replyText == \"kthxbai\"",
-      "number_of_records": 87,
+      "number_of_records": 92,
       "consistent": true
     },
     {
       "py/object": "__main__.Query",
       "query": "amqp and method == \"connection start\" and request.versionMajor == \"0\" and request.versionMinor == \"9\"",
-      "number_of_records": 120,
+      "number_of_records": 152,
       "consistent": true
     },
     {
@@ -46,13 +46,13 @@
     {
       "py/object": "__main__.Query",
       "query": "amqp and timestamp >= datetime(\"02/03/2022, 9:02:18.034 AM\") and timestamp <= datetime(\"02/03/2022, 9:02:32.634 AM\")",
-      "number_of_records": 13,
+      "number_of_records": 19,
       "consistent": true
     },
     {
       "py/object": "__main__.Query",
       "query": "amqp and src.port == \"49346\" and dst.port == \"5672\"",
-      "number_of_records": 0,
+      "number_of_records": 1,
       "consistent": true
     },
     {
@@ -100,26 +100,26 @@
     {
       "py/object": "__main__.Query",
       "query": "grpc",
-      "number_of_records": 0,
-      "consistent": true
+      "number_of_records": 90,
+      "consistent": false
     },
     {
       "py/object": "__main__.Query",
       "query": "http",
-      "number_of_records": 16,
+      "number_of_records": 5067,
       "consistent": false
     },
     {
       "py/object": "__main__.Query",
       "query": "http2",
-      "number_of_records": 0,
-      "consistent": false
+      "number_of_records": 96,
+      "consistent": true
     },
     {
       "py/object": "__main__.Query",
       "query": "kafka",
-      "number_of_records": 195,
-      "consistent": true
+      "number_of_records": 8811,
+      "consistent": false
     },
     {
       "py/object": "__main__.Query",
@@ -166,19 +166,19 @@
     {
       "py/object": "__main__.Query",
       "query": "redis",
-      "number_of_records": 1274,
+      "number_of_records": 5276,
       "consistent": false
     },
     {
       "py/object": "__main__.Query",
       "query": "redis and method == \"PING\"",
-      "number_of_records": 561,
+      "number_of_records": 562,
       "consistent": false
     },
     {
       "py/object": "__main__.Query",
       "query": "redis and method == \"FLUSHDB\"",
-      "number_of_records": 99,
+      "number_of_records": 101,
       "consistent": false
     },
     {
@@ -202,7 +202,7 @@
     {
       "py/object": "__main__.Query",
       "query": "redis and request.command == \"PING\" and request.type == \"Array\"",
-      "number_of_records": 561,
+      "number_of_records": 562,
       "consistent": false
     },
     {
@@ -232,7 +232,7 @@
     {
       "py/object": "__main__.Query",
       "query": "redis and response.keyword == \"OK\" and response.type == \"Simple String\"",
-      "number_of_records": 634,
+      "number_of_records": 671,
       "consistent": false
     },
     {
