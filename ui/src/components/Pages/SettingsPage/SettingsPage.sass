@@ -19,7 +19,7 @@
 
 
 .header-section
-    background-color: $header-background-color
+    background-color: $header-section-color
 
     &__container
         @include tab-container
@@ -34,10 +34,18 @@
 
 .tab-content
     padding-top: 30px;
-    background-color: $data-background-color
+    background-color: $content-section-color
     height: 100vh;
     &__container
         @include tab-container
 
 .table-body-style
     background: $main-background-color
+    & tr td:not(:first-child)
+        text-align : center
+.mui-table__thead
+    & tr th:not(:first-child)
+        text-align : center
+
+.delete-comfirmation-modal .confirmationText
+    color: $font-color

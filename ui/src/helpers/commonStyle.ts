@@ -43,10 +43,10 @@ export const useCommonStyles = makeStyles(() => ({
     },
     modal :{
         position: 'absolute',
-        top: '10%',
+        top: '40%',
         left: '50%',
-        transform: 'translate(-50%, 0%)',
-        width: "MAX(40vw, 600px)",
+        transform: 'translate(-50%, -40%)',
+        width: "CLAMP(600px,50%, 800px)",
         bgcolor: 'background.paper',
         borderRadius: '5px',
         boxShadow: 24,

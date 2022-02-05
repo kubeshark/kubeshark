@@ -24,8 +24,8 @@ export const UserSettings : React.FC<Props> = () => {
 
     const [usersRows, setUserRows] = useState([]);
     const [userData,userUserData] = useState({} as UserData)
-    const cols : ColsType[] = [{field : "username",header:"User", width: '30%'},
-                               {field : "workspace",header:"Worksapce", width: '20%'},
+    const cols : ColsType[] = [{field : "username",header:"User", width: "20%"},
+                               {field : "workspace",header:"Worksapce", width: "20%"},
                                {field : "role",header:"Role",mapValue : (val) => Utils.capitalizeFirstLetter(val)},
                                {field : "status",header:"Status",getCellClassName : (field, val) =>{
                                    return val === InviteStatus.active ? "status--active" : "status--pending"
@@ -110,8 +110,8 @@ export const UserSettings : React.FC<Props> = () => {
         </AddUserModal>
         <ConfirmationModal isOpen={confirmModalOpen} onClose={() => setConfirmModalOpen(false)} 
                            onConfirm={onConfirmDelete} confirmButtonText="Delete user" title="Delete User"
-                           confirmButtonColor="#DB2156">
-            <p>Are you sure you want to delete this user?</p>
+                           confirmButtonColor="#DB2156" className={"delete-comfirmation-modal"}>
+            <div>Are you sure you want to delete this user?</div>
         </ConfirmationModal>
     </>);
 }
