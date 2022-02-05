@@ -242,14 +242,15 @@ jobs:
         id: condval
         with:
           cond: ${{ github.ref == 'refs/heads/main' }}
-          if_true: "minor"
-          if_false: "patch"
+          if_true: "official"
+          if_false: "dev"
 
-      - name: Auto Increment Semver Action
-        uses: MCKanpolat/auto-semver-action@1.0.5
+      - name: Auto Increment Ver Action
+        uses: docker://igorgov/auto-inc-ver:v1.1.0
         id: versioning
         with:
-          releaseType: ${{ steps.condval.outputs.value }}
+          mode: ${{ steps.condval.outputs.value }}
+          suffix: 'dev'
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Get version parameters
