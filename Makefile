@@ -19,7 +19,7 @@ help: ## This help.
 TS_SUFFIX="$(shell date '+%s')"
 GIT_BRANCH="$(shell git branch | grep \* | cut -d ' ' -f2 | tr '[:upper:]' '[:lower:]' | tr '/' '_')"
 BUCKET_PATH=static.up9.io/mizu/$(GIT_BRANCH)
-export SEM_VER?=0.0.0
+export VER?=0.0
 
 ui: ## Build UI.
 	@(cd ui; npm i ; npm run build; )
