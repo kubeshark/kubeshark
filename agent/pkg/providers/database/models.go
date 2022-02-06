@@ -3,7 +3,7 @@ package database
 type Invite struct {
 	Token      string `gorm:"primary_key"`
 	IdentityId string
-	Username   string
+	Username   string `gorm:"unique"`
 	CreatedAt  int64
 }
 
