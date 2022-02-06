@@ -75,7 +75,7 @@ RUN go build -ldflags="-extldflags=-static -s -w \
     -X 'github.com/up9inc/mizu/agent/pkg/version.GitCommitHash=${COMMIT_HASH}' \
     -X 'github.com/up9inc/mizu/agent/pkg/version.Branch=${GIT_BRANCH}' \
     -X 'github.com/up9inc/mizu/agent/pkg/version.BuildTimestamp=${BUILD_TIMESTAMP}' \
-    -X 'github.com/up9inc/mizu/agent/pkg/version.SemVer=${SEM_VER}'" -o mizuagent .
+    -X 'github.com/up9inc/mizu/agent/pkg/version.Ver=${SEM_VER}'" -o mizuagent .
 
 # Download Basenine executable, verify the sha1sum
 ADD https://github.com/up9inc/basenine/releases/download/v0.4.13/basenine_linux_${GOARCH} ./basenine_linux_${GOARCH}

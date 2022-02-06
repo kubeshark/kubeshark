@@ -23,7 +23,7 @@ build: ## Build mizu CLI binary (select platform via GOOS / GOARCH env variables
 					   -X 'github.com/up9inc/mizu/cli/mizu.Branch=$(GIT_BRANCH)' \
 					   -X 'github.com/up9inc/mizu/cli/mizu.BuildTimestamp=$(BUILD_TIMESTAMP)' \
 					   -X 'github.com/up9inc/mizu/cli/mizu.Platform=$(SUFFIX)' \
-					   -X 'github.com/up9inc/mizu/cli/mizu.SemVer=$(SEM_VER)'" \
+					   -X 'github.com/up9inc/mizu/cli/mizu.Ver=$(SEM_VER)'" \
 					   -o bin/mizu_$(SUFFIX) mizu.go
 	(cd bin && shasum -a 256 mizu_${SUFFIX} > mizu_${SUFFIX}.sha256)
 

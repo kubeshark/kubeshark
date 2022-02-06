@@ -9,6 +9,6 @@ import (
 )
 
 func GetVersion(c *gin.Context) {
-	resp := shared.VersionResponse{SemVer: version.SemVer}
+	resp := shared.VersionResponse{SemVer: version.Ver}
 	c.JSON(http.StatusOK, resp)
 }
