@@ -75,6 +75,7 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
           toast.error("Error getting user details")
       }
   })();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   },[isEditMode, userData])
 
   const onClose = () => {
@@ -101,7 +102,6 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
   const isFormDisabled = () : boolean => {
     return !(userDataModel?.role && userDataModel?.username && userDataModel?.workspaceId && fromService.isValidEmail(userDataModel?.username))
   }
-
 
   const mapTokenToLink = (token) => {
     return`${window.location.origin}${RouterRoutes.SETUP}/${token}`
