@@ -52,8 +52,7 @@ func createSimpleParam(name string, in openapi.In, ptype openapi.SchemaType) *op
 	}
 	required := true // FFS! https://stackoverflow.com/questions/32364027/reference-a-boolean-for-assignment-in-a-struct/32364093
 	schema := new(openapi.SchemaObj)
-	schema.Type = make(openapi.Types, 0)
-	schema.Type = append(schema.Type, ptype)
+	schema.Type = openapi.Types{ptype}
 
 	style := openapi.StyleSimple
 	if in == openapi.InQuery {
@@ -197,7 +196,7 @@ func fillParamExample(param **openapi.Examples, exampleValue string) error {
 			continue
 		}
 
-		if value == exampleValue || cnt > 5 { // 5 examples is enough
+		if value == exampleValue || cnt >= 5 { // 5 examples is enough
 			return nil
 		}
 	}
@@ -211,6 +210,36 @@ func fillParamExample(param **openapi.Examples, exampleValue string) error {
 	themap["example #"+strconv.Itoa(cnt)] = &openapi.ExampleObj{Value: valMsg}
 
 	return nil
+}
+
+// TODO: somehow generalize the two example setting functions, plus add body example handling
+
+func addSchemaExample(existing *openapi.SchemaObj, bodyStr string) {
+	if len(existing.Examples) < 5 {
+		found := false
+		for _, eVal := range existing.Examples {
+			existingExample := ""
+			err := json.Unmarshal(eVal, &existingExample)
+			if err != nil {
+				logger.Log.Debugf("Failed to unmarshal example: %v", eVal)
+				continue
+			}
+
+			if existingExample == bodyStr {
+				found = true
+				break
+			}
+		}
+
+		if !found {
+			example, err := json.Marshal(bodyStr)
+			if err != nil {
+				logger.Log.Debugf("Failed to marshal example: %v", bodyStr)
+				return
+			}
+			existing.Examples = append(existing.Examples, example)
+		}
+	}
 }
 
 func longestCommonXfix(strs [][]string, pre bool) []string { // https://github.com/jpillora/longestcommon
@@ -259,6 +288,22 @@ func longestCommonXfix(strs [][]string, pre bool) []string { // https://github.c
 		}
 	}
 	return xfix
+}
+
+func getSimilarPrefix(strs []string) string {
+	chunked := make([][]string, 0)
+	for _, item := range strs {
+		chunked = append(chunked, strings.Split(item, "/"))
+	}
+
+	cmn := longestCommonXfix(chunked, true)
+	res := make([]string, 0)
+	for _, chunk := range cmn {
+		if chunk != "api" && !IsVersionString(chunk) && !strings.HasPrefix(chunk, "{") {
+			res = append(res, chunk)
+		}
+	}
+	return strings.Join(res[1:], ".")
 }
 
 // returns all non-nil ops in PathObj
@@ -324,13 +369,11 @@ func anyJSON(text string) (anyVal interface{}, isJSON bool) {
 	return nil, false
 }
 
-func cleanNonAlnum(s []byte) string {
+func cleanStr(str string, criterion func(r rune) bool) string {
+	s := []byte(str)
 	j := 0
 	for _, b := range s {
-		if ('a' <= b && b <= 'z') ||
-			('A' <= b && b <= 'Z') ||
-			('0' <= b && b <= '9') ||
-			b == ' ' {
+		if criterion(rune(b)) {
 			s[j] = b
 			j++
 		}
@@ -338,11 +381,49 @@ func cleanNonAlnum(s []byte) string {
 	return string(s[:j])
 }
 
+/*
 func isAlpha(s string) bool {
 	for _, r := range s {
-		if (r < 'a' || r > 'z') && (r < 'A' || r > 'Z') {
+		if isAlphaRune(r) {
 			return false
 		}
 	}
 	return true
+}
+*/
+
+func isAlphaRune(r rune) bool {
+	return !((r < 'a' || r > 'z') && (r < 'A' || r > 'Z'))
+}
+
+func isAlNumRune(b rune) bool {
+	return isAlphaRune(b) || ('0' <= b && b <= '9')
+}
+
+func deleteFromSlice(s []string, val string) []string {
+	temp := s[:0]
+	for _, x := range s {
+		if x != val {
+			temp = append(temp, x)
+		}
+	}
+	return temp
+}
+
+func sliceContains(s []string, e string) bool {
+	for _, a := range s {
+		if a == e {
+			return true
+		}
+	}
+	return false
+}
+
+func intersectSliceWithMap(required []string, names map[string]struct{}) []string {
+	for name := range names {
+		if !sliceContains(required, name) {
+			required = deleteFromSlice(required, name)
+		}
+	}
+	return required
 }

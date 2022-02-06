@@ -33,3 +33,27 @@ func TestAnyJSON(t *testing.T) {
 		}
 	}
 }
+
+func TestStrRunes(t *testing.T) {
+	if isAlphaRune('5') {
+		t.Logf("Failed")
+	}
+	if !isAlphaRune('a') {
+		t.Logf("Failed")
+	}
+
+	if !isAlNumRune('5') {
+		t.Logf("Failed")
+	}
+	if isAlNumRune(' ') {
+		t.Logf("Failed")
+	}
+
+	if cleanStr("-abc_567", isAlphaRune) != "abc" {
+		t.Logf("Failed")
+	}
+
+	if cleanStr("-abc_567", isAlNumRune) != "abc567" {
+		t.Logf("Failed")
+	}
+}

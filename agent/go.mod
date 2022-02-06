@@ -4,7 +4,7 @@ go 1.16
 
 require (
 	github.com/antelman107/net-wait-go v0.0.0-20210623112055-cf684aebda7b
-	github.com/chanced/openapi v0.0.6
+	github.com/chanced/openapi v0.0.7
 	github.com/djherbis/atime v1.0.0
 	github.com/elastic/go-elasticsearch/v7 v7.16.0
 	github.com/getkin/kin-openapi v0.76.0
@@ -15,6 +15,7 @@ require (
 	github.com/go-playground/validator/v10 v10.5.0
 	github.com/google/uuid v1.1.2
 	github.com/gorilla/websocket v1.4.2
+	github.com/nav-inc/datetime v0.1.3
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/orcaman/concurrent-map v0.0.0-20210106121528-16402b402231
 	github.com/ory/keto-client-go v0.7.0-alpha.1
@@ -29,6 +30,7 @@ require (
 	github.com/up9inc/mizu/tap/extensions/http v0.0.0
 	github.com/up9inc/mizu/tap/extensions/kafka v0.0.0
 	github.com/up9inc/mizu/tap/extensions/redis v0.0.0
+	github.com/wI2L/jsondiff v0.1.1
 	github.com/yalp/jsonpath v0.0.0-20180802001716-5cc68e5049a0
 	k8s.io/api v0.21.2
 	k8s.io/apimachinery v0.21.2
