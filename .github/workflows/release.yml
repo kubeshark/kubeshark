@@ -114,7 +114,7 @@ jobs:
           if_false: "dev"
 
       - name: Auto Increment Ver Action
-        uses: docker://igorgov/auto-inc-ver:vv2.0.0
+        uses: docker://igorgov/auto-inc-ver:v2.0.0
         id: versioning
         with:
           mode: ${{ steps.condval.outputs.value }}
@@ -181,7 +181,7 @@ jobs:
           if_false: "dev"
 
       - name: Auto Increment Ver Action
-        uses: docker://igorgov/auto-inc-ver:vv2.0.0
+        uses: docker://igorgov/auto-inc-ver:v2.0.0
         id: versioning
         with:
           mode: ${{ steps.condval.outputs.value }}
