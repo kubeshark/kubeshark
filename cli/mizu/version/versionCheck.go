@@ -25,11 +25,9 @@ func CheckVersionCompatibility(apiServerProvider *apiserver.Provider) (bool, err
 		return false, err
 	}
 
-	equals, err := version.AreEquals(apiVer, mizu.Ver)
-	if err != nil {
+	if equals, err := version.AreEquals(apiVer, mizu.Ver); err != nil {
 		return false, fmt.Errorf("Failed to check version equality between mizuVer: %s and apiVer: %s, error: %w", mizu.Ver, apiVer, err)
-	}
-	if !equals {
+	} else if !equals {
 		logger.Log.Errorf(uiUtils.Red, fmt.Sprintf("cli version (%s) is not compatible with api version (%s)", mizu.Ver, apiVer))
 		return false, nil
 	}
