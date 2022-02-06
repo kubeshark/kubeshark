@@ -81,7 +81,7 @@ func TestGreaterThenGreater(t *testing.T) {
 	}
 }
 
-func TestGreaterThenLessthen(t *testing.T) {
+func TestGreaterThenLessThen(t *testing.T) {
 	tests := []struct {
 		Name   string
 		First  string
