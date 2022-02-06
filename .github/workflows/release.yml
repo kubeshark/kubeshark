@@ -99,11 +99,13 @@ jobs:
       - name: Check out the repo
         uses: actions/checkout@v2
 
-      - name: Set up Cloud SDK
-        uses: google-github-actions/setup-gcloud@master
+      - id: 'auth'
+        uses: 'google-github-actions/auth@v0'
         with:
-          service_account_key: ${{ secrets.GCR_JSON_KEY }}
-          export_default_credentials: true
+          credentials_json: '${{ secrets.GCR_JSON_KEY }}'
+
+      - name: 'Set up Cloud SDK'
+        uses: 'google-github-actions/setup-gcloud@v0'
 
       - name: Determine versioning strategy
         uses: haya14busa/action-cond@v1
@@ -235,11 +237,13 @@ jobs:
       - name: Check out the repo
         uses: actions/checkout@v2
 
-      - name: Set up Cloud SDK
-        uses: google-github-actions/setup-gcloud@master
+      - id: 'auth'
+        uses: 'google-github-actions/auth@v0'
         with:
-          service_account_key: ${{ secrets.GCR_JSON_KEY }}
-          export_default_credentials: true
+          credentials_json: '${{ secrets.GCR_JSON_KEY }}'
+
+      - name: 'Set up Cloud SDK'
+        uses: 'google-github-actions/setup-gcloud@v0'
 
       - name: Determine versioning strategy
         uses: haya14busa/action-cond@v1
