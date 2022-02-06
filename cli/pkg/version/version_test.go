@@ -70,7 +70,7 @@ func TestGreaterThenGreater(t *testing.T) {
 		{Name: "major", First: "2.0", Second: "1.0"},
 		{Name: "patch", First: "1.1", Second: "1.0"},
 		{Name: "incremental", First: "1.0-dev1", Second: "1.0-dev0"},
-		{Name: "major", First: "1.0", Second: "1.0-dev1"},
+		{Name: "major vs incremental", First: "1.0", Second: "1.0-dev1"},
 	}
 	for _, test := range tests {
 		t.Run(test.Name, func(t *testing.T) {
