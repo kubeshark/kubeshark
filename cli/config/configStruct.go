@@ -54,7 +54,7 @@ func (config *ConfigStruct) validate() error {
 func (config *ConfigStruct) SetDefaults() {
 	config.KratosImage = shared.KratosImageDefault
 	config.KetoImage = shared.KetoImageDefault
-	config.AgentImage = fmt.Sprintf("%s:%s", shared.MizuAgentImageRepo, mizu.SemVer)
+	config.AgentImage = fmt.Sprintf("%s:%s", shared.MizuAgentImageRepo, mizu.Ver)
 	config.ConfigFilePath = path.Join(mizu.GetMizuFolderPath(), "config.yaml")
 }
 
