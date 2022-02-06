@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"net/url"
 	"path"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -103,9 +104,28 @@ func getProcessCgroup(procfs string, pid string) (string, error) {
 		logger.Log.Warningf("Error reading cgroup file %v - %v", filePath, err)
 		return "", err
 	}
-
-	parts := strings.Split(string(bytes), ":")
-	cgrouppath := parts[len(parts)-1]
-
-	return strings.TrimSpace(path.Base(cgrouppath)), nil
+	
+	lines := strings.Split(string(bytes), "\n")
+	
+	var cgrouppath string
+	
+	if len(lines) == 1 {
+		parts := strings.Split(string(bytes), ":")
+		cgrouppath = parts[len(parts)-1]
+	} else {
+		for _, line := range lines {
+			if strings.Contains(line, ":pids:") {
+				parts := strings.Split(line, ":")
+				cgrouppath = parts[len(parts)-1]
+			}
+		}
+	}
+	
+	basename := strings.TrimSpace(path.Base(cgrouppath))
+	
+	if strings.Contains(basename, ".") {
+		return strings.TrimSuffix(basename, filepath.Ext(basename)), nil
+	} else {
+		return basename, nil
+	}
 }
