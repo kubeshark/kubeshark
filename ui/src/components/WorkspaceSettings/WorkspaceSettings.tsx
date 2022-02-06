@@ -75,7 +75,7 @@ export const WorkspaceSettings : React.FC<Props> = () => {
         </AddWorkspaceModal>
         <ConfirmationModal isOpen={isOpenDeleteModal} onClose={() => setIsOpenDeleteModal(false)} 
                            onConfirm={onDeleteConfirmation} confirmButtonText="Delete Workspace" title="Delete Workspace"
-                           confirmButtonColor="#DB2156">
+                           confirmButtonColor="#DB2156" className={"delete-comfirmation-modal"}>
             <p>Are you sure you want to delete this workspace?</p>
         </ConfirmationModal>
     </>);

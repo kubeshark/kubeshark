@@ -5,7 +5,6 @@ import ConfirmationModal from '../../UI/Modals/ConfirmationModal';
 import SelectList from '../../UI/SelectList';
 import './AddWorkspaceModal.sass'
 import { toast } from "react-toastify";
-import { TextField } from '@material-ui/core';
 
 export type WorkspaceData = {
     id:string;
@@ -99,17 +98,16 @@ const AddWorkspaceModal: FC<AddWorkspaceModalProp> = ({isOpen,onCloseModal, work
     <ConfirmationModal isOpen={isOpen} onClose={onClose} onConfirm={onConfirm} title={title} confirmButtonText={"add"} confirmDisabled={!isFormValid()}>
       <h3 className='comfirmation-modal__sub-section-header'>DETAILS</h3>
         <div className='comfirmation-modal__sub-section'>
-          <div>
-            {/* <input type="text" value={workspaceName ?? ""} className={classes.textField + " workspace__name"} placeholder={"Workspace Name"} 
-                  onChange={onWorkspaceNameChange}></input> */}
-                   <TextField value={workspaceName ?? ""} className={"user__email"} size='small' label="Workspace Name" onChange={onWorkspaceNameChange}
-                              variant="outlined"/>
-            </div>
+                  <div className="form-input workspace__name">
+                    <label htmlFor="inputworkspaceName">Workspace Name</label>
+                    <input id="inputworkspaceName" type="text" value={workspaceName ?? ""} className={classes.textField}
+                  onChange={onWorkspaceNameChange}/> 
+                  </div>
             </div>
             <h3 className='comfirmation-modal__sub-section-header'>TAP SETTINGS</h3>     
           <div className="namespacesSettingsContainer">
             <div style={{marginTop: "17px"}}>
-                <input className={classes.textField + " searchNamespace"} placeholder="Search" value={searchValue}
+                <input className={classes.textField + " search-workspace"} placeholder="Search" value={searchValue}
                         onChange={(event) => setSearchValue(event.target.value)}/>
             </div>
             <SelectList items={namespaces}

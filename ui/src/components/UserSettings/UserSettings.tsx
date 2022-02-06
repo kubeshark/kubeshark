@@ -23,9 +23,9 @@ enum InviteStatus{
 export const UserSettings : React.FC<Props> = () => {
 
     const [usersRows, setUserRows] = useState([]);
-    const [userData,userUserData] = useState({} as UserData)
+    const [userData,setUserData] = useState({} as UserData)
     const cols : ColsType[] = [{field : "username",header:"User", width: "20%"},
-                               {field : "workspace",header:"Worksapce", width: "20%"},
+                               {field : "workspace",header:"Worksapce", width: "20%", mapValue : (workspace) => workspace?.name},
                                {field : "role",header:"Role",mapValue : (val) => Utils.capitalizeFirstLetter(val)},
                                {field : "status",header:"Status",getCellClassName : (field, val) =>{
                                    return val === InviteStatus.active ? "status--active" : "status--pending"
@@ -37,9 +37,8 @@ export const UserSettings : React.FC<Props> = () => {
     const getUserList =         (async () => {
         try {
             let users  = await api.getUsers()
-            const mappedUsers = users
-            .map((user) => {
-                return {...user,status: Utils.capitalizeFirstLetter(user.status), role: user.role, workspace : user?.workspace?.name}
+            const mappedUsers = users.map((user) => {
+                return {...user,status: Utils.capitalizeFirstLetter(user.status), role: user.role}
             })
             setUserRows(mappedUsers)                                
         } catch (e) {
@@ -70,7 +69,7 @@ export const UserSettings : React.FC<Props> = () => {
     const onRowDelete = (user) => {
         setConfirmModalOpen(true);
         const userForDel = findUser(user.userId);
-        userUserData(userForDel)
+        setUserData(userForDel)
     }
 
     const onConfirmDelete = () => {
@@ -89,7 +88,7 @@ export const UserSettings : React.FC<Props> = () => {
     }
 
     const onRowEdit = (row) => {
-        userUserData(row)
+        setUserData(row)
         setEditMode(true)
         setIsOpen(true)
     }
@@ -105,7 +104,7 @@ export const UserSettings : React.FC<Props> = () => {
                                buttonConfig={buttonConfig} rows={usersRows} cols={cols} bodyClass="table-body-style">
         </FilterableTableAction>
         <AddUserModal isOpen={isOpenModal} onCloseModal={() => { 
-                     setIsOpen(false);userUserData({} as UserData) } }
+                     setIsOpen(false);setUserData({} as UserData) } }
                       userData={userData} isEditMode={editMode} onUserChange={onUserChange}>
         </AddUserModal>
         <ConfirmationModal isOpen={confirmModalOpen} onClose={() => setConfirmModalOpen(false)} 

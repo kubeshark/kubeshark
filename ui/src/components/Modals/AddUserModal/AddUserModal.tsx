@@ -18,6 +18,8 @@ export type UserData = {
   username : string;
   workspaceId : string;
   userId: string;
+  inviteToken: string;
+  workspace : {name:string, id:string}
 }
 
 interface AddUserModalProps {
@@ -61,13 +63,14 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
   useEffect(()=> {
     (async () => {
       try {
-          let specificUser : any = {}
-          if (isEditMode && userData.userId){
-            specificUser= await api.getUserDetails(userData)
+          if (isEditMode && userData?.inviteToken){
+            setInvite({...invite,link : mapTokenToLink(userData?.inviteToken), isSuceeded : true,sent:true})
+            userData.workspaceId = userData?.workspace?.id
           }
           
           setEditMode(isEditMode)
-          setUserData({...userData,workspaceId : specificUser.workspaceId} as UserData)
+          setUserData({...userData} as UserData)
+          
       } catch (e) {
           toast.error("Error getting user details")
       }
@@ -96,7 +99,7 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
   };
 
   const isFormDisabled = () : boolean => {
-    return !(userDataModel?.role && userDataModel?.username && userDataModel?.workspaceId && !isDisplayErrorMessage)
+    return !(userDataModel?.role && userDataModel?.username && userDataModel?.workspaceId && fromService.isValidEmail(userDataModel?.username))
   }
 
 
@@ -207,7 +210,7 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
                     onChange={(event) => setSearchValue(event.target.value)}/>
         </div>
         <SelectList items={workspaces} tableName={''} multiSelect={false} searchValue={searchValue}
-        setCheckedValues={handleChange("workspaceId")} tabelClassName={''} checkedValues={[userDataModel.workspaceId]} >
+        setCheckedValues={handleChange("workspaceId")} tabelClassName={''} checkedValues={[userDataModel?.workspaceId]} >
         </SelectList>
       </div>
     </ConfirmationModal>
