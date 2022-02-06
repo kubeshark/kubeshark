@@ -135,7 +135,7 @@ type HealthResponse struct {
 }
 
 type VersionResponse struct {
-	SemVer string `json:"semver"`
+	Ver string `json:"ver"`
 }
 
 type RulesPolicy struct {
