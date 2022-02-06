@@ -23,12 +23,14 @@ export const EntHeader: React.FC = () => {
     const userState = useRecoilValue(loggedInUserStateAtom);
 
     const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
-
+    
     useEffect(() => {
-        if(userState.role === Roles.admin && !userState.workspace) {
-            setIsSettingsModalOpen(true);
-        }
-    }, [userState])
+        (async() => {
+            const workspace = await api.getWorkspaces();
+            if(userState.role === Roles.admin && !userState.workspace && workspace.length === 0) {
+                setIsSettingsModalOpen(true);
+            }
+    })}, [userState])
 
     const onSettingsModalClose = () => {
         setIsSettingsModalOpen(false);
