@@ -17,6 +17,10 @@ type Counter struct {
 }
 
 func (c *Counter) addEntry(ts float64, rt float64, succ bool, dur float64) {
+	if dur < 0 {
+		panic("Duration cannot be negative")
+	}
+
 	c.Entries += 1
 	c.SumRT += rt
 	c.SumDuration += dur
