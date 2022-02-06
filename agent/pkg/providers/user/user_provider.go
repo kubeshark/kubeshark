@@ -294,36 +294,6 @@ func UpdateUserTraits(identityId string, traits map[string]interface{}, ctx cont
 	return err
 }
 
-func GetUser(identityId string, ctx context.Context) (*User, error) {
-	user := &User{
-		UserId: identityId,
-	}
-
-	identity, _, err := client.V0alpha2Api.AdminGetIdentity(ctx, identityId).Execute()
-	if err != nil {
-		return nil, err
-	}
-
-	traits := identity.Traits.(map[string]interface{})
-	username := traits["username"].(string)
-	user.Username = username
-	user.Status = InviteStatus(traits["inviteStatus"].(string))
-
-	if systemRole, err := userRoles.GetUserSystemRole(username); err != nil {
-		return nil, err
-	} else {
-		user.SystemRole = systemRole
-	}
-
-	if workspaceId, err := userRoles.GetUserWorkspaceId(username); err != nil {
-		return nil, err
-	} else {
-		user.WorkspaceId = workspaceId
-	}
-
-	return user, nil
-}
-
 func ListUsers(usernameFilterQuery string, ctx context.Context) ([]UserListItem, error) {
 	var users []UserListItem
 
@@ -362,12 +332,23 @@ func ListUsers(usernameFilterQuery string, ctx context.Context) ([]UserListItem,
 			}
 			workspace := workspaceMap[workspaceId]
 
+			var inviteToken *string
+			if invite, err := database.GetInviteByUsername(username); err != nil {
+				if !errors.Is(err, &database.ErrorNotFound{}) {
+					return nil, err
+				}
+				inviteToken = nil
+			} else {
+				inviteToken = &invite.Token
+			}
+
 			users = append(users, UserListItem{
-				Username:   username,
-				UserId:     identity.Id,
-				Status:     InviteStatus(inviteStatus),
-				SystemRole: systemRole,
-				Workspace:  workspace,
+				Username:    username,
+				UserId:      identity.Id,
+				Status:      InviteStatus(inviteStatus),
+				SystemRole:  systemRole,
+				Workspace:   workspace,
+				InviteToken: inviteToken,
 			})
 		}
 	}
@@ -381,16 +362,23 @@ func WhoAmI(sessionToken string, ctx context.Context) (*WhoAmIResponse, error) {
 		return nil, err
 	}
 
-	user, err := GetUser(session.Identity.Id, ctx)
+	traits := session.Identity.Traits.(map[string]interface{})
+	username := traits["username"].(string)
+
+	systemRole, err := userRoles.GetUserSystemRole(username)
+	if err != nil {
+		return nil, err
+	}
+	workspaceId, err := userRoles.GetUserWorkspaceId(username)
 	if err != nil {
 		return nil, err
 	}
 
 	var userWorkspace *workspace.WorkspaceResponse
-	if user.WorkspaceId != "" {
-		if userWorkspace, err = workspace.GetWorkspace(user.WorkspaceId); err != nil {
+	if workspaceId != "" {
+		if userWorkspace, err = workspace.GetWorkspace(workspaceId); err != nil {
 			if errors.Is(err, &database.ErrorNotFound{}) {
-				logger.Log.Warningf("user %s has workspace id %s with no associated database entry", user.Username, user.WorkspaceId)
+				logger.Log.Warningf("user %s has workspace id %s with no associated database entry", username, workspaceId)
 				userWorkspace = nil
 			} else {
 				return nil, err
@@ -399,8 +387,8 @@ func WhoAmI(sessionToken string, ctx context.Context) (*WhoAmIResponse, error) {
 	}
 
 	return &WhoAmIResponse{
-		Username:   user.Username,
-		SystemRole: user.SystemRole,
+		Username:   username,
+		SystemRole: systemRole,
 		Workspace:  userWorkspace,
 	}, nil
 }

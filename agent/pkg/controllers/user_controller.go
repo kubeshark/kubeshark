@@ -1,8 +1,10 @@
 package controllers
 
 import (
+	"errors"
 	"net/http"
 
+	"github.com/up9inc/mizu/agent/pkg/providers/database"
 	"github.com/up9inc/mizu/agent/pkg/providers/user"
 
 	"github.com/gin-gonic/gin"
@@ -44,7 +46,11 @@ func CreateUserAndInvite(c *gin.Context) {
 
 	if inviteToken, identityId, err := user.CreateNewUserWithInvite(requestCreateUser.Username, requestCreateUser.WorkspaceId, requestCreateUser.SystemRole, c.Request.Context()); err != nil {
 		logger.Log.Errorf("internal error while creating user invite %v", err)
-		c.JSON(http.StatusInternalServerError, err)
+		if errors.Is(err, &database.ErrorUniqueConstraintViolation{}) {
+			c.JSON(http.StatusConflict, "an invite for this user already exists")
+		} else {
+			c.JSON(http.StatusInternalServerError, err)
+		}
 	} else {
 		c.JSON(201, gin.H{"inviteToken": inviteToken, "userId": identityId})
 	}
@@ -92,15 +98,6 @@ func ListUsers(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, err)
 	} else {
 		c.JSON(200, users)
-	}
-}
-
-func GetUser(c *gin.Context) {
-	if user, err := user.GetUser(c.Param("userId"), c.Request.Context()); err != nil {
-		logger.Log.Errorf("internal error while fetching specific user %v", err)
-		c.JSON(http.StatusInternalServerError, err)
-	} else {
-		c.JSON(200, user)
 	}
 }
 

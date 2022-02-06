@@ -13,20 +13,13 @@ type TokenResponse struct {
 	Token string `json:"token"`
 }
 
-type User struct {
-	Username    string       `json:"username"`
-	UserId      string       `json:"userId"`
-	Status      InviteStatus `json:"status"`
-	WorkspaceId string       `json:"workspaceId"`
-	SystemRole  string       `json:"role"`
-}
-
 type UserListItem struct {
-	Username   string                               `json:"username"`
-	UserId     string                               `json:"userId"`
-	Status     InviteStatus                         `json:"status"`
-	SystemRole string                               `json:"role"`
-	Workspace  *workspace.WorkspaceListItemResponse `json:"workspace"`
+	Username    string                               `json:"username"`
+	UserId      string                               `json:"userId"`
+	Status      InviteStatus                         `json:"status"`
+	SystemRole  string                               `json:"role"`
+	Workspace   *workspace.WorkspaceListItemResponse `json:"workspace"`
+	InviteToken *string                              `json:"inviteToken"`
 }
 
 type InviteUserRequest struct {

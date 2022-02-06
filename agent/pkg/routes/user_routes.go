@@ -10,8 +10,6 @@ import (
 func UserRoutes(ginApp *gin.Engine) {
 	routeGroup := ginApp.Group("/user")
 
-	routeGroup.GET("/:userId", middlewares.RequiresAdmin(), controllers.GetUser)
-
 	routeGroup.GET("/whoAmI", middlewares.RequiresAuth(), controllers.WhoAmI)
 	routeGroup.POST("/login", controllers.Login)
 	routeGroup.POST("/logout", controllers.Logout)
