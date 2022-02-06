@@ -32,14 +32,15 @@ jobs:
         id: condval
         with:
           cond: ${{ github.ref == 'refs/heads/main' }}
-          if_true: "minor"
-          if_false: "patch"
+          if_true: "stable"
+          if_false: "dev"
 
-      - name: Auto increment SemVer action
-        uses: MCKanpolat/auto-semver-action@1.0.5
+      - name: Auto Increment Ver Action
+        uses: docker://igorgov/auto-inc-ver:v2.0.0
         id: versioning
         with:
-          releaseType: ${{ steps.condval.outputs.value }}
+          mode: ${{ steps.condval.outputs.value }}
+          suffix: 'dev'
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Get version parameters
@@ -109,14 +110,15 @@ jobs:
         id: condval
         with:
           cond: ${{ github.ref == 'refs/heads/main' }}
-          if_true: "minor"
-          if_false: "patch"
+          if_true: "stable"
+          if_false: "dev"
 
-      - name: Auto increment SemVer action
-        uses: MCKanpolat/auto-semver-action@1.0.5
+      - name: Auto Increment Ver Action
+        uses: docker://igorgov/auto-inc-ver:v2.0.0
         id: versioning
         with:
-          releaseType: ${{ steps.condval.outputs.value }}
+          mode: ${{ steps.condval.outputs.value }}
+          suffix: 'dev'
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Get version parameters
@@ -175,14 +177,15 @@ jobs:
         id: condval
         with:
           cond: ${{ github.ref == 'refs/heads/main' }}
-          if_true: "minor"
-          if_false: "patch"
+          if_true: "stable"
+          if_false: "dev"
 
-      - name: Auto increment SemVer action
-        uses: MCKanpolat/auto-semver-action@1.0.5
+      - name: Auto Increment Ver Action
+        uses: docker://igorgov/auto-inc-ver:v2.0.0
         id: versioning
         with:
-          releaseType: ${{ steps.condval.outputs.value }}
+          mode: ${{ steps.condval.outputs.value }}
+          suffix: 'dev'
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Get version parameters
@@ -238,18 +241,20 @@ jobs:
           service_account_key: ${{ secrets.GCR_JSON_KEY }}
           export_default_credentials: true
 
-      - uses: haya14busa/action-cond@v1
+      - name: Determine versioning strategy
+        uses: haya14busa/action-cond@v1
         id: condval
         with:
           cond: ${{ github.ref == 'refs/heads/main' }}
-          if_true: "minor"
-          if_false: "patch"
+          if_true: "stable"
+          if_false: "dev"
 
-      - name: Auto Increment Semver Action
-        uses: MCKanpolat/auto-semver-action@1.0.5
+      - name: Auto Increment Ver Action
+        uses: docker://igorgov/auto-inc-ver:v2.0.0
         id: versioning
         with:
-          releaseType: ${{ steps.condval.outputs.value }}
+          mode: ${{ steps.condval.outputs.value }}
+          suffix: 'dev'
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Get version parameters

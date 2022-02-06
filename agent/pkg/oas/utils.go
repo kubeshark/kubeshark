@@ -52,8 +52,7 @@ func createSimpleParam(name string, in openapi.In, ptype openapi.SchemaType) *op
 	}
 	required := true // FFS! https://stackoverflow.com/questions/32364027/reference-a-boolean-for-assignment-in-a-struct/32364093
 	schema := new(openapi.SchemaObj)
-	schema.Type = make(openapi.Types, 0)
-	schema.Type = append(schema.Type, ptype)
+	schema.Type = openapi.Types{ptype}
 
 	style := openapi.StyleSimple
 	if in == openapi.InQuery {
@@ -197,7 +196,7 @@ func fillParamExample(param **openapi.Examples, exampleValue string) error {
 			continue
 		}
 
-		if value == exampleValue || cnt > 5 { // 5 examples is enough
+		if value == exampleValue || cnt >= 5 { // 5 examples is enough
 			return nil
 		}
 	}
@@ -211,6 +210,36 @@ func fillParamExample(param **openapi.Examples, exampleValue string) error {
 	themap["example #"+strconv.Itoa(cnt)] = &openapi.ExampleObj{Value: valMsg}
 
 	return nil
+}
+
+// TODO: somehow generalize the two example setting functions, plus add body example handling
+
+func addSchemaExample(existing *openapi.SchemaObj, bodyStr string) {
+	if len(existing.Examples) < 5 {
+		found := false
+		for _, eVal := range existing.Examples {
+			existingExample := ""
+			err := json.Unmarshal(eVal, &existingExample)
+			if err != nil {
+				logger.Log.Debugf("Failed to unmarshal example: %v", eVal)
+				continue
+			}
+
+			if existingExample == bodyStr {
+				found = true
+				break
+			}
+		}
+
+		if !found {
+			example, err := json.Marshal(bodyStr)
+			if err != nil {
+				logger.Log.Debugf("Failed to marshal example: %v", bodyStr)
+				return
+			}
+			existing.Examples = append(existing.Examples, example)
+		}
+	}
 }
 
 func longestCommonXfix(strs [][]string, pre bool) []string { // https://github.com/jpillora/longestcommon
@@ -369,4 +398,32 @@ func isAlphaRune(r rune) bool {
 
 func isAlNumRune(b rune) bool {
 	return isAlphaRune(b) || ('0' <= b && b <= '9')
+}
+
+func deleteFromSlice(s []string, val string) []string {
+	temp := s[:0]
+	for _, x := range s {
+		if x != val {
+			temp = append(temp, x)
+		}
+	}
+	return temp
+}
+
+func sliceContains(s []string, e string) bool {
+	for _, a := range s {
+		if a == e {
+			return true
+		}
+	}
+	return false
+}
+
+func intersectSliceWithMap(required []string, names map[string]struct{}) []string {
+	for name := range names {
+		if !sliceContains(required, name) {
+			required = deleteFromSlice(required, name)
+		}
+	}
+	return required
 }
