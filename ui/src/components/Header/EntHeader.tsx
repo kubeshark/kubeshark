@@ -30,7 +30,7 @@ export const EntHeader: React.FC = () => {
             if(userState.role === Roles.admin && !userState.workspace && workspace.length === 0) {
                 setIsSettingsModalOpen(true);
             }
-    })}, [userState])
+    })()}, [userState])
 
     const onSettingsModalClose = () => {
         setIsSettingsModalOpen(false);
