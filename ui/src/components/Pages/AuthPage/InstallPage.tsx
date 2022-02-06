@@ -70,7 +70,7 @@ export const InstallPage: React.FC = () => {
     return <div className="centeredForm" ref={formRef}>
             {isLoading && <LoadingOverlay/>}
             <div className="form-title left-text">Setup</div>
-            {inviteToken && <span className="form-subtitle">you have been invited to join Mizu, please set password in order to complete the registration process</span>}
+            {inviteToken && <span className="form-subtitle">You have been invited to join Mizu, please set password in order to complete the registration process</span>}
             {!inviteToken && <span className="form-subtitle">Welcome to Mizu, please set up the admin user to continue</span>}
             {!inviteToken && <div className="form-input">
                 <label htmlFor="inputUsername">Username</label>

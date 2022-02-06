@@ -60,6 +60,14 @@ func GetInviteByInviteToken(inviteToken string) (*Invite, error) {
 	return &invite, nil
 }
 
+func GetInviteByUsername(username string) (*Invite, error) {
+	var invite Invite
+	if err := db.Where("username = ?", username).First(&invite).Error; err != nil {
+		return nil, handleDatabaseError(err)
+	}
+	return &invite, nil
+}
+
 func DeleteInvite(inviteToken string) error {
 	if err := db.Where("token = ?", inviteToken).Delete(&Invite{}).Error; err != nil {
 		return handleDatabaseError(err)

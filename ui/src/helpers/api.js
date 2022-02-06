@@ -114,9 +114,9 @@ export default class Api {
     }
 
     createWorkspace = async(workspaceData,linkUser) =>{
-        let path = `/workspace`;
+        let path = `/workspace/`;
         if(linkUser){
-            path = `/workspace?linkUser=${linkUser}`;
+            path = `/workspace/?linkUser=${linkUser}`;
         }
         const response = await this.client.post(path,workspaceData);
         return response.data;
