@@ -5,12 +5,12 @@ import {EntHeader} from "../../Header/EntHeader";
 import {useRecoilState} from "recoil";
 import serviceMapModalOpenAtom from "../../../recoil/serviceMapModalOpen";
 
-const SystemViewer = ({isFirstLogin, setIsFirstLogin}) => {
+const SystemViewer = () => {
 
     const [serviceMapModalOpen, setServiceMapModalOpen] = useRecoilState(serviceMapModalOpenAtom);
 
     return <>
-        <EntHeader isFirstLogin={isFirstLogin} setIsFirstLogin={setIsFirstLogin} />
+        <EntHeader/>
         <Outlet/>
         {window["isServiceMapEnabled"] && <ServiceMapModal
             isOpen={serviceMapModalOpen}

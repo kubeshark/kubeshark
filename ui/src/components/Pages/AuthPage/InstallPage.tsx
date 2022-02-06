@@ -13,11 +13,8 @@ import { useNavigate, useParams } from "react-router-dom";
 
 const api = Api.getInstance();
 
-interface InstallPageProps {
-    onFirstLogin: () => void;
-}
 
-export const InstallPage: React.FC<InstallPageProps> = ({onFirstLogin}) => {
+export const InstallPage: React.FC = () => {
 
     const formRef = useRef(null);
     const classes = useCommonStyles();
@@ -51,7 +48,6 @@ export const InstallPage: React.FC<InstallPageProps> = ({onFirstLogin}) => {
             await registerFunc();
             if (!await api.isAuthenticationNeeded()) {
                 navigate('/');
-                onFirstLogin();
             }
         } catch (e) {
             if (e.type === FormValidationErrorType) {

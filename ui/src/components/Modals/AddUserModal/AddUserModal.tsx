@@ -201,14 +201,16 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
       </div>
       </div>
       <h3 className='comfirmation-modal__sub-section-header'>WORKSPACE ACCESS </h3>     
-      <div className="namespacesSettingsContainer">
+      <div className="listSettingsContainer">
         <div style={{marginTop: "17px"}}>
-            <input className={classes.textField + " search-workspace"} placeholder="Search" value={searchValue}
+            <input className={classes.textField + " search"} placeholder="Search" value={searchValue}
                     onChange={(event) => setSearchValue(event.target.value)}/>
         </div>
+        <div className='select-list-container'>
         <SelectList items={workspaces} tableName={''} multiSelect={false} searchValue={searchValue}
         setCheckedValues={handleChange("workspaceId")} tabelClassName={''} checkedValues={[userDataModel.workspaceId]} >
         </SelectList>
+        </div>
       </div>
     </ConfirmationModal>
     </>); 

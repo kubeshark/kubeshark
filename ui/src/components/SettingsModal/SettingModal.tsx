@@ -12,12 +12,11 @@ import { adminUsername } from "../../consts";
 interface SettingsModalProps {
     isOpen: boolean
     onClose: () => void
-    isFirstLogin: boolean
 }
 
 const api = Api.getInstance();
 
-export const SettingsModal: React.FC<SettingsModalProps> = ({isOpen, onClose, isFirstLogin}) => {
+export const SettingsModal: React.FC<SettingsModalProps> = ({isOpen, onClose}) => {
 
     const classes = useCommonStyles();
     const [namespaces, setNamespaces] = useState([]);
@@ -31,28 +30,18 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({isOpen, onClose, is
             try {
                 setSearchValue("");
                 setIsLoading(true);
-                // const tapConfig = await api.getTapConfig()
                 const namespaces = await api.getNamespaces();
                 const namespacesMapped = namespaces.map(namespace => {
                     return {key: namespace, value: namespace}
                   })
                 setNamespaces(namespacesMapped);
-                // if(isFirstLogin) {
-                //     const namespacesObj = {...tapConfig?.tappedNamespaces}
-                //     Object.keys(tapConfig?.tappedNamespaces ?? {}).forEach(namespace => {
-                //         namespacesObj[namespace] = true;
-                //     })
-                //     setNamespaces(namespacesObj);
-                // } else {
-                //     setNamespaces(tapConfig?.tappedNamespaces);
-                // }
             } catch (e) {
                 console.error(e);
             } finally {
                 setIsLoading(false);
             }
         })()
-    }, [isFirstLogin, isOpen])
+    }, [isOpen])
 
     const updateTappingSettings = async () => {
         try {
@@ -70,7 +59,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({isOpen, onClose, is
     }
 
     const onModalClose = (reason) => {
-        if(reason === 'backdropClick' && isFirstLogin) return;
+        if(reason === 'backdropClick') return;
         onClose();
     }
 
@@ -94,16 +83,16 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({isOpen, onClose, is
                     {isLoading ? <div style={{textAlign: "center", padding: 20}}>
                         <img alt="spinner" src={spinner} style={{height: 35}}/>
                     </div> : <>
-                        <div className="namespacesSettingsContainer">
+                        <div className="listSettingsContainer">
                             <div style={{marginTop: "17px"}}>
-                                <input className={classes.textField + " searchNamespace"} placeholder="Search" value={searchValue}
+                                <input className={classes.textField + " search"} placeholder="Search" value={searchValue}
                                        onChange={(event) => setSearchValue(event.target.value)}/></div>
                                 <SelectList items={namespaces} tableName={'Namespace'} multiSelect={true} searchValue={searchValue} setCheckedValues={setCheckedNamespacesKeys} tabelClassName={'namespacesTable'} checkedValues={checkedNamespacesKeys}/>
                         </div>
                     </>}
                 </div>
                 <div className="settingsActionsContainer">
-                    {!isFirstLogin &&
+                    {
                     <Button style={{width: 100}} className={classes.outlinedButton} size={"small"}
                             onClick={onClose} variant='outlined'>Cancel</Button>}
                     <Button style={{width: 100, marginLeft: 20}} className={classes.button} size={"small"}

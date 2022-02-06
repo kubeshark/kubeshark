@@ -1,4 +1,3 @@
-import React, { useState} from "react";
 import {Route, Routes} from "react-router-dom";
 import {RouterRoutes} from "../helpers/routes";
 import AuthPageBase from "./Pages/AuthPage/AuthPageBase";
@@ -13,19 +12,14 @@ import { AuthenticatedRoute } from "../helpers/AuthenticatedRoute";
 
 const AppSwitchRoutes = () => {
 
-    const [isFirstLogin, setIsFirstLogin] = useState(false);
-    
-
-
-
     return <Routes>
-        <Route path={"/"} element={<SystemViewer isFirstLogin={isFirstLogin} setIsFirstLogin={setIsFirstLogin}/>}>
+        <Route path={"/"} element={<SystemViewer/>}>
             <Route path={RouterRoutes.SETTINGS} element={<AuthenticatedRoute><SettingsPage/></AuthenticatedRoute>} /> {/*todo: set settings component*/}
             <Route path={"/"} element={<AuthenticatedRoute><TrafficPage/></AuthenticatedRoute>}/>
             
         </Route>
-        <Route path={RouterRoutes.SETUP} element={<AuthPageBase><InstallPage onFirstLogin={() => setIsFirstLogin(true)}/></AuthPageBase>}/>
-        <Route path={RouterRoutes.SETUP + "/:inviteToken"} element={<AuthPageBase><InstallPage onFirstLogin={() => setIsFirstLogin(true)}/></AuthPageBase>}/>
+        <Route path={RouterRoutes.SETUP} element={<AuthPageBase><InstallPage/></AuthPageBase>}/>
+        <Route path={RouterRoutes.SETUP + "/:inviteToken"} element={<AuthPageBase><InstallPage/></AuthPageBase>}/>
         <Route path={RouterRoutes.LOGIN} element={<AuthPageBase><LoginPage/></AuthPageBase>}/>
         
     </Routes>

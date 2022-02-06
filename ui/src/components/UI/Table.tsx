@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from "react";
 import './style/Table.sass';
-import circleImg from '../assets/dotted-circle.svg';
+import NoDataMessage from "./NoDataMessage";
 
 export interface ColsType {
     field:string,
@@ -36,10 +36,6 @@ export const Table: React.FC<TableProps> = ({rows, cols, onRowDelete, onRowEdit,
         onRowDelete(row);
     }
 
-    // const filteredValues = useMemo(() => {
-    //     return tableRows.filter((listValue) => listValue.find(row));
-    // },[tableRows, searchValue])
-
     return <table cellPadding={5} style={{borderCollapse: "collapse"}} className="mui-table">
     <thead className="mui-table__thead">
     <tr style={{borderBottomWidth: "2px"}} className="mui-table__tr">
@@ -52,18 +48,12 @@ export const Table: React.FC<TableProps> = ({rows, cols, onRowDelete, onRowEdit,
     <tbody className={`mui-table__tbody ${bodyClass}`}>
         {
             ((tableRows == null) || (tableRows.length === 0)) ?
-            <tr className="mui-table__no-data">
-                <td>
-                    <div className="container">
-                        <img src={circleImg} alt="No data Found"></img>
-                        <div className="mui-table__no-data-message">{noDataMeesage}</div>
-                    </div>
-
+            <tr className="mui-table__tr--no-data">
+                <td >
+                    <NoDataMessage messageText={noDataMeesage}/>
                 </td>
             </tr>
-
             :
-        
             tableRows?.map((rowData,index) => {
                 return <tr key={rowData?.id ?? index} className="mui-table__tr">
                     {cols.map((col,index) => {                        

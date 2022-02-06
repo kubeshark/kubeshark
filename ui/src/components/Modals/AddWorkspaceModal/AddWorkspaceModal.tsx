@@ -100,18 +100,17 @@ const AddWorkspaceModal: FC<AddWorkspaceModalProp> = ({isOpen,onCloseModal, work
       <h3 className='comfirmation-modal__sub-section-header'>DETAILS</h3>
         <div className='comfirmation-modal__sub-section'>
           <div>
-            {/* <input type="text" value={workspaceName ?? ""} className={classes.textField + " workspace__name"} placeholder={"Workspace Name"} 
-                  onChange={onWorkspaceNameChange}></input> */}
-                   <TextField value={workspaceName ?? ""} className={"user__email"} size='small' label="Workspace Name" onChange={onWorkspaceNameChange}
-                              variant="outlined"/>
+              <TextField value={workspaceName ?? ""} className={"user__email"} size='small' label="Workspace Name" onChange={onWorkspaceNameChange}
+                        variant="outlined"/>
             </div>
             </div>
             <h3 className='comfirmation-modal__sub-section-header'>TAP SETTINGS</h3>     
-          <div className="namespacesSettingsContainer">
+          <div className="listSettingsContainer">
             <div style={{marginTop: "17px"}}>
-                <input className={classes.textField + " searchNamespace"} placeholder="Search" value={searchValue}
+                <input className={classes.textField + " search"} placeholder="Search" value={searchValue}
                         onChange={(event) => setSearchValue(event.target.value)}/>
             </div>
+            <div className='select-list-container'>
             <SelectList items={namespaces}
                         tableName={"Namespaces"}
                         multiSelect={true} 
@@ -120,6 +119,8 @@ const AddWorkspaceModal: FC<AddWorkspaceModalProp> = ({isOpen,onCloseModal, work
                         setCheckedValues={setCheckedNamespacesKeys} 
                         tabelClassName={undefined}>
                         </SelectList>
+            </div>
+
           </div>
     </ConfirmationModal>
     </>); 

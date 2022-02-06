@@ -17,26 +17,21 @@ import { Roles } from "../../recoil/loggedInUserState";
 
 const api = Api.getInstance();
 
-interface EntHeaderProps {
-    isFirstLogin: boolean;
-    setIsFirstLogin: (flag: boolean) => void
-}
 
-export const EntHeader: React.FC<EntHeaderProps> = ({isFirstLogin, setIsFirstLogin}) => {
+export const EntHeader: React.FC = () => {
     const navigate = useNavigate();
     const userState = useRecoilValue(loggedInUserStateAtom);
 
     const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 
     useEffect(() => {
-        if(isFirstLogin) {
-            setIsSettingsModalOpen(true)
+        if(userState.role === Roles.admin && !userState.workspace) {
+            setIsSettingsModalOpen(true);
         }
-    }, [isFirstLogin])
+    }, [userState])
 
     const onSettingsModalClose = () => {
         setIsSettingsModalOpen(false);
-        setIsFirstLogin(false);
     }
 
     return <div className="header">
@@ -49,7 +44,7 @@ export const EntHeader: React.FC<EntHeaderProps> = ({isFirstLogin, setIsFirstLog
         {userState.role === Roles.admin && <img className="headerIcon" alt="settings" src={settingImg} style={{marginRight: 25}} onClick={() => navigate(RouterRoutes.SETTINGS)}/>}
             <ProfileButton/>
         </div>
-        {userState.role === Roles.admin && !userState.workspace && <SettingsModal isOpen={isSettingsModalOpen} onClose={onSettingsModalClose} isFirstLogin={isFirstLogin}/>}
+        <SettingsModal isOpen={isSettingsModalOpen} onClose={onSettingsModalClose}/>
     </div>;
 }
 

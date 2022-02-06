@@ -6,11 +6,10 @@ import AddWorkspaceModal, { WorkspaceData } from "../Modals/AddWorkspaceModal/Ad
 import { toast } from "react-toastify";
 import ConfirmationModal from "../UI/Modals/ConfirmationModal";
 
-interface Props {}
 
 const api = Api.getInstance();
 
-export const WorkspaceSettings : React.FC<Props> = () => {
+export const WorkspaceSettings : React.FC = () => {
 
     const [workspacesRows, setWorkspacesRows] = useState([]);
     const cols : ColsType[] = [{field : "name",header:"Name"}];

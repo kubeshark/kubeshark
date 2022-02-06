@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import Checkbox from "./Checkbox"
 import Radio from "./Radio";
 import './style/SelectList.sass';
+import NoDataMessage from "./NoDataMessage";
 
 export type ValuesListInput = {
     key: string;
@@ -18,6 +19,8 @@ export interface Props {
 }
 
 const SelectList: React.FC<Props> = ({items ,tableName,checkedValues=[],multiSelect=true,searchValue="",setCheckedValues,tabelClassName}) => {
+
+    const noItemsMessage = "No items to show";
  
     const filteredValues = useMemo(() => {
         return items.filter((listValue) => listValue?.value?.includes(searchValue));
@@ -61,22 +64,31 @@ const SelectList: React.FC<Props> = ({items ,tableName,checkedValues=[],multiSel
             <th>{tableName}</th>    
         </tr>
 
-        return <div className={tabelClassName + " select-list-table"}>
+    const tableBody = filteredValues.length === 0 ?  
+    <tr>
+        <td>
+            <NoDataMessage messageText={noItemsMessage}/>
+        </td>
+    </tr> 
+                    : 
+        filteredValues?.map(listValue => {
+            return <tr key={listValue.key}>
+                    <td style={{width: 50}}>
+                        {multiSelect && <Checkbox checked={checkedValues.includes(listValue.key)} onToggle={() => toggleValue(listValue.key)}/>}
+                        {!multiSelect && <Radio checked={checkedValues.includes(listValue.key)} onToggle={() => toggleValue(listValue.key)}/>}
+                    </td>
+                    <td>{listValue.value}</td>
+                </tr>   
+        }
+    )
+
+        return <div className={tabelClassName  ? tabelClassName + " select-list-table" : " select-list-table"}>
                 <table cellPadding={5} style={{borderCollapse: "collapse"}}>
                     <thead>
-                    {tableHead}
+                        {tableHead}
                     </thead>
                     <tbody>
-                    {filteredValues?.map(listValue => {
-                            return <tr key={listValue.key}>
-                                <td style={{width: 50}}>
-                                    {multiSelect && <Checkbox checked={checkedValues.includes(listValue.key)} onToggle={() => toggleValue(listValue.key)}/>}
-                                    {!multiSelect && <Radio checked={checkedValues.includes(listValue.key)} onToggle={() => toggleValue(listValue.key)}/>}
-                                </td>
-                                <td>{listValue.value}</td>
-                            </tr>   
-                        }
-                    )}
+                        {tableBody}
                     </tbody>
             </table>
         </div>

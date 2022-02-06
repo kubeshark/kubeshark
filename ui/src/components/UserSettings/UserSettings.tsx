@@ -9,10 +9,6 @@ import ConfirmationModal from "../UI/Modals/ConfirmationModal";
 import {Utils} from "../../helpers/Utils"
 
 
-interface Props {
-
-}
-
 const api = Api.getInstance();
 
 enum InviteStatus{
@@ -20,7 +16,7 @@ enum InviteStatus{
     pending = "Pending"
 }
 
-export const UserSettings : React.FC<Props> = () => {
+export const UserSettings : React.FC = () => {
 
     const [usersRows, setUserRows] = useState([]);
     const [userData,userUserData] = useState({} as UserData)
