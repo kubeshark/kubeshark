@@ -5,6 +5,10 @@ on:
     branches:
       - 'develop'
       - 'main'
+  push: # needed to upload test coverage report to codecov
+    branches:
+      - 'develop'
+      - 'main'
 
 concurrency:
   group: mizu-tests-validation-${{ github.ref }}
