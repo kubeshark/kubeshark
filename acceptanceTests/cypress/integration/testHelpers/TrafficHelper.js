@@ -39,10 +39,17 @@ export function leftOnHoverCheck(entryNum, path, filterName) {
 }
 
 export function rightTextCheck(path, expectedText) {
-    cy.get(`.TrafficPage-Container > :nth-child(2) ${path}`).should('have.text', expectedText);
+    cy.get(`#rightSideContainer ${path}`).should('have.text', expectedText);
 }
 
 export function rightOnHoverCheck(path, expectedText) {
-    cy.get(`.TrafficPage-Container > :nth-child(2) ${path}`).trigger('mouseover');
-    cy.get(`.TrafficPage-Container > :nth-child(2) .Queryable-Tooltip`).should('have.text', expectedText);
+    cy.get(`#rightSideContainer ${path}`).trigger('mouseover');
+    cy.get(`#rightSideContainer .Queryable-Tooltip`).should('have.text', expectedText);
+}
+
+export function checkThatAllEntriesShown() {
+    cy.get('#entries-length').then(number => {
+        if (number.text() === '1')
+            cy.get('[title="Fetch old records"]').click();
+    });
 }

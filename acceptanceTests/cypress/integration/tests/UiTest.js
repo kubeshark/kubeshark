@@ -139,7 +139,7 @@ function checkFilterNoResults(filterName) {
 
             // applying the filter
             cy.get('.w-tc-editor-text').type(filterName);
-            cy.get('.w-tc-editor').should('have.attr', 'style').and('include', greenFilterColor);
+            cy.get('.w-tc-editor').should('have.attr', 'style').and('include', Cypress.env('greenFilterColor'));
             cy.get('[type="submit"]').click();
 
             // waiting for the entries number to load
@@ -172,7 +172,7 @@ function checkIllegalFilter(illegalFilterName) {
             const totalEntries = number.text();
 
             cy.get('.w-tc-editor-text').type(illegalFilterName);
-            cy.get('.w-tc-editor').should('have.attr', 'style').and('include', redFilterColor);
+            cy.get('.w-tc-editor').should('have.attr', 'style').and('include', Cypress.env('redFilterColor'));
             cy.get('[type="submit"]').click();
 
             cy.get('[role="alert"]').should('be.visible');
@@ -197,7 +197,7 @@ function checkFilter(filterDetails){
 
             // applying the filter with alt+enter or with the button
             cy.get('.w-tc-editor-text').type(`${name}${applyByEnter ? '{alt+enter}' : ''}`);
-            cy.get('.w-tc-editor').should('have.attr', 'style').and('include', greenFilterColor);
+            cy.get('.w-tc-editor').should('have.attr', 'style').and('include', Cypress.env('greenFilterColor'));
             if (!applyByEnter)
                 cy.get('[type="submit"]').click();
 
@@ -239,9 +239,6 @@ function deeperChcek(leftSidePath, rightSidePath, filterName, leftSideExpectedTe
         rightOnHoverCheck(rightSidePath, filterName);
     });
 }
-
-
-
 
 function checkRightSideResponseBody() {
     cy.contains('Response').click();

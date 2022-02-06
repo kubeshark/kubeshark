@@ -5,7 +5,6 @@ import (
 	"github.com/go-redis/redis/v8"
 	"os/exec"
 	"testing"
-	"time"
 )
 
 func TestRedis(t *testing.T) {
@@ -91,5 +90,4 @@ func TestRedis(t *testing.T) {
 		}
 	}
 
-	time.Sleep(1 * time.Hour)
 }
