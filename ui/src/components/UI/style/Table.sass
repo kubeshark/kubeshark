@@ -10,8 +10,8 @@
     margin-top: 20px
 
     &__tbody
-      max-height: calc(70vh - 355px)
-      overflow-y: auto
+      max-height: calc(70vh - 230px)
+      overflow-y: overlay
       display: block
 
     &__tbody &__tr:hover
@@ -82,7 +82,7 @@
       padding: 6.5px;
            
       &--delete
-        margin-left: 15%;
+        margin-left: clamp(10px,15%,20px);
         @include icon(url("../../assets/delete.svg"))
         
         &:hover
@@ -97,7 +97,10 @@
     &__td
       color: $light-gray
       padding: 10px
-      font-size: 16px
+      font-size: 15px
+      text-overflow: ellipsis;
+      overflow: hidden;
+      font-weight: 600;
 
 @mixin row-actions
         display: flex

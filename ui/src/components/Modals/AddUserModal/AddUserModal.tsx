@@ -1,4 +1,4 @@
-import { Button, FormControl, IconButton, InputAdornment, InputLabel, MenuItem, OutlinedInput,Select } from '@material-ui/core';
+import { Button, FormControl, IconButton, InputAdornment, InputLabel, OutlinedInput } from '@material-ui/core';
 
 import { FC, useEffect, useState } from 'react';
 import Api from '../../../helpers/api';
@@ -34,38 +34,20 @@ const fromService = new FormService()
 export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userData, isEditMode,onUserChange}) => {
 
 
-  //const [editUserData, setEditUserData] = useState(userData)
+
   const [searchValue, setSearchValue] = useState("");
-
   const [workspaces, setWorkspaces] = useState([])
-
-  //const { control, handleSubmit,register } = useForm<UserData>();
   const [editMode, setEditMode] = useState(isEditMode);
   const [invite, setInvite] = useState({sent:false,isSuceeded:false,link : null});
   const roles = [{key:"1",value:"admin"},{key:"2",value:"user"}]
+  const [isDisplayErrorMessage, setIsDisplayErrorMessage] = useState(false)
   const classes = useCommonStyles()
-
   const [userDataModel, setUserData] = useState(userData as UserData)
   const isLoading = false;
 
-  // useEffect(() => {
-  //   setIsOpen(isOpen)
-  // },[isOpen])
-
   useEffect(() => {
     (async () => {
-        try {
-          //   const workspacesList = [
-          //     {
-          //         "id": "f54b18ec-aa15-4b2c-a4d5-8eda17e44c93",
-          //         "name": "sock-shop"
-          //     },
-          //     {
-          //         "id": "c7ad9158-d840-46c0-b5ce-2487c013723f",
-          //         "name": "test"
-          //     }
-          // ]
-          
+        try {          
           const list = await api.getWorkspaces() 
           const workspacesList = list.map((obj) => {return {key:obj.id, value:obj.name,isChecked:false}})
           setWorkspaces(workspacesList)                         
@@ -92,10 +74,6 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
   })();
   },[isEditMode, userData])
 
-  // const onClose = () => {
-  //   setIsOpen(false)
-  // }
-
   const onClose = () => {
     onCloseModal()
     setUserData({} as UserData)
@@ -106,35 +84,19 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
 
   const updateUser = async() =>{
       try {
-        const res = await api.updateUser(userDataModel)
+        await api.updateUser(userDataModel)
         toast.success("User has been modified")  
       } catch (error) {
         toast.error("Error accured modifing user")  
       }
   }
 
-  const workspaceChange = (workspaces) => {
-    //setWorkspaces(newVal);
-    const  data = {...userDataModel, workspaceId : workspaces.length ? workspaces[0] : ""}
-    setUserData((prevState) => {return data});
-  }
-
-  const userRoleChange = (e) => {
-    const  data = {...userDataModel, role : e.target.value}
-    setUserData(data)
-  }
-
-  const userNameChange = (e) => {
-    const  data = {...userDataModel, username : e.currentTarget.value}
-    setUserData(data)
-  }
-
   const handleChange = (prop) => (event) => {
-    //setValues({ ...values, [prop]: event.target.value });
+    setUserData({ ...userDataModel, [prop]: event?.target?.value || event[0] });
   };
 
   const isFormDisabled = () : boolean => {
-    return !(Object.values(userDataModel).length >= 3) && Object.values(userDataModel).every(val => val !== null)
+    return !(userDataModel?.role && userDataModel?.username && userDataModel?.workspaceId && !isDisplayErrorMessage)
   }
 
 
@@ -172,6 +134,12 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
     return (!invite.isSuceeded || !(invite.link && invite.sent)) 
   }
 
+  const onBlurEmail = (e) => {
+    const isValid = fromService.isValidEmail(e.target.value)
+    const isErrorDisplay = (!isValid && !!userDataModel?.username)
+    setIsDisplayErrorMessage(isErrorDisplay)
+  }
+
   const handleCopyinviteLink = (e) => {navigator.clipboard.writeText(invite.link)}
 
   const addUsermodalCustomActions = <>
@@ -179,7 +147,7 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
       <div className={isShowInviteLink() ? "invite-link-row" : ""}>
       {isShowInviteLink() && <FormControl variant="outlined" size={"small"} className='invite-link-field'> 
           <InputLabel htmlFor="outlined-adornment-password">Invite link</InputLabel>
-          <OutlinedInput type={'text'} value={invite.link} onChange={handleChange('password')}  classes={{input: "u-input-padding"}}
+          <OutlinedInput type={'text'} value={invite.link}  classes={{input: "u-input-padding"}}
             endAdornment={
               <InputAdornment position="end">
                 <IconButton aria-label="copy invite link" onClick={handleCopyinviteLink} edge="end">
@@ -194,7 +162,6 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
                                             disabled={isFormDisabled()}  
                                             endIcon={isLoading && <img src={spinner} alt="spinner"/>}
                                             startIcon={<span className='generate-link-button__icon'></span>}>
-                                              
                                               {"Generate Invite Link"}
                               </Button>}
            {!isEditMode &&  isShowInviteLink() &&  <Button style={{height: '100%',marginLeft:'20px'}} className={classes.button} size={"small"} onClick={onClose}>
@@ -204,55 +171,33 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
               Save
             </Button>
           }
-
       </div>
-
    </>;
 
   return (<>
-
     <ConfirmationModal isOpen={isOpen} onClose={onClose} onConfirm={onClose} 
                        title={`${editMode ? "Edit" : "Add"} User`} customActions={addUsermodalCustomActions}>
-
+ 
       <h3 className='comfirmation-modal__sub-section-header'>DETAILS</h3>
       <div className='comfirmation-modal__sub-section'>
       <div className='user__details'>
-        {/* <input type="text" value={userDataModel?.username ?? ""} className={classes.textField + " user__email"} 
-                placeholder={"User Email"} onChange={userNameChange} disabled={editMode}>
-        </input> */}
-      {/* <div className="">
-          <label htmlFor="input-user-name">User email</label>
-          <input id="input-user-name" type="text" value={userDataModel?.username ?? ""} className={classes.textField + " user__email"} 
-          placeholder={"User Email"} onChange={userNameChange} disabled={editMode}/>
-      </div> */}
-      <FormControl variant="outlined" size={"small"} className={"user__email"}> 
-          <InputLabel htmlFor="">User email</InputLabel>
-          <OutlinedInput type={'text'} onChange={userNameChange} disabled={editMode} value={userDataModel?.username ?? ""}  
-            label="User email"/>
-            {/* {!fromService.isValidEmail(userDataModel?.username) && <label>*Invalid email</label>} */}
-        </FormControl>
-        
-              {/* <Controller name="role" control={control} rules={{ required: true }}
-        render={({ field }) =>    }
-      /> */}
-
-
-  {/* className='user__role u-input-padding' */}
-  {/* classes={{ select : 'u-input-padding' }}  */}
-      <FormControl variant="outlined" className='user__role' size={"small"}>
-        <InputLabel id="user-role-outlined-label">User role</InputLabel>
-        <Select
-          labelId="user-role-outlined-label"
-          id="demo-simple-select-outlined"
-          value={userDataModel.role ?? ""} onChange={userRoleChange}
-          label="User role">
-           {roles.map((role) => (
-                <MenuItem key={role.value} value={role.value}>
+      <div className="form-input user__email">
+        <label htmlFor="inputUserEmail">User email</label>
+        <input id="inputUserEmail" disabled={editMode} onChange={handleChange("username")} onBlur={onBlurEmail}
+               value={userDataModel?.username ?? ""} className={classes.textField} placeholder='name@company.com'/>  
+        <label className='error-message'>{(isDisplayErrorMessage) ? "*Email is not valid" : ""}</label>  
+      </div>
+      <div className="form-input user__role">
+        <label htmlFor="inputUserRole">User role</label>
+        <select value={userDataModel?.role || ""} onChange={handleChange("role")} id='inputUserRole' className={classes.textField} >
+            <option></option>
+        {roles.map((role) => (            
+                <option key={role.value} value={role.value}>
                   {Utils.capitalizeFirstLetter(role.value)}
-                </MenuItem>
+                </option>
               ))}
-        </Select>
-      </FormControl>
+        </select>
+      </div>                  
       </div>
       </div>
       <h3 className='comfirmation-modal__sub-section-header'>WORKSPACE ACCESS </h3>     
@@ -262,10 +207,9 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
                     onChange={(event) => setSearchValue(event.target.value)}/>
         </div>
         <SelectList items={workspaces} tableName={''} multiSelect={false} searchValue={searchValue}
-        setCheckedValues={workspaceChange} tabelClassName={''} checkedValues={[userDataModel.workspaceId]} >
+        setCheckedValues={handleChange("workspaceId")} tabelClassName={''} checkedValues={[userDataModel.workspaceId]} >
         </SelectList>
       </div>
-
     </ConfirmationModal>
     </>); 
 };

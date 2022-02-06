@@ -12,7 +12,10 @@ const useStyles = makeStyles({
         borderRadius: "5px",      
         outline: "none",
         minWidth: "300px",
-        backgroundColor: "rgb(255, 255, 255)"
+        backgroundColor: "rgb(255, 255, 255)",       
+    },
+    modalBackdrop :{
+        background : "rgba(24, 51, 121, 0.8)"
     }
 });
 
@@ -47,6 +50,7 @@ const CustomModal: React.FunctionComponent<CustomModalProps> = ({ open = false, 
                   BackdropComponent={Backdrop}
                   BackdropProps={{
                       timeout: 500,
+                      className:`${classes.modalBackdrop}`
                   }}>
                 <div className={`${classes.modalContents} ${globals} ${className ?  className : ''}`} >
                     <Fade in={open}>

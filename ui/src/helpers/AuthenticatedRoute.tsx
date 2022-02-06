@@ -30,6 +30,7 @@ export const AuthenticatedRoute: React.FC  = ({children}) => {
                 setIsLoading(false);
         }
     })();
+   // eslint-disable-next-line react-hooks/exhaustive-deps
    }, [])
 
     if (isLoading) {
