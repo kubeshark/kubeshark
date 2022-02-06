@@ -1,20 +1,60 @@
 import {
-    checkThatAllEntriesShown,
     leftOnHoverCheck,
     leftTextCheck,
     rightOnHoverCheck,
     rightTextCheck,
-    verifyMinimumEntries
 } from "../testHelpers/TrafficHelper";
+
+const possibleJsonPlaces = {
+    response: 'RESPONSE',
+    request: 'REQUEST',
+    nowhere: null
+}
 
 it('opening mizu', function () {
     cy.visit(Cypress.env('testUrl'));
-
 });
 
-['PING', 'SET', 'EXISTS', 'GET', 'DEL'].map(checkRedisFilterByMethod);
+checkRedisFilterByMethod({
+    method: 'PING',
+    shouldCheckSummary: false,
+    jsonPlace: possibleJsonPlaces.nowhere
+});
 
-function checkRedisFilterByMethod(method) {
+checkRedisFilterByMethod({
+    method: 'SET',
+    shouldCheckSummary: true,
+    jsonPlace: possibleJsonPlaces.request,
+    methodRegex: /^\[value, keepttl]$/mg
+});
+
+checkRedisFilterByMethod({
+    method: 'EXISTS',
+    shouldCheckSummary: true,
+    jsonPlace: possibleJsonPlaces.response,
+    methodRegex: /^1$/mg
+});
+
+checkRedisFilterByMethod({
+    method: 'GET',
+    shouldCheckSummary: true,
+    jsonPlace: possibleJsonPlaces.response,
+    methodRegex: /^value$/mg
+});
+
+checkRedisFilterByMethod({
+    method: 'DEL',
+    shouldCheckSummary: true,
+    jsonPlace: possibleJsonPlaces.response,
+    methodRegex: /^1$|^0$/mg
+});
+
+function checkRedisFilterByMethod(funcDict) {
+    const {method, shouldCheckSummary} = funcDict
+    const summaryDict = getSummeryDict(method);
+    const methodDict = getMethodDict(method);
+    const protocolDict = getProtocolDict(method);
+
     it(`Testing the method: ${method}`, function () {
         // applying filter
         cy.get('.w-tc-editor-text').clear().type(`method == "${method}"`);
@@ -23,100 +63,93 @@ function checkRedisFilterByMethod(method) {
 
         cy.get('#entries-length').then(number => {
             // if the entries list isn't expanded it expands here
-            if (number.text() === '0' || number.text() === '1')
+            if (number.text() === '0' || number.text() === '1') // todo change when TRA-4262 is fixed
                 cy.get('[title="Fetch old records"]').click();
 
-            cy.get('#entries-length').should('not.have.text', '0').and('not.have.text', '1').then(() => { //TODO remove the 0 when bug fixed
-                cy.get('#list [id]').then(elements => {
-                    const htmlMnt = Object.values(elements);
-                    let doneOneClickCheck = false;
+            cy.get('#entries-length').should('not.have.text', '0').and('not.have.text', '1').then(() => {
+                cy.get(`#list [id]`).then(elements => {
+                   const listElmWithIdAttr = Object.values(elements);
+                   let doneCheckOnFirst = false;
 
-                    htmlMnt.forEach((elm, index) => {
-                        // going through every element in the list that has attribute id that equals: "entry-X"
-                        if (elm?.id && elm.id.match(RegExp(/entry-(\d{2}|\d{1})$/gm))) {
-                            // dictionary for saving the status of each check
-                            let containsTheRightAttr = {
-                                checkByTitle: false,
-                                checkByMethod: false
-                            };
+                   listElmWithIdAttr.forEach(entry => {
+                       if (entry?.id && entry.id.match(RegExp(/entry-(\d{2}|\d{1})$/gm))) {
+                           const entryNum = getEntryNumById(entry.id);
 
-                            // going through every element inside the entry
-                            elm.querySelectorAll("*").forEach(child => {
-                                if (child.getAttribute('title') ===
-                                    `Add "method == "${method}"" to the filter`) {
-                                    containsTheRightAttr.checkByTitle = true;
-                                }
-                                if (child.innerText === method)
-                                    containsTheRightAttr.checkByMethod = true;
-                            });
-                            if (!containsTheRightAttr.checkByTitle || !containsTheRightAttr.checkByMethod){
-                                throw new Error(`Failed. ${containsTheRightAttr}`);
-                            }
-                            if (!doneOneClickCheck && method !== 'PING') {
-                                cy.get(`#list #${elm.id}`).click();
-                                const entryNum = parseInt(elm.id.split('-')[1]);
-                                const pathToSummary = '> :nth-child(2) > :nth-child(1) > :nth-child(2) > :nth-child(2)';
-                                const redisElement = '[title="REDIS"]';
+                           leftTextCheck(entryNum, methodDict.pathLeft, methodDict.expectedText);
+                           leftTextCheck(entryNum, protocolDict.pathLeft, protocolDict.expectedTextLeft);
+                           if (shouldCheckSummary)
+                               leftTextCheck(entryNum, summaryDict.pathLeft, summaryDict.expectedText);
 
-                                leftOnHoverCheck(entryNum + 1, pathToSummary, 'summary == "key"');
-                                leftTextCheck(entryNum + 1, pathToSummary, 'key');
-
-                                rightOnHoverCheck(redisElement, 'redis');
-                                rightTextCheck(redisElement, 'Redis Serialization Protocol');
-
-                                if (method !== 'SET') {
-                                    cy.contains('Response').click();
-                                }
-
-                                rightValueCheck(method);
-                                doneOneClickCheck = true;
-                            }
-                        }
-                    });
-                    cy.reload();
+                           if (!doneCheckOnFirst) {
+                                oneTimeCheck(funcDict, protocolDict, methodDict, summaryDict, entry);
+                               doneCheckOnFirst = true;
+                           }
+                       }
+                   });
                 });
             });
         });
     });
 }
-function rightValueCheck(method) {
-    let valueToCheck;
 
-    switch (method) {
-        case 'SET':
-            valueToCheck = /^\[value, keepttl]$/mg;
-            break;
-        case 'EXISTS':
-            valueToCheck = /^1$/mg;
-            break;
-        case 'GET':
-            valueToCheck = /^value$/mg;
-            break;
-        case 'DEL':
-            valueToCheck = /^1$|^0$/mg;
-            break;
+function oneTimeCheck(generalDict, protocolDict, methodDict, summaryDict, entry) {
+    const entryNum = getEntryNumById(entry.id);
+    const {shouldCheckSummary, jsonPlace, methodRegex} = generalDict;
+
+    leftOnHoverCheck(entryNum, methodDict.pathLeft, methodDict.expectedOnHover);
+    leftOnHoverCheck(entryNum, protocolDict.pathLeft, protocolDict.expectedOnHover);
+    if (shouldCheckSummary)
+        leftOnHoverCheck(entryNum, summaryDict.pathLeft, summaryDict.expectedOnHover);
+
+    cy.get(`#${entry.id}`).click();
+
+    rightTextCheck(methodDict.pathRight, methodDict.expectedText);
+    rightTextCheck(protocolDict.pathRight, protocolDict.expectedTextRight);
+    if (shouldCheckSummary)
+        rightTextCheck(summaryDict.pathRight, summaryDict.expectedText);
+
+    rightOnHoverCheck(methodDict.pathRight, methodDict.expectedOnHover);
+    rightOnHoverCheck(protocolDict.pathRight, protocolDict.expectedOnHover);
+    if (shouldCheckSummary)
+        rightOnHoverCheck(summaryDict.pathRight, summaryDict.expectedOnHover);
+
+    if (jsonPlace) {
+        if (jsonPlace === possibleJsonPlaces.response)
+            cy.contains('Response').click();
+        cy.get('.hljs').then(text => {
+            expect(text.text()).to.match(methodRegex)
+        });
     }
-    cy.get('.hljs').then(text => {
-        expect(text.text()).to.match(valueToCheck);
-    });
 }
 
-function rightSideSETCheck() {
-    cy.get('.hljs').should('have.text', '[value, keepttl]');
+function getSummeryDict(method) {
+    return {
+        pathLeft: '> :nth-child(2) > :nth-child(1) > :nth-child(2) > :nth-child(2)',
+        pathRight: '> :nth-child(2) > :nth-child(1) > :nth-child(1) > :nth-child(2) > :nth-child(2)',
+        expectedText: 'key',
+        expectedOnHover: `redismethod == "${method}"summary == "key"`
+    };
 }
 
-function rightSideEXISTSCheck() {
-    //cy.contains('Response').click();
-    cy.get('.hljs').should('have.text', '1');
+function getMethodDict(method) {
+    return {
+        pathLeft: '> :nth-child(2) > :nth-child(1) > :nth-child(1) > :nth-child(2)',
+        pathRight: '> :nth-child(2) > :nth-child(1) > :nth-child(1) > :nth-child(1) > :nth-child(2)',
+        expectedText: method,
+        expectedOnHover: `method == "${method}"`
+    };
 }
 
-function rightSideGETCheck() {
-    //cy.contains('Response').click();
-    cy.get('.hljs').should('have.text', 'value');
+function getProtocolDict(method) {
+    return {
+        pathLeft: '> :nth-child(1) > :nth-child(1)',
+        pathRight: '> :nth-child(1) > :nth-child(1) > :nth-child(1) > :nth-child(1)',
+        expectedTextLeft: 'REDIS',
+        expectedTextRight: 'Redis Serialization Protocol',
+        expectedOnHover: `redismethod == "${method}"`
+    };
 }
 
-function rightSideDELCheck() {
-    //cy.contains('Response').click();
-    cy.get('.hljs').should('have.text', '1')
+function getEntryNumById (id) {
+    return parseInt(id.split('-')[1]);
 }
-

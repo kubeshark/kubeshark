@@ -90,4 +90,5 @@ func TestRedis(t *testing.T) {
 		}
 	}
 
+	runCypressTests(t, "npx cypress run --spec  \"cypress/integration/tests/Redis.js\"")
 }
