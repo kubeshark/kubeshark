@@ -13,9 +13,9 @@ type Version struct {
 }
 
 func Parse(ver string) (*Version, error) {
-	re := regexp.MustCompile(`(\d+)\.(\d+)(?:-\w+(\d+))?`)
+	re := regexp.MustCompile(`^(\d+)\.(\d+)(?:-\w+(\d+))?$`)
 	match := re.FindStringSubmatch(ver)
-	if len(match) < 3 || len(match) > 4 {
+	if len(match) != 4 {
 		return nil, fmt.Errorf("invalid format expected <major>.<patch>(-<suffix><incremental>)? %s,", ver)
 	}
 	major, err := strconv.Atoi(match[1])
@@ -72,6 +72,10 @@ func GreaterThen(first string, second string) (bool, error) {
 		return true, nil
 	} else if firstVer.Patch < secondVer.Patch {
 		return false, nil
+	}
+
+	if firstVer.Incremental == -1 && secondVer.Incremental > -1 {
+		return true, nil
 	}
 
 	if firstVer.Incremental > secondVer.Incremental {
