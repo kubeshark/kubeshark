@@ -71,17 +71,17 @@ func findSslOffsets(sslElf *elf.File, base uint64) (sslOffsets, error) {
 	if sslReadSymbol, ok = symbolsMap["SSL_read"]; !ok {
 		return sslOffsets{}, errors.New("SSL_read symbol not found")
 	}
-	
+
 	var sslWriteExOffset, sslReadExOffset uint64
 
 	if sslWriteExSymbol, ok = symbolsMap["SSL_write_ex"]; !ok {
-		sslWriteExOffset = 0; // libssl.so.1.0 doesn't have the _ex functions
+		sslWriteExOffset = 0 // libssl.so.1.0 doesn't have the _ex functions
 	} else {
 		sslWriteExOffset = sslWriteExSymbol.Value - base
 	}
 
 	if sslReadExSymbol, ok = symbolsMap["SSL_read_ex"]; !ok {
-		sslReadExOffset = 0; // libssl.so.1.0 doesn't have the _ex functions
+		sslReadExOffset = 0 // libssl.so.1.0 doesn't have the _ex functions
 	} else {
 		sslReadExOffset = sslReadExSymbol.Value - base
 	}

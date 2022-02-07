@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/go-errors/errors"
 	"github.com/up9inc/mizu/shared/logger"
 	v1 "k8s.io/api/core/v1"
 )
@@ -96,36 +97,47 @@ func buildContainerIdsMap(pods *[]v1.Pod) map[string]bool {
 }
 
 func getProcessCgroup(procfs string, pid string) (string, error) {
-	filePath := fmt.Sprintf("%v/%v/cgroup", procfs, pid)
+	filePath := fmt.Sprintf("%s/%s/cgroup", procfs, pid)
 
 	bytes, err := ioutil.ReadFile(filePath)
 
 	if err != nil {
-		logger.Log.Warningf("Error reading cgroup file %v - %v", filePath, err)
+		logger.Log.Warningf("Error reading cgroup file %s - %v", filePath, err)
 		return "", err
 	}
-	
+
 	lines := strings.Split(string(bytes), "\n")
-	
-	var cgrouppath string
-	
+	cgrouppath := extractCgroup(lines)
+
+	if cgrouppath == "" {
+		return "", errors.Errorf("Cgroup path not found for %d, %s", pid, lines)
+	}
+
+	return normalizeCgroup(cgrouppath), nil
+}
+
+func extractCgroup(lines []string) string {
 	if len(lines) == 1 {
-		parts := strings.Split(string(bytes), ":")
-		cgrouppath = parts[len(parts)-1]
+		parts := strings.Split(lines[0], ":")
+		return parts[len(parts)-1]
 	} else {
 		for _, line := range lines {
 			if strings.Contains(line, ":pids:") {
 				parts := strings.Split(line, ":")
-				cgrouppath = parts[len(parts)-1]
+				return parts[len(parts)-1]
 			}
 		}
 	}
-	
+
+	return ""
+}
+
+func normalizeCgroup(cgrouppath string) string {
 	basename := strings.TrimSpace(path.Base(cgrouppath))
-	
+
 	if strings.Contains(basename, ".") {
-		return strings.TrimSuffix(basename, filepath.Ext(basename)), nil
+		return strings.TrimSuffix(basename, filepath.Ext(basename))
 	} else {
-		return basename, nil
+		return basename
 	}
 }

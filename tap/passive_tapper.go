@@ -243,7 +243,7 @@ func startPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem) 
 	logger.Log.Infof("AppStats: %v", diagnose.AppStats)
 }
 
-func startTlsTapper(httpExtension *api.Extension, outputItems chan *api.OutputChannelItem, options *api.TrafficFilteringOptions) {
+func startTlsTapper(extension *api.Extension, outputItems chan *api.OutputChannelItem, options *api.TrafficFilteringOptions) {
 	tls := tlstapper.TlsTapper{}
 	tlsPerfBufferSize := os.Getpagesize() * 100
 
@@ -272,5 +272,5 @@ func startTlsTapper(httpExtension *api.Extension, outputItems chan *api.OutputCh
 	}
 
 	poller := tlstapper.NewTlsPoller(&tls)
-	go poller.Poll(httpExtension, emitter, options)
+	go poller.Poll(extension, emitter, options)
 }

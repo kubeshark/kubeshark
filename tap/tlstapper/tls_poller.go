@@ -31,7 +31,7 @@ func NewTlsPoller(tls *TlsTapper) *tlsPoller {
 	}
 }
 
-func (p *tlsPoller) Poll(httpExtension *api.Extension,
+func (p *tlsPoller) Poll(extension *api.Extension,
 	emitter api.Emitter, options *api.TrafficFilteringOptions) {
 
 	chunks := make(chan *tlsChunk)
@@ -45,7 +45,7 @@ func (p *tlsPoller) Poll(httpExtension *api.Extension,
 				return
 			}
 
-			if err := p.handleTlsChunk(chunk, httpExtension, emitter, options); err != nil {
+			if err := p.handleTlsChunk(chunk, extension, emitter, options); err != nil {
 				LogError(err)
 			}
 		case key := <-p.closedReaders:
@@ -54,7 +54,7 @@ func (p *tlsPoller) Poll(httpExtension *api.Extension,
 	}
 }
 
-func (p *tlsPoller) handleTlsChunk(chunk *tlsChunk, httpExtension *api.Extension,
+func (p *tlsPoller) handleTlsChunk(chunk *tlsChunk, extension *api.Extension,
 	emitter api.Emitter, options *api.TrafficFilteringOptions) error {
 	ip, port, err := chunk.getAddress()
 
@@ -66,7 +66,7 @@ func (p *tlsPoller) handleTlsChunk(chunk *tlsChunk, httpExtension *api.Extension
 	reader, exists := p.readers[key]
 
 	if !exists {
-		reader = p.startNewTlsReader(chunk, ip, port, key, httpExtension, emitter, options)
+		reader = p.startNewTlsReader(chunk, ip, port, key, extension, emitter, options)
 		p.readers[key] = reader
 	}
 
@@ -79,7 +79,7 @@ func (p *tlsPoller) handleTlsChunk(chunk *tlsChunk, httpExtension *api.Extension
 	return nil
 }
 
-func (p *tlsPoller) startNewTlsReader(chunk *tlsChunk, ip net.IP, port uint16, key string, httpExtension *api.Extension,
+func (p *tlsPoller) startNewTlsReader(chunk *tlsChunk, ip net.IP, port uint16, key string, extension *api.Extension,
 	emitter api.Emitter, options *api.TrafficFilteringOptions) *tlsReader {
 
 	reader := &tlsReader{
@@ -93,14 +93,14 @@ func (p *tlsPoller) startNewTlsReader(chunk *tlsChunk, ip net.IP, port uint16, k
 	isRequest := (chunk.isClient() && chunk.isWrite()) || (chunk.isServer() && chunk.isRead())
 	tcpid := buildTcpId(isRequest, ip, port)
 
-	go dissect(httpExtension, reader, isRequest, &tcpid, emitter, options)
+	go dissect(extension, reader, isRequest, &tcpid, emitter, options)
 	return reader
 }
 
-func dissect(httpExtension *api.Extension, reader *tlsReader, isRequest bool, tcpid *api.TcpID,
+func dissect(extension *api.Extension, reader *tlsReader, isRequest bool, tcpid *api.TcpID,
 	emitter api.Emitter, options *api.TrafficFilteringOptions) {
 	b := bufio.NewReader(reader)
-	err := httpExtension.Dissector.Dissect(b, isRequest, tcpid, &api.CounterPair{}, &api.SuperTimer{}, &api.SuperIdentifier{}, emitter, options)
+	err := extension.Dissector.Dissect(b, isRequest, tcpid, &api.CounterPair{}, &api.SuperTimer{}, &api.SuperIdentifier{}, emitter, options)
 
 	if err != nil {
 		logger.Log.Warningf("Error dissecting TLS %v - %v", tcpid, err)

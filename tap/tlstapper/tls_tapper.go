@@ -86,7 +86,8 @@ func (t *TlsTapper) AddPid(procfs string, pid uint32) error {
 	sslLibrary, err := findSsllib(procfs, pid)
 
 	if err != nil {
-		return err
+		logger.Log.Infof("PID skipped no libssl.so found (pid: %d) %v", pid, err)
+		return nil // hide the error on purpose, its OK for a process to not use libssl.so
 	}
 
 	return t.tapPid(pid, sslLibrary)
@@ -167,10 +168,10 @@ func (t *TlsTapper) tapPid(pid uint32, sslLibrary string) error {
 }
 
 func LogError(err error) {
-	switch err := err.(type) {
-	case *errors.Error:
-		logger.Log.Errorf("Error: %v", err.ErrorStack())
-	default:
+	var e *errors.Error
+	if errors.As(err, &e) {
+		logger.Log.Errorf("Error: %v", e.ErrorStack())
+	} else {
 		logger.Log.Errorf("Error: %v", err)
 	}
 }

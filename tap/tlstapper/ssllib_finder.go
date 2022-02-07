@@ -11,7 +11,7 @@ import (
 )
 
 func findSsllib(procfs string, pid uint32) (string, error) {
-	binary, err := os.Readlink(fmt.Sprintf("%v/%v/exe", procfs, pid))
+	binary, err := os.Readlink(fmt.Sprintf("%s/%d/exe", procfs, pid))
 
 	if err != nil {
 		return "", errors.Wrap(err, 0)
@@ -59,5 +59,5 @@ func findLibraryByPid(procfs string, pid uint32, libraryName string) (string, er
 		return fullpath, nil
 	}
 
-	return "", errors.New(fmt.Sprintf("%v not found for PID %v", libraryName, pid))
+	return "", errors.Errorf("%s not found for PID %d", libraryName, pid)
 }
