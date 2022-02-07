@@ -29,8 +29,8 @@ const OasModal = ({ openModal, handleCloseModal }) => {
 
   const onSelectedOASService = async (selectedService) => {
     setSelectedServiceName(selectedService);
-    if(!oasServices || oasServices?.length === 0){
-      return
+    if(oasServices.length === 0){
+      return 
     }
     try {
       const data = await api.getOasByService(selectedService);
@@ -70,7 +70,7 @@ const OasModal = ({ openModal, handleCloseModal }) => {
                   value={selectedServiceName}
                   onChange={onSelectedOASService}
                 >
-                  {oasServices?.map?.((service) => (
+                  {oasServices.map((service) => (
                     <MenuItem key={service} value={service}>
                       {service}
                     </MenuItem>

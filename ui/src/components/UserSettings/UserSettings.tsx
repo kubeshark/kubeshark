@@ -1,12 +1,12 @@
 import "./UserSettings.sass"
 import {ColsType, FilterableTableAction} from "../UI/FilterableTableAction"
-// import Api from "../../helpers/api"
 import { useEffect, useState } from "react";
 import { UserData,AddUserModal } from "../Modals/AddUserModal/AddUserModal";
 import Api from '../../helpers/api';
 import { toast } from "react-toastify";
 import ConfirmationModal from "../UI/Modals/ConfirmationModal";
 import {Utils} from "../../helpers/Utils"
+import spinner from "../assets/spinner.svg";
 
 
 const api = Api.getInstance();
@@ -28,10 +28,12 @@ export const UserSettings : React.FC = () => {
                                }}]
     const [isOpenModal,setIsOpen] = useState(false)
     const [editMode, setEditMode] = useState(false);
-    const [confirmModalOpen,setConfirmModalOpen] = useState(false)
+    const [confirmModalOpen,setConfirmModalOpen] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
 
     const getUserList =         (async () => {
         try {
+            setIsLoading(true);
             let users  = await api.getUsers()
             const mappedUsers = users.map((user) => {
                 return {...user,status: Utils.capitalizeFirstLetter(user.status), role: user.role}
@@ -39,6 +41,9 @@ export const UserSettings : React.FC = () => {
             setUserRows(mappedUsers)                                
         } catch (e) {
             console.error(e);
+        }
+        finally{
+            setIsLoading(false);
         }
     })
     
@@ -96,9 +101,10 @@ export const UserSettings : React.FC = () => {
     const buttonConfig = {onClick: () => {setIsOpen(true);setEditMode(false);}, text:"Add User"}
 
     return (<>
-        <FilterableTableAction onRowEdit={onRowEdit} onRowDelete={onRowDelete} searchConfig={searchConfig} 
-                               buttonConfig={buttonConfig} rows={usersRows} cols={cols} bodyClass="table-body-style">
-        </FilterableTableAction>
+        {isLoading ? <div style={{textAlign: "center", padding: 20}}>
+                        <img alt="spinner" src={spinner} style={{height: 35}}/>
+                    </div> : <> <FilterableTableAction onRowEdit={onRowEdit} onRowDelete={onRowDelete} searchConfig={searchConfig} 
+                               buttonConfig={buttonConfig} rows={usersRows} cols={cols} bodyClass="table-body-style"/> </>}
         <AddUserModal isOpen={isOpenModal} onCloseModal={() => { 
                      setIsOpen(false);setUserData({} as UserData) } }
                       userData={userData} isEditMode={editMode} onUserChange={onUserChange}>

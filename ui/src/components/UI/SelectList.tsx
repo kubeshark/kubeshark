@@ -15,7 +15,7 @@ export interface Props {
     multiSelect:boolean;
     searchValue?:string;
     setCheckedValues: (newValues)=> void;
-    tabelClassName
+    tabelClassName?
 }
 
 const SelectList: React.FC<Props> = ({items ,tableName,checkedValues=[],multiSelect=true,searchValue="",setCheckedValues,tabelClassName}) => {

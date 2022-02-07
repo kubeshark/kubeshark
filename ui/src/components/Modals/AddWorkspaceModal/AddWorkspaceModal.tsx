@@ -5,6 +5,8 @@ import ConfirmationModal from '../../UI/Modals/ConfirmationModal';
 import SelectList from '../../UI/SelectList';
 import './AddWorkspaceModal.sass'
 import { toast } from "react-toastify";
+import spinner from "../../assets/spinner.svg";
+import LoadingOverlay from "../../LoadingOverlay";
 
 export type WorkspaceData = {
     id:string;
@@ -16,11 +18,12 @@ interface AddWorkspaceModalProp {
   isOpen : boolean,
   onCloseModal: () => void,
   workspaceId: string,
-  onEdit: boolean
+  onEdit: boolean,
+  onWorkspaceAdded: () => void,
 }
 const api = Api.getInstance();
 
-const AddWorkspaceModal: FC<AddWorkspaceModalProp> = ({isOpen,onCloseModal, workspaceId, onEdit}) => {
+const AddWorkspaceModal: FC<AddWorkspaceModalProp> = ({isOpen,onCloseModal, workspaceId, onEdit, onWorkspaceAdded}) => {
 
   const [searchValue, setSearchValue] = useState("");
 
@@ -29,6 +32,8 @@ const AddWorkspaceModal: FC<AddWorkspaceModalProp> = ({isOpen,onCloseModal, work
   const [namespaces, setNamespaces] = useState([]);
 
   const classes = useCommonStyles();
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSaveLoading, setIsSaveLoading] = useState(false);
 
   const title = onEdit ? "Edit Workspace" : "Add Workspace";
 
@@ -37,6 +42,7 @@ const AddWorkspaceModal: FC<AddWorkspaceModalProp> = ({isOpen,onCloseModal, work
     (async () => {
         try {
           if(onEdit){
+            setIsLoading(true);
             const workspace = await api.getSpecificWorkspace(workspaceId);
             setWorkspaceName(workspace.name);
             setCheckedNamespacesKeys(workspace.namespaces);   
@@ -49,7 +55,8 @@ const AddWorkspaceModal: FC<AddWorkspaceModalProp> = ({isOpen,onCloseModal, work
             setNamespaces(namespacesMapped);
     } catch (e) {
             console.error(e);
-        } finally {
+        }finally{
+          setIsLoading(false);
         }
     })()
 }, [isOpen,onEdit,workspaceId])
@@ -64,6 +71,7 @@ const AddWorkspaceModal: FC<AddWorkspaceModalProp> = ({isOpen,onCloseModal, work
 
   const onConfirm = async () => {
       try{
+        setIsSaveLoading(true);
         const workspaceData = {
           name: workspaceName,
           namespaces: checkedNamespacesKeys
@@ -76,10 +84,13 @@ const AddWorkspaceModal: FC<AddWorkspaceModalProp> = ({isOpen,onCloseModal, work
           await api.createWorkspace(workspaceData);
           toast.success("Workspace Succesesfully Created ");
         }
-        resetForm();
-        onCloseModal();   
+        onWorkspaceAdded();
+        onClose();   
       } catch{
         toast.error("Couldn't Create The Worksapce");
+      }
+      finally{
+        setIsSaveLoading(false);
       }
   }
 
@@ -96,6 +107,7 @@ const AddWorkspaceModal: FC<AddWorkspaceModalProp> = ({isOpen,onCloseModal, work
 
   return (<>
     <ConfirmationModal isOpen={isOpen} onClose={onClose} onConfirm={onConfirm} title={title} confirmButtonText={"add"} confirmDisabled={!isFormValid()}>
+    {isSaveLoading && <LoadingOverlay/>}
       <h3 className='comfirmation-modal__sub-section-header'>DETAILS</h3>
         <div className='comfirmation-modal__sub-section'>
                   <div className="form-input workspace__name">
@@ -110,17 +122,18 @@ const AddWorkspaceModal: FC<AddWorkspaceModalProp> = ({isOpen,onCloseModal, work
                 <input className={classes.textField + " search"} placeholder="Search" value={searchValue}
                         onChange={(event) => setSearchValue(event.target.value)}/>
             </div>
-            <div className='select-list-container'>
+            {isLoading ? <div style={{textAlign: "center", padding: 20}}>
+                        <img alt="spinner" src={spinner} style={{height: 35}}/>
+                    </div> : <> 
+                    <div className='select-list-container'>
             <SelectList items={namespaces}
                         tableName={"Namespaces"}
                         multiSelect={true} 
                         checkedValues={checkedNamespacesKeys} 
                         searchValue={searchValue} 
-                        setCheckedValues={setCheckedNamespacesKeys} 
-                        tabelClassName={undefined}>
-                        </SelectList>
+                        setCheckedValues={setCheckedNamespacesKeys}/>
             </div>
-
+            </>}
           </div>
     </ConfirmationModal>
     </>); 

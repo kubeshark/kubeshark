@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import AddWorkspaceModal, { WorkspaceData } from "../Modals/AddWorkspaceModal/AddWorkspaceModal";
 import { toast } from "react-toastify";
 import ConfirmationModal from "../UI/Modals/ConfirmationModal";
+import spinner from "../assets/spinner.svg";
 
 
 const api = Api.getInstance();
@@ -14,23 +15,31 @@ export const WorkspaceSettings : React.FC = () => {
     const [workspacesRows, setWorkspacesRows] = useState([]);
     const cols : ColsType[] = [{field : "name",header:"Name"}];
 
-    const [workspaceData,SetWorkspaceData] = useState({} as WorkspaceData);
+    const [workspaceData,setWorkspaceData] = useState({} as WorkspaceData);
     const [isOpenModal,setIsOpen] = useState(false);
     const [isEditMode,setIsEditMode] = useState(false);
-    const [isOpenDeleteModal, setIsOpenDeleteModal] = useState(false);    
+    const [isOpenDeleteModal, setIsOpenDeleteModal] = useState(false);  
+    const [isLoading, setIsLoading] = useState(false);  
 
-    const buttonConfig = {onClick: () => {setIsOpen(true); setIsEditMode(false);SetWorkspaceData({} as WorkspaceData)}, text:"Add Workspace"}
+    const buttonConfig = {onClick: () => {setIsOpen(true); setIsEditMode(false);setWorkspaceData({} as WorkspaceData)}, text:"Add Workspace"}
+
+    const getWorkspaces = async() => {
+        try {
+            setIsLoading(true);
+            const workspaces = await api.getWorkspaces();
+            setWorkspacesRows(workspaces)                 
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setIsLoading(false);
+        }
+    }
 
     useEffect(() => {
-        (async () => {
-            try {
-                const workspaces = await api.getWorkspaces();
-                setWorkspacesRows(workspaces)                 
-            } catch (e) {
-                console.error(e);
-            }
-        })();
-    },[isOpenModal])
+        getWorkspaces();
+    },[])
+
+    const onWorkspaceAdded = ()=> getWorkspaces();
 
     const filterFuncFactory = (searchQuery: string) => {
         return (row) => {
@@ -42,35 +51,36 @@ export const WorkspaceSettings : React.FC = () => {
     
     const onRowDelete = async (workspace) => {
         setIsOpenDeleteModal(true); 
-        SetWorkspaceData(workspace);  
+        setWorkspaceData(workspace);  
     }
     
-    const onDeleteConfirmation = () => {
-        (async() => {
+    const onDeleteConfirmation = async() => {
             try{
                 const workspaceLeft = workspacesRows.filter(ws => ws.id !== workspaceData.id);
                 setWorkspacesRows(workspaceLeft);
                 await api.deleteWorkspace(workspaceData.id);
                 setIsOpenDeleteModal(false);
-                SetWorkspaceData({} as WorkspaceData);
+                setWorkspaceData({} as WorkspaceData);
                 toast.success("Workspace Succesesfully Deleted ");
-            } catch {
+            } catch(e) {
+                console.error(e);
                 toast.error("Workspace hasn't deleted");
             }
-        })();
     }
 
     const onRowEdit = (row) => {
        setIsOpen(true);
        setIsEditMode(true);
-       SetWorkspaceData(row);
+       setWorkspaceData(row);
     }
    
     return (<>
-        <FilterableTableAction onRowEdit={onRowEdit} onRowDelete={onRowDelete} searchConfig={searchConfig} 
-                               buttonConfig={buttonConfig} rows={workspacesRows} cols={cols} bodyClass="table-body-style">
-        </FilterableTableAction>
-        <AddWorkspaceModal isOpen={isOpenModal} workspaceId={workspaceData.id} onEdit={isEditMode} onCloseModal={() => { setIsOpen(false);} } >            
+         {isLoading? <div style={{textAlign: "center", padding: 20}}>
+                        <img alt="spinner" src={spinner} style={{height: 35}}/>
+                    </div> : <>
+                    <FilterableTableAction onRowEdit={onRowEdit} onRowDelete={onRowDelete} searchConfig={searchConfig} 
+                               buttonConfig={buttonConfig} rows={workspacesRows} cols={cols} bodyClass="table-body-style"/></>}
+        <AddWorkspaceModal isOpen={isOpenModal} workspaceId={workspaceData.id} onEdit={isEditMode} onWorkspaceAdded={onWorkspaceAdded} onCloseModal={() => { setIsOpen(false);} } >            
         </AddWorkspaceModal>
         <ConfirmationModal isOpen={isOpenDeleteModal} onClose={() => setIsOpenDeleteModal(false)} 
                            onConfirm={onDeleteConfirmation} confirmButtonText="Delete Workspace" title="Delete Workspace"

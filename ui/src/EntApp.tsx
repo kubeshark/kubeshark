@@ -16,6 +16,14 @@ const EntApp = () => {
             const userDetails = await api.whoAmI();
             setUserDetails(userDetails);
         })()
+        return setUserDetails({                
+            "username": "",
+            "role": "",
+            "workspace": {
+                "id": "",
+                "name": "",
+                "namespaces": []
+        }}); 
     },[setUserDetails])
 
     return (
