@@ -27,18 +27,30 @@ jobs:
       - name: Check out code into the Go module directory
         uses: actions/checkout@v2
 
-      - shell: bash
+      - name: Install libpcap
+        shell: bash
         run: |
           sudo apt-get install libpcap-dev
+
+      - name: Install gsutil
+        shell: bash
+        run: |
+          echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] http://packages.cloud.google.com/apt cloud-sdk main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
+          curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key --keyring /usr/share/keyrings/cloud.google.gpg add -
+          sudo apt-get update
+          sudo apt-get install google-cloud-sdk
 
       - name: CLI Test
         run: make test-cli
 
       - name: Agent Test
         run: make test-agent
-      
+
       - name: Shared Test
         run: make test-shared
+
+      - name: Extensions Test
+        run: make test-extensions
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2

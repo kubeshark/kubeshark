@@ -92,5 +92,8 @@ test-agent:
 test-shared:
 	@echo "running shared tests"; cd shared && $(MAKE) test
 
+test-extensions:
+	@echo "running http tests"; cd tap/extensions/http && $(MAKE) test
+
 acceptance-test:
 	@echo "running acceptance tests"; cd acceptanceTests && $(MAKE) test
