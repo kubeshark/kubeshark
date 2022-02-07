@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"sort"
 	"strconv"
 	"strings"
 	"syscall"
@@ -25,9 +24,8 @@ import (
 
 	"github.com/up9inc/mizu/agent/pkg/elastic"
 
-	"github.com/up9inc/mizu/agent/pkg/controllers"
-
 	"github.com/up9inc/mizu/agent/pkg/api"
+	"github.com/up9inc/mizu/agent/pkg/app"
 	"github.com/up9inc/mizu/agent/pkg/config"
 
 	v1 "k8s.io/api/core/v1"
@@ -42,11 +40,6 @@ import (
 	"github.com/up9inc/mizu/shared/logger"
 	"github.com/up9inc/mizu/tap"
 	tapApi "github.com/up9inc/mizu/tap/api"
-
-	amqpExt "github.com/up9inc/mizu/tap/extensions/amqp"
-	httpExt "github.com/up9inc/mizu/tap/extensions/http"
-	kafkaExt "github.com/up9inc/mizu/tap/extensions/kafka"
-	redisExt "github.com/up9inc/mizu/tap/extensions/redis"
 )
 
 var tapperMode = flag.Bool("tap", false, "Run in tapper mode without API")
@@ -56,9 +49,6 @@ var apiServerAddress = flag.String("api-server-address", "", "Address of mizu AP
 var namespace = flag.String("namespace", "", "Resolve IPs if they belong to resources in this namespace (default is all)")
 var harsReaderMode = flag.Bool("hars-read", false, "Run in hars-read mode")
 var harsDir = flag.String("hars-dir", "", "Directory to read hars from")
-
-var extensions []*tapApi.Extension             // global
-var extensionsMap map[string]*tapApi.Extension // global
 
 var startTime int64
 
@@ -75,7 +65,7 @@ func main() {
 	if err := config.LoadConfig(); err != nil {
 		logger.Log.Fatalf("Error loading config file %v", err)
 	}
-	loadExtensions()
+	app.LoadExtensions()
 
 	if !*tapperMode && !*apiServerMode && !*standaloneMode && !*harsReaderMode {
 		panic("One of the flags --tap, --api or --standalone or --hars-read must be provided")
@@ -90,10 +80,10 @@ func main() {
 		filteringOptions := getTrafficFilteringOptions()
 		hostMode := os.Getenv(shared.HostModeEnvVar) == "1"
 		tapOpts := &tap.TapOpts{HostMode: hostMode}
-		tap.StartPassiveTapper(tapOpts, outputItemsChannel, extensions, filteringOptions)
+		tap.StartPassiveTapper(tapOpts, outputItemsChannel, app.Extensions, filteringOptions)
 
 		go filterItems(outputItemsChannel, filteredOutputItemsChannel)
-		go api.StartReadingEntries(filteredOutputItemsChannel, nil, extensionsMap)
+		go api.StartReadingEntries(filteredOutputItemsChannel, nil, app.ExtensionsMap)
 
 		hostApi(nil)
 	} else if *tapperMode {
@@ -113,7 +103,7 @@ func main() {
 		filteredOutputItemsChannel := make(chan *tapApi.OutputChannelItem)
 
 		filteringOptions := getTrafficFilteringOptions()
-		tap.StartPassiveTapper(tapOpts, filteredOutputItemsChannel, extensions, filteringOptions)
+		tap.StartPassiveTapper(tapOpts, filteredOutputItemsChannel, app.Extensions, filteringOptions)
 		socketConnection, err := dialSocketWithRetry(*apiServerAddress, socketConnectionRetries, socketConnectionRetryDelay)
 		if err != nil {
 			panic(fmt.Sprintf("Error connecting to socket server at %s %v", *apiServerAddress, err))
@@ -130,7 +120,7 @@ func main() {
 		filteredOutputItemsChannel := make(chan *tapApi.OutputChannelItem)
 		enableExpFeatureIfNeeded()
 		go filterItems(outputItemsChannel, filteredOutputItemsChannel)
-		go api.StartReadingEntries(filteredOutputItemsChannel, nil, extensionsMap)
+		go api.StartReadingEntries(filteredOutputItemsChannel, nil, app.ExtensionsMap)
 
 		syncEntriesConfig := getSyncEntriesConfig()
 		if syncEntriesConfig != nil {
@@ -145,7 +135,7 @@ func main() {
 		filteredHarChannel := make(chan *tapApi.OutputChannelItem)
 
 		go filterItems(outputItemsChannel, filteredHarChannel)
-		go api.StartReadingEntries(filteredHarChannel, harsDir, extensionsMap)
+		go api.StartReadingEntries(filteredHarChannel, harsDir, app.ExtensionsMap)
 		hostApi(nil)
 	}
 
@@ -184,7 +174,7 @@ func configureBasenineServer(host string, port string) {
 	}
 
 	// Define the macros
-	for _, extension := range extensions {
+	for _, extension := range app.Extensions {
 		macros := extension.Dissector.Macros()
 		for macro, expanded := range macros {
 			err = basenine.Macro(host, port, macro, expanded)
@@ -193,49 +183,6 @@ func configureBasenineServer(host string, port string) {
 			}
 		}
 	}
-}
-
-func loadExtensions() {
-	extensions = make([]*tapApi.Extension, 4)
-	extensionsMap = make(map[string]*tapApi.Extension)
-
-	extensionAmqp := &tapApi.Extension{}
-	dissectorAmqp := amqpExt.NewDissector()
-	dissectorAmqp.Register(extensionAmqp)
-	extensionAmqp.Dissector = dissectorAmqp
-	extensions[0] = extensionAmqp
-	extensionsMap[extensionAmqp.Protocol.Name] = extensionAmqp
-
-	extensionHttp := &tapApi.Extension{}
-	dissectorHttp := httpExt.NewDissector()
-	dissectorHttp.Register(extensionHttp)
-	extensionHttp.Dissector = dissectorHttp
-	extensions[1] = extensionHttp
-	extensionsMap[extensionHttp.Protocol.Name] = extensionHttp
-
-	extensionKafka := &tapApi.Extension{}
-	dissectorKafka := kafkaExt.NewDissector()
-	dissectorKafka.Register(extensionKafka)
-	extensionKafka.Dissector = dissectorKafka
-	extensions[2] = extensionKafka
-	extensionsMap[extensionKafka.Protocol.Name] = extensionKafka
-
-	extensionRedis := &tapApi.Extension{}
-	dissectorRedis := redisExt.NewDissector()
-	dissectorRedis.Register(extensionRedis)
-	extensionRedis.Dissector = dissectorRedis
-	extensions[3] = extensionRedis
-	extensionsMap[extensionRedis.Protocol.Name] = extensionRedis
-
-	sort.Slice(extensions, func(i, j int) bool {
-		return extensions[i].Protocol.Priority < extensions[j].Protocol.Priority
-	})
-
-	for _, extension := range extensions {
-		logger.Log.Infof("Extension Properties: %+v", extension)
-	}
-
-	controllers.InitExtensionsMap(extensionsMap)
 }
 
 func hostApi(socketHarOutputChannel chan<- *tapApi.OutputChannelItem) {
