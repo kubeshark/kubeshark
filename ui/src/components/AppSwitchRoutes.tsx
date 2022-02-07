@@ -14,7 +14,7 @@ const AppSwitchRoutes = () => {
 
     return <Routes>
         <Route path={"/"} element={<SystemViewer/>}>
-            <Route path={RouterRoutes.SETTINGS} element={<AuthenticatedRoute><SettingsPage/></AuthenticatedRoute>} /> {/*todo: set settings component*/}
+            <Route path={RouterRoutes.SETTINGS} element={<AuthenticatedRoute><SettingsPage/></AuthenticatedRoute>} />
             <Route path={"/"} element={<AuthenticatedRoute><TrafficPage/></AuthenticatedRoute>}/>
             
         </Route>

@@ -53,8 +53,8 @@ export default class Api {
         return response.data;
     }
 
-    getUserDetails = async(user) => {
-        const response = await this.client.get(`/user/${user.userId}`);
+    getUserDetails = async(userId) => {
+        const response = await this.client.get(`/user/${userId}`);
         return response.data;
     }
 
@@ -63,8 +63,8 @@ export default class Api {
         return response.data;
     }
 
-    deleteUser = async(user) => {
-        const response = await this.client.delete(`/user/${user.userId}`);
+    deleteUser = async(userId) => {
+        const response = await this.client.delete(`/user/${userId}`);
         return response.data;
     }
 
@@ -232,7 +232,6 @@ export default class Api {
         return response.data;
     }
 
-
     setupAdminUser = async (password) => {
         const form = new FormData();
         form.append('password', password);
@@ -252,8 +251,7 @@ export default class Api {
                 throw e;
             }
         }
-    }
-    
+    }   
 
     login = async (username, password) => {
         const form = new FormData();

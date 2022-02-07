@@ -7,15 +7,12 @@ import LoadingOverlay from "../../LoadingOverlay";
 import { useCommonStyles } from "../../../helpers/commonStyle";
 import useKeyPress from "../../../hooks/useKeyPress"
 import shortcutsKeyboard from "../../../configs/shortcutsKeyboard"
-import { useNavigate, useParams } from "react-router-dom";
-
-
+import { useNavigate, useParams } from "react-router-dom"
+import { RouterRoutes } from "../../../helpers/routes";
 
 const api = Api.getInstance();
 
-
 export const InstallPage: React.FC = () => {
-
     const formRef = useRef(null);
     const classes = useCommonStyles();
     const [isLoading, setIsLoading] = useState(false);
@@ -47,7 +44,7 @@ export const InstallPage: React.FC = () => {
             setIsLoading(true);           
             await registerFunc();
             if (!await api.isAuthenticationNeeded()) {
-                navigate('/');
+                navigate(RouterRoutes.TRAFFIC);
             }
         } catch (e) {
             if (e.type === FormValidationErrorType) {

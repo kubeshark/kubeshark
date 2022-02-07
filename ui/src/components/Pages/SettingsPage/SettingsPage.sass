@@ -1,20 +1,20 @@
 @import "../../../variables.module"
 
 @mixin tab-container
-        width: clamp(50%,513px,80%);
+        width: clamp(50%,513px,80%)
         margin: 0 auto
 
 .settings-page
-    background: #F7F9FC;
-    display: flex;
-    flex-direction: column;
-    align-content: center;
-    /* justify-content: center; */
-    margin: 0 auto;
-    height: 100vh;
+    background: #F7F9FC
+    display: flex
+    flex-direction: column
+    align-content: center
+    /* justify-content: center */
+    margin: 0 auto
+    height: 100vh
     
     & .tabs-nav
-        padding-top: 0px;
+        padding-top: 0px
 
 
 
@@ -29,13 +29,13 @@
         font-size: 28px
         color: $blue-gray
         font-weight: 600 
-        margin-bottom: 60px;
-        margin-top: 20px;
+        margin-bottom: 60px
+        margin-top: 20px
 
 .tab-content
-    padding-top: 30px;
+    padding-top: 30px
     background-color: $content-section-color
-    height: 100vh;
+    height: 100vh
     &__container
         @include tab-container
 

@@ -5,7 +5,11 @@ import { UserSettings } from "../../UserSettings/UserSettings";
 import { WorkspaceSettings } from "../../WorkspaceSettings/WorkspaceSettings";
 import "./SettingsPage.sass"
 
-const AdminSettings: React.FC<any> = ({color}) => {
+interface AdminSettingsInterface{
+    color?: string
+}
+
+const AdminSettings: React.FC<AdminSettingsInterface> = ({color}) => {
     var TABS = [
         {tab:"USERS"}, {tab:"WORKSPACE"}
     ];
