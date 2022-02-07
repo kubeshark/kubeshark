@@ -30,17 +30,6 @@ export const FilterableTableAction: React.FC<Props> = ({onRowDelete,onRowEdit, s
         setRows(rows);
     },[rows])
 
-    // useEffect(()=> {  
-    //     if(inputSearch !== ""){
-    //         const searchFunc = searchConfig.filterRows(inputSearch)
-    //         const filtered = tableRows.filter(searchFunc)
-    //         setRows(filtered)
-    //     }
-    //     else{
-    //         setRows(allRows);
-    //     }
-    // },[inputSearch])
-
     const onChange = (e) => {
         setInputSearch(e.target.value)
     }

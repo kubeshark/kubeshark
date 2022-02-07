@@ -10,6 +10,7 @@ import useKeyPress from "../../../hooks/useKeyPress"
 import shortcutsKeyboard from "../../../configs/shortcutsKeyboard"
 import loggedInUserStateAtom from "../../../recoil/loggedInUserState/atom";
 import { useNavigate } from "react-router-dom";
+import { RouterRoutes } from "../../../helpers/routes";
 
 
 const api = Api.getInstance();
@@ -23,7 +24,6 @@ const LoginPage: React.FC = () => {
     const formRef = useRef(null);
     const navigate = useNavigate();
 
-
     const setEntPage = useSetRecoilState(entPageAtom);
     const setUserRole = useSetRecoilState(loggedInUserStateAtom);
 
@@ -33,11 +33,10 @@ const LoginPage: React.FC = () => {
         try {
             await api.login(username, password);
             const userDetails = await api.whoAmI();
-            console.log(userDetails)
             setUserRole(userDetails);
             if (!await api.isAuthenticationNeeded()) {
                 setEntPage(Page.Traffic);
-                navigate("/");
+                navigate(RouterRoutes.TRAFFIC);
             } else {
                 toast.error("Invalid credentials");
             }

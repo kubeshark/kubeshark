@@ -1,13 +1,13 @@
 @import '../../../variables.module'
 
 @mixin generate-icon
-    display: block;
-    text-indent: -9999px;
-    width: 17px;
-    height: 17px;
-    background-repeat: no-repeat;
-    background-size: 19px;
-    background-size: cover;
+    display: block
+    text-indent: -9999px
+    width: 17px
+    height: 17px
+    background-repeat: no-repeat
+    background-size: 19px
+    background-size: cover
 
 .invite-link
     &-row
@@ -39,36 +39,36 @@
         
 .user
     &__details
-        display: flex;
-        align-content: center;
-        justify-content: space-between;
-        height: 74px;
-        align-items: flex-start;
+        display: flex
+        align-content: center
+        justify-content: space-between
+        height: 74px
+        align-items: flex-start
 
         .form-input
             margin: 0 !important
 
 
         & .user__email
-            width: clamp(300px,60%,600px);
-            box-sizing: border-box;
+            width: clamp(300px,60%,600px)
+            box-sizing: border-box
             
             input
                 height: 38px
 
         & .user__role
             width : clamp(186px,30%,230px)
-            display: grid;
+            display: grid
 
             select
-                height: 38px;
+                height: 38px
 
 .form-input .error-message
     color: red
     margin-top: 3px
 
 input:disabled
-    color: #9D9D9D;
+    color: #9D9D9D
 
 .search-workspace
     width: clamp(186px,38%,400px)
@@ -78,16 +78,16 @@ input:disabled
     overflow-y: auto
 
 @mixin label-size
-    font-style: normal;
-    font-weight: normal;
-    font-size: 14px;
-    line-height: 15px;
+    font-style: normal
+    font-weight: normal
+    font-size: 14px
+    line-height: 15px
 
 .u-input-padding
     & .MuiInputLabel-outlined.MuiInputLabel-marginDense 
         @include label-size
     & .MuiInputLabel-outlined.MuiInputLabel-shrink
-        transform: translate(14px, -6px) scale(0.75);
+        transform: translate(14px, -6px) scale(0.75)
         @include label-size
 
     &.MuiOutlinedInput-input, &.MuiSelect-outlined, 
@@ -96,8 +96,8 @@ input:disabled
         @include label-size
 
     & .MuiOutlinedInput-inputMarginDense
-        padding-top: 9.5px;
-        padding-bottom: 9.5px;
+        padding-top: 9.5px
+        padding-bottom: 9.5px
     & .MuiSelect-outlined.MuiSelect-outlined
         font-size: 14px
 
