@@ -26,6 +26,7 @@ import (
 const LastSeenTS = "x-last-seen-ts"
 const CountersTotal = "x-counters-total"
 const CountersPerSource = "x-counters-per-source"
+const SampleId = "x-sample-entry"
 
 type reqResp struct { // hello, generics in Go
 	Req  *har.Request
@@ -306,7 +307,7 @@ func handleCounters(opObj *openapi.Operation, success bool, entryWithSource *Ent
 	rt := float64(entryWithSource.Entry.Time) / 1000
 
 	dur := 0.0
-	if prevTs != 0 {
+	if prevTs != 0 && ts >= prevTs {
 		dur = ts - prevTs
 	}
 
@@ -328,19 +329,39 @@ func handleCounters(opObj *openapi.Operation, success bool, entryWithSource *Ent
 		return err
 	}
 
+	err = opObj.Extensions.SetExtension(SampleId, entryWithSource.Id)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
 func handleRequest(req *har.Request, opObj *openapi.Operation, isSuccess bool) error {
 	// TODO: we don't handle the situation when header/qstr param can be defined on pathObj level. Also the path param defined on opObj
+	urlParsed, err := url.Parse(req.URL)
+	if err != nil {
+		return err
+	}
+
+	qs := make([]har.NVP, 0)
+	for name, vals := range urlParsed.Query() {
+		for _, val := range vals {
+			qs = append(qs, har.NVP{Name: name, Value: val})
+		}
+	}
+
+	if len(qs) != len(req.QueryString) {
+		logger.Log.Warningf("QStr params in HAR do not match URL: %s", req.URL)
+	}
 
 	qstrGW := nvParams{
 		In:             openapi.InQuery,
-		Pairs:          req.QueryString,
+		Pairs:          qs,
 		IsIgnored:      func(name string) bool { return false },
 		GeneralizeName: func(name string) string { return name },
 	}
-	handleNameVals(qstrGW, &opObj.Parameters)
+	handleNameVals(qstrGW, &opObj.Parameters, false)
 
 	hdrGW := nvParams{
 		In:             openapi.InHeader,
@@ -348,7 +369,7 @@ func handleRequest(req *har.Request, opObj *openapi.Operation, isSuccess bool) e
 		IsIgnored:      isHeaderIgnored,
 		GeneralizeName: strings.ToLower,
 	}
-	handleNameVals(hdrGW, &opObj.Parameters)
+	handleNameVals(hdrGW, &opObj.Parameters, true)
 
 	if isSuccess {
 		reqBody, err := getRequestBody(req, opObj)
