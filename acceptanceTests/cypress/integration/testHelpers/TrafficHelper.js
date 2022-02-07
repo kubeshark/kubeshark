@@ -35,7 +35,7 @@ export function leftTextCheck(entryNum, path, expectedText) {
 
 export function leftOnHoverCheck(entryNum, path, filterName) {
     cy.get(`#list #entry-${entryNum} ${path}`).trigger('mouseover');
-    cy.get(`#list #entry-${entryNum} .Queryable-Tooltip`).should('have.text', filterName);
+    cy.get(`#list #entry-${entryNum} .Queryable-Tooltip`).invoke('text').should('match', new RegExp(filterName));
 }
 
 export function rightTextCheck(path, expectedText) {
@@ -44,7 +44,7 @@ export function rightTextCheck(path, expectedText) {
 
 export function rightOnHoverCheck(path, expectedText) {
     cy.get(`#rightSideContainer ${path}`).trigger('mouseover');
-    cy.get(`#rightSideContainer .Queryable-Tooltip`).should('have.text', expectedText);
+    cy.get(`#rightSideContainer .Queryable-Tooltip`).invoke('text').should('match', new RegExp(expectedText));
 }
 
 export function checkThatAllEntriesShown() {

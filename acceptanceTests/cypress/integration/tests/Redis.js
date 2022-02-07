@@ -18,35 +18,35 @@ it('opening mizu', function () {
 checkRedisFilterByMethod({
     method: 'PING',
     shouldCheckSummary: false,
-    jsonPlace: valueTabs.none
+    valueTab: valueTabs.none
 });
 
 checkRedisFilterByMethod({
     method: 'SET',
     shouldCheckSummary: true,
-    jsonPlace: valueTabs.request,
-    methodRegex: /^\[value, keepttl]$/mg
+    valueTab: valueTabs.request,
+    valueRegex: /^\[value, keepttl]$/mg
 });
 
 checkRedisFilterByMethod({
     method: 'EXISTS',
     shouldCheckSummary: true,
-    jsonPlace: valueTabs.response,
-    methodRegex: /^1$/mg
+    valueTab: valueTabs.response,
+    valueRegex: /^1$/mg
 });
 
 checkRedisFilterByMethod({
     method: 'GET',
     shouldCheckSummary: true,
-    jsonPlace: valueTabs.response,
-    methodRegex: /^value$/mg
+    valueTab: valueTabs.response,
+    valueRegex: /^value$/mg
 });
 
 checkRedisFilterByMethod({
     method: 'DEL',
     shouldCheckSummary: true,
-    jsonPlace: valueTabs.response,
-    methodRegex: /^1$|^0$/mg
+    valueTab: valueTabs.response,
+    valueRegex: /^1$|^0$/mg
 });
 
 function checkRedisFilterByMethod(funcDict) {
@@ -94,7 +94,7 @@ function checkRedisFilterByMethod(funcDict) {
 
 function deepCheck(generalDict, protocolDict, methodDict, summaryDict, entry) {
     const entryNum = getEntryNumById(entry.id);
-    const {shouldCheckSummary, jsonPlace, methodRegex} = generalDict;
+    const {shouldCheckSummary, valueTab, valueRegex} = generalDict;
 
     leftOnHoverCheck(entryNum, methodDict.pathLeft, methodDict.expectedOnHover);
     leftOnHoverCheck(entryNum, protocolDict.pathLeft, protocolDict.expectedOnHover);
@@ -113,11 +113,11 @@ function deepCheck(generalDict, protocolDict, methodDict, summaryDict, entry) {
     if (shouldCheckSummary)
         rightOnHoverCheck(summaryDict.pathRight, summaryDict.expectedOnHover);
 
-    if (jsonPlace) {
-        if (jsonPlace === valueTabs.response)
+    if (valueTab) {
+        if (valueTab === valueTabs.response)
             cy.contains('Response').click();
-        cy.get('.hljs').then(text => {
-            expect(text.text()).to.match(methodRegex)
+        cy.get(Cypress.env('bodyJsonClass')).then(text => {
+            expect(text.text()).to.match(valueRegex)
         });
     }
 }

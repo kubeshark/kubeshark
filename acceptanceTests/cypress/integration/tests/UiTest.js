@@ -5,10 +5,10 @@ import {
     resizeToNormalMizu,
     rightOnHoverCheck,
     leftOnHoverCheck,
-    rightTextCheck, verifyMinimumEntries
+    rightTextCheck,
+    verifyMinimumEntries
 } from "../testHelpers/TrafficHelper";
 const refreshWaitTimeout = 10000;
-const bodyJsonClass = '.hljs';
 
 it('opening mizu', function () {
     cy.visit(Cypress.env('testUrl'));
@@ -85,11 +85,11 @@ checkFilter({
 });
 
 checkFilter({
-    name: 'src.name == ""',
+    name: 'src.name == "redis.mizu-tests"',
     leftSidePath: '[title="Source Name"]',
-    leftSideExpectedText: '[Unresolved]',
+    leftSideExpectedText: 'redis.mizu-tests',
     rightSidePath: '> :nth-child(2) [title="Source Name"]',
-    rightSideExpectedText: '[Unresolved]',
+    rightSideExpectedText: 'redis.mizu-tests',
     applyByEnter: false
 });
 
@@ -243,7 +243,7 @@ function checkRightSideResponseBody() {
     cy.contains('Response').click();
     clickCheckbox('Decode Base64');
 
-    cy.get(`${bodyJsonClass}`).then(value => {
+    cy.get(`${Cypress.env('bodyJsonClass')}`).then(value => {
         const encodedBody = value.text();
         const decodedBody = atob(encodedBody);
         const responseBody = JSON.parse(decodedBody);
@@ -264,11 +264,11 @@ function checkRightSideResponseBody() {
         expect(responseBody.headers['Accept-Encoding']).to.match(expectdJsonBody.headers['Accept-Encoding']);
         expect(responseBody.headers['X-Forwarded-Uri']).to.match(expectdJsonBody.headers['X-Forwarded-Uri']);
 
-        cy.get(`${bodyJsonClass}`).should('have.text', encodedBody);
+        cy.get(`${Cypress.env('bodyJsonClass')}`).should('have.text', encodedBody);
         clickCheckbox('Decode Base64');
 
-        cy.get(`${bodyJsonClass} > `).its('length').should('be.gt', 1).then(linesNum => {
-            cy.get(`${bodyJsonClass} > >`).its('length').should('be.gt', linesNum).then(jsonItemsNum => {
+        cy.get(`${Cypress.env('bodyJsonClass')} > `).its('length').should('be.gt', 1).then(linesNum => {
+            cy.get(`${Cypress.env('bodyJsonClass')} > >`).its('length').should('be.gt', linesNum).then(jsonItemsNum => {
                 checkPrettyAndLineNums(jsonItemsNum, decodedBody);
 
                 clickCheckbox('Line numbers');
@@ -290,7 +290,7 @@ function clickCheckbox(type) {
 
 function checkPrettyAndLineNums(jsonItemsLen, decodedBody) {
     decodedBody = decodedBody.replaceAll(' ', '');
-    cy.get(`${bodyJsonClass} >`).then(elements => {
+    cy.get(`${Cypress.env('bodyJsonClass')} >`).then(elements => {
         const lines = Object.values(elements);
         lines.forEach((line, index) => {
             if (line.getAttribute) {
@@ -310,13 +310,13 @@ function getCleanLine(lineElement) {
 }
 
 function checkPrettyOrNothing(jsonItems, decodedBody) {
-    cy.get(`${bodyJsonClass} > `).should('have.length', jsonItems).then(text => {
+    cy.get(`${Cypress.env('bodyJsonClass')} > `).should('have.length', jsonItems).then(text => {
         const json = text.text();
         expect(json).to.equal(decodedBody);
     });
 }
 
 function checkOnlyLineNumberes(jsonItems, decodedText) {
-    cy.get(`${bodyJsonClass} >`).should('have.length', 1).and('have.text', decodedText);
-    cy.get(`${bodyJsonClass} > >`).should('have.length', jsonItems)
+    cy.get(`${Cypress.env('bodyJsonClass')} >`).should('have.length', 1).and('have.text', decodedText);
+    cy.get(`${Cypress.env('bodyJsonClass')} > >`).should('have.length', jsonItems)
 }
