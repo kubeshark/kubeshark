@@ -116,7 +116,7 @@ func TestDissect(t *testing.T) {
 			return len(iMarshaled) < len(jMarshaled)
 		})
 
-		marshaled, err := json.MarshalIndent(items, "", "\t")
+		marshaled, err := json.Marshal(items)
 		assert.Nil(t, err)
 
 		if testUpdateEnabled {
