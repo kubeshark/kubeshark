@@ -265,6 +265,9 @@ func (h HTTPPayload) MarshalJSON() ([]byte, error) {
 	switch h.Type {
 	case TypeHttpRequest:
 		harRequest, err := har.NewRequest(h.Data.(*http.Request), true)
+		if err != nil {
+			return nil, errors.New("Failed converting request to HAR")
+		}
 		sort.Slice(harRequest.Headers, func(i, j int) bool {
 			if harRequest.Headers[i].Name < harRequest.Headers[j].Name {
 				return true
@@ -287,9 +290,6 @@ func (h HTTPPayload) MarshalJSON() ([]byte, error) {
 		if present {
 			harRequest.URL = ""
 		}
-		if err != nil {
-			return nil, errors.New("Failed converting request to HAR")
-		}
 		var reqWrapper *HTTPRequestWrapper
 		if !present {
 			reqWrapper = &HTTPRequestWrapper{Request: h.Data.(*http.Request)}
@@ -301,6 +301,9 @@ func (h HTTPPayload) MarshalJSON() ([]byte, error) {
 		})
 	case TypeHttpResponse:
 		harResponse, err := har.NewResponse(h.Data.(*http.Response), true)
+		if err != nil {
+			return nil, errors.New("Failed converting response to HAR")
+		}
 		sort.Slice(harResponse.Headers, func(i, j int) bool {
 			if harResponse.Headers[i].Name < harResponse.Headers[j].Name {
 				return true
@@ -319,9 +322,6 @@ func (h HTTPPayload) MarshalJSON() ([]byte, error) {
 			}
 			return harResponse.Cookies[i].Value < harResponse.Cookies[j].Value
 		})
-		if err != nil {
-			return nil, errors.New("Failed converting response to HAR")
-		}
 		_, present := os.LookupEnv("MIZU_TEST")
 		var resWrapper *HTTPResponseWrapper
 		if !present {

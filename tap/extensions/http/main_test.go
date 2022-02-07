@@ -77,7 +77,6 @@ func TestDissect(t *testing.T) {
 		fmt.Printf("%s %s\n", msg, pathClient)
 		fileClient, err := os.Open(pathClient)
 		assert.Nil(t, err)
-		defer fileClient.Close()
 
 		bufferClient := bufio.NewReader(fileClient)
 		tcpIDClient := &api.TcpID{
@@ -93,7 +92,6 @@ func TestDissect(t *testing.T) {
 		fmt.Printf("%s %s\n", msg, pathServer)
 		fileServer, err := os.Open(pathServer)
 		assert.Nil(t, err)
-		defer fileServer.Close()
 
 		bufferServer := bufio.NewReader(fileServer)
 		tcpIDServer := &api.TcpID{
@@ -103,6 +101,9 @@ func TestDissect(t *testing.T) {
 			DstPort: "1",
 		}
 		dissector.Dissect(bufferServer, false, tcpIDServer, counterPair, &api.SuperTimer{}, superIdentifier, emitter, options)
+
+		fileClient.Close()
+		fileServer.Close()
 
 		time.Sleep(10 * time.Millisecond)
 
