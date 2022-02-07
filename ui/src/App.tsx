@@ -6,8 +6,6 @@ import { ServiceMapModal } from './components/ServiceMapModal/ServiceMapModal';
 import {useRecoilState} from "recoil";
 import serviceMapModalOpenAtom from "./recoil/serviceMapModalOpen";
 
-window["isServiceMapEnabled"] = true
-
 const App = () => {
 
     const [analyzeStatus, setAnalyzeStatus] = useState(null);
