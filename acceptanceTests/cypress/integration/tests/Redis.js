@@ -51,9 +51,9 @@ checkRedisFilterByMethod({
 
 function checkRedisFilterByMethod(funcDict) {
     const {method, shouldCheckSummary} = funcDict
-    const summaryDict = getSummeryDict(method);
+    const summaryDict = getSummeryDict();
     const methodDict = getMethodDict(method);
-    const protocolDict = getProtocolDict(method);
+    const protocolDict = getProtocolDict();
 
     it(`Testing the method: ${method}`, function () {
         // applying filter
@@ -122,12 +122,12 @@ function deepCheck(generalDict, protocolDict, methodDict, summaryDict, entry) {
     }
 }
 
-function getSummeryDict(method) {
+function getSummeryDict() {
     return {
         pathLeft: '> :nth-child(2) > :nth-child(1) > :nth-child(2) > :nth-child(2)',
         pathRight: '> :nth-child(2) > :nth-child(1) > :nth-child(1) > :nth-child(2) > :nth-child(2)',
         expectedText: 'key',
-        expectedOnHover: `redismethod == "${method}"summary == "key"`
+        expectedOnHover: `summary == "key"`
     };
 }
 
@@ -140,13 +140,13 @@ function getMethodDict(method) {
     };
 }
 
-function getProtocolDict(method) {
+function getProtocolDict() {
     return {
         pathLeft: '> :nth-child(1) > :nth-child(1)',
         pathRight: '> :nth-child(1) > :nth-child(1) > :nth-child(1) > :nth-child(1)',
         expectedTextLeft: 'REDIS',
         expectedTextRight: 'Redis Serialization Protocol',
-        expectedOnHover: `redismethod == "${method}"`
+        expectedOnHover: `redis`
     };
 }
 

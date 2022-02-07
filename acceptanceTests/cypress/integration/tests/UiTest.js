@@ -85,11 +85,11 @@ checkFilter({
 });
 
 checkFilter({
-    name: 'src.name == "redis.mizu-tests"',
+    name: 'src.name == ""',
     leftSidePath: '[title="Source Name"]',
-    leftSideExpectedText: 'redis.mizu-tests',
+    leftSideExpectedText: '[Unresolved]',
     rightSidePath: '> :nth-child(2) [title="Source Name"]',
-    rightSideExpectedText: 'redis.mizu-tests',
+    rightSideExpectedText: '[Unresolved]',
     applyByEnter: false
 });
 
