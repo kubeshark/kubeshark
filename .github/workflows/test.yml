@@ -15,26 +15,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  run-tests-cli:
-    name: CLI Tests
-    runs-on: ubuntu-latest
-    steps:
-      - name: Set up Go 1.16
-        uses: actions/setup-go@v2
-        with:
-          go-version: '^1.16'
-
-      - name: Check out code into the Go module directory
-        uses: actions/checkout@v2
-
-      - name: Test
-        run: make test-cli
-
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v2
-
-  run-tests-agent:
-    name: Agent Tests
+  run-unit-tests:
+    name: Unit Tests
     runs-on: ubuntu-latest
     steps:
       - name: Set up Go 1.16
@@ -49,8 +31,15 @@ jobs:
         run: |
           sudo apt-get install libpcap-dev
 
-      - name: Test
+      - name: CLI Test
+        run: make test-cli
+
+      - name: Agent Test
         run: make test-agent
+      
+      - name: Shared Test
+        run: make test-shared
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2
+
