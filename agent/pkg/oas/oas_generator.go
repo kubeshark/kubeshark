@@ -107,6 +107,7 @@ func newOasGenerator() *oasGenerator {
 type EntryWithSource struct {
 	Source string
 	Entry  har.Entry
+	Id     uint
 }
 
 type oasGenerator struct {

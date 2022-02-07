@@ -115,10 +115,10 @@ type nvParams struct {
 	GeneralizeName func(name string) string
 }
 
-func handleNameVals(gw nvParams, params **openapi.ParameterList) {
+func handleNameVals(gw nvParams, params **openapi.ParameterList, checkIgnore bool) {
 	visited := map[string]*openapi.ParameterObj{}
 	for _, pair := range gw.Pairs {
-		if gw.IsIgnored(pair.Name) {
+		if (checkIgnore && gw.IsIgnored(pair.Name)) || pair.Name == "" {
 			continue
 		}
 
