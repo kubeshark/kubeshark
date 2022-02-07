@@ -78,7 +78,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             TARGETARCH=${{ matrix.target }}
-            SEM_VER=${{ steps.versioning.outputs.version }}
+            VER=${{ steps.versioning.outputs.version }}
             BUILD_TIMESTAMP=${{ steps.version_parameters.outputs.build_timestamp }}
             GIT_BRANCH=${{ steps.version_parameters.outputs.branch }}
             COMMIT_HASH=${{ github.sha }}
@@ -99,11 +99,13 @@ jobs:
       - name: Check out the repo
         uses: actions/checkout@v2
 
-      - name: Set up Cloud SDK
-        uses: google-github-actions/setup-gcloud@master
+      - id: 'auth'
+        uses: 'google-github-actions/auth@v0'
         with:
-          service_account_key: ${{ secrets.GCR_JSON_KEY }}
-          export_default_credentials: true
+          credentials_json: '${{ secrets.GCR_JSON_KEY }}'
+
+      - name: 'Set up Cloud SDK'
+        uses: 'google-github-actions/setup-gcloud@v0'
 
       - name: Determine versioning strategy
         uses: haya14busa/action-cond@v1
@@ -162,7 +164,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             TARGETARCH=${{ matrix.target }}
-            SEM_VER=${{ steps.versioning.outputs.version }}
+            VER=${{ steps.versioning.outputs.version }}
             BUILD_TIMESTAMP=${{ steps.version_parameters.outputs.build_timestamp }}
             GIT_BRANCH=${{ steps.version_parameters.outputs.branch }}
             COMMIT_HASH=${{ github.sha }}
@@ -235,11 +237,13 @@ jobs:
       - name: Check out the repo
         uses: actions/checkout@v2
 
-      - name: Set up Cloud SDK
-        uses: google-github-actions/setup-gcloud@master
+      - id: 'auth'
+        uses: 'google-github-actions/auth@v0'
         with:
-          service_account_key: ${{ secrets.GCR_JSON_KEY }}
-          export_default_credentials: true
+          credentials_json: '${{ secrets.GCR_JSON_KEY }}'
+
+      - name: 'Set up Cloud SDK'
+        uses: 'google-github-actions/setup-gcloud@v0'
 
       - name: Determine versioning strategy
         uses: haya14busa/action-cond@v1
@@ -265,7 +269,7 @@ jobs:
         id: version_parameters
 
       - name: Build and Push CLI
-        run: make push-cli SEM_VER='${{ steps.versioning.outputs.version }}' BUILD_TIMESTAMP='${{ steps.version_parameters.outputs.build_timestamp }}'
+        run: make push-cli VER='${{ steps.versioning.outputs.version }}' BUILD_TIMESTAMP='${{ steps.version_parameters.outputs.build_timestamp }}'
 
       - name: Log the version into a .txt file
         shell: bash

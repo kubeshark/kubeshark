@@ -83,7 +83,7 @@ func CheckNewerVersion(versionChan chan string) {
 
 	greater, err := version.GreaterThen(gitHubVersion, mizu.Ver)
 	if err != nil {
-		logger.Log.Debugf("[ERROR] Semver version is not valid, github version %v, current version %v", gitHubVersion, mizu.Ver)
+		logger.Log.Debugf("[ERROR] Ver version is not valid, github version %v, current version %v", gitHubVersion, mizu.Ver)
 		versionChan <- ""
 		return
 	}

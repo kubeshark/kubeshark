@@ -143,5 +143,5 @@ func (provider *Provider) GetVersion() (string, error) {
 		return "", err
 	}
 
-	return versionResponse.SemVer, nil
+	return versionResponse.Ver, nil
 }
