@@ -5,10 +5,10 @@ import {
     rightTextCheck,
 } from "../testHelpers/TrafficHelper";
 
-const possibleJsonPlaces = {
+const valueTabs = {
     response: 'RESPONSE',
     request: 'REQUEST',
-    nowhere: null
+    none: null
 }
 
 it('opening mizu', function () {
@@ -18,34 +18,34 @@ it('opening mizu', function () {
 checkRedisFilterByMethod({
     method: 'PING',
     shouldCheckSummary: false,
-    jsonPlace: possibleJsonPlaces.nowhere
+    jsonPlace: valueTabs.none
 });
 
 checkRedisFilterByMethod({
     method: 'SET',
     shouldCheckSummary: true,
-    jsonPlace: possibleJsonPlaces.request,
+    jsonPlace: valueTabs.request,
     methodRegex: /^\[value, keepttl]$/mg
 });
 
 checkRedisFilterByMethod({
     method: 'EXISTS',
     shouldCheckSummary: true,
-    jsonPlace: possibleJsonPlaces.response,
+    jsonPlace: valueTabs.response,
     methodRegex: /^1$/mg
 });
 
 checkRedisFilterByMethod({
     method: 'GET',
     shouldCheckSummary: true,
-    jsonPlace: possibleJsonPlaces.response,
+    jsonPlace: valueTabs.response,
     methodRegex: /^value$/mg
 });
 
 checkRedisFilterByMethod({
     method: 'DEL',
     shouldCheckSummary: true,
-    jsonPlace: possibleJsonPlaces.response,
+    jsonPlace: valueTabs.response,
     methodRegex: /^1$|^0$/mg
 });
 
@@ -81,7 +81,7 @@ function checkRedisFilterByMethod(funcDict) {
                                leftTextCheck(entryNum, summaryDict.pathLeft, summaryDict.expectedText);
 
                            if (!doneCheckOnFirst) {
-                                oneTimeCheck(funcDict, protocolDict, methodDict, summaryDict, entry);
+                               deepCheck(funcDict, protocolDict, methodDict, summaryDict, entry);
                                doneCheckOnFirst = true;
                            }
                        }
@@ -92,7 +92,7 @@ function checkRedisFilterByMethod(funcDict) {
     });
 }
 
-function oneTimeCheck(generalDict, protocolDict, methodDict, summaryDict, entry) {
+function deepCheck(generalDict, protocolDict, methodDict, summaryDict, entry) {
     const entryNum = getEntryNumById(entry.id);
     const {shouldCheckSummary, jsonPlace, methodRegex} = generalDict;
 
@@ -114,7 +114,7 @@ function oneTimeCheck(generalDict, protocolDict, methodDict, summaryDict, entry)
         rightOnHoverCheck(summaryDict.pathRight, summaryDict.expectedOnHover);
 
     if (jsonPlace) {
-        if (jsonPlace === possibleJsonPlaces.response)
+        if (jsonPlace === valueTabs.response)
             cy.contains('Response').click();
         cy.get('.hljs').then(text => {
             expect(text.text()).to.match(methodRegex)

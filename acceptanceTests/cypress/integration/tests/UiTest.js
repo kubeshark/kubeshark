@@ -4,10 +4,8 @@ import {
     resizeToHugeMizu,
     resizeToNormalMizu,
     rightOnHoverCheck,
-    rightTextCheck
+    rightTextCheck, verifyMinimumEntries
 } from "../testHelpers/TrafficHelper";
-const greenFilterColor = 'rgb(210, 250, 210)';
-const redFilterColor = 'rgb(250, 214, 220)';
 const refreshWaitTimeout = 10000;
 const bodyJsonClass = '.hljs';
 
