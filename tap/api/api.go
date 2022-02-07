@@ -264,7 +264,7 @@ type HTTPWrapper struct {
 }
 
 func (h HTTPPayload) MarshalJSON() ([]byte, error) {
-	_, testEnvEnabled := os.LookupEnv("MIZU_TEST")
+	_, testEnvEnabled := os.LookupEnv(mizuTestEnvVar)
 	switch h.Type {
 	case TypeHttpRequest:
 		harRequest, err := har.NewRequest(h.Data.(*http.Request), true)
