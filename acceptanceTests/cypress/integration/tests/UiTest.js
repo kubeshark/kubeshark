@@ -4,6 +4,7 @@ import {
     resizeToHugeMizu,
     resizeToNormalMizu,
     rightOnHoverCheck,
+    leftOnHoverCheck,
     rightTextCheck, verifyMinimumEntries
 } from "../testHelpers/TrafficHelper";
 const refreshWaitTimeout = 10000;
