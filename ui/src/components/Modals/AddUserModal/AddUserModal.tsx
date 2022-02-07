@@ -11,8 +11,6 @@ import spinner from "../../assets/spinner.svg";
 import {FormService} from "../../../helpers/FormService"
 import {RouterRoutes} from "../../../helpers/routes";
 import {Utils} from "../../../helpers/Utils"
-import LoadingOverlay from '../../LoadingOverlay';
-
 
 export type UserData = {
   role:string;
