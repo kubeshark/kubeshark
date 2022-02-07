@@ -12,20 +12,46 @@ const selectedNodeBorderColor = "#205CF5"
 const selectedNodeLabelColor = "#205CF5"
 const selectedEdgeLabelColor = "#205CF5"
 
+function customScaling(min, max, total, value) {
+    if (max === min) {
+        return 0.5;
+    }
+    else {
+        var scale = 1 / (max - min);
+        return Math.max(0, (value - min) * scale);
+    }
+}
+
+function nodeSelected(values, id, selected, hovering) {
+    values.color = selectedNodeColor;
+    values.borderColor = selectedNodeBorderColor;
+    values.borderWidth = 4;
+}
+
+function nodeLabelSelected(values, id, selected, hovering) {
+    values.size = values.size + 1;
+    values.color = selectedNodeLabelColor;
+    values.strokeColor = selectedNodeLabelColor;
+    values.strokeWidth = 0.2
+}
+
+function edgeSelected(values, id, selected, hovering) {
+    values.opacity = 0.4;
+    values.width = values.width + 1;
+}
+
+function edgeLabelSelected(values, id, selected, hovering) {
+    values.size = values.size + 1;
+    values.color = selectedEdgeLabelColor;
+    values.strokeColor = selectedEdgeLabelColor;
+    values.strokeWidth = 0.2
+}
+
 const nodeOptions = {
     shape: 'dot',
     chosen: {
-        node: function (values, id, selected, hovering) {
-            values.color = selectedNodeColor;
-            values.borderColor = selectedNodeBorderColor;
-            values.borderWidth = 4;
-        },
-        label: function (values, id, selected, hovering) {
-            values.size = values.size + 1;
-            values.color = selectedNodeLabelColor;
-            values.strokeColor = selectedNodeLabelColor;
-            values.strokeWidth = 0.2
-        }
+        node: nodeSelected,
+        label: nodeLabelSelected,
     },
     color: {
         background: '#494677',
@@ -53,15 +79,7 @@ const nodeOptions = {
             maxVisible: maxLabelScaling,
             drawThreshold: 5,
         },
-        customScalingFunction: function (min, max, total, value) {
-            if (max === min) {
-                return 0.5;
-            }
-            else {
-                let scale = 1 / (max - min);
-                return Math.max(0, (value - min) * scale);
-            }
-        }
+        customScalingFunction: customScaling,
     },
     borderWidth: 2,
     labelHighlightBold: true,
@@ -71,16 +89,8 @@ const nodeOptions = {
 
 const edgeOptions = {
     chosen: {
-        edge: function (values, id, selected, hovering) {
-            values.opacity = 0.4;
-            values.width = values.width + 1;
-        },
-        label: function (values, id, selected, hovering) {
-            values.size = values.size + 1;
-            values.color = selectedEdgeLabelColor;
-            values.strokeColor = selectedEdgeLabelColor;
-            values.strokeWidth = 0.2
-        }
+        edge: edgeSelected,
+        label: edgeLabelSelected,
     },
     dashes: false,
     arrowStrikethrough: false,
@@ -120,15 +130,7 @@ const edgeOptions = {
             maxVisible: maxLabelScaling,
             drawThreshold: 5
         },
-        customScalingFunction: function (min, max, total, value) {
-            if (max === min) {
-                return 0.5;
-            }
-            else {
-                var scale = 1 / (max - min);
-                return Math.max(0, (value - min) * scale);
-            }
-        }
+        customScalingFunction: customScaling,
     },
     labelHighlightBold: true,
     selectionWidth: 1,
@@ -142,10 +144,10 @@ const ServiceMapOptions = {
         barnesHut: {
             theta: 0.5,
             gravitationalConstant: -2000,
-            centralGravity: 0.3,
+            centralGravity: 0.4,
             springLength: 180,
             springConstant: 0.04,
-            damping: 0.09,
+            damping: 0.2,
             avoidOverlap: 1
         },
     },
