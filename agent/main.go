@@ -5,24 +5,14 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"os/signal"
-	"strconv"
-	"strings"
 	"syscall"
 	"time"
 
-	"github.com/up9inc/mizu/agent/pkg/middlewares"
 	"github.com/up9inc/mizu/agent/pkg/models"
-	"github.com/up9inc/mizu/agent/pkg/oas"
-	"github.com/up9inc/mizu/agent/pkg/routes"
-	"github.com/up9inc/mizu/agent/pkg/servicemap"
-	"github.com/up9inc/mizu/agent/pkg/up9"
 	"github.com/up9inc/mizu/agent/pkg/utils"
-
-	"github.com/up9inc/mizu/agent/pkg/elastic"
 
 	"github.com/up9inc/mizu/agent/pkg/api"
 	"github.com/up9inc/mizu/agent/pkg/app"
@@ -30,12 +20,8 @@ import (
 
 	v1 "k8s.io/api/core/v1"
 
-	"github.com/antelman107/net-wait-go/wait"
-	"github.com/gin-contrib/static"
-	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"github.com/op/go-logging"
-	basenine "github.com/up9inc/basenine/client/go"
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/logger"
 	"github.com/up9inc/mizu/tap"
@@ -72,71 +58,13 @@ func main() {
 	}
 
 	if *standaloneMode {
-		api.StartResolving(*namespace)
-
-		outputItemsChannel := make(chan *tapApi.OutputChannelItem)
-		filteredOutputItemsChannel := make(chan *tapApi.OutputChannelItem)
-
-		filteringOptions := getTrafficFilteringOptions()
-		hostMode := os.Getenv(shared.HostModeEnvVar) == "1"
-		tapOpts := &tap.TapOpts{HostMode: hostMode}
-		tap.StartPassiveTapper(tapOpts, outputItemsChannel, app.Extensions, filteringOptions)
-
-		go filterItems(outputItemsChannel, filteredOutputItemsChannel)
-		go api.StartReadingEntries(filteredOutputItemsChannel, nil, app.ExtensionsMap)
-
-		hostApi(nil)
+		runInStandaloneMode()
 	} else if *tapperMode {
-		logger.Log.Infof("Starting tapper, websocket address: %s", *apiServerAddress)
-		if *apiServerAddress == "" {
-			panic("API server address must be provided with --api-server-address when using --tap")
-		}
-
-		hostMode := os.Getenv(shared.HostModeEnvVar) == "1"
-		tapOpts := &tap.TapOpts{HostMode: hostMode}
-		tapTargets := getTapTargets()
-		if tapTargets != nil {
-			tapOpts.FilterAuthorities = tapTargets
-			logger.Log.Infof("Filtering for the following authorities: %v", tapOpts.FilterAuthorities)
-		}
-
-		filteredOutputItemsChannel := make(chan *tapApi.OutputChannelItem)
-
-		filteringOptions := getTrafficFilteringOptions()
-		tap.StartPassiveTapper(tapOpts, filteredOutputItemsChannel, app.Extensions, filteringOptions)
-		socketConnection, err := dialSocketWithRetry(*apiServerAddress, socketConnectionRetries, socketConnectionRetryDelay)
-		if err != nil {
-			panic(fmt.Sprintf("Error connecting to socket server at %s %v", *apiServerAddress, err))
-		}
-		logger.Log.Infof("Connected successfully to websocket %s", *apiServerAddress)
-
-		go pipeTapChannelToSocket(socketConnection, filteredOutputItemsChannel)
+		runInTapperMode()
 	} else if *apiServerMode {
-		configureBasenineServer(shared.BasenineHost, shared.BaseninePort)
-		startTime = time.Now().UnixNano() / int64(time.Millisecond)
-		api.StartResolving(*namespace)
-
-		outputItemsChannel := make(chan *tapApi.OutputChannelItem)
-		filteredOutputItemsChannel := make(chan *tapApi.OutputChannelItem)
-		enableExpFeatureIfNeeded()
-		go filterItems(outputItemsChannel, filteredOutputItemsChannel)
-		go api.StartReadingEntries(filteredOutputItemsChannel, nil, app.ExtensionsMap)
-
-		syncEntriesConfig := getSyncEntriesConfig()
-		if syncEntriesConfig != nil {
-			if err := up9.SyncEntries(syncEntriesConfig); err != nil {
-				logger.Log.Error("Error syncing entries, err: %v", err)
-			}
-		}
-
-		hostApi(outputItemsChannel)
+		utils.StartServer(app.RunInApiServerMode(*namespace))
 	} else if *harsReaderMode {
-		outputItemsChannel := make(chan *tapApi.OutputChannelItem, 1000)
-		filteredHarChannel := make(chan *tapApi.OutputChannelItem)
-
-		go filterItems(outputItemsChannel, filteredHarChannel)
-		go api.StartReadingEntries(filteredHarChannel, harsDir, app.ExtensionsMap)
-		hostApi(nil)
+		runInHarReaderMode()
 	}
 
 	signalChan := make(chan os.Signal, 1)
@@ -146,124 +74,59 @@ func main() {
 	logger.Log.Info("Exiting")
 }
 
-func enableExpFeatureIfNeeded() {
-	if config.Config.OAS {
-		oas.GetOasGeneratorInstance().Start()
-	}
-	if config.Config.ServiceMap {
-		servicemap.GetInstance().SetConfig(config.Config)
-	}
-	elastic.GetInstance().Configure(config.Config.Elastic)
-}
-
-func configureBasenineServer(host string, port string) {
-	if !wait.New(
-		wait.WithProto("tcp"),
-		wait.WithWait(200*time.Millisecond),
-		wait.WithBreak(50*time.Millisecond),
-		wait.WithDeadline(5*time.Second),
-		wait.WithDebug(config.Config.LogLevel == logging.DEBUG),
-	).Do([]string{fmt.Sprintf("%s:%s", host, port)}) {
-		logger.Log.Panicf("Basenine is not available!")
+func runInTapperMode() {
+	logger.Log.Infof("Starting tapper, websocket address: %s", *apiServerAddress)
+	if *apiServerAddress == "" {
+		panic("API server address must be provided with --api-server-address when using --tap")
 	}
 
-	// Limit the database size to default 200MB
-	err := basenine.Limit(host, port, config.Config.MaxDBSizeBytes)
+	hostMode := os.Getenv(shared.HostModeEnvVar) == "1"
+	tapOpts := &tap.TapOpts{HostMode: hostMode}
+	tapTargets := getTapTargets()
+	if tapTargets != nil {
+		tapOpts.FilterAuthorities = tapTargets
+		logger.Log.Infof("Filtering for the following authorities: %v", tapOpts.FilterAuthorities)
+	}
+
+	filteredOutputItemsChannel := make(chan *tapApi.OutputChannelItem)
+
+	filteringOptions := getTrafficFilteringOptions()
+	tap.StartPassiveTapper(tapOpts, filteredOutputItemsChannel, app.Extensions, filteringOptions)
+	socketConnection, err := dialSocketWithRetry(*apiServerAddress, socketConnectionRetries, socketConnectionRetryDelay)
 	if err != nil {
-		logger.Log.Panicf("Error while limiting database size: %v", err)
+		panic(fmt.Sprintf("Error connecting to socket server at %s %v", *apiServerAddress, err))
 	}
+	logger.Log.Infof("Connected successfully to websocket %s", *apiServerAddress)
 
-	// Define the macros
-	for _, extension := range app.Extensions {
-		macros := extension.Dissector.Macros()
-		for macro, expanded := range macros {
-			err = basenine.Macro(host, port, macro, expanded)
-			if err != nil {
-				logger.Log.Panicf("Error while adding a macro: %v", err)
-			}
-		}
-	}
+	go pipeTapChannelToSocket(socketConnection, filteredOutputItemsChannel)
 }
 
-func hostApi(socketHarOutputChannel chan<- *tapApi.OutputChannelItem) {
-	app := gin.Default()
+func runInStandaloneMode() {
+	api.StartResolving(*namespace)
 
-	app.GET("/echo", func(c *gin.Context) {
-		c.String(http.StatusOK, "Here is Mizu agent")
-	})
+	outputItemsChannel := make(chan *tapApi.OutputChannelItem)
+	filteredOutputItemsChannel := make(chan *tapApi.OutputChannelItem)
 
-	eventHandlers := api.RoutesEventHandlers{
-		SocketOutChannel: socketHarOutputChannel,
-	}
+	filteringOptions := getTrafficFilteringOptions()
+	hostMode := os.Getenv(shared.HostModeEnvVar) == "1"
+	tapOpts := &tap.TapOpts{HostMode: hostMode}
+	tap.StartPassiveTapper(tapOpts, outputItemsChannel, app.Extensions, filteringOptions)
 
-	app.Use(DisableRootStaticCache())
+	go app.FilterItems(outputItemsChannel, filteredOutputItemsChannel)
+	go api.StartReadingEntries(filteredOutputItemsChannel, nil, app.ExtensionsMap)
 
-	var staticFolder string
-	if config.Config.StandaloneMode {
-		staticFolder = "./site-standalone"
-	} else {
-		staticFolder = "./site"
-	}
-
-	indexStaticFile := staticFolder + "/index.html"
-	if err := setUIFlags(indexStaticFile); err != nil {
-		logger.Log.Errorf("Error setting ui flags, err: %v", err)
-	}
-
-	app.Use(static.ServeRoot("/", staticFolder))
-	app.NoRoute(func(c *gin.Context) {
-		c.File(indexStaticFile)
-	})
-
-	app.Use(middlewares.CORSMiddleware()) // This has to be called after the static middleware, does not work if its called before
-
-	api.WebSocketRoutes(app, &eventHandlers, startTime)
-
-	if config.Config.StandaloneMode {
-		routes.ConfigRoutes(app)
-		routes.UserRoutes(app)
-		routes.InstallRoutes(app)
-	}
-	if config.Config.OAS {
-		routes.OASRoutes(app)
-	}
-	if config.Config.ServiceMap {
-		routes.ServiceMapRoutes(app)
-	}
-
-	routes.QueryRoutes(app)
-	routes.EntriesRoutes(app)
-	routes.MetadataRoutes(app)
-	routes.StatusRoutes(app)
-	utils.StartServer(app)
+	ginApp := app.HostApi(nil)
+	utils.StartServer(ginApp)
 }
 
-func DisableRootStaticCache() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		if c.Request.RequestURI == "/" {
-			// Disable cache only for the main static route
-			c.Writer.Header().Set("Cache-Control", "no-store")
-		}
+func runInHarReaderMode() {
+	outputItemsChannel := make(chan *tapApi.OutputChannelItem, 1000)
+	filteredHarChannel := make(chan *tapApi.OutputChannelItem)
 
-		c.Next()
-	}
-}
-
-func setUIFlags(uiIndexPath string) error {
-	read, err := ioutil.ReadFile(uiIndexPath)
-	if err != nil {
-		return err
-	}
-
-	replacedContent := strings.Replace(string(read), "__IS_OAS_ENABLED__", strconv.FormatBool(config.Config.OAS), 1)
-	replacedContent = strings.Replace(replacedContent, "__IS_SERVICE_MAP_ENABLED__", strconv.FormatBool(config.Config.ServiceMap), 1)
-
-	err = ioutil.WriteFile(uiIndexPath, []byte(replacedContent), 0)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	go app.FilterItems(outputItemsChannel, filteredHarChannel)
+	go api.StartReadingEntries(filteredHarChannel, harsDir, app.ExtensionsMap)
+	ginApp := app.HostApi(nil)
+	utils.StartServer(ginApp)
 }
 
 func parseEnvVar(env string) map[string][]v1.Pod {
@@ -302,16 +165,6 @@ func getTrafficFilteringOptions() *tapApi.TrafficFilteringOptions {
 	}
 
 	return &filteringOptions
-}
-
-func filterItems(inChannel <-chan *tapApi.OutputChannelItem, outChannel chan *tapApi.OutputChannelItem) {
-	for message := range inChannel {
-		if message.ConnectionInfo.IsOutgoing && api.CheckIsServiceIP(message.ConnectionInfo.ServerIP) {
-			continue
-		}
-
-		outChannel <- message
-	}
 }
 
 func pipeTapChannelToSocket(connection *websocket.Conn, messageDataChannel <-chan *tapApi.OutputChannelItem) {
