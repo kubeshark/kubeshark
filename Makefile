@@ -89,5 +89,8 @@ test-cli:
 test-agent:
 	@echo "running agent tests"; cd agent && $(MAKE) test
 
+test-shared:
+	@echo "running shared tests"; cd shared && $(MAKE) test
+
 acceptance-test:
 	@echo "running acceptance tests"; cd acceptanceTests && $(MAKE) test
