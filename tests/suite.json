@@ -4,13 +4,13 @@
     {
       "py/object": "__main__.Query",
       "query": "",
-      "number_of_records": 22825,
+      "number_of_records": 23766,
       "consistent": false
     },
     {
       "py/object": "__main__.Query",
       "query": "timestamp >= datetime(\"02/04/2022, 5:14:40.448 PM\")",
-      "number_of_records": 9747,
+      "number_of_records": 10679,
       "consistent": false
     },
     {
@@ -160,13 +160,13 @@
     {
       "py/object": "__main__.Query",
       "query": "grpc",
-      "number_of_records": 88,
+      "number_of_records": 90,
       "consistent": false
     },
     {
       "py/object": "__main__.Query",
       "query": "grpc and timestamp >= datetime(\"02/04/2022, 5:14:40.448 PM\")",
-      "number_of_records": 88,
+      "number_of_records": 90,
       "consistent": false
     },
     {
@@ -178,7 +178,7 @@
     {
       "py/object": "__main__.Query",
       "query": "grpc and request.method == \"GetFeature\" and request.path == \"/routeguide.RouteGuide/GetFeature\" and request.pathSegments[1] == \"GetFeature\" and request.headers[\":method\"] == \"POST\" and response.status == 0 and response.statusText == \"OK\" and response.headers[\":status\"] == \"200\"",
-      "number_of_records": 34,
+      "number_of_records": 36,
       "consistent": false
     },
     {
@@ -202,109 +202,25 @@
     {
       "py/object": "__main__.Query",
       "query": "grpc and dst.name == \"mizutest-grpc-py-server:50051\"",
-      "number_of_records": 88,
+      "number_of_records": 90,
       "consistent": false
-    },
-    {
-      "py/object": "__main__.Query",
-      "query": "http",
-      "number_of_records": 4971,
-      "consistent": false
-    },
-    {
-      "py/object": "__main__.Query",
-      "query": "http and timestamp >= datetime(\"02/04/2022, 5:14:40.448 PM\")",
-      "number_of_records": 4958,
-      "consistent": false
-    },
-    {
-      "py/object": "__main__.Query",
-      "query": "http and request.method == \"GET\" and request.path == \"/health\" and response.status == 200 and response.statusText == \"OK\"",
-      "number_of_records": 132,
-      "consistent": true
-    },
-    {
-      "py/object": "__main__.Query",
-      "query": "http and request.method == \"GET\" and request.path == \"/ready\" and request.targetUri == \"/ready\" and request.headers[\"User-Agent\"] == \"kube-probe/1.21\" and response.status == 200 and response.statusText == \"OK\" and response.content.text == \"OK\"",
-      "number_of_records": 0,
-      "consistent": true
-    },
-    {
-      "py/object": "__main__.Query",
-      "query": "http and request.method == \"GET\" and request.path == \"/\" and request.targetUri == \"/\" and request.headers[\"Host\"] == \"172.17.0.20:8079\" and request.headers[\"User-Agent\"] == \"kube-probe/1.21\" and response.status == 200 and response.statusText == \"OK\" and response.headers[\"Content-Length\"] == \"8688\" and response.headers[\"Content-Type\"] == \"text/html; charset=UTF-8\"",
-      "number_of_records": 40,
-      "consistent": true
-    },
-    {
-      "py/object": "__main__.Query",
-      "query": "http and request.method == \"POST\" and request.path == \"/carts/y9naz5ppDN_rXW78YYzOmJcSQatwFBJs/items\" and request.pathSegments[0] == \"carts\" and request.pathSegments[1] == \"y9naz5ppDN_rXW78YYzOmJcSQatwFBJs\" and request.pathSegments[2] == \"items\" and request.headers[\"Connection\"] == \"close\" and request.headers[\"Content-Length\"] == \"64\" and request.headers[\"Content-Type\"] == \"application/json\" and response.status == 201 and response.statusText == \"Created\" and response.headers[\"Content-Type\"] == \"application/json;charset=UTF-8\"",
-      "number_of_records": 302,
-      "consistent": false
-    },
-    {
-      "py/object": "__main__.Query",
-      "query": "http and request.method == \"POST\" and request.path == \"/cart\" and request.headers[\"Accept-Encoding\"] == \"gzip, deflate\" and request.headers[\"Accept\"] == \"*/*\" and request.headers[\"User-Agent\"] == \"python-requests/2.25.1\" and response.status == 201 and response.statusText == \"Created\" and request.postData.text.json().id == \"510a0d7e-8e83-4193-b483-e27e09ddc34d\"",
-      "number_of_records": 29,
-      "consistent": false
-    },
-    {
-      "py/object": "__main__.Query",
-      "query": "http and request.method == \"GET\" and request.path == \"/basket.html\" and request.headers[\"Accept-Encoding\"] == \"gzip, deflate\" and request.headers[\"Connection\"] == \"keep-alive\" and request.headers[\"User-Agent\"] == \"python-requests/2.25.1\" and response.status == 200 and response.statusText == \"OK\" and response.headers[\"Accept-Ranges\"] == \"bytes\" and response.headers[\"Content-Type\"] == \"text/html; charset=UTF-8\" and response.content.text.startsWith(\"<!DOCTYPE html>\")",
-      "number_of_records": 0,
-      "consistent": false
-    },
-    {
-      "py/object": "__main__.Query",
-      "query": "http and request.method == \"POST\" and request.path == \"/orders\" and request.headers[\"User-Agent\"] == \"python-requests/2.25.1\" and request.headers[\"Host\"] == \"192.168.49.2:30001\" and response.status == 500 and response.statusText == \"Internal Server Error\" and src.name == \"\" and dst.name == \"\" and response.headers[\"Content-Length\"] == \"44\" and response.content.text.json().message == \"User not logged in.\"",
-      "number_of_records": 229,
-      "consistent": false
-    },
-    {
-      "py/object": "__main__.Query",
-      "query": "http and request.method == \"GET\" and request.path == \"/catalogue\" and request.headers[\"Host\"] == \"catalogue\" and request.headers[\"Connection\"] == \"close\" and response.status == 200 and response.statusText == \"OK\" and response.content.text.json()[0].name == \"Holy\"",
-      "number_of_records": 0,
-      "consistent": true
-    },
-    {
-      "py/object": "__main__.Query",
-      "query": "http and request.method == \"GET\" and request.path == \"/login\" and request.headers[\"Authorization\"] == \"[REDACTED]\" and response.status == 401 and response.statusText == \"Unauthorized\" and response.content.text.json().status_code == 401 and response.content.text.json().error == \"Unauthorized\"",
-      "number_of_records": 541,
-      "consistent": false
-    },
-    {
-      "py/object": "__main__.Query",
-      "query": "http and request.method == \"DELETE\" and request.path == \"/carts/y9naz5ppDN_rXW78YYzOmJcSQatwFBJs\" and request.pathSegments[0] == \"carts\" and request.pathSegments[1] == \"y9naz5ppDN_rXW78YYzOmJcSQatwFBJs\" and request.headers[\"Host\"] == \"carts\" and response.status == 202 and response.statusText == \"Accepted\"",
-      "number_of_records": 540,
-      "consistent": false
-    },
-    {
-      "py/object": "__main__.Query",
-      "query": "http and request.method == \"DELETE\" and request.path == \"/cart\" and request.headers[\"User-Agent\"] == \"python-requests/2.25.1\" and response.status == 202 and response.statusText == \"Accepted\"",
-      "number_of_records": 230,
-      "consistent": false
-    },
-    {
-      "py/object": "__main__.Query",
-      "query": "http and request.method == \"POST\" and request.path == \"/carts/y9naz5ppDN_rXW78YYzOmJcSQatwFBJs/items\" and request.pathSegments[1] == \"y9naz5ppDN_rXW78YYzOmJcSQatwFBJs\" and request.postData.text.json().itemId == \"zzz4f044-b040-410d-8ead-4de0446aec7e\" and request.postData.text.json().unitPrice == 12 and response.status == 201 and response.statusText == \"Created\" and response.headers[\"X-Application-Context\"] == \"carts:80\" and response.content.text.json().itemId == \"zzz4f044-b040-410d-8ead-4de0446aec7e\" and response.content.text.json().unitPrice == 12 and response.content.text.json().unitPrice == 12",
-      "number_of_records": 0,
-      "consistent": true
     },
     {
       "py/object": "__main__.Query",
       "query": "http2",
-      "number_of_records": 94,
+      "number_of_records": 96,
       "consistent": false
     },
     {
       "py/object": "__main__.Query",
       "query": "http2 and timestamp >= datetime(\"02/04/2022, 5:14:40.448 PM\")",
-      "number_of_records": 88,
+      "number_of_records": 90,
       "consistent": false
     },
     {
       "py/object": "__main__.Query",
       "query": "kafka",
-      "number_of_records": 8811,
+      "number_of_records": 8810,
       "consistent": false
     },
     {
@@ -406,25 +322,25 @@
     {
       "py/object": "__main__.Query",
       "query": "redis",
-      "number_of_records": 5338,
+      "number_of_records": 6065,
       "consistent": false
     },
     {
       "py/object": "__main__.Query",
       "query": "redis and timestamp >= datetime(\"02/04/2022, 5:14:40.448 PM\")",
-      "number_of_records": 4077,
+      "number_of_records": 4794,
       "consistent": false
     },
     {
       "py/object": "__main__.Query",
       "query": "redis and method == \"PING\"",
-      "number_of_records": 555,
+      "number_of_records": 557,
       "consistent": false
     },
     {
       "py/object": "__main__.Query",
       "query": "redis and method == \"FLUSHDB\"",
-      "number_of_records": 102,
+      "number_of_records": 101,
       "consistent": false
     },
     {
@@ -448,7 +364,7 @@
     {
       "py/object": "__main__.Query",
       "query": "redis and request.command == \"PING\" and request.type == \"Array\"",
-      "number_of_records": 555,
+      "number_of_records": 557,
       "consistent": false
     },
     {
@@ -473,19 +389,19 @@
       "py/object": "__main__.Query",
       "query": "redis and request.command == \"INFO\" and request.key == \"keyspace\" and request.type == \"Array\" and response.type == \"Bulk String\" and response.value == \"# Keyspace\"",
       "number_of_records": 10,
-      "consistent": true
+      "consistent": false
     },
     {
       "py/object": "__main__.Query",
       "query": "redis and response.keyword == \"OK\" and response.type == \"Simple String\"",
-      "number_of_records": 672,
+      "number_of_records": 679,
       "consistent": false
     },
     {
       "py/object": "__main__.Query",
       "query": "redis and request.command == \"EVALSHA\" and request.key == \"b3b5be469962cc72e488ee86a39ed8b552e3ed35\" and request.type == \"Array\" and request.value == \"[1, key2, value]\" and response.type == \"Error\" and response.value == \"NoScriptError: NOSCRIPT No matching script. Please use EVAL.\"",
-      "number_of_records": 1,
-      "consistent": true
+      "number_of_records": 2,
+      "consistent": false
     },
     {
       "py/object": "__main__.Query",
@@ -556,7 +472,7 @@
     {
       "py/object": "__main__.Query",
       "query": "redis and request.command == \"GET\" and request.key == \"key\" and request.type == \"Array\" and response.type == \"Bulk String\" and response.value == \"value\"",
-      "number_of_records": 35,
+      "number_of_records": 37,
       "consistent": false
     },
     {
@@ -568,7 +484,7 @@
     {
       "py/object": "__main__.Query",
       "query": "redis and request.command == \"EXPIRE\" and request.key == \"sess:y9naz5ppDN_rXW78YYzOmJcSQatwFBJs\" and request.type == \"Array\" and request.value == \"86400\" and response.type == \"Integer\" and response.value == 1",
-      "number_of_records": 1986,
+      "number_of_records": 2343,
       "consistent": false
     }
   ]
