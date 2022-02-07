@@ -110,7 +110,7 @@ func getProcessCgroup(procfs string, pid string) (string, error) {
 	cgrouppath := extractCgroup(lines)
 
 	if cgrouppath == "" {
-		return "", errors.Errorf("Cgroup path not found for %d, %s", pid, lines)
+		return "", errors.Errorf("Cgroup path not found for %s, %s", pid, lines)
 	}
 
 	return normalizeCgroup(cgrouppath), nil
