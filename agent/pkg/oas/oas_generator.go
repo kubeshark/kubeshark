@@ -79,6 +79,10 @@ func (g *oasGenerator) runGeneretor() {
 	}
 }
 
+func (g *oasGenerator) Reset() {
+	g.ServiceSpecs = &sync.Map{}
+}
+
 func (g *oasGenerator) PushEntry(entryWithSource *EntryWithSource) {
 	if !g.started {
 		return
@@ -103,6 +107,7 @@ func newOasGenerator() *oasGenerator {
 type EntryWithSource struct {
 	Source string
 	Entry  har.Entry
+	Id     uint
 }
 
 type oasGenerator struct {
