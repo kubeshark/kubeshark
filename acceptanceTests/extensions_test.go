@@ -2,8 +2,14 @@ package acceptanceTests
 
 import (
 	"context"
+	"fmt"
 	"github.com/go-redis/redis/v8"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/util/homedir"
 	"os/exec"
+	"path/filepath"
 	"testing"
 )
 
@@ -46,8 +52,21 @@ func TestRedis(t *testing.T) {
 
 	ctx := context.Background()
 
+	home := homedir.HomeDir()
+	configLoadingRules := &clientcmd.ClientConfigLoadingRules{ExplicitPath: filepath.Join(home, ".kube", "config")}
+	clientConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
+		configLoadingRules,
+		&clientcmd.ConfigOverrides{
+			CurrentContext: "",
+		},
+	)
+	restClientConfig, _ := clientConfig.ClientConfig()
+	clientSet, _ := kubernetes.NewForConfig(restClientConfig)
+	service, _ := clientSet.CoreV1().Services("mizu-tests").Get(ctx, "redis", metav1.GetOptions{})
+	redisIp := service.Status.LoadBalancer.Ingress[0].IP
+
 	rdb := redis.NewClient(&redis.Options{
-		Addr: "localhost:6379",
+		Addr: fmt.Sprintf("%v:6379", redisIp),
 	})
 
 	for i := 0; i < defaultEntriesCount/5; i++ {

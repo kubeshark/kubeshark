@@ -62,5 +62,3 @@ make build-docker-ci
 
 echo "Build cli"
 make build-cli-ci
-
-kubectl get services -n mizu-tests
