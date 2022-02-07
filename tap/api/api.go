@@ -16,6 +16,8 @@ import (
 	"github.com/google/martian/har"
 )
 
+const mizuTestEnvVar = "MIZU_TEST"
+
 type Protocol struct {
 	Name            string   `json:"name"`
 	LongName        string   `json:"longName"`
@@ -262,6 +264,7 @@ type HTTPWrapper struct {
 }
 
 func (h HTTPPayload) MarshalJSON() ([]byte, error) {
+	_, testEnvEnabled := os.LookupEnv("MIZU_TEST")
 	switch h.Type {
 	case TypeHttpRequest:
 		harRequest, err := har.NewRequest(h.Data.(*http.Request), true)
@@ -286,12 +289,11 @@ func (h HTTPPayload) MarshalJSON() ([]byte, error) {
 			}
 			return harRequest.QueryString[i].Value < harRequest.QueryString[j].Value
 		})
-		_, present := os.LookupEnv("MIZU_TEST")
-		if present {
+		if testEnvEnabled {
 			harRequest.URL = ""
 		}
 		var reqWrapper *HTTPRequestWrapper
-		if !present {
+		if !testEnvEnabled {
 			reqWrapper = &HTTPRequestWrapper{Request: h.Data.(*http.Request)}
 		}
 		return json.Marshal(&HTTPWrapper{
@@ -322,9 +324,8 @@ func (h HTTPPayload) MarshalJSON() ([]byte, error) {
 			}
 			return harResponse.Cookies[i].Value < harResponse.Cookies[j].Value
 		})
-		_, present := os.LookupEnv("MIZU_TEST")
 		var resWrapper *HTTPResponseWrapper
-		if !present {
+		if !testEnvEnabled {
 			resWrapper = &HTTPResponseWrapper{Response: h.Data.(*http.Response)}
 		}
 		return json.Marshal(&HTTPWrapper{
