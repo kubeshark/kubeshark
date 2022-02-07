@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"os"
@@ -34,7 +35,8 @@ func TestDissect(t *testing.T) {
 
 	if testUpdateEnabled {
 		os.RemoveAll(expectDir)
-		os.MkdirAll(expectDir, 0775)
+		err := os.MkdirAll(expectDir, 0775)
+		assert.Nil(t, err)
 	}
 
 	dissector := NewDissector()
@@ -85,7 +87,10 @@ func TestDissect(t *testing.T) {
 			SrcPort: "1",
 			DstPort: "2",
 		}
-		dissector.Dissect(bufferClient, true, tcpIDClient, counterPair, &api.SuperTimer{}, superIdentifier, emitter, options)
+		err = dissector.Dissect(bufferClient, true, tcpIDClient, counterPair, &api.SuperTimer{}, superIdentifier, emitter, options)
+		if err != nil && err != io.EOF && err != io.ErrUnexpectedEOF {
+			panic(err)
+		}
 
 		// Response
 		pathServer := basePath + respSuffix
@@ -100,7 +105,10 @@ func TestDissect(t *testing.T) {
 			SrcPort: "2",
 			DstPort: "1",
 		}
-		dissector.Dissect(bufferServer, false, tcpIDServer, counterPair, &api.SuperTimer{}, superIdentifier, emitter, options)
+		err = dissector.Dissect(bufferServer, false, tcpIDServer, counterPair, &api.SuperTimer{}, superIdentifier, emitter, options)
+		if err != nil && err != io.EOF && err != io.ErrUnexpectedEOF {
+			panic(err)
+		}
 
 		fileClient.Close()
 		fileServer.Close()
