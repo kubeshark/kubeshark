@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"sort"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/up9inc/mizu/tap/api"
@@ -102,6 +103,8 @@ func TestDissect(t *testing.T) {
 			DstPort: "1",
 		}
 		dissector.Dissect(bufferServer, false, tcpIDServer, counterPair, &api.SuperTimer{}, superIdentifier, emitter, options)
+
+		time.Sleep(10 * time.Millisecond)
 
 		pathExpect := fmt.Sprintf("%s/%s.json", expectDir, basePath[4:])
 

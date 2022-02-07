@@ -34,7 +34,7 @@
 					"url": "",
 					"details": {
 						"method": "GET",
-						"url": "/van/mcy/2147374698.html",
+						"url": "",
 						"httpVersion": "HTTP/1.1",
 						"cookies": [],
 						"headers": [
@@ -75,59 +75,7 @@
 						"headersSize": -1,
 						"bodySize": 0
 					},
-					"rawRequest": {
-						"Method": "GET",
-						"URL": {
-							"Scheme": "",
-							"Opaque": "",
-							"User": null,
-							"Host": "",
-							"Path": "/van/mcy/2147374698.html",
-							"RawPath": "",
-							"ForceQuery": false,
-							"RawQuery": "",
-							"Fragment": "",
-							"RawFragment": ""
-						},
-						"Proto": "HTTP/1.1",
-						"ProtoMajor": 1,
-						"ProtoMinor": 1,
-						"Header": {
-							"Accept": [
-								"application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5"
-							],
-							"Accept-Charset": [
-								"ISO-8859-1,utf-8;q=0.7,*;q=0.3"
-							],
-							"Accept-Encoding": [
-								"gzip,deflate,sdch"
-							],
-							"Accept-Language": [
-								"en-US,en;q=0.8"
-							],
-							"Connection": [
-								"keep-alive"
-							],
-							"Referer": [
-								"http://vancouver.en.craigslist.ca/search/mca?query=1995+kawasaki\u0026srchType=A\u0026minAsk=\u0026maxAsk="
-							],
-							"User-Agent": [
-								"Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/534.10 (KHTML, like Gecko) Chrome/8.0.552.237 Safari/534.10"
-							]
-						},
-						"ContentLength": 0,
-						"TransferEncoding": null,
-						"Close": false,
-						"Host": "vancouver.en.craigslist.ca",
-						"Form": null,
-						"PostForm": null,
-						"MultipartForm": null,
-						"Trailer": null,
-						"RemoteAddr": "",
-						"RequestURI": "/van/mcy/2147374698.html",
-						"TLS": null,
-						"Response": null
-					},
+					"rawRequest": null,
 					"rawResponse": null
 				}
 			},
@@ -195,53 +143,7 @@
 						"bodySize": 6784
 					},
 					"rawRequest": null,
-					"rawResponse": {
-						"Body": "\u003c?xml version=\"1.0\" encoding=\"utf-8\"?\u003e\u003crss version=\"2.0\"\u003e\u003cchannel\u003e\u003ctitle\u003eMost Watched Videos\u003c/title\u003e\u003clink\u003ehttp://video.sympatico.msn.com\u003c/link\u003e\u003cdescription\u003eMost Watched Videos\u003c/description\u003e\u003cimage\u003e\u003curl\u003ehttp://img.video.msn.com/i/um/msnsc.jpg\u003c/url\u003e\u003ctitle\u003eMSN Video - Entertainment\u003c/title\u003e\u003clink\u003ehttp://video.sympatico.msn.com\u003c/link\u003e\u003c/image\u003e\u003clanguage\u003een-ca\u003c/language\u003e\u003cttl\u003e10\u003c/ttl\u003e\u003ccategory domain=\"MSN Video\"\u003eMSN_Microsoft\u003c/category\u003e\u003ccopyright\u003eCopyright 2009 Microsoft Corporation. All rights reserved.\u003c/copyright\u003e\u003clastBuildDate\u003eFri, 13 Nov 2009 11:07:02 GMT\u003c/lastBuildDate\u003e\u003citem\u003e\u003ctitle\u003eChimp attack victim breaks her silence\u003c/title\u003e\u003clink\u003ehttp://video.msn.com/video.aspx?mkt=en-ca\u0026amp;brand=\u0026amp;vid=5367df70-bdcf-445f-965e-3e0e94879b9b\u0026amp;from=imbot_en-ca_m2534\u0026amp;fg=rss\u003c/link\u003e\u003cdescription\u003eNov. 12: Charla Nash, the woman who was brutally mauled by her friend’s pet chimpanzee, speaks out for the first time and bravely shows the extent of her injuries. NBC’s Jeff Rossen reports.\u003c/description\u003e\u003cpubDate\u003eThu, 12 Nov 2009 08:57:00 GMT\u003c/pubDate\u003e\u003cguid isPermaLink=\"false\"\u003e5367df70-bdcf-445f-965e-3e0e94879b9b\u003c/guid\u003e\u003cenclosure url=\"http://img3.catalog.video.msn.com/image.aspx?uuid=5367df70-bdcf-445f-965e-3e0e94879b9b\u0026amp;w=136\u0026amp;h=102\" type=\"image/jpeg\" length=\"1\"/\u003e\u003c/item\u003e\u003citem\u003e\u003ctitle\u003e12-year-old girl can’t stop sneezing\u003c/title\u003e\u003clink\u003ehttp://video.msn.com/video.aspx?mkt=en-ca\u0026amp;brand=\u0026amp;vid=9f491340-13ee-4891-b596-13ad724d9991\u0026amp;from=imbot_en-ca_m2534\u0026amp;fg=rss\u003c/link\u003e\u003cdescription\u003eNov. 11: Lauren Johnson, a 12-year-old from Virginia, has been unable to stop sneezing for more than two weeks. TODAY’s Ann Curry talks to Lauren, her mom, Lynn Johnson, and NBC’s chief medical editor, Dr. Nancy Snyderman, about the condition.\u003c/description\u003e\u003cpubDate\u003eWed, 11 Nov 2009 21:04:00 GMT\u003c/pubDate\u003e\u003cguid isPermaLink=\"false\"\u003e9f491340-13ee-4891-b596-13ad724d9991\u003c/guid\u003e\u003cenclosure url=\"http://img1.catalog.video.msn.com/image.aspx?uuid=9f491340-13ee-4891-b596-13ad724d9991\u0026amp;w=136\u0026amp;h=102\" type=\"image/jpeg\" length=\"1\"/\u003e\u003c/item\u003e\u003citem\u003e\u003ctitle\u003eWhat’s your sex IQ?\u003c/title\u003e\u003clink\u003ehttp://video.msn.com/video.aspx?mkt=en-ca\u0026amp;brand=\u0026amp;vid=9742457b-aaef-44a7-8f35-2019afba1be5\u0026amp;from=imbot_en-ca_m2534\u0026amp;fg=rss\u003c/link\u003e\u003cdescription\u003eNov. 11: Lisa Bain from Women’s Health magazine quizzes TODAY’s Hoda Kotb and Kathie Lee Gifford on sex facts.\u003c/description\u003e\u003cpubDate\u003eWed, 11 Nov 2009 23:44:00 GMT\u003c/pubDate\u003e\u003cguid isPermaLink=\"false\"\u003e9742457b-aaef-44a7-8f35-2019afba1be5\u003c/guid\u003e\u003cenclosure url=\"http://img1.catalog.video.msn.com/image.aspx?uuid=9742457b-aaef-44a7-8f35-2019afba1be5\u0026amp;w=136\u0026amp;h=102\" type=\"image/jpeg\" length=\"1\"/\u003e\u003c/item\u003e\u003citem\u003e\u003ctitle\u003eJon Gosselin Goes Viral\u003c/title\u003e\u003clink\u003ehttp://video.msn.com/video.aspx?mkt=en-ca\u0026amp;brand=\u0026amp;vid=0ca3756a-f014-4892-9a30-87262607d4e5\u0026amp;from=imbot_en-ca_m2534\u0026amp;fg=rss\u003c/link\u003e\u003cdescription\u003eJon Gosselin takes aim at him self in this hilarious viral video.\u003c/description\u003e\u003cpubDate\u003eThu, 12 Nov 2009 06:26:49 GMT\u003c/pubDate\u003e\u003cguid isPermaLink=\"false\"\u003e0ca3756a-f014-4892-9a30-87262607d4e5\u003c/guid\u003e\u003cenclosure url=\"http://img1.catalog.video.msn.com/image.aspx?uuid=0ca3756a-f014-4892-9a30-87262607d4e5\u0026amp;w=136\u0026amp;h=102\" type=\"image/jpeg\" length=\"1\"/\u003e\u003c/item\u003e\u003citem\u003e\u003ctitle\u003eDirtiest Ever Footballer?\u003c/title\u003e\u003clink\u003ehttp://video.msn.com/video.aspx?mkt=en-ca\u0026amp;brand=\u0026amp;vid=36f2a1d8-2247-4f1f-a2f0-6f27636f4c17\u0026amp;from=imbot_en-ca_m2534\u0026amp;fg=rss\u003c/link\u003e\u003cdescription\u003eWomen\u0026apos;s football game gets out of hand when one player gets rough.\u003c/description\u003e\u003cpubDate\u003eTue, 10 Nov 2009 07:08:00 GMT\u003c/pubDate\u003e\u003cguid isPermaLink=\"false\"\u003e36f2a1d8-2247-4f1f-a2f0-6f27636f4c17\u003c/guid\u003e\u003cenclosure url=\"http://img5.catalog.video.msn.com/image.aspx?uuid=36f2a1d8-2247-4f1f-a2f0-6f27636f4c17\u0026amp;w=136\u0026amp;h=102\" type=\"image/jpeg\" length=\"1\"/\u003e\u003c/item\u003e\u003citem\u003e\u003ctitle\u003eMan Almost Struck by Lightning\u003c/title\u003e\u003clink\u003ehttp://video.msn.com/video.aspx?mkt=en-ca\u0026amp;brand=\u0026amp;vid=b4555c91-e892-43f8-bb06-2cb4fb1e5f97\u0026amp;from=imbot_en-ca_m2534\u0026amp;fg=rss\u003c/link\u003e\u003cdescription\u003eThis lucky gentleman decides to go outside and play around during a thunderstorm.\u003c/description\u003e\u003cpubDate\u003eWed, 11 Nov 2009 11:38:34 GMT\u003c/pubDate\u003e\u003cguid isPermaLink=\"false\"\u003eb4555c91-e892-43f8-bb06-2cb4fb1e5f97\u003c/guid\u003e\u003cenclosure url=\"http://img2.catalog.video.msn.com/image.aspx?uuid=b4555c91-e892-43f8-bb06-2cb4fb1e5f97\u0026amp;w=136\u0026amp;h=102\" type=\"image/jpeg\" length=\"1\"/\u003e\u003c/item\u003e\u003citem\u003e\u003ctitle\u003eFans walk out on Spears in Australia\u003c/title\u003e\u003clink\u003ehttp://video.msn.com/video.aspx?mkt=en-ca\u0026amp;brand=\u0026amp;vid=c283419a-5204-4d96-8732-826494e10947\u0026amp;from=imbot_en-ca_m2534\u0026amp;fg=rss\u003c/link\u003e\u003cdescription\u003eNov. 7: It took Australian fans of Britney Spears only three songs to deserted the pop diva after it became evident she was lip-synching. Msnbc\u0026apos;s Alex Witt reports.\u003c/description\u003e\u003cpubDate\u003eSun, 08 Nov 2009 05:40:00 GMT\u003c/pubDate\u003e\u003cguid isPermaLink=\"false\"\u003ec283419a-5204-4d96-8732-826494e10947\u003c/guid\u003e\u003cenclosure url=\"http://img5.catalog.video.msn.com/image.aspx?uuid=c283419a-5204-4d96-8732-826494e10947\u0026amp;w=136\u0026amp;h=102\" type=\"image/jpeg\" length=\"1\"/\u003e\u003c/item\u003e\u003citem\u003e\u003ctitle\u003eAmy\u0026apos;s fishy tale of weight gain\u003c/title\u003e\u003clink\u003ehttp://video.msn.com/video.aspx?mkt=en-ca\u0026amp;brand=\u0026amp;vid=0e3d99fd-e6a4-4752-a8c9-620ee2a808ee\u0026amp;from=imbot_en-ca_m2534\u0026amp;fg=rss\u003c/link\u003e\u003cdescription\u003eAmy Winehouse is reportedly trying to gain weight to get a body to match her boobs.\u003c/description\u003e\u003cpubDate\u003eTue, 10 Nov 2009 04:40:57 GMT\u003c/pubDate\u003e\u003cguid isPermaLink=\"false\"\u003e0e3d99fd-e6a4-4752-a8c9-620ee2a808ee\u003c/guid\u003e\u003cenclosure url=\"http://img2.catalog.video.msn.com/image.aspx?uuid=0e3d99fd-e6a4-4752-a8c9-620ee2a808ee\u0026amp;w=136\u0026amp;h=102\" type=\"image/jpeg\" length=\"1\"/\u003e\u003c/item\u003e\u003citem\u003e\u003ctitle\u003eFake Twitter accounts\u003c/title\u003e\u003clink\u003ehttp://video.msn.com/video.aspx?mkt=en-ca\u0026amp;brand=\u0026amp;vid=cbcc2009-1211-1842-0025-132877877200\u0026amp;from=imbot_en-ca_m2534\u0026amp;fg=rss\u003c/link\u003e\u003cdescription\u003eDuffy aims to stop Twitter impostor\u003c/description\u003e\u003cpubDate\u003eFri, 13 Nov 2009 07:42:25 GMT\u003c/pubDate\u003e\u003cguid isPermaLink=\"false\"\u003ecbcc2009-1211-1842-0025-132877877200\u003c/guid\u003e\u003cenclosure url=\"http://img4.catalog.video.msn.com/image.aspx?uuid=cbcc2009-1211-1842-0025-132877877200\u0026amp;w=136\u0026amp;h=102\" type=\"image/jpeg\" length=\"1\"/\u003e\u003c/item\u003e\u003citem\u003e\u003ctitle\u003eJon Gosselin In LA\u003c/title\u003e\u003clink\u003ehttp://video.msn.com/video.aspx?mkt=en-ca\u0026amp;brand=\u0026amp;vid=f7723f59-261c-4a1a-88a0-f6e2b31b1e30\u0026amp;from=imbot_en-ca_m2534\u0026amp;fg=rss\u003c/link\u003e\u003cdescription\u003eReality show dad Jon Gosselin has arrived in Los Angeles amid his divorce and being dropped from Jon \u0026amp; Kate Plus 8\u003c/description\u003e\u003cpubDate\u003eThu, 01 Oct 2009 05:42:37 GMT\u003c/pubDate\u003e\u003cguid isPermaLink=\"false\"\u003ef7723f59-261c-4a1a-88a0-f6e2b31b1e30\u003c/guid\u003e\u003cenclosure url=\"http://img2.catalog.video.msn.com/image.aspx?uuid=f7723f59-261c-4a1a-88a0-f6e2b31b1e30\u0026amp;w=136\u0026amp;h=102\" type=\"image/jpeg\" length=\"1\"/\u003e\u003c/item\u003e\u003c/channel\u003e\u003c/rss\u003e",
-						"Status": "200 OK",
-						"StatusCode": 200,
-						"Proto": "HTTP/1.1",
-						"ProtoMajor": 1,
-						"ProtoMinor": 1,
-						"Header": {
-							"Age": [
-								"110"
-							],
-							"Cache-Control": [
-								"public"
-							],
-							"Connection": [
-								"keep-alive"
-							],
-							"Content-Length": [
-								"6784"
-							],
-							"Content-Type": [
-								"text/xml; charset=utf-8"
-							],
-							"Date": [
-								"Fri, 13 Nov 2009 19:08:51 GMT"
-							],
-							"Expires": [
-								"Fri, 13 Nov 2009 19:10:04 GMT"
-							],
-							"Server": [
-								"Microsoft-IIS/7.0"
-							],
-							"X-Aspnet-Version": [
-								"2.0.50727"
-							],
-							"X-Powered-By": [
-								"ASP.NET"
-							]
-						},
-						"ContentLength": 6784,
-						"TransferEncoding": null,
-						"Close": false,
-						"Uncompressed": false,
-						"Trailer": null,
-						"Request": null,
-						"TLS": null
-					}
+					"rawResponse": null
 				}
 			}
 		},

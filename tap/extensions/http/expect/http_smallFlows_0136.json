@@ -34,7 +34,7 @@
 					"url": "",
 					"details": {
 						"method": "GET",
-						"url": "/bnc/mcy/2147013715.html",
+						"url": "",
 						"httpVersion": "HTTP/1.1",
 						"cookies": [],
 						"headers": [
@@ -75,59 +75,7 @@
 						"headersSize": -1,
 						"bodySize": 0
 					},
-					"rawRequest": {
-						"Method": "GET",
-						"URL": {
-							"Scheme": "",
-							"Opaque": "",
-							"User": null,
-							"Host": "",
-							"Path": "/bnc/mcy/2147013715.html",
-							"RawPath": "",
-							"ForceQuery": false,
-							"RawQuery": "",
-							"Fragment": "",
-							"RawFragment": ""
-						},
-						"Proto": "HTTP/1.1",
-						"ProtoMajor": 1,
-						"ProtoMinor": 1,
-						"Header": {
-							"Accept": [
-								"application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5"
-							],
-							"Accept-Charset": [
-								"ISO-8859-1,utf-8;q=0.7,*;q=0.3"
-							],
-							"Accept-Encoding": [
-								"gzip,deflate,sdch"
-							],
-							"Accept-Language": [
-								"en-US,en;q=0.8"
-							],
-							"Connection": [
-								"keep-alive"
-							],
-							"Referer": [
-								"http://vancouver.en.craigslist.ca/search/mca?query=supermoto\u0026srchType=A\u0026minAsk=\u0026maxAsk="
-							],
-							"User-Agent": [
-								"Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/534.10 (KHTML, like Gecko) Chrome/8.0.552.237 Safari/534.10"
-							]
-						},
-						"ContentLength": 0,
-						"TransferEncoding": null,
-						"Close": false,
-						"Host": "vancouver.en.craigslist.ca",
-						"Form": null,
-						"PostForm": null,
-						"MultipartForm": null,
-						"Trailer": null,
-						"RemoteAddr": "",
-						"RequestURI": "/bnc/mcy/2147013715.html",
-						"TLS": null,
-						"Response": null
-					},
+					"rawRequest": null,
 					"rawResponse": null
 				}
 			},
@@ -179,41 +127,7 @@
 						"bodySize": 218
 					},
 					"rawRequest": null,
-					"rawResponse": {
-						"Body": "\u003cHTML\u003e\u003cHEAD\u003e\n\u003cTITLE\u003eRequest Timeout\u003c/TITLE\u003e\n\u003c/HEAD\u003e\u003cBODY\u003e\n\u003cH1\u003eRequest Timeout\u003c/H1\u003e\nThe server timed out while waiting for the browser's request.\u003cP\u003e\nReference\u0026#32;\u0026#35;2\u0026#46;97cf6cce\u0026#46;1295981649\u0026#46;0\n\u003c/BODY\u003e\u003c/HTML\u003e\n",
-						"Status": "408 Request Time-out",
-						"StatusCode": 408,
-						"Proto": "HTTP/1.0",
-						"ProtoMajor": 1,
-						"ProtoMinor": 0,
-						"Header": {
-							"Content-Length": [
-								"218"
-							],
-							"Content-Type": [
-								"text/html"
-							],
-							"Date": [
-								"Tue, 25 Jan 2011 18:54:09 GMT"
-							],
-							"Expires": [
-								"Tue, 25 Jan 2011 18:54:09 GMT"
-							],
-							"Mime-Version": [
-								"1.0"
-							],
-							"Server": [
-								"AkamaiGHost"
-							]
-						},
-						"ContentLength": 218,
-						"TransferEncoding": null,
-						"Close": true,
-						"Uncompressed": false,
-						"Trailer": null,
-						"Request": null,
-						"TLS": null
-					}
+					"rawResponse": null
 				}
 			}
 		},

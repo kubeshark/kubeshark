@@ -34,7 +34,7 @@
 					"url": "",
 					"details": {
 						"method": "GET",
-						"url": "/a/diff/317/562916/show2.asp?M=\u0026smartclicktrack=http://clk.atdmt.com/go/155578665/direct\u0026ai.131767702.132508540=\u0026ct.1/01?href=\u0026562916=\u002688838=\u00260=\u0026973506850=",
+						"url": "",
 						"httpVersion": "HTTP/1.1",
 						"cookies": [],
 						"headers": [
@@ -104,56 +104,7 @@
 						"headersSize": -1,
 						"bodySize": 0
 					},
-					"rawRequest": {
-						"Method": "GET",
-						"URL": {
-							"Scheme": "",
-							"Opaque": "",
-							"User": null,
-							"Host": "",
-							"Path": "/a/diff/317/562916/show2.asp",
-							"RawPath": "",
-							"ForceQuery": false,
-							"RawQuery": "M=\u0026smartclicktrack=http://clk.atdmt.com/go/155578665/direct\u0026ai.131767702.132508540=\u0026ct.1/01?href=\u0026562916=\u002688838=\u00260=\u0026973506850=",
-							"Fragment": "",
-							"RawFragment": ""
-						},
-						"Proto": "HTTP/1.1",
-						"ProtoMajor": 1,
-						"ProtoMinor": 1,
-						"Header": {
-							"Accept": [
-								"*/*"
-							],
-							"Accept-Encoding": [
-								"gzip, deflate"
-							],
-							"Accept-Language": [
-								"en-us"
-							],
-							"Connection": [
-								"Keep-Alive"
-							],
-							"Referer": [
-								"http://view.atdmt.com/DRN/iview/155578665/direct/01?click="
-							],
-							"User-Agent": [
-								"Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; .NET CLR 1.1.4322; .NET CLR 2.0.50727; .NET CLR 3.0.4506.2152; .NET CLR 3.5.30729; Windows Live Messenger 14.0.8089.0726)"
-							]
-						},
-						"ContentLength": 0,
-						"TransferEncoding": null,
-						"Close": false,
-						"Host": "www3.smartadserver.com",
-						"Form": null,
-						"PostForm": null,
-						"MultipartForm": null,
-						"Trailer": null,
-						"RemoteAddr": "",
-						"RequestURI": "/a/diff/317/562916/show2.asp?562916;88838;0;973506850;M;smartclicktrack=http://clk.atdmt.com/go/155578665/direct;ai.131767702.132508540;ct.1/01?href=",
-						"TLS": null,
-						"Response": null
-					},
+					"rawRequest": null,
 					"rawResponse": null
 				}
 			},
@@ -213,47 +164,166 @@
 						"bodySize": 563
 					},
 					"rawRequest": null,
-					"rawResponse": {
-						"Body": "\u003c?xml version=\"1.0\" encoding=\"UTF-8\" ?\u003e \n\u003cads\u003e\n  \u003ctabad\u003e\n\t\u003cimage\u003ehttp://www.microsoft.com/canada/msn/images/entertainment-tab-icon.png\u003c/image\u003e\n\t\u003cname\u003eMSN Entertainment\u003c/name\u003e\n\t\u003ctype\u003eMSN Entertainment\u003c/type\u003e\n\t\u003ctooltip\u003eTalk Celebrity Affairs - MSN Entertainment\u003c/tooltip\u003e \n\t\u003ccontenturl\u003ehttp://specials.en.ca.msn.com/wlm/WLMHome.aspx\u003c/contenturl\u003e \n\t\u003chiturl\u003ehttp://g.msn.com/0AD00001/1618258.1??PID=6477613\u0026amp;UIT=A\u0026amp;TargetID=8082119\u0026amp;AN=1527775246\u0026amp;PG=IMCETA\u003c/hiturl\u003e \n\t\u003csiteid\u003e0\u003c/siteid\u003e \n\t\u003cnotificationid\u003e0\u003c/notificationid\u003e \n  \u003c/tabad\u003e\n\u003c/ads\u003e",
-						"Status": "200 OK",
-						"StatusCode": 200,
-						"Proto": "HTTP/1.1",
-						"ProtoMajor": 1,
-						"ProtoMinor": 1,
-						"Header": {
-							"Cache-Control": [
-								"no-cache, must-revalidate"
-							],
-							"Content-Length": [
-								"563"
-							],
-							"Content-Type": [
-								"text/html; Charset=utf-8"
-							],
-							"Date": [
-								"Fri, 13 Nov 2009 19:08:25 GMT"
-							],
-							"Expires": [
-								"Fri, 01 Jan 1990 00:00:00 GMT"
-							],
-							"Pragma": [
-								"no-cache"
-							],
-							"Server": [
-								"Microsoft-IIS/6.0"
-							],
-							"X-Radid": [
-								"P6477613-T8082119-C1618258"
-							]
+					"rawResponse": null
+				}
+			}
+		},
+		"Summary": null
+	},
+	{
+		"Protocol": {
+			"name": "http",
+			"longName": "Hypertext Transfer Protocol -- HTTP/1.1",
+			"abbr": "HTTP",
+			"macro": "http",
+			"version": "1.1",
+			"backgroundColor": "#205cf5",
+			"foregroundColor": "#ffffff",
+			"fontSize": 12,
+			"referenceLink": "https://datatracker.ietf.org/doc/html/rfc2616",
+			"ports": [
+				"80",
+				"443",
+				"8080"
+			],
+			"priority": 0
+		},
+		"Timestamp": -6795364578871,
+		"ConnectionInfo": {
+			"ClientIP": "1",
+			"ClientPort": "1",
+			"ServerIP": "2",
+			"ServerPort": "2",
+			"IsOutgoing": false
+		},
+		"Pair": {
+			"request": {
+				"isRequest": true,
+				"captureTime": "0001-01-01T00:00:00Z",
+				"payload": {
+					"method": "GET",
+					"url": "",
+					"details": {
+						"method": "GET",
+						"url": "",
+						"httpVersion": "HTTP/1.1",
+						"cookies": [],
+						"headers": [
+							{
+								"name": "Accept",
+								"value": "*/*"
+							},
+							{
+								"name": "Accept-Encoding",
+								"value": "gzip, deflate"
+							},
+							{
+								"name": "Accept-Language",
+								"value": "en-us"
+							},
+							{
+								"name": "Connection",
+								"value": "Keep-Alive"
+							},
+							{
+								"name": "Host",
+								"value": "www3.smartadserver.com"
+							},
+							{
+								"name": "Referer",
+								"value": "http://view.atdmt.com/DRN/iview/155578665/direct/01?click="
+							},
+							{
+								"name": "User-Agent",
+								"value": "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; .NET CLR 1.1.4322; .NET CLR 2.0.50727; .NET CLR 3.0.4506.2152; .NET CLR 3.5.30729; Windows Live Messenger 14.0.8089.0726)"
+							}
+						],
+						"queryString": [
+							{
+								"name": "ai.131767702.132508540",
+								"value": ""
+							},
+							{
+								"name": "ct.1/01?href",
+								"value": ""
+							},
+							{
+								"name": "http://clk.atdmt.com/go/155578665/direct",
+								"value": ""
+							}
+						],
+						"headersSize": -1,
+						"bodySize": 0
+					},
+					"rawRequest": null,
+					"rawResponse": null
+				}
+			},
+			"response": {
+				"isRequest": false,
+				"captureTime": "0001-01-01T00:00:00Z",
+				"payload": {
+					"method": "",
+					"url": "",
+					"details": {
+						"status": 302,
+						"statusText": "Found",
+						"httpVersion": "HTTP/1.1",
+						"cookies": [],
+						"headers": [
+							{
+								"name": "Cache-Control",
+								"value": "private,no-cache"
+							},
+							{
+								"name": "Content-Length",
+								"value": "684"
+							},
+							{
+								"name": "Content-Type",
+								"value": "text/html"
+							},
+							{
+								"name": "Date",
+								"value": "Fri, 13 Nov 2009 19:08:30 GMT"
+							},
+							{
+								"name": "Expires",
+								"value": "Thu, 12 Nov 2009 19:08:30 GMT"
+							},
+							{
+								"name": "Location",
+								"value": "http://www3.smartadserver.com/a/diff/317/562916/show2.asp?562916;88838;0;973506850;M;smartclicktrack=http://clk.atdmt.com/go/155578665/direct;ai.131767702.132508540;ct.1/01?href="
+							},
+							{
+								"name": "P3p",
+								"value": "CP=\"BUS CUR CONo FIN IVDo ONL OUR PHY SAMo TELo\""
+							},
+							{
+								"name": "Pragma",
+								"value": "no-cache"
+							},
+							{
+								"name": "Server",
+								"value": "Microsoft-IIS/7.0"
+							},
+							{
+								"name": "Set-Cookie",
+								"value": "[REDACTED]"
+							}
+						],
+						"content": {
+							"size": 684,
+							"mimeType": "text/html",
+							"text": "PEhUTUw+PEhlYWQ+PE1FVEEgSFRUUC1FUVVJVj1SZWZyZXNoIENPTlRFTlQ9IjA7VVJMPWh0dHA6Ly93d3czLnNtYXJ0YWRzZXJ2ZXIuY29tL2EvZGlmZi8zMTcvNTYyOTE2L3Nob3cyLmFzcD81NjI5MTY7ODg4Mzg7MDs5NzM1MDY4NTA7TTtzbWFydGNsaWNrdHJhY2s9aHR0cDovL2Nsay5hdGRtdC5jb20vZ28vMTU1NTc4NjY1L2RpcmVjdDthaS4xMzE3Njc3MDIuMTMyNTA4NTQwO2N0LjEvMDE/aHJlZj0iPjxTY3JpcHQ+d2luZG93LmxvY2F0aW9uPSdodHRwOi8vd3d3My5zbWFydGFkc2VydmVyLmNvbS9hL2RpZmYvMzE3LzU2MjkxNi9zaG93Mi5hc3A/NTYyOTE2Ozg4ODM4OzA7OTczNTA2ODUwO007c21hcnRjbGlja3RyYWNrPWh0dHA6Ly9jbGsuYXRkbXQuY29tL2dvLzE1NTU3ODY2NS9kaXJlY3Q7YWkuMTMxNzY3NzAyLjEzMjUwODU0MDtjdC4xLzAxP2hyZWY9Jzs8L1NjcmlwdD48L0hlYWQ+PEJvZHk+IFRoaXMgcGFnZSB3YXMgbW92ZWQgPEEgSHJlZj0iaHR0cDovL3d3dzMuc21hcnRhZHNlcnZlci5jb20vYS9kaWZmLzMxNy81NjI5MTYvc2hvdzIuYXNwPzU2MjkxNjs4ODgzODswOzk3MzUwNjg1MDtNO3NtYXJ0Y2xpY2t0cmFjaz1odHRwOi8vY2xrLmF0ZG10LmNvbS9nby8xNTU1Nzg2NjUvZGlyZWN0O2FpLjEzMTc2NzcwMi4xMzI1MDg1NDA7Y3QuMS8wMT9ocmVmPSI+aGVyZTwvQT48L0hUTUw+",
+							"encoding": "base64"
 						},
-						"ContentLength": 563,
-						"TransferEncoding": null,
-						"Close": false,
-						"Uncompressed": false,
-						"Trailer": null,
-						"Request": null,
-						"TLS": null
-					}
+						"redirectURL": "http://www3.smartadserver.com/a/diff/317/562916/show2.asp?562916;88838;0;973506850;M;smartclicktrack=http://clk.atdmt.com/go/155578665/direct;ai.131767702.132508540;ct.1/01?href=",
+						"headersSize": -1,
+						"bodySize": 684
+					},
+					"rawRequest": null,
+					"rawResponse": null
 				}
 			}
 		},

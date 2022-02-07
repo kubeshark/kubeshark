@@ -1,0 +1,277 @@
+[
+	{
+		"Protocol": {
+			"name": "http",
+			"longName": "Hypertext Transfer Protocol -- HTTP/1.1",
+			"abbr": "HTTP",
+			"macro": "http",
+			"version": "1.1",
+			"backgroundColor": "#205cf5",
+			"foregroundColor": "#ffffff",
+			"fontSize": 12,
+			"referenceLink": "https://datatracker.ietf.org/doc/html/rfc2616",
+			"ports": [
+				"80",
+				"443",
+				"8080"
+			],
+			"priority": 0
+		},
+		"Timestamp": -6795364578871,
+		"ConnectionInfo": {
+			"ClientIP": "1",
+			"ClientPort": "1",
+			"ServerIP": "2",
+			"ServerPort": "2",
+			"IsOutgoing": false
+		},
+		"Pair": {
+			"request": {
+				"isRequest": true,
+				"captureTime": "0001-01-01T00:00:00Z",
+				"payload": {
+					"method": "GET",
+					"url": "",
+					"details": {
+						"method": "GET",
+						"url": "",
+						"httpVersion": "HTTP/1.1",
+						"cookies": [],
+						"headers": [
+							{
+								"name": "Accept",
+								"value": "*/*"
+							},
+							{
+								"name": "Accept-Charset",
+								"value": "ISO-8859-1,utf-8;q=0.7,*;q=0.3"
+							},
+							{
+								"name": "Accept-Encoding",
+								"value": "gzip,deflate,sdch"
+							},
+							{
+								"name": "Accept-Language",
+								"value": "en-US,en;q=0.8"
+							},
+							{
+								"name": "Connection",
+								"value": "keep-alive"
+							},
+							{
+								"name": "Host",
+								"value": "msnportal.112.2o7.net"
+							},
+							{
+								"name": "Referer",
+								"value": "http://ca.msn.com/"
+							},
+							{
+								"name": "User-Agent",
+								"value": "Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/534.10 (KHTML, like Gecko) Chrome/8.0.552.237 Safari/534.10"
+							}
+						],
+						"queryString": [
+							{
+								"name": "[AQB]",
+								"value": ""
+							},
+							{
+								"name": "[AQE]",
+								"value": ""
+							},
+							{
+								"name": "bh",
+								"value": "949"
+							},
+							{
+								"name": "bw",
+								"value": "1680"
+							},
+							{
+								"name": "c",
+								"value": "32"
+							},
+							{
+								"name": "c12",
+								"value": "http://lifestyle.ca.msn.com/home-garden/five-things/rd-gallery.aspx?cp-documentid=27053613"
+							},
+							{
+								"name": "c13",
+								"value": "wrapper\u003epage\u003econtent\u003eareal\u003elife"
+							},
+							{
+								"name": "c15",
+								"value": "3"
+							},
+							{
+								"name": "c16",
+								"value": "5 new uses for umbrellas"
+							},
+							{
+								"name": "c17",
+								"value": "MSN CanadaMSFTW:MSFT"
+							},
+							{
+								"name": "c18",
+								"value": ""
+							},
+							{
+								"name": "c38",
+								"value": "12.0"
+							},
+							{
+								"name": "events",
+								"value": "event4"
+							},
+							{
+								"name": "g",
+								"value": "http://ca.msn.com/"
+							},
+							{
+								"name": "hp",
+								"value": "N"
+							},
+							{
+								"name": "k",
+								"value": "Y"
+							},
+							{
+								"name": "ndh",
+								"value": "1"
+							},
+							{
+								"name": "ns",
+								"value": "msnportal"
+							},
+							{
+								"name": "pageName",
+								"value": "MSN CanadaMSFTW"
+							},
+							{
+								"name": "pe",
+								"value": "lnk_o"
+							},
+							{
+								"name": "pev2",
+								"value": "5 new uses for umbrellas"
+							},
+							{
+								"name": "r",
+								"value": ""
+							},
+							{
+								"name": "s",
+								"value": "1680x1050"
+							},
+							{
+								"name": "t",
+								"value": "25/0/2011 10:52:23 2 480"
+							},
+							{
+								"name": "v11",
+								"value": "5 new uses for umbrellas"
+							},
+							{
+								"name": "v12",
+								"value": "http://lifestyle.ca.msn.com/home-garden/five-things/rd-gallery.aspx?cp-documentid=27053613"
+							}
+						],
+						"headersSize": -1,
+						"bodySize": 0
+					},
+					"rawRequest": null,
+					"rawResponse": null
+				}
+			},
+			"response": {
+				"isRequest": false,
+				"captureTime": "0001-01-01T00:00:00Z",
+				"payload": {
+					"method": "",
+					"url": "",
+					"details": {
+						"status": 200,
+						"statusText": "OK",
+						"httpVersion": "HTTP/1.1",
+						"cookies": [],
+						"headers": [
+							{
+								"name": "Cache-Control",
+								"value": "no-cache, no-store, must-revalidate, max-age=0, proxy-revalidate, no-transform, private"
+							},
+							{
+								"name": "Connection",
+								"value": "Keep-Alive"
+							},
+							{
+								"name": "Content-Length",
+								"value": "43"
+							},
+							{
+								"name": "Content-Type",
+								"value": "image/gif"
+							},
+							{
+								"name": "Date",
+								"value": "Tue, 25 Jan 2011 18:53:00 GMT"
+							},
+							{
+								"name": "Etag",
+								"value": "\"4D3F1C0C-36F0-47A17051\""
+							},
+							{
+								"name": "Expires",
+								"value": "Mon, 24 Jan 2011 18:53:00 GMT"
+							},
+							{
+								"name": "Keep-Alive",
+								"value": "timeout=15"
+							},
+							{
+								"name": "Last-Modified",
+								"value": "Wed, 26 Jan 2011 18:53:00 GMT"
+							},
+							{
+								"name": "P3p",
+								"value": "policyref=\"/w3c/p3p.xml\", CP=\"NOI DSP COR NID PSA OUR IND COM NAV STA\""
+							},
+							{
+								"name": "Pragma",
+								"value": "no-cache"
+							},
+							{
+								"name": "Server",
+								"value": "Omniture DC/2.0.0"
+							},
+							{
+								"name": "Vary",
+								"value": "*"
+							},
+							{
+								"name": "X-C",
+								"value": "ms-4.3.1"
+							},
+							{
+								"name": "Xserver",
+								"value": "www388"
+							}
+						],
+						"content": {
+							"size": 43,
+							"mimeType": "image/gif",
+							"text": "R0lGODlhAgACAIAAAP///wAAACH5BAEAAAAALAAAAAACAAIAAAIChFEAOw==",
+							"encoding": "base64"
+						},
+						"redirectURL": "",
+						"headersSize": -1,
+						"bodySize": 43
+					},
+					"rawRequest": null,
+					"rawResponse": null
+				}
+			}
+		},
+		"Summary": null
+	}
+]

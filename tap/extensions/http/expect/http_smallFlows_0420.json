@@ -34,7 +34,7 @@
 					"url": "",
 					"details": {
 						"method": "GET",
-						"url": "/diff/317/562916/Banni%C3%A8res-Kwikpix-234x60.jpg",
+						"url": "",
 						"httpVersion": "HTTP/1.1",
 						"cookies": [],
 						"headers": [
@@ -71,56 +71,7 @@
 						"headersSize": -1,
 						"bodySize": 0
 					},
-					"rawRequest": {
-						"Method": "GET",
-						"URL": {
-							"Scheme": "",
-							"Opaque": "",
-							"User": null,
-							"Host": "",
-							"Path": "/diff/317/562916/Bannières-Kwikpix-234x60.jpg",
-							"RawPath": "",
-							"ForceQuery": false,
-							"RawQuery": "",
-							"Fragment": "",
-							"RawFragment": ""
-						},
-						"Proto": "HTTP/1.1",
-						"ProtoMajor": 1,
-						"ProtoMinor": 1,
-						"Header": {
-							"Accept": [
-								"*/*"
-							],
-							"Accept-Encoding": [
-								"gzip, deflate"
-							],
-							"Accept-Language": [
-								"en-us"
-							],
-							"Connection": [
-								"Keep-Alive"
-							],
-							"Referer": [
-								"http://view.atdmt.com/DRN/iview/155578665/direct/01?click="
-							],
-							"User-Agent": [
-								"Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; .NET CLR 1.1.4322; .NET CLR 2.0.50727; .NET CLR 3.0.4506.2152; .NET CLR 3.5.30729; Windows Live Messenger 14.0.8089.0726)"
-							]
-						},
-						"ContentLength": 0,
-						"TransferEncoding": null,
-						"Close": false,
-						"Host": "akamai.smartadserver.com",
-						"Form": null,
-						"PostForm": null,
-						"MultipartForm": null,
-						"Trailer": null,
-						"RemoteAddr": "",
-						"RequestURI": "/diff/317/562916/Banni%C3%A8res-Kwikpix-234x60.jpg",
-						"TLS": null,
-						"Response": null
-					},
+					"rawRequest": null,
 					"rawResponse": null
 				}
 			},
@@ -180,47 +131,7 @@
 						"bodySize": 657
 					},
 					"rawRequest": null,
-					"rawResponse": {
-						"Body": "s:44281:4:187\n\ufffd\ufffd3\u0018\u0000\u0000\u0000q\ufffdf\ufffdw\ufffd\u0000\u0000\u0000u\ufffdo8\ufffd\ufffd\u0000\u0000\u0000u\ufffd\u000e\u0007A!\u0000\u0000\u0000v\ufffd\ufffdA'\ufffd\u0000\u0000\u0000u\ufffd\ufffd\u001d:\ufffd\u0000\u0000\u0000{\ufffdhs\u003c\ufffd\u0000\u0000\u0000u\ufffdJ\ufffd\ufffd+\u0001\u0000\u0000uC\ufffdfM\ufffd[@)\ufffd\u0000\u0000\u0000{\ufffd-SWX\u0000\u0000\u0000{\ufffdK\n\ufffd\r\u0000\u0000\u0000u\ufffd\ufffdH\ufffdm\u0001\u0000\u0000{\ufffd\ufffds\ufffd\ufffdG\ufffd\ufffd\u0002\u0000\u0000\u0000{\ufffd\ufffdi\u0011\ufffd\u0000\u0000\u0000{\ufffd\ufffd˟\ufffd\u0000\u0000\u0000{\u0001x\u000cƋ\u0000\u0000\u0000x\ufffd1\ufffd\ufffdB\u0001\u0000\u0000{\ufffd\ufffdL|{wu\ufffd\ufffd\u0001\u0000\u0000{\ufffdT\ufffd\ufffd\ufffd\ufffd\ufffd\u0010\ufffd\u0000\u0000\u0000x\ufffds:44282:4:442\n}\ufffd\u0012\ufffd\u0000\u0000\u0000{V\ufffd-b\ufffd\u0000\u0000\u0000u\ufffd\u001fA\ufffd\ufffd\u0001\u0000\u0000x\ufffd\ufffd\ufffd\ufffd\n$\ufffd-\ufffd\u0000\u0000\u0000y\ufffd\ufffd\ufffd\ufffd\ufffd\u0001\u0000\u0000n^]\ufffd\ufffd\ufffdS\ufffdeH\u0000\u0000\u0000z\ufffd*J\ufffd\ufffd\u0000\u0000\u0000x\ufffd\ufffd:ȕ\u0001\u0000\u0000u\ufffdG\ufffde\ufffdW6\ufffd\ufffd\u0001\u0000\u0000qa\ufffd\u000cjG\ufffdF\ufffd\ufffd\u0000\u0000\u0000jk\ufffd\ufffdJb\u0000\u0000\u0000y\u0005\ufffdL-\ufffd\u0002\u0000\u0000{\ufffd*\ufffd\ufffd\u0006\u0000\u0000{\ufffd\ufffdjm\ufffd\ufffd\\G\ufffd\u0000\u0000\u0000vԸ\u0012\ufffd\ufffd\u0001\u0000\u0000o\u0001\u0019~\ufffd\ufffdU\ufffdv\ufffd\u0000\u0000\u0000{\ufffd\u001f%y\ufffd\u0000\u0000\u0000{\ufffdt\ufffd\ufffd\ufffd\u0001\u0000\u0000jC\ufffd\ufffd\ufffd\u000b\ufffd\ufffd\ufffd-\u0001\u0000\u0000u\ufffd\u0008\ufffdݵ\u001e4\ufffd\ufffd\u0000\u0000\u0000{1f\ufffdR\ufffd\u0000\u0000\u0000{\ufffd\ufffd+\ufffd$\u0000\u0000\u0000u\ufffd\ufffd)x\ufffd\u0000\u0000\u0000{\ufffd\ufffdt,P\u0000\u0000\u0000w\ufffd@\ufffdb\ufffd\u0001\u0000\u0000pp\ufffdpF\ufffdKc\ufffd\ufffd\u0000\u0000\u0000z9\ufffd;\u000b)\u0000\u0000\u0000r\ufffd|/\ufffd0\u0000\u0000\u0000z@\ufffdp'\ufffd\u0000\u0000\u0000u\ufffdo(\ufffd%\u0000\u0000\u0000zH\ufffd/\u003c!\u0000\u0000\u0000j5:\ufffd\t\ufffd\u0001\u0000\u0000{\ufffda1Uk\ufffd\ufffd\u00136\u0001\u0000\u0000w5\ufffd\ufffd\u003e\ufffdŶ\ufffd\ufffd\u0001\u0000\u0000u\ufffd6s߈\ufffdNٝ\u0000\u0000\u0000h_\ufffd\ufffd^\u001e\u0001\u0000\u0000qF(\ufffdP4L\ufffdn\ufffd\u0000\u0000\u0000z\ufffde\u001c\ufffd\ufffd\u0001\u0000\u0000h\ufffdaa\ufffd\ufffd\ufffd\r\ufffd^\u0000\u0000\u0000v\ufffd\ufffd\u003e\ufffd?\u0000\u0000\u0000j=\u001dJ\ufffd\ufffd\u0000\u0000\u0000x\ufffd\ufffd\u003e\u001e\"\u0000\u0000\u0000u\ufffd\ufffd\ufffd\ufffd\ufffd\u0000\u0000\u0000zf",
-						"Status": "200 OK",
-						"StatusCode": 200,
-						"Proto": "HTTP/1.1",
-						"ProtoMajor": 1,
-						"ProtoMinor": 1,
-						"Header": {
-							"Age": [
-								"161"
-							],
-							"Cache-Control": [
-								"public,max-age=172800"
-							],
-							"Content-Length": [
-								"657"
-							],
-							"Content-Type": [
-								"application/vnd.google.safebrowsing-chunk"
-							],
-							"Date": [
-								"Tue, 25 Jan 2011 19:07:08 GMT"
-							],
-							"Server": [
-								"Chunked Update Server"
-							],
-							"X-Content-Type-Options": [
-								"nosniff"
-							],
-							"X-Xss-Protection": [
-								"1; mode=block"
-							]
-						},
-						"ContentLength": 657,
-						"TransferEncoding": null,
-						"Close": false,
-						"Uncompressed": false,
-						"Trailer": null,
-						"Request": null,
-						"TLS": null
-					}
+					"rawResponse": null
 				}
 			}
 		},

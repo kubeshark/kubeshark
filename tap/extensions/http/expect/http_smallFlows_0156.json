@@ -34,7 +34,7 @@
 					"url": "",
 					"details": {
 						"method": "GET",
-						"url": "/",
+						"url": "",
 						"httpVersion": "HTTP/1.0",
 						"cookies": [],
 						"headers": [
@@ -51,41 +51,7 @@
 						"headersSize": -1,
 						"bodySize": 0
 					},
-					"rawRequest": {
-						"Method": "GET",
-						"URL": {
-							"Scheme": "",
-							"Opaque": "",
-							"User": null,
-							"Host": "",
-							"Path": "/",
-							"RawPath": "",
-							"ForceQuery": false,
-							"RawQuery": "",
-							"Fragment": "",
-							"RawFragment": ""
-						},
-						"Proto": "HTTP/1.0",
-						"ProtoMajor": 1,
-						"ProtoMinor": 0,
-						"Header": {
-							"User-Agent": [
-								"Skype WISPr"
-							]
-						},
-						"ContentLength": 0,
-						"TransferEncoding": null,
-						"Close": true,
-						"Host": "conn.skype.com",
-						"Form": null,
-						"PostForm": null,
-						"MultipartForm": null,
-						"Trailer": null,
-						"RemoteAddr": "",
-						"RequestURI": "/",
-						"TLS": null,
-						"Response": null
-					},
+					"rawRequest": null,
 					"rawResponse": null
 				}
 			},
@@ -129,35 +95,7 @@
 						"bodySize": 129
 					},
 					"rawRequest": null,
-					"rawResponse": {
-						"Body": "CoeMIazIaxOAkLeHleviaJoAyIEPoephiepLadRIewRluhouX9aqOesIadriEvOu0IatIUzOesIuToedrieSOunluzoAprIEWi0PrIuqlunOasIuthLufROAStLesOaX\n",
-						"Status": "200 OK",
-						"StatusCode": 200,
-						"Proto": "HTTP/1.1",
-						"ProtoMajor": 1,
-						"ProtoMinor": 1,
-						"Header": {
-							"Content-Length": [
-								"129"
-							],
-							"Content-Type": [
-								"text/html; charset=utf-8"
-							],
-							"Date": [
-								"Mon, 20 Dec 2010 20:19:36 GMT"
-							],
-							"Server": [
-								"Apache"
-							]
-						},
-						"ContentLength": 129,
-						"TransferEncoding": null,
-						"Close": true,
-						"Uncompressed": false,
-						"Trailer": null,
-						"Request": null,
-						"TLS": null
-					}
+					"rawResponse": null
 				}
 			}
 		},

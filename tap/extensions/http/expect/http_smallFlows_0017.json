@@ -1,0 +1,145 @@
+[
+	{
+		"Protocol": {
+			"name": "http",
+			"longName": "Hypertext Transfer Protocol -- HTTP/1.1",
+			"abbr": "HTTP",
+			"macro": "http",
+			"version": "1.1",
+			"backgroundColor": "#205cf5",
+			"foregroundColor": "#ffffff",
+			"fontSize": 12,
+			"referenceLink": "https://datatracker.ietf.org/doc/html/rfc2616",
+			"ports": [
+				"80",
+				"443",
+				"8080"
+			],
+			"priority": 0
+		},
+		"Timestamp": -6795364578871,
+		"ConnectionInfo": {
+			"ClientIP": "1",
+			"ClientPort": "1",
+			"ServerIP": "2",
+			"ServerPort": "2",
+			"IsOutgoing": false
+		},
+		"Pair": {
+			"request": {
+				"isRequest": true,
+				"captureTime": "0001-01-01T00:00:00Z",
+				"payload": {
+					"method": "POST",
+					"url": "",
+					"details": {
+						"method": "POST",
+						"url": "",
+						"httpVersion": "HTTP/1.1",
+						"cookies": [],
+						"headers": [
+							{
+								"name": "Accept-Charset",
+								"value": "ISO-8859-1,utf-8;q=0.7,*;q=0.3"
+							},
+							{
+								"name": "Accept-Encoding",
+								"value": "gzip,deflate,sdch"
+							},
+							{
+								"name": "Accept-Language",
+								"value": "en-US,en;q=0.8"
+							},
+							{
+								"name": "Connection",
+								"value": "keep-alive"
+							},
+							{
+								"name": "Content-Length",
+								"value": "279"
+							},
+							{
+								"name": "Content-Type",
+								"value": "text/plain"
+							},
+							{
+								"name": "Host",
+								"value": "toolbarqueries.clients.google.com"
+							},
+							{
+								"name": "User-Agent",
+								"value": "Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/534.10 (KHTML, like Gecko) Chrome/8.0.552.237 Safari/534.10"
+							}
+						],
+						"queryString": [],
+						"postData": {
+							"mimeType": "text/plain",
+							"params": [],
+							"text": "\u003c?xml version=\"1.0\" encoding=\"UTF-8\"?\u003e\u003cautofillquery clientversion=\"6.1.1715.1442/en (GGLL)\"\u003e\u003cform signature=\"11311456280056790184\"\u003e\u003cfield signature=\"2324831971\"/\u003e\u003cfield signature=\"2478111386\"/\u003e\u003cfield signature=\"2512174895\"/\u003e\u003cfield signature=\"2257244218\"/\u003e\u003c/form\u003e\u003c/autofillquery\u003e"
+						},
+						"headersSize": -1,
+						"bodySize": 279
+					},
+					"rawRequest": null,
+					"rawResponse": null
+				}
+			},
+			"response": {
+				"isRequest": false,
+				"captureTime": "0001-01-01T00:00:00Z",
+				"payload": {
+					"method": "",
+					"url": "",
+					"details": {
+						"status": 200,
+						"statusText": "OK",
+						"httpVersion": "HTTP/1.1",
+						"cookies": [],
+						"headers": [
+							{
+								"name": "Cache-Control",
+								"value": "private, x-gzip-ok=\"\""
+							},
+							{
+								"name": "Content-Encoding",
+								"value": "gzip"
+							},
+							{
+								"name": "Content-Length",
+								"value": "67"
+							},
+							{
+								"name": "Content-Type",
+								"value": "text/xml; charset=utf-8"
+							},
+							{
+								"name": "Date",
+								"value": "Tue, 25 Jan 2011 18:52:36 GMT"
+							},
+							{
+								"name": "Server",
+								"value": "AutoFill Server"
+							},
+							{
+								"name": "X-Xss-Protection",
+								"value": "1; mode=block"
+							}
+						],
+						"content": {
+							"size": 151,
+							"mimeType": "text/xml; charset=utf-8",
+							"text": "PGF1dG9maWxscXVlcnlyZXNwb25zZT48ZmllbGQgYXV0b2ZpbGx0eXBlPSIwIiAvPjxmaWVsZCBhdXRvZmlsbHR5cGU9IjAiIC8+PGZpZWxkIGF1dG9maWxsdHlwZT0iMCIgLz48ZmllbGQgYXV0b2ZpbGx0eXBlPSIwIiAvPjwvYXV0b2ZpbGxxdWVyeXJlc3BvbnNlPg==",
+							"encoding": "base64"
+						},
+						"redirectURL": "",
+						"headersSize": -1,
+						"bodySize": 67
+					},
+					"rawRequest": null,
+					"rawResponse": null
+				}
+			}
+		},
+		"Summary": null
+	}
+]

@@ -34,7 +34,7 @@
 					"url": "",
 					"details": {
 						"method": "GET",
-						"url": "/?url=s1.4publishers.com/skprup.asp?lang=ENU\u0026cty=ca\u0026verutils=3.0.0.91\u0026versem=none\u0026cl=b`tr\u0026data=0.0.700\u0026go=\"00\"",
+						"url": "",
 						"httpVersion": "HTTP/1.1",
 						"cookies": [],
 						"headers": [
@@ -88,47 +88,7 @@
 						"headersSize": -1,
 						"bodySize": 0
 					},
-					"rawRequest": {
-						"Method": "GET",
-						"URL": {
-							"Scheme": "",
-							"Opaque": "",
-							"User": null,
-							"Host": "",
-							"Path": "/",
-							"RawPath": "",
-							"ForceQuery": false,
-							"RawQuery": "url=s1.4publishers.com/skprup.asp?lang=ENU\u0026cty=ca\u0026verutils=3.0.0.91\u0026versem=none\u0026cl=b`tr\u0026data=0.0.700\u0026go=\"00\"",
-							"Fragment": "",
-							"RawFragment": ""
-						},
-						"Proto": "HTTP/1.1",
-						"ProtoMajor": 1,
-						"ProtoMinor": 1,
-						"Header": {
-							"Accept": [
-								"*/*"
-							],
-							"Cache-Control": [
-								"no-cache"
-							],
-							"Connection": [
-								"Keep-Alive"
-							]
-						},
-						"ContentLength": 0,
-						"TransferEncoding": null,
-						"Close": false,
-						"Host": "guide.opendns.com",
-						"Form": null,
-						"PostForm": null,
-						"MultipartForm": null,
-						"Trailer": null,
-						"RemoteAddr": "",
-						"RequestURI": "/?url=s1%2E4publishers%2Ecom%2Fskprup%2Easp%3Flang%3DENU%26cty%3Dca%26verutils%3D3%2E0%2E0%2E91%26versem%3Dnone%26cl%3Db%60tr%26data%3D0%2E0%2E700%26go%3D%2200%22",
-						"TLS": null,
-						"Response": null
-					},
+					"rawRequest": null,
 					"rawResponse": null
 				}
 			},
@@ -188,47 +148,7 @@
 						"bodySize": -1
 					},
 					"rawRequest": null,
-					"rawResponse": {
-						"Body": "\u003chtml\u003e\n\t\u003chead\u003e\n\t\t\u003ctitle\u003e  \u003c/title\u003e\n\t\t\u003cscript type=\"text/javascript\"\u003e\n\t\tfunction bredir(d,u,r,v,c){var w,h,wd,hd,bi;var b=false;var p=false;var s=[[300,250,false],[250,250,false],[240,400,false],[336,280,false],[180,150,false],[468,60,false],[234,60,false],[88,31,false],[120,90,false],[120,60,false],[120,240,false],[125,125,false],[728,90,false],[160,600,false],[120,600,false],[300,600,false],[300,125,false],[530,300,false],[190,200,false],[470,250,false],[720,300,true],[500,350,true],[550,480,true]];if(typeof(window.innerHeight)=='number'){h=window.innerHeight;w=window.innerWidth;}else if(typeof(document.body.offsetHeight)=='number'){h=document.body.offsetHeight;w=document.body.offsetWidth;}for(var i=0;i\u003cs.length;i++){bi=s[i];wd=Math.abs(w-bi[0]);hd=Math.abs(h-bi[1]);if(wd\u003c=2\u0026\u0026hd\u003c=2){b=true;p=bi[2];}}if(b||(w\u003c100\u0026\u0026w!==0)||(h\u003c100\u0026\u0026h!==0)){if(p\u0026\u0026self==parent){self.close();return;}return'/b'+'anner.php?w='+w+'\u0026h='+h+'\u0026d='+d+'\u0026u='+u+'\u0026r='+r+'\u0026view='+v;}else{return c;}}\n\t\t\u003c/script\u003e\n\t\u003c/head\u003e\n\t\u003cbody onLoad=\"window.location = bredir('s1.4publishers.com', 's1.4publishers.com%2Fskev.asp%3Flang%3DENU%26cty%3Dca%26cr%3D1291394794%26md%3D1291394794%26verutils%3D3.0.0.91%26cl%3Db%60tr%26data%3D0.0.700%26go%3D%2200%22', '', 'error', '/main?url=s1.4publishers.com%2Fskev.asp%3Flang%3DENU%26cty%3Dca%26cr%3D1291394794%26md%3D1291394794%26verutils%3D3.0.0.91%26cl%3Db%60tr%26data%3D0.0.700%26go%3D%2200%22');\" style=\"margin: 0px;\"\u003e\n\t\t\u003cnoscript\u003e\n\t\t\t\u003ciframe frameborder=\"0\" src=\"/main?url=s1.4publishers.com%2Fskev.asp%3Flang%3DENU%26cty%3Dca%26cr%3D1291394794%26md%3D1291394794%26verutils%3D3.0.0.91%26cl%3Db%60tr%26data%3D0.0.700%26go%3D%2200%22\" width=\"100%\" height=\"100%\"\u003e\u003c/iframe\u003e\n\t\t\u003c/noscript\u003e\n\t\u003c/body\u003e\n\u003c/html\u003e\n",
-						"Status": "200 OK",
-						"StatusCode": 200,
-						"Proto": "HTTP/1.0",
-						"ProtoMajor": 1,
-						"ProtoMinor": 0,
-						"Header": {
-							"Cache-Control": [
-								"no-cache, must-revalidate"
-							],
-							"Connection": [
-								"close"
-							],
-							"Content-Type": [
-								"text/html; charset=utf-8"
-							],
-							"Date": [
-								"Mon, 20 Dec 2010 20:20:03 GMT"
-							],
-							"Expires": [
-								"Mon, 26 Jul 1997 05:00:00 GMT"
-							],
-							"Pragma": [
-								"no-cache"
-							],
-							"Server": [
-								"OpenDNS Guide"
-							],
-							"Set-Cookie": [
-								"[REDACTED]"
-							]
-						},
-						"ContentLength": -1,
-						"TransferEncoding": null,
-						"Close": true,
-						"Uncompressed": false,
-						"Trailer": null,
-						"Request": null,
-						"TLS": null
-					}
+					"rawResponse": null
 				}
 			}
 		},

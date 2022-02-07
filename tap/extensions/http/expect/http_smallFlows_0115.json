@@ -23,7 +23,7 @@
 			"ClientPort": "1",
 			"ServerIP": "2",
 			"ServerPort": "2",
-			"IsOutgoing": true
+			"IsOutgoing": false
 		},
 		"Pair": {
 			"request": {
@@ -34,7 +34,7 @@
 					"url": "",
 					"details": {
 						"method": "GET",
-						"url": "/br/csl/img/1/loading.gif",
+						"url": "",
 						"httpVersion": "HTTP/1.1",
 						"cookies": [],
 						"headers": [
@@ -75,59 +75,173 @@
 						"headersSize": -1,
 						"bodySize": 0
 					},
-					"rawRequest": {
-						"Method": "GET",
-						"URL": {
-							"Scheme": "",
-							"Opaque": "",
-							"User": null,
-							"Host": "",
-							"Path": "/br/csl/img/1/loading.gif",
-							"RawPath": "",
-							"ForceQuery": false,
-							"RawQuery": "",
-							"Fragment": "",
-							"RawFragment": ""
+					"rawRequest": null,
+					"rawResponse": null
+				}
+			},
+			"response": {
+				"isRequest": false,
+				"captureTime": "0001-01-01T00:00:00Z",
+				"payload": {
+					"method": "",
+					"url": "",
+					"details": {
+						"status": 200,
+						"statusText": "OK",
+						"httpVersion": "HTTP/1.1",
+						"cookies": [],
+						"headers": [
+							{
+								"name": "Accept-Ranges",
+								"value": "bytes"
+							},
+							{
+								"name": "Age",
+								"value": "1693088"
+							},
+							{
+								"name": "Cache-Control",
+								"value": "max-age=31536000"
+							},
+							{
+								"name": "Connection",
+								"value": "keep-alive"
+							},
+							{
+								"name": "Content-Length",
+								"value": "362"
+							},
+							{
+								"name": "Content-Type",
+								"value": "image/gif"
+							},
+							{
+								"name": "Date",
+								"value": "Tue, 25 Jan 2011 18:53:27 GMT"
+							},
+							{
+								"name": "Etag",
+								"value": "\"0b85c57c7c4c91:0\""
+							},
+							{
+								"name": "Expires",
+								"value": "Fri, 06 Jan 2012 04:35:19 GMT"
+							},
+							{
+								"name": "Last-Modified",
+								"value": "Fri, 24 Apr 2009 10:28:00 GMT"
+							},
+							{
+								"name": "P3p",
+								"value": "CP=\"BUS CUR CONo FIN IVDo ONL OUR PHY SAMo TELo\""
+							},
+							{
+								"name": "S",
+								"value": "BLUMPPSTCA03"
+							},
+							{
+								"name": "Server",
+								"value": "Microsoft-IIS/7.0"
+							},
+							{
+								"name": "X-Powered-By",
+								"value": "ASP.NET"
+							}
+						],
+						"content": {
+							"size": 362,
+							"mimeType": "image/gif",
+							"text": "R0lGODlhDwAOANU/ABdcoEF6svb5/AhSmg5WnRleoeLr8/T4+5261xBXnt3o8QpTm/X4+z54sRFYnouu0Pb5+yxrqfr8/fn7/fn7/KXA22SSwP///xJZnkqAtUd+tPP3+9bi7nqiybTK4DFvqyZnp0mAtYerzujv9UR7s8jZ6WCPvyBipC9tqlmKu12NvW2ZxNjk79/p8hhdoZS00xtfoszb6mSTwKK92fP2+vP3+gxVnKXA2pOz0yhop/v8/f7+/xNan/z9/gdRmv///yH5BAEAAD8ALAAAAAAPAA4AAAaHwJ/QcnJEVsJkUlGIdCoWECamFBICl532EiJslKrPrtezkXcok5KH6Ol0iXfvUVAuShSeXk/xEJQYMxMCAi6EEy8ASgEBOgwHMAcMLSAaSgoDKxIQNBASAD45HEoIAw0VLA8NAz4+CTNKBgEOAwUkBjitPjI1VVU3C60pvlUeCT4ZxFUxIiNBADs=",
+							"encoding": "base64"
 						},
-						"Proto": "HTTP/1.1",
-						"ProtoMajor": 1,
-						"ProtoMinor": 1,
-						"Header": {
-							"Accept": [
-								"*/*"
-							],
-							"Accept-Charset": [
-								"ISO-8859-1,utf-8;q=0.7,*;q=0.3"
-							],
-							"Accept-Encoding": [
-								"gzip,deflate,sdch"
-							],
-							"Accept-Language": [
-								"en-US,en;q=0.8"
-							],
-							"Connection": [
-								"keep-alive"
-							],
-							"Referer": [
-								"http://lifestyle.ca.msn.com/home-garden/five-things/rd-gallery.aspx?cp-documentid=27053613\u0026page=1"
-							],
-							"User-Agent": [
-								"Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/534.10 (KHTML, like Gecko) Chrome/8.0.552.237 Safari/534.10"
-							]
-						},
-						"ContentLength": 0,
-						"TransferEncoding": null,
-						"Close": false,
-						"Host": "blstc.msn.com",
-						"Form": null,
-						"PostForm": null,
-						"MultipartForm": null,
-						"Trailer": null,
-						"RemoteAddr": "",
-						"RequestURI": "/br/csl/img/1/loading.gif",
-						"TLS": null,
-						"Response": null
+						"redirectURL": "",
+						"headersSize": -1,
+						"bodySize": 362
 					},
+					"rawRequest": null,
+					"rawResponse": null
+				}
+			}
+		},
+		"Summary": null
+	},
+	{
+		"Protocol": {
+			"name": "http",
+			"longName": "Hypertext Transfer Protocol -- HTTP/1.1",
+			"abbr": "HTTP",
+			"macro": "http",
+			"version": "1.1",
+			"backgroundColor": "#205cf5",
+			"foregroundColor": "#ffffff",
+			"fontSize": 12,
+			"referenceLink": "https://datatracker.ietf.org/doc/html/rfc2616",
+			"ports": [
+				"80",
+				"443",
+				"8080"
+			],
+			"priority": 0
+		},
+		"Timestamp": -6795364578871,
+		"ConnectionInfo": {
+			"ClientIP": "1",
+			"ClientPort": "1",
+			"ServerIP": "2",
+			"ServerPort": "2",
+			"IsOutgoing": true
+		},
+		"Pair": {
+			"request": {
+				"isRequest": true,
+				"captureTime": "0001-01-01T00:00:00Z",
+				"payload": {
+					"method": "GET",
+					"url": "",
+					"details": {
+						"method": "GET",
+						"url": "",
+						"httpVersion": "HTTP/1.1",
+						"cookies": [],
+						"headers": [
+							{
+								"name": "Accept",
+								"value": "*/*"
+							},
+							{
+								"name": "Accept-Charset",
+								"value": "ISO-8859-1,utf-8;q=0.7,*;q=0.3"
+							},
+							{
+								"name": "Accept-Encoding",
+								"value": "gzip,deflate,sdch"
+							},
+							{
+								"name": "Accept-Language",
+								"value": "en-US,en;q=0.8"
+							},
+							{
+								"name": "Connection",
+								"value": "keep-alive"
+							},
+							{
+								"name": "Host",
+								"value": "blstc.msn.com"
+							},
+							{
+								"name": "Referer",
+								"value": "http://lifestyle.ca.msn.com/home-garden/five-things/rd-gallery.aspx?cp-documentid=27053613\u0026page=1"
+							},
+							{
+								"name": "User-Agent",
+								"value": "Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/534.10 (KHTML, like Gecko) Chrome/8.0.552.237 Safari/534.10"
+							}
+						],
+						"queryString": [],
+						"headersSize": -1,
+						"bodySize": 0
+					},
+					"rawRequest": null,
 					"rawResponse": null
 				}
 			},
@@ -211,65 +325,7 @@
 						"bodySize": 1034
 					},
 					"rawRequest": null,
-					"rawResponse": {
-						"Body": "GIF89a\u0015\u0000\u0016\u0000\ufffd\u0000\u0000\u0007R\ufffd\u0008P\ufffd\u0014Z\ufffd\u001f`\ufffd5r\ufffde\ufffd\ufffdw\ufffdʄ\ufffd͚\ufffdר\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000,\u0000\u0000\u0000\u0000\u0015\u0000\u0016\u0000\u0000\u0008\ufffd\u0000S\u0008\u001cH\ufffd\ufffd\ufffd\ufffd*T\ufffdH\ufffd\"\ufffdÇ\u0005\u001f*LhB\ufffdC\ufffd\u000fG\ufffd\u0018\u0001\u0011\u0005\ufffd\u0014\u000b\t\ufffd@QB\ufffd\t\ufffd\n?\ufffdh\ufffdr%B\ufffd\u000b\u001fV\ufffd\ufffdR`ʇ(\u000eX\u000c\ufffd\ufffd\ufffd\ufffd\u0002\u0000,*\ufffd\ufffd\ufffd\ufffd\u0006\u0002\u0001\u0008\u0008\ufffd80\ufffd\ufffd\u0005\u0002\u0000\u0014\ufffd \ufffd\ufffdM\ufffd\u0007\u0000\u0018pjQ \u0003\u0006\r\ufffd20\u0010@@\ufffd\u0005bӊ}\ufffd\ufffd\u0001\u0004\u0007n\r\u0000\u0000p\ufffd\ufffd\u0003\u0008wٲ\ufffd\ufffd\ufffdo\u0004\ufffd\u0008\ufffd\ufffd\ufffdKXB\ufffdÇ-P\ufffd@A\ufffd\u0000Ɗ\u0017SX\\!C\u0006\u000c\ufffd3k\ufffd0\u0001\ufffdf\ufffd\u0018.`\ufffd̡t\ufffdҥ7pP\ufffd\ufffdui\u0010 \u003c|\ufffdM\ufffd\ufffdm\ufffd'N\ufffd !\"\ufffd\u0008\u0015\"\ufffd\ufffd\u0008\ufffd\ufffd\ufffd\ufffd\ufffdW\ufffd2t\ufffd\\\"˝ʣK\u000c\u0008\u0000;",
-						"Status": "200 OK",
-						"StatusCode": 200,
-						"Proto": "HTTP/1.1",
-						"ProtoMajor": 1,
-						"ProtoMinor": 1,
-						"Header": {
-							"Accept-Ranges": [
-								"bytes"
-							],
-							"Age": [
-								"3861464"
-							],
-							"Cache-Control": [
-								"max-age=31536000"
-							],
-							"Connection": [
-								"keep-alive"
-							],
-							"Content-Length": [
-								"1034"
-							],
-							"Content-Type": [
-								"image/gif"
-							],
-							"Date": [
-								"Tue, 25 Jan 2011 18:53:27 GMT"
-							],
-							"Etag": [
-								"\"0c6835ec7c4c91:0\""
-							],
-							"Expires": [
-								"Mon, 12 Dec 2011 02:15:43 GMT"
-							],
-							"Last-Modified": [
-								"Fri, 24 Apr 2009 10:28:12 GMT"
-							],
-							"P3p": [
-								"CP=\"BUS CUR CONo FIN IVDo ONL OUR PHY SAMo TELo\""
-							],
-							"S": [
-								"BLUMPPSTCA02"
-							],
-							"Server": [
-								"Microsoft-IIS/7.0"
-							],
-							"X-Powered-By": [
-								"ASP.NET"
-							]
-						},
-						"ContentLength": 1034,
-						"TransferEncoding": null,
-						"Close": false,
-						"Uncompressed": false,
-						"Trailer": null,
-						"Request": null,
-						"TLS": null
-					}
+					"rawResponse": null
 				}
 			}
 		},

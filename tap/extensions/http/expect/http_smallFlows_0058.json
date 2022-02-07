@@ -34,7 +34,7 @@
 					"url": "",
 					"details": {
 						"method": "GET",
-						"url": "/br/csl/img/1/right.gif",
+						"url": "",
 						"httpVersion": "HTTP/1.1",
 						"cookies": [],
 						"headers": [
@@ -75,59 +75,7 @@
 						"headersSize": -1,
 						"bodySize": 0
 					},
-					"rawRequest": {
-						"Method": "GET",
-						"URL": {
-							"Scheme": "",
-							"Opaque": "",
-							"User": null,
-							"Host": "",
-							"Path": "/br/csl/img/1/right.gif",
-							"RawPath": "",
-							"ForceQuery": false,
-							"RawQuery": "",
-							"Fragment": "",
-							"RawFragment": ""
-						},
-						"Proto": "HTTP/1.1",
-						"ProtoMajor": 1,
-						"ProtoMinor": 1,
-						"Header": {
-							"Accept": [
-								"*/*"
-							],
-							"Accept-Charset": [
-								"ISO-8859-1,utf-8;q=0.7,*;q=0.3"
-							],
-							"Accept-Encoding": [
-								"gzip,deflate,sdch"
-							],
-							"Accept-Language": [
-								"en-US,en;q=0.8"
-							],
-							"Connection": [
-								"keep-alive"
-							],
-							"Referer": [
-								"http://lifestyle.ca.msn.com/home-garden/five-things/rd-gallery.aspx?cp-documentid=27053613"
-							],
-							"User-Agent": [
-								"Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/534.10 (KHTML, like Gecko) Chrome/8.0.552.237 Safari/534.10"
-							]
-						},
-						"ContentLength": 0,
-						"TransferEncoding": null,
-						"Close": false,
-						"Host": "blstc.msn.com",
-						"Form": null,
-						"PostForm": null,
-						"MultipartForm": null,
-						"Trailer": null,
-						"RemoteAddr": "",
-						"RequestURI": "/br/csl/img/1/right.gif",
-						"TLS": null,
-						"Response": null
-					},
+					"rawRequest": null,
 					"rawResponse": null
 				}
 			},
@@ -211,65 +159,7 @@
 						"bodySize": 537
 					},
 					"rawRequest": null,
-					"rawResponse": {
-						"Body": "GIF89a\u0015\u0000\u0016\u0000\ufffd\u0000\u0000\ufffd\ufffd\ufffd5r\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\u0008P\ufffd\ufffd\ufffd\ufffd\ufffd\ufffdׄ\ufffd\ufffd\u0007R\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\u001b`\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\u0014Z\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffdw\ufffd\ufffd\u001a^\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\u001f`\ufffd\u001a_\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\u0016_\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffde\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\u0006P\ufffd\ufffd\ufffd\ufffd\u0019^\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd!\ufffd\u0004\u0000\u0000\u0000\u0000\u0000,\u0000\u0000\u0000\u0000\u0015\u0000\u0016\u0000\u0000\u0006\ufffd\ufffd\u0005\n\ufffd`\ufffd\ufffdFD\ufffdQd0\u0019\ufffd\ufffd%\ufffd\ufffd\ufffdz?k#\ufffd\ufffd\ufffd\ufffd=\ufffd/vA\u001d\ufffd\ufffd4)\ufffd\ufffd\ufffd\ufffd\u003e\ufffd\ufffdq9{+^\ufffd\ufffdqj\ufffd\u0013\u001fu\u003e_?_:=a{l'='\u0013\u001e;\u0006]\u003cY\u003cl?\u003c\ufffdXq\u003e\u0004\u001f\ufffdW$qi\u000b=\ufffd]a1\u000f;7Xih\u000c4\u0014U\u003e\ufffd\u003e\u0007\u0017;\u0007\ufffd?\u0001\u0008\u0001\u0014)\ufffdV\u0007\ufffd\ufffdU\u003c\u00144\u0008\u0012 o]\ufffd\ufffd\ufffd\ufffd.\u0016\u000c\ufffdU:\u0004\ufffd\u000e\u0010\ufffd\ufffd\ufffd 5\u0012\u0008\u0016\ufffd\u0019\u000e\ufffd\u0002%%\"\ufffd\ufffd\"\u000bN\u0016\"\u0026\u0026\ufffd\u0002\ufffd\u0010\u001a\u0000\u0003j\ufffd\ufffd@\ufffd\u0002\ufffd\u0018\u0002\nر#C\ufffd\u0002\u001b\u001e\ufffd\ufffd\ufffd\ufffd\u0001\ufffd\u000206h\ufffd\ufffd\ufffd\u0003\ufffd\u001b\u0004X\u0010\u0008I\ufffd\u0003ɑ(K\ufffd\ufffd\u0000\ufffd\ufffd˖\u0014\u0000\ufffdt\ufffd\u0002\ufffd\u000cA\u0005\u0006\ufffd\ufffdɳ\ufffd\n6\u001c3\u003c\\\ufffd\ufffd`D\u0002\u0017\u003eT\u0018M\ufffd\ufffdD\ufffd\u0011Fm\ufffd(P\ufffd\u000c\ufffdB\ufffd|\u001d\ufffd\ufffd\u0005\u0011\ufffd4XS\u0019\ufffd2\ufffdȑ\u0026N\ufffd,a\ufffd J\u0010\u0000;",
-						"Status": "200 OK",
-						"StatusCode": 200,
-						"Proto": "HTTP/1.1",
-						"ProtoMajor": 1,
-						"ProtoMinor": 1,
-						"Header": {
-							"Accept-Ranges": [
-								"bytes"
-							],
-							"Age": [
-								"1629543"
-							],
-							"Cache-Control": [
-								"max-age=31536000"
-							],
-							"Connection": [
-								"keep-alive"
-							],
-							"Content-Length": [
-								"537"
-							],
-							"Content-Type": [
-								"image/gif"
-							],
-							"Date": [
-								"Tue, 25 Jan 2011 18:53:01 GMT"
-							],
-							"Etag": [
-								"\"2664702323aaca1:0\""
-							],
-							"Expires": [
-								"Fri, 06 Jan 2012 22:13:58 GMT"
-							],
-							"Last-Modified": [
-								"Wed, 10 Feb 2010 07:32:02 GMT"
-							],
-							"P3p": [
-								"CP=\"BUS CUR CONo FIN IVDo ONL OUR PHY SAMo TELo\""
-							],
-							"S": [
-								"BLUMPPSTCA04"
-							],
-							"Server": [
-								"Microsoft-IIS/7.0"
-							],
-							"X-Powered-By": [
-								"ASP.NET"
-							]
-						},
-						"ContentLength": 537,
-						"TransferEncoding": null,
-						"Close": false,
-						"Uncompressed": false,
-						"Trailer": null,
-						"Request": null,
-						"TLS": null
-					}
+					"rawResponse": null
 				}
 			}
 		},

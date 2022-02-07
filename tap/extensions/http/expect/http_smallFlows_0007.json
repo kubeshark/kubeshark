@@ -34,412 +34,7 @@
 					"url": "",
 					"details": {
 						"method": "GET",
-						"url": "/b/ss/msnportalhomepagecaen/1/H.7-pdv-2/s84495919100008?c2=en-ca\u0026v2=1/25/2011\u0026v=Y\u0026ns=msnportal\u0026pageName=MSN CanadaMSFTW\u0026k=Y\u0026bw=1680\u0026c1=Portal\u0026hp=N\u0026v1=1/2011\u0026c29=http://ca.msn.com/\u0026[AQE]=\u0026s=1680x1050\u0026bh=949\u0026c4=\u0026cc=USD\u0026j=1.3\u0026[AQB]=\u0026server=msn.com\u0026ndh=1\u0026g=http://ca.msn.com/\u0026r=\u0026c=32\u0026ch=\u0026c19=Dblu,W1,Q1,4.0\u0026c22=True\u0026ct=lan\u0026t=25/0/2011 10:52:23 2 480\u0026c3=12.0",
-						"httpVersion": "HTTP/1.1",
-						"cookies": [],
-						"headers": [
-							{
-								"name": "Accept",
-								"value": "*/*"
-							},
-							{
-								"name": "Accept-Charset",
-								"value": "ISO-8859-1,utf-8;q=0.7,*;q=0.3"
-							},
-							{
-								"name": "Accept-Encoding",
-								"value": "gzip,deflate,sdch"
-							},
-							{
-								"name": "Accept-Language",
-								"value": "en-US,en;q=0.8"
-							},
-							{
-								"name": "Connection",
-								"value": "keep-alive"
-							},
-							{
-								"name": "Host",
-								"value": "msnportal.112.2o7.net"
-							},
-							{
-								"name": "Referer",
-								"value": "http://ca.msn.com/"
-							},
-							{
-								"name": "User-Agent",
-								"value": "Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/534.10 (KHTML, like Gecko) Chrome/8.0.552.237 Safari/534.10"
-							}
-						],
-						"queryString": [
-							{
-								"name": "[AQB]",
-								"value": ""
-							},
-							{
-								"name": "[AQE]",
-								"value": ""
-							},
-							{
-								"name": "bh",
-								"value": "949"
-							},
-							{
-								"name": "bw",
-								"value": "1680"
-							},
-							{
-								"name": "c",
-								"value": "32"
-							},
-							{
-								"name": "c1",
-								"value": "Portal"
-							},
-							{
-								"name": "c19",
-								"value": "Dblu,W1,Q1,4.0"
-							},
-							{
-								"name": "c2",
-								"value": "en-ca"
-							},
-							{
-								"name": "c22",
-								"value": "True"
-							},
-							{
-								"name": "c29",
-								"value": "http://ca.msn.com/"
-							},
-							{
-								"name": "c3",
-								"value": "12.0"
-							},
-							{
-								"name": "c4",
-								"value": ""
-							},
-							{
-								"name": "cc",
-								"value": "USD"
-							},
-							{
-								"name": "ch",
-								"value": ""
-							},
-							{
-								"name": "ct",
-								"value": "lan"
-							},
-							{
-								"name": "g",
-								"value": "http://ca.msn.com/"
-							},
-							{
-								"name": "hp",
-								"value": "N"
-							},
-							{
-								"name": "j",
-								"value": "1.3"
-							},
-							{
-								"name": "k",
-								"value": "Y"
-							},
-							{
-								"name": "ndh",
-								"value": "1"
-							},
-							{
-								"name": "ns",
-								"value": "msnportal"
-							},
-							{
-								"name": "pageName",
-								"value": "MSN CanadaMSFTW"
-							},
-							{
-								"name": "r",
-								"value": ""
-							},
-							{
-								"name": "s",
-								"value": "1680x1050"
-							},
-							{
-								"name": "server",
-								"value": "msn.com"
-							},
-							{
-								"name": "t",
-								"value": "25/0/2011 10:52:23 2 480"
-							},
-							{
-								"name": "v",
-								"value": "Y"
-							},
-							{
-								"name": "v1",
-								"value": "1/2011"
-							},
-							{
-								"name": "v2",
-								"value": "1/25/2011"
-							}
-						],
-						"headersSize": -1,
-						"bodySize": 0
-					},
-					"rawRequest": {
-						"Method": "GET",
-						"URL": {
-							"Scheme": "",
-							"Opaque": "",
-							"User": null,
-							"Host": "",
-							"Path": "/b/ss/msnportalhomepagecaen/1/H.7-pdv-2/s84495919100008",
-							"RawPath": "",
-							"ForceQuery": false,
-							"RawQuery": "c2=en-ca\u0026v2=1/25/2011\u0026v=Y\u0026ns=msnportal\u0026pageName=MSN CanadaMSFTW\u0026k=Y\u0026bw=1680\u0026c1=Portal\u0026hp=N\u0026v1=1/2011\u0026c29=http://ca.msn.com/\u0026[AQE]=\u0026s=1680x1050\u0026bh=949\u0026c4=\u0026cc=USD\u0026j=1.3\u0026[AQB]=\u0026server=msn.com\u0026ndh=1\u0026g=http://ca.msn.com/\u0026r=\u0026c=32\u0026ch=\u0026c19=Dblu,W1,Q1,4.0\u0026c22=True\u0026ct=lan\u0026t=25/0/2011 10:52:23 2 480\u0026c3=12.0",
-							"Fragment": "",
-							"RawFragment": ""
-						},
-						"Proto": "HTTP/1.1",
-						"ProtoMajor": 1,
-						"ProtoMinor": 1,
-						"Header": {
-							"Accept": [
-								"*/*"
-							],
-							"Accept-Charset": [
-								"ISO-8859-1,utf-8;q=0.7,*;q=0.3"
-							],
-							"Accept-Encoding": [
-								"gzip,deflate,sdch"
-							],
-							"Accept-Language": [
-								"en-US,en;q=0.8"
-							],
-							"Connection": [
-								"keep-alive"
-							],
-							"Referer": [
-								"http://ca.msn.com/"
-							],
-							"User-Agent": [
-								"Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/534.10 (KHTML, like Gecko) Chrome/8.0.552.237 Safari/534.10"
-							]
-						},
-						"ContentLength": 0,
-						"TransferEncoding": null,
-						"Close": false,
-						"Host": "msnportal.112.2o7.net",
-						"Form": null,
-						"PostForm": null,
-						"MultipartForm": null,
-						"Trailer": null,
-						"RemoteAddr": "",
-						"RequestURI": "/b/ss/msnportalhomepagecaen/1/H.7-pdv-2/s84495919100008?[AQB]\u0026ndh=1\u0026t=25%2F0%2F2011%2010%3A52%3A23%202%20480\u0026ns=msnportal\u0026pageName=MSN%20CanadaMSFTW\u0026g=http%3A%2F%2Fca.msn.com%2F\u0026r=\u0026s=1680x1050\u0026c=32\u0026k=Y\u0026bw=1680\u0026bh=949\u0026hp=N\u0026ch=\u0026server=msn.com\u0026c1=Portal\u0026v1=1%2F2011\u0026c2=en-ca\u0026v2=1%2F25%2F2011\u0026c3=12.0\u0026c19=Dblu%2CW1%2CQ1%2C4.0\u0026c22=True\u0026c29=http%3A%2F%2Fca.msn.com%2F\u0026c4=\u0026cc=USD\u0026ct=lan\u0026v=Y\u0026j=1.3\u0026[AQE]",
-						"TLS": null,
-						"Response": null
-					},
-					"rawResponse": null
-				}
-			},
-			"response": {
-				"isRequest": false,
-				"captureTime": "0001-01-01T00:00:00Z",
-				"payload": {
-					"method": "",
-					"url": "",
-					"details": {
-						"status": 302,
-						"statusText": "Found",
-						"httpVersion": "HTTP/1.1",
-						"cookies": [],
-						"headers": [
-							{
-								"name": "Cache-Control",
-								"value": "no-cache, no-store, must-revalidate, max-age=0, proxy-revalidate, no-transform, private"
-							},
-							{
-								"name": "Connection",
-								"value": "Keep-Alive"
-							},
-							{
-								"name": "Content-Length",
-								"value": "0"
-							},
-							{
-								"name": "Content-Type",
-								"value": "text/plain"
-							},
-							{
-								"name": "Date",
-								"value": "Tue, 25 Jan 2011 18:52:35 GMT"
-							},
-							{
-								"name": "Etag",
-								"value": "\"4D3F1BF3-2EAB-73F9D72C\""
-							},
-							{
-								"name": "Expires",
-								"value": "Mon, 24 Jan 2011 18:52:35 GMT"
-							},
-							{
-								"name": "Keep-Alive",
-								"value": "timeout=15"
-							},
-							{
-								"name": "Last-Modified",
-								"value": "Wed, 26 Jan 2011 18:52:35 GMT"
-							},
-							{
-								"name": "Location",
-								"value": "http://b.scorecardresearch.com/r?c2=3000001\u0026d.c=gif\u0026d.o=msnportalhomepagecaen\u0026d.x=184063711\u0026d.t=page\u0026d.u=http%3A%2F%2Fca.msn.com%2F"
-							},
-							{
-								"name": "P3p",
-								"value": "policyref=\"/w3c/p3p.xml\", CP=\"NOI DSP COR NID PSA OUR IND COM NAV STA\""
-							},
-							{
-								"name": "Pragma",
-								"value": "no-cache"
-							},
-							{
-								"name": "Server",
-								"value": "Omniture DC/2.0.0"
-							},
-							{
-								"name": "Vary",
-								"value": "*"
-							},
-							{
-								"name": "X-C",
-								"value": "ms-4.3.1"
-							},
-							{
-								"name": "Xserver",
-								"value": "www363"
-							}
-						],
-						"content": {
-							"size": 0,
-							"mimeType": "text/plain",
-							"encoding": "base64"
-						},
-						"redirectURL": "http://b.scorecardresearch.com/r?c2=3000001\u0026d.c=gif\u0026d.o=msnportalhomepagecaen\u0026d.x=184063711\u0026d.t=page\u0026d.u=http%3A%2F%2Fca.msn.com%2F",
-						"headersSize": -1,
-						"bodySize": 0
-					},
-					"rawRequest": null,
-					"rawResponse": {
-						"Status": "302 Found",
-						"StatusCode": 302,
-						"Proto": "HTTP/1.1",
-						"ProtoMajor": 1,
-						"ProtoMinor": 1,
-						"Header": {
-							"Cache-Control": [
-								"no-cache, no-store, must-revalidate, max-age=0, proxy-revalidate, no-transform, private"
-							],
-							"Connection": [
-								"Keep-Alive"
-							],
-							"Content-Length": [
-								"0"
-							],
-							"Content-Type": [
-								"text/plain"
-							],
-							"Date": [
-								"Tue, 25 Jan 2011 18:52:35 GMT"
-							],
-							"Etag": [
-								"\"4D3F1BF3-2EAB-73F9D72C\""
-							],
-							"Expires": [
-								"Mon, 24 Jan 2011 18:52:35 GMT"
-							],
-							"Keep-Alive": [
-								"timeout=15"
-							],
-							"Last-Modified": [
-								"Wed, 26 Jan 2011 18:52:35 GMT"
-							],
-							"Location": [
-								"http://b.scorecardresearch.com/r?c2=3000001\u0026d.c=gif\u0026d.o=msnportalhomepagecaen\u0026d.x=184063711\u0026d.t=page\u0026d.u=http%3A%2F%2Fca.msn.com%2F"
-							],
-							"P3p": [
-								"policyref=\"/w3c/p3p.xml\", CP=\"NOI DSP COR NID PSA OUR IND COM NAV STA\""
-							],
-							"Pragma": [
-								"no-cache"
-							],
-							"Server": [
-								"Omniture DC/2.0.0"
-							],
-							"Vary": [
-								"*"
-							],
-							"X-C": [
-								"ms-4.3.1"
-							],
-							"Xserver": [
-								"www363"
-							]
-						},
-						"ContentLength": 0,
-						"TransferEncoding": null,
-						"Close": false,
-						"Uncompressed": false,
-						"Trailer": null,
-						"Request": null,
-						"TLS": null
-					}
-				}
-			}
-		},
-		"Summary": null
-	},
-	{
-		"Protocol": {
-			"name": "http",
-			"longName": "Hypertext Transfer Protocol -- HTTP/1.1",
-			"abbr": "HTTP",
-			"macro": "http",
-			"version": "1.1",
-			"backgroundColor": "#205cf5",
-			"foregroundColor": "#ffffff",
-			"fontSize": 12,
-			"referenceLink": "https://datatracker.ietf.org/doc/html/rfc2616",
-			"ports": [
-				"80",
-				"443",
-				"8080"
-			],
-			"priority": 0
-		},
-		"Timestamp": -6795364578871,
-		"ConnectionInfo": {
-			"ClientIP": "1",
-			"ClientPort": "1",
-			"ServerIP": "2",
-			"ServerPort": "2",
-			"IsOutgoing": false
-		},
-		"Pair": {
-			"request": {
-				"isRequest": true,
-				"captureTime": "0001-01-01T00:00:00Z",
-				"payload": {
-					"method": "GET",
-					"url": "",
-					"details": {
-						"method": "GET",
-						"url": "/b/ss/msnportalhomepagecaen/1/H.7-pdv-2/s81580283869989?pageName=MSN CanadaMSFTW\u0026c=32\u0026c12=http://ca.msn.com/#\u0026pev2=IEAKTickler Prompt shown\u0026r=\u0026hp=N\u0026c16=IEAKTickler Prompt shown\u0026c17=MSN CanadaMSFTW:MSFT\u0026c18=\u0026[AQB]=\u0026ndh=1\u0026g=http://ca.msn.com/\u0026k=Y\u0026bw=1680\u0026bh=949\u0026events=event4\u0026v11=IEAKTickler Prompt shown\u0026t=25/0/2011 10:52:23 2 480\u0026ns=msnportal\u0026s=1680x1050\u0026c13=wrapper\u003eticklerI\u0026c15=1\u0026c38=12.0\u0026v12=http://ca.msn.com/#\u0026pe=lnk_o\u0026[AQE]=",
+						"url": "",
 						"httpVersion": "HTTP/1.1",
 						"cookies": [],
 						"headers": [
@@ -585,59 +180,7 @@
 						"headersSize": -1,
 						"bodySize": 0
 					},
-					"rawRequest": {
-						"Method": "GET",
-						"URL": {
-							"Scheme": "",
-							"Opaque": "",
-							"User": null,
-							"Host": "",
-							"Path": "/b/ss/msnportalhomepagecaen/1/H.7-pdv-2/s81580283869989",
-							"RawPath": "",
-							"ForceQuery": false,
-							"RawQuery": "pageName=MSN CanadaMSFTW\u0026c=32\u0026c12=http://ca.msn.com/#\u0026pev2=IEAKTickler Prompt shown\u0026r=\u0026hp=N\u0026c16=IEAKTickler Prompt shown\u0026c17=MSN CanadaMSFTW:MSFT\u0026c18=\u0026[AQB]=\u0026ndh=1\u0026g=http://ca.msn.com/\u0026k=Y\u0026bw=1680\u0026bh=949\u0026events=event4\u0026v11=IEAKTickler Prompt shown\u0026t=25/0/2011 10:52:23 2 480\u0026ns=msnportal\u0026s=1680x1050\u0026c13=wrapper\u003eticklerI\u0026c15=1\u0026c38=12.0\u0026v12=http://ca.msn.com/#\u0026pe=lnk_o\u0026[AQE]=",
-							"Fragment": "",
-							"RawFragment": ""
-						},
-						"Proto": "HTTP/1.1",
-						"ProtoMajor": 1,
-						"ProtoMinor": 1,
-						"Header": {
-							"Accept": [
-								"*/*"
-							],
-							"Accept-Charset": [
-								"ISO-8859-1,utf-8;q=0.7,*;q=0.3"
-							],
-							"Accept-Encoding": [
-								"gzip,deflate,sdch"
-							],
-							"Accept-Language": [
-								"en-US,en;q=0.8"
-							],
-							"Connection": [
-								"keep-alive"
-							],
-							"Referer": [
-								"http://ca.msn.com/"
-							],
-							"User-Agent": [
-								"Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/534.10 (KHTML, like Gecko) Chrome/8.0.552.237 Safari/534.10"
-							]
-						},
-						"ContentLength": 0,
-						"TransferEncoding": null,
-						"Close": false,
-						"Host": "msnportal.112.2o7.net",
-						"Form": null,
-						"PostForm": null,
-						"MultipartForm": null,
-						"Trailer": null,
-						"RemoteAddr": "",
-						"RequestURI": "/b/ss/msnportalhomepagecaen/1/H.7-pdv-2/s81580283869989?[AQB]\u0026ndh=1\u0026t=25%2F0%2F2011%2010%3A52%3A23%202%20480\u0026ns=msnportal\u0026pageName=MSN%20CanadaMSFTW\u0026g=http%3A%2F%2Fca.msn.com%2F\u0026r=\u0026s=1680x1050\u0026c=32\u0026k=Y\u0026bw=1680\u0026bh=949\u0026hp=N\u0026events=event4\u0026c12=http%3A%2F%2Fca.msn.com%2F%23\u0026c13=wrapper%3EticklerI\u0026c15=1\u0026c16=IEAKTickler%20Prompt%20shown\u0026c17=MSN%20CanadaMSFTW%3AMSFT\u0026c18=\u0026c38=12.0\u0026v12=http%3A%2F%2Fca.msn.com%2F%23\u0026v11=IEAKTickler%20Prompt%20shown\u0026pe=lnk_o\u0026pev2=IEAKTickler%20Prompt%20shown\u0026[AQE]",
-						"TLS": null,
-						"Response": null
-					},
+					"rawRequest": null,
 					"rawResponse": null
 				}
 			},
@@ -725,68 +268,7 @@
 						"bodySize": 43
 					},
 					"rawRequest": null,
-					"rawResponse": {
-						"Body": "GIF89a\u0002\u0000\u0002\u0000\ufffd\u0000\u0000\ufffd\ufffd\ufffd\u0000\u0000\u0000!\ufffd\u0004\u0001\u0000\u0000\u0000\u0000,\u0000\u0000\u0000\u0000\u0002\u0000\u0002\u0000\u0000\u0002\u0002\ufffdQ\u0000;",
-						"Status": "200 OK",
-						"StatusCode": 200,
-						"Proto": "HTTP/1.1",
-						"ProtoMajor": 1,
-						"ProtoMinor": 1,
-						"Header": {
-							"Cache-Control": [
-								"no-cache, no-store, must-revalidate, max-age=0, proxy-revalidate, no-transform, private"
-							],
-							"Connection": [
-								"Keep-Alive"
-							],
-							"Content-Length": [
-								"43"
-							],
-							"Content-Type": [
-								"image/gif"
-							],
-							"Date": [
-								"Tue, 25 Jan 2011 18:52:36 GMT"
-							],
-							"Etag": [
-								"\"4D3F1BF4-0B78-346EF30D\""
-							],
-							"Expires": [
-								"Mon, 24 Jan 2011 18:52:36 GMT"
-							],
-							"Keep-Alive": [
-								"timeout=15"
-							],
-							"Last-Modified": [
-								"Wed, 26 Jan 2011 18:52:36 GMT"
-							],
-							"P3p": [
-								"policyref=\"/w3c/p3p.xml\", CP=\"NOI DSP COR NID PSA OUR IND COM NAV STA\""
-							],
-							"Pragma": [
-								"no-cache"
-							],
-							"Server": [
-								"Omniture DC/2.0.0"
-							],
-							"Vary": [
-								"*"
-							],
-							"X-C": [
-								"ms-4.3.1"
-							],
-							"Xserver": [
-								"www340"
-							]
-						},
-						"ContentLength": 43,
-						"TransferEncoding": null,
-						"Close": false,
-						"Uncompressed": false,
-						"Trailer": null,
-						"Request": null,
-						"TLS": null
-					}
+					"rawResponse": null
 				}
 			}
 		},
@@ -827,7 +309,7 @@
 					"url": "",
 					"details": {
 						"method": "GET",
-						"url": "/b/ss/msnportalhomepagecaen/1/H.7-pdv-2/s8636364785023?pev2=Woman falls from hotel\u0026pev1=http://ca.msn.com/#\u0026ndh=1\u0026r=\u0026s=1680x1050\u0026hp=N\u0026g=http://ca.msn.com/\u0026c12=http://ca.msn.com/#\u0026c18=\u0026events=event4\u0026oi=undefined\u0026c17=MSN CanadaMSFTW:MSFT\u0026pid=MSN CanadaMSFTW\u0026c=32\u0026k=Y\u0026c15=4\u0026pe=lnk_o\u0026[AQE]=\u0026t=25/0/2011 10:52:23 2 480\u0026ns=msnportal\u0026bw=1680\u0026bh=949\u0026c16=Woman falls from hotel\u0026v12=http://ca.msn.com/#\u0026pidt=1\u0026ot=A\u0026v11=Woman falls from hotel\u0026oid=http://ca.msn.com/#\u0026[AQB]=\u0026pageName=MSN CanadaMSFTW\u0026c13=wrapper\u003epage\u003econtent\u003eareal\u003einfopane\u0026c38=12.0",
+						"url": "",
 						"httpVersion": "HTTP/1.1",
 						"cookies": [],
 						"headers": [
@@ -997,59 +479,7 @@
 						"headersSize": -1,
 						"bodySize": 0
 					},
-					"rawRequest": {
-						"Method": "GET",
-						"URL": {
-							"Scheme": "",
-							"Opaque": "",
-							"User": null,
-							"Host": "",
-							"Path": "/b/ss/msnportalhomepagecaen/1/H.7-pdv-2/s8636364785023",
-							"RawPath": "",
-							"ForceQuery": false,
-							"RawQuery": "pev2=Woman falls from hotel\u0026pev1=http://ca.msn.com/#\u0026ndh=1\u0026r=\u0026s=1680x1050\u0026hp=N\u0026g=http://ca.msn.com/\u0026c12=http://ca.msn.com/#\u0026c18=\u0026events=event4\u0026oi=undefined\u0026c17=MSN CanadaMSFTW:MSFT\u0026pid=MSN CanadaMSFTW\u0026c=32\u0026k=Y\u0026c15=4\u0026pe=lnk_o\u0026[AQE]=\u0026t=25/0/2011 10:52:23 2 480\u0026ns=msnportal\u0026bw=1680\u0026bh=949\u0026c16=Woman falls from hotel\u0026v12=http://ca.msn.com/#\u0026pidt=1\u0026ot=A\u0026v11=Woman falls from hotel\u0026oid=http://ca.msn.com/#\u0026[AQB]=\u0026pageName=MSN CanadaMSFTW\u0026c13=wrapper\u003epage\u003econtent\u003eareal\u003einfopane\u0026c38=12.0",
-							"Fragment": "",
-							"RawFragment": ""
-						},
-						"Proto": "HTTP/1.1",
-						"ProtoMajor": 1,
-						"ProtoMinor": 1,
-						"Header": {
-							"Accept": [
-								"*/*"
-							],
-							"Accept-Charset": [
-								"ISO-8859-1,utf-8;q=0.7,*;q=0.3"
-							],
-							"Accept-Encoding": [
-								"gzip,deflate,sdch"
-							],
-							"Accept-Language": [
-								"en-US,en;q=0.8"
-							],
-							"Connection": [
-								"keep-alive"
-							],
-							"Referer": [
-								"http://ca.msn.com/"
-							],
-							"User-Agent": [
-								"Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/534.10 (KHTML, like Gecko) Chrome/8.0.552.237 Safari/534.10"
-							]
-						},
-						"ContentLength": 0,
-						"TransferEncoding": null,
-						"Close": false,
-						"Host": "msnportal.112.2o7.net",
-						"Form": null,
-						"PostForm": null,
-						"MultipartForm": null,
-						"Trailer": null,
-						"RemoteAddr": "",
-						"RequestURI": "/b/ss/msnportalhomepagecaen/1/H.7-pdv-2/s8636364785023?[AQB]\u0026ndh=1\u0026t=25%2F0%2F2011%2010%3A52%3A23%202%20480\u0026ns=msnportal\u0026pageName=MSN%20CanadaMSFTW\u0026g=http%3A%2F%2Fca.msn.com%2F\u0026r=\u0026s=1680x1050\u0026c=32\u0026k=Y\u0026bw=1680\u0026bh=949\u0026hp=N\u0026events=event4\u0026c12=http%3A%2F%2Fca.msn.com%2F%23\u0026c13=wrapper%3Epage%3Econtent%3Eareal%3Einfopane\u0026c15=4\u0026c16=Woman%20falls%20from%20hotel\u0026c17=MSN%20CanadaMSFTW%3AMSFT\u0026c18=\u0026c38=12.0\u0026v12=http%3A%2F%2Fca.msn.com%2F%23\u0026v11=Woman%20falls%20from%20hotel\u0026pe=lnk_o\u0026pev2=Woman%20falls%20from%20hotel\u0026pev1=http%3A%2F%2Fca.msn.com%2F%23\u0026pid=MSN%20CanadaMSFTW\u0026pidt=1\u0026oid=http%3A%2F%2Fca.msn.com%2F%23\u0026ot=A\u0026oi=undefined\u0026[AQE]",
-						"TLS": null,
-						"Response": null
-					},
+					"rawRequest": null,
 					"rawResponse": null
 				}
 			},
@@ -1137,68 +567,297 @@
 						"bodySize": 43
 					},
 					"rawRequest": null,
-					"rawResponse": {
-						"Body": "GIF89a\u0002\u0000\u0002\u0000\ufffd\u0000\u0000\ufffd\ufffd\ufffd\u0000\u0000\u0000!\ufffd\u0004\u0001\u0000\u0000\u0000\u0000,\u0000\u0000\u0000\u0000\u0002\u0000\u0002\u0000\u0000\u0002\u0002\ufffdQ\u0000;",
-						"Status": "200 OK",
-						"StatusCode": 200,
-						"Proto": "HTTP/1.1",
-						"ProtoMajor": 1,
-						"ProtoMinor": 1,
-						"Header": {
-							"Cache-Control": [
-								"no-cache, no-store, must-revalidate, max-age=0, proxy-revalidate, no-transform, private"
-							],
-							"Connection": [
-								"Keep-Alive"
-							],
-							"Content-Length": [
-								"43"
-							],
-							"Content-Type": [
-								"image/gif"
-							],
-							"Date": [
-								"Tue, 25 Jan 2011 18:52:48 GMT"
-							],
-							"Etag": [
-								"\"4D3F1C00-77D2-78FB8ACE\""
-							],
-							"Expires": [
-								"Mon, 24 Jan 2011 18:52:48 GMT"
-							],
-							"Keep-Alive": [
-								"timeout=15"
-							],
-							"Last-Modified": [
-								"Wed, 26 Jan 2011 18:52:48 GMT"
-							],
-							"P3p": [
-								"policyref=\"/w3c/p3p.xml\", CP=\"NOI DSP COR NID PSA OUR IND COM NAV STA\""
-							],
-							"Pragma": [
-								"no-cache"
-							],
-							"Server": [
-								"Omniture DC/2.0.0"
-							],
-							"Vary": [
-								"*"
-							],
-							"X-C": [
-								"ms-4.3.1"
-							],
-							"Xserver": [
-								"www335"
-							]
+					"rawResponse": null
+				}
+			}
+		},
+		"Summary": null
+	},
+	{
+		"Protocol": {
+			"name": "http",
+			"longName": "Hypertext Transfer Protocol -- HTTP/1.1",
+			"abbr": "HTTP",
+			"macro": "http",
+			"version": "1.1",
+			"backgroundColor": "#205cf5",
+			"foregroundColor": "#ffffff",
+			"fontSize": 12,
+			"referenceLink": "https://datatracker.ietf.org/doc/html/rfc2616",
+			"ports": [
+				"80",
+				"443",
+				"8080"
+			],
+			"priority": 0
+		},
+		"Timestamp": -6795364578871,
+		"ConnectionInfo": {
+			"ClientIP": "1",
+			"ClientPort": "1",
+			"ServerIP": "2",
+			"ServerPort": "2",
+			"IsOutgoing": false
+		},
+		"Pair": {
+			"request": {
+				"isRequest": true,
+				"captureTime": "0001-01-01T00:00:00Z",
+				"payload": {
+					"method": "GET",
+					"url": "",
+					"details": {
+						"method": "GET",
+						"url": "",
+						"httpVersion": "HTTP/1.1",
+						"cookies": [],
+						"headers": [
+							{
+								"name": "Accept",
+								"value": "*/*"
+							},
+							{
+								"name": "Accept-Charset",
+								"value": "ISO-8859-1,utf-8;q=0.7,*;q=0.3"
+							},
+							{
+								"name": "Accept-Encoding",
+								"value": "gzip,deflate,sdch"
+							},
+							{
+								"name": "Accept-Language",
+								"value": "en-US,en;q=0.8"
+							},
+							{
+								"name": "Connection",
+								"value": "keep-alive"
+							},
+							{
+								"name": "Host",
+								"value": "msnportal.112.2o7.net"
+							},
+							{
+								"name": "Referer",
+								"value": "http://ca.msn.com/"
+							},
+							{
+								"name": "User-Agent",
+								"value": "Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/534.10 (KHTML, like Gecko) Chrome/8.0.552.237 Safari/534.10"
+							}
+						],
+						"queryString": [
+							{
+								"name": "[AQB]",
+								"value": ""
+							},
+							{
+								"name": "[AQE]",
+								"value": ""
+							},
+							{
+								"name": "bh",
+								"value": "949"
+							},
+							{
+								"name": "bw",
+								"value": "1680"
+							},
+							{
+								"name": "c",
+								"value": "32"
+							},
+							{
+								"name": "c1",
+								"value": "Portal"
+							},
+							{
+								"name": "c19",
+								"value": "Dblu,W1,Q1,4.0"
+							},
+							{
+								"name": "c2",
+								"value": "en-ca"
+							},
+							{
+								"name": "c22",
+								"value": "True"
+							},
+							{
+								"name": "c29",
+								"value": "http://ca.msn.com/"
+							},
+							{
+								"name": "c3",
+								"value": "12.0"
+							},
+							{
+								"name": "c4",
+								"value": ""
+							},
+							{
+								"name": "cc",
+								"value": "USD"
+							},
+							{
+								"name": "ch",
+								"value": ""
+							},
+							{
+								"name": "ct",
+								"value": "lan"
+							},
+							{
+								"name": "g",
+								"value": "http://ca.msn.com/"
+							},
+							{
+								"name": "hp",
+								"value": "N"
+							},
+							{
+								"name": "j",
+								"value": "1.3"
+							},
+							{
+								"name": "k",
+								"value": "Y"
+							},
+							{
+								"name": "ndh",
+								"value": "1"
+							},
+							{
+								"name": "ns",
+								"value": "msnportal"
+							},
+							{
+								"name": "pageName",
+								"value": "MSN CanadaMSFTW"
+							},
+							{
+								"name": "r",
+								"value": ""
+							},
+							{
+								"name": "s",
+								"value": "1680x1050"
+							},
+							{
+								"name": "server",
+								"value": "msn.com"
+							},
+							{
+								"name": "t",
+								"value": "25/0/2011 10:52:23 2 480"
+							},
+							{
+								"name": "v",
+								"value": "Y"
+							},
+							{
+								"name": "v1",
+								"value": "1/2011"
+							},
+							{
+								"name": "v2",
+								"value": "1/25/2011"
+							}
+						],
+						"headersSize": -1,
+						"bodySize": 0
+					},
+					"rawRequest": null,
+					"rawResponse": null
+				}
+			},
+			"response": {
+				"isRequest": false,
+				"captureTime": "0001-01-01T00:00:00Z",
+				"payload": {
+					"method": "",
+					"url": "",
+					"details": {
+						"status": 302,
+						"statusText": "Found",
+						"httpVersion": "HTTP/1.1",
+						"cookies": [],
+						"headers": [
+							{
+								"name": "Cache-Control",
+								"value": "no-cache, no-store, must-revalidate, max-age=0, proxy-revalidate, no-transform, private"
+							},
+							{
+								"name": "Connection",
+								"value": "Keep-Alive"
+							},
+							{
+								"name": "Content-Length",
+								"value": "0"
+							},
+							{
+								"name": "Content-Type",
+								"value": "text/plain"
+							},
+							{
+								"name": "Date",
+								"value": "Tue, 25 Jan 2011 18:52:35 GMT"
+							},
+							{
+								"name": "Etag",
+								"value": "\"4D3F1BF3-2EAB-73F9D72C\""
+							},
+							{
+								"name": "Expires",
+								"value": "Mon, 24 Jan 2011 18:52:35 GMT"
+							},
+							{
+								"name": "Keep-Alive",
+								"value": "timeout=15"
+							},
+							{
+								"name": "Last-Modified",
+								"value": "Wed, 26 Jan 2011 18:52:35 GMT"
+							},
+							{
+								"name": "Location",
+								"value": "http://b.scorecardresearch.com/r?c2=3000001\u0026d.c=gif\u0026d.o=msnportalhomepagecaen\u0026d.x=184063711\u0026d.t=page\u0026d.u=http%3A%2F%2Fca.msn.com%2F"
+							},
+							{
+								"name": "P3p",
+								"value": "policyref=\"/w3c/p3p.xml\", CP=\"NOI DSP COR NID PSA OUR IND COM NAV STA\""
+							},
+							{
+								"name": "Pragma",
+								"value": "no-cache"
+							},
+							{
+								"name": "Server",
+								"value": "Omniture DC/2.0.0"
+							},
+							{
+								"name": "Vary",
+								"value": "*"
+							},
+							{
+								"name": "X-C",
+								"value": "ms-4.3.1"
+							},
+							{
+								"name": "Xserver",
+								"value": "www363"
+							}
+						],
+						"content": {
+							"size": 0,
+							"mimeType": "text/plain",
+							"encoding": "base64"
 						},
-						"ContentLength": 43,
-						"TransferEncoding": null,
-						"Close": false,
-						"Uncompressed": false,
-						"Trailer": null,
-						"Request": null,
-						"TLS": null
-					}
+						"redirectURL": "http://b.scorecardresearch.com/r?c2=3000001\u0026d.c=gif\u0026d.o=msnportalhomepagecaen\u0026d.x=184063711\u0026d.t=page\u0026d.u=http%3A%2F%2Fca.msn.com%2F",
+						"headersSize": -1,
+						"bodySize": 0
+					},
+					"rawRequest": null,
+					"rawResponse": null
 				}
 			}
 		},

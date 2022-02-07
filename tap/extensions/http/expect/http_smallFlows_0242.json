@@ -34,7 +34,7 @@
 					"url": "",
 					"details": {
 						"method": "GET",
-						"url": "/mobile/tab/v90/tab_image/tab-image.png",
+						"url": "",
 						"httpVersion": "HTTP/1.1",
 						"cookies": [],
 						"headers": [
@@ -67,53 +67,7 @@
 						"headersSize": -1,
 						"bodySize": 0
 					},
-					"rawRequest": {
-						"Method": "GET",
-						"URL": {
-							"Scheme": "",
-							"Opaque": "",
-							"User": null,
-							"Host": "",
-							"Path": "/mobile/tab/v90/tab_image/tab-image.png",
-							"RawPath": "",
-							"ForceQuery": false,
-							"RawQuery": "",
-							"Fragment": "",
-							"RawFragment": ""
-						},
-						"Proto": "HTTP/1.1",
-						"ProtoMajor": 1,
-						"ProtoMinor": 1,
-						"Header": {
-							"Accept": [
-								"*/*"
-							],
-							"Connection": [
-								"Keep-Alive"
-							],
-							"If-Modified-Since": [
-								"Wed, 04 Nov 2009 20:27:00 GMT"
-							],
-							"If-None-Match": [
-								"\"0269298d5dca1:0\""
-							],
-							"User-Agent": [
-								"Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; .NET CLR 1.1.4322; .NET CLR 2.0.50727; .NET CLR 3.0.4506.2152; .NET CLR 3.5.30729; Windows Live Messenger 14.0.8089.0726)"
-							]
-						},
-						"ContentLength": 0,
-						"TransferEncoding": null,
-						"Close": false,
-						"Host": "www.gowindowslive.com",
-						"Form": null,
-						"PostForm": null,
-						"MultipartForm": null,
-						"Trailer": null,
-						"RemoteAddr": "",
-						"RequestURI": "/mobile/tab/v90/tab_image/tab-image.png",
-						"TLS": null,
-						"Response": null
-					},
+					"rawRequest": null,
 					"rawResponse": null
 				}
 			},
@@ -160,37 +114,7 @@
 						"bodySize": 0
 					},
 					"rawRequest": null,
-					"rawResponse": {
-						"Status": "304 Not Modified",
-						"StatusCode": 304,
-						"Proto": "HTTP/1.1",
-						"ProtoMajor": 1,
-						"ProtoMinor": 1,
-						"Header": {
-							"Connection": [
-								"keep-alive"
-							],
-							"Content-Type": [
-								"image/png"
-							],
-							"Date": [
-								"Fri, 13 Nov 2009 19:08:26 GMT"
-							],
-							"Etag": [
-								"\"60be6a5b1163ca1:3d4\""
-							],
-							"Last-Modified": [
-								"Wed, 11 Nov 2009 20:55:53 GMT"
-							]
-						},
-						"ContentLength": 0,
-						"TransferEncoding": null,
-						"Close": false,
-						"Uncompressed": false,
-						"Trailer": null,
-						"Request": null,
-						"TLS": null
-					}
+					"rawResponse": null
 				}
 			}
 		},

@@ -34,7 +34,7 @@
 					"url": "",
 					"details": {
 						"method": "GET",
-						"url": "/DRN/iview/184649311/direct;wi.1;hi.1/01",
+						"url": "",
 						"httpVersion": "HTTP/1.1",
 						"cookies": [],
 						"headers": [
@@ -59,47 +59,7 @@
 						"headersSize": -1,
 						"bodySize": 0
 					},
-					"rawRequest": {
-						"Method": "GET",
-						"URL": {
-							"Scheme": "",
-							"Opaque": "",
-							"User": null,
-							"Host": "",
-							"Path": "/DRN/iview/184649311/direct;wi.1;hi.1/01",
-							"RawPath": "",
-							"ForceQuery": false,
-							"RawQuery": "",
-							"Fragment": "",
-							"RawFragment": ""
-						},
-						"Proto": "HTTP/1.1",
-						"ProtoMajor": 1,
-						"ProtoMinor": 1,
-						"Header": {
-							"Accept": [
-								"*/*"
-							],
-							"Connection": [
-								"Keep-Alive"
-							],
-							"User-Agent": [
-								"Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; .NET CLR 1.1.4322; .NET CLR 2.0.50727; .NET CLR 3.0.4506.2152; .NET CLR 3.5.30729; Windows Live Messenger 14.0.8089.0726)"
-							]
-						},
-						"ContentLength": 0,
-						"TransferEncoding": null,
-						"Close": false,
-						"Host": "view.atdmt.com",
-						"Form": null,
-						"PostForm": null,
-						"MultipartForm": null,
-						"Trailer": null,
-						"RemoteAddr": "",
-						"RequestURI": "/DRN/iview/184649311/direct;wi.1;hi.1/01",
-						"TLS": null,
-						"Response": null
-					},
+					"rawRequest": null,
 					"rawResponse": null
 				}
 			},
@@ -154,42 +114,7 @@
 						"bodySize": -1
 					},
 					"rawRequest": null,
-					"rawResponse": {
-						"Status": "200 OK",
-						"StatusCode": 200,
-						"Proto": "HTTP/1.1",
-						"ProtoMajor": 1,
-						"ProtoMinor": 1,
-						"Header": {
-							"Connection": [
-								"keep-alive"
-							],
-							"Content-Language": [
-								"en-US"
-							],
-							"Content-Type": [
-								"text/plain;charset=UTF-8"
-							],
-							"Date": [
-								"Tue, 25 Jan 2011 19:08:03 GMT"
-							],
-							"Server": [
-								"nginx/0.7.67"
-							],
-							"X-Retry-After": [
-								"3"
-							]
-						},
-						"ContentLength": -1,
-						"TransferEncoding": [
-							"chunked"
-						],
-						"Close": false,
-						"Uncompressed": false,
-						"Trailer": null,
-						"Request": null,
-						"TLS": null
-					}
+					"rawResponse": null
 				}
 			}
 		},

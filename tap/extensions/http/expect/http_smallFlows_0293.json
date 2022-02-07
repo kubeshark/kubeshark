@@ -34,7 +34,7 @@
 					"url": "",
 					"details": {
 						"method": "GET",
-						"url": "/pix?217555=",
+						"url": "",
 						"httpVersion": "HTTP/1.1",
 						"cookies": [],
 						"headers": [
@@ -80,59 +80,7 @@
 						"headersSize": -1,
 						"bodySize": 0
 					},
-					"rawRequest": {
-						"Method": "GET",
-						"URL": {
-							"Scheme": "",
-							"Opaque": "",
-							"User": null,
-							"Host": "",
-							"Path": "/pix",
-							"RawPath": "",
-							"ForceQuery": false,
-							"RawQuery": "217555=",
-							"Fragment": "",
-							"RawFragment": ""
-						},
-						"Proto": "HTTP/1.1",
-						"ProtoMajor": 1,
-						"ProtoMinor": 1,
-						"Header": {
-							"Accept": [
-								"*/*"
-							],
-							"Accept-Charset": [
-								"ISO-8859-1,utf-8;q=0.7,*;q=0.3"
-							],
-							"Accept-Encoding": [
-								"gzip,deflate,sdch"
-							],
-							"Accept-Language": [
-								"en-US,en;q=0.8"
-							],
-							"Connection": [
-								"keep-alive"
-							],
-							"Referer": [
-								"http://view.atdmt.com/DRN/iview/155580746/direct;;wi.728;hi.90/01?click="
-							],
-							"User-Agent": [
-								"Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/534.10 (KHTML, like Gecko) Chrome/8.0.552.237 Safari/534.10"
-							]
-						},
-						"ContentLength": 0,
-						"TransferEncoding": null,
-						"Close": false,
-						"Host": "voken.eyereturn.com",
-						"Form": null,
-						"PostForm": null,
-						"MultipartForm": null,
-						"Trailer": null,
-						"RemoteAddr": "",
-						"RequestURI": "/pix?217555",
-						"TLS": null,
-						"Response": null
-					},
+					"rawRequest": null,
 					"rawResponse": null
 				}
 			},
@@ -192,47 +140,7 @@
 						"bodySize": 43
 					},
 					"rawRequest": null,
-					"rawResponse": {
-						"Body": "GIF89a\u0001\u0000\u0001\u0000\ufffd\u0000\u0000\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd!\ufffd\u0004\u0001\n\u0000\u0001\u0000,\u0000\u0000\u0000\u0000\u0001\u0000\u0001\u0000\u0000\u0002\u0002L\u0001\u0000;",
-						"Status": "200 OK",
-						"StatusCode": 200,
-						"Proto": "HTTP/1.1",
-						"ProtoMajor": 1,
-						"ProtoMinor": 1,
-						"Header": {
-							"Cache-Control": [
-								"no-cache"
-							],
-							"Content-Length": [
-								"43"
-							],
-							"Content-Type": [
-								"image/gif"
-							],
-							"Date": [
-								"Tue, 25 Jan 2011 18:54:44 GMT"
-							],
-							"P3p": [
-								"policyref=\"/w3c/p3p.xml\", CP=\"NOI DSP NID PSAo PSDa OUR STP IND UNI COM NAV\""
-							],
-							"Pragma": [
-								"no-cache"
-							],
-							"Server": [
-								"eyeReturn Ad Server"
-							],
-							"Set-Cookie": [
-								"[REDACTED]"
-							]
-						},
-						"ContentLength": 43,
-						"TransferEncoding": null,
-						"Close": false,
-						"Uncompressed": false,
-						"Trailer": null,
-						"Request": null,
-						"TLS": null
-					}
+					"rawResponse": null
 				}
 			}
 		},

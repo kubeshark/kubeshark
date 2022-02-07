@@ -34,7 +34,7 @@
 					"url": "",
 					"details": {
 						"method": "GET",
-						"url": "/DRN/iview/155578665/direct/01?click=",
+						"url": "",
 						"httpVersion": "HTTP/1.1",
 						"cookies": [],
 						"headers": [
@@ -76,56 +76,7 @@
 						"headersSize": -1,
 						"bodySize": 0
 					},
-					"rawRequest": {
-						"Method": "GET",
-						"URL": {
-							"Scheme": "",
-							"Opaque": "",
-							"User": null,
-							"Host": "",
-							"Path": "/DRN/iview/155578665/direct/01",
-							"RawPath": "",
-							"ForceQuery": false,
-							"RawQuery": "click=",
-							"Fragment": "",
-							"RawFragment": ""
-						},
-						"Proto": "HTTP/1.1",
-						"ProtoMajor": 1,
-						"ProtoMinor": 1,
-						"Header": {
-							"Accept": [
-								"image/gif, image/x-xbitmap, image/jpeg, image/pjpeg, application/x-shockwave-flash, application/x-ms-application, application/x-ms-xbap, application/vnd.ms-xpsdocument, application/xaml+xml, application/vnd.ms-excel, application/vnd.ms-powerpoint, application/msword, */*"
-							],
-							"Accept-Encoding": [
-								"gzip, deflate"
-							],
-							"Accept-Language": [
-								"en-us"
-							],
-							"Connection": [
-								"Keep-Alive"
-							],
-							"Referer": [
-								"http://rad.msn.com/ADSAdClient31.dll?GetAd=\u0026PG=IMSMCA\u0026AP=1007"
-							],
-							"User-Agent": [
-								"Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; .NET CLR 1.1.4322; .NET CLR 2.0.50727; .NET CLR 3.0.4506.2152; .NET CLR 3.5.30729; Windows Live Messenger 14.0.8089.0726)"
-							]
-						},
-						"ContentLength": 0,
-						"TransferEncoding": null,
-						"Close": false,
-						"Host": "view.atdmt.com",
-						"Form": null,
-						"PostForm": null,
-						"MultipartForm": null,
-						"Trailer": null,
-						"RemoteAddr": "",
-						"RequestURI": "/DRN/iview/155578665/direct/01?click=",
-						"TLS": null,
-						"Response": null
-					},
+					"rawRequest": null,
 					"rawResponse": null
 				}
 			},
@@ -173,38 +124,7 @@
 						"bodySize": 498
 					},
 					"rawRequest": null,
-					"rawResponse": {
-						"Body": "\u003cSCRIPT LANGUAGE=\"JavaScript1.1\" SRC=\"http://www3.smartadserver.com/call/adj/88838/562916/microsoft.advisioconseil/234x60/973506850/no?http://clk.atdmt.com/go/155578665/direct;ai.131767702.132508540;ct.1/01?href=\"/\u003e\n\u003cNOSCRIPT\u003e\u003ca href=\"http://www3.smartadserver.com/call/jumpi/88838/562916/microsoft.advisioconseil/234x60/351009372/no?\" target=\"_blank\"\u003e\u003cimg src=\"http://www3.smartadserver.com/call/adi/88838/562916/microsoft.advisioconseil/234x60/172953613/no?\" border=\"0\"/\u003e\u003c/a\u003e\n\u003c/NOSCRIPT\u003e",
-						"Status": "200 OK",
-						"StatusCode": 200,
-						"Proto": "HTTP/1.1",
-						"ProtoMajor": 1,
-						"ProtoMinor": 1,
-						"Header": {
-							"Cache-Control": [
-								"no-store"
-							],
-							"Content-Length": [
-								"498"
-							],
-							"Content-Type": [
-								"text/html"
-							],
-							"Date": [
-								"Fri, 13 Nov 2009 19:08:29 GMT"
-							],
-							"Expires": [
-								"0"
-							]
-						},
-						"ContentLength": 498,
-						"TransferEncoding": null,
-						"Close": true,
-						"Uncompressed": false,
-						"Trailer": null,
-						"Request": null,
-						"TLS": null
-					}
+					"rawResponse": null
 				}
 			}
 		},

@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"sort"
 	"sync"
 	"time"
@@ -265,35 +266,72 @@ func (h HTTPPayload) MarshalJSON() ([]byte, error) {
 	case TypeHttpRequest:
 		harRequest, err := har.NewRequest(h.Data.(*http.Request), true)
 		sort.Slice(harRequest.Headers, func(i, j int) bool {
-			return harRequest.Headers[i].Name < harRequest.Headers[j].Name
+			if harRequest.Headers[i].Name < harRequest.Headers[j].Name {
+				return true
+			}
+			if harRequest.Headers[i].Name > harRequest.Headers[j].Name {
+				return false
+			}
+			return harRequest.Headers[i].Value < harRequest.Headers[j].Value
 		})
 		sort.Slice(harRequest.QueryString, func(i, j int) bool {
-			return harRequest.QueryString[i].Name < harRequest.QueryString[j].Name
+			if harRequest.QueryString[i].Name < harRequest.QueryString[j].Name {
+				return true
+			}
+			if harRequest.QueryString[i].Name > harRequest.QueryString[j].Name {
+				return false
+			}
+			return harRequest.QueryString[i].Value < harRequest.QueryString[j].Value
 		})
+		_, present := os.LookupEnv("MIZU_TEST")
+		if present {
+			harRequest.URL = ""
+		}
 		if err != nil {
 			return nil, errors.New("Failed converting request to HAR")
+		}
+		var reqWrapper *HTTPRequestWrapper
+		if !present {
+			reqWrapper = &HTTPRequestWrapper{Request: h.Data.(*http.Request)}
 		}
 		return json.Marshal(&HTTPWrapper{
 			Method:     harRequest.Method,
 			Details:    harRequest,
-			RawRequest: &HTTPRequestWrapper{Request: h.Data.(*http.Request)},
+			RawRequest: reqWrapper,
 		})
 	case TypeHttpResponse:
 		harResponse, err := har.NewResponse(h.Data.(*http.Response), true)
 		sort.Slice(harResponse.Headers, func(i, j int) bool {
-			return harResponse.Headers[i].Name < harResponse.Headers[j].Name
+			if harResponse.Headers[i].Name < harResponse.Headers[j].Name {
+				return true
+			}
+			if harResponse.Headers[i].Name > harResponse.Headers[j].Name {
+				return false
+			}
+			return harResponse.Headers[i].Value < harResponse.Headers[j].Value
 		})
 		sort.Slice(harResponse.Cookies, func(i, j int) bool {
-			return harResponse.Cookies[i].Name < harResponse.Cookies[j].Name
+			if harResponse.Cookies[i].Name < harResponse.Cookies[j].Name {
+				return true
+			}
+			if harResponse.Cookies[i].Name > harResponse.Cookies[j].Name {
+				return false
+			}
+			return harResponse.Cookies[i].Value < harResponse.Cookies[j].Value
 		})
 		if err != nil {
 			return nil, errors.New("Failed converting response to HAR")
+		}
+		_, present := os.LookupEnv("MIZU_TEST")
+		var resWrapper *HTTPResponseWrapper
+		if !present {
+			resWrapper = &HTTPResponseWrapper{Response: h.Data.(*http.Response)}
 		}
 		return json.Marshal(&HTTPWrapper{
 			Method:      "",
 			Url:         "",
 			Details:     harResponse,
-			RawResponse: &HTTPResponseWrapper{Response: h.Data.(*http.Response)},
+			RawResponse: resWrapper,
 		})
 	default:
 		panic(fmt.Sprintf("HTTP payload cannot be marshaled: %v", h.Type))

@@ -34,7 +34,7 @@
 					"url": "",
 					"details": {
 						"method": "GET",
-						"url": "/?url=pxml10.4publishers.com/pxml.zip?pv=50331653\u0026sid=D77B3D5279E5E596\u0026go=\"00\"\u0026go=\"00\"",
+						"url": "",
 						"httpVersion": "HTTP/1.1",
 						"cookies": [],
 						"headers": [
@@ -76,47 +76,7 @@
 						"headersSize": -1,
 						"bodySize": 0
 					},
-					"rawRequest": {
-						"Method": "GET",
-						"URL": {
-							"Scheme": "",
-							"Opaque": "",
-							"User": null,
-							"Host": "",
-							"Path": "/",
-							"RawPath": "",
-							"ForceQuery": false,
-							"RawQuery": "url=pxml10.4publishers.com/pxml.zip?pv=50331653\u0026sid=D77B3D5279E5E596\u0026go=\"00\"\u0026go=\"00\"",
-							"Fragment": "",
-							"RawFragment": ""
-						},
-						"Proto": "HTTP/1.1",
-						"ProtoMajor": 1,
-						"ProtoMinor": 1,
-						"Header": {
-							"Accept": [
-								"*/*"
-							],
-							"Cache-Control": [
-								"no-cache"
-							],
-							"Connection": [
-								"Keep-Alive"
-							]
-						},
-						"ContentLength": 0,
-						"TransferEncoding": null,
-						"Close": false,
-						"Host": "guide.opendns.com",
-						"Form": null,
-						"PostForm": null,
-						"MultipartForm": null,
-						"Trailer": null,
-						"RemoteAddr": "",
-						"RequestURI": "/?url=pxml10%2E4publishers%2Ecom%2Fpxml%2Ezip%3Fpv%3D50331653%26sid%3DD77B3D5279E5E596%26go%3D%2200%22%26go%3D%2200%22",
-						"TLS": null,
-						"Response": null
-					},
+					"rawRequest": null,
 					"rawResponse": null
 				}
 			},
@@ -151,28 +111,7 @@
 						"bodySize": 0
 					},
 					"rawRequest": null,
-					"rawResponse": {
-						"Status": "304 Not Modified",
-						"StatusCode": 304,
-						"Proto": "HTTP/1.1",
-						"ProtoMajor": 1,
-						"ProtoMinor": 1,
-						"Header": {
-							"Date": [
-								"Fri, 13 Nov 2009 19:08:26 GMT"
-							],
-							"Etag": [
-								"\"0269298d5dca1:0\""
-							]
-						},
-						"ContentLength": 0,
-						"TransferEncoding": null,
-						"Close": false,
-						"Uncompressed": false,
-						"Trailer": null,
-						"Request": null,
-						"TLS": null
-					}
+					"rawResponse": null
 				}
 			}
 		},

@@ -34,7 +34,7 @@
 					"url": "",
 					"details": {
 						"method": "GET",
-						"url": "/flash/logos/us.swf",
+						"url": "",
 						"httpVersion": "HTTP/1.1",
 						"cookies": [],
 						"headers": [
@@ -79,62 +79,7 @@
 						"headersSize": -1,
 						"bodySize": 0
 					},
-					"rawRequest": {
-						"Method": "GET",
-						"URL": {
-							"Scheme": "",
-							"Opaque": "",
-							"User": null,
-							"Host": "",
-							"Path": "/flash/logos/us.swf",
-							"RawPath": "",
-							"ForceQuery": false,
-							"RawQuery": "",
-							"Fragment": "",
-							"RawFragment": ""
-						},
-						"Proto": "HTTP/1.1",
-						"ProtoMajor": 1,
-						"ProtoMinor": 1,
-						"Header": {
-							"Accept": [
-								"*/*"
-							],
-							"Accept-Charset": [
-								"ISO-8859-1,utf-8;q=0.7,*;q=0.3"
-							],
-							"Accept-Encoding": [
-								"gzip,deflate,sdch"
-							],
-							"Accept-Language": [
-								"en-US,en;q=0.8"
-							],
-							"Connection": [
-								"keep-alive"
-							],
-							"If-Modified-Since": [
-								"Thu, 22 Jul 2010 20:17:26 GMT"
-							],
-							"Referer": [
-								"http://img.widgets.video.s-msn.com/flash/inline.swf"
-							],
-							"User-Agent": [
-								"Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/534.10 (KHTML, like Gecko) Chrome/8.0.552.237 Safari/534.10"
-							]
-						},
-						"ContentLength": 0,
-						"TransferEncoding": null,
-						"Close": false,
-						"Host": "images.video.msn.com",
-						"Form": null,
-						"PostForm": null,
-						"MultipartForm": null,
-						"Trailer": null,
-						"RemoteAddr": "",
-						"RequestURI": "/flash/logos/us.swf",
-						"TLS": null,
-						"Response": null
-					},
+					"rawRequest": null,
 					"rawResponse": null
 				}
 			},
@@ -181,37 +126,7 @@
 						"bodySize": 0
 					},
 					"rawRequest": null,
-					"rawResponse": {
-						"Status": "304 Not Modified",
-						"StatusCode": 304,
-						"Proto": "HTTP/1.1",
-						"ProtoMajor": 1,
-						"ProtoMinor": 1,
-						"Header": {
-							"Cache-Control": [
-								"public, max-age=900, s-maxage=900"
-							],
-							"Connection": [
-								"keep-alive"
-							],
-							"Content-Type": [
-								"application/x-shockwave-flash"
-							],
-							"Date": [
-								"Tue, 25 Jan 2011 18:53:03 GMT"
-							],
-							"Last-Modified": [
-								"Thu, 22 Jul 2010 20:17:26 GMT"
-							]
-						},
-						"ContentLength": 0,
-						"TransferEncoding": null,
-						"Close": false,
-						"Uncompressed": false,
-						"Trailer": null,
-						"Request": null,
-						"TLS": null
-					}
+					"rawResponse": null
 				}
 			}
 		},
@@ -252,7 +167,7 @@
 					"url": "",
 					"details": {
 						"method": "GET",
-						"url": "/flash/script/embed.js",
+						"url": "",
 						"httpVersion": "HTTP/1.1",
 						"cookies": [],
 						"headers": [
@@ -297,62 +212,7 @@
 						"headersSize": -1,
 						"bodySize": 0
 					},
-					"rawRequest": {
-						"Method": "GET",
-						"URL": {
-							"Scheme": "",
-							"Opaque": "",
-							"User": null,
-							"Host": "",
-							"Path": "/flash/script/embed.js",
-							"RawPath": "",
-							"ForceQuery": false,
-							"RawQuery": "",
-							"Fragment": "",
-							"RawFragment": ""
-						},
-						"Proto": "HTTP/1.1",
-						"ProtoMajor": 1,
-						"ProtoMinor": 1,
-						"Header": {
-							"Accept": [
-								"*/*"
-							],
-							"Accept-Charset": [
-								"ISO-8859-1,utf-8;q=0.7,*;q=0.3"
-							],
-							"Accept-Encoding": [
-								"gzip,deflate,sdch"
-							],
-							"Accept-Language": [
-								"en-US,en;q=0.8"
-							],
-							"Connection": [
-								"keep-alive"
-							],
-							"If-Modified-Since": [
-								"Fri, 14 Jan 2011 00:55:04 GMT"
-							],
-							"Referer": [
-								"http://lifestyle.ca.msn.com/home-garden/five-things/rd-gallery.aspx?cp-documentid=27053613"
-							],
-							"User-Agent": [
-								"Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/534.10 (KHTML, like Gecko) Chrome/8.0.552.237 Safari/534.10"
-							]
-						},
-						"ContentLength": 0,
-						"TransferEncoding": null,
-						"Close": false,
-						"Host": "images.video.msn.com",
-						"Form": null,
-						"PostForm": null,
-						"MultipartForm": null,
-						"Trailer": null,
-						"RemoteAddr": "",
-						"RequestURI": "/flash/script/embed.js",
-						"TLS": null,
-						"Response": null
-					},
+					"rawRequest": null,
 					"rawResponse": null
 				}
 			},
@@ -407,43 +267,7 @@
 						"bodySize": 0
 					},
 					"rawRequest": null,
-					"rawResponse": {
-						"Status": "304 Not Modified",
-						"StatusCode": 304,
-						"Proto": "HTTP/1.1",
-						"ProtoMajor": 1,
-						"ProtoMinor": 1,
-						"Header": {
-							"Cache-Control": [
-								"public, max-age=900, s-maxage=900"
-							],
-							"Connection": [
-								"keep-alive"
-							],
-							"Content-Type": [
-								"application/x-javascript"
-							],
-							"Date": [
-								"Tue, 25 Jan 2011 18:53:02 GMT"
-							],
-							"Expires": [
-								"Wed, 01 Jan 1997 12:00:00 GMT"
-							],
-							"Last-Modified": [
-								"Fri, 14 Jan 2011 00:55:04 GMT"
-							],
-							"Vary": [
-								"Accept-Encoding"
-							]
-						},
-						"ContentLength": 0,
-						"TransferEncoding": null,
-						"Close": false,
-						"Uncompressed": false,
-						"Trailer": null,
-						"Request": null,
-						"TLS": null
-					}
+					"rawResponse": null
 				}
 			}
 		},
@@ -484,7 +308,7 @@
 					"url": "",
 					"details": {
 						"method": "GET",
-						"url": "/flash/versionDetect.swf",
+						"url": "",
 						"httpVersion": "HTTP/1.1",
 						"cookies": [],
 						"headers": [
@@ -529,62 +353,7 @@
 						"headersSize": -1,
 						"bodySize": 0
 					},
-					"rawRequest": {
-						"Method": "GET",
-						"URL": {
-							"Scheme": "",
-							"Opaque": "",
-							"User": null,
-							"Host": "",
-							"Path": "/flash/versionDetect.swf",
-							"RawPath": "",
-							"ForceQuery": false,
-							"RawQuery": "",
-							"Fragment": "",
-							"RawFragment": ""
-						},
-						"Proto": "HTTP/1.1",
-						"ProtoMajor": 1,
-						"ProtoMinor": 1,
-						"Header": {
-							"Accept": [
-								"*/*"
-							],
-							"Accept-Charset": [
-								"ISO-8859-1,utf-8;q=0.7,*;q=0.3"
-							],
-							"Accept-Encoding": [
-								"gzip,deflate,sdch"
-							],
-							"Accept-Language": [
-								"en-US,en;q=0.8"
-							],
-							"Connection": [
-								"keep-alive"
-							],
-							"If-Modified-Since": [
-								"Thu, 22 Jul 2010 20:17:26 GMT"
-							],
-							"Referer": [
-								"http://lifestyle.ca.msn.com/home-garden/five-things/rd-gallery.aspx?cp-documentid=27053613"
-							],
-							"User-Agent": [
-								"Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/534.10 (KHTML, like Gecko) Chrome/8.0.552.237 Safari/534.10"
-							]
-						},
-						"ContentLength": 0,
-						"TransferEncoding": null,
-						"Close": false,
-						"Host": "images.video.msn.com",
-						"Form": null,
-						"PostForm": null,
-						"MultipartForm": null,
-						"Trailer": null,
-						"RemoteAddr": "",
-						"RequestURI": "/flash/versionDetect.swf",
-						"TLS": null,
-						"Response": null
-					},
+					"rawRequest": null,
 					"rawResponse": null
 				}
 			},
@@ -676,71 +445,7 @@
 						"bodySize": 43
 					},
 					"rawRequest": null,
-					"rawResponse": {
-						"Body": "GIF89a\u0002\u0000\u0002\u0000\ufffd\u0000\u0000\ufffd\ufffd\ufffd\u0000\u0000\u0000!\ufffd\u0004\u0001\u0000\u0000\u0000\u0000,\u0000\u0000\u0000\u0000\u0002\u0000\u0002\u0000\u0000\u0002\u0002\ufffdQ\u0000;",
-						"Status": "200 OK",
-						"StatusCode": 200,
-						"Proto": "HTTP/1.1",
-						"ProtoMajor": 1,
-						"ProtoMinor": 1,
-						"Header": {
-							"Cache-Control": [
-								"no-cache, no-store, must-revalidate, max-age=0, proxy-revalidate, no-transform, private"
-							],
-							"Connection": [
-								"Keep-Alive"
-							],
-							"Content-Length": [
-								"43"
-							],
-							"Content-Type": [
-								"image/gif"
-							],
-							"Date": [
-								"Tue, 25 Jan 2011 18:53:02 GMT"
-							],
-							"Etag": [
-								"\"4D3F1C0E-02DE-4A40EF46\""
-							],
-							"Expires": [
-								"Mon, 24 Jan 2011 18:53:02 GMT"
-							],
-							"Keep-Alive": [
-								"timeout=15"
-							],
-							"Last-Modified": [
-								"Wed, 26 Jan 2011 18:53:02 GMT"
-							],
-							"P3p": [
-								"policyref=\"/w3c/p3p.xml\", CP=\"NOI DSP COR NID PSA OUR IND COM NAV STA\""
-							],
-							"Pragma": [
-								"no-cache"
-							],
-							"Server": [
-								"Omniture DC/2.0.0"
-							],
-							"Set-Cookie": [
-								"[REDACTED]"
-							],
-							"Vary": [
-								"*"
-							],
-							"X-C": [
-								"ms-4.3.1"
-							],
-							"Xserver": [
-								"www68"
-							]
-						},
-						"ContentLength": 43,
-						"TransferEncoding": null,
-						"Close": false,
-						"Uncompressed": false,
-						"Trailer": null,
-						"Request": null,
-						"TLS": null
-					}
+					"rawResponse": null
 				}
 			}
 		},

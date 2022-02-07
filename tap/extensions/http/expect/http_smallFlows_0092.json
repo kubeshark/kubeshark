@@ -34,7 +34,7 @@
 					"url": "",
 					"details": {
 						"method": "GET",
-						"url": "/pki/mscorp/crl/Microsoft%20Secure%20Server%20Authority(8).crl",
+						"url": "",
 						"httpVersion": "HTTP/1.1",
 						"cookies": [],
 						"headers": [
@@ -71,56 +71,7 @@
 						"headersSize": -1,
 						"bodySize": 0
 					},
-					"rawRequest": {
-						"Method": "GET",
-						"URL": {
-							"Scheme": "",
-							"Opaque": "",
-							"User": null,
-							"Host": "",
-							"Path": "/pki/mscorp/crl/Microsoft Secure Server Authority(8).crl",
-							"RawPath": "/pki/mscorp/crl/Microsoft%20Secure%20Server%20Authority(8).crl",
-							"ForceQuery": false,
-							"RawQuery": "",
-							"Fragment": "",
-							"RawFragment": ""
-						},
-						"Proto": "HTTP/1.1",
-						"ProtoMajor": 1,
-						"ProtoMinor": 1,
-						"Header": {
-							"Accept": [
-								"*/*"
-							],
-							"Cache-Control": [
-								"max-age = 900"
-							],
-							"Connection": [
-								"Keep-Alive"
-							],
-							"If-Modified-Since": [
-								"Thu, 06 Jan 2011 18:47:35 GMT"
-							],
-							"If-None-Match": [
-								"\"21b152fd2adcb1:0\""
-							],
-							"User-Agent": [
-								"Microsoft-CryptoAPI/6.1"
-							]
-						},
-						"ContentLength": 0,
-						"TransferEncoding": null,
-						"Close": false,
-						"Host": "mscrl.microsoft.com",
-						"Form": null,
-						"PostForm": null,
-						"MultipartForm": null,
-						"Trailer": null,
-						"RemoteAddr": "",
-						"RequestURI": "/pki/mscorp/crl/Microsoft%20Secure%20Server%20Authority(8).crl",
-						"TLS": null,
-						"Response": null
-					},
+					"rawRequest": null,
 					"rawResponse": null
 				}
 			},
@@ -167,37 +118,7 @@
 						"bodySize": 0
 					},
 					"rawRequest": null,
-					"rawResponse": {
-						"Status": "304 Not Modified",
-						"StatusCode": 304,
-						"Proto": "HTTP/1.1",
-						"ProtoMajor": 1,
-						"ProtoMinor": 1,
-						"Header": {
-							"Age": [
-								"150"
-							],
-							"Connection": [
-								"keep-alive"
-							],
-							"Content-Type": [
-								"application/pkix-crl"
-							],
-							"Date": [
-								"Tue, 25 Jan 2011 18:22:37 GMT"
-							],
-							"Expires": [
-								"Tue, 25 Jan 2011 18:35:07 GMT"
-							]
-						},
-						"ContentLength": 0,
-						"TransferEncoding": null,
-						"Close": false,
-						"Uncompressed": false,
-						"Trailer": null,
-						"Request": null,
-						"TLS": null
-					}
+					"rawResponse": null
 				}
 			}
 		},

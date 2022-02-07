@@ -34,7 +34,7 @@
 					"url": "",
 					"details": {
 						"method": "GET",
-						"url": "/image.aspx?uuid=c9e5fc42-82c0-a6fd-dce5-ce76ac2b7b87\u0026w=52\u0026h=39\u0026so=4",
+						"url": "",
 						"httpVersion": "HTTP/1.1",
 						"cookies": [],
 						"headers": [
@@ -96,62 +96,7 @@
 						"headersSize": -1,
 						"bodySize": 0
 					},
-					"rawRequest": {
-						"Method": "GET",
-						"URL": {
-							"Scheme": "",
-							"Opaque": "",
-							"User": null,
-							"Host": "",
-							"Path": "/image.aspx",
-							"RawPath": "",
-							"ForceQuery": false,
-							"RawQuery": "uuid=c9e5fc42-82c0-a6fd-dce5-ce76ac2b7b87\u0026w=52\u0026h=39\u0026so=4",
-							"Fragment": "",
-							"RawFragment": ""
-						},
-						"Proto": "HTTP/1.1",
-						"ProtoMajor": 1,
-						"ProtoMinor": 1,
-						"Header": {
-							"Accept": [
-								"*/*"
-							],
-							"Accept-Charset": [
-								"ISO-8859-1,utf-8;q=0.7,*;q=0.3"
-							],
-							"Accept-Encoding": [
-								"gzip,deflate,sdch"
-							],
-							"Accept-Language": [
-								"en-US,en;q=0.8"
-							],
-							"Connection": [
-								"keep-alive"
-							],
-							"If-Modified-Since": [
-								"Sat, 22 Jan 2011 21:25:26 GMT"
-							],
-							"Referer": [
-								"http://img.widgets.video.s-msn.com/flash/inline.swf"
-							],
-							"User-Agent": [
-								"Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/534.10 (KHTML, like Gecko) Chrome/8.0.552.237 Safari/534.10"
-							]
-						},
-						"ContentLength": 0,
-						"TransferEncoding": null,
-						"Close": false,
-						"Host": "img4.catalog.video.msn.com",
-						"Form": null,
-						"PostForm": null,
-						"MultipartForm": null,
-						"Trailer": null,
-						"RemoteAddr": "",
-						"RequestURI": "/image.aspx?uuid=c9e5fc42-82c0-a6fd-dce5-ce76ac2b7b87\u0026w=52\u0026h=39\u0026so=4",
-						"TLS": null,
-						"Response": null
-					},
+					"rawRequest": null,
 					"rawResponse": null
 				}
 			},
@@ -198,37 +143,7 @@
 						"bodySize": 0
 					},
 					"rawRequest": null,
-					"rawResponse": {
-						"Status": "304 Not Modified",
-						"StatusCode": 304,
-						"Proto": "HTTP/1.1",
-						"ProtoMajor": 1,
-						"ProtoMinor": 1,
-						"Header": {
-							"Age": [
-								"2769"
-							],
-							"Connection": [
-								"keep-alive"
-							],
-							"Content-Type": [
-								"image/jpeg"
-							],
-							"Date": [
-								"Tue, 25 Jan 2011 18:55:01 GMT"
-							],
-							"Expires": [
-								"Tue, 25 Jan 2011 19:31:21 GMT"
-							]
-						},
-						"ContentLength": 0,
-						"TransferEncoding": null,
-						"Close": false,
-						"Uncompressed": false,
-						"Trailer": null,
-						"Request": null,
-						"TLS": null
-					}
+					"rawResponse": null
 				}
 			}
 		},
@@ -269,7 +184,7 @@
 					"url": "",
 					"details": {
 						"method": "GET",
-						"url": "/image.aspx?uuid=ae413324-0bcc-bb13-8863-ef1d0ca27628\u0026w=112\u0026h=84\u0026so=4",
+						"url": "",
 						"httpVersion": "HTTP/1.1",
 						"cookies": [],
 						"headers": [
@@ -331,62 +246,7 @@
 						"headersSize": -1,
 						"bodySize": 0
 					},
-					"rawRequest": {
-						"Method": "GET",
-						"URL": {
-							"Scheme": "",
-							"Opaque": "",
-							"User": null,
-							"Host": "",
-							"Path": "/image.aspx",
-							"RawPath": "",
-							"ForceQuery": false,
-							"RawQuery": "uuid=ae413324-0bcc-bb13-8863-ef1d0ca27628\u0026w=112\u0026h=84\u0026so=4",
-							"Fragment": "",
-							"RawFragment": ""
-						},
-						"Proto": "HTTP/1.1",
-						"ProtoMajor": 1,
-						"ProtoMinor": 1,
-						"Header": {
-							"Accept": [
-								"*/*"
-							],
-							"Accept-Charset": [
-								"ISO-8859-1,utf-8;q=0.7,*;q=0.3"
-							],
-							"Accept-Encoding": [
-								"gzip,deflate,sdch"
-							],
-							"Accept-Language": [
-								"en-US,en;q=0.8"
-							],
-							"Connection": [
-								"keep-alive"
-							],
-							"If-Modified-Since": [
-								"Tue, 25 Jan 2011 17:04:20 GMT"
-							],
-							"Referer": [
-								"http://img.widgets.video.s-msn.com/flash/inline.swf"
-							],
-							"User-Agent": [
-								"Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/534.10 (KHTML, like Gecko) Chrome/8.0.552.237 Safari/534.10"
-							]
-						},
-						"ContentLength": 0,
-						"TransferEncoding": null,
-						"Close": false,
-						"Host": "img4.catalog.video.msn.com",
-						"Form": null,
-						"PostForm": null,
-						"MultipartForm": null,
-						"Trailer": null,
-						"RemoteAddr": "",
-						"RequestURI": "/image.aspx?uuid=ae413324-0bcc-bb13-8863-ef1d0ca27628\u0026w=112\u0026h=84\u0026so=4",
-						"TLS": null,
-						"Response": null
-					},
+					"rawRequest": null,
 					"rawResponse": null
 				}
 			},
@@ -433,37 +293,7 @@
 						"bodySize": 0
 					},
 					"rawRequest": null,
-					"rawResponse": {
-						"Status": "304 Not Modified",
-						"StatusCode": 304,
-						"Proto": "HTTP/1.1",
-						"ProtoMajor": 1,
-						"ProtoMinor": 1,
-						"Header": {
-							"Age": [
-								"2759"
-							],
-							"Connection": [
-								"keep-alive"
-							],
-							"Content-Type": [
-								"image/jpeg"
-							],
-							"Date": [
-								"Tue, 25 Jan 2011 18:55:01 GMT"
-							],
-							"Expires": [
-								"Tue, 25 Jan 2011 19:09:03 GMT"
-							]
-						},
-						"ContentLength": 0,
-						"TransferEncoding": null,
-						"Close": false,
-						"Uncompressed": false,
-						"Trailer": null,
-						"Request": null,
-						"TLS": null
-					}
+					"rawResponse": null
 				}
 			}
 		},
@@ -504,7 +334,7 @@
 					"url": "",
 					"details": {
 						"method": "GET",
-						"url": "/image.aspx?h=84\u0026so=4\u0026uuid=c9e5fc42-82c0-a6fd-dce5-ce76ac2b7b87\u0026w=112",
+						"url": "",
 						"httpVersion": "HTTP/1.1",
 						"cookies": [],
 						"headers": [
@@ -566,62 +396,7 @@
 						"headersSize": -1,
 						"bodySize": 0
 					},
-					"rawRequest": {
-						"Method": "GET",
-						"URL": {
-							"Scheme": "",
-							"Opaque": "",
-							"User": null,
-							"Host": "",
-							"Path": "/image.aspx",
-							"RawPath": "",
-							"ForceQuery": false,
-							"RawQuery": "h=84\u0026so=4\u0026uuid=c9e5fc42-82c0-a6fd-dce5-ce76ac2b7b87\u0026w=112",
-							"Fragment": "",
-							"RawFragment": ""
-						},
-						"Proto": "HTTP/1.1",
-						"ProtoMajor": 1,
-						"ProtoMinor": 1,
-						"Header": {
-							"Accept": [
-								"*/*"
-							],
-							"Accept-Charset": [
-								"ISO-8859-1,utf-8;q=0.7,*;q=0.3"
-							],
-							"Accept-Encoding": [
-								"gzip,deflate,sdch"
-							],
-							"Accept-Language": [
-								"en-US,en;q=0.8"
-							],
-							"Connection": [
-								"keep-alive"
-							],
-							"If-Modified-Since": [
-								"Sat, 22 Jan 2011 21:09:28 GMT"
-							],
-							"Referer": [
-								"http://img.widgets.video.s-msn.com/flash/inline.swf"
-							],
-							"User-Agent": [
-								"Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/534.10 (KHTML, like Gecko) Chrome/8.0.552.237 Safari/534.10"
-							]
-						},
-						"ContentLength": 0,
-						"TransferEncoding": null,
-						"Close": false,
-						"Host": "img4.catalog.video.msn.com",
-						"Form": null,
-						"PostForm": null,
-						"MultipartForm": null,
-						"Trailer": null,
-						"RemoteAddr": "",
-						"RequestURI": "/image.aspx?uuid=c9e5fc42-82c0-a6fd-dce5-ce76ac2b7b87\u0026w=112\u0026h=84\u0026so=4",
-						"TLS": null,
-						"Response": null
-					},
+					"rawRequest": null,
 					"rawResponse": null
 				}
 			},
@@ -668,37 +443,7 @@
 						"bodySize": 0
 					},
 					"rawRequest": null,
-					"rawResponse": {
-						"Status": "304 Not Modified",
-						"StatusCode": 304,
-						"Proto": "HTTP/1.1",
-						"ProtoMajor": 1,
-						"ProtoMinor": 1,
-						"Header": {
-							"Age": [
-								"2757"
-							],
-							"Connection": [
-								"keep-alive"
-							],
-							"Content-Type": [
-								"image/jpeg"
-							],
-							"Date": [
-								"Tue, 25 Jan 2011 18:55:01 GMT"
-							],
-							"Expires": [
-								"Tue, 25 Jan 2011 19:31:51 GMT"
-							]
-						},
-						"ContentLength": 0,
-						"TransferEncoding": null,
-						"Close": false,
-						"Uncompressed": false,
-						"Trailer": null,
-						"Request": null,
-						"TLS": null
-					}
+					"rawResponse": null
 				}
 			}
 		},

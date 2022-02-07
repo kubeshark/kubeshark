@@ -1,0 +1,127 @@
+[
+	{
+		"Protocol": {
+			"name": "http",
+			"longName": "Hypertext Transfer Protocol -- HTTP/1.1",
+			"abbr": "HTTP",
+			"macro": "http",
+			"version": "1.1",
+			"backgroundColor": "#205cf5",
+			"foregroundColor": "#ffffff",
+			"fontSize": 12,
+			"referenceLink": "https://datatracker.ietf.org/doc/html/rfc2616",
+			"ports": [
+				"80",
+				"443",
+				"8080"
+			],
+			"priority": 0
+		},
+		"Timestamp": -6795364578871,
+		"ConnectionInfo": {
+			"ClientIP": "1",
+			"ClientPort": "1",
+			"ServerIP": "2",
+			"ServerPort": "2",
+			"IsOutgoing": false
+		},
+		"Pair": {
+			"request": {
+				"isRequest": true,
+				"captureTime": "0001-01-01T00:00:00Z",
+				"payload": {
+					"method": "GET",
+					"url": "",
+					"details": {
+						"method": "GET",
+						"url": "",
+						"httpVersion": "HTTP/1.1",
+						"cookies": [],
+						"headers": [
+							{
+								"name": "Accept",
+								"value": "*/*"
+							},
+							{
+								"name": "Cache-Control",
+								"value": "max-age = 900"
+							},
+							{
+								"name": "Connection",
+								"value": "Keep-Alive"
+							},
+							{
+								"name": "Host",
+								"value": "mscrl.microsoft.com"
+							},
+							{
+								"name": "If-Modified-Since",
+								"value": "Thu, 06 Jan 2011 18:48:25 GMT"
+							},
+							{
+								"name": "If-None-Match",
+								"value": "\"b409c4cd2adcb1:0\""
+							},
+							{
+								"name": "User-Agent",
+								"value": "Microsoft-CryptoAPI/6.1"
+							}
+						],
+						"queryString": [],
+						"headersSize": -1,
+						"bodySize": 0
+					},
+					"rawRequest": null,
+					"rawResponse": null
+				}
+			},
+			"response": {
+				"isRequest": false,
+				"captureTime": "0001-01-01T00:00:00Z",
+				"payload": {
+					"method": "",
+					"url": "",
+					"details": {
+						"status": 304,
+						"statusText": "Not Modified",
+						"httpVersion": "HTTP/1.1",
+						"cookies": [],
+						"headers": [
+							{
+								"name": "Age",
+								"value": "789"
+							},
+							{
+								"name": "Connection",
+								"value": "keep-alive"
+							},
+							{
+								"name": "Content-Type",
+								"value": "application/pkix-crl"
+							},
+							{
+								"name": "Date",
+								"value": "Tue, 25 Jan 2011 18:22:46 GMT"
+							},
+							{
+								"name": "Expires",
+								"value": "Tue, 25 Jan 2011 18:24:37 GMT"
+							}
+						],
+						"content": {
+							"size": 0,
+							"mimeType": "application/pkix-crl",
+							"encoding": "base64"
+						},
+						"redirectURL": "",
+						"headersSize": -1,
+						"bodySize": 0
+					},
+					"rawRequest": null,
+					"rawResponse": null
+				}
+			}
+		},
+		"Summary": null
+	}
+]
