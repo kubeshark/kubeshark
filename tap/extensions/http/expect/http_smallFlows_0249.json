@@ -1,0 +1,181 @@
+[
+	{
+		"Protocol": {
+			"name": "http",
+			"longName": "Hypertext Transfer Protocol -- HTTP/1.1",
+			"abbr": "HTTP",
+			"macro": "http",
+			"version": "1.1",
+			"backgroundColor": "#205cf5",
+			"foregroundColor": "#ffffff",
+			"fontSize": 12,
+			"referenceLink": "https://datatracker.ietf.org/doc/html/rfc2616",
+			"ports": [
+				"80",
+				"443",
+				"8080"
+			],
+			"priority": 0
+		},
+		"Timestamp": -6795364578871,
+		"ConnectionInfo": {
+			"ClientIP": "1",
+			"ClientPort": "1",
+			"ServerIP": "2",
+			"ServerPort": "2",
+			"IsOutgoing": true
+		},
+		"Pair": {
+			"request": {
+				"isRequest": true,
+				"captureTime": "0001-01-01T00:00:00Z",
+				"payload": {
+					"method": "GET",
+					"url": "",
+					"details": {
+						"method": "GET",
+						"url": "/?url=pxml10.4publishers.com/pxml.zip?pv=50331653\u0026sid=D77B3D5279E5E596\u0026go=\"00\"\u0026go=\"00\"",
+						"httpVersion": "HTTP/1.1",
+						"cookies": [],
+						"headers": [
+							{
+								"name": "Accept",
+								"value": "*/*"
+							},
+							{
+								"name": "Cache-Control",
+								"value": "no-cache"
+							},
+							{
+								"name": "Connection",
+								"value": "Keep-Alive"
+							},
+							{
+								"name": "Host",
+								"value": "guide.opendns.com"
+							}
+						],
+						"queryString": [
+							{
+								"name": "go",
+								"value": "\"00\""
+							},
+							{
+								"name": "go",
+								"value": "\"00\""
+							},
+							{
+								"name": "sid",
+								"value": "D77B3D5279E5E596"
+							},
+							{
+								"name": "url",
+								"value": "pxml10.4publishers.com/pxml.zip?pv=50331653"
+							}
+						],
+						"headersSize": -1,
+						"bodySize": 0
+					},
+					"rawRequest": {
+						"Method": "GET",
+						"URL": {
+							"Scheme": "",
+							"Opaque": "",
+							"User": null,
+							"Host": "",
+							"Path": "/",
+							"RawPath": "",
+							"ForceQuery": false,
+							"RawQuery": "url=pxml10.4publishers.com/pxml.zip?pv=50331653\u0026sid=D77B3D5279E5E596\u0026go=\"00\"\u0026go=\"00\"",
+							"Fragment": "",
+							"RawFragment": ""
+						},
+						"Proto": "HTTP/1.1",
+						"ProtoMajor": 1,
+						"ProtoMinor": 1,
+						"Header": {
+							"Accept": [
+								"*/*"
+							],
+							"Cache-Control": [
+								"no-cache"
+							],
+							"Connection": [
+								"Keep-Alive"
+							]
+						},
+						"ContentLength": 0,
+						"TransferEncoding": null,
+						"Close": false,
+						"Host": "guide.opendns.com",
+						"Form": null,
+						"PostForm": null,
+						"MultipartForm": null,
+						"Trailer": null,
+						"RemoteAddr": "",
+						"RequestURI": "/?url=pxml10%2E4publishers%2Ecom%2Fpxml%2Ezip%3Fpv%3D50331653%26sid%3DD77B3D5279E5E596%26go%3D%2200%22%26go%3D%2200%22",
+						"TLS": null,
+						"Response": null
+					},
+					"rawResponse": null
+				}
+			},
+			"response": {
+				"isRequest": false,
+				"captureTime": "0001-01-01T00:00:00Z",
+				"payload": {
+					"method": "",
+					"url": "",
+					"details": {
+						"status": 304,
+						"statusText": "Not Modified",
+						"httpVersion": "HTTP/1.1",
+						"cookies": [],
+						"headers": [
+							{
+								"name": "Date",
+								"value": "Fri, 13 Nov 2009 19:08:26 GMT"
+							},
+							{
+								"name": "Etag",
+								"value": "\"0269298d5dca1:0\""
+							}
+						],
+						"content": {
+							"size": 0,
+							"mimeType": "",
+							"encoding": "base64"
+						},
+						"redirectURL": "",
+						"headersSize": -1,
+						"bodySize": 0
+					},
+					"rawRequest": null,
+					"rawResponse": {
+						"Status": "304 Not Modified",
+						"StatusCode": 304,
+						"Proto": "HTTP/1.1",
+						"ProtoMajor": 1,
+						"ProtoMinor": 1,
+						"Header": {
+							"Date": [
+								"Fri, 13 Nov 2009 19:08:26 GMT"
+							],
+							"Etag": [
+								"\"0269298d5dca1:0\""
+							]
+						},
+						"ContentLength": 0,
+						"TransferEncoding": null,
+						"Close": false,
+						"Uncompressed": false,
+						"Trailer": null,
+						"Request": null,
+						"TLS": null
+					}
+				}
+			}
+		},
+		"Summary": null
+	}
+]

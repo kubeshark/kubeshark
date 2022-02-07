@@ -1,0 +1,241 @@
+[
+	{
+		"Protocol": {
+			"name": "http",
+			"longName": "Hypertext Transfer Protocol -- HTTP/1.1",
+			"abbr": "HTTP",
+			"macro": "http",
+			"version": "1.1",
+			"backgroundColor": "#205cf5",
+			"foregroundColor": "#ffffff",
+			"fontSize": 12,
+			"referenceLink": "https://datatracker.ietf.org/doc/html/rfc2616",
+			"ports": [
+				"80",
+				"443",
+				"8080"
+			],
+			"priority": 0
+		},
+		"Timestamp": -6795364578871,
+		"ConnectionInfo": {
+			"ClientIP": "1",
+			"ClientPort": "1",
+			"ServerIP": "2",
+			"ServerPort": "2",
+			"IsOutgoing": true
+		},
+		"Pair": {
+			"request": {
+				"isRequest": true,
+				"captureTime": "0001-01-01T00:00:00Z",
+				"payload": {
+					"method": "GET",
+					"url": "",
+					"details": {
+						"method": "GET",
+						"url": "/adi/N4682.MSN/B4036843.24;sz=728x90;ord=168389210?click=http://clk.atdmt.com/goiframe/193597746.193347367/155580746/direct/01?href=",
+						"httpVersion": "HTTP/1.1",
+						"cookies": [],
+						"headers": [
+							{
+								"name": "Accept",
+								"value": "application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5"
+							},
+							{
+								"name": "Accept-Charset",
+								"value": "ISO-8859-1,utf-8;q=0.7,*;q=0.3"
+							},
+							{
+								"name": "Accept-Encoding",
+								"value": "gzip,deflate,sdch"
+							},
+							{
+								"name": "Accept-Language",
+								"value": "en-US,en;q=0.8"
+							},
+							{
+								"name": "Connection",
+								"value": "keep-alive"
+							},
+							{
+								"name": "Host",
+								"value": "ad.doubleclick.net"
+							},
+							{
+								"name": "Referer",
+								"value": "http://view.atdmt.com/DRN/iview/155580746/direct;;wi.728;hi.90/01?click="
+							},
+							{
+								"name": "User-Agent",
+								"value": "Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/534.10 (KHTML, like Gecko) Chrome/8.0.552.237 Safari/534.10"
+							}
+						],
+						"queryString": [
+							{
+								"name": "click",
+								"value": "http://clk.atdmt.com/goiframe/193597746.193347367/155580746/direct/01?href="
+							}
+						],
+						"headersSize": -1,
+						"bodySize": 0
+					},
+					"rawRequest": {
+						"Method": "GET",
+						"URL": {
+							"Scheme": "",
+							"Opaque": "",
+							"User": null,
+							"Host": "",
+							"Path": "/adi/N4682.MSN/B4036843.24;sz=728x90;ord=168389210",
+							"RawPath": "",
+							"ForceQuery": false,
+							"RawQuery": "click=http://clk.atdmt.com/goiframe/193597746.193347367/155580746/direct/01?href=",
+							"Fragment": "",
+							"RawFragment": ""
+						},
+						"Proto": "HTTP/1.1",
+						"ProtoMajor": 1,
+						"ProtoMinor": 1,
+						"Header": {
+							"Accept": [
+								"application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5"
+							],
+							"Accept-Charset": [
+								"ISO-8859-1,utf-8;q=0.7,*;q=0.3"
+							],
+							"Accept-Encoding": [
+								"gzip,deflate,sdch"
+							],
+							"Accept-Language": [
+								"en-US,en;q=0.8"
+							],
+							"Connection": [
+								"keep-alive"
+							],
+							"Referer": [
+								"http://view.atdmt.com/DRN/iview/155580746/direct;;wi.728;hi.90/01?click="
+							],
+							"User-Agent": [
+								"Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/534.10 (KHTML, like Gecko) Chrome/8.0.552.237 Safari/534.10"
+							]
+						},
+						"ContentLength": 0,
+						"TransferEncoding": null,
+						"Close": false,
+						"Host": "ad.doubleclick.net",
+						"Form": null,
+						"PostForm": null,
+						"MultipartForm": null,
+						"Trailer": null,
+						"RemoteAddr": "",
+						"RequestURI": "/adi/N4682.MSN/B4036843.24;sz=728x90;ord=168389210?click=http://clk.atdmt.com/goiframe/193597746.193347367/155580746/direct/01%3fhref=",
+						"TLS": null,
+						"Response": null
+					},
+					"rawResponse": null
+				}
+			},
+			"response": {
+				"isRequest": false,
+				"captureTime": "0001-01-01T00:00:00Z",
+				"payload": {
+					"method": "",
+					"url": "",
+					"details": {
+						"status": 200,
+						"statusText": "OK",
+						"httpVersion": "HTTP/1.1",
+						"cookies": [],
+						"headers": [
+							{
+								"name": "Cache-Control",
+								"value": "no-store"
+							},
+							{
+								"name": "Content-Encoding",
+								"value": "gzip"
+							},
+							{
+								"name": "Content-Length",
+								"value": "653"
+							},
+							{
+								"name": "Content-Type",
+								"value": "text/html"
+							},
+							{
+								"name": "Date",
+								"value": "Tue, 25 Jan 2011 18:55:20 GMT"
+							},
+							{
+								"name": "Expires",
+								"value": "0"
+							},
+							{
+								"name": "Vary",
+								"value": "Accept-Encoding"
+							},
+							{
+								"name": "X-Powered-By",
+								"value": "ASP.NET"
+							}
+						],
+						"content": {
+							"size": 1605,
+							"mimeType": "text/html",
+							"text": "PFNDUklQVCBMYW5ndWFnZT0iSmF2YXNjcmlwdCI+DQp2YXIgRENjb2RlID0gIk40NjgyLk1TTi9CNDAzNjg0My4yNCI7DQp2YXIgREN3aWR0aCA9ICI3MjgiOw0KdmFyIERDaGVpZ2h0ID0gIjkwIjsNCnZhciByYW5kTnVtID0gTWF0aC5mbG9vcihNYXRoLnJhbmRvbSgpICogMTAwMDAwMDAwKSArIDEwMDAwMDAwMDsNCnZhciBpZnJhbWVzcmMgPSAiaHR0cDovL2FkLmRvdWJsZWNsaWNrLm5ldC9hZGkvIiArIERDY29kZSArICI7c3o9IiArIERDd2lkdGggKyAieCIgKyBEQ2hlaWdodCArICI7b3JkPSIgKyByYW5kTnVtICsgIj9jbGljaz1odHRwOi8vY2xrLmF0ZG10LmNvbS9nb2lmcmFtZS8xOTM1OTc3NDYuMTkzMzQ3MzY3LzE1NTU4MDc0Ni9kaXJlY3QvMDElM2ZocmVmPSI7DQp2YXIgc2NyaXB0c3JjID0gImh0dHA6Ly9hZC5kb3VibGVjbGljay5uZXQvYWRqLyIgKyBEQ2NvZGUgKyAiO2Ficj0haWU7c3o9IiArIERDd2lkdGggKyAieCIgKyBEQ2hlaWdodCArICI7b3JkPSIgKyByYW5kTnVtICsgIj9jbGljaz1odHRwOi8vY2xrLmF0ZG10LmNvbS9nb2lmcmFtZS8xOTM1OTc3NDYuMTkzMzQ3MzY3LzE1NTU4MDc0Ni9kaXJlY3QvMDElM2ZocmVmPSI7DQp2YXIgY2xpY2tSZWRpcmVjdCA9ICJodHRwOi8vYWQuZG91YmxlY2xpY2submV0L2p1bXAvIiArIERDY29kZSArICI7YWJyPSFpZTQ7YWJyPSFpZTU7c3o9IiArIERDd2lkdGggKyAieCIgKyBEQ2hlaWdodCArICI7b3JkPSIgKyByYW5kTnVtICsgIj9jbGljaz1odHRwOi8vY2xrLmF0ZG10LmNvbS9nb2lmcmFtZS8xOTM1OTc3NDYuMTkzMzQ3MzY3LzE1NTU4MDc0Ni9kaXJlY3QvMDElM2ZocmVmPSI7DQp2YXIgdmlld1JlZGlyZWN0ID0gImh0dHA6Ly9hZC5kb3VibGVjbGljay5uZXQvYWQvIiArIERDY29kZSArICI7YWJyPSFpZTQ7YWJyPSFpZTU7c3o9IiArIERDd2lkdGggKyAieCIgKyBEQ2hlaWdodCArICI7b3JkPSIgKyByYW5kTnVtICsgIj9jbGljaz1odHRwOi8vY2xrLmF0ZG10LmNvbS9nb2lmcmFtZS8xOTM1OTc3NDYuMTkzMzQ3MzY3LzE1NTU4MDc0Ni9kaXJlY3QvMDElM2ZocmVmPSI7DQpkb2N1bWVudC53cml0ZSgiPGlmcmEiICsgIm1lIHNyYz0iICsgaWZyYW1lc3JjICsgIiB3aWR0aD0iICsgREN3aWR0aCArICIgaGVpZ2h0PSIgKyBEQ2hlaWdodCArICIgbWFyZ2lud2lkdGg9MCBtYXJnaW5oZWlnaHQ9MCBoc3BhY2U9MCB2c3BhY2U9MCBmcmFtZWJvcmRlcj0wIHNjcm9sbGluZz1ubz4iKTsNCmRvY3VtZW50LndyaXRlKCI8c2NyIiArICJpcHQgbGFuZ3VhZ2U9SmF2YVNjcmlwdDEuMSBzcmM9IiArIHNjcmlwdHNyYyArICIgPiIpOw0KZG9jdW1lbnQud3JpdGUoIjwvc2NyIiArICJpcHQ+Iik7DQpkb2N1bWVudC53cml0ZSgiPG5vcyIgKyAiY3JpcHQ+Iik7DQpkb2N1bWVudC53cml0ZSgiPGEgIiArICJocmVmPSIgKyBjbGlja1JlZGlyZWN0ICsgIiB0YXJnZXQ9X2JsYW5rPjxpbWcgc3JjPSIgKyB2aWV3UmVkaXJlY3QgKyAiIGFsdD0nJyBib3JkZXI9MD4iKTsNCmRvY3VtZW50LndyaXRlKCI8LyIgKyAiYT4iKTsNCmRvY3VtZW50LndyaXRlKCI8L25vcyIgKyAiY3JpcHQ+Iik7DQpkb2N1bWVudC53cml0ZSgiPC9pZnJhIiArICJtZT4iKQ0KPC9TQ1JJUFQ+",
+							"encoding": "base64"
+						},
+						"redirectURL": "",
+						"headersSize": -1,
+						"bodySize": 653
+					},
+					"rawRequest": null,
+					"rawResponse": {
+						"Body": "\u001f\ufffd\u0008\u0000\u0000\u0000\u0000\u0000\u0004\u0000\ufffd\ufffd\u0007`\u001cI\ufffd%\u0026/m\ufffd{J\ufffdJ\ufffd\ufffdt\ufffd\u0008\ufffd`\u0013$ؐ@\u0010\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\u001diG#)\ufffd*\ufffd\ufffdeVe]f\u0016@\ufffd흼\ufffd\ufffd{\ufffd\ufffd\ufffd\ufffd{\ufffd\ufffd\ufffd\ufffd;\ufffdN'\ufffd\ufffd\ufffd?\\fd\u0001l\ufffd\ufffdJ\ufffdɞ!\ufffd\ufffd\ufffd\u001f?~|\u001f?\"\u001e\ufffd\u003eyu\ufffd\ufffdM\ufffd\u003c[^\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd]fʹ.V\ufffdGG\ufffdqr\ufffd\ufffd\ufffdӓi5\ufffd\ufffd\ufffdҏ^\ufffdz\ufffd7\ufffd\ufffd\ufffd\ufffd\ufffdO\ufffdw\ufffd}z\ufffdo\ufffd\ufffd\ufffdѡivU\ufffd\ufffd9\ufffd=\ufffd;p\ufffd\ufffd\ufffd\ufffdb\ufffd\ufffd\ufffd\ufffd;\ufffd\ufffd:[\ufffd^\ufffd\u0017\ufffd\ufffd\u0017Y;\u001f\ufffd\ufffdUUo\ufffd\ufffd\ufffd\ufffdZl\ufffdI\ufffd\ufffd\ufffd\ufffd\ufffds'\ufffd\ufffd\ufffd\ufffd\u0010\ufffd\ufffd:[\ufffdM=%\u0018\u001f\ufffd\ufffdv\ufffd\ufffd\ufffd\ufffdl6\ufffdU\ufffdI\ufffdO\ufffdb\ufffdv\ufffd\ufffd[\ufffd\ufffd\ufffd\ufffd\u0011\ufffd\ufffdc\ufffd$\ufffd\ufffd\ufffd\ufffd\ufffdg\ufffd\ufffd\ufffdK\u001f\ufffd\ufffd\ufffd\u0015Q\ufffdపg\ufffd\u0008\ufffd\u0000O\ufffd\ufffd\ufffd`\ufffd\ufffdiW\ufffd\ufffd\ufffd8kg\ufffdv\u003c\ufffd\u0016w/*A\ufffd\ufffd\ufffd\ufffd{\ufffd\u001f\u003ex\ufffd\ufffd\ufffd\ufffd~\ufffd\ufffd\ufffd\ufffdާ\u000f\ufffd\ufffd޿\ufffd`\ufffd\u003e\ufffd;+\ufffd|\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd3C\u000e\ufffd\ufffd-\u0006\ufffd\ufffd\ufffd\ufffdd\ufffd\ufffd\ufffdߵ\ufffd\ufffd\ufffd8(\u0006\ufffd*\ufffd\ufffd7\u000f\ufffd\ufffd׋\ufffd\ufffd\ufffd\ufffd\ufffd/\ufffd\ufffd\ufffd8\ufffd\ufffd\"\ufffd\ufffd\ufffd\u0010\ufffd\ufffd\ufffd\ufffd\u00068\ufffd\ufffd\ufffdE\ufffdl\ufffdWu\ufffd\ufffd[\u001f=\u0006(\ufffd\ufffd\ufffd\"O\ufffdY\u0019\u000f|\u0026rH\ufffd\ufffd\ufffd8\ufffd\r\"\u0015\ufffd\ufffdc\ufffd\ufffd~\ufffd(]d\ufffdE\ufffd\ufffdv\ufffd\ufffd\ufffd_\ufffd5\ufffd9oV\ufffd4\ufffd_.\ufffd/\ufffdӄ\u0008\ufffd\ufffd\ufffd\u0017\ufffdLU\ufffd\ufffd\ufffd\ufffd\ufffdeu\ufffdѝ\u0018\ufffd\ufffd\u0004}~D\ufffd\ufffd\ufffdF\ufffdA\ufffd\ufffdfy\ufffd\u001d\ufffd\ufffdaPS\ufffd\ufffd\ufffd\ufffd\ufffd?J\u0007\ufffdݥVh\u000c\ufffd\u0003M\ufffdU\ufffd-\u0018\ufffd@\ufffd\ufffdz\ufffd\u0026Bg\ufffd\ufffd\ufffd\ufffdr\u0011}\ufffd\ufffdD\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\u0010\ufffdo\ufffd\u001e\u0017\ufffd\u000b\ufffdh\ufffdqh\ufffd\ufffd\ufffdg\u001f\ufffd\u001a\ufffd\u000c\ufffd\ufffd\ufffd\ufffdQ6\ufffd\ufffdmо\ufffd\ufffd\ufffdV\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffdb\u003c\ufffd\ufffd\u001f\ufffd\u0011\ufffdjE\u0006\u0000\u0000",
+						"Status": "200 OK",
+						"StatusCode": 200,
+						"Proto": "HTTP/1.1",
+						"ProtoMajor": 1,
+						"ProtoMinor": 1,
+						"Header": {
+							"Cache-Control": [
+								"no-store"
+							],
+							"Content-Encoding": [
+								"gzip"
+							],
+							"Content-Length": [
+								"653"
+							],
+							"Content-Type": [
+								"text/html"
+							],
+							"Date": [
+								"Tue, 25 Jan 2011 18:55:20 GMT"
+							],
+							"Expires": [
+								"0"
+							],
+							"Vary": [
+								"Accept-Encoding"
+							],
+							"X-Powered-By": [
+								"ASP.NET"
+							]
+						},
+						"ContentLength": 653,
+						"TransferEncoding": null,
+						"Close": true,
+						"Uncompressed": false,
+						"Trailer": null,
+						"Request": null,
+						"TLS": null
+					}
+				}
+			}
+		},
+		"Summary": null
+	}
+]

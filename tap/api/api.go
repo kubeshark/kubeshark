@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"sort"
 	"sync"
 	"time"
 
@@ -263,6 +264,12 @@ func (h HTTPPayload) MarshalJSON() ([]byte, error) {
 	switch h.Type {
 	case TypeHttpRequest:
 		harRequest, err := har.NewRequest(h.Data.(*http.Request), true)
+		sort.Slice(harRequest.Headers, func(i, j int) bool {
+			return harRequest.Headers[i].Name < harRequest.Headers[j].Name
+		})
+		sort.Slice(harRequest.QueryString, func(i, j int) bool {
+			return harRequest.QueryString[i].Name < harRequest.QueryString[j].Name
+		})
 		if err != nil {
 			return nil, errors.New("Failed converting request to HAR")
 		}
@@ -273,6 +280,12 @@ func (h HTTPPayload) MarshalJSON() ([]byte, error) {
 		})
 	case TypeHttpResponse:
 		harResponse, err := har.NewResponse(h.Data.(*http.Response), true)
+		sort.Slice(harResponse.Headers, func(i, j int) bool {
+			return harResponse.Headers[i].Name < harResponse.Headers[j].Name
+		})
+		sort.Slice(harResponse.Cookies, func(i, j int) bool {
+			return harResponse.Cookies[i].Name < harResponse.Cookies[j].Name
+		})
 		if err != nil {
 			return nil, errors.New("Failed converting response to HAR")
 		}

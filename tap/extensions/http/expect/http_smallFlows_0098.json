@@ -1,0 +1,250 @@
+[
+	{
+		"Protocol": {
+			"name": "http",
+			"longName": "Hypertext Transfer Protocol -- HTTP/1.1",
+			"abbr": "HTTP",
+			"macro": "http",
+			"version": "1.1",
+			"backgroundColor": "#205cf5",
+			"foregroundColor": "#ffffff",
+			"fontSize": 12,
+			"referenceLink": "https://datatracker.ietf.org/doc/html/rfc2616",
+			"ports": [
+				"80",
+				"443",
+				"8080"
+			],
+			"priority": 0
+		},
+		"Timestamp": -6795364578871,
+		"ConnectionInfo": {
+			"ClientIP": "1",
+			"ClientPort": "1",
+			"ServerIP": "2",
+			"ServerPort": "2",
+			"IsOutgoing": false
+		},
+		"Pair": {
+			"request": {
+				"isRequest": true,
+				"captureTime": "0001-01-01T00:00:00Z",
+				"payload": {
+					"method": "GET",
+					"url": "",
+					"details": {
+						"method": "GET",
+						"url": "/van/mcy/2178440509.html",
+						"httpVersion": "HTTP/1.1",
+						"cookies": [],
+						"headers": [
+							{
+								"name": "Accept",
+								"value": "application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5"
+							},
+							{
+								"name": "Accept-Charset",
+								"value": "ISO-8859-1,utf-8;q=0.7,*;q=0.3"
+							},
+							{
+								"name": "Accept-Encoding",
+								"value": "gzip,deflate,sdch"
+							},
+							{
+								"name": "Accept-Language",
+								"value": "en-US,en;q=0.8"
+							},
+							{
+								"name": "Connection",
+								"value": "keep-alive"
+							},
+							{
+								"name": "Host",
+								"value": "vancouver.en.craigslist.ca"
+							},
+							{
+								"name": "Referer",
+								"value": "http://vancouver.en.craigslist.ca/search/mca?query=ducati\u0026srchType=A\u0026minAsk=\u0026maxAsk="
+							},
+							{
+								"name": "User-Agent",
+								"value": "Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/534.10 (KHTML, like Gecko) Chrome/8.0.552.237 Safari/534.10"
+							}
+						],
+						"queryString": [],
+						"headersSize": -1,
+						"bodySize": 0
+					},
+					"rawRequest": {
+						"Method": "GET",
+						"URL": {
+							"Scheme": "",
+							"Opaque": "",
+							"User": null,
+							"Host": "",
+							"Path": "/van/mcy/2178440509.html",
+							"RawPath": "",
+							"ForceQuery": false,
+							"RawQuery": "",
+							"Fragment": "",
+							"RawFragment": ""
+						},
+						"Proto": "HTTP/1.1",
+						"ProtoMajor": 1,
+						"ProtoMinor": 1,
+						"Header": {
+							"Accept": [
+								"application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5"
+							],
+							"Accept-Charset": [
+								"ISO-8859-1,utf-8;q=0.7,*;q=0.3"
+							],
+							"Accept-Encoding": [
+								"gzip,deflate,sdch"
+							],
+							"Accept-Language": [
+								"en-US,en;q=0.8"
+							],
+							"Connection": [
+								"keep-alive"
+							],
+							"Referer": [
+								"http://vancouver.en.craigslist.ca/search/mca?query=ducati\u0026srchType=A\u0026minAsk=\u0026maxAsk="
+							],
+							"User-Agent": [
+								"Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/534.10 (KHTML, like Gecko) Chrome/8.0.552.237 Safari/534.10"
+							]
+						},
+						"ContentLength": 0,
+						"TransferEncoding": null,
+						"Close": false,
+						"Host": "vancouver.en.craigslist.ca",
+						"Form": null,
+						"PostForm": null,
+						"MultipartForm": null,
+						"Trailer": null,
+						"RemoteAddr": "",
+						"RequestURI": "/van/mcy/2178440509.html",
+						"TLS": null,
+						"Response": null
+					},
+					"rawResponse": null
+				}
+			},
+			"response": {
+				"isRequest": false,
+				"captureTime": "0001-01-01T00:00:00Z",
+				"payload": {
+					"method": "",
+					"url": "",
+					"details": {
+						"status": 200,
+						"statusText": "OK",
+						"httpVersion": "HTTP/1.1",
+						"cookies": [],
+						"headers": [
+							{
+								"name": "Cache-Control",
+								"value": "public,max-age=3939203"
+							},
+							{
+								"name": "Content-Encoding",
+								"value": "gzip"
+							},
+							{
+								"name": "Content-Length",
+								"value": "1879"
+							},
+							{
+								"name": "Content-Type",
+								"value": "text/html; charset=iso-8859-1;"
+							},
+							{
+								"name": "Date",
+								"value": "Tue, 25 Jan 2011 17:46:37 GMT"
+							},
+							{
+								"name": "Expires",
+								"value": "Sat, 12 Mar 2011 08:00:00 GMT"
+							},
+							{
+								"name": "Last-Modified",
+								"value": "Tue, 25 Jan 2011 17:46:37 GMT"
+							},
+							{
+								"name": "Server",
+								"value": "Apache"
+							},
+							{
+								"name": "Set-Cookie",
+								"value": "[REDACTED]"
+							},
+							{
+								"name": "Vary",
+								"value": "Accept-Encoding"
+							}
+						],
+						"content": {
+							"size": 4283,
+							"mimeType": "text/html; charset=iso-8859-1;",
+							"text": "PCFET0NUWVBFIGh0bWwgUFVCTElDICItLy9XM0MvL0RURCBIVE1MIDQuMDEgVHJhbnNpdGlvbmFsLy9FTiIgImh0dHA6Ly93d3cudzMub3JnL1RSL2h0bWw0L2xvb3NlLmR0ZCI+CjxodG1sPgo8aGVhZD4KCTx0aXRsZT45MDAgY2MgRHVjYXRpIC0gQ2FyYm9uIEZpYmVyPC90aXRsZT4KCTxtZXRhIG5hbWU9InJvYm90cyIgY29udGVudD0iTk9BUkNISVZFLE5PRk9MTE9XIj4KCTxsaW5rIHR5cGU9InRleHQvY3NzIiByZWw9InN0eWxlc2hlZXQiIG1lZGlhPSJhbGwiIGhyZWY9Imh0dHA6Ly93d3cuY3JhaWdzbGlzdC5vcmcvc3R5bGVzL2NyYWlnc2xpc3QuY3NzP3Y9OCI+CjwvaGVhZD4KCjxib2R5IGNsYXNzPSJwb3N0aW5nIj4KCgo8ZGl2IGNsYXNzPSJiY2hlYWQiPgoJPGEgaWQ9ImVmIiBocmVmPSIvZW1haWwuZnJpZW5kP3Bvc3RpbmdJRD0yMTc4NDQwNTA5JmFtcDt0b2tlbj1VMkZzZEdWa1gxOHpNRFEzTWpNd05QdnBjTmFZemVuZWZKN0lsNlNXRTZPSFBnMzdvODZBQkFSc0VUZkJMT2MzMVFoZ1ZUQjluSnZZVjVheThPWjg5cDZ6OHpwWW5BcVBlT1JrVnk1dFNDUSI+ZW1haWwgdGhpcyBwb3N0aW5nIHRvIGEgZnJpZW5kPC9hPgoJPGEgaHJlZj0iaHR0cDovL3ZhbmNvdXZlci5lbi5jcmFpZ3NsaXN0LmNhLyI+dmFuY291dmVyLCBCQyBjcmFpZ3NsaXN0PC9hPiAmZ3Q7Cgk8YSBocmVmPSJodHRwOi8vdmFuY291dmVyLmVuLmNyYWlnc2xpc3QuY2EvdmFuLyI+dmFuY291dmVyPC9hPiAmZ3Q7CgkgPGEgaHJlZj0iaHR0cDovL3ZhbmNvdXZlci5lbi5jcmFpZ3NsaXN0LmNhL3Zhbi9zc3MvIj5mb3Igc2FsZSAvIHdhbnRlZDwvYT4gJmd0OwogICAgPGEgaHJlZj0iaHR0cDovL3ZhbmNvdXZlci5lbi5jcmFpZ3NsaXN0LmNhL3Zhbi9tY3kvIj5tb3RvcmN5Y2xlcy9zY29vdGVycyAtIGJ5IG93bmVyPC9hPgo8L2Rpdj4KCgkKCgk8ZGl2IGlkPSJmbGFncyI+CgkJPGRpdiBpZD0iZmxhZ01zZyI+CgkJCXBsZWFzZSBmbGFnIHdpdGggY2FyZTogPGEgaHJlZj0iaHR0cDovL3d3dy5jcmFpZ3NsaXN0Lm9yZy9hYm91dC9oZWxwL2ZsYWdzX2FuZF9jb21tdW5pdHlfbW9kZXJhdGlvbiI+Wz9dPC9hPgoJCTwvZGl2PgoJCTxkaXYgaWQ9ImZsYWdDaG9vc2VyIj4KCQkJPGJyPgoJCQk8YSBjbGFzcz0iZmwiIGlkPSJmbGFnMTYiIGhyZWY9Ii9mbGFnLz9mbGFnQ29kZT0xNiZhbXA7cG9zdGluZ0lEPTIxNzg0NDA1MDkiCgkJCQl0aXRsZT0iV3JvbmcgY2F0ZWdvcnksIHdyb25nIHNpdGUsIGRpc2N1c3NlcyBhbm90aGVyIHBvc3QsIG9yIG90aGVyd2lzZSBtaXNwbGFjZWQiPgoJCQkJbWlzY2F0ZWdvcml6ZWQ8L2E+CgkJCTxicj4KCgkJCTxhIGNsYXNzPSJmbCIgaWQ9ImZsYWcyOCIgaHJlZj0iL2ZsYWcvP2ZsYWdDb2RlPTI4JmFtcDtwb3N0aW5nSUQ9MjE3ODQ0MDUwOSIKCQkJCXRpdGxlPSJWaW9sYXRlcyBjcmFpZ3NsaXN0IFRlcm1zIE9mIFVzZSBvciBvdGhlciBwb3N0ZWQgZ3VpZGVsaW5lcyI+CgkJCQlwcm9oaWJpdGVkPC9hPgoJCQk8YnI+CgoJCQk8YSBjbGFzcz0iZmwiIGlkPSJmbGFnMTUiIGhyZWY9Ii9mbGFnLz9mbGFnQ29kZT0xNSZhbXA7cG9zdGluZ0lEPTIxNzg0NDA1MDkiCgkJCQl0aXRsZT0iUG9zdGVkIHRvbyBmcmVxdWVudGx5LCBpbiBtdWx0aXBsZSBjaXRpZXMvY2F0ZWdvcmllcywgb3IgaXMgdG9vIGNvbW1lcmNpYWwiPgoJCQkJc3BhbS9vdmVycG9zdDwvYT4KCQkJPGJyPgoKCQkJPGEgY2xhc3M9ImZsIiBpZD0iZmxhZzkiIGhyZWY9Ii9mbGFnLz9mbGFnQ29kZT05JmFtcDtwb3N0aW5nSUQ9MjE3ODQ0MDUwOSIKCQkJCXRpdGxlPSJTaG91bGQgYmUgY29uc2lkZXJlZCBmb3IgaW5jbHVzaW9uIGluIHRoZSBCZXN0LU9mLUNyYWlnc2xpc3QiPgoJCQkJYmVzdCBvZiBjcmFpZ3NsaXN0PC9hPgoJCQk8YnI+CgkJPC9kaXY+Cgk8L2Rpdj4KCjxkaXYgaWQ9InRzYiI+CgkJCTxlbT5Bdm9pZCBzY2FtcyBhbmQgZnJhdWQgYnkgZGVhbGluZyBsb2NhbGx5ITwvZW0+IEJld2FyZSBhbnkgZGVhbCBpbnZvbHZpbmcgV2VzdGVybiBVbmlvbiwgTW9uZXlncmFtLCB3aXJlIHRyYW5zZmVyLCBjYXNoaWVyIGNoZWNrLCBtb25leSBvcmRlciwgc2hpcHBpbmcsIGVzY3Jvdywgb3IgYW55IHByb21pc2Ugb2YgdHJhbnNhY3Rpb24gcHJvdGVjdGlvbi9jZXJ0aWZpY2F0aW9uL2d1YXJhbnRlZS4gPGEgaHJlZj0iaHR0cDovL3d3dy5jcmFpZ3NsaXN0Lm9yZy9hYm91dC9zY2Ftcy5odG1sIj5Nb3JlIGluZm88L2E+PC9kaXY+CjxoMj45MDAgY2MgRHVjYXRpIC0gQ2FyYm9uIEZpYmVyIC0gJDEzNTAwIChWYW5jb3V2ZXIpPC9oMj4KPGhyPgpEYXRlOiAyMDExLTAxLTI0LCAgNTo1MlBNIFBTVDxicj4KUmVwbHkgdG86IDxhIGhyZWY9Im1haWx0bzpzYWxlLWNkZzJlLTIxNzg0NDA1MDlAY3JhaWdzbGlzdC5vcmc/c3ViamVjdD05MDAlMjBjYyUyMER1Y2F0aSUyMC0lMjBDYXJib24lMjBGaWJlciUyMC0lMjAlMjQxMzUwMCUyMChWYW5jb3V2ZXIpJmFtcDtib2R5PSUwQSUwQWh0dHAlM0ElMkYlMkZ2YW5jb3V2ZXIuZW4uY3JhaWdzbGlzdC5jYSUyRnZhbiUyRm1jeSUyRjIxNzg0NDA1MDkuaHRtbCUwQSI+c2FsZS1jZGcyZS0yMTc4NDQwNTA5QGNyYWlnc2xpc3Qub3JnPC9hPiA8c3VwPls8YSBocmVmPSJodHRwOi8vd3d3LmNyYWlnc2xpc3Qub3JnL2Fib3V0L2hlbHAvcmVwbHlpbmdfdG9fcG9zdHMiIHRhcmdldD0iX2JsYW5rIj5FcnJvcnMgd2hlbiByZXBseWluZyB0byBhZHM/PC9hPl08L3N1cD48YnI+Cjxocj4KPGJyPgo8ZGl2IGlkPSJ1c2VyYm9keSI+CjkwMGNjIER1Y2F0aSBmb3Igc2FsZS4NPGJyPgpDYXJib24gRmliZXIgdGFuaywgYW5kIGJvZHkuDTxicj4KUmFjZSBzdXNwZW5zaW9uLg08YnI+ClR1bmVkIHBpcGUuDTxicj4KUmFjZSB0aXJlcy4NPGJyPgpWZXJ5IHZlcnkgZmFzdC4NPGJyPgoNPGJyPgplbWFpbCBpbnF1aXJpZXMuPCEtLSBTVEFSVCBDTFRBR1MgLS0+CgoKPGJyPjxicj48dWwgY2xhc3M9ImJsdXJicyI+CjxsaT4gPCEtLSBDTFRBRyBHZW9ncmFwaGljQXJlYT1WYW5jb3V2ZXIgLS0+TG9jYXRpb246IFZhbmNvdXZlcgo8bGk+aXQncyBOT1Qgb2sgdG8gY29udGFjdCB0aGlzIHBvc3RlciB3aXRoIHNlcnZpY2VzIG9yIG90aGVyIGNvbW1lcmNpYWwgaW50ZXJlc3RzPC91bD4KPCEtLSBFTkQgQ0xUQUdTIC0tPgoJCTx0YWJsZSBzdW1tYXJ5PSJjcmFpZ3NsaXN0IGhvc3RlZCBpbWFnZXMiPgoJCQk8dHI+CgkJCQk8dGQgYWxpZ249ImNlbnRlciI+PGltZyBzcmM9Imh0dHA6Ly9pbWFnZXMuY3JhaWdzbGlzdC5vcmcvM200M3AzM282NVY2NVgxNVIyYjFvOTFhYTk3ODc2YWRmMTRjNS5qcGciIGFsdD0iaW1hZ2UgMjE3ODQ0MDUwOS0wIj48L3RkPgoJCQkJPHRkIGFsaWduPSJjZW50ZXIiPjxpbWcgc3JjPSJodHRwOi8vaW1hZ2VzLmNyYWlnc2xpc3Qub3JnLzNvMjNwMjNsNzVUNjVaNDVSMmIxb2ExNDBlNDg4OTRhZTEwZGUuanBnIiBhbHQ9ImltYWdlIDIxNzg0NDA1MDktMSI+PC90ZD4KCQkJPC90cj4KCQkJPHRyPgoJCQkJPHRkIGFsaWduPSJjZW50ZXIiPjxpbWcgc3JjPSJodHRwOi8vaW1hZ2VzLmNyYWlnc2xpc3Qub3JnLzNrYjNtYTNwNTVZMTVUMjVaMmIxb2RiNTU0Yjk2ZGU3YTEzMjYuanBnIiBhbHQ9ImltYWdlIDIxNzg0NDA1MDktMiI+PC90ZD4KCQkJCTx0ZCBhbGlnbj0iY2VudGVyIj48L3RkPgoJCQk8L3RyPgoJCTwvdGFibGU+Cgo8L2Rpdj4KUG9zdGluZ0lEOiAyMTc4NDQwNTA5PGJyPgoKCjxicj4KCjxocj4KPHVsIGNsYXNzPSJjbGZvb3RlciI+Cgk8bGk+Q29weXJpZ2h0ICZjb3B5OyAyMDExIGNyYWlnc2xpc3QsIGluYy48L2xpPgoJPGxpPjxhIGhyZWY9Imh0dHA6Ly93d3cuY3JhaWdzbGlzdC5vcmcvYWJvdXQvdGVybXMub2YudXNlLmh0bWwiPnRlcm1zIG9mIHVzZTwvYT48L2xpPgoJPGxpPjxhIGhyZWY9Imh0dHA6Ly93d3cuY3JhaWdzbGlzdC5vcmcvYWJvdXQvcHJpdmFjeV9wb2xpY3kiPnByaXZhY3kgcG9saWN5PC9hPjwvbGk+Cgk8bGk+PGEgaHJlZj0iL2ZvcnVtcy8/Zm9ydW1JRD04Ij5mZWVkYmFjayBmb3J1bTwvYT48L2xpPgo8L3VsPgoKPHNjcmlwdCB0eXBlPSJ0ZXh0L2phdmFzY3JpcHQiIHNyYz0iaHR0cDovL3d3dy5jcmFpZ3NsaXN0Lm9yZy9qcy9qcXVlcnktMS40LjIuanMiPjwvc2NyaXB0Pgo8c2NyaXB0IHR5cGU9InRleHQvamF2YXNjcmlwdCIgc3JjPSJodHRwOi8vd3d3LmNyYWlnc2xpc3Qub3JnL2pzL3Bvc3RpbmdzLmpzIj48L3NjcmlwdD4KPHNjcmlwdCB0eXBlPSJ0ZXh0L2phdmFzY3JpcHQiPjwhLS0KCXBJRCA9IDIxNzg0NDA1MDk7Ci0tPgo8L3NjcmlwdD4KPC9ib2R5Pgo8L2h0bWw+Cgo=",
+							"encoding": "base64"
+						},
+						"redirectURL": "",
+						"headersSize": -1,
+						"bodySize": 1879
+					},
+					"rawRequest": null,
+					"rawResponse": {
+						"Body": "\u001f\ufffd\u0008\u0000\u0000\u0000\u0000\u0000\u0000\u0003\ufffdXS\ufffdL\u0012\ufffd[\ufffd\ufffd;\ufffd\ufffdν\ufffd* $\u0010\u0004\u0017\ufffd\u0010\ufffd]\ufffdRq\ufffd\ufffd\ufffd}\ufffdʚL\u0006\u0018I2ٙ\t\u001c~\ufffd\ufffd\ufffd\u0004\ufffd\ufffduO\ufffd=\u000bB23\ufffd\ufffdt\ufffd\ufffd?b\ufffd\ufffd\ufffdh8\ufffd\ufffd\u003c\ufffd\ufffdNb\ufffd\ufffdztv:\u0004\ufffd꺷\ufffd\ufffd\ufffd\u001e\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\u000c\ufffd\ufffd\ufffd\u0007cIR\ufffd5\u0017)\ufffd]\ufffd\ufffd\ufffd\u0001g\ufffduv\ufffd\ufffd\ufffd岶lԄ\ufffd\ufffd\ufffd+רj\ufffd\ufffd\u0010\ufffd\ufffd\"\u001d9\ufffdݮ\u00192?\ufffdD\ufffdݝ\ufffd\ufffd:f\ufffdN\ufffd\u000e\ufffd\ufffdqN\ufffd\ufffdP\ufffd!\ufffd\ufffdH\ufffd#\u000f\ufffd\ufffd\ufffd\ufffd\u001a\\\ufffd0M %\t\ufffd9R\ufffdB+\u0007\ufffdH5KuϹ\u0018\r\ufffd\ufffd\ufffdOoN*\u0017\ufffd\ufffd\ufffd\ufffd\ufffdѭcDb\ufffd\ufffdA\ufffd2\u0014\ufffd\ufffd\ufffdڥ\n\ufffd$\ufffd{\ufffdҫ\ufffd\ufffd\u0019cځ\ufffdE\ufffd\ufffd\u001c\u0012\ufffd\u000e\ufffd$\ufffd\ufffd\ufffd͡\ufffd𩊹\ufffd֬B\ufffd\ufffd\u001aE\ufffd\ufffd\ufffd^\ufffdX\ufffd\u0016v\ufffdvC\u0011\ufffd\ufffd\ufffdD\ufffd\ufffd\ufffd\t\ufffdy:\ufffdy\ufffd\ufffd\ufffdb=\u001eR\ufffd\ufffd\ufffd$\ufffd\ufffd\ufffd\ufffd\u0026\ufffd\ufffd]\ufffd\u0010\u001e\ufffd\u0026\ufffd\ufffd4:,\u0015\ufffd\u001e\ufffd|o\ufffd\ufffdlփz\ufffd=I\ufffd\u000fZ\ufffdY\ufffd\ufffd\ufffdTѧ\ufffd\ufffd\ufffd^\ufffd\ufffd\ufffd\ufffdK\ufffd\ufffd\ufffd|yq\ufffd\ufffd\ufffd\u0005\ufffd{d)\ufffd\ufffd\ufffd\u001a\ufffd\ufffdoOZ\ufffdϗ\ufffdƾh\ufffd\u0006G\ufffd+u2\ufffd\u001c\ufffd\ufffdh\ufffd\ufffd2\ufffdތ\ufffd:\ufffdo\ufffd\ufffd\ufffd\ufffd\ufffdڣo\ufffdN\ufffdzl?fw\ufffd\ufffd\ufffd%\u001b]\ufffdoV\ufffd\ufffd\u001e~q\ufffd\u0016\u0018\ufffd\u0019WP\ufffd\u0002-\ufffd@\u0001\ufffd\ufffd\ufffdg^\\\ufffd\ufffd\ufffd|\ufffdd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffdu\ufffdO\ufffd\u00158\u001a\ufffdf֨\ufffd\ufffdS\ufffd\ufffdM\ufffdpj[\ufffd\ufffd\u0012x\ufffd\u0016\ufffd\u0014j\ufffd\u0008\t\ufffd\ufffd\u000c\\X\u0012\ufffdZ\ufffd\ufffd\u0008\ufffd\ufffdF\ufffd\t]\ufffd\ufffdDh!\ufffd\ufffd\u001a\u001a)*\ufffdfR!\ufffd\ufffd\u0015\ufffdeZ`F\u0026!Q\ufffd0;\ufffd\ufffd\ufffd1\ufffd\ufffd\ufffdd\ufffd\u000c_\ufffd\u000f\ufffd\ufffd\ufffd\u001d\ufffd\ufffdbF\u0014\u00033\u0006K\ufffdg@\ufffdd\u0007\ufffd\u0005\ufffd'\ufffd\u0026\ufffd\ufffd5\ufffd7\ufffd\\\ufffd\ufffd=I\ufffd{*\ufffd$O\ufffd^\ufffd'\"b\ufffd\ufffdxw\ufffd\u001c\ufffd\ufffd8\ufffd\ufffd\u0012\ufffd\u000fh\ufffd3\u0013\ufffd\ufffd@\ufffd\re\ufffdK֤\ufffd`\ufffd\ufffd\ufffdz\ufffd'\ufffd\ufffdG\ufffd\ufffd\ufffd\ufffd^=\ufffde\ufffd\ufffd3\ufffd;Fߎ\ufffd\t=\ufffdV\n$ f\r6\u0015rU\ufffd\ufffd}\ufffd\ufffd\ufffd*\u0010qEs\ufffd\ufffd\u0002\ufffd\n=c\ufffd\u0012\ufffd\u0002x\ufffd\ufffdq\ufffd\ufffdW\tWYL(\ufffd\n\ufffd;\ufffd\\j㏬\ufffdsi\ufffd\ufffdv\ufffd\ufffd\ufffd\ufffd\ufffdۯ\ufffdㆋ\u0018\ufffdU[\ufffd\ufffd1\ufffd\ufffd\ufffd\ufffd\u0004\ufffd\"\ufffd5hk\u0003\ufffd`\ufffd\ufffd\ufffdarc\ufffd\u0004\ufffdI1\ufffd!ׯ\u0006\ufffd\u0005/:?x\u001d\ufffd\ufffd\u0002\ufffd\u0016\u0002\ufffd\ufffd}\ufffd1\u000f\ufffdx\u0006\u003c\ufffd$\ufffd5G6\u0002\ufffd\"a\ufffde\ufffdR\ufffd\ufffd\ufffd1w\u0018!\ufffd/\u0026)'qi\ufffd\ufffdH\ufffd\n\ufffd\u001e\ufffd\ufffd+\ufffd\ufffd\ufffddE\ufffduF\\\ufffdD\u001eG\u00102SJ\u0014:U\ufffdI\u0026\ufffdyJ\ufffd\\!\ufffd\ufffdA\ufffdz8bJWG\ufffd\ufffd\ufffd\ufffd\ufffdJ\ufffd!N\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\u000e\ufffduP?ŋVa\u0019',\ufffd\u000f\u0016\ufffdG\ufffd\ufffdK\u000cc\u0011\ufffd$yd\ufffdB\ufffdHl\ufffdl,(V\ufffdջ.V\ufffd\u003e\ufffdYbt\ufffd\ufffdb\u0001\ufffd\\\ufffdxa\ufffd\ufffd\"\u001e\u0026S\ufffd\ufffd\"\ufffd\n\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd$\u0018\u001e\u001c%\ufffd)\ufffd\u0013\ufffdo)Q3\ufffd\ufffd\ufffd:D\ufffd\u0015H\ufffdB\u003c\ufffd\ufffd\ufffd\ufffdL\ufffd\ufffd\ufffd\n0E\ufffdXڃ3\ufffd!\ufffd\u0012\u00139h\ufffd\ufffdD\ufffd\ufffd\u000bfX3{\ufffdR\u00265\ufffdpj\u0013\ufffd;͉4\ufffd\ufffd\ufffd^\ufffd\ufffd\ufffd\u0013j\ufffdUp\ufffd\ufffd\u00021\ufffdt\"\ufffdSK\u000fvg\ufffd/{\u0006|\ufffd\ufffd\ufffd\u0008p\ufffd\ufffdo\ufffd\u0019\ufffd\u001fX\ufffd}#\ufffdGr\ufffd|\u003c\u0000\ufffd\ufffdyպW\ufffd\ufffd\u0015\ufffd\ufffd \ufffd/\ufffd\ufffd\ufffdzl\u000f\ufffd\ufffde\ufffd\nY\ufffd\ufffd=M\ufffd\ufffd\u0001S\r\ufffd4\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd?\ufffd\ufffdq\ufffd\ufffd\ufffd\u0001\ufffd\ufffdC\ufffd{~\ufffdR\ufffd\u0014@\ufffd\ufffd\ufffd\ufffd\u0002,\ufffdX\ufffd\ufffd\ufffd\ufffdߴ\ufffd\ufffdv\u000b\ufffd\ufffd\ufffdi'z{\ufffd\u0001~\ufffd\ufffd\ufffd\u001a\ufffd=\ufffd#~^\ufffd7\ufffd$^\ufffd\ufffd\ufffdu\u0003պ\u0015\ufffd8\ufffd\ufffdXb\ufffd]W\ufffdY\ufffd\ufffd\ufffd\ufffd\u0011i\u001c\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\u0004!\ufffd]\ufffd\ufffd)\ufffdV\ufffd\u003e\ufffdI:w\ufffd'R\n\ufffd|\ufffd\u0019Ka\ufffd\ufffd6\u0013\ufffd:4\ufffdb\ufffd1\u001b\ufffd\ufffd\ufffd\ufffdVܭ\ufffd'\ufffd*c\ufffd\ufffd\u0011\ufffdn\ufffdPa]\ufffdk\ufffd\ufffd\ufffd\ufffdB\ufffd\ufffd\u0015\u001b]F\ufffd\\q\ufffd\ufffd\u001fT\ufffd2\ufffd\ufffdx/G\ufffdy\ufffd\ufffd \ufffd\u0019\ufffd^\ufffd1\ufffdT9p\ufffd\ufffd\n\u0016\ufffd2!\ufffd\ufffdb\ufffd\ufffd\u0016]\u0012O\ufffd\ufffd\ufffdd\ufffdZ\ufffd]\ufffd\n\ufffd\ufffd\ufffd\ufffd\u0018\ufffdg\ufffd\ufffd\ufffdk\ufffdVm;\ufffd\ufffd\ufffd7\ufffd\ufffd\ufffd\ufffd8\ufffd\ufffd\ufffd\ufffdػ\ufffd덠\u0015\ufffdOL`\u0014g3N\u0007\ufffd\ufffd\ufffd\u0013C\ufffd\ufffd3QD\ufffd\u0001\u003c\r[y\ufffd\ufffd\ufffd\ufffdb4\u000617\ufffd5\ufffd2\ufffd\ufffd\ufffd}Ci\ufffd(\ufffd+\u0017\ufffdb\ufffdy\ufffd3\ufffd\ufffd\ufffdf\ufffd:\ufffd)\ufffd\ufffd\ufffd\ufffdw7\ufffdN.\ufffd\ufffd-\ufffd\u000c\ufffdI\u0018\u001b7\u0026\t\ufffd\ufffd\ufffd\ufffdU\ufffdfE\ufffd\ufffd\t\ufffd\ufffd\ufffdUW\u0017}\u0001\ufffdD\ufffd\ufffdm\ufffd\ufffd\u00043\ufffd8\ufffd.O\ufffd\ufffdK\ufffdD\ufffdB\ufffdG\ufffd5\ufffdf#k4D+\ufffdi\u0005\ufffd{\ufffd\ufffd\u001fz\ufffd\ufffd\u0011\ufffd\ufffdo\ufffd\ufffdH4\ufffd\ufffd4\ufffd=dS\u00077@\ufffdY-\ufffd!z\ufffd\ufffd[\ufffd:\ufffd\ufffd8\ufffd\ufffd\ufffd\ufffdF\ufffd\u001f\ufffd[\ufffd\ufffdf\ufffd\ufffdx\ufffd:k\ufffd۝\u0026a^=b\ufffd\ufffd\ufffdm\ufffd\ufffd\u001b\ufffds\ufffd\u003cl$\ufffd\ufffd\u0005\ufffd\ufffd\u0017\ufffd\ufffd\ufffd\ufffd\u0001\u0016\ufffdA\ufffd\u000c;\ufffd\ufffd\ufffd\u0013\ufffd\ufffd\ufffd~\u0005\ufffd\ufffd_\u000e\ufffd\u00115\ufffd\u001a\u0012\ufffd\nW\ufffd\ufffd\ufffdu\ufffd=\ufffd\ufffd[\u0014\ufffd\"\ufffd˸ް\ufffd\ufffd\u0013\ufffd\u0010\ufffd/o\ufffd\ufffd\ufffdV\ufffdOg\u001a\ufffdS\ufffd\ufffd`\ufffd\ufffdV\ufffd5\ufffd\u0006\ufffdu]\\Z\u0008\ufffd:Ki\ufffd^\ufffdĤ\ufffdy\ufffd,5v\ufffd\u00146\u001c*\ufffd\ufffd\ufffd\ufffdf\ufffd/\u0008]a΋9\ufffd\ufffdT\u003eC\ufffd\ufffd\ufffdV\u0017\ufffdV\ufffd(l_\ufffd/v+\ufffd69a,\n\t\ufffd\ufffd\u001d\ufffdH\u0016Q\ufffd\ufffdŲ\ufffd3\ufffd\ufffdr\ufffd@\u0016\ufffd\u0018u\ufffd\ufffd\ufffd'`\u001f\ufffd\ufffd\ufffd\u001d\ufffd\\U\ufffdZ\ufffd\ufffd\ufffd\u001e\ufffd9\ufffdB\ufffd\ufffd\ufffdu\ufffdm\ufffdz\ufffd޾\ufffd,\ufffd;\ufffd\ufffd1\ufffd\ufffd\ufffd\ufffda\ufffdd\ufffd-%\ufffd\ufffd\ufffd\ufffde\ufffd\ufffd/a\ufffd?\ufffd\ufffdTm\ufffd\u0010\u0000\u0000",
+						"Status": "200 OK",
+						"StatusCode": 200,
+						"Proto": "HTTP/1.1",
+						"ProtoMajor": 1,
+						"ProtoMinor": 1,
+						"Header": {
+							"Cache-Control": [
+								"public,max-age=3939203"
+							],
+							"Content-Encoding": [
+								"gzip"
+							],
+							"Content-Length": [
+								"1879"
+							],
+							"Content-Type": [
+								"text/html; charset=iso-8859-1;"
+							],
+							"Date": [
+								"Tue, 25 Jan 2011 17:46:37 GMT"
+							],
+							"Expires": [
+								"Sat, 12 Mar 2011 08:00:00 GMT"
+							],
+							"Last-Modified": [
+								"Tue, 25 Jan 2011 17:46:37 GMT"
+							],
+							"Server": [
+								"Apache"
+							],
+							"Set-Cookie": [
+								"[REDACTED]"
+							],
+							"Vary": [
+								"Accept-Encoding"
+							]
+						},
+						"ContentLength": 1879,
+						"TransferEncoding": null,
+						"Close": true,
+						"Uncompressed": false,
+						"Trailer": null,
+						"Request": null,
+						"TLS": null
+					}
+				}
+			}
+		},
+		"Summary": null
+	}
+]

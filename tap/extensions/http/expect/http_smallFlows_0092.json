@@ -1,0 +1,206 @@
+[
+	{
+		"Protocol": {
+			"name": "http",
+			"longName": "Hypertext Transfer Protocol -- HTTP/1.1",
+			"abbr": "HTTP",
+			"macro": "http",
+			"version": "1.1",
+			"backgroundColor": "#205cf5",
+			"foregroundColor": "#ffffff",
+			"fontSize": 12,
+			"referenceLink": "https://datatracker.ietf.org/doc/html/rfc2616",
+			"ports": [
+				"80",
+				"443",
+				"8080"
+			],
+			"priority": 0
+		},
+		"Timestamp": -6795364578871,
+		"ConnectionInfo": {
+			"ClientIP": "1",
+			"ClientPort": "1",
+			"ServerIP": "2",
+			"ServerPort": "2",
+			"IsOutgoing": false
+		},
+		"Pair": {
+			"request": {
+				"isRequest": true,
+				"captureTime": "0001-01-01T00:00:00Z",
+				"payload": {
+					"method": "GET",
+					"url": "",
+					"details": {
+						"method": "GET",
+						"url": "/pki/mscorp/crl/Microsoft%20Secure%20Server%20Authority(8).crl",
+						"httpVersion": "HTTP/1.1",
+						"cookies": [],
+						"headers": [
+							{
+								"name": "Accept",
+								"value": "*/*"
+							},
+							{
+								"name": "Cache-Control",
+								"value": "max-age = 900"
+							},
+							{
+								"name": "Connection",
+								"value": "Keep-Alive"
+							},
+							{
+								"name": "Host",
+								"value": "mscrl.microsoft.com"
+							},
+							{
+								"name": "If-Modified-Since",
+								"value": "Thu, 06 Jan 2011 18:47:35 GMT"
+							},
+							{
+								"name": "If-None-Match",
+								"value": "\"21b152fd2adcb1:0\""
+							},
+							{
+								"name": "User-Agent",
+								"value": "Microsoft-CryptoAPI/6.1"
+							}
+						],
+						"queryString": [],
+						"headersSize": -1,
+						"bodySize": 0
+					},
+					"rawRequest": {
+						"Method": "GET",
+						"URL": {
+							"Scheme": "",
+							"Opaque": "",
+							"User": null,
+							"Host": "",
+							"Path": "/pki/mscorp/crl/Microsoft Secure Server Authority(8).crl",
+							"RawPath": "/pki/mscorp/crl/Microsoft%20Secure%20Server%20Authority(8).crl",
+							"ForceQuery": false,
+							"RawQuery": "",
+							"Fragment": "",
+							"RawFragment": ""
+						},
+						"Proto": "HTTP/1.1",
+						"ProtoMajor": 1,
+						"ProtoMinor": 1,
+						"Header": {
+							"Accept": [
+								"*/*"
+							],
+							"Cache-Control": [
+								"max-age = 900"
+							],
+							"Connection": [
+								"Keep-Alive"
+							],
+							"If-Modified-Since": [
+								"Thu, 06 Jan 2011 18:47:35 GMT"
+							],
+							"If-None-Match": [
+								"\"21b152fd2adcb1:0\""
+							],
+							"User-Agent": [
+								"Microsoft-CryptoAPI/6.1"
+							]
+						},
+						"ContentLength": 0,
+						"TransferEncoding": null,
+						"Close": false,
+						"Host": "mscrl.microsoft.com",
+						"Form": null,
+						"PostForm": null,
+						"MultipartForm": null,
+						"Trailer": null,
+						"RemoteAddr": "",
+						"RequestURI": "/pki/mscorp/crl/Microsoft%20Secure%20Server%20Authority(8).crl",
+						"TLS": null,
+						"Response": null
+					},
+					"rawResponse": null
+				}
+			},
+			"response": {
+				"isRequest": false,
+				"captureTime": "0001-01-01T00:00:00Z",
+				"payload": {
+					"method": "",
+					"url": "",
+					"details": {
+						"status": 304,
+						"statusText": "Not Modified",
+						"httpVersion": "HTTP/1.1",
+						"cookies": [],
+						"headers": [
+							{
+								"name": "Age",
+								"value": "150"
+							},
+							{
+								"name": "Connection",
+								"value": "keep-alive"
+							},
+							{
+								"name": "Content-Type",
+								"value": "application/pkix-crl"
+							},
+							{
+								"name": "Date",
+								"value": "Tue, 25 Jan 2011 18:22:37 GMT"
+							},
+							{
+								"name": "Expires",
+								"value": "Tue, 25 Jan 2011 18:35:07 GMT"
+							}
+						],
+						"content": {
+							"size": 0,
+							"mimeType": "application/pkix-crl",
+							"encoding": "base64"
+						},
+						"redirectURL": "",
+						"headersSize": -1,
+						"bodySize": 0
+					},
+					"rawRequest": null,
+					"rawResponse": {
+						"Status": "304 Not Modified",
+						"StatusCode": 304,
+						"Proto": "HTTP/1.1",
+						"ProtoMajor": 1,
+						"ProtoMinor": 1,
+						"Header": {
+							"Age": [
+								"150"
+							],
+							"Connection": [
+								"keep-alive"
+							],
+							"Content-Type": [
+								"application/pkix-crl"
+							],
+							"Date": [
+								"Tue, 25 Jan 2011 18:22:37 GMT"
+							],
+							"Expires": [
+								"Tue, 25 Jan 2011 18:35:07 GMT"
+							]
+						},
+						"ContentLength": 0,
+						"TransferEncoding": null,
+						"Close": false,
+						"Uncompressed": false,
+						"Trailer": null,
+						"Request": null,
+						"TLS": null
+					}
+				}
+			}
+		},
+		"Summary": null
+	}
+]

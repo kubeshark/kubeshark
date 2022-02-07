@@ -1,0 +1,250 @@
+[
+	{
+		"Protocol": {
+			"name": "http",
+			"longName": "Hypertext Transfer Protocol -- HTTP/1.1",
+			"abbr": "HTTP",
+			"macro": "http",
+			"version": "1.1",
+			"backgroundColor": "#205cf5",
+			"foregroundColor": "#ffffff",
+			"fontSize": 12,
+			"referenceLink": "https://datatracker.ietf.org/doc/html/rfc2616",
+			"ports": [
+				"80",
+				"443",
+				"8080"
+			],
+			"priority": 0
+		},
+		"Timestamp": -6795364578871,
+		"ConnectionInfo": {
+			"ClientIP": "1",
+			"ClientPort": "1",
+			"ServerIP": "2",
+			"ServerPort": "2",
+			"IsOutgoing": false
+		},
+		"Pair": {
+			"request": {
+				"isRequest": true,
+				"captureTime": "0001-01-01T00:00:00Z",
+				"payload": {
+					"method": "GET",
+					"url": "",
+					"details": {
+						"method": "GET",
+						"url": "/rds/mcy/2164427165.html",
+						"httpVersion": "HTTP/1.1",
+						"cookies": [],
+						"headers": [
+							{
+								"name": "Accept",
+								"value": "application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5"
+							},
+							{
+								"name": "Accept-Charset",
+								"value": "ISO-8859-1,utf-8;q=0.7,*;q=0.3"
+							},
+							{
+								"name": "Accept-Encoding",
+								"value": "gzip,deflate,sdch"
+							},
+							{
+								"name": "Accept-Language",
+								"value": "en-US,en;q=0.8"
+							},
+							{
+								"name": "Connection",
+								"value": "keep-alive"
+							},
+							{
+								"name": "Host",
+								"value": "vancouver.en.craigslist.ca"
+							},
+							{
+								"name": "Referer",
+								"value": "http://vancouver.en.craigslist.ca/search/mca?query=kawasaki\u0026srchType=A\u0026minAsk=\u0026maxAsk=\u0026s=100"
+							},
+							{
+								"name": "User-Agent",
+								"value": "Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/534.10 (KHTML, like Gecko) Chrome/8.0.552.237 Safari/534.10"
+							}
+						],
+						"queryString": [],
+						"headersSize": -1,
+						"bodySize": 0
+					},
+					"rawRequest": {
+						"Method": "GET",
+						"URL": {
+							"Scheme": "",
+							"Opaque": "",
+							"User": null,
+							"Host": "",
+							"Path": "/rds/mcy/2164427165.html",
+							"RawPath": "",
+							"ForceQuery": false,
+							"RawQuery": "",
+							"Fragment": "",
+							"RawFragment": ""
+						},
+						"Proto": "HTTP/1.1",
+						"ProtoMajor": 1,
+						"ProtoMinor": 1,
+						"Header": {
+							"Accept": [
+								"application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5"
+							],
+							"Accept-Charset": [
+								"ISO-8859-1,utf-8;q=0.7,*;q=0.3"
+							],
+							"Accept-Encoding": [
+								"gzip,deflate,sdch"
+							],
+							"Accept-Language": [
+								"en-US,en;q=0.8"
+							],
+							"Connection": [
+								"keep-alive"
+							],
+							"Referer": [
+								"http://vancouver.en.craigslist.ca/search/mca?query=kawasaki\u0026srchType=A\u0026minAsk=\u0026maxAsk=\u0026s=100"
+							],
+							"User-Agent": [
+								"Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/534.10 (KHTML, like Gecko) Chrome/8.0.552.237 Safari/534.10"
+							]
+						},
+						"ContentLength": 0,
+						"TransferEncoding": null,
+						"Close": false,
+						"Host": "vancouver.en.craigslist.ca",
+						"Form": null,
+						"PostForm": null,
+						"MultipartForm": null,
+						"Trailer": null,
+						"RemoteAddr": "",
+						"RequestURI": "/rds/mcy/2164427165.html",
+						"TLS": null,
+						"Response": null
+					},
+					"rawResponse": null
+				}
+			},
+			"response": {
+				"isRequest": false,
+				"captureTime": "0001-01-01T00:00:00Z",
+				"payload": {
+					"method": "",
+					"url": "",
+					"details": {
+						"status": 200,
+						"statusText": "OK",
+						"httpVersion": "HTTP/1.1",
+						"cookies": [],
+						"headers": [
+							{
+								"name": "Cache-Control",
+								"value": "public,max-age=3979862"
+							},
+							{
+								"name": "Content-Encoding",
+								"value": "gzip"
+							},
+							{
+								"name": "Content-Length",
+								"value": "1889"
+							},
+							{
+								"name": "Content-Type",
+								"value": "text/html; charset=iso-8859-1;"
+							},
+							{
+								"name": "Date",
+								"value": "Mon, 17 Jan 2011 06:28:58 GMT"
+							},
+							{
+								"name": "Expires",
+								"value": "Fri, 04 Mar 2011 08:00:00 GMT"
+							},
+							{
+								"name": "Last-Modified",
+								"value": "Mon, 17 Jan 2011 06:28:58 GMT"
+							},
+							{
+								"name": "Server",
+								"value": "Apache"
+							},
+							{
+								"name": "Set-Cookie",
+								"value": "[REDACTED]"
+							},
+							{
+								"name": "Vary",
+								"value": "Accept-Encoding"
+							}
+						],
+						"content": {
+							"size": 4153,
+							"mimeType": "text/html; charset=iso-8859-1;",
+							"text": "PCFET0NUWVBFIGh0bWwgUFVCTElDICItLy9XM0MvL0RURCBIVE1MIDQuMDEgVHJhbnNpdGlvbmFsLy9FTiIgImh0dHA6Ly93d3cudzMub3JnL1RSL2h0bWw0L2xvb3NlLmR0ZCI+CjxodG1sPgo8aGVhZD4KCTx0aXRsZT5XQU5URUQhISA4NSA4NiBHU1hSIDc1MDwvdGl0bGU+Cgk8bWV0YSBuYW1lPSJyb2JvdHMiIGNvbnRlbnQ9Ik5PQVJDSElWRSxOT0ZPTExPVyI+Cgk8bGluayB0eXBlPSJ0ZXh0L2NzcyIgcmVsPSJzdHlsZXNoZWV0IiBtZWRpYT0iYWxsIiBocmVmPSJodHRwOi8vd3d3LmNyYWlnc2xpc3Qub3JnL3N0eWxlcy9jcmFpZ3NsaXN0LmNzcz92PTgiPgo8L2hlYWQ+Cgo8Ym9keSBjbGFzcz0icG9zdGluZyI+CgoKPGRpdiBjbGFzcz0iYmNoZWFkIj4KCTxhIGlkPSJlZiIgaHJlZj0iL2VtYWlsLmZyaWVuZD9wb3N0aW5nSUQ9MjE2NDQyNzE2NSZhbXA7dG9rZW49VTJGc2RHVmtYMTh5TWpRMk1qSTBOZ1FJTTZiOElBcGVVMEd3ZFZXSEtzMWp3TkFsSmhmRUd3d2ZQV2JqR3ZOaWp1RlZCeTZGdE8yQU1La01IVjJSNDNJYllJSEdMWUJ6Q3g4M0FHYVVFdTgiPmVtYWlsIHRoaXMgcG9zdGluZyB0byBhIGZyaWVuZDwvYT4KCTxhIGhyZWY9Imh0dHA6Ly92YW5jb3V2ZXIuZW4uY3JhaWdzbGlzdC5jYS8iPnZhbmNvdXZlciwgQkMgY3JhaWdzbGlzdDwvYT4gJmd0OwoJPGEgaHJlZj0iaHR0cDovL3ZhbmNvdXZlci5lbi5jcmFpZ3NsaXN0LmNhL3Jkcy8iPmRlbHRhL3N1cnJleS9sYW5nbGV5PC9hPiAmZ3Q7CgkgPGEgaHJlZj0iaHR0cDovL3ZhbmNvdXZlci5lbi5jcmFpZ3NsaXN0LmNhL3Jkcy9zc3MvIj5mb3Igc2FsZSAvIHdhbnRlZDwvYT4gJmd0OwogICAgPGEgaHJlZj0iaHR0cDovL3ZhbmNvdXZlci5lbi5jcmFpZ3NsaXN0LmNhL3Jkcy9tY3kvIj5tb3RvcmN5Y2xlcy9zY29vdGVycyAtIGJ5IG93bmVyPC9hPgo8L2Rpdj4KCgkKCgk8ZGl2IGlkPSJmbGFncyI+CgkJPGRpdiBpZD0iZmxhZ01zZyI+CgkJCXBsZWFzZSBmbGFnIHdpdGggY2FyZTogPGEgaHJlZj0iaHR0cDovL3d3dy5jcmFpZ3NsaXN0Lm9yZy9hYm91dC9oZWxwL2ZsYWdzX2FuZF9jb21tdW5pdHlfbW9kZXJhdGlvbiI+Wz9dPC9hPgoJCTwvZGl2PgoJCTxkaXYgaWQ9ImZsYWdDaG9vc2VyIj4KCQkJPGJyPgoJCQk8YSBjbGFzcz0iZmwiIGlkPSJmbGFnMTYiIGhyZWY9Ii9mbGFnLz9mbGFnQ29kZT0xNiZhbXA7cG9zdGluZ0lEPTIxNjQ0MjcxNjUiCgkJCQl0aXRsZT0iV3JvbmcgY2F0ZWdvcnksIHdyb25nIHNpdGUsIGRpc2N1c3NlcyBhbm90aGVyIHBvc3QsIG9yIG90aGVyd2lzZSBtaXNwbGFjZWQiPgoJCQkJbWlzY2F0ZWdvcml6ZWQ8L2E+CgkJCTxicj4KCgkJCTxhIGNsYXNzPSJmbCIgaWQ9ImZsYWcyOCIgaHJlZj0iL2ZsYWcvP2ZsYWdDb2RlPTI4JmFtcDtwb3N0aW5nSUQ9MjE2NDQyNzE2NSIKCQkJCXRpdGxlPSJWaW9sYXRlcyBjcmFpZ3NsaXN0IFRlcm1zIE9mIFVzZSBvciBvdGhlciBwb3N0ZWQgZ3VpZGVsaW5lcyI+CgkJCQlwcm9oaWJpdGVkPC9hPgoJCQk8YnI+CgoJCQk8YSBjbGFzcz0iZmwiIGlkPSJmbGFnMTUiIGhyZWY9Ii9mbGFnLz9mbGFnQ29kZT0xNSZhbXA7cG9zdGluZ0lEPTIxNjQ0MjcxNjUiCgkJCQl0aXRsZT0iUG9zdGVkIHRvbyBmcmVxdWVudGx5LCBpbiBtdWx0aXBsZSBjaXRpZXMvY2F0ZWdvcmllcywgb3IgaXMgdG9vIGNvbW1lcmNpYWwiPgoJCQkJc3BhbS9vdmVycG9zdDwvYT4KCQkJPGJyPgoKCQkJPGEgY2xhc3M9ImZsIiBpZD0iZmxhZzkiIGhyZWY9Ii9mbGFnLz9mbGFnQ29kZT05JmFtcDtwb3N0aW5nSUQ9MjE2NDQyNzE2NSIKCQkJCXRpdGxlPSJTaG91bGQgYmUgY29uc2lkZXJlZCBmb3IgaW5jbHVzaW9uIGluIHRoZSBCZXN0LU9mLUNyYWlnc2xpc3QiPgoJCQkJYmVzdCBvZiBjcmFpZ3NsaXN0PC9hPgoJCQk8YnI+CgkJPC9kaXY+Cgk8L2Rpdj4KCjxkaXYgaWQ9InRzYiI+CgkJCTxlbT5Bdm9pZCBzY2FtcyBhbmQgZnJhdWQgYnkgZGVhbGluZyBsb2NhbGx5ITwvZW0+IEJld2FyZSBhbnkgZGVhbCBpbnZvbHZpbmcgV2VzdGVybiBVbmlvbiwgTW9uZXlncmFtLCB3aXJlIHRyYW5zZmVyLCBjYXNoaWVyIGNoZWNrLCBtb25leSBvcmRlciwgc2hpcHBpbmcsIGVzY3Jvdywgb3IgYW55IHByb21pc2Ugb2YgdHJhbnNhY3Rpb24gcHJvdGVjdGlvbi9jZXJ0aWZpY2F0aW9uL2d1YXJhbnRlZS4gPGEgaHJlZj0iaHR0cDovL3d3dy5jcmFpZ3NsaXN0Lm9yZy9hYm91dC9zY2Ftcy5odG1sIj5Nb3JlIGluZm88L2E+PC9kaXY+CjxoMj5XQU5URUQhISA4NSA4NiBHU1hSIDc1MCAtICQxIChTb3V0aCBTdXJyZXkpPC9oMj4KPGhyPgpEYXRlOiAyMDExLTAxLTE2LCAxMDoyNFBNIFBTVDxicj4KUmVwbHkgdG86IDxhIGhyZWY9Im1haWx0bzpzYWxlLWVtdndlLTIxNjQ0MjcxNjVAY3JhaWdzbGlzdC5vcmc/c3ViamVjdD1XQU5URUQhISUyMDg1JTIwODYlMjBHU1hSJTIwNzUwJTIwLSUyMCUyNDElMjAoU291dGglMjBTdXJyZXkpJmFtcDtib2R5PSUwQSUwQWh0dHAlM0ElMkYlMkZ2YW5jb3V2ZXIuZW4uY3JhaWdzbGlzdC5jYSUyRnJkcyUyRm1jeSUyRjIxNjQ0MjcxNjUuaHRtbCUwQSI+c2FsZS1lbXZ3ZS0yMTY0NDI3MTY1QGNyYWlnc2xpc3Qub3JnPC9hPiA8c3VwPls8YSBocmVmPSJodHRwOi8vd3d3LmNyYWlnc2xpc3Qub3JnL2Fib3V0L2hlbHAvcmVwbHlpbmdfdG9fcG9zdHMiIHRhcmdldD0iX2JsYW5rIj5FcnJvcnMgd2hlbiByZXBseWluZyB0byBhZHM/PC9hPl08L3N1cD48YnI+Cjxocj4KPGJyPgo8ZGl2IGlkPSJ1c2VyYm9keSI+CkknbSBsb29raW5nIGZvciBhIDE5ODUgb3IgMTk4NiBTdXp1a2kgR1NYUiA3NTAuICBJIHByZWZlciBpdCB0byBiZSBvcmlnaW5hbCBwYXJ0cyBvciBjbG9zZSB0byBpdC4gIERvZXNuJ3QgbWF0dGVyIGluIHdoYXQgY29uZGl0aW9uIGJ1dCBpdCBoYXMgdG8gYmUgYWxsIHRoZXJlLg08YnI+CkFsc28gbG9va2luZyBmb3IgR1NYUi1SIG9yIGxpbWl0ZWQgNzUwIG9yIFJHIDUwMC4NPGJyPgoNPGJyPgpQbGVhc2Ugc2VuZCBtZSBwaWNzIGlmIHlvdSdyZSBpbnRlcmVzdGVkIGluIHNlbGxpbmcuDTxicj4KDTxicj4Ka2V5d29yZHM6c3V6dWtpLCB5YW1haGEsIGJtdywgaG9uZGEsIGthd2FzYWtpLCBkdWNhdGksIGFwcmlsaWE8IS0tIFNUQVJUIENMVEFHUyAtLT4KCgo8YnI+PGJyPjx1bCBjbGFzcz0iYmx1cmJzIj4KPGxpPiA8IS0tIENMVEFHIEdlb2dyYXBoaWNBcmVhPVNvdXRoIFN1cnJleSAtLT5Mb2NhdGlvbjogU291dGggU3VycmV5CjxsaT5pdCdzIE5PVCBvayB0byBjb250YWN0IHRoaXMgcG9zdGVyIHdpdGggc2VydmljZXMgb3Igb3RoZXIgY29tbWVyY2lhbCBpbnRlcmVzdHM8L3VsPgo8IS0tIEVORCBDTFRBR1MgLS0+CgkJPHRhYmxlIHN1bW1hcnk9ImNyYWlnc2xpc3QgaG9zdGVkIGltYWdlcyI+CgkJCTx0cj4KCQkJCTx0ZCBhbGlnbj0iY2VudGVyIj48L3RkPgoJCQkJPHRkIGFsaWduPSJjZW50ZXIiPjwvdGQ+CgkJCTwvdHI+CgkJCTx0cj4KCQkJCTx0ZCBhbGlnbj0iY2VudGVyIj48L3RkPgoJCQkJPHRkIGFsaWduPSJjZW50ZXIiPjwvdGQ+CgkJCTwvdHI+CgkJPC90YWJsZT4KCjwvZGl2PgpQb3N0aW5nSUQ6IDIxNjQ0MjcxNjU8YnI+CgoKPGJyPgoKPGhyPgo8dWwgY2xhc3M9ImNsZm9vdGVyIj4KCTxsaT5Db3B5cmlnaHQgJmNvcHk7IDIwMTEgY3JhaWdzbGlzdCwgaW5jLjwvbGk+Cgk8bGk+PGEgaHJlZj0iaHR0cDovL3d3dy5jcmFpZ3NsaXN0Lm9yZy9hYm91dC90ZXJtcy5vZi51c2UuaHRtbCI+dGVybXMgb2YgdXNlPC9hPjwvbGk+Cgk8bGk+PGEgaHJlZj0iaHR0cDovL3d3dy5jcmFpZ3NsaXN0Lm9yZy9hYm91dC9wcml2YWN5X3BvbGljeSI+cHJpdmFjeSBwb2xpY3k8L2E+PC9saT4KCTxsaT48YSBocmVmPSIvZm9ydW1zLz9mb3J1bUlEPTgiPmZlZWRiYWNrIGZvcnVtPC9hPjwvbGk+CjwvdWw+Cgo8c2NyaXB0IHR5cGU9InRleHQvamF2YXNjcmlwdCIgc3JjPSJodHRwOi8vd3d3LmNyYWlnc2xpc3Qub3JnL2pzL2pxdWVyeS0xLjQuMi5qcyI+PC9zY3JpcHQ+CjxzY3JpcHQgdHlwZT0idGV4dC9qYXZhc2NyaXB0IiBzcmM9Imh0dHA6Ly93d3cuY3JhaWdzbGlzdC5vcmcvanMvcG9zdGluZ3MuanMiPjwvc2NyaXB0Pgo8c2NyaXB0IHR5cGU9InRleHQvamF2YXNjcmlwdCI+PCEtLQoJcElEID0gMjE2NDQyNzE2NTsKLS0+Cjwvc2NyaXB0Pgo8L2JvZHk+CjwvaHRtbD4KCg==",
+							"encoding": "base64"
+						},
+						"redirectURL": "",
+						"headersSize": -1,
+						"bodySize": 1889
+					},
+					"rawRequest": null,
+					"rawResponse": {
+						"Body": "\u001f\ufffd\u0008\u0000\u0000\u0000\u0000\u0000\u0000\u0003\ufffdWmS\ufffd8\u0012\ufffd\u000cU\ufffd\u001f\u001a\ufffd1sW\ufffd\ufffdI\ufffd,\ufffd$\ufffdB\ufffd\ufffd]\u0002,\u0004ة\ufffd+J\ufffd\ufffdX\ufffdl\ufffd$9Yϯ\ufffdn9\ufffd\ufffd\ufffd\ufffdA\ufffdQ\ufffd/\ufffd\ufffd\ufffd\ufffdz\ufffd\ufffdv{\ufffd\ufffd\ufffd?\ufffdvs\u0006\ufffdM$\ufffdܟ\\\u000e\ufffd\ufffdU}\ufffdq\ufffd\ufffd\ufffd\ufffd\ufffdS\ufffd\u0018\ufffd.a\ufffdVo\ufffdX\ufffd\ufffd\u0008+Tʤ\ufffd\ufffd]y\ufffd\ufffd\ufffdfG\ufffd\ufffd\\.k˽\ufffd\ufffdS|듪}_*ex-\ufffd\ufffd\ufffd\ufffdn\ufffd\u0010\ufffd8\ufffd\ufffd\ufffd[m+\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffdtg\u0007\u000e\u000f\ufffd\ufffd\u0005\ufffd\ufffd_nᇃz\ufffd/\ufffdq]\ufffd-\ufffd\ufffd%\ufffd\ufffdi\u0015(k\u003c\u0008Ujyj;\ufffd\ufffdu\ufffd\ufffd1|8\ufffd\\]\ufffd__^^?z$\"E:\u0007[d(b\ufffdo\ufffd\u000f\r\ni.;\ufffd\ufffd\ufffd\ufffd\u0026\ufffd\ufffdz\ufffd\ufffdH\ufffd\ufffdǤ\ufffd \ufffd|\ufffd\ufffd\ufffd$\ufffdLL\ufffd\u0014\ufffd:\ufffdJ9c\u0014u\u001e/:\ufffd\ufffd\ufffd_\ufffd\ufffd\ufffd\u000eTT@(\ufffd1\u001d/SƊt\ufffd\ufffd8\u0011\ufffd\ufffdz\u003c\u0008i\ufffd3\ufffd\ufffd\ufffd:\u001e\ufffd\ufffd\ufffd\ufffdy\ufffdM\ufffd\ufffdit\ufffdR0\u003c\ufffd4\u001b\ufffd\ufffd\ufffd\ufffd\u000f\ufffd\ufffd\ufffd'\ufffdd_\ufffd\ufffd\ufffd\ufffds\ufffd\u003c7\ufffd\ufffda\ufffdK\ufffd\ufffd\u0018\ufffd~n\ufffdf\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\u0015\u001c\u000e{\u0019\ufffd\ufffd\u000f\ufffd\ufffd\ufffd\ufffd\ufffdO\ufffd1[^\ufffd\ufffd\ufffd\ufffd\ufffdl\ufffd\\Nn\u001e\ufffd\ufffd`q%f\ufffd\ufffd\ufffdI\ufffd:\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffdy\ufffd\ufffd7\u000c\ufffd\r/\u0006\ufffd\ufffdN\ufffd\ufffd;\ufffd\ufffd\r\ufffd\ufffdY\ufffd\u003e:\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd,\ufffd\n\u0018\ufffd\ufffd\ufffd}V\ufffd\ufffd*\ufffd\u000b\ufffd\ufffd*_p]\ufffd\ufffdf8C\ufffd{\ufffd\ufffd\ufffd\n\ufffd\ufffd\ufffde\ufffdT\ufffd\ufffd\ufffd\ufffd\ufffd!}:2\ufffd3\ufffd\ufffd2\ufffd\ufffdZ\ufffd,\ufffdJ^l\ufffd\ufffd\u000f*4\ufffd\ufffdN\ufffd\u0006\ufffd$\u0007\u001f\ufffd\u000cQ\u0017\ufffdh\u0004\ufffd\ufffd\ufffd\ufffd$,Pg\ufffd\ufffd\ufffda\u0011\u0012\ufffdL\ufffd\ufffd\ufffd\ufffd@\u0015\ufffd\u0002\ufffd2\ufffdڅ\ufffd\ufffd#f\u0010;[\ufffds\ufffd!\ufffdL$\ufffd\u001a\ufffd\ufffd롑\ufffd\ufffd\ufffd\ufffdLrf8\ufffd\u0018,\ufffd\ufffd!d\ufffd\u001f\ufffd\ufffd\ufffd\ufffdo\u0016\ufffd\ufffd\"\ufffde\ufffd\ufffdM\ufffdX\u001a=\ufffd*I\ufffdT\ufffd\ufffd)Q\u0011׌\ufffd\ufffd\ufffd\ufffdz\ufffd\ufffd\ufffd\ufffd\ufffdV6\ufffd\ufffd\ufffd~LI\ufffdK\ufffdځ.\ufffdl\ufffd\ufffd\tf\ufffdzi\ufffd\ufffd\u000c}z\ufffd\ufffd\ufffd\u003c\ufffd\ufffdi\ufffd\u001c\ufffd\ufffd,\u0007\u003cҷ\ufffd\ufffd\ufffd\ufffd=j\ufffdX\u000c\ufffd\ufffdS\ufffd\ufffd\n,\ufffd;\u0012\u0014\ufffd@$L\ufffd\u001b\ufffd\r\ufffdT٘k\ufffd\ufffd\n\ufffd\ufffd\ufffdץ\ufffdX%\ufffdd\ufffd\ufffd\u003c*\ufffd\ufffd\ufffd\ufffd\ufffd6񝯐\ufffdr\ufffdm?\ufffd\ufffdo\ufffd\ufffd\u003c|\ufffd\u001f\u000fBI\ufffd\ufffdl\ufffd\u0002\ufffd\ufffdN\u000c\\O\ufffd\u001e\ufffd\\\u001b\ufffd|\ufffd\u0011Ls\ufffdx\u0017)7+\ufffd3\ufffdb\u0011\u0008\ufffdn\ufffd\u001b\u0007o\u0006\ufffd\ufffd}Fߔ\ufffdX\ufffd\ufffd\u0008\ufffd\ufffdr\ufffdd\ufffdg RHri\u0005\ufffd\u0011B,\u0015ě\ufffd\ufffdr\ufffd4BB\ufffd/\ufffdC\ufffd\ufffd\ufffd\u0007\ufffd\ufffd\ufffdW\ufffd=\ufffd\ufffd;\ufffd\ufffd\ufffd\ufffd\u0017_\ufffd\ufffd\ufffd]\ufffdr\u0019A\ufffd\ufffd\ufffd\u0018\u000c\ufffdF\ufffd(\ufffdE\u001a\ufffd\ufffd \ufffd\ufffd!\u000c=\ufffdpc\ufffdדj\ufffd\ufffd\ufffdVf\u00078\u0001j\ufffd\u0007\u001aۀ\ufffd:Q\ufffdI\ufffd\ufffd/\ufffd\u0004\ufffd\u003c\ufffdI\ufffd\ufffdP\"\u0002\ufffd_B\ufffdE#4\ufffd#b\ufffd\ufffd3I\ufffd+U\ufffdŪ\ufffdic\ufffd\ufffd\ufffd9K\ufffdn\\Y.@+\u0017J.h\ufffd#\ufffd\ufffdu\n\ufffd)Z_\ufffd\ufffdJy1\ufffd,\ufffd\ufffd\u0010(a\ufffd\ufffdO\ufffdzCfb\ufffd\ufffd\u0014\ufffd+\ufffd\ufffdB\u003c\ufffd\ufffd\ufffdp\u0026\ufffdP[\u0005\ufffd\t\ufffdZ\ufffd\ufffd\ufffd\ufffd\u0010h\te\u000e:\ufffd4\ufffd\ufffdx\ufffd\ufffd-w\ufffd~ȵ\u0015\u0013\u0011:\ufffd\ufffd\ufffd9\ufffdĜ\ufffd\ufffd~\"rA\ufffdQ\ufffd\ufffduG\nm\u0016\ufffdDQPW\u0011l\ufffdͷ:\u0007$ҿ6\ufffdow\ufffd\u0026\ufffd;W\u000c\ufffd\ufffd\u0015\ufffdIBx\u0018\ufffd\ufffd\ufffd#h\ufffd\u001b\ufffdj\ufffdQm\ufffd*Ш\u001f5\ufffdoFps7v\ufffdu\ufffd3Y \u003e7x\ufffd\ufffd\u001f\u000eP\u001d\ufffd\ufffdd\ufffd\ufffd\ufffd\u00170\ufffd\ufffd\ufffd\u0003\ufffd\u0026\u000ff\u0018\ufffd\ufffdڼ\ufffdf\ufffd\ufffd\ufffd.-\ufffd\ufffd\ufffdxC3\ufffdZ\ufffd\ufffd\ufffd\ufffd~\u0003o\ufffd\ufffd\ufffd\ufffd2\ufffdA\ufffd\ufffd\ufffd\ufffdn\ufffd\ufffd?\ufffd\ufffd\ufffd^o\ufffdy\ufffd\ufffd\ufffdk\u000cNb\ufffd\ufffd+\ufffd\u0019\ufffd\ufffd\u0018\ufffdB\ufffdz\ufffd\ufffd{|p%\ufffdm\ufffd\ufffd\ufffd\ufffd\ufffdJ\ufffd\ufffd\ufffd!f\ufffd\ufffdz\ufffd\ufffdî\ufffd2=\ufffdة=\u0005X\ufffd\ufffd^\ufffdLk\ufffd\ufffdn\u0019\ufffd\u0014\ufffd\ufffd]/\u0011\ufffdc\ufffd\u0017k\u000bm\ufffdN\ufffd\u001dX\ufffd\ufffdN\ufffd\u001c+\u000b\ufffd\u0005\ufffdf\ufffd9\ufffd\ufffdPsR@\ufffdʠ\ufffd\u0005\ufffd\ufffdOxo\ufffd\ufffd\ufffd\ufffd\ufffd\u0019\u00165\ufffd!b\ufffd#\ufffdAX\ufffd1 R\u0015S\ufffd\ufffd,dL[C\ufffd\ufffd\ufffd\ufffdE\ufffd¢ĩ\ufffd\u0026\ufffdl!a֒\\\ufffdv3KD\u0011\ufffd\u0016\u0018\ufffdܒ\ufffd\ufffd\ufffd\ufffdF\ufffdO\ufffd\n\ufffdkq\ufffd\ufffd\ufffdQ\ufffd\ufffd${\ufffd\ufffd\ufffd\ufffd\u0014\t\ufffd\ufffd\ufffd,\ufffd\ufffd\u000e\ufffd\ufffd^_\ufffd\ufffdכ\ufffd\ufffd\u001bl\ufffd\ufffdY\ufffdL\ufffd\u0006\ufffd\u0004\n\ufffdv)\ufffd6q\ufffd\ufffdh\ufffd\ufffd\ufffd8\ufffd\ufffd\ufffd\ufffd\u0017K\ufffdfsd\\,*P\ufffd\ufffdŬ\u0002A\ufffd\ufffd\u001c\ufffd\u0017\ufffd\u003cgKf\u0018\ufffdF9el\u0005X\ufffd\ufffd\u0014\ufffd\ufffdS\ufffd\ufffdݸw;\ufffd\ufffd\ufffd\ufffd7\ufffd\ufffdj\ufffd5\ufffd\ufffd\ufffd\ufffd\ufffd򹧕\ufffd\u000e\ufffd\u0010a\ufffd\ufffd\ufffd!A'\u0002\u0003\ufffd\ufffdx\ufffdX\ufffd=\ufffdYg3)Iۥ*9\ufffd\u00086g\ufffd\u0016a?\u001b\ufffd\ufffd\u001e\ufffd\ufffdSh\ufffd\ufffdG\ufffdyiA\ufffd8\\\ufffd\ufffdxX\ufffd\ufffd\ufffd\ufffd\u0002\ufffdRU\ufffdCd\ufffd~N\ufffd\u001ed\ufffd\ufffd\ufffd\ufffd\ufffd?H\ufffd\ufffd\u0005X\ufffdL\ufffd$L\u0017\u001do\ufffd\u0002\ufffde\ufffd\u0013\t\ufffd\ufffd\ufffdlۖ\r\r\u003eDx\ufffdb\ufffd\ufffd\u0004\ufffd}\u003c$'\u001b\ufffd\ufffdI|\ufffd\ufffdgUx'\u001f\ufffd\ufffd\ufffd\ufffdx\ufffd\ufffdzHu\ufffdY^\u0016\ufffd2\ufffdV\ufffd\ufffdr\ufffd\ufffd\ufffd\ufffdFt\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd-|\n\ufffd\ufffd\ufffd\ufffd̍\nGe\u003e\ufffd\ufffd}\\Z\n\ufffd\ufffd),\ufffd555\ufffda.\ufffd(\ufffd\rQA\ufffd\ufffd\ufffd\ufffd?\ufffd\u0016A\ufffd`a\ufffd\ufffd#E\ufffd\ufffd\ufffdz\ufffd\ufffd\ufffd-\ufffd\u003e\ufffdd\ufffd\u0018l\u001b\ufffd\ufffd]\u0002~\ufffdL8\ufffd\u0002\u0016\ufffd\ufffd\ufffd\ufffdH\ufffd \ufffdnc9\u0014\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\u0005+G=0:\ufffdO\ufffdΌ?\ufffdNI\u0017\ufffdFm\ufffd֬\ufffd\u000c\ufffdg)\ufffd\ufffd\ufffdu\ufffd\ufffd\u001d\ufffd!\ufffd]J\ufffd\ufffd\ufffdlx\n\ufffd\r\ufffd|ݦ\u0004\ufffdP\ufffd\u0013\ufffd\ufffd\ufffd]\ufffd%\ufffd\ufffd;\ufffd\ufffd\u001d\ufffd9\u0010\u0000\u0000",
+						"Status": "200 OK",
+						"StatusCode": 200,
+						"Proto": "HTTP/1.1",
+						"ProtoMajor": 1,
+						"ProtoMinor": 1,
+						"Header": {
+							"Cache-Control": [
+								"public,max-age=3979862"
+							],
+							"Content-Encoding": [
+								"gzip"
+							],
+							"Content-Length": [
+								"1889"
+							],
+							"Content-Type": [
+								"text/html; charset=iso-8859-1;"
+							],
+							"Date": [
+								"Mon, 17 Jan 2011 06:28:58 GMT"
+							],
+							"Expires": [
+								"Fri, 04 Mar 2011 08:00:00 GMT"
+							],
+							"Last-Modified": [
+								"Mon, 17 Jan 2011 06:28:58 GMT"
+							],
+							"Server": [
+								"Apache"
+							],
+							"Set-Cookie": [
+								"[REDACTED]"
+							],
+							"Vary": [
+								"Accept-Encoding"
+							]
+						},
+						"ContentLength": 1889,
+						"TransferEncoding": null,
+						"Close": true,
+						"Uncompressed": false,
+						"Trailer": null,
+						"Request": null,
+						"TLS": null
+					}
+				}
+			}
+		},
+		"Summary": null
+	}
+]

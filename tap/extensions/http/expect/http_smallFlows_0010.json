@@ -1,0 +1,3866 @@
+[
+	{
+		"Protocol": {
+			"name": "http",
+			"longName": "Hypertext Transfer Protocol -- HTTP/1.1",
+			"abbr": "HTTP",
+			"macro": "http",
+			"version": "1.1",
+			"backgroundColor": "#205cf5",
+			"foregroundColor": "#ffffff",
+			"fontSize": 12,
+			"referenceLink": "https://datatracker.ietf.org/doc/html/rfc2616",
+			"ports": [
+				"80",
+				"443",
+				"8080"
+			],
+			"priority": 0
+		},
+		"Timestamp": -6795364578871,
+		"ConnectionInfo": {
+			"ClientIP": "1",
+			"ClientPort": "1",
+			"ServerIP": "2",
+			"ServerPort": "2",
+			"IsOutgoing": false
+		},
+		"Pair": {
+			"request": {
+				"isRequest": true,
+				"captureTime": "0001-01-01T00:00:00Z",
+				"payload": {
+					"method": "GET",
+					"url": "",
+					"details": {
+						"method": "GET",
+						"url": "/ADSAdClient31.dll?DPJS=0\u0026PN=MSFT\u0026PG=CAEPD1\u0026AP=1402\u0026GetSAd=",
+						"httpVersion": "HTTP/1.1",
+						"cookies": [],
+						"headers": [
+							{
+								"name": "Accept",
+								"value": "*/*"
+							},
+							{
+								"name": "Accept-Charset",
+								"value": "ISO-8859-1,utf-8;q=0.7,*;q=0.3"
+							},
+							{
+								"name": "Accept-Encoding",
+								"value": "gzip,deflate,sdch"
+							},
+							{
+								"name": "Accept-Language",
+								"value": "en-US,en;q=0.8"
+							},
+							{
+								"name": "Connection",
+								"value": "keep-alive"
+							},
+							{
+								"name": "Host",
+								"value": "a.rad.msn.com"
+							},
+							{
+								"name": "Referer",
+								"value": "http://entertainment.ca.msn.com/movies/"
+							},
+							{
+								"name": "User-Agent",
+								"value": "Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/534.10 (KHTML, like Gecko) Chrome/8.0.552.237 Safari/534.10"
+							}
+						],
+						"queryString": [
+							{
+								"name": "AP",
+								"value": "1402"
+							},
+							{
+								"name": "DPJS",
+								"value": "0"
+							},
+							{
+								"name": "GetSAd",
+								"value": ""
+							},
+							{
+								"name": "PG",
+								"value": "CAEPD1"
+							},
+							{
+								"name": "PN",
+								"value": "MSFT"
+							}
+						],
+						"headersSize": -1,
+						"bodySize": 0
+					},
+					"rawRequest": {
+						"Method": "GET",
+						"URL": {
+							"Scheme": "",
+							"Opaque": "",
+							"User": null,
+							"Host": "",
+							"Path": "/ADSAdClient31.dll",
+							"RawPath": "",
+							"ForceQuery": false,
+							"RawQuery": "DPJS=0\u0026PN=MSFT\u0026PG=CAEPD1\u0026AP=1402\u0026GetSAd=",
+							"Fragment": "",
+							"RawFragment": ""
+						},
+						"Proto": "HTTP/1.1",
+						"ProtoMajor": 1,
+						"ProtoMinor": 1,
+						"Header": {
+							"Accept": [
+								"*/*"
+							],
+							"Accept-Charset": [
+								"ISO-8859-1,utf-8;q=0.7,*;q=0.3"
+							],
+							"Accept-Encoding": [
+								"gzip,deflate,sdch"
+							],
+							"Accept-Language": [
+								"en-US,en;q=0.8"
+							],
+							"Connection": [
+								"keep-alive"
+							],
+							"Referer": [
+								"http://entertainment.ca.msn.com/movies/"
+							],
+							"User-Agent": [
+								"Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/534.10 (KHTML, like Gecko) Chrome/8.0.552.237 Safari/534.10"
+							]
+						},
+						"ContentLength": 0,
+						"TransferEncoding": null,
+						"Close": false,
+						"Host": "a.rad.msn.com",
+						"Form": null,
+						"PostForm": null,
+						"MultipartForm": null,
+						"Trailer": null,
+						"RemoteAddr": "",
+						"RequestURI": "/ADSAdClient31.dll?GetSAd=\u0026DPJS=0\u0026PN=MSFT\u0026PG=CAEPD1\u0026AP=1402",
+						"TLS": null,
+						"Response": null
+					},
+					"rawResponse": null
+				}
+			},
+			"response": {
+				"isRequest": false,
+				"captureTime": "0001-01-01T00:00:00Z",
+				"payload": {
+					"method": "",
+					"url": "",
+					"details": {
+						"status": 200,
+						"statusText": "OK",
+						"httpVersion": "HTTP/1.1",
+						"cookies": [],
+						"headers": [
+							{
+								"name": "Cache-Control",
+								"value": "no-cache, must-revalidate"
+							},
+							{
+								"name": "Content-Encoding",
+								"value": "gzip"
+							},
+							{
+								"name": "Content-Length",
+								"value": "467"
+							},
+							{
+								"name": "Content-Type",
+								"value": "text/html; Charset=utf-8"
+							},
+							{
+								"name": "Cteonnt-Length",
+								"value": "741"
+							},
+							{
+								"name": "Date",
+								"value": "Tue, 25 Jan 2011 18:55:20 GMT"
+							},
+							{
+								"name": "Expires",
+								"value": "Fri, 01 Jan 1990 00:00:00 GMT"
+							},
+							{
+								"name": "P3p",
+								"value": "CP=\"BUS CUR CONo FIN IVDo ONL OUR PHY SAMo TELo\""
+							},
+							{
+								"name": "Pragma",
+								"value": "no-cache"
+							},
+							{
+								"name": "Server",
+								"value": "Microsoft-IIS/7.5"
+							},
+							{
+								"name": "X-Radid",
+								"value": "P7824437-T29112703-C80000000000018486"
+							}
+						],
+						"content": {
+							"size": 741,
+							"mimeType": "text/html; Charset=utf-8",
+							"text": "ICAKLy88IVtDREFUQVsKZnVuY3Rpb24gZ2V0UkFESWRzKCkgeyByZXR1cm57ImFkaWQiOiI4MDAwMDAwMDAwMDAxODQ4NiIsInBpZCI6Ijc4MjQ0MzciLCJ0YXJnZXRpZCI6IjI5MTEyNzAzIn07fSAgCmlmKHR5cGVvZihpbkRhcElGKSAhPSAidW5kZWZpbmVkIil7cGFyZW50LmRhcF9SZXNpemUoZG9jdW1lbnQuYm9keS5pZCwgMSwgMSk7fSAgCnRyeSAgCnsgICAgCglpZih0eXBlb2YoaW5EYXBJRikgIT0gInVuZGVmaW5lZCIpICAgIAoJeyAgICAgIAoJCXBhcmVudC5TaG93QWNiKGRvY3VtZW50LmJvZHkuaWQsIDgwMDAwMDAwMDAwMDE4NDg2LCAgMSwgMSwgImcubXNuLmNvbSIsICIyQUQwMDAxUiIsIjc4MjQ0MzciLCBudWxsKTsgICAgCgl9ICAKfSAgCmNhdGNoKGUpe30gIApkb2N1bWVudC53cml0ZSgnPGEgaHJlZj0iaHR0cDovL2cubXNuLmNvbS8yQUQwMDAxUi84MDAwMDAwMDAwMDAxODQ4Ni4xPz9QSUQ9NzgyNDQzNyZhbXA7VUlUPUcmYW1wO1RhcmdldElEPTI5MTEyNzAzJmFtcDtBTj0xOTE1MzA2ODA5JmFtcDtQRz1DQUVQRDEmYW1wO0FTSUQ9MTJkOWM2NjBjMWY1NGU2Y2I3NGIxZWNmOTVkM2YzY2IiIHRhcmdldD0iX2JsYW5rIj48aW1nIHNyYz0iaHR0cDovL2EuYWRzMi5tc2Fkcy5uZXQvQ0lTLzIwLzAwMC8wMDAvMDAwLzAwMS8xNTAuZ2lmIiB3aWR0aD0iMSIgaGVpZ2h0PSIxIiBhbHQ9ImRvdCIgYm9yZGVyPSIwIiAvPjwvYT4nKTsgIApkb2N1bWVudC5jbG9zZSgpOyAgCi8vXV0+ICAK",
+							"encoding": "base64"
+						},
+						"redirectURL": "",
+						"headersSize": -1,
+						"bodySize": 467
+					},
+					"rawRequest": null,
+					"rawResponse": {
+						"Body": "\u001f\ufffd\u0008\u0000\u0000\u0000\u0000\u0000\u0000\u0003\ufffdQ[o\ufffd0\u0014~n~ũ\u001fV\ufffd\"\ufffdɽ\t\ufffdPت\ufffdLQ\ufffd=UUel\u0003V\ufffd 0\ufffd2\ufffd\ufffd\u003eC\ufffdtR'\ufffd\ufffd\ufffd\ufffd\\\u0000\u0006\u0018\ufffdn\ufffd6ap\u000c\ufffd\u0006q\ufffd\ufffd\ufffd\ufffd\ufffdD\ufffd}\u0010nym\ufffd\ufffdB%tS\ufffd\u0016Q.9\ufffdGs\ufffd\ufffd\ufffd\ufffdx\u003eECT\ufffd\ufffd\ufffd\ufffd\u001b\ufffdG3ckZ\u0019\ufffd\ufffd\ufffd-\u0008\ufffdf\ufffd\u0008\ufffd-\ufffd\u0000\u00062\ufffd\ufffd\ufffd\u0014ElI\u0015\ufffdr\ufffdÆ[\u001fP\ufffd\ufffd\ufffd\ufffd\u0012\u001c\ufffdmI+\ufffd\ufffd\ufffdi\ufffd\ufffd\u0017\ufffd\ufffd-,^\ufffd\u0026\ufffd|Q\ufffdώ\ufffdC \ufffd\ufffd{@]\ufffdͿ\u0005s\u00067\ufffdG\ufffd\ufffd\ufffd\ufffd\ufffdr\ufffdNvH\ufffdS\ufffd\ufffd0}iw\u0008=\ufffd\u0010P\ufffd\ufffd\ufffdrX\ufffd#cxA\ufffde\ufffdM\ufffd\ufffd9\ufffdj\ufffd\ufffd^^\ufffd\ufffdb\ufffd˨f\ufffd%\ufffd\ufffd3\ufffd|\ufffdJjaݭ(\ufffd\ufffd\ufffd}\ufffdj]\ufffdc|\ufffd\ufffd\u001f\ufffd\ufffdKA\u000eyx\ufffdmC\ufffd\ufffd\ufffd\u001b\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffdc\ufffd\n\u0013\ufffdXD\ufffd\r~\ufffddA\u0026#w:w\u0017\ufffdg\ufffd\ufffdo\ufffdﻐ\\\ufffd\u0007\ufffd\ufffdx|\ufffd\ufffdS\ufffd\ufffdx2\u0016S\u0016\ufffd\ufffd\u0011\u0011,^L\ufffd(\u001e\ufffd\u0008\ufffde\ufffd\u003ez\ufffd2\ufffd^\ufffdz%\ufffd\u0004\ufffd\ufffd]\ufffd\ufffd\u000e\ufffd\ufffdg\ufffd0\ufffdQB\ufffd\ufffd\ufffd\ufffd=\u0017\ufffd\ufffd\ufffd\ufffd\u0004\ufffd\ufffd\ufffd$2Fp\ufffd\\\ufffd\u003e\"\u0008R!\ufffd\ufffd`\u001b\ufffdfF\ufffdB#\ufffd\ufffd\ufffd\ufffd\ufffdG.\u0002\ufffd^a\ufffd\ufffd\ufffd\ufffd\ufffd9F\ufffd\u0015\ufffd\ufffdz\u001f\ufffd\ufffd\ufffdk#\ufffd\u0000\ufffd\n\ufffdt\ufffd\u0002\u0000\u0000",
+						"Status": "200 OK",
+						"StatusCode": 200,
+						"Proto": "HTTP/1.1",
+						"ProtoMajor": 1,
+						"ProtoMinor": 1,
+						"Header": {
+							"Cache-Control": [
+								"no-cache, must-revalidate"
+							],
+							"Content-Encoding": [
+								"gzip"
+							],
+							"Content-Length": [
+								"467"
+							],
+							"Content-Type": [
+								"text/html; Charset=utf-8"
+							],
+							"Cteonnt-Length": [
+								"741"
+							],
+							"Date": [
+								"Tue, 25 Jan 2011 18:55:20 GMT"
+							],
+							"Expires": [
+								"Fri, 01 Jan 1990 00:00:00 GMT"
+							],
+							"P3p": [
+								"CP=\"BUS CUR CONo FIN IVDo ONL OUR PHY SAMo TELo\""
+							],
+							"Pragma": [
+								"no-cache"
+							],
+							"Server": [
+								"Microsoft-IIS/7.5"
+							],
+							"X-Radid": [
+								"P7824437-T29112703-C80000000000018486"
+							]
+						},
+						"ContentLength": 467,
+						"TransferEncoding": null,
+						"Close": false,
+						"Uncompressed": false,
+						"Trailer": null,
+						"Request": null,
+						"TLS": null
+					}
+				}
+			}
+		},
+		"Summary": null
+	},
+	{
+		"Protocol": {
+			"name": "http",
+			"longName": "Hypertext Transfer Protocol -- HTTP/1.1",
+			"abbr": "HTTP",
+			"macro": "http",
+			"version": "1.1",
+			"backgroundColor": "#205cf5",
+			"foregroundColor": "#ffffff",
+			"fontSize": 12,
+			"referenceLink": "https://datatracker.ietf.org/doc/html/rfc2616",
+			"ports": [
+				"80",
+				"443",
+				"8080"
+			],
+			"priority": 0
+		},
+		"Timestamp": -6795364578871,
+		"ConnectionInfo": {
+			"ClientIP": "1",
+			"ClientPort": "1",
+			"ServerIP": "2",
+			"ServerPort": "2",
+			"IsOutgoing": false
+		},
+		"Pair": {
+			"request": {
+				"isRequest": true,
+				"captureTime": "0001-01-01T00:00:00Z",
+				"payload": {
+					"method": "GET",
+					"url": "",
+					"details": {
+						"method": "GET",
+						"url": "/ADSAdClient31.dll?DPJS=0\u0026PN=MSFT\u0026PG=CELPR1\u0026AP=1402\u0026GetSAd=",
+						"httpVersion": "HTTP/1.1",
+						"cookies": [],
+						"headers": [
+							{
+								"name": "Accept",
+								"value": "*/*"
+							},
+							{
+								"name": "Accept-Charset",
+								"value": "ISO-8859-1,utf-8;q=0.7,*;q=0.3"
+							},
+							{
+								"name": "Accept-Encoding",
+								"value": "gzip,deflate,sdch"
+							},
+							{
+								"name": "Accept-Language",
+								"value": "en-US,en;q=0.8"
+							},
+							{
+								"name": "Connection",
+								"value": "keep-alive"
+							},
+							{
+								"name": "Host",
+								"value": "a.rad.msn.com"
+							},
+							{
+								"name": "Referer",
+								"value": "http://lifestyle.ca.msn.com/home-garden/five-things/rd-gallery.aspx?cp-documentid=27053613\u0026page=3"
+							},
+							{
+								"name": "User-Agent",
+								"value": "Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/534.10 (KHTML, like Gecko) Chrome/8.0.552.237 Safari/534.10"
+							}
+						],
+						"queryString": [
+							{
+								"name": "AP",
+								"value": "1402"
+							},
+							{
+								"name": "DPJS",
+								"value": "0"
+							},
+							{
+								"name": "GetSAd",
+								"value": ""
+							},
+							{
+								"name": "PG",
+								"value": "CELPR1"
+							},
+							{
+								"name": "PN",
+								"value": "MSFT"
+							}
+						],
+						"headersSize": -1,
+						"bodySize": 0
+					},
+					"rawRequest": {
+						"Method": "GET",
+						"URL": {
+							"Scheme": "",
+							"Opaque": "",
+							"User": null,
+							"Host": "",
+							"Path": "/ADSAdClient31.dll",
+							"RawPath": "",
+							"ForceQuery": false,
+							"RawQuery": "DPJS=0\u0026PN=MSFT\u0026PG=CELPR1\u0026AP=1402\u0026GetSAd=",
+							"Fragment": "",
+							"RawFragment": ""
+						},
+						"Proto": "HTTP/1.1",
+						"ProtoMajor": 1,
+						"ProtoMinor": 1,
+						"Header": {
+							"Accept": [
+								"*/*"
+							],
+							"Accept-Charset": [
+								"ISO-8859-1,utf-8;q=0.7,*;q=0.3"
+							],
+							"Accept-Encoding": [
+								"gzip,deflate,sdch"
+							],
+							"Accept-Language": [
+								"en-US,en;q=0.8"
+							],
+							"Connection": [
+								"keep-alive"
+							],
+							"Referer": [
+								"http://lifestyle.ca.msn.com/home-garden/five-things/rd-gallery.aspx?cp-documentid=27053613\u0026page=3"
+							],
+							"User-Agent": [
+								"Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/534.10 (KHTML, like Gecko) Chrome/8.0.552.237 Safari/534.10"
+							]
+						},
+						"ContentLength": 0,
+						"TransferEncoding": null,
+						"Close": false,
+						"Host": "a.rad.msn.com",
+						"Form": null,
+						"PostForm": null,
+						"MultipartForm": null,
+						"Trailer": null,
+						"RemoteAddr": "",
+						"RequestURI": "/ADSAdClient31.dll?GetSAd=\u0026DPJS=0\u0026PN=MSFT\u0026PG=CELPR1\u0026AP=1402",
+						"TLS": null,
+						"Response": null
+					},
+					"rawResponse": null
+				}
+			},
+			"response": {
+				"isRequest": false,
+				"captureTime": "0001-01-01T00:00:00Z",
+				"payload": {
+					"method": "",
+					"url": "",
+					"details": {
+						"status": 200,
+						"statusText": "OK",
+						"httpVersion": "HTTP/1.1",
+						"cookies": [],
+						"headers": [
+							{
+								"name": "Cache-Control",
+								"value": "no-cache, must-revalidate"
+							},
+							{
+								"name": "Content-Encoding",
+								"value": "gzip"
+							},
+							{
+								"name": "Content-Length",
+								"value": "465"
+							},
+							{
+								"name": "Content-Type",
+								"value": "text/html; Charset=utf-8"
+							},
+							{
+								"name": "Cteonnt-Length",
+								"value": "741"
+							},
+							{
+								"name": "Date",
+								"value": "Tue, 25 Jan 2011 18:54:45 GMT"
+							},
+							{
+								"name": "Expires",
+								"value": "Fri, 01 Jan 1990 00:00:00 GMT"
+							},
+							{
+								"name": "P3p",
+								"value": "CP=\"BUS CUR CONo FIN IVDo ONL OUR PHY SAMo TELo\""
+							},
+							{
+								"name": "Pragma",
+								"value": "no-cache"
+							},
+							{
+								"name": "Server",
+								"value": "Microsoft-IIS/7.5"
+							},
+							{
+								"name": "X-Radid",
+								"value": "P7868506-T29456096-C80000000000018486"
+							}
+						],
+						"content": {
+							"size": 741,
+							"mimeType": "text/html; Charset=utf-8",
+							"text": "ICAKLy88IVtDREFUQVsKZnVuY3Rpb24gZ2V0UkFESWRzKCkgeyByZXR1cm57ImFkaWQiOiI4MDAwMDAwMDAwMDAxODQ4NiIsInBpZCI6Ijc4Njg1MDYiLCJ0YXJnZXRpZCI6IjI5NDU2MDk2In07fSAgCmlmKHR5cGVvZihpbkRhcElGKSAhPSAidW5kZWZpbmVkIil7cGFyZW50LmRhcF9SZXNpemUoZG9jdW1lbnQuYm9keS5pZCwgMSwgMSk7fSAgCnRyeSAgCnsgICAgCglpZih0eXBlb2YoaW5EYXBJRikgIT0gInVuZGVmaW5lZCIpICAgIAoJeyAgICAgIAoJCXBhcmVudC5TaG93QWNiKGRvY3VtZW50LmJvZHkuaWQsIDgwMDAwMDAwMDAwMDE4NDg2LCAgMSwgMSwgImcubXNuLmNvbSIsICIyQUQwMDAxUiIsIjc4Njg1MDYiLCBudWxsKTsgICAgCgl9ICAKfSAgCmNhdGNoKGUpe30gIApkb2N1bWVudC53cml0ZSgnPGEgaHJlZj0iaHR0cDovL2cubXNuLmNvbS8yQUQwMDAxUi84MDAwMDAwMDAwMDAxODQ4Ni4xPz9QSUQ9Nzg2ODUwNiZhbXA7VUlUPUcmYW1wO1RhcmdldElEPTI5NDU2MDk2JmFtcDtBTj0xNjQ2OTM2MTk2JmFtcDtQRz1DRUxQUjEmYW1wO0FTSUQ9YTM2NDZhYTJiYTE5NDY2MmFiZmJmYjYyNThhNzgwZWIiIHRhcmdldD0iX2JsYW5rIj48aW1nIHNyYz0iaHR0cDovL2EuYWRzMi5tc2Fkcy5uZXQvQ0lTLzIwLzAwMC8wMDAvMDAwLzAwMS8xNTAuZ2lmIiB3aWR0aD0iMSIgaGVpZ2h0PSIxIiBhbHQ9ImRvdCIgYm9yZGVyPSIwIiAvPjwvYT4nKTsgIApkb2N1bWVudC5jbG9zZSgpOyAgCi8vXV0+ICAK",
+							"encoding": "base64"
+						},
+						"redirectURL": "",
+						"headersSize": -1,
+						"bodySize": 465
+					},
+					"rawRequest": null,
+					"rawResponse": {
+						"Body": "\u001f\ufffd\u0008\u0000\u0000\u0000\u0000\u0000\u0000\u0003\ufffdQ\ufffdj\ufffd@\u0014\ufffdn\ufffd\ufffdt.\ufffd\n\ufffdqlbM\u0013S$\ufffd\u0016aYB\ufffd^\ufffdRFg\ufffdau\u0014\u001d\t\ufffd\ufffdw\ufffdѤ\ufffdB\u0017::\ufffd_\ufffd\ufffd\ufffd\u0000\ufffd0^\\?\ufffd\ufffd`\u0017\u003c\ufffd\ufffdN\u0026JT\u00122\ufffd6A\u0018\ufffd\ufffd0\ufffd\u0008\rW]#\ufffd\ufffd2\ufffd\ufffd=\ufffd\ufffd\ufffdC\ufffd\ufffd\ufffd\ufffd1\ufffd\ufffdȝ\ufffdzS\ufffd\ufffd\u0015m4\ufffd\ufffdtf\ufffd\ufffdk\ufffd\\\ufffd6\u0003\u0018\ufffd\ufffdP\ufffd\ufffdW\ufffd!dH\ufffd\ufffd\ufffd\t\ufffd\u003e\ufffdN2\ufffd\n\ufffd\u00192\ufffd5m\ufffdT\u0016\ufffd\ufffd놷\ufffd\u000f7X\ufffdte\ufffd\ufffd+v\ufffd\u0004\u001b\u0003ѯ9\u0000\ufffd栿G\ufffdgt\ufffd5\ufffd)oH3\ufffd6\ufffd\ufffdA\u0012\ufffd\ufffd\ufffdS\ufffdc\u0018\ufffdǀ2\ufffdl\ufffd\ufffdT%҆\u0013\ufffd}\ufffdFw\ufffd\u0003Ȯ(\ufffd\ufffd\ufffd\ufffd/\ufffd\ufffd\tUInp\ufffd\ufffd\u001b\u0017\ufffd}#\u00147n\u0016\u0014\ufffd\ufffd\ufffd\u003eʕ\ufffd\ufffd1\ufffdP\ufffdw|\ufffd\ufffd \ufffd\u003c\u003c\ufffd\ufffd\ufffd?\ufffd~\ufffde=\ufffdv\ufffd\ufffd\ufffd\ufffd\ufffdU\ufffd\ufffd\ufffd\"\u0006o\ufffd\ufffd'\ufffdĝݺ\ufffd\ufffdY?\ufffd\ufffd\ufffd?\ufffd\u001br\ufffdo\ufffd\u001f\ufffdV\ufffdP\ufffdĔ\ufffd\u0026\ufffd\ufffd\ufffd8Տ\ufffdL=z\ufffd\ufffd\u003cFpڳ\ufffd^\ufffd\ufffd\ufffd\ufffdh\ufffd\u0010e\u0006m\ufffd\\\ufffd\ufffd\u0016e\ufffd\ufffd\ufffd\ufffd\\\ufffdU\ufffdŎ\ufffdu\ufffd\ufffd\\\ufffd\ufffdԶ2\ufffd\"\ufffd\u000b\ufffdr\u001f\u0011\u00049\u0017Y\ufffd\ufffd\ufffdJ\u000b-Y\ufffd\u0010\ufffdU\ufffdx\ufffd#\u001b\u0001^.0]\ufffd\ufffd\ufffd\ufffd\u0018cRT-7\u0006\u001f\ufffd//K-\ufffd\u0002\ufffd\ufffdW\ufffd\ufffd\u0002\u0000\u0000",
+						"Status": "200 OK",
+						"StatusCode": 200,
+						"Proto": "HTTP/1.1",
+						"ProtoMajor": 1,
+						"ProtoMinor": 1,
+						"Header": {
+							"Cache-Control": [
+								"no-cache, must-revalidate"
+							],
+							"Content-Encoding": [
+								"gzip"
+							],
+							"Content-Length": [
+								"465"
+							],
+							"Content-Type": [
+								"text/html; Charset=utf-8"
+							],
+							"Cteonnt-Length": [
+								"741"
+							],
+							"Date": [
+								"Tue, 25 Jan 2011 18:54:45 GMT"
+							],
+							"Expires": [
+								"Fri, 01 Jan 1990 00:00:00 GMT"
+							],
+							"P3p": [
+								"CP=\"BUS CUR CONo FIN IVDo ONL OUR PHY SAMo TELo\""
+							],
+							"Pragma": [
+								"no-cache"
+							],
+							"Server": [
+								"Microsoft-IIS/7.5"
+							],
+							"X-Radid": [
+								"P7868506-T29456096-C80000000000018486"
+							]
+						},
+						"ContentLength": 465,
+						"TransferEncoding": null,
+						"Close": false,
+						"Uncompressed": false,
+						"Trailer": null,
+						"Request": null,
+						"TLS": null
+					}
+				}
+			}
+		},
+		"Summary": null
+	},
+	{
+		"Protocol": {
+			"name": "http",
+			"longName": "Hypertext Transfer Protocol -- HTTP/1.1",
+			"abbr": "HTTP",
+			"macro": "http",
+			"version": "1.1",
+			"backgroundColor": "#205cf5",
+			"foregroundColor": "#ffffff",
+			"fontSize": 12,
+			"referenceLink": "https://datatracker.ietf.org/doc/html/rfc2616",
+			"ports": [
+				"80",
+				"443",
+				"8080"
+			],
+			"priority": 0
+		},
+		"Timestamp": -6795364578871,
+		"ConnectionInfo": {
+			"ClientIP": "1",
+			"ClientPort": "1",
+			"ServerIP": "2",
+			"ServerPort": "2",
+			"IsOutgoing": false
+		},
+		"Pair": {
+			"request": {
+				"isRequest": true,
+				"captureTime": "0001-01-01T00:00:00Z",
+				"payload": {
+					"method": "GET",
+					"url": "",
+					"details": {
+						"method": "GET",
+						"url": "/ADSAdClient31.dll?GetSAd=\u0026DPJS=0\u0026PN=MSFT\u0026PG=CELPR1\u0026AP=1402",
+						"httpVersion": "HTTP/1.1",
+						"cookies": [],
+						"headers": [
+							{
+								"name": "Accept",
+								"value": "*/*"
+							},
+							{
+								"name": "Accept-Charset",
+								"value": "ISO-8859-1,utf-8;q=0.7,*;q=0.3"
+							},
+							{
+								"name": "Accept-Encoding",
+								"value": "gzip,deflate,sdch"
+							},
+							{
+								"name": "Accept-Language",
+								"value": "en-US,en;q=0.8"
+							},
+							{
+								"name": "Connection",
+								"value": "keep-alive"
+							},
+							{
+								"name": "Host",
+								"value": "a.rad.msn.com"
+							},
+							{
+								"name": "Referer",
+								"value": "http://lifestyle.ca.msn.com/home-garden/five-things/rd-gallery.aspx?cp-documentid=27053613\u0026page=1"
+							},
+							{
+								"name": "User-Agent",
+								"value": "Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/534.10 (KHTML, like Gecko) Chrome/8.0.552.237 Safari/534.10"
+							}
+						],
+						"queryString": [
+							{
+								"name": "AP",
+								"value": "1402"
+							},
+							{
+								"name": "DPJS",
+								"value": "0"
+							},
+							{
+								"name": "GetSAd",
+								"value": ""
+							},
+							{
+								"name": "PG",
+								"value": "CELPR1"
+							},
+							{
+								"name": "PN",
+								"value": "MSFT"
+							}
+						],
+						"headersSize": -1,
+						"bodySize": 0
+					},
+					"rawRequest": {
+						"Method": "GET",
+						"URL": {
+							"Scheme": "",
+							"Opaque": "",
+							"User": null,
+							"Host": "",
+							"Path": "/ADSAdClient31.dll",
+							"RawPath": "",
+							"ForceQuery": false,
+							"RawQuery": "GetSAd=\u0026DPJS=0\u0026PN=MSFT\u0026PG=CELPR1\u0026AP=1402",
+							"Fragment": "",
+							"RawFragment": ""
+						},
+						"Proto": "HTTP/1.1",
+						"ProtoMajor": 1,
+						"ProtoMinor": 1,
+						"Header": {
+							"Accept": [
+								"*/*"
+							],
+							"Accept-Charset": [
+								"ISO-8859-1,utf-8;q=0.7,*;q=0.3"
+							],
+							"Accept-Encoding": [
+								"gzip,deflate,sdch"
+							],
+							"Accept-Language": [
+								"en-US,en;q=0.8"
+							],
+							"Connection": [
+								"keep-alive"
+							],
+							"Referer": [
+								"http://lifestyle.ca.msn.com/home-garden/five-things/rd-gallery.aspx?cp-documentid=27053613\u0026page=1"
+							],
+							"User-Agent": [
+								"Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/534.10 (KHTML, like Gecko) Chrome/8.0.552.237 Safari/534.10"
+							]
+						},
+						"ContentLength": 0,
+						"TransferEncoding": null,
+						"Close": false,
+						"Host": "a.rad.msn.com",
+						"Form": null,
+						"PostForm": null,
+						"MultipartForm": null,
+						"Trailer": null,
+						"RemoteAddr": "",
+						"RequestURI": "/ADSAdClient31.dll?GetSAd=\u0026DPJS=0\u0026PN=MSFT\u0026PG=CELPR1\u0026AP=1402",
+						"TLS": null,
+						"Response": null
+					},
+					"rawResponse": null
+				}
+			},
+			"response": {
+				"isRequest": false,
+				"captureTime": "0001-01-01T00:00:00Z",
+				"payload": {
+					"method": "",
+					"url": "",
+					"details": {
+						"status": 200,
+						"statusText": "OK",
+						"httpVersion": "HTTP/1.1",
+						"cookies": [],
+						"headers": [
+							{
+								"name": "Cache-Control",
+								"value": "no-cache, must-revalidate"
+							},
+							{
+								"name": "Content-Encoding",
+								"value": "gzip"
+							},
+							{
+								"name": "Content-Length",
+								"value": "466"
+							},
+							{
+								"name": "Content-Type",
+								"value": "text/html; Charset=utf-8"
+							},
+							{
+								"name": "Cteonnt-Length",
+								"value": "738"
+							},
+							{
+								"name": "Date",
+								"value": "Tue, 25 Jan 2011 18:53:27 GMT"
+							},
+							{
+								"name": "Expires",
+								"value": "Fri, 01 Jan 1990 00:00:00 GMT"
+							},
+							{
+								"name": "P3p",
+								"value": "CP=\"BUS CUR CONo FIN IVDo ONL OUR PHY SAMo TELo\""
+							},
+							{
+								"name": "Pragma",
+								"value": "no-cache"
+							},
+							{
+								"name": "Server",
+								"value": "Microsoft-IIS/7.5"
+							},
+							{
+								"name": "X-Radid",
+								"value": "P7868506-T29456096-C80000000000018486"
+							}
+						],
+						"content": {
+							"size": 738,
+							"mimeType": "text/html; Charset=utf-8",
+							"text": "ICAKLy88IVtDREFUQVsKZnVuY3Rpb24gZ2V0UkFESWRzKCkgeyByZXR1cm57ImFkaWQiOiI4MDAwMDAwMDAwMDAxODQ4NiIsInBpZCI6Ijc4Njg1MDYiLCJ0YXJnZXRpZCI6IjI5NDU2MDk2In07fSAgCmlmKHR5cGVvZihpbkRhcElGKSAhPSAidW5kZWZpbmVkIil7cGFyZW50LmRhcF9SZXNpemUoZG9jdW1lbnQuYm9keS5pZCwgMSwgMSk7fSAgCnRyeSAgCnsgICAgCglpZih0eXBlb2YoaW5EYXBJRikgIT0gInVuZGVmaW5lZCIpICAgIAoJeyAgICAgIAoJCXBhcmVudC5TaG93QWNiKGRvY3VtZW50LmJvZHkuaWQsIDgwMDAwMDAwMDAwMDE4NDg2LCAgMSwgMSwgImcubXNuLmNvbSIsICIyQUQwMDAxUiIsIjc4Njg1MDYiLCBudWxsKTsgICAgCgl9ICAKfSAgCmNhdGNoKGUpe30gIApkb2N1bWVudC53cml0ZSgnPGEgaHJlZj0iaHR0cDovL2cubXNuLmNvbS8yQUQwMDAxUi84MDAwMDAwMDAwMDAxODQ4Ni4xPz9QSUQ9Nzg2ODUwNiZhbXA7VUlUPUcmYW1wO1RhcmdldElEPTI5NDU2MDk2JmFtcDtBTj0zMjExNjc1JmFtcDtQRz1DRUxQUjEmYW1wO0FTSUQ9OTU3ODQ1ZDAzMzc0NGQ0YmJhOGNiZTRlYTk2MDQzNGMiIHRhcmdldD0iX2JsYW5rIj48aW1nIHNyYz0iaHR0cDovL2EuYWRzMi5tc2Fkcy5uZXQvQ0lTLzIwLzAwMC8wMDAvMDAwLzAwMS8xNTAuZ2lmIiB3aWR0aD0iMSIgaGVpZ2h0PSIxIiBhbHQ9ImRvdCIgYm9yZGVyPSIwIiAvPjwvYT4nKTsgIApkb2N1bWVudC5jbG9zZSgpOyAgCi8vXV0+ICAK",
+							"encoding": "base64"
+						},
+						"redirectURL": "",
+						"headersSize": -1,
+						"bodySize": 466
+					},
+					"rawRequest": null,
+					"rawResponse": {
+						"Body": "\u001f\ufffd\u0008\u0000\u0000\u0000\u0000\u0000\u0000\u0003\ufffdQok\ufffd0\u0018\ufffd~\ufffdgyqS(F\ufffdZ\ufffd\ufffd\u000e\ufffdwC8\ufffd\ufffd\ufffd^\ufffd1\ufffd\ufffd\u001aN\ufffdh\ufffd\ufffdʾ\ufffdE\ufffdu\u0007;\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\u0001\ufffd`\ufffd\ufffd}\ufffdD\ufffd!|\ufffdd\ufffdH%\ufffd\u0005\ufffdL\ufffd\ufffd(\ufffd\ufffd\ufffd\ufffd\u0019Z\u0026\ufffdV\ufffd\u0011\ufffd\ufffd\ufffd{\ufffd\ufffd\u001f\ufffd\ufffd\u001d\ufffdCSԌ\ufffd\ufffd\ufffd\ufffd\ufffd9ؒ\ufffd\nct\ufffd\u000b\ufffd\ufffd̅\ufffd^\ufffd\ufffd\u0000\u0013\ufffdi\ufffd԰:Ӹ\ufffdH\u0013\ufffd\ufffd6\u0000\ufffd\u000b\ufffd2.\u0018E\ufffd\ufffd!-\u0013Ҡ\ufffdyٱ\ufffd\ufffdf\u001a\ufffdӾ\u001a|IMO\u0006\ufffdS\ufffd\ufffd\ufffdG@ٞ\ufffd\u0006u\u00267\ufffdG\ufffd\ufffd\ufffd\ufffd\ufffdr\ufffdF\ufffd/\ufffdc\ufffd\u0026\ufffd`\ufffd\ufffd\ufffd\u0014F\ufffd)\ufffdܨ:a\ufffdu\ufffd\ufffda\ufffdѐ\ufffdS\ufffd_\ufffd\u0000\ufffd/K}y\ufffd\u001a\ufffd\u001d^JdZhL?\u000fƕ\ufffd\ufffdrɴ\ufffd\u0015\ufffd\ufffdeY\ufffd\n)\ufffd{\ufffd\ufffd\u0014\ufffd\u001d\u001f*Ȱ\u001e\u001e\ufffdq\u0014\ufffd\ufffd~!U\ufffd\ufffd\u0019\u001f\ufffd\ufffdQ;\ufffd\ufffdP\ufffd\ufffdE\ufffd\ufffd\ufffdG0\ufffd-˛\ufffd\ufffd\ufffd}\u000c6_\ufffdow\ufffd%\ufffdW\ufffd\u000bw\ufffd;.5g\ufffd\ufffd\ufffdP'I\ufffd\ufffd\u0026\ufffdad\ufffd\ufffd\ufffd\ufffdI\u0011\\\ufffd\u001c\ufffd\ufffd\ufffd$\ufffd\u0017Z\ufffdx\ufffdCצ\ufffd\ufffd\ufffdAhg\ufffd\u000e\ufffd0\u0004\ufffdx\u0013\ufffd\ufffdmbU\ufffd_\ufffdk\u001a9\ufffd\u0010\u001c9\ufffdE\ufffd,\u0004\u0005\ufffdy\ufffd\ufffd\ufffdJJ%i-\u0011$uKY\u001b \u0013\u0001^\ufffd0Y\ufffd\r\ufffd\ufffd\ufffdaZ\ufffd\u001d\ufffdF\u001f\ufffd\ufffd\ufffdk%\ufffd\u0000\ufffdO\u0008g\ufffd\u0002\u0000\u0000",
+						"Status": "200 OK",
+						"StatusCode": 200,
+						"Proto": "HTTP/1.1",
+						"ProtoMajor": 1,
+						"ProtoMinor": 1,
+						"Header": {
+							"Cache-Control": [
+								"no-cache, must-revalidate"
+							],
+							"Content-Encoding": [
+								"gzip"
+							],
+							"Content-Length": [
+								"466"
+							],
+							"Content-Type": [
+								"text/html; Charset=utf-8"
+							],
+							"Cteonnt-Length": [
+								"738"
+							],
+							"Date": [
+								"Tue, 25 Jan 2011 18:53:27 GMT"
+							],
+							"Expires": [
+								"Fri, 01 Jan 1990 00:00:00 GMT"
+							],
+							"P3p": [
+								"CP=\"BUS CUR CONo FIN IVDo ONL OUR PHY SAMo TELo\""
+							],
+							"Pragma": [
+								"no-cache"
+							],
+							"Server": [
+								"Microsoft-IIS/7.5"
+							],
+							"X-Radid": [
+								"P7868506-T29456096-C80000000000018486"
+							]
+						},
+						"ContentLength": 466,
+						"TransferEncoding": null,
+						"Close": false,
+						"Uncompressed": false,
+						"Trailer": null,
+						"Request": null,
+						"TLS": null
+					}
+				}
+			}
+		},
+		"Summary": null
+	},
+	{
+		"Protocol": {
+			"name": "http",
+			"longName": "Hypertext Transfer Protocol -- HTTP/1.1",
+			"abbr": "HTTP",
+			"macro": "http",
+			"version": "1.1",
+			"backgroundColor": "#205cf5",
+			"foregroundColor": "#ffffff",
+			"fontSize": 12,
+			"referenceLink": "https://datatracker.ietf.org/doc/html/rfc2616",
+			"ports": [
+				"80",
+				"443",
+				"8080"
+			],
+			"priority": 0
+		},
+		"Timestamp": -6795364578871,
+		"ConnectionInfo": {
+			"ClientIP": "1",
+			"ClientPort": "1",
+			"ServerIP": "2",
+			"ServerPort": "2",
+			"IsOutgoing": false
+		},
+		"Pair": {
+			"request": {
+				"isRequest": true,
+				"captureTime": "0001-01-01T00:00:00Z",
+				"payload": {
+					"method": "GET",
+					"url": "",
+					"details": {
+						"method": "GET",
+						"url": "/ADSAdClient31.dll?AP=1402\u0026GetSAd=\u0026DPJS=0\u0026PN=MSFT\u0026PG=CELPR1",
+						"httpVersion": "HTTP/1.1",
+						"cookies": [],
+						"headers": [
+							{
+								"name": "Accept",
+								"value": "*/*"
+							},
+							{
+								"name": "Accept-Charset",
+								"value": "ISO-8859-1,utf-8;q=0.7,*;q=0.3"
+							},
+							{
+								"name": "Accept-Encoding",
+								"value": "gzip,deflate,sdch"
+							},
+							{
+								"name": "Accept-Language",
+								"value": "en-US,en;q=0.8"
+							},
+							{
+								"name": "Connection",
+								"value": "keep-alive"
+							},
+							{
+								"name": "Host",
+								"value": "a.rad.msn.com"
+							},
+							{
+								"name": "Referer",
+								"value": "http://lifestyle.ca.msn.com/home-garden/five-things/rd-gallery.aspx?cp-documentid=27053613\u0026page=4"
+							},
+							{
+								"name": "User-Agent",
+								"value": "Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/534.10 (KHTML, like Gecko) Chrome/8.0.552.237 Safari/534.10"
+							}
+						],
+						"queryString": [
+							{
+								"name": "AP",
+								"value": "1402"
+							},
+							{
+								"name": "DPJS",
+								"value": "0"
+							},
+							{
+								"name": "GetSAd",
+								"value": ""
+							},
+							{
+								"name": "PG",
+								"value": "CELPR1"
+							},
+							{
+								"name": "PN",
+								"value": "MSFT"
+							}
+						],
+						"headersSize": -1,
+						"bodySize": 0
+					},
+					"rawRequest": {
+						"Method": "GET",
+						"URL": {
+							"Scheme": "",
+							"Opaque": "",
+							"User": null,
+							"Host": "",
+							"Path": "/ADSAdClient31.dll",
+							"RawPath": "",
+							"ForceQuery": false,
+							"RawQuery": "AP=1402\u0026GetSAd=\u0026DPJS=0\u0026PN=MSFT\u0026PG=CELPR1",
+							"Fragment": "",
+							"RawFragment": ""
+						},
+						"Proto": "HTTP/1.1",
+						"ProtoMajor": 1,
+						"ProtoMinor": 1,
+						"Header": {
+							"Accept": [
+								"*/*"
+							],
+							"Accept-Charset": [
+								"ISO-8859-1,utf-8;q=0.7,*;q=0.3"
+							],
+							"Accept-Encoding": [
+								"gzip,deflate,sdch"
+							],
+							"Accept-Language": [
+								"en-US,en;q=0.8"
+							],
+							"Connection": [
+								"keep-alive"
+							],
+							"Referer": [
+								"http://lifestyle.ca.msn.com/home-garden/five-things/rd-gallery.aspx?cp-documentid=27053613\u0026page=4"
+							],
+							"User-Agent": [
+								"Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/534.10 (KHTML, like Gecko) Chrome/8.0.552.237 Safari/534.10"
+							]
+						},
+						"ContentLength": 0,
+						"TransferEncoding": null,
+						"Close": false,
+						"Host": "a.rad.msn.com",
+						"Form": null,
+						"PostForm": null,
+						"MultipartForm": null,
+						"Trailer": null,
+						"RemoteAddr": "",
+						"RequestURI": "/ADSAdClient31.dll?GetSAd=\u0026DPJS=0\u0026PN=MSFT\u0026PG=CELPR1\u0026AP=1402",
+						"TLS": null,
+						"Response": null
+					},
+					"rawResponse": null
+				}
+			},
+			"response": {
+				"isRequest": false,
+				"captureTime": "0001-01-01T00:00:00Z",
+				"payload": {
+					"method": "",
+					"url": "",
+					"details": {
+						"status": 200,
+						"statusText": "OK",
+						"httpVersion": "HTTP/1.1",
+						"cookies": [],
+						"headers": [
+							{
+								"name": "Cache-Control",
+								"value": "no-cache, must-revalidate"
+							},
+							{
+								"name": "Content-Encoding",
+								"value": "gzip"
+							},
+							{
+								"name": "Content-Length",
+								"value": "468"
+							},
+							{
+								"name": "Content-Type",
+								"value": "text/html; Charset=utf-8"
+							},
+							{
+								"name": "Cteonnt-Length",
+								"value": "741"
+							},
+							{
+								"name": "Date",
+								"value": "Tue, 25 Jan 2011 18:54:58 GMT"
+							},
+							{
+								"name": "Expires",
+								"value": "Fri, 01 Jan 1990 00:00:00 GMT"
+							},
+							{
+								"name": "P3p",
+								"value": "CP=\"BUS CUR CONo FIN IVDo ONL OUR PHY SAMo TELo\""
+							},
+							{
+								"name": "Pragma",
+								"value": "no-cache"
+							},
+							{
+								"name": "Server",
+								"value": "Microsoft-IIS/7.5"
+							},
+							{
+								"name": "X-Radid",
+								"value": "P7868506-T29456096-C80000000000018486"
+							}
+						],
+						"content": {
+							"size": 741,
+							"mimeType": "text/html; Charset=utf-8",
+							"text": "ICAKLy88IVtDREFUQVsKZnVuY3Rpb24gZ2V0UkFESWRzKCkgeyByZXR1cm57ImFkaWQiOiI4MDAwMDAwMDAwMDAxODQ4NiIsInBpZCI6Ijc4Njg1MDYiLCJ0YXJnZXRpZCI6IjI5NDU2MDk2In07fSAgCmlmKHR5cGVvZihpbkRhcElGKSAhPSAidW5kZWZpbmVkIil7cGFyZW50LmRhcF9SZXNpemUoZG9jdW1lbnQuYm9keS5pZCwgMSwgMSk7fSAgCnRyeSAgCnsgICAgCglpZih0eXBlb2YoaW5EYXBJRikgIT0gInVuZGVmaW5lZCIpICAgIAoJeyAgICAgIAoJCXBhcmVudC5TaG93QWNiKGRvY3VtZW50LmJvZHkuaWQsIDgwMDAwMDAwMDAwMDE4NDg2LCAgMSwgMSwgImcubXNuLmNvbSIsICIyQUQwMDAxUiIsIjc4Njg1MDYiLCBudWxsKTsgICAgCgl9ICAKfSAgCmNhdGNoKGUpe30gIApkb2N1bWVudC53cml0ZSgnPGEgaHJlZj0iaHR0cDovL2cubXNuLmNvbS8yQUQwMDAxUi84MDAwMDAwMDAwMDAxODQ4Ni4xPz9QSUQ9Nzg2ODUwNiZhbXA7VUlUPUcmYW1wO1RhcmdldElEPTI5NDU2MDk2JmFtcDtBTj0xNjEwNjEzMDQ3JmFtcDtQRz1DRUxQUjEmYW1wO0FTSUQ9NGM0YjUyNjNlZDE5NDE0NGI5ZGM0MDE1ZjE2MDY5NDUiIHRhcmdldD0iX2JsYW5rIj48aW1nIHNyYz0iaHR0cDovL2EuYWRzMi5tc2Fkcy5uZXQvQ0lTLzIwLzAwMC8wMDAvMDAwLzAwMS8xNTAuZ2lmIiB3aWR0aD0iMSIgaGVpZ2h0PSIxIiBhbHQ9ImRvdCIgYm9yZGVyPSIwIiAvPjwvYT4nKTsgIApkb2N1bWVudC5jbG9zZSgpOyAgCi8vXV0+ICAK",
+							"encoding": "base64"
+						},
+						"redirectURL": "",
+						"headersSize": -1,
+						"bodySize": 468
+					},
+					"rawRequest": null,
+					"rawResponse": {
+						"Body": "\u001f\ufffd\u0008\u0000\u0000\u0000\u0000\u0000\u0000\u0003\ufffdQ\ufffdj\ufffd0\u0014\ufffdn\ufffd\ufffdT\u0017\ufffd\r\ufffd\ufffdR\ufffdu\ufffd8\ufffd$[\t\ufffd\u0011\ufffd쪔\"K\ufffd-f\ufffd\ufffdV\u0008Y\ufffd\ufffdOV\ufffdt\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd;?\u0000\u0003\ufffdg\ufffdO\ufffde\ufffdK\ufffd\u0006\ufffd^1-k\u0005\ufffdЛd\ufffd\ufffd\ufffd\ufffd\ufffd\tZ\ufffd\ufffd\ufffd:!\ufffd%G\ufffd(\ufffd?\u000e\ufffd\ufffd(DC\ufffd\ufffd\ufffd]\u0014Fc\ufffd\ufffd5m\r\ufffdu\ufffd\u0026\ufffd8\ufffd'!z\ufffd\ufffd\u0002\u000cd\ufffd\ufffdc#\ufffd̑jI\ufffd\ufffd7\u0017\ufffdc@{\ufffdE\u0026\ufffd\ufffd\ufffd=5\ufffd\u0015J{\ufffd6/\u001b\ufffd\ufffd\ufffd\ufffd\ufffd5\ufffdW\ufffd/\ufffd\ufffdѓ|\u0008\ufffd|\ufffd\u0005\ufffd\ufffd\ufffd\ufffdO`\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\u003c\ufffd\ufffd+Wodۢ\u003e$,\ufffd\u0007ӧv\ufffd`ه\ufffdr\ufffd\ufffd\ufffd\ufffd\ufffd\n\u0019c\ufffd,\ufffd\ufffd\ufffd\ufffd\ufffd2\u0007P\ufffd\ufffdt\ufffdg\ufffd\ufffd\ufffd\ufffd2\ufffdY\ufffd\u0008\ufffd\ufffd\u001b\u0017\ufffdC+\ufffdpnf\u0014\ufffdVd1*\ufffdn\ufffd1\ufffdP\ufffdw|\ufffd\ufffd \ufffd\u003c\u003c\ufffdW\ufffd\ufffd\ufffd\ufffd\u000b\ufffd\ufffd\ufffd\ufffd\ufffd.~\ufffd\ufffdή\ufffd\u0017a\ufffdɏ\ufffd\ufffd\ufffd\u000fɭ\u001f\ufffdY\ufffd\ufffd1^|\ufffd\ufffdސs|k^\u0004,Hǣ\ufffdVp2\tH\u0010\ufffd\u0013\ufffd\u0002\ufffd\ufffd3\u0012\ufffd\ufffdACp\ufffds\ufffd^Ғ\ufffd_h\u003e\ufffdU\u000e]\ufffd.\ufffdS\ufffd\ufffdnd\ufffd0\ufffdSB\ufffd\ufffdj\ufffdG\u003e6\ufffd\ufffdu\t\u0026c\ufffd\ufffde\ufffd\ufffd \ufffd.bD\u0010\u0014B\ufffd\ufffd\ufffd6*-\ufffd\ufffd\ufffdF\ufffd\ufffd-\u0017m\ufffd|\u0004x\u003e\ufffdt~ӏ\ufffdc\ufffd\ufffd\ufffd;\ufffdX\u001f\ufffd\ufffd\ufffds#\ufffd\u0000oo\ufffdh\ufffd\u0002\u0000\u0000",
+						"Status": "200 OK",
+						"StatusCode": 200,
+						"Proto": "HTTP/1.1",
+						"ProtoMajor": 1,
+						"ProtoMinor": 1,
+						"Header": {
+							"Cache-Control": [
+								"no-cache, must-revalidate"
+							],
+							"Content-Encoding": [
+								"gzip"
+							],
+							"Content-Length": [
+								"468"
+							],
+							"Content-Type": [
+								"text/html; Charset=utf-8"
+							],
+							"Cteonnt-Length": [
+								"741"
+							],
+							"Date": [
+								"Tue, 25 Jan 2011 18:54:58 GMT"
+							],
+							"Expires": [
+								"Fri, 01 Jan 1990 00:00:00 GMT"
+							],
+							"P3p": [
+								"CP=\"BUS CUR CONo FIN IVDo ONL OUR PHY SAMo TELo\""
+							],
+							"Pragma": [
+								"no-cache"
+							],
+							"Server": [
+								"Microsoft-IIS/7.5"
+							],
+							"X-Radid": [
+								"P7868506-T29456096-C80000000000018486"
+							]
+						},
+						"ContentLength": 468,
+						"TransferEncoding": null,
+						"Close": false,
+						"Uncompressed": false,
+						"Trailer": null,
+						"Request": null,
+						"TLS": null
+					}
+				}
+			}
+		},
+		"Summary": null
+	},
+	{
+		"Protocol": {
+			"name": "http",
+			"longName": "Hypertext Transfer Protocol -- HTTP/1.1",
+			"abbr": "HTTP",
+			"macro": "http",
+			"version": "1.1",
+			"backgroundColor": "#205cf5",
+			"foregroundColor": "#ffffff",
+			"fontSize": 12,
+			"referenceLink": "https://datatracker.ietf.org/doc/html/rfc2616",
+			"ports": [
+				"80",
+				"443",
+				"8080"
+			],
+			"priority": 0
+		},
+		"Timestamp": -6795364578871,
+		"ConnectionInfo": {
+			"ClientIP": "1",
+			"ClientPort": "1",
+			"ServerIP": "2",
+			"ServerPort": "2",
+			"IsOutgoing": false
+		},
+		"Pair": {
+			"request": {
+				"isRequest": true,
+				"captureTime": "0001-01-01T00:00:00Z",
+				"payload": {
+					"method": "GET",
+					"url": "",
+					"details": {
+						"method": "GET",
+						"url": "/ADSAdClient31.dll?DPJS=0\u0026PN=MSFT\u0026PG=CAEPD1\u0026AP=1402\u0026GetSAd=",
+						"httpVersion": "HTTP/1.1",
+						"cookies": [],
+						"headers": [
+							{
+								"name": "Accept",
+								"value": "*/*"
+							},
+							{
+								"name": "Accept-Charset",
+								"value": "ISO-8859-1,utf-8;q=0.7,*;q=0.3"
+							},
+							{
+								"name": "Accept-Encoding",
+								"value": "gzip,deflate,sdch"
+							},
+							{
+								"name": "Accept-Language",
+								"value": "en-US,en;q=0.8"
+							},
+							{
+								"name": "Connection",
+								"value": "keep-alive"
+							},
+							{
+								"name": "Host",
+								"value": "a.rad.msn.com"
+							},
+							{
+								"name": "Referer",
+								"value": "http://entertainment.ca.msn.com/movies/galleries/gallery.aspx?cp-documentid=26184969"
+							},
+							{
+								"name": "User-Agent",
+								"value": "Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/534.10 (KHTML, like Gecko) Chrome/8.0.552.237 Safari/534.10"
+							}
+						],
+						"queryString": [
+							{
+								"name": "AP",
+								"value": "1402"
+							},
+							{
+								"name": "DPJS",
+								"value": "0"
+							},
+							{
+								"name": "GetSAd",
+								"value": ""
+							},
+							{
+								"name": "PG",
+								"value": "CAEPD1"
+							},
+							{
+								"name": "PN",
+								"value": "MSFT"
+							}
+						],
+						"headersSize": -1,
+						"bodySize": 0
+					},
+					"rawRequest": {
+						"Method": "GET",
+						"URL": {
+							"Scheme": "",
+							"Opaque": "",
+							"User": null,
+							"Host": "",
+							"Path": "/ADSAdClient31.dll",
+							"RawPath": "",
+							"ForceQuery": false,
+							"RawQuery": "DPJS=0\u0026PN=MSFT\u0026PG=CAEPD1\u0026AP=1402\u0026GetSAd=",
+							"Fragment": "",
+							"RawFragment": ""
+						},
+						"Proto": "HTTP/1.1",
+						"ProtoMajor": 1,
+						"ProtoMinor": 1,
+						"Header": {
+							"Accept": [
+								"*/*"
+							],
+							"Accept-Charset": [
+								"ISO-8859-1,utf-8;q=0.7,*;q=0.3"
+							],
+							"Accept-Encoding": [
+								"gzip,deflate,sdch"
+							],
+							"Accept-Language": [
+								"en-US,en;q=0.8"
+							],
+							"Connection": [
+								"keep-alive"
+							],
+							"Referer": [
+								"http://entertainment.ca.msn.com/movies/galleries/gallery.aspx?cp-documentid=26184969"
+							],
+							"User-Agent": [
+								"Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/534.10 (KHTML, like Gecko) Chrome/8.0.552.237 Safari/534.10"
+							]
+						},
+						"ContentLength": 0,
+						"TransferEncoding": null,
+						"Close": false,
+						"Host": "a.rad.msn.com",
+						"Form": null,
+						"PostForm": null,
+						"MultipartForm": null,
+						"Trailer": null,
+						"RemoteAddr": "",
+						"RequestURI": "/ADSAdClient31.dll?GetSAd=\u0026DPJS=0\u0026PN=MSFT\u0026PG=CAEPD1\u0026AP=1402",
+						"TLS": null,
+						"Response": null
+					},
+					"rawResponse": null
+				}
+			},
+			"response": {
+				"isRequest": false,
+				"captureTime": "0001-01-01T00:00:00Z",
+				"payload": {
+					"method": "",
+					"url": "",
+					"details": {
+						"status": 200,
+						"statusText": "OK",
+						"httpVersion": "HTTP/1.1",
+						"cookies": [],
+						"headers": [
+							{
+								"name": "Cache-Control",
+								"value": "no-cache, must-revalidate"
+							},
+							{
+								"name": "Content-Encoding",
+								"value": "gzip"
+							},
+							{
+								"name": "Content-Length",
+								"value": "466"
+							},
+							{
+								"name": "Content-Type",
+								"value": "text/html; Charset=utf-8"
+							},
+							{
+								"name": "Cteonnt-Length",
+								"value": "740"
+							},
+							{
+								"name": "Date",
+								"value": "Tue, 25 Jan 2011 18:55:47 GMT"
+							},
+							{
+								"name": "Expires",
+								"value": "Fri, 01 Jan 1990 00:00:00 GMT"
+							},
+							{
+								"name": "P3p",
+								"value": "CP=\"BUS CUR CONo FIN IVDo ONL OUR PHY SAMo TELo\""
+							},
+							{
+								"name": "Pragma",
+								"value": "no-cache"
+							},
+							{
+								"name": "Server",
+								"value": "Microsoft-IIS/7.5"
+							},
+							{
+								"name": "X-Radid",
+								"value": "P7824437-T29112703-C80000000000018486"
+							}
+						],
+						"content": {
+							"size": 740,
+							"mimeType": "text/html; Charset=utf-8",
+							"text": "ICAKLy88IVtDREFUQVsKZnVuY3Rpb24gZ2V0UkFESWRzKCkgeyByZXR1cm57ImFkaWQiOiI4MDAwMDAwMDAwMDAxODQ4NiIsInBpZCI6Ijc4MjQ0MzciLCJ0YXJnZXRpZCI6IjI5MTEyNzAzIn07fSAgCmlmKHR5cGVvZihpbkRhcElGKSAhPSAidW5kZWZpbmVkIil7cGFyZW50LmRhcF9SZXNpemUoZG9jdW1lbnQuYm9keS5pZCwgMSwgMSk7fSAgCnRyeSAgCnsgICAgCglpZih0eXBlb2YoaW5EYXBJRikgIT0gInVuZGVmaW5lZCIpICAgIAoJeyAgICAgIAoJCXBhcmVudC5TaG93QWNiKGRvY3VtZW50LmJvZHkuaWQsIDgwMDAwMDAwMDAwMDE4NDg2LCAgMSwgMSwgImcubXNuLmNvbSIsICIyQUQwMDAxUiIsIjc4MjQ0MzciLCBudWxsKTsgICAgCgl9ICAKfSAgCmNhdGNoKGUpe30gIApkb2N1bWVudC53cml0ZSgnPGEgaHJlZj0iaHR0cDovL2cubXNuLmNvbS8yQUQwMDAxUi84MDAwMDAwMDAwMDAxODQ4Ni4xPz9QSUQ9NzgyNDQzNyZhbXA7VUlUPUcmYW1wO1RhcmdldElEPTI5MTEyNzAzJmFtcDtBTj00NTU2MjUxODYmYW1wO1BHPUNBRVBEMSZhbXA7QVNJRD05NTA5OGE0MTQ0YzU0MmUxOGEzZDZkMWNkMGY1YTA0MSIgdGFyZ2V0PSJfYmxhbmsiPjxpbWcgc3JjPSJodHRwOi8vYS5hZHMyLm1zYWRzLm5ldC9DSVMvMjAvMDAwLzAwMC8wMDAvMDAxLzE1MC5naWYiIHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGFsdD0iZG90IiBib3JkZXI9IjAiIC8+PC9hPicpOyAgCmRvY3VtZW50LmNsb3NlKCk7ICAKLy9dXT4gIAo=",
+							"encoding": "base64"
+						},
+						"redirectURL": "",
+						"headersSize": -1,
+						"bodySize": 466
+					},
+					"rawRequest": null,
+					"rawResponse": {
+						"Body": "\u001f\ufffd\u0008\u0000\u0000\u0000\u0000\u0000\u0000\u0003\ufffdQ[o\ufffd0\u0018}n~\ufffd\ufffd\ufffd\u0015\ufffd\u0008c\u0002\tiB*\u0014\ufffd*/S\ufffddOUU9\ufffd\u0001\ufffd`\u0010\u0018E\u0019\ufffd\ufffdq\ufffdtR'\ufffd\ufffd|W\ufffd\ufffd]\u0000\u0018!\ufffd\ufffd}Z'\ufffd!~\u001a\ufffd\ufffd\ufffdJT\u0012d\\\ufffd\ufffdd\ufffdZ\ufffd\u0006=h\ufffd\ufffd\u001a\ufffdC\ufffd\u0004\ufffd\ufffd0t?\u000f\u000e\ufffdp\nǰ6\ufffdY\ufffd\ufffd\ufffdd\ufffdmE\u001a\ufffda\ufffd\ufffd\u001cco\ufffdN\ufffd\ufffd\ufffd\r\ufffd\ufffdH-u\ufffdy\ufffdZB\u0026\ufffd\ufffd\ufffd\ufffd\ufffdm\u0004`'\u0019O\ufffd\ufffd\u000c\ufffd}M\u001a.\ufffd\ufffdH\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd-VѮ\u001c|Ǌ\ufffd\u001d\ufffd\ufffd\u0000\ufffd\ufffd6\ufffd\ufffd9\ufffd\u000f\ufffd\u0019\ufffd\ufffd\u001f\ufffd\ufffdg\ufffd\u0007\ufffd\ufffd\ufffdl\ufffdW\ufffd\ufffd\u001e\ufffd\ufffd\ufffd\ufffd\ufffd10\ufffdc\u00003\ufffdl\ufffdC\ufffd\u0012jË\ufffd!c\ufffd\ufffd\ufffd\ufffd\u0001Ȯ(\ufffdŅj(v\ufffd\ufffd(\ufffd[\ufffd\ufffd\u0007\ufffd\ufffdwj\ufffd\ufffd\ufffdݒ\ufffd\ufffd\ufffdi\u0004s\ufffd\ufffd{\ufffd\ufffd\u0014\ufffd\u0003\u001f})\ufffd\ufffd\u000f\u000f\ufffdM\u0012\ufffd\ufffd~#e\ufffd\ufffd\ufffd9D\ufffdF;\ufffdU\ufffd\ufffd\ufffd\"\ufffd7\ufffd\u0019\ufffdA0\ufffd\u0002\u001cN\ufffdc\ufffd\u0018\ufffd\ufffd\ufffd\ufffd\u0004_\ufffd{\ufffd`\u001e\ufffd\ufffd\ufffd\ufffd\ufffd\ufffdi\ufffd{\u001c\ufffdd¦\u000cS\ufffd\ufffd\u0001q}\u000c\ufffde\ufffd\u0011|9\u0016D\ufffd\ufffd\ufffdR\ufffd\u0019h\u001bz-\ufffd8\ufffd\ufffd\ufffd\ufffdA\u000bGr\ufffd֛=\ufffd\\\ufffdK\ufffd\ufffdb\ufffd\u0003\ufffd\ufffdD\n\ufffdI0\ufffdGPc\ufffd\\d\ufffd\ufffd\ufffd*)\ufffdd\ufffd\ufffd\ufffdX5\ufffd7\u0011t!@\ufffd%\"\ufffd\ufffda\ufffd\ufffdS\ufffdE\ufffdr\ufffd\ufffd\u0010z~^i\ufffd\u0007%K\ufffd\ufffd\ufffd\u0002\u0000\u0000",
+						"Status": "200 OK",
+						"StatusCode": 200,
+						"Proto": "HTTP/1.1",
+						"ProtoMajor": 1,
+						"ProtoMinor": 1,
+						"Header": {
+							"Cache-Control": [
+								"no-cache, must-revalidate"
+							],
+							"Content-Encoding": [
+								"gzip"
+							],
+							"Content-Length": [
+								"466"
+							],
+							"Content-Type": [
+								"text/html; Charset=utf-8"
+							],
+							"Cteonnt-Length": [
+								"740"
+							],
+							"Date": [
+								"Tue, 25 Jan 2011 18:55:47 GMT"
+							],
+							"Expires": [
+								"Fri, 01 Jan 1990 00:00:00 GMT"
+							],
+							"P3p": [
+								"CP=\"BUS CUR CONo FIN IVDo ONL OUR PHY SAMo TELo\""
+							],
+							"Pragma": [
+								"no-cache"
+							],
+							"Server": [
+								"Microsoft-IIS/7.5"
+							],
+							"X-Radid": [
+								"P7824437-T29112703-C80000000000018486"
+							]
+						},
+						"ContentLength": 466,
+						"TransferEncoding": null,
+						"Close": false,
+						"Uncompressed": false,
+						"Trailer": null,
+						"Request": null,
+						"TLS": null
+					}
+				}
+			}
+		},
+		"Summary": null
+	},
+	{
+		"Protocol": {
+			"name": "http",
+			"longName": "Hypertext Transfer Protocol -- HTTP/1.1",
+			"abbr": "HTTP",
+			"macro": "http",
+			"version": "1.1",
+			"backgroundColor": "#205cf5",
+			"foregroundColor": "#ffffff",
+			"fontSize": 12,
+			"referenceLink": "https://datatracker.ietf.org/doc/html/rfc2616",
+			"ports": [
+				"80",
+				"443",
+				"8080"
+			],
+			"priority": 0
+		},
+		"Timestamp": -6795364578871,
+		"ConnectionInfo": {
+			"ClientIP": "1",
+			"ClientPort": "1",
+			"ServerIP": "2",
+			"ServerPort": "2",
+			"IsOutgoing": false
+		},
+		"Pair": {
+			"request": {
+				"isRequest": true,
+				"captureTime": "0001-01-01T00:00:00Z",
+				"payload": {
+					"method": "GET",
+					"url": "",
+					"details": {
+						"method": "GET",
+						"url": "/ADSAdClient31.dll?GetSAd=\u0026DPJS=0\u0026PN=MSFT\u0026PG=CELPR1\u0026AP=1402",
+						"httpVersion": "HTTP/1.1",
+						"cookies": [],
+						"headers": [
+							{
+								"name": "Accept",
+								"value": "*/*"
+							},
+							{
+								"name": "Accept-Charset",
+								"value": "ISO-8859-1,utf-8;q=0.7,*;q=0.3"
+							},
+							{
+								"name": "Accept-Encoding",
+								"value": "gzip,deflate,sdch"
+							},
+							{
+								"name": "Accept-Language",
+								"value": "en-US,en;q=0.8"
+							},
+							{
+								"name": "Connection",
+								"value": "keep-alive"
+							},
+							{
+								"name": "Host",
+								"value": "a.rad.msn.com"
+							},
+							{
+								"name": "Referer",
+								"value": "http://lifestyle.ca.msn.com/home-garden/five-things/rd-gallery.aspx?cp-documentid=27053613\u0026page=2"
+							},
+							{
+								"name": "User-Agent",
+								"value": "Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/534.10 (KHTML, like Gecko) Chrome/8.0.552.237 Safari/534.10"
+							}
+						],
+						"queryString": [
+							{
+								"name": "AP",
+								"value": "1402"
+							},
+							{
+								"name": "DPJS",
+								"value": "0"
+							},
+							{
+								"name": "GetSAd",
+								"value": ""
+							},
+							{
+								"name": "PG",
+								"value": "CELPR1"
+							},
+							{
+								"name": "PN",
+								"value": "MSFT"
+							}
+						],
+						"headersSize": -1,
+						"bodySize": 0
+					},
+					"rawRequest": {
+						"Method": "GET",
+						"URL": {
+							"Scheme": "",
+							"Opaque": "",
+							"User": null,
+							"Host": "",
+							"Path": "/ADSAdClient31.dll",
+							"RawPath": "",
+							"ForceQuery": false,
+							"RawQuery": "GetSAd=\u0026DPJS=0\u0026PN=MSFT\u0026PG=CELPR1\u0026AP=1402",
+							"Fragment": "",
+							"RawFragment": ""
+						},
+						"Proto": "HTTP/1.1",
+						"ProtoMajor": 1,
+						"ProtoMinor": 1,
+						"Header": {
+							"Accept": [
+								"*/*"
+							],
+							"Accept-Charset": [
+								"ISO-8859-1,utf-8;q=0.7,*;q=0.3"
+							],
+							"Accept-Encoding": [
+								"gzip,deflate,sdch"
+							],
+							"Accept-Language": [
+								"en-US,en;q=0.8"
+							],
+							"Connection": [
+								"keep-alive"
+							],
+							"Referer": [
+								"http://lifestyle.ca.msn.com/home-garden/five-things/rd-gallery.aspx?cp-documentid=27053613\u0026page=2"
+							],
+							"User-Agent": [
+								"Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/534.10 (KHTML, like Gecko) Chrome/8.0.552.237 Safari/534.10"
+							]
+						},
+						"ContentLength": 0,
+						"TransferEncoding": null,
+						"Close": false,
+						"Host": "a.rad.msn.com",
+						"Form": null,
+						"PostForm": null,
+						"MultipartForm": null,
+						"Trailer": null,
+						"RemoteAddr": "",
+						"RequestURI": "/ADSAdClient31.dll?GetSAd=\u0026DPJS=0\u0026PN=MSFT\u0026PG=CELPR1\u0026AP=1402",
+						"TLS": null,
+						"Response": null
+					},
+					"rawResponse": null
+				}
+			},
+			"response": {
+				"isRequest": false,
+				"captureTime": "0001-01-01T00:00:00Z",
+				"payload": {
+					"method": "",
+					"url": "",
+					"details": {
+						"status": 200,
+						"statusText": "OK",
+						"httpVersion": "HTTP/1.1",
+						"cookies": [],
+						"headers": [
+							{
+								"name": "Cache-Control",
+								"value": "no-cache, must-revalidate"
+							},
+							{
+								"name": "Content-Encoding",
+								"value": "gzip"
+							},
+							{
+								"name": "Content-Length",
+								"value": "469"
+							},
+							{
+								"name": "Content-Type",
+								"value": "text/html; Charset=utf-8"
+							},
+							{
+								"name": "Cteonnt-Length",
+								"value": "741"
+							},
+							{
+								"name": "Date",
+								"value": "Tue, 25 Jan 2011 18:53:38 GMT"
+							},
+							{
+								"name": "Expires",
+								"value": "Fri, 01 Jan 1990 00:00:00 GMT"
+							},
+							{
+								"name": "P3p",
+								"value": "CP=\"BUS CUR CONo FIN IVDo ONL OUR PHY SAMo TELo\""
+							},
+							{
+								"name": "Pragma",
+								"value": "no-cache"
+							},
+							{
+								"name": "Server",
+								"value": "Microsoft-IIS/7.5"
+							},
+							{
+								"name": "X-Radid",
+								"value": "P7868506-T29456096-C80000000000018486"
+							}
+						],
+						"content": {
+							"size": 741,
+							"mimeType": "text/html; Charset=utf-8",
+							"text": "ICAKLy88IVtDREFUQVsKZnVuY3Rpb24gZ2V0UkFESWRzKCkgeyByZXR1cm57ImFkaWQiOiI4MDAwMDAwMDAwMDAxODQ4NiIsInBpZCI6Ijc4Njg1MDYiLCJ0YXJnZXRpZCI6IjI5NDU2MDk2In07fSAgCmlmKHR5cGVvZihpbkRhcElGKSAhPSAidW5kZWZpbmVkIil7cGFyZW50LmRhcF9SZXNpemUoZG9jdW1lbnQuYm9keS5pZCwgMSwgMSk7fSAgCnRyeSAgCnsgICAgCglpZih0eXBlb2YoaW5EYXBJRikgIT0gInVuZGVmaW5lZCIpICAgIAoJeyAgICAgIAoJCXBhcmVudC5TaG93QWNiKGRvY3VtZW50LmJvZHkuaWQsIDgwMDAwMDAwMDAwMDE4NDg2LCAgMSwgMSwgImcubXNuLmNvbSIsICIyQUQwMDAxUiIsIjc4Njg1MDYiLCBudWxsKTsgICAgCgl9ICAKfSAgCmNhdGNoKGUpe30gIApkb2N1bWVudC53cml0ZSgnPGEgaHJlZj0iaHR0cDovL2cubXNuLmNvbS8yQUQwMDAxUi84MDAwMDAwMDAwMDAxODQ4Ni4xPz9QSUQ9Nzg2ODUwNiZhbXA7VUlUPUcmYW1wO1RhcmdldElEPTI5NDU2MDk2JmFtcDtBTj0xODgwODIwMDUxJmFtcDtQRz1DRUxQUjEmYW1wO0FTSUQ9NGMwOTkyZTYzYTNmNDEyMTgxMWJkOTc4ZWFkMGZkZDQiIHRhcmdldD0iX2JsYW5rIj48aW1nIHNyYz0iaHR0cDovL2EuYWRzMi5tc2Fkcy5uZXQvQ0lTLzIwLzAwMC8wMDAvMDAwLzAwMS8xNTAuZ2lmIiB3aWR0aD0iMSIgaGVpZ2h0PSIxIiBhbHQ9ImRvdCIgYm9yZGVyPSIwIiAvPjwvYT4nKTsgIApkb2N1bWVudC5jbG9zZSgpOyAgCi8vXV0+ICAK",
+							"encoding": "base64"
+						},
+						"redirectURL": "",
+						"headersSize": -1,
+						"bodySize": 469
+					},
+					"rawRequest": null,
+					"rawResponse": {
+						"Body": "\u001f\ufffd\u0008\u0000\u0000\u0000\u0000\u0000\u0000\u0003\ufffdQ\ufffdj\ufffd0\u0014\ufffdn\ufffd\ufffdT\u0017\ufffd\r\ufffd\ufffd\\\ufffdu\ufffd8\ufffd\ufffd[1\ufffd\u0011\ufffd쪔\ufffdX\ufffd-\ufffd\ufffdƖ\t\ufffd\ufffd\ufffdOv\ufffdt\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd;?\u0000#\ufffd\ufffd\ufffdO\ufffd8\ufffdFO\ufffd\ufffdU\ufffd\ufffd\ufffd\ufffd\\\ufffdu\u0014'\ufffd\ufffdl\ufffd\ufffd\u0016\ufffd\ufffdU\ufffd\u0018\ufffd\u001cݣ\ufffd|,\u001ax\ufffd\ufffdƨ\u001a^\ufffd\u0002?\ufffd\ufffd\ufffd֬6\u0018\ufffdӝz\u0013\ufffdL}\ufffd:{\u0005\u0018\ufffd\ufffdҧJ\ufffd\ufffd%U̪\ufffd\ufffd\r\ufffd!\ufffdVq\ufffdI%8\ufffd\ufffd\ufffd\ufffdBi\ufffd\ufffd\ufffde-\u001a\ufffd[X\ufffdL\ufffdC\ufffdە\ufffd\ufffdH\u003e\u0006j\ufffd=\u0000\ufffd\ufffdd\ufffd\u000e\ufffd\u001a]\ufffd\u001f\ufffd\u001c7\ufffd\ufffd\ufffd\ufffd\u001b٦(\ufffdQ\ufffd\ufffd\u0007ӧr\ufffd0\ufffd\ufffd\u0001\ufffdΡQNZ\u001e\ufffd1\ufffd(\ufffd#֦\ufffdK\u001f@\ufffd\ufffd\ufffd=;S\ufffd\ufffd\ufffd'e:-,aw\ufffdq\ufffd;\ufffdR\u000b\ufffdfΠ\ufffdE\u0016\ufffdB\ufffd\ufffd\u001e\ufffd\u000b\u0005~\ufffdǟ\u0012r\ufffd\ufffd\ufffd*\ufffd\ufffd7\ufffd/\ufffdP\ufffd~\u0026\ufffd\ufffdqж\ufffd(\ufffd\ufffd\ufffd \u0006o\ufffd#\ufffdA@\u0002\ufffd\ufffd\t\u001d\u003c\ufffd\ufffdp\ufffd\ufffd\ufffdj}\ufffd\ufffd\ufffd\ufffd\ufffd\ufffdd:u\ufffd\ufffdn3\ufffd\ufffd4\ufffdtǧw\ufffd`\ufffdd\ufffd{\u0008\ufffds\u000e\ufffd\ufffdn\ufffd\ufffd/\ufffd\ufffd\ufffdC\u000eM\ufffd^\ufffdg\u000e\ufffd\ufffdk\ufffd0\ufffdQB\ufffde\ufffd\ufffd.\ufffd\u0026\ufffd\ufffd\u000e\ufffdtB\ufffd\\f\u0008\ufffd\ufffd\ufffd\"D\u0014A!d^\u0018l\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\u0008ve\ufffdE\u001d\"\ufffd\u0000/\ufffd\ufffd-n\ufffd\ufffd~\ufffd1ݗ\ufffd\ufffd\u0006\u001f\ufffd\ufffd\ufffd\u000b#\ufffd\u0000\ufffd.ޔ\ufffd\u0002\u0000\u0000",
+						"Status": "200 OK",
+						"StatusCode": 200,
+						"Proto": "HTTP/1.1",
+						"ProtoMajor": 1,
+						"ProtoMinor": 1,
+						"Header": {
+							"Cache-Control": [
+								"no-cache, must-revalidate"
+							],
+							"Content-Encoding": [
+								"gzip"
+							],
+							"Content-Length": [
+								"469"
+							],
+							"Content-Type": [
+								"text/html; Charset=utf-8"
+							],
+							"Cteonnt-Length": [
+								"741"
+							],
+							"Date": [
+								"Tue, 25 Jan 2011 18:53:38 GMT"
+							],
+							"Expires": [
+								"Fri, 01 Jan 1990 00:00:00 GMT"
+							],
+							"P3p": [
+								"CP=\"BUS CUR CONo FIN IVDo ONL OUR PHY SAMo TELo\""
+							],
+							"Pragma": [
+								"no-cache"
+							],
+							"Server": [
+								"Microsoft-IIS/7.5"
+							],
+							"X-Radid": [
+								"P7868506-T29456096-C80000000000018486"
+							]
+						},
+						"ContentLength": 469,
+						"TransferEncoding": null,
+						"Close": false,
+						"Uncompressed": false,
+						"Trailer": null,
+						"Request": null,
+						"TLS": null
+					}
+				}
+			}
+		},
+		"Summary": null
+	},
+	{
+		"Protocol": {
+			"name": "http",
+			"longName": "Hypertext Transfer Protocol -- HTTP/1.1",
+			"abbr": "HTTP",
+			"macro": "http",
+			"version": "1.1",
+			"backgroundColor": "#205cf5",
+			"foregroundColor": "#ffffff",
+			"fontSize": 12,
+			"referenceLink": "https://datatracker.ietf.org/doc/html/rfc2616",
+			"ports": [
+				"80",
+				"443",
+				"8080"
+			],
+			"priority": 0
+		},
+		"Timestamp": -6795364578871,
+		"ConnectionInfo": {
+			"ClientIP": "1",
+			"ClientPort": "1",
+			"ServerIP": "2",
+			"ServerPort": "2",
+			"IsOutgoing": false
+		},
+		"Pair": {
+			"request": {
+				"isRequest": true,
+				"captureTime": "0001-01-01T00:00:00Z",
+				"payload": {
+					"method": "GET",
+					"url": "",
+					"details": {
+						"method": "GET",
+						"url": "/ADSAdClient31.dll?GetSAd=\u0026DPJS=0\u0026PN=MSFT\u0026PG=CELPR1\u0026AP=1402",
+						"httpVersion": "HTTP/1.1",
+						"cookies": [],
+						"headers": [
+							{
+								"name": "Accept",
+								"value": "*/*"
+							},
+							{
+								"name": "Accept-Charset",
+								"value": "ISO-8859-1,utf-8;q=0.7,*;q=0.3"
+							},
+							{
+								"name": "Accept-Encoding",
+								"value": "gzip,deflate,sdch"
+							},
+							{
+								"name": "Accept-Language",
+								"value": "en-US,en;q=0.8"
+							},
+							{
+								"name": "Connection",
+								"value": "keep-alive"
+							},
+							{
+								"name": "Host",
+								"value": "a.rad.msn.com"
+							},
+							{
+								"name": "Referer",
+								"value": "http://lifestyle.ca.msn.com/home-garden/five-things/rd-gallery.aspx?cp-documentid=27053613"
+							},
+							{
+								"name": "User-Agent",
+								"value": "Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/534.10 (KHTML, like Gecko) Chrome/8.0.552.237 Safari/534.10"
+							}
+						],
+						"queryString": [
+							{
+								"name": "AP",
+								"value": "1402"
+							},
+							{
+								"name": "DPJS",
+								"value": "0"
+							},
+							{
+								"name": "GetSAd",
+								"value": ""
+							},
+							{
+								"name": "PG",
+								"value": "CELPR1"
+							},
+							{
+								"name": "PN",
+								"value": "MSFT"
+							}
+						],
+						"headersSize": -1,
+						"bodySize": 0
+					},
+					"rawRequest": {
+						"Method": "GET",
+						"URL": {
+							"Scheme": "",
+							"Opaque": "",
+							"User": null,
+							"Host": "",
+							"Path": "/ADSAdClient31.dll",
+							"RawPath": "",
+							"ForceQuery": false,
+							"RawQuery": "GetSAd=\u0026DPJS=0\u0026PN=MSFT\u0026PG=CELPR1\u0026AP=1402",
+							"Fragment": "",
+							"RawFragment": ""
+						},
+						"Proto": "HTTP/1.1",
+						"ProtoMajor": 1,
+						"ProtoMinor": 1,
+						"Header": {
+							"Accept": [
+								"*/*"
+							],
+							"Accept-Charset": [
+								"ISO-8859-1,utf-8;q=0.7,*;q=0.3"
+							],
+							"Accept-Encoding": [
+								"gzip,deflate,sdch"
+							],
+							"Accept-Language": [
+								"en-US,en;q=0.8"
+							],
+							"Connection": [
+								"keep-alive"
+							],
+							"Referer": [
+								"http://lifestyle.ca.msn.com/home-garden/five-things/rd-gallery.aspx?cp-documentid=27053613"
+							],
+							"User-Agent": [
+								"Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/534.10 (KHTML, like Gecko) Chrome/8.0.552.237 Safari/534.10"
+							]
+						},
+						"ContentLength": 0,
+						"TransferEncoding": null,
+						"Close": false,
+						"Host": "a.rad.msn.com",
+						"Form": null,
+						"PostForm": null,
+						"MultipartForm": null,
+						"Trailer": null,
+						"RemoteAddr": "",
+						"RequestURI": "/ADSAdClient31.dll?GetSAd=\u0026DPJS=0\u0026PN=MSFT\u0026PG=CELPR1\u0026AP=1402",
+						"TLS": null,
+						"Response": null
+					},
+					"rawResponse": null
+				}
+			},
+			"response": {
+				"isRequest": false,
+				"captureTime": "0001-01-01T00:00:00Z",
+				"payload": {
+					"method": "",
+					"url": "",
+					"details": {
+						"status": 200,
+						"statusText": "OK",
+						"httpVersion": "HTTP/1.1",
+						"cookies": [],
+						"headers": [
+							{
+								"name": "Cache-Control",
+								"value": "no-cache, must-revalidate"
+							},
+							{
+								"name": "Content-Encoding",
+								"value": "gzip"
+							},
+							{
+								"name": "Content-Length",
+								"value": "466"
+							},
+							{
+								"name": "Content-Type",
+								"value": "text/html; Charset=utf-8"
+							},
+							{
+								"name": "Cteonnt-Length",
+								"value": "739"
+							},
+							{
+								"name": "Date",
+								"value": "Tue, 25 Jan 2011 18:53:01 GMT"
+							},
+							{
+								"name": "Expires",
+								"value": "Fri, 01 Jan 1990 00:00:00 GMT"
+							},
+							{
+								"name": "P3p",
+								"value": "CP=\"BUS CUR CONo FIN IVDo ONL OUR PHY SAMo TELo\""
+							},
+							{
+								"name": "Pragma",
+								"value": "no-cache"
+							},
+							{
+								"name": "Server",
+								"value": "Microsoft-IIS/7.5"
+							},
+							{
+								"name": "X-Radid",
+								"value": "P7868506-T29456096-C80000000000018486"
+							}
+						],
+						"content": {
+							"size": 739,
+							"mimeType": "text/html; Charset=utf-8",
+							"text": "ICAKLy88IVtDREFUQVsKZnVuY3Rpb24gZ2V0UkFESWRzKCkgeyByZXR1cm57ImFkaWQiOiI4MDAwMDAwMDAwMDAxODQ4NiIsInBpZCI6Ijc4Njg1MDYiLCJ0YXJnZXRpZCI6IjI5NDU2MDk2In07fSAgCmlmKHR5cGVvZihpbkRhcElGKSAhPSAidW5kZWZpbmVkIil7cGFyZW50LmRhcF9SZXNpemUoZG9jdW1lbnQuYm9keS5pZCwgMSwgMSk7fSAgCnRyeSAgCnsgICAgCglpZih0eXBlb2YoaW5EYXBJRikgIT0gInVuZGVmaW5lZCIpICAgIAoJeyAgICAgIAoJCXBhcmVudC5TaG93QWNiKGRvY3VtZW50LmJvZHkuaWQsIDgwMDAwMDAwMDAwMDE4NDg2LCAgMSwgMSwgImcubXNuLmNvbSIsICIyQUQwMDAxUiIsIjc4Njg1MDYiLCBudWxsKTsgICAgCgl9ICAKfSAgCmNhdGNoKGUpe30gIApkb2N1bWVudC53cml0ZSgnPGEgaHJlZj0iaHR0cDovL2cubXNuLmNvbS8yQUQwMDAxUi84MDAwMDAwMDAwMDAxODQ4Ni4xPz9QSUQ9Nzg2ODUwNiZhbXA7VUlUPUcmYW1wO1RhcmdldElEPTI5NDU2MDk2JmFtcDtBTj01MTkwNjcwMyZhbXA7UEc9Q0VMUFIxJmFtcDtBU0lEPTVhN2VkYTUxZTE5NDQxODk4MjQxNTY0NzhhMmRjZjU4IiB0YXJnZXQ9Il9ibGFuayI+PGltZyBzcmM9Imh0dHA6Ly9hLmFkczIubXNhZHMubmV0L0NJUy8yMC8wMDAvMDAwLzAwMC8wMDEvMTUwLmdpZiIgd2lkdGg9IjEiIGhlaWdodD0iMSIgYWx0PSJkb3QiIGJvcmRlcj0iMCIgLz48L2E+Jyk7ICAKZG9jdW1lbnQuY2xvc2UoKTsgIAovL11dPiAgCg==",
+							"encoding": "base64"
+						},
+						"redirectURL": "",
+						"headersSize": -1,
+						"bodySize": 466
+					},
+					"rawRequest": null,
+					"rawResponse": {
+						"Body": "\u001f\ufffd\u0008\u0000\u0000\u0000\u0000\u0000\u0000\u0003\ufffdQ\ufffdj\ufffd0\u0014\ufffdn\ufffd\ufffdT\u0017\ufffd\r\ufffd\ufffd\u003c\ufffdq\ufffd8\ufffd\ufffd[1\ufffd\u0011\ufffd\ufffd\ufffd\ufffd\ufffdXr,\ufffd\ufffd\ufffdV\u0008\ufffd\ufffd\ufffdOV\ufffdt\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\u001f\ufffd\u0001\ufffd\ufffd\ufffd\ufffdy\ufffd\ufffd\ufffd\ufffdAq\ufffd\ufffd\u0012\ufffd\ufffd-W\ufffd$\ufffdXk\ufffd\ufffdA\ufffdա\ufffd\u001d\ufffdL0t\ufffd\"\ufffd\ufffd\ufffdȏB4D\ufffd\ufffd\ufffd\ufffd0\n\ufffd\ufffdV\ufffd\ufffd\u0018\ufffd\ufffd\ufffd\ufffd t\ufffd!z\ufffd\ufffd\u0001\u000cDa\ufffdSͫ\ufffd\u00122\ufffdu\ufffdÆ\ufffd\u0018\ufffdA2^\u0008\ufffd\u0019\ufffd\ufffd\ufffd6\\*\ufffd\ufffd\ufffde\ufffd[\ufffd\ufffd[\ufffd\ufffd\u000f\ufffd޷\ufffd\ufffd\ufffd\u0011l\u0008D_\ufffd\u0000\ufffd\ufffd\ufffd\ufffd\u000e\ufffd\u0019\\\ufffd\u001f\ufffd\ufffdg\ufffd{\ufffd\ufffd\ufffdlUV\ufffd$\ufffd\ufffd\ufffd\ufffdK\ufffdC0\ufffdC@[g\ufffdJ'\ufffd\ufffdH\u001b^\ufffd\ufffd\u0019K\ufffd\ufffde\u000e \u000f\ufffd\ufffd=9S\ufffd\ufffd\ufffd/\ufffd*/-nw\ufffdq\ufffd;6Bq\ufffdvJ\ufffdlx\u0011\ufffdR\ufffd\ufffd\u000e\ufffd\u000b\u0005\ufffd\ufffd\ufffd_\nr\ufffd\ufffd\ufffd\"K\ufffdw\ufffd\u001b\ufffd\ufffd'\ufffd\ufffd:~0\ufffdڬB\ufffd?\u0016a\ufffdɯ8 c7\u001c\ufffdߌ\ufffdx\ufffd\ufffd\ufffd.\ufffd\ufffd\u001c]\ufffd\ufffd\ufffd\ufffd8\ufffd\u0001\ufffdd\ufffd\ufffd$\u001aG\ufffdO\ufffd\ufffd\u001fE\ufffdcy\u0011D\u0008\ufffd[\ufffd\ufffd\ufffdfG\ufffd+\ufffdM\ufffd~\u000bm\ufffd_\ufffd\ufffd\u000ee\ufffd\ufffd[\ufffd\\\ufffdy\ufffd\ufffdu\ufffd=\ufffdI\ufffd:[Q 8\n\ufffd\ufffd\u0018\u0011\u0004%\u0017\ufffdRck\ufffd\ufffd\ufffdd\ufffdB\ufffd\ufffd\u001aƛ\u0018\ufffd\u0008\ufffdl\ufffd\ufffd\ufffd\ufffd\u001f\ufffd\ufffd\u0010\ufffd]\ufffdr\ufffd\ufffd0~~\ufffdi\ufffd\u0007\u0008\ufffd\ufffd\ufffd\ufffd\u0002\u0000\u0000",
+						"Status": "200 OK",
+						"StatusCode": 200,
+						"Proto": "HTTP/1.1",
+						"ProtoMajor": 1,
+						"ProtoMinor": 1,
+						"Header": {
+							"Cache-Control": [
+								"no-cache, must-revalidate"
+							],
+							"Content-Encoding": [
+								"gzip"
+							],
+							"Content-Length": [
+								"466"
+							],
+							"Content-Type": [
+								"text/html; Charset=utf-8"
+							],
+							"Cteonnt-Length": [
+								"739"
+							],
+							"Date": [
+								"Tue, 25 Jan 2011 18:53:01 GMT"
+							],
+							"Expires": [
+								"Fri, 01 Jan 1990 00:00:00 GMT"
+							],
+							"P3p": [
+								"CP=\"BUS CUR CONo FIN IVDo ONL OUR PHY SAMo TELo\""
+							],
+							"Pragma": [
+								"no-cache"
+							],
+							"Server": [
+								"Microsoft-IIS/7.5"
+							],
+							"X-Radid": [
+								"P7868506-T29456096-C80000000000018486"
+							]
+						},
+						"ContentLength": 466,
+						"TransferEncoding": null,
+						"Close": false,
+						"Uncompressed": false,
+						"Trailer": null,
+						"Request": null,
+						"TLS": null
+					}
+				}
+			}
+		},
+		"Summary": null
+	},
+	{
+		"Protocol": {
+			"name": "http",
+			"longName": "Hypertext Transfer Protocol -- HTTP/1.1",
+			"abbr": "HTTP",
+			"macro": "http",
+			"version": "1.1",
+			"backgroundColor": "#205cf5",
+			"foregroundColor": "#ffffff",
+			"fontSize": 12,
+			"referenceLink": "https://datatracker.ietf.org/doc/html/rfc2616",
+			"ports": [
+				"80",
+				"443",
+				"8080"
+			],
+			"priority": 0
+		},
+		"Timestamp": -6795364578871,
+		"ConnectionInfo": {
+			"ClientIP": "1",
+			"ClientPort": "1",
+			"ServerIP": "2",
+			"ServerPort": "2",
+			"IsOutgoing": false
+		},
+		"Pair": {
+			"request": {
+				"isRequest": true,
+				"captureTime": "0001-01-01T00:00:00Z",
+				"payload": {
+					"method": "GET",
+					"url": "",
+					"details": {
+						"method": "GET",
+						"url": "/ADSAdClient31.dll?PG=CAE9UT\u0026AP=1440\u0026GetSAd=\u0026DPJS=0\u0026PN=MSFT",
+						"httpVersion": "HTTP/1.1",
+						"cookies": [],
+						"headers": [
+							{
+								"name": "Accept",
+								"value": "*/*"
+							},
+							{
+								"name": "Accept-Charset",
+								"value": "ISO-8859-1,utf-8;q=0.7,*;q=0.3"
+							},
+							{
+								"name": "Accept-Encoding",
+								"value": "gzip,deflate,sdch"
+							},
+							{
+								"name": "Accept-Language",
+								"value": "en-US,en;q=0.8"
+							},
+							{
+								"name": "Connection",
+								"value": "keep-alive"
+							},
+							{
+								"name": "Host",
+								"value": "a.rad.msn.com"
+							},
+							{
+								"name": "Referer",
+								"value": "http://ca.msn.com/"
+							},
+							{
+								"name": "User-Agent",
+								"value": "Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/534.10 (KHTML, like Gecko) Chrome/8.0.552.237 Safari/534.10"
+							}
+						],
+						"queryString": [
+							{
+								"name": "AP",
+								"value": "1440"
+							},
+							{
+								"name": "DPJS",
+								"value": "0"
+							},
+							{
+								"name": "GetSAd",
+								"value": ""
+							},
+							{
+								"name": "PG",
+								"value": "CAE9UT"
+							},
+							{
+								"name": "PN",
+								"value": "MSFT"
+							}
+						],
+						"headersSize": -1,
+						"bodySize": 0
+					},
+					"rawRequest": {
+						"Method": "GET",
+						"URL": {
+							"Scheme": "",
+							"Opaque": "",
+							"User": null,
+							"Host": "",
+							"Path": "/ADSAdClient31.dll",
+							"RawPath": "",
+							"ForceQuery": false,
+							"RawQuery": "PG=CAE9UT\u0026AP=1440\u0026GetSAd=\u0026DPJS=0\u0026PN=MSFT",
+							"Fragment": "",
+							"RawFragment": ""
+						},
+						"Proto": "HTTP/1.1",
+						"ProtoMajor": 1,
+						"ProtoMinor": 1,
+						"Header": {
+							"Accept": [
+								"*/*"
+							],
+							"Accept-Charset": [
+								"ISO-8859-1,utf-8;q=0.7,*;q=0.3"
+							],
+							"Accept-Encoding": [
+								"gzip,deflate,sdch"
+							],
+							"Accept-Language": [
+								"en-US,en;q=0.8"
+							],
+							"Connection": [
+								"keep-alive"
+							],
+							"Referer": [
+								"http://ca.msn.com/"
+							],
+							"User-Agent": [
+								"Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/534.10 (KHTML, like Gecko) Chrome/8.0.552.237 Safari/534.10"
+							]
+						},
+						"ContentLength": 0,
+						"TransferEncoding": null,
+						"Close": false,
+						"Host": "a.rad.msn.com",
+						"Form": null,
+						"PostForm": null,
+						"MultipartForm": null,
+						"Trailer": null,
+						"RemoteAddr": "",
+						"RequestURI": "/ADSAdClient31.dll?GetSAd=\u0026DPJS=0\u0026PN=MSFT\u0026PG=CAE9UT\u0026AP=1440",
+						"TLS": null,
+						"Response": null
+					},
+					"rawResponse": null
+				}
+			},
+			"response": {
+				"isRequest": false,
+				"captureTime": "0001-01-01T00:00:00Z",
+				"payload": {
+					"method": "",
+					"url": "",
+					"details": {
+						"status": 200,
+						"statusText": "OK",
+						"httpVersion": "HTTP/1.1",
+						"cookies": [],
+						"headers": [
+							{
+								"name": "Cache-Control",
+								"value": "no-cache, must-revalidate"
+							},
+							{
+								"name": "Content-Encoding",
+								"value": "gzip"
+							},
+							{
+								"name": "Content-Length",
+								"value": "623"
+							},
+							{
+								"name": "Content-Type",
+								"value": "text/html; Charset=utf-8"
+							},
+							{
+								"name": "Cteonnt-Length",
+								"value": "1165"
+							},
+							{
+								"name": "Date",
+								"value": "Tue, 25 Jan 2011 18:52:34 GMT"
+							},
+							{
+								"name": "Expires",
+								"value": "Fri, 01 Jan 1990 00:00:00 GMT"
+							},
+							{
+								"name": "P3p",
+								"value": "CP=\"BUS CUR CONo FIN IVDo ONL OUR PHY SAMo TELo\""
+							},
+							{
+								"name": "Pragma",
+								"value": "no-cache"
+							},
+							{
+								"name": "Server",
+								"value": "Microsoft-IIS/7.5"
+							},
+							{
+								"name": "X-Radid",
+								"value": "P8251423-T8114306-C1687391"
+							}
+						],
+						"content": {
+							"size": 1165,
+							"mimeType": "text/html; Charset=utf-8",
+							"text": "DQovLzwhW0NEQVRBWw0KdmFyIGNvbnRlbnRzXzM2MyA9ICc8c3Bhbj48YSB0YXJnZXQ9Il9ibGFuayIgaHJlZj0iaHR0cDovL2cubXNuLmNvbS8wQUQwMDAwMS8xNjg3MzkxLjE/ISZhbXA7JmFtcDtQSUQ9ODI1MTQyMyZhbXA7VUlUPUcmYW1wO1RhcmdldElEPTgxMTQzMDYmYW1wO0FOPTM3NTI4OTQmYW1wO1BHPUNBRTlVVCI+QmVzdCBpbmJveCBvcmdhbml6ZXI/IE5ldyBIb3RtYWlsITwvQT48L3NwYW4+JzsNCnZhciBmaF8zNjMgPSBudWxsOw0KaWYgKGRvY3VtZW50LmJvZHkgJiYgZG9jdW1lbnQuYm9keS5pZCAmJiBkb2N1bWVudC5ib2R5LmlkLmxlbmd0aCA+IDApDQp7DQoJZmhfMzYzPXBhcmVudC5kb2N1bWVudC5nZXRFbGVtZW50QnlJZChkb2N1bWVudC5ib2R5LmlkKTsNCn0NCg0KaWYgKG5hdmlnYXRvci5hcHBWZXJzaW9uLmluZGV4T2YoIldpbiIpPj0wICYmIHBhcnNlRmxvYXQobmF2aWdhdG9yLmFwcFZlcnNpb24uc3Vic3RyKG5hdmlnYXRvci5hcHBWZXJzaW9uLmluZGV4T2YoIk1TSUUgIikrNSkpPj00KQ0Kew0KCXRyeQ0KCXsNCgkJaWYoIWZoXzM2MyB8fCB0eXBlb2YoaW5EYXBJRikgPT0gInVuZGVmaW5lZCIpDQoJCXsNCgkJCWRsV3JpdGUoKTsNCgkJfQ0KCQllbHNlDQoJCXsNCgkJCWZoXzM2My5wYXJlbnROb2RlLmluc2VydEFkamFjZW50SFRNTCgnYWZ0ZXJCZWdpbicsIGNvbnRlbnRzXzM2Myk7DQoJCQlmaF8zNjMuc3R5bGUuZGlzcGxheT0nbm9uZSc7DQoJCQlkb2N1bWVudC5jbG9zZSgpOw0KCQl9DQoJfQ0KCWNhdGNoKGUpDQoJew0KCQlkbFdyaXRlKCk7DQoJfQ0KfWVsc2V7ZGxXcml0ZSgpO30NCmZ1bmN0aW9uIGRsV3JpdGUoKXsNCglpZighZmhfMzYzIHx8IHR5cGVvZihpbkRhcE1ncklmKSA9PSAidW5kZWZpbmVkIikNCgl7CQ0KCQlkb2N1bWVudC53cml0ZShjb250ZW50c18zNjMpOw0KCX0NCgllbHNlDQoJew0KCQl2YXIgZWxlbVNwYW4gPSBkb2N1bWVudC5jcmVhdGVFbGVtZW50KCJzcGFuIik7DQoJCWVsZW1TcGFuLmlubmVySFRNTCA9IGNvbnRlbnRzXzM2MzsNCgkJZmhfMzYzLnBhcmVudE5vZGUuaW5zZXJ0QmVmb3JlKGVsZW1TcGFuLCBmaF8zNjMucGFyZW50Tm9kZS5maXJzdENoaWxkKTsNCgkJZmhfMzYzLnN0eWxlLmRpc3BsYXk9J25vbmUnOw0KCX0NCglkb2N1bWVudC5jbG9zZSgpOw0KfQ0KLy9dXT4NCg==",
+							"encoding": "base64"
+						},
+						"redirectURL": "",
+						"headersSize": -1,
+						"bodySize": 623
+					},
+					"rawRequest": null,
+					"rawResponse": {
+						"Body": "\u001f\ufffd\u0008\u0000\u0000\u0000\u0000\u0000\u0000\u0003\ufffdS]O\ufffd@\u0014}.\t\ufffda胔\ufffdi\ufffd|\ufffd+\ufffd\u0014\ufffd\ufffddu7\u0011\ufffd\u0007c\ufffd\ufffdޖY\ufffd\ufffdffPY\ufffd\ufffd\ufffdL\u000b\u0002Y\ufffdM\ufffdLO\ufffd=sΙ\ufffdr\ufffd\ufffd\ufffd\ufffd\ufffd\ufffdA8\n\ufffd˥g,Pę\u0002\ufffd\ufffdc\ufffd\ufffd@\u0001\ufffdve\ufffdY\ufffd\ufffd\ufffd\ufffd\"\u0005\u0015؏c\ufffdٓ\ufffd\u0026\u0002\ufffd\ufffd\ufffd(\ufffd}\ufffd\ufffdԝJ\ufffdF|\ufffd\ufffd\ufffdA]_\ufffd\ufffd\ufffd;\ufffd\ufffd#\ufffd\ufffdO*{x\ufffd\u001d\ufffd\ufffd_\ufffdA\ufffd9h\ufffd̓F\ufffd~;\u001c\u0005\u0017\ufffdj\ufffdӛϾ\ufffdl\ufffd\ufffd9\u0018^\u0007\ufffd\ufffd\ufffdA\ufffd\ufffdYt_\u0004\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffdA*Dؘ\ufffd\".R\ufffd\ufffd_\u0010'\ufffd\u001a^\ufffd%WSLh\ufffd녽\ufffd\ufffd\ufffd\ufffd\u001e\u0017ޒ\ufffd\ufffd\u0015\ufffdQ\ufffd1\ufffd '\ufffd\ufffdl\ufffd\r\ufffdc\u001e\ufffd\ufffd\ufffd\u001e\ufffd\u0002\\\u0012\ufffd\ufffd\\\n,U\u0013\ufffdC\ufffdZ\ufffd\ufffd(\ufffd\ufffd\ufffd:Ȱ0e\u001f\ufffd\ufffd\ufffd\u0019\u0005\ufffd\ufffdχ\ufffd\ufffdf\ufffd\ufffd\ufffdE\ufffd\ufffdK\ufffd\u0012\ufffd\ufffdI\ufffd\u0015\u0017.β\ufffd $\ufffd\ufffd%,\ufffdן\ufffdc\ufffd\u0011f\ufffdzA\ufffd\ufffdѻH8\ufffd\u001c\ufffd\ufffdMr6\ufffdJ|Axu3\u003cCv\ufffd[\ufffd\ufffdi\ufffdK\u001bJ\ufffd\ufffdӬ,\ufffd8\ufffde`ooH\ufffd3\ufffd\ufffdC\ufffd\u0000g\ufffd\ufffd\u001a\n\u0002d\ufffd4UB\u0018Ķ.+\ufffdw\ufffd(p\ufffd5\ufffd\ufffd\ufffd,\u000b\ufffd\ufffduA\ufffd\ufffd\u0016I]\ufffd\u0018\ufffd$\tB\ufffd\ufffd\u001f\u001ci\ufffdrt\ufffdé\ufffdD\ufffd\ufffdCJXuk\u0026\u000b\ufffd\u0015\ufffdTs\nnLdF\ufffd\u003c\ufffd2\ufffd\ufffd\u001c\ufffdѱ\ufffd:\ufffd\\n\ufffd1w\ufffdU4q\ufffd\ufffd\ufffdEm\ufffd\ufffd\u0005\ufffdF\ufffdb\ufffdj(\ufffd\ufffdH\ufffd\u0000\ufffd\u0007j:?\u000f\ufffd*\u0015\ufffddWN\u000b+\ufffdq%\ufffd%'\ufffdϡQ\ufffd\ufffd-Wh\ufffd\u0017\ufffd$\ufffd\ufffdy\ufffd\u0003\ufffdv'\u0000+XΘc\ufffdq\ufffd\u000b\ufffd\ufffdj\u001d/\u0003aR\ufffd}\ufffd\ufffd\ufffdU\ufffd\ufffdF\u001f\u0012.\ufffdY\ufffd\ufffd/\ufffd\ufffd\ufffd\u0008\ufffdN'\ufffd\ufffdc\ufffd\ufffd\ufffd\u0018G;\u000eEÞ\ufffd\ufffd\ufffd+\ufffd\ufffd\u0001\ufffd\ufffd%\ufffd\ufffd\u0004\u0000\u0000",
+						"Status": "200 OK",
+						"StatusCode": 200,
+						"Proto": "HTTP/1.1",
+						"ProtoMajor": 1,
+						"ProtoMinor": 1,
+						"Header": {
+							"Cache-Control": [
+								"no-cache, must-revalidate"
+							],
+							"Content-Encoding": [
+								"gzip"
+							],
+							"Content-Length": [
+								"623"
+							],
+							"Content-Type": [
+								"text/html; Charset=utf-8"
+							],
+							"Cteonnt-Length": [
+								"1165"
+							],
+							"Date": [
+								"Tue, 25 Jan 2011 18:52:34 GMT"
+							],
+							"Expires": [
+								"Fri, 01 Jan 1990 00:00:00 GMT"
+							],
+							"P3p": [
+								"CP=\"BUS CUR CONo FIN IVDo ONL OUR PHY SAMo TELo\""
+							],
+							"Pragma": [
+								"no-cache"
+							],
+							"Server": [
+								"Microsoft-IIS/7.5"
+							],
+							"X-Radid": [
+								"P8251423-T8114306-C1687391"
+							]
+						},
+						"ContentLength": 623,
+						"TransferEncoding": null,
+						"Close": false,
+						"Uncompressed": false,
+						"Trailer": null,
+						"Request": null,
+						"TLS": null
+					}
+				}
+			}
+		},
+		"Summary": null
+	},
+	{
+		"Protocol": {
+			"name": "http",
+			"longName": "Hypertext Transfer Protocol -- HTTP/1.1",
+			"abbr": "HTTP",
+			"macro": "http",
+			"version": "1.1",
+			"backgroundColor": "#205cf5",
+			"foregroundColor": "#ffffff",
+			"fontSize": 12,
+			"referenceLink": "https://datatracker.ietf.org/doc/html/rfc2616",
+			"ports": [
+				"80",
+				"443",
+				"8080"
+			],
+			"priority": 0
+		},
+		"Timestamp": -6795364578871,
+		"ConnectionInfo": {
+			"ClientIP": "1",
+			"ClientPort": "1",
+			"ServerIP": "2",
+			"ServerPort": "2",
+			"IsOutgoing": false
+		},
+		"Pair": {
+			"request": {
+				"isRequest": true,
+				"captureTime": "0001-01-01T00:00:00Z",
+				"payload": {
+					"method": "GET",
+					"url": "",
+					"details": {
+						"method": "GET",
+						"url": "/ADSAdClient31.dll?PG=CAELCB\u0026AP=1089\u0026GetSAd=\u0026DPJS=0\u0026PN=MSFT",
+						"httpVersion": "HTTP/1.1",
+						"cookies": [],
+						"headers": [
+							{
+								"name": "Accept",
+								"value": "*/*"
+							},
+							{
+								"name": "Accept-Charset",
+								"value": "ISO-8859-1,utf-8;q=0.7,*;q=0.3"
+							},
+							{
+								"name": "Accept-Encoding",
+								"value": "gzip,deflate,sdch"
+							},
+							{
+								"name": "Accept-Language",
+								"value": "en-US,en;q=0.8"
+							},
+							{
+								"name": "Connection",
+								"value": "keep-alive"
+							},
+							{
+								"name": "Host",
+								"value": "a.rad.msn.com"
+							},
+							{
+								"name": "Referer",
+								"value": "http://lifestyle.ca.msn.com/home-garden/five-things/rd-gallery.aspx?cp-documentid=27053613\u0026page=1"
+							},
+							{
+								"name": "User-Agent",
+								"value": "Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/534.10 (KHTML, like Gecko) Chrome/8.0.552.237 Safari/534.10"
+							}
+						],
+						"queryString": [
+							{
+								"name": "AP",
+								"value": "1089"
+							},
+							{
+								"name": "DPJS",
+								"value": "0"
+							},
+							{
+								"name": "GetSAd",
+								"value": ""
+							},
+							{
+								"name": "PG",
+								"value": "CAELCB"
+							},
+							{
+								"name": "PN",
+								"value": "MSFT"
+							}
+						],
+						"headersSize": -1,
+						"bodySize": 0
+					},
+					"rawRequest": {
+						"Method": "GET",
+						"URL": {
+							"Scheme": "",
+							"Opaque": "",
+							"User": null,
+							"Host": "",
+							"Path": "/ADSAdClient31.dll",
+							"RawPath": "",
+							"ForceQuery": false,
+							"RawQuery": "PG=CAELCB\u0026AP=1089\u0026GetSAd=\u0026DPJS=0\u0026PN=MSFT",
+							"Fragment": "",
+							"RawFragment": ""
+						},
+						"Proto": "HTTP/1.1",
+						"ProtoMajor": 1,
+						"ProtoMinor": 1,
+						"Header": {
+							"Accept": [
+								"*/*"
+							],
+							"Accept-Charset": [
+								"ISO-8859-1,utf-8;q=0.7,*;q=0.3"
+							],
+							"Accept-Encoding": [
+								"gzip,deflate,sdch"
+							],
+							"Accept-Language": [
+								"en-US,en;q=0.8"
+							],
+							"Connection": [
+								"keep-alive"
+							],
+							"Referer": [
+								"http://lifestyle.ca.msn.com/home-garden/five-things/rd-gallery.aspx?cp-documentid=27053613\u0026page=1"
+							],
+							"User-Agent": [
+								"Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/534.10 (KHTML, like Gecko) Chrome/8.0.552.237 Safari/534.10"
+							]
+						},
+						"ContentLength": 0,
+						"TransferEncoding": null,
+						"Close": false,
+						"Host": "a.rad.msn.com",
+						"Form": null,
+						"PostForm": null,
+						"MultipartForm": null,
+						"Trailer": null,
+						"RemoteAddr": "",
+						"RequestURI": "/ADSAdClient31.dll?GetSAd=\u0026DPJS=0\u0026PN=MSFT\u0026PG=CAELCB\u0026AP=1089",
+						"TLS": null,
+						"Response": null
+					},
+					"rawResponse": null
+				}
+			},
+			"response": {
+				"isRequest": false,
+				"captureTime": "0001-01-01T00:00:00Z",
+				"payload": {
+					"method": "",
+					"url": "",
+					"details": {
+						"status": 200,
+						"statusText": "OK",
+						"httpVersion": "HTTP/1.1",
+						"cookies": [],
+						"headers": [
+							{
+								"name": "Cache-Control",
+								"value": "no-cache, must-revalidate"
+							},
+							{
+								"name": "Content-Encoding",
+								"value": "gzip"
+							},
+							{
+								"name": "Content-Length",
+								"value": "952"
+							},
+							{
+								"name": "Content-Type",
+								"value": "text/html; Charset=utf-8"
+							},
+							{
+								"name": "Cteonnt-Length",
+								"value": "2329"
+							},
+							{
+								"name": "Date",
+								"value": "Tue, 25 Jan 2011 18:53:27 GMT"
+							},
+							{
+								"name": "Expires",
+								"value": "Fri, 01 Jan 1990 00:00:00 GMT"
+							},
+							{
+								"name": "P3p",
+								"value": "CP=\"BUS CUR CONo FIN IVDo ONL OUR PHY SAMo TELo\""
+							},
+							{
+								"name": "Pragma",
+								"value": "no-cache"
+							},
+							{
+								"name": "Server",
+								"value": "Microsoft-IIS/7.5"
+							},
+							{
+								"name": "X-Radid",
+								"value": "P7698478-T25740950-C71000000000019812"
+							}
+						],
+						"content": {
+							"size": 2329,
+							"mimeType": "text/html; Charset=utf-8",
+							"text": "Ci8vPCFbQ0RBVEFbCiBmdW5jdGlvbiBnZXRSQURJZHMoKSB7IHJldHVybnsiYWRpZCI6IjcxMDAwMDAwMDAwMDE5ODEyIiwicGlkIjoiNzY5ODQ3OCIsInRhcmdldGlkIjoiMjU3NDA5NTAifTt9IGlmKHR5cGVvZihpbkRhcElGKSAhPSAidW5kZWZpbmVkIil7cGFyZW50LmRhcF9SZXNpemUoZG9jdW1lbnQuYm9keS5pZCwgMzAwLCAyNTApO2lmKHBhcmVudC5fZGFwVXRpbHMuaXNfaWU1dXAgJiYgKHBhcmVudC5fZGFwVXRpbHMubWFqb3JWZXIgPCA5KSl7ZG9jdW1lbnQub25yZWFkeXN0YXRlY2hhbmdlPXN0YXJ0UmVuZGVyQWRfODU2Mjk1Nzg0O2RvY3VtZW50LmNsb3NlKCk7fSBlbHNlIHtkb2N1bWVudC53cml0ZShyZW5kZXJBZF84NTYyOTU3ODQoKSk7fX0gZWxzZSB7ZG9jdW1lbnQud3JpdGUocmVuZGVyQWRfODU2Mjk1Nzg0KCkpO31mdW5jdGlvbiBzdGFydFJlbmRlckFkXzg1NjI5NTc4NCgpIHtpZiAoZG9jdW1lbnQucmVhZHlTdGF0ZT09ImNvbXBsZXRlIikge3ZhciBkYXBJZnMgPSBkb2N1bWVudC5ib2R5LmlkO3ZhciBjaGlsZGRhcElmcyA9IGRhcElmcyArICdDaGlsZCc7dmFyIGlmcm0gPSBkb2N1bWVudC5jcmVhdGVFbGVtZW50KCJJRlJBTUUiKTtpZnJtLmlkID0gY2hpbGRkYXBJZnM7aWZybS5oZWlnaHQgPSBwYXJlbnQuZG9jdW1lbnQuYWxsW2RhcElmc10uaGVpZ2h0O2lmcm0ud2lkdGggPSBwYXJlbnQuZG9jdW1lbnQuYWxsW2RhcElmc10ud2lkdGg7aWZybS5zY3JvbGxpbmcgPSAibm8iO2lmcm0uZnJhbWVCb3JkZXIgPSAwO2RvY3VtZW50LmJvZHkuaW5zZXJ0QWRqYWNlbnRFbGVtZW50KCJhZnRlckJlZ2luIixpZnJtKTt3cml0ZWluRGFwSUZfODU2Mjk1Nzg0KGlmcm0sIGRhcElmcyk7cGFyZW50LmRvY3VtZW50LmFsbFtkYXBJZnNdLmluc2VydEFkamFjZW50RWxlbWVudCgnYmVmb3JlQmVnaW4nLCBpZnJtKTtwYXJlbnQuZGFwX1Jlc2l6ZShkb2N1bWVudC5ib2R5LmlkLCAwLCAwKTt9fWZ1bmN0aW9uIHdyaXRlaW5EYXBJRl84NTYyOTU3ODQoaWZybSwgZGFwSWZzKSB7dmFyIHMgPSAnPGh0bWw+PGhlYWQ+PHRpdGxlPkFkdmVydGlzZW1lbnQ8L3RpdGxlPjwvaGVhZD48Ym9keSBpZD0iJyArIGRhcElmcyArICdDaGlsZCIgbGVmdG1hcmdpbj0iMCIgdG9wbWFyZ2luPSIwIj48c2NyJysnaXB0IHR5cGU9InRleHQvamF2YXNjcmlwdCI+dmFyIGluRGFwSUY9dHJ1ZTsnO2lmKGRvY3VtZW50LmRvbWFpbiAmJiBwYXJlbnQubG9jYXRpb24uaG9zdG5hbWUhPWRvY3VtZW50LmRvbWFpbil7cyArPSAnZG9jdW1lbnQuZG9tYWluPSInICsgZG9jdW1lbnQuZG9tYWluICsgJyI7Jzt9aWYgKHR5cGVvZihpbkRhcE1ncklmKSAhPSAidW5kZWZpbmVkIil7cyArPScgdmFyIGluRGFwTWdySWY9dHJ1ZTsnO31zKz0gJ3dpbmRvdy5zZXRUaW1lb3V0KCJkb2N1bWVudC5jbG9zZSgpOyIsMzAwMDApOyc7cys9ICc8L3NjcicrJ2lwdD4nO3ZhciByZW5kZXJBZENvZGUgPSByZW5kZXJBZF84NTYyOTU3ODQoKTtyZW5kZXJBZENvZGUgPSByZW5kZXJBZENvZGUucmVwbGFjZSgvXG4vZywiXFxuIik7cmVuZGVyQWRDb2RlID0gcmVuZGVyQWRDb2RlLnJlcGxhY2UoLycvZywiXFxcJyIpO3MrPSByZW5kZXJBZENvZGU7cys9JzwvYm9keT48L2h0bWw+JztpZnJtLnNyYyA9ICJqYXZhc2NyaXB0OnZvaWQoZG9jdW1lbnQud3JpdGUoJyIgKyBzICsgIicpKTsiO31mdW5jdGlvbiByZW5kZXJBZF84NTYyOTU3ODQoKSB7dmFyIGFkQ29kZV84NTYyOTU3ODQ9bmV3IEFycmF5KCk7YWRDb2RlXzg1NjI5NTc4NC5wdXNoKCc8c2NyJysnaXB0IHR5cGU9InRleHQvamF2YXNjcmlwdCI+XG4nKTthZENvZGVfODU2Mjk1Nzg0LnB1c2goJyA8IS0tXG4nKTthZENvZGVfODU2Mjk1Nzg0LnB1c2goJyBtaWNyb3NvZnRfYWR1bml0aWQ9IjEwMDAwMDE1IjtcbicpO2FkQ29kZV84NTYyOTU3ODQucHVzaCgnIG1pY3Jvc29mdF9hZHVuaXRfd2lkdGg9IjMwMCI7XG4nKTthZENvZGVfODU2Mjk1Nzg0LnB1c2goJyBtaWNyb3NvZnRfYWR1bml0X2hlaWdodD0iMjUwIjtcbicpO2FkQ29kZV84NTYyOTU3ODQucHVzaCgnIG1pY3Jvc29mdF9hZHVuaXRfbGVnYWN5PSJmYWxzZSI7XG4nKTthZENvZGVfODU2Mjk1Nzg0LnB1c2goJyAvLy0tPlxuJyk7YWRDb2RlXzg1NjI5NTc4NC5wdXNoKCcgPC9zY3InKydpcHQ+XG4nKTthZENvZGVfODU2Mjk1Nzg0LnB1c2goJyA8c2NyJysnaXB0IHR5cGU9InRleHQvamF2YXNjcmlwdCIgc3JjPSJodHRwOi8vYWRzeW5kaWNhdGlvbi5tc24uY29tL2RlbGl2ZXJ5L2dldGFkcy5qcyIgPjwvc2NyJysnaXB0PlxuJyk7dmFyIHMgPSBhZENvZGVfODU2Mjk1Nzg0LmpvaW4oJycpO3JldHVybiBzOyB9Ci8vXV0+Cg==",
+							"encoding": "base64"
+						},
+						"redirectURL": "",
+						"headersSize": -1,
+						"bodySize": 952
+					},
+					"rawRequest": null,
+					"rawResponse": {
+						"Body": "\u001f\ufffd\u0008\u0000\u0000\u0000\u0000\u0000\u0000\u0003\ufffdV\ufffdr\ufffd:\u0014\ufffd\ufffd)\u0014-j{J\ufffd\ufffd\u001b\u001a\ufffdmfh\ufffdΰ\ufffd\u0026\ufffd\ufffd\ufffd\ufffdaTK\ufffdbl\ufffd#\ufffdp)û\ufffd\ufffd\u0002̐\u00264\ufffd\ufffd\ufffdw\ufffd\ufffds\ufffd\ufffd0L\ufffd\u001f\ufffd\ufffdG\ufffdG\ufffdg(_\ufffd\ufffdp)Ќ\ufffd\ufffd\ufffd\ufffd\ufffdj?@k\ufffd\ufffdY(\ufffdƄr\ufffdo\ufffd\ufffde\ufffd\ufffd]\u000e\ufffd\ufffdW\ufffd\ufffdkw\ufffdiп\ufffd\ufffd\ufffd\ufffd\u0010\u00056\u001a\ufffdU\ufffd\ufffd:\u001a\ufffd\"\ufffd\ufffd7\ufffd\ufffd\ufffdY\ufffdL\ufffd\u003e\u0017\ufffd\ufffd\u001e\r\ufffdy\ufffd\ufffdBP\ufffds\ufffd(\u000e\ufffd5QL\ufffd.%\ufffd\ufffd\ufffdi\ufffd\ufffd\ufffdTf\ufffd\ufffd\ufffd~J\ufffd\ufffdr\ufffdA\ufffdDQ\u0007]\ufffd\ufffd \u0006\ufffd[\ufffd)h\ufffdgx\ufffd\ufffd\\O9\ufffd-j\ufffd\ufffd\u0003zy[\ufffd\ufffdT?\ufffdB\t\u001a\u0004\ufffdzo\\\n\ufffd\u0008]iC\u000c\ufffd\n\"f,\ufffd\ufffd\ufffd\u003c0\u0008N\ufffd\ufffd\ufffd\ufffd\ufffdt5\ufffd\ufffd\ufffd\ufffd\ufffd\ufffdNVJ\ufffd\ufffd\u0000\u0012c\ufffdf\ufffd5\ufffdT\ufffd0\u001f\u003c\u001f\ufffd\ufffd\u0001\ufffd߇\ufffd7\ufffd\ufffdhl\ufffdx\ufffd\ufffd*5i\ufffdk\ufffdHS\ufffdɪ.\ufffda\u0018P\ufffdD!(\ufffd8\ufffd(E\ufffdE\ufffd\ufffdmV\ufffd\ufffd\ufffd\u0010\ufffd\ufffd#\ufffd\ufffd\ufffd\ufffdk \u003cWաz\u0006\ufffd\u000c\ufffdR2{\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\u0017l\u001b\ufffd*0\u000b\ufffd\u0003\ufffdNZ0\u003e+\u000c\ufffd\ufffdZ\ufffd\ufffdE\ufffd\ufffd\ufffd\u0001\ufffd\ufffd \ufffd\ufffd\ufffd\ufffd\u0014'\ufffd\r\ufffd\ufffdu\ufffddYr1\u0003\u0015,$v\ufffd\\\ufffd\ufffd}\ufffd\n\ufffd\u0007\ufffd\ufffdm\ufffd+\ufffd\ufffdL\ufffd\u0011\ufffd\ufffd\u000cd\ufffdtHn\ufffd\ufffd\ufffdf\\\ufffd\ufffd\ufffd\u0012\ufffdM\ufffd\ufffd\ufffd=h\ufffd\ufffd\ufffdl+\u0016\ufffdo\u0005\ufffdgO\ufffdO\ufffdK\ufffd\u001aW^\ufffd\ufffdrk\ufffd\ufffdQ\ufffdA\ufffd1ش4\ufffd\ufffd\u0000\u001d\u0017l\ufffd\ufffd\ufffd0U9L\n \ufffd01ܔl8\ufffd\ufffd\u0010!\ufffdMdI\ufffd\ufffdI\ufffd \ufffd1\ufffd4\ufffd\u001e\u0010Ù\ufffd3\u0004\ufffd\ufffd如\ufffd\ufffd\"\ufffd\u0011FF\ufffd\ufffdi\ufffd@c\ufffd\ufffd\u001e\ufffd\r\ufffdK ņ\ufffdo\ufffd9y\u0026p\u0001R\u003cl\u0008\ufffdBO\ufffdZ\ufffd؃޵ISY\u0011.\ufffdXo+Sʌؤ\ufffd\ufffd\ufffdF@\ufffd\ufffd#p\ufffd\ufffd\ufffd \ufffd#\ufffd6\ufffd#Ð\u0007\u0006\ufffd\u001b;N\ufffdk\ufffd\ufffdL\ufffd\ufffd\ufffd\ufffd\ufffdZ\ufffd\ufffd\u003e\ufffd\u0006\ufffd\u000b{\ufffd\ufffd\ufffd%\u0017T.\ufffd\ufffd\ufffd\ufffd\ufffdbr\u0001\ufffd\ufffd\ufffd\ufffd\ufffd\u000e܁m\u0016A\u000f\ufffd\ufffd\ufffdI\ufffd}\ufffd\ufffdn\ufffd \ufffdf\ufffd\ufffd$eв\ufffd\ufffdp\u0005į`\ufffd\u0011\u0016B]\u0002\ufffd\ufffdp\"\ufffdY\u0007O\u0026\u0002\ufffd\ufffd\ufffd\u0014\u003c\ufffd\ufffdx\ufffd`\ufffd;DY\u0001\u0004k\ufffd`\ufffdaYd\ufffde\ufffdOev\ufffd\ufffd\ufffd\ufffd\u003eKN\ufffd6\ufffdu\ufffda\ufffd\ufffd\ufffd\u000e\ufffd`\ufffd\ufffd\ufffdE\ufffd\ufffd\u0004\u001dcI㹕\ufffd\ufffd-\ufffdH)\ufffd\ufffd\u0012\u001c_v\ufffd\ufffd.|\ufffd4\ufffd\u0026\ufffd{U\u001b%\ufffd\u0017\u0017o\u0002*\u000e\ufffdF\ufffd\ufffdL\t]\u0008\u000e\ufffd^\ufffd\ufffd\u000by\ufffd\ufffd\ufffd\ufffdT\ufffd\ufffd\u0012K1\u0010⽚n]\ufffd\ufffdھ[\ufffdd3\ufffd\ufffdR\ufffd\u0013x\ufffdN(\ufffd\ufffd\ufffdŉz\u001d\ufffd\ufffdm੾ \ufffdQ\ufffd\u000bc\ufffd\ufffd0$T\ufffd\u0004\ufffd\ufffdq\ufffd\ufffd\ufffd\ufffd\ufffd\u0016RVr\ufffdU\ufffd\u0010\u003e6\u0000ѝk\ufffd\ufffd\ufffdG\u0011\ufffdv݋H\ufffd\ufffd\u000b\ufffd\u0003\ufffd\ufffd\ufffdA:F\ufffd\ufffd0|z\u001a\ufffd\ufffd\u0006U\ufffd\u001br\u0019\t\u0000\u0000",
+						"Status": "200 OK",
+						"StatusCode": 200,
+						"Proto": "HTTP/1.1",
+						"ProtoMajor": 1,
+						"ProtoMinor": 1,
+						"Header": {
+							"Cache-Control": [
+								"no-cache, must-revalidate"
+							],
+							"Content-Encoding": [
+								"gzip"
+							],
+							"Content-Length": [
+								"952"
+							],
+							"Content-Type": [
+								"text/html; Charset=utf-8"
+							],
+							"Cteonnt-Length": [
+								"2329"
+							],
+							"Date": [
+								"Tue, 25 Jan 2011 18:53:27 GMT"
+							],
+							"Expires": [
+								"Fri, 01 Jan 1990 00:00:00 GMT"
+							],
+							"P3p": [
+								"CP=\"BUS CUR CONo FIN IVDo ONL OUR PHY SAMo TELo\""
+							],
+							"Pragma": [
+								"no-cache"
+							],
+							"Server": [
+								"Microsoft-IIS/7.5"
+							],
+							"X-Radid": [
+								"P7698478-T25740950-C71000000000019812"
+							]
+						},
+						"ContentLength": 952,
+						"TransferEncoding": null,
+						"Close": false,
+						"Uncompressed": false,
+						"Trailer": null,
+						"Request": null,
+						"TLS": null
+					}
+				}
+			}
+		},
+		"Summary": null
+	},
+	{
+		"Protocol": {
+			"name": "http",
+			"longName": "Hypertext Transfer Protocol -- HTTP/1.1",
+			"abbr": "HTTP",
+			"macro": "http",
+			"version": "1.1",
+			"backgroundColor": "#205cf5",
+			"foregroundColor": "#ffffff",
+			"fontSize": 12,
+			"referenceLink": "https://datatracker.ietf.org/doc/html/rfc2616",
+			"ports": [
+				"80",
+				"443",
+				"8080"
+			],
+			"priority": 0
+		},
+		"Timestamp": -6795364578871,
+		"ConnectionInfo": {
+			"ClientIP": "1",
+			"ClientPort": "1",
+			"ServerIP": "2",
+			"ServerPort": "2",
+			"IsOutgoing": false
+		},
+		"Pair": {
+			"request": {
+				"isRequest": true,
+				"captureTime": "0001-01-01T00:00:00Z",
+				"payload": {
+					"method": "GET",
+					"url": "",
+					"details": {
+						"method": "GET",
+						"url": "/ADSAdClient31.dll?DPJS=0\u0026PN=MSFT\u0026PG=CAELCB\u0026AP=1089\u0026GetSAd=",
+						"httpVersion": "HTTP/1.1",
+						"cookies": [],
+						"headers": [
+							{
+								"name": "Accept",
+								"value": "*/*"
+							},
+							{
+								"name": "Accept-Charset",
+								"value": "ISO-8859-1,utf-8;q=0.7,*;q=0.3"
+							},
+							{
+								"name": "Accept-Encoding",
+								"value": "gzip,deflate,sdch"
+							},
+							{
+								"name": "Accept-Language",
+								"value": "en-US,en;q=0.8"
+							},
+							{
+								"name": "Connection",
+								"value": "keep-alive"
+							},
+							{
+								"name": "Host",
+								"value": "a.rad.msn.com"
+							},
+							{
+								"name": "Referer",
+								"value": "http://lifestyle.ca.msn.com/home-garden/five-things/rd-gallery.aspx?cp-documentid=27053613\u0026page=3"
+							},
+							{
+								"name": "User-Agent",
+								"value": "Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/534.10 (KHTML, like Gecko) Chrome/8.0.552.237 Safari/534.10"
+							}
+						],
+						"queryString": [
+							{
+								"name": "AP",
+								"value": "1089"
+							},
+							{
+								"name": "DPJS",
+								"value": "0"
+							},
+							{
+								"name": "GetSAd",
+								"value": ""
+							},
+							{
+								"name": "PG",
+								"value": "CAELCB"
+							},
+							{
+								"name": "PN",
+								"value": "MSFT"
+							}
+						],
+						"headersSize": -1,
+						"bodySize": 0
+					},
+					"rawRequest": {
+						"Method": "GET",
+						"URL": {
+							"Scheme": "",
+							"Opaque": "",
+							"User": null,
+							"Host": "",
+							"Path": "/ADSAdClient31.dll",
+							"RawPath": "",
+							"ForceQuery": false,
+							"RawQuery": "DPJS=0\u0026PN=MSFT\u0026PG=CAELCB\u0026AP=1089\u0026GetSAd=",
+							"Fragment": "",
+							"RawFragment": ""
+						},
+						"Proto": "HTTP/1.1",
+						"ProtoMajor": 1,
+						"ProtoMinor": 1,
+						"Header": {
+							"Accept": [
+								"*/*"
+							],
+							"Accept-Charset": [
+								"ISO-8859-1,utf-8;q=0.7,*;q=0.3"
+							],
+							"Accept-Encoding": [
+								"gzip,deflate,sdch"
+							],
+							"Accept-Language": [
+								"en-US,en;q=0.8"
+							],
+							"Connection": [
+								"keep-alive"
+							],
+							"Referer": [
+								"http://lifestyle.ca.msn.com/home-garden/five-things/rd-gallery.aspx?cp-documentid=27053613\u0026page=3"
+							],
+							"User-Agent": [
+								"Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/534.10 (KHTML, like Gecko) Chrome/8.0.552.237 Safari/534.10"
+							]
+						},
+						"ContentLength": 0,
+						"TransferEncoding": null,
+						"Close": false,
+						"Host": "a.rad.msn.com",
+						"Form": null,
+						"PostForm": null,
+						"MultipartForm": null,
+						"Trailer": null,
+						"RemoteAddr": "",
+						"RequestURI": "/ADSAdClient31.dll?GetSAd=\u0026DPJS=0\u0026PN=MSFT\u0026PG=CAELCB\u0026AP=1089",
+						"TLS": null,
+						"Response": null
+					},
+					"rawResponse": null
+				}
+			},
+			"response": {
+				"isRequest": false,
+				"captureTime": "0001-01-01T00:00:00Z",
+				"payload": {
+					"method": "",
+					"url": "",
+					"details": {
+						"status": 200,
+						"statusText": "OK",
+						"httpVersion": "HTTP/1.1",
+						"cookies": [],
+						"headers": [
+							{
+								"name": "Cache-Control",
+								"value": "no-cache, must-revalidate"
+							},
+							{
+								"name": "Content-Encoding",
+								"value": "gzip"
+							},
+							{
+								"name": "Content-Length",
+								"value": "952"
+							},
+							{
+								"name": "Content-Type",
+								"value": "text/html; Charset=utf-8"
+							},
+							{
+								"name": "Cteonnt-Length",
+								"value": "2329"
+							},
+							{
+								"name": "Date",
+								"value": "Tue, 25 Jan 2011 18:54:46 GMT"
+							},
+							{
+								"name": "Expires",
+								"value": "Fri, 01 Jan 1990 00:00:00 GMT"
+							},
+							{
+								"name": "P3p",
+								"value": "CP=\"BUS CUR CONo FIN IVDo ONL OUR PHY SAMo TELo\""
+							},
+							{
+								"name": "Pragma",
+								"value": "no-cache"
+							},
+							{
+								"name": "Server",
+								"value": "Microsoft-IIS/7.5"
+							},
+							{
+								"name": "X-Radid",
+								"value": "P7698478-T25740950-C71000000000019812"
+							}
+						],
+						"content": {
+							"size": 2329,
+							"mimeType": "text/html; Charset=utf-8",
+							"text": "Ci8vPCFbQ0RBVEFbCiBmdW5jdGlvbiBnZXRSQURJZHMoKSB7IHJldHVybnsiYWRpZCI6IjcxMDAwMDAwMDAwMDE5ODEyIiwicGlkIjoiNzY5ODQ3OCIsInRhcmdldGlkIjoiMjU3NDA5NTAifTt9IGlmKHR5cGVvZihpbkRhcElGKSAhPSAidW5kZWZpbmVkIil7cGFyZW50LmRhcF9SZXNpemUoZG9jdW1lbnQuYm9keS5pZCwgMzAwLCAyNTApO2lmKHBhcmVudC5fZGFwVXRpbHMuaXNfaWU1dXAgJiYgKHBhcmVudC5fZGFwVXRpbHMubWFqb3JWZXIgPCA5KSl7ZG9jdW1lbnQub25yZWFkeXN0YXRlY2hhbmdlPXN0YXJ0UmVuZGVyQWRfMzIwNDIyMzY2O2RvY3VtZW50LmNsb3NlKCk7fSBlbHNlIHtkb2N1bWVudC53cml0ZShyZW5kZXJBZF8zMjA0MjIzNjYoKSk7fX0gZWxzZSB7ZG9jdW1lbnQud3JpdGUocmVuZGVyQWRfMzIwNDIyMzY2KCkpO31mdW5jdGlvbiBzdGFydFJlbmRlckFkXzMyMDQyMjM2NigpIHtpZiAoZG9jdW1lbnQucmVhZHlTdGF0ZT09ImNvbXBsZXRlIikge3ZhciBkYXBJZnMgPSBkb2N1bWVudC5ib2R5LmlkO3ZhciBjaGlsZGRhcElmcyA9IGRhcElmcyArICdDaGlsZCc7dmFyIGlmcm0gPSBkb2N1bWVudC5jcmVhdGVFbGVtZW50KCJJRlJBTUUiKTtpZnJtLmlkID0gY2hpbGRkYXBJZnM7aWZybS5oZWlnaHQgPSBwYXJlbnQuZG9jdW1lbnQuYWxsW2RhcElmc10uaGVpZ2h0O2lmcm0ud2lkdGggPSBwYXJlbnQuZG9jdW1lbnQuYWxsW2RhcElmc10ud2lkdGg7aWZybS5zY3JvbGxpbmcgPSAibm8iO2lmcm0uZnJhbWVCb3JkZXIgPSAwO2RvY3VtZW50LmJvZHkuaW5zZXJ0QWRqYWNlbnRFbGVtZW50KCJhZnRlckJlZ2luIixpZnJtKTt3cml0ZWluRGFwSUZfMzIwNDIyMzY2KGlmcm0sIGRhcElmcyk7cGFyZW50LmRvY3VtZW50LmFsbFtkYXBJZnNdLmluc2VydEFkamFjZW50RWxlbWVudCgnYmVmb3JlQmVnaW4nLCBpZnJtKTtwYXJlbnQuZGFwX1Jlc2l6ZShkb2N1bWVudC5ib2R5LmlkLCAwLCAwKTt9fWZ1bmN0aW9uIHdyaXRlaW5EYXBJRl8zMjA0MjIzNjYoaWZybSwgZGFwSWZzKSB7dmFyIHMgPSAnPGh0bWw+PGhlYWQ+PHRpdGxlPkFkdmVydGlzZW1lbnQ8L3RpdGxlPjwvaGVhZD48Ym9keSBpZD0iJyArIGRhcElmcyArICdDaGlsZCIgbGVmdG1hcmdpbj0iMCIgdG9wbWFyZ2luPSIwIj48c2NyJysnaXB0IHR5cGU9InRleHQvamF2YXNjcmlwdCI+dmFyIGluRGFwSUY9dHJ1ZTsnO2lmKGRvY3VtZW50LmRvbWFpbiAmJiBwYXJlbnQubG9jYXRpb24uaG9zdG5hbWUhPWRvY3VtZW50LmRvbWFpbil7cyArPSAnZG9jdW1lbnQuZG9tYWluPSInICsgZG9jdW1lbnQuZG9tYWluICsgJyI7Jzt9aWYgKHR5cGVvZihpbkRhcE1ncklmKSAhPSAidW5kZWZpbmVkIil7cyArPScgdmFyIGluRGFwTWdySWY9dHJ1ZTsnO31zKz0gJ3dpbmRvdy5zZXRUaW1lb3V0KCJkb2N1bWVudC5jbG9zZSgpOyIsMzAwMDApOyc7cys9ICc8L3NjcicrJ2lwdD4nO3ZhciByZW5kZXJBZENvZGUgPSByZW5kZXJBZF8zMjA0MjIzNjYoKTtyZW5kZXJBZENvZGUgPSByZW5kZXJBZENvZGUucmVwbGFjZSgvXG4vZywiXFxuIik7cmVuZGVyQWRDb2RlID0gcmVuZGVyQWRDb2RlLnJlcGxhY2UoLycvZywiXFxcJyIpO3MrPSByZW5kZXJBZENvZGU7cys9JzwvYm9keT48L2h0bWw+JztpZnJtLnNyYyA9ICJqYXZhc2NyaXB0OnZvaWQoZG9jdW1lbnQud3JpdGUoJyIgKyBzICsgIicpKTsiO31mdW5jdGlvbiByZW5kZXJBZF8zMjA0MjIzNjYoKSB7dmFyIGFkQ29kZV8zMjA0MjIzNjY9bmV3IEFycmF5KCk7YWRDb2RlXzMyMDQyMjM2Ni5wdXNoKCc8c2NyJysnaXB0IHR5cGU9InRleHQvamF2YXNjcmlwdCI+XG4nKTthZENvZGVfMzIwNDIyMzY2LnB1c2goJyA8IS0tXG4nKTthZENvZGVfMzIwNDIyMzY2LnB1c2goJyBtaWNyb3NvZnRfYWR1bml0aWQ9IjEwMDAwMDE1IjtcbicpO2FkQ29kZV8zMjA0MjIzNjYucHVzaCgnIG1pY3Jvc29mdF9hZHVuaXRfd2lkdGg9IjMwMCI7XG4nKTthZENvZGVfMzIwNDIyMzY2LnB1c2goJyBtaWNyb3NvZnRfYWR1bml0X2hlaWdodD0iMjUwIjtcbicpO2FkQ29kZV8zMjA0MjIzNjYucHVzaCgnIG1pY3Jvc29mdF9hZHVuaXRfbGVnYWN5PSJmYWxzZSI7XG4nKTthZENvZGVfMzIwNDIyMzY2LnB1c2goJyAvLy0tPlxuJyk7YWRDb2RlXzMyMDQyMjM2Ni5wdXNoKCcgPC9zY3InKydpcHQ+XG4nKTthZENvZGVfMzIwNDIyMzY2LnB1c2goJyA8c2NyJysnaXB0IHR5cGU9InRleHQvamF2YXNjcmlwdCIgc3JjPSJodHRwOi8vYWRzeW5kaWNhdGlvbi5tc24uY29tL2RlbGl2ZXJ5L2dldGFkcy5qcyIgPjwvc2NyJysnaXB0PlxuJyk7dmFyIHMgPSBhZENvZGVfMzIwNDIyMzY2LmpvaW4oJycpO3JldHVybiBzOyB9Ci8vXV0+Cg==",
+							"encoding": "base64"
+						},
+						"redirectURL": "",
+						"headersSize": -1,
+						"bodySize": 952
+					},
+					"rawRequest": null,
+					"rawResponse": {
+						"Body": "\u001f\ufffd\u0008\u0000\u0000\u0000\u0000\u0000\u0000\u0003\ufffdV\ufffdr\ufffd:\u0014\ufffd\ufffd)\u0014-j{J\ufffdCB\ufffdl3C\ufffdv\ufffdE7i\ufffd݄\u000c\ufffdZ2\u0016cK\u001eI\ufffd\ufffdex\ufffd\u001eY\ufffd\u0019҄\ufffd\u0015:\ufffd\ufffd\ufffdw\ufffd|\u0012\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\u0004\ufffds\ufffd\u0019.\u0005\ufffd2\ufffd8|\u0018Q\ufffd\u0007h\ufffd\u00143s%V\ufffdPN\ufffd\u001d\ufffd\u003e\ufffdv\ufffd\ufffdۛ\ufffd\u001e\ufffd\ufffd\ufffd\ufffd\\\ufffd\ufffd\\^\ufffd\ufffd\ufffd\u0010\u00056\u001aa\ufffd}\u0019\ufffd\ufffd#\ufffd\ufffd׈\ufffd\ufffdY\ufffdL\ufffd\u003e\u0017\u000f\ufffd\u001e}\u000b\ufffdi\ufffd\ufffd\\P\ufffds\ufffd(\u000eV5QL\ufffd.%\ufffd\ufffd\ufffdi\ufffd?\ufffd\ufffd\ufffd敕\ufffd\ufffdt\ufffd崃.\ufffd\ufffd\ufffdz\ufffd(\ufffd\ufffd\ufffdFa\u0002\u001a\ufffd\u0018^\ufffd.\ufffd\u0013\ufffd\ufffd\ufffd\u001a}\ufffd\ufffd^\ufffdVd\u0026տL\ufffd\u0004\ufffd\u0006\ufffdjg\\\n\ufffd\u0008]jC\u000c\ufffd\n\"\ufffd,\ufffd\ufffd\ufffd\u003c2\u0008N\r\ufffd\ufffd\ufffd\u0017]\ufffdz\u0017WW\ufffdN'+\ufffdf~\u0000\ufffd\ufffdR3\ufffd\u001a[(n\ufffd\u000f\ufffd\u000fT\ufffd\u0000\ufffd\u001fC\ufffd\ufffd\ufffdF4\ufffdE\u003cGm\ufffd\ufffd4~\ufffd4\ufffd\u0014g\ufffd\ufffdKf\u0018\u0006\ufffd\u000bQ\u0008\ufffd0\ufffd5J\ufffdaQc{\ufffd\u0015\ufffd\ufffd-\ufffd\ufffd\ufffd\ufffd\ufffd{+\ufffd\u001a\u0008\ufffdU\ufffd\ufffd\ufffd\ufffd;þ\ufffd̞|\u003c\ufffd\ufffd8\ufffd\ufffd\u0015\ufffdƨ\n\ufffd\u0002tϨ\ufffd\u0016\ufffdO\u000b\u00037\ufffdVom\ufffd\ufffd|r\ufffd\ufffd\r\ufffd),85\ufffd\u0011|\ufffdqp\ufffd)Y\ufffd\\LA\u0005\u000b\ufffd\ufffd4W\ufffdb_\ufffd\ufffd\ufffd\ufffd\u003cj\ufffd\ufffd\n 4SfHg$\u0003\ufffd.\u001d\ufffd\u001b\ufffd\ufffd\ufffd)\u0017\ufffdc\ufffd\u0004qӫ\ry\ufffd\ufffd`/;\ufffd\ufffd\u0005\ufffd{\ufffd\ufffdٓ\ufffd\ufffd\ufffdR\ufffdƕ\ufffdi\ufffdܚyo\u0014`\u0010`\u000c\ufffd-M\ufffd\u0026@\ufffd\u0005\ufffdc/)LU\u000e\ufffd\u0002H3H\u000c7%\u001b\u000c\ufffd\u000bD\ufffdu\u0013Y\u0012:a\u0012:\ufffdu\ufffd8M\ufffd\u0007\ufffdp\ufffdv\u000c\ufffd\ufffdd\ufffd\ufffd`\ufffd\ufffdHq\ufffd\ufffd\ufffdu{\u001a$\ufffd\u0018\ufffd\ufffd\ufffdk\ufffd\ufffd\u0012H\ufffda\ufffd\ufffdpF^\u0008\\\ufffd\u0014\u000f\u001a\ufffd\ufffd\ufffdS\ufffd\ufffd,\ufffd\ufffdwm\ufffdTV\ufffd\u000b;֛ʔ2#6\ufffdn!\ufffd\u0011\ufffd\ufffd\ufffd\ufffd\u0000\u001c\ufffd \u003cH\ufffd@\ufffd\t\ufffd\ufffd0\ufffd\ufffd\ufffd\ufffdڎ\ufffd\ufffd\ufffd\ufffd\u003eU\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd=\ufffd\ufffd\ufffdAm\ufffd^k\ufffdu\ufffd\u0005\ufffd\ufffd\ufffdf\ufffd'\ufffd\ufffd\ufffd\u0003\ufffdv\u003e\ufffd\ufffd\u0003w`\ufffdE\ufffdC/nt\ufffdpW\ufffd\ufffd\u001b9H\ufffd\ufffd\ufffd{I\u0019\ufffdl{\ufffd_\u0001\ufffd\u001b\u0018{\ufffd\ufffdP\ufffd@6?\u001c\ufffdp\ufffd\ufffd㱀\ufffd\ufffd+\u0005\ufffd\ufffd\ufffd\u001e(\ufffd\ufffd\ufffdQV\u0000\ufffdZ\u003eXrX\u0016\ufffdn\ufffd\ufffdS\ufffd\ufffd\ufffd\ufffd\ufffdw/\ufffdӶ\ufffdn\ufffdy\u0018\ufffdm\ufffd\ufffd=Xsxo\ufffd\ufffd)A\ufffdX\ufffdxn\ufffd\ufffd`\u000b4T\ufffd,\ufffd\u0004\ufffd\ufffd\ufffdz\ufffd\u000b\ufffd;κ\ufffd\ufffd\ufffd\ufffdF\ufffd\ufffd\ufffdٻ\ufffd\ufffdú\ufffd27\u0013B\ufffd\ufffdã\ufffdb\ufffdB\ufffd\ufffdq\ufffd!\ufffdI\ufffd\ufffdR\u000c\ufffd\ufffd\ufffd\ufffd[\ufffd)\ufffd\ufffd\u001fV-ٔd\ufffd\u0014\ufffd\u0004^\ufffd#\ufffdaxvv\ufffd^{\ufffd}\u001fx\ufffd/\u0008x\ufffd\ufffd\ufffd.\u000c\t\ufffdKA\ufffdf\ufffd+-\ufffd𲅔\ufffd\u001cv\ufffd2\ufffd\ufffd\r@tg\u001a# \ufffdA\u0004\ufffd]\ufffd*\ufffd\ufffd\ufffd\ufffd\ufffd\u0000\ufffd\ufffdp\ufffd\ufffd\ufffd\ufffd$\u000c\ufffd\ufffd\u0007'\ufffd\u00011\ufffdC\ufffd\u0019\t\u0000\u0000",
+						"Status": "200 OK",
+						"StatusCode": 200,
+						"Proto": "HTTP/1.1",
+						"ProtoMajor": 1,
+						"ProtoMinor": 1,
+						"Header": {
+							"Cache-Control": [
+								"no-cache, must-revalidate"
+							],
+							"Content-Encoding": [
+								"gzip"
+							],
+							"Content-Length": [
+								"952"
+							],
+							"Content-Type": [
+								"text/html; Charset=utf-8"
+							],
+							"Cteonnt-Length": [
+								"2329"
+							],
+							"Date": [
+								"Tue, 25 Jan 2011 18:54:46 GMT"
+							],
+							"Expires": [
+								"Fri, 01 Jan 1990 00:00:00 GMT"
+							],
+							"P3p": [
+								"CP=\"BUS CUR CONo FIN IVDo ONL OUR PHY SAMo TELo\""
+							],
+							"Pragma": [
+								"no-cache"
+							],
+							"Server": [
+								"Microsoft-IIS/7.5"
+							],
+							"X-Radid": [
+								"P7698478-T25740950-C71000000000019812"
+							]
+						},
+						"ContentLength": 952,
+						"TransferEncoding": null,
+						"Close": false,
+						"Uncompressed": false,
+						"Trailer": null,
+						"Request": null,
+						"TLS": null
+					}
+				}
+			}
+		},
+		"Summary": null
+	},
+	{
+		"Protocol": {
+			"name": "http",
+			"longName": "Hypertext Transfer Protocol -- HTTP/1.1",
+			"abbr": "HTTP",
+			"macro": "http",
+			"version": "1.1",
+			"backgroundColor": "#205cf5",
+			"foregroundColor": "#ffffff",
+			"fontSize": 12,
+			"referenceLink": "https://datatracker.ietf.org/doc/html/rfc2616",
+			"ports": [
+				"80",
+				"443",
+				"8080"
+			],
+			"priority": 0
+		},
+		"Timestamp": -6795364578871,
+		"ConnectionInfo": {
+			"ClientIP": "1",
+			"ClientPort": "1",
+			"ServerIP": "2",
+			"ServerPort": "2",
+			"IsOutgoing": false
+		},
+		"Pair": {
+			"request": {
+				"isRequest": true,
+				"captureTime": "0001-01-01T00:00:00Z",
+				"payload": {
+					"method": "GET",
+					"url": "",
+					"details": {
+						"method": "GET",
+						"url": "/ADSAdClient31.dll?AP=1089\u0026GetSAd=\u0026DPJS=0\u0026PN=MSFT\u0026PG=CAEECD",
+						"httpVersion": "HTTP/1.1",
+						"cookies": [],
+						"headers": [
+							{
+								"name": "Accept",
+								"value": "*/*"
+							},
+							{
+								"name": "Accept-Charset",
+								"value": "ISO-8859-1,utf-8;q=0.7,*;q=0.3"
+							},
+							{
+								"name": "Accept-Encoding",
+								"value": "gzip,deflate,sdch"
+							},
+							{
+								"name": "Accept-Language",
+								"value": "en-US,en;q=0.8"
+							},
+							{
+								"name": "Connection",
+								"value": "keep-alive"
+							},
+							{
+								"name": "Host",
+								"value": "a.rad.msn.com"
+							},
+							{
+								"name": "Referer",
+								"value": "http://entertainment.ca.msn.com/movies/galleries/gallery.aspx?cp-documentid=26184969"
+							},
+							{
+								"name": "User-Agent",
+								"value": "Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/534.10 (KHTML, like Gecko) Chrome/8.0.552.237 Safari/534.10"
+							}
+						],
+						"queryString": [
+							{
+								"name": "AP",
+								"value": "1089"
+							},
+							{
+								"name": "DPJS",
+								"value": "0"
+							},
+							{
+								"name": "GetSAd",
+								"value": ""
+							},
+							{
+								"name": "PG",
+								"value": "CAEECD"
+							},
+							{
+								"name": "PN",
+								"value": "MSFT"
+							}
+						],
+						"headersSize": -1,
+						"bodySize": 0
+					},
+					"rawRequest": {
+						"Method": "GET",
+						"URL": {
+							"Scheme": "",
+							"Opaque": "",
+							"User": null,
+							"Host": "",
+							"Path": "/ADSAdClient31.dll",
+							"RawPath": "",
+							"ForceQuery": false,
+							"RawQuery": "AP=1089\u0026GetSAd=\u0026DPJS=0\u0026PN=MSFT\u0026PG=CAEECD",
+							"Fragment": "",
+							"RawFragment": ""
+						},
+						"Proto": "HTTP/1.1",
+						"ProtoMajor": 1,
+						"ProtoMinor": 1,
+						"Header": {
+							"Accept": [
+								"*/*"
+							],
+							"Accept-Charset": [
+								"ISO-8859-1,utf-8;q=0.7,*;q=0.3"
+							],
+							"Accept-Encoding": [
+								"gzip,deflate,sdch"
+							],
+							"Accept-Language": [
+								"en-US,en;q=0.8"
+							],
+							"Connection": [
+								"keep-alive"
+							],
+							"Referer": [
+								"http://entertainment.ca.msn.com/movies/galleries/gallery.aspx?cp-documentid=26184969"
+							],
+							"User-Agent": [
+								"Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/534.10 (KHTML, like Gecko) Chrome/8.0.552.237 Safari/534.10"
+							]
+						},
+						"ContentLength": 0,
+						"TransferEncoding": null,
+						"Close": false,
+						"Host": "a.rad.msn.com",
+						"Form": null,
+						"PostForm": null,
+						"MultipartForm": null,
+						"Trailer": null,
+						"RemoteAddr": "",
+						"RequestURI": "/ADSAdClient31.dll?GetSAd=\u0026DPJS=0\u0026PN=MSFT\u0026PG=CAEECD\u0026AP=1089",
+						"TLS": null,
+						"Response": null
+					},
+					"rawResponse": null
+				}
+			},
+			"response": {
+				"isRequest": false,
+				"captureTime": "0001-01-01T00:00:00Z",
+				"payload": {
+					"method": "",
+					"url": "",
+					"details": {
+						"status": 200,
+						"statusText": "OK",
+						"httpVersion": "HTTP/1.1",
+						"cookies": [],
+						"headers": [
+							{
+								"name": "Cache-Control",
+								"value": "no-cache, must-revalidate"
+							},
+							{
+								"name": "Content-Encoding",
+								"value": "gzip"
+							},
+							{
+								"name": "Content-Length",
+								"value": "949"
+							},
+							{
+								"name": "Content-Type",
+								"value": "text/html; Charset=utf-8"
+							},
+							{
+								"name": "Cteonnt-Length",
+								"value": "2329"
+							},
+							{
+								"name": "Date",
+								"value": "Tue, 25 Jan 2011 18:55:46 GMT"
+							},
+							{
+								"name": "Expires",
+								"value": "Fri, 01 Jan 1990 00:00:00 GMT"
+							},
+							{
+								"name": "P3p",
+								"value": "CP=\"BUS CUR CONo FIN IVDo ONL OUR PHY SAMo TELo\""
+							},
+							{
+								"name": "Pragma",
+								"value": "no-cache"
+							},
+							{
+								"name": "Server",
+								"value": "Microsoft-IIS/7.5"
+							},
+							{
+								"name": "X-Radid",
+								"value": "P7698473-T25740947-C53000000000025070"
+							}
+						],
+						"content": {
+							"size": 2329,
+							"mimeType": "text/html; Charset=utf-8",
+							"text": "Ci8vPCFbQ0RBVEFbCiBmdW5jdGlvbiBnZXRSQURJZHMoKSB7IHJldHVybnsiYWRpZCI6IjUzMDAwMDAwMDAwMDI1MDcwIiwicGlkIjoiNzY5ODQ3MyIsInRhcmdldGlkIjoiMjU3NDA5NDcifTt9IGlmKHR5cGVvZihpbkRhcElGKSAhPSAidW5kZWZpbmVkIil7cGFyZW50LmRhcF9SZXNpemUoZG9jdW1lbnQuYm9keS5pZCwgMzAwLCAyNTApO2lmKHBhcmVudC5fZGFwVXRpbHMuaXNfaWU1dXAgJiYgKHBhcmVudC5fZGFwVXRpbHMubWFqb3JWZXIgPCA5KSl7ZG9jdW1lbnQub25yZWFkeXN0YXRlY2hhbmdlPXN0YXJ0UmVuZGVyQWRfNDU2MTMzNDE0O2RvY3VtZW50LmNsb3NlKCk7fSBlbHNlIHtkb2N1bWVudC53cml0ZShyZW5kZXJBZF80NTYxMzM0MTQoKSk7fX0gZWxzZSB7ZG9jdW1lbnQud3JpdGUocmVuZGVyQWRfNDU2MTMzNDE0KCkpO31mdW5jdGlvbiBzdGFydFJlbmRlckFkXzQ1NjEzMzQxNCgpIHtpZiAoZG9jdW1lbnQucmVhZHlTdGF0ZT09ImNvbXBsZXRlIikge3ZhciBkYXBJZnMgPSBkb2N1bWVudC5ib2R5LmlkO3ZhciBjaGlsZGRhcElmcyA9IGRhcElmcyArICdDaGlsZCc7dmFyIGlmcm0gPSBkb2N1bWVudC5jcmVhdGVFbGVtZW50KCJJRlJBTUUiKTtpZnJtLmlkID0gY2hpbGRkYXBJZnM7aWZybS5oZWlnaHQgPSBwYXJlbnQuZG9jdW1lbnQuYWxsW2RhcElmc10uaGVpZ2h0O2lmcm0ud2lkdGggPSBwYXJlbnQuZG9jdW1lbnQuYWxsW2RhcElmc10ud2lkdGg7aWZybS5zY3JvbGxpbmcgPSAibm8iO2lmcm0uZnJhbWVCb3JkZXIgPSAwO2RvY3VtZW50LmJvZHkuaW5zZXJ0QWRqYWNlbnRFbGVtZW50KCJhZnRlckJlZ2luIixpZnJtKTt3cml0ZWluRGFwSUZfNDU2MTMzNDE0KGlmcm0sIGRhcElmcyk7cGFyZW50LmRvY3VtZW50LmFsbFtkYXBJZnNdLmluc2VydEFkamFjZW50RWxlbWVudCgnYmVmb3JlQmVnaW4nLCBpZnJtKTtwYXJlbnQuZGFwX1Jlc2l6ZShkb2N1bWVudC5ib2R5LmlkLCAwLCAwKTt9fWZ1bmN0aW9uIHdyaXRlaW5EYXBJRl80NTYxMzM0MTQoaWZybSwgZGFwSWZzKSB7dmFyIHMgPSAnPGh0bWw+PGhlYWQ+PHRpdGxlPkFkdmVydGlzZW1lbnQ8L3RpdGxlPjwvaGVhZD48Ym9keSBpZD0iJyArIGRhcElmcyArICdDaGlsZCIgbGVmdG1hcmdpbj0iMCIgdG9wbWFyZ2luPSIwIj48c2NyJysnaXB0IHR5cGU9InRleHQvamF2YXNjcmlwdCI+dmFyIGluRGFwSUY9dHJ1ZTsnO2lmKGRvY3VtZW50LmRvbWFpbiAmJiBwYXJlbnQubG9jYXRpb24uaG9zdG5hbWUhPWRvY3VtZW50LmRvbWFpbil7cyArPSAnZG9jdW1lbnQuZG9tYWluPSInICsgZG9jdW1lbnQuZG9tYWluICsgJyI7Jzt9aWYgKHR5cGVvZihpbkRhcE1ncklmKSAhPSAidW5kZWZpbmVkIil7cyArPScgdmFyIGluRGFwTWdySWY9dHJ1ZTsnO31zKz0gJ3dpbmRvdy5zZXRUaW1lb3V0KCJkb2N1bWVudC5jbG9zZSgpOyIsMzAwMDApOyc7cys9ICc8L3NjcicrJ2lwdD4nO3ZhciByZW5kZXJBZENvZGUgPSByZW5kZXJBZF80NTYxMzM0MTQoKTtyZW5kZXJBZENvZGUgPSByZW5kZXJBZENvZGUucmVwbGFjZSgvXG4vZywiXFxuIik7cmVuZGVyQWRDb2RlID0gcmVuZGVyQWRDb2RlLnJlcGxhY2UoLycvZywiXFxcJyIpO3MrPSByZW5kZXJBZENvZGU7cys9JzwvYm9keT48L2h0bWw+JztpZnJtLnNyYyA9ICJqYXZhc2NyaXB0OnZvaWQoZG9jdW1lbnQud3JpdGUoJyIgKyBzICsgIicpKTsiO31mdW5jdGlvbiByZW5kZXJBZF80NTYxMzM0MTQoKSB7dmFyIGFkQ29kZV80NTYxMzM0MTQ9bmV3IEFycmF5KCk7YWRDb2RlXzQ1NjEzMzQxNC5wdXNoKCc8c2NyJysnaXB0IHR5cGU9InRleHQvamF2YXNjcmlwdCI+XG4nKTthZENvZGVfNDU2MTMzNDE0LnB1c2goJyA8IS0tXG4nKTthZENvZGVfNDU2MTMzNDE0LnB1c2goJyBtaWNyb3NvZnRfYWR1bml0aWQ9IjEwMDAwMDA1IjtcbicpO2FkQ29kZV80NTYxMzM0MTQucHVzaCgnIG1pY3Jvc29mdF9hZHVuaXRfd2lkdGg9IjMwMCI7XG4nKTthZENvZGVfNDU2MTMzNDE0LnB1c2goJyBtaWNyb3NvZnRfYWR1bml0X2hlaWdodD0iMjUwIjtcbicpO2FkQ29kZV80NTYxMzM0MTQucHVzaCgnIG1pY3Jvc29mdF9hZHVuaXRfbGVnYWN5PSJmYWxzZSI7XG4nKTthZENvZGVfNDU2MTMzNDE0LnB1c2goJyAvLy0tPlxuJyk7YWRDb2RlXzQ1NjEzMzQxNC5wdXNoKCcgPC9zY3InKydpcHQ+XG4nKTthZENvZGVfNDU2MTMzNDE0LnB1c2goJyA8c2NyJysnaXB0IHR5cGU9InRleHQvamF2YXNjcmlwdCIgc3JjPSJodHRwOi8vYWRzeW5kaWNhdGlvbi5tc24uY29tL2RlbGl2ZXJ5L2dldGFkcy5qcyIgPjwvc2NyJysnaXB0PlxuJyk7dmFyIHMgPSBhZENvZGVfNDU2MTMzNDE0LmpvaW4oJycpO3JldHVybiBzOyB9Ci8vXV0+Cg==",
+							"encoding": "base64"
+						},
+						"redirectURL": "",
+						"headersSize": -1,
+						"bodySize": 949
+					},
+					"rawRequest": null,
+					"rawResponse": {
+						"Body": "\u001f\ufffd\u0008\u0000\u0000\u0000\u0000\u0000\u0000\u0003\ufffdVOs\ufffd:\u0010\ufffd\ufffdS(:\ufffd\ufffd\ufffd`\ufffd@ib\ufffd\u0019\ufffd\ufffd3\u001cz\ufffd\ufffd{\ufffd$è\ufffd\u001a\ufffd\ufffd%\ufffd$\ufffd\ufffd1|\ufffd\ufffd\ufffd\u00013\ufffd\t\r'\ufffd\ufffd\ufffd\ufffd߮|\u0016\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffdd\u000b\ufffdZ\ufffd$\ufffd\ufffd\ufffd\u001f\ufffdM\ufffd\ufffd\u0003\ufffd\u0026\u001a\ufffdB\ufffd5e\\pzC\u0007W\ufffd\ufffd\ufffdӠ7\ufffd\ufffd\u000e\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd/\ufffd\ufffd\u0015\ufffd-\ufffdh\ufffd\u0016~\u001a\u000c\ufffd\ufffd\ufffd\ufffd\ufffdn\ufffd\r\u0011\ufffdoW\u0015\ufffd\ufffd\u0017\ufffd\ufffdU\ufffd\ufffd\u00019O\u0008]H\u000e\ufffd\ufffd\ufffdi\ufffd\ufffd\ufffd\u0006i\ufffd\ufffdU\ufffd{0\ufffd?\ufffd\ufffdJ\u0017\ufffd\ufffd\ufffdR|\ufffd\u0015\ufffdC0\ufffd\u000eA\ufffdA\ufffd\u0006\ufffd\nS\ufffd\ufffdۊ\ufffdt\ufffd\ufffd\n\u0018,*\ufffd\ufffd\u0003yy[\ufffd\ufffd\ufffd\ufffd\ufffd\u00261\ufffd\u000e\ufffd\ufffd޸\ufffd\u001a\u0018_\u0019\ufffd,\ufffd9\ufffd3H\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd1\ufffd\ufffd\u0007\ufffd/\ufffd\ufffd\ufffd\ufffd\ufffdh\ufffd\ufffd\u0016ʀ\u001f`bP\u0018 \ufffd\ufffd\ufffd\u0016\u0016|\ufffd|\ufffd\ufffd\u0007\u0008~\u001fzߔW\ufffdq-\u0012\u0019i\ufffdT\ufffd\ufffd\ufffdK#Ih\ufffdʪ\u0000\u000b\u0014Q\ufffdL\u0013,\ufffd$3$!\ufffdE\ufffd\ufffdm\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffdG\ufffd\ufffd:\ufffdWCD\ufffd\ufffdC\ufffd\u0014\ufffdY\ufffdV\ufffd;\ufffdt\ufffd\ufffd~\ufffd\ufffd\u001bu\ufffd\ufffd%\ufffdE\ufffd\ufffd\ufffdF\ufffd\ufffd\ufffd\ufffd\u0016ov\ufffd\ufffd\ufffdbE\ufffd\ufffd\u0000\ufffd\ufffd\ufffdFa)\ufffd\ufffdO\ufffdkL\u00037\ufffdVE!\ufffd\u000cU\ufffdT\ufffd\ufffdf\ufffd\ufffd\ufffdUi,\u001f\ufffd{m\u0013\ufffd\u0002H\u0003ڎ\ufffd\ufffd\ufffd(ۧ\ufffd2\u000b\ufffd+̄\ufffd\u001dg%\ufffd\ufffd^m\ufffd{\ufffd\u0004w\ufffd\ufffdV,\ufffd\ufffd\n\ufffd\ufffd\ufffd\ufffd_\ufffd)\r\ufffd+\ufffdSW\ufffd5\ufffd\ufffd(\ufffd \ufffd\u0018lZ\ufffd\ufffdI\ufffd\r\u0017\\\ufffd\ufffd8\ufffde1\ufffds$\ufffd(\ufffd\ufffd\u00160\u001a\ufffdg\ufffdP\ufffd:\ufffd8l\ufffdq\ufffd@\ufffdc\"xB=$Fcn\ufffd\u0010J\n\ufffdl\ufffd\ufffd/dB{\ufffdXU\ufffd\ufffdQ\ufffd\ufffd\ufffd\u003ez\ufffd\ufffd\ufffd-\ufffd\ufffdZ\ufffd׆s\ufffd\ufffd\ufffd\u0002\ufffdtT\u0013\ufffd\t=\ufffdz\u0001\ufffd\ufffd\ufffdk\ufffd\ufffd\ufffddB\ufffd\ufffd\ufffdV\ufffdP)sIwse\ufffd\ufffd\ufffd\ufffd'G\ufffd`\ufffd\ufffda\ufffdG\ufffdm\ufffdG\ufffd1\u000f\ufffd.7n\ufffd\u000e\ufffdԏ\ufffd\ufffdd/7\ufffd\ufffd\ufffd\ufffd}\ufffd5j\u0017\ufffd\ufffd8\ufffdK!\ufffdZv\r؟\ufffd\u0004\ufffd@F\ufffd}\ufffdv\u0007\ufffd\ufffd\ufffd4@\ufffdZ'\u000e\ufffde\u001a5#\ufffd\ufffd\ufffd3\ufffd8`\ufffdv\ufffd\ufffd\u0015\u0010\ufffd\ufffdqG\\\u0008U\ufffdd\ufffd\ufffdG\u0019\ufffd:\ufffd\ufffdQ\ufffd|\ufffd\ufffd\ufffd\ufffd\ufffd\u001f=Tp\ufffd\u001d\ufffd\ufffd\u0000\ufffdu|p\ufffdp,r\ufffdr\ufffd\ufffdS7ymco\ufffd\ufffd\ufffdm\u001b\ufffdu\ufffdQ\ufffd\ufffd\ufffd\u000e\ufffdp\ufffdуE\ufffd\ufffd\u0004\u001bƲ\ufffds+O$,\ufffdXk\ufffd\ufffd\u0012\u001c_v\ufffd\ufffd\ufffd}\ufffd4\ufffd\u001e\ufffd\ufffd\ufffd6\ufffd\ufffd/.\ufffd\u0004\ufffd\u0002׍Q\ufffd\ufffd2\ufffd\ufffd\u0002\u001f\ufffd\ufffd^6\ufffd\ufffd\ufffdF\ufffdR\ufffd\ufffdK,\ufffdH\ufffd\ufffdj6\ufffd2\ufffd\ufffd\ufffdݪ\u0005\ufffdX\ufffdJh\ufffd\ufffdU:\ufffd\u001c\ufffd\u0017\u0017'\ufffdu@߷\ufffd\ufffd\ufffdB\ufffdG\tͭ\ufffdnq\ufffd\ufffd\\lǽ4\ufffd\ufffd/[ȡ\u0010\ufffd\ufffdV!~l \ufffd;7\ufffd \u0019\ufffd\"\ufffd\ufffd\ufffd\u0017\ufffd̕\ufffd\ufffd\ufffd\ufffd\ufffd\u000b\ufffd\ufffd\ufffdl\ufffd\ufffd\ufffd\ufffdit\ufffd?\ufffd\ufffd\ufffd+\u0019\t\u0000\u0000",
+						"Status": "200 OK",
+						"StatusCode": 200,
+						"Proto": "HTTP/1.1",
+						"ProtoMajor": 1,
+						"ProtoMinor": 1,
+						"Header": {
+							"Cache-Control": [
+								"no-cache, must-revalidate"
+							],
+							"Content-Encoding": [
+								"gzip"
+							],
+							"Content-Length": [
+								"949"
+							],
+							"Content-Type": [
+								"text/html; Charset=utf-8"
+							],
+							"Cteonnt-Length": [
+								"2329"
+							],
+							"Date": [
+								"Tue, 25 Jan 2011 18:55:46 GMT"
+							],
+							"Expires": [
+								"Fri, 01 Jan 1990 00:00:00 GMT"
+							],
+							"P3p": [
+								"CP=\"BUS CUR CONo FIN IVDo ONL OUR PHY SAMo TELo\""
+							],
+							"Pragma": [
+								"no-cache"
+							],
+							"Server": [
+								"Microsoft-IIS/7.5"
+							],
+							"X-Radid": [
+								"P7698473-T25740947-C53000000000025070"
+							]
+						},
+						"ContentLength": 949,
+						"TransferEncoding": null,
+						"Close": false,
+						"Uncompressed": false,
+						"Trailer": null,
+						"Request": null,
+						"TLS": null
+					}
+				}
+			}
+		},
+		"Summary": null
+	},
+	{
+		"Protocol": {
+			"name": "http",
+			"longName": "Hypertext Transfer Protocol -- HTTP/1.1",
+			"abbr": "HTTP",
+			"macro": "http",
+			"version": "1.1",
+			"backgroundColor": "#205cf5",
+			"foregroundColor": "#ffffff",
+			"fontSize": 12,
+			"referenceLink": "https://datatracker.ietf.org/doc/html/rfc2616",
+			"ports": [
+				"80",
+				"443",
+				"8080"
+			],
+			"priority": 0
+		},
+		"Timestamp": -6795364578871,
+		"ConnectionInfo": {
+			"ClientIP": "1",
+			"ClientPort": "1",
+			"ServerIP": "2",
+			"ServerPort": "2",
+			"IsOutgoing": false
+		},
+		"Pair": {
+			"request": {
+				"isRequest": true,
+				"captureTime": "0001-01-01T00:00:00Z",
+				"payload": {
+					"method": "GET",
+					"url": "",
+					"details": {
+						"method": "GET",
+						"url": "/ADSAdClient31.dll?AP=1089\u0026GetSAd=\u0026DPJS=0\u0026PN=MSFT\u0026PG=CAELCB",
+						"httpVersion": "HTTP/1.1",
+						"cookies": [],
+						"headers": [
+							{
+								"name": "Accept",
+								"value": "*/*"
+							},
+							{
+								"name": "Accept-Charset",
+								"value": "ISO-8859-1,utf-8;q=0.7,*;q=0.3"
+							},
+							{
+								"name": "Accept-Encoding",
+								"value": "gzip,deflate,sdch"
+							},
+							{
+								"name": "Accept-Language",
+								"value": "en-US,en;q=0.8"
+							},
+							{
+								"name": "Connection",
+								"value": "keep-alive"
+							},
+							{
+								"name": "Host",
+								"value": "a.rad.msn.com"
+							},
+							{
+								"name": "Referer",
+								"value": "http://lifestyle.ca.msn.com/home-garden/five-things/rd-gallery.aspx?cp-documentid=27053613"
+							},
+							{
+								"name": "User-Agent",
+								"value": "Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/534.10 (KHTML, like Gecko) Chrome/8.0.552.237 Safari/534.10"
+							}
+						],
+						"queryString": [
+							{
+								"name": "AP",
+								"value": "1089"
+							},
+							{
+								"name": "DPJS",
+								"value": "0"
+							},
+							{
+								"name": "GetSAd",
+								"value": ""
+							},
+							{
+								"name": "PG",
+								"value": "CAELCB"
+							},
+							{
+								"name": "PN",
+								"value": "MSFT"
+							}
+						],
+						"headersSize": -1,
+						"bodySize": 0
+					},
+					"rawRequest": {
+						"Method": "GET",
+						"URL": {
+							"Scheme": "",
+							"Opaque": "",
+							"User": null,
+							"Host": "",
+							"Path": "/ADSAdClient31.dll",
+							"RawPath": "",
+							"ForceQuery": false,
+							"RawQuery": "AP=1089\u0026GetSAd=\u0026DPJS=0\u0026PN=MSFT\u0026PG=CAELCB",
+							"Fragment": "",
+							"RawFragment": ""
+						},
+						"Proto": "HTTP/1.1",
+						"ProtoMajor": 1,
+						"ProtoMinor": 1,
+						"Header": {
+							"Accept": [
+								"*/*"
+							],
+							"Accept-Charset": [
+								"ISO-8859-1,utf-8;q=0.7,*;q=0.3"
+							],
+							"Accept-Encoding": [
+								"gzip,deflate,sdch"
+							],
+							"Accept-Language": [
+								"en-US,en;q=0.8"
+							],
+							"Connection": [
+								"keep-alive"
+							],
+							"Referer": [
+								"http://lifestyle.ca.msn.com/home-garden/five-things/rd-gallery.aspx?cp-documentid=27053613"
+							],
+							"User-Agent": [
+								"Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/534.10 (KHTML, like Gecko) Chrome/8.0.552.237 Safari/534.10"
+							]
+						},
+						"ContentLength": 0,
+						"TransferEncoding": null,
+						"Close": false,
+						"Host": "a.rad.msn.com",
+						"Form": null,
+						"PostForm": null,
+						"MultipartForm": null,
+						"Trailer": null,
+						"RemoteAddr": "",
+						"RequestURI": "/ADSAdClient31.dll?GetSAd=\u0026DPJS=0\u0026PN=MSFT\u0026PG=CAELCB\u0026AP=1089",
+						"TLS": null,
+						"Response": null
+					},
+					"rawResponse": null
+				}
+			},
+			"response": {
+				"isRequest": false,
+				"captureTime": "0001-01-01T00:00:00Z",
+				"payload": {
+					"method": "",
+					"url": "",
+					"details": {
+						"status": 200,
+						"statusText": "OK",
+						"httpVersion": "HTTP/1.1",
+						"cookies": [],
+						"headers": [
+							{
+								"name": "Cache-Control",
+								"value": "no-cache, must-revalidate"
+							},
+							{
+								"name": "Content-Encoding",
+								"value": "gzip"
+							},
+							{
+								"name": "Content-Length",
+								"value": "953"
+							},
+							{
+								"name": "Content-Type",
+								"value": "text/html; Charset=utf-8"
+							},
+							{
+								"name": "Cteonnt-Length",
+								"value": "2348"
+							},
+							{
+								"name": "Date",
+								"value": "Tue, 25 Jan 2011 18:53:02 GMT"
+							},
+							{
+								"name": "Expires",
+								"value": "Fri, 01 Jan 1990 00:00:00 GMT"
+							},
+							{
+								"name": "P3p",
+								"value": "CP=\"BUS CUR CONo FIN IVDo ONL OUR PHY SAMo TELo\""
+							},
+							{
+								"name": "Pragma",
+								"value": "no-cache"
+							},
+							{
+								"name": "Server",
+								"value": "Microsoft-IIS/7.5"
+							},
+							{
+								"name": "X-Radid",
+								"value": "P7698478-T25740950-C71000000000019812"
+							}
+						],
+						"content": {
+							"size": 2348,
+							"mimeType": "text/html; Charset=utf-8",
+							"text": "Ci8vPCFbQ0RBVEFbCiBmdW5jdGlvbiBnZXRSQURJZHMoKSB7IHJldHVybnsiYWRpZCI6IjcxMDAwMDAwMDAwMDE5ODEyIiwicGlkIjoiNzY5ODQ3OCIsInRhcmdldGlkIjoiMjU3NDA5NTAifTt9IGlmKHR5cGVvZihpbkRhcElGKSAhPSAidW5kZWZpbmVkIil7cGFyZW50LmRhcF9SZXNpemUoZG9jdW1lbnQuYm9keS5pZCwgMzAwLCAyNTApO2lmKHBhcmVudC5fZGFwVXRpbHMuaXNfaWU1dXAgJiYgKHBhcmVudC5fZGFwVXRpbHMubWFqb3JWZXIgPCA5KSl7ZG9jdW1lbnQub25yZWFkeXN0YXRlY2hhbmdlPXN0YXJ0UmVuZGVyQWRfMTQ5NDc0NTIxODtkb2N1bWVudC5jbG9zZSgpO30gZWxzZSB7ZG9jdW1lbnQud3JpdGUocmVuZGVyQWRfMTQ5NDc0NTIxOCgpKTt9fSBlbHNlIHtkb2N1bWVudC53cml0ZShyZW5kZXJBZF8xNDk0NzQ1MjE4KCkpO31mdW5jdGlvbiBzdGFydFJlbmRlckFkXzE0OTQ3NDUyMTgoKSB7aWYgKGRvY3VtZW50LnJlYWR5U3RhdGU9PSJjb21wbGV0ZSIpIHt2YXIgZGFwSWZzID0gZG9jdW1lbnQuYm9keS5pZDt2YXIgY2hpbGRkYXBJZnMgPSBkYXBJZnMgKyAnQ2hpbGQnO3ZhciBpZnJtID0gZG9jdW1lbnQuY3JlYXRlRWxlbWVudCgiSUZSQU1FIik7aWZybS5pZCA9IGNoaWxkZGFwSWZzO2lmcm0uaGVpZ2h0ID0gcGFyZW50LmRvY3VtZW50LmFsbFtkYXBJZnNdLmhlaWdodDtpZnJtLndpZHRoID0gcGFyZW50LmRvY3VtZW50LmFsbFtkYXBJZnNdLndpZHRoO2lmcm0uc2Nyb2xsaW5nID0gIm5vIjtpZnJtLmZyYW1lQm9yZGVyID0gMDtkb2N1bWVudC5ib2R5Lmluc2VydEFkamFjZW50RWxlbWVudCgiYWZ0ZXJCZWdpbiIsaWZybSk7d3JpdGVpbkRhcElGXzE0OTQ3NDUyMTgoaWZybSwgZGFwSWZzKTtwYXJlbnQuZG9jdW1lbnQuYWxsW2RhcElmc10uaW5zZXJ0QWRqYWNlbnRFbGVtZW50KCdiZWZvcmVCZWdpbicsIGlmcm0pO3BhcmVudC5kYXBfUmVzaXplKGRvY3VtZW50LmJvZHkuaWQsIDAsIDApO319ZnVuY3Rpb24gd3JpdGVpbkRhcElGXzE0OTQ3NDUyMTgoaWZybSwgZGFwSWZzKSB7dmFyIHMgPSAnPGh0bWw+PGhlYWQ+PHRpdGxlPkFkdmVydGlzZW1lbnQ8L3RpdGxlPjwvaGVhZD48Ym9keSBpZD0iJyArIGRhcElmcyArICdDaGlsZCIgbGVmdG1hcmdpbj0iMCIgdG9wbWFyZ2luPSIwIj48c2NyJysnaXB0IHR5cGU9InRleHQvamF2YXNjcmlwdCI+dmFyIGluRGFwSUY9dHJ1ZTsnO2lmKGRvY3VtZW50LmRvbWFpbiAmJiBwYXJlbnQubG9jYXRpb24uaG9zdG5hbWUhPWRvY3VtZW50LmRvbWFpbil7cyArPSAnZG9jdW1lbnQuZG9tYWluPSInICsgZG9jdW1lbnQuZG9tYWluICsgJyI7Jzt9aWYgKHR5cGVvZihpbkRhcE1ncklmKSAhPSAidW5kZWZpbmVkIil7cyArPScgdmFyIGluRGFwTWdySWY9dHJ1ZTsnO31zKz0gJ3dpbmRvdy5zZXRUaW1lb3V0KCJkb2N1bWVudC5jbG9zZSgpOyIsMzAwMDApOyc7cys9ICc8L3NjcicrJ2lwdD4nO3ZhciByZW5kZXJBZENvZGUgPSByZW5kZXJBZF8xNDk0NzQ1MjE4KCk7cmVuZGVyQWRDb2RlID0gcmVuZGVyQWRDb2RlLnJlcGxhY2UoL1xuL2csIlxcbiIpO3JlbmRlckFkQ29kZSA9IHJlbmRlckFkQ29kZS5yZXBsYWNlKC8nL2csIlxcXCciKTtzKz0gcmVuZGVyQWRDb2RlO3MrPSc8L2JvZHk+PC9odG1sPic7aWZybS5zcmMgPSAiamF2YXNjcmlwdDp2b2lkKGRvY3VtZW50LndyaXRlKCciICsgcyArICInKSk7Ijt9ZnVuY3Rpb24gcmVuZGVyQWRfMTQ5NDc0NTIxOCgpIHt2YXIgYWRDb2RlXzE0OTQ3NDUyMTg9bmV3IEFycmF5KCk7YWRDb2RlXzE0OTQ3NDUyMTgucHVzaCgnPHNjcicrJ2lwdCB0eXBlPSJ0ZXh0L2phdmFzY3JpcHQiPlxuJyk7YWRDb2RlXzE0OTQ3NDUyMTgucHVzaCgnIDwhLS1cbicpO2FkQ29kZV8xNDk0NzQ1MjE4LnB1c2goJyBtaWNyb3NvZnRfYWR1bml0aWQ9IjEwMDAwMDE1IjtcbicpO2FkQ29kZV8xNDk0NzQ1MjE4LnB1c2goJyBtaWNyb3NvZnRfYWR1bml0X3dpZHRoPSIzMDAiO1xuJyk7YWRDb2RlXzE0OTQ3NDUyMTgucHVzaCgnIG1pY3Jvc29mdF9hZHVuaXRfaGVpZ2h0PSIyNTAiO1xuJyk7YWRDb2RlXzE0OTQ3NDUyMTgucHVzaCgnIG1pY3Jvc29mdF9hZHVuaXRfbGVnYWN5PSJmYWxzZSI7XG4nKTthZENvZGVfMTQ5NDc0NTIxOC5wdXNoKCcgLy8tLT5cbicpO2FkQ29kZV8xNDk0NzQ1MjE4LnB1c2goJyA8L3NjcicrJ2lwdD5cbicpO2FkQ29kZV8xNDk0NzQ1MjE4LnB1c2goJyA8c2NyJysnaXB0IHR5cGU9InRleHQvamF2YXNjcmlwdCIgc3JjPSJodHRwOi8vYWRzeW5kaWNhdGlvbi5tc24uY29tL2RlbGl2ZXJ5L2dldGFkcy5qcyIgPjwvc2NyJysnaXB0PlxuJyk7dmFyIHMgPSBhZENvZGVfMTQ5NDc0NTIxOC5qb2luKCcnKTtyZXR1cm4gczsgfQovL11dPgo=",
+							"encoding": "base64"
+						},
+						"redirectURL": "",
+						"headersSize": -1,
+						"bodySize": 953
+					},
+					"rawRequest": null,
+					"rawResponse": {
+						"Body": "\u001f\ufffd\u0008\u0000\u0000\u0000\u0000\u0000\u0000\u0003\ufffdV\ufffdr\ufffd:\u0014\ufffd\ufffd)\u0014-j{J0\ufffd\ufffdM\ufffdmfH\ufffdΰ\ufffd\u0026\ufffd\ufffd\u0026d\u0018Ւ\ufffd\u0018[\ufffdH\"\\\ufffd\ufffd\ufffd=\ufffd\u0000S҄\ufffd\u0015:\ufffd\ufffd\ufffdw\ufffd|\u0016\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\u000ce\u000b\ufffd\u001a.\u0005\ufffd1\ufffd0\ufffd\u001fS\ufffd\u0007h\ufffd\u00143\u000b%֘PN\ufffd\r\ufffd\ufffdv\ufffd\ufffd\ufffd\ufffd\ufffd{\ufffd[\ufffdr7\ufffd\u000e\ufffd{W\ufffdp6D\ufffd\ufffdZxٿ\ufffdu\u0006\ufffd\u000e\ufffdD\u001b\ufffd3߬*\u00263\ufffd\ufffd{R\ufffd?\u0007\ufffd\u003cAx!(˸`\u0014\u0007\ufffd\ufffd(\u0026L\ufffd\ufffdj\ufffd\ufffd4\ufffd\ufffd|*\ufffdEie?$]\ufffd9m\ufffd:\ufffd\u0016\ufffd\ufffdw\ufffd\u0008\u000cn\u0015\ufffd\ufffd\ufffd\ufffd\ufffdB\ufffd\ufffd\ufffdr\ufffd_T\ufffd\ufffd\u0007\ufffd\ufffd\ufffd$s\ufffd\ufffd3\ufffdb4\u0008\ufffd\ufffd޸\u0014\ufffd\u0011\ufffd҆\u0018\ufffd\ufffdD\ufffdX\u0002\ufffd\ufffdy`\u0010\ufffd\u001a\ufffdi\ufffd7\ufffd]\ufffd\ufffd\ufffd\ufffd\ufffdh\ufffd\ufffd\u0016R3?\ufffd\ufffdX\ufffd\u0019j\ufffd-\u00157\ufffd\u0007\ufffdǺ~\u0000\ufffdw\ufffd\ufffd}y- \ufffd\u0026\ufffd\ufffd\ufffdRu*\ufffd\ufffdT\ufffd\u0004\ufffd\ufffd\ufffd\nf\u0018\u0006\ufffd3Q\u0008J1\ufffd4J\ufffdqa#{\ufffd漠\r\ufffd\ufffd\ufffd\ufffd\ufffd;+\ufffdj\u0008\ufffdTy\ufffd\ufffd\ufffd;\ufffd\u003e\u0015̞|\u003c\ufffd\ufffd0\ufffd\ufffd\t\ufffd\ufffd\ufffd\u0012\ufffd\u0002\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffdr\u00037\ufffdv\ufffdl\ufffd\ufffdxt\ufffd\ufffd-\ufffd),95\ufffd\t|\ufffdqp\ufffd*Y\u0014\\\ufffd@\u0005\u000b\ufffd\ufffd4S\ufffdd\ufffdRA\ufffd@\ufffdi\ufffd\ufffd\n 4SfD\ufffd$\u0005\ufffd\u003e\u001d\ufffd\u0019\ufffdnٌ\u000bܲV\ufffd\ufffd\ufffd֖\ufffd\ufffd]\ufffd\ufffd\ufffdmɂ\ufffd\ufffdH\ufffd\ufffd\ufffd\ufffd\ufffd2\ufffdX\ufffd\ufffdk\ufffden̼5\u000f0\r0\u000b\ufffd\ufffd(\u0015\ufffdc\ufffd\ufffd\ufffd\u0017\ufffd\ufffd,\ufffdq\u000e\ufffd\u0019Ɔ\ufffd\ufffd\rG\ufffd\u0019B\ufffd\ufffd\u000e-\u000e\ufffd0\u000e\u001d\ufffdzF\ufffd\u0026\ufffd\u0003j8s{\ufffd`T\ufffd̔\ufffd\u0001\ufffdHp\u0007##\ufffd\ufffd4\ufffd\ufffd5\ufffdG\ufffdW\u0006\ufffdU\ufffd`\ufffd\ufffd7\ufffd\ufffd\u003c\u0013\ufffd\u0000)\u001e\ufffd\u0014s\ufffd'F-X\ufffdA\ufffd\ufffd\ufffd\ufffd,\t\u0017v\ufffd\ufffd\ufffd)dJl\ufffd\ufffd\\j#\ufffd\ufffd\ufffd\ufffd\u00118XCx\ufffd\ufffd\ufffdx\u001b\ufffd\ufffda\ufffd\u0003\ufffdˍ\u001d\ufffd\ufffde\ufffde\ufffd\ufffd\ufffd\ufffd}e-{h\u001fs\ufffdڅ\ufffd\ufffd\ufffd\ufffd\ufffd\u000b*\ufffdm\ufffd\ufffdW^2\ufffd\u0000N\ufffd}\ufffd\u0016\u0008n\ufffdN\ufffd@\u0013\ufffd\ufffd։\ufffd}\ufffd\ufffdn\ufffd \ufffdz\ufffd\ufffd$eв\ufffd\ufffd\ufffd-\u0010\ufffd\u0002\ufffdG\ufffd\tU\u0001t\ufffdÉ\u0008g-\u003c\ufffd\u0008\u0018ѿR\ufffd\u001c~⁂\ufffd\ufffd\u0010e\u0005\u0010\ufffd%\ufffde\ufffd\ufffd\ufffdm\ufffd\u001dA\ufffd\ufffd\ufffdk:{\ufffd,9m\ufffd\ufffdv\ufffd\ufffd\ufffd\ufffd\ufffd\u003c؃U\ufffd\u000f\ufffd\ufffd\u001f3t\ufffd%\ufffd냋D\ufffd%\u001a)EVP\ufffd\u0017\ufffd\ufffdj\ufffds\ufffd;ͼ\ufffd\ufffd^WG\ufffd\ufffd\ufffd\ufffdۈ\ufffd\ufffd\ufffd\ufffd23SB\u0017\ufffd\ufffd\u0003\ufffd`\ufffdZv\ufffd8z\ufffd\ufffd\ufffd\ufffdf\t\u0006^\ufffd[\ufffd-\ufffd\u0004\ufffd\ufffd\ufffd\ufffd\u0016lF\ufffdU\ufffd3\u0002O\ufffd)\ufffd0\ufffd\ufffd8U\ufffd\u0003\u0026\ufffd@\ufffd\ufffd\u000f\u0002J%87\ufffd\ufffd\tCB\ufffdJP\ufffd\u001d\ufffdR\ufffd6\ufffds!e\u0005\ufffd\ufffd\ufffd\n\ufffd\ufffd\u0003\u0010\ufffd\ufffd\ufffd\u0008xy\u0014\ufffdn\ufffd\ufffd\u000ce.\ufffd\ufffd=\ufffd\ufffd\ufffd\u001e\ufffd#\ufffd9\u000bç\ufffd\ufffd\ufffd/\ufffd~u@,\t\u0000\u0000",
+						"Status": "200 OK",
+						"StatusCode": 200,
+						"Proto": "HTTP/1.1",
+						"ProtoMajor": 1,
+						"ProtoMinor": 1,
+						"Header": {
+							"Cache-Control": [
+								"no-cache, must-revalidate"
+							],
+							"Content-Encoding": [
+								"gzip"
+							],
+							"Content-Length": [
+								"953"
+							],
+							"Content-Type": [
+								"text/html; Charset=utf-8"
+							],
+							"Cteonnt-Length": [
+								"2348"
+							],
+							"Date": [
+								"Tue, 25 Jan 2011 18:53:02 GMT"
+							],
+							"Expires": [
+								"Fri, 01 Jan 1990 00:00:00 GMT"
+							],
+							"P3p": [
+								"CP=\"BUS CUR CONo FIN IVDo ONL OUR PHY SAMo TELo\""
+							],
+							"Pragma": [
+								"no-cache"
+							],
+							"Server": [
+								"Microsoft-IIS/7.5"
+							],
+							"X-Radid": [
+								"P7698478-T25740950-C71000000000019812"
+							]
+						},
+						"ContentLength": 953,
+						"TransferEncoding": null,
+						"Close": false,
+						"Uncompressed": false,
+						"Trailer": null,
+						"Request": null,
+						"TLS": null
+					}
+				}
+			}
+		},
+		"Summary": null
+	},
+	{
+		"Protocol": {
+			"name": "http",
+			"longName": "Hypertext Transfer Protocol -- HTTP/1.1",
+			"abbr": "HTTP",
+			"macro": "http",
+			"version": "1.1",
+			"backgroundColor": "#205cf5",
+			"foregroundColor": "#ffffff",
+			"fontSize": 12,
+			"referenceLink": "https://datatracker.ietf.org/doc/html/rfc2616",
+			"ports": [
+				"80",
+				"443",
+				"8080"
+			],
+			"priority": 0
+		},
+		"Timestamp": -6795364578871,
+		"ConnectionInfo": {
+			"ClientIP": "1",
+			"ClientPort": "1",
+			"ServerIP": "2",
+			"ServerPort": "2",
+			"IsOutgoing": false
+		},
+		"Pair": {
+			"request": {
+				"isRequest": true,
+				"captureTime": "0001-01-01T00:00:00Z",
+				"payload": {
+					"method": "GET",
+					"url": "",
+					"details": {
+						"method": "GET",
+						"url": "/ADSAdClient31.dll?GetSAd=\u0026DPJS=0\u0026PN=MSFT\u0026PG=CAELCB\u0026AP=1089",
+						"httpVersion": "HTTP/1.1",
+						"cookies": [],
+						"headers": [
+							{
+								"name": "Accept",
+								"value": "*/*"
+							},
+							{
+								"name": "Accept-Charset",
+								"value": "ISO-8859-1,utf-8;q=0.7,*;q=0.3"
+							},
+							{
+								"name": "Accept-Encoding",
+								"value": "gzip,deflate,sdch"
+							},
+							{
+								"name": "Accept-Language",
+								"value": "en-US,en;q=0.8"
+							},
+							{
+								"name": "Connection",
+								"value": "keep-alive"
+							},
+							{
+								"name": "Host",
+								"value": "a.rad.msn.com"
+							},
+							{
+								"name": "Referer",
+								"value": "http://lifestyle.ca.msn.com/home-garden/five-things/rd-gallery.aspx?cp-documentid=27053613\u0026page=2"
+							},
+							{
+								"name": "User-Agent",
+								"value": "Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/534.10 (KHTML, like Gecko) Chrome/8.0.552.237 Safari/534.10"
+							}
+						],
+						"queryString": [
+							{
+								"name": "AP",
+								"value": "1089"
+							},
+							{
+								"name": "DPJS",
+								"value": "0"
+							},
+							{
+								"name": "GetSAd",
+								"value": ""
+							},
+							{
+								"name": "PG",
+								"value": "CAELCB"
+							},
+							{
+								"name": "PN",
+								"value": "MSFT"
+							}
+						],
+						"headersSize": -1,
+						"bodySize": 0
+					},
+					"rawRequest": {
+						"Method": "GET",
+						"URL": {
+							"Scheme": "",
+							"Opaque": "",
+							"User": null,
+							"Host": "",
+							"Path": "/ADSAdClient31.dll",
+							"RawPath": "",
+							"ForceQuery": false,
+							"RawQuery": "GetSAd=\u0026DPJS=0\u0026PN=MSFT\u0026PG=CAELCB\u0026AP=1089",
+							"Fragment": "",
+							"RawFragment": ""
+						},
+						"Proto": "HTTP/1.1",
+						"ProtoMajor": 1,
+						"ProtoMinor": 1,
+						"Header": {
+							"Accept": [
+								"*/*"
+							],
+							"Accept-Charset": [
+								"ISO-8859-1,utf-8;q=0.7,*;q=0.3"
+							],
+							"Accept-Encoding": [
+								"gzip,deflate,sdch"
+							],
+							"Accept-Language": [
+								"en-US,en;q=0.8"
+							],
+							"Connection": [
+								"keep-alive"
+							],
+							"Referer": [
+								"http://lifestyle.ca.msn.com/home-garden/five-things/rd-gallery.aspx?cp-documentid=27053613\u0026page=2"
+							],
+							"User-Agent": [
+								"Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/534.10 (KHTML, like Gecko) Chrome/8.0.552.237 Safari/534.10"
+							]
+						},
+						"ContentLength": 0,
+						"TransferEncoding": null,
+						"Close": false,
+						"Host": "a.rad.msn.com",
+						"Form": null,
+						"PostForm": null,
+						"MultipartForm": null,
+						"Trailer": null,
+						"RemoteAddr": "",
+						"RequestURI": "/ADSAdClient31.dll?GetSAd=\u0026DPJS=0\u0026PN=MSFT\u0026PG=CAELCB\u0026AP=1089",
+						"TLS": null,
+						"Response": null
+					},
+					"rawResponse": null
+				}
+			},
+			"response": {
+				"isRequest": false,
+				"captureTime": "0001-01-01T00:00:00Z",
+				"payload": {
+					"method": "",
+					"url": "",
+					"details": {
+						"status": 200,
+						"statusText": "OK",
+						"httpVersion": "HTTP/1.1",
+						"cookies": [],
+						"headers": [
+							{
+								"name": "Cache-Control",
+								"value": "no-cache, must-revalidate"
+							},
+							{
+								"name": "Content-Encoding",
+								"value": "gzip"
+							},
+							{
+								"name": "Content-Length",
+								"value": "953"
+							},
+							{
+								"name": "Content-Type",
+								"value": "text/html; Charset=utf-8"
+							},
+							{
+								"name": "Cteonnt-Length",
+								"value": "2348"
+							},
+							{
+								"name": "Date",
+								"value": "Tue, 25 Jan 2011 18:53:40 GMT"
+							},
+							{
+								"name": "Expires",
+								"value": "Fri, 01 Jan 1990 00:00:00 GMT"
+							},
+							{
+								"name": "P3p",
+								"value": "CP=\"BUS CUR CONo FIN IVDo ONL OUR PHY SAMo TELo\""
+							},
+							{
+								"name": "Pragma",
+								"value": "no-cache"
+							},
+							{
+								"name": "Server",
+								"value": "Microsoft-IIS/7.5"
+							},
+							{
+								"name": "X-Radid",
+								"value": "P7698478-T25740950-C71000000000019812"
+							}
+						],
+						"content": {
+							"size": 2348,
+							"mimeType": "text/html; Charset=utf-8",
+							"text": "Ci8vPCFbQ0RBVEFbCiBmdW5jdGlvbiBnZXRSQURJZHMoKSB7IHJldHVybnsiYWRpZCI6IjcxMDAwMDAwMDAwMDE5ODEyIiwicGlkIjoiNzY5ODQ3OCIsInRhcmdldGlkIjoiMjU3NDA5NTAifTt9IGlmKHR5cGVvZihpbkRhcElGKSAhPSAidW5kZWZpbmVkIil7cGFyZW50LmRhcF9SZXNpemUoZG9jdW1lbnQuYm9keS5pZCwgMzAwLCAyNTApO2lmKHBhcmVudC5fZGFwVXRpbHMuaXNfaWU1dXAgJiYgKHBhcmVudC5fZGFwVXRpbHMubWFqb3JWZXIgPCA5KSl7ZG9jdW1lbnQub25yZWFkeXN0YXRlY2hhbmdlPXN0YXJ0UmVuZGVyQWRfMTYzMDE1ODg4MTtkb2N1bWVudC5jbG9zZSgpO30gZWxzZSB7ZG9jdW1lbnQud3JpdGUocmVuZGVyQWRfMTYzMDE1ODg4MSgpKTt9fSBlbHNlIHtkb2N1bWVudC53cml0ZShyZW5kZXJBZF8xNjMwMTU4ODgxKCkpO31mdW5jdGlvbiBzdGFydFJlbmRlckFkXzE2MzAxNTg4ODEoKSB7aWYgKGRvY3VtZW50LnJlYWR5U3RhdGU9PSJjb21wbGV0ZSIpIHt2YXIgZGFwSWZzID0gZG9jdW1lbnQuYm9keS5pZDt2YXIgY2hpbGRkYXBJZnMgPSBkYXBJZnMgKyAnQ2hpbGQnO3ZhciBpZnJtID0gZG9jdW1lbnQuY3JlYXRlRWxlbWVudCgiSUZSQU1FIik7aWZybS5pZCA9IGNoaWxkZGFwSWZzO2lmcm0uaGVpZ2h0ID0gcGFyZW50LmRvY3VtZW50LmFsbFtkYXBJZnNdLmhlaWdodDtpZnJtLndpZHRoID0gcGFyZW50LmRvY3VtZW50LmFsbFtkYXBJZnNdLndpZHRoO2lmcm0uc2Nyb2xsaW5nID0gIm5vIjtpZnJtLmZyYW1lQm9yZGVyID0gMDtkb2N1bWVudC5ib2R5Lmluc2VydEFkamFjZW50RWxlbWVudCgiYWZ0ZXJCZWdpbiIsaWZybSk7d3JpdGVpbkRhcElGXzE2MzAxNTg4ODEoaWZybSwgZGFwSWZzKTtwYXJlbnQuZG9jdW1lbnQuYWxsW2RhcElmc10uaW5zZXJ0QWRqYWNlbnRFbGVtZW50KCdiZWZvcmVCZWdpbicsIGlmcm0pO3BhcmVudC5kYXBfUmVzaXplKGRvY3VtZW50LmJvZHkuaWQsIDAsIDApO319ZnVuY3Rpb24gd3JpdGVpbkRhcElGXzE2MzAxNTg4ODEoaWZybSwgZGFwSWZzKSB7dmFyIHMgPSAnPGh0bWw+PGhlYWQ+PHRpdGxlPkFkdmVydGlzZW1lbnQ8L3RpdGxlPjwvaGVhZD48Ym9keSBpZD0iJyArIGRhcElmcyArICdDaGlsZCIgbGVmdG1hcmdpbj0iMCIgdG9wbWFyZ2luPSIwIj48c2NyJysnaXB0IHR5cGU9InRleHQvamF2YXNjcmlwdCI+dmFyIGluRGFwSUY9dHJ1ZTsnO2lmKGRvY3VtZW50LmRvbWFpbiAmJiBwYXJlbnQubG9jYXRpb24uaG9zdG5hbWUhPWRvY3VtZW50LmRvbWFpbil7cyArPSAnZG9jdW1lbnQuZG9tYWluPSInICsgZG9jdW1lbnQuZG9tYWluICsgJyI7Jzt9aWYgKHR5cGVvZihpbkRhcE1ncklmKSAhPSAidW5kZWZpbmVkIil7cyArPScgdmFyIGluRGFwTWdySWY9dHJ1ZTsnO31zKz0gJ3dpbmRvdy5zZXRUaW1lb3V0KCJkb2N1bWVudC5jbG9zZSgpOyIsMzAwMDApOyc7cys9ICc8L3NjcicrJ2lwdD4nO3ZhciByZW5kZXJBZENvZGUgPSByZW5kZXJBZF8xNjMwMTU4ODgxKCk7cmVuZGVyQWRDb2RlID0gcmVuZGVyQWRDb2RlLnJlcGxhY2UoL1xuL2csIlxcbiIpO3JlbmRlckFkQ29kZSA9IHJlbmRlckFkQ29kZS5yZXBsYWNlKC8nL2csIlxcXCciKTtzKz0gcmVuZGVyQWRDb2RlO3MrPSc8L2JvZHk+PC9odG1sPic7aWZybS5zcmMgPSAiamF2YXNjcmlwdDp2b2lkKGRvY3VtZW50LndyaXRlKCciICsgcyArICInKSk7Ijt9ZnVuY3Rpb24gcmVuZGVyQWRfMTYzMDE1ODg4MSgpIHt2YXIgYWRDb2RlXzE2MzAxNTg4ODE9bmV3IEFycmF5KCk7YWRDb2RlXzE2MzAxNTg4ODEucHVzaCgnPHNjcicrJ2lwdCB0eXBlPSJ0ZXh0L2phdmFzY3JpcHQiPlxuJyk7YWRDb2RlXzE2MzAxNTg4ODEucHVzaCgnIDwhLS1cbicpO2FkQ29kZV8xNjMwMTU4ODgxLnB1c2goJyBtaWNyb3NvZnRfYWR1bml0aWQ9IjEwMDAwMDE1IjtcbicpO2FkQ29kZV8xNjMwMTU4ODgxLnB1c2goJyBtaWNyb3NvZnRfYWR1bml0X3dpZHRoPSIzMDAiO1xuJyk7YWRDb2RlXzE2MzAxNTg4ODEucHVzaCgnIG1pY3Jvc29mdF9hZHVuaXRfaGVpZ2h0PSIyNTAiO1xuJyk7YWRDb2RlXzE2MzAxNTg4ODEucHVzaCgnIG1pY3Jvc29mdF9hZHVuaXRfbGVnYWN5PSJmYWxzZSI7XG4nKTthZENvZGVfMTYzMDE1ODg4MS5wdXNoKCcgLy8tLT5cbicpO2FkQ29kZV8xNjMwMTU4ODgxLnB1c2goJyA8L3NjcicrJ2lwdD5cbicpO2FkQ29kZV8xNjMwMTU4ODgxLnB1c2goJyA8c2NyJysnaXB0IHR5cGU9InRleHQvamF2YXNjcmlwdCIgc3JjPSJodHRwOi8vYWRzeW5kaWNhdGlvbi5tc24uY29tL2RlbGl2ZXJ5L2dldGFkcy5qcyIgPjwvc2NyJysnaXB0PlxuJyk7dmFyIHMgPSBhZENvZGVfMTYzMDE1ODg4MS5qb2luKCcnKTtyZXR1cm4gczsgfQovL11dPgo=",
+							"encoding": "base64"
+						},
+						"redirectURL": "",
+						"headersSize": -1,
+						"bodySize": 953
+					},
+					"rawRequest": null,
+					"rawResponse": {
+						"Body": "\u001f\ufffd\u0008\u0000\u0000\u0000\u0000\u0000\u0000\u0003\ufffdV\ufffdr\ufffd:\u0014\ufffd\ufffd)\u0014-j{J\ufffdIKCb\ufffd\u0019\ufffd\ufffd3,\ufffdI{\ufffd\u0026d\u0018Ւ\ufffd\u0018[\ufffdH\"\\.û\ufffd\ufffd\u0002LI\u0013\u001aV\ufffd\ufffd;\ufffd\ufffd9\ufffdY\u0018\u0026\ufffd\u000f\ufffdw\ufffd\u001f\ufffd\ufffd3\ufffd/Df\ufffd\u0014h\ufffd\ufffd\ufffd\ufffdnL\ufffd\u001f\ufffd5R\ufffd,\ufffdXcB9\ufffd7\ufffd\ufffd\u0017\ufffd\ufffd\ufffdA\ufffd\u0012wp\ufffdn\u003e]\u000f\u003e^\r\ufffdl\ufffd\u0002\u001b\ufffd\ufffd\ufffd\ufffd1\ufffd\ufffdGx\u0013o\u0010\ufffd}\ufffd\ufffd\ufffd\ufffd}.\ufffdH=\ufffd\u001a\ufffd\ufffd\u0014ᅠ,\ufffd\ufffdQ\u001c\ufffdk\ufffd\ufffd0]J\ufffd\ufffd=\ufffd\ufffd\ufffdS\ufffd-*+\ufffd)\ufffd\ufffd\ufffdi\u0007}\ufffd\ufffd\u000e\ufffd\ufffdGA\u000c\u0006\ufffd\nS\ufffd\ufffd\ufffd\ufffdRw\ufffd\ufffdr\ufffd_\ufffd\ufffd\ufffd;\ufffd\ufffd\ufffd\"s\ufffd\ufffde\n%\ufffd:\u0008\ufffd{\ufffdR(F\ufffdJ\u001bbXV\u00101c)\ufffdW\ufffd\ufffdApjD\ufffd\ufffdO\u001f\ufffd^0\u0018\ufffd\ufffd\ufffdRVJ\ufffd\ufffd\u00002c\ufffdf\ufffd\ufffd\ufffdT\ufffd0\u001f\\\u001f\ufffd\ufffd\u0001\ufffd\ufffd\u0008\ufffd\ufffd奀l\ufffdx\ufffd\ufffdJ5\ufffd|\ufffd\ufffd\ufffd)\ufffddU\ufffd\ufffd0\u000c\ufffd'\ufffd\u0010\ufffdb\ufffdk\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd6+xI[\ufffd\ufffd\ufffd\u001ey\ufffdV\ufffd5\u0010\ufffd\ufffd\ufffdP=\u0003w\ufffd})\ufffd=\ufffdx\ufffd\ufffd~\ufffd\ufffd\u000b\ufffd\ufffdQ\u0015\ufffd\u0005\ufffd\ufffdQ'-\u0018\ufffd\u0015\u0006nv\ufffd\ufffd\ufffd\"e\ufffd\ufffd\ufffd\ufffd[\ufffdSXrj\ufffd\u0013\ufffd\u0006\ufffd\ufffd:S\ufffd,\ufffd\ufffd\ufffd\n\u0016\u0012;i\ufffdH\ufffd\u003eK\u0005\ufffd\u0003y\ufffd\ufffd\ufffd\u0015@h\ufffd̈\ufffdI\u0006\ufffd}:$7L}f3.p\ufffdZ\t\ufffd\ufffd[[\u0002\u001fv\ufffd\ufffdv\ufffd%\u000b\ufffd\ufffd\"\ufffd\ufffd+\ufffd'˥b\ufffd/\ufffdӔ\ufffd5\ufffd\ufffd\u003c\ufffd4\ufffd,lZ\ufffd\ufffdU\ufffd\ufffd\r\ufffd\ufffd^R\ufffd\ufffd\u001c\u0026\u0005\ufffdf\ufffd\u0018nJ6\u001c\ufffd'\u0008\ufffd\ufffd\u0026\ufffd$t\ufffd$t\u0010\ufffd\u0019q\ufffdb\u000f\ufffd\ufffd\ufffd\ufffd9\ufffdQ\ufffdrS\ufffd\u0006\ufffd\"\ufffd\u0011FF\ufffd\ufffdi\ufffd@k\ufffd\ufffd\u001e\ufffd\r\ufffd\ufffd ņ\ufffdg\ufffd9y\"p\u0001R\u003cl(\ufffdbO\ufffdZ\ufffd؃\ufffd\ufffdYSY\u0011.\ufffdpoKSʌج\ufffd\ufffd\ufffdF@\ufffd\ufffd\ufffd#p\ufffd\ufffd\ufffd \ufffd#\ufffd6\ufffd#Ð\u0007\u0006\ufffd\u001b;P\ufffd\ufffd\ufffd\ufffdL\ufffd\ufffd\ufffd\ufffd\ufffdZ\ufffd\ufffd\u003e\ufffd\u0006\ufffd\u000b{\ufffd\ufffd\ufffd%\u0017T.\ufffd\ufffd\ufffd\u001f\ufffdbr\u0001\ufffd\ufffd\ufffd\ufffd-\u0010܁\ufffd\u0016A\u0013\ufffd\ufffd\ufffdI\ufffd}\ufffd\ufffdn\ufffd \ufffdf\ufffdo%eв\ufffd\ufffd\ufffd-\u0010\ufffd\u0000\ufffdG\ufffd\tu\tt\ufffdÉ\u0008g\u001d\u003c\ufffd\u0008\u0018ѿR\ufffd\u001c~⁂\ufffd\ufffd\u0010e\u0005\u0010\ufffd%\ufffde\ufffd\ufffd\ufffdm\ufffd\u001dA\ufffd\ufffd\ufffdk;{\ufffd$9m\ufffd\ufffdv\ufffd\ufffd\ufffd\ufffd\ufffd\u003c؃U\ufffd\u000f\ufffd\ufffd\u001f3t\ufffd%\ufffd냋T\ufffd%\u001a)EVP\ufffdg\ufffd\ufffdz\ufffd\u000b\ufffd;ͼ\ufffd\ufffd^VG\ufffd\ufffd\ufffd\ufffd눊\ufffd\ufffd\ufffd27SB\u0017\ufffd\ufffd\u0003\ufffdb\ufffdZ\ufffd\ufffd8~\ufffd\ufffd\ufffd\ufffdf)\u0006^\ufffdY\ufffd-\ufffd\u0014\ufffd޷\ufffd\ufffdlF\ufffdU\ufffds\u0002O\ufffd)\ufffd0\ufffd\ufffd8U\ufffd\u0003\u0026\ufffd@\ufffd\ufffd\u000f\u0002J\ufffd\ufffd0\ufffd\ufffd\tCB\ufffdJP\ufffd\u001d\ufffdJ\ufffd.\ufffds!e%\ufffd\ufffd\ufffd\n\ufffd\ufffd\u0003\u0010ݹ\ufffd\u0008xy\u0014\ufffdn\ufffd=\u000fe.\ufffd\ufffd=\ufffd\ufffd\ufffd\u001e\ufffdc\ufffd9\u000b\ufffd\ufffd\ufffd\ufffd\ufffd/\ufffd\ufffd\ufffd\t,\t\u0000\u0000",
+						"Status": "200 OK",
+						"StatusCode": 200,
+						"Proto": "HTTP/1.1",
+						"ProtoMajor": 1,
+						"ProtoMinor": 1,
+						"Header": {
+							"Cache-Control": [
+								"no-cache, must-revalidate"
+							],
+							"Content-Encoding": [
+								"gzip"
+							],
+							"Content-Length": [
+								"953"
+							],
+							"Content-Type": [
+								"text/html; Charset=utf-8"
+							],
+							"Cteonnt-Length": [
+								"2348"
+							],
+							"Date": [
+								"Tue, 25 Jan 2011 18:53:40 GMT"
+							],
+							"Expires": [
+								"Fri, 01 Jan 1990 00:00:00 GMT"
+							],
+							"P3p": [
+								"CP=\"BUS CUR CONo FIN IVDo ONL OUR PHY SAMo TELo\""
+							],
+							"Pragma": [
+								"no-cache"
+							],
+							"Server": [
+								"Microsoft-IIS/7.5"
+							],
+							"X-Radid": [
+								"P7698478-T25740950-C71000000000019812"
+							]
+						},
+						"ContentLength": 953,
+						"TransferEncoding": null,
+						"Close": false,
+						"Uncompressed": false,
+						"Trailer": null,
+						"Request": null,
+						"TLS": null
+					}
+				}
+			}
+		},
+		"Summary": null
+	},
+	{
+		"Protocol": {
+			"name": "http",
+			"longName": "Hypertext Transfer Protocol -- HTTP/1.1",
+			"abbr": "HTTP",
+			"macro": "http",
+			"version": "1.1",
+			"backgroundColor": "#205cf5",
+			"foregroundColor": "#ffffff",
+			"fontSize": 12,
+			"referenceLink": "https://datatracker.ietf.org/doc/html/rfc2616",
+			"ports": [
+				"80",
+				"443",
+				"8080"
+			],
+			"priority": 0
+		},
+		"Timestamp": -6795364578871,
+		"ConnectionInfo": {
+			"ClientIP": "1",
+			"ClientPort": "1",
+			"ServerIP": "2",
+			"ServerPort": "2",
+			"IsOutgoing": false
+		},
+		"Pair": {
+			"request": {
+				"isRequest": true,
+				"captureTime": "0001-01-01T00:00:00Z",
+				"payload": {
+					"method": "GET",
+					"url": "",
+					"details": {
+						"method": "GET",
+						"url": "/ADSAdClient31.dll?AP=1089\u0026GetSAd=\u0026DPJS=0\u0026PN=MSFT\u0026PG=CAELCB",
+						"httpVersion": "HTTP/1.1",
+						"cookies": [],
+						"headers": [
+							{
+								"name": "Accept",
+								"value": "*/*"
+							},
+							{
+								"name": "Accept-Charset",
+								"value": "ISO-8859-1,utf-8;q=0.7,*;q=0.3"
+							},
+							{
+								"name": "Accept-Encoding",
+								"value": "gzip,deflate,sdch"
+							},
+							{
+								"name": "Accept-Language",
+								"value": "en-US,en;q=0.8"
+							},
+							{
+								"name": "Connection",
+								"value": "keep-alive"
+							},
+							{
+								"name": "Host",
+								"value": "a.rad.msn.com"
+							},
+							{
+								"name": "Referer",
+								"value": "http://lifestyle.ca.msn.com/home-garden/five-things/rd-gallery.aspx?cp-documentid=27053613\u0026page=4"
+							},
+							{
+								"name": "User-Agent",
+								"value": "Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/534.10 (KHTML, like Gecko) Chrome/8.0.552.237 Safari/534.10"
+							}
+						],
+						"queryString": [
+							{
+								"name": "AP",
+								"value": "1089"
+							},
+							{
+								"name": "DPJS",
+								"value": "0"
+							},
+							{
+								"name": "GetSAd",
+								"value": ""
+							},
+							{
+								"name": "PG",
+								"value": "CAELCB"
+							},
+							{
+								"name": "PN",
+								"value": "MSFT"
+							}
+						],
+						"headersSize": -1,
+						"bodySize": 0
+					},
+					"rawRequest": {
+						"Method": "GET",
+						"URL": {
+							"Scheme": "",
+							"Opaque": "",
+							"User": null,
+							"Host": "",
+							"Path": "/ADSAdClient31.dll",
+							"RawPath": "",
+							"ForceQuery": false,
+							"RawQuery": "AP=1089\u0026GetSAd=\u0026DPJS=0\u0026PN=MSFT\u0026PG=CAELCB",
+							"Fragment": "",
+							"RawFragment": ""
+						},
+						"Proto": "HTTP/1.1",
+						"ProtoMajor": 1,
+						"ProtoMinor": 1,
+						"Header": {
+							"Accept": [
+								"*/*"
+							],
+							"Accept-Charset": [
+								"ISO-8859-1,utf-8;q=0.7,*;q=0.3"
+							],
+							"Accept-Encoding": [
+								"gzip,deflate,sdch"
+							],
+							"Accept-Language": [
+								"en-US,en;q=0.8"
+							],
+							"Connection": [
+								"keep-alive"
+							],
+							"Referer": [
+								"http://lifestyle.ca.msn.com/home-garden/five-things/rd-gallery.aspx?cp-documentid=27053613\u0026page=4"
+							],
+							"User-Agent": [
+								"Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/534.10 (KHTML, like Gecko) Chrome/8.0.552.237 Safari/534.10"
+							]
+						},
+						"ContentLength": 0,
+						"TransferEncoding": null,
+						"Close": false,
+						"Host": "a.rad.msn.com",
+						"Form": null,
+						"PostForm": null,
+						"MultipartForm": null,
+						"Trailer": null,
+						"RemoteAddr": "",
+						"RequestURI": "/ADSAdClient31.dll?GetSAd=\u0026DPJS=0\u0026PN=MSFT\u0026PG=CAELCB\u0026AP=1089",
+						"TLS": null,
+						"Response": null
+					},
+					"rawResponse": null
+				}
+			},
+			"response": {
+				"isRequest": false,
+				"captureTime": "0001-01-01T00:00:00Z",
+				"payload": {
+					"method": "",
+					"url": "",
+					"details": {
+						"status": 200,
+						"statusText": "OK",
+						"httpVersion": "HTTP/1.1",
+						"cookies": [],
+						"headers": [
+							{
+								"name": "Cache-Control",
+								"value": "no-cache, must-revalidate"
+							},
+							{
+								"name": "Content-Encoding",
+								"value": "gzip"
+							},
+							{
+								"name": "Content-Length",
+								"value": "953"
+							},
+							{
+								"name": "Content-Type",
+								"value": "text/html; Charset=utf-8"
+							},
+							{
+								"name": "Cteonnt-Length",
+								"value": "2348"
+							},
+							{
+								"name": "Date",
+								"value": "Tue, 25 Jan 2011 18:54:59 GMT"
+							},
+							{
+								"name": "Expires",
+								"value": "Fri, 01 Jan 1990 00:00:00 GMT"
+							},
+							{
+								"name": "P3p",
+								"value": "CP=\"BUS CUR CONo FIN IVDo ONL OUR PHY SAMo TELo\""
+							},
+							{
+								"name": "Pragma",
+								"value": "no-cache"
+							},
+							{
+								"name": "Server",
+								"value": "Microsoft-IIS/7.5"
+							},
+							{
+								"name": "X-Radid",
+								"value": "P7698478-T25740950-C71000000000019812"
+							}
+						],
+						"content": {
+							"size": 2348,
+							"mimeType": "text/html; Charset=utf-8",
+							"text": "Ci8vPCFbQ0RBVEFbCiBmdW5jdGlvbiBnZXRSQURJZHMoKSB7IHJldHVybnsiYWRpZCI6IjcxMDAwMDAwMDAwMDE5ODEyIiwicGlkIjoiNzY5ODQ3OCIsInRhcmdldGlkIjoiMjU3NDA5NTAifTt9IGlmKHR5cGVvZihpbkRhcElGKSAhPSAidW5kZWZpbmVkIil7cGFyZW50LmRhcF9SZXNpemUoZG9jdW1lbnQuYm9keS5pZCwgMzAwLCAyNTApO2lmKHBhcmVudC5fZGFwVXRpbHMuaXNfaWU1dXAgJiYgKHBhcmVudC5fZGFwVXRpbHMubWFqb3JWZXIgPCA5KSl7ZG9jdW1lbnQub25yZWFkeXN0YXRlY2hhbmdlPXN0YXJ0UmVuZGVyQWRfMTg5NzQ4MTE4Mztkb2N1bWVudC5jbG9zZSgpO30gZWxzZSB7ZG9jdW1lbnQud3JpdGUocmVuZGVyQWRfMTg5NzQ4MTE4MygpKTt9fSBlbHNlIHtkb2N1bWVudC53cml0ZShyZW5kZXJBZF8xODk3NDgxMTgzKCkpO31mdW5jdGlvbiBzdGFydFJlbmRlckFkXzE4OTc0ODExODMoKSB7aWYgKGRvY3VtZW50LnJlYWR5U3RhdGU9PSJjb21wbGV0ZSIpIHt2YXIgZGFwSWZzID0gZG9jdW1lbnQuYm9keS5pZDt2YXIgY2hpbGRkYXBJZnMgPSBkYXBJZnMgKyAnQ2hpbGQnO3ZhciBpZnJtID0gZG9jdW1lbnQuY3JlYXRlRWxlbWVudCgiSUZSQU1FIik7aWZybS5pZCA9IGNoaWxkZGFwSWZzO2lmcm0uaGVpZ2h0ID0gcGFyZW50LmRvY3VtZW50LmFsbFtkYXBJZnNdLmhlaWdodDtpZnJtLndpZHRoID0gcGFyZW50LmRvY3VtZW50LmFsbFtkYXBJZnNdLndpZHRoO2lmcm0uc2Nyb2xsaW5nID0gIm5vIjtpZnJtLmZyYW1lQm9yZGVyID0gMDtkb2N1bWVudC5ib2R5Lmluc2VydEFkamFjZW50RWxlbWVudCgiYWZ0ZXJCZWdpbiIsaWZybSk7d3JpdGVpbkRhcElGXzE4OTc0ODExODMoaWZybSwgZGFwSWZzKTtwYXJlbnQuZG9jdW1lbnQuYWxsW2RhcElmc10uaW5zZXJ0QWRqYWNlbnRFbGVtZW50KCdiZWZvcmVCZWdpbicsIGlmcm0pO3BhcmVudC5kYXBfUmVzaXplKGRvY3VtZW50LmJvZHkuaWQsIDAsIDApO319ZnVuY3Rpb24gd3JpdGVpbkRhcElGXzE4OTc0ODExODMoaWZybSwgZGFwSWZzKSB7dmFyIHMgPSAnPGh0bWw+PGhlYWQ+PHRpdGxlPkFkdmVydGlzZW1lbnQ8L3RpdGxlPjwvaGVhZD48Ym9keSBpZD0iJyArIGRhcElmcyArICdDaGlsZCIgbGVmdG1hcmdpbj0iMCIgdG9wbWFyZ2luPSIwIj48c2NyJysnaXB0IHR5cGU9InRleHQvamF2YXNjcmlwdCI+dmFyIGluRGFwSUY9dHJ1ZTsnO2lmKGRvY3VtZW50LmRvbWFpbiAmJiBwYXJlbnQubG9jYXRpb24uaG9zdG5hbWUhPWRvY3VtZW50LmRvbWFpbil7cyArPSAnZG9jdW1lbnQuZG9tYWluPSInICsgZG9jdW1lbnQuZG9tYWluICsgJyI7Jzt9aWYgKHR5cGVvZihpbkRhcE1ncklmKSAhPSAidW5kZWZpbmVkIil7cyArPScgdmFyIGluRGFwTWdySWY9dHJ1ZTsnO31zKz0gJ3dpbmRvdy5zZXRUaW1lb3V0KCJkb2N1bWVudC5jbG9zZSgpOyIsMzAwMDApOyc7cys9ICc8L3NjcicrJ2lwdD4nO3ZhciByZW5kZXJBZENvZGUgPSByZW5kZXJBZF8xODk3NDgxMTgzKCk7cmVuZGVyQWRDb2RlID0gcmVuZGVyQWRDb2RlLnJlcGxhY2UoL1xuL2csIlxcbiIpO3JlbmRlckFkQ29kZSA9IHJlbmRlckFkQ29kZS5yZXBsYWNlKC8nL2csIlxcXCciKTtzKz0gcmVuZGVyQWRDb2RlO3MrPSc8L2JvZHk+PC9odG1sPic7aWZybS5zcmMgPSAiamF2YXNjcmlwdDp2b2lkKGRvY3VtZW50LndyaXRlKCciICsgcyArICInKSk7Ijt9ZnVuY3Rpb24gcmVuZGVyQWRfMTg5NzQ4MTE4MygpIHt2YXIgYWRDb2RlXzE4OTc0ODExODM9bmV3IEFycmF5KCk7YWRDb2RlXzE4OTc0ODExODMucHVzaCgnPHNjcicrJ2lwdCB0eXBlPSJ0ZXh0L2phdmFzY3JpcHQiPlxuJyk7YWRDb2RlXzE4OTc0ODExODMucHVzaCgnIDwhLS1cbicpO2FkQ29kZV8xODk3NDgxMTgzLnB1c2goJyBtaWNyb3NvZnRfYWR1bml0aWQ9IjEwMDAwMDE1IjtcbicpO2FkQ29kZV8xODk3NDgxMTgzLnB1c2goJyBtaWNyb3NvZnRfYWR1bml0X3dpZHRoPSIzMDAiO1xuJyk7YWRDb2RlXzE4OTc0ODExODMucHVzaCgnIG1pY3Jvc29mdF9hZHVuaXRfaGVpZ2h0PSIyNTAiO1xuJyk7YWRDb2RlXzE4OTc0ODExODMucHVzaCgnIG1pY3Jvc29mdF9hZHVuaXRfbGVnYWN5PSJmYWxzZSI7XG4nKTthZENvZGVfMTg5NzQ4MTE4My5wdXNoKCcgLy8tLT5cbicpO2FkQ29kZV8xODk3NDgxMTgzLnB1c2goJyA8L3NjcicrJ2lwdD5cbicpO2FkQ29kZV8xODk3NDgxMTgzLnB1c2goJyA8c2NyJysnaXB0IHR5cGU9InRleHQvamF2YXNjcmlwdCIgc3JjPSJodHRwOi8vYWRzeW5kaWNhdGlvbi5tc24uY29tL2RlbGl2ZXJ5L2dldGFkcy5qcyIgPjwvc2NyJysnaXB0PlxuJyk7dmFyIHMgPSBhZENvZGVfMTg5NzQ4MTE4My5qb2luKCcnKTtyZXR1cm4gczsgfQovL11dPgo=",
+							"encoding": "base64"
+						},
+						"redirectURL": "",
+						"headersSize": -1,
+						"bodySize": 953
+					},
+					"rawRequest": null,
+					"rawResponse": {
+						"Body": "\u001f\ufffd\u0008\u0000\u0000\u0000\u0000\u0000\u0000\u0003\ufffdV\ufffdr\ufffd:\u0014\ufffd\ufffd)\u0014-j{J0\ufffd\ufffd\ufffd\ufffdf\ufffd$\ufffd\u000c\ufffdnr\ufffdnB\ufffdQ-\u0019\ufffd\ufffd%\ufffd$\ufffd\ufffd2\ufffd\ufffd=\ufffd\u0000S҄\ufffd\u0015:\ufffd\ufffd\ufffdw\ufffd|\u0016\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\u000ce\u000b\ufffd\u001a.\u0005\ufffd1\ufffd0\ufffd\u001fS\ufffd\u0007h\ufffd\u00143\u000b%֘PN\ufffd\r\ufffd\ufffdv\ufffd\ufffd\ufffd\ufffd߽\ufffd-\\\ufffd\ufffdσ\ufffd\ufffdu\u001fΆ(\ufffdQ\u000b/{\ufffdW\ufffdA\ufffd\ufffd7\ufffd\u0006\ufffd\ufffd7\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffdT\ufffd\ufffd\u0001:O\u0010^\u0008\ufffd2.\u0018\ufffd\ufffd\ufffd\"\ufffd\tӦ\ufffd\ufffd\u003e0\ufffd\ufffdc\u003e\ufffd颴\ufffd_\ufffd\ufffdڜ\ufffdЧN\ufffd\ufffd.{\ufffd \u0002\ufffd[\ufffd)h\ufffd0\ufffd\ufffdm\ufffd\ufffd\ufffd\ufffd\u0016\u0015\ufffd\ufffd\u0001\ufffd\ufffd-\ufffd\\\ufffd\ufffdL\ufffd\u0018\r\ufffd`\ufffd7.\ufffdb\ufffd\ufffd\ufffd!\ufffd\ufffd9\u00113\ufffd\ufffde\u001e\u0018\u0004\ufffdFt\ufffd\ufffd\u000f\ufffd\ufffd\ufffd\ufffdn\ufffdS\ufffdWJ\u000b\ufffd\ufffd\u001f@f\ufffd\ufffd\u000c5֖\ufffd\u001b\ufffd\ufffd\ufffdc]?\u0000\ufffd;\ufffd\ufffd\ufffd\ufffd\u0016\ufffdm\u0013\ufffdPS\ufffd:\ufffdl*I\ufffdSYV\u00053\u000c\u0003\ufffd\ufffd(\u0004\ufffd\u0018g\u001a%踰\ufffd\ufffdMs^\ufffd\u0006\ufffd\ufffd|Dޝ\ufffd{5\ufffdg\ufffd\u003cTO\ufffd\ufffda_\nfO\u003e\u001e}\u0018}\ufffd\ufffdmsT\tf\u0001z`\ufffdIs\ufffdg\ufffd\ufffd\ufffd]\ufffdw\ufffdHQ\u003c:\ufffd\ufffd\u0016\ufffd\u0014\ufffd\ufffd\ufffd\ufffd\u0004\ufffd\ufffd8\ufffdN\ufffd,\n.f\ufffd\ufffd\ufffd\ufffdN\ufffd)R\ufffd[\ufffd\ufffd~ \ufffd4}t\u0005\u0010\ufffd)3\ufffds\ufffd\ufffdl\ufffd\u000e\ufffd\u000cS\ufffdl\ufffd\u0005nY+ATwkK\ufffd\ufffd.\ufffd\ufffdֶdA\ufffdV\ufffdv\ufffd\ufffdb\ufffdT\ufffd\ufffd\ufffd\ufffd\ufffd27fޚ\u0007\ufffd\u0006\ufffd\ufffdMC\ufffd\ufffd\ufffdб\ufffdvًsS\u0016\ufffd8\u0007\ufffd\u000cc\ufffdM\ufffd\ufffd#\ufffd\u000c!r]\ufffd\u0016\ufffdN\u0018\ufffd\u000eb=#N\u0013\ufffd\u00015\ufffd\ufffd=G0*XfJ\ufffd\u0000\\$\ufffd\ufffd\ufffd\ufffdUs\u001a\ufffd\ufffd\u001a\ufffd\ufffd\ufffd+\ufffd\ufffd*H\ufffda\ufffd\ufffdpN\ufffd\t\\\ufffd\u0014\u000fk\ufffd\ufffd\ufffd\u0013\ufffd\u0016,\ufffd\ufffd{M\ufffdT\ufffd\ufffd\u000b;\ufffd\ufffd\ufffd\u00142%6\ufffdv.\ufffd\u0011\ufffd\ufffd\ufffd\ufffd\u0008\u001c\ufffd!\u003cH\ufffdH\ufffd\r\ufffd\ufffd0\ufffd\ufffd\ufffd\ufffd\ufffd\u000e\ufffd\ufffd\ufffd\ufffd6S\ufffd\ufffd徲\ufffd=\ufffd\ufffd\ufffdF\ufffd\ufffd\ufffdh\ufffdu\ufffd\u0005\ufffd˶f\ufffd;/\ufffd\\\u0000\ufffd\ufffd\u003ew\u000b\u0004\ufffd`\ufffdu\ufffd\ufffd^T\ufffd\ufffd\ufffd\ufffdLC7t\ufffdj=\ufffdw\ufffd2h\ufffd\ufffd\ufffd\ufffd\u0016\ufffd^\u0001\ufffd#섪\u0000\ufffd\ufffd\ufffdD\ufffd\ufffd\u0016\ufffdL\u0004\ufffd\ufffd_)x\u000e?\ufffd@\ufffdFw\ufffd\ufffd\u0002\ufffd\ufffd\u0012²\ufffd\ufffdȶˎ\ufffdJ\ufffd\ufffd5\ufffd\ufffdy\ufffd\ufffd6}t;\ufffd\ufffdPpK\u001e\ufffd\ufffd\ufffd\ufffd\u0007\ufffd\ufffd\ufffd\u0019:Β\ufffd\ufffd\ufffdE\"\ufffd\u0012\ufffd\ufffd\"+(\ufffdv\ufffdй\ufffd\ufffdf\ufffdDx\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd\ufffdmD\ufffda\ufffdh\ufffd\ufffd)\ufffd\u000b\ufffd\ufffd\u0001L\ufffd{-\ufffd=\u001c\ufffdOwZo\ufffd\u0004\u0003/ޭ\ufffd\u0016g\u0002o\ufffd\ufffdu\u000b6#\ufffd*\ufffd\u0019\ufffd'\ufffd\ufffdv\u0018^\\\ufffd\ufffd\ufffd\u0001\ufffdO O\ufffd\u0007\u0001\ufffd\u0012\ufffd\u001bS݄!\ufffdz%(ߎ~\ufffdE\u001b޹\ufffd\ufffd\ufffd\ufffd\ufffdZ\ufffd\ufffd\ufffd\u0001\ufffd\ufffd\\c\u0004\ufffd\u003c\na\ufffd\ufffd^\ufffd2\ufffd\\\ufffd\u001e@\ufffdG\u000f\ufffd\u0011ڜ\ufffd\ufffd\ufffd\ufffd\ufffd\ufffdfk\ufffd\ufffd,\t\u0000\u0000",
+						"Status": "200 OK",
+						"StatusCode": 200,
+						"Proto": "HTTP/1.1",
+						"ProtoMajor": 1,
+						"ProtoMinor": 1,
+						"Header": {
+							"Cache-Control": [
+								"no-cache, must-revalidate"
+							],
+							"Content-Encoding": [
+								"gzip"
+							],
+							"Content-Length": [
+								"953"
+							],
+							"Content-Type": [
+								"text/html; Charset=utf-8"
+							],
+							"Cteonnt-Length": [
+								"2348"
+							],
+							"Date": [
+								"Tue, 25 Jan 2011 18:54:59 GMT"
+							],
+							"Expires": [
+								"Fri, 01 Jan 1990 00:00:00 GMT"
+							],
+							"P3p": [
+								"CP=\"BUS CUR CONo FIN IVDo ONL OUR PHY SAMo TELo\""
+							],
+							"Pragma": [
+								"no-cache"
+							],
+							"Server": [
+								"Microsoft-IIS/7.5"
+							],
+							"X-Radid": [
+								"P7698478-T25740950-C71000000000019812"
+							]
+						},
+						"ContentLength": 953,
+						"TransferEncoding": null,
+						"Close": false,
+						"Uncompressed": false,
+						"Trailer": null,
+						"Request": null,
+						"TLS": null
+					}
+				}
+			}
+		},
+		"Summary": null
+	}
+]

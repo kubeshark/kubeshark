@@ -1,0 +1,235 @@
+[
+	{
+		"Protocol": {
+			"name": "http",
+			"longName": "Hypertext Transfer Protocol -- HTTP/1.1",
+			"abbr": "HTTP",
+			"macro": "http",
+			"version": "1.1",
+			"backgroundColor": "#205cf5",
+			"foregroundColor": "#ffffff",
+			"fontSize": 12,
+			"referenceLink": "https://datatracker.ietf.org/doc/html/rfc2616",
+			"ports": [
+				"80",
+				"443",
+				"8080"
+			],
+			"priority": 0
+		},
+		"Timestamp": -6795364578871,
+		"ConnectionInfo": {
+			"ClientIP": "1",
+			"ClientPort": "1",
+			"ServerIP": "2",
+			"ServerPort": "2",
+			"IsOutgoing": true
+		},
+		"Pair": {
+			"request": {
+				"isRequest": true,
+				"captureTime": "0001-01-01T00:00:00Z",
+				"payload": {
+					"method": "GET",
+					"url": "",
+					"details": {
+						"method": "GET",
+						"url": "/videoByMarket.aspx?sf=DailyCount\u0026sd=-1\u0026vs=0\u0026responseencoding=rss\u0026mk=en-ca\u0026st=1\u0026ps=10\u0026title=Most Watched Videos\u0026p=imbot_en-ca_m2534",
+						"httpVersion": "HTTP/1.1",
+						"cookies": [],
+						"headers": [
+							{
+								"name": "Accept",
+								"value": "*/*"
+							},
+							{
+								"name": "Connection",
+								"value": "Keep-Alive"
+							},
+							{
+								"name": "Host",
+								"value": "edge1.catalog.video.msn.com"
+							},
+							{
+								"name": "User-Agent",
+								"value": "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; .NET CLR 1.1.4322; .NET CLR 2.0.50727; .NET CLR 3.0.4506.2152; .NET CLR 3.5.30729; Windows Live Messenger 14.0.8089.0726)"
+							}
+						],
+						"queryString": [
+							{
+								"name": "mk",
+								"value": "en-ca"
+							},
+							{
+								"name": "p",
+								"value": "imbot_en-ca_m2534"
+							},
+							{
+								"name": "ps",
+								"value": "10"
+							},
+							{
+								"name": "responseencoding",
+								"value": "rss"
+							},
+							{
+								"name": "sd",
+								"value": "-1"
+							},
+							{
+								"name": "sf",
+								"value": "DailyCount"
+							},
+							{
+								"name": "st",
+								"value": "1"
+							},
+							{
+								"name": "title",
+								"value": "Most Watched Videos"
+							},
+							{
+								"name": "vs",
+								"value": "0"
+							}
+						],
+						"headersSize": -1,
+						"bodySize": 0
+					},
+					"rawRequest": {
+						"Method": "GET",
+						"URL": {
+							"Scheme": "",
+							"Opaque": "",
+							"User": null,
+							"Host": "",
+							"Path": "/videoByMarket.aspx",
+							"RawPath": "",
+							"ForceQuery": false,
+							"RawQuery": "sf=DailyCount\u0026sd=-1\u0026vs=0\u0026responseencoding=rss\u0026mk=en-ca\u0026st=1\u0026ps=10\u0026title=Most Watched Videos\u0026p=imbot_en-ca_m2534",
+							"Fragment": "",
+							"RawFragment": ""
+						},
+						"Proto": "HTTP/1.1",
+						"ProtoMajor": 1,
+						"ProtoMinor": 1,
+						"Header": {
+							"Accept": [
+								"*/*"
+							],
+							"Connection": [
+								"Keep-Alive"
+							],
+							"User-Agent": [
+								"Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; .NET CLR 1.1.4322; .NET CLR 2.0.50727; .NET CLR 3.0.4506.2152; .NET CLR 3.5.30729; Windows Live Messenger 14.0.8089.0726)"
+							]
+						},
+						"ContentLength": 0,
+						"TransferEncoding": null,
+						"Close": false,
+						"Host": "edge1.catalog.video.msn.com",
+						"Form": null,
+						"PostForm": null,
+						"MultipartForm": null,
+						"Trailer": null,
+						"RemoteAddr": "",
+						"RequestURI": "/videoByMarket.aspx?mk=en-ca\u0026sf=DailyCount\u0026st=1\u0026sd=-1\u0026vs=0\u0026ps=10\u0026title=Most%20Watched%20Videos\u0026p=imbot_en-ca_m2534\u0026responseencoding=rss",
+						"TLS": null,
+						"Response": null
+					},
+					"rawResponse": null
+				}
+			},
+			"response": {
+				"isRequest": false,
+				"captureTime": "0001-01-01T00:00:00Z",
+				"payload": {
+					"method": "",
+					"url": "",
+					"details": {
+						"status": 200,
+						"statusText": "OK",
+						"httpVersion": "HTTP/1.1",
+						"cookies": [],
+						"headers": [
+							{
+								"name": "Connection",
+								"value": "keep-alive"
+							},
+							{
+								"name": "Content-Language",
+								"value": "en-US"
+							},
+							{
+								"name": "Content-Type",
+								"value": "text/plain;charset=UTF-8"
+							},
+							{
+								"name": "Date",
+								"value": "Tue, 25 Jan 2011 19:09:57 GMT"
+							},
+							{
+								"name": "Server",
+								"value": "nginx/0.7.67"
+							},
+							{
+								"name": "Transfer-Encoding",
+								"value": "chunked"
+							},
+							{
+								"name": "X-Retry-After",
+								"value": "3"
+							}
+						],
+						"content": {
+							"size": 0,
+							"mimeType": "text/plain;charset=UTF-8",
+							"encoding": "base64"
+						},
+						"redirectURL": "",
+						"headersSize": -1,
+						"bodySize": -1
+					},
+					"rawRequest": null,
+					"rawResponse": {
+						"Status": "200 OK",
+						"StatusCode": 200,
+						"Proto": "HTTP/1.1",
+						"ProtoMajor": 1,
+						"ProtoMinor": 1,
+						"Header": {
+							"Connection": [
+								"keep-alive"
+							],
+							"Content-Language": [
+								"en-US"
+							],
+							"Content-Type": [
+								"text/plain;charset=UTF-8"
+							],
+							"Date": [
+								"Tue, 25 Jan 2011 19:09:57 GMT"
+							],
+							"Server": [
+								"nginx/0.7.67"
+							],
+							"X-Retry-After": [
+								"3"
+							]
+						},
+						"ContentLength": -1,
+						"TransferEncoding": [
+							"chunked"
+						],
+						"Close": false,
+						"Uncompressed": false,
+						"Trailer": null,
+						"Request": null,
+						"TLS": null
+					}
+				}
+			}
+		},
+		"Summary": null
+	}
+]

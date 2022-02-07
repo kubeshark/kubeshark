@@ -1,0 +1,237 @@
+[
+	{
+		"Protocol": {
+			"name": "http",
+			"longName": "Hypertext Transfer Protocol -- HTTP/1.1",
+			"abbr": "HTTP",
+			"macro": "http",
+			"version": "1.1",
+			"backgroundColor": "#205cf5",
+			"foregroundColor": "#ffffff",
+			"fontSize": 12,
+			"referenceLink": "https://datatracker.ietf.org/doc/html/rfc2616",
+			"ports": [
+				"80",
+				"443",
+				"8080"
+			],
+			"priority": 0
+		},
+		"Timestamp": -6795364578871,
+		"ConnectionInfo": {
+			"ClientIP": "1",
+			"ClientPort": "1",
+			"ServerIP": "2",
+			"ServerPort": "2",
+			"IsOutgoing": true
+		},
+		"Pair": {
+			"request": {
+				"isRequest": true,
+				"captureTime": "0001-01-01T00:00:00Z",
+				"payload": {
+					"method": "GET",
+					"url": "",
+					"details": {
+						"method": "GET",
+						"url": "/?url=s1.4publishers.com/skprup.asp?lang=ENU\u0026cty=ca\u0026verutils=3.0.0.91\u0026versem=none\u0026cl=b`tr\u0026data=0.0.700\u0026go=\"00\"",
+						"httpVersion": "HTTP/1.1",
+						"cookies": [],
+						"headers": [
+							{
+								"name": "Accept",
+								"value": "*/*"
+							},
+							{
+								"name": "Cache-Control",
+								"value": "no-cache"
+							},
+							{
+								"name": "Connection",
+								"value": "Keep-Alive"
+							},
+							{
+								"name": "Host",
+								"value": "guide.opendns.com"
+							}
+						],
+						"queryString": [
+							{
+								"name": "cl",
+								"value": "b`tr"
+							},
+							{
+								"name": "cty",
+								"value": "ca"
+							},
+							{
+								"name": "data",
+								"value": "0.0.700"
+							},
+							{
+								"name": "go",
+								"value": "\"00\""
+							},
+							{
+								"name": "url",
+								"value": "s1.4publishers.com/skprup.asp?lang=ENU"
+							},
+							{
+								"name": "versem",
+								"value": "none"
+							},
+							{
+								"name": "verutils",
+								"value": "3.0.0.91"
+							}
+						],
+						"headersSize": -1,
+						"bodySize": 0
+					},
+					"rawRequest": {
+						"Method": "GET",
+						"URL": {
+							"Scheme": "",
+							"Opaque": "",
+							"User": null,
+							"Host": "",
+							"Path": "/",
+							"RawPath": "",
+							"ForceQuery": false,
+							"RawQuery": "url=s1.4publishers.com/skprup.asp?lang=ENU\u0026cty=ca\u0026verutils=3.0.0.91\u0026versem=none\u0026cl=b`tr\u0026data=0.0.700\u0026go=\"00\"",
+							"Fragment": "",
+							"RawFragment": ""
+						},
+						"Proto": "HTTP/1.1",
+						"ProtoMajor": 1,
+						"ProtoMinor": 1,
+						"Header": {
+							"Accept": [
+								"*/*"
+							],
+							"Cache-Control": [
+								"no-cache"
+							],
+							"Connection": [
+								"Keep-Alive"
+							]
+						},
+						"ContentLength": 0,
+						"TransferEncoding": null,
+						"Close": false,
+						"Host": "guide.opendns.com",
+						"Form": null,
+						"PostForm": null,
+						"MultipartForm": null,
+						"Trailer": null,
+						"RemoteAddr": "",
+						"RequestURI": "/?url=s1%2E4publishers%2Ecom%2Fskprup%2Easp%3Flang%3DENU%26cty%3Dca%26verutils%3D3%2E0%2E0%2E91%26versem%3Dnone%26cl%3Db%60tr%26data%3D0%2E0%2E700%26go%3D%2200%22",
+						"TLS": null,
+						"Response": null
+					},
+					"rawResponse": null
+				}
+			},
+			"response": {
+				"isRequest": false,
+				"captureTime": "0001-01-01T00:00:00Z",
+				"payload": {
+					"method": "",
+					"url": "",
+					"details": {
+						"status": 200,
+						"statusText": "OK",
+						"httpVersion": "HTTP/1.0",
+						"cookies": [],
+						"headers": [
+							{
+								"name": "Cache-Control",
+								"value": "no-cache, must-revalidate"
+							},
+							{
+								"name": "Connection",
+								"value": "close"
+							},
+							{
+								"name": "Content-Type",
+								"value": "text/html; charset=utf-8"
+							},
+							{
+								"name": "Date",
+								"value": "Mon, 20 Dec 2010 20:20:03 GMT"
+							},
+							{
+								"name": "Expires",
+								"value": "Mon, 26 Jul 1997 05:00:00 GMT"
+							},
+							{
+								"name": "Pragma",
+								"value": "no-cache"
+							},
+							{
+								"name": "Server",
+								"value": "OpenDNS Guide"
+							},
+							{
+								"name": "Set-Cookie",
+								"value": "[REDACTED]"
+							}
+						],
+						"content": {
+							"size": 1717,
+							"mimeType": "text/html; charset=utf-8",
+							"text": "PGh0bWw+Cgk8aGVhZD4KCQk8dGl0bGU+ICA8L3RpdGxlPgoJCTxzY3JpcHQgdHlwZT0idGV4dC9qYXZhc2NyaXB0Ij4KCQlmdW5jdGlvbiBicmVkaXIoZCx1LHIsdixjKXt2YXIgdyxoLHdkLGhkLGJpO3ZhciBiPWZhbHNlO3ZhciBwPWZhbHNlO3ZhciBzPVtbMzAwLDI1MCxmYWxzZV0sWzI1MCwyNTAsZmFsc2VdLFsyNDAsNDAwLGZhbHNlXSxbMzM2LDI4MCxmYWxzZV0sWzE4MCwxNTAsZmFsc2VdLFs0NjgsNjAsZmFsc2VdLFsyMzQsNjAsZmFsc2VdLFs4OCwzMSxmYWxzZV0sWzEyMCw5MCxmYWxzZV0sWzEyMCw2MCxmYWxzZV0sWzEyMCwyNDAsZmFsc2VdLFsxMjUsMTI1LGZhbHNlXSxbNzI4LDkwLGZhbHNlXSxbMTYwLDYwMCxmYWxzZV0sWzEyMCw2MDAsZmFsc2VdLFszMDAsNjAwLGZhbHNlXSxbMzAwLDEyNSxmYWxzZV0sWzUzMCwzMDAsZmFsc2VdLFsxOTAsMjAwLGZhbHNlXSxbNDcwLDI1MCxmYWxzZV0sWzcyMCwzMDAsdHJ1ZV0sWzUwMCwzNTAsdHJ1ZV0sWzU1MCw0ODAsdHJ1ZV1dO2lmKHR5cGVvZih3aW5kb3cuaW5uZXJIZWlnaHQpPT0nbnVtYmVyJyl7aD13aW5kb3cuaW5uZXJIZWlnaHQ7dz13aW5kb3cuaW5uZXJXaWR0aDt9ZWxzZSBpZih0eXBlb2YoZG9jdW1lbnQuYm9keS5vZmZzZXRIZWlnaHQpPT0nbnVtYmVyJyl7aD1kb2N1bWVudC5ib2R5Lm9mZnNldEhlaWdodDt3PWRvY3VtZW50LmJvZHkub2Zmc2V0V2lkdGg7fWZvcih2YXIgaT0wO2k8cy5sZW5ndGg7aSsrKXtiaT1zW2ldO3dkPU1hdGguYWJzKHctYmlbMF0pO2hkPU1hdGguYWJzKGgtYmlbMV0pO2lmKHdkPD0yJiZoZDw9Mil7Yj10cnVlO3A9YmlbMl07fX1pZihifHwodzwxMDAmJnchPT0wKXx8KGg8MTAwJiZoIT09MCkpe2lmKHAmJnNlbGY9PXBhcmVudCl7c2VsZi5jbG9zZSgpO3JldHVybjt9cmV0dXJuJy9iJysnYW5uZXIucGhwP3c9Jyt3KycmaD0nK2grJyZkPScrZCsnJnU9Jyt1Kycmcj0nK3IrJyZ2aWV3PScrdjt9ZWxzZXtyZXR1cm4gYzt9fQoJCTwvc2NyaXB0PgoJPC9oZWFkPgoJPGJvZHkgb25Mb2FkPSJ3aW5kb3cubG9jYXRpb24gPSBicmVkaXIoJ3MxLjRwdWJsaXNoZXJzLmNvbScsICdzMS40cHVibGlzaGVycy5jb20lMkZza2V2LmFzcCUzRmxhbmclM0RFTlUlMjZjdHklM0RjYSUyNmNyJTNEMTI5MTM5NDc5NCUyNm1kJTNEMTI5MTM5NDc5NCUyNnZlcnV0aWxzJTNEMy4wLjAuOTElMjZjbCUzRGIlNjB0ciUyNmRhdGElM0QwLjAuNzAwJTI2Z28lM0QlMjIwMCUyMicsICcnLCAnZXJyb3InLCAnL21haW4/dXJsPXMxLjRwdWJsaXNoZXJzLmNvbSUyRnNrZXYuYXNwJTNGbGFuZyUzREVOVSUyNmN0eSUzRGNhJTI2Y3IlM0QxMjkxMzk0Nzk0JTI2bWQlM0QxMjkxMzk0Nzk0JTI2dmVydXRpbHMlM0QzLjAuMC45MSUyNmNsJTNEYiU2MHRyJTI2ZGF0YSUzRDAuMC43MDAlMjZnbyUzRCUyMjAwJTIyJyk7IiBzdHlsZT0ibWFyZ2luOiAwcHg7Ij4KCQk8bm9zY3JpcHQ+CgkJCTxpZnJhbWUgZnJhbWVib3JkZXI9IjAiIHNyYz0iL21haW4/dXJsPXMxLjRwdWJsaXNoZXJzLmNvbSUyRnNrZXYuYXNwJTNGbGFuZyUzREVOVSUyNmN0eSUzRGNhJTI2Y3IlM0QxMjkxMzk0Nzk0JTI2bWQlM0QxMjkxMzk0Nzk0JTI2dmVydXRpbHMlM0QzLjAuMC45MSUyNmNsJTNEYiU2MHRyJTI2ZGF0YSUzRDAuMC43MDAlMjZnbyUzRCUyMjAwJTIyIiB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIj48L2lmcmFtZT4KCQk8L25vc2NyaXB0PgoJPC9ib2R5Pgo8L2h0bWw+Cg==",
+							"encoding": "base64"
+						},
+						"redirectURL": "",
+						"headersSize": -1,
+						"bodySize": -1
+					},
+					"rawRequest": null,
+					"rawResponse": {
+						"Body": "\u003chtml\u003e\n\t\u003chead\u003e\n\t\t\u003ctitle\u003e  \u003c/title\u003e\n\t\t\u003cscript type=\"text/javascript\"\u003e\n\t\tfunction bredir(d,u,r,v,c){var w,h,wd,hd,bi;var b=false;var p=false;var s=[[300,250,false],[250,250,false],[240,400,false],[336,280,false],[180,150,false],[468,60,false],[234,60,false],[88,31,false],[120,90,false],[120,60,false],[120,240,false],[125,125,false],[728,90,false],[160,600,false],[120,600,false],[300,600,false],[300,125,false],[530,300,false],[190,200,false],[470,250,false],[720,300,true],[500,350,true],[550,480,true]];if(typeof(window.innerHeight)=='number'){h=window.innerHeight;w=window.innerWidth;}else if(typeof(document.body.offsetHeight)=='number'){h=document.body.offsetHeight;w=document.body.offsetWidth;}for(var i=0;i\u003cs.length;i++){bi=s[i];wd=Math.abs(w-bi[0]);hd=Math.abs(h-bi[1]);if(wd\u003c=2\u0026\u0026hd\u003c=2){b=true;p=bi[2];}}if(b||(w\u003c100\u0026\u0026w!==0)||(h\u003c100\u0026\u0026h!==0)){if(p\u0026\u0026self==parent){self.close();return;}return'/b'+'anner.php?w='+w+'\u0026h='+h+'\u0026d='+d+'\u0026u='+u+'\u0026r='+r+'\u0026view='+v;}else{return c;}}\n\t\t\u003c/script\u003e\n\t\u003c/head\u003e\n\t\u003cbody onLoad=\"window.location = bredir('s1.4publishers.com', 's1.4publishers.com%2Fskev.asp%3Flang%3DENU%26cty%3Dca%26cr%3D1291394794%26md%3D1291394794%26verutils%3D3.0.0.91%26cl%3Db%60tr%26data%3D0.0.700%26go%3D%2200%22', '', 'error', '/main?url=s1.4publishers.com%2Fskev.asp%3Flang%3DENU%26cty%3Dca%26cr%3D1291394794%26md%3D1291394794%26verutils%3D3.0.0.91%26cl%3Db%60tr%26data%3D0.0.700%26go%3D%2200%22');\" style=\"margin: 0px;\"\u003e\n\t\t\u003cnoscript\u003e\n\t\t\t\u003ciframe frameborder=\"0\" src=\"/main?url=s1.4publishers.com%2Fskev.asp%3Flang%3DENU%26cty%3Dca%26cr%3D1291394794%26md%3D1291394794%26verutils%3D3.0.0.91%26cl%3Db%60tr%26data%3D0.0.700%26go%3D%2200%22\" width=\"100%\" height=\"100%\"\u003e\u003c/iframe\u003e\n\t\t\u003c/noscript\u003e\n\t\u003c/body\u003e\n\u003c/html\u003e\n",
+						"Status": "200 OK",
+						"StatusCode": 200,
+						"Proto": "HTTP/1.0",
+						"ProtoMajor": 1,
+						"ProtoMinor": 0,
+						"Header": {
+							"Cache-Control": [
+								"no-cache, must-revalidate"
+							],
+							"Connection": [
+								"close"
+							],
+							"Content-Type": [
+								"text/html; charset=utf-8"
+							],
+							"Date": [
+								"Mon, 20 Dec 2010 20:20:03 GMT"
+							],
+							"Expires": [
+								"Mon, 26 Jul 1997 05:00:00 GMT"
+							],
+							"Pragma": [
+								"no-cache"
+							],
+							"Server": [
+								"OpenDNS Guide"
+							],
+							"Set-Cookie": [
+								"[REDACTED]"
+							]
+						},
+						"ContentLength": -1,
+						"TransferEncoding": null,
+						"Close": true,
+						"Uncompressed": false,
+						"Trailer": null,
+						"Request": null,
+						"TLS": null
+					}
+				}
+			}
+		},
+		"Summary": null
+	}
+]

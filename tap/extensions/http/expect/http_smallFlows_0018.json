@@ -1,0 +1,531 @@
+[
+	{
+		"Protocol": {
+			"name": "http",
+			"longName": "Hypertext Transfer Protocol -- HTTP/1.1",
+			"abbr": "HTTP",
+			"macro": "http",
+			"version": "1.1",
+			"backgroundColor": "#205cf5",
+			"foregroundColor": "#ffffff",
+			"fontSize": 12,
+			"referenceLink": "https://datatracker.ietf.org/doc/html/rfc2616",
+			"ports": [
+				"80",
+				"443",
+				"8080"
+			],
+			"priority": 0
+		},
+		"Timestamp": -6795364578871,
+		"ConnectionInfo": {
+			"ClientIP": "1",
+			"ClientPort": "1",
+			"ServerIP": "2",
+			"ServerPort": "2",
+			"IsOutgoing": false
+		},
+		"Pair": {
+			"request": {
+				"isRequest": true,
+				"captureTime": "0001-01-01T00:00:00Z",
+				"payload": {
+					"method": "GET",
+					"url": "",
+					"details": {
+						"method": "GET",
+						"url": "/blank.aspx?1295981545103=",
+						"httpVersion": "HTTP/1.1",
+						"cookies": [],
+						"headers": [
+							{
+								"name": "Accept",
+								"value": "application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5"
+							},
+							{
+								"name": "Accept-Charset",
+								"value": "ISO-8859-1,utf-8;q=0.7,*;q=0.3"
+							},
+							{
+								"name": "Accept-Encoding",
+								"value": "gzip,deflate,sdch"
+							},
+							{
+								"name": "Accept-Language",
+								"value": "en-US,en;q=0.8"
+							},
+							{
+								"name": "Connection",
+								"value": "keep-alive"
+							},
+							{
+								"name": "Host",
+								"value": "ca.msn.com"
+							},
+							{
+								"name": "Referer",
+								"value": "http://ca.msn.com/"
+							},
+							{
+								"name": "User-Agent",
+								"value": "Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/534.10 (KHTML, like Gecko) Chrome/8.0.552.237 Safari/534.10"
+							}
+						],
+						"queryString": [
+							{
+								"name": "1295981545103",
+								"value": ""
+							}
+						],
+						"headersSize": -1,
+						"bodySize": 0
+					},
+					"rawRequest": {
+						"Method": "GET",
+						"URL": {
+							"Scheme": "",
+							"Opaque": "",
+							"User": null,
+							"Host": "",
+							"Path": "/blank.aspx",
+							"RawPath": "",
+							"ForceQuery": false,
+							"RawQuery": "1295981545103=",
+							"Fragment": "",
+							"RawFragment": ""
+						},
+						"Proto": "HTTP/1.1",
+						"ProtoMajor": 1,
+						"ProtoMinor": 1,
+						"Header": {
+							"Accept": [
+								"application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5"
+							],
+							"Accept-Charset": [
+								"ISO-8859-1,utf-8;q=0.7,*;q=0.3"
+							],
+							"Accept-Encoding": [
+								"gzip,deflate,sdch"
+							],
+							"Accept-Language": [
+								"en-US,en;q=0.8"
+							],
+							"Connection": [
+								"keep-alive"
+							],
+							"Referer": [
+								"http://ca.msn.com/"
+							],
+							"User-Agent": [
+								"Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/534.10 (KHTML, like Gecko) Chrome/8.0.552.237 Safari/534.10"
+							]
+						},
+						"ContentLength": 0,
+						"TransferEncoding": null,
+						"Close": false,
+						"Host": "ca.msn.com",
+						"Form": null,
+						"PostForm": null,
+						"MultipartForm": null,
+						"Trailer": null,
+						"RemoteAddr": "",
+						"RequestURI": "/blank.aspx?1295981545103",
+						"TLS": null,
+						"Response": null
+					},
+					"rawResponse": null
+				}
+			},
+			"response": {
+				"isRequest": false,
+				"captureTime": "0001-01-01T00:00:00Z",
+				"payload": {
+					"method": "",
+					"url": "",
+					"details": {
+						"status": 200,
+						"statusText": "OK",
+						"httpVersion": "HTTP/1.1",
+						"cookies": [],
+						"headers": [
+							{
+								"name": "Cache-Control",
+								"value": "no-cache"
+							},
+							{
+								"name": "Content-Encoding",
+								"value": "gzip"
+							},
+							{
+								"name": "Content-Length",
+								"value": "65"
+							},
+							{
+								"name": "Content-Type",
+								"value": "text/html; charset=utf-8"
+							},
+							{
+								"name": "Cteonnt-Length",
+								"value": "50"
+							},
+							{
+								"name": "Date",
+								"value": "Tue, 25 Jan 2011 18:52:36 GMT"
+							},
+							{
+								"name": "P3p",
+								"value": "CP=\"BUS CUR CONo FIN IVDo ONL OUR PHY SAMo TELo\""
+							},
+							{
+								"name": "Pragma",
+								"value": "no-cache"
+							},
+							{
+								"name": "S",
+								"value": "CO1MPPRENA46"
+							},
+							{
+								"name": "Server",
+								"value": "Microsoft-IIS/6.0"
+							},
+							{
+								"name": "X-Aspnet-Version",
+								"value": "2.0.50727"
+							},
+							{
+								"name": "X-Powered-By",
+								"value": "ASP.NET"
+							}
+						],
+						"content": {
+							"size": 50,
+							"mimeType": "text/html; charset=utf-8",
+							"text": "PGh0bWwgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGh0bWwiPjwvaHRtbD4=",
+							"encoding": "base64"
+						},
+						"redirectURL": "",
+						"headersSize": -1,
+						"bodySize": 65
+					},
+					"rawRequest": null,
+					"rawResponse": {
+						"Body": "\u001f\ufffd\u0008\u0000\u0000\u0000\u0000\u0000\u0000\u0003\ufffd\ufffd(\ufffd\ufffdQ\ufffd\ufffd\ufffd\ufffd+\ufffdU\ufffd())\ufffd\ufffd\ufffd///\ufffd+7\ufffd\ufffd/J\ufffd7\ufffd\ufffd\ufffdԯ\u0000\ufffdQ\ufffd\ufffd\ufffd\u0007\ufffdv\u0000#\u0016\u0019\ufffd2\u0000\u0000\u0000",
+						"Status": "200 OK",
+						"StatusCode": 200,
+						"Proto": "HTTP/1.1",
+						"ProtoMajor": 1,
+						"ProtoMinor": 1,
+						"Header": {
+							"Cache-Control": [
+								"no-cache"
+							],
+							"Content-Encoding": [
+								"gzip"
+							],
+							"Content-Length": [
+								"65"
+							],
+							"Content-Type": [
+								"text/html; charset=utf-8"
+							],
+							"Cteonnt-Length": [
+								"50"
+							],
+							"Date": [
+								"Tue, 25 Jan 2011 18:52:36 GMT"
+							],
+							"P3p": [
+								"CP=\"BUS CUR CONo FIN IVDo ONL OUR PHY SAMo TELo\""
+							],
+							"Pragma": [
+								"no-cache"
+							],
+							"S": [
+								"CO1MPPRENA46"
+							],
+							"Server": [
+								"Microsoft-IIS/6.0"
+							],
+							"X-Aspnet-Version": [
+								"2.0.50727"
+							],
+							"X-Powered-By": [
+								"ASP.NET"
+							]
+						},
+						"ContentLength": 65,
+						"TransferEncoding": null,
+						"Close": false,
+						"Uncompressed": false,
+						"Trailer": null,
+						"Request": null,
+						"TLS": null
+					}
+				}
+			}
+		},
+		"Summary": null
+	},
+	{
+		"Protocol": {
+			"name": "http",
+			"longName": "Hypertext Transfer Protocol -- HTTP/1.1",
+			"abbr": "HTTP",
+			"macro": "http",
+			"version": "1.1",
+			"backgroundColor": "#205cf5",
+			"foregroundColor": "#ffffff",
+			"fontSize": 12,
+			"referenceLink": "https://datatracker.ietf.org/doc/html/rfc2616",
+			"ports": [
+				"80",
+				"443",
+				"8080"
+			],
+			"priority": 0
+		},
+		"Timestamp": -6795364578871,
+		"ConnectionInfo": {
+			"ClientIP": "1",
+			"ClientPort": "1",
+			"ServerIP": "2",
+			"ServerPort": "2",
+			"IsOutgoing": false
+		},
+		"Pair": {
+			"request": {
+				"isRequest": true,
+				"captureTime": "0001-01-01T00:00:00Z",
+				"payload": {
+					"method": "GET",
+					"url": "",
+					"details": {
+						"method": "GET",
+						"url": "/ajax/I.aspx",
+						"httpVersion": "HTTP/1.1",
+						"cookies": [],
+						"headers": [
+							{
+								"name": "Accept",
+								"value": "*/*"
+							},
+							{
+								"name": "Accept-Charset",
+								"value": "ISO-8859-1,utf-8;q=0.7,*;q=0.3"
+							},
+							{
+								"name": "Accept-Encoding",
+								"value": "gzip,deflate,sdch"
+							},
+							{
+								"name": "Accept-Language",
+								"value": "en-US,en;q=0.8"
+							},
+							{
+								"name": "Connection",
+								"value": "keep-alive"
+							},
+							{
+								"name": "Host",
+								"value": "ca.msn.com"
+							},
+							{
+								"name": "Referer",
+								"value": "http://ca.msn.com/"
+							},
+							{
+								"name": "User-Agent",
+								"value": "Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/534.10 (KHTML, like Gecko) Chrome/8.0.552.237 Safari/534.10"
+							}
+						],
+						"queryString": [],
+						"headersSize": -1,
+						"bodySize": 0
+					},
+					"rawRequest": {
+						"Method": "GET",
+						"URL": {
+							"Scheme": "",
+							"Opaque": "",
+							"User": null,
+							"Host": "",
+							"Path": "/ajax/I.aspx",
+							"RawPath": "",
+							"ForceQuery": false,
+							"RawQuery": "",
+							"Fragment": "",
+							"RawFragment": ""
+						},
+						"Proto": "HTTP/1.1",
+						"ProtoMajor": 1,
+						"ProtoMinor": 1,
+						"Header": {
+							"Accept": [
+								"*/*"
+							],
+							"Accept-Charset": [
+								"ISO-8859-1,utf-8;q=0.7,*;q=0.3"
+							],
+							"Accept-Encoding": [
+								"gzip,deflate,sdch"
+							],
+							"Accept-Language": [
+								"en-US,en;q=0.8"
+							],
+							"Connection": [
+								"keep-alive"
+							],
+							"Referer": [
+								"http://ca.msn.com/"
+							],
+							"User-Agent": [
+								"Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/534.10 (KHTML, like Gecko) Chrome/8.0.552.237 Safari/534.10"
+							]
+						},
+						"ContentLength": 0,
+						"TransferEncoding": null,
+						"Close": false,
+						"Host": "ca.msn.com",
+						"Form": null,
+						"PostForm": null,
+						"MultipartForm": null,
+						"Trailer": null,
+						"RemoteAddr": "",
+						"RequestURI": "/ajax/I.aspx",
+						"TLS": null,
+						"Response": null
+					},
+					"rawResponse": null
+				}
+			},
+			"response": {
+				"isRequest": false,
+				"captureTime": "0001-01-01T00:00:00Z",
+				"payload": {
+					"method": "",
+					"url": "",
+					"details": {
+						"status": 200,
+						"statusText": "OK",
+						"httpVersion": "HTTP/1.1",
+						"cookies": [],
+						"headers": [
+							{
+								"name": "Cache-Control",
+								"value": "no-cache"
+							},
+							{
+								"name": "Content-Encoding",
+								"value": "gzip"
+							},
+							{
+								"name": "Content-Length",
+								"value": "493"
+							},
+							{
+								"name": "Content-Type",
+								"value": "text/xml; charset=utf-8"
+							},
+							{
+								"name": "Date",
+								"value": "Tue, 25 Jan 2011 18:52:36 GMT"
+							},
+							{
+								"name": "Ntcoent-Length",
+								"value": "1020"
+							},
+							{
+								"name": "P3p",
+								"value": "CP=\"BUS CUR CONo FIN IVDo ONL OUR PHY SAMo TELo\""
+							},
+							{
+								"name": "Pragma",
+								"value": "no-cache"
+							},
+							{
+								"name": "S",
+								"value": "CO1MPPRENA48"
+							},
+							{
+								"name": "Server",
+								"value": "Microsoft-IIS/6.0"
+							},
+							{
+								"name": "X-Aspnet-Version",
+								"value": "2.0.50727"
+							},
+							{
+								"name": "X-Powered-By",
+								"value": "ASP.NET"
+							}
+						],
+						"content": {
+							"size": 1020,
+							"mimeType": "text/xml; charset=utf-8",
+							"text": "PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz48dGlja2xlcj48Y29udGVudD48YSBjbGFzcz0iZGVsIiBpZD0iY2xiIiB0aXRsZT0iQ2xvc2UiIGhyZWY9IiMiPjxkaXYgc3R5bGU9InZpc2liaWxpdHk6dmlzaWJsZSI+PC9kaXY+PC9hPjxkaXYgY2xhc3M9ImUxIGllYWsxIj48aW1nIHNyYz0iaHR0cDovL2NvbC5zdGIucy1tc24uY29tL2kvRDYvOEU3NjNDODI1REMwRTM4ODkyOUFFMUIzNzVDRTE4LkpQRyIgd2lkdGg9IjEiIGhlaWdodD0iMSIgYWx0PSJJRTgiIC8+PC9kaXY+PGRpdiBjbGFzcz0iZTJtZCBpZWFrMiI+PHVsPjxsaSBjbGFzcz0iZmlyc3QiPjxzcGFuPjwvc3Bhbj48L2xpPjxsaSBjbGFzcz0ibGFzdCI+PHNwYW4+PC9zcGFuPjwvbGk+PC91bD48L2Rpdj48ZGl2IGNsYXNzPSJlMyBpZWFrMyI+PGEgaHJlZj0iaHR0cDovL3d3dy5taWNyb3NvZnQuY29tL2NhbmFkYS9tc24vbXNub2llOC8iIGlkPSJiZ2xpbmsiPjwvYT48aW5wdXQgaWQ9IklFQUtCdXR0b24iIGNsYXNzPSJidXR0b24iIHR5cGU9ImJ1dHRvbiIgLz48L2Rpdj48L2NvbnRlbnQ+PGNsYXNzPnRpY2tsZXI8L2NsYXNzPjxpZD50aWNrbGVySTwvaWQ+PGZ1bmN0aW9ucz48ZnVuY3Rpb24+PG5hbWU+SS5UPC9uYW1lPjxldmVudD5jbGljazwvZXZlbnQ+PGVsZW1lbnQ+I0lFQUtCdXR0b248L2VsZW1lbnQ+PC9mdW5jdGlvbj48L2Z1bmN0aW9ucz48dmFyaWFibGVzPjx2YXJpYWJsZT48dmFyaWFibGVuYW1lPklFQUtVcmw8L3ZhcmlhYmxlbmFtZT48dmFyaWFibGV2YWx1ZT5odHRwOi8vd3d3Lm1pY3Jvc29mdC5jb20vY2FuYWRhL21zbi9tc25vaWU4LzwvdmFyaWFibGV2YWx1ZT48L3ZhcmlhYmxlPjx2YXJpYWJsZT48dmFyaWFibGVuYW1lPnRyYWNrTmF2aWdhdGVJRUFLPC92YXJpYWJsZW5hbWU+PHZhcmlhYmxldmFsdWU+TmF2aWdhdGUgSUVBSzwvdmFyaWFibGV2YWx1ZT48L3ZhcmlhYmxlPjwvdmFyaWFibGVzPjxmcmllbmRseW5hbWU+SUVBS1RpY2tsZXI8L2ZyaWVuZGx5bmFtZT48L3RpY2tsZXI+",
+							"encoding": "base64"
+						},
+						"redirectURL": "",
+						"headersSize": -1,
+						"bodySize": 493
+					},
+					"rawRequest": null,
+					"rawResponse": {
+						"Body": "\u001f\ufffd\u0008\u0000\u0000\u0000\u0000\u0000\u0000\u0003\ufffdSmo\ufffd0\u0010\ufffd+\ufffd\ufffd\ufffd\ufffd\u0004\ufffd\ufffd\ufffd\ufffdjS4e\ufffd\ufffd}\ufffd~\ufffd1\u00269Ř\u0008\u001fd\ufffd\ufffd;^\ufffd\ufffdۤ}\ufffd~\ufffd\ufffd\ufffd;#_~U\ufffdu\ufffd\ufffdP\ufffd\ufffd\ufffd\ufffd\u001dg\ufffd\ufffd\ufffd\u0000\ufffdMx\ufffd\ufffdm\ufffd_R\ufffd\ufffd\ufffd\ufffd4\ufffdԵC\ufffd0\ufffd\ufffdi\ufffd\ufffdOxa,gP$\\ۜ3\u0004\ufffd\u0026\ufffdk[{\ufffdٮ1e\ufffdox*\u000b\ufffd\ufffd\ufffdSo\ufffd\ufffdC\u000e\u0016\ufffd\ufffd\u003c@k\ufffd.ȁN5zN\ufffdM\ufffd\ufffd\ufffd}Hv\ufffd\ufffd\ufffd7:\ufffd;\ufffdó\u0010\ufffd\ufffd\ufffd\ufffd\u003c\ufffd\ufffd\ufffdw\ufffd\ufffd+\u0001\ufffd\ufffdA\ufffd\ufffd\ufffdC\ufffd\ufffdW\ufffd\ufffd\ufffd\ufffd,\ufffd\ufffd\ufffd\ufffd\ufffdk\u0016\ufffdE\ufffd\ufffd\ufffd,\ufffd\ufffd\ufffd?\ufffdpv\ufffd\u0002w\ufffd*\ufffd3\ufffd\ufffd\ufffd\u0000\ufffd\ufffd{\ufffdŜ\ufffd\ufffd\ufffd%\ufffdUU\u000cTVD\ufffd\ufffd\ufffd\ufffd0\ufffdJh\u003c\ufffd\ufffd\u001f\ufffd\ufffd\ufffd\ufffd\ufffdp\ufffdC\ufffd\ufffd]D\ufffd\ufffds\ufffdh\ufffd\u0015Q\ufffd\ufffdF8u}\u003c\u001e\ufffd\ntS\ufffd\ufffdġk\ufffd\ufffd*\ufffd\ufffd!\ufffd_\r\u0026\u0016\ufffd6\ufffd\ufffd\u0005\ufffd\ufffd'K3\u0005whqPo\ufffd\ufffdoo-b\ufffd\ufffd\\.\ufffdD\u003c\u001dh;\ufffd\ufffd\ufffd\ufffdF=\ufffd|\ufffdO\ufffd\ufffd@\ufffdA\ufffdP̪\ufffd\u0014$Ȳu\u001a\ufffd5\ufffdm\ufffd\ufffdt\ufffd2\ufffd\u0026\ufffd\ufffdb@\ufffdt}Jm)R\ufffdQ\ufffdƚ\ufffd\u00077g\ufffdd\ufffd\ufffdR\ufffd\ufffd-\ufffdJt\ufffd\u0001Eo\ufffd\u0002\ufffd\ufffdX\ufffd\ufffd\ufffdl\ufffd\u0014W\ufffdŧS\ufffd5\ufffd\ufffd\u000c\ufffd\ufffdi\ufffd=\ufffd倍\ufffd\ufffd廙\ufffdB\ufffd\u0013\ufffd7\ufffdٓ]\ufffd~.\ufffd\ufffd~\ufffd\r\u0018W\ufffd\ufffd\ufffd\ufffdǼ\ufffd+\ufffd\u0014\ufffd\ufffd\ufffd\u001be\ufffd\ufffds\ufffd\u0003\u0000\u0000",
+						"Status": "200 OK",
+						"StatusCode": 200,
+						"Proto": "HTTP/1.1",
+						"ProtoMajor": 1,
+						"ProtoMinor": 1,
+						"Header": {
+							"Cache-Control": [
+								"no-cache"
+							],
+							"Content-Encoding": [
+								"gzip"
+							],
+							"Content-Length": [
+								"493"
+							],
+							"Content-Type": [
+								"text/xml; charset=utf-8"
+							],
+							"Date": [
+								"Tue, 25 Jan 2011 18:52:36 GMT"
+							],
+							"Ntcoent-Length": [
+								"1020"
+							],
+							"P3p": [
+								"CP=\"BUS CUR CONo FIN IVDo ONL OUR PHY SAMo TELo\""
+							],
+							"Pragma": [
+								"no-cache"
+							],
+							"S": [
+								"CO1MPPRENA48"
+							],
+							"Server": [
+								"Microsoft-IIS/6.0"
+							],
+							"X-Aspnet-Version": [
+								"2.0.50727"
+							],
+							"X-Powered-By": [
+								"ASP.NET"
+							]
+						},
+						"ContentLength": 493,
+						"TransferEncoding": null,
+						"Close": false,
+						"Uncompressed": false,
+						"Trailer": null,
+						"Request": null,
+						"TLS": null
+					}
+				}
+			}
+		},
+		"Summary": null
+	}
+]
