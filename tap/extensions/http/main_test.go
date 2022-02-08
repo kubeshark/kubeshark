@@ -19,11 +19,11 @@ import (
 )
 
 const (
-	pattern    = "./bin/*_req.bin"
-	msg        = "Dissecting:"
-	respSuffix = "_res.bin"
-	expectDir  = "expect"
-	testUpdate = "TEST_UPDATE"
+	pattern          = "./bin/*_req.bin"
+	msg              = "Dissecting:"
+	respSuffix       = "_res.bin"
+	expectDirDissect = "expect/dissect"
+	testUpdate       = "TEST_UPDATE"
 )
 
 func TestDissect(t *testing.T) {
@@ -34,8 +34,8 @@ func TestDissect(t *testing.T) {
 	}
 
 	if testUpdateEnabled {
-		os.RemoveAll(expectDir)
-		err := os.MkdirAll(expectDir, 0775)
+		os.RemoveAll(expectDirDissect)
+		err := os.MkdirAll(expectDirDissect, 0775)
 		assert.Nil(t, err)
 	}
 
@@ -115,7 +115,7 @@ func TestDissect(t *testing.T) {
 
 		time.Sleep(10 * time.Millisecond)
 
-		pathExpect := fmt.Sprintf("%s/%s.json", expectDir, basePath[4:])
+		pathExpect := fmt.Sprintf("%s/%s.json", expectDirDissect, basePath[4:])
 
 		sort.Slice(items, func(i, j int) bool {
 			iMarshaled, err := json.Marshal(items[i])
