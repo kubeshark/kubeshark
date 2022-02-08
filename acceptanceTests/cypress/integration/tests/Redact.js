@@ -7,4 +7,4 @@ it('Loading Mizu', function () {
 verifyMinimumEntries();
 
 isValueExistsInElement(true, Cypress.env('redactHeaderContent'), '#tbody-Headers');
-isValueExistsInElement(true, Cypress.env('redactBodyContent'), '.hljs');
+isValueExistsInElement(true, Cypress.env('redactBodyContent'), Cypress.env('bodyJsonClass'));
