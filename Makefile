@@ -83,6 +83,15 @@ clean-cli:  ## Clean CLI.
 clean-docker:
 	@(echo "DOCKER cleanup - NOT IMPLEMENTED YET " )
 
+test-lint:
+	cd agent && golangci-lint run
+	cd shared && golangci-lint run
+	cd tap && golangci-lint run
+	cd cli && golangci-lint run
+	cd acceptanceTests && golangci-lint run
+	cd tap/api && golangci-lint run
+	cd tap/extensions/ && for D in */; do cd $$D && golangci-lint run && cd ..; done
+
 test-cli:
 	@echo "running cli tests"; cd cli && $(MAKE) test
 
