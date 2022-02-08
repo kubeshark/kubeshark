@@ -1,9 +1,13 @@
 # Snyk (https://snyk.io) policy file, patches or ignores known vulnerabilities.
-version: v1.14.0
+version: v1.22.1
+# ignores vulnerabilities until expiry date; change duration by modifying expiry date
 ignore:
   SNYK-GOLANG-GITHUBCOMPKGSFTP-569475:
-    - '*':
-      reason: None Given
+    - '*': null
+    - reason: None Given
   'SNYK:LIC:GOLANG:GITHUB.COM:HASHICORP:GO-RETRYABLEHTTP:MPL-2.0':
     - '*':
-      reason: None Given 
+        reason: None Given
+        expires: 2023-03-10T20:36:56.304Z
+        created: 2022-02-08T20:36:56.310Z
+patch: {}
