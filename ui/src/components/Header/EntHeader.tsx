@@ -12,11 +12,10 @@ import { useRecoilValue, useSetRecoilState } from "recoil";
 import {useNavigate} from "react-router-dom";
 import {RouterRoutes} from "../../helpers/routes";
 import { SettingsModal } from "../SettingsModal/SettingModal";
-import loggedInUserStateAtom from "../../recoil/loggedInUserState/atom";
-import { Roles } from "../../recoil/loggedInUserState";
+import loggedInUserStateAtom from "../../recoil/loggedInUser/atom";
+import { Roles } from "../../recoil/loggedInUser";
 
 const api = Api.getInstance();
-
 
 export const EntHeader: React.FC = () => {
     const navigate = useNavigate();

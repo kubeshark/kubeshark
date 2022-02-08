@@ -3,7 +3,7 @@ import './App.sass';
 import AppSwitchRoutes from "./components/AppSwitchRoutes";
 import {BrowserRouter} from "react-router-dom";
 import { useSetRecoilState } from 'recoil';
-import loggedInUserStateAtom from './recoil/loggedInUserState/atom';
+import loggedInUserStateAtom from './recoil/loggedInUser/atom';
 import Api from './helpers/api';
 
 const api = Api.getInstance();
