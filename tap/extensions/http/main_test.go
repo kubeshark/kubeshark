@@ -34,6 +34,30 @@ const (
 	testUpdate      = "TEST_UPDATE"
 )
 
+func TestRegister(t *testing.T) {
+	dissector := NewDissector()
+	extension := &api.Extension{}
+	dissector.Register(extension)
+	assert.Equal(t, "http", extension.Protocol.Name)
+	assert.NotNil(t, extension.MatcherMap)
+}
+
+func TestMacros(t *testing.T) {
+	expectedMacros := map[string]string{
+		"http":  `proto.name == "http" and proto.version.startsWith("1")`,
+		"http2": `proto.name == "http" and proto.version == "2.0"`,
+		"grpc":  `proto.name == "http" and proto.version == "2.0" and proto.macro == "grpc"`,
+	}
+	dissector := NewDissector()
+	macros := dissector.Macros()
+	assert.Equal(t, expectedMacros, macros)
+}
+
+func TestPing(t *testing.T) {
+	dissector := NewDissector()
+	dissector.Ping()
+}
+
 func TestDissect(t *testing.T) {
 	var testUpdateEnabled bool
 	_, present := os.LookupEnv(testUpdate)
