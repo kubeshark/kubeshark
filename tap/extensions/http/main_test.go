@@ -59,11 +59,7 @@ func TestPing(t *testing.T) {
 }
 
 func TestDissect(t *testing.T) {
-	var testUpdateEnabled bool
-	_, present := os.LookupEnv(testUpdate)
-	if present {
-		testUpdateEnabled = true
-	}
+	_, testUpdateEnabled := os.LookupEnv(testUpdate)
 
 	expectDirDissect := path.Join(expectDir, dissectDir)
 
@@ -189,11 +185,7 @@ func TestDissect(t *testing.T) {
 }
 
 func TestAnalyze(t *testing.T) {
-	var testUpdateEnabled bool
-	_, present := os.LookupEnv(testUpdate)
-	if present {
-		testUpdateEnabled = true
-	}
+	_, testUpdateEnabled := os.LookupEnv(testUpdate)
 
 	expectDirDissect := path.Join(expectDir, dissectDir)
 	expectDirAnalyze := path.Join(expectDir, analyzeDir)
@@ -250,11 +242,7 @@ func TestAnalyze(t *testing.T) {
 }
 
 func TestRepresent(t *testing.T) {
-	var testUpdateEnabled bool
-	_, present := os.LookupEnv(testUpdate)
-	if present {
-		testUpdateEnabled = true
-	}
+	_, testUpdateEnabled := os.LookupEnv(testUpdate)
 
 	expectDirAnalyze := path.Join(expectDir, analyzeDir)
 	expectDirRepresent := path.Join(expectDir, representDir)
