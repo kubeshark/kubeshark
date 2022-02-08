@@ -1,11 +1,13 @@
-test: test-pull-expect
+test: test-pull-bin test-pull-expect
 	@MIZU_TEST=1 go test -v ./... -coverpkg=./... -coverprofile=coverage.out -covermode=atomic
 
 test-update: test-pull-bin
 	@MIZU_TEST=1 TEST_UPDATE=1 go test -v ./... -coverpkg=./... -coverprofile=coverage.out -covermode=atomic
 
 test-pull-bin:
+	@mkdir -p bin && \
 	@[ "$(ls -A --ignore='.??*' bin)" ] && echo "Skipping downloading BINs" || gsutil -m cp gs://static.up9.io/mizu/test-pcap/bin/http/\*.bin bin
 
 test-pull-expect:
-	@[ "$(ls -A --ignore='.??*' bin)" ] && echo "Skipping downloading BINs" || gsutil -m cp gs://static.up9.io/mizu/test-pcap/bin/http/\*.bin bin
+	@mkdir -p expect && \
+	@[ "$(ls -A --ignore='.??*' expect)" ] && echo "Skipping downloading expected JSONs" || gsutil -m cp gs://static.up9.io/mizu/test-pcap/expect/http/\* expect
