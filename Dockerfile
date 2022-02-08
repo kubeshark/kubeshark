@@ -14,7 +14,7 @@ RUN npm run build
 RUN npm run build-ent
 
 ### Base builder image for native builds architecture
-FROM golang:1.16-alpine AS builder-native-base
+FROM golang:1.17-alpine AS builder-native-base
 ENV CGO_ENABLED=1 GOOS=linux
 RUN apk add libpcap-dev g++ perl-utils
 
