@@ -7,15 +7,9 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var (
-	QueryPostValidateHandler = controllers.PostValidate
-)
-
-func QueryRoutes(ginApp *gin.Engine) *gin.RouterGroup {
+func QueryRoutes(ginApp *gin.Engine) {
 	routeGroup := ginApp.Group("/query")
 	routeGroup.Use(middlewares.RequiresAuth())
 
-	routeGroup.POST("/validate", func(c *gin.Context) { QueryPostValidateHandler(c) })
-
-	return routeGroup
+	routeGroup.POST("/validate", controllers.PostValidate)
 }

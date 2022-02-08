@@ -7,18 +7,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var (
-	EntriesGetHandler       = controllers.GetEntries
-	EntriesGetSingleHandler = controllers.GetEntry
-)
-
 // EntriesRoutes defines the group of har entries routes.
-func EntriesRoutes(ginApp *gin.Engine) *gin.RouterGroup {
+func EntriesRoutes(ginApp *gin.Engine) {
 	routeGroup := ginApp.Group("/entries")
 	routeGroup.Use(middlewares.RequiresAuth())
 
-	routeGroup.GET("/", func(c *gin.Context) { EntriesGetHandler(c) })          // get entries (base/thin entries) and metadata
-	routeGroup.GET("/:id", func(c *gin.Context) { EntriesGetSingleHandler(c) }) // get single (full) entry
-
-	return routeGroup
+	routeGroup.GET("/", controllers.GetEntries)  // get entries (base/thin entries) and metadata
+	routeGroup.GET("/:id", controllers.GetEntry) // get single (full) entry
 }
