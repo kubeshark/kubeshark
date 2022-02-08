@@ -8,7 +8,7 @@ import entPageAtom, {Page} from "../../../recoil/entPage";
 import {useSetRecoilState} from "recoil";
 import useKeyPress from "../../../hooks/useKeyPress"
 import shortcutsKeyboard from "../../../configs/shortcutsKeyboard"
-import loggedInUserStateAtom from "../../../recoil/loggedInUserState/atom";
+import loggedInUserStateAtom from "../../../recoil/loggedInUser/atom";
 import { useNavigate } from "react-router-dom";
 import { RouterRoutes } from "../../../helpers/routes";
 

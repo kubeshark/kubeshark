@@ -6,9 +6,6 @@ import 'react-toastify/dist/ReactToastify.css';
 import {RecoilRoot} from "recoil";
 import AppChooser from "./AppChooser";
 
-window["isOasEnabled"]=true;
-window["isServiceMapEnabled"]=true;
-
 ReactDOM.render( <>
     <RecoilRoot>
         <AppChooser/>
