@@ -29,12 +29,10 @@ func (wh *EventWatchHelper) Filter(wEvent *WatchEvent) (bool, error) {
 	if err != nil {
 		return false, nil
 	}
-
 	if !wh.NameRegexFilter.MatchString(event.Name) {
 		return false, nil
 	}
-
-	if strings.EqualFold(event.Regarding.Kind, wh.Kind) {
+	if !strings.EqualFold(event.Regarding.Kind, wh.Kind) {
 		return false, nil
 	}
 
