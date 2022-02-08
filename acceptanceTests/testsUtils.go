@@ -2,13 +2,19 @@ package acceptanceTests
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/util/homedir"
 	"net/http"
 	"os"
 	"os/exec"
 	"path"
+	"path/filepath"
 	"strings"
 	"syscall"
 	"testing"
@@ -68,10 +74,39 @@ func getApiServerUrl(port uint16) string {
 	return fmt.Sprintf("http://localhost:%v", port)
 }
 
+func getServiceExternalIp(ctx context.Context, namespace string, service string) (string, error) {
+	home := homedir.HomeDir()
+	configLoadingRules := &clientcmd.ClientConfigLoadingRules{ExplicitPath: filepath.Join(home, ".kube", "config")}
+	clientConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
+		configLoadingRules,
+		&clientcmd.ConfigOverrides{
+			CurrentContext: "",
+		},
+	)
+
+	restClientConfig, err := clientConfig.ClientConfig()
+	if err != nil {
+		return "", err
+	}
+
+	clientSet, err := kubernetes.NewForConfig(restClientConfig)
+	if err != nil {
+		return "", err
+	}
+
+	serviceObj, err := clientSet.CoreV1().Services(namespace).Get(ctx, service, metav1.GetOptions{})
+	if err != nil {
+		return "", err
+	}
+
+	externalIp := serviceObj.Status.LoadBalancer.Ingress[0].IP
+	return externalIp, nil
+}
+
 func getDefaultCommandArgs() []string {
 	setFlag := "--set"
 	telemetry := "telemetry=false"
-	agentImage := "agent-image=gcr.io/up9-docker-hub/mizu/ci:0.0.0"
+	agentImage := "agent-image=gcr.io/up9-docker-hub/mizu/ci:0.0"
 	imagePullPolicy := "image-pull-policy=IfNotPresent"
 	headless := "headless=true"
 
