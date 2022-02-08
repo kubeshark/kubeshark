@@ -36,8 +36,6 @@ var namespace = flag.String("namespace", "", "Resolve IPs if they belong to reso
 var harsReaderMode = flag.Bool("hars-read", false, "Run in hars-read mode")
 var harsDir = flag.String("hars-dir", "", "Directory to read hars from")
 
-var startTime int64
-
 const (
 	socketConnectionRetries    = 30
 	socketConnectionRetryDelay = time.Second * 2
@@ -200,21 +198,6 @@ func pipeTapChannelToSocket(connection *websocket.Conn, messageDataChannel <-cha
 			continue
 		}
 	}
-}
-
-func getSyncEntriesConfig() *shared.SyncEntriesConfig {
-	syncEntriesConfigJson := os.Getenv(shared.SyncEntriesConfigEnvVar)
-	if syncEntriesConfigJson == "" {
-		return nil
-	}
-
-	var syncEntriesConfig = &shared.SyncEntriesConfig{}
-	err := json.Unmarshal([]byte(syncEntriesConfigJson), syncEntriesConfig)
-	if err != nil {
-		panic(fmt.Sprintf("env var %s's value of %s is invalid! json must match the shared.SyncEntriesConfig struct, err: %v", shared.SyncEntriesConfigEnvVar, syncEntriesConfigJson, err))
-	}
-
-	return syncEntriesConfig
 }
 
 func determineLogLevel() (logLevel logging.Level) {
