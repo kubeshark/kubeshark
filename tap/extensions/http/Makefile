@@ -2,7 +2,7 @@ skipbin := $$(ls -A --ignore='.??*' bin)
 skipexpect := $$(ls -A --ignore='.??*' expect)
 
 test: test-pull-bin test-pull-expect
-	@MIZU_TEST=1 go test -v ./... -coverpkg=./... -coverprofile=coverage.out -covermode=atomic
+	@MIZU_TEST=1 go test -v ./... -coverpkg=./... -race -coverprofile=coverage.out -covermode=atomic
 
 test-update: test-pull-bin
 	@MIZU_TEST=1 TEST_UPDATE=1 go test -v ./... -coverpkg=./... -coverprofile=coverage.out -covermode=atomic

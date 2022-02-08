@@ -94,10 +94,16 @@ func TestDissect(t *testing.T) {
 		}
 
 		var items []*api.OutputChannelItem
+		stop := make(chan bool)
 
 		go func() {
-			for item := range itemChannel {
-				items = append(items, item)
+			for {
+				select {
+				case <-stop:
+					return
+				case item := <-itemChannel:
+					items = append(items, item)
+				}
 			}
 		}()
 
@@ -147,9 +153,11 @@ func TestDissect(t *testing.T) {
 		fileClient.Close()
 		fileServer.Close()
 
+		pathExpect := path.Join(expectDirDissect, fmt.Sprintf("%s.json", basePath[4:]))
+
 		time.Sleep(10 * time.Millisecond)
 
-		pathExpect := path.Join(expectDirDissect, fmt.Sprintf("%s.json", basePath[4:]))
+		stop <- true
 
 		sort.Slice(items, func(i, j int) bool {
 			iMarshaled, err := json.Marshal(items[i])
