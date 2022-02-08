@@ -47,13 +47,13 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 		}
 
 		if isClient {
-			_, _, err := ReadRequest(b, tcpID, superTimer)
+			_, _, err := ReadRequest(b, tcpID, counterPair, superTimer)
 			if err != nil {
 				return err
 			}
 			superIdentifier.Protocol = &_protocol
 		} else {
-			err := ReadResponse(b, tcpID, superTimer, emitter)
+			err := ReadResponse(b, tcpID, counterPair, superTimer, emitter)
 			if err != nil {
 				return err
 			}
@@ -120,7 +120,11 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 			summary = summary[:len(summary)-2]
 		}
 	case CreateTopics:
-		topics := reqDetails["payload"].(map[string]interface{})["topics"].([]interface{})
+		_topics := reqDetails["payload"].(map[string]interface{})["topics"]
+		if _topics == nil {
+			break
+		}
+		topics := _topics.([]interface{})
 		for _, topic := range topics {
 			summary += fmt.Sprintf("%s, ", topic.(map[string]interface{})["name"].(string))
 		}
@@ -128,6 +132,9 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 			summary = summary[:len(summary)-2]
 		}
 	case DeleteTopics:
+		if reqDetails["topicNames"] == nil {
+			break
+		}
 		topicNames := reqDetails["topicNames"].([]string)
 		for _, name := range topicNames {
 			summary += fmt.Sprintf("%s, ", name)
