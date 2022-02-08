@@ -8,10 +8,6 @@ on:
     branches:
       - 'develop'
 
-concurrency:
-  group: mizu-acceptance-tests-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
   run-acceptance-tests:
     name: Run acceptance tests
