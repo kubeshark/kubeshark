@@ -1,8 +1,8 @@
 FROM dockcross/linux-arm64-musl:latest AS builder-from-amd64-to-arm64v8
 
 # Install Go
-RUN curl https://go.dev/dl/go1.16.13.linux-amd64.tar.gz -Lo ./go.linux-amd64.tar.gz
-RUN curl https://go.dev/dl/go1.16.13.linux-amd64.tar.gz.asc -Lo ./go.linux-amd64.tar.gz.asc
+RUN curl https://go.dev/dl/go1.17.6.linux-amd64.tar.gz -Lo ./go.linux-amd64.tar.gz
+RUN curl https://go.dev/dl/go1.17.6.linux-amd64.tar.gz.asc -Lo ./go.linux-amd64.tar.gz.asc
 RUN curl https://dl.google.com/dl/linux/linux_signing_key.pub  -Lo linux_signing_key.pub
 RUN gpg --import linux_signing_key.pub && gpg --verify ./go.linux-amd64.tar.gz.asc ./go.linux-amd64.tar.gz
 RUN rm -rf /usr/local/go && tar -C /usr/local -xzf go.linux-amd64.tar.gz
