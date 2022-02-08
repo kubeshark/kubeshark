@@ -40,9 +40,6 @@ jobs:
           sudo apt-get update
           sudo apt-get install google-cloud-sdk
 
-      - name: Extensions Test
-        run: make test-extensions
-
       - name: CLI Test
         run: make test-cli
 
@@ -51,6 +48,9 @@ jobs:
 
       - name: Shared Test
         run: make test-shared
+
+      - name: Extensions Test
+        run: make test-extensions
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2
