@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"path"
 	"path/filepath"
 	"sort"
 	"testing"
@@ -19,11 +20,16 @@ import (
 )
 
 const (
-	pattern          = "./bin/*_req.bin"
-	msg              = "Dissecting:"
-	respSuffix       = "_res.bin"
-	expectDirDissect = "expect/dissect"
-	testUpdate       = "TEST_UPDATE"
+	binDir         = "bin"
+	patternBin     = "*_req.bin"
+	patternDissect = "*.json"
+	msgDissecting  = "Dissecting:"
+	msgAnalyzing   = "Analyzing:"
+	respSuffix     = "_res.bin"
+	expectDir      = "expect"
+	dissectDir     = "dissect"
+	analyzeDir     = "analyze"
+	testUpdate     = "TEST_UPDATE"
 )
 
 func TestDissect(t *testing.T) {
@@ -33,6 +39,8 @@ func TestDissect(t *testing.T) {
 		testUpdateEnabled = true
 	}
 
+	expectDirDissect := path.Join(expectDir, dissectDir)
+
 	if testUpdateEnabled {
 		os.RemoveAll(expectDirDissect)
 		err := os.MkdirAll(expectDirDissect, 0775)
@@ -40,7 +48,7 @@ func TestDissect(t *testing.T) {
 	}
 
 	dissector := NewDissector()
-	paths, err := filepath.Glob(pattern)
+	paths, err := filepath.Glob(path.Join(binDir, patternBin))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -49,8 +57,8 @@ func TestDissect(t *testing.T) {
 		IgnoredUserAgents: []string{},
 	}
 
-	for _, path := range paths {
-		basePath := path[:len(path)-8]
+	for _, _path := range paths {
+		basePath := _path[:len(_path)-8]
 
 		// Channel to verify the output
 		itemChannel := make(chan *api.OutputChannelItem)
@@ -75,8 +83,8 @@ func TestDissect(t *testing.T) {
 		superIdentifier := &api.SuperIdentifier{}
 
 		// Request
-		pathClient := path
-		fmt.Printf("%s %s\n", msg, pathClient)
+		pathClient := _path
+		fmt.Printf("%s %s\n", msgDissecting, pathClient)
 		fileClient, err := os.Open(pathClient)
 		assert.Nil(t, err)
 
@@ -94,7 +102,7 @@ func TestDissect(t *testing.T) {
 
 		// Response
 		pathServer := basePath + respSuffix
-		fmt.Printf("%s %s\n", msg, pathServer)
+		fmt.Printf("%s %s\n", msgDissecting, pathServer)
 		fileServer, err := os.Open(pathServer)
 		assert.Nil(t, err)
 
@@ -115,7 +123,7 @@ func TestDissect(t *testing.T) {
 
 		time.Sleep(10 * time.Millisecond)
 
-		pathExpect := fmt.Sprintf("%s/%s.json", expectDirDissect, basePath[4:])
+		pathExpect := path.Join(expectDirDissect, fmt.Sprintf("%s.json", basePath[4:]))
 
 		sort.Slice(items, func(i, j int) bool {
 			iMarshaled, err := json.Marshal(items[i])
@@ -126,6 +134,67 @@ func TestDissect(t *testing.T) {
 		})
 
 		marshaled, err := json.Marshal(items)
+		assert.Nil(t, err)
+
+		if testUpdateEnabled {
+			if len(items) > 0 {
+				err = os.WriteFile(pathExpect, marshaled, 0644)
+				assert.Nil(t, err)
+			}
+		} else {
+			if _, err := os.Stat(pathExpect); errors.Is(err, os.ErrNotExist) {
+				assert.Len(t, items, 0)
+			} else {
+				expectedBytes, err := ioutil.ReadFile(pathExpect)
+				assert.Nil(t, err)
+
+				assert.JSONEq(t, string(expectedBytes), string(marshaled))
+			}
+		}
+	}
+}
+
+func TestAnalyze(t *testing.T) {
+	var testUpdateEnabled bool
+	_, present := os.LookupEnv(testUpdate)
+	if present {
+		testUpdateEnabled = true
+	}
+
+	expectDirDissect := path.Join(expectDir, dissectDir)
+	expectDirAnalyze := path.Join(expectDir, analyzeDir)
+
+	if testUpdateEnabled {
+		os.RemoveAll(expectDirAnalyze)
+		err := os.MkdirAll(expectDirAnalyze, 0775)
+		assert.Nil(t, err)
+	}
+
+	dissector := NewDissector()
+	paths, err := filepath.Glob(path.Join(expectDirDissect, patternDissect))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, _path := range paths {
+		fmt.Printf("%s %s\n", msgAnalyzing, _path)
+
+		bytes, err := ioutil.ReadFile(_path)
+		assert.Nil(t, err)
+
+		var items []*api.OutputChannelItem
+		err = json.Unmarshal(bytes, &items)
+		assert.Nil(t, err)
+
+		var entries []*api.Entry
+		for _, item := range items {
+			entry := dissector.Analyze(item, "", "")
+			entries = append(entries, entry)
+		}
+
+		pathExpect := path.Join(expectDirAnalyze, filepath.Base(_path))
+
+		marshaled, err := json.Marshal(entries)
 		assert.Nil(t, err)
 
 		if testUpdateEnabled {
