@@ -5,38 +5,24 @@ on:
     branches:
       - 'develop'
       - 'main'
+  push: # needed to upload test coverage report to codecov
+    branches:
+      - 'develop'
+      - 'main'
 
 concurrency:
   group: mizu-tests-validation-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  run-tests-cli:
-    name: CLI Tests
+  run-unit-tests:
+    name: Unit Tests
     runs-on: ubuntu-latest
     steps:
-      - name: Set up Go 1.16
+      - name: Set up Go 1.17
         uses: actions/setup-go@v2
         with:
-          go-version: '^1.16'
-
-      - name: Check out code into the Go module directory
-        uses: actions/checkout@v2
-
-      - name: Test
-        run: make test-cli
-
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v2
-
-  run-tests-agent:
-    name: Agent Tests
-    runs-on: ubuntu-latest
-    steps:
-      - name: Set up Go 1.16
-        uses: actions/setup-go@v2
-        with:
-          go-version: '^1.16'
+          go-version: '^1.17'
 
       - name: Check out code into the Go module directory
         uses: actions/checkout@v2
@@ -45,8 +31,15 @@ jobs:
         run: |
           sudo apt-get install libpcap-dev
 
-      - name: Test
+      - name: CLI Test
+        run: make test-cli
+
+      - name: Agent Test
         run: make test-agent
+      
+      - name: Shared Test
+        run: make test-shared
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2
+

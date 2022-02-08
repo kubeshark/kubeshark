@@ -14,7 +14,7 @@ RUN npm run build
 RUN npm run build-ent
 
 ### Base builder image for native builds architecture
-FROM golang:1.16-alpine AS builder-native-base
+FROM golang:1.17-alpine AS builder-native-base
 ENV CGO_ENABLED=1 GOOS=linux
 RUN apk add libpcap-dev g++ perl-utils
 
@@ -67,7 +67,7 @@ COPY agent .
 ARG COMMIT_HASH
 ARG GIT_BRANCH
 ARG BUILD_TIMESTAMP
-ARG SEM_VER=0.0.0
+ARG VER=0.0
 
 WORKDIR /app/agent-build
 
@@ -75,7 +75,7 @@ RUN go build -ldflags="-extldflags=-static -s -w \
     -X 'github.com/up9inc/mizu/agent/pkg/version.GitCommitHash=${COMMIT_HASH}' \
     -X 'github.com/up9inc/mizu/agent/pkg/version.Branch=${GIT_BRANCH}' \
     -X 'github.com/up9inc/mizu/agent/pkg/version.BuildTimestamp=${BUILD_TIMESTAMP}' \
-    -X 'github.com/up9inc/mizu/agent/pkg/version.SemVer=${SEM_VER}'" -o mizuagent .
+    -X 'github.com/up9inc/mizu/agent/pkg/version.Ver=${VER}'" -o mizuagent .
 
 # Download Basenine executable, verify the sha1sum
 ADD https://github.com/up9inc/basenine/releases/download/v0.4.13/basenine_linux_${GOARCH} ./basenine_linux_${GOARCH}

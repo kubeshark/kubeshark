@@ -32,14 +32,15 @@ jobs:
         id: condval
         with:
           cond: ${{ github.ref == 'refs/heads/main' }}
-          if_true: "minor"
-          if_false: "patch"
+          if_true: "stable"
+          if_false: "dev"
 
-      - name: Auto increment SemVer action
-        uses: MCKanpolat/auto-semver-action@1.0.5
+      - name: Auto Increment Ver Action
+        uses: docker://igorgov/auto-inc-ver:v2.0.0
         id: versioning
         with:
-          releaseType: ${{ steps.condval.outputs.value }}
+          mode: ${{ steps.condval.outputs.value }}
+          suffix: 'dev'
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Get version parameters
@@ -77,7 +78,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             TARGETARCH=${{ matrix.target }}
-            SEM_VER=${{ steps.versioning.outputs.version }}
+            VER=${{ steps.versioning.outputs.version }}
             BUILD_TIMESTAMP=${{ steps.version_parameters.outputs.build_timestamp }}
             GIT_BRANCH=${{ steps.version_parameters.outputs.branch }}
             COMMIT_HASH=${{ github.sha }}
@@ -98,25 +99,28 @@ jobs:
       - name: Check out the repo
         uses: actions/checkout@v2
 
-      - name: Set up Cloud SDK
-        uses: google-github-actions/setup-gcloud@master
+      - id: 'auth'
+        uses: 'google-github-actions/auth@v0'
         with:
-          service_account_key: ${{ secrets.GCR_JSON_KEY }}
-          export_default_credentials: true
+          credentials_json: '${{ secrets.GCR_JSON_KEY }}'
+
+      - name: 'Set up Cloud SDK'
+        uses: 'google-github-actions/setup-gcloud@v0'
 
       - name: Determine versioning strategy
         uses: haya14busa/action-cond@v1
         id: condval
         with:
           cond: ${{ github.ref == 'refs/heads/main' }}
-          if_true: "minor"
-          if_false: "patch"
+          if_true: "stable"
+          if_false: "dev"
 
-      - name: Auto increment SemVer action
-        uses: MCKanpolat/auto-semver-action@1.0.5
+      - name: Auto Increment Ver Action
+        uses: docker://igorgov/auto-inc-ver:v2.0.0
         id: versioning
         with:
-          releaseType: ${{ steps.condval.outputs.value }}
+          mode: ${{ steps.condval.outputs.value }}
+          suffix: 'dev'
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Get version parameters
@@ -160,7 +164,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             TARGETARCH=${{ matrix.target }}
-            SEM_VER=${{ steps.versioning.outputs.version }}
+            VER=${{ steps.versioning.outputs.version }}
             BUILD_TIMESTAMP=${{ steps.version_parameters.outputs.build_timestamp }}
             GIT_BRANCH=${{ steps.version_parameters.outputs.branch }}
             COMMIT_HASH=${{ github.sha }}
@@ -175,14 +179,15 @@ jobs:
         id: condval
         with:
           cond: ${{ github.ref == 'refs/heads/main' }}
-          if_true: "minor"
-          if_false: "patch"
+          if_true: "stable"
+          if_false: "dev"
 
-      - name: Auto increment SemVer action
-        uses: MCKanpolat/auto-semver-action@1.0.5
+      - name: Auto Increment Ver Action
+        uses: docker://igorgov/auto-inc-ver:v2.0.0
         id: versioning
         with:
-          releaseType: ${{ steps.condval.outputs.value }}
+          mode: ${{ steps.condval.outputs.value }}
+          suffix: 'dev'
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Get version parameters
@@ -224,32 +229,36 @@ jobs:
     runs-on: ubuntu-latest
     needs: [docker-manifest, gcp-registry]
     steps:
-      - name: Set up Go 1.16
+      - name: Set up Go 1.17
         uses: actions/setup-go@v2
         with:
-          go-version: '1.16'
+          go-version: '1.17'
 
       - name: Check out the repo
         uses: actions/checkout@v2
 
-      - name: Set up Cloud SDK
-        uses: google-github-actions/setup-gcloud@master
+      - id: 'auth'
+        uses: 'google-github-actions/auth@v0'
         with:
-          service_account_key: ${{ secrets.GCR_JSON_KEY }}
-          export_default_credentials: true
+          credentials_json: '${{ secrets.GCR_JSON_KEY }}'
 
-      - uses: haya14busa/action-cond@v1
+      - name: 'Set up Cloud SDK'
+        uses: 'google-github-actions/setup-gcloud@v0'
+
+      - name: Determine versioning strategy
+        uses: haya14busa/action-cond@v1
         id: condval
         with:
           cond: ${{ github.ref == 'refs/heads/main' }}
-          if_true: "minor"
-          if_false: "patch"
+          if_true: "stable"
+          if_false: "dev"
 
-      - name: Auto Increment Semver Action
-        uses: MCKanpolat/auto-semver-action@1.0.5
+      - name: Auto Increment Ver Action
+        uses: docker://igorgov/auto-inc-ver:v2.0.0
         id: versioning
         with:
-          releaseType: ${{ steps.condval.outputs.value }}
+          mode: ${{ steps.condval.outputs.value }}
+          suffix: 'dev'
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Get version parameters
@@ -260,7 +269,7 @@ jobs:
         id: version_parameters
 
       - name: Build and Push CLI
-        run: make push-cli SEM_VER='${{ steps.versioning.outputs.version }}' BUILD_TIMESTAMP='${{ steps.version_parameters.outputs.build_timestamp }}'
+        run: make push-cli VER='${{ steps.versioning.outputs.version }}' BUILD_TIMESTAMP='${{ steps.version_parameters.outputs.build_timestamp }}'
 
       - name: Log the version into a .txt file
         shell: bash

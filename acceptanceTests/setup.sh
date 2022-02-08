@@ -36,14 +36,23 @@ kubectl create deployment httpbin2 --image=kennethreitz/httpbin -n mizu-tests
 
 kubectl create deployment httpbin --image=kennethreitz/httpbin -n mizu-tests2
 
+echo "Creating redis deployment"
+kubectl create deployment redis --image=redis -n mizu-tests
+
 echo "Creating httpbin services"
 kubectl expose deployment httpbin --type=NodePort --port=80 -n mizu-tests
 kubectl expose deployment httpbin2 --type=NodePort --port=80 -n mizu-tests
 
 kubectl expose deployment httpbin --type=NodePort --port=80 -n mizu-tests2
 
+echo "Creating redis service"
+kubectl expose deployment redis --type=LoadBalancer --port=6379 -n mizu-tests
+
 echo "Starting proxy"
 kubectl proxy --port=8080 &
+
+echo "Starting tunnel"
+minikube tunnel &
 
 echo "Setting minikube docker env"
 eval $(minikube docker-env)
