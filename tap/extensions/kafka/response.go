@@ -16,7 +16,7 @@ type Response struct {
 	CaptureTime   time.Time   `json:"captureTime"`
 }
 
-func ReadResponse(r io.Reader, tcpID *api.TcpID, superTimer *api.SuperTimer, emitter api.Emitter) (err error) {
+func ReadResponse(r io.Reader, tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, emitter api.Emitter) (err error) {
 	d := &decoder{reader: r, remain: 4}
 	size := d.readInt32()
 
@@ -44,7 +44,8 @@ func ReadResponse(r io.Reader, tcpID *api.TcpID, superTimer *api.SuperTimer, emi
 	}
 
 	key := fmt.Sprintf(
-		"%s:%s->%s:%s::%d",
+		"%d_%s:%s_%s:%s_%d",
+		counterPair.StreamId,
 		tcpID.DstIP,
 		tcpID.DstPort,
 		tcpID.SrcIP,
