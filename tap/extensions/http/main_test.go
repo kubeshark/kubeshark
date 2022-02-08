@@ -20,16 +20,18 @@ import (
 )
 
 const (
-	binDir         = "bin"
-	patternBin     = "*_req.bin"
-	patternDissect = "*.json"
-	msgDissecting  = "Dissecting:"
-	msgAnalyzing   = "Analyzing:"
-	respSuffix     = "_res.bin"
-	expectDir      = "expect"
-	dissectDir     = "dissect"
-	analyzeDir     = "analyze"
-	testUpdate     = "TEST_UPDATE"
+	binDir          = "bin"
+	patternBin      = "*_req.bin"
+	patternDissect  = "*.json"
+	msgDissecting   = "Dissecting:"
+	msgAnalyzing    = "Analyzing:"
+	msgRepresenting = "Representing:"
+	respSuffix      = "_res.bin"
+	expectDir       = "expect"
+	dissectDir      = "dissect"
+	analyzeDir      = "analyze"
+	representDir    = "represent"
+	testUpdate      = "TEST_UPDATE"
 )
 
 func TestDissect(t *testing.T) {
@@ -198,13 +200,75 @@ func TestAnalyze(t *testing.T) {
 		assert.Nil(t, err)
 
 		if testUpdateEnabled {
-			if len(items) > 0 {
+			if len(entries) > 0 {
 				err = os.WriteFile(pathExpect, marshaled, 0644)
 				assert.Nil(t, err)
 			}
 		} else {
 			if _, err := os.Stat(pathExpect); errors.Is(err, os.ErrNotExist) {
 				assert.Len(t, items, 0)
+			} else {
+				expectedBytes, err := ioutil.ReadFile(pathExpect)
+				assert.Nil(t, err)
+
+				assert.JSONEq(t, string(expectedBytes), string(marshaled))
+			}
+		}
+	}
+}
+
+func TestRepresent(t *testing.T) {
+	var testUpdateEnabled bool
+	_, present := os.LookupEnv(testUpdate)
+	if present {
+		testUpdateEnabled = true
+	}
+
+	expectDirAnalyze := path.Join(expectDir, analyzeDir)
+	expectDirRepresent := path.Join(expectDir, representDir)
+
+	if testUpdateEnabled {
+		os.RemoveAll(expectDirRepresent)
+		err := os.MkdirAll(expectDirRepresent, 0775)
+		assert.Nil(t, err)
+	}
+
+	dissector := NewDissector()
+	paths, err := filepath.Glob(path.Join(expectDirAnalyze, patternDissect))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, _path := range paths {
+		fmt.Printf("%s %s\n", msgRepresenting, _path)
+
+		bytes, err := ioutil.ReadFile(_path)
+		assert.Nil(t, err)
+
+		var entries []*api.Entry
+		err = json.Unmarshal(bytes, &entries)
+		assert.Nil(t, err)
+
+		var objects []string
+		for _, entry := range entries {
+			object, _, err := dissector.Represent(entry.Request, entry.Response)
+			assert.Nil(t, err)
+			objects = append(objects, string(object))
+		}
+
+		pathExpect := path.Join(expectDirRepresent, filepath.Base(_path))
+
+		marshaled, err := json.Marshal(objects)
+		assert.Nil(t, err)
+
+		if testUpdateEnabled {
+			if len(objects) > 0 {
+				err = os.WriteFile(pathExpect, marshaled, 0644)
+				assert.Nil(t, err)
+			}
+		} else {
+			if _, err := os.Stat(pathExpect); errors.Is(err, os.ErrNotExist) {
+				assert.Len(t, objects, 0)
 			} else {
 				expectedBytes, err := ioutil.ReadFile(pathExpect)
 				assert.Nil(t, err)
