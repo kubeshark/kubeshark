@@ -44,6 +44,3 @@ cypress.env.json
 */cypress/screenshots
 */cypress/videos
 */cypress/support
-
-# PCAP files
-tests/pcaps/*.pcap

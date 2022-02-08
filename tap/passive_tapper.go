@@ -17,7 +17,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/logger"
 	"github.com/up9inc/mizu/tap/api"
 	"github.com/up9inc/mizu/tap/diagnose"
@@ -190,10 +189,7 @@ func initializePacketSources() error {
 
 func startPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem) {
 	streamsMap := NewTcpStreamMap()
-	_, present := os.LookupEnv(shared.MizuTestEnvVar)
-	if !present {
-		go streamsMap.closeTimedoutTcpStreamChannels()
-	}
+	go streamsMap.closeTimedoutTcpStreamChannels()
 
 	diagnose.InitializeErrorsMap(*debug, *verbose, *quiet)
 	diagnose.InitializeTapperInternalStats()

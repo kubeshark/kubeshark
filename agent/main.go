@@ -177,20 +177,17 @@ func configureBasenineServer(host string, port string) {
 		logger.Log.Panicf("Basenine is not available!")
 	}
 
-	_, present := os.LookupEnv(shared.MizuTestEnvVar)
-	if !present {
-		// Limit the database size to default 200MB
-		err := basenine.Limit(host, port, config.Config.MaxDBSizeBytes)
-		if err != nil {
-			logger.Log.Panicf("Error while limiting database size: %v", err)
-		}
+	// Limit the database size to default 200MB
+	err := basenine.Limit(host, port, config.Config.MaxDBSizeBytes)
+	if err != nil {
+		logger.Log.Panicf("Error while limiting database size: %v", err)
 	}
 
 	// Define the macros
 	for _, extension := range extensions {
 		macros := extension.Dissector.Macros()
 		for macro, expanded := range macros {
-			err := basenine.Macro(host, port, macro, expanded)
+			err = basenine.Macro(host, port, macro, expanded)
 			if err != nil {
 				logger.Log.Panicf("Error while adding a macro: %v", err)
 			}
@@ -443,10 +440,7 @@ func dialSocketWithRetry(socketAddress string, retryAmount int, retryDelay time.
 				time.Sleep(retryDelay)
 			}
 		} else {
-			_, present := os.LookupEnv(shared.MizuTestEnvVar)
-			if !present {
-				go handleIncomingMessageAsTapper(socketConnection)
-			}
+			go handleIncomingMessageAsTapper(socketConnection)
 			return socketConnection, nil
 		}
 	}

@@ -3,14 +3,12 @@ package source
 import (
 	"fmt"
 	"io"
-	"os"
 	"time"
 
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/ip4defrag"
 	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/pcap"
-	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/logger"
 	"github.com/up9inc/mizu/tap/diagnose"
 )
@@ -114,11 +112,6 @@ func (source *tcpPacketSource) readPackets(ipdefrag bool, packets chan<- TcpPack
 
 		if err == io.EOF {
 			logger.Log.Infof("Got EOF while reading packets from %v", source.name)
-			_, present := os.LookupEnv(shared.MizuTestEnvVar)
-			if present {
-				time.Sleep(1 * time.Second)
-				os.Exit(0)
-			}
 			return
 		} else if err != nil {
 			if err.Error() != "Timeout Expired" {
