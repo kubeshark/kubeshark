@@ -289,6 +289,17 @@ func (h HTTPPayload) MarshalJSON() ([]byte, error) {
 			}
 			return harRequest.QueryString[i].Value < harRequest.QueryString[j].Value
 		})
+		if harRequest.PostData != nil {
+			sort.Slice(harRequest.PostData.Params, func(i, j int) bool {
+				if harRequest.PostData.Params[i].Name < harRequest.PostData.Params[j].Name {
+					return true
+				}
+				if harRequest.PostData.Params[i].Name > harRequest.PostData.Params[j].Name {
+					return false
+				}
+				return harRequest.PostData.Params[i].Value < harRequest.PostData.Params[j].Value
+			})
+		}
 		if testEnvEnabled {
 			harRequest.URL = ""
 		}
