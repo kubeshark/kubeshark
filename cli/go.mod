@@ -9,7 +9,7 @@ require (
 	github.com/google/go-github/v37 v37.0.0
 	github.com/google/uuid v1.3.0
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
-	github.com/spf13/cobra v1.2.1
+	github.com/spf13/cobra v1.3.0
 	github.com/spf13/pflag v1.0.5
 	github.com/up9inc/mizu/shared v0.0.0
 	github.com/up9inc/mizu/tap/api v0.0.0
