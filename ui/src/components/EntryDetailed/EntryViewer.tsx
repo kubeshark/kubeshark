@@ -8,7 +8,12 @@ enum SectionTypes {
     SectionBody = "body",
 }
 
-const SectionsRepresentation: React.FC<any> = ({data, color}) => {
+interface SectionsRepresentationProps {
+    data: object,
+    color: string,
+}
+
+const SectionsRepresentation: React.FC<SectionsRepresentationProps> = ({data, color}) => {
     const sections = []
 
     if (data) {
@@ -33,7 +38,20 @@ const SectionsRepresentation: React.FC<any> = ({data, color}) => {
     return <>{sections}</>;
 }
 
-const AutoRepresentation: React.FC<any> = ({representation, isRulesEnabled, rulesMatched, contractStatus, requestReason, responseReason, contractContent, elapsedTime, color}) => {
+interface AutoRepresentationProps {
+    representation: string,
+    isRulesEnabled: boolean,
+    rulesMatched: object[],
+    contractStatus: number,
+    requestReason: string,
+    responseReason: string,
+    contractContent: string,
+    elapsedTime: number,
+    color: string,
+
+}
+
+const AutoRepresentation: React.FC<AutoRepresentationProps> = ({representation, isRulesEnabled, rulesMatched, contractStatus, requestReason, responseReason, contractContent, elapsedTime, color}) => {
     const TABS = [
         {
             tab: 'Request'
@@ -101,9 +119,9 @@ const AutoRepresentation: React.FC<any> = ({representation, isRulesEnabled, rule
 }
 
 interface Props {
-    representation: any;
+    representation: string;
     isRulesEnabled: boolean;
-    rulesMatched: any;
+    rulesMatched: object[];
     contractStatus: number;
     requestReason: string;
     responseReason: string;
