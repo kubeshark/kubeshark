@@ -16,6 +16,8 @@ import (
 )
 
 func CreateTapMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, serializedValidationRules string, serializedContract string, serializedMizuConfig string, isNsRestrictedMode bool, mizuResourcesNamespace string, agentImage string, syncEntriesConfig *shared.SyncEntriesConfig, maxEntriesDBSizeBytes int64, apiServerResources shared.Resources, imagePullPolicy core.PullPolicy, logLevel logging.Level) (bool, error) {
+	mizuServiceAccountExists := false
+
 	if !isNsRestrictedMode {
 		if err := createMizuNamespace(ctx, kubernetesProvider, mizuResourcesNamespace); err != nil {
 			return false, err
@@ -23,7 +25,7 @@ func CreateTapMizuResources(ctx context.Context, kubernetesProvider *kubernetes.
 	}
 
 	if err := createMizuConfigmap(ctx, kubernetesProvider, serializedValidationRules, serializedContract, serializedMizuConfig, mizuResourcesNamespace); err != nil {
-		logger.Log.Warningf(uiUtils.Warning, fmt.Sprintf("Failed to create resources required for policy validation. Mizu will not validate policy rules. error: %v", errormessage.FormatError(err)))
+		return mizuServiceAccountExists, err
 	}
 
 	mizuServiceAccountExists, err := createRBACIfNecessary(ctx, kubernetesProvider, isNsRestrictedMode, mizuResourcesNamespace, []string{"pods", "services", "endpoints"})
