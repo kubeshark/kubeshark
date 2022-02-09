@@ -16,7 +16,6 @@ plugins:
   - '@typescript-eslint'
 settings:
   react:
-    pragma: React
-    version: 17.0.2
+    version: latest
 rules:
   indent: ["error", 4]
