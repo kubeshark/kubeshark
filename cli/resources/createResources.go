@@ -20,7 +20,7 @@ func CreateTapMizuResources(ctx context.Context, kubernetesProvider *kubernetes.
 
 	if !isNsRestrictedMode {
 		if err := createMizuNamespace(ctx, kubernetesProvider, mizuResourcesNamespace); err != nil {
-			return false, err
+			return mizuServiceAccountExists, err
 		}
 	}
 
