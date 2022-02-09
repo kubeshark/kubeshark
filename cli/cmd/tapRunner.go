@@ -425,7 +425,7 @@ func postApiServerStarted(ctx context.Context, kubernetesProvider *kubernetes.Pr
 
 	options, _ := getMizuApiFilteringOptions()
 	if err := startTapperSyncer(ctx, cancel, kubernetesProvider, state.targetNamespaces, *options, state.startTime); err != nil {
-		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error starting mizu tapper syncer: %v", err))
+		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error starting mizu tapper syncer: %v", errormessage.FormatError(err)))
 		cancel()
 	}
 
