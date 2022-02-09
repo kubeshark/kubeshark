@@ -84,6 +84,7 @@ export const UserSettings : React.FC = () => {
                 console.error(error);
                 toast.error("User wasn't deleted")
             }
+            setUserData({} as UserData)
             setConfirmModalOpen(false);
     }
 
