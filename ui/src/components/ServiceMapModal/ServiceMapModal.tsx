@@ -9,6 +9,9 @@ import Graph from "react-graph-vis";
 import debounce from 'lodash/debounce';
 import ServiceMapOptions from './ServiceMapOptions'
 import { useCommonStyles } from "../../helpers/commonStyle";
+import refresh from "../assets/refresh.svg";
+import reset from "../assets/reset.svg";
+import close from "../assets/close.svg"
 
 interface GraphData {
     nodes: Node[];
@@ -147,7 +150,8 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onOpen
     }, [isOpen])
 
     useEffect(() => {
-        getServiceMapData()
+        getServiceMapData();
+        return () => setGraphData({ nodes: [], edges: [] })
     }, [getServiceMapData])
 
     const resetServiceMap = debounce(async () => {
@@ -186,6 +190,34 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onOpen
                         <img alt="spinner" src={spinnerImg} style={{ height: 50 }} />
                     </div>}
                     {!isLoading && <div style={{ height: "100%", width: "100%" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between" }}> 
+                        <div>
+                        <Button
+                            startIcon={<img src={reset} className="custom" alt="reset" style={{ marginRight:"8%"}}></img>}
+                            size="large"
+                            variant="contained"
+                            className={commonClasses.outlinedButton + " " + commonClasses.imagedButton}
+                            style={{ marginRight: 25, paddingTop: "3px", paddingBottom: "1px"}}
+                            onClick={resetServiceMap}
+                        >                          
+                            Reset
+                        </Button>
+                        <Button
+                            startIcon={<img src={refresh} className="custom" alt="refresh" style={{ marginRight:"8%"}}></img>}
+                            size="medium"
+                            variant="contained"
+                            className={commonClasses.outlinedButton + " " + commonClasses.imagedButton}
+                            onClick={refreshServiceMap}
+                        >
+                            Refresh
+                        </Button>
+                        </div>
+                        <img src={close} alt="close" onClick={() => onClose()} style={{cursor:"pointer"}}></img>
+                    </div>
+                        <Graph
+                            graph={graphData}
+                            options={ServiceMapOptions}
+                        />
                         <div className='legend-scale'>
                             <ul className='legend-labels'>
                                 <li><span style={{ background: '#205cf5' }}></span>HTTP</li>
@@ -196,33 +228,6 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onOpen
                                 <li><span style={{ background: '#a41e11' }}></span>REDIS</li>
                             </ul>
                         </div>
-                        <Button
-                            variant="contained"
-                            className={commonClasses.button}
-                            style={{ marginLeft: 200, marginRight: 25 }}
-                            onClick={() => onClose()}
-                        >
-                            Close
-                        </Button>
-                        <Button
-                            variant="contained"
-                            className={commonClasses.button}
-                            style={{ marginRight: 25 }}
-                            onClick={resetServiceMap}
-                        >
-                            Reset
-                        </Button>
-                        <Button
-                            variant="contained"
-                            className={commonClasses.button}
-                            onClick={refreshServiceMap}
-                        >
-                            Refresh
-                        </Button>
-                        <Graph
-                            graph={graphData}
-                            options={ServiceMapOptions}
-                        />
                     </div>}
                 </Box>
             </Fade>
