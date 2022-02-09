@@ -59,7 +59,7 @@ interface EntrySectionCollapsibleTitleProps {
     title: string,
     color: string,
     expanded: boolean,
-    setExpanded: any,
+    setExpanded: React.Dispatch<React.SetStateAction<boolean>>,
     query?: string,
 }
 
@@ -103,7 +103,7 @@ export const EntrySectionContainer: React.FC<EntrySectionContainerProps> = ({tit
 
 interface EntryBodySectionProps {
     title: string,
-    content: any,
+    content: string,
     color: string,
     encoding?: string,
     contentType?: string,
@@ -131,7 +131,7 @@ export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
     const isBase64Encoding = encoding === 'base64';
     const supportsPrettying = supportedFormats.some(format => contentType?.indexOf(format) > -1);
 
-    const formatTextBody = (body: any): string => {
+    const formatTextBody = (body: string): string => {
         if (!decodeBase64) return body;
 
         const chunk = body.slice(0, MAXIMUM_BYTES_TO_FORMAT);
@@ -193,14 +193,20 @@ export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
     </React.Fragment>
 }
 
+interface Row {
+    name: string,
+    value: string | number,
+    selector: string,
+}
+
 interface EntrySectionProps {
     title: string,
     color: string,
-    arrayToIterate: any[],
+    arrayToIterate: Row[],
 }
 
 export const EntryTableSection: React.FC<EntrySectionProps> = ({title, color, arrayToIterate}) => {
-    let arrayToIterateSorted: any[];
+    let arrayToIterateSorted: Row[];
     if (arrayToIterate) {
         arrayToIterateSorted = arrayToIterate.sort((a, b) => {
             if (a.name > b.name) {
@@ -237,14 +243,14 @@ interface EntryPolicySectionProps {
     title: string,
     color: string,
     latency?: number,
-    arrayToIterate: any[],
+    arrayToIterate: object[],
 }
 
 interface EntryPolicySectionCollapsibleTitleProps {
     label: string;
     matched: string;
     expanded: boolean;
-    setExpanded: any;
+    setExpanded: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const EntryPolicySectionCollapsibleTitle: React.FC<EntryPolicySectionCollapsibleTitleProps> = ({label, matched, expanded, setExpanded}) => {
@@ -270,7 +276,7 @@ const EntryPolicySectionCollapsibleTitle: React.FC<EntryPolicySectionCollapsible
 interface EntryPolicySectionContainerProps {
     label: string;
     matched: string;
-    children?: any;
+    children?: React.ReactNode;
 }
 
 export const EntryPolicySectionContainer: React.FC<EntryPolicySectionContainerProps> = ({label, matched, children}) => {

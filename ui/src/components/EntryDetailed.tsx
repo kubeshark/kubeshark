@@ -33,7 +33,14 @@ const useStyles = makeStyles(() => ({
 
 export const formatSize = (n: number) => n > 1000 ? `${Math.round(n / 1000)}KB` : `${n} B`;
 
-const EntryTitle: React.FC<any> = ({protocol, data, bodySize, elapsedTime}) => {
+interface EntryTitleProps {
+    protocol: object;
+    data: object;
+    bodySize: number;
+    elapsedTime: number;
+}
+
+const EntryTitle: React.FC<EntryTitleProps> = ({protocol, data, bodySize, elapsedTime}) => {
     const classes = useStyles();
     const response = data.response;
 
@@ -68,7 +75,11 @@ const EntryTitle: React.FC<any> = ({protocol, data, bodySize, elapsedTime}) => {
     </div>;
 };
 
-const EntrySummary: React.FC<any> = ({entry}) => {
+interface EntrySummaryProps {
+    entry: object;
+}
+
+const EntrySummary: React.FC<EntrySummaryProps> = ({entry}) => {
     return <EntryItem
         key={`entry-${entry.id}`}
         entry={entry}
