@@ -62,8 +62,10 @@ type TcpID struct {
 }
 
 type CounterPair struct {
+	StreamId int64
 	Request  uint
 	Response uint
+	sync.Mutex
 }
 
 type GenericMessage struct {
