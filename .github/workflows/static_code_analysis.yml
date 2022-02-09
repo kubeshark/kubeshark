@@ -21,8 +21,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          sudo apt update
-          sudo apt install -y libpcap-dev
+          sudo apt-get install libpcap-dev
 
       - name: Go lint - agent
         uses: golangci/golangci-lint-action@v2
@@ -89,9 +88,14 @@ jobs:
           version: latest
           working-directory: tap/extensions/redis
 
+      - uses: actions/setup-node@v2
+        with:
+          node-version: 16
+
       - name: ESLint
         run: |
           cd ui
           npm install
           cd ..
+          sudo npm install -g eslint
           make test-eslint
