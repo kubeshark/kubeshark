@@ -88,3 +88,10 @@ jobs:
         with:
           version: latest
           working-directory: tap/extensions/redis
+
+      - name: ESLint
+        run: |
+          cd ui
+          npm install
+          cd ..
+          make test-eslint

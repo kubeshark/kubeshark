@@ -45,7 +45,11 @@
     "xml-formatter": "^2.6.0"
   },
   "devDependencies": {
-    "env-cmd": "^10.0.1"
+    "@typescript-eslint/eslint-plugin": "^5.11.0",
+    "@typescript-eslint/parser": "^5.11.0",
+    "env-cmd": "^10.0.1",
+    "eslint": "^8.8.0",
+    "eslint-plugin-react": "^7.28.0"
   },
   "scripts": {
     "start": "craco start",
