@@ -73,8 +73,7 @@ export const UserSettings : React.FC = () => {
         setUserData(userForDel)
     }
 
-    const onConfirmDelete = () => {
-        (async() => {
+    const onConfirmDelete = async() => {
             try {
                 await api.deleteUser(userData.userId)
                 const findFunc = filterFuncFactory(userData.userId);
@@ -82,10 +81,10 @@ export const UserSettings : React.FC = () => {
                 setUserRows(usersLeft)
                 toast.success("User Deleted succesesfully")
             } catch (error) {
-                toast.error("User wasn't not deleted")
+                console.error(error);
+                toast.error("User wasn't deleted")
             }
             setConfirmModalOpen(false);
-        })()   
     }
 
     const onRowEdit = (row) => {

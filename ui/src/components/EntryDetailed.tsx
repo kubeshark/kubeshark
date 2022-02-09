@@ -107,6 +107,7 @@ export const EntryDetailed = () => {
                 console.error(error);
             }
         })();
+        return ()=> setEntryData(null);
         // eslint-disable-next-line
     }, [focusedEntryId]);
 
