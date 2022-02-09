@@ -11,7 +11,6 @@ const LoadingOverlay: React.FC<LoadingOverlayProps> = ({delay}) => {
 
     const [isVisible, setIsVisible] = useState(false);
 
-    // @ts-ignore
     useEffect(() => {
         let isRelevant = true;
 

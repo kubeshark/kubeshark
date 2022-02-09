@@ -44,7 +44,7 @@ const useLayoutStyles = makeStyles(() => ({
 }));
 
 interface TrafficPageProps {
-  setAnalyzeStatus?: (status: any) => void;
+    setAnalyzeStatus?: (status: object) => void;
 }
 
 const api = Api.getInstance();
@@ -138,11 +138,11 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus}) => {
         ws.current.onmessage = (e) => {
             if (!e?.data) return;
             const message = JSON.parse(e.data);
+            const entry = message.data;
+            const newEntries = [...entries, entry];
             switch (message.messageType) {
             case "entry":
-                const entry = message.data;
                 if (!focusedEntryId) setFocusedEntryId(entry.id.toString());
-                const newEntries = [...entries, entry];
                 if (newEntries.length === 10001) {
                     setLeftOffTop(newEntries[0].entry.id);
                     newEntries.shift();
@@ -194,10 +194,10 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus}) => {
     useEffect(() => {
         (async () => {
             openWebSocket("leftOff(-1)", true);
-            try{
+            try {
                 const tapStatusResponse = await api.tapStatus();
                 setTappingStatus(tapStatusResponse);
-                if(setAnalyzeStatus) {
+                if (setAnalyzeStatus) {
                     const analyzeStatusResponse = await api.analyzeStatus();
                     setAnalyzeStatus(analyzeStatusResponse);
                 }

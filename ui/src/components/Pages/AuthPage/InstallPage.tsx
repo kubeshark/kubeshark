@@ -45,7 +45,7 @@ export const InstallPage: React.FC<InstallPageProps> = ({onFirstLogin}) => {
             }
         } catch (e) {
             if (e.type === FormValidationErrorType) {
-                for (const messages of Object.values(e.messages) as any[]) {
+                for (const messages of Object.values(e.messages) as object[][]) {
                     for (const message of messages) {
                         toast.error(message.text);
                     }

@@ -5,7 +5,7 @@ import logo from '../assets/Mizu-logo.svg';
 import './Header.sass';
 
 interface HeaderProps {
-    analyzeStatus: any
+    analyzeStatus: object
 }
 export const Header: React.FC<HeaderProps> = ({analyzeStatus}) => {
     return <div className="header">
