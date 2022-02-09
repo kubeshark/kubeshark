@@ -1,10 +1,11 @@
-import {Tooltip as MUITooltip, Fade, TooltipProps as MUITooltipProps, makeStyles} from "@material-ui/core";
 import React from "react";
+import {Tooltip as MUITooltip, Fade, TooltipProps as MUITooltipProps, makeStyles} from "@material-ui/core";
+import { ClassNameMap } from "@material-ui/core/styles/withStyles";
 
 export interface TooltipProps extends MUITooltipProps {
     variant?: 'default' | 'wide' | 'fit';
     isSimple?: boolean;
-    classes?: any;
+    classes?: ClassNameMap;
 }
 
 export type TooltipPlacement = 'bottom-end' | 'bottom-start' | 'bottom' | 'left-end' | 'left-start' | 'left' | 'right-end' | 'right-start' | 'right' | 'top-end' | 'top-start' | 'top';
@@ -21,7 +22,7 @@ const styles = {
     }
 };
 
-const useStyles = makeStyles((theme) => styles);
+const useStyles = makeStyles(() => styles);
 
 const Tooltip: React.FC<TooltipProps> = (props) => {
 

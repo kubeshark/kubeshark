@@ -1,6 +1,5 @@
 import {makeStyles} from "@material-ui/core";
 
-// @ts-ignore
 export const useCommonStyles = makeStyles(() => ({
     button: {
         backgroundColor: "#205cf5",

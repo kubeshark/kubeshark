@@ -71,7 +71,6 @@ interface Protocol {
 
 interface ServiceMapModalProps {
     isOpen: boolean;
-    onOpen: () => void;
     onClose: () => void;
 }
 
@@ -91,7 +90,7 @@ const modalStyle = {
 
 const api = Api.getInstance();
 
-export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onOpen, onClose }) => {
+export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClose }) => {
     const commonClasses = useCommonStyles();
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [graphData, setGraphData] = useState<GraphData>({ nodes: [], edges: [] });

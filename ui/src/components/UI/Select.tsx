@@ -6,7 +6,7 @@ import styles from './style/Select.module.sass';
 
 export const ALL_KEY= 'All';
 
-const menuProps: any = {
+const menuProps: object = {
     anchorOrigin: {
         vertical: "bottom",
         horizontal: "left"

@@ -49,8 +49,8 @@ const FancyTextDisplay: React.FC<Props> = ({text, className, isPossibleToCopy = 
         <p
             className={`FancyTextDisplay-Container ${className ? className : ''} ${displayIconOnMouseOver ? 'displayIconOnMouseOver ' : ''} ${applyTextEllipsis ? ' FancyTextDisplay-ContainerEllipsis' : ''}`}
             title={text}
-            onMouseOver={ e => setShowTooltip(true)}
-            onMouseLeave={ e => setShowTooltip(false)}
+            onMouseOver={ () => setShowTooltip(true)}
+            onMouseLeave={ () => setShowTooltip(false)}
         >
             {!buttonOnly && flipped && textElement}
             {copyButton}

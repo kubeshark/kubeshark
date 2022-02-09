@@ -2,6 +2,7 @@ import Tooltip from "./Tooltip";
 import React from "react";
 import {makeStyles} from '@material-ui/core/styles';
 import variables from '../../variables.module.scss';
+import { ClassNameMap } from "@material-ui/core/styles/withStyles";
 
 interface Tab {
     tab: string,
@@ -12,7 +13,7 @@ interface Tab {
 }
 
 interface Props {
-    classes?: any,
+    classes?: ClassNameMap,
     tabs: Tab[],
     currentTab: string,
     color: string,

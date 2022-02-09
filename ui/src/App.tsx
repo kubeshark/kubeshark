@@ -17,7 +17,6 @@ const App = () => {
             <TrafficPage setAnalyzeStatus={setAnalyzeStatus}/>
             {window["isServiceMapEnabled"] && <ServiceMapModal
                 isOpen={serviceMapModalOpen}
-                onOpen={() => setServiceMapModalOpen(true)}
                 onClose={() => setServiceMapModalOpen(false)}
             />}
         </div>

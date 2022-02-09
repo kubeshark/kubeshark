@@ -52,8 +52,8 @@ const Queryable: React.FC<Props> = ({query, style, iconStyle, className, useTool
         <div
             className={`Queryable-Container displayIconOnMouseOver ${className ? className : ''} ${displayIconOnMouseOver ? 'displayIconOnMouseOver ' : ''}`}
             style={style}
-            onMouseOver={ e => setShowTooltip(true)}
-            onMouseLeave={ e => setShowTooltip(false)}
+            onMouseOver={ () => setShowTooltip(true)}
+            onMouseLeave={ () => setShowTooltip(false)}
         >
             {flipped && addButton}
             {children}
