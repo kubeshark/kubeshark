@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+	"sort"
 	"strconv"
 
 	"github.com/up9inc/mizu/tap/api"
@@ -38,6 +39,10 @@ func mapSliceMergeRepeatedKeys(mapSlice []interface{}) (newMapSlice []interface{
 		}
 		newMapSlice = append(newMapSlice, h)
 	}
+
+	sort.Slice(newMapSlice, func(i, j int) bool {
+		return newMapSlice[i].(map[string]interface{})["name"].(string) < newMapSlice[j].(map[string]interface{})["name"].(string)
+	})
 
 	return
 }
