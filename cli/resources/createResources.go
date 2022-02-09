@@ -157,7 +157,7 @@ func createMizuApiServerDeployment(ctx context.Context, kubernetesProvider *kube
 		return err
 	}
 	pod.Spec.Containers[0].LivenessProbe = &core.Probe{
-		Handler: core.Handler{
+		ProbeHandler: core.ProbeHandler{
 			HTTPGet: &core.HTTPGetAction{
 				Path: "/echo",
 				Port: intstr.FromInt(shared.DefaultApiServerPort),
