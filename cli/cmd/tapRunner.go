@@ -337,7 +337,7 @@ func watchApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 					continue
 				}
 
-				logger.Log.Debugf("Watching API Server pod loop, modified: %v", modifiedPod.Status.Phase)
+				logger.Log.Debugf("Watching API Server pod loop, modified: %v, containers statuses: %v", modifiedPod.Status.Phase, modifiedPod.Status.ContainerStatuses)
 
 				if modifiedPod.Status.Phase == core.PodRunning && !isPodReady {
 					isPodReady = true
@@ -404,7 +404,7 @@ func watchApiServerEvents(ctx context.Context, kubernetesProvider *kubernetes.Pr
 			case "FailedScheduling", "Failed":
 				logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Mizu API Server status: %s - %s", event.Reason, event.Note))
 				cancel()
-				
+
 			}
 		case err, ok := <-errorChan:
 			if !ok {

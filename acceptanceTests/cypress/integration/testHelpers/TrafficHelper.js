@@ -24,7 +24,32 @@ export function verifyMinimumEntries() {
                 const numOfEntries = number.text();
                 return parseInt(numOfEntries);
             };
-            cy.wrap({ there: getNum }).invoke('there').should('be.gte', minimumEntries);
+            cy.wrap({there: getNum}).invoke('there').should('be.gte', minimumEntries);
         });
+    });
+}
+
+export function leftTextCheck(entryNum, path, expectedText) {
+    cy.get(`#list #entry-${entryNum} ${path}`).invoke('text').should('eq', expectedText);
+}
+
+export function leftOnHoverCheck(entryNum, path, filterName) {
+    cy.get(`#list #entry-${entryNum} ${path}`).trigger('mouseover');
+    cy.get(`#list #entry-${entryNum} .Queryable-Tooltip`).invoke('text').should('match', new RegExp(filterName));
+}
+
+export function rightTextCheck(path, expectedText) {
+    cy.get(`#rightSideContainer ${path}`).should('have.text', expectedText);
+}
+
+export function rightOnHoverCheck(path, expectedText) {
+    cy.get(`#rightSideContainer ${path}`).trigger('mouseover');
+    cy.get(`#rightSideContainer .Queryable-Tooltip`).invoke('text').should('match', new RegExp(expectedText));
+}
+
+export function checkThatAllEntriesShown() {
+    cy.get('#entries-length').then(number => {
+        if (number.text() === '1')
+            cy.get('[title="Fetch old records"]').click();
     });
 }
