@@ -13,7 +13,7 @@ const useStyles = makeStyles(() => ({
 }));
 
 interface AnalyseButtonProps {
-    analyzeStatus: any
+    analyzeStatus: object
 }
 
 export const AnalyzeButton: React.FC<AnalyseButtonProps>  = ({analyzeStatus}) => {

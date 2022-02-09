@@ -12,25 +12,25 @@ import wsConnectionAtom, {WsConnectionStatus} from "../recoil/wsConnection";
 import queryAtom from "../recoil/query";
 
 interface EntriesListProps {
-    listEntryREF: any;
+    listEntryREF: React.MutableRefObject<HTMLDivElement>;
     onSnapBrokenEvent: () => void;
     isSnappedToBottom: boolean;
-    setIsSnappedToBottom: any;
+    setIsSnappedToBottom: React.Dispatch<React.SetStateAction<boolean>>;
     queriedCurrent: number;
-    setQueriedCurrent: any;
+    setQueriedCurrent: React.Dispatch<React.SetStateAction<number>>;
     queriedTotal: number;
-    setQueriedTotal: any;
+    setQueriedTotal: React.Dispatch<React.SetStateAction<number>>;
     startTime: number;
     noMoreDataTop: boolean;
     setNoMoreDataTop: (flag: boolean) => void;
     leftOffTop: number;
     setLeftOffTop: (leftOffTop: number) => void;
-    ws: any;
+    ws: WebSocket;
     openWebSocket: (query: string, resetEntries: boolean) => void;
     leftOffBottom: number;
     truncatedTimestamp: number;
-    setTruncatedTimestamp: any;
-    scrollableRef: any;
+    setTruncatedTimestamp: React.Dispatch<React.SetStateAction<number>>;
+    scrollableRef: React.MutableRefObject<ScrollableFeedVirtualized>;
 }
 
 const api = Api.getInstance();
@@ -48,12 +48,14 @@ export const EntriesList: React.FC<EntriesListProps> = ({listEntryREF, onSnapBro
     useEffect(() => {
         const list = document.getElementById('list').firstElementChild;
         list.addEventListener('scroll', (e) => {
-            const el: any = e.target;
-            if(el.scrollTop === 0) {
-                setLoadMoreTop(true);
-            } else {
-                setNoMoreDataTop(false);
-                setLoadMoreTop(false);
+            if (e.target instanceof Element) {
+                const el: Element = e.target;
+                if(el.scrollTop === 0) {
+                    setLoadMoreTop(true);
+                } else {
+                    setNoMoreDataTop(false);
+                    setLoadMoreTop(false);
+                }
             }
         });
     }, [setLoadMoreTop, setNoMoreDataTop]);
@@ -123,7 +125,7 @@ export const EntriesList: React.FC<EntriesListProps> = ({listEntryREF, onSnapBro
                 <button type="button"
                     title="Fetch old records"
                     className={`${styles.btnOld} ${!scrollbarVisible && leftOffTop > 0 ? styles.showButton : styles.hideButton}`}
-                    onClick={(_) => {
+                    onClick={() => {
                         ws.close();
                         getOldEntries();
                     }}>
@@ -132,7 +134,7 @@ export const EntriesList: React.FC<EntriesListProps> = ({listEntryREF, onSnapBro
                 <button type="button"
                     title="Snap to bottom"
                     className={`${styles.btnLive} ${isSnappedToBottom && !isWsConnectionClosed ? styles.hideButton : styles.showButton}`}
-                    onClick={(_) => {
+                    onClick={() => {
                         if (isWsConnectionClosed) {
                             if (query) {
                                 openWebSocket(`(${query}) and leftOff(${leftOffBottom})`, false);
