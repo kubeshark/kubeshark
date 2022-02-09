@@ -10,7 +10,6 @@ const useKeyPress = (eventConfigs, callback, node = null) => {
     // handle what happens on key press
     const handleKeyPress = useCallback(
         (event) => {
-      
             // check if one of the key is part of the ones we want
             if (eventConfigs.some((eventConfig) => Object.keys(eventConfig).every(nameKey => eventConfig[nameKey] === event[nameKey]))) {
                 event.stopPropagation()
@@ -22,16 +21,13 @@ const useKeyPress = (eventConfigs, callback, node = null) => {
     );
 
     useEffect(() => {
-    // target is either the provided node or the document
+        // target is either the provided node or the document
         const targetNode = node ?? document;
         // attach the event listener
-        targetNode &&
-      targetNode.addEventListener("keydown", handleKeyPress);
+        targetNode && targetNode.addEventListener("keydown", handleKeyPress);
 
         // remove the event listener
-        return () =>
-            targetNode &&
-        targetNode.removeEventListener("keydown", handleKeyPress);
+        return () => targetNode && targetNode.removeEventListener("keydown", handleKeyPress);
     }, [handleKeyPress, node]);
 };
 

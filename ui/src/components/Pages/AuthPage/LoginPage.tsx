@@ -42,19 +42,18 @@ const LoginPage: React.FC = () => {
 
     useKeyPress(shortcutsKeyboard.enter, onFormSubmit, formRef.current);
 
-    return <div className="centeredForm" ref={formRef}> 
+    return <div className="centeredForm" ref={formRef}>
         {isLoading && <LoadingOverlay/>}
         <div className="form-title left-text">Login</div>
         <div className="form-input">
             <label htmlFor="inputUsername">Username</label>
-            <input id="inputUsername" autoFocus className={classes.textField} value={username} onChange={(event) => setUsername(event.target.value)}/>    
+            <input id="inputUsername" autoFocus className={classes.textField} value={username} onChange={(event) => setUsername(event.target.value)}/>
         </div>
         <div className="form-input">
             <label htmlFor="inputPassword">Password</label>
             <input id="inputPassword" className={classes.textField} value={password} type="password" onChange={(event) => setPassword(event.target.value)}/>
         </div>
         <Button className={classes.button + " form-button"} variant="contained" fullWidth onClick={onFormSubmit}>Log in</Button>
-            
     </div>;
 };
 

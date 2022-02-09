@@ -10,7 +10,7 @@ import './OasModal.sass'
 const api = Api.getInstance();
 const noOasServiceSelectedMessage = "Please Select OasService";
 
-const OasModal = ({ openModal, handleCloseModal }) => { 
+const OasModal = ({ openModal, handleCloseModal }) => {
     const [oasServices, setOasServices] = useState([])
     const [selectedServiceName, setSelectedServiceName] = useState("");
     const [selectedServiceSpec, setSelectedServiceSpec] = useState(null);
