@@ -1,5 +1,5 @@
-skipbin := $$(ls -A --ignore='.??*' bin)
-skipexpect := $$(ls -A --ignore='.??*' expect)
+skipbin := $$(find bin -mindepth 1 -maxdepth 1)
+skipexpect := $$(find expect -mindepth 1 -maxdepth 1)
 
 test: test-pull-bin test-pull-expect
 	@MIZU_TEST=1 go test -v ./... -coverpkg=./... -race -coverprofile=coverage.out -covermode=atomic
