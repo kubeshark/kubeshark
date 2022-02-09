@@ -9,8 +9,8 @@ test-update: test-pull-bin
 
 test-pull-bin:
 	@mkdir -p bin
-	@[ "${skipbin}" ] && echo "Skipping downloading BINs" || gsutil -m cp gs://static.up9.io/mizu/test-pcap/bin/http/\*.bin bin
+	@[ "${skipbin}" ] && echo "Skipping downloading BINs" || gsutil  -o 'GSUtil:parallel_process_count=5' -o 'GSUtil:parallel_thread_count=5'  -m cp gs://static.up9.io/mizu/test-pcap/bin/http/\*.bin bin
 
 test-pull-expect:
 	@mkdir -p expect
-	@[ "${skipexpect}" ] && echo "Skipping downloading expected JSONs" || gsutil -m cp -r gs://static.up9.io/mizu/test-pcap/expect/http/\* expect
+	@[ "${skipexpect}" ] && echo "Skipping downloading expected JSONs" || gsutil  -o 'GSUtil:parallel_process_count=5' -o 'GSUtil:parallel_thread_count=5'  -m cp -r gs://static.up9.io/mizu/test-pcap/expect/http/\* expect
