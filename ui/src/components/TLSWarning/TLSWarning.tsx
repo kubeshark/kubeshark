@@ -33,7 +33,7 @@ export const TLSWarning: React.FC<TLSWarningProps>  = ({showTLSWarning, setShowT
 
     return (<Snackbar open={showTLSWarning && !userDismissedTLSWarning}>
         <MuiAlert classes={{filledWarning: 'customWarningStyle'}} elevation={6} variant="filled"
-                  onClose={() => setUserDismissedTLSWarning(true)} severity="warning">
+            onClose={() => setUserDismissedTLSWarning(true)} severity="warning">
             Mizu is detecting TLS traffic, this type of traffic will not be displayed.
             {addressesWithTLS.size > 0 &&
             <ul className="httpsDomains"> {Array.from(addressesWithTLS, address => <li>{address}</li>)} </ul>}

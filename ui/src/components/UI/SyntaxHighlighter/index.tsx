@@ -30,10 +30,10 @@ interface Props {
 }
 
 export const SyntaxHighlighter: React.FC<Props> = ({
-        code,
-        showLineNumbers = false,
-        language = null
-    }) => {
+    code,
+    showLineNumbers = false,
+    language = null
+}) => {
     const markers = showLineNumbers ? code.split("\n").map((item, i) => {
         return {
             line: i + 1,

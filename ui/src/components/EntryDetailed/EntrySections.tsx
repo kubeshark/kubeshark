@@ -30,28 +30,28 @@ const EntryViewLine: React.FC<EntryViewLineProps> = ({label, value, selector = "
         query = `${selector} == ${value}`;
     }
     return (label && <tr className={styles.dataLine}>
-                    <td className={`${styles.dataKey}`}>
-                        <Queryable
-                            query={query}
-                            style={{float: "right", height: "18px"}}
-                            iconStyle={{marginRight: "20px"}}
-                            flipped={true}
-                            useTooltip={useTooltip}
-                            displayIconOnMouseOver={displayIconOnMouseOver}
-                        >
-                            {label}
-                        </Queryable>
-                    </td>
-                <td>
-                    <FancyTextDisplay
-                        className={styles.dataValue}
-                        text={value}
-                        applyTextEllipsis={false}
-                        flipped={true}
-                        displayIconOnMouseOver={true}
-                    />
-                </td>
-            </tr>) || null;
+        <td className={`${styles.dataKey}`}>
+            <Queryable
+                query={query}
+                style={{float: "right", height: "18px"}}
+                iconStyle={{marginRight: "20px"}}
+                flipped={true}
+                useTooltip={useTooltip}
+                displayIconOnMouseOver={displayIconOnMouseOver}
+            >
+                {label}
+            </Queryable>
+        </td>
+        <td>
+            <FancyTextDisplay
+                className={styles.dataValue}
+                text={value}
+                applyTextEllipsis={false}
+                flipped={true}
+                displayIconOnMouseOver={true}
+            />
+        </td>
+    </tr>) || null;
 }
 
 
@@ -164,10 +164,10 @@ export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
 
     return <React.Fragment>
         {content && content?.length > 0 && <EntrySectionContainer
-                                                title={title}
-                                                color={color}
-                                                query={`${selector} == r".*"`}
-                                            >
+            title={title}
+            color={color}
+            query={`${selector} == r".*"`}
+        >
             <div style={{display: 'flex', alignItems: 'center', alignContent: 'center', margin: "5px 0"}}>
                 {supportsPrettying && <div style={{paddingTop: 3}}>
                     <Checkbox checked={isPretty} onToggle={() => {setIsPretty(!isPretty)}}/>
@@ -260,8 +260,8 @@ const EntryPolicySectionCollapsibleTitle: React.FC<EntryPolicySectionCollapsible
         </span>
         <span>
             <tr className={styles.dataLine}>
-            <td className={`${styles.dataKey} ${styles.rulesTitleSuccess}`}>{label}</td>
-            <td className={`${styles.dataKey} ${matched === 'Success' ? styles.rulesMatchedSuccess : styles.rulesMatchedFailure}`}>{matched}</td>
+                <td className={`${styles.dataKey} ${styles.rulesTitleSuccess}`}>{label}</td>
+                <td className={`${styles.dataKey} ${matched === 'Success' ? styles.rulesMatchedSuccess : styles.rulesMatchedFailure}`}>{matched}</td>
             </tr>
         </span>
     </div>
@@ -289,10 +289,10 @@ export const EntryTablePolicySection: React.FC<EntryPolicySectionProps> = ({titl
         {
             arrayToIterate && arrayToIterate.length > 0 ?
                 <>
-                <EntrySectionContainer title={title} color={color}>
-                    <table>
-                        <tbody>
-                            {arrayToIterate.map(({rule, matched}, index) => {
+                    <EntrySectionContainer title={title} color={color}>
+                        <table>
+                            <tbody>
+                                {arrayToIterate.map(({rule, matched}, index) => {
                                     return (
                                         <EntryPolicySectionContainer key={index} label={rule.Name} matched={matched && (rule.Type === 'slo' ? rule.ResponseTime >= latency : true)? "Success" : "Failure"}>
                                             {
@@ -330,11 +330,11 @@ export const EntryTablePolicySection: React.FC<EntryPolicySectionProps> = ({titl
                                         </EntryPolicySectionContainer>
                                     )
                                 }
-                            )
-                            }
-                        </tbody>
-                    </table>
-                </EntrySectionContainer>
+                                )
+                                }
+                            </tbody>
+                        </table>
+                    </EntrySectionContainer>
                 </> : <span className={styles.noRules}>No rules could be applied to this request.</span>
         }
     </React.Fragment>

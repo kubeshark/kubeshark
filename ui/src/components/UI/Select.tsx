@@ -38,19 +38,19 @@ export interface SelectProps extends MUISelectProps {
 }
 
 export const Select: React.FC<SelectProps> = ({
-                                                  label,
-                                                  value,
-                                                  onChange,
-                                                  transformDisplay,
-                                                  ellipsis = true,
-                                                  multiple,
-                                                  labelOnTop = false,
-                                                  children,
-                                                  className,
-                                                  labelClassName,
-                                                  trimItemsWhenMultiple,
-                                                  ...props
-                                              }) => {
+    label,
+    value,
+    onChange,
+    transformDisplay,
+    ellipsis = true,
+    multiple,
+    labelOnTop = false,
+    children,
+    className,
+    labelClassName,
+    trimItemsWhenMultiple,
+    ...props
+}) => {
     let _value = value;
 
     const _onChange = (_, item) => {

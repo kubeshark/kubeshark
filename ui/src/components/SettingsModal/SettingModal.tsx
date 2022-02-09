@@ -84,14 +84,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({isOpen, onClose, is
     const buildNamespacesTable = () => {
         return <table cellPadding={5} style={{borderCollapse: "collapse"}}>
             <thead>
-            <tr style={{borderBottomWidth: "2px"}}>
-                <th style={{width: 50}}><Checkbox checked={Object.values(namespaces).every(tap => tap === true)}
-                                                  onToggle={toggleAll}/></th>
-                <th>Namespace</th>
-            </tr>
+                <tr style={{borderBottomWidth: "2px"}}>
+                    <th style={{width: 50}}><Checkbox checked={Object.values(namespaces).every(tap => tap === true)}
+                        onToggle={toggleAll}/></th>
+                    <th>Namespace</th>
+                </tr>
             </thead>
             <tbody>
-            {filteredNamespaces?.map(namespace => {
+                {filteredNamespaces?.map(namespace => {
                     return <tr key={namespace}>
                         <td style={{width: 50}}>
                             <Checkbox checked={namespaces[namespace]} onToggle={() => toggleTapNamespace(namespace)}/>
@@ -99,7 +99,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({isOpen, onClose, is
                         <td>{namespace}</td>
                     </tr>
                 }
-            )}
+                )}
             </tbody>
         </table>
     }
@@ -132,7 +132,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({isOpen, onClose, is
                         <div className="namespacesSettingsContainer">
                             <div style={{margin: "10px 0"}}>
                                 <input className={classes.textField + " searchNamespace"} placeholder="Search" value={searchValue}
-                                       onChange={(event) => setSearchValue(event.target.value)}/></div>
+                                    onChange={(event) => setSearchValue(event.target.value)}/></div>
                             <div className="namespacesTable">
                                 {buildNamespacesTable()}
                             </div>
@@ -142,9 +142,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({isOpen, onClose, is
                 <div className="settingsActionsContainer">
                     {!isFirstLogin &&
                     <Button style={{width: 100}} className={classes.outlinedButton} size={"small"}
-                            onClick={onClose} variant='outlined'>Cancel</Button>}
+                        onClick={onClose} variant='outlined'>Cancel</Button>}
                     <Button style={{width: 100, marginLeft: 20}} className={classes.button} size={"small"}
-                            onClick={updateTappingSettings}>OK</Button>
+                        onClick={updateTappingSettings}>OK</Button>
                 </div>
             </Box>
         </Fade>

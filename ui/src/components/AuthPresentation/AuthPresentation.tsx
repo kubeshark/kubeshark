@@ -21,10 +21,10 @@ export const AuthPresentation = () => {
 
     return <>
         {statusAuth?.email && <div className="authPresentationContainer">
-                <div>
-                    <div className="authEmail">{statusAuth.email}</div>
-                    <div className="authModel">{statusAuth.model}</div>
-                </div>
-            </div>}
+            <div>
+                <div className="authEmail">{statusAuth.email}</div>
+                <div className="authModel">{statusAuth.model}</div>
+            </div>
+        </div>}
     </>;
 }

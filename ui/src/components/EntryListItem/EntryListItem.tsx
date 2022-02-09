@@ -60,25 +60,25 @@ export const EntryItem: React.FC<EntryProps> = ({entry, style, headingMode}) => 
     let ingoingIcon;
     let outgoingIcon;
     switch(classification) {
-        case StatusCodeClassification.SUCCESS: {
-            ingoingIcon = ingoingIconSuccess;
-            outgoingIcon = outgoingIconSuccess;
-            break;
-        }
-        case StatusCodeClassification.FAILURE: {
-            ingoingIcon = ingoingIconFailure;
-            outgoingIcon = outgoingIconFailure;
-            break;
-        }
-        case StatusCodeClassification.NEUTRAL: {
-            ingoingIcon = ingoingIconNeutral;
-            outgoingIcon = outgoingIconNeutral;
-            break;
-        }
+    case StatusCodeClassification.SUCCESS: {
+        ingoingIcon = ingoingIconSuccess;
+        outgoingIcon = outgoingIconSuccess;
+        break;
+    }
+    case StatusCodeClassification.FAILURE: {
+        ingoingIcon = ingoingIconFailure;
+        outgoingIcon = outgoingIconFailure;
+        break;
+    }
+    case StatusCodeClassification.NEUTRAL: {
+        ingoingIcon = ingoingIconNeutral;
+        outgoingIcon = outgoingIconNeutral;
+        break;
+    }
     }
     let additionalRulesProperties = "";
     let ruleSuccess = true;
-    let rule = 'latency' in entry.rules
+    const rule = 'latency' in entry.rules
     if (rule) {
         if (entry.rules.latency !== -1) {
             if (entry.rules.latency >= entry.latency || !('latency' in entry)) {
@@ -108,21 +108,21 @@ export const EntryItem: React.FC<EntryProps> = ({entry, style, headingMode}) => 
     let contractEnabled = true;
     let contractText = "";
     switch (entry.contractStatus) {
-        case 0:
-            contractEnabled = false;
-            break;
-        case 1:
-            additionalRulesProperties = styles.ruleSuccessRow
-            ruleSuccess = true
-            contractText = "No Breaches"
-            break;
-        case 2:
-            additionalRulesProperties = styles.ruleFailureRow
-            ruleSuccess = false
-            contractText = "Breach"
-            break;
-        default:
-            break;
+    case 0:
+        contractEnabled = false;
+        break;
+    case 1:
+        additionalRulesProperties = styles.ruleSuccessRow
+        ruleSuccess = true
+        contractText = "No Breaches"
+        break;
+    case 2:
+        additionalRulesProperties = styles.ruleFailureRow
+        ruleSuccess = false
+        contractText = "Breach"
+        break;
+    default:
+        break;
     }
 
 
@@ -163,8 +163,8 @@ export const EntryItem: React.FC<EntryProps> = ({entry, style, headingMode}) => 
                         flipped={true}
                         style={{marginTop: "-4px", overflow: "visible"}}
                         iconStyle={!headingMode ? {marginTop: "4px", right: "16px", position: "relative"} :
-                        entry.proto.name === "http" ? {marginTop: "4px", left: "calc(50vw + 41px)", position: "absolute"} :
-                        {marginTop: "4px", left: "calc(50vw - 9px)", position: "absolute"}}
+                            entry.proto.name === "http" ? {marginTop: "4px", left: "calc(50vw + 41px)", position: "absolute"} :
+                                {marginTop: "4px", left: "calc(50vw - 9px)", position: "absolute"}}
                     >
                         <span
                             title="Source Name"
@@ -192,21 +192,21 @@ export const EntryItem: React.FC<EntryProps> = ({entry, style, headingMode}) => 
                     <div className={`${styles.ruleNumberText} ${ruleSuccess ? styles.ruleNumberTextSuccess : styles.ruleNumberTextFailure} ${rule && contractEnabled ? styles.separatorRight : ""}`}>
                         {`Rules (${numberOfRules})`}
                     </div>
-                : ""
+                    : ""
             }
             {
                 contractEnabled ?
                     <div className={`${styles.ruleNumberText} ${ruleSuccess ? styles.ruleNumberTextSuccess : styles.ruleNumberTextFailure} ${rule && contractEnabled ? styles.separatorLeft : ""}`}>
                         {contractText}
                     </div>
-                : ""
+                    : ""
             }
             <div className={styles.separatorRight}>
                 <Queryable
-                        query={`src.ip == "${entry.src.ip}"`}
-                        displayIconOnMouseOver={true}
-                        flipped={true}
-                        iconStyle={{marginRight: "16px"}}
+                    query={`src.ip == "${entry.src.ip}"`}
+                    displayIconOnMouseOver={true}
+                    flipped={true}
+                    iconStyle={{marginRight: "16px"}}
                 >
                     <span
                         className={`${styles.tcpInfo} ${styles.ip}`}
@@ -215,12 +215,12 @@ export const EntryItem: React.FC<EntryProps> = ({entry, style, headingMode}) => 
                         {entry.src.ip}
                     </span>
                 </Queryable>
-				<span className={`${styles.tcpInfo}`} style={{marginTop: "18px"}}>{entry.src.port ? ":" : ""}</span>
+                <span className={`${styles.tcpInfo}`} style={{marginTop: "18px"}}>{entry.src.port ? ":" : ""}</span>
                 <Queryable
-                        query={`src.port == "${entry.src.port}"`}
-                        displayIconOnMouseOver={true}
-                        flipped={true}
-                        iconStyle={{marginTop: "28px"}}
+                    query={`src.port == "${entry.src.port}"`}
+                    displayIconOnMouseOver={true}
+                    flipped={true}
+                    iconStyle={{marginTop: "28px"}}
                 >
                     <span
                         className={`${styles.tcpInfo} ${styles.port}`}
@@ -231,10 +231,10 @@ export const EntryItem: React.FC<EntryProps> = ({entry, style, headingMode}) => 
                 </Queryable>
                 {entry.isOutgoing ?
                     <Queryable
-                            query={`outgoing == true`}
-                            displayIconOnMouseOver={true}
-                            flipped={true}
-                            iconStyle={{marginTop: "28px"}}
+                        query={`outgoing == true`}
+                        displayIconOnMouseOver={true}
+                        flipped={true}
+                        iconStyle={{marginTop: "28px"}}
                     >
                         <img
                             src={outgoingIcon}
@@ -244,10 +244,10 @@ export const EntryItem: React.FC<EntryProps> = ({entry, style, headingMode}) => 
                     </Queryable>
                     :
                     <Queryable
-                            query={`outgoing == true`}
-                            displayIconOnMouseOver={true}
-                            flipped={true}
-                            iconStyle={{marginTop: "28px"}}
+                        query={`outgoing == true`}
+                        displayIconOnMouseOver={true}
+                        flipped={true}
+                        iconStyle={{marginTop: "28px"}}
                     >
                         <img
                             src={ingoingIcon}
@@ -261,10 +261,10 @@ export const EntryItem: React.FC<EntryProps> = ({entry, style, headingMode}) => 
                     </Queryable>
                 }
                 <Queryable
-                        query={`dst.ip == "${entry.dst.ip}"`}
-                        displayIconOnMouseOver={true}
-                        flipped={false}
-                        iconStyle={{marginTop: "28px"}}
+                    query={`dst.ip == "${entry.dst.ip}"`}
+                    displayIconOnMouseOver={true}
+                    flipped={false}
+                    iconStyle={{marginTop: "28px"}}
                 >
                     <span
                         className={`${styles.tcpInfo} ${styles.ip}`}
@@ -275,9 +275,9 @@ export const EntryItem: React.FC<EntryProps> = ({entry, style, headingMode}) => 
                 </Queryable>
                 <span className={`${styles.tcpInfo}`} style={{marginTop: "18px"}}>:</span>
                 <Queryable
-                        query={`dst.port == "${entry.dst.port}"`}
-                        displayIconOnMouseOver={true}
-                        flipped={false}
+                    query={`dst.port == "${entry.dst.port}"`}
+                    displayIconOnMouseOver={true}
+                    flipped={false}
                 >
                     <span
                         className={`${styles.tcpInfo} ${styles.port}`}
@@ -289,9 +289,9 @@ export const EntryItem: React.FC<EntryProps> = ({entry, style, headingMode}) => 
             </div>
             <div className={styles.timestamp}>
                 <Queryable
-                        query={`timestamp >= datetime("${Moment(+entry.timestamp)?.utc().format('MM/DD/YYYY, h:mm:ss.SSS A')}")`}
-                        displayIconOnMouseOver={true}
-                        flipped={false}
+                    query={`timestamp >= datetime("${Moment(+entry.timestamp)?.utc().format('MM/DD/YYYY, h:mm:ss.SSS A')}")`}
+                    displayIconOnMouseOver={true}
+                    flipped={false}
                 >
                     <span
                         title="Timestamp (UTC)"

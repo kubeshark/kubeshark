@@ -36,14 +36,14 @@ const FancyTextDisplay: React.FC<Props> = ({text, className, isPossibleToCopy = 
     const textElement = <span className={'FancyTextDisplay-Text'}>{text}</span>;
 
     const copyButton = isPossibleToCopy && text ? <CopyToClipboard text={text} onCopy={onCopy}>
-                    <span
-                        className={`FancyTextDisplay-Icon`}
-                        title={`Copy "${text}" value to clipboard`}
-                    >
-                        <img src={duplicateImg} alt="Duplicate full value"/>
-                        {showCopiedNotification && <span className={'FancyTextDisplay-CopyNotifier'}>Copied</span>}
-                    </span>
-				</CopyToClipboard> : null;
+        <span
+            className={`FancyTextDisplay-Icon`}
+            title={`Copy "${text}" value to clipboard`}
+        >
+            <img src={duplicateImg} alt="Duplicate full value"/>
+            {showCopiedNotification && <span className={'FancyTextDisplay-CopyNotifier'}>Copied</span>}
+        </span>
+    </CopyToClipboard> : null;
 
     return (
         <p

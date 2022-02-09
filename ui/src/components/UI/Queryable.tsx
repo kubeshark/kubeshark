@@ -38,15 +38,15 @@ const Queryable: React.FC<Props> = ({query, style, iconStyle, className, useTool
     }, [showAddedNotification, query, setQuery]);
 
     const addButton = query ? <CopyToClipboard text={query} onCopy={onCopy}>
-                    <span
-                        className={`Queryable-Icon`}
-                        title={`Add "${query}" to the filter`}
-                        style={iconStyle}
-                    >
-                        <AddCircleIcon fontSize="small" color="inherit"/>
-                        {showAddedNotification && <span className={'Queryable-AddNotifier'}>Added</span>}
-                    </span>
-				</CopyToClipboard> : null;
+        <span
+            className={`Queryable-Icon`}
+            title={`Add "${query}" to the filter`}
+            style={iconStyle}
+        >
+            <AddCircleIcon fontSize="small" color="inherit"/>
+            {showAddedNotification && <span className={'Queryable-AddNotifier'}>Added</span>}
+        </span>
+    </CopyToClipboard> : null;
 
     return (
         <div

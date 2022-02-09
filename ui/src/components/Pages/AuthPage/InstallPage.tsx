@@ -63,22 +63,22 @@ export const InstallPage: React.FC<InstallPageProps> = ({onFirstLogin}) => {
     useKeyPress(shortcutsKeyboard.enter, onFormSubmit, formRef.current);
 
     return <div className="centeredForm" ref={formRef}>
-            {isLoading && <LoadingOverlay/>}
-            <div className="form-title left-text">Setup</div>
-            <span className="form-subtitle">Welcome to Mizu, please set up the admin user to continue</span>
-            <div className="form-input">
-                <label htmlFor="inputUsername">Username</label>
-                <input id="inputUsername" className={classes.textField} value={adminUsername} disabled={true} />
-            </div>
-            <div className="form-input">
-                <label htmlFor="inputUsername">Password</label>
-                <input id="inputUsername" className={classes.textField} value={password} type="password" onChange={(event) => setPassword(event.target.value)}/>    
-            </div>
-            <div className="form-input">
-                <label htmlFor="inputUsername">Confirm Password</label>
-                <input id="inputUsername" className={classes.textField} value={passwordConfirm} type="password" onChange={(event) => setPasswordConfirm(event.target.value)}/>    
-            </div>
-            <Button className={classes.button + " form-button"} variant="contained" fullWidth onClick={onFormSubmit}>Finish</Button>
+        {isLoading && <LoadingOverlay/>}
+        <div className="form-title left-text">Setup</div>
+        <span className="form-subtitle">Welcome to Mizu, please set up the admin user to continue</span>
+        <div className="form-input">
+            <label htmlFor="inputUsername">Username</label>
+            <input id="inputUsername" className={classes.textField} value={adminUsername} disabled={true} />
+        </div>
+        <div className="form-input">
+            <label htmlFor="inputUsername">Password</label>
+            <input id="inputUsername" className={classes.textField} value={password} type="password" onChange={(event) => setPassword(event.target.value)}/>    
+        </div>
+        <div className="form-input">
+            <label htmlFor="inputUsername">Confirm Password</label>
+            <input id="inputUsername" className={classes.textField} value={passwordConfirm} type="password" onChange={(event) => setPasswordConfirm(event.target.value)}/>    
+        </div>
+        <Button className={classes.button + " form-button"} variant="contained" fullWidth onClick={onFormSubmit}>Finish</Button>
     </div>;
 };
 

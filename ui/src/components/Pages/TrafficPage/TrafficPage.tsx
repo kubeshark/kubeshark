@@ -24,23 +24,23 @@ import {TLSWarning} from "../../TLSWarning/TLSWarning";
 import serviceMapModalOpenAtom from "../../../recoil/serviceMapModalOpen";
 
 const useLayoutStyles = makeStyles(() => ({
-  details: {
-    flex: "0 0 50%",
-    width: "45vw",
-    padding: "12px 24px",
-    borderRadius: 4,
-    marginTop: 15,
-    background: variables.headerBackgroundColor,
-  },
+    details: {
+        flex: "0 0 50%",
+        width: "45vw",
+        padding: "12px 24px",
+        borderRadius: 4,
+        marginTop: 15,
+        background: variables.headerBackgroundColor,
+    },
 
-  viewer: {
-    display: "flex",
-    overflowY: "auto",
-    height: "calc(100% - 70px)",
-    padding: 5,
-    paddingBottom: 0,
-    overflow: "auto",
-  },
+    viewer: {
+        display: "flex",
+        overflowY: "auto",
+        height: "calc(100% - 70px)",
+        padding: 5,
+        paddingBottom: 0,
+        overflow: "auto",
+    },
 }));
 
 interface TrafficPageProps {
@@ -82,23 +82,23 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus}) => {
     const [addressesWithTLS, setAddressesWithTLS] = useState(new Set<string>());
 
     const handleQueryChange = useMemo(
-      () =>
-        debounce(async (query: string) => {
-          if (!query) {
-            setQueryBackgroundColor("#f5f5f5");
-          } else {
-            const data = await api.validateQuery(query);
-            if (!data) {
-              return;
-            }
-            if (data.valid) {
-              setQueryBackgroundColor("#d2fad2");
-            } else {
-              setQueryBackgroundColor("#fad6dc");
-            }
-          }
-        }, 500),
-      []
+        () =>
+            debounce(async (query: string) => {
+                if (!query) {
+                    setQueryBackgroundColor("#f5f5f5");
+                } else {
+                    const data = await api.validateQuery(query);
+                    if (!data) {
+                        return;
+                    }
+                    if (data.valid) {
+                        setQueryBackgroundColor("#d2fad2");
+                    } else {
+                        setQueryBackgroundColor("#fad6dc");
+                    }
+                }
+            }, 500),
+        []
     ) as (query: string) => void;
 
     useEffect(() => {
@@ -135,90 +135,90 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus}) => {
     }
 
     if (ws.current) {
-      ws.current.onmessage = (e) => {
-        if (!e?.data) return;
-        const message = JSON.parse(e.data);
-        switch (message.messageType) {
-          case "entry":
-            const entry = message.data;
-            if (!focusedEntryId) setFocusedEntryId(entry.id.toString());
-            const newEntries = [...entries, entry];
-            if (newEntries.length === 10001) {
-              setLeftOffTop(newEntries[0].entry.id);
-              newEntries.shift();
-              setNoMoreDataTop(false);
+        ws.current.onmessage = (e) => {
+            if (!e?.data) return;
+            const message = JSON.parse(e.data);
+            switch (message.messageType) {
+            case "entry":
+                const entry = message.data;
+                if (!focusedEntryId) setFocusedEntryId(entry.id.toString());
+                const newEntries = [...entries, entry];
+                if (newEntries.length === 10001) {
+                    setLeftOffTop(newEntries[0].entry.id);
+                    newEntries.shift();
+                    setNoMoreDataTop(false);
+                }
+                setEntries(newEntries);
+                break;
+            case "status":
+                setTappingStatus(message.tappingStatus);
+                break;
+            case "analyzeStatus":
+                setAnalyzeStatus(message.analyzeStatus);
+                break;
+            case "outboundLink":
+                onTLSDetected(message.Data.DstIP);
+                break;
+            case "toast":
+                toast[message.data.type](message.data.text, {
+                    position: "bottom-right",
+                    theme: "colored",
+                    autoClose: message.data.autoClose,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                    progress: undefined,
+                });
+                break;
+            case "queryMetadata":
+                setQueriedCurrent(queriedCurrent + message.data.current);
+                setQueriedTotal(message.data.total);
+                setLeftOffBottom(message.data.leftOff);
+                setTruncatedTimestamp(message.data.truncatedTimestamp);
+                if (leftOffTop === null) {
+                    setLeftOffTop(message.data.leftOff - 1);
+                }
+                break;
+            case "startTime":
+                setStartTime(message.data);
+                break;
+            default:
+                console.error(
+                    `unsupported websocket message type, Got: ${message.messageType}`
+                );
             }
-            setEntries(newEntries);
-            break;
-          case "status":
-            setTappingStatus(message.tappingStatus);
-            break;
-          case "analyzeStatus":
-            setAnalyzeStatus(message.analyzeStatus);
-            break;
-          case "outboundLink":
-            onTLSDetected(message.Data.DstIP);
-            break;
-          case "toast":
-            toast[message.data.type](message.data.text, {
-              position: "bottom-right",
-              theme: "colored",
-              autoClose: message.data.autoClose,
-              hideProgressBar: false,
-              closeOnClick: true,
-              pauseOnHover: true,
-              draggable: true,
-              progress: undefined,
-            });
-            break;
-          case "queryMetadata":
-            setQueriedCurrent(queriedCurrent + message.data.current);
-            setQueriedTotal(message.data.total);
-            setLeftOffBottom(message.data.leftOff);
-            setTruncatedTimestamp(message.data.truncatedTimestamp);
-            if (leftOffTop === null) {
-              setLeftOffTop(message.data.leftOff - 1);
-            }
-            break;
-          case "startTime":
-            setStartTime(message.data);
-            break;
-          default:
-            console.error(
-              `unsupported websocket message type, Got: ${message.messageType}`
-            );
-        }
-      };
+        };
     }
 
     useEffect(() => {
-          (async () => {
-                openWebSocket("leftOff(-1)", true);
-                try{
-                    const tapStatusResponse = await api.tapStatus();
-                    setTappingStatus(tapStatusResponse);
-                    if(setAnalyzeStatus) {
-                        const analyzeStatusResponse = await api.analyzeStatus();
-                        setAnalyzeStatus(analyzeStatusResponse);
-                    }
-                } catch (error) {
-                    console.error(error);
+        (async () => {
+            openWebSocket("leftOff(-1)", true);
+            try{
+                const tapStatusResponse = await api.tapStatus();
+                setTappingStatus(tapStatusResponse);
+                if(setAnalyzeStatus) {
+                    const analyzeStatusResponse = await api.analyzeStatus();
+                    setAnalyzeStatus(analyzeStatusResponse);
                 }
-            })()
-            // eslint-disable-next-line
+            } catch (error) {
+                console.error(error);
+            }
+        })()
+        // eslint-disable-next-line
         }, []);
 
     const toggleConnection = () => {
-      ws.current.close();
-      if (wsConnection !== WsConnectionStatus.Connected) {
-          if (query) {
-              openWebSocket(`(${query}) and leftOff(-1)`, true);
-          } else {
-              openWebSocket(`leftOff(-1)`, true);
-          }
-          scrollableRef.current.jumpToBottom();
-          setIsSnappedToBottom(true);
-      }
+        ws.current.close();
+        if (wsConnection !== WsConnectionStatus.Connected) {
+            if (query) {
+                openWebSocket(`(${query}) and leftOff(-1)`, true);
+            } else {
+                openWebSocket(`leftOff(-1)`, true);
+            }
+            scrollableRef.current.jumpToBottom();
+            setIsSnappedToBottom(true);
+        }
     }
 
     const onTLSDetected = (destAddress: string) => {
@@ -233,19 +233,19 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus}) => {
     const getConnectionStatusClass = (isContainer) => {
         const container = isContainer ? "Container" : "";
         switch (wsConnection) {
-            case WsConnectionStatus.Connected:
-                return "greenIndicator" + container;
-            default:
-                return "redIndicator" + container;
+        case WsConnectionStatus.Connected:
+            return "greenIndicator" + container;
+        default:
+            return "redIndicator" + container;
         }
     }
 
     const getConnectionTitle = () => {
         switch (wsConnection) {
-            case WsConnectionStatus.Connected:
-                return "streaming live traffic"
-            default:
-                return "streaming paused";
+        case WsConnectionStatus.Connected:
+            return "streaming live traffic"
+        default:
+            return "streaming paused";
         }
     }
 
@@ -260,86 +260,86 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus}) => {
         setServiceMapModalOpen(true)
     }, 500);
 
-  return (
-    <div className="TrafficPage">
-      <div className="TrafficPageHeader">
-        <div className="TrafficPageStreamStatus">
-          <img className="playPauseIcon" style={{ visibility: wsConnection === WsConnectionStatus.Connected ? "visible" : "hidden" }} alt="pause"
-            src={pauseIcon} onClick={toggleConnection} />
-          <img className="playPauseIcon" style={{ position: "absolute", visibility: wsConnection === WsConnectionStatus.Connected ? "hidden" : "visible" }} alt="play"
-            src={playIcon} onClick={toggleConnection} />
-          <div className="connectionText">
-            {getConnectionTitle()}
-            <div className={"indicatorContainer " + getConnectionStatusClass(true)}>
-              <div className={"indicator " + getConnectionStatusClass(false)} />
-            </div>
-          </div>
-        </div>
-        <div style={{ display: 'flex' }}>
-          {window["isOasEnabled"] && <Button
-            type="submit"
-            variant="contained"
-            className={commonClasses.button}
-            style={{ marginRight: 25 }}
-            onClick={handleOpenModal}
-          >
+    return (
+        <div className="TrafficPage">
+            <div className="TrafficPageHeader">
+                <div className="TrafficPageStreamStatus">
+                    <img className="playPauseIcon" style={{ visibility: wsConnection === WsConnectionStatus.Connected ? "visible" : "hidden" }} alt="pause"
+                        src={pauseIcon} onClick={toggleConnection} />
+                    <img className="playPauseIcon" style={{ position: "absolute", visibility: wsConnection === WsConnectionStatus.Connected ? "hidden" : "visible" }} alt="play"
+                        src={playIcon} onClick={toggleConnection} />
+                    <div className="connectionText">
+                        {getConnectionTitle()}
+                        <div className={"indicatorContainer " + getConnectionStatusClass(true)}>
+                            <div className={"indicator " + getConnectionStatusClass(false)} />
+                        </div>
+                    </div>
+                </div>
+                <div style={{ display: 'flex' }}>
+                    {window["isOasEnabled"] && <Button
+                        type="submit"
+                        variant="contained"
+                        className={commonClasses.button}
+                        style={{ marginRight: 25 }}
+                        onClick={handleOpenModal}
+                    >
             Show OAS
-          </Button>}
-          {window["isServiceMapEnabled"] && <Button
-            variant="contained"
-            className={commonClasses.button}
-            onClick={openServiceMapModalDebounce}
-          >
+                    </Button>}
+                    {window["isServiceMapEnabled"] && <Button
+                        variant="contained"
+                        className={commonClasses.button}
+                        onClick={openServiceMapModalDebounce}
+                    >
             Service Map
-          </Button>}
+                    </Button>}
+                </div>
+            </div>
+            {window["isOasEnabled"] && <OasModal
+                openModal={openOasModal}
+                handleCloseModal={handleCloseModal}
+            />}
+            {<div className="TrafficPage-Container">
+                <div className="TrafficPage-ListContainer">
+                    <Filters
+                        backgroundColor={queryBackgroundColor}
+                        ws={ws.current}
+                        openWebSocket={openWebSocket}
+                    />
+                    <div className={styles.container}>
+                        <EntriesList
+                            listEntryREF={listEntry}
+                            onSnapBrokenEvent={onSnapBrokenEvent}
+                            isSnappedToBottom={isSnappedToBottom}
+                            setIsSnappedToBottom={setIsSnappedToBottom}
+                            queriedCurrent={queriedCurrent}
+                            setQueriedCurrent={setQueriedCurrent}
+                            queriedTotal={queriedTotal}
+                            setQueriedTotal={setQueriedTotal}
+                            startTime={startTime}
+                            noMoreDataTop={noMoreDataTop}
+                            setNoMoreDataTop={setNoMoreDataTop}
+                            leftOffTop={leftOffTop}
+                            setLeftOffTop={setLeftOffTop}
+                            ws={ws.current}
+                            openWebSocket={openWebSocket}
+                            leftOffBottom={leftOffBottom}
+                            truncatedTimestamp={truncatedTimestamp}
+                            setTruncatedTimestamp={setTruncatedTimestamp}
+                            scrollableRef={scrollableRef}
+                        />
+                    </div>
+                </div>
+                <div className={classes.details} id="rightSideContainer">
+                    {focusedEntryId && <EntryDetailed />}
+                </div>
+            </div>}
+            {tappingStatus && !openOasModal && <StatusBar />}
+            <TLSWarning showTLSWarning={showTLSWarning}
+                setShowTLSWarning={setShowTLSWarning}
+                addressesWithTLS={addressesWithTLS}
+                setAddressesWithTLS={setAddressesWithTLS}
+                userDismissedTLSWarning={userDismissedTLSWarning}
+                setUserDismissedTLSWarning={setUserDismissedTLSWarning} />
         </div>
-      </div>
-      {window["isOasEnabled"] && <OasModal
-        openModal={openOasModal}
-        handleCloseModal={handleCloseModal}
-      />}
-      {<div className="TrafficPage-Container">
-        <div className="TrafficPage-ListContainer">
-          <Filters
-            backgroundColor={queryBackgroundColor}
-            ws={ws.current}
-            openWebSocket={openWebSocket}
-          />
-          <div className={styles.container}>
-            <EntriesList
-              listEntryREF={listEntry}
-              onSnapBrokenEvent={onSnapBrokenEvent}
-              isSnappedToBottom={isSnappedToBottom}
-              setIsSnappedToBottom={setIsSnappedToBottom}
-              queriedCurrent={queriedCurrent}
-              setQueriedCurrent={setQueriedCurrent}
-              queriedTotal={queriedTotal}
-              setQueriedTotal={setQueriedTotal}
-              startTime={startTime}
-              noMoreDataTop={noMoreDataTop}
-              setNoMoreDataTop={setNoMoreDataTop}
-              leftOffTop={leftOffTop}
-              setLeftOffTop={setLeftOffTop}
-              ws={ws.current}
-              openWebSocket={openWebSocket}
-              leftOffBottom={leftOffBottom}
-              truncatedTimestamp={truncatedTimestamp}
-              setTruncatedTimestamp={setTruncatedTimestamp}
-              scrollableRef={scrollableRef}
-            />
-          </div>
-        </div>
-        <div className={classes.details} id="rightSideContainer">
-          {focusedEntryId && <EntryDetailed />}
-        </div>
-      </div>}
-      {tappingStatus && !openOasModal && <StatusBar />}
-       <TLSWarning showTLSWarning={showTLSWarning}
-                   setShowTLSWarning={setShowTLSWarning}
-                   addressesWithTLS={addressesWithTLS}
-                   setAddressesWithTLS={setAddressesWithTLS}
-                   userDismissedTLSWarning={userDismissedTLSWarning}
-                   setUserDismissedTLSWarning={setUserDismissedTLSWarning} />
-    </div>
-  );
+    );
 };

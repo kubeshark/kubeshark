@@ -47,17 +47,17 @@ const AppSwitchRoutes = () => {
 
     useEffect(() => {
         switch (entPage) {
-            case Page.Traffic:
-                navigate("/");
-                break;
-            case Page.Setup:
-                navigate(RouterRoutes.SETUP);
-                break;
-            case Page.Login:
-                navigate(RouterRoutes.LOGIN);
-                break;
-            default:
-                navigate(RouterRoutes.LOGIN);
+        case Page.Traffic:
+            navigate("/");
+            break;
+        case Page.Setup:
+            navigate(RouterRoutes.SETUP);
+            break;
+        case Page.Login:
+            navigate(RouterRoutes.LOGIN);
+            break;
+        default:
+            navigate(RouterRoutes.LOGIN);
         }
         // eslint-disable-next-line
     },[entPage])

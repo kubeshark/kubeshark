@@ -7,13 +7,13 @@ import "./AuthBasePage.sass";
 
 export const AuthPageBase: React.FC = ({children}) => {
     return <div className="authContainer" style={{background: `url(${background})`, backgroundSize: "cover"}}>
-            <div className="authHeader">
-                <img alt="logo" src={logo}/>
-            </div>
-            {children}
-            <div className="authFooter">
-                <img alt="logo" src={poweredBy}/>
-            </div>
+        <div className="authHeader">
+            <img alt="logo" src={logo}/>
+        </div>
+        {children}
+        <div className="authFooter">
+            <img alt="logo" src={poweredBy}/>
+        </div>
     </div>;
 };
 
