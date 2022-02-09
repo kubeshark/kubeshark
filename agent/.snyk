@@ -4,6 +4,6 @@ ignore:
   SNYK-GOLANG-GITHUBCOMPKGSFTP-569475:
     - '*':
       reason: None Given
-  'SNYK:LIC:GOLANG:GITHUB.COM:HASHICORP:GO-RETRYABLEHTTP:MPL-2.0':
+  SNYK:LIC:GOLANG:GITHUB.COM:HASHICORP:GO-RETRYABLEHTTP:MPL-2.0:
     - '*':
-      reason: None Given 
+      reason: None Given
