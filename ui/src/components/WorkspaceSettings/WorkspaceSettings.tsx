@@ -6,6 +6,7 @@ import AddWorkspaceModal, { WorkspaceData } from "../Modals/AddWorkspaceModal/Ad
 import { toast } from "react-toastify";
 import ConfirmationModal from "../UI/Modals/ConfirmationModal";
 import spinner from "../assets/spinner.svg";
+import LoadingOverlay from "../LoadingOverlay";
 
 
 const api = Api.getInstance();
@@ -20,6 +21,7 @@ export const WorkspaceSettings : React.FC = () => {
     const [isEditMode,setIsEditMode] = useState(false);
     const [isOpenDeleteModal, setIsOpenDeleteModal] = useState(false);  
     const [isLoading, setIsLoading] = useState(false);  
+    const [isDeleteLoading, setIsDeleteLoading] = useState(false);
 
     const buttonConfig = {onClick: () => {setIsOpen(true); setIsEditMode(false);setWorkspaceData({} as WorkspaceData)}, text:"Add Workspace"}
 
@@ -56,6 +58,7 @@ export const WorkspaceSettings : React.FC = () => {
     
     const onDeleteConfirmation = async() => {
             try{
+                setIsDeleteLoading(true);
                 const workspaceLeft = workspacesRows.filter(ws => ws.id !== workspaceData.id);
                 setWorkspacesRows(workspaceLeft);
                 await api.deleteWorkspace(workspaceData.id);
@@ -65,6 +68,9 @@ export const WorkspaceSettings : React.FC = () => {
             } catch(e) {
                 console.error(e);
                 toast.error("Workspace hasn't deleted");
+            }
+            finally{
+                setIsDeleteLoading(false);
             }
     }
 
@@ -85,6 +91,7 @@ export const WorkspaceSettings : React.FC = () => {
         <ConfirmationModal isOpen={isOpenDeleteModal} onClose={() => setIsOpenDeleteModal(false)} 
                            onConfirm={onDeleteConfirmation} confirmButtonText="Delete Workspace" title="Delete Workspace"
                            confirmButtonColor="#DB2156" className={"delete-comfirmation-modal"}>
+        {isDeleteLoading && <LoadingOverlay/>}
             <p>Are you sure you want to delete this workspace?</p>
         </ConfirmationModal>
     </>);

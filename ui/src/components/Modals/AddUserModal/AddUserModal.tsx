@@ -60,13 +60,13 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
 },[])
 
   useEffect(()=> {
-    if (isEditMode && userData?.inviteToken){
-      setInvite({...invite,link : mapTokenToLink(userData?.inviteToken), isSuceeded : true,sent:true})
+    if (isEditMode){
+      userData?.inviteToken && setInvite({...invite,link : mapTokenToLink(userData?.inviteToken), isSuceeded : true,sent:true})
       userData.workspaceId = userData?.workspace?.id
     }
-    
     setEditMode(isEditMode)
     setUserData({...userData} as UserData)
+   
   // eslint-disable-next-line react-hooks/exhaustive-deps
   },[isEditMode, userData])
 
@@ -81,6 +81,7 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
   const updateUser = async() =>{
       try {
         await api.updateUser(userDataModel)
+        onUserChange(userDataModel)   
         toast.success("User has been modified")  
       } catch (error) {
         toast.error("Error accured modifing user")  
@@ -179,6 +180,7 @@ export const AddUserModal: FC<AddUserModalProps> = ({isOpen, onCloseModal, userD
           }
       </div>
    </>;
+
 
   return (<>
     <ConfirmationModal isOpen={isOpen} onClose={onClose} onConfirm={onClose} 
