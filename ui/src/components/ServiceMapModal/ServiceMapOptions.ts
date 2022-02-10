@@ -12,35 +12,35 @@ const selectedNodeBorderColor = "#205CF5"
 const selectedNodeLabelColor = "#205CF5"
 const selectedEdgeLabelColor = "#205CF5"
 
-function customScaling(min, max, total, value) {
+const customScaling = (min, max, total, value) => {
     if (max === min) {
         return 0.5;
     }
     else {
-        var scale = 1 / (max - min);
+        const scale = 1 / (max - min);
         return Math.max(0, (value - min) * scale);
     }
 }
 
-function nodeSelected(values, id, selected, hovering) {
+const nodeSelected = (values, id, selected, hovering) => {
     values.color = selectedNodeColor;
     values.borderColor = selectedNodeBorderColor;
     values.borderWidth = 4;
 }
 
-function nodeLabelSelected(values, id, selected, hovering) {
+const nodeLabelSelected = (values, id, selected, hovering) => {
     values.size = values.size + 1;
     values.color = selectedNodeLabelColor;
     values.strokeColor = selectedNodeLabelColor;
     values.strokeWidth = 0.2
 }
 
-function edgeSelected(values, id, selected, hovering) {
+const edgeSelected = (values, id, selected, hovering) => {
     values.opacity = 0.4;
     values.width = values.width + 1;
 }
 
-function edgeLabelSelected(values, id, selected, hovering) {
+const edgeLabelSelected = (values, id, selected, hovering) => {
     values.size = values.size + 1;
     values.color = selectedEdgeLabelColor;
     values.strokeColor = selectedEdgeLabelColor;
