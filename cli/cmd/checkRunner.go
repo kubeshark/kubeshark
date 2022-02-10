@@ -253,7 +253,6 @@ func checkTapResourcesExist(ctx context.Context, kubernetesProvider *kubernetes.
 			if !kubernetes.IsPodRunning(&pod) {
 				notRunningTappers += 1
 			}
-
 		}
 		if tappers != notRunningTappers {
 			logger.Log.Errorf("%v '%v' %v/%v pods are not running", fmt.Sprintf(uiUtils.Red, "✗"), kubernetes.TapperPodName, notRunningTappers, tappers)
