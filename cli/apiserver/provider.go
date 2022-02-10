@@ -162,7 +162,7 @@ func (provider *Provider) do(req *http.Request) (*http.Response, error) {
 func (provider *Provider) checkError(response *http.Response, errInOperation error) (*http.Response, error) {
 	if (errInOperation != nil) {
 		return response, errInOperation
-	} else if response.StatusCode != 200 {
+	} else if response.StatusCode != http.StatusOK {
 		body, err := ioutil.ReadAll(response.Body)
 		response.Body = io.NopCloser(bytes.NewBuffer(body)) // rewind
 		if err != nil {
