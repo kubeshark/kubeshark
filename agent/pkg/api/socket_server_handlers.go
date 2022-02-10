@@ -34,9 +34,12 @@ func (h *RoutesEventHandlers) WebSocketConnect(socketId int, isTapper bool) {
 		tappers.Connected()
 	} else {
 		logger.Log.Infof("Websocket event - Browser socket connected, socket ID: %d", socketId)
+
 		socketListLock.Lock()
 		browserClientSocketUUIDs = append(browserClientSocketUUIDs, socketId)
 		socketListLock.Unlock()
+
+		BroadcastTappedPodsStatus()
 	}
 }
 
