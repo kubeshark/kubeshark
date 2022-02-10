@@ -58,10 +58,8 @@ func (provider *Provider) TestConnection() error {
 
 func (provider *Provider) isReachable() (bool, error) {
 	echoUrl := fmt.Sprintf("%s/echo", provider.url)
-	if response, err := provider.get(echoUrl); err != nil {
+	if _, err := provider.get(echoUrl); err != nil {
 		return false, err
-	} else if response.StatusCode != 200 {
-		return false, fmt.Errorf("invalid status code %v", response.StatusCode)
 	} else {
 		return true, nil
 	}
@@ -73,10 +71,8 @@ func (provider *Provider) ReportTapperStatus(tapperStatus shared.TapperStatus) e
 	if jsonValue, err := json.Marshal(tapperStatus); err != nil {
 		return fmt.Errorf("failed Marshal the tapper status %w", err)
 	} else {
-		if response, err := provider.post(tapperStatusUrl, "application/json", bytes.NewBuffer(jsonValue)); err != nil {
+		if _, err := provider.post(tapperStatusUrl, "application/json", bytes.NewBuffer(jsonValue)); err != nil {
 			return fmt.Errorf("failed sending to API server the tapped pods %w", err)
-		} else if response.StatusCode != 200 {
-			return fmt.Errorf("failed sending to API server the tapper status, response status code %v", response.StatusCode)
 		} else {
 			logger.Log.Debugf("Reported to server API about tapper status: %v", tapperStatus)
 			return nil
@@ -92,10 +88,8 @@ func (provider *Provider) ReportTappedPods(pods []core.Pod) error {
 	if jsonValue, err := json.Marshal(podInfos); err != nil {
 		return fmt.Errorf("failed Marshal the tapped pods %w", err)
 	} else {
-		if response, err := provider.post(tappedPodsUrl, "application/json", bytes.NewBuffer(jsonValue)); err != nil {
+		if _, err := provider.post(tappedPodsUrl, "application/json", bytes.NewBuffer(jsonValue)); err != nil {
 			return fmt.Errorf("failed sending to API server the tapped pods %w", err)
-		} else if response.StatusCode != 200 {
-			return fmt.Errorf("failed sending to API server the tapped pods, response status code %v", response.StatusCode)
 		} else {
 			logger.Log.Debugf("Reported to server API about %d taped pods successfully", len(podInfos))
 			return nil
@@ -109,8 +103,6 @@ func (provider *Provider) GetGeneralStats() (map[string]interface{}, error) {
 	response, requestErr := provider.get(generalStatsUrl)
 	if requestErr != nil {
 		return nil, fmt.Errorf("failed to get general stats for telemetry, err: %w", requestErr)
-	} else if response.StatusCode != 200 {
-		return nil, fmt.Errorf("failed to get general stats for telemetry, status code: %v", response.StatusCode)
 	}
 
 	defer response.Body.Close()
