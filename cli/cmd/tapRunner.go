@@ -45,7 +45,7 @@ var apiProvider *apiserver.Provider
 func RunMizuTap() {
 	state.startTime = time.Now()
 
-	apiProvider = apiserver.NewProvider(GetApiServerUrl(), apiserver.DefaultRetries, apiserver.DefaultTimeout)
+	apiProvider = apiserver.NewProvider(GetApiServerUrl(config.Config.Tap.GuiPort), apiserver.DefaultRetries, apiserver.DefaultTimeout)
 
 	var err error
 	var serializedValidationRules string
@@ -421,7 +421,7 @@ func watchApiServerEvents(ctx context.Context, kubernetesProvider *kubernetes.Pr
 }
 
 func postApiServerStarted(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
-	startProxyReportErrorIfAny(kubernetesProvider, ctx, cancel)
+	startProxyReportErrorIfAny(kubernetesProvider, ctx, cancel, config.Config.Tap.GuiPort)
 
 	options, _ := getMizuApiFilteringOptions()
 	if err := startTapperSyncer(ctx, cancel, kubernetesProvider, state.targetNamespaces, *options, state.startTime); err != nil {
@@ -429,7 +429,7 @@ func postApiServerStarted(ctx context.Context, kubernetesProvider *kubernetes.Pr
 		cancel()
 	}
 
-	url := GetApiServerUrl()
+	url := GetApiServerUrl(config.Config.Tap.GuiPort)
 	logger.Log.Infof("Mizu is available at %s", url)
 	if !config.Config.HeadlessMode {
 		uiUtils.OpenBrowser(url)
