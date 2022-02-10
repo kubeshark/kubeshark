@@ -162,7 +162,7 @@ func (provider *Provider) checkError(response *http.Response, errInOperation err
 			return response, err
 		}
 
-		return response, fmt.Errorf("got response with status code %d %s", response.StatusCode, string(body))
+		return response, fmt.Errorf("got response with status code: %d, body: %s", response.StatusCode, string(body))
 	}
 
 	return response, nil
