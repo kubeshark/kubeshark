@@ -11,7 +11,6 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"sort"
 	"testing"
 	"time"
 
@@ -154,14 +153,6 @@ func TestDissect(t *testing.T) {
 		time.Sleep(10 * time.Millisecond)
 
 		stop <- true
-
-		sort.Slice(items, func(i, j int) bool {
-			iMarshaled, err := json.Marshal(items[i])
-			assert.Nil(t, err)
-			jMarshaled, err := json.Marshal(items[j])
-			assert.Nil(t, err)
-			return len(iMarshaled) < len(jMarshaled)
-		})
 
 		marshaled, err := json.Marshal(items)
 		assert.Nil(t, err)
