@@ -80,10 +80,10 @@ clean-agent: ## Clean agent.
 clean-cli:  ## Clean CLI.
 	@(cd cli; make clean ; echo "CLI cleanup done" )
 
-clean-docker:
+clean-docker:  ## Run clen docker
 	@(echo "DOCKER cleanup - NOT IMPLEMENTED YET " )
 
-test-lint:
+test-lint:  ## Run lint on all modules
 	cd agent && golangci-lint run
 	cd shared && golangci-lint run
 	cd tap && golangci-lint run
@@ -92,14 +92,17 @@ test-lint:
 	cd tap/api && golangci-lint run
 	cd tap/extensions/ && for D in */; do cd $$D && golangci-lint run && cd ..; done
 
-test-cli:
+test-cli:  ## Run cli tests
 	@echo "running cli tests"; cd cli && $(MAKE) test
 
-test-agent:
+test-agent:  ## Run agent tests
 	@echo "running agent tests"; cd agent && $(MAKE) test
 
-test-shared:
+test-shared:  ## Run shared tests
 	@echo "running shared tests"; cd shared && $(MAKE) test
 
-acceptance-test:
+test-extensions:  ## Run extensions tests
+	@echo "running http tests"; cd tap/extensions/http && $(MAKE) test
+
+acceptance-test:  ## Run acceptance tests
 	@echo "running acceptance tests"; cd acceptanceTests && $(MAKE) test
