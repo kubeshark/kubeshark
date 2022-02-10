@@ -5,7 +5,6 @@ import (
 	"time"
 )
 
-var reqResMatcher = CreateResponseRequestMatcher() // global
 const maxTry int = 3000
 
 type RequestResponsePair struct {
@@ -13,12 +12,12 @@ type RequestResponsePair struct {
 	Response Response
 }
 
-// Key is {client_addr}:{client_port}->{dest_addr}:{dest_port}::{correlation_id}
+// Key is {client_addr}:{client_port}_{dest_addr}:{dest_port}_{correlation_id}
 type requestResponseMatcher struct {
 	openMessagesMap *sync.Map
 }
 
-func CreateResponseRequestMatcher() requestResponseMatcher {
+func createResponseRequestMatcher() requestResponseMatcher {
 	newMatcher := &requestResponseMatcher{openMessagesMap: &sync.Map{}}
 	return *newMatcher
 }

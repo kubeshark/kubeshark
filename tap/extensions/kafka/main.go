@@ -33,27 +33,27 @@ type dissecting string
 
 func (d dissecting) Register(extension *api.Extension) {
 	extension.Protocol = &_protocol
-	extension.MatcherMap = reqResMatcher.openMessagesMap
 }
 
 func (d dissecting) Ping() {
 	log.Printf("pong %s", _protocol.Name)
 }
 
-func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, superIdentifier *api.SuperIdentifier, emitter api.Emitter, options *api.TrafficFilteringOptions) error {
+func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, superIdentifier *api.SuperIdentifier, emitter api.Emitter, options *api.TrafficFilteringOptions, _reqResMatcher interface{}) error {
+	reqResMatcher := _reqResMatcher.(requestResponseMatcher)
 	for {
 		if superIdentifier.Protocol != nil && superIdentifier.Protocol != &_protocol {
 			return errors.New("Identified by another protocol")
 		}
 
 		if isClient {
-			_, _, err := ReadRequest(b, tcpID, counterPair, superTimer)
+			_, _, err := ReadRequest(b, tcpID, counterPair, superTimer, reqResMatcher)
 			if err != nil {
 				return err
 			}
 			superIdentifier.Protocol = &_protocol
 		} else {
-			err := ReadResponse(b, tcpID, counterPair, superTimer, emitter)
+			err := ReadResponse(b, tcpID, counterPair, superTimer, emitter, reqResMatcher)
 			if err != nil {
 				return err
 			}
@@ -213,6 +213,10 @@ func (d dissecting) Macros() map[string]string {
 	return map[string]string{
 		`kafka`: fmt.Sprintf(`proto.name == "%s"`, _protocol.Name),
 	}
+}
+
+func (d dissecting) NewResponseRequestMatcher() interface{} {
+	return createResponseRequestMatcher()
 }
 
 var Dissector dissecting

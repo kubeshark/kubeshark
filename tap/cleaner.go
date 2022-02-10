@@ -6,7 +6,6 @@ import (
 
 	"github.com/google/gopacket/reassembly"
 	"github.com/up9inc/mizu/shared/logger"
-	"github.com/up9inc/mizu/tap/api"
 )
 
 type CleanerStats struct {
@@ -31,11 +30,6 @@ func (cl *Cleaner) clean() {
 	logger.Log.Debugf("Assembler Stats before cleaning %s", cl.assembler.Dump())
 	flushed, closed := cl.assembler.FlushCloseOlderThan(startCleanTime.Add(-cl.connectionTimeout))
 	cl.assemblerMutex.Unlock()
-
-	for _, extension := range extensions {
-		deleted := deleteOlderThan(extension.MatcherMap, startCleanTime.Add(-cl.connectionTimeout))
-		cl.stats.deleted += deleted
-	}
 
 	cl.statsMutex.Lock()
 	logger.Log.Debugf("Assembler Stats after cleaning %s", cl.assembler.Dump())
@@ -71,26 +65,4 @@ func (cl *Cleaner) dumpStats() CleanerStats {
 	cl.statsMutex.Unlock()
 
 	return stats
-}
-
-func deleteOlderThan(matcherMap *sync.Map, t time.Time) int {
-	numDeleted := 0
-
-	if matcherMap == nil {
-		return numDeleted
-	}
-
-	matcherMap.Range(func(key interface{}, value interface{}) bool {
-		message, _ := value.(*api.GenericMessage)
-		// TODO: Investigate the reason why `request` is `nil` in some rare occasion
-		if message != nil {
-			if message.CaptureTime.Before(t) {
-				matcherMap.Delete(key)
-				numDeleted++
-			}
-		}
-		return true
-	})
-
-	return numDeleted
 }

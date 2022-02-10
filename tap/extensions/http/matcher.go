@@ -8,8 +8,6 @@ import (
 	"github.com/up9inc/mizu/tap/api"
 )
 
-var reqResMatcher = createResponseRequestMatcher() // global
-
 // Key is {client_addr}:{client_port}->{dest_addr}:{dest_port}_{incremental_counter}
 type requestResponseMatcher struct {
 	openMessagesMap *sync.Map

@@ -39,7 +39,6 @@ func TestRegister(t *testing.T) {
 	extension := &api.Extension{}
 	dissector.Register(extension)
 	assert.Equal(t, "http", extension.Protocol.Name)
-	assert.NotNil(t, extension.MatcherMap)
 }
 
 func TestMacros(t *testing.T) {
@@ -123,7 +122,8 @@ func TestDissect(t *testing.T) {
 			SrcPort: "1",
 			DstPort: "2",
 		}
-		err = dissector.Dissect(bufferClient, true, tcpIDClient, counterPair, &api.SuperTimer{}, superIdentifier, emitter, options)
+		reqResMatcher := dissector.NewResponseRequestMatcher()
+		err = dissector.Dissect(bufferClient, true, tcpIDClient, counterPair, &api.SuperTimer{}, superIdentifier, emitter, options, reqResMatcher)
 		if err != nil && err != io.EOF && err != io.ErrUnexpectedEOF {
 			panic(err)
 		}
@@ -141,7 +141,7 @@ func TestDissect(t *testing.T) {
 			SrcPort: "2",
 			DstPort: "1",
 		}
-		err = dissector.Dissect(bufferServer, false, tcpIDServer, counterPair, &api.SuperTimer{}, superIdentifier, emitter, options)
+		err = dissector.Dissect(bufferServer, false, tcpIDServer, counterPair, &api.SuperTimer{}, superIdentifier, emitter, options, reqResMatcher)
 		if err != nil && err != io.EOF && err != io.ErrUnexpectedEOF {
 			panic(err)
 		}

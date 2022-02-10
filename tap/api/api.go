@@ -39,10 +39,9 @@ type TCP struct {
 }
 
 type Extension struct {
-	Protocol   *Protocol
-	Path       string
-	Dissector  Dissector
-	MatcherMap *sync.Map
+	Protocol  *Protocol
+	Path      string
+	Dissector Dissector
 }
 
 type ConnectionInfo struct {
@@ -62,7 +61,6 @@ type TcpID struct {
 }
 
 type CounterPair struct {
-	StreamId int64
 	Request  uint
 	Response uint
 	sync.Mutex
@@ -100,10 +98,11 @@ type SuperIdentifier struct {
 type Dissector interface {
 	Register(*Extension)
 	Ping()
-	Dissect(b *bufio.Reader, isClient bool, tcpID *TcpID, counterPair *CounterPair, superTimer *SuperTimer, superIdentifier *SuperIdentifier, emitter Emitter, options *TrafficFilteringOptions) error
+	Dissect(b *bufio.Reader, isClient bool, tcpID *TcpID, counterPair *CounterPair, superTimer *SuperTimer, superIdentifier *SuperIdentifier, emitter Emitter, options *TrafficFilteringOptions, reqResMatcher interface{}) error
 	Analyze(item *OutputChannelItem, resolvedSource string, resolvedDestination string) *Entry
 	Represent(request map[string]interface{}, response map[string]interface{}) (object []byte, bodySize int64, err error)
 	Macros() map[string]string
+	NewResponseRequestMatcher() interface{}
 }
 
 type Emitting struct {

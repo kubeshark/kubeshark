@@ -7,9 +7,7 @@ import (
 	"github.com/up9inc/mizu/tap/api"
 )
 
-var reqResMatcher = createResponseRequestMatcher() // global
-
-// Key is `{stream_id}_{src_ip}:{dst_ip}_{src_ip}:{src_port}_{incremental_counter}`
+// Key is `{src_ip}:{dst_ip}_{src_ip}:{src_port}_{incremental_counter}`
 type requestResponseMatcher struct {
 	openMessagesMap *sync.Map
 }
