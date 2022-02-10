@@ -237,7 +237,7 @@ func checkTapResourcesExist(ctx context.Context, kubernetesProvider *kubernetes.
 	} else if kubernetes.IsPodRunning(pod) {
 		logger.Log.Infof("%v '%v' pod running", fmt.Sprintf(uiUtils.Green, "√"), kubernetes.ApiServerPodName)
 	} else {
-		logger.Log.Errorf("%v '%v' pod not running", fmt.Sprintf(uiUtils.Red, "✗"))
+		logger.Log.Errorf("%v '%v' pod not running", fmt.Sprintf(uiUtils.Red, "✗"), kubernetes.ApiServerPodName)
 		return false
 	}
 
