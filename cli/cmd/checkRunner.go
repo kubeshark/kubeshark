@@ -101,7 +101,7 @@ func checkKubernetesVersion(kubernetesVersion *semver.SemVersion) bool {
 func checkServerConnection(kubernetesProvider *kubernetes.Provider) bool {
 	logger.Log.Infof("\nmizu-connectivity\n--------------------")
 
-	serverUrl := GetApiServerUrl()
+	serverUrl := GetApiServerUrl(config.Config.Tap.GuiPort)
 
 	apiServerProvider := apiserver.NewProvider(serverUrl, 1, apiserver.DefaultTimeout)
 	if err := apiServerProvider.TestConnection(); err == nil {

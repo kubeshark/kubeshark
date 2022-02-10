@@ -39,7 +39,7 @@ func runMizuView() {
 			return
 		}
 
-		url = GetApiServerUrl()
+		url = GetApiServerUrl(config.Config.View.GuiPort)
 
 		response, err := http.Get(fmt.Sprintf("%s/", url))
 		if err == nil && response.StatusCode == 200 {
@@ -47,7 +47,7 @@ func runMizuView() {
 			return
 		}
 		logger.Log.Infof("Establishing connection to k8s cluster...")
-		startProxyReportErrorIfAny(kubernetesProvider, ctx, cancel)
+		startProxyReportErrorIfAny(kubernetesProvider, ctx, cancel, config.Config.View.GuiPort)
 	}
 
 	apiServerProvider := apiserver.NewProvider(url, apiserver.DefaultRetries, apiserver.DefaultTimeout)
