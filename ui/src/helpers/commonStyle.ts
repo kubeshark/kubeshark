@@ -9,7 +9,7 @@ export const useCommonStyles = makeStyles(() => ({
         fontSize: 12,
         padding: "8px 12px",
         borderRadius: "6px ! important",
-
+        
         "&:hover": {
             backgroundColor: "#205cf5",
         },
@@ -27,6 +27,11 @@ export const useCommonStyles = makeStyles(() => ({
             backgroundColor: "transparent",
         },
     },
+
+    imagedButton: {
+        padding: "0px 14px"
+    },
+
     textField: {
         outline: 0,
         background: "white",
