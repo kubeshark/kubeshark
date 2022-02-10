@@ -44,3 +44,7 @@ cypress.env.json
 */cypress/screenshots
 */cypress/videos
 */cypress/support
+
+# Ignore test data in extensions
+tap/extensions/*/bin
+tap/extensions/*/expect
