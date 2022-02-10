@@ -248,17 +248,20 @@ func checkTapResourcesExist(ctx context.Context, kubernetesProvider *kubernetes.
 	} else {
 		tappers := 0
 		notRunningTappers := 0
+
 		for _, pod := range pods {
 			tappers += 1
 			if !kubernetes.IsPodRunning(&pod) {
 				notRunningTappers += 1
 			}
 		}
+
 		if tappers != notRunningTappers {
 			logger.Log.Errorf("%v '%v' %v/%v pods are not running", fmt.Sprintf(uiUtils.Red, "✗"), kubernetes.TapperPodName, notRunningTappers, tappers)
 			return false
 		}
-		logger.Log.Infof("%v %v '%v' pods running", fmt.Sprintf(uiUtils.Green, "√"), tappers, kubernetes.TapperPodName)
+
+		logger.Log.Infof("%v '%v' %v pods running", fmt.Sprintf(uiUtils.Green, "√"), kubernetes.TapperPodName, tappers)
 		return true
 	}
 }
