@@ -17,12 +17,19 @@
     width: auto
     max-height: 32px
     overflow: hidden
+    max-width: clamp(150px,50%,600px)
 
     .podsCount
         display: flex
         justify-content: center
         font-weight: 600
 
+        .pods-count-text
+            width: 100%
+            max-width: 100%
+            white-space: nowrap
+            overflow: hidden
+            text-overflow: ellipsis
         img
             margin-right: 10px
             height: 22px
