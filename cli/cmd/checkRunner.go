@@ -74,9 +74,15 @@ func checkMizuMode(ctx context.Context, kubernetesProvider *kubernetes.Provider)
 	} else if exist {
 		logger.Log.Infof("%v mizu running with install command", fmt.Sprintf(uiUtils.Green, "√"))
 		return true, true
-	} else {
+	} else if exist, err = kubernetesProvider.DoesPodExist(ctx, config.Config.MizuResourcesNamespace, kubernetes.ApiServerPodName); err != nil {
+		logger.Log.Errorf("%v can't check mizu command, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), err)
+		return false, false
+	} else if exist {
 		logger.Log.Infof("%v mizu running with tap command", fmt.Sprintf(uiUtils.Green, "√"))
-		return true, false
+		return true, true
+	} else {
+		logger.Log.Infof("%v mizu is not running", fmt.Sprintf(uiUtils.Red, "✗"))
+		return false, false
 	}
 }
 

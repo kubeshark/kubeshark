@@ -362,7 +362,7 @@ func representBasicDeliver(event map[string]interface{}) []interface{} {
 		for name, value := range properties["headers"].(map[string]interface{}) {
 			headers = append(headers, api.TableData{
 				Name:     name,
-				Value:    value.(string),
+				Value:    value,
 				Selector: fmt.Sprintf(`request.properties.headers["%s"]`, name),
 			})
 		}

@@ -13,7 +13,8 @@
     "tests/Regex.js",
     "tests/RegexMasking.js",
     "tests/IgnoredUserAgents.js",
-    "tests/UiTest.js"
+    "tests/UiTest.js",
+    "tests/Redis.js"
   ],
 
   "env": {
@@ -21,6 +22,9 @@
     "redactHeaderContent": "User-Header[REDACTED]",
     "redactBodyContent": "{ \"User\": \"[REDACTED]\" }",
     "regexMaskingBodyContent": "[REDACTED]",
-    "minimumEntries": 25
+    "minimumEntries": 25,
+    "greenFilterColor": "rgb(210, 250, 210)",
+    "redFilterColor": "rgb(250, 214, 220)",
+    "bodyJsonClass": ".hljs"
   }
 }

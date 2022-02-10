@@ -229,10 +229,10 @@ jobs:
     runs-on: ubuntu-latest
     needs: [docker-manifest, gcp-registry]
     steps:
-      - name: Set up Go 1.16
+      - name: Set up Go 1.17
         uses: actions/setup-go@v2
         with:
-          go-version: '1.16'
+          go-version: '1.17'
 
       - name: Check out the repo
         uses: actions/checkout@v2
