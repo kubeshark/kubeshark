@@ -5,13 +5,24 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
+	"strings"
 	"syscall"
 	"time"
 
+	"github.com/gin-contrib/static"
+	"github.com/gin-gonic/gin"
+	"github.com/up9inc/mizu/agent/pkg/elastic"
+	"github.com/up9inc/mizu/agent/pkg/middlewares"
 	"github.com/up9inc/mizu/agent/pkg/models"
+	"github.com/up9inc/mizu/agent/pkg/oas"
+	"github.com/up9inc/mizu/agent/pkg/routes"
+	"github.com/up9inc/mizu/agent/pkg/servicemap"
+	"github.com/up9inc/mizu/agent/pkg/up9"
 	"github.com/up9inc/mizu/agent/pkg/utils"
 
 	"github.com/up9inc/mizu/agent/pkg/api"
@@ -35,6 +46,7 @@ var apiServerAddress = flag.String("api-server-address", "", "Address of mizu AP
 var namespace = flag.String("namespace", "", "Resolve IPs if they belong to resources in this namespace (default is all)")
 var harsReaderMode = flag.Bool("hars-read", false, "Run in hars-read mode")
 var harsDir = flag.String("hars-dir", "", "Directory to read hars from")
+var startTime int64
 
 const (
 	socketConnectionRetries    = 30
@@ -60,7 +72,7 @@ func main() {
 	} else if *tapperMode {
 		runInTapperMode()
 	} else if *apiServerMode {
-		utils.StartServer(app.RunInApiServerMode(*namespace))
+		utils.StartServer(runInApiServerMode(*namespace))
 	} else if *harsReaderMode {
 		runInHarReaderMode()
 	}
@@ -70,6 +82,77 @@ func main() {
 	<-signalChan
 
 	logger.Log.Info("Exiting")
+}
+
+func hostApi(socketHarOutputChannel chan<- *tapApi.OutputChannelItem) *gin.Engine {
+	app := gin.Default()
+
+	app.GET("/echo", func(c *gin.Context) {
+		c.String(http.StatusOK, "Here is Mizu agent")
+	})
+
+	eventHandlers := api.RoutesEventHandlers{
+		SocketOutChannel: socketHarOutputChannel,
+	}
+
+	app.Use(disableRootStaticCache())
+
+	var staticFolder string
+	if config.Config.StandaloneMode {
+		staticFolder = "./site-standalone"
+	} else {
+		staticFolder = "./site"
+	}
+
+	indexStaticFile := staticFolder + "/index.html"
+	if err := setUIFlags(indexStaticFile); err != nil {
+		logger.Log.Errorf("Error setting ui flags, err: %v", err)
+	}
+
+	app.Use(static.ServeRoot("/", staticFolder))
+	app.NoRoute(func(c *gin.Context) {
+		c.File(indexStaticFile)
+	})
+
+	app.Use(middlewares.CORSMiddleware()) // This has to be called after the static middleware, does not work if its called before
+
+	api.WebSocketRoutes(app, &eventHandlers, startTime)
+
+	if config.Config.StandaloneMode {
+		routes.ConfigRoutes(app)
+		routes.UserRoutes(app)
+		routes.InstallRoutes(app)
+	}
+	if config.Config.OAS {
+		routes.OASRoutes(app)
+	}
+	if config.Config.ServiceMap {
+		routes.ServiceMapRoutes(app)
+	}
+
+	routes.QueryRoutes(app)
+	routes.EntriesRoutes(app)
+	routes.MetadataRoutes(app)
+	routes.StatusRoutes(app)
+
+	return app
+}
+
+func runInApiServerMode(namespace string) *gin.Engine {
+	app.ConfigureBasenineServer(shared.BasenineHost, shared.BaseninePort)
+	startTime = time.Now().UnixNano() / int64(time.Millisecond)
+	api.StartResolving(namespace)
+
+	enableExpFeatureIfNeeded()
+
+	syncEntriesConfig := getSyncEntriesConfig()
+	if syncEntriesConfig != nil {
+		if err := up9.SyncEntries(syncEntriesConfig); err != nil {
+			logger.Log.Error("Error syncing entries, err: %v", err)
+		}
+	}
+
+	return hostApi(app.GetEntryInputChannel())
 }
 
 func runInTapperMode() {
@@ -113,7 +196,7 @@ func runInStandaloneMode() {
 	go app.FilterItems(outputItemsChannel, filteredOutputItemsChannel)
 	go api.StartReadingEntries(filteredOutputItemsChannel, nil, app.ExtensionsMap)
 
-	ginApp := app.HostApi(nil)
+	ginApp := hostApi(nil)
 	utils.StartServer(ginApp)
 }
 
@@ -123,8 +206,61 @@ func runInHarReaderMode() {
 
 	go app.FilterItems(outputItemsChannel, filteredHarChannel)
 	go api.StartReadingEntries(filteredHarChannel, harsDir, app.ExtensionsMap)
-	ginApp := app.HostApi(nil)
+	ginApp := hostApi(nil)
 	utils.StartServer(ginApp)
+}
+
+func enableExpFeatureIfNeeded() {
+	if config.Config.OAS {
+		oas.GetOasGeneratorInstance().Start()
+	}
+	if config.Config.ServiceMap {
+		servicemap.GetInstance().SetConfig(config.Config)
+	}
+	elastic.GetInstance().Configure(config.Config.Elastic)
+}
+
+func getSyncEntriesConfig() *shared.SyncEntriesConfig {
+	syncEntriesConfigJson := os.Getenv(shared.SyncEntriesConfigEnvVar)
+	if syncEntriesConfigJson == "" {
+		return nil
+	}
+
+	var syncEntriesConfig = &shared.SyncEntriesConfig{}
+	err := json.Unmarshal([]byte(syncEntriesConfigJson), syncEntriesConfig)
+	if err != nil {
+		panic(fmt.Sprintf("env var %s's value of %s is invalid! json must match the shared.SyncEntriesConfig struct, err: %v", shared.SyncEntriesConfigEnvVar, syncEntriesConfigJson, err))
+	}
+
+	return syncEntriesConfig
+}
+
+func disableRootStaticCache() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if c.Request.RequestURI == "/" {
+			// Disable cache only for the main static route
+			c.Writer.Header().Set("Cache-Control", "no-store")
+		}
+
+		c.Next()
+	}
+}
+
+func setUIFlags(uiIndexPath string) error {
+	read, err := ioutil.ReadFile(uiIndexPath)
+	if err != nil {
+		return err
+	}
+
+	replacedContent := strings.Replace(string(read), "__IS_OAS_ENABLED__", strconv.FormatBool(config.Config.OAS), 1)
+	replacedContent = strings.Replace(replacedContent, "__IS_SERVICE_MAP_ENABLED__", strconv.FormatBool(config.Config.ServiceMap), 1)
+
+	err = ioutil.WriteFile(uiIndexPath, []byte(replacedContent), 0)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func parseEnvVar(env string) map[string][]v1.Pod {

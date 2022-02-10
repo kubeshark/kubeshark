@@ -7,17 +7,10 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var (
-	ConfigPostTapConfigHandler = controllers.PostTapConfig
-	ConfigGetTapConfigHandler  = controllers.GetTapConfig
-)
-
-func ConfigRoutes(ginApp *gin.Engine) *gin.RouterGroup {
+func ConfigRoutes(ginApp *gin.Engine) {
 	routeGroup := ginApp.Group("/config")
 	routeGroup.Use(middlewares.RequiresAuth())
 
-	routeGroup.POST("/tap", middlewares.RequiresAdmin(), func(c *gin.Context) { ConfigPostTapConfigHandler(c) })
-	routeGroup.GET("/tap", func(c *gin.Context) { ConfigGetTapConfigHandler(c) })
-
-	return routeGroup
+	routeGroup.POST("/tap", middlewares.RequiresAdmin(), controllers.PostTapConfig)
+	routeGroup.GET("/tap", controllers.GetTapConfig)
 }
