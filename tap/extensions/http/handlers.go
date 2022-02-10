@@ -58,7 +58,7 @@ func handleHTTP2Stream(http2Assembler *Http2Assembler, tcpID *api.TcpID, superTi
 	switch messageHTTP1 := messageHTTP1.(type) {
 	case http.Request:
 		ident := fmt.Sprintf(
-			"%s->%s %s->%s %d %s",
+			"%s_%s_%s_%s_%d_%s",
 			tcpID.SrcIP,
 			tcpID.DstIP,
 			tcpID.SrcPort,
@@ -78,7 +78,7 @@ func handleHTTP2Stream(http2Assembler *Http2Assembler, tcpID *api.TcpID, superTi
 		}
 	case http.Response:
 		ident := fmt.Sprintf(
-			"%s->%s %s->%s %d %s",
+			"%s_%s_%s_%s_%d_%s",
 			tcpID.DstIP,
 			tcpID.SrcIP,
 			tcpID.DstPort,
@@ -130,7 +130,7 @@ func handleHTTP1ClientStream(b *bufio.Reader, tcpID *api.TcpID, counterPair *api
 	req.Body = io.NopCloser(bytes.NewBuffer(body)) // rewind
 
 	ident := fmt.Sprintf(
-		"%s:%s_%s:%s_%d_%s",
+		"%s_%s_%s_%s_%d_%s",
 		tcpID.SrcIP,
 		tcpID.DstIP,
 		tcpID.SrcPort,
@@ -173,7 +173,7 @@ func handleHTTP1ServerStream(b *bufio.Reader, tcpID *api.TcpID, counterPair *api
 	res.Body = io.NopCloser(bytes.NewBuffer(body)) // rewind
 
 	ident := fmt.Sprintf(
-		"%s:%s_%s:%s_%d_%s",
+		"%s_%s_%s_%s_%d_%s",
 		tcpID.DstIP,
 		tcpID.SrcIP,
 		tcpID.DstPort,

@@ -145,7 +145,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 			// In case of an HTTP2 upgrade, duplicate the HTTP1 request into HTTP2 with stream ID 1
 			if switchingProtocolsHTTP2 {
 				ident := fmt.Sprintf(
-					"%s->%s %s->%s 1 %s",
+					"%s_%s_%s_%s_1_%s",
 					tcpID.SrcIP,
 					tcpID.DstIP,
 					tcpID.SrcPort,

@@ -13,7 +13,7 @@ func handleClientStream(tcpID *api.TcpID, counterPair *api.CounterPair, superTim
 	counterPair.Unlock()
 
 	ident := fmt.Sprintf(
-		"%s:%s_%s:%s_%d",
+		"%s_%s_%s_%s_%d",
 		tcpID.SrcIP,
 		tcpID.DstIP,
 		tcpID.SrcPort,
@@ -42,7 +42,7 @@ func handleServerStream(tcpID *api.TcpID, counterPair *api.CounterPair, superTim
 	counterPair.Unlock()
 
 	ident := fmt.Sprintf(
-		"%s:%s_%s:%s_%d",
+		"%s_%s_%s_%s_%d",
 		tcpID.DstIP,
 		tcpID.SrcIP,
 		tcpID.DstPort,

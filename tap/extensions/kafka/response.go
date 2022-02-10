@@ -44,7 +44,7 @@ func ReadResponse(r io.Reader, tcpID *api.TcpID, counterPair *api.CounterPair, s
 	}
 
 	key := fmt.Sprintf(
-		"%s:%s_%s:%s_%d",
+		"%s_%s_%s_%s_%d",
 		tcpID.DstIP,
 		tcpID.DstPort,
 		tcpID.SrcIP,
