@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -57,7 +58,7 @@ func (provider *Provider) TestConnection() error {
 
 func (provider *Provider) isReachable() (bool, error) {
 	echoUrl := fmt.Sprintf("%s/echo", provider.url)
-	if response, err := provider.client.Get(echoUrl); err != nil {
+	if response, err := provider.get(echoUrl); err != nil {
 		return false, err
 	} else if response.StatusCode != 200 {
 		return false, fmt.Errorf("invalid status code %v", response.StatusCode)
@@ -72,7 +73,7 @@ func (provider *Provider) ReportTapperStatus(tapperStatus shared.TapperStatus) e
 	if jsonValue, err := json.Marshal(tapperStatus); err != nil {
 		return fmt.Errorf("failed Marshal the tapper status %w", err)
 	} else {
-		if response, err := provider.client.Post(tapperStatusUrl, "application/json", bytes.NewBuffer(jsonValue)); err != nil {
+		if response, err := provider.post(tapperStatusUrl, "application/json", bytes.NewBuffer(jsonValue)); err != nil {
 			return fmt.Errorf("failed sending to API server the tapped pods %w", err)
 		} else if response.StatusCode != 200 {
 			return fmt.Errorf("failed sending to API server the tapper status, response status code %v", response.StatusCode)
@@ -91,7 +92,7 @@ func (provider *Provider) ReportTappedPods(pods []core.Pod) error {
 	if jsonValue, err := json.Marshal(podInfos); err != nil {
 		return fmt.Errorf("failed Marshal the tapped pods %w", err)
 	} else {
-		if response, err := provider.client.Post(tappedPodsUrl, "application/json", bytes.NewBuffer(jsonValue)); err != nil {
+		if response, err := provider.post(tappedPodsUrl, "application/json", bytes.NewBuffer(jsonValue)); err != nil {
 			return fmt.Errorf("failed sending to API server the tapped pods %w", err)
 		} else if response.StatusCode != 200 {
 			return fmt.Errorf("failed sending to API server the tapped pods, response status code %v", response.StatusCode)
@@ -105,7 +106,7 @@ func (provider *Provider) ReportTappedPods(pods []core.Pod) error {
 func (provider *Provider) GetGeneralStats() (map[string]interface{}, error) {
 	generalStatsUrl := fmt.Sprintf("%s/status/general", provider.url)
 
-	response, requestErr := provider.client.Get(generalStatsUrl)
+	response, requestErr := provider.get(generalStatsUrl)
 	if requestErr != nil {
 		return nil, fmt.Errorf("failed to get general stats for telemetry, err: %w", requestErr)
 	} else if response.StatusCode != 200 {
@@ -132,7 +133,7 @@ func (provider *Provider) GetVersion() (string, error) {
 		Method: http.MethodGet,
 		URL:    versionUrl,
 	}
-	statusResp, err := provider.client.Do(req)
+	statusResp, err := provider.do(req)
 	if err != nil {
 		return "", err
 	}
@@ -144,4 +145,32 @@ func (provider *Provider) GetVersion() (string, error) {
 	}
 
 	return versionResponse.Ver, nil
+}
+
+func (provider *Provider) get(url string) (*http.Response, error) {
+	return provider.checkError(provider.client.Get(url))
+}
+
+func (provider *Provider) post(url, contentType string, body io.Reader) (*http.Response, error) {
+	return provider.checkError(provider.client.Post(url, contentType, body))
+}
+
+func (provider *Provider) do(req *http.Request) (*http.Response, error) {
+	return provider.checkError(provider.client.Do(req))
+}
+
+func (provider *Provider) checkError(response *http.Response, errInOperation error) (*http.Response, error) {
+	if (errInOperation != nil) {
+		return response, errInOperation
+	} else if response.StatusCode != 200 {
+		body, err := ioutil.ReadAll(response.Body)
+		response.Body = io.NopCloser(bytes.NewBuffer(body)) // rewind
+		if err != nil {
+			return response, err
+		}
+
+		return response, fmt.Errorf("got response with status code %d %s", response.StatusCode, string(body))
+	}
+
+	return response, nil
 }
