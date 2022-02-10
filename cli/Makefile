@@ -14,7 +14,7 @@ help: ## This help.
 install:
 	go install mizu.go
 
-build-debug:
+build-debug:  ## Build mizu CLI for debug
 	export GCLFAGS='-gcflags="all=-N -l"'
 	${MAKE} build
 
