@@ -202,9 +202,9 @@ func TestAmqp(t *testing.T) {
 		}
 
 		select {
-		case <- msgChan:
+		case <-msgChan:
 			break
-		case <- time.After(3 * time.Second):
+		case <-time.After(3 * time.Second):
 			t.Errorf("failed to consume a message on time")
 			return
 		}
@@ -224,5 +224,5 @@ func TestAmqp(t *testing.T) {
 		ch.Close()
 	}
 
-	time.Sleep(10 * time.Minute)
+	runCypressTests(t, "npx cypress run --spec  \"cypress/integration/tests/Rabbit.js\"")
 }
