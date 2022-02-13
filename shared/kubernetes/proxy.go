@@ -129,8 +129,12 @@ func getHttpDialer(kubernetesProvider *Provider, namespace string, podName strin
 	}
 
 	path := fmt.Sprintf("/api/v1/namespaces/%s/pods/%s/portforward", namespace, podName)
-	hostIP := strings.TrimLeft(kubernetesProvider.clientConfig.Host, "htps:/") // no need specify "t" twice
-	serverURL := url.URL{Scheme: "https", Path: path, Host: hostIP}
+	hostPath := strings.TrimLeft(kubernetesProvider.clientConfig.Host, "htps:/") // no need specify "t" twice
+	hostPath, err = url.PathUnescape(hostPath)
+	if err != nil {
+		return nil, err
+	}
+	serverURL := url.URL{Scheme: "https", Path: path, Host: hostPath}
 
 	return spdy.NewDialer(upgrader, &http.Client{Transport: roundTripper}, http.MethodPost, &serverURL), nil
 }
