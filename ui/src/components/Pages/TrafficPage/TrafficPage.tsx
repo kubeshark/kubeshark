@@ -258,7 +258,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus}) => {
         }
     }
 
-    const handleOpenModal = () => {
+    const handleOpenOasModal = () => {
       ws.current.close();
       setOpenOasModal(true);
     }
@@ -291,7 +291,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus}) => {
             variant="contained"
             className={commonClasses.outlinedButton + " " + commonClasses.imagedButton}
             style={{ marginRight: 25 }}
-            onClick={handleOpenModal}
+            onClick={handleOpenOasModal}
           >
             Show OAS
           </Button>}
