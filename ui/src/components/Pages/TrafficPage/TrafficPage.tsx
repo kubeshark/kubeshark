@@ -76,7 +76,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus}) => {
     const scrollableRef = useRef(null);
 
     const [openOasModal, setOpenOasModal] = useState(false);
-    const handleOpenModal = () => setOpenOasModal(true);
+    
     const handleCloseModal = () => setOpenOasModal(false);
 
     const [showTLSWarning, setShowTLSWarning] = useState(false);
@@ -258,8 +258,14 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus}) => {
         }
     }
 
+    const handleOpenModal = () => {
+      ws.current.close();
+      setOpenOasModal(true);
+    }
+
     const openServiceMapModalDebounce = debounce(() => {
-        setServiceMapModalOpen(true)
+        ws.current.close();
+        setServiceMapModalOpen(true);
     }, 500);
 
   return (
