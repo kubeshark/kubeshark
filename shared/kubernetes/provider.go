@@ -281,7 +281,7 @@ func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, moun
 			VolumeMounts:    volumeMounts,
 			ReadinessProbe: &core.Probe{
 				FailureThreshold: 3,
-				Handler: core.Handler{
+				ProbeHandler: core.ProbeHandler{
 					TCPSocket: &core.TCPSocketAction{
 						Port: intstr.Parse(shared.BaseninePort),
 					},
@@ -314,7 +314,7 @@ func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, moun
 			VolumeMounts:    volumeMounts,
 			ReadinessProbe: &core.Probe{
 				FailureThreshold: 3,
-				Handler: core.Handler{
+				ProbeHandler: core.ProbeHandler{
 					HTTPGet: &core.HTTPGetAction{
 						Path:   "/health/ready",
 						Port:   intstr.FromInt(4433),
@@ -344,7 +344,7 @@ func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, moun
 			VolumeMounts:    volumeMounts,
 			ReadinessProbe: &core.Probe{
 				FailureThreshold: 3,
-				Handler: core.Handler{
+				ProbeHandler: core.ProbeHandler{
 					HTTPGet: &core.HTTPGetAction{
 						Path:   "/health/ready",
 						Port:   intstr.FromInt(4466),
@@ -1026,7 +1026,7 @@ func (provider *Provider) ListAllRunningPodsMatchingRegex(ctx context.Context, r
 
 	matchingPods := make([]core.Pod, 0)
 	for _, pod := range pods {
-		if isPodRunning(&pod) {
+		if IsPodRunning(&pod) {
 			matchingPods = append(matchingPods, pod)
 		}
 	}
@@ -1216,6 +1216,6 @@ func loadKubernetesConfiguration(kubeConfigPath string) clientcmd.ClientConfig {
 	)
 }
 
-func isPodRunning(pod *core.Pod) bool {
+func IsPodRunning(pod *core.Pod) bool {
 	return pod.Status.Phase == core.PodRunning
 }

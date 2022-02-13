@@ -7,15 +7,21 @@ import (
 )
 
 func handleClientStream(tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, emitter api.Emitter, request *RedisPacket) error {
+	counterPair.Lock()
 	counterPair.Request++
+	requestCounter := counterPair.Request
+	counterPair.Unlock()
+
 	ident := fmt.Sprintf(
-		"%s->%s %s->%s %d",
+		"%d_%s:%s_%s:%s_%d",
+		counterPair.StreamId,
 		tcpID.SrcIP,
 		tcpID.DstIP,
 		tcpID.SrcPort,
 		tcpID.DstPort,
-		counterPair.Request,
+		requestCounter,
 	)
+
 	item := reqResMatcher.registerRequest(ident, request, superTimer.CaptureTime)
 	if item != nil {
 		item.ConnectionInfo = &api.ConnectionInfo{
@@ -31,15 +37,21 @@ func handleClientStream(tcpID *api.TcpID, counterPair *api.CounterPair, superTim
 }
 
 func handleServerStream(tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, emitter api.Emitter, response *RedisPacket) error {
+	counterPair.Lock()
 	counterPair.Response++
+	responseCounter := counterPair.Response
+	counterPair.Unlock()
+
 	ident := fmt.Sprintf(
-		"%s->%s %s->%s %d",
+		"%d_%s:%s_%s:%s_%d",
+		counterPair.StreamId,
 		tcpID.DstIP,
 		tcpID.SrcIP,
 		tcpID.DstPort,
 		tcpID.SrcPort,
-		counterPair.Response,
+		responseCounter,
 	)
+
 	item := reqResMatcher.registerResponse(ident, response, superTimer.CaptureTime)
 	if item != nil {
 		item.ConnectionInfo = &api.ConnectionInfo{

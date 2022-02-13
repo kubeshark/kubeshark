@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/up9inc/mizu/agent/pkg/api"
 	"github.com/up9inc/mizu/agent/pkg/config"
 	"github.com/up9inc/mizu/agent/pkg/models"
 	"github.com/up9inc/mizu/agent/pkg/providers"
@@ -36,7 +37,7 @@ func PostTapConfig(c *gin.Context) {
 		tappedPods.Set([]*shared.PodInfo{})
 		tappers.ResetStatus()
 
-		broadcastTappedPodsStatus()
+		api.BroadcastTappedPodsStatus()
 	}
 
 	var tappedNamespaces []string
@@ -136,7 +137,7 @@ func startMizuTapperSyncer(ctx context.Context, provider *kubernetes.Provider, t
 				}
 
 				tappedPods.Set(kubernetes.GetPodInfosForPods(tapperSyncer.CurrentlyTappedPods))
-				broadcastTappedPodsStatus()
+				api.BroadcastTappedPodsStatus()
 			case tapperStatus, ok := <-tapperSyncer.TapperStatusChangedOut:
 				if !ok {
 					logger.Log.Debug("mizuTapperSyncer tapper status changed channel closed, ending listener loop")
@@ -144,7 +145,7 @@ func startMizuTapperSyncer(ctx context.Context, provider *kubernetes.Provider, t
 				}
 
 				tappers.SetStatus(&tapperStatus)
-				broadcastTappedPodsStatus()
+				api.BroadcastTappedPodsStatus()
 			case <-ctx.Done():
 				logger.Log.Debug("mizuTapperSyncer event listener loop exiting due to context done")
 				return

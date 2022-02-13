@@ -49,10 +49,8 @@ func runMizuInstall() {
 		nil, defaultMaxEntriesDBSizeBytes, defaultResources, config.Config.ImagePullPolicy(),
 		config.Config.LogLevel(), false); err != nil {
 		var statusError *k8serrors.StatusError
-		if errors.As(err, &statusError) {
-			if statusError.ErrStatus.Reason == metav1.StatusReasonAlreadyExists {
-				logger.Log.Info("Mizu is already running in this namespace, run `mizu clean` to remove the currently running Mizu instance")
-			}
+		if errors.As(err, &statusError) && (statusError.ErrStatus.Reason == metav1.StatusReasonAlreadyExists) {
+			logger.Log.Info("Mizu is already running in this namespace, run `mizu clean` to remove the currently running Mizu instance")
 		} else {
 			defer resources.CleanUpMizuResources(ctx, cancel, kubernetesProvider, config.Config.IsNsRestrictedMode(), config.Config.MizuResourcesNamespace)
 			logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error creating resources: %v", errormessage.FormatError(err)))
