@@ -4,16 +4,17 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/up9inc/mizu/shared"
-	"k8s.io/apimachinery/pkg/util/httpstream"
-	"k8s.io/client-go/tools/portforward"
-	"k8s.io/client-go/transport/spdy"
 	"net"
 	"net/http"
 	"net/url"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/up9inc/mizu/shared"
+	"k8s.io/apimachinery/pkg/util/httpstream"
+	"k8s.io/client-go/tools/portforward"
+	"k8s.io/client-go/transport/spdy"
 
 	"github.com/up9inc/mizu/shared/logger"
 	"k8s.io/kubectl/pkg/proxy"
@@ -31,7 +32,7 @@ func StartProxy(kubernetesProvider *Provider, proxyHost string, mizuPort uint16,
 		RejectMethods: proxy.MakeRegexpArrayOrDie(proxy.DefaultMethodRejectRE),
 	}
 
-	proxyHandler, err := proxy.NewProxyHandler(k8sProxyApiPrefix, filter, &kubernetesProvider.clientConfig, time.Second*2)
+	proxyHandler, err := proxy.NewProxyHandler(k8sProxyApiPrefix, filter, &kubernetesProvider.clientConfig, time.Second*2, false)
 	if err != nil {
 		return nil, err
 	}

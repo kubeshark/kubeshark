@@ -19,7 +19,7 @@ help: ## This help.
 TS_SUFFIX="$(shell date '+%s')"
 GIT_BRANCH="$(shell git branch | grep \* | cut -d ' ' -f2 | tr '[:upper:]' '[:lower:]' | tr '/' '_')"
 BUCKET_PATH=static.up9.io/mizu/$(GIT_BRANCH)
-export SEM_VER?=0.0.0
+export VER?=0.0
 
 ui: ## Build UI.
 	@(cd ui; npm i ; npm run build; )
@@ -80,14 +80,29 @@ clean-agent: ## Clean agent.
 clean-cli:  ## Clean CLI.
 	@(cd cli; make clean ; echo "CLI cleanup done" )
 
-clean-docker:
+clean-docker:  ## Run clen docker
 	@(echo "DOCKER cleanup - NOT IMPLEMENTED YET " )
 
-test-cli:
+test-lint:  ## Run lint on all modules
+	cd agent && golangci-lint run
+	cd shared && golangci-lint run
+	cd tap && golangci-lint run
+	cd cli && golangci-lint run
+	cd acceptanceTests && golangci-lint run
+	cd tap/api && golangci-lint run
+	cd tap/extensions/ && for D in */; do cd $$D && golangci-lint run && cd ..; done
+
+test-cli:  ## Run cli tests
 	@echo "running cli tests"; cd cli && $(MAKE) test
 
-test-agent:
+test-agent:  ## Run agent tests
 	@echo "running agent tests"; cd agent && $(MAKE) test
 
-acceptance-test:
+test-shared:  ## Run shared tests
+	@echo "running shared tests"; cd shared && $(MAKE) test
+
+test-extensions:  ## Run extensions tests
+	@echo "running http tests"; cd tap/extensions/http && $(MAKE) test
+
+acceptance-test:  ## Run acceptance tests
 	@echo "running acceptance tests"; cd acceptanceTests && $(MAKE) test

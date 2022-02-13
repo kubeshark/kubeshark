@@ -1,13 +1,20 @@
 import {findLineAndCheck, getExpectedDetailsDict} from "../testHelpers/StatusBarHelper";
-import {resizeToHugeMizu, resizeToNormalMizu} from "../testHelpers/TrafficHelper";
-const greenFilterColor = 'rgb(210, 250, 210)';
-const redFilterColor = 'rgb(250, 214, 220)';
+import {
+    leftTextCheck,
+    resizeToHugeMizu,
+    resizeToNormalMizu,
+    rightOnHoverCheck,
+    leftOnHoverCheck,
+    rightTextCheck,
+    verifyMinimumEntries
+} from "../testHelpers/TrafficHelper";
 const refreshWaitTimeout = 10000;
-const bodyJsonClass = '.hljs';
 
 it('opening mizu', function () {
     cy.visit(Cypress.env('testUrl'));
 });
+
+verifyMinimumEntries();
 
 it('top bar check', function () {
     const podName1 = 'httpbin', namespace1 = 'mizu-tests';
@@ -131,7 +138,7 @@ function checkFilterNoResults(filterName) {
 
             // applying the filter
             cy.get('.w-tc-editor-text').type(filterName);
-            cy.get('.w-tc-editor').should('have.attr', 'style').and('include', greenFilterColor);
+            cy.get('.w-tc-editor').should('have.attr', 'style').and('include', Cypress.env('greenFilterColor'));
             cy.get('[type="submit"]').click();
 
             // waiting for the entries number to load
@@ -164,7 +171,7 @@ function checkIllegalFilter(illegalFilterName) {
             const totalEntries = number.text();
 
             cy.get('.w-tc-editor-text').type(illegalFilterName);
-            cy.get('.w-tc-editor').should('have.attr', 'style').and('include', redFilterColor);
+            cy.get('.w-tc-editor').should('have.attr', 'style').and('include', Cypress.env('redFilterColor'));
             cy.get('[type="submit"]').click();
 
             cy.get('[role="alert"]').should('be.visible');
@@ -189,7 +196,7 @@ function checkFilter(filterDetails){
 
             // applying the filter with alt+enter or with the button
             cy.get('.w-tc-editor-text').type(`${name}${applyByEnter ? '{alt+enter}' : ''}`);
-            cy.get('.w-tc-editor').should('have.attr', 'style').and('include', greenFilterColor);
+            cy.get('.w-tc-editor').should('have.attr', 'style').and('include', Cypress.env('greenFilterColor'));
             if (!applyByEnter)
                 cy.get('[type="submit"]').click();
 
@@ -229,37 +236,15 @@ function deeperChcek(leftSidePath, rightSidePath, filterName, leftSideExpectedTe
         cy.get(`#list #entry-${entryNum}`).click();
         rightTextCheck(rightSidePath, rightSideExpectedText);
         rightOnHoverCheck(rightSidePath, filterName);
-        checkRightSideResponseBody();
     });
 }
-
-function leftTextCheck(entryNum, path, expectedText) {
-    cy.get(`#list #entry-${entryNum} ${path}`).invoke('text').should('eq', expectedText);
-}
-
-function leftOnHoverCheck(entryNum, path, filterName) {
-    cy.get(`#list #entry-${entryNum} ${path}`).trigger('mouseover');
-    cy.get(`#list #entry-${entryNum} .Queryable-Tooltip`).should('have.text', filterName);
-}
-
-function rightTextCheck(path, expectedText) {
-    cy.get(`.TrafficPage-Container > :nth-child(2) ${path}`).should('have.text', expectedText);
-}
-
-function rightOnHoverCheck(path, expectedText) {
-    cy.get(`.TrafficPage-Container > :nth-child(2) ${path}`).trigger('mouseover');
-    cy.get(`.TrafficPage-Container > :nth-child(2) .Queryable-Tooltip`).should('have.text', expectedText);
-}
-
 
 function checkRightSideResponseBody() {
     cy.contains('Response').click();
     clickCheckbox('Decode Base64');
 
-    cy.get(`${bodyJsonClass}`).then(value => {
+    cy.get(`${Cypress.env('bodyJsonClass')}`).then(value => {
         const encodedBody = value.text();
-        cy.log(encodedBody);
-
         const decodedBody = atob(encodedBody);
         const responseBody = JSON.parse(decodedBody);
 
@@ -279,11 +264,11 @@ function checkRightSideResponseBody() {
         expect(responseBody.headers['Accept-Encoding']).to.match(expectdJsonBody.headers['Accept-Encoding']);
         expect(responseBody.headers['X-Forwarded-Uri']).to.match(expectdJsonBody.headers['X-Forwarded-Uri']);
 
-        cy.get(`${bodyJsonClass}`).should('have.text', encodedBody);
+        cy.get(`${Cypress.env('bodyJsonClass')}`).should('have.text', encodedBody);
         clickCheckbox('Decode Base64');
 
-        cy.get(`${bodyJsonClass} > `).its('length').should('be.gt', 1).then(linesNum => {
-            cy.get(`${bodyJsonClass} > >`).its('length').should('be.gt', linesNum).then(jsonItemsNum => {
+        cy.get(`${Cypress.env('bodyJsonClass')} > `).its('length').should('be.gt', 1).then(linesNum => {
+            cy.get(`${Cypress.env('bodyJsonClass')} > >`).its('length').should('be.gt', linesNum).then(jsonItemsNum => {
                 checkPrettyAndLineNums(jsonItemsNum, decodedBody);
 
                 clickCheckbox('Line numbers');
@@ -305,7 +290,7 @@ function clickCheckbox(type) {
 
 function checkPrettyAndLineNums(jsonItemsLen, decodedBody) {
     decodedBody = decodedBody.replaceAll(' ', '');
-    cy.get(`${bodyJsonClass} >`).then(elements => {
+    cy.get(`${Cypress.env('bodyJsonClass')} >`).then(elements => {
         const lines = Object.values(elements);
         lines.forEach((line, index) => {
             if (line.getAttribute) {
@@ -325,13 +310,13 @@ function getCleanLine(lineElement) {
 }
 
 function checkPrettyOrNothing(jsonItems, decodedBody) {
-    cy.get(`${bodyJsonClass} > `).should('have.length', jsonItems).then(text => {
+    cy.get(`${Cypress.env('bodyJsonClass')} > `).should('have.length', jsonItems).then(text => {
         const json = text.text();
         expect(json).to.equal(decodedBody);
     });
 }
 
 function checkOnlyLineNumberes(jsonItems, decodedText) {
-    cy.get(`${bodyJsonClass} >`).should('have.length', 1).and('have.text', decodedText);
-    cy.get(`${bodyJsonClass} > >`).should('have.length', jsonItems)
+    cy.get(`${Cypress.env('bodyJsonClass')} >`).should('have.length', 1).and('have.text', decodedText);
+    cy.get(`${Cypress.env('bodyJsonClass')} > >`).should('have.length', jsonItems)
 }

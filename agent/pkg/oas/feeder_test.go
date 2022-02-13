@@ -21,20 +21,33 @@ func getFiles(baseDir string) (result []string, err error) {
 	result = make([]string, 0)
 	logger.Log.Infof("Reading files from tree: %s", baseDir)
 
+	inputs := []string{baseDir}
+
 	// https://yourbasic.org/golang/list-files-in-directory/
-	err = filepath.Walk(baseDir,
-		func(path string, info os.FileInfo, err error) error {
-			if err != nil {
-				return err
-			}
+	visitor := func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
 
-			ext := strings.ToLower(filepath.Ext(path))
-			if !info.IsDir() && (ext == ".har" || ext == ".ldjson") {
-				result = append(result, path)
-			}
-
+		if info.Mode()&os.ModeSymlink != 0 {
+			path, _ = os.Readlink(path)
+			inputs = append(inputs, path)
 			return nil
-		})
+		}
+
+		ext := strings.ToLower(filepath.Ext(path))
+		if !info.IsDir() && (ext == ".har" || ext == ".ldjson") {
+			result = append(result, path)
+		}
+
+		return nil
+	}
+
+	for len(inputs) > 0 {
+		path := inputs[0]
+		inputs = inputs[1:]
+		err = filepath.Walk(path, visitor)
+	}
 
 	sort.SliceStable(result, func(i, j int) bool {
 		return fileSize(result[i]) < fileSize(result[j])
@@ -110,25 +123,27 @@ func feedFromHAR(file string, isSync bool) (int, error) {
 	cnt := 0
 	for _, entry := range harDoc.Log.Entries {
 		cnt += 1
-		feedEntry(&entry, isSync)
+		feedEntry(&entry, "", isSync, file)
 	}
 
 	return cnt, nil
 }
 
-func feedEntry(entry *har.Entry, isSync bool) {
+func feedEntry(entry *har.Entry, source string, isSync bool, file string) {
+	entry.Comment = file
 	if entry.Response.Status == 302 {
 		logger.Log.Debugf("Dropped traffic entry due to permanent redirect status: %s", entry.StartedDateTime)
 	}
 
-	if strings.Contains(entry.Request.URL, "taboola") {
+	if strings.Contains(entry.Request.URL, "some") { // for debugging
 		logger.Log.Debugf("Interesting: %s", entry.Request.URL)
 	}
 
+	ews := EntryWithSource{Entry: *entry, Source: source, Id: uint(0)}
 	if isSync {
-		GetOasGeneratorInstance().entriesChan <- *entry // blocking variant, right?
+		GetOasGeneratorInstance().entriesChan <- ews // blocking variant, right?
 	} else {
-		GetOasGeneratorInstance().PushEntry(entry)
+		GetOasGeneratorInstance().PushEntry(&ews)
 	}
 }
 
@@ -145,6 +160,7 @@ func feedFromLDJSON(file string, isSync bool) (int, error) {
 	var meta map[string]interface{}
 	buf := strings.Builder{}
 	cnt := 0
+	source := ""
 	for {
 		substr, isPrefix, err := reader.ReadLine()
 		if err == io.EOF {
@@ -164,6 +180,9 @@ func feedFromLDJSON(file string, isSync bool) (int, error) {
 			if err != nil {
 				return 0, err
 			}
+			if s, ok := meta["_source"]; ok && s != nil {
+				source = s.(string)
+			}
 		} else {
 			var entry har.Entry
 			err := json.Unmarshal([]byte(line), &entry)
@@ -171,7 +190,7 @@ func feedFromLDJSON(file string, isSync bool) (int, error) {
 				logger.Log.Warningf("Failed decoding entry: %s", line)
 			} else {
 				cnt += 1
-				feedEntry(&entry, isSync)
+				feedEntry(&entry, source, isSync, file)
 			}
 		}
 	}

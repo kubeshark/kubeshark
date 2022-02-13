@@ -19,7 +19,10 @@ export const StatusBar = () => {
     return <div className={'statusBar' + (expandedBar ? ' expandedStatusBar' : "")} onMouseOver={() => setExpandedBar(true)} onMouseLeave={() => setExpandedBar(false)}>
         <div className="podsCount">
             {tappingStatus.some(pod => !pod.isTapped) && <img src={warningIcon} alt="warning"/>}
-            {`Tapping ${amountOfUntappedPods > 0 ? amountOfTappedPods + " / " + amountOfPods : amountOfPods} ${pluralize('pod', amountOfPods)} in ${pluralize('namespace', uniqueNamespaces.length)} ${uniqueNamespaces.join(", ")}`}</div>
+            <span className='pods-count-text'>
+                {`Tapping ${amountOfUntappedPods > 0 ? amountOfTappedPods + " / " + amountOfPods : amountOfPods} ${pluralize('pod', amountOfPods)} in ${pluralize('namespace', uniqueNamespaces.length)} ${uniqueNamespaces.join(", ")}`}
+            </span>
+        </div>
         {expandedBar && <div style={{marginTop: 20}}>
             <table>
                 <thead>
