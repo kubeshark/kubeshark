@@ -140,14 +140,20 @@ func (provider *Provider) GetVersion() (string, error) {
 	return versionResponse.Ver, nil
 }
 
+// When err is nil, resp always contains a non-nil resp.Body.
+// Caller should close resp.Body when done reading from it.
 func (provider *Provider) get(url string) (*http.Response, error) {
 	return provider.checkError(provider.client.Get(url))
 }
 
+// When err is nil, resp always contains a non-nil resp.Body.
+// Caller should close resp.Body when done reading from it.
 func (provider *Provider) post(url, contentType string, body io.Reader) (*http.Response, error) {
 	return provider.checkError(provider.client.Post(url, contentType, body))
 }
 
+// When err is nil, resp always contains a non-nil resp.Body.
+// Caller should close resp.Body when done reading from it.
 func (provider *Provider) do(req *http.Request) (*http.Response, error) {
 	return provider.checkError(provider.client.Do(req))
 }
