@@ -5,11 +5,9 @@ metadata:
 rules:
 - apiGroups: [""]
   resources: ["serviceaccounts"]
-  verbs: ["create"]
   verbs: ["get", "create"]
 - apiGroups: ["rbac.authorization.k8s.io"]
   resources: ["clusterroles"]
-  verbs: ["create"]
   verbs: ["get", "create", "delete"]
 - apiGroups: ["rbac.authorization.k8s.io"]
   resources: ["clusterrolebindings"]
