@@ -952,11 +952,6 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	labelSelector := applyconfmeta.LabelSelector()
 	labelSelector.WithMatchLabels(map[string]string{"app": tapperPodName})
 
-	applyOptions := metav1.ApplyOptions{
-		Force: true,
-		FieldManager: fieldManagerName,
-	}
-
 	daemonSet := applyconfapp.DaemonSet(daemonSetName, namespace)
 	daemonSet.
 		WithLabels(map[string]string{
@@ -965,7 +960,7 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 		}).
 		WithSpec(applyconfapp.DaemonSetSpec().WithSelector(labelSelector).WithTemplate(podTemplate))
 
-	_, err = provider.clientSet.AppsV1().DaemonSets(namespace).Apply(ctx, daemonSet, applyOptions)
+	_, err = provider.clientSet.AppsV1().DaemonSets(namespace).Apply(ctx, daemonSet, metav1.ApplyOptions{FieldManager: fieldManagerName})
 	return err
 }
 
