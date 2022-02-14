@@ -3,7 +3,6 @@ package kafka
 import (
 	"fmt"
 	"io"
-	"net"
 	"reflect"
 	"strconv"
 	"strings"
@@ -25,30 +24,6 @@ func (k ApiKey) String() string {
 		return apiNames[i]
 	}
 	return strconv.Itoa(int(k))
-}
-
-func (k ApiKey) MinVersion() int16 { return k.apiType().minVersion() }
-
-func (k ApiKey) MaxVersion() int16 { return k.apiType().maxVersion() }
-
-func (k ApiKey) SelectVersion(minVersion, maxVersion int16) int16 {
-	min := k.MinVersion()
-	max := k.MaxVersion()
-	switch {
-	case min > maxVersion:
-		return min
-	case max < maxVersion:
-		return max
-	default:
-		return maxVersion
-	}
-}
-
-func (k ApiKey) apiType() apiType {
-	if i := int(k); i >= 0 && i < len(apiTypes) {
-		return apiTypes[i]
-	}
-	return apiType{}
 }
 
 const (
@@ -179,7 +154,6 @@ type messageType struct {
 	flexible bool
 	gotype   reflect.Type
 	decode   decodeFunc
-	encode   encodeFunc
 }
 
 type apiType struct {
@@ -187,41 +161,7 @@ type apiType struct {
 	responses []messageType
 }
 
-func (t apiType) minVersion() int16 {
-	if len(t.requests) == 0 {
-		return 0
-	}
-	return t.requests[0].version
-}
-
-func (t apiType) maxVersion() int16 {
-	if len(t.requests) == 0 {
-		return 0
-	}
-	return t.requests[len(t.requests)-1].version
-}
-
 var apiTypes [numApis]apiType
-
-// Register is automatically called by sub-packages are imported to install a
-// new pair of request/response message types.
-func Register(req, res Message) {
-	k1 := req.ApiKey()
-	k2 := res.ApiKey()
-
-	if k1 != k2 {
-		panic(fmt.Sprintf("[%T/%T]: request and response API keys mismatch: %d != %d", req, res, k1, k2))
-	}
-
-	apiTypes[k1] = apiType{
-		requests:  typesOf(req),
-		responses: typesOf(res),
-	}
-}
-
-func typesOf(v interface{}) []messageType {
-	return makeTypes(reflect.TypeOf(v).Elem())
-}
 
 func makeTypes(t reflect.Type) []messageType {
 	minVersion := int16(-1)
@@ -256,7 +196,6 @@ func makeTypes(t reflect.Type) []messageType {
 			gotype:   t,
 			flexible: flexible,
 			decode:   decodeFuncOf(t, v, flexible, structTag{}),
-			encode:   encodeFuncOf(t, v, flexible, structTag{}),
 		})
 	}
 
@@ -393,31 +332,6 @@ type Broker struct {
 	Rack string
 }
 
-func (b Broker) String() string {
-	return net.JoinHostPort(b.Host, itoa(b.Port))
-}
-
-func (b Broker) Format(w fmt.State, v rune) {
-	switch v {
-	case 'd':
-		_, _ = io.WriteString(w, itoa(b.ID))
-	case 's':
-		_, _ = io.WriteString(w, b.String())
-	case 'v':
-		_, _ = io.WriteString(w, itoa(b.ID))
-		_, _ = io.WriteString(w, " ")
-		_, _ = io.WriteString(w, b.String())
-		if b.Rack != "" {
-			_, _ = io.WriteString(w, " ")
-			_, _ = io.WriteString(w, b.Rack)
-		}
-	}
-}
-
-func itoa(i int32) string {
-	return strconv.Itoa(int(i))
-}
-
 type Topic struct {
 	Name       string
 	Error      int16
@@ -457,17 +371,4 @@ type Merger interface {
 	// response (or an error). The results must be either Message or error
 	// values, other types should trigger a panic.
 	Merge(messages []Message, results []interface{}) (Message, error)
-}
-
-// Result converts r to a Message or and error, or panics if r could be be
-// converted to these types.
-func Result(r interface{}) (Message, error) {
-	switch v := r.(type) {
-	case Message:
-		return v, nil
-	case error:
-		return nil, v
-	default:
-		panic(fmt.Errorf("BUG: result must be a message or an error but not %T", v))
-	}
 }
