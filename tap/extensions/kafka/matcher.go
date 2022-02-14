@@ -7,8 +7,6 @@ import (
 	"github.com/up9inc/mizu/tap/api"
 )
 
-const maxTry int = 3000
-
 type RequestResponsePair struct {
 	Request  Request
 	Response Response
@@ -17,14 +15,19 @@ type RequestResponsePair struct {
 // Key is {client_addr}_{client_port}_{dest_addr}_{dest_port}_{correlation_id}
 type requestResponseMatcher struct {
 	openMessagesMap *sync.Map
+	maxTry          int
 }
 
 func createResponseRequestMatcher() api.RequestResponseMatcher {
-	return &requestResponseMatcher{openMessagesMap: &sync.Map{}}
+	return &requestResponseMatcher{openMessagesMap: &sync.Map{}, maxTry: 3000}
 }
 
 func (matcher *requestResponseMatcher) GetMap() *sync.Map {
 	return matcher.openMessagesMap
+}
+
+func (matcher *requestResponseMatcher) SetMaxTry(value int) {
+	matcher.maxTry = value
 }
 
 func (matcher *requestResponseMatcher) registerRequest(key string, request *Request) *RequestResponsePair {
@@ -44,7 +47,7 @@ func (matcher *requestResponseMatcher) registerResponse(key string, response *Re
 	try := 0
 	for {
 		try++
-		if try > maxTry {
+		if try > matcher.maxTry {
 			return nil
 		}
 		if request, found := matcher.openMessagesMap.LoadAndDelete(key); found {

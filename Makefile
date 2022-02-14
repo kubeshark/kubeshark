@@ -103,6 +103,7 @@ test-shared:  ## Run shared tests
 
 test-extensions:  ## Run extensions tests
 	@echo "running http tests"; cd tap/extensions/http && $(MAKE) test
+	@echo "running kafka tests"; cd tap/extensions/kafka && $(MAKE) test
 
 acceptance-test:  ## Run acceptance tests
 	@echo "running acceptance tests"; cd acceptanceTests && $(MAKE) test

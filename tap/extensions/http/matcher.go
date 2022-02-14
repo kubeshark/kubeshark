@@ -21,6 +21,9 @@ func (matcher *requestResponseMatcher) GetMap() *sync.Map {
 	return matcher.openMessagesMap
 }
 
+func (matcher *requestResponseMatcher) SetMaxTry(value int) {
+}
+
 func (matcher *requestResponseMatcher) registerRequest(ident string, request *http.Request, captureTime time.Time, protoMinor int) *api.OutputChannelItem {
 	requestHTTPMessage := api.GenericMessage{
 		IsRequest:   true,
