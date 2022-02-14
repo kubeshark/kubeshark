@@ -156,13 +156,6 @@ type messageType struct {
 	decode   decodeFunc
 }
 
-type apiType struct {
-	requests  []messageType
-	responses []messageType
-}
-
-var apiTypes [numApis]apiType
-
 func makeTypes(t reflect.Type) []messageType {
 	minVersion := int16(-1)
 	maxVersion := int16(-1)

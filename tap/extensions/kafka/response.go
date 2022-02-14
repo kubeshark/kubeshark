@@ -287,14 +287,8 @@ func ReadResponse(r io.Reader, tcpID *api.TcpID, counterPair *api.CounterPair, s
 	}
 	emitter.Emit(item)
 
-	if i := int(apiKey); i < 0 || i >= len(apiTypes) {
+	if i := int(apiKey); i < 0 || i >= numApis {
 		err = fmt.Errorf("unsupported api key: %d", i)
-		return err
-	}
-
-	t := &apiTypes[apiKey]
-	if t == nil {
-		err = fmt.Errorf("unsupported api: %s", apiNames[apiKey])
 		return err
 	}
 

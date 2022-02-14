@@ -45,19 +45,13 @@ func ReadRequest(r io.Reader, tcpID *api.TcpID, counterPair *api.CounterPair, su
 	correlationID := d.readInt32()
 	clientID := d.readString()
 
-	if i := int(apiKey); i < 0 || i >= len(apiTypes) {
+	if i := int(apiKey); i < 0 || i >= numApis {
 		err = fmt.Errorf("unsupported api key: %d", i)
 		return apiKey, apiVersion, err
 	}
 
 	if err = d.err; err != nil {
 		err = dontExpectEOF(err)
-		return apiKey, apiVersion, err
-	}
-
-	t := &apiTypes[apiKey]
-	if t == nil {
-		err = fmt.Errorf("unsupported api: %s", apiNames[apiKey])
 		return apiKey, apiVersion, err
 	}
 

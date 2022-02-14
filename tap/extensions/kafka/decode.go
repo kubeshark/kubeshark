@@ -8,8 +8,6 @@ import (
 	"io/ioutil"
 	"reflect"
 	"strings"
-	"sync"
-	"sync/atomic"
 )
 
 type discarder interface {
@@ -473,8 +471,3 @@ func decodeReadInt32(b []byte) int32 {
 func decodeReadInt64(b []byte) int64 {
 	return int64(binary.BigEndian.Uint64(b))
 }
-
-var (
-	decoders     sync.Pool    // *decoder
-	unmarshalers atomic.Value // map[versionedType]decodeFunc
-)
