@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -896,6 +897,10 @@ func representMapAsTable(mapData map[string]interface{}, selectorPrefix string, 
 			Selector: selector,
 		})
 	}
+
+	sort.Slice(table, func(i, j int) bool {
+		return table[i].Name < table[j].Name
+	})
 
 	obj, _ := json.Marshal(table)
 	representation = string(obj)
