@@ -98,7 +98,7 @@ type SuperIdentifier struct {
 type Dissector interface {
 	Register(*Extension)
 	Ping()
-	Dissect(b *bufio.Reader, isClient bool, tcpID *TcpID, counterPair *CounterPair, superTimer *SuperTimer, superIdentifier *SuperIdentifier, emitter Emitter, options *TrafficFilteringOptions, reqResMatcher interface{}) error
+	Dissect(b *bufio.Reader, isClient bool, tcpID *TcpID, counterPair *CounterPair, superTimer *SuperTimer, superIdentifier *SuperIdentifier, emitter Emitter, options *TrafficFilteringOptions, reqResMatcher RequestResponseMatcher) error
 	Analyze(item *OutputChannelItem, resolvedSource string, resolvedDestination string) *Entry
 	Represent(request map[string]interface{}, response map[string]interface{}) (object []byte, bodySize int64, err error)
 	Macros() map[string]string
