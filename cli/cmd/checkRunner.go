@@ -31,7 +31,7 @@ func runMizuCheck() {
 	}
 
 	if checkPassed {
-		checkPassed = checkAllResourcesExist(ctx, kubernetesProvider, isInstallCommand)
+		checkPassed = checkK8sResources(ctx, kubernetesProvider, isInstallCommand)
 	}
 
 	if checkPassed {
@@ -66,7 +66,7 @@ func checkKubernetesApi() (*kubernetes.Provider, *semver.SemVersion, bool) {
 }
 
 func checkMizuMode(ctx context.Context, kubernetesProvider *kubernetes.Provider) (bool, bool) {
-	logger.Log.Infof("\nmizu-mode\n--------------------")
+	logger.Log.Infof("\nmode\n--------------------")
 
 	if exist, err := kubernetesProvider.DoesDeploymentExist(ctx, config.Config.MizuResourcesNamespace, kubernetes.ApiServerPodName); err != nil {
 		logger.Log.Errorf("%v can't check mizu command, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), err)
@@ -79,7 +79,7 @@ func checkMizuMode(ctx context.Context, kubernetesProvider *kubernetes.Provider)
 		return false, false
 	} else if exist {
 		logger.Log.Infof("%v mizu running with tap command", fmt.Sprintf(uiUtils.Green, "√"))
-		return true, true
+		return true, false
 	} else {
 		logger.Log.Infof("%v mizu is not running", fmt.Sprintf(uiUtils.Red, "✗"))
 		return false, false
@@ -99,9 +99,9 @@ func checkKubernetesVersion(kubernetesVersion *semver.SemVersion) bool {
 }
 
 func checkServerConnection(kubernetesProvider *kubernetes.Provider) bool {
-	logger.Log.Infof("\nmizu-connectivity\n--------------------")
+	logger.Log.Infof("\nAPI-server-connectivity\n--------------------")
 
-	serverUrl := GetApiServerUrl()
+	serverUrl := GetApiServerUrl(config.Config.Tap.GuiPort)
 
 	apiServerProvider := apiserver.NewProvider(serverUrl, 1, apiserver.DefaultTimeout)
 	if err := apiServerProvider.TestConnection(); err == nil {
@@ -169,8 +169,8 @@ func checkPortForward(serverUrl string, kubernetesProvider *kubernetes.Provider)
 	return nil
 }
 
-func checkAllResourcesExist(ctx context.Context, kubernetesProvider *kubernetes.Provider, isInstallCommand bool) bool {
-	logger.Log.Infof("\nmizu-existence\n--------------------")
+func checkK8sResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, isInstallCommand bool) bool {
+	logger.Log.Infof("\nk8s-components\n--------------------")
 
 	exist, err := kubernetesProvider.DoesNamespaceExist(ctx, config.Config.MizuResourcesNamespace)
 	allResourcesExist := checkResourceExist(config.Config.MizuResourcesNamespace, "namespace", exist, err)
@@ -227,7 +227,43 @@ func checkTapResourcesExist(ctx context.Context, kubernetesProvider *kubernetes.
 	exist, err := kubernetesProvider.DoesPodExist(ctx, config.Config.MizuResourcesNamespace, kubernetes.ApiServerPodName)
 	tapResourcesExist := checkResourceExist(kubernetes.ApiServerPodName, "pod", exist, err)
 
-	return tapResourcesExist
+	if !tapResourcesExist {
+		return false
+	}
+
+	if pod, err := kubernetesProvider.GetPod(ctx, config.Config.MizuResourcesNamespace, kubernetes.ApiServerPodName); err != nil {
+		logger.Log.Errorf("%v error checking if '%v' pod exists, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), kubernetes.ApiServerPodName, err)
+		return false
+	} else if kubernetes.IsPodRunning(pod) {
+		logger.Log.Infof("%v '%v' pod running", fmt.Sprintf(uiUtils.Green, "√"), kubernetes.ApiServerPodName)
+	} else {
+		logger.Log.Errorf("%v '%v' pod not running", fmt.Sprintf(uiUtils.Red, "✗"), kubernetes.ApiServerPodName)
+		return false
+	}
+
+	tapperRegex := regexp.MustCompile(fmt.Sprintf("^%s.*", kubernetes.TapperPodName))
+	if pods, err := kubernetesProvider.ListAllPodsMatchingRegex(ctx, tapperRegex, []string{config.Config.MizuResourcesNamespace}); err != nil {
+		logger.Log.Errorf("%v error listing '%v' pods, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), kubernetes.TapperPodName, err)
+		return false
+	} else {
+		tappers := 0
+		notRunningTappers := 0
+
+		for _, pod := range pods {
+			tappers += 1
+			if !kubernetes.IsPodRunning(&pod) {
+				notRunningTappers += 1
+			}
+		}
+
+		if notRunningTappers > 0 {
+			logger.Log.Errorf("%v '%v' %v/%v pods are not running", fmt.Sprintf(uiUtils.Red, "✗"), kubernetes.TapperPodName, notRunningTappers, tappers)
+			return false
+		}
+
+		logger.Log.Infof("%v '%v' %v pods running", fmt.Sprintf(uiUtils.Green, "√"), kubernetes.TapperPodName, tappers)
+		return true
+	}
 }
 
 func checkResourceExist(resourceName string, resourceType string, exist bool, err error) bool {
