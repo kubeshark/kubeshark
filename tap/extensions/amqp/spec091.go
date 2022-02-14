@@ -49,27 +49,6 @@ const (
 	BadMethodFrameUnknownClass  = 602
 )
 
-func isSoftExceptionCode(code int) bool {
-	switch code {
-	case 311:
-		return true
-	case 312:
-		return true
-	case 313:
-		return true
-	case 403:
-		return true
-	case 404:
-		return true
-	case 405:
-		return true
-	case 406:
-		return true
-
-	}
-	return false
-}
-
 type ConnectionStart struct {
 	VersionMajor     byte   `json:"versionMajor"`
 	VersionMinor     byte   `json:"versionMinor"`
