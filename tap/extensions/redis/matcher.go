@@ -7,7 +7,7 @@ import (
 	"github.com/up9inc/mizu/tap/api"
 )
 
-// Key is `{src_ip}:{dst_ip}_{src_ip}:{src_port}_{incremental_counter}`
+// Key is `{src_ip}_{dst_ip}_{src_ip}_{src_port}_{incremental_counter}`
 type requestResponseMatcher struct {
 	openMessagesMap *sync.Map
 }
