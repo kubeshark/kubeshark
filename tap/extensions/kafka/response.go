@@ -25,6 +25,9 @@ func ReadResponse(r io.Reader, tcpID *api.TcpID, counterPair *api.CounterPair, s
 	}
 
 	if size < 4 {
+		if size == 0 {
+			return io.EOF
+		}
 		return fmt.Errorf("A Kafka response header cannot be smaller than 8 bytes")
 	}
 

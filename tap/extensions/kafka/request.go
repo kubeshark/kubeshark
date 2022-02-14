@@ -28,6 +28,9 @@ func ReadRequest(r io.Reader, tcpID *api.TcpID, counterPair *api.CounterPair, su
 	}
 
 	if size < 8 {
+		if size == 0 {
+			return 0, 0, io.EOF
+		}
 		return 0, 0, fmt.Errorf("A Kafka request header cannot be smaller than 8 bytes")
 	}
 
