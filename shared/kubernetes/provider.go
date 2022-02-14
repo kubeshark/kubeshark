@@ -949,11 +949,20 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	})
 	podTemplate.WithSpec(podSpec)
 
+	ownerReferences := applyconfmeta.OwnerReference()
+	// ownerReferences.WithAPIVersion()
+	ownerReferences.WithKind("DaemonSet")
+	ownerReferences.WithName(daemonSetName)
+	// ownerReferences.WithUID()
+	// ownerReferences.WithController()
+	// ownerReferences.WithBlockOwnerDeletion()
+
 	labelSelector := applyconfmeta.LabelSelector()
 	labelSelector.WithMatchLabels(map[string]string{"app": tapperPodName})
 
 	daemonSet := applyconfapp.DaemonSet(daemonSetName, namespace)
 	daemonSet.
+		WithOwnerReferences(ownerReferences).
 		WithLabels(map[string]string{
 			LabelManagedBy: provider.managedBy,
 			LabelCreatedBy: provider.createdBy,
