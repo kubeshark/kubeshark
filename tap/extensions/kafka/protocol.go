@@ -52,6 +52,21 @@ func (k ApiKey) apiType() apiType {
 }
 
 const (
+	// v0  = 0
+	v1  = 1
+	v2  = 2
+	v3  = 3
+	v4  = 4
+	v5  = 5
+	v6  = 6
+	v7  = 7
+	v8  = 8
+	v9  = 9
+	v10 = 10
+	v11 = 11
+)
+
+const (
 	Produce                     ApiKey = 0
 	Fetch                       ApiKey = 1
 	ListOffsets                 ApiKey = 2
@@ -418,14 +433,6 @@ type Partition struct {
 	Offline  []int32
 }
 
-// BrokerMessage is an extension of the Message interface implemented by some
-// request types to customize the broker assignment logic.
-type BrokerMessage interface {
-	// Given a representation of the kafka cluster state as argument, returns
-	// the broker that the message should be routed to.
-	Broker(Cluster) (Broker, error)
-}
-
 // GroupMessage is an extension of the Message interface implemented by some
 // request types to inform the program that they should be routed to a group
 // coordinator.
@@ -441,16 +448,6 @@ type PreparedMessage interface {
 	// Prepares the message before being sent to a kafka broker using the API
 	// version passed as argument.
 	Prepare(apiVersion int16)
-}
-
-// Splitter is an interface implemented by messages that can be split into
-// multiple requests and have their results merged back by a Merger.
-type Splitter interface {
-	// For a given cluster layout, returns the list of messages constructed
-	// from the receiver for each requests that should be sent to the cluster.
-	// The second return value is a Merger which can be used to merge back the
-	// results of each request into a single message (or an error).
-	Split(Cluster) ([]Message, Merger, error)
 }
 
 // Merger is an interface implemented by messages which can merge multiple
