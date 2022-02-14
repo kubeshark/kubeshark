@@ -100,7 +100,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 
 			// Workaround for `Time.MarshalJSON: year outside of range [0,9999]` error
 			if header.Properties.Timestamp.Year() > 9999 {
-				header.Properties.Timestamp = time.Time{}
+				header.Properties.Timestamp = time.Time{}.UTC()
 			}
 
 			switch lastMethodFrameMessage.(type) {
