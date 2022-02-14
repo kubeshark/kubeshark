@@ -125,7 +125,7 @@ type Entry struct {
 	Protocol               Protocol               `json:"proto"`
 	Source                 *TCP                   `json:"src"`
 	Destination            *TCP                   `json:"dst"`
-	Namespace              string                 `json:"namespace"`
+	Namespace              string                 `json:"namespace,omitempty"`
 	Outgoing               bool                   `json:"outgoing"`
 	Timestamp              int64                  `json:"timestamp"`
 	StartTime              time.Time              `json:"startTime"`
