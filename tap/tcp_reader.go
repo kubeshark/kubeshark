@@ -47,7 +47,7 @@ type tcpReader struct {
 	extension          *api.Extension
 	emitter            api.Emitter
 	counterPair        *api.CounterPair
-	reqResMatcher      interface{}
+	reqResMatcher      api.RequestResponseMatcher
 	sync.Mutex
 }
 
