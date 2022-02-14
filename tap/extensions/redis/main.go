@@ -32,14 +32,14 @@ type dissecting string
 
 func (d dissecting) Register(extension *api.Extension) {
 	extension.Protocol = &protocol
-	extension.MatcherMap = reqResMatcher.openMessagesMap
 }
 
 func (d dissecting) Ping() {
 	log.Printf("pong %s", protocol.Name)
 }
 
-func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, superIdentifier *api.SuperIdentifier, emitter api.Emitter, options *api.TrafficFilteringOptions) error {
+func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, superIdentifier *api.SuperIdentifier, emitter api.Emitter, options *api.TrafficFilteringOptions, _reqResMatcher api.RequestResponseMatcher) error {
+	reqResMatcher := _reqResMatcher.(*requestResponseMatcher)
 	is := &RedisInputStream{
 		Reader: b,
 		Buf:    make([]byte, 8192),
@@ -52,9 +52,9 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 		}
 
 		if isClient {
-			err = handleClientStream(tcpID, counterPair, superTimer, emitter, redisPacket)
+			err = handleClientStream(tcpID, counterPair, superTimer, emitter, redisPacket, reqResMatcher)
 		} else {
-			err = handleServerStream(tcpID, counterPair, superTimer, emitter, redisPacket)
+			err = handleServerStream(tcpID, counterPair, superTimer, emitter, redisPacket, reqResMatcher)
 		}
 
 		if err != nil {
@@ -125,6 +125,10 @@ func (d dissecting) Macros() map[string]string {
 	return map[string]string{
 		`redis`: fmt.Sprintf(`proto.name == "%s"`, protocol.Name),
 	}
+}
+
+func (d dissecting) NewResponseRequestMatcher() api.RequestResponseMatcher {
+	return createResponseRequestMatcher()
 }
 
 var Dissector dissecting
