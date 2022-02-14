@@ -12,7 +12,7 @@ type RequestResponsePair struct {
 	Response Response
 }
 
-// Key is {client_addr}:{client_port}_{dest_addr}:{dest_port}_{correlation_id}
+// Key is {client_addr}_{client_port}_{dest_addr}_{dest_port}_{correlation_id}
 type requestResponseMatcher struct {
 	openMessagesMap *sync.Map
 }
