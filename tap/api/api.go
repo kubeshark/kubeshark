@@ -102,7 +102,11 @@ type Dissector interface {
 	Analyze(item *OutputChannelItem, resolvedSource string, resolvedDestination string) *Entry
 	Represent(request map[string]interface{}, response map[string]interface{}) (object []byte, bodySize int64, err error)
 	Macros() map[string]string
-	NewResponseRequestMatcher() interface{}
+	NewResponseRequestMatcher() RequestResponseMatcher
+}
+
+type RequestResponseMatcher interface {
+	GetMap() *sync.Map
 }
 
 type Emitting struct {

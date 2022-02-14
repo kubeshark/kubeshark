@@ -19,7 +19,7 @@ type Request struct {
 	CaptureTime   time.Time   `json:"captureTime"`
 }
 
-func ReadRequest(r io.Reader, tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, reqResMatcher requestResponseMatcher) (apiKey ApiKey, apiVersion int16, err error) {
+func ReadRequest(r io.Reader, tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, reqResMatcher *requestResponseMatcher) (apiKey ApiKey, apiVersion int16, err error) {
 	d := &decoder{reader: r, remain: 4}
 	size := d.readInt32()
 

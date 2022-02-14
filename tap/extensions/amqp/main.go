@@ -300,7 +300,7 @@ func (d dissecting) Macros() map[string]string {
 	}
 }
 
-func (d dissecting) NewResponseRequestMatcher() interface{} {
+func (d dissecting) NewResponseRequestMatcher() api.RequestResponseMatcher {
 	return nil
 }
 

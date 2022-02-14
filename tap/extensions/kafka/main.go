@@ -40,7 +40,7 @@ func (d dissecting) Ping() {
 }
 
 func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, superIdentifier *api.SuperIdentifier, emitter api.Emitter, options *api.TrafficFilteringOptions, _reqResMatcher interface{}) error {
-	reqResMatcher := _reqResMatcher.(requestResponseMatcher)
+	reqResMatcher := _reqResMatcher.(*requestResponseMatcher)
 	for {
 		if superIdentifier.Protocol != nil && superIdentifier.Protocol != &_protocol {
 			return errors.New("Identified by another protocol")
@@ -215,7 +215,7 @@ func (d dissecting) Macros() map[string]string {
 	}
 }
 
-func (d dissecting) NewResponseRequestMatcher() interface{} {
+func (d dissecting) NewResponseRequestMatcher() api.RequestResponseMatcher {
 	return createResponseRequestMatcher()
 }
 

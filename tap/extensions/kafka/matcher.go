@@ -3,6 +3,8 @@ package kafka
 import (
 	"sync"
 	"time"
+
+	"github.com/up9inc/mizu/tap/api"
 )
 
 const maxTry int = 3000
@@ -17,9 +19,12 @@ type requestResponseMatcher struct {
 	openMessagesMap *sync.Map
 }
 
-func createResponseRequestMatcher() requestResponseMatcher {
-	newMatcher := &requestResponseMatcher{openMessagesMap: &sync.Map{}}
-	return *newMatcher
+func createResponseRequestMatcher() api.RequestResponseMatcher {
+	return &requestResponseMatcher{openMessagesMap: &sync.Map{}}
+}
+
+func (matcher *requestResponseMatcher) GetMap() *sync.Map {
+	return matcher.openMessagesMap
 }
 
 func (matcher *requestResponseMatcher) registerRequest(key string, request *Request) *RequestResponsePair {

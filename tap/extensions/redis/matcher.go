@@ -12,9 +12,12 @@ type requestResponseMatcher struct {
 	openMessagesMap *sync.Map
 }
 
-func createResponseRequestMatcher() requestResponseMatcher {
-	newMatcher := &requestResponseMatcher{openMessagesMap: &sync.Map{}}
-	return *newMatcher
+func createResponseRequestMatcher() api.RequestResponseMatcher {
+	return &requestResponseMatcher{openMessagesMap: &sync.Map{}}
+}
+
+func (matcher *requestResponseMatcher) GetMap() *sync.Map {
+	return matcher.openMessagesMap
 }
 
 func (matcher *requestResponseMatcher) registerRequest(ident string, request *RedisPacket, captureTime time.Time) *api.OutputChannelItem {

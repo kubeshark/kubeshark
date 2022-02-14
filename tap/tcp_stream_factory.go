@@ -29,8 +29,9 @@ type tcpStreamFactory struct {
 }
 
 type tcpStreamWrapper struct {
-	stream    *tcpStream
-	createdAt time.Time
+	stream        *tcpStream
+	reqResMatcher api.RequestResponseMatcher
+	createdAt     time.Time
 }
 
 func NewTcpStreamFactory(emitter api.Emitter, streamsMap *tcpStreamMap, opts *TapOpts) *tcpStreamFactory {
@@ -126,8 +127,9 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.T
 			})
 
 			factory.streamsMap.Store(stream.id, &tcpStreamWrapper{
-				stream:    stream,
-				createdAt: time.Now(),
+				stream:        stream,
+				reqResMatcher: reqResMatcher,
+				createdAt:     time.Now(),
 			})
 
 			factory.wg.Add(2)

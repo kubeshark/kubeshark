@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/gopacket/reassembly"
 	"github.com/up9inc/mizu/shared/logger"
+	"github.com/up9inc/mizu/tap/api"
 )
 
 type CleanerStats struct {
@@ -21,6 +22,7 @@ type Cleaner struct {
 	connectionTimeout time.Duration
 	stats             CleanerStats
 	statsMutex        sync.Mutex
+	streamsMap        *tcpStreamMap
 }
 
 func (cl *Cleaner) clean() {
@@ -30,6 +32,16 @@ func (cl *Cleaner) clean() {
 	logger.Log.Debugf("Assembler Stats before cleaning %s", cl.assembler.Dump())
 	flushed, closed := cl.assembler.FlushCloseOlderThan(startCleanTime.Add(-cl.connectionTimeout))
 	cl.assemblerMutex.Unlock()
+
+	cl.streamsMap.streams.Range(func(k, v interface{}) bool {
+		reqResMatcher := v.(*tcpStreamWrapper).reqResMatcher
+		if reqResMatcher == nil {
+			return true
+		}
+		deleted := deleteOlderThan(reqResMatcher.GetMap(), startCleanTime.Add(-cl.connectionTimeout))
+		cl.stats.deleted += deleted
+		return true
+	})
 
 	cl.statsMutex.Lock()
 	logger.Log.Debugf("Assembler Stats after cleaning %s", cl.assembler.Dump())
@@ -65,4 +77,26 @@ func (cl *Cleaner) dumpStats() CleanerStats {
 	cl.statsMutex.Unlock()
 
 	return stats
+}
+
+func deleteOlderThan(matcherMap *sync.Map, t time.Time) int {
+	numDeleted := 0
+
+	if matcherMap == nil {
+		return numDeleted
+	}
+
+	matcherMap.Range(func(key interface{}, value interface{}) bool {
+		message, _ := value.(*api.GenericMessage)
+		// TODO: Investigate the reason why `request` is `nil` in some rare occasion
+		if message != nil {
+			if message.CaptureTime.Before(t) {
+				matcherMap.Delete(key)
+				numDeleted++
+			}
+		}
+		return true
+	})
+
+	return numDeleted
 }

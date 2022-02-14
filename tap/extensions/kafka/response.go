@@ -16,7 +16,7 @@ type Response struct {
 	CaptureTime   time.Time   `json:"captureTime"`
 }
 
-func ReadResponse(r io.Reader, tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, emitter api.Emitter, reqResMatcher requestResponseMatcher) (err error) {
+func ReadResponse(r io.Reader, tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, emitter api.Emitter, reqResMatcher *requestResponseMatcher) (err error) {
 	d := &decoder{reader: r, remain: 4}
 	size := d.readInt32()
 
