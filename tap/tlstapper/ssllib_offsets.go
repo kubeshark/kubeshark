@@ -53,11 +53,11 @@ func findBaseAddress(sslElf *elf.File, sslLibraryPath string) (uint64, error) {
 func findSslOffsets(sslElf *elf.File, base uint64) (sslOffsets, error) {
 	symbolsMap := make(map[string]elf.Symbol)
 
-	if err := buildSymbolsMap(sslElf.Symbols, &symbolsMap); err != nil {
+	if err := buildSymbolsMap(sslElf.Symbols, symbolsMap); err != nil {
 		return sslOffsets{}, errors.Wrap(err, 0)
 	}
 
-	if err := buildSymbolsMap(sslElf.DynamicSymbols, &symbolsMap); err != nil {
+	if err := buildSymbolsMap(sslElf.DynamicSymbols, symbolsMap); err != nil {
 		return sslOffsets{}, errors.Wrap(err, 0)
 	}
 
@@ -94,7 +94,7 @@ func findSslOffsets(sslElf *elf.File, base uint64) (sslOffsets, error) {
 	}, nil
 }
 
-func buildSymbolsMap(sectionGetter func() ([]elf.Symbol, error), symbols *map[string]elf.Symbol) error {
+func buildSymbolsMap(sectionGetter func() ([]elf.Symbol, error), symbols map[string]elf.Symbol) error {
 	syms, err := sectionGetter()
 
 	if err != nil && !errors.Is(err, elf.ErrNoSymbols) {
@@ -106,7 +106,7 @@ func buildSymbolsMap(sectionGetter func() ([]elf.Symbol, error), symbols *map[st
 			continue
 		}
 
-		(*symbols)[sym.Name] = sym
+		symbols[sym.Name] = sym
 	}
 
 	return nil

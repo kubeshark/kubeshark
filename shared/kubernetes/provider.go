@@ -839,7 +839,7 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 
 	caps := applyconfcore.Capabilities().WithDrop("ALL")
 
-	caps.WithAdd("NET_RAW").WithAdd("NET_ADMIN") // to listen to traffic using libpcap
+	caps = caps.WithAdd("NET_RAW").WithAdd("NET_ADMIN") // to listen to traffic using libpcap
 
 	if serviceMesh || tls {
 		caps = caps.WithAdd("SYS_ADMIN")  // to read /proc/PID/net/ns + to install eBPF programs (kernel < 5.8)
