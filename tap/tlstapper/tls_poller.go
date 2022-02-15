@@ -100,7 +100,8 @@ func (p *tlsPoller) startNewTlsReader(chunk *tlsChunk, ip net.IP, port uint16, k
 func dissect(extension *api.Extension, reader *tlsReader, isRequest bool, tcpid *api.TcpID,
 	emitter api.Emitter, options *api.TrafficFilteringOptions) {
 	b := bufio.NewReader(reader)
-	err := extension.Dissector.Dissect(b, isRequest, tcpid, &api.CounterPair{}, &api.SuperTimer{}, &api.SuperIdentifier{}, emitter, options)
+	reqResMatcher := extension.Dissector.NewResponseRequestMatcher()
+	err := extension.Dissector.Dissect(b, isRequest, tcpid, &api.CounterPair{}, &api.SuperTimer{}, &api.SuperIdentifier{}, emitter, options, reqResMatcher)
 
 	if err != nil {
 		logger.Log.Warningf("Error dissecting TLS %v - %v", tcpid, err)
