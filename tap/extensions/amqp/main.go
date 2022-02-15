@@ -42,7 +42,7 @@ func (d dissecting) Ping() {
 
 const amqpRequest string = "amqp_request"
 
-func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, superIdentifier *api.SuperIdentifier, emitter api.Emitter, options *api.TrafficFilteringOptions) error {
+func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, superIdentifier *api.SuperIdentifier, emitter api.Emitter, options *api.TrafficFilteringOptions, _reqResMatcher api.RequestResponseMatcher) error {
 	r := AmqpReader{b}
 
 	var remaining int
@@ -299,6 +299,10 @@ func (d dissecting) Macros() map[string]string {
 	return map[string]string{
 		`amqp`: fmt.Sprintf(`proto.name == "%s"`, protocol.Name),
 	}
+}
+
+func (d dissecting) NewResponseRequestMatcher() api.RequestResponseMatcher {
+	return nil
 }
 
 var Dissector dissecting
