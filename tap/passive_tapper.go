@@ -221,6 +221,7 @@ func startPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem) 
 		assemblerMutex:    &assembler.assemblerMutex,
 		cleanPeriod:       cleanPeriod,
 		connectionTimeout: staleConnectionTimeout,
+		streamsMap:        streamsMap,
 	}
 	cleaner.start()
 
