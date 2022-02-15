@@ -29,8 +29,9 @@ type tcpStreamFactory struct {
 }
 
 type tcpStreamWrapper struct {
-	stream    *tcpStream
-	createdAt time.Time
+	stream        *tcpStream
+	reqResMatcher api.RequestResponseMatcher
+	createdAt     time.Time
 }
 
 func NewTcpStreamFactory(emitter api.Emitter, streamsMap *tcpStreamMap, opts *TapOpts) *tcpStreamFactory {
@@ -81,8 +82,8 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.T
 	if stream.isTapTarget {
 		stream.id = factory.streamsMap.nextId()
 		for i, extension := range extensions {
+			reqResMatcher := extension.Dissector.NewResponseRequestMatcher()
 			counterPair := &api.CounterPair{
-				StreamId: stream.id,
 				Request:  0,
 				Response: 0,
 			}
@@ -103,6 +104,7 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.T
 				extension:          extension,
 				emitter:            factory.Emitter,
 				counterPair:        counterPair,
+				reqResMatcher:      reqResMatcher,
 			})
 			stream.servers = append(stream.servers, tcpReader{
 				msgQueue:   make(chan tcpReaderDataMsg),
@@ -121,11 +123,13 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.T
 				extension:          extension,
 				emitter:            factory.Emitter,
 				counterPair:        counterPair,
+				reqResMatcher:      reqResMatcher,
 			})
 
 			factory.streamsMap.Store(stream.id, &tcpStreamWrapper{
-				stream:    stream,
-				createdAt: time.Now(),
+				stream:        stream,
+				reqResMatcher: reqResMatcher,
+				createdAt:     time.Now(),
 			})
 
 			factory.wg.Add(2)
