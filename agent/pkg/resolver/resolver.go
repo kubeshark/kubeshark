@@ -30,11 +30,6 @@ type Resolver struct {
 	namespace    string
 }
 
-type ResolvedObjectInfo struct {
-	FullAddress string
-	Namespace   string
-}
-
 func (resolver *Resolver) Start(ctx context.Context) {
 	if !resolver.isStarted {
 		resolver.isStarted = true
@@ -45,12 +40,12 @@ func (resolver *Resolver) Start(ctx context.Context) {
 	}
 }
 
-func (resolver *Resolver) Resolve(name string) *ResolvedObjectInfo {
+func (resolver *Resolver) Resolve(name string) string {
 	resolvedName, isFound := resolver.nameMap.Get(name)
 	if !isFound {
-		return nil
+		return ""
 	}
-	return resolvedName.(*ResolvedObjectInfo)
+	return resolvedName.(string)
 }
 
 func (resolver *Resolver) GetMap() cmap.ConcurrentMap {
@@ -76,7 +71,7 @@ func (resolver *Resolver) watchPods(ctx context.Context) error {
 			}
 			if event.Type == watch.Deleted {
 				pod := event.Object.(*corev1.Pod)
-				resolver.saveResolvedName(pod.Status.PodIP, "", pod.Namespace, event.Type)
+				resolver.saveResolvedName(pod.Status.PodIP, "", event.Type)
 			}
 		case <-ctx.Done():
 			watcher.Stop()
@@ -111,10 +106,10 @@ func (resolver *Resolver) watchEndpoints(ctx context.Context) error {
 					}
 					if subset.Addresses != nil {
 						for _, address := range subset.Addresses {
-							resolver.saveResolvedName(address.IP, serviceHostname, endpoint.Namespace, event.Type)
+							resolver.saveResolvedName(address.IP, serviceHostname, event.Type)
 							for _, port := range ports {
 								ipWithPort := fmt.Sprintf("%s:%d", address.IP, port)
-								resolver.saveResolvedName(ipWithPort, serviceHostname, endpoint.Namespace, event.Type)
+								resolver.saveResolvedName(ipWithPort, serviceHostname, event.Type)
 							}
 						}
 					}
@@ -144,19 +139,19 @@ func (resolver *Resolver) watchServices(ctx context.Context) error {
 			service := event.Object.(*corev1.Service)
 			serviceHostname := fmt.Sprintf("%s.%s", service.Name, service.Namespace)
 			if service.Spec.ClusterIP != "" && service.Spec.ClusterIP != kubClientNullString {
-				resolver.saveResolvedName(service.Spec.ClusterIP, serviceHostname, service.Namespace, event.Type)
+				resolver.saveResolvedName(service.Spec.ClusterIP, serviceHostname, event.Type)
 				if service.Spec.Ports != nil {
 					for _, port := range service.Spec.Ports {
 						if port.Port > 0 {
-							resolver.saveResolvedName(fmt.Sprintf("%s:%d", service.Spec.ClusterIP, port.Port), serviceHostname, service.Namespace, event.Type)
+							resolver.saveResolvedName(fmt.Sprintf("%s:%d", service.Spec.ClusterIP, port.Port), serviceHostname, event.Type)
 						}
 					}
 				}
-				resolver.saveServiceIP(service.Spec.ClusterIP, serviceHostname, service.Namespace, event.Type)
+				resolver.saveServiceIP(service.Spec.ClusterIP, serviceHostname, event.Type)
 			}
 			if service.Status.LoadBalancer.Ingress != nil {
 				for _, ingress := range service.Status.LoadBalancer.Ingress {
-					resolver.saveResolvedName(ingress.IP, serviceHostname, service.Namespace, event.Type)
+					resolver.saveResolvedName(ingress.IP, serviceHostname, event.Type)
 				}
 			}
 		case <-ctx.Done():
@@ -166,22 +161,21 @@ func (resolver *Resolver) watchServices(ctx context.Context) error {
 	}
 }
 
-func (resolver *Resolver) saveResolvedName(key string, resolved string, namespace string, eventType watch.EventType) {
+func (resolver *Resolver) saveResolvedName(key string, resolved string, eventType watch.EventType) {
 	if eventType == watch.Deleted {
 		resolver.nameMap.Remove(key)
 		logger.Log.Infof("setting %s=nil", key)
 	} else {
-
-		resolver.nameMap.Set(key, &ResolvedObjectInfo{FullAddress: resolved, Namespace: namespace})
+		resolver.nameMap.Set(key, resolved)
 		logger.Log.Infof("setting %s=%s", key, resolved)
 	}
 }
 
-func (resolver *Resolver) saveServiceIP(key string, resolved string, namespace string, eventType watch.EventType) {
+func (resolver *Resolver) saveServiceIP(key string, resolved string, eventType watch.EventType) {
 	if eventType == watch.Deleted {
 		resolver.serviceMap.Remove(key)
 	} else {
-		resolver.nameMap.Set(key, &ResolvedObjectInfo{FullAddress: resolved, Namespace: namespace})
+		resolver.serviceMap.Set(key, resolved)
 	}
 }
 

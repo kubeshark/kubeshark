@@ -39,9 +39,10 @@ type TCP struct {
 }
 
 type Extension struct {
-	Protocol  *Protocol
-	Path      string
-	Dissector Dissector
+	Protocol   *Protocol
+	Path       string
+	Dissector  Dissector
+	MatcherMap *sync.Map
 }
 
 type ConnectionInfo struct {
@@ -61,6 +62,7 @@ type TcpID struct {
 }
 
 type CounterPair struct {
+	StreamId int64
 	Request  uint
 	Response uint
 	sync.Mutex
@@ -98,15 +100,10 @@ type SuperIdentifier struct {
 type Dissector interface {
 	Register(*Extension)
 	Ping()
-	Dissect(b *bufio.Reader, isClient bool, tcpID *TcpID, counterPair *CounterPair, superTimer *SuperTimer, superIdentifier *SuperIdentifier, emitter Emitter, options *TrafficFilteringOptions, reqResMatcher RequestResponseMatcher) error
-	Analyze(item *OutputChannelItem, resolvedSource string, resolvedDestination string, namespace string) *Entry
+	Dissect(b *bufio.Reader, isClient bool, tcpID *TcpID, counterPair *CounterPair, superTimer *SuperTimer, superIdentifier *SuperIdentifier, emitter Emitter, options *TrafficFilteringOptions) error
+	Analyze(item *OutputChannelItem, resolvedSource string, resolvedDestination string) *Entry
 	Represent(request map[string]interface{}, response map[string]interface{}) (object []byte, bodySize int64, err error)
 	Macros() map[string]string
-	NewResponseRequestMatcher() RequestResponseMatcher
-}
-
-type RequestResponseMatcher interface {
-	GetMap() *sync.Map
 }
 
 type Emitting struct {
@@ -128,7 +125,6 @@ type Entry struct {
 	Protocol               Protocol               `json:"proto"`
 	Source                 *TCP                   `json:"src"`
 	Destination            *TCP                   `json:"dst"`
-	Namespace              string                 `json:"namespace,omitempty"`
 	Outgoing               bool                   `json:"outgoing"`
 	Timestamp              int64                  `json:"timestamp"`
 	StartTime              time.Time              `json:"startTime"`

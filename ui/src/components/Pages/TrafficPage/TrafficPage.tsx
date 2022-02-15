@@ -76,7 +76,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus}) => {
     const scrollableRef = useRef(null);
 
     const [openOasModal, setOpenOasModal] = useState(false);
-    
+    const handleOpenModal = () => setOpenOasModal(true);
     const handleCloseModal = () => setOpenOasModal(false);
 
     const [showTLSWarning, setShowTLSWarning] = useState(false);
@@ -258,14 +258,8 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus}) => {
         }
     }
 
-    const handleOpenOasModal = () => {
-      ws.current.close();
-      setOpenOasModal(true);
-    }
-
     const openServiceMapModalDebounce = debounce(() => {
-        ws.current.close();
-        setServiceMapModalOpen(true);
+        setServiceMapModalOpen(true)
     }, 500);
 
   return (
@@ -291,7 +285,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus}) => {
             variant="contained"
             className={commonClasses.outlinedButton + " " + commonClasses.imagedButton}
             style={{ marginRight: 25 }}
-            onClick={handleOpenOasModal}
+            onClick={handleOpenModal}
           >
             Show OAS
           </Button>}

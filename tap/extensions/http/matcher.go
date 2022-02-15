@@ -8,17 +8,16 @@ import (
 	"github.com/up9inc/mizu/tap/api"
 )
 
-// Key is {client_addr}_{client_port}_{dest_addr}_{dest_port}_{incremental_counter}_{proto_ident}
+var reqResMatcher = createResponseRequestMatcher() // global
+
+// Key is {client_addr}:{client_port}->{dest_addr}:{dest_port}_{incremental_counter}
 type requestResponseMatcher struct {
 	openMessagesMap *sync.Map
 }
 
-func createResponseRequestMatcher() api.RequestResponseMatcher {
-	return &requestResponseMatcher{openMessagesMap: &sync.Map{}}
-}
-
-func (matcher *requestResponseMatcher) GetMap() *sync.Map {
-	return matcher.openMessagesMap
+func createResponseRequestMatcher() requestResponseMatcher {
+	newMatcher := &requestResponseMatcher{openMessagesMap: &sync.Map{}}
+	return *newMatcher
 }
 
 func (matcher *requestResponseMatcher) registerRequest(ident string, request *http.Request, captureTime time.Time, protoMinor int) *api.OutputChannelItem {

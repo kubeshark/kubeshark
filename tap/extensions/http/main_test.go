@@ -11,6 +11,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"sort"
 	"testing"
 	"time"
 
@@ -38,6 +39,7 @@ func TestRegister(t *testing.T) {
 	extension := &api.Extension{}
 	dissector.Register(extension)
 	assert.Equal(t, "http", extension.Protocol.Name)
+	assert.NotNil(t, extension.MatcherMap)
 }
 
 func TestMacros(t *testing.T) {
@@ -121,8 +123,7 @@ func TestDissect(t *testing.T) {
 			SrcPort: "1",
 			DstPort: "2",
 		}
-		reqResMatcher := dissector.NewResponseRequestMatcher()
-		err = dissector.Dissect(bufferClient, true, tcpIDClient, counterPair, &api.SuperTimer{}, superIdentifier, emitter, options, reqResMatcher)
+		err = dissector.Dissect(bufferClient, true, tcpIDClient, counterPair, &api.SuperTimer{}, superIdentifier, emitter, options)
 		if err != nil && err != io.EOF && err != io.ErrUnexpectedEOF {
 			panic(err)
 		}
@@ -140,7 +141,7 @@ func TestDissect(t *testing.T) {
 			SrcPort: "2",
 			DstPort: "1",
 		}
-		err = dissector.Dissect(bufferServer, false, tcpIDServer, counterPair, &api.SuperTimer{}, superIdentifier, emitter, options, reqResMatcher)
+		err = dissector.Dissect(bufferServer, false, tcpIDServer, counterPair, &api.SuperTimer{}, superIdentifier, emitter, options)
 		if err != nil && err != io.EOF && err != io.ErrUnexpectedEOF {
 			panic(err)
 		}
@@ -153,6 +154,14 @@ func TestDissect(t *testing.T) {
 		time.Sleep(10 * time.Millisecond)
 
 		stop <- true
+
+		sort.Slice(items, func(i, j int) bool {
+			iMarshaled, err := json.Marshal(items[i])
+			assert.Nil(t, err)
+			jMarshaled, err := json.Marshal(items[j])
+			assert.Nil(t, err)
+			return len(iMarshaled) < len(jMarshaled)
+		})
 
 		marshaled, err := json.Marshal(items)
 		assert.Nil(t, err)
@@ -205,7 +214,7 @@ func TestAnalyze(t *testing.T) {
 
 		var entries []*api.Entry
 		for _, item := range items {
-			entry := dissector.Analyze(item, "", "", "")
+			entry := dissector.Analyze(item, "", "")
 			entries = append(entries, entry)
 		}
 

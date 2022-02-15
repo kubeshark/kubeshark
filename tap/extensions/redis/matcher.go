@@ -7,17 +7,16 @@ import (
 	"github.com/up9inc/mizu/tap/api"
 )
 
-// Key is `{src_ip}_{dst_ip}_{src_ip}_{src_port}_{incremental_counter}`
+var reqResMatcher = createResponseRequestMatcher() // global
+
+// Key is `{stream_id}_{src_ip}:{dst_ip}_{src_ip}:{src_port}_{incremental_counter}`
 type requestResponseMatcher struct {
 	openMessagesMap *sync.Map
 }
 
-func createResponseRequestMatcher() api.RequestResponseMatcher {
-	return &requestResponseMatcher{openMessagesMap: &sync.Map{}}
-}
-
-func (matcher *requestResponseMatcher) GetMap() *sync.Map {
-	return matcher.openMessagesMap
+func createResponseRequestMatcher() requestResponseMatcher {
+	newMatcher := &requestResponseMatcher{openMessagesMap: &sync.Map{}}
+	return *newMatcher
 }
 
 func (matcher *requestResponseMatcher) registerRequest(ident string, request *RedisPacket, captureTime time.Time) *api.OutputChannelItem {

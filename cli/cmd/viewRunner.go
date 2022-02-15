@@ -3,13 +3,13 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"net/http"
-
 	"github.com/up9inc/mizu/cli/utils"
+	"net/http"
 
 	"github.com/up9inc/mizu/cli/apiserver"
 	"github.com/up9inc/mizu/cli/config"
 	"github.com/up9inc/mizu/cli/mizu/fsUtils"
+	"github.com/up9inc/mizu/cli/mizu/version"
 	"github.com/up9inc/mizu/cli/uiUtils"
 	"github.com/up9inc/mizu/shared/kubernetes"
 	"github.com/up9inc/mizu/shared/logger"
@@ -60,6 +60,15 @@ func runMizuView() {
 
 	if !config.Config.HeadlessMode {
 		uiUtils.OpenBrowser(url)
+	}
+
+	if isCompatible, err := version.CheckVersionCompatibility(apiServerProvider); err != nil {
+		logger.Log.Errorf("Failed to check versions compatibility %v", err)
+		cancel()
+		return
+	} else if !isCompatible {
+		cancel()
+		return
 	}
 
 	utils.WaitForFinish(ctx, cancel)

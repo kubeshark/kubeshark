@@ -118,8 +118,8 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 
 	for item := range outputItems {
 		extension := extensionsMap[item.Protocol.Name]
-		resolvedSource, resolvedDestionation, namespace := resolveIP(item.ConnectionInfo)
-		mizuEntry := extension.Dissector.Analyze(item, resolvedSource, resolvedDestionation, namespace)
+		resolvedSource, resolvedDestionation := resolveIP(item.ConnectionInfo)
+		mizuEntry := extension.Dissector.Analyze(item, resolvedSource, resolvedDestionation)
 		if extension.Protocol.Name == "http" {
 			if !disableOASValidation {
 				var httpPair tapApi.HTTPRequestResponsePair
@@ -158,32 +158,26 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 	}
 }
 
-func resolveIP(connectionInfo *tapApi.ConnectionInfo) (resolvedSource string, resolvedDestination string, namespace string) {
+func resolveIP(connectionInfo *tapApi.ConnectionInfo) (resolvedSource string, resolvedDestination string) {
 	if k8sResolver != nil {
 		unresolvedSource := connectionInfo.ClientIP
-		resolvedSourceObject := k8sResolver.Resolve(unresolvedSource)
-		if resolvedSourceObject == nil {
+		resolvedSource = k8sResolver.Resolve(unresolvedSource)
+		if resolvedSource == "" {
 			logger.Log.Debugf("Cannot find resolved name to source: %s", unresolvedSource)
 			if os.Getenv("SKIP_NOT_RESOLVED_SOURCE") == "1" {
 				return
 			}
-		} else {
-			resolvedSource = resolvedSourceObject.FullAddress
 		}
-
 		unresolvedDestination := fmt.Sprintf("%s:%s", connectionInfo.ServerIP, connectionInfo.ServerPort)
-		resolvedDestinationObject := k8sResolver.Resolve(unresolvedDestination)
-		if resolvedDestinationObject == nil {
+		resolvedDestination = k8sResolver.Resolve(unresolvedDestination)
+		if resolvedDestination == "" {
 			logger.Log.Debugf("Cannot find resolved name to dest: %s", unresolvedDestination)
 			if os.Getenv("SKIP_NOT_RESOLVED_DEST") == "1" {
 				return
 			}
-		} else {
-			resolvedDestination = resolvedDestinationObject.FullAddress
-			namespace = resolvedDestinationObject.Namespace
 		}
 	}
-	return resolvedSource, resolvedDestination, namespace
+	return resolvedSource, resolvedDestination
 }
 
 func CheckIsServiceIP(address string) bool {
