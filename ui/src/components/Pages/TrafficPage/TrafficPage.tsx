@@ -22,6 +22,8 @@ import OasModal from "../../OasModal/OasModal";
 import {useCommonStyles} from "../../../helpers/commonStyle"
 import {TLSWarning} from "../../TLSWarning/TLSWarning";
 import serviceMapModalOpenAtom from "../../../recoil/serviceMapModalOpen";
+import serviceMap from "../../assets/serviceMap.svg";
+import services from "../../assets/services.svg";
 
 const useLayoutStyles = makeStyles(() => ({
   details: {
@@ -74,7 +76,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus}) => {
     const scrollableRef = useRef(null);
 
     const [openOasModal, setOpenOasModal] = useState(false);
-    const handleOpenModal = () => setOpenOasModal(true);
+    
     const handleCloseModal = () => setOpenOasModal(false);
 
     const [showTLSWarning, setShowTLSWarning] = useState(false);
@@ -256,8 +258,14 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus}) => {
         }
     }
 
+    const handleOpenOasModal = () => {
+      ws.current.close();
+      setOpenOasModal(true);
+    }
+
     const openServiceMapModalDebounce = debounce(() => {
-        setServiceMapModalOpen(true)
+        ws.current.close();
+        setServiceMapModalOpen(true);
     }, 500);
 
   return (
@@ -277,17 +285,21 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus}) => {
         </div>
         <div style={{ display: 'flex' }}>
           {window["isOasEnabled"] && <Button
+            startIcon={<img className="custom" src={services} alt="services"></img>}
+            size="large"
             type="submit"
             variant="contained"
-            className={commonClasses.button}
+            className={commonClasses.outlinedButton + " " + commonClasses.imagedButton}
             style={{ marginRight: 25 }}
-            onClick={handleOpenModal}
+            onClick={handleOpenOasModal}
           >
             Show OAS
           </Button>}
           {window["isServiceMapEnabled"] && <Button
+            startIcon={<img src={serviceMap} className="custom" alt="service-map" style={{marginRight:"8%"}}></img>}
+            size="large"
             variant="contained"
-            className={commonClasses.button}
+            className={commonClasses.outlinedButton + " " + commonClasses.imagedButton}
             onClick={openServiceMapModalDebounce}
           >
             Service Map

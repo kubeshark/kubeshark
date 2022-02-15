@@ -1,4 +1,9 @@
-import {isValueExistsInElement, resizeToHugeMizu, verifyMinimumEntries} from "../testHelpers/TrafficHelper";
+import {
+    checkThatAllEntriesShown,
+    isValueExistsInElement,
+    resizeToHugeMizu,
+    verifyMinimumEntries
+} from "../testHelpers/TrafficHelper";
 
 it('Loading Mizu', function () {
     cy.visit(Cypress.env('testUrl'));
@@ -17,13 +22,6 @@ function checkEntries() {
             const numOfEntries = parseInt(number.text());
             [...Array(numOfEntries).keys()].map(checkEntry);
         });
-    });
-}
-
-function checkThatAllEntriesShown() {
-    cy.get('#entries-length').then(number => {
-        if (number.text() === '1')
-            cy.get('[title="Fetch old records"]').click();
     });
 }
 

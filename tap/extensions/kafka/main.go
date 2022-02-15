@@ -33,27 +33,27 @@ type dissecting string
 
 func (d dissecting) Register(extension *api.Extension) {
 	extension.Protocol = &_protocol
-	extension.MatcherMap = reqResMatcher.openMessagesMap
 }
 
 func (d dissecting) Ping() {
 	log.Printf("pong %s", _protocol.Name)
 }
 
-func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, superIdentifier *api.SuperIdentifier, emitter api.Emitter, options *api.TrafficFilteringOptions) error {
+func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, superIdentifier *api.SuperIdentifier, emitter api.Emitter, options *api.TrafficFilteringOptions, _reqResMatcher api.RequestResponseMatcher) error {
+	reqResMatcher := _reqResMatcher.(*requestResponseMatcher)
 	for {
 		if superIdentifier.Protocol != nil && superIdentifier.Protocol != &_protocol {
 			return errors.New("Identified by another protocol")
 		}
 
 		if isClient {
-			_, _, err := ReadRequest(b, tcpID, superTimer)
+			_, _, err := ReadRequest(b, tcpID, counterPair, superTimer, reqResMatcher)
 			if err != nil {
 				return err
 			}
 			superIdentifier.Protocol = &_protocol
 		} else {
-			err := ReadResponse(b, tcpID, superTimer, emitter)
+			err := ReadResponse(b, tcpID, counterPair, superTimer, emitter, reqResMatcher)
 			if err != nil {
 				return err
 			}
@@ -62,7 +62,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 	}
 }
 
-func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, resolvedDestination string) *api.Entry {
+func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, resolvedDestination string, namespace string) *api.Entry {
 	request := item.Pair.Request.Payload.(map[string]interface{})
 	reqDetails := request["details"].(map[string]interface{})
 	apiKey := ApiKey(reqDetails["apiKey"].(float64))
@@ -120,7 +120,11 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 			summary = summary[:len(summary)-2]
 		}
 	case CreateTopics:
-		topics := reqDetails["payload"].(map[string]interface{})["topics"].([]interface{})
+		_topics := reqDetails["payload"].(map[string]interface{})["topics"]
+		if _topics == nil {
+			break
+		}
+		topics := _topics.([]interface{})
 		for _, topic := range topics {
 			summary += fmt.Sprintf("%s, ", topic.(map[string]interface{})["name"].(string))
 		}
@@ -128,6 +132,9 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 			summary = summary[:len(summary)-2]
 		}
 	case DeleteTopics:
+		if reqDetails["topicNames"] == nil {
+			break
+		}
 		topicNames := reqDetails["topicNames"].([]string)
 		for _, name := range topicNames {
 			summary += fmt.Sprintf("%s, ", name)
@@ -151,6 +158,7 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 			IP:   item.ConnectionInfo.ServerIP,
 			Port: item.ConnectionInfo.ServerPort,
 		},
+		Namespace:   namespace,
 		Outgoing:    item.ConnectionInfo.IsOutgoing,
 		Request:     reqDetails,
 		Response:    item.Pair.Response.Payload.(map[string]interface{})["details"].(map[string]interface{}),
@@ -206,6 +214,10 @@ func (d dissecting) Macros() map[string]string {
 	return map[string]string{
 		`kafka`: fmt.Sprintf(`proto.name == "%s"`, _protocol.Name),
 	}
+}
+
+func (d dissecting) NewResponseRequestMatcher() api.RequestResponseMatcher {
+	return createResponseRequestMatcher()
 }
 
 var Dissector dissecting

@@ -34,9 +34,12 @@ func (h *RoutesEventHandlers) WebSocketConnect(socketId int, isTapper bool) {
 		tappers.Connected()
 	} else {
 		logger.Log.Infof("Websocket event - Browser socket connected, socket ID: %d", socketId)
+
 		socketListLock.Lock()
 		browserClientSocketUUIDs = append(browserClientSocketUUIDs, socketId)
 		socketListLock.Unlock()
+
+		BroadcastTappedPodsStatus()
 	}
 }
 
@@ -101,9 +104,9 @@ func (h *RoutesEventHandlers) WebSocketMessage(_ int, message []byte) {
 }
 
 func handleTLSLink(outboundLinkMessage models.WebsocketOutboundLinkMessage) {
-	resolvedName := k8sResolver.Resolve(outboundLinkMessage.Data.DstIP)
-	if resolvedName != "" {
-		outboundLinkMessage.Data.DstIP = resolvedName
+	resolvedNameObject := k8sResolver.Resolve(outboundLinkMessage.Data.DstIP)
+	if resolvedNameObject != nil {
+		outboundLinkMessage.Data.DstIP = resolvedNameObject.FullAddress
 	} else if outboundLinkMessage.Data.SuggestedResolvedName != "" {
 		outboundLinkMessage.Data.DstIP = outboundLinkMessage.Data.SuggestedResolvedName
 	}

@@ -23,12 +23,12 @@ import (
 	"github.com/up9inc/mizu/shared/logger"
 )
 
-func GetApiServerUrl() string {
-	return fmt.Sprintf("http://%s", kubernetes.GetMizuApiServerProxiedHostAndPath(config.Config.Tap.GuiPort))
+func GetApiServerUrl(port uint16) string {
+	return fmt.Sprintf("http://%s", kubernetes.GetMizuApiServerProxiedHostAndPath(port))
 }
 
-func startProxyReportErrorIfAny(kubernetesProvider *kubernetes.Provider, ctx context.Context, cancel context.CancelFunc) {
-	httpServer, err := kubernetes.StartProxy(kubernetesProvider, config.Config.Tap.ProxyHost, config.Config.Tap.GuiPort, config.Config.MizuResourcesNamespace, kubernetes.ApiServerPodName, cancel)
+func startProxyReportErrorIfAny(kubernetesProvider *kubernetes.Provider, ctx context.Context, cancel context.CancelFunc, port uint16) {
+	httpServer, err := kubernetes.StartProxy(kubernetesProvider, config.Config.Tap.ProxyHost, port, config.Config.MizuResourcesNamespace, kubernetes.ApiServerPodName, cancel)
 	if err != nil {
 		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error occured while running k8s proxy %v\n"+
 			"Try setting different port by using --%s", errormessage.FormatError(err), configStructs.GuiPortTapName))
@@ -36,7 +36,7 @@ func startProxyReportErrorIfAny(kubernetesProvider *kubernetes.Provider, ctx con
 		return
 	}
 
-	apiProvider = apiserver.NewProvider(GetApiServerUrl(), apiserver.DefaultRetries, apiserver.DefaultTimeout)
+	apiProvider = apiserver.NewProvider(GetApiServerUrl(port), apiserver.DefaultRetries, apiserver.DefaultTimeout)
 	if err := apiProvider.TestConnection(); err != nil {
 		logger.Log.Debugf("Couldn't connect using proxy, stopping proxy and trying to create port-forward")
 		if err := httpServer.Shutdown(ctx); err != nil {
@@ -44,14 +44,14 @@ func startProxyReportErrorIfAny(kubernetesProvider *kubernetes.Provider, ctx con
 		}
 
 		podRegex, _ := regexp.Compile(kubernetes.ApiServerPodName)
-		if _, err := kubernetes.NewPortForward(kubernetesProvider, config.Config.MizuResourcesNamespace, podRegex, config.Config.Tap.GuiPort, ctx, cancel); err != nil {
+		if _, err := kubernetes.NewPortForward(kubernetesProvider, config.Config.MizuResourcesNamespace, podRegex, port, ctx, cancel); err != nil {
 			logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error occured while running port forward %v\n"+
 				"Try setting different port by using --%s", errormessage.FormatError(err), configStructs.GuiPortTapName))
 			cancel()
 			return
 		}
 
-		apiProvider = apiserver.NewProvider(GetApiServerUrl(), apiserver.DefaultRetries, apiserver.DefaultTimeout)
+		apiProvider = apiserver.NewProvider(GetApiServerUrl(port), apiserver.DefaultRetries, apiserver.DefaultTimeout)
 		if err := apiProvider.TestConnection(); err != nil {
 			logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Couldn't connect to API server, for more info check logs at %s", fsUtils.GetLogFilePath()))
 			cancel()

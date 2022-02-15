@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -39,18 +38,7 @@ func PostTappedPods(c *gin.Context) {
 
 	logger.Log.Infof("[Status] POST request: %d tapped pods", len(requestTappedPods))
 	tappedPods.Set(requestTappedPods)
-	broadcastTappedPodsStatus()
-}
-
-func broadcastTappedPodsStatus() {
-	tappedPodsStatus := tappedPods.GetTappedPodsStatus()
-
-	message := shared.CreateWebSocketStatusMessage(tappedPodsStatus)
-	if jsonBytes, err := json.Marshal(message); err != nil {
-		logger.Log.Errorf("Could not Marshal message %v", err)
-	} else {
-		api.BroadcastToBrowserClients(jsonBytes)
-	}
+	api.BroadcastTappedPodsStatus()
 }
 
 func PostTapperStatus(c *gin.Context) {
@@ -67,7 +55,7 @@ func PostTapperStatus(c *gin.Context) {
 
 	logger.Log.Infof("[Status] POST request, tapper status: %v", tapperStatus)
 	tappers.SetStatus(tapperStatus)
-	broadcastTappedPodsStatus()
+	api.BroadcastTappedPodsStatus()
 }
 
 func GetConnectedTappersCount(c *gin.Context) {

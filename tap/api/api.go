@@ -8,11 +8,15 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
+	"sort"
 	"sync"
 	"time"
 
 	"github.com/google/martian/har"
 )
+
+const mizuTestEnvVar = "MIZU_TEST"
 
 type Protocol struct {
 	Name            string   `json:"name"`
@@ -35,10 +39,9 @@ type TCP struct {
 }
 
 type Extension struct {
-	Protocol   *Protocol
-	Path       string
-	Dissector  Dissector
-	MatcherMap *sync.Map
+	Protocol  *Protocol
+	Path      string
+	Dissector Dissector
 }
 
 type ConnectionInfo struct {
@@ -60,6 +63,7 @@ type TcpID struct {
 type CounterPair struct {
 	Request  uint
 	Response uint
+	sync.Mutex
 }
 
 type GenericMessage struct {
@@ -94,10 +98,15 @@ type SuperIdentifier struct {
 type Dissector interface {
 	Register(*Extension)
 	Ping()
-	Dissect(b *bufio.Reader, isClient bool, tcpID *TcpID, counterPair *CounterPair, superTimer *SuperTimer, superIdentifier *SuperIdentifier, emitter Emitter, options *TrafficFilteringOptions) error
-	Analyze(item *OutputChannelItem, resolvedSource string, resolvedDestination string) *Entry
+	Dissect(b *bufio.Reader, isClient bool, tcpID *TcpID, counterPair *CounterPair, superTimer *SuperTimer, superIdentifier *SuperIdentifier, emitter Emitter, options *TrafficFilteringOptions, reqResMatcher RequestResponseMatcher) error
+	Analyze(item *OutputChannelItem, resolvedSource string, resolvedDestination string, namespace string) *Entry
 	Represent(request map[string]interface{}, response map[string]interface{}) (object []byte, bodySize int64, err error)
 	Macros() map[string]string
+	NewResponseRequestMatcher() RequestResponseMatcher
+}
+
+type RequestResponseMatcher interface {
+	GetMap() *sync.Map
 }
 
 type Emitting struct {
@@ -119,6 +128,7 @@ type Entry struct {
 	Protocol               Protocol               `json:"proto"`
 	Source                 *TCP                   `json:"src"`
 	Destination            *TCP                   `json:"dst"`
+	Namespace              string                 `json:"namespace,omitempty"`
 	Outgoing               bool                   `json:"outgoing"`
 	Timestamp              int64                  `json:"timestamp"`
 	StartTime              time.Time              `json:"startTime"`
@@ -260,27 +270,86 @@ type HTTPWrapper struct {
 }
 
 func (h HTTPPayload) MarshalJSON() ([]byte, error) {
+	_, testEnvEnabled := os.LookupEnv(mizuTestEnvVar)
 	switch h.Type {
 	case TypeHttpRequest:
 		harRequest, err := har.NewRequest(h.Data.(*http.Request), true)
 		if err != nil {
 			return nil, errors.New("Failed converting request to HAR")
 		}
+		sort.Slice(harRequest.Headers, func(i, j int) bool {
+			if harRequest.Headers[i].Name < harRequest.Headers[j].Name {
+				return true
+			}
+			if harRequest.Headers[i].Name > harRequest.Headers[j].Name {
+				return false
+			}
+			return harRequest.Headers[i].Value < harRequest.Headers[j].Value
+		})
+		sort.Slice(harRequest.QueryString, func(i, j int) bool {
+			if harRequest.QueryString[i].Name < harRequest.QueryString[j].Name {
+				return true
+			}
+			if harRequest.QueryString[i].Name > harRequest.QueryString[j].Name {
+				return false
+			}
+			return harRequest.QueryString[i].Value < harRequest.QueryString[j].Value
+		})
+		if harRequest.PostData != nil {
+			sort.Slice(harRequest.PostData.Params, func(i, j int) bool {
+				if harRequest.PostData.Params[i].Name < harRequest.PostData.Params[j].Name {
+					return true
+				}
+				if harRequest.PostData.Params[i].Name > harRequest.PostData.Params[j].Name {
+					return false
+				}
+				return harRequest.PostData.Params[i].Value < harRequest.PostData.Params[j].Value
+			})
+		}
+		if testEnvEnabled {
+			harRequest.URL = ""
+		}
+		var reqWrapper *HTTPRequestWrapper
+		if !testEnvEnabled {
+			reqWrapper = &HTTPRequestWrapper{Request: h.Data.(*http.Request)}
+		}
 		return json.Marshal(&HTTPWrapper{
 			Method:     harRequest.Method,
 			Details:    harRequest,
-			RawRequest: &HTTPRequestWrapper{Request: h.Data.(*http.Request)},
+			RawRequest: reqWrapper,
 		})
 	case TypeHttpResponse:
 		harResponse, err := har.NewResponse(h.Data.(*http.Response), true)
 		if err != nil {
 			return nil, errors.New("Failed converting response to HAR")
 		}
+		sort.Slice(harResponse.Headers, func(i, j int) bool {
+			if harResponse.Headers[i].Name < harResponse.Headers[j].Name {
+				return true
+			}
+			if harResponse.Headers[i].Name > harResponse.Headers[j].Name {
+				return false
+			}
+			return harResponse.Headers[i].Value < harResponse.Headers[j].Value
+		})
+		sort.Slice(harResponse.Cookies, func(i, j int) bool {
+			if harResponse.Cookies[i].Name < harResponse.Cookies[j].Name {
+				return true
+			}
+			if harResponse.Cookies[i].Name > harResponse.Cookies[j].Name {
+				return false
+			}
+			return harResponse.Cookies[i].Value < harResponse.Cookies[j].Value
+		})
+		var resWrapper *HTTPResponseWrapper
+		if !testEnvEnabled {
+			resWrapper = &HTTPResponseWrapper{Response: h.Data.(*http.Response)}
+		}
 		return json.Marshal(&HTTPWrapper{
 			Method:      "",
 			Url:         "",
 			Details:     harResponse,
-			RawResponse: &HTTPResponseWrapper{Response: h.Data.(*http.Response)},
+			RawResponse: resWrapper,
 		})
 	default:
 		panic(fmt.Sprintf("HTTP payload cannot be marshaled: %v", h.Type))

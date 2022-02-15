@@ -76,6 +76,8 @@ func NewProvider(kubeConfigPath string) (*Provider, error) {
 			"you can set alternative kube config file path by adding the kube-config-path field to the mizu config file, err:  %w", kubeConfigPath, err)
 	}
 
+	logger.Log.Debugf("K8s client config, host: %s, api path: %s, user agent: %s", restClientConfig.Host, restClientConfig.APIPath, restClientConfig.UserAgent)
+
 	return &Provider{
 		clientSet:        clientSet,
 		kubernetesConfig: kubernetesConfig,
@@ -279,7 +281,7 @@ func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, moun
 			VolumeMounts:    volumeMounts,
 			ReadinessProbe: &core.Probe{
 				FailureThreshold: 3,
-				Handler: core.Handler{
+				ProbeHandler: core.ProbeHandler{
 					TCPSocket: &core.TCPSocketAction{
 						Port: intstr.Parse(shared.BaseninePort),
 					},
@@ -312,7 +314,7 @@ func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, moun
 			VolumeMounts:    volumeMounts,
 			ReadinessProbe: &core.Probe{
 				FailureThreshold: 3,
-				Handler: core.Handler{
+				ProbeHandler: core.ProbeHandler{
 					HTTPGet: &core.HTTPGetAction{
 						Path:   "/health/ready",
 						Port:   intstr.FromInt(4433),
@@ -342,7 +344,7 @@ func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, moun
 			VolumeMounts:    volumeMounts,
 			ReadinessProbe: &core.Probe{
 				FailureThreshold: 3,
-				Handler: core.Handler{
+				ProbeHandler: core.ProbeHandler{
 					HTTPGet: &core.HTTPGetAction{
 						Path:   "/health/ready",
 						Port:   intstr.FromInt(4466),
@@ -952,6 +954,11 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	labelSelector := applyconfmeta.LabelSelector()
 	labelSelector.WithMatchLabels(map[string]string{"app": tapperPodName})
 
+	applyOptions := metav1.ApplyOptions{
+		Force: true,
+		FieldManager: fieldManagerName,
+	}
+
 	daemonSet := applyconfapp.DaemonSet(daemonSetName, namespace)
 	daemonSet.
 		WithLabels(map[string]string{
@@ -960,7 +967,7 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 		}).
 		WithSpec(applyconfapp.DaemonSetSpec().WithSelector(labelSelector).WithTemplate(podTemplate))
 
-	_, err = provider.clientSet.AppsV1().DaemonSets(namespace).Apply(ctx, daemonSet, metav1.ApplyOptions{FieldManager: fieldManagerName})
+	_, err = provider.clientSet.AppsV1().DaemonSets(namespace).Apply(ctx, daemonSet, applyOptions)
 	return err
 }
 
@@ -1000,7 +1007,7 @@ func (provider *Provider) ListAllRunningPodsMatchingRegex(ctx context.Context, r
 
 	matchingPods := make([]core.Pod, 0)
 	for _, pod := range pods {
-		if isPodRunning(&pod) {
+		if IsPodRunning(&pod) {
 			matchingPods = append(matchingPods, pod)
 		}
 	}
@@ -1190,6 +1197,6 @@ func loadKubernetesConfiguration(kubeConfigPath string) clientcmd.ClientConfig {
 	)
 }
 
-func isPodRunning(pod *core.Pod) bool {
+func IsPodRunning(pod *core.Pod) bool {
 	return pod.Status.Phase == core.PodRunning
 }

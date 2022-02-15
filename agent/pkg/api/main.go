@@ -118,8 +118,8 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 
 	for item := range outputItems {
 		extension := extensionsMap[item.Protocol.Name]
-		resolvedSource, resolvedDestionation := resolveIP(item.ConnectionInfo)
-		mizuEntry := extension.Dissector.Analyze(item, resolvedSource, resolvedDestionation)
+		resolvedSource, resolvedDestionation, namespace := resolveIP(item.ConnectionInfo)
+		mizuEntry := extension.Dissector.Analyze(item, resolvedSource, resolvedDestionation, namespace)
 		if extension.Protocol.Name == "http" {
 			if !disableOASValidation {
 				var httpPair tapApi.HTTPRequestResponsePair
@@ -140,7 +140,7 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 				mizuEntry.Rules = rules
 			}
 
-			entryWSource := oas.EntryWithSource{Entry: *harEntry, Source: mizuEntry.Source.Name}
+			entryWSource := oas.EntryWithSource{Entry: *harEntry, Source: mizuEntry.Source.Name, Id: mizuEntry.Id}
 			oas.GetOasGeneratorInstance().PushEntry(&entryWSource)
 		}
 
@@ -158,26 +158,32 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 	}
 }
 
-func resolveIP(connectionInfo *tapApi.ConnectionInfo) (resolvedSource string, resolvedDestination string) {
+func resolveIP(connectionInfo *tapApi.ConnectionInfo) (resolvedSource string, resolvedDestination string, namespace string) {
 	if k8sResolver != nil {
 		unresolvedSource := connectionInfo.ClientIP
-		resolvedSource = k8sResolver.Resolve(unresolvedSource)
-		if resolvedSource == "" {
+		resolvedSourceObject := k8sResolver.Resolve(unresolvedSource)
+		if resolvedSourceObject == nil {
 			logger.Log.Debugf("Cannot find resolved name to source: %s", unresolvedSource)
 			if os.Getenv("SKIP_NOT_RESOLVED_SOURCE") == "1" {
 				return
 			}
+		} else {
+			resolvedSource = resolvedSourceObject.FullAddress
 		}
+
 		unresolvedDestination := fmt.Sprintf("%s:%s", connectionInfo.ServerIP, connectionInfo.ServerPort)
-		resolvedDestination = k8sResolver.Resolve(unresolvedDestination)
-		if resolvedDestination == "" {
+		resolvedDestinationObject := k8sResolver.Resolve(unresolvedDestination)
+		if resolvedDestinationObject == nil {
 			logger.Log.Debugf("Cannot find resolved name to dest: %s", unresolvedDestination)
 			if os.Getenv("SKIP_NOT_RESOLVED_DEST") == "1" {
 				return
 			}
+		} else {
+			resolvedDestination = resolvedDestinationObject.FullAddress
+			namespace = resolvedDestinationObject.Namespace
 		}
 	}
-	return resolvedSource, resolvedDestination
+	return resolvedSource, resolvedDestination, namespace
 }
 
 func CheckIsServiceIP(address string) bool {

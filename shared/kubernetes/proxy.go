@@ -4,16 +4,17 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/up9inc/mizu/shared"
-	"k8s.io/apimachinery/pkg/util/httpstream"
-	"k8s.io/client-go/tools/portforward"
-	"k8s.io/client-go/transport/spdy"
 	"net"
 	"net/http"
 	"net/url"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/up9inc/mizu/shared"
+	"k8s.io/apimachinery/pkg/util/httpstream"
+	"k8s.io/client-go/tools/portforward"
+	"k8s.io/client-go/transport/spdy"
 
 	"github.com/up9inc/mizu/shared/logger"
 	"k8s.io/kubectl/pkg/proxy"
@@ -31,7 +32,7 @@ func StartProxy(kubernetesProvider *Provider, proxyHost string, mizuPort uint16,
 		RejectMethods: proxy.MakeRegexpArrayOrDie(proxy.DefaultMethodRejectRE),
 	}
 
-	proxyHandler, err := proxy.NewProxyHandler(k8sProxyApiPrefix, filter, &kubernetesProvider.clientConfig, time.Second*2)
+	proxyHandler, err := proxy.NewProxyHandler(k8sProxyApiPrefix, filter, &kubernetesProvider.clientConfig, time.Second*2, false)
 	if err != nil {
 		return nil, err
 	}
@@ -127,9 +128,14 @@ func getHttpDialer(kubernetesProvider *Provider, namespace string, podName strin
 		return nil, err
 	}
 
-	path := fmt.Sprintf("/api/v1/namespaces/%s/pods/%s/portforward", namespace, podName)
-	hostIP := strings.TrimLeft(kubernetesProvider.clientConfig.Host, "htps:/") // no need specify "t" twice
-	serverURL := url.URL{Scheme: "https", Path: path, Host: hostIP}
+	clientConfigHostUrl, err := url.Parse(kubernetesProvider.clientConfig.Host)
+	if err != nil {
+		return nil, fmt.Errorf("Failed parsing client config host URL %s, error %w", kubernetesProvider.clientConfig.Host, err)
+	}
+	path := fmt.Sprintf("%s/api/v1/namespaces/%s/pods/%s/portforward", clientConfigHostUrl.Path, namespace, podName)
+
+	serverURL := url.URL{Scheme: "https", Path: path, Host: clientConfigHostUrl.Host}
+	logger.Log.Debugf("Http dialer url %v", serverURL)
 
 	return spdy.NewDialer(upgrader, &http.Client{Transport: roundTripper}, http.MethodPost, &serverURL), nil
 }
