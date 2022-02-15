@@ -13,10 +13,10 @@ import (
 //go:generate go run github.com/cilium/ebpf/cmd/bpf2go tlsTapper bpf/tls_tapper.c -- -O2 -g -D__TARGET_ARCH_x86
 
 type TlsTapper struct {
-	bpfObjects   tlsTapperObjects
-	syscallHooks syscallHooks
-	sslHooks     []sslHooks
-	reader       *perf.Reader
+	bpfObjects      tlsTapperObjects
+	syscallHooks    syscallHooks
+	sslHooksStructs []sslHooks
+	reader          *perf.Reader
 }
 
 func (t *TlsTapper) Init(bufferSize int) error {
@@ -38,7 +38,7 @@ func (t *TlsTapper) Init(bufferSize int) error {
 		return err
 	}
 
-	t.sslHooks = make([]sslHooks, 0)
+	t.sslHooksStructs = make([]sslHooks, 0)
 
 	return t.initChunksReader(bufferSize)
 }
@@ -114,7 +114,7 @@ func (t *TlsTapper) Close() []error {
 
 	errors = append(errors, t.syscallHooks.close()...)
 
-	for _, sslHooks := range t.sslHooks {
+	for _, sslHooks := range t.sslHooksStructs {
 		errors = append(errors, sslHooks.close()...)
 	}
 
@@ -156,7 +156,7 @@ func (t *TlsTapper) tapPid(pid uint32, sslLibrary string) error {
 		return err
 	}
 
-	t.sslHooks = append(t.sslHooks, newSsl)
+	t.sslHooksStructs = append(t.sslHooksStructs, newSsl)
 
 	pids := t.bpfObjects.tlsTapperMaps.PidsMap
 
