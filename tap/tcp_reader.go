@@ -47,7 +47,6 @@ type tcpReader struct {
 	extension          *api.Extension
 	emitter            api.Emitter
 	counterPair        *api.CounterPair
-	reqResMatcher      api.RequestResponseMatcher
 	sync.Mutex
 }
 
@@ -95,7 +94,7 @@ func (h *tcpReader) Close() {
 func (h *tcpReader) run(wg *sync.WaitGroup) {
 	defer wg.Done()
 	b := bufio.NewReader(h)
-	err := h.extension.Dissector.Dissect(b, h.isClient, h.tcpID, h.counterPair, h.superTimer, h.parent.superIdentifier, h.emitter, filteringOptions, h.reqResMatcher)
+	err := h.extension.Dissector.Dissect(b, h.isClient, h.tcpID, h.counterPair, h.superTimer, h.parent.superIdentifier, h.emitter, filteringOptions)
 	if err != nil {
 		_, err = io.Copy(ioutil.Discard, b)
 		if err != nil {

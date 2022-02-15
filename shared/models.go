@@ -43,7 +43,6 @@ type MizuAgentConfig struct {
 	StandaloneMode         bool          `json:"standaloneMode"`
 	ServiceMap             bool          `json:"serviceMap"`
 	OAS                    bool          `json:"oas"`
-	Telemetry              bool          `json:"telemetry"`
 	Elastic                ElasticConfig `json:"elastic"`
 }
 

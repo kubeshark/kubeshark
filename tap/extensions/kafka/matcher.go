@@ -3,10 +3,9 @@ package kafka
 import (
 	"sync"
 	"time"
-
-	"github.com/up9inc/mizu/tap/api"
 )
 
+var reqResMatcher = CreateResponseRequestMatcher() // global
 const maxTry int = 3000
 
 type RequestResponsePair struct {
@@ -14,17 +13,14 @@ type RequestResponsePair struct {
 	Response Response
 }
 
-// Key is {client_addr}_{client_port}_{dest_addr}_{dest_port}_{correlation_id}
+// Key is {client_addr}:{client_port}->{dest_addr}:{dest_port}::{correlation_id}
 type requestResponseMatcher struct {
 	openMessagesMap *sync.Map
 }
 
-func createResponseRequestMatcher() api.RequestResponseMatcher {
-	return &requestResponseMatcher{openMessagesMap: &sync.Map{}}
-}
-
-func (matcher *requestResponseMatcher) GetMap() *sync.Map {
-	return matcher.openMessagesMap
+func CreateResponseRequestMatcher() requestResponseMatcher {
+	newMatcher := &requestResponseMatcher{openMessagesMap: &sync.Map{}}
+	return *newMatcher
 }
 
 func (matcher *requestResponseMatcher) registerRequest(key string, request *Request) *RequestResponsePair {
