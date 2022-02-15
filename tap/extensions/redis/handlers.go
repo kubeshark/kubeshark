@@ -6,15 +6,14 @@ import (
 	"github.com/up9inc/mizu/tap/api"
 )
 
-func handleClientStream(tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, emitter api.Emitter, request *RedisPacket) error {
+func handleClientStream(tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, emitter api.Emitter, request *RedisPacket, reqResMatcher *requestResponseMatcher) error {
 	counterPair.Lock()
 	counterPair.Request++
 	requestCounter := counterPair.Request
 	counterPair.Unlock()
 
 	ident := fmt.Sprintf(
-		"%d_%s:%s_%s:%s_%d",
-		counterPair.StreamId,
+		"%s_%s_%s_%s_%d",
 		tcpID.SrcIP,
 		tcpID.DstIP,
 		tcpID.SrcPort,
@@ -36,15 +35,14 @@ func handleClientStream(tcpID *api.TcpID, counterPair *api.CounterPair, superTim
 	return nil
 }
 
-func handleServerStream(tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, emitter api.Emitter, response *RedisPacket) error {
+func handleServerStream(tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, emitter api.Emitter, response *RedisPacket, reqResMatcher *requestResponseMatcher) error {
 	counterPair.Lock()
 	counterPair.Response++
 	responseCounter := counterPair.Response
 	counterPair.Unlock()
 
 	ident := fmt.Sprintf(
-		"%d_%s:%s_%s:%s_%d",
-		counterPair.StreamId,
+		"%s_%s_%s_%s_%d",
 		tcpID.DstIP,
 		tcpID.SrcIP,
 		tcpID.DstPort,

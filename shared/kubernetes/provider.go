@@ -76,6 +76,8 @@ func NewProvider(kubeConfigPath string) (*Provider, error) {
 			"you can set alternative kube config file path by adding the kube-config-path field to the mizu config file, err:  %w", kubeConfigPath, err)
 	}
 
+	logger.Log.Debugf("K8s client config, host: %s, api path: %s, user agent: %s", restClientConfig.Host, restClientConfig.APIPath, restClientConfig.UserAgent)
+
 	return &Provider{
 		clientSet:        clientSet,
 		kubernetesConfig: kubernetesConfig,
@@ -952,6 +954,11 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	labelSelector := applyconfmeta.LabelSelector()
 	labelSelector.WithMatchLabels(map[string]string{"app": tapperPodName})
 
+	applyOptions := metav1.ApplyOptions{
+		Force: true,
+		FieldManager: fieldManagerName,
+	}
+
 	daemonSet := applyconfapp.DaemonSet(daemonSetName, namespace)
 	daemonSet.
 		WithLabels(map[string]string{
@@ -960,7 +967,7 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 		}).
 		WithSpec(applyconfapp.DaemonSetSpec().WithSelector(labelSelector).WithTemplate(podTemplate))
 
-	_, err = provider.clientSet.AppsV1().DaemonSets(namespace).Apply(ctx, daemonSet, metav1.ApplyOptions{FieldManager: fieldManagerName})
+	_, err = provider.clientSet.AppsV1().DaemonSets(namespace).Apply(ctx, daemonSet, applyOptions)
 	return err
 }
 
