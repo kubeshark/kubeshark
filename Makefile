@@ -103,6 +103,7 @@ test-shared:  ## Run shared tests
 
 test-extensions:  ## Run extensions tests
 	@echo "running http tests"; cd tap/extensions/http && $(MAKE) test
+	@echo "running redis tests"; cd tap/extensions/redis && $(MAKE) test
 
 acceptance-test:  ## Run acceptance tests
 	@echo "running acceptance tests"; cd acceptanceTests && $(MAKE) test
