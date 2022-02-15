@@ -204,7 +204,7 @@ func TestAnalyze(t *testing.T) {
 
 		var entries []*api.Entry
 		for _, item := range items {
-			entry := dissector.Analyze(item, "", "")
+			entry := dissector.Analyze(item, "", "", "")
 			entries = append(entries, entry)
 		}
 
