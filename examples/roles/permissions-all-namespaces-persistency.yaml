@@ -1,0 +1,25 @@
+# This example shows the roles required for a user to be able to use Mizu in all namespaces.
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: mizu-runner-persistency-clusterrole
+rules:
+- apiGroups: ["storage.k8s.io"]
+  resources: ["storageclasses"]
+  verbs: ["list"]
+- apiGroups: [""]
+  resources: ["persistentvolumeclaims"]
+  verbs: ["create"]
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: mizu-runner-persistent-clusterrolebindings
+subjects:
+- kind: User
+  name: user1
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: ClusterRole
+  name: mizu-runner-persistency-clusterrole
+  apiGroup: rbac.authorization.k8s.io
