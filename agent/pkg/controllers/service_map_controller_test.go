@@ -102,13 +102,13 @@ func (s *ServiceMapControllerSuite) TestGet() {
 	// response nodes
 	aNode := servicemap.ServiceMapNode{
 		Id:    1,
-		Name:  TCPEntryA.IP,
+		Name:  TCPEntryA.Name,
 		Entry: TCPEntryA,
 		Count: 1,
 	}
 	bNode := servicemap.ServiceMapNode{
 		Id:    2,
-		Name:  TCPEntryB.IP,
+		Name:  TCPEntryB.Name,
 		Entry: TCPEntryB,
 		Count: 1,
 	}

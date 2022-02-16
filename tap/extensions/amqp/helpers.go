@@ -3,6 +3,7 @@ package amqp
 import (
 	"encoding/json"
 	"fmt"
+	"sort"
 	"strconv"
 	"time"
 
@@ -282,6 +283,9 @@ func representBasicPublish(event map[string]interface{}) []interface{} {
 				Selector: fmt.Sprintf(`request.properties.headers["%s"]`, name),
 			})
 		}
+		sort.Slice(headers, func(i, j int) bool {
+			return headers[i].Name < headers[j].Name
+		})
 		headersMarshaled, _ := json.Marshal(headers)
 		rep = append(rep, api.SectionData{
 			Type:  api.TABLE,
@@ -366,6 +370,9 @@ func representBasicDeliver(event map[string]interface{}) []interface{} {
 				Selector: fmt.Sprintf(`request.properties.headers["%s"]`, name),
 			})
 		}
+		sort.Slice(headers, func(i, j int) bool {
+			return headers[i].Name < headers[j].Name
+		})
 		headersMarshaled, _ := json.Marshal(headers)
 		rep = append(rep, api.SectionData{
 			Type:  api.TABLE,
@@ -438,6 +445,9 @@ func representQueueDeclare(event map[string]interface{}) []interface{} {
 				Selector: fmt.Sprintf(`request.arguments["%s"]`, name),
 			})
 		}
+		sort.Slice(headers, func(i, j int) bool {
+			return headers[i].Name < headers[j].Name
+		})
 		headersMarshaled, _ := json.Marshal(headers)
 		rep = append(rep, api.SectionData{
 			Type:  api.TABLE,
@@ -504,6 +514,9 @@ func representExchangeDeclare(event map[string]interface{}) []interface{} {
 				Selector: fmt.Sprintf(`request.arguments["%s"]`, name),
 			})
 		}
+		sort.Slice(headers, func(i, j int) bool {
+			return headers[i].Name < headers[j].Name
+		})
 		headersMarshaled, _ := json.Marshal(headers)
 		rep = append(rep, api.SectionData{
 			Type:  api.TABLE,
@@ -565,6 +578,9 @@ func representConnectionStart(event map[string]interface{}) []interface{} {
 				Selector: fmt.Sprintf(`request.serverProperties["%s"]`, name),
 			})
 		}
+		sort.Slice(headers, func(i, j int) bool {
+			return headers[i].Name < headers[j].Name
+		})
 		headersMarshaled, _ := json.Marshal(headers)
 		rep = append(rep, api.SectionData{
 			Type:  api.TABLE,
@@ -656,6 +672,9 @@ func representQueueBind(event map[string]interface{}) []interface{} {
 				Selector: fmt.Sprintf(`request.arguments["%s"]`, name),
 			})
 		}
+		sort.Slice(headers, func(i, j int) bool {
+			return headers[i].Name < headers[j].Name
+		})
 		headersMarshaled, _ := json.Marshal(headers)
 		rep = append(rep, api.SectionData{
 			Type:  api.TABLE,
@@ -717,6 +736,9 @@ func representBasicConsume(event map[string]interface{}) []interface{} {
 				Selector: fmt.Sprintf(`request.arguments["%s"]`, name),
 			})
 		}
+		sort.Slice(headers, func(i, j int) bool {
+			return headers[i].Name < headers[j].Name
+		})
 		headersMarshaled, _ := json.Marshal(headers)
 		rep = append(rep, api.SectionData{
 			Type:  api.TABLE,
