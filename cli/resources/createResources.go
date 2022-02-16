@@ -80,7 +80,7 @@ func CreateInstallMizuResources(ctx context.Context, kubernetesProvider *kuberne
 	}
 	logger.Log.Infof("configmap/%v created", kubernetes.ConfigMapName)
 
-	_, err := createRBACIfNecessary(ctx, kubernetesProvider, isNsRestrictedMode, mizuResourcesNamespace, []string{"pods", "services", "endpoints", "namespaces"})
+	_, err := createRBACIfNecessary(ctx, kubernetesProvider, isNsRestrictedMode, mizuResourcesNamespace, []string{"pods", "services", "endpoints", "namespaces", "deployments"})
 	if err != nil {
 		return err
 	}
