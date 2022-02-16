@@ -949,20 +949,28 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	})
 	podTemplate.WithSpec(podSpec)
 
-	ownerReferences := applyconfmeta.OwnerReference()
-	// ownerReferences.WithAPIVersion()
-	ownerReferences.WithKind("DaemonSet")
-	ownerReferences.WithName(daemonSetName)
-	// ownerReferences.WithUID()
-	// ownerReferences.WithController()
-	// ownerReferences.WithBlockOwnerDeletion()
+	ownerReferences := make([]*applyconfmeta.OwnerReferenceApplyConfiguration, 0)
+	deployment, err := provider.GetDeployment(ctx, namespace, "mizu-api-server")
+	if err == nil {
+		logger.Log.Info("DEBUG adding owner %+v", deployment)
+		ownerReference := applyconfmeta.OwnerReference()
+		ownerReference.WithAPIVersion("apps/v1") // get from deployment obj. deployment.APIVersion is empty. ¯\_(ツ)_/¯
+		ownerReference.WithKind("Deployment") // get from deployment obj. deployment.Kind is empty. ¯\_(ツ)_/¯
+		ownerReference.WithName(deployment.Name)
+		ownerReference.WithUID(deployment.UID)
+		ownerReferences = append(ownerReferences, ownerReference)
+		// ownerReferences.WithController() // not sure whether or not to use this
+		// ownerReferences.WithBlockOwnerDeletion() // not sure whether or not to use this
+	} else {
+		logger.Log.Infof("DEBUG error getting deployment %+v", err)
+	}
 
 	labelSelector := applyconfmeta.LabelSelector()
 	labelSelector.WithMatchLabels(map[string]string{"app": tapperPodName})
 
 	daemonSet := applyconfapp.DaemonSet(daemonSetName, namespace)
 	daemonSet.
-		WithOwnerReferences(ownerReferences).
+		WithOwnerReferences(ownerReferences...).
 		WithLabels(map[string]string{
 			LabelManagedBy: provider.managedBy,
 			LabelCreatedBy: provider.createdBy,
@@ -999,6 +1007,10 @@ func (provider *Provider) ListAllPodsMatchingRegex(ctx context.Context, regex *r
 
 func (provider *Provider) GetPod(ctx context.Context, namespaces string, podName string) (*core.Pod, error) {
 	return provider.clientSet.CoreV1().Pods(namespaces).Get(ctx, podName, metav1.GetOptions{})
+}
+
+func (provider *Provider) GetDeployment(ctx context.Context, namespace string, deploymentName string) (*v1.Deployment, error) {
+	return provider.clientSet.AppsV1().Deployments(namespace).Get(ctx, deploymentName, metav1.GetOptions{})
 }
 
 func (provider *Provider) ListAllRunningPodsMatchingRegex(ctx context.Context, regex *regexp.Regexp, namespaces []string) ([]core.Pod, error) {
