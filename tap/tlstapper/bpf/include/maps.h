@@ -10,7 +10,7 @@ Copyright (C) UP9 Inc.
 #define FLAGS_IS_CLIENT_BIT (1 << 0)
 #define FLAGS_IS_READ_BIT (1 << 1)
 
-// The same struct can be found in Chunk.go
+// The same struct can be found in chunk.go
 //  
 //  Be careful when editing, alignment and padding should be exactly the same in go/c.
 //

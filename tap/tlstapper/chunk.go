@@ -8,20 +8,20 @@ import (
 	"github.com/go-errors/errors"
 )
 
-const FLAGS_IS_CLIENT_BIT int32 = (1 << 0)
-const FLAGS_IS_READ_BIT int32 = (1 << 1)
+const FLAGS_IS_CLIENT_BIT uint32 = (1 << 0)
+const FLAGS_IS_READ_BIT uint32 = (1 << 1)
 
 // The same struct can be found in maps.h
 //
 //	Be careful when editing, alignment and padding should be exactly the same in go/c.
 //
 type tlsChunk struct {
-	Pid      int32
-	Tgid     int32
-	Len      int32
-	Recorded int32
-	Fd       int32
-	Flags    int32
+	Pid      uint32
+	Tgid     uint32
+	Len      uint32
+	Recorded uint32
+	Fd       uint32
+	Flags    uint32
 	Address  [16]byte
 	Data     [4096]byte
 }
@@ -67,4 +67,8 @@ func (c *tlsChunk) isWrite() bool {
 
 func (c *tlsChunk) getRecordedData() []byte {
 	return c.Data[:c.Recorded]
+}
+
+func (c *tlsChunk) isRequest() bool {
+	return (c.isClient() && c.isWrite()) || (c.isServer() && c.isRead())
 }

@@ -248,7 +248,7 @@ func startTlsTapper(extension *api.Extension, outputItems chan *api.OutputChanne
 	tls := tlstapper.TlsTapper{}
 	tlsPerfBufferSize := os.Getpagesize() * 100
 
-	if err := tls.Init(tlsPerfBufferSize); err != nil {
+	if err := tls.Init(tlsPerfBufferSize, *procfs, extension); err != nil {
 		tlstapper.LogError(err)
 		return
 	}
@@ -272,6 +272,5 @@ func startTlsTapper(extension *api.Extension, outputItems chan *api.OutputChanne
 		OutputChannel: outputItems,
 	}
 
-	poller := tlstapper.NewTlsPoller(&tls, extension)
-	go poller.Poll(extension, emitter, options)
+	go tls.Poll(emitter, options)
 }
