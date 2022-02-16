@@ -25,6 +25,9 @@ func ReadResponse(r io.Reader, tcpID *api.TcpID, counterPair *api.CounterPair, s
 	}
 
 	if size < 4 {
+		if size == 0 {
+			return io.EOF
+		}
 		return fmt.Errorf("A Kafka response header cannot be smaller than 8 bytes")
 	}
 
@@ -53,7 +56,7 @@ func ReadResponse(r io.Reader, tcpID *api.TcpID, counterPair *api.CounterPair, s
 	)
 	reqResPair := reqResMatcher.registerResponse(key, response)
 	if reqResPair == nil {
-		return fmt.Errorf("Couldn't match a Kafka response to a Kafka request in 3 seconds!")
+		return fmt.Errorf("Couldn't match a Kafka response to a Kafka request in %d milliseconds!", reqResMatcher.maxTry)
 	}
 	apiKey := reqResPair.Request.ApiKey
 	apiVersion := reqResPair.Request.ApiVersion
@@ -284,57 +287,12 @@ func ReadResponse(r io.Reader, tcpID *api.TcpID, counterPair *api.CounterPair, s
 	}
 	emitter.Emit(item)
 
-	if i := int(apiKey); i < 0 || i >= len(apiTypes) {
+	if i := int(apiKey); i < 0 || i >= numApis {
 		err = fmt.Errorf("unsupported api key: %d", i)
-		return err
-	}
-
-	t := &apiTypes[apiKey]
-	if t == nil {
-		err = fmt.Errorf("unsupported api: %s", apiNames[apiKey])
 		return err
 	}
 
 	d.discardAll()
 
 	return nil
-}
-
-func WriteResponse(w io.Writer, apiVersion int16, correlationID int32, msg Message) error {
-	apiKey := msg.ApiKey()
-
-	if i := int(apiKey); i < 0 || i >= len(apiTypes) {
-		return fmt.Errorf("unsupported api key: %d", i)
-	}
-
-	t := &apiTypes[apiKey]
-	if t == nil {
-		return fmt.Errorf("unsupported api: %s", apiNames[apiKey])
-	}
-
-	minVersion := t.minVersion()
-	maxVersion := t.maxVersion()
-
-	if apiVersion < minVersion || apiVersion > maxVersion {
-		return fmt.Errorf("unsupported %s version: v%d not in range v%d-v%d", apiKey, apiVersion, minVersion, maxVersion)
-	}
-
-	r := &t.responses[apiVersion-minVersion]
-	v := valueOf(msg)
-	b := newPageBuffer()
-	defer b.unref()
-
-	e := &encoder{writer: b}
-	e.writeInt32(0) // placeholder for the response size
-	e.writeInt32(correlationID)
-	r.encode(e, v)
-	err := e.err
-
-	if err == nil {
-		size := packUint32(uint32(b.Size()) - 4)
-		_, _ = b.WriteAt(size[:], 0)
-		_, err = b.WriteTo(w)
-	}
-
-	return err
 }

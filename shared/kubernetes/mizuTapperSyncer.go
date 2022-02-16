@@ -46,6 +46,7 @@ type TapperSyncerConfig struct {
 	MizuApiFilteringOptions  api.TrafficFilteringOptions
 	MizuServiceAccountExists bool
 	ServiceMesh              bool
+	Tls                      bool
 }
 
 func CreateAndStartMizuTapperSyncer(ctx context.Context, kubernetesProvider *Provider, config TapperSyncerConfig, startTime time.Time) (*MizuTapperSyncer, error) {
@@ -324,6 +325,7 @@ func (tapperSyncer *MizuTapperSyncer) updateMizuTappers() error {
 			tapperSyncer.config.MizuApiFilteringOptions,
 			tapperSyncer.config.LogLevel,
 			tapperSyncer.config.ServiceMesh,
+			tapperSyncer.config.Tls,
 		); err != nil {
 			return err
 		}

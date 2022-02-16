@@ -12,19 +12,6 @@ const (
 	RequireAll  RequiredAcks = -1
 )
 
-func (acks RequiredAcks) String() string {
-	switch acks {
-	case RequireNone:
-		return "none"
-	case RequireOne:
-		return "one"
-	case RequireAll:
-		return "all"
-	default:
-		return "unknown"
-	}
-}
-
 type UUID struct {
 	TimeLow          int32 `json:"timeLow"`
 	TimeMid          int16 `json:"timeMid"`

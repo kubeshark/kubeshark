@@ -140,7 +140,7 @@ func readTimestamp(r io.Reader) (v time.Time, err error) {
 	if err = binary.Read(r, binary.BigEndian, &sec); err != nil {
 		return
 	}
-	return time.Unix(sec, 0), nil
+	return time.Unix(sec, 0).UTC(), nil
 }
 
 /*
