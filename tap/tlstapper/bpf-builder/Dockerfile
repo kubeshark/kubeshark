@@ -1,12 +1,5 @@
-FROM ubuntu
+FROM alpine:3
 
-RUN apt-get update && apt-get install -y git clang llvm wget && \
-	wget https://go.dev/dl/go1.17.6.linux-amd64.tar.gz && \
-	tar xf go1.17.6.linux-amd64.tar.gz -C / && \
-	ln -s /go/bin/go /usr/bin/go
+RUN apk --no-cache update && apk --no-cache add clang llvm libbpf-dev go linux-headers
 
-WORKDIR /opt
-ARG MIZU_BRANCH=develop
-RUN git clone -b $MIZU_BRANCH https://github.com/up9inc/mizu
-
-WORKDIR /opt/mizu
+WORKDIR /mizu
