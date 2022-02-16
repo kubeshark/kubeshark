@@ -223,41 +223,8 @@ type Decimal struct {
 //
 type Table map[string]interface{}
 
-func validateField(f interface{}) error {
-	switch fv := f.(type) {
-	case nil, bool, byte, int, int16, int32, int64, float32, float64, string, []byte, Decimal, time.Time:
-		return nil
-
-	case []interface{}:
-		for _, v := range fv {
-			if err := validateField(v); err != nil {
-				return fmt.Errorf("in array %s", err)
-			}
-		}
-		return nil
-
-	case Table:
-		for k, v := range fv {
-			if err := validateField(v); err != nil {
-				return fmt.Errorf("table field %q %s", k, err)
-			}
-		}
-		return nil
-	}
-
-	return fmt.Errorf("value %T not supported", f)
-}
-
-// Validate returns and error if any Go types in the table are incompatible with AMQP types.
-func (t Table) Validate() error {
-	return validateField(t)
-}
-
 type Message interface {
-	id() (uint16, uint16)
-	wait() bool
 	read(io.Reader) error
-	write(io.Writer) error
 }
 
 /*
@@ -286,8 +253,6 @@ system calls to read a frame.
 
 */
 type frame interface {
-	write(io.Writer) error
-	channel() uint16
 }
 
 type AmqpReader struct {
@@ -323,8 +288,6 @@ type MethodFrame struct {
 	Method    Message
 }
 
-func (f *MethodFrame) channel() uint16 { return f.ChannelId }
-
 /*
 Heartbeating is a technique designed to undo one of TCP/IP's features, namely
 its ability to recover from a broken physical connection by closing only after
@@ -337,8 +300,6 @@ class method.
 type HeartbeatFrame struct {
 	ChannelId uint16
 }
-
-func (f *HeartbeatFrame) channel() uint16 { return f.ChannelId }
 
 /*
 Certain methods (such as Basic.Publish, Basic.Deliver, etc.) are formally
@@ -367,8 +328,6 @@ type HeaderFrame struct {
 	Properties Properties
 }
 
-func (f *HeaderFrame) channel() uint16 { return f.ChannelId }
-
 /*
 Content is the application data we carry from client-to-client via the AMQP
 server.  Content is, roughly speaking, a set of properties plus a binary data
@@ -388,5 +347,3 @@ type BodyFrame struct {
 	ChannelId uint16
 	Body      []byte
 }
-
-func (f *BodyFrame) channel() uint16 { return f.ChannelId }
