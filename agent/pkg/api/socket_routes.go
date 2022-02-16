@@ -115,7 +115,7 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 		// params[1]: enableFullEntries (0: disable, 1: enable)
 		params := make([][]byte, 2)
 		breakWholeLoop := false
-		for i, _ := range params {
+		for i := range params {
 			_, params[i], err = ws.ReadMessage()
 			if err != nil {
 				if _, ok := err.(*websocket.CloseError); ok {
