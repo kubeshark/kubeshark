@@ -111,19 +111,35 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 	}
 
 	for {
-		_, msg, err := ws.ReadMessage()
-		if err != nil {
-			if _, ok := err.(*websocket.CloseError); ok {
-				logger.Log.Debugf("Received websocket close message, socket id: %d", socketId)
-			} else {
-				logger.Log.Errorf("Error reading message, socket id: %d, error: %v", socketId, err)
-			}
+		// params[0]: query
+		// params[1]: enableFullEntries (0: disable, 1: enable)
+		params := make([][]byte, 2)
+		breakWholeLoop := false
+		for i, _ := range params {
+			_, params[i], err = ws.ReadMessage()
+			if err != nil {
+				if _, ok := err.(*websocket.CloseError); ok {
+					logger.Log.Debugf("Received websocket close message, socket id: %d", socketId)
+				} else {
+					logger.Log.Errorf("Error reading message, socket id: %d, error: %v", socketId, err)
+				}
 
+				breakWholeLoop = true
+				break
+			}
+		}
+
+		if breakWholeLoop {
 			break
 		}
 
+		enableFullEntries := false
+		if len(params[1]) > 0 && params[1][0] != 48 {
+			enableFullEntries = true
+		}
+
 		if !isTapper && !isQuerySet {
-			query := string(msg)
+			query := string(params[0])
 			err = basenine.Validate(shared.BasenineHost, shared.BaseninePort, query)
 			if err != nil {
 				toastBytes, _ := models.CreateWebsocketToastMessage(&models.ToastMessage{
@@ -150,10 +166,15 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 					var entry *tapApi.Entry
 					err = json.Unmarshal(bytes, &entry)
 
-					base := tapApi.Summarize(entry)
+					var message []byte
+					if enableFullEntries {
+						message, _ = models.CreateFullEntryWebSocketMessage(entry)
+					} else {
+						base := tapApi.Summarize(entry)
+						message, _ = models.CreateBaseEntryWebSocketMessage(base)
+					}
 
-					baseEntryBytes, _ := models.CreateBaseEntryWebSocketMessage(base)
-					if err := SendToSocket(socketId, baseEntryBytes); err != nil {
+					if err := SendToSocket(socketId, message); err != nil {
 						logger.Log.Error(err)
 					}
 				}
@@ -185,7 +206,7 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 
 			connection.Query(query, data, meta)
 		} else {
-			eventHandlers.WebSocketMessage(socketId, msg)
+			eventHandlers.WebSocketMessage(socketId, params[0])
 		}
 	}
 }
