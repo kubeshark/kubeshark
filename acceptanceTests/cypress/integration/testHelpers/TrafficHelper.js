@@ -4,6 +4,8 @@ export const valueTabs = {
     none: null
 }
 
+const maxEntriesInDom = 13;
+
 export function isValueExistsInElement(shouldInclude, content, domPathToContainer){
     it(`should ${shouldInclude ? '' : 'not'} include '${content}'`, function () {
         cy.get(domPathToContainer).then(htmlText => {
@@ -15,11 +17,11 @@ export function isValueExistsInElement(shouldInclude, content, domPathToContaine
 }
 
 export function resizeToHugeMizu() {
-    cy.viewport(1920, 3500);
+    cy.viewport(Cypress.env('mizuWidth'), Cypress.env('hugeMizuHeight'));
 }
 
 export function resizeToNormalMizu() {
-    cy.viewport(1920, 1080);
+    cy.viewport(Cypress.env('mizuWidth'), Cypress.env('normalMizuHeight'));
 }
 
 export function verifyMinimumEntries() {
@@ -61,7 +63,7 @@ export function checkThatAllEntriesShown() {
 }
 
 export function checkFilterByMethod(funcDict) {
-    const {protocol, method, summary} = funcDict;
+    const {protocol, method, summary, hugeMizu} = funcDict;
     const summaryDict = getSummeryDict(summary);
     const methodDict = getMethodDict(method);
     const protocolDict = getProtocolDict(protocol.name, protocol.text);
@@ -82,25 +84,36 @@ export function checkFilterByMethod(funcDict) {
                     const listElmWithIdAttr = Object.values(elements);
                     let doneCheckOnFirst = false;
 
-                    listElmWithIdAttr.forEach(entry => {
-                        if (entry?.id && entry.id.match(RegExp(/entry-(\d{2}|\d{1})$/gm))) {
-                            const entryNum = getEntryNumById(entry.id);
+                    cy.get('#entries-length').invoke('text').then(len => {
+                        resizeIfNeeded(len);
+                        listElmWithIdAttr.forEach(entry => {
+                            if (entry?.id && entry.id.match(RegExp(/entry-(\d{2}|\d{1})$/gm))) {
+                                const entryNum = getEntryNumById(entry.id);
 
-                            leftTextCheck(entryNum, methodDict.pathLeft, methodDict.expectedText);
-                            leftTextCheck(entryNum, protocolDict.pathLeft, protocolDict.expectedTextLeft);
-                            if (summaryDict)
-                                leftTextCheck(entryNum, summaryDict.pathLeft, summaryDict.expectedText);
+                                leftTextCheck(entryNum, methodDict.pathLeft, methodDict.expectedText);
+                                leftTextCheck(entryNum, protocolDict.pathLeft, protocolDict.expectedTextLeft);
+                                if (summaryDict)
+                                    leftTextCheck(entryNum, summaryDict.pathLeft, summaryDict.expectedText);
 
-                            if (!doneCheckOnFirst) {
-                                deepCheck(funcDict, protocolDict, methodDict, entry);
-                                doneCheckOnFirst = true;
+                                if (!doneCheckOnFirst) {
+                                    deepCheck(funcDict, protocolDict, methodDict, entry);
+                                    doneCheckOnFirst = true;
+                                }
                             }
-                        }
+                        });
+                        resizeIfNeeded(len);
                     });
                 });
             });
         });
     });
+}
+
+function resizeIfNeeded(entriesLen) {
+    if (entriesLen > maxEntriesInDom){
+        Cypress.config().viewportHeight === Cypress.env('normalMizuHeight') ?
+            resizeToHugeMizu() : resizeToNormalMizu()
+    }
 }
 
 function deepCheck(generalDict, protocolDict, methodDict, entry) {
