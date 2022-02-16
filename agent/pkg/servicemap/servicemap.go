@@ -172,20 +172,33 @@ func (s *serviceMap) NewTCPEntry(src *tapApi.TCP, dst *tapApi.TCP, p *tapApi.Pro
 		return
 	}
 
-	srcEntry := &entryData{
-		key:   key(src.IP),
-		entry: src,
-	}
-	if len(srcEntry.entry.Name) == 0 {
+	var srcEntry *entryData
+	var dstEntry *entryData
+
+	if len(src.Name) == 0 {
+		srcEntry = &entryData{
+			key:   key(src.IP),
+			entry: src,
+		}
 		srcEntry.entry.Name = UnresolvedNodeName
+	} else {
+		srcEntry = &entryData{
+			key:   key(src.Name),
+			entry: src,
+		}
 	}
 
-	dstEntry := &entryData{
-		key:   key(dst.IP),
-		entry: dst,
-	}
-	if len(dstEntry.entry.Name) == 0 {
+	if len(dst.Name) == 0 {
+		dstEntry = &entryData{
+			key:   key(dst.IP),
+			entry: dst,
+		}
 		dstEntry.entry.Name = UnresolvedNodeName
+	} else {
+		dstEntry = &entryData{
+			key:   key(dst.Name),
+			entry: dst,
+		}
 	}
 
 	s.addEdge(srcEntry, dstEntry, p)
