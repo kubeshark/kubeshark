@@ -122,7 +122,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus}) => {
         ws.current.onopen = () => {
             setWsConnection(WsConnectionStatus.Connected);
             ws.current.send(query);
-            ws.current.send("0");
+            ws.current.send("");
         }
         ws.current.onclose = () => {
             setWsConnection(WsConnectionStatus.Closed);

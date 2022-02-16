@@ -112,7 +112,7 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 
 	for {
 		// params[0]: query
-		// params[1]: enableFullEntries (0: disable, 1: enable)
+		// params[1]: enableFullEntries (empty: disable, non-empty: enable)
 		params := make([][]byte, 2)
 		breakWholeLoop := false
 		for i := range params {
@@ -134,7 +134,7 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 		}
 
 		enableFullEntries := false
-		if len(params[1]) > 0 && params[1][0] != 48 {
+		if len(params[1]) > 0 {
 			enableFullEntries = true
 		}
 
