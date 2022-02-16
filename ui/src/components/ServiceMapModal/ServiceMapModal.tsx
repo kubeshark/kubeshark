@@ -10,8 +10,7 @@ import debounce from 'lodash/debounce';
 import ServiceMapOptions from './ServiceMapOptions'
 import { useCommonStyles } from "../../helpers/commonStyle";
 import refresh from "../assets/refresh.svg";
-import reset from "../assets/reset.svg";
-import close from "../assets/close.svg"
+import close from "../assets/close.svg";
 
 interface GraphData {
     nodes: Node[];
@@ -154,19 +153,6 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onOpen
         return () => setGraphData({ nodes: [], edges: [] })
     }, [getServiceMapData])
 
-    const resetServiceMap = debounce(async () => {
-        try {
-            const serviceMapResetResponse = await api.serviceMapReset();
-            if (serviceMapResetResponse["status"] === "enabled") {
-                refreshServiceMap()
-            }
-
-        } catch (ex) {
-            toast.error("An error occurred while resetting Mizu Service Map, see console for mode details");
-            console.error(ex);
-        }
-    }, 500);
-
     const refreshServiceMap = debounce(() => {
         getServiceMapData();
     }, 500);
@@ -192,16 +178,6 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onOpen
                     {!isLoading && <div style={{ height: "100%", width: "100%" }}>
                     <div style={{ display: "flex", justifyContent: "space-between" }}> 
                         <div>
-                        <Button
-                            startIcon={<img src={reset} className="custom" alt="reset" style={{ marginRight:"8%"}}></img>}
-                            size="large"
-                            variant="contained"
-                            className={commonClasses.outlinedButton + " " + commonClasses.imagedButton}
-                            style={{ marginRight: 25, paddingTop: "3px", paddingBottom: "1px"}}
-                            onClick={resetServiceMap}
-                        >                          
-                            Reset
-                        </Button>
                         <Button
                             startIcon={<img src={refresh} className="custom" alt="refresh" style={{ marginRight:"8%"}}></img>}
                             size="medium"

@@ -38,7 +38,7 @@ type ConfigStruct struct {
 	ConfigFilePath         string                      `yaml:"config-path,omitempty" readonly:""`
 	HeadlessMode           bool                        `yaml:"headless" default:"false"`
 	LogLevelStr            string                      `yaml:"log-level,omitempty" default:"INFO" readonly:""`
-	ServiceMap             bool                        `yaml:"service-map" default:"false"`
+	ServiceMap             bool                        `yaml:"service-map" default:"true"`
 	OAS                    bool                        `yaml:"oas,omitempty" default:"false" readonly:""`
 	Elastic                shared.ElasticConfig        `yaml:"elastic"`
 }
