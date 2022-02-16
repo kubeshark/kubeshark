@@ -39,6 +39,9 @@ kubectl create deployment httpbin --image=kennethreitz/httpbin -n mizu-tests2
 echo "Creating redis deployment"
 kubectl create deployment redis --image=redis -n mizu-tests
 
+echo "Creating rabbitmq deployment"
+kubectl create deployment rabbitmq --image=rabbitmq -n mizu-tests
+
 echo "Creating httpbin services"
 kubectl expose deployment httpbin --type=NodePort --port=80 -n mizu-tests
 kubectl expose deployment httpbin2 --type=NodePort --port=80 -n mizu-tests
@@ -47,6 +50,9 @@ kubectl expose deployment httpbin --type=NodePort --port=80 -n mizu-tests2
 
 echo "Creating redis service"
 kubectl expose deployment redis --type=LoadBalancer --port=6379 -n mizu-tests
+
+echo "Creating rabbitmq service"
+kubectl expose deployment rabbitmq --type=LoadBalancer --port=5672 -n mizu-tests
 
 echo "Starting proxy"
 kubectl proxy --port=8080 &
