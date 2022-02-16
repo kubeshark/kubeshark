@@ -21,13 +21,15 @@ type tlsPoller struct {
 	tls           *TlsTapper
 	readers       map[string]*tlsReader
 	closedReaders chan string
+	reqResMatcher api.RequestResponseMatcher
 }
 
-func NewTlsPoller(tls *TlsTapper) *tlsPoller {
+func NewTlsPoller(tls *TlsTapper, extension *api.Extension) *tlsPoller {
 	return &tlsPoller{
 		tls:           tls,
 		readers:       make(map[string]*tlsReader),
 		closedReaders: make(chan string, 100),
+		reqResMatcher: extension.Dissector.NewResponseRequestMatcher(),
 	}
 }
 
@@ -93,15 +95,16 @@ func (p *tlsPoller) startNewTlsReader(chunk *tlsChunk, ip net.IP, port uint16, k
 	isRequest := (chunk.isClient() && chunk.isWrite()) || (chunk.isServer() && chunk.isRead())
 	tcpid := buildTcpId(isRequest, ip, port)
 
-	go dissect(extension, reader, isRequest, &tcpid, emitter, options)
+	go dissect(extension, reader, isRequest, &tcpid, emitter, options, p.reqResMatcher)
 	return reader
 }
 
 func dissect(extension *api.Extension, reader *tlsReader, isRequest bool, tcpid *api.TcpID,
-	emitter api.Emitter, options *api.TrafficFilteringOptions) {
+	emitter api.Emitter, options *api.TrafficFilteringOptions, reqResMatcher api.RequestResponseMatcher) {
 	b := bufio.NewReader(reader)
-	reqResMatcher := extension.Dissector.NewResponseRequestMatcher()
-	err := extension.Dissector.Dissect(b, isRequest, tcpid, &api.CounterPair{}, &api.SuperTimer{}, &api.SuperIdentifier{}, emitter, options, reqResMatcher)
+
+	err := extension.Dissector.Dissect(b, isRequest, tcpid, &api.CounterPair{},
+		&api.SuperTimer{}, &api.SuperIdentifier{}, emitter, options, reqResMatcher)
 
 	if err != nil {
 		logger.Log.Warningf("Error dissecting TLS %v - %v", tcpid, err)

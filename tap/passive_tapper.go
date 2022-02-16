@@ -272,6 +272,6 @@ func startTlsTapper(extension *api.Extension, outputItems chan *api.OutputChanne
 		OutputChannel: outputItems,
 	}
 
-	poller := tlstapper.NewTlsPoller(&tls)
+	poller := tlstapper.NewTlsPoller(&tls, extension)
 	go poller.Poll(extension, emitter, options)
 }
