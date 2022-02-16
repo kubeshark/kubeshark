@@ -107,6 +107,7 @@ type Dissector interface {
 
 type RequestResponseMatcher interface {
 	GetMap() *sync.Map
+	SetMaxTry(value int)
 }
 
 type Emitting struct {

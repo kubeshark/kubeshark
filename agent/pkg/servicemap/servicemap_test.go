@@ -268,9 +268,14 @@ func (s *ServiceMapEnabledSuite) TestServiceMap() {
 		assert.LessOrEqual(node.Id, expectedNodeCount)
 
 		// entry
-		// node.Name is the key of the node, key = entry.IP
+		// node.Name is the key of the node, key = entry.Name by default
 		// entry.Name is the name of the service and could be unresolved
-		assert.Equal(node.Name, node.Entry.IP)
+		// when entry.Name is unresolved, key = entry.IP
+		if node.Entry.Name == UnresolvedNodeName {
+			assert.Equal(node.Name, node.Entry.IP)
+		} else {
+			assert.Equal(node.Name, node.Entry.Name)
+		}
 		assert.Equal(Port, node.Entry.Port)
 		assert.Equal(entryName, node.Entry.Name)
 
@@ -320,16 +325,24 @@ func (s *ServiceMapEnabledSuite) TestServiceMap() {
 	cdEdge := -1
 	acEdge := -1
 	var validateEdge = func(edge ServiceMapEdge, sourceEntryName string, destEntryName string, protocolName string, protocolCount int) {
-		// source
+		// source node
 		assert.Contains(nodeIds, edge.Source.Id)
 		assert.LessOrEqual(edge.Source.Id, expectedNodeCount)
-		assert.Equal(edge.Source.Name, edge.Source.Entry.IP)
+		if edge.Source.Entry.Name == UnresolvedNodeName {
+			assert.Equal(edge.Source.Name, edge.Source.Entry.IP)
+		} else {
+			assert.Equal(edge.Source.Name, edge.Source.Entry.Name)
+		}
 		assert.Equal(sourceEntryName, edge.Source.Entry.Name)
 
-		// destination
+		// destination node
 		assert.Contains(nodeIds, edge.Destination.Id)
 		assert.LessOrEqual(edge.Destination.Id, expectedNodeCount)
-		assert.Equal(edge.Destination.Name, edge.Destination.Entry.IP)
+		if edge.Destination.Entry.Name == UnresolvedNodeName {
+			assert.Equal(edge.Destination.Name, edge.Destination.Entry.IP)
+		} else {
+			assert.Equal(edge.Destination.Name, edge.Destination.Entry.Name)
+		}
 		assert.Equal(destEntryName, edge.Destination.Entry.Name)
 
 		// protocol

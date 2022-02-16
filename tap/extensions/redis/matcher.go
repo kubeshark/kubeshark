@@ -19,6 +19,8 @@ func createResponseRequestMatcher() api.RequestResponseMatcher {
 func (matcher *requestResponseMatcher) GetMap() *sync.Map {
 	return matcher.openMessagesMap
 }
+func (matcher *requestResponseMatcher) SetMaxTry(value int) {
+}
 
 func (matcher *requestResponseMatcher) registerRequest(ident string, request *RedisPacket, captureTime time.Time) *api.OutputChannelItem {
 	requestRedisMessage := api.GenericMessage{

@@ -14,7 +14,8 @@
     "tests/RegexMasking.js",
     "tests/IgnoredUserAgents.js",
     "tests/UiTest.js",
-    "tests/Redis.js"
+    "tests/Redis.js",
+    "tests/Rabbit.js"
   ],
 
   "env": {
