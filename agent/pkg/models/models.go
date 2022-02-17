@@ -42,6 +42,11 @@ type WebSocketEntryMessage struct {
 	Data *tapApi.BaseEntry `json:"data,omitempty"`
 }
 
+type WebSocketFullEntryMessage struct {
+	*shared.WebSocketMessageMetadata
+	Data *tapApi.Entry `json:"data,omitempty"`
+}
+
 type WebSocketTappedEntryMessage struct {
 	*shared.WebSocketMessageMetadata
 	Data *tapApi.OutputChannelItem
@@ -84,6 +89,16 @@ func CreateBaseEntryWebSocketMessage(base *tapApi.BaseEntry) ([]byte, error) {
 			MessageType: shared.WebSocketMessageTypeEntry,
 		},
 		Data: base,
+	}
+	return json.Marshal(message)
+}
+
+func CreateFullEntryWebSocketMessage(entry *tapApi.Entry) ([]byte, error) {
+	message := &WebSocketFullEntryMessage{
+		WebSocketMessageMetadata: &shared.WebSocketMessageMetadata{
+			MessageType: shared.WebSocketMessageTypeFullEntry,
+		},
+		Data: entry,
 	}
 	return json.Marshal(message)
 }
