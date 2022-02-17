@@ -1,4 +1,4 @@
-# This example shows the roles required for a user to be able to use Mizu in all namespaces.
+# This example shows the permissions that are required in order to run the `mizu tap` command
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:

@@ -1,4 +1,5 @@
-# This example shows the roles required for a user to be able to use Mizu in all namespaces.
+# This example shows permissions that are required for persistency with `mizu install` command
+# Optional with `mizu-install`
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
