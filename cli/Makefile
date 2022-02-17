@@ -22,7 +22,7 @@ build-debug:  ## Build mizu CLI for debug
 	${MAKE} build-base
 
 build:
-	export LDFLAGS_EXT='-extldflags=-static -s -w'
+	export LDFLAGS_EXT='-s -w'
 	${MAKE} build-base
 
 build-base: ## Build mizu CLI binary (select platform via GOOS / GOARCH env variables).
