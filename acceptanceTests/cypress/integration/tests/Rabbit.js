@@ -2,7 +2,6 @@ import {checkFilterByMethod, valueTabs,} from "../testHelpers/TrafficHelper";
 
 it('opening mizu', function () {
     cy.visit(Cypress.env('testUrl'));
-    cy.get('#total-entries').invoke('text').should('match', /^[4-7][0-9]$/m)
 });
 
 const rabbitProtocolDetails = {name: 'AMQP', text: 'Advanced Message Queuing Protocol 0-9-1'};
