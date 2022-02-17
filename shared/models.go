@@ -15,6 +15,7 @@ type WebSocketMessageType string
 
 const (
 	WebSocketMessageTypeEntry         WebSocketMessageType = "entry"
+	WebSocketMessageTypeFullEntry     WebSocketMessageType = "fullEntry"
 	WebSocketMessageTypeTappedEntry   WebSocketMessageType = "tappedEntry"
 	WebSocketMessageTypeUpdateStatus  WebSocketMessageType = "status"
 	WebSocketMessageTypeAnalyzeStatus WebSocketMessageType = "analyzeStatus"
