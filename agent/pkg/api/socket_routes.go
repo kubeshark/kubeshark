@@ -110,11 +110,11 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 		logger.Log.Error(err)
 	}
 
+out:
 	for {
 		// params[0]: query
 		// params[1]: enableFullEntries (empty: disable, non-empty: enable)
 		params := make([][]byte, 2)
-		breakWholeLoop := false
 		for i := range params {
 			_, params[i], err = ws.ReadMessage()
 			if err != nil {
@@ -124,13 +124,8 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 					logger.Log.Errorf("Error reading message, socket id: %d, error: %v", socketId, err)
 				}
 
-				breakWholeLoop = true
-				break
+				break out
 			}
-		}
-
-		if breakWholeLoop {
-			break
 		}
 
 		enableFullEntries := false
