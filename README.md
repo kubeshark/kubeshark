@@ -8,10 +8,10 @@
         <img alt="GitHub Latest Release" src="https://img.shields.io/github/v/release/up9inc/mizu?logo=GitHub&style=flat-square">
     </a>
     <a href="https://hub.docker.com/r/up9inc/mizu">
-      <img alt="Docker pulls" src="https://img.shields.io/docker/pulls/up9inc/mizu?color=%23099cec">
+      <img alt="Docker pulls" src="https://img.shields.io/docker/pulls/up9inc/mizu?color=%23099cec&logo=Docker&style=flat-square">
     </a>
     <a href="https://hub.docker.com/r/up9inc/mizu">
-      <img alt="Image size" src="https://img.shields.io/docker/image-size/up9inc/mizu/latest">
+      <img alt="Image size" src="https://img.shields.io/docker/image-size/up9inc/mizu/latest?logo=Docker&style=flat-square">
     </a>
     <a href="https://join.slack.com/t/up9/shared_invite/zt-tfjnduli-QzlR8VV4Z1w3YnPIAJfhlQ">
       <img alt="Slack" src="https://img.shields.io/badge/slack-join_chat-white.svg?logo=slack&style=social">
