@@ -1,4 +1,4 @@
-# This example shows the roles required for a user to be able to use Mizu in a single namespace with IP resolution disabled.
+# This example shows the permissions that are required in order to run the `mizu tap` command in namespace-restricted mode
 kind: Role
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
@@ -7,22 +7,19 @@ metadata:
 rules:
 - apiGroups: [""]
   resources: ["pods"]
-  verbs: ["get", "list", "watch", "create", "delete"]
+  verbs: ["list", "watch", "create"]
 - apiGroups: [""]
   resources: ["services"]
   verbs: ["get", "create", "delete"]
 - apiGroups: ["apps"]
   resources: ["daemonsets"]
-  verbs: ["get", "create", "patch", "delete"]
+  verbs: ["create", "patch", "delete"]
 - apiGroups: [""]
   resources: ["services/proxy"]
-  verbs: ["get"]
+  verbs: ["get", "create", "delete"]
 - apiGroups: [""]
   resources: ["configmaps"]
-  verbs: ["get", "create", "delete"]
-- apiGroups: ["events.k8s.io"]
-  resources: ["events"]
-  verbs: ["list", "watch"]
+  verbs: ["create", "delete"]
 ---
 kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
