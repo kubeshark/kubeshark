@@ -1,5 +1,4 @@
 # This example shows permissions that are required for Mizu to resolve IPs to service names
-# Optional with `mizu tap` or `mizu-install`
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
