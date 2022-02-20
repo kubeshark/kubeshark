@@ -80,7 +80,7 @@ Notes:
 
 ## List of permissions
 
-The permissions that are required to run Mizu depend on the command (`mizu tap` or `mizu-install`) and on the configuration.
+The permissions that are required to run Mizu depend on the configuration.
 By default Mizu requires cluster-wide permissions.
 If these are not available to the user, it is possible to run Mizu in namespace-restricted mode which has a reduced set of requirements.
 This is done by by setting the `mizu-resources-namespace` config option. See [configuration](CONFIGURATION.md) for instructions.
