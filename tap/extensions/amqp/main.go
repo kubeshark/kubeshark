@@ -27,10 +27,6 @@ var protocol api.Protocol = api.Protocol{
 	Priority:        1,
 }
 
-func init() {
-	log.Println("Initializing AMQP extension...")
-}
-
 type dissecting string
 
 func (d dissecting) Register(extension *api.Extension) {
