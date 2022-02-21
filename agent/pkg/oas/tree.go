@@ -137,7 +137,7 @@ func getPatternFromExamples(exmp *openapi.Examples) *openapi.Regexp {
 
 		if pat != ".+" {
 			re := new(openapi.Regexp)
-			re.Regexp = regexp.MustCompile(`\d+`)
+			re.Regexp = regexp.MustCompile(pat)
 			return re
 		}
 	}
@@ -352,6 +352,7 @@ outer:
 			matchedConst := oChild.constant != nil && oChild.constant == nChild.constant
 			matchedParam := oChild.constant == nil && nChild.constant == nil
 			if matchedConst || matchedParam {
+				// TODO: if both are params, could have merged their examples
 				nChild.merge(oChild)
 				continue outer
 			}
