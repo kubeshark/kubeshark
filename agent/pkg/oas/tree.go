@@ -2,13 +2,12 @@ package oas
 
 import (
 	"encoding/json"
+	"github.com/chanced/openapi"
+	"github.com/up9inc/mizu/shared/logger"
 	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
-
-	"github.com/chanced/openapi"
-	"github.com/up9inc/mizu/shared/logger"
 )
 
 type NodePath = []string
@@ -79,7 +78,7 @@ func (n *Node) getOrSet(path NodePath, existingPathObj *openapi.PathObj) (node *
 			logger.Log.Warningf("Failed to add example to a parameter: %s", err)
 		}
 
-		if len(*exmp) > 1 && node.pathParam.Schema.Pattern == nil { // is it enough to decide on 2 samples?
+		if len(*exmp) >= 3 && node.pathParam.Schema.Pattern == nil { // is it enough to decide on 2 samples?
 			node.pathParam.Schema.Pattern = getPatternFromExamples(exmp)
 		}
 	}
@@ -96,6 +95,7 @@ func (n *Node) getOrSet(path NodePath, existingPathObj *openapi.PathObj) (node *
 
 func getPatternFromExamples(exmp *openapi.Examples) *openapi.Regexp {
 	allInts := true
+	strs := make([]string, 0)
 	for _, example := range *exmp {
 		exampleObj, err := example.ResolveExample(exampleResolver)
 		if err != nil {
@@ -108,6 +108,7 @@ func getPatternFromExamples(exmp *openapi.Examples) *openapi.Regexp {
 			logger.Log.Warningf("Failed decoding parameter example into string: %s", err)
 			continue
 		}
+		strs = append(strs, value)
 
 		if _, err := strconv.Atoi(value); err != nil {
 			allInts = false
@@ -118,6 +119,27 @@ func getPatternFromExamples(exmp *openapi.Examples) *openapi.Regexp {
 		re := new(openapi.Regexp)
 		re.Regexp = regexp.MustCompile(`\d+`)
 		return re
+	} else {
+		prefix := longestCommonXfixStr(strs, true)
+		suffix := longestCommonXfixStr(strs, false)
+
+		pat := ""
+		separators := "-._/:|*,+"
+		if len(prefix) > 0 && strings.Contains(separators, string(prefix[len(prefix)-1])) {
+			pat = "^" + regexp.QuoteMeta(prefix)
+		}
+
+		pat += ".+"
+
+		if len(suffix) > 0 && strings.Contains(separators, string(suffix[0])) {
+			pat += regexp.QuoteMeta(suffix) + "$"
+		}
+
+		if pat != ".+" {
+			re := new(openapi.Regexp)
+			re.Regexp = regexp.MustCompile(`\d+`)
+			return re
+		}
 	}
 	return nil
 }
@@ -159,19 +181,20 @@ func (n *Node) searchInParams(paramObj *openapi.ParameterObj, chunk string, chun
 			continue
 		}
 
-		if chunkIsGibberish {
-			return subnode
-		} else if paramObj != nil {
+		if paramObj != nil {
 			// TODO: mergeParam(subnode.pathParam, paramObj)
 			return subnode
-		} else if subnode.pathParam.Schema.Pattern != nil {
+		} else if subnode.pathParam.Schema.Pattern != nil { // it has defined param pattern, have to respect it
 			// TODO: and not in exceptions
 			if subnode.pathParam.Schema.Pattern.Match([]byte(chunk)) {
 				return subnode
 			} else {
 				return nil
 			}
+		} else if chunkIsGibberish {
+			return subnode
 		}
+
 	}
 	return nil
 }
