@@ -10,7 +10,7 @@ curl -Lo mizu https://github.com/up9inc/mizu/releases/download/_VER_/mizu_darwin
 
 **Mac** (AArch64/Apple M1 silicon)
 ```
-rm mizu && curl -Lo mizu https://github.com/up9inc/mizu/releases/download/_VER_/mizu_darwin_arm64 && chmod 755 mizu
+rm -f mizu && curl -Lo mizu https://github.com/up9inc/mizu/releases/download/_VER_/mizu_darwin_arm64 && chmod 755 mizu
 ```
 
 **Linux** (x86-64)
