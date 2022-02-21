@@ -54,11 +54,11 @@ func (g *oasGenerator) runGeneretor() {
 				logger.Log.Errorf("Failed to parse entry URL: %v, err: %v", entry.Request.URL, err)
 			}
 
-			val, found := g.ServiceSpecs.Load(u.Host)
+			val, found := g.ServiceSpecs.Load(entryWithSource.Destination)
 			var gen *SpecGen
 			if !found {
-				gen = NewGen(u.Scheme + "://" + u.Host)
-				g.ServiceSpecs.Store(u.Host, gen)
+				gen = NewGen(u.Scheme + "://" + entryWithSource.Destination)
+				g.ServiceSpecs.Store(entryWithSource.Destination, gen)
 			} else {
 				gen = val.(*SpecGen)
 			}
@@ -105,9 +105,10 @@ func newOasGenerator() *oasGenerator {
 }
 
 type EntryWithSource struct {
-	Source string
-	Entry  har.Entry
-	Id     uint
+	Source      string
+	Destination string
+	Entry       har.Entry
+	Id          uint
 }
 
 type oasGenerator struct {

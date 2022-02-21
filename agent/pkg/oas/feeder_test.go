@@ -6,6 +6,7 @@ import (
 	"errors"
 	"io"
 	"io/ioutil"
+	"net/url"
 	"os"
 	"path/filepath"
 	"sort"
@@ -139,7 +140,12 @@ func feedEntry(entry *har.Entry, source string, isSync bool, file string) {
 		logger.Log.Debugf("Interesting: %s", entry.Request.URL)
 	}
 
-	ews := EntryWithSource{Entry: *entry, Source: source, Id: uint(0)}
+	u, err := url.Parse(entry.Request.URL)
+	if err != nil {
+		logger.Log.Errorf("Failed to parse entry URL: %v, err: %v", entry.Request.URL, err)
+	}
+
+	ews := EntryWithSource{Entry: *entry, Source: source, Destination: u.Host, Id: uint(0)}
 	if isSync {
 		GetOasGeneratorInstance().entriesChan <- ews // blocking variant, right?
 	} else {
