@@ -1,6 +1,5 @@
 import {checkFilterByMethod, valueTabs,} from "../testHelpers/TrafficHelper";
 
-
 it('opening mizu', function () {
     cy.visit(Cypress.env('testUrl'));
 });

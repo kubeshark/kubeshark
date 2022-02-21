@@ -24,10 +24,6 @@ var protocol api.Protocol = api.Protocol{
 	Priority:        3,
 }
 
-func init() {
-	log.Println("Initializing Redis extension...")
-}
-
 type dissecting string
 
 func (d dissecting) Register(extension *api.Extension) {
