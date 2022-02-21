@@ -60,10 +60,6 @@ func LoadExtensions() {
 		return Extensions[i].Protocol.Priority < Extensions[j].Protocol.Priority
 	})
 
-	for _, extension := range Extensions {
-		logger.Log.Infof("Extension Properties: %+v", extension)
-	}
-
 	controllers.InitExtensionsMap(ExtensionsMap)
 }
 
