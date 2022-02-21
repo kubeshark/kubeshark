@@ -25,10 +25,6 @@ var _protocol api.Protocol = api.Protocol{
 	Priority:        2,
 }
 
-func init() {
-	log.Println("Initializing Kafka extension...")
-}
-
 type dissecting string
 
 func (d dissecting) Register(extension *api.Extension) {
