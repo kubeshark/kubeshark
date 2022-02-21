@@ -345,7 +345,7 @@ func (n *Node) countParentParams() int {
 
 func (n *Node) merge(other *Node) {
 	// TODO: merge operations, remember historical operationIDs
-	// TODO: if n is param and other is constant, could have added an example
+	// TODO: if n is param and other is constant, could have added constant as an example
 outer:
 	for _, oChild := range other.children {
 		for _, nChild := range n.children {
