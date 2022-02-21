@@ -124,7 +124,7 @@ func getPatternFromExamples(exmp *openapi.Examples) *openapi.Regexp {
 		suffix := longestCommonXfixStr(strs, false)
 
 		pat := ""
-		separators := "-._/:|*,+"
+		separators := "-._/:|*,+" // TODO: we could also cut prefix till the last separator
 		if len(prefix) > 0 && strings.Contains(separators, string(prefix[len(prefix)-1])) {
 			pat = "^" + regexp.QuoteMeta(prefix)
 		}
@@ -228,27 +228,25 @@ func (n *Node) compact() {
 	if param != nil {
 		// take its regex
 		pRegex := param.pathParam.Schema.Pattern
-		if pRegex == nil {
-			return
-		}
+		if pRegex != nil {
+			newChildren := make([]*Node, 0)
 
-		newChildren := make([]*Node, 0)
-
-		// compact the constants via regex
-		for _, subnode := range n.children {
-			if subnode.constant != nil {
-				if pRegex.Match([]byte(*subnode.constant)) {
-					param.merge(subnode)
-					continue
+			// compact the constants via regex
+			for _, subnode := range n.children {
+				if subnode.constant != nil {
+					if pRegex.Match([]byte(*subnode.constant)) {
+						param.merge(subnode)
+						continue
+					}
 				}
+				newChildren = append(newChildren, subnode)
 			}
-			newChildren = append(newChildren, subnode)
-		}
 
-		if len(n.children) != len(newChildren) {
-			logger.Log.Debugf("Shrinking children from %d to %d", len(n.children), len(newChildren))
-			n.children = newChildren
-			n.compact()
+			if len(n.children) != len(newChildren) {
+				logger.Log.Debugf("Shrinking children from %d to %d", len(n.children), len(newChildren))
+				n.children = newChildren
+				n.compact()
+			}
 		}
 	}
 
@@ -346,6 +344,8 @@ func (n *Node) countParentParams() int {
 }
 
 func (n *Node) merge(other *Node) {
+	// TODO: merge operations, remember historical operationIDs
+	// TODO: if n is param and other is constant, could have added an example
 outer:
 	for _, oChild := range other.children {
 		for _, nChild := range n.children {
