@@ -48,7 +48,8 @@ func TestEntries(t *testing.T) {
 		t.FailNow()
 	}
 	GetOasGeneratorInstance().Start()
-	loadStartingOAS()
+	loadStartingOAS("test_artifacts/catalogue.json", "catalogue")
+	loadStartingOAS("test_artifacts/trcc.json", "trcc-api-service")
 
 	cnt, err := feedEntries(files, true)
 	if err != nil {
@@ -175,8 +176,7 @@ func waitQueueProcessed() {
 	}
 }
 
-func loadStartingOAS() {
-	file := "test_artifacts/catalogue.json"
+func loadStartingOAS(file string, label string) {
 	fd, err := os.Open(file)
 	if err != nil {
 		panic(err)
@@ -195,10 +195,10 @@ func loadStartingOAS() {
 		panic(err)
 	}
 
-	gen := NewGen("catalogue")
+	gen := NewGen(label)
 	gen.StartFromSpec(doc)
 
-	GetOasGeneratorInstance().ServiceSpecs.Store("catalogue", gen)
+	GetOasGeneratorInstance().ServiceSpecs.Store(label, gen)
 }
 
 func TestEntriesNegative(t *testing.T) {

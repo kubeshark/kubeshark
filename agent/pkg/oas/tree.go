@@ -51,7 +51,7 @@ func (n *Node) getOrSet(path NodePath, existingPathObj *openapi.PathObj) (node *
 		node = n.searchInConstants(pathChunk)
 	}
 
-	if node == nil {
+	if node == nil && pathChunk != "" {
 		node = n.searchInParams(paramObj, pathChunk, chunkIsGibberish)
 	}
 
@@ -116,7 +116,7 @@ func getPatternFromExamples(exmp *openapi.Examples) *openapi.Regexp {
 
 	if allInts {
 		re := new(openapi.Regexp)
-		re.Regexp = regexp.MustCompile("\\d+")
+		re.Regexp = regexp.MustCompile(`\d+`)
 		return re
 	}
 	return nil
@@ -153,10 +153,6 @@ func (n *Node) createParam() *openapi.ParameterObj {
 }
 
 func (n *Node) searchInParams(paramObj *openapi.ParameterObj, chunk string, chunkIsGibberish bool) *Node {
-	if paramObj != nil || chunkIsGibberish {
-		logger.Log.Debugf("")
-	}
-
 	// look among params
 	for _, subnode := range n.children {
 		if subnode.constant != nil {
@@ -172,6 +168,8 @@ func (n *Node) searchInParams(paramObj *openapi.ParameterObj, chunk string, chun
 			// TODO: and not in exceptions
 			if subnode.pathParam.Schema.Pattern.Match([]byte(chunk)) {
 				return subnode
+			} else {
+				return nil
 			}
 		}
 	}
