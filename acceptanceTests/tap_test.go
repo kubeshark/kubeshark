@@ -632,3 +632,8 @@ func TestTapDumpLogs(t *testing.T) {
 		return
 	}
 }
+
+func TestRestrictedMode(t *testing.T) {
+	switchKubeContextForTest(t, "user1")
+	TestTapMultipleNamespaces(t)
+}
