@@ -29,10 +29,22 @@ func InitLogger(logPath string) {
 	logging.SetBackend(backend1Leveled, backend2Formatter)
 }
 
-func InitLoggerStderrOnly(level logging.Level) {
-	backend := logging.NewLogBackend(os.Stderr, "", 0)
-	backendFormatter := logging.NewBackendFormatter(backend, format)
+func InitLoggerStd(level logging.Level) {
+	var backends []logging.Backend
 
-	logging.SetBackend(backendFormatter)
-	logging.SetLevel(level, "")
+	stderrBackend := logging.NewLogBackend(os.Stderr, "", 0)
+	stderrFormater := logging.NewBackendFormatter(stderrBackend, format)
+	stderrLeveled := logging.AddModuleLevel(stderrFormater)
+	stderrLeveled.SetLevel(logging.ERROR, "")
+	backends = append(backends, stderrLeveled)
+
+	if level >= logging.WARNING {
+		stdoutBackend := logging.NewLogBackend(os.Stdout, "", 0)
+		stdoutFormater := logging.NewBackendFormatter(stdoutBackend, format)
+		stdoutLeveled := logging.AddModuleLevel(stdoutFormater)
+		stdoutLeveled.SetLevel(logging.DEBUG, "")
+		stdoutLeveled.IsEnabledFor(logging.DEBUG, logging.INFO)
+		backends = append(backends, stdoutLeveled)
+	}
+	logging.SetBackend(backends...)
 }
