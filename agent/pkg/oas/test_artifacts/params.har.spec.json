@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "https://httpbin.org",
-    "description": "Mizu observed 18 entries (0 failed), at 0.112 hits/s, average response time is 0.182 seconds",
+    "description": "Mizu observed 18 entries (0 failed), at 0.11 hits/s, average response time is 0.18 seconds",
     "version": "1.0"
   },
   "servers": [
@@ -14,8 +14,8 @@
     "/appears-once": {
       "get": {
         "summary": "/appears-once",
-        "description": "Mizu observed 1 entries (0 failed), at 0.000 hits/s, average response time is 0.630 seconds",
-        "operationId": "8ac53463-5633-436d-a1df-4a6aceadb6ad",
+        "description": "Mizu observed 1 entries (0 failed), at 0.00 hits/s, average response time is 0.63 seconds",
+        "operationId": "<UUID4>",
         "responses": {
           "200": {
             "description": "Successful call with status 200",
@@ -25,34 +25,34 @@
               }
             }
           }
-        },
-        "x-last-seen-ts": 1567750580.0471218,
-        "x-counters-total": {
-          "entries": 1,
-          "failures": 0,
-          "firstSeen": 1567750580.0471218,
-          "lastSeen": 1567750580.0471218,
-          "sumRT": 0.63,
-          "sumDuration": 0
         },
         "x-counters-per-source": {
           "": {
             "entries": 1,
             "failures": 0,
-            "firstSeen": 1567750580.0471218,
-            "lastSeen": 1567750580.0471218,
+            "firstSeen": 1567750580.04,
+            "lastSeen": 1567750580.04,
             "sumRT": 0.63,
             "sumDuration": 0
           }
         },
-        "x-sample-entry": 0
+        "x-sample-entry": 0,
+        "x-last-seen-ts": 1567750580.04,
+        "x-counters-total": {
+          "entries": 1,
+          "failures": 0,
+          "firstSeen": 1567750580.04,
+          "lastSeen": 1567750580.04,
+          "sumRT": 0.63,
+          "sumDuration": 0
+        }
       }
     },
     "/appears-twice": {
       "get": {
         "summary": "/appears-twice",
-        "description": "Mizu observed 2 entries (0 failed), at 0.500 hits/s, average response time is 0.630 seconds",
-        "operationId": "553e2e0f-693b-403d-a660-91c4db72926a",
+        "description": "Mizu observed 2 entries (0 failed), at 0.50 hits/s, average response time is 0.63 seconds",
+        "operationId": "<UUID4>",
         "responses": {
           "200": {
             "description": "Successful call with status 200",
@@ -63,12 +63,13 @@
             }
           }
         },
-        "x-last-seen-ts": 1567750581.7471218,
+        "x-sample-entry": 0,
+        "x-last-seen-ts": 1567750581.74,
         "x-counters-total": {
           "entries": 2,
           "failures": 0,
-          "firstSeen": 1567750580.7471218,
-          "lastSeen": 1567750581.7471218,
+          "firstSeen": 1567750580.74,
+          "lastSeen": 1567750581.74,
           "sumRT": 1.26,
           "sumDuration": 1
         },
@@ -76,20 +77,19 @@
           "": {
             "entries": 2,
             "failures": 0,
-            "firstSeen": 1567750580.7471218,
-            "lastSeen": 1567750581.7471218,
+            "firstSeen": 1567750580.74,
+            "lastSeen": 1567750581.74,
             "sumRT": 1.26,
             "sumDuration": 1
           }
-        },
-        "x-sample-entry": 0
+        }
       }
     },
     "/body-optional": {
       "post": {
         "summary": "/body-optional",
-        "description": "Mizu observed 3 entries (0 failed), at 0.003 hits/s, average response time is 0.001 seconds",
-        "operationId": "ee98f0d9-22b2-41a2-9cd9-93c456c39b7e",
+        "description": "Mizu observed 3 entries (0 failed), at 0.00 hits/s, average response time is 0.00 seconds",
+        "operationId": "<UUID4>",
         "responses": {
           "200": {
             "description": "Successful call with status 200",
@@ -98,24 +98,24 @@
             }
           }
         },
+        "x-sample-entry": 0,
         "x-counters-total": {
           "entries": 3,
           "failures": 0,
-          "firstSeen": 1567750581.7471218,
-          "lastSeen": 1567750581.757122,
-          "sumRT": 0.003,
-          "sumDuration": 0.010000228881835938
+          "firstSeen": 1567750581.74,
+          "lastSeen": 1567750581.75,
+          "sumRT": 0.00,
+          "sumDuration": 0.01
         },
-        "x-sample-entry": 0,
-        "x-last-seen-ts": 1567750581.757122,
+        "x-last-seen-ts": 1567750581.75,
         "x-counters-per-source": {
           "": {
             "entries": 3,
             "failures": 0,
-            "firstSeen": 1567750581.7471218,
-            "lastSeen": 1567750581.757122,
-            "sumRT": 0.003,
-            "sumDuration": 0.010000228881835938
+            "firstSeen": 1567750581.74,
+            "lastSeen": 1567750581.75,
+            "sumRT": 0.00,
+            "sumDuration": 0.01
           }
         },
         "requestBody": {
@@ -131,8 +131,8 @@
     "/body-required": {
       "post": {
         "summary": "/body-required",
-        "description": "Mizu observed 1 entries (0 failed), at 0.000 hits/s, average response time is 0.001 seconds",
-        "operationId": "e928cca0-f78f-45cc-bfb8-813da96d634c",
+        "description": "Mizu observed 1 entries (0 failed), at 0.00 hits/s, average response time is 0.00 seconds",
+        "operationId": "<UUID4>",
         "responses": {
           "200": {
             "description": "Successful call with status 200",
@@ -145,22 +145,22 @@
         "x-counters-total": {
           "entries": 1,
           "failures": 0,
-          "firstSeen": 1567750581.757122,
-          "lastSeen": 1567750581.757122,
-          "sumRT": 0.001,
+          "firstSeen": 1567750581.75,
+          "lastSeen": 1567750581.75,
+          "sumRT": 0.00,
           "sumDuration": 0
         },
         "x-counters-per-source": {
           "": {
             "entries": 1,
             "failures": 0,
-            "firstSeen": 1567750581.757122,
-            "lastSeen": 1567750581.757122,
-            "sumRT": 0.001,
+            "firstSeen": 1567750581.75,
+            "lastSeen": 1567750581.75,
+            "sumRT": 0.00,
             "sumDuration": 0
           }
         },
-        "x-last-seen-ts": 1567750581.757122,
+        "x-last-seen-ts": 1567750581.75,
         "requestBody": {
           "description": "Generic request body",
           "content": {
@@ -175,8 +175,8 @@
     "/form-multipart": {
       "post": {
         "summary": "/form-multipart",
-        "description": "Mizu observed 1 entries (0 failed), at 0.000 hits/s, average response time is 0.001 seconds",
-        "operationId": "34ae7ecd-d1bc-4a27-bf19-e113a1bfd9b8",
+        "description": "Mizu observed 1 entries (0 failed), at 0.00 hits/s, average response time is 0.00 seconds",
+        "operationId": "<UUID4>",
         "responses": {
           "200": {
             "description": "Successful call with status 200",
@@ -188,22 +188,22 @@
           }
         },
         "x-sample-entry": 0,
-        "x-last-seen-ts": 1567750582.7471218,
+        "x-last-seen-ts": 1567750582.74,
         "x-counters-total": {
           "entries": 1,
           "failures": 0,
-          "firstSeen": 1567750582.7471218,
-          "lastSeen": 1567750582.7471218,
-          "sumRT": 0.001,
+          "firstSeen": 1567750582.74,
+          "lastSeen": 1567750582.74,
+          "sumRT": 0.00,
           "sumDuration": 0
         },
         "x-counters-per-source": {
           "": {
             "entries": 1,
             "failures": 0,
-            "firstSeen": 1567750582.7471218,
-            "lastSeen": 1567750582.7471218,
-            "sumRT": 0.001,
+            "firstSeen": 1567750582.74,
+            "lastSeen": 1567750582.74,
+            "sumRT": 0.00,
             "sumDuration": 0
           }
         },
@@ -243,8 +243,8 @@
     "/form-urlencoded": {
       "post": {
         "summary": "/form-urlencoded",
-        "description": "Mizu observed 2 entries (0 failed), at 0.500 hits/s, average response time is 0.001 seconds",
-        "operationId": "acf74a9e-0ab1-4be0-844c-8829161bbbef",
+        "description": "Mizu observed 2 entries (0 failed), at 0.50 hits/s, average response time is 0.00 seconds",
+        "operationId": "<UUID4>",
         "responses": {
           "200": {
             "description": "Successful call with status 200",
@@ -253,24 +253,24 @@
             }
           }
         },
-        "x-last-seen-ts": 1567750581.7471218,
         "x-counters-per-source": {
           "": {
             "entries": 2,
             "failures": 0,
-            "firstSeen": 1567750580.7471218,
-            "lastSeen": 1567750581.7471218,
-            "sumRT": 0.002,
+            "firstSeen": 1567750580.74,
+            "lastSeen": 1567750581.74,
+            "sumRT": 0.00,
             "sumDuration": 1
           }
         },
         "x-sample-entry": 0,
+        "x-last-seen-ts": 1567750581.74,
         "x-counters-total": {
           "entries": 2,
           "failures": 0,
-          "firstSeen": 1567750580.7471218,
-          "lastSeen": 1567750581.7471218,
-          "sumRT": 0.002,
+          "firstSeen": 1567750580.74,
+          "lastSeen": 1567750581.74,
+          "sumRT": 0.00,
           "sumDuration": 1
         },
         "requestBody": {
@@ -325,8 +325,8 @@
           "param-patterns"
         ],
         "summary": "/param-patterns/{parampatternId}",
-        "description": "Mizu observed 2 entries (0 failed), at 0.000 hits/s, average response time is 0.001 seconds",
-        "operationId": "7c5d979a-b1b4-4e7f-a146-6888851d0fa7",
+        "description": "Mizu observed 2 entries (0 failed), at 0.00 hits/s, average response time is 0.00 seconds",
+        "operationId": "<UUID4>",
         "responses": {
           "200": {
             "description": "Successful call with status 200",
@@ -335,25 +335,25 @@
             }
           }
         },
-        "x-last-seen-ts": 1567750582.000004,
-        "x-sample-entry": 0,
         "x-counters-per-source": {
           "": {
             "entries": 2,
             "failures": 0,
-            "firstSeen": 1567750582.000003,
-            "lastSeen": 1567750582.000004,
-            "sumRT": 0.002,
-            "sumDuration": 9.5367431640625e-7
+            "firstSeen": 1567750582.00,
+            "lastSeen": 1567750582.00,
+            "sumRT": 0.00,
+            "sumDuration": 9.53e-7
           }
         },
+        "x-sample-entry": 0,
+        "x-last-seen-ts": 1567750582.00,
         "x-counters-total": {
           "entries": 2,
           "failures": 0,
-          "firstSeen": 1567750582.000003,
-          "lastSeen": 1567750582.000004,
-          "sumRT": 0.002,
-          "sumDuration": 9.5367431640625e-7
+          "firstSeen": 1567750582.00,
+          "lastSeen": 1567750582.00,
+          "sumRT": 0.00,
+          "sumDuration": 9.53e-7
         }
       },
       "parameters": [
@@ -392,8 +392,8 @@
           "param-patterns"
         ],
         "summary": "/param-patterns/{parampatternId}/1",
-        "description": "Mizu observed 1 entries (0 failed), at 0.000 hits/s, average response time is 0.001 seconds",
-        "operationId": "dbf2abf1-fc43-41c0-a9c4-223721a956c4",
+        "description": "Mizu observed 1 entries (0 failed), at 0.00 hits/s, average response time is 0.00 seconds",
+        "operationId": "<UUID4>",
         "responses": {
           "200": {
             "description": "Successful call with status 200",
@@ -402,22 +402,22 @@
             }
           }
         },
-        "x-last-seen-ts": 1567750582.000001,
+        "x-last-seen-ts": 1567750582.00,
         "x-counters-total": {
           "entries": 1,
           "failures": 0,
-          "firstSeen": 1567750582.000001,
-          "lastSeen": 1567750582.000001,
-          "sumRT": 0.001,
+          "firstSeen": 1567750582.00,
+          "lastSeen": 1567750582.00,
+          "sumRT": 0.00,
           "sumDuration": 0
         },
         "x-counters-per-source": {
           "": {
             "entries": 1,
             "failures": 0,
-            "firstSeen": 1567750582.000001,
-            "lastSeen": 1567750582.000001,
-            "sumRT": 0.001,
+            "firstSeen": 1567750582.00,
+            "lastSeen": 1567750582.00,
+            "sumRT": 0.00,
             "sumDuration": 0
           }
         },
@@ -459,8 +459,8 @@
           "param-patterns"
         ],
         "summary": "/param-patterns/{parampatternId}/static",
-        "description": "Mizu observed 1 entries (0 failed), at 0.000 hits/s, average response time is 0.001 seconds",
-        "operationId": "03d7c115-8bb3-434c-9ec0-63097b216859",
+        "description": "Mizu observed 1 entries (0 failed), at 0.00 hits/s, average response time is 0.00 seconds",
+        "operationId": "<UUID4>",
         "responses": {
           "200": {
             "description": "Successful call with status 200",
@@ -473,22 +473,22 @@
           "": {
             "entries": 1,
             "failures": 0,
-            "firstSeen": 1567750582.000002,
-            "lastSeen": 1567750582.000002,
-            "sumRT": 0.001,
+            "firstSeen": 1567750582.00,
+            "lastSeen": 1567750582.00,
+            "sumRT": 0.00,
             "sumDuration": 0
           }
         },
-        "x-last-seen-ts": 1567750582.000002,
+        "x-sample-entry": 0,
+        "x-last-seen-ts": 1567750582.00,
         "x-counters-total": {
           "entries": 1,
           "failures": 0,
-          "firstSeen": 1567750582.000002,
-          "lastSeen": 1567750582.000002,
-          "sumRT": 0.001,
+          "firstSeen": 1567750582.00,
+          "lastSeen": 1567750582.00,
+          "sumRT": 0.00,
           "sumDuration": 0
-        },
-        "x-sample-entry": 0
+        }
       },
       "parameters": [
         {
@@ -526,8 +526,8 @@
           "param-patterns"
         ],
         "summary": "/param-patterns/{parampatternId}/{param1}",
-        "description": "Mizu observed 1 entries (0 failed), at 0.000 hits/s, average response time is 0.001 seconds",
-        "operationId": "280b7f73-9a7c-4373-9367-081ef62e2d55",
+        "description": "Mizu observed 1 entries (0 failed), at 0.00 hits/s, average response time is 0.00 seconds",
+        "operationId": "<UUID4>",
         "responses": {
           "200": {
             "description": "Successful call with status 200",
@@ -536,26 +536,26 @@
             }
           }
         },
-        "x-sample-entry": 0,
+        "x-counters-total": {
+          "entries": 1,
+          "failures": 0,
+          "firstSeen": 1567750582.00,
+          "lastSeen": 1567750582.00,
+          "sumRT": 0.00,
+          "sumDuration": 0
+        },
         "x-counters-per-source": {
           "": {
             "entries": 1,
             "failures": 0,
-            "firstSeen": 1567750582.000002,
-            "lastSeen": 1567750582.000002,
-            "sumRT": 0.001,
+            "firstSeen": 1567750582.00,
+            "lastSeen": 1567750582.00,
+            "sumRT": 0.00,
             "sumDuration": 0
           }
         },
-        "x-last-seen-ts": 1567750582.000002,
-        "x-counters-total": {
-          "entries": 1,
-          "failures": 0,
-          "firstSeen": 1567750582.000002,
-          "lastSeen": 1567750582.000002,
-          "sumRT": 0.001,
-          "sumDuration": 0
-        }
+        "x-sample-entry": 0,
+        "x-last-seen-ts": 1567750582.00
       },
       "parameters": [
         {
@@ -604,8 +604,8 @@
     "/{Id}": {
       "get": {
         "summary": "/{Id}",
-        "description": "Mizu observed 1 entries (0 failed), at 0.000 hits/s, average response time is 0.630 seconds",
-        "operationId": "26f8ada2-a350-46e8-a618-093d44e04a0d",
+        "description": "Mizu observed 1 entries (0 failed), at 0.00 hits/s, average response time is 0.63 seconds",
+        "operationId": "<UUID4>",
         "responses": {
           "200": {
             "description": "Successful call with status 200",
@@ -616,12 +616,12 @@
             }
           }
         },
-        "x-last-seen-ts": 1567750579.7471218,
+        "x-last-seen-ts": 1567750579.74,
         "x-counters-total": {
           "entries": 1,
           "failures": 0,
-          "firstSeen": 1567750579.7471218,
-          "lastSeen": 1567750579.7471218,
+          "firstSeen": 1567750579.74,
+          "lastSeen": 1567750579.74,
           "sumRT": 0.63,
           "sumDuration": 0
         },
@@ -629,8 +629,8 @@
           "": {
             "entries": 1,
             "failures": 0,
-            "firstSeen": 1567750579.7471218,
-            "lastSeen": 1567750579.7471218,
+            "firstSeen": 1567750579.74,
+            "lastSeen": 1567750579.74,
             "sumRT": 0.63,
             "sumDuration": 0
           }
@@ -648,10 +648,10 @@
           },
           "examples": {
             "example #0": {
-              "value": "e21f7112-3d3b-4632-9da3-a4af2e0e9166"
+              "value": "<UUID4>"
             },
             "example #1": {
-              "value": "952bea17-3776-11ea-9341-42010a84012a"
+              "value": "<UUID4>"
             }
           }
         }
@@ -660,8 +660,8 @@
     "/{Id}/sub1": {
       "get": {
         "summary": "/{Id}/sub1",
-        "description": "Mizu observed 1 entries (0 failed), at 0.000 hits/s, average response time is 0.111 seconds",
-        "operationId": "b8cc1dd8-a124-43b9-81ce-aba40037b352",
+        "description": "Mizu observed 1 entries (0 failed), at 0.00 hits/s, average response time is 0.11 seconds",
+        "operationId": "<UUID4>",
         "responses": {
           "200": {
             "description": "Successful call with status 200",
@@ -670,26 +670,26 @@
             }
           }
         },
+        "x-sample-entry": 0,
+        "x-last-seen-ts": 1567750483.86,
         "x-counters-total": {
           "entries": 1,
           "failures": 0,
-          "firstSeen": 1567750483.864529,
-          "lastSeen": 1567750483.864529,
-          "sumRT": 0.111,
+          "firstSeen": 1567750483.86,
+          "lastSeen": 1567750483.86,
+          "sumRT": 0.11,
           "sumDuration": 0
         },
         "x-counters-per-source": {
           "": {
             "entries": 1,
             "failures": 0,
-            "firstSeen": 1567750483.864529,
-            "lastSeen": 1567750483.864529,
-            "sumRT": 0.111,
+            "firstSeen": 1567750483.86,
+            "lastSeen": 1567750483.86,
+            "sumRT": 0.11,
             "sumDuration": 0
           }
-        },
-        "x-sample-entry": 0,
-        "x-last-seen-ts": 1567750483.864529
+        }
       },
       "parameters": [
         {
@@ -702,10 +702,10 @@
           },
           "examples": {
             "example #0": {
-              "value": "e21f7112-3d3b-4632-9da3-a4af2e0e9166"
+              "value": "<UUID4>"
             },
             "example #1": {
-              "value": "952bea17-3776-11ea-9341-42010a84012a"
+              "value": "<UUID4>"
             }
           }
         }
@@ -714,8 +714,8 @@
     "/{Id}/sub2": {
       "get": {
         "summary": "/{Id}/sub2",
-        "description": "Mizu observed 1 entries (0 failed), at 0.000 hits/s, average response time is 0.630 seconds",
-        "operationId": "ad5f7ba5-1382-4a06-a309-746b644fc2e4",
+        "description": "Mizu observed 1 entries (0 failed), at 0.00 hits/s, average response time is 0.63 seconds",
+        "operationId": "<UUID4>",
         "responses": {
           "200": {
             "description": "Successful call with status 200",
@@ -726,12 +726,13 @@
             }
           }
         },
-        "x-last-seen-ts": 1567750578.7471218,
+        "x-sample-entry": 0,
+        "x-last-seen-ts": 1567750578.74,
         "x-counters-total": {
           "entries": 1,
           "failures": 0,
-          "firstSeen": 1567750578.7471218,
-          "lastSeen": 1567750578.7471218,
+          "firstSeen": 1567750578.74,
+          "lastSeen": 1567750578.74,
           "sumRT": 0.63,
           "sumDuration": 0
         },
@@ -739,13 +740,12 @@
           "": {
             "entries": 1,
             "failures": 0,
-            "firstSeen": 1567750578.7471218,
-            "lastSeen": 1567750578.7471218,
+            "firstSeen": 1567750578.74,
+            "lastSeen": 1567750578.74,
             "sumRT": 0.63,
             "sumDuration": 0
           }
-        },
-        "x-sample-entry": 0
+        }
       },
       "parameters": [
         {
@@ -758,10 +758,10 @@
           },
           "examples": {
             "example #0": {
-              "value": "e21f7112-3d3b-4632-9da3-a4af2e0e9166"
+              "value": "<UUID4>"
             },
             "example #1": {
-              "value": "952bea17-3776-11ea-9341-42010a84012a"
+              "value": "<UUID4>"
             }
           }
         }
@@ -771,19 +771,19 @@
   "x-counters-total": {
     "entries": 18,
     "failures": 0,
-    "firstSeen": 1567750483.864529,
-    "lastSeen": 1567750582.7471218,
-    "sumRT": 3.272999999999999,
-    "sumDuration": 2.0100011825561523
+    "firstSeen": 1567750483.86,
+    "lastSeen": 1567750582.74,
+    "sumRT": 3.27,
+    "sumDuration": 2.01
   },
   "x-counters-per-source": {
     "": {
       "entries": 18,
       "failures": 0,
-      "firstSeen": 1567750483.864529,
-      "lastSeen": 1567750582.7471218,
-      "sumRT": 3.272999999999999,
-      "sumDuration": 2.0100011825561523
+      "firstSeen": 1567750483.86,
+      "lastSeen": 1567750582.74,
+      "sumRT": 3.27,
+      "sumDuration": 2.01
     }
   }
 }
