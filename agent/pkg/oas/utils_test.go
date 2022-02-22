@@ -69,7 +69,11 @@ func TestOpMerging(t *testing.T) {
 		{nil, nil, nil},
 		{&openapi.Operation{}, nil, &openapi.Operation{}},
 		{nil, &openapi.Operation{}, &openapi.Operation{}},
-		{&openapi.Operation{}, &openapi.Operation{}, &openapi.Operation{}},
+		{
+			&openapi.Operation{OperationID: "op1"},
+			&openapi.Operation{OperationID: "op2"},
+			&openapi.Operation{OperationID: "op1"},
+		},
 		// has historicIds
 	}
 	for _, tc := range testCases {

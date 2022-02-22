@@ -41,8 +41,9 @@ func outputSpec(label string, spec *openapi.OpenAPI, t *testing.T) string {
 }
 
 func TestEntries(t *testing.T) {
-	logger.InitLoggerStderrOnly(logging.INFO)
-	files, err := getFiles("./test_artifacts/")
+	logger.InitLoggerStderrOnly(logging.DEBUG)
+	//files, err := getFiles("/media/bigdisk/UP9/trcc/alon-up9")
+	files, err := getFiles("/media/bigdisk/UP9")
 	if err != nil {
 		t.Log(err)
 		t.FailNow()
@@ -50,6 +51,22 @@ func TestEntries(t *testing.T) {
 	GetOasGeneratorInstance().Start()
 	loadStartingOAS("test_artifacts/catalogue.json", "catalogue")
 	loadStartingOAS("test_artifacts/trcc.json", "trcc-api-service")
+
+	go func() {
+		for {
+			time.Sleep(1 * time.Second)
+			GetOasGeneratorInstance().ServiceSpecs.Range(func(key, val interface{}) bool {
+				svc := key.(string)
+				t.Logf("Getting spec for %s", svc)
+				gen := val.(*SpecGen)
+				_, err := gen.GetSpec()
+				if err != nil {
+					t.Error(err)
+				}
+				return true
+			})
+		}
+	}()
 
 	cnt, err := feedEntries(files, true)
 	if err != nil {
@@ -157,6 +174,12 @@ func TestFileSingle(t *testing.T) {
 
 		if len(diff) > 0 {
 			t.Errorf("Generated spec does not match expected:\n%s", diff.String())
+			if os.Getenv("MIZU_OAS_WRITE_FILES") != "" {
+				err = ioutil.WriteFile(file+".spec.json", []byte(specText), 0644)
+				if err != nil {
+					panic(err)
+				}
+			}
 		}
 
 		return true
