@@ -477,7 +477,7 @@ func intersectSliceWithMap(required []string, names map[string]struct{}) []strin
 
 func mergePathObj(po *openapi.PathObj, other *openapi.PathObj) {
 	// merge parameters
-	mergePathParams(&po.Parameters, &other.Parameters)
+	mergeParamLists(&po.Parameters, &other.Parameters)
 
 	// merge ops
 	mergeOps(&po.Get, &other.Get)
@@ -490,7 +490,7 @@ func mergePathObj(po *openapi.PathObj, other *openapi.PathObj) {
 	mergeOps(&po.Post, &other.Post)
 }
 
-func mergePathParams(params **openapi.ParameterList, other **openapi.ParameterList) {
+func mergeParamLists(params **openapi.ParameterList, other **openapi.ParameterList) {
 	if *other == nil {
 		return
 	}
@@ -515,15 +515,41 @@ outer:
 			}
 
 			if param.In == oParam.In && param.Name == oParam.Name {
+				// TODO: merge examples? transfer schema pattern?
 				continue outer
 			}
 		}
 
 		**params = append(**params, oParam)
 	}
-
 }
 
 func mergeOps(op **openapi.Operation, other **openapi.Operation) {
-	// TODO: merge operations, remember historical operationIDs
+	if *other == nil {
+		return
+	}
+
+	if *op == nil {
+		*op = *other
+	} else {
+		// merge parameters
+		mergeParamLists(&(*op).Parameters, &(*other).Parameters)
+
+		// merge responses
+		mergeOpResponses(&(*op).Responses, &(*other).Responses)
+
+		// merge request body
+		mergeOpReqBodies(&(*op).RequestBody, &(*other).RequestBody)
+
+		// historical OpIDs
+		// merge kpis
+	}
+}
+
+func mergeOpReqBodies(r *openapi.RequestBody, r2 *openapi.RequestBody) {
+
+}
+
+func mergeOpResponses(r *openapi.Responses, o *openapi.Responses) {
+
 }
