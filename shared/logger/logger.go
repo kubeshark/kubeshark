@@ -42,8 +42,7 @@ func InitLoggerStd(level logging.Level) {
 		stdoutBackend := logging.NewLogBackend(os.Stdout, "", 0)
 		stdoutFormater := logging.NewBackendFormatter(stdoutBackend, format)
 		stdoutLeveled := logging.AddModuleLevel(stdoutFormater)
-		stdoutLeveled.SetLevel(logging.DEBUG, "")
-		stdoutLeveled.IsEnabledFor(logging.DEBUG, logging.INFO)
+		stdoutLeveled.SetLevel(level, "")
 		backends = append(backends, stdoutLeveled)
 	}
 	logging.SetBackend(backends...)
