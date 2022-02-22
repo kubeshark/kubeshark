@@ -30,6 +30,11 @@ type SocketConnection struct {
 	isTapper      bool
 }
 
+type WebSocketParams struct {
+	Query             string `json:"query"`
+	EnableFullEntries bool   `json:"enableFullEntries"`
+}
+
 var (
 	websocketUpgrader = websocket.Upgrader{
 		ReadBufferSize:  1024,
@@ -110,31 +115,26 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 		logger.Log.Error(err)
 	}
 
-out:
+	var params WebSocketParams
+
 	for {
-		// params[0]: query
-		// params[1]: enableFullEntries (empty: disable, non-empty: enable)
-		params := make([][]byte, 2)
-		for i := range params {
-			_, params[i], err = ws.ReadMessage()
-			if err != nil {
-				if _, ok := err.(*websocket.CloseError); ok {
-					logger.Log.Debugf("Received websocket close message, socket id: %d", socketId)
-				} else {
-					logger.Log.Errorf("Error reading message, socket id: %d, error: %v", socketId, err)
-				}
-
-				break out
+		_, msg, err := ws.ReadMessage()
+		if err != nil {
+			if _, ok := err.(*websocket.CloseError); ok {
+				logger.Log.Debugf("Received websocket close message, socket id: %d", socketId)
+			} else {
+				logger.Log.Errorf("Error reading message, socket id: %d, error: %v", socketId, err)
 			}
-		}
 
-		enableFullEntries := false
-		if len(params[1]) > 0 {
-			enableFullEntries = true
+			break
 		}
 
 		if !isTapper && !isQuerySet {
-			query := string(params[0])
+			if err := json.Unmarshal(msg, &params); err != nil {
+				logger.Log.Errorf("Error: %v", socketId, err)
+			}
+
+			query := params.Query
 			err = basenine.Validate(shared.BasenineHost, shared.BaseninePort, query)
 			if err != nil {
 				toastBytes, _ := models.CreateWebsocketToastMessage(&models.ToastMessage{
@@ -162,7 +162,7 @@ out:
 					err = json.Unmarshal(bytes, &entry)
 
 					var message []byte
-					if enableFullEntries {
+					if params.EnableFullEntries {
 						message, _ = models.CreateFullEntryWebSocketMessage(entry)
 					} else {
 						base := tapApi.Summarize(entry)
@@ -201,7 +201,7 @@ out:
 
 			connection.Query(query, data, meta)
 		} else {
-			eventHandlers.WebSocketMessage(socketId, params[0])
+			eventHandlers.WebSocketMessage(socketId, msg)
 		}
 	}
 }

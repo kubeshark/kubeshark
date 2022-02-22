@@ -56,7 +56,7 @@ const (
 
 func main() {
 	logLevel := determineLogLevel()
-	logger.InitLoggerStderrOnly(logLevel)
+	logger.InitLoggerStd(logLevel)
 	flag.Parse()
 	if err := config.LoadConfig(); err != nil {
 		logger.Log.Fatalf("Error loading config file %v", err)

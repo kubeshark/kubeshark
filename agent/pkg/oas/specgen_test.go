@@ -41,7 +41,7 @@ func outputSpec(label string, spec *openapi.OpenAPI, t *testing.T) string {
 }
 
 func TestEntries(t *testing.T) {
-	logger.InitLoggerStderrOnly(logging.INFO)
+	logger.InitLoggerStd(logging.INFO)
 	files, err := getFiles("./test_artifacts/")
 	if err != nil {
 		t.Log(err)
