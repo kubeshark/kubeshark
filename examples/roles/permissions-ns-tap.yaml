@@ -3,7 +3,6 @@ kind: Role
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: mizu-runner-role
-  namespace: user1
 rules:
 - apiGroups: [""]
   resources: ["pods"]
@@ -25,7 +24,6 @@ kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: mizu-runner-rolebindings
-  namespace: user1
 subjects:
 - kind: User
   name: user1

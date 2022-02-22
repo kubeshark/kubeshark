@@ -3,7 +3,6 @@ kind: Role
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: mizu-runner-debug-role
-  namespace: user1
 rules:
 - apiGroups: ["events.k8s.io"]
   resources: ["events"]
@@ -16,7 +15,6 @@ kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: mizu-runner-debug-rolebindings
-  namespace: user1
 subjects:
 - kind: User
   name: user1
