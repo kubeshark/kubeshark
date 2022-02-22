@@ -150,7 +150,7 @@ func runCypressTests(t *testing.T, cypressRunCmd string) {
 	t.Logf("running command: %v", cypressCmd.String())
 	out, err := cypressCmd.Output()
 	if err != nil {
-		t.Errorf("error: %v", err)
+		t.Errorf("error running cypress, error: %v", err)
 		return
 	}
 
