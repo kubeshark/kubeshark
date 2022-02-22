@@ -4,51 +4,72 @@ it('should open mizu', function () {
 
 serviceMapCheck();
 
-function serviceMapCheck() {
+async function serviceMapCheck() {
     it('service map test', function () {
         cy.intercept(`${Cypress.env('testUrl')}/servicemap/get`).as('serviceMapRequest');
-        cy.get('#total-entries').invoke('text').then(entriesNum => {
-            cy.get('[alt="service-map"]').click();
-            cy.wait('@serviceMapRequest').then(({response}) => {
-                const body = response.body;
-                console.log(body)
-                checkBody(body, entriesNum);
+        cy.get('#total-entries').should('not.have.text', '0').then(() => {
+            cy.get('#total-entries').invoke('text').then(async entriesNum => {
+                cy.get('[alt="service-map"]').click();
+                cy.wait('@serviceMapRequest').then(({response}) => {
+                    const body = response.body;
+                    console.log(body)
+                    // checkBody(body, {
+                    //     nodesCount: 2,
+                    //     mainNodeName: 'redis.mizu-tests',
+                    //     entiresNum: entriesNum,
+                    //     edgesCount: 1,
+                    //     protocol: 'redis'
+                    // });
+                    redisTestServiceMapValidation(body, parseInt(entriesNum));
+                });
             });
         });
     });
 }
 
 
-function checkBody(bodyJson, entriesNum) {
+function redisTestServiceMapValidation(bodyJson, entriesNum) {
     const {nodes, edges, status} = bodyJson;
-    expect(nodes.length).to.equal(3, `Expected nodes count`);
+    // const {nodesCount, mainNodeName, entriesNum, edgesCount, protocol} = valuesDict;
+    const nodesNum = 2;
+    const protocolNodeName = 'redis.mizu-tests';
 
-    let rabbitNodesCount = 0;
-    nodes.forEach(node => {
-        if (node.name === 'rabbitmq.mizu-tests'){
-            rabbitNodesCount++;
-        }
-    });
-    if (rabbitNodesCount !== 1) {
-        throw new Error(`Expected only one rabbit nodes. got: ${rabbitNodesCount}`);
-    }
+    expect(nodes.length).to.equal(nodesNum, `Expected nodes count`);
 
-    expect(edges.length).to.equal(3, `Expected edges count`);
-    let tempNum = 0;
+    const {protocolNode, protocolNodeIndex} = nodes[0].name === protocolNodeName ?
+        {protocolNode: nodes[0].name, index: 0} : {protocolNode: nodes[1].name, protocolNodeIndex: 1};
+
+    expect(edges[0].destination.name).to.equal(protocolNodeName);
+    expect(edges[0].source.name).to.equal(protocolNodeIndex ? nodes[0].name : nodes[1].name);
+
+    let falseEntriesCount = entriesNum;
     edges.forEach(edge => {
-        tempNum += edge.count;
-
-        if (edge.destination.name === 'rabbitmq.mizu-tests') {
-            expect(edge.count).to.equal(27);
-        } else {
-            expect(edge.source.name).to.equal('rabbitmq.mizu-tests');
-        }
-        expect(edge.protocol.name).to.equal('amqp');
-
+        falseEntriesCount -= edge.count;
     });
-    if (tempNum !== 72) {
-        throw new Error(`Expected the counts sum to be ${entriesNum}, but got ${tempNum} instead`);
+
+    if (falseEntriesCount) {
+        throw new Error(``)
     }
+
+    // let tempNodesCount = 0;
+    // nodes.forEach(node => {
+    //     if (node.name === mainNodeName){
+    //         tempNodesCount++;
+    //     }
+    // });
+    // if (tempNodesCount !== 1) {
+    //     throw new Error(`Expected only one rabbit nodes. got: ${tempNodesCount}`);
+    // }
+    //
+    // expect(edges.length).to.equal(edgesCount, `Expected edges count`);
+    // let tempNum = 0;
+    // edges.forEach(edge => {
+    //     expect(edge.protocol.name).to.equal(protocol);
+    //     tempNum += edge.count;
+    // });
+    // if (tempNum !== 30) {
+    //     throw new Error(`Expected the counts sum to be ${entriesNum}, but got ${tempNum} instead`);
+    // }
 
 
 
