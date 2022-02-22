@@ -74,7 +74,7 @@ func getApiServerUrl(port uint16) string {
 	return fmt.Sprintf("http://localhost:%v", port)
 }
 
-func getServiceExternalIp(ctx context.Context, namespace string, service string) (string, error) {
+func newKubernetesProvider() (*KubernetesProvider, error) {
 	home := homedir.HomeDir()
 	configLoadingRules := &clientcmd.ClientConfigLoadingRules{ExplicitPath: filepath.Join(home, ".kube", "config")}
 	clientConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
@@ -86,15 +86,23 @@ func getServiceExternalIp(ctx context.Context, namespace string, service string)
 
 	restClientConfig, err := clientConfig.ClientConfig()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	clientSet, err := kubernetes.NewForConfig(restClientConfig)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	serviceObj, err := clientSet.CoreV1().Services(namespace).Get(ctx, service, metav1.GetOptions{})
+	return &KubernetesProvider{clientSet}, nil
+}
+
+type KubernetesProvider struct {
+	clientSet *kubernetes.Clientset
+}
+
+func (kp *KubernetesProvider) getServiceExternalIp(ctx context.Context, namespace string, service string) (string, error) {
+	serviceObj, err := kp.clientSet.CoreV1().Services(namespace).Get(ctx, service, metav1.GetOptions{})
 	if err != nil {
 		return "", err
 	}
