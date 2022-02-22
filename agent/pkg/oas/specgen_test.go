@@ -41,9 +41,8 @@ func outputSpec(label string, spec *openapi.OpenAPI, t *testing.T) string {
 }
 
 func TestEntries(t *testing.T) {
-	logger.InitLoggerStderrOnly(logging.DEBUG)
-	//files, err := getFiles("/media/bigdisk/UP9/trcc/alon-up9")
-	files, err := getFiles("/media/bigdisk/UP9")
+	logger.InitLoggerStd(logging.INFO)
+	files, err := getFiles("./test_artifacts/")
 	if err != nil {
 		t.Log(err)
 		t.FailNow()
