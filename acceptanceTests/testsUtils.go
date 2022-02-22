@@ -111,6 +111,43 @@ func (kp *kubernetesProvider) getServiceExternalIp(ctx context.Context, namespac
 	return externalIp, nil
 }
 
+func switchKubeContextForTest(t *testing.T, contextName string) error {
+	currentKubeContextName, err := getKubeCurrentContextName()
+	if err != nil {
+		return err
+	}
+
+	t.Cleanup(func() {
+		err := setKubeCurrentContext(currentKubeContextName)
+		if err != nil {
+			t.Errorf("failed to set Kubernetes context to %s, err: %v", currentKubeContextName, err)
+		}
+	})
+
+	return nil
+}
+
+func getKubeCurrentContextName() (string, error) {
+	cmd := exec.Command("kubectl", "config", "current-context")
+
+	output, err := cmd.Output()
+	if err != nil {
+		return "", err
+	}
+
+	return string(bytes.TrimSpace(output)), nil
+}
+func setKubeCurrentContext(contextName string) error {
+	cmd := exec.Command("kubectl", "config", "use-context", contextName)
+
+	err := cmd.Run()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func getDefaultCommandArgs() []string {
 	setFlag := "--set"
 	telemetry := "telemetry=false"
