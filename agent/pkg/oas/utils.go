@@ -474,3 +474,56 @@ func intersectSliceWithMap(required []string, names map[string]struct{}) []strin
 	}
 	return required
 }
+
+func mergePathObj(po *openapi.PathObj, other *openapi.PathObj) {
+	// merge parameters
+	mergePathParams(&po.Parameters, &other.Parameters)
+
+	// merge ops
+	mergeOps(&po.Get, &other.Get)
+	mergeOps(&po.Put, &other.Put)
+	mergeOps(&po.Options, &other.Options)
+	mergeOps(&po.Patch, &other.Patch)
+	mergeOps(&po.Delete, &other.Delete)
+	mergeOps(&po.Head, &other.Head)
+	mergeOps(&po.Trace, &other.Trace)
+	mergeOps(&po.Post, &other.Post)
+}
+
+func mergePathParams(params **openapi.ParameterList, other **openapi.ParameterList) {
+	if *other == nil {
+		return
+	}
+
+	if *params == nil {
+		*params = new(openapi.ParameterList)
+	}
+
+outer:
+	for _, o := range **other {
+		oParam, err := o.ResolveParameter(paramResolver)
+		if err != nil {
+			logger.Log.Warningf("Failed to resolve reference: %s", err)
+			continue
+		}
+
+		for _, p := range **params {
+			param, err := p.ResolveParameter(paramResolver)
+			if err != nil {
+				logger.Log.Warningf("Failed to resolve reference: %s", err)
+				continue
+			}
+
+			if param.In == oParam.In && param.Name == oParam.Name {
+				continue outer
+			}
+		}
+
+		**params = append(**params, oParam)
+	}
+
+}
+
+func mergeOps(op **openapi.Operation, other **openapi.Operation) {
+	// TODO: merge operations, remember historical operationIDs
+}

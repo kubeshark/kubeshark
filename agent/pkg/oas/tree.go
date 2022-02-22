@@ -188,6 +188,9 @@ func (n *Node) searchInParams(paramObj *openapi.ParameterObj, chunk string, chun
 			// TODO: and not in exceptions
 			if subnode.pathParam.Schema.Pattern.Match([]byte(chunk)) {
 				return subnode
+			} else if chunkIsGibberish {
+				// TODO: what to do if gibberish chunk does not match the pattern and not in exceptions?
+				return nil
 			} else {
 				return nil
 			}
@@ -344,8 +347,17 @@ func (n *Node) countParentParams() int {
 }
 
 func (n *Node) merge(other *Node) {
-	// TODO: merge operations, remember historical operationIDs
+	if n.constant == nil && other.constant == nil {
+		// make sure the params will match by name later in merge
+		other.pathParam.Name = n.pathParam.Name
+	}
+
+	if n.pathObj != nil && other.pathObj != nil {
+		mergePathObj(n.pathObj, other.pathObj)
+	}
+
 	// TODO: if n is param and other is constant, could have added constant as an example
+
 outer:
 	for _, oChild := range other.children {
 		for _, nChild := range n.children {
