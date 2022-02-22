@@ -25,6 +25,12 @@ jobs:
       - name: Setup acceptance test
         run: source ./acceptanceTests/setup.sh
 
+      - name: Create k8s user
+        env:
+          USERNAME: user1
+        run: |
+          ./acceptanceTests/create_user.sh "${USERNAME}"
+
       # - name: Test
       #   run: make acceptance-test
 
