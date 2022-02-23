@@ -149,7 +149,8 @@ func setKubeCurrentContext(contextName string) error {
 }
 
 func applyKubeFilesForTest(t *testing.T, namespace string, filename ...string) error {
-	for _, fname := range filename {
+	for i := range filename {
+		fname := filename[i]
 		if err := applyKubeFile(namespace, fname); err != nil {
 			return err
 		}
