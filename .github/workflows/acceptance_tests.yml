@@ -31,9 +31,10 @@ jobs:
         run: |
           ./acceptanceTests/create_user.sh "${USERNAME}"
 
-      - name: Test Restricted
+      - name: Test My Tests
         run: |
           pushd acceptanceTests
+          go test -run TestTapMultipleNamespaces
           go test -run TestRestrictedMode
           popd
 
