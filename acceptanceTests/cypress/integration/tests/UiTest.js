@@ -190,7 +190,7 @@ function checkFilter(filterDetails){
     const entriesForDeeperCheck = 5;
 
     it(`checking the filter: ${name}`, function () {
-        cy.get('#total-entries').then(number => {
+        cy.get('#total-entries').should('not.have.text', '0').then(number => {
             const totalEntries = number.text();
 
             // checks the hover on the last entry (the only one in DOM at the beginning)
@@ -323,47 +323,45 @@ function checkOnlyLineNumberes(jsonItems, decodedText) {
     cy.get(`${Cypress.env('bodyJsonClass')} > >`).should('have.length', jsonItems)
 }
 
-async function serviceMapCheck() {
+function serviceMapCheck() {
     it('service map test', function () {
         cy.intercept(`${Cypress.env('testUrl')}/servicemap/get`).as('serviceMapRequest');
         cy.get('#total-entries').should('not.have.text', '0').then(() => {
-            cy.get('#total-entries').invoke('text').then(async entriesNum => {
+            cy.get('#total-entries').invoke('text').then(entriesNum => {
                 cy.get('[alt="service-map"]').click();
                 cy.wait('@serviceMapRequest').then(({response}) => {
                     const body = response.body;
-                    console.log(body)
-
-                    serviceMapAPICheck(body, {
-                        entriesNum: parseInt(entriesNum),
-                        nodeValues: {
-                            destination: 'httpbin.mizu-tests',
-                            source: '127.0.0.1'}
-                    });
+                    const nodeParams = {
+                        destination: 'httpbin.mizu-tests',
+                        source: '127.0.0.1'
+                    };
+                    serviceMapAPICheck(body, parseInt(entriesNum), nodeParams);
+                    cy.reload();
                 });
             });
         });
     });
 }
 
-function serviceMapAPICheck(bodyJson, valuesDict) {
-    const {nodes, edges} = bodyJson;
-    const {entriesNum, nodeValues} = valuesDict;
+function serviceMapAPICheck(body, entriesNum, nodeParams) {
+    const {nodes, edges} = body;
 
-    expect(nodes.length).to.equal(Object.keys(nodeValues).length, `Expected nodes count`);
+    expect(nodes.length).to.equal(Object.keys(nodeParams).length, `Expected nodes count`);
 
-    const sourceNodeIndex = nodes[0].name === nodeValues.destination ? 1 : 0;
+    const sourceNodeIndex = nodes[0].name === nodeParams.source ? 0 : 1;
 
-    expect(nodes[sourceNodeIndex].name).to.equal(nodeValues.source);
+    expect(nodes[sourceNodeIndex].name).to.equal(nodeParams.source);
+    expect(nodes[sourceNodeIndex ? 0 : 1].name).to.equal(nodeParams.destination);
 
     let count = 0;
     edges.forEach(edge => {
         count += edge.count;
-        if (edge.destination.name === nodeValues.destination) {
-            expect(edge.source.name).to.equal(nodeValues.source);
+        if (edge.destination.name === nodeParams.destination) {
+            expect(edge.source.name).to.equal(nodeParams.source);
         }
     });
 
     if (count !== entriesNum) {
-        throw new Error(`Expected ${entriesNum} entries, but vy the edges, the total amount is ${count} `)
+        throw new Error(`Expected ${entriesNum} entries, but vy the edges, the total amount is ${count}`);
     }
 }
