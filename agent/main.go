@@ -56,11 +56,9 @@ const (
 
 func main() {
 	logLevel := determineLogLevel()
-	logger.InitLoggerStderrOnly(logLevel)
+	logger.InitLoggerStd(logLevel)
 	flag.Parse()
-	if err := config.LoadConfig(); err != nil {
-		logger.Log.Fatalf("Error loading config file %v", err)
-	}
+
 	app.LoadExtensions()
 
 	if !*tapperMode && !*apiServerMode && !*standaloneMode && !*harsReaderMode {
@@ -139,7 +137,10 @@ func hostApi(socketHarOutputChannel chan<- *tapApi.OutputChannelItem) *gin.Engin
 }
 
 func runInApiServerMode(namespace string) *gin.Engine {
-	app.ConfigureBasenineServer(shared.BasenineHost, shared.BaseninePort)
+	if err := config.LoadConfig(); err != nil {
+		logger.Log.Fatalf("Error loading config file %v", err)
+	}
+	app.ConfigureBasenineServer(shared.BasenineHost, shared.BaseninePort, config.Config.MaxDBSizeBytes, config.Config.LogLevel)
 	startTime = time.Now().UnixNano() / int64(time.Millisecond)
 	api.StartResolving(namespace)
 
@@ -215,7 +216,7 @@ func enableExpFeatureIfNeeded() {
 		oas.GetOasGeneratorInstance().Start()
 	}
 	if config.Config.ServiceMap {
-		servicemap.GetInstance().SetConfig(config.Config)
+		servicemap.GetInstance().Enable()
 	}
 	elastic.GetInstance().Configure(config.Config.Elastic)
 }
