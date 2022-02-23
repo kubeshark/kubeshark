@@ -3,7 +3,6 @@ package servicemap
 import (
 	"sync"
 
-	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/logger"
 	tapApi "github.com/up9inc/mizu/tap/api"
 )
@@ -26,13 +25,13 @@ func GetInstance() ServiceMap {
 }
 
 type serviceMap struct {
-	config           *shared.MizuAgentConfig
+	enabled          bool
 	graph            *graph
 	entriesProcessed int
 }
 
 type ServiceMap interface {
-	SetConfig(config *shared.MizuAgentConfig)
+	Enable()
 	IsEnabled() bool
 	NewTCPEntry(source *tapApi.TCP, destination *tapApi.TCP, protocol *tapApi.Protocol)
 	GetStatus() ServiceMapStatus
@@ -46,7 +45,7 @@ type ServiceMap interface {
 
 func newServiceMap() *serviceMap {
 	return &serviceMap{
-		config:           nil,
+		enabled:          false,
 		entriesProcessed: 0,
 		graph:            newDirectedGraph(),
 	}
@@ -156,15 +155,12 @@ func (s *serviceMap) addEdge(u, v *entryData, p *tapApi.Protocol) {
 	s.entriesProcessed++
 }
 
-func (s *serviceMap) SetConfig(config *shared.MizuAgentConfig) {
-	s.config = config
+func (s *serviceMap) Enable() {
+	s.enabled = true
 }
 
 func (s *serviceMap) IsEnabled() bool {
-	if s.config != nil && s.config.ServiceMap {
-		return true
-	}
-	return false
+	return s.enabled
 }
 
 func (s *serviceMap) NewTCPEntry(src *tapApi.TCP, dst *tapApi.TCP, p *tapApi.Protocol) {

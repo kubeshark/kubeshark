@@ -216,7 +216,7 @@ func enableExpFeatureIfNeeded() {
 		oas.GetOasGeneratorInstance().Start()
 	}
 	if config.Config.ServiceMap {
-		servicemap.GetInstance().SetConfig(config.Config)
+		servicemap.GetInstance().Enable()
 	}
 	elastic.GetInstance().Configure(config.Config.Elastic)
 }
