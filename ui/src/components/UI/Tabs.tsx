@@ -40,7 +40,7 @@ const useTabsStyles = makeStyles((theme) => ({
     },
 
     active: {
-        fontWeight: theme.typography.fontWeightBold,
+        FontWeight: theme.typography.fontWeightBold,
         color: variables.fontColor,
         cursor: 'unset',
         borderBottom: "2px solid " + variables.fontColor,

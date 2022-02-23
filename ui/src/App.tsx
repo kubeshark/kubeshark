@@ -5,11 +5,16 @@ import {TrafficPage} from "./components/Pages/TrafficPage/TrafficPage";
 import { ServiceMapModal } from './components/ServiceMapModal/ServiceMapModal';
 import {useRecoilState} from "recoil";
 import serviceMapModalOpenAtom from "./recoil/serviceMapModalOpen";
+import OasModal from './components/OasModal/OasModal';
+import oasModalOpenAtom from './recoil/oasModalOpen/atom';
+
+window["isOasEnabled"] = true;
 
 const App = () => {
 
     const [analyzeStatus, setAnalyzeStatus] = useState(null);
     const [serviceMapModalOpen, setServiceMapModalOpen] = useRecoilState(serviceMapModalOpenAtom);
+    const [oasModalOpen, setOasModalOpen] = useRecoilState(oasModalOpenAtom)
 
     return (
         <div className="mizuApp">
@@ -19,6 +24,10 @@ const App = () => {
                 isOpen={serviceMapModalOpen}
                 onOpen={() => setServiceMapModalOpen(true)}
                 onClose={() => setServiceMapModalOpen(false)}
+            />}
+            {window["isOasEnabled"] && <OasModal
+                openModal={oasModalOpen}
+                handleCloseModal={() => setOasModalOpen(false)}
             />}
         </div>
     );
