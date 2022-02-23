@@ -148,6 +148,49 @@ func setKubeCurrentContext(contextName string) error {
 	return nil
 }
 
+func applyKubeFileForTest(t *testing.T, namespace string, filename string) error {
+	err := applyKubeFile(namespace, filename)
+	if err != nil {
+		return err
+	}
+
+	t.Cleanup(func() {
+		err := deleteKubeFile(namespace, filename)
+		if err != nil {
+			t.Errorf(
+				"failed to delete Kubernetes resources in namespace %s from filename %s, err: %v",
+				namespace,
+				filename,
+				err,
+			)
+		}
+	})
+
+	return nil
+}
+
+func applyKubeFile(namespace string, filename string) (error) {
+	cmd := exec.Command("kubectl", "apply", "-n", namespace, "-f", filename)
+
+	err := cmd.Run()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func deleteKubeFile(namespace string, filename string) error {
+	cmd := exec.Command("kubectl", "delete", "-n", namespace, "-f", filename)
+
+	err := cmd.Run()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func getDefaultCommandArgs() []string {
 	setFlag := "--set"
 	telemetry := "telemetry=false"
