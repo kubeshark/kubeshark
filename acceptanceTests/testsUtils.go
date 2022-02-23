@@ -137,11 +137,11 @@ func getKubeCurrentContextName() (string, error) {
 
 	return string(bytes.TrimSpace(output)), nil
 }
+
 func setKubeCurrentContext(contextName string) error {
 	cmd := exec.Command("kubectl", "config", "use-context", contextName)
 
-	err := cmd.Run()
-	if err != nil {
+	if err := cmd.Run(); err != nil {
 		return err
 	}
 
@@ -149,14 +149,12 @@ func setKubeCurrentContext(contextName string) error {
 }
 
 func applyKubeFileForTest(t *testing.T, namespace string, filename string) error {
-	err := applyKubeFile(namespace, filename)
-	if err != nil {
+	if err := applyKubeFile(namespace, filename); err != nil {
 		return err
 	}
 
 	t.Cleanup(func() {
-		err := deleteKubeFile(namespace, filename)
-		if err != nil {
+		if err := deleteKubeFile(namespace, filename); err != nil {
 			t.Errorf(
 				"failed to delete Kubernetes resources in namespace %s from filename %s, err: %v",
 				namespace,
@@ -172,8 +170,7 @@ func applyKubeFileForTest(t *testing.T, namespace string, filename string) error
 func applyKubeFile(namespace string, filename string) (error) {
 	cmd := exec.Command("kubectl", "apply", "-n", namespace, "-f", filename)
 
-	err := cmd.Run()
-	if err != nil {
+	if err := cmd.Run(); err != nil {
 		return err
 	}
 
@@ -183,8 +180,7 @@ func applyKubeFile(namespace string, filename string) (error) {
 func deleteKubeFile(namespace string, filename string) error {
 	cmd := exec.Command("kubectl", "delete", "-n", namespace, "-f", filename)
 
-	err := cmd.Run()
-	if err != nil {
+	if err := cmd.Run(); err != nil {
 		return err
 	}
 
