@@ -68,4 +68,3 @@ make build-cli-ci
 
 echo "Starting tunnel"
 minikube tunnel &
-sleep 20
