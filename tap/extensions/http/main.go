@@ -76,10 +76,6 @@ const (
 	TypeHttpResponse
 )
 
-func init() {
-	log.Println("Initializing HTTP extension...")
-}
-
 type dissecting string
 
 func (d dissecting) Register(extension *api.Extension) {

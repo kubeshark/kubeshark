@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/suite"
-	"github.com/up9inc/mizu/shared"
 	tapApi "github.com/up9inc/mizu/tap/api"
 )
 
@@ -96,9 +95,7 @@ func (s *ServiceMapDisabledSuite) SetupTest() {
 
 func (s *ServiceMapEnabledSuite) SetupTest() {
 	s.instance = GetInstance()
-	s.instance.SetConfig(&shared.MizuAgentConfig{
-		ServiceMap: true,
-	})
+	s.instance.Enable()
 }
 
 func (s *ServiceMapDisabledSuite) TestServiceMapInstance() {

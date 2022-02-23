@@ -155,7 +155,7 @@ func TestAmqp(t *testing.T) {
 	defer conn.Close()
 
 	// Temporary fix for missing amqp entries
-	time.Sleep(5 * time.Second)
+	time.Sleep(10 * time.Second)
 
 	for i := 0; i < defaultEntriesCount/5; i++ {
 		ch, err := conn.Channel()
