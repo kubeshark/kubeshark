@@ -81,8 +81,7 @@ func ConfigureBasenineServer(host string, port string, dbSize int64, logLevel lo
 	for _, extension := range Extensions {
 		macros := extension.Dissector.Macros()
 		for macro, expanded := range macros {
-			err = basenine.Macro(host, port, macro, expanded)
-			if err != nil {
+			if err := basenine.Macro(host, port, macro, expanded); err != nil {
 				logger.Log.Panicf("Error while adding a macro: %v", err)
 			}
 		}
