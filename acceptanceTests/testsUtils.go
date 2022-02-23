@@ -130,9 +130,9 @@ func switchKubeContextForTest(t *testing.T, contextName string) error {
 func getKubeCurrentContextName() (string, error) {
 	cmd := exec.Command("kubectl", "config", "current-context")
 
-	output, err := cmd.Output()
+	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("%v, %s", err, string(output))
 	}
 
 	return string(bytes.TrimSpace(output)), nil
@@ -141,8 +141,8 @@ func getKubeCurrentContextName() (string, error) {
 func setKubeCurrentContext(contextName string) error {
 	cmd := exec.Command("kubectl", "config", "use-context", contextName)
 
-	if err := cmd.Run(); err != nil {
-		return err
+	if output, err := cmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("%v, %s", err, string(output))
 	}
 
 	return nil
@@ -172,8 +172,8 @@ func applyKubeFilesForTest(t *testing.T, namespace string, filename ...string) e
 func applyKubeFile(namespace string, filename string) (error) {
 	cmd := exec.Command("kubectl", "apply", "-n", namespace, "-f", filename)
 
-	if err := cmd.Run(); err != nil {
-		return err
+	if output, err := cmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("%v, %s", err, string(output))
 	}
 
 	return nil
@@ -182,8 +182,8 @@ func applyKubeFile(namespace string, filename string) (error) {
 func deleteKubeFile(namespace string, filename string) error {
 	cmd := exec.Command("kubectl", "delete", "-n", namespace, "-f", filename)
 
-	if err := cmd.Run(); err != nil {
-		return err
+	if output, err := cmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("%v, %s", err, string(output))
 	}
 
 	return nil
