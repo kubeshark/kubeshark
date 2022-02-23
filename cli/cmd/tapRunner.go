@@ -154,6 +154,7 @@ func finishTapExecution(kubernetesProvider *kubernetes.Provider) {
 func getTapMizuAgentConfig() *shared.MizuAgentConfig {
 	mizuAgentConfig := shared.MizuAgentConfig{
 		MaxDBSizeBytes:         config.Config.Tap.MaxEntriesDBSizeBytes(),
+		InsertionFilter:        config.Config.Tap.GetInsertionFilter(),
 		AgentImage:             config.Config.AgentImage,
 		PullPolicy:             config.Config.ImagePullPolicyStr,
 		LogLevel:               config.Config.LogLevel(),

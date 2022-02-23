@@ -90,6 +90,12 @@ func ConfigureBasenineServer(host string, port string) {
 			}
 		}
 	}
+
+	// Set the insertion filter that comes from the config
+	err = basenine.InsertionFilter(host, port, config.Config.InsertionFilter)
+	if err != nil {
+		logger.Log.Panicf("Error while setting the insertion filter: %v", err)
+	}
 }
 
 func GetEntryInputChannel() chan *tapApi.OutputChannelItem {
