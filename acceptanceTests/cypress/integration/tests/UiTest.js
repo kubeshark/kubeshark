@@ -64,6 +64,8 @@ it('right side sanity test', function () {
     });
 });
 
+serviceMapCheck();
+
 checkIllegalFilter('invalid filter');
 
 checkFilter({
@@ -319,4 +321,49 @@ function checkPrettyOrNothing(jsonItems, decodedBody) {
 function checkOnlyLineNumberes(jsonItems, decodedText) {
     cy.get(`${Cypress.env('bodyJsonClass')} >`).should('have.length', 1).and('have.text', decodedText);
     cy.get(`${Cypress.env('bodyJsonClass')} > >`).should('have.length', jsonItems)
+}
+
+async function serviceMapCheck() {
+    it('service map test', function () {
+        cy.intercept(`${Cypress.env('testUrl')}/servicemap/get`).as('serviceMapRequest');
+        cy.get('#total-entries').should('not.have.text', '0').then(() => {
+            cy.get('#total-entries').invoke('text').then(async entriesNum => {
+                cy.get('[alt="service-map"]').click();
+                cy.wait('@serviceMapRequest').then(({response}) => {
+                    const body = response.body;
+                    console.log(body)
+
+                    serviceMapAPICheck(body, {
+                        entriesNum: parseInt(entriesNum),
+                        nodeValues: {
+                            destination: 'httpbin.mizu-tests',
+                            source: '127.0.0.1'}
+                    });
+                });
+            });
+        });
+    });
+}
+
+function serviceMapAPICheck(bodyJson, valuesDict) {
+    const {nodes, edges} = bodyJson;
+    const {entriesNum, nodeValues} = valuesDict;
+
+    expect(nodes.length).to.equal(Object.keys(nodeValues).length, `Expected nodes count`);
+
+    const sourceNodeIndex = nodes[0].name === nodeValues.destination ? 1 : 0;
+
+    expect(nodes[sourceNodeIndex].name).to.equal(nodeValues.source);
+
+    let count = 0;
+    edges.forEach(edge => {
+        count += edge.count;
+        if (edge.destination.name === nodeValues.destination) {
+            expect(edge.source.name).to.equal(nodeValues.source);
+        }
+    });
+
+    if (count !== entriesNum) {
+        throw new Error(`Expected ${entriesNum} entries, but vy the edges, the total amount is ${count} `)
+    }
 }
