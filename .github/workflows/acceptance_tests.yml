@@ -22,8 +22,8 @@ jobs:
       - name: Check out code into the Go module directory
         uses: actions/checkout@v2
 
-      - name: Setup acceptance test
-        run: source ./acceptanceTests/setup.sh
+      # - name: Setup acceptance test
+      #   run: source ./acceptanceTests/setup.sh
 
       - name: Create k8s users
         env:
