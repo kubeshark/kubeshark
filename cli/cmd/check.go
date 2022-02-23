@@ -5,6 +5,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/up9inc/mizu/cli/config/configStructs"
 	"github.com/up9inc/mizu/cli/telemetry"
+	"github.com/up9inc/mizu/shared/logger"
 )
 
 var checkCmd = &cobra.Command{
@@ -21,7 +22,9 @@ func init() {
 	rootCmd.AddCommand(checkCmd)
 
 	defaultCheckConfig := configStructs.CheckConfig{}
-	defaults.Set(&defaultCheckConfig)
+	if err := defaults.Set(&defaultCheckConfig); err != nil {
+		logger.Log.Debug(err)
+	}
 
 	checkCmd.Flags().Bool(configStructs.PreTapCheckName, defaultCheckConfig.PreTap, "Check pre-tap Mizu installation for potential problems")
 }
