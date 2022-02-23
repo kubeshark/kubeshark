@@ -22,6 +22,13 @@ jobs:
       - name: Check out code into the Go module directory
         uses: actions/checkout@v2
 
+      - name: Download cli
+        run: |
+          mkdir cli/bin
+          curl -Lo ./cli/bin/mizu_ci https://github.com/up9inc/mizu/releases/download/28.0-dev26/mizu_linux_amd64
+          chmod 755 ./cli/bin/mizu_ci
+          ls -l /home/runner/work/mizu/mizu/cli/bin/mizu_ci
+
       - name: Setup acceptance test
         run: source ./acceptanceTests/setup.sh
 
@@ -38,16 +45,22 @@ jobs:
           kubectl config use-context ${USERNAME_UNRESTRICTED}
 
       - name: Test
-        run: make acceptance-test
+        run: |
+          cd acceptanceTests
+          go test -run TestTapMultipleNamespaces
+          go test -run TestRestrictedMode
 
-      - name: Slack notification on failure
-        uses: ravsamhq/notify-slack-action@v1
-        if: always()
-        with:
-          status: ${{ job.status }}
-          notification_title: 'Mizu {workflow} has {status_message}'
-          message_format: '{emoji} *{workflow}* {status_message} during <{run_url}|run>, after commit: <{commit_url}|{commit_sha}>'
-          footer: 'Linked Repo <{repo_url}|{repo}>'
-          notify_when: 'failure'
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      # - name: Test
+      #   run: make acceptance-test
+
+#       - name: Slack notification on failure
+#         uses: ravsamhq/notify-slack-action@v1
+#         if: always()
+#         with:
+#           status: ${{ job.status }}
+#           notification_title: 'Mizu {workflow} has {status_message}'
+#           message_format: '{emoji} *{workflow}* {status_message} during <{run_url}|run>, after commit: <{commit_url}|{commit_sha}>'
+#           footer: 'Linked Repo <{repo_url}|{repo}>'
+#           notify_when: 'failure'
+#         env:
+#           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
