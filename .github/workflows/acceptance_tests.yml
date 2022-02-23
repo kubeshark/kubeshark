@@ -12,7 +12,7 @@ on:
 jobs:
   run-acceptance-tests:
     name: Run acceptance tests
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       - name: Set up Go 1.17
         uses: actions/setup-go@v2
