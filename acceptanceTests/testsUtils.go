@@ -148,21 +148,23 @@ func setKubeCurrentContext(contextName string) error {
 	return nil
 }
 
-func applyKubeFileForTest(t *testing.T, namespace string, filename string) error {
-	if err := applyKubeFile(namespace, filename); err != nil {
-		return err
-	}
-
-	t.Cleanup(func() {
-		if err := deleteKubeFile(namespace, filename); err != nil {
-			t.Errorf(
-				"failed to delete Kubernetes resources in namespace %s from filename %s, err: %v",
-				namespace,
-				filename,
-				err,
-			)
+func applyKubeFilesForTest(t *testing.T, namespace string, filename ...string) error {
+	for _, fname := range filename {
+		if err := applyKubeFile(namespace, fname); err != nil {
+			return err
 		}
-	})
+
+		t.Cleanup(func() {
+			if err := deleteKubeFile(namespace, fname); err != nil {
+				t.Errorf(
+					"failed to delete Kubernetes resources in namespace %s from filename %s, err: %v",
+					namespace,
+					fname,
+					err,
+				)
+			}
+		})
+	}
 
 	return nil
 }
