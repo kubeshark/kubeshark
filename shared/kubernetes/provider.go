@@ -829,7 +829,7 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	if tls {
 		mizuCmd = append(mizuCmd, "--tls")
 	}
-	
+
 	if serviceMesh || tls {
 		mizuCmd = append(mizuCmd, "--procfs", procfsMountPath)
 	}
@@ -939,24 +939,6 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	sysfsVolumeMount := applyconfcore.VolumeMount().WithName(sysfsVolumeName).WithMountPath(sysfsMountPath).WithReadOnly(true)
 	agentContainer.WithVolumeMounts(sysfsVolumeMount)
 
-	volumeName := ConfigMapName
-	configMapVolume := applyconfcore.VolumeApplyConfiguration{
-		Name: &volumeName,
-		VolumeSourceApplyConfiguration: applyconfcore.VolumeSourceApplyConfiguration{
-			ConfigMap: &applyconfcore.ConfigMapVolumeSourceApplyConfiguration{
-				LocalObjectReferenceApplyConfiguration: applyconfcore.LocalObjectReferenceApplyConfiguration{
-					Name: &volumeName,
-				},
-			},
-		},
-	}
-	mountPath := shared.ConfigDirPath
-	configMapVolumeMount := applyconfcore.VolumeMountApplyConfiguration{
-		Name:      &volumeName,
-		MountPath: &mountPath,
-	}
-	agentContainer.WithVolumeMounts(&configMapVolumeMount)
-
 	podSpec := applyconfcore.PodSpec()
 	podSpec.WithHostNetwork(true)
 	podSpec.WithDNSPolicy(core.DNSClusterFirstWithHostNet)
@@ -967,7 +949,7 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	podSpec.WithContainers(agentContainer)
 	podSpec.WithAffinity(affinity)
 	podSpec.WithTolerations(noExecuteToleration, noScheduleToleration)
-	podSpec.WithVolumes(&configMapVolume, procfsVolume, sysfsVolume)
+	podSpec.WithVolumes(procfsVolume, sysfsVolume)
 
 	podTemplate := applyconfcore.PodTemplateSpec()
 	podTemplate.WithLabels(map[string]string{
@@ -981,7 +963,7 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	labelSelector.WithMatchLabels(map[string]string{"app": tapperPodName})
 
 	applyOptions := metav1.ApplyOptions{
-		Force: true,
+		Force:        true,
 		FieldManager: fieldManagerName,
 	}
 
