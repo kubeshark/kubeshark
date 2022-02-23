@@ -140,7 +140,7 @@ func runInApiServerMode(namespace string) *gin.Engine {
 	if err := config.LoadConfig(); err != nil {
 		logger.Log.Fatalf("Error loading config file %v", err)
 	}
-	app.ConfigureBasenineServer(shared.BasenineHost, shared.BaseninePort)
+	app.ConfigureBasenineServer(shared.BasenineHost, shared.BaseninePort, config.Config.MaxDBSizeBytes, config.Config.LogLevel)
 	startTime = time.Now().UnixNano() / int64(time.Millisecond)
 	api.StartResolving(namespace)
 
