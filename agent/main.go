@@ -139,7 +139,7 @@ func hostApi(socketHarOutputChannel chan<- *tapApi.OutputChannelItem) *gin.Engin
 }
 
 func runInApiServerMode(namespace string) *gin.Engine {
-	app.ConfigureBasenineServer(shared.BasenineHost, shared.BaseninePort)
+	app.ConfigureBasenineServer(shared.BasenineHost, shared.BaseninePort, config.Config.MaxDBSizeBytes, config.Config.LogLevel)
 	startTime = time.Now().UnixNano() / int64(time.Millisecond)
 	api.StartResolving(namespace)
 
