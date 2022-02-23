@@ -34,4 +34,4 @@ openssl x509 -req -in "${CRT_FILE}" -CA "${MINIKUBE_CRT_FILE}" -CAkey "${MINIKUB
 
 echo "Creating context for user \"${USERNAME}\""
 kubectl config set-credentials "${USERNAME}" --client-certificate="${CRT_FILE}" --client-key="${KEY_FILE}"
-kubectl config set-context user1 --cluster=minikube --user="${USERNAME}"
+kubectl config set-context "${USERNAME}" --cluster=minikube --user="${USERNAME}"
