@@ -25,15 +25,14 @@ export function resizeToNormalMizu() {
 }
 
 export function verifyMinimumEntries() {
-    const minimumEntries = Cypress.env('minimumEntries');
-    it(`Making sure that mizu shows at least ${minimumEntries} entries`, async function () {
-        cy.get('#total-entries').then(number => {
-            const getNum = () => {
-                const numOfEntries = number.text();
-                return parseInt(numOfEntries);
-            };
-            cy.wrap({there: getNum}).invoke('there').should('be.gte', minimumEntries);
-        });
+    const entriesSent = Cypress.env('entriesCount');
+    const minimumEntries = Math.round((0.75 * entriesSent)).toString();
+
+    // the next regex matches all the numbers that are above minimumEntries
+    const regex = new RegExp(`[${minimumEntries[0]}][${minimumEntries[1]}-9]|[${parseInt(minimumEntries[0]) + 1}-9][0-9]`);
+
+    it(`Minimum entries should be above ${minimumEntries}`, function () {
+        cy.get('#total-entries').invoke('text').should('match', regex);
     });
 }
 
