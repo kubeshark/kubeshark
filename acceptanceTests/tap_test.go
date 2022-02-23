@@ -653,5 +653,5 @@ func TestRestrictedMode(t *testing.T) {
 	t.Log("switching k8s context to user")
 	switchKubeContextForTest(t, "user1")
 
-	TestTapMultipleNamespaces(t)
+	t.Run("multiple namespaces", TestTapMultipleNamespaces)
 }
