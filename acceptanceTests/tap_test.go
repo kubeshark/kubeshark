@@ -634,7 +634,6 @@ func TestTapDumpLogs(t *testing.T) {
 }
 
 func TestRestrictedMode(t *testing.T) {
-	switchKubeContextForTest(t, "user1")
 	applyKubeFilesForTest(
 		t,
 		"mizu-tests",
@@ -649,5 +648,6 @@ func TestRestrictedMode(t *testing.T) {
 		"../examples/roles/permissions-ns-ip-resolution-optional.yaml",
 		"../examples/roles/permissions-ns-debug-optional.yaml",
 	)
+	switchKubeContextForTest(t, "user1")
 	TestTapMultipleNamespaces(t)
 }
