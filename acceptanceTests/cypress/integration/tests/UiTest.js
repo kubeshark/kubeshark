@@ -325,6 +325,7 @@ function checkOnlyLineNumberes(jsonItems, decodedText) {
 
 function serviceMapCheck() {
     it('service map test', function () {
+        cy.reload();
         cy.intercept(`${Cypress.env('testUrl')}/servicemap/get`).as('serviceMapRequest');
         cy.get('#total-entries').should('not.have.text', '0').then(() => {
             cy.get('#total-entries').invoke('text').then(entriesNum => {
