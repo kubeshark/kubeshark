@@ -37,12 +37,6 @@ jobs:
           kubectl apply -f examples/roles/permissions-all-namespaces-debug-optional.yaml
           kubectl config use-context ${USERNAME_UNRESTRICTED}
 
-      - name: Test Restricted
-        run: |
-          pushd acceptanceTests
-          go test -run TestRestrictedMode
-          popd
-
       # - name: Test
       #   run: make acceptance-test
 
