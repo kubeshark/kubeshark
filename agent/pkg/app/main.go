@@ -62,7 +62,7 @@ func LoadExtensions() {
 	controllers.InitExtensionsMap(ExtensionsMap)
 }
 
-func ConfigureBasenineServer(host string, port string, dbSize int64, logLevel logging.Level) {
+func ConfigureBasenineServer(host string, port string, dbSize int64, logLevel logging.Level, insertionFilter string) {
 	if !wait.New(
 		wait.WithProto("tcp"),
 		wait.WithWait(200*time.Millisecond),
@@ -88,8 +88,7 @@ func ConfigureBasenineServer(host string, port string, dbSize int64, logLevel lo
 	}
 
 	// Set the insertion filter that comes from the config
-	err = basenine.InsertionFilter(host, port, config.Config.InsertionFilter)
-	if err != nil {
+	if err := basenine.InsertionFilter(host, port, insertionFilter); err != nil {
 		logger.Log.Panicf("Error while setting the insertion filter: %v", err)
 	}
 }
