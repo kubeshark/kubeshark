@@ -325,7 +325,6 @@ function checkOnlyLineNumberes(jsonItems, decodedText) {
 
 function serviceMapCheck() {
     it('service map test', function () {
-        cy.reload();
         cy.intercept(`${Cypress.env('testUrl')}/servicemap/get`).as('serviceMapRequest');
         cy.get('#total-entries').should('not.have.text', '0').then(() => {
             cy.get('#total-entries').invoke('text').then(entriesNum => {
@@ -349,10 +348,9 @@ function serviceMapAPICheck(body, entriesNum, nodeParams) {
 
     expect(nodes.length).to.equal(Object.keys(nodeParams).length, `Expected nodes count`);
 
-    const sourceNodeIndex = nodes[0].name === nodeParams.source ? 0 : 1;
+    expect(edges.some(edge => edge.source.name === nodeParams.source)).to.be.true;
+    expect(edges.some(edge => edge.destination.name === nodeParams.destination)).to.be.true;
 
-    expect(nodes[sourceNodeIndex].name).to.equal(nodeParams.source);
-    expect(nodes[sourceNodeIndex ? 0 : 1].name).to.equal(nodeParams.destination);
 
     let count = 0;
     edges.forEach(edge => {
