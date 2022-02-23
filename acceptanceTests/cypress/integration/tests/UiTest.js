@@ -351,7 +351,6 @@ function serviceMapAPICheck(body, entriesNum, nodeParams) {
     expect(edges.some(edge => edge.source.name === nodeParams.source)).to.be.true;
     expect(edges.some(edge => edge.destination.name === nodeParams.destination)).to.be.true;
 
-
     let count = 0;
     edges.forEach(edge => {
         count += edge.count;
@@ -360,7 +359,5 @@ function serviceMapAPICheck(body, entriesNum, nodeParams) {
         }
     });
 
-    if (count !== entriesNum) {
-        throw new Error(`Expected ${entriesNum} entries, but vy the edges, the total amount is ${count}`);
-    }
+    expect(count).to.equal(entriesNum);
 }
