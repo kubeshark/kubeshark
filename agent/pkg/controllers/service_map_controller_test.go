@@ -11,7 +11,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/suite"
-	"github.com/up9inc/mizu/shared"
 	tapApi "github.com/up9inc/mizu/tap/api"
 )
 
@@ -59,9 +58,7 @@ type ServiceMapControllerSuite struct {
 
 func (s *ServiceMapControllerSuite) SetupTest() {
 	s.c = NewServiceMapController()
-	s.c.service.SetConfig(&shared.MizuAgentConfig{
-		ServiceMap: true,
-	})
+	s.c.service.Enable()
 	s.c.service.NewTCPEntry(TCPEntryA, TCPEntryB, ProtocolHttp)
 
 	s.w = httptest.NewRecorder()
