@@ -73,8 +73,7 @@ func ConfigureBasenineServer(host string, port string, dbSize int64, logLevel lo
 		logger.Log.Panicf("Basenine is not available!")
 	}
 
-	err := basenine.Limit(host, port, dbSize)
-	if err != nil {
+	if err := basenine.Limit(host, port, dbSize); err != nil {
 		logger.Log.Panicf("Error while limiting database size: %v", err)
 	}
 
