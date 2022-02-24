@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "https://httpbin.org",
-    "description": "Mizu observed 18 entries (0 failed), at 0.11 hits/s, average response time is 0.18 seconds",
+    "description": "Mizu observed 19 entries (0 failed), at 0.10 hits/s, average response time is 0.17 seconds",
     "version": "1.0"
   },
   "servers": [
@@ -318,6 +318,60 @@
           "required": true
         }
       }
+    },
+    "/param-patterns/prefix-gibberish-fine/{prefixgibberishfineId}": {
+      "get": {
+        "tags": [
+          "param-patterns"
+        ],
+        "summary": "/param-patterns/prefix-gibberish-fine/{prefixgibberishfineId}",
+        "description": "Mizu observed 1 entries (0 failed), at 0.00 hits/s, average response time is 0.00 seconds",
+        "operationId": "<UUID4>",
+        "responses": {
+          "200": {
+            "description": "Successful call with status 200",
+            "content": {
+              "": {}
+            }
+          }
+        },
+        "x-counters-per-source": {
+          "": {
+            "entries": 1,
+            "failures": 0,
+            "firstSeen": 1567750582,
+            "lastSeen": 1567750582,
+            "sumRT": 0.00,
+            "sumDuration": 0
+          }
+        },
+        "x-counters-total": {
+          "entries": 1,
+          "failures": 0,
+          "firstSeen": 1567750582,
+          "lastSeen": 1567750582,
+          "sumRT": 0.00,
+          "sumDuration": 0
+        },
+        "x-last-seen-ts": 1567750582,
+        "x-sample-entry": 0
+      },
+      "parameters": [
+        {
+          "name": "prefixgibberishfineId",
+          "in": "path",
+          "required": true,
+          "style": "simple",
+          "schema": {
+            "type": "string"
+          },
+          "examples": {
+            "example #0": {
+              "value": "234324"
+            }
+          }
+        }
+      ]
     },
     "/param-patterns/{parampatternId}": {
       "get": {
@@ -770,7 +824,7 @@
   },
   "x-counters-per-source": {
     "": {
-      "entries": 18,
+      "entries": 19,
       "failures": 0,
       "firstSeen": 1567750483.86,
       "lastSeen": 1567750582.74,
@@ -779,7 +833,7 @@
     }
   },
   "x-counters-total": {
-    "entries": 18,
+    "entries": 19,
     "failures": 0,
     "firstSeen": 1567750483.86,
     "lastSeen": 1567750582.74,
