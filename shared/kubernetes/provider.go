@@ -489,11 +489,6 @@ func (provider *Provider) DoesDeploymentExist(ctx context.Context, namespace str
 	return provider.doesResourceExist(deploymentResource, err)
 }
 
-func (provider *Provider) DoesPodExist(ctx context.Context, namespace string, name string) (bool, error) {
-	podResource, err := provider.clientSet.CoreV1().Pods(namespace).Get(ctx, name, metav1.GetOptions{})
-	return provider.doesResourceExist(podResource, err)
-}
-
 func (provider *Provider) DoesServiceExist(ctx context.Context, namespace string, name string) (bool, error) {
 	serviceResource, err := provider.clientSet.CoreV1().Services(namespace).Get(ctx, name, metav1.GetOptions{})
 	return provider.doesResourceExist(serviceResource, err)
@@ -1041,6 +1036,15 @@ func (provider *Provider) ListAllRunningPodsMatchingRegex(ctx context.Context, r
 		}
 	}
 	return matchingPods, nil
+}
+
+func(provider *Provider) ListPodsByAppLabel(ctx context.Context, namespaces string, labelName string) ([]core.Pod, error) {
+	pods, err := provider.clientSet.CoreV1().Pods(namespaces).List(ctx, metav1.ListOptions{LabelSelector: fmt.Sprintf("app=%s", labelName)})
+	if err != nil {
+		return nil, err
+	}
+
+	return pods.Items, err
 }
 
 func (provider *Provider) ListAllNamespaces(ctx context.Context) ([]core.Namespace, error) {

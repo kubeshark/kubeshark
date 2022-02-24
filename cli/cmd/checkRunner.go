@@ -193,26 +193,21 @@ func checkK8sResources(ctx context.Context, kubernetesProvider *kubernetes.Provi
 }
 
 func checkPodResourcesExist(ctx context.Context, kubernetesProvider *kubernetes.Provider) bool {
-	exist, err := kubernetesProvider.DoesPodExist(ctx, config.Config.MizuResourcesNamespace, kubernetes.ApiServerPodName)
-	tapResourcesExist := checkResourceExist(kubernetes.ApiServerPodName, "pod", exist, err)
-
-	if !tapResourcesExist {
+	if pods, err := kubernetesProvider.ListPodsByAppLabel(ctx, config.Config.MizuResourcesNamespace, kubernetes.ApiServerPodName); err != nil {
+		logger.Log.Errorf("%v error checking if '%v' pod is running, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), kubernetes.ApiServerPodName, err)
 		return false
-	}
-
-	if pod, err := kubernetesProvider.GetPod(ctx, config.Config.MizuResourcesNamespace, kubernetes.ApiServerPodName); err != nil {
-		logger.Log.Errorf("%v error checking if '%v' pod exists, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), kubernetes.ApiServerPodName, err)
+	} else if len(pods) == 0 {
+		logger.Log.Errorf("%v '%v' pod doesn't exist", fmt.Sprintf(uiUtils.Red, "✗"), kubernetes.ApiServerPodName)
 		return false
-	} else if kubernetes.IsPodRunning(pod) {
-		logger.Log.Infof("%v '%v' pod running", fmt.Sprintf(uiUtils.Green, "√"), kubernetes.ApiServerPodName)
-	} else {
+	} else if !kubernetes.IsPodRunning(&pods[0]) {
 		logger.Log.Errorf("%v '%v' pod not running", fmt.Sprintf(uiUtils.Red, "✗"), kubernetes.ApiServerPodName)
 		return false
 	}
 
-	tapperRegex := regexp.MustCompile(fmt.Sprintf("^%s.*", kubernetes.TapperPodName))
-	if pods, err := kubernetesProvider.ListAllPodsMatchingRegex(ctx, tapperRegex, []string{config.Config.MizuResourcesNamespace}); err != nil {
-		logger.Log.Errorf("%v error listing '%v' pods, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), kubernetes.TapperPodName, err)
+	logger.Log.Infof("%v '%v' pod running", fmt.Sprintf(uiUtils.Green, "√"), kubernetes.ApiServerPodName)
+
+	if pods, err := kubernetesProvider.ListPodsByAppLabel(ctx, config.Config.MizuResourcesNamespace, kubernetes.TapperPodName); err != nil {
+		logger.Log.Errorf("%v error checking if '%v' pods are running, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), kubernetes.TapperPodName, err)
 		return false
 	} else {
 		tappers := 0
