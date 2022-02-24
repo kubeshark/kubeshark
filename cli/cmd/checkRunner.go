@@ -2,8 +2,8 @@ package cmd
 
 import (
 	"context"
+	"embed"
 	"fmt"
-	"github.com/up9inc/mizu/shared"
 	rbac "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -15,6 +15,11 @@ import (
 	"github.com/up9inc/mizu/shared/kubernetes"
 	"github.com/up9inc/mizu/shared/logger"
 	"github.com/up9inc/mizu/shared/semver"
+)
+
+var (
+	//go:embed permissionFiles
+	embedFS embed.FS
 )
 
 func runMizuCheck() {
@@ -248,12 +253,12 @@ func checkK8sTapPermissions(ctx context.Context, kubernetesProvider *kubernetes.
 
 	var filePath string
 	if config.Config.IsNsRestrictedMode() {
-		filePath = "./examples/roles/permissions-ns-tap.yaml"
+		filePath = "permissionFiles/permissions-ns-tap.yaml"
 	} else {
-		filePath = "./examples/roles/permissions-all-namespaces-tap.yaml"
+		filePath = "permissionFiles/permissions-all-namespaces-tap.yaml"
 	}
 
-	data, err := shared.ReadFromFile(filePath)
+	data, err := embedFS.ReadFile(filePath)
 	if err != nil {
 		logger.Log.Errorf("%v error while checking kubernetes permissions, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), err)
 		return false
