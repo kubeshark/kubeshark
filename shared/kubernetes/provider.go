@@ -17,6 +17,7 @@ import (
 	"github.com/up9inc/mizu/shared/semver"
 	"github.com/up9inc/mizu/tap/api"
 	v1 "k8s.io/api/apps/v1"
+	auth "k8s.io/api/authorization/v1"
 	core "k8s.io/api/core/v1"
 	rbac "k8s.io/api/rbac/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
@@ -441,6 +442,26 @@ func (provider *Provider) CreateService(ctx context.Context, namespace string, s
 		},
 	}
 	return provider.clientSet.CoreV1().Services(namespace).Create(ctx, &service, metav1.CreateOptions{})
+}
+
+func (provider *Provider) CanI(ctx context.Context, namespace string, resource string, verb string, group string) (bool, error) {
+	selfSubjectAccessReview := &auth.SelfSubjectAccessReview{
+		Spec: auth.SelfSubjectAccessReviewSpec{
+			ResourceAttributes: &auth.ResourceAttributes{
+				Namespace: namespace,
+				Resource: resource,
+				Verb: verb,
+				Group: group,
+			},
+		},
+	}
+
+	response, err := provider.clientSet.AuthorizationV1().SelfSubjectAccessReviews().Create(ctx, selfSubjectAccessReview, metav1.CreateOptions{})
+	if err != nil {
+		return false, err
+	}
+
+	return response.Status.Allowed, nil
 }
 
 func (provider *Provider) DoesNamespaceExist(ctx context.Context, name string) (bool, error) {
