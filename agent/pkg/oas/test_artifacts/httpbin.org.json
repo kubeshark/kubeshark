@@ -1,0 +1,54 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Preloaded https://httpbin.org",
+    "version": "0.0"
+  },
+  "servers": [
+    {
+      "url": "https://httpbin.org"
+    }
+  ],
+  "paths": {
+    "/param-patterns/{parampatternId}/{num}": {
+      "parameters": [
+        {
+          "name": "parampatternId",
+          "in": "path",
+          "required": true,
+          "style": "simple",
+          "schema": {
+            "type": "string"
+          },
+          "examples": {
+            "example #0": {
+              "value": "prefix-gibberish-sfdlasdfkadf87sd93284q24r"
+            },
+            "example #1": {
+              "value": "prefix-gibberish-adslkfasdf89sa7dfasddafa8a98sd7kansdf"
+            },
+            "example #2": {
+              "value": "prefix-gibberish-4jk5l2345h2452l4352435jlk45"
+            },
+            "example #3": {
+              "value": "prefix-gibberish-84395h2j4k35hj243j5h2kl34h54k"
+            },
+            "example #4": {
+              "value": "prefix-gibberish-afterwards"
+            }
+          }
+        },
+        {
+          "name": "num",
+          "in": "path",
+          "required": true,
+          "style": "simple",
+          "schema": {
+            "type": "string",
+            "pattern": "\\d+"
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,9 +1,9 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "https://httpbin.org",
+    "title": "Preloaded https://httpbin.org",
     "description": "Mizu observed 18 entries (0 failed), at 0.11 hits/s, average response time is 0.18 seconds",
-    "version": "1.0"
+    "version": "0.0"
   },
   "servers": [
     {
@@ -386,73 +386,6 @@
         }
       ]
     },
-    "/param-patterns/{parampatternId}/1": {
-      "get": {
-        "tags": [
-          "param-patterns"
-        ],
-        "summary": "/param-patterns/{parampatternId}/1",
-        "description": "Mizu observed 1 entries (0 failed), at 0.00 hits/s, average response time is 0.00 seconds",
-        "operationId": "<UUID4>",
-        "responses": {
-          "200": {
-            "description": "Successful call with status 200",
-            "content": {
-              "": {}
-            }
-          }
-        },
-        "x-counters-per-source": {
-          "": {
-            "entries": 1,
-            "failures": 0,
-            "firstSeen": 1567750582.00,
-            "lastSeen": 1567750582.00,
-            "sumRT": 0.00,
-            "sumDuration": 0
-          }
-        },
-        "x-counters-total": {
-          "entries": 1,
-          "failures": 0,
-          "firstSeen": 1567750582.00,
-          "lastSeen": 1567750582.00,
-          "sumRT": 0.00,
-          "sumDuration": 0
-        },
-        "x-last-seen-ts": 1567750582.00,
-        "x-sample-entry": 0
-      },
-      "parameters": [
-        {
-          "name": "parampatternId",
-          "in": "path",
-          "required": true,
-          "style": "simple",
-          "schema": {
-            "type": "string",
-            "pattern": "^prefix-gibberish-.+"
-          },
-          "examples": {
-            "example #0": {
-              "value": "prefix-gibberish-sfdlasdfkadf87sd93284q24r"
-            },
-            "example #1": {
-              "value": "prefix-gibberish-adslkfasdf89sa7dfasddafa8a98sd7kansdf"
-            },
-            "example #2": {
-              "value": "prefix-gibberish-4jk5l2345h2452l4352435jlk45"
-            },
-            "example #3": {
-              "value": "prefix-gibberish-84395h2j4k35hj243j5h2kl34h54k"
-            },
-            "example #4": {
-              "value": "prefix-gibberish-afterwards"
-            }
-          }
-        }
-      ]
-    },
     "/param-patterns/{parampatternId}/static": {
       "get": {
         "tags": [
@@ -520,13 +453,13 @@
         }
       ]
     },
-    "/param-patterns/{parampatternId}/{param1}": {
+    "/param-patterns/{parampatternId}/{num}": {
       "get": {
         "tags": [
           "param-patterns"
         ],
-        "summary": "/param-patterns/{parampatternId}/{param1}",
-        "description": "Mizu observed 1 entries (0 failed), at 0.00 hits/s, average response time is 0.00 seconds",
+        "summary": "/param-patterns/{parampatternId}/{num}",
+        "description": "Mizu observed 2 entries (0 failed), at 0.00 hits/s, average response time is 0.00 seconds",
         "operationId": "<UUID4>",
         "responses": {
           "200": {
@@ -538,40 +471,26 @@
         },
         "x-counters-per-source": {
           "": {
-            "entries": 1,
+            "entries": 2,
             "failures": 0,
             "firstSeen": 1567750582.00,
             "lastSeen": 1567750582.00,
             "sumRT": 0.00,
-            "sumDuration": 0
+            "sumDuration": 9.53e-7
           }
         },
         "x-counters-total": {
-          "entries": 1,
+          "entries": 2,
           "failures": 0,
           "firstSeen": 1567750582.00,
           "lastSeen": 1567750582.00,
           "sumRT": 0.00,
-          "sumDuration": 0
+          "sumDuration": 9.53e-7
         },
         "x-last-seen-ts": 1567750582.00,
         "x-sample-entry": 0
       },
       "parameters": [
-        {
-          "name": "param1",
-          "in": "path",
-          "required": true,
-          "style": "simple",
-          "schema": {
-            "type": "string"
-          },
-          "examples": {
-            "example #0": {
-              "value": "23421"
-            }
-          }
-        },
         {
           "name": "parampatternId",
           "in": "path",
@@ -596,6 +515,24 @@
             },
             "example #4": {
               "value": "prefix-gibberish-afterwards"
+            }
+          }
+        },
+        {
+          "name": "num",
+          "in": "path",
+          "required": true,
+          "style": "simple",
+          "schema": {
+            "type": "string",
+            "pattern": "\\d+"
+          },
+          "examples": {
+            "example #0": {
+              "value": "1"
+            },
+            "example #1": {
+              "value": "23421"
             }
           }
         }

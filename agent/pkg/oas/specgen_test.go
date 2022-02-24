@@ -124,7 +124,8 @@ func TestEntries(t *testing.T) {
 func TestFileSingle(t *testing.T) {
 	GetOasGeneratorInstance().Start()
 	GetOasGeneratorInstance().Reset()
-	// loadStartingOAS()
+	loadStartingOAS("test_artifacts/httpbin.org.json", "httpbin.org")
+
 	file := "test_artifacts/params.har"
 	files := []string{file}
 	cnt, err := feedEntries(files, true)
