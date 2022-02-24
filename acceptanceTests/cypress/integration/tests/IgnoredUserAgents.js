@@ -2,14 +2,11 @@ import {
     checkThatAllEntriesShown,
     isValueExistsInElement,
     resizeToHugeMizu,
-    verifyMinimumEntries
 } from "../testHelpers/TrafficHelper";
 
 it('Loading Mizu', function () {
     cy.visit(Cypress.env('testUrl'));
 });
-
-verifyMinimumEntries();
 
 checkEntries();
 
