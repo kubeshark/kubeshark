@@ -19,7 +19,7 @@ import (
 
 var (
 	//go:embed permissionFiles
-	f embed.FS
+	embedFS embed.FS
 )
 
 func runMizuCheck() {
@@ -258,7 +258,7 @@ func checkK8sTapPermissions(ctx context.Context, kubernetesProvider *kubernetes.
 		filePath = "permissionFiles/permissions-all-namespaces-tap.yaml"
 	}
 
-	data, err := f.ReadFile(filePath)
+	data, err := embedFS.ReadFile(filePath)
 	if err != nil {
 		logger.Log.Errorf("%v error while checking kubernetes permissions, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), err)
 		return false
