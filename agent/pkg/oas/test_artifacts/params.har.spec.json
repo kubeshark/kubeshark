@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "https://httpbin.org",
-    "description": "Mizu observed 18 entries (0 failed), at 0.11 hits/s, average response time is 0.18 seconds",
+    "description": "Mizu observed 19 entries (0 failed), at 0.10 hits/s, average response time is 0.17 seconds",
     "version": "1.0"
   },
   "servers": [
@@ -63,7 +63,6 @@
             }
           }
         },
-        "x-sample-entry": 0,
         "x-last-seen-ts": 1567750581.74,
         "x-counters-total": {
           "entries": 2,
@@ -82,7 +81,8 @@
             "sumRT": 1.26,
             "sumDuration": 1
           }
-        }
+        },
+        "x-sample-entry": 0
       }
     },
     "/body-optional": {
@@ -98,16 +98,6 @@
             }
           }
         },
-        "x-sample-entry": 0,
-        "x-counters-total": {
-          "entries": 3,
-          "failures": 0,
-          "firstSeen": 1567750581.74,
-          "lastSeen": 1567750581.75,
-          "sumRT": 0.00,
-          "sumDuration": 0.01
-        },
-        "x-last-seen-ts": 1567750581.75,
         "x-counters-per-source": {
           "": {
             "entries": 3,
@@ -117,6 +107,16 @@
             "sumRT": 0.00,
             "sumDuration": 0.01
           }
+        },
+        "x-last-seen-ts": 1567750581.75,
+        "x-sample-entry": 0,
+        "x-counters-total": {
+          "entries": 3,
+          "failures": 0,
+          "firstSeen": 1567750581.74,
+          "lastSeen": 1567750581.75,
+          "sumRT": 0.00,
+          "sumDuration": 0.01
         },
         "requestBody": {
           "description": "Generic request body",
@@ -141,15 +141,6 @@
             }
           }
         },
-        "x-sample-entry": 0,
-        "x-counters-total": {
-          "entries": 1,
-          "failures": 0,
-          "firstSeen": 1567750581.75,
-          "lastSeen": 1567750581.75,
-          "sumRT": 0.00,
-          "sumDuration": 0
-        },
         "x-counters-per-source": {
           "": {
             "entries": 1,
@@ -160,7 +151,16 @@
             "sumDuration": 0
           }
         },
+        "x-sample-entry": 0,
         "x-last-seen-ts": 1567750581.75,
+        "x-counters-total": {
+          "entries": 1,
+          "failures": 0,
+          "firstSeen": 1567750581.75,
+          "lastSeen": 1567750581.75,
+          "sumRT": 0.00,
+          "sumDuration": 0
+        },
         "requestBody": {
           "description": "Generic request body",
           "content": {
@@ -187,7 +187,6 @@
             }
           }
         },
-        "x-sample-entry": 0,
         "x-last-seen-ts": 1567750582.74,
         "x-counters-total": {
           "entries": 1,
@@ -207,6 +206,7 @@
             "sumDuration": 0
           }
         },
+        "x-sample-entry": 0,
         "requestBody": {
           "description": "Generic request body",
           "content": {
@@ -263,8 +263,8 @@
             "sumDuration": 1
           }
         },
-        "x-sample-entry": 0,
         "x-last-seen-ts": 1567750581.74,
+        "x-sample-entry": 0,
         "x-counters-total": {
           "entries": 2,
           "failures": 0,
@@ -319,6 +319,60 @@
         }
       }
     },
+    "/param-patterns/prefix-gibberish-fine/{prefixgibberishfineId}": {
+      "get": {
+        "tags": [
+          "param-patterns"
+        ],
+        "summary": "/param-patterns/prefix-gibberish-fine/{prefixgibberishfineId}",
+        "description": "Mizu observed 1 entries (0 failed), at 0.00 hits/s, average response time is 0.00 seconds",
+        "operationId": "<UUID4>",
+        "responses": {
+          "200": {
+            "description": "Successful call with status 200",
+            "content": {
+              "": {}
+            }
+          }
+        },
+        "x-last-seen-ts": 1567750582,
+        "x-counters-total": {
+          "entries": 1,
+          "failures": 0,
+          "firstSeen": 1567750582,
+          "lastSeen": 1567750582,
+          "sumRT": 0.00,
+          "sumDuration": 0
+        },
+        "x-counters-per-source": {
+          "": {
+            "entries": 1,
+            "failures": 0,
+            "firstSeen": 1567750582,
+            "lastSeen": 1567750582,
+            "sumRT": 0.00,
+            "sumDuration": 0
+          }
+        },
+        "x-sample-entry": 0
+      },
+      "parameters": [
+        {
+          "name": "prefixgibberishfineId",
+          "in": "path",
+          "required": true,
+          "style": "simple",
+          "schema": {
+            "type": "string"
+          },
+          "examples": {
+            "example #0": {
+              "value": "234324"
+            }
+          }
+        }
+      ]
+    },
     "/param-patterns/{parampatternId}": {
       "get": {
         "tags": [
@@ -335,6 +389,7 @@
             }
           }
         },
+        "x-sample-entry": 0,
         "x-counters-per-source": {
           "": {
             "entries": 2,
@@ -345,7 +400,6 @@
             "sumDuration": 9.53e-7
           }
         },
-        "x-sample-entry": 0,
         "x-last-seen-ts": 1567750582.00,
         "x-counters-total": {
           "entries": 2,
@@ -402,6 +456,7 @@
             }
           }
         },
+        "x-sample-entry": 0,
         "x-last-seen-ts": 1567750582.00,
         "x-counters-total": {
           "entries": 1,
@@ -420,8 +475,7 @@
             "sumRT": 0.00,
             "sumDuration": 0
           }
-        },
-        "x-sample-entry": 0
+        }
       },
       "parameters": [
         {
@@ -469,6 +523,15 @@
             }
           }
         },
+        "x-sample-entry": 0,
+        "x-counters-total": {
+          "entries": 1,
+          "failures": 0,
+          "firstSeen": 1567750582.00,
+          "lastSeen": 1567750582.00,
+          "sumRT": 0.00,
+          "sumDuration": 0
+        },
         "x-counters-per-source": {
           "": {
             "entries": 1,
@@ -479,16 +542,7 @@
             "sumDuration": 0
           }
         },
-        "x-sample-entry": 0,
-        "x-last-seen-ts": 1567750582.00,
-        "x-counters-total": {
-          "entries": 1,
-          "failures": 0,
-          "firstSeen": 1567750582.00,
-          "lastSeen": 1567750582.00,
-          "sumRT": 0.00,
-          "sumDuration": 0
-        }
+        "x-last-seen-ts": 1567750582.00
       },
       "parameters": [
         {
@@ -616,7 +670,6 @@
             }
           }
         },
-        "x-last-seen-ts": 1567750579.74,
         "x-counters-total": {
           "entries": 1,
           "failures": 0,
@@ -635,7 +688,8 @@
             "sumDuration": 0
           }
         },
-        "x-sample-entry": 0
+        "x-sample-entry": 0,
+        "x-last-seen-ts": 1567750579.74
       },
       "parameters": [
         {
@@ -670,8 +724,6 @@
             }
           }
         },
-        "x-sample-entry": 0,
-        "x-last-seen-ts": 1567750483.86,
         "x-counters-total": {
           "entries": 1,
           "failures": 0,
@@ -689,7 +741,9 @@
             "sumRT": 0.11,
             "sumDuration": 0
           }
-        }
+        },
+        "x-sample-entry": 0,
+        "x-last-seen-ts": 1567750483.86
       },
       "parameters": [
         {
@@ -726,16 +780,6 @@
             }
           }
         },
-        "x-sample-entry": 0,
-        "x-last-seen-ts": 1567750578.74,
-        "x-counters-total": {
-          "entries": 1,
-          "failures": 0,
-          "firstSeen": 1567750578.74,
-          "lastSeen": 1567750578.74,
-          "sumRT": 0.63,
-          "sumDuration": 0
-        },
         "x-counters-per-source": {
           "": {
             "entries": 1,
@@ -745,6 +789,16 @@
             "sumRT": 0.63,
             "sumDuration": 0
           }
+        },
+        "x-sample-entry": 0,
+        "x-last-seen-ts": 1567750578.74,
+        "x-counters-total": {
+          "entries": 1,
+          "failures": 0,
+          "firstSeen": 1567750578.74,
+          "lastSeen": 1567750578.74,
+          "sumRT": 0.63,
+          "sumDuration": 0
         }
       },
       "parameters": [
@@ -769,7 +823,7 @@
     }
   },
   "x-counters-total": {
-    "entries": 18,
+    "entries": 19,
     "failures": 0,
     "firstSeen": 1567750483.86,
     "lastSeen": 1567750582.74,
@@ -778,7 +832,7 @@
   },
   "x-counters-per-source": {
     "": {
-      "entries": 18,
+      "entries": 19,
       "failures": 0,
       "firstSeen": 1567750483.86,
       "lastSeen": 1567750582.74,

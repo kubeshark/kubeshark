@@ -1,8 +1,6 @@
 package oas
 
 import (
-	"github.com/chanced/openapi"
-	"reflect"
 	"testing"
 )
 
@@ -57,30 +55,5 @@ func TestStrRunes(t *testing.T) {
 
 	if cleanStr("-abc_567", isAlNumRune) != "abc567" {
 		t.Logf("Failed")
-	}
-}
-
-func TestOpMerging(t *testing.T) {
-	testCases := []struct {
-		op1 *openapi.Operation
-		op2 *openapi.Operation
-		res *openapi.Operation
-	}{
-		{nil, nil, nil},
-		{&openapi.Operation{}, nil, &openapi.Operation{}},
-		{nil, &openapi.Operation{}, &openapi.Operation{}},
-		{
-			&openapi.Operation{OperationID: "op1"},
-			&openapi.Operation{OperationID: "op2"},
-			&openapi.Operation{OperationID: "op1"},
-		},
-		// has historicIds
-	}
-	for _, tc := range testCases {
-		mergeOps(&tc.op1, &tc.op2)
-
-		if !reflect.DeepEqual(tc.op1, tc.res) {
-			t.Errorf("Does not match expected")
-		}
 	}
 }
