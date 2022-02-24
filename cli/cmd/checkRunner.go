@@ -187,7 +187,7 @@ func checkK8sResources(ctx context.Context, kubernetesProvider *kubernetes.Provi
 	return allResourcesExist
 }
 
-func checkTapPodExist(ctx context.Context, kubernetesProvider *kubernetes.Provider) bool {
+func checkPodResourcesExist(ctx context.Context, kubernetesProvider *kubernetes.Provider) bool {
 	exist, err := kubernetesProvider.DoesPodExist(ctx, config.Config.MizuResourcesNamespace, kubernetes.ApiServerPodName)
 	tapResourcesExist := checkResourceExist(kubernetes.ApiServerPodName, "pod", exist, err)
 
