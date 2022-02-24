@@ -111,16 +111,20 @@ func (kp *kubernetesProvider) getServiceExternalIp(ctx context.Context, namespac
 	return externalIp, nil
 }
 
-func switchKubeContextForTest(t *testing.T, contextName string) error {
-	currentKubeContextName, err := getKubeCurrentContextName()
+func switchKubeContextForTest(t *testing.T, newContextName string) error {
+	prevKubeContextName, err := getKubeCurrentContextName()
 	if err != nil {
 		return err
 	}
 
+	if err := setKubeCurrentContext(newContextName); err != nil {
+		return err
+	}
+
 	t.Cleanup(func() {
-		err := setKubeCurrentContext(currentKubeContextName)
+		err := setKubeCurrentContext(prevKubeContextName)
 		if err != nil {
-			t.Errorf("failed to set Kubernetes context to %s, err: %v", currentKubeContextName, err)
+			t.Errorf("failed to set Kubernetes context to %s, err: %v", prevKubeContextName, err)
 		}
 	})
 
