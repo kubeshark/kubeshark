@@ -60,11 +60,11 @@ kubectl proxy --port=8080 &
 echo "Setting minikube docker env"
 eval $(minikube docker-env)
 
-# echo "Build agent image"
-# make build-docker-ci
+echo "Build agent image"
+make build-docker-ci
 
-# echo "Build cli"
-# make build-cli-ci
+echo "Build cli"
+make build-cli-ci
 
 echo "Starting tunnel"
 minikube tunnel &
