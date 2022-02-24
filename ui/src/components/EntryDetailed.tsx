@@ -8,6 +8,7 @@ import {toast} from "react-toastify";
 import {useRecoilValue} from "recoil";
 import focusedEntryIdAtom from "../recoil/focusedEntryId";
 import Api from "../helpers/api";
+import queryAtom from "../recoil/query";
 
 const useStyles = makeStyles(() => ({
     entryTitle: {
@@ -82,6 +83,7 @@ const api = Api.getInstance();
 export const EntryDetailed = () => {
 
     const focusedEntryId = useRecoilValue(focusedEntryIdAtom);
+    const query = useRecoilValue(queryAtom);
     const [entryData, setEntryData] = useState(null);
 
     useEffect(() => {
@@ -89,7 +91,7 @@ export const EntryDetailed = () => {
         setEntryData(null);
         (async () => {
             try {
-                const entryData = await api.getEntry(focusedEntryId);
+                const entryData = await api.getEntry(focusedEntryId, query);
                 setEntryData(entryData);
             } catch (error) {
                 if (error.response?.data?.type) {
