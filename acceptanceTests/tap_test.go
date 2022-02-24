@@ -635,23 +635,29 @@ func TestTapDumpLogs(t *testing.T) {
 
 func TestRestrictedMode(t *testing.T) {
 	t.Log("creating permissions for restricted user")
-	applyKubeFilesForTest(
+	if err := applyKubeFilesForTest(
 		t,
 		"mizu-tests",
 		"../examples/roles/permissions-ns-tap.yaml",
 		"../examples/roles/permissions-ns-ip-resolution-optional.yaml",
 		"../examples/roles/permissions-ns-debug-optional.yaml",
-	)
-	applyKubeFilesForTest(
+	); err != nil {
+		t.Errorf("failed to create k8s permissions, %v", err)
+	}
+	if err := applyKubeFilesForTest(
 		t,
 		"mizu-tests2",
 		"../examples/roles/permissions-ns-tap.yaml",
 		"../examples/roles/permissions-ns-ip-resolution-optional.yaml",
 		"../examples/roles/permissions-ns-debug-optional.yaml",
-	)
+	); err != nil {
+		t.Errorf("failed to create k8s permissions, %v", err)
+	}
 
 	t.Log("switching k8s context to user")
-	switchKubeContextForTest(t, "user1")
+	if err := switchKubeContextForTest(t, "user1"); err != nil {
+		t.Errorf("failed to switch k8s context, %v", err)
+	}
 
 	t.Run("multiple namespaces", TestTapMultipleNamespaces)
 }
