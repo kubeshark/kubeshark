@@ -8,8 +8,6 @@ import serviceMapModalOpenAtom from "./recoil/serviceMapModalOpen";
 import OasModal from './components/OasModal/OasModal';
 import oasModalOpenAtom from './recoil/oasModalOpen/atom';
 
-window["isOasEnabled"] = true;
-
 const App = () => {
 
     const [analyzeStatus, setAnalyzeStatus] = useState(null);

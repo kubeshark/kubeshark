@@ -9,11 +9,11 @@ import style from './OasModal.module.sass';
 
 const modalStyle = {
   position: 'absolute',
-  top: '10%',
+  top: '6%',
   left: '50%',
   transform: 'translate(-50%, 0%)',
-  width: '80vw',
-  height: '80vh',
+  width: '89vw',
+  height: '82vh',
   bgcolor: 'background.paper',
   borderRadius: '5px',
   boxShadow: 24,
@@ -22,7 +22,6 @@ const modalStyle = {
 };
 
 const api = Api.getInstance();
-const noOasServiceSelectedMessage = "Please Select OasService";
 const ipAddressWithPortRegex = new RegExp('([0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}):([0-9]{1,5})');
 
 const OasModal = ({ openModal, handleCloseModal }) => { 
@@ -45,16 +44,18 @@ const OasModal = ({ openModal, handleCloseModal }) => {
   }, [openModal]);
 
   const onSelectedOASService = async (selectedService) => {
-    setSelectedServiceName(selectedService);
-    if(oasServices.length === 0){
-      return
-    }
-    try {
-      const data = await api.getOasByService(selectedService);
-      setSelectedServiceSpec(data);
-    } catch (e) {
-      toast.error("Error occurred while fetching service OAS spec");
-      console.error(e);
+    if (!!selectedService){
+      setSelectedServiceName(selectedService);
+      if(oasServices.length === 0){
+        return
+      }
+      try {
+        const data = await api.getOasByService(selectedService);
+        setSelectedServiceSpec(data);
+      } catch (e) {
+        toast.error("Error occurred while fetching service OAS spec");
+        console.error(e);
+      }
     }
   };
 
@@ -69,6 +70,9 @@ const OasModal = ({ openModal, handleCloseModal }) => {
         resServices.push(s);
       }
     })
+    resServices.sort();
+    unResServices.sort();
+    onSelectedOASService(resServices[0]);
     setResolvedServices(resServices);
     setUnResolvedServices(unResServices);
   }
@@ -128,30 +132,41 @@ const OasModal = ({ openModal, handleCloseModal }) => {
           {selectedServiceSpec && <RedocStandalone spec={selectedServiceSpec} 
               options={{               
                 theme:{
+                  codeBlock:{
+                    backgroundColor:"#11171a",
+                  },
                   colors:{
                     responses:{
+                      error:{
+                        tabTextColor:"#1b1b29"
+                      },
                       info:{
-                        color:"#0d0b1a",
-                        tabTextColor:"#1b1b28"
+                        tabTextColor:"#1b1b29",
+                        backgroundColor:"#27ae60"
                       },
                       success:{
-                        backgroundColor:"#ffffff"
-                      }
+                        tabTextColor:"#0c0b1a"
+                      },
+                    },
+                    text:{
+                      primary:"#1b1b29",
+                      secondary:"#4d4d4d"
                     }
                   },
                   rightPanel:{
-                    backgroundColor:"#f7f9fc",
-                    textColor:"#5f5d87"
+                    backgroundColor:"#253237",
                   },
                   sidebar:{
                     backgroundColor:"#ffffff"
+                  },
+                  typography:{
+                    code:{
+                      color:"#0c0b1a"
+                    }
                   }
               }
               }}/>}
             </div>
-          {/* <div className={style.NotSelectedMessage}>
-            {!selectedServiceName && noOasServiceSelectedMessage}
-          </div> */}
         </Box>
       </Fade>
     </Modal>
