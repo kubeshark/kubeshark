@@ -34,13 +34,8 @@ func runMizuCheck() {
 			checkPassed = checkK8sTapPermissions(ctx, kubernetesProvider)
 		}
 	} else {
-		var isInstallCommand bool
 		if checkPassed {
-			checkPassed, isInstallCommand = checkMizuMode(ctx, kubernetesProvider)
-		}
-
-		if checkPassed {
-			checkPassed = checkK8sResources(ctx, kubernetesProvider, isInstallCommand)
+			checkPassed = checkK8sResources(ctx, kubernetesProvider)
 		}
 
 		if checkPassed {
@@ -73,27 +68,6 @@ func checkKubernetesApi() (*kubernetes.Provider, *semver.SemVersion, bool) {
 	logger.Log.Infof("%v can query the Kubernetes API", fmt.Sprintf(uiUtils.Green, "√"))
 
 	return kubernetesProvider, kubernetesVersion, true
-}
-
-func checkMizuMode(ctx context.Context, kubernetesProvider *kubernetes.Provider) (bool, bool) {
-	logger.Log.Infof("\nmode\n--------------------")
-
-	if exist, err := kubernetesProvider.DoesDeploymentExist(ctx, config.Config.MizuResourcesNamespace, kubernetes.ApiServerPodName); err != nil {
-		logger.Log.Errorf("%v can't check mizu command, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), err)
-		return false, false
-	} else if exist {
-		logger.Log.Infof("%v mizu running with install command", fmt.Sprintf(uiUtils.Green, "√"))
-		return true, true
-	} else if exist, err = kubernetesProvider.DoesPodExist(ctx, config.Config.MizuResourcesNamespace, kubernetes.ApiServerPodName); err != nil {
-		logger.Log.Errorf("%v can't check mizu command, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), err)
-		return false, false
-	} else if exist {
-		logger.Log.Infof("%v mizu running with tap command", fmt.Sprintf(uiUtils.Green, "√"))
-		return true, false
-	} else {
-		logger.Log.Infof("%v mizu is not running", fmt.Sprintf(uiUtils.Red, "✗"))
-		return false, false
-	}
 }
 
 func checkKubernetesVersion(kubernetesVersion *semver.SemVersion) bool {
@@ -179,7 +153,7 @@ func checkPortForward(serverUrl string, kubernetesProvider *kubernetes.Provider)
 	return nil
 }
 
-func checkK8sResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, isInstallCommand bool) bool {
+func checkK8sResources(ctx context.Context, kubernetesProvider *kubernetes.Provider) bool {
 	logger.Log.Infof("\nk8s-components\n--------------------")
 
 	exist, err := kubernetesProvider.DoesNamespaceExist(ctx, config.Config.MizuResourcesNamespace)
@@ -208,32 +182,12 @@ func checkK8sResources(ctx context.Context, kubernetesProvider *kubernetes.Provi
 	exist, err = kubernetesProvider.DoesServiceExist(ctx, config.Config.MizuResourcesNamespace, kubernetes.ApiServerPodName)
 	allResourcesExist = checkResourceExist(kubernetes.ApiServerPodName, "service", exist, err) && allResourcesExist
 
-	if isInstallCommand {
-		allResourcesExist = checkInstallResourcesExist(ctx, kubernetesProvider) && allResourcesExist
-	} else {
-		allResourcesExist = checkTapResourcesExist(ctx, kubernetesProvider) && allResourcesExist
-	}
+	allResourcesExist = checkPodResourcesExist(ctx, kubernetesProvider) && allResourcesExist
 
 	return allResourcesExist
 }
 
-func checkInstallResourcesExist(ctx context.Context, kubernetesProvider *kubernetes.Provider) bool {
-	exist, err := kubernetesProvider.DoesRoleExist(ctx, config.Config.MizuResourcesNamespace, kubernetes.DaemonRoleName)
-	installResourcesExist := checkResourceExist(kubernetes.DaemonRoleName, "role", exist, err)
-
-	exist, err = kubernetesProvider.DoesRoleBindingExist(ctx, config.Config.MizuResourcesNamespace, kubernetes.DaemonRoleBindingName)
-	installResourcesExist = checkResourceExist(kubernetes.DaemonRoleBindingName, "role binding", exist, err) && installResourcesExist
-
-	exist, err = kubernetesProvider.DoesPersistentVolumeClaimExist(ctx, config.Config.MizuResourcesNamespace, kubernetes.PersistentVolumeClaimName)
-	installResourcesExist = checkResourceExist(kubernetes.PersistentVolumeClaimName, "persistent volume claim", exist, err) && installResourcesExist
-
-	exist, err = kubernetesProvider.DoesDeploymentExist(ctx, config.Config.MizuResourcesNamespace, kubernetes.ApiServerPodName)
-	installResourcesExist = checkResourceExist(kubernetes.ApiServerPodName, "deployment", exist, err) && installResourcesExist
-
-	return installResourcesExist
-}
-
-func checkTapResourcesExist(ctx context.Context, kubernetesProvider *kubernetes.Provider) bool {
+func checkPodResourcesExist(ctx context.Context, kubernetesProvider *kubernetes.Provider) bool {
 	exist, err := kubernetesProvider.DoesPodExist(ctx, config.Config.MizuResourcesNamespace, kubernetes.ApiServerPodName)
 	tapResourcesExist := checkResourceExist(kubernetes.ApiServerPodName, "pod", exist, err)
 
