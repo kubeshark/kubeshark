@@ -217,7 +217,46 @@ func (n *Node) searchInConstants(pathChunk string) *Node {
 }
 
 func (n *Node) compact() {
-	// TODO
+	// TODO: introduce and leverage "dirty" flag?
+	var param *Node
+	// find the param
+	for _, subnode := range n.children {
+		if subnode.constant != nil {
+			continue
+		}
+
+		param = subnode
+	}
+
+	if param != nil {
+		// take its regex
+		pRegex := param.pathParam.Schema.Pattern
+		if pRegex != nil {
+			newChildren := make([]*Node, 0)
+
+			// compact the constants via regex
+			for _, subnode := range n.children {
+				if subnode.constant != nil {
+					if pRegex.Match([]byte(*subnode.constant)) {
+						param.merge(subnode)
+						continue
+					}
+				}
+				newChildren = append(newChildren, subnode)
+			}
+
+			if len(n.children) != len(newChildren) {
+				logger.Log.Debugf("Shrinking children from %d to %d", len(n.children), len(newChildren))
+				n.children = newChildren
+				n.compact()
+			}
+		}
+	}
+
+	// recurse into next tree level
+	for _, subnode := range n.children {
+		subnode.compact()
+	}
 }
 
 func (n *Node) listPaths() *openapi.Paths {
@@ -305,4 +344,31 @@ func (n *Node) countParentParams() int {
 		node = node.parent
 	}
 	return res
+}
+
+func (n *Node) merge(other *Node) {
+	if n.constant == nil && other.constant == nil {
+		// make sure the params will match by name later in merge
+		other.pathParam.Name = n.pathParam.Name
+	}
+
+	if n.pathObj != nil && other.pathObj != nil {
+		mergePathObj(n.pathObj, other.pathObj)
+	}
+
+	// TODO: if n is param and other is constant, could have added constant as an example
+
+outer:
+	for _, oChild := range other.children {
+		for _, nChild := range n.children {
+			matchedConst := oChild.constant != nil && oChild.constant == nChild.constant
+			matchedParam := oChild.constant == nil && nChild.constant == nil
+			if matchedConst || matchedParam {
+				// TODO: if both are params, could have merged their examples
+				nChild.merge(oChild)
+				continue outer
+			}
+		}
+		n.children = append(n.children, oChild)
+	}
 }
