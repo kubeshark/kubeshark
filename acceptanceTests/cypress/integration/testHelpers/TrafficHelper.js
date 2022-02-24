@@ -26,13 +26,16 @@ export function resizeToNormalMizu() {
 
 export function verifyMinimumEntries() {
     const entriesSent = Cypress.env('entriesCount');
-    const minimumEntries = Math.round((0.75 * entriesSent)).toString();
+    const minimumEntries = Math.round((0.75 * entriesSent));
 
-    // the next regex matches all the numbers that are above minimumEntries
-    const regex = new RegExp(`[${minimumEntries[0]}][${minimumEntries[1]}-9]|[${parseInt(minimumEntries[0]) + 1}-9][0-9]`);
+    it(`Making sure that mizu shows at least ${minimumEntries} entries`, function () {
+        cy.get('#total-entries').then(number => {
+            const getNum = () => {
+                return parseInt(number.text());
+            };
 
-    it(`Minimum entries should be above ${minimumEntries}`, function () {
-        cy.get('#total-entries').invoke('text').should('match', regex);
+            cy.wrap({num: getNum}).invoke('num').should('be.gt', minimumEntries);
+        });
     });
 }
 
