@@ -36,8 +36,6 @@
             "sumDuration": 0
           }
         },
-        "x-sample-entry": 0,
-        "x-last-seen-ts": 1567750580.04,
         "x-counters-total": {
           "entries": 1,
           "failures": 0,
@@ -45,7 +43,9 @@
           "lastSeen": 1567750580.04,
           "sumRT": 0.63,
           "sumDuration": 0
-        }
+        },
+        "x-last-seen-ts": 1567750580.04,
+        "x-sample-entry": 0
       }
     },
     "/appears-twice": {
@@ -63,16 +63,6 @@
             }
           }
         },
-        "x-sample-entry": 0,
-        "x-last-seen-ts": 1567750581.74,
-        "x-counters-total": {
-          "entries": 2,
-          "failures": 0,
-          "firstSeen": 1567750580.74,
-          "lastSeen": 1567750581.74,
-          "sumRT": 1.26,
-          "sumDuration": 1
-        },
         "x-counters-per-source": {
           "": {
             "entries": 2,
@@ -82,7 +72,17 @@
             "sumRT": 1.26,
             "sumDuration": 1
           }
-        }
+        },
+        "x-counters-total": {
+          "entries": 2,
+          "failures": 0,
+          "firstSeen": 1567750580.74,
+          "lastSeen": 1567750581.74,
+          "sumRT": 1.26,
+          "sumDuration": 1
+        },
+        "x-last-seen-ts": 1567750581.74,
+        "x-sample-entry": 0
       }
     },
     "/body-optional": {
@@ -98,16 +98,6 @@
             }
           }
         },
-        "x-sample-entry": 0,
-        "x-counters-total": {
-          "entries": 3,
-          "failures": 0,
-          "firstSeen": 1567750581.74,
-          "lastSeen": 1567750581.75,
-          "sumRT": 0.00,
-          "sumDuration": 0.01
-        },
-        "x-last-seen-ts": 1567750581.75,
         "x-counters-per-source": {
           "": {
             "entries": 3,
@@ -118,6 +108,16 @@
             "sumDuration": 0.01
           }
         },
+        "x-counters-total": {
+          "entries": 3,
+          "failures": 0,
+          "firstSeen": 1567750581.74,
+          "lastSeen": 1567750581.75,
+          "sumRT": 0.00,
+          "sumDuration": 0.01
+        },
+        "x-last-seen-ts": 1567750581.75,
+        "x-sample-entry": 0,
         "requestBody": {
           "description": "Generic request body",
           "content": {
@@ -141,15 +141,6 @@
             }
           }
         },
-        "x-sample-entry": 0,
-        "x-counters-total": {
-          "entries": 1,
-          "failures": 0,
-          "firstSeen": 1567750581.75,
-          "lastSeen": 1567750581.75,
-          "sumRT": 0.00,
-          "sumDuration": 0
-        },
         "x-counters-per-source": {
           "": {
             "entries": 1,
@@ -160,7 +151,16 @@
             "sumDuration": 0
           }
         },
+        "x-counters-total": {
+          "entries": 1,
+          "failures": 0,
+          "firstSeen": 1567750581.75,
+          "lastSeen": 1567750581.75,
+          "sumRT": 0.00,
+          "sumDuration": 0
+        },
         "x-last-seen-ts": 1567750581.75,
+        "x-sample-entry": 0,
         "requestBody": {
           "description": "Generic request body",
           "content": {
@@ -187,16 +187,6 @@
             }
           }
         },
-        "x-sample-entry": 0,
-        "x-last-seen-ts": 1567750582.74,
-        "x-counters-total": {
-          "entries": 1,
-          "failures": 0,
-          "firstSeen": 1567750582.74,
-          "lastSeen": 1567750582.74,
-          "sumRT": 0.00,
-          "sumDuration": 0
-        },
         "x-counters-per-source": {
           "": {
             "entries": 1,
@@ -207,6 +197,16 @@
             "sumDuration": 0
           }
         },
+        "x-counters-total": {
+          "entries": 1,
+          "failures": 0,
+          "firstSeen": 1567750582.74,
+          "lastSeen": 1567750582.74,
+          "sumRT": 0.00,
+          "sumDuration": 0
+        },
+        "x-last-seen-ts": 1567750582.74,
+        "x-sample-entry": 0,
         "requestBody": {
           "description": "Generic request body",
           "content": {
@@ -263,8 +263,6 @@
             "sumDuration": 1
           }
         },
-        "x-sample-entry": 0,
-        "x-last-seen-ts": 1567750581.74,
         "x-counters-total": {
           "entries": 2,
           "failures": 0,
@@ -273,6 +271,8 @@
           "sumRT": 0.00,
           "sumDuration": 1
         },
+        "x-last-seen-ts": 1567750581.74,
+        "x-sample-entry": 0,
         "requestBody": {
           "description": "Generic request body",
           "content": {
@@ -345,8 +345,6 @@
             "sumDuration": 9.53e-7
           }
         },
-        "x-sample-entry": 0,
-        "x-last-seen-ts": 1567750582.00,
         "x-counters-total": {
           "entries": 2,
           "failures": 0,
@@ -354,7 +352,9 @@
           "lastSeen": 1567750582.00,
           "sumRT": 0.00,
           "sumDuration": 9.53e-7
-        }
+        },
+        "x-last-seen-ts": 1567750582.00,
+        "x-sample-entry": 0
       },
       "parameters": [
         {
@@ -402,15 +402,6 @@
             }
           }
         },
-        "x-last-seen-ts": 1567750582.00,
-        "x-counters-total": {
-          "entries": 1,
-          "failures": 0,
-          "firstSeen": 1567750582.00,
-          "lastSeen": 1567750582.00,
-          "sumRT": 0.00,
-          "sumDuration": 0
-        },
         "x-counters-per-source": {
           "": {
             "entries": 1,
@@ -421,6 +412,15 @@
             "sumDuration": 0
           }
         },
+        "x-counters-total": {
+          "entries": 1,
+          "failures": 0,
+          "firstSeen": 1567750582.00,
+          "lastSeen": 1567750582.00,
+          "sumRT": 0.00,
+          "sumDuration": 0
+        },
+        "x-last-seen-ts": 1567750582.00,
         "x-sample-entry": 0
       },
       "parameters": [
@@ -479,8 +479,6 @@
             "sumDuration": 0
           }
         },
-        "x-sample-entry": 0,
-        "x-last-seen-ts": 1567750582.00,
         "x-counters-total": {
           "entries": 1,
           "failures": 0,
@@ -488,7 +486,9 @@
           "lastSeen": 1567750582.00,
           "sumRT": 0.00,
           "sumDuration": 0
-        }
+        },
+        "x-last-seen-ts": 1567750582.00,
+        "x-sample-entry": 0
       },
       "parameters": [
         {
@@ -536,14 +536,6 @@
             }
           }
         },
-        "x-counters-total": {
-          "entries": 1,
-          "failures": 0,
-          "firstSeen": 1567750582.00,
-          "lastSeen": 1567750582.00,
-          "sumRT": 0.00,
-          "sumDuration": 0
-        },
         "x-counters-per-source": {
           "": {
             "entries": 1,
@@ -554,8 +546,16 @@
             "sumDuration": 0
           }
         },
-        "x-sample-entry": 0,
-        "x-last-seen-ts": 1567750582.00
+        "x-counters-total": {
+          "entries": 1,
+          "failures": 0,
+          "firstSeen": 1567750582.00,
+          "lastSeen": 1567750582.00,
+          "sumRT": 0.00,
+          "sumDuration": 0
+        },
+        "x-last-seen-ts": 1567750582.00,
+        "x-sample-entry": 0
       },
       "parameters": [
         {
@@ -616,15 +616,6 @@
             }
           }
         },
-        "x-last-seen-ts": 1567750579.74,
-        "x-counters-total": {
-          "entries": 1,
-          "failures": 0,
-          "firstSeen": 1567750579.74,
-          "lastSeen": 1567750579.74,
-          "sumRT": 0.63,
-          "sumDuration": 0
-        },
         "x-counters-per-source": {
           "": {
             "entries": 1,
@@ -635,6 +626,15 @@
             "sumDuration": 0
           }
         },
+        "x-counters-total": {
+          "entries": 1,
+          "failures": 0,
+          "firstSeen": 1567750579.74,
+          "lastSeen": 1567750579.74,
+          "sumRT": 0.63,
+          "sumDuration": 0
+        },
+        "x-last-seen-ts": 1567750579.74,
         "x-sample-entry": 0
       },
       "parameters": [
@@ -670,16 +670,6 @@
             }
           }
         },
-        "x-sample-entry": 0,
-        "x-last-seen-ts": 1567750483.86,
-        "x-counters-total": {
-          "entries": 1,
-          "failures": 0,
-          "firstSeen": 1567750483.86,
-          "lastSeen": 1567750483.86,
-          "sumRT": 0.11,
-          "sumDuration": 0
-        },
         "x-counters-per-source": {
           "": {
             "entries": 1,
@@ -689,7 +679,17 @@
             "sumRT": 0.11,
             "sumDuration": 0
           }
-        }
+        },
+        "x-counters-total": {
+          "entries": 1,
+          "failures": 0,
+          "firstSeen": 1567750483.86,
+          "lastSeen": 1567750483.86,
+          "sumRT": 0.11,
+          "sumDuration": 0
+        },
+        "x-last-seen-ts": 1567750483.86,
+        "x-sample-entry": 0
       },
       "parameters": [
         {
@@ -726,16 +726,6 @@
             }
           }
         },
-        "x-sample-entry": 0,
-        "x-last-seen-ts": 1567750578.74,
-        "x-counters-total": {
-          "entries": 1,
-          "failures": 0,
-          "firstSeen": 1567750578.74,
-          "lastSeen": 1567750578.74,
-          "sumRT": 0.63,
-          "sumDuration": 0
-        },
         "x-counters-per-source": {
           "": {
             "entries": 1,
@@ -745,7 +735,17 @@
             "sumRT": 0.63,
             "sumDuration": 0
           }
-        }
+        },
+        "x-counters-total": {
+          "entries": 1,
+          "failures": 0,
+          "firstSeen": 1567750578.74,
+          "lastSeen": 1567750578.74,
+          "sumRT": 0.63,
+          "sumDuration": 0
+        },
+        "x-last-seen-ts": 1567750578.74,
+        "x-sample-entry": 0
       },
       "parameters": [
         {
@@ -768,14 +768,6 @@
       ]
     }
   },
-  "x-counters-total": {
-    "entries": 18,
-    "failures": 0,
-    "firstSeen": 1567750483.86,
-    "lastSeen": 1567750582.74,
-    "sumRT": 3.27,
-    "sumDuration": 2.01
-  },
   "x-counters-per-source": {
     "": {
       "entries": 18,
@@ -785,5 +777,13 @@
       "sumRT": 3.27,
       "sumDuration": 2.01
     }
+  },
+  "x-counters-total": {
+    "entries": 18,
+    "failures": 0,
+    "firstSeen": 1567750483.86,
+    "lastSeen": 1567750582.74,
+    "sumRT": 3.27,
+    "sumDuration": 2.01
   }
 }

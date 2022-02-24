@@ -171,14 +171,15 @@ func TestFileSingle(t *testing.T) {
 			t.FailNow()
 		}
 
+		if os.Getenv("MIZU_OAS_WRITE_FILES") != "" {
+			err = ioutil.WriteFile(file+".spec.json", []byte(specText), 0644)
+			if err != nil {
+				panic(err)
+			}
+		}
+
 		if len(diff) > 0 {
 			t.Errorf("Generated spec does not match expected:\n%s", diff.String())
-			if os.Getenv("MIZU_OAS_WRITE_FILES") != "" {
-				err = ioutil.WriteFile(file+".spec.json", []byte(specText), 0644)
-				if err != nil {
-					panic(err)
-				}
-			}
 		}
 
 		return true
