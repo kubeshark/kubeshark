@@ -99,10 +99,6 @@ func appendHistoricalIds(op **openapi.Operation, other **openapi.Operation) {
 		(*op).Extensions = make(openapi.Extensions)
 	}
 
-	if len(mIDs) > 1 {
-		logger.Log.Debugf("")
-	}
-
 	err := (*op).Extensions.SetExtension(HistoricalIDs, mIDs)
 	if err != nil {
 		logger.Log.Warningf("Failed to set extension %s: %s", HistoricalIDs, err)
