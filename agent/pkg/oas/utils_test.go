@@ -1,6 +1,7 @@
 package oas
 
 import (
+	"encoding/json"
 	"github.com/chanced/openapi"
 	"reflect"
 	"testing"
@@ -72,7 +73,7 @@ func TestOpMerging(t *testing.T) {
 		{
 			&openapi.Operation{OperationID: "op1"},
 			&openapi.Operation{OperationID: "op2"},
-			&openapi.Operation{OperationID: "op1"},
+			&openapi.Operation{OperationID: "op1", Extensions: openapi.Extensions{}},
 		},
 		// has historicIds
 	}
@@ -80,7 +81,8 @@ func TestOpMerging(t *testing.T) {
 		mergeOps(&tc.op1, &tc.op2)
 
 		if !reflect.DeepEqual(tc.op1, tc.res) {
-			t.Errorf("Does not match expected")
+			txt, _ := json.Marshal(tc.op1)
+			t.Errorf("Does not match expected: %s", txt)
 		}
 	}
 }

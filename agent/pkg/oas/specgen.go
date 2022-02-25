@@ -27,6 +27,7 @@ const LastSeenTS = "x-last-seen-ts"
 const CountersTotal = "x-counters-total"
 const CountersPerSource = "x-counters-per-source"
 const SampleId = "x-sample-entry"
+const HistoricalIDs = "x-historical-ids"
 
 type reqResp struct { // hello, generics in Go
 	Req  *har.Request
