@@ -24,7 +24,7 @@ import (
 )
 
 const (
-	longRetriesCount      = 50
+	longRetriesCount      = 100
 	shortRetriesCount     = 10
 	defaultApiServerPort  = shared.DefaultApiServerPort
 	defaultNamespaceName  = "mizu-tests"
@@ -198,10 +198,11 @@ func deleteKubeFile(kubeContext string, namespace string, filename string) error
 func getDefaultCommandArgs() []string {
 	setFlag := "--set"
 	telemetry := "telemetry=false"
+	agentImage := "agent-image=gcr.io/up9-docker-hub/mizu/ci:0.0"
 	imagePullPolicy := "image-pull-policy=IfNotPresent"
 	headless := "headless=true"
 
-	return []string{setFlag, telemetry, setFlag, imagePullPolicy, setFlag, headless}
+	return []string{setFlag, telemetry, setFlag, agentImage, setFlag, imagePullPolicy, setFlag, headless}
 }
 
 func getDefaultTapCommandArgs() []string {
@@ -239,9 +240,9 @@ func getDefaultConfigCommandArgs() []string {
 func runCypressTests(t *testing.T, cypressRunCmd string) {
 	cypressCmd := exec.Command("bash", "-c", cypressRunCmd)
 	t.Logf("running command: %v", cypressCmd.String())
-	out, err := cypressCmd.CombinedOutput()
+	out, err := cypressCmd.Output()
 	if err != nil {
-		t.Errorf("error running cypress, error: %v, %s", err, string(out))
+		t.Errorf("error running cypress, error: %v", err)
 		return
 	}
 
