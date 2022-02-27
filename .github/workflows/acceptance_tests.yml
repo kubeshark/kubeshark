@@ -24,7 +24,7 @@ jobs:
       - name: Setup acceptance test
         run: source ./acceptanceTests/setup.sh
 
-      - name: Create k8s users
+      - name: Create k8s users and change context
         env:
           USERNAME_UNRESTRICTED: admin
           USERNAME_RESTRICTED: user1
