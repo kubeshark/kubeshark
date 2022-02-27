@@ -4,10 +4,13 @@ import (
 	"context"
 	"embed"
 	"fmt"
+	core "k8s.io/api/core/v1"
 	rbac "k8s.io/api/rbac/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/scheme"
 	"regexp"
+	"time"
 
 	"github.com/up9inc/mizu/cli/apiserver"
 	"github.com/up9inc/mizu/cli/config"
@@ -37,6 +40,10 @@ func runMizuCheck() {
 	if config.Config.Check.PreTap {
 		if checkPassed {
 			checkPassed = checkK8sTapPermissions(ctx, kubernetesProvider)
+		}
+
+		if checkPassed && config.Config.Check.ImagesConnectivity {
+			checkPassed = checkImagesConnectivity(ctx, kubernetesProvider)
 		}
 	} else {
 		if checkPassed {
@@ -314,4 +321,105 @@ func checkPermissionExist(group string, resource string, verb string, exist bool
 
 	logger.Log.Infof("%v can %v %v in group '%v'", fmt.Sprintf(uiUtils.Green, "√"), verb, resource, group)
 	return true
+}
+
+func checkImagesConnectivity(ctx context.Context, kubernetesProvider *kubernetes.Provider) bool {
+	logger.Log.Infof("\nimages-connectivity\n--------------------")
+
+	podName := "images-connectivity"
+
+	defer removeImagesConnectivityResources(ctx, kubernetesProvider, podName)
+	if err := createImagesConnectivityResources(ctx, kubernetesProvider, podName); err != nil {
+		logger.Log.Errorf("%v error while creating images connectivity resources, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), err)
+		return false
+	}
+
+	if err := checkImagePulled(ctx, kubernetesProvider, podName); err != nil {
+		logger.Log.Errorf("%v docker hub image not pulled, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), err)
+		return false
+	}
+
+	logger.Log.Infof("%v docker hub image pulled", fmt.Sprintf(uiUtils.Green, "√"))
+	return true
+}
+
+func checkImagePulled(ctx context.Context, kubernetesProvider *kubernetes.Provider, podName string) error {
+	podExactRegex := regexp.MustCompile(fmt.Sprintf("^%s$", podName))
+	podWatchHelper := kubernetes.NewPodWatchHelper(kubernetesProvider, podExactRegex)
+	eventChan, errorChan := kubernetes.FilteredWatch(ctx, podWatchHelper, []string{config.Config.MizuResourcesNamespace}, podWatchHelper)
+
+	timeAfter := time.After(30 * time.Second)
+
+	for {
+		select {
+		case wEvent, ok := <-eventChan:
+			if !ok {
+				eventChan = nil
+				continue
+			}
+
+			pod, err := wEvent.ToPod()
+			if err != nil {
+				return err
+			}
+
+			if pod.Status.Phase == core.PodRunning {
+				return nil
+			}
+		case err, ok := <-errorChan:
+			if !ok {
+				errorChan = nil
+				continue
+			}
+
+			return err
+		case <-timeAfter:
+			return fmt.Errorf("image not pulled in time")
+		}
+	}
+}
+
+func removeImagesConnectivityResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, podName string) {
+	if err := kubernetesProvider.RemovePod(ctx, config.Config.MizuResourcesNamespace, podName); err != nil {
+		logger.Log.Debugf("error while removing images connectivity resources, err: %v", err)
+	}
+
+	if !config.Config.IsNsRestrictedMode() {
+		if err := kubernetesProvider.RemoveNamespace(ctx, config.Config.MizuResourcesNamespace); err != nil {
+			logger.Log.Debugf("error while removing images connectivity resources, err: %v", err)
+		}
+	}
+}
+
+func createImagesConnectivityResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, podName string) error {
+	if !config.Config.IsNsRestrictedMode() {
+		if _, err := kubernetesProvider.CreateNamespace(ctx, config.Config.MizuResourcesNamespace); err != nil {
+			return err
+		}
+	}
+
+	var zero int64
+	pod := &core.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: podName,
+		},
+		Spec: core.PodSpec{
+			Containers: []core.Container{
+				{
+					Name:            "probe",
+					Image:           "up9inc/busybox",
+					ImagePullPolicy: "Always",
+					Command:         []string{"cat"},
+					Stdin:           true,
+				},
+			},
+			TerminationGracePeriodSeconds: &zero,
+		},
+	}
+
+	if _, err := kubernetesProvider.CreatePod(ctx, config.Config.MizuResourcesNamespace, pod); err != nil {
+		return err
+	}
+
+	return nil
 }
