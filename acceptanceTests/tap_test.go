@@ -637,6 +637,7 @@ func TestRestrictedMode(t *testing.T) {
 	t.Log("creating permissions for restricted user")
 	if err := applyKubeFilesForTest(
 		t,
+		"minikube",
 		"mizu-tests",
 		"../examples/roles/permissions-ns-tap.yaml",
 		"../examples/roles/permissions-ns-ip-resolution-optional.yaml",
@@ -646,6 +647,7 @@ func TestRestrictedMode(t *testing.T) {
 	}
 	if err := applyKubeFilesForTest(
 		t,
+		"minikube",
 		"mizu-tests2",
 		"../examples/roles/permissions-ns-tap.yaml",
 		"../examples/roles/permissions-ns-ip-resolution-optional.yaml",
