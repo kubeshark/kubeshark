@@ -5,6 +5,8 @@
 # Usage:
 #  ./create_user.sh <username>
 
+set -e
+
 USERNAME=$1
 CERT_DIR="${HOME}/certs"
 KEY_FILE="${CERT_DIR}/${USERNAME}.key"
