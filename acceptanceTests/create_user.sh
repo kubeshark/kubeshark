@@ -24,10 +24,7 @@ then
 fi
 
 echo "Creating certificate for user \"${USERNAME}\""
-if ! [[ -d ${CERT_DIR} ]]
-then
-  mkdir -p ${CERT_DIR}
-fi
+mkdir -p ${CERT_DIR}
 echo "Generating key \"${KEY_FILE}\""
 openssl genrsa -out "${KEY_FILE}" 2048
 echo "Generating crt \"${CRT_FILE}\""
