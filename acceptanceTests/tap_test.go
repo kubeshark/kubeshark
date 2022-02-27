@@ -14,6 +14,10 @@ import (
 )
 
 func TestTap(t *testing.T) {
+	basicTapTest(t)
+}
+
+func basicTapTest(t *testing.T, extraArgs... string) {
 	if testing.Short() {
 		t.Skip("ignored acceptance test")
 	}
@@ -32,6 +36,8 @@ func TestTap(t *testing.T) {
 
 			tapNamespace := getDefaultTapNamespace()
 			tapCmdArgs = append(tapCmdArgs, tapNamespace...)
+
+			tapCmdArgs = append(tapCmdArgs, extraArgs...)
 
 			tapCmd := exec.Command(cliPath, tapCmdArgs...)
 			t.Logf("running command: %v", tapCmd.String())
@@ -216,6 +222,52 @@ func TestTapMultipleNamespaces(t *testing.T) {
 
 	runCypressTests(t, fmt.Sprintf("npx cypress run --spec  \"cypress/integration/tests/MultipleNamespaces.js\" --env name1=%v,name2=%v,name3=%v,namespace1=%v,namespace2=%v,namespace3=%v",
 		expectedPods[0].Name, expectedPods[1].Name, expectedPods[2].Name, expectedPods[0].Namespace, expectedPods[1].Namespace, expectedPods[2].Namespace))
+}
+
+func TestTapRestrictedMode(t *testing.T) {
+	if testing.Short() {
+		t.Skip("ignored acceptance test")
+	}
+
+	namespace := "mizu-tests"
+
+	expectedPods := []PodDescriptor{
+		{Name: "httpbin", Namespace: namespace},
+		{Name: "httpbin2", Namespace: namespace},
+	}
+
+	cliPath, cliPathErr := getCliPath()
+	if cliPathErr != nil {
+		t.Errorf("failed to get cli path, err: %v", cliPathErr)
+		return
+	}
+
+	tapCmdArgs := getDefaultTapCommandArgs()
+	tapCmdArgs = append(tapCmdArgs, "--set mizu-resources-namespace", namespace)
+
+	tapCmd := exec.Command(cliPath, tapCmdArgs...)
+	t.Logf("running command: %v", tapCmd.String())
+
+	t.Cleanup(func() {
+		if err := cleanupCommand(tapCmd); err != nil {
+			t.Logf("failed to cleanup tap command, err: %v", err)
+		}
+	})
+
+	if err := tapCmd.Start(); err != nil {
+		t.Errorf("failed to start tap command, err: %v", err)
+		return
+	}
+
+	apiServerUrl := getApiServerUrl(defaultApiServerPort)
+
+	if err := waitTapPodsReady(apiServerUrl); err != nil {
+		t.Errorf("failed to start tap pods on time, err: %v", err)
+		return
+	}
+
+	runCypressTests(t, fmt.Sprintf("npx cypress run --spec  \"cypress/integration/tests/MultipleNamespaces.js\" --env name1=%v,name2=%v,namespace1=%v,namespace2=%v",
+		expectedPods[0].Name, expectedPods[1].Name, expectedPods[0].Namespace, expectedPods[1].Namespace))
 }
 
 func TestTapRegex(t *testing.T) {
@@ -634,19 +686,13 @@ func TestTapDumpLogs(t *testing.T) {
 }
 
 func TestRestrictedMode(t *testing.T) {
+	namespace := "mizu-tests"
+
 	t.Log("creating permissions for restricted user")
 	if err := applyKubeFilesForTest(
 		t,
 		"minikube",
-		"mizu-tests",
-		"../examples/roles/permissions-ns-tap.yaml",
-	); err != nil {
-		t.Errorf("failed to create k8s permissions, %v", err)
-	}
-	if err := applyKubeFilesForTest(
-		t,
-		"minikube",
-		"mizu-tests2",
+		namespace,
 		"../examples/roles/permissions-ns-tap.yaml",
 	); err != nil {
 		t.Errorf("failed to create k8s permissions, %v", err)
@@ -657,5 +703,6 @@ func TestRestrictedMode(t *testing.T) {
 		t.Errorf("failed to switch k8s context, %v", err)
 	}
 
-	t.Run("multiple namespaces", TestTapMultipleNamespaces)
+	extraArgs := []string{"--set", fmt.Sprintf("mizu-resources-namespace=%s", namespace)}
+	t.Run("multiple namespaces", func (testingT *testing.T) {basicTapTest(testingT, extraArgs...)})
 }
