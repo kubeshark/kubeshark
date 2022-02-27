@@ -647,14 +647,14 @@ func TestRestrictedMode(t *testing.T) {
 		t,
 		"minikube",
 		namespace,
-		"../examples/roles/permissions-ns-tap.yaml",
-		"../examples/roles/permissions-ns-ip-resolution-optional.yaml",
+		"../cli/cmd/permissionFiles/permissions-ns-tap.yaml",
+		"../cli/cmd/permissionFiles/permissions-ns-ip-resolution-optional.yaml",
 	); err != nil {
 		t.Errorf("failed to create k8s permissions, %v", err)
 	}
 
 	t.Log("switching k8s context to user")
-	if err := switchKubeContextForTest(t, "user1"); err != nil {
+	if err := switchKubeContextForTest(t, "user-with-restricted-access"); err != nil {
 		t.Errorf("failed to switch k8s context, %v", err)
 	}
 

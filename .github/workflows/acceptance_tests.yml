@@ -26,14 +26,14 @@ jobs:
 
       - name: Create k8s users and change context
         env:
-          USERNAME_UNRESTRICTED: admin
-          USERNAME_RESTRICTED: user1
+          USERNAME_UNRESTRICTED: user-with-clusterwide-access
+          USERNAME_RESTRICTED: user-with-restricted-access
         run: |
           ./acceptanceTests/create_user.sh "${USERNAME_UNRESTRICTED}"
           ./acceptanceTests/create_user.sh "${USERNAME_RESTRICTED}"
-          sed s/user1/admin/ examples/roles/permissions-all-namespaces-tap.yaml | kubectl apply -f -
-          sed s/user1/admin/ examples/roles/permissions-all-namespaces-ip-resolution-optional.yaml | kubectl apply -f -
-          sed s/user1/admin/ examples/roles/permissions-all-namespaces-debug-optional.yaml | kubectl apply -f -
+          kubectl apply -f cli/cmd/permissionFiles/roles/permissions-all-namespaces-tap.yaml
+          kubectl apply -f cli/cmd/permissionFiles/roles/permissions-all-namespaces-ip-resolution-optional.yaml
+          kubectl apply -f cli/cmd/permissionFiles/roles/permissions-all-namespaces-debug-optional.yaml
           kubectl config use-context ${USERNAME_UNRESTRICTED}
 
       - name: Test

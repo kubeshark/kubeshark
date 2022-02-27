@@ -26,7 +26,7 @@ metadata:
   name: mizu-runner-rolebindings
 subjects:
 - kind: User
-  name: user1
+  name: user-with-restricted-access
   apiGroup: rbac.authorization.k8s.io
 roleRef:
   kind: Role
