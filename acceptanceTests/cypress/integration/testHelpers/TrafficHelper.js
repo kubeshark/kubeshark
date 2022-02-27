@@ -25,14 +25,16 @@ export function resizeToNormalMizu() {
 }
 
 export function verifyMinimumEntries() {
-    const minimumEntries = Cypress.env('minimumEntries');
-    it(`Making sure that mizu shows at least ${minimumEntries} entries`, async function () {
+    const entriesSent = Cypress.env('entriesCount');
+    const minimumEntries = Math.round((0.75 * entriesSent));
+
+    it(`Making sure that mizu shows at least ${minimumEntries} entries`, function () {
         cy.get('#total-entries').then(number => {
             const getNum = () => {
-                const numOfEntries = number.text();
-                return parseInt(numOfEntries);
+                return parseInt(number.text());
             };
-            cy.wrap({there: getNum}).invoke('there').should('be.gte', minimumEntries);
+
+            cy.wrap({num: getNum}).invoke('num').should('be.gt', minimumEntries);
         });
     });
 }

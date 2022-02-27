@@ -64,6 +64,8 @@ it('right side sanity test', function () {
     });
 });
 
+serviceMapCheck();
+
 checkIllegalFilter('invalid filter');
 
 checkFilter({
@@ -188,7 +190,7 @@ function checkFilter(filterDetails){
     const entriesForDeeperCheck = 5;
 
     it(`checking the filter: ${name}`, function () {
-        cy.get('#total-entries').then(number => {
+        cy.get('#total-entries').should('not.have.text', '0').then(number => {
             const totalEntries = number.text();
 
             // checks the hover on the last entry (the only one in DOM at the beginning)
@@ -319,4 +321,43 @@ function checkPrettyOrNothing(jsonItems, decodedBody) {
 function checkOnlyLineNumberes(jsonItems, decodedText) {
     cy.get(`${Cypress.env('bodyJsonClass')} >`).should('have.length', 1).and('have.text', decodedText);
     cy.get(`${Cypress.env('bodyJsonClass')} > >`).should('have.length', jsonItems)
+}
+
+function serviceMapCheck() {
+    it('service map test', function () {
+        cy.intercept(`${Cypress.env('testUrl')}/servicemap/get`).as('serviceMapRequest');
+        cy.get('#total-entries').should('not.have.text', '0').then(() => {
+            cy.get('#total-entries').invoke('text').then(entriesNum => {
+                cy.get('[alt="service-map"]').click();
+                cy.wait('@serviceMapRequest').then(({response}) => {
+                    const body = response.body;
+                    const nodeParams = {
+                        destination: 'httpbin.mizu-tests',
+                        source: '127.0.0.1'
+                    };
+                    serviceMapAPICheck(body, parseInt(entriesNum), nodeParams);
+                    cy.reload();
+                });
+            });
+        });
+    });
+}
+
+function serviceMapAPICheck(body, entriesNum, nodeParams) {
+    const {nodes, edges} = body;
+
+    expect(nodes.length).to.equal(Object.keys(nodeParams).length, `Expected nodes count`);
+
+    expect(edges.some(edge => edge.source.name === nodeParams.source)).to.be.true;
+    expect(edges.some(edge => edge.destination.name === nodeParams.destination)).to.be.true;
+
+    let count = 0;
+    edges.forEach(edge => {
+        count += edge.count;
+        if (edge.destination.name === nodeParams.destination) {
+            expect(edge.source.name).to.equal(nodeParams.source);
+        }
+    });
+
+    expect(count).to.equal(entriesNum);
 }

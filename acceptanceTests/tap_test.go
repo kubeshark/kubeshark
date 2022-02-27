@@ -68,7 +68,7 @@ func basicTapTest(t *testing.T, extraArgs... string) {
 				}
 			}
 
-			runCypressTests(t, "npx cypress run --spec  \"cypress/integration/tests/UiTest.js\"")
+			runCypressTests(t, fmt.Sprintf("npx cypress run --spec  \"cypress/integration/tests/UiTest.js\" --env entriesCount=%d", entriesCount))
 		})
 	}
 }
