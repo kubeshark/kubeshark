@@ -30,6 +30,11 @@ type SocketConnection struct {
 	isTapper      bool
 }
 
+type WebSocketParams struct {
+	Query             string `json:"query"`
+	EnableFullEntries bool   `json:"enableFullEntries"`
+}
+
 var (
 	websocketUpgrader = websocket.Upgrader{
 		ReadBufferSize:  1024,
@@ -110,6 +115,8 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 		logger.Log.Error(err)
 	}
 
+	var params WebSocketParams
+
 	for {
 		_, msg, err := ws.ReadMessage()
 		if err != nil {
@@ -123,7 +130,11 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 		}
 
 		if !isTapper && !isQuerySet {
-			query := string(msg)
+			if err := json.Unmarshal(msg, &params); err != nil {
+				logger.Log.Errorf("Error: %v", socketId, err)
+			}
+
+			query := params.Query
 			err = basenine.Validate(shared.BasenineHost, shared.BaseninePort, query)
 			if err != nil {
 				toastBytes, _ := models.CreateWebsocketToastMessage(&models.ToastMessage{
@@ -150,10 +161,15 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 					var entry *tapApi.Entry
 					err = json.Unmarshal(bytes, &entry)
 
-					base := tapApi.Summarize(entry)
+					var message []byte
+					if params.EnableFullEntries {
+						message, _ = models.CreateFullEntryWebSocketMessage(entry)
+					} else {
+						base := tapApi.Summarize(entry)
+						message, _ = models.CreateBaseEntryWebSocketMessage(base)
+					}
 
-					baseEntryBytes, _ := models.CreateBaseEntryWebSocketMessage(base)
-					if err := SendToSocket(socketId, baseEntryBytes); err != nil {
+					if err := SendToSocket(socketId, message); err != nil {
 						logger.Log.Error(err)
 					}
 				}

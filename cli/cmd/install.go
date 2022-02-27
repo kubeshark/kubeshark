@@ -14,10 +14,10 @@ var installCmd = &cobra.Command{
 		logger.Log.Infof("This command has been deprecated, please use helm as described below.\n\n")
 
 		logger.Log.Infof("To install stable build of Mizu on your cluster using helm, run the following command:")
-		logger.Log.Infof("    helm install mizu mizu --repo https://static.up9.com/mizu/helm --namespace=mizu --create-namespace\n\n")
+		logger.Log.Infof("    helm install mizu up9mizu --repo https://static.up9.com/mizu/helm --namespace=mizu --create-namespace\n\n")
 
 		logger.Log.Infof("To install development build of Mizu on your cluster using helm, run the following command:")
-		logger.Log.Infof("    helm install mizu mizu --repo https://static.up9.com/mizu/helm-develop --namespace=mizu --create-namespace")
+		logger.Log.Infof("    helm install mizu up9mizu --repo https://static.up9.com/mizu/helm-develop --namespace=mizu --create-namespace\n")
 
 		return nil
 	},

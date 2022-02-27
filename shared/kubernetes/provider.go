@@ -17,6 +17,7 @@ import (
 	"github.com/up9inc/mizu/shared/semver"
 	"github.com/up9inc/mizu/tap/api"
 	v1 "k8s.io/api/apps/v1"
+	auth "k8s.io/api/authorization/v1"
 	core "k8s.io/api/core/v1"
 	rbac "k8s.io/api/rbac/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
@@ -51,6 +52,8 @@ const (
 	fieldManagerName = "mizu-manager"
 	procfsVolumeName = "proc"
 	procfsMountPath  = "/hostproc"
+	sysfsVolumeName  = "sys"
+	sysfsMountPath   = "/sys"
 )
 
 func NewProvider(kubeConfigPath string) (*Provider, error) {
@@ -441,6 +444,26 @@ func (provider *Provider) CreateService(ctx context.Context, namespace string, s
 	return provider.clientSet.CoreV1().Services(namespace).Create(ctx, &service, metav1.CreateOptions{})
 }
 
+func (provider *Provider) CanI(ctx context.Context, namespace string, resource string, verb string, group string) (bool, error) {
+	selfSubjectAccessReview := &auth.SelfSubjectAccessReview{
+		Spec: auth.SelfSubjectAccessReviewSpec{
+			ResourceAttributes: &auth.ResourceAttributes{
+				Namespace: namespace,
+				Resource: resource,
+				Verb: verb,
+				Group: group,
+			},
+		},
+	}
+
+	response, err := provider.clientSet.AuthorizationV1().SelfSubjectAccessReviews().Create(ctx, selfSubjectAccessReview, metav1.CreateOptions{})
+	if err != nil {
+		return false, err
+	}
+
+	return response.Status.Allowed, nil
+}
+
 func (provider *Provider) DoesNamespaceExist(ctx context.Context, name string) (bool, error) {
 	namespaceResource, err := provider.clientSet.CoreV1().Namespaces().Get(ctx, name, metav1.GetOptions{})
 	return provider.doesResourceExist(namespaceResource, err)
@@ -464,11 +487,6 @@ func (provider *Provider) DoesPersistentVolumeClaimExist(ctx context.Context, na
 func (provider *Provider) DoesDeploymentExist(ctx context.Context, namespace string, name string) (bool, error) {
 	deploymentResource, err := provider.clientSet.AppsV1().Deployments(namespace).Get(ctx, name, metav1.GetOptions{})
 	return provider.doesResourceExist(deploymentResource, err)
-}
-
-func (provider *Provider) DoesPodExist(ctx context.Context, namespace string, name string) (bool, error) {
-	podResource, err := provider.clientSet.CoreV1().Pods(namespace).Get(ctx, name, metav1.GetOptions{})
-	return provider.doesResourceExist(podResource, err)
 }
 
 func (provider *Provider) DoesServiceExist(ctx context.Context, namespace string, name string) (bool, error) {
@@ -795,7 +813,7 @@ func (provider *Provider) CreateConfigMap(ctx context.Context, namespace string,
 	return nil
 }
 
-func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, apiServerPodIp string, nodeToTappedPodMap map[string][]core.Pod, serviceAccountName string, resources shared.Resources, imagePullPolicy core.PullPolicy, mizuApiFilteringOptions api.TrafficFilteringOptions, logLevel logging.Level, serviceMesh bool) error {
+func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, apiServerPodIp string, nodeToTappedPodMap map[string][]core.Pod, serviceAccountName string, resources shared.Resources, imagePullPolicy core.PullPolicy, mizuApiFilteringOptions api.TrafficFilteringOptions, logLevel logging.Level, serviceMesh bool, tls bool) error {
 	logger.Log.Debugf("Applying %d tapper daemon sets, ns: %s, daemonSetName: %s, podImage: %s, tapperPodName: %s", len(nodeToTappedPodMap), namespace, daemonSetName, podImage, tapperPodName)
 
 	if len(nodeToTappedPodMap) == 0 {
@@ -821,7 +839,15 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	}
 
 	if serviceMesh {
-		mizuCmd = append(mizuCmd, "--procfs", procfsMountPath, "--servicemesh")
+		mizuCmd = append(mizuCmd, "--servicemesh")
+	}
+
+	if tls {
+		mizuCmd = append(mizuCmd, "--tls")
+	}
+
+	if serviceMesh || tls {
+		mizuCmd = append(mizuCmd, "--procfs", procfsMountPath)
 	}
 
 	agentContainer := applyconfcore.Container()
@@ -829,12 +855,21 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	agentContainer.WithImage(podImage)
 	agentContainer.WithImagePullPolicy(imagePullPolicy)
 
-	caps := applyconfcore.Capabilities().WithDrop("ALL").WithAdd("NET_RAW").WithAdd("NET_ADMIN")
+	caps := applyconfcore.Capabilities().WithDrop("ALL")
 
-	if serviceMesh {
-		caps = caps.WithAdd("SYS_ADMIN")    // for reading /proc/PID/net/ns
-		caps = caps.WithAdd("SYS_PTRACE")   // for setting netns to other process
-		caps = caps.WithAdd("DAC_OVERRIDE") // for reading /proc/PID/environ
+	caps = caps.WithAdd("NET_RAW").WithAdd("NET_ADMIN") // to listen to traffic using libpcap
+
+	if serviceMesh || tls {
+		caps = caps.WithAdd("SYS_ADMIN")  // to read /proc/PID/net/ns + to install eBPF programs (kernel < 5.8)
+		caps = caps.WithAdd("SYS_PTRACE") // to set netns to other process + to open libssl.so of other process
+
+		if serviceMesh {
+			caps = caps.WithAdd("DAC_OVERRIDE") // to read /proc/PID/environ
+		}
+
+		if tls {
+			caps = caps.WithAdd("SYS_RESOURCE") // to change rlimits for eBPF
+		}
 	}
 
 	agentContainer.WithSecurityContext(applyconfcore.SecurityContext().WithCapabilities(caps))
@@ -910,26 +945,15 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	//
 	procfsVolume := applyconfcore.Volume()
 	procfsVolume.WithName(procfsVolumeName).WithHostPath(applyconfcore.HostPathVolumeSource().WithPath("/proc"))
-	volumeMount := applyconfcore.VolumeMount().WithName(procfsVolumeName).WithMountPath(procfsMountPath).WithReadOnly(true)
-	agentContainer.WithVolumeMounts(volumeMount)
+	procfsVolumeMount := applyconfcore.VolumeMount().WithName(procfsVolumeName).WithMountPath(procfsMountPath).WithReadOnly(true)
+	agentContainer.WithVolumeMounts(procfsVolumeMount)
 
-	volumeName := ConfigMapName
-	configMapVolume := applyconfcore.VolumeApplyConfiguration{
-		Name: &volumeName,
-		VolumeSourceApplyConfiguration: applyconfcore.VolumeSourceApplyConfiguration{
-			ConfigMap: &applyconfcore.ConfigMapVolumeSourceApplyConfiguration{
-				LocalObjectReferenceApplyConfiguration: applyconfcore.LocalObjectReferenceApplyConfiguration{
-					Name: &volumeName,
-				},
-			},
-		},
-	}
-	mountPath := shared.ConfigDirPath
-	configMapVolumeMount := applyconfcore.VolumeMountApplyConfiguration{
-		Name:      &volumeName,
-		MountPath: &mountPath,
-	}
-	agentContainer.WithVolumeMounts(&configMapVolumeMount)
+	// We need access to /sys in order to install certain eBPF tracepoints
+	//
+	sysfsVolume := applyconfcore.Volume()
+	sysfsVolume.WithName(sysfsVolumeName).WithHostPath(applyconfcore.HostPathVolumeSource().WithPath("/sys"))
+	sysfsVolumeMount := applyconfcore.VolumeMount().WithName(sysfsVolumeName).WithMountPath(sysfsMountPath).WithReadOnly(true)
+	agentContainer.WithVolumeMounts(sysfsVolumeMount)
 
 	podSpec := applyconfcore.PodSpec()
 	podSpec.WithHostNetwork(true)
@@ -941,7 +965,7 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	podSpec.WithContainers(agentContainer)
 	podSpec.WithAffinity(affinity)
 	podSpec.WithTolerations(noExecuteToleration, noScheduleToleration)
-	podSpec.WithVolumes(&configMapVolume, procfsVolume)
+	podSpec.WithVolumes(procfsVolume, sysfsVolume)
 
 	podTemplate := applyconfcore.PodTemplateSpec()
 	podTemplate.WithLabels(map[string]string{
@@ -955,7 +979,7 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	labelSelector.WithMatchLabels(map[string]string{"app": tapperPodName})
 
 	applyOptions := metav1.ApplyOptions{
-		Force: true,
+		Force:        true,
 		FieldManager: fieldManagerName,
 	}
 
@@ -1012,6 +1036,15 @@ func (provider *Provider) ListAllRunningPodsMatchingRegex(ctx context.Context, r
 		}
 	}
 	return matchingPods, nil
+}
+
+func(provider *Provider) ListPodsByAppLabel(ctx context.Context, namespaces string, labelName string) ([]core.Pod, error) {
+	pods, err := provider.clientSet.CoreV1().Pods(namespaces).List(ctx, metav1.ListOptions{LabelSelector: fmt.Sprintf("app=%s", labelName)})
+	if err != nil {
+		return nil, err
+	}
+
+	return pods.Items, err
 }
 
 func (provider *Provider) ListAllNamespaces(ctx context.Context) ([]core.Namespace, error) {

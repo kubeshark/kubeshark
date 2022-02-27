@@ -8,6 +8,7 @@ import (
 	"io"
 	"log"
 	"strconv"
+	"time"
 
 	"github.com/up9inc/mizu/tap/api"
 )
@@ -24,10 +25,6 @@ var protocol api.Protocol = api.Protocol{
 	ReferenceLink:   "https://www.rabbitmq.com/amqp-0-9-1-reference.html",
 	Ports:           []string{"5671", "5672"},
 	Priority:        1,
-}
-
-func init() {
-	log.Println("Initializing AMQP extension...")
 }
 
 type dissecting string
@@ -85,7 +82,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 		frame, err := r.ReadFrame()
 		if err == io.EOF {
 			// We must read until we see an EOF... very important!
-			return errors.New("AMQP EOF")
+			return nil
 		}
 
 		switch f := frame.(type) {
@@ -96,6 +93,12 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 			// start content state
 			header = f
 			remaining = int(header.Size)
+
+			// Workaround for `Time.MarshalJSON: year outside of range [0,9999]` error
+			if header.Properties.Timestamp.Year() > 9999 {
+				header.Properties.Timestamp = time.Time{}.UTC()
+			}
+
 			switch lastMethodFrameMessage.(type) {
 			case *BasicPublish:
 				eventBasicPublish.Properties = header.Properties

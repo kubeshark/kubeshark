@@ -21,6 +21,7 @@ import (
 	"github.com/up9inc/mizu/tap/api"
 	"github.com/up9inc/mizu/tap/diagnose"
 	"github.com/up9inc/mizu/tap/source"
+	"github.com/up9inc/mizu/tap/tlstapper"
 	v1 "k8s.io/api/core/v1"
 )
 
@@ -53,6 +54,7 @@ var promisc = flag.Bool("promisc", true, "Set promiscuous mode")
 var staleTimeoutSeconds = flag.Int("staletimout", 120, "Max time in seconds to keep connections which don't transmit data")
 var pids = flag.String("pids", "", "A comma separated list of PIDs to capture their network namespaces")
 var servicemesh = flag.Bool("servicemesh", false, "Record decrypted traffic if the cluster is configured with a service mesh and with mtls")
+var tls = flag.Bool("tls", false, "Enable TLS tapper")
 
 var memprofile = flag.String("memprofile", "", "Write memory profile")
 
@@ -93,6 +95,15 @@ func StartPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem, 
 		tapTargets = []v1.Pod{}
 	} else {
 		tapTargets = opts.FilterAuthorities
+	}
+
+	if *tls {
+		for _, e := range extensions {
+			if e.Protocol.Name == "http" {
+				startTlsTapper(e, outputItems, options)
+				break
+			}
+		}
 	}
 
 	if GetMemoryProfilingEnabled() {
@@ -231,4 +242,36 @@ func startPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem) 
 	diagnose.InternalStats.PrintStatsSummary()
 	diagnose.TapErrors.PrintSummary()
 	logger.Log.Infof("AppStats: %v", diagnose.AppStats)
+}
+
+func startTlsTapper(extension *api.Extension, outputItems chan *api.OutputChannelItem, options *api.TrafficFilteringOptions) {
+	tls := tlstapper.TlsTapper{}
+	tlsPerfBufferSize := os.Getpagesize() * 100
+
+	if err := tls.Init(tlsPerfBufferSize); err != nil {
+		tlstapper.LogError(err)
+		return
+	}
+
+	// A quick way to instrument libssl.so without PID filtering - used for debuging and troubleshooting
+	//
+	if os.Getenv("MIZU_GLOBAL_SSL_LIBRARY") != "" {
+		if err := tls.GlobalTap(os.Getenv("MIZU_GLOBAL_SSL_LIBRARY")); err != nil {
+			tlstapper.LogError(err)
+			return
+		}
+	}
+
+	if err := tlstapper.UpdateTapTargets(&tls, &tapTargets, *procfs); err != nil {
+		tlstapper.LogError(err)
+		return
+	}
+
+	var emitter api.Emitter = &api.Emitting{
+		AppStats:      &diagnose.AppStats,
+		OutputChannel: outputItems,
+	}
+
+	poller := tlstapper.NewTlsPoller(&tls, extension)
+	go poller.Poll(extension, emitter, options)
 }

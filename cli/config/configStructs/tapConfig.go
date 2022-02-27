@@ -23,6 +23,7 @@ const (
 	EnforcePolicyFile             = "traffic-validation-file"
 	ContractFile                  = "contract"
 	ServiceMeshName               = "service-mesh"
+	TlsName                       = "tls"
 )
 
 type TapConfig struct {
@@ -45,6 +46,7 @@ type TapConfig struct {
 	ApiServerResources      shared.Resources `yaml:"api-server-resources"`
 	TapperResources         shared.Resources `yaml:"tapper-resources"`
 	ServiceMesh             bool             `yaml:"service-mesh" default:"false"`
+	Tls                     bool             `yaml:"tls" default:"false"`
 }
 
 func (config *TapConfig) PodRegex() *regexp.Regexp {

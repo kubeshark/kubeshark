@@ -22,7 +22,7 @@ require (
 	github.com/ory/kratos-client-go v0.8.2-alpha.1
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/stretchr/testify v1.7.0
-	github.com/up9inc/basenine/client/go v0.0.0-20220125035757-926e42208705
+	github.com/up9inc/basenine/client/go v0.0.0-20220220204122-0ef8cb24fab1
 	github.com/up9inc/mizu/shared v0.0.0
 	github.com/up9inc/mizu/tap v0.0.0
 	github.com/up9inc/mizu/tap/api v0.0.0
@@ -54,6 +54,7 @@ require (
 	github.com/bradleyfalzon/tlsx v0.0.0-20170624122154-28fd0e59bac4 // indirect
 	github.com/chai2010/gettext-go v0.0.0-20160711120539-c6fed771bfd5 // indirect
 	github.com/chanced/dynamic v0.0.0-20211210164248-f8fadb1d735b // indirect
+	github.com/cilium/ebpf v0.8.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/evanphx/json-patch v5.6.0+incompatible // indirect
 	github.com/exponent-io/jsonpath v0.0.0-20210407135951-1de76d718b3f // indirect

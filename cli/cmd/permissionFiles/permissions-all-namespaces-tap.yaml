@@ -1,5 +1,4 @@
-# This example shows the roles required for a user to be able to use Mizu in all namespaces with IP resolution disabled.
-# (Traffic will be recorded, but Mizu will not translate IP addresses to names)
+# This example shows the permissions that are required in order to run the `mizu tap` command
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
@@ -7,25 +6,22 @@ metadata:
 rules:
 - apiGroups: [""]
   resources: ["pods"]
-  verbs: ["list", "watch", "create", "delete"]
+  verbs: ["list", "watch", "create"]
 - apiGroups: [""]
   resources: ["services"]
-  verbs: ["create", "delete"]
+  verbs: ["get", "create"]
 - apiGroups: ["apps"]
   resources: ["daemonsets"]
-  verbs: ["create", "patch", "delete"]
+  verbs: ["create", "patch"]
 - apiGroups: [""]
   resources: ["namespaces"]
-  verbs: ["get", "list", "watch", "create", "delete"]
+  verbs: ["list", "watch", "create", "delete"]
 - apiGroups: [""]
   resources: ["services/proxy"]
-  verbs: ["get"]
+  verbs: ["get", "create"]
 - apiGroups: [""]
   resources: ["configmaps"]
-  verbs: ["get", "create", "delete"]
-  - apiGroups: ["events.k8s.io"]
-    resources: ["events"]
-    verbs: ["list", "watch"]
+  verbs: ["create"]
 ---
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
