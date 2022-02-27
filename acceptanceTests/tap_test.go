@@ -640,8 +640,6 @@ func TestRestrictedMode(t *testing.T) {
 		"minikube",
 		"mizu-tests",
 		"../examples/roles/permissions-ns-tap.yaml",
-		"../examples/roles/permissions-ns-ip-resolution-optional.yaml",
-		"../examples/roles/permissions-ns-debug-optional.yaml",
 	); err != nil {
 		t.Errorf("failed to create k8s permissions, %v", err)
 	}
@@ -650,8 +648,6 @@ func TestRestrictedMode(t *testing.T) {
 		"minikube",
 		"mizu-tests2",
 		"../examples/roles/permissions-ns-tap.yaml",
-		"../examples/roles/permissions-ns-ip-resolution-optional.yaml",
-		"../examples/roles/permissions-ns-debug-optional.yaml",
 	); err != nil {
 		t.Errorf("failed to create k8s permissions, %v", err)
 	}
