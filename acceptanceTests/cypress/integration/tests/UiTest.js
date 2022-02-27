@@ -17,8 +17,8 @@ it('opening mizu', function () {
 verifyMinimumEntries();
 
 it('top bar check', function () {
-    const podName1 = 'httpbin', namespace1 = 'mizu-tests';
-    const podName2 = 'httpbin2', namespace2 = 'mizu-tests';
+    const podName1 = Cypress.env('podName1'), namespace1 = Cypress.env('namespace1');
+    const podName2 = Cypress.env('podName2'), namespace2 = Cypress.env('namespace2');
 
     cy.get('.podsCount').trigger('mouseover');
     findLineAndCheck(getExpectedDetailsDict(podName1, namespace1));
@@ -27,6 +27,7 @@ it('top bar check', function () {
 });
 
 it('filtering guide check', function () {
+    cy.reload();
     cy.get('[title="Open Filtering Guide (Cheatsheet)"]').click();
     cy.get('#modal-modal-title').should('be.visible');
     cy.get('[lang="en"]').click(0, 0);
@@ -86,14 +87,25 @@ checkFilter({
     applyByEnter: false
 });
 
-checkFilter({
-    name: 'src.name == ""',
-    leftSidePath: '[title="Source Name"]',
-    leftSideExpectedText: '[Unresolved]',
-    rightSidePath: '> :nth-child(2) [title="Source Name"]',
-    rightSideExpectedText: '[Unresolved]',
-    applyByEnter: false
-});
+if (Cypress.env('checkSourceOrDest')) {
+    checkFilter({
+        name: 'src.name == ""',
+        leftSidePath: '[title="Source Name"]',
+        leftSideExpectedText: '[Unresolved]',
+        rightSidePath: '> :nth-child(2) [title="Source Name"]',
+        rightSideExpectedText: '[Unresolved]',
+        applyByEnter: false
+    });
+
+    checkFilter({
+        name: 'dst.name == "httpbin.mizu-tests"',
+        leftSidePath: '> :nth-child(3) > :nth-child(2) > :nth-child(3) > :nth-child(2)',
+        leftSideExpectedText: 'httpbin.mizu-tests',
+        rightSidePath: '> :nth-child(2) > :nth-child(2) > :nth-child(2) > :nth-child(3) > :nth-child(2)',
+        rightSideExpectedText: 'httpbin.mizu-tests',
+        applyByEnter: false
+    });
+}
 
 checkFilter({
     name: 'method == "GET"',
@@ -110,15 +122,6 @@ checkFilter({
     leftSideExpectedText: '/get',
     rightSidePath: '> :nth-child(2) > :nth-child(2) > :nth-child(1) > :nth-child(2) > :nth-child(2)',
     rightSideExpectedText: '/get',
-    applyByEnter: false
-});
-
-checkFilter({
-    name: 'dst.name == "httpbin.mizu-tests"',
-    leftSidePath: '> :nth-child(3) > :nth-child(2) > :nth-child(3) > :nth-child(2)',
-    leftSideExpectedText: 'httpbin.mizu-tests',
-    rightSidePath: '> :nth-child(2) > :nth-child(2) > :nth-child(2) > :nth-child(3) > :nth-child(2)',
-    rightSideExpectedText: 'httpbin.mizu-tests',
     applyByEnter: false
 });
 
@@ -169,6 +172,7 @@ function shouldNotExist(entryNum) {
 
 function checkIllegalFilter(illegalFilterName) {
     it(`should show red search bar with the input: ${illegalFilterName}`, function () {
+        cy.reload();
         cy.get('#total-entries').then(number => {
             const totalEntries = number.text();
 
