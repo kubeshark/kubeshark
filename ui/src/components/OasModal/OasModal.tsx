@@ -1,5 +1,5 @@
 import { Box, Fade, FormControl, MenuItem, Modal, Backdrop, ListSubheader } from "@material-ui/core";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { RedocStandalone } from "redoc";
 import Api from "../../helpers/api";
 import { Select } from "../UI/Select";
@@ -24,6 +24,43 @@ const modalStyle = {
 const api = Api.getInstance();
 const ipAddressWithPortRegex = new RegExp('([0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}):([0-9]{1,5})');
 
+const redocThemeOptions = {               
+  theme:{
+    codeBlock:{
+      backgroundColor:"#11171a",
+    },
+    colors:{
+      responses:{
+        error:{
+          tabTextColor:"#1b1b29"
+        },
+        info:{
+          tabTextColor:"#1b1b29",
+          backgroundColor:"#27ae60"
+        },
+        success:{
+          tabTextColor:"#0c0b1a"
+        },
+      },
+      text:{
+        primary:"#1b1b29",
+        secondary:"#4d4d4d"
+      }
+    },
+    rightPanel:{
+      backgroundColor:"#253237",
+    },
+    sidebar:{
+      backgroundColor:"#ffffff"
+    },
+    typography:{
+      code:{
+        color:"#0c0b1a"
+      }
+    }
+  }
+}
+
 const OasModal = ({ openModal, handleCloseModal }) => { 
   const [oasServices, setOasServices] = useState([] as string[])
   const [selectedServiceName, setSelectedServiceName] = useState("");
@@ -31,19 +68,7 @@ const OasModal = ({ openModal, handleCloseModal }) => {
   const [resolvedServices, setResolvedServices] = useState([]);
   const [unResolvedServices, setUnResolvedServices] = useState([]);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const services = await api.getOasServices();
-        resolvedArrayBuilder(services);
-        setOasServices(services);
-      } catch (e) {
-        console.error(e);
-      }
-    })();
-  }, [openModal]);
-
-  const onSelectedOASService = async (selectedService) => {
+  const onSelectedOASService = useCallback( async (selectedService) => {
     if (!!selectedService){
       setSelectedServiceName(selectedService);
       if(oasServices.length === 0){
@@ -57,25 +82,40 @@ const OasModal = ({ openModal, handleCloseModal }) => {
         console.error(e);
       }
     }
-  };
+  },[oasServices.length])
 
-  const resolvedArrayBuilder = async (services) => {
-    var resServices = [];
-    var unResServices = [];
-    services.map(s => {
+  const resolvedArrayBuilder = useCallback(async(services) => {
+    const resServices = [];
+    const unResServices = [];
+    services.forEach(s => {
       if(ipAddressWithPortRegex.test(s)){
         unResServices.push(s);
       }
       else {
         resServices.push(s);
       }
-    })
+    });
+
     resServices.sort();
     unResServices.sort();
     onSelectedOASService(resServices[0]);
     setResolvedServices(resServices);
     setUnResolvedServices(unResServices);
-  }
+  },[onSelectedOASService])
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const services = await api.getOasServices();
+        resolvedArrayBuilder(services);
+        setOasServices(services);
+      } catch (e) {
+        console.error(e);
+      }
+    })();
+  }, [openModal,resolvedArrayBuilder]);
+
+ 
 
   return (
     <Modal
@@ -91,12 +131,7 @@ const OasModal = ({ openModal, handleCloseModal }) => {
     >
       <Fade in={openModal}>
         <Box sx={modalStyle}>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              padding: "1%",
-            }}>
+          <div className={style.boxContainer}>
             <div className={style.selectHeader}>
                 <div className={style.title}>OpenAPI selected service: </div>
                 <div className={style.selectContainer} >
@@ -119,7 +154,7 @@ const OasModal = ({ openModal, handleCloseModal }) => {
                         <MenuItem key={service} value={service}>
                           {service}
                         </MenuItem>
-                      ))}
+                      ))} 
                     </Select>
                   </FormControl>
                 </div>
@@ -129,43 +164,8 @@ const OasModal = ({ openModal, handleCloseModal }) => {
             </div>
           </div>
           <div className={style.redoc}>
-          {selectedServiceSpec && <RedocStandalone spec={selectedServiceSpec} 
-              options={{               
-                theme:{
-                  codeBlock:{
-                    backgroundColor:"#11171a",
-                  },
-                  colors:{
-                    responses:{
-                      error:{
-                        tabTextColor:"#1b1b29"
-                      },
-                      info:{
-                        tabTextColor:"#1b1b29",
-                        backgroundColor:"#27ae60"
-                      },
-                      success:{
-                        tabTextColor:"#0c0b1a"
-                      },
-                    },
-                    text:{
-                      primary:"#1b1b29",
-                      secondary:"#4d4d4d"
-                    }
-                  },
-                  rightPanel:{
-                    backgroundColor:"#253237",
-                  },
-                  sidebar:{
-                    backgroundColor:"#ffffff"
-                  },
-                  typography:{
-                    code:{
-                      color:"#0c0b1a"
-                    }
-                  }
-              }
-              }}/>}
+          {selectedServiceSpec && <RedocStandalone spec={selectedServiceSpec}   
+              options={redocThemeOptions}/>}
             </div>
         </Box>
       </Fade>
