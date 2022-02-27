@@ -694,6 +694,7 @@ func TestRestrictedMode(t *testing.T) {
 		"minikube",
 		namespace,
 		"../examples/roles/permissions-ns-tap.yaml",
+		"../examples/roles/permissions-ns-ip-resolution-optional.yaml",
 	); err != nil {
 		t.Errorf("failed to create k8s permissions, %v", err)
 	}
