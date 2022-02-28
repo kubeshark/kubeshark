@@ -650,6 +650,22 @@ func TestTapDumpLogs(t *testing.T) {
 	}
 }
 
+func TestIpResolving(t *testing.T) {
+	namespace := ""
+
+	t.Log("add permissions for ip-resolution for current user")
+	if err := ApplyKubeFilesForTest(
+		t,
+		"minikube",
+		namespace,
+		"../cli/cmd/permissionFiles/permissions-all-namespaces-ip-resolution-optional.yaml",
+	); err != nil {
+		t.Errorf("failed to create k8s permissions, %v", err)
+		return
+	}
+
+	basicTapTest(t, true)
+}
 func TestRestrictedMode(t *testing.T) {
 	namespace := "mizu-tests"
 
