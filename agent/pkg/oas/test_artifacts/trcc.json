@@ -1,0 +1,50 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Preloaded TRCC",
+    "version": "0.1",
+    "description": "Test file for loading pre-existing OAS"
+  },
+  "paths": {
+    "/models/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "style": "simple",
+          "schema": {
+            "type": "string",
+            "pattern": ".+(_|-|\\.).+"
+          },
+          "example": "some-uuid-maybe"
+        }
+      ]
+    },
+    "/models/{id}/{id2}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "style": "simple",
+          "schema": {
+            "type": "string",
+            "pattern": ".+(_|-|\\.).+"
+          },
+          "example": "some-uuid-maybe"
+        },
+        {
+          "name": "id2",
+          "in": "path",
+          "required": true,
+          "style": "simple",
+          "schema": {
+            "type": "string",
+            "pattern": "\\d+"
+          }
+        }
+      ]
+    }
+  }
+}
