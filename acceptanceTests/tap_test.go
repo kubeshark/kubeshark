@@ -71,8 +71,8 @@ func TestTap(t *testing.T) {
 			for i := 0; i < len(expectedPods); i++ {
 				expectedPodsStr += fmt.Sprintf("Name:%vNamespace:%v", expectedPods[i].Name, expectedPods[i].Namespace)
 			}
-
-			const shouldCheckSrcAndDest = true
+			
+			const shouldCheckSrcAndDest = false
 			runCypressTests(t, fmt.Sprintf("npx cypress run --spec  \"cypress/integration/tests/UiTest.js\" --env entriesCount=%d,arrayDict=%v,shouldCheckSrcAndDest=%v",
 				entriesCount, expectedPodsStr, shouldCheckSrcAndDest))
 		})

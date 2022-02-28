@@ -11,16 +11,13 @@ import {
 
 const refreshWaitTimeout = 10000;
 
+
 const fullParam = Cypress.env('arrayDict'); // "Name:fooNamespace:barName:foo1Namespace:bar1"
 const podsArray = fullParam.split('Name:').slice(1); // ["fooNamespace:bar", "foo1Namespace:bar1"]
 podsArray.forEach((podStr, index) => {
     const podAndNamespaceArr = podStr.split('Namespace:'); // [foo, bar] / [foo1, bar1]
     podsArray[index] = getExpectedDetailsDict(podAndNamespaceArr[0], podAndNamespaceArr[1]);
 });
-
-const destPodName = podsArray[0].podName;
-const destNamespace = podsArray[0].namespace;
-const destination = destPodName + '.' + destNamespace;
 
 it('opening mizu', function () {
     cy.visit(Cypress.env('testUrl'));
@@ -73,8 +70,6 @@ it('right side sanity test', function () {
     });
 });
 
-serviceMapCheck(destination);
-
 checkIllegalFilter('invalid filter');
 
 checkFilter({
@@ -96,6 +91,8 @@ checkFilter({
 });
 
 if (Cypress.env('shouldCheckSrcAndDest')) {
+    serviceMapCheck();
+
     checkFilter({
         name: 'src.name == ""',
         leftSidePath: '[title="Source Name"]',
@@ -106,11 +103,11 @@ if (Cypress.env('shouldCheckSrcAndDest')) {
     });
 
     checkFilter({
-        name: `dst.name == "${destination}"`,
+        name: `dst.name == "httpbin.mizu-tests"`,
         leftSidePath: '> :nth-child(3) > :nth-child(2) > :nth-child(3) > :nth-child(2)',
-        leftSideExpectedText: destination,
+        leftSideExpectedText: 'httpbin.mizu-tests',
         rightSidePath: '> :nth-child(2) > :nth-child(2) > :nth-child(2) > :nth-child(3) > :nth-child(2)',
-        rightSideExpectedText: destination,
+        rightSideExpectedText: 'httpbin.mizu-tests',
         applyByEnter: false
     });
 }
@@ -335,7 +332,7 @@ function checkOnlyLineNumberes(jsonItems, decodedText) {
     cy.get(`${Cypress.env('bodyJsonClass')} > >`).should('have.length', jsonItems)
 }
 
-function serviceMapCheck(destination) {
+function serviceMapCheck() {
     it('service map test', function () {
         cy.intercept(`${Cypress.env('testUrl')}/servicemap/get`).as('serviceMapRequest');
         cy.get('#total-entries').should('not.have.text', '0').then(() => {
@@ -344,7 +341,7 @@ function serviceMapCheck(destination) {
                 cy.wait('@serviceMapRequest').then(({response}) => {
                     const body = response.body;
                     const nodeParams = {
-                        destination: destination,
+                        destination: 'httpbin.mizu-tests',
                         source: '127.0.0.1'
                     };
                     serviceMapAPICheck(body, parseInt(entriesNum), nodeParams);
