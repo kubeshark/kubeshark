@@ -1,4 +1,4 @@
-module github.com/up9inc/mizu/tests
+module github.com/up9inc/mizu/acceptanceTests
 
 go 1.17
 
