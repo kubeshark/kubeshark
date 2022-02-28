@@ -67,8 +67,14 @@ func TestTap(t *testing.T) {
 				{Name: "httpbin2", Namespace: "mizu-tests"},
 			}
 
-			runCypressTests(t, fmt.Sprintf("npx cypress run --spec  \"cypress/integration/tests/UiTest.js\" --env entriesCount=%d,podName1=%v,podName2=%v,namespace1=%v,namespace2=%v,checkSourceOrDest=%v",
-				entriesCount, expectedPods[0].Name, expectedPods[1].Name, expectedPods[0].Namespace, expectedPods[1].Namespace, true))
+			var expectedPodsStr string
+			for i := 0; i < len(expectedPods); i++ {
+				expectedPodsStr += fmt.Sprintf("Name:%vNamespace:%v", expectedPods[i].Name, expectedPods[i].Namespace)
+			}
+
+			const shouldCheckSrcAndDest = true
+			runCypressTests(t, fmt.Sprintf("npx cypress run --spec  \"cypress/integration/tests/UiTest.js\" --env entriesCount=%d,arrayDict=%v,shouldCheckSrcAndDest=%v",
+				entriesCount, expectedPodsStr, shouldCheckSrcAndDest))
 		})
 	}
 }
