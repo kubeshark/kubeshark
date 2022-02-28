@@ -7,7 +7,6 @@ on:
   push:
     branches:
       - 'develop'
-      - 'test/permission-acceptance'
 
 jobs:
   run-acceptance-tests:
