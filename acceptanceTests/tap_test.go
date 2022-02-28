@@ -14,10 +14,10 @@ import (
 )
 
 func TestTap(t *testing.T) {
-	basicTapTest(t)
+	basicTapTest(t, false)
 }
 
-func basicTapTest(t *testing.T, extraArgs... string) {
+func basicTapTest(t *testing.T, shouldCheckSrcAndDest bool, extraArgs... string) {
 	if testing.Short() {
 		t.Skip("ignored acceptance test")
 	}
@@ -78,7 +78,6 @@ func basicTapTest(t *testing.T, extraArgs... string) {
 				expectedPodsStr += fmt.Sprintf("Name:%vNamespace:%v", expectedPods[i].Name, expectedPods[i].Namespace)
 			}
 
-			const shouldCheckSrcAndDest = false
 			RunCypressTests(t, fmt.Sprintf("npx cypress run --spec  \"cypress/integration/tests/UiTest.js\" --env entriesCount=%d,arrayDict=%v,shouldCheckSrcAndDest=%v",
 				entriesCount, expectedPodsStr, shouldCheckSrcAndDest))
 		})
@@ -673,5 +672,5 @@ func TestRestrictedMode(t *testing.T) {
 	}
 
 	extraArgs := []string{"--set", fmt.Sprintf("mizu-resources-namespace=%s", namespace)}
-	t.Run("basic tap", func (testingT *testing.T) {basicTapTest(testingT, extraArgs...)})
+	t.Run("basic tap", func (testingT *testing.T) {basicTapTest(testingT, false, extraArgs...)})
 }
