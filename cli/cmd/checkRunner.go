@@ -43,7 +43,7 @@ func runMizuCheck() {
 		}
 
 		if checkPassed {
-			checkPassed = checkImagesConnectivity(ctx, kubernetesProvider)
+			checkPassed = checkImagePullInCluster(ctx, kubernetesProvider)
 		}
 	} else {
 		if checkPassed {
@@ -323,23 +323,23 @@ func checkPermissionExist(group string, resource string, verb string, exist bool
 	return true
 }
 
-func checkImagesConnectivity(ctx context.Context, kubernetesProvider *kubernetes.Provider) bool {
-	logger.Log.Infof("\nimages-connectivity\n--------------------")
+func checkImagePullInCluster(ctx context.Context, kubernetesProvider *kubernetes.Provider) bool {
+	logger.Log.Infof("\nimage-pull-in-cluster\n--------------------")
 
-	podName := "images-connectivity"
+	podName := "image-pull-in-cluster"
 
-	defer removeImagesConnectivityResources(ctx, kubernetesProvider, podName)
-	if err := createImagesConnectivityResources(ctx, kubernetesProvider, podName); err != nil {
-		logger.Log.Errorf("%v error while creating images connectivity resources, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), err)
+	defer removeImagePullInClusterResources(ctx, kubernetesProvider, podName)
+	if err := createImagePullInClusterResources(ctx, kubernetesProvider, podName); err != nil {
+		logger.Log.Errorf("%v error while creating image pull in cluster resources, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), err)
 		return false
 	}
 
 	if err := checkImagePulled(ctx, kubernetesProvider, podName); err != nil {
-		logger.Log.Errorf("%v docker hub image not pulled, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), err)
+		logger.Log.Errorf("%v cluster is not able to pull mizu containers from docker hub, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), err)
 		return false
 	}
 
-	logger.Log.Infof("%v docker hub image pulled", fmt.Sprintf(uiUtils.Green, "√"))
+	logger.Log.Infof("%v cluster is able to pull mizu containers from docker hub", fmt.Sprintf(uiUtils.Green, "√"))
 	return true
 }
 
@@ -379,19 +379,19 @@ func checkImagePulled(ctx context.Context, kubernetesProvider *kubernetes.Provid
 	}
 }
 
-func removeImagesConnectivityResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, podName string) {
+func removeImagePullInClusterResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, podName string) {
 	if err := kubernetesProvider.RemovePod(ctx, config.Config.MizuResourcesNamespace, podName); err != nil {
-		logger.Log.Debugf("error while removing images connectivity resources, err: %v", err)
+		logger.Log.Debugf("error while removing image pull in cluster resources, err: %v", err)
 	}
 
 	if !config.Config.IsNsRestrictedMode() {
 		if err := kubernetesProvider.RemoveNamespace(ctx, config.Config.MizuResourcesNamespace); err != nil {
-			logger.Log.Debugf("error while removing images connectivity resources, err: %v", err)
+			logger.Log.Debugf("error while removing image pull in cluster resources, err: %v", err)
 		}
 	}
 }
 
-func createImagesConnectivityResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, podName string) error {
+func createImagePullInClusterResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, podName string) error {
 	if !config.Config.IsNsRestrictedMode() {
 		if _, err := kubernetesProvider.CreateNamespace(ctx, config.Config.MizuResourcesNamespace); err != nil {
 			return err
