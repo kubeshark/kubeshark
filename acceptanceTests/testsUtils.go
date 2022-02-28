@@ -38,7 +38,7 @@ type PodDescriptor struct {
 	Namespace string
 }
 
-func getCliPath() (string, error) {
+func GetCliPath() (string, error) {
 	dir, filePathErr := os.Getwd()
 	if filePathErr != nil {
 		return "", filePathErr
@@ -48,7 +48,7 @@ func getCliPath() (string, error) {
 	return cliPath, nil
 }
 
-func getMizuFolderPath() (string, error) {
+func GetMizuFolderPath() (string, error) {
 	home, homeDirErr := os.UserHomeDir()
 	if homeDirErr != nil {
 		return "", homeDirErr
@@ -57,8 +57,8 @@ func getMizuFolderPath() (string, error) {
 	return path.Join(home, ".mizu"), nil
 }
 
-func getConfigPath() (string, error) {
-	mizuFolderPath, mizuPathError := getMizuFolderPath()
+func GetConfigPath() (string, error) {
+	mizuFolderPath, mizuPathError := GetMizuFolderPath()
 	if mizuPathError != nil {
 		return "", mizuPathError
 	}
@@ -66,15 +66,15 @@ func getConfigPath() (string, error) {
 	return path.Join(mizuFolderPath, "config.yaml"), nil
 }
 
-func getProxyUrl(namespace string, service string) string {
+func GetProxyUrl(namespace string, service string) string {
 	return fmt.Sprintf("http://localhost:8080/api/v1/namespaces/%v/services/%v/proxy", namespace, service)
 }
 
-func getApiServerUrl(port uint16) string {
+func GetApiServerUrl(port uint16) string {
 	return fmt.Sprintf("http://localhost:%v", port)
 }
 
-func getServiceExternalIp(ctx context.Context, namespace string, service string) (string, error) {
+func GetServiceExternalIp(ctx context.Context, namespace string, service string) (string, error) {
 	home := homedir.HomeDir()
 	configLoadingRules := &clientcmd.ClientConfigLoadingRules{ExplicitPath: filepath.Join(home, ".kube", "config")}
 	clientConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
@@ -113,39 +113,39 @@ func getDefaultCommandArgs() []string {
 	return []string{setFlag, telemetry, setFlag, agentImage, setFlag, imagePullPolicy, setFlag, headless}
 }
 
-func getDefaultTapCommandArgs() []string {
+func GetDefaultTapCommandArgs() []string {
 	tapCommand := "tap"
 	defaultCmdArgs := getDefaultCommandArgs()
 
 	return append([]string{tapCommand}, defaultCmdArgs...)
 }
 
-func getDefaultTapCommandArgsWithRegex(regex string) []string {
+func GetDefaultTapCommandArgsWithRegex(regex string) []string {
 	tapCommand := "tap"
 	defaultCmdArgs := getDefaultCommandArgs()
 
 	return append([]string{tapCommand, regex}, defaultCmdArgs...)
 }
 
-func getDefaultLogsCommandArgs() []string {
+func GetDefaultLogsCommandArgs() []string {
 	logsCommand := "logs"
 	defaultCmdArgs := getDefaultCommandArgs()
 
 	return append([]string{logsCommand}, defaultCmdArgs...)
 }
 
-func getDefaultTapNamespace() []string {
+func GetDefaultTapNamespace() []string {
 	return []string{"-n", "mizu-tests"}
 }
 
-func getDefaultConfigCommandArgs() []string {
+func GetDefaultConfigCommandArgs() []string {
 	configCommand := "config"
 	defaultCmdArgs := getDefaultCommandArgs()
 
 	return append([]string{configCommand}, defaultCmdArgs...)
 }
 
-func runCypressTests(t *testing.T, cypressRunCmd string) {
+func RunCypressTests(t *testing.T, cypressRunCmd string) {
 	cypressCmd := exec.Command("bash", "-c", cypressRunCmd)
 	t.Logf("running command: %v", cypressCmd.String())
 	out, err := cypressCmd.Output()
@@ -184,10 +184,10 @@ func tryExecuteFunc(executeFunc func() error) (err interface{}) {
 	return executeFunc()
 }
 
-func waitTapPodsReady(apiServerUrl string) error {
+func WaitTapPodsReady(apiServerUrl string) error {
 	resolvingUrl := fmt.Sprintf("%v/status/connectedTappersCount", apiServerUrl)
 	tapPodsReadyFunc := func() error {
-		requestResult, requestErr := executeHttpGetRequest(resolvingUrl)
+		requestResult, requestErr := ExecuteHttpGetRequest(resolvingUrl)
 		if requestErr != nil {
 			return requestErr
 		}
@@ -212,7 +212,7 @@ func jsonBytesToInterface(jsonBytes []byte) (interface{}, error) {
 	return result, nil
 }
 
-func executeHttpRequest(response *http.Response, requestErr error) (interface{}, error) {
+func ExecuteHttpRequest(response *http.Response, requestErr error) (interface{}, error) {
 	if requestErr != nil {
 		return nil, requestErr
 	} else if response.StatusCode != 200 {
@@ -229,7 +229,7 @@ func executeHttpRequest(response *http.Response, requestErr error) (interface{},
 	return jsonBytesToInterface(data)
 }
 
-func executeHttpGetRequestWithHeaders(url string, headers map[string]string) (interface{}, error) {
+func ExecuteHttpGetRequestWithHeaders(url string, headers map[string]string) (interface{}, error) {
 	request, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
@@ -241,15 +241,15 @@ func executeHttpGetRequestWithHeaders(url string, headers map[string]string) (in
 
 	client := &http.Client{}
 	response, requestErr := client.Do(request)
-	return executeHttpRequest(response, requestErr)
+	return ExecuteHttpRequest(response, requestErr)
 }
 
-func executeHttpGetRequest(url string) (interface{}, error) {
+func ExecuteHttpGetRequest(url string) (interface{}, error) {
 	response, requestErr := http.Get(url)
-	return executeHttpRequest(response, requestErr)
+	return ExecuteHttpRequest(response, requestErr)
 }
 
-func executeHttpPostRequestWithHeaders(url string, headers map[string]string, body interface{}) (interface{}, error) {
+func ExecuteHttpPostRequestWithHeaders(url string, headers map[string]string, body interface{}) (interface{}, error) {
 	requestBody, jsonErr := json.Marshal(body)
 	if jsonErr != nil {
 		return nil, jsonErr
@@ -267,10 +267,10 @@ func executeHttpPostRequestWithHeaders(url string, headers map[string]string, bo
 
 	client := &http.Client{}
 	response, requestErr := client.Do(request)
-	return executeHttpRequest(response, requestErr)
+	return ExecuteHttpRequest(response, requestErr)
 }
 
-func cleanupCommand(cmd *exec.Cmd) error {
+func CleanupCommand(cmd *exec.Cmd) error {
 	if err := cmd.Process.Signal(syscall.SIGQUIT); err != nil {
 		return err
 	}
@@ -282,7 +282,7 @@ func cleanupCommand(cmd *exec.Cmd) error {
 	return nil
 }
 
-func getLogsPath() (string, error) {
+func GetLogsPath() (string, error) {
 	dir, filePathErr := os.Getwd()
 	if filePathErr != nil {
 		return "", filePathErr
