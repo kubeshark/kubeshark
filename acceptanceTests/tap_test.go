@@ -26,15 +26,15 @@ func basicTapTest(t *testing.T, extraArgs... string) {
 
 	for _, entriesCount := range tests {
 		t.Run(fmt.Sprintf("%d", entriesCount), func(t *testing.T) {
-			cliPath, cliPathErr := getCliPath()
+			cliPath, cliPathErr := GetCliPath()
 			if cliPathErr != nil {
 				t.Errorf("failed to get cli path, err: %v", cliPathErr)
 				return
 			}
 
-			tapCmdArgs := getDefaultTapCommandArgs()
+			tapCmdArgs := GetDefaultTapCommandArgs()
 
-			tapNamespace := getDefaultTapNamespace()
+			tapNamespace := GetDefaultTapNamespace()
 			tapCmdArgs = append(tapCmdArgs, tapNamespace...)
 
 			tapCmdArgs = append(tapCmdArgs, extraArgs...)
@@ -43,7 +43,7 @@ func basicTapTest(t *testing.T, extraArgs... string) {
 			t.Logf("running command: %v", tapCmd.String())
 
 			t.Cleanup(func() {
-				if err := cleanupCommand(tapCmd); err != nil {
+				if err := CleanupCommand(tapCmd); err != nil {
 					t.Logf("failed to cleanup tap command, err: %v", err)
 				}
 			})
@@ -53,16 +53,16 @@ func basicTapTest(t *testing.T, extraArgs... string) {
 				return
 			}
 
-			apiServerUrl := getApiServerUrl(defaultApiServerPort)
+			apiServerUrl := GetApiServerUrl(defaultApiServerPort)
 
-			if err := waitTapPodsReady(apiServerUrl); err != nil {
+			if err := WaitTapPodsReady(apiServerUrl); err != nil {
 				t.Errorf("failed to start tap pods on time, err: %v", err)
 				return
 			}
 
-			proxyUrl := getProxyUrl(defaultNamespaceName, defaultServiceName)
+			proxyUrl := GetProxyUrl(defaultNamespaceName, defaultServiceName)
 			for i := 0; i < entriesCount; i++ {
-				if _, requestErr := executeHttpGetRequest(fmt.Sprintf("%v/get", proxyUrl)); requestErr != nil {
+				if _, requestErr := ExecuteHttpGetRequest(fmt.Sprintf("%v/get", proxyUrl)); requestErr != nil {
 					t.Errorf("failed to send proxy request, err: %v", requestErr)
 					return
 				}
@@ -77,9 +77,9 @@ func basicTapTest(t *testing.T, extraArgs... string) {
 			for i := 0; i < len(expectedPods); i++ {
 				expectedPodsStr += fmt.Sprintf("Name:%vNamespace:%v", expectedPods[i].Name, expectedPods[i].Namespace)
 			}
-			
+
 			const shouldCheckSrcAndDest = false
-			runCypressTests(t, fmt.Sprintf("npx cypress run --spec  \"cypress/integration/tests/UiTest.js\" --env entriesCount=%d,arrayDict=%v,shouldCheckSrcAndDest=%v",
+			RunCypressTests(t, fmt.Sprintf("npx cypress run --spec  \"cypress/integration/tests/UiTest.js\" --env entriesCount=%d,arrayDict=%v,shouldCheckSrcAndDest=%v",
 				entriesCount, expectedPodsStr, shouldCheckSrcAndDest))
 		})
 	}
@@ -94,15 +94,15 @@ func TestTapGuiPort(t *testing.T) {
 
 	for _, guiPort := range tests {
 		t.Run(fmt.Sprintf("%d", guiPort), func(t *testing.T) {
-			cliPath, cliPathErr := getCliPath()
+			cliPath, cliPathErr := GetCliPath()
 			if cliPathErr != nil {
 				t.Errorf("failed to get cli path, err: %v", cliPathErr)
 				return
 			}
 
-			tapCmdArgs := getDefaultTapCommandArgs()
+			tapCmdArgs := GetDefaultTapCommandArgs()
 
-			tapNamespace := getDefaultTapNamespace()
+			tapNamespace := GetDefaultTapNamespace()
 			tapCmdArgs = append(tapCmdArgs, tapNamespace...)
 
 			tapCmdArgs = append(tapCmdArgs, "-p", fmt.Sprintf("%d", guiPort))
@@ -111,7 +111,7 @@ func TestTapGuiPort(t *testing.T) {
 			t.Logf("running command: %v", tapCmd.String())
 
 			t.Cleanup(func() {
-				if err := cleanupCommand(tapCmd); err != nil {
+				if err := CleanupCommand(tapCmd); err != nil {
 					t.Logf("failed to cleanup tap command, err: %v", err)
 				}
 			})
@@ -121,22 +121,22 @@ func TestTapGuiPort(t *testing.T) {
 				return
 			}
 
-			apiServerUrl := getApiServerUrl(guiPort)
+			apiServerUrl := GetApiServerUrl(guiPort)
 
-			if err := waitTapPodsReady(apiServerUrl); err != nil {
+			if err := WaitTapPodsReady(apiServerUrl); err != nil {
 				t.Errorf("failed to start tap pods on time, err: %v", err)
 				return
 			}
 
-			proxyUrl := getProxyUrl(defaultNamespaceName, defaultServiceName)
+			proxyUrl := GetProxyUrl(defaultNamespaceName, defaultServiceName)
 			for i := 0; i < defaultEntriesCount; i++ {
-				if _, requestErr := executeHttpGetRequest(fmt.Sprintf("%v/get", proxyUrl)); requestErr != nil {
+				if _, requestErr := ExecuteHttpGetRequest(fmt.Sprintf("%v/get", proxyUrl)); requestErr != nil {
 					t.Errorf("failed to send proxy request, err: %v", requestErr)
 					return
 				}
 			}
 
-			runCypressTests(t, fmt.Sprintf("npx cypress run --spec \"cypress/integration/tests/GuiPort.js\" --env name=%v,namespace=%v,port=%d",
+			RunCypressTests(t, fmt.Sprintf("npx cypress run --spec \"cypress/integration/tests/GuiPort.js\" --env name=%v,namespace=%v,port=%d",
 				"httpbin", "mizu-tests", guiPort))
 		})
 	}
@@ -153,20 +153,20 @@ func TestTapAllNamespaces(t *testing.T) {
 		{Name: "httpbin", Namespace: "mizu-tests2"},
 	}
 
-	cliPath, cliPathErr := getCliPath()
+	cliPath, cliPathErr := GetCliPath()
 	if cliPathErr != nil {
 		t.Errorf("failed to get cli path, err: %v", cliPathErr)
 		return
 	}
 
-	tapCmdArgs := getDefaultTapCommandArgs()
+	tapCmdArgs := GetDefaultTapCommandArgs()
 	tapCmdArgs = append(tapCmdArgs, "-A")
 
 	tapCmd := exec.Command(cliPath, tapCmdArgs...)
 	t.Logf("running command: %v", tapCmd.String())
 
 	t.Cleanup(func() {
-		if err := cleanupCommand(tapCmd); err != nil {
+		if err := CleanupCommand(tapCmd); err != nil {
 			t.Logf("failed to cleanup tap command, err: %v", err)
 		}
 	})
@@ -176,14 +176,14 @@ func TestTapAllNamespaces(t *testing.T) {
 		return
 	}
 
-	apiServerUrl := getApiServerUrl(defaultApiServerPort)
+	apiServerUrl := GetApiServerUrl(defaultApiServerPort)
 
-	if err := waitTapPodsReady(apiServerUrl); err != nil {
+	if err := WaitTapPodsReady(apiServerUrl); err != nil {
 		t.Errorf("failed to start tap pods on time, err: %v", err)
 		return
 	}
 
-	runCypressTests(t, fmt.Sprintf("npx cypress run --spec  \"cypress/integration/tests/MultipleNamespaces.js\" --env name1=%v,name2=%v,name3=%v,namespace1=%v,namespace2=%v,namespace3=%v",
+	RunCypressTests(t, fmt.Sprintf("npx cypress run --spec  \"cypress/integration/tests/MultipleNamespaces.js\" --env name1=%v,name2=%v,name3=%v,namespace1=%v,namespace2=%v,namespace3=%v",
 		expectedPods[0].Name, expectedPods[1].Name, expectedPods[2].Name, expectedPods[0].Namespace, expectedPods[1].Namespace, expectedPods[2].Namespace))
 }
 
@@ -198,13 +198,13 @@ func TestTapMultipleNamespaces(t *testing.T) {
 		{Name: "httpbin", Namespace: "mizu-tests2"},
 	}
 
-	cliPath, cliPathErr := getCliPath()
+	cliPath, cliPathErr := GetCliPath()
 	if cliPathErr != nil {
 		t.Errorf("failed to get cli path, err: %v", cliPathErr)
 		return
 	}
 
-	tapCmdArgs := getDefaultTapCommandArgs()
+	tapCmdArgs := GetDefaultTapCommandArgs()
 	var namespacesCmd []string
 	for _, expectedPod := range expectedPods {
 		namespacesCmd = append(namespacesCmd, "-n", expectedPod.Namespace)
@@ -215,7 +215,7 @@ func TestTapMultipleNamespaces(t *testing.T) {
 	t.Logf("running command: %v", tapCmd.String())
 
 	t.Cleanup(func() {
-		if err := cleanupCommand(tapCmd); err != nil {
+		if err := CleanupCommand(tapCmd); err != nil {
 			t.Logf("failed to cleanup tap command, err: %v", err)
 		}
 	})
@@ -225,14 +225,14 @@ func TestTapMultipleNamespaces(t *testing.T) {
 		return
 	}
 
-	apiServerUrl := getApiServerUrl(defaultApiServerPort)
+	apiServerUrl := GetApiServerUrl(defaultApiServerPort)
 
-	if err := waitTapPodsReady(apiServerUrl); err != nil {
+	if err := WaitTapPodsReady(apiServerUrl); err != nil {
 		t.Errorf("failed to start tap pods on time, err: %v", err)
 		return
 	}
 
-	runCypressTests(t, fmt.Sprintf("npx cypress run --spec  \"cypress/integration/tests/MultipleNamespaces.js\" --env name1=%v,name2=%v,name3=%v,namespace1=%v,namespace2=%v,namespace3=%v",
+	RunCypressTests(t, fmt.Sprintf("npx cypress run --spec  \"cypress/integration/tests/MultipleNamespaces.js\" --env name1=%v,name2=%v,name3=%v,namespace1=%v,namespace2=%v,namespace3=%v",
 		expectedPods[0].Name, expectedPods[1].Name, expectedPods[2].Name, expectedPods[0].Namespace, expectedPods[1].Namespace, expectedPods[2].Namespace))
 }
 
@@ -246,22 +246,22 @@ func TestTapRegex(t *testing.T) {
 		{Name: regexPodName, Namespace: "mizu-tests"},
 	}
 
-	cliPath, cliPathErr := getCliPath()
+	cliPath, cliPathErr := GetCliPath()
 	if cliPathErr != nil {
 		t.Errorf("failed to get cli path, err: %v", cliPathErr)
 		return
 	}
 
-	tapCmdArgs := getDefaultTapCommandArgsWithRegex(regexPodName)
+	tapCmdArgs := GetDefaultTapCommandArgsWithRegex(regexPodName)
 
-	tapNamespace := getDefaultTapNamespace()
+	tapNamespace := GetDefaultTapNamespace()
 	tapCmdArgs = append(tapCmdArgs, tapNamespace...)
 
 	tapCmd := exec.Command(cliPath, tapCmdArgs...)
 	t.Logf("running command: %v", tapCmd.String())
 
 	t.Cleanup(func() {
-		if err := cleanupCommand(tapCmd); err != nil {
+		if err := CleanupCommand(tapCmd); err != nil {
 			t.Logf("failed to cleanup tap command, err: %v", err)
 		}
 	})
@@ -271,14 +271,14 @@ func TestTapRegex(t *testing.T) {
 		return
 	}
 
-	apiServerUrl := getApiServerUrl(defaultApiServerPort)
+	apiServerUrl := GetApiServerUrl(defaultApiServerPort)
 
-	if err := waitTapPodsReady(apiServerUrl); err != nil {
+	if err := WaitTapPodsReady(apiServerUrl); err != nil {
 		t.Errorf("failed to start tap pods on time, err: %v", err)
 		return
 	}
 
-	runCypressTests(t, fmt.Sprintf("npx cypress run --spec  \"cypress/integration/tests/Regex.js\" --env name=%v,namespace=%v",
+	RunCypressTests(t, fmt.Sprintf("npx cypress run --spec  \"cypress/integration/tests/Regex.js\" --env name=%v,namespace=%v",
 		expectedPods[0].Name, expectedPods[0].Namespace))
 }
 
@@ -287,15 +287,15 @@ func TestTapDryRun(t *testing.T) {
 		t.Skip("ignored acceptance test")
 	}
 
-	cliPath, cliPathErr := getCliPath()
+	cliPath, cliPathErr := GetCliPath()
 	if cliPathErr != nil {
 		t.Errorf("failed to get cli path, err: %v", cliPathErr)
 		return
 	}
 
-	tapCmdArgs := getDefaultTapCommandArgs()
+	tapCmdArgs := GetDefaultTapCommandArgs()
 
-	tapNamespace := getDefaultTapNamespace()
+	tapNamespace := GetDefaultTapNamespace()
 	tapCmdArgs = append(tapCmdArgs, tapNamespace...)
 
 	tapCmdArgs = append(tapCmdArgs, "--dry-run")
@@ -334,22 +334,22 @@ func TestTapRedact(t *testing.T) {
 		t.Skip("ignored acceptance test")
 	}
 
-	cliPath, cliPathErr := getCliPath()
+	cliPath, cliPathErr := GetCliPath()
 	if cliPathErr != nil {
 		t.Errorf("failed to get cli path, err: %v", cliPathErr)
 		return
 	}
 
-	tapCmdArgs := getDefaultTapCommandArgs()
+	tapCmdArgs := GetDefaultTapCommandArgs()
 
-	tapNamespace := getDefaultTapNamespace()
+	tapNamespace := GetDefaultTapNamespace()
 	tapCmdArgs = append(tapCmdArgs, tapNamespace...)
 
 	tapCmd := exec.Command(cliPath, tapCmdArgs...)
 	t.Logf("running command: %v", tapCmd.String())
 
 	t.Cleanup(func() {
-		if err := cleanupCommand(tapCmd); err != nil {
+		if err := CleanupCommand(tapCmd); err != nil {
 			t.Logf("failed to cleanup tap command, err: %v", err)
 		}
 	})
@@ -359,24 +359,24 @@ func TestTapRedact(t *testing.T) {
 		return
 	}
 
-	apiServerUrl := getApiServerUrl(defaultApiServerPort)
+	apiServerUrl := GetApiServerUrl(defaultApiServerPort)
 
-	if err := waitTapPodsReady(apiServerUrl); err != nil {
+	if err := WaitTapPodsReady(apiServerUrl); err != nil {
 		t.Errorf("failed to start tap pods on time, err: %v", err)
 		return
 	}
 
-	proxyUrl := getProxyUrl(defaultNamespaceName, defaultServiceName)
+	proxyUrl := GetProxyUrl(defaultNamespaceName, defaultServiceName)
 	requestHeaders := map[string]string{"User-Header": "Mizu"}
 	requestBody := map[string]string{"User": "Mizu"}
 	for i := 0; i < defaultEntriesCount; i++ {
-		if _, requestErr := executeHttpPostRequestWithHeaders(fmt.Sprintf("%v/post", proxyUrl), requestHeaders, requestBody); requestErr != nil {
+		if _, requestErr := ExecuteHttpPostRequestWithHeaders(fmt.Sprintf("%v/post", proxyUrl), requestHeaders, requestBody); requestErr != nil {
 			t.Errorf("failed to send proxy request, err: %v", requestErr)
 			return
 		}
 	}
 
-	runCypressTests(t, "npx cypress run --spec  \"cypress/integration/tests/Redact.js\"")
+	RunCypressTests(t, "npx cypress run --spec  \"cypress/integration/tests/Redact.js\"")
 }
 
 func TestTapNoRedact(t *testing.T) {
@@ -384,15 +384,15 @@ func TestTapNoRedact(t *testing.T) {
 		t.Skip("ignored acceptance test")
 	}
 
-	cliPath, cliPathErr := getCliPath()
+	cliPath, cliPathErr := GetCliPath()
 	if cliPathErr != nil {
 		t.Errorf("failed to get cli path, err: %v", cliPathErr)
 		return
 	}
 
-	tapCmdArgs := getDefaultTapCommandArgs()
+	tapCmdArgs := GetDefaultTapCommandArgs()
 
-	tapNamespace := getDefaultTapNamespace()
+	tapNamespace := GetDefaultTapNamespace()
 	tapCmdArgs = append(tapCmdArgs, tapNamespace...)
 
 	tapCmdArgs = append(tapCmdArgs, "--no-redact")
@@ -401,7 +401,7 @@ func TestTapNoRedact(t *testing.T) {
 	t.Logf("running command: %v", tapCmd.String())
 
 	t.Cleanup(func() {
-		if err := cleanupCommand(tapCmd); err != nil {
+		if err := CleanupCommand(tapCmd); err != nil {
 			t.Logf("failed to cleanup tap command, err: %v", err)
 		}
 	})
@@ -411,24 +411,24 @@ func TestTapNoRedact(t *testing.T) {
 		return
 	}
 
-	apiServerUrl := getApiServerUrl(defaultApiServerPort)
+	apiServerUrl := GetApiServerUrl(defaultApiServerPort)
 
-	if err := waitTapPodsReady(apiServerUrl); err != nil {
+	if err := WaitTapPodsReady(apiServerUrl); err != nil {
 		t.Errorf("failed to start tap pods on time, err: %v", err)
 		return
 	}
 
-	proxyUrl := getProxyUrl(defaultNamespaceName, defaultServiceName)
+	proxyUrl := GetProxyUrl(defaultNamespaceName, defaultServiceName)
 	requestHeaders := map[string]string{"User-Header": "Mizu"}
 	requestBody := map[string]string{"User": "Mizu"}
 	for i := 0; i < defaultEntriesCount; i++ {
-		if _, requestErr := executeHttpPostRequestWithHeaders(fmt.Sprintf("%v/post", proxyUrl), requestHeaders, requestBody); requestErr != nil {
+		if _, requestErr := ExecuteHttpPostRequestWithHeaders(fmt.Sprintf("%v/post", proxyUrl), requestHeaders, requestBody); requestErr != nil {
 			t.Errorf("failed to send proxy request, err: %v", requestErr)
 			return
 		}
 	}
 
-	runCypressTests(t, "npx cypress run --spec  \"cypress/integration/tests/NoRedact.js\"")
+	RunCypressTests(t, "npx cypress run --spec  \"cypress/integration/tests/NoRedact.js\"")
 }
 
 func TestTapRegexMasking(t *testing.T) {
@@ -436,15 +436,15 @@ func TestTapRegexMasking(t *testing.T) {
 		t.Skip("ignored acceptance test")
 	}
 
-	cliPath, cliPathErr := getCliPath()
+	cliPath, cliPathErr := GetCliPath()
 	if cliPathErr != nil {
 		t.Errorf("failed to get cli path, err: %v", cliPathErr)
 		return
 	}
 
-	tapCmdArgs := getDefaultTapCommandArgs()
+	tapCmdArgs := GetDefaultTapCommandArgs()
 
-	tapNamespace := getDefaultTapNamespace()
+	tapNamespace := GetDefaultTapNamespace()
 	tapCmdArgs = append(tapCmdArgs, tapNamespace...)
 
 	tapCmdArgs = append(tapCmdArgs, "-r", "Mizu")
@@ -453,7 +453,7 @@ func TestTapRegexMasking(t *testing.T) {
 	t.Logf("running command: %v", tapCmd.String())
 
 	t.Cleanup(func() {
-		if err := cleanupCommand(tapCmd); err != nil {
+		if err := CleanupCommand(tapCmd); err != nil {
 			t.Logf("failed to cleanup tap command, err: %v", err)
 		}
 	})
@@ -463,23 +463,23 @@ func TestTapRegexMasking(t *testing.T) {
 		return
 	}
 
-	apiServerUrl := getApiServerUrl(defaultApiServerPort)
+	apiServerUrl := GetApiServerUrl(defaultApiServerPort)
 
-	if err := waitTapPodsReady(apiServerUrl); err != nil {
+	if err := WaitTapPodsReady(apiServerUrl); err != nil {
 		t.Errorf("failed to start tap pods on time, err: %v", err)
 		return
 	}
 
-	proxyUrl := getProxyUrl(defaultNamespaceName, defaultServiceName)
+	proxyUrl := GetProxyUrl(defaultNamespaceName, defaultServiceName)
 	for i := 0; i < defaultEntriesCount; i++ {
 		response, requestErr := http.Post(fmt.Sprintf("%v/post", proxyUrl), "text/plain", bytes.NewBufferString("Mizu"))
-		if _, requestErr = executeHttpRequest(response, requestErr); requestErr != nil {
+		if _, requestErr = ExecuteHttpRequest(response, requestErr); requestErr != nil {
 			t.Errorf("failed to send proxy request, err: %v", requestErr)
 			return
 		}
 	}
 
-	runCypressTests(t, "npx cypress run --spec \"cypress/integration/tests/RegexMasking.js\"")
+	RunCypressTests(t, "npx cypress run --spec \"cypress/integration/tests/RegexMasking.js\"")
 
 }
 
@@ -488,15 +488,15 @@ func TestTapIgnoredUserAgents(t *testing.T) {
 		t.Skip("ignored acceptance test")
 	}
 
-	cliPath, cliPathErr := getCliPath()
+	cliPath, cliPathErr := GetCliPath()
 	if cliPathErr != nil {
 		t.Errorf("failed to get cli path, err: %v", cliPathErr)
 		return
 	}
 
-	tapCmdArgs := getDefaultTapCommandArgs()
+	tapCmdArgs := GetDefaultTapCommandArgs()
 
-	tapNamespace := getDefaultTapNamespace()
+	tapNamespace := GetDefaultTapNamespace()
 	tapCmdArgs = append(tapCmdArgs, tapNamespace...)
 
 	ignoredUserAgentValue := "ignore"
@@ -506,7 +506,7 @@ func TestTapIgnoredUserAgents(t *testing.T) {
 	t.Logf("running command: %v", tapCmd.String())
 
 	t.Cleanup(func() {
-		if err := cleanupCommand(tapCmd); err != nil {
+		if err := CleanupCommand(tapCmd); err != nil {
 			t.Logf("failed to cleanup tap command, err: %v", err)
 		}
 	})
@@ -516,32 +516,32 @@ func TestTapIgnoredUserAgents(t *testing.T) {
 		return
 	}
 
-	apiServerUrl := getApiServerUrl(defaultApiServerPort)
+	apiServerUrl := GetApiServerUrl(defaultApiServerPort)
 
-	if err := waitTapPodsReady(apiServerUrl); err != nil {
+	if err := WaitTapPodsReady(apiServerUrl); err != nil {
 		t.Errorf("failed to start tap pods on time, err: %v", err)
 		return
 	}
 
-	proxyUrl := getProxyUrl(defaultNamespaceName, defaultServiceName)
+	proxyUrl := GetProxyUrl(defaultNamespaceName, defaultServiceName)
 
 	ignoredUserAgentCustomHeader := "Ignored-User-Agent"
 	headers := map[string]string{"User-Agent": ignoredUserAgentValue, ignoredUserAgentCustomHeader: ""}
 	for i := 0; i < defaultEntriesCount; i++ {
-		if _, requestErr := executeHttpGetRequestWithHeaders(fmt.Sprintf("%v/get", proxyUrl), headers); requestErr != nil {
+		if _, requestErr := ExecuteHttpGetRequestWithHeaders(fmt.Sprintf("%v/get", proxyUrl), headers); requestErr != nil {
 			t.Errorf("failed to send proxy request, err: %v", requestErr)
 			return
 		}
 	}
 
 	for i := 0; i < defaultEntriesCount; i++ {
-		if _, requestErr := executeHttpGetRequest(fmt.Sprintf("%v/get", proxyUrl)); requestErr != nil {
+		if _, requestErr := ExecuteHttpGetRequest(fmt.Sprintf("%v/get", proxyUrl)); requestErr != nil {
 			t.Errorf("failed to send proxy request, err: %v", requestErr)
 			return
 		}
 	}
 
-	runCypressTests(t, "npx cypress run --spec  \"cypress/integration/tests/IgnoredUserAgents.js\"")
+	RunCypressTests(t, "npx cypress run --spec  \"cypress/integration/tests/IgnoredUserAgents.js\"")
 }
 
 func TestTapDumpLogs(t *testing.T) {
@@ -549,15 +549,15 @@ func TestTapDumpLogs(t *testing.T) {
 		t.Skip("ignored acceptance test")
 	}
 
-	cliPath, cliPathErr := getCliPath()
+	cliPath, cliPathErr := GetCliPath()
 	if cliPathErr != nil {
 		t.Errorf("failed to get cli path, err: %v", cliPathErr)
 		return
 	}
 
-	tapCmdArgs := getDefaultTapCommandArgs()
+	tapCmdArgs := GetDefaultTapCommandArgs()
 
-	tapNamespace := getDefaultTapNamespace()
+	tapNamespace := GetDefaultTapNamespace()
 	tapCmdArgs = append(tapCmdArgs, tapNamespace...)
 
 	tapCmdArgs = append(tapCmdArgs, "--set", "dump-logs=true")
@@ -570,19 +570,19 @@ func TestTapDumpLogs(t *testing.T) {
 		return
 	}
 
-	apiServerUrl := getApiServerUrl(defaultApiServerPort)
+	apiServerUrl := GetApiServerUrl(defaultApiServerPort)
 
-	if err := waitTapPodsReady(apiServerUrl); err != nil {
+	if err := WaitTapPodsReady(apiServerUrl); err != nil {
 		t.Errorf("failed to start tap pods on time, err: %v", err)
 		return
 	}
 
-	if err := cleanupCommand(tapCmd); err != nil {
+	if err := CleanupCommand(tapCmd); err != nil {
 		t.Errorf("failed to cleanup tap command, err: %v", err)
 		return
 	}
 
-	mizuFolderPath, mizuPathErr := getMizuFolderPath()
+	mizuFolderPath, mizuPathErr := GetMizuFolderPath()
 	if mizuPathErr != nil {
 		t.Errorf("failed to get mizu folder path, err: %v", mizuPathErr)
 		return
@@ -655,7 +655,7 @@ func TestRestrictedMode(t *testing.T) {
 	namespace := "mizu-tests"
 
 	t.Log("creating permissions for restricted user")
-	if err := applyKubeFilesForTest(
+	if err := ApplyKubeFilesForTest(
 		t,
 		"minikube",
 		namespace,
@@ -667,7 +667,7 @@ func TestRestrictedMode(t *testing.T) {
 	}
 
 	t.Log("switching k8s context to user")
-	if err := switchKubeContextForTest(t, "user-with-restricted-access"); err != nil {
+	if err := SwitchKubeContextForTest(t, "user-with-restricted-access"); err != nil {
 		t.Errorf("failed to switch k8s context, %v", err)
 		return
 	}
