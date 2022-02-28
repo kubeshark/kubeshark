@@ -148,9 +148,9 @@ func getDefaultConfigCommandArgs() []string {
 func runCypressTests(t *testing.T, cypressRunCmd string) {
 	cypressCmd := exec.Command("bash", "-c", cypressRunCmd)
 	t.Logf("running command: %v", cypressCmd.String())
-	out, err := cypressCmd.Output()
+	out, err := cypressCmd.CombinedOutput()
 	if err != nil {
-		t.Errorf("error running cypress, error: %v", err)
+		t.Errorf("error running cypress, error: %v, output: %v", err, string(out))
 		return
 	}
 

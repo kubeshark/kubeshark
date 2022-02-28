@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	github.com/antelman107/net-wait-go v0.0.0-20210623112055-cf684aebda7b
-	github.com/chanced/openapi v0.0.7
+	github.com/chanced/openapi v0.0.8
 	github.com/djherbis/atime v1.1.0
 	github.com/elastic/go-elasticsearch/v7 v7.17.0
 	github.com/getkin/kin-openapi v0.89.0
