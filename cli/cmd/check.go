@@ -27,5 +27,4 @@ func init() {
 	}
 
 	checkCmd.Flags().Bool(configStructs.PreTapCheckName, defaultCheckConfig.PreTap, "Check pre-tap Mizu installation for potential problems")
-	checkCmd.Flags().Bool(configStructs.ImagesConnectivityCheckName, defaultCheckConfig.ImagesConnectivity, "Check mizu images connectivity")
 }

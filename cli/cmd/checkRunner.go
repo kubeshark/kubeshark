@@ -42,7 +42,7 @@ func runMizuCheck() {
 			checkPassed = checkK8sTapPermissions(ctx, kubernetesProvider)
 		}
 
-		if checkPassed && config.Config.Check.ImagesConnectivity {
+		if checkPassed {
 			checkPassed = checkImagesConnectivity(ctx, kubernetesProvider)
 		}
 	} else {

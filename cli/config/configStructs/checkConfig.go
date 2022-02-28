@@ -1,11 +1,9 @@
 package configStructs
 
 const (
-	PreTapCheckName             = "pre-tap"
-	ImagesConnectivityCheckName = "images-connectivity"
+	PreTapCheckName = "pre-tap"
 )
 
 type CheckConfig struct {
-	PreTap             bool `yaml:"pre-tap"`
-	ImagesConnectivity bool `yaml:"images-connectivity"`
+	PreTap bool `yaml:"pre-tap"`
 }
