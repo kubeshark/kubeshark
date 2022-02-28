@@ -22,6 +22,9 @@ rules:
 - apiGroups: [""]
   resources: ["configmaps"]
   verbs: ["create"]
+- apiGroups: [""]
+  resources: ["pods/log"]
+  verbs: ["get"]
 ---
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1

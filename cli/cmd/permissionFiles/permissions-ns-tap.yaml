@@ -19,6 +19,9 @@ rules:
 - apiGroups: [""]
   resources: ["configmaps"]
   verbs: ["create", "delete"]
+- apiGroups: [""]
+  resources: ["pods/log"]
+  verbs: ["get"]
 ---
 kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
