@@ -175,7 +175,15 @@ func ApplyKubeFilesForTest(t *testing.T, kubeContext string, namespace string, f
 }
 
 func ApplyKubeFile(kubeContext string, namespace string, filename string) (error) {
-	cmd := exec.Command("kubectl", "apply", "--context", kubeContext, "-n", namespace, "-f", filename)
+	cmdArgs := []string{
+		"apply",
+		"--context", kubeContext,
+		"-f", filename,
+	}
+	if namespace != "" {
+		cmdArgs = append(cmdArgs, "-n", namespace)
+	}
+	cmd := exec.Command("kubectl", cmdArgs...)
 
 	if output, err := cmd.CombinedOutput(); err != nil {
 		return fmt.Errorf("%v, %s", err, string(output))
@@ -185,7 +193,15 @@ func ApplyKubeFile(kubeContext string, namespace string, filename string) (error
 }
 
 func DeleteKubeFile(kubeContext string, namespace string, filename string) error {
-	cmd := exec.Command("kubectl", "delete", "--context", kubeContext, "-n", namespace, "-f", filename)
+	cmdArgs := []string{
+		"delete",
+		"--context", kubeContext,
+		"-f", filename,
+	}
+	if namespace != "" {
+		cmdArgs = append(cmdArgs, "-n", namespace)
+	}
+	cmd := exec.Command("kubectl", cmdArgs...)
 
 	if output, err := cmd.CombinedOutput(); err != nil {
 		return fmt.Errorf("%v, %s", err, string(output))
