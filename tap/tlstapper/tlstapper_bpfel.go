@@ -80,7 +80,6 @@ type tlsTapperMapSpecs struct {
 	FileDescriptorToIpv4 *ebpf.MapSpec `ebpf:"file_descriptor_to_ipv4"`
 	Heap                 *ebpf.MapSpec `ebpf:"heap"`
 	PidsMap              *ebpf.MapSpec `ebpf:"pids_map"`
-	SeenFileDescriptors  *ebpf.MapSpec `ebpf:"seen_file_descriptors"`
 	SslReadContext       *ebpf.MapSpec `ebpf:"ssl_read_context"`
 	SslWriteContext      *ebpf.MapSpec `ebpf:"ssl_write_context"`
 }
@@ -110,7 +109,6 @@ type tlsTapperMaps struct {
 	FileDescriptorToIpv4 *ebpf.Map `ebpf:"file_descriptor_to_ipv4"`
 	Heap                 *ebpf.Map `ebpf:"heap"`
 	PidsMap              *ebpf.Map `ebpf:"pids_map"`
-	SeenFileDescriptors  *ebpf.Map `ebpf:"seen_file_descriptors"`
 	SslReadContext       *ebpf.Map `ebpf:"ssl_read_context"`
 	SslWriteContext      *ebpf.Map `ebpf:"ssl_write_context"`
 }
@@ -123,7 +121,6 @@ func (m *tlsTapperMaps) Close() error {
 		m.FileDescriptorToIpv4,
 		m.Heap,
 		m.PidsMap,
-		m.SeenFileDescriptors,
 		m.SslReadContext,
 		m.SslWriteContext,
 	)
