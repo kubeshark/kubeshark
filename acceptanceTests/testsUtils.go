@@ -122,8 +122,7 @@ func switchKubeContextForTest(t *testing.T, newContextName string) error {
 	}
 
 	t.Cleanup(func() {
-		err := setKubeCurrentContext(prevKubeContextName)
-		if err != nil {
+		if err := setKubeCurrentContext(prevKubeContextName); err != nil {
 			t.Errorf("failed to set Kubernetes context to %s, err: %v", prevKubeContextName, err)
 			t.Errorf("cleanup failed, subsequent tests may be affected")
 		}

@@ -651,11 +651,13 @@ func TestRestrictedMode(t *testing.T) {
 		"../cli/cmd/permissionFiles/permissions-ns-ip-resolution-optional.yaml",
 	); err != nil {
 		t.Errorf("failed to create k8s permissions, %v", err)
+		return
 	}
 
 	t.Log("switching k8s context to user")
 	if err := switchKubeContextForTest(t, "user-with-restricted-access"); err != nil {
 		t.Errorf("failed to switch k8s context, %v", err)
+		return
 	}
 
 	extraArgs := []string{"--set", fmt.Sprintf("mizu-resources-namespace=%s", namespace)}
