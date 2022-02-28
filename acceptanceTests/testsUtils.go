@@ -101,7 +101,7 @@ type KubernetesProvider struct {
 	clientSet *kubernetes.Clientset
 }
 
-func (kp *KubernetesProvider) getServiceExternalIp(ctx context.Context, namespace string, service string) (string, error) {
+func (kp *KubernetesProvider) GetServiceExternalIp(ctx context.Context, namespace string, service string) (string, error) {
 	serviceObj, err := kp.clientSet.CoreV1().Services(namespace).Get(ctx, service, metav1.GetOptions{})
 	if err != nil {
 		return "", err
