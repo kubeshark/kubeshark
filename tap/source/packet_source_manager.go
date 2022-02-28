@@ -199,6 +199,32 @@ func newNetnsPacketSource(pid int, nsh netns.NsHandle, interfaceName string,
 	}
 }
 
+func buildBPFExpr(pods []v1.Pod) string {
+	hostsFilter := make([]string, 0)
+
+	for _, pod := range pods {
+		hostsFilter = append(hostsFilter, fmt.Sprintf("host %s", pod.Status.PodIP))
+	}
+
+	return fmt.Sprintf("%s and port not 443", strings.Join(hostsFilter, " or "))
+}
+
+func (m *PacketSourceManager) SetBPFFilter(pods []v1.Pod) {
+	if len(pods) == 0 {
+		logger.Log.Info("No pods provided, skipping pcap bpf filter")
+		return
+	}
+
+	expr := buildBPFExpr(pods)
+	logger.Log.Infof("Setting pcap bpf filter %s", expr)
+
+	for _, src := range m.sources {
+		if err := src.setBPFFilter(expr); err != nil {
+			logger.Log.Warningf("Error setting bpf filter for %v - %w", src, err)
+		}
+	}
+}
+
 func (m *PacketSourceManager) ReadPackets(ipdefrag bool, packets chan<- TcpPacketInfo) {
 	for _, src := range m.sources {
 		go src.readPackets(ipdefrag, packets)

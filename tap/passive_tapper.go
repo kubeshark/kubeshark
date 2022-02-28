@@ -193,6 +193,7 @@ func initializePacketSources() error {
 	if packetSourceManager, err = source.NewPacketSourceManager(*procfs, *pids, *fname, *iface, *servicemesh, tapTargets, behaviour); err != nil {
 		return err
 	} else {
+		packetSourceManager.SetBPFFilter(tapTargets)
 		packetSourceManager.ReadPackets(!*nodefrag, mainPacketInputChan)
 		return nil
 	}
