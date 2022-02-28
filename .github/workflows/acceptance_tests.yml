@@ -34,7 +34,6 @@ jobs:
           ./acceptanceTests/create_user.sh "${USERNAME_RESTRICTED}"
           kubectl apply -f cli/cmd/permissionFiles/permissions-all-namespaces-tap.yaml
           kubectl apply -f cli/cmd/permissionFiles/permissions-all-namespaces-ip-resolution-optional.yaml
-          kubectl apply -f cli/cmd/permissionFiles/permissions-all-namespaces-debug-optional.yaml
           kubectl config use-context ${USERNAME_UNRESTRICTED}
 
       - name: Test
