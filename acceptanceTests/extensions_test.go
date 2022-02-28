@@ -15,22 +15,22 @@ func TestRedis(t *testing.T) {
 		t.Skip("ignored acceptance test")
 	}
 
-	cliPath, cliPathErr := getCliPath()
+	cliPath, cliPathErr := GetCliPath()
 	if cliPathErr != nil {
 		t.Errorf("failed to get cli path, err: %v", cliPathErr)
 		return
 	}
 
-	tapCmdArgs := getDefaultTapCommandArgs()
+	tapCmdArgs := GetDefaultTapCommandArgs()
 
-	tapNamespace := getDefaultTapNamespace()
+	tapNamespace := GetDefaultTapNamespace()
 	tapCmdArgs = append(tapCmdArgs, tapNamespace...)
 
 	tapCmd := exec.Command(cliPath, tapCmdArgs...)
 	t.Logf("running command: %v", tapCmd.String())
 
 	t.Cleanup(func() {
-		if err := cleanupCommand(tapCmd); err != nil {
+		if err := CleanupCommand(tapCmd); err != nil {
 			t.Logf("failed to cleanup tap command, err: %v", err)
 		}
 	})
@@ -40,16 +40,16 @@ func TestRedis(t *testing.T) {
 		return
 	}
 
-	apiServerUrl := getApiServerUrl(defaultApiServerPort)
+	apiServerUrl := GetApiServerUrl(defaultApiServerPort)
 
-	if err := waitTapPodsReady(apiServerUrl); err != nil {
+	if err := WaitTapPodsReady(apiServerUrl); err != nil {
 		t.Errorf("failed to start tap pods on time, err: %v", err)
 		return
 	}
 
 	ctx := context.Background()
 
-	redisExternalIp, err := getServiceExternalIp(ctx, defaultNamespaceName, "redis")
+	redisExternalIp, err := GetServiceExternalIp(ctx, defaultNamespaceName, "redis")
 	if err != nil {
 		t.Errorf("failed to get redis external ip, err: %v", err)
 		return
@@ -99,7 +99,7 @@ func TestRedis(t *testing.T) {
 		}
 	}
 
-	runCypressTests(t, "npx cypress run --spec  \"cypress/integration/tests/Redis.js\"")
+	RunCypressTests(t, "npx cypress run --spec  \"cypress/integration/tests/Redis.js\"")
 }
 
 func TestAmqp(t *testing.T) {
@@ -107,22 +107,22 @@ func TestAmqp(t *testing.T) {
 		t.Skip("ignored acceptance test")
 	}
 
-	cliPath, cliPathErr := getCliPath()
+	cliPath, cliPathErr := GetCliPath()
 	if cliPathErr != nil {
 		t.Errorf("failed to get cli path, err: %v", cliPathErr)
 		return
 	}
 
-	tapCmdArgs := getDefaultTapCommandArgs()
+	tapCmdArgs := GetDefaultTapCommandArgs()
 
-	tapNamespace := getDefaultTapNamespace()
+	tapNamespace := GetDefaultTapNamespace()
 	tapCmdArgs = append(tapCmdArgs, tapNamespace...)
 
 	tapCmd := exec.Command(cliPath, tapCmdArgs...)
 	t.Logf("running command: %v", tapCmd.String())
 
 	t.Cleanup(func() {
-		if err := cleanupCommand(tapCmd); err != nil {
+		if err := CleanupCommand(tapCmd); err != nil {
 			t.Logf("failed to cleanup tap command, err: %v", err)
 		}
 	})
@@ -132,16 +132,16 @@ func TestAmqp(t *testing.T) {
 		return
 	}
 
-	apiServerUrl := getApiServerUrl(defaultApiServerPort)
+	apiServerUrl := GetApiServerUrl(defaultApiServerPort)
 
-	if err := waitTapPodsReady(apiServerUrl); err != nil {
+	if err := WaitTapPodsReady(apiServerUrl); err != nil {
 		t.Errorf("failed to start tap pods on time, err: %v", err)
 		return
 	}
 
 	ctx := context.Background()
 
-	rabbitmqExternalIp, err := getServiceExternalIp(ctx, defaultNamespaceName, "rabbitmq")
+	rabbitmqExternalIp, err := GetServiceExternalIp(ctx, defaultNamespaceName, "rabbitmq")
 	if err != nil {
 		t.Errorf("failed to get RabbitMQ external ip, err: %v", err)
 		return
@@ -224,5 +224,5 @@ func TestAmqp(t *testing.T) {
 		ch.Close()
 	}
 
-	runCypressTests(t, "npx cypress run --spec  \"cypress/integration/tests/Rabbit.js\"")
+	RunCypressTests(t, "npx cypress run --spec  \"cypress/integration/tests/Rabbit.js\"")
 }
