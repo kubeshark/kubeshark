@@ -89,7 +89,7 @@ func ConfigureBasenineServer(host string, port string, dbSize int64, logLevel lo
 
 	// Set the insertion filter that comes from the config
 	if err := basenine.InsertionFilter(host, port, insertionFilter); err != nil {
-		logger.Log.Panicf("Error while setting the insertion filter: %v", err)
+		logger.Log.Errorf("Error while setting the insertion filter: %v", err)
 	}
 }
 
