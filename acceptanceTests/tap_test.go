@@ -666,6 +666,7 @@ func TestIpResolving(t *testing.T) {
 
 	basicTapTest(t, true)
 }
+
 func TestRestrictedMode(t *testing.T) {
 	namespace := "mizu-tests"
 
