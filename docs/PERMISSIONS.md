@@ -85,4 +85,4 @@ By default Mizu requires cluster-wide permissions.
 If these are not available to the user, it is possible to run Mizu in namespace-restricted mode which has a reduced set of requirements.
 This is done by by setting the `mizu-resources-namespace` config option. See [configuration](CONFIGURATION.md) for instructions.
 
-The different requirements are listed in [the example roles dir](../examples/roles)
+The different requirements are listed in [the permission templates dir](../cli/cmd/permissionFiles)

@@ -31,6 +31,7 @@ const (
 	defaultServiceName    = "httpbin"
 	defaultEntriesCount   = 50
 	waitAfterTapPodsReady = 3 * time.Second
+	allNamespaces         = ""
 )
 
 type PodDescriptor struct {
@@ -38,7 +39,7 @@ type PodDescriptor struct {
 	Namespace string
 }
 
-func getCliPath() (string, error) {
+func GetCliPath() (string, error) {
 	dir, filePathErr := os.Getwd()
 	if filePathErr != nil {
 		return "", filePathErr
@@ -48,7 +49,7 @@ func getCliPath() (string, error) {
 	return cliPath, nil
 }
 
-func getMizuFolderPath() (string, error) {
+func GetMizuFolderPath() (string, error) {
 	home, homeDirErr := os.UserHomeDir()
 	if homeDirErr != nil {
 		return "", homeDirErr
@@ -57,8 +58,8 @@ func getMizuFolderPath() (string, error) {
 	return path.Join(home, ".mizu"), nil
 }
 
-func getConfigPath() (string, error) {
-	mizuFolderPath, mizuPathError := getMizuFolderPath()
+func GetConfigPath() (string, error) {
+	mizuFolderPath, mizuPathError := GetMizuFolderPath()
 	if mizuPathError != nil {
 		return "", mizuPathError
 	}
@@ -66,15 +67,15 @@ func getConfigPath() (string, error) {
 	return path.Join(mizuFolderPath, "config.yaml"), nil
 }
 
-func getProxyUrl(namespace string, service string) string {
+func GetProxyUrl(namespace string, service string) string {
 	return fmt.Sprintf("http://localhost:8080/api/v1/namespaces/%v/services/%v/proxy", namespace, service)
 }
 
-func getApiServerUrl(port uint16) string {
+func GetApiServerUrl(port uint16) string {
 	return fmt.Sprintf("http://localhost:%v", port)
 }
 
-func getServiceExternalIp(ctx context.Context, namespace string, service string) (string, error) {
+func NewKubernetesProvider() (*KubernetesProvider, error) {
 	home := homedir.HomeDir()
 	configLoadingRules := &clientcmd.ClientConfigLoadingRules{ExplicitPath: filepath.Join(home, ".kube", "config")}
 	clientConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
@@ -86,21 +87,128 @@ func getServiceExternalIp(ctx context.Context, namespace string, service string)
 
 	restClientConfig, err := clientConfig.ClientConfig()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	clientSet, err := kubernetes.NewForConfig(restClientConfig)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	serviceObj, err := clientSet.CoreV1().Services(namespace).Get(ctx, service, metav1.GetOptions{})
+	return &KubernetesProvider{clientSet}, nil
+}
+
+type KubernetesProvider struct {
+	clientSet *kubernetes.Clientset
+}
+
+func (kp *KubernetesProvider) GetServiceExternalIp(ctx context.Context, namespace string, service string) (string, error) {
+	serviceObj, err := kp.clientSet.CoreV1().Services(namespace).Get(ctx, service, metav1.GetOptions{})
 	if err != nil {
 		return "", err
 	}
 
 	externalIp := serviceObj.Status.LoadBalancer.Ingress[0].IP
 	return externalIp, nil
+}
+
+func SwitchKubeContextForTest(t *testing.T, newContextName string) error {
+	prevKubeContextName, err := GetKubeCurrentContextName()
+	if err != nil {
+		return err
+	}
+
+	if err := SetKubeCurrentContext(newContextName); err != nil {
+		return err
+	}
+
+	t.Cleanup(func() {
+		if err := SetKubeCurrentContext(prevKubeContextName); err != nil {
+			t.Errorf("failed to set Kubernetes context to %s, err: %v", prevKubeContextName, err)
+			t.Errorf("cleanup failed, subsequent tests may be affected")
+		}
+	})
+
+	return nil
+}
+
+func GetKubeCurrentContextName() (string, error) {
+	cmd := exec.Command("kubectl", "config", "current-context")
+
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", fmt.Errorf("%v, %s", err, string(output))
+	}
+
+	return string(bytes.TrimSpace(output)), nil
+}
+
+func SetKubeCurrentContext(contextName string) error {
+	cmd := exec.Command("kubectl", "config", "use-context", contextName)
+
+	if output, err := cmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("%v, %s", err, string(output))
+	}
+
+	return nil
+}
+
+func ApplyKubeFilesForTest(t *testing.T, kubeContext string, namespace string, filename ...string) error {
+	for i := range filename {
+		fname := filename[i]
+		if err := ApplyKubeFile(kubeContext, namespace, fname); err != nil {
+			return err
+		}
+
+		t.Cleanup(func() {
+			if err := DeleteKubeFile(kubeContext, namespace, fname); err != nil {
+				t.Errorf(
+					"failed to delete Kubernetes resources in namespace %s from filename %s, err: %v",
+					namespace,
+					fname,
+					err,
+				)
+			}
+		})
+	}
+
+	return nil
+}
+
+func ApplyKubeFile(kubeContext string, namespace string, filename string) (error) {
+	cmdArgs := []string{
+		"apply",
+		"--context", kubeContext,
+		"-f", filename,
+	}
+	if namespace != allNamespaces {
+		cmdArgs = append(cmdArgs, "-n", namespace)
+	}
+	cmd := exec.Command("kubectl", cmdArgs...)
+
+	if output, err := cmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("%v, %s", err, string(output))
+	}
+
+	return nil
+}
+
+func DeleteKubeFile(kubeContext string, namespace string, filename string) error {
+	cmdArgs := []string{
+		"delete",
+		"--context", kubeContext,
+		"-f", filename,
+	}
+	if namespace != allNamespaces {
+		cmdArgs = append(cmdArgs, "-n", namespace)
+	}
+	cmd := exec.Command("kubectl", cmdArgs...)
+
+	if output, err := cmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("%v, %s", err, string(output))
+	}
+
+	return nil
 }
 
 func getDefaultCommandArgs() []string {
@@ -113,44 +221,44 @@ func getDefaultCommandArgs() []string {
 	return []string{setFlag, telemetry, setFlag, agentImage, setFlag, imagePullPolicy, setFlag, headless}
 }
 
-func getDefaultTapCommandArgs() []string {
+func GetDefaultTapCommandArgs() []string {
 	tapCommand := "tap"
 	defaultCmdArgs := getDefaultCommandArgs()
 
 	return append([]string{tapCommand}, defaultCmdArgs...)
 }
 
-func getDefaultTapCommandArgsWithRegex(regex string) []string {
+func GetDefaultTapCommandArgsWithRegex(regex string) []string {
 	tapCommand := "tap"
 	defaultCmdArgs := getDefaultCommandArgs()
 
 	return append([]string{tapCommand, regex}, defaultCmdArgs...)
 }
 
-func getDefaultLogsCommandArgs() []string {
+func GetDefaultLogsCommandArgs() []string {
 	logsCommand := "logs"
 	defaultCmdArgs := getDefaultCommandArgs()
 
 	return append([]string{logsCommand}, defaultCmdArgs...)
 }
 
-func getDefaultTapNamespace() []string {
+func GetDefaultTapNamespace() []string {
 	return []string{"-n", "mizu-tests"}
 }
 
-func getDefaultConfigCommandArgs() []string {
+func GetDefaultConfigCommandArgs() []string {
 	configCommand := "config"
 	defaultCmdArgs := getDefaultCommandArgs()
 
 	return append([]string{configCommand}, defaultCmdArgs...)
 }
 
-func runCypressTests(t *testing.T, cypressRunCmd string) {
+func RunCypressTests(t *testing.T, cypressRunCmd string) {
 	cypressCmd := exec.Command("bash", "-c", cypressRunCmd)
 	t.Logf("running command: %v", cypressCmd.String())
-	out, err := cypressCmd.Output()
+	out, err := cypressCmd.CombinedOutput()
 	if err != nil {
-		t.Errorf("error running cypress, error: %v", err)
+		t.Errorf("error running cypress, error: %v, output: %v", err, string(out))
 		return
 	}
 
@@ -184,10 +292,10 @@ func tryExecuteFunc(executeFunc func() error) (err interface{}) {
 	return executeFunc()
 }
 
-func waitTapPodsReady(apiServerUrl string) error {
+func WaitTapPodsReady(apiServerUrl string) error {
 	resolvingUrl := fmt.Sprintf("%v/status/connectedTappersCount", apiServerUrl)
 	tapPodsReadyFunc := func() error {
-		requestResult, requestErr := executeHttpGetRequest(resolvingUrl)
+		requestResult, requestErr := ExecuteHttpGetRequest(resolvingUrl)
 		if requestErr != nil {
 			return requestErr
 		}
@@ -212,7 +320,7 @@ func jsonBytesToInterface(jsonBytes []byte) (interface{}, error) {
 	return result, nil
 }
 
-func executeHttpRequest(response *http.Response, requestErr error) (interface{}, error) {
+func ExecuteHttpRequest(response *http.Response, requestErr error) (interface{}, error) {
 	if requestErr != nil {
 		return nil, requestErr
 	} else if response.StatusCode != 200 {
@@ -229,7 +337,7 @@ func executeHttpRequest(response *http.Response, requestErr error) (interface{},
 	return jsonBytesToInterface(data)
 }
 
-func executeHttpGetRequestWithHeaders(url string, headers map[string]string) (interface{}, error) {
+func ExecuteHttpGetRequestWithHeaders(url string, headers map[string]string) (interface{}, error) {
 	request, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
@@ -241,15 +349,15 @@ func executeHttpGetRequestWithHeaders(url string, headers map[string]string) (in
 
 	client := &http.Client{}
 	response, requestErr := client.Do(request)
-	return executeHttpRequest(response, requestErr)
+	return ExecuteHttpRequest(response, requestErr)
 }
 
-func executeHttpGetRequest(url string) (interface{}, error) {
+func ExecuteHttpGetRequest(url string) (interface{}, error) {
 	response, requestErr := http.Get(url)
-	return executeHttpRequest(response, requestErr)
+	return ExecuteHttpRequest(response, requestErr)
 }
 
-func executeHttpPostRequestWithHeaders(url string, headers map[string]string, body interface{}) (interface{}, error) {
+func ExecuteHttpPostRequestWithHeaders(url string, headers map[string]string, body interface{}) (interface{}, error) {
 	requestBody, jsonErr := json.Marshal(body)
 	if jsonErr != nil {
 		return nil, jsonErr
@@ -267,10 +375,10 @@ func executeHttpPostRequestWithHeaders(url string, headers map[string]string, bo
 
 	client := &http.Client{}
 	response, requestErr := client.Do(request)
-	return executeHttpRequest(response, requestErr)
+	return ExecuteHttpRequest(response, requestErr)
 }
 
-func cleanupCommand(cmd *exec.Cmd) error {
+func CleanupCommand(cmd *exec.Cmd) error {
 	if err := cmd.Process.Signal(syscall.SIGQUIT); err != nil {
 		return err
 	}
@@ -282,7 +390,7 @@ func cleanupCommand(cmd *exec.Cmd) error {
 	return nil
 }
 
-func getLogsPath() (string, error) {
+func GetLogsPath() (string, error) {
 	dir, filePathErr := os.Getwd()
 	if filePathErr != nil {
 		return "", filePathErr
