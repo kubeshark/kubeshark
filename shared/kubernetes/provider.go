@@ -17,6 +17,7 @@ import (
 	"github.com/up9inc/mizu/shared/semver"
 	"github.com/up9inc/mizu/tap/api"
 	v1 "k8s.io/api/apps/v1"
+	auth "k8s.io/api/authorization/v1"
 	core "k8s.io/api/core/v1"
 	rbac "k8s.io/api/rbac/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
@@ -443,6 +444,26 @@ func (provider *Provider) CreateService(ctx context.Context, namespace string, s
 	return provider.clientSet.CoreV1().Services(namespace).Create(ctx, &service, metav1.CreateOptions{})
 }
 
+func (provider *Provider) CanI(ctx context.Context, namespace string, resource string, verb string, group string) (bool, error) {
+	selfSubjectAccessReview := &auth.SelfSubjectAccessReview{
+		Spec: auth.SelfSubjectAccessReviewSpec{
+			ResourceAttributes: &auth.ResourceAttributes{
+				Namespace: namespace,
+				Resource: resource,
+				Verb: verb,
+				Group: group,
+			},
+		},
+	}
+
+	response, err := provider.clientSet.AuthorizationV1().SelfSubjectAccessReviews().Create(ctx, selfSubjectAccessReview, metav1.CreateOptions{})
+	if err != nil {
+		return false, err
+	}
+
+	return response.Status.Allowed, nil
+}
+
 func (provider *Provider) DoesNamespaceExist(ctx context.Context, name string) (bool, error) {
 	namespaceResource, err := provider.clientSet.CoreV1().Namespaces().Get(ctx, name, metav1.GetOptions{})
 	return provider.doesResourceExist(namespaceResource, err)
@@ -466,11 +487,6 @@ func (provider *Provider) DoesPersistentVolumeClaimExist(ctx context.Context, na
 func (provider *Provider) DoesDeploymentExist(ctx context.Context, namespace string, name string) (bool, error) {
 	deploymentResource, err := provider.clientSet.AppsV1().Deployments(namespace).Get(ctx, name, metav1.GetOptions{})
 	return provider.doesResourceExist(deploymentResource, err)
-}
-
-func (provider *Provider) DoesPodExist(ctx context.Context, namespace string, name string) (bool, error) {
-	podResource, err := provider.clientSet.CoreV1().Pods(namespace).Get(ctx, name, metav1.GetOptions{})
-	return provider.doesResourceExist(podResource, err)
 }
 
 func (provider *Provider) DoesServiceExist(ctx context.Context, namespace string, name string) (bool, error) {
@@ -1020,6 +1036,15 @@ func (provider *Provider) ListAllRunningPodsMatchingRegex(ctx context.Context, r
 		}
 	}
 	return matchingPods, nil
+}
+
+func(provider *Provider) ListPodsByAppLabel(ctx context.Context, namespaces string, labelName string) ([]core.Pod, error) {
+	pods, err := provider.clientSet.CoreV1().Pods(namespaces).List(ctx, metav1.ListOptions{LabelSelector: fmt.Sprintf("app=%s", labelName)})
+	if err != nil {
+		return nil, err
+	}
+
+	return pods.Items, err
 }
 
 func (provider *Provider) ListAllNamespaces(ctx context.Context) ([]core.Namespace, error) {
