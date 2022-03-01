@@ -651,7 +651,7 @@ func TestTapDumpLogs(t *testing.T) {
 }
 
 func TestIpResolving(t *testing.T) {
-	namespace := ""
+	namespace := allNamespaces
 
 	t.Log("add permissions for ip-resolution for current user")
 	if err := ApplyKubeFilesForTest(

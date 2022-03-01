@@ -31,6 +31,7 @@ const (
 	defaultServiceName    = "httpbin"
 	defaultEntriesCount   = 50
 	waitAfterTapPodsReady = 3 * time.Second
+	allNamespaces         = ""
 )
 
 type PodDescriptor struct {
@@ -180,7 +181,7 @@ func ApplyKubeFile(kubeContext string, namespace string, filename string) (error
 		"--context", kubeContext,
 		"-f", filename,
 	}
-	if namespace != "" {
+	if namespace != allNamespaces {
 		cmdArgs = append(cmdArgs, "-n", namespace)
 	}
 	cmd := exec.Command("kubectl", cmdArgs...)
@@ -198,7 +199,7 @@ func DeleteKubeFile(kubeContext string, namespace string, filename string) error
 		"--context", kubeContext,
 		"-f", filename,
 	}
-	if namespace != "" {
+	if namespace != allNamespaces {
 		cmdArgs = append(cmdArgs, "-n", namespace)
 	}
 	cmd := exec.Command("kubectl", cmdArgs...)
