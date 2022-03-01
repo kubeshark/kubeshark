@@ -49,7 +49,13 @@ func TestRedis(t *testing.T) {
 
 	ctx := context.Background()
 
-	redisExternalIp, err := GetServiceExternalIp(ctx, defaultNamespaceName, "redis")
+	kubernetesProvider, err := NewKubernetesProvider()
+	if err != nil {
+		t.Errorf("failed to create k8s provider, err %v", err)
+		return
+	}
+
+	redisExternalIp, err := kubernetesProvider.GetServiceExternalIp(ctx, defaultNamespaceName, "redis")
 	if err != nil {
 		t.Errorf("failed to get redis external ip, err: %v", err)
 		return
@@ -141,7 +147,13 @@ func TestAmqp(t *testing.T) {
 
 	ctx := context.Background()
 
-	rabbitmqExternalIp, err := GetServiceExternalIp(ctx, defaultNamespaceName, "rabbitmq")
+	kubernetesProvider, err := NewKubernetesProvider()
+	if err != nil {
+		t.Errorf("failed to create k8s provider, err %v", err)
+		return
+	}
+
+	rabbitmqExternalIp, err := kubernetesProvider.GetServiceExternalIp(ctx, defaultNamespaceName, "rabbitmq")
 	if err != nil {
 		t.Errorf("failed to get RabbitMQ external ip, err: %v", err)
 		return

@@ -14,6 +14,10 @@ import (
 )
 
 func TestTap(t *testing.T) {
+	basicTapTest(t, false)
+}
+
+func basicTapTest(t *testing.T, shouldCheckSrcAndDest bool, extraArgs... string) {
 	if testing.Short() {
 		t.Skip("ignored acceptance test")
 	}
@@ -32,6 +36,8 @@ func TestTap(t *testing.T) {
 
 			tapNamespace := GetDefaultTapNamespace()
 			tapCmdArgs = append(tapCmdArgs, tapNamespace...)
+
+			tapCmdArgs = append(tapCmdArgs, extraArgs...)
 
 			tapCmd := exec.Command(cliPath, tapCmdArgs...)
 			t.Logf("running command: %v", tapCmd.String())
@@ -72,7 +78,6 @@ func TestTap(t *testing.T) {
 				expectedPodsStr += fmt.Sprintf("Name:%vNamespace:%v", expectedPods[i].Name, expectedPods[i].Namespace)
 			}
 
-			const shouldCheckSrcAndDest = false
 			RunCypressTests(t, fmt.Sprintf("npx cypress run --spec  \"cypress/integration/tests/UiTest.js\" --env entriesCount=%d,arrayDict=%v,shouldCheckSrcAndDest=%v",
 				entriesCount, expectedPodsStr, shouldCheckSrcAndDest))
 		})
@@ -643,4 +648,45 @@ func TestTapDumpLogs(t *testing.T) {
 		t.Errorf("tapper logs not found")
 		return
 	}
+}
+
+func TestIpResolving(t *testing.T) {
+	namespace := allNamespaces
+
+	t.Log("add permissions for ip-resolution for current user")
+	if err := ApplyKubeFilesForTest(
+		t,
+		"minikube",
+		namespace,
+		"../cli/cmd/permissionFiles/permissions-all-namespaces-ip-resolution-optional.yaml",
+	); err != nil {
+		t.Errorf("failed to create k8s permissions, %v", err)
+		return
+	}
+
+	basicTapTest(t, true)
+}
+
+func TestRestrictedMode(t *testing.T) {
+	namespace := "mizu-tests"
+
+	t.Log("creating permissions for restricted user")
+	if err := ApplyKubeFilesForTest(
+		t,
+		"minikube",
+		namespace,
+		"../cli/cmd/permissionFiles/permissions-ns-tap.yaml",
+	); err != nil {
+		t.Errorf("failed to create k8s permissions, %v", err)
+		return
+	}
+
+	t.Log("switching k8s context to user")
+	if err := SwitchKubeContextForTest(t, "user-with-restricted-access"); err != nil {
+		t.Errorf("failed to switch k8s context, %v", err)
+		return
+	}
+
+	extraArgs := []string{"--set", fmt.Sprintf("mizu-resources-namespace=%s", namespace)}
+	t.Run("basic tap", func (testingT *testing.T) {basicTapTest(testingT, false, extraArgs...)})
 }

@@ -31,6 +31,7 @@ const (
 	defaultServiceName    = "httpbin"
 	defaultEntriesCount   = 50
 	waitAfterTapPodsReady = 3 * time.Second
+	allNamespaces         = ""
 )
 
 type PodDescriptor struct {
@@ -74,7 +75,7 @@ func GetApiServerUrl(port uint16) string {
 	return fmt.Sprintf("http://localhost:%v", port)
 }
 
-func GetServiceExternalIp(ctx context.Context, namespace string, service string) (string, error) {
+func NewKubernetesProvider() (*KubernetesProvider, error) {
 	home := homedir.HomeDir()
 	configLoadingRules := &clientcmd.ClientConfigLoadingRules{ExplicitPath: filepath.Join(home, ".kube", "config")}
 	clientConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
@@ -86,21 +87,128 @@ func GetServiceExternalIp(ctx context.Context, namespace string, service string)
 
 	restClientConfig, err := clientConfig.ClientConfig()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	clientSet, err := kubernetes.NewForConfig(restClientConfig)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	serviceObj, err := clientSet.CoreV1().Services(namespace).Get(ctx, service, metav1.GetOptions{})
+	return &KubernetesProvider{clientSet}, nil
+}
+
+type KubernetesProvider struct {
+	clientSet *kubernetes.Clientset
+}
+
+func (kp *KubernetesProvider) GetServiceExternalIp(ctx context.Context, namespace string, service string) (string, error) {
+	serviceObj, err := kp.clientSet.CoreV1().Services(namespace).Get(ctx, service, metav1.GetOptions{})
 	if err != nil {
 		return "", err
 	}
 
 	externalIp := serviceObj.Status.LoadBalancer.Ingress[0].IP
 	return externalIp, nil
+}
+
+func SwitchKubeContextForTest(t *testing.T, newContextName string) error {
+	prevKubeContextName, err := GetKubeCurrentContextName()
+	if err != nil {
+		return err
+	}
+
+	if err := SetKubeCurrentContext(newContextName); err != nil {
+		return err
+	}
+
+	t.Cleanup(func() {
+		if err := SetKubeCurrentContext(prevKubeContextName); err != nil {
+			t.Errorf("failed to set Kubernetes context to %s, err: %v", prevKubeContextName, err)
+			t.Errorf("cleanup failed, subsequent tests may be affected")
+		}
+	})
+
+	return nil
+}
+
+func GetKubeCurrentContextName() (string, error) {
+	cmd := exec.Command("kubectl", "config", "current-context")
+
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", fmt.Errorf("%v, %s", err, string(output))
+	}
+
+	return string(bytes.TrimSpace(output)), nil
+}
+
+func SetKubeCurrentContext(contextName string) error {
+	cmd := exec.Command("kubectl", "config", "use-context", contextName)
+
+	if output, err := cmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("%v, %s", err, string(output))
+	}
+
+	return nil
+}
+
+func ApplyKubeFilesForTest(t *testing.T, kubeContext string, namespace string, filename ...string) error {
+	for i := range filename {
+		fname := filename[i]
+		if err := ApplyKubeFile(kubeContext, namespace, fname); err != nil {
+			return err
+		}
+
+		t.Cleanup(func() {
+			if err := DeleteKubeFile(kubeContext, namespace, fname); err != nil {
+				t.Errorf(
+					"failed to delete Kubernetes resources in namespace %s from filename %s, err: %v",
+					namespace,
+					fname,
+					err,
+				)
+			}
+		})
+	}
+
+	return nil
+}
+
+func ApplyKubeFile(kubeContext string, namespace string, filename string) (error) {
+	cmdArgs := []string{
+		"apply",
+		"--context", kubeContext,
+		"-f", filename,
+	}
+	if namespace != allNamespaces {
+		cmdArgs = append(cmdArgs, "-n", namespace)
+	}
+	cmd := exec.Command("kubectl", cmdArgs...)
+
+	if output, err := cmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("%v, %s", err, string(output))
+	}
+
+	return nil
+}
+
+func DeleteKubeFile(kubeContext string, namespace string, filename string) error {
+	cmdArgs := []string{
+		"delete",
+		"--context", kubeContext,
+		"-f", filename,
+	}
+	if namespace != allNamespaces {
+		cmdArgs = append(cmdArgs, "-n", namespace)
+	}
+	cmd := exec.Command("kubectl", cmdArgs...)
+
+	if output, err := cmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("%v, %s", err, string(output))
+	}
+
+	return nil
 }
 
 func getDefaultCommandArgs() []string {

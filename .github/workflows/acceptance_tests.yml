@@ -24,6 +24,16 @@ jobs:
       - name: Setup acceptance test
         run: source ./acceptanceTests/setup.sh
 
+      - name: Create k8s users and change context
+        env:
+          USERNAME_UNRESTRICTED: user-with-clusterwide-access
+          USERNAME_RESTRICTED: user-with-restricted-access
+        run: |
+          ./acceptanceTests/create_user.sh "${USERNAME_UNRESTRICTED}"
+          ./acceptanceTests/create_user.sh "${USERNAME_RESTRICTED}"
+          kubectl apply -f cli/cmd/permissionFiles/permissions-all-namespaces-tap.yaml
+          kubectl config use-context ${USERNAME_UNRESTRICTED}
+
       - name: Test
         run: make acceptance-test
 
