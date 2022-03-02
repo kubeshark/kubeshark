@@ -26,6 +26,30 @@ Think TCPDump and Wireshark re-invented for Kubernetes.
 
 ![Simple UI](assets/mizu-ui.png)
 
+## Quickstart and documentation
+
+You can run Mizu on any Kubernetes cluster (version of 1.16.0 or higher) in a matter of seconds. See the [Mizu Getting Started Guide](https://getmizu.io/docs/) for how.
+
+For more comprehensive documentation, start with the [docs](https://getmizu.io/docs/mizu/mizu-cli).
+
+## Working in this repo
+
+We ❤️ pull requests! See [CONTRIBUTING.md](docs/CONTRIBUTING.md) for info on contributing changes.
+
+
+
+## Code of Conduct
+
+This project is for everyone. We ask that our users and contributors take a few minutes to review our [Code of Conduct](docs/CODE_OF_CONDUCT.md).
+
+
+
+
+
+
+
+
+
 ## Features
 
 - Simple and powerful CLI
@@ -173,31 +197,3 @@ Web interface is now available at http://localhost:8899
 ```
 Any request that contains `User-Agent` header with one of the specified values (`kube-probe` or `prometheus`) will not be captured
 
-### Traffic validation rules
-
-This feature allows you to define set of simple rules, and test the traffic against them.
-Such validation may test response for specific JSON fields, headers, etc.
-
-Please see [TRAFFIC RULES](docs/POLICY_RULES.md) page for more details and syntax.
-
-### OpenAPI Specification (OAS) Contract Monitoring
-
-An OAS/Swagger file can contain schemas under `parameters` and `responses` fields. With `--contract catalogue.yaml`
-CLI option, you can pass your API description to Mizu and the traffic will automatically be validated
-against the contracts.
-
-Please see [CONTRACT MONITORING](docs/CONTRACT_MONITORING.md) page for more details and syntax.
-
-### Configure proxy host 
-
-By default, mizu will be accessible via local host: 'http://localhost:8899', it is possible to change the host, for
-instance, to '0.0.0.0' which can grant access via machine IP address. This setting can be changed via command line
-flag `--set tap.proxy-host=<value>` or via config file:
-tap proxy-host: 0.0.0.0 and when changed it will support accessing by IP
-
-### Install Mizu standalone
-
-Mizu can be run detached from the cli using the install command: `mizu install`. This type of mizu instance will run
-indefinitely in the cluster.
-
-For more information please refer to [INSTALL STANDALONE](docs/INSTALL_STANDALONE.md)
