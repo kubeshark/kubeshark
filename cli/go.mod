@@ -11,6 +11,7 @@ require (
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/spf13/cobra v1.3.0
 	github.com/spf13/pflag v1.0.5
+	github.com/up9inc/basenine/server/lib v0.0.0-20220302073458-c32e0adf1500
 	github.com/up9inc/mizu/shared v0.0.0
 	github.com/up9inc/mizu/tap/api v0.0.0
 	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8
@@ -32,8 +33,10 @@ require (
 	github.com/MakeNowJust/heredoc v1.0.0 // indirect
 	github.com/PuerkitoBio/purell v1.1.1 // indirect
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
+	github.com/alecthomas/participle/v2 v2.0.0-alpha7 // indirect
 	github.com/chai2010/gettext-go v0.0.0-20160711120539-c6fed771bfd5 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/dlclark/regexp2 v1.4.0 // indirect
 	github.com/docker/go-units v0.4.0 // indirect
 	github.com/evanphx/json-patch v5.6.0+incompatible // indirect
 	github.com/exponent-io/jsonpath v0.0.0-20210407135951-1de76d718b3f // indirect
@@ -68,6 +71,7 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/monochromegane/go-gitignore v0.0.0-20200626010858-205db1a8cc00 // indirect
 	github.com/mxk/go-flowrate v0.0.0-20140419014527-cca7078d478f // indirect
+	github.com/ohler55/ojg v1.12.13 // indirect
 	github.com/peterbourgon/diskv v2.0.1+incompatible // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
