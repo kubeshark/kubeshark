@@ -161,8 +161,8 @@ func (s *serviceMap) Enable() {
 }
 
 func (s *serviceMap) Disable() {
-	s.enabled = false
 	s.Reset()
+	s.enabled = false
 }
 
 func (s *serviceMap) IsEnabled() bool {
