@@ -33,23 +33,10 @@ func (g *oasGenerator) Start() {
 	g.entriesChan = make(chan EntryWithSource, 100) // buffer up to 100 entries for OAS processing
 	g.ServiceSpecs = &sync.Map{}
 	g.started = true
-	go instance.runGenerator()
+	go instance.runGeneretor()
 }
 
-func (g *oasGenerator) Stop() {
-	if !g.started {
-		return
-	}
-	g.cancel()
-	g.Reset()
-	g.started = false
-}
-
-func (g *oasGenerator) IsStarted() bool {
-	return g.started
-}
-
-func (g *oasGenerator) runGenerator() {
+func (g *oasGenerator) runGeneretor() {
 	for {
 		select {
 		case <-g.ctx.Done():

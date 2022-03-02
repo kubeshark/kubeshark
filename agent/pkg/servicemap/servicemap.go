@@ -32,7 +32,6 @@ type serviceMap struct {
 
 type ServiceMap interface {
 	Enable()
-	Disable()
 	IsEnabled() bool
 	NewTCPEntry(source *tapApi.TCP, destination *tapApi.TCP, protocol *tapApi.Protocol)
 	GetStatus() ServiceMapStatus
@@ -158,11 +157,6 @@ func (s *serviceMap) addEdge(u, v *entryData, p *tapApi.Protocol) {
 
 func (s *serviceMap) Enable() {
 	s.enabled = true
-}
-
-func (s *serviceMap) Disable() {
-	s.Reset()
-	s.enabled = false
 }
 
 func (s *serviceMap) IsEnabled() bool {
