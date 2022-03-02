@@ -76,8 +76,6 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus}) => {
     const [startTime, setStartTime] = useState(0);
     const scrollableRef = useRef(null);
 
-
-
     const [showTLSWarning, setShowTLSWarning] = useState(false);
     const [userDismissedTLSWarning, setUserDismissedTLSWarning] = useState(false);
     const [addressesWithTLS, setAddressesWithTLS] = useState(new Set<string>());
