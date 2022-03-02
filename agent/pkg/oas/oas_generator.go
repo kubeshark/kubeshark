@@ -45,6 +45,10 @@ func (g *oasGenerator) Stop() {
 	g.started = false
 }
 
+func (g *oasGenerator) IsStarted() bool {
+	return g.started
+}
+
 func (g *oasGenerator) runGenerator() {
 	for {
 		select {
