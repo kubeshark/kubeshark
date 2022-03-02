@@ -53,14 +53,14 @@ func basicTapTest(t *testing.T, shouldCheckSrcAndDest bool, extraArgs... string)
 				return
 			}
 
-			apiServerUrl := GetApiServerUrl(defaultApiServerPort)
+			apiServerUrl := GetApiServerUrl(DefaultApiServerPort)
 
 			if err := WaitTapPodsReady(apiServerUrl); err != nil {
 				t.Errorf("failed to start tap pods on time, err: %v", err)
 				return
 			}
 
-			proxyUrl := GetProxyUrl(defaultNamespaceName, defaultServiceName)
+			proxyUrl := GetProxyUrl(DefaultNamespaceName, DefaultServiceName)
 			for i := 0; i < entriesCount; i++ {
 				if _, requestErr := ExecuteHttpGetRequest(fmt.Sprintf("%v/get", proxyUrl)); requestErr != nil {
 					t.Errorf("failed to send proxy request, err: %v", requestErr)
@@ -127,8 +127,8 @@ func TestTapGuiPort(t *testing.T) {
 				return
 			}
 
-			proxyUrl := GetProxyUrl(defaultNamespaceName, defaultServiceName)
-			for i := 0; i < defaultEntriesCount; i++ {
+			proxyUrl := GetProxyUrl(DefaultNamespaceName, DefaultServiceName)
+			for i := 0; i < DefaultEntriesCount; i++ {
 				if _, requestErr := ExecuteHttpGetRequest(fmt.Sprintf("%v/get", proxyUrl)); requestErr != nil {
 					t.Errorf("failed to send proxy request, err: %v", requestErr)
 					return
@@ -175,7 +175,7 @@ func TestTapAllNamespaces(t *testing.T) {
 		return
 	}
 
-	apiServerUrl := GetApiServerUrl(defaultApiServerPort)
+	apiServerUrl := GetApiServerUrl(DefaultApiServerPort)
 
 	if err := WaitTapPodsReady(apiServerUrl); err != nil {
 		t.Errorf("failed to start tap pods on time, err: %v", err)
@@ -224,7 +224,7 @@ func TestTapMultipleNamespaces(t *testing.T) {
 		return
 	}
 
-	apiServerUrl := GetApiServerUrl(defaultApiServerPort)
+	apiServerUrl := GetApiServerUrl(DefaultApiServerPort)
 
 	if err := WaitTapPodsReady(apiServerUrl); err != nil {
 		t.Errorf("failed to start tap pods on time, err: %v", err)
@@ -270,7 +270,7 @@ func TestTapRegex(t *testing.T) {
 		return
 	}
 
-	apiServerUrl := GetApiServerUrl(defaultApiServerPort)
+	apiServerUrl := GetApiServerUrl(DefaultApiServerPort)
 
 	if err := WaitTapPodsReady(apiServerUrl); err != nil {
 		t.Errorf("failed to start tap pods on time, err: %v", err)
@@ -318,7 +318,7 @@ func TestTapDryRun(t *testing.T) {
 	}()
 
 	go func() {
-		time.Sleep(shortRetriesCount * time.Second)
+		time.Sleep(ShortRetriesCount * time.Second)
 		resultChannel <- "fail"
 	}()
 
@@ -358,17 +358,17 @@ func TestTapRedact(t *testing.T) {
 		return
 	}
 
-	apiServerUrl := GetApiServerUrl(defaultApiServerPort)
+	apiServerUrl := GetApiServerUrl(DefaultApiServerPort)
 
 	if err := WaitTapPodsReady(apiServerUrl); err != nil {
 		t.Errorf("failed to start tap pods on time, err: %v", err)
 		return
 	}
 
-	proxyUrl := GetProxyUrl(defaultNamespaceName, defaultServiceName)
+	proxyUrl := GetProxyUrl(DefaultNamespaceName, DefaultServiceName)
 	requestHeaders := map[string]string{"User-Header": "Mizu"}
 	requestBody := map[string]string{"User": "Mizu"}
-	for i := 0; i < defaultEntriesCount; i++ {
+	for i := 0; i < DefaultEntriesCount; i++ {
 		if _, requestErr := ExecuteHttpPostRequestWithHeaders(fmt.Sprintf("%v/post", proxyUrl), requestHeaders, requestBody); requestErr != nil {
 			t.Errorf("failed to send proxy request, err: %v", requestErr)
 			return
@@ -410,17 +410,17 @@ func TestTapNoRedact(t *testing.T) {
 		return
 	}
 
-	apiServerUrl := GetApiServerUrl(defaultApiServerPort)
+	apiServerUrl := GetApiServerUrl(DefaultApiServerPort)
 
 	if err := WaitTapPodsReady(apiServerUrl); err != nil {
 		t.Errorf("failed to start tap pods on time, err: %v", err)
 		return
 	}
 
-	proxyUrl := GetProxyUrl(defaultNamespaceName, defaultServiceName)
+	proxyUrl := GetProxyUrl(DefaultNamespaceName, DefaultServiceName)
 	requestHeaders := map[string]string{"User-Header": "Mizu"}
 	requestBody := map[string]string{"User": "Mizu"}
-	for i := 0; i < defaultEntriesCount; i++ {
+	for i := 0; i < DefaultEntriesCount; i++ {
 		if _, requestErr := ExecuteHttpPostRequestWithHeaders(fmt.Sprintf("%v/post", proxyUrl), requestHeaders, requestBody); requestErr != nil {
 			t.Errorf("failed to send proxy request, err: %v", requestErr)
 			return
@@ -462,15 +462,15 @@ func TestTapRegexMasking(t *testing.T) {
 		return
 	}
 
-	apiServerUrl := GetApiServerUrl(defaultApiServerPort)
+	apiServerUrl := GetApiServerUrl(DefaultApiServerPort)
 
 	if err := WaitTapPodsReady(apiServerUrl); err != nil {
 		t.Errorf("failed to start tap pods on time, err: %v", err)
 		return
 	}
 
-	proxyUrl := GetProxyUrl(defaultNamespaceName, defaultServiceName)
-	for i := 0; i < defaultEntriesCount; i++ {
+	proxyUrl := GetProxyUrl(DefaultNamespaceName, DefaultServiceName)
+	for i := 0; i < DefaultEntriesCount; i++ {
 		response, requestErr := http.Post(fmt.Sprintf("%v/post", proxyUrl), "text/plain", bytes.NewBufferString("Mizu"))
 		if _, requestErr = ExecuteHttpRequest(response, requestErr); requestErr != nil {
 			t.Errorf("failed to send proxy request, err: %v", requestErr)
@@ -515,25 +515,25 @@ func TestTapIgnoredUserAgents(t *testing.T) {
 		return
 	}
 
-	apiServerUrl := GetApiServerUrl(defaultApiServerPort)
+	apiServerUrl := GetApiServerUrl(DefaultApiServerPort)
 
 	if err := WaitTapPodsReady(apiServerUrl); err != nil {
 		t.Errorf("failed to start tap pods on time, err: %v", err)
 		return
 	}
 
-	proxyUrl := GetProxyUrl(defaultNamespaceName, defaultServiceName)
+	proxyUrl := GetProxyUrl(DefaultNamespaceName, DefaultServiceName)
 
 	ignoredUserAgentCustomHeader := "Ignored-User-Agent"
 	headers := map[string]string{"User-Agent": ignoredUserAgentValue, ignoredUserAgentCustomHeader: ""}
-	for i := 0; i < defaultEntriesCount; i++ {
+	for i := 0; i < DefaultEntriesCount; i++ {
 		if _, requestErr := ExecuteHttpGetRequestWithHeaders(fmt.Sprintf("%v/get", proxyUrl), headers); requestErr != nil {
 			t.Errorf("failed to send proxy request, err: %v", requestErr)
 			return
 		}
 	}
 
-	for i := 0; i < defaultEntriesCount; i++ {
+	for i := 0; i < DefaultEntriesCount; i++ {
 		if _, requestErr := ExecuteHttpGetRequest(fmt.Sprintf("%v/get", proxyUrl)); requestErr != nil {
 			t.Errorf("failed to send proxy request, err: %v", requestErr)
 			return
@@ -569,7 +569,7 @@ func TestTapDumpLogs(t *testing.T) {
 		return
 	}
 
-	apiServerUrl := GetApiServerUrl(defaultApiServerPort)
+	apiServerUrl := GetApiServerUrl(DefaultApiServerPort)
 
 	if err := WaitTapPodsReady(apiServerUrl); err != nil {
 		t.Errorf("failed to start tap pods on time, err: %v", err)
@@ -651,7 +651,7 @@ func TestTapDumpLogs(t *testing.T) {
 }
 
 func TestIpResolving(t *testing.T) {
-	namespace := allNamespaces
+	namespace := AllNamespaces
 
 	t.Log("add permissions for ip-resolution for current user")
 	if err := ApplyKubeFilesForTest(
