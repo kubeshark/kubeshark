@@ -40,7 +40,7 @@ func TestRedis(t *testing.T) {
 		return
 	}
 
-	apiServerUrl := GetApiServerUrl(defaultApiServerPort)
+	apiServerUrl := GetApiServerUrl(DefaultApiServerPort)
 
 	if err := WaitTapPodsReady(apiServerUrl); err != nil {
 		t.Errorf("failed to start tap pods on time, err: %v", err)
@@ -55,7 +55,7 @@ func TestRedis(t *testing.T) {
 		return
 	}
 
-	redisExternalIp, err := kubernetesProvider.GetServiceExternalIp(ctx, defaultNamespaceName, "redis")
+	redisExternalIp, err := kubernetesProvider.GetServiceExternalIp(ctx, DefaultNamespaceName, "redis")
 	if err != nil {
 		t.Errorf("failed to get redis external ip, err: %v", err)
 		return
@@ -65,7 +65,7 @@ func TestRedis(t *testing.T) {
 		Addr: fmt.Sprintf("%v:6379", redisExternalIp),
 	})
 
-	for i := 0; i < defaultEntriesCount/5; i++ {
+	for i := 0; i < DefaultEntriesCount/5; i++ {
 		requestErr := rdb.Ping(ctx).Err()
 		if requestErr != nil {
 			t.Errorf("failed to send redis request, err: %v", requestErr)
@@ -73,7 +73,7 @@ func TestRedis(t *testing.T) {
 		}
 	}
 
-	for i := 0; i < defaultEntriesCount/5; i++ {
+	for i := 0; i < DefaultEntriesCount/5; i++ {
 		requestErr := rdb.Set(ctx, "key", "value", -1).Err()
 		if requestErr != nil {
 			t.Errorf("failed to send redis request, err: %v", requestErr)
@@ -81,7 +81,7 @@ func TestRedis(t *testing.T) {
 		}
 	}
 
-	for i := 0; i < defaultEntriesCount/5; i++ {
+	for i := 0; i < DefaultEntriesCount/5; i++ {
 		requestErr := rdb.Exists(ctx, "key").Err()
 		if requestErr != nil {
 			t.Errorf("failed to send redis request, err: %v", requestErr)
@@ -89,7 +89,7 @@ func TestRedis(t *testing.T) {
 		}
 	}
 
-	for i := 0; i < defaultEntriesCount/5; i++ {
+	for i := 0; i < DefaultEntriesCount/5; i++ {
 		requestErr := rdb.Get(ctx, "key").Err()
 		if requestErr != nil {
 			t.Errorf("failed to send redis request, err: %v", requestErr)
@@ -97,7 +97,7 @@ func TestRedis(t *testing.T) {
 		}
 	}
 
-	for i := 0; i < defaultEntriesCount/5; i++ {
+	for i := 0; i < DefaultEntriesCount/5; i++ {
 		requestErr := rdb.Del(ctx, "key").Err()
 		if requestErr != nil {
 			t.Errorf("failed to send redis request, err: %v", requestErr)
@@ -138,7 +138,7 @@ func TestAmqp(t *testing.T) {
 		return
 	}
 
-	apiServerUrl := GetApiServerUrl(defaultApiServerPort)
+	apiServerUrl := GetApiServerUrl(DefaultApiServerPort)
 
 	if err := WaitTapPodsReady(apiServerUrl); err != nil {
 		t.Errorf("failed to start tap pods on time, err: %v", err)
@@ -153,7 +153,7 @@ func TestAmqp(t *testing.T) {
 		return
 	}
 
-	rabbitmqExternalIp, err := kubernetesProvider.GetServiceExternalIp(ctx, defaultNamespaceName, "rabbitmq")
+	rabbitmqExternalIp, err := kubernetesProvider.GetServiceExternalIp(ctx, DefaultNamespaceName, "rabbitmq")
 	if err != nil {
 		t.Errorf("failed to get RabbitMQ external ip, err: %v", err)
 		return
@@ -169,7 +169,7 @@ func TestAmqp(t *testing.T) {
 	// Temporary fix for missing amqp entries
 	time.Sleep(10 * time.Second)
 
-	for i := 0; i < defaultEntriesCount/5; i++ {
+	for i := 0; i < DefaultEntriesCount/5; i++ {
 		ch, err := conn.Channel()
 		if err != nil {
 			t.Errorf("failed to open a channel, err: %v", err)
