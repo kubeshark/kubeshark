@@ -10,7 +10,7 @@ import (
 
 func newNetnsPacketSource(procfs string, pid string,
 	interfaceName string, behaviour TcpPacketSourceBehaviour) (*tcpPacketSource, error) {
-	nsh, err := netns.GetFromPath(fmt.Sprintf("%v/%v/ns/net", procfs, pid))
+	nsh, err := netns.GetFromPath(fmt.Sprintf("%s/%s/ns/net", procfs, pid))
 
 	if err != nil {
 		logger.Log.Errorf("Unable to get netns of pid %s - %w", pid, err)
