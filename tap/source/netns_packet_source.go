@@ -56,7 +56,7 @@ func newPacketSourceFromNetnsHandle(pid string, nsh netns.NsHandle, interfaceNam
 			return
 		}
 
-		name := fmt.Sprintf("netns-%v-%v", pid, interfaceName)
+		name := fmt.Sprintf("netns-%s-%s", pid, interfaceName)
 		src, err := newTcpPacketSource(name, "", interfaceName, behaviour)
 
 		if err != nil {
