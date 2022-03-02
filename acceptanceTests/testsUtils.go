@@ -265,11 +265,11 @@ func RunCypressTests(t *testing.T, cypressRunCmd string) {
 	t.Logf("%s", out)
 }
 
-func retriesExecute(retriesCount int, executeFunc func() error) error {
+func RetriesExecute(retriesCount int, executeFunc func() error) error {
 	var lastError interface{}
 
 	for i := 0; i < retriesCount; i++ {
-		if err := tryExecuteFunc(executeFunc); err != nil {
+		if err := TryExecuteFunc(executeFunc); err != nil {
 			lastError = err
 
 			time.Sleep(1 * time.Second)
@@ -282,7 +282,7 @@ func retriesExecute(retriesCount int, executeFunc func() error) error {
 	return fmt.Errorf("reached max retries count, retries count: %v, last err: %v", retriesCount, lastError)
 }
 
-func tryExecuteFunc(executeFunc func() error) (err interface{}) {
+func TryExecuteFunc(executeFunc func() error) (err interface{}) {
 	defer func() {
 		if panicErr := recover(); panicErr != nil {
 			err = panicErr
@@ -308,10 +308,10 @@ func WaitTapPodsReady(apiServerUrl string) error {
 		return nil
 	}
 
-	return retriesExecute(LongRetriesCount, tapPodsReadyFunc)
+	return RetriesExecute(LongRetriesCount, tapPodsReadyFunc)
 }
 
-func jsonBytesToInterface(jsonBytes []byte) (interface{}, error) {
+func JsonBytesToInterface(jsonBytes []byte) (interface{}, error) {
 	var result interface{}
 	if parseErr := json.Unmarshal(jsonBytes, &result); parseErr != nil {
 		return nil, parseErr
@@ -334,7 +334,7 @@ func ExecuteHttpRequest(response *http.Response, requestErr error) (interface{},
 		return nil, readErr
 	}
 
-	return jsonBytesToInterface(data)
+	return JsonBytesToInterface(data)
 }
 
 func ExecuteHttpGetRequestWithHeaders(url string, headers map[string]string) (interface{}, error) {
