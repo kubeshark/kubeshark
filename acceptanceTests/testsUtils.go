@@ -24,14 +24,14 @@ import (
 )
 
 const (
-	longRetriesCount      = 100
-	shortRetriesCount     = 10
-	defaultApiServerPort  = shared.DefaultApiServerPort
-	defaultNamespaceName  = "mizu-tests"
-	defaultServiceName    = "httpbin"
-	defaultEntriesCount   = 50
-	waitAfterTapPodsReady = 3 * time.Second
-	allNamespaces         = ""
+	LongRetriesCount      = 100
+	ShortRetriesCount     = 10
+	DefaultApiServerPort  = shared.DefaultApiServerPort
+	DefaultNamespaceName  = "mizu-tests"
+	DefaultServiceName    = "httpbin"
+	DefaultEntriesCount   = 50
+	WaitAfterTapPodsReady = 3 * time.Second
+	AllNamespaces         = ""
 )
 
 type PodDescriptor struct {
@@ -181,7 +181,7 @@ func ApplyKubeFile(kubeContext string, namespace string, filename string) (error
 		"--context", kubeContext,
 		"-f", filename,
 	}
-	if namespace != allNamespaces {
+	if namespace != AllNamespaces {
 		cmdArgs = append(cmdArgs, "-n", namespace)
 	}
 	cmd := exec.Command("kubectl", cmdArgs...)
@@ -199,7 +199,7 @@ func DeleteKubeFile(kubeContext string, namespace string, filename string) error
 		"--context", kubeContext,
 		"-f", filename,
 	}
-	if namespace != allNamespaces {
+	if namespace != AllNamespaces {
 		cmdArgs = append(cmdArgs, "-n", namespace)
 	}
 	cmd := exec.Command("kubectl", cmdArgs...)
@@ -304,11 +304,11 @@ func WaitTapPodsReady(apiServerUrl string) error {
 		if connectedTappersCount == 0 {
 			return fmt.Errorf("no connected tappers running")
 		}
-		time.Sleep(waitAfterTapPodsReady)
+		time.Sleep(WaitAfterTapPodsReady)
 		return nil
 	}
 
-	return retriesExecute(longRetriesCount, tapPodsReadyFunc)
+	return retriesExecute(LongRetriesCount, tapPodsReadyFunc)
 }
 
 func jsonBytesToInterface(jsonBytes []byte) (interface{}, error) {

@@ -36,7 +36,7 @@ func TestLogs(t *testing.T) {
 		return
 	}
 
-	apiServerUrl := GetApiServerUrl(defaultApiServerPort)
+	apiServerUrl := GetApiServerUrl(DefaultApiServerPort)
 
 	if err := WaitTapPodsReady(apiServerUrl); err != nil {
 		t.Errorf("failed to start tap pods on time, err: %v", err)
@@ -137,7 +137,7 @@ func TestLogsPath(t *testing.T) {
 		return
 	}
 
-	apiServerUrl := GetApiServerUrl(defaultApiServerPort)
+	apiServerUrl := GetApiServerUrl(DefaultApiServerPort)
 
 	if err := WaitTapPodsReady(apiServerUrl); err != nil {
 		t.Errorf("failed to start tap pods on time, err: %v", err)
