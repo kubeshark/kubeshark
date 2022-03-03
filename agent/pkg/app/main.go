@@ -60,6 +60,7 @@ func LoadExtensions() {
 	})
 
 	controllers.InitExtensionsMap(ExtensionsMap)
+	api.InitExtensionsMap(ExtensionsMap)
 }
 
 func ConfigureBasenineServer(host string, port string, dbSize int64, logLevel logging.Level, insertionFilter string) {

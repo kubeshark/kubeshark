@@ -100,6 +100,7 @@ type Dissector interface {
 	Ping()
 	Dissect(b *bufio.Reader, isClient bool, tcpID *TcpID, counterPair *CounterPair, superTimer *SuperTimer, superIdentifier *SuperIdentifier, emitter Emitter, options *TrafficFilteringOptions, reqResMatcher RequestResponseMatcher) error
 	Analyze(item *OutputChannelItem, resolvedSource string, resolvedDestination string, namespace string) *Entry
+	Summarize(entry *Entry) *BaseEntry
 	Represent(request map[string]interface{}, response map[string]interface{}) (object []byte, bodySize int64, err error)
 	Macros() map[string]string
 	NewResponseRequestMatcher() RequestResponseMatcher
@@ -135,12 +136,7 @@ type Entry struct {
 	StartTime              time.Time              `json:"startTime"`
 	Request                map[string]interface{} `json:"request"`
 	Response               map[string]interface{} `json:"response"`
-	Summary                string                 `json:"summary"`
-	Method                 string                 `json:"method"`
-	Status                 int                    `json:"status"`
 	ElapsedTime            int64                  `json:"elapsedTime"`
-	Path                   string                 `json:"path"`
-	IsOutgoing             bool                   `json:"isOutgoing,omitempty"`
 	Rules                  ApplicableRules        `json:"rules,omitempty"`
 	ContractStatus         ContractStatus         `json:"contractStatus,omitempty"`
 	ContractRequestReason  string                 `json:"contractRequestReason,omitempty"`
@@ -154,6 +150,7 @@ type EntryWrapper struct {
 	Representation string                   `json:"representation"`
 	BodySize       int64                    `json:"bodySize"`
 	Data           *Entry                   `json:"data"`
+	Base           *BaseEntry               `json:"base"`
 	Rules          []map[string]interface{} `json:"rulesMatched,omitempty"`
 	IsRulesEnabled bool                     `json:"isRulesEnabled"`
 }
@@ -161,11 +158,12 @@ type EntryWrapper struct {
 type BaseEntry struct {
 	Id             uint            `json:"id"`
 	Protocol       Protocol        `json:"proto,omitempty"`
-	Url            string          `json:"url,omitempty"`
-	Path           string          `json:"path,omitempty"`
 	Summary        string          `json:"summary,omitempty"`
-	StatusCode     int             `json:"status"`
+	SummaryQuery   string          `json:"summaryQuery,omitempty"`
+	Status         int             `json:"status"`
+	StatusQuery    string          `json:"statusQuery"`
 	Method         string          `json:"method,omitempty"`
+	MethodQuery    string          `json:"methodQuery,omitempty"`
 	Timestamp      int64           `json:"timestamp,omitempty"`
 	Source         *TCP            `json:"src"`
 	Destination    *TCP            `json:"dst"`
@@ -190,24 +188,6 @@ type Contract struct {
 	Content        string         `json:"content"`
 }
 
-func Summarize(entry *Entry) *BaseEntry {
-	return &BaseEntry{
-		Id:             entry.Id,
-		Protocol:       entry.Protocol,
-		Path:           entry.Path,
-		Summary:        entry.Summary,
-		StatusCode:     entry.Status,
-		Method:         entry.Method,
-		Timestamp:      entry.Timestamp,
-		Source:         entry.Source,
-		Destination:    entry.Destination,
-		IsOutgoing:     entry.IsOutgoing,
-		Latency:        entry.ElapsedTime,
-		Rules:          entry.Rules,
-		ContractStatus: entry.ContractStatus,
-	}
-}
-
 type DataUnmarshaler interface {
 	UnmarshalData(*Entry) error
 }
@@ -215,14 +195,9 @@ type DataUnmarshaler interface {
 func (bed *BaseEntry) UnmarshalData(entry *Entry) error {
 	bed.Protocol = entry.Protocol
 	bed.Id = entry.Id
-	bed.Path = entry.Path
-	bed.Summary = entry.Summary
-	bed.StatusCode = entry.Status
-	bed.Method = entry.Method
 	bed.Timestamp = entry.Timestamp
 	bed.Source = entry.Source
 	bed.Destination = entry.Destination
-	bed.IsOutgoing = entry.IsOutgoing
 	bed.Latency = entry.ElapsedTime
 	bed.ContractStatus = entry.ContractStatus
 	return nil

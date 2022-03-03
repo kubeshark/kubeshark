@@ -231,7 +231,6 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 	reqDetails["targetUri"] = reqDetails["url"]
 	reqDetails["path"] = path
 	reqDetails["pathSegments"] = strings.Split(path, "/")[1:]
-	reqDetails["summary"] = path
 
 	// Rearrange the maps for the querying
 	reqDetails["_headers"] = reqDetails["headers"]
@@ -248,15 +247,9 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 	reqDetails["_queryStringMerged"] = mapSliceMergeRepeatedKeys(reqDetails["_queryString"].([]interface{}))
 	reqDetails["queryString"] = mapSliceRebuildAsMap(reqDetails["_queryStringMerged"].([]interface{}))
 
-	method := reqDetails["method"].(string)
 	statusCode := int(resDetails["status"].(float64))
 	if item.Protocol.Abbreviation == "gRPC" {
 		resDetails["statusText"] = grpcStatusCodes[statusCode]
-	}
-
-	if item.Protocol.Version == "2.0" && !isRequestUpgradedH2C {
-		reqDetails["url"] = path
-		request["url"] = path
 	}
 
 	elapsedTime := item.Pair.Response.CaptureTime.Sub(item.Pair.Request.CaptureTime).Round(time.Millisecond).Milliseconds()
@@ -280,14 +273,37 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 		Outgoing:    item.ConnectionInfo.IsOutgoing,
 		Request:     reqDetails,
 		Response:    resDetails,
-		Method:      method,
-		Status:      statusCode,
 		Timestamp:   item.Timestamp,
 		StartTime:   item.Pair.Request.CaptureTime,
 		ElapsedTime: elapsedTime,
-		Summary:     path,
-		IsOutgoing:  item.ConnectionInfo.IsOutgoing,
 		HTTPPair:    string(httpPair),
+	}
+}
+
+func (d dissecting) Summarize(entry *api.Entry) *api.BaseEntry {
+	summary := entry.Request["path"].(string)
+	summaryQuery := fmt.Sprintf(`request.path == "%s"`, summary)
+	method := entry.Request["method"].(string)
+	methodQuery := fmt.Sprintf(`request.method == "%s"`, method)
+	status := int(entry.Response["status"].(float64))
+	statusQuery := fmt.Sprintf(`respoonse.status == %d`, status)
+
+	return &api.BaseEntry{
+		Id:             entry.Id,
+		Protocol:       entry.Protocol,
+		Summary:        summary,
+		SummaryQuery:   summaryQuery,
+		Status:         status,
+		StatusQuery:    statusQuery,
+		Method:         method,
+		MethodQuery:    methodQuery,
+		Timestamp:      entry.Timestamp,
+		Source:         entry.Source,
+		Destination:    entry.Destination,
+		IsOutgoing:     entry.Outgoing,
+		Latency:        entry.ElapsedTime,
+		Rules:          entry.Rules,
+		ContractStatus: entry.ContractStatus,
 	}
 }
 

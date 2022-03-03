@@ -119,7 +119,7 @@ export const EntryDetailed = () => {
             bodySize={entryData.bodySize}
             elapsedTime={entryData.data.elapsedTime}
         />}
-        {entryData && <EntrySummary entry={entryData.data}/>}
+        {entryData && <EntrySummary entry={entryData.base}/>}
         <>
             {entryData && <EntryViewer
                 representation={entryData.representation}

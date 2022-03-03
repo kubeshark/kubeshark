@@ -65,17 +65,6 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 	reqDetails := request["details"].(map[string]interface{})
 	resDetails := response["details"].(map[string]interface{})
 
-	method := ""
-	if reqDetails["command"] != nil {
-		method = reqDetails["command"].(string)
-	}
-
-	summary := ""
-	if reqDetails["key"] != nil {
-		summary = reqDetails["key"].(string)
-	}
-
-	request["url"] = summary
 	elapsedTime := item.Pair.Response.CaptureTime.Sub(item.Pair.Request.CaptureTime).Round(time.Millisecond).Milliseconds()
 	if elapsedTime < 0 {
 		elapsedTime = 0
@@ -96,15 +85,48 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 		Outgoing:    item.ConnectionInfo.IsOutgoing,
 		Request:     reqDetails,
 		Response:    resDetails,
-		Method:      method,
-		Status:      0,
 		Timestamp:   item.Timestamp,
 		StartTime:   item.Pair.Request.CaptureTime,
 		ElapsedTime: elapsedTime,
-		Summary:     summary,
-		IsOutgoing:  item.ConnectionInfo.IsOutgoing,
 	}
 
+}
+
+func (d dissecting) Summarize(entry *api.Entry) *api.BaseEntry {
+	status := 0
+	statusQuery := ""
+
+	method := ""
+	methodQuery := ""
+	if entry.Request["command"] != nil {
+		method = entry.Request["command"].(string)
+		methodQuery = fmt.Sprintf(`request.command == "%s"`, method)
+	}
+
+	summary := ""
+	summaryQuery := ""
+	if entry.Response["key"] != nil {
+		summary = entry.Response["key"].(string)
+		summaryQuery = fmt.Sprintf(`response.key == "%s"`, summary)
+	}
+
+	return &api.BaseEntry{
+		Id:             entry.Id,
+		Protocol:       entry.Protocol,
+		Summary:        summary,
+		SummaryQuery:   summaryQuery,
+		Status:         status,
+		StatusQuery:    statusQuery,
+		Method:         method,
+		MethodQuery:    methodQuery,
+		Timestamp:      entry.Timestamp,
+		Source:         entry.Source,
+		Destination:    entry.Destination,
+		IsOutgoing:     entry.Outgoing,
+		Latency:        entry.ElapsedTime,
+		Rules:          entry.Rules,
+		ContractStatus: entry.ContractStatus,
+	}
 }
 
 func (d dissecting) Represent(request map[string]interface{}, response map[string]interface{}) (object []byte, bodySize int64, err error) {
