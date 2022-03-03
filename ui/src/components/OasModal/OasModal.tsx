@@ -161,14 +161,14 @@ const OasModal = ({ openModal, handleCloseModal }) => {
                 </div>
             </div>
             <div style={{ cursor: "pointer" }}>
-              <img src={closeIcon} alt="Back" onClick={handleCloseModal} />
+              <img src={closeIcon} alt="close" onClick={handleCloseModal} />
             </div>
           </div>
           <div className={style.redoc}>
           {selectedServiceSpec && <RedocStandalone 
                                     spec={selectedServiceSpec}   
                                     options={redocThemeOptions}/>}
-            </div>
+          </div>
         </Box>
       </Fade>
     </Modal>

@@ -281,7 +281,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus}) => {
             </div>
           </div>
         </div>
-        <div style={{ display: 'flex' }}>
+        <div style={{ display: 'flex', height: "100%" }}>
           {window["isOasEnabled"] && <Button
             startIcon={<img className="custom" src={services} alt="services"></img>}
             size="large"
