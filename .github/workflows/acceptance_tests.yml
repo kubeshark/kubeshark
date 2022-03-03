@@ -22,7 +22,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Setup acceptance test
-        run: source ./acceptanceTests/setup.sh
+        run: ./acceptanceTests/setup.sh
 
       - name: Create k8s users and change context
         env:
