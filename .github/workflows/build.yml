@@ -22,6 +22,8 @@ jobs:
     steps:
       - name: Check out code into the Go module directory
         uses: actions/checkout@v2
+        with:
+          fetch-depth: 2
       
       - name: Check modified files
         id: modified_files
