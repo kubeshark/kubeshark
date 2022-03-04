@@ -188,21 +188,6 @@ type Contract struct {
 	Content        string         `json:"content"`
 }
 
-type DataUnmarshaler interface {
-	UnmarshalData(*Entry) error
-}
-
-func (bed *BaseEntry) UnmarshalData(entry *Entry) error {
-	bed.Protocol = entry.Protocol
-	bed.Id = entry.Id
-	bed.Timestamp = entry.Timestamp
-	bed.Source = entry.Source
-	bed.Destination = entry.Destination
-	bed.Latency = entry.ElapsedTime
-	bed.ContractStatus = entry.ContractStatus
-	return nil
-}
-
 const (
 	TABLE string = "table"
 	BODY  string = "body"
