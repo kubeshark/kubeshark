@@ -24,7 +24,7 @@ jobs:
         with:
           fetch-depth: 2
 
-      - name: Set up Go 1.17
+    - name: Set up Go 1.17
         uses: actions/setup-go@v2
         with:
           go-version: '^1.17'
@@ -42,53 +42,31 @@ jobs:
       - name: 'Set up Cloud SDK'
         uses: 'google-github-actions/setup-gcloud@v0'
 
+      - name: Check CLI modified files
+        id: cli_modified_files
+        run: devops/check_modified_files.sh cli/
+
       - name: CLI Test
+        if: steps.cli_modified_files.outputs.matched == 'true'
         run: make test-cli
 
+      - name: Check Agent modified files
+        id: agent_modified_files
+        run: devops/check_modified_files.sh agent/
+
       - name: Agent Test
+        if: steps.agent_modified_files.outputs.matched == 'true'
         run: make test-agent
 
       - name: Shared Test
         run: make test-shared
-
-      - name: Check modified files
-        id: modified_files
-        env:
-          dependant_folders: |
-            (
-              tap/extensions/*
-            )
-        run: |
-          echo "========== check paths of modified files =========="
-          folders_arr=${{ env.dependant_folders }}
-          git diff --name-only HEAD^ HEAD > files.txt
-          matched=false
-          while IFS= read -r file
-          do
-            for folder in ${folders_arr[*]}
-            do
-              if [[ $folder == $file ]]; then
-                matched=true
-                break
-              fi
-            done
-            if [[ $matched = true ]]; then
-              echo "$file - match condition"
-              break
-            else 
-              echo "$file - does not match condition"
-            fi
-          done < files.txt
-          if [[ $matched = true ]]; then
-            echo "match found set to true"
-            echo "::set-output name=matched::true"
-          else
-            echo "no match found"
-            echo "::set-output name=matched::false"
-          fi
+      
+      - name: Check extensions modified files
+        id: ext_modified_files
+        run: devops/check_modified_files.sh tap/extensions/
 
       - name: Extensions Test
-        if: steps.modified_files.outputs.matched == 'true'
+        if: steps.ext_modified_files.outputs.matched == 'true'
         run: make test-extensions
 
       - name: Upload coverage to Codecov
