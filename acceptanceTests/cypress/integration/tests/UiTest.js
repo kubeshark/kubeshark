@@ -113,7 +113,7 @@ if (Cypress.env('shouldCheckSrcAndDest')) {
 }
 
 checkFilter({
-    name: 'method == "GET"',
+    name: 'request.method == "GET"',
     leftSidePath: '> :nth-child(3) > :nth-child(1) > :nth-child(1) > :nth-child(2)',
     leftSideExpectedText: 'GET',
     rightSidePath: '> :nth-child(2) > :nth-child(2) > :nth-child(1) > :nth-child(1) > :nth-child(2)',
@@ -122,7 +122,7 @@ checkFilter({
 });
 
 checkFilter({
-    name: 'summary == "/get"',
+    name: 'request.path == "/get"',
     leftSidePath: '> :nth-child(3) > :nth-child(1) > :nth-child(2) > :nth-child(2)',
     leftSideExpectedText: '/get',
     rightSidePath: '> :nth-child(2) > :nth-child(2) > :nth-child(1) > :nth-child(2) > :nth-child(2)',
@@ -139,7 +139,7 @@ checkFilter({
     applyByEnter: false
 });
 
-checkFilterNoResults('method == "POST"');
+checkFilterNoResults('request.method == "POST"');
 
 function checkFilterNoResults(filterName) {
     it(`checking the filter: ${filterName}. Expecting no results`, function () {
