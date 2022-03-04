@@ -20,7 +20,7 @@ checkFilterByMethod({
     method: 'SET',
     methodQuery: 'request.command == "SET"',
     summary: 'key',
-    summaryQuery: 'response.key == "key"',
+    summaryQuery: 'request.key == "key"',
     value: {tab: valueTabs.request, regex: /^\[value, keepttl]$/mg}
 })
 
@@ -29,7 +29,7 @@ checkFilterByMethod({
     method: 'EXISTS',
     methodQuery: 'request.command == "EXISTS"',
     summary: 'key',
-    summaryQuery: 'response.key == "key"',
+    summaryQuery: 'request.key == "key"',
     value: {tab: valueTabs.response, regex: /^1$/mg}
 })
 
@@ -38,7 +38,7 @@ checkFilterByMethod({
     method: 'GET',
     methodQuery: 'request.command == "GET"',
     summary: 'key',
-    summaryQuery: 'response.key == "key"',
+    summaryQuery: 'request.key == "key"',
     value: {tab: valueTabs.response, regex: /^value$/mg}
 })
 
@@ -47,6 +47,6 @@ checkFilterByMethod({
     method: 'DEL',
     methodQuery: 'request.command == "DEL"',
     summary: 'key',
-    summaryQuery: 'response.key == "key"',
+    summaryQuery: 'request.key == "key"',
     value: {tab: valueTabs.response, regex: /^1$|^0$/mg}
 })

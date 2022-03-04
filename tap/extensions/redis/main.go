@@ -105,9 +105,9 @@ func (d dissecting) Summarize(entry *api.Entry) *api.BaseEntry {
 
 	summary := ""
 	summaryQuery := ""
-	if entry.Response["key"] != nil {
-		summary = entry.Response["key"].(string)
-		summaryQuery = fmt.Sprintf(`response.key == "%s"`, summary)
+	if entry.Request["key"] != nil {
+		summary = entry.Request["key"].(string)
+		summaryQuery = fmt.Sprintf(`request.key == "%s"`, summary)
 	}
 
 	return &api.BaseEntry{
