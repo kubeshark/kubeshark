@@ -286,7 +286,7 @@ func (d dissecting) Summarize(entry *api.Entry) *api.BaseEntry {
 	method := entry.Request["method"].(string)
 	methodQuery := fmt.Sprintf(`request.method == "%s"`, method)
 	status := int(entry.Response["status"].(float64))
-	statusQuery := fmt.Sprintf(`respoonse.status == %d`, status)
+	statusQuery := fmt.Sprintf(`response.status == %d`, status)
 
 	return &api.BaseEntry{
 		Id:             entry.Id,

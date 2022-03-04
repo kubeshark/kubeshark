@@ -72,7 +72,7 @@ export function checkFilterByMethod(funcDict) {
 
     it(`Testing the method: ${method}`, function () {
         // applying filter
-        cy.get('.w-tc-editor-text').clear().type(`method == "${method}"`);
+        cy.get('.w-tc-editor-text').clear().type(methodQuery);
         cy.get('[type="submit"]').click();
         cy.get('.w-tc-editor').should('have.attr', 'style').and('include', Cypress.env('greenFilterColor'));
 
