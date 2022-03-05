@@ -56,8 +56,8 @@ const (
 	sysfsMountPath   = "/sys"
 )
 
-func NewProvider(kubeConfigPath string) (*Provider, error) {
-	kubernetesConfig := loadKubernetesConfiguration(kubeConfigPath)
+func NewProvider(kubeConfigPath string, contextName string) (*Provider, error) {
+	kubernetesConfig := loadKubernetesConfiguration(kubeConfigPath, contextName)
 	restClientConfig, err := kubernetesConfig.ClientConfig()
 	if err != nil {
 		if clientcmd.IsEmptyConfig(err) {
@@ -1212,7 +1212,7 @@ func ValidateKubernetesVersion(serverVersionSemVer *semver.SemVersion) error {
 	return nil
 }
 
-func loadKubernetesConfiguration(kubeConfigPath string) clientcmd.ClientConfig {
+func loadKubernetesConfiguration(kubeConfigPath string, context string) clientcmd.ClientConfig {
 	logger.Log.Debugf("Using kube config %s", kubeConfigPath)
 	configPathList := filepath.SplitList(kubeConfigPath)
 	configLoadingRules := &clientcmd.ClientConfigLoadingRules{}
@@ -1221,7 +1221,7 @@ func loadKubernetesConfiguration(kubeConfigPath string) clientcmd.ClientConfig {
 	} else {
 		configLoadingRules.Precedence = configPathList
 	}
-	contextName := ""
+	contextName := context
 	return clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
 		configLoadingRules,
 		&clientcmd.ConfigOverrides{
