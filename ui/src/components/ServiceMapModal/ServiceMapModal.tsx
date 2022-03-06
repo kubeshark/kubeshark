@@ -81,11 +81,11 @@ interface ServiceMapModalProps {
 
 const modalStyle = {
     position: 'absolute',
-    top: '10%',
+    top: '6%',
     left: '50%',
     transform: 'translate(-50%, 0%)',
-    width: '80vw',
-    height: '80vh',
+    width: '89vw',
+    height: '82vh',
     bgcolor: 'background.paper',
     borderRadius: '5px',
     boxShadow: 24,

@@ -18,12 +18,12 @@ import entriesAtom from "../../../recoil/entries";
 import focusedEntryIdAtom from "../../../recoil/focusedEntryId";
 import websocketConnectionAtom, {WsConnectionStatus} from "../../../recoil/wsConnection";
 import queryAtom from "../../../recoil/query";
-import OasModal from "../../OasModal/OasModal";
 import {useCommonStyles} from "../../../helpers/commonStyle"
 import {TLSWarning} from "../../TLSWarning/TLSWarning";
 import serviceMapModalOpenAtom from "../../../recoil/serviceMapModalOpen";
 import serviceMap from "../../assets/serviceMap.svg";
 import services from "../../assets/services.svg";
+import oasModalOpenAtom from "../../../recoil/oasModalOpen/atom";
 
 const useLayoutStyles = makeStyles(() => ({
   details: {
@@ -59,6 +59,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus}) => {
     const [focusedEntryId, setFocusedEntryId] = useRecoilState(focusedEntryIdAtom);
     const [wsConnection, setWsConnection] = useRecoilState(websocketConnectionAtom);
     const setServiceMapModalOpen = useSetRecoilState(serviceMapModalOpenAtom);
+    const [openOasModal, setOpenOasModal] = useRecoilState(oasModalOpenAtom);
     const query = useRecoilValue(queryAtom);
 
     const [noMoreDataTop, setNoMoreDataTop] = useState(false);
@@ -74,10 +75,6 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus}) => {
 
     const [startTime, setStartTime] = useState(0);
     const scrollableRef = useRef(null);
-
-    const [openOasModal, setOpenOasModal] = useState(false);
-    
-    const handleCloseModal = () => setOpenOasModal(false);
 
     const [showTLSWarning, setShowTLSWarning] = useState(false);
     const [userDismissedTLSWarning, setUserDismissedTLSWarning] = useState(false);
@@ -283,7 +280,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus}) => {
             </div>
           </div>
         </div>
-        <div style={{ display: 'flex' }}>
+        <div style={{ display: 'flex', height: "100%" }}>
           {window["isOasEnabled"] && <Button
             startIcon={<img className="custom" src={services} alt="services"></img>}
             size="large"
@@ -306,10 +303,6 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus}) => {
           </Button>}
         </div>
       </div>
-      {window["isOasEnabled"] && <OasModal
-        openModal={openOasModal}
-        handleCloseModal={handleCloseModal}
-      />}
       {<div className="TrafficPage-Container">
         <div className="TrafficPage-ListContainer">
           <Filters

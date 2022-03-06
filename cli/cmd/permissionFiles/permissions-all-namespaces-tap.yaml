@@ -22,6 +22,9 @@ rules:
 - apiGroups: [""]
   resources: ["configmaps"]
   verbs: ["create"]
+- apiGroups: [""]
+  resources: ["pods/log"]
+  verbs: ["get"]
 ---
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
@@ -29,7 +32,7 @@ metadata:
   name: mizu-runner-clusterrolebindings
 subjects:
 - kind: User
-  name: user1
+  name: user-with-clusterwide-access
   apiGroup: rbac.authorization.k8s.io
 roleRef:
   kind: ClusterRole

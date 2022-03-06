@@ -25,9 +25,12 @@ interface TCPInterface {
 interface Entry {
     proto: ProtocolInterface,
     method?: string,
+    methodQuery?: string,
     summary: string,
+    summaryQuery: string,
     id: number,
     status?: number;
+    statusQuery?: string;
     timestamp: Date;
     src: TCPInterface,
     dst: TCPInterface,
@@ -152,10 +155,10 @@ export const EntryItem: React.FC<EntryProps> = ({entry, style, headingMode}) => 
                 horizontal={false}
             /> : null}
             {isStatusCodeEnabled && <div>
-                <StatusCode statusCode={entry.status}/>
+                <StatusCode statusCode={entry.status} statusQuery={entry.statusQuery}/>
             </div>}
             <div className={styles.endpointServiceContainer} style={{paddingLeft: endpointServiceContainer}}>
-                <Summary method={entry.method} summary={entry.summary}/>
+                <Summary method={entry.method} methodQuery={entry.methodQuery} summary={entry.summary} summaryQuery={entry.summaryQuery}/>
                 <div className={styles.resolvedName}>
                     <Queryable
                         query={`src.name == "${entry.src.name}"`}

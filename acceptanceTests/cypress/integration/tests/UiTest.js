@@ -1,14 +1,23 @@
 import {findLineAndCheck, getExpectedDetailsDict} from "../testHelpers/StatusBarHelper";
 import {
+    leftOnHoverCheck,
     leftTextCheck,
     resizeToHugeMizu,
     resizeToNormalMizu,
     rightOnHoverCheck,
-    leftOnHoverCheck,
     rightTextCheck,
     verifyMinimumEntries
 } from "../testHelpers/TrafficHelper";
+
 const refreshWaitTimeout = 10000;
+
+
+const fullParam = Cypress.env('arrayDict'); // "Name:fooNamespace:barName:foo1Namespace:bar1"
+const podsArray = fullParam.split('Name:').slice(1); // ["fooNamespace:bar", "foo1Namespace:bar1"]
+podsArray.forEach((podStr, index) => {
+    const podAndNamespaceArr = podStr.split('Namespace:'); // [foo, bar] / [foo1, bar1]
+    podsArray[index] = getExpectedDetailsDict(podAndNamespaceArr[0], podAndNamespaceArr[1]);
+});
 
 it('opening mizu', function () {
     cy.visit(Cypress.env('testUrl'));
@@ -17,16 +26,13 @@ it('opening mizu', function () {
 verifyMinimumEntries();
 
 it('top bar check', function () {
-    const podName1 = 'httpbin', namespace1 = 'mizu-tests';
-    const podName2 = 'httpbin2', namespace2 = 'mizu-tests';
-
     cy.get('.podsCount').trigger('mouseover');
-    findLineAndCheck(getExpectedDetailsDict(podName1, namespace1));
-    findLineAndCheck(getExpectedDetailsDict(podName2, namespace2));
+    podsArray.map(findLineAndCheck);
     cy.reload();
 });
 
 it('filtering guide check', function () {
+    cy.reload();
     cy.get('[title="Open Filtering Guide (Cheatsheet)"]').click();
     cy.get('#modal-modal-title').should('be.visible');
     cy.get('[lang="en"]').click(0, 0);
@@ -64,8 +70,6 @@ it('right side sanity test', function () {
     });
 });
 
-serviceMapCheck();
-
 checkIllegalFilter('invalid filter');
 
 checkFilter({
@@ -86,17 +90,30 @@ checkFilter({
     applyByEnter: false
 });
 
-checkFilter({
-    name: 'src.name == ""',
-    leftSidePath: '[title="Source Name"]',
-    leftSideExpectedText: '[Unresolved]',
-    rightSidePath: '> :nth-child(2) [title="Source Name"]',
-    rightSideExpectedText: '[Unresolved]',
-    applyByEnter: false
-});
+if (Cypress.env('shouldCheckSrcAndDest')) {
+    serviceMapCheck();
+
+    checkFilter({
+        name: 'src.name == ""',
+        leftSidePath: '[title="Source Name"]',
+        leftSideExpectedText: '[Unresolved]',
+        rightSidePath: '> :nth-child(2) [title="Source Name"]',
+        rightSideExpectedText: '[Unresolved]',
+        applyByEnter: false
+    });
+
+    checkFilter({
+        name: `dst.name == "httpbin.mizu-tests"`,
+        leftSidePath: '> :nth-child(3) > :nth-child(2) > :nth-child(3) > :nth-child(2)',
+        leftSideExpectedText: 'httpbin.mizu-tests',
+        rightSidePath: '> :nth-child(2) > :nth-child(2) > :nth-child(2) > :nth-child(3) > :nth-child(2)',
+        rightSideExpectedText: 'httpbin.mizu-tests',
+        applyByEnter: false
+    });
+}
 
 checkFilter({
-    name: 'method == "GET"',
+    name: 'request.method == "GET"',
     leftSidePath: '> :nth-child(3) > :nth-child(1) > :nth-child(1) > :nth-child(2)',
     leftSideExpectedText: 'GET',
     rightSidePath: '> :nth-child(2) > :nth-child(2) > :nth-child(1) > :nth-child(1) > :nth-child(2)',
@@ -105,20 +122,11 @@ checkFilter({
 });
 
 checkFilter({
-    name: 'summary == "/get"',
+    name: 'request.path == "/get"',
     leftSidePath: '> :nth-child(3) > :nth-child(1) > :nth-child(2) > :nth-child(2)',
     leftSideExpectedText: '/get',
     rightSidePath: '> :nth-child(2) > :nth-child(2) > :nth-child(1) > :nth-child(2) > :nth-child(2)',
     rightSideExpectedText: '/get',
-    applyByEnter: false
-});
-
-checkFilter({
-    name: 'dst.name == "httpbin.mizu-tests"',
-    leftSidePath: '> :nth-child(3) > :nth-child(2) > :nth-child(3) > :nth-child(2)',
-    leftSideExpectedText: 'httpbin.mizu-tests',
-    rightSidePath: '> :nth-child(2) > :nth-child(2) > :nth-child(2) > :nth-child(3) > :nth-child(2)',
-    rightSideExpectedText: 'httpbin.mizu-tests',
     applyByEnter: false
 });
 
@@ -131,7 +139,7 @@ checkFilter({
     applyByEnter: false
 });
 
-checkFilterNoResults('method == "POST"');
+checkFilterNoResults('request.method == "POST"');
 
 function checkFilterNoResults(filterName) {
     it(`checking the filter: ${filterName}. Expecting no results`, function () {
@@ -169,6 +177,7 @@ function shouldNotExist(entryNum) {
 
 function checkIllegalFilter(illegalFilterName) {
     it(`should show red search bar with the input: ${illegalFilterName}`, function () {
+        cy.reload();
         cy.get('#total-entries').then(number => {
             const totalEntries = number.text();
 

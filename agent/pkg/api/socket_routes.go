@@ -17,6 +17,12 @@ import (
 	tapApi "github.com/up9inc/mizu/tap/api"
 )
 
+var extensionsMap map[string]*tapApi.Extension // global
+
+func InitExtensionsMap(ref map[string]*tapApi.Extension) {
+	extensionsMap = ref
+}
+
 type EventHandlers interface {
 	WebSocketConnect(socketId int, isTapper bool)
 	WebSocketDisconnect(socketId int, isTapper bool)
@@ -165,7 +171,8 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 					if params.EnableFullEntries {
 						message, _ = models.CreateFullEntryWebSocketMessage(entry)
 					} else {
-						base := tapApi.Summarize(entry)
+						extension := extensionsMap[entry.Protocol.Name]
+						base := extension.Dissector.Summarize(entry)
 						message, _ = models.CreateBaseEntryWebSocketMessage(base)
 					}
 

@@ -2,7 +2,6 @@ import Tooltip from "./Tooltip";
 import React from "react";
 import {makeStyles} from '@material-ui/core/styles';
 import variables from '../../variables.module.scss';
-
 interface Tab {
     tab: string,
     disabled?: boolean,
@@ -27,7 +26,7 @@ const useTabsStyles = makeStyles((theme) => ({
         height: 40,
         paddingTop: 15
     },
-
+    
     tab: {
         display: 'inline-block',
         textTransform: 'uppercase',
@@ -40,7 +39,7 @@ const useTabsStyles = makeStyles((theme) => ({
     },
 
     active: {
-        fontWeight: theme.typography.fontWeightBold,
+        fontWeight: 600,
         color: variables.fontColor,
         cursor: 'unset',
         borderBottom: "2px solid " + variables.fontColor,
