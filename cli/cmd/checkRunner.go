@@ -65,7 +65,7 @@ func runMizuCheck() {
 func checkKubernetesApi() (*kubernetes.Provider, *semver.SemVersion, bool) {
 	logger.Log.Infof("\nkubernetes-api\n--------------------")
 
-	kubernetesProvider, err := kubernetes.NewProvider(config.Config.KubeConfigPath())
+	kubernetesProvider, err := kubernetes.NewProvider(config.Config.KubeConfigPath(), config.Config.KubeContext)
 	if err != nil {
 		logger.Log.Errorf("%v can't initialize the client, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), err)
 		return nil, nil, false

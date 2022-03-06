@@ -84,6 +84,11 @@ export default class Api {
         return response.data;
     }
 
+    gelAlloasServicesInOneSpec = async () => {
+        const response = await this.client.get("/oas/all");
+        return response.data;
+    }
+
     validateQuery = async (query) => {
         if (this.source) {
             this.source.cancel();
