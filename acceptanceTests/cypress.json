@@ -24,7 +24,6 @@
     "redactHeaderContent": "User-Header[REDACTED]",
     "redactBodyContent": "{ \"User\": \"[REDACTED]\" }",
     "regexMaskingBodyContent": "[REDACTED]",
-    "minimumEntries": 25,
     "greenFilterColor": "rgb(210, 250, 210)",
     "redFilterColor": "rgb(250, 214, 220)",
     "bodyJsonClass": ".hljs",

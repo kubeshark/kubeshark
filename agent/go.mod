@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	github.com/antelman107/net-wait-go v0.0.0-20210623112055-cf684aebda7b
-	github.com/chanced/openapi v0.0.7
+	github.com/chanced/openapi v0.0.8
 	github.com/djherbis/atime v1.1.0
 	github.com/elastic/go-elasticsearch/v7 v7.17.0
 	github.com/getkin/kin-openapi v0.89.0
@@ -22,7 +22,7 @@ require (
 	github.com/ory/kratos-client-go v0.8.2-alpha.1
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/stretchr/testify v1.7.0
-	github.com/up9inc/basenine/client/go v0.0.0-20220220204122-0ef8cb24fab1
+	github.com/up9inc/basenine/client/go v0.0.0-20220302182733-74dc40dc2ef0
 	github.com/up9inc/mizu/shared v0.0.0
 	github.com/up9inc/mizu/tap v0.0.0
 	github.com/up9inc/mizu/tap/api v0.0.0

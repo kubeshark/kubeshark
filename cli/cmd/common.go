@@ -61,7 +61,7 @@ func startProxyReportErrorIfAny(kubernetesProvider *kubernetes.Provider, ctx con
 }
 
 func getKubernetesProviderForCli() (*kubernetes.Provider, error) {
-	kubernetesProvider, err := kubernetes.NewProvider(config.Config.KubeConfigPath())
+	kubernetesProvider, err := kubernetes.NewProvider(config.Config.KubeConfigPath(), config.Config.KubeContext)
 	if err != nil {
 		handleKubernetesProviderError(err)
 		return nil, err

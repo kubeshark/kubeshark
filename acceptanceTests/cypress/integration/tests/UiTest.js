@@ -1,14 +1,23 @@
 import {findLineAndCheck, getExpectedDetailsDict} from "../testHelpers/StatusBarHelper";
 import {
+    leftOnHoverCheck,
     leftTextCheck,
     resizeToHugeMizu,
     resizeToNormalMizu,
     rightOnHoverCheck,
-    leftOnHoverCheck,
     rightTextCheck,
     verifyMinimumEntries
 } from "../testHelpers/TrafficHelper";
+
 const refreshWaitTimeout = 10000;
+
+
+const fullParam = Cypress.env('arrayDict'); // "Name:fooNamespace:barName:foo1Namespace:bar1"
+const podsArray = fullParam.split('Name:').slice(1); // ["fooNamespace:bar", "foo1Namespace:bar1"]
+podsArray.forEach((podStr, index) => {
+    const podAndNamespaceArr = podStr.split('Namespace:'); // [foo, bar] / [foo1, bar1]
+    podsArray[index] = getExpectedDetailsDict(podAndNamespaceArr[0], podAndNamespaceArr[1]);
+});
 
 it('opening mizu', function () {
     cy.visit(Cypress.env('testUrl'));
@@ -17,16 +26,13 @@ it('opening mizu', function () {
 verifyMinimumEntries();
 
 it('top bar check', function () {
-    const podName1 = 'httpbin', namespace1 = 'mizu-tests';
-    const podName2 = 'httpbin2', namespace2 = 'mizu-tests';
-
     cy.get('.podsCount').trigger('mouseover');
-    findLineAndCheck(getExpectedDetailsDict(podName1, namespace1));
-    findLineAndCheck(getExpectedDetailsDict(podName2, namespace2));
+    podsArray.map(findLineAndCheck);
     cy.reload();
 });
 
 it('filtering guide check', function () {
+    cy.reload();
     cy.get('[title="Open Filtering Guide (Cheatsheet)"]').click();
     cy.get('#modal-modal-title').should('be.visible');
     cy.get('[lang="en"]').click(0, 0);
@@ -84,14 +90,27 @@ checkFilter({
     applyByEnter: false
 });
 
-checkFilter({
-    name: 'src.name == ""',
-    leftSidePath: '[title="Source Name"]',
-    leftSideExpectedText: '[Unresolved]',
-    rightSidePath: '> :nth-child(2) [title="Source Name"]',
-    rightSideExpectedText: '[Unresolved]',
-    applyByEnter: false
-});
+if (Cypress.env('shouldCheckSrcAndDest')) {
+    serviceMapCheck();
+
+    checkFilter({
+        name: 'src.name == ""',
+        leftSidePath: '[title="Source Name"]',
+        leftSideExpectedText: '[Unresolved]',
+        rightSidePath: '> :nth-child(2) [title="Source Name"]',
+        rightSideExpectedText: '[Unresolved]',
+        applyByEnter: false
+    });
+
+    checkFilter({
+        name: `dst.name == "httpbin.mizu-tests"`,
+        leftSidePath: '> :nth-child(3) > :nth-child(2) > :nth-child(3) > :nth-child(2)',
+        leftSideExpectedText: 'httpbin.mizu-tests',
+        rightSidePath: '> :nth-child(2) > :nth-child(2) > :nth-child(2) > :nth-child(3) > :nth-child(2)',
+        rightSideExpectedText: 'httpbin.mizu-tests',
+        applyByEnter: false
+    });
+}
 
 checkFilter({
     name: 'method == "GET"',
@@ -108,15 +127,6 @@ checkFilter({
     leftSideExpectedText: '/get',
     rightSidePath: '> :nth-child(2) > :nth-child(2) > :nth-child(1) > :nth-child(2) > :nth-child(2)',
     rightSideExpectedText: '/get',
-    applyByEnter: false
-});
-
-checkFilter({
-    name: 'dst.name == "httpbin.mizu-tests"',
-    leftSidePath: '> :nth-child(3) > :nth-child(2) > :nth-child(3) > :nth-child(2)',
-    leftSideExpectedText: 'httpbin.mizu-tests',
-    rightSidePath: '> :nth-child(2) > :nth-child(2) > :nth-child(2) > :nth-child(3) > :nth-child(2)',
-    rightSideExpectedText: 'httpbin.mizu-tests',
     applyByEnter: false
 });
 
@@ -167,6 +177,7 @@ function shouldNotExist(entryNum) {
 
 function checkIllegalFilter(illegalFilterName) {
     it(`should show red search bar with the input: ${illegalFilterName}`, function () {
+        cy.reload();
         cy.get('#total-entries').then(number => {
             const totalEntries = number.text();
 
@@ -188,7 +199,7 @@ function checkFilter(filterDetails){
     const entriesForDeeperCheck = 5;
 
     it(`checking the filter: ${name}`, function () {
-        cy.get('#total-entries').then(number => {
+        cy.get('#total-entries').should('not.have.text', '0').then(number => {
             const totalEntries = number.text();
 
             // checks the hover on the last entry (the only one in DOM at the beginning)
@@ -319,4 +330,43 @@ function checkPrettyOrNothing(jsonItems, decodedBody) {
 function checkOnlyLineNumberes(jsonItems, decodedText) {
     cy.get(`${Cypress.env('bodyJsonClass')} >`).should('have.length', 1).and('have.text', decodedText);
     cy.get(`${Cypress.env('bodyJsonClass')} > >`).should('have.length', jsonItems)
+}
+
+function serviceMapCheck() {
+    it('service map test', function () {
+        cy.intercept(`${Cypress.env('testUrl')}/servicemap/get`).as('serviceMapRequest');
+        cy.get('#total-entries').should('not.have.text', '0').then(() => {
+            cy.get('#total-entries').invoke('text').then(entriesNum => {
+                cy.get('[alt="service-map"]').click();
+                cy.wait('@serviceMapRequest').then(({response}) => {
+                    const body = response.body;
+                    const nodeParams = {
+                        destination: 'httpbin.mizu-tests',
+                        source: '127.0.0.1'
+                    };
+                    serviceMapAPICheck(body, parseInt(entriesNum), nodeParams);
+                    cy.reload();
+                });
+            });
+        });
+    });
+}
+
+function serviceMapAPICheck(body, entriesNum, nodeParams) {
+    const {nodes, edges} = body;
+
+    expect(nodes.length).to.equal(Object.keys(nodeParams).length, `Expected nodes count`);
+
+    expect(edges.some(edge => edge.source.name === nodeParams.source)).to.be.true;
+    expect(edges.some(edge => edge.destination.name === nodeParams.destination)).to.be.true;
+
+    let count = 0;
+    edges.forEach(edge => {
+        count += edge.count;
+        if (edge.destination.name === nodeParams.destination) {
+            expect(edge.source.name).to.equal(nodeParams.source);
+        }
+    });
+
+    expect(count).to.equal(entriesNum);
 }
