@@ -31,9 +31,6 @@ cli: ## Build CLI.
 cli-debug: ## Build CLI.
 	@echo "building cli"; cd cli && $(MAKE) build-debug
 
-build-cli-ci: ## Build CLI for CI.
-	@echo "building cli for ci"; cd cli && $(MAKE) build GIT_BRANCH=ci SUFFIX=ci
-
 agent: ## Build agent.
 	@(echo "building mizu agent .." )
 	@(cd agent; go build -o build/mizuagent main.go)
@@ -56,10 +53,6 @@ push: push-docker push-cli ## Build and publish agent docker image & CLI.
 push-docker: ## Build and publish agent docker image.
 	@echo "publishing Docker image .. "
 	devops/build-push-featurebranch.sh
-
-build-docker-ci: ## Build agent docker image for CI.
-	@echo "building docker image for ci"
-	devops/build-agent-ci.sh
 
 push-cli: ## Build and publish CLI.
 	@echo "publishing CLI .. "

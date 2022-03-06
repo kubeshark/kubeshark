@@ -57,14 +57,14 @@ kubectl expose deployment rabbitmq --type=LoadBalancer --port=5672 -n mizu-tests
 echo "Starting proxy"
 kubectl proxy --port=8080 &
 
-echo "Starting tunnel"
-minikube tunnel &
-
 echo "Setting minikube docker env"
 eval $(minikube docker-env)
 
 echo "Build agent image"
-make build-docker-ci
+docker build -t mizu/ci:0.0 .
 
 echo "Build cli"
-make build-cli-ci
+cd cli && make build GIT_BRANCH=ci SUFFIX=ci
+
+echo "Starting tunnel"
+minikube tunnel &

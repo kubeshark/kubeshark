@@ -2,8 +2,15 @@ package cmd
 
 import (
 	"context"
+	"embed"
 	"fmt"
+	core "k8s.io/api/core/v1"
+	rbac "k8s.io/api/rbac/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/kubernetes/scheme"
 	"regexp"
+	"time"
 
 	"github.com/up9inc/mizu/cli/apiserver"
 	"github.com/up9inc/mizu/cli/config"
@@ -13,8 +20,13 @@ import (
 	"github.com/up9inc/mizu/shared/semver"
 )
 
+var (
+	//go:embed permissionFiles
+	embedFS embed.FS
+)
+
 func runMizuCheck() {
-	logger.Log.Infof("Mizu install checks\n===================")
+	logger.Log.Infof("Mizu checks\n===================")
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // cancel will be called when this function exits
@@ -25,17 +37,22 @@ func runMizuCheck() {
 		checkPassed = checkKubernetesVersion(kubernetesVersion)
 	}
 
-	var isInstallCommand bool
-	if checkPassed {
-		checkPassed, isInstallCommand = checkMizuMode(ctx, kubernetesProvider)
-	}
+	if config.Config.Check.PreTap {
+		if checkPassed {
+			checkPassed = checkK8sTapPermissions(ctx, kubernetesProvider)
+		}
 
-	if checkPassed {
-		checkPassed = checkK8sResources(ctx, kubernetesProvider, isInstallCommand)
-	}
+		if checkPassed {
+			checkPassed = checkImagePullInCluster(ctx, kubernetesProvider)
+		}
+	} else {
+		if checkPassed {
+			checkPassed = checkK8sResources(ctx, kubernetesProvider)
+		}
 
-	if checkPassed {
-		checkPassed = checkServerConnection(kubernetesProvider)
+		if checkPassed {
+			checkPassed = checkServerConnection(kubernetesProvider)
+		}
 	}
 
 	if checkPassed {
@@ -48,7 +65,7 @@ func runMizuCheck() {
 func checkKubernetesApi() (*kubernetes.Provider, *semver.SemVersion, bool) {
 	logger.Log.Infof("\nkubernetes-api\n--------------------")
 
-	kubernetesProvider, err := kubernetes.NewProvider(config.Config.KubeConfigPath())
+	kubernetesProvider, err := kubernetes.NewProvider(config.Config.KubeConfigPath(), config.Config.KubeContext)
 	if err != nil {
 		logger.Log.Errorf("%v can't initialize the client, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), err)
 		return nil, nil, false
@@ -63,27 +80,6 @@ func checkKubernetesApi() (*kubernetes.Provider, *semver.SemVersion, bool) {
 	logger.Log.Infof("%v can query the Kubernetes API", fmt.Sprintf(uiUtils.Green, "√"))
 
 	return kubernetesProvider, kubernetesVersion, true
-}
-
-func checkMizuMode(ctx context.Context, kubernetesProvider *kubernetes.Provider) (bool, bool) {
-	logger.Log.Infof("\nmode\n--------------------")
-
-	if exist, err := kubernetesProvider.DoesDeploymentExist(ctx, config.Config.MizuResourcesNamespace, kubernetes.ApiServerPodName); err != nil {
-		logger.Log.Errorf("%v can't check mizu command, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), err)
-		return false, false
-	} else if exist {
-		logger.Log.Infof("%v mizu running with install command", fmt.Sprintf(uiUtils.Green, "√"))
-		return true, true
-	} else if exist, err = kubernetesProvider.DoesPodExist(ctx, config.Config.MizuResourcesNamespace, kubernetes.ApiServerPodName); err != nil {
-		logger.Log.Errorf("%v can't check mizu command, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), err)
-		return false, false
-	} else if exist {
-		logger.Log.Infof("%v mizu running with tap command", fmt.Sprintf(uiUtils.Green, "√"))
-		return true, false
-	} else {
-		logger.Log.Infof("%v mizu is not running", fmt.Sprintf(uiUtils.Red, "✗"))
-		return false, false
-	}
 }
 
 func checkKubernetesVersion(kubernetesVersion *semver.SemVersion) bool {
@@ -169,7 +165,7 @@ func checkPortForward(serverUrl string, kubernetesProvider *kubernetes.Provider)
 	return nil
 }
 
-func checkK8sResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, isInstallCommand bool) bool {
+func checkK8sResources(ctx context.Context, kubernetesProvider *kubernetes.Provider) bool {
 	logger.Log.Infof("\nk8s-components\n--------------------")
 
 	exist, err := kubernetesProvider.DoesNamespaceExist(ctx, config.Config.MizuResourcesNamespace)
@@ -198,52 +194,27 @@ func checkK8sResources(ctx context.Context, kubernetesProvider *kubernetes.Provi
 	exist, err = kubernetesProvider.DoesServiceExist(ctx, config.Config.MizuResourcesNamespace, kubernetes.ApiServerPodName)
 	allResourcesExist = checkResourceExist(kubernetes.ApiServerPodName, "service", exist, err) && allResourcesExist
 
-	if isInstallCommand {
-		allResourcesExist = checkInstallResourcesExist(ctx, kubernetesProvider) && allResourcesExist
-	} else {
-		allResourcesExist = checkTapResourcesExist(ctx, kubernetesProvider) && allResourcesExist
-	}
+	allResourcesExist = checkPodResourcesExist(ctx, kubernetesProvider) && allResourcesExist
 
 	return allResourcesExist
 }
 
-func checkInstallResourcesExist(ctx context.Context, kubernetesProvider *kubernetes.Provider) bool {
-	exist, err := kubernetesProvider.DoesRoleExist(ctx, config.Config.MizuResourcesNamespace, kubernetes.DaemonRoleName)
-	installResourcesExist := checkResourceExist(kubernetes.DaemonRoleName, "role", exist, err)
-
-	exist, err = kubernetesProvider.DoesRoleBindingExist(ctx, config.Config.MizuResourcesNamespace, kubernetes.DaemonRoleBindingName)
-	installResourcesExist = checkResourceExist(kubernetes.DaemonRoleBindingName, "role binding", exist, err) && installResourcesExist
-
-	exist, err = kubernetesProvider.DoesPersistentVolumeClaimExist(ctx, config.Config.MizuResourcesNamespace, kubernetes.PersistentVolumeClaimName)
-	installResourcesExist = checkResourceExist(kubernetes.PersistentVolumeClaimName, "persistent volume claim", exist, err) && installResourcesExist
-
-	exist, err = kubernetesProvider.DoesDeploymentExist(ctx, config.Config.MizuResourcesNamespace, kubernetes.ApiServerPodName)
-	installResourcesExist = checkResourceExist(kubernetes.ApiServerPodName, "deployment", exist, err) && installResourcesExist
-
-	return installResourcesExist
-}
-
-func checkTapResourcesExist(ctx context.Context, kubernetesProvider *kubernetes.Provider) bool {
-	exist, err := kubernetesProvider.DoesPodExist(ctx, config.Config.MizuResourcesNamespace, kubernetes.ApiServerPodName)
-	tapResourcesExist := checkResourceExist(kubernetes.ApiServerPodName, "pod", exist, err)
-
-	if !tapResourcesExist {
+func checkPodResourcesExist(ctx context.Context, kubernetesProvider *kubernetes.Provider) bool {
+	if pods, err := kubernetesProvider.ListPodsByAppLabel(ctx, config.Config.MizuResourcesNamespace, kubernetes.ApiServerPodName); err != nil {
+		logger.Log.Errorf("%v error checking if '%v' pod is running, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), kubernetes.ApiServerPodName, err)
 		return false
-	}
-
-	if pod, err := kubernetesProvider.GetPod(ctx, config.Config.MizuResourcesNamespace, kubernetes.ApiServerPodName); err != nil {
-		logger.Log.Errorf("%v error checking if '%v' pod exists, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), kubernetes.ApiServerPodName, err)
+	} else if len(pods) == 0 {
+		logger.Log.Errorf("%v '%v' pod doesn't exist", fmt.Sprintf(uiUtils.Red, "✗"), kubernetes.ApiServerPodName)
 		return false
-	} else if kubernetes.IsPodRunning(pod) {
-		logger.Log.Infof("%v '%v' pod running", fmt.Sprintf(uiUtils.Green, "√"), kubernetes.ApiServerPodName)
-	} else {
+	} else if !kubernetes.IsPodRunning(&pods[0]) {
 		logger.Log.Errorf("%v '%v' pod not running", fmt.Sprintf(uiUtils.Red, "✗"), kubernetes.ApiServerPodName)
 		return false
 	}
 
-	tapperRegex := regexp.MustCompile(fmt.Sprintf("^%s.*", kubernetes.TapperPodName))
-	if pods, err := kubernetesProvider.ListAllPodsMatchingRegex(ctx, tapperRegex, []string{config.Config.MizuResourcesNamespace}); err != nil {
-		logger.Log.Errorf("%v error listing '%v' pods, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), kubernetes.TapperPodName, err)
+	logger.Log.Infof("%v '%v' pod running", fmt.Sprintf(uiUtils.Green, "√"), kubernetes.ApiServerPodName)
+
+	if pods, err := kubernetesProvider.ListPodsByAppLabel(ctx, config.Config.MizuResourcesNamespace, kubernetes.TapperPodName); err != nil {
+		logger.Log.Errorf("%v error checking if '%v' pods are running, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), kubernetes.TapperPodName, err)
 		return false
 	} else {
 		tappers := 0
@@ -273,9 +244,182 @@ func checkResourceExist(resourceName string, resourceType string, exist bool, er
 	} else if !exist {
 		logger.Log.Errorf("%v '%v' %v doesn't exist", fmt.Sprintf(uiUtils.Red, "✗"), resourceName, resourceType)
 		return false
-	} else {
-		logger.Log.Infof("%v '%v' %v exists", fmt.Sprintf(uiUtils.Green, "√"), resourceName, resourceType)
 	}
 
+	logger.Log.Infof("%v '%v' %v exists", fmt.Sprintf(uiUtils.Green, "√"), resourceName, resourceType)
 	return true
+}
+
+func checkK8sTapPermissions(ctx context.Context, kubernetesProvider *kubernetes.Provider) bool {
+	logger.Log.Infof("\nkubernetes-permissions\n--------------------")
+
+	var filePath string
+	if config.Config.IsNsRestrictedMode() {
+		filePath = "permissionFiles/permissions-ns-tap.yaml"
+	} else {
+		filePath = "permissionFiles/permissions-all-namespaces-tap.yaml"
+	}
+
+	data, err := embedFS.ReadFile(filePath)
+	if err != nil {
+		logger.Log.Errorf("%v error while checking kubernetes permissions, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), err)
+		return false
+	}
+
+	obj, err := getDecodedObject(data)
+	if err != nil {
+		logger.Log.Errorf("%v error while checking kubernetes permissions, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), err)
+		return false
+	}
+
+	var rules []rbac.PolicyRule
+	if config.Config.IsNsRestrictedMode() {
+		rules = obj.(*rbac.Role).Rules
+	} else {
+		rules = obj.(*rbac.ClusterRole).Rules
+	}
+
+	return checkPermissions(ctx, kubernetesProvider, rules)
+}
+
+func getDecodedObject(data []byte) (runtime.Object, error) {
+	decode := scheme.Codecs.UniversalDeserializer().Decode
+
+	obj, _, err := decode(data, nil, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return obj, nil
+}
+
+func checkPermissions(ctx context.Context, kubernetesProvider *kubernetes.Provider, rules []rbac.PolicyRule) bool {
+	permissionsExist := true
+
+	for _, rule := range rules {
+		for _, group := range rule.APIGroups {
+			for _, resource := range rule.Resources {
+				for _, verb := range rule.Verbs {
+					exist, err := kubernetesProvider.CanI(ctx, config.Config.MizuResourcesNamespace, resource, verb, group)
+					permissionsExist = checkPermissionExist(group, resource, verb, exist, err) && permissionsExist
+				}
+			}
+		}
+	}
+
+	return permissionsExist
+}
+
+func checkPermissionExist(group string, resource string, verb string, exist bool, err error) bool {
+	if err != nil {
+		logger.Log.Errorf("%v error checking permission for %v %v in group '%v', err: %v", fmt.Sprintf(uiUtils.Red, "✗"), verb, resource, group, err)
+		return false
+	} else if !exist {
+		logger.Log.Errorf("%v can't %v %v in group '%v'", fmt.Sprintf(uiUtils.Red, "✗"), verb, resource, group)
+		return false
+	}
+
+	logger.Log.Infof("%v can %v %v in group '%v'", fmt.Sprintf(uiUtils.Green, "√"), verb, resource, group)
+	return true
+}
+
+func checkImagePullInCluster(ctx context.Context, kubernetesProvider *kubernetes.Provider) bool {
+	logger.Log.Infof("\nimage-pull-in-cluster\n--------------------")
+
+	podName := "image-pull-in-cluster"
+
+	defer removeImagePullInClusterResources(ctx, kubernetesProvider, podName)
+	if err := createImagePullInClusterResources(ctx, kubernetesProvider, podName); err != nil {
+		logger.Log.Errorf("%v error while creating image pull in cluster resources, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), err)
+		return false
+	}
+
+	if err := checkImagePulled(ctx, kubernetesProvider, podName); err != nil {
+		logger.Log.Errorf("%v cluster is not able to pull mizu containers from docker hub, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), err)
+		return false
+	}
+
+	logger.Log.Infof("%v cluster is able to pull mizu containers from docker hub", fmt.Sprintf(uiUtils.Green, "√"))
+	return true
+}
+
+func checkImagePulled(ctx context.Context, kubernetesProvider *kubernetes.Provider, podName string) error {
+	podExactRegex := regexp.MustCompile(fmt.Sprintf("^%s$", podName))
+	podWatchHelper := kubernetes.NewPodWatchHelper(kubernetesProvider, podExactRegex)
+	eventChan, errorChan := kubernetes.FilteredWatch(ctx, podWatchHelper, []string{config.Config.MizuResourcesNamespace}, podWatchHelper)
+
+	timeAfter := time.After(30 * time.Second)
+
+	for {
+		select {
+		case wEvent, ok := <-eventChan:
+			if !ok {
+				eventChan = nil
+				continue
+			}
+
+			pod, err := wEvent.ToPod()
+			if err != nil {
+				return err
+			}
+
+			if pod.Status.Phase == core.PodRunning {
+				return nil
+			}
+		case err, ok := <-errorChan:
+			if !ok {
+				errorChan = nil
+				continue
+			}
+
+			return err
+		case <-timeAfter:
+			return fmt.Errorf("image not pulled in time")
+		}
+	}
+}
+
+func removeImagePullInClusterResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, podName string) {
+	if err := kubernetesProvider.RemovePod(ctx, config.Config.MizuResourcesNamespace, podName); err != nil {
+		logger.Log.Debugf("error while removing image pull in cluster resources, err: %v", err)
+	}
+
+	if !config.Config.IsNsRestrictedMode() {
+		if err := kubernetesProvider.RemoveNamespace(ctx, config.Config.MizuResourcesNamespace); err != nil {
+			logger.Log.Debugf("error while removing image pull in cluster resources, err: %v", err)
+		}
+	}
+}
+
+func createImagePullInClusterResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, podName string) error {
+	if !config.Config.IsNsRestrictedMode() {
+		if _, err := kubernetesProvider.CreateNamespace(ctx, config.Config.MizuResourcesNamespace); err != nil {
+			return err
+		}
+	}
+
+	var zero int64
+	pod := &core.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: podName,
+		},
+		Spec: core.PodSpec{
+			Containers: []core.Container{
+				{
+					Name:            "probe",
+					Image:           "up9inc/busybox",
+					ImagePullPolicy: "Always",
+					Command:         []string{"cat"},
+					Stdin:           true,
+				},
+			},
+			TerminationGracePeriodSeconds: &zero,
+		},
+	}
+
+	if _, err := kubernetesProvider.CreatePod(ctx, config.Config.MizuResourcesNamespace, pod); err != nil {
+		return err
+	}
+
+	return nil
 }

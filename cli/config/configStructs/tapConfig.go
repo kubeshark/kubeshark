@@ -3,10 +3,16 @@ package configStructs
 import (
 	"errors"
 	"fmt"
+	"io/fs"
+	"io/ioutil"
+	"os"
 	"regexp"
 
+	"github.com/up9inc/mizu/cli/uiUtils"
 	"github.com/up9inc/mizu/shared"
 
+	basenine "github.com/up9inc/basenine/server/lib"
+	"github.com/up9inc/mizu/shared/logger"
 	"github.com/up9inc/mizu/shared/units"
 )
 
@@ -18,6 +24,7 @@ const (
 	PlainTextFilterRegexesTapName = "regex-masking"
 	DisableRedactionTapName       = "no-redact"
 	HumanMaxEntriesDBSizeTapName  = "max-entries-db-size"
+	InsertionFilterName           = "insertion-filter"
 	DryRunTapName                 = "dry-run"
 	WorkspaceTapName              = "workspace"
 	EnforcePolicyFile             = "traffic-validation-file"
@@ -27,26 +34,27 @@ const (
 )
 
 type TapConfig struct {
-	UploadIntervalSec       int              `yaml:"upload-interval" default:"10"`
-	PodRegexStr             string           `yaml:"regex" default:".*"`
-	GuiPort                 uint16           `yaml:"gui-port" default:"8899"`
-	ProxyHost               string           `yaml:"proxy-host" default:"127.0.0.1"`
-	Namespaces              []string         `yaml:"namespaces"`
-	Analysis                bool             `yaml:"analysis" default:"false"`
-	AllNamespaces           bool             `yaml:"all-namespaces" default:"false"`
-	PlainTextFilterRegexes  []string         `yaml:"regex-masking"`
-	IgnoredUserAgents       []string         `yaml:"ignored-user-agents"`
-	DisableRedaction        bool             `yaml:"no-redact" default:"false"`
-	HumanMaxEntriesDBSize   string           `yaml:"max-entries-db-size" default:"200MB"`
-	DryRun                  bool             `yaml:"dry-run" default:"false"`
-	Workspace               string           `yaml:"workspace"`
-	EnforcePolicyFile       string           `yaml:"traffic-validation-file"`
-	ContractFile            string           `yaml:"contract"`
-	AskUploadConfirmation   bool             `yaml:"ask-upload-confirmation" default:"true"`
-	ApiServerResources      shared.Resources `yaml:"api-server-resources"`
-	TapperResources         shared.Resources `yaml:"tapper-resources"`
-	ServiceMesh             bool             `yaml:"service-mesh" default:"false"`
-	Tls                     bool             `yaml:"tls" default:"false"`
+	UploadIntervalSec      int              `yaml:"upload-interval" default:"10"`
+	PodRegexStr            string           `yaml:"regex" default:".*"`
+	GuiPort                uint16           `yaml:"gui-port" default:"8899"`
+	ProxyHost              string           `yaml:"proxy-host" default:"127.0.0.1"`
+	Namespaces             []string         `yaml:"namespaces"`
+	Analysis               bool             `yaml:"analysis" default:"false"`
+	AllNamespaces          bool             `yaml:"all-namespaces" default:"false"`
+	PlainTextFilterRegexes []string         `yaml:"regex-masking"`
+	IgnoredUserAgents      []string         `yaml:"ignored-user-agents"`
+	DisableRedaction       bool             `yaml:"no-redact" default:"false"`
+	HumanMaxEntriesDBSize  string           `yaml:"max-entries-db-size" default:"200MB"`
+	InsertionFilter        string           `yaml:"insertion-filter" default:""`
+	DryRun                 bool             `yaml:"dry-run" default:"false"`
+	Workspace              string           `yaml:"workspace"`
+	EnforcePolicyFile      string           `yaml:"traffic-validation-file"`
+	ContractFile           string           `yaml:"contract"`
+	AskUploadConfirmation  bool             `yaml:"ask-upload-confirmation" default:"true"`
+	ApiServerResources     shared.Resources `yaml:"api-server-resources"`
+	TapperResources        shared.Resources `yaml:"tapper-resources"`
+	ServiceMesh            bool             `yaml:"service-mesh" default:"false"`
+	Tls                    bool             `yaml:"tls" default:"false"`
 }
 
 func (config *TapConfig) PodRegex() *regexp.Regexp {
@@ -57,6 +65,25 @@ func (config *TapConfig) PodRegex() *regexp.Regexp {
 func (config *TapConfig) MaxEntriesDBSizeBytes() int64 {
 	maxEntriesDBSizeBytes, _ := units.HumanReadableToBytes(config.HumanMaxEntriesDBSize)
 	return maxEntriesDBSizeBytes
+}
+
+func (config *TapConfig) GetInsertionFilter() string {
+	insertionFilter := config.InsertionFilter
+	if fs.ValidPath(insertionFilter) {
+		if _, err := os.Stat(insertionFilter); err == nil {
+			b, err := ioutil.ReadFile(insertionFilter)
+			if err != nil {
+				logger.Log.Warningf(uiUtils.Warning, fmt.Sprintf("Couldn't read the file on path: %s, err: %v", insertionFilter, err))
+			} else {
+				insertionFilter = string(b)
+			}
+		}
+	}
+	_, err := basenine.Parse(insertionFilter)
+	if err != nil {
+		logger.Log.Warningf(uiUtils.Warning, fmt.Sprintf("Insertion filter syntax error: %v", err))
+	}
+	return insertionFilter
 }
 
 func (config *TapConfig) Validate() error {

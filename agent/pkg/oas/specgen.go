@@ -188,7 +188,7 @@ func (g *SpecGen) handlePathObj(entryWithSource *EntryWithSource) (string, error
 	}
 
 	if entry.Request.Method == "OPTIONS" {
-		logger.Log.Debugf("Dropped traffic entry due to its method: %s", urlParsed.Path)
+		logger.Log.Debugf("Dropped traffic entry due to its method: %s %s", entry.Request.Method, urlParsed.Path)
 		return "", nil
 	}
 

@@ -4,13 +4,14 @@ import (
 	"bytes"
 	"crypto/tls"
 	"encoding/json"
+	"net/http"
+	"sync"
+	"time"
+
 	"github.com/elastic/go-elasticsearch/v7"
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/logger"
 	"github.com/up9inc/mizu/tap/api"
-	"net/http"
-	"sync"
-	"time"
 )
 
 type client struct {
@@ -31,6 +32,9 @@ func GetInstance() *client {
 
 func (client *client) Configure(config shared.ElasticConfig) {
 	if config.Url == "" || config.User == "" || config.Password == "" {
+		if client.es != nil {
+			client.es = nil
+		}
 		logger.Log.Infof("No elastic configuration was supplied, elastic exporter disabled")
 		return
 	}
@@ -46,13 +50,13 @@ func (client *client) Configure(config shared.ElasticConfig) {
 
 	es, err := elasticsearch.NewClient(cfg)
 	if err != nil {
-		logger.Log.Fatalf("Failed to initialize elastic client %v", err)
+		logger.Log.Errorf("Failed to initialize elastic client %v", err)
 	}
 
 	// Have the client instance return a response
 	res, err := es.Info()
 	if err != nil {
-		logger.Log.Fatalf("Elastic client.Info() ERROR: %v", err)
+		logger.Log.Errorf("Elastic client.Info() ERROR: %v", err)
 	} else {
 		client.es = es
 		client.index = "mizu_traffic_http_" + time.Now().Format("2006_01_02_15_04")

@@ -118,8 +118,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus}) => {
         ws.current = new WebSocket(MizuWebsocketURL);
         ws.current.onopen = () => {
             setWsConnection(WsConnectionStatus.Connected);
-            ws.current.send(query);
-            ws.current.send("");
+            ws.current.send(JSON.stringify({"query": query, "enableFullEntries": false}));
         }
         ws.current.onclose = () => {
             setWsConnection(WsConnectionStatus.Closed);

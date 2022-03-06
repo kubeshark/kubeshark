@@ -9,7 +9,6 @@ import (
 	"github.com/op/go-logging"
 	basenine "github.com/up9inc/basenine/client/go"
 	"github.com/up9inc/mizu/agent/pkg/api"
-	"github.com/up9inc/mizu/agent/pkg/config"
 	"github.com/up9inc/mizu/agent/pkg/controllers"
 	"github.com/up9inc/mizu/shared/logger"
 	tapApi "github.com/up9inc/mizu/tap/api"
@@ -63,20 +62,18 @@ func LoadExtensions() {
 	controllers.InitExtensionsMap(ExtensionsMap)
 }
 
-func ConfigureBasenineServer(host string, port string) {
+func ConfigureBasenineServer(host string, port string, dbSize int64, logLevel logging.Level, insertionFilter string) {
 	if !wait.New(
 		wait.WithProto("tcp"),
 		wait.WithWait(200*time.Millisecond),
 		wait.WithBreak(50*time.Millisecond),
 		wait.WithDeadline(5*time.Second),
-		wait.WithDebug(config.Config.LogLevel == logging.DEBUG),
+		wait.WithDebug(logLevel == logging.DEBUG),
 	).Do([]string{fmt.Sprintf("%s:%s", host, port)}) {
 		logger.Log.Panicf("Basenine is not available!")
 	}
 
-	// Limit the database size to default 200MB
-	err := basenine.Limit(host, port, config.Config.MaxDBSizeBytes)
-	if err != nil {
+	if err := basenine.Limit(host, port, dbSize); err != nil {
 		logger.Log.Panicf("Error while limiting database size: %v", err)
 	}
 
@@ -84,11 +81,15 @@ func ConfigureBasenineServer(host string, port string) {
 	for _, extension := range Extensions {
 		macros := extension.Dissector.Macros()
 		for macro, expanded := range macros {
-			err = basenine.Macro(host, port, macro, expanded)
-			if err != nil {
+			if err := basenine.Macro(host, port, macro, expanded); err != nil {
 				logger.Log.Panicf("Error while adding a macro: %v", err)
 			}
 		}
+	}
+
+	// Set the insertion filter that comes from the config
+	if err := basenine.InsertionFilter(host, port, insertionFilter); err != nil {
+		logger.Log.Errorf("Error while setting the insertion filter: %v", err)
 	}
 }
 
