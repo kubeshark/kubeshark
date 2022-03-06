@@ -47,7 +47,7 @@ jobs:
         run: devops/check_modified_files.sh cli/
 
       - name: CLI Test
-        if: steps.cli_modified_files.outputs.matched == 'true'
+        if: github.event_name == 'push' || steps.cli_modified_files.outputs.matched == 'true'
         run: make test-cli
 
       - name: Check Agent modified files
@@ -55,7 +55,7 @@ jobs:
         run: devops/check_modified_files.sh agent/
 
       - name: Agent Test
-        if: steps.agent_modified_files.outputs.matched == 'true'
+        if: github.event_name == 'push' || steps.agent_modified_files.outputs.matched == 'true'
         run: make test-agent
 
       - name: Shared Test
@@ -66,7 +66,7 @@ jobs:
         run: devops/check_modified_files.sh tap/extensions/
 
       - name: Extensions Test
-        if: steps.ext_modified_files.outputs.matched == 'true'
+        if: github.event_name == 'push' || steps.ext_modified_files.outputs.matched == 'true'
         run: make test-extensions
 
       - name: Upload coverage to Codecov
