@@ -181,8 +181,8 @@ func (p *tlsPoller) buildTcpId(chunk *tlsChunk, ip net.IP, port uint16) api.TcpI
 	if err != nil {
 		// May happen if the socket already closed, very likely to happen for localhost
 		//
-		myIp = net.IP{0, 0, 0, 0}
-		myPort = 0
+		myIp = api.UnknownIp
+		myPort = api.UnknownPort
 	}
 
 	if chunk.isRequest() {

@@ -20,6 +20,17 @@ const (
 	INODE_FILED_INDEX       = 9
 )
 
+// This file helps to extract Ip and Port out of a Socket file descriptor.
+// 
+// The equivalent bash commands are:
+// 
+//  > ls -l /proc/<pid>/fd/<fd>
+// 	    Output something like "socket:[1234]" for sockets - 1234 is the inode of the socket
+//  > cat /proc/<pid>/net/tcp | grep <inode>
+//      Output a line per ipv4 socket, the 9th field is the inode of the socket
+//      The 1st and 2nd fields are the source and dest ip and ports in a Hex format
+//      0100007F:50 is 127.0.0.1:80
+
 func getAddressBySockfd(procfs string, pid uint32, fd uint32, src bool) (net.IP, uint16, error) {
 	inode, err := getSocketInode(procfs, pid, fd)
 
