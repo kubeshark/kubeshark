@@ -12,10 +12,6 @@ import (
 	"github.com/up9inc/mizu/tap"
 )
 
-func GetEntry(r *tapApi.Entry, v tapApi.DataUnmarshaler) error {
-	return v.UnmarshalData(r)
-}
-
 type TapConfig struct {
 	TappedNamespaces map[string]bool `json:"tappedNamespaces"`
 }

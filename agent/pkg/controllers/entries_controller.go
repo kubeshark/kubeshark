@@ -77,7 +77,8 @@ func GetEntries(c *gin.Context) {
 			return // exit
 		}
 
-		base := tapApi.Summarize(entry)
+		extension := extensionsMap[entry.Protocol.Name]
+		base := extension.Dissector.Summarize(entry)
 
 		dataSlice = append(dataSlice, base)
 	}
@@ -123,6 +124,7 @@ func GetEntry(c *gin.Context) {
 	}
 
 	extension := extensionsMap[entry.Protocol.Name]
+	base := extension.Dissector.Summarize(entry)
 	representation, bodySize, _ := extension.Dissector.Represent(entry.Request, entry.Response)
 
 	var rules []map[string]interface{}
@@ -142,6 +144,7 @@ func GetEntry(c *gin.Context) {
 		Representation: string(representation),
 		BodySize:       bodySize,
 		Data:           entry,
+		Base:           base,
 		Rules:          rules,
 		IsRulesEnabled: isRulesEnabled,
 	})

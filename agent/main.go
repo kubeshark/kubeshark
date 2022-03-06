@@ -86,7 +86,7 @@ func hostApi(socketHarOutputChannel chan<- *tapApi.OutputChannelItem) *gin.Engin
 	app := gin.Default()
 
 	app.GET("/echo", func(c *gin.Context) {
-		c.String(http.StatusOK, "Here is Mizu agent")
+		c.JSON(http.StatusOK, "Here is Mizu agent")
 	})
 
 	eventHandlers := api.RoutesEventHandlers{
@@ -140,7 +140,7 @@ func runInApiServerMode(namespace string) *gin.Engine {
 	if err := config.LoadConfig(); err != nil {
 		logger.Log.Fatalf("Error loading config file %v", err)
 	}
-	app.ConfigureBasenineServer(shared.BasenineHost, shared.BaseninePort, config.Config.MaxDBSizeBytes, config.Config.LogLevel)
+	app.ConfigureBasenineServer(shared.BasenineHost, shared.BaseninePort, config.Config.MaxDBSizeBytes, config.Config.LogLevel, config.Config.InsertionFilter)
 	startTime = time.Now().UnixNano() / int64(time.Millisecond)
 	api.StartResolving(namespace)
 

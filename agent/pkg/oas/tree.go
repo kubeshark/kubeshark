@@ -1,12 +1,13 @@
 package oas
 
 import (
-	"net/url"
-	"strconv"
-	"strings"
-
+	"encoding/json"
 	"github.com/chanced/openapi"
 	"github.com/up9inc/mizu/shared/logger"
+	"net/url"
+	"regexp"
+	"strconv"
+	"strings"
 )
 
 type NodePath = []string
@@ -49,8 +50,8 @@ func (n *Node) getOrSet(path NodePath, existingPathObj *openapi.PathObj) (node *
 		node = n.searchInConstants(pathChunk)
 	}
 
-	if node == nil {
-		node = n.searchInParams(paramObj, chunkIsGibberish)
+	if node == nil && pathChunk != "" {
+		node = n.searchInParams(paramObj, pathChunk, chunkIsGibberish)
 	}
 
 	// still no node found, should create it
@@ -76,6 +77,10 @@ func (n *Node) getOrSet(path NodePath, existingPathObj *openapi.PathObj) (node *
 		if err != nil {
 			logger.Log.Warningf("Failed to add example to a parameter: %s", err)
 		}
+
+		if len(*exmp) >= 3 && node.pathParam.Schema.Pattern == nil { // is it enough to decide on 2 samples?
+			node.pathParam.Schema.Pattern = getPatternFromExamples(exmp)
+		}
 	}
 
 	// TODO: eat up trailing slash, in a smart way: node.pathObj!=nil && path[1]==""
@@ -86,6 +91,57 @@ func (n *Node) getOrSet(path NodePath, existingPathObj *openapi.PathObj) (node *
 	}
 
 	return node
+}
+
+func getPatternFromExamples(exmp *openapi.Examples) *openapi.Regexp {
+	allInts := true
+	strs := make([]string, 0)
+	for _, example := range *exmp {
+		exampleObj, err := example.ResolveExample(exampleResolver)
+		if err != nil {
+			continue
+		}
+
+		var value string
+		err = json.Unmarshal(exampleObj.Value, &value)
+		if err != nil {
+			logger.Log.Warningf("Failed decoding parameter example into string: %s", err)
+			continue
+		}
+		strs = append(strs, value)
+
+		if _, err := strconv.Atoi(value); err != nil {
+			allInts = false
+		}
+	}
+
+	if allInts {
+		re := new(openapi.Regexp)
+		re.Regexp = regexp.MustCompile(`\d+`)
+		return re
+	} else {
+		prefix := longestCommonXfixStr(strs, true)
+		suffix := longestCommonXfixStr(strs, false)
+
+		pat := ""
+		separators := "-._/:|*,+" // TODO: we could also cut prefix till the last separator
+		if len(prefix) > 0 && strings.Contains(separators, string(prefix[len(prefix)-1])) {
+			pat = "^" + regexp.QuoteMeta(prefix)
+		}
+
+		pat += ".+"
+
+		if len(suffix) > 0 && strings.Contains(separators, string(suffix[0])) {
+			pat += regexp.QuoteMeta(suffix) + "$"
+		}
+
+		if pat != ".+" {
+			re := new(openapi.Regexp)
+			re.Regexp = regexp.MustCompile(pat)
+			return re
+		}
+	}
+	return nil
 }
 
 func (n *Node) createParam() *openapi.ParameterObj {
@@ -118,23 +174,30 @@ func (n *Node) createParam() *openapi.ParameterObj {
 	return newParam
 }
 
-func (n *Node) searchInParams(paramObj *openapi.ParameterObj, chunkIsGibberish bool) *Node {
+func (n *Node) searchInParams(paramObj *openapi.ParameterObj, chunk string, chunkIsGibberish bool) *Node {
 	// look among params
-	if paramObj != nil || chunkIsGibberish {
-		for _, subnode := range n.children {
-			if subnode.constant != nil {
-				continue
-			}
-
-			// TODO: check the regex pattern of param? for exceptions etc
-
-			if paramObj != nil {
-				// TODO: mergeParam(subnode.pathParam, paramObj)
-				return subnode
-			} else {
-				return subnode
-			}
+	for _, subnode := range n.children {
+		if subnode.constant != nil {
+			continue
 		}
+
+		if paramObj != nil {
+			// TODO: mergeParam(subnode.pathParam, paramObj)
+			return subnode
+		} else if subnode.pathParam.Schema.Pattern != nil { // it has defined param pattern, have to respect it
+			// TODO: and not in exceptions
+			if subnode.pathParam.Schema.Pattern.Match([]byte(chunk)) {
+				return subnode
+			} else if chunkIsGibberish {
+				// TODO: what to do if gibberish chunk does not match the pattern and not in exceptions?
+				return nil
+			} else {
+				return nil
+			}
+		} else if chunkIsGibberish {
+			return subnode
+		}
+
 	}
 	return nil
 }

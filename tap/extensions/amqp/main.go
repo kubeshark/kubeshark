@@ -219,31 +219,6 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 	request := item.Pair.Request.Payload.(map[string]interface{})
 	reqDetails := request["details"].(map[string]interface{})
 
-	summary := ""
-	switch request["method"] {
-	case basicMethodMap[40]:
-		summary = reqDetails["exchange"].(string)
-	case basicMethodMap[60]:
-		summary = reqDetails["exchange"].(string)
-	case exchangeMethodMap[10]:
-		summary = reqDetails["exchange"].(string)
-	case queueMethodMap[10]:
-		summary = reqDetails["queue"].(string)
-	case connectionMethodMap[10]:
-		summary = fmt.Sprintf(
-			"%s.%s",
-			strconv.Itoa(int(reqDetails["versionMajor"].(float64))),
-			strconv.Itoa(int(reqDetails["versionMinor"].(float64))),
-		)
-	case connectionMethodMap[50]:
-		summary = reqDetails["replyText"].(string)
-	case queueMethodMap[20]:
-		summary = reqDetails["queue"].(string)
-	case basicMethodMap[20]:
-		summary = reqDetails["queue"].(string)
-	}
-
-	request["url"] = summary
 	reqDetails["method"] = request["method"]
 	return &api.Entry{
 		Protocol: protocol,
@@ -260,15 +235,68 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 		Namespace:   namespace,
 		Outgoing:    item.ConnectionInfo.IsOutgoing,
 		Request:     reqDetails,
-		Method:      request["method"].(string),
-		Status:      0,
 		Timestamp:   item.Timestamp,
 		StartTime:   item.Pair.Request.CaptureTime,
 		ElapsedTime: 0,
-		Summary:     summary,
-		IsOutgoing:  item.ConnectionInfo.IsOutgoing,
 	}
 
+}
+
+func (d dissecting) Summarize(entry *api.Entry) *api.BaseEntry {
+	summary := ""
+	summaryQuery := ""
+	method := entry.Request["method"].(string)
+	methodQuery := fmt.Sprintf(`request.method == "%s"`, method)
+	switch method {
+	case basicMethodMap[40]:
+		summary = entry.Request["exchange"].(string)
+		summaryQuery = fmt.Sprintf(`request.exchange == "%s"`, summary)
+	case basicMethodMap[60]:
+		summary = entry.Request["exchange"].(string)
+		summaryQuery = fmt.Sprintf(`request.exchange == "%s"`, summary)
+	case exchangeMethodMap[10]:
+		summary = entry.Request["exchange"].(string)
+		summaryQuery = fmt.Sprintf(`request.exchange == "%s"`, summary)
+	case queueMethodMap[10]:
+		summary = entry.Request["queue"].(string)
+		summaryQuery = fmt.Sprintf(`request.queue == "%s"`, summary)
+	case connectionMethodMap[10]:
+		versionMajor := int(entry.Request["versionMajor"].(float64))
+		versionMinor := int(entry.Request["versionMinor"].(float64))
+		summary = fmt.Sprintf(
+			"%s.%s",
+			strconv.Itoa(versionMajor),
+			strconv.Itoa(versionMinor),
+		)
+		summaryQuery = fmt.Sprintf(`request.versionMajor == %d and request.versionMinor == %d`, versionMajor, versionMinor)
+	case connectionMethodMap[50]:
+		summary = entry.Request["replyText"].(string)
+		summaryQuery = fmt.Sprintf(`request.replyText == "%s"`, summary)
+	case queueMethodMap[20]:
+		summary = entry.Request["queue"].(string)
+		summaryQuery = fmt.Sprintf(`request.queue == "%s"`, summary)
+	case basicMethodMap[20]:
+		summary = entry.Request["queue"].(string)
+		summaryQuery = fmt.Sprintf(`request.queue == "%s"`, summary)
+	}
+
+	return &api.BaseEntry{
+		Id:             entry.Id,
+		Protocol:       entry.Protocol,
+		Summary:        summary,
+		SummaryQuery:   summaryQuery,
+		Status:         0,
+		StatusQuery:    "",
+		Method:         method,
+		MethodQuery:    methodQuery,
+		Timestamp:      entry.Timestamp,
+		Source:         entry.Source,
+		Destination:    entry.Destination,
+		IsOutgoing:     entry.Outgoing,
+		Latency:        entry.ElapsedTime,
+		Rules:          entry.Rules,
+		ContractStatus: entry.ContractStatus,
+	}
 }
 
 func (d dissecting) Represent(request map[string]interface{}, response map[string]interface{}) (object []byte, bodySize int64, err error) {

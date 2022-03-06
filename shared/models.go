@@ -35,6 +35,7 @@ type Resources struct {
 
 type MizuAgentConfig struct {
 	MaxDBSizeBytes         int64         `json:"maxDBSizeBytes"`
+	InsertionFilter        string        `json:"insertionFilter"`
 	AgentImage             string        `json:"agentImage"`
 	PullPolicy             string        `json:"pullPolicy"`
 	LogLevel               logging.Level `json:"logLevel"`

@@ -19,13 +19,15 @@ jobs:
     name: Unit Tests
     runs-on: ubuntu-latest
     steps:
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 2
+
       - name: Set up Go 1.17
         uses: actions/setup-go@v2
         with:
           go-version: '^1.17'
-
-      - name: Check out code into the Go module directory
-        uses: actions/checkout@v2
 
       - name: Install libpcap
         shell: bash
@@ -40,16 +42,31 @@ jobs:
       - name: 'Set up Cloud SDK'
         uses: 'google-github-actions/setup-gcloud@v0'
 
+      - name: Check CLI modified files
+        id: cli_modified_files
+        run: devops/check_modified_files.sh cli/
+
       - name: CLI Test
+        if: github.event_name == 'push' || steps.cli_modified_files.outputs.matched == 'true'
         run: make test-cli
 
+      - name: Check Agent modified files
+        id: agent_modified_files
+        run: devops/check_modified_files.sh agent/
+
       - name: Agent Test
+        if: github.event_name == 'push' || steps.agent_modified_files.outputs.matched == 'true'
         run: make test-agent
 
       - name: Shared Test
         run: make test-shared
+      
+      - name: Check extensions modified files
+        id: ext_modified_files
+        run: devops/check_modified_files.sh tap/extensions/
 
       - name: Extensions Test
+        if: github.event_name == 'push' || steps.ext_modified_files.outputs.matched == 'true'
         run: make test-extensions
 
       - name: Upload coverage to Codecov
