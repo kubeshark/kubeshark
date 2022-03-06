@@ -98,6 +98,10 @@ func newTcpPacketSource(name, filename string, interfaceName string,
 	return result, nil
 }
 
+func (source *tcpPacketSource) String() string {
+	return source.name
+}
+
 func (source *tcpPacketSource) setBPFFilter(expr string) (err error) {
 	return source.handle.SetBPFFilter(expr)
 }

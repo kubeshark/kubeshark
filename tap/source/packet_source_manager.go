@@ -8,6 +8,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
+const bpfFilterMaxPods = 150
 const hostSourcePid = "0"
 
 type PacketSourceManager struct {
@@ -85,9 +86,7 @@ func (m *PacketSourceManager) getRelevantPids(procfs string, pods []v1.Pod) map[
 	relevantPids := make(map[string]bool)
 	relevantPids[hostSourcePid] = true
 
-	envoyPids, err := discoverRelevantEnvoyPids(procfs, pods)
-
-	if err != nil {
+	if envoyPids, err := discoverRelevantEnvoyPids(procfs, pods); err != nil {
 		logger.Log.Warningf("Unable to discover envoy pids - %w", err)
 	} else {
 		for _, pid := range envoyPids {
@@ -95,9 +94,7 @@ func (m *PacketSourceManager) getRelevantPids(procfs string, pods []v1.Pod) map[
 		}
 	}
 
-	linkerdPids, err := discoverRelevantLinkerdPids(procfs, pods)
-
-	if err != nil {
+	if linkerdPids, err := discoverRelevantLinkerdPids(procfs, pods); err != nil {
 		logger.Log.Warningf("Unable to discover linkerd pids - %w", err)
 	} else {
 		for _, pid := range linkerdPids {
@@ -123,8 +120,16 @@ func (m *PacketSourceManager) setBPFFilter(pods []v1.Pod) {
 		logger.Log.Info("No pods provided, skipping pcap bpf filter")
 		return
 	}
+	
+	var expr string
+	
+	if len(pods) > bpfFilterMaxPods {
+		logger.Log.Info("Too many pods for setting ebpf filter %d, setting just not 443", len(pods))
+		expr = "port not 443"
+	} else {
+		expr = buildBPFExpr(pods)
+	}
 
-	expr := buildBPFExpr(pods)
 	logger.Log.Infof("Setting pcap bpf filter %s", expr)
 
 	for pid, src := range m.sources {
