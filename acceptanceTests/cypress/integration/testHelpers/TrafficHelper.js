@@ -65,14 +65,14 @@ export function checkThatAllEntriesShown() {
 }
 
 export function checkFilterByMethod(funcDict) {
-    const {protocol, method, summary, hugeMizu} = funcDict;
-    const summaryDict = getSummeryDict(summary);
-    const methodDict = getMethodDict(method);
+    const {protocol, method, methodQuery, summary, summaryQuery} = funcDict;
+    const summaryDict = getSummaryDict(summary, summaryQuery);
+    const methodDict = getMethodDict(method, methodQuery);
     const protocolDict = getProtocolDict(protocol.name, protocol.text);
 
     it(`Testing the method: ${method}`, function () {
         // applying filter
-        cy.get('.w-tc-editor-text').clear().type(`method == "${method}"`);
+        cy.get('.w-tc-editor-text').clear().type(methodQuery);
         cy.get('[type="submit"]').click();
         cy.get('.w-tc-editor').should('have.attr', 'style').and('include', Cypress.env('greenFilterColor'));
 
@@ -121,7 +121,7 @@ function resizeIfNeeded(entriesLen) {
 function deepCheck(generalDict, protocolDict, methodDict, entry) {
     const entryNum = getEntryNumById(entry.id);
     const {summary, value} = generalDict;
-    const summaryDict = getSummeryDict(summary);
+    const summaryDict = getSummaryDict(summary);
 
     leftOnHoverCheck(entryNum, methodDict.pathLeft, methodDict.expectedOnHover);
     leftOnHoverCheck(entryNum, protocolDict.pathLeft, protocolDict.expectedOnHover);
@@ -149,13 +149,13 @@ function deepCheck(generalDict, protocolDict, methodDict, entry) {
     }
 }
 
-function getSummeryDict(summary) {
-    if (summary) {
+function getSummaryDict(value, query) {
+    if (value) {
         return {
             pathLeft: '> :nth-child(2) > :nth-child(1) > :nth-child(2) > :nth-child(2)',
             pathRight: '> :nth-child(2) > :nth-child(1) > :nth-child(1) > :nth-child(2) > :nth-child(2)',
-            expectedText: summary,
-            expectedOnHover: `summary == "${summary}"`
+            expectedText: value,
+            expectedOnHover: query
         };
     }
     else {
@@ -163,12 +163,12 @@ function getSummeryDict(summary) {
     }
 }
 
-function getMethodDict(method) {
+function getMethodDict(value, query) {
     return {
         pathLeft: '> :nth-child(2) > :nth-child(1) > :nth-child(1) > :nth-child(2)',
         pathRight: '> :nth-child(2) > :nth-child(1) > :nth-child(1) > :nth-child(1) > :nth-child(2)',
-        expectedText: method,
-        expectedOnHover: `method == "${method}"`
+        expectedText: value,
+        expectedOnHover: query
     };
 }
 
