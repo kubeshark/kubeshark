@@ -21,14 +21,16 @@ import (
 const (
 	binDir          = "bin"
 	patternBin      = "*_req.bin"
-	patternDissect  = "*.json"
+	patternExpect   = "*.json"
 	msgDissecting   = "Dissecting:"
 	msgAnalyzing    = "Analyzing:"
+	msgSummarizing  = "Summarizing:"
 	msgRepresenting = "Representing:"
 	respSuffix      = "_res.bin"
 	expectDir       = "expect"
 	dissectDir      = "dissect"
 	analyzeDir      = "analyze"
+	summarizeDir    = "summarize"
 	representDir    = "represent"
 	testUpdate      = "TEST_UPDATE"
 )
@@ -188,7 +190,7 @@ func TestAnalyze(t *testing.T) {
 	}
 
 	dissector := NewDissector()
-	paths, err := filepath.Glob(path.Join(expectDirDissect, patternDissect))
+	paths, err := filepath.Glob(path.Join(expectDirDissect, patternExpect))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -232,6 +234,63 @@ func TestAnalyze(t *testing.T) {
 	}
 }
 
+func TestSummarize(t *testing.T) {
+	_, testUpdateEnabled := os.LookupEnv(testUpdate)
+
+	expectDirAnalyze := path.Join(expectDir, analyzeDir)
+	expectDirSummarize := path.Join(expectDir, summarizeDir)
+
+	if testUpdateEnabled {
+		os.RemoveAll(expectDirSummarize)
+		err := os.MkdirAll(expectDirSummarize, 0775)
+		assert.Nil(t, err)
+	}
+
+	dissector := NewDissector()
+	paths, err := filepath.Glob(path.Join(expectDirAnalyze, patternExpect))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, _path := range paths {
+		fmt.Printf("%s %s\n", msgSummarizing, _path)
+
+		bytes, err := ioutil.ReadFile(_path)
+		assert.Nil(t, err)
+
+		var entries []*api.Entry
+		err = json.Unmarshal(bytes, &entries)
+		assert.Nil(t, err)
+
+		var baseEntries []*api.BaseEntry
+		for _, entry := range entries {
+			baseEntry := dissector.Summarize(entry)
+			baseEntries = append(baseEntries, baseEntry)
+		}
+
+		pathExpect := path.Join(expectDirSummarize, filepath.Base(_path))
+
+		marshaled, err := json.Marshal(baseEntries)
+		assert.Nil(t, err)
+
+		if testUpdateEnabled {
+			if len(baseEntries) > 0 {
+				err = os.WriteFile(pathExpect, marshaled, 0644)
+				assert.Nil(t, err)
+			}
+		} else {
+			if _, err := os.Stat(pathExpect); errors.Is(err, os.ErrNotExist) {
+				assert.Len(t, entries, 0)
+			} else {
+				expectedBytes, err := ioutil.ReadFile(pathExpect)
+				assert.Nil(t, err)
+
+				assert.JSONEq(t, string(expectedBytes), string(marshaled))
+			}
+		}
+	}
+}
+
 func TestRepresent(t *testing.T) {
 	_, testUpdateEnabled := os.LookupEnv(testUpdate)
 
@@ -245,7 +304,7 @@ func TestRepresent(t *testing.T) {
 	}
 
 	dissector := NewDissector()
-	paths, err := filepath.Glob(path.Join(expectDirAnalyze, patternDissect))
+	paths, err := filepath.Glob(path.Join(expectDirAnalyze, patternExpect))
 	if err != nil {
 		log.Fatal(err)
 	}

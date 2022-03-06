@@ -61,83 +61,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, resolvedDestination string, namespace string) *api.Entry {
 	request := item.Pair.Request.Payload.(map[string]interface{})
 	reqDetails := request["details"].(map[string]interface{})
-	apiKey := ApiKey(reqDetails["apiKey"].(float64))
 
-	summary := ""
-	switch apiKey {
-	case Metadata:
-		_topics := reqDetails["payload"].(map[string]interface{})["topics"]
-		if _topics == nil {
-			break
-		}
-		topics := _topics.([]interface{})
-		for _, topic := range topics {
-			summary += fmt.Sprintf("%s, ", topic.(map[string]interface{})["name"].(string))
-		}
-		if len(summary) > 0 {
-			summary = summary[:len(summary)-2]
-		}
-	case ApiVersions:
-		summary = reqDetails["clientID"].(string)
-	case Produce:
-		_topics := reqDetails["payload"].(map[string]interface{})["topicData"]
-		if _topics == nil {
-			break
-		}
-		topics := _topics.([]interface{})
-		for _, topic := range topics {
-			summary += fmt.Sprintf("%s, ", topic.(map[string]interface{})["topic"].(string))
-		}
-		if len(summary) > 0 {
-			summary = summary[:len(summary)-2]
-		}
-	case Fetch:
-		_topics := reqDetails["payload"].(map[string]interface{})["topics"]
-		if _topics == nil {
-			break
-		}
-		topics := _topics.([]interface{})
-		for _, topic := range topics {
-			summary += fmt.Sprintf("%s, ", topic.(map[string]interface{})["topic"].(string))
-		}
-		if len(summary) > 0 {
-			summary = summary[:len(summary)-2]
-		}
-	case ListOffsets:
-		_topics := reqDetails["payload"].(map[string]interface{})["topics"]
-		if _topics == nil {
-			break
-		}
-		topics := _topics.([]interface{})
-		for _, topic := range topics {
-			summary += fmt.Sprintf("%s, ", topic.(map[string]interface{})["name"].(string))
-		}
-		if len(summary) > 0 {
-			summary = summary[:len(summary)-2]
-		}
-	case CreateTopics:
-		_topics := reqDetails["payload"].(map[string]interface{})["topics"]
-		if _topics == nil {
-			break
-		}
-		topics := _topics.([]interface{})
-		for _, topic := range topics {
-			summary += fmt.Sprintf("%s, ", topic.(map[string]interface{})["name"].(string))
-		}
-		if len(summary) > 0 {
-			summary = summary[:len(summary)-2]
-		}
-	case DeleteTopics:
-		if reqDetails["topicNames"] == nil {
-			break
-		}
-		topicNames := reqDetails["topicNames"].([]string)
-		for _, name := range topicNames {
-			summary += fmt.Sprintf("%s, ", name)
-		}
-	}
-
-	request["url"] = summary
 	elapsedTime := item.Pair.Response.CaptureTime.Sub(item.Pair.Request.CaptureTime).Round(time.Millisecond).Milliseconds()
 	if elapsedTime < 0 {
 		elapsedTime = 0
@@ -158,13 +82,127 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 		Outgoing:    item.ConnectionInfo.IsOutgoing,
 		Request:     reqDetails,
 		Response:    item.Pair.Response.Payload.(map[string]interface{})["details"].(map[string]interface{}),
-		Method:      apiNames[apiKey],
-		Status:      0,
 		Timestamp:   item.Timestamp,
 		StartTime:   item.Pair.Request.CaptureTime,
 		ElapsedTime: elapsedTime,
-		Summary:     summary,
-		IsOutgoing:  item.ConnectionInfo.IsOutgoing,
+	}
+}
+
+func (d dissecting) Summarize(entry *api.Entry) *api.BaseEntry {
+	status := 0
+	statusQuery := ""
+
+	apiKey := ApiKey(entry.Request["apiKey"].(float64))
+	method := apiNames[apiKey]
+	methodQuery := fmt.Sprintf("request.apiKey == %d", int(entry.Request["apiKey"].(float64)))
+
+	summary := ""
+	summaryQuery := ""
+	switch apiKey {
+	case Metadata:
+		_topics := entry.Request["payload"].(map[string]interface{})["topics"]
+		if _topics == nil {
+			break
+		}
+		topics := _topics.([]interface{})
+		for i, topic := range topics {
+			summary += fmt.Sprintf("%s, ", topic.(map[string]interface{})["name"].(string))
+			summaryQuery += fmt.Sprintf(`request.payload.topics[%d].name == "%s" and`, i, summary)
+		}
+		if len(summary) > 0 {
+			summary = summary[:len(summary)-2]
+			summaryQuery = summaryQuery[:len(summaryQuery)-4]
+		}
+	case ApiVersions:
+		summary = entry.Request["clientID"].(string)
+		summaryQuery = fmt.Sprintf(`request.clientID == "%s"`, summary)
+	case Produce:
+		_topics := entry.Request["payload"].(map[string]interface{})["topicData"]
+		if _topics == nil {
+			break
+		}
+		topics := _topics.([]interface{})
+		for i, topic := range topics {
+			summary += fmt.Sprintf("%s, ", topic.(map[string]interface{})["topic"].(string))
+			summaryQuery += fmt.Sprintf(`request.payload.topicData[%d].topic == "%s" and`, i, summary)
+		}
+		if len(summary) > 0 {
+			summary = summary[:len(summary)-2]
+			summaryQuery = summaryQuery[:len(summaryQuery)-4]
+		}
+	case Fetch:
+		_topics := entry.Request["payload"].(map[string]interface{})["topics"]
+		if _topics == nil {
+			break
+		}
+		topics := _topics.([]interface{})
+		for i, topic := range topics {
+			summary += fmt.Sprintf("%s, ", topic.(map[string]interface{})["topic"].(string))
+			summaryQuery += fmt.Sprintf(`request.payload.topics[%d].topic == "%s" and`, i, summary)
+		}
+		if len(summary) > 0 {
+			summary = summary[:len(summary)-2]
+			summaryQuery = summaryQuery[:len(summaryQuery)-4]
+		}
+	case ListOffsets:
+		_topics := entry.Request["payload"].(map[string]interface{})["topics"]
+		if _topics == nil {
+			break
+		}
+		topics := _topics.([]interface{})
+		for i, topic := range topics {
+			summary += fmt.Sprintf("%s, ", topic.(map[string]interface{})["name"].(string))
+			summaryQuery += fmt.Sprintf(`request.payload.topics[%d].name == "%s" and`, i, summary)
+		}
+		if len(summary) > 0 {
+			summary = summary[:len(summary)-2]
+			summaryQuery = summaryQuery[:len(summaryQuery)-4]
+		}
+	case CreateTopics:
+		_topics := entry.Request["payload"].(map[string]interface{})["topics"]
+		if _topics == nil {
+			break
+		}
+		topics := _topics.([]interface{})
+		for i, topic := range topics {
+			summary += fmt.Sprintf("%s, ", topic.(map[string]interface{})["name"].(string))
+			summaryQuery += fmt.Sprintf(`request.payload.topics[%d].name == "%s" and`, i, summary)
+		}
+		if len(summary) > 0 {
+			summary = summary[:len(summary)-2]
+			summaryQuery = summaryQuery[:len(summaryQuery)-4]
+		}
+	case DeleteTopics:
+		if entry.Request["topicNames"] == nil {
+			break
+		}
+		topicNames := entry.Request["topicNames"].([]string)
+		for i, name := range topicNames {
+			summary += fmt.Sprintf("%s, ", name)
+			summaryQuery += fmt.Sprintf(`request.topicNames[%d] == "%s" and`, i, summary)
+		}
+		if len(summary) > 0 {
+			summary = summary[:len(summary)-2]
+			summaryQuery = summaryQuery[:len(summaryQuery)-4]
+		}
+	}
+
+	return &api.BaseEntry{
+		Id:             entry.Id,
+		Protocol:       entry.Protocol,
+		Summary:        summary,
+		SummaryQuery:   summaryQuery,
+		Status:         status,
+		StatusQuery:    statusQuery,
+		Method:         method,
+		MethodQuery:    methodQuery,
+		Timestamp:      entry.Timestamp,
+		Source:         entry.Source,
+		Destination:    entry.Destination,
+		IsOutgoing:     entry.Outgoing,
+		Latency:        entry.ElapsedTime,
+		Rules:          entry.Rules,
+		ContractStatus: entry.ContractStatus,
 	}
 }
 

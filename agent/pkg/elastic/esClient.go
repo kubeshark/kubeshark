@@ -80,11 +80,7 @@ type httpEntry struct {
 	CreatedAt   time.Time              `json:"createdAt"`
 	Request     map[string]interface{} `json:"request"`
 	Response    map[string]interface{} `json:"response"`
-	Summary     string                 `json:"summary"`
-	Method      string                 `json:"method"`
-	Status      int                    `json:"status"`
 	ElapsedTime int64                  `json:"elapsedTime"`
-	Path        string                 `json:"path"`
 }
 
 func (client *client) PushEntry(entry *api.Entry) {
@@ -103,11 +99,7 @@ func (client *client) PushEntry(entry *api.Entry) {
 		CreatedAt:   entry.StartTime,
 		Request:     entry.Request,
 		Response:    entry.Response,
-		Summary:     entry.Summary,
-		Method:      entry.Method,
-		Status:      entry.Status,
 		ElapsedTime: entry.ElapsedTime,
-		Path:        entry.Path,
 	}
 
 	entryJson, err := json.Marshal(entryToPush)
