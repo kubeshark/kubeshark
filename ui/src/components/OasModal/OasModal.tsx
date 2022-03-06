@@ -6,7 +6,8 @@ import { Select } from "../UI/Select";
 import closeIcon from "../assets/closeIcon.svg";
 import { toast } from 'react-toastify';
 import style from './OasModal.module.sass';
-import opnApiLogo from '../assets/openApiLogo.png'
+import openApiLogo from '../assets/openApiLogo.png'
+import { redocThemeOptions } from "./redocThemeOptions";
 
 const modalStyle = {
   position: 'absolute',
@@ -24,42 +25,6 @@ const modalStyle = {
 
 const api = Api.getInstance();
 const ipAddressWithPortRegex = new RegExp('([0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}):([0-9]{1,5})');
-
-const redocThemeOptions = {     
-  theme:{
-    codeBlock:{
-      backgroundColor:"#11171a",
-    },
-    colors:{
-      responses:{
-        error:{
-          tabTextColor:"#1b1b29"
-        },
-        info:{
-          tabTextColor:"#1b1b29",
-        },
-        success:{
-          tabTextColor:"#0c0b1a"
-        },
-      },
-      text:{
-        primary:"#1b1b29",
-        secondary:"#4d4d4d"
-      }
-    },
-    rightPanel:{
-      backgroundColor:"#253237",
-    },
-    sidebar:{
-      backgroundColor:"#ffffff"
-    },
-    typography:{
-      code:{
-        color:"#0c0b1a"
-      }
-    }
-  }
-}
 
 const OasModal = ({ openModal, handleCloseModal }) => { 
   const [oasServices, setOasServices] = useState([] as string[])
@@ -133,7 +98,7 @@ const OasModal = ({ openModal, handleCloseModal }) => {
         <Box sx={modalStyle}>
           <div className={style.boxContainer}>
             <div className={style.selectHeader}>
-              <div><img src={opnApiLogo} alt="openApi" className={style.openApilogo}/></div>
+              <div><img src={openApiLogo} alt="openApi" className={style.openApilogo}/></div>
                 <div className={style.title}>OpenAPI selected service: </div>
                 <div className={style.selectContainer} >
                   <FormControl>
