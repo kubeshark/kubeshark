@@ -449,9 +449,9 @@ func (provider *Provider) CanI(ctx context.Context, namespace string, resource s
 		Spec: auth.SelfSubjectAccessReviewSpec{
 			ResourceAttributes: &auth.ResourceAttributes{
 				Namespace: namespace,
-				Resource: resource,
-				Verb: verb,
-				Group: group,
+				Resource:  resource,
+				Verb:      verb,
+				Group:     group,
 			},
 		},
 	}
@@ -995,6 +995,55 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	return err
 }
 
+func (provider *Provider) ResetMizuTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string) error {
+	agentContainer := applyconfcore.Container()
+	agentContainer.WithName(tapperPodName)
+	agentContainer.WithImage(podImage)
+
+	nodeSelectorRequirement := applyconfcore.NodeSelectorRequirement()
+	nodeSelectorRequirement.WithKey("mizu-non-existing-label")
+	nodeSelectorRequirement.WithOperator(core.NodeSelectorOpExists)
+	nodeSelectorTerm := applyconfcore.NodeSelectorTerm()
+	nodeSelectorTerm.WithMatchExpressions(nodeSelectorRequirement)
+	nodeSelector := applyconfcore.NodeSelector()
+	nodeSelector.WithNodeSelectorTerms(nodeSelectorTerm)
+	nodeAffinity := applyconfcore.NodeAffinity()
+	nodeAffinity.WithRequiredDuringSchedulingIgnoredDuringExecution(nodeSelector)
+	affinity := applyconfcore.Affinity()
+	affinity.WithNodeAffinity(nodeAffinity)
+
+	podSpec := applyconfcore.PodSpec()
+	podSpec.WithContainers(agentContainer)
+	podSpec.WithAffinity(affinity)
+
+	podTemplate := applyconfcore.PodTemplateSpec()
+	podTemplate.WithLabels(map[string]string{
+		"app":          tapperPodName,
+		LabelManagedBy: provider.managedBy,
+		LabelCreatedBy: provider.createdBy,
+	})
+	podTemplate.WithSpec(podSpec)
+
+	labelSelector := applyconfmeta.LabelSelector()
+	labelSelector.WithMatchLabels(map[string]string{"app": tapperPodName})
+
+	applyOptions := metav1.ApplyOptions{
+		Force:        true,
+		FieldManager: fieldManagerName,
+	}
+
+	daemonSet := applyconfapp.DaemonSet(daemonSetName, namespace)
+	daemonSet.
+		WithLabels(map[string]string{
+			LabelManagedBy: provider.managedBy,
+			LabelCreatedBy: provider.createdBy,
+		}).
+		WithSpec(applyconfapp.DaemonSetSpec().WithSelector(labelSelector).WithTemplate(podTemplate))
+
+	_, err := provider.clientSet.AppsV1().DaemonSets(namespace).Apply(ctx, daemonSet, applyOptions)
+	return err
+}
+
 func (provider *Provider) listPodsImpl(ctx context.Context, regex *regexp.Regexp, namespaces []string, listOptions metav1.ListOptions) ([]core.Pod, error) {
 	var pods []core.Pod
 	for _, namespace := range namespaces {
@@ -1038,7 +1087,7 @@ func (provider *Provider) ListAllRunningPodsMatchingRegex(ctx context.Context, r
 	return matchingPods, nil
 }
 
-func(provider *Provider) ListPodsByAppLabel(ctx context.Context, namespaces string, labelName string) ([]core.Pod, error) {
+func (provider *Provider) ListPodsByAppLabel(ctx context.Context, namespaces string, labelName string) ([]core.Pod, error) {
 	pods, err := provider.clientSet.CoreV1().Pods(namespaces).List(ctx, metav1.ListOptions{LabelSelector: fmt.Sprintf("app=%s", labelName)})
 	if err != nil {
 		return nil, err
