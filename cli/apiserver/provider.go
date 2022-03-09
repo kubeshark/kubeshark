@@ -38,6 +38,23 @@ func NewProvider(url string, retries int, timeout time.Duration) *Provider {
 	}
 }
 
+func (provider *Provider) GetInstallTemplate(templateName string) (string, error) {
+	url := fmt.Sprintf("%s/%v", provider.url, templateName)
+	response, err := provider.get(url)
+	if err != nil {
+		return "", err
+	}
+
+	defer response.Body.Close()
+
+	installTemplate, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return "", err
+	}
+
+	return string(installTemplate), nil
+}
+
 func (provider *Provider) TestConnection() error {
 	retriesLeft := provider.retries
 	for retriesLeft > 0 {
@@ -159,7 +176,7 @@ func (provider *Provider) do(req *http.Request) (*http.Response, error) {
 }
 
 func (provider *Provider) checkError(response *http.Response, errInOperation error) (*http.Response, error) {
-	if (errInOperation != nil) {
+	if errInOperation != nil {
 		return response, errInOperation
 	// Check only if status != 200 (and not status >= 300). Agent APIs return only 200 on success.
 	} else if response.StatusCode != http.StatusOK {
@@ -170,7 +187,7 @@ func (provider *Provider) checkError(response *http.Response, errInOperation err
 			return response, err
 		}
 
-		errorMsg := strings.ReplaceAll((string(body)), "\n", ";")
+		errorMsg := strings.ReplaceAll(string(body), "\n", ";")
 		return response, fmt.Errorf("got response with status code: %d, body: %s", response.StatusCode, errorMsg)
 	}
 
