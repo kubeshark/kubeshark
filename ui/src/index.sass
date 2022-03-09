@@ -1,0 +1,148 @@
+@import './variables.module'
+
+html,
+body
+  height: 100%
+
+body
+  font-family: 'Source Sans Pro', sans-serif
+  font-weight: 400
+  font-size: 90%
+  color: #fff
+  background-color: #313346
+  -webkit-font-smoothing: antialiased
+  -moz-osx-font-smoothing: grayscale
+  margin: 0
+  padding: 0
+  overflow: hidden
+
+code
+  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace
+
+.uppercase
+  text-transform: uppercase
+
+/****
+ * Button
+ ***/
+button
+  span
+    line-height: 1
+  &:not(.MuiFab-root)
+    &.MuiButtonBase-root
+      box-sizing: border-box
+      font-weight: 500
+      line-height: 1
+      border-radius: 20px
+      letter-spacing: 0.02857em
+      text-transform: uppercase
+      img:not(.custom)
+        max-width: 13px
+        max-height: 13px
+
+    &.tiny
+      min-width: 0
+
+/****
+ * Select
+ ***/
+.select
+  display: flex
+  align-items: center
+  justify-content: flex-start
+  color: white
+  .MuiInput-underline
+    &::before,
+    &::after
+      display: none
+      content: ''
+
+    .MuiSelect-root
+      &.MuiSelect-select
+        border-radius: 20px
+        cursor: pointer
+        min-width: 2rem
+        font-weight: normal
+        padding: 3px 16px 4px 12px
+        border: 1px solid #BCC6DD
+
+    .MuiInputBase-input
+      border-radius: 20px
+      background-color: $main-background-color
+      cursor: pointer
+      padding-top: 0
+      padding-bottom: 0
+      font-size: 12px
+      font-weight: normal
+      font-stretch: normal
+      font-style: normal
+      letter-spacing: normal
+      text-align: left
+      line-height: 1.25
+      min-height: initial
+    .MuiSelect-icon
+      top: 50%
+      transform: translateY(-50%)
+      right: 5px
+      position: absolute
+      pointer-events: none
+      &.MuiSelect-iconOpen
+        transform: translateY(-50%) rotate(180deg)
+
+  .ellipsis
+    display: block
+    overflow: hidden
+    white-space: nowrap
+    width: 100px
+    text-overflow: ellipsis
+
+  .selectLabel
+    margin-right: 8px
+
+  &.labelOnTop
+    flex-direction: column
+    align-items: flex-start
+    .selectLabel
+      margin-right: 0
+      margin-bottom: 4px
+
+/****
+ * Paper/List/Menu list
+ ***/
+.MuiPaper-root
+  margin-top: 5px
+  color: $blue-gray
+  border: 1px solid #BCC6DD
+  &.MuiPaper-rounded
+    border-radius: 4px
+
+  .MuiList-root
+    padding: 0
+    &.MuiMenu-list
+      border-radius: 4px
+      box-shadow: 0 10px 20px 0 rgba(0, 0, 0, 0.5)
+      .MuiListItem-root
+        &.MuiMenuItem-root
+          padding: 14px
+          font-size: 11px
+          font-stretch: normal
+          font-style: normal
+          line-height: 1.25
+          &.Mui-selected
+            font-weight: 600
+            background-color: $data-background-color
+
+// scroll-bar css
+
+::-webkit-scrollbar
+  width: 6px
+
+::-webkit-scrollbar-thumb
+  background-color: $light-blue-color
+  border-radius: 10px
+
+::-webkit-scrollbar-button
+  display: none
+
+::-webkit-scrollbar-corner
+  display: none

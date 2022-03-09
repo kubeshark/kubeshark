@@ -48,3 +48,8 @@ cypress.env.json
 # Ignore test data in extensions
 tap/extensions/*/bin
 tap/extensions/*/expect
+
+# UI folders to ignore
+ui*/node_modules
+ui*/public
+ui*/dist

@@ -1,7 +1,0 @@
-{
-  "name": "rework-visit",
-  "version": "1.0.0",
-  "description": "Rework declaration visitor utility",
-  "keywords": ["css", "rework"],
-  "license": "MIT"
-}

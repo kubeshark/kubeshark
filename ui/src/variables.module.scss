@@ -1,0 +1,24 @@
+$main-background-color: white;
+$header-background-color: #F7F9FC;
+$data-background-color: #E9EBF8;
+$font-color: #0C0B1A;
+$secondary-font-color: rgba(0,0,0,0.5);
+$blue-color: #205CF5;
+$light-blue-color: #BCCEFD;
+$success-color: #27AE60;
+$failure-color: #EB5757;
+$blue-gray: #494677;
+$light-gray: #8F9BB2;
+
+:export {
+  mainBackgroundColor: $main-background-color;
+  headerBackgroundColor: $header-background-color;
+  fontColor: $font-color;
+  secondaryFontColor: $secondary-font-color;
+  blueColor: $blue-color;
+  lightBlueColor: $light-blue-color;
+  successColor: $success-color;
+  failureColor: $failure-color;
+  blueGray: $blue-gray;
+  lightGray: $light-gray;
+}
