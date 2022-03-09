@@ -132,8 +132,22 @@ func extractCgroup(lines []string) string {
 	return ""
 }
 
+// cgroup in the /proc/<pid>/cgroup may look something like
+//
+//  /system.slice/docker-<ID>.scope
+//  /system.slice/containerd-<ID>.scope
+//  /kubepods.slice/kubepods-burstable.slice/kubepods-burstable-pod3beae8e0_164d_4689_a087_efd902d8c2ab.slice/docker-<ID>.scope
+//  /kubepods/besteffort/pod7709c1d5-447c-428f-bed9-8ddec35c93f4/<ID>
+//
+// This function extract the <ID> out of the cgroup path, the <ID> should match 
+//	the "Container ID:" field when running kubectl describe pod <POD>
+//
 func normalizeCgroup(cgrouppath string) string {
 	basename := strings.TrimSpace(path.Base(cgrouppath))
+	
+	if strings.Contains(basename, "-") {
+		basename = basename[strings.Index(basename, "-") + 1:]
+	}
 
 	if strings.Contains(basename, ".") {
 		return strings.TrimSuffix(basename, filepath.Ext(basename))
