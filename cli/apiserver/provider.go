@@ -4,11 +4,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
+	"github.com/up9inc/mizu/cli/utils"
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"strings"
 	"time"
 
 	"github.com/up9inc/mizu/shared/kubernetes"
@@ -38,23 +37,6 @@ func NewProvider(url string, retries int, timeout time.Duration) *Provider {
 	}
 }
 
-func (provider *Provider) GetInstallTemplate(templateName string) (string, error) {
-	url := fmt.Sprintf("%s/%v", provider.url, templateName)
-	response, err := provider.get(url)
-	if err != nil {
-		return "", err
-	}
-
-	defer response.Body.Close()
-
-	installTemplate, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		return "", err
-	}
-
-	return string(installTemplate), nil
-}
-
 func (provider *Provider) TestConnection() error {
 	retriesLeft := provider.retries
 	for retriesLeft > 0 {
@@ -76,7 +58,7 @@ func (provider *Provider) TestConnection() error {
 
 func (provider *Provider) isReachable() (bool, error) {
 	echoUrl := fmt.Sprintf("%s/echo", provider.url)
-	if _, err := provider.get(echoUrl); err != nil {
+	if _, err := utils.Get(echoUrl, provider.client); err != nil {
 		return false, err
 	} else {
 		return true, nil
@@ -89,7 +71,7 @@ func (provider *Provider) ReportTapperStatus(tapperStatus shared.TapperStatus) e
 	if jsonValue, err := json.Marshal(tapperStatus); err != nil {
 		return fmt.Errorf("failed Marshal the tapper status %w", err)
 	} else {
-		if _, err := provider.post(tapperStatusUrl, "application/json", bytes.NewBuffer(jsonValue)); err != nil {
+		if _, err := utils.Post(tapperStatusUrl, "application/json", bytes.NewBuffer(jsonValue), provider.client); err != nil {
 			return fmt.Errorf("failed sending to API server the tapped pods %w", err)
 		} else {
 			logger.Log.Debugf("Reported to server API about tapper status: %v", tapperStatus)
@@ -106,7 +88,7 @@ func (provider *Provider) ReportTappedPods(pods []core.Pod) error {
 	if jsonValue, err := json.Marshal(podInfos); err != nil {
 		return fmt.Errorf("failed Marshal the tapped pods %w", err)
 	} else {
-		if _, err := provider.post(tappedPodsUrl, "application/json", bytes.NewBuffer(jsonValue)); err != nil {
+		if _, err := utils.Post(tappedPodsUrl, "application/json", bytes.NewBuffer(jsonValue), provider.client); err != nil {
 			return fmt.Errorf("failed sending to API server the tapped pods %w", err)
 		} else {
 			logger.Log.Debugf("Reported to server API about %d taped pods successfully", len(podInfos))
@@ -118,7 +100,7 @@ func (provider *Provider) ReportTappedPods(pods []core.Pod) error {
 func (provider *Provider) GetGeneralStats() (map[string]interface{}, error) {
 	generalStatsUrl := fmt.Sprintf("%s/status/general", provider.url)
 
-	response, requestErr := provider.get(generalStatsUrl)
+	response, requestErr := utils.Get(generalStatsUrl, provider.client)
 	if requestErr != nil {
 		return nil, fmt.Errorf("failed to get general stats for telemetry, err: %w", requestErr)
 	}
@@ -143,7 +125,7 @@ func (provider *Provider) GetVersion() (string, error) {
 		Method: http.MethodGet,
 		URL:    versionUrl,
 	}
-	statusResp, err := provider.do(req)
+	statusResp, err := utils.Do(req, provider.client)
 	if err != nil {
 		return "", err
 	}
@@ -155,41 +137,4 @@ func (provider *Provider) GetVersion() (string, error) {
 	}
 
 	return versionResponse.Ver, nil
-}
-
-// When err is nil, resp always contains a non-nil resp.Body.
-// Caller should close resp.Body when done reading from it.
-func (provider *Provider) get(url string) (*http.Response, error) {
-	return provider.checkError(provider.client.Get(url))
-}
-
-// When err is nil, resp always contains a non-nil resp.Body.
-// Caller should close resp.Body when done reading from it.
-func (provider *Provider) post(url, contentType string, body io.Reader) (*http.Response, error) {
-	return provider.checkError(provider.client.Post(url, contentType, body))
-}
-
-// When err is nil, resp always contains a non-nil resp.Body.
-// Caller should close resp.Body when done reading from it.
-func (provider *Provider) do(req *http.Request) (*http.Response, error) {
-	return provider.checkError(provider.client.Do(req))
-}
-
-func (provider *Provider) checkError(response *http.Response, errInOperation error) (*http.Response, error) {
-	if errInOperation != nil {
-		return response, errInOperation
-	// Check only if status != 200 (and not status >= 300). Agent APIs return only 200 on success.
-	} else if response.StatusCode != http.StatusOK {
-		body, err := ioutil.ReadAll(response.Body)
-		response.Body.Close()
-		response.Body = io.NopCloser(bytes.NewBuffer(body)) // rewind
-		if err != nil {
-			return response, err
-		}
-
-		errorMsg := strings.ReplaceAll(string(body), "\n", ";")
-		return response, fmt.Errorf("got response with status code: %d, body: %s", response.StatusCode, errorMsg)
-	}
-
-	return response, nil
 }
