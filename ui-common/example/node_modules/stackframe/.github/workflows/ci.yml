@@ -1,0 +1,38 @@
+name: Continuous Integration
+on: [push]
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    environment: sauce
+    permissions: read-all
+    env:
+      SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
+      SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
+      SAUCE_TUNNEL_ID: github-action-tunnel
+    steps:
+      - name: Setup sauce connect
+        uses: saucelabs/sauce-connect-action@v2
+        with:
+            username: ${{ secrets.SAUCE_USERNAME }}
+            accessKey: ${{ secrets.SAUCE_ACCESS_KEY }}
+            tunnelIdentifier: github-action-tunnel
+            scVersion: 4.7.1
+      - name: Checkout
+        uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: 16
+      - name: Cache dependencies
+        uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: npm-${{ hashFiles('package-lock.json') }}
+          restore-keys: npm-
+      - name: Install packages
+        run: npm ci
+      - name: Lint code
+        run: npm run lint
+      - name: Run browser tests in Saucelabs
+        run: npm run test-ci
+        timeout-minutes: 5

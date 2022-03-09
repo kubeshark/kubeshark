@@ -1,0 +1,48 @@
+{
+    "name": "check-types",
+    "version": "11.1.2",
+    "description": "A little library for asserting types and values.",
+    "homepage": "https://gitlab.com/philbooth/check-types.js",
+    "bugs": "https://gitlab.com/philbooth/check-types.js/issues",
+    "license": "MIT",
+    "author": "Phil Booth <pmbooth@gmail.com> (https://philbooth.me/)",
+    "main": "./src/check-types",
+    "repository": {
+        "type": "git",
+        "url": "https://gitlab.com/philbooth/check-types.js.git"
+    },
+    "keywords": [
+        "type",
+        "types",
+        "type-check",
+        "type-checking",
+        "duck-typing",
+        "arguments",
+        "parameters",
+        "values",
+        "data",
+        "contract",
+        "assert",
+        "check",
+        "verify",
+        "safe",
+        "safety"
+    ],
+    "devDependencies": {
+        "chai": "4.2.x",
+        "jshint": "^2.9.7",
+        "mocha": "5.2.x",
+        "please-release-me": "^2.1.2",
+        "uglify-js": "3.4.x"
+    },
+    "scripts": {
+        "lint": "jshint ./src/check-types.js",
+        "test": "mocha --ui tdd --reporter spec --colors ./test/check-types.js",
+        "minify": "uglifyjs ./src/check-types.js --compress --mangle --output ./src/check-types.min.js"
+    },
+    "files": [
+        "COPYING",
+        "HISTORY.md",
+        "src"
+    ]
+}

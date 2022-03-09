@@ -1,0 +1,29 @@
+{
+  "name": "@svgr/babel-plugin-transform-svg-component",
+  "description": "Transform SVG into component",
+  "version": "5.5.0",
+  "main": "lib/index.js",
+  "repository": "https://github.com/gregberge/svgr/tree/master/packages/babel-plugin-transform-svg-component",
+  "author": "Greg Bergé <berge.greg@gmail.com>",
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "babel-plugin"
+  ],
+  "engines": {
+    "node": ">=10"
+  },
+  "homepage": "https://react-svgr.com",
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/gregberge"
+  },
+  "license": "MIT",
+  "scripts": {
+    "prebuild": "rm -rf lib/",
+    "build": "babel --config-file ../../babel.config.js -d lib --ignore \"**/*.test.js\" src",
+    "prepublishOnly": "yarn run build"
+  },
+  "gitHead": "b5920550bd966f876cb65c5e23af180461e5aa23"
+}

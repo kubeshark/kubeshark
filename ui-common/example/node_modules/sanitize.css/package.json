@@ -1,0 +1,53 @@
+{
+  "name": "sanitize.css",
+  "version": "10.0.0",
+  "description": "A best-practices CSS foundation",
+  "author": "Jonathan Neal <jonathantneal@hotmail.com>",
+  "contributors": [
+    "Jonathan Neal <jonathantneal@hotmail.com> (http://jonathantneal.com/)",
+    "Nicolas Gallagher <nicolas@nicolasgallagher.com> (http://nicolasgallagher.com/)"
+  ],
+  "license": "CC0-1.0",
+  "repository": "csstools/sanitize.css",
+  "homepage": "https://github.com/csstools/sanitize.css#readme",
+  "bugs": "https://github.com/csstools/sanitize.css/issues",
+  "main": "sanitize.css",
+  "style": "sanitize.css",
+  "files": [
+    "forms.css",
+    "page.css",
+    "sanitize.css",
+    "typography.css"
+  ],
+  "scripts": {
+    "prepublishOnly": "npm test",
+    "test": "stylelint *.css"
+  },
+  "devDependencies": {
+    "stylelint": "^10.0.1",
+    "stylelint-config-standard": "^18.3.0"
+  },
+  "stylelint": {
+    "extends": "stylelint-config-standard",
+    "rules": {
+      "font-family-no-duplicate-names": [
+        true,
+        {
+          "ignoreFontFamilyNames": [
+            "monospace"
+          ]
+        }
+      ],
+      "no-descending-specificity": [
+        null
+      ]
+    }
+  },
+  "keywords": [
+    "css",
+    "normalizes",
+    "sanitizes",
+    "browsers",
+    "fixes"
+  ]
+}

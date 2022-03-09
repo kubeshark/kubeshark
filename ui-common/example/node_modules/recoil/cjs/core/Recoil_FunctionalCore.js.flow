@@ -1,0 +1,87 @@
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @emails oncall+recoil
+ * @flow strict-local
+ * @format
+ */
+'use strict';
+
+import type { Loadable } from '../adt/Recoil_Loadable';
+import type { DefaultValue, Trigger } from './Recoil_Node';
+import type { RecoilValue } from './Recoil_RecoilValue';
+import type { RetainedBy } from './Recoil_RetainedBy';
+import type { AtomWrites, NodeKey, Store, TreeState } from './Recoil_State';
+
+const {
+  setByAddingToSet
+} = require('../util/Recoil_CopyOnWrite');
+
+const filterIterable = require('../util/Recoil_filterIterable');
+
+const gkx = require('../util/Recoil_gkx');
+
+const mapIterable = require('../util/Recoil_mapIterable');
+
+const {
+  getNode,
+  getNodeMaybe,
+  recoilValuesForKeys
+} = require('./Recoil_Node');
+
+const {
+  RetentionZone
+} = require('./Recoil_RetentionZone'); // flowlint-next-line unclear-type:off
+
+
+const emptySet: $ReadOnlySet<any> = Object.freeze(new Set());
+declare class ReadOnlyRecoilValueError extends Error {}
+declare function initializeRetentionForNode(store: Store, nodeKey: NodeKey, retainedBy: RetainedBy): () => void;
+declare function initializeNodeIfNewToStore(store: Store, treeState: TreeState, key: NodeKey, trigger: Trigger): void;
+declare function cleanUpNode(store: Store, key: NodeKey): any; // Get the current value loadable of a node and update the state.
+// Update dependencies and subscriptions for selectors.
+// Update saved value validation for atoms.
+
+declare function getNodeLoadable<T>(store: Store, state: TreeState, key: NodeKey): Loadable<T>; // Peek at the current value loadable for a node without any evaluation or state change
+
+declare function peekNodeLoadable<T>(store: Store, state: TreeState, key: NodeKey): ?Loadable<T>; // Write value directly to state bypassing the Node interface as the node
+// definitions may not have been loaded yet when processing the initial snapshot.
+
+declare function setUnvalidatedAtomValue_DEPRECATED<T>(state: TreeState, key: NodeKey, newValue: T): TreeState; // Return the discovered dependencies and values to be written by setting
+// a node value. (Multiple values may be written due to selectors getting to
+// set upstreams; deps may be discovered because of reads in updater functions.)
+
+declare function setNodeValue<T>(store: Store, state: TreeState, key: NodeKey, newValue: T | DefaultValue): AtomWrites;
+type ComponentInfo = {
+  name: string
+};
+export type RecoilValueInfo<T> = {
+  loadable: ?Loadable<T>,
+  isActive: boolean,
+  isSet: boolean,
+  isModified: boolean,
+  // TODO report modified selectors
+  type: 'atom' | 'selector' | void,
+  // void until initialized for now
+  deps: Iterable<RecoilValue<mixed>>,
+  subscribers: {
+    nodes: Iterable<RecoilValue<mixed>>,
+    components: Iterable<ComponentInfo>,
+  },
+};
+declare function peekNodeInfo<T>(store: Store, state: TreeState, key: NodeKey): RecoilValueInfo<T>; // Find all of the recursively dependent nodes
+
+declare function getDownstreamNodes(store: Store, state: TreeState, keys: $ReadOnlySet<NodeKey> | $ReadOnlyArray<NodeKey>): $ReadOnlySet<NodeKey>;
+module.exports = {
+  getNodeLoadable,
+  peekNodeLoadable,
+  setNodeValue,
+  cleanUpNode,
+  setUnvalidatedAtomValue_DEPRECATED,
+  peekNodeInfo,
+  getDownstreamNodes,
+  initializeNodeIfNewToStore
+};

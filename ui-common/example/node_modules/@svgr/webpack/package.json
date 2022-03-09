@@ -1,0 +1,49 @@
+{
+  "name": "@svgr/webpack",
+  "description": "SVGR webpack loader.",
+  "version": "5.5.0",
+  "main": "lib/index.js",
+  "repository": "https://github.com/gregberge/svgr/tree/master/packages/webpack",
+  "author": "Greg Bergé <berge.greg@gmail.com>",
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "svgr",
+    "svg",
+    "react",
+    "webpack",
+    "webpack-loader"
+  ],
+  "engines": {
+    "node": ">=10"
+  },
+  "homepage": "https://react-svgr.com",
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/gregberge"
+  },
+  "license": "MIT",
+  "scripts": {
+    "prebuild": "rm -rf lib/",
+    "build": "babel --config-file ../../babel.config.js -d lib --ignore \"**/*.test.js\" src",
+    "prepublishOnly": "yarn run build"
+  },
+  "dependencies": {
+    "@babel/core": "^7.12.3",
+    "@babel/plugin-transform-react-constant-elements": "^7.12.1",
+    "@babel/preset-env": "^7.12.1",
+    "@babel/preset-react": "^7.12.5",
+    "@svgr/core": "^5.5.0",
+    "@svgr/plugin-jsx": "^5.5.0",
+    "@svgr/plugin-svgo": "^5.5.0",
+    "loader-utils": "^2.0.0"
+  },
+  "devDependencies": {
+    "babel-loader": "^8.2.1",
+    "memory-fs": "^0.5.0",
+    "url-loader": "^4.1.1",
+    "webpack": "^5.4.0"
+  },
+  "gitHead": "b5920550bd966f876cb65c5e23af180461e5aa23"
+}

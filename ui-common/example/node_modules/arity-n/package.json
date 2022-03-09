@@ -1,0 +1,31 @@
+{
+  "name": "arity-n",
+  "version": "1.0.4",
+  "description": "Wraps a function with a function of a sertain arity.",
+  "main": "N.js",
+  "scripts": {
+    "test": "mocha --reporter nyan --compilers js:mocha-traceur"
+  },
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/stoeffel/arityN"
+  },
+  "keywords": [
+    "function",
+    "arity",
+    "functional"
+  ],
+  "author": "stoeffel",
+  "license": "MIT",
+  "bugs": {
+    "url": "http://github.com/stoeffel/arityN/issues"
+  },
+  "homepage": "http://github.com/stoeffel/arityN",
+  "devDependencies": {
+    "expect.js": "^0.3.1",
+    "mocha": "^2.1.0",
+    "mocha-traceur": "^2.1.0",
+    "sinon": "^1.12.2"
+  },
+  "dependencies": {}
+}

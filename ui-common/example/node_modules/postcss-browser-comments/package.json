@@ -1,0 +1,71 @@
+{
+  "name": "postcss-browser-comments",
+  "version": "3.0.0",
+  "description": "Keep only the CSS you need based on comments and your browserslist",
+  "author": "Jonathan Neal <csstools@hotmail.com>",
+  "license": "CC0-1.0",
+  "repository": "csstools/postcss-browser-comments",
+  "homepage": "https://github.com/csstools/postcss-browser-comments#readme",
+  "bugs": "https://github.com/csstools/postcss-browser-comments/issues",
+  "main": "index.cjs.js",
+  "module": "index.es.js",
+  "files": [
+    "index.cjs.js",
+    "index.es.js"
+  ],
+  "scripts": {
+    "prepublishOnly": "npm test",
+    "pretest": "rollup -c .rollup.js --silent",
+    "test": "npm run test:js && npm run test:tape",
+    "test:ec": "echint --ignore index.*.js test",
+    "test:js": "eslint *.js --cache --ignore-path .gitignore --quiet",
+    "test:tape": "postcss-tape"
+  },
+  "engines": {
+    "node": ">=8.0.0"
+  },
+  "dependencies": {
+    "postcss": "^7"
+  },
+  "peerDependencies": {
+    "browserslist": "^4"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.4.5",
+    "@babel/preset-env": "^7.4.5",
+    "babel-eslint": "^10.0.1",
+    "browserslist": "^4.1.1",
+    "eslint": "^5.16.0",
+    "postcss-tape": "^5.0.0",
+    "pre-commit": "^1.2.2",
+    "rollup": "^1.12.3",
+    "rollup-plugin-babel": "^4.3.2"
+  },
+  "eslintConfig": {
+    "env": {
+      "browser": true,
+      "es6": true,
+      "node": true
+    },
+    "extends": "eslint:recommended",
+    "parser": "babel-eslint",
+    "parserOptions": {
+      "ecmaVersion": 2018,
+      "impliedStrict": true,
+      "sourceType": "module"
+    },
+    "root": true
+  },
+  "keywords": [
+    "postcss",
+    "css",
+    "postcss-plugin",
+    "browserslists",
+    "browserlists",
+    "browsers",
+    "lists",
+    "support",
+    "caniuse",
+    "target"
+  ]
+}

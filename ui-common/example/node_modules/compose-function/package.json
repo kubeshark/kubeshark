@@ -1,0 +1,58 @@
+{
+  "name": "compose-function",
+  "version": "3.0.3",
+  "description": "Compose new functions f(g(x))",
+  "main": "index.js",
+  "scripts": {
+    "clean": "git reset && echo '/node_modules/' > .gitignore && git add .gitignore && git stash save --include-untracked --keep-index '`npm run clean` trash can' && git clean --force -d && git reset --hard && echo '\nclean: Uncommitted and ignored files have been moved to gitâs stash. To restore them run `git stash pop --quiet; git checkout .gitignore`.'",
+    "coverage": "rm -rf coverage && npm run test:transpile && cd .es5 && istanbul cover test.js && mv coverage ..",
+    "coveralls": "npm run coverage && cat ./coverage/lcov.info | coveralls",
+    "develop": "nodangel --ignore node_modules --ignore coverage --exec 'npm run --silent test:lite'",
+    "prepublish": "npm run --silent clean && npm run transpile",
+    "patch-release": "npm version patch && npm publish && git push --follow-tags",
+    "minor-release": "npm version minor && npm publish && git push --follow-tags",
+    "major-release": "npm version major && npm publish && git push --follow-tags",
+    "test": "eslint --ignore-path .gitignore .; npm run test:transpile && node .es5/test.js | tap-spec",
+    "test:lite": "babel-node --optional es7.functionBind test.js | tap-spec",
+    "test:transpile": "rm -rf .es5 && babel --optional es7.functionBind test.js test/*.js --out-dir .es5 && babel module/*.js --out-dir .es5",
+    "transpile": "babel module --out-dir .",
+    "view-coverage": "echo 'Generating coverage reports…'; npm run coverage >/dev/null && echo '…done.' && opn ./coverage/lcov-report/index.html >/dev/null"
+  },
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/stoeffel/compose-function"
+  },
+  "files": [
+    "/*.js",
+    "/module/",
+    "/README.md",
+    "/LICENSE.md"
+  ],
+  "keywords": [
+    "function",
+    "compose",
+    "functional"
+  ],
+  "author": "stoeffel",
+  "license": "MIT",
+  "bugs": {
+    "url": "http://github.com/stoeffel/compose-function/issues"
+  },
+  "homepage": "http://github.com/stoeffel/compose-function",
+  "devDependencies": {
+    "babel": "^5.8.21",
+    "babel-eslint": "^4.0.10",
+    "coveralls": "^2.11.4",
+    "curry-this": "^3.0.2",
+    "es6-symbol": "^2.0.1",
+    "eslint": "^1.2.0",
+    "istanbul": "^0.3.18",
+    "nodangel": "1.3.8",
+    "opn-cli": "1.0.0",
+    "tap-spec": "^4.0.2",
+    "tape-catch": "1.0.4"
+  },
+  "dependencies": {
+    "arity-n": "^1.0.4"
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "name": "workbox-strategies",
+  "version": "5.1.4",
+  "license": "MIT",
+  "author": "Google's Web DevRel Team",
+  "description": "A service worker helper library implementing common caching strategies.",
+  "repository": "googlechrome/workbox",
+  "bugs": "https://github.com/googlechrome/workbox/issues",
+  "homepage": "https://github.com/GoogleChrome/workbox",
+  "keywords": [
+    "workbox",
+    "workboxjs",
+    "service worker",
+    "sw",
+    "router",
+    "routing"
+  ],
+  "scripts": {
+    "build": "gulp build-packages --package workbox-strategies",
+    "version": "npm run build",
+    "prepare": "npm run build"
+  },
+  "workbox": {
+    "browserNamespace": "workbox.strategies",
+    "packageType": "browser"
+  },
+  "main": "index.js",
+  "module": "index.mjs",
+  "types": "index.d.ts",
+  "dependencies": {
+    "workbox-core": "^5.1.4",
+    "workbox-routing": "^5.1.4"
+  },
+  "gitHead": "a95b6fd489c2a66574f1655b2de3acd2ece35fb3"
+}
