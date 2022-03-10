@@ -1,4 +1,4 @@
-type ITrafficViewerApi = {
+type TrafficViewerApi = {
     validateQuery : (query: any) => any
     tapStatus : () => any
     analyzeStatus : () => any
@@ -7,4 +7,4 @@ type ITrafficViewerApi = {
     getRecentTLSLinks : () => any
   }
 
-  export default ITrafficViewerApi
+  export default TrafficViewerApi

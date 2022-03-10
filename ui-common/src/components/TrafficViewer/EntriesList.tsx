@@ -12,7 +12,7 @@ import wsConnectionAtom, {WsConnectionStatus} from "../../recoil/wsConnection";
 import queryAtom from "../../recoil/query";
 import { closeWsConnectionCallbackAtom } from "../../recoil/wsConnection/atom";
 import TrafficViewerApiAtom from "../../recoil/TrafficViewerApi";
-import ITrafficViewerApi from "./ITrafficViewerApi";
+import TrafficViewerApi from "./TrafficViewerApi";
 
 interface EntriesListProps {
     listEntryREF: any;
@@ -41,7 +41,7 @@ export const EntriesList: React.FC<EntriesListProps> = ({listEntryREF, onSnapBro
     const wsConnection = useRecoilValue(wsConnectionAtom);
     const query = useRecoilValue(queryAtom);
     const isWsConnectionClosed = wsConnection === WsConnectionStatus.Closed;
-    const trafficViewerApi = useRecoilValue(TrafficViewerApiAtom as RecoilState<ITrafficViewerApi>)
+    const trafficViewerApi = useRecoilValue(TrafficViewerApiAtom as RecoilState<TrafficViewerApi>)
 
     const [loadMoreTop, setLoadMoreTop] = useState(false);
     const [isLoadingTop, setIsLoadingTop] = useState(false);

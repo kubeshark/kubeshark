@@ -27,7 +27,7 @@ const defaultProps = {
 };
 
 export interface SelectProps extends MUISelectProps {
-    onChangecb: (arg0: string) => void;
+    onChangeCb: (arg0: string) => void;
     value: string | string[];
     ellipsis?: boolean;
     labelOnTop?: boolean;
@@ -40,7 +40,7 @@ export interface SelectProps extends MUISelectProps {
 export const Select: React.FC<SelectProps> = ({
                                                   label,
                                                   value,
-                                                  onChangecb,
+                                                  onChangeCb,
                                                   transformDisplay,
                                                   ellipsis = true,
                                                   multiple,
@@ -55,7 +55,7 @@ export const Select: React.FC<SelectProps> = ({
 
     const _onChange = (_: any, item: { props: { value: any; }; }) => {
         const value = item.props.value;
-        value === ALL_KEY ? onChangecb(ALL_KEY) : onChangecb(value);
+        value === ALL_KEY ? onChangeCb(ALL_KEY) : onChangeCb(value);
     }
 
     if (multiple && (!_value || _value.length === 0)) _value = [ALL_KEY];

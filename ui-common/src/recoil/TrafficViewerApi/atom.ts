@@ -1,7 +1,7 @@
 import { atom } from "recoil";
 
 const TrafficViewerApiAtom = atom({
-    key: "trafficViewerApi",
+    key: "TrafficViewerApiAtom",
     default: {}
 });
 

@@ -6,7 +6,7 @@ const wsConnectionAtom = atom({
 });
 
 type closeWsConnectionCallback = {closeCallback : () => {}}
-//closeCallback
+
 export const closeWsConnectionCallbackAtom = atom({
     key: "closeWsConnectionCallbackAtom",
     default:  {} as closeWsConnectionCallback

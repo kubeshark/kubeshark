@@ -8,7 +8,7 @@ import {toast} from "react-toastify";
 import {RecoilState, useRecoilState, useRecoilValue} from "recoil";
 import focusedEntryIdAtom from "../../recoil/focusedEntryId";
 import trafficViewerApi from "../../recoil/TrafficViewerApi";
-import ITrafficViewerApi from "../TrafficViewer/ITrafficViewerApi";
+import TrafficViewerApi from "./TrafficViewerApi";
 import TrafficViewerApiAtom from "../../recoil/TrafficViewerApi/atom";
 
 const useStyles = makeStyles(() => ({
@@ -84,7 +84,7 @@ const EntrySummary: React.FC<any> = ({entry}) => {
 export const EntryDetailed = () => {
 
     const focusedEntryId = useRecoilValue(focusedEntryIdAtom);
-    const trafficViewerApi = useRecoilValue(TrafficViewerApiAtom as RecoilState<ITrafficViewerApi>)
+    const trafficViewerApi = useRecoilValue(TrafficViewerApiAtom as RecoilState<TrafficViewerApi>)
 
     const [entryData, setEntryData] = useState(null);
 

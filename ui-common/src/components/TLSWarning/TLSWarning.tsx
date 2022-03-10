@@ -3,7 +3,7 @@ import MuiAlert from "@material-ui/lab/Alert";
 import React, {useEffect} from "react";
 import { RecoilState, useRecoilValue } from "recoil";
 import TrafficViewerApiAtom from "../../recoil/TrafficViewerApi/atom";
-import ITrafficViewerApi from "../TrafficViewer/ITrafficViewerApi";
+import TrafficViewerApi from "../TrafficViewer/TrafficViewerApi";
 import './TLSWarning.sass';
 
 interface TLSWarningProps {
@@ -17,7 +17,7 @@ interface TLSWarningProps {
 
 export const TLSWarning: React.FC<TLSWarningProps>  = ({showTLSWarning, setShowTLSWarning, addressesWithTLS, setAddressesWithTLS, userDismissedTLSWarning, setUserDismissedTLSWarning}) => {
 
-    const trafficViewerApi = useRecoilValue(TrafficViewerApiAtom as RecoilState<ITrafficViewerApi>)
+    const trafficViewerApi = useRecoilValue(TrafficViewerApiAtom as RecoilState<TrafficViewerApi>)
     useEffect(() => {
         (async () => {
             try {

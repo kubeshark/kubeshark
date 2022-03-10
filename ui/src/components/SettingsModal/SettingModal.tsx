@@ -1,6 +1,6 @@
 import React, {useEffect, useMemo, useState} from "react";
 import {Modal, Backdrop, Fade, Box, Button} from "@material-ui/core";
-//import Checkbox from "traffic-page/src/components/UI/Checkbox";
+import {UI} from "@up9/mizu-common";
 import './SettingsModal.sass';
 import Api from "../../helpers/api";
 import spinner from "../assets/spinner.svg";
@@ -98,10 +98,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({isOpen, onClose, is
         return <table cellPadding={5} style={{borderCollapse: "collapse"}}>
             <thead>
             <tr style={{borderBottomWidth: "2px"}}>
-                <th style={{width: 50}}>
-                    {/* <Checkbox checked={Object.values(namespaces).every(tap => tap === true)}
-                                                  onToggle={toggleAll}/>*/}
-                    </th> 
+                <th style={{width: 50}}><UI.Checkbox checked={Object.values(namespaces).every(tap => tap === true)}
+                                                  onToggle={toggleAll}/></th>
                 <th>Namespace</th>
             </tr>
             </thead>
@@ -109,7 +107,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({isOpen, onClose, is
             {filteredNamespaces?.map(namespace => {
                     return <tr key={namespace}>
                         <td style={{width: 50}}>
-                            {/* <Checkbox checked={namespaces[namespace]} onToggle={() => toggleTapNamespace(namespace)}/> */}
+                            <UI.Checkbox checked={namespaces[namespace]} onToggle={() => toggleTapNamespace(namespace)}/>
                         </td>
                         <td>{namespace}</td>
                     </tr>

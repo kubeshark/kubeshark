@@ -49,6 +49,15 @@ export default class Api {
         const response = await client.get("/status/tap");
         return response.data;
     }
+    getTapConfig = async () => {
+        const response = await this.client.get("/config/tap");
+        return response.data;
+    }
+
+    setTapConfig = async (config) => {
+        const response = await this.client.post("/config/tap", {tappedNamespaces: config});
+        return response.data;
+    }
 
     //#region User api
 
@@ -178,6 +187,11 @@ export default class Api {
 
     getOasByService = async (selectedService) => {
         const response = await client.get(`/oas/${selectedService}`);
+        return response.data;
+    }
+
+    gelAlloasServicesInOneSpec = async () => {
+        const response = await this.client.get("/oas/all");
         return response.data;
     }
 

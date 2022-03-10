@@ -3,11 +3,14 @@ import { Box, Fade, Modal, Backdrop, Button } from "@material-ui/core";
 import { toast } from "react-toastify";
 import Api from "../../helpers/api";
 import spinnerStyle from '../style/Spinner.module.sass';
+import './ServiceMapModal.sass';
 import spinnerImg from '../assets/spinner.svg';
 import Graph from "react-graph-vis";
 import debounce from 'lodash/debounce';
 import ServiceMapOptions from './ServiceMapOptions'
 import { useCommonStyles } from "../../helpers/commonStyle";
+import refresh from "../assets/refresh.svg";
+import close from "../assets/close.svg";
 
 interface GraphData {
     nodes: Node[];
@@ -29,6 +32,7 @@ interface Edge {
     label: string;
     title?: string;
     color?: object;
+    font?: object;
 }
 
 interface ServiceMapNode {
@@ -77,11 +81,11 @@ interface ServiceMapModalProps {
 
 const modalStyle = {
     position: 'absolute',
-    top: '10%',
+    top: '6%',
     left: '50%',
     transform: 'translate(-50%, 0%)',
-    width: '80vw',
-    height: '80vh',
+    width: '89vw',
+    height: '82vh',
     bgcolor: 'background.paper',
     borderRadius: '5px',
     boxShadow: 24,
@@ -104,7 +108,7 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onOpen
             const newGraphData: GraphData = { nodes: [], edges: [] }
 
             if (serviceMapData.nodes) {
-                newGraphData.nodes = serviceMapData.nodes.map(node => {
+                newGraphData.nodes = serviceMapData.nodes.map<Node>(node => {
                     return {
                         id: node.id,
                         value: node.count,
@@ -115,7 +119,7 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onOpen
             }
 
             if (serviceMapData.edges) {
-                newGraphData.edges = serviceMapData.edges.map(edge => {
+                newGraphData.edges = serviceMapData.edges.map<Edge>(edge => {
                     return {
                         from: edge.source.id,
                         to: edge.destination.id,
@@ -124,6 +128,10 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onOpen
                         color: {
                             color: edge.protocol.backgroundColor,
                             highlight: edge.protocol.backgroundColor
+                        },
+                        font: {
+                            color: edge.protocol.backgroundColor,
+                            strokeColor: edge.protocol.backgroundColor
                         },
                     }
                 })
@@ -141,21 +149,9 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onOpen
     }, [isOpen])
 
     useEffect(() => {
-        getServiceMapData()
+        getServiceMapData();
+        return () => setGraphData({ nodes: [], edges: [] })
     }, [getServiceMapData])
-
-    const resetServiceMap = debounce(async () => {
-        try {
-            const serviceMapResetResponse = await api.serviceMapReset();
-            if (serviceMapResetResponse["status"] === "enabled") {
-                refreshServiceMap()
-            }
-
-        } catch (ex) {
-            toast.error("An error occurred while resetting Mizu Service Map, see console for mode details");
-            console.error(ex);
-        }
-    }, 500);
 
     const refreshServiceMap = debounce(() => {
         getServiceMapData();
@@ -180,33 +176,34 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onOpen
                         <img alt="spinner" src={spinnerImg} style={{ height: 50 }} />
                     </div>}
                     {!isLoading && <div style={{ height: "100%", width: "100%" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between" }}> 
+                        <div>
                         <Button
+                            startIcon={<img src={refresh} className="custom" alt="refresh" style={{ marginRight:"8%"}}></img>}
+                            size="medium"
                             variant="contained"
-                            className={commonClasses.button}
-                            style={{ marginRight: 25 }}
-                            onClick={() => onClose()}
-                        >
-                            Close
-                        </Button>
-                        <Button
-                            variant="contained"
-                            className={commonClasses.button}
-                            style={{ marginRight: 25 }}
-                            onClick={resetServiceMap}
-                        >
-                            Reset
-                        </Button>
-                        <Button
-                            variant="contained"
-                            className={commonClasses.button}
+                            className={commonClasses.outlinedButton + " " + commonClasses.imagedButton}
                             onClick={refreshServiceMap}
                         >
                             Refresh
                         </Button>
+                        </div>
+                        <img src={close} alt="close" onClick={() => onClose()} style={{cursor:"pointer"}}></img>
+                    </div>
                         <Graph
                             graph={graphData}
                             options={ServiceMapOptions}
                         />
+                        <div className='legend-scale'>
+                            <ul className='legend-labels'>
+                                <li><span style={{ background: '#205cf5' }}></span>HTTP</li>
+                                <li><span style={{ background: '#244c5a' }}></span>HTTP/2</li>
+                                <li><span style={{ background: '#244c5a' }}></span>gRPC</li>
+                                <li><span style={{ background: '#ff6600' }}></span>AMQP</li>
+                                <li><span style={{ background: '#000000' }}></span>KAFKA</li>
+                                <li><span style={{ background: '#a41e11' }}></span>REDIS</li>
+                            </ul>
+                        </div>
                     </div>}
                 </Box>
             </Fade>

@@ -16,11 +16,13 @@ export const StatusBar = () => {
     const [expandedBar, setExpandedBar] = useState(false);
     const {uniqueNamespaces, amountOfPods, amountOfTappedPods, amountOfUntappedPods} = useRecoilValue(tappingStatusDetails);
 
-    return <div className={`${style.statusBar} ${(expandedBar ? ' expandedStatusBar' : "")}`} onMouseOver={() => setExpandedBar(true)} onMouseLeave={() => setExpandedBar(false)}>
+    return <div className={`${style.statusBar} ${(expandedBar ? `${style.expandedStatusBar}` : "")}`} onMouseOver={() => setExpandedBar(true)} onMouseLeave={() => setExpandedBar(false)}>
         <div className={style.podsCount}>
-            {tappingStatus?.some(pod => !pod.isTapped) && <img src={warningIcon} alt="warning"/>}
-            {`Tapping ${amountOfUntappedPods > 0 ? amountOfTappedPods + " / " + amountOfPods : amountOfPods} ${pluralize('pod', amountOfPods)} in ${pluralize('namespace', uniqueNamespaces.length)} ${uniqueNamespaces.join(", ")}`}
-            </div>
+        {tappingStatus.some(pod => !pod.isTapped) && <img src={warningIcon} alt="warning"/>}
+            <span className={style.podsCountText}>
+                {`Tapping ${amountOfUntappedPods > 0 ? amountOfTappedPods + " / " + amountOfPods : amountOfPods} ${pluralize('pod', amountOfPods)} in ${pluralize('namespace', uniqueNamespaces.length)} ${uniqueNamespaces.join(", ")}`}
+            </span>
+        </div>
         {expandedBar && <div style={{marginTop: 20}}>
             <table>
                 <thead>

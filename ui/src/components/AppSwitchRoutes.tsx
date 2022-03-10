@@ -34,7 +34,6 @@ const AppSwitchRoutes = () => {
                     setEntPage(Page.Login);
                 }
             }
-            //setEntPage(Page.Traffic);
         } catch (e) {
             toast.error("Error occured while checking Mizu API status, see console for mode details");
             console.error(e);

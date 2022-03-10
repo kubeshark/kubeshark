@@ -4,11 +4,14 @@ import "./TrafficPage.sass";
 import Api, {MizuWebsocketURL,getToken} from "../../../helpers/api";
 import debounce from 'lodash/debounce';
 import {useSetRecoilState} from "recoil";
-import OasModal from "../../OasModal/OasModal";
 import {useCommonStyles} from "../../../helpers/commonStyle"
 import serviceMapModalOpenAtom from "../../../recoil/serviceMapModalOpen";
 import TrafficViewer  from "@up9/mizu-common"
 import "@up9/mizu-common/dist/index.css"
+import oasModalOpenAtom from "../../../recoil/oasModalOpen/atom";
+import serviceMap from "../../assets/serviceMap.svg";	
+import services from "../../assets/services.svg";	
+
 
 enum WebSocketReadyState{
   CONNECTING,
@@ -24,7 +27,8 @@ interface TrafficPageProps {
 const api = Api.getInstance();
 
 export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus}) => {
-  const setServiceMapModalOpen = useSetRecoilState(serviceMapModalOpenAtom);
+  const setServiceMapModalOpen = useSetRecoilState(serviceMapModalOpenAtom);	
+  const setOpenOasModal = useSetRecoilState(oasModalOpenAtom);
 
   const commonClasses = useCommonStyles();
   const [message, setMessage] = useState(null);
@@ -32,9 +36,6 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus}) => {
   const [isOpen, setisOpen] = useState(false);
   const ws = useRef(null);
 
-  const [openOasModal, setOpenOasModal] = useState(false);
-  const handleOpenModal = () => setOpenOasModal(true);
-  const handleCloseModal = () => setOpenOasModal(false);
   const openServiceMapModalDebounce = debounce(() => {
     setServiceMapModalOpen(true)
   }, 500);
@@ -67,8 +68,13 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus}) => {
   
   const sendQuery = (query) =>{
       if(ws.current && (ws.current.readyState === WebSocketReadyState.OPEN)){
-          ws.current.send(query)
+        ws.current.send(JSON.stringify({"query": query, "enableFullEntries": false}));
       }
+  }
+
+  const handleOpenOasModal = () => {	
+    ws.current.close();	
+    setOpenOasModal(true);	
   }
 
   useEffect(() => {
@@ -82,14 +88,27 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus}) => {
     
     <>
       <div className="TrafficPageHeader">
-        <div style={{ display: 'flex' }}>
-          {window["isOasEnabled"] && <Button type="submit" variant="contained" className={commonClasses.button} style={{ marginRight: 25 }} onClick={handleOpenModal}>
-            Show OAS
-          </Button>}
-          {window["isServiceMapEnabled"] && <Button variant="contained" className={commonClasses.button} onClick={openServiceMapModalDebounce}>
-            Service Map
-          </Button>}
-          {window["isOasEnabled"] && <OasModal openModal={openOasModal} handleCloseModal={handleCloseModal}/>}
+      <div style={{ display: 'flex', height: "100%" }}>	
+          {window["isOasEnabled"] && <Button	
+            startIcon={<img className="custom" src={services} alt="services"></img>}	
+            size="large"	
+            type="submit"	
+            variant="contained"	
+            className={commonClasses.outlinedButton + " " + commonClasses.imagedButton}	
+            style={{ marginRight: 25 }}	
+            onClick={handleOpenOasModal}	
+          >	
+            Show OAS	
+          </Button>}	
+          {window["isServiceMapEnabled"] && <Button	
+            startIcon={<img src={serviceMap} className="custom" alt="service-map" style={{marginRight:"8%"}}></img>}	
+            size="large"	
+            variant="contained"	
+            className={commonClasses.outlinedButton + " " + commonClasses.imagedButton}	
+            onClick={openServiceMapModalDebounce}	
+          >	
+            Service Map	
+          </Button>}	
         </div>
       </div>
       <TrafficViewer setAnalyzeStatus={setAnalyzeStatus} message={message} error={error} isOpen={isOpen} closeWs={closeWs}

@@ -53,3 +53,4 @@ tap/extensions/*/expect
 ui*/node_modules
 ui*/public
 ui*/dist
+*.editorconfig
