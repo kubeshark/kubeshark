@@ -13,7 +13,7 @@
     "@types/jest": "^26.0.22",
     "@types/node": "^12.20.10",
     "@uiw/react-textarea-code-editor": "^1.4.12",
-    "@up9/mizu-common": "^1.0.11",
+    "@up9/mizu-common": "^1.0.111",
     "axios": "^0.25.0",
     "core-js": "^3.20.2",
     "craco-babel-loader": "^1.0.3",
