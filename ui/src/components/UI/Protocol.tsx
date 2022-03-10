@@ -46,6 +46,7 @@ const Protocol: React.FC<ProtocolProps> = ({protocol, horizontal}) => {
             displayIconOnMouseOver={true}
             flipped={false}
             iconStyle={{marginTop: "52px", marginRight: "10px", zIndex: 1000}}
+            tooltipStyle={{marginTop: "-22px", zIndex: 1001}}
         >
             <span
                 className={`${styles.base} ${styles.vertical}`}
