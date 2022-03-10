@@ -59,6 +59,7 @@ jobs:
           tags: |
             type=raw,${{ steps.versioning.outputs.version }}
             type=raw,value=latest,enable=${{ steps.condval.outputs.value == 'stable' }}
+            type=raw,value=dev-latest,enable=${{ steps.condval.outputs.value == 'dev' }}
           flavor: |
             latest=auto
             prefix=
