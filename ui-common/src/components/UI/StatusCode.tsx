@@ -9,15 +9,16 @@ export enum StatusCodeClassification {
 }
 
 interface EntryProps {
-    statusCode: number
+    statusCode: number,
+    statusQuery: string
 }
 
-const StatusCode: React.FC<EntryProps> = ({statusCode}) => {
+const StatusCode: React.FC<EntryProps> = ({statusCode, statusQuery}) => {
 
     const classification = getClassification(statusCode)
 
     return <Queryable
-        query={`response.status == ${statusCode}`}
+        query={statusQuery}
         displayIconOnMouseOver={true}
         flipped={true}
         iconStyle={{marginTop: "40px", paddingLeft: "10px"}}

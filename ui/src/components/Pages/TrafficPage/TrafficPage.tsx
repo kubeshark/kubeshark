@@ -13,7 +13,6 @@ import services from "../../assets/services.svg";
 import tappingStatusAtom from "../../../recoil/tappingStatus/atom";
 import {StatusBar} from "@up9/mizu-common"
 
-
 enum WebSocketReadyState{
   CONNECTING,
   OPEN,

@@ -10,6 +10,7 @@ import focusedEntryIdAtom from "../../recoil/focusedEntryId";
 import trafficViewerApi from "../../recoil/TrafficViewerApi";
 import TrafficViewerApi from "./TrafficViewerApi";
 import TrafficViewerApiAtom from "../../recoil/TrafficViewerApi/atom";
+import queryAtom from "../../recoil/query/atom";
 
 const useStyles = makeStyles(() => ({
     entryTitle: {
@@ -85,6 +86,7 @@ export const EntryDetailed = () => {
 
     const focusedEntryId = useRecoilValue(focusedEntryIdAtom);
     const trafficViewerApi = useRecoilValue(TrafficViewerApiAtom as RecoilState<TrafficViewerApi>)
+    const query = useRecoilValue(queryAtom);
 
     const [entryData, setEntryData] = useState(null);
 
@@ -93,7 +95,7 @@ export const EntryDetailed = () => {
         setEntryData(null);
         (async () => {
             try {
-                const entryData = await trafficViewerApi.getEntry(focusedEntryId);
+                const entryData = await trafficViewerApi.getEntry(focusedEntryId, query);
                 setEntryData(entryData);
             } catch (error) {
                 if (error.response?.data?.type) {
@@ -121,7 +123,7 @@ export const EntryDetailed = () => {
             bodySize={entryData.bodySize}
             elapsedTime={entryData.data.elapsedTime}
         />}
-        {entryData && <EntrySummary entry={entryData.data}/>}
+        {entryData && <EntrySummary entry={entryData.base}/>}
         <React.Fragment>
             {entryData && <EntryViewer
                 representation={entryData.representation}

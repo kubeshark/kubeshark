@@ -3,7 +3,7 @@
  // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import TrafficViewer from '@up9/mizu-common';
 import "@up9/mizu-common/dist/index.css"
-import {  useRef, useState } from 'react';
+import {  useEffect, useRef, useState } from 'react';
 
 import Api, {MizuWebsocketURL,getToken} from "./api";
 
@@ -20,19 +20,17 @@ const App = () => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [message, setMessage] = useState(null);
   const [error, setError] = useState(null);
- 
   const [isOpen, setisOpen] = useState(false);
   const ws = useRef(null);
 
-  const onMessage = (e:any) => {setMessage(e)}
-  const onError = (e:any) => setError(e)
+  const onMessage = (e: any) => {setMessage(e)}
+  const onError = (e: any) => setError(e)
   const onOpen = () => {setisOpen(true)}
   const onClose = () => setisOpen(false)
 
-  const openScoket = () => {
+  const openScoket = (query = "") => {
     let websocketUrl = MizuWebsocketURL;
-    const tk = getToken()
-    if (tk) {
+    if (getToken()) {
       websocketUrl += `/${getToken()}`;
     }
     ws.current = new WebSocket(websocketUrl)
@@ -51,15 +49,23 @@ const App = () => {
   }
   
   
-  const sendQuery = (query : any) =>{
+  const sendQuery = (query: string) =>{
       if(ws.current && (ws.current.readyState === WebSocketReadyState.OPEN)){
-          ws.current.send(query)
+        ws.current.send(JSON.stringify({"query": query, "enableFullEntries": false}));
       }
   }
 
+  useEffect(() => {
+      return () => {
+        if(ws.current)
+          closeWs()
+      }
+  },[])
+
   return <>
 
-    <TrafficViewer message={{}} isOpen={false} closeWs={closeWs} sendQuery={sendQuery} openSocket={openScoket} trafficViewerApiProp={api} ></TrafficViewer>
+    <TrafficViewer message={message} error={error} isOpen={isOpen} closeWs={closeWs} sendQuery={sendQuery} openSocket={openScoket}
+                   trafficViewerApiProp={api} setTappingStatus={()=>{}} ></TrafficViewer>
   </>
 }
 

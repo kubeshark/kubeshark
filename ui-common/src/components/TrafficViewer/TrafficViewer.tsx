@@ -65,7 +65,7 @@ const TrafficViewer: React.FC<TrafficViewerProps> = ({setAnalyzeStatus, setTappi
     const setCloseWsCallback = useSetRecoilState(closeWsConnectionCallbackAtom)
     const query = useRecoilValue(queryAtom);
     const [queryToSend, setQueryToSend] = useState("")
-    const [trafficViewerApiState, setTrafficViewerApiState] = useRecoilState(trafficViewerApiAtom as RecoilState<TrafficViewerApi>)
+    const setTrafficViewerApiState = useSetRecoilState(trafficViewerApiAtom as RecoilState<TrafficViewerApi>)
     
 
     const [noMoreDataTop, setNoMoreDataTop] = useState(false);
@@ -195,8 +195,6 @@ const TrafficViewer: React.FC<TrafficViewerProps> = ({setAnalyzeStatus, setTappi
       sendQuery(queryToSend)
     },[isOpen, queryToSend, sendQuery, setWsConnection])
 
-    
-
     const onerror = (event) => {
         console.error("WebSocket error:", event);
         if (query) {
@@ -290,7 +288,7 @@ const TrafficViewer: React.FC<TrafficViewerProps> = ({setAnalyzeStatus, setTappi
     <div className={TrafficViewerStyles.TrafficPage}>
       <div className={TrafficViewerStyles.TrafficPageHeader}>
         <div className={TrafficViewerStyles.TrafficPageStreamStatus}>
-          <img className={TrafficViewerStyles.playPauseIcon} style={{ visibility: wsConnection === WsConnectionStatus.Connected ? "visible" : "hidden" }} alt="pause"
+        <img className={TrafficViewerStyles.playPauseIcon}  style={{ visibility: wsConnection === WsConnectionStatus.Connected ? "visible" : "hidden" }} alt="pause"
             src={pauseIcon} onClick={toggleConnection} />
           <img className={TrafficViewerStyles.playPauseIcon} style={{ position: "absolute", visibility: wsConnection === WsConnectionStatus.Connected ? "hidden" : "visible" }} alt="play"
             src={playIcon} onClick={toggleConnection} />
