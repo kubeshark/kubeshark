@@ -8,17 +8,14 @@ import {EntryDetailed} from "./EntryDetailed";
 import playIcon from 'assets/run.svg';
 import pauseIcon from 'assets/pause.svg';
 import variables from '../../variables.module.scss';
-import {StatusBar} from "../UI/StatusBar";
 import { toast } from 'react-toastify';
 import debounce from 'lodash/debounce';
 import { RecoilRoot, RecoilState, useRecoilState, useRecoilValue, useSetRecoilState} from "recoil";
-import tappingStatusAtom from "../../recoil/tappingStatus";
 import entriesAtom from "../../recoil/entries";
 import focusedEntryIdAtom from "../../recoil/focusedEntryId";
 import websocketConnectionAtom, {WsConnectionStatus} from "../../recoil/wsConnection";
 import queryAtom from "../../recoil/query";
 import {TLSWarning} from "../TLSWarning/TLSWarning";
-import { closeWsConnectionCallbackAtom } from "../../recoil/wsConnection/atom";
 import trafficViewerApiAtom from "../../recoil/TrafficViewerApi"
 import TrafficViewerApi from "./TrafficViewerApi";
 
@@ -50,19 +47,15 @@ interface TrafficViewerProps {
   message? :{}
   error? :{}
   isOpen : boolean
-  closeWs : () => void
-  sendQuery : (query : string) => void
-  openSocket : () => void
   trafficViewerApiProp : TrafficViewerApi
 }
 
-const TrafficViewer: React.FC<TrafficViewerProps> = ({setAnalyzeStatus, setTappingStatus, message, error, isOpen, closeWs, sendQuery, openSocket, trafficViewerApiProp}) => {
+const TrafficViewer: React.FC<TrafficViewerProps> = ({setAnalyzeStatus, setTappingStatus, message, error, isOpen, trafficViewerApiProp}) => {
     const classes = useLayoutStyles();
     
     const [entries, setEntries] = useRecoilState(entriesAtom);
     const [focusedEntryId, setFocusedEntryId] = useRecoilState(focusedEntryIdAtom);
     const [wsConnection, setWsConnection] = useRecoilState(websocketConnectionAtom);
-    const setCloseWsCallback = useSetRecoilState(closeWsConnectionCallbackAtom)
     const query = useRecoilValue(queryAtom);
     const [queryToSend, setQueryToSend] = useState("")
     const setTrafficViewerApiState = useSetRecoilState(trafficViewerApiAtom as RecoilState<TrafficViewerApi>)
@@ -121,7 +114,7 @@ const TrafficViewer: React.FC<TrafficViewerProps> = ({setAnalyzeStatus, setTappi
             setNoMoreDataTop(false);
         }
         setQueryToSend(query)
-        openSocket();
+        trafficViewerApiProp.webSocket.open();
     }
 
     const onmessage = useCallback((e) => {
@@ -192,8 +185,8 @@ const TrafficViewer: React.FC<TrafficViewerProps> = ({setAnalyzeStatus, setTappi
 
     useEffect(()=>{
       isOpen ? setWsConnection(WsConnectionStatus.Connected) : setWsConnection(WsConnectionStatus.Closed)
-      sendQuery(queryToSend)
-    },[isOpen, queryToSend, sendQuery, setWsConnection])
+      trafficViewerApiProp.webSocket.sendQuery(queryToSend)
+    },[isOpen, queryToSend, setWsConnection])
 
     const onerror = (event) => {
         console.error("WebSocket error:", event);
@@ -222,8 +215,8 @@ const TrafficViewer: React.FC<TrafficViewerProps> = ({setAnalyzeStatus, setTappi
     }, []);
 
 
-    const closeCallback = () => {wsConnection === WsConnectionStatus.Connected && closeWs()}
-    setCloseWsCallback({closeCallback : closeCallback})
+    //const closeCallback = () => {wsConnection === WsConnectionStatus.Connected && trafficViewerApiProp.webSocket.close()}
+
 
     const toggleConnection = () => {  
       if (wsConnection === WsConnectionStatus.Closed) {
@@ -238,7 +231,7 @@ const TrafficViewer: React.FC<TrafficViewerProps> = ({setAnalyzeStatus, setTappi
       }
       else if(wsConnection === WsConnectionStatus.Connected)
         {
-          closeWs()
+          trafficViewerApiProp.webSocket.close()
           setWsConnection(WsConnectionStatus.Closed);
         }
     }
@@ -277,7 +270,7 @@ const TrafficViewer: React.FC<TrafficViewerProps> = ({setAnalyzeStatus, setTappi
     const onSnapBrokenEvent = () => {
         setIsSnappedToBottom(false);
         if (wsConnection === WsConnectionStatus.Connected) {
-          closeWs()
+          trafficViewerApiProp.webSocket.close()
         }
     }
 
@@ -343,10 +336,10 @@ const TrafficViewer: React.FC<TrafficViewerProps> = ({setAnalyzeStatus, setTappi
 };
 
 const MemoiedTrafficViwer =  React.memo(TrafficViewer)
-const TrafficViewerContainer: React.FC<TrafficViewerProps> = ({setAnalyzeStatus, setTappingStatus, message, isOpen, closeWs, sendQuery, openSocket, trafficViewerApiProp}) => 
+const TrafficViewerContainer: React.FC<TrafficViewerProps> = ({setAnalyzeStatus, setTappingStatus, message, isOpen, trafficViewerApiProp}) => 
 {
   return <RecoilRoot>
-    <MemoiedTrafficViwer message={message} isOpen={isOpen} closeWs={closeWs} sendQuery={sendQuery } openSocket={ openSocket}
+    <MemoiedTrafficViwer message={message} isOpen={isOpen}
                        trafficViewerApiProp={trafficViewerApiProp} setAnalyzeStatus={setAnalyzeStatus} setTappingStatus={setTappingStatus}/>
   </RecoilRoot>
 }

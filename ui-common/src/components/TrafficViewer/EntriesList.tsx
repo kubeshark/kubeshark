@@ -10,7 +10,6 @@ import {RecoilState, useRecoilState, useRecoilValue} from "recoil";
 import entriesAtom from "../../recoil/entries";
 import wsConnectionAtom, {WsConnectionStatus} from "../../recoil/wsConnection";
 import queryAtom from "../../recoil/query";
-import { closeWsConnectionCallbackAtom } from "../../recoil/wsConnection/atom";
 import TrafficViewerApiAtom from "../../recoil/TrafficViewerApi";
 import TrafficViewerApi from "./TrafficViewerApi";
 
@@ -45,7 +44,6 @@ export const EntriesList: React.FC<EntriesListProps> = ({listEntryREF, onSnapBro
 
     const [loadMoreTop, setLoadMoreTop] = useState(false);
     const [isLoadingTop, setIsLoadingTop] = useState(false);
-    const {closeCallback} = useRecoilValue(closeWsConnectionCallbackAtom)
 
     useEffect(() => {
         const list = document.getElementById('list').firstElementChild;
@@ -126,7 +124,7 @@ export const EntriesList: React.FC<EntriesListProps> = ({listEntryREF, onSnapBro
                         title="Fetch old records"
                         className={`${styles.btnOld} ${!scrollbarVisible && leftOffTop > 0 ? styles.showButton : styles.hideButton}`}
                         onClick={(_) => {
-                            closeCallback()
+                            trafficViewerApi.webSocket.close()
                             getOldEntries();
                         }}>
                         <img alt="down" src={down} />

@@ -11,7 +11,7 @@ import {useRecoilState, useRecoilValue} from "recoil";
 import queryAtom from "../../recoil/query";
 import useKeyPress from "../../hooks/useKeyPress"
 import shortcutsKeyboard from "../../configs/shortcutsKeyboard"
-import { closeWsConnectionCallbackAtom } from "../../recoil/wsConnection/atom";
+import trafficViewerApiAtom from "../../recoil/TrafficViewerApi"
 
 
 interface FiltersProps {
@@ -51,7 +51,7 @@ export const QueryForm: React.FC<QueryFormProps> = ({backgroundColor, openWebSoc
 
     const formRef = useRef<HTMLFormElement>(null);
     const [query, setQuery] = useRecoilState(queryAtom);
-    const closeWsConnectionObj = useRecoilValue(closeWsConnectionCallbackAtom)
+    const trafficViewerApi = useRecoilValue(trafficViewerApiAtom)
 
     const [openModal, setOpenModal] = useState(false);
 
@@ -63,7 +63,7 @@ export const QueryForm: React.FC<QueryFormProps> = ({backgroundColor, openWebSoc
     }
 
     const handleSubmit = (e) => {
-        closeWsConnectionObj.closeCallback()
+        trafficViewerApi.webSocket.close()
         if (query) {
             openWebSocket(`(${query}) and leftOff(-1)`, true);
         } else {

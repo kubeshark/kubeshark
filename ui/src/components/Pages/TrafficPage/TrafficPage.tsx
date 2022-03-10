@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Button } from "@material-ui/core";
-import Api, {MizuWebsocketURL,getToken} from "../../../helpers/api";
+import Api, {getWebsocketUrl} from "../../../helpers/api";
 import debounce from 'lodash/debounce';
 import {useSetRecoilState, useRecoilState} from "recoil";
 import {useCommonStyles} from "../../../helpers/commonStyle"
@@ -47,31 +47,29 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus}) => {
   const onClose = () => setisOpen(false)
 
   const openScoket = (query = "") => {
-    let websocketUrl = MizuWebsocketURL;
-    if (getToken()) {
-      websocketUrl += `/${getToken()}`;
-    }
-    ws.current = new WebSocket(websocketUrl)
+    ws.current = new WebSocket(getWebsocketUrl())
     ws.current.addEventListener("message",onMessage)
     ws.current.addEventListener("error",onError)
     ws.current.addEventListener("open",onOpen)
     ws.current.addEventListener("close",onClose)
   }
 
-  const closeWs = () => {
-      ws.current.readyState === WebSocketReadyState.OPEN && ws.current.close();
-      ws.current.removeEventListener("message",onMessage)
-      ws.current.removeEventListener("error",onError)
-      ws.current.removeEventListener("open",onOpen)
-      ws.current.removeEventListener("close",onClose)
-  }
-  
-  
-  const sendQuery = (query) =>{
-      if(ws.current && (ws.current.readyState === WebSocketReadyState.OPEN)){
-        ws.current.send(JSON.stringify({"query": query, "enableFullEntries": false}));
-      }
-  }
+  const closeSocket = () => {
+    ws.current.readyState === WebSocketReadyState.OPEN && ws.current.close();
+    ws.current.removeEventListener("message",onMessage)
+    ws.current.removeEventListener("error",onError)
+    ws.current.removeEventListener("open",onOpen)
+    ws.current.removeEventListener("close",onClose)
+}
+
+
+const sendQuery = (query: string) =>{
+    if(ws.current && (ws.current.readyState === WebSocketReadyState.OPEN)){
+      ws.current.send(JSON.stringify({"query": query, "enableFullEntries": false}));
+    }
+}
+
+const trafficViewerApi = {...api, webSocket:{open : openScoket, close: closeSocket, sendQuery: sendQuery}}
 
   const handleOpenOasModal = () => {	
     ws.current.close();	
@@ -81,7 +79,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus}) => {
   useEffect(() => {
       return () => {
         if(ws.current)
-          closeWs()
+        closeSocket()
       }
   },[])
 
@@ -112,8 +110,8 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus}) => {
           </Button>}	
         </div>
       </div>
-      <TrafficViewer setAnalyzeStatus={setAnalyzeStatus} setTappingStatus={setTappingStatus} message={message} error={error} isOpen={isOpen} closeWs={closeWs}
-                     sendQuery={sendQuery} openSocket={openScoket} trafficViewerApiProp={api} />
+      <TrafficViewer setAnalyzeStatus={setAnalyzeStatus} setTappingStatus={setTappingStatus} message={message} error={error} isOpen={isOpen}
+                     trafficViewerApiProp={trafficViewerApi} />
       {tappingStatus && !openOasModal && <StatusBar/>}
     </>
   );

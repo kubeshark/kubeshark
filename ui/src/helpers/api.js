@@ -321,6 +321,11 @@ export default class Api {
     }
 }
 
-export function getToken(){
-    return token
+export function getWebsocketUrl(){
+    let websocketUrl = MizuWebsocketURL;
+    if (token) {
+      websocketUrl += `/${token}`;
+    }
+
+    return websocketUrl;
 }
