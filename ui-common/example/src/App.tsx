@@ -1,8 +1,8 @@
 
 
  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import TrafficViewer from 'liraz-test';
-import "liraz-test/dist/index.css"
+import TrafficViewer from '@up9/mizu-common';
+import "@up9/mizu-common/dist/index.css"
 import {  useRef, useState } from 'react';
 
 import Api, {MizuWebsocketURL,getToken} from "./api";

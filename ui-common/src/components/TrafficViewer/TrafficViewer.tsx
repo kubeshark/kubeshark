@@ -45,6 +45,7 @@ const useLayoutStyles = makeStyles(() => ({
 
 interface TrafficViewerProps {
   setAnalyzeStatus?: (status: any) => void;
+  setTappingStatus?: (tappingStatus : any) => void;
   api? :any
   message? :{}
   error? :{}
@@ -55,9 +56,9 @@ interface TrafficViewerProps {
   trafficViewerApiProp : TrafficViewerApi
 }
 
-const TrafficViewer: React.FC<TrafficViewerProps> = ({setAnalyzeStatus, message, error, isOpen, closeWs, sendQuery, openSocket, trafficViewerApiProp}) => {
+const TrafficViewer: React.FC<TrafficViewerProps> = ({setAnalyzeStatus, setTappingStatus, message, error, isOpen, closeWs, sendQuery, openSocket, trafficViewerApiProp}) => {
     const classes = useLayoutStyles();
-    const [tappingStatus, setTappingStatus] = useRecoilState(tappingStatusAtom);
+    
     const [entries, setEntries] = useRecoilState(entriesAtom);
     const [focusedEntryId, setFocusedEntryId] = useRecoilState(focusedEntryIdAtom);
     const [wsConnection, setWsConnection] = useRecoilState(websocketConnectionAtom);
@@ -333,7 +334,6 @@ const TrafficViewer: React.FC<TrafficViewerProps> = ({setAnalyzeStatus, message,
           {focusedEntryId && <EntryDetailed />}
         </div>
       </div>}
-      {tappingStatus && !openOasModal &&<StatusBar />}
        <TLSWarning showTLSWarning={showTLSWarning}
                    setShowTLSWarning={setShowTLSWarning}
                    addressesWithTLS={addressesWithTLS}
@@ -345,11 +345,11 @@ const TrafficViewer: React.FC<TrafficViewerProps> = ({setAnalyzeStatus, message,
 };
 
 const MemoiedTrafficViwer =  React.memo(TrafficViewer)
-const TrafficViewerContainer: React.FC<TrafficViewerProps> = ({setAnalyzeStatus, message, isOpen, closeWs, sendQuery, openSocket, trafficViewerApiProp}) => 
+const TrafficViewerContainer: React.FC<TrafficViewerProps> = ({setAnalyzeStatus, setTappingStatus, message, isOpen, closeWs, sendQuery, openSocket, trafficViewerApiProp}) => 
 {
   return <RecoilRoot>
     <MemoiedTrafficViwer message={message} isOpen={isOpen} closeWs={closeWs} sendQuery={sendQuery } openSocket={ openSocket}
-                       trafficViewerApiProp={trafficViewerApiProp} setAnalyzeStatus={setAnalyzeStatus}/>
+                       trafficViewerApiProp={trafficViewerApiProp} setAnalyzeStatus={setAnalyzeStatus} setTappingStatus={setTappingStatus}/>
   </RecoilRoot>
 }
 

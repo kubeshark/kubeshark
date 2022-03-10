@@ -1,6 +1,6 @@
 {
-  "short_name": "liraz-test",
-  "name": "liraz-test",
+  "short_name": "@up9/mizu-common",
+  "name": "@up9/mizu-common",
   "icons": [
     {
       "src": "favicon.ico",

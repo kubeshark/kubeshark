@@ -50,7 +50,6 @@ tap/extensions/*/bin
 tap/extensions/*/expect
 
 # UI folders to ignore
-ui*/node_modules
-ui*/public
-ui*/dist
+**/node_modules/**
+**/dist/**
 *.editorconfig

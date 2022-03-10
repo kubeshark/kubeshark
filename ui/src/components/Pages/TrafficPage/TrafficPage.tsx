@@ -1,9 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Button } from "@material-ui/core";
-import "./TrafficPage.sass";
 import Api, {MizuWebsocketURL,getToken} from "../../../helpers/api";
 import debounce from 'lodash/debounce';
-import {useSetRecoilState} from "recoil";
+import {useSetRecoilState, useRecoilState} from "recoil";
 import {useCommonStyles} from "../../../helpers/commonStyle"
 import serviceMapModalOpenAtom from "../../../recoil/serviceMapModalOpen";
 import TrafficViewer  from "@up9/mizu-common"
@@ -11,6 +10,8 @@ import "@up9/mizu-common/dist/index.css"
 import oasModalOpenAtom from "../../../recoil/oasModalOpen/atom";
 import serviceMap from "../../assets/serviceMap.svg";	
 import services from "../../assets/services.svg";	
+import tappingStatusAtom from "../../../recoil/tappingStatus/atom";
+import {StatusBar} from "@up9/mizu-common"
 
 
 enum WebSocketReadyState{
@@ -27,8 +28,9 @@ interface TrafficPageProps {
 const api = Api.getInstance();
 
 export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus}) => {
-  const setServiceMapModalOpen = useSetRecoilState(serviceMapModalOpenAtom);	
-  const setOpenOasModal = useSetRecoilState(oasModalOpenAtom);
+  const setServiceMapModalOpen = useSetRecoilState(serviceMapModalOpenAtom);
+  const [tappingStatus, setTappingStatus] = useRecoilState(tappingStatusAtom);
+  const [openOasModal,setOpenOasModal] = useRecoilState(oasModalOpenAtom);
 
   const commonClasses = useCommonStyles();
   const [message, setMessage] = useState(null);
@@ -111,8 +113,9 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus}) => {
           </Button>}	
         </div>
       </div>
-      <TrafficViewer setAnalyzeStatus={setAnalyzeStatus} message={message} error={error} isOpen={isOpen} closeWs={closeWs}
+      <TrafficViewer setAnalyzeStatus={setAnalyzeStatus} setTappingStatus={setTappingStatus} message={message} error={error} isOpen={isOpen} closeWs={closeWs}
                      sendQuery={sendQuery} openSocket={openScoket} trafficViewerApiProp={api} />
+      {tappingStatus && !openOasModal && <StatusBar/>}
     </>
   );
 };

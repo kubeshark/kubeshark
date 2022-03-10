@@ -7,7 +7,7 @@
 ## Install
 
 ```bash
-npm install --save liraz-test
+npm install --save @up9/mizu-common
 ```
 
 ## Usage
@@ -15,8 +15,8 @@ npm install --save liraz-test
 ```tsx
 import React, { Component } from 'react'
 
-import MyComponent from 'liraz-test'
-import 'liraz-test/dist/index.css'
+import MyComponent from 'l@up9/mizu-common'
+import '@up9/mizu-common/dist/index.css'
 
 class Example extends Component {
   render() {

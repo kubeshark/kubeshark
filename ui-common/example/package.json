@@ -1,5 +1,5 @@
 {
-  "name": "liraz-test-example",
+  "name": "@up9/mizu-common-example",
   "homepage": ".",
   "version": "0.0.0",
   "private": true,
@@ -18,7 +18,7 @@
     "@types/node": "file:../node_modules/@types/node",
     "@types/react": "file:../node_modules/@types/react",
     "@types/react-dom": "file:../node_modules/@types/react-dom",
-    "liraz-test": "file:..",
+    "@up9/mizu-common": "file:..",
     "react": "file:../node_modules/react",
     "react-dom": "file:../node_modules/react-dom"
   },
