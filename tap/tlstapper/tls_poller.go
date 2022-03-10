@@ -103,7 +103,7 @@ func dissect(extension *api.Extension, reader *tlsReader, isRequest bool, tcpid 
 	emitter api.Emitter, options *api.TrafficFilteringOptions, reqResMatcher api.RequestResponseMatcher) {
 	b := bufio.NewReader(reader)
 
-	err := extension.Dissector.Dissect(b, isRequest, tcpid, &api.CounterPair{},
+	err := extension.Dissector.Dissect(b, api.Ebpf, isRequest, tcpid, &api.CounterPair{},
 		&api.SuperTimer{}, &api.SuperIdentifier{}, emitter, options, reqResMatcher)
 
 	if err != nil {

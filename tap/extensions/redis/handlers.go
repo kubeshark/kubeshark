@@ -6,7 +6,7 @@ import (
 	"github.com/up9inc/mizu/tap/api"
 )
 
-func handleClientStream(tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, emitter api.Emitter, request *RedisPacket, reqResMatcher *requestResponseMatcher) error {
+func handleClientStream(capture api.Capture, tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, emitter api.Emitter, request *RedisPacket, reqResMatcher *requestResponseMatcher) error {
 	counterPair.Lock()
 	counterPair.Request++
 	requestCounter := counterPair.Request
@@ -23,6 +23,7 @@ func handleClientStream(tcpID *api.TcpID, counterPair *api.CounterPair, superTim
 
 	item := reqResMatcher.registerRequest(ident, request, superTimer.CaptureTime)
 	if item != nil {
+		item.Capture = capture
 		item.ConnectionInfo = &api.ConnectionInfo{
 			ClientIP:   tcpID.SrcIP,
 			ClientPort: tcpID.SrcPort,
@@ -35,7 +36,7 @@ func handleClientStream(tcpID *api.TcpID, counterPair *api.CounterPair, superTim
 	return nil
 }
 
-func handleServerStream(tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, emitter api.Emitter, response *RedisPacket, reqResMatcher *requestResponseMatcher) error {
+func handleServerStream(capture api.Capture, tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, emitter api.Emitter, response *RedisPacket, reqResMatcher *requestResponseMatcher) error {
 	counterPair.Lock()
 	counterPair.Response++
 	responseCounter := counterPair.Response
@@ -52,6 +53,7 @@ func handleServerStream(tcpID *api.TcpID, counterPair *api.CounterPair, superTim
 
 	item := reqResMatcher.registerResponse(ident, response, superTimer.CaptureTime)
 	if item != nil {
+		item.Capture = capture
 		item.ConnectionInfo = &api.ConnectionInfo{
 			ClientIP:   tcpID.DstIP,
 			ClientPort: tcpID.DstPort,
