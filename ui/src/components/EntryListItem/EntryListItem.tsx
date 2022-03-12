@@ -156,7 +156,7 @@ export const EntryItem: React.FC<EntryProps> = ({entry, style, headingMode}) => 
                 protocol={entry.proto}
                 horizontal={false}
             /> : null}
-            {entry.capture !== "pcap" ? <div className={styles.capture}>
+            {entry.capture === "ebpf" ? <div className={styles.capture}>
                 <Queryable
                     query={`capture == "${entry.capture}"`}
                     displayIconOnMouseOver={true}
