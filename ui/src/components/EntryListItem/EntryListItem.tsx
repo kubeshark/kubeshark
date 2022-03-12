@@ -156,6 +156,7 @@ export const EntryItem: React.FC<EntryProps> = ({entry, style, headingMode}) => 
                 protocol={entry.proto}
                 horizontal={false}
             /> : null}
+            {/* TODO: Update the code below once we have api.Pcap, api.Envoy and api.Linkerd distinction in the backend */}
             {entry.capture === "ebpf" ? <div className={styles.capture}>
                 <Queryable
                     query={`capture == "${entry.capture}"`}
