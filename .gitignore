@@ -48,3 +48,6 @@ cypress.env.json
 # Ignore test data in extensions
 tap/extensions/*/bin
 tap/extensions/*/expect
+
+# Ignore *.log files
+*.log

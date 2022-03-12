@@ -3,6 +3,8 @@ set -e
 
 PREFIX=$HOME/local/bin
 VERSION=v1.22.0
+TUNNEL_LOG="tunnel.log"
+PROXY_LOG="proxy.log"
 
 echo "Attempting to install minikube and assorted tools to $PREFIX"
 
@@ -55,8 +57,12 @@ kubectl expose deployment redis --type=LoadBalancer --port=6379 -n mizu-tests --
 echo "Creating rabbitmq service"
 kubectl expose deployment rabbitmq --type=LoadBalancer --port=5672 -n mizu-tests --dry-run=client -o yaml | kubectl apply -f -
 
+# TODO: need to understand how to fail if address already in use
 echo "Starting proxy"
-kubectl proxy --port=8080 &
+rm -f ${PROXY_LOG}
+kubectl proxy --port=8080 > ${PROXY_LOG} &
+PID1=$!
+echo "kubectl proxy process id is ${PID1} and log of proxy in ${PROXY_LOG}"
 
 echo "Setting minikube docker env"
 eval "$(minikube docker-env)"
@@ -67,5 +73,9 @@ docker build -t mizu/ci:0.0 .
 echo "Build cli"
 cd cli && make build GIT_BRANCH=ci SUFFIX=ci
 
+# TODO: need to understand how to fail is password is asked (sudo)
 echo "Starting tunnel"
-minikube tunnel &
+rm -f ${TUNNEL_LOG}
+minikube tunnel > ${TUNNEL_LOG} &
+PID2=$!
+echo "Minikube tunnel process id is ${PID2} and log of tunnel in ${TUNNEL_LOG}"
