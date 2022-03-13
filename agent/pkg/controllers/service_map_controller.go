@@ -14,7 +14,7 @@ type ServiceMapController struct {
 
 func NewServiceMapController() *ServiceMapController {
 	return &ServiceMapController{
-		service: servicemap.GetInstance(),
+		service: servicemap.GetDefaultServiceMapInstance(),
 	}
 }
 

@@ -13,18 +13,18 @@ const (
 	UnresolvedNodeName = "unresolved"
 )
 
-var instance *serviceMap
+var instance *defaultServiceMap
 var once sync.Once
 
-func GetInstance() ServiceMap {
+func GetDefaultServiceMapInstance() ServiceMap {
 	once.Do(func() {
-		instance = newServiceMap()
+		instance = NewDefaultServiceMapGenerator()
 		logger.Log.Debug("Service Map Initialized")
 	})
 	return instance
 }
 
-type serviceMap struct {
+type defaultServiceMap struct {
 	enabled          bool
 	graph            *graph
 	entriesProcessed int
@@ -44,8 +44,8 @@ type ServiceMap interface {
 	Reset()
 }
 
-func newServiceMap() *serviceMap {
-	return &serviceMap{
+func NewDefaultServiceMapGenerator() *defaultServiceMap {
+	return &defaultServiceMap{
 		enabled:          false,
 		entriesProcessed: 0,
 		graph:            newDirectedGraph(),
@@ -105,12 +105,12 @@ func newEdgeData(p *tapApi.Protocol) *edgeData {
 	}
 }
 
-func (s *serviceMap) nodeExists(k key) (*nodeData, bool) {
+func (s *defaultServiceMap) nodeExists(k key) (*nodeData, bool) {
 	n, ok := s.graph.Nodes[k]
 	return n, ok
 }
 
-func (s *serviceMap) addNode(k key, e *tapApi.TCP) (*nodeData, bool) {
+func (s *defaultServiceMap) addNode(k key, e *tapApi.TCP) (*nodeData, bool) {
 	nd, exists := s.nodeExists(k)
 	if !exists {
 		s.graph.Nodes[k] = newNodeData(len(s.graph.Nodes)+1, e)
@@ -119,7 +119,7 @@ func (s *serviceMap) addNode(k key, e *tapApi.TCP) (*nodeData, bool) {
 	return nd, false
 }
 
-func (s *serviceMap) addEdge(u, v *entryData, p *tapApi.Protocol) {
+func (s *defaultServiceMap) addEdge(u, v *entryData, p *tapApi.Protocol) {
 	if n, ok := s.addNode(u.key, u.entry); !ok {
 		n.count++
 	}
@@ -156,20 +156,20 @@ func (s *serviceMap) addEdge(u, v *entryData, p *tapApi.Protocol) {
 	s.entriesProcessed++
 }
 
-func (s *serviceMap) Enable() {
+func (s *defaultServiceMap) Enable() {
 	s.enabled = true
 }
 
-func (s *serviceMap) Disable() {
+func (s *defaultServiceMap) Disable() {
 	s.Reset()
 	s.enabled = false
 }
 
-func (s *serviceMap) IsEnabled() bool {
+func (s *defaultServiceMap) IsEnabled() bool {
 	return s.enabled
 }
 
-func (s *serviceMap) NewTCPEntry(src *tapApi.TCP, dst *tapApi.TCP, p *tapApi.Protocol) {
+func (s *defaultServiceMap) NewTCPEntry(src *tapApi.TCP, dst *tapApi.TCP, p *tapApi.Protocol) {
 	if !s.IsEnabled() {
 		return
 	}
@@ -206,7 +206,7 @@ func (s *serviceMap) NewTCPEntry(src *tapApi.TCP, dst *tapApi.TCP, p *tapApi.Pro
 	s.addEdge(srcEntry, dstEntry, p)
 }
 
-func (s *serviceMap) GetStatus() ServiceMapStatus {
+func (s *defaultServiceMap) GetStatus() ServiceMapStatus {
 	status := ServiceMapDisabled
 	if s.IsEnabled() {
 		status = ServiceMapEnabled
@@ -220,7 +220,7 @@ func (s *serviceMap) GetStatus() ServiceMapStatus {
 	}
 }
 
-func (s *serviceMap) GetNodes() []ServiceMapNode {
+func (s *defaultServiceMap) GetNodes() []ServiceMapNode {
 	var nodes []ServiceMapNode
 	for i, n := range s.graph.Nodes {
 		nodes = append(nodes, ServiceMapNode{
@@ -233,7 +233,7 @@ func (s *serviceMap) GetNodes() []ServiceMapNode {
 	return nodes
 }
 
-func (s *serviceMap) GetEdges() []ServiceMapEdge {
+func (s *defaultServiceMap) GetEdges() []ServiceMapEdge {
 	var edges []ServiceMapEdge
 	for u, m := range s.graph.Edges {
 		for v := range m {
@@ -260,15 +260,15 @@ func (s *serviceMap) GetEdges() []ServiceMapEdge {
 	return edges
 }
 
-func (s *serviceMap) GetEntriesProcessedCount() int {
+func (s *defaultServiceMap) GetEntriesProcessedCount() int {
 	return s.entriesProcessed
 }
 
-func (s *serviceMap) GetNodesCount() int {
+func (s *defaultServiceMap) GetNodesCount() int {
 	return len(s.graph.Nodes)
 }
 
-func (s *serviceMap) GetEdgesCount() int {
+func (s *defaultServiceMap) GetEdgesCount() int {
 	var count int
 	for u, m := range s.graph.Edges {
 		for v := range m {
@@ -280,7 +280,7 @@ func (s *serviceMap) GetEdgesCount() int {
 	return count
 }
 
-func (s *serviceMap) Reset() {
+func (s *defaultServiceMap) Reset() {
 	s.entriesProcessed = 0
 	s.graph = newDirectedGraph()
 }

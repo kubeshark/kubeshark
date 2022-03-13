@@ -215,10 +215,10 @@ func runInHarReaderMode() {
 
 func enableExpFeatureIfNeeded() {
 	if config.Config.OAS {
-		oas.GetOasGeneratorInstance().Start()
+		oas.GetDefaultOasGeneratorInstance().Start()
 	}
 	if config.Config.ServiceMap {
-		servicemap.GetInstance().Enable()
+		servicemap.GetDefaultServiceMapInstance().Enable()
 	}
 	elastic.GetInstance().Configure(config.Config.Elastic)
 }
@@ -399,6 +399,6 @@ func handleIncomingMessageAsTapper(socketConnection *websocket.Conn) {
 }
 
 func initializeDependencies() {
-	dependency.RegisterGenerator(dependency.ServiceMapGeneratorDependency, func() interface{} { return servicemap.GetInstance() })
-	dependency.RegisterGenerator(dependency.OasGeneratorDependency, func() interface{} { return oas.GetOasGeneratorInstance() })
+	dependency.RegisterGenerator(dependency.ServiceMapGeneratorDependency, func() interface{} { return servicemap.GetDefaultServiceMapInstance() })
+	dependency.RegisterGenerator(dependency.OasGeneratorDependency, func() interface{} { return oas.GetDefaultOasGeneratorInstance() })
 }

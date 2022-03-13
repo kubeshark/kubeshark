@@ -152,7 +152,7 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 				entryWSource.Destination = mizuEntry.Destination.IP + ":" + mizuEntry.Destination.Port
 			}
 
-			oasGenerator := dependency.GetInstance(dependency.OasGeneratorDependency).(*oas.OasGenerator)
+			oasGenerator := dependency.GetInstance(dependency.OasGeneratorDependency).(oas.OasGenerator)
 			oasGenerator.PushEntry(&entryWSource)
 		}
 

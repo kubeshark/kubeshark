@@ -12,18 +12,34 @@ import (
 
 var (
 	syncOnce sync.Once
-	instance *OasGenerator
+	instance *defaultOasGenerator
 )
 
-func GetOasGeneratorInstance() *OasGenerator {
+type OasGenerator interface {
+	Start()
+	Stop()
+	IsStarted()
+	Reset()
+	PushEntry(entryWithSource *EntryWithSource)
+}
+
+type defaultOasGenerator struct {
+	started      bool
+	ctx          context.Context
+	cancel       context.CancelFunc
+	ServiceSpecs *sync.Map
+	entriesChan  chan EntryWithSource
+}
+
+func GetDefaultOasGeneratorInstance() *defaultOasGenerator {
 	syncOnce.Do(func() {
-		instance = newOasGenerator()
+		instance = NewDefaultOasGenerator()
 		logger.Log.Debug("OAS Generator Initialized")
 	})
 	return instance
 }
 
-func (g *OasGenerator) Start() {
+func (g *defaultOasGenerator) Start() {
 	if g.started {
 		return
 	}
@@ -36,7 +52,7 @@ func (g *OasGenerator) Start() {
 	go instance.runGenerator()
 }
 
-func (g *OasGenerator) Stop() {
+func (g *defaultOasGenerator) Stop() {
 	if !g.started {
 		return
 	}
@@ -45,11 +61,11 @@ func (g *OasGenerator) Stop() {
 	g.started = false
 }
 
-func (g *OasGenerator) IsStarted() bool {
+func (g *defaultOasGenerator) IsStarted() bool {
 	return g.started
 }
 
-func (g *OasGenerator) runGenerator() {
+func (g *defaultOasGenerator) runGenerator() {
 	for {
 		select {
 		case <-g.ctx.Done():
@@ -92,11 +108,11 @@ func (g *OasGenerator) runGenerator() {
 	}
 }
 
-func (g *OasGenerator) Reset() {
+func (g *defaultOasGenerator) Reset() {
 	g.ServiceSpecs = &sync.Map{}
 }
 
-func (g *OasGenerator) PushEntry(entryWithSource *EntryWithSource) {
+func (g *defaultOasGenerator) PushEntry(entryWithSource *EntryWithSource) {
 	if !g.started {
 		return
 	}
@@ -107,8 +123,8 @@ func (g *OasGenerator) PushEntry(entryWithSource *EntryWithSource) {
 	}
 }
 
-func newOasGenerator() *OasGenerator {
-	return &OasGenerator{
+func NewDefaultOasGenerator() *defaultOasGenerator {
+	return &defaultOasGenerator{
 		started:      false,
 		ctx:          nil,
 		cancel:       nil,
@@ -122,12 +138,4 @@ type EntryWithSource struct {
 	Destination string
 	Entry       har.Entry
 	Id          uint
-}
-
-type OasGenerator struct {
-	started      bool
-	ctx          context.Context
-	cancel       context.CancelFunc
-	ServiceSpecs *sync.Map
-	entriesChan  chan EntryWithSource
 }
