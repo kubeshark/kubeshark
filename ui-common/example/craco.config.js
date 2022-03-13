@@ -1,4 +1,3 @@
-//const stylesResourcesLoader = require('craco-style-resources-loader');
 module.exports = {
   webpack: {
       configure: (webpackConfig) => {
@@ -10,13 +9,5 @@ module.exports = {
 
           return webpackConfig;
       }
-  },
-  // plugins: [
-  //   {
-  //     plugin: stylesResourcesLoader,
-  //     options: {
-  //       patterns: ['./node_modules/liraz-test/dist/index.css','./node_modules/liraz-test/dist/*.svg'],
-  //     },
-  //   },
-  // ]
+  }
 }
