@@ -92,23 +92,6 @@ export default class Api {
         return response.data;
     }
 
-    isAuthenticationNeeded = async () => {
-        try {
-            await client.get("/user/whoAmI");
-            return false;
-        } catch (e) {
-            if (e.response.status === 401) {
-                return true;
-            }
-            throw e;
-        }
-    }
-
-    whoAmI = async () => {
-        const response = await client.get("/user/whoAmI");
-        return response.data;
-    }
-
     persistToken = (tk) => {
         token = tk;
         client = this.getAxiosClient();
