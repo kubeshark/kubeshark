@@ -215,10 +215,12 @@ func runInHarReaderMode() {
 
 func enableExpFeatureIfNeeded() {
 	if config.Config.OAS {
-		oas.GetDefaultOasGeneratorInstance().Start()
+		oasGenerator := dependency.GetInstance(dependency.OasGeneratorDependency).(oas.OasGenerator)
+		oasGenerator.Start()
 	}
 	if config.Config.ServiceMap {
-		servicemap.GetDefaultServiceMapInstance().Enable()
+		serviceMapGenerator := dependency.GetInstance(dependency.ServiceMapGeneratorDependency).(servicemap.ServiceMap)
+		serviceMapGenerator.Enable()
 	}
 	elastic.GetInstance().Configure(config.Config.Elastic)
 }
