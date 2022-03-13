@@ -18,6 +18,8 @@ import queryAtom from "../../recoil/query";
 import {TLSWarning} from "../TLSWarning/TLSWarning";
 import trafficViewerApiAtom from "../../recoil/TrafficViewerApi"
 import TrafficViewerApi from "./TrafficViewerApi";
+import { StatusBar } from "../UI/StatusBar";
+import tappingStatusAtom from "../../recoil/tappingStatus/atom";
 
 
 const useLayoutStyles = makeStyles(() => ({
@@ -42,16 +44,16 @@ const useLayoutStyles = makeStyles(() => ({
 
 interface TrafficViewerProps {
   setAnalyzeStatus?: (status: any) => void;
-  setTappingStatus?: (tappingStatus : any) => void;
   api? :any
   message? :{}
   error? :{}
   isOpen : boolean
   trafficViewerApiProp : TrafficViewerApi,
-  actionButtons? : JSX.Element
+  actionButtons? : JSX.Element,
+  isShowStatusBar? : boolean
 }
 
-const TrafficViewer: React.FC<TrafficViewerProps> = ({setAnalyzeStatus, setTappingStatus, message, error, isOpen, trafficViewerApiProp, actionButtons}) => {
+const TrafficViewer: React.FC<TrafficViewerProps> = ({setAnalyzeStatus, message, error, isOpen, trafficViewerApiProp, actionButtons, isShowStatusBar}) => {
     const classes = useLayoutStyles();
 
     const [entries, setEntries] = useRecoilState(entriesAtom);
@@ -60,6 +62,7 @@ const TrafficViewer: React.FC<TrafficViewerProps> = ({setAnalyzeStatus, setTappi
     const query = useRecoilValue(queryAtom);
     const [queryToSend, setQueryToSend] = useState("")
     const setTrafficViewerApiState = useSetRecoilState(trafficViewerApiAtom as RecoilState<TrafficViewerApi>)
+    const [tappingStatus, setTappingStatus] = useRecoilState(tappingStatusAtom);
     
 
     const [noMoreDataTop, setNoMoreDataTop] = useState(false);
@@ -271,8 +274,9 @@ const TrafficViewer: React.FC<TrafficViewerProps> = ({setAnalyzeStatus, setTappi
         }
     }
 
-  return (
+  return (    
     <div className={TrafficViewerStyles.TrafficPage}>
+      {tappingStatus && isShowStatusBar && <StatusBar/>}
       <div className={TrafficViewerStyles.TrafficPageHeader}>
         <div className={TrafficViewerStyles.TrafficPageStreamStatus}>
         <img className={TrafficViewerStyles.playPauseIcon}  style={{ visibility: wsConnection === WsConnectionStatus.Connected ? "visible" : "hidden" }} alt="pause"
@@ -331,11 +335,11 @@ const TrafficViewer: React.FC<TrafficViewerProps> = ({setAnalyzeStatus, setTappi
 };
 
 const MemoiedTrafficViwer =  React.memo(TrafficViewer)
-const TrafficViewerContainer: React.FC<TrafficViewerProps> = ({setAnalyzeStatus, setTappingStatus, message, isOpen, trafficViewerApiProp, actionButtons}) => 
+const TrafficViewerContainer: React.FC<TrafficViewerProps> = ({setAnalyzeStatus, message, isOpen, trafficViewerApiProp, actionButtons, isShowStatusBar = true}) => 
 {
   return <RecoilRoot>
-    <MemoiedTrafficViwer message={message} isOpen={isOpen} actionButtons={actionButtons}
-                       trafficViewerApiProp={trafficViewerApiProp} setAnalyzeStatus={setAnalyzeStatus} setTappingStatus={setTappingStatus}/>
+    <MemoiedTrafficViwer message={message} isOpen={isOpen} actionButtons={actionButtons} isShowStatusBar={isShowStatusBar}
+                       trafficViewerApiProp={trafficViewerApiProp} setAnalyzeStatus={setAnalyzeStatus}/>
   </RecoilRoot>
 }
 

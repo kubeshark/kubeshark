@@ -10,21 +10,16 @@ import "@up9/mizu-common/dist/index.css"
 import oasModalOpenAtom from "../../../recoil/oasModalOpen/atom";
 import serviceMap from "../../assets/serviceMap.svg";	
 import services from "../../assets/services.svg";	
-import tappingStatusAtom from "../../../recoil/tappingStatus/atom";
-import {StatusBar} from "@up9/mizu-common"
 
 interface TrafficPageProps {
   setAnalyzeStatus?: (status: any) => void;
 }
-
-window["isOasEnabled"] = true;  window["isServiceMapEnabled"] = true;
 
 const api = Api.getInstance();
 
 export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus}) => {
   const commonClasses = useCommonStyles();
   const setServiceMapModalOpen = useSetRecoilState(serviceMapModalOpenAtom);
-  const [tappingStatus, setTappingStatus] = useRecoilState(tappingStatusAtom);
   const [openOasModal, setOpenOasModal] = useRecoilState(oasModalOpenAtom);
 
   const {message,error,isOpen, openSocket, closeSocket, sendQuery} = useWS(getWebsocketUrl())
@@ -71,9 +66,8 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus}) => {
 
   return ( 
   <>
-      <TrafficViewer setAnalyzeStatus={setAnalyzeStatus} setTappingStatus={setTappingStatus} message={message} error={error} isOpen={isOpen}
-                     trafficViewerApiProp={trafficViewerApi} actionButtons={actionButtons}/>
-      {tappingStatus && !openOasModal && <StatusBar/>}
+      <TrafficViewer setAnalyzeStatus={setAnalyzeStatus}  message={message} error={error} isOpen={isOpen}
+                     trafficViewerApiProp={trafficViewerApi} actionButtons={actionButtons} isShowStatusBar={!openOasModal}/>
   </>
   );
 };

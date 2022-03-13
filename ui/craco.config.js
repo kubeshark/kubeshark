@@ -1,3 +1,5 @@
+const path = require("path")
+
 module.exports = {
     webpack: {
         configure: (webpackConfig) => {
@@ -7,7 +9,8 @@ module.exports = {
             if(instanceOfMiniCssExtractPlugin)
                 instanceOfMiniCssExtractPlugin.options.ignoreOrder = true;
 
-           
+            webpackConfig.resolve.alias['react']= path.resolve(__dirname, 'node_modules/react'); // solve 2  react instances
+
 
             return webpackConfig;
         }

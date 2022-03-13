@@ -18,7 +18,7 @@ const App = () => {
 
   return <>
     <TrafficViewer message={message} error={error} isOpen={isOpen}
-                   trafficViewerApiProp={trafficViewerApi} setTappingStatus={()=>{}} ></TrafficViewer>
+                   trafficViewerApiProp={trafficViewerApi} ></TrafficViewer>
   </>
 }
 
