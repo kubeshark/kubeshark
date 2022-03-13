@@ -59,11 +59,6 @@ export default class Api {
         return response.data;
     }
 
-    getAuthStatus = async () => {
-        const response = await client.get("/status/auth");
-        return response.data;
-    }
-
     getOasServices = async () => {
         const response = await client.get("/oas");
         return response.data;
@@ -94,11 +89,6 @@ export default class Api {
             return null;
         }
 
-        return response.data;
-    }
-
-    isInstallNeeded = async () => {
-        const response = await client.get("/install/isNeeded");
         return response.data;
     }
 
