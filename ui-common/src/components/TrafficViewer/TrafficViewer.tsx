@@ -47,12 +47,13 @@ interface TrafficViewerProps {
   message? :{}
   error? :{}
   isOpen : boolean
-  trafficViewerApiProp : TrafficViewerApi
+  trafficViewerApiProp : TrafficViewerApi,
+  actionButtons? : JSX.Element
 }
 
-const TrafficViewer: React.FC<TrafficViewerProps> = ({setAnalyzeStatus, setTappingStatus, message, error, isOpen, trafficViewerApiProp}) => {
+const TrafficViewer: React.FC<TrafficViewerProps> = ({setAnalyzeStatus, setTappingStatus, message, error, isOpen, trafficViewerApiProp, actionButtons}) => {
     const classes = useLayoutStyles();
-    
+
     const [entries, setEntries] = useRecoilState(entriesAtom);
     const [focusedEntryId, setFocusedEntryId] = useRecoilState(focusedEntryIdAtom);
     const [wsConnection, setWsConnection] = useRecoilState(websocketConnectionAtom);
@@ -214,10 +215,6 @@ const TrafficViewer: React.FC<TrafficViewerProps> = ({setAnalyzeStatus, setTappi
     // eslint-disable-next-line
     }, []);
 
-
-    //const closeCallback = () => {wsConnection === WsConnectionStatus.Connected && trafficViewerApiProp.webSocket.close()}
-
-
     const toggleConnection = () => {  
       if (wsConnection === WsConnectionStatus.Closed) {
           
@@ -274,9 +271,6 @@ const TrafficViewer: React.FC<TrafficViewerProps> = ({setAnalyzeStatus, setTappi
         }
     }
 
-
-
-
   return (
     <div className={TrafficViewerStyles.TrafficPage}>
       <div className={TrafficViewerStyles.TrafficPageHeader}>
@@ -290,6 +284,7 @@ const TrafficViewer: React.FC<TrafficViewerProps> = ({setAnalyzeStatus, setTappi
             {getConnectionIndicator()}
           </div>
         </div>
+        {actionButtons}
       </div>
       {<div className={TrafficViewerStyles.TrafficPageContainer}>
         <div className={TrafficViewerStyles.TrafficPageListContainer}>
@@ -336,13 +331,12 @@ const TrafficViewer: React.FC<TrafficViewerProps> = ({setAnalyzeStatus, setTappi
 };
 
 const MemoiedTrafficViwer =  React.memo(TrafficViewer)
-const TrafficViewerContainer: React.FC<TrafficViewerProps> = ({setAnalyzeStatus, setTappingStatus, message, isOpen, trafficViewerApiProp}) => 
+const TrafficViewerContainer: React.FC<TrafficViewerProps> = ({setAnalyzeStatus, setTappingStatus, message, isOpen, trafficViewerApiProp, actionButtons}) => 
 {
   return <RecoilRoot>
-    <MemoiedTrafficViwer message={message} isOpen={isOpen}
+    <MemoiedTrafficViwer message={message} isOpen={isOpen} actionButtons={actionButtons}
                        trafficViewerApiProp={trafficViewerApiProp} setAnalyzeStatus={setAnalyzeStatus} setTappingStatus={setTappingStatus}/>
   </RecoilRoot>
 }
-
 
 export default TrafficViewerContainer 

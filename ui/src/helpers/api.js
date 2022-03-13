@@ -181,7 +181,7 @@ export default class Api {
     }
 
     getOasServices = async () => {
-        const response = await client.get("/oas");
+        const response = await client.get("/oas/");
         return response.data;
     }
 
