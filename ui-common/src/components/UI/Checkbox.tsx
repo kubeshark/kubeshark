@@ -3,13 +3,14 @@ import React from "react";
 export interface Props {
     checked: boolean;
     onToggle: (checked:boolean) => any;
+    disabled?: boolean;
 }
 
-const Checkbox: React.FC<Props> = ({checked, onToggle}) => {
+const Checkbox: React.FC<Props> = ({checked, onToggle, disabled}) => {
 
     return (
         <div>
-            <input style={{cursor: "pointer"}} type="checkbox" checked={checked} onChange={(event) => onToggle(event.target.checked)}/>
+            <input style={!disabled ? {cursor: "pointer"}: {}} type="checkbox" checked={checked} disabled={disabled} onChange={(event) => onToggle(event.target.checked)}/>
         </div>
     );
 };
