@@ -12,10 +12,10 @@ import (
 
 var (
 	syncOnce sync.Once
-	instance *oasGenerator
+	instance *OasGenerator
 )
 
-func GetOasGeneratorInstance() *oasGenerator {
+func GetOasGeneratorInstance() *OasGenerator {
 	syncOnce.Do(func() {
 		instance = newOasGenerator()
 		logger.Log.Debug("OAS Generator Initialized")
@@ -23,7 +23,7 @@ func GetOasGeneratorInstance() *oasGenerator {
 	return instance
 }
 
-func (g *oasGenerator) Start() {
+func (g *OasGenerator) Start() {
 	if g.started {
 		return
 	}
@@ -36,7 +36,7 @@ func (g *oasGenerator) Start() {
 	go instance.runGenerator()
 }
 
-func (g *oasGenerator) Stop() {
+func (g *OasGenerator) Stop() {
 	if !g.started {
 		return
 	}
@@ -45,11 +45,11 @@ func (g *oasGenerator) Stop() {
 	g.started = false
 }
 
-func (g *oasGenerator) IsStarted() bool {
+func (g *OasGenerator) IsStarted() bool {
 	return g.started
 }
 
-func (g *oasGenerator) runGenerator() {
+func (g *OasGenerator) runGenerator() {
 	for {
 		select {
 		case <-g.ctx.Done():
@@ -92,11 +92,11 @@ func (g *oasGenerator) runGenerator() {
 	}
 }
 
-func (g *oasGenerator) Reset() {
+func (g *OasGenerator) Reset() {
 	g.ServiceSpecs = &sync.Map{}
 }
 
-func (g *oasGenerator) PushEntry(entryWithSource *EntryWithSource) {
+func (g *OasGenerator) PushEntry(entryWithSource *EntryWithSource) {
 	if !g.started {
 		return
 	}
@@ -107,8 +107,8 @@ func (g *oasGenerator) PushEntry(entryWithSource *EntryWithSource) {
 	}
 }
 
-func newOasGenerator() *oasGenerator {
-	return &oasGenerator{
+func newOasGenerator() *OasGenerator {
+	return &OasGenerator{
 		started:      false,
 		ctx:          nil,
 		cancel:       nil,
@@ -124,7 +124,7 @@ type EntryWithSource struct {
 	Id          uint
 }
 
-type oasGenerator struct {
+type OasGenerator struct {
 	started      bool
 	ctx          context.Context
 	cancel       context.CancelFunc

@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/up9inc/mizu/agent/pkg/dependency"
 	"github.com/up9inc/mizu/agent/pkg/elastic"
 	"github.com/up9inc/mizu/agent/pkg/har"
 	"github.com/up9inc/mizu/agent/pkg/holder"
@@ -151,7 +152,8 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 				entryWSource.Destination = mizuEntry.Destination.IP + ":" + mizuEntry.Destination.Port
 			}
 
-			oas.GetOasGeneratorInstance().PushEntry(&entryWSource)
+			oasGenerator := dependency.GetInstance(dependency.OasGeneratorDependency).(*oas.OasGenerator)
+			oasGenerator.PushEntry(&entryWSource)
 		}
 
 		data, err := json.Marshal(mizuEntry)
@@ -163,7 +165,9 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 
 		connection.SendText(string(data))
 
-		servicemap.GetInstance().NewTCPEntry(mizuEntry.Source, mizuEntry.Destination, &item.Protocol)
+		serviceMapGenerator := dependency.GetInstance(dependency.ServiceMapGeneratorDependency).(servicemap.ServiceMap)
+		serviceMapGenerator.NewTCPEntry(mizuEntry.Source, mizuEntry.Destination, &item.Protocol)
+
 		elastic.GetInstance().PushEntry(mizuEntry)
 	}
 }
