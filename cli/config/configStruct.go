@@ -23,6 +23,7 @@ const (
 type ConfigStruct struct {
 	Tap                    configStructs.TapConfig     `yaml:"tap"`
 	Check                  configStructs.CheckConfig   `yaml:"check"`
+	Install                configStructs.InstallConfig `yaml:"install"`
 	Version                configStructs.VersionConfig `yaml:"version"`
 	View                   configStructs.ViewConfig    `yaml:"view"`
 	Logs                   configStructs.LogsConfig    `yaml:"logs"`
@@ -36,6 +37,7 @@ type ConfigStruct struct {
 	Telemetry              bool                        `yaml:"telemetry" default:"true"`
 	DumpLogs               bool                        `yaml:"dump-logs" default:"false"`
 	KubeConfigPathStr      string                      `yaml:"kube-config-path"`
+	KubeContext            string                      `yaml:"kube-context"`
 	ConfigFilePath         string                      `yaml:"config-path,omitempty" readonly:""`
 	HeadlessMode           bool                        `yaml:"headless" default:"false"`
 	LogLevelStr            string                      `yaml:"log-level,omitempty" default:"INFO" readonly:""`

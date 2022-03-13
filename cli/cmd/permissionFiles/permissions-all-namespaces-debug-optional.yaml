@@ -17,7 +17,7 @@ metadata:
   name: mizu-runner-debug-clusterrolebindings
 subjects:
 - kind: User
-  name: user1
+  name: user-with-clusterwide-access
   apiGroup: rbac.authorization.k8s.io
 roleRef:
   kind: ClusterRole

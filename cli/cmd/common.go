@@ -36,8 +36,8 @@ func startProxyReportErrorIfAny(kubernetesProvider *kubernetes.Provider, ctx con
 		return
 	}
 
-	apiProvider = apiserver.NewProvider(GetApiServerUrl(port), apiserver.DefaultRetries, apiserver.DefaultTimeout)
-	if err := apiProvider.TestConnection(); err != nil {
+	provider := apiserver.NewProvider(GetApiServerUrl(port), apiserver.DefaultRetries, apiserver.DefaultTimeout)
+	if err := provider.TestConnection(); err != nil {
 		logger.Log.Debugf("Couldn't connect using proxy, stopping proxy and trying to create port-forward")
 		if err := httpServer.Shutdown(ctx); err != nil {
 			logger.Log.Debugf("Error occurred while stopping proxy %v", errormessage.FormatError(err))
@@ -51,8 +51,8 @@ func startProxyReportErrorIfAny(kubernetesProvider *kubernetes.Provider, ctx con
 			return
 		}
 
-		apiProvider = apiserver.NewProvider(GetApiServerUrl(port), apiserver.DefaultRetries, apiserver.DefaultTimeout)
-		if err := apiProvider.TestConnection(); err != nil {
+		provider = apiserver.NewProvider(GetApiServerUrl(port), apiserver.DefaultRetries, apiserver.DefaultTimeout)
+		if err := provider.TestConnection(); err != nil {
 			logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Couldn't connect to API server, for more info check logs at %s", fsUtils.GetLogFilePath()))
 			cancel()
 			return
@@ -61,7 +61,7 @@ func startProxyReportErrorIfAny(kubernetesProvider *kubernetes.Provider, ctx con
 }
 
 func getKubernetesProviderForCli() (*kubernetes.Provider, error) {
-	kubernetesProvider, err := kubernetes.NewProvider(config.Config.KubeConfigPath())
+	kubernetesProvider, err := kubernetes.NewProvider(config.Config.KubeConfigPath(), config.Config.KubeContext)
 	if err != nil {
 		handleKubernetesProviderError(err)
 		return nil, err
