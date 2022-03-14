@@ -10,6 +10,10 @@ Copyright (C) UP9 Inc.
 #define FLAGS_IS_CLIENT_BIT (1 << 0)
 #define FLAGS_IS_READ_BIT (1 << 1)
 
+#define CHUNK_SIZE (1 << 12)
+#define CHUNK_X8_SIZE (1 << 15)
+#define MAX_CHUNKS_PER_OPERATION (8)
+
 // The same struct can be found in chunk.go
 //  
 //  Be careful when editing, alignment and padding should be exactly the same in go/c.
@@ -18,11 +22,12 @@ struct tlsChunk {
     __u32 pid;
     __u32 tgid;
     __u32 len;
+    __u32 start;
     __u32 recorded;
     __u32 fd;
     __u32 flags;
     __u8 address[16];
-    __u8 data[4096]; // Must be N^2
+    __u8 data[CHUNK_SIZE]; // Must be N^2
 };
 
 struct ssl_info {

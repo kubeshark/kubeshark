@@ -66,16 +66,25 @@ static __always_inline void add_address_to_chunk(struct tlsChunk* chunk, __u64 i
 	}
 }
 
-static __always_inline void send_chunk(struct pt_regs *ctx, __u8* buffer, __u64 id, struct tlsChunk* chunk) {
-	long err = 0;
+static __always_inline void send_chunk_part(struct pt_regs *ctx, __u8* buffer, __u64 id, 
+	struct tlsChunk* chunk, int start, int end) {
+	size_t recorded = MIN(end - start, sizeof(chunk->data));
+	
+	if (recorded <= 0) {
+		return;
+	}
+	
+	chunk->recorded = recorded;
+	chunk->start = start;
 	
 	// This ugly trick is for the ebpf verifier happiness
 	//
+	long err = 0;
 	if (chunk->recorded == sizeof(chunk->data)) {
-		err = bpf_probe_read(chunk->data, sizeof(chunk->data), buffer);
+		err = bpf_probe_read(chunk->data, sizeof(chunk->data), buffer + start);
 	} else {
-		size_t recorded = chunk->recorded & sizeof(chunk->data) - 1; // Buffer must be N^2
-		err = bpf_probe_read(chunk->data, recorded, buffer);
+		recorded &= (sizeof(chunk->data) - 1); // Buffer must be N^2
+		err = bpf_probe_read(chunk->data, recorded, buffer + start);
 	}
 	
 	if (err != 0) {
@@ -87,10 +96,32 @@ static __always_inline void send_chunk(struct pt_regs *ctx, __u8* buffer, __u64 
 	bpf_perf_event_output(ctx, &chunks_buffer, BPF_F_CURRENT_CPU, chunk, sizeof(struct tlsChunk));
 }
 
+static __always_inline void send_chunk(struct pt_regs *ctx, __u8* buffer, __u64 id, struct tlsChunk* chunk) {
+	// ebpf loops must be bounded at compile time, we can't use (i < chunk->len / CHUNK_SIZE)
+	//
+	// 	https://lwn.net/Articles/794934/
+	// 
+	// If we want to compile in kernel older than 5.3, we should add "#pragma unroll" to this loop
+	// 
+	for (int i = 0; i < MAX_CHUNKS_PER_OPERATION; i++) {
+		if (chunk->len <= (CHUNK_SIZE * i)) {
+			break;
+		}
+		
+		send_chunk_part(ctx, buffer, id, chunk, CHUNK_SIZE * i, chunk->len);
+	}
+}
+
 static __always_inline void output_ssl_chunk(struct pt_regs *ctx, struct ssl_info* info, __u64 id, __u32 flags) {
 	int countBytes = get_count_bytes(ctx, info, id);
 	
 	if (countBytes <= 0) {
+		return;
+	}
+	
+	if (countBytes > (CHUNK_SIZE * MAX_CHUNKS_PER_OPERATION)) {
+		char msg[] = "Buffer too big %d (id: %ld)";
+		bpf_trace_printk(msg, sizeof(msg), countBytes, id);
 		return;
 	}
 	
@@ -108,13 +139,10 @@ static __always_inline void output_ssl_chunk(struct pt_regs *ctx, struct ssl_inf
 		return;
 	}
 	
-	size_t recorded = MIN(countBytes, sizeof(chunk->data));
-	
 	chunk->flags = flags;
 	chunk->pid = id >> 32;
 	chunk->tgid = id;
 	chunk->len = countBytes;
-	chunk->recorded = recorded;
 	chunk->fd = info->fd;
 	
 	add_address_to_chunk(chunk, id, chunk->fd);
