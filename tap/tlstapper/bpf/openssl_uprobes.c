@@ -66,6 +66,27 @@ static __always_inline void add_address_to_chunk(struct tlsChunk* chunk, __u64 i
 	}
 }
 
+static __always_inline void send_chunk(struct pt_regs *ctx, __u8* buffer, __u64 id, struct tlsChunk* chunk) {
+	long err = 0;
+	
+	// This ugly trick is for the ebpf verifier happiness
+	//
+	if (chunk->recorded == sizeof(chunk->data)) {
+		err = bpf_probe_read(chunk->data, sizeof(chunk->data), buffer);
+	} else {
+		size_t recorded = chunk->recorded & sizeof(chunk->data) - 1; // Buffer must be N^2
+		err = bpf_probe_read(chunk->data, recorded, buffer);
+	}
+	
+	if (err != 0) {
+		char msg[] = "Error reading from ssl buffer %ld - %ld";
+		bpf_trace_printk(msg, sizeof(msg), id, err);
+		return;
+	}
+	
+	bpf_perf_event_output(ctx, &chunks_buffer, BPF_F_CURRENT_CPU, chunk, sizeof(struct tlsChunk));
+}
+
 static __always_inline void output_ssl_chunk(struct pt_regs *ctx, struct ssl_info* info, __u64 id, __u32 flags) {
 	int countBytes = get_count_bytes(ctx, info, id);
 	
@@ -95,26 +116,9 @@ static __always_inline void output_ssl_chunk(struct pt_regs *ctx, struct ssl_inf
 	chunk->len = countBytes;
 	chunk->recorded = recorded;
 	chunk->fd = info->fd;
+	
 	add_address_to_chunk(chunk, id, chunk->fd);
-	
-	long err = 0;
-	
-	// This ugly trick is for the ebpf verifier happiness
-	//
-	if (recorded == sizeof(chunk->data)) {
-		err = bpf_probe_read(chunk->data, sizeof(chunk->data), info->buffer);
-	} else {
-		recorded &= sizeof(chunk->data) - 1; // Buffer must be N^2
-		err = bpf_probe_read(chunk->data, recorded, info->buffer);
-	}
-	
-	if (err != 0) {
-		char msg[] = "Error reading from ssl buffer %ld - %ld";
-		bpf_trace_printk(msg, sizeof(msg), id, err);
-		return;
-	}
-	
-	bpf_perf_event_output(ctx, &chunks_buffer, BPF_F_CURRENT_CPU, chunk, sizeof(struct tlsChunk));
+	send_chunk(ctx, info->buffer, id, chunk);
 }
 
 static __always_inline void ssl_uprobe(void* ssl, void* buffer, int num, struct bpf_map_def* map_fd, size_t *count_ptr) {
