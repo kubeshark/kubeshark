@@ -152,7 +152,7 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 				entryWSource.Destination = mizuEntry.Destination.IP + ":" + mizuEntry.Destination.Port
 			}
 
-			oasGenerator := dependency.GetInstance(dependency.OasGeneratorDependency).(oas.OasGenerator)
+			oasGenerator := dependency.GetInstance(dependency.OasGeneratorDependency).(oas.OasGeneratorSink)
 			oasGenerator.PushEntry(&entryWSource)
 		}
 
@@ -165,7 +165,7 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 
 		connection.SendText(string(data))
 
-		serviceMapGenerator := dependency.GetInstance(dependency.ServiceMapGeneratorDependency).(servicemap.ServiceMap)
+		serviceMapGenerator := dependency.GetInstance(dependency.ServiceMapGeneratorDependency).(servicemap.ServiceMapSink)
 		serviceMapGenerator.NewTCPEntry(mizuEntry.Source, mizuEntry.Destination, &item.Protocol)
 
 		elastic.GetInstance().PushEntry(mizuEntry)

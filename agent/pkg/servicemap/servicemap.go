@@ -30,6 +30,10 @@ type defaultServiceMap struct {
 	entriesProcessed int
 }
 
+type ServiceMapSink interface {
+	NewTCPEntry(source *tapApi.TCP, destination *tapApi.TCP, protocol *tapApi.Protocol)
+}
+
 type ServiceMap interface {
 	Enable()
 	Disable()
