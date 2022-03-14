@@ -853,14 +853,8 @@ github.com/ugorji/go v1.2.6/go.mod h1:anCg0y61KIhDlPZmnH+so+RQbysYVyDko0IMgJv0Nn
 github.com/ugorji/go/codec v1.1.7/go.mod h1:Ax+UKWsSmolVDwsd+7N3ZtXu+yMGCf907BLYF3GoBXY=
 github.com/ugorji/go/codec v1.2.6 h1:7kbGefxLoDBuYXOms4yD7223OpNMMPNPZxXk5TvFcyQ=
 github.com/ugorji/go/codec v1.2.6/go.mod h1:V6TCNZ4PHqoHGFZuSG1W8nrCzzdgA2DozYxWFFpvxTw=
-github.com/up9inc/basenine/client/go v0.0.0-20220220204122-0ef8cb24fab1 h1:0XN8s3HtwUBr9hbWRAFulFMsu1f2cabfJbwpz/sOoLA=
-github.com/up9inc/basenine/client/go v0.0.0-20220220204122-0ef8cb24fab1/go.mod h1:SvJGPoa/6erhUQV7kvHBwM/0x5LyO6XaG2lUaCaKiUI=
-github.com/up9inc/basenine/client/go v0.0.0-20220301135911-d2111357b14e h1:nv/A/AeF8PcU91aHAj6o2cU8fl/46v0ZLj7wgIKjv+o=
-github.com/up9inc/basenine/client/go v0.0.0-20220301135911-d2111357b14e/go.mod h1:SvJGPoa/6erhUQV7kvHBwM/0x5LyO6XaG2lUaCaKiUI=
-github.com/up9inc/basenine/client/go v0.0.0-20220302073458-c32e0adf1500 h1:T1QHxt65NMete/GobVSvcHnwZAQibvahhrMTCgtnSS4=
-github.com/up9inc/basenine/client/go v0.0.0-20220302073458-c32e0adf1500/go.mod h1:SvJGPoa/6erhUQV7kvHBwM/0x5LyO6XaG2lUaCaKiUI=
-github.com/up9inc/basenine/client/go v0.0.0-20220302182733-74dc40dc2ef0 h1:mSqZuJJV4UZyaAoC8x7/AO7DLidlXepFyU18Vm3rFiA=
-github.com/up9inc/basenine/client/go v0.0.0-20220302182733-74dc40dc2ef0/go.mod h1:SvJGPoa/6erhUQV7kvHBwM/0x5LyO6XaG2lUaCaKiUI=
+github.com/up9inc/basenine/client/go v0.0.0-20220314115524-ea31bc47d7bb h1:sHVaA0JjdcTIxLNz0HgUQwrZosWau3XiTFfEL2Up+Lw=
+github.com/up9inc/basenine/client/go v0.0.0-20220314115524-ea31bc47d7bb/go.mod h1:SvJGPoa/6erhUQV7kvHBwM/0x5LyO6XaG2lUaCaKiUI=
 github.com/vektah/gqlparser v1.1.2/go.mod h1:1ycwN7Ij5njmMkPPAOaRFY4rET2Enx7IkVv3vaXspKw=
 github.com/vishvananda/netns v0.0.0-20211101163701-50045581ed74 h1:gga7acRE695APm9hlsSMoOoE65U4/TcqNj90mc69Rlg=
 github.com/vishvananda/netns v0.0.0-20211101163701-50045581ed74/go.mod h1:DD4vA1DwXk04H54A1oHXtwZmA0grkVMdPxx/VGLCah0=
