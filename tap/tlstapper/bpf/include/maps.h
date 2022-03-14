@@ -11,8 +11,9 @@ Copyright (C) UP9 Inc.
 #define FLAGS_IS_READ_BIT (1 << 1)
 
 #define CHUNK_SIZE (1 << 12)
-#define CHUNK_X8_SIZE (1 << 15)
 #define MAX_CHUNKS_PER_OPERATION (8)
+
+#define SSL_INFO_MAX_TTL_NANO (1000000000l * 60l)
 
 // The same struct can be found in chunk.go
 //  
@@ -33,6 +34,7 @@ struct tlsChunk {
 struct ssl_info {
     void* buffer;
     __u32 fd;
+    __u64 created_at_nano;
     
     // for ssl_write and ssl_read must be zero
     // for ssl_write_ex and ssl_read_ex save the *written/*readbytes pointer. 
@@ -58,10 +60,13 @@ struct fd_info {
 
 #define BPF_PERF_OUTPUT(_name) \
     BPF_MAP(_name, BPF_MAP_TYPE_PERF_EVENT_ARRAY, int, __u32, 1024)
+    
+#define BPF_LRU_HASH(_name, _key_type, _value_type) \
+    BPF_MAP(_name, BPF_MAP_TYPE_LRU_HASH, _key_type, _value_type, 16384)
 
 BPF_HASH(pids_map, __u32, __u32);
-BPF_HASH(ssl_write_context, __u64, struct ssl_info);
-BPF_HASH(ssl_read_context, __u64, struct ssl_info);
+BPF_LRU_HASH(ssl_write_context, __u64, struct ssl_info);
+BPF_LRU_HASH(ssl_read_context, __u64, struct ssl_info);
 BPF_HASH(file_descriptor_to_ipv4, __u64, struct fd_info);
 BPF_PERF_OUTPUT(chunks_buffer);
 

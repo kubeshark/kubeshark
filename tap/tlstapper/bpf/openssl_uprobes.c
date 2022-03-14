@@ -156,9 +156,28 @@ static __always_inline void ssl_uprobe(void* ssl, void* buffer, int num, struct 
 		return;
 	}
 	
+	struct ssl_info *infoPtr = bpf_map_lookup_elem(map_fd, &id);
 	struct ssl_info info = {};
 	
-	info.fd = -1;
+	if (infoPtr == 0) {
+		info.fd = -1;
+		info.created_at_nano = bpf_ktime_get_ns();
+	} else {
+		long err = bpf_probe_read(&info, sizeof(struct ssl_info), infoPtr);
+		
+		if (err != 0) {
+			char msg[] = "Error reading old ssl context (id: %ld) (err: %ld)";
+			bpf_trace_printk(msg, sizeof(msg), id, err);
+		}
+		
+		if ((bpf_ktime_get_ns() - info.created_at_nano) > SSL_INFO_MAX_TTL_NANO) {
+			// If the ssl info is too old, we don't want to use its info because it may be incorrect.
+			//
+			info.fd = -1;
+			info.created_at_nano = bpf_ktime_get_ns();
+		}
+	}
+	
 	info.count_ptr = count_ptr;
 	info.buffer = buffer;
 	
@@ -188,7 +207,17 @@ static __always_inline void ssl_uretprobe(struct pt_regs *ctx, struct bpf_map_de
 	struct ssl_info info;
 	long err = bpf_probe_read(&info, sizeof(struct ssl_info), infoPtr);
 	
-	bpf_map_delete_elem(map_fd, &id);
+	// Do not clean map on purpose, sometimes there are two calls to ssl_read in a raw
+	//	while the first call actually goes to read from socket, and we get the chance
+	//	to find the fd. The other call already have all the information and we don't
+	//	have the chance to get the fd.
+	//
+	// There are two risks keeping the map items
+	//	1. It gets full - we solve it by using BPF_MAP_TYPE_LRU_HASH with hard limit
+	//	2. We get wrong info of an old call - we solve it by comparing the timestamp 
+	//		info before using it
+	//
+	// bpf_map_delete_elem(map_fd, &id);
 	
 	if (err != 0) {
 		char msg[] = "Error reading ssl context (id: %ld) (err: %ld)";
