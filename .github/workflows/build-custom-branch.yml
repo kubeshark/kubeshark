@@ -1,0 +1,44 @@
+name: Build Custom Branch
+
+on: push
+
+concurrency:
+  group: custom-branch-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Push custom branch image to GCR
+    runs-on: ubuntu-latest
+    if: ${{ contains(github.event.head_commit.message, '#build_and_publish_custom_image') }}
+
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v2
+
+      - id: 'auth'
+        uses: 'google-github-actions/auth@v0'
+        with:
+          credentials_json: '${{ secrets.GCR_JSON_KEY }}'
+
+      - name: 'Set up Cloud SDK'
+        uses: 'google-github-actions/setup-gcloud@v0'
+
+      - name: Get base image name
+        shell: bash
+        run: echo "##[set-output name=image;]$(echo gcr.io/up9-docker-hub/mizu/${GITHUB_REF#refs/heads/})"
+        id: base_image_step
+
+      - name: Login to GCR
+        uses: docker/login-action@v1
+        with:
+          registry: gcr.io
+          username: _json_key
+          password: ${{ secrets.GCR_JSON_KEY }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.base_image_step.outputs.image }}:latest
