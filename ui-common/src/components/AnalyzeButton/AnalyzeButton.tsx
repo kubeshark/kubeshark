@@ -1,8 +1,8 @@
 import {Button} from "@material-ui/core";
 import React from "react";
-import Tooltip from "../UI/Tooltip";
-import logo_up9 from "../assets/logo_up9.svg";
+import logo_up9 from "logo_up9.svg";
 import {makeStyles} from "@material-ui/core/styles";
+import { Tooltip } from "../UI";
 
 const useStyles = makeStyles(() => ({
     tooltip: {
