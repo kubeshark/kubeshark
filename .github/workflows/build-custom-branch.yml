@@ -46,7 +46,6 @@ jobs:
           password: ${{ secrets.GCR_JSON_KEY }}
 
       - name: Set up Docker Buildx
-        if: steps.modified_files.outputs.matched == 'true'
         uses: docker/setup-buildx-action@v1
 
       - name: Build and push
