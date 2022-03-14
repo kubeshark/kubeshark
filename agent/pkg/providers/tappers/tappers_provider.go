@@ -37,15 +37,6 @@ func SetStatus(tapperStatus *shared.TapperStatus) {
 	saveStatus()
 }
 
-func ResetStatus() {
-	lockStatus.Lock()
-	defer lockStatus.Unlock()
-
-	status = make(map[string]*shared.TapperStatus)
-
-	saveStatus()
-}
-
 func GetConnectedCount() int {
 	return connectedCount
 }
