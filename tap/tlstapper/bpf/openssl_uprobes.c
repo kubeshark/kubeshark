@@ -18,7 +18,7 @@ struct {
 	__type(value, struct tlsChunk);
 } heap SEC(".maps");
 
-static __always_inline int getCountBytes(struct pt_regs *ctx, struct ssl_info* info, __u64 id) {
+static __always_inline int get_count_bytes(struct pt_regs *ctx, struct ssl_info* info, __u64 id) {
 	int returnValue = PT_REGS_RC(ctx);
 	
 	if (info->count_ptr == 0) {
@@ -47,8 +47,27 @@ static __always_inline int getCountBytes(struct pt_regs *ctx, struct ssl_info* i
 	return countBytes;
 }
 
+static __always_inline void add_address_to_chunk(struct tlsChunk* chunk, __u64 id, __u32 fd) {
+	__u32 pid = id >> 32;
+	__u64 key = (__u64) pid << 32 | fd;
+	
+	struct fd_info *fdinfo = bpf_map_lookup_elem(&file_descriptor_to_ipv4, &key);
+	
+	if (fdinfo == 0) {
+		return;
+	}
+	
+	int err = bpf_probe_read(chunk->address, sizeof(chunk->address), fdinfo->ipv4_addr);
+	chunk->flags |= (fdinfo->flags & FLAGS_IS_CLIENT_BIT);
+	
+	if (err != 0) {
+		char msg[] = "Error reading from fd address %ld - %ld";
+		bpf_trace_printk(msg, sizeof(msg), id, err);
+	}
+}
+
 static __always_inline void output_ssl_chunk(struct pt_regs *ctx, struct ssl_info* info, __u64 id, __u32 flags) {
-	int countBytes = getCountBytes(ctx, info, id);
+	int countBytes = get_count_bytes(ctx, info, id);
 	
 	if (countBytes <= 0) {
 		return;
@@ -76,6 +95,7 @@ static __always_inline void output_ssl_chunk(struct pt_regs *ctx, struct ssl_inf
 	chunk->len = countBytes;
 	chunk->recorded = recorded;
 	chunk->fd = info->fd;
+	add_address_to_chunk(chunk, id, chunk->fd);
 	
 	long err = 0;
 	
@@ -92,22 +112,6 @@ static __always_inline void output_ssl_chunk(struct pt_regs *ctx, struct ssl_inf
 		char msg[] = "Error reading from ssl buffer %ld - %ld";
 		bpf_trace_printk(msg, sizeof(msg), id, err);
 		return;
-	}
-	
-	__u32 pid = id >> 32;
-	__u32 fd = info->fd;
-	__u64 key = (__u64) pid << 32 | fd;
-	
-	struct fd_info *fdinfo = bpf_map_lookup_elem(&file_descriptor_to_ipv4, &key);
-	
-	if (fdinfo != 0) {
-		err = bpf_probe_read(chunk->address, sizeof(chunk->address), fdinfo->ipv4_addr);
-		chunk->flags |= (fdinfo->flags & FLAGS_IS_CLIENT_BIT);
-		
-		if (err != 0) {
-			char msg[] = "Error reading from fd address %ld - %ld";
-			bpf_trace_printk(msg, sizeof(msg), id, err);
-		}
 	}
 	
 	bpf_perf_event_output(ctx, &chunks_buffer, BPF_F_CURRENT_CPU, chunk, sizeof(struct tlsChunk));
