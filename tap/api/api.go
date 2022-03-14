@@ -47,10 +47,11 @@ type Extension struct {
 type Capture string
 
 const (
-	Pcap    Capture = "pcap"
-	Envoy   Capture = "envoy"
-	Linkerd Capture = "linkerd"
-	Ebpf    Capture = "ebpf"
+	UndefinedCapture Capture = ""
+	Pcap             Capture = "pcap"
+	Envoy            Capture = "envoy"
+	Linkerd          Capture = "linkerd"
+	Ebpf             Capture = "ebpf"
 )
 
 type ConnectionInfo struct {
