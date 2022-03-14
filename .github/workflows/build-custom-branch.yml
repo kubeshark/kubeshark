@@ -8,7 +8,7 @@ concurrency:
 
 jobs:
   build:
-    name: Push Docker image to GCR
+    name: Push custom branch image to GCR
     runs-on: ubuntu-latest
     if: ${{ contains(github.event.head_commit.message, '#build_and_publish_custom_image') }}
 
