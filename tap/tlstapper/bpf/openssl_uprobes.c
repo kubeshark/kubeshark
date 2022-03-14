@@ -54,38 +54,38 @@ static __always_inline void output_ssl_chunk(struct pt_regs *ctx, struct ssl_inf
 		return;
 	}
 	
-	struct tlsChunk* c;
+	struct tlsChunk* chunk;
 	int zero = 0;
 	
 	// If other thread, running on the same CPU get to this point at the same time like us (context switch)
 	//	the data will be corrupted - protection may be added in the future
 	//
-	c = bpf_map_lookup_elem(&heap, &zero);
+	chunk = bpf_map_lookup_elem(&heap, &zero);
 	
-	if (!c) {
+	if (!chunk) {
 		char msg[] = "Unable to allocate chunk (id: %ld)";
 		bpf_trace_printk(msg, sizeof(msg), id);
 		return;
 	}
 	
-	size_t recorded = MIN(countBytes, sizeof(c->data));
+	size_t recorded = MIN(countBytes, sizeof(chunk->data));
 	
-	c->flags = flags;
-	c->pid = id >> 32;
-	c->tgid = id;
-	c->len = countBytes;
-	c->recorded = recorded;
-	c->fd = info->fd;
+	chunk->flags = flags;
+	chunk->pid = id >> 32;
+	chunk->tgid = id;
+	chunk->len = countBytes;
+	chunk->recorded = recorded;
+	chunk->fd = info->fd;
 	
 	long err = 0;
 	
 	// This ugly trick is for the ebpf verifier happiness
 	//
-	if (recorded == sizeof(c->data)) {
-		err = bpf_probe_read(c->data, sizeof(c->data), info->buffer);
+	if (recorded == sizeof(chunk->data)) {
+		err = bpf_probe_read(chunk->data, sizeof(chunk->data), info->buffer);
 	} else {
-		recorded &= sizeof(c->data) - 1; // Buffer must be N^2
-		err = bpf_probe_read(c->data, recorded, info->buffer);
+		recorded &= sizeof(chunk->data) - 1; // Buffer must be N^2
+		err = bpf_probe_read(chunk->data, recorded, info->buffer);
 	}
 	
 	if (err != 0) {
@@ -101,8 +101,8 @@ static __always_inline void output_ssl_chunk(struct pt_regs *ctx, struct ssl_inf
 	struct fd_info *fdinfo = bpf_map_lookup_elem(&file_descriptor_to_ipv4, &key);
 	
 	if (fdinfo != 0) {
-		err = bpf_probe_read(c->address, sizeof(c->address), fdinfo->ipv4_addr);
-		c->flags |= (fdinfo->flags & FLAGS_IS_CLIENT_BIT);
+		err = bpf_probe_read(chunk->address, sizeof(chunk->address), fdinfo->ipv4_addr);
+		chunk->flags |= (fdinfo->flags & FLAGS_IS_CLIENT_BIT);
 		
 		if (err != 0) {
 			char msg[] = "Error reading from fd address %ld - %ld";
@@ -110,7 +110,7 @@ static __always_inline void output_ssl_chunk(struct pt_regs *ctx, struct ssl_inf
 		}
 	}
 	
-	bpf_perf_event_output(ctx, &chunks_buffer, BPF_F_CURRENT_CPU, c, sizeof(struct tlsChunk));
+	bpf_perf_event_output(ctx, &chunks_buffer, BPF_F_CURRENT_CPU, chunk, sizeof(struct tlsChunk));
 }
 
 static __always_inline void ssl_uprobe(void* ssl, void* buffer, int num, struct bpf_map_def* map_fd, size_t *count_ptr) {
