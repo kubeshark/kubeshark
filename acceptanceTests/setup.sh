@@ -73,7 +73,7 @@ docker build -t mizu/ci:0.0 .
 echo "Build cli"
 cd cli && make build GIT_BRANCH=ci SUFFIX=ci
 
-# TODO: need to understand how to fail is password is asked (sudo)
+# TODO: need to understand how to fail if password is asked (sudo)
 echo "Starting tunnel"
 rm -f ${TUNNEL_LOG}
 minikube tunnel > ${TUNNEL_LOG} &
