@@ -16,7 +16,6 @@ import (
 	"github.com/up9inc/mizu/shared/logger"
 	"github.com/up9inc/mizu/shared/semver"
 	"github.com/up9inc/mizu/tap/api"
-	v1 "k8s.io/api/apps/v1"
 	auth "k8s.io/api/authorization/v1"
 	core "k8s.io/api/core/v1"
 	rbac "k8s.io/api/rbac/v1"
@@ -43,7 +42,6 @@ type Provider struct {
 	clientSet        *kubernetes.Clientset
 	kubernetesConfig clientcmd.ClientConfig
 	clientConfig     restclient.Config
-	Namespace        string
 	managedBy        string
 	createdBy        string
 }
@@ -399,33 +397,6 @@ func (provider *Provider) CreatePod(ctx context.Context, namespace string, podSp
 	return provider.clientSet.CoreV1().Pods(namespace).Create(ctx, podSpec, metav1.CreateOptions{})
 }
 
-func (provider *Provider) CreateDeployment(ctx context.Context, namespace string, deploymentName string, podSpec *core.Pod) (*v1.Deployment, error) {
-	if _, keyExists := podSpec.ObjectMeta.Labels["app"]; !keyExists {
-		return nil, errors.New("pod spec must contain 'app' label")
-	}
-	podTemplate := &core.PodTemplateSpec{
-		ObjectMeta: podSpec.ObjectMeta,
-		Spec:       podSpec.Spec,
-	}
-	deployment := &v1.Deployment{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: deploymentName,
-			Labels: map[string]string{
-				LabelManagedBy: provider.managedBy,
-				LabelCreatedBy: provider.createdBy,
-			},
-		},
-		Spec: v1.DeploymentSpec{
-			Selector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{"app": podSpec.ObjectMeta.Labels["app"]},
-			},
-			Template: *podTemplate,
-			Strategy: v1.DeploymentStrategy{},
-		},
-	}
-	return provider.clientSet.AppsV1().Deployments(namespace).Create(ctx, deployment, metav1.CreateOptions{})
-}
-
 func (provider *Provider) CreateService(ctx context.Context, namespace string, serviceName string, appLabelValue string) (*core.Service, error) {
 	service := core.Service{
 		ObjectMeta: metav1.ObjectMeta{
@@ -477,16 +448,6 @@ func (provider *Provider) DoesConfigMapExist(ctx context.Context, namespace stri
 func (provider *Provider) DoesServiceAccountExist(ctx context.Context, namespace string, name string) (bool, error) {
 	serviceAccountResource, err := provider.clientSet.CoreV1().ServiceAccounts(namespace).Get(ctx, name, metav1.GetOptions{})
 	return provider.doesResourceExist(serviceAccountResource, err)
-}
-
-func (provider *Provider) DoesPersistentVolumeClaimExist(ctx context.Context, namespace string, name string) (bool, error) {
-	persistentVolumeClaimResource, err := provider.clientSet.CoreV1().PersistentVolumeClaims(namespace).Get(ctx, name, metav1.GetOptions{})
-	return provider.doesResourceExist(persistentVolumeClaimResource, err)
-}
-
-func (provider *Provider) DoesDeploymentExist(ctx context.Context, namespace string, name string) (bool, error) {
-	deploymentResource, err := provider.clientSet.AppsV1().Deployments(namespace).Get(ctx, name, metav1.GetOptions{})
-	return provider.doesResourceExist(deploymentResource, err)
 }
 
 func (provider *Provider) DoesServiceExist(ctx context.Context, namespace string, name string) (bool, error) {
@@ -657,62 +618,6 @@ func (provider *Provider) CreateMizuRBACNamespaceRestricted(ctx context.Context,
 	return nil
 }
 
-func (provider *Provider) CreateDaemonsetRBAC(ctx context.Context, namespace string, serviceAccountName string, roleName string, roleBindingName string, version string) error {
-	role := &rbac.Role{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: roleName,
-			Labels: map[string]string{
-				"mizu-cli-version": version,
-				LabelManagedBy:     provider.managedBy,
-				LabelCreatedBy:     provider.createdBy,
-			},
-		},
-		Rules: []rbac.PolicyRule{
-			{
-				APIGroups: []string{"apps"},
-				Resources: []string{"daemonsets"},
-				Verbs:     []string{"patch", "get", "list", "create", "delete"},
-			},
-			{
-				APIGroups: []string{"events.k8s.io"},
-				Resources: []string{"events"},
-				Verbs:     []string{"list", "watch"},
-			},
-		},
-	}
-	roleBinding := &rbac.RoleBinding{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: roleBindingName,
-			Labels: map[string]string{
-				"mizu-cli-version": version,
-				LabelManagedBy:     provider.managedBy,
-				LabelCreatedBy:     provider.createdBy,
-			},
-		},
-		RoleRef: rbac.RoleRef{
-			Name:     roleName,
-			Kind:     "Role",
-			APIGroup: "rbac.authorization.k8s.io",
-		},
-		Subjects: []rbac.Subject{
-			{
-				Kind:      "ServiceAccount",
-				Name:      serviceAccountName,
-				Namespace: namespace,
-			},
-		},
-	}
-	_, err := provider.clientSet.RbacV1().Roles(namespace).Create(ctx, role, metav1.CreateOptions{})
-	if err != nil && !k8serrors.IsAlreadyExists(err) {
-		return err
-	}
-	_, err = provider.clientSet.RbacV1().RoleBindings(namespace).Create(ctx, roleBinding, metav1.CreateOptions{})
-	if err != nil && !k8serrors.IsAlreadyExists(err) {
-		return err
-	}
-	return nil
-}
-
 func (provider *Provider) RemoveNamespace(ctx context.Context, name string) error {
 	err := provider.clientSet.CoreV1().Namespaces().Delete(ctx, name, metav1.DeleteOptions{})
 	return provider.handleRemovalError(err)
@@ -738,18 +643,13 @@ func (provider *Provider) RemoveRole(ctx context.Context, namespace string, name
 	return provider.handleRemovalError(err)
 }
 
-func (provider *Provider) RemoveServicAccount(ctx context.Context, namespace string, name string) error {
+func (provider *Provider) RemoveServiceAccount(ctx context.Context, namespace string, name string) error {
 	err := provider.clientSet.CoreV1().ServiceAccounts(namespace).Delete(ctx, name, metav1.DeleteOptions{})
 	return provider.handleRemovalError(err)
 }
 
 func (provider *Provider) RemovePod(ctx context.Context, namespace string, podName string) error {
 	err := provider.clientSet.CoreV1().Pods(namespace).Delete(ctx, podName, metav1.DeleteOptions{})
-	return provider.handleRemovalError(err)
-}
-
-func (provider *Provider) RemoveDeployment(ctx context.Context, namespace string, deploymentName string) error {
-	err := provider.clientSet.AppsV1().Deployments(namespace).Delete(ctx, deploymentName, metav1.DeleteOptions{})
 	return provider.handleRemovalError(err)
 }
 
@@ -765,11 +665,6 @@ func (provider *Provider) RemoveService(ctx context.Context, namespace string, s
 
 func (provider *Provider) RemoveDaemonSet(ctx context.Context, namespace string, daemonSetName string) error {
 	err := provider.clientSet.AppsV1().DaemonSets(namespace).Delete(ctx, daemonSetName, metav1.DeleteOptions{})
-	return provider.handleRemovalError(err)
-}
-
-func (provider *Provider) RemovePersistentVolumeClaim(ctx context.Context, namespace string, volumeClaimName string) error {
-	err := provider.clientSet.CoreV1().PersistentVolumeClaims(namespace).Delete(ctx, volumeClaimName, metav1.DeleteOptions{})
 	return provider.handleRemovalError(err)
 }
 
@@ -1163,45 +1058,6 @@ func (provider *Provider) ListManagedRoleBindings(ctx context.Context, namespace
 		LabelSelector: fmt.Sprintf("%s=%s", LabelManagedBy, provider.managedBy),
 	}
 	return provider.clientSet.RbacV1().RoleBindings(namespace).List(ctx, listOptions)
-}
-
-func (provider *Provider) IsDefaultStorageProviderAvailable(ctx context.Context) (bool, error) {
-	storageClassList, err := provider.clientSet.StorageV1().StorageClasses().List(ctx, metav1.ListOptions{})
-	if err != nil {
-		return false, err
-	}
-	for _, storageClass := range storageClassList.Items {
-		if storageClass.Annotations["storageclass.kubernetes.io/is-default-class"] == "true" {
-			return true, nil
-		}
-	}
-	return false, nil
-}
-
-func (provider *Provider) CreatePersistentVolumeClaim(ctx context.Context, namespace string, volumeClaimName string, sizeLimitBytes int64) (*core.PersistentVolumeClaim, error) {
-	sizeLimitQuantity := resource.NewQuantity(sizeLimitBytes, resource.DecimalSI)
-	volumeClaim := &core.PersistentVolumeClaim{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: volumeClaimName,
-			Labels: map[string]string{
-				LabelManagedBy: provider.managedBy,
-				LabelCreatedBy: provider.createdBy,
-			},
-		},
-		Spec: core.PersistentVolumeClaimSpec{
-			AccessModes: []core.PersistentVolumeAccessMode{core.ReadWriteOnce},
-			Resources: core.ResourceRequirements{
-				Limits: core.ResourceList{
-					core.ResourceStorage: *sizeLimitQuantity,
-				},
-				Requests: core.ResourceList{
-					core.ResourceStorage: *sizeLimitQuantity,
-				},
-			},
-		},
-	}
-
-	return provider.clientSet.CoreV1().PersistentVolumeClaims(namespace).Create(ctx, volumeClaim, metav1.CreateOptions{})
 }
 
 // ValidateNotProxy We added this after a customer tried to run mizu from lens, which used len's kube config, which have cluster server configuration, which points to len's local proxy.

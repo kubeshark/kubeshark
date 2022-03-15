@@ -11,7 +11,6 @@ COPY ui/package-lock.json .
 RUN npm i
 COPY ui .
 RUN npm run build
-RUN npm run build-ent
 
 ### Base builder image for native builds architecture
 FROM golang:1.17-alpine AS builder-native-base
@@ -99,7 +98,6 @@ WORKDIR /app
 COPY --from=builder ["/app/agent-build/mizuagent", "."]
 COPY --from=builder ["/app/agent-build/basenine", "/usr/local/bin/basenine"]
 COPY --from=front-end ["/app/ui-build/build", "site"]
-COPY --from=front-end ["/app/ui-build/build-ent", "site-standalone"]
 
 # this script runs both apiserver and passivetapper and exits either if one of them exits, preventing a scenario where the container runs without one process
 ENTRYPOINT ["/app/mizuagent"]
