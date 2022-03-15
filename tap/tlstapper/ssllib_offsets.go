@@ -2,7 +2,6 @@ package tlstapper
 
 import (
 	"debug/elf"
-	"fmt"
 
 	"github.com/go-errors/errors"
 	"github.com/up9inc/mizu/shared/logger"
@@ -47,7 +46,7 @@ func findBaseAddress(sslElf *elf.File, sslLibraryPath string) (uint64, error) {
 		}
 	}
 
-	return 0, errors.New(fmt.Sprintf("Program header not found in %v", sslLibraryPath))
+	return 0, errors.Errorf("Program header not found in %v", sslLibraryPath)
 }
 
 func findSslOffsets(sslElf *elf.File, base uint64) (sslOffsets, error) {
