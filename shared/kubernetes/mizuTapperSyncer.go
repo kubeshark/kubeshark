@@ -325,15 +325,22 @@ func (tapperSyncer *MizuTapperSyncer) updateMizuTappers() error {
 			tapperSyncer.config.MizuApiFilteringOptions,
 			tapperSyncer.config.LogLevel,
 			tapperSyncer.config.ServiceMesh,
-			tapperSyncer.config.Tls,
-		); err != nil {
+			tapperSyncer.config.Tls); err != nil {
 			return err
 		}
+
 		logger.Log.Debugf("Successfully created %v tappers", len(tapperSyncer.nodeToTappedPodMap))
 	} else {
-		if err := tapperSyncer.kubernetesProvider.RemoveDaemonSet(tapperSyncer.context, tapperSyncer.config.MizuResourcesNamespace, TapperDaemonSetName); err != nil {
+		if err := tapperSyncer.kubernetesProvider.ResetMizuTapperDaemonSet(
+			tapperSyncer.context,
+			tapperSyncer.config.MizuResourcesNamespace,
+			TapperDaemonSetName,
+			tapperSyncer.config.AgentImage,
+			TapperPodName); err != nil {
 			return err
 		}
+
+		logger.Log.Debugf("Successfully reset tapper daemon set")
 	}
 
 	return nil
