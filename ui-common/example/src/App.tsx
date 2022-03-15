@@ -17,7 +17,7 @@ const App = () => {
   },[])
 
   return <>
-    <TrafficViewer message={message} error={error} isOpen={isOpen}
+    <TrafficViewer message={message} error={error} isWebSocketOpen={isOpen}
                    trafficViewerApiProp={trafficViewerApi} ></TrafficViewer>
   </>
 }

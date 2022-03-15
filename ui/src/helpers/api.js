@@ -55,102 +55,9 @@ export default class Api {
     }
 
     setTapConfig = async (config) => {
-        const response = await this.client.post("/config/tap", {tappedNamespaces: config});
+        const response = await this.client.post("/config/tap", { tappedNamespaces: config });
         return response.data;
     }
-
-    //#region User api
-
-    getUsers = async(filter = "") =>{
-        const response = await client.get(`/user/listUsers?usernameFilter=${filter}`);
-        return response.data;
-    }
-
-    getUserDetails = async(userId) => {
-        const response = await client.get(`/user/${userId}`);
-        return response.data;
-    }
-
-    updateUser = async(user) => {
-        const response = await client.put(`/user/${user.userId}`,user);
-        return response.data;
-    }
-
-    deleteUser = async(userId) => {
-        const response = await client.delete(`/user/${userId}`);
-        return response.data;
-    }
-
-    recoverUser = async(data) => {
-        const form = new FormData();
-        form.append('password', data.password);
-        form.append('inviteToken', data.inviteToken);
-
-        try {
-            const response = await client.post(`/user/recover`, form);
-            this.persistToken(response.data.token);
-            return response;
-        } catch (e) {
-            if (e.response.status === 400) {
-                const error = {
-                    'type': FormValidationErrorType,
-                    'messages': e.response.data
-                };
-                throw error;
-            } else {
-                throw e;
-            }
-        }
-    }
-
-    inviteExistingUser = async(userId)  =>{
-        const response = await client.post(`/user/${userId}/invite`);
-        return response.data;
-    }
-
-     genareteInviteLink = async(userData)  =>{
-        const response = await client.post(`/user/createUserAndInvite`,userData);
-        return response.data;
-    }
-
-    //#endregion 
-
-    //#region Workspace api
-    getWorkspaces = async() =>{
-        const response = await client.get(`/workspace/`);
-        return response.data;
-    }
-
-    getSpecificWorkspace = async(workspaceId) =>{
-        const response = await client.get(`/workspace/${workspaceId}`);
-        return response.data;
-    }
-
-    createWorkspace = async(workspaceData,linkUser) =>{
-        let path = `/workspace/`;
-        if(linkUser){
-            path = `/workspace/?linkUser=${linkUser}`;
-        }
-        const response = await client.post(path,workspaceData);
-        return response.data;
-    }    
-
-    editWorkspace = async(workspaceId, workspaceData) =>{
-        const response = await client.put(`/workspace/${workspaceId}`,workspaceData);
-        return response.data;
-    }   
-
-    deleteWorkspace = async(workspaceId) => {
-        const response = await client.delete(`/workspace/${workspaceId}`);
-        return response.data;
-    }
-
-    getNamespaces = async() =>{
-        const response = await client.get(`/kube/namespaces`);
-        return response.data;
-    }
-
-    //#endregion
 
     analyzeStatus = async () => {
         const response = await client.get("/status/analyze");
@@ -218,91 +125,10 @@ export default class Api {
         return response.data;
     }
 
-    getServerConfig = async () => {
-        const response = await client.get("/config/");
-        return response.data;
-    }
-
-    saveServerConfig = async (newConfig) => {
-        const response = await client.post("/config/", newConfig);
-        return response.data;
-    }
-
-    getDefaultServerConfig = async () => {
-        const response = await client.get("/config/defaults");
-        return response.data;
-    }
-
-    getServerMetadata = async () => {
-        const response = await client.get("/metadata/");
-        return response.data;
-    }
-
-    isInstallNeeded = async () => {
-        const response = await client.get("/install/isNeeded");
-        return response.data;
-    }
-
-    isAuthenticationNeeded = async () => {
-        try {
-            await client.get("/user/whoAmI");
-            return false;
-        } catch (e) {
-            if (e.response.status === 401) {
-                return true;
-            }
-            throw e;
-        }
-    }
-
-    whoAmI = async () => {
-        const response = await client.get("/user/whoAmI");
-        return response.data;
-    }
-
-    setupAdminUser = async (password) => {
-        const form = new FormData();
-        form.append('password', password);
-
-        try {
-            const response = await client.post(`/install/admin`, form);
-            this.persistToken(response.data.token);
-            return response;
-        } catch (e) {
-            if (e.response.status === 400) {
-                const error = {
-                    'type': FormValidationErrorType,
-                    'messages': e.response.data
-                };
-                throw error;
-            } else {
-                throw e;
-            }
-        }
-    }   
-
-    login = async (username, password) => {
-        const form = new FormData();
-        form.append('username', username);
-        form.append('password', password);
-
-        const response = await client.post(`/user/login`, form);
-        if (response.status >= 200 && response.status < 300) {
-            this.persistToken(response.data.token);
-        }
-
-        return response;
-    }
-
     persistToken = (tk) => {
         token = tk;
         client = this.getAxiosClient();
         localStorage.setItem('token', token);
-    }
-
-    logout = async () => {
-        await client.post(`/user/logout`);
-        this.persistToken(null);
     }
 
     getAxiosClient = () => {
@@ -321,10 +147,10 @@ export default class Api {
     }
 }
 
-export function getWebsocketUrl(){
+export function getWebsocketUrl() {
     let websocketUrl = MizuWebsocketURL;
     if (token) {
-      websocketUrl += `/${token}`;
+        websocketUrl += `/${token}`;
     }
 
     return websocketUrl;

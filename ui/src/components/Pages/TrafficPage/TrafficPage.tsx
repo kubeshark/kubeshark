@@ -66,7 +66,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus}) => {
 
   return ( 
   <>
-      <TrafficViewer setAnalyzeStatus={setAnalyzeStatus}  message={message} error={error} isOpen={isOpen}
+      <TrafficViewer setAnalyzeStatus={setAnalyzeStatus}  message={message} error={error} isWebSocketOpen={isOpen}
                      trafficViewerApiProp={trafficViewerApi} actionButtons={actionButtons} isShowStatusBar={!openOasModal}/>
   </>
   );
