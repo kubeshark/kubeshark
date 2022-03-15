@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"os"
 	"sort"
@@ -17,6 +18,9 @@ import (
 )
 
 const mizuTestEnvVar = "MIZU_TEST"
+
+var UnknownIp net.IP   = net.IP{0, 0, 0, 0}
+var UnknownPort uint16 = 0
 
 type Protocol struct {
 	Name            string   `json:"name"`
