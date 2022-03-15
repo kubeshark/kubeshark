@@ -9,7 +9,7 @@ enum WebSocketReadyState {
 
 export const DEFAULT_QUERY = "leftOff(-1)";
 
-export default function useWS(wsUrl: string) {
+const useWS = (wsUrl: string) => {
   const [message, setMessage] = useState(null);
   const [error, setError] = useState(null);
   const [isOpen, setisOpen] = useState(false);
@@ -44,3 +44,5 @@ export default function useWS(wsUrl: string) {
 
   return { message, error, isOpen, openSocket, closeSocket, sendQuery }
 }
+
+export default useWS
