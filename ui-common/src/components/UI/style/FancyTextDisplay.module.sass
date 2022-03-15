@@ -1,0 +1,40 @@
+.FancyTextDisplayContainer
+    display: flex
+    align-items: center
+
+    &.displayIconOnMouseOver
+        .FancyTextDisplayIcon
+            opacity: 0
+            pointer-events: none
+        &:hover
+            .FancyTextDisplayIcon
+                opacity: 1
+                pointer-events: all
+
+
+    .FancyTextDisplayIcon
+        height: 22px
+        width: 22px
+        cursor: pointer
+        margin-right: 3px
+
+        &:hover
+            background-color: rgba(255, 255, 255, 0.06)
+            border-radius: 4px
+
+    &.FancyTextDisplayContainerEllipsis
+        .FancyTextDisplayText
+            text-align: left
+            text-overflow: ellipsis
+            overflow: hidden
+            white-space: nowrap
+            width: calc(100% - 30px)
+
+    .FancyTextDisplayCopyNotifier
+        background-color: #4252a5
+        padding: 2px 5px
+        border-radius: 4px
+        position: absolute
+        transform: translate(0, -80%)
+        color: white
+        z-index: 1000

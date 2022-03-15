@@ -12,11 +12,11 @@
     "@testing-library/user-event": "^12.8.3",
     "@types/jest": "^26.0.22",
     "@types/node": "^12.20.10",
-    "@types/react": "^17.0.3",
-    "@types/react-dom": "^17.0.3",
     "@uiw/react-textarea-code-editor": "^1.4.12",
+    "@up9/mizu-common": "1.0.125",
     "axios": "^0.25.0",
     "core-js": "^3.20.2",
+    "craco-babel-loader": "^1.0.3",
     "highlight.js": "^11.3.1",
     "json-beautify": "^1.1.1",
     "jsonpath": "^1.1.1",
@@ -37,7 +37,6 @@
     "react-scrollable-feed-virtualized": "^1.4.9",
     "react-syntax-highlighter": "^15.4.3",
     "react-toastify": "^8.0.3",
-    "recoil": "^0.5.2",
     "redoc": "^2.0.0-rc.59",
     "styled-components": "^5.3.3",
     "typescript": "^4.2.4",
@@ -45,7 +44,11 @@
     "xml-formatter": "^2.6.0"
   },
   "devDependencies": {
-    "env-cmd": "^10.0.1"
+    "env-cmd": "^10.0.1",
+    "npm-link-shared": "^0.5.6",
+    "react-app-rewire-alias": "^1.1.7",
+    "react-dev-utils": "^12.0.0",
+    "recoil": "^0.5.2"
   },
   "scripts": {
     "start": "craco start",

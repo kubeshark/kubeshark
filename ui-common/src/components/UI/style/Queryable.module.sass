@@ -1,0 +1,47 @@
+.QueryableContainer
+    display: flex
+    align-items: center
+
+    &.displayIconOnMouseOver
+        .QueryableIcon
+            opacity: 0
+            width: 0px
+            pointer-events: none
+        &:hover
+            .QueryableIcon
+                opacity: 1
+                pointer-events: all
+
+
+    .QueryableIcon
+        height: 22px
+        width: 22px
+        cursor: pointer
+        color: #27AE60
+
+        &:hover
+            background-color: rgba(255, 255, 255, 0.06)
+            border-radius: 4px
+            color: #1E884B
+
+    .QueryableAddNotifier
+        background-color: #1E884B
+        font-weight: normal
+        padding: 2px 5px
+        border-radius: 4px
+        position: absolute
+        transform: translate(0, 10%)
+        color: white
+        z-index: 1000
+        font-size: 11px
+
+    .QueryableTooltip
+        background-color: #1E884B
+        font-weight: normal
+        padding: 2px 5px
+        border-radius: 4px
+        position: absolute
+        transform: translate(0, -80%)
+        color: white
+        z-index: 1000
+        font-size: 11px
