@@ -6,7 +6,10 @@ import { ServiceMapModal } from './components/ServiceMapModal/ServiceMapModal';
 import {useRecoilState} from "recoil";
 import serviceMapModalOpenAtom from "./recoil/serviceMapModalOpen";
 import oasModalOpenAtom from './recoil/oasModalOpen/atom';
-import OasModal from './components/OasModal/OasModal';
+import {OasModal} from '@up9/mizu-common';
+import Api from './helpers/api';
+
+const api = Api.getInstance()
 
 const App = () => {
 
@@ -24,6 +27,8 @@ const App = () => {
                 onClose={() => setServiceMapModalOpen(false)}
             />}
         {window["isOasEnabled"] && <OasModal
+            getOasServices={api.getOasServices}
+            getOasByService={api.getOasByService}
             openModal={oasModalOpen}
             handleCloseModal={() => setOasModalOpen(false)}
         />}

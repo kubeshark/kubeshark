@@ -5,8 +5,6 @@ import 'react-toastify/dist/ReactToastify.css';
 import {RecoilRoot} from "recoil";
 import App from './App';
 
-
-
 ReactDOM.render( <>
     <RecoilRoot>
         <App/>

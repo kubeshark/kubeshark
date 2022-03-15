@@ -53,7 +53,7 @@ export const Select: React.FC<SelectProps> = ({
                                               }) => {
     let _value = value;
 
-    const _onChange = (_: any, item: { props: { value: any; }; }) => {
+    const _onChange = ( item: { props: { value: any; }; }) => {
         const value = item.props.value;
         value === ALL_KEY ? onChangeCb(ALL_KEY) : onChangeCb(value);
     }
@@ -78,7 +78,7 @@ export const Select: React.FC<SelectProps> = ({
                 value: _value,
                 renderValue,
                 multiple,
-                onChange: _onChange,
+                onChange: (e,data) => _onChange(data),
             })}
         >
             {multiple && <MenuItem key={ALL_KEY} value={ALL_KEY}>{transformItem(ALL_KEY)}</MenuItem>}

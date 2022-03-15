@@ -1,3 +1,6 @@
+// this workaround fix a warning of mini-css-extract-plugin throws "Conflicting order" during build
+// https://github.com/facebook/create-react-app/issues/5372
+
 const path = require("path")
 
 module.exports = {
