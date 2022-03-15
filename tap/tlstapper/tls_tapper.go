@@ -14,10 +14,11 @@ type TlsTapper struct {
 	syscallHooks    syscallHooks
 	sslHooksStructs []sslHooks
 	poller          *tlsPoller
+	bpfLogger       *bpfLogger
 }
 
-func (t *TlsTapper) Init(bufferSize int, procfs string, extension *api.Extension) error {
-	logger.Log.Infof("Initializing tls tapper (bufferSize: %v)", bufferSize)
+func (t *TlsTapper) Init(chunksBufferSize int, logBufferSize int, procfs string, extension *api.Extension) error {
+	logger.Log.Infof("Initializing tls tapper (chunksSize: %d) (logSize: %d)", chunksBufferSize, logBufferSize)
 
 	if err := setupRLimit(); err != nil {
 		return err
@@ -35,12 +36,21 @@ func (t *TlsTapper) Init(bufferSize int, procfs string, extension *api.Extension
 
 	t.sslHooksStructs = make([]sslHooks, 0)
 
+	t.bpfLogger = newBpfLogger()
+	if err := t.bpfLogger.init(&t.bpfObjects, logBufferSize); err != nil {
+		return err
+	}
+
 	t.poller = newTlsPoller(t, extension, procfs)
-	return t.poller.init(&t.bpfObjects, bufferSize)
+	return t.poller.init(&t.bpfObjects, chunksBufferSize)
 }
 
 func (t *TlsTapper) Poll(emitter api.Emitter, options *api.TrafficFilteringOptions) {
 	t.poller.poll(emitter, options)
+}
+
+func (t *TlsTapper) PollForLogging() {
+	t.bpfLogger.poll()
 }
 
 func (t *TlsTapper) GlobalTap(sslLibrary string) error {
@@ -81,6 +91,10 @@ func (t *TlsTapper) Close() []error {
 
 	for _, sslHooks := range t.sslHooksStructs {
 		errors = append(errors, sslHooks.close()...)
+	}
+
+	if err := t.bpfLogger.close(); err != nil {
+		errors = append(errors, err)
 	}
 
 	if err := t.poller.close(); err != nil {

@@ -7,6 +7,8 @@ Copyright (C) UP9 Inc.
 #include "include/headers.h"
 #include "include/util.h"
 #include "include/maps.h"
+#include "include/log.h"
+#include "include/logger_messages.h"
 #include "include/pids.h"
 
 // Heap-like area for eBPF programs - stack size limited to 512 bytes, we must use maps for bigger (chunk) objects.
@@ -149,7 +151,7 @@ static __always_inline void output_ssl_chunk(struct pt_regs *ctx, struct ssl_inf
 	send_chunk(ctx, info->buffer, id, chunk);
 }
 
-static __always_inline void ssl_uprobe(void* ssl, void* buffer, int num, struct bpf_map_def* map_fd, size_t *count_ptr) {
+static __always_inline void ssl_uprobe(struct pt_regs *ctx, void* ssl, void* buffer, int num, struct bpf_map_def* map_fd, size_t *count_ptr) {
 	__u64 id = bpf_get_current_pid_tgid();
 	
 	if (!should_tap(id >> 32)) {
@@ -236,7 +238,7 @@ static __always_inline void ssl_uretprobe(struct pt_regs *ctx, struct bpf_map_de
 
 SEC("uprobe/ssl_write")
 void BPF_KPROBE(ssl_write, void* ssl, void* buffer, int num) {
-	ssl_uprobe(ssl, buffer, num, &ssl_write_context, 0);
+	ssl_uprobe(ctx, ssl, buffer, num, &ssl_write_context, 0);
 }
 
 SEC("uretprobe/ssl_write")
@@ -246,7 +248,7 @@ void BPF_KPROBE(ssl_ret_write) {
 
 SEC("uprobe/ssl_read")
 void BPF_KPROBE(ssl_read, void* ssl, void* buffer, int num) {
-	ssl_uprobe(ssl, buffer, num, &ssl_read_context, 0);
+	ssl_uprobe(ctx, ssl, buffer, num, &ssl_read_context, 0);
 }
 
 SEC("uretprobe/ssl_read")
@@ -256,7 +258,7 @@ void BPF_KPROBE(ssl_ret_read) {
 
 SEC("uprobe/ssl_write_ex")
 void BPF_KPROBE(ssl_write_ex, void* ssl, void* buffer, size_t num, size_t *written) {
-	ssl_uprobe(ssl, buffer, num, &ssl_write_context, written);
+	ssl_uprobe(ctx, ssl, buffer, num, &ssl_write_context, written);
 }
 
 SEC("uretprobe/ssl_write_ex")
@@ -266,7 +268,7 @@ void BPF_KPROBE(ssl_ret_write_ex) {
 
 SEC("uprobe/ssl_read_ex")
 void BPF_KPROBE(ssl_read_ex, void* ssl, void* buffer, size_t num, size_t *readbytes) {
-	ssl_uprobe(ssl, buffer, num, &ssl_read_context, readbytes);
+	ssl_uprobe(ctx, ssl, buffer, num, &ssl_read_context, readbytes);
 }
 
 SEC("uretprobe/ssl_read_ex")

@@ -245,9 +245,10 @@ func startPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem) 
 
 func startTlsTapper(extension *api.Extension, outputItems chan *api.OutputChannelItem, options *api.TrafficFilteringOptions) {
 	tls := tlstapper.TlsTapper{}
-	tlsPerfBufferSize := os.Getpagesize() * 100
+	chunksBufferSize := os.Getpagesize() * 100
+	logBufferSize := os.Getpagesize()
 
-	if err := tls.Init(tlsPerfBufferSize, *procfs, extension); err != nil {
+	if err := tls.Init(chunksBufferSize, logBufferSize, *procfs, extension); err != nil {
 		tlstapper.LogError(err)
 		return
 	}
@@ -271,5 +272,6 @@ func startTlsTapper(extension *api.Extension, outputItems chan *api.OutputChanne
 		OutputChannel: outputItems,
 	}
 
+	go tls.PollForLogging()
 	go tls.Poll(emitter, options)
 }

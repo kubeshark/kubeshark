@@ -78,6 +78,7 @@ type tlsTapperMapSpecs struct {
 	ConnectSyscallInfo   *ebpf.MapSpec `ebpf:"connect_syscall_info"`
 	FileDescriptorToIpv4 *ebpf.MapSpec `ebpf:"file_descriptor_to_ipv4"`
 	Heap                 *ebpf.MapSpec `ebpf:"heap"`
+	LogBuffer            *ebpf.MapSpec `ebpf:"log_buffer"`
 	PidsMap              *ebpf.MapSpec `ebpf:"pids_map"`
 	SslReadContext       *ebpf.MapSpec `ebpf:"ssl_read_context"`
 	SslWriteContext      *ebpf.MapSpec `ebpf:"ssl_write_context"`
@@ -107,6 +108,7 @@ type tlsTapperMaps struct {
 	ConnectSyscallInfo   *ebpf.Map `ebpf:"connect_syscall_info"`
 	FileDescriptorToIpv4 *ebpf.Map `ebpf:"file_descriptor_to_ipv4"`
 	Heap                 *ebpf.Map `ebpf:"heap"`
+	LogBuffer            *ebpf.Map `ebpf:"log_buffer"`
 	PidsMap              *ebpf.Map `ebpf:"pids_map"`
 	SslReadContext       *ebpf.Map `ebpf:"ssl_read_context"`
 	SslWriteContext      *ebpf.Map `ebpf:"ssl_write_context"`
@@ -119,6 +121,7 @@ func (m *tlsTapperMaps) Close() error {
 		m.ConnectSyscallInfo,
 		m.FileDescriptorToIpv4,
 		m.Heap,
+		m.LogBuffer,
 		m.PidsMap,
 		m.SslReadContext,
 		m.SslWriteContext,

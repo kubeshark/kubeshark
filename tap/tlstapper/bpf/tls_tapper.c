@@ -7,6 +7,8 @@ Copyright (C) UP9 Inc.
 #include "include/headers.h"
 #include "include/util.h"
 #include "include/maps.h"
+#include "include/log.h"
+#include "include/logger_messages.h"
 #include "include/pids.h"
 
 // To avoid multiple .o files
