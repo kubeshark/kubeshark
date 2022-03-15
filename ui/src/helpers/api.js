@@ -65,12 +65,12 @@ export default class Api {
     }
 
     getEntry = async (id, query) => {
-        const response = await client.get(`/entries/${id}?query=${query}`);
+        const response = await client.get(`/entries/${id}?query=${encodeURIComponent(query)}`);
         return response.data;
     }
 
     fetchEntries = async (leftOff, direction, query, limit, timeoutMs) => {
-        const response = await client.get(`/entries/?leftOff=${leftOff}&direction=${direction}&query=${query}&limit=${limit}&timeoutMs=${timeoutMs}`).catch(function (thrown) {
+        const response = await client.get(`/entries/?leftOff=${leftOff}&direction=${direction}&query=${encodeURIComponent(query)}&limit=${limit}&timeoutMs=${timeoutMs}`).catch(function (thrown) {
             console.error(thrown.message);
             return {};
         });
