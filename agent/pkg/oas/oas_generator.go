@@ -54,7 +54,7 @@ func (g *defaultOasGenerator) Start() {
 	g.entriesChan = make(chan EntryWithSource, 100) // buffer up to 100 entries for OAS processing
 	g.serviceSpecs = &sync.Map{}
 	g.started = true
-	go instance.runGenerator()
+	go g.runGenerator()
 }
 
 func (g *defaultOasGenerator) Stop() {
