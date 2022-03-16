@@ -54,6 +54,14 @@ interface EntryProps {
     headingMode: boolean;
 }
 
+enum CaptureTypes {
+    UndefinedCapture = "",
+    Pcap = "pcap",
+    Envoy = "envoy",
+    Linkerd = "linkerd",
+    Ebpf = "ebpf",
+}
+
 export const EntryItem: React.FC<EntryProps> = ({entry, style, headingMode}) => {
 
     const [focusedEntryId, setFocusedEntryId] = useRecoilState(focusedEntryIdAtom);
@@ -157,7 +165,7 @@ export const EntryItem: React.FC<EntryProps> = ({entry, style, headingMode}) => 
                 horizontal={false}
             /> : null}
             {/* TODO: Update the code below once we have api.Pcap, api.Envoy and api.Linkerd distinction in the backend */}
-            {entry.capture === "ebpf" ? <div className={styles.capture}>
+            {entry.capture === CaptureTypes.Ebpf ? <div className={styles.capture}>
                 <Queryable
                     query={`capture == "${entry.capture}"`}
                     displayIconOnMouseOver={true}
