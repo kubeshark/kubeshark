@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="22" height="29.999" viewBox="0 0 22 29.999">
+    <defs>
+        <filter id="Rectangle_2909" width="21" height="25.999" x=".43" y="0" filterUnits="userSpaceOnUse">
+            <feOffset dy="3"/>
+            <feGaussianBlur result="blur" stdDeviation="3"/>
+            <feFlood flood-opacity=".161"/>
+            <feComposite in2="blur" operator="in"/>
+            <feComposite in="SourceGraphic"/>
+        </filter>
+        <filter id="Rectangle_2911" width="21" height="20.999" x=".43" y="9" filterUnits="userSpaceOnUse">
+            <feOffset dy="3"/>
+            <feGaussianBlur result="blur-2" stdDeviation="3"/>
+            <feFlood flood-opacity=".161"/>
+            <feComposite in2="blur-2" operator="in"/>
+            <feComposite in="SourceGraphic"/>
+        </filter>
+        <style>
+            .cls-2{fill:#fff}
+        </style>
+    </defs>
+    <g id="warning_icon" transform="translate(-883 -4234.5)">
+        <circle id="Ellipse_1021" cx="11" cy="11" r="11" fill="#fdab2b" data-name="Ellipse 1021" transform="translate(883 4235)"/>
+        <g id="Group_5975" data-name="Group 5975" transform="translate(892.43 4240.5)">
+            <g id="Group_5974" data-name="Group 5974">
+                <g filter="url(#Rectangle_2909)" transform="translate(-9.43 -6)">
+                    <rect id="Rectangle_2909-2" width="3" height="7.999" class="cls-2" data-name="Rectangle 2909" rx="1.5" transform="translate(9.43 6)"/>
+                </g>
+                <g filter="url(#Rectangle_2911)" transform="translate(-9.43 -6)">
+                    <rect id="Rectangle_2911-2" width="3" height="2.999" class="cls-2" data-name="Rectangle 2911" rx="1.499" transform="translate(9.43 15)"/>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

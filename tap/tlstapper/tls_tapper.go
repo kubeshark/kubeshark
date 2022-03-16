@@ -1,13 +1,10 @@
 package tlstapper
 
 import (
-	"bytes"
-	"encoding/binary"
-
-	"github.com/cilium/ebpf/perf"
 	"github.com/cilium/ebpf/rlimit"
 	"github.com/go-errors/errors"
 	"github.com/up9inc/mizu/shared/logger"
+	"github.com/up9inc/mizu/tap/api"
 )
 
 //go:generate go run github.com/cilium/ebpf/cmd/bpf2go tlsTapper bpf/tls_tapper.c -- -O2 -g -D__TARGET_ARCH_x86
@@ -16,10 +13,10 @@ type TlsTapper struct {
 	bpfObjects      tlsTapperObjects
 	syscallHooks    syscallHooks
 	sslHooksStructs []sslHooks
-	reader          *perf.Reader
+	poller          *tlsPoller
 }
 
-func (t *TlsTapper) Init(bufferSize int) error {
+func (t *TlsTapper) Init(bufferSize int, procfs string, extension *api.Extension) error {
 	logger.Log.Infof("Initializing tls tapper (bufferSize: %v)", bufferSize)
 
 	if err := setupRLimit(); err != nil {
@@ -27,55 +24,23 @@ func (t *TlsTapper) Init(bufferSize int) error {
 	}
 
 	t.bpfObjects = tlsTapperObjects{}
-
 	if err := loadTlsTapperObjects(&t.bpfObjects, nil); err != nil {
 		return errors.Wrap(err, 0)
 	}
 
 	t.syscallHooks = syscallHooks{}
-
 	if err := t.syscallHooks.installSyscallHooks(&t.bpfObjects); err != nil {
 		return err
 	}
 
 	t.sslHooksStructs = make([]sslHooks, 0)
 
-	return t.initChunksReader(bufferSize)
+	t.poller = newTlsPoller(t, extension, procfs)
+	return t.poller.init(&t.bpfObjects, bufferSize)
 }
 
-func (t *TlsTapper) pollPerf(chunks chan<- *tlsChunk) {
-	logger.Log.Infof("Start polling for tls events")
-
-	for {
-		record, err := t.reader.Read()
-
-		if err != nil {
-			close(chunks)
-
-			if errors.Is(err, perf.ErrClosed) {
-				return
-			}
-
-			LogError(errors.Errorf("Error reading chunks from tls perf, aborting TLS! %v", err))
-			return
-		}
-
-		if record.LostSamples != 0 {
-			logger.Log.Infof("Buffer is full, dropped %d chunks", record.LostSamples)
-			continue
-		}
-
-		buffer := bytes.NewReader(record.RawSample)
-
-		var chunk tlsChunk
-
-		if err := binary.Read(buffer, binary.LittleEndian, &chunk); err != nil {
-			LogError(errors.Errorf("Error parsing chunk %v", err))
-			continue
-		}
-
-		chunks <- &chunk
-	}
+func (t *TlsTapper) Poll(emitter api.Emitter, options *api.TrafficFilteringOptions) {
+	t.poller.poll(emitter, options)
 }
 
 func (t *TlsTapper) GlobalTap(sslLibrary string) error {
@@ -118,7 +83,7 @@ func (t *TlsTapper) Close() []error {
 		errors = append(errors, sslHooks.close()...)
 	}
 
-	if err := t.reader.Close(); err != nil {
+	if err := t.poller.close(); err != nil {
 		errors = append(errors, err)
 	}
 
@@ -127,18 +92,6 @@ func (t *TlsTapper) Close() []error {
 
 func setupRLimit() error {
 	err := rlimit.RemoveMemlock()
-
-	if err != nil {
-		return errors.Wrap(err, 0)
-	}
-
-	return nil
-}
-
-func (t *TlsTapper) initChunksReader(bufferSize int) error {
-	var err error
-
-	t.reader, err = perf.NewReader(t.bpfObjects.ChunksBuffer, bufferSize)
 
 	if err != nil {
 		return errors.Wrap(err, 0)
