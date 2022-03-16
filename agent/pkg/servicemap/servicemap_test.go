@@ -80,21 +80,21 @@ var (
 type ServiceMapDisabledSuite struct {
 	suite.Suite
 
-	instance ServiceMap
+	instance *defaultServiceMap
 }
 
 type ServiceMapEnabledSuite struct {
 	suite.Suite
 
-	instance ServiceMap
+	instance *defaultServiceMap
 }
 
 func (s *ServiceMapDisabledSuite) SetupTest() {
-	s.instance = GetInstance()
+	s.instance = GetDefaultServiceMapInstance()
 }
 
 func (s *ServiceMapEnabledSuite) SetupTest() {
-	s.instance = GetInstance()
+	s.instance = GetDefaultServiceMapInstance()
 	s.instance.Enable()
 }
 
@@ -107,7 +107,7 @@ func (s *ServiceMapDisabledSuite) TestServiceMapInstance() {
 func (s *ServiceMapDisabledSuite) TestServiceMapSingletonInstance() {
 	assert := s.Assert()
 
-	instance2 := GetInstance()
+	instance2 := GetDefaultServiceMapInstance()
 
 	assert.NotNil(s.instance)
 	assert.NotNil(instance2)
