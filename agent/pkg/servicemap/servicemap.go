@@ -16,7 +16,7 @@ const (
 var instance *defaultServiceMap
 var once sync.Once
 
-func GetDefaultServiceMapInstance() ServiceMap {
+func GetDefaultServiceMapInstance() *defaultServiceMap {
 	once.Do(func() {
 		instance = NewDefaultServiceMapGenerator()
 		logger.Log.Debug("Service Map Initialized")
@@ -38,7 +38,6 @@ type ServiceMap interface {
 	Enable()
 	Disable()
 	IsEnabled() bool
-	NewTCPEntry(source *tapApi.TCP, destination *tapApi.TCP, protocol *tapApi.Protocol)
 	GetStatus() ServiceMapStatus
 	GetNodes() []ServiceMapNode
 	GetEdges() []ServiceMapEdge

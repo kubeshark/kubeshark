@@ -80,13 +80,13 @@ var (
 type ServiceMapDisabledSuite struct {
 	suite.Suite
 
-	instance ServiceMap
+	instance *defaultServiceMap
 }
 
 type ServiceMapEnabledSuite struct {
 	suite.Suite
 
-	instance ServiceMap
+	instance *defaultServiceMap
 }
 
 func (s *ServiceMapDisabledSuite) SetupTest() {

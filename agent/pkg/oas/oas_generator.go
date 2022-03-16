@@ -24,7 +24,6 @@ type OasGenerator interface {
 	Stop()
 	IsStarted() bool
 	Reset()
-	PushEntry(entryWithSource *EntryWithSource)
 	GetServiceSpecs() *sync.Map
 }
 
@@ -36,7 +35,7 @@ type defaultOasGenerator struct {
 	entriesChan  chan EntryWithSource
 }
 
-func GetDefaultOasGeneratorInstance() OasGenerator {
+func GetDefaultOasGeneratorInstance() *defaultOasGenerator {
 	syncOnce.Do(func() {
 		instance = NewDefaultOasGenerator()
 		logger.Log.Debug("OAS Generator Initialized")
