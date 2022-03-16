@@ -1,0 +1,41 @@
+{
+  "compilerOptions": {
+    "outDir": "dist",
+    "module": "esnext",
+    "lib": [
+      "dom",
+      "esnext"
+    ],
+    "moduleResolution": "node",
+    "jsx": "react-jsx",
+    "sourceMap": true,
+    "declaration": true,
+    "esModuleInterop": true,
+    "noImplicitReturns": true,
+    "noImplicitThis": true,
+    "noImplicitAny": true,
+    "strictNullChecks": false,
+    "suppressImplicitAnyIndexErrors": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "allowSyntheticDefaultImports": true,
+    "target": "es5",
+    "allowJs": true,
+    "skipLibCheck": true,
+  
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "noFallthroughCasesInSwitch": true
+  },
+  "include": [
+    "src"
+  ],
+  "exclude": [
+    "node_modules",
+    "build",
+    "exmaple"
+  ]
+}

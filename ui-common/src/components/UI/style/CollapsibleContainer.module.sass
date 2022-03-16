@@ -1,0 +1,33 @@
+.CollapsibleContainerHeader
+  display: flex
+  align-items: center
+  cursor: pointer
+  min-height: 40px
+  
+.CollapsibleContainerHeaderSticky
+  background: #1f253f
+  position: sticky
+  top: 0
+  z-index: 1
+
+.CollapsibleContainerBigger
+  padding: 10px
+  font-size: 14px !important
+
+.CollapsibleContainerExpandCollapseButton
+  margin-left: auto
+  padding-right: 2%
+
+.CollapsibleContainerExpanded
+  min-height: 40px
+
+.CollapsibleContainerTitle
+  font-weight: 600
+  font-family: 'Source Sans Pro', sans-serif
+  font-size: 12px
+
+.CollapsibleContainerExpanded .CollapsibleContainerTitle
+  color: rgba(186, 199, 255, 1)
+
+.CollapsibleContainerCollapsed .CollapsibleContainerTitle
+  color: rgba(186, 199, 255, 0.75)

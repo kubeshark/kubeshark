@@ -42,7 +42,6 @@ type MizuAgentConfig struct {
 	TapperResources        Resources     `json:"tapperResources"`
 	MizuResourcesNamespace string        `json:"mizuResourceNamespace"`
 	AgentDatabasePath      string        `json:"agentDatabasePath"`
-	StandaloneMode         bool          `json:"standaloneMode"`
 	ServiceMap             bool          `json:"serviceMap"`
 	OAS                    bool          `json:"oas"`
 	Telemetry              bool          `json:"telemetry"`
