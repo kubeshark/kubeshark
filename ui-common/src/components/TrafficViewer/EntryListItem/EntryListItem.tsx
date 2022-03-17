@@ -4,6 +4,7 @@ import SwapHorizIcon from '@material-ui/icons/SwapHoriz';
 import styles from './EntryListItem.module.sass';
 import StatusCode, {getClassification, StatusCodeClassification} from "../../UI/StatusCode";
 import Protocol, {ProtocolInterface} from "../../UI/Protocol"
+import eBPFLogo from '../assets/ebpf.png';
 import {Summary} from "../../UI/Summary";
 import Queryable from "../../UI/Queryable";
 import ingoingIconSuccess from "assets/ingoing-traffic-success.svg"
@@ -24,6 +25,7 @@ interface TCPInterface {
 
 interface Entry {
     proto: ProtocolInterface,
+    capture: string,
     method?: string,
     methodQuery?: string,
     summary: string,
@@ -50,6 +52,14 @@ interface EntryProps {
     entry: Entry;
     style: object;
     headingMode: boolean;
+}
+
+enum CaptureTypes {
+    UndefinedCapture = "",
+    Pcap = "pcap",
+    Envoy = "envoy",
+    Linkerd = "linkerd",
+    Ebpf = "ebpf",
 }
 
 export const EntryItem: React.FC<EntryProps> = ({entry, style, headingMode}) => {
@@ -154,6 +164,17 @@ export const EntryItem: React.FC<EntryProps> = ({entry, style, headingMode}) => 
                 protocol={entry.proto}
                 horizontal={false}
             /> : null}
+            {/* TODO: Update the code below once we have api.Pcap, api.Envoy and api.Linkerd distinction in the backend */}
+            {entry.capture === CaptureTypes.Ebpf ? <div className={styles.capture}>
+                <Queryable
+                    query={`capture == "${entry.capture}"`}
+                    displayIconOnMouseOver={true}
+                    flipped={false}
+                    style={{position: "absolute"}}
+                >
+                    <img src={eBPFLogo} alt="eBPF"/>
+                </Queryable>
+            </div> : null}
             {isStatusCodeEnabled && <div>
                 <StatusCode statusCode={entry.status} statusQuery={entry.statusQuery}/>
             </div>}

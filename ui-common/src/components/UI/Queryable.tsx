@@ -11,11 +11,12 @@ interface Props {
     iconStyle?: object,
     className?: string,
     useTooltip?: boolean,
+    tooltipStyle?: object,
     displayIconOnMouseOver?: boolean,
     flipped?: boolean,
 }
 
-const Queryable: React.FC<Props> = ({query, style, iconStyle, className, useTooltip= true, displayIconOnMouseOver = false, flipped = false, children}) => {
+const Queryable: React.FC<Props> = ({query, style, iconStyle, className, useTooltip = true, tooltipStyle = null, displayIconOnMouseOver = false, flipped = false, children}) => {
     const [showAddedNotification, setAdded] = useState(false);
     const [showTooltip, setShowTooltip] = useState(false);
     const [queryState, setQuery] = useRecoilState(queryAtom);
@@ -48,12 +49,12 @@ const Queryable: React.FC<Props> = ({query, style, iconStyle, className, useTool
 				</CopyToClipboard> : null;
 
     return (
-        <div className={`${QueryableStyle.QueryableContainer} ${QueryableStyle.displayIconOnMouseOver} ${className ? className : ''} ${displayIconOnMouseOver ? QueryableStyle.displayIconOnMouseOver : ''}`} 
+        <div className={`${QueryableStyle.QueryableContainer} ${QueryableStyle.displayIconOnMouseOver} ${className ? className : ''} ${displayIconOnMouseOver ? QueryableStyle.displayIconOnMouseOver : ''}`}
             style={style} onMouseOver={ e => setShowTooltip(true)} onMouseLeave={ e => setShowTooltip(false)}>
                 {flipped && addButton}
                 {children}
                 {!flipped && addButton}
-                {useTooltip && showTooltip && <span className={QueryableStyle.QueryableTooltip}>{query}</span>}
+                {useTooltip && showTooltip && <span className={QueryableStyle.QueryableTooltip} style={tooltipStyle}>{query}</span>}
         </div>
     );
 };
