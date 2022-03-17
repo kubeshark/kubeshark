@@ -100,7 +100,9 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 	if !isTapper {
 		connection, err = basenine.NewConnection(shared.BasenineHost, shared.BaseninePort)
 		if err != nil {
-			panic(err)
+			logger.Log.Errorf("Failed to establish a connection to Basenine: %v", err)
+			socketCleanup(socketId, connectedWebsockets[socketId])
+			return
 		}
 	}
 
