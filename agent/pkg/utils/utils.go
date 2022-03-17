@@ -17,6 +17,10 @@ import (
 	"github.com/up9inc/mizu/shared/logger"
 )
 
+var (
+	StartTime int64 // global
+)
+
 // StartServer starts the server with a graceful shutdown
 func StartServer(app *gin.Engine) {
 	signals := make(chan os.Signal, 2)

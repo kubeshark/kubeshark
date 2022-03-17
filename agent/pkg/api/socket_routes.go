@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/up9inc/mizu/agent/pkg/models"
+	"github.com/up9inc/mizu/agent/pkg/utils"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -59,13 +60,13 @@ func init() {
 	connectedWebsockets = make(map[int]*SocketConnection)
 }
 
-func WebSocketRoutes(app *gin.Engine, eventHandlers EventHandlers, startTime int64) {
+func WebSocketRoutes(app *gin.Engine, eventHandlers EventHandlers) {
 	SocketGetBrowserHandler = func(c *gin.Context) {
-		websocketHandler(c.Writer, c.Request, eventHandlers, false, startTime)
+		websocketHandler(c.Writer, c.Request, eventHandlers, false)
 	}
 
 	SocketGetTapperHandler = func(c *gin.Context) {
-		websocketHandler(c.Writer, c.Request, eventHandlers, true, startTime)
+		websocketHandler(c.Writer, c.Request, eventHandlers, true)
 	}
 
 	app.GET("/ws", func(c *gin.Context) {
@@ -77,7 +78,7 @@ func WebSocketRoutes(app *gin.Engine, eventHandlers EventHandlers, startTime int
 	})
 }
 
-func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers EventHandlers, isTapper bool, startTime int64) {
+func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers EventHandlers, isTapper bool) {
 	ws, err := websocketUpgrader.Upgrade(w, r, nil)
 	if err != nil {
 		logger.Log.Errorf("Failed to set websocket upgrade: %v", err)
@@ -115,7 +116,7 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 
 	eventHandlers.WebSocketConnect(socketId, isTapper)
 
-	startTimeBytes, _ := models.CreateWebsocketStartTimeMessage(startTime)
+	startTimeBytes, _ := models.CreateWebsocketStartTimeMessage(utils.StartTime)
 
 	if err = SendToSocket(socketId, startTimeBytes); err != nil {
 		logger.Log.Error(err)
