@@ -49,5 +49,10 @@ cypress.env.json
 tap/extensions/*/bin
 tap/extensions/*/expect
 
+# UI folders to ignore
+**/node_modules/**
+**/dist/**
+*.editorconfig
+
 # Ignore *.log files
 *.log

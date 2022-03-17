@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"os"
 	"sort"
@@ -17,6 +18,9 @@ import (
 )
 
 const mizuTestEnvVar = "MIZU_TEST"
+
+var UnknownIp net.IP   = net.IP{0, 0, 0, 0}
+var UnknownPort uint16 = 0
 
 type Protocol struct {
 	Name            string   `json:"name"`
@@ -43,6 +47,16 @@ type Extension struct {
 	Path      string
 	Dissector Dissector
 }
+
+type Capture string
+
+const (
+	UndefinedCapture Capture = ""
+	Pcap             Capture = "pcap"
+	Envoy            Capture = "envoy"
+	Linkerd          Capture = "linkerd"
+	Ebpf             Capture = "ebpf"
+)
 
 type ConnectionInfo struct {
 	ClientIP   string
@@ -80,6 +94,7 @@ type RequestResponsePair struct {
 // `Protocol` is modified in the later stages of data propagation. Therefore it's not a pointer.
 type OutputChannelItem struct {
 	Protocol       Protocol
+	Capture        Capture
 	Timestamp      int64
 	ConnectionInfo *ConnectionInfo
 	Pair           *RequestResponsePair
@@ -98,7 +113,7 @@ type SuperIdentifier struct {
 type Dissector interface {
 	Register(*Extension)
 	Ping()
-	Dissect(b *bufio.Reader, isClient bool, tcpID *TcpID, counterPair *CounterPair, superTimer *SuperTimer, superIdentifier *SuperIdentifier, emitter Emitter, options *TrafficFilteringOptions, reqResMatcher RequestResponseMatcher) error
+	Dissect(b *bufio.Reader, capture Capture, isClient bool, tcpID *TcpID, counterPair *CounterPair, superTimer *SuperTimer, superIdentifier *SuperIdentifier, emitter Emitter, options *TrafficFilteringOptions, reqResMatcher RequestResponseMatcher) error
 	Analyze(item *OutputChannelItem, resolvedSource string, resolvedDestination string, namespace string) *Entry
 	Summarize(entry *Entry) *BaseEntry
 	Represent(request map[string]interface{}, response map[string]interface{}) (object []byte, bodySize int64, err error)
@@ -128,6 +143,7 @@ func (e *Emitting) Emit(item *OutputChannelItem) {
 type Entry struct {
 	Id                     uint                   `json:"id"`
 	Protocol               Protocol               `json:"proto"`
+	Capture                Capture                `json:"capture"`
 	Source                 *TCP                   `json:"src"`
 	Destination            *TCP                   `json:"dst"`
 	Namespace              string                 `json:"namespace,omitempty"`
@@ -158,6 +174,7 @@ type EntryWrapper struct {
 type BaseEntry struct {
 	Id             uint            `json:"id"`
 	Protocol       Protocol        `json:"proto,omitempty"`
+	Capture        Capture         `json:"capture"`
 	Summary        string          `json:"summary,omitempty"`
 	SummaryQuery   string          `json:"summaryQuery,omitempty"`
 	Status         int             `json:"status"`

@@ -1,0 +1,64 @@
+@import "../../../variables.module"
+
+.Entry
+    font-family: "Source Sans Pro", Lucida Grande, Tahoma, sans-serif
+    height: calc(100% - 70px)
+    width: 100%
+    margin-top: 10px
+
+    h3,
+    h4
+        font-family: "Source Sans Pro", Lucida Grande, Tahoma, sans-serif
+
+    .header
+        background-color: rgb(55, 65, 111)
+        padding: 0.5rem .75rem .65rem .75rem
+        border-top-left-radius: 0.25rem
+        border-top-right-radius: 0.25rem
+        display: flex
+        font-size: .75rem
+        align-items: center
+        .description
+            min-width: 25rem
+            display: flex
+            align-items: center
+            justify-content: space-between
+            .method
+                padding: 0 .25rem
+                font-size: 0.75rem
+                font-weight: bold
+                border-radius: 0.25rem
+                border: 0.0625rem solid rgba(255, 255, 255, 0.16)
+                margin-right: .5rem
+            > span
+                margin-left: .5rem
+        .timing
+            border-left: 1px solid #627ef7
+            margin-left: .3rem
+            padding-left: .3rem
+
+    .headerClickable
+        cursor: pointer
+        &:hover
+            background: lighten(rgb(55, 65, 111), 10%)
+        border-top-left-radius: 0
+        border-top-right-radius: 0
+
+    .body
+        height: 100%
+        overflow-y: auto
+        background: $main-background-color
+        color: $blue-gray
+        border-radius: 4px
+        padding: 10px
+        position: relative
+        .bodyHeader
+            padding: 0 1rem
+        .endpointURL
+            font-size: .75rem
+            display: block
+            color: $blue-color
+            text-decoration: none
+            margin-bottom: .5rem
+            overflow-wrap: anywhere
+            padding: 5px 0
