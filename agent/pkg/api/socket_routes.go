@@ -138,7 +138,8 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 
 		if !isTapper && !isQuerySet {
 			if err := json.Unmarshal(msg, &params); err != nil {
-				logger.Log.Errorf("Error: %v", socketId, err)
+				logger.Log.Errorf("Error unmarshalling parameters: %v", socketId, err)
+				continue
 			}
 
 			query := params.Query
@@ -167,6 +168,10 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 
 					var entry *tapApi.Entry
 					err = json.Unmarshal(bytes, &entry)
+					if err != nil {
+						logger.Log.Debugf("Error unmarshalling entry: %v", err.Error())
+						continue
+					}
 
 					var message []byte
 					if params.EnableFullEntries {
@@ -194,7 +199,8 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 					var metadata *basenine.Metadata
 					err = json.Unmarshal(bytes, &metadata)
 					if err != nil {
-						logger.Log.Debugf("Error recieving metadata: %v", err.Error())
+						logger.Log.Debugf("Error unmarshalling metadata: %v", err.Error())
+						continue
 					}
 
 					metadataBytes, _ := models.CreateWebsocketQueryMetadataMessage(metadata)
