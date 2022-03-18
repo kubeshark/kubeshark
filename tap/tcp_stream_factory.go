@@ -89,6 +89,7 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.T
 			}
 			stream.clients = append(stream.clients, tcpReader{
 				msgQueue:   make(chan tcpReaderDataMsg),
+				progress:   &api.ReadProgress{},
 				superTimer: &api.SuperTimer{},
 				ident:      fmt.Sprintf("%s %s", net, transport),
 				tcpID: &api.TcpID{
@@ -108,6 +109,7 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.T
 			})
 			stream.servers = append(stream.servers, tcpReader{
 				msgQueue:   make(chan tcpReaderDataMsg),
+				progress:   &api.ReadProgress{},
 				superTimer: &api.SuperTimer{},
 				ident:      fmt.Sprintf("%s %s", net, transport),
 				tcpID: &api.TcpID{

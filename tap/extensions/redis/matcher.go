@@ -22,10 +22,11 @@ func (matcher *requestResponseMatcher) GetMap() *sync.Map {
 func (matcher *requestResponseMatcher) SetMaxTry(value int) {
 }
 
-func (matcher *requestResponseMatcher) registerRequest(ident string, request *RedisPacket, captureTime time.Time) *api.OutputChannelItem {
+func (matcher *requestResponseMatcher) registerRequest(ident string, request *RedisPacket, captureTime time.Time, captureSize int) *api.OutputChannelItem {
 	requestRedisMessage := api.GenericMessage{
 		IsRequest:   true,
 		CaptureTime: captureTime,
+		CaptureSize: captureSize,
 		Payload: RedisPayload{
 			Data: &RedisWrapper{
 				Method:  string(request.Command),
@@ -48,10 +49,11 @@ func (matcher *requestResponseMatcher) registerRequest(ident string, request *Re
 	return nil
 }
 
-func (matcher *requestResponseMatcher) registerResponse(ident string, response *RedisPacket, captureTime time.Time) *api.OutputChannelItem {
+func (matcher *requestResponseMatcher) registerResponse(ident string, response *RedisPacket, captureTime time.Time, captureSize int) *api.OutputChannelItem {
 	responseRedisMessage := api.GenericMessage{
 		IsRequest:   false,
 		CaptureTime: captureTime,
+		CaptureSize: captureSize,
 		Payload: RedisPayload{
 			Data: &RedisWrapper{
 				Method:  string(response.Command),

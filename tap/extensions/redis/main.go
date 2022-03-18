@@ -34,7 +34,7 @@ func (d dissecting) Ping() {
 	log.Printf("pong %s", protocol.Name)
 }
 
-func (d dissecting) Dissect(b *bufio.Reader, capture api.Capture, isClient bool, tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, superIdentifier *api.SuperIdentifier, emitter api.Emitter, options *api.TrafficFilteringOptions, _reqResMatcher api.RequestResponseMatcher) error {
+func (d dissecting) Dissect(b *bufio.Reader, progress *api.ReadProgress, capture api.Capture, isClient bool, tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, superIdentifier *api.SuperIdentifier, emitter api.Emitter, options *api.TrafficFilteringOptions, _reqResMatcher api.RequestResponseMatcher) error {
 	reqResMatcher := _reqResMatcher.(*requestResponseMatcher)
 	is := &RedisInputStream{
 		Reader: b,
@@ -48,9 +48,9 @@ func (d dissecting) Dissect(b *bufio.Reader, capture api.Capture, isClient bool,
 		}
 
 		if isClient {
-			err = handleClientStream(capture, tcpID, counterPair, superTimer, emitter, redisPacket, reqResMatcher)
+			err = handleClientStream(progress, capture, tcpID, counterPair, superTimer, emitter, redisPacket, reqResMatcher)
 		} else {
-			err = handleServerStream(capture, tcpID, counterPair, superTimer, emitter, redisPacket, reqResMatcher)
+			err = handleServerStream(progress, capture, tcpID, counterPair, superTimer, emitter, redisPacket, reqResMatcher)
 		}
 
 		if err != nil {

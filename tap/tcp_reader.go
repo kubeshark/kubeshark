@@ -40,6 +40,7 @@ type tcpReader struct {
 	isOutgoing         bool
 	msgQueue           chan tcpReaderDataMsg // Channel of captured reassembled tcp payload
 	data               []byte
+	progress           *api.ReadProgress
 	superTimer         *api.SuperTimer
 	parent             *tcpStream
 	packetsSeen        uint
@@ -80,6 +81,8 @@ func (h *tcpReader) Read(p []byte) (int, error) {
 
 	l := copy(p, h.data)
 	h.data = h.data[l:]
+	h.progress.Feed(l)
+
 	return l, nil
 }
 
@@ -96,7 +99,7 @@ func (h *tcpReader) run(wg *sync.WaitGroup) {
 	defer wg.Done()
 	b := bufio.NewReader(h)
 	// TODO: Add api.Pcap, api.Envoy and api.Linkerd distinction by refactoring NewPacketSourceManager method
-	err := h.extension.Dissector.Dissect(b, api.Pcap, h.isClient, h.tcpID, h.counterPair, h.superTimer, h.parent.superIdentifier, h.emitter, filteringOptions, h.reqResMatcher)
+	err := h.extension.Dissector.Dissect(b, h.progress, api.Pcap, h.isClient, h.tcpID, h.counterPair, h.superTimer, h.parent.superIdentifier, h.emitter, filteringOptions, h.reqResMatcher)
 	if err != nil {
 		_, err = io.Copy(ioutil.Discard, b)
 		if err != nil {
