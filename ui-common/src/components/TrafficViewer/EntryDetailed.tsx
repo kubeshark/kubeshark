@@ -36,23 +36,36 @@ const useStyles = makeStyles(() => ({
 
 export const formatSize = (n: number) => n > 1000 ? `${Math.round(n / 1000)}KB` : `${n} B`;
 
-const EntryTitle: React.FC<any> = ({protocol, data, bodySize, elapsedTime}) => {
+const EntryTitle: React.FC<any> = ({protocol, data, elapsedTime}) => {
     const classes = useStyles();
+    const request = data.request;
     const response = data.response;
 
     return <div className={classes.entryTitle}>
         <Protocol protocol={protocol} horizontal={true}/>
         <div style={{right: "30px", position: "absolute", display: "flex"}}>
-            {response && <Queryable
-                query={`response.bodySize == ${bodySize}`}
+            {request && <Queryable
+                query={`requestSize == ${data.requestSize}`}
                 style={{margin: "0 18px"}}
                 displayIconOnMouseOver={true}
             >
                 <div
                     style={{opacity: 0.5}}
-                    id="entryDetailedTitleBodySize"
+                    id="entryDetailedTitleRequestSize"
                 >
-                    {formatSize(bodySize)}
+                    {`Request: ${formatSize(data.requestSize)}`}
+                </div>
+            </Queryable>}
+            {response && <Queryable
+                query={`responseSize == ${data.responseSize}`}
+                style={{margin: "0 18px"}}
+                displayIconOnMouseOver={true}
+            >
+                <div
+                    style={{opacity: 0.5}}
+                    id="entryDetailedTitleResponseSize"
+                >
+                    {`Response: ${formatSize(data.responseSize)}`}
                 </div>
             </Queryable>}
             {response && <Queryable
@@ -64,7 +77,7 @@ const EntryTitle: React.FC<any> = ({protocol, data, bodySize, elapsedTime}) => {
                     style={{opacity: 0.5}}
                     id="entryDetailedTitleElapsedTime"
                 >
-                    {Math.round(elapsedTime)}ms
+                    {`Elapsed Time: ${Math.round(elapsedTime)}ms`}
                 </div>
             </Queryable>}
         </div>
@@ -120,7 +133,6 @@ export const EntryDetailed = () => {
         {entryData && <EntryTitle
             protocol={entryData.protocol}
             data={entryData.data}
-            bodySize={entryData.bodySize}
             elapsedTime={entryData.data.elapsedTime}
         />}
         {entryData && <EntrySummary entry={entryData.base}/>}

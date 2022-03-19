@@ -4,7 +4,7 @@ import SwapHorizIcon from '@material-ui/icons/SwapHoriz';
 import styles from './EntryListItem.module.sass';
 import StatusCode, {getClassification, StatusCodeClassification} from "../../UI/StatusCode";
 import Protocol, {ProtocolInterface} from "../../UI/Protocol"
-import eBPFLogo from '../assets/ebpf.png';
+import eBPFLogo from '../../assets/ebpf.png';
 import {Summary} from "../../UI/Summary";
 import Queryable from "../../UI/Queryable";
 import ingoingIconSuccess from "assets/ingoing-traffic-success.svg"

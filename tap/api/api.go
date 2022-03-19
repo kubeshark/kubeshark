@@ -131,7 +131,7 @@ type Dissector interface {
 	Dissect(b *bufio.Reader, progress *ReadProgress, capture Capture, isClient bool, tcpID *TcpID, counterPair *CounterPair, superTimer *SuperTimer, superIdentifier *SuperIdentifier, emitter Emitter, options *TrafficFilteringOptions, reqResMatcher RequestResponseMatcher) error
 	Analyze(item *OutputChannelItem, resolvedSource string, resolvedDestination string, namespace string) *Entry
 	Summarize(entry *Entry) *BaseEntry
-	Represent(request map[string]interface{}, response map[string]interface{}) (object []byte, bodySize int64, err error)
+	Represent(request map[string]interface{}, response map[string]interface{}) (object []byte, err error)
 	Macros() map[string]string
 	NewResponseRequestMatcher() RequestResponseMatcher
 }
@@ -167,6 +167,8 @@ type Entry struct {
 	StartTime              time.Time              `json:"startTime"`
 	Request                map[string]interface{} `json:"request"`
 	Response               map[string]interface{} `json:"response"`
+	RequestSize            int                    `json:"requestSize"`
+	ResponseSize           int                    `json:"responseSize"`
 	ElapsedTime            int64                  `json:"elapsedTime"`
 	Rules                  ApplicableRules        `json:"rules,omitempty"`
 	ContractStatus         ContractStatus         `json:"contractStatus,omitempty"`
@@ -179,7 +181,6 @@ type Entry struct {
 type EntryWrapper struct {
 	Protocol       Protocol                 `json:"protocol"`
 	Representation string                   `json:"representation"`
-	BodySize       int64                    `json:"bodySize"`
 	Data           *Entry                   `json:"data"`
 	Base           *BaseEntry               `json:"base"`
 	Rules          []map[string]interface{} `json:"rulesMatched,omitempty"`
