@@ -13,4 +13,4 @@ test-pull-bin:
 
 test-pull-expect:
 	@mkdir -p expect
-	@[ "${skipexpect}" ] && echo "Skipping downloading expected JSONs" || gsutil  -o 'GSUtil:parallel_process_count=5' -o 'GSUtil:parallel_thread_count=5'  -m cp -r gs://static.up9.io/mizu/test-pcap/expect4/redis/\* expect
+	@[ "${skipexpect}" ] && echo "Skipping downloading expected JSONs" || gsutil  -o 'GSUtil:parallel_process_count=5' -o 'GSUtil:parallel_thread_count=5'  -m cp -r gs://static.up9.io/mizu/test-pcap/expect5/redis/\* expect
