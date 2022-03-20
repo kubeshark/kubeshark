@@ -7,7 +7,6 @@ import (
 	"github.com/up9inc/mizu/agent/pkg/utils"
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/logger"
-	"github.com/up9inc/mizu/shared/kubernetes"
 )
 
 const FilePath = shared.DataDirPath + "tappers-status.json"
@@ -20,7 +19,7 @@ var (
 	lockConnectedCount = &sync.Mutex{}
 	connectedCount     int
 
-	nodeHostToTappedPodsMap kubernetes.NodeToPodsMap
+	nodeHostToTappedPodsMap shared.NodeToPodsMap
 )
 
 func GetStatus() map[string]*shared.TapperStatus {
@@ -85,11 +84,11 @@ func saveStatus() {
 	}
 }
 
-func SetNodeToTappedPodMap(nodeToTappedPodsMap kubernetes.NodeToPodsMap) {
+func SetNodeToTappedPodMap(nodeToTappedPodsMap shared.NodeToPodsMap) {
 	logger.Log.Infof("Setting node to tapped pods map to %v", nodeToTappedPodsMap)
 	nodeHostToTappedPodsMap = nodeToTappedPodsMap
 }
 
-func GetNodeToTappedPodMap() kubernetes.NodeToPodsMap {
+func GetNodeToTappedPodMap() shared.NodeToPodsMap {
 	return nodeHostToTappedPodsMap
 }

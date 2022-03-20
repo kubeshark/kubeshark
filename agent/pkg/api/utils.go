@@ -5,7 +5,6 @@ import (
 
 	"github.com/up9inc/mizu/agent/pkg/providers/tappedPods"
 	"github.com/up9inc/mizu/shared"
-	"github.com/up9inc/mizu/shared/kubernetes"
 	"github.com/up9inc/mizu/shared/logger"
 )
 
@@ -20,7 +19,7 @@ func BroadcastTappedPodsStatus() {
 	}
 }
 
-func SendTappedPods(socketId int, nodeToTappedPodMap kubernetes.NodeToPodsMap) {
+func SendTappedPods(socketId int, nodeToTappedPodMap shared.NodeToPodsMap) {
 	message := shared.CreateWebSocketTappedPodsMessage(nodeToTappedPodMap)
 	if jsonBytes, err := json.Marshal(message); err != nil {
 		logger.Log.Errorf("Could not Marshal message %v", err)
@@ -31,7 +30,7 @@ func SendTappedPods(socketId int, nodeToTappedPodMap kubernetes.NodeToPodsMap) {
 	}
 }
 
-func BroadcastTappedPodsToTappers(nodeToTappedPodMap kubernetes.NodeToPodsMap) {
+func BroadcastTappedPodsToTappers(nodeToTappedPodMap shared.NodeToPodsMap) {
 	message := shared.CreateWebSocketTappedPodsMessage(nodeToTappedPodMap)
 	if jsonBytes, err := json.Marshal(message); err != nil {
 		logger.Log.Errorf("Could not Marshal message %v", err)

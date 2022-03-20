@@ -5,11 +5,10 @@ import (
 	"strings"
 
 	"github.com/op/go-logging"
-	"github.com/up9inc/mizu/shared/kubernetes"
 	"github.com/up9inc/mizu/shared/logger"
-	v1 "k8s.io/api/core/v1"
 
 	"gopkg.in/yaml.v3"
+	v1 "k8s.io/api/core/v1"
 )
 
 type WebSocketMessageType string
@@ -79,13 +78,15 @@ type WebSocketStatusMessage struct {
 
 type WebSocketTappedPodsMessage struct {
 	*WebSocketMessageMetadata
-	NodeToTappedPodMap kubernetes.NodeToPodsMap `json:"nodeToTappedPodMap"`
+	NodeToTappedPodMap NodeToPodsMap `json:"nodeToTappedPodMap"`
 }
 
 type WebSocketTapConfigMessage struct {
 	*WebSocketMessageMetadata
 	TapTargets []v1.Pod `json:"pods"`
 }
+
+type NodeToPodsMap map[string][]v1.Pod
 
 type TapperStatus struct {
 	TapperName string `json:"tapperName"`
@@ -128,7 +129,7 @@ func CreateWebSocketStatusMessage(tappedPodsStatus []TappedPodStatus) WebSocketS
 	}
 }
 
-func CreateWebSocketTappedPodsMessage(nodeToTappedPodMap kubernetes.NodeToPodsMap) WebSocketTappedPodsMessage {
+func CreateWebSocketTappedPodsMessage(nodeToTappedPodMap NodeToPodsMap) WebSocketTappedPodsMessage {
 	return WebSocketTappedPodsMessage{
 		WebSocketMessageMetadata: &WebSocketMessageMetadata{
 			MessageType: WebSocketMessageTypeUpdateTappedPods,

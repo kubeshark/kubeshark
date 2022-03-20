@@ -9,10 +9,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-type NodeToPodsMap map[string][]core.Pod
-
-func GetNodeHostToTappedPodsMap(tappedPods []core.Pod) NodeToPodsMap {
-	nodeToTappedPodMap := make(NodeToPodsMap)
+func GetNodeHostToTappedPodsMap(tappedPods []core.Pod) shared.NodeToPodsMap {
+	nodeToTappedPodMap := make(shared.NodeToPodsMap)
 	for _, pod := range tappedPods {
 		minimizedPod := getMinimizedPod(pod)
 
