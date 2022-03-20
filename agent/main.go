@@ -156,11 +156,6 @@ func runInTapperMode() {
 
 	hostMode := os.Getenv(shared.HostModeEnvVar) == "1"
 	tapOpts := &tap.TapOpts{HostMode: hostMode}
-	tapTargets := getTapTargets()
-	if tapTargets != nil {
-		tapOpts.FilterAuthorities = tapTargets
-		logger.Log.Infof("Filtering for the following authorities: %v", tapOpts.FilterAuthorities)
-	}
 
 	filteredOutputItemsChannel := make(chan *tapApi.OutputChannelItem)
 
@@ -272,12 +267,6 @@ func parseEnvVar(env string) map[string][]v1.Pod {
 		panic(fmt.Sprintf("env var %s's value of %v is invalid! must be map[string][]v1.Pod %v", env, mapOfList, err))
 	}
 	return mapOfList
-}
-
-func getTapTargets() []v1.Pod {
-	nodeName := os.Getenv(shared.NodeNameEnvVar)
-	tappedAddressesPerNodeDict := parseEnvVar(shared.TappedAddressesPerNodeDictEnvVar)
-	return tappedAddressesPerNodeDict[nodeName]
 }
 
 func getTrafficFilteringOptions() *tapApi.TrafficFilteringOptions {
