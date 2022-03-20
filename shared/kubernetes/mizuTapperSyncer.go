@@ -186,7 +186,7 @@ func (tapperSyncer *MizuTapperSyncer) watchPodsForTapping() {
 	podWatchHelper := NewPodWatchHelper(tapperSyncer.kubernetesProvider, &tapperSyncer.config.PodFilterRegex)
 	eventChan, errorChan := FilteredWatch(tapperSyncer.context, podWatchHelper, tapperSyncer.config.TargetNamespaces, podWatchHelper)
 
-	restartTappers := func() {
+	handleChangeInPods := func() {
 		err, changeFound := tapperSyncer.updateCurrentlyTappedPods()
 		if err != nil {
 			tapperSyncer.ErrorOut <- K8sTapManagerError{
@@ -206,7 +206,7 @@ func (tapperSyncer *MizuTapperSyncer) watchPodsForTapping() {
 			}
 		}
 	}
-	restartTappersDebouncer := debounce.NewDebouncer(updateTappersDelay, restartTappers)
+	restartTappersDebouncer := debounce.NewDebouncer(updateTappersDelay, handleChangeInPods)
 
 	for {
 		select {
