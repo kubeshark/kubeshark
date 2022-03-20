@@ -30,8 +30,6 @@ import (
 	"github.com/up9inc/mizu/agent/pkg/app"
 	"github.com/up9inc/mizu/agent/pkg/config"
 
-	v1 "k8s.io/api/core/v1"
-
 	"github.com/gorilla/websocket"
 	"github.com/op/go-logging"
 	"github.com/up9inc/mizu/shared"
