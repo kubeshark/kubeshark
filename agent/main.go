@@ -253,22 +253,6 @@ func setUIFlags(uiIndexPath string) error {
 	return nil
 }
 
-func parseEnvVar(env string) map[string][]v1.Pod {
-	var mapOfList map[string][]v1.Pod
-
-	val, present := os.LookupEnv(env)
-
-	if !present {
-		return mapOfList
-	}
-
-	err := json.Unmarshal([]byte(val), &mapOfList)
-	if err != nil {
-		panic(fmt.Sprintf("env var %s's value of %v is invalid! must be map[string][]v1.Pod %v", env, mapOfList, err))
-	}
-	return mapOfList
-}
-
 func getTrafficFilteringOptions() *tapApi.TrafficFilteringOptions {
 	filteringOptionsJson := os.Getenv(shared.MizuFilteringOptionsEnvVar)
 	if filteringOptionsJson == "" {
