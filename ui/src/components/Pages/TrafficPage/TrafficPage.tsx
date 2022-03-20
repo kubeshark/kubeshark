@@ -23,7 +23,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus}) => {
   const [openOasModal, setOpenOasModal] = useRecoilState(oasModalOpenAtom);
 
   const {message,error,isOpen, openSocket, closeSocket, sendQueryWhenWsOpen} = useWS(getWebsocketUrl())
-  const trafficViewerApi = {...api, webSocket:{open : openSocket, close: closeSocket, sendQuery: sendQueryWhenWsOpen}}
+  const trafficViewerApi = {...api, webSocket:{open : openSocket, close: closeSocket, sendQueryWhenWsOpen: sendQueryWhenWsOpen}}
 
   const handleOpenOasModal = () => {	
     closeSocket()
