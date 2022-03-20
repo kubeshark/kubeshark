@@ -326,6 +326,11 @@ func (tapperSyncer *MizuTapperSyncer) updateMizuTappers() error {
 			serviceAccountName = ""
 		}
 
+		nodeNames := make([]string, 0, len(tapperSyncer.nodeToTappedPodMap))
+		for nodeName := range tapperSyncer.nodeToTappedPodMap {
+			nodeNames = append(nodeNames, nodeName)
+		}
+
 		if err := tapperSyncer.kubernetesProvider.ApplyMizuTapperDaemonSet(
 			tapperSyncer.context,
 			tapperSyncer.config.MizuResourcesNamespace,
@@ -333,7 +338,7 @@ func (tapperSyncer *MizuTapperSyncer) updateMizuTappers() error {
 			tapperSyncer.config.AgentImage,
 			TapperPodName,
 			fmt.Sprintf("%s.%s.svc.cluster.local", ApiServerPodName, tapperSyncer.config.MizuResourcesNamespace),
-			tapperSyncer.nodeToTappedPodMap,
+			nodeNames,
 			serviceAccountName,
 			tapperSyncer.config.TapperResources,
 			tapperSyncer.config.ImagePullPolicy,
