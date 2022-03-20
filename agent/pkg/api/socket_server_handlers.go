@@ -38,6 +38,8 @@ func (h *RoutesEventHandlers) WebSocketConnect(socketId int, isTapper bool) {
 		tapperClientSocketUUIDs = append(tapperClientSocketUUIDs, socketId)
 		socketListLock.Unlock()
 
+		nodeToTappedPodMap := tappers.GetNodeToTappedPodMap()
+		SendTappedPods(socketId, nodeToTappedPodMap)
 	} else {
 		logger.Log.Infof("Websocket event - Browser socket connected, socket ID: %d", socketId)
 

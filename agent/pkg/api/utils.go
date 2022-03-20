@@ -20,6 +20,17 @@ func BroadcastTappedPodsStatus() {
 	}
 }
 
+func SendTappedPods(socketId int, nodeToTappedPodMap kubernetes.NodeToPodsMap) {
+	message := shared.CreateWebSocketTappedPodsMessage(nodeToTappedPodMap)
+	if jsonBytes, err := json.Marshal(message); err != nil {
+		logger.Log.Errorf("Could not Marshal message %v", err)
+	} else {
+		if err := SendToSocket(socketId, jsonBytes); err != nil {
+			logger.Log.Error(err)
+		}
+	}
+}
+
 func BroadcastTappedPodsToTappers(nodeToTappedPodMap kubernetes.NodeToPodsMap) {
 	message := shared.CreateWebSocketTappedPodsMessage(nodeToTappedPodMap)
 	if jsonBytes, err := json.Marshal(message); err != nil {
