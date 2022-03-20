@@ -11,11 +11,12 @@ interface Props {
     iconStyle?: object,
     className?: string,
     useTooltip?: boolean,
+    tooltipStyle?: object,
     displayIconOnMouseOver?: boolean,
     flipped?: boolean,
 }
 
-const Queryable: React.FC<Props> = ({query, style, iconStyle, className, useTooltip= true, displayIconOnMouseOver = false, flipped = false, children}) => {
+const Queryable: React.FC<Props> = ({query, style, iconStyle, className, useTooltip = true, tooltipStyle = null, displayIconOnMouseOver = false, flipped = false, children}) => {
     const [showAddedNotification, setAdded] = useState(false);
     const [showTooltip, setShowTooltip] = useState(false);
     const [queryState, setQuery] = useRecoilState(queryAtom);
@@ -53,7 +54,7 @@ const Queryable: React.FC<Props> = ({query, style, iconStyle, className, useTool
                 {flipped && addButton}
                 {children}
                 {!flipped && addButton}
-                {useTooltip && showTooltip && <span data-cy={"QueryableTooltip"} className={QueryableStyle.QueryableTooltip}>{query}</span>}
+                {useTooltip && showTooltip && <span data-cy={"QueryableTooltip"} className={QueryableStyle.QueryableTooltip} style={tooltipStyle}>{query}</span>}
         </div>
     );
 };
