@@ -359,7 +359,6 @@ func handleIncomingMessageAsTapper(socketConnection *websocket.Conn) {
 						logger.Log.Infof("Could not unmarshal message of message type %s %v", socketMessageBase.MessageType, err)
 						return
 					}
-					logger.Log.Infof("DEBUG tapper instructed to change tapped pods %+v", tappedPodsMessage.NodeToTappedPodMap)
 					nodeName := os.Getenv(shared.NodeNameEnvVar)
 					tap.UpdateTapTargets(tappedPodsMessage.NodeToTappedPodMap[nodeName])
 				default:
