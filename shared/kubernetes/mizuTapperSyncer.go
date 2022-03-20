@@ -32,6 +32,7 @@ type MizuTapperSyncer struct {
 	TapperStatusChangedOut chan shared.TapperStatus
 	ErrorOut               chan K8sTapManagerError
 	nodeToTappedPodMap     map[string][]core.Pod
+	tappedNodes            []string
 }
 
 type TapperSyncerConfig struct {
@@ -303,6 +304,20 @@ func (tapperSyncer *MizuTapperSyncer) updateCurrentlyTappedPods() (err error, ch
 }
 
 func (tapperSyncer *MizuTapperSyncer) updateMizuTappers() error {
+	nodesToTap := make([]string, len(tapperSyncer.nodeToTappedPodMap))
+	i := 0
+	for node := range tapperSyncer.nodeToTappedPodMap {
+		nodesToTap[i] = node
+		i++
+	}
+
+	if shared.EqualStringSlices(nodesToTap, tapperSyncer.tappedNodes) {
+		logger.Log.Info("Skipping apply, DaemonSet is up to date")
+		return nil
+	}
+
+	logger.Log.Infof("Updating DaemonSet to run on nodes: %v", nodesToTap)
+
 	if len(tapperSyncer.nodeToTappedPodMap) > 0 {
 		var serviceAccountName string
 		if tapperSyncer.config.MizuServiceAccountExists {
@@ -342,6 +357,8 @@ func (tapperSyncer *MizuTapperSyncer) updateMizuTappers() error {
 
 		logger.Log.Debugf("Successfully reset tapper daemon set")
 	}
+
+	tapperSyncer.tappedNodes = nodesToTap
 
 	return nil
 }
