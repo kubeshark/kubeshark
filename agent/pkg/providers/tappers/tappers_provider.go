@@ -84,3 +84,12 @@ func saveStatus() {
 		logger.Log.Errorf("Error saving tappers status, err: %v", err)
 	}
 }
+
+func SetNodeToTappedPodMap(nodeToTappedPodsMap kubernetes.NodeToPodsMap) {
+	logger.Log.Infof("Setting node to tapped pods map to %v", nodeToTappedPodsMap)
+	nodeHostToTappedPodsMap = nodeToTappedPodsMap
+}
+
+func GetNodeToTappedPodMap() kubernetes.NodeToPodsMap {
+	return nodeHostToTappedPodsMap
+}
