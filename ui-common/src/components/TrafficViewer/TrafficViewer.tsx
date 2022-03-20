@@ -8,7 +8,8 @@ import { EntryDetailed } from "./EntryDetailed";
 import playIcon from 'assets/run.svg';
 import pauseIcon from 'assets/pause.svg';
 import variables from '../../variables.module.scss';
-import { toast } from 'react-toastify';
+import { toast,ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import debounce from 'lodash/debounce';
 import { RecoilRoot, RecoilState, useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 import entriesAtom from "../../recoil/entries";
@@ -20,7 +21,6 @@ import trafficViewerApiAtom from "../../recoil/TrafficViewerApi"
 import TrafficViewerApi from "./TrafficViewerApi";
 import { StatusBar } from "../UI/StatusBar";
 import tappingStatusAtom from "../../recoil/tappingStatus/atom";
-
 
 const useLayoutStyles = makeStyles(() => ({
   details: {
@@ -119,6 +119,7 @@ const TrafficViewer: React.FC<TrafficViewerProps> = ({ setAnalyzeStatus, message
     }
     setQueryToSend(query)
     trafficViewerApiProp.webSocket.open();
+    trafficViewerApiProp.webSocket.sendQueryWhenWsOpen(query)
   }
 
   const onmessage = useCallback((e) => {
@@ -189,7 +190,7 @@ const TrafficViewer: React.FC<TrafficViewerProps> = ({ setAnalyzeStatus, message
 
   useEffect(() => {
     isWebSocketOpen ? setWsConnection(WsConnectionStatus.Connected) : setWsConnection(WsConnectionStatus.Closed)
-    trafficViewerApiProp.webSocket.sendQuery(queryToSend)
+    trafficViewerApiProp.webSocket.sendQueryWhenWsOpen(queryToSend)
   }, [isWebSocketOpen, queryToSend, setWsConnection])
 
   const onerror = (event) => {
@@ -330,6 +331,7 @@ const TrafficViewer: React.FC<TrafficViewerProps> = ({ setAnalyzeStatus, message
         setAddressesWithTLS={setAddressesWithTLS}
         userDismissedTLSWarning={userDismissedTLSWarning}
         setUserDismissedTLSWarning={setUserDismissedTLSWarning} />
+      <ToastContainer/>
     </div>
   );
 };
@@ -342,4 +344,4 @@ const TrafficViewerContainer: React.FC<TrafficViewerProps> = ({ setAnalyzeStatus
   </RecoilRoot>
 }
 
-export default TrafficViewerContainer 
+export default TrafficViewerContainer

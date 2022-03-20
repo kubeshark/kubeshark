@@ -18,7 +18,9 @@ const useWS = (wsUrl: string) => {
   const onMessage = (e) => { setMessage(e) }
   const onError = (e) => setError(e)
   const onOpen = () => { setisOpen(true) }
-  const onClose = () => setisOpen(false)
+  const onClose = () => {
+    setisOpen(false)
+  }
 
   const openSocket = () => {
     ws.current = new WebSocket(wsUrl)
@@ -36,13 +38,17 @@ const useWS = (wsUrl: string) => {
     ws.current.removeEventListener("close", onClose)
   }
 
-  const sendQuery = (query: string) => {
-    if (ws.current && (ws.current.readyState === WebSocketReadyState.OPEN)) {
-      ws.current.send(JSON.stringify({ "query": query, "enableFullEntries": false }));
-    }
+  const sendQueryWhenWsOpen = (query) => {
+    setTimeout(() => {
+      if (ws?.current?.readyState === WebSocket.OPEN) {
+        ws.current.send(JSON.stringify({"query": query, "enableFullEntries": false}));
+      } else {
+        sendQueryWhenWsOpen(query);
+      }
+    }, 500)
   }
 
-  return { message, error, isOpen, openSocket, closeSocket, sendQuery }
+  return { message, error, isOpen, openSocket, closeSocket, sendQueryWhenWsOpen }
 }
 
 export default useWS

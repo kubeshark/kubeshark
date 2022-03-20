@@ -8,7 +8,7 @@ type TrafficViewerApi = {
     webSocket : {
       open : () => {},
       close : () => {},
-      sendQuery : (query:string) => {}
+      sendQueryWhenWsOpen : (query:string) => {}
     }
   }
 

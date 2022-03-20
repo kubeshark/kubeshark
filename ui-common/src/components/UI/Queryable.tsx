@@ -48,12 +48,12 @@ const Queryable: React.FC<Props> = ({query, style, iconStyle, className, useTool
 				</CopyToClipboard> : null;
 
     return (
-        <div className={`${QueryableStyle.QueryableContainer} ${QueryableStyle.displayIconOnMouseOver} ${className ? className : ''} ${displayIconOnMouseOver ? QueryableStyle.displayIconOnMouseOver : ''}`} 
+        <div className={`${QueryableStyle.QueryableContainer} ${QueryableStyle.displayIconOnMouseOver} ${className ? className : ''} ${displayIconOnMouseOver ? QueryableStyle.displayIconOnMouseOver : ''}`}
             style={style} onMouseOver={ e => setShowTooltip(true)} onMouseLeave={ e => setShowTooltip(false)}>
                 {flipped && addButton}
                 {children}
                 {!flipped && addButton}
-                {useTooltip && showTooltip && <span className={QueryableStyle.QueryableTooltip}>{query}</span>}
+                {useTooltip && showTooltip && <span data-cy={"QueryableTooltip"} className={QueryableStyle.QueryableTooltip}>{query}</span>}
         </div>
     );
 };

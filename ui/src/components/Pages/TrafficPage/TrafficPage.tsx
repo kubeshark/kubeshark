@@ -22,8 +22,8 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus}) => {
   const setServiceMapModalOpen = useSetRecoilState(serviceMapModalOpenAtom);
   const [openOasModal, setOpenOasModal] = useRecoilState(oasModalOpenAtom);
 
-  const {message,error,isOpen, openSocket, closeSocket, sendQuery} = useWS(getWebsocketUrl())
-  const trafficViewerApi = {...api, webSocket:{open : openSocket, close: closeSocket, sendQuery: sendQuery}}
+  const {message,error,isOpen, openSocket, closeSocket, sendQueryWhenWsOpen} = useWS(getWebsocketUrl())
+  const trafficViewerApi = {...api, webSocket:{open : openSocket, close: closeSocket, sendQuery: sendQueryWhenWsOpen}}
 
   const handleOpenOasModal = () => {	
     closeSocket()
@@ -55,8 +55,6 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus}) => {
                                 Service Map	
                               </Button>}	
                         </div>
-
-  sendQuery(DEFAULT_QUERY);
 
   useEffect(() => {
     return () => {

@@ -1,8 +1,8 @@
 const columns = {podName : 1, namespace : 2, tapping : 3};
-const greenStatusImageSrc = '/static/media/success.662997eb.svg';
+const greenStatusImageSrc = '/static/media/success~SJqhqGpJ.662997eb.svg';
 
 function getDomPathInStatusBar(line, column) {
-    return `.expandedStatusBar > :nth-child(2) > > :nth-child(2) > :nth-child(${line}) > :nth-child(${column})`;
+    return `[data-cy="expandedStatusBar"] > :nth-child(2) > > :nth-child(2) > :nth-child(${line}) > :nth-child(${column})`;
 }
 
 export function checkLine(line, expectedValues) {
@@ -18,8 +18,8 @@ export function checkLine(line, expectedValues) {
 }
 
 export function findLineAndCheck(expectedValues) {
-    cy.get('.expandedStatusBar > :nth-child(2) > > :nth-child(2) > > :nth-child(1)').then(pods => {
-        cy.get('.expandedStatusBar > :nth-child(2) > > :nth-child(2) > > :nth-child(2)').then(namespaces => {
+    cy.get('[data-cy="expandedStatusBar"] > :nth-child(2) > > :nth-child(2) > > :nth-child(1)').then(pods => {
+        cy.get('[data-cy="expandedStatusBar"] > :nth-child(2) > > :nth-child(2) > > :nth-child(2)').then(namespaces => {
             // organizing namespaces array
             const podObjectsArray = Object.values(pods ?? {});
             const namespacesObjectsArray = Object.values(namespaces ?? {});
