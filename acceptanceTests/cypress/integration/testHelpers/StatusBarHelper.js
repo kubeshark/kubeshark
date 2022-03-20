@@ -1,5 +1,4 @@
 const columns = {podName : 1, namespace : 2, tapping : 3};
-const greenStatusImageSrc = '/static/media/success~SJqhqGpJ.662997eb.svg';
 
 function getDomPathInStatusBar(line, column) {
     return `[data-cy="expandedStatusBar"] > :nth-child(2) > > :nth-child(2) > :nth-child(${line}) > :nth-child(${column})`;
@@ -12,7 +11,7 @@ export function checkLine(line, expectedValues) {
 
         cy.get(getDomPathInStatusBar(line, columns.namespace)).invoke('text').then(namespaceValue => {
             expect(namespaceValue).to.equal(expectedValues.namespace);
-            cy.get(getDomPathInStatusBar(line, columns.tapping)).children().should('have.attr', 'src', greenStatusImageSrc);
+            cy.get(getDomPathInStatusBar(line, columns.tapping)).children().should('have.attr', 'src').and("match", /success.*\.svg/);
         });
     });
 }
