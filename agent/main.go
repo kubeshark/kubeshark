@@ -382,6 +382,15 @@ func handleIncomingMessageAsTapper(socketConnection *websocket.Conn) {
 					} else {
 						tap.UpdateTapTargets(tapConfigMessage.TapTargets)
 					}
+				case shared.WebSocketMessageTypeUpdateTappedPods:
+					var tappedPodsMessage shared.WebSocketTappedPodsMessage
+					if err := json.Unmarshal(message, &tappedPodsMessage); err != nil {
+						logger.Log.Infof("Could not unmarshal message of message type %s %v", socketMessageBase.MessageType, err)
+						return
+					}
+					logger.Log.Infof("DEBUG tapper instructed to change tapped pods %+v", tappedPodsMessage.NodeToTappedPodMap)
+					nodeName := os.Getenv(shared.NodeNameEnvVar)
+					tap.UpdateTapTargets(tappedPodsMessage.NodeToTappedPodMap[nodeName])
 				default:
 					logger.Log.Warningf("Received socket message of type %s for which no handlers are defined", socketMessageBase.MessageType)
 				}

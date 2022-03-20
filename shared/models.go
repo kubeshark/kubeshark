@@ -14,16 +14,17 @@ import (
 type WebSocketMessageType string
 
 const (
-	WebSocketMessageTypeEntry         WebSocketMessageType = "entry"
-	WebSocketMessageTypeFullEntry     WebSocketMessageType = "fullEntry"
-	WebSocketMessageTypeTappedEntry   WebSocketMessageType = "tappedEntry"
-	WebSocketMessageTypeUpdateStatus  WebSocketMessageType = "status"
-	WebSocketMessageTypeAnalyzeStatus WebSocketMessageType = "analyzeStatus"
-	WebsocketMessageTypeOutboundLink  WebSocketMessageType = "outboundLink"
-	WebSocketMessageTypeToast         WebSocketMessageType = "toast"
-	WebSocketMessageTypeQueryMetadata WebSocketMessageType = "queryMetadata"
-	WebSocketMessageTypeStartTime     WebSocketMessageType = "startTime"
-	WebSocketMessageTypeTapConfig     WebSocketMessageType = "tapConfig"
+	WebSocketMessageTypeEntry            WebSocketMessageType = "entry"
+	WebSocketMessageTypeFullEntry        WebSocketMessageType = "fullEntry"
+	WebSocketMessageTypeTappedEntry      WebSocketMessageType = "tappedEntry"
+	WebSocketMessageTypeUpdateStatus     WebSocketMessageType = "status"
+	WebSocketMessageTypeUpdateTappedPods WebSocketMessageType = "tappedPods"
+	WebSocketMessageTypeAnalyzeStatus    WebSocketMessageType = "analyzeStatus"
+	WebsocketMessageTypeOutboundLink     WebSocketMessageType = "outboundLink"
+	WebSocketMessageTypeToast            WebSocketMessageType = "toast"
+	WebSocketMessageTypeQueryMetadata    WebSocketMessageType = "queryMetadata"
+	WebSocketMessageTypeStartTime        WebSocketMessageType = "startTime"
+	WebSocketMessageTypeTapConfig        WebSocketMessageType = "tapConfig"
 )
 
 type Resources struct {
@@ -75,6 +76,11 @@ type WebSocketStatusMessage struct {
 	TappingStatus []TappedPodStatus `json:"tappingStatus"`
 }
 
+type WebSocketTappedPodsMessage struct {
+	*WebSocketMessageMetadata
+	NodeToTappedPodMap map[string][]v1.Pod `json:"nodeToTappedPodMap"`
+}
+
 type WebSocketTapConfigMessage struct {
 	*WebSocketMessageMetadata
 	TapTargets []v1.Pod `json:"pods"`
@@ -118,6 +124,15 @@ func CreateWebSocketStatusMessage(tappedPodsStatus []TappedPodStatus) WebSocketS
 			MessageType: WebSocketMessageTypeUpdateStatus,
 		},
 		TappingStatus: tappedPodsStatus,
+	}
+}
+
+func CreateWebSocketTappedPodsMessage(nodeToTappedPodMap map[string][]v1.Pod) WebSocketTappedPodsMessage {
+	return WebSocketTappedPodsMessage{
+		WebSocketMessageMetadata: &WebSocketMessageMetadata{
+			MessageType: WebSocketMessageTypeUpdateTappedPods,
+		},
+		NodeToTappedPodMap: nodeToTappedPodMap,
 	}
 }
 
