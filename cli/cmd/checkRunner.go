@@ -41,10 +41,6 @@ func runMizuCheck() {
 		if checkPassed {
 			checkPassed = checkK8sTapPermissions(ctx, kubernetesProvider)
 		}
-
-		if checkPassed {
-			checkPassed = checkImagePullInCluster(ctx, kubernetesProvider)
-		}
 	} else {
 		if checkPassed {
 			checkPassed = checkK8sResources(ctx, kubernetesProvider)
@@ -52,6 +48,12 @@ func runMizuCheck() {
 
 		if checkPassed {
 			checkPassed = checkServerConnection(kubernetesProvider)
+		}
+	}
+
+	if config.Config.Check.ImagePull {
+		if checkPassed {
+			checkPassed = checkImagePullInCluster(ctx, kubernetesProvider)
 		}
 	}
 
@@ -326,15 +328,21 @@ func checkPermissionExist(group string, resource string, verb string, exist bool
 func checkImagePullInCluster(ctx context.Context, kubernetesProvider *kubernetes.Provider) bool {
 	logger.Log.Infof("\nimage-pull-in-cluster\n--------------------")
 
-	podName := "image-pull-in-cluster"
+	namespace := "default"
+	podName := "mizu-test"
 
-	defer removeImagePullInClusterResources(ctx, kubernetesProvider, podName)
-	if err := createImagePullInClusterResources(ctx, kubernetesProvider, podName); err != nil {
-		logger.Log.Errorf("%v error while creating image pull in cluster resources, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), err)
+	defer func() {
+		if err := kubernetesProvider.RemovePod(ctx, namespace, podName); err != nil {
+			logger.Log.Debugf("error while removing test pod in cluster, err: %v", err)
+		}
+	}()
+
+	if err := createImagePullInClusterPod(ctx, kubernetesProvider, namespace, podName); err != nil {
+		logger.Log.Errorf("%v error while creating test pod in cluster, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), err)
 		return false
 	}
 
-	if err := checkImagePulled(ctx, kubernetesProvider, podName); err != nil {
+	if err := checkImagePulled(ctx, kubernetesProvider, namespace, podName); err != nil {
 		logger.Log.Errorf("%v cluster is not able to pull mizu containers from docker hub, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), err)
 		return false
 	}
@@ -343,10 +351,10 @@ func checkImagePullInCluster(ctx context.Context, kubernetesProvider *kubernetes
 	return true
 }
 
-func checkImagePulled(ctx context.Context, kubernetesProvider *kubernetes.Provider, podName string) error {
+func checkImagePulled(ctx context.Context, kubernetesProvider *kubernetes.Provider, namespace string, podName string) error {
 	podExactRegex := regexp.MustCompile(fmt.Sprintf("^%s$", podName))
 	podWatchHelper := kubernetes.NewPodWatchHelper(kubernetesProvider, podExactRegex)
-	eventChan, errorChan := kubernetes.FilteredWatch(ctx, podWatchHelper, []string{config.Config.MizuResourcesNamespace}, podWatchHelper)
+	eventChan, errorChan := kubernetes.FilteredWatch(ctx, podWatchHelper, []string{namespace}, podWatchHelper)
 
 	timeAfter := time.After(30 * time.Second)
 
@@ -379,25 +387,7 @@ func checkImagePulled(ctx context.Context, kubernetesProvider *kubernetes.Provid
 	}
 }
 
-func removeImagePullInClusterResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, podName string) {
-	if err := kubernetesProvider.RemovePod(ctx, config.Config.MizuResourcesNamespace, podName); err != nil {
-		logger.Log.Debugf("error while removing image pull in cluster resources, err: %v", err)
-	}
-
-	if !config.Config.IsNsRestrictedMode() {
-		if err := kubernetesProvider.RemoveNamespace(ctx, config.Config.MizuResourcesNamespace); err != nil {
-			logger.Log.Debugf("error while removing image pull in cluster resources, err: %v", err)
-		}
-	}
-}
-
-func createImagePullInClusterResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, podName string) error {
-	if !config.Config.IsNsRestrictedMode() {
-		if _, err := kubernetesProvider.CreateNamespace(ctx, config.Config.MizuResourcesNamespace); err != nil {
-			return err
-		}
-	}
-
+func createImagePullInClusterPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, namespace string, podName string) error {
 	var zero int64
 	pod := &core.Pod{
 		ObjectMeta: metav1.ObjectMeta{
@@ -417,7 +407,7 @@ func createImagePullInClusterResources(ctx context.Context, kubernetesProvider *
 		},
 	}
 
-	if _, err := kubernetesProvider.CreatePod(ctx, config.Config.MizuResourcesNamespace, pod); err != nil {
+	if _, err := kubernetesProvider.CreatePod(ctx, namespace, pod); err != nil {
 		return err
 	}
 
