@@ -43,6 +43,9 @@ func PostTappedPods(c *gin.Context) {
 	logger.Log.Infof("[Status] POST request: %d tapped pods", len(requestTappedPods))
 	tappedPods.Set(podInfos)
 	api.BroadcastTappedPodsStatus()
+
+	nodeToTappedPodMap := kubernetes.GetNodeHostToTappedPodsMap(requestTappedPods)
+	api.BroadcastTappedPodsToTappers(nodeToTappedPodMap)
 }
 
 func PostTapperStatus(c *gin.Context) {
