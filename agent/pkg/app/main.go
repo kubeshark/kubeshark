@@ -9,6 +9,7 @@ import (
 	"github.com/op/go-logging"
 	basenine "github.com/up9inc/basenine/client/go"
 	"github.com/up9inc/mizu/agent/pkg/api"
+	"github.com/up9inc/mizu/agent/pkg/utils"
 	"github.com/up9inc/mizu/shared/logger"
 	tapApi "github.com/up9inc/mizu/tap/api"
 	amqpExt "github.com/up9inc/mizu/tap/extensions/amqp"
@@ -20,7 +21,6 @@ import (
 var (
 	Extensions    []*tapApi.Extension          // global
 	ExtensionsMap map[string]*tapApi.Extension // global
-	StartTime     int64                        // global
 )
 
 func LoadExtensions() {
@@ -92,7 +92,7 @@ func ConfigureBasenineServer(host string, port string, dbSize int64, logLevel lo
 		logger.Log.Errorf("Error while setting the insertion filter: %v", err)
 	}
 
-	StartTime = time.Now().UnixNano() / int64(time.Millisecond)
+	utils.StartTime = time.Now().UnixNano() / int64(time.Millisecond)
 }
 
 func GetEntryInputChannel() chan *tapApi.OutputChannelItem {
