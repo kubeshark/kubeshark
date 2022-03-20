@@ -31,7 +31,7 @@ type MizuTapperSyncer struct {
 	TapPodChangesOut       chan TappedPodChangeEvent
 	TapperStatusChangedOut chan shared.TapperStatus
 	ErrorOut               chan K8sTapManagerError
-	nodeToTappedPodMap     map[string][]core.Pod
+	nodeToTappedPodMap     NodeToPodsMap
 	tappedNodes            []string
 }
 
