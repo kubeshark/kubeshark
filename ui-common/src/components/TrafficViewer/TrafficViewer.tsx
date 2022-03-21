@@ -48,10 +48,13 @@ interface TrafficViewerProps {
   trafficViewerApiProp: TrafficViewerApi,
   actionButtons?: JSX.Element,
   isShowStatusBar?: boolean,
-  webSocketUrl : string
+  webSocketUrl : string,
+  isCloseWebSocket : boolean
 }
 
-export const TrafficViewer : React.FC<TrafficViewerProps> = ({setAnalyzeStatus, trafficViewerApiProp, actionButtons,isShowStatusBar,webSocketUrl}) => {
+export const TrafficViewer : React.FC<TrafficViewerProps> = ({setAnalyzeStatus, trafficViewerApiProp,
+                                                               actionButtons,isShowStatusBar,webSocketUrl,
+                                                               isCloseWebSocket}) => {
 
   const classes = useLayoutStyles();
 
@@ -103,6 +106,10 @@ export const TrafficViewer : React.FC<TrafficViewerProps> = ({setAnalyzeStatus, 
     handleQueryChange(query);
   }, [query, handleQueryChange]);
 
+  useEffect(()=>{
+    isCloseWebSocket && closeWebSocket()
+  },[isCloseWebSocket])
+
   const ws = useRef(null);
 
   const listEntry = useRef(null);
@@ -140,6 +147,10 @@ export const TrafficViewer : React.FC<TrafficViewerProps> = ({setAnalyzeStatus, 
         sendQueryWhenWsOpen(query);
       }
     }, 500)
+  }
+
+  const closeWebSocket = () => {
+    ws.current && ws.current.close()
   }
 
   if (ws.current) {
@@ -200,7 +211,7 @@ export const TrafficViewer : React.FC<TrafficViewerProps> = ({setAnalyzeStatus, 
   }
 
   useEffect(() => {
-    setTrafficViewerApiState({...trafficViewerApiProp, webSocket : {close : () => ws.current.close()}});
+    setTrafficViewerApiState({...trafficViewerApiProp, webSocket : {close : closeWebSocket}});
     (async () => {
       openWebSocket("leftOff(-1)", true);
       try{
@@ -330,10 +341,13 @@ export const TrafficViewer : React.FC<TrafficViewerProps> = ({setAnalyzeStatus, 
 };
 
 const MemoiedTrafficViewer = React.memo(TrafficViewer)
-const TrafficViewerContainer: React.FC<TrafficViewerProps> = ({ setAnalyzeStatus, trafficViewerApiProp, actionButtons, isShowStatusBar = true ,webSocketUrl}) => {
+const TrafficViewerContainer: React.FC<TrafficViewerProps> = ({ setAnalyzeStatus, trafficViewerApiProp,
+                                                                actionButtons, isShowStatusBar = true ,
+                                                                webSocketUrl, isCloseWebSocket}) => {
   return <RecoilRoot>
     <MemoiedTrafficViewer actionButtons={actionButtons} isShowStatusBar={isShowStatusBar} webSocketUrl={webSocketUrl}
-      trafficViewerApiProp={trafficViewerApiProp} setAnalyzeStatus={setAnalyzeStatus} />
+                          isCloseWebSocket={isCloseWebSocket} trafficViewerApiProp={trafficViewerApiProp}
+                          setAnalyzeStatus={setAnalyzeStatus} />
   </RecoilRoot>
 }
 

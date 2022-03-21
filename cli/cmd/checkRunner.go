@@ -31,6 +31,10 @@ func runMizuCheck() {
 		if checkPassed {
 			checkPassed = check.TapKubernetesPermissions(ctx, embedFS, kubernetesProvider)
 		}
+	} else if config.Config.Check.PreInstall {
+		if checkPassed {
+			checkPassed = check.InstallKubernetesPermissions(ctx, kubernetesProvider)
+		}
 	} else {
 		if checkPassed {
 			checkPassed = check.KubernetesResources(ctx, kubernetesProvider)
