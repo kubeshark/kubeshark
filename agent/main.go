@@ -47,7 +47,6 @@ var apiServerAddress = flag.String("api-server-address", "", "Address of mizu AP
 var namespace = flag.String("namespace", "", "Resolve IPs if they belong to resources in this namespace (default is all)")
 var harsReaderMode = flag.Bool("hars-read", false, "Run in hars-read mode")
 var harsDir = flag.String("hars-dir", "", "Directory to read hars from")
-var startTime int64
 
 const (
 	socketConnectionRetries    = 30
@@ -110,7 +109,7 @@ func hostApi(socketHarOutputChannel chan<- *tapApi.OutputChannelItem) *gin.Engin
 
 	app.Use(middlewares.CORSMiddleware()) // This has to be called after the static middleware, does not work if its called before
 
-	api.WebSocketRoutes(app, &eventHandlers, startTime)
+	api.WebSocketRoutes(app, &eventHandlers)
 
 	if config.Config.OAS {
 		routes.OASRoutes(app)
@@ -124,6 +123,7 @@ func hostApi(socketHarOutputChannel chan<- *tapApi.OutputChannelItem) *gin.Engin
 	routes.EntriesRoutes(app)
 	routes.MetadataRoutes(app)
 	routes.StatusRoutes(app)
+	routes.DbRoutes(app)
 
 	return app
 }
@@ -133,7 +133,6 @@ func runInApiServerMode(namespace string) *gin.Engine {
 		logger.Log.Fatalf("Error loading config file %v", err)
 	}
 	app.ConfigureBasenineServer(shared.BasenineHost, shared.BaseninePort, config.Config.MaxDBSizeBytes, config.Config.LogLevel, config.Config.InsertionFilter)
-	startTime = time.Now().UnixNano() / int64(time.Millisecond)
 	api.StartResolving(namespace)
 
 	enableExpFeatureIfNeeded()
