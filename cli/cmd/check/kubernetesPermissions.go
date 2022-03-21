@@ -4,13 +4,15 @@ import (
 	"context"
 	"embed"
 	"fmt"
+	"github.com/up9inc/mizu/cli/bucket"
 	"github.com/up9inc/mizu/cli/config"
 	"github.com/up9inc/mizu/cli/uiUtils"
 	"github.com/up9inc/mizu/shared/kubernetes"
 	"github.com/up9inc/mizu/shared/logger"
 	rbac "k8s.io/api/rbac/v1"
-	"k8s.io/apimachinery/pkg/runtime"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/scheme"
+	"strings"
 )
 
 func TapKubernetesPermissions(ctx context.Context, embedFS embed.FS, kubernetesProvider *kubernetes.Provider) bool {
@@ -29,42 +31,75 @@ func TapKubernetesPermissions(ctx context.Context, embedFS embed.FS, kubernetesP
 		return false
 	}
 
-	obj, err := getDecodedObject(data)
+	decode := scheme.Codecs.UniversalDeserializer().Decode
+	obj, _, err := decode(data, nil, nil)
 	if err != nil {
 		logger.Log.Errorf("%v error while checking kubernetes permissions, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), err)
 		return false
 	}
 
-	var rules []rbac.PolicyRule
-	if config.Config.IsNsRestrictedMode() {
-		rules = obj.(*rbac.Role).Rules
-	} else {
-		rules = obj.(*rbac.ClusterRole).Rules
+	switch resource := obj.(type) {
+	case *rbac.Role:
+		return checkRulesPermissions(ctx, kubernetesProvider, resource.Rules, config.Config.MizuResourcesNamespace)
+	case *rbac.ClusterRole:
+		return checkRulesPermissions(ctx, kubernetesProvider, resource.Rules, "")
 	}
 
-	return checkPermissions(ctx, kubernetesProvider, rules)
+	logger.Log.Errorf("%v error while checking kubernetes permissions, err: resource of type 'Role' or 'ClusterRole' not found in permission files", fmt.Sprintf(uiUtils.Red, "✗"))
+	return false
 }
 
-func getDecodedObject(data []byte) (runtime.Object, error) {
-	decode := scheme.Codecs.UniversalDeserializer().Decode
+func InstallKubernetesPermissions(ctx context.Context, kubernetesProvider *kubernetes.Provider) bool {
+	logger.Log.Infof("\nkubernetes-permissions\n--------------------")
 
-	obj, _, err := decode(data, nil, nil)
+	bucketProvider := bucket.NewProvider(config.Config.Install.TemplateUrl, bucket.DefaultTimeout)
+	installTemplate, err := bucketProvider.GetInstallTemplate(config.Config.Install.TemplateName)
 	if err != nil {
-		return nil, err
+		logger.Log.Errorf("%v error while checking kubernetes permissions, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), err)
+		return false
 	}
 
-	return obj, nil
+	resourcesTemplate := strings.Split(installTemplate, "---")[1:]
+
+	permissionsExist := true
+
+	decode := scheme.Codecs.UniversalDeserializer().Decode
+	for _, resourceTemplate := range resourcesTemplate {
+		obj, _, err := decode([]byte(resourceTemplate), nil, nil)
+		if err != nil {
+			logger.Log.Errorf("%v error while checking kubernetes permissions, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), err)
+			return false
+		}
+
+		groupVersionKind := obj.GetObjectKind().GroupVersionKind()
+		resource := fmt.Sprintf("%vs", strings.ToLower(groupVersionKind.Kind))
+		permissionsExist = checkCreatePermission(ctx, kubernetesProvider, resource, groupVersionKind.Group, obj.(metav1.Object).GetNamespace()) && permissionsExist
+
+		switch resourceObj := obj.(type) {
+		case *rbac.Role:
+			permissionsExist = checkRulesPermissions(ctx, kubernetesProvider, resourceObj.Rules, resourceObj.Namespace) && permissionsExist
+		case *rbac.ClusterRole:
+			permissionsExist = checkRulesPermissions(ctx, kubernetesProvider, resourceObj.Rules, "") && permissionsExist
+		}
+	}
+
+	return permissionsExist
 }
 
-func checkPermissions(ctx context.Context, kubernetesProvider *kubernetes.Provider, rules []rbac.PolicyRule) bool {
+func checkCreatePermission(ctx context.Context, kubernetesProvider *kubernetes.Provider, resource string, group string, namespace string) bool {
+	exist, err := kubernetesProvider.CanI(ctx, namespace, resource, "create", group)
+	return checkPermissionExist(group, resource, "create", namespace, exist, err)
+}
+
+func checkRulesPermissions(ctx context.Context, kubernetesProvider *kubernetes.Provider, rules []rbac.PolicyRule, namespace string) bool {
 	permissionsExist := true
 
 	for _, rule := range rules {
 		for _, group := range rule.APIGroups {
 			for _, resource := range rule.Resources {
 				for _, verb := range rule.Verbs {
-					exist, err := kubernetesProvider.CanI(ctx, config.Config.MizuResourcesNamespace, resource, verb, group)
-					permissionsExist = checkPermissionExist(group, resource, verb, exist, err) && permissionsExist
+					exist, err := kubernetesProvider.CanI(ctx, namespace, resource, verb, group)
+					permissionsExist = checkPermissionExist(group, resource, verb, namespace, exist, err) && permissionsExist
 				}
 			}
 		}
@@ -73,15 +108,24 @@ func checkPermissions(ctx context.Context, kubernetesProvider *kubernetes.Provid
 	return permissionsExist
 }
 
-func checkPermissionExist(group string, resource string, verb string, exist bool, err error) bool {
+func checkPermissionExist(group string, resource string, verb string, namespace string, exist bool, err error) bool {
+	var groupAndNamespace string
+	if group != "" && namespace != "" {
+		groupAndNamespace = fmt.Sprintf("in group '%v' and namespace '%v'", group, namespace)
+	} else if group != "" {
+		groupAndNamespace = fmt.Sprintf("in group '%v'", group)
+	} else if namespace != "" {
+		groupAndNamespace = fmt.Sprintf("in namespace '%v'", namespace)
+	}
+
 	if err != nil {
-		logger.Log.Errorf("%v error checking permission for %v %v in group '%v', err: %v", fmt.Sprintf(uiUtils.Red, "✗"), verb, resource, group, err)
+		logger.Log.Errorf("%v error checking permission for %v %v %v, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), verb, resource, groupAndNamespace, err)
 		return false
 	} else if !exist {
-		logger.Log.Errorf("%v can't %v %v in group '%v'", fmt.Sprintf(uiUtils.Red, "✗"), verb, resource, group)
+		logger.Log.Errorf("%v can't %v %v %v", fmt.Sprintf(uiUtils.Red, "✗"), verb, resource, groupAndNamespace)
 		return false
 	}
 
-	logger.Log.Infof("%v can %v %v in group '%v'", fmt.Sprintf(uiUtils.Green, "√"), verb, resource, group)
+	logger.Log.Infof("%v can %v %v %v", fmt.Sprintf(uiUtils.Green, "√"), verb, resource, groupAndNamespace)
 	return true
 }
