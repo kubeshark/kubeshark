@@ -88,6 +88,17 @@ type WebSocketTapConfigMessage struct {
 
 type NodeToPodsMap map[string][]v1.Pod
 
+func (np NodeToPodsMap) Summary() map[string][]string {
+	summary := make(map[string][]string)
+	for node, pods := range np {
+		for _, pod := range pods {
+			summary[node] = append(summary[node], pod.Name + "." + pod.Namespace)
+		}
+	}
+
+	return summary
+}
+
 type TapperStatus struct {
 	TapperName string `json:"tapperName"`
 	NodeName   string `json:"nodeName"`

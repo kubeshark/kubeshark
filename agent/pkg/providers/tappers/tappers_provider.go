@@ -85,7 +85,9 @@ func saveStatus() {
 }
 
 func SetNodeToTappedPodMap(nodeToTappedPodsMap shared.NodeToPodsMap) {
-	logger.Log.Infof("Setting node to tapped pods map to %v", nodeToTappedPodsMap)
+	summary := nodeToTappedPodsMap.Summary()
+	logger.Log.Infof("Setting node to tapped pods map to %v", summary)
+
 	nodeHostToTappedPodsMap = nodeToTappedPodsMap
 }
 
