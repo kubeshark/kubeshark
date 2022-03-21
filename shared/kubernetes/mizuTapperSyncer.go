@@ -312,11 +312,11 @@ func (tapperSyncer *MizuTapperSyncer) updateMizuTappers() error {
 	}
 
 	if shared.EqualStringSlices(nodesToTap, tapperSyncer.tappedNodes) {
-		logger.Log.Info("Skipping apply, DaemonSet is up to date")
+		logger.Log.Debug("Skipping apply, DaemonSet is up to date")
 		return nil
 	}
 
-	logger.Log.Infof("Updating DaemonSet to run on nodes: %v", nodesToTap)
+	logger.Log.Debugf("Updating DaemonSet to run on nodes: %v", nodesToTap)
 
 	if len(tapperSyncer.nodeToTappedPodMap) > 0 {
 		var serviceAccountName string
