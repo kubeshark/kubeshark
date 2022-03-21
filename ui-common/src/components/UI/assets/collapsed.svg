@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 22 22">
+    <defs>
+        <style>
+            .cls-1{fill:#fff;stroke:#707070;opacity:0}.cls-2{fill:#627ef7}.cls-3{stroke:none}.cls-4{fill:none}
+        </style>
+    </defs>
+    <g id="icon_down_diagonal" transform="translate(-1304 -166)">
+        <g id="Rectangle_924" class="cls-1" data-name="Rectangle 924">
+            <path d="M0 0h22v22H0z" class="cls-3" transform="translate(1304 166)"/>
+            <path d="M.5.5h21v21H.5z" class="cls-4" transform="translate(1304 166)"/>
+        </g>
+        <path id="icon_down" d="M5.117 0H3.07v3.07H0v2.047h5.117V0z" class="cls-2" transform="translate(1312.46 174.491)"/>
+    </g>
+</svg>

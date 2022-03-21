@@ -1,6 +1,6 @@
 import React from "react";
 import {AuthPresentation} from "../AuthPresentation/AuthPresentation";
-import {AnalyzeButton} from "../AnalyzeButton/AnalyzeButton";
+import {AnalyzeButton} from "@up9/mizu-common"
 import logo from '../assets/Mizu-logo.svg';
 import './Header.sass';
 
