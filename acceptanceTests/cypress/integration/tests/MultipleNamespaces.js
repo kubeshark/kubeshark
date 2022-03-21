@@ -2,7 +2,7 @@ import {findLineAndCheck, getExpectedDetailsDict} from '../testHelpers/StatusBar
 
 it('opening', function () {
     cy.visit(Cypress.env('testUrl'));
-    cy.get('.podsCount').trigger('mouseover');
+    cy.get(`[data-cy="podsCountText"]`).trigger('mouseover');
 });
 
 [1, 2, 3].map(doItFunc);
