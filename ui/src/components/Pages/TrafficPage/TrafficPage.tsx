@@ -1,11 +1,11 @@
-import React, { useEffect } from "react";
+import React, {useEffect} from "react";
 import { Button } from "@material-ui/core";
-import Api, {getWebsocketUrl} from "../../../helpers/api";
+import Api,{getWebsocketUrl} from "../../../helpers/api";
 import debounce from 'lodash/debounce';
 import {useSetRecoilState, useRecoilState} from "recoil";
 import {useCommonStyles} from "../../../helpers/commonStyle"
 import serviceMapModalOpenAtom from "../../../recoil/serviceMapModalOpen";
-import TrafficViewer ,{useWS,DEFAULT_QUERY} from "@up9/mizu-common"
+import TrafficViewer from "@up9/mizu-common"
 import "@up9/mizu-common/dist/index.css"
 import oasModalOpenAtom from "../../../recoil/oasModalOpen/atom";
 import serviceMap from "../../assets/serviceMap.svg";	
@@ -22,11 +22,10 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus}) => {
   const setServiceMapModalOpen = useSetRecoilState(serviceMapModalOpenAtom);
   const [openOasModal, setOpenOasModal] = useRecoilState(oasModalOpenAtom);
 
-  const {message,error,isOpen, openSocket, closeSocket, sendQuery} = useWS(getWebsocketUrl())
-  const trafficViewerApi = {...api, webSocket:{open : openSocket, close: closeSocket, sendQuery: sendQuery}}
+const trafficViewerApi = {...api}
 
   const handleOpenOasModal = () => {	
-    closeSocket()
+    //closeSocket() -- Todo: Add Close webSocket
     setOpenOasModal(true);	
   }
 
@@ -56,17 +55,15 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus}) => {
                               </Button>}	
                         </div>
 
-  sendQuery(DEFAULT_QUERY);
-
   useEffect(() => {
     return () => {
-      closeSocket()
+      //closeSocket()
     }
   },[])
 
   return ( 
   <>
-      <TrafficViewer setAnalyzeStatus={setAnalyzeStatus}  message={message} error={error} isWebSocketOpen={isOpen}
+      <TrafficViewer setAnalyzeStatus={setAnalyzeStatus} webSocketUrl={getWebsocketUrl()}
                      trafficViewerApiProp={trafficViewerApi} actionButtons={actionButtons} isShowStatusBar={!openOasModal}/>
   </>
   );

@@ -26,7 +26,7 @@ it('opening mizu', function () {
 verifyMinimumEntries();
 
 it('top bar check', function () {
-    cy.get('.podsCount').trigger('mouseover');
+    cy.get(`[data-cy="podsCountText"]`).trigger('mouseover');
     podsArray.map(findLineAndCheck);
     cy.reload();
 });
@@ -205,6 +205,7 @@ function checkFilter(filterDetails){
             // checks the hover on the last entry (the only one in DOM at the beginning)
             leftOnHoverCheck(totalEntries - 1, leftSidePath, name);
 
+            cy.get('.w-tc-editor-text').clear();
             // applying the filter with alt+enter or with the button
             cy.get('.w-tc-editor-text').type(`${name}${applyByEnter ? '{alt+enter}' : ''}`);
             cy.get('.w-tc-editor').should('have.attr', 'style').and('include', Cypress.env('greenFilterColor'));
