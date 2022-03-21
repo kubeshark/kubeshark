@@ -16,6 +16,7 @@ import (
 
 	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
+	"github.com/up9inc/mizu/agent/pkg/dependency"
 	"github.com/up9inc/mizu/agent/pkg/elastic"
 	"github.com/up9inc/mizu/agent/pkg/middlewares"
 	"github.com/up9inc/mizu/agent/pkg/models"
@@ -46,7 +47,6 @@ var apiServerAddress = flag.String("api-server-address", "", "Address of mizu AP
 var namespace = flag.String("namespace", "", "Resolve IPs if they belong to resources in this namespace (default is all)")
 var harsReaderMode = flag.Bool("hars-read", false, "Run in hars-read mode")
 var harsDir = flag.String("hars-dir", "", "Directory to read hars from")
-var startTime int64
 
 const (
 	socketConnectionRetries    = 30
@@ -55,6 +55,7 @@ const (
 )
 
 func main() {
+	initializeDependencies()
 	logLevel := determineLogLevel()
 	logger.InitLoggerStd(logLevel)
 	flag.Parse()
@@ -95,13 +96,7 @@ func hostApi(socketHarOutputChannel chan<- *tapApi.OutputChannelItem) *gin.Engin
 
 	app.Use(disableRootStaticCache())
 
-	var staticFolder string
-	if config.Config.StandaloneMode {
-		staticFolder = "./site-standalone"
-	} else {
-		staticFolder = "./site"
-	}
-
+	staticFolder := "./site"
 	indexStaticFile := staticFolder + "/index.html"
 	if err := setUIFlags(indexStaticFile); err != nil {
 		logger.Log.Errorf("Error setting ui flags, err: %v", err)
@@ -114,16 +109,12 @@ func hostApi(socketHarOutputChannel chan<- *tapApi.OutputChannelItem) *gin.Engin
 
 	app.Use(middlewares.CORSMiddleware()) // This has to be called after the static middleware, does not work if its called before
 
-	api.WebSocketRoutes(app, &eventHandlers, startTime)
+	api.WebSocketRoutes(app, &eventHandlers)
 
-	if config.Config.StandaloneMode {
-		routes.ConfigRoutes(app)
-		routes.UserRoutes(app)
-		routes.InstallRoutes(app)
-	}
 	if config.Config.OAS {
 		routes.OASRoutes(app)
 	}
+
 	if config.Config.ServiceMap {
 		routes.ServiceMapRoutes(app)
 	}
@@ -132,6 +123,7 @@ func hostApi(socketHarOutputChannel chan<- *tapApi.OutputChannelItem) *gin.Engin
 	routes.EntriesRoutes(app)
 	routes.MetadataRoutes(app)
 	routes.StatusRoutes(app)
+	routes.DbRoutes(app)
 
 	return app
 }
@@ -141,7 +133,6 @@ func runInApiServerMode(namespace string) *gin.Engine {
 		logger.Log.Fatalf("Error loading config file %v", err)
 	}
 	app.ConfigureBasenineServer(shared.BasenineHost, shared.BaseninePort, config.Config.MaxDBSizeBytes, config.Config.LogLevel, config.Config.InsertionFilter)
-	startTime = time.Now().UnixNano() / int64(time.Millisecond)
 	api.StartResolving(namespace)
 
 	enableExpFeatureIfNeeded()
@@ -213,10 +204,12 @@ func runInHarReaderMode() {
 
 func enableExpFeatureIfNeeded() {
 	if config.Config.OAS {
-		oas.GetOasGeneratorInstance().Start()
+		oasGenerator := dependency.GetInstance(dependency.OasGeneratorDependency).(oas.OasGenerator)
+		oasGenerator.Start()
 	}
 	if config.Config.ServiceMap {
-		servicemap.GetInstance().Enable()
+		serviceMapGenerator := dependency.GetInstance(dependency.ServiceMapGeneratorDependency).(servicemap.ServiceMap)
+		serviceMapGenerator.Enable()
 	}
 	elastic.GetInstance().Configure(config.Config.Elastic)
 }
@@ -394,4 +387,9 @@ func handleIncomingMessageAsTapper(socketConnection *websocket.Conn) {
 			}
 		}
 	}
+}
+
+func initializeDependencies() {
+	dependency.RegisterGenerator(dependency.ServiceMapGeneratorDependency, func() interface{} { return servicemap.GetDefaultServiceMapInstance() })
+	dependency.RegisterGenerator(dependency.OasGeneratorDependency, func() interface{} { return oas.GetDefaultOasGeneratorInstance() })
 }
