@@ -107,10 +107,10 @@ func (p *bpfLogger) log(log *logMessage) {
 
 func (p *bpfLogger) logLevel(level uint32, format string, args ...interface{}) {
 	if level == logLevelError {
-		logger.Log.Errorf(logPrefix+format, args)
+		logger.Log.Errorf(logPrefix+format, args...)
 	} else if level == logLevelInfo {
-		logger.Log.Infof(logPrefix+format, args)
+		logger.Log.Infof(logPrefix+format, args...)
 	} else if level == logLevelDebug {
-		logger.Log.Debugf(logPrefix+format, args)
+		logger.Log.Debugf(logPrefix+format, args...)
 	}
 }
