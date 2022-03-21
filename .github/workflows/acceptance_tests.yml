@@ -7,7 +7,6 @@ on:
   push:
     branches:
       - 'develop'
-      - 'test-leon'
 
 jobs:
   run-acceptance-tests:
