@@ -6,9 +6,7 @@ type TrafficViewerApi = {
     getEntry : (entryId : any, query:string) => any
     getRecentTLSLinks : () => any,
     webSocket : {
-      open : () => {},
-      close : () => {},
-      sendQuery : (query:string) => {}
+      close : () => {}
     }
   }
 
