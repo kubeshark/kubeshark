@@ -333,7 +333,7 @@ func checkImagePullInCluster(ctx context.Context, kubernetesProvider *kubernetes
 
 	defer func() {
 		if err := kubernetesProvider.RemovePod(ctx, namespace, podName); err != nil {
-			logger.Log.Debugf("error while removing test pod in cluster, err: %v", err)
+			logger.Log.Errorf("%v error while removing test pod in cluster, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), err)
 		}
 	}()
 
