@@ -1,6 +1,6 @@
 import React, {useEffect} from "react";
 import { Button } from "@material-ui/core";
-import Api from "../../../helpers/api";
+import Api,{getWebsocketUrl} from "../../../helpers/api";
 import debounce from 'lodash/debounce';
 import {useSetRecoilState, useRecoilState} from "recoil";
 import {useCommonStyles} from "../../../helpers/commonStyle"
@@ -63,7 +63,7 @@ const trafficViewerApi = {...api}
 
   return ( 
   <>
-      <TrafficViewer setAnalyzeStatus={setAnalyzeStatus}
+      <TrafficViewer setAnalyzeStatus={setAnalyzeStatus} webSocketUrl={getWebsocketUrl()}
                      trafficViewerApiProp={trafficViewerApi} actionButtons={actionButtons} isShowStatusBar={!openOasModal}/>
   </>
   );
