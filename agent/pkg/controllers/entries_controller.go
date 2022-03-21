@@ -120,7 +120,17 @@ func GetEntry(c *gin.Context) {
 
 	extension := app.ExtensionsMap[entry.Protocol.Name]
 	base := extension.Dissector.Summarize(entry)
-	representation, bodySize, _ := extension.Dissector.Represent(entry.Request, entry.Response)
+	var representation []byte
+	representation, err = extension.Dissector.Represent(entry.Request, entry.Response)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"error":     true,
+			"type":      "error",
+			"autoClose": "5000",
+			"msg":       err.Error(),
+		})
+		return // exit
+	}
 
 	var rules []map[string]interface{}
 	var isRulesEnabled bool
@@ -137,7 +147,6 @@ func GetEntry(c *gin.Context) {
 	c.JSON(http.StatusOK, tapApi.EntryWrapper{
 		Protocol:       entry.Protocol,
 		Representation: string(representation),
-		BodySize:       bodySize,
 		Data:           entry,
 		Base:           base,
 		Rules:          rules,

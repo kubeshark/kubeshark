@@ -86,7 +86,7 @@ func (d dissecting) Ping() {
 	log.Printf("pong %s", http11protocol.Name)
 }
 
-func (d dissecting) Dissect(b *bufio.Reader, capture api.Capture, isClient bool, tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, superIdentifier *api.SuperIdentifier, emitter api.Emitter, options *api.TrafficFilteringOptions, _reqResMatcher api.RequestResponseMatcher) error {
+func (d dissecting) Dissect(b *bufio.Reader, progress *api.ReadProgress, capture api.Capture, isClient bool, tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, superIdentifier *api.SuperIdentifier, emitter api.Emitter, options *api.TrafficFilteringOptions, _reqResMatcher api.RequestResponseMatcher) error {
 	reqResMatcher := _reqResMatcher.(*requestResponseMatcher)
 
 	var err error
@@ -121,7 +121,7 @@ func (d dissecting) Dissect(b *bufio.Reader, capture api.Capture, isClient bool,
 		}
 
 		if isHTTP2 {
-			err = handleHTTP2Stream(http2Assembler, capture, tcpID, superTimer, emitter, options, reqResMatcher)
+			err = handleHTTP2Stream(http2Assembler, progress, capture, tcpID, superTimer, emitter, options, reqResMatcher)
 			if err == io.EOF || err == io.ErrUnexpectedEOF {
 				break
 			} else if err != nil {
@@ -130,7 +130,7 @@ func (d dissecting) Dissect(b *bufio.Reader, capture api.Capture, isClient bool,
 			superIdentifier.Protocol = &http11protocol
 		} else if isClient {
 			var req *http.Request
-			switchingProtocolsHTTP2, req, err = handleHTTP1ClientStream(b, capture, tcpID, counterPair, superTimer, emitter, options, reqResMatcher)
+			switchingProtocolsHTTP2, req, err = handleHTTP1ClientStream(b, progress, capture, tcpID, counterPair, superTimer, emitter, options, reqResMatcher)
 			if err == io.EOF || err == io.ErrUnexpectedEOF {
 				break
 			} else if err != nil {
@@ -148,7 +148,7 @@ func (d dissecting) Dissect(b *bufio.Reader, capture api.Capture, isClient bool,
 					tcpID.DstPort,
 					"HTTP2",
 				)
-				item := reqResMatcher.registerRequest(ident, req, superTimer.CaptureTime, req.ProtoMinor)
+				item := reqResMatcher.registerRequest(ident, req, superTimer.CaptureTime, progress.Current(), req.ProtoMinor)
 				if item != nil {
 					item.ConnectionInfo = &api.ConnectionInfo{
 						ClientIP:   tcpID.SrcIP,
@@ -162,7 +162,7 @@ func (d dissecting) Dissect(b *bufio.Reader, capture api.Capture, isClient bool,
 				}
 			}
 		} else {
-			switchingProtocolsHTTP2, err = handleHTTP1ServerStream(b, capture, tcpID, counterPair, superTimer, emitter, options, reqResMatcher)
+			switchingProtocolsHTTP2, err = handleHTTP1ServerStream(b, progress, capture, tcpID, counterPair, superTimer, emitter, options, reqResMatcher)
 			if err == io.EOF || err == io.ErrUnexpectedEOF {
 				break
 			} else if err != nil {
@@ -271,14 +271,16 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 			IP:   item.ConnectionInfo.ServerIP,
 			Port: item.ConnectionInfo.ServerPort,
 		},
-		Namespace:   namespace,
-		Outgoing:    item.ConnectionInfo.IsOutgoing,
-		Request:     reqDetails,
-		Response:    resDetails,
-		Timestamp:   item.Timestamp,
-		StartTime:   item.Pair.Request.CaptureTime,
-		ElapsedTime: elapsedTime,
-		HTTPPair:    string(httpPair),
+		Namespace:    namespace,
+		Outgoing:     item.ConnectionInfo.IsOutgoing,
+		Request:      reqDetails,
+		Response:     resDetails,
+		RequestSize:  item.Pair.Request.CaptureSize,
+		ResponseSize: item.Pair.Response.CaptureSize,
+		Timestamp:    item.Timestamp,
+		StartTime:    item.Pair.Request.CaptureTime,
+		ElapsedTime:  elapsedTime,
+		HTTPPair:     string(httpPair),
 	}
 }
 
@@ -410,10 +412,8 @@ func representRequest(request map[string]interface{}) (repRequest []interface{})
 	return
 }
 
-func representResponse(response map[string]interface{}) (repResponse []interface{}, bodySize int64) {
+func representResponse(response map[string]interface{}) (repResponse []interface{}) {
 	repResponse = make([]interface{}, 0)
-
-	bodySize = int64(response["bodySize"].(float64))
 
 	details, _ := json.Marshal([]api.TableData{
 		{
@@ -428,7 +428,7 @@ func representResponse(response map[string]interface{}) (repResponse []interface
 		},
 		{
 			Name:     "Body Size (bytes)",
-			Value:    bodySize,
+			Value:    int64(response["bodySize"].(float64)),
 			Selector: `response.bodySize`,
 		},
 	})
@@ -471,10 +471,10 @@ func representResponse(response map[string]interface{}) (repResponse []interface
 	return
 }
 
-func (d dissecting) Represent(request map[string]interface{}, response map[string]interface{}) (object []byte, bodySize int64, err error) {
+func (d dissecting) Represent(request map[string]interface{}, response map[string]interface{}) (object []byte, err error) {
 	representation := make(map[string]interface{})
 	repRequest := representRequest(request)
-	repResponse, bodySize := representResponse(response)
+	repResponse := representResponse(response)
 	representation["request"] = repRequest
 	representation["response"] = repResponse
 	object, err = json.Marshal(representation)

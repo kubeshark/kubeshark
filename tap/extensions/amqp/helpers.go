@@ -94,7 +94,7 @@ type AMQPWrapper struct {
 	Details interface{} `json:"details"`
 }
 
-func emitAMQP(event interface{}, _type string, method string, connectionInfo *api.ConnectionInfo, captureTime time.Time, emitter api.Emitter, capture api.Capture) {
+func emitAMQP(event interface{}, _type string, method string, connectionInfo *api.ConnectionInfo, captureTime time.Time, captureSize int, emitter api.Emitter, capture api.Capture) {
 	request := &api.GenericMessage{
 		IsRequest:   true,
 		CaptureTime: captureTime,

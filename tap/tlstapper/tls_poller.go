@@ -146,6 +146,7 @@ func (p *tlsPoller) startNewTlsReader(chunk *tlsChunk, ip net.IP, port uint16, k
 		doneHandler: func(r *tlsReader) {
 			p.closeReader(key, r)
 		},
+		progress: &api.ReadProgress{},
 	}
 
 	tcpid := p.buildTcpId(chunk, ip, port)
@@ -158,7 +159,7 @@ func dissect(extension *api.Extension, reader *tlsReader, isRequest bool, tcpid 
 	emitter api.Emitter, options *api.TrafficFilteringOptions, reqResMatcher api.RequestResponseMatcher) {
 	b := bufio.NewReader(reader)
 
-	err := extension.Dissector.Dissect(b, api.Ebpf, isRequest, tcpid, &api.CounterPair{},
+	err := extension.Dissector.Dissect(b, reader.progress, api.Ebpf, isRequest, tcpid, &api.CounterPair{},
 		&api.SuperTimer{}, &api.SuperIdentifier{}, emitter, options, reqResMatcher)
 
 	if err != nil {
