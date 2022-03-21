@@ -9,7 +9,7 @@ docker build -t mizu-ebpf-builder . || exit 1
 docker run --rm \
 	--name mizu-ebpf-builder \
 	-v $MIZU_HOME:/mizu \
-	-v $HOME/go:/root/go \
+	-v $(go env GOPATH):/root/go \
 	-it mizu-ebpf-builder \
 	sh -c "
 		go generate tap/tlstapper/tls_tapper.go

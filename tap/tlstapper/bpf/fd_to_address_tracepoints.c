@@ -69,7 +69,7 @@ void sys_exit_accept4(struct sys_exit_accept4_ctx *ctx) {
 	
 	struct accept_info *infoPtr = bpf_map_lookup_elem(&accept_syscall_context, &id);
 	
-	if (infoPtr == 0) {
+	if (infoPtr == NULL) {
 		return;
 	}
 	
@@ -175,7 +175,7 @@ void sys_exit_connect(struct sys_exit_connect_ctx *ctx) {
 	
 	struct connect_info *infoPtr = bpf_map_lookup_elem(&connect_syscall_info, &id);
 	
-	if (infoPtr == 0) {
+	if (infoPtr == NULL) {
 		return;
 	}
 	

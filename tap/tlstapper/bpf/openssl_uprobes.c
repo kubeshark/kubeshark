@@ -21,7 +21,7 @@ struct {
 static __always_inline int get_count_bytes(struct pt_regs *ctx, struct ssl_info* info, __u64 id) {
 	int returnValue = PT_REGS_RC(ctx);
 	
-	if (info->count_ptr == 0) {
+	if (info->count_ptr == NULL) {
 		// ssl_read and ssl_write return the number of bytes written/read
 		//
 		return returnValue;
@@ -53,7 +53,7 @@ static __always_inline void add_address_to_chunk(struct tlsChunk* chunk, __u64 i
 	
 	struct fd_info *fdinfo = bpf_map_lookup_elem(&file_descriptor_to_ipv4, &key);
 	
-	if (fdinfo == 0) {
+	if (fdinfo == NULL) {
 		return;
 	}
 	
@@ -159,7 +159,7 @@ static __always_inline void ssl_uprobe(void* ssl, void* buffer, int num, struct 
 	struct ssl_info *infoPtr = bpf_map_lookup_elem(map_fd, &id);
 	struct ssl_info info = {};
 	
-	if (infoPtr == 0) {
+	if (infoPtr == NULL) {
 		info.fd = -1;
 		info.created_at_nano = bpf_ktime_get_ns();
 	} else {
@@ -198,7 +198,7 @@ static __always_inline void ssl_uretprobe(struct pt_regs *ctx, struct bpf_map_de
 	
 	struct ssl_info *infoPtr = bpf_map_lookup_elem(map_fd, &id);
 	
-	if (infoPtr == 0) {
+	if (infoPtr == NULL) {
 		char msg[] = "Error getting ssl context info (id: %ld)";
 		bpf_trace_printk(msg, sizeof(msg), id);
 		return;
