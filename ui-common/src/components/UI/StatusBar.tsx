@@ -11,15 +11,14 @@ const pluralize = (noun: string, amount: number) => {
 }
 
 export const StatusBar = () => {
-
     const tappingStatus = useRecoilValue(tappingStatusAtom);
     const [expandedBar, setExpandedBar] = useState(false);
     const {uniqueNamespaces, amountOfPods, amountOfTappedPods, amountOfUntappedPods} = useRecoilValue(tappingStatusDetails);
 
-    return <div className={`${style.statusBar} ${(expandedBar ? `${style.expandedStatusBar}` : "")}`} onMouseOver={() => setExpandedBar(true)} onMouseLeave={() => setExpandedBar(false)}>
+    return <div className={`${style.statusBar} ${(expandedBar ? `${style.expandedStatusBar}` : "")}`} onMouseOver={() => setExpandedBar(true)} onMouseLeave={() => setExpandedBar(false)} data-cy="expandedStatusBar">
         <div className={style.podsCount}>
         {tappingStatus.some(pod => !pod.isTapped) && <img src={warningIcon} alt="warning"/>}
-            <span className={style.podsCountText}>
+            <span className={style.podsCountText} data-cy="podsCountText">
                 {`Tapping ${amountOfUntappedPods > 0 ? amountOfTappedPods + " / " + amountOfPods : amountOfPods} ${pluralize('pod', amountOfPods)} in ${pluralize('namespace', uniqueNamespaces.length)} ${uniqueNamespaces.join(", ")}`}
             </span>
         </div>

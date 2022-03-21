@@ -5,10 +5,10 @@ import Api, {getWebsocketUrl} from "./api";
 
 const api = Api.getInstance()
 
-const App = () => { 
-  const {message,error,isOpen, openSocket, closeSocket, sendQuery} = useWS(getWebsocketUrl())
-  const trafficViewerApi = {...api, webSocket:{open : openSocket, close: closeSocket, sendQuery: sendQuery}}
-  sendQuery(DEFAULT_QUERY);
+const App = () => {
+  const {message,error,isOpen, openSocket, closeSocket, sendQueryWhenWsOpen} = useWS(getWebsocketUrl())
+  const trafficViewerApi = {...api, webSocket:{open : openSocket, close: closeSocket, sendQueryWhenWsOpen: sendQueryWhenWsOpen}}
+  sendQueryWhenWsOpen(DEFAULT_QUERY);
 
   useEffect(() => {
     return () =>{
