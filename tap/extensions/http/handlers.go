@@ -47,7 +47,7 @@ func replaceForwardedFor(item *api.OutputChannelItem) {
 	item.ConnectionInfo.ClientPort = ""
 }
 
-func handleHTTP2Stream(http2Assembler *Http2Assembler, capture api.Capture, tcpID *api.TcpID, superTimer *api.SuperTimer, emitter api.Emitter, options *api.TrafficFilteringOptions, reqResMatcher *requestResponseMatcher) error {
+func handleHTTP2Stream(http2Assembler *Http2Assembler, progress *api.ReadProgress, capture api.Capture, tcpID *api.TcpID, superTimer *api.SuperTimer, emitter api.Emitter, options *api.TrafficFilteringOptions, reqResMatcher *requestResponseMatcher) error {
 	streamID, messageHTTP1, isGrpc, err := http2Assembler.readMessage()
 	if err != nil {
 		return err
@@ -66,7 +66,7 @@ func handleHTTP2Stream(http2Assembler *Http2Assembler, capture api.Capture, tcpI
 			streamID,
 			"HTTP2",
 		)
-		item = reqResMatcher.registerRequest(ident, &messageHTTP1, superTimer.CaptureTime, messageHTTP1.ProtoMinor)
+		item = reqResMatcher.registerRequest(ident, &messageHTTP1, superTimer.CaptureTime, progress.Current(), messageHTTP1.ProtoMinor)
 		if item != nil {
 			item.ConnectionInfo = &api.ConnectionInfo{
 				ClientIP:   tcpID.SrcIP,
@@ -86,7 +86,7 @@ func handleHTTP2Stream(http2Assembler *Http2Assembler, capture api.Capture, tcpI
 			streamID,
 			"HTTP2",
 		)
-		item = reqResMatcher.registerResponse(ident, &messageHTTP1, superTimer.CaptureTime, messageHTTP1.ProtoMinor)
+		item = reqResMatcher.registerResponse(ident, &messageHTTP1, superTimer.CaptureTime, progress.Current(), messageHTTP1.ProtoMinor)
 		if item != nil {
 			item.ConnectionInfo = &api.ConnectionInfo{
 				ClientIP:   tcpID.DstIP,
@@ -111,7 +111,7 @@ func handleHTTP2Stream(http2Assembler *Http2Assembler, capture api.Capture, tcpI
 	return nil
 }
 
-func handleHTTP1ClientStream(b *bufio.Reader, capture api.Capture, tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, emitter api.Emitter, options *api.TrafficFilteringOptions, reqResMatcher *requestResponseMatcher) (switchingProtocolsHTTP2 bool, req *http.Request, err error) {
+func handleHTTP1ClientStream(b *bufio.Reader, progress *api.ReadProgress, capture api.Capture, tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, emitter api.Emitter, options *api.TrafficFilteringOptions, reqResMatcher *requestResponseMatcher) (switchingProtocolsHTTP2 bool, req *http.Request, err error) {
 	req, err = http.ReadRequest(b)
 	if err != nil {
 		return
@@ -139,7 +139,7 @@ func handleHTTP1ClientStream(b *bufio.Reader, capture api.Capture, tcpID *api.Tc
 		requestCounter,
 		"HTTP1",
 	)
-	item := reqResMatcher.registerRequest(ident, req, superTimer.CaptureTime, req.ProtoMinor)
+	item := reqResMatcher.registerRequest(ident, req, superTimer.CaptureTime, progress.Current(), req.ProtoMinor)
 	if item != nil {
 		item.ConnectionInfo = &api.ConnectionInfo{
 			ClientIP:   tcpID.SrcIP,
@@ -154,7 +154,7 @@ func handleHTTP1ClientStream(b *bufio.Reader, capture api.Capture, tcpID *api.Tc
 	return
 }
 
-func handleHTTP1ServerStream(b *bufio.Reader, capture api.Capture, tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, emitter api.Emitter, options *api.TrafficFilteringOptions, reqResMatcher *requestResponseMatcher) (switchingProtocolsHTTP2 bool, err error) {
+func handleHTTP1ServerStream(b *bufio.Reader, progress *api.ReadProgress, capture api.Capture, tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, emitter api.Emitter, options *api.TrafficFilteringOptions, reqResMatcher *requestResponseMatcher) (switchingProtocolsHTTP2 bool, err error) {
 	var res *http.Response
 	res, err = http.ReadResponse(b, nil)
 	if err != nil {
@@ -183,7 +183,7 @@ func handleHTTP1ServerStream(b *bufio.Reader, capture api.Capture, tcpID *api.Tc
 		responseCounter,
 		"HTTP1",
 	)
-	item := reqResMatcher.registerResponse(ident, res, superTimer.CaptureTime, res.ProtoMinor)
+	item := reqResMatcher.registerResponse(ident, res, superTimer.CaptureTime, progress.Current(), res.ProtoMinor)
 	if item != nil {
 		item.ConnectionInfo = &api.ConnectionInfo{
 			ClientIP:   tcpID.DstIP,

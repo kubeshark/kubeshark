@@ -94,10 +94,6 @@ func (tapperSyncer *MizuTapperSyncer) watchTapperPods() {
 				continue
 			}
 
-			if tapperSyncer.startTime.After(pod.CreationTimestamp.Time) {
-				continue
-			}
-
 			logger.Log.Debugf("Watching tapper pods loop, tapper: %v, node: %v, status: %v", pod.Name, pod.Spec.NodeName, pod.Status.Phase)
 			if pod.Spec.NodeName != "" {
 				tapperStatus := shared.TapperStatus{TapperName: pod.Name, NodeName: pod.Spec.NodeName, Status: string(pod.Status.Phase)}
@@ -134,10 +130,6 @@ func (tapperSyncer *MizuTapperSyncer) watchTapperEvents() {
 			event, err := wEvent.ToEvent()
 			if err != nil {
 				logger.Log.Debugf("[ERROR] parsing Mizu resource event: %+v", err)
-				continue
-			}
-
-			if tapperSyncer.startTime.After(event.CreationTimestamp.Time) {
 				continue
 			}
 
