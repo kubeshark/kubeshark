@@ -15,7 +15,7 @@ interface Props {
     classes?: any,
     tabs: Tab[],
     currentTab: string,
-    color: string,
+    color?: string,
     onChange: (string) => void,
     leftAligned?: boolean,
     dark?: boolean,
