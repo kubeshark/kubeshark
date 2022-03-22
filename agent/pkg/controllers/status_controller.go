@@ -45,7 +45,7 @@ func PostTappedPods(c *gin.Context) {
 	api.BroadcastTappedPodsStatus()
 
 	nodeToTappedPodMap := kubernetes.GetNodeHostToTappedPodsMap(requestTappedPods)
-	tappers.SetNodeToTappedPodMap(nodeToTappedPodMap)
+	tappedPods.SetNodeToTappedPodMap(nodeToTappedPodMap)
 	api.BroadcastTappedPodsToTappers(nodeToTappedPodMap)
 }
 

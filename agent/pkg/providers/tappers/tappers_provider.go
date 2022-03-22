@@ -18,8 +18,6 @@ var (
 
 	lockConnectedCount = &sync.Mutex{}
 	connectedCount     int
-
-	nodeHostToTappedPodsMap shared.NodeToPodsMap
 )
 
 func GetStatus() map[string]*shared.TapperStatus {
@@ -82,15 +80,4 @@ func saveStatus() {
 	if err := utils.SaveJsonFile(FilePath, status); err != nil {
 		logger.Log.Errorf("Error saving tappers status, err: %v", err)
 	}
-}
-
-func SetNodeToTappedPodMap(nodeToTappedPodsMap shared.NodeToPodsMap) {
-	summary := nodeToTappedPodsMap.Summary()
-	logger.Log.Infof("Setting node to tapped pods map to %v", summary)
-
-	nodeHostToTappedPodsMap = nodeToTappedPodsMap
-}
-
-func GetNodeToTappedPodMap() shared.NodeToPodsMap {
-	return nodeHostToTappedPodsMap
 }

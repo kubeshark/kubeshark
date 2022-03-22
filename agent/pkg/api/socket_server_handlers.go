@@ -7,6 +7,7 @@ import (
 
 	"github.com/up9inc/mizu/agent/pkg/models"
 	"github.com/up9inc/mizu/agent/pkg/providers"
+	"github.com/up9inc/mizu/agent/pkg/providers/tappedPods"
 	"github.com/up9inc/mizu/agent/pkg/providers/tappers"
 	"github.com/up9inc/mizu/agent/pkg/up9"
 
@@ -38,7 +39,7 @@ func (h *RoutesEventHandlers) WebSocketConnect(socketId int, isTapper bool) {
 		tapperClientSocketUUIDs = append(tapperClientSocketUUIDs, socketId)
 		socketListLock.Unlock()
 
-		nodeToTappedPodMap := tappers.GetNodeToTappedPodMap()
+		nodeToTappedPodMap := tappedPods.GetNodeToTappedPodMap()
 		SendTappedPods(socketId, nodeToTappedPodMap)
 	} else {
 		logger.Log.Infof("Websocket event - Browser socket connected, socket ID: %d", socketId)
