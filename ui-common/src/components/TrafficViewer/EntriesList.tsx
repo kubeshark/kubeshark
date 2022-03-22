@@ -5,10 +5,8 @@ import Moment from 'moment';
 import {EntryItem} from "./EntryListItem/EntryListItem";
 import down from "assets/downImg.svg";
 import spinner from 'assets/spinner.svg';
-
 import {RecoilState, useRecoilState, useRecoilValue} from "recoil";
 import entriesAtom from "../../recoil/entries";
-import wsConnectionAtom, {WsConnectionStatus} from "../../recoil/wsConnection";
 import queryAtom from "../../recoil/query";
 import TrafficViewerApiAtom from "../../recoil/TrafficViewerApi";
 import TrafficViewerApi from "./TrafficViewerApi";
@@ -32,14 +30,15 @@ interface EntriesListProps {
     truncatedTimestamp: number;
     setTruncatedTimestamp: any;
     scrollableRef: any;
+    ws: any;
 }
 
-export const EntriesList: React.FC<EntriesListProps> = ({listEntryREF, onSnapBrokenEvent, isSnappedToBottom, setIsSnappedToBottom, queriedCurrent, setQueriedCurrent, queriedTotal, setQueriedTotal, startTime, noMoreDataTop, setNoMoreDataTop, leftOffTop, setLeftOffTop, openWebSocket, leftOffBottom, truncatedTimestamp, setTruncatedTimestamp, scrollableRef}) => {
+export const EntriesList: React.FC<EntriesListProps> = ({listEntryREF, onSnapBrokenEvent, isSnappedToBottom, setIsSnappedToBottom, queriedCurrent, setQueriedCurrent, queriedTotal, setQueriedTotal, startTime, noMoreDataTop, setNoMoreDataTop, leftOffTop, setLeftOffTop, openWebSocket, leftOffBottom, truncatedTimestamp, setTruncatedTimestamp, scrollableRef, ws}) => {
 
     const [entries, setEntries] = useRecoilState(entriesAtom);
-    const wsConnection = useRecoilValue(wsConnectionAtom);
     const query = useRecoilValue(queryAtom);
-    const isWsConnectionClosed = wsConnection === WsConnectionStatus.Closed;
+    const isWsConnectionClosed = ws?.current?.readyState !== WebSocket.OPEN;
+
     const trafficViewerApi = useRecoilValue(TrafficViewerApiAtom as RecoilState<TrafficViewerApi>)
 
     const [loadMoreTop, setLoadMoreTop] = useState(false);
