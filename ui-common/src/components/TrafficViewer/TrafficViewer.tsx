@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Filters } from "./Filters";
 import { EntriesList } from "./EntriesList";
 import { makeStyles } from "@material-ui/core";
