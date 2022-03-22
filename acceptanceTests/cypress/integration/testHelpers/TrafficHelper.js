@@ -142,7 +142,9 @@ function deepCheck(generalDict, protocolDict, methodDict, entry) {
 
     if (value) {
         if (value.tab === valueTabs.response)
-            cy.contains('Response').click();
+            // temporary fix, change to some "data-cy" attribute,
+            // this will fix the issue that happen because we have "response:" in the header of the right side
+            cy.get('#rightSideContainer > :nth-child(3)').contains('Response').click();
         cy.get(Cypress.env('bodyJsonClass')).then(text => {
             expect(text.text()).to.match(value.regex)
         });
