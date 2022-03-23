@@ -10,8 +10,6 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/up9inc/mizu/shared/kubernetes"
-
 	"github.com/up9inc/mizu/cli/config"
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/logger"
@@ -83,15 +81,13 @@ func (provider *Provider) ReportTapperStatus(tapperStatus shared.TapperStatus) e
 func (provider *Provider) ReportTappedPods(pods []core.Pod) error {
 	tappedPodsUrl := fmt.Sprintf("%s/status/tappedPods", provider.url)
 
-	podInfos := kubernetes.GetPodInfosForPods(pods)
-
-	if jsonValue, err := json.Marshal(podInfos); err != nil {
+	if jsonValue, err := json.Marshal(pods); err != nil {
 		return fmt.Errorf("failed Marshal the tapped pods %w", err)
 	} else {
 		if _, err := utils.Post(tappedPodsUrl, "application/json", bytes.NewBuffer(jsonValue), provider.client); err != nil {
 			return fmt.Errorf("failed sending to API server the tapped pods %w", err)
 		} else {
-			logger.Log.Debugf("Reported to server API about %d taped pods successfully", len(podInfos))
+			logger.Log.Debugf("Reported to server API about %d taped pods successfully", len(pods))
 			return nil
 		}
 	}

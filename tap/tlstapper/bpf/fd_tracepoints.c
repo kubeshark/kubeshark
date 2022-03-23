@@ -28,7 +28,7 @@ void sys_enter_read(struct sys_enter_read_ctx *ctx) {
 	
 	struct ssl_info *infoPtr = bpf_map_lookup_elem(&ssl_read_context, &id);
 	
-	if (infoPtr == 0) {
+	if (infoPtr == NULL) {
 		return;
 	}
 	
@@ -71,7 +71,7 @@ void sys_enter_write(struct sys_enter_write_ctx *ctx) {
 	
 	struct ssl_info *infoPtr = bpf_map_lookup_elem(&ssl_write_context, &id);
 	
-	if (infoPtr == 0) {
+	if (infoPtr == NULL) {
 		return;
 	}
 	
