@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"net/http"
+	core "k8s.io/api/core/v1"
 
 	"github.com/gin-gonic/gin"
 	"github.com/up9inc/mizu/agent/pkg/api"
@@ -12,6 +13,7 @@ import (
 	"github.com/up9inc/mizu/agent/pkg/up9"
 	"github.com/up9inc/mizu/agent/pkg/validation"
 	"github.com/up9inc/mizu/shared"
+	"github.com/up9inc/mizu/shared/kubernetes"
 	"github.com/up9inc/mizu/shared/logger"
 )
 
@@ -30,15 +32,21 @@ func HealthCheck(c *gin.Context) {
 }
 
 func PostTappedPods(c *gin.Context) {
-	var requestTappedPods []*shared.PodInfo
+	var requestTappedPods []core.Pod
 	if err := c.Bind(&requestTappedPods); err != nil {
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
 
+	podInfos := kubernetes.GetPodInfosForPods(requestTappedPods)
+
 	logger.Log.Infof("[Status] POST request: %d tapped pods", len(requestTappedPods))
-	tappedPods.Set(requestTappedPods)
+	tappedPods.Set(podInfos)
 	api.BroadcastTappedPodsStatus()
+
+	nodeToTappedPodMap := kubernetes.GetNodeHostToTappedPodsMap(requestTappedPods)
+	tappedPods.SetNodeToTappedPodMap(nodeToTappedPodMap)
+	api.BroadcastTappedPodsToTappers(nodeToTappedPodMap)
 }
 
 func PostTapperStatus(c *gin.Context) {

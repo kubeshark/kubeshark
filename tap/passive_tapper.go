@@ -59,7 +59,6 @@ var memprofile = flag.String("memprofile", "", "Write memory profile")
 
 type TapOpts struct {
 	HostMode          bool
-	FilterAuthorities []v1.Pod
 }
 
 var extensions []*api.Extension                     // global
@@ -89,12 +88,6 @@ func inArrayString(arr []string, valueToCheck string) bool {
 func StartPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem, extensionsRef []*api.Extension, options *api.TrafficFilteringOptions) {
 	extensions = extensionsRef
 	filteringOptions = options
-
-	if opts.FilterAuthorities == nil {
-		tapTargets = []v1.Pod{}
-	} else {
-		tapTargets = opts.FilterAuthorities
-	}
 
 	if *tls {
 		for _, e := range extensions {
