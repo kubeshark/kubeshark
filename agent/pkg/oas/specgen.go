@@ -28,6 +28,13 @@ const CountersTotal = "x-counters-total"
 const CountersPerSource = "x-counters-per-source"
 const SampleId = "x-sample-entry"
 
+type EntryWithSource struct {
+	Source      string
+	Destination string
+	Entry       har.Entry
+	Id          uint
+}
+
 type reqResp struct { // hello, generics in Go
 	Req  *har.Request
 	Resp *har.Response

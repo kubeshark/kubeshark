@@ -1,149 +1,106 @@
 package oas
 
 import (
-	"context"
 	"encoding/json"
+	basenine "github.com/up9inc/basenine/client/go"
+	"github.com/up9inc/mizu/agent/pkg/har"
+	"github.com/up9inc/mizu/shared"
+	"github.com/up9inc/mizu/tap/api"
 	"net/url"
 	"sync"
 
-	"github.com/up9inc/mizu/agent/pkg/har"
 	"github.com/up9inc/mizu/shared/logger"
 )
 
-var (
-	syncOnce sync.Once
-	instance *defaultOasGenerator
-)
-
-type OasGeneratorSink interface {
-	PushEntry(entryWithSource *EntryWithSource)
-}
-
-type OasGenerator interface {
-	Start()
-	Stop()
-	IsStarted() bool
-	Reset()
-	GetServiceSpecs() *sync.Map
-}
-
-type defaultOasGenerator struct {
-	started      bool
-	ctx          context.Context
-	cancel       context.CancelFunc
-	serviceSpecs *sync.Map
-	entriesChan  chan EntryWithSource
-}
-
-func GetDefaultOasGeneratorInstance() *defaultOasGenerator {
-	syncOnce.Do(func() {
-		instance = NewDefaultOasGenerator()
-		logger.Log.Debug("OAS Generator Initialized")
-	})
-	return instance
-}
-
-func (g *defaultOasGenerator) Start() {
-	if g.started {
-		return
+func RunDBProcessing() {
+	serviceSpecs := new(sync.Map)
+	c, err := basenine.NewConnection(shared.BasenineHost, shared.BaseninePort)
+	if err != nil {
+		panic(err)
 	}
-	ctx, cancel := context.WithCancel(context.Background())
-	g.cancel = cancel
-	g.ctx = ctx
-	g.entriesChan = make(chan EntryWithSource, 100) // buffer up to 100 entries for OAS processing
-	g.serviceSpecs = &sync.Map{}
-	g.started = true
-	go g.runGenerator()
-}
 
-func (g *defaultOasGenerator) Stop() {
-	if !g.started {
-		return
-	}
-	g.cancel()
-	g.Reset()
-	g.started = false
-}
+	// Make []byte channels to recieve the data and the meta
+	data := make(chan []byte)
+	meta := make(chan []byte)
 
-func (g *defaultOasGenerator) IsStarted() bool {
-	return g.started
-}
+	// Define a function to handle the data stream
+	handleDataChannel := func(wg *sync.WaitGroup, c *basenine.Connection, data chan []byte) {
+		defer wg.Done()
+		for {
+			bytes := <-data
 
-func (g *defaultOasGenerator) runGenerator() {
-	for {
-		select {
-		case <-g.ctx.Done():
-			logger.Log.Infof("OAS Generator was canceled")
-			return
-
-		case entryWithSource, ok := <-g.entriesChan:
-			if !ok {
-				logger.Log.Infof("OAS Generator - entries channel closed")
-				break
-			}
-			entry := entryWithSource.Entry
-			u, err := url.Parse(entry.Request.URL)
+			logger.Log.Debugf("Data: %s", bytes)
+			e := new(api.Entry)
+			err := json.Unmarshal(bytes, e)
 			if err != nil {
-				logger.Log.Errorf("Failed to parse entry URL: %v, err: %v", entry.Request.URL, err)
-			}
-
-			val, found := g.serviceSpecs.Load(entryWithSource.Destination)
-			var gen *SpecGen
-			if !found {
-				gen = NewGen(u.Scheme + "://" + entryWithSource.Destination)
-				g.serviceSpecs.Store(entryWithSource.Destination, gen)
-			} else {
-				gen = val.(*SpecGen)
-			}
-
-			opId, err := gen.feedEntry(entryWithSource)
-			if err != nil {
-				txt, suberr := json.Marshal(entry)
-				if suberr == nil {
-					logger.Log.Debugf("Problematic entry: %s", txt)
-				}
-
-				logger.Log.Warningf("Failed processing entry: %s", err)
 				continue
 			}
-
-			logger.Log.Debugf("Handled entry %s as opId: %s", entry.Request.URL, opId) // TODO: set opId back to entry?
+			handleEntry(e, serviceSpecs)
 		}
 	}
+
+	// Define a function to handle the meta stream
+	handleMetaChannel := func(c *basenine.Connection, meta chan []byte) {
+		for {
+			bytes := <-meta
+
+			logger.Log.Debugf("Meta: %s", bytes)
+		}
+	}
+
+	var wg sync.WaitGroup
+	go handleDataChannel(&wg, c, data)
+	go handleMetaChannel(c, meta)
+	wg.Add(1)
+
+	c.Query("", data, meta)
+
+	wg.Wait()
 }
 
-func (g *defaultOasGenerator) Reset() {
-	g.serviceSpecs = &sync.Map{}
-}
-
-func (g *defaultOasGenerator) PushEntry(entryWithSource *EntryWithSource) {
-	if !g.started {
+func handleEntry(mizuEntry *api.Entry, specs *sync.Map) {
+	entry, err := har.NewEntry(mizuEntry.Request, mizuEntry.Response, mizuEntry.StartTime, mizuEntry.ElapsedTime)
+	if err != nil {
+		logger.Log.Warningf("Failed to turn MizuEntry %d into HAR Entry: %s", mizuEntry.Id, err)
 		return
 	}
-	select {
-	case g.entriesChan <- *entryWithSource:
-	default:
-		logger.Log.Warningf("OAS Generator - entry wasn't sent to channel because the channel has no buffer or there is no receiver")
+
+	dest := mizuEntry.Destination.Name
+	if dest == "" {
+		dest = mizuEntry.Destination.IP + ":" + mizuEntry.Destination.Port
 	}
-}
 
-func (g *defaultOasGenerator) GetServiceSpecs() *sync.Map {
-	return g.serviceSpecs
-}
-
-func NewDefaultOasGenerator() *defaultOasGenerator {
-	return &defaultOasGenerator{
-		started:      false,
-		ctx:          nil,
-		cancel:       nil,
-		serviceSpecs: nil,
-		entriesChan:  nil,
+	u, err := url.Parse(entry.Request.URL)
+	if err != nil {
+		logger.Log.Errorf("Failed to parse entry URL: %v, err: %v", entry.Request.URL, err)
 	}
-}
 
-type EntryWithSource struct {
-	Source      string
-	Destination string
-	Entry       har.Entry
-	Id          uint
+	val, found := specs.Load(dest)
+	var gen *SpecGen
+	if !found {
+		gen = NewGen(u.Scheme + "://" + dest)
+		specs.Store(dest, gen)
+	} else {
+		gen = val.(*SpecGen)
+	}
+
+	entryWSource := EntryWithSource{
+		Entry:       *entry,
+		Source:      mizuEntry.Source.Name,
+		Destination: dest,
+		Id:          mizuEntry.Id,
+	}
+
+	opId, err := gen.feedEntry(entryWSource)
+	if err != nil {
+		txt, suberr := json.Marshal(entry)
+		if suberr == nil {
+			logger.Log.Debugf("Problematic entry: %s", txt)
+		}
+
+		logger.Log.Warningf("Failed processing entry %d: %s", mizuEntry.Id, err)
+		return
+	}
+
+	logger.Log.Debugf("Handled entry %d as opId: %s", mizuEntry.Id, opId) // TODO: set opId back to entry?
 }
