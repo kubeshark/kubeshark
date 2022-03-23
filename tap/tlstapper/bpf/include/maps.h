@@ -13,6 +13,7 @@ Copyright (C) UP9 Inc.
 #define CHUNK_SIZE (1 << 12)
 #define MAX_CHUNKS_PER_OPERATION (8)
 
+// One minute in nano seconds. Chosen by gut feeling.
 #define SSL_INFO_MAX_TTL_NANO (1000000000l * 60l)
 
 // The same struct can be found in chunk.go
