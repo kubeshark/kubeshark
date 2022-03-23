@@ -1,6 +1,7 @@
 package oas
 
 import (
+	"context"
 	"encoding/json"
 	basenine "github.com/up9inc/basenine/client/go"
 	"github.com/up9inc/mizu/agent/pkg/har"
@@ -12,50 +13,111 @@ import (
 	"github.com/up9inc/mizu/shared/logger"
 )
 
-func RunDBProcessing() {
-	serviceSpecs := new(sync.Map)
-	c, err := basenine.NewConnection(shared.BasenineHost, shared.BaseninePort)
-	if err != nil {
-		panic(err)
+var (
+	syncOnce sync.Once
+	instance *defaultOasGenerator
+)
+
+type OasGeneratorSink interface {
+	PushEntry(entryWithSource *EntryWithSource)
+}
+
+type OasGenerator interface {
+	Start()
+	Stop()
+	IsStarted() bool
+	Reset()
+	GetServiceSpecs() *sync.Map
+}
+
+type defaultOasGenerator struct {
+	started      bool
+	ctx          context.Context
+	cancel       context.CancelFunc
+	serviceSpecs *sync.Map
+}
+
+func GetDefaultOasGeneratorInstance() *defaultOasGenerator {
+	syncOnce.Do(func() {
+		instance = NewDefaultOasGenerator()
+		logger.Log.Debug("OAS Generator Initialized")
+	})
+	return instance
+}
+
+func (g *defaultOasGenerator) Start() {
+	if g.started {
+		return
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	g.cancel = cancel
+	g.ctx = ctx
+	g.serviceSpecs = &sync.Map{}
+	g.started = true
+	var db *basenine.Connection
+	go g.runGenerator(db)
+}
+
+func (g *defaultOasGenerator) Stop() {
+	if !g.started {
+		return
+	}
+	g.cancel()
+	g.Reset()
+	g.started = false
+}
+
+func (g *defaultOasGenerator) IsStarted() bool {
+	return g.started
+}
+
+func (g defaultOasGenerator) runGenerator(db *basenine.Connection) {
+
+}
+
+func (g *defaultOasGenerator) runGenerator(connection *basenine.Connection) {
+	if connection == nil {
+		c, err := basenine.NewConnection(shared.BasenineHost, shared.BaseninePort)
+		connection = c
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	// Make []byte channels to recieve the data and the meta
-	data := make(chan []byte)
-	meta := make(chan []byte)
+	dataChan := make(chan []byte)
+	metaChan := make(chan []byte)
 
-	// Define a function to handle the data stream
-	handleDataChannel := func(wg *sync.WaitGroup, c *basenine.Connection, data chan []byte) {
-		defer wg.Done()
-		for {
-			bytes := <-data
+	connection.Query("", dataChan, metaChan)
 
-			logger.Log.Debugf("Data: %s", bytes)
+	for {
+		select {
+		case <-g.ctx.Done():
+			logger.Log.Infof("OAS Generator was canceled")
+			return
+
+		case metaBytes, ok := <-metaChan:
+			if !ok {
+				logger.Log.Infof("OAS Generator - meta channel closed")
+				break
+			}
+			logger.Log.Debugf("Meta: %s", metaBytes)
+
+		case dataBytes, ok := <-dataChan:
+			if !ok {
+				logger.Log.Infof("OAS Generator - entries channel closed")
+				break
+			}
+
+			logger.Log.Debugf("Data: %s", dataBytes)
 			e := new(api.Entry)
-			err := json.Unmarshal(bytes, e)
+			err := json.Unmarshal(dataBytes, e)
 			if err != nil {
 				continue
 			}
-			handleEntry(e, serviceSpecs)
+			handleEntry(e, g.serviceSpecs)
 		}
 	}
-
-	// Define a function to handle the meta stream
-	handleMetaChannel := func(c *basenine.Connection, meta chan []byte) {
-		for {
-			bytes := <-meta
-
-			logger.Log.Debugf("Meta: %s", bytes)
-		}
-	}
-
-	var wg sync.WaitGroup
-	go handleDataChannel(&wg, c, data)
-	go handleMetaChannel(c, meta)
-	wg.Add(1)
-
-	c.Query("", data, meta)
-
-	wg.Wait()
 }
 
 func handleEntry(mizuEntry *api.Entry, specs *sync.Map) {
@@ -103,4 +165,21 @@ func handleEntry(mizuEntry *api.Entry, specs *sync.Map) {
 	}
 
 	logger.Log.Debugf("Handled entry %d as opId: %s", mizuEntry.Id, opId) // TODO: set opId back to entry?
+}
+
+func (g *defaultOasGenerator) Reset() {
+	g.serviceSpecs = &sync.Map{}
+}
+
+func (g *defaultOasGenerator) GetServiceSpecs() *sync.Map {
+	return g.serviceSpecs
+}
+
+func NewDefaultOasGenerator() *defaultOasGenerator {
+	return &defaultOasGenerator{
+		started:      false,
+		ctx:          nil,
+		cancel:       nil,
+		serviceSpecs: nil,
+	}
 }
