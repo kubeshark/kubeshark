@@ -146,6 +146,7 @@ func (p *tlsPoller) startNewTlsReader(chunk *tlsChunk, ip net.IP, port uint16, k
 		doneHandler: func(r *tlsReader) {
 			p.closeReader(key, r)
 		},
+		progress: &api.ReadProgress{},
 	}
 
 	tcpid := p.buildTcpId(chunk, ip, port)
@@ -158,7 +159,7 @@ func dissect(extension *api.Extension, reader *tlsReader, isRequest bool, tcpid 
 	emitter api.Emitter, options *api.TrafficFilteringOptions, reqResMatcher api.RequestResponseMatcher) {
 	b := bufio.NewReader(reader)
 
-	err := extension.Dissector.Dissect(b, isRequest, tcpid, &api.CounterPair{},
+	err := extension.Dissector.Dissect(b, reader.progress, api.Ebpf, isRequest, tcpid, &api.CounterPair{},
 		&api.SuperTimer{}, &api.SuperIdentifier{}, emitter, options, reqResMatcher)
 
 	if err != nil {
@@ -224,8 +225,8 @@ func (p *tlsPoller) logTls(chunk *tlsChunk, ip net.IP, port uint16) {
 
 	str := strings.ReplaceAll(strings.ReplaceAll(string(chunk.Data[0:chunk.Recorded]), "\n", " "), "\r", "")
 
-	logger.Log.Infof("PID: %v (tid: %v) (fd: %v) (client: %v) (addr: %v:%v) (fdaddr %v:%v>%v:%v) (recorded %v out of %v) - %v - %v",
+	logger.Log.Infof("PID: %v (tid: %v) (fd: %v) (client: %v) (addr: %v:%v) (fdaddr %v:%v>%v:%v) (recorded %v out of %v starting at %v) - %v - %v",
 		chunk.Pid, chunk.Tgid, chunk.Fd, flagsStr, ip, port,
 		srcIp, srcPort, dstIp, dstPort,
-		chunk.Recorded, chunk.Len, str, hex.EncodeToString(chunk.Data[0:chunk.Recorded]))
+		chunk.Recorded, chunk.Len, chunk.Start, str, hex.EncodeToString(chunk.Data[0:chunk.Recorded]))
 }

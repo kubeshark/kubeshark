@@ -16,7 +16,7 @@ type Response struct {
 	CaptureTime   time.Time   `json:"captureTime"`
 }
 
-func ReadResponse(r io.Reader, tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, emitter api.Emitter, reqResMatcher *requestResponseMatcher) (err error) {
+func ReadResponse(r io.Reader, capture api.Capture, tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, emitter api.Emitter, reqResMatcher *requestResponseMatcher) (err error) {
 	d := &decoder{reader: r, remain: 4}
 	size := d.readInt32()
 
@@ -258,12 +258,14 @@ func ReadResponse(r io.Reader, tcpID *api.TcpID, counterPair *api.CounterPair, s
 
 	item := &api.OutputChannelItem{
 		Protocol:       _protocol,
+		Capture:        capture,
 		Timestamp:      reqResPair.Request.CaptureTime.UnixNano() / int64(time.Millisecond),
 		ConnectionInfo: connectionInfo,
 		Pair: &api.RequestResponsePair{
 			Request: api.GenericMessage{
 				IsRequest:   true,
 				CaptureTime: reqResPair.Request.CaptureTime,
+				CaptureSize: int(reqResPair.Request.Size),
 				Payload: KafkaPayload{
 					Data: &KafkaWrapper{
 						Method:  apiNames[apiKey],
@@ -275,6 +277,7 @@ func ReadResponse(r io.Reader, tcpID *api.TcpID, counterPair *api.CounterPair, s
 			Response: api.GenericMessage{
 				IsRequest:   false,
 				CaptureTime: reqResPair.Response.CaptureTime,
+				CaptureSize: int(reqResPair.Response.Size),
 				Payload: KafkaPayload{
 					Data: &KafkaWrapper{
 						Method:  apiNames[apiKey],
