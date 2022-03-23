@@ -1,5 +1,5 @@
 import React from "react";
-import infoImg from 'assets/info.png';
+import infoImg from 'assets/info.svg';
 
 const DEFUALT_LINK = "https://getmizu.io/docs"
 

@@ -14,9 +14,9 @@ export const Header: React.FC<HeaderProps> = ({analyzeStatus}) => {
             <div className="title"><img src={logo} alt="logo"/></div>
             <div className="description">Traffic viewer for Kubernetes</div>
         </div>
-        <UI.InformationIcon/>
-        <div style={{display: "flex", alignItems: "center"}}>
+        <div style={{display: "flex", alignItems: "center"}}>       
             {analyzeStatus?.isAnalyzing && <AnalyzeButton analyzeStatus={analyzeStatus}/>}
+            <UI.InformationIcon/>
             <AuthPresentation/>
         </div>
     </div>;
