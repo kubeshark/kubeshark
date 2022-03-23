@@ -54,8 +54,7 @@ func (g *defaultOasGenerator) Start() {
 	g.ctx = ctx
 	g.serviceSpecs = &sync.Map{}
 	g.started = true
-	var db *basenine.Connection
-	go g.runGenerator(db)
+	go g.runGenerator(nil)
 }
 
 func (g *defaultOasGenerator) Stop() {
@@ -69,10 +68,6 @@ func (g *defaultOasGenerator) Stop() {
 
 func (g *defaultOasGenerator) IsStarted() bool {
 	return g.started
-}
-
-func (g defaultOasGenerator) runGenerator(db *basenine.Connection) {
-
 }
 
 func (g *defaultOasGenerator) runGenerator(connection *basenine.Connection) {
