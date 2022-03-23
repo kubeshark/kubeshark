@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/up9inc/mizu/agent/pkg/models"
 	"os"
 	"path"
 	"sort"
@@ -131,6 +132,12 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 				mizuEntry.ContractRequestReason = contract.RequestReason
 				mizuEntry.ContractResponseReason = contract.ResponseReason
 				mizuEntry.ContractContent = contract.Content
+			}
+
+			harEntry, err := har.NewEntry(mizuEntry.Request, mizuEntry.Response, mizuEntry.StartTime, mizuEntry.ElapsedTime)
+			if err == nil {
+				rules, _, _ := models.RunValidationRulesState(*harEntry, mizuEntry.Destination.Name)
+				mizuEntry.Rules = rules
 			}
 		}
 
