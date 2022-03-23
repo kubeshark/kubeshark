@@ -144,6 +144,8 @@ func runInApiServerMode(namespace string) *gin.Engine {
 		}
 	}
 
+	go oas.RunDBProcessing()
+
 	return hostApi(app.GetEntryInputChannel())
 }
 
