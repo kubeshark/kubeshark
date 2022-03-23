@@ -58,7 +58,7 @@ jobs:
         run: devops/check_modified_files.sh tap/extensions/
 
       - name: Extensions Test
-        if: github.event_name == 'push' || steps.ext_modified_files.outputs.matched == 'true'
+        # if: github.event_name == 'push' || steps.ext_modified_files.outputs.matched == 'true'
         run: make test-extensions
 
       - name: Upload coverage to Codecov
