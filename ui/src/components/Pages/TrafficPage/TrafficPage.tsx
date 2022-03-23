@@ -13,11 +13,12 @@ import services from "../../assets/services.svg";
 
 interface TrafficPageProps {
   setAnalyzeStatus?: (status: any) => void;
+  isDemoBannerView? : boolean
 }
 
 const api = Api.getInstance();
 
-export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus}) => {
+export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, isDemoBannerView}) => {
   const commonClasses = useCommonStyles();
   const setServiceMapModalOpen = useSetRecoilState(serviceMapModalOpenAtom);
   const [openOasModal, setOpenOasModal] = useRecoilState(oasModalOpenAtom);
@@ -66,7 +67,7 @@ const trafficViewerApi = {...api}
   return (
   <>
       <TrafficViewer setAnalyzeStatus={setAnalyzeStatus} webSocketUrl={getWebsocketUrl()} isCloseWebSocket={!openWebSocket}
-                     trafficViewerApiProp={trafficViewerApi} actionButtons={actionButtons} isShowStatusBar={!openOasModal}/>
+                     trafficViewerApiProp={trafficViewerApi} actionButtons={actionButtons} isShowStatusBar={!openOasModal} isDemoBannerView={isDemoBannerView}/>
   </>
   );
 };
