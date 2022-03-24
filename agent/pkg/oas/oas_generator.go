@@ -117,25 +117,29 @@ func (g *defaultOasGenerator) runGenerator() {
 }
 
 func (g *defaultOasGenerator) handleEntry(mizuEntry *api.Entry) {
-	entry, err := har.NewEntry(mizuEntry.Request, mizuEntry.Response, mizuEntry.StartTime, mizuEntry.ElapsedTime)
-	if err != nil {
-		logger.Log.Warningf("Failed to turn MizuEntry %d into HAR Entry: %s", mizuEntry.Id, err)
-		return
-	}
+	if mizuEntry.Protocol.Name == "http" {
+		entry, err := har.NewEntry(mizuEntry.Request, mizuEntry.Response, mizuEntry.StartTime, mizuEntry.ElapsedTime)
+		if err != nil {
+			logger.Log.Warningf("Failed to turn MizuEntry %d into HAR Entry: %s", mizuEntry.Id, err)
+			return
+		}
 
-	dest := mizuEntry.Destination.Name
-	if dest == "" {
-		dest = mizuEntry.Destination.IP + ":" + mizuEntry.Destination.Port
-	}
+		dest := mizuEntry.Destination.Name
+		if dest == "" {
+			dest = mizuEntry.Destination.IP + ":" + mizuEntry.Destination.Port
+		}
 
-	entryWSource := &EntryWithSource{
-		Entry:       *entry,
-		Source:      mizuEntry.Source.Name,
-		Destination: dest,
-		Id:          mizuEntry.Id,
-	}
+		entryWSource := &EntryWithSource{
+			Entry:       *entry,
+			Source:      mizuEntry.Source.Name,
+			Destination: dest,
+			Id:          mizuEntry.Id,
+		}
 
-	g.handleHARWithSource(entryWSource)
+		g.handleHARWithSource(entryWSource)
+	} else {
+		logger.Log.Debugf("OAS: Unsupported protocol in entry %d: %s", mizuEntry.Id, mizuEntry.Protocol.Name)
+	}
 }
 
 func (g *defaultOasGenerator) handleHARWithSource(entryWSource *EntryWithSource) {
