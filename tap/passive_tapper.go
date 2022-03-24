@@ -107,26 +107,36 @@ func StartPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem, 
 }
 
 func UpdateTapTargets(newTapTargets []v1.Pod) {
+	success := true
+
 	tapTargets = newTapTargets
 	if err := initializePacketSources(); err != nil {
 		logger.Log.Fatal(err)
+		success = false
 	}
+
 	if tlsTapperInstance != nil {
 		if err := tlstapper.UpdateTapTargets(tlsTapperInstance, &tapTargets, *procfs); err != nil {
 			tlstapper.LogError(err)
+			success = false
 		}
 	}
 
-	printNewTapTargets()
+	printNewTapTargets(success)
 }
 
-func printNewTapTargets() {
+func printNewTapTargets(success bool) {
 	printStr := ""
 	for _, tapTarget := range tapTargets {
 		printStr += fmt.Sprintf("%s (%s), ", tapTarget.Status.PodIP, tapTarget.Name)
 	}
 	printStr = strings.TrimRight(printStr, ", ")
-	logger.Log.Infof("Now tapping: %s", printStr)
+
+	if success == true {
+		logger.Log.Infof("Now tapping: %s", printStr)
+	} else {
+		logger.Log.Errorf("Failed to start tapping: %s", printStr)
+	}
 }
 
 func printPeriodicStats(cleaner *Cleaner) {
