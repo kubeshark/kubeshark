@@ -11,7 +11,7 @@ import trafficViewerApi from "../../recoil/TrafficViewerApi";
 import TrafficViewerApi from "./TrafficViewerApi";
 import TrafficViewerApiAtom from "../../recoil/TrafficViewerApi/atom";
 import queryAtom from "../../recoil/query/atom";
-import useWindowDimensions, { useRequetTextByWidth } from "../../hooks/WindowDimensionsHook";
+import useWindowDimensions, { useRequestTextByWidth } from "../../hooks/WindowDimensionsHook";
 
 const useStyles = makeStyles(() => ({
     entryTitle: {
@@ -36,18 +36,18 @@ const useStyles = makeStyles(() => ({
 }));
 
 export const formatSize = (n: number) => n > 1000 ? `${Math.round(n / 1000)}KB` : `${n} B`;
-const minsizeDisplayRequestSize = 880;
+const minSizeDisplayRequestSize = 880;
 const EntryTitle: React.FC<any> = ({protocol, data, elapsedTime}) => {
     const classes = useStyles();
     const request = data.request;
     const response = data.response;
 
     const { width } = useWindowDimensions();
-    const {requestText, responseText, elapsedTimeText} = useRequetTextByWidth(width)
+    const {requestText, responseText, elapsedTimeText} = useRequestTextByWidth(width)
 
     return <div className={classes.entryTitle}>
         <Protocol protocol={protocol} horizontal={true}/>
-        {(width > minsizeDisplayRequestSize) && <div style={{right: "30px", position: "absolute", display: "flex"}}>
+        {(width > minSizeDisplayRequestSize) && <div style={{right: "30px", position: "absolute", display: "flex"}}>
             {request && <Queryable
                 query={`requestSize == ${data.requestSize}`}
                 style={{margin: "0 18px"}}

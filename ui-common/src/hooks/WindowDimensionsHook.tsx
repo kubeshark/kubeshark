@@ -8,7 +8,7 @@ function getWindowDimensions() {
     };
 }
 
-export function useRequetTextByWidth(windowWidth){
+export function useRequestTextByWidth(windowWidth){
 
     let requestText = "Request: "
     let responseText = "Response: "
