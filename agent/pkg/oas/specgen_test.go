@@ -6,6 +6,7 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -48,14 +49,16 @@ func TestEntries(t *testing.T) {
 		t.Log(err)
 		t.FailNow()
 	}
-	GetDefaultOasGeneratorInstance().Start()
-	loadStartingOAS("test_artifacts/catalogue.json", "catalogue")
-	loadStartingOAS("test_artifacts/trcc.json", "trcc-api-service")
+
+	gen := NewDefaultOasGenerator(nil)
+	gen.serviceSpecs = new(sync.Map)
+	loadStartingOAS("test_artifacts/catalogue.json", "catalogue", gen.serviceSpecs)
+	loadStartingOAS("test_artifacts/trcc.json", "trcc-api-service", gen.serviceSpecs)
 
 	go func() {
 		for {
 			time.Sleep(1 * time.Second)
-			GetDefaultOasGeneratorInstance().GetServiceSpecs().Range(func(key, val interface{}) bool {
+			gen.serviceSpecs.Range(func(key, val interface{}) bool {
 				svc := key.(string)
 				t.Logf("Getting spec for %s", svc)
 				gen := val.(*SpecGen)
@@ -77,7 +80,7 @@ func TestEntries(t *testing.T) {
 	waitQueueProcessed()
 
 	svcs := strings.Builder{}
-	GetDefaultOasGeneratorInstance().GetServiceSpecs().Range(func(key, val interface{}) bool {
+	gen.serviceSpecs.Range(func(key, val interface{}) bool {
 		gen := val.(*SpecGen)
 		svc := key.(string)
 		svcs.WriteString(svc + ",")
@@ -99,7 +102,7 @@ func TestEntries(t *testing.T) {
 		return true
 	})
 
-	GetDefaultOasGeneratorInstance().GetServiceSpecs().Range(func(key, val interface{}) bool {
+	gen.serviceSpecs.Range(func(key, val interface{}) bool {
 		svc := key.(string)
 		gen := val.(*SpecGen)
 		spec, err := gen.GetSpec()
@@ -123,8 +126,8 @@ func TestEntries(t *testing.T) {
 }
 
 func TestFileSingle(t *testing.T) {
-	GetDefaultOasGeneratorInstance().Start()
-	GetDefaultOasGeneratorInstance().Reset()
+	gen := NewDefaultOasGenerator(nil)
+	gen.serviceSpecs = new(sync.Map)
 	// loadStartingOAS()
 	file := "test_artifacts/params.har"
 	files := []string{file}
@@ -136,7 +139,7 @@ func TestFileSingle(t *testing.T) {
 
 	waitQueueProcessed()
 
-	GetDefaultOasGeneratorInstance().GetServiceSpecs().Range(func(key, val interface{}) bool {
+	gen.serviceSpecs.Range(func(key, val interface{}) bool {
 		svc := key.(string)
 		gen := val.(*SpecGen)
 		spec, err := gen.GetSpec()
@@ -201,7 +204,7 @@ func waitQueueProcessed() {
 	}
 }
 
-func loadStartingOAS(file string, label string) {
+func loadStartingOAS(file string, label string, specs *sync.Map) {
 	fd, err := os.Open(file)
 	if err != nil {
 		panic(err)
@@ -223,7 +226,7 @@ func loadStartingOAS(file string, label string) {
 	gen := NewGen(label)
 	gen.StartFromSpec(doc)
 
-	GetDefaultOasGeneratorInstance().GetServiceSpecs().Store(label, gen)
+	specs.Store(label, gen)
 }
 
 func TestEntriesNegative(t *testing.T) {
