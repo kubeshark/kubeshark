@@ -19,7 +19,7 @@ const menuProps: any = {
 };
 
 // icons styles are not overwritten from the Props, only as a separate object
-const classes = {icon: styles.icon, selectMenu: styles.list};
+const classes = {icon: styles.icon, selectMenu: styles.list, select: styles.oasSelect, root:styles.root};
 
 const defaultProps = {
     MenuProps: menuProps,
