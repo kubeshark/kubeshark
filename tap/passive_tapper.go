@@ -107,9 +107,23 @@ func StartPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem, 
 
 func UpdateTapTargets(newTapTargets []v1.Pod) {
 	tapTargets = newTapTargets
-	if err := initializePacketSources(); err != nil {
-		logger.Log.Fatal(err)
+
+	var bpffilter string
+	if len(flag.Args()) > 0 {
+		bpffilter = strings.Join(flag.Args(), " ")
 	}
+
+	behaviour := source.TcpPacketSourceBehaviour{
+		SnapLength:  *snaplen,
+		Promisc:     *promisc,
+		Tstype:      *tstype,
+		DecoderName: *decoder,
+		Lazy:        *lazy,
+		BpfFilter:   bpffilter,
+	}
+
+	packetSourceManager.UpdatePods(*servicemesh, *procfs, tapTargets, *iface, behaviour)
+
 	printNewTapTargets()
 }
 
