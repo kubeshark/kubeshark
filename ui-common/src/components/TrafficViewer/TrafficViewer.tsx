@@ -49,7 +49,7 @@ interface TrafficViewerProps {
   isShowStatusBar?: boolean,
   webSocketUrl : string,
   isCloseWebSocket : boolean,
-  isDemoBannerView? : boolean
+  isDemoBannerView : boolean
 }
 
 export const TrafficViewer : React.FC<TrafficViewerProps> = ({setAnalyzeStatus, trafficViewerApiProp,
@@ -294,7 +294,7 @@ export const TrafficViewer : React.FC<TrafficViewerProps> = ({setAnalyzeStatus, 
 
   return (
     <div className={TrafficViewerStyles.TrafficPage}>
-      {tappingStatus && isShowStatusBar && <StatusBar isDemoBannerView={undefined} />}
+      {tappingStatus && isShowStatusBar && <StatusBar isDemoBannerView={isDemoBannerView} />}
       <div className={TrafficViewerStyles.TrafficPageHeader}>
         <div className={TrafficViewerStyles.TrafficPageStreamStatus}>
           <img className={TrafficViewerStyles.playPauseIcon} style={{ visibility: ws?.current?.readyState === WebSocket.OPEN ? "visible" : "hidden" }} alt="pause"

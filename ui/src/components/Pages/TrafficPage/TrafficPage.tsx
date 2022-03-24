@@ -13,12 +13,11 @@ import services from "../../assets/services.svg";
 
 interface TrafficPageProps {
   setAnalyzeStatus?: (status: any) => void;
-  isDemoBannerView? : boolean
 }
 
 const api = Api.getInstance();
 
-export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus, isDemoBannerView}) => {
+export const TrafficPage: React.FC<TrafficPageProps> = ({setAnalyzeStatus}) => {
   const commonClasses = useCommonStyles();
   const setServiceMapModalOpen = useSetRecoilState(serviceMapModalOpenAtom);
   const [openOasModal, setOpenOasModal] = useRecoilState(oasModalOpenAtom);
@@ -44,7 +43,7 @@ const trafficViewerApi = {...api}
                                 type="submit"
                                 variant="contained"
                                 className={commonClasses.outlinedButton + " " + commonClasses.imagedButton}
-                                style={{ marginRight: 25 }}
+                                style={{ marginRight: 25, textTransform: 'unset' }}
                                 onClick={handleOpenOasModal}>
                                 OpenApi Specs
                               </Button>}
@@ -53,7 +52,8 @@ const trafficViewerApi = {...api}
                                 size="large"
                                 variant="contained"
                                 className={commonClasses.outlinedButton + " " + commonClasses.imagedButton}
-                                onClick={openServiceMapModalDebounce}>
+                                onClick={openServiceMapModalDebounce}
+                                style={{textTransform: 'unset'}}>
                                 Service Map
                               </Button>}
                         </div>
@@ -67,7 +67,7 @@ const trafficViewerApi = {...api}
   return (
   <>
       <TrafficViewer setAnalyzeStatus={setAnalyzeStatus} webSocketUrl={getWebsocketUrl()} isCloseWebSocket={!openWebSocket}
-                     trafficViewerApiProp={trafficViewerApi} actionButtons={actionButtons} isShowStatusBar={!openOasModal} isDemoBannerView={isDemoBannerView}/>
+                     trafficViewerApiProp={trafficViewerApi} actionButtons={actionButtons} isShowStatusBar={!openOasModal}/>
   </>
   );
 };
