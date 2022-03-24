@@ -11,7 +11,10 @@ import (
 )
 
 func TestGetOASServers(t *testing.T) {
-	dependency.RegisterGenerator(dependency.OasGeneratorDependency, func() interface{} { return oas.GetDefaultOasGeneratorInstance() })
+	dependency.RegisterGenerator(dependency.OasGeneratorDependency, func() interface{} {
+		instance := oas.GetDefaultOasGeneratorInstance()
+		return instance
+	})
 
 	recorder := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(recorder)
