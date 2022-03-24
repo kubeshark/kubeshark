@@ -3,8 +3,11 @@ package oas
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	basenine "github.com/up9inc/basenine/client/go"
+	"github.com/up9inc/mizu/agent/pkg/har"
 	"net"
+	"sync"
 	"testing"
 	"time"
 )
@@ -38,6 +41,7 @@ func TestOASGen(t *testing.T) {
 	_ = testCases
 
 	gen := new(defaultOasGenerator)
+	gen.serviceSpecs = &sync.Map{}
 	//fakeDB := new(FakeConn)
 	gen.dbConn = new(basenine.Connection)
 	gen.dbConn.Conn = &fakeConn{
@@ -48,8 +52,28 @@ func TestOASGen(t *testing.T) {
 	gen.ctx = ctx
 	gen.cancel = cancel
 	//gen.runGenerator()
-	ews := EntryWithSource{}
+	e := new(har.Entry)
+	err := json.Unmarshal([]byte(`{"startedDateTime": "20000101","request": {"url": "https://host/path", "method": "GET"}, "response": {"status": 200}}`), e)
+	if err != nil {
+		panic(err)
+	}
+
+	ews := &EntryWithSource{
+		Destination: "some",
+		Entry:       *e,
+	}
 	gen.handleHARWithSource(ews)
+	g, ok := gen.serviceSpecs.Load("some")
+	if !ok {
+		panic("Failed")
+	}
+	sg := g.(*SpecGen)
+	spec, err := sg.GetSpec()
+	if err != nil {
+		panic(err)
+	}
+	specText, err := json.Marshal(spec)
+	t.Log(string(specText))
 	/*
 		for _, tc := range testCases {
 			split := strings.Split(tc.inp, "/")

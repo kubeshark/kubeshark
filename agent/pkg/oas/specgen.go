@@ -80,7 +80,7 @@ func (g *SpecGen) feedEntry(entryWithSource *EntryWithSource) (string, error) {
 	g.lock.Lock()
 	defer g.lock.Unlock()
 
-	opId, err := g.handlePathObj(&entryWithSource)
+	opId, err := g.handlePathObj(entryWithSource)
 	if err != nil {
 		return "", err
 	}
