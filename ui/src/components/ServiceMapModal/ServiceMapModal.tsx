@@ -99,7 +99,7 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onOpen
     const commonClasses = useCommonStyles();
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [graphData, setGraphData] = useState<GraphData>({ nodes: [], edges: [] });
-
+   
     const getServiceMapData = useCallback(async () => {
         try {
             setIsLoading(true)
@@ -140,7 +140,7 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onOpen
             setGraphData(newGraphData)
 
         } catch (ex) {
-            toast.error("An error occurred while loading Mizu Service Map, see console for mode details");
+            toast.error("An error occurred while loading Mizu Service Map, see console for mode details",{containerId: 'Community'});
             console.error(ex);
         } finally {
             setIsLoading(false)

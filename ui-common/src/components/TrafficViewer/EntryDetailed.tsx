@@ -125,7 +125,7 @@ export const EntryDetailed = () => {
                         pauseOnHover: true,
                         draggable: true,
                         progress: undefined,
-                    });
+                    },{containerId: 'Common'});
                 }
                 console.error(error);
             }

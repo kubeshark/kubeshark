@@ -9,7 +9,6 @@ import playIcon from 'assets/run.svg';
 import pauseIcon from 'assets/pause.svg';
 import variables from '../../variables.module.scss';
 import { toast,ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 import debounce from 'lodash/debounce';
 import { RecoilRoot, RecoilState, useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 import entriesAtom from "../../recoil/entries";
@@ -194,7 +193,7 @@ export const TrafficViewer : React.FC<TrafficViewerProps> = ({setAnalyzeStatus, 
             pauseOnHover: true,
             draggable: true,
             progress: undefined,
-          });
+          },{containerId: 'Common'});
           break;
         case "queryMetadata":
           setQueriedCurrent(queriedCurrent + message.data.current);
@@ -349,7 +348,6 @@ export const TrafficViewer : React.FC<TrafficViewerProps> = ({setAnalyzeStatus, 
         setAddressesWithTLS={setAddressesWithTLS}
         userDismissedTLSWarning={userDismissedTLSWarning}
         setUserDismissedTLSWarning={setUserDismissedTLSWarning} />
-      <ToastContainer/>
     </div>
   );
 };
@@ -362,6 +360,16 @@ const TrafficViewerContainer: React.FC<TrafficViewerProps> = ({ setAnalyzeStatus
     <MemoiedTrafficViewer actionButtons={actionButtons} isShowStatusBar={isShowStatusBar} webSocketUrl={webSocketUrl}
                           isCloseWebSocket={isCloseWebSocket} trafficViewerApiProp={trafficViewerApiProp}
                           setAnalyzeStatus={setAnalyzeStatus} isDemoBannerView={isDemoBannerView} />
+     <ToastContainer enableMultiContainer containerId={'Common'} 
+            position="bottom-right"
+            autoClose={5000}
+            hideProgressBar={false}
+            newestOnTop={false}
+            closeOnClick
+            rtl={false}
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover/>
   </RecoilRoot>
 }
 

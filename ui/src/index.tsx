@@ -1,7 +1,7 @@
 import ReactDOM from 'react-dom';
 import './index.sass';
 import {ToastContainer} from "react-toastify";
-import 'react-toastify/dist/ReactToastify.css';
+import 'react-toastify/dist/ReactToastify.min.css';
 import {RecoilRoot} from "recoil";
 import App from './App';
 

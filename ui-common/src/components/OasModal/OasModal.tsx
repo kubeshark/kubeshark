@@ -42,7 +42,7 @@ const OasModal = ({ openModal, handleCloseModal, getOasServices, getOasByService
         const data = await getOasByService(selectedService);
         setSelectedServiceSpec(data);
       } catch (e) {
-        toast.error("Error occurred while fetching service OAS spec");
+        toast.error("Error occurred while fetching service OAS spec",{containerId: 'Common'});
         console.error(e);
       }
     }
