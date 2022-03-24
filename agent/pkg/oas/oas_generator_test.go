@@ -1,9 +1,27 @@
 package oas
 
 import (
+	"bytes"
+	"context"
 	basenine "github.com/up9inc/basenine/client/go"
+	"net"
 	"testing"
+	"time"
 )
+
+type fakeConn struct {
+	sendBuffer    *bytes.Buffer
+	receiveBuffer *bytes.Buffer
+}
+
+func (f fakeConn) Read(p []byte) (int, error)       { return f.sendBuffer.Read(p) }
+func (f fakeConn) Write(p []byte) (int, error)      { return f.receiveBuffer.Write(p) }
+func (fakeConn) Close() error                       { return nil }
+func (fakeConn) LocalAddr() net.Addr                { return nil }
+func (fakeConn) RemoteAddr() net.Addr               { return nil }
+func (fakeConn) SetDeadline(t time.Time) error      { return nil }
+func (fakeConn) SetReadDeadline(t time.Time) error  { return nil }
+func (fakeConn) SetWriteDeadline(t time.Time) error { return nil }
 
 func TestOASGen(t *testing.T) {
 	testCases := []struct {
@@ -20,8 +38,16 @@ func TestOASGen(t *testing.T) {
 	_ = testCases
 
 	gen := new(defaultOasGenerator)
-	fakeDB := new(basenine.Connection)
-	gen.runGenerator(fakeDB)
+	//fakeDB := new(FakeConn)
+	gen.dbConn = new(basenine.Connection)
+	gen.dbConn.Conn = &fakeConn{
+		sendBuffer:    bytes.NewBufferString(""),
+		receiveBuffer: bytes.NewBufferString(""),
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	gen.ctx = ctx
+	gen.cancel = cancel
+	gen.runGenerator()
 	/*
 		for _, tc := range testCases {
 			split := strings.Split(tc.inp, "/")

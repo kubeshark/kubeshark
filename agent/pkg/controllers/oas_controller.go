@@ -12,7 +12,7 @@ import (
 
 func GetOASServers(c *gin.Context) {
 	m := make([]string, 0)
-	oasGenerator := dependency.GetInstance(dependency.OasGeneratorDependency).(oas.OasGenerator)
+	oasGenerator := dependency.GetInstance(dependency.OasGeneratorDependency).(oas.Generator)
 	oasGenerator.GetServiceSpecs().Range(func(key, value interface{}) bool {
 		m = append(m, key.(string))
 		return true
@@ -22,7 +22,7 @@ func GetOASServers(c *gin.Context) {
 }
 
 func GetOASSpec(c *gin.Context) {
-	oasGenerator := dependency.GetInstance(dependency.OasGeneratorDependency).(oas.OasGenerator)
+	oasGenerator := dependency.GetInstance(dependency.OasGeneratorDependency).(oas.Generator)
 	res, ok := oasGenerator.GetServiceSpecs().Load(c.Param("id"))
 	if !ok {
 		c.JSON(http.StatusNotFound, gin.H{
@@ -52,7 +52,7 @@ func GetOASSpec(c *gin.Context) {
 func GetOASAllSpecs(c *gin.Context) {
 	res := map[string]*openapi.OpenAPI{}
 
-	oasGenerator := dependency.GetInstance(dependency.OasGeneratorDependency).(oas.OasGenerator)
+	oasGenerator := dependency.GetInstance(dependency.OasGeneratorDependency).(oas.Generator)
 	oasGenerator.GetServiceSpecs().Range(func(key, value interface{}) bool {
 		svc := key.(string)
 		gen := value.(*oas.SpecGen)

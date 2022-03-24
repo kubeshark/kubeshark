@@ -192,7 +192,8 @@ func TestFileSingle(t *testing.T) {
 func waitQueueProcessed() {
 	for {
 		time.Sleep(100 * time.Millisecond)
-		queue := len(GetDefaultOasGeneratorInstance().entriesChan)
+		//queue := len(GetDefaultOasGeneratorInstance().entriesChan)
+		queue := 0
 		logger.Log.Infof("Queue: %d", queue)
 		if queue < 1 {
 			break
