@@ -11,8 +11,16 @@ import (
 const bpfFilterMaxPods = 150
 const hostSourcePid = "0"
 
+type PacketSourceManagerConfig struct {
+	mtls          bool
+	procfs        string
+	interfaceName string
+	behaviour     TcpPacketSourceBehaviour
+}
+
 type PacketSourceManager struct {
 	sources map[string]*tcpPacketSource
+	config  PacketSourceManagerConfig
 }
 
 func NewPacketSourceManager(procfs string, filename string, interfaceName string,
@@ -28,7 +36,14 @@ func NewPacketSourceManager(procfs string, filename string, interfaceName string
 		},
 	}
 
-	sourceManager.UpdatePods(mtls, procfs, pods, interfaceName, behaviour)
+	sourceManager.config = PacketSourceManagerConfig{
+		mtls: mtls,
+		procfs: procfs,
+		interfaceName: interfaceName,
+		behaviour: behaviour,
+	}
+
+	sourceManager.UpdatePods(pods)
 	return sourceManager, nil
 }
 
@@ -49,10 +64,9 @@ func newHostPacketSource(filename string, interfaceName string,
 	return source, nil
 }
 
-func (m *PacketSourceManager) UpdatePods(mtls bool, procfs string, pods []v1.Pod,
-	interfaceName string, behaviour TcpPacketSourceBehaviour) {
-	if mtls {
-		m.updateMtlsPods(procfs, pods, interfaceName, behaviour)
+func (m *PacketSourceManager) UpdatePods(pods []v1.Pod) {
+	if m.config.mtls {
+		m.updateMtlsPods(m.config.procfs, pods, m.config.interfaceName, m.config.behaviour)
 	}
 
 	m.setBPFFilter(pods)
