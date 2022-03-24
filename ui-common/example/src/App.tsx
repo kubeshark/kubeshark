@@ -1,4 +1,4 @@
-import TrafficViewer,{useWS, DEFAULT_QUERY} from '@up9/mizu-common';
+import TrafficViewer,{useWS, DEFAULT_QUERY, OasModal} from '@up9/mizu-common';
 import "@up9/mizu-common/dist/index.css"
 import {useEffect} from 'react';
 import Api, {getWebsocketUrl} from "./api";
@@ -17,8 +17,7 @@ const App = () => {
   },[])
 
   return <>
-    <TrafficViewer message={message} error={error} isWebSocketOpen={isOpen}
-                   trafficViewerApiProp={trafficViewerApi} ></TrafficViewer>
+
   </>
 }
 

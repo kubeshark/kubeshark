@@ -111,9 +111,9 @@ func checkRulesPermissions(ctx context.Context, kubernetesProvider *kubernetes.P
 func checkPermissionExist(group string, resource string, verb string, namespace string, exist bool, err error) bool {
 	var groupAndNamespace string
 	if group != "" && namespace != "" {
-		groupAndNamespace = fmt.Sprintf("in group '%v' and namespace '%v'", group, namespace)
+		groupAndNamespace = fmt.Sprintf("in api group '%v' and namespace '%v'", group, namespace)
 	} else if group != "" {
-		groupAndNamespace = fmt.Sprintf("in group '%v'", group)
+		groupAndNamespace = fmt.Sprintf("in api group '%v'", group)
 	} else if namespace != "" {
 		groupAndNamespace = fmt.Sprintf("in namespace '%v'", namespace)
 	}
