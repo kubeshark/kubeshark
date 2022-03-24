@@ -375,7 +375,6 @@ func handleRequest(req *har.Request, opObj *openapi.Operation, isSuccess bool, s
 	}
 	handleNameVals(hdrGW, &opObj.Parameters, true, sampleId)
 
-	// TODO: set sample ID for body
 	if isSuccess {
 		reqBody, err := getRequestBody(req, opObj)
 		if err != nil {
