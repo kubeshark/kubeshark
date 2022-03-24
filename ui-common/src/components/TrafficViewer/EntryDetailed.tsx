@@ -11,6 +11,7 @@ import trafficViewerApi from "../../recoil/TrafficViewerApi";
 import TrafficViewerApi from "./TrafficViewerApi";
 import TrafficViewerApiAtom from "../../recoil/TrafficViewerApi/atom";
 import queryAtom from "../../recoil/query/atom";
+import useWindowDimensions, { useRequestTextByWidth } from "../../hooks/WindowDimensionsHook";
 
 const useStyles = makeStyles(() => ({
     entryTitle: {
@@ -35,15 +36,18 @@ const useStyles = makeStyles(() => ({
 }));
 
 export const formatSize = (n: number) => n > 1000 ? `${Math.round(n / 1000)}KB` : `${n} B`;
-
+const minSizeDisplayRequestSize = 880;
 const EntryTitle: React.FC<any> = ({protocol, data, elapsedTime}) => {
     const classes = useStyles();
     const request = data.request;
     const response = data.response;
 
+    const { width } = useWindowDimensions();
+    const {requestText, responseText, elapsedTimeText} = useRequestTextByWidth(width)
+
     return <div className={classes.entryTitle}>
         <Protocol protocol={protocol} horizontal={true}/>
-        <div style={{right: "30px", position: "absolute", display: "flex"}}>
+        {(width > minSizeDisplayRequestSize) && <div style={{right: "30px", position: "absolute", display: "flex"}}>
             {request && <Queryable
                 query={`requestSize == ${data.requestSize}`}
                 style={{margin: "0 18px"}}
@@ -53,7 +57,7 @@ const EntryTitle: React.FC<any> = ({protocol, data, elapsedTime}) => {
                     style={{opacity: 0.5}}
                     id="entryDetailedTitleRequestSize"
                 >
-                    {`Request: ${formatSize(data.requestSize)}`}
+                    {`${requestText}${formatSize(data.requestSize)}`}
                 </div>
             </Queryable>}
             {response && <Queryable
@@ -65,22 +69,22 @@ const EntryTitle: React.FC<any> = ({protocol, data, elapsedTime}) => {
                     style={{opacity: 0.5}}
                     id="entryDetailedTitleResponseSize"
                 >
-                    {`Response: ${formatSize(data.responseSize)}`}
+                    {`${responseText}${formatSize(data.responseSize)}`}
                 </div>
             </Queryable>}
             {response && <Queryable
                 query={`elapsedTime >= ${elapsedTime}`}
-                style={{marginRight: 18}}
+                style={{margin: "0 0 0 18px"}}
                 displayIconOnMouseOver={true}
             >
                 <div
                     style={{opacity: 0.5}}
                     id="entryDetailedTitleElapsedTime"
                 >
-                    {`Elapsed Time: ${Math.round(elapsedTime)}ms`}
+                    {`${elapsedTimeText}${Math.round(elapsedTime)}ms`}
                 </div>
             </Queryable>}
-        </div>
+        </div>}
     </div>;
 };
 
