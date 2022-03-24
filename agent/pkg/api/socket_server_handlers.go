@@ -7,6 +7,7 @@ import (
 
 	"github.com/up9inc/mizu/agent/pkg/models"
 	"github.com/up9inc/mizu/agent/pkg/providers"
+	"github.com/up9inc/mizu/agent/pkg/providers/tappedPods"
 	"github.com/up9inc/mizu/agent/pkg/providers/tappers"
 	"github.com/up9inc/mizu/agent/pkg/up9"
 
@@ -17,6 +18,7 @@ import (
 )
 
 var browserClientSocketUUIDs = make([]int, 0)
+var tapperClientSocketUUIDs = make([]int, 0)
 var socketListLock = sync.Mutex{}
 
 type RoutesEventHandlers struct {
@@ -32,6 +34,13 @@ func (h *RoutesEventHandlers) WebSocketConnect(socketId int, isTapper bool) {
 	if isTapper {
 		logger.Log.Infof("Websocket event - Tapper connected, socket ID: %d", socketId)
 		tappers.Connected()
+
+		socketListLock.Lock()
+		tapperClientSocketUUIDs = append(tapperClientSocketUUIDs, socketId)
+		socketListLock.Unlock()
+
+		nodeToTappedPodMap := tappedPods.GetNodeToTappedPodMap()
+		SendTappedPods(socketId, nodeToTappedPodMap)
 	} else {
 		logger.Log.Infof("Websocket event - Browser socket connected, socket ID: %d", socketId)
 
@@ -47,6 +56,10 @@ func (h *RoutesEventHandlers) WebSocketDisconnect(socketId int, isTapper bool) {
 	if isTapper {
 		logger.Log.Infof("Websocket event - Tapper disconnected, socket ID:  %d", socketId)
 		tappers.Disconnected()
+
+		socketListLock.Lock()
+		removeSocketUUIDFromTapperSlice(socketId)
+		socketListLock.Unlock()
 	} else {
 		logger.Log.Infof("Websocket event - Browser socket disconnected, socket ID:  %d", socketId)
 		socketListLock.Lock()
@@ -57,6 +70,16 @@ func (h *RoutesEventHandlers) WebSocketDisconnect(socketId int, isTapper bool) {
 
 func BroadcastToBrowserClients(message []byte) {
 	for _, socketId := range browserClientSocketUUIDs {
+		go func(socketId int) {
+			if err := SendToSocket(socketId, message); err != nil {
+				logger.Log.Error(err)
+			}
+		}(socketId)
+	}
+}
+
+func BroadcastToTapperClients(message []byte) {
+	for _, socketId := range tapperClientSocketUUIDs {
 		go func(socketId int) {
 			if err := SendToSocket(socketId, message); err != nil {
 				logger.Log.Error(err)
@@ -134,4 +157,14 @@ func removeSocketUUIDFromBrowserSlice(uuidToRemove int) {
 		}
 	}
 	browserClientSocketUUIDs = newUUIDSlice
+}
+
+func removeSocketUUIDFromTapperSlice(uuidToRemove int) {
+	newUUIDSlice := make([]int, 0, len(tapperClientSocketUUIDs))
+	for _, uuid := range tapperClientSocketUUIDs {
+		if uuid != uuidToRemove {
+			newUUIDSlice = append(newUUIDSlice, uuid)
+		}
+	}
+	tapperClientSocketUUIDs = newUUIDSlice
 }

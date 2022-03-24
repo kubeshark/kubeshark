@@ -5,6 +5,7 @@ import (
 	"github.com/go-errors/errors"
 	"github.com/up9inc/mizu/shared/logger"
 	"github.com/up9inc/mizu/tap/api"
+	"sync"
 )
 
 //go:generate go run github.com/cilium/ebpf/cmd/bpf2go tlsTapper bpf/tls_tapper.c -- -O2 -g -D__TARGET_ARCH_x86
@@ -14,6 +15,7 @@ type TlsTapper struct {
 	syscallHooks    syscallHooks
 	sslHooksStructs []sslHooks
 	poller          *tlsPoller
+	registeredPids  sync.Map
 }
 
 func (t *TlsTapper) Init(bufferSize int, procfs string, extension *api.Extension) error {
@@ -70,6 +72,16 @@ func (t *TlsTapper) RemovePid(pid uint32) error {
 	return nil
 }
 
+func (t *TlsTapper) ClearPids() {
+	t.registeredPids.Range(func(key, v interface{}) bool {
+		if err := t.RemovePid(key.(uint32)); err != nil {
+			LogError(err)
+		}
+		t.registeredPids.Delete(key)
+		return true
+	})
+}
+
 func (t *TlsTapper) Close() []error {
 	errors := make([]error, 0)
 
@@ -116,6 +128,8 @@ func (t *TlsTapper) tapPid(pid uint32, sslLibrary string) error {
 	if err := pids.Put(pid, uint32(1)); err != nil {
 		return errors.Wrap(err, 0)
 	}
+	
+	t.registeredPids.Store(pid, true)
 
 	return nil
 }
