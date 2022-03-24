@@ -132,7 +132,7 @@ func printNewTapTargets(success bool) {
 	}
 	printStr = strings.TrimRight(printStr, ", ")
 
-	if success == true {
+	if success {
 		logger.Log.Infof("Now tapping: %s", printStr)
 	} else {
 		logger.Log.Errorf("Failed to start tapping: %s", printStr)
