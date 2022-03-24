@@ -77,8 +77,6 @@ func TestEntries(t *testing.T) {
 		t.Fail()
 	}
 
-	waitQueueProcessed()
-
 	svcs := strings.Builder{}
 	gen.serviceSpecs.Range(func(key, val interface{}) bool {
 		gen := val.(*SpecGen)
@@ -137,8 +135,6 @@ func TestFileSingle(t *testing.T) {
 		t.Fail()
 	}
 
-	waitQueueProcessed()
-
 	gen.serviceSpecs.Range(func(key, val interface{}) bool {
 		svc := key.(string)
 		gen := val.(*SpecGen)
@@ -190,18 +186,6 @@ func TestFileSingle(t *testing.T) {
 	})
 
 	logger.Log.Infof("Processed entries: %d", cnt)
-}
-
-func waitQueueProcessed() {
-	for {
-		time.Sleep(100 * time.Millisecond)
-		//queue := len(GetDefaultOasGeneratorInstance().entriesChan)
-		queue := 0
-		logger.Log.Infof("Queue: %d", queue)
-		if queue < 1 {
-			break
-		}
-	}
 }
 
 func loadStartingOAS(file string, label string, specs *sync.Map) {
