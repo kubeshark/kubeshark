@@ -12,6 +12,7 @@ import TrafficViewerApi from "./TrafficViewerApi";
 import TrafficViewerApiAtom from "../../recoil/TrafficViewerApi/atom";
 import queryAtom from "../../recoil/query/atom";
 import useWindowDimensions, { useRequestTextByWidth } from "../../hooks/WindowDimensionsHook";
+import { TOAST_CONTAINER_ID } from "../../configs/Consts";
 
 const useStyles = makeStyles(() => ({
     entryTitle: {
@@ -125,7 +126,7 @@ export const EntryDetailed = () => {
                         pauseOnHover: true,
                         draggable: true,
                         progress: undefined,
-                    },{containerId: 'Common'});
+                    },{containerId: TOAST_CONTAINER_ID});
                 }
                 console.error(error);
             }

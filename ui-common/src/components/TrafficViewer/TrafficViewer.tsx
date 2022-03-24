@@ -19,6 +19,7 @@ import trafficViewerApiAtom from "../../recoil/TrafficViewerApi"
 import TrafficViewerApi from "./TrafficViewerApi";
 import { StatusBar } from "../UI/StatusBar";
 import tappingStatusAtom from "../../recoil/tappingStatus/atom";
+import { TOAST_CONTAINER_ID } from "../../configs/Consts";
 
 const useLayoutStyles = makeStyles(() => ({
   details: {
@@ -193,7 +194,7 @@ export const TrafficViewer : React.FC<TrafficViewerProps> = ({setAnalyzeStatus, 
             pauseOnHover: true,
             draggable: true,
             progress: undefined,
-          },{containerId: 'Common'});
+          },{containerId: TOAST_CONTAINER_ID});
           break;
         case "queryMetadata":
           setQueriedCurrent(queriedCurrent + message.data.current);
@@ -360,7 +361,7 @@ const TrafficViewerContainer: React.FC<TrafficViewerProps> = ({ setAnalyzeStatus
     <MemoiedTrafficViewer actionButtons={actionButtons} isShowStatusBar={isShowStatusBar} webSocketUrl={webSocketUrl}
                           isCloseWebSocket={isCloseWebSocket} trafficViewerApiProp={trafficViewerApiProp}
                           setAnalyzeStatus={setAnalyzeStatus} isDemoBannerView={isDemoBannerView} />
-     <ToastContainer enableMultiContainer containerId={'Common'} 
+     <ToastContainer enableMultiContainer containerId={TOAST_CONTAINER_ID} 
             position="bottom-right"
             autoClose={5000}
             hideProgressBar={false}

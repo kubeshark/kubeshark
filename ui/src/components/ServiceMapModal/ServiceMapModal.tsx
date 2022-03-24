@@ -11,6 +11,7 @@ import ServiceMapOptions from './ServiceMapOptions'
 import { useCommonStyles } from "../../helpers/commonStyle";
 import refresh from "../assets/refresh.svg";
 import close from "../assets/close.svg";
+import { TOAST_CONTAINER_ID } from "../../consts";
 
 interface GraphData {
     nodes: Node[];
@@ -140,7 +141,7 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onOpen
             setGraphData(newGraphData)
 
         } catch (ex) {
-            toast.error("An error occurred while loading Mizu Service Map, see console for mode details",{containerId: 'Community'});
+            toast.error("An error occurred while loading Mizu Service Map, see console for mode details",{containerId: TOAST_CONTAINER_ID});
             console.error(ex);
         } finally {
             setIsLoading(false)
