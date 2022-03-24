@@ -8,7 +8,7 @@ import (
 )
 
 func TestOASGen(t *testing.T) {
-	gen := new(DefaultOasGenerator)
+	gen := new(defaultOasGenerator)
 	gen.serviceSpecs = &sync.Map{}
 
 	e := new(har.Entry)

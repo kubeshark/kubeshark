@@ -15,7 +15,7 @@ import (
 
 var (
 	syncOnce sync.Once
-	instance *DefaultOasGenerator
+	instance *defaultOasGenerator
 )
 
 type GeneratorSink interface {
@@ -30,7 +30,7 @@ type Generator interface {
 	GetServiceSpecs() *sync.Map
 }
 
-type DefaultOasGenerator struct {
+type defaultOasGenerator struct {
 	started      bool
 	ctx          context.Context
 	cancel       context.CancelFunc
@@ -38,7 +38,7 @@ type DefaultOasGenerator struct {
 	dbConn       *basenine.Connection
 }
 
-func GetDefaultOasGeneratorInstance(conn *basenine.Connection) *DefaultOasGenerator {
+func GetDefaultOasGeneratorInstance(conn *basenine.Connection) *defaultOasGenerator {
 	syncOnce.Do(func() {
 		if conn == nil {
 			c, err := basenine.NewConnection(shared.BasenineHost, shared.BaseninePort)
@@ -54,7 +54,7 @@ func GetDefaultOasGeneratorInstance(conn *basenine.Connection) *DefaultOasGenera
 	return instance
 }
 
-func (g *DefaultOasGenerator) Start() {
+func (g *defaultOasGenerator) Start() {
 	if g.started {
 		return
 	}
@@ -66,7 +66,7 @@ func (g *DefaultOasGenerator) Start() {
 	go g.runGenerator()
 }
 
-func (g *DefaultOasGenerator) Stop() {
+func (g *defaultOasGenerator) Stop() {
 	if !g.started {
 		return
 	}
@@ -75,11 +75,11 @@ func (g *DefaultOasGenerator) Stop() {
 	g.started = false
 }
 
-func (g *DefaultOasGenerator) IsStarted() bool {
+func (g *defaultOasGenerator) IsStarted() bool {
 	return g.started
 }
 
-func (g *DefaultOasGenerator) runGenerator() {
+func (g *defaultOasGenerator) runGenerator() {
 	// Make []byte channels to recieve the data and the meta
 	dataChan := make(chan []byte)
 	metaChan := make(chan []byte)
@@ -116,7 +116,7 @@ func (g *DefaultOasGenerator) runGenerator() {
 	}
 }
 
-func (g *DefaultOasGenerator) handleEntry(mizuEntry *api.Entry) {
+func (g *defaultOasGenerator) handleEntry(mizuEntry *api.Entry) {
 	entry, err := har.NewEntry(mizuEntry.Request, mizuEntry.Response, mizuEntry.StartTime, mizuEntry.ElapsedTime)
 	if err != nil {
 		logger.Log.Warningf("Failed to turn MizuEntry %d into HAR Entry: %s", mizuEntry.Id, err)
@@ -138,7 +138,7 @@ func (g *DefaultOasGenerator) handleEntry(mizuEntry *api.Entry) {
 	g.handleHARWithSource(entryWSource)
 }
 
-func (g *DefaultOasGenerator) handleHARWithSource(entryWSource *EntryWithSource) {
+func (g *defaultOasGenerator) handleHARWithSource(entryWSource *EntryWithSource) {
 	entry := entryWSource.Entry
 	gen := g.getGen(entryWSource.Destination, entry.Request.URL)
 
@@ -156,7 +156,7 @@ func (g *DefaultOasGenerator) handleHARWithSource(entryWSource *EntryWithSource)
 	logger.Log.Debugf("Handled entry %d as opId: %s", entryWSource.Id, opId) // TODO: set opId back to entry?
 }
 
-func (g *DefaultOasGenerator) getGen(dest string, urlStr string) *SpecGen {
+func (g *defaultOasGenerator) getGen(dest string, urlStr string) *SpecGen {
 	u, err := url.Parse(urlStr)
 	if err != nil {
 		logger.Log.Errorf("Failed to parse entry URL: %v, err: %v", urlStr, err)
@@ -173,16 +173,16 @@ func (g *DefaultOasGenerator) getGen(dest string, urlStr string) *SpecGen {
 	return gen
 }
 
-func (g *DefaultOasGenerator) Reset() {
+func (g *defaultOasGenerator) Reset() {
 	g.serviceSpecs = &sync.Map{}
 }
 
-func (g *DefaultOasGenerator) GetServiceSpecs() *sync.Map {
+func (g *defaultOasGenerator) GetServiceSpecs() *sync.Map {
 	return g.serviceSpecs
 }
 
-func NewDefaultOasGenerator(c *basenine.Connection) *DefaultOasGenerator {
-	return &DefaultOasGenerator{
+func NewDefaultOasGenerator(c *basenine.Connection) *defaultOasGenerator {
+	return &defaultOasGenerator{
 		started:      false,
 		ctx:          nil,
 		cancel:       nil,

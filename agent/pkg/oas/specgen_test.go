@@ -71,7 +71,7 @@ func TestEntries(t *testing.T) {
 		}
 	}()
 
-	cnt, err := feedEntries(files, true)
+	cnt, err := feedEntries(files, true, gen)
 	if err != nil {
 		t.Log(err)
 		t.Fail()
@@ -131,7 +131,7 @@ func TestFileSingle(t *testing.T) {
 	// loadStartingOAS()
 	file := "test_artifacts/params.har"
 	files := []string{file}
-	cnt, err := feedEntries(files, true)
+	cnt, err := feedEntries(files, true, gen)
 	if err != nil {
 		logger.Log.Warning("Failed processing file: " + err.Error())
 		t.Fail()
@@ -230,8 +230,10 @@ func loadStartingOAS(file string, label string, specs *sync.Map) {
 }
 
 func TestEntriesNegative(t *testing.T) {
+	gen := NewDefaultOasGenerator(nil)
+	gen.serviceSpecs = new(sync.Map)
 	files := []string{"invalid"}
-	_, err := feedEntries(files, false)
+	_, err := feedEntries(files, false, gen)
 	if err == nil {
 		t.Logf("Should have failed")
 		t.Fail()
@@ -239,8 +241,10 @@ func TestEntriesNegative(t *testing.T) {
 }
 
 func TestEntriesPositive(t *testing.T) {
+	gen := NewDefaultOasGenerator(nil)
+	gen.serviceSpecs = new(sync.Map)
 	files := []string{"test_artifacts/params.har"}
-	_, err := feedEntries(files, false)
+	_, err := feedEntries(files, false, gen)
 	if err != nil {
 		t.Logf("Failed")
 		t.Fail()
