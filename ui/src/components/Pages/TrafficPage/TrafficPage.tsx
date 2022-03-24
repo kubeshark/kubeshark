@@ -43,7 +43,7 @@ const trafficViewerApi = {...api}
                                 type="submit"
                                 variant="contained"
                                 className={commonClasses.outlinedButton + " " + commonClasses.imagedButton}
-                                style={{ marginRight: 25 }}
+                                style={{ marginRight: 25, textTransform: 'unset' }}
                                 onClick={handleOpenOasModal}>
                                 OpenApi Specs
                               </Button>}
@@ -52,7 +52,8 @@ const trafficViewerApi = {...api}
                                 size="large"
                                 variant="contained"
                                 className={commonClasses.outlinedButton + " " + commonClasses.imagedButton}
-                                onClick={openServiceMapModalDebounce}>
+                                onClick={openServiceMapModalDebounce}
+                                style={{textTransform: 'unset'}}>
                                 Service Map
                               </Button>}
                         </div>
@@ -66,7 +67,7 @@ const trafficViewerApi = {...api}
   return (
   <>
       <TrafficViewer setAnalyzeStatus={setAnalyzeStatus} webSocketUrl={getWebsocketUrl()} isCloseWebSocket={!openWebSocket}
-                     trafficViewerApiProp={trafficViewerApi} actionButtons={actionButtons} isShowStatusBar={!openOasModal}/>
+                     trafficViewerApiProp={trafficViewerApi} actionButtons={actionButtons} isShowStatusBar={!openOasModal} isDemoBannerView={false}/>
   </>
   );
 };
