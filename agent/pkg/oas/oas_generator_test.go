@@ -31,6 +31,6 @@ func TestOASGen(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	specText, err := json.Marshal(spec)
+	specText, _ := json.Marshal(spec)
 	t.Log(string(specText))
 }
