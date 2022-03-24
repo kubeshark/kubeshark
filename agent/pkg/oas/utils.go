@@ -115,7 +115,7 @@ type nvParams struct {
 	GeneralizeName func(name string) string
 }
 
-func handleNameVals(gw nvParams, params **openapi.ParameterList, checkIgnore bool) {
+func handleNameVals(gw nvParams, params **openapi.ParameterList, checkIgnore bool, sampleId uint) {
 	visited := map[string]*openapi.ParameterObj{}
 	for _, pair := range gw.Pairs {
 		if (checkIgnore && gw.IsIgnored(pair.Name)) || pair.Name == "" {
@@ -137,6 +137,8 @@ func handleNameVals(gw nvParams, params **openapi.ParameterList, checkIgnore boo
 			logger.Log.Warningf("Failed to add example to a parameter: %s", err)
 		}
 		visited[nameGeneral] = param
+
+		setSampleID(&param.Extensions, sampleId)
 	}
 
 	// maintain "required" flag
@@ -473,4 +475,16 @@ func intersectSliceWithMap(required []string, names map[string]struct{}) []strin
 		}
 	}
 	return required
+}
+
+func setSampleID(extensions *openapi.Extensions, id uint) {
+	if id > 0 {
+		if *extensions == nil {
+			*extensions = openapi.Extensions{}
+		}
+		err := (extensions).SetExtension(SampleId, id)
+		if err != nil {
+			logger.Log.Warningf("Failed to set sample ID: %s", err)
+		}
+	}
 }

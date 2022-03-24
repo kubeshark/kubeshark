@@ -20,7 +20,7 @@ type Node struct {
 	children  []*Node
 }
 
-func (n *Node) getOrSet(path NodePath, existingPathObj *openapi.PathObj) (node *Node) {
+func (n *Node) getOrSet(path NodePath, existingPathObj *openapi.PathObj, sampleId uint) (node *Node) {
 	if existingPathObj == nil {
 		panic("Invalid function call")
 	}
@@ -78,6 +78,8 @@ func (n *Node) getOrSet(path NodePath, existingPathObj *openapi.PathObj) (node *
 			logger.Log.Warningf("Failed to add example to a parameter: %s", err)
 		}
 
+		setSampleID(&node.pathParam.Extensions, sampleId)
+
 		if len(*exmp) >= 3 && node.pathParam.Schema.Pattern == nil { // is it enough to decide on 2 samples?
 			node.pathParam.Schema.Pattern = getPatternFromExamples(exmp)
 		}
@@ -85,7 +87,7 @@ func (n *Node) getOrSet(path NodePath, existingPathObj *openapi.PathObj) (node *
 
 	// TODO: eat up trailing slash, in a smart way: node.pathObj!=nil && path[1]==""
 	if len(path) > 1 {
-		return node.getOrSet(path[1:], existingPathObj)
+		return node.getOrSet(path[1:], existingPathObj, sampleId)
 	} else if node.pathObj == nil {
 		node.pathObj = existingPathObj
 	}

@@ -45,7 +45,7 @@
           "sumDuration": 0
         },
         "x-last-seen-ts": 1567750580.04,
-        "x-sample-entry": 0
+        "x-sample-entry": 4
       }
     },
     "/appears-twice": {
@@ -82,7 +82,7 @@
           "sumDuration": 1
         },
         "x-last-seen-ts": 1567750581.74,
-        "x-sample-entry": 0
+        "x-sample-entry": 6
       }
     },
     "/body-optional": {
@@ -117,7 +117,7 @@
           "sumDuration": 0.01
         },
         "x-last-seen-ts": 1567750581.75,
-        "x-sample-entry": 0,
+        "x-sample-entry": 12,
         "requestBody": {
           "description": "Generic request body",
           "content": {
@@ -160,7 +160,7 @@
           "sumDuration": 0
         },
         "x-last-seen-ts": 1567750581.75,
-        "x-sample-entry": 0,
+        "x-sample-entry": 13,
         "requestBody": {
           "description": "Generic request body",
           "content": {
@@ -206,7 +206,7 @@
           "sumDuration": 0
         },
         "x-last-seen-ts": 1567750582.74,
-        "x-sample-entry": 0,
+        "x-sample-entry": 9,
         "requestBody": {
           "description": "Generic request body",
           "content": {
@@ -272,7 +272,7 @@
           "sumDuration": 1
         },
         "x-last-seen-ts": 1567750581.74,
-        "x-sample-entry": 0,
+        "x-sample-entry": 8,
         "requestBody": {
           "description": "Generic request body",
           "content": {
@@ -354,7 +354,7 @@
           "sumDuration": 0
         },
         "x-last-seen-ts": 1567750582,
-        "x-sample-entry": 0
+        "x-sample-entry": 14
       },
       "parameters": [
         {
@@ -369,7 +369,8 @@
             "example #0": {
               "value": "234324"
             }
-          }
+          },
+          "x-sample-entry": 14
         }
       ]
     },
@@ -408,7 +409,7 @@
           "sumDuration": 9.53e-7
         },
         "x-last-seen-ts": 1567750582.00,
-        "x-sample-entry": 0
+        "x-sample-entry": 18
       },
       "parameters": [
         {
@@ -436,7 +437,8 @@
             "example #4": {
               "value": "prefix-gibberish-afterwards"
             }
-          }
+          },
+          "x-sample-entry": 19
         }
       ]
     },
@@ -475,7 +477,7 @@
           "sumDuration": 0
         },
         "x-last-seen-ts": 1567750582.00,
-        "x-sample-entry": 0
+        "x-sample-entry": 15
       },
       "parameters": [
         {
@@ -503,7 +505,8 @@
             "example #4": {
               "value": "prefix-gibberish-afterwards"
             }
-          }
+          },
+          "x-sample-entry": 19
         }
       ]
     },
@@ -542,7 +545,7 @@
           "sumDuration": 0
         },
         "x-last-seen-ts": 1567750582.00,
-        "x-sample-entry": 0
+        "x-sample-entry": 16
       },
       "parameters": [
         {
@@ -570,7 +573,8 @@
             "example #4": {
               "value": "prefix-gibberish-afterwards"
             }
-          }
+          },
+          "x-sample-entry": 19
         }
       ]
     },
@@ -609,7 +613,7 @@
           "sumDuration": 0
         },
         "x-last-seen-ts": 1567750582.00,
-        "x-sample-entry": 0
+        "x-sample-entry": 19
       },
       "parameters": [
         {
@@ -624,7 +628,8 @@
             "example #0": {
               "value": "23421"
             }
-          }
+          },
+          "x-sample-entry": 19
         },
         {
           "name": "parampatternId",
@@ -651,7 +656,8 @@
             "example #4": {
               "value": "prefix-gibberish-afterwards"
             }
-          }
+          },
+          "x-sample-entry": 19
         }
       ]
     },
@@ -689,7 +695,7 @@
           "sumDuration": 0
         },
         "x-last-seen-ts": 1567750579.74,
-        "x-sample-entry": 0
+        "x-sample-entry": 3
       },
       "parameters": [
         {
@@ -707,7 +713,8 @@
             "example #1": {
               "value": "<UUID4>"
             }
-          }
+          },
+          "x-sample-entry": 3
         }
       ]
     },
@@ -743,7 +750,7 @@
           "sumDuration": 0
         },
         "x-last-seen-ts": 1567750483.86,
-        "x-sample-entry": 0
+        "x-sample-entry": 1
       },
       "parameters": [
         {
@@ -761,7 +768,8 @@
             "example #1": {
               "value": "<UUID4>"
             }
-          }
+          },
+          "x-sample-entry": 3
         }
       ]
     },
@@ -799,7 +807,7 @@
           "sumDuration": 0
         },
         "x-last-seen-ts": 1567750578.74,
-        "x-sample-entry": 0
+        "x-sample-entry": 2
       },
       "parameters": [
         {
@@ -817,7 +825,8 @@
             "example #1": {
               "value": "<UUID4>"
             }
-          }
+          },
+          "x-sample-entry": 3
         }
       ]
     }

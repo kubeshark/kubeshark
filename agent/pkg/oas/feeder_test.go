@@ -67,13 +67,13 @@ func fileSize(fname string) int64 {
 	return fi.Size()
 }
 
-func feedEntries(fromFiles []string, isSync bool, gen *defaultOasGenerator) (count int, err error) {
+func feedEntries(fromFiles []string, isSync bool, gen *defaultOasGenerator) (count uint, err error) {
 	badFiles := make([]string, 0)
-	cnt := 0
+	cnt := uint(0)
 	for _, file := range fromFiles {
 		logger.Log.Info("Processing file: " + file)
 		ext := strings.ToLower(filepath.Ext(file))
-		eCnt := 0
+		eCnt := uint(0)
 		switch ext {
 		case ".har":
 			eCnt, err = feedFromHAR(file, isSync, gen)
@@ -102,7 +102,7 @@ func feedEntries(fromFiles []string, isSync bool, gen *defaultOasGenerator) (cou
 	return cnt, nil
 }
 
-func feedFromHAR(file string, isSync bool, gen *defaultOasGenerator) (int, error) {
+func feedFromHAR(file string, isSync bool, gen *defaultOasGenerator) (uint, error) {
 	fd, err := os.Open(file)
 	if err != nil {
 		panic(err)
@@ -121,16 +121,16 @@ func feedFromHAR(file string, isSync bool, gen *defaultOasGenerator) (int, error
 		return 0, err
 	}
 
-	cnt := 0
+	cnt := uint(0)
 	for _, entry := range harDoc.Log.Entries {
 		cnt += 1
-		feedEntry(&entry, "", isSync, file, gen)
+		feedEntry(&entry, "", file, gen, cnt)
 	}
 
 	return cnt, nil
 }
 
-func feedEntry(entry *har.Entry, source string, isSync bool, file string, gen *defaultOasGenerator) {
+func feedEntry(entry *har.Entry, source string, file string, gen *defaultOasGenerator, cnt uint) {
 	entry.Comment = file
 	if entry.Response.Status == 302 {
 		logger.Log.Debugf("Dropped traffic entry due to permanent redirect status: %s", entry.StartedDateTime)
@@ -145,11 +145,11 @@ func feedEntry(entry *har.Entry, source string, isSync bool, file string, gen *d
 		logger.Log.Errorf("Failed to parse entry URL: %v, err: %v", entry.Request.URL, err)
 	}
 
-	ews := EntryWithSource{Entry: *entry, Source: source, Destination: u.Host, Id: uint(0)}
+	ews := EntryWithSource{Entry: *entry, Source: source, Destination: u.Host, Id: cnt}
 	gen.handleHARWithSource(&ews)
 }
 
-func feedFromLDJSON(file string, isSync bool, gen *defaultOasGenerator) (int, error) {
+func feedFromLDJSON(file string, isSync bool, gen *defaultOasGenerator) (uint, error) {
 	fd, err := os.Open(file)
 	if err != nil {
 		panic(err)
@@ -161,7 +161,7 @@ func feedFromLDJSON(file string, isSync bool, gen *defaultOasGenerator) (int, er
 
 	var meta map[string]interface{}
 	buf := strings.Builder{}
-	cnt := 0
+	cnt := uint(0)
 	source := ""
 	for {
 		substr, isPrefix, err := reader.ReadLine()
@@ -192,7 +192,7 @@ func feedFromLDJSON(file string, isSync bool, gen *defaultOasGenerator) (int, er
 				logger.Log.Warningf("Failed decoding entry: %s", line)
 			} else {
 				cnt += 1
-				feedEntry(&entry, source, isSync, file, gen)
+				feedEntry(&entry, source, file, gen, cnt)
 			}
 		}
 	}
