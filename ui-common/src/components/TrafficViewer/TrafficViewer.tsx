@@ -357,11 +357,11 @@ export const TrafficViewer : React.FC<TrafficViewerProps> = ({setAnalyzeStatus, 
 const MemoiedTrafficViewer = React.memo(TrafficViewer)
 const TrafficViewerContainer: React.FC<TrafficViewerProps> = ({ setAnalyzeStatus, trafficViewerApiProp,
                                                                 actionButtons, isShowStatusBar = true ,
-                                                                webSocketUrl, isCloseWebSocket}) => {
+                                                                webSocketUrl, isCloseWebSocket, isDemoBannerView}) => {
   return <RecoilRoot>
     <MemoiedTrafficViewer actionButtons={actionButtons} isShowStatusBar={isShowStatusBar} webSocketUrl={webSocketUrl}
                           isCloseWebSocket={isCloseWebSocket} trafficViewerApiProp={trafficViewerApiProp}
-                          setAnalyzeStatus={setAnalyzeStatus} />
+                          setAnalyzeStatus={setAnalyzeStatus} isDemoBannerView={isDemoBannerView} />
   </RecoilRoot>
 }
 
