@@ -66,6 +66,7 @@ var filteringOptions *api.TrafficFilteringOptions   // global
 var tapTargets []v1.Pod                             // global
 var packetSourceManager *source.PacketSourceManager // global
 var mainPacketInputChan chan source.TcpPacketInfo   // global
+var tlsTapperInstance *tlstapper.TlsTapper          // global
 
 func inArrayInt(arr []int, valueToCheck int) bool {
 	for _, value := range arr {
@@ -92,7 +93,7 @@ func StartPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem, 
 	if *tls {
 		for _, e := range extensions {
 			if e.Protocol.Name == "http" {
-				startTlsTapper(e, outputItems, options)
+				tlsTapperInstance = startTlsTapper(e, outputItems, options)
 				break
 			}
 		}
@@ -110,6 +111,12 @@ func UpdateTapTargets(newTapTargets []v1.Pod) {
 	if err := initializePacketSources(); err != nil {
 		logger.Log.Fatal(err)
 	}
+	if tlsTapperInstance != nil {
+		if err := tlstapper.UpdateTapTargets(tlsTapperInstance, &tapTargets, *procfs); err != nil {
+			tlstapper.LogError(err)
+		}
+	}
+
 	printNewTapTargets()
 }
 
@@ -236,18 +243,18 @@ func startPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem) 
 	logger.Log.Infof("AppStats: %v", diagnose.AppStats)
 }
 
-func startTlsTapper(extension *api.Extension, outputItems chan *api.OutputChannelItem, options *api.TrafficFilteringOptions) {
+func startTlsTapper(extension *api.Extension, outputItems chan *api.OutputChannelItem, options *api.TrafficFilteringOptions) *tlstapper.TlsTapper {
 	tls := tlstapper.TlsTapper{}
 	tlsPerfBufferSize := os.Getpagesize() * 100
 
 	if err := tls.Init(tlsPerfBufferSize, *procfs, extension); err != nil {
 		tlstapper.LogError(err)
-		return
+		return nil
 	}
 
 	if err := tlstapper.UpdateTapTargets(&tls, &tapTargets, *procfs); err != nil {
 		tlstapper.LogError(err)
-		return
+		return nil
 	}
 
 	// A quick way to instrument libssl.so without PID filtering - used for debuging and troubleshooting
@@ -255,7 +262,7 @@ func startTlsTapper(extension *api.Extension, outputItems chan *api.OutputChanne
 	if os.Getenv("MIZU_GLOBAL_SSL_LIBRARY") != "" {
 		if err := tls.GlobalTap(os.Getenv("MIZU_GLOBAL_SSL_LIBRARY")); err != nil {
 			tlstapper.LogError(err)
-			return
+			return nil
 		}
 	}
 
@@ -265,4 +272,6 @@ func startTlsTapper(extension *api.Extension, outputItems chan *api.OutputChanne
 	}
 
 	go tls.Poll(emitter, options)
+
+	return &tls
 }
