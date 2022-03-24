@@ -120,7 +120,7 @@ func (g *defaultOasGenerator) handleEntry(mizuEntry *api.Entry) {
 		dest = mizuEntry.Destination.IP + ":" + mizuEntry.Destination.Port
 	}
 
-	entryWSource := EntryWithSource{
+	entryWSource := &EntryWithSource{
 		Entry:       *entry,
 		Source:      mizuEntry.Source.Name,
 		Destination: dest,
@@ -130,7 +130,7 @@ func (g *defaultOasGenerator) handleEntry(mizuEntry *api.Entry) {
 	g.handleHARWithSource(entryWSource)
 }
 
-func (g *defaultOasGenerator) handleHARWithSource(entryWSource EntryWithSource) {
+func (g *defaultOasGenerator) handleHARWithSource(entryWSource *EntryWithSource) {
 	entry := entryWSource.Entry
 	gen := g.getGen(entryWSource.Destination, entry.Request.URL)
 

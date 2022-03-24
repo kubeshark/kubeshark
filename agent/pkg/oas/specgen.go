@@ -76,7 +76,7 @@ func (g *SpecGen) StartFromSpec(oas *openapi.OpenAPI) {
 	}
 }
 
-func (g *SpecGen) feedEntry(entryWithSource EntryWithSource) (string, error) {
+func (g *SpecGen) feedEntry(entryWithSource *EntryWithSource) (string, error) {
 	g.lock.Lock()
 	defer g.lock.Unlock()
 

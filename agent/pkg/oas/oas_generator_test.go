@@ -47,7 +47,9 @@ func TestOASGen(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	gen.ctx = ctx
 	gen.cancel = cancel
-	gen.runGenerator()
+	//gen.runGenerator()
+	ews := EntryWithSource{}
+	gen.handleHARWithSource(ews)
 	/*
 		for _, tc := range testCases {
 			split := strings.Split(tc.inp, "/")
