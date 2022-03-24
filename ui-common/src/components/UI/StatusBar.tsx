@@ -19,7 +19,7 @@ export const StatusBar = ({isDemoBannerView}) => {
     const [expandedBar, setExpandedBar] = useState(false);
     const {uniqueNamespaces, amountOfPods, amountOfTappedPods, amountOfUntappedPods} = useRecoilValue(tappingStatusDetails);
 
-    return <div className={isDemoBannerView ? `${style.banner}` : `${style.statusBar} ${(expandedBar ? `${style.expandedStatusBar}` : "")}`} onMouseOver={() => setExpandedBar(true)} onMouseLeave={() => setExpandedBar(false)} data-cy="expandedStatusBar">
+    return <div className={`${style.statusBar} ${(expandedBar ? `${style.expandedStatusBar}` : "")}`} onMouseOver={() => setExpandedBar(true)} onMouseLeave={() => setExpandedBar(false)} data-cy="expandedStatusBar">
         <div className={style.podsCount}>
         {tappingStatus.some(pod => !pod.isTapped) && <img src={warningIcon} alt="warning"/>}
             <span className={style.podsCountText} data-cy="podsCountText">
