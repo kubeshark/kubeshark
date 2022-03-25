@@ -78,8 +78,6 @@ func (n *Node) getOrSet(path NodePath, existingPathObj *openapi.PathObj, sampleI
 			logger.Log.Warningf("Failed to add example to a parameter: %s", err)
 		}
 
-		setSampleID(&node.pathParam.Extensions, sampleId)
-
 		if len(*exmp) >= 3 && node.pathParam.Schema.Pattern == nil { // is it enough to decide on 2 samples?
 			node.pathParam.Schema.Pattern = getPatternFromExamples(exmp)
 		}
@@ -90,6 +88,10 @@ func (n *Node) getOrSet(path NodePath, existingPathObj *openapi.PathObj, sampleI
 		return node.getOrSet(path[1:], existingPathObj, sampleId)
 	} else if node.pathObj == nil {
 		node.pathObj = existingPathObj
+	}
+
+	if node.pathParam != nil {
+		//setSampleID(&node.pathParam.Extensions, sampleId)
 	}
 
 	return node
