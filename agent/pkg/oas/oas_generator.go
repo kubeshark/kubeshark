@@ -18,10 +18,6 @@ var (
 	instance *defaultOasGenerator
 )
 
-type GeneratorSink interface {
-	PushEntry(entryWithSource *EntryWithSource)
-}
-
 type OasGenerator interface {
 	Start()
 	Stop()

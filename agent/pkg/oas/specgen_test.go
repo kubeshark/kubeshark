@@ -20,7 +20,7 @@ import (
 
 // if started via env, write file into subdir
 func outputSpec(label string, spec *openapi.OpenAPI, t *testing.T) string {
-	content, err := json.MarshalIndent(spec, "", "\t")
+	content, err := json.MarshalIndent(spec, "", "  ")
 	if err != nil {
 		panic(err)
 	}
