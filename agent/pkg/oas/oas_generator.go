@@ -22,7 +22,7 @@ type GeneratorSink interface {
 	PushEntry(entryWithSource *EntryWithSource)
 }
 
-type Generator interface {
+type OasGenerator interface {
 	Start()
 	Stop()
 	IsStarted() bool

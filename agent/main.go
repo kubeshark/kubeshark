@@ -197,7 +197,7 @@ func runInHarReaderMode() {
 
 func enableExpFeatureIfNeeded() {
 	if config.Config.OAS {
-		oasGenerator := dependency.GetInstance(dependency.OasGeneratorDependency).(oas.Generator)
+		oasGenerator := dependency.GetInstance(dependency.OasGeneratorDependency).(oas.OasGenerator)
 		oasGenerator.Start()
 	}
 	if config.Config.ServiceMap {
