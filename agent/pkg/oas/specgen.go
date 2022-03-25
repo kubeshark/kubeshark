@@ -382,6 +382,8 @@ func handleRequest(req *har.Request, opObj *openapi.Operation, isSuccess bool, s
 		}
 
 		if reqBody != nil {
+			setSampleID(&reqBody.Extensions, sampleId)
+
 			if req.PostData.Text == "" {
 				reqBody.Required = false
 			} else {
@@ -405,6 +407,8 @@ func handleResponse(resp *har.Response, opObj *openapi.Operation, isSuccess bool
 	if err != nil {
 		return err
 	}
+
+	setSampleID(&respObj.Extensions, sampleId)
 
 	handleRespHeaders(resp.Headers, respObj, sampleId)
 
