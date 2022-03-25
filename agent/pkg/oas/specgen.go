@@ -469,6 +469,8 @@ func fillContent(reqResp reqResp, respContent openapi.Content, ctype string, sam
 		content = respContent[ctype]
 	}
 
+	setSampleID(&content.Extensions, sampleId)
+
 	var text string
 	var isBinary bool
 	if reqResp.Req != nil {

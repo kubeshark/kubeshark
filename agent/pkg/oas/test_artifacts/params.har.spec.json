@@ -21,7 +21,8 @@
             "description": "Successful call with status 200",
             "content": {
               "application/json": {
-                "example": null
+                "example": null,
+                "x-sample-entry": 4
               }
             }
           }
@@ -58,7 +59,8 @@
             "description": "Successful call with status 200",
             "content": {
               "application/json": {
-                "example": null
+                "example": null,
+                "x-sample-entry": 6
               }
             }
           }
@@ -94,7 +96,9 @@
           "200": {
             "description": "Successful call with status 200",
             "content": {
-              "": {}
+              "": {
+                "x-sample-entry": 12
+              }
             }
           }
         },
@@ -122,7 +126,8 @@
           "description": "Generic request body",
           "content": {
             "application/json": {
-              "example": "{\"key\", \"val\"}"
+              "example": "{\"key\", \"val\"}",
+              "x-sample-entry": 11
             }
           }
         }
@@ -137,7 +142,9 @@
           "200": {
             "description": "Successful call with status 200",
             "content": {
-              "": {}
+              "": {
+                "x-sample-entry": 13
+              }
             }
           }
         },
@@ -165,7 +172,8 @@
           "description": "Generic request body",
           "content": {
             "": {
-              "example": "body exists"
+              "example": "body exists",
+              "x-sample-entry": 13
             }
           },
           "required": true
@@ -182,7 +190,8 @@
             "description": "Successful call with status 200",
             "content": {
               "": {
-                "example": {}
+                "example": {},
+                "x-sample-entry": 9
               }
             }
           }
@@ -233,7 +242,8 @@
                   }
                 }
               },
-              "example": "--BOUNDARY\r\nContent-Disposition: form-data; name=\"file\"; filename=\"metadata.json\"\r\nContent-Type: application/json\r\n\r\n{\"functions\": 123}\r\n--BOUNDARY\r\nContent-Disposition: form-data; name=\"path\"\r\n\r\n/content/components\r\n--BOUNDARY--\r\n"
+              "example": "--BOUNDARY\r\nContent-Disposition: form-data; name=\"file\"; filename=\"metadata.json\"\r\nContent-Type: application/json\r\n\r\n{\"functions\": 123}\r\n--BOUNDARY\r\nContent-Disposition: form-data; name=\"path\"\r\n\r\n/content/components\r\n--BOUNDARY--\r\n",
+              "x-sample-entry": 9
             }
           },
           "required": true
@@ -249,7 +259,9 @@
           "200": {
             "description": "Successful call with status 200",
             "content": {
-              "": {}
+              "": {
+                "x-sample-entry": 8
+              }
             }
           }
         },
@@ -312,7 +324,8 @@
                   }
                 }
               },
-              "example": "agent-id=ade\u0026callback-url=\u0026token=sometoken"
+              "example": "agent-id=ade\u0026callback-url=\u0026token=sometoken",
+              "x-sample-entry": 8
             }
           },
           "required": true
@@ -331,7 +344,9 @@
           "200": {
             "description": "Successful call with status 200",
             "content": {
-              "": {}
+              "": {
+                "x-sample-entry": 14
+              }
             }
           }
         },
@@ -386,7 +401,9 @@
           "200": {
             "description": "Successful call with status 200",
             "content": {
-              "": {}
+              "": {
+                "x-sample-entry": 18
+              }
             }
           }
         },
@@ -454,7 +471,9 @@
           "200": {
             "description": "Successful call with status 200",
             "content": {
-              "": {}
+              "": {
+                "x-sample-entry": 15
+              }
             }
           }
         },
@@ -522,7 +541,9 @@
           "200": {
             "description": "Successful call with status 200",
             "content": {
-              "": {}
+              "": {
+                "x-sample-entry": 16
+              }
             }
           }
         },
@@ -590,7 +611,9 @@
           "200": {
             "description": "Successful call with status 200",
             "content": {
-              "": {}
+              "": {
+                "x-sample-entry": 19
+              }
             }
           }
         },
@@ -671,7 +694,8 @@
             "description": "Successful call with status 200",
             "content": {
               "application/json": {
-                "example": null
+                "example": null,
+                "x-sample-entry": 3
               }
             }
           }
@@ -727,7 +751,9 @@
           "200": {
             "description": "Successful call with status 200",
             "content": {
-              "text/html": {}
+              "text/html": {
+                "x-sample-entry": 1
+              }
             }
           }
         },
@@ -783,7 +809,8 @@
             "description": "Successful call with status 200",
             "content": {
               "application/json": {
-                "example": null
+                "example": null,
+                "x-sample-entry": 2
               }
             }
           }
