@@ -89,6 +89,7 @@ FROM ${TARGETARCH}/busybox:latest
 # gin-gonic runs in debug mode without this
 ENV GIN_MODE=release
 
+WORKDIR /app/data/
 WORKDIR /app
 
 # Copy binary and config files from /build to root folder of scratch container.
