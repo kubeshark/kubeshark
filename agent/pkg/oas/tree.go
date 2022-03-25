@@ -83,15 +83,15 @@ func (n *Node) getOrSet(path NodePath, existingPathObj *openapi.PathObj, sampleI
 		}
 	}
 
+	if node.pathParam != nil {
+		setSampleID(&node.pathParam.Extensions, sampleId)
+	}
+
 	// TODO: eat up trailing slash, in a smart way: node.pathObj!=nil && path[1]==""
 	if len(path) > 1 {
 		return node.getOrSet(path[1:], existingPathObj, sampleId)
 	} else if node.pathObj == nil {
 		node.pathObj = existingPathObj
-	}
-
-	if node.pathParam != nil {
-		//setSampleID(&node.pathParam.Extensions, sampleId)
 	}
 
 	return node
