@@ -110,10 +110,8 @@ func UpdateTapTargets(newTapTargets []v1.Pod) {
 	success := true
 
 	tapTargets = newTapTargets
-	if err := initializePacketSources(); err != nil {
-		logger.Log.Fatal(err)
-		success = false
-	}
+
+	packetSourceManager.UpdatePods(tapTargets)
 
 	if tlsTapperInstance != nil {
 		if err := tlstapper.UpdateTapTargets(tlsTapperInstance, &tapTargets, *procfs); err != nil {
