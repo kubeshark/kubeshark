@@ -70,6 +70,10 @@ func (n *Node) getOrSet(path NodePath, existingPathObj *openapi.PathObj, sampleI
 		}
 	}
 
+	if node.pathParam != nil {
+		setSampleID(&node.pathParam.Extensions, sampleId)
+	}
+
 	// add example if it's a gibberish chunk
 	if node.pathParam != nil && !chunkIsParam {
 		exmp := &node.pathParam.Examples
@@ -81,10 +85,6 @@ func (n *Node) getOrSet(path NodePath, existingPathObj *openapi.PathObj, sampleI
 		if len(*exmp) >= 3 && node.pathParam.Schema.Pattern == nil { // is it enough to decide on 2 samples?
 			node.pathParam.Schema.Pattern = getPatternFromExamples(exmp)
 		}
-	}
-
-	if node.pathParam != nil {
-		setSampleID(&node.pathParam.Extensions, sampleId)
 	}
 
 	// TODO: eat up trailing slash, in a smart way: node.pathObj!=nil && path[1]==""
