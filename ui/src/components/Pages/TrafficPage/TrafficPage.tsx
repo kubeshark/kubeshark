@@ -40,7 +40,6 @@ const trafficViewerApi = {...api}
                               {window["isOasEnabled"] && <Button
                                 startIcon={<img className="custom" src={services} alt="services"></img>}
                                 size="large"
-                                type="submit"
                                 variant="contained"
                                 className={commonClasses.outlinedButton + " " + commonClasses.imagedButton}
                                 style={{ marginRight: 25, textTransform: 'unset' }}

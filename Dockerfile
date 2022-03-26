@@ -78,10 +78,10 @@ RUN go build -ldflags="-extldflags=-static -s -w \
 # Download Basenine executable, verify the sha1sum
 ADD https://github.com/up9inc/basenine/releases/download/v0.6.6/basenine_linux_${GOARCH} ./basenine_linux_${GOARCH}
 ADD https://github.com/up9inc/basenine/releases/download/v0.6.6/basenine_linux_${GOARCH}.sha256 ./basenine_linux_${GOARCH}.sha256
+
 RUN shasum -a 256 -c basenine_linux_"${GOARCH}".sha256 && \
     chmod +x ./basenine_linux_"${GOARCH}" && \
     mv ./basenine_linux_"${GOARCH}" ./basenine
-
 
 ### The shipped image
 ARG TARGETARCH=amd64
