@@ -232,7 +232,6 @@ export const TrafficViewer : React.FC<TrafficViewerProps> = ({setAnalyzeStatus, 
   useEffect(() => {
     setTrafficViewerApiState({...trafficViewerApiProp, webSocket : {close : closeWebSocket}});
     (async () => {
-      openWebSocket("leftOff(-1)", true);
       try{
         const tapStatusResponse = await trafficViewerApiProp.tapStatus();
         setTappingStatus(tapStatusResponse);
