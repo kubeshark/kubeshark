@@ -8,8 +8,7 @@ import { EntryDetailed } from "./EntryDetailed";
 import playIcon from 'assets/run.svg';
 import pauseIcon from 'assets/pause.svg';
 import variables from '../../variables.module.scss';
-import { toast,ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { toast, ToastContainer } from 'react-toastify';
 import debounce from 'lodash/debounce';
 import { RecoilRoot, RecoilState, useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 import entriesAtom from "../../recoil/entries";
@@ -20,6 +19,7 @@ import trafficViewerApiAtom from "../../recoil/TrafficViewerApi"
 import TrafficViewerApi from "./TrafficViewerApi";
 import { StatusBar } from "../UI/StatusBar";
 import tappingStatusAtom from "../../recoil/tappingStatus/atom";
+import { TOAST_CONTAINER_ID } from "../../configs/Consts";
 
 const useLayoutStyles = makeStyles(() => ({
   details: {
@@ -47,14 +47,14 @@ interface TrafficViewerProps {
   trafficViewerApiProp: TrafficViewerApi,
   actionButtons?: JSX.Element,
   isShowStatusBar?: boolean,
-  webSocketUrl : string,
-  isCloseWebSocket : boolean,
-  isDemoBannerView : boolean
+  webSocketUrl: string,
+  isCloseWebSocket: boolean,
+  isDemoBannerView: boolean
 }
 
-export const TrafficViewer : React.FC<TrafficViewerProps> = ({setAnalyzeStatus, trafficViewerApiProp,
-                                                               actionButtons,isShowStatusBar,webSocketUrl,
-                                                               isCloseWebSocket, isDemoBannerView}) => {
+export const TrafficViewer: React.FC<TrafficViewerProps> = ({ setAnalyzeStatus, trafficViewerApiProp,
+  actionButtons, isShowStatusBar, webSocketUrl,
+  isCloseWebSocket, isDemoBannerView }) => {
 
   const classes = useLayoutStyles();
 
@@ -106,9 +106,9 @@ export const TrafficViewer : React.FC<TrafficViewerProps> = ({setAnalyzeStatus, 
     handleQueryChange(query);
   }, [query, handleQueryChange]);
 
-  useEffect(()=>{
+  useEffect(() => {
     isCloseWebSocket && closeWebSocket()
-  },[isCloseWebSocket])
+  }, [isCloseWebSocket])
 
   const ws = useRef(null);
 
@@ -126,7 +126,7 @@ export const TrafficViewer : React.FC<TrafficViewerProps> = ({setAnalyzeStatus, 
       sendQueryWhenWsOpen(query);
 
       ws.current.onclose = () => {
-        if(window.location.pathname === "/")
+        if (window.location.pathname === "/")
           setForceRender(forceRender + 1);
       }
       ws.current.onerror = (event) => {
@@ -140,13 +140,13 @@ export const TrafficViewer : React.FC<TrafficViewerProps> = ({setAnalyzeStatus, 
           openWebSocket(`leftOff(${leftOffBottom})`, false);
         }
       }
-    } catch (e) {}
+    } catch (e) { }
   }
 
   const sendQueryWhenWsOpen = (query) => {
     setTimeout(() => {
       if (ws?.current?.readyState === WebSocket.OPEN) {
-        ws.current.send(JSON.stringify({"query": query, "enableFullEntries": false}));
+        ws.current.send(JSON.stringify({ "query": query, "enableFullEntries": false }));
       } else {
         sendQueryWhenWsOpen(query);
       }
@@ -154,7 +154,7 @@ export const TrafficViewer : React.FC<TrafficViewerProps> = ({setAnalyzeStatus, 
   }
 
   const closeWebSocket = () => {
-    if(ws?.current?.readyState === WebSocket.OPEN) {
+    if (ws?.current?.readyState === WebSocket.OPEN) {
       ws.current.close();
     }
   }
@@ -194,7 +194,7 @@ export const TrafficViewer : React.FC<TrafficViewerProps> = ({setAnalyzeStatus, 
             pauseOnHover: true,
             draggable: true,
             progress: undefined,
-          });
+          }, { containerId: TOAST_CONTAINER_ID });
           break;
         case "queryMetadata":
           setQueriedCurrent(queriedCurrent + message.data.current);
@@ -217,13 +217,13 @@ export const TrafficViewer : React.FC<TrafficViewerProps> = ({setAnalyzeStatus, 
   }
 
   useEffect(() => {
-    setTrafficViewerApiState({...trafficViewerApiProp, webSocket : {close : closeWebSocket}});
+    setTrafficViewerApiState({ ...trafficViewerApiProp, webSocket: { close: closeWebSocket } });
     (async () => {
       openWebSocket("leftOff(-1)", true);
-      try{
+      try {
         const tapStatusResponse = await trafficViewerApiProp.tapStatus();
         setTappingStatus(tapStatusResponse);
-        if(setAnalyzeStatus) {
+        if (setAnalyzeStatus) {
           const analyzeStatusResponse = await trafficViewerApiProp.analyzeStatus();
           setAnalyzeStatus(analyzeStatusResponse);
         }
@@ -235,7 +235,7 @@ export const TrafficViewer : React.FC<TrafficViewerProps> = ({setAnalyzeStatus, 
   }, []);
 
   const toggleConnection = () => {
-    if(ws?.current?.readyState === WebSocket.OPEN) {
+    if (ws?.current?.readyState === WebSocket.OPEN) {
       ws?.current?.close();
     } else {
       if (query) {
@@ -349,19 +349,28 @@ export const TrafficViewer : React.FC<TrafficViewerProps> = ({setAnalyzeStatus, 
         setAddressesWithTLS={setAddressesWithTLS}
         userDismissedTLSWarning={userDismissedTLSWarning}
         setUserDismissedTLSWarning={setUserDismissedTLSWarning} />
-      <ToastContainer/>
     </div>
   );
 };
 
 const MemoiedTrafficViewer = React.memo(TrafficViewer)
 const TrafficViewerContainer: React.FC<TrafficViewerProps> = ({ setAnalyzeStatus, trafficViewerApiProp,
-                                                                actionButtons, isShowStatusBar = true ,
-                                                                webSocketUrl, isCloseWebSocket, isDemoBannerView}) => {
+  actionButtons, isShowStatusBar = true,
+  webSocketUrl, isCloseWebSocket, isDemoBannerView }) => {
   return <RecoilRoot>
     <MemoiedTrafficViewer actionButtons={actionButtons} isShowStatusBar={isShowStatusBar} webSocketUrl={webSocketUrl}
-                          isCloseWebSocket={isCloseWebSocket} trafficViewerApiProp={trafficViewerApiProp}
-                          setAnalyzeStatus={setAnalyzeStatus} isDemoBannerView={isDemoBannerView} />
+      isCloseWebSocket={isCloseWebSocket} trafficViewerApiProp={trafficViewerApiProp}
+      setAnalyzeStatus={setAnalyzeStatus} isDemoBannerView={isDemoBannerView} />
+    <ToastContainer enableMultiContainer containerId={TOAST_CONTAINER_ID}
+      position="bottom-right"
+      autoClose={5000}
+      hideProgressBar={false}
+      newestOnTop={false}
+      closeOnClick
+      rtl={false}
+      pauseOnFocusLoss
+      draggable
+      pauseOnHover />
   </RecoilRoot>
 }
 
