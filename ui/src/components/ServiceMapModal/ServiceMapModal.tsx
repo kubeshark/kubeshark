@@ -100,7 +100,7 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onOpen
     const commonClasses = useCommonStyles();
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [graphData, setGraphData] = useState<GraphData>({ nodes: [], edges: [] });
-   
+
     const getServiceMapData = useCallback(async () => {
         try {
             setIsLoading(true)
@@ -141,7 +141,7 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onOpen
             setGraphData(newGraphData)
 
         } catch (ex) {
-            toast.error("An error occurred while loading Mizu Service Map, see console for mode details",{containerId: TOAST_CONTAINER_ID});
+            toast.error("An error occurred while loading Mizu Service Map, see console for mode details", { containerId: TOAST_CONTAINER_ID });
             console.error(ex);
         } finally {
             setIsLoading(false)
@@ -177,20 +177,20 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onOpen
                         <img alt="spinner" src={spinnerImg} style={{ height: 50 }} />
                     </div>}
                     {!isLoading && <div style={{ height: "100%", width: "100%" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between" }}> 
-                        <div>
-                        <Button
-                            startIcon={<img src={refresh} className="custom" alt="refresh" style={{ marginRight:"8%"}}></img>}
-                            size="medium"
-                            variant="contained"
-                            className={commonClasses.outlinedButton + " " + commonClasses.imagedButton}
-                            onClick={refreshServiceMap}
-                        >
-                            Refresh
-                        </Button>
+                        <div style={{ display: "flex", justifyContent: "space-between" }}>
+                            <div>
+                                <Button
+                                    startIcon={<img src={refresh} className="custom" alt="refresh" style={{ marginRight: "8%" }}></img>}
+                                    size="medium"
+                                    variant="contained"
+                                    className={commonClasses.outlinedButton + " " + commonClasses.imagedButton}
+                                    onClick={refreshServiceMap}
+                                >
+                                    Refresh
+                                </Button>
+                            </div>
+                            <img src={close} alt="close" onClick={() => onClose()} style={{ cursor: "pointer" }}></img>
                         </div>
-                        <img src={close} alt="close" onClick={() => onClose()} style={{cursor:"pointer"}}></img>
-                    </div>
                         <Graph
                             graph={graphData}
                             options={ServiceMapOptions}

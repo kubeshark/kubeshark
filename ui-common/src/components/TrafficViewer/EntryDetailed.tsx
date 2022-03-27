@@ -1,11 +1,11 @@
-import React, {useEffect, useState} from "react";
+import React, { useEffect, useState } from "react";
 import EntryViewer from "./EntryDetailed/EntryViewer";
-import {EntryItem} from "./EntryListItem/EntryListItem";
-import {makeStyles} from "@material-ui/core";
+import { EntryItem } from "./EntryListItem/EntryListItem";
+import { makeStyles } from "@material-ui/core";
 import Protocol from "../UI/Protocol"
 import Queryable from "../UI/Queryable";
-import {toast} from "react-toastify";
-import {RecoilState, useRecoilState, useRecoilValue} from "recoil";
+import { toast } from "react-toastify";
+import { RecoilState, useRecoilState, useRecoilValue } from "recoil";
 import focusedEntryIdAtom from "../../recoil/focusedEntryId";
 import trafficViewerApi from "../../recoil/TrafficViewerApi";
 import TrafficViewerApi from "./TrafficViewerApi";
@@ -38,24 +38,24 @@ const useStyles = makeStyles(() => ({
 
 export const formatSize = (n: number) => n > 1000 ? `${Math.round(n / 1000)}KB` : `${n} B`;
 const minSizeDisplayRequestSize = 880;
-const EntryTitle: React.FC<any> = ({protocol, data, elapsedTime}) => {
+const EntryTitle: React.FC<any> = ({ protocol, data, elapsedTime }) => {
     const classes = useStyles();
     const request = data.request;
     const response = data.response;
 
     const { width } = useWindowDimensions();
-    const {requestText, responseText, elapsedTimeText} = useRequestTextByWidth(width)
+    const { requestText, responseText, elapsedTimeText } = useRequestTextByWidth(width)
 
     return <div className={classes.entryTitle}>
-        <Protocol protocol={protocol} horizontal={true}/>
-        {(width > minSizeDisplayRequestSize) && <div style={{right: "30px", position: "absolute", display: "flex"}}>
+        <Protocol protocol={protocol} horizontal={true} />
+        {(width > minSizeDisplayRequestSize) && <div style={{ right: "30px", position: "absolute", display: "flex" }}>
             {request && <Queryable
                 query={`requestSize == ${data.requestSize}`}
-                style={{margin: "0 18px"}}
+                style={{ margin: "0 18px" }}
                 displayIconOnMouseOver={true}
             >
                 <div
-                    style={{opacity: 0.5}}
+                    style={{ opacity: 0.5 }}
                     id="entryDetailedTitleRequestSize"
                 >
                     {`${requestText}${formatSize(data.requestSize)}`}
@@ -63,11 +63,11 @@ const EntryTitle: React.FC<any> = ({protocol, data, elapsedTime}) => {
             </Queryable>}
             {response && <Queryable
                 query={`responseSize == ${data.responseSize}`}
-                style={{margin: "0 18px"}}
+                style={{ margin: "0 18px" }}
                 displayIconOnMouseOver={true}
             >
                 <div
-                    style={{opacity: 0.5}}
+                    style={{ opacity: 0.5 }}
                     id="entryDetailedTitleResponseSize"
                 >
                     {`${responseText}${formatSize(data.responseSize)}`}
@@ -75,11 +75,11 @@ const EntryTitle: React.FC<any> = ({protocol, data, elapsedTime}) => {
             </Queryable>}
             {response && <Queryable
                 query={`elapsedTime >= ${elapsedTime}`}
-                style={{margin: "0 0 0 18px"}}
+                style={{ margin: "0 0 0 18px" }}
                 displayIconOnMouseOver={true}
             >
                 <div
-                    style={{opacity: 0.5}}
+                    style={{ opacity: 0.5 }}
                     id="entryDetailedTitleElapsedTime"
                 >
                     {`${elapsedTimeText}${Math.round(elapsedTime)}ms`}
@@ -89,7 +89,7 @@ const EntryTitle: React.FC<any> = ({protocol, data, elapsedTime}) => {
     </div>;
 };
 
-const EntrySummary: React.FC<any> = ({entry}) => {
+const EntrySummary: React.FC<any> = ({ entry }) => {
     return <EntryItem
         key={`entry-${entry.id}`}
         entry={entry}
@@ -126,7 +126,7 @@ export const EntryDetailed = () => {
                         pauseOnHover: true,
                         draggable: true,
                         progress: undefined,
-                    },{containerId: TOAST_CONTAINER_ID});
+                    }, { containerId: TOAST_CONTAINER_ID });
                 }
                 console.error(error);
             }
@@ -140,7 +140,7 @@ export const EntryDetailed = () => {
             data={entryData.data}
             elapsedTime={entryData.data.elapsedTime}
         />}
-        {entryData && <EntrySummary entry={entryData.base}/>}
+        {entryData && <EntrySummary entry={entryData.base} />}
         <React.Fragment>
             {entryData && <EntryViewer
                 representation={entryData.representation}
