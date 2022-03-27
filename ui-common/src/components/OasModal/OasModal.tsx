@@ -23,14 +23,11 @@ const modalStyle = {
   color: '#000',
 };
 
-const ipAddressWithPortRegex = new RegExp('([0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}):([0-9]{1,5})');
 
 const OasModal = ({ openModal, handleCloseModal, getOasServices, getOasByService }) => {
   const [oasServices, setOasServices] = useState([] as string[])
   const [selectedServiceName, setSelectedServiceName] = useState("");
   const [selectedServiceSpec, setSelectedServiceSpec] = useState(null);
-  const [resolvedServices, setResolvedServices] = useState([]);
-  const [unResolvedServices, setUnResolvedServices] = useState([]);
 
   const onSelectedOASService = useCallback(async (selectedService) => {
     if (!!selectedService) {
@@ -48,42 +45,22 @@ const OasModal = ({ openModal, handleCloseModal, getOasServices, getOasByService
     }
   }, [oasServices.length])
 
-  const resolvedArrayBuilder = useCallback(async (services) => {
-    const resServices = [];
-    const unResServices = [];
-    services.forEach(s => {
-      if (ipAddressWithPortRegex.test(s)) {
-        unResServices.push(s);
-      }
-      else {
-        resServices.push(s);
-      }
-    });
-
-    resServices.sort();
-    unResServices.sort();
-    if (resServices.length > 0) {
-      onSelectedOASService(resServices[0]);
-    }
-    else {
-      onSelectedOASService(unResServices[0]);
-    }
-
-    setResolvedServices(resServices);
-    setUnResolvedServices(unResServices);
-  }, [onSelectedOASService])
-
   useEffect(() => {
     (async () => {
       try {
         const services = await getOasServices();
-        resolvedArrayBuilder(services);
         setOasServices(services);
+        if (services.length > 0){
+          onSelectedOASService(services[0]);
+        }
+        else {
+          onSelectedOASService(null);
+        }
       } catch (e) {
         console.error(e);
       }
     })();
-  }, [openModal, resolvedArrayBuilder]);
+  }, [openModal]);
 
 
   return (
@@ -102,8 +79,8 @@ const OasModal = ({ openModal, handleCloseModal, getOasServices, getOasByService
         <Box sx={modalStyle}>
           <div className={style.boxContainer}>
             <div className={style.selectHeader}>
-              <div><img src={openApiLogo} alt="openApi" className={style.openApilogo} /></div>
-              <div className={style.title}>OpenApi </div>
+              <div><img src={openApiLogo} alt="openAPI" className={style.openApilogo} /></div>
+              <div className={style.title}>OpenAPI</div>
             </div>
             <div style={{ cursor: "pointer" }}>
                 <img src={closeIcon} alt="close" onClick={handleCloseModal} />
@@ -117,14 +94,7 @@ const OasModal = ({ openModal, handleCloseModal, getOasServices, getOasByService
                   value={selectedServiceName}
                   onChangeCb={onSelectedOASService}
                 >
-                  <ListSubheader disableSticky={true}>Resolved</ListSubheader>
-                  {resolvedServices.map((service) => (
-                    <MenuItem key={service} value={service}>
-                      {service}
-                    </MenuItem>
-                  ))}
-                  <ListSubheader disableSticky={true}>UnResolved</ListSubheader>
-                  {unResolvedServices.map((service) => (
+                  {oasServices.map((service) => (
                     <MenuItem key={service} value={service}>
                       {service}
                     </MenuItem>

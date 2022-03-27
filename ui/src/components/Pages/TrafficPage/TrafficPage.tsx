@@ -35,9 +35,9 @@ const trafficViewerApi = {...api}
     setServiceMapModalOpen(true)
   }, 500);
 
-  const actionButtons = (window["isOasEnabled"] || window["isServiceMapEnabled"]) &&
+  const actionButtons = (true|| window["isServiceMapEnabled"]) &&
                           <div style={{ display: 'flex', height: "100%" }}>
-                              {window["isOasEnabled"] && <Button
+                              {true && <Button
                                 startIcon={<img className="custom" src={services} alt="services"></img>}
                                 size="large"
                                 type="submit"
@@ -45,7 +45,7 @@ const trafficViewerApi = {...api}
                                 className={commonClasses.outlinedButton + " " + commonClasses.imagedButton}
                                 style={{ marginRight: 25, textTransform: 'unset' }}
                                 onClick={handleOpenOasModal}>
-                                OpenApi Specs
+                                OpenAPI Specs
                               </Button>}
                               {window["isServiceMapEnabled"] && <Button
                                 startIcon={<img src={serviceMap} className="custom" alt="service-map" style={{marginRight:"8%"}}></img>}
