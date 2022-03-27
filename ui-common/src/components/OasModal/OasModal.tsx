@@ -7,7 +7,8 @@ import style from './OasModal.module.sass';
 import openApiLogo from 'assets/openApiLogo.png'
 import { redocThemeOptions } from "./redocThemeOptions";
 import React from "react";
-import { UI } from "../..";
+import { Select } from "../UI/Select";
+
 
 const modalStyle = {
   position: 'absolute',
@@ -82,12 +83,12 @@ const OasModal = ({ openModal, handleCloseModal, getOasServices, getOasByService
               <div className={style.title}>OpenAPI</div>
             </div>
             <div style={{ cursor: "pointer" }}>
-                <img src={closeIcon} alt="close" onClick={handleCloseModal} />
-              </div>
+              <img src={closeIcon} alt="close" onClick={handleCloseModal} />
+            </div>
           </div>
           <div className={style.selectContainer} >
               <FormControl>
-                <UI.Select
+                <Select
                   labelId="service-select-label"
                   id="service-select"
                   value={selectedServiceName}
@@ -98,7 +99,7 @@ const OasModal = ({ openModal, handleCloseModal, getOasServices, getOasByService
                       {service}
                     </MenuItem>
                   ))}
-                </UI.Select>
+                </Select>
               </FormControl>
             </div>
           <div className={style.borderLine}></div>
