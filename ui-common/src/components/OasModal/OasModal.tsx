@@ -1,4 +1,4 @@
-import { Box, Fade, FormControl, MenuItem, Modal, Backdrop, ListSubheader } from "@material-ui/core";
+import { Box, Fade, FormControl, MenuItem, Modal, Backdrop } from "@material-ui/core";
 import { useCallback, useEffect, useState } from "react";
 import { RedocStandalone } from "redoc";
 import closeIcon from "assets/closeIcon.svg";
@@ -29,39 +29,38 @@ const OasModal = ({ openModal, handleCloseModal, getOasServices, getOasByService
   const [selectedServiceName, setSelectedServiceName] = useState("");
   const [selectedServiceSpec, setSelectedServiceSpec] = useState(null);
 
-  const onSelectedOASService = useCallback(async (selectedService) => {
-    if (!!selectedService) {
-      setSelectedServiceName(selectedService);
-      if (oasServices.length === 0) {
-        return
-      }
-      try {
-        const data = await getOasByService(selectedService);
-        setSelectedServiceSpec(data);
+  const onSelectedOASService = async (selectedService) => {
+    if (oasServices.length === 0) {
+      setSelectedServiceSpec(null);
+      setSelectedServiceName("");
+      return
+    }
+    else {
+      setSelectedServiceName(selectedService ? selectedService : oasServices[0]);
+    }
+    try {
+      const data = await getOasByService(selectedService ? selectedService : oasServices[0]);
+      setSelectedServiceSpec(data);
       } catch (e) {
         toast.error("Error occurred while fetching service OAS spec");
         console.error(e);
-      }
-    }
-  }, [oasServices.length])
+      }  
+  };
 
   useEffect(() => {
     (async () => {
       try {
         const services = await getOasServices();
         setOasServices(services);
-        if (services.length > 0){
-          onSelectedOASService(services[0]);
-        }
-        else {
-          onSelectedOASService(null);
-        }
       } catch (e) {
         console.error(e);
       }
     })();
   }, [openModal]);
 
+  useEffect(() => {
+    onSelectedOASService(null);
+  },[oasServices])
 
   return (
     <Modal
