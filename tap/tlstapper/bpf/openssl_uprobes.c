@@ -194,7 +194,7 @@ static __always_inline void ssl_uretprobe(struct pt_regs *ctx, struct bpf_map_de
 	
 	struct ssl_info *infoPtr = bpf_map_lookup_elem(map_fd, &id);
 	
-	if (infoPtr == 0) {
+	if (infoPtr == NULL) {
 		log_error(ctx, LOG_ERROR_GETTING_SSL_CONTEXT, id, 0l, 0l);
 		return;
 	}

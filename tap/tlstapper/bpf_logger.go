@@ -16,7 +16,7 @@ const logPrefix = "[bpf] "
 //
 const logLevelError = 0
 const logLevelInfo = 1
-const logLevelDebug = 0
+const logLevelDebug = 2
 
 type logMessage struct {
 	Level       uint32
