@@ -118,15 +118,11 @@ export const EntryDetailed = () => {
             } catch (error) {
                 if (error.response?.data?.type) {
                     toast[error.response.data.type](`Entry[${focusedEntryId}]: ${error.response.data.msg}`, {
-                        position: "bottom-right",
                         theme: "colored",
                         autoClose: error.response.data.autoClose,
-                        hideProgressBar: false,
-                        closeOnClick: true,
-                        pauseOnHover: true,
-                        draggable: true,
                         progress: undefined,
-                    }, { containerId: TOAST_CONTAINER_ID });
+                        containerId: TOAST_CONTAINER_ID
+                    });
                 }
                 console.error(error);
             }
