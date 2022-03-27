@@ -40,7 +40,7 @@ type ConfigStruct struct {
 	HeadlessMode           bool                        `yaml:"headless" default:"false"`
 	LogLevelStr            string                      `yaml:"log-level,omitempty" default:"INFO" readonly:""`
 	ServiceMap             bool                        `yaml:"service-map" default:"true"`
-	OAS                    bool                        `yaml:"oas,omitempty" default:"false" readonly:""`
+	OAS                    bool                        `yaml:"oas" default:"true"`
 	Elastic                shared.ElasticConfig        `yaml:"elastic"`
 }
 

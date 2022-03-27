@@ -7,7 +7,9 @@ import style from './OasModal.module.sass';
 import openApiLogo from 'assets/openApiLogo.png'
 import { redocThemeOptions } from "./redocThemeOptions";
 import React from "react";
+import { TOAST_CONTAINER_ID } from "../../configs/Consts";
 import { Select } from "../UI/Select";
+
 
 const modalStyle = {
   position: 'absolute',
@@ -25,34 +27,34 @@ const modalStyle = {
 
 const ipAddressWithPortRegex = new RegExp('([0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}):([0-9]{1,5})');
 
-const OasModal = ({ openModal, handleCloseModal, getOasServices, getOasByService}) => { 
+const OasModal = ({ openModal, handleCloseModal, getOasServices, getOasByService }) => {
   const [oasServices, setOasServices] = useState([] as string[])
   const [selectedServiceName, setSelectedServiceName] = useState("");
   const [selectedServiceSpec, setSelectedServiceSpec] = useState(null);
   const [resolvedServices, setResolvedServices] = useState([]);
   const [unResolvedServices, setUnResolvedServices] = useState([]);
 
-  const onSelectedOASService = useCallback( async (selectedService) => {
-    if (!!selectedService){
+  const onSelectedOASService = useCallback(async (selectedService) => {
+    if (!!selectedService) {
       setSelectedServiceName(selectedService);
-      if(oasServices.length === 0){
+      if (oasServices.length === 0) {
         return
       }
       try {
         const data = await getOasByService(selectedService);
         setSelectedServiceSpec(data);
       } catch (e) {
-        toast.error("Error occurred while fetching service OAS spec");
+        toast.error("Error occurred while fetching service OAS spec", { containerId: TOAST_CONTAINER_ID });
         console.error(e);
       }
     }
-  },[oasServices.length])
+  }, [oasServices.length])
 
-  const resolvedArrayBuilder = useCallback(async(services) => {
+  const resolvedArrayBuilder = useCallback(async (services) => {
     const resServices = [];
     const unResServices = [];
     services.forEach(s => {
-      if(ipAddressWithPortRegex.test(s)){
+      if (ipAddressWithPortRegex.test(s)) {
         unResServices.push(s);
       }
       else {
@@ -62,10 +64,16 @@ const OasModal = ({ openModal, handleCloseModal, getOasServices, getOasByService
 
     resServices.sort();
     unResServices.sort();
-    onSelectedOASService(resServices[0]);
+    if (resServices.length > 0) {
+      onSelectedOASService(resServices[0]);
+    }
+    else {
+      onSelectedOASService(unResServices[0]);
+    }
+
     setResolvedServices(resServices);
     setUnResolvedServices(unResServices);
-  },[onSelectedOASService])
+  }, [onSelectedOASService])
 
   useEffect(() => {
     (async () => {
@@ -77,8 +85,7 @@ const OasModal = ({ openModal, handleCloseModal, getOasServices, getOasByService
         console.error(e);
       }
     })();
-  }, [openModal,resolvedArrayBuilder]);
-
+  }, [openModal, resolvedArrayBuilder]);
 
 
   return (
@@ -90,48 +97,48 @@ const OasModal = ({ openModal, handleCloseModal, getOasServices, getOasByService
       closeAfterTransition
       BackdropComponent={Backdrop}
       BackdropProps={{
-          timeout: 500,
+        timeout: 500,
       }}
     >
       <Fade in={openModal}>
         <Box sx={modalStyle}>
           <div className={style.boxContainer}>
             <div className={style.selectHeader}>
-              <div><img src={openApiLogo} alt="openApi" className={style.openApilogo}/></div>
-                <div className={style.title}>OpenAPI selected service: </div>
-                <div className={style.selectContainer} >
-                  <FormControl>
-                    <Select
-                      labelId="service-select-label"
-                      id="service-select"
-                      placeholder="Show OAS"
-                      value={selectedServiceName}
-                      onChangeCb={onSelectedOASService}
-                    >
-                      <ListSubheader disableSticky={true}>Resolved</ListSubheader>
-                      {resolvedServices.map((service) => (
-                        <MenuItem key={service} value={service}>
-                          {service}
-                        </MenuItem>
-                      ))}
-                      <ListSubheader disableSticky={true}>UnResolved</ListSubheader>
-                      {unResolvedServices.map((service) => (
-                        <MenuItem key={service} value={service}>
-                          {service}
-                        </MenuItem>
-                      ))} 
-                    </Select>
-                  </FormControl>
-                </div>
+              <div><img src={openApiLogo} alt="openApi" className={style.openApilogo} /></div>
+              <div className={style.title}>OpenApi </div>
             </div>
             <div style={{ cursor: "pointer" }}>
               <img src={closeIcon} alt="close" onClick={handleCloseModal} />
             </div>
           </div>
+          <div className={style.selectContainer} >
+            <FormControl>
+              <Select
+                labelId="service-select-label"
+                id="service-select"
+                value={selectedServiceName}
+                onChangeCb={onSelectedOASService}
+              >
+                <ListSubheader disableSticky={true}>Resolved</ListSubheader>
+                {resolvedServices.map((service) => (
+                  <MenuItem key={service} value={service}>
+                    {service}
+                  </MenuItem>
+                ))}
+                <ListSubheader disableSticky={true}>UnResolved</ListSubheader>
+                {unResolvedServices.map((service) => (
+                  <MenuItem key={service} value={service}>
+                    {service}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </div>
+          <div className={style.borderLine}></div>
           <div className={style.redoc}>
-          {selectedServiceSpec && <RedocStandalone 
-                                    spec={selectedServiceSpec}   
-                                    options={redocThemeOptions}/>}
+            {selectedServiceSpec && <RedocStandalone
+              spec={selectedServiceSpec}
+              options={redocThemeOptions} />}
           </div>
         </Box>
       </Fade>

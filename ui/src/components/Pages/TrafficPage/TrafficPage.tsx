@@ -40,19 +40,19 @@ const trafficViewerApi = {...api}
                               {window["isOasEnabled"] && <Button
                                 startIcon={<img className="custom" src={services} alt="services"></img>}
                                 size="large"
-                                type="submit"
                                 variant="contained"
                                 className={commonClasses.outlinedButton + " " + commonClasses.imagedButton}
-                                style={{ marginRight: 25 }}
+                                style={{ marginRight: 25, textTransform: 'unset' }}
                                 onClick={handleOpenOasModal}>
-                                Show OAS
+                                OpenApi Specs
                               </Button>}
                               {window["isServiceMapEnabled"] && <Button
                                 startIcon={<img src={serviceMap} className="custom" alt="service-map" style={{marginRight:"8%"}}></img>}
                                 size="large"
                                 variant="contained"
                                 className={commonClasses.outlinedButton + " " + commonClasses.imagedButton}
-                                onClick={openServiceMapModalDebounce}>
+                                onClick={openServiceMapModalDebounce}
+                                style={{textTransform: 'unset'}}>
                                 Service Map
                               </Button>}
                         </div>
@@ -66,7 +66,7 @@ const trafficViewerApi = {...api}
   return (
   <>
       <TrafficViewer setAnalyzeStatus={setAnalyzeStatus} webSocketUrl={getWebsocketUrl()} isCloseWebSocket={!openWebSocket}
-                     trafficViewerApiProp={trafficViewerApi} actionButtons={actionButtons} isShowStatusBar={!openOasModal}/>
+                     trafficViewerApiProp={trafficViewerApi} actionButtons={actionButtons} isShowStatusBar={!openOasModal} isDemoBannerView={false}/>
   </>
   );
 };
