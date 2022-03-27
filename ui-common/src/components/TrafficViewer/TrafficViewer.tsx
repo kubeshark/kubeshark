@@ -50,12 +50,11 @@ interface TrafficViewerProps {
   webSocketUrl : string,
   isCloseWebSocket : boolean,
   isDemoBannerView : boolean
-  reopenConnectionTime: string;
 }
 
 export const TrafficViewer : React.FC<TrafficViewerProps> = ({setAnalyzeStatus, trafficViewerApiProp,
                                                                actionButtons,isShowStatusBar,webSocketUrl,
-                                                               isCloseWebSocket, isDemoBannerView, reopenConnectionTime}) => {
+                                                               isCloseWebSocket, isDemoBannerView}) => {
 
   const classes = useLayoutStyles();
 
@@ -112,8 +111,8 @@ export const TrafficViewer : React.FC<TrafficViewerProps> = ({setAnalyzeStatus, 
   },[isCloseWebSocket])
 
   useEffect(() => {
-    reopenConnectionTime && reopenConnection()
-  }, [reopenConnectionTime])
+    reopenConnection()
+  }, [webSocketUrl])
 
   const ws = useRef(null);
 
@@ -370,11 +369,11 @@ export const TrafficViewer : React.FC<TrafficViewerProps> = ({setAnalyzeStatus, 
 const MemoiedTrafficViewer = React.memo(TrafficViewer)
 const TrafficViewerContainer: React.FC<TrafficViewerProps> = ({ setAnalyzeStatus, trafficViewerApiProp,
                                                                 actionButtons, isShowStatusBar = true ,
-                                                                webSocketUrl, isCloseWebSocket, isDemoBannerView, reopenConnectionTime}) => {
+                                                                webSocketUrl, isCloseWebSocket, isDemoBannerView}) => {
   return <RecoilRoot>
     <MemoiedTrafficViewer actionButtons={actionButtons} isShowStatusBar={isShowStatusBar} webSocketUrl={webSocketUrl}
                           isCloseWebSocket={isCloseWebSocket} trafficViewerApiProp={trafficViewerApiProp}
-                          setAnalyzeStatus={setAnalyzeStatus} isDemoBannerView={isDemoBannerView} reopenConnectionTime={reopenConnectionTime}/>
+                          setAnalyzeStatus={setAnalyzeStatus} isDemoBannerView={isDemoBannerView}/>
   </RecoilRoot>
 }
 
