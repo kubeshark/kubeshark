@@ -4,10 +4,8 @@ on:
   pull_request:
     branches:
       - 'main'
-      - 'develop'
   push:
     branches:
-      - 'develop'
       - 'develop'
 
 jobs:
