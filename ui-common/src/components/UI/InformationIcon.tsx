@@ -11,7 +11,7 @@ export interface InformationIconProps{
 
 export const InformationIcon: React.FC<InformationIconProps> = ({link,style}) => {
     return <React.Fragment>
-        <a href={DEFUALT_LINK ? DEFUALT_LINK : link} style={style} className={styles.flex} title="documentation">
+        <a href={DEFUALT_LINK ? DEFUALT_LINK : link} style={style} className={styles.flex} title="documentation" target="_blank">
             <img className="headerIcon"  src={infoImg} alt="Info icon"/>
         </a>
     </React.Fragment>

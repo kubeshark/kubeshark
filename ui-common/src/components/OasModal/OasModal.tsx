@@ -7,7 +7,9 @@ import style from './OasModal.module.sass';
 import openApiLogo from 'assets/openApiLogo.png'
 import { redocThemeOptions } from "./redocThemeOptions";
 import React from "react";
-import { UI } from "../..";
+import { TOAST_CONTAINER_ID } from "../../configs/Consts";
+import { Select } from "../UI/Select";
+
 
 const modalStyle = {
   position: 'absolute',
@@ -42,7 +44,7 @@ const OasModal = ({ openModal, handleCloseModal, getOasServices, getOasByService
         const data = await getOasByService(selectedService);
         setSelectedServiceSpec(data);
       } catch (e) {
-        toast.error("Error occurred while fetching service OAS spec");
+        toast.error("Error occurred while fetching service OAS spec", { containerId: TOAST_CONTAINER_ID });
         console.error(e);
       }
     }
@@ -106,32 +108,32 @@ const OasModal = ({ openModal, handleCloseModal, getOasServices, getOasByService
               <div className={style.title}>OpenApi </div>
             </div>
             <div style={{ cursor: "pointer" }}>
-                <img src={closeIcon} alt="close" onClick={handleCloseModal} />
-              </div>
+              <img src={closeIcon} alt="close" onClick={handleCloseModal} />
+            </div>
           </div>
           <div className={style.selectContainer} >
-              <FormControl>
-                <UI.Select
-                  labelId="service-select-label"
-                  id="service-select"
-                  value={selectedServiceName}
-                  onChangeCb={onSelectedOASService}
-                >
-                  <ListSubheader disableSticky={true}>Resolved</ListSubheader>
-                  {resolvedServices.map((service) => (
-                    <MenuItem key={service} value={service}>
-                      {service}
-                    </MenuItem>
-                  ))}
-                  <ListSubheader disableSticky={true}>UnResolved</ListSubheader>
-                  {unResolvedServices.map((service) => (
-                    <MenuItem key={service} value={service}>
-                      {service}
-                    </MenuItem>
-                  ))}
-                </UI.Select>
-              </FormControl>
-            </div>
+            <FormControl>
+              <Select
+                labelId="service-select-label"
+                id="service-select"
+                value={selectedServiceName}
+                onChangeCb={onSelectedOASService}
+              >
+                <ListSubheader disableSticky={true}>Resolved</ListSubheader>
+                {resolvedServices.map((service) => (
+                  <MenuItem key={service} value={service}>
+                    {service}
+                  </MenuItem>
+                ))}
+                <ListSubheader disableSticky={true}>UnResolved</ListSubheader>
+                {unResolvedServices.map((service) => (
+                  <MenuItem key={service} value={service}>
+                    {service}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </div>
           <div className={style.borderLine}></div>
           <div className={style.redoc}>
             {selectedServiceSpec && <RedocStandalone
