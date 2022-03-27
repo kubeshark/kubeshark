@@ -1,0 +1,39 @@
+.highlighterContainer
+    &.fitScreen
+        pre
+            max-height: 90vh
+            overflow: auto
+
+    pre
+        code
+            font-size: 0.75rem
+
+            &:first-child
+                margin-right: 0.75rem
+                background: #F7F9FC
+
+                .react-syntax-highlighter-line-number
+                    color: rgb(98, 126, 247)
+
+
+
+            &:last-child
+                display: block
+
+    code.hljs
+        white-space: pre-wrap
+
+    code.hljs:before
+        counter-reset: listing
+
+.hljsMarkerLine
+    counter-increment: listing
+
+.hljsMarkerLine:before
+    content: counter(listing) "  "
+    display: inline-block
+    width: 3rem
+    padding-left: auto
+    margin-left: auto
+    text-align: right
+    opacity: .5
