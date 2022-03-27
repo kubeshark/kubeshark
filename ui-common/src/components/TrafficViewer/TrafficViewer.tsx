@@ -190,7 +190,7 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({ setAnalyzeStatus, 
             autoClose: message.data.autoClose,
             pauseOnHover: true,
             progress: undefined,
-            containerId: TOAST_CONTAINER_ID 
+            containerId: TOAST_CONTAINER_ID
           });
           break;
         case "queryMetadata":
