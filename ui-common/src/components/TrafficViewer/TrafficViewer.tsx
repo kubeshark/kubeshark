@@ -50,11 +50,12 @@ interface TrafficViewerProps {
   webSocketUrl : string,
   isCloseWebSocket : boolean,
   isDemoBannerView : boolean
+  reopenConnectionTime: string;
 }
 
 export const TrafficViewer : React.FC<TrafficViewerProps> = ({setAnalyzeStatus, trafficViewerApiProp,
                                                                actionButtons,isShowStatusBar,webSocketUrl,
-                                                               isCloseWebSocket, isDemoBannerView}) => {
+                                                               isCloseWebSocket, isDemoBannerView, reopenConnectionTime}) => {
 
   const classes = useLayoutStyles();
 
@@ -110,7 +111,26 @@ export const TrafficViewer : React.FC<TrafficViewerProps> = ({setAnalyzeStatus, 
     isCloseWebSocket && closeWebSocket()
   },[isCloseWebSocket])
 
+  useEffect(() => {
+    reopenConnectionTime && reopenConnection()
+  }, [reopenConnectionTime])
+
   const ws = useRef(null);
+
+  const openEmptyWebSocket = () => {
+    if (query) {
+      openWebSocket(`(${query}) and leftOff(-1)`, true);
+    } else {
+      openWebSocket(`leftOff(-1)`, true);
+    }
+  }
+
+  const closeWebSocket = () => {
+    if(ws?.current?.readyState === WebSocket.OPEN) {
+      ws.current.close();
+      return true;
+    }
+  }
 
   const listEntry = useRef(null);
   const openWebSocket = (query: string, resetEntries: boolean) => {
@@ -151,12 +171,6 @@ export const TrafficViewer : React.FC<TrafficViewerProps> = ({setAnalyzeStatus, 
         sendQueryWhenWsOpen(query);
       }
     }, 500)
-  }
-
-  const closeWebSocket = () => {
-    if(ws?.current?.readyState === WebSocket.OPEN) {
-      ws.current.close();
-    }
   }
 
   if (ws.current) {
@@ -235,17 +249,16 @@ export const TrafficViewer : React.FC<TrafficViewerProps> = ({setAnalyzeStatus, 
   }, []);
 
   const toggleConnection = () => {
-    if(ws?.current?.readyState === WebSocket.OPEN) {
-      ws?.current?.close();
-    } else {
-      if (query) {
-        openWebSocket(`(${query}) and leftOff(-1)`, true);
-      } else {
-        openWebSocket(`leftOff(-1)`, true);
-      }
+    if(!closeWebSocket()) {
+      openEmptyWebSocket();
       scrollableRef.current.jumpToBottom();
       setIsSnappedToBottom(true);
     }
+  }
+
+  const reopenConnection = async () => {
+    closeWebSocket()
+    openEmptyWebSocket();
   }
 
   useEffect(() => {
@@ -357,11 +370,11 @@ export const TrafficViewer : React.FC<TrafficViewerProps> = ({setAnalyzeStatus, 
 const MemoiedTrafficViewer = React.memo(TrafficViewer)
 const TrafficViewerContainer: React.FC<TrafficViewerProps> = ({ setAnalyzeStatus, trafficViewerApiProp,
                                                                 actionButtons, isShowStatusBar = true ,
-                                                                webSocketUrl, isCloseWebSocket, isDemoBannerView}) => {
+                                                                webSocketUrl, isCloseWebSocket, isDemoBannerView, reopenConnectionTime}) => {
   return <RecoilRoot>
     <MemoiedTrafficViewer actionButtons={actionButtons} isShowStatusBar={isShowStatusBar} webSocketUrl={webSocketUrl}
                           isCloseWebSocket={isCloseWebSocket} trafficViewerApiProp={trafficViewerApiProp}
-                          setAnalyzeStatus={setAnalyzeStatus} isDemoBannerView={isDemoBannerView} />
+                          setAnalyzeStatus={setAnalyzeStatus} isDemoBannerView={isDemoBannerView} reopenConnectionTime={reopenConnectionTime}/>
   </RecoilRoot>
 }
 
