@@ -103,7 +103,8 @@ func StartPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem, 
 		diagnose.StartMemoryProfiler(os.Getenv(MemoryProfilingDumpPath), os.Getenv(MemoryProfilingTimeIntervalSeconds))
 	}
 
-	go startPassiveTapper(opts, outputItems)
+	streamsMap, assembler := initializePassiveTapper(opts, outputItems)
+	go startPassiveTapper(streamsMap, assembler)
 }
 
 func UpdateTapTargets(newTapTargets []v1.Pod) {
@@ -205,9 +206,8 @@ func initializePacketSources() error {
 	}
 }
 
-func startPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem) {
+func initializePassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem) (*tcpStreamMap, *tcpAssembler) {
 	streamsMap := NewTcpStreamMap()
-	go streamsMap.closeTimedoutTcpStreamChannels()
 
 	diagnose.InitializeErrorsMap(*debug, *verbose, *quiet)
 	diagnose.InitializeTapperInternalStats()
@@ -219,6 +219,12 @@ func startPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem) 
 	}
 
 	assembler := NewTcpAssembler(outputItems, streamsMap, opts)
+
+	return streamsMap, assembler
+}
+
+func startPassiveTapper(streamsMap *tcpStreamMap, assembler *tcpAssembler) {
+	go streamsMap.closeTimedoutTcpStreamChannels()
 
 	diagnose.AppStats.SetStartTime(time.Now())
 
