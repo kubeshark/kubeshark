@@ -45,7 +45,7 @@ export function leftTextCheck(entryNum, path, expectedText) {
 
 export function leftOnHoverCheck(entryNum, path, filterName) {
     cy.get(`#list #entry-${entryNum} ${path}`).trigger('mouseover');
-    cy.get(`#list #entry-${entryNum} .Queryable-Tooltip`).invoke('text').should('match', new RegExp(filterName));
+    cy.get(`#list #entry-${entryNum} [data-cy='QueryableTooltip']`).invoke('text').should('match', new RegExp(filterName));
 }
 
 export function rightTextCheck(path, expectedText) {
@@ -54,7 +54,7 @@ export function rightTextCheck(path, expectedText) {
 
 export function rightOnHoverCheck(path, expectedText) {
     cy.get(`#rightSideContainer ${path}`).trigger('mouseover');
-    cy.get(`#rightSideContainer .Queryable-Tooltip`).invoke('text').should('match', new RegExp(expectedText));
+    cy.get(`#rightSideContainer [data-cy='QueryableTooltip']`).invoke('text').should('match', new RegExp(expectedText));
 }
 
 export function checkThatAllEntriesShown() {
@@ -142,7 +142,9 @@ function deepCheck(generalDict, protocolDict, methodDict, entry) {
 
     if (value) {
         if (value.tab === valueTabs.response)
-            cy.contains('Response').click();
+            // temporary fix, change to some "data-cy" attribute,
+            // this will fix the issue that happen because we have "response:" in the header of the right side
+            cy.get('#rightSideContainer > :nth-child(3)').contains('Response').click();
         cy.get(Cypress.env('bodyJsonClass')).then(text => {
             expect(text.text()).to.match(value.regex)
         });

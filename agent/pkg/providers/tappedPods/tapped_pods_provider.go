@@ -14,9 +14,10 @@ import (
 const FilePath = shared.DataDirPath + "tapped-pods.json"
 
 var (
-	lock       = &sync.Mutex{}
-	syncOnce   sync.Once
-	tappedPods []*shared.PodInfo
+	lock                    = &sync.Mutex{}
+	syncOnce                sync.Once
+	tappedPods              []*shared.PodInfo
+	nodeHostToTappedPodsMap shared.NodeToPodsMap
 )
 
 func Get() []*shared.PodInfo {
@@ -54,4 +55,15 @@ func GetTappedPodsStatus() []shared.TappedPodStatus {
 	}
 
 	return tappedPodsStatus
+}
+
+func SetNodeToTappedPodMap(nodeToTappedPodsMap shared.NodeToPodsMap) {
+	summary := nodeToTappedPodsMap.Summary()
+	logger.Log.Infof("Setting node to tapped pods map to %v", summary)
+
+	nodeHostToTappedPodsMap = nodeToTappedPodsMap
+}
+
+func GetNodeToTappedPodMap() shared.NodeToPodsMap {
+	return nodeHostToTappedPodsMap
 }

@@ -35,7 +35,7 @@ func (d dissecting) Ping() {
 	log.Printf("pong %s", _protocol.Name)
 }
 
-func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, superIdentifier *api.SuperIdentifier, emitter api.Emitter, options *api.TrafficFilteringOptions, _reqResMatcher api.RequestResponseMatcher) error {
+func (d dissecting) Dissect(b *bufio.Reader, progress *api.ReadProgress, capture api.Capture, isClient bool, tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, superIdentifier *api.SuperIdentifier, emitter api.Emitter, options *api.TrafficFilteringOptions, _reqResMatcher api.RequestResponseMatcher) error {
 	reqResMatcher := _reqResMatcher.(*requestResponseMatcher)
 	for {
 		if superIdentifier.Protocol != nil && superIdentifier.Protocol != &_protocol {
@@ -49,7 +49,7 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 			}
 			superIdentifier.Protocol = &_protocol
 		} else {
-			err := ReadResponse(b, tcpID, counterPair, superTimer, emitter, reqResMatcher)
+			err := ReadResponse(b, capture, tcpID, counterPair, superTimer, emitter, reqResMatcher)
 			if err != nil {
 				return err
 			}
@@ -68,6 +68,7 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 	}
 	return &api.Entry{
 		Protocol: _protocol,
+		Capture:  item.Capture,
 		Source: &api.TCP{
 			Name: resolvedSource,
 			IP:   item.ConnectionInfo.ClientIP,
@@ -78,13 +79,15 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 			IP:   item.ConnectionInfo.ServerIP,
 			Port: item.ConnectionInfo.ServerPort,
 		},
-		Namespace:   namespace,
-		Outgoing:    item.ConnectionInfo.IsOutgoing,
-		Request:     reqDetails,
-		Response:    item.Pair.Response.Payload.(map[string]interface{})["details"].(map[string]interface{}),
-		Timestamp:   item.Timestamp,
-		StartTime:   item.Pair.Request.CaptureTime,
-		ElapsedTime: elapsedTime,
+		Namespace:    namespace,
+		Outgoing:     item.ConnectionInfo.IsOutgoing,
+		Request:      reqDetails,
+		Response:     item.Pair.Response.Payload.(map[string]interface{})["details"].(map[string]interface{}),
+		RequestSize:  item.Pair.Request.CaptureSize,
+		ResponseSize: item.Pair.Response.CaptureSize,
+		Timestamp:    item.Timestamp,
+		StartTime:    item.Pair.Request.CaptureTime,
+		ElapsedTime:  elapsedTime,
 	}
 }
 
@@ -190,6 +193,7 @@ func (d dissecting) Summarize(entry *api.Entry) *api.BaseEntry {
 	return &api.BaseEntry{
 		Id:             entry.Id,
 		Protocol:       entry.Protocol,
+		Capture:        entry.Capture,
 		Summary:        summary,
 		SummaryQuery:   summaryQuery,
 		Status:         status,
@@ -206,8 +210,7 @@ func (d dissecting) Summarize(entry *api.Entry) *api.BaseEntry {
 	}
 }
 
-func (d dissecting) Represent(request map[string]interface{}, response map[string]interface{}) (object []byte, bodySize int64, err error) {
-	bodySize = 0
+func (d dissecting) Represent(request map[string]interface{}, response map[string]interface{}) (object []byte, err error) {
 	representation := make(map[string]interface{})
 
 	apiKey := ApiKey(request["apiKey"].(float64))

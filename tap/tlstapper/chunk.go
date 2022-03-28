@@ -8,22 +8,23 @@ import (
 	"github.com/go-errors/errors"
 )
 
-const FLAGS_IS_CLIENT_BIT int32 = (1 << 0)
-const FLAGS_IS_READ_BIT int32 = (1 << 1)
+const FLAGS_IS_CLIENT_BIT uint32 = (1 << 0)
+const FLAGS_IS_READ_BIT uint32 = (1 << 1)
 
 // The same struct can be found in maps.h
 //
 //	Be careful when editing, alignment and padding should be exactly the same in go/c.
 //
 type tlsChunk struct {
-	Pid      int32
-	Tgid     int32
-	Len      int32
-	Recorded int32
-	Fd       int32
-	Flags    int32
-	Address  [16]byte
-	Data     [4096]byte
+	Pid      uint32	// process id
+	Tgid     uint32	// thread id inside the process
+	Len      uint32	// the size of the native buffer used to read/write the tls data (may be bigger than tlsChunk.Data[])
+	Start    uint32	// the start offset withing the native buffer
+	Recorded uint32	// number of bytes copied from the native buffer to tlsChunk.Data[]
+	Fd       uint32	// the file descriptor used to read/write the tls data (probably socket file descriptor)
+	Flags    uint32 // bitwise flags
+	Address  [16]byte // ipv4 address and port
+	Data     [4096]byte // actual tls data
 }
 
 func (c *tlsChunk) getAddress() (net.IP, uint16, error) {
@@ -67,4 +68,8 @@ func (c *tlsChunk) isWrite() bool {
 
 func (c *tlsChunk) getRecordedData() []byte {
 	return c.Data[:c.Recorded]
+}
+
+func (c *tlsChunk) isRequest() bool {
+	return (c.isClient() && c.isWrite()) || (c.isServer() && c.isRead())
 }

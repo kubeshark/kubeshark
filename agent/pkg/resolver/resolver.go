@@ -168,11 +168,13 @@ func (resolver *Resolver) watchServices(ctx context.Context) error {
 
 func (resolver *Resolver) saveResolvedName(key string, resolved string, namespace string, eventType watch.EventType) {
 	if eventType == watch.Deleted {
+		resolver.nameMap.Remove(resolved)
 		resolver.nameMap.Remove(key)
 		logger.Log.Infof("setting %s=nil", key)
 	} else {
 
 		resolver.nameMap.Set(key, &ResolvedObjectInfo{FullAddress: resolved, Namespace: namespace})
+		resolver.nameMap.Set(resolved, &ResolvedObjectInfo{FullAddress: resolved, Namespace: namespace})
 		logger.Log.Infof("setting %s=%s", key, resolved)
 	}
 }

@@ -6,17 +6,15 @@ FROM node:16 AS front-end
 
 WORKDIR /app/ui-build
 
-COPY ui/package.json .
-COPY ui/package-lock.json .
+COPY ui/package.json ui/package-lock.json ./
 RUN npm i
 COPY ui .
 RUN npm run build
-RUN npm run build-ent
 
 ### Base builder image for native builds architecture
 FROM golang:1.17-alpine AS builder-native-base
 ENV CGO_ENABLED=1 GOOS=linux
-RUN apk add libpcap-dev g++ perl-utils
+RUN apk add --no-cache libpcap-dev g++ perl-utils
 
 
 ### Intermediate builder image for x86-64 to x86-64 native builds
@@ -78,17 +76,16 @@ RUN go build -ldflags="-extldflags=-static -s -w \
     -X 'github.com/up9inc/mizu/agent/pkg/version.Ver=${VER}'" -o mizuagent .
 
 # Download Basenine executable, verify the sha1sum
-ADD https://github.com/up9inc/basenine/releases/download/v0.5.4/basenine_linux_${GOARCH} ./basenine_linux_${GOARCH}
-ADD https://github.com/up9inc/basenine/releases/download/v0.5.4/basenine_linux_${GOARCH}.sha256 ./basenine_linux_${GOARCH}.sha256
-RUN shasum -a 256 -c basenine_linux_${GOARCH}.sha256
-RUN chmod +x ./basenine_linux_${GOARCH}
-RUN mv ./basenine_linux_${GOARCH} ./basenine
+ADD https://github.com/up9inc/basenine/releases/download/v0.6.6/basenine_linux_${GOARCH} ./basenine_linux_${GOARCH}
+ADD https://github.com/up9inc/basenine/releases/download/v0.6.6/basenine_linux_${GOARCH}.sha256 ./basenine_linux_${GOARCH}.sha256
 
+RUN shasum -a 256 -c basenine_linux_"${GOARCH}".sha256 && \
+    chmod +x ./basenine_linux_"${GOARCH}" && \
+    mv ./basenine_linux_"${GOARCH}" ./basenine
 
 ### The shipped image
 ARG TARGETARCH=amd64
 FROM ${TARGETARCH}/busybox:latest
-
 # gin-gonic runs in debug mode without this
 ENV GIN_MODE=release
 
@@ -99,7 +96,6 @@ WORKDIR /app
 COPY --from=builder ["/app/agent-build/mizuagent", "."]
 COPY --from=builder ["/app/agent-build/basenine", "/usr/local/bin/basenine"]
 COPY --from=front-end ["/app/ui-build/build", "site"]
-COPY --from=front-end ["/app/ui-build/build-ent", "site-standalone"]
 
 # this script runs both apiserver and passivetapper and exits either if one of them exits, preventing a scenario where the container runs without one process
 ENTRYPOINT ["/app/mizuagent"]
