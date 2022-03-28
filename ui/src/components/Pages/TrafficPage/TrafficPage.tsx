@@ -35,9 +35,9 @@ const trafficViewerApi = {...api}
     setServiceMapModalOpen(true)
   }, 500);
 
-  const actionButtons = (true|| window["isServiceMapEnabled"]) &&
+  const actionButtons = (window["isOasEnabled"] || window["isServiceMapEnabled"]) &&
                           <div style={{ display: 'flex', height: "100%" }}>
-                              {true && <Button
+                              {window["isOasEnabled"] && <Button
                                 startIcon={<img className="custom" src={services} alt="services"></img>}
                                 size="large"
                                 variant="contained"
