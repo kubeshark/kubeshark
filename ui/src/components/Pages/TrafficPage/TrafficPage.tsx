@@ -40,12 +40,11 @@ const trafficViewerApi = {...api}
                               {window["isOasEnabled"] && <Button
                                 startIcon={<img className="custom" src={services} alt="services"></img>}
                                 size="large"
-                                type="submit"
                                 variant="contained"
                                 className={commonClasses.outlinedButton + " " + commonClasses.imagedButton}
                                 style={{ marginRight: 25, textTransform: 'unset' }}
                                 onClick={handleOpenOasModal}>
-                                OpenApi Specs
+                                OpenAPI Specs
                               </Button>}
                               {window["isServiceMapEnabled"] && <Button
                                 startIcon={<img src={serviceMap} className="custom" alt="service-map" style={{marginRight:"8%"}}></img>}
