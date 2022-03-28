@@ -14,6 +14,9 @@ jobs:
     name: Run acceptance tests
     runs-on: ubuntu-latest
     steps:
+      - name: Get gitHub context
+        run: echo "${{ toJson(github) }}"
+
       - name: Slack notification on failure
         uses: ravsamhq/notify-slack-action@v1
         if: always()
