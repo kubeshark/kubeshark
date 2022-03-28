@@ -12,10 +12,6 @@ import (
 	"github.com/up9inc/mizu/tap"
 )
 
-type TapConfig struct {
-	TappedNamespaces map[string]bool `json:"tappedNamespaces"`
-}
-
 type EntriesRequest struct {
 	LeftOff   int    `form:"leftOff" validate:"required,min=-1"`
 	Direction int    `form:"direction" validate:"required,oneof='1' '-1'"`
@@ -109,16 +105,6 @@ func CreateWebsocketTappedEntryMessage(base *tapApi.OutputChannelItem) ([]byte, 
 	return json.Marshal(message)
 }
 
-func CreateWebsocketOutboundLinkMessage(base *tap.OutboundLink) ([]byte, error) {
-	message := &WebsocketOutboundLinkMessage{
-		WebSocketMessageMetadata: &shared.WebSocketMessageMetadata{
-			MessageType: shared.WebsocketMessageTypeOutboundLink,
-		},
-		Data: base,
-	}
-	return json.Marshal(message)
-}
-
 func CreateWebsocketToastMessage(base *ToastMessage) ([]byte, error) {
 	message := &WebSocketToastMessage{
 		WebSocketMessageMetadata: &shared.WebSocketMessageMetadata{
@@ -173,8 +159,4 @@ func RunValidationRulesState(harEntry har.Entry, service string) (tapApi.Applica
 	resultPolicyToSend, isEnabled := rules.MatchRequestPolicy(harEntry, service)
 	statusPolicyToSend, latency, numberOfRules := rules.PassedValidationRules(resultPolicyToSend)
 	return tapApi.ApplicableRules{Status: statusPolicyToSend, Latency: latency, NumberOfRules: numberOfRules}, resultPolicyToSend, isEnabled
-}
-
-type InstallState struct {
-	Completed bool `json:"completed"`
 }

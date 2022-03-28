@@ -5,7 +5,6 @@ const (
 	SyncEntriesConfigEnvVar          = "SYNC_ENTRIES_CONFIG"
 	HostModeEnvVar                   = "HOST_MODE"
 	NodeNameEnvVar                   = "NODE_NAME"
-	TappedAddressesPerNodeDictEnvVar = "TAPPED_ADDRESSES_PER_HOST"
 	ConfigDirPath                    = "/app/config/"
 	DataDirPath                      = "/app/data/"
 	ValidationRulesFileName          = "validation-rules.yaml"
@@ -17,6 +16,4 @@ const (
 	MizuAgentImageRepo               = "docker.io/up9inc/mizu"
 	BasenineHost                     = "127.0.0.1"
 	BaseninePort                     = "9099"
-	KratosImageDefault               = "gcr.io/up9-docker-hub/mizu-kratos/stable:0.0.0"
-	KetoImageDefault                 = "gcr.io/up9-docker-hub/mizu-keto/stable:0.0.0"
 )

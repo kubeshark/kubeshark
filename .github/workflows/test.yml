@@ -34,14 +34,6 @@ jobs:
         run: |
           sudo apt-get install libpcap-dev
 
-      - id: 'auth'
-        uses: 'google-github-actions/auth@v0'
-        with:
-          credentials_json: '${{ secrets.GCR_JSON_KEY }}'
-
-      - name: 'Set up Cloud SDK'
-        uses: 'google-github-actions/setup-gcloud@v0'
-
       - name: Check CLI modified files
         id: cli_modified_files
         run: devops/check_modified_files.sh cli/

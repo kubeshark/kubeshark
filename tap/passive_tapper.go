@@ -52,7 +52,6 @@ var snaplen = flag.Int("s", 65536, "Snap length (number of bytes max to read per
 var tstype = flag.String("timestamp_type", "", "Type of timestamps to use")
 var promisc = flag.Bool("promisc", true, "Set promiscuous mode")
 var staleTimeoutSeconds = flag.Int("staletimout", 120, "Max time in seconds to keep connections which don't transmit data")
-var pids = flag.String("pids", "", "A comma separated list of PIDs to capture their network namespaces")
 var servicemesh = flag.Bool("servicemesh", false, "Record decrypted traffic if the cluster is configured with a service mesh and with mtls")
 var tls = flag.Bool("tls", false, "Enable TLS tapper")
 
@@ -60,7 +59,6 @@ var memprofile = flag.String("memprofile", "", "Write memory profile")
 
 type TapOpts struct {
 	HostMode          bool
-	FilterAuthorities []v1.Pod
 }
 
 var extensions []*api.Extension                     // global
@@ -68,6 +66,7 @@ var filteringOptions *api.TrafficFilteringOptions   // global
 var tapTargets []v1.Pod                             // global
 var packetSourceManager *source.PacketSourceManager // global
 var mainPacketInputChan chan source.TcpPacketInfo   // global
+var tlsTapperInstance *tlstapper.TlsTapper          // global
 
 func inArrayInt(arr []int, valueToCheck int) bool {
 	for _, value := range arr {
@@ -91,16 +90,10 @@ func StartPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem, 
 	extensions = extensionsRef
 	filteringOptions = options
 
-	if opts.FilterAuthorities == nil {
-		tapTargets = []v1.Pod{}
-	} else {
-		tapTargets = opts.FilterAuthorities
-	}
-
 	if *tls {
 		for _, e := range extensions {
 			if e.Protocol.Name == "http" {
-				startTlsTapper(e, outputItems, options)
+				tlsTapperInstance = startTlsTapper(e, outputItems, options)
 				break
 			}
 		}
@@ -110,24 +103,39 @@ func StartPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem, 
 		diagnose.StartMemoryProfiler(os.Getenv(MemoryProfilingDumpPath), os.Getenv(MemoryProfilingTimeIntervalSeconds))
 	}
 
-	go startPassiveTapper(opts, outputItems)
+	streamsMap, assembler := initializePassiveTapper(opts, outputItems)
+	go startPassiveTapper(streamsMap, assembler)
 }
 
 func UpdateTapTargets(newTapTargets []v1.Pod) {
+	success := true
+
 	tapTargets = newTapTargets
-	if err := initializePacketSources(); err != nil {
-		logger.Log.Fatal(err)
+
+	packetSourceManager.UpdatePods(tapTargets)
+
+	if tlsTapperInstance != nil {
+		if err := tlstapper.UpdateTapTargets(tlsTapperInstance, &tapTargets, *procfs); err != nil {
+			tlstapper.LogError(err)
+			success = false
+		}
 	}
-	printNewTapTargets()
+
+	printNewTapTargets(success)
 }
 
-func printNewTapTargets() {
+func printNewTapTargets(success bool) {
 	printStr := ""
 	for _, tapTarget := range tapTargets {
 		printStr += fmt.Sprintf("%s (%s), ", tapTarget.Status.PodIP, tapTarget.Name)
 	}
 	printStr = strings.TrimRight(printStr, ", ")
-	logger.Log.Infof("Now tapping: %s", printStr)
+
+	if success {
+		logger.Log.Infof("Now tapping: %s", printStr)
+	} else {
+		logger.Log.Errorf("Failed to start tapping: %s", printStr)
+	}
 }
 
 func printPeriodicStats(cleaner *Cleaner) {
@@ -190,7 +198,7 @@ func initializePacketSources() error {
 	}
 
 	var err error
-	if packetSourceManager, err = source.NewPacketSourceManager(*procfs, *pids, *fname, *iface, *servicemesh, tapTargets, behaviour); err != nil {
+	if packetSourceManager, err = source.NewPacketSourceManager(*procfs, *fname, *iface, *servicemesh, tapTargets, behaviour); err != nil {
 		return err
 	} else {
 		packetSourceManager.ReadPackets(!*nodefrag, mainPacketInputChan)
@@ -198,9 +206,8 @@ func initializePacketSources() error {
 	}
 }
 
-func startPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem) {
+func initializePassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem) (*tcpStreamMap, *tcpAssembler) {
 	streamsMap := NewTcpStreamMap()
-	go streamsMap.closeTimedoutTcpStreamChannels()
 
 	diagnose.InitializeErrorsMap(*debug, *verbose, *quiet)
 	diagnose.InitializeTapperInternalStats()
@@ -212,6 +219,12 @@ func startPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem) 
 	}
 
 	assembler := NewTcpAssembler(outputItems, streamsMap, opts)
+
+	return streamsMap, assembler
+}
+
+func startPassiveTapper(streamsMap *tcpStreamMap, assembler *tcpAssembler) {
+	go streamsMap.closeTimedoutTcpStreamChannels()
 
 	diagnose.AppStats.SetStartTime(time.Now())
 
@@ -244,13 +257,18 @@ func startPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem) 
 	logger.Log.Infof("AppStats: %v", diagnose.AppStats)
 }
 
-func startTlsTapper(extension *api.Extension, outputItems chan *api.OutputChannelItem, options *api.TrafficFilteringOptions) {
+func startTlsTapper(extension *api.Extension, outputItems chan *api.OutputChannelItem, options *api.TrafficFilteringOptions) *tlstapper.TlsTapper {
 	tls := tlstapper.TlsTapper{}
 	tlsPerfBufferSize := os.Getpagesize() * 100
 
-	if err := tls.Init(tlsPerfBufferSize); err != nil {
+	if err := tls.Init(tlsPerfBufferSize, *procfs, extension); err != nil {
 		tlstapper.LogError(err)
-		return
+		return nil
+	}
+
+	if err := tlstapper.UpdateTapTargets(&tls, &tapTargets, *procfs); err != nil {
+		tlstapper.LogError(err)
+		return nil
 	}
 
 	// A quick way to instrument libssl.so without PID filtering - used for debuging and troubleshooting
@@ -258,13 +276,8 @@ func startTlsTapper(extension *api.Extension, outputItems chan *api.OutputChanne
 	if os.Getenv("MIZU_GLOBAL_SSL_LIBRARY") != "" {
 		if err := tls.GlobalTap(os.Getenv("MIZU_GLOBAL_SSL_LIBRARY")); err != nil {
 			tlstapper.LogError(err)
-			return
+			return nil
 		}
-	}
-
-	if err := tlstapper.UpdateTapTargets(&tls, &tapTargets, *procfs); err != nil {
-		tlstapper.LogError(err)
-		return
 	}
 
 	var emitter api.Emitter = &api.Emitting{
@@ -272,6 +285,7 @@ func startTlsTapper(extension *api.Extension, outputItems chan *api.OutputChanne
 		OutputChannel: outputItems,
 	}
 
-	poller := tlstapper.NewTlsPoller(&tls, extension)
-	go poller.Poll(extension, emitter, options)
+	go tls.Poll(emitter, options)
+
+	return &tls
 }

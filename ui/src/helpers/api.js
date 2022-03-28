@@ -9,6 +9,10 @@ const CancelToken = axios.CancelToken;
 
 const apiURL = process.env.REACT_APP_OVERRIDE_API_URL ? process.env.REACT_APP_OVERRIDE_API_URL : `${window.location.origin}/`;
 
+let token = ""
+let client = null
+let source = null
+
 export default class Api {
     static instance;
 
@@ -20,44 +24,53 @@ export default class Api {
     }
 
     constructor() {
-        this.token = localStorage.getItem("token");
+        token = localStorage.getItem("token");
 
-        this.client = this.getAxiosClient();
-        this.source = null;
+        client = this.getAxiosClient();
+        source = null;
     }
 
     serviceMapStatus = async () => {
-        const response = await this.client.get("/servicemap/status");
+        const response = await client.get("/servicemap/status");
         return response.data;
     }
 
     serviceMapData = async () => {
-        const response = await this.client.get(`/servicemap/get`);
+        const response = await client.get(`/servicemap/get`);
         return response.data;
     }
 
     serviceMapReset = async () => {
-        const response = await this.client.get(`/servicemap/reset`);
+        const response = await client.get(`/servicemap/reset`);
         return response.data;
     }
 
     tapStatus = async () => {
-        const response = await this.client.get("/status/tap");
+        const response = await client.get("/status/tap");
+        return response.data;
+    }
+    getTapConfig = async () => {
+        const response = await this.client.get("/config/tap");
+        return response.data;
+    }
+
+    setTapConfig = async (config) => {
+        const response = await this.client.post("/config/tap", { tappedNamespaces: config });
         return response.data;
     }
 
     analyzeStatus = async () => {
-        const response = await this.client.get("/status/analyze");
+        const response = await client.get("/status/analyze");
         return response.data;
     }
 
     getEntry = async (id, query) => {
-        const response = await this.client.get(`/entries/${id}?query=${query}`);
+        const response = await client.get(`/entries/${id}?query=${encodeURIComponent(query)}`);
         return response.data;
     }
 
     fetchEntries = async (leftOff, direction, query, limit, timeoutMs) => {
-        const response = await this.client.get(`/entries/?leftOff=${leftOff}&direction=${direction}&query=${query}&limit=${limit}&timeoutMs=${timeoutMs}`).catch(function (thrown) {
+        const response = await client.get(`/entries/?leftOff=${leftOff}&direction=${direction}&query=${encodeURIComponent(query)}&limit=${limit}&timeoutMs=${timeoutMs}`).catch(function (thrown) {
             console.error(thrown.message);
             return {};
         });
@@ -65,22 +78,22 @@ export default class Api {
     }
 
     getRecentTLSLinks = async () => {
-        const response = await this.client.get("/status/recentTLSLinks");
+        const response = await client.get("/status/recentTLSLinks");
         return response.data;
     }
 
     getAuthStatus = async () => {
-        const response = await this.client.get("/status/auth");
+        const response = await client.get("/status/auth");
         return response.data;
     }
 
     getOasServices = async () => {
-        const response = await this.client.get("/oas");
+        const response = await client.get("/oas/");
         return response.data;
     }
 
     getOasByService = async (selectedService) => {
-        const response = await this.client.get(`/oas/${selectedService}`);
+        const response = await client.get(`/oas/${selectedService}`);
         return response.data;
     }
 
@@ -90,15 +103,15 @@ export default class Api {
     }
 
     validateQuery = async (query) => {
-        if (this.source) {
-            this.source.cancel();
+        if (source) {
+            source.cancel();
         }
-        this.source = CancelToken.source();
+        source = CancelToken.source();
 
         const form = new FormData();
         form.append('query', query)
-        const response = await this.client.post(`/query/validate`, form, {
-            cancelToken: this.source.token
+        const response = await client.post(`/query/validate`, form, {
+            cancelToken: source.token
         }).catch(function (thrown) {
             if (!axios.isCancel(thrown)) {
                 console.error('Validate error', thrown.message);
@@ -112,76 +125,10 @@ export default class Api {
         return response.data;
     }
 
-    getTapConfig = async () => {
-        const response = await this.client.get("/config/tap");
-        return response.data;
-    }
-
-    setTapConfig = async (config) => {
-        const response = await this.client.post("/config/tap", {tappedNamespaces: config});
-        return response.data;
-    }
-
-    isInstallNeeded = async () => {
-        const response = await this.client.get("/install/isNeeded");
-        return response.data;
-    }
-
-    isAuthenticationNeeded = async () => {
-        try {
-            await this.client.get("/status/tap");
-            return false;
-        } catch (e) {
-            if (e.response.status === 401) {
-                return true;
-            }
-            throw e;
-        }
-    }
-
-    setupAdminUser = async (password) => {
-        const form = new FormData();
-        form.append('password', password);
-
-        try {
-            const response = await this.client.post(`/install/admin`, form);
-            this.persistToken(response.data.token);
-            return response;
-        } catch (e) {
-            if (e.response.status === 400) {
-                const error = {
-                    'type': FormValidationErrorType,
-                    'messages': e.response.data
-                };
-                throw error;
-            } else {
-                throw e;
-            }
-        }
-    }
-
-    login = async (username, password) => {
-        const form = new FormData();
-        form.append('username', username);
-        form.append('password', password);
-
-        const response = await this.client.post(`/user/login`, form);
-        if (response.status >= 200 && response.status < 300) {
-            this.persistToken(response.data.token);
-        }
-
-        return response;
-    }
-
-    persistToken = (token) => {
-        this.token = token;
-        this.client = this.getAxiosClient();
+    persistToken = (tk) => {
+        token = tk;
+        client = this.getAxiosClient();
         localStorage.setItem('token', token);
-    }
-
-    logout = async () => {
-        await this.client.post(`/user/logout`);
-        this.persistToken(null);
     }
 
     getAxiosClient = () => {
@@ -189,8 +136,8 @@ export default class Api {
             Accept: "application/json"
         }
 
-        if (this.token) {
-            headers['x-session-token'] = `${this.token}`; // we use `x-session-token` instead of `Authorization` because the latter is reserved by kubectl proxy, making mizu view not work
+        if (token) {
+            headers['x-session-token'] = `${token}`; // we use `x-session-token` instead of `Authorization` because the latter is reserved by kubectl proxy, making mizu view not work
         }
         return axios.create({
             baseURL: apiURL,
@@ -198,4 +145,13 @@ export default class Api {
             headers
         });
     }
+}
+
+export function getWebsocketUrl() {
+    let websocketUrl = MizuWebsocketURL;
+    if (token) {
+        websocketUrl += `/${token}`;
+    }
+
+    return websocketUrl;
 }
