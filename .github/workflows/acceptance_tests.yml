@@ -4,10 +4,10 @@ on:
   pull_request:
     branches:
       - 'main'
+      - 'add_info_to_slack'
   push:
     branches:
       - 'develop'
-      - 'add_info_to_slack'
 
 jobs:
   run-acceptance-tests:
