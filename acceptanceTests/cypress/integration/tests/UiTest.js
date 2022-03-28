@@ -26,7 +26,7 @@ it('opening mizu', function () {
 verifyMinimumEntries();
 
 it('top bar check', function () {
-    cy.get(`[data-cy="podsCountText"]`).trigger('mouseover');
+    cy.get('.podsCount').trigger('mouseover');
     podsArray.map(findLineAndCheck);
     cy.reload();
 });
@@ -40,23 +40,32 @@ it('filtering guide check', function () {
 });
 
 it('right side sanity test', function () {
-    cy.get('#entryDetailedTitleElapsedTime').then(timeInMs => {
-        const time = timeInMs.text();
-        if (time < '0ms') {
-            throw new Error(`The time in the top line cannot be negative ${time}`);
-        }
-    });
+    cy.get('#entryDetailedTitleBodySize').then(sizeTopLine => {
+        const sizeOnTopLine = sizeTopLine.text().replace(' B', '');
+        cy.contains('Response').click();
+        cy.contains('Body Size (bytes)').parent().next().then(size => {
+            const bodySizeByDetails = size.text();
+            expect(sizeOnTopLine).to.equal(bodySizeByDetails, 'The body size in the top line should match the details in the response');
 
-    // temporary fix, change to some "data-cy" attribute,
-    // this will fix the issue that happen because we have "response:" in the header of the right side
-    cy.get('#rightSideContainer > :nth-child(3)').contains('Response').click();
+            if (parseInt(bodySizeByDetails) < 0) {
+                throw new Error(`The body size cannot be negative. got the size: ${bodySizeByDetails}`)
+            }
 
-    cy.get('#rightSideContainer [title="Status Code"]').then(status => {
-        const statusCode = status.text();
-        cy.contains('Status').parent().next().then(statusInDetails => {
-            const statusCodeInDetails = statusInDetails.text();
+            cy.get('#entryDetailedTitleElapsedTime').then(timeInMs => {
+                const time = timeInMs.text();
+                if (time < '0ms') {
+                    throw new Error(`The time in the top line cannot be negative ${time}`);
+                }
 
-            expect(statusCode).to.equal(statusCodeInDetails, 'The status code in the top line should match the status code in details');
+                cy.get('#rightSideContainer [title="Status Code"]').then(status => {
+                    const statusCode = status.text();
+                    cy.contains('Status').parent().next().then(statusInDetails => {
+                        const statusCodeInDetails = statusInDetails.text();
+
+                        expect(statusCode).to.equal(statusCodeInDetails, 'The status code in the top line should match the status code in details');
+                    });
+                });
+            });
         });
     });
 });
@@ -196,7 +205,6 @@ function checkFilter(filterDetails){
             // checks the hover on the last entry (the only one in DOM at the beginning)
             leftOnHoverCheck(totalEntries - 1, leftSidePath, name);
 
-            cy.get('.w-tc-editor-text').clear();
             // applying the filter with alt+enter or with the button
             cy.get('.w-tc-editor-text').type(`${name}${applyByEnter ? '{alt+enter}' : ''}`);
             cy.get('.w-tc-editor').should('have.attr', 'style').and('include', Cypress.env('greenFilterColor'));
@@ -243,9 +251,7 @@ function deeperChcek(leftSidePath, rightSidePath, filterName, leftSideExpectedTe
 }
 
 function checkRightSideResponseBody() {
-    // temporary fix, change to some "data-cy" attribute,
-    // this will fix the issue that happen because we have "response:" in the header of the right side
-    cy.get('#rightSideContainer > :nth-child(3)').contains('Response').click();
+    cy.contains('Response').click();
     clickCheckbox('Decode Base64');
 
     cy.get(`${Cypress.env('bodyJsonClass')}`).then(value => {

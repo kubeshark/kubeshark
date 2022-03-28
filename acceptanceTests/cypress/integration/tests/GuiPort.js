@@ -8,6 +8,6 @@ it('check', function () {
     cy.visit(`http://localhost:${port}`);
     cy.wait('@statusTap').its('response.statusCode').should('match', /^2\d{2}/);
 
-    cy.get(`[data-cy="expandedStatusBar"]`).trigger('mouseover',{force: true});
+    cy.get('.podsCount').trigger('mouseover');
     findLineAndCheck(getExpectedDetailsDict(podName, namespace));
 });

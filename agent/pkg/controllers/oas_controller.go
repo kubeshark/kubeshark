@@ -5,15 +5,13 @@ import (
 
 	"github.com/chanced/openapi"
 	"github.com/gin-gonic/gin"
-	"github.com/up9inc/mizu/agent/pkg/dependency"
 	"github.com/up9inc/mizu/agent/pkg/oas"
 	"github.com/up9inc/mizu/shared/logger"
 )
 
 func GetOASServers(c *gin.Context) {
 	m := make([]string, 0)
-	oasGenerator := dependency.GetInstance(dependency.OasGeneratorDependency).(oas.OasGenerator)
-	oasGenerator.GetServiceSpecs().Range(func(key, value interface{}) bool {
+	oas.GetOasGeneratorInstance().ServiceSpecs.Range(func(key, value interface{}) bool {
 		m = append(m, key.(string))
 		return true
 	})
@@ -22,8 +20,7 @@ func GetOASServers(c *gin.Context) {
 }
 
 func GetOASSpec(c *gin.Context) {
-	oasGenerator := dependency.GetInstance(dependency.OasGeneratorDependency).(oas.OasGenerator)
-	res, ok := oasGenerator.GetServiceSpecs().Load(c.Param("id"))
+	res, ok := oas.GetOasGeneratorInstance().ServiceSpecs.Load(c.Param("id"))
 	if !ok {
 		c.JSON(http.StatusNotFound, gin.H{
 			"error":     true,
@@ -51,9 +48,7 @@ func GetOASSpec(c *gin.Context) {
 
 func GetOASAllSpecs(c *gin.Context) {
 	res := map[string]*openapi.OpenAPI{}
-
-	oasGenerator := dependency.GetInstance(dependency.OasGeneratorDependency).(oas.OasGenerator)
-	oasGenerator.GetServiceSpecs().Range(func(key, value interface{}) bool {
+	oas.GetOasGeneratorInstance().ServiceSpecs.Range(func(key, value interface{}) bool {
 		svc := key.(string)
 		gen := value.(*oas.SpecGen)
 		spec, err := gen.GetSpec()

@@ -1,10 +1,9 @@
 package oas
 
 import (
+	"github.com/chanced/openapi"
 	"strings"
 	"testing"
-
-	"github.com/chanced/openapi"
 )
 
 func TestTree(t *testing.T) {

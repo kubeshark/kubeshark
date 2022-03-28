@@ -147,9 +147,9 @@ func feedEntry(entry *har.Entry, source string, isSync bool, file string) {
 
 	ews := EntryWithSource{Entry: *entry, Source: source, Destination: u.Host, Id: uint(0)}
 	if isSync {
-		GetDefaultOasGeneratorInstance().entriesChan <- ews // blocking variant, right?
+		GetOasGeneratorInstance().entriesChan <- ews // blocking variant, right?
 	} else {
-		GetDefaultOasGeneratorInstance().PushEntry(&ews)
+		GetOasGeneratorInstance().PushEntry(&ews)
 	}
 }
 

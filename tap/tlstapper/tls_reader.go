@@ -3,8 +3,6 @@ package tlstapper
 import (
 	"io"
 	"time"
-
-	"github.com/up9inc/mizu/tap/api"
 )
 
 type tlsReader struct {
@@ -12,7 +10,6 @@ type tlsReader struct {
 	chunks      chan *tlsChunk
 	data        []byte
 	doneHandler func(r *tlsReader)
-	progress    *api.ReadProgress
 }
 
 func (r *tlsReader) Read(p []byte) (int, error) {
@@ -39,7 +36,6 @@ func (r *tlsReader) Read(p []byte) (int, error) {
 
 	l := copy(p, r.data)
 	r.data = r.data[l:]
-	r.progress.Feed(l)
 
 	return l, nil
 }

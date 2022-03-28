@@ -1,15 +1,15 @@
+import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.sass';
 import {ToastContainer} from "react-toastify";
-import 'react-toastify/dist/ReactToastify.min.css';
+import 'react-toastify/dist/ReactToastify.css';
 import {RecoilRoot} from "recoil";
-import App from './App';
-import { TOAST_CONTAINER_ID } from './consts';
+import AppChooser from "./AppChooser";
 
 ReactDOM.render( <>
     <RecoilRoot>
-        <App/>
-        <ToastContainer enableMultiContainer containerId={TOAST_CONTAINER_ID} 
+        <AppChooser/>
+        <ToastContainer
             position="bottom-right"
             autoClose={5000}
             hideProgressBar={false}

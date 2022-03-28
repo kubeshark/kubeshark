@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/up9inc/mizu/agent/pkg/app"
 	"github.com/up9inc/mizu/agent/pkg/har"
 	"github.com/up9inc/mizu/agent/pkg/models"
 	"github.com/up9inc/mizu/agent/pkg/validation"
@@ -18,6 +17,12 @@ import (
 	"github.com/up9inc/mizu/shared/logger"
 	tapApi "github.com/up9inc/mizu/tap/api"
 )
+
+var extensionsMap map[string]*tapApi.Extension // global
+
+func InitExtensionsMap(ref map[string]*tapApi.Extension) {
+	extensionsMap = ref
+}
 
 func Error(c *gin.Context, err error) bool {
 	if err != nil {
@@ -72,7 +77,7 @@ func GetEntries(c *gin.Context) {
 			return // exit
 		}
 
-		extension := app.ExtensionsMap[entry.Protocol.Name]
+		extension := extensionsMap[entry.Protocol.Name]
 		base := extension.Dissector.Summarize(entry)
 
 		dataSlice = append(dataSlice, base)
@@ -118,19 +123,9 @@ func GetEntry(c *gin.Context) {
 		return // exit
 	}
 
-	extension := app.ExtensionsMap[entry.Protocol.Name]
+	extension := extensionsMap[entry.Protocol.Name]
 	base := extension.Dissector.Summarize(entry)
-	var representation []byte
-	representation, err = extension.Dissector.Represent(entry.Request, entry.Response)
-	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{
-			"error":     true,
-			"type":      "error",
-			"autoClose": "5000",
-			"msg":       err.Error(),
-		})
-		return // exit
-	}
+	representation, bodySize, _ := extension.Dissector.Represent(entry.Request, entry.Response)
 
 	var rules []map[string]interface{}
 	var isRulesEnabled bool
@@ -147,6 +142,7 @@ func GetEntry(c *gin.Context) {
 	c.JSON(http.StatusOK, tapApi.EntryWrapper{
 		Protocol:       entry.Protocol,
 		Representation: string(representation),
+		BodySize:       bodySize,
 		Data:           entry,
 		Base:           base,
 		Rules:          rules,

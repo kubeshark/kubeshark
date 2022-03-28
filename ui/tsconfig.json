@@ -6,7 +6,6 @@
       "dom.iterable",
       "esnext"
     ],
-    
     "allowJs": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
@@ -21,7 +20,6 @@
     "jsx": "react-jsx",
     "downlevelIteration": true,
     "noFallthroughCasesInSwitch": true
-
   },
   "include": [
     "src"

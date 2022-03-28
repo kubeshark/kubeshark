@@ -34,7 +34,7 @@ func (d dissecting) Ping() {
 	log.Printf("pong %s", protocol.Name)
 }
 
-func (d dissecting) Dissect(b *bufio.Reader, progress *api.ReadProgress, capture api.Capture, isClient bool, tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, superIdentifier *api.SuperIdentifier, emitter api.Emitter, options *api.TrafficFilteringOptions, _reqResMatcher api.RequestResponseMatcher) error {
+func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, superIdentifier *api.SuperIdentifier, emitter api.Emitter, options *api.TrafficFilteringOptions, _reqResMatcher api.RequestResponseMatcher) error {
 	reqResMatcher := _reqResMatcher.(*requestResponseMatcher)
 	is := &RedisInputStream{
 		Reader: b,
@@ -48,9 +48,9 @@ func (d dissecting) Dissect(b *bufio.Reader, progress *api.ReadProgress, capture
 		}
 
 		if isClient {
-			err = handleClientStream(progress, capture, tcpID, counterPair, superTimer, emitter, redisPacket, reqResMatcher)
+			err = handleClientStream(tcpID, counterPair, superTimer, emitter, redisPacket, reqResMatcher)
 		} else {
-			err = handleServerStream(progress, capture, tcpID, counterPair, superTimer, emitter, redisPacket, reqResMatcher)
+			err = handleServerStream(tcpID, counterPair, superTimer, emitter, redisPacket, reqResMatcher)
 		}
 
 		if err != nil {
@@ -71,7 +71,6 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 	}
 	return &api.Entry{
 		Protocol: protocol,
-		Capture:  item.Capture,
 		Source: &api.TCP{
 			Name: resolvedSource,
 			IP:   item.ConnectionInfo.ClientIP,
@@ -82,15 +81,13 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 			IP:   item.ConnectionInfo.ServerIP,
 			Port: item.ConnectionInfo.ServerPort,
 		},
-		Namespace:    namespace,
-		Outgoing:     item.ConnectionInfo.IsOutgoing,
-		Request:      reqDetails,
-		Response:     resDetails,
-		RequestSize:  item.Pair.Request.CaptureSize,
-		ResponseSize: item.Pair.Response.CaptureSize,
-		Timestamp:    item.Timestamp,
-		StartTime:    item.Pair.Request.CaptureTime,
-		ElapsedTime:  elapsedTime,
+		Namespace:   namespace,
+		Outgoing:    item.ConnectionInfo.IsOutgoing,
+		Request:     reqDetails,
+		Response:    resDetails,
+		Timestamp:   item.Timestamp,
+		StartTime:   item.Pair.Request.CaptureTime,
+		ElapsedTime: elapsedTime,
 	}
 
 }
@@ -116,7 +113,6 @@ func (d dissecting) Summarize(entry *api.Entry) *api.BaseEntry {
 	return &api.BaseEntry{
 		Id:             entry.Id,
 		Protocol:       entry.Protocol,
-		Capture:        entry.Capture,
 		Summary:        summary,
 		SummaryQuery:   summaryQuery,
 		Status:         status,
@@ -133,7 +129,8 @@ func (d dissecting) Summarize(entry *api.Entry) *api.BaseEntry {
 	}
 }
 
-func (d dissecting) Represent(request map[string]interface{}, response map[string]interface{}) (object []byte, err error) {
+func (d dissecting) Represent(request map[string]interface{}, response map[string]interface{}) (object []byte, bodySize int64, err error) {
+	bodySize = 0
 	representation := make(map[string]interface{})
 	repRequest := representGeneric(request, `request.`)
 	repResponse := representGeneric(response, `response.`)

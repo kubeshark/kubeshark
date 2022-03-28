@@ -73,7 +73,7 @@ clean-agent: ## Clean agent.
 clean-cli:  ## Clean CLI.
 	@(cd cli; make clean ; echo "CLI cleanup done" )
 
-clean-docker:  ## Run clean docker
+clean-docker:  ## Run clen docker
 	@(echo "DOCKER cleanup - NOT IMPLEMENTED YET " )
 
 test-lint:  ## Run lint on all modules

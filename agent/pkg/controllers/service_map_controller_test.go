@@ -7,7 +7,6 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/up9inc/mizu/agent/pkg/dependency"
 	"github.com/up9inc/mizu/agent/pkg/servicemap"
 
 	"github.com/gin-gonic/gin"
@@ -58,11 +57,9 @@ type ServiceMapControllerSuite struct {
 }
 
 func (s *ServiceMapControllerSuite) SetupTest() {
-	dependency.RegisterGenerator(dependency.ServiceMapGeneratorDependency, func() interface{} { return servicemap.GetDefaultServiceMapInstance() })
-
 	s.c = NewServiceMapController()
 	s.c.service.Enable()
-	s.c.service.(servicemap.ServiceMapSink).NewTCPEntry(TCPEntryA, TCPEntryB, ProtocolHttp)
+	s.c.service.NewTCPEntry(TCPEntryA, TCPEntryB, ProtocolHttp)
 
 	s.w = httptest.NewRecorder()
 	s.g, _ = gin.CreateTestContext(s.w)

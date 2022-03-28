@@ -1,8 +1,5 @@
 // this workaround fix a warning of mini-css-extract-plugin throws "Conflicting order" during build
 // https://github.com/facebook/create-react-app/issues/5372
-
-const path = require("path")
-
 module.exports = {
     webpack: {
         configure: (webpackConfig) => {
@@ -12,10 +9,7 @@ module.exports = {
             if(instanceOfMiniCssExtractPlugin)
                 instanceOfMiniCssExtractPlugin.options.ignoreOrder = true;
 
-            webpackConfig.resolve.alias['react']= path.resolve(__dirname, 'node_modules/react'); // solve 2  react instances
-
-
             return webpackConfig;
-        }
+        },
     }
 }

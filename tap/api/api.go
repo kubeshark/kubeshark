@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"net"
 	"net/http"
 	"os"
 	"sort"
@@ -18,9 +17,6 @@ import (
 )
 
 const mizuTestEnvVar = "MIZU_TEST"
-
-var UnknownIp net.IP = net.IP{0, 0, 0, 0}
-var UnknownPort uint16 = 0
 
 type Protocol struct {
 	Name            string   `json:"name"`
@@ -48,16 +44,6 @@ type Extension struct {
 	Dissector Dissector
 }
 
-type Capture string
-
-const (
-	UndefinedCapture Capture = ""
-	Pcap             Capture = "pcap"
-	Envoy            Capture = "envoy"
-	Linkerd          Capture = "linkerd"
-	Ebpf             Capture = "ebpf"
-)
-
 type ConnectionInfo struct {
 	ClientIP   string
 	ClientPort string
@@ -83,7 +69,6 @@ type CounterPair struct {
 type GenericMessage struct {
 	IsRequest   bool        `json:"isRequest"`
 	CaptureTime time.Time   `json:"captureTime"`
-	CaptureSize int         `json:"captureSize"`
 	Payload     interface{} `json:"payload"`
 }
 
@@ -95,7 +80,6 @@ type RequestResponsePair struct {
 // `Protocol` is modified in the later stages of data propagation. Therefore it's not a pointer.
 type OutputChannelItem struct {
 	Protocol       Protocol
-	Capture        Capture
 	Timestamp      int64
 	ConnectionInfo *ConnectionInfo
 	Pair           *RequestResponsePair
@@ -111,27 +95,13 @@ type SuperIdentifier struct {
 	IsClosedOthers bool
 }
 
-type ReadProgress struct {
-	readBytes   int
-	lastCurrent int
-}
-
-func (p *ReadProgress) Feed(n int) {
-	p.readBytes += n
-}
-
-func (p *ReadProgress) Current() (n int) {
-	p.lastCurrent = p.readBytes - p.lastCurrent
-	return p.lastCurrent
-}
-
 type Dissector interface {
 	Register(*Extension)
 	Ping()
-	Dissect(b *bufio.Reader, progress *ReadProgress, capture Capture, isClient bool, tcpID *TcpID, counterPair *CounterPair, superTimer *SuperTimer, superIdentifier *SuperIdentifier, emitter Emitter, options *TrafficFilteringOptions, reqResMatcher RequestResponseMatcher) error
+	Dissect(b *bufio.Reader, isClient bool, tcpID *TcpID, counterPair *CounterPair, superTimer *SuperTimer, superIdentifier *SuperIdentifier, emitter Emitter, options *TrafficFilteringOptions, reqResMatcher RequestResponseMatcher) error
 	Analyze(item *OutputChannelItem, resolvedSource string, resolvedDestination string, namespace string) *Entry
 	Summarize(entry *Entry) *BaseEntry
-	Represent(request map[string]interface{}, response map[string]interface{}) (object []byte, err error)
+	Represent(request map[string]interface{}, response map[string]interface{}) (object []byte, bodySize int64, err error)
 	Macros() map[string]string
 	NewResponseRequestMatcher() RequestResponseMatcher
 }
@@ -158,7 +128,6 @@ func (e *Emitting) Emit(item *OutputChannelItem) {
 type Entry struct {
 	Id                     uint                   `json:"id"`
 	Protocol               Protocol               `json:"proto"`
-	Capture                Capture                `json:"capture"`
 	Source                 *TCP                   `json:"src"`
 	Destination            *TCP                   `json:"dst"`
 	Namespace              string                 `json:"namespace,omitempty"`
@@ -167,8 +136,6 @@ type Entry struct {
 	StartTime              time.Time              `json:"startTime"`
 	Request                map[string]interface{} `json:"request"`
 	Response               map[string]interface{} `json:"response"`
-	RequestSize            int                    `json:"requestSize"`
-	ResponseSize           int                    `json:"responseSize"`
 	ElapsedTime            int64                  `json:"elapsedTime"`
 	Rules                  ApplicableRules        `json:"rules,omitempty"`
 	ContractStatus         ContractStatus         `json:"contractStatus,omitempty"`
@@ -181,6 +148,7 @@ type Entry struct {
 type EntryWrapper struct {
 	Protocol       Protocol                 `json:"protocol"`
 	Representation string                   `json:"representation"`
+	BodySize       int64                    `json:"bodySize"`
 	Data           *Entry                   `json:"data"`
 	Base           *BaseEntry               `json:"base"`
 	Rules          []map[string]interface{} `json:"rulesMatched,omitempty"`
@@ -190,7 +158,6 @@ type EntryWrapper struct {
 type BaseEntry struct {
 	Id             uint            `json:"id"`
 	Protocol       Protocol        `json:"proto,omitempty"`
-	Capture        Capture         `json:"capture"`
 	Summary        string          `json:"summary,omitempty"`
 	SummaryQuery   string          `json:"summaryQuery,omitempty"`
 	Status         int             `json:"status"`

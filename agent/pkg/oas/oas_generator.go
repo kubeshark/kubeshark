@@ -12,38 +12,18 @@ import (
 
 var (
 	syncOnce sync.Once
-	instance *defaultOasGenerator
+	instance *oasGenerator
 )
 
-type OasGeneratorSink interface {
-	PushEntry(entryWithSource *EntryWithSource)
-}
-
-type OasGenerator interface {
-	Start()
-	Stop()
-	IsStarted() bool
-	Reset()
-	GetServiceSpecs() *sync.Map
-}
-
-type defaultOasGenerator struct {
-	started      bool
-	ctx          context.Context
-	cancel       context.CancelFunc
-	serviceSpecs *sync.Map
-	entriesChan  chan EntryWithSource
-}
-
-func GetDefaultOasGeneratorInstance() *defaultOasGenerator {
+func GetOasGeneratorInstance() *oasGenerator {
 	syncOnce.Do(func() {
-		instance = NewDefaultOasGenerator()
+		instance = newOasGenerator()
 		logger.Log.Debug("OAS Generator Initialized")
 	})
 	return instance
 }
 
-func (g *defaultOasGenerator) Start() {
+func (g *oasGenerator) Start() {
 	if g.started {
 		return
 	}
@@ -51,12 +31,12 @@ func (g *defaultOasGenerator) Start() {
 	g.cancel = cancel
 	g.ctx = ctx
 	g.entriesChan = make(chan EntryWithSource, 100) // buffer up to 100 entries for OAS processing
-	g.serviceSpecs = &sync.Map{}
+	g.ServiceSpecs = &sync.Map{}
 	g.started = true
-	go g.runGenerator()
+	go instance.runGenerator()
 }
 
-func (g *defaultOasGenerator) Stop() {
+func (g *oasGenerator) Stop() {
 	if !g.started {
 		return
 	}
@@ -65,11 +45,11 @@ func (g *defaultOasGenerator) Stop() {
 	g.started = false
 }
 
-func (g *defaultOasGenerator) IsStarted() bool {
+func (g *oasGenerator) IsStarted() bool {
 	return g.started
 }
 
-func (g *defaultOasGenerator) runGenerator() {
+func (g *oasGenerator) runGenerator() {
 	for {
 		select {
 		case <-g.ctx.Done():
@@ -87,11 +67,11 @@ func (g *defaultOasGenerator) runGenerator() {
 				logger.Log.Errorf("Failed to parse entry URL: %v, err: %v", entry.Request.URL, err)
 			}
 
-			val, found := g.serviceSpecs.Load(entryWithSource.Destination)
+			val, found := g.ServiceSpecs.Load(entryWithSource.Destination)
 			var gen *SpecGen
 			if !found {
 				gen = NewGen(u.Scheme + "://" + entryWithSource.Destination)
-				g.serviceSpecs.Store(entryWithSource.Destination, gen)
+				g.ServiceSpecs.Store(entryWithSource.Destination, gen)
 			} else {
 				gen = val.(*SpecGen)
 			}
@@ -112,11 +92,11 @@ func (g *defaultOasGenerator) runGenerator() {
 	}
 }
 
-func (g *defaultOasGenerator) Reset() {
-	g.serviceSpecs = &sync.Map{}
+func (g *oasGenerator) Reset() {
+	g.ServiceSpecs = &sync.Map{}
 }
 
-func (g *defaultOasGenerator) PushEntry(entryWithSource *EntryWithSource) {
+func (g *oasGenerator) PushEntry(entryWithSource *EntryWithSource) {
 	if !g.started {
 		return
 	}
@@ -127,16 +107,12 @@ func (g *defaultOasGenerator) PushEntry(entryWithSource *EntryWithSource) {
 	}
 }
 
-func (g *defaultOasGenerator) GetServiceSpecs() *sync.Map {
-	return g.serviceSpecs
-}
-
-func NewDefaultOasGenerator() *defaultOasGenerator {
-	return &defaultOasGenerator{
+func newOasGenerator() *oasGenerator {
+	return &oasGenerator{
 		started:      false,
 		ctx:          nil,
 		cancel:       nil,
-		serviceSpecs: nil,
+		ServiceSpecs: nil,
 		entriesChan:  nil,
 	}
 }
@@ -146,4 +122,12 @@ type EntryWithSource struct {
 	Destination string
 	Entry       har.Entry
 	Id          uint
+}
+
+type oasGenerator struct {
+	started      bool
+	ctx          context.Context
+	cancel       context.CancelFunc
+	ServiceSpecs *sync.Map
+	entriesChan  chan EntryWithSource
 }

@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/up9inc/mizu/agent/pkg/models"
-	"github.com/up9inc/mizu/agent/pkg/utils"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -60,13 +59,13 @@ func init() {
 	connectedWebsockets = make(map[int]*SocketConnection)
 }
 
-func WebSocketRoutes(app *gin.Engine, eventHandlers EventHandlers) {
+func WebSocketRoutes(app *gin.Engine, eventHandlers EventHandlers, startTime int64) {
 	SocketGetBrowserHandler = func(c *gin.Context) {
-		websocketHandler(c.Writer, c.Request, eventHandlers, false)
+		websocketHandler(c.Writer, c.Request, eventHandlers, false, startTime)
 	}
 
 	SocketGetTapperHandler = func(c *gin.Context) {
-		websocketHandler(c.Writer, c.Request, eventHandlers, true)
+		websocketHandler(c.Writer, c.Request, eventHandlers, true, startTime)
 	}
 
 	app.GET("/ws", func(c *gin.Context) {
@@ -78,7 +77,7 @@ func WebSocketRoutes(app *gin.Engine, eventHandlers EventHandlers) {
 	})
 }
 
-func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers EventHandlers, isTapper bool) {
+func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers EventHandlers, isTapper bool, startTime int64) {
 	ws, err := websocketUpgrader.Upgrade(w, r, nil)
 	if err != nil {
 		logger.Log.Errorf("Failed to set websocket upgrade: %v", err)
@@ -100,9 +99,7 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 	if !isTapper {
 		connection, err = basenine.NewConnection(shared.BasenineHost, shared.BaseninePort)
 		if err != nil {
-			logger.Log.Errorf("Failed to establish a connection to Basenine: %v", err)
-			socketCleanup(socketId, connectedWebsockets[socketId])
-			return
+			panic(err)
 		}
 	}
 
@@ -118,7 +115,7 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 
 	eventHandlers.WebSocketConnect(socketId, isTapper)
 
-	startTimeBytes, _ := models.CreateWebsocketStartTimeMessage(utils.StartTime)
+	startTimeBytes, _ := models.CreateWebsocketStartTimeMessage(startTime)
 
 	if err = SendToSocket(socketId, startTimeBytes); err != nil {
 		logger.Log.Error(err)
@@ -140,8 +137,7 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 
 		if !isTapper && !isQuerySet {
 			if err := json.Unmarshal(msg, &params); err != nil {
-				logger.Log.Errorf("Error unmarshalling parameters: %v", socketId, err)
-				continue
+				logger.Log.Errorf("Error: %v", socketId, err)
 			}
 
 			query := params.Query
@@ -170,10 +166,6 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 
 					var entry *tapApi.Entry
 					err = json.Unmarshal(bytes, &entry)
-					if err != nil {
-						logger.Log.Debugf("Error unmarshalling entry: %v", err.Error())
-						continue
-					}
 
 					var message []byte
 					if params.EnableFullEntries {
@@ -201,8 +193,7 @@ func websocketHandler(w http.ResponseWriter, r *http.Request, eventHandlers Even
 					var metadata *basenine.Metadata
 					err = json.Unmarshal(bytes, &metadata)
 					if err != nil {
-						logger.Log.Debugf("Error unmarshalling metadata: %v", err.Error())
-						continue
+						logger.Log.Debugf("Error recieving metadata: %v", err.Error())
 					}
 
 					metadataBytes, _ := models.CreateWebsocketQueryMetadataMessage(metadata)

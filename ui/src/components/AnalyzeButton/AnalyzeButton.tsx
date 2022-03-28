@@ -1,6 +1,6 @@
 import {Button} from "@material-ui/core";
 import React from "react";
-import {UI} from "@up9/mizu-common";
+import Tooltip from "../UI/Tooltip";
 import logo_up9 from "../assets/logo_up9.svg";
 import {makeStyles} from "@material-ui/core/styles";
 
@@ -63,7 +63,7 @@ export const AnalyzeButton: React.FC<AnalyseButtonProps>  = ({analyzeStatus}) =>
             </span>
 
     return ( <div>
-        <UI.Tooltip title={analysisMessage} isSimple classes={classes}>
+        <Tooltip title={analysisMessage} isSimple classes={classes}>
             <div>
                 <Button
                     style={{fontFamily: "system-ui",
@@ -81,6 +81,6 @@ export const AnalyzeButton: React.FC<AnalyseButtonProps>  = ({analyzeStatus}) =>
                     Analysis
                 </Button>
             </div>
-        </UI.Tooltip>
+        </Tooltip>
     </div>);
 }
