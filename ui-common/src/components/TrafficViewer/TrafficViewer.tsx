@@ -186,15 +186,12 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({ setAnalyzeStatus, 
           break;
         case "toast":
           toast[message.data.type](message.data.text, {
-            position: "bottom-right",
             theme: "colored",
             autoClose: message.data.autoClose,
-            hideProgressBar: false,
-            closeOnClick: true,
             pauseOnHover: true,
-            draggable: true,
             progress: undefined,
-          }, { containerId: TOAST_CONTAINER_ID });
+            containerId: TOAST_CONTAINER_ID
+          });
           break;
         case "queryMetadata":
           setQueriedCurrent(queriedCurrent + message.data.current);
