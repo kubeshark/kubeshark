@@ -4,7 +4,7 @@ on:
   pull_request:
     branches:
       - 'main'
-      - 'add_info_to_slack'
+      - 'develop'
   push:
     branches:
       - 'develop'
