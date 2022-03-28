@@ -8,6 +8,8 @@ import (
 	"sync"
 )
 
+const GLOABL_TAP_PID = 0
+
 //go:generate go run github.com/cilium/ebpf/cmd/bpf2go tlsTapper bpf/tls_tapper.c -- -O2 -g -D__TARGET_ARCH_x86
 
 type TlsTapper struct {
@@ -56,7 +58,7 @@ func (t *TlsTapper) PollForLogging() {
 }
 
 func (t *TlsTapper) GlobalTap(sslLibrary string) error {
-	return t.tapPid(0, sslLibrary)
+	return t.tapPid(GLOABL_TAP_PID, sslLibrary)
 }
 
 func (t *TlsTapper) AddPid(procfs string, pid uint32) error {
@@ -84,7 +86,12 @@ func (t *TlsTapper) RemovePid(pid uint32) error {
 
 func (t *TlsTapper) ClearPids() {
 	t.registeredPids.Range(func(key, v interface{}) bool {
-		if err := t.RemovePid(key.(uint32)); err != nil {
+		pid := key.(uint32)
+		if pid == GLOABL_TAP_PID {
+			return true
+		}
+		
+		if err := t.RemovePid(pid); err != nil {
 			LogError(err)
 		}
 		t.registeredPids.Delete(key)
