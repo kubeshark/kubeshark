@@ -4,8 +4,9 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/up9inc/mizu/agent/pkg/dependency"
+	"github.com/up9inc/mizu/agent/pkg/entries"
 	"github.com/up9inc/mizu/agent/pkg/models"
-	"github.com/up9inc/mizu/agent/pkg/providers/entries"
 	"github.com/up9inc/mizu/agent/pkg/validation"
 
 	"github.com/gin-gonic/gin"
@@ -43,7 +44,8 @@ func GetEntries(c *gin.Context) {
 		entriesRequest.TimeoutMs = 3000
 	}
 
-	entries, metadata, err := entries.GetEntries(entriesRequest)
+	entriesProvider := dependency.GetInstance(dependency.EntriesProvider).(entries.EntriesProvider)
+	entries, metadata, err := entriesProvider.GetEntries(entriesRequest)
 	if !HandleEntriesError(c, err) {
 		baseEntries := make([]interface{}, 0)
 		for _, entry := range entries {
@@ -68,7 +70,9 @@ func GetEntry(c *gin.Context) {
 	}
 
 	id, _ := strconv.Atoi(c.Param("id"))
-	entry, err := entries.GetEntry(singleEntryRequest, id)
+
+	entriesProvider := dependency.GetInstance(dependency.EntriesProvider).(entries.EntriesProvider)
+	entry, err := entriesProvider.GetEntry(singleEntryRequest, id)
 
 	if !HandleEntriesError(c, err) {
 		c.JSON(http.StatusOK, entry)
