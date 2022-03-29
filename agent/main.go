@@ -18,6 +18,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/up9inc/mizu/agent/pkg/dependency"
 	"github.com/up9inc/mizu/agent/pkg/elastic"
+	"github.com/up9inc/mizu/agent/pkg/entries"
 	"github.com/up9inc/mizu/agent/pkg/middlewares"
 	"github.com/up9inc/mizu/agent/pkg/models"
 	"github.com/up9inc/mizu/agent/pkg/oas"
@@ -371,4 +372,5 @@ func handleIncomingMessageAsTapper(socketConnection *websocket.Conn) {
 func initializeDependencies() {
 	dependency.RegisterGenerator(dependency.ServiceMapGeneratorDependency, func() interface{} { return servicemap.GetDefaultServiceMapInstance() })
 	dependency.RegisterGenerator(dependency.OasGeneratorDependency, func() interface{} { return oas.GetDefaultOasGeneratorInstance() })
+	dependency.RegisterGenerator(dependency.EntriesProvider, func() interface{} { return &entries.BasenineEntriesProvider{} })
 }
