@@ -9,7 +9,6 @@ COPY ui-common/package.json .
 COPY ui-common/package-lock.json .
 RUN npm i
 COPY ui-common .
-RUN npm run build
 RUN npm pack
 
 ### Front-end
