@@ -103,7 +103,8 @@ func StartPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem, 
 		diagnose.StartMemoryProfiler(os.Getenv(MemoryProfilingDumpPath), os.Getenv(MemoryProfilingTimeIntervalSeconds))
 	}
 
-	go startPassiveTapper(opts, outputItems)
+	streamsMap, assembler := initializePassiveTapper(opts, outputItems)
+	go startPassiveTapper(streamsMap, assembler)
 }
 
 func UpdateTapTargets(newTapTargets []v1.Pod) {
@@ -205,9 +206,8 @@ func initializePacketSources() error {
 	}
 }
 
-func startPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem) {
+func initializePassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem) (*tcpStreamMap, *tcpAssembler) {
 	streamsMap := NewTcpStreamMap()
-	go streamsMap.closeTimedoutTcpStreamChannels()
 
 	diagnose.InitializeErrorsMap(*debug, *verbose, *quiet)
 	diagnose.InitializeTapperInternalStats()
@@ -219,6 +219,12 @@ func startPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem) 
 	}
 
 	assembler := NewTcpAssembler(outputItems, streamsMap, opts)
+
+	return streamsMap, assembler
+}
+
+func startPassiveTapper(streamsMap *tcpStreamMap, assembler *tcpAssembler) {
+	go streamsMap.closeTimedoutTcpStreamChannels()
 
 	diagnose.AppStats.SetStartTime(time.Now())
 
@@ -253,9 +259,10 @@ func startPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem) 
 
 func startTlsTapper(extension *api.Extension, outputItems chan *api.OutputChannelItem, options *api.TrafficFilteringOptions) *tlstapper.TlsTapper {
 	tls := tlstapper.TlsTapper{}
-	tlsPerfBufferSize := os.Getpagesize() * 100
+	chunksBufferSize := os.Getpagesize() * 100
+	logBufferSize := os.Getpagesize()
 
-	if err := tls.Init(tlsPerfBufferSize, *procfs, extension); err != nil {
+	if err := tls.Init(chunksBufferSize, logBufferSize, *procfs, extension); err != nil {
 		tlstapper.LogError(err)
 		return nil
 	}
@@ -279,6 +286,7 @@ func startTlsTapper(extension *api.Extension, outputItems chan *api.OutputChanne
 		OutputChannel: outputItems,
 	}
 
+	go tls.PollForLogging()
 	go tls.Poll(emitter, options)
 
 	return &tls

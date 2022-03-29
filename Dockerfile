@@ -6,8 +6,7 @@ FROM node:16 AS front-end
 
 WORKDIR /app/ui-build
 
-COPY ui/package.json .
-COPY ui/package-lock.json .
+COPY ui/package.json ui/package-lock.json ./
 RUN npm i
 COPY ui .
 RUN npm run build
@@ -15,7 +14,7 @@ RUN npm run build
 ### Base builder image for native builds architecture
 FROM golang:1.17-alpine AS builder-native-base
 ENV CGO_ENABLED=1 GOOS=linux
-RUN apk add libpcap-dev g++ perl-utils
+RUN apk add --no-cache libpcap-dev g++ perl-utils
 
 
 ### Intermediate builder image for x86-64 to x86-64 native builds
@@ -79,15 +78,14 @@ RUN go build -ldflags="-extldflags=-static -s -w \
 # Download Basenine executable, verify the sha1sum
 ADD https://github.com/up9inc/basenine/releases/download/v0.6.6/basenine_linux_${GOARCH} ./basenine_linux_${GOARCH}
 ADD https://github.com/up9inc/basenine/releases/download/v0.6.6/basenine_linux_${GOARCH}.sha256 ./basenine_linux_${GOARCH}.sha256
-RUN shasum -a 256 -c basenine_linux_${GOARCH}.sha256
-RUN chmod +x ./basenine_linux_${GOARCH}
-RUN mv ./basenine_linux_${GOARCH} ./basenine
 
+RUN shasum -a 256 -c basenine_linux_"${GOARCH}".sha256 && \
+    chmod +x ./basenine_linux_"${GOARCH}" && \
+    mv ./basenine_linux_"${GOARCH}" ./basenine
 
 ### The shipped image
 ARG TARGETARCH=amd64
 FROM ${TARGETARCH}/busybox:latest
-
 # gin-gonic runs in debug mode without this
 ENV GIN_MODE=release
 
