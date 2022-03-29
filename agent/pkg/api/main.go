@@ -196,7 +196,10 @@ func resolveIP(connectionInfo *tapApi.ConnectionInfo) (resolvedSource string, re
 		} else {
 			resolvedDestination = resolvedDestinationObject.FullAddress
 			// Overwrite namespace (if it was set according to the source)
-			namespace = resolvedDestinationObject.Namespace
+			// Only overwrite if non-empty
+			if resolvedDestinationObject.Namespace != "" {
+				namespace = resolvedDestinationObject.Namespace
+			}
 		}
 	}
 	return resolvedSource, resolvedDestination, namespace
