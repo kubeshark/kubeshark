@@ -13,28 +13,31 @@ import (
 	tapApi "github.com/up9inc/mizu/tap/api"
 )
 
-func GetEntries(entriesRequest *models.EntriesRequest) (*models.EntriesResponse, error) {
+func GetEntries(entriesRequest *models.EntriesRequest) ([]*tapApi.EntryWrapper, *basenine.Metadata, error) {
 	data, meta, err := basenine.Fetch(shared.BasenineHost, shared.BaseninePort,
 		entriesRequest.LeftOff, entriesRequest.Direction, entriesRequest.Query,
 		entriesRequest.Limit, time.Duration(entriesRequest.TimeoutMs)*time.Millisecond)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	response := &models.EntriesResponse{}
-	var dataSlice []interface{}
+	var dataSlice []*tapApi.EntryWrapper
 
 	for _, row := range data {
 		var entry *tapApi.Entry
 		err = json.Unmarshal(row, &entry)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 
 		extension := app.ExtensionsMap[entry.Protocol.Name]
 		base := extension.Dissector.Summarize(entry)
 
-		dataSlice = append(dataSlice, base)
+		dataSlice = append(dataSlice, &tapApi.EntryWrapper{
+			Protocol: entry.Protocol,
+			Data:     entry,
+			Base:     base,
+		})
 	}
 
 	var metadata *basenine.Metadata
@@ -43,10 +46,7 @@ func GetEntries(entriesRequest *models.EntriesRequest) (*models.EntriesResponse,
 		logger.Log.Debugf("Error recieving metadata: %v", err.Error())
 	}
 
-	response.Data = dataSlice
-	response.Meta = metadata
-
-	return response, nil
+	return dataSlice, metadata, nil
 }
 
 func GetEntry(singleEntryRequest *models.SingleEntryRequest, entryId int) (*tapApi.EntryWrapper, error) {

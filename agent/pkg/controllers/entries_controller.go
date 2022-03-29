@@ -43,9 +43,16 @@ func GetEntries(c *gin.Context) {
 		entriesRequest.TimeoutMs = 3000
 	}
 
-	response, err := entries.GetEntries(entriesRequest)
+	entries, metadata, err := entries.GetEntries(entriesRequest)
 	if !HandleEntriesError(c, err) {
-		c.JSON(http.StatusOK, response)
+		baseEntries := make([]interface{}, 0)
+		for entry := range entries {
+			baseEntries = append(baseEntries, entries[entry].Base)
+		}
+		c.JSON(http.StatusOK, models.EntriesResponse{
+			Data: baseEntries,
+			Meta: metadata,
+		})
 	}
 }
 
