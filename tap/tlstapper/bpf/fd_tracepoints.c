@@ -7,6 +7,8 @@ Copyright (C) UP9 Inc.
 #include "include/headers.h"
 #include "include/util.h"
 #include "include/maps.h"
+#include "include/log.h"
+#include "include/logger_messages.h"
 #include "include/pids.h"
 
 struct sys_enter_read_ctx {
@@ -36,8 +38,7 @@ void sys_enter_read(struct sys_enter_read_ctx *ctx) {
 	long err = bpf_probe_read(&info, sizeof(struct ssl_info), infoPtr);
 	
 	if (err != 0) {
-		char msg[] = "Error reading read info from read syscall (id: %ld) (err: %ld)";
-		bpf_trace_printk(msg, sizeof(msg), id, err);
+		log_error(ctx, LOG_ERROR_READING_SSL_CONTEXT, id, err, ORIGIN_SYS_ENTER_READ_CODE);
 		return;
 	}
 	
@@ -46,9 +47,7 @@ void sys_enter_read(struct sys_enter_read_ctx *ctx) {
 	err = bpf_map_update_elem(&ssl_read_context, &id, &info, BPF_ANY);
 	
 	if (err != 0) {
-		char msg[] = "Error putting file descriptor from read syscall (id: %ld) (err: %ld)";
-		bpf_trace_printk(msg, sizeof(msg), id, err);
-		return;
+		log_error(ctx, LOG_ERROR_PUTTING_FILE_DESCRIPTOR, id, err, ORIGIN_SYS_ENTER_READ_CODE);
 	}
 }
 
@@ -79,8 +78,7 @@ void sys_enter_write(struct sys_enter_write_ctx *ctx) {
 	long err = bpf_probe_read(&info, sizeof(struct ssl_info), infoPtr);
 	
 	if (err != 0) {
-		char msg[] = "Error reading write context from write syscall (id: %ld) (err: %ld)";
-		bpf_trace_printk(msg, sizeof(msg), id, err);
+		log_error(ctx, LOG_ERROR_READING_SSL_CONTEXT, id, err, ORIGIN_SYS_ENTER_WRITE_CODE);
 		return;
 	}
 	
@@ -89,8 +87,6 @@ void sys_enter_write(struct sys_enter_write_ctx *ctx) {
 	err = bpf_map_update_elem(&ssl_write_context, &id, &info, BPF_ANY);
 	
 	if (err != 0) {
-		char msg[] = "Error putting file descriptor from write syscall (id: %ld) (err: %ld)";
-		bpf_trace_printk(msg, sizeof(msg), id, err);
-		return;
+		log_error(ctx, LOG_ERROR_PUTTING_FILE_DESCRIPTOR, id, err, ORIGIN_SYS_ENTER_WRITE_CODE);
 	}
 }
