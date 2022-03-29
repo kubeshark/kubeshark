@@ -7,7 +7,11 @@ Copyright (C) UP9 Inc.
 #include "include/headers.h"
 #include "include/util.h"
 #include "include/maps.h"
+#include "include/log.h"
+#include "include/logger_messages.h"
 #include "include/pids.h"
+
+#define IPV4_ADDR_LEN (16)
 
 struct accept_info {
 	__u64* sockaddr;
@@ -41,9 +45,7 @@ void sys_enter_accept4(struct sys_enter_accept4_ctx *ctx) {
 	long err = bpf_map_update_elem(&accept_syscall_context, &id, &info, BPF_ANY);
 	
 	if (err != 0) {
-		char msg[] = "Error putting accept info (id: %ld) (err: %ld)";
-		bpf_trace_printk(msg, sizeof(msg), id, err);
-		return;
+		log_error(ctx, LOG_ERROR_PUTTING_ACCEPT_INFO, id, err, 0l);
 	}
 }
 
@@ -70,6 +72,7 @@ void sys_exit_accept4(struct sys_exit_accept4_ctx *ctx) {
 	struct accept_info *infoPtr = bpf_map_lookup_elem(&accept_syscall_context, &id);
 	
 	if (infoPtr == NULL) {
+		log_error(ctx, LOG_ERROR_GETTING_ACCEPT_INFO, id, 0l, 0l);
 		return;
 	}
 	
@@ -79,15 +82,14 @@ void sys_exit_accept4(struct sys_exit_accept4_ctx *ctx) {
 	bpf_map_delete_elem(&accept_syscall_context, &id);
 	
 	if (err != 0) {
-		char msg[] = "Error reading accept info from accept syscall (id: %ld) (err: %ld)";
-		bpf_trace_printk(msg, sizeof(msg), id, err);
+		log_error(ctx, LOG_ERROR_READING_ACCEPT_INFO, id, err, 0l);
 		return;
 	}
 	
 	__u32 addrlen;
 	bpf_probe_read(&addrlen, sizeof(__u32), info.addrlen);
 	
-	if (addrlen != 16) {
+	if (addrlen != IPV4_ADDR_LEN) {
 		// Currently only ipv4 is supported linux-src/include/linux/inet.h
 		return;
 	}
@@ -105,9 +107,7 @@ void sys_exit_accept4(struct sys_exit_accept4_ctx *ctx) {
 	err = bpf_map_update_elem(&file_descriptor_to_ipv4, &key, &fdinfo, BPF_ANY);
 	
 	if (err != 0) {
-		char msg[] = "Error putting fd to address mapping from accept (key: %ld) (err: %ld)";
-		bpf_trace_printk(msg, sizeof(msg), key, err);
-		return;
+		log_error(ctx, LOG_ERROR_PUTTING_FD_MAPPING, id, err, ORIGIN_SYS_EXIT_ACCEPT4_CODE);
 	}
 }
 
@@ -145,9 +145,7 @@ void sys_enter_connect(struct sys_enter_connect_ctx *ctx) {
 	long err = bpf_map_update_elem(&connect_syscall_info, &id, &info, BPF_ANY);
 	
 	if (err != 0) {
-		char msg[] = "Error putting connect info (id: %ld) (err: %ld)";
-		bpf_trace_printk(msg, sizeof(msg), id, err);
-		return;
+		log_error(ctx, LOG_ERROR_PUTTING_CONNECT_INFO, id, err, 0l);
 	}
 }
 
@@ -176,6 +174,7 @@ void sys_exit_connect(struct sys_exit_connect_ctx *ctx) {
 	struct connect_info *infoPtr = bpf_map_lookup_elem(&connect_syscall_info, &id);
 	
 	if (infoPtr == NULL) {
+		log_error(ctx, LOG_ERROR_GETTING_CONNECT_INFO, id, 0l, 0l);
 		return;
 	}
 	
@@ -185,12 +184,11 @@ void sys_exit_connect(struct sys_exit_connect_ctx *ctx) {
 	bpf_map_delete_elem(&connect_syscall_info, &id);
 	
 	if (err != 0) {
-		char msg[] = "Error reading connect info from connect syscall (id: %ld) (err: %ld)";
-		bpf_trace_printk(msg, sizeof(msg), id, err);
+		log_error(ctx, LOG_ERROR_READING_CONNECT_INFO, id, err, 0l);
 		return;
 	}
 	
-	if (info.addrlen != 16) {
+	if (info.addrlen != IPV4_ADDR_LEN) {
 		// Currently only ipv4 is supported linux-src/include/linux/inet.h
 		return;
 	}
@@ -208,8 +206,6 @@ void sys_exit_connect(struct sys_exit_connect_ctx *ctx) {
 	err = bpf_map_update_elem(&file_descriptor_to_ipv4, &key, &fdinfo, BPF_ANY);
 	
 	if (err != 0) {
-		char msg[] = "Error putting fd to address mapping from connect (key: %ld) (err: %ld)";
-		bpf_trace_printk(msg, sizeof(msg), key, err);
-		return;
+		log_error(ctx, LOG_ERROR_PUTTING_FD_MAPPING, id, err, ORIGIN_SYS_EXIT_CONNECT_CODE);
 	}
 }

@@ -8,6 +8,8 @@ import (
 	"sync"
 )
 
+const GLOABL_TAP_PID = 0
+
 //go:generate go run github.com/cilium/ebpf/cmd/bpf2go tlsTapper bpf/tls_tapper.c -- -O2 -g -D__TARGET_ARCH_x86
 
 type TlsTapper struct {
@@ -15,11 +17,12 @@ type TlsTapper struct {
 	syscallHooks    syscallHooks
 	sslHooksStructs []sslHooks
 	poller          *tlsPoller
+	bpfLogger       *bpfLogger
 	registeredPids  sync.Map
 }
 
-func (t *TlsTapper) Init(bufferSize int, procfs string, extension *api.Extension) error {
-	logger.Log.Infof("Initializing tls tapper (bufferSize: %v)", bufferSize)
+func (t *TlsTapper) Init(chunksBufferSize int, logBufferSize int, procfs string, extension *api.Extension) error {
+	logger.Log.Infof("Initializing tls tapper (chunksSize: %d) (logSize: %d)", chunksBufferSize, logBufferSize)
 
 	if err := setupRLimit(); err != nil {
 		return err
@@ -37,16 +40,25 @@ func (t *TlsTapper) Init(bufferSize int, procfs string, extension *api.Extension
 
 	t.sslHooksStructs = make([]sslHooks, 0)
 
+	t.bpfLogger = newBpfLogger()
+	if err := t.bpfLogger.init(&t.bpfObjects, logBufferSize); err != nil {
+		return err
+	}
+
 	t.poller = newTlsPoller(t, extension, procfs)
-	return t.poller.init(&t.bpfObjects, bufferSize)
+	return t.poller.init(&t.bpfObjects, chunksBufferSize)
 }
 
 func (t *TlsTapper) Poll(emitter api.Emitter, options *api.TrafficFilteringOptions) {
 	t.poller.poll(emitter, options)
 }
 
+func (t *TlsTapper) PollForLogging() {
+	t.bpfLogger.poll()
+}
+
 func (t *TlsTapper) GlobalTap(sslLibrary string) error {
-	return t.tapPid(0, sslLibrary)
+	return t.tapPid(GLOABL_TAP_PID, sslLibrary)
 }
 
 func (t *TlsTapper) AddPid(procfs string, pid uint32) error {
@@ -74,7 +86,12 @@ func (t *TlsTapper) RemovePid(pid uint32) error {
 
 func (t *TlsTapper) ClearPids() {
 	t.registeredPids.Range(func(key, v interface{}) bool {
-		if err := t.RemovePid(key.(uint32)); err != nil {
+		pid := key.(uint32)
+		if pid == GLOABL_TAP_PID {
+			return true
+		}
+		
+		if err := t.RemovePid(pid); err != nil {
 			LogError(err)
 		}
 		t.registeredPids.Delete(key)
@@ -93,6 +110,10 @@ func (t *TlsTapper) Close() []error {
 
 	for _, sslHooks := range t.sslHooksStructs {
 		errors = append(errors, sslHooks.close()...)
+	}
+
+	if err := t.bpfLogger.close(); err != nil {
+		errors = append(errors, err)
 	}
 
 	if err := t.poller.close(); err != nil {
