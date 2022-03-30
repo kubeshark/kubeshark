@@ -140,8 +140,6 @@ export const EntryItem: React.FC<EntryProps> = ({entry, style, headingMode}) => 
 
 
     const isStatusCodeEnabled = ((entry.proto.name === "http" && "status" in entry) || entry.status !== 0);
-    let endpointServiceContainer = "10px";
-    if (!isStatusCodeEnabled) endpointServiceContainer = "20px";
 
     return <React.Fragment>
         <div
@@ -178,7 +176,7 @@ export const EntryItem: React.FC<EntryProps> = ({entry, style, headingMode}) => 
             {isStatusCodeEnabled && <div>
                 <StatusCode statusCode={entry.status} statusQuery={entry.statusQuery}/>
             </div>}
-            <div className={styles.endpointServiceContainer} style={{paddingLeft: endpointServiceContainer}}>
+            <div className={styles.endpointServiceContainer} style={{paddingLeft: 10}}>
                 <Summary method={entry.method} methodQuery={entry.methodQuery} summary={entry.summary} summaryQuery={entry.summaryQuery}/>
                 <div className={styles.resolvedName}>
                     <Queryable
