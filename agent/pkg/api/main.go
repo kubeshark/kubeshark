@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/up9inc/mizu/agent/pkg/models"
 	"os"
 	"path"
 	"sort"
@@ -19,8 +20,6 @@ import (
 
 	"github.com/up9inc/mizu/agent/pkg/servicemap"
 
-	"github.com/up9inc/mizu/agent/pkg/models"
-	"github.com/up9inc/mizu/agent/pkg/oas"
 	"github.com/up9inc/mizu/agent/pkg/resolver"
 	"github.com/up9inc/mizu/agent/pkg/utils"
 
@@ -140,20 +139,6 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 				rules, _, _ := models.RunValidationRulesState(*harEntry, mizuEntry.Destination.Name)
 				mizuEntry.Rules = rules
 			}
-
-			entryWSource := oas.EntryWithSource{
-				Entry:       *harEntry,
-				Source:      mizuEntry.Source.Name,
-				Destination: mizuEntry.Destination.Name,
-				Id:          mizuEntry.Id,
-			}
-
-			if entryWSource.Destination == "" {
-				entryWSource.Destination = mizuEntry.Destination.IP + ":" + mizuEntry.Destination.Port
-			}
-
-			oasGenerator := dependency.GetInstance(dependency.OasGeneratorDependency).(oas.OasGeneratorSink)
-			oasGenerator.PushEntry(&entryWSource)
 		}
 
 		data, err := json.Marshal(mizuEntry)
