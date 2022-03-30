@@ -183,6 +183,7 @@ func resolveIP(connectionInfo *tapApi.ConnectionInfo) (resolvedSource string, re
 			}
 		} else {
 			resolvedSource = resolvedSourceObject.FullAddress
+			namespace = resolvedSourceObject.Namespace
 		}
 
 		unresolvedDestination := fmt.Sprintf("%s:%s", connectionInfo.ServerIP, connectionInfo.ServerPort)
@@ -194,7 +195,11 @@ func resolveIP(connectionInfo *tapApi.ConnectionInfo) (resolvedSource string, re
 			}
 		} else {
 			resolvedDestination = resolvedDestinationObject.FullAddress
-			namespace = resolvedDestinationObject.Namespace
+			// Overwrite namespace (if it was set according to the source)
+			// Only overwrite if non-empty
+			if resolvedDestinationObject.Namespace != "" {
+				namespace = resolvedDestinationObject.Namespace
+			}
 		}
 	}
 	return resolvedSource, resolvedDestination, namespace
