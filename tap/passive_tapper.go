@@ -112,7 +112,7 @@ func UpdateTapTargets(newTapTargets []v1.Pod) {
 
 	tapTargets = newTapTargets
 
-	packetSourceManager.UpdatePods(tapTargets)
+	packetSourceManager.UpdatePods(tapTargets, !*nodefrag, mainPacketInputChan)
 
 	if tlsTapperInstance != nil {
 		if err := tlstapper.UpdateTapTargets(tlsTapperInstance, &tapTargets, *procfs); err != nil {
@@ -198,12 +198,8 @@ func initializePacketSources() error {
 	}
 
 	var err error
-	if packetSourceManager, err = source.NewPacketSourceManager(*procfs, *fname, *iface, *servicemesh, tapTargets, behaviour); err != nil {
-		return err
-	} else {
-		packetSourceManager.ReadPackets(!*nodefrag, mainPacketInputChan)
-		return nil
-	}
+	packetSourceManager, err = source.NewPacketSourceManager(*procfs, *fname, *iface, *servicemesh, tapTargets, behaviour, !*nodefrag, mainPacketInputChan)
+	return err
 }
 
 func initializePassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem) (*tcpStreamMap, *tcpAssembler) {
