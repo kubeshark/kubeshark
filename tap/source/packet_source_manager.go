@@ -24,7 +24,7 @@ type PacketSourceManager struct {
 }
 
 func NewPacketSourceManager(procfs string, filename string, interfaceName string,
-	mtls bool, pods []v1.Pod, behaviour TcpPacketSourceBehaviour) (*PacketSourceManager, error) {
+	mtls bool, pods []v1.Pod, behaviour TcpPacketSourceBehaviour, ipdefrag bool, packets chan<- TcpPacketInfo) (*PacketSourceManager, error) {
 	hostSource, err := newHostPacketSource(filename, interfaceName, behaviour)
 	if err != nil {
 		return nil, err
@@ -43,7 +43,7 @@ func NewPacketSourceManager(procfs string, filename string, interfaceName string
 		behaviour: behaviour,
 	}
 
-	sourceManager.UpdatePods(pods)
+	go hostSource.readPackets(ipdefrag, packets)
 	return sourceManager, nil
 }
 
@@ -64,16 +64,16 @@ func newHostPacketSource(filename string, interfaceName string,
 	return source, nil
 }
 
-func (m *PacketSourceManager) UpdatePods(pods []v1.Pod) {
+func (m *PacketSourceManager) UpdatePods(pods []v1.Pod, ipdefrag bool, packets chan<- TcpPacketInfo) {
 	if m.config.mtls {
-		m.updateMtlsPods(m.config.procfs, pods, m.config.interfaceName, m.config.behaviour)
+		m.updateMtlsPods(m.config.procfs, pods, m.config.interfaceName, m.config.behaviour, ipdefrag, packets)
 	}
 
 	m.setBPFFilter(pods)
 }
 
 func (m *PacketSourceManager) updateMtlsPods(procfs string, pods []v1.Pod,
-	interfaceName string, behaviour TcpPacketSourceBehaviour) {
+	interfaceName string, behaviour TcpPacketSourceBehaviour, ipdefrag bool, packets chan<- TcpPacketInfo) {
 
 	relevantPids := m.getRelevantPids(procfs, pods)
 	logger.Log.Infof("Updating mtls pods (new: %v) (current: %v)", relevantPids, m.sources)
@@ -90,6 +90,7 @@ func (m *PacketSourceManager) updateMtlsPods(procfs string, pods []v1.Pod,
 			source, err := newNetnsPacketSource(procfs, pid, interfaceName, behaviour)
 
 			if err == nil {
+				go source.readPackets(ipdefrag, packets)
 				m.sources[pid] = source
 			}
 		}
@@ -150,12 +151,6 @@ func (m *PacketSourceManager) setBPFFilter(pods []v1.Pod) {
 		if err := src.setBPFFilter(expr); err != nil {
 			logger.Log.Warningf("Error setting bpf filter for %s %v - %w", pid, src, err)
 		}
-	}
-}
-
-func (m *PacketSourceManager) ReadPackets(ipdefrag bool, packets chan<- TcpPacketInfo) {
-	for _, src := range m.sources {
-		go src.readPackets(ipdefrag, packets)
 	}
 }
 
