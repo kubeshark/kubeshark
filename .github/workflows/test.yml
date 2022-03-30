@@ -18,6 +18,7 @@ jobs:
   run-unit-tests:
     name: Unit Tests
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Check out code into the Go module directory
         uses: actions/checkout@v2

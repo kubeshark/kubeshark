@@ -20,7 +20,7 @@ type Node struct {
 	children  []*Node
 }
 
-func (n *Node) getOrSet(path NodePath, existingPathObj *openapi.PathObj) (node *Node) {
+func (n *Node) getOrSet(path NodePath, existingPathObj *openapi.PathObj, sampleId uint) (node *Node) {
 	if existingPathObj == nil {
 		panic("Invalid function call")
 	}
@@ -70,6 +70,10 @@ func (n *Node) getOrSet(path NodePath, existingPathObj *openapi.PathObj) (node *
 		}
 	}
 
+	if node.pathParam != nil {
+		setSampleID(&node.pathParam.Extensions, sampleId)
+	}
+
 	// add example if it's a gibberish chunk
 	if node.pathParam != nil && !chunkIsParam {
 		exmp := &node.pathParam.Examples
@@ -85,7 +89,7 @@ func (n *Node) getOrSet(path NodePath, existingPathObj *openapi.PathObj) (node *
 
 	// TODO: eat up trailing slash, in a smart way: node.pathObj!=nil && path[1]==""
 	if len(path) > 1 {
-		return node.getOrSet(path[1:], existingPathObj)
+		return node.getOrSet(path[1:], existingPathObj, sampleId)
 	} else if node.pathObj == nil {
 		node.pathObj = existingPathObj
 	}
