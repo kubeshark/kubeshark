@@ -148,7 +148,7 @@ const ServiceMapOptions = {
             springLength: 180,
             springConstant: 0.04,
             damping: 0.2,
-            avoidOverlap: 1
+            avoidOverlap: 0
         },
     },
     layout: {
