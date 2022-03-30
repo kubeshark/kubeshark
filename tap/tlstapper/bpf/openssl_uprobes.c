@@ -7,6 +7,8 @@ Copyright (C) UP9 Inc.
 #include "include/headers.h"
 #include "include/util.h"
 #include "include/maps.h"
+#include "include/log.h"
+#include "include/logger_messages.h"
 #include "include/pids.h"
 
 // Heap-like area for eBPF programs - stack size limited to 512 bytes, we must use maps for bigger (chunk) objects.
@@ -39,15 +41,14 @@ static __always_inline int get_count_bytes(struct pt_regs *ctx, struct ssl_info*
 	long err = bpf_probe_read(&countBytes, sizeof(size_t), (void*) info->count_ptr);
 	
 	if (err != 0) {
-		char msg[] = "Error reading bytes count of _ex (id: %ld) (err: %ld)";
-		bpf_trace_printk(msg, sizeof(msg), id, err);
+		log_error(ctx, LOG_ERROR_READING_BYTES_COUNT, id, err, 0l);
 		return 0;
 	}
 	
 	return countBytes;
 }
 
-static __always_inline void add_address_to_chunk(struct tlsChunk* chunk, __u64 id, __u32 fd) {
+static __always_inline void add_address_to_chunk(struct pt_regs *ctx, struct tlsChunk* chunk, __u64 id, __u32 fd) {
 	__u32 pid = id >> 32;
 	__u64 key = (__u64) pid << 32 | fd;
 	
@@ -61,8 +62,7 @@ static __always_inline void add_address_to_chunk(struct tlsChunk* chunk, __u64 i
 	chunk->flags |= (fdinfo->flags & FLAGS_IS_CLIENT_BIT);
 	
 	if (err != 0) {
-		char msg[] = "Error reading from fd address %ld - %ld";
-		bpf_trace_printk(msg, sizeof(msg), id, err);
+		log_error(ctx, LOG_ERROR_READING_FD_ADDRESS, id, err, 0l);
 	}
 }
 
@@ -88,8 +88,7 @@ static __always_inline void send_chunk_part(struct pt_regs *ctx, __u8* buffer, _
 	}
 	
 	if (err != 0) {
-		char msg[] = "Error reading from ssl buffer %ld - %ld";
-		bpf_trace_printk(msg, sizeof(msg), id, err);
+		log_error(ctx, LOG_ERROR_READING_FROM_SSL_BUFFER, id, err, 0l);
 		return;
 	}
 	
@@ -101,8 +100,9 @@ static __always_inline void send_chunk(struct pt_regs *ctx, __u8* buffer, __u64 
 	//
 	// 	https://lwn.net/Articles/794934/
 	// 
-	// If we want to compile in kernel older than 5.3, we should add "#pragma unroll" to this loop
+	// However we want to run in kernel older than 5.3, hence we use "#pragma unroll" anyway
 	// 
+	#pragma unroll
 	for (int i = 0; i < MAX_CHUNKS_PER_OPERATION; i++) {
 		if (chunk->len <= (CHUNK_SIZE * i)) {
 			break;
@@ -120,8 +120,7 @@ static __always_inline void output_ssl_chunk(struct pt_regs *ctx, struct ssl_inf
 	}
 	
 	if (countBytes > (CHUNK_SIZE * MAX_CHUNKS_PER_OPERATION)) {
-		char msg[] = "Buffer too big %d (id: %ld)";
-		bpf_trace_printk(msg, sizeof(msg), countBytes, id);
+		log_error(ctx, LOG_ERROR_BUFFER_TOO_BIG, id, countBytes, 0l);
 		return;
 	}
 	
@@ -134,8 +133,7 @@ static __always_inline void output_ssl_chunk(struct pt_regs *ctx, struct ssl_inf
 	chunk = bpf_map_lookup_elem(&heap, &zero);
 	
 	if (!chunk) {
-		char msg[] = "Unable to allocate chunk (id: %ld)";
-		bpf_trace_printk(msg, sizeof(msg), id);
+		log_error(ctx, LOG_ERROR_ALLOCATING_CHUNK, id, 0l, 0l);
 		return;
 	}
 	
@@ -145,11 +143,11 @@ static __always_inline void output_ssl_chunk(struct pt_regs *ctx, struct ssl_inf
 	chunk->len = countBytes;
 	chunk->fd = info->fd;
 	
-	add_address_to_chunk(chunk, id, chunk->fd);
+	add_address_to_chunk(ctx, chunk, id, chunk->fd);
 	send_chunk(ctx, info->buffer, id, chunk);
 }
 
-static __always_inline void ssl_uprobe(void* ssl, void* buffer, int num, struct bpf_map_def* map_fd, size_t *count_ptr) {
+static __always_inline void ssl_uprobe(struct pt_regs *ctx, void* ssl, void* buffer, int num, struct bpf_map_def* map_fd, size_t *count_ptr) {
 	__u64 id = bpf_get_current_pid_tgid();
 	
 	if (!should_tap(id >> 32)) {
@@ -166,8 +164,7 @@ static __always_inline void ssl_uprobe(void* ssl, void* buffer, int num, struct 
 		long err = bpf_probe_read(&info, sizeof(struct ssl_info), infoPtr);
 		
 		if (err != 0) {
-			char msg[] = "Error reading old ssl context (id: %ld) (err: %ld)";
-			bpf_trace_printk(msg, sizeof(msg), id, err);
+			log_error(ctx, LOG_ERROR_READING_SSL_CONTEXT, id, err, ORIGIN_SSL_UPROBE_CODE);
 		}
 		
 		if ((bpf_ktime_get_ns() - info.created_at_nano) > SSL_INFO_MAX_TTL_NANO) {
@@ -184,8 +181,7 @@ static __always_inline void ssl_uprobe(void* ssl, void* buffer, int num, struct 
 	long err = bpf_map_update_elem(map_fd, &id, &info, BPF_ANY);
 	
 	if (err != 0) {
-		char msg[] = "Error putting ssl context (id: %ld) (err: %ld)";
-		bpf_trace_printk(msg, sizeof(msg), id, err);
+		log_error(ctx, LOG_ERROR_PUTTING_SSL_CONTEXT, id, err, 0l);
 	}
 }
 
@@ -199,8 +195,7 @@ static __always_inline void ssl_uretprobe(struct pt_regs *ctx, struct bpf_map_de
 	struct ssl_info *infoPtr = bpf_map_lookup_elem(map_fd, &id);
 	
 	if (infoPtr == NULL) {
-		char msg[] = "Error getting ssl context info (id: %ld)";
-		bpf_trace_printk(msg, sizeof(msg), id);
+		log_error(ctx, LOG_ERROR_GETTING_SSL_CONTEXT, id, 0l, 0l);
 		return;
 	}
 	
@@ -220,14 +215,12 @@ static __always_inline void ssl_uretprobe(struct pt_regs *ctx, struct bpf_map_de
 	// bpf_map_delete_elem(map_fd, &id);
 	
 	if (err != 0) {
-		char msg[] = "Error reading ssl context (id: %ld) (err: %ld)";
-		bpf_trace_printk(msg, sizeof(msg), id, err);
+		log_error(ctx, LOG_ERROR_READING_SSL_CONTEXT, id, err, ORIGIN_SSL_URETPROBE_CODE);
 		return;
 	}
 	
 	if (info.fd == -1) {
-		char msg[] = "File descriptor is missing from ssl info (id: %ld)";
-		bpf_trace_printk(msg, sizeof(msg), id);
+		log_error(ctx, LOG_ERROR_MISSING_FILE_DESCRIPTOR, id, 0l, 0l);
 		return;
 	}
 	
@@ -236,7 +229,7 @@ static __always_inline void ssl_uretprobe(struct pt_regs *ctx, struct bpf_map_de
 
 SEC("uprobe/ssl_write")
 void BPF_KPROBE(ssl_write, void* ssl, void* buffer, int num) {
-	ssl_uprobe(ssl, buffer, num, &ssl_write_context, 0);
+	ssl_uprobe(ctx, ssl, buffer, num, &ssl_write_context, 0);
 }
 
 SEC("uretprobe/ssl_write")
@@ -246,7 +239,7 @@ void BPF_KPROBE(ssl_ret_write) {
 
 SEC("uprobe/ssl_read")
 void BPF_KPROBE(ssl_read, void* ssl, void* buffer, int num) {
-	ssl_uprobe(ssl, buffer, num, &ssl_read_context, 0);
+	ssl_uprobe(ctx, ssl, buffer, num, &ssl_read_context, 0);
 }
 
 SEC("uretprobe/ssl_read")
@@ -256,7 +249,7 @@ void BPF_KPROBE(ssl_ret_read) {
 
 SEC("uprobe/ssl_write_ex")
 void BPF_KPROBE(ssl_write_ex, void* ssl, void* buffer, size_t num, size_t *written) {
-	ssl_uprobe(ssl, buffer, num, &ssl_write_context, written);
+	ssl_uprobe(ctx, ssl, buffer, num, &ssl_write_context, written);
 }
 
 SEC("uretprobe/ssl_write_ex")
@@ -266,7 +259,7 @@ void BPF_KPROBE(ssl_ret_write_ex) {
 
 SEC("uprobe/ssl_read_ex")
 void BPF_KPROBE(ssl_read_ex, void* ssl, void* buffer, size_t num, size_t *readbytes) {
-	ssl_uprobe(ssl, buffer, num, &ssl_read_context, readbytes);
+	ssl_uprobe(ctx, ssl, buffer, num, &ssl_read_context, readbytes);
 }
 
 SEC("uretprobe/ssl_read_ex")

@@ -5,4 +5,5 @@ type DependencyContainerType string
 const (
 	ServiceMapGeneratorDependency = "ServiceMapGeneratorDependency"
 	OasGeneratorDependency        = "OasGeneratorDependency"
+	EntriesProvider               = "EntriesProvider"
 )

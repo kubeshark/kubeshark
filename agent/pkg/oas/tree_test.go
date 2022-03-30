@@ -20,10 +20,10 @@ func TestTree(t *testing.T) {
 	}
 
 	tree := new(Node)
-	for _, tc := range testCases {
+	for i, tc := range testCases {
 		split := strings.Split(tc.inp, "/")
 		pathObj := new(openapi.PathObj)
-		node := tree.getOrSet(split, pathObj)
+		node := tree.getOrSet(split, pathObj, uint(i))
 
 		fillPathParams(node, pathObj)
 
