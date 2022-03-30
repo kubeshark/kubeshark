@@ -100,6 +100,7 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onOpen
     const commonClasses = useCommonStyles();
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [graphData, setGraphData] = useState<GraphData>({ nodes: [], edges: [] });
+    const [graphOptions, setGraphOptions] = useState(ServiceMapOptions);
 
     const getServiceMapData = useCallback(async () => {
         try {
@@ -150,6 +151,14 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onOpen
     }, [isOpen])
 
     useEffect(() => {
+        if(graphData?.nodes?.length === 0) return;
+        let options = {...graphOptions};
+        options.physics.barnesHut.avoidOverlap = graphData?.nodes?.length > 10 ? 0 : 1;
+        setGraphOptions(options);
+        // eslint-disable-next-line
+    },[graphData?.nodes?.length])
+
+    useEffect(() => {
         getServiceMapData();
         return () => setGraphData({ nodes: [], edges: [] })
     }, [getServiceMapData])
@@ -180,7 +189,7 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onOpen
                         <div style={{ display: "flex", justifyContent: "space-between" }}>
                             <div>
                                 <Button
-                                    startIcon={<img src={refresh} className="custom" alt="refresh" style={{ marginRight: "8%" }}></img>}
+                                    startIcon={<img src={refresh} className="custom" alt="refresh" style={{ marginRight: "8%" }}/>}
                                     size="medium"
                                     variant="contained"
                                     className={commonClasses.outlinedButton + " " + commonClasses.imagedButton}
@@ -189,20 +198,20 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onOpen
                                     Refresh
                                 </Button>
                             </div>
-                            <img src={close} alt="close" onClick={() => onClose()} style={{ cursor: "pointer" }}></img>
+                            <img src={close} alt="close" onClick={() => onClose()} style={{ cursor: "pointer" }}/>
                         </div>
                         <Graph
                             graph={graphData}
-                            options={ServiceMapOptions}
+                            options={graphOptions}
                         />
                         <div className='legend-scale'>
                             <ul className='legend-labels'>
-                                <li><span style={{ background: '#205cf5' }}></span>HTTP</li>
-                                <li><span style={{ background: '#244c5a' }}></span>HTTP/2</li>
-                                <li><span style={{ background: '#244c5a' }}></span>gRPC</li>
-                                <li><span style={{ background: '#ff6600' }}></span>AMQP</li>
-                                <li><span style={{ background: '#000000' }}></span>KAFKA</li>
-                                <li><span style={{ background: '#a41e11' }}></span>REDIS</li>
+                                <li><span style={{ background: '#205cf5' }}/>HTTP</li>
+                                <li><span style={{ background: '#244c5a' }}/>HTTP/2</li>
+                                <li><span style={{ background: '#244c5a' }}/>gRPC</li>
+                                <li><span style={{ background: '#ff6600' }}/>AMQP</li>
+                                <li><span style={{ background: '#000000' }}/>KAFKA</li>
+                                <li><span style={{ background: '#a41e11' }}/>REDIS</li>
                             </ul>
                         </div>
                     </div>}
