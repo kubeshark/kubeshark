@@ -310,7 +310,8 @@ func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, moun
 			Image:           "mongo",
 			ImagePullPolicy: opts.ImagePullPolicy,
 			VolumeMounts:    volumeMounts,
-			Args:            []string{"--dbpath", "/data/db"},
+			Command:         []string{"/bin/sh"},
+			Args:            []string{"-c", "mongod --replSet=rs0 --bind_ip_all & sleep 3 && mongo --quiet --eval 'rs.initiate()' && tail -f /dev/null"},
 			WorkingDir:      shared.DataDirPath,
 		},
 	}
