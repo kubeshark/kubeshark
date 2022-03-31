@@ -176,7 +176,7 @@ export const EntryItem: React.FC<EntryProps> = ({entry, style, headingMode}) => 
             {isStatusCodeEnabled && <div>
                 <StatusCode statusCode={entry.status} statusQuery={entry.statusQuery}/>
             </div>}
-            <div className={styles.endpointServiceContainer} style={{paddingLeft: 10}}>
+            <div className={styles.endpointServiceContainer}>
                 <Summary method={entry.method} methodQuery={entry.methodQuery} summary={entry.summary} summaryQuery={entry.summaryQuery}/>
                 <div className={styles.resolvedName}>
                     <Queryable
