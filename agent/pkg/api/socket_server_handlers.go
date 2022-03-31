@@ -1,12 +1,14 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"sync"
 
+	"github.com/gin-gonic/gin"
+	basenine "github.com/up9inc/basenine/client/go"
 	"github.com/up9inc/mizu/agent/pkg/models"
-	"github.com/up9inc/mizu/agent/pkg/providers"
 	"github.com/up9inc/mizu/agent/pkg/providers/tappedPods"
 	"github.com/up9inc/mizu/agent/pkg/providers/tappers"
 	"github.com/up9inc/mizu/agent/pkg/up9"
@@ -17,7 +19,11 @@ import (
 	"github.com/up9inc/mizu/shared/logger"
 )
 
-var browserClientSocketUUIDs = make([]int, 0)
+type BrowserClient struct {
+	dataStreamCancelFunc context.CancelFunc
+}
+
+var browserClients = make(map[int]*BrowserClient, 0)
 var tapperClientSocketUUIDs = make([]int, 0)
 var socketListLock = sync.Mutex{}
 
@@ -30,7 +36,7 @@ func init() {
 	go up9.UpdateAnalyzeStatus(BroadcastToBrowserClients)
 }
 
-func (h *RoutesEventHandlers) WebSocketConnect(socketId int, isTapper bool) {
+func (h *RoutesEventHandlers) WebSocketConnect(_ *gin.Context, socketId int, isTapper bool) {
 	if isTapper {
 		logger.Log.Infof("Websocket event - Tapper connected, socket ID: %d", socketId)
 		tappers.Connected()
@@ -45,7 +51,7 @@ func (h *RoutesEventHandlers) WebSocketConnect(socketId int, isTapper bool) {
 		logger.Log.Infof("Websocket event - Browser socket connected, socket ID: %d", socketId)
 
 		socketListLock.Lock()
-		browserClientSocketUUIDs = append(browserClientSocketUUIDs, socketId)
+		browserClients[socketId] = &BrowserClient{}
 		socketListLock.Unlock()
 
 		BroadcastTappedPodsStatus()
@@ -63,13 +69,16 @@ func (h *RoutesEventHandlers) WebSocketDisconnect(socketId int, isTapper bool) {
 	} else {
 		logger.Log.Infof("Websocket event - Browser socket disconnected, socket ID:  %d", socketId)
 		socketListLock.Lock()
-		removeSocketUUIDFromBrowserSlice(socketId)
+		if browserClients[socketId] != nil && browserClients[socketId].dataStreamCancelFunc != nil {
+			browserClients[socketId].dataStreamCancelFunc()
+		}
+		delete(browserClients, socketId)
 		socketListLock.Unlock()
 	}
 }
 
 func BroadcastToBrowserClients(message []byte) {
-	for _, socketId := range browserClientSocketUUIDs {
+	for socketId, _ := range browserClients {
 		go func(socketId int) {
 			if err := SendToSocket(socketId, message); err != nil {
 				logger.Log.Error(err)
@@ -88,7 +97,124 @@ func BroadcastToTapperClients(message []byte) {
 	}
 }
 
-func (h *RoutesEventHandlers) WebSocketMessage(_ int, message []byte) {
+func (h *RoutesEventHandlers) WebSocketMessage(socketId int, isTapper bool, message []byte) {
+	if isTapper {
+		h.handleTapperIncomingMessage(message)
+	} else {
+		// we initiate the basenine stream after the first websocket message we receive (it contains the entry query), we then store a cancelfunc to later cancel this stream
+		if browserClients[socketId] != nil && browserClients[socketId].dataStreamCancelFunc == nil {
+			cancelFunc, err := startStreamingBasenineEntriesToSocket(socketId, message)
+			if err != nil {
+				logger.Log.Errorf("error initializing basenine stream for browser socket %d %+v", socketId, err)
+			} else {
+				browserClients[socketId].dataStreamCancelFunc = cancelFunc
+			}
+		}
+	}
+}
+
+func startStreamingBasenineEntriesToSocket(socketId int, message []byte) (context.CancelFunc, error) {
+	var params WebSocketParams
+	if err := json.Unmarshal(message, &params); err != nil {
+		logger.Log.Errorf("error unmarshalling parameters: %v", socketId, err)
+		return nil, err
+	}
+
+	var connection *basenine.Connection
+
+	connection, err := basenine.NewConnection(shared.BasenineHost, shared.BaseninePort)
+	if err != nil {
+		logger.Log.Errorf("failed to establish a connection to Basenine: %v", err)
+		socketCleanup(socketId, connectedWebsockets[socketId])
+		return nil, err
+	}
+
+	data := make(chan []byte)
+	meta := make(chan []byte)
+
+	ctx, cancel := context.WithCancel(context.Background())
+
+	query := params.Query
+	err = basenine.Validate(shared.BasenineHost, shared.BaseninePort, query)
+	if err != nil {
+		toastBytes, _ := models.CreateWebsocketToastMessage(&models.ToastMessage{
+			Type:      "error",
+			AutoClose: 5000,
+			Text:      fmt.Sprintf("syntax error: %s", err.Error()),
+		})
+		if err := SendToSocket(socketId, toastBytes); err != nil {
+			logger.Log.Error(err)
+		}
+	}
+
+	handleDataChannel := func(c *basenine.Connection, data chan []byte) {
+		for {
+			bytes := <-data
+
+			if string(bytes) == basenine.CloseChannel {
+				return
+			}
+
+			var entry *tapApi.Entry
+			err = json.Unmarshal(bytes, &entry)
+			if err != nil {
+				logger.Log.Debugf("error unmarshalling entry: %v", err.Error())
+				continue
+			}
+
+			var message []byte
+			if params.EnableFullEntries {
+				message, _ = models.CreateFullEntryWebSocketMessage(entry)
+			} else {
+				extension := extensionsMap[entry.Protocol.Name]
+				base := extension.Dissector.Summarize(entry)
+				message, _ = models.CreateBaseEntryWebSocketMessage(base)
+			}
+
+			if err := SendToSocket(socketId, message); err != nil {
+				logger.Log.Error(err)
+			}
+		}
+	}
+
+	handleMetaChannel := func(c *basenine.Connection, meta chan []byte) {
+		for {
+			bytes := <-meta
+
+			if string(bytes) == basenine.CloseChannel {
+				return
+			}
+
+			var metadata *basenine.Metadata
+			err = json.Unmarshal(bytes, &metadata)
+			if err != nil {
+				logger.Log.Debugf("Error unmarshalling metadata: %v", err.Error())
+				continue
+			}
+
+			metadataBytes, _ := models.CreateWebsocketQueryMetadataMessage(metadata)
+			if err := SendToSocket(socketId, metadataBytes); err != nil {
+				logger.Log.Error(err)
+			}
+		}
+	}
+
+	go handleDataChannel(connection, data)
+	go handleMetaChannel(connection, meta)
+
+	connection.Query(query, data, meta)
+
+	go func() {
+		<-ctx.Done()
+		data <- []byte(basenine.CloseChannel)
+		meta <- []byte(basenine.CloseChannel)
+		connection.Close()
+	}()
+
+	return cancel, nil
+}
+
+func (h *RoutesEventHandlers) handleTapperIncomingMessage(message []byte) {
 	var socketMessageBase shared.WebSocketMessageMetadata
 	err := json.Unmarshal(message, &socketMessageBase)
 	if err != nil {
@@ -112,51 +238,10 @@ func (h *RoutesEventHandlers) WebSocketMessage(_ int, message []byte) {
 			} else {
 				BroadcastToBrowserClients(message)
 			}
-		case shared.WebsocketMessageTypeOutboundLink:
-			var outboundLinkMessage models.WebsocketOutboundLinkMessage
-			err := json.Unmarshal(message, &outboundLinkMessage)
-			if err != nil {
-				logger.Log.Infof("Could not unmarshal message of message type %s %v", socketMessageBase.MessageType, err)
-			} else {
-				handleTLSLink(outboundLinkMessage)
-			}
 		default:
 			logger.Log.Infof("Received socket message of type %s for which no handlers are defined", socketMessageBase.MessageType)
 		}
 	}
-}
-
-func handleTLSLink(outboundLinkMessage models.WebsocketOutboundLinkMessage) {
-	resolvedNameObject := k8sResolver.Resolve(outboundLinkMessage.Data.DstIP)
-	if resolvedNameObject != nil {
-		outboundLinkMessage.Data.DstIP = resolvedNameObject.FullAddress
-	} else if outboundLinkMessage.Data.SuggestedResolvedName != "" {
-		outboundLinkMessage.Data.DstIP = outboundLinkMessage.Data.SuggestedResolvedName
-	}
-	cacheKey := fmt.Sprintf("%s -> %s:%d", outboundLinkMessage.Data.Src, outboundLinkMessage.Data.DstIP, outboundLinkMessage.Data.DstPort)
-	_, isInCache := providers.RecentTLSLinks.Get(cacheKey)
-	if isInCache {
-		return
-	} else {
-		providers.RecentTLSLinks.SetDefault(cacheKey, outboundLinkMessage.Data)
-	}
-	marshaledMessage, err := json.Marshal(outboundLinkMessage)
-	if err != nil {
-		logger.Log.Errorf("Error marshaling outbound link message for broadcasting: %v", err)
-	} else {
-		logger.Log.Errorf("Broadcasting outboundlink message %s", string(marshaledMessage))
-		BroadcastToBrowserClients(marshaledMessage)
-	}
-}
-
-func removeSocketUUIDFromBrowserSlice(uuidToRemove int) {
-	newUUIDSlice := make([]int, 0, len(browserClientSocketUUIDs))
-	for _, uuid := range browserClientSocketUUIDs {
-		if uuid != uuidToRemove {
-			newUUIDSlice = append(newUUIDSlice, uuid)
-		}
-	}
-	browserClientSocketUUIDs = newUUIDSlice
 }
 
 func removeSocketUUIDFromTapperSlice(uuidToRemove int) {
