@@ -3,7 +3,6 @@ package controllers
 import (
 	"encoding/json"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/up9inc/mizu/agent/pkg/app"
@@ -101,7 +100,7 @@ func GetEntry(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, validationError)
 	}
 
-	id, _ := strconv.Atoi(c.Param("id"))
+	id := c.Param("id")
 	var entry *tapApi.Entry
 	bytes, err := basenine.Single(shared.BasenineHost, shared.BaseninePort, id, singleEntryRequest.Query)
 	if Error(c, err) {

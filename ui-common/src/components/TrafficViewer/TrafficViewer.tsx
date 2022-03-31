@@ -166,7 +166,7 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({ setAnalyzeStatus, 
       switch (message.messageType) {
         case "entry":
           const entry = message.data;
-          if (!focusedEntryId) setFocusedEntryId(entry.id.toString());
+          if (!focusedEntryId) setFocusedEntryId(entry.id);
           const newEntries = [...entries, entry];
           if (newEntries.length === 10001) {
             setLeftOffTop(newEntries[0].entry.id);

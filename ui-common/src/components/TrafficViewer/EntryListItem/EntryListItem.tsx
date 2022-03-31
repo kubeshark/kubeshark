@@ -66,7 +66,7 @@ export const EntryItem: React.FC<EntryProps> = ({entry, style, headingMode}) => 
 
     const [focusedEntryId, setFocusedEntryId] = useRecoilState(focusedEntryIdAtom);
     const [queryState, setQuery] = useRecoilState(queryAtom);
-    const isSelected = focusedEntryId === entry.id.toString();
+    const isSelected = focusedEntryId === entry.id;
 
     const classification = getClassification(entry.status)
     const numberOfRules = entry.rules.numberOfRules
@@ -145,12 +145,12 @@ export const EntryItem: React.FC<EntryProps> = ({entry, style, headingMode}) => 
 
     return <React.Fragment>
         <div
-            id={`entry-${entry.id.toString()}`}
+            id={`entry-${entry.id}`}
             className={`${styles.row}
             ${isSelected && !rule && !contractEnabled ? styles.rowSelected : additionalRulesProperties}`}
             onClick={() => {
                 if (!setFocusedEntryId) return;
-                setFocusedEntryId(entry.id.toString());
+                setFocusedEntryId(entry.id);
             }}
             style={{
                 border: isSelected && !headingMode ? `1px ${entry.proto.backgroundColor} solid` : "1px transparent solid",

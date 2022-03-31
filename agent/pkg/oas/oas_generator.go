@@ -145,5 +145,5 @@ type EntryWithSource struct {
 	Source      string
 	Destination string
 	Entry       har.Entry
-	Id          uint
+	Id          string
 }

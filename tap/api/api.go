@@ -156,7 +156,7 @@ func (e *Emitting) Emit(item *OutputChannelItem) {
 }
 
 type Entry struct {
-	Id                     uint                   `json:"id"`
+	Id                     string                 `json:"id"`
 	Protocol               Protocol               `json:"proto"`
 	Capture                Capture                `json:"capture"`
 	Source                 *TCP                   `json:"src"`
@@ -188,7 +188,7 @@ type EntryWrapper struct {
 }
 
 type BaseEntry struct {
-	Id             uint            `json:"id"`
+	Id             string          `json:"id"`
 	Protocol       Protocol        `json:"proto,omitempty"`
 	Capture        Capture         `json:"capture"`
 	Summary        string          `json:"summary,omitempty"`
