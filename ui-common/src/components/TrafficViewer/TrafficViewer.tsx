@@ -110,7 +110,26 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({ setAnalyzeStatus, 
     isCloseWebSocket && closeWebSocket()
   }, [isCloseWebSocket])
 
+  useEffect(() => {
+    reopenConnection()
+  }, [webSocketUrl])
+
   const ws = useRef(null);
+
+  const openEmptyWebSocket = () => {
+    if (query) {
+      openWebSocket(`(${query}) and leftOff(-1)`, true);
+    } else {
+      openWebSocket(`leftOff(-1)`, true);
+    }
+  }
+
+  const closeWebSocket = () => {
+    if(ws?.current?.readyState === WebSocket.OPEN) {
+      ws.current.close();
+      return true;
+    }
+  }
 
   const listEntry = useRef(null);
   const openWebSocket = (query: string, resetEntries: boolean) => {
@@ -151,12 +170,6 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({ setAnalyzeStatus, 
         sendQueryWhenWsOpen(query);
       }
     }, 500)
-  }
-
-  const closeWebSocket = () => {
-    if (ws?.current?.readyState === WebSocket.OPEN) {
-      ws.current.close();
-    }
   }
 
   if (ws.current) {
@@ -216,8 +229,7 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({ setAnalyzeStatus, 
   useEffect(() => {
     setTrafficViewerApiState({ ...trafficViewerApiProp, webSocket: { close: closeWebSocket } });
     (async () => {
-      openWebSocket("leftOff(-1)", true);
-      try {
+      try{
         const tapStatusResponse = await trafficViewerApiProp.tapStatus();
         setTappingStatus(tapStatusResponse);
         if (setAnalyzeStatus) {
@@ -232,17 +244,16 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({ setAnalyzeStatus, 
   }, []);
 
   const toggleConnection = () => {
-    if (ws?.current?.readyState === WebSocket.OPEN) {
-      ws?.current?.close();
-    } else {
-      if (query) {
-        openWebSocket(`(${query}) and leftOff(-1)`, true);
-      } else {
-        openWebSocket(`leftOff(-1)`, true);
-      }
+    if(!closeWebSocket()) {
+      openEmptyWebSocket();
       scrollableRef.current.jumpToBottom();
       setIsSnappedToBottom(true);
     }
+  }
+
+  const reopenConnection = async () => {
+    closeWebSocket()
+    openEmptyWebSocket();
   }
 
   useEffect(() => {
