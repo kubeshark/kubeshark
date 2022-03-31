@@ -149,4 +149,4 @@ replace github.com/up9inc/mizu/tap/extensions/kafka v0.0.0 => ../tap/extensions/
 
 replace github.com/up9inc/mizu/tap/extensions/redis v0.0.0 => ../tap/extensions/redis
 
-replace github.com/up9inc/basenine/client/go v0.0.0-20220326121918-785f3061c8ce => /home/mertyildiran/Documents/up9/basenine/client/go
+replace github.com/up9inc/basenine/client/go v0.0.0-20220326121918-785f3061c8ce => ./basenine-go
