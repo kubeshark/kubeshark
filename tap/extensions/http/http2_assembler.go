@@ -144,16 +144,6 @@ func (ga *Http2Assembler) readMessage() (streamID uint32, messageHTTP1 interface
 	grpcStatus := headersHTTP1.Get("Grpc-Status")
 	if grpcStatus != "" {
 		isGrpc = true
-		status = grpcStatus
-	}
-
-	if strings.Contains(headersHTTP1.Get("Content-Type"), "application/grpc") {
-		isGrpc = true
-		grpcPath := headersHTTP1.Get(":path")
-		pathSegments := strings.Split(grpcPath, "/")
-		if len(pathSegments) > 0 {
-			method = pathSegments[len(pathSegments)-1]
-		}
 	}
 
 	if method != "" {
