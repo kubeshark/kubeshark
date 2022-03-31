@@ -54,7 +54,7 @@ const Protocol: React.FC<ProtocolProps> = ({protocol, horizontal}) => {
                     backgroundColor: protocol.backgroundColor,
                     color: protocol.foregroundColor,
                     fontSize: protocol.fontSize,
-                    marginRight: "-20px",
+                    marginRight: "-6px",
                 }}
                 title={protocol.longName}
             >
