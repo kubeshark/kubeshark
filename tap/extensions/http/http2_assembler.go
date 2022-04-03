@@ -28,26 +28,6 @@ const protoMinorHTTP2 = 0
 
 var maxHTTP2DataLen = 1 * 1024 * 1024 // 1MB
 
-var grpcStatusCodes = []string{
-	"OK",
-	"CANCELLED",
-	"UNKNOWN",
-	"INVALID_ARGUMENT",
-	"DEADLINE_EXCEEDED",
-	"NOT_FOUND",
-	"ALREADY_EXISTS",
-	"PERMISSION_DENIED",
-	"RESOURCE_EXHAUSTED",
-	"FAILED_PRECONDITION",
-	"ABORTED",
-	"OUT_OF_RANGE",
-	"UNIMPLEMENTED",
-	"INTERNAL",
-	"UNAVAILABLE",
-	"DATA_LOSS",
-	"UNAUTHENTICATED",
-}
-
 type messageFragment struct {
 	headers []hpack.HeaderField
 	data    []byte
