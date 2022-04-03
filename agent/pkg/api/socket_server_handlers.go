@@ -77,7 +77,7 @@ func (h *RoutesEventHandlers) WebSocketDisconnect(socketId int, isTapper bool) {
 }
 
 func BroadcastToBrowserClients(message []byte) {
-	for socketId, _ := range browserClients {
+	for socketId := range browserClients {
 		go func(socketId int) {
 			if err := SendToSocket(socketId, message); err != nil {
 				logger.Log.Error(err)
