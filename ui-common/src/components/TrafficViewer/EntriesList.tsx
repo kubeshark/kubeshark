@@ -10,6 +10,7 @@ import entriesAtom from "../../recoil/entries";
 import queryAtom from "../../recoil/query";
 import TrafficViewerApiAtom from "../../recoil/TrafficViewerApi";
 import TrafficViewerApi from "./TrafficViewerApi";
+import focusedEntryIdAtom from "../../recoil/focusedEntryId";
 
 interface EntriesListProps {
     listEntryREF: any;
@@ -18,8 +19,6 @@ interface EntriesListProps {
     setIsSnappedToBottom: any;
     queriedCurrent: number;
     setQueriedCurrent: any;
-    queriedTotal: number;
-    setQueriedTotal: any;
     startTime: number;
     noMoreDataTop: boolean;
     setNoMoreDataTop: (flag: boolean) => void;
@@ -33,16 +32,18 @@ interface EntriesListProps {
     ws: any;
 }
 
-export const EntriesList: React.FC<EntriesListProps> = ({listEntryREF, onSnapBrokenEvent, isSnappedToBottom, setIsSnappedToBottom, queriedCurrent, setQueriedCurrent, queriedTotal, setQueriedTotal, startTime, noMoreDataTop, setNoMoreDataTop, leftOffTop, setLeftOffTop, openWebSocket, leftOffBottom, truncatedTimestamp, setTruncatedTimestamp, scrollableRef, ws}) => {
+export const EntriesList: React.FC<EntriesListProps> = ({listEntryREF, onSnapBrokenEvent, isSnappedToBottom, setIsSnappedToBottom, queriedCurrent, setQueriedCurrent, startTime, noMoreDataTop, setNoMoreDataTop, leftOffTop, setLeftOffTop, openWebSocket, leftOffBottom, truncatedTimestamp, setTruncatedTimestamp, scrollableRef, ws}) => {
 
     const [entries, setEntries] = useRecoilState(entriesAtom);
     const query = useRecoilValue(queryAtom);
     const isWsConnectionClosed = ws?.current?.readyState !== WebSocket.OPEN;
+    const [focusedEntryId, setFocusedEntryId] = useRecoilState(focusedEntryIdAtom);
 
     const trafficViewerApi = useRecoilValue(TrafficViewerApiAtom as RecoilState<TrafficViewerApi>)
 
     const [loadMoreTop, setLoadMoreTop] = useState(false);
     const [isLoadingTop, setIsLoadingTop] = useState(false);
+    const [queriedTotal, setQueriedTotal] = useState(0);
 
     useEffect(() => {
         const list = document.getElementById('list').firstElementChild;
@@ -102,6 +103,29 @@ export const EntriesList: React.FC<EntriesListProps> = ({listEntryREF, onSnapBro
     }, [loadMoreTop, noMoreDataTop, getOldEntries, isWsConnectionClosed]);
 
     const scrollbarVisible = scrollableRef.current?.childWrapperRef.current.clientHeight > scrollableRef.current?.wrapperRef.current.clientHeight;
+
+  if (ws.current) {
+    ws.current.onmessage = (e) => {
+      if (!e?.data) return;
+      const message = JSON.parse(e.data);
+      switch (message.messageType) {
+        case "entry":
+          const entry = message.data;
+          if (!focusedEntryId) setFocusedEntryId(entry.id.toString());
+          const newEntries = [...entries, entry];
+          if (newEntries.length === 10001) {
+            setLeftOffTop(newEntries[0].entry.id);
+            newEntries.shift();
+            setNoMoreDataTop(false);
+          }
+          setEntries(newEntries);
+          break;
+        case "queryMetadata":
+          setQueriedTotal(message.data.total);
+          break;
+      };
+    }
+  }
 
     return <React.Fragment>
             <div className={styles.list}>
