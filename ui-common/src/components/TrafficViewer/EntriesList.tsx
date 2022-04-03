@@ -105,7 +105,7 @@ export const EntriesList: React.FC<EntriesListProps> = ({listEntryREF, onSnapBro
     const scrollbarVisible = scrollableRef.current?.childWrapperRef.current.clientHeight > scrollableRef.current?.wrapperRef.current.clientHeight;
 
   if (ws.current) {
-    ws.current.onmessage = (e) => {
+    ws.current.addEventListener("message", (e) => {
       if (!e?.data) return;
       const message = JSON.parse(e.data);
       switch (message.messageType) {
@@ -124,7 +124,7 @@ export const EntriesList: React.FC<EntriesListProps> = ({listEntryREF, onSnapBro
           setQueriedTotal(message.data.total);
           break;
       };
-    }
+    });
   }
 
     return <React.Fragment>
