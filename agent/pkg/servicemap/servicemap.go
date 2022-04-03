@@ -227,10 +227,11 @@ func (s *defaultServiceMap) GetNodes() []ServiceMapNode {
 	var nodes []ServiceMapNode
 	for i, n := range s.graph.Nodes {
 		nodes = append(nodes, ServiceMapNode{
-			Id:    n.id,
-			Name:  string(i),
-			Entry: n.entry,
-			Count: n.count,
+			Id:       n.id,
+			Name:     string(i),
+			Resolved: n.entry.Name != UnresolvedNodeName,
+			Entry:    n.entry,
+			Count:    n.count,
 		})
 	}
 	return nodes
