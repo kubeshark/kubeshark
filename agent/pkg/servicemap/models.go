@@ -18,10 +18,11 @@ type ServiceMapResponse struct {
 }
 
 type ServiceMapNode struct {
-	Id    int         `json:"id"`
-	Name  string      `json:"name"`
-	Entry *tapApi.TCP `json:"entry"`
-	Count int         `json:"count"`
+	Id       int         `json:"id"`
+	Name     string      `json:"name"`
+	Entry    *tapApi.TCP `json:"entry"`
+	Count    int         `json:"count"`
+	Resolved bool        `json:"resolved"`
 }
 
 type ServiceMapEdge struct {
