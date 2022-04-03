@@ -244,16 +244,18 @@ func (s *defaultServiceMap) GetEdges() []ServiceMapEdge {
 			for _, p := range s.graph.Edges[u][v].data {
 				edges = append(edges, ServiceMapEdge{
 					Source: ServiceMapNode{
-						Id:    s.graph.Nodes[u].id,
-						Name:  string(u),
-						Entry: s.graph.Nodes[u].entry,
-						Count: s.graph.Nodes[u].count,
+						Id:       s.graph.Nodes[u].id,
+						Name:     string(u),
+						Entry:    s.graph.Nodes[u].entry,
+						Resolved: s.graph.Nodes[u].entry.Name != UnresolvedNodeName,
+						Count:    s.graph.Nodes[u].count,
 					},
 					Destination: ServiceMapNode{
-						Id:    s.graph.Nodes[v].id,
-						Name:  string(v),
-						Entry: s.graph.Nodes[v].entry,
-						Count: s.graph.Nodes[v].count,
+						Id:       s.graph.Nodes[v].id,
+						Name:     string(v),
+						Entry:    s.graph.Nodes[v].entry,
+						Resolved: s.graph.Nodes[v].entry.Name != UnresolvedNodeName,
+						Count:    s.graph.Nodes[v].count,
 					},
 					Count:    p.count,
 					Protocol: p.protocol,
