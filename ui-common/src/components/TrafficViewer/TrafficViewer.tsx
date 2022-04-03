@@ -72,7 +72,7 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({ setAnalyzeStatus, 
   const [queriedCurrent, setQueriedCurrent] = useState(0);
   const [queriedTotal, setQueriedTotal] = useState(0);
   const [leftOffBottom, setLeftOffBottom] = useState("");
-  const [leftOffTop, setLeftOffTop] = useState(null);
+  const [leftOffTop, setLeftOffTop] = useState("");
   const [truncatedTimestamp, setTruncatedTimestamp] = useState(0);
 
   const [startTime, setStartTime] = useState(0);
@@ -137,7 +137,7 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({ setAnalyzeStatus, 
       setFocusedEntryId(null);
       setEntries([]);
       setQueriedCurrent(0);
-      setLeftOffTop(null);
+      setLeftOffTop("");
       setNoMoreDataTop(false);
     }
     try {
@@ -211,8 +211,8 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({ setAnalyzeStatus, 
           setQueriedTotal(message.data.total);
           setLeftOffBottom(message.data.leftOff);
           setTruncatedTimestamp(message.data.truncatedTimestamp);
-          if (leftOffTop === null) {
-            setLeftOffTop(message.data.leftOff - 1);
+          if (leftOffTop === "") {
+            setLeftOffTop(message.data.leftOff);
           }
           break;
         case "startTime":

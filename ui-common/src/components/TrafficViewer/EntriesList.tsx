@@ -23,8 +23,8 @@ interface EntriesListProps {
     startTime: number;
     noMoreDataTop: boolean;
     setNoMoreDataTop: (flag: boolean) => void;
-    leftOffTop: number;
-    setLeftOffTop: (leftOffTop: number) => void;
+    leftOffTop: string;
+    setLeftOffTop: (leftOffTop: string) => void;
     openWebSocket: (query: string, resetEntries: boolean) => void;
     leftOffBottom: string;
     truncatedTimestamp: number;
@@ -63,7 +63,7 @@ export const EntriesList: React.FC<EntriesListProps> = ({listEntryREF, onSnapBro
 
     const getOldEntries = useCallback(async () => {
         setLoadMoreTop(false);
-        if (leftOffTop === null || leftOffTop <= 0) {
+        if (leftOffTop === "") {
             return;
         }
         setIsLoadingTop(true);
@@ -121,7 +121,7 @@ export const EntriesList: React.FC<EntriesListProps> = ({listEntryREF, onSnapBro
                     </ScrollableFeedVirtualized>
                     <button type="button"
                         title="Fetch old records"
-                        className={`${styles.btnOld} ${!scrollbarVisible && leftOffTop > 0 ? styles.showButton : styles.hideButton}`}
+                        className={`${styles.btnOld} ${!scrollbarVisible && leftOffTop !== "" ? styles.showButton : styles.hideButton}`}
                         onClick={(_) => {
                             trafficViewerApi.webSocket.close()
                             getOldEntries();
