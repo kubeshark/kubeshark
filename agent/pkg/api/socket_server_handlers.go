@@ -98,11 +98,10 @@ func BroadcastToTapperClients(message []byte) {
 
 func (h *RoutesEventHandlers) WebSocketMessage(socketId int, isTapper bool, message []byte) {
 	if isTapper {
-		h.handleTapperIncomingMessage(message)
+		HandleTapperIncomingMessage(message, h.SocketOutChannel, BroadcastToBrowserClients)
 	} else {
 		// we initiate the basenine stream after the first websocket message we receive (it contains the entry query), we then store a cancelfunc to later cancel this stream
 		if browserClients[socketId] != nil && browserClients[socketId].dataStreamCancelFunc == nil {
-
 			var params WebSocketParams
 			if err := json.Unmarshal(message, &params); err != nil {
 				logger.Log.Errorf("Error: %v", socketId, err)
@@ -121,7 +120,7 @@ func (h *RoutesEventHandlers) WebSocketMessage(socketId int, isTapper bool, mess
 	}
 }
 
-func (h *RoutesEventHandlers) handleTapperIncomingMessage(message []byte) {
+func HandleTapperIncomingMessage(message []byte, socketOutChannel chan<- *tapApi.OutputChannelItem, broadcastMessageFunc func([]byte)) {
 	var socketMessageBase shared.WebSocketMessageMetadata
 	err := json.Unmarshal(message, &socketMessageBase)
 	if err != nil {
@@ -135,7 +134,7 @@ func (h *RoutesEventHandlers) handleTapperIncomingMessage(message []byte) {
 				logger.Log.Infof("Could not unmarshal message of message type %s %v", socketMessageBase.MessageType, err)
 			} else {
 				// NOTE: This is where the message comes back from the intermediate WebSocket to code.
-				h.SocketOutChannel <- tappedEntryMessage.Data
+				socketOutChannel <- tappedEntryMessage.Data
 			}
 		case shared.WebSocketMessageTypeUpdateStatus:
 			var statusMessage shared.WebSocketStatusMessage
@@ -143,7 +142,7 @@ func (h *RoutesEventHandlers) handleTapperIncomingMessage(message []byte) {
 			if err != nil {
 				logger.Log.Infof("Could not unmarshal message of message type %s %v", socketMessageBase.MessageType, err)
 			} else {
-				BroadcastToBrowserClients(message)
+				broadcastMessageFunc(message)
 			}
 		default:
 			logger.Log.Infof("Received socket message of type %s for which no handlers are defined", socketMessageBase.MessageType)
