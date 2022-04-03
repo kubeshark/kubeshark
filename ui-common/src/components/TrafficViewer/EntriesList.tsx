@@ -10,8 +10,6 @@ import entriesAtom from "../../recoil/entries";
 import queryAtom from "../../recoil/query";
 import TrafficViewerApiAtom from "../../recoil/TrafficViewerApi";
 import TrafficViewerApi from "./TrafficViewerApi";
-import {toast} from "react-toastify";
-import {TOAST_CONTAINER_ID} from "../../configs/Consts";
 import focusedEntryIdAtom from "../../recoil/focusedEntryId";
 
 interface EntriesListProps {
