@@ -65,9 +65,9 @@ export const QueryForm: React.FC<QueryFormProps> = ({backgroundColor, openWebSoc
     const handleSubmit = (e) => {
         trafficViewerApi.webSocket.close()
         if (query) {
-            openWebSocket(`(${query}) and leftOff(-1)`, true);
+            openWebSocket(`(${query}) and leftOff("latest")`, true);
         } else {
-            openWebSocket(`leftOff(-1)`, true);
+            openWebSocket(`leftOff("latest")`, true);
         }
         e.preventDefault();
     }

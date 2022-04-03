@@ -26,7 +26,7 @@ interface EntriesListProps {
     leftOffTop: number;
     setLeftOffTop: (leftOffTop: number) => void;
     openWebSocket: (query: string, resetEntries: boolean) => void;
-    leftOffBottom: number;
+    leftOffBottom: string;
     truncatedTimestamp: number;
     setTruncatedTimestamp: any;
     scrollableRef: any;
@@ -134,9 +134,9 @@ export const EntriesList: React.FC<EntriesListProps> = ({listEntryREF, onSnapBro
                         onClick={(_) => {
                             if (isWsConnectionClosed) {
                                 if (query) {
-                                    openWebSocket(`(${query}) and leftOff(${leftOffBottom})`, false);
+                                    openWebSocket(`(${query}) and leftOff("${leftOffBottom}")`, false);
                                 } else {
-                                    openWebSocket(`leftOff(${leftOffBottom})`, false);
+                                    openWebSocket(`leftOff("${leftOffBottom}")`, false);
                                 }
                             }
                             scrollableRef.current.jumpToBottom();

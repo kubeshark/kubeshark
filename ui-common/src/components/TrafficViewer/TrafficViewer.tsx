@@ -71,7 +71,7 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({ setAnalyzeStatus, 
 
   const [queriedCurrent, setQueriedCurrent] = useState(0);
   const [queriedTotal, setQueriedTotal] = useState(0);
-  const [leftOffBottom, setLeftOffBottom] = useState(0);
+  const [leftOffBottom, setLeftOffBottom] = useState("");
   const [leftOffTop, setLeftOffTop] = useState(null);
   const [truncatedTimestamp, setTruncatedTimestamp] = useState(0);
 
@@ -118,9 +118,9 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({ setAnalyzeStatus, 
 
   const openEmptyWebSocket = () => {
     if (query) {
-      openWebSocket(`(${query}) and leftOff(-1)`, true);
+      openWebSocket(`(${query}) and leftOff("latest")`, true);
     } else {
-      openWebSocket(`leftOff(-1)`, true);
+      openWebSocket(`leftOff("latest")`, true);
     }
   }
 
@@ -154,9 +154,9 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({ setAnalyzeStatus, 
           ws.current.close();
         }
         if (query) {
-          openWebSocket(`(${query}) and leftOff(${leftOffBottom})`, false);
+          openWebSocket(`(${query}) and leftOff("${leftOffBottom}")`, false);
         } else {
-          openWebSocket(`leftOff(${leftOffBottom})`, false);
+          openWebSocket(`leftOff("${leftOffBottom}")`, false);
         }
       }
     } catch (e) { }
