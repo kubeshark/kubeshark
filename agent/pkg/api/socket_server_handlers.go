@@ -109,10 +109,12 @@ func (h *RoutesEventHandlers) WebSocketMessage(socketId int, isTapper bool, mess
 			}
 
 			entriesStreamer := dependency.GetInstance(dependency.EntriesSocketStreamer).(EntryStreamer)
-			cancelFunc, err := entriesStreamer.Get(socketId, &params)
+			ctx, cancelFunc := context.WithCancel(context.Background())
+			err := entriesStreamer.Get(ctx, socketId, &params)
 
 			if err != nil {
 				logger.Log.Errorf("error initializing basenine stream for browser socket %d %+v", socketId, err)
+				cancelFunc()
 			} else {
 				browserClients[socketId].dataStreamCancelFunc = cancelFunc
 			}

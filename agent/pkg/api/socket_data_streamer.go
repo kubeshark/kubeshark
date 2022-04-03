@@ -14,7 +14,7 @@ import (
 )
 
 type EntryStreamer interface {
-	Get(socketId int, params *WebSocketParams) (context.CancelFunc, error)
+	Get(ctx context.Context, socketId int, params *WebSocketParams) error
 }
 
 type EntryStreamerSocketConnector interface {
@@ -66,7 +66,7 @@ func (e *DefaultEntryStreamerSocketConnector) CleanupSocket(socketId int) {
 
 type BasenineEntryStreamer struct{}
 
-func (e *BasenineEntryStreamer) Get(socketId int, params *WebSocketParams) (context.CancelFunc, error) {
+func (e *BasenineEntryStreamer) Get(ctx context.Context, socketId int, params *WebSocketParams) error {
 	var connection *basenine.Connection
 
 	entryStreamerSocketConnector := dependency.GetInstance(dependency.EntryStreamerSocketConnector).(EntryStreamerSocketConnector)
@@ -75,13 +75,11 @@ func (e *BasenineEntryStreamer) Get(socketId int, params *WebSocketParams) (cont
 	if err != nil {
 		logger.Log.Errorf("failed to establish a connection to Basenine: %v", err)
 		entryStreamerSocketConnector.CleanupSocket(socketId)
-		return nil, err
+		return err
 	}
 
 	data := make(chan []byte)
 	meta := make(chan []byte)
-
-	ctx, cancel := context.WithCancel(context.Background())
 
 	query := params.Query
 	err = basenine.Validate(shared.BasenineHost, shared.BaseninePort, query)
@@ -139,5 +137,5 @@ func (e *BasenineEntryStreamer) Get(socketId int, params *WebSocketParams) (cont
 		connection.Close()
 	}()
 
-	return cancel, nil
+	return nil
 }
