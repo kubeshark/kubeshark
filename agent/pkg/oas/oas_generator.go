@@ -24,14 +24,16 @@ type OasGenerator interface {
 	IsStarted() bool
 	Reset()
 	GetServiceSpecs() *sync.Map
+	SetEntriesQuery(query string)
 }
 
 type defaultOasGenerator struct {
-	started      bool
-	ctx          context.Context
-	cancel       context.CancelFunc
-	serviceSpecs *sync.Map
-	dbConn       *basenine.Connection
+	started       bool
+	ctx           context.Context
+	cancel        context.CancelFunc
+	serviceSpecs  *sync.Map
+	dbConn        *basenine.Connection
+	entriesQuery string
 }
 
 func GetDefaultOasGeneratorInstance(conn *basenine.Connection) *defaultOasGenerator {
@@ -80,7 +82,7 @@ func (g *defaultOasGenerator) runGenerator() {
 	dataChan := make(chan []byte)
 	metaChan := make(chan []byte)
 
-	g.dbConn.Query("", dataChan, metaChan)
+	g.dbConn.Query(g.entriesQuery, dataChan, metaChan)
 
 	for {
 		select {
@@ -179,6 +181,10 @@ func (g *defaultOasGenerator) Reset() {
 
 func (g *defaultOasGenerator) GetServiceSpecs() *sync.Map {
 	return g.serviceSpecs
+}
+
+func (g *defaultOasGenerator) SetEntriesQuery(query string) {
+	g.entriesQuery = query
 }
 
 func NewDefaultOasGenerator(c *basenine.Connection) *defaultOasGenerator {
