@@ -175,7 +175,7 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({ setAnalyzeStatus, 
   }
 
   if (ws.current) {
-    ws.current.onmessage = (e) => {
+    ws.current.addEventListener("message", (e) => {
       if (!e?.data) return;
       const message = JSON.parse(e.data);
       switch (message.messageType) {
@@ -209,7 +209,7 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({ setAnalyzeStatus, 
           setStartTime(message.data);
           break;
       }
-    };
+    })
   }
 
   useEffect(() => {
