@@ -893,7 +893,7 @@ func representMapAsTable(mapData map[string]interface{}, selectorPrefix string, 
 			}
 		}
 		selector := fmt.Sprintf("%s[\"%s\"]", selectorPrefix, key)
-		caser := cases.Title(language.Und)
+		caser := cases.Title(language.Und, cases.NoLower)
 		table = append(table, api.TableData{
 			Name:     strings.Join(camelcase.Split(caser.String(key)), " "),
 			Value:    value,
