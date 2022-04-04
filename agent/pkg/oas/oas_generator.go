@@ -82,6 +82,7 @@ func (g *defaultOasGenerator) runGenerator() {
 	dataChan := make(chan []byte)
 	metaChan := make(chan []byte)
 
+	logger.Log.Infof("Starting generator to DB connection with query '%s'", g.entriesQuery)
 	g.dbConn.Query(g.entriesQuery, dataChan, metaChan)
 
 	for {
