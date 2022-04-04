@@ -31,6 +31,10 @@ func (e *BasenineEntriesProvider) GetEntries(entriesRequest *models.EntriesReque
 	var dataSlice []*tapApi.EntryWrapper
 
 	for _, row := range data {
+		if string(row) == basenine.CloseConnection {
+			break
+		}
+
 		var entry *tapApi.Entry
 		err = json.Unmarshal(row, &entry)
 		if err != nil {
