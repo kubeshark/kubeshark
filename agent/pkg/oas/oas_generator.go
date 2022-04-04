@@ -43,6 +43,7 @@ func GetDefaultOasGeneratorInstance(conn *basenine.Connection) *defaultOasGenera
 			if err != nil {
 				panic(err)
 			}
+			logger.Log.Infof("Created new DB connection for OAS generator: %v, %s, %s", c, shared.BasenineHost, shared.BaseninePort)
 			conn = c
 		}
 
