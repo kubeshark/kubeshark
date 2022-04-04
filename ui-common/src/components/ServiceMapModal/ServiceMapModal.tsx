@@ -192,7 +192,6 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
                                         <div className={styles.servicesFilterList}>
                                             <SelectList items={getServicesForFilter} tableName={"Services"} tableClassName={styles.filters} multiSelect={true} searchValue={servicesSearchVal}
                                                 checkBoxWidth="5%" checkedValues={filteredServices} setCheckedValues={(newServicesForFilter) => filterServiceMap(null, newServicesForFilter)} />
-
                                         </div>
                                     </div>
                                 </div>
