@@ -24,67 +24,117 @@ jobs:
           sudo apt update
           sudo apt install -y libpcap-dev
 
+      - name: Check Agent modified files
+        id: agent_modified_files
+        run: devops/check_modified_files.sh agent/
+
       - name: Go lint - agent
         uses: golangci/golangci-lint-action@v2
+        if: steps.agent_modified_files.outputs.matched == 'true'
         with:
           version: latest
           working-directory: agent
           args: --timeout=3m
 
+      - name: Check shared modified files
+        id: shared_modified_files
+        run: devops/check_modified_files.sh shared/
+
       - name: Go lint - shared
         uses: golangci/golangci-lint-action@v2
+        if: steps.shared_modified_files.outputs.matched == 'true'
         with:
           version: latest
           working-directory: shared
           args: --timeout=3m
 
+      - name: Check tap modified files
+        id: tap_modified_files
+        run: devops/check_modified_files.sh tap/
+
       - name: Go lint - tap
         uses: golangci/golangci-lint-action@v2
+        if: steps.tap_modified_files.outputs.matched == 'true'
         with:
           version: latest
           working-directory: tap
           args: --timeout=3m
 
+      - name: Check cli modified files
+        id: cli_modified_files
+        run: devops/check_modified_files.sh cli/
+
       - name: Go lint - CLI
         uses: golangci/golangci-lint-action@v2
+        if: steps.cli_modified_files.outputs.matched == 'true'
         with:
           version: latest
           working-directory: cli
           args: --timeout=3m
 
+      - name: Check acceptanceTests modified files
+        id: acceptanceTests_modified_files
+        run: devops/check_modified_files.sh acceptanceTests/
+
       - name: Go lint - acceptanceTests
         uses: golangci/golangci-lint-action@v2
+        if: steps.acceptanceTests_modified_files.outputs.matched == 'true'
         with:
           version: latest
           working-directory: acceptanceTests
           args: --timeout=3m
 
+      - name: Check tap/api modified files
+        id: tap_api_modified_files
+        run: devops/check_modified_files.sh tap/api/
+
       - name: Go lint - tap/api
         uses: golangci/golangci-lint-action@v2
+        if: steps.tap_api_modified_files.outputs.matched == 'true'
         with:
           version: latest
           working-directory: tap/api
 
+      - name: Check tap/extensions/amqp modified files
+        id: tap_amqp_modified_files
+        run: devops/check_modified_files.sh tap/extensions/amqp/
+
       - name: Go lint - tap/extensions/amqp
         uses: golangci/golangci-lint-action@v2
+        if: steps.tap_amqp_modified_files.outputs.matched == 'true'
         with:
           version: latest
           working-directory: tap/extensions/amqp
+      
+      - name: Check tap/extensions/http modified files
+        id: tap_http_modified_files
+        run: devops/check_modified_files.sh tap/extensions/http/
 
       - name: Go lint - tap/extensions/http
         uses: golangci/golangci-lint-action@v2
+        if: steps.tap_http_modified_files.outputs.matched == 'true'
         with:
           version: latest
           working-directory: tap/extensions/http
 
+      - name: Check tap/extensions/kafka modified files
+        id: tap_kafka_modified_files
+        run: devops/check_modified_files.sh tap/extensions/kafka/
+
       - name: Go lint - tap/extensions/kafka
         uses: golangci/golangci-lint-action@v2
+        if: steps.tap_kafka_modified_files.outputs.matched == 'true'
         with:
           version: latest
           working-directory: tap/extensions/kafka
 
+      - name: Check tap/extensions/redis modified files
+        id: tap_redis_modified_files
+        run: devops/check_modified_files.sh tap/extensions/redis/
+
       - name: Go lint - tap/extensions/redis
         uses: golangci/golangci-lint-action@v2
+        if: steps.tap_redis_modified_files.outputs.matched == 'true'
         with:
           version: latest
           working-directory: tap/extensions/redis
