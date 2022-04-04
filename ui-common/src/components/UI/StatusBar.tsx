@@ -14,11 +14,10 @@ interface StatusBarProps {
    isDemoBannerView: boolean;
   }
 
-export const StatusBar = ({isDemoBannerView}) => {
+export const StatusBar: React.FC<StatusBarProps> = ({isDemoBannerView}) => {
     const tappingStatus = useRecoilValue(tappingStatusAtom);
     const [expandedBar, setExpandedBar] = useState(false);
     const {uniqueNamespaces, amountOfPods, amountOfTappedPods, amountOfUntappedPods} = useRecoilValue(tappingStatusDetails);
-
     return <div className={`${isDemoBannerView ? `${style.banner}` : ''} ${style.statusBar} ${(expandedBar ? `${style.expandedStatusBar}` : "")}`} onMouseOver={() => setExpandedBar(true)} onMouseLeave={() => setExpandedBar(false)} data-cy="expandedStatusBar">
         <div className={style.podsCount}>
         {tappingStatus.some(pod => !pod.isTapped) && <img src={warningIcon} alt="warning"/>}
@@ -39,7 +38,7 @@ export const StatusBar = ({isDemoBannerView}) => {
                     {tappingStatus.map(pod => <tr key={pod.name}>
                         <td style={{width: "40%"}}>{pod.name}</td>
                         <td style={{width: "40%"}}>{pod.namespace}</td>
-                        <td style={{width: "20%", textAlign: "center"}}><img style={{height: 20}} alt="status" src={pod.isTapped ? successIcon : failIcon}/></td>
+                        <td style={{width: "20%", textAlign: "center"}}>{pod.isTapped ? <img style={{height: 20}} alt="status" src={successIcon}/> : <img style={{height: 20}} alt="status" src={failIcon}/>}</td>
                     </tr>)}
                 </tbody>
             </table>
