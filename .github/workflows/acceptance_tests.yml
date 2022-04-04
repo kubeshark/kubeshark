@@ -7,6 +7,7 @@ on:
   push:
     branches:
       - 'develop'
+      - 'refactor_ws'
 
 jobs:
   run-acceptance-tests:
