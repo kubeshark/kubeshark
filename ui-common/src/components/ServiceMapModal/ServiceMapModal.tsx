@@ -188,7 +188,7 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
                                     </div>
                                     <div className={styles.separtorLine}></div>
                                     <div className={styles.servicesFilter}>
-                                        <input className={commonClasses.textField + " servicesFilterSearch"} placeholder="search service" value={servicesSearchVal} onChange={(event) => setServicesSearchVal(event.target.value)} />
+                                        <input className={commonClasses.textField + ` ${styles.servicesFilterSearch}`} placeholder="search service" value={servicesSearchVal} onChange={(event) => setServicesSearchVal(event.target.value)} />
                                         <div className={styles.servicesFilterList}>
                                             <SelectList items={getServicesForFilter} tableName={"Services"} tableClassName={styles.filters} multiSelect={true} searchValue={servicesSearchVal}
                                                 checkBoxWidth="5%" checkedValues={filteredServices} setCheckedValues={(newServicesForFilter) => filterServiceMap(null, newServicesForFilter)} />
