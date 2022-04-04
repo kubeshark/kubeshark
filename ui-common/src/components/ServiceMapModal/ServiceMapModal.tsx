@@ -105,6 +105,7 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
             value: node.count,
             label: (node.entry.name === "unresolved") ? node.name : `${node.entry.name} (${node.name})`,
             title: "Count: " + node.name,
+            isResolved: node.entry.resolved
         }
     }
 
@@ -120,9 +121,15 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
             },
         }
     }
+    const mapToKeyValForFilter = (arr) => arr.map(mapNodesDatatoGraph)
+        .map((edge) => { return { key: edge.label, value: edge.label } })
+        .sort((a, b) => { return a.key.localeCompare(b.key) });
 
     const getServicesForFilter = useMemo(() => {
-        return serviceMapApiData.nodes?.map(mapNodesDatatoGraph).map((edge) => { return { key: edge.label, value: edge.label } }).sort((a, b) => { return b.key.localeCompare(a.key) })
+
+        const resolved = mapToKeyValForFilter(serviceMapApiData.nodes?.filter(x => x.resolved))
+        const unResolved = mapToKeyValForFilter(serviceMapApiData.nodes?.filter(x => !x.resolved))
+        return [...resolved, ...unResolved]
     }, [serviceMapApiData])
 
     const filterServiceMap = (newProtocolsFilters?: any[], newServiceFilters?: string[]) => {

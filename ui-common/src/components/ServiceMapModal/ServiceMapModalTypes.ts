@@ -25,6 +25,7 @@ export interface ServiceMapNode {
     name: string;
     entry: Entry;
     count: number;
+    resolved: boolean;
 }
 
 export interface ServiceMapEdge {
