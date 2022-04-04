@@ -64,7 +64,6 @@ COPY tap/extensions/amqp/go.mod ../tap/extensions/amqp/
 COPY tap/extensions/http/go.mod ../tap/extensions/http/
 COPY tap/extensions/kafka/go.mod ../tap/extensions/kafka/
 COPY tap/extensions/redis/go.mod ../tap/extensions/redis/
-COPY basenine-go ./basenine-go
 RUN go mod download
 # cheap trick to make the build faster (as long as go.mod did not change)
 RUN go list -f '{{.Path}}@{{.Version}}' -m all | sed 1d | grep -e 'go-cache' | xargs go get
@@ -88,10 +87,11 @@ RUN go build -ldflags="-extldflags=-static -s -w \
     -X 'github.com/up9inc/mizu/agent/pkg/version.Ver=${VER}'" -o mizuagent .
 
 # Download Basenine executable, verify the sha1sum
-COPY ./basenine_linux_${GOARCH} ./basenine_linux_${GOARCH}
+ADD https://github.com/up9inc/basenine/releases/download/v0.7.0/basenine_linux_${GOARCH} ./basenine_linux_${GOARCH}
+ADD https://github.com/up9inc/basenine/releases/download/v0.7.0/basenine_linux_${GOARCH}.sha256 ./basenine_linux_${GOARCH}.sha256
 
-RUN chmod +x ./basenine_linux_"${GOARCH}" && \
-    mv ./basenine_linux_"${GOARCH}" ./basenine
+RUN shasum -a 256 -c basenine_linux_"${GOARCH}".sha256 && \
+    chmod +x ./basenine_linux_"${GOARCH}" && \
 
 ### The shipped image
 ARG TARGETARCH=amd64
