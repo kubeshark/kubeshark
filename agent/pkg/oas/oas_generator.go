@@ -74,7 +74,7 @@ func (g *defaultOasGenerator) runGenerator() {
 	dataChan := make(chan []byte)
 	metaChan := make(chan []byte)
 
-	logger.Log.Infof("Starting generator to DB connection with query '%s'", g.entriesQuery)
+	logger.Log.Infof("DEBUG Starting generator to DB connection with query '%s'", g.entriesQuery) // DEBUG?
 	g.dbConn.Query(g.entriesQuery, dataChan, metaChan)
 
 	for {
@@ -186,7 +186,7 @@ func NewDefaultOasGenerator(conn *basenine.Connection) *defaultOasGenerator {
 		if err != nil {
 			panic(err)
 		}
-		logger.Log.Infof("Created new DB connection for OAS generator: %v, %s, %s", newConn, shared.BasenineHost, shared.BaseninePort) // tmp
+		logger.Log.Infof("DEBUG Created new DB connection for OAS generator: %v, %s, %s", newConn, shared.BasenineHost, shared.BaseninePort) // tmp
 		conn = newConn
 	}
 
