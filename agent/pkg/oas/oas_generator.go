@@ -38,15 +38,6 @@ type defaultOasGenerator struct {
 
 func GetDefaultOasGeneratorInstance(conn *basenine.Connection) *defaultOasGenerator {
 	syncOnce.Do(func() {
-		if conn == nil {
-			c, err := basenine.NewConnection(shared.BasenineHost, shared.BaseninePort)
-			if err != nil {
-				panic(err)
-			}
-			logger.Log.Infof("Created new DB connection for OAS generator: %v, %s, %s", c, shared.BasenineHost, shared.BaseninePort)
-			conn = c
-		}
-
 		instance = NewDefaultOasGenerator(conn)
 		logger.Log.Debug("OAS Generator Initialized")
 	})
@@ -189,12 +180,21 @@ func (g *defaultOasGenerator) SetEntriesQuery(query string) {
 	g.entriesQuery = query
 }
 
-func NewDefaultOasGenerator(c *basenine.Connection) *defaultOasGenerator {
+func NewDefaultOasGenerator(conn *basenine.Connection) *defaultOasGenerator {
+	if conn == nil {
+		newConn, err := basenine.NewConnection(shared.BasenineHost, shared.BaseninePort)
+		if err != nil {
+			panic(err)
+		}
+		logger.Log.Infof("Created new DB connection for OAS generator: %v, %s, %s", newConn, shared.BasenineHost, shared.BaseninePort) // tmp
+		conn = newConn
+	}
+
 	return &defaultOasGenerator{
 		started:      false,
 		ctx:          nil,
 		cancel:       nil,
 		serviceSpecs: nil,
-		dbConn:       c,
+		dbConn:       conn,
 	}
 }
