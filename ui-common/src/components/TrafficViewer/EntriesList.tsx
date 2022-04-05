@@ -1,8 +1,8 @@
-import React, {useCallback, useEffect, useMemo, useState} from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import styles from '../style/EntriesList.module.sass';
 import ScrollableFeedVirtualized from "react-scrollable-feed-virtualized";
 import Moment from 'moment';
-import {EntryItem} from "./EntryListItem/EntryListItem";
+import { EntryItem } from "./EntryListItem/EntryListItem";
 import down from "assets/downImg.svg";
 import spinner from 'assets/spinner.svg';
 import {RecoilState, useRecoilState, useRecoilValue, useSetRecoilState} from "recoil";
@@ -73,6 +73,25 @@ export const EntriesList: React.FC<EntriesListProps> = ({
   const memoizedEntries = useMemo(() => {
     return entries;
   }, [entries]);
+
+  useEffect(() => {
+    (async () => {
+        setIsLoadingTop(true);
+        ws?.current?.close()
+        try {
+            if (trafficViewerApi?.fetchEntries) {
+                const previosEntries = await trafficViewerApi.fetchEntries(-1, -1, query, 20, 3000);
+                const newEntries = [...[...previosEntries.data].reverse(), ...entries];
+                setEntries(newEntries);
+                setLeftOffTop(newEntries.slice(newEntries.length - 1)[0])
+            }
+
+        }
+        finally {
+            setIsLoadingTop(false);
+        }
+    })();
+}, [trafficViewerApi, query]);
 
   const getOldEntries = useCallback(async () => {
     setLoadMoreTop(false);

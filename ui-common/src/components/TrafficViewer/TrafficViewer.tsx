@@ -44,7 +44,6 @@ const useLayoutStyles = makeStyles(() => ({
 
 interface TrafficViewerProps {
   setAnalyzeStatus?: (status: any) => void;
-  api?: any
   trafficViewerApiProp: TrafficViewerApi,
   actionButtons?: JSX.Element,
   isShowStatusBar?: boolean,
