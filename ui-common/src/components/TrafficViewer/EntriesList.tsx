@@ -127,7 +127,7 @@ export const EntriesList: React.FC<EntriesListProps> = ({
           if (!focusedEntryId) setFocusedEntryId(entry.id.toString());
           const newEntries = [...entries, entry];
           if (newEntries.length === 10001) {
-            setLeftOffTop(newEntries[0].entry.id);
+            setLeftOffTop(newEntries[0].id);
             newEntries.shift();
             setNoMoreDataTop(false);
           }
