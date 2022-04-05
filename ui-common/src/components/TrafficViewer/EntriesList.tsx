@@ -1,20 +1,21 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useState } from "react";
 import styles from '../style/EntriesList.module.sass';
 import ScrollableFeedVirtualized from "react-scrollable-feed-virtualized";
 import Moment from 'moment';
 import { EntryItem } from "./EntryListItem/EntryListItem";
 import down from "assets/downImg.svg";
 import spinner from 'assets/spinner.svg';
-import {RecoilState, useRecoilState, useRecoilValue, useSetRecoilState} from "recoil";
+import { RecoilState, useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 import entriesAtom from "../../recoil/entries";
 import queryAtom from "../../recoil/query";
 import TrafficViewerApiAtom from "../../recoil/TrafficViewerApi";
 import TrafficViewerApi from "./TrafficViewerApi";
 import focusedEntryIdAtom from "../../recoil/focusedEntryId";
-import {toast} from "react-toastify";
-import {TOAST_CONTAINER_ID} from "../../configs/Consts";
+import { toast } from "react-toastify";
+import { TOAST_CONTAINER_ID } from "../../configs/Consts";
 import tappingStatusAtom from "../../recoil/tappingStatus";
 import leftOffTopAtom from "../../recoil/leftOffTop";
+import useDebounce from "../../hooks/useDebounce";
 
 interface EntriesListProps {
   listEntryREF: any;
@@ -28,17 +29,22 @@ interface EntriesListProps {
   ws: any;
 }
 
-export const EntriesList: React.FC<EntriesListProps> = ({
-                                                          listEntryREF,
-                                                          onSnapBrokenEvent,
-                                                          isSnappedToBottom,
-                                                          setIsSnappedToBottom,
-                                                          noMoreDataTop,
-                                                          setNoMoreDataTop,
-                                                          openWebSocket,
-                                                          scrollableRef,
-                                                          ws
-                                                        }) => {
+export type ListHandle = {
+  loadPrevoisEntries: () => Promise<any>,
+}
+export const EntriesList: React.ForwardRefRenderFunction<ListHandle, EntriesListProps> = ({
+  listEntryREF,
+  onSnapBrokenEvent,
+  isSnappedToBottom,
+  setIsSnappedToBottom,
+  noMoreDataTop,
+  setNoMoreDataTop,
+  openWebSocket,
+  scrollableRef,
+  ws,
+}, forwardedRef) => {
+
+
 
   const [entries, setEntries] = useRecoilState(entriesAtom);
   const query = useRecoilValue(queryAtom);
@@ -55,7 +61,32 @@ export const EntriesList: React.FC<EntriesListProps> = ({
   const [startTime, setStartTime] = useState(0);
   const [truncatedTimestamp, setTruncatedTimestamp] = useState(0);
 
+  const debouncedQuery = useDebounce<string>(query, 500)
+
   const leftOffBottom = entries.length > 0 ? entries[entries.length - 1].id : -1;
+
+  useImperativeHandle(forwardedRef, () => ({
+    loadPrevoisEntries: () => {
+      return new Promise(async (res, rej) => {
+        setIsLoadingTop(true);
+        try {
+          if (trafficViewerApi?.fetchEntries) {
+            const previosEntries = await trafficViewerApi.fetchEntries(-1, -1, debouncedQuery, 20, 3000);
+            const newEntries = [...[...previosEntries.data].reverse(), ...entries];
+            setEntries(newEntries);
+            setLeftOffTop(newEntries.slice(newEntries.length - 1)[0])
+            res(newEntries)
+          }
+        }
+        catch (error) {
+          rej(error)
+        }
+        finally {
+          setIsLoadingTop(false);
+        }
+      })
+    }
+  }), [trafficViewerApi]);
 
   useEffect(() => {
     const list = document.getElementById('list').firstElementChild;
@@ -76,22 +107,9 @@ export const EntriesList: React.FC<EntriesListProps> = ({
 
   useEffect(() => {
     (async () => {
-        setIsLoadingTop(true);
-        ws?.current?.close()
-        try {
-            if (trafficViewerApi?.fetchEntries) {
-                const previosEntries = await trafficViewerApi.fetchEntries(-1, -1, query, 20, 3000);
-                const newEntries = [...[...previosEntries.data].reverse(), ...entries];
-                setEntries(newEntries);
-                setLeftOffTop(newEntries.slice(newEntries.length - 1)[0])
-            }
 
-        }
-        finally {
-            setIsLoadingTop(false);
-        }
     })();
-}, [trafficViewerApi, query]);
+  }, [trafficViewerApi, debouncedQuery]);
 
   const getOldEntries = useCallback(async () => {
     setLoadMoreTop(false);
@@ -182,7 +200,7 @@ export const EntriesList: React.FC<EntriesListProps> = ({
     <div className={styles.list}>
       <div id="list" ref={listEntryREF} className={styles.list}>
         {isLoadingTop && <div className={styles.spinnerContainer}>
-          <img alt="spinner" src={spinner} style={{height: 25}}/>
+          <img alt="spinner" src={spinner} style={{ height: 25 }} />
         </div>}
         {noMoreDataTop && <div id="noMoreDataTop" className={styles.noMoreDataAvailable}>No more data available</div>}
         <ScrollableFeedVirtualized ref={scrollableRef} itemHeight={48} marginTop={10} onSnapBroken={onSnapBrokenEvent}>
@@ -195,29 +213,29 @@ export const EntriesList: React.FC<EntriesListProps> = ({
           />)}
         </ScrollableFeedVirtualized>
         <button type="button"
-                title="Fetch old records"
-                className={`${styles.btnOld} ${!scrollbarVisible && leftOffTop > 0 ? styles.showButton : styles.hideButton}`}
-                onClick={(_) => {
-                  trafficViewerApi.webSocket.close()
-                  getOldEntries();
-                }}>
-          <img alt="down" src={down}/>
+          title="Fetch old records"
+          className={`${styles.btnOld} ${!scrollbarVisible && leftOffTop > 0 ? styles.showButton : styles.hideButton}`}
+          onClick={(_) => {
+            trafficViewerApi.webSocket.close()
+            getOldEntries();
+          }}>
+          <img alt="down" src={down} />
         </button>
         <button type="button"
-                title="Snap to bottom"
-                className={`${styles.btnLive} ${isSnappedToBottom && !isWsConnectionClosed ? styles.hideButton : styles.showButton}`}
-                onClick={(_) => {
-                  if (isWsConnectionClosed) {
-                    if (query) {
-                      openWebSocket(`(${query}) and leftOff(${leftOffBottom})`, false);
-                    } else {
-                      openWebSocket(`leftOff(${leftOffBottom})`, false);
-                    }
-                  }
-                  scrollableRef.current.jumpToBottom();
-                  setIsSnappedToBottom(true);
-                }}>
-          <img alt="down" src={down}/>
+          title="Snap to bottom"
+          className={`${styles.btnLive} ${isSnappedToBottom && !isWsConnectionClosed ? styles.hideButton : styles.showButton}`}
+          onClick={(_) => {
+            if (isWsConnectionClosed) {
+              if (query) {
+                openWebSocket(`(${query}) and leftOff(${leftOffBottom})`, false);
+              } else {
+                openWebSocket(`leftOff(${leftOffBottom})`, false);
+              }
+            }
+            scrollableRef.current.jumpToBottom();
+            setIsSnappedToBottom(true);
+          }}>
+          <img alt="down" src={down} />
         </button>
       </div>
 
@@ -235,3 +253,5 @@ export const EntriesList: React.FC<EntriesListProps> = ({
     </div>
   </React.Fragment>;
 };
+
+export default React.forwardRef(EntriesList);
