@@ -122,7 +122,7 @@ func (ga *Http2Assembler) readMessage() (streamID uint32, messageHTTP1 interface
 
 	// gRPC detection
 	grpcStatus := headersHTTP1.Get("Grpc-Status")
-	if grpcStatus != "" {
+	if grpcStatus != "" || strings.Contains(headersHTTP1.Get("Content-Type"), "application/grpc") {
 		isGrpc = true
 	}
 
