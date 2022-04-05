@@ -14,6 +14,7 @@ import SelectList from "../UI/SelectList";
 import { GraphData, ServiceMapGraph } from "./ServiceMapModalTypes"
 import { ResizableBox } from "react-resizable"
 import "react-resizable/css/styles.css"
+import { Utils } from "../../helpers/Utils";
 
 const modalStyle = {
     position: 'absolute',
@@ -52,9 +53,6 @@ const protocols = [
     { key: "kafka", value: "KAFKA", component: <LegentLabel color='#000000' name="KAFKA" /> },
     { key: "redis", value: "REDIS", component: <LegentLabel color='#a41e11' name="REDIS" /> },]
 
-
-const IP_ADDRESS_REGEX = /([0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3})(:([0-9]{1,5}))?/
-const isIpAddress = (address: string): boolean => IP_ADDRESS_REGEX.test(address)
 
 interface ServiceMapModalProps {
     isOpen: boolean;
@@ -145,7 +143,7 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
     }
 
     useEffect(() => {
-        const resolvedServices = getServicesForFilter.map(x => x.key).filter(serviceName => !isIpAddress(serviceName))
+        const resolvedServices = getServicesForFilter.map(x => x.key).filter(serviceName => !Utils.isIpAddress(serviceName))
         setFilteredServices(resolvedServices)
         filterServiceMap(filteredProtocols, resolvedServices)
     }, [getServicesForFilter])
@@ -224,6 +222,6 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
                     </div>
                 </Box>
             </Fade>
-        </Modal >
+        </Modal>
     );
 }
