@@ -5,14 +5,14 @@ import { makeStyles } from "@material-ui/core";
 import Protocol from "../UI/Protocol"
 import Queryable from "../UI/Queryable";
 import { toast } from "react-toastify";
-import { RecoilState, useRecoilState, useRecoilValue } from "recoil";
+import { RecoilState, useRecoilValue } from "recoil";
 import focusedEntryIdAtom from "../../recoil/focusedEntryId";
-import trafficViewerApi from "../../recoil/TrafficViewerApi";
 import TrafficViewerApi from "./TrafficViewerApi";
 import TrafficViewerApiAtom from "../../recoil/TrafficViewerApi/atom";
 import queryAtom from "../../recoil/query/atom";
 import useWindowDimensions, { useRequestTextByWidth } from "../../hooks/WindowDimensionsHook";
 import { TOAST_CONTAINER_ID } from "../../configs/Consts";
+import spinner from "assets/spinner.svg";
 
 const useStyles = makeStyles(() => ({
     entryTitle: {
@@ -105,12 +105,13 @@ export const EntryDetailed = () => {
     const focusedEntryId = useRecoilValue(focusedEntryIdAtom);
     const trafficViewerApi = useRecoilValue(TrafficViewerApiAtom as RecoilState<TrafficViewerApi>)
     const query = useRecoilValue(queryAtom);
-
+    const [isLoading, setIsLoading] = useState(false);
     const [entryData, setEntryData] = useState(null);
 
     useEffect(() => {
         if (!focusedEntryId) return;
         setEntryData(null);
+       setIsLoading(true);
         (async () => {
             try {
                 const entryData = await trafficViewerApi.getEntry(focusedEntryId, query);
@@ -125,20 +126,23 @@ export const EntryDetailed = () => {
                     });
                 }
                 console.error(error);
+            } finally {
+              setIsLoading(false);
             }
         })();
         // eslint-disable-next-line
     }, [focusedEntryId]);
 
     return <React.Fragment>
-        {entryData && <EntryTitle
+      {isLoading && <div style={{textAlign: "center", width: "100%", marginTop: 50}}><img alt="spinner" src={spinner} style={{height: 60}}/></div>}
+      {!isLoading && entryData && <EntryTitle
             protocol={entryData.protocol}
             data={entryData.data}
             elapsedTime={entryData.data.elapsedTime}
         />}
-        {entryData && <EntrySummary entry={entryData.base} />}
+        {!isLoading && entryData && <EntrySummary entry={entryData.base} />}
         <React.Fragment>
-            {entryData && <EntryViewer
+            {!isLoading && entryData && <EntryViewer
                 representation={entryData.representation}
                 isRulesEnabled={entryData.isRulesEnabled}
                 rulesMatched={entryData.rulesMatched}
