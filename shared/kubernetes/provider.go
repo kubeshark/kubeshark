@@ -302,17 +302,8 @@ func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, moun
 				},
 			},
 			Command:    []string{"basenine"},
-			Args:       []string{"-addr", "0.0.0.0", "-port", shared.BaseninePort},
+			Args:       []string{"-addr", "0.0.0.0", "-port", shared.BaseninePort, "-persistent"},
 			WorkingDir: shared.DataDirPath,
-		},
-		{
-			Name:            "mongodb",
-			Image:           "mongo",
-			ImagePullPolicy: opts.ImagePullPolicy,
-			VolumeMounts:    volumeMounts,
-			Command:         []string{"/bin/sh"},
-			Args:            []string{"-c", "mongod --replSet=rs0 --bind_ip_all & sleep 3 && mongo --quiet --eval 'rs.initiate()' && tail -f /dev/null"},
-			WorkingDir:      shared.DataDirPath,
 		},
 	}
 
