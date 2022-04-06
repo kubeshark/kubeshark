@@ -22,7 +22,6 @@ type OasGenerator interface {
 	Start()
 	Stop()
 	IsStarted() bool
-	Reset()
 	GetServiceSpecs() *sync.Map
 	SetEntriesQuery(query string)
 }
@@ -61,7 +60,7 @@ func (g *defaultOasGenerator) Stop() {
 		return
 	}
 	g.cancel()
-	g.Reset()
+	g.reset()
 	g.started = false
 }
 
@@ -170,7 +169,7 @@ func (g *defaultOasGenerator) getGen(dest string, urlStr string) *SpecGen {
 	return gen
 }
 
-func (g *defaultOasGenerator) Reset() {
+func (g *defaultOasGenerator) reset() {
 	g.serviceSpecs = &sync.Map{}
 }
 
