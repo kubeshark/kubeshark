@@ -46,7 +46,7 @@ const SelectList: React.FC<Props> = ({ items, tableName, checkedValues = [], mul
         const newCheckedValues = [...checkedValues];
         if (newCheckedValues.length === enabledItemsLength) setCheckedValues([]);
         else {
-            items.forEach((obj) => {
+            filteredValues.forEach((obj) => {
                 if (!obj.disabled && !newCheckedValues.includes(obj.key))
                     newCheckedValues.push(obj.key);
             })
