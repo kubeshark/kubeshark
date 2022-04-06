@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/chanced/openapi"
-	"github.com/op/go-logging"
 	"github.com/up9inc/mizu/shared/logger"
 	"github.com/wI2L/jsondiff"
 
@@ -55,7 +54,7 @@ func outputSpec(label string, spec *openapi.OpenAPI, t *testing.T) string {
 }
 
 func TestEntries(t *testing.T) {
-	logger.InitLoggerStd(logging.INFO)
+	//logger.InitLoggerStd(logging.INFO) causes race condition
 	files, err := getFiles("./test_artifacts/")
 	if err != nil {
 		t.Log(err)
