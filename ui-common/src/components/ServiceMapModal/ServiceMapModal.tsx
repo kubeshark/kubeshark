@@ -144,7 +144,7 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
     }
 
     useEffect(() => {
-        let mergeWithPrev = getServicesForFilter.filter(serviceName => !Utils.isIpAddress(serviceName))
+        let mergeWithPrev = getServicesForFilter.map(x => x.key).filter(serviceName => !Utils.isIpAddress(serviceName))
         if (filteredServices.length > 0)
             mergeWithPrev = mergeWithPrev.filter(s => filteredServices.includes(s))
         filterServiceMap(filteredProtocols, mergeWithPrev)
