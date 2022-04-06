@@ -128,12 +128,12 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
 
         const resolved = mapToKeyValForFilter(serviceMapApiData.nodes?.filter(x => x.resolved))
         const unResolved = mapToKeyValForFilter(serviceMapApiData.nodes?.filter(x => !x.resolved))
-        return [...resolved, ...unResolved].map(x => x.key)
+        return [...resolved, ...unResolved]
     }, [serviceMapApiData])
 
     const filterServiceMap = (newProtocolsFilters?: any[], newServiceFilters?: string[]) => {
         const filterProt = newProtocolsFilters || filteredProtocols
-        const filterService = newServiceFilters || filteredServices || getServicesForFilter
+        const filterService = newServiceFilters || filteredServices || getServicesForFilter.map(x => x.key)
         setFilteredProtocols(filterProt)
         setFilteredServices(filterService)
         const newGraphData: GraphData = {
