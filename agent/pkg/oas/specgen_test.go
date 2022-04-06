@@ -1,8 +1,10 @@
 package oas
 
 import (
+	"bytes"
 	"encoding/json"
 	"io/ioutil"
+	"net"
 	"os"
 	"regexp"
 	"strings"
@@ -15,8 +17,18 @@ import (
 	"github.com/up9inc/mizu/shared/logger"
 	"github.com/wI2L/jsondiff"
 
+	basenine "github.com/up9inc/basenine/client/go"
 	"github.com/up9inc/mizu/agent/pkg/har"
 )
+
+func GetFakeDBConn(send string, recv string) *basenine.Connection {
+	dummyConn := new(basenine.Connection)
+	dummyConn.Conn = FakeConn{
+		sendBuffer:    bytes.NewBufferString(send),
+		receiveBuffer: bytes.NewBufferString(recv),
+	}
+	return dummyConn
+}
 
 // if started via env, write file into subdir
 func outputSpec(label string, spec *openapi.OpenAPI, t *testing.T) string {
@@ -50,7 +62,8 @@ func TestEntries(t *testing.T) {
 		t.FailNow()
 	}
 
-	gen := NewDefaultOasGenerator(nil)
+	dummyConn := GetFakeDBConn("\n", "\n")
+	gen := NewDefaultOasGenerator(dummyConn)
 	gen.serviceSpecs = new(sync.Map)
 	loadStartingOAS("test_artifacts/catalogue.json", "catalogue", gen.serviceSpecs)
 	loadStartingOAS("test_artifacts/trcc.json", "trcc-api-service", gen.serviceSpecs)
@@ -124,7 +137,8 @@ func TestEntries(t *testing.T) {
 }
 
 func TestFileSingle(t *testing.T) {
-	gen := NewDefaultOasGenerator(nil)
+	dummyConn := GetFakeDBConn("\n", "\n")
+	gen := NewDefaultOasGenerator(dummyConn)
 	gen.serviceSpecs = new(sync.Map)
 	// loadStartingOAS()
 	file := "test_artifacts/params.har"
@@ -214,7 +228,8 @@ func loadStartingOAS(file string, label string, specs *sync.Map) {
 }
 
 func TestEntriesNegative(t *testing.T) {
-	gen := NewDefaultOasGenerator(nil)
+	dummyConn := GetFakeDBConn("\n", "\n")
+	gen := NewDefaultOasGenerator(dummyConn)
 	gen.serviceSpecs = new(sync.Map)
 	files := []string{"invalid"}
 	_, err := feedEntries(files, false, gen)
@@ -225,7 +240,8 @@ func TestEntriesNegative(t *testing.T) {
 }
 
 func TestEntriesPositive(t *testing.T) {
-	gen := NewDefaultOasGenerator(nil)
+	dummyConn := GetFakeDBConn("\n", "\n")
+	gen := NewDefaultOasGenerator(dummyConn)
 	gen.serviceSpecs = new(sync.Map)
 	files := []string{"test_artifacts/params.har"}
 	_, err := feedEntries(files, false, gen)
@@ -267,3 +283,17 @@ func TestLoadValid3_1(t *testing.T) {
 		t.FailNow()
 	}
 }
+
+type FakeConn struct {
+	sendBuffer    *bytes.Buffer
+	receiveBuffer *bytes.Buffer
+}
+
+func (f FakeConn) Read(p []byte) (int, error)       { return f.sendBuffer.Read(p) }
+func (f FakeConn) Write(p []byte) (int, error)      { return f.receiveBuffer.Write(p) }
+func (FakeConn) Close() error                       { return nil }
+func (FakeConn) LocalAddr() net.Addr                { return nil }
+func (FakeConn) RemoteAddr() net.Addr               { return nil }
+func (FakeConn) SetDeadline(t time.Time) error      { return nil }
+func (FakeConn) SetReadDeadline(t time.Time) error  { return nil }
+func (FakeConn) SetWriteDeadline(t time.Time) error { return nil }
