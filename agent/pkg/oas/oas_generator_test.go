@@ -9,7 +9,7 @@ import (
 
 func TestOASGen(t *testing.T) {
 	gen := new(defaultOasGenerator)
-	gen.dbConn = GetFakeDBConn("\n", "\n")
+	gen.dbConn = GetFakeDBConn(`{"startedDateTime": "20000101","request": {"url": "https://host/path", "method": "GET"}, "response": {"status": 200}}`)
 	gen.serviceSpecs = &sync.Map{}
 
 	e := new(har.Entry)

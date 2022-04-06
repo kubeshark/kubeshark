@@ -20,11 +20,11 @@ import (
 	"github.com/up9inc/mizu/agent/pkg/har"
 )
 
-func GetFakeDBConn(send string, recv string) *basenine.Connection {
+func GetFakeDBConn(send string) *basenine.Connection {
 	dummyConn := new(basenine.Connection)
 	dummyConn.Conn = FakeConn{
 		sendBuffer:    bytes.NewBufferString(send),
-		receiveBuffer: bytes.NewBufferString(recv),
+		receiveBuffer: bytes.NewBufferString(""),
 	}
 	return dummyConn
 }
@@ -61,7 +61,7 @@ func TestEntries(t *testing.T) {
 		t.FailNow()
 	}
 
-	dummyConn := GetFakeDBConn("\n", "\n")
+	dummyConn := GetFakeDBConn("\n")
 	gen := NewDefaultOasGenerator(dummyConn)
 	gen.serviceSpecs = new(sync.Map)
 	loadStartingOAS("test_artifacts/catalogue.json", "catalogue", gen.serviceSpecs)
@@ -136,7 +136,7 @@ func TestEntries(t *testing.T) {
 }
 
 func TestFileSingle(t *testing.T) {
-	dummyConn := GetFakeDBConn("\n", "\n")
+	dummyConn := GetFakeDBConn("\n")
 	gen := NewDefaultOasGenerator(dummyConn)
 	gen.serviceSpecs = new(sync.Map)
 	// loadStartingOAS()
@@ -227,7 +227,7 @@ func loadStartingOAS(file string, label string, specs *sync.Map) {
 }
 
 func TestEntriesNegative(t *testing.T) {
-	dummyConn := GetFakeDBConn("\n", "\n")
+	dummyConn := GetFakeDBConn("\n")
 	gen := NewDefaultOasGenerator(dummyConn)
 	gen.serviceSpecs = new(sync.Map)
 	files := []string{"invalid"}
@@ -239,7 +239,7 @@ func TestEntriesNegative(t *testing.T) {
 }
 
 func TestEntriesPositive(t *testing.T) {
-	dummyConn := GetFakeDBConn("\n", "\n")
+	dummyConn := GetFakeDBConn("\n")
 	gen := NewDefaultOasGenerator(dummyConn)
 	gen.serviceSpecs = new(sync.Map)
 	files := []string{"test_artifacts/params.har"}
