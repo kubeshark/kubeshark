@@ -15,6 +15,7 @@ import { GraphData, ServiceMapGraph } from "./ServiceMapModalTypes"
 import { ResizableBox } from "react-resizable"
 import "react-resizable/css/styles.css"
 import { Utils } from "../../helpers/Utils";
+import { TOAST_CONTAINER_ID } from "../../configs/Consts";
 
 const modalStyle = {
     position: 'absolute',
@@ -89,7 +90,7 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
 
             setGraphData(newGraphData)
         } catch (ex) {
-            toast.error("An error occurred while loading Mizu Service Map, see console for mode details");
+            toast.error("An error occurred while loading Mizu Service Map, see console for mode details", { containerId: TOAST_CONTAINER_ID });
             console.error(ex);
         } finally {
             setIsLoading(false)
@@ -127,12 +128,12 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
 
         const resolved = mapToKeyValForFilter(serviceMapApiData.nodes?.filter(x => x.resolved))
         const unResolved = mapToKeyValForFilter(serviceMapApiData.nodes?.filter(x => !x.resolved))
-        return [...resolved, ...unResolved]
+        return [...resolved, ...unResolved].map(x => x.key)
     }, [serviceMapApiData])
 
     const filterServiceMap = (newProtocolsFilters?: any[], newServiceFilters?: string[]) => {
         const filterProt = newProtocolsFilters || filteredProtocols
-        const filterService = newServiceFilters || filteredServices || getServicesForFilter.map(x => x.key)
+        const filterService = newServiceFilters || filteredServices || getServicesForFilter
         setFilteredProtocols(filterProt)
         setFilteredServices(filterService)
         const newGraphData: GraphData = {
@@ -143,9 +144,10 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
     }
 
     useEffect(() => {
-        const resolvedServices = getServicesForFilter.map(x => x.key).filter(serviceName => !Utils.isIpAddress(serviceName))
-        setFilteredServices(resolvedServices)
-        filterServiceMap(filteredProtocols, resolvedServices)
+        let mergeWithPrev = getServicesForFilter.filter(serviceName => !Utils.isIpAddress(serviceName))
+        if (filteredServices.length > 0)
+            mergeWithPrev = mergeWithPrev.filter(s => filteredServices.includes(s))
+        filterServiceMap(filteredProtocols, mergeWithPrev)
     }, [getServicesForFilter])
 
     useEffect(() => {
