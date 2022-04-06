@@ -9,6 +9,7 @@ import (
 
 func TestOASGen(t *testing.T) {
 	gen := new(defaultOasGenerator)
+	gen.dbConn = GetFakeDBConn(`{"startedDateTime": "20000101","request": {"url": "https://host/path", "method": "GET"}, "response": {"status": 200}}`)
 	gen.serviceSpecs = &sync.Map{}
 
 	e := new(har.Entry)
@@ -21,6 +22,7 @@ func TestOASGen(t *testing.T) {
 		Destination: "some",
 		Entry:       *e,
 	}
+	gen.Start()
 	gen.handleHARWithSource(ews)
 	g, ok := gen.serviceSpecs.Load("some")
 	if !ok {
@@ -33,4 +35,9 @@ func TestOASGen(t *testing.T) {
 	}
 	specText, _ := json.Marshal(spec)
 	t.Log(string(specText))
+
+	if !gen.IsStarted() {
+		t.Errorf("Should be started")
+	}
+	gen.Stop()
 }
