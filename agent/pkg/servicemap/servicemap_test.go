@@ -403,10 +403,10 @@ func (s *ServiceMapEnabledSuite) TestServiceMap() {
 	assert.Equal(0, status.EdgeCount)
 
 	// Nodes after reset
-	assert.Equal([]ServiceMapNode(nil), nodes)
+	assert.Equal([]ServiceMapNode{}, nodes)
 
 	// Edges after reset
-	assert.Equal([]ServiceMapEdge(nil), edges)
+	assert.Equal([]ServiceMapEdge{}, edges)
 }
 
 func TestServiceMapSuite(t *testing.T) {
