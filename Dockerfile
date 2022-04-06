@@ -92,6 +92,7 @@ ADD https://github.com/up9inc/basenine/releases/download/v0.7.0/basenine_linux_$
 
 RUN shasum -a 256 -c basenine_linux_"${GOARCH}".sha256 && \
     chmod +x ./basenine_linux_"${GOARCH}" && \
+    mv ./basenine_linux_"${GOARCH}" ./basenine
 
 ### The shipped image
 ARG TARGETARCH=amd64
