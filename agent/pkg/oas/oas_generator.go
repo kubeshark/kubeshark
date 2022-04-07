@@ -47,11 +47,13 @@ func (g *defaultOasGenerator) Start() {
 	if g.started {
 		return
 	}
+
 	ctx, cancel := context.WithCancel(context.Background())
 	g.cancel = cancel
 	g.ctx = ctx
 	g.serviceSpecs = &sync.Map{}
 	g.started = true
+
 	go g.runGenerator()
 }
 
@@ -59,6 +61,8 @@ func (g *defaultOasGenerator) Stop() {
 	if !g.started {
 		return
 	}
+
+	g.dbConn.Close()
 	g.cancel()
 	g.reset()
 	g.started = false
@@ -69,7 +73,7 @@ func (g *defaultOasGenerator) IsStarted() bool {
 }
 
 func (g *defaultOasGenerator) runGenerator() {
-	// Make []byte channels to recieve the data and the meta
+	// Make []byte channels to receive the data and the meta
 	dataChan := make(chan []byte)
 	metaChan := make(chan []byte)
 
@@ -80,6 +84,8 @@ func (g *defaultOasGenerator) runGenerator() {
 		select {
 		case <-g.ctx.Done():
 			logger.Log.Infof("OAS Generator was canceled")
+			close(dataChan)
+			close(metaChan)
 			return
 
 		case metaBytes, ok := <-metaChan:
