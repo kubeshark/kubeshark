@@ -49,6 +49,7 @@ const protocols = [
     { key: "http", value: "HTTP", component: <LegentLabel color="#205cf5" name="HTTP" /> },
     { key: "http/2", value: "HTTP/2", component: <LegentLabel color='#244c5a' name="HTTP/2" /> },
     { key: "grpc", value: "gRPC", component: <LegentLabel color='#244c5a' name="gRPC" /> },
+    { key: "graphql", value: "GraphQL", component: <LegentLabel color='#e10098' name="GraphQL" /> },
     { key: "amqp", value: "AMQP", component: <LegentLabel color='#ff6600' name="AMQP" /> },
     { key: "kafka", value: "KAFKA", component: <LegentLabel color='#000000' name="KAFKA" /> },
     { key: "redis", value: "REDIS", component: <LegentLabel color='#a41e11' name="REDIS" /> },]
