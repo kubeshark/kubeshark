@@ -19,7 +19,7 @@ var (
 )
 
 type OasGenerator interface {
-	Start()
+	Start(conn *basenine.Connection)
 	Stop()
 	IsStarted() bool
 	GetServiceSpecs() *sync.Map
