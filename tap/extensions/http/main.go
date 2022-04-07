@@ -248,11 +248,6 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 	reqDetails["_queryStringMerged"] = mapSliceMergeRepeatedKeys(reqDetails["_queryString"].([]interface{}))
 	reqDetails["queryString"] = mapSliceRebuildAsMap(reqDetails["_queryStringMerged"].([]interface{}))
 
-	statusCode := int(resDetails["status"].(float64))
-	if item.Protocol.Abbreviation == "gRPC" {
-		resDetails["statusText"] = grpcStatusCodes[statusCode]
-	}
-
 	elapsedTime := item.Pair.Response.CaptureTime.Sub(item.Pair.Request.CaptureTime).Round(time.Millisecond).Milliseconds()
 	if elapsedTime < 0 {
 		elapsedTime = 0
