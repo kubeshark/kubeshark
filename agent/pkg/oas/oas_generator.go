@@ -48,10 +48,19 @@ func (g *defaultOasGenerator) Start() {
 		return
 	}
 
+	if g.dbConn == nil {
+		newConn, err := basenine.NewConnection(shared.BasenineHost, shared.BaseninePort)
+		if err != nil {
+			panic(err)
+		}
+		g.dbConn = newConn
+	}
+
 	ctx, cancel := context.WithCancel(context.Background())
 	g.cancel = cancel
 	g.ctx = ctx
 	g.serviceSpecs = &sync.Map{}
+
 	g.started = true
 
 	go g.runGenerator()
@@ -62,9 +71,14 @@ func (g *defaultOasGenerator) Stop() {
 		return
 	}
 
-	g.dbConn.Close()
+	if g.dbConn != nil {
+		g.dbConn.Close()
+		g.dbConn = nil
+	}
+
 	g.cancel()
 	g.reset()
+
 	g.started = false
 }
 
