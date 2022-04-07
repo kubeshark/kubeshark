@@ -53,7 +53,8 @@ func (g *defaultOasGenerator) Start(conn *basenine.Connection) {
 			logger.Log.Infof("Creating new DB connection for OAS generator to address %s:%s", shared.BasenineHost, shared.BaseninePort)
 			newConn, err := basenine.NewConnection(shared.BasenineHost, shared.BaseninePort)
 			if err != nil {
-				panic(err)
+				logger.Log.Error("Error connecting to DB for OAS generator, err: %v", err)
+				return
 			}
 
 			conn = newConn
