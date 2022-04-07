@@ -159,9 +159,7 @@ func (g *defaultOasGenerator) getGen(dest string, urlStr string) *SpecGen {
 	val, found := g.serviceSpecs.Load(dest)
 	var gen *SpecGen
 	if !found {
-		serviceAddress := u.Scheme + "://" + dest
-		logger.Log.Infof("Create SpecGen for service %s", serviceAddress)
-		gen = NewGen(serviceAddress)
+		gen = NewGen(u.Scheme + "://" + dest)
 		g.serviceSpecs.Store(dest, gen)
 	} else {
 		gen = val.(*SpecGen)
