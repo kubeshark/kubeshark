@@ -22,9 +22,8 @@ type OasGenerator interface {
 	Start()
 	Stop()
 	IsStarted() bool
-	Reset()
 	GetServiceSpecs() *sync.Map
-	SetEntriesQuery(query string)
+	SetEntriesQuery(query string) bool
 }
 
 type defaultOasGenerator struct {
@@ -61,7 +60,7 @@ func (g *defaultOasGenerator) Stop() {
 		return
 	}
 	g.cancel()
-	g.Reset()
+	g.reset()
 	g.started = false
 }
 
@@ -168,7 +167,7 @@ func (g *defaultOasGenerator) getGen(dest string, urlStr string) *SpecGen {
 	return gen
 }
 
-func (g *defaultOasGenerator) Reset() {
+func (g *defaultOasGenerator) reset() {
 	g.serviceSpecs = &sync.Map{}
 }
 
@@ -176,8 +175,10 @@ func (g *defaultOasGenerator) GetServiceSpecs() *sync.Map {
 	return g.serviceSpecs
 }
 
-func (g *defaultOasGenerator) SetEntriesQuery(query string) {
+func (g *defaultOasGenerator) SetEntriesQuery(query string) bool {
+	changed := g.entriesQuery != query
 	g.entriesQuery = query
+	return changed
 }
 
 func NewDefaultOasGenerator(conn *basenine.Connection) *defaultOasGenerator {
