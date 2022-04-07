@@ -35,25 +35,31 @@ type defaultOasGenerator struct {
 	entriesQuery string
 }
 
-func GetDefaultOasGeneratorInstance(conn *basenine.Connection) *defaultOasGenerator {
+func GetDefaultOasGeneratorInstance() *defaultOasGenerator {
 	syncOnce.Do(func() {
-		instance = NewDefaultOasGenerator(conn)
+		instance = NewDefaultOasGenerator()
 		logger.Log.Debug("OAS Generator Initialized")
 	})
 	return instance
 }
 
-func (g *defaultOasGenerator) Start() {
+func (g *defaultOasGenerator) Start(conn *basenine.Connection) {
 	if g.started {
 		return
 	}
 
 	if g.dbConn == nil {
-		newConn, err := basenine.NewConnection(shared.BasenineHost, shared.BaseninePort)
-		if err != nil {
-			panic(err)
+		if conn == nil {
+			logger.Log.Infof("Creating new DB connection for OAS generator to address %s:%s", shared.BasenineHost, shared.BaseninePort)
+			newConn, err := basenine.NewConnection(shared.BasenineHost, shared.BaseninePort)
+			if err != nil {
+				panic(err)
+			}
+
+			conn = newConn
 		}
-		g.dbConn = newConn
+
+		g.dbConn = conn
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -201,21 +207,12 @@ func (g *defaultOasGenerator) SetEntriesQuery(query string) bool {
 	return changed
 }
 
-func NewDefaultOasGenerator(conn *basenine.Connection) *defaultOasGenerator {
-	if conn == nil {
-		logger.Log.Infof("Creating new DB connection for OAS generator to address %s:%s", shared.BasenineHost, shared.BaseninePort)
-		newConn, err := basenine.NewConnection(shared.BasenineHost, shared.BaseninePort)
-		if err != nil {
-			panic(err)
-		}
-		conn = newConn
-	}
-
+func NewDefaultOasGenerator() *defaultOasGenerator {
 	return &defaultOasGenerator{
 		started:      false,
 		ctx:          nil,
 		cancel:       nil,
 		serviceSpecs: nil,
-		dbConn:       conn,
+		dbConn:       nil,
 	}
 }

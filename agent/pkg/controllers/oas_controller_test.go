@@ -58,12 +58,12 @@ func getRecorderAndContext() (*httptest.ResponseRecorder, *gin.Context) {
 		receiveBuffer: bytes.NewBufferString("\n"),
 	}
 	dependency.RegisterGenerator(dependency.OasGeneratorDependency, func() interface{} {
-		return oas.GetDefaultOasGeneratorInstance(dummyConn)
+		return oas.GetDefaultOasGeneratorInstance()
 	})
 
 	recorder := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(recorder)
-	oas.GetDefaultOasGeneratorInstance(dummyConn).Start()
-	oas.GetDefaultOasGeneratorInstance(dummyConn).GetServiceSpecs().Store("some", oas.NewGen("some"))
+	oas.GetDefaultOasGeneratorInstance().Start(dummyConn)
+	oas.GetDefaultOasGeneratorInstance().GetServiceSpecs().Store("some", oas.NewGen("some"))
 	return recorder, c
 }
