@@ -47,12 +47,12 @@ const LegentLabel: React.FC<LegentLabelProps> = ({ color, name }) => {
 }
 
 const protocols = [
-    { key: "http", value: "HTTP", component: <LegentLabel color="#205cf5" name="HTTP" /> },
-    { key: "http/2", value: "HTTP/2", component: <LegentLabel color='#244c5a' name="HTTP/2" /> },
-    { key: "grpc", value: "gRPC", component: <LegentLabel color='#244c5a' name="gRPC" /> },
-    { key: "amqp", value: "AMQP", component: <LegentLabel color='#ff6600' name="AMQP" /> },
-    { key: "kafka", value: "KAFKA", component: <LegentLabel color='#000000' name="KAFKA" /> },
-    { key: "redis", value: "REDIS", component: <LegentLabel color='#a41e11' name="REDIS" /> },]
+    { key: "HTTP", value: "HTTP", component: <LegentLabel color="#205cf5" name="HTTP" /> },
+    { key: "HTTP/2", value: "HTTP/2", component: <LegentLabel color='#244c5a' name="HTTP/2" /> },
+    { key: "gRPC", value: "gRPC", component: <LegentLabel color='#244c5a' name="gRPC" /> },
+    { key: "AMQP", value: "AMQP", component: <LegentLabel color='#ff6600' name="AMQP" /> },
+    { key: "KAFKA", value: "KAFKA", component: <LegentLabel color='#000000' name="KAFKA" /> },
+    { key: "REDIS", value: "REDIS", component: <LegentLabel color='#a41e11' name="REDIS" /> },]
 
 
 interface ServiceMapModalProps {
@@ -138,7 +138,7 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
         setFilteredServices(filterService)
         const newGraphData: GraphData = {
             nodes: serviceMapApiData.nodes?.map(mapNodesDatatoGraph).filter(node => filterService.includes(node.label)),
-            edges: serviceMapApiData.edges?.filter(edge => filterProt.includes(edge.protocol.name)).map(mapEdgesDatatoGraph)
+            edges: serviceMapApiData.edges?.filter(edge => filterProt.includes(edge.protocol.abbr)).map(mapEdgesDatatoGraph)
         }
         setGraphData(newGraphData);
     }
