@@ -127,6 +127,9 @@ func (g *defaultOasGenerator) runGenerator() {
 			if err != nil {
 				continue
 			}
+
+			logger.Log.Infof("->>> New entry: %v", e.Protocol.Name)
+
 			g.handleEntry(e)
 		}
 	}
