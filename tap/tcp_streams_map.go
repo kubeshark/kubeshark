@@ -37,7 +37,7 @@ func (streamMap *tcpStreamMap) nextId() int64 {
 func (streamMap *tcpStreamMap) closeTimedoutTcpStreamChannels() {
 	tcpStreamChannelTimeout := GetTcpChannelTimeoutMs()
 	for {
-		time.Sleep(10 * time.Millisecond)
+		time.Sleep(1000 * time.Millisecond)
 		_debug.FreeOSMemory()
 		streamMap.streams.Range(func(key interface{}, value interface{}) bool {
 			streamWrapper := value.(*tcpStreamWrapper)
