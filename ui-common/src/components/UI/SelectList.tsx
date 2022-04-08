@@ -21,18 +21,10 @@ const SelectList: React.FC<Props> = ({ items, tableName, checkedValues = [], mul
     const noItemsMessage = "No items to show";
     const [headerChecked, setHeaderChecked] = useState(false)
 
-
     const filteredValues = useMemo(() => {
         return items.filter((listValue) => listValue?.value?.includes(searchValue));
     }, [items, searchValue])
 
-    const enabledItemsLength = useMemo(() => {
-        if (searchValue === "")
-            return items.filter(item => !item.disabled).length
-        else
-            // return filteredValues.map(x => x.key).filter(x => checkedValues.includes(x)).length
-            return filteredValues.length
-    }, [items, filteredValues, checkedValues]);
 
     const toggleValue = (checkedKey) => {
         if (!multiSelect) {
@@ -43,43 +35,17 @@ const SelectList: React.FC<Props> = ({ items, tableName, checkedValues = [], mul
         else {
             const newCheckedValues = [...checkedValues];
             let index = newCheckedValues.indexOf(checkedKey);
+
             if (index > -1)
                 newCheckedValues.splice(index, 1);
             else
                 newCheckedValues.push(checkedKey);
+
             setCheckedValues(newCheckedValues);
-            if (filteredValues.every(ai => newCheckedValues.includes(ai))) {
-                debugger
-                setHeaderChecked(true);
-            }
+            const isSeatHeader = filteredValues.map(x => x.key).every(ai => newCheckedValues.includes(ai))
+            setHeaderChecked(isSeatHeader);
         }
     }
-
-    useEffect(() => {
-        if (headerChecked) {
-            const newVals = [...filteredValues].map(x => x.key)
-            const mappedFiltered = filteredValues.map(x => x.key)
-            const intersectedChecked = checkedValues.filter(x => !mappedFiltered.includes(x))
-            setCheckedValues(newVals.concat(intersectedChecked))
-        }
-        else {
-            console.log("checkedValues", [...checkedValues], "table")
-            console.log("filteredValues", [...filteredValues.map(x => x.key)])
-            console.dir([...checkedValues].filter(x => !filteredValues.map(x => x.key).includes(x)))
-            const mappedFiltered = filteredValues.map(x => x.key)
-            let newChecked = checkedValues
-            if (searchValue) {
-                newChecked = [...checkedValues].filter(x => mappedFiltered.includes(x))
-                setCheckedValues(newChecked)
-            }
-            else {
-                setCheckedValues([])
-
-            }
-
-
-        }
-    }, [headerChecked])
 
     useEffect(() => {
         if (filteredValues.map(x => x.key).every(ai => checkedValues.includes(ai)) && searchValue) {
@@ -90,33 +56,18 @@ const SelectList: React.FC<Props> = ({ items, tableName, checkedValues = [], mul
         }
     }, [searchValue])
 
-    const toggleAll = useCallback((isChecked) => {
-        const shouldCheckAll = isChecked;
-        const newCheckedValues = [...checkedValues];
-        setHeaderChecked(shouldCheckAll)
-        if (shouldCheckAll) {
-            const filteredKeys = filteredValues.map(x => x.key)
-            //const removedFiltredValues = [...new Set(filteredKeys.concat(newCheckedValues))];
-            //setCheckedValues(filteredKeys);
-            // setHeaderChecked(shouldCheckAll)
-        }
-        else {
-            // filteredValues.forEach((obj) => {
-            //     if (!obj.disabled && !newCheckedValues.includes(obj.key))
-            //         newCheckedValues.push(obj.key);
-            // })
-            // setCheckedValues(newCheckedValues);
-        }
-    }, [searchValue, filteredValues])
+    const toggleAll = useCallback((isCheckAll) => {
+        setHeaderChecked(isCheckAll)
+        const filteredValuesKeys = [...filteredValues].map(x => x.key)
+        let newChecked = checkedValues.filter(x => !filteredValuesKeys.includes(x))
 
-    // const isHeaderChecked = useCallback(() => {
-    //     if (searchValue === "") {
-    //         setHeaderChecked(enabledItemsLength === checkedValues.length)
-    //     }
-    //     else {
-    //         setHeaderChecked(enabledItemsLength === filteredValues.length)
-    //     }
-    // }, [searchValue, enabledItemsLength, checkedValues])
+        if (isCheckAll) {
+            const intersectedChecked = checkedValues.filter(x => !filteredValuesKeys.includes(x))
+            newChecked = filteredValuesKeys.concat(intersectedChecked)
+        }
+
+        setCheckedValues(newChecked)
+    }, [searchValue, filteredValues])
 
     const dataFieldFunc = (listValue) => listValue.component ? listValue.component :
         <span className={styles.nowrap} title={listValue.value}>
