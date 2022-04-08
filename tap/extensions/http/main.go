@@ -74,12 +74,12 @@ var grpcProtocol api.Protocol = api.Protocol{
 var graphQL1Protocol api.Protocol = api.Protocol{
 	Name:            "http",
 	LongName:        "Hypertext Transfer Protocol -- HTTP/1.1 [ GraphQL over HTTP/1.1 ]",
-	Abbreviation:    "GraphQL",
-	Macro:           "graphql",
+	Abbreviation:    "GQL",
+	Macro:           "gql",
 	Version:         "1.1",
 	BackgroundColor: "#e10098",
 	ForegroundColor: "#ffffff",
-	FontSize:        9,
+	FontSize:        12,
 	ReferenceLink:   "https://graphql.org/learn/serving-over-http/",
 	Ports:           []string{"80", "443", "8080"},
 	Priority:        0,
@@ -88,12 +88,12 @@ var graphQL1Protocol api.Protocol = api.Protocol{
 var graphQL2Protocol api.Protocol = api.Protocol{
 	Name:            "http",
 	LongName:        "Hypertext Transfer Protocol Version 2 (HTTP/2) [ GraphQL over HTTP/2 ]",
-	Abbreviation:    "GraphQL",
-	Macro:           "graphql",
+	Abbreviation:    "GQL",
+	Macro:           "gql",
 	Version:         "2.0",
 	BackgroundColor: "#e10098",
 	ForegroundColor: "#ffffff",
-	FontSize:        9,
+	FontSize:        12,
 	ReferenceLink:   "https://graphql.org/learn/serving-over-http/",
 	Ports:           []string{"80", "443", "8080", "50051"},
 	Priority:        0,
@@ -514,10 +514,10 @@ func (d dissecting) Represent(request map[string]interface{}, response map[strin
 
 func (d dissecting) Macros() map[string]string {
 	return map[string]string{
-		`http`:    fmt.Sprintf(`proto.name == "%s" and proto.version.startsWith("%c")`, http11protocol.Name, http11protocol.Version[0]),
-		`http2`:   fmt.Sprintf(`proto.name == "%s" and proto.version == "%s"`, http11protocol.Name, http2Protocol.Version),
-		`grpc`:    fmt.Sprintf(`proto.name == "%s" and proto.version == "%s" and proto.macro == "%s"`, http11protocol.Name, grpcProtocol.Version, grpcProtocol.Macro),
-		`graphql`: fmt.Sprintf(`proto.name == "%s" and proto.macro == "%s"`, graphQL1Protocol.Name, graphQL1Protocol.Macro),
+		`http`:  fmt.Sprintf(`proto.name == "%s" and proto.version.startsWith("%c")`, http11protocol.Name, http11protocol.Version[0]),
+		`http2`: fmt.Sprintf(`proto.name == "%s" and proto.version == "%s"`, http11protocol.Name, http2Protocol.Version),
+		`grpc`:  fmt.Sprintf(`proto.name == "%s" and proto.version == "%s" and proto.macro == "%s"`, http11protocol.Name, grpcProtocol.Version, grpcProtocol.Macro),
+		`gql`:   fmt.Sprintf(`proto.name == "%s" and proto.macro == "%s"`, graphQL1Protocol.Name, graphQL1Protocol.Macro),
 	}
 }
 
