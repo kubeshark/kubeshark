@@ -25,6 +25,9 @@ const SelectList: React.FC<Props> = ({ items, tableName, checkedValues = [], mul
         return items.filter((listValue) => listValue?.value?.includes(searchValue));
     }, [items, searchValue])
 
+    const filteredValuesKeys = useMemo(() => {
+        return filteredValues.map(x => x.key)
+    }, [filteredValues])
 
     const toggleValue = (checkedKey) => {
         if (!multiSelect) {
@@ -42,13 +45,13 @@ const SelectList: React.FC<Props> = ({ items, tableName, checkedValues = [], mul
                 newCheckedValues.push(checkedKey);
 
             setCheckedValues(newCheckedValues);
-            const isSeatHeader = filteredValues.map(x => x.key).every(ai => newCheckedValues.includes(ai))
+            const isSeatHeader = filteredValuesKeys.every(ai => newCheckedValues.includes(ai))
             setHeaderChecked(isSeatHeader);
         }
     }
 
     useEffect(() => {
-        if (filteredValues.map(x => x.key).every(ai => checkedValues.includes(ai)) && searchValue) {
+        if (filteredValuesKeys.every(ai => checkedValues.includes(ai)) && filteredValuesKeys.length > 0) {
             setHeaderChecked(true);
         }
         else {
@@ -58,13 +61,11 @@ const SelectList: React.FC<Props> = ({ items, tableName, checkedValues = [], mul
 
     const toggleAll = useCallback((isCheckAll) => {
         setHeaderChecked(isCheckAll)
-        const filteredValuesKeys = [...filteredValues].map(x => x.key)
         let newChecked = checkedValues.filter(x => !filteredValuesKeys.includes(x))
 
         if (isCheckAll) {
             const disabledItems = items.filter(i => i.disabled).map(x => x.key)
-            const intersectedChecked = checkedValues.filter(x => !filteredValuesKeys.includes(x))
-            newChecked = filteredValuesKeys.concat(intersectedChecked).filter(x => !disabledItems.includes(x))
+            newChecked = filteredValuesKeys.concat([...newChecked]).filter(x => !disabledItems.includes(x))
         }
 
         setCheckedValues(newChecked)
