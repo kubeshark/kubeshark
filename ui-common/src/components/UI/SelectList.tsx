@@ -62,8 +62,9 @@ const SelectList: React.FC<Props> = ({ items, tableName, checkedValues = [], mul
         let newChecked = checkedValues.filter(x => !filteredValuesKeys.includes(x))
 
         if (isCheckAll) {
+            const disabledItems = items.filter(i => i.disabled).map(x => x.key)
             const intersectedChecked = checkedValues.filter(x => !filteredValuesKeys.includes(x))
-            newChecked = filteredValuesKeys.concat(intersectedChecked)
+            newChecked = filteredValuesKeys.concat(intersectedChecked).filter(x => !disabledItems.includes(x))
         }
 
         setCheckedValues(newChecked)
