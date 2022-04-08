@@ -37,9 +37,9 @@ export function getClassification(statusCode: number): string {
 
     // 1 - 16 HTTP/2 (gRPC) status codes
     // 2xx - 5xx HTTP/1.x status codes
-    if ((statusCode >= 200 && statusCode <= 399) || statusCode === 0) {
+    if (statusCode >= 200 && statusCode <= 399) {
         classification = StatusCodeClassification.SUCCESS;
-    } else if (statusCode >= 400 || (statusCode >= 1 && statusCode <= 16)) {
+    } else if (statusCode >= 400) {
         classification = StatusCodeClassification.FAILURE;
     }
 
