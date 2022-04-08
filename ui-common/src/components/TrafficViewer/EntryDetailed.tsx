@@ -89,12 +89,13 @@ const EntryTitle: React.FC<any> = ({ protocol, data, elapsedTime }) => {
     </div>;
 };
 
-const EntrySummary: React.FC<any> = ({ entry }) => {
+const EntrySummary: React.FC<any> = ({ entry, namespace }) => {
     return <EntryItem
         key={`entry-${entry.id}`}
         entry={entry}
         style={{}}
         headingMode={true}
+        namespace={namespace}
     />;
 };
 
@@ -140,7 +141,7 @@ export const EntryDetailed = () => {
             data={entryData.data}
             elapsedTime={entryData.data.elapsedTime}
         />}
-        {!isLoading && entryData && <EntrySummary entry={entryData.base} />}
+        {!isLoading && entryData && <EntrySummary entry={entryData.base} namespace={entryData.data.namespace} />}
         <React.Fragment>
             {!isLoading && entryData && <EntryViewer
                 representation={entryData.representation}

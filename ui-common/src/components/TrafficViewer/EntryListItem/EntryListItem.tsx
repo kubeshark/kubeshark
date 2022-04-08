@@ -52,6 +52,7 @@ interface EntryProps {
     entry: Entry;
     style: object;
     headingMode: boolean;
+    namespace?: string;
 }
 
 enum CaptureTypes {
@@ -62,7 +63,7 @@ enum CaptureTypes {
     Ebpf = "ebpf",
 }
 
-export const EntryItem: React.FC<EntryProps> = ({entry, style, headingMode}) => {
+export const EntryItem: React.FC<EntryProps> = ({entry, style, headingMode, namespace}) => {
 
     const [focusedEntryId, setFocusedEntryId] = useRecoilState(focusedEntryIdAtom);
     const [queryState, setQuery] = useRecoilState(queryAtom);
@@ -224,6 +225,19 @@ export const EntryItem: React.FC<EntryProps> = ({entry, style, headingMode}) => 
                 : ""
             }
             <div className={styles.separatorRight}>
+                {headingMode ? <Queryable
+                        query={`namespace == "${namespace}"`}
+                        displayIconOnMouseOver={true}
+                        flipped={true}
+                        iconStyle={{marginRight: "16px"}}
+                >
+                    <span
+                        className={`${styles.tcpInfo} ${styles.ip}`}
+                        title="Namespace"
+                    >
+                        {namespace}
+                    </span>
+                </Queryable> : null}
                 <Queryable
                         query={`src.ip == "${entry.src.ip}"`}
                         displayIconOnMouseOver={true}
