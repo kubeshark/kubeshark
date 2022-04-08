@@ -224,7 +224,8 @@ func (s *defaultServiceMap) GetStatus() ServiceMapStatus {
 }
 
 func (s *defaultServiceMap) GetNodes() []ServiceMapNode {
-	var nodes []ServiceMapNode
+	nodes := []ServiceMapNode{}
+
 	for i, n := range s.graph.Nodes {
 		nodes = append(nodes, ServiceMapNode{
 			Id:       n.id,
@@ -234,11 +235,13 @@ func (s *defaultServiceMap) GetNodes() []ServiceMapNode {
 			Count:    n.count,
 		})
 	}
+
 	return nodes
 }
 
 func (s *defaultServiceMap) GetEdges() []ServiceMapEdge {
-	var edges []ServiceMapEdge
+	edges := []ServiceMapEdge{}
+
 	for u, m := range s.graph.Edges {
 		for v := range m {
 			for _, p := range s.graph.Edges[u][v].data {
@@ -263,6 +266,7 @@ func (s *defaultServiceMap) GetEdges() []ServiceMapEdge {
 			}
 		}
 	}
+
 	return edges
 }
 

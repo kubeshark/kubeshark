@@ -28,26 +28,6 @@ const protoMinorHTTP2 = 0
 
 var maxHTTP2DataLen = 1 * 1024 * 1024 // 1MB
 
-var grpcStatusCodes = []string{
-	"OK",
-	"CANCELLED",
-	"UNKNOWN",
-	"INVALID_ARGUMENT",
-	"DEADLINE_EXCEEDED",
-	"NOT_FOUND",
-	"ALREADY_EXISTS",
-	"PERMISSION_DENIED",
-	"RESOURCE_EXHAUSTED",
-	"FAILED_PRECONDITION",
-	"ABORTED",
-	"OUT_OF_RANGE",
-	"UNIMPLEMENTED",
-	"INTERNAL",
-	"UNAVAILABLE",
-	"DATA_LOSS",
-	"UNAUTHENTICATED",
-}
-
 type messageFragment struct {
 	headers []hpack.HeaderField
 	data    []byte
@@ -142,18 +122,8 @@ func (ga *Http2Assembler) readMessage() (streamID uint32, messageHTTP1 interface
 
 	// gRPC detection
 	grpcStatus := headersHTTP1.Get("Grpc-Status")
-	if grpcStatus != "" {
+	if grpcStatus != "" || strings.Contains(headersHTTP1.Get("Content-Type"), "application/grpc") {
 		isGrpc = true
-		status = grpcStatus
-	}
-
-	if strings.Contains(headersHTTP1.Get("Content-Type"), "application/grpc") {
-		isGrpc = true
-		grpcPath := headersHTTP1.Get(":path")
-		pathSegments := strings.Split(grpcPath, "/")
-		if len(pathSegments) > 0 {
-			method = pathSegments[len(pathSegments)-1]
-		}
 	}
 
 	if method != "" {
