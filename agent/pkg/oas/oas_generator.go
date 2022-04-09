@@ -20,46 +20,57 @@ var (
 )
 
 type OasGenerator interface {
-	Start()
+	Start(conn *basenine.Connection)
 	Stop()
 	IsStarted() bool
-	Reset()
 	GetServiceSpecs() *sync.Map
+	SetEntriesQuery(query string) bool
 }
 
 type defaultOasGenerator struct {
-	started      bool
-	ctx          context.Context
-	cancel       context.CancelFunc
-	serviceSpecs *sync.Map
-	dbConn       *basenine.Connection
+	started       bool
+	ctx           context.Context
+	cancel        context.CancelFunc
+	serviceSpecs  *sync.Map
+	dbConn        *basenine.Connection
+	entriesQuery string
 }
 
-func GetDefaultOasGeneratorInstance(conn *basenine.Connection) *defaultOasGenerator {
+func GetDefaultOasGeneratorInstance() *defaultOasGenerator {
 	syncOnce.Do(func() {
-		if conn == nil {
-			c, err := basenine.NewConnection(shared.BasenineHost, shared.BaseninePort)
-			if err != nil {
-				panic(err)
-			}
-			conn = c
-		}
-
-		instance = NewDefaultOasGenerator(conn)
+		instance = NewDefaultOasGenerator()
 		logger.Log.Debug("OAS Generator Initialized")
 	})
 	return instance
 }
 
-func (g *defaultOasGenerator) Start() {
+func (g *defaultOasGenerator) Start(conn *basenine.Connection) {
 	if g.started {
 		return
 	}
+
+	if g.dbConn == nil {
+		if conn == nil {
+			logger.Log.Infof("Creating new DB connection for OAS generator to address %s:%s", shared.BasenineHost, shared.BaseninePort)
+			newConn, err := basenine.NewConnection(shared.BasenineHost, shared.BaseninePort)
+			if err != nil {
+				logger.Log.Error("Error connecting to DB for OAS generator, err: %v", err)
+				return
+			}
+
+			conn = newConn
+		}
+
+		g.dbConn = conn
+	}
+
 	ctx, cancel := context.WithCancel(context.Background())
 	g.cancel = cancel
 	g.ctx = ctx
 	g.serviceSpecs = &sync.Map{}
+
 	g.started = true
+
 	go g.runGenerator()
 }
 
@@ -67,8 +78,15 @@ func (g *defaultOasGenerator) Stop() {
 	if !g.started {
 		return
 	}
+
+	if g.dbConn != nil {
+		g.dbConn.Close()
+		g.dbConn = nil
+	}
+
 	g.cancel()
-	g.Reset()
+	g.reset()
+
 	g.started = false
 }
 
@@ -77,16 +95,19 @@ func (g *defaultOasGenerator) IsStarted() bool {
 }
 
 func (g *defaultOasGenerator) runGenerator() {
-	// Make []byte channels to recieve the data and the meta
+	// Make []byte channels to receive the data and the meta
 	dataChan := make(chan []byte)
 	metaChan := make(chan []byte)
 
-	g.dbConn.Query("", dataChan, metaChan)
+	logger.Log.Infof("Querying DB for OAS generator with query '%s'", g.entriesQuery)
+	g.dbConn.Query(g.entriesQuery, dataChan, metaChan)
 
 	for {
 		select {
 		case <-g.ctx.Done():
 			logger.Log.Infof("OAS Generator was canceled")
+			close(dataChan)
+			close(metaChan)
 			return
 
 		case metaBytes, ok := <-metaChan:
@@ -174,7 +195,7 @@ func (g *defaultOasGenerator) getGen(dest string, urlStr string) *SpecGen {
 	return gen
 }
 
-func (g *defaultOasGenerator) Reset() {
+func (g *defaultOasGenerator) reset() {
 	g.serviceSpecs = &sync.Map{}
 }
 
@@ -182,12 +203,18 @@ func (g *defaultOasGenerator) GetServiceSpecs() *sync.Map {
 	return g.serviceSpecs
 }
 
-func NewDefaultOasGenerator(c *basenine.Connection) *defaultOasGenerator {
+func (g *defaultOasGenerator) SetEntriesQuery(query string) bool {
+	changed := g.entriesQuery != query
+	g.entriesQuery = query
+	return changed
+}
+
+func NewDefaultOasGenerator() *defaultOasGenerator {
 	return &defaultOasGenerator{
 		started:      false,
 		ctx:          nil,
 		cancel:       nil,
 		serviceSpecs: nil,
-		dbConn:       c,
+		dbConn:       nil,
 	}
 }

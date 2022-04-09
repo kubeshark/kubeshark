@@ -161,7 +161,7 @@ type Entry struct {
 	Capture                Capture                `json:"capture"`
 	Source                 *TCP                   `json:"src"`
 	Destination            *TCP                   `json:"dst"`
-	Namespace              string                 `json:"namespace,omitempty"`
+	Namespace              string                 `json:"namespace"`
 	Outgoing               bool                   `json:"outgoing"`
 	Timestamp              int64                  `json:"timestamp"`
 	StartTime              time.Time              `json:"startTime"`
