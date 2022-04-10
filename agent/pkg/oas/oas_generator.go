@@ -182,7 +182,7 @@ func (g *defaultOasGenerator) handleHARWithSource(entryWSource *EntryWithSource)
 		return
 	}
 
-	logger.Log.Debugf("Handled entry %d as opId: %s", entryWSource.Id, opId) // TODO: set opId back to entry?
+	logger.Log.Debugf("Handled entry %s as opId: %s", entryWSource.Id, opId) // TODO: set opId back to entry?
 }
 
 func (g *defaultOasGenerator) getGen(dest string, urlStr string) *SpecGen {
