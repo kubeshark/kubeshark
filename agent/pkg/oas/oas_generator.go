@@ -50,8 +50,6 @@ func (g *defaultOasGenerator) Start(conn *basenine.Connection) {
 		return
 	}
 
-	g.dbMutex.Lock()
-	defer g.dbMutex.Unlock()
 	if g.dbConn == nil {
 		if conn == nil {
 			logger.Log.Infof("Creating new DB connection for OAS generator to address %s:%s", shared.BasenineHost, shared.BaseninePort)
@@ -66,7 +64,6 @@ func (g *defaultOasGenerator) Start(conn *basenine.Connection) {
 
 		g.dbConn = conn
 	}
-	g.dbMutex.Unlock()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	g.cancel = cancel
@@ -105,11 +102,13 @@ func (g *defaultOasGenerator) runGenerator() {
 	dataChan := make(chan []byte)
 	metaChan := make(chan []byte)
 
-	g.dbMutex.Lock()
-	defer g.dbMutex.Unlock()
-	logger.Log.Infof("Querying DB for OAS generator with query '%s'", g.entriesQuery)
-	g.dbConn.Query(g.entriesQuery, dataChan, metaChan)
-	g.dbMutex.Unlock()
+	func() {
+		g.dbMutex.Lock()
+		defer g.dbMutex.Unlock()
+		logger.Log.Infof("Querying DB for OAS generator with query '%s'", g.entriesQuery)
+		g.dbConn.Query(g.entriesQuery, dataChan, metaChan)
+		g.dbMutex.Unlock()
+	}()
 
 	for {
 		select {
