@@ -107,7 +107,6 @@ func (g *defaultOasGenerator) runGenerator() {
 		defer g.dbMutex.Unlock()
 		logger.Log.Infof("Querying DB for OAS generator with query '%s'", g.entriesQuery)
 		g.dbConn.Query(g.entriesQuery, dataChan, metaChan)
-		g.dbMutex.Unlock()
 	}()
 
 	for {
