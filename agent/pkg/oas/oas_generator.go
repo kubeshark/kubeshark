@@ -79,6 +79,10 @@ func (g *defaultOasGenerator) Stop() {
 	if !g.started {
 		return
 	}
+	g.started = false
+
+	g.cancel()
+	g.reset()
 
 	g.dbMutex.Lock()
 	defer g.dbMutex.Unlock()
@@ -86,11 +90,6 @@ func (g *defaultOasGenerator) Stop() {
 		g.dbConn.Close()
 		g.dbConn = nil
 	}
-
-	g.cancel()
-	g.reset()
-
-	g.started = false
 }
 
 func (g *defaultOasGenerator) IsStarted() bool {
