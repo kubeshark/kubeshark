@@ -128,7 +128,7 @@ export const EntriesList: React.FC<EntriesListProps> = ({
         case "entry":
           const entry = message.data;
           if (!focusedEntryId) setFocusedEntryId(entry.id.toString());
-          let newEntries = [...entries, entry];
+          const newEntries = [...entries, entry];
           if (newEntries.length > 10000) {
             setLeftOffTop(newEntries[0].id);
             newEntries.splice(0, newEntries.length - 10000)
