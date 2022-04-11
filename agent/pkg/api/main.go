@@ -152,6 +152,7 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 		connection.SendText(string(data))
 
 		serviceMapGenerator := dependency.GetInstance(dependency.ServiceMapGeneratorDependency).(servicemap.ServiceMapSink)
+		logger.Log.Infof("DEBUG entry source ->>>> %v, %v", mizuEntry.Source.Name, mizuEntry.Source.IP)
 		serviceMapGenerator.NewTCPEntry(mizuEntry.Source, mizuEntry.Destination, &item.Protocol)
 
 		elastic.GetInstance().PushEntry(mizuEntry)

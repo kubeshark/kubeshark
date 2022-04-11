@@ -177,6 +177,8 @@ func (s *defaultServiceMap) NewTCPEntry(src *tapApi.TCP, dst *tapApi.TCP, p *tap
 		return
 	}
 
+	logger.Log.Infof("DEBUG service map source ->>>> %v, %v", src.Name, src.IP)
+
 	var srcEntry *entryData
 	var dstEntry *entryData
 
