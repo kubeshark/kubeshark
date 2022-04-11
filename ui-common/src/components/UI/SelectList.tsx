@@ -22,7 +22,8 @@ const SelectList: React.FC<Props> = ({ items, tableName, checkedValues = [], mul
     const [headerChecked, setHeaderChecked] = useState(false)
 
     const filteredValues = useMemo(() => {
-        return items.filter((listValue) => listValue?.value?.includes(searchValue));
+        const a = items.filter((listValue) => listValue?.value?.includes(searchValue));
+        return a;
     }, [items, searchValue])
 
     const filteredValuesKeys = useMemo(() => {
@@ -45,22 +46,15 @@ const SelectList: React.FC<Props> = ({ items, tableName, checkedValues = [], mul
                 newCheckedValues.push(checkedKey);
 
             setCheckedValues(newCheckedValues);
-            const isSeatHeader = filteredValuesKeys.every(ai => newCheckedValues.includes(ai))
-            setHeaderChecked(isSeatHeader);
         }
     }
 
     useEffect(() => {
-        if (filteredValuesKeys.every(ai => checkedValues.includes(ai)) && filteredValuesKeys.length > 0) {
-            setHeaderChecked(true);
-        }
-        else {
-            setHeaderChecked(false);
-        }
-    }, [searchValue])
+        const setAllChecked = filteredValuesKeys.every(val => checkedValues.includes(val))
+        setHeaderChecked(setAllChecked)
+    }, [searchValue, filteredValuesKeys, items, checkedValues])
 
     const toggleAll = useCallback((isCheckAll) => {
-        setHeaderChecked(isCheckAll)
         let newChecked = checkedValues.filter(x => !filteredValuesKeys.includes(x))
 
         if (isCheckAll) {
@@ -69,7 +63,7 @@ const SelectList: React.FC<Props> = ({ items, tableName, checkedValues = [], mul
         }
 
         setCheckedValues(newChecked)
-    }, [searchValue, filteredValues])
+    }, [searchValue, checkedValues, filteredValuesKeys])
 
     const dataFieldFunc = (listValue) => listValue.component ? listValue.component :
         <span className={styles.nowrap} title={listValue.value}>
