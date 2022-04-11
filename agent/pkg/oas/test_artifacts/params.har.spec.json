@@ -21,9 +21,11 @@
             "description": "Successful call with status 200",
             "content": {
               "application/json": {
-                "example": null
+                "example": null,
+                "x-sample-entry": 4
               }
-            }
+            },
+            "x-sample-entry": 4
           }
         },
         "x-counters-per-source": {
@@ -45,7 +47,7 @@
           "sumDuration": 0
         },
         "x-last-seen-ts": 1567750580.04,
-        "x-sample-entry": 0
+        "x-sample-entry": 4
       }
     },
     "/appears-twice": {
@@ -58,9 +60,11 @@
             "description": "Successful call with status 200",
             "content": {
               "application/json": {
-                "example": null
+                "example": null,
+                "x-sample-entry": 6
               }
-            }
+            },
+            "x-sample-entry": 6
           }
         },
         "x-counters-per-source": {
@@ -82,7 +86,7 @@
           "sumDuration": 1
         },
         "x-last-seen-ts": 1567750581.74,
-        "x-sample-entry": 0
+        "x-sample-entry": 6
       }
     },
     "/body-optional": {
@@ -94,8 +98,11 @@
           "200": {
             "description": "Successful call with status 200",
             "content": {
-              "": {}
-            }
+              "": {
+                "x-sample-entry": 12
+              }
+            },
+            "x-sample-entry": 12
           }
         },
         "x-counters-per-source": {
@@ -117,14 +124,16 @@
           "sumDuration": 0.01
         },
         "x-last-seen-ts": 1567750581.75,
-        "x-sample-entry": 0,
+        "x-sample-entry": 12,
         "requestBody": {
           "description": "Generic request body",
           "content": {
             "application/json": {
-              "example": "{\"key\", \"val\"}"
+              "example": "{\"key\", \"val\"}",
+              "x-sample-entry": 11
             }
-          }
+          },
+          "x-sample-entry": 12
         }
       }
     },
@@ -137,8 +146,11 @@
           "200": {
             "description": "Successful call with status 200",
             "content": {
-              "": {}
-            }
+              "": {
+                "x-sample-entry": 13
+              }
+            },
+            "x-sample-entry": 13
           }
         },
         "x-counters-per-source": {
@@ -160,15 +172,17 @@
           "sumDuration": 0
         },
         "x-last-seen-ts": 1567750581.75,
-        "x-sample-entry": 0,
+        "x-sample-entry": 13,
         "requestBody": {
           "description": "Generic request body",
           "content": {
             "": {
-              "example": "body exists"
+              "example": "body exists",
+              "x-sample-entry": 13
             }
           },
-          "required": true
+          "required": true,
+          "x-sample-entry": 13
         }
       }
     },
@@ -182,9 +196,11 @@
             "description": "Successful call with status 200",
             "content": {
               "": {
-                "example": {}
+                "example": {},
+                "x-sample-entry": 9
               }
-            }
+            },
+            "x-sample-entry": 9
           }
         },
         "x-counters-per-source": {
@@ -206,7 +222,7 @@
           "sumDuration": 0
         },
         "x-last-seen-ts": 1567750582.74,
-        "x-sample-entry": 0,
+        "x-sample-entry": 9,
         "requestBody": {
           "description": "Generic request body",
           "content": {
@@ -233,10 +249,12 @@
                   }
                 }
               },
-              "example": "--BOUNDARY\r\nContent-Disposition: form-data; name=\"file\"; filename=\"metadata.json\"\r\nContent-Type: application/json\r\n\r\n{\"functions\": 123}\r\n--BOUNDARY\r\nContent-Disposition: form-data; name=\"path\"\r\n\r\n/content/components\r\n--BOUNDARY--\r\n"
+              "example": "--BOUNDARY\r\nContent-Disposition: form-data; name=\"file\"; filename=\"metadata.json\"\r\nContent-Type: application/json\r\n\r\n{\"functions\": 123}\r\n--BOUNDARY\r\nContent-Disposition: form-data; name=\"path\"\r\n\r\n/content/components\r\n--BOUNDARY--\r\n",
+              "x-sample-entry": 9
             }
           },
-          "required": true
+          "required": true,
+          "x-sample-entry": 9
         }
       }
     },
@@ -249,8 +267,11 @@
           "200": {
             "description": "Successful call with status 200",
             "content": {
-              "": {}
-            }
+              "": {
+                "x-sample-entry": 8
+              }
+            },
+            "x-sample-entry": 8
           }
         },
         "x-counters-per-source": {
@@ -272,7 +293,7 @@
           "sumDuration": 1
         },
         "x-last-seen-ts": 1567750581.74,
-        "x-sample-entry": 0,
+        "x-sample-entry": 8,
         "requestBody": {
           "description": "Generic request body",
           "content": {
@@ -312,10 +333,12 @@
                   }
                 }
               },
-              "example": "agent-id=ade\u0026callback-url=\u0026token=sometoken"
+              "example": "agent-id=ade\u0026callback-url=\u0026token=sometoken",
+              "x-sample-entry": 8
             }
           },
-          "required": true
+          "required": true,
+          "x-sample-entry": 8
         }
       }
     },
@@ -331,8 +354,11 @@
           "200": {
             "description": "Successful call with status 200",
             "content": {
-              "": {}
-            }
+              "": {
+                "x-sample-entry": 14
+              }
+            },
+            "x-sample-entry": 14
           }
         },
         "x-counters-per-source": {
@@ -354,7 +380,7 @@
           "sumDuration": 0
         },
         "x-last-seen-ts": 1567750582,
-        "x-sample-entry": 0
+        "x-sample-entry": 14
       },
       "parameters": [
         {
@@ -369,7 +395,8 @@
             "example #0": {
               "value": "234324"
             }
-          }
+          },
+          "x-sample-entry": 14
         }
       ]
     },
@@ -385,8 +412,11 @@
           "200": {
             "description": "Successful call with status 200",
             "content": {
-              "": {}
-            }
+              "": {
+                "x-sample-entry": 18
+              }
+            },
+            "x-sample-entry": 18
           }
         },
         "x-counters-per-source": {
@@ -408,7 +438,7 @@
           "sumDuration": 9.53e-7
         },
         "x-last-seen-ts": 1567750582.00,
-        "x-sample-entry": 0
+        "x-sample-entry": 18
       },
       "parameters": [
         {
@@ -436,7 +466,8 @@
             "example #4": {
               "value": "prefix-gibberish-afterwards"
             }
-          }
+          },
+          "x-sample-entry": 19
         }
       ]
     },
@@ -452,8 +483,11 @@
           "200": {
             "description": "Successful call with status 200",
             "content": {
-              "": {}
-            }
+              "": {
+                "x-sample-entry": 15
+              }
+            },
+            "x-sample-entry": 15
           }
         },
         "x-counters-per-source": {
@@ -475,7 +509,7 @@
           "sumDuration": 0
         },
         "x-last-seen-ts": 1567750582.00,
-        "x-sample-entry": 0
+        "x-sample-entry": 15
       },
       "parameters": [
         {
@@ -503,7 +537,8 @@
             "example #4": {
               "value": "prefix-gibberish-afterwards"
             }
-          }
+          },
+          "x-sample-entry": 19
         }
       ]
     },
@@ -519,8 +554,11 @@
           "200": {
             "description": "Successful call with status 200",
             "content": {
-              "": {}
-            }
+              "": {
+                "x-sample-entry": 16
+              }
+            },
+            "x-sample-entry": 16
           }
         },
         "x-counters-per-source": {
@@ -542,7 +580,7 @@
           "sumDuration": 0
         },
         "x-last-seen-ts": 1567750582.00,
-        "x-sample-entry": 0
+        "x-sample-entry": 16
       },
       "parameters": [
         {
@@ -570,7 +608,8 @@
             "example #4": {
               "value": "prefix-gibberish-afterwards"
             }
-          }
+          },
+          "x-sample-entry": 19
         }
       ]
     },
@@ -586,8 +625,11 @@
           "200": {
             "description": "Successful call with status 200",
             "content": {
-              "": {}
-            }
+              "": {
+                "x-sample-entry": 19
+              }
+            },
+            "x-sample-entry": 19
           }
         },
         "x-counters-per-source": {
@@ -609,7 +651,7 @@
           "sumDuration": 0
         },
         "x-last-seen-ts": 1567750582.00,
-        "x-sample-entry": 0
+        "x-sample-entry": 19
       },
       "parameters": [
         {
@@ -624,7 +666,8 @@
             "example #0": {
               "value": "23421"
             }
-          }
+          },
+          "x-sample-entry": 19
         },
         {
           "name": "parampatternId",
@@ -651,7 +694,8 @@
             "example #4": {
               "value": "prefix-gibberish-afterwards"
             }
-          }
+          },
+          "x-sample-entry": 19
         }
       ]
     },
@@ -665,9 +709,11 @@
             "description": "Successful call with status 200",
             "content": {
               "application/json": {
-                "example": null
+                "example": null,
+                "x-sample-entry": 3
               }
-            }
+            },
+            "x-sample-entry": 3
           }
         },
         "x-counters-per-source": {
@@ -689,7 +735,7 @@
           "sumDuration": 0
         },
         "x-last-seen-ts": 1567750579.74,
-        "x-sample-entry": 0
+        "x-sample-entry": 3
       },
       "parameters": [
         {
@@ -707,7 +753,8 @@
             "example #1": {
               "value": "<UUID4>"
             }
-          }
+          },
+          "x-sample-entry": 3
         }
       ]
     },
@@ -720,8 +767,11 @@
           "200": {
             "description": "Successful call with status 200",
             "content": {
-              "text/html": {}
-            }
+              "text/html": {
+                "x-sample-entry": 1
+              }
+            },
+            "x-sample-entry": 1
           }
         },
         "x-counters-per-source": {
@@ -743,7 +793,7 @@
           "sumDuration": 0
         },
         "x-last-seen-ts": 1567750483.86,
-        "x-sample-entry": 0
+        "x-sample-entry": 1
       },
       "parameters": [
         {
@@ -761,7 +811,8 @@
             "example #1": {
               "value": "<UUID4>"
             }
-          }
+          },
+          "x-sample-entry": 3
         }
       ]
     },
@@ -775,9 +826,11 @@
             "description": "Successful call with status 200",
             "content": {
               "application/json": {
-                "example": null
+                "example": null,
+                "x-sample-entry": 2
               }
-            }
+            },
+            "x-sample-entry": 2
           }
         },
         "x-counters-per-source": {
@@ -799,7 +852,7 @@
           "sumDuration": 0
         },
         "x-last-seen-ts": 1567750578.74,
-        "x-sample-entry": 0
+        "x-sample-entry": 2
       },
       "parameters": [
         {
@@ -817,7 +870,8 @@
             "example #1": {
               "value": "<UUID4>"
             }
-          }
+          },
+          "x-sample-entry": 3
         }
       ]
     }

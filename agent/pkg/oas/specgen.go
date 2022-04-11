@@ -28,6 +28,13 @@ const CountersTotal = "x-counters-total"
 const CountersPerSource = "x-counters-per-source"
 const SampleId = "x-sample-entry"
 
+type EntryWithSource struct {
+	Source      string
+	Destination string
+	Entry       har.Entry
+	Id          uint
+}
+
 type reqResp struct { // hello, generics in Go
 	Req  *har.Request
 	Resp *har.Response
@@ -60,7 +67,7 @@ func (g *SpecGen) StartFromSpec(oas *openapi.OpenAPI) {
 	g.tree = new(Node)
 	for pathStr, pathObj := range oas.Paths.Items {
 		pathSplit := strings.Split(string(pathStr), "/")
-		g.tree.getOrSet(pathSplit, pathObj)
+		g.tree.getOrSet(pathSplit, pathObj, 0)
 
 		// clean "last entry timestamp" markers from the past
 		for _, pathAndOp := range g.tree.listOps() {
@@ -69,11 +76,11 @@ func (g *SpecGen) StartFromSpec(oas *openapi.OpenAPI) {
 	}
 }
 
-func (g *SpecGen) feedEntry(entryWithSource EntryWithSource) (string, error) {
+func (g *SpecGen) feedEntry(entryWithSource *EntryWithSource) (string, error) {
 	g.lock.Lock()
 	defer g.lock.Unlock()
 
-	opId, err := g.handlePathObj(&entryWithSource)
+	opId, err := g.handlePathObj(entryWithSource)
 	if err != nil {
 		return "", err
 	}
@@ -219,7 +226,7 @@ func (g *SpecGen) handlePathObj(entryWithSource *EntryWithSource) (string, error
 	} else {
 		split = strings.Split(urlParsed.Path, "/")
 	}
-	node := g.tree.getOrSet(split, new(openapi.PathObj))
+	node := g.tree.getOrSet(split, new(openapi.PathObj), entryWithSource.Id)
 	opObj, err := handleOpObj(entryWithSource, node.pathObj)
 
 	if opObj != nil {
@@ -242,12 +249,12 @@ func handleOpObj(entryWithSource *EntryWithSource, pathObj *openapi.PathObj) (*o
 		return nil, nil
 	}
 
-	err = handleRequest(&entry.Request, opObj, isSuccess)
+	err = handleRequest(&entry.Request, opObj, isSuccess, entryWithSource.Id)
 	if err != nil {
 		return nil, err
 	}
 
-	err = handleResponse(&entry.Response, opObj, isSuccess)
+	err = handleResponse(&entry.Response, opObj, isSuccess, entryWithSource.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -256,6 +263,8 @@ func handleOpObj(entryWithSource *EntryWithSource, pathObj *openapi.PathObj) (*o
 	if err != nil {
 		return nil, err
 	}
+
+	setSampleID(&opObj.Extensions, entryWithSource.Id)
 
 	return opObj, nil
 }
@@ -329,15 +338,10 @@ func handleCounters(opObj *openapi.Operation, success bool, entryWithSource *Ent
 		return err
 	}
 
-	err = opObj.Extensions.SetExtension(SampleId, entryWithSource.Id)
-	if err != nil {
-		return err
-	}
-
 	return nil
 }
 
-func handleRequest(req *har.Request, opObj *openapi.Operation, isSuccess bool) error {
+func handleRequest(req *har.Request, opObj *openapi.Operation, isSuccess bool, sampleId uint) error {
 	// TODO: we don't handle the situation when header/qstr param can be defined on pathObj level. Also the path param defined on opObj
 	urlParsed, err := url.Parse(req.URL)
 	if err != nil {
@@ -361,7 +365,7 @@ func handleRequest(req *har.Request, opObj *openapi.Operation, isSuccess bool) e
 		IsIgnored:      func(name string) bool { return false },
 		GeneralizeName: func(name string) string { return name },
 	}
-	handleNameVals(qstrGW, &opObj.Parameters, false)
+	handleNameVals(qstrGW, &opObj.Parameters, false, sampleId)
 
 	hdrGW := nvParams{
 		In:             openapi.InHeader,
@@ -369,7 +373,7 @@ func handleRequest(req *har.Request, opObj *openapi.Operation, isSuccess bool) e
 		IsIgnored:      isHeaderIgnored,
 		GeneralizeName: strings.ToLower,
 	}
-	handleNameVals(hdrGW, &opObj.Parameters, true)
+	handleNameVals(hdrGW, &opObj.Parameters, true, sampleId)
 
 	if isSuccess {
 		reqBody, err := getRequestBody(req, opObj)
@@ -378,12 +382,14 @@ func handleRequest(req *har.Request, opObj *openapi.Operation, isSuccess bool) e
 		}
 
 		if reqBody != nil {
+			setSampleID(&reqBody.Extensions, sampleId)
+
 			if req.PostData.Text == "" {
 				reqBody.Required = false
 			} else {
 
 				reqCtype, _ := getReqCtype(req)
-				reqMedia, err := fillContent(reqResp{Req: req}, reqBody.Content, reqCtype)
+				reqMedia, err := fillContent(reqResp{Req: req}, reqBody.Content, reqCtype, sampleId)
 				if err != nil {
 					return err
 				}
@@ -395,18 +401,20 @@ func handleRequest(req *har.Request, opObj *openapi.Operation, isSuccess bool) e
 	return nil
 }
 
-func handleResponse(resp *har.Response, opObj *openapi.Operation, isSuccess bool) error {
+func handleResponse(resp *har.Response, opObj *openapi.Operation, isSuccess bool, sampleId uint) error {
 	// TODO: we don't support "default" response
 	respObj, err := getResponseObj(resp, opObj, isSuccess)
 	if err != nil {
 		return err
 	}
 
-	handleRespHeaders(resp.Headers, respObj)
+	setSampleID(&respObj.Extensions, sampleId)
+
+	handleRespHeaders(resp.Headers, respObj, sampleId)
 
 	respCtype := getRespCtype(resp)
 	respContent := respObj.Content
-	respMedia, err := fillContent(reqResp{Resp: resp}, respContent, respCtype)
+	respMedia, err := fillContent(reqResp{Resp: resp}, respContent, respCtype, sampleId)
 	if err != nil {
 		return err
 	}
@@ -414,7 +422,7 @@ func handleResponse(resp *har.Response, opObj *openapi.Operation, isSuccess bool
 	return nil
 }
 
-func handleRespHeaders(reqHeaders []har.Header, respObj *openapi.ResponseObj) {
+func handleRespHeaders(reqHeaders []har.Header, respObj *openapi.ResponseObj, sampleId uint) {
 	visited := map[string]*openapi.HeaderObj{}
 	for _, pair := range reqHeaders {
 		if isHeaderIgnored(pair.Name) {
@@ -436,6 +444,8 @@ func handleRespHeaders(reqHeaders []har.Header, respObj *openapi.ResponseObj) {
 			logger.Log.Warningf("Failed to add example to a parameter: %s", err)
 		}
 		visited[nameGeneral] = param
+
+		setSampleID(&param.Extensions, sampleId)
 	}
 
 	// maintain "required" flag
@@ -456,12 +466,14 @@ func handleRespHeaders(reqHeaders []har.Header, respObj *openapi.ResponseObj) {
 	}
 }
 
-func fillContent(reqResp reqResp, respContent openapi.Content, ctype string) (*openapi.MediaType, error) {
+func fillContent(reqResp reqResp, respContent openapi.Content, ctype string, sampleId uint) (*openapi.MediaType, error) {
 	content, found := respContent[ctype]
 	if !found {
 		respContent[ctype] = &openapi.MediaType{}
 		content = respContent[ctype]
 	}
+
+	setSampleID(&content.Extensions, sampleId)
 
 	var text string
 	var isBinary bool
@@ -474,10 +486,10 @@ func fillContent(reqResp reqResp, respContent openapi.Content, ctype string) (*o
 	if !isBinary && text != "" {
 		var exampleMsg []byte
 		// try treating it as json
-		any, isJSON := anyJSON(text)
+		anyVal, isJSON := anyJSON(text)
 		if isJSON {
 			// re-marshal with forced indent
-			if msg, err := json.MarshalIndent(any, "", "\t"); err != nil {
+			if msg, err := json.MarshalIndent(anyVal, "", "\t"); err != nil {
 				panic("Failed to re-marshal value, super-strange")
 			} else {
 				exampleMsg = msg
