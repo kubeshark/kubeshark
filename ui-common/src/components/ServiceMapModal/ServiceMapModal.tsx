@@ -200,7 +200,7 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
                         </div>
                         <div className={styles.graphSection}>
                             <div style={{ display: "flex", justifyContent: "space-between" }}>
-                                <Button style={{ marginRight: "3%" }}
+                                <Button style={{ marginLeft: "3%" }}
                                     startIcon={<img src={refreshIcon} className="custom" alt="refresh" style={{ marginRight: "8%" }}></img>}
                                     size="medium"
                                     variant="contained"
