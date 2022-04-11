@@ -187,7 +187,6 @@ func (s *defaultServiceMap) NewTCPEntry(src *tapApi.TCP, dst *tapApi.TCP, p *tap
 		}
 		srcEntry.entry.Name = UnresolvedNodeName
 	} else {
-		logger.Log.Infof("DEBUG src ->>>> %v, %v", src.Name, src.IP)
 		srcEntry = &entryData{
 			key:   key(src.Name),
 			entry: src,
@@ -201,7 +200,6 @@ func (s *defaultServiceMap) NewTCPEntry(src *tapApi.TCP, dst *tapApi.TCP, p *tap
 		}
 		dstEntry.entry.Name = UnresolvedNodeName
 	} else {
-		logger.Log.Infof("DEBUG dst ->>>> %v, %v", dst.Name, dst.IP)
 		dstEntry = &entryData{
 			key:   key(dst.Name),
 			entry: dst,
