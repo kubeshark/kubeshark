@@ -55,7 +55,8 @@ export const EntriesList: React.FC<EntriesListProps> = ({
   const [startTime, setStartTime] = useState(0);
   const [truncatedTimestamp, setTruncatedTimestamp] = useState(0);
 
-  const leftOffBottom = entries.length > 0 ? entries[entries.length - 1].id : "";
+  const zeroPad = (num, places) => String(num).padStart(places, '0')
+  const leftOffBottom = entries.length > 0 ? zeroPad(+entries[entries.length - 1].id + 1) : "";
 
   useEffect(() => {
     const list = document.getElementById('list').firstElementChild;
@@ -98,6 +99,9 @@ export const EntriesList: React.FC<EntriesListProps> = ({
     setIsLoadingTop(false);
 
     const newEntries = [...data.data.reverse(), ...entries];
+    if(newEntries.length > 10000) {
+      newEntries.splice(10000, newEntries.length - 10000)
+    }
     setEntries(newEntries);
 
     setQueriedTotal(data.meta.total);
@@ -126,9 +130,9 @@ export const EntriesList: React.FC<EntriesListProps> = ({
           const entry = message.data;
           if (!focusedEntryId) setFocusedEntryId(entry.id);
           const newEntries = [...entries, entry];
-          if (newEntries.length === 10001) {
+          if (newEntries.length > 10000) {
             setLeftOffTop(newEntries[0].id);
-            newEntries.shift();
+            newEntries.splice(0, newEntries.length - 10000)
             setNoMoreDataTop(false);
           }
           setEntries(newEntries);
