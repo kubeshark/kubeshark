@@ -186,7 +186,9 @@ func (s *defaultServiceMap) NewTCPEntry(src *tapApi.TCP, dst *tapApi.TCP, p *tap
 			key:   key(src.IP),
 			entry: &tapApi.TCP{},
 		}
-		copier.Copy(srcEntry.entry, src)
+		if err := copier.Copy(srcEntry.entry, src); err != nil {
+			logger.Log.Errorf("Error while copying src entry into src entry data")
+		}
 
 		srcEntry.entry.Name = UnresolvedNodeName
 	} else {
@@ -201,7 +203,9 @@ func (s *defaultServiceMap) NewTCPEntry(src *tapApi.TCP, dst *tapApi.TCP, p *tap
 			key:   key(dst.IP),
 			entry: &tapApi.TCP{},
 		}
-		copier.Copy(dstEntry.entry, dst)
+		if err := copier.Copy(dstEntry.entry, dst); err != nil {
+			logger.Log.Errorf("Error while copying dst entry into dst entry data")
+		}
 
 		dstEntry.entry.Name = UnresolvedNodeName
 	} else {
