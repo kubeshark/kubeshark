@@ -51,14 +51,14 @@ const SelectList: React.FC<Props> = ({ items, tableName, checkedValues = [], mul
     useEffect(() => {
         const setAllChecked = filteredValuesKeys.every(val => checkedValues.includes(val))
         setHeaderChecked(setAllChecked)
-    }, [searchValue, filteredValuesKeys, items, checkedValues])
+    }, [filteredValuesKeys, checkedValues])
 
-    const toggleAll = useCallback((isCheckAll) => {
+    const toggleAll = useCallback((shouldCheckAll) => {
         let newChecked = checkedValues.filter(x => !filteredValuesKeys.includes(x))
 
-        if (isCheckAll) {
+        if (shouldCheckAll) {
             const disabledItems = items.filter(i => i.disabled).map(x => x.key)
-            newChecked = filteredValuesKeys.concat([...newChecked]).filter(x => !disabledItems.includes(x))
+            newChecked = [...filteredValuesKeys, ...newChecked].filter(x => !disabledItems.includes(x))
         }
 
         setCheckedValues(newChecked)
