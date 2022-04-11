@@ -8,6 +8,7 @@ import openApiLogo from 'assets/openApiLogo.png'
 import { redocThemeOptions } from "./redocThemeOptions";
 import React from "react";
 import { Select } from "../UI/Select";
+import { TOAST_CONTAINER_ID } from "../../configs/Consts";
 
 
 const modalStyle = {
@@ -43,7 +44,7 @@ const OasModal = ({ openModal, handleCloseModal, getOasServices, getOasByService
       const data = await getOasByService(selectedService ? selectedService : oasServices[0]);
       setSelectedServiceSpec(data);
     } catch (e) {
-      toast.error("Error occurred while fetching service OAS spec");
+      toast.error("Error occurred while fetching service OAS spec", { containerId: TOAST_CONTAINER_ID });
       console.error(e);
     }
   };
