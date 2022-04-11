@@ -2,7 +2,6 @@ package tap
 
 import (
 	"bufio"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"sync"
