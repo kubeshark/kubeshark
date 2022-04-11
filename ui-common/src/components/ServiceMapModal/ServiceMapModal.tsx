@@ -181,7 +181,7 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
                     <div className={styles.modalContainer}>
                         {/* TODO: remove error missing height */}
                         <div className={styles.filterSection}>
-                            <Resizeable>
+                            <Resizeable minWidth={170}>
                                 <div className={styles.filterWrapper}>
                                     <div className={styles.protocolsFilterList}>
                                         <SelectList items={protocols} checkBoxWidth="5%" tableName={"Protocols"} multiSelect={true}

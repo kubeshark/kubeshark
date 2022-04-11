@@ -1,51 +1,60 @@
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
+import { detectType } from "redoc";
 
 import styles from './style/Resizeable.module.sass'
 
 export interface Props {
     children
+    minWidth: number
 }
 
-const Resizeable: React.FC<Props> = ({ children }) => {
+const Resizeable: React.FC<Props> = ({ children, minWidth }) => {
+    // Query the element
+    const resizeble = useRef(null)
+    let mousePos = { x: 0, y: 0 }
+    let elementDimention = { w: 0, h: 0 }
+    let isPressed = false
 
-    const [initialPos, setInitialPos] = React.useState(null || Number);
-    const [initialPosDraggable, setInitialPosDraggable] = React.useState(null || Number);
-    const [initialSize, setInitialSize] = React.useState(null);
+    const mouseDownHandler = function (e) {
+        // Get the current mouse position
+        mousePos = { x: e.clientX, y: e.clientY }
+        isPressed = true
 
-    const initial = (e) => {
-        let resizable = document.getElementById('Resizable');
-        setInitialPos(e.clientX);
-        setInitialPosDraggable(e.clientX)
-        setInitialSize(resizable.offsetWidth);
+        // Calculate the dimension of element
+        const styles = resizeble.current.getBoundingClientRect();
+        elementDimention = { w: parseInt(styles.width, 10), h: parseInt(styles.height, 10) }
+        // Attach the listeners to `document`
+        window.addEventListener('mousemove', mouseMoveHandler);
+        window.addEventListener('mouseup', mouseUpHandler);
+    };
 
-    }
 
-    const draOver = (e) => {
-        e.preventDefault();
-    }
+    const mouseMoveHandler = function (e) {
+        if (isPressed) {
+            // How far the mouse has been moved
+            const dx = e.clientX - mousePos.x;
+            const widthEl = elementDimention.w + dx
 
-    const resize = (e: any) => {
-        e.preventDefault()
-        let resizable = document.getElementById('Resizable');
-        resizable.style.width = `${parseInt(initialSize) + parseInt(e.clientX) - initialPos}px`
-        let draggable = document.getElementById('Draggable');
-        draggable.style.left = `${parseInt(e.clientX) - initialPosDraggable}px`
+            if (widthEl > minWidth)
+                // Adjust the dimension of element
+                resizeble.current.style.width = `${widthEl}px`;
+        }
+    };
 
-    }
+    const mouseUpHandler = function () {
+        window.removeEventListener('mousemove', mouseMoveHandler);
+        window.removeEventListener('mouseup', mouseUpHandler);
+        isPressed = false
+    };
 
     return (
         <React.Fragment>
-            <div className={styles.Block}>
-                <div id='Resizable' className={styles.Resizable} draggable={false}>
-                    {children}
-                </div>
-                <div id='Draggable' className={styles.Draggable}
-                    onDragOver={draOver}
-                    onDragStart={initial}
-                    onDrag={resize}
-                    draggable
-                />
+            <div className={styles.resizable} id="resizeMe" ref={resizeble}>
+                {children}
+                <div className={`${styles.resizer} ${styles.resizerRight}`} onMouseDown={mouseDownHandler}></div>
+                {/* <div className={`${styles.resizer} ${styles.resizerB}`} onMouseDown={mouseDownHandler}></div> -- FutureUse*/}
             </div>
+
         </React.Fragment>
     );
 };

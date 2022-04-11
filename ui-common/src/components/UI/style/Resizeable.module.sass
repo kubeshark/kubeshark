@@ -1,23 +1,29 @@
 @import "../../../variables.module"
 
-.Block
-    width: 100%
-    height: 100%
-    display: inline-flex
+.resizable
+    position: relative
     align-items: center
-
-.Resizable
+    display: flex
+    overflow: hidden
     border-right: 1px solid $blue-color
-    width: 100%
     height: 100%
-    resize: horizontal
-    overflow: auto
+    width: 100%
+    padding-right: 3px
 
-.Draggable
-    background: rgba(1, 1, 1, 0.2)
-    border-bottom: 1px solid black
-    border-right: 1px solid black
-    border-top: 1px solid black
-    cursor: col-resize
-    height: 20px
-    width: 10px
+.resizer
+    position: absolute
+
+    &Right
+        cursor: col-resize
+        height: 100%
+        right: 0
+        top: 0
+        width: 5px
+
+    // FutureUse
+    &Bottom
+        bottom: 0
+        cursor: row-resize
+        height: 5px
+        left: 0
+        width: 100%
