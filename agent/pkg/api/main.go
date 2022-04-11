@@ -119,7 +119,6 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 	for item := range outputItems {
 		extension := extensionsMap[item.Protocol.Name]
 		resolvedSource, resolvedDestionation, namespace := resolveIP(item.ConnectionInfo)
-		logger.Log.Infof("DEBUG resolve src ->>>> %v", resolvedSource)
 		mizuEntry := extension.Dissector.Analyze(item, resolvedSource, resolvedDestionation, namespace)
 		if extension.Protocol.Name == "http" {
 			if !disableOASValidation {
@@ -152,7 +151,6 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 		connection.SendText(string(data))
 
 		serviceMapGenerator := dependency.GetInstance(dependency.ServiceMapGeneratorDependency).(servicemap.ServiceMapSink)
-		logger.Log.Infof("DEBUG entry source ->>>> %v, %v", mizuEntry.Source.Name, mizuEntry.Source.IP)
 		serviceMapGenerator.NewTCPEntry(mizuEntry.Source, mizuEntry.Destination, &item.Protocol)
 
 		elastic.GetInstance().PushEntry(mizuEntry)

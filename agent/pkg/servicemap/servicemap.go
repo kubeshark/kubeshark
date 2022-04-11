@@ -1,6 +1,7 @@
 package servicemap
 
 import (
+	"github.com/jinzhu/copier"
 	"sync"
 
 	"github.com/up9inc/mizu/shared/logger"
@@ -177,16 +178,14 @@ func (s *defaultServiceMap) NewTCPEntry(src *tapApi.TCP, dst *tapApi.TCP, p *tap
 		return
 	}
 
-	logger.Log.Infof("DEBUG service map source ->>>> %v, %v", src.Name, src.IP)
-
 	var srcEntry *entryData
 	var dstEntry *entryData
 
 	if len(src.Name) == 0 {
 		srcEntry = &entryData{
 			key:   key(src.IP),
-			entry: src,
 		}
+		copier.Copy(srcEntry.entry, src)
 		srcEntry.entry.Name = UnresolvedNodeName
 	} else {
 		srcEntry = &entryData{
@@ -198,8 +197,8 @@ func (s *defaultServiceMap) NewTCPEntry(src *tapApi.TCP, dst *tapApi.TCP, p *tap
 	if len(dst.Name) == 0 {
 		dstEntry = &entryData{
 			key:   key(dst.IP),
-			entry: dst,
 		}
+		copier.Copy(dstEntry.entry, dst)
 		dstEntry.entry.Name = UnresolvedNodeName
 	} else {
 		dstEntry = &entryData{
