@@ -22,8 +22,7 @@ const SelectList: React.FC<Props> = ({ items, tableName, checkedValues = [], mul
     const [headerChecked, setHeaderChecked] = useState(false)
 
     const filteredValues = useMemo(() => {
-        const a = items.filter((listValue) => listValue?.value?.includes(searchValue));
-        return a;
+        return items.filter((listValue) => listValue?.value?.includes(searchValue));
     }, [items, searchValue])
 
     const filteredValuesKeys = useMemo(() => {
