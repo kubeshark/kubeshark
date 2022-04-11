@@ -67,8 +67,8 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
     const commonClasses = useCommonStyles();
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [graphData, setGraphData] = useState<GraphData>({ nodes: [], edges: [] });
-    const [filteredProtocols, setFilteredProtocols] = useState(protocols.map(x => x.key))
-    const [filteredServices, setFilteredServices] = useState([])
+    const [checkedProtocols, setCheckedProtocols] = useState(protocols.map(x => x.key))
+    const [checkedServices, setCheckedServices] = useState([])
     const [serviceMapApiData, setServiceMapApiData] = useState<ServiceMapGraph>({ edges: [], nodes: [] })
     const [servicesSearchVal, setServicesSearchVal] = useState("")
     const [graphOptions, setGraphOptions] = useState(ServiceMapOptions);
@@ -133,10 +133,10 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
     }, [serviceMapApiData])
 
     const filterServiceMap = (newProtocolsFilters?: any[], newServiceFilters?: string[]) => {
-        const filterProt = newProtocolsFilters || filteredProtocols
-        const filterService = newServiceFilters || filteredServices || getServicesForFilter.map(x => x.key)
-        setFilteredProtocols(filterProt)
-        setFilteredServices(filterService)
+        const filterProt = newProtocolsFilters || checkedProtocols
+        const filterService = newServiceFilters || checkedServices
+        setCheckedProtocols(filterProt)
+        setCheckedServices(filterService)
         const newGraphData: GraphData = {
             nodes: serviceMapApiData.nodes?.map(mapNodesDatatoGraph).filter(node => filterService.includes(node.label)),
             edges: serviceMapApiData.edges?.filter(edge => filterProt.includes(edge.protocol.abbr)).map(mapEdgesDatatoGraph)
@@ -145,10 +145,8 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
     }
 
     useEffect(() => {
-        let mergeWithPrev = getServicesForFilter.map(x => x.key).filter(serviceName => !Utils.isIpAddress(serviceName))
-        if (filteredServices.length > 0)
-            mergeWithPrev = mergeWithPrev.filter(s => filteredServices.includes(s))
-        filterServiceMap(filteredProtocols, mergeWithPrev)
+        if (checkedServices.length > 0) return // only after refresh
+        filterServiceMap(checkedProtocols, getServicesForFilter.map(x => x.key).filter(serviceName => !Utils.isIpAddress(serviceName)))
     }, [getServicesForFilter])
 
     useEffect(() => {
@@ -185,14 +183,14 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
                                 <div className={styles.filterWrapper}>
                                     <div className={styles.protocolsFilterList}>
                                         <SelectList items={protocols} checkBoxWidth="5%" tableName={"Protocols"} multiSelect={true}
-                                            checkedValues={filteredProtocols} setCheckedValues={filterServiceMap} tableClassName={styles.filters} />
+                                            checkedValues={checkedProtocols} setCheckedValues={filterServiceMap} tableClassName={styles.filters} />
                                     </div>
                                     <div className={styles.separtorLine}></div>
                                     <div className={styles.servicesFilter}>
                                         <input className={commonClasses.textField + ` ${styles.servicesFilterSearch}`} placeholder="search service" value={servicesSearchVal} onChange={(event) => setServicesSearchVal(event.target.value)} />
                                         <div className={styles.servicesFilterList}>
                                             <SelectList items={getServicesForFilter} tableName={"Services"} tableClassName={styles.filters} multiSelect={true} searchValue={servicesSearchVal}
-                                                checkBoxWidth="5%" checkedValues={filteredServices} setCheckedValues={(newServicesForFilter) => filterServiceMap(null, newServicesForFilter)} />
+                                                checkBoxWidth="5%" checkedValues={checkedServices} setCheckedValues={(newServicesForFilter) => filterServiceMap(null, newServicesForFilter)} />
                                         </div>
                                     </div>
                                 </div>

@@ -45,31 +45,24 @@ const SelectList: React.FC<Props> = ({ items, tableName, checkedValues = [], mul
                 newCheckedValues.push(checkedKey);
 
             setCheckedValues(newCheckedValues);
-            const isSeatHeader = filteredValuesKeys.every(ai => newCheckedValues.includes(ai))
-            setHeaderChecked(isSeatHeader);
         }
     }
 
     useEffect(() => {
-        if (filteredValuesKeys.every(ai => checkedValues.includes(ai)) && filteredValuesKeys.length > 0) {
-            setHeaderChecked(true);
-        }
-        else {
-            setHeaderChecked(false);
-        }
-    }, [searchValue])
+        const setAllChecked = filteredValuesKeys.every(val => checkedValues.includes(val))
+        setHeaderChecked(setAllChecked)
+    }, [filteredValuesKeys, checkedValues])
 
-    const toggleAll = useCallback((isCheckAll) => {
-        setHeaderChecked(isCheckAll)
+    const toggleAll = useCallback((shouldCheckAll) => {
         let newChecked = checkedValues.filter(x => !filteredValuesKeys.includes(x))
 
-        if (isCheckAll) {
+        if (shouldCheckAll) {
             const disabledItems = items.filter(i => i.disabled).map(x => x.key)
-            newChecked = filteredValuesKeys.concat([...newChecked]).filter(x => !disabledItems.includes(x))
+            newChecked = [...filteredValuesKeys, ...newChecked].filter(x => !disabledItems.includes(x))
         }
 
         setCheckedValues(newChecked)
-    }, [searchValue, filteredValues])
+    }, [searchValue, checkedValues, filteredValuesKeys])
 
     const dataFieldFunc = (listValue) => listValue.component ? listValue.component :
         <span className={styles.nowrap} title={listValue.value}>
