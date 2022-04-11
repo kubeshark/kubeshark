@@ -184,8 +184,10 @@ func (s *defaultServiceMap) NewTCPEntry(src *tapApi.TCP, dst *tapApi.TCP, p *tap
 	if len(src.Name) == 0 {
 		srcEntry = &entryData{
 			key:   key(src.IP),
+			entry: &tapApi.TCP{},
 		}
 		copier.Copy(srcEntry.entry, src)
+
 		srcEntry.entry.Name = UnresolvedNodeName
 	} else {
 		srcEntry = &entryData{
@@ -197,8 +199,10 @@ func (s *defaultServiceMap) NewTCPEntry(src *tapApi.TCP, dst *tapApi.TCP, p *tap
 	if len(dst.Name) == 0 {
 		dstEntry = &entryData{
 			key:   key(dst.IP),
+			entry: &tapApi.TCP{},
 		}
 		copier.Copy(dstEntry.entry, dst)
+
 		dstEntry.entry.Name = UnresolvedNodeName
 	} else {
 		dstEntry = &entryData{
