@@ -12,10 +12,9 @@ import closeIcon from "assets/close.svg"
 import styles from './ServiceMapModal.module.sass'
 import SelectList from "../UI/SelectList";
 import { GraphData, ServiceMapGraph } from "./ServiceMapModalTypes"
-import { ResizableBox } from "react-resizable"
-import "react-resizable/css/styles.css"
 import { Utils } from "../../helpers/Utils";
 import { TOAST_CONTAINER_ID } from "../../configs/Consts";
+import Resizeable from "../UI/Resizeable"
 
 const modalStyle = {
     position: 'absolute',
@@ -176,9 +175,8 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
             <Fade in={isOpen}>
                 <Box sx={modalStyle}>
                     <div className={styles.modalContainer}>
-                        {/* TODO: remove error missing height */}
-                        <ResizableBox width={200} style={{ height: '100%', minWidth: "200px" }} axis={"x"}>
-                            <div className={styles.filterSection}>
+                        <div className={styles.filterSection}>
+                            <Resizeable minWidth={170}>
                                 <div className={styles.filterWrapper}>
                                     <div className={styles.protocolsFilterList}>
                                         <SelectList items={protocols} checkBoxWidth="5%" tableName={"Protocols"} multiSelect={true}
@@ -193,11 +191,11 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        </ResizableBox>
+                            </Resizeable>
+                        </div>
                         <div className={styles.graphSection}>
                             <div style={{ display: "flex", justifyContent: "space-between" }}>
-                                <Button style={{ marginRight: "3%" }}
+                                <Button style={{ marginLeft: "3%" }}
                                     startIcon={<img src={refreshIcon} className="custom" alt="refresh" style={{ marginRight: "8%" }}></img>}
                                     size="medium"
                                     variant="contained"
@@ -206,7 +204,7 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
                                 >
                                     Refresh
                                 </Button>
-                                <img src={closeIcon} alt="close" onClick={() => onClose()} style={{ cursor: "pointer" }}></img>
+                                <img src={closeIcon} alt="close" onClick={() => onClose()} style={{ cursor: "pointer", userSelect: "none" }}></img>
                             </div>
                             {isLoading && <div className={spinnerStyle.spinnerContainer}>
                                 <img alt="spinner" src={spinnerImg} style={{ height: 50 }} />
