@@ -113,12 +113,9 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
 
   const ws = useRef(null);
 
-  const openEmptyWebSocket = () => {
-    if (query) {
-      openWebSocket(`(${query}) and leftOff(-1)`, true);
-    } else {
-      openWebSocket(`leftOff(-1)`, true);
-    }
+  const openEmptyWebSocket = (resetEntries: boolean = true, leftoffButton = -1) => {
+    const queryToSend = query ? `(${query}) and leftOff(${leftoffButton})` : `leftOff(${leftoffButton})`
+    openWebSocket(queryToSend, resetEntries);
   }
 
   const closeWebSocket = () => {
@@ -170,6 +167,12 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
 
   useEffect(() => {
     setTrafficViewerApiState({ ...trafficViewerApiProp, webSocket: { close: closeWebSocket } });
+    entriesListRef.current.loadPrevoisEntries(trafficViewerApiProp.fetchEntries).then((entries) => {
+      const last = entries.slice(-1)[0].id
+      openEmptyWebSocket(false, last + 1);
+      scrollableRef?.current.jumpToBottom();
+      setIsSnappedToBottom(true);
+    });
     (async () => {
       try {
         const tapStatusResponse = await trafficViewerApiProp.tapStatus();

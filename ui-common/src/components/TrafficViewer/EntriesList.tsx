@@ -30,7 +30,7 @@ interface EntriesListProps {
 }
 
 export type ListHandle = {
-  loadPrevoisEntries: () => Promise<any>,
+  loadPrevoisEntries: (fetchEntries: (leftOff, direction, query, limit, timeoutMs) => Promise<any>) => Promise<any>,
 }
 export const EntriesList: React.ForwardRefRenderFunction<ListHandle, EntriesListProps> = ({
   listEntryREF,
@@ -65,17 +65,16 @@ export const EntriesList: React.ForwardRefRenderFunction<ListHandle, EntriesList
   const leftOffBottom = entries.length > 0 ? entries[entries.length - 1].id + 1 : -1;
 
   useImperativeHandle(forwardedRef, () => ({
-    loadPrevoisEntries: () => {
+    loadPrevoisEntries: (fetchEntries) => {
       return new Promise(async (res, rej) => {
         setIsLoadingTop(true);
         try {
-          if (trafficViewerApi?.fetchEntries) {
-            const previosEntries = await trafficViewerApi.fetchEntries(-1, -1, debouncedQuery, 20, 3000);
-            const newEntries = [...[...previosEntries.data].reverse(), ...entries];
-            setEntries(newEntries);
-            setLeftOffTop(newEntries.slice(newEntries.length - 1)[0])
-            res(newEntries)
-          }
+          const previosEntries = await fetchEntries(-1, -1, debouncedQuery, 20, 3000);
+          const newEntries = [...[...previosEntries.data].reverse(), ...entries];
+          setEntries(newEntries);
+          setLeftOffTop(newEntries.slice(newEntries.length - 1)[0].id)
+          res(newEntries)
+
         }
         catch (error) {
           rej(error)
