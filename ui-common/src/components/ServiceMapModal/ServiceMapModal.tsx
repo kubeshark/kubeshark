@@ -12,8 +12,6 @@ import closeIcon from "assets/close.svg"
 import styles from './ServiceMapModal.module.sass'
 import SelectList from "../UI/SelectList";
 import { GraphData, ServiceMapGraph } from "./ServiceMapModalTypes"
-import { ResizableBox } from "react-resizable"
-import "react-resizable/css/styles.css"
 import { Utils } from "../../helpers/Utils";
 import { TOAST_CONTAINER_ID } from "../../configs/Consts";
 import Resizeable from "../UI/Resizeable"
