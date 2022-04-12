@@ -55,7 +55,7 @@ export const EntriesList: React.FC<EntriesListProps> = ({
   const [startTime, setStartTime] = useState(0);
   const [truncatedTimestamp, setTruncatedTimestamp] = useState(0);
 
-  const leftOffBottom = entries.length > 0 ? entries[entries.length - 1].id : "";
+  const leftOffBottom = entries.length > 0 ? entries[entries.length - 1].id : "latest";
 
   useEffect(() => {
     const list = document.getElementById('list').firstElementChild;
