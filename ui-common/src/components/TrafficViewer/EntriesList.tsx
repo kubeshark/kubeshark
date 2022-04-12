@@ -62,8 +62,7 @@ export const EntriesList: React.ForwardRefRenderFunction<ListHandle, EntriesList
   const [truncatedTimestamp, setTruncatedTimestamp] = useState(0);
 
   const debouncedQuery = useDebounce<string>(query, 500)
-
-  const leftOffBottom = entries.length > 0 ? entries[entries.length - 1].id : -1;
+  const leftOffBottom = entries.length > 0 ? entries[entries.length - 1].id + 1 : -1;
 
   useImperativeHandle(forwardedRef, () => ({
     loadPrevoisEntries: () => {
@@ -135,6 +134,9 @@ export const EntriesList: React.ForwardRefRenderFunction<ListHandle, EntriesList
     setIsLoadingTop(false);
 
     const newEntries = [...data.data.reverse(), ...entries];
+    if (newEntries.length > 10000) {
+      newEntries.splice(10000, newEntries.length - 10000)
+    }
     setEntries(newEntries);
 
     setQueriedTotal(data.meta.total);
@@ -163,9 +165,9 @@ export const EntriesList: React.ForwardRefRenderFunction<ListHandle, EntriesList
           const entry = message.data;
           if (!focusedEntryId) setFocusedEntryId(entry.id.toString());
           const newEntries = [...entries, entry];
-          if (newEntries.length === 10001) {
-            setLeftOffTop(newEntries[0].entry.id);
-            newEntries.shift();
+          if (newEntries.length > 10000) {
+            setLeftOffTop(newEntries[0].id);
+            newEntries.splice(0, newEntries.length - 10000)
             setNoMoreDataTop(false);
           }
           setEntries(newEntries);

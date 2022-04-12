@@ -3,13 +3,11 @@ package oas
 import (
 	"encoding/json"
 	"github.com/up9inc/mizu/agent/pkg/har"
-	"sync"
 	"testing"
 )
 
 func TestOASGen(t *testing.T) {
 	gen := new(defaultOasGenerator)
-	gen.serviceSpecs = &sync.Map{}
 
 	e := new(har.Entry)
 	err := json.Unmarshal([]byte(`{"startedDateTime": "20000101","request": {"url": "https://host/path", "method": "GET"}, "response": {"status": 200}}`), e)
@@ -21,6 +19,9 @@ func TestOASGen(t *testing.T) {
 		Destination: "some",
 		Entry:       *e,
 	}
+
+	dummyConn := GetFakeDBConn(`{"startedDateTime": "20000101","request": {"url": "https://host/path", "method": "GET"}, "response": {"status": 200}}`)
+	gen.Start(dummyConn)
 	gen.handleHARWithSource(ews)
 	g, ok := gen.serviceSpecs.Load("some")
 	if !ok {
@@ -33,4 +34,9 @@ func TestOASGen(t *testing.T) {
 	}
 	specText, _ := json.Marshal(spec)
 	t.Log(string(specText))
+
+	if !gen.IsStarted() {
+		t.Errorf("Should be started")
+	}
+	gen.Stop()
 }
