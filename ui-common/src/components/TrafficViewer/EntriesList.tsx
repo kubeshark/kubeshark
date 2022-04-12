@@ -55,8 +55,7 @@ export const EntriesList: React.FC<EntriesListProps> = ({
   const [startTime, setStartTime] = useState(0);
   const [truncatedTimestamp, setTruncatedTimestamp] = useState(0);
 
-  const zeroPad = (num, places) => String(num).padStart(places, '0')
-  const leftOffBottom = entries.length > 0 ? zeroPad(+entries[entries.length - 1].id + 1) : "";
+  const leftOffBottom = entries.length > 0 ? entries[entries.length - 1].id : "";
 
   useEffect(() => {
     const list = document.getElementById('list').firstElementChild;
