@@ -12,7 +12,7 @@ const Resizeable: React.FC<Props> = ({ children, minWidth }) => {
     let mousePos = { x: 0, y: 0 }
     let elementDimention = { w: 0, h: 0 }
     let isPressed = false
-    const [elemWidth, setElemWidth] = useState(resizeble?.current?.style.width)
+    const [elemWidth, setElemWidth] = useState(resizeble?.current?.style?.width)
 
     const mouseDownHandler = function (e) {
         // Get the current mouse position
