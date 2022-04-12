@@ -177,7 +177,6 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
             <Fade in={isOpen}>
                 <Box sx={modalStyle}>
                     <div className={styles.modalContainer}>
-                        {/* TODO: remove error missing height */}
                         <div className={styles.filterSection}>
                             <Resizeable minWidth={170}>
                                 <div className={styles.filterWrapper}>
@@ -207,7 +206,7 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
                                 >
                                     Refresh
                                 </Button>
-                                <img src={closeIcon} alt="close" onClick={() => onClose()} style={{ cursor: "pointer" }}></img>
+                                <img src={closeIcon} alt="close" onClick={() => onClose()} style={{ cursor: "pointer", userSelect: "none" }}></img>
                             </div>
                             {isLoading && <div className={spinnerStyle.spinnerContainer}>
                                 <img alt="spinner" src={spinnerImg} style={{ height: 50 }} />

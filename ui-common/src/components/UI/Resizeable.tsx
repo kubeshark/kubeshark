@@ -1,5 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
-import { detectType } from "redoc";
+import React, { useRef, useState } from "react";
 
 import styles from './style/Resizeable.module.sass'
 
@@ -9,11 +8,11 @@ export interface Props {
 }
 
 const Resizeable: React.FC<Props> = ({ children, minWidth }) => {
-    // Query the element
     const resizeble = useRef(null)
     let mousePos = { x: 0, y: 0 }
     let elementDimention = { w: 0, h: 0 }
     let isPressed = false
+    const [elemWidth, setElemWidth] = useState(resizeble?.current?.style.width)
 
     const mouseDownHandler = function (e) {
         // Get the current mouse position
@@ -35,9 +34,9 @@ const Resizeable: React.FC<Props> = ({ children, minWidth }) => {
             const dx = e.clientX - mousePos.x;
             const widthEl = elementDimention.w + dx
 
-            if (widthEl > minWidth)
+            if (widthEl >= minWidth)
                 // Adjust the dimension of element
-                resizeble.current.style.width = `${widthEl}px`;
+                setElemWidth(widthEl)
         }
     };
 
@@ -49,7 +48,7 @@ const Resizeable: React.FC<Props> = ({ children, minWidth }) => {
 
     return (
         <React.Fragment>
-            <div className={styles.resizable} id="resizeMe" ref={resizeble}>
+            <div className={styles.resizable} ref={resizeble} style={{ width: elemWidth }}>
                 {children}
                 <div className={`${styles.resizer} ${styles.resizerRight}`} onMouseDown={mouseDownHandler}></div>
                 {/* <div className={`${styles.resizer} ${styles.resizerB}`} onMouseDown={mouseDownHandler}></div> -- FutureUse*/}
