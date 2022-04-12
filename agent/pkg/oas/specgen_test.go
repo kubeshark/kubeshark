@@ -61,8 +61,7 @@ func TestEntries(t *testing.T) {
 		t.FailNow()
 	}
 
-	dummyConn := GetFakeDBConn("\n")
-	gen := NewDefaultOasGenerator(dummyConn)
+	gen := NewDefaultOasGenerator()
 	gen.serviceSpecs = new(sync.Map)
 	loadStartingOAS("test_artifacts/catalogue.json", "catalogue", gen.serviceSpecs)
 	loadStartingOAS("test_artifacts/trcc.json", "trcc-api-service", gen.serviceSpecs)
@@ -136,8 +135,7 @@ func TestEntries(t *testing.T) {
 }
 
 func TestFileSingle(t *testing.T) {
-	dummyConn := GetFakeDBConn("\n")
-	gen := NewDefaultOasGenerator(dummyConn)
+	gen := NewDefaultOasGenerator()
 	gen.serviceSpecs = new(sync.Map)
 	// loadStartingOAS()
 	file := "test_artifacts/params.har"
@@ -227,8 +225,7 @@ func loadStartingOAS(file string, label string, specs *sync.Map) {
 }
 
 func TestEntriesNegative(t *testing.T) {
-	dummyConn := GetFakeDBConn("\n")
-	gen := NewDefaultOasGenerator(dummyConn)
+	gen := NewDefaultOasGenerator()
 	gen.serviceSpecs = new(sync.Map)
 	files := []string{"invalid"}
 	_, err := feedEntries(files, false, gen)
@@ -239,8 +236,7 @@ func TestEntriesNegative(t *testing.T) {
 }
 
 func TestEntriesPositive(t *testing.T) {
-	dummyConn := GetFakeDBConn("\n")
-	gen := NewDefaultOasGenerator(dummyConn)
+	gen := NewDefaultOasGenerator()
 	gen.serviceSpecs = new(sync.Map)
 	files := []string{"test_artifacts/params.har"}
 	_, err := feedEntries(files, false, gen)

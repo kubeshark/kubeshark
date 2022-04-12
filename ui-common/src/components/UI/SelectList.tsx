@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import Radio from "./Radio";
 import styles from './style/SelectList.module.sass'
 import NoDataMessage from "./NoDataMessage";
@@ -19,11 +19,15 @@ export interface Props {
 const SelectList: React.FC<Props> = ({ items, tableName, checkedValues = [], multiSelect = true, searchValue = "", setCheckedValues, tableClassName,
     checkBoxWidth = 50 }) => {
     const noItemsMessage = "No items to show";
-    const enabledItemsLength = useMemo(() => items.filter(item => !item.disabled).length, [items]);
+    const [headerChecked, setHeaderChecked] = useState(false)
 
     const filteredValues = useMemo(() => {
         return items.filter((listValue) => listValue?.value?.includes(searchValue));
     }, [items, searchValue])
+
+    const filteredValuesKeys = useMemo(() => {
+        return filteredValues.map(x => x.key)
+    }, [filteredValues])
 
     const toggleValue = (checkedKey) => {
         if (!multiSelect) {
@@ -34,25 +38,31 @@ const SelectList: React.FC<Props> = ({ items, tableName, checkedValues = [], mul
         else {
             const newCheckedValues = [...checkedValues];
             let index = newCheckedValues.indexOf(checkedKey);
+
             if (index > -1)
                 newCheckedValues.splice(index, 1);
             else
                 newCheckedValues.push(checkedKey);
+
             setCheckedValues(newCheckedValues);
         }
     }
 
-    const toggleAll = () => {
-        const newCheckedValues = [...checkedValues];
-        if (newCheckedValues.length === enabledItemsLength) setCheckedValues([]);
-        else {
-            items.forEach((obj) => {
-                if (!obj.disabled && !newCheckedValues.includes(obj.key))
-                    newCheckedValues.push(obj.key);
-            })
-            setCheckedValues(newCheckedValues);
+    useEffect(() => {
+        const setAllChecked = filteredValuesKeys.every(val => checkedValues.includes(val))
+        setHeaderChecked(setAllChecked)
+    }, [filteredValuesKeys, checkedValues])
+
+    const toggleAll = useCallback((shouldCheckAll) => {
+        let newChecked = checkedValues.filter(x => !filteredValuesKeys.includes(x))
+
+        if (shouldCheckAll) {
+            const disabledItems = items.filter(i => i.disabled).map(x => x.key)
+            newChecked = [...filteredValuesKeys, ...newChecked].filter(x => !disabledItems.includes(x))
         }
-    }
+
+        setCheckedValues(newChecked)
+    }, [searchValue, checkedValues, filteredValuesKeys])
 
     const dataFieldFunc = (listValue) => listValue.component ? listValue.component :
         <span className={styles.nowrap} title={listValue.value}>
@@ -60,8 +70,8 @@ const SelectList: React.FC<Props> = ({ items, tableName, checkedValues = [], mul
         </span>
 
     const tableHead = multiSelect ? <tr style={{ borderBottomWidth: "2px" }}>
-        <th style={{ width: checkBoxWidth }}><Checkbox data-cy="checkbox-all" checked={enabledItemsLength === checkedValues.length}
-            onToggle={toggleAll} /></th>
+        <th style={{ width: checkBoxWidth }}><Checkbox data-cy="checkbox-all" checked={headerChecked}
+            onToggle={(isChecked) => toggleAll(isChecked)} /></th>
         <th>{tableName}</th>
     </tr> :
         <tr style={{ borderBottomWidth: "2px" }}>
@@ -70,7 +80,7 @@ const SelectList: React.FC<Props> = ({ items, tableName, checkedValues = [], mul
 
     const tableBody = filteredValues.length === 0 ?
         <tr>
-            <td>
+            <td colSpan={2}>
                 <NoDataMessage messageText={noItemsMessage} />
             </td>
         </tr>

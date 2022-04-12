@@ -1,25 +1,26 @@
 @import '../../../variables.module'
 
 .selectListTable
+    overflow: auto
+    height: 100%
+
     table
         width: 100%
         margin-top: 20px
-        height: 100%
-
-        tbody
-            display: block
+        border-collapse: collapse
 
         th
             color: $blue-gray
             text-align: left
             padding: 10px
+            position: sticky
+            top: 0
+            background: $main-background-color
 
         tr
             border-bottom-width: 1px
             border-bottom-color: $data-background-color
             border-bottom-style: solid
-            display: table
-            table-layout: fixed
             width: 100%
 
         td
