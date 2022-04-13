@@ -226,8 +226,8 @@ function checkFilter(filterDetails) {
 
             // checking only 'leftTextCheck' on all entries because the rest of the checks require more time
             cy.get(`#list [id^=entry]`).each(elem => {
-                const element = elem[0]
-                let entryId = getEntryId(element.id)
+                const element = elem[0];
+                let entryId = getEntryId(element.id);
                 leftTextCheck(entryId, leftSidePath, leftSideExpectedText);
             });
 
@@ -244,15 +244,14 @@ function checkFilter(filterDetails) {
 
 function deeperCheck(leftSidePath, rightSidePath, filterName, leftSideExpectedText, rightSideExpectedText, entriesNumToCheck) {
     cy.get(`#list [id^=entry]`).each((element, index) => {
-        if (index >= entriesNumToCheck){
-            return
-        }
-        const entryId = getEntryId(element[0].id);
-        leftOnHoverCheck(entryId, leftSidePath, filterName);
+        if (index < entriesNumToCheck) {
+            const entryId = getEntryId(element[0].id);
+            leftOnHoverCheck(entryId, leftSidePath, filterName);
 
-        element.click();
-        rightTextCheck(rightSidePath, rightSideExpectedText);
-        rightOnHoverCheck(rightSidePath, filterName);
+            element.click();
+            rightTextCheck(rightSidePath, rightSideExpectedText);
+            rightOnHoverCheck(rightSidePath, filterName);
+        }
     });
 }
 

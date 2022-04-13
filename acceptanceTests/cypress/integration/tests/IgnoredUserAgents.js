@@ -16,7 +16,7 @@ function checkEntries() {
         resizeToHugeMizu();
 
         cy.get('#list [id^=entry]').each(entryElement => {
-            entryElement.click()
+            entryElement.click();
             cy.get('#tbody-Headers').should('be.visible');
             isValueExistsInElement(false, 'Ignored-User-Agent', '#tbody-Headers');
         });
