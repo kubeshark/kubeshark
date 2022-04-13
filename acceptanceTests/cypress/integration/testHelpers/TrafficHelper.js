@@ -111,7 +111,8 @@ export function checkFilterByMethod(funcDict) {
     });
 }
 
-export function getEntryId (id) {
+export function getEntryId(id) {
+    // take the second part from the string (entry-<ID>)
     return id.split('-')[1];
 }
 
@@ -187,5 +188,3 @@ function getProtocolDict(protocol, protocolText) {
         expectedOnHover: protocol.toLowerCase()
     };
 }
-
-

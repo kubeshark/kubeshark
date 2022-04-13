@@ -149,10 +149,6 @@ function checkFilterNoResults(filterName) {
             // the DOM should show 0 entries
             cy.get('#entries-length').should('have.text', '0');
 
-            // going through every potential entry and verifies that it doesn't exist
-            // maybe add this as check later but not we don't have the id as incremental number
-            // [...Array(parseInt(totalEntries)).keys()].map(shouldNotExist);
-
             cy.get('[title="Fetch old records"]').click();
             cy.get('#noMoreDataTop', {timeout: refreshWaitTimeout}).should('be.visible');
             cy.get('#entries-length').should('have.text', '0'); // after loading all entries there should still be 0 entries
@@ -162,10 +158,6 @@ function checkFilterNoResults(filterName) {
             cy.get('#total-entries', {timeout: refreshWaitTimeout}).should('have.text', totalEntries);
         });
     });
-}
-
-function shouldNotExist(entryId) {
-    cy.get(`entry-${entryId}`).should('not.exist');
 }
 
 function checkIllegalFilter(illegalFilterName) {
