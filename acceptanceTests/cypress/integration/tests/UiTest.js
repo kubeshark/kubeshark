@@ -190,13 +190,15 @@ function checkFilter(filterDetails) {
         applyByEnter
     } = filterDetails;
 
+    const entriesForDeeperCheck = 5;
+
     it(`checking the filter: ${name}`, function () {
         cy.get('#total-entries').should('not.have.text', '0').then(number => {
-            const totalEntries = number.text()
+            const totalEntries = number.text();
 
             cy.get(`#list [id^=entry]`).last().then(elem => {
-                const element = elem[0]
-                const entryId = getEntryId(element.id)
+                const element = elem[0];
+                const entryId = getEntryId(element.id);
                 // checks the hover on the last entry (the only one in DOM at the beginning)
                 leftOnHoverCheck(entryId, leftSidePath, name);
 
@@ -230,7 +232,7 @@ function checkFilter(filterDetails) {
             });
 
             // making the other 3 checks on the first X entries (longer time for each check)
-            deeperCheck(leftSidePath, rightSidePath, name, leftSideExpectedText, rightSideExpectedText);
+            deeperCheck(leftSidePath, rightSidePath, name, leftSideExpectedText, rightSideExpectedText, entriesForDeeperCheck);
 
             // reloading then waiting for the entries number to load
             resizeToNormalMizu();
@@ -240,12 +242,15 @@ function checkFilter(filterDetails) {
     });
 }
 
-function deeperCheck(leftSidePath, rightSidePath, filterName, leftSideExpectedText, rightSideExpectedText) {
-    cy.get(`#list [id^=entry]`).each(element => {
-        const entryId = getEntryId(element[0].id)
+function deeperCheck(leftSidePath, rightSidePath, filterName, leftSideExpectedText, rightSideExpectedText, entriesNumToCheck) {
+    cy.get(`#list [id^=entry]`).each((element, index) => {
+        if (index >= entriesNumToCheck){
+            return
+        }
+        const entryId = getEntryId(element[0].id);
         leftOnHoverCheck(entryId, leftSidePath, filterName);
 
-        element.click()
+        element.click();
         rightTextCheck(rightSidePath, rightSideExpectedText);
         rightOnHoverCheck(rightSidePath, filterName);
     });
