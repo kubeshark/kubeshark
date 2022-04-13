@@ -2,12 +2,13 @@ package oas
 
 import (
 	"encoding/json"
-	"github.com/chanced/openapi"
-	"github.com/up9inc/mizu/shared/logger"
 	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/chanced/openapi"
+	"github.com/up9inc/mizu/shared/logger"
 )
 
 type NodePath = []string
@@ -20,7 +21,7 @@ type Node struct {
 	children  []*Node
 }
 
-func (n *Node) getOrSet(path NodePath, existingPathObj *openapi.PathObj, sampleId uint) (node *Node) {
+func (n *Node) getOrSet(path NodePath, existingPathObj *openapi.PathObj, sampleId string) (node *Node) {
 	if existingPathObj == nil {
 		panic("Invalid function call")
 	}

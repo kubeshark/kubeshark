@@ -43,7 +43,7 @@ jobs:
         with:
           status: ${{ job.status }}
           notification_title: 'Mizu {workflow} has {status_message}'
-          message_format: '{emoji} *{workflow}* {status_message} during <{run_url}|run>, after commit <{commit_url}|{commit_sha}> by ${{ github.event.head_commit.committer.name }} <${{ github.event.head_commit.committer.email }}> ```${{ github.event.head_commit.message }}```'
+          message_format: '{emoji} *{workflow}* {status_message} during <{run_url}|run>, after commit <{commit_url}|{commit_sha}> by ${{ github.event.head_commit.author.name }} <${{ github.event.head_commit.author.email }}> ```${{ github.event.head_commit.message }}```'
           footer: 'Linked Repo <{repo_url}|{repo}>'
           notify_when: 'failure'
         env:

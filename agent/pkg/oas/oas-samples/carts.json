@@ -1,0 +1,96 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "http://carts",
+    "description": "Mizu observed 3 entries (0 failed), at 2.287 hits/s, average response time is 0.017 seconds",
+    "version": "1.0"
+  },
+  "servers": [
+    {
+      "url": "http://carts"
+    }
+  ],
+  "paths": {
+    "/carts/{cartId}/items": {
+      "get": {
+        "summary": "/carts/{cartId}/items",
+        "description": "Mizu observed 3 entries (0 failed), at 2.287 hits/s, average response time is 0.017 seconds",
+        "operationId": "84c9b926-1f73-4ab4-b381-3c124528959f",
+        "responses": {
+          "200": {
+            "description": "Successful call with status 200",
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "id": "60fe98fb86c0fc000869a90c",
+                    "itemId": "3395a43e-2d88-40de-b95f-e00e1502085b",
+                    "quantity": 1,
+                    "unitPrice": 18
+                  }
+                ],
+                "x-sample-entry": "000000000000000000000010"
+              }
+            },
+            "x-sample-entry": "000000000000000000000010"
+          }
+        },
+        "x-counters-per-source": {
+          "some-source": {
+            "entries": 3,
+            "failures": 0,
+            "firstSeen": 1627298058.3798368,
+            "lastSeen": 1627298065.2397773,
+            "sumRT": 0.05,
+            "sumDuration": 6.859940528869629
+          }
+        },
+        "x-counters-total": {
+          "entries": 3,
+          "failures": 0,
+          "firstSeen": 1627298058.3798368,
+          "lastSeen": 1627298065.2397773,
+          "sumRT": 0.05,
+          "sumDuration": 6.859940528869629
+        },
+        "x-last-seen-ts": 1627298065.2397773,
+        "x-sample-entry": "000000000000000000000010"
+      },
+      "parameters": [
+        {
+          "name": "cartId",
+          "in": "path",
+          "required": true,
+          "style": "simple",
+          "schema": {
+            "type": "string"
+          },
+          "examples": {
+            "example #0": {
+              "value": "mHK0P7zTktmV1zv57iWAvCTd43FFMHap"
+            }
+          },
+          "x-sample-entry": "000000000000000000000010"
+        }
+      ]
+    }
+  },
+  "x-counters-per-source": {
+    "some-source": {
+      "entries": 3,
+      "failures": 0,
+      "firstSeen": 1627298058.3798368,
+      "lastSeen": 1627298065.2397773,
+      "sumRT": 0.05,
+      "sumDuration": 6.859940528869629
+    }
+  },
+  "x-counters-total": {
+    "entries": 3,
+    "failures": 0,
+    "firstSeen": 1627298058.3798368,
+    "lastSeen": 1627298065.2397773,
+    "sumRT": 0.05,
+    "sumDuration": 6.859940528869629
+  }
+}

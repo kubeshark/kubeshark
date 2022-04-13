@@ -21,17 +21,17 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({ setAnalyzeStatus }) =>
   const commonClasses = useCommonStyles();
   const [serviceMapModalOpen, setServiceMapModalOpen] = useRecoilState(serviceMapModalOpenAtom);
   const [openOasModal, setOpenOasModal] = useRecoilState(oasModalOpenAtom);
-  const [openWebSocket, setOpenWebSocket] = useState(true);
+  const [shouldCloseWebSocket, setShouldCloseWebSocket] = useState(false);
 
   const trafficViewerApi = { ...api }
 
   const handleOpenOasModal = () => {
-    setOpenWebSocket(false)
+    setShouldCloseWebSocket(true)
     setOpenOasModal(true);
   }
 
   const openServiceMapModalDebounce = debounce(() => {
-    setOpenWebSocket(false)
+    setShouldCloseWebSocket(true)
     setServiceMapModalOpen(true)
   }, 500);
 
@@ -59,7 +59,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({ setAnalyzeStatus }) =>
 
   return (
     <>
-      <TrafficViewer setAnalyzeStatus={setAnalyzeStatus} webSocketUrl={MizuWebsocketURL} isCloseWebSocket={!openWebSocket}
+      <TrafficViewer setAnalyzeStatus={setAnalyzeStatus} webSocketUrl={MizuWebsocketURL} shouldCloseWebSocket={shouldCloseWebSocket} setShouldCloseWebSocket={setShouldCloseWebSocket}
         trafficViewerApiProp={trafficViewerApi} actionButtons={actionButtons} isShowStatusBar={!(openOasModal || serviceMapModalOpen)} isDemoBannerView={false} />
     </>
   );
