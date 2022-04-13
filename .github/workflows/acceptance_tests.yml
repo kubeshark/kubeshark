@@ -4,6 +4,7 @@ on:
   pull_request:
     branches:
       - 'main'
+      - 'develop'
   push:
     branches:
       - 'develop'
@@ -12,6 +13,7 @@ jobs:
   run-acceptance-tests:
     name: Run acceptance tests
     runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.ref == 'refs/heads/main' || ${{ contains(github.event.head_commit.message, '#run_accpetance_test') }})
     steps:
       - name: Set up Go 1.17
         uses: actions/setup-go@v2
