@@ -98,8 +98,7 @@ func (h *tcpReader) Close() {
 func (h *tcpReader) run(wg *sync.WaitGroup) {
 	defer wg.Done()
 	b := bufio.NewReader(h)
-	// TODO: Add api.Pcap, api.Envoy and api.Linkerd distinction by refactoring NewPacketSourceManager method
-	err := h.extension.Dissector.Dissect(b, h.progress, api.Pcap, h.isClient, h.tcpID, h.counterPair, h.superTimer, h.parent.superIdentifier, h.emitter, filteringOptions, h.reqResMatcher)
+	err := h.extension.Dissector.Dissect(b, h.progress, h.parent.origin, h.isClient, h.tcpID, h.counterPair, h.superTimer, h.parent.superIdentifier, h.emitter, filteringOptions, h.reqResMatcher)
 	if err != nil {
 		_, err = io.Copy(ioutil.Discard, b)
 		if err != nil {

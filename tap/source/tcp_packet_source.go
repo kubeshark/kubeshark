@@ -10,6 +10,7 @@ import (
 	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/pcap"
 	"github.com/up9inc/mizu/shared/logger"
+	"github.com/up9inc/mizu/tap/api"
 	"github.com/up9inc/mizu/tap/diagnose"
 )
 
@@ -19,6 +20,7 @@ type tcpPacketSource struct {
 	defragger *ip4defrag.IPv4Defragmenter
 	Behaviour *TcpPacketSourceBehaviour
 	name      string
+	Origin    api.Capture
 }
 
 type TcpPacketSourceBehaviour struct {
@@ -36,13 +38,14 @@ type TcpPacketInfo struct {
 }
 
 func newTcpPacketSource(name, filename string, interfaceName string,
-	behaviour TcpPacketSourceBehaviour) (*tcpPacketSource, error) {
+	behaviour TcpPacketSourceBehaviour, origin api.Capture) (*tcpPacketSource, error) {
 	var err error
 
 	result := &tcpPacketSource{
 		name:      name,
 		defragger: ip4defrag.NewIPv4Defragmenter(),
 		Behaviour: &behaviour,
+		Origin:    origin,
 	}
 
 	if filename != "" {
