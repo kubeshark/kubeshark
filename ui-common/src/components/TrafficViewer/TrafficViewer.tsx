@@ -49,14 +49,15 @@ interface TrafficViewerProps {
   actionButtons?: JSX.Element,
   isShowStatusBar?: boolean,
   webSocketUrl: string,
-  isCloseWebSocket: boolean,
+  shouldCloseWebSocket: boolean,
+  setShouldCloseWebSocket: (flag: boolean) => void,
   isDemoBannerView: boolean
 }
 
 export const TrafficViewer: React.FC<TrafficViewerProps> = ({
                                                               setAnalyzeStatus, trafficViewerApiProp,
                                                               actionButtons, isShowStatusBar, webSocketUrl,
-                                                              isCloseWebSocket, isDemoBannerView
+                                                              shouldCloseWebSocket, setShouldCloseWebSocket, isDemoBannerView
                                                             }) => {
 
   const classes = useLayoutStyles();
@@ -104,8 +105,11 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
   }, [query, handleQueryChange]);
 
   useEffect(() => {
-    isCloseWebSocket && closeWebSocket()
-  }, [isCloseWebSocket])
+    if(shouldCloseWebSocket){
+      closeWebSocket()
+      setShouldCloseWebSocket(false);
+    }
+  }, [shouldCloseWebSocket])
 
   useEffect(() => {
     reopenConnection()
@@ -295,11 +299,11 @@ const MemoiedTrafficViewer = React.memo(TrafficViewer)
 const TrafficViewerContainer: React.FC<TrafficViewerProps> = ({
                                                                 setAnalyzeStatus, trafficViewerApiProp,
                                                                 actionButtons, isShowStatusBar = true,
-                                                                webSocketUrl, isCloseWebSocket, isDemoBannerView
+                                                                webSocketUrl, shouldCloseWebSocket, setShouldCloseWebSocket, isDemoBannerView
                                                               }) => {
   return <RecoilRoot>
     <MemoiedTrafficViewer actionButtons={actionButtons} isShowStatusBar={isShowStatusBar} webSocketUrl={webSocketUrl}
-                          isCloseWebSocket={isCloseWebSocket} trafficViewerApiProp={trafficViewerApiProp}
+                          shouldCloseWebSocket={shouldCloseWebSocket} setShouldCloseWebSocket={setShouldCloseWebSocket} trafficViewerApiProp={trafficViewerApiProp}
                           setAnalyzeStatus={setAnalyzeStatus} isDemoBannerView={isDemoBannerView}/>
     <ToastContainer enableMultiContainer containerId={TOAST_CONTAINER_ID}
                     position="bottom-right"
