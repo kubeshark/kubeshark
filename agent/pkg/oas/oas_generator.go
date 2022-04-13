@@ -101,14 +101,12 @@ func (g *defaultOasGenerator) runGenerator() {
 	dataChan := make(chan []byte)
 	metaChan := make(chan []byte)
 
-	func() {
-		g.dbMutex.Lock()
-		defer g.dbMutex.Unlock()
-		logger.Log.Infof("Querying DB for OAS generator with query '%s'", g.entriesQuery)
-		if err := g.dbConn.Query(g.entriesQuery, dataChan, metaChan); err != nil {
-			logger.Log.Errorf("Query mode call failed: %v", err)
-		}
-	}()
+	g.dbMutex.Lock()
+	defer g.dbMutex.Unlock()
+	logger.Log.Infof("Querying DB for OAS generator with query '%s'", g.entriesQuery)
+	if err := g.dbConn.Query(g.entriesQuery, dataChan, metaChan); err != nil {
+		logger.Log.Errorf("Query mode call failed: %v", err)
+	}
 
 	for {
 		select {
