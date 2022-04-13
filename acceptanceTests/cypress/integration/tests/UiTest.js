@@ -1,5 +1,6 @@
 import {findLineAndCheck, getExpectedDetailsDict} from "../testHelpers/StatusBarHelper";
 import {
+    getEntryId,
     leftOnHoverCheck,
     leftTextCheck,
     resizeToHugeMizu,
@@ -149,7 +150,8 @@ function checkFilterNoResults(filterName) {
             cy.get('#entries-length').should('have.text', '0');
 
             // going through every potential entry and verifies that it doesn't exist
-            [...Array(parseInt(totalEntries)).keys()].map(shouldNotExist);
+            // maybe add this as check later but not we don't have the id as incremental number
+            // [...Array(parseInt(totalEntries)).keys()].map(shouldNotExist);
 
             cy.get('[title="Fetch old records"]').click();
             cy.get('#noMoreDataTop', {timeout: refreshWaitTimeout}).should('be.visible');
@@ -162,8 +164,8 @@ function checkFilterNoResults(filterName) {
     });
 }
 
-function shouldNotExist(entryNum) {
-    cy.get(`entry-${entryNum}`).should('not.exist');
+function shouldNotExist(entryId) {
+    cy.get(`entry-${entryId}`).should('not.exist');
 }
 
 function checkIllegalFilter(illegalFilterName) {
@@ -185,58 +187,72 @@ function checkIllegalFilter(illegalFilterName) {
         });
     });
 }
-function checkFilter(filterDetails){
-    const {name, leftSidePath, rightSidePath, rightSideExpectedText, leftSideExpectedText, applyByEnter} = filterDetails;
-    const entriesForDeeperCheck = 5;
+
+function checkFilter(filterDetails) {
+    const {
+        name,
+        leftSidePath,
+        rightSidePath,
+        rightSideExpectedText,
+        leftSideExpectedText,
+        applyByEnter
+    } = filterDetails;
 
     it(`checking the filter: ${name}`, function () {
         cy.get('#total-entries').should('not.have.text', '0').then(number => {
-            const totalEntries = number.text();
+            const totalEntries = number.text()
 
-            // checks the hover on the last entry (the only one in DOM at the beginning)
-            leftOnHoverCheck(totalEntries - 1, leftSidePath, name);
+            cy.get(`#list [id^=entry]`).last().then(elem => {
+                const element = elem[0]
+                const entryId = getEntryId(element.id)
+                // checks the hover on the last entry (the only one in DOM at the beginning)
+                leftOnHoverCheck(entryId, leftSidePath, name);
 
-            cy.get('.w-tc-editor-text').clear();
-            // applying the filter with alt+enter or with the button
-            cy.get('.w-tc-editor-text').type(`${name}${applyByEnter ? '{alt+enter}' : ''}`);
-            cy.get('.w-tc-editor').should('have.attr', 'style').and('include', Cypress.env('greenFilterColor'));
-            if (!applyByEnter)
-                cy.get('[type="submit"]').click();
+                cy.get('.w-tc-editor-text').clear();
+                // applying the filter with alt+enter or with the button
+                cy.get('.w-tc-editor-text').type(`${name}${applyByEnter ? '{alt+enter}' : ''}`);
+                cy.get('.w-tc-editor').should('have.attr', 'style').and('include', Cypress.env('greenFilterColor'));
+                if (!applyByEnter)
+                    cy.get('[type="submit"]').click();
 
-            // only one entry in DOM after filtering, checking all checks on it
-            leftTextCheck(totalEntries - 1, leftSidePath, leftSideExpectedText);
-            leftOnHoverCheck(totalEntries - 1, leftSidePath, name);
-            rightTextCheck(rightSidePath, rightSideExpectedText);
-            rightOnHoverCheck(rightSidePath, name);
-            checkRightSideResponseBody();
+                // only one entry in DOM after filtering, checking all checks on it
+                leftTextCheck(entryId, leftSidePath, leftSideExpectedText);
+                leftOnHoverCheck(entryId, leftSidePath, name);
+                rightTextCheck(rightSidePath, rightSideExpectedText);
+                rightOnHoverCheck(rightSidePath, name);
+                checkRightSideResponseBody();
 
-            cy.get('[title="Fetch old records"]').click();
-            resizeToHugeMizu();
+                cy.get('[title="Fetch old records"]').click();
+                resizeToHugeMizu();
 
-            // waiting for the entries number to load
-            cy.get('#entries-length', {timeout: refreshWaitTimeout}).should('have.text', totalEntries);
+                // waiting for the entries number to load
+                cy.get('#entries-length', {timeout: refreshWaitTimeout}).should('have.text', totalEntries);
 
-            // checking only 'leftTextCheck' on all entries because the rest of the checks require more time
-            [...Array(parseInt(totalEntries)).keys()].forEach(entryNum => {
-                leftTextCheck(entryNum, leftSidePath, leftSideExpectedText);
-            });
+                // checking only 'leftTextCheck' on all entries because the rest of the checks require more time
+                cy.get(`#list [id^=entry]`).each(elem => {
+                    const element = elem[0]
+                    let entryId = getEntryId(element.id)
+                    leftTextCheck(entryId, leftSidePath, leftSideExpectedText);
+                });
 
-            // making the other 3 checks on the first X entries (longer time for each check)
-            deeperChcek(leftSidePath, rightSidePath, name, leftSideExpectedText, rightSideExpectedText, entriesForDeeperCheck);
+                // making the other 3 checks on the first X entries (longer time for each check)
+                deeperCheck(leftSidePath, rightSidePath, name, leftSideExpectedText, rightSideExpectedText);
 
-            // reloading then waiting for the entries number to load
-            resizeToNormalMizu();
-            cy.reload();
-            cy.get('#total-entries', {timeout: refreshWaitTimeout}).should('have.text', totalEntries);
+                // reloading then waiting for the entries number to load
+                resizeToNormalMizu();
+                cy.reload();
+                cy.get('#total-entries', {timeout: refreshWaitTimeout}).should('have.text', totalEntries);
+            })
         });
     });
 }
 
-function deeperChcek(leftSidePath, rightSidePath, filterName, leftSideExpectedText, rightSideExpectedText, entriesNumToCheck) {
-    [...Array(entriesNumToCheck).keys()].forEach(entryNum => {
-        leftOnHoverCheck(entryNum, leftSidePath, filterName);
+function deeperCheck(leftSidePath, rightSidePath, filterName, leftSideExpectedText, rightSideExpectedText) {
+    cy.get(`#list [id^=entry]`).each(element => {
+        const entryId = getEntryId(element[0].id)
+        leftOnHoverCheck(entryId, leftSidePath, filterName);
 
-        cy.get(`#list #entry-${entryNum}`).click();
+        element.click()
         rightTextCheck(rightSidePath, rightSideExpectedText);
         rightOnHoverCheck(rightSidePath, filterName);
     });
