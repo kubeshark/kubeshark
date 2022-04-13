@@ -3,13 +3,10 @@ import * as axios from "axios";
 export const MizuWebsocketURL = process.env.REACT_APP_OVERRIDE_WS_URL ? process.env.REACT_APP_OVERRIDE_WS_URL :
     window.location.protocol === 'https:' ? `wss://${window.location.host}/ws` : `ws://${window.location.host}/ws`;
 
-export const FormValidationErrorType = "formError";
-
 const CancelToken = axios.CancelToken;
 
 const apiURL = process.env.REACT_APP_OVERRIDE_API_URL ? process.env.REACT_APP_OVERRIDE_API_URL : `${window.location.origin}/`;
 
-let token = ""
 let client = null
 let source = null
 
@@ -24,24 +21,12 @@ export default class Api {
     }
 
     constructor() {
-        token = localStorage.getItem("token");
-
         client = this.getAxiosClient();
         source = null;
     }
 
-    serviceMapStatus = async () => {
-        const response = await client.get("/servicemap/status");
-        return response.data;
-    }
-
     serviceMapData = async () => {
         const response = await client.get(`/servicemap/get`);
-        return response.data;
-    }
-
-    serviceMapReset = async () => {
-        const response = await client.get(`/servicemap/reset`);
         return response.data;
     }
 
@@ -125,19 +110,9 @@ export default class Api {
         return response.data;
     }
 
-    persistToken = (tk) => {
-        token = tk;
-        client = this.getAxiosClient();
-        localStorage.setItem('token', token);
-    }
-
     getAxiosClient = () => {
         const headers = {
             Accept: "application/json"
-        }
-
-        if (token) {
-            headers['x-session-token'] = `${token}`; // we use `x-session-token` instead of `Authorization` because the latter is reserved by kubectl proxy, making mizu view not work
         }
         return axios.create({
             baseURL: apiURL,
@@ -145,13 +120,4 @@ export default class Api {
             headers
         });
     }
-}
-
-export function getWebsocketUrl() {
-    let websocketUrl = MizuWebsocketURL;
-    if (token) {
-        websocketUrl += `/${token}`;
-    }
-
-    return websocketUrl;
 }

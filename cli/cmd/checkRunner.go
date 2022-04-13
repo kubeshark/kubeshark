@@ -27,13 +27,21 @@ func runMizuCheck() {
 		checkPassed = check.KubernetesVersion(kubernetesVersion)
 	}
 
-	if config.Config.Check.PreTap {
-		if checkPassed {
-			checkPassed = check.TapKubernetesPermissions(ctx, embedFS, kubernetesProvider)
+	if config.Config.Check.PreTap || config.Config.Check.PreInstall || config.Config.Check.ImagePull {
+		if config.Config.Check.PreTap {
+			if checkPassed {
+				checkPassed = check.TapKubernetesPermissions(ctx, embedFS, kubernetesProvider)
+			}
+		} else if config.Config.Check.PreInstall {
+			if checkPassed {
+				checkPassed = check.InstallKubernetesPermissions(ctx, kubernetesProvider)
+			}
 		}
-	} else if config.Config.Check.PreInstall {
-		if checkPassed {
-			checkPassed = check.InstallKubernetesPermissions(ctx, kubernetesProvider)
+
+		if config.Config.Check.ImagePull {
+			if checkPassed {
+				checkPassed = check.ImagePullInCluster(ctx, kubernetesProvider)
+			}
 		}
 	} else {
 		if checkPassed {
@@ -42,12 +50,6 @@ func runMizuCheck() {
 
 		if checkPassed {
 			checkPassed = check.ServerConnection(kubernetesProvider)
-		}
-	}
-
-	if config.Config.Check.ImagePull {
-		if checkPassed {
-			checkPassed = check.ImagePullInCluster(ctx, kubernetesProvider)
 		}
 	}
 

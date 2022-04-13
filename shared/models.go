@@ -6,24 +6,25 @@ import (
 
 	"github.com/op/go-logging"
 	"github.com/up9inc/mizu/shared/logger"
-	v1 "k8s.io/api/core/v1"
 
 	"gopkg.in/yaml.v3"
+	v1 "k8s.io/api/core/v1"
 )
 
 type WebSocketMessageType string
 
 const (
-	WebSocketMessageTypeEntry         WebSocketMessageType = "entry"
-	WebSocketMessageTypeFullEntry     WebSocketMessageType = "fullEntry"
-	WebSocketMessageTypeTappedEntry   WebSocketMessageType = "tappedEntry"
-	WebSocketMessageTypeUpdateStatus  WebSocketMessageType = "status"
-	WebSocketMessageTypeAnalyzeStatus WebSocketMessageType = "analyzeStatus"
-	WebsocketMessageTypeOutboundLink  WebSocketMessageType = "outboundLink"
-	WebSocketMessageTypeToast         WebSocketMessageType = "toast"
-	WebSocketMessageTypeQueryMetadata WebSocketMessageType = "queryMetadata"
-	WebSocketMessageTypeStartTime     WebSocketMessageType = "startTime"
-	WebSocketMessageTypeTapConfig     WebSocketMessageType = "tapConfig"
+	WebSocketMessageTypeEntry            WebSocketMessageType = "entry"
+	WebSocketMessageTypeFullEntry        WebSocketMessageType = "fullEntry"
+	WebSocketMessageTypeTappedEntry      WebSocketMessageType = "tappedEntry"
+	WebSocketMessageTypeUpdateStatus     WebSocketMessageType = "status"
+	WebSocketMessageTypeUpdateTappedPods WebSocketMessageType = "tappedPods"
+	WebSocketMessageTypeAnalyzeStatus    WebSocketMessageType = "analyzeStatus"
+	WebsocketMessageTypeOutboundLink     WebSocketMessageType = "outboundLink"
+	WebSocketMessageTypeToast            WebSocketMessageType = "toast"
+	WebSocketMessageTypeQueryMetadata    WebSocketMessageType = "queryMetadata"
+	WebSocketMessageTypeStartTime        WebSocketMessageType = "startTime"
+	WebSocketMessageTypeTapConfig        WebSocketMessageType = "tapConfig"
 )
 
 type Resources struct {
@@ -75,9 +76,27 @@ type WebSocketStatusMessage struct {
 	TappingStatus []TappedPodStatus `json:"tappingStatus"`
 }
 
+type WebSocketTappedPodsMessage struct {
+	*WebSocketMessageMetadata
+	NodeToTappedPodMap NodeToPodsMap `json:"nodeToTappedPodMap"`
+}
+
 type WebSocketTapConfigMessage struct {
 	*WebSocketMessageMetadata
 	TapTargets []v1.Pod `json:"pods"`
+}
+
+type NodeToPodsMap map[string][]v1.Pod
+
+func (np NodeToPodsMap) Summary() map[string][]string {
+	summary := make(map[string][]string)
+	for node, pods := range np {
+		for _, pod := range pods {
+			summary[node] = append(summary[node], pod.Namespace + "/" +  pod.Name)
+		}
+	}
+
+	return summary
 }
 
 type TapperStatus struct {
@@ -118,6 +137,15 @@ func CreateWebSocketStatusMessage(tappedPodsStatus []TappedPodStatus) WebSocketS
 			MessageType: WebSocketMessageTypeUpdateStatus,
 		},
 		TappingStatus: tappedPodsStatus,
+	}
+}
+
+func CreateWebSocketTappedPodsMessage(nodeToTappedPodMap NodeToPodsMap) WebSocketTappedPodsMessage {
+	return WebSocketTappedPodsMessage{
+		WebSocketMessageMetadata: &WebSocketMessageMetadata{
+			MessageType: WebSocketMessageTypeUpdateTappedPods,
+		},
+		NodeToTappedPodMap: nodeToTappedPodMap,
 	}
 }
 

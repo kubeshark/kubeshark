@@ -101,16 +101,18 @@ func (s *ServiceMapControllerSuite) TestGet() {
 
 	// response nodes
 	aNode := servicemap.ServiceMapNode{
-		Id:    1,
-		Name:  TCPEntryA.Name,
-		Entry: TCPEntryA,
-		Count: 1,
+		Id:       1,
+		Name:     TCPEntryA.Name,
+		Entry:    TCPEntryA,
+		Resolved: true,
+		Count:    1,
 	}
 	bNode := servicemap.ServiceMapNode{
-		Id:    2,
-		Name:  TCPEntryB.Name,
-		Entry: TCPEntryB,
-		Count: 1,
+		Id:       2,
+		Name:     TCPEntryB.Name,
+		Entry:    TCPEntryB,
+		Resolved: true,
+		Count:    1,
 	}
 	assert.Contains(response.Nodes, aNode)
 	assert.Contains(response.Nodes, bNode)

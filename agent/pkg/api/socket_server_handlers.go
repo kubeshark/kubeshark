@@ -1,12 +1,14 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
-	"fmt"
 	"sync"
 
+	"github.com/gin-gonic/gin"
+	"github.com/up9inc/mizu/agent/pkg/dependency"
 	"github.com/up9inc/mizu/agent/pkg/models"
-	"github.com/up9inc/mizu/agent/pkg/providers"
+	"github.com/up9inc/mizu/agent/pkg/providers/tappedPods"
 	"github.com/up9inc/mizu/agent/pkg/providers/tappers"
 	"github.com/up9inc/mizu/agent/pkg/up9"
 
@@ -16,7 +18,12 @@ import (
 	"github.com/up9inc/mizu/shared/logger"
 )
 
-var browserClientSocketUUIDs = make([]int, 0)
+type BrowserClient struct {
+	dataStreamCancelFunc context.CancelFunc
+}
+
+var browserClients = make(map[int]*BrowserClient, 0)
+var tapperClientSocketUUIDs = make([]int, 0)
 var socketListLock = sync.Mutex{}
 
 type RoutesEventHandlers struct {
@@ -28,15 +35,22 @@ func init() {
 	go up9.UpdateAnalyzeStatus(BroadcastToBrowserClients)
 }
 
-func (h *RoutesEventHandlers) WebSocketConnect(socketId int, isTapper bool) {
+func (h *RoutesEventHandlers) WebSocketConnect(_ *gin.Context, socketId int, isTapper bool) {
 	if isTapper {
 		logger.Log.Infof("Websocket event - Tapper connected, socket ID: %d", socketId)
 		tappers.Connected()
+
+		socketListLock.Lock()
+		tapperClientSocketUUIDs = append(tapperClientSocketUUIDs, socketId)
+		socketListLock.Unlock()
+
+		nodeToTappedPodMap := tappedPods.GetNodeToTappedPodMap()
+		SendTappedPods(socketId, nodeToTappedPodMap)
 	} else {
 		logger.Log.Infof("Websocket event - Browser socket connected, socket ID: %d", socketId)
 
 		socketListLock.Lock()
-		browserClientSocketUUIDs = append(browserClientSocketUUIDs, socketId)
+		browserClients[socketId] = &BrowserClient{}
 		socketListLock.Unlock()
 
 		BroadcastTappedPodsStatus()
@@ -47,16 +61,23 @@ func (h *RoutesEventHandlers) WebSocketDisconnect(socketId int, isTapper bool) {
 	if isTapper {
 		logger.Log.Infof("Websocket event - Tapper disconnected, socket ID:  %d", socketId)
 		tappers.Disconnected()
+
+		socketListLock.Lock()
+		removeSocketUUIDFromTapperSlice(socketId)
+		socketListLock.Unlock()
 	} else {
 		logger.Log.Infof("Websocket event - Browser socket disconnected, socket ID:  %d", socketId)
 		socketListLock.Lock()
-		removeSocketUUIDFromBrowserSlice(socketId)
+		if browserClients[socketId] != nil && browserClients[socketId].dataStreamCancelFunc != nil {
+			browserClients[socketId].dataStreamCancelFunc()
+		}
+		delete(browserClients, socketId)
 		socketListLock.Unlock()
 	}
 }
 
 func BroadcastToBrowserClients(message []byte) {
-	for _, socketId := range browserClientSocketUUIDs {
+	for socketId := range browserClients {
 		go func(socketId int) {
 			if err := SendToSocket(socketId, message); err != nil {
 				logger.Log.Error(err)
@@ -65,7 +86,43 @@ func BroadcastToBrowserClients(message []byte) {
 	}
 }
 
-func (h *RoutesEventHandlers) WebSocketMessage(_ int, message []byte) {
+func BroadcastToTapperClients(message []byte) {
+	for _, socketId := range tapperClientSocketUUIDs {
+		go func(socketId int) {
+			if err := SendToSocket(socketId, message); err != nil {
+				logger.Log.Error(err)
+			}
+		}(socketId)
+	}
+}
+
+func (h *RoutesEventHandlers) WebSocketMessage(socketId int, isTapper bool, message []byte) {
+	if isTapper {
+		HandleTapperIncomingMessage(message, h.SocketOutChannel, BroadcastToBrowserClients)
+	} else {
+		// we initiate the basenine stream after the first websocket message we receive (it contains the entry query), we then store a cancelfunc to later cancel this stream
+		if browserClients[socketId] != nil && browserClients[socketId].dataStreamCancelFunc == nil {
+			var params WebSocketParams
+			if err := json.Unmarshal(message, &params); err != nil {
+				logger.Log.Errorf("Error: %v", socketId, err)
+				return
+			}
+
+			entriesStreamer := dependency.GetInstance(dependency.EntriesSocketStreamer).(EntryStreamer)
+			ctx, cancelFunc := context.WithCancel(context.Background())
+			err := entriesStreamer.Get(ctx, socketId, &params)
+
+			if err != nil {
+				logger.Log.Errorf("error initializing basenine stream for browser socket %d %+v", socketId, err)
+				cancelFunc()
+			} else {
+				browserClients[socketId].dataStreamCancelFunc = cancelFunc
+			}
+		}
+	}
+}
+
+func HandleTapperIncomingMessage(message []byte, socketOutChannel chan<- *tapApi.OutputChannelItem, broadcastMessageFunc func([]byte)) {
 	var socketMessageBase shared.WebSocketMessageMetadata
 	err := json.Unmarshal(message, &socketMessageBase)
 	if err != nil {
@@ -79,7 +136,7 @@ func (h *RoutesEventHandlers) WebSocketMessage(_ int, message []byte) {
 				logger.Log.Infof("Could not unmarshal message of message type %s %v", socketMessageBase.MessageType, err)
 			} else {
 				// NOTE: This is where the message comes back from the intermediate WebSocket to code.
-				h.SocketOutChannel <- tappedEntryMessage.Data
+				socketOutChannel <- tappedEntryMessage.Data
 			}
 		case shared.WebSocketMessageTypeUpdateStatus:
 			var statusMessage shared.WebSocketStatusMessage
@@ -87,15 +144,7 @@ func (h *RoutesEventHandlers) WebSocketMessage(_ int, message []byte) {
 			if err != nil {
 				logger.Log.Infof("Could not unmarshal message of message type %s %v", socketMessageBase.MessageType, err)
 			} else {
-				BroadcastToBrowserClients(message)
-			}
-		case shared.WebsocketMessageTypeOutboundLink:
-			var outboundLinkMessage models.WebsocketOutboundLinkMessage
-			err := json.Unmarshal(message, &outboundLinkMessage)
-			if err != nil {
-				logger.Log.Infof("Could not unmarshal message of message type %s %v", socketMessageBase.MessageType, err)
-			} else {
-				handleTLSLink(outboundLinkMessage)
+				broadcastMessageFunc(message)
 			}
 		default:
 			logger.Log.Infof("Received socket message of type %s for which no handlers are defined", socketMessageBase.MessageType)
@@ -103,35 +152,12 @@ func (h *RoutesEventHandlers) WebSocketMessage(_ int, message []byte) {
 	}
 }
 
-func handleTLSLink(outboundLinkMessage models.WebsocketOutboundLinkMessage) {
-	resolvedNameObject := k8sResolver.Resolve(outboundLinkMessage.Data.DstIP)
-	if resolvedNameObject != nil {
-		outboundLinkMessage.Data.DstIP = resolvedNameObject.FullAddress
-	} else if outboundLinkMessage.Data.SuggestedResolvedName != "" {
-		outboundLinkMessage.Data.DstIP = outboundLinkMessage.Data.SuggestedResolvedName
-	}
-	cacheKey := fmt.Sprintf("%s -> %s:%d", outboundLinkMessage.Data.Src, outboundLinkMessage.Data.DstIP, outboundLinkMessage.Data.DstPort)
-	_, isInCache := providers.RecentTLSLinks.Get(cacheKey)
-	if isInCache {
-		return
-	} else {
-		providers.RecentTLSLinks.SetDefault(cacheKey, outboundLinkMessage.Data)
-	}
-	marshaledMessage, err := json.Marshal(outboundLinkMessage)
-	if err != nil {
-		logger.Log.Errorf("Error marshaling outbound link message for broadcasting: %v", err)
-	} else {
-		logger.Log.Errorf("Broadcasting outboundlink message %s", string(marshaledMessage))
-		BroadcastToBrowserClients(marshaledMessage)
-	}
-}
-
-func removeSocketUUIDFromBrowserSlice(uuidToRemove int) {
-	newUUIDSlice := make([]int, 0, len(browserClientSocketUUIDs))
-	for _, uuid := range browserClientSocketUUIDs {
+func removeSocketUUIDFromTapperSlice(uuidToRemove int) {
+	newUUIDSlice := make([]int, 0, len(tapperClientSocketUUIDs))
+	for _, uuid := range tapperClientSocketUUIDs {
 		if uuid != uuidToRemove {
 			newUUIDSlice = append(newUUIDSlice, uuid)
 		}
 	}
-	browserClientSocketUUIDs = newUUIDSlice
+	tapperClientSocketUUIDs = newUUIDSlice
 }

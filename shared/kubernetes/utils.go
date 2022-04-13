@@ -5,12 +5,11 @@ import (
 
 	"github.com/up9inc/mizu/shared"
 	core "k8s.io/api/core/v1"
-	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func GetNodeHostToTappedPodsMap(tappedPods []core.Pod) map[string][]core.Pod {
-	nodeToTappedPodMap := make(map[string][]core.Pod)
+func GetNodeHostToTappedPodsMap(tappedPods []core.Pod) shared.NodeToPodsMap {
+	nodeToTappedPodMap := make(shared.NodeToPodsMap)
 	for _, pod := range tappedPods {
 		minimizedPod := getMinimizedPod(pod)
 
@@ -29,18 +28,18 @@ func getMinimizedPod(fullPod core.Pod) core.Pod {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: fullPod.Name,
 		},
-		Status: v1.PodStatus{
+		Status: core.PodStatus{
 			PodIP:             fullPod.Status.PodIP,
 			ContainerStatuses: getMinimizedContainerStatuses(fullPod),
 		},
 	}
 }
 
-func getMinimizedContainerStatuses(fullPod core.Pod) []v1.ContainerStatus {
-	result := make([]v1.ContainerStatus, len(fullPod.Status.ContainerStatuses))
+func getMinimizedContainerStatuses(fullPod core.Pod) []core.ContainerStatus {
+	result := make([]core.ContainerStatus, len(fullPod.Status.ContainerStatuses))
 
 	for i, container := range fullPod.Status.ContainerStatuses {
-		result[i] = v1.ContainerStatus{
+		result[i] = core.ContainerStatus{
 			ContainerID: container.ContainerID,
 		}
 	}

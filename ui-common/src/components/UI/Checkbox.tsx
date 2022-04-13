@@ -6,11 +6,11 @@ export interface Props {
     disabled?: boolean;
 }
 
-const Checkbox: React.FC<Props> = ({checked, onToggle, disabled}) => {
+const Checkbox: React.FC<Props> = ({checked, onToggle, disabled, ...props}) => {
 
     return (
         <div>
-            <input style={!disabled ? {cursor: "pointer"}: {}} type="checkbox" checked={checked} disabled={disabled} onChange={(event) => onToggle(event.target.checked)}/>
+            <input style={!disabled ? {cursor: "pointer"}: {}} type="checkbox" checked={checked} disabled={disabled} onChange={(event) => onToggle(event.target.checked)} {...props}/>
         </div>
     );
 };

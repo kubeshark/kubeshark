@@ -18,6 +18,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/up9inc/mizu/agent/pkg/dependency"
 	"github.com/up9inc/mizu/agent/pkg/elastic"
+	"github.com/up9inc/mizu/agent/pkg/entries"
 	"github.com/up9inc/mizu/agent/pkg/middlewares"
 	"github.com/up9inc/mizu/agent/pkg/models"
 	"github.com/up9inc/mizu/agent/pkg/oas"
@@ -29,8 +30,6 @@ import (
 	"github.com/up9inc/mizu/agent/pkg/api"
 	"github.com/up9inc/mizu/agent/pkg/app"
 	"github.com/up9inc/mizu/agent/pkg/config"
-
-	v1 "k8s.io/api/core/v1"
 
 	"github.com/gorilla/websocket"
 	"github.com/op/go-logging"
@@ -155,11 +154,6 @@ func runInTapperMode() {
 
 	hostMode := os.Getenv(shared.HostModeEnvVar) == "1"
 	tapOpts := &tap.TapOpts{HostMode: hostMode}
-	tapTargets := getTapTargets()
-	if tapTargets != nil {
-		tapOpts.FilterAuthorities = tapTargets
-		logger.Log.Infof("Filtering for the following authorities: %v", tapOpts.FilterAuthorities)
-	}
 
 	filteredOutputItemsChannel := make(chan *tapApi.OutputChannelItem)
 
@@ -205,7 +199,7 @@ func runInHarReaderMode() {
 func enableExpFeatureIfNeeded() {
 	if config.Config.OAS {
 		oasGenerator := dependency.GetInstance(dependency.OasGeneratorDependency).(oas.OasGenerator)
-		oasGenerator.Start()
+		oasGenerator.Start(nil)
 	}
 	if config.Config.ServiceMap {
 		serviceMapGenerator := dependency.GetInstance(dependency.ServiceMapGeneratorDependency).(servicemap.ServiceMap)
@@ -255,28 +249,6 @@ func setUIFlags(uiIndexPath string) error {
 	}
 
 	return nil
-}
-
-func parseEnvVar(env string) map[string][]v1.Pod {
-	var mapOfList map[string][]v1.Pod
-
-	val, present := os.LookupEnv(env)
-
-	if !present {
-		return mapOfList
-	}
-
-	err := json.Unmarshal([]byte(val), &mapOfList)
-	if err != nil {
-		panic(fmt.Sprintf("env var %s's value of %v is invalid! must be map[string][]v1.Pod %v", env, mapOfList, err))
-	}
-	return mapOfList
-}
-
-func getTapTargets() []v1.Pod {
-	nodeName := os.Getenv(shared.NodeNameEnvVar)
-	tappedAddressesPerNodeDict := parseEnvVar(shared.TappedAddressesPerNodeDictEnvVar)
-	return tappedAddressesPerNodeDict[nodeName]
 }
 
 func getTrafficFilteringOptions() *tapApi.TrafficFilteringOptions {
@@ -381,6 +353,14 @@ func handleIncomingMessageAsTapper(socketConnection *websocket.Conn) {
 					} else {
 						tap.UpdateTapTargets(tapConfigMessage.TapTargets)
 					}
+				case shared.WebSocketMessageTypeUpdateTappedPods:
+					var tappedPodsMessage shared.WebSocketTappedPodsMessage
+					if err := json.Unmarshal(message, &tappedPodsMessage); err != nil {
+						logger.Log.Infof("Could not unmarshal message of message type %s %v", socketMessageBase.MessageType, err)
+						return
+					}
+					nodeName := os.Getenv(shared.NodeNameEnvVar)
+					tap.UpdateTapTargets(tappedPodsMessage.NodeToTappedPodMap[nodeName])
 				default:
 					logger.Log.Warningf("Received socket message of type %s for which no handlers are defined", socketMessageBase.MessageType)
 				}
@@ -392,4 +372,7 @@ func handleIncomingMessageAsTapper(socketConnection *websocket.Conn) {
 func initializeDependencies() {
 	dependency.RegisterGenerator(dependency.ServiceMapGeneratorDependency, func() interface{} { return servicemap.GetDefaultServiceMapInstance() })
 	dependency.RegisterGenerator(dependency.OasGeneratorDependency, func() interface{} { return oas.GetDefaultOasGeneratorInstance() })
+	dependency.RegisterGenerator(dependency.EntriesProvider, func() interface{} { return &entries.BasenineEntriesProvider{} })
+	dependency.RegisterGenerator(dependency.EntriesSocketStreamer, func() interface{} { return &api.BasenineEntryStreamer{} })
+	dependency.RegisterGenerator(dependency.EntryStreamerSocketConnector, func() interface{} { return &api.DefaultEntryStreamerSocketConnector{} })
 }
