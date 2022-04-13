@@ -62,6 +62,7 @@ func (streamMap *tcpStreamMap) getCloseTimedoutTcpChannelsInterval() time.Durati
 func (streamMap *tcpStreamMap) closeTimedoutTcpStreamChannels() {
 	tcpStreamChannelTimeout := GetTcpChannelTimeoutMs()
 	closeTimedoutTcpChannelsIntervalMs := streamMap.getCloseTimedoutTcpChannelsInterval()
+	logger.Log.Infof("Using %d ms as the close timedout TCP stream channels interval", closeTimedoutTcpChannelsIntervalMs/time.Millisecond)
 	for {
 		time.Sleep(closeTimedoutTcpChannelsIntervalMs)
 		_debug.FreeOSMemory()
@@ -73,7 +74,7 @@ func (streamMap *tcpStreamMap) closeTimedoutTcpStreamChannels() {
 					stream.Close()
 					diagnose.AppStats.IncDroppedTcpStreams()
 					logger.Log.Debugf("Dropped an unidentified TCP stream because of timeout. Total dropped: %d Total Goroutines: %d Timeout (ms): %d",
-						diagnose.AppStats.DroppedTcpStreams, runtime.NumGoroutine(), tcpStreamChannelTimeout/1000000)
+						diagnose.AppStats.DroppedTcpStreams, runtime.NumGoroutine(), tcpStreamChannelTimeout/time.Millisecond)
 				}
 			} else {
 				if !stream.superIdentifier.IsClosedOthers {
