@@ -24,7 +24,7 @@ interface EntriesListProps {
   setIsSnappedToBottom: any;
   noMoreDataTop: boolean;
   setNoMoreDataTop: (flag: boolean) => void;
-  openWebSocket: (query: string, resetEntries: boolean) => void;
+  snapToButtom: (resetEntries: boolean, leftoffButton, queryTosend: string) => void;
   scrollableRef: any;
   ws: any;
 }
@@ -39,7 +39,7 @@ export const EntriesList: React.ForwardRefRenderFunction<ListHandle, EntriesList
   setIsSnappedToBottom,
   noMoreDataTop,
   setNoMoreDataTop,
-  openWebSocket,
+  snapToButtom,
   scrollableRef,
   ws,
 }, forwardedRef) => {
@@ -64,39 +64,22 @@ export const EntriesList: React.ForwardRefRenderFunction<ListHandle, EntriesList
   const debouncedQuery = useDebounce<string>(query, 500)
   const leftOffBottom = entries.length > 0 ? entries[entries.length - 1].id + 1 : -1;
 
-  useImperativeHandle(forwardedRef, () => ({
-    loadPrevoisEntries: (fetchEntries) => {
-      return new Promise(async (res, rej) => {
-        setIsLoadingTop(true);
-        try {
-          const previosEntries = await fetchEntries(-1, -1, debouncedQuery, 20, 3000);
-          const newEntries = [...[...previosEntries.data].reverse(), ...entries];
-          setEntries(newEntries);
-          setLeftOffTop(newEntries.slice(newEntries.length - 1)[0].id)
-          res(newEntries)
 
-        }
-        catch (error) {
-          rej(error)
-        }
-        finally {
-          setIsLoadingTop(false);
-        }
-      })
-    }
-  }), [trafficViewerApi]);
 
   useEffect(() => {
     const list = document.getElementById('list').firstElementChild;
-    list.addEventListener('scroll', (e) => {
-      const el: any = e.target;
-      if (el.scrollTop === 0) {
+    const handleScroll = (e: any) => {
+      if (e.target.scrollTop === 0) {
         setLoadMoreTop(true);
       } else {
         setNoMoreDataTop(false);
         setLoadMoreTop(false);
       }
-    });
+    };
+    list.addEventListener('scroll', handleScroll)
+    return () => {
+      list.removeEventListener('scroll', handleScroll)
+    }
   }, [setLoadMoreTop, setNoMoreDataTop]);
 
   const memoizedEntries = useMemo(() => {
@@ -111,11 +94,9 @@ export const EntriesList: React.ForwardRefRenderFunction<ListHandle, EntriesList
 
   const getOldEntries = useCallback(async () => {
     setLoadMoreTop(false);
-    if (leftOffTop === null || leftOffTop <= 0) {
-      return;
-    }
+    const leftOffTopToQuery = (leftOffTop && leftOffTop >= 0) ? leftOffTop : -1
     setIsLoadingTop(true);
-    const data = await trafficViewerApi.fetchEntries(leftOffTop, -1, query, 100, 3000);
+    const data = await trafficViewerApi.fetchEntries(leftOffTopToQuery, -1, query, 100, 3000);
     if (!data || data.data === null || data.meta === null) {
       setNoMoreDataTop(true);
       setIsLoadingTop(false);
@@ -144,16 +125,31 @@ export const EntriesList: React.ForwardRefRenderFunction<ListHandle, EntriesList
     if (scrollTo) {
       scrollableRef.current.scrollToIndex(data.data.length - 1);
     }
-  }, [setLoadMoreTop, setIsLoadingTop, entries, setEntries, query, setNoMoreDataTop, leftOffTop, setLeftOffTop, setQueriedTotal, setTruncatedTimestamp, scrollableRef]);
+
+    return newEntries
+  }, [trafficViewerApi, setLoadMoreTop, setIsLoadingTop, entries, setEntries, query, setNoMoreDataTop, leftOffTop, setLeftOffTop, setQueriedTotal, setTruncatedTimestamp, scrollableRef]);
 
   useEffect(() => {
     if (!isWsConnectionClosed || !loadMoreTop || noMoreDataTop) return;
     getOldEntries();
   }, [loadMoreTop, noMoreDataTop, getOldEntries, isWsConnectionClosed]);
 
+  useImperativeHandle(forwardedRef, () => ({
+    loadPrevoisEntries: () => {
+      return new Promise(async (res, rej) => {
+        try {
+          const entries = await getOldEntries()
+          res(entries)
+        } catch (error) {
+          rej(error)
+        }
+
+      })
+    }
+
+  }), [scrollableRef, trafficViewerApi, getOldEntries]);
+
   const scrollbarVisible = scrollableRef.current?.childWrapperRef.current.clientHeight > scrollableRef.current?.wrapperRef.current.clientHeight;
-
-
 
   if (ws.current) {
     ws.current.onmessage = (e) => {
@@ -227,11 +223,7 @@ export const EntriesList: React.ForwardRefRenderFunction<ListHandle, EntriesList
           className={`${styles.btnLive} ${isSnappedToBottom && !isWsConnectionClosed ? styles.hideButton : styles.showButton}`}
           onClick={(_) => {
             if (isWsConnectionClosed) {
-              if (query) {
-                openWebSocket(`(${query}) and leftOff(${leftOffBottom})`, false);
-              } else {
-                openWebSocket(`leftOff(${leftOffBottom})`, false);
-              }
+              snapToButtom(false, query, leftOffBottom)
             }
             scrollableRef.current.jumpToBottom();
             setIsSnappedToBottom(true);

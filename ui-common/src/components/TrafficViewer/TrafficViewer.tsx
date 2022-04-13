@@ -79,6 +79,7 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
   const [addressesWithTLS, setAddressesWithTLS] = useState(new Set<string>());
   const entriesListRef = React.useRef<ListHandle>(null);
 
+
   const handleQueryChange = useMemo(
     () =>
       debounce(async (query: string) => {
@@ -108,13 +109,13 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
   }, [isCloseWebSocket])
 
   useEffect(() => {
-    reopenConnection()
+    //streamEntries();
   }, [webSocketUrl])
 
   const ws = useRef(null);
 
-  const openEmptyWebSocket = (resetEntries: boolean = true, leftoffButton = -1) => {
-    const queryToSend = query ? `(${query}) and leftOff(${leftoffButton})` : `leftOff(${leftoffButton})`
+  const openEmptyWebSocket = (resetEntries: boolean = true, leftoffButton = -1, queryTosend: string = query) => {
+    const queryToSend = queryTosend ? `(${queryTosend}) and leftOff(${leftoffButton})` : `leftOff(${leftoffButton})`
     openWebSocket(queryToSend, resetEntries);
   }
 
@@ -146,9 +147,7 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
       }
       ws.current.onerror = (event) => {
         console.error("WebSocket error:", event);
-        if (ws?.current?.readyState === WebSocket.OPEN) {
-          ws.current.close();
-        }
+        closeWebSocket()
       }
     } catch (e) {
     }
@@ -167,12 +166,6 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
 
   useEffect(() => {
     setTrafficViewerApiState({ ...trafficViewerApiProp, webSocket: { close: closeWebSocket } });
-    entriesListRef.current.loadPrevoisEntries(trafficViewerApiProp.fetchEntries).then((entries) => {
-      const last = entries.slice(-1)[0].id
-      openEmptyWebSocket(false, last + 1);
-      scrollableRef?.current.jumpToBottom();
-      setIsSnappedToBottom(true);
-    });
     (async () => {
       try {
         const tapStatusResponse = await trafficViewerApiProp.tapStatus();
@@ -181,6 +174,7 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
           const analyzeStatusResponse = await trafficViewerApiProp.analyzeStatus();
           setAnalyzeStatus(analyzeStatusResponse);
         }
+        streamEntries()
       } catch (error) {
         console.error(error);
       }
@@ -189,24 +183,40 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
 
   const toggleConnection = () => {
     if (!closeWebSocket()) {
-      openEmptyWebSocket();
-      scrollableRef.current.jumpToBottom();
-      setIsSnappedToBottom(true);
+      snapToButtom()
     }
   }
 
   const reopenConnection = async () => {
     closeWebSocket()
-    openEmptyWebSocket();
+    snapToButtom()
+  }
+
+  const fetchOldEntires = () => {
+    return entriesListRef.current.loadPrevoisEntries(trafficViewerApiProp.fetchEntries).catch((err) => {
+      console.log(err)
+    })
+  }
+
+  const streamEntries = () => {
+    return fetchOldEntires().then((entries) => {
+      const last = entries.slice(-1)[0].id
+      snapToButtom(false, last + 1);
+    }).catch((err) => {
+      console.log(err)
+      snapToButtom(true);
+    })
+  }
+
+  const snapToButtom = (resetEntries: boolean = true, leftOffButton = -1, queryTosend: string = query) => {
+    openEmptyWebSocket(resetEntries, leftOffButton, queryTosend);
     scrollableRef.current.jumpToBottom();
     setIsSnappedToBottom(true);
   }
 
   useEffect(() => {
     return () => {
-      if (ws?.current?.readyState === WebSocket.OPEN) {
-        ws.current.close();
-      }
+      closeWebSocket()
     };
   }, []);
 
@@ -236,9 +246,7 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
 
   const onSnapBrokenEvent = () => {
     setIsSnappedToBottom(false);
-    if (ws?.current?.readyState === WebSocket.OPEN) {
-      ws.current.close();
-    }
+    closeWebSocket()
   }
 
   return (
@@ -252,7 +260,7 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
           <img className={TrafficViewerStyles.playPauseIcon}
             style={{ position: "absolute", visibility: wsReadyState === WebSocket.OPEN ? "hidden" : "visible" }}
             alt="play"
-            src={playIcon} onClick={toggleConnection} />
+            src={playIcon} onClick={e => streamEntries()} />
           <div className={TrafficViewerStyles.connectionText}>
             {getConnectionTitle()}
             {getConnectionIndicator()}
@@ -274,7 +282,7 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
               setIsSnappedToBottom={setIsSnappedToBottom}
               noMoreDataTop={noMoreDataTop}
               setNoMoreDataTop={setNoMoreDataTop}
-              openWebSocket={openWebSocket}
+              snapToButtom={snapToButtom}
               scrollableRef={scrollableRef}
               ws={ws}
               ref={entriesListRef}
