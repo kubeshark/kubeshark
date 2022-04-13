@@ -12,9 +12,9 @@ import closeIcon from "assets/close.svg"
 import styles from './ServiceMapModal.module.sass'
 import SelectList from "../UI/SelectList";
 import { GraphData, ServiceMapGraph } from "./ServiceMapModalTypes"
-import { ResizableBox } from "react-resizable"
-import "react-resizable/css/styles.css"
 import { Utils } from "../../helpers/Utils";
+import { TOAST_CONTAINER_ID } from "../../configs/Consts";
+import Resizeable from "../UI/Resizeable"
 
 const modalStyle = {
     position: 'absolute',
@@ -46,13 +46,13 @@ const LegentLabel: React.FC<LegentLabelProps> = ({ color, name }) => {
 }
 
 const protocols = [
-    { key: "http", value: "HTTP", component: <LegentLabel color="#205cf5" name="HTTP" /> },
-    { key: "http/2", value: "HTTP/2", component: <LegentLabel color='#244c5a' name="HTTP/2" /> },
-    { key: "grpc", value: "gRPC", component: <LegentLabel color='#244c5a' name="gRPC" /> },
-    { key: "graphql", value: "GraphQL", component: <LegentLabel color='#e10098' name="GraphQL" /> },
-    { key: "amqp", value: "AMQP", component: <LegentLabel color='#ff6600' name="AMQP" /> },
-    { key: "kafka", value: "KAFKA", component: <LegentLabel color='#000000' name="KAFKA" /> },
-    { key: "redis", value: "REDIS", component: <LegentLabel color='#a41e11' name="REDIS" /> },]
+    { key: "HTTP", value: "HTTP", component: <LegentLabel color="#205cf5" name="HTTP" /> },
+    { key: "HTTP/2", value: "HTTP/2", component: <LegentLabel color='#244c5a' name="HTTP/2" /> },
+    { key: "gRPC", value: "gRPC", component: <LegentLabel color='#244c5a' name="gRPC" /> },
+    { key: "GQL", value: "GQL", component: <LegentLabel color='#e10098' name="GQL" /> },
+    { key: "AMQP", value: "AMQP", component: <LegentLabel color='#ff6600' name="AMQP" /> },
+    { key: "KAFKA", value: "KAFKA", component: <LegentLabel color='#000000' name="KAFKA" /> },
+    { key: "REDIS", value: "REDIS", component: <LegentLabel color='#a41e11' name="REDIS" /> },]
 
 
 interface ServiceMapModalProps {
@@ -66,8 +66,8 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
     const commonClasses = useCommonStyles();
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [graphData, setGraphData] = useState<GraphData>({ nodes: [], edges: [] });
-    const [filteredProtocols, setFilteredProtocols] = useState(protocols.map(x => x.key))
-    const [filteredServices, setFilteredServices] = useState([])
+    const [checkedProtocols, setCheckedProtocols] = useState(protocols.map(x => x.key))
+    const [checkedServices, setCheckedServices] = useState([])
     const [serviceMapApiData, setServiceMapApiData] = useState<ServiceMapGraph>({ edges: [], nodes: [] })
     const [servicesSearchVal, setServicesSearchVal] = useState("")
     const [graphOptions, setGraphOptions] = useState(ServiceMapOptions);
@@ -90,7 +90,7 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
 
             setGraphData(newGraphData)
         } catch (ex) {
-            toast.error("An error occurred while loading Mizu Service Map, see console for mode details");
+            toast.error("An error occurred while loading Mizu Service Map, see console for mode details", { containerId: TOAST_CONTAINER_ID });
             console.error(ex);
         } finally {
             setIsLoading(false)
@@ -132,21 +132,20 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
     }, [serviceMapApiData])
 
     const filterServiceMap = (newProtocolsFilters?: any[], newServiceFilters?: string[]) => {
-        const filterProt = newProtocolsFilters || filteredProtocols
-        const filterService = newServiceFilters || filteredServices || getServicesForFilter.map(x => x.key)
-        setFilteredProtocols(filterProt)
-        setFilteredServices(filterService)
+        const filterProt = newProtocolsFilters || checkedProtocols
+        const filterService = newServiceFilters || checkedServices
+        setCheckedProtocols(filterProt)
+        setCheckedServices(filterService)
         const newGraphData: GraphData = {
             nodes: serviceMapApiData.nodes?.map(mapNodesDatatoGraph).filter(node => filterService.includes(node.label)),
-            edges: serviceMapApiData.edges?.filter(edge => filterProt.includes(edge.protocol.name)).map(mapEdgesDatatoGraph)
+            edges: serviceMapApiData.edges?.filter(edge => filterProt.includes(edge.protocol.abbr)).map(mapEdgesDatatoGraph)
         }
         setGraphData(newGraphData);
     }
 
     useEffect(() => {
-        const resolvedServices = getServicesForFilter.map(x => x.key).filter(serviceName => !Utils.isIpAddress(serviceName))
-        setFilteredServices(resolvedServices)
-        filterServiceMap(filteredProtocols, resolvedServices)
+        if (checkedServices.length > 0) return // only after refresh
+        filterServiceMap(checkedProtocols, getServicesForFilter.map(x => x.key).filter(serviceName => !Utils.isIpAddress(serviceName)))
     }, [getServicesForFilter])
 
     useEffect(() => {
@@ -177,28 +176,27 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
             <Fade in={isOpen}>
                 <Box sx={modalStyle}>
                     <div className={styles.modalContainer}>
-                        {/* TODO: remove error missing height */}
-                        <ResizableBox width={200} style={{ height: '100%', minWidth: "200px" }} axis={"x"}>
-                            <div className={styles.filterSection}>
+                        <div className={styles.filterSection}>
+                            <Resizeable minWidth={170}>
                                 <div className={styles.filterWrapper}>
                                     <div className={styles.protocolsFilterList}>
                                         <SelectList items={protocols} checkBoxWidth="5%" tableName={"Protocols"} multiSelect={true}
-                                            checkedValues={filteredProtocols} setCheckedValues={filterServiceMap} tableClassName={styles.filters} />
+                                            checkedValues={checkedProtocols} setCheckedValues={filterServiceMap} tableClassName={styles.filters} />
                                     </div>
                                     <div className={styles.separtorLine}></div>
                                     <div className={styles.servicesFilter}>
                                         <input className={commonClasses.textField + ` ${styles.servicesFilterSearch}`} placeholder="search service" value={servicesSearchVal} onChange={(event) => setServicesSearchVal(event.target.value)} />
                                         <div className={styles.servicesFilterList}>
                                             <SelectList items={getServicesForFilter} tableName={"Services"} tableClassName={styles.filters} multiSelect={true} searchValue={servicesSearchVal}
-                                                checkBoxWidth="5%" checkedValues={filteredServices} setCheckedValues={(newServicesForFilter) => filterServiceMap(null, newServicesForFilter)} />
+                                                checkBoxWidth="5%" checkedValues={checkedServices} setCheckedValues={(newServicesForFilter) => filterServiceMap(null, newServicesForFilter)} />
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        </ResizableBox>
+                            </Resizeable>
+                        </div>
                         <div className={styles.graphSection}>
                             <div style={{ display: "flex", justifyContent: "space-between" }}>
-                                <Button style={{ marginRight: "3%" }}
+                                <Button style={{ marginLeft: "3%" }}
                                     startIcon={<img src={refreshIcon} className="custom" alt="refresh" style={{ marginRight: "8%" }}></img>}
                                     size="medium"
                                     variant="contained"
@@ -207,7 +205,7 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
                                 >
                                     Refresh
                                 </Button>
-                                <img src={closeIcon} alt="close" onClick={() => onClose()} style={{ cursor: "pointer" }}></img>
+                                <img src={closeIcon} alt="close" onClick={() => onClose()} style={{ cursor: "pointer", userSelect: "none" }}></img>
                             </div>
                             {isLoading && <div className={spinnerStyle.spinnerContainer}>
                                 <img alt="spinner" src={spinnerImg} style={{ height: 50 }} />
