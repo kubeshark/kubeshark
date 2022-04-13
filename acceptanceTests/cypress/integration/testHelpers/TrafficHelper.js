@@ -39,13 +39,13 @@ export function verifyMinimumEntries() {
     });
 }
 
-export function leftTextCheck(entryNum, path, expectedText) {
-    cy.get(`#list #entry-${entryNum} ${path}`).invoke('text').should('eq', expectedText);
+export function leftTextCheck(entryId, path, expectedText) {
+    cy.get(`#list #entry-${entryId} ${path}`).invoke('text').should('eq', expectedText);
 }
 
-export function leftOnHoverCheck(entryNum, path, filterName) {
-    cy.get(`#list #entry-${entryNum} ${path}`).trigger('mouseover');
-    cy.get(`#list #entry-${entryNum} [data-cy='QueryableTooltip']`).invoke('text').should('match', new RegExp(filterName));
+export function leftOnHoverCheck(entryId, path, filterName) {
+    cy.get(`#list #entry-${entryId} ${path}`).trigger('mouseover');
+    cy.get(`#list #entry-${entryId} [data-cy='QueryableTooltip']`).invoke('text').should('match', new RegExp(filterName));
 }
 
 export function rightTextCheck(path, expectedText) {
@@ -89,13 +89,13 @@ export function checkFilterByMethod(funcDict) {
                     cy.get('#entries-length').invoke('text').then(len => {
                         resizeIfNeeded(len);
                         listElmWithIdAttr.forEach(entry => {
-                            if (entry?.id && entry.id.match(RegExp(/entry-(\d{2}|\d{1})$/gm))) {
-                                const entryNum = getEntryNumById(entry.id);
+                            if (entry?.id && entry.id.match(RegExp(/entry-(\d{24})$/gm))) {
+                                const entryId = getEntryId(entry.id);
 
-                                leftTextCheck(entryNum, methodDict.pathLeft, methodDict.expectedText);
-                                leftTextCheck(entryNum, protocolDict.pathLeft, protocolDict.expectedTextLeft);
+                                leftTextCheck(entryId, methodDict.pathLeft, methodDict.expectedText);
+                                leftTextCheck(entryId, protocolDict.pathLeft, protocolDict.expectedTextLeft);
                                 if (summaryDict)
-                                    leftTextCheck(entryNum, summaryDict.pathLeft, summaryDict.expectedText);
+                                    leftTextCheck(entryId, summaryDict.pathLeft, summaryDict.expectedText);
 
                                 if (!doneCheckOnFirst) {
                                     deepCheck(funcDict, protocolDict, methodDict, entry);
@@ -111,6 +111,11 @@ export function checkFilterByMethod(funcDict) {
     });
 }
 
+export function getEntryId(id) {
+    // take the second part from the string (entry-<ID>)
+    return id.split('-')[1];
+}
+
 function resizeIfNeeded(entriesLen) {
     if (entriesLen > maxEntriesInDom){
         Cypress.config().viewportHeight === Cypress.env('normalMizuHeight') ?
@@ -119,14 +124,14 @@ function resizeIfNeeded(entriesLen) {
 }
 
 function deepCheck(generalDict, protocolDict, methodDict, entry) {
-    const entryNum = getEntryNumById(entry.id);
+    const entryId = getEntryId(entry.id);
     const {summary, value} = generalDict;
     const summaryDict = getSummaryDict(summary);
 
-    leftOnHoverCheck(entryNum, methodDict.pathLeft, methodDict.expectedOnHover);
-    leftOnHoverCheck(entryNum, protocolDict.pathLeft, protocolDict.expectedOnHover);
+    leftOnHoverCheck(entryId, methodDict.pathLeft, methodDict.expectedOnHover);
+    leftOnHoverCheck(entryId, protocolDict.pathLeft, protocolDict.expectedOnHover);
     if (summaryDict)
-        leftOnHoverCheck(entryNum, summaryDict.pathLeft, summaryDict.expectedOnHover);
+        leftOnHoverCheck(entryId, summaryDict.pathLeft, summaryDict.expectedOnHover);
 
     cy.get(`#${entry.id}`).click();
 
@@ -182,8 +187,4 @@ function getProtocolDict(protocol, protocolText) {
         expectedTextRight: protocolText,
         expectedOnHover: protocol.toLowerCase()
     };
-}
-
-function getEntryNumById (id) {
-    return parseInt(id.split('-')[1]);
 }

@@ -55,7 +55,7 @@ export const EntriesList: React.FC<EntriesListProps> = ({
   const [startTime, setStartTime] = useState(0);
   const [truncatedTimestamp, setTruncatedTimestamp] = useState(0);
 
-  const leftOffBottom = entries.length > 0 ? entries[entries.length - 1].id + 1 : -1;
+  const leftOffBottom = entries.length > 0 ? entries[entries.length - 1].id : "latest";
 
   useEffect(() => {
     const list = document.getElementById('list').firstElementChild;
@@ -76,7 +76,7 @@ export const EntriesList: React.FC<EntriesListProps> = ({
 
   const getOldEntries = useCallback(async () => {
     setLoadMoreTop(false);
-    if (leftOffTop === null || leftOffTop <= 0) {
+    if (leftOffTop === "") {
       return;
     }
     setIsLoadingTop(true);
@@ -127,7 +127,7 @@ export const EntriesList: React.FC<EntriesListProps> = ({
       switch (message.messageType) {
         case "entry":
           const entry = message.data;
-          if (!focusedEntryId) setFocusedEntryId(entry.id.toString());
+          if (!focusedEntryId) setFocusedEntryId(entry.id);
           const newEntries = [...entries, entry];
           if (newEntries.length > 10000) {
             setLeftOffTop(newEntries[0].id);
@@ -151,14 +151,14 @@ export const EntriesList: React.FC<EntriesListProps> = ({
         case "queryMetadata":
           setTruncatedTimestamp(message.data.truncatedTimestamp);
           setQueriedTotal(message.data.total);
-          if (leftOffTop === null) {
-            setLeftOffTop(message.data.leftOff - 1);
+          if (leftOffTop === "") {
+            setLeftOffTop(message.data.leftOff);
           }
           break;
         case "startTime":
           setStartTime(message.data);
           break;
-      };
+      }
     }
   }
 
@@ -180,7 +180,7 @@ export const EntriesList: React.FC<EntriesListProps> = ({
         </ScrollableFeedVirtualized>
         <button type="button"
                 title="Fetch old records"
-                className={`${styles.btnOld} ${!scrollbarVisible && leftOffTop > 0 ? styles.showButton : styles.hideButton}`}
+                className={`${styles.btnOld} ${!scrollbarVisible && leftOffTop !== "" ? styles.showButton : styles.hideButton}`}
                 onClick={(_) => {
                   trafficViewerApi.webSocket.close()
                   getOldEntries();
@@ -193,9 +193,9 @@ export const EntriesList: React.FC<EntriesListProps> = ({
                 onClick={(_) => {
                   if (isWsConnectionClosed) {
                     if (query) {
-                      openWebSocket(`(${query}) and leftOff(${leftOffBottom})`, false);
+                      openWebSocket(`(${query}) and leftOff("${leftOffBottom}")`, false);
                     } else {
-                      openWebSocket(`leftOff(${leftOffBottom})`, false);
+                      openWebSocket(`leftOff("${leftOffBottom}")`, false);
                     }
                   }
                   scrollableRef.current.jumpToBottom();

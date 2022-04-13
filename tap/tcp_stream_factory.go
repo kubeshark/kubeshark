@@ -78,6 +78,7 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.T
 		optchecker:      reassembly.NewTCPOptionCheck(),
 		superIdentifier: &api.SuperIdentifier{},
 		streamsMap:      factory.streamsMap,
+		origin:          getPacketOrigin(ac),
 	}
 	if stream.isTapTarget {
 		stream.id = factory.streamsMap.nextId()
@@ -180,6 +181,17 @@ func (factory *tcpStreamFactory) shouldNotifyOnOutboundLink(dstIP string, dstPor
 		return !isDirectedHere && !isPrivateIP(dstIP)
 	}
 	return true
+}
+
+func getPacketOrigin(ac reassembly.AssemblerContext) api.Capture {
+	c, ok := ac.(*context)
+
+	if !ok {
+		// If ac is not our context, fallback to Pcap
+		return api.Pcap
+	}
+
+	return c.Origin
 }
 
 type streamProps struct {

@@ -21,6 +21,7 @@ import {StatusBar} from "../UI/StatusBar";
 import tappingStatusAtom from "../../recoil/tappingStatus/atom";
 import {TOAST_CONTAINER_ID} from "../../configs/Consts";
 import leftOffTopAtom from "../../recoil/leftOffTop";
+import { DEFAULT_QUERY } from '../../hooks/useWS';
 
 const useLayoutStyles = makeStyles(() => ({
   details: {
@@ -49,14 +50,15 @@ interface TrafficViewerProps {
   actionButtons?: JSX.Element,
   isShowStatusBar?: boolean,
   webSocketUrl: string,
-  isCloseWebSocket: boolean,
+  shouldCloseWebSocket: boolean,
+  setShouldCloseWebSocket: (flag: boolean) => void,
   isDemoBannerView: boolean
 }
 
 export const TrafficViewer: React.FC<TrafficViewerProps> = ({
                                                               setAnalyzeStatus, trafficViewerApiProp,
                                                               actionButtons, isShowStatusBar, webSocketUrl,
-                                                              isCloseWebSocket, isDemoBannerView
+                                                              shouldCloseWebSocket, setShouldCloseWebSocket, isDemoBannerView
                                                             }) => {
 
   const classes = useLayoutStyles();
@@ -104,8 +106,11 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
   }, [query, handleQueryChange]);
 
   useEffect(() => {
-    isCloseWebSocket && closeWebSocket()
-  }, [isCloseWebSocket])
+    if(shouldCloseWebSocket){
+      closeWebSocket()
+      setShouldCloseWebSocket(false);
+    }
+  }, [shouldCloseWebSocket])
 
   useEffect(() => {
     reopenConnection()
@@ -115,9 +120,9 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
 
   const openEmptyWebSocket = () => {
     if (query) {
-      openWebSocket(`(${query}) and leftOff(-1)`, true);
+      openWebSocket(`(${query}) and ${DEFAULT_QUERY}`, true);
     } else {
-      openWebSocket(`leftOff(-1)`, true);
+      openWebSocket(DEFAULT_QUERY, true);
     }
   }
 
@@ -133,7 +138,7 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
     if (resetEntries) {
       setFocusedEntryId(null);
       setEntries([]);
-      setLeftOffTop(null);
+      setLeftOffTop("");
       setNoMoreDataTop(false);
     }
     try {
@@ -295,11 +300,11 @@ const MemoiedTrafficViewer = React.memo(TrafficViewer)
 const TrafficViewerContainer: React.FC<TrafficViewerProps> = ({
                                                                 setAnalyzeStatus, trafficViewerApiProp,
                                                                 actionButtons, isShowStatusBar = true,
-                                                                webSocketUrl, isCloseWebSocket, isDemoBannerView
+                                                                webSocketUrl, shouldCloseWebSocket, setShouldCloseWebSocket, isDemoBannerView
                                                               }) => {
   return <RecoilRoot>
     <MemoiedTrafficViewer actionButtons={actionButtons} isShowStatusBar={isShowStatusBar} webSocketUrl={webSocketUrl}
-                          isCloseWebSocket={isCloseWebSocket} trafficViewerApiProp={trafficViewerApiProp}
+                          shouldCloseWebSocket={shouldCloseWebSocket} setShouldCloseWebSocket={setShouldCloseWebSocket} trafficViewerApiProp={trafficViewerApiProp}
                           setAnalyzeStatus={setAnalyzeStatus} isDemoBannerView={isDemoBannerView}/>
     <ToastContainer enableMultiContainer containerId={TOAST_CONTAINER_ID}
                     position="bottom-right"

@@ -5,12 +5,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/up9inc/mizu/agent/pkg/models"
 	"os"
 	"path"
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/up9inc/mizu/agent/pkg/models"
 
 	"github.com/up9inc/mizu/agent/pkg/dependency"
 	"github.com/up9inc/mizu/agent/pkg/elastic"
@@ -104,9 +105,11 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 
 	connection, err := basenine.NewConnection(shared.BasenineHost, shared.BaseninePort)
 	if err != nil {
-		panic(err)
+		logger.Log.Panicf("Can't establish a new connection to Basenine server: %v", err)
 	}
-	connection.InsertMode()
+	if err = connection.InsertMode(); err != nil {
+		logger.Log.Panicf("Insert mode call failed: %v", err)
+	}
 
 	disableOASValidation := false
 	ctx := context.Background()
@@ -148,7 +151,9 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 
 		providers.EntryAdded(len(data))
 
-		connection.SendText(string(data))
+		if err = connection.SendText(string(data)); err != nil {
+			logger.Log.Panicf("An error occured while inserting a new record to database: %v", err)
+		}
 
 		serviceMapGenerator := dependency.GetInstance(dependency.ServiceMapGeneratorDependency).(servicemap.ServiceMapSink)
 		serviceMapGenerator.NewTCPEntry(mizuEntry.Source, mizuEntry.Destination, &item.Protocol)
