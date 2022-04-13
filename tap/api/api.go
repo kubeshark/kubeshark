@@ -100,6 +100,7 @@ type OutputChannelItem struct {
 	ConnectionInfo *ConnectionInfo
 	Pair           *RequestResponsePair
 	Summary        *BaseEntry
+	Namespace      string
 }
 
 type SuperTimer struct {
