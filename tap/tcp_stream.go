@@ -29,6 +29,7 @@ type tcpStream struct {
 	clients         []tcpReader
 	servers         []tcpReader
 	ident           string
+	origin          api.Capture
 	sync.Mutex
 	streamsMap *tcpStreamMap
 }
