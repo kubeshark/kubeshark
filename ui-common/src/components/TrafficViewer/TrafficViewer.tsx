@@ -21,6 +21,7 @@ import {StatusBar} from "../UI/StatusBar";
 import tappingStatusAtom from "../../recoil/tappingStatus/atom";
 import {TOAST_CONTAINER_ID} from "../../configs/Consts";
 import leftOffTopAtom from "../../recoil/leftOffTop";
+import { DEFAULT_QUERY } from '../../hooks/useWS';
 
 const useLayoutStyles = makeStyles(() => ({
   details: {
@@ -119,9 +120,9 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
 
   const openEmptyWebSocket = () => {
     if (query) {
-      openWebSocket(`(${query}) and leftOff("latest")`, true);
+      openWebSocket(`(${query}) and ${DEFAULT_QUERY}`, true);
     } else {
-      openWebSocket(`leftOff("latest")`, true);
+      openWebSocket(DEFAULT_QUERY, true);
     }
   }
 
