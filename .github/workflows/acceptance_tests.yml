@@ -14,8 +14,9 @@ jobs:
     name: Run acceptance tests
     runs-on: ubuntu-latest
     if: |
-      (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')) || 
-      (github.event_name == 'pull_request' && (github.ref == 'refs/heads/main' || ${{ contains(github.event.head_commit.message, '#run_accpetance_test') }} ))
+      (github.event_name == 'push' && github.ref == 'refs/heads/develop')) || 
+      (github.event_name == 'pull_request' && github.ref == 'refs/heads/main' || 
+      (github.event_name == 'pull_request' && github.ref == 'refs/heads/develop' && ${{ contains(github.event.head_commit.message, '#run_accpetance_test') }} )
     steps:
       - name: Set up Go 1.17
         uses: actions/setup-go@v2
@@ -23,9 +24,10 @@ jobs:
           go-version: '^1.17'
 
       - name: Check out code into the Go module directory
-        if: |
-          (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')) || 
-          (github.event_name == 'pull_request' && (github.ref == 'refs/heads/main' || ${{ contains(github.event.head_commit.message, '#run_accpetance_test') }} ))
+         if: |
+          (github.event_name == 'push' && github.ref == 'refs/heads/develop')) || 
+          (github.event_name == 'pull_request' && github.ref == 'refs/heads/main' || 
+          (github.event_name == 'pull_request' && github.ref == 'refs/heads/develop' && ${{ contains(github.event.head_commit.message, '#run_accpetance_test') }} )
         uses: actions/checkout@v2
 
       - name: Setup acceptance test
