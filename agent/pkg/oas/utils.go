@@ -115,7 +115,7 @@ type nvParams struct {
 	GeneralizeName func(name string) string
 }
 
-func handleNameVals(gw nvParams, params **openapi.ParameterList, checkIgnore bool, sampleId uint) {
+func handleNameVals(gw nvParams, params **openapi.ParameterList, checkIgnore bool, sampleId string) {
 	visited := map[string]*openapi.ParameterObj{}
 	for _, pair := range gw.Pairs {
 		if (checkIgnore && gw.IsIgnored(pair.Name)) || pair.Name == "" {
@@ -477,8 +477,8 @@ func intersectSliceWithMap(required []string, names map[string]struct{}) []strin
 	return required
 }
 
-func setSampleID(extensions *openapi.Extensions, id uint) {
-	if id > 0 {
+func setSampleID(extensions *openapi.Extensions, id string) {
+	if id != "" {
 		if *extensions == nil {
 			*extensions = openapi.Extensions{}
 		}

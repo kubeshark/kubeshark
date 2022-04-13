@@ -15,7 +15,7 @@ import (
 
 type EntriesProvider interface {
 	GetEntries(entriesRequest *models.EntriesRequest) ([]*tapApi.EntryWrapper, *basenine.Metadata, error)
-	GetEntry(singleEntryRequest *models.SingleEntryRequest, entryId int) (*tapApi.EntryWrapper, error)
+	GetEntry(singleEntryRequest *models.SingleEntryRequest, entryId string) (*tapApi.EntryWrapper, error)
 }
 
 type BasenineEntriesProvider struct{}
@@ -56,7 +56,7 @@ func (e *BasenineEntriesProvider) GetEntries(entriesRequest *models.EntriesReque
 	return dataSlice, metadata, nil
 }
 
-func (e *BasenineEntriesProvider) GetEntry(singleEntryRequest *models.SingleEntryRequest, entryId int) (*tapApi.EntryWrapper, error) {
+func (e *BasenineEntriesProvider) GetEntry(singleEntryRequest *models.SingleEntryRequest, entryId string) (*tapApi.EntryWrapper, error) {
 	var entry *tapApi.Entry
 	bytes, err := basenine.Single(shared.BasenineHost, shared.BaseninePort, entryId, singleEntryRequest.Query)
 	if err != nil {

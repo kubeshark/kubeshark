@@ -1,0 +1,1787 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Preloaded TRCC",
+    "description": "Test file for loading pre-existing OAS",
+    "version": "0.1"
+  },
+  "paths": {
+    "/hc": {
+      "get": {
+        "summary": "/hc",
+        "description": "Mizu observed 1 entries (0 failed), at 0.000 hits/s, average response time is 0.001 seconds",
+        "operationId": "c9fdb168-cd8a-48d2-ac37-887ddadb810c",
+        "responses": {
+          "200": {
+            "description": "Successful call with status 200",
+            "content": {
+              "text/html": {
+                "example": "healthy",
+                "x-sample-entry": "000000000000000000000035"
+              }
+            },
+            "x-sample-entry": "000000000000000000000035"
+          }
+        },
+        "x-counters-per-source": {
+          "": {
+            "entries": 1,
+            "failures": 0,
+            "firstSeen": 1590058951.273,
+            "lastSeen": 1590058951.273,
+            "sumRT": 0.001,
+            "sumDuration": 0
+          }
+        },
+        "x-counters-total": {
+          "entries": 1,
+          "failures": 0,
+          "firstSeen": 1590058951.273,
+          "lastSeen": 1590058951.273,
+          "sumRT": 0.001,
+          "sumDuration": 0
+        },
+        "x-last-seen-ts": 1590058951.273,
+        "x-sample-entry": "000000000000000000000035"
+      }
+    },
+    "/models/aaa/blacklist": {
+      "get": {
+        "tags": [
+          "models"
+        ],
+        "summary": "/models/aaa/blacklist",
+        "description": "Mizu observed 2 entries (0 failed), at 0.420 hits/s, average response time is 0.002 seconds",
+        "operationId": "aa04b7c2-11fc-49bd-86b5-fec0a336216d",
+        "responses": {
+          "200": {
+            "description": "Successful call with status 200",
+            "content": {
+              "application/json": {
+                "example": [],
+                "x-sample-entry": "000000000000000000000121"
+              }
+            },
+            "x-sample-entry": "000000000000000000000121"
+          }
+        },
+        "x-counters-per-source": {
+          "": {
+            "entries": 2,
+            "failures": 0,
+            "firstSeen": 1590058951.864,
+            "lastSeen": 1590058952.705,
+            "sumRT": 0.003,
+            "sumDuration": 0.8409998416900635
+          }
+        },
+        "x-counters-total": {
+          "entries": 2,
+          "failures": 0,
+          "firstSeen": 1590058951.864,
+          "lastSeen": 1590058952.705,
+          "sumRT": 0.003,
+          "sumDuration": 0.8409998416900635
+        },
+        "x-last-seen-ts": 1590058952.705,
+        "x-sample-entry": "000000000000000000000121"
+      }
+    },
+    "/models/andrey2/blacklist": {
+      "get": {
+        "tags": [
+          "models"
+        ],
+        "summary": "/models/andrey2/blacklist",
+        "description": "Mizu observed 1 entries (0 failed), at 0.000 hits/s, average response time is 0.001 seconds",
+        "operationId": "a61a1b56-7205-4246-99de-baec013a53d9",
+        "responses": {
+          "200": {
+            "description": "Successful call with status 200",
+            "content": {
+              "application/json": {
+                "example": [],
+                "x-sample-entry": "000000000000000000000127"
+              }
+            },
+            "x-sample-entry": "000000000000000000000127"
+          }
+        },
+        "x-counters-per-source": {
+          "": {
+            "entries": 1,
+            "failures": 0,
+            "firstSeen": 1590058953.215,
+            "lastSeen": 1590058953.215,
+            "sumRT": 0.001,
+            "sumDuration": 0
+          }
+        },
+        "x-counters-total": {
+          "entries": 1,
+          "failures": 0,
+          "firstSeen": 1590058953.215,
+          "lastSeen": 1590058953.215,
+          "sumRT": 0.001,
+          "sumDuration": 0
+        },
+        "x-last-seen-ts": 1590058953.215,
+        "x-sample-entry": "000000000000000000000127"
+      }
+    },
+    "/models/default/blacklist": {
+      "get": {
+        "tags": [
+          "models"
+        ],
+        "summary": "/models/default/blacklist",
+        "description": "Mizu observed 1 entries (0 failed), at 0.000 hits/s, average response time is 0.001 seconds",
+        "operationId": "371ca033-3863-4546-bc7e-03b291a7a188",
+        "responses": {
+          "200": {
+            "description": "Successful call with status 200",
+            "content": {
+              "application/json": {
+                "example": [],
+                "x-sample-entry": "000000000000000000000107"
+              }
+            },
+            "x-sample-entry": "000000000000000000000107"
+          }
+        },
+        "x-counters-per-source": {
+          "": {
+            "entries": 1,
+            "failures": 0,
+            "firstSeen": 1590058952.452,
+            "lastSeen": 1590058952.452,
+            "sumRT": 0.001,
+            "sumDuration": 0
+          }
+        },
+        "x-counters-total": {
+          "entries": 1,
+          "failures": 0,
+          "firstSeen": 1590058952.452,
+          "lastSeen": 1590058952.452,
+          "sumRT": 0.001,
+          "sumDuration": 0
+        },
+        "x-last-seen-ts": 1590058952.452,
+        "x-sample-entry": "000000000000000000000107"
+      }
+    },
+    "/models/roee/blacklist": {
+      "get": {
+        "tags": [
+          "models"
+        ],
+        "summary": "/models/roee/blacklist",
+        "description": "Mizu observed 2 entries (0 failed), at 0.211 hits/s, average response time is 0.001 seconds",
+        "operationId": "fba33b70-58d1-43e4-9223-38e854e78a77",
+        "responses": {
+          "200": {
+            "description": "Successful call with status 200",
+            "content": {
+              "application/json": {
+                "example": [],
+                "x-sample-entry": "000000000000000000000101"
+              }
+            },
+            "x-sample-entry": "000000000000000000000101"
+          }
+        },
+        "x-counters-per-source": {
+          "": {
+            "entries": 2,
+            "failures": 0,
+            "firstSeen": 1590058952.027,
+            "lastSeen": 1590058952.4499998,
+            "sumRT": 0.002,
+            "sumDuration": 0.42299985885620117
+          }
+        },
+        "x-counters-total": {
+          "entries": 2,
+          "failures": 0,
+          "firstSeen": 1590058952.027,
+          "lastSeen": 1590058952.4499998,
+          "sumRT": 0.002,
+          "sumDuration": 0.42299985885620117
+        },
+        "x-last-seen-ts": 1590058952.4499998,
+        "x-sample-entry": "000000000000000000000101"
+      }
+    },
+    "/models/roee/status": {
+      "get": {
+        "tags": [
+          "models"
+        ],
+        "summary": "/models/roee/status",
+        "description": "Mizu observed 1 entries (0 failed), at 0.000 hits/s, average response time is 0.001 seconds",
+        "operationId": "0653c2af-ef3f-43cd-b7e1-48f951d34fa2",
+        "responses": {
+          "200": {
+            "description": "Successful call with status 200",
+            "content": {
+              "application/json": {
+                "example": {
+                  "errorCount": 0,
+                  "lastMajorGeneration": 1589448081.392,
+                  "lastSuccessfulGeneration": 1589448081.392
+                },
+                "x-sample-entry": "000000000000000000000133"
+              }
+            },
+            "x-sample-entry": "000000000000000000000133"
+          }
+        },
+        "x-counters-per-source": {
+          "": {
+            "entries": 1,
+            "failures": 0,
+            "firstSeen": 1590058953.303,
+            "lastSeen": 1590058953.303,
+            "sumRT": 0.001,
+            "sumDuration": 0
+          }
+        },
+        "x-counters-total": {
+          "entries": 1,
+          "failures": 0,
+          "firstSeen": 1590058953.303,
+          "lastSeen": 1590058953.303,
+          "sumRT": 0.001,
+          "sumDuration": 0
+        },
+        "x-last-seen-ts": 1590058953.303,
+        "x-sample-entry": "000000000000000000000133"
+      }
+    },
+    "/models/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "style": "simple",
+          "schema": {
+            "type": "string",
+            "pattern": ".+(_|-|\\.).+"
+          },
+          "examples": {
+            "example #0": {
+              "value": "aws_kong5"
+            },
+            "example #1": {
+              "value": "liraz_test_2105"
+            },
+            "example #2": {
+              "value": "ah.trdemo.0511"
+            },
+            "example #3": {
+              "value": "ngm-1205-aws-no-tapper-04"
+            },
+            "example #4": {
+              "value": "rami-endpoints"
+            }
+          },
+          "example": "some-uuid-maybe",
+          "x-sample-entry": "000000000000000000000148"
+        }
+      ]
+    },
+    "/models/{id}/blacklist": {
+      "get": {
+        "tags": [
+          "models"
+        ],
+        "summary": "/models/{id}/blacklist",
+        "description": "Mizu observed 39 entries (0 failed), at 0.078 hits/s, average response time is 0.001 seconds",
+        "operationId": "ce1b76bc-9bff-4438-a21d-0a7a6e5be503",
+        "responses": {
+          "200": {
+            "description": "Successful call with status 200",
+            "content": {
+              "application/json": {
+                "example": [],
+                "x-sample-entry": "000000000000000000000124"
+              }
+            },
+            "x-sample-entry": "000000000000000000000124"
+          }
+        },
+        "x-counters-per-source": {
+          "": {
+            "entries": 39,
+            "failures": 0,
+            "firstSeen": 1590058950.313,
+            "lastSeen": 1590058953.212,
+            "sumRT": 0.052000000000000025,
+            "sumDuration": 3.057999849319458
+          }
+        },
+        "x-counters-total": {
+          "entries": 39,
+          "failures": 0,
+          "firstSeen": 1590058950.313,
+          "lastSeen": 1590058953.212,
+          "sumRT": 0.052000000000000025,
+          "sumDuration": 3.057999849319458
+        },
+        "x-last-seen-ts": 1590058953.212,
+        "x-sample-entry": "000000000000000000000124"
+      },
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "style": "simple",
+          "schema": {
+            "type": "string",
+            "pattern": ".+(_|-|\\.).+"
+          },
+          "examples": {
+            "example #0": {
+              "value": "aws_kong5"
+            },
+            "example #1": {
+              "value": "liraz_test_2105"
+            },
+            "example #2": {
+              "value": "ah.trdemo.0511"
+            },
+            "example #3": {
+              "value": "ngm-1205-aws-no-tapper-04"
+            },
+            "example #4": {
+              "value": "rami-endpoints"
+            }
+          },
+          "example": "some-uuid-maybe",
+          "x-sample-entry": "000000000000000000000148"
+        }
+      ]
+    },
+    "/models/{id}/status": {
+      "get": {
+        "tags": [
+          "models"
+        ],
+        "summary": "/models/{id}/status",
+        "description": "Mizu observed 7 entries (0 failed), at 0.543 hits/s, average response time is 0.193 seconds",
+        "operationId": "2c46cc41-1ec7-4636-b97e-13e4a7296c65",
+        "responses": {
+          "200": {
+            "description": "Successful call with status 200",
+            "content": {
+              "application/json": {
+                "example": [],
+                "x-sample-entry": "000000000000000000000146"
+              }
+            },
+            "x-sample-entry": "000000000000000000000146"
+          }
+        },
+        "x-counters-per-source": {
+          "": {
+            "entries": 7,
+            "failures": 0,
+            "firstSeen": 1590058950.3100002,
+            "lastSeen": 1590058953.9500003,
+            "sumRT": 1.3519999999999996,
+            "sumDuration": 3.8000001907348633
+          }
+        },
+        "x-counters-total": {
+          "entries": 7,
+          "failures": 0,
+          "firstSeen": 1590058950.3100002,
+          "lastSeen": 1590058953.9500003,
+          "sumRT": 1.3519999999999996,
+          "sumDuration": 3.8000001907348633
+        },
+        "x-last-seen-ts": 1590058953.9500003,
+        "x-sample-entry": "000000000000000000000146"
+      },
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "style": "simple",
+          "schema": {
+            "type": "string",
+            "pattern": ".+(_|-|\\.).+"
+          },
+          "examples": {
+            "example #0": {
+              "value": "aws_kong5"
+            },
+            "example #1": {
+              "value": "liraz_test_2105"
+            },
+            "example #2": {
+              "value": "ah.trdemo.0511"
+            },
+            "example #3": {
+              "value": "ngm-1205-aws-no-tapper-04"
+            },
+            "example #4": {
+              "value": "rami-endpoints"
+            }
+          },
+          "example": "some-uuid-maybe",
+          "x-sample-entry": "000000000000000000000148"
+        }
+      ]
+    },
+    "/models/{id}/suites/all/runs": {
+      "get": {
+        "tags": [
+          "models"
+        ],
+        "summary": "/models/{id}/suites/all/runs",
+        "description": "Mizu observed 69 entries (0 failed), at 0.093 hits/s, average response time is 0.029 seconds",
+        "operationId": "6776caf3-87e7-4515-899d-4d4d6cfc0bb8",
+        "responses": {
+          "200": {
+            "description": "Successful call with status 200",
+            "content": {
+              "application/json": {
+                "example": [],
+                "x-sample-entry": "000000000000000000000148"
+              },
+              "text/html": {
+                "x-sample-entry": "000000000000000000000104"
+              }
+            },
+            "x-sample-entry": "000000000000000000000148"
+          }
+        },
+        "x-counters-per-source": {
+          "": {
+            "entries": 69,
+            "failures": 0,
+            "firstSeen": 1590058949.277,
+            "lastSeen": 1590058953.952,
+            "sumRT": 2.013999999999998,
+            "sumDuration": 6.393998861312866
+          }
+        },
+        "x-counters-total": {
+          "entries": 69,
+          "failures": 0,
+          "firstSeen": 1590058949.277,
+          "lastSeen": 1590058953.952,
+          "sumRT": 2.013999999999998,
+          "sumDuration": 6.393998861312866
+        },
+        "x-last-seen-ts": 1590058953.952,
+        "x-sample-entry": "000000000000000000000148"
+      },
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "style": "simple",
+          "schema": {
+            "type": "string",
+            "pattern": ".+(_|-|\\.).+"
+          },
+          "examples": {
+            "example #0": {
+              "value": "aws_kong5"
+            },
+            "example #1": {
+              "value": "liraz_test_2105"
+            },
+            "example #2": {
+              "value": "ah.trdemo.0511"
+            },
+            "example #3": {
+              "value": "ngm-1205-aws-no-tapper-04"
+            },
+            "example #4": {
+              "value": "rami-endpoints"
+            }
+          },
+          "example": "some-uuid-maybe",
+          "x-sample-entry": "000000000000000000000148"
+        }
+      ]
+    },
+    "/models/{id}/suites/all/runs/state": {
+      "get": {
+        "tags": [
+          "models"
+        ],
+        "summary": "/models/{id}/suites/all/runs/state",
+        "description": "Mizu observed 2 entries (0 failed), at 0.997 hits/s, average response time is 0.514 seconds",
+        "operationId": "fe8186fa-b221-46e1-8130-9be1f00a7c2d",
+        "responses": {
+          "200": {
+            "description": "Successful call with status 200",
+            "content": {
+              "application/json": {
+                "example": {
+                  "errorCount": 0,
+                  "lastMajorGeneration": -1,
+                  "lastSuccessfulGeneration": -1
+                },
+                "x-sample-entry": "000000000000000000000042"
+              }
+            },
+            "x-sample-entry": "000000000000000000000042"
+          }
+        },
+        "x-counters-per-source": {
+          "": {
+            "entries": 2,
+            "failures": 0,
+            "firstSeen": 1590058949.2819998,
+            "lastSeen": 1590058951.275,
+            "sumRT": 1.029,
+            "sumDuration": 1.9930002689361572
+          }
+        },
+        "x-counters-total": {
+          "entries": 2,
+          "failures": 0,
+          "firstSeen": 1590058949.2819998,
+          "lastSeen": 1590058951.275,
+          "sumRT": 1.029,
+          "sumDuration": 1.9930002689361572
+        },
+        "x-last-seen-ts": 1590058951.275,
+        "x-sample-entry": "000000000000000000000042"
+      },
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "style": "simple",
+          "schema": {
+            "type": "string",
+            "pattern": ".+(_|-|\\.).+"
+          },
+          "examples": {
+            "example #0": {
+              "value": "aws_kong5"
+            },
+            "example #1": {
+              "value": "liraz_test_2105"
+            },
+            "example #2": {
+              "value": "ah.trdemo.0511"
+            },
+            "example #3": {
+              "value": "ngm-1205-aws-no-tapper-04"
+            },
+            "example #4": {
+              "value": "rami-endpoints"
+            }
+          },
+          "example": "some-uuid-maybe",
+          "x-sample-entry": "000000000000000000000148"
+        }
+      ]
+    },
+    "/models/{id}/{id2}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "style": "simple",
+          "schema": {
+            "type": "string",
+            "pattern": ".+(_|-|\\.).+"
+          },
+          "example": "some-uuid-maybe"
+        },
+        {
+          "name": "id2",
+          "in": "path",
+          "required": true,
+          "style": "simple",
+          "schema": {
+            "type": "string",
+            "pattern": "\\d+"
+          }
+        }
+      ]
+    },
+    "/proxies": {
+      "get": {
+        "tags": [
+          "proxies"
+        ],
+        "summary": "/proxies",
+        "description": "Mizu observed 2 entries (0 failed), at 1.587 hits/s, average response time is 0.386 seconds",
+        "operationId": "bff7bf3e-effa-43ad-8fce-bab2847a77aa",
+        "responses": {
+          "200": {
+            "description": "Successful call with status 200",
+            "content": {
+              "application/json": {
+                "example": {
+                  "createDate": "2020-05-21T10:45:02+00:00",
+                  "idleSince": "2020-05-21T10:51:26.131837",
+                  "modelId": null,
+                  "orgId": "someOrgId123",
+                  "password": "anna",
+                  "proxyId": "lirazyup9com-prx1",
+                  "status": "idle",
+                  "urls": {},
+                  "userName": "proxy"
+                },
+                "x-sample-entry": "000000000000000000000140"
+              }
+            },
+            "x-sample-entry": "000000000000000000000140"
+          }
+        },
+        "x-counters-per-source": {
+          "": {
+            "entries": 2,
+            "failures": 0,
+            "firstSeen": 1590058949.2780004,
+            "lastSeen": 1590058952.452,
+            "sumRT": 0.771,
+            "sumDuration": 3.173999547958374
+          }
+        },
+        "x-counters-total": {
+          "entries": 2,
+          "failures": 0,
+          "firstSeen": 1590058949.2780004,
+          "lastSeen": 1590058952.452,
+          "sumRT": 0.771,
+          "sumDuration": 3.173999547958374
+        },
+        "x-last-seen-ts": 1590058952.452,
+        "x-sample-entry": "000000000000000000000140"
+      }
+    },
+    "/proxies/": {
+      "get": {
+        "tags": [
+          "proxies"
+        ],
+        "summary": "/proxies/",
+        "description": "Mizu observed 1 entries (0 failed), at 0.000 hits/s, average response time is 1.022 seconds",
+        "operationId": "9c12fbeb-b4cd-40a7-8962-5b9b01619a8e",
+        "parameters": [
+          {
+            "name": "x-custom-demo-header",
+            "in": "header",
+            "required": true,
+            "style": "simple",
+            "schema": {
+              "type": "string"
+            },
+            "examples": {
+              "example #0": {
+                "value": "demo"
+              }
+            },
+            "x-sample-entry": "000000000000000000000001"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful call with status 200",
+            "headers": {
+              "x-custom-demo-header2": {
+                "required": true,
+                "style": "simple",
+                "schema": {
+                  "type": "string"
+                },
+                "examples": {
+                  "example #0": {
+                    "value": "demo2"
+                  }
+                },
+                "x-sample-entry": "000000000000000000000001"
+              }
+            },
+            "content": {
+              "application/json": {
+                "example": "null\n",
+                "x-sample-entry": "000000000000000000000001"
+              }
+            },
+            "x-sample-entry": "000000000000000000000001"
+          }
+        },
+        "x-counters-per-source": {
+          "": {
+            "entries": 1,
+            "failures": 0,
+            "firstSeen": 1590058948.255,
+            "lastSeen": 1590058948.255,
+            "sumRT": 1.022,
+            "sumDuration": 0
+          }
+        },
+        "x-counters-total": {
+          "entries": 1,
+          "failures": 0,
+          "firstSeen": 1590058948.255,
+          "lastSeen": 1590058948.255,
+          "sumRT": 1.022,
+          "sumDuration": 0
+        },
+        "x-last-seen-ts": 1590058948.255,
+        "x-sample-entry": "000000000000000000000001"
+      }
+    },
+    "/proxies/local": {
+      "get": {
+        "tags": [
+          "proxies"
+        ],
+        "summary": "/proxies/local",
+        "description": "Mizu observed 1 entries (0 failed), at 0.000 hits/s, average response time is 0.610 seconds",
+        "operationId": "0f676cec-87ba-4a03-ac72-f48c3e90d5b8",
+        "responses": {
+          "200": {
+            "description": "Successful call with status 200",
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "agentName": "ag6-minikube",
+                    "creationTime": "Sun, 22 Mar 2020 22:11:55 GMT",
+                    "id": "057573f3-c207-4d56-9512-3e1ff9190f53_trdemo_trdemo-client",
+                    "instancesCount": 0,
+                    "lastSeen": "Thu, 09 Apr 2020 22:45:55 GMT",
+                    "model": "ag_trdemo_040701",
+                    "shouldTap": true,
+                    "type": "passive"
+                  },
+                  {
+                    "agentName": "ag6-minikube",
+                    "creationTime": "Sun, 22 Mar 2020 22:11:55 GMT",
+                    "id": "057573f3-c207-4d56-9512-3e1ff9190f53_trdemo_trdemo-flights",
+                    "instancesCount": 0,
+                    "lastSeen": "Thu, 09 Apr 2020 22:45:55 GMT",
+                    "model": "ag_trdemo_040701",
+                    "shouldTap": true,
+                    "type": "passive"
+                  },
+                  {
+                    "agentName": "ag6-minikube",
+                    "creationTime": "Sun, 22 Mar 2020 22:11:55 GMT",
+                    "id": "057573f3-c207-4d56-9512-3e1ff9190f53_trdemo_trdemo-shoppingcart",
+                    "instancesCount": 0,
+                    "lastSeen": "Thu, 09 Apr 2020 22:45:55 GMT",
+                    "model": "ag_trdemo_040701",
+                    "shouldTap": true,
+                    "type": "passive"
+                  },
+                  {
+                    "agentName": "ag6-minikube",
+                    "creationTime": "Sun, 22 Mar 2020 22:11:55 GMT",
+                    "id": "057573f3-c207-4d56-9512-3e1ff9190f53_trdemo_trdemo-users",
+                    "instancesCount": 0,
+                    "lastSeen": "Thu, 09 Apr 2020 22:45:55 GMT",
+                    "model": "ag_trdemo_040701",
+                    "shouldTap": true,
+                    "type": "passive"
+                  },
+                  {
+                    "agentName": "nimrod-gcloud-mycluster",
+                    "creationTime": "Sun, 19 Apr 2020 17:46:09 GMT",
+                    "id": "0c484f93-5987-4e16-ac5d-ee838b8c7b65_tradmin_frontend-deployment",
+                    "instancesCount": 0,
+                    "lastSeen": "Mon, 20 Apr 2020 09:29:13 GMT",
+                    "model": "default",
+                    "shouldTap": false,
+                    "type": "envoy"
+                  },
+                  {
+                    "agentName": "nimrod-gcloud-mycluster",
+                    "creationTime": "Mon, 06 Apr 2020 06:50:47 GMT",
+                    "id": "0c484f93-5987-4e16-ac5d-ee838b8c7b65_tradmin_trcc-api-deployment",
+                    "instancesCount": 0,
+                    "lastSeen": "Mon, 20 Apr 2020 09:29:13 GMT",
+                    "model": "default",
+                    "shouldTap": false,
+                    "type": "envoy"
+                  },
+                  {
+                    "agentName": "nimrod-gcloud-mycluster",
+                    "creationTime": null,
+                    "id": "0c484f93-5987-4e16-ac5d-ee838b8c7b65_trdemo_trdemo-client",
+                    "instancesCount": 0,
+                    "lastSeen": "Mon, 20 Apr 2020 09:29:53 GMT",
+                    "model": "ngm-0704-gcloud-05",
+                    "shouldTap": true,
+                    "type": "passive"
+                  },
+                  {
+                    "agentName": "nimrod-gcloud-mycluster",
+                    "creationTime": null,
+                    "id": "0c484f93-5987-4e16-ac5d-ee838b8c7b65_trdemo_trdemo-flights",
+                    "instancesCount": 0,
+                    "lastSeen": "Mon, 20 Apr 2020 09:29:53 GMT",
+                    "model": "ngm-0704-gcloud-05",
+                    "shouldTap": true,
+                    "type": "passive"
+                  },
+                  {
+                    "agentName": "nimrod-gcloud-mycluster",
+                    "creationTime": null,
+                    "id": "0c484f93-5987-4e16-ac5d-ee838b8c7b65_trdemo_trdemo-shoppingcart",
+                    "instancesCount": 0,
+                    "lastSeen": "Tue, 07 Apr 2020 17:12:48 GMT",
+                    "model": "ngm-0704-gcloud-05",
+                    "shouldTap": true,
+                    "type": "passive"
+                  },
+                  {
+                    "agentName": "nimrod-gcloud-mycluster",
+                    "creationTime": null,
+                    "id": "0c484f93-5987-4e16-ac5d-ee838b8c7b65_trdemo_trdemo-users",
+                    "instancesCount": 0,
+                    "lastSeen": "Tue, 07 Apr 2020 17:12:48 GMT",
+                    "model": "ngm-0704-gcloud-05",
+                    "shouldTap": true,
+                    "type": "passive"
+                  },
+                  {
+                    "agentName": "haiut-samcust1105",
+                    "creationTime": "Thu, 23 Apr 2020 13:44:42 GMT",
+                    "id": "2a45b7bd-3615-11ea-b692-42010a8400bd_trdemo_trdemo-client",
+                    "instancesCount": 1,
+                    "lastSeen": "Thu, 21 May 2020 11:02:32 GMT",
+                    "model": "ah.trdemo.0513",
+                    "shouldTap": true,
+                    "type": "passive"
+                  },
+                  {
+                    "agentName": "haiut-samcust1105",
+                    "creationTime": "Thu, 23 Apr 2020 13:44:42 GMT",
+                    "id": "2a45b7bd-3615-11ea-b692-42010a8400bd_trdemo_trdemo-flights",
+                    "instancesCount": 1,
+                    "lastSeen": "Thu, 21 May 2020 11:02:32 GMT",
+                    "model": "ah.trdemo.0513",
+                    "shouldTap": true,
+                    "type": "passive"
+                  },
+                  {
+                    "agentName": "haiut-samcust1105",
+                    "creationTime": "Thu, 23 Apr 2020 13:44:42 GMT",
+                    "id": "2a45b7bd-3615-11ea-b692-42010a8400bd_trdemo_trdemo-shoppingcart",
+                    "instancesCount": 1,
+                    "lastSeen": "Thu, 21 May 2020 11:02:32 GMT",
+                    "model": "ah.trdemo.0513",
+                    "shouldTap": true,
+                    "type": "passive"
+                  },
+                  {
+                    "agentName": "haiut-samcust1105",
+                    "creationTime": "Thu, 23 Apr 2020 13:44:35 GMT",
+                    "id": "2a45b7bd-3615-11ea-b692-42010a8400bd_trdemo_trdemo-users",
+                    "instancesCount": 1,
+                    "lastSeen": "Thu, 21 May 2020 11:02:32 GMT",
+                    "model": "ah.trdemo.0513",
+                    "shouldTap": true,
+                    "type": "passive"
+                  },
+                  {
+                    "agentName": "rami-aws-agent2",
+                    "creationTime": "Thu, 14 May 2020 14:54:45 GMT",
+                    "id": "6edcaf1b-f7f9-4dd7-ae4d-2443ab489213_trdemo_trdemo-client",
+                    "instancesCount": 1,
+                    "lastSeen": "Thu, 21 May 2020 11:02:28 GMT",
+                    "model": "aws_services_envoy",
+                    "shouldTap": true,
+                    "type": "envoy"
+                  },
+                  {
+                    "agentName": "rami-aws-agent2",
+                    "creationTime": "Thu, 14 May 2020 14:54:45 GMT",
+                    "id": "6edcaf1b-f7f9-4dd7-ae4d-2443ab489213_trdemo_trdemo-flights",
+                    "instancesCount": 2,
+                    "lastSeen": "Thu, 21 May 2020 11:02:30 GMT",
+                    "model": "aws_services_envoy",
+                    "shouldTap": true,
+                    "type": "passive"
+                  },
+                  {
+                    "agentName": "rami-aws-agent2",
+                    "creationTime": "Thu, 14 May 2020 14:54:45 GMT",
+                    "id": "6edcaf1b-f7f9-4dd7-ae4d-2443ab489213_trdemo_trdemo-shoppingcart",
+                    "instancesCount": 2,
+                    "lastSeen": "Thu, 21 May 2020 11:02:30 GMT",
+                    "model": "aws_services_envoy",
+                    "shouldTap": true,
+                    "type": "passive"
+                  },
+                  {
+                    "agentName": "rami-aws-agent2",
+                    "creationTime": "Thu, 14 May 2020 14:54:45 GMT",
+                    "id": "6edcaf1b-f7f9-4dd7-ae4d-2443ab489213_trdemo_trdemo-users",
+                    "instancesCount": 2,
+                    "lastSeen": "Thu, 21 May 2020 11:02:30 GMT",
+                    "model": "aws_services_envoy",
+                    "shouldTap": true,
+                    "type": "passive"
+                  },
+                  {
+                    "agentName": null,
+                    "creationTime": null,
+                    "id": "alextestrio-prx1",
+                    "instancesCount": 0,
+                    "lastSeen": "Thu, 19 Mar 2020 13:10:36 GMT",
+                    "model": "ah-0319",
+                    "shouldTap": false,
+                    "type": "proxy"
+                  },
+                  {
+                    "agentName": null,
+                    "creationTime": "Fri, 17 Apr 2020 16:17:58 GMT",
+                    "id": "alexup9com-prx1",
+                    "instancesCount": 0,
+                    "lastSeen": "Sat, 18 Apr 2020 14:12:41 GMT",
+                    "model": "ah-test-1704-01",
+                    "shouldTap": false,
+                    "type": "proxy"
+                  },
+                  {
+                    "agentName": null,
+                    "creationTime": null,
+                    "id": "alontestrio-prx1",
+                    "instancesCount": 0,
+                    "lastSeen": "Mon, 23 Mar 2020 17:45:49 GMT",
+                    "model": "ag_nectar_032301",
+                    "shouldTap": false,
+                    "type": "proxy"
+                  },
+                  {
+                    "agentName": null,
+                    "creationTime": "Tue, 31 Mar 2020 23:45:34 GMT",
+                    "id": "alonup9com-prx1",
+                    "instancesCount": 1,
+                    "lastSeen": "Thu, 21 May 2020 10:58:30 GMT",
+                    "model": "ag.proxy.050801",
+                    "shouldTap": true,
+                    "type": "proxy"
+                  },
+                  {
+                    "agentName": null,
+                    "creationTime": "Mon, 06 Apr 2020 07:51:20 GMT",
+                    "id": "andrewpetrovup9com-prx1",
+                    "instancesCount": 0,
+                    "lastSeen": "Tue, 07 Apr 2020 08:15:56 GMT",
+                    "model": "ap_test",
+                    "shouldTap": false,
+                    "type": "proxy"
+                  },
+                  {
+                    "agentName": null,
+                    "creationTime": null,
+                    "id": "andreytestrio-prx1",
+                    "instancesCount": 0,
+                    "lastSeen": "Thu, 26 Mar 2020 11:09:27 GMT",
+                    "model": "andrey2",
+                    "shouldTap": false,
+                    "type": "proxy"
+                  },
+                  {
+                    "agentName": "haiut-mk04",
+                    "creationTime": null,
+                    "id": "c59d834b-00cd-4650-b114-a9da537c56d7_trdemo_trdemo-client",
+                    "instancesCount": 0,
+                    "lastSeen": "Thu, 09 Apr 2020 10:19:27 GMT",
+                    "model": "ah-0329-01",
+                    "shouldTap": true,
+                    "type": "passive"
+                  },
+                  {
+                    "agentName": "haiut-mk04",
+                    "creationTime": null,
+                    "id": "c59d834b-00cd-4650-b114-a9da537c56d7_trdemo_trdemo-flights",
+                    "instancesCount": 0,
+                    "lastSeen": "Thu, 09 Apr 2020 10:19:27 GMT",
+                    "model": "ah-0329-01",
+                    "shouldTap": true,
+                    "type": "passive"
+                  },
+                  {
+                    "agentName": "haiut-mk04",
+                    "creationTime": null,
+                    "id": "c59d834b-00cd-4650-b114-a9da537c56d7_trdemo_trdemo-shoppingcart",
+                    "instancesCount": 0,
+                    "lastSeen": "Thu, 09 Apr 2020 10:19:27 GMT",
+                    "model": "ah-0329-01",
+                    "shouldTap": true,
+                    "type": "passive"
+                  },
+                  {
+                    "agentName": "haiut-mk04",
+                    "creationTime": null,
+                    "id": "c59d834b-00cd-4650-b114-a9da537c56d7_trdemo_trdemo-users",
+                    "instancesCount": 0,
+                    "lastSeen": "Thu, 09 Apr 2020 10:19:27 GMT",
+                    "model": "ah-0329-01",
+                    "shouldTap": true,
+                    "type": "passive"
+                  },
+                  {
+                    "agentName": "nimrod-01-london-aws",
+                    "creationTime": "Mon, 13 Apr 2020 14:32:47 GMT",
+                    "id": "cluster-01-ECSCluster-ZldlPWdD1B9z_trdemo-01-TrdemoClientTaskDefinition-51AGMDOUMFOS",
+                    "instancesCount": 0,
+                    "lastSeen": "Thu, 23 Apr 2020 17:01:37 GMT",
+                    "model": "default",
+                    "shouldTap": true,
+                    "type": "passive"
+                  },
+                  {
+                    "agentName": "nimrod-01-london-aws",
+                    "creationTime": "Sun, 12 Apr 2020 12:18:27 GMT",
+                    "id": "cluster-01-ECSCluster-ZldlPWdD1B9z_trdemo-01-TrdemoClientTaskDefinition-ZSUR7XY24R3X",
+                    "instancesCount": 0,
+                    "lastSeen": "Sun, 12 Apr 2020 14:40:11 GMT",
+                    "model": "ngm-1204-aws-01",
+                    "shouldTap": true,
+                    "type": "passive"
+                  },
+                  {
+                    "agentName": "nimrod-01-london-aws",
+                    "creationTime": "Mon, 13 Apr 2020 14:31:31 GMT",
+                    "id": "cluster-01-ECSCluster-ZldlPWdD1B9z_trdemo-01-TrdemoFlightsTaskDefinition-1GQ6KPSBBH2CG",
+                    "instancesCount": 0,
+                    "lastSeen": "Thu, 23 Apr 2020 17:01:37 GMT",
+                    "model": "default",
+                    "shouldTap": true,
+                    "type": "passive"
+                  },
+                  {
+                    "agentName": "nimrod-01-london-aws",
+                    "creationTime": "Sun, 12 Apr 2020 12:18:27 GMT",
+                    "id": "cluster-01-ECSCluster-ZldlPWdD1B9z_trdemo-01-TrdemoFlightsTaskDefinition-1P92C5J4BMAJ",
+                    "instancesCount": 0,
+                    "lastSeen": "Sun, 12 Apr 2020 14:40:11 GMT",
+                    "model": "ngm-1204-aws-01",
+                    "shouldTap": true,
+                    "type": "passive"
+                  },
+                  {
+                    "agentName": "nimrod-01-london-aws",
+                    "creationTime": "Sun, 12 Apr 2020 12:18:26 GMT",
+                    "id": "cluster-01-ECSCluster-ZldlPWdD1B9z_trdemo-01-TrdemoShoppingcartTaskDefinition-8LVIGNH5OGR5",
+                    "instancesCount": 0,
+                    "lastSeen": "Sun, 12 Apr 2020 14:40:09 GMT",
+                    "model": "ngm-1204-aws-01",
+                    "shouldTap": true,
+                    "type": "passive"
+                  },
+                  {
+                    "agentName": "nimrod-01-london-aws",
+                    "creationTime": "Mon, 13 Apr 2020 14:31:29 GMT",
+                    "id": "cluster-01-ECSCluster-ZldlPWdD1B9z_trdemo-01-TrdemoShoppingcartTaskDefinition-EF79FKMGB0S5",
+                    "instancesCount": 0,
+                    "lastSeen": "Thu, 23 Apr 2020 17:01:59 GMT",
+                    "model": "default",
+                    "shouldTap": true,
+                    "type": "passive"
+                  },
+                  {
+                    "agentName": "nimrod-01-london-aws",
+                    "creationTime": "Mon, 13 Apr 2020 14:31:36 GMT",
+                    "id": "cluster-01-ECSCluster-ZldlPWdD1B9z_trdemo-01-TrdemoUsersTaskDefinition-1SOGKLV12R6VX",
+                    "instancesCount": 0,
+                    "lastSeen": "Thu, 23 Apr 2020 17:01:53 GMT",
+                    "model": "default",
+                    "shouldTap": true,
+                    "type": "passive"
+                  },
+                  {
+                    "agentName": "nimrod-01-london-aws",
+                    "creationTime": "Sun, 12 Apr 2020 12:18:26 GMT",
+                    "id": "cluster-01-ECSCluster-ZldlPWdD1B9z_trdemo-01-TrdemoUsersTaskDefinition-IA4ZUEXN3VPX",
+                    "instancesCount": 0,
+                    "lastSeen": "Sun, 12 Apr 2020 14:40:09 GMT",
+                    "model": "ngm-1204-aws-01",
+                    "shouldTap": true,
+                    "type": "passive"
+                  },
+                  {
+                    "agentName": "nimrod-01-london-aws",
+                    "creationTime": "Sun, 12 Apr 2020 14:51:10 GMT",
+                    "id": "cluster-01-ECSCluster-ZldlPWdD1B9z_trdemo-02-TrdemoClientTaskDefinition-19SVXVU4US12S",
+                    "instancesCount": 0,
+                    "lastSeen": "Sun, 12 Apr 2020 15:59:02 GMT",
+                    "model": "ngm-1204-aws-02",
+                    "shouldTap": true,
+                    "type": "passive"
+                  },
+                  {
+                    "agentName": "nimrod-01-london-aws",
+                    "creationTime": "Sun, 12 Apr 2020 14:49:24 GMT",
+                    "id": "cluster-01-ECSCluster-ZldlPWdD1B9z_trdemo-02-TrdemoFlightsTaskDefinition-2P1PRCG5UHC3",
+                    "instancesCount": 0,
+                    "lastSeen": "Sun, 12 Apr 2020 15:59:04 GMT",
+                    "model": "ngm-1204-aws-02",
+                    "shouldTap": true,
+                    "type": "passive"
+                  },
+                  {
+                    "agentName": "nimrod-01-london-aws",
+                    "creationTime": "Sun, 12 Apr 2020 14:48:48 GMT",
+                    "id": "cluster-01-ECSCluster-ZldlPWdD1B9z_trdemo-02-TrdemoShoppingcartTaskDefinition-1TLHJW9NH2B5A",
+                    "instancesCount": 0,
+                    "lastSeen": "Sun, 12 Apr 2020 15:59:00 GMT",
+                    "model": "ngm-1204-aws-02",
+                    "shouldTap": true,
+                    "type": "passive"
+                  },
+                  {
+                    "agentName": "nimrod-01-london-aws",
+                    "creationTime": "Sun, 12 Apr 2020 14:48:43 GMT",
+                    "id": "cluster-01-ECSCluster-ZldlPWdD1B9z_trdemo-02-TrdemoUsersTaskDefinition-1W5X329FWGXZ3",
+                    "instancesCount": 0,
+                    "lastSeen": "Sun, 12 Apr 2020 15:59:00 GMT",
+                    "model": "ngm-1204-aws-02",
+                    "shouldTap": true,
+                    "type": "passive"
+                  },
+                  {
+                    "agentName": "haiut-aws-fra-03",
+                    "creationTime": "Sun, 26 Apr 2020 20:09:14 GMT",
+                    "id": "d2d6c435-eaf5-48f6-8e61-1e7c57251fbd_trdemo_trdemo-client",
+                    "instancesCount": 0,
+                    "lastSeen": "Sun, 10 May 2020 13:31:29 GMT",
+                    "model": "aws_new_resolving2",
+                    "shouldTap": true,
+                    "type": "passive"
+                  },
+                  {
+                    "agentName": "haiut-aws-fra-03",
+                    "creationTime": "Sun, 26 Apr 2020 20:09:09 GMT",
+                    "id": "d2d6c435-eaf5-48f6-8e61-1e7c57251fbd_trdemo_trdemo-flights",
+                    "instancesCount": 0,
+                    "lastSeen": "Sun, 10 May 2020 13:31:31 GMT",
+                    "model": "aws_new_resolving2",
+                    "shouldTap": true,
+                    "type": "passive"
+                  },
+                  {
+                    "agentName": "haiut-aws-fra-03",
+                    "creationTime": "Sun, 26 Apr 2020 20:09:14 GMT",
+                    "id": "d2d6c435-eaf5-48f6-8e61-1e7c57251fbd_trdemo_trdemo-shoppingcart",
+                    "instancesCount": 0,
+                    "lastSeen": "Sun, 10 May 2020 13:31:29 GMT",
+                    "model": "aws_new_resolving2",
+                    "shouldTap": true,
+                    "type": "passive"
+                  },
+                  {
+                    "agentName": "haiut-aws-fra-03",
+                    "creationTime": "Sun, 26 Apr 2020 20:09:09 GMT",
+                    "id": "d2d6c435-eaf5-48f6-8e61-1e7c57251fbd_trdemo_trdemo-users",
+                    "instancesCount": 0,
+                    "lastSeen": "Sun, 10 May 2020 13:31:31 GMT",
+                    "model": "aws_new_resolving2",
+                    "shouldTap": true,
+                    "type": "passive"
+                  },
+                  {
+                    "agentName": null,
+                    "creationTime": null,
+                    "id": "e677a5bc-0542-11ea-a607-42010a8400ce_tradmin_frontend-deployment",
+                    "instancesCount": 0,
+                    "lastSeen": "Sun, 10 May 2020 13:31:31 GMT",
+                    "model": "default",
+                    "shouldTap": false,
+                    "type": "envoy"
+                  },
+                  {
+                    "agentName": null,
+                    "creationTime": "Fri, 03 Apr 2020 08:00:08 GMT",
+                    "id": "e677a5bc-0542-11ea-a607-42010a8400ce_tradmin_trcc-api-deployme-f9aaef0a8d6f47bab4894c055aa72533-67c7fc5czfxr",
+                    "instancesCount": 0,
+                    "lastSeen": "Fri, 03 Apr 2020 05:04:11 GMT",
+                    "model": "default",
+                    "shouldTap": false,
+                    "type": "envoy"
+                  },
+                  {
+                    "agentName": null,
+                    "creationTime": null,
+                    "id": "e677a5bc-0542-11ea-a607-42010a8400ce_tradmin_trcc-api-deployment",
+                    "instancesCount": 0,
+                    "lastSeen": "Thu, 23 Apr 2020 08:12:03 GMT",
+                    "model": "sy-trcc-dogfood-3",
+                    "shouldTap": false,
+                    "type": "envoy"
+                  },
+                  {
+                    "agentName": "stg-cloud-agent",
+                    "creationTime": "Thu, 23 Apr 2020 08:11:52 GMT",
+                    "id": "e677a5bc-0542-11ea-a607-42010a8400ce_tradmin_trcc-api-deployment-stable",
+                    "instancesCount": 2,
+                    "lastSeen": "Thu, 21 May 2020 11:02:31 GMT",
+                    "model": "sy-trcc-dogfood-10",
+                    "shouldTap": true,
+                    "type": "passive"
+                  },
+                  {
+                    "agentName": "stg-cloud-agent",
+                    "creationTime": null,
+                    "id": "e677a5bc-0542-11ea-a607-42010a8400ce_trdemo_trdemo-client",
+                    "instancesCount": 0,
+                    "lastSeen": "Thu, 21 May 2020 11:02:29 GMT",
+                    "model": "up9_011401",
+                    "shouldTap": false,
+                    "type": "envoy"
+                  },
+                  {
+                    "agentName": "stg-cloud-agent",
+                    "creationTime": null,
+                    "id": "e677a5bc-0542-11ea-a607-42010a8400ce_trdemo_trdemo-flights",
+                    "instancesCount": 0,
+                    "lastSeen": "Thu, 21 May 2020 11:02:29 GMT",
+                    "model": "up9_011401",
+                    "shouldTap": false,
+                    "type": "passive"
+                  },
+                  {
+                    "agentName": null,
+                    "creationTime": null,
+                    "id": "e677a5bc-0542-11ea-a607-42010a8400ce_trdemo_trdemo-shoppingcart",
+                    "instancesCount": 0,
+                    "lastSeen": "Sun, 10 May 2020 13:31:30 GMT",
+                    "model": "bookstack-remote",
+                    "shouldTap": false,
+                    "type": "passive"
+                  },
+                  {
+                    "agentName": "stg-cloud-agent",
+                    "creationTime": null,
+                    "id": "e677a5bc-0542-11ea-a607-42010a8400ce_trdemo_trdemo-users",
+                    "instancesCount": 0,
+                    "lastSeen": "Thu, 21 May 2020 11:02:29 GMT",
+                    "model": "up9_011401",
+                    "shouldTap": false,
+                    "type": "passive"
+                  },
+                  {
+                    "agentName": null,
+                    "creationTime": null,
+                    "id": "lirazyup9com-prx1",
+                    "instancesCount": 0,
+                    "lastSeen": "Thu, 21 May 2020 10:51:01 GMT",
+                    "model": "liraz_test_2105",
+                    "shouldTap": false,
+                    "type": "proxy"
+                  },
+                  {
+                    "agentName": "nimrod-01-london-aws",
+                    "creationTime": "Thu, 21 May 2020 10:58:05 GMT",
+                    "id": "london-01-ECSCluster-27iuIYva8nO4_trdemo-01-TrdemoClientTaskDefinition-4TTVATDRY0CJ",
+                    "instancesCount": 1,
+                    "lastSeen": "Thu, 21 May 2020 11:02:31 GMT",
+                    "model": "default",
+                    "shouldTap": true,
+                    "type": "passive"
+                  },
+                  {
+                    "agentName": "nimrod-01-london-aws",
+                    "creationTime": "Thu, 21 May 2020 10:51:53 GMT",
+                    "id": "london-01-ECSCluster-27iuIYva8nO4_trdemo-01-TrdemoFlightsTaskDefinition-HBBUAO47D2VT",
+                    "instancesCount": 1,
+                    "lastSeen": "Thu, 21 May 2020 11:02:30 GMT",
+                    "model": "default",
+                    "shouldTap": true,
+                    "type": "passive"
+                  },
+                  {
+                    "agentName": "nimrod-01-london-aws",
+                    "creationTime": "Thu, 21 May 2020 10:57:09 GMT",
+                    "id": "london-01-ECSCluster-27iuIYva8nO4_trdemo-01-TrdemoShoppingcartTaskDefinition-1UAMK7WTR1SWE",
+                    "instancesCount": 1,
+                    "lastSeen": "Thu, 21 May 2020 11:02:32 GMT",
+                    "model": "default",
+                    "shouldTap": true,
+                    "type": "passive"
+                  },
+                  {
+                    "agentName": "nimrod-01-london-aws",
+                    "creationTime": "Thu, 21 May 2020 10:56:49 GMT",
+                    "id": "london-01-ECSCluster-27iuIYva8nO4_trdemo-01-TrdemoUsersTaskDefinition-1HEEGJCBNB4PB",
+                    "instancesCount": 1,
+                    "lastSeen": "Thu, 21 May 2020 11:02:31 GMT",
+                    "model": "default",
+                    "shouldTap": true,
+                    "type": "passive"
+                  },
+                  {
+                    "agentName": "nimrod-01-paris-aws",
+                    "creationTime": "Tue, 12 May 2020 14:14:42 GMT",
+                    "id": "nimrod-01-ECSCluster-1ENCWB3MDFEUQ_trdemo-01-TrdemoClientTaskDefinition-1HQRZT31KSGK0",
+                    "instancesCount": 1,
+                    "lastSeen": "Thu, 21 May 2020 11:02:29 GMT",
+                    "model": "ngm-1305-aws-01",
+                    "shouldTap": false,
+                    "type": "passive"
+                  },
+                  {
+                    "agentName": "nimrod-01-paris-aws",
+                    "creationTime": "Mon, 06 Apr 2020 08:37:02 GMT",
+                    "id": "nimrod-01-ECSCluster-1ENCWB3MDFEUQ_trdemo-01-TrdemoClientTaskDefinition-PCTOAFN3NUUL",
+                    "instancesCount": 0,
+                    "lastSeen": "Tue, 12 May 2020 12:36:48 GMT",
+                    "model": "default",
+                    "shouldTap": false,
+                    "type": "passive"
+                  },
+                  {
+                    "agentName": "nimrod-01-paris-aws",
+                    "creationTime": "Mon, 06 Apr 2020 10:46:50 GMT",
+                    "id": "nimrod-01-ECSCluster-1ENCWB3MDFEUQ_trdemo-01-TrdemoFlightsTaskDefinition-1RP81I0ETBSRA",
+                    "instancesCount": 0,
+                    "lastSeen": "Tue, 12 May 2020 12:34:26 GMT",
+                    "model": "default",
+                    "shouldTap": false,
+                    "type": "passive"
+                  },
+                  {
+                    "agentName": "nimrod-01-paris-aws",
+                    "creationTime": "Tue, 12 May 2020 14:13:16 GMT",
+                    "id": "nimrod-01-ECSCluster-1ENCWB3MDFEUQ_trdemo-01-TrdemoFlightsTaskDefinition-6MATLSTUSK15",
+                    "instancesCount": 1,
+                    "lastSeen": "Thu, 21 May 2020 11:02:30 GMT",
+                    "model": "ngm-1305-aws-01",
+                    "shouldTap": false,
+                    "type": "passive"
+                  },
+                  {
+                    "agentName": "nimrod-01-paris-aws",
+                    "creationTime": "Tue, 12 May 2020 14:13:05 GMT",
+                    "id": "nimrod-01-ECSCluster-1ENCWB3MDFEUQ_trdemo-01-TrdemoShoppingcartTaskDefinition-1NSJ45NVQ46VV",
+                    "instancesCount": 1,
+                    "lastSeen": "Thu, 21 May 2020 11:02:30 GMT",
+                    "model": "ngm-1305-aws-01",
+                    "shouldTap": false,
+                    "type": "passive"
+                  },
+                  {
+                    "agentName": "nimrod-01-paris-aws",
+                    "creationTime": "Mon, 06 Apr 2020 08:37:02 GMT",
+                    "id": "nimrod-01-ECSCluster-1ENCWB3MDFEUQ_trdemo-01-TrdemoShoppingcartTaskDefinition-VAY9IULBYL27",
+                    "instancesCount": 0,
+                    "lastSeen": "Tue, 12 May 2020 12:34:12 GMT",
+                    "model": "default",
+                    "shouldTap": false,
+                    "type": "passive"
+                  },
+                  {
+                    "agentName": "nimrod-01-paris-aws",
+                    "creationTime": "Tue, 12 May 2020 14:13:05 GMT",
+                    "id": "nimrod-01-ECSCluster-1ENCWB3MDFEUQ_trdemo-01-TrdemoUsersTaskDefinition-1KSLKXSKQ0YGI",
+                    "instancesCount": 1,
+                    "lastSeen": "Thu, 21 May 2020 11:02:31 GMT",
+                    "model": "ngm-1305-aws-01",
+                    "shouldTap": false,
+                    "type": "passive"
+                  },
+                  {
+                    "agentName": "nimrod-01-paris-aws",
+                    "creationTime": "Mon, 06 Apr 2020 10:47:04 GMT",
+                    "id": "nimrod-01-ECSCluster-1ENCWB3MDFEUQ_trdemo-01-TrdemoUsersTaskDefinition-A4VERGQEE2C9",
+                    "instancesCount": 0,
+                    "lastSeen": "Tue, 12 May 2020 12:34:26 GMT",
+                    "model": "default",
+                    "shouldTap": false,
+                    "type": "passive"
+                  },
+                  {
+                    "agentName": "nimrod-01-paris-aws",
+                    "creationTime": "Tue, 12 May 2020 16:03:37 GMT",
+                    "id": "nimrod-01-ECSCluster-1ENCWB3MDFEUQ_trdemo-no-tapper-TrdemoClientTaskDefinition-1SP9ZUN1LZE3N",
+                    "instancesCount": 0,
+                    "lastSeen": "Tue, 12 May 2020 21:58:09 GMT",
+                    "model": "ngm-1205-aws-no-tapper-04",
+                    "shouldTap": true,
+                    "type": "passive"
+                  },
+                  {
+                    "agentName": "nimrod-01-paris-aws",
+                    "creationTime": "Tue, 12 May 2020 16:04:39 GMT",
+                    "id": "nimrod-01-ECSCluster-1ENCWB3MDFEUQ_trdemo-no-tapper-TrdemoFlightsTaskDefinition-1U2E8ONADR65S",
+                    "instancesCount": 0,
+                    "lastSeen": "Tue, 12 May 2020 21:56:39 GMT",
+                    "model": "ngm-1205-aws-no-tapper-04",
+                    "shouldTap": true,
+                    "type": "passive"
+                  },
+                  {
+                    "agentName": "nimrod-01-paris-aws",
+                    "creationTime": "Tue, 12 May 2020 16:01:49 GMT",
+                    "id": "nimrod-01-ECSCluster-1ENCWB3MDFEUQ_trdemo-no-tapper-TrdemoShoppingcartTaskDefinition-PFB3IL2KQWE3",
+                    "instancesCount": 0,
+                    "lastSeen": "Tue, 12 May 2020 21:56:34 GMT",
+                    "model": "ngm-1205-aws-no-tapper-04",
+                    "shouldTap": true,
+                    "type": "passive"
+                  },
+                  {
+                    "agentName": "nimrod-01-paris-aws",
+                    "creationTime": "Tue, 12 May 2020 16:01:54 GMT",
+                    "id": "nimrod-01-ECSCluster-1ENCWB3MDFEUQ_trdemo-no-tapper-TrdemoUsersTaskDefinition-CXOR2F6JGPNY",
+                    "instancesCount": 0,
+                    "lastSeen": "Tue, 12 May 2020 21:56:54 GMT",
+                    "model": "ngm-1205-aws-no-tapper-04",
+                    "shouldTap": true,
+                    "type": "passive"
+                  },
+                  {
+                    "agentName": null,
+                    "creationTime": null,
+                    "id": "nimrodup9com-prx1",
+                    "instancesCount": 0,
+                    "lastSeen": "Sun, 29 Mar 2020 12:59:27 GMT",
+                    "model": "ngm-2020-03-29-00",
+                    "shouldTap": false,
+                    "type": "proxy"
+                  },
+                  {
+                    "agentName": null,
+                    "creationTime": "Sun, 29 Mar 2020 14:09:23 GMT",
+                    "id": "nimrodup9com-someorgid123-prx1-local",
+                    "instancesCount": 0,
+                    "lastSeen": "Sun, 29 Mar 2020 14:15:05 GMT",
+                    "model": "ngm-2020-03-29-01",
+                    "shouldTap": true,
+                    "type": "local_proxy"
+                  },
+                  {
+                    "agentName": null,
+                    "creationTime": null,
+                    "id": "ofriup9com-prx1",
+                    "instancesCount": 0,
+                    "lastSeen": "Wed, 04 Mar 2020 08:04:47 GMT",
+                    "model": "aaa",
+                    "shouldTap": false,
+                    "type": "proxy"
+                  },
+                  {
+                    "agentName": null,
+                    "creationTime": "Thu, 19 Mar 2020 16:03:38 GMT",
+                    "id": "rami-prx1",
+                    "instancesCount": 0,
+                    "lastSeen": "Thu, 19 Mar 2020 16:03:38 GMT",
+                    "model": "default",
+                    "shouldTap": true,
+                    "type": "proxy"
+                  },
+                  {
+                    "agentName": null,
+                    "creationTime": "Thu, 02 Apr 2020 06:31:20 GMT",
+                    "id": "ramibermanup9com-prx1",
+                    "instancesCount": 0,
+                    "lastSeen": "Thu, 23 Apr 2020 06:26:18 GMT",
+                    "model": "rami-endpoints",
+                    "shouldTap": false,
+                    "type": "proxy"
+                  },
+                  {
+                    "agentName": null,
+                    "creationTime": "Mon, 04 May 2020 11:25:30 GMT",
+                    "id": "ramibrn1gmailcom-prx1",
+                    "instancesCount": 0,
+                    "lastSeen": "Mon, 04 May 2020 11:26:11 GMT",
+                    "model": "regression-04-05-20",
+                    "shouldTap": false,
+                    "type": "proxy"
+                  },
+                  {
+                    "agentName": null,
+                    "creationTime": "Sun, 12 Apr 2020 12:50:24 GMT",
+                    "id": "ramibrngmailcom-prx1",
+                    "instancesCount": 0,
+                    "lastSeen": "Sun, 12 Apr 2020 12:51:00 GMT",
+                    "model": "rami-proxy-test",
+                    "shouldTap": false,
+                    "type": "proxy"
+                  },
+                  {
+                    "agentName": null,
+                    "creationTime": "Mon, 16 Mar 2020 14:14:37 GMT",
+                    "id": "roeegadottestrio-prx1",
+                    "instancesCount": 0,
+                    "lastSeen": "Thu, 19 Mar 2020 07:02:30 GMT",
+                    "model": "roee",
+                    "shouldTap": false,
+                    "type": "proxy"
+                  },
+                  {
+                    "agentName": null,
+                    "creationTime": "Tue, 31 Mar 2020 09:31:42 GMT",
+                    "id": "roeegadotup9com-someorgid123-prx1-local",
+                    "instancesCount": 0,
+                    "lastSeen": "Mon, 13 Apr 2020 06:29:10 GMT",
+                    "model": "rg_local_proxy_5",
+                    "shouldTap": false,
+                    "type": "local_proxy"
+                  }
+                ],
+                "x-sample-entry": "000000000000000000000144"
+              }
+            },
+            "x-sample-entry": "000000000000000000000144"
+          }
+        },
+        "x-counters-per-source": {
+          "": {
+            "entries": 1,
+            "failures": 0,
+            "firstSeen": 1590058952.707,
+            "lastSeen": 1590058952.707,
+            "sumRT": 0.61,
+            "sumDuration": 0
+          }
+        },
+        "x-counters-total": {
+          "entries": 1,
+          "failures": 0,
+          "firstSeen": 1590058952.707,
+          "lastSeen": 1590058952.707,
+          "sumRT": 0.61,
+          "sumDuration": 0
+        },
+        "x-last-seen-ts": 1590058952.707,
+        "x-sample-entry": "000000000000000000000144"
+      }
+    },
+    "/tapping/state": {
+      "get": {
+        "summary": "/tapping/state",
+        "description": "Mizu observed 8 entries (0 failed), at 0.760 hits/s, average response time is 0.258 seconds",
+        "operationId": "b0c1e867-43ee-4f94-bcf8-58cd0ba0f5c8",
+        "responses": {
+          "200": {
+            "description": "Successful call with status 200",
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "runId": "fpfrlibnwy",
+                    "status": "COMPLETED"
+                  },
+                  {
+                    "runId": "huuonvenvp",
+                    "status": "COMPLETED"
+                  },
+                  {
+                    "runId": "lbtcxllqvg",
+                    "status": "COMPLETED"
+                  },
+                  {
+                    "runId": "tycbfylptk",
+                    "status": "COMPLETED"
+                  },
+                  {
+                    "runId": "zlzddvtcaa",
+                    "status": "COMPLETED"
+                  }
+                ],
+                "x-sample-entry": "000000000000000000000136"
+              },
+              "text/html": {
+                "example": "Ok",
+                "x-sample-entry": "000000000000000000000021"
+              }
+            },
+            "x-sample-entry": "000000000000000000000136"
+          }
+        },
+        "x-counters-per-source": {
+          "": {
+            "entries": 8,
+            "failures": 0,
+            "firstSeen": 1590058948.2540002,
+            "lastSeen": 1590058953.307,
+            "sumRT": 2.0629999999999993,
+            "sumDuration": 6.0829997062683105
+          }
+        },
+        "x-counters-total": {
+          "entries": 8,
+          "failures": 0,
+          "firstSeen": 1590058948.2540002,
+          "lastSeen": 1590058953.307,
+          "sumRT": 2.0629999999999993,
+          "sumDuration": 6.0829997062683105
+        },
+        "x-last-seen-ts": 1590058953.221,
+        "x-sample-entry": "000000000000000000000136"
+      },
+      "post": {
+        "summary": "/tapping/state",
+        "description": "Mizu observed 6 entries (1 failed), at 0.570 hits/s, average response time is 0.431 seconds",
+        "operationId": "4245a3e5-ebff-4a5b-a7d7-a7fbae4b0fce",
+        "responses": {
+          "200": {
+            "description": "Successful call with status 200",
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "agentName": "stg-cloud-agent",
+                    "creationTime": "Mon, 18 May 2020 08:34:05 GMT",
+                    "id": "e677a5bc-0542-11ea-a607-42010a8400ce_tradmin_trcc-api-deployment-stable",
+                    "instancesCount": 2,
+                    "lastSeen": "Mon, 18 May 2020 14:48:04 GMT",
+                    "model": "default",
+                    "shouldTap": false,
+                    "type": "envoy"
+                  },
+                  {
+                    "agentName": "stg-cloud-agent",
+                    "creationTime": "Wed, 20 May 2020 09:33:35 GMT",
+                    "id": "e677a5bc-0542-11ea-a607-42010a8400ce_trdemo_trdemo-client",
+                    "instancesCount": 1,
+                    "lastSeen": "Wed, 20 May 2020 10:23:57 GMT",
+                    "model": "default",
+                    "shouldTap": true,
+                    "type": "envoy"
+                  },
+                  {
+                    "agentName": "stg-cloud-agent",
+                    "creationTime": "Mon, 18 May 2020 07:45:09 GMT",
+                    "id": "e677a5bc-0542-11ea-a607-42010a8400ce_trdemo_trdemo-flights",
+                    "instancesCount": 1,
+                    "lastSeen": "Wed, 20 May 2020 10:23:57 GMT",
+                    "model": "default",
+                    "shouldTap": false,
+                    "type": "passive"
+                  },
+                  {
+                    "agentName": "stg-cloud-agent",
+                    "creationTime": "Mon, 18 May 2020 07:45:09 GMT",
+                    "id": "e677a5bc-0542-11ea-a607-42010a8400ce_trdemo_trdemo-users",
+                    "instancesCount": 1,
+                    "lastSeen": "Wed, 20 May 2020 10:23:57 GMT",
+                    "model": "default",
+                    "shouldTap": false,
+                    "type": "passive"
+                  }
+                ],
+                "x-sample-entry": "000000000000000000000111"
+              },
+              "text/html": {
+                "example": "Ok",
+                "x-sample-entry": "000000000000000000000128"
+              }
+            },
+            "x-sample-entry": "000000000000000000000128"
+          },
+          "404": {
+            "description": "Failed call with status 404",
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again."
+                },
+                "x-sample-entry": "000000000000000000000043"
+              }
+            },
+            "x-sample-entry": "000000000000000000000043"
+          }
+        },
+        "x-counters-per-source": {
+          "": {
+            "entries": 6,
+            "failures": 1,
+            "firstSeen": 1590058949.283,
+            "lastSeen": 1590058952.7059999,
+            "sumRT": 2.5849999999999995,
+            "sumDuration": 3.422999858856201
+          }
+        },
+        "x-counters-total": {
+          "entries": 6,
+          "failures": 1,
+          "firstSeen": 1590058949.283,
+          "lastSeen": 1590058952.7059999,
+          "sumRT": 2.5849999999999995,
+          "sumDuration": 3.422999858856201
+        },
+        "x-last-seen-ts": 1590058952.7059999,
+        "x-sample-entry": "000000000000000000000128",
+        "requestBody": {
+          "description": "Generic request body",
+          "content": {
+            "application/json": {
+              "example": {
+                "data": [
+                  {
+                    "agentName": "stg-cloud-agent",
+                    "id": "e677a5bc-0542-11ea-a607-42010a8400ce_tradmin_trcc-api-deployment-stable",
+                    "instance_id": "trcc-api-deployment-stable-559db9f988-sj52h",
+                    "ip": "10.48.0.155",
+                    "type": "passive"
+                  },
+                  {
+                    "agentName": "stg-cloud-agent",
+                    "id": "e677a5bc-0542-11ea-a607-42010a8400ce_trdemo_trdemo-client",
+                    "instance_id": "trdemo-client-6db5b5684-srtdd",
+                    "ip": "10.48.0.139",
+                    "type": "envoy"
+                  },
+                  {
+                    "agentName": "stg-cloud-agent",
+                    "id": "e677a5bc-0542-11ea-a607-42010a8400ce_trdemo_trdemo-flights",
+                    "instance_id": "trdemo-flights-5679bd4b49-r489r",
+                    "ip": "10.48.0.51",
+                    "type": "passive"
+                  },
+                  {
+                    "agentName": "stg-cloud-agent",
+                    "id": "e677a5bc-0542-11ea-a607-42010a8400ce_trdemo_trdemo-users",
+                    "instance_id": "trdemo-users-77f6546dbc-k8rxr",
+                    "ip": "10.48.0.50",
+                    "type": "passive"
+                  }
+                ]
+              },
+              "x-sample-entry": "000000000000000000000128"
+            }
+          },
+          "required": true,
+          "x-sample-entry": "000000000000000000000128"
+        }
+      }
+    }
+  },
+  "x-counters-per-source": {
+    "": {
+      "entries": 143,
+      "failures": 1,
+      "firstSeen": 1590058948.2540002,
+      "lastSeen": 1590058953.952,
+      "sumRT": 11.506999999999994,
+      "sumDuration": 29.188997983932495
+    }
+  },
+  "x-counters-total": {
+    "entries": 143,
+    "failures": 1,
+    "firstSeen": 1590058948.2540002,
+    "lastSeen": 1590058953.952,
+    "sumRT": 11.506999999999994,
+    "sumDuration": 29.188997983932495
+  }
+}

@@ -1,6 +1,7 @@
 package oas
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
@@ -23,7 +24,7 @@ func TestTree(t *testing.T) {
 	for i, tc := range testCases {
 		split := strings.Split(tc.inp, "/")
 		pathObj := new(openapi.PathObj)
-		node := tree.getOrSet(split, pathObj, uint(i))
+		node := tree.getOrSet(split, pathObj, fmt.Sprintf("%024d", i))
 
 		fillPathParams(node, pathObj)
 

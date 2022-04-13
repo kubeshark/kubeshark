@@ -3,12 +3,13 @@ package oas
 import (
 	"context"
 	"encoding/json"
+	"net/url"
+	"sync"
+
 	basenine "github.com/up9inc/basenine/client/go"
 	"github.com/up9inc/mizu/agent/pkg/har"
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/tap/api"
-	"net/url"
-	"sync"
 
 	"github.com/up9inc/mizu/shared/logger"
 )
@@ -27,11 +28,12 @@ type OasGenerator interface {
 }
 
 type defaultOasGenerator struct {
-	started       bool
-	ctx           context.Context
-	cancel        context.CancelFunc
-	serviceSpecs  *sync.Map
-	dbConn        *basenine.Connection
+	started      bool
+	ctx          context.Context
+	cancel       context.CancelFunc
+	serviceSpecs *sync.Map
+	dbConn       *basenine.Connection
+	dbMutex      sync.Mutex
 	entriesQuery string
 }
 
@@ -77,16 +79,17 @@ func (g *defaultOasGenerator) Stop() {
 	if !g.started {
 		return
 	}
-
-	if g.dbConn != nil {
-		g.dbConn.Close()
-		g.dbConn = nil
-	}
+	g.started = false
 
 	g.cancel()
 	g.reset()
 
-	g.started = false
+	g.dbMutex.Lock()
+	defer g.dbMutex.Unlock()
+	if g.dbConn != nil {
+		g.dbConn.Close()
+		g.dbConn = nil
+	}
 }
 
 func (g *defaultOasGenerator) IsStarted() bool {
@@ -98,8 +101,12 @@ func (g *defaultOasGenerator) runGenerator() {
 	dataChan := make(chan []byte)
 	metaChan := make(chan []byte)
 
+	g.dbMutex.Lock()
+	defer g.dbMutex.Unlock()
 	logger.Log.Infof("Querying DB for OAS generator with query '%s'", g.entriesQuery)
-	g.dbConn.Query(g.entriesQuery, dataChan, metaChan)
+	if err := g.dbConn.Query(g.entriesQuery, dataChan, metaChan); err != nil {
+		logger.Log.Errorf("Query mode call failed: %v", err)
+	}
 
 	for {
 		select {
@@ -174,7 +181,7 @@ func (g *defaultOasGenerator) handleHARWithSource(entryWSource *EntryWithSource)
 		return
 	}
 
-	logger.Log.Debugf("Handled entry %d as opId: %s", entryWSource.Id, opId) // TODO: set opId back to entry?
+	logger.Log.Debugf("Handled entry %s as opId: %s", entryWSource.Id, opId) // TODO: set opId back to entry?
 }
 
 func (g *defaultOasGenerator) getGen(dest string, urlStr string) *SpecGen {
