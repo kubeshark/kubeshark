@@ -70,6 +70,9 @@ func (t *tcpStream) Accept(tcp *layers.TCP, ci gopacket.CaptureInfo, dir reassem
 	if !accept {
 		diagnose.InternalStats.RejectOpt++
 	}
+	
+	*start = true
+	
 	return accept
 }
 
