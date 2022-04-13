@@ -13,7 +13,9 @@ jobs:
   run-acceptance-tests:
     name: Run acceptance tests
     runs-on: ubuntu-latest
-    if: (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop') || (github.event_name == 'pull_request' && (github.ref == 'refs/heads/main' || ${{ contains(github.event.head_commit.message, '#run_accpetance_test') }} ))
+    if: |
+      (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')) || 
+      (github.event_name == 'pull_request' && (github.ref == 'refs/heads/main' || ${{ contains(github.event.head_commit.message, '#run_accpetance_test') }} ))
     steps:
       - name: Set up Go 1.17
         uses: actions/setup-go@v2
