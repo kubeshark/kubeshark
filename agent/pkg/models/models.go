@@ -13,7 +13,7 @@ import (
 )
 
 type EntriesRequest struct {
-	LeftOff   int    `form:"leftOff" validate:"required,min=-1"`
+	LeftOff   string `form:"leftOff" validate:"required"`
 	Direction int    `form:"direction" validate:"required,oneof='1' '-1'"`
 	Query     string `form:"query"`
 	Limit     int    `form:"limit" validate:"required,min=1"`

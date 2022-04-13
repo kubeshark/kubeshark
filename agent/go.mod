@@ -21,7 +21,7 @@ require (
 	github.com/orcaman/concurrent-map v1.0.0
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/stretchr/testify v1.7.0
-	github.com/up9inc/basenine/client/go v0.0.0-20220326121918-785f3061c8ce
+	github.com/up9inc/basenine/client/go v0.0.0-20220413023528-c741e4aa1cf2
 	github.com/up9inc/mizu/shared v0.0.0
 	github.com/up9inc/mizu/tap v0.0.0
 	github.com/up9inc/mizu/tap/api v0.0.0
