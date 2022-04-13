@@ -1,8 +1,10 @@
 package tap
 
 import (
+	"os"
 	"runtime"
 	_debug "runtime/debug"
+	"strconv"
 	"sync"
 	"time"
 
@@ -34,10 +36,34 @@ func (streamMap *tcpStreamMap) nextId() int64 {
 	return streamMap.streamId
 }
 
+func (streamMap *tcpStreamMap) getCloseTimedoutTcpChannelsInterval() time.Duration {
+	defaultDuration := 1000 * time.Millisecond
+	rangeMin := 10
+	rangeMax := 10000
+	closeTimedoutTcpChannelsIntervalMsStr := os.Getenv(CloseTimedoutTcpChannelsIntervalMsEnvVar)
+	if closeTimedoutTcpChannelsIntervalMsStr == "" {
+		return defaultDuration
+	} else {
+		closeTimedoutTcpChannelsIntervalMs, err := strconv.Atoi(closeTimedoutTcpChannelsIntervalMsStr)
+		if err != nil {
+			logger.Log.Warningf("Error parsing environment variable %s: %v\n", CloseTimedoutTcpChannelsIntervalMsEnvVar, err)
+			return defaultDuration
+		} else {
+			if closeTimedoutTcpChannelsIntervalMs < rangeMin || closeTimedoutTcpChannelsIntervalMs > rangeMax {
+				logger.Log.Warningf("The value of environment variable %s is not in acceptable range: %d - %d\n", CloseTimedoutTcpChannelsIntervalMsEnvVar, rangeMin, rangeMax)
+				return defaultDuration
+			} else {
+				return time.Duration(closeTimedoutTcpChannelsIntervalMs) * time.Millisecond
+			}
+		}
+	}
+}
+
 func (streamMap *tcpStreamMap) closeTimedoutTcpStreamChannels() {
 	tcpStreamChannelTimeout := GetTcpChannelTimeoutMs()
+	closeTimedoutTcpChannelsIntervalMs := streamMap.getCloseTimedoutTcpChannelsInterval()
 	for {
-		time.Sleep(1000 * time.Millisecond)
+		time.Sleep(closeTimedoutTcpChannelsIntervalMs)
 		_debug.FreeOSMemory()
 		streamMap.streams.Range(func(key interface{}, value interface{}) bool {
 			streamWrapper := value.(*tcpStreamWrapper)

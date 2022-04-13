@@ -13,6 +13,7 @@ const (
 	MaxBufferedPagesTotalEnvVarName           = "MAX_BUFFERED_PAGES_TOTAL"
 	MaxBufferedPagesPerConnectionEnvVarName   = "MAX_BUFFERED_PAGES_PER_CONNECTION"
 	TcpStreamChannelTimeoutMsEnvVarName       = "TCP_STREAM_CHANNEL_TIMEOUT_MS"
+	CloseTimedoutTcpChannelsIntervalMsEnvVar  = "CLOSE_TIMEDOUT_TCP_STREAM_CHANNELS_INTERVAL_MS"
 	MaxBufferedPagesTotalDefaultValue         = 5000
 	MaxBufferedPagesPerConnectionDefaultValue = 5000
 	TcpStreamChannelTimeoutMsDefaultValue     = 10000
