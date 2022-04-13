@@ -323,7 +323,9 @@ func syncEntriesImpl(token string, model string, envPrefix string, uploadInterva
 	go handleMetaChannel(&wg, connection, meta)
 	wg.Add(2)
 
-	connection.Query(query, data, meta)
+	if err = connection.Query(query, data, meta); err != nil {
+		logger.Log.Panicf("Query mode call failed: %v", err)
+	}
 
 	wg.Wait()
 }

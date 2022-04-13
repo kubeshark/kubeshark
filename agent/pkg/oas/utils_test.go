@@ -29,7 +29,7 @@ func TestAnyJSON(t *testing.T) {
 		} else if tc.inp == "null" && any != nil {
 			t.Errorf("null has to parse as nil (but got %s)", any)
 		} else {
-			t.Logf("%s => %s", tc.inp, any)
+			t.Logf("%s => %v", tc.inp, any)
 		}
 	}
 }

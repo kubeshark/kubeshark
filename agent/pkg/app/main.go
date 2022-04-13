@@ -67,7 +67,7 @@ func ConfigureBasenineServer(host string, port string, dbSize int64, logLevel lo
 		wait.WithProto("tcp"),
 		wait.WithWait(200*time.Millisecond),
 		wait.WithBreak(50*time.Millisecond),
-		wait.WithDeadline(5*time.Second),
+		wait.WithDeadline(20*time.Second),
 		wait.WithDebug(logLevel == logging.DEBUG),
 	).Do([]string{fmt.Sprintf("%s:%s", host, port)}) {
 		logger.Log.Panicf("Basenine is not available!")
