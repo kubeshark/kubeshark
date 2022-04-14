@@ -329,7 +329,7 @@ func (tapperSyncer *MizuTapperSyncer) updateMizuTappers() error {
 			TapperDaemonSetName,
 			tapperSyncer.config.AgentImage,
 			TapperPodName,
-			fmt.Sprintf("%s.%s.svc.cluster.local", ApiServerPodName, tapperSyncer.config.MizuResourcesNamespace),
+			fmt.Sprintf("%s.%s.svc", ApiServerPodName, tapperSyncer.config.MizuResourcesNamespace),
 			nodeNames,
 			serviceAccountName,
 			tapperSyncer.config.TapperResources,

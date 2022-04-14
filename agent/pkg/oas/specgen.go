@@ -3,10 +3,6 @@ package oas
 import (
 	"encoding/json"
 	"errors"
-	"github.com/chanced/openapi"
-	"github.com/google/uuid"
-	"github.com/nav-inc/datetime"
-	"github.com/up9inc/mizu/shared/logger"
 	"io"
 	"io/ioutil"
 	"mime"
@@ -17,6 +13,11 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/chanced/openapi"
+	"github.com/google/uuid"
+	"github.com/nav-inc/datetime"
+	"github.com/up9inc/mizu/shared/logger"
 
 	"github.com/up9inc/mizu/agent/pkg/har"
 
@@ -32,7 +33,7 @@ type EntryWithSource struct {
 	Source      string
 	Destination string
 	Entry       har.Entry
-	Id          uint
+	Id          string
 }
 
 type reqResp struct { // hello, generics in Go
@@ -67,7 +68,7 @@ func (g *SpecGen) StartFromSpec(oas *openapi.OpenAPI) {
 	g.tree = new(Node)
 	for pathStr, pathObj := range oas.Paths.Items {
 		pathSplit := strings.Split(string(pathStr), "/")
-		g.tree.getOrSet(pathSplit, pathObj, 0)
+		g.tree.getOrSet(pathSplit, pathObj, "")
 
 		// clean "last entry timestamp" markers from the past
 		for _, pathAndOp := range g.tree.listOps() {
@@ -341,7 +342,7 @@ func handleCounters(opObj *openapi.Operation, success bool, entryWithSource *Ent
 	return nil
 }
 
-func handleRequest(req *har.Request, opObj *openapi.Operation, isSuccess bool, sampleId uint) error {
+func handleRequest(req *har.Request, opObj *openapi.Operation, isSuccess bool, sampleId string) error {
 	// TODO: we don't handle the situation when header/qstr param can be defined on pathObj level. Also the path param defined on opObj
 	urlParsed, err := url.Parse(req.URL)
 	if err != nil {
@@ -401,7 +402,7 @@ func handleRequest(req *har.Request, opObj *openapi.Operation, isSuccess bool, s
 	return nil
 }
 
-func handleResponse(resp *har.Response, opObj *openapi.Operation, isSuccess bool, sampleId uint) error {
+func handleResponse(resp *har.Response, opObj *openapi.Operation, isSuccess bool, sampleId string) error {
 	// TODO: we don't support "default" response
 	respObj, err := getResponseObj(resp, opObj, isSuccess)
 	if err != nil {
@@ -422,7 +423,7 @@ func handleResponse(resp *har.Response, opObj *openapi.Operation, isSuccess bool
 	return nil
 }
 
-func handleRespHeaders(reqHeaders []har.Header, respObj *openapi.ResponseObj, sampleId uint) {
+func handleRespHeaders(reqHeaders []har.Header, respObj *openapi.ResponseObj, sampleId string) {
 	visited := map[string]*openapi.HeaderObj{}
 	for _, pair := range reqHeaders {
 		if isHeaderIgnored(pair.Name) {
@@ -466,7 +467,7 @@ func handleRespHeaders(reqHeaders []har.Header, respObj *openapi.ResponseObj, sa
 	}
 }
 
-func fillContent(reqResp reqResp, respContent openapi.Content, ctype string, sampleId uint) (*openapi.MediaType, error) {
+func fillContent(reqResp reqResp, respContent openapi.Content, ctype string, sampleId string) (*openapi.MediaType, error) {
 	content, found := respContent[ctype]
 	if !found {
 		respContent[ctype] = &openapi.MediaType{}

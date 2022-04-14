@@ -62,7 +62,7 @@ export const EntriesList: React.ForwardRefRenderFunction<ListHandle, EntriesList
   const [truncatedTimestamp, setTruncatedTimestamp] = useState(0);
 
   const debouncedQuery = useDebounce<string>(query, 500)
-  const leftOffBottom = entries.length > 0 ? entries[entries.length - 1].id + 1 : -1;
+  const leftOffBottom = entries.length > 0 ? entries[entries.length - 1].id : "latest";
 
 
 
@@ -94,9 +94,11 @@ export const EntriesList: React.ForwardRefRenderFunction<ListHandle, EntriesList
 
   const getOldEntries = useCallback(async () => {
     setLoadMoreTop(false);
-    const leftOffTopToQuery = (leftOffTop && leftOffTop >= 0) ? leftOffTop : -1
+    if (leftOffTop === "") {
+      return;
+    }
     setIsLoadingTop(true);
-    const data = await trafficViewerApi.fetchEntries(leftOffTopToQuery, -1, query, 100, 3000);
+    const data = await trafficViewerApi.fetchEntries(leftOffTop, -1, query, 100, 3000);
     if (!data || data.data === null || data.meta === null) {
       setNoMoreDataTop(true);
       setIsLoadingTop(false);
@@ -105,7 +107,7 @@ export const EntriesList: React.ForwardRefRenderFunction<ListHandle, EntriesList
     setLeftOffTop(data.meta.leftOff);
 
     let scrollTo: boolean;
-    if (data.meta.leftOff === 0) {
+    if (data.meta.noMoreData) {
       setNoMoreDataTop(true);
       scrollTo = false;
     } else {
@@ -158,7 +160,7 @@ export const EntriesList: React.ForwardRefRenderFunction<ListHandle, EntriesList
       switch (message.messageType) {
         case "entry":
           const entry = message.data;
-          if (!focusedEntryId) setFocusedEntryId(entry.id.toString());
+          if (!focusedEntryId) setFocusedEntryId(entry.id);
           const newEntries = [...entries, entry];
           if (newEntries.length > 10000) {
             setLeftOffTop(newEntries[0].id);
@@ -182,14 +184,14 @@ export const EntriesList: React.ForwardRefRenderFunction<ListHandle, EntriesList
         case "queryMetadata":
           setTruncatedTimestamp(message.data.truncatedTimestamp);
           setQueriedTotal(message.data.total);
-          if (leftOffTop === null) {
-            setLeftOffTop(message.data.leftOff - 1);
+          if (leftOffTop === "") {
+            setLeftOffTop(message.data.leftOff);
           }
           break;
         case "startTime":
           setStartTime(message.data);
           break;
-      };
+      }
     }
   }
 

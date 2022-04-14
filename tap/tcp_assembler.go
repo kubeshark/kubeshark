@@ -29,6 +29,7 @@ type tcpAssembler struct {
 // The assembler context
 type context struct {
 	CaptureInfo gopacket.CaptureInfo
+	Origin      api.Capture
 }
 
 func (c *context) GetCaptureInfo() gopacket.CaptureInfo {
@@ -87,8 +88,10 @@ func (a *tcpAssembler) processPackets(dumpPacket bool, packets <-chan source.Tcp
 					logger.Log.Fatalf("Failed to set network layer for checksum: %s", err)
 				}
 			}
+
 			c := context{
 				CaptureInfo: packet.Metadata().CaptureInfo,
+				Origin:      packetInfo.Source.Origin,
 			}
 			diagnose.InternalStats.Totalsz += len(tcp.Payload)
 			a.assemblerMutex.Lock()

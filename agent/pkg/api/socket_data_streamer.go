@@ -49,7 +49,7 @@ func (e *BasenineEntryStreamer) Get(ctx context.Context, socketId int, params *W
 			var entry *tapApi.Entry
 			err = json.Unmarshal(bytes, &entry)
 			if err != nil {
-				logger.Log.Debugf("error unmarshalling entry: %v", err.Error())
+				logger.Log.Debugf("Error unmarshalling entry: %v", err.Error())
 				continue
 			}
 
@@ -79,7 +79,9 @@ func (e *BasenineEntryStreamer) Get(ctx context.Context, socketId int, params *W
 	go handleDataChannel(connection, data)
 	go handleMetaChannel(connection, meta)
 
-	connection.Query(query, data, meta)
+	if err = connection.Query(query, data, meta); err != nil {
+		logger.Log.Panicf("Query mode call failed: %v", err)
+	}
 
 	go func() {
 		<-ctx.Done()

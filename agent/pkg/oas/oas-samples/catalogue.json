@@ -1,0 +1,485 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Preloaded",
+    "description": "Test file for loading pre-existing OAS",
+    "version": "0.1"
+  },
+  "paths": {
+    "/catalogue": {
+      "get": {
+        "tags": [
+          "catalogue"
+        ],
+        "summary": "/catalogue",
+        "description": "Mizu observed 3 entries (0 failed), at 2.647 hits/s, average response time is 0.008 seconds",
+        "operationId": "dd6c3dbe-6b6b-4ddd-baed-757e237ddb8a",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "style": "form",
+            "schema": {
+              "type": "string"
+            },
+            "examples": {
+              "example #0": {
+                "value": "1"
+              }
+            },
+            "x-sample-entry": "000000000000000000000002"
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": true,
+            "style": "form",
+            "schema": {
+              "type": "string"
+            },
+            "examples": {
+              "example #0": {
+                "value": "6"
+              },
+              "example #1": {
+                "value": "3"
+              },
+              "example #2": {
+                "value": "5"
+              }
+            },
+            "x-sample-entry": "000000000000000000000011"
+          },
+          {
+            "name": "tags",
+            "in": "query",
+            "required": false,
+            "style": "form",
+            "schema": {
+              "type": "string"
+            },
+            "examples": {
+              "example #0": {
+                "value": ""
+              },
+              "example #1": {
+                "value": "blue"
+              }
+            },
+            "x-sample-entry": "000000000000000000000007"
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "style": "form",
+            "schema": {
+              "type": "string"
+            },
+            "examples": {
+              "example #0": {
+                "value": "id"
+              }
+            },
+            "x-sample-entry": "000000000000000000000007"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful call with status 200",
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "count": 1,
+                    "description": "Socks fit for a Messiah. You too can experience walking in water with these special edition beauties. Each hole is lovingly proggled to leave smooth edges. The only sock approved by a higher power.",
+                    "id": "03fef6ac-1896-4ce8-bd69-b798f85c6e0b",
+                    "imageUrl": [
+                      "/catalogue/images/holy_1.jpeg",
+                      "/catalogue/images/holy_2.jpeg"
+                    ],
+                    "name": "Holy",
+                    "price": 99.99,
+                    "tag": [
+                      "action",
+                      "magic"
+                    ]
+                  },
+                  {
+                    "count": 438,
+                    "description": "proident occaecat irure et excepteur labore minim nisi amet irure",
+                    "id": "3395a43e-2d88-40de-b95f-e00e1502085b",
+                    "imageUrl": [
+                      "/catalogue/images/colourful_socks.jpg",
+                      "/catalogue/images/colourful_socks.jpg"
+                    ],
+                    "name": "Colourful",
+                    "price": 18,
+                    "tag": [
+                      "brown",
+                      "blue"
+                    ]
+                  },
+                  {
+                    "count": 820,
+                    "description": "Ready for action. Engineers: be ready to smash that next bug! Be ready, with these super-action-sport-masterpieces. This particular engineer was chased away from the office with a stick.",
+                    "id": "510a0d7e-8e83-4193-b483-e27e09ddc34d",
+                    "imageUrl": [
+                      "/catalogue/images/puma_1.jpeg",
+                      "/catalogue/images/puma_2.jpeg"
+                    ],
+                    "name": "SuperSport XL",
+                    "price": 15,
+                    "tag": [
+                      "sport",
+                      "formal",
+                      "black"
+                    ]
+                  },
+                  {
+                    "count": 738,
+                    "description": "A mature sock, crossed, with an air of nonchalance.",
+                    "id": "808a2de1-1aaa-4c25-a9b9-6612e8f29a38",
+                    "imageUrl": [
+                      "/catalogue/images/cross_1.jpeg",
+                      "/catalogue/images/cross_2.jpeg"
+                    ],
+                    "name": "Crossed",
+                    "price": 17.32,
+                    "tag": [
+                      "blue",
+                      "action",
+                      "red",
+                      "formal"
+                    ]
+                  },
+                  {
+                    "count": 808,
+                    "description": "enim officia aliqua excepteur esse deserunt quis aliquip nostrud anim",
+                    "id": "819e1fbf-8b7e-4f6d-811f-693534916a8b",
+                    "imageUrl": [
+                      "/catalogue/images/WAT.jpg",
+                      "/catalogue/images/WAT2.jpg"
+                    ],
+                    "name": "Figueroa",
+                    "price": 14,
+                    "tag": [
+                      "green",
+                      "formal",
+                      "blue"
+                    ]
+                  },
+                  {
+                    "count": 175,
+                    "description": "consequat amet cupidatat minim laborum tempor elit ex consequat in",
+                    "id": "837ab141-399e-4c1f-9abc-bace40296bac",
+                    "imageUrl": [
+                      "/catalogue/images/catsocks.jpg",
+                      "/catalogue/images/catsocks2.jpg"
+                    ],
+                    "name": "Cat socks",
+                    "price": 15,
+                    "tag": [
+                      "brown",
+                      "formal",
+                      "green"
+                    ]
+                  }
+                ],
+                "x-sample-entry": "000000000000000000000011"
+              }
+            },
+            "x-sample-entry": "000000000000000000000011"
+          }
+        },
+        "x-counters-per-source": {
+          "some-source": {
+            "entries": 3,
+            "failures": 0,
+            "firstSeen": 1627298057.7849188,
+            "lastSeen": 1627298065.7258668,
+            "sumRT": 0.024999999999999998,
+            "sumDuration": 7.940948009490967
+          }
+        },
+        "x-counters-total": {
+          "entries": 3,
+          "failures": 0,
+          "firstSeen": 1627298057.7849188,
+          "lastSeen": 1627298065.7258668,
+          "sumRT": 0.024999999999999998,
+          "sumDuration": 7.940948009490967
+        },
+        "x-last-seen-ts": 1627298065.7258668,
+        "x-sample-entry": "000000000000000000000011"
+      }
+    },
+    "/catalogue/size": {
+      "get": {
+        "tags": [
+          "catalogue"
+        ],
+        "summary": "/catalogue/size",
+        "description": "Mizu observed 1 entries (0 failed), at 0.000 hits/s, average response time is 0.013 seconds",
+        "operationId": "2315e69d-9d66-48cf-b3d3-fec9c30bd28b",
+        "parameters": [
+          {
+            "name": "tags",
+            "in": "query",
+            "required": true,
+            "style": "form",
+            "schema": {
+              "type": "string"
+            },
+            "examples": {
+              "example #0": {
+                "value": ""
+              }
+            },
+            "x-sample-entry": "000000000000000000000001"
+          },
+          {
+            "name": "x-some",
+            "in": "header",
+            "required": true,
+            "style": "simple",
+            "schema": {
+              "type": "string"
+            },
+            "examples": {
+              "example #0": {
+                "value": "demo val"
+              }
+            },
+            "x-sample-entry": "000000000000000000000001"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful call with status 200",
+            "content": {
+              "application/json": {
+                "example": {
+                  "err": null,
+                  "size": 9
+                },
+                "x-sample-entry": "000000000000000000000001"
+              }
+            },
+            "x-sample-entry": "000000000000000000000001"
+          }
+        },
+        "x-counters-per-source": {
+          "some-source": {
+            "entries": 1,
+            "failures": 0,
+            "firstSeen": 1627298057.7841518,
+            "lastSeen": 1627298057.7841518,
+            "sumRT": 0.013,
+            "sumDuration": 0
+          }
+        },
+        "x-counters-total": {
+          "entries": 1,
+          "failures": 0,
+          "firstSeen": 1627298057.7841518,
+          "lastSeen": 1627298057.7841518,
+          "sumRT": 0.013,
+          "sumDuration": 0
+        },
+        "x-last-seen-ts": 1627298057.7841518,
+        "x-sample-entry": "000000000000000000000001"
+      }
+    },
+    "/catalogue/{id}": {
+      "get": {
+        "tags": [
+          "catalogue"
+        ],
+        "summary": "/catalogue/{id}",
+        "description": "Mizu observed 4 entries (0 failed), at 1.899 hits/s, average response time is 0.003 seconds",
+        "parameters": [
+          {
+            "name": "non-required-header",
+            "in": "header",
+            "required": false,
+            "style": "simple",
+            "schema": {
+              "type": "string"
+            },
+            "example": "some-uuid-maybe"
+          },
+          {
+            "name": "x-some",
+            "in": "header",
+            "required": false,
+            "style": "simple",
+            "schema": {
+              "type": "string"
+            },
+            "examples": {
+              "example #0": {
+                "value": "demoval"
+              }
+            },
+            "x-sample-entry": "000000000000000000000004"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful call with status 200",
+            "content": {
+              "application/json": {
+                "example": {
+                  "count": 438,
+                  "description": "proident occaecat irure et excepteur labore minim nisi amet irure",
+                  "id": "3395a43e-2d88-40de-b95f-e00e1502085b",
+                  "imageUrl": [
+                    "/catalogue/images/colourful_socks.jpg",
+                    "/catalogue/images/colourful_socks.jpg"
+                  ],
+                  "name": "Colourful",
+                  "price": 18,
+                  "tag": [
+                    "brown",
+                    "blue"
+                  ]
+                },
+                "x-sample-entry": "000000000000000000000012"
+              }
+            },
+            "x-sample-entry": "000000000000000000000012"
+          }
+        },
+        "x-counters-per-source": {
+          "some-source": {
+            "entries": 4,
+            "failures": 0,
+            "firstSeen": 1627298058.1315014,
+            "lastSeen": 1627298065.7293031,
+            "sumRT": 0.013999999999999999,
+            "sumDuration": 7.597801685333252
+          }
+        },
+        "x-counters-total": {
+          "entries": 4,
+          "failures": 0,
+          "firstSeen": 1627298058.1315014,
+          "lastSeen": 1627298065.7293031,
+          "sumRT": 0.013999999999999999,
+          "sumDuration": 7.597801685333252
+        },
+        "x-last-seen-ts": 1627298065.7293031,
+        "x-sample-entry": "000000000000000000000012"
+      },
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "style": "simple",
+          "schema": {
+            "type": "string"
+          },
+          "examples": {
+            "example #0": {
+              "value": "3395a43e-2d88-40de-b95f-e00e1502085b"
+            },
+            "example #1": {
+              "value": "808a2de1-1aaa-4c25-a9b9-6612e8f29a38"
+            }
+          },
+          "example": "some-uuid-maybe",
+          "x-sample-entry": "000000000000000000000012"
+        }
+      ]
+    },
+    "/catalogue/{id}/details": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "style": "simple",
+          "schema": {
+            "type": "string"
+          },
+          "example": "some-uuid-maybe"
+        }
+      ]
+    },
+    "/tags": {
+      "get": {
+        "summary": "/tags",
+        "description": "Mizu observed 1 entries (0 failed), at 0.000 hits/s, average response time is 0.007 seconds",
+        "operationId": "c4d7d0ed-1a78-4370-a049-efe3abc631a6",
+        "responses": {
+          "200": {
+            "description": "Successful call with status 200",
+            "content": {
+              "application/json": {
+                "example": {
+                  "err": null,
+                  "tags": [
+                    "brown",
+                    "geek",
+                    "formal",
+                    "blue",
+                    "skin",
+                    "red",
+                    "action",
+                    "sport",
+                    "black",
+                    "magic",
+                    "green"
+                  ]
+                },
+                "x-sample-entry": "000000000000000000000003"
+              }
+            },
+            "x-sample-entry": "000000000000000000000003"
+          }
+        },
+        "x-counters-per-source": {
+          "some-source": {
+            "entries": 1,
+            "failures": 0,
+            "firstSeen": 1627298057.7841816,
+            "lastSeen": 1627298057.7841816,
+            "sumRT": 0.007,
+            "sumDuration": 0
+          }
+        },
+        "x-counters-total": {
+          "entries": 1,
+          "failures": 0,
+          "firstSeen": 1627298057.7841816,
+          "lastSeen": 1627298057.7841816,
+          "sumRT": 0.007,
+          "sumDuration": 0
+        },
+        "x-last-seen-ts": 1627298057.7841816,
+        "x-sample-entry": "000000000000000000000003"
+      }
+    }
+  },
+  "x-counters-per-source": {
+    "some-source": {
+      "entries": 9,
+      "failures": 0,
+      "firstSeen": 1627298057.7841518,
+      "lastSeen": 1627298065.7293031,
+      "sumRT": 0.05899999999999999,
+      "sumDuration": 15.538749694824219
+    }
+  },
+  "x-counters-total": {
+    "entries": 9,
+    "failures": 0,
+    "firstSeen": 1627298057.7841518,
+    "lastSeen": 1627298065.7293031,
+    "sumRT": 0.05899999999999999,
+    "sumDuration": 15.538749694824219
+  }
+}

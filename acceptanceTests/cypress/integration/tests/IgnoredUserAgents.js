@@ -15,15 +15,11 @@ function checkEntries() {
         checkThatAllEntriesShown();
         resizeToHugeMizu();
 
-        cy.get('#total-entries').then(number => {
-            const numOfEntries = parseInt(number.text());
-            [...Array(numOfEntries).keys()].map(checkEntry);
+        cy.get('#list [id^=entry]').each(entryElement => {
+            entryElement.click();
+            cy.get('#tbody-Headers').should('be.visible');
+            isValueExistsInElement(false, 'Ignored-User-Agent', '#tbody-Headers');
         });
     });
 }
 
-function checkEntry(entryIndex) {
-    cy.get(`#entry-${entryIndex}`).click();
-    cy.get('#tbody-Headers').should('be.visible');
-    isValueExistsInElement(false, 'Ignored-User-Agent', '#tbody-Headers');
-}
