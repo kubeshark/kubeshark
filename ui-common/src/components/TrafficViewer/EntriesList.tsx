@@ -89,7 +89,7 @@ export const EntriesList: React.FC<EntriesListProps> = ({
     setLeftOffTop(data.meta.leftOff);
 
     let scrollTo: boolean;
-    if (data.meta.leftOff === 0) {
+    if (data.meta.noMoreData) {
       setNoMoreDataTop(true);
       scrollTo = false;
     } else {
