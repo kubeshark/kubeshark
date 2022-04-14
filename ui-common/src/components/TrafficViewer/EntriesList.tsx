@@ -5,7 +5,7 @@ import Moment from 'moment';
 import { EntryItem } from "./EntryListItem/EntryListItem";
 import down from "assets/downImg.svg";
 import spinner from 'assets/spinner.svg';
-import { RecoilState, useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
+import { RecoilState, useRecoilCallback, useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 import entriesAtom from "../../recoil/entries";
 import queryAtom from "../../recoil/query";
 import TrafficViewerApiAtom from "../../recoil/TrafficViewerApi";
@@ -16,6 +16,7 @@ import { TOAST_CONTAINER_ID } from "../../configs/Consts";
 import tappingStatusAtom from "../../recoil/tappingStatus";
 import leftOffTopAtom from "../../recoil/leftOffTop";
 import useDebounce from "../../hooks/useDebounce";
+import { DEFAULT_LEFTOFF } from "../../hooks/useWS";
 
 interface EntriesListProps {
   listEntryREF: any;
@@ -24,9 +25,10 @@ interface EntriesListProps {
   setIsSnappedToBottom: any;
   noMoreDataTop: boolean;
   setNoMoreDataTop: (flag: boolean) => void;
-  snapToButtom: (resetEntries: boolean, leftoffButton, queryTosend: string) => void;
+  snapToButtom: (resetEntries: boolean, leftoffButton?: string, queryTosend?: string) => void;
   scrollableRef: any;
   ws: any;
+  isStreamData: boolean
 }
 
 export type ListHandle = {
@@ -42,9 +44,8 @@ export const EntriesList: React.ForwardRefRenderFunction<ListHandle, EntriesList
   snapToButtom,
   scrollableRef,
   ws,
+  isStreamData
 }, forwardedRef) => {
-
-
 
   const [entries, setEntries] = useRecoilState(entriesAtom);
   const query = useRecoilValue(queryAtom);
@@ -60,11 +61,10 @@ export const EntriesList: React.ForwardRefRenderFunction<ListHandle, EntriesList
   const [queriedTotal, setQueriedTotal] = useState(0);
   const [startTime, setStartTime] = useState(0);
   const [truncatedTimestamp, setTruncatedTimestamp] = useState(0);
+  let oldEntries = []
 
   const debouncedQuery = useDebounce<string>(query, 500)
   const leftOffBottom = entries.length > 0 ? entries[entries.length - 1].id : "latest";
-
-
 
   useEffect(() => {
     const list = document.getElementById('list').firstElementChild;
@@ -86,19 +86,14 @@ export const EntriesList: React.ForwardRefRenderFunction<ListHandle, EntriesList
     return entries;
   }, [entries]);
 
-  useEffect(() => {
-    (async () => {
 
-    })();
-  }, [trafficViewerApi, debouncedQuery]);
-
-  const getOldEntries = useCallback(async () => {
+  //useRecoilCallback for retriving updated TrafficViewerApi from Recoil
+  const getOldEntries = useRecoilCallback(({ snapshot }) => async () => {
     setLoadMoreTop(false);
-    if (leftOffTop === "") {
-      return;
-    }
+    const useLeftoff = leftOffTop === "" ? DEFAULT_LEFTOFF : leftOffTop
     setIsLoadingTop(true);
-    const data = await trafficViewerApi.fetchEntries(leftOffTop, -1, query, 100, 3000);
+    const fetchEntries = snapshot.getLoadable(TrafficViewerApiAtom).contents.fetchEntries
+    const data = await fetchEntries(useLeftoff, -1, query, 100, 3000);
     if (!data || data.data === null || data.meta === null) {
       setNoMoreDataTop(true);
       setIsLoadingTop(false);
@@ -114,7 +109,7 @@ export const EntriesList: React.ForwardRefRenderFunction<ListHandle, EntriesList
       scrollTo = true;
     }
     setIsLoadingTop(false);
-
+    oldEntries = [...data.data.reverse()]
     const newEntries = [...data.data.reverse(), ...entries];
     if (newEntries.length > 10000) {
       newEntries.splice(10000, newEntries.length - 10000)
@@ -136,20 +131,15 @@ export const EntriesList: React.ForwardRefRenderFunction<ListHandle, EntriesList
     getOldEntries();
   }, [loadMoreTop, noMoreDataTop, getOldEntries, isWsConnectionClosed]);
 
-  useImperativeHandle(forwardedRef, () => ({
-    loadPrevoisEntries: () => {
-      return new Promise(async (res, rej) => {
-        try {
-          const entries = await getOldEntries()
-          res(entries)
-        } catch (error) {
-          rej(error)
-        }
-
-      })
-    }
-
-  }), [scrollableRef, trafficViewerApi, getOldEntries]);
+  useEffect(() => {
+    (async () => {
+      if (isStreamData) {
+        await getOldEntries()
+        const leffOffButton = oldEntries.length > 0 ? oldEntries[oldEntries.length - 1].id : DEFAULT_LEFTOFF
+        snapToButtom(false, leffOffButton)
+      }
+    })();
+  }, [isStreamData]);
 
   const scrollbarVisible = scrollableRef.current?.childWrapperRef.current.clientHeight > scrollableRef.current?.wrapperRef.current.clientHeight;
 
@@ -213,7 +203,7 @@ export const EntriesList: React.ForwardRefRenderFunction<ListHandle, EntriesList
         </ScrollableFeedVirtualized>
         <button type="button"
           title="Fetch old records"
-          className={`${styles.btnOld} ${!scrollbarVisible && leftOffTop > 0 ? styles.showButton : styles.hideButton}`}
+          className={`${styles.btnOld} ${!scrollbarVisible && Number.parseInt(leftOffTop) > 0 ? styles.showButton : styles.hideButton}`}
           onClick={(_) => {
             trafficViewerApi.webSocket.close()
             getOldEntries();
@@ -225,7 +215,7 @@ export const EntriesList: React.ForwardRefRenderFunction<ListHandle, EntriesList
           className={`${styles.btnLive} ${isSnappedToBottom && !isWsConnectionClosed ? styles.hideButton : styles.showButton}`}
           onClick={(_) => {
             if (isWsConnectionClosed) {
-              snapToButtom(false, query, leftOffBottom)
+              snapToButtom(false, leftOffBottom)
             }
             scrollableRef.current.jumpToBottom();
             setIsSnappedToBottom(true);

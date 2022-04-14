@@ -21,7 +21,7 @@ import { StatusBar } from "../UI/StatusBar";
 import tappingStatusAtom from "../../recoil/tappingStatus/atom";
 import { TOAST_CONTAINER_ID } from "../../configs/Consts";
 import leftOffTopAtom from "../../recoil/leftOffTop";
-import { DEFAULT_QUERY } from '../../hooks/useWS';
+import { DEFAULT_LEFTOFF, DEFAULT_QUERY } from '../../hooks/useWS';
 
 const useLayoutStyles = makeStyles(() => ({
   details: {
@@ -71,7 +71,7 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
   const [noMoreDataTop, setNoMoreDataTop] = useState(false);
   const [isSnappedToBottom, setIsSnappedToBottom] = useState(true);
   const [wsReadyState, setWsReadyState] = useState(0);
-
+  const [isStreamData, setIsStreamData] = useState(false)
   const [queryBackgroundColor, setQueryBackgroundColor] = useState("#f5f5f5");
 
   const setLeftOffTop = useSetRecoilState(leftOffTopAtom);
@@ -80,7 +80,7 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
   const [showTLSWarning, setShowTLSWarning] = useState(false);
   const [userDismissedTLSWarning, setUserDismissedTLSWarning] = useState(false);
   const [addressesWithTLS, setAddressesWithTLS] = useState(new Set<string>());
-  const entriesListRef = React.useRef<ListHandle>(null);
+
 
 
   const handleQueryChange = useMemo(
@@ -115,13 +115,13 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
   }, [shouldCloseWebSocket])
 
   useEffect(() => {
-    //streamEntries();
+    setIsStreamData(true)
   }, [webSocketUrl])
 
   const ws = useRef(null);
 
-  const openEmptyWebSocket = (resetEntries: boolean = true, leftoffButton = -1, queryTosend: string = query) => {
-    const queryToSend = queryTosend ? `(${queryTosend}) and leftOff(${leftoffButton})` : `leftOff(${leftoffButton})`
+  const openEmptyWebSocket = (resetEntries: boolean = true, leftoffButton = DEFAULT_LEFTOFF, queryTosend: string = query) => {
+    const queryToSend = queryTosend ? `(${queryTosend}) and leftOff("${leftoffButton}")` : `leftOff("${leftoffButton}")`
     openWebSocket(queryToSend, resetEntries);
   }
 
@@ -180,7 +180,6 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
           const analyzeStatusResponse = await trafficViewerApiProp.analyzeStatus();
           setAnalyzeStatus(analyzeStatusResponse);
         }
-        streamEntries()
       } catch (error) {
         console.error(error);
       }
@@ -198,23 +197,7 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
     snapToButtom()
   }
 
-  const fetchOldEntires = () => {
-    return entriesListRef.current.loadPrevoisEntries(trafficViewerApiProp.fetchEntries).catch((err) => {
-      console.log(err)
-    })
-  }
-
-  const streamEntries = () => {
-    return fetchOldEntires().then((entries) => {
-      const last = entries.slice(-1)[0].id
-      snapToButtom(false, last + 1);
-    }).catch((err) => {
-      console.log(err)
-      snapToButtom(true);
-    })
-  }
-
-  const snapToButtom = (resetEntries: boolean = true, leftOffButton = -1, queryTosend: string = query) => {
+  const snapToButtom = (resetEntries: boolean = true, leftOffButton = DEFAULT_LEFTOFF, queryTosend: string = query) => {
     openEmptyWebSocket(resetEntries, leftOffButton, queryTosend);
     scrollableRef.current.jumpToBottom();
     setIsSnappedToBottom(true);
@@ -266,7 +249,9 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
           <img className={TrafficViewerStyles.playPauseIcon}
             style={{ position: "absolute", visibility: wsReadyState === WebSocket.OPEN ? "hidden" : "visible" }}
             alt="play"
-            src={playIcon} onClick={e => streamEntries()} />
+            src={playIcon} onClick={(e) => {
+              // Todo: streamEntries
+            }} />
           <div className={TrafficViewerStyles.connectionText}>
             {getConnectionTitle()}
             {getConnectionIndicator()}
@@ -291,7 +276,7 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
               snapToButtom={snapToButtom}
               scrollableRef={scrollableRef}
               ws={ws}
-              ref={entriesListRef}
+              isStreamData={isStreamData}
             />
           </div>
         </div>
@@ -311,25 +296,25 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
 
 const MemoiedTrafficViewer = React.memo(TrafficViewer)
 const TrafficViewerContainer: React.FC<TrafficViewerProps> = ({
-                                                                setAnalyzeStatus, trafficViewerApiProp,
-                                                                actionButtons, isShowStatusBar = true,
-                                                                webSocketUrl, shouldCloseWebSocket, setShouldCloseWebSocket, isDemoBannerView
-                                                              }) => {
+  setAnalyzeStatus, trafficViewerApiProp,
+  actionButtons, isShowStatusBar = true,
+  webSocketUrl, shouldCloseWebSocket, setShouldCloseWebSocket, isDemoBannerView
+}) => {
   return <RecoilRoot>
-      <MemoiedTrafficViewer actionButtons={actionButtons} isShowStatusBar={isShowStatusBar} webSocketUrl={webSocketUrl}
-        shouldCloseWebSocket={shouldCloseWebSocket} setShouldCloseWebSocket={setShouldCloseWebSocket} trafficViewerApiProp={trafficViewerApiProp}
-        setAnalyzeStatus={setAnalyzeStatus} isDemoBannerView={isDemoBannerView} />
-      <ToastContainer enableMultiContainer containerId={TOAST_CONTAINER_ID}
-        position="bottom-right"
-        autoClose={5000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover />
-    </RecoilRoot>
+    <MemoiedTrafficViewer actionButtons={actionButtons} isShowStatusBar={isShowStatusBar} webSocketUrl={webSocketUrl}
+      shouldCloseWebSocket={shouldCloseWebSocket} setShouldCloseWebSocket={setShouldCloseWebSocket} trafficViewerApiProp={trafficViewerApiProp}
+      setAnalyzeStatus={setAnalyzeStatus} isDemoBannerView={isDemoBannerView} />
+    <ToastContainer enableMultiContainer containerId={TOAST_CONTAINER_ID}
+      position="bottom-right"
+      autoClose={5000}
+      hideProgressBar={false}
+      newestOnTop={false}
+      closeOnClick
+      rtl={false}
+      pauseOnFocusLoss
+      draggable
+      pauseOnHover />
+  </RecoilRoot>
 }
 
-    export default TrafficViewerContainer
+export default TrafficViewerContainer
