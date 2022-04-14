@@ -28,7 +28,8 @@ interface EntriesListProps {
   snapToButtom: (resetEntries: boolean, leftoffButton?: string, queryTosend?: string) => void;
   scrollableRef: any;
   ws: any;
-  isStreamData: boolean
+  isStreamData: boolean,
+  setIsStreamData: (flag: boolean) => void;
 }
 
 export type ListHandle = {
@@ -44,8 +45,9 @@ export const EntriesList: React.ForwardRefRenderFunction<ListHandle, EntriesList
   snapToButtom,
   scrollableRef,
   ws,
-  isStreamData
-}, forwardedRef) => {
+  isStreamData,
+  setIsStreamData
+}) => {
 
   const [entries, setEntries] = useRecoilState(entriesAtom);
   const query = useRecoilValue(queryAtom);
@@ -138,6 +140,7 @@ export const EntriesList: React.ForwardRefRenderFunction<ListHandle, EntriesList
         const leffOffButton = oldEntries.length > 0 ? oldEntries[oldEntries.length - 1].id : DEFAULT_LEFTOFF
         snapToButtom(false, leffOffButton)
       }
+      setIsStreamData(false)
     })();
   }, [isStreamData]);
 

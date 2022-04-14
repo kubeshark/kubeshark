@@ -249,9 +249,7 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
           <img className={TrafficViewerStyles.playPauseIcon}
             style={{ position: "absolute", visibility: wsReadyState === WebSocket.OPEN ? "hidden" : "visible" }}
             alt="play"
-            src={playIcon} onClick={(e) => {
-              // Todo: streamEntries
-            }} />
+            src={playIcon} onClick={(e) => setIsStreamData(true)} />
           <div className={TrafficViewerStyles.connectionText}>
             {getConnectionTitle()}
             {getConnectionIndicator()}
@@ -277,6 +275,7 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
               scrollableRef={scrollableRef}
               ws={ws}
               isStreamData={isStreamData}
+              setIsStreamData={setIsStreamData}
             />
           </div>
         </div>
