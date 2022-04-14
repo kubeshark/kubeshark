@@ -11,15 +11,15 @@ interface LinkProps {
 
 export const Link: React.FC<LinkProps> = ({ link, className, title, children }) => {
     return <React.Fragment>
-        <a href={DEFUALT_LINK ? DEFUALT_LINK : link} className={className} title={title} target="_blank">
+        <a href={link} className={className} title={title} target="_blank">
             {children}
         </a>
     </React.Fragment>
 }
 
-export const InformationIcon: React.FC<LinkProps> = ({ link, className }) => {
+export const InformationIcon: React.FC<LinkProps> = ({ className }) => {
     return <React.Fragment>
-        <Link title="documentation" className={`${styles.linkStyle} ${className}`}>
+        <Link title="documentation" className={`${styles.linkStyle} ${className}`} link={DEFUALT_LINK}>
             <span>Docs</span>
         </Link>
     </React.Fragment>
