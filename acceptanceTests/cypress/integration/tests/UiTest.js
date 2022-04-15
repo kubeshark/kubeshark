@@ -248,7 +248,7 @@ function deeperCheck(leftSidePath, rightSidePath, filterName, leftSideExpectedTe
             const entryId = getEntryId(element[0].id);
             leftOnHoverCheck(entryId, leftSidePath, filterName);
 
-            element.click();
+            cy.get(`#list #entry-${entryId}`).click();
             rightTextCheck(rightSidePath, rightSideExpectedText);
             rightOnHoverCheck(rightSidePath, filterName);
         }
