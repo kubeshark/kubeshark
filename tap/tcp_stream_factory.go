@@ -20,11 +20,12 @@ import (
  * Generates a new tcp stream for each new tcp connection. Closes the stream when the connection closes.
  */
 type tcpStreamFactory struct {
-	wg         sync.WaitGroup
-	Emitter    api.Emitter
-	streamsMap *tcpStreamMap
-	ownIps     []string
-	opts       *TapOpts
+	wg                 sync.WaitGroup
+	outboundLinkWriter *OutboundLinkWriter
+	Emitter            api.Emitter
+	streamsMap         *tcpStreamMap
+	ownIps             []string
+	opts               *TapOpts
 }
 
 type tcpStreamWrapper struct {
@@ -62,6 +63,9 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.T
 	srcPort := transport.Src().String()
 	dstPort := transport.Dst().String()
 
+	// if factory.shouldNotifyOnOutboundLink(dstIp, dstPort) {
+	// 	factory.outboundLinkWriter.WriteOutboundLink(net.Src().String(), dstIp, dstPort, "", "")
+	// }
 	props := factory.getStreamProps(srcIp, srcPort, dstIp, dstPort)
 	isTapTarget := props.isTapTarget
 	stream := &tcpStream{
@@ -95,13 +99,14 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.T
 					SrcPort: srcPort,
 					DstPort: dstPort,
 				},
-				parent:        stream,
-				isClient:      true,
-				isOutgoing:    props.isOutgoing,
-				extension:     extension,
-				emitter:       factory.Emitter,
-				counterPair:   counterPair,
-				reqResMatcher: reqResMatcher,
+				parent:             stream,
+				isClient:           true,
+				isOutgoing:         props.isOutgoing,
+				outboundLinkWriter: factory.outboundLinkWriter,
+				extension:          extension,
+				emitter:            factory.Emitter,
+				counterPair:        counterPair,
+				reqResMatcher:      reqResMatcher,
 			})
 			stream.servers = append(stream.servers, tcpReader{
 				msgQueue:   make(chan tcpReaderDataMsg),
@@ -114,13 +119,14 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.T
 					SrcPort: transport.Dst().String(),
 					DstPort: transport.Src().String(),
 				},
-				parent:        stream,
-				isClient:      false,
-				isOutgoing:    props.isOutgoing,
-				extension:     extension,
-				emitter:       factory.Emitter,
-				counterPair:   counterPair,
-				reqResMatcher: reqResMatcher,
+				parent:             stream,
+				isClient:           false,
+				isOutgoing:         props.isOutgoing,
+				outboundLinkWriter: factory.outboundLinkWriter,
+				extension:          extension,
+				emitter:            factory.Emitter,
+				counterPair:        counterPair,
+				reqResMatcher:      reqResMatcher,
 			})
 
 			factory.streamsMap.Store(stream.id, &tcpStreamWrapper{
@@ -166,6 +172,15 @@ func (factory *tcpStreamFactory) getStreamProps(srcIP string, srcPort string, ds
 	} else {
 		return &streamProps{isTapTarget: true}
 	}
+}
+
+//lint:ignore U1000 will be used in the future
+func (factory *tcpStreamFactory) shouldNotifyOnOutboundLink(dstIP string, dstPort int) bool {
+	if inArrayInt(remoteOnlyOutboundPorts, dstPort) {
+		isDirectedHere := inArrayString(factory.ownIps, dstIP)
+		return !isDirectedHere && !isPrivateIP(dstIP)
+	}
+	return true
 }
 
 func getPacketOrigin(ac reassembly.AssemblerContext) api.Capture {

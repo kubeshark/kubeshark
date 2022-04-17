@@ -30,21 +30,22 @@ type ConnectionInfo struct {
  * Implements io.Reader interface (Read)
  */
 type tcpReader struct {
-	ident         string
-	tcpID         *api.TcpID
-	isClosed      bool
-	isClient      bool
-	isOutgoing    bool
-	msgQueue      chan tcpReaderDataMsg // Channel of captured reassembled tcp payload
-	data          []byte
-	progress      *api.ReadProgress
-	superTimer    *api.SuperTimer
-	parent        *tcpStream
-	packetsSeen   uint
-	extension     *api.Extension
-	emitter       api.Emitter
-	counterPair   *api.CounterPair
-	reqResMatcher api.RequestResponseMatcher
+	ident              string
+	tcpID              *api.TcpID
+	isClosed           bool
+	isClient           bool
+	isOutgoing         bool
+	msgQueue           chan tcpReaderDataMsg // Channel of captured reassembled tcp payload
+	data               []byte
+	progress           *api.ReadProgress
+	superTimer         *api.SuperTimer
+	parent             *tcpStream
+	packetsSeen        uint
+	outboundLinkWriter *OutboundLinkWriter
+	extension          *api.Extension
+	emitter            api.Emitter
+	counterPair        *api.CounterPair
+	reqResMatcher      api.RequestResponseMatcher
 	sync.Mutex
 }
 
