@@ -15,7 +15,6 @@ import { toast } from "react-toastify";
 import { TOAST_CONTAINER_ID } from "../../configs/Consts";
 import tappingStatusAtom from "../../recoil/tappingStatus";
 import leftOffTopAtom from "../../recoil/leftOffTop";
-import useDebounce from "../../hooks/useDebounce";
 import { DEFAULT_LEFTOFF } from "../../helpers/Consts";
 
 interface EntriesListProps {
