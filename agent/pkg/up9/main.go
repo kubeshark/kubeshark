@@ -217,6 +217,7 @@ BasenineReconnect:
 	connection, err = basenine.NewConnection(shared.BasenineHost, shared.BaseninePort)
 	if err != nil {
 		logger.Log.Errorf("Can't establish a new connection to Basenine server: %v", err)
+		connection.Close()
 		time.Sleep(shared.BasenineReconnectInterval * time.Second)
 		goto BasenineReconnect
 	}
@@ -328,6 +329,7 @@ BasenineReconnect:
 
 	if err = connection.Query(query, data, meta); err != nil {
 		logger.Log.Errorf("Query mode call failed: %v", err)
+		connection.Close()
 		time.Sleep(shared.BasenineReconnectInterval * time.Second)
 		goto BasenineReconnect
 	}

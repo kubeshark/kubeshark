@@ -112,6 +112,7 @@ BasenineReconnect:
 	}
 	if err = connection.InsertMode(); err != nil {
 		logger.Log.Errorf("Insert mode call failed: %v", err)
+		connection.Close()
 		time.Sleep(shared.BasenineReconnectInterval * time.Second)
 		goto BasenineReconnect
 	}
@@ -159,6 +160,7 @@ BasenineReconnect:
 
 		if err = connection.SendText(string(data)); err != nil {
 			logger.Log.Errorf("An error occured while inserting a new record to database: %v", err)
+			connection.Close()
 			time.Sleep(shared.BasenineReconnectInterval * time.Second)
 			goto BasenineReconnect
 		}
