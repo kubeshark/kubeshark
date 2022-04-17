@@ -20,7 +20,6 @@ const (
 	WebSocketMessageTypeUpdateStatus     WebSocketMessageType = "status"
 	WebSocketMessageTypeUpdateTappedPods WebSocketMessageType = "tappedPods"
 	WebSocketMessageTypeAnalyzeStatus    WebSocketMessageType = "analyzeStatus"
-	WebsocketMessageTypeOutboundLink     WebSocketMessageType = "outboundLink"
 	WebSocketMessageTypeToast            WebSocketMessageType = "toast"
 	WebSocketMessageTypeQueryMetadata    WebSocketMessageType = "queryMetadata"
 	WebSocketMessageTypeStartTime        WebSocketMessageType = "startTime"
@@ -92,7 +91,7 @@ func (np NodeToPodsMap) Summary() map[string][]string {
 	summary := make(map[string][]string)
 	for node, pods := range np {
 		for _, pod := range pods {
-			summary[node] = append(summary[node], pod.Namespace + "/" +  pod.Name)
+			summary[node] = append(summary[node], pod.Namespace+"/"+pod.Name)
 		}
 	}
 
