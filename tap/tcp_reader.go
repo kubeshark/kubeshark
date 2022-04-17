@@ -7,7 +7,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/bradleyfalzon/tlsx"
 	"github.com/up9inc/mizu/shared/logger"
 	"github.com/up9inc/mizu/tap/api"
 )
@@ -63,16 +62,6 @@ func (h *tcpReader) Read(p []byte) (int, error) {
 		h.superTimer.CaptureTime = msg.timestamp
 		if len(h.data) > 0 {
 			h.packetsSeen += 1
-		}
-		if h.packetsSeen < checkTLSPacketAmount && len(msg.bytes) > 5 { // packets with less than 5 bytes cause tlsx to panic
-			clientHello := tlsx.ClientHello{}
-			err := clientHello.Unmarshall(msg.bytes)
-			if err == nil {
-				logger.Log.Debugf("Detected TLS client hello with SNI %s", clientHello.SNI)
-				// TODO: Throws `panic: runtime error: invalid memory address or nil pointer dereference` error.
-				// numericPort, _ := strconv.Atoi(h.tcpID.DstPort)
-				// h.outboundLinkWriter.WriteOutboundLink(h.tcpID.SrcIP, h.tcpID.DstIP, numericPort, clientHello.SNI, TLSProtocol)
-			}
 		}
 	}
 	if !ok || len(h.data) == 0 {
