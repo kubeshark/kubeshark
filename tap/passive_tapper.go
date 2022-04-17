@@ -27,9 +27,6 @@ import (
 
 const cleanPeriod = time.Second * 10
 
-//lint:ignore U1000 will be used in the future
-var remoteOnlyOutboundPorts = []int{80, 443}
-
 var maxcount = flag.Int64("c", -1, "Only grab this many packets, then exit")
 var decoder = flag.String("decoder", "", "Name of the decoder to use (default: guess from capture)")
 var statsevery = flag.Int("stats", 60, "Output statistics every N seconds")
@@ -58,7 +55,7 @@ var tls = flag.Bool("tls", false, "Enable TLS tapper")
 var memprofile = flag.String("memprofile", "", "Write memory profile")
 
 type TapOpts struct {
-	HostMode          bool
+	HostMode bool
 }
 
 var extensions []*api.Extension                     // global
@@ -67,24 +64,6 @@ var tapTargets []v1.Pod                             // global
 var packetSourceManager *source.PacketSourceManager // global
 var mainPacketInputChan chan source.TcpPacketInfo   // global
 var tlsTapperInstance *tlstapper.TlsTapper          // global
-
-func inArrayInt(arr []int, valueToCheck int) bool {
-	for _, value := range arr {
-		if value == valueToCheck {
-			return true
-		}
-	}
-	return false
-}
-
-func inArrayString(arr []string, valueToCheck string) bool {
-	for _, value := range arr {
-		if value == valueToCheck {
-			return true
-		}
-	}
-	return false
-}
 
 func StartPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem, extensionsRef []*api.Extension, options *api.TrafficFilteringOptions) {
 	extensions = extensionsRef
