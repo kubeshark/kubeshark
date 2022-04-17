@@ -63,7 +63,8 @@ export const EntriesList: React.ForwardRefRenderFunction<ListHandle, EntriesList
   const [queriedTotal, setQueriedTotal] = useState(0);
   const [startTime, setStartTime] = useState(0);
   const [truncatedTimestamp, setTruncatedTimestamp] = useState(0);
-  let oldEntries = []
+  const [oldEntries, setoldEntries] = useState([]);
+
 
   const debouncedQuery = useDebounce<string>(query, 500)
   const leftOffBottom = entries.length > 0 ? entries[entries.length - 1].id : "latest";
@@ -88,7 +89,6 @@ export const EntriesList: React.ForwardRefRenderFunction<ListHandle, EntriesList
     return entries;
   }, [entries]);
 
-
   //useRecoilCallback for retriving updated TrafficViewerApi from Recoil
   const getOldEntries = useRecoilCallback(({ snapshot }) => async () => {
     setLoadMoreTop(false);
@@ -99,7 +99,7 @@ export const EntriesList: React.ForwardRefRenderFunction<ListHandle, EntriesList
     if (!data || data.data === null || data.meta === null) {
       setNoMoreDataTop(true);
       setIsLoadingTop(false);
-      return;
+      return [];
     }
     setLeftOffTop(data.meta.leftOff);
 
@@ -111,8 +111,8 @@ export const EntriesList: React.ForwardRefRenderFunction<ListHandle, EntriesList
       scrollTo = true;
     }
     setIsLoadingTop(false);
-    oldEntries = [...data.data.reverse()]
-    const newEntries = [...data.data.reverse(), ...entries];
+    const newFetched = [...data.data.reverse()]
+    const newEntries = [...newFetched, ...entries];
     if (newEntries.length > 10000) {
       newEntries.splice(10000, newEntries.length - 10000)
     }
@@ -125,7 +125,7 @@ export const EntriesList: React.ForwardRefRenderFunction<ListHandle, EntriesList
       scrollableRef.current.scrollToIndex(data.data.length - 1);
     }
 
-    return newEntries
+    return [...newFetched]
   }, [trafficViewerApi, setLoadMoreTop, setIsLoadingTop, entries, setEntries, query, setNoMoreDataTop, leftOffTop, setLeftOffTop, setQueriedTotal, setTruncatedTimestamp, scrollableRef]);
 
   useEffect(() => {
@@ -136,8 +136,8 @@ export const EntriesList: React.ForwardRefRenderFunction<ListHandle, EntriesList
   useEffect(() => {
     (async () => {
       if (isStreamData) {
-        await getOldEntries()
-        const leffOffButton = oldEntries.length > 0 ? oldEntries[oldEntries.length - 1].id : DEFAULT_LEFTOFF
+        const oldEntries = await getOldEntries()
+        const leffOffButton = oldEntries.length > 0 ? oldEntries[oldEntries.length - 1].id + 1 : DEFAULT_LEFTOFF
         snapToButtom(false, leffOffButton)
       }
       setIsStreamData(false)
