@@ -9,7 +9,6 @@ import (
 
 	basenine "github.com/up9inc/basenine/client/go"
 	"github.com/up9inc/mizu/shared"
-	"github.com/up9inc/mizu/tap"
 )
 
 type EntriesRequest struct {
@@ -42,11 +41,6 @@ type WebSocketFullEntryMessage struct {
 type WebSocketTappedEntryMessage struct {
 	*shared.WebSocketMessageMetadata
 	Data *tapApi.OutputChannelItem
-}
-
-type WebsocketOutboundLinkMessage struct {
-	*shared.WebSocketMessageMetadata
-	Data *tap.OutboundLink
 }
 
 type AuthStatus struct {

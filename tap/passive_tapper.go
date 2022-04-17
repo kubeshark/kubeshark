@@ -27,9 +27,6 @@ import (
 
 const cleanPeriod = time.Second * 10
 
-//lint:ignore U1000 will be used in the future
-var remoteOnlyOutboundPorts = []int{80, 443}
-
 var maxcount = flag.Int64("c", -1, "Only grab this many packets, then exit")
 var decoder = flag.String("decoder", "", "Name of the decoder to use (default: guess from capture)")
 var statsevery = flag.Int("stats", 60, "Output statistics every N seconds")
@@ -58,7 +55,7 @@ var tls = flag.Bool("tls", false, "Enable TLS tapper")
 var memprofile = flag.String("memprofile", "", "Write memory profile")
 
 type TapOpts struct {
-	HostMode          bool
+	HostMode bool
 }
 
 var extensions []*api.Extension                     // global
