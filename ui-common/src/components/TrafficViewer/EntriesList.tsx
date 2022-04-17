@@ -111,8 +111,8 @@ export const EntriesList: React.ForwardRefRenderFunction<ListHandle, EntriesList
       scrollTo = true;
     }
     setIsLoadingTop(false);
-    const newFetched = [...data.data.reverse()]
-    const newEntries = [...newFetched, ...entries];
+    const oldEntries = [...data.data.reverse()]
+    const newEntries = [...oldEntries, ...entries];
     if (newEntries.length > 10000) {
       newEntries.splice(10000, newEntries.length - 10000)
     }
@@ -125,7 +125,7 @@ export const EntriesList: React.ForwardRefRenderFunction<ListHandle, EntriesList
       scrollableRef.current.scrollToIndex(data.data.length - 1);
     }
 
-    return [...newFetched]
+    return oldEntries
   }, [trafficViewerApi, setLoadMoreTop, setIsLoadingTop, entries, setEntries, query, setNoMoreDataTop, leftOffTop, setLeftOffTop, setQueriedTotal, setTruncatedTimestamp, scrollableRef]);
 
   useEffect(() => {
@@ -136,8 +136,9 @@ export const EntriesList: React.ForwardRefRenderFunction<ListHandle, EntriesList
   useEffect(() => {
     (async () => {
       if (isStreamData) {
+        setEntries([])
         const oldEntries = await getOldEntries()
-        const leffOffButton = oldEntries.length > 0 ? oldEntries[oldEntries.length - 1].id + 1 : DEFAULT_LEFTOFF
+        const leffOffButton = oldEntries.length > 0 ? oldEntries[oldEntries.length - 1].id : DEFAULT_LEFTOFF
         snapToButtom(false, leffOffButton)
       }
       setIsStreamData(false)

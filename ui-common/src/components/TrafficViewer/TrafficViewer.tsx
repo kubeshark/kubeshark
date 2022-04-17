@@ -188,7 +188,7 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
 
   const toggleConnection = () => {
     if (!closeWebSocket()) {
-      snapToButtom()
+      setIsStreamData(true)
     }
   }
 
@@ -249,7 +249,7 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
           <img className={TrafficViewerStyles.playPauseIcon}
             style={{ position: "absolute", visibility: wsReadyState === WebSocket.OPEN ? "hidden" : "visible" }}
             alt="play"
-            src={playIcon} onClick={(e) => setIsStreamData(true)} />
+            src={playIcon} onClick={toggleConnection} />
           <div className={TrafficViewerStyles.connectionText}>
             {getConnectionTitle()}
             {getConnectionIndicator()}
