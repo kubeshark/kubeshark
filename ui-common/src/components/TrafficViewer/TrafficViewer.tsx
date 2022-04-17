@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Filters } from "./Filters";
-import EntriesList, { ListHandle } from "./EntriesList";
+import EntriesList from "./EntriesList";
 import { makeStyles } from "@material-ui/core";
 import TrafficViewerStyles from "./TrafficViewer.module.sass";
 import styles from '../style/EntriesList.module.sass';
@@ -21,7 +21,7 @@ import { StatusBar } from "../UI/StatusBar";
 import tappingStatusAtom from "../../recoil/tappingStatus/atom";
 import { TOAST_CONTAINER_ID } from "../../configs/Consts";
 import leftOffTopAtom from "../../recoil/leftOffTop";
-import { DEFAULT_LEFTOFF, DEFAULT_QUERY } from '../../hooks/useWS';
+import { DEFAULT_LEFTOFF } from '../../helpers/Consts';
 
 const useLayoutStyles = makeStyles(() => ({
   details: {
@@ -123,6 +123,8 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
   const openEmptyWebSocket = (resetEntries: boolean = true, leftoffButton = DEFAULT_LEFTOFF, queryTosend: string = query) => {
     const queryToSend = queryTosend ? `(${queryTosend}) and leftOff("${leftoffButton}")` : `leftOff("${leftoffButton}")`
     openWebSocket(queryToSend, resetEntries);
+    scrollableRef.current.jumpToBottom();
+    setIsSnappedToBottom(true);
   }
 
   const closeWebSocket = () => {
@@ -188,19 +190,13 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
 
   const toggleConnection = () => {
     if (!closeWebSocket()) {
-      setIsStreamData(true)
+      setIsStreamData(true) //we have to wait for the fetch to finish bringing old entries before open the web socket
     }
   }
 
   const reopenConnection = async () => {
     closeWebSocket()
-    snapToButtom()
-  }
-
-  const snapToButtom = (resetEntries: boolean = true, leftOffButton = DEFAULT_LEFTOFF, queryTosend: string = query) => {
-    openEmptyWebSocket(resetEntries, leftOffButton, queryTosend);
-    scrollableRef.current.jumpToBottom();
-    setIsSnappedToBottom(true);
+    openEmptyWebSocket()
   }
 
   useEffect(() => {
@@ -271,7 +267,7 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
               setIsSnappedToBottom={setIsSnappedToBottom}
               noMoreDataTop={noMoreDataTop}
               setNoMoreDataTop={setNoMoreDataTop}
-              snapToButtom={snapToButtom}
+              openEmptyWebSocket={openEmptyWebSocket}
               scrollableRef={scrollableRef}
               ws={ws}
               isStreamData={isStreamData}

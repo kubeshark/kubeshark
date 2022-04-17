@@ -1,4 +1,4 @@
-import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import styles from '../style/EntriesList.module.sass';
 import ScrollableFeedVirtualized from "react-scrollable-feed-virtualized";
 import Moment from 'moment';
@@ -16,7 +16,7 @@ import { TOAST_CONTAINER_ID } from "../../configs/Consts";
 import tappingStatusAtom from "../../recoil/tappingStatus";
 import leftOffTopAtom from "../../recoil/leftOffTop";
 import useDebounce from "../../hooks/useDebounce";
-import { DEFAULT_LEFTOFF } from "../../hooks/useWS";
+import { DEFAULT_LEFTOFF } from "../../helpers/Consts";
 
 interface EntriesListProps {
   listEntryREF: any;
@@ -25,24 +25,21 @@ interface EntriesListProps {
   setIsSnappedToBottom: any;
   noMoreDataTop: boolean;
   setNoMoreDataTop: (flag: boolean) => void;
-  snapToButtom: (resetEntries: boolean, leftoffButton?: string, queryTosend?: string) => void;
+  openEmptyWebSocket: (resetEntries: boolean, leftoffButton?: string, queryToSend?: string) => void;
   scrollableRef: any;
   ws: any;
   isStreamData: boolean,
   setIsStreamData: (flag: boolean) => void;
 }
 
-export type ListHandle = {
-  loadPrevoisEntries: (fetchEntries: (leftOff, direction, query, limit, timeoutMs) => Promise<any>) => Promise<any>,
-}
-export const EntriesList: React.ForwardRefRenderFunction<ListHandle, EntriesListProps> = ({
+export const EntriesList: React.FC<EntriesListProps> = ({
   listEntryREF,
   onSnapBrokenEvent,
   isSnappedToBottom,
   setIsSnappedToBottom,
   noMoreDataTop,
   setNoMoreDataTop,
-  snapToButtom,
+  openEmptyWebSocket,
   scrollableRef,
   ws,
   isStreamData,
@@ -63,10 +60,7 @@ export const EntriesList: React.ForwardRefRenderFunction<ListHandle, EntriesList
   const [queriedTotal, setQueriedTotal] = useState(0);
   const [startTime, setStartTime] = useState(0);
   const [truncatedTimestamp, setTruncatedTimestamp] = useState(0);
-  const [oldEntries, setoldEntries] = useState([]);
 
-
-  const debouncedQuery = useDebounce<string>(query, 500)
   const leftOffBottom = entries.length > 0 ? entries[entries.length - 1].id : "latest";
 
   useEffect(() => {
@@ -92,10 +86,10 @@ export const EntriesList: React.ForwardRefRenderFunction<ListHandle, EntriesList
   //useRecoilCallback for retriving updated TrafficViewerApi from Recoil
   const getOldEntries = useRecoilCallback(({ snapshot }) => async () => {
     setLoadMoreTop(false);
-    const useLeftoff = leftOffTop === "" ? DEFAULT_LEFTOFF : leftOffTop
+    const leftOffTopForFetch = leftOffTop === "" ? DEFAULT_LEFTOFF : leftOffTop
     setIsLoadingTop(true);
     const fetchEntries = snapshot.getLoadable(TrafficViewerApiAtom).contents.fetchEntries
-    const data = await fetchEntries(useLeftoff, -1, query, 100, 3000);
+    const data = await fetchEntries(leftOffTopForFetch, -1, query, 100, 3000);
     if (!data || data.data === null || data.meta === null) {
       setNoMoreDataTop(true);
       setIsLoadingTop(false);
@@ -139,7 +133,7 @@ export const EntriesList: React.ForwardRefRenderFunction<ListHandle, EntriesList
         setEntries([])
         const oldEntries = await getOldEntries()
         const leffOffButton = oldEntries.length > 0 ? oldEntries[oldEntries.length - 1].id : DEFAULT_LEFTOFF
-        snapToButtom(false, leffOffButton)
+        openEmptyWebSocket(false, leffOffButton)
       }
       setIsStreamData(false)
     })();
@@ -219,7 +213,7 @@ export const EntriesList: React.ForwardRefRenderFunction<ListHandle, EntriesList
           className={`${styles.btnLive} ${isSnappedToBottom && !isWsConnectionClosed ? styles.hideButton : styles.showButton}`}
           onClick={(_) => {
             if (isWsConnectionClosed) {
-              snapToButtom(false, leftOffBottom)
+              openEmptyWebSocket(false, leftOffBottom)
             }
             scrollableRef.current.jumpToBottom();
             setIsSnappedToBottom(true);
@@ -243,4 +237,4 @@ export const EntriesList: React.ForwardRefRenderFunction<ListHandle, EntriesList
   </React.Fragment>;
 };
 
-export default React.forwardRef(EntriesList);
+export default EntriesList;
