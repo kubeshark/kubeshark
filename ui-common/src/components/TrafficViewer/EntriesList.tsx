@@ -89,7 +89,7 @@ export const EntriesList: React.FC<EntriesListProps> = ({
     setLeftOffTop(data.meta.leftOff);
 
     let scrollTo: boolean;
-    if (data.meta.leftOff === 0) {
+    if (data.meta.noMoreData) {
       setNoMoreDataTop(true);
       scrollTo = false;
     } else {
@@ -118,23 +118,28 @@ export const EntriesList: React.FC<EntriesListProps> = ({
 
   const scrollbarVisible = scrollableRef.current?.childWrapperRef.current.clientHeight > scrollableRef.current?.wrapperRef.current.clientHeight;
 
+  useEffect(() => {
+    if (!focusedEntryId && entries.length > 0)
+      setFocusedEntryId(entries[0].id);
+  }, [focusedEntryId, entries])
 
+  useEffect(() => {
+    const newEntries = [...entries];
+    if (newEntries.length > 10000) {
+      setLeftOffTop(newEntries[0].id);
+      newEntries.splice(0, newEntries.length - 10000)
+      setNoMoreDataTop(false);
+      setEntries(newEntries);
+    }
+  }, [entries])
 
-  if (ws.current) {
+  if(ws.current && !ws.current.onmessage) {
     ws.current.onmessage = (e) => {
       if (!e?.data) return;
       const message = JSON.parse(e.data);
       switch (message.messageType) {
         case "entry":
-          const entry = message.data;
-          if (!focusedEntryId) setFocusedEntryId(entry.id);
-          const newEntries = [...entries, entry];
-          if (newEntries.length > 10000) {
-            setLeftOffTop(newEntries[0].id);
-            newEntries.splice(0, newEntries.length - 10000)
-            setNoMoreDataTop(false);
-          }
-          setEntries(newEntries);
+          setEntries(entriesState => [...entriesState,  message.data]);
           break;
         case "status":
           setTappingStatus(message.tappingStatus);
@@ -151,9 +156,7 @@ export const EntriesList: React.FC<EntriesListProps> = ({
         case "queryMetadata":
           setTruncatedTimestamp(message.data.truncatedTimestamp);
           setQueriedTotal(message.data.total);
-          if (leftOffTop === "") {
-            setLeftOffTop(message.data.leftOff);
-          }
+          setLeftOffTop(leftOffState => leftOffState === "" ? message.data.leftOff : leftOffState);
           break;
         case "startTime":
           setStartTime(message.data);
