@@ -11,8 +11,6 @@ import (
 	"github.com/up9inc/mizu/tap/api"
 )
 
-const checkTLSPacketAmount = 100
-
 type tcpReaderDataMsg struct {
 	bytes     []byte
 	timestamp time.Time

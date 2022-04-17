@@ -65,24 +65,6 @@ var packetSourceManager *source.PacketSourceManager // global
 var mainPacketInputChan chan source.TcpPacketInfo   // global
 var tlsTapperInstance *tlstapper.TlsTapper          // global
 
-func inArrayInt(arr []int, valueToCheck int) bool {
-	for _, value := range arr {
-		if value == valueToCheck {
-			return true
-		}
-	}
-	return false
-}
-
-func inArrayString(arr []string, valueToCheck string) bool {
-	for _, value := range arr {
-		if value == valueToCheck {
-			return true
-		}
-	}
-	return false
-}
-
 func StartPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem, extensionsRef []*api.Extension, options *api.TrafficFilteringOptions) {
 	extensions = extensionsRef
 	filteringOptions = options
