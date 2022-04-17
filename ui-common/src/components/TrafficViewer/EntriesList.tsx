@@ -118,23 +118,31 @@ export const EntriesList: React.FC<EntriesListProps> = ({
 
   const scrollbarVisible = scrollableRef.current?.childWrapperRef.current.clientHeight > scrollableRef.current?.wrapperRef.current.clientHeight;
 
+  useEffect(() => {
+    if (!focusedEntryId && entries.length > 0)
+      setFocusedEntryId(entries[0].id);
+  }, [focusedEntryId, entries])
 
+  useEffect(() => {
+    const newEntries = [...entries];
+    if (newEntries.length > 10000) {
+      setLeftOffTop(newEntries[0].id);
+      newEntries.splice(0, newEntries.length - 10000)
+      setNoMoreDataTop(false);
+      setEntries(newEntries);
+    }
+  }, [entries])
 
-  if (ws.current) {
+  if(ws.current && !ws.current.onmessage) {
     ws.current.onmessage = (e) => {
       if (!e?.data) return;
       const message = JSON.parse(e.data);
       switch (message.messageType) {
         case "entry":
-          const entry = message.data;
-          if (!focusedEntryId) setFocusedEntryId(entry.id);
-          const newEntries = [...entries, entry];
-          if (newEntries.length > 10000) {
-            setLeftOffTop(newEntries[0].id);
-            newEntries.splice(0, newEntries.length - 10000)
-            setNoMoreDataTop(false);
-          }
-          setEntries(newEntries);
+          setEntries(entriesState => {
+            const newEntries = [...entriesState,  message.data];
+            return newEntries;
+          });
           break;
         case "status":
           setTappingStatus(message.tappingStatus);
