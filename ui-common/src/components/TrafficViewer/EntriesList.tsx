@@ -139,10 +139,7 @@ export const EntriesList: React.FC<EntriesListProps> = ({
       const message = JSON.parse(e.data);
       switch (message.messageType) {
         case "entry":
-          setEntries(entriesState => {
-            const newEntries = [...entriesState,  message.data];
-            return newEntries;
-          });
+          setEntries(entriesState => [...entriesState,  message.data]);
           break;
         case "status":
           setTappingStatus(message.tappingStatus);
@@ -159,9 +156,7 @@ export const EntriesList: React.FC<EntriesListProps> = ({
         case "queryMetadata":
           setTruncatedTimestamp(message.data.truncatedTimestamp);
           setQueriedTotal(message.data.total);
-          if (leftOffTop === "") {
-            setLeftOffTop(message.data.leftOff);
-          }
+          setLeftOffTop(leftOffState => leftOffState === "" ? message.data.leftOff : leftOffState);
           break;
         case "startTime":
           setStartTime(message.data);
