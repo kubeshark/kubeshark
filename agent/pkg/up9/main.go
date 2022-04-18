@@ -211,11 +211,15 @@ func syncEntriesImpl(token string, model string, envPrefix string, uploadInterva
 
 	logger.Log.Infof("Getting entries from the database")
 
+BasenineReconnect:
 	var connection *basenine.Connection
 	var err error
 	connection, err = basenine.NewConnection(shared.BasenineHost, shared.BaseninePort)
 	if err != nil {
-		panic(err)
+		logger.Log.Errorf("Can't establish a new connection to Basenine server: %v", err)
+		connection.Close()
+		time.Sleep(shared.BasenineReconnectInterval * time.Second)
+		goto BasenineReconnect
 	}
 
 	data := make(chan []byte)
@@ -324,7 +328,10 @@ func syncEntriesImpl(token string, model string, envPrefix string, uploadInterva
 	wg.Add(2)
 
 	if err = connection.Query(query, data, meta); err != nil {
-		logger.Log.Panicf("Query mode call failed: %v", err)
+		logger.Log.Errorf("Query mode call failed: %v", err)
+		connection.Close()
+		time.Sleep(shared.BasenineReconnectInterval * time.Second)
+		goto BasenineReconnect
 	}
 
 	wg.Wait()
