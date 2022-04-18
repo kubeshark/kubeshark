@@ -4,18 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"time"
 
-	"github.com/patrickmn/go-cache"
 	"github.com/up9inc/mizu/agent/pkg/models"
 	"github.com/up9inc/mizu/shared"
 )
 
-const tlsLinkRetainmentTime = time.Minute * 15
-
 var (
-	authStatus     *models.AuthStatus
-	RecentTLSLinks = cache.New(tlsLinkRetainmentTime, tlsLinkRetainmentTime)
+	authStatus *models.AuthStatus
 )
 
 func GetAuthStatus() (*models.AuthStatus, error) {

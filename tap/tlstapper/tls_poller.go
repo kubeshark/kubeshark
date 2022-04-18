@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"fmt"
 	"net"
+	"sync"
 
 	"encoding/binary"
 	"encoding/hex"
@@ -19,13 +20,14 @@ import (
 )
 
 type tlsPoller struct {
-	tls           *TlsTapper
-	readers       map[string]*tlsReader
-	closedReaders chan string
-	reqResMatcher api.RequestResponseMatcher
-	chunksReader  *perf.Reader
-	extension     *api.Extension
-	procfs        string
+	tls            *TlsTapper
+	readers        map[string]*tlsReader
+	closedReaders  chan string
+	reqResMatcher  api.RequestResponseMatcher
+	chunksReader   *perf.Reader
+	extension      *api.Extension
+	procfs         string
+	pidToNamespace sync.Map
 }
 
 func newTlsPoller(tls *TlsTapper, extension *api.Extension, procfs string) *tlsPoller {
@@ -151,16 +153,21 @@ func (p *tlsPoller) startNewTlsReader(chunk *tlsChunk, ip net.IP, port uint16, k
 
 	tcpid := p.buildTcpId(chunk, ip, port)
 
-	go dissect(extension, reader, chunk.isRequest(), &tcpid, emitter, options, p.reqResMatcher)
+	tlsEmitter := &tlsEmitter{
+		delegate:  emitter,
+		namespace: p.getNamespace(chunk.Pid),
+	}
+
+	go dissect(extension, reader, chunk.isRequest(), &tcpid, tlsEmitter, options, p.reqResMatcher)
 	return reader
 }
 
 func dissect(extension *api.Extension, reader *tlsReader, isRequest bool, tcpid *api.TcpID,
-	emitter api.Emitter, options *api.TrafficFilteringOptions, reqResMatcher api.RequestResponseMatcher) {
+	tlsEmitter *tlsEmitter, options *api.TrafficFilteringOptions, reqResMatcher api.RequestResponseMatcher) {
 	b := bufio.NewReader(reader)
 
 	err := extension.Dissector.Dissect(b, reader.progress, api.Ebpf, isRequest, tcpid, &api.CounterPair{},
-		&api.SuperTimer{}, &api.SuperIdentifier{}, emitter, options, reqResMatcher)
+		&api.SuperTimer{}, &api.SuperIdentifier{}, tlsEmitter, options, reqResMatcher)
 
 	if err != nil {
 		logger.Log.Warningf("Error dissecting TLS %v - %v", tcpid, err)
@@ -203,6 +210,33 @@ func (p *tlsPoller) buildTcpId(chunk *tlsChunk, ip net.IP, port uint16) api.TcpI
 			Ident:   "",
 		}
 	}
+}
+
+func (p *tlsPoller) addPid(pid uint32, namespace string) {
+	p.pidToNamespace.Store(pid, namespace)
+}
+
+func (p *tlsPoller) getNamespace(pid uint32) string {
+	namespaceIfc, ok := p.pidToNamespace.Load(pid)
+
+	if !ok {
+		return api.UNKNOWN_NAMESPACE
+	}
+
+	namespace, ok := namespaceIfc.(string)
+
+	if !ok {
+		return api.UNKNOWN_NAMESPACE
+	}
+
+	return namespace
+}
+
+func (p *tlsPoller) clearPids() {
+	p.pidToNamespace.Range(func(key, v interface{}) bool {
+		p.pidToNamespace.Delete(key)
+		return true
+	})
 }
 
 func (p *tlsPoller) logTls(chunk *tlsChunk, ip net.IP, port uint16) {

@@ -128,6 +128,11 @@ BasenineReconnect:
 	for item := range outputItems {
 		extension := extensionsMap[item.Protocol.Name]
 		resolvedSource, resolvedDestionation, namespace := resolveIP(item.ConnectionInfo)
+		
+		if namespace == "" && item.Namespace != tapApi.UNKNOWN_NAMESPACE {
+			namespace = item.Namespace
+		}
+		
 		mizuEntry := extension.Dissector.Analyze(item, resolvedSource, resolvedDestionation, namespace)
 		if extension.Protocol.Name == "http" {
 			if !disableOASValidation {
