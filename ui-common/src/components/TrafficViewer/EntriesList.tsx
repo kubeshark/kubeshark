@@ -1,11 +1,11 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import styles from '../style/EntriesList.module.sass';
 import ScrollableFeedVirtualized from "react-scrollable-feed-virtualized";
 import Moment from 'moment';
 import { EntryItem } from "./EntryListItem/EntryListItem";
 import down from "assets/downImg.svg";
 import spinner from 'assets/spinner.svg';
-import { RecoilState, useRecoilCallback, useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
+import { RecoilState, useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 import entriesAtom from "../../recoil/entries";
 import queryAtom from "../../recoil/query";
 import TrafficViewerApiAtom from "../../recoil/TrafficViewerApi";
@@ -27,8 +27,8 @@ interface EntriesListProps {
   openEmptyWebSocket: (resetEntries: boolean, leftoffButton?: string, queryToSend?: string) => void;
   scrollableRef: any;
   ws: any;
-  isStreamData: boolean,
-  setIsStreamData: (flag: boolean) => void;
+  isShouldStartStreamData: boolean,
+  setIsShouldStartStreamData: (flag: boolean) => void;
 }
 
 export const EntriesList: React.FC<EntriesListProps> = ({
@@ -41,8 +41,8 @@ export const EntriesList: React.FC<EntriesListProps> = ({
   openEmptyWebSocket,
   scrollableRef,
   ws,
-  isStreamData,
-  setIsStreamData
+  isShouldStartStreamData,
+  setIsShouldStartStreamData
 }) => {
 
   const [entries, setEntries] = useRecoilState(entriesAtom);
@@ -84,12 +84,11 @@ export const EntriesList: React.FC<EntriesListProps> = ({
   }, [entries]);
 
   //useRecoilCallback for retriving updated TrafficViewerApi from Recoil
-  const getOldEntries = useRecoilCallback(({ snapshot }) => async () => {
+  const getOldEntries = useCallback(async () => {
     setLoadMoreTop(false);
     const leftOffTopForFetch = leftOffTop === "" ? DEFAULT_LEFTOFF : leftOffTop
     setIsLoadingTop(true);
-    const fetchEntries = snapshot.getLoadable(TrafficViewerApiAtom).contents.fetchEntries
-    const data = await fetchEntries(leftOffTopForFetch, -1, query, 100, 3000);
+    const data = await trafficViewerApi.fetchEntries(leftOffTopForFetch, -1, query, 100, 3000);
     if (!data || data.data === null || data.meta === null) {
       setNoMoreDataTop(true);
       setIsLoadingTop(false);
@@ -129,17 +128,16 @@ export const EntriesList: React.FC<EntriesListProps> = ({
 
   useEffect(() => {
     (async () => {
-      if (isStreamData) {
+      if (isShouldStartStreamData && trafficViewerApi?.fetchEntries) {
         setEntries([])
         const oldEntries = await getOldEntries()
         const leffOffButton = oldEntries.length > 0 ? oldEntries[oldEntries.length - 1].id : DEFAULT_LEFTOFF
         openEmptyWebSocket(false, leffOffButton)
       }
-      setIsStreamData(false)
+      setIsShouldStartStreamData(false)
     })();
-  }, [isStreamData]);
+  }, [isShouldStartStreamData, trafficViewerApi.fetchEntries]);
 
-  
   useEffect(() => {
     if (!focusedEntryId && entries.length > 0)
       setFocusedEntryId(entries[0].id);
@@ -155,14 +153,14 @@ export const EntriesList: React.FC<EntriesListProps> = ({
     }
   }, [entries])
 
-  if(ws.current && !ws.current.onmessage) {
+  if (ws.current && !ws.current.onmessage) {
     ws.current.onmessage = (e) => {
       if (!e?.data) return;
       const message = JSON.parse(e.data);
       switch (message.messageType) {
         case "entry":
           setEntries(entriesState => {
-            const newEntries = [...entriesState,  message.data];
+            const newEntries = [...entriesState, message.data];
             return newEntries;
           });
           break;
@@ -210,7 +208,7 @@ export const EntriesList: React.FC<EntriesListProps> = ({
         </ScrollableFeedVirtualized>
         <button type="button"
           title="Fetch old records"
-          className={`${styles.btnOld} ${!scrollbarVisible && Number.parseInt(leftOffTop) > 0 ? styles.showButton : styles.hideButton}`}
+          className={`${styles.btnOld} ${!scrollbarVisible && (leftOffTop !== "") ? styles.showButton : styles.hideButton}`}
           onClick={(_) => {
             trafficViewerApi.webSocket.close()
             getOldEntries();

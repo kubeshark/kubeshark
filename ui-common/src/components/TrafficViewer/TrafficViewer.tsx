@@ -71,7 +71,7 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
   const [noMoreDataTop, setNoMoreDataTop] = useState(false);
   const [isSnappedToBottom, setIsSnappedToBottom] = useState(true);
   const [wsReadyState, setWsReadyState] = useState(0);
-  const [isStreamData, setIsStreamData] = useState(false)
+  const [isShouldStartStreamData, setIsShouldStartStreamData] = useState(false)
   const [queryBackgroundColor, setQueryBackgroundColor] = useState("#f5f5f5");
 
   const setLeftOffTop = useSetRecoilState(leftOffTopAtom);
@@ -115,7 +115,7 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
   }, [shouldCloseWebSocket])
 
   useEffect(() => {
-    setIsStreamData(true)
+    setIsShouldStartStreamData(true)
   }, [webSocketUrl])
 
   const ws = useRef(null);
@@ -190,7 +190,7 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
 
   const toggleConnection = () => {
     if (!closeWebSocket()) {
-      setIsStreamData(true) //we have to wait for the fetch to finish bringing old entries before open the web socket
+      setIsShouldStartStreamData(true) //we have to wait for the fetch to finish bringing old entries before open the web socket
     }
   }
 
@@ -270,8 +270,8 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
               openEmptyWebSocket={openEmptyWebSocket}
               scrollableRef={scrollableRef}
               ws={ws}
-              isStreamData={isStreamData}
-              setIsStreamData={setIsStreamData}
+              isShouldStartStreamData={isShouldStartStreamData}
+              setIsShouldStartStreamData={setIsShouldStartStreamData}
             />
           </div>
         </div>
