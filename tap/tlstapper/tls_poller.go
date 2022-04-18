@@ -19,8 +19,6 @@ import (
 	"github.com/up9inc/mizu/tap/api"
 )
 
-const UNKNOWN_NAMESPACE = ""
-
 type tlsPoller struct {
 	tls            *TlsTapper
 	readers        map[string]*tlsReader
@@ -222,13 +220,13 @@ func (p *tlsPoller) getNamespace(pid uint32) string {
 	namespaceIfc, ok := p.pidToNamespace.Load(pid)
 
 	if !ok {
-		return UNKNOWN_NAMESPACE
+		return api.UNKNOWN_NAMESPACE
 	}
 
 	namespace, ok := namespaceIfc.(string)
 
 	if !ok {
-		return UNKNOWN_NAMESPACE
+		return api.UNKNOWN_NAMESPACE
 	}
 
 	return namespace

@@ -18,6 +18,7 @@ import (
 )
 
 const mizuTestEnvVar = "MIZU_TEST"
+const UNKNOWN_NAMESPACE = ""
 
 var UnknownIp net.IP = net.IP{0, 0, 0, 0}
 var UnknownPort uint16 = 0

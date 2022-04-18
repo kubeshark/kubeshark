@@ -59,7 +59,7 @@ func (t *TlsTapper) PollForLogging() {
 }
 
 func (t *TlsTapper) GlobalTap(sslLibrary string) error {
-	return t.tapPid(GLOABL_TAP_PID, sslLibrary, UNKNOWN_NAMESPACE)
+	return t.tapPid(GLOABL_TAP_PID, sslLibrary, api.UNKNOWN_NAMESPACE)
 }
 
 func (t *TlsTapper) AddPid(procfs string, pid uint32, namespace string) error {
