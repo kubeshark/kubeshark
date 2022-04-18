@@ -9,7 +9,6 @@ import (
 	"github.com/patrickmn/go-cache"
 	"github.com/up9inc/mizu/agent/pkg/models"
 	"github.com/up9inc/mizu/shared"
-	"github.com/up9inc/mizu/tap"
 )
 
 const tlsLinkRetainmentTime = time.Minute * 15
@@ -50,17 +49,4 @@ func GetAuthStatus() (*models.AuthStatus, error) {
 	}
 
 	return authStatus, nil
-}
-
-func GetAllRecentTLSAddresses() []string {
-	recentTLSLinks := make([]string, 0)
-
-	for _, outboundLinkItem := range RecentTLSLinks.Items() {
-		outboundLink, castOk := outboundLinkItem.Object.(*tap.OutboundLink)
-		if castOk {
-			recentTLSLinks = append(recentTLSLinks, outboundLink.DstIP)
-		}
-	}
-
-	return recentTLSLinks
 }

@@ -29,21 +29,6 @@ func getLocalhostIPs() ([]string, error) {
 	return myIPs, nil
 }
 
-//lint:ignore U1000 will be used in the future
-func isPrivateIP(ipStr string) bool {
-	ip := net.ParseIP(ipStr)
-	if ip.IsLoopback() || ip.IsLinkLocalUnicast() || ip.IsLinkLocalMulticast() {
-		return true
-	}
-
-	for _, block := range privateIPBlocks {
-		if block.Contains(ip) {
-			return true
-		}
-	}
-	return false
-}
-
 func initPrivateIPBlocks() {
 	for _, cidr := range []string{
 		"127.0.0.0/8",    // IPv4 loopback

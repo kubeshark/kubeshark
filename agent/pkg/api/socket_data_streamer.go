@@ -24,7 +24,7 @@ func (e *BasenineEntryStreamer) Get(ctx context.Context, socketId int, params *W
 
 	connection, err := basenine.NewConnection(shared.BasenineHost, shared.BaseninePort)
 	if err != nil {
-		logger.Log.Errorf("failed to establish a connection to Basenine: %v", err)
+		logger.Log.Errorf("Failed to establish a connection to Basenine: %v", err)
 		entryStreamerSocketConnector.CleanupSocket(socketId)
 		return err
 	}
@@ -80,7 +80,9 @@ func (e *BasenineEntryStreamer) Get(ctx context.Context, socketId int, params *W
 	go handleMetaChannel(connection, meta)
 
 	if err = connection.Query(query, data, meta); err != nil {
-		logger.Log.Panicf("Query mode call failed: %v", err)
+		logger.Log.Errorf("Query mode call failed: %v", err)
+		entryStreamerSocketConnector.CleanupSocket(socketId)
+		return err
 	}
 
 	go func() {
