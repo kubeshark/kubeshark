@@ -99,9 +99,11 @@ func GetPodInfosForPods(pods []core.Pod) []*shared.PodInfo {
 
 func checkTappersCanStartOnNodes(kubernetesProvider *Provider, context context.Context, nodesToTap []string) {
 	var nodeNameToDetails = make(map[string]core.Node, 0)
+	var clusterNodeNames = make([]string, 0)
 	if nodes, err := kubernetesProvider.GetNodes(context, ""); err == nil {
 		for _, item := range nodes.Items {
 			nodeNameToDetails[item.Name] = item
+			clusterNodeNames = append(clusterNodeNames, item.Name)
 		}
 	} else {
 		logger.Log.Debugf("failed to get cluster nodes, %v", err)
