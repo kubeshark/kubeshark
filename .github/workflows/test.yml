@@ -56,7 +56,7 @@ jobs:
       
       - name: Check extensions modified files
         id: ext_modified_files
-        run: devops/check_modified_files.sh tap/extensions/
+        run: devops/check_modified_files.sh tap/extensions/ tap/api/
 
       - name: Extensions Test
         if: github.event_name == 'push' || steps.ext_modified_files.outputs.matched == 'true'
@@ -64,4 +64,3 @@ jobs:
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2
-

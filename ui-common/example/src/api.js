@@ -54,11 +54,6 @@ export default class Api {
         return response.data;
     }
 
-    getRecentTLSLinks = async () => {
-        const response = await client.get("/status/recentTLSLinks");
-        return response.data;
-    }
-
     getOasServices = async () => {
         const response = await client.get("/oas");
         return response.data;
