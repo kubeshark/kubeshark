@@ -11,7 +11,7 @@ require (
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/spf13/cobra v1.3.0
 	github.com/spf13/pflag v1.0.5
-	github.com/up9inc/basenine/server/lib v0.0.0-20220413173135-69508ca741d7
+	github.com/up9inc/basenine/server/lib v0.0.0-20220419100955-e2ca51087607
 	github.com/up9inc/mizu/shared v0.0.0
 	github.com/up9inc/mizu/tap/api v0.0.0
 	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8
