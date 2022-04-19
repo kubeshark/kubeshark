@@ -1,6 +1,8 @@
 package kubernetes
 
 import (
+	"context"
+	"github.com/up9inc/mizu/shared/logger"
 	"regexp"
 
 	"github.com/up9inc/mizu/shared"
@@ -92,4 +94,30 @@ func GetPodInfosForPods(pods []core.Pod) []*shared.PodInfo {
 		podInfos = append(podInfos, &shared.PodInfo{Name: pod.Name, Namespace: pod.Namespace, NodeName: pod.Spec.NodeName})
 	}
 	return podInfos
+}
+
+
+func checkTappersCanStartOnNodes(kubernetesProvider *Provider, context context.Context, nodesToTap []string) {
+	var nodeNameToDetails = make(map[string]core.Node, 0)
+	if nodes, err := kubernetesProvider.GetNodes(context, ""); err == nil {
+		for _, item := range nodes.Items {
+			nodeNameToDetails[item.Name] = item
+		}
+	} else {
+		logger.Log.Debugf("cannot check nodes of cluster")
+	}
+
+	for _, item := range nodesToTap {
+		nodeDetails, ok := nodeNameToDetails[item]
+		if !ok {
+			logger.Log.Debugf("Cannot get this node details to check if the tapper can start on it")
+			continue
+		}
+		val, ok := nodeDetails.GetLabels()[NodeHostNameLabelKey]
+		if !ok {
+			logger.Log.Warningf("Tapper cannot start on node '%s', this missing the '%s' label", nodeDetails.Name, NodeHostNameLabelKey)
+		} else if val != nodeDetails.Name {
+			logger.Log.Warningf("Tapper cannot start on node '%s',  value of '%s' label is not match the node name", nodeDetails.Name, NodeHostNameLabelKey, val)
+		}
+	}
 }

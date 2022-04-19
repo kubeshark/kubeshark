@@ -1053,7 +1053,7 @@ func (provider *Provider) ListManagedRoleBindings(ctx context.Context, namespace
 func (provider *Provider) GetNodes(ctx context.Context, selector string) (*core.NodeList, error) {
 	listOptions := metav1.ListOptions{}
 	if selector != "" {
-		listOptions.LabelSelector = fmt.Sprintf("%s", selector)
+		listOptions.LabelSelector = selector
 	}
 	return provider.clientSet.CoreV1().Nodes().List(ctx, listOptions)
 }

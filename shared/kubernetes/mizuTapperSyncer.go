@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"regexp"
-	"sigs.k8s.io/kustomize/kyaml/sliceutil"
 	"time"
 
 	"github.com/op/go-logging"
@@ -311,21 +310,7 @@ func (tapperSyncer *MizuTapperSyncer) updateMizuTappers() error {
 
 	logger.Log.Debugf("Updating DaemonSet to run on nodes: %v", nodesToTap)
 
-	if nodes, err := tapperSyncer.kubernetesProvider.GetNodes(tapperSyncer.context, ""); err == nil {
-		for _, item := range nodes.Items {
-			if sliceutil.Contains(nodesToTap, item.Name) {
-				val, ok := item.GetLabels()[NodeHostNameLabelKey]
-				if !ok {
-					logger.Log.Warningf("Tapper cannot start on node '%s', this missing the '%s' label", item.Name, NodeHostNameLabelKey)
-				} else if val != item.Name {
-					logger.Log.Warningf("Tapper cannot start on node '%s',  value of '%s' label is not the node name", item.Name, NodeHostNameLabelKey, val)
-				}
-			}
-		}
-	} else {
-		logger.Log.Debugf("cannot check nodes of cluster")
-	}
-
+	checkTappersCanStartOnNodes(tapperSyncer.kubernetesProvider, tapperSyncer.context, nodesToTap)
 
 	if len(tapperSyncer.nodeToTappedPodMap) > 0 {
 		var serviceAccountName string
