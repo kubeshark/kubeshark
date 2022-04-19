@@ -806,11 +806,11 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	agentContainer.WithResources(agentResources)
 
 	nodeSelectorRequirement := applyconfcore.NodeSelectorRequirement()
-	nodeSelectorRequirement.WithKey("kubernetes.io/hostname")
+	nodeSelectorRequirement.WithKey("metadata.name")
 	nodeSelectorRequirement.WithOperator(core.NodeSelectorOpIn)
 	nodeSelectorRequirement.WithValues(nodeNames...)
 	nodeSelectorTerm := applyconfcore.NodeSelectorTerm()
-	nodeSelectorTerm.WithMatchExpressions(nodeSelectorRequirement)
+	nodeSelectorTerm.WithMatchFields(nodeSelectorRequirement)
 	nodeSelector := applyconfcore.NodeSelector()
 	nodeSelector.WithNodeSelectorTerms(nodeSelectorTerm)
 	nodeAffinity := applyconfcore.NodeAffinity()
