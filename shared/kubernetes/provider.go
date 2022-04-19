@@ -805,14 +805,20 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	agentResources := applyconfcore.ResourceRequirements().WithRequests(agentResourceRequests).WithLimits(agentResourceLimits)
 	agentContainer.WithResources(agentResources)
 
-	nodeSelectorRequirement := applyconfcore.NodeSelectorRequirement()
-	nodeSelectorRequirement.WithKey("metadata.name")
-	nodeSelectorRequirement.WithOperator(core.NodeSelectorOpIn)
-	nodeSelectorRequirement.WithValues(nodeNames...)
-	nodeSelectorTerm := applyconfcore.NodeSelectorTerm()
-	nodeSelectorTerm.WithMatchFields(nodeSelectorRequirement)
+	matchFields := make([]*applyconfcore.NodeSelectorTermApplyConfiguration, 0)
+	for _, nodeName := range nodeNames {
+		nodeSelectorRequirement := applyconfcore.NodeSelectorRequirement()
+		nodeSelectorRequirement.WithKey("metadata.name")
+		nodeSelectorRequirement.WithOperator(core.NodeSelectorOpIn)
+		nodeSelectorRequirement.WithValues(nodeName)
+
+		nodeSelectorTerm := applyconfcore.NodeSelectorTerm()
+		nodeSelectorTerm.WithMatchFields(nodeSelectorRequirement)
+		matchFields = append(matchFields, nodeSelectorTerm)
+	}
+
 	nodeSelector := applyconfcore.NodeSelector()
-	nodeSelector.WithNodeSelectorTerms(nodeSelectorTerm)
+	nodeSelector.WithNodeSelectorTerms(matchFields...)
 	nodeAffinity := applyconfcore.NodeAffinity()
 	nodeAffinity.WithRequiredDuringSchedulingIgnoredDuringExecution(nodeSelector)
 	affinity := applyconfcore.Affinity()
