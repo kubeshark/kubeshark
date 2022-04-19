@@ -16,10 +16,11 @@ const (
 )
 
 const (
-	LabelPrefixApp      = "app.kubernetes.io/"
-	LabelManagedBy      = LabelPrefixApp + "managed-by"
-	LabelCreatedBy      = LabelPrefixApp + "created-by"
-	LabelValueMizu      = "mizu"
-	LabelValueMizuCLI   = "mizu-cli"
-	LabelValueMizuAgent = "mizu-agent"
+	NodeHostNameLabelKey = "kubernetes.io/hostname"
+	LabelPrefixApp       = "app.kubernetes.io/"
+	LabelManagedBy       = LabelPrefixApp + "managed-by"
+	LabelCreatedBy       = LabelPrefixApp + "created-by"
+	LabelValueMizu       = "mizu"
+	LabelValueMizuCLI    = "mizu-cli"
+	LabelValueMizuAgent  = "mizu-agent"
 )

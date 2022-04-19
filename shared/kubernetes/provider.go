@@ -806,7 +806,7 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	agentContainer.WithResources(agentResources)
 
 	nodeSelectorRequirement := applyconfcore.NodeSelectorRequirement()
-	nodeSelectorRequirement.WithKey("kubernetes.io/hostname")
+	nodeSelectorRequirement.WithKey(NodeHostNameLabelKey)
 	nodeSelectorRequirement.WithOperator(core.NodeSelectorOpIn)
 	nodeSelectorRequirement.WithValues(nodeNames...)
 	nodeSelectorTerm := applyconfcore.NodeSelectorTerm()
@@ -1048,6 +1048,14 @@ func (provider *Provider) ListManagedRoleBindings(ctx context.Context, namespace
 		LabelSelector: fmt.Sprintf("%s=%s", LabelManagedBy, provider.managedBy),
 	}
 	return provider.clientSet.RbacV1().RoleBindings(namespace).List(ctx, listOptions)
+}
+
+func (provider *Provider) GetNodes(ctx context.Context, selector string) (*core.NodeList, error) {
+	listOptions := metav1.ListOptions{}
+	if selector != "" {
+		listOptions.LabelSelector = fmt.Sprintf("%s", selector)
+	}
+	return provider.clientSet.CoreV1().Nodes().List(ctx, listOptions)
 }
 
 // ValidateNotProxy We added this after a customer tried to run mizu from lens, which used len's kube config, which have cluster server configuration, which points to len's local proxy.
