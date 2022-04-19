@@ -3,7 +3,7 @@ name: Acceptance tests on PR
 on: push
 
 concurrency:
-  group: acceptance-test-on-pr-${{ github.ref }}
+  group: acceptance-tests-on-pr-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
