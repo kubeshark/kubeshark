@@ -1,4 +1,4 @@
-name: acceptance tests on PR
+name: Acceptance tests on PR
 
 on:
   pull_request:
@@ -11,7 +11,7 @@ concurrency:
 
 jobs:
   run-acceptance-tests:
-    name: Run acceptance tests on PR
+    name: Run tests
     runs-on: ubuntu-latest
     if: ${{ contains(github.event.head_commit.message, '#run_acceptance_tests') }}
 
