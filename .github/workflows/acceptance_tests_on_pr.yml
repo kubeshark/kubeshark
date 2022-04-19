@@ -10,7 +10,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  run-acceptance-tests:
+  run-tests:
     name: Run tests
     runs-on: ubuntu-latest
     if: ${{ contains(github.event.head_commit.message, '#run_acceptance_tests') }}
