@@ -12,7 +12,7 @@ import TrafficViewerApiAtom from "../../recoil/TrafficViewerApi";
 import TrafficViewerApi from "./TrafficViewerApi";
 import focusedEntryIdAtom from "../../recoil/focusedEntryId";
 import {toast} from "react-toastify";
-import {TOAST_CONTAINER_ID} from "../../configs/Consts";
+import {MAX_ENTRIES, TOAST_CONTAINER_ID} from "../../configs/Consts";
 import tappingStatusAtom from "../../recoil/tappingStatus";
 import leftOffTopAtom from "../../recoil/leftOffTop";
 
@@ -98,8 +98,8 @@ export const EntriesList: React.FC<EntriesListProps> = ({
     setIsLoadingTop(false);
 
     const newEntries = [...data.data.reverse(), ...entries];
-    if(newEntries.length > 10000) {
-      newEntries.splice(10000, newEntries.length - 10000)
+    if(newEntries.length > MAX_ENTRIES) {
+      newEntries.splice(MAX_ENTRIES, newEntries.length - MAX_ENTRIES)
     }
     setEntries(newEntries);
 
@@ -125,9 +125,9 @@ export const EntriesList: React.FC<EntriesListProps> = ({
 
   useEffect(() => {
     const newEntries = [...entries];
-    if (newEntries.length > 10000) {
+    if (newEntries.length > MAX_ENTRIES) {
       setLeftOffTop(newEntries[0].id);
-      newEntries.splice(0, newEntries.length - 10000)
+      newEntries.splice(0, newEntries.length - MAX_ENTRIES)
       setNoMoreDataTop(false);
       setEntries(newEntries);
     }
@@ -209,7 +209,7 @@ export const EntriesList: React.FC<EntriesListProps> = ({
       </div>
 
       <div className={styles.footer}>
-        <div>Displaying <b id="entries-length">{entries?.length}</b> results out of <b
+        <div>Displaying <b id="entries-length">{entries?.length > MAX_ENTRIES ? MAX_ENTRIES : entries?.length}</b> results out of <b
           id="total-entries">{queriedTotal}</b> total
         </div>
         {startTime !== 0 && <div>Started listening at <span style={{
