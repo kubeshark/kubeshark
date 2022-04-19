@@ -104,20 +104,20 @@ func checkTappersCanStartOnNodes(kubernetesProvider *Provider, context context.C
 			nodeNameToDetails[item.Name] = item
 		}
 	} else {
-		logger.Log.Debugf("cannot check nodes of cluster")
+		logger.Log.Debugf("failed to get cluster nodes, %v", err)
 	}
 
 	for _, item := range nodesToTap {
 		nodeDetails, ok := nodeNameToDetails[item]
 		if !ok {
-			logger.Log.Debugf("Cannot get this node details to check if the tapper can start on it")
+			logger.Log.Debugf("Failed to find node to tap %v in cluster nodes %v", item, clusterNodeNames)
 			continue
 		}
 		val, ok := nodeDetails.GetLabels()[NodeHostNameLabelKey]
 		if !ok {
-			logger.Log.Warningf("Tapper cannot start on node '%s', this missing the '%s' label", nodeDetails.Name, NodeHostNameLabelKey)
+			logger.Log.Warningf("Failed to tap node %s: node label %s wasn't found", item, NodeHostNameLabelKey)
 		} else if val != nodeDetails.Name {
-			logger.Log.Warningf("Tapper cannot start on node '%s',  value of '%s' label is not match the node name", nodeDetails.Name, NodeHostNameLabelKey, val)
+			logger.Log.Warningf("Failed to tap node %s:,  node label '%s' is not matching the node name", nodeDetails.Name, NodeHostNameLabelKey, val)
 		}
 	}
 }
