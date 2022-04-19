@@ -1,9 +1,6 @@
 name: Acceptance tests on PR
 
-on:
-  pull_request:
-    branches:
-      - 'develop'
+on: push
 
 concurrency:
   group: acceptance-test-on-pr-${{ github.ref }}
