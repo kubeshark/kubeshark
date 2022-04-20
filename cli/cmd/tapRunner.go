@@ -28,7 +28,6 @@ import (
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/kubernetes"
 	"github.com/up9inc/mizu/shared/logger"
-	"github.com/up9inc/mizu/tap/api"
 )
 
 const cleanupTimeout = time.Minute
@@ -276,12 +275,12 @@ func readValidationRules(file string) (string, error) {
 }
 
 func getMizuApiFilteringOptions() (*shared.TrafficFilteringOptions, error) {
-	var compiledRegexSlice []*api.SerializableRegexp
+	var compiledRegexSlice []*shared.SerializableRegexp
 
 	if config.Config.Tap.PlainTextFilterRegexes != nil && len(config.Config.Tap.PlainTextFilterRegexes) > 0 {
-		compiledRegexSlice = make([]*api.SerializableRegexp, 0)
+		compiledRegexSlice = make([]*shared.SerializableRegexp, 0)
 		for _, regexStr := range config.Config.Tap.PlainTextFilterRegexes {
-			compiledRegex, err := api.CompileRegexToSerializableRegexp(regexStr)
+			compiledRegex, err := shared.CompileRegexToSerializableRegexp(regexStr)
 			if err != nil {
 				return nil, err
 			}
