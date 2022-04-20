@@ -17,6 +17,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/logger"
 	"github.com/up9inc/mizu/tap/api"
 	"github.com/up9inc/mizu/tap/api/diagnose"
@@ -55,14 +56,14 @@ type TapOpts struct {
 	HostMode bool
 }
 
-var extensions []*api.Extension                     // global
-var filteringOptions *api.TrafficFilteringOptions   // global
-var tapTargets []v1.Pod                             // global
-var packetSourceManager *source.PacketSourceManager // global
-var mainPacketInputChan chan source.TcpPacketInfo   // global
-var tlsTapperInstance *tlstapper.TlsTapper          // global
+var extensions []*api.Extension                      // global
+var filteringOptions *shared.TrafficFilteringOptions // global
+var tapTargets []v1.Pod                              // global
+var packetSourceManager *source.PacketSourceManager  // global
+var mainPacketInputChan chan source.TcpPacketInfo    // global
+var tlsTapperInstance *tlstapper.TlsTapper           // global
 
-func StartPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem, extensionsRef []*api.Extension, options *api.TrafficFilteringOptions) {
+func StartPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem, extensionsRef []*api.Extension, options *shared.TrafficFilteringOptions) {
 	extensions = extensionsRef
 	filteringOptions = options
 
@@ -227,7 +228,7 @@ func startPassiveTapper(streamsMap *api.TcpStreamMap, assembler *tcpAssembler) {
 	logger.Log.Infof("AppStats: %v", diagnose.AppStatsInst)
 }
 
-func startTlsTapper(extension *api.Extension, outputItems chan *api.OutputChannelItem, options *api.TrafficFilteringOptions) *tlstapper.TlsTapper {
+func startTlsTapper(extension *api.Extension, outputItems chan *api.OutputChannelItem, options *shared.TrafficFilteringOptions) *tlstapper.TlsTapper {
 	tls := tlstapper.TlsTapper{}
 	chunksBufferSize := os.Getpagesize() * 100
 	logBufferSize := os.Getpagesize()

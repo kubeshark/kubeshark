@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/tap/api"
 )
 
@@ -39,7 +40,7 @@ func (d dissecting) Ping() {
 
 const amqpRequest string = "amqp_request"
 
-func (d dissecting) Dissect(b *bufio.Reader, progress *api.ReadProgress, capture api.Capture, isClient bool, tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, superIdentifier *api.SuperIdentifier, emitter api.Emitter, options *api.TrafficFilteringOptions, _reqResMatcher api.RequestResponseMatcher) error {
+func (d dissecting) Dissect(b *bufio.Reader, progress *api.ReadProgress, capture api.Capture, isClient bool, tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, superIdentifier *api.SuperIdentifier, emitter api.Emitter, options *shared.TrafficFilteringOptions, _reqResMatcher api.RequestResponseMatcher) error {
 	r := AmqpReader{b}
 
 	var remaining int

@@ -189,7 +189,7 @@ func printTappedPodsPreview(ctx context.Context, kubernetesProvider *kubernetes.
 	}
 }
 
-func startTapperSyncer(ctx context.Context, cancel context.CancelFunc, provider *kubernetes.Provider, targetNamespaces []string, mizuApiFilteringOptions api.TrafficFilteringOptions, startTime time.Time) error {
+func startTapperSyncer(ctx context.Context, cancel context.CancelFunc, provider *kubernetes.Provider, targetNamespaces []string, mizuApiFilteringOptions shared.TrafficFilteringOptions, startTime time.Time) error {
 	tapperSyncer, err := kubernetes.CreateAndStartMizuTapperSyncer(ctx, provider, kubernetes.TapperSyncerConfig{
 		TargetNamespaces:         targetNamespaces,
 		PodFilterRegex:           *config.Config.Tap.PodRegex(),
@@ -275,7 +275,7 @@ func readValidationRules(file string) (string, error) {
 	return string(newContent), nil
 }
 
-func getMizuApiFilteringOptions() (*api.TrafficFilteringOptions, error) {
+func getMizuApiFilteringOptions() (*shared.TrafficFilteringOptions, error) {
 	var compiledRegexSlice []*api.SerializableRegexp
 
 	if config.Config.Tap.PlainTextFilterRegexes != nil && len(config.Config.Tap.PlainTextFilterRegexes) > 0 {
@@ -289,7 +289,7 @@ func getMizuApiFilteringOptions() (*api.TrafficFilteringOptions, error) {
 		}
 	}
 
-	return &api.TrafficFilteringOptions{
+	return &shared.TrafficFilteringOptions{
 		PlainTextMaskingRegexes: compiledRegexSlice,
 		IgnoredUserAgents:       config.Config.Tap.IgnoredUserAgents,
 		DisableRedaction:        config.Config.Tap.DisableRedaction,

@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/beevik/etree"
+	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/tap/api"
 )
 
@@ -25,7 +26,7 @@ var personallyIdentifiableDataFields = []string{"token", "authorization", "authe
 	"zip", "zipcode", "address", "country", "firstname", "lastname",
 	"middlename", "fname", "lname", "birthdate"}
 
-func IsIgnoredUserAgent(item *api.OutputChannelItem, options *api.TrafficFilteringOptions) bool {
+func IsIgnoredUserAgent(item *api.OutputChannelItem, options *shared.TrafficFilteringOptions) bool {
 	if item.Protocol.Name != "http" {
 		return false
 	}
@@ -49,7 +50,7 @@ func IsIgnoredUserAgent(item *api.OutputChannelItem, options *api.TrafficFilteri
 	return false
 }
 
-func FilterSensitiveData(item *api.OutputChannelItem, options *api.TrafficFilteringOptions) {
+func FilterSensitiveData(item *api.OutputChannelItem, options *shared.TrafficFilteringOptions) {
 	request := item.Pair.Request.Payload.(api.HTTPPayload).Data.(*http.Request)
 	response := item.Pair.Response.Payload.(api.HTTPPayload).Data.(*http.Response)
 
@@ -60,7 +61,7 @@ func FilterSensitiveData(item *api.OutputChannelItem, options *api.TrafficFilter
 	filterResponseBody(response, options)
 }
 
-func filterRequestBody(request *http.Request, options *api.TrafficFilteringOptions) {
+func filterRequestBody(request *http.Request, options *shared.TrafficFilteringOptions) {
 	contenType := getContentTypeHeaderValue(request.Header)
 	body, err := ioutil.ReadAll(request.Body)
 	if err != nil {
@@ -74,7 +75,7 @@ func filterRequestBody(request *http.Request, options *api.TrafficFilteringOptio
 	}
 }
 
-func filterResponseBody(response *http.Response, options *api.TrafficFilteringOptions) {
+func filterResponseBody(response *http.Response, options *shared.TrafficFilteringOptions) {
 	contentType := getContentTypeHeaderValue(response.Header)
 	body, err := ioutil.ReadAll(response.Body)
 	if err != nil {
@@ -130,7 +131,7 @@ func isFieldNameSensitive(fieldName string) bool {
 	return false
 }
 
-func filterHttpBody(bytes []byte, contentType string, options *api.TrafficFilteringOptions) ([]byte, error) {
+func filterHttpBody(bytes []byte, contentType string, options *shared.TrafficFilteringOptions) ([]byte, error) {
 	mimeType := strings.Split(contentType, ";")[0]
 	switch strings.ToLower(mimeType) {
 	case "application/json":
@@ -151,7 +152,7 @@ func filterHttpBody(bytes []byte, contentType string, options *api.TrafficFilter
 	return bytes, nil
 }
 
-func filterPlainText(bytes []byte, options *api.TrafficFilteringOptions) []byte {
+func filterPlainText(bytes []byte, options *shared.TrafficFilteringOptions) []byte {
 	for _, regex := range options.PlainTextMaskingRegexes {
 		bytes = regex.ReplaceAll(bytes, []byte(maskedFieldPlaceholderValue))
 	}

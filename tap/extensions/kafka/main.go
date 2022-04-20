@@ -8,6 +8,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/tap/api"
 )
 
@@ -35,7 +36,7 @@ func (d dissecting) Ping() {
 	log.Printf("pong %s", _protocol.Name)
 }
 
-func (d dissecting) Dissect(b *bufio.Reader, progress *api.ReadProgress, capture api.Capture, isClient bool, tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, superIdentifier *api.SuperIdentifier, emitter api.Emitter, options *api.TrafficFilteringOptions, _reqResMatcher api.RequestResponseMatcher) error {
+func (d dissecting) Dissect(b *bufio.Reader, progress *api.ReadProgress, capture api.Capture, isClient bool, tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, superIdentifier *api.SuperIdentifier, emitter api.Emitter, options *shared.TrafficFilteringOptions, _reqResMatcher api.RequestResponseMatcher) error {
 	reqResMatcher := _reqResMatcher.(*requestResponseMatcher)
 	for {
 		if superIdentifier.Protocol != nil && superIdentifier.Protocol != &_protocol {

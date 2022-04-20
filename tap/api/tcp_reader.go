@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/logger"
 )
 
@@ -72,7 +73,7 @@ func (h *TcpReader) Close() {
 	h.Unlock()
 }
 
-func (h *TcpReader) Run(filteringOptions *TrafficFilteringOptions, wg *sync.WaitGroup) {
+func (h *TcpReader) Run(filteringOptions *shared.TrafficFilteringOptions, wg *sync.WaitGroup) {
 	defer wg.Done()
 	b := bufio.NewReader(h)
 	err := h.Extension.Dissector.Dissect(b, h.Progress, h.Parent.Origin, h.IsClient, h.TcpID, h.CounterPair, h.SuperTimer, h.Parent.SuperIdentifier, h.Emitter, filteringOptions, h.ReqResMatcher)

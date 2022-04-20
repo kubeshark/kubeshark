@@ -6,7 +6,6 @@ require (
 	github.com/docker/go-units v0.4.0
 	github.com/golang-jwt/jwt/v4 v4.2.0
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
-	github.com/up9inc/mizu/tap/api v0.0.0
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 	k8s.io/api v0.23.3
 	k8s.io/apimachinery v0.23.3
@@ -41,7 +40,6 @@ require (
 	github.com/google/btree v1.0.1 // indirect
 	github.com/google/go-cmp v0.5.7 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
-	github.com/google/martian v2.1.0+incompatible // indirect
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/googleapis/gnostic v0.5.5 // indirect
