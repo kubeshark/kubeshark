@@ -1,5 +1,6 @@
 module github.com/up9inc/mizu/agent
 
+
 go 1.17
 
 require (

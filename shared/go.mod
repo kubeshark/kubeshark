@@ -1,5 +1,6 @@
 module github.com/up9inc/mizu/shared
 
+
 go 1.17
 
 require (
