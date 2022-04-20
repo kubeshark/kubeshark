@@ -2,6 +2,7 @@ package entries
 
 import (
 	"encoding/json"
+	"errors"
 	"time"
 
 	basenine "github.com/up9inc/basenine/client/go"
@@ -64,7 +65,7 @@ func (e *BasenineEntriesProvider) GetEntry(singleEntryRequest *models.SingleEntr
 	}
 	err = json.Unmarshal(bytes, &entry)
 	if err != nil {
-		return nil, err
+		return nil, errors.New(string(bytes))
 	}
 
 	extension := app.ExtensionsMap[entry.Protocol.Name]
