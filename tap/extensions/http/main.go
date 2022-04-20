@@ -128,7 +128,7 @@ func (d dissecting) Dissect(b *bufio.Reader, reader *api.TcpReader, options *sha
 			} else if err != nil {
 				continue
 			}
-			reader.Parent.SuperIdentifier.Protocol = &http11protocol
+			reader.Parent.CloseOtherProtocolDissectors(&http11protocol)
 		} else if reader.IsClient {
 			var req *http.Request
 			switchingProtocolsHTTP2, req, err = handleHTTP1ClientStream(b, reader.Progress, reader.Parent.Origin, reader.TcpID, reader.CounterPair, reader.SuperTimer, reader.Emitter, options, reqResMatcher)
@@ -137,7 +137,7 @@ func (d dissecting) Dissect(b *bufio.Reader, reader *api.TcpReader, options *sha
 			} else if err != nil {
 				continue
 			}
-			reader.Parent.SuperIdentifier.Protocol = &http11protocol
+			reader.Parent.CloseOtherProtocolDissectors(&http11protocol)
 
 			// In case of an HTTP2 upgrade, duplicate the HTTP1 request into HTTP2 with stream ID 1
 			if switchingProtocolsHTTP2 {
@@ -169,7 +169,7 @@ func (d dissecting) Dissect(b *bufio.Reader, reader *api.TcpReader, options *sha
 			} else if err != nil {
 				continue
 			}
-			reader.Parent.SuperIdentifier.Protocol = &http11protocol
+			reader.Parent.CloseOtherProtocolDissectors(&http11protocol)
 		}
 	}
 

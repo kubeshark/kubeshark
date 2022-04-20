@@ -179,3 +179,26 @@ func (t *TcpStream) Close() {
 		reader.Close()
 	}
 }
+
+func (t *TcpStream) CloseOtherProtocolDissectors(protocol *Protocol) {
+	if t.SuperIdentifier.IsClosedOthers {
+		return
+	}
+
+	t.SuperIdentifier.Protocol = protocol
+
+	for i := range t.Clients {
+		reader := &t.Clients[i]
+		if reader.Extension.Protocol != t.SuperIdentifier.Protocol {
+			reader.Close()
+		}
+	}
+	for i := range t.Servers {
+		reader := &t.Servers[i]
+		if reader.Extension.Protocol != t.SuperIdentifier.Protocol {
+			reader.Close()
+		}
+	}
+
+	t.SuperIdentifier.IsClosedOthers = true
+}

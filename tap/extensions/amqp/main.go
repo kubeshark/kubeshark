@@ -113,11 +113,11 @@ func (d dissecting) Dissect(b *bufio.Reader, reader *api.TcpReader, options *sha
 			switch lastMethodFrameMessage.(type) {
 			case *BasicPublish:
 				eventBasicPublish.Body = f.Body
-				reader.Parent.SuperIdentifier.Protocol = &protocol
+				reader.Parent.CloseOtherProtocolDissectors(&protocol)
 				emitAMQP(*eventBasicPublish, amqpRequest, basicMethodMap[40], connectionInfo, reader.SuperTimer.CaptureTime, reader.Progress.Current(), reader.Emitter, reader.Parent.Origin)
 			case *BasicDeliver:
 				eventBasicDeliver.Body = f.Body
-				reader.Parent.SuperIdentifier.Protocol = &protocol
+				reader.Parent.CloseOtherProtocolDissectors(&protocol)
 				emitAMQP(*eventBasicDeliver, amqpRequest, basicMethodMap[60], connectionInfo, reader.SuperTimer.CaptureTime, reader.Progress.Current(), reader.Emitter, reader.Parent.Origin)
 			}
 
@@ -138,7 +138,7 @@ func (d dissecting) Dissect(b *bufio.Reader, reader *api.TcpReader, options *sha
 					NoWait:     m.NoWait,
 					Arguments:  m.Arguments,
 				}
-				reader.Parent.SuperIdentifier.Protocol = &protocol
+				reader.Parent.CloseOtherProtocolDissectors(&protocol)
 				emitAMQP(*eventQueueBind, amqpRequest, queueMethodMap[20], connectionInfo, reader.SuperTimer.CaptureTime, reader.Progress.Current(), reader.Emitter, reader.Parent.Origin)
 
 			case *BasicConsume:
@@ -151,7 +151,7 @@ func (d dissecting) Dissect(b *bufio.Reader, reader *api.TcpReader, options *sha
 					NoWait:      m.NoWait,
 					Arguments:   m.Arguments,
 				}
-				reader.Parent.SuperIdentifier.Protocol = &protocol
+				reader.Parent.CloseOtherProtocolDissectors(&protocol)
 				emitAMQP(*eventBasicConsume, amqpRequest, basicMethodMap[20], connectionInfo, reader.SuperTimer.CaptureTime, reader.Progress.Current(), reader.Emitter, reader.Parent.Origin)
 
 			case *BasicDeliver:
@@ -171,7 +171,7 @@ func (d dissecting) Dissect(b *bufio.Reader, reader *api.TcpReader, options *sha
 					NoWait:     m.NoWait,
 					Arguments:  m.Arguments,
 				}
-				reader.Parent.SuperIdentifier.Protocol = &protocol
+				reader.Parent.CloseOtherProtocolDissectors(&protocol)
 				emitAMQP(*eventQueueDeclare, amqpRequest, queueMethodMap[10], connectionInfo, reader.SuperTimer.CaptureTime, reader.Progress.Current(), reader.Emitter, reader.Parent.Origin)
 
 			case *ExchangeDeclare:
@@ -185,7 +185,7 @@ func (d dissecting) Dissect(b *bufio.Reader, reader *api.TcpReader, options *sha
 					NoWait:     m.NoWait,
 					Arguments:  m.Arguments,
 				}
-				reader.Parent.SuperIdentifier.Protocol = &protocol
+				reader.Parent.CloseOtherProtocolDissectors(&protocol)
 				emitAMQP(*eventExchangeDeclare, amqpRequest, exchangeMethodMap[10], connectionInfo, reader.SuperTimer.CaptureTime, reader.Progress.Current(), reader.Emitter, reader.Parent.Origin)
 
 			case *ConnectionStart:
@@ -196,7 +196,7 @@ func (d dissecting) Dissect(b *bufio.Reader, reader *api.TcpReader, options *sha
 					Mechanisms:       m.Mechanisms,
 					Locales:          m.Locales,
 				}
-				reader.Parent.SuperIdentifier.Protocol = &protocol
+				reader.Parent.CloseOtherProtocolDissectors(&protocol)
 				emitAMQP(*eventConnectionStart, amqpRequest, connectionMethodMap[10], connectionInfo, reader.SuperTimer.CaptureTime, reader.Progress.Current(), reader.Emitter, reader.Parent.Origin)
 
 			case *ConnectionClose:
@@ -206,7 +206,7 @@ func (d dissecting) Dissect(b *bufio.Reader, reader *api.TcpReader, options *sha
 					ClassId:   m.ClassId,
 					MethodId:  m.MethodId,
 				}
-				reader.Parent.SuperIdentifier.Protocol = &protocol
+				reader.Parent.CloseOtherProtocolDissectors(&protocol)
 				emitAMQP(*eventConnectionClose, amqpRequest, connectionMethodMap[50], connectionInfo, reader.SuperTimer.CaptureTime, reader.Progress.Current(), reader.Emitter, reader.Parent.Origin)
 			}
 
