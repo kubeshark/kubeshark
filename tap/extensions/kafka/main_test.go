@@ -17,6 +17,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/tap/api"
+	"github.com/up9inc/mizu/tap/api/diagnose"
 )
 
 const (
@@ -84,7 +85,7 @@ func TestDissect(t *testing.T) {
 		// Channel to verify the output
 		itemChannel := make(chan *api.OutputChannelItem)
 		var emitter api.Emitter = &api.Emitting{
-			AppStats:      &api.AppStats{},
+			AppStats:      &diagnose.AppStats{},
 			OutputChannel: itemChannel,
 		}
 
@@ -124,7 +125,19 @@ func TestDissect(t *testing.T) {
 		}
 		reqResMatcher := dissector.NewResponseRequestMatcher()
 		reqResMatcher.SetMaxTry(10)
-		err = dissector.Dissect(bufferClient, &api.ReadProgress{}, api.Pcap, true, tcpIDClient, counterPair, &api.SuperTimer{}, superIdentifier, emitter, options, reqResMatcher)
+		reader := &api.TcpReader{
+			Progress: &api.ReadProgress{},
+			Parent: &api.TcpStream{
+				Origin:          api.Pcap,
+				SuperIdentifier: superIdentifier,
+			},
+			IsClient:      true,
+			TcpID:         tcpIDClient,
+			SuperTimer:    &api.SuperTimer{},
+			Emitter:       emitter,
+			ReqResMatcher: reqResMatcher,
+		}
+		err = dissector.Dissect(bufferClient, reader, options)
 		if err != nil && err != io.EOF && err != io.ErrUnexpectedEOF {
 			log.Println(err)
 		}
@@ -142,7 +155,19 @@ func TestDissect(t *testing.T) {
 			SrcPort: "2",
 			DstPort: "1",
 		}
-		err = dissector.Dissect(bufferServer, &api.ReadProgress{}, api.Pcap, false, tcpIDServer, counterPair, &api.SuperTimer{}, superIdentifier, emitter, options, reqResMatcher)
+		reader = &api.TcpReader{
+			Progress: &api.ReadProgress{},
+			Parent: &api.TcpStream{
+				Origin:          api.Pcap,
+				SuperIdentifier: superIdentifier,
+			},
+			IsClient:      false,
+			TcpID:         tcpIDServer,
+			SuperTimer:    &api.SuperTimer{},
+			Emitter:       emitter,
+			ReqResMatcher: reqResMatcher,
+		}
+		err = dissector.Dissect(bufferServer, reader, options)
 		if err != nil && err != io.EOF && err != io.ErrUnexpectedEOF {
 			log.Println(err)
 		}

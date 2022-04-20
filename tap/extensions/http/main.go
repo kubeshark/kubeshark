@@ -87,15 +87,15 @@ func (d dissecting) Ping() {
 	log.Printf("pong %s", http11protocol.Name)
 }
 
-func (d dissecting) Dissect(b *bufio.Reader, progress *api.ReadProgress, capture api.Capture, isClient bool, tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, superIdentifier *api.SuperIdentifier, emitter api.Emitter, options *shared.TrafficFilteringOptions, _reqResMatcher api.RequestResponseMatcher) error {
-	reqResMatcher := _reqResMatcher.(*requestResponseMatcher)
+func (d dissecting) Dissect(b *bufio.Reader, reader *api.TcpReader, options *shared.TrafficFilteringOptions) error {
+	reqResMatcher := reader.ReqResMatcher.(*requestResponseMatcher)
 
 	var err error
-	isHTTP2, _ := checkIsHTTP2Connection(b, isClient)
+	isHTTP2, _ := checkIsHTTP2Connection(b, reader.IsClient)
 
 	var http2Assembler *Http2Assembler
 	if isHTTP2 {
-		err = prepareHTTP2Connection(b, isClient)
+		err = prepareHTTP2Connection(b, reader.IsClient)
 		if err != nil {
 			return err
 		}
@@ -106,74 +106,74 @@ func (d dissecting) Dissect(b *bufio.Reader, progress *api.ReadProgress, capture
 	for {
 		if switchingProtocolsHTTP2 {
 			switchingProtocolsHTTP2 = false
-			isHTTP2, err = checkIsHTTP2Connection(b, isClient)
+			isHTTP2, err = checkIsHTTP2Connection(b, reader.IsClient)
 			if err != nil {
 				break
 			}
-			err = prepareHTTP2Connection(b, isClient)
+			err = prepareHTTP2Connection(b, reader.IsClient)
 			if err != nil {
 				break
 			}
 			http2Assembler = createHTTP2Assembler(b)
 		}
 
-		if superIdentifier.Protocol != nil && superIdentifier.Protocol != &http11protocol {
+		if reader.Parent.SuperIdentifier.Protocol != nil && reader.Parent.SuperIdentifier.Protocol != &http11protocol {
 			return errors.New("Identified by another protocol")
 		}
 
 		if isHTTP2 {
-			err = handleHTTP2Stream(http2Assembler, progress, capture, tcpID, superTimer, emitter, options, reqResMatcher)
+			err = handleHTTP2Stream(http2Assembler, reader.Progress, reader.Parent.Origin, reader.TcpID, reader.SuperTimer, reader.Emitter, options, reqResMatcher)
 			if err == io.EOF || err == io.ErrUnexpectedEOF {
 				break
 			} else if err != nil {
 				continue
 			}
-			superIdentifier.Protocol = &http11protocol
-		} else if isClient {
+			reader.Parent.SuperIdentifier.Protocol = &http11protocol
+		} else if reader.IsClient {
 			var req *http.Request
-			switchingProtocolsHTTP2, req, err = handleHTTP1ClientStream(b, progress, capture, tcpID, counterPair, superTimer, emitter, options, reqResMatcher)
+			switchingProtocolsHTTP2, req, err = handleHTTP1ClientStream(b, reader.Progress, reader.Parent.Origin, reader.TcpID, reader.CounterPair, reader.SuperTimer, reader.Emitter, options, reqResMatcher)
 			if err == io.EOF || err == io.ErrUnexpectedEOF {
 				break
 			} else if err != nil {
 				continue
 			}
-			superIdentifier.Protocol = &http11protocol
+			reader.Parent.SuperIdentifier.Protocol = &http11protocol
 
 			// In case of an HTTP2 upgrade, duplicate the HTTP1 request into HTTP2 with stream ID 1
 			if switchingProtocolsHTTP2 {
 				ident := fmt.Sprintf(
 					"%s_%s_%s_%s_1_%s",
-					tcpID.SrcIP,
-					tcpID.DstIP,
-					tcpID.SrcPort,
-					tcpID.DstPort,
+					reader.TcpID.SrcIP,
+					reader.TcpID.DstIP,
+					reader.TcpID.SrcPort,
+					reader.TcpID.DstPort,
 					"HTTP2",
 				)
-				item := reqResMatcher.registerRequest(ident, req, superTimer.CaptureTime, progress.Current(), req.ProtoMinor)
+				item := reqResMatcher.registerRequest(ident, req, reader.SuperTimer.CaptureTime, reader.Progress.Current(), req.ProtoMinor)
 				if item != nil {
 					item.ConnectionInfo = &api.ConnectionInfo{
-						ClientIP:   tcpID.SrcIP,
-						ClientPort: tcpID.SrcPort,
-						ServerIP:   tcpID.DstIP,
-						ServerPort: tcpID.DstPort,
+						ClientIP:   reader.TcpID.SrcIP,
+						ClientPort: reader.TcpID.SrcPort,
+						ServerIP:   reader.TcpID.DstIP,
+						ServerPort: reader.TcpID.DstPort,
 						IsOutgoing: true,
 					}
-					item.Capture = capture
-					filterAndEmit(item, emitter, options)
+					item.Capture = reader.Parent.Origin
+					filterAndEmit(item, reader.Emitter, options)
 				}
 			}
 		} else {
-			switchingProtocolsHTTP2, err = handleHTTP1ServerStream(b, progress, capture, tcpID, counterPair, superTimer, emitter, options, reqResMatcher)
+			switchingProtocolsHTTP2, err = handleHTTP1ServerStream(b, reader.Progress, reader.Parent.Origin, reader.TcpID, reader.CounterPair, reader.SuperTimer, reader.Emitter, options, reqResMatcher)
 			if err == io.EOF || err == io.ErrUnexpectedEOF {
 				break
 			} else if err != nil {
 				continue
 			}
-			superIdentifier.Protocol = &http11protocol
+			reader.Parent.SuperIdentifier.Protocol = &http11protocol
 		}
 	}
 
-	if superIdentifier.Protocol == nil {
+	if reader.Parent.SuperIdentifier.Protocol == nil {
 		return err
 	}
 

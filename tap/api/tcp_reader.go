@@ -40,45 +40,45 @@ type TcpReader struct {
 	sync.Mutex
 }
 
-func (h *TcpReader) Read(p []byte) (int, error) {
+func (reader *TcpReader) Read(p []byte) (int, error) {
 	var msg TcpReaderDataMsg
 
 	ok := true
-	for ok && len(h.data) == 0 {
-		msg, ok = <-h.MsgQueue
-		h.data = msg.bytes
+	for ok && len(reader.data) == 0 {
+		msg, ok = <-reader.MsgQueue
+		reader.data = msg.bytes
 
-		h.SuperTimer.CaptureTime = msg.timestamp
-		if len(h.data) > 0 {
-			h.packetsSeen += 1
+		reader.SuperTimer.CaptureTime = msg.timestamp
+		if len(reader.data) > 0 {
+			reader.packetsSeen += 1
 		}
 	}
-	if !ok || len(h.data) == 0 {
+	if !ok || len(reader.data) == 0 {
 		return 0, io.EOF
 	}
 
-	l := copy(p, h.data)
-	h.data = h.data[l:]
-	h.Progress.Feed(l)
+	l := copy(p, reader.data)
+	reader.data = reader.data[l:]
+	reader.Progress.Feed(l)
 
 	return l, nil
 }
 
-func (h *TcpReader) Close() {
-	h.Lock()
-	if !h.isClosed {
-		h.isClosed = true
-		close(h.MsgQueue)
+func (reader *TcpReader) Close() {
+	reader.Lock()
+	if !reader.isClosed {
+		reader.isClosed = true
+		close(reader.MsgQueue)
 	}
-	h.Unlock()
+	reader.Unlock()
 }
 
-func (h *TcpReader) Run(filteringOptions *shared.TrafficFilteringOptions, wg *sync.WaitGroup) {
+func (reader *TcpReader) Run(options *shared.TrafficFilteringOptions, wg *sync.WaitGroup) {
 	defer wg.Done()
-	b := bufio.NewReader(h)
-	err := h.Extension.Dissector.Dissect(b, h.Progress, h.Parent.Origin, h.IsClient, h.TcpID, h.CounterPair, h.SuperTimer, h.Parent.SuperIdentifier, h.Emitter, filteringOptions, h.ReqResMatcher)
+	b := bufio.NewReader(reader)
+	err := reader.Extension.Dissector.Dissect(b, reader, options)
 	if err != nil {
-		_, err = io.Copy(ioutil.Discard, b)
+		_, err = io.Copy(ioutil.Discard, reader)
 		if err != nil {
 			logger.Log.Errorf("%v", err)
 		}
