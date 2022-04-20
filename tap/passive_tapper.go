@@ -199,6 +199,7 @@ func initializePassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelI
 }
 
 func startPassiveTapper(streamsMap *tcpStreamMap, assembler *tcpAssembler) {
+	fmt.Printf("Dummy commit\n")
 	go streamsMap.closeTimedoutTcpStreamChannels()
 
 	diagnose.AppStats.SetStartTime(time.Now())
