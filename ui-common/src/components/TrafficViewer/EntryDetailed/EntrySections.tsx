@@ -130,7 +130,7 @@ export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
 
     const isBase64Encoding = encoding === 'base64';
     const supportsPrettying = supportedFormats.some(format => contentType?.indexOf(format) > -1);
-    var isAbleToDecodeGrpc = true;
+    const [isDecodeGrpc, setIsDecodeGrpc] = useState(true);
 
     const formatTextBody = (body: any): string => {
         if (!decodeBase64) return body;
@@ -154,15 +154,16 @@ export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
                 // Replace all non printable characters (ASCII)
                 const protobufDecoder = new ProtobufDecoder(bodyBuf, true);
                 const protobufDecoded = protobufDecoder.decode().toSimple();
-                isAbleToDecodeGrpc = true;
                 if (!isPretty) return JSON.stringify(protobufDecoded);
                 return jsonBeautify(protobufDecoded, null, 2, 80);
             }
         } catch (error) {
-            console.error(error);
+            if(isDecodeGrpc)
+                setIsDecodeGrpc(false);
+            if (!String(error).includes("More than one message in")){
+                console.error(error);
+            }
         }
-        isAbleToDecodeGrpc = false;
-        console.log(isAbleToDecodeGrpc);
         return bodyBuf;
     }
 
@@ -186,13 +187,14 @@ export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
                     <Checkbox checked={decodeBase64} onToggle={() => { setDecodeBase64(!decodeBase64) }} />
                 </div>}
                 {isBase64Encoding && <span style={{ marginLeft: '.2rem' }}>Decode Base64</span>}
-                {!isAbleToDecodeGrpc && <span style={{ fontSize: '12px', color: '#DB2156', marginLeft: '.8rem' }}>More than one message in protobuf payload is not supported</span>}
+                {!isDecodeGrpc && <span style={{ fontSize: '12px', color: '#DB2156', marginLeft: '.8rem' }}>More than one message in protobuf payload is not supported</span>}
             </div>  
 
             <SyntaxHighlighter  
                 code={formatTextBody(content)}
                 showLineNumbers={showLineNumbers}
             />
+
         </EntrySectionContainer>}
     </React.Fragment>
 }
