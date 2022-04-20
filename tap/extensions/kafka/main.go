@@ -44,13 +44,13 @@ func (d dissecting) Dissect(b *bufio.Reader, reader *api.TcpReader, options *sha
 		}
 
 		if reader.IsClient {
-			_, _, err := ReadRequest(b, reader.TcpID, reader.CounterPair, reader.SuperTimer, reqResMatcher)
+			_, _, err := ReadRequest(b, reader.TcpID, reader.CounterPair, reader.CaptureTime, reqResMatcher)
 			if err != nil {
 				return err
 			}
 			reader.Parent.CloseOtherProtocolDissectors(&_protocol)
 		} else {
-			err := ReadResponse(b, reader.Parent.Origin, reader.TcpID, reader.CounterPair, reader.SuperTimer, reader.Emitter, reqResMatcher)
+			err := ReadResponse(b, reader.Parent.Origin, reader.TcpID, reader.CounterPair, reader.CaptureTime, reader.Emitter, reqResMatcher)
 			if err != nil {
 				return err
 			}

@@ -30,7 +30,7 @@ type TcpReader struct {
 	MsgQueue      chan TcpReaderDataMsg // Channel of captured reassembled tcp payload
 	data          []byte
 	Progress      *ReadProgress
-	SuperTimer    *SuperTimer
+	CaptureTime   time.Time
 	Parent        *TcpStream
 	packetsSeen   uint
 	Extension     *Extension
@@ -48,7 +48,7 @@ func (reader *TcpReader) Read(p []byte) (int, error) {
 		msg, ok = <-reader.MsgQueue
 		reader.data = msg.bytes
 
-		reader.SuperTimer.CaptureTime = msg.timestamp
+		reader.CaptureTime = msg.timestamp
 		if len(reader.data) > 0 {
 			reader.packetsSeen += 1
 		}

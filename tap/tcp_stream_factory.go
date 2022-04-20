@@ -78,10 +78,9 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.T
 				Response: 0,
 			}
 			stream.Clients = append(stream.Clients, api.TcpReader{
-				MsgQueue:   make(chan api.TcpReaderDataMsg),
-				Progress:   &api.ReadProgress{},
-				SuperTimer: &api.SuperTimer{},
-				Ident:      fmt.Sprintf("%s %s", net, transport),
+				MsgQueue: make(chan api.TcpReaderDataMsg),
+				Progress: &api.ReadProgress{},
+				Ident:    fmt.Sprintf("%s %s", net, transport),
 				TcpID: &api.TcpID{
 					SrcIP:   srcIp,
 					DstIP:   dstIp,
@@ -97,10 +96,9 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.T
 				ReqResMatcher: reqResMatcher,
 			})
 			stream.Servers = append(stream.Servers, api.TcpReader{
-				MsgQueue:   make(chan api.TcpReaderDataMsg),
-				Progress:   &api.ReadProgress{},
-				SuperTimer: &api.SuperTimer{},
-				Ident:      fmt.Sprintf("%s %s", net, transport),
+				MsgQueue: make(chan api.TcpReaderDataMsg),
+				Progress: &api.ReadProgress{},
+				Ident:    fmt.Sprintf("%s %s", net, transport),
 				TcpID: &api.TcpID{
 					SrcIP:   net.Dst().String(),
 					DstIP:   net.Src().String(),

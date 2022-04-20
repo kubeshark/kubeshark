@@ -174,7 +174,6 @@ func dissect(extension *api.Extension, reader *tlsReader, isRequest bool, tcpid 
 		},
 		IsClient:      isRequest,
 		TcpID:         tcpid,
-		SuperTimer:    &api.SuperTimer{},
 		Emitter:       tlsEmitter,
 		ReqResMatcher: reqResMatcher,
 	}

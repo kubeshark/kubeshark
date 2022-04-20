@@ -106,10 +106,6 @@ type OutputChannelItem struct {
 	Namespace      string
 }
 
-type SuperTimer struct {
-	CaptureTime time.Time
-}
-
 type ProtoIdentifier struct {
 	Protocol       *Protocol
 	IsClosedOthers bool

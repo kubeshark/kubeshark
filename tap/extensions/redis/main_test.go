@@ -133,7 +133,6 @@ func TestDissect(t *testing.T) {
 			},
 			IsClient:      true,
 			TcpID:         tcpIDClient,
-			SuperTimer:    &api.SuperTimer{},
 			Emitter:       emitter,
 			ReqResMatcher: reqResMatcher,
 		}
@@ -163,7 +162,6 @@ func TestDissect(t *testing.T) {
 			},
 			IsClient:      false,
 			TcpID:         tcpIDServer,
-			SuperTimer:    &api.SuperTimer{},
 			Emitter:       emitter,
 			ReqResMatcher: reqResMatcher,
 		}

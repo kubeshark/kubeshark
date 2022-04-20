@@ -49,9 +49,9 @@ func (d dissecting) Dissect(b *bufio.Reader, reader *api.TcpReader, options *sha
 		}
 
 		if reader.IsClient {
-			err = handleClientStream(reader.Progress, reader.Parent.Origin, reader.TcpID, reader.CounterPair, reader.SuperTimer, reader.Emitter, redisPacket, reqResMatcher)
+			err = handleClientStream(reader.Progress, reader.Parent.Origin, reader.TcpID, reader.CounterPair, reader.CaptureTime, reader.Emitter, redisPacket, reqResMatcher)
 		} else {
-			err = handleServerStream(reader.Progress, reader.Parent.Origin, reader.TcpID, reader.CounterPair, reader.SuperTimer, reader.Emitter, redisPacket, reqResMatcher)
+			err = handleServerStream(reader.Progress, reader.Parent.Origin, reader.TcpID, reader.CounterPair, reader.CaptureTime, reader.Emitter, redisPacket, reqResMatcher)
 		}
 
 		if err != nil {
