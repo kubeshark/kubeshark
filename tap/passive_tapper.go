@@ -17,6 +17,7 @@ import (
 	"strings"
 	"time"
 
+	carbon "github.com/golang-module/carbon/v2"
 	"github.com/up9inc/mizu/shared/logger"
 	"github.com/up9inc/mizu/tap/api"
 	"github.com/up9inc/mizu/tap/diagnose"
@@ -199,6 +200,7 @@ func initializePassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelI
 }
 
 func startPassiveTapper(streamsMap *tcpStreamMap, assembler *tcpAssembler) {
+	fmt.Sprintf("%s", carbon.Now())
 	fmt.Printf("Dummy commit\n")
 	go streamsMap.closeTimedoutTcpStreamChannels()
 

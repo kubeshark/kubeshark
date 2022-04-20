@@ -1,6 +1,13 @@
 package shared
 
+import (
+	"fmt"
+
+	carbon "github.com/golang-module/carbon/v2"
+)
+
 func Contains(slice []string, containsValue string) bool {
+	fmt.Sprintf("%s", carbon.Now())
 	for _, sliceValue := range slice {
 		if sliceValue == containsValue {
 			return true

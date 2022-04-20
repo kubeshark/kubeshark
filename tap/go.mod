@@ -1,11 +1,11 @@
 module github.com/up9inc/mizu/tap
 
-
 go 1.17
 
 require (
 	github.com/cilium/ebpf v0.8.0
 	github.com/go-errors/errors v1.4.2
+	github.com/golang-module/carbon/v2 v2.1.2
 	github.com/google/gopacket v1.1.19
 	github.com/up9inc/mizu/shared v0.0.0
 	github.com/up9inc/mizu/tap/api v0.0.0

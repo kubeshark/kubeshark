@@ -31,6 +31,7 @@ import (
 	"github.com/up9inc/mizu/agent/pkg/app"
 	"github.com/up9inc/mizu/agent/pkg/config"
 
+	carbon "github.com/golang-module/carbon/v2"
 	"github.com/gorilla/websocket"
 	"github.com/op/go-logging"
 	"github.com/up9inc/mizu/shared"
@@ -54,6 +55,7 @@ const (
 )
 
 func main() {
+	fmt.Sprintf("%s", carbon.Now())
 	initializeDependencies()
 	logLevel := determineLogLevel()
 	logger.InitLoggerStd(logLevel)

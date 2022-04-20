@@ -14,6 +14,7 @@ import (
 	"sync"
 	"time"
 
+	carbon "github.com/golang-module/carbon/v2"
 	"github.com/google/martian/har"
 )
 
@@ -266,6 +267,7 @@ type HTTPWrapper struct {
 }
 
 func (h HTTPPayload) MarshalJSON() ([]byte, error) {
+	fmt.Sprintf("%s", carbon.Now())
 	_, testEnvEnabled := os.LookupEnv(mizuTestEnvVar)
 	switch h.Type {
 	case TypeHttpRequest:
