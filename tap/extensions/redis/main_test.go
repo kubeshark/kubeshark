@@ -134,6 +134,7 @@ func TestDissect(t *testing.T) {
 			IsClient:      true,
 			TcpID:         tcpIDClient,
 			Emitter:       emitter,
+			CounterPair:   counterPair,
 			ReqResMatcher: reqResMatcher,
 		}
 		err = dissector.Dissect(bufferClient, reader, options)
@@ -163,6 +164,7 @@ func TestDissect(t *testing.T) {
 			IsClient:      false,
 			TcpID:         tcpIDServer,
 			Emitter:       emitter,
+			CounterPair:   counterPair,
 			ReqResMatcher: reqResMatcher,
 		}
 		err = dissector.Dissect(bufferServer, reader, options)
