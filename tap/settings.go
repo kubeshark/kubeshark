@@ -3,7 +3,6 @@ package tap
 import (
 	"os"
 	"strconv"
-	"time"
 )
 
 const (
@@ -12,11 +11,8 @@ const (
 	MemoryProfilingTimeIntervalSeconds        = "MEMORY_PROFILING_TIME_INTERVAL"
 	MaxBufferedPagesTotalEnvVarName           = "MAX_BUFFERED_PAGES_TOTAL"
 	MaxBufferedPagesPerConnectionEnvVarName   = "MAX_BUFFERED_PAGES_PER_CONNECTION"
-	TcpStreamChannelTimeoutMsEnvVarName       = "TCP_STREAM_CHANNEL_TIMEOUT_MS"
-	CloseTimedoutTcpChannelsIntervalMsEnvVar  = "CLOSE_TIMEDOUT_TCP_STREAM_CHANNELS_INTERVAL_MS"
 	MaxBufferedPagesTotalDefaultValue         = 5000
 	MaxBufferedPagesPerConnectionDefaultValue = 5000
-	TcpStreamChannelTimeoutMsDefaultValue     = 10000
 )
 
 func GetMaxBufferedPagesTotal() int {
@@ -33,14 +29,6 @@ func GetMaxBufferedPagesPerConnection() int {
 		return MaxBufferedPagesPerConnectionDefaultValue
 	}
 	return valueFromEnv
-}
-
-func GetTcpChannelTimeoutMs() time.Duration {
-	valueFromEnv, err := strconv.Atoi(os.Getenv(TcpStreamChannelTimeoutMsEnvVarName))
-	if err != nil {
-		return TcpStreamChannelTimeoutMsDefaultValue * time.Millisecond
-	}
-	return time.Duration(valueFromEnv) * time.Millisecond
 }
 
 func GetMemoryProfilingEnabled() bool {

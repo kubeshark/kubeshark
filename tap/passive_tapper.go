@@ -197,6 +197,8 @@ func initializePassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelI
 }
 
 func startPassiveTapper(streamsMap *api.TcpStreamMap, assembler *tcpAssembler) {
+	go streamsMap.CloseTimedoutTcpStreamChannels()
+
 	diagnose.AppStatsInst.SetStartTime(time.Now())
 
 	staleConnectionTimeout := time.Second * time.Duration(*staleTimeoutSeconds)
