@@ -19,7 +19,7 @@ import (
 
 	"github.com/up9inc/mizu/shared/logger"
 	"github.com/up9inc/mizu/tap/api"
-	"github.com/up9inc/mizu/tap/diagnose"
+	"github.com/up9inc/mizu/tap/api/diagnose"
 	"github.com/up9inc/mizu/tap/source"
 	"github.com/up9inc/mizu/tap/tlstapper"
 	v1 "k8s.io/api/core/v1"
@@ -31,11 +31,8 @@ var maxcount = flag.Int64("c", -1, "Only grab this many packets, then exit")
 var decoder = flag.String("decoder", "", "Name of the decoder to use (default: guess from capture)")
 var statsevery = flag.Int("stats", 60, "Output statistics every N seconds")
 var lazy = flag.Bool("lazy", false, "If true, do lazy decoding")
-var nodefrag = flag.Bool("nodefrag", false, "If true, do not do IPv4 defrag")
-var checksum = flag.Bool("checksum", false, "Check TCP checksum")                                                      // global
-var nooptcheck = flag.Bool("nooptcheck", true, "Do not check TCP options (useful to ignore MSS on captures with TSO)") // global
-var ignorefsmerr = flag.Bool("ignorefsmerr", true, "Ignore TCP FSM errors")                                            // global
-var allowmissinginit = flag.Bool("allowmissinginit", true, "Support streams without SYN/SYN+ACK/ACK sequence")         // global
+var nodefrag = flag.Bool("nodefrag", false, "If true, do not do IPv4 defrag")                                  // global
+var allowmissinginit = flag.Bool("allowmissinginit", true, "Support streams without SYN/SYN+ACK/ACK sequence") // global
 var verbose = flag.Bool("verbose", false, "Be verbose")
 var debug = flag.Bool("debug", false, "Display debug information")
 var quiet = flag.Bool("quiet", false, "Be quiet regarding errors")
@@ -128,7 +125,7 @@ func printPeriodicStats(cleaner *Cleaner) {
 		errorMapLen, errorsSummery := diagnose.TapErrors.GetErrorsSummary()
 
 		logger.Log.Infof("%v (errors: %v, errTypes:%v) - Errors Summary: %s",
-			time.Since(diagnose.AppStats.StartTime),
+			time.Since(diagnose.AppStatsInst.StartTime),
 			diagnose.TapErrors.ErrorsCount,
 			errorMapLen,
 			errorsSummery,
@@ -151,7 +148,7 @@ func printPeriodicStats(cleaner *Cleaner) {
 			cleanStats.closed,
 			cleanStats.deleted,
 		)
-		currentAppStats := diagnose.AppStats.DumpStats()
+		currentAppStats := diagnose.AppStatsInst.DumpStats()
 		appStatsJSON, _ := json.Marshal(currentAppStats)
 		logger.Log.Infof("app stats - %v", string(appStatsJSON))
 	}
@@ -181,8 +178,8 @@ func initializePacketSources() error {
 	return err
 }
 
-func initializePassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem) (*tcpStreamMap, *tcpAssembler) {
-	streamsMap := NewTcpStreamMap()
+func initializePassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem) (*api.TcpStreamMap, *tcpAssembler) {
+	streamsMap := api.NewTcpStreamMap()
 
 	diagnose.InitializeErrorsMap(*debug, *verbose, *quiet)
 	diagnose.InitializeTapperInternalStats()
@@ -198,10 +195,8 @@ func initializePassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelI
 	return streamsMap, assembler
 }
 
-func startPassiveTapper(streamsMap *tcpStreamMap, assembler *tcpAssembler) {
-	go streamsMap.closeTimedoutTcpStreamChannels()
-
-	diagnose.AppStats.SetStartTime(time.Now())
+func startPassiveTapper(streamsMap *api.TcpStreamMap, assembler *tcpAssembler) {
+	diagnose.AppStatsInst.SetStartTime(time.Now())
 
 	staleConnectionTimeout := time.Second * time.Duration(*staleTimeoutSeconds)
 	cleaner := Cleaner{
@@ -229,7 +224,7 @@ func startPassiveTapper(streamsMap *tcpStreamMap, assembler *tcpAssembler) {
 
 	diagnose.InternalStats.PrintStatsSummary()
 	diagnose.TapErrors.PrintSummary()
-	logger.Log.Infof("AppStats: %v", diagnose.AppStats)
+	logger.Log.Infof("AppStats: %v", diagnose.AppStatsInst)
 }
 
 func startTlsTapper(extension *api.Extension, outputItems chan *api.OutputChannelItem, options *api.TrafficFilteringOptions) *tlstapper.TlsTapper {
@@ -257,7 +252,7 @@ func startTlsTapper(extension *api.Extension, outputItems chan *api.OutputChanne
 	}
 
 	var emitter api.Emitter = &api.Emitting{
-		AppStats:      &diagnose.AppStats,
+		AppStats:      &diagnose.AppStatsInst,
 		OutputChannel: outputItems,
 	}
 

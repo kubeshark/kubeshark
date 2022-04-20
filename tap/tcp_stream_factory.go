@@ -21,12 +21,12 @@ import (
 type tcpStreamFactory struct {
 	wg         sync.WaitGroup
 	Emitter    api.Emitter
-	streamsMap *tcpStreamMap
+	streamsMap *api.TcpStreamMap
 	ownIps     []string
 	opts       *TapOpts
 }
 
-func NewTcpStreamFactory(emitter api.Emitter, streamsMap *tcpStreamMap, opts *TapOpts) *tcpStreamFactory {
+func NewTcpStreamFactory(emitter api.Emitter, streamsMap *api.TcpStreamMap, opts *TapOpts) *tcpStreamFactory {
 	var ownIps []string
 
 	if localhostIPs, err := getLocalhostIPs(); err != nil {
@@ -57,71 +57,71 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.T
 
 	props := factory.getStreamProps(srcIp, srcPort, dstIp, dstPort)
 	isTapTarget := props.isTapTarget
-	stream := &tcpStream{
-		net:             net,
-		transport:       transport,
-		isDNS:           tcp.SrcPort == 53 || tcp.DstPort == 53,
-		isTapTarget:     isTapTarget,
-		tcpstate:        reassembly.NewTCPSimpleFSM(fsmOptions),
-		ident:           fmt.Sprintf("%s:%s", net, transport),
-		optchecker:      reassembly.NewTCPOptionCheck(),
-		superIdentifier: &api.SuperIdentifier{},
-		streamsMap:      factory.streamsMap,
-		origin:          getPacketOrigin(ac),
+	stream := &api.TcpStream{
+		Net:             net,
+		Transport:       transport,
+		IsDNS:           tcp.SrcPort == 53 || tcp.DstPort == 53,
+		IsTapTarget:     isTapTarget,
+		TcpState:        reassembly.NewTCPSimpleFSM(fsmOptions),
+		Ident:           fmt.Sprintf("%s:%s", net, transport),
+		Optchecker:      reassembly.NewTCPOptionCheck(),
+		SuperIdentifier: &api.SuperIdentifier{},
+		StreamsMap:      factory.streamsMap,
+		Origin:          getPacketOrigin(ac),
 	}
-	if stream.isTapTarget {
-		stream.id = factory.streamsMap.nextId()
+	if stream.IsTapTarget {
+		stream.Id = factory.streamsMap.NextId()
 		for i, extension := range extensions {
 			reqResMatcher := extension.Dissector.NewResponseRequestMatcher()
 			counterPair := &api.CounterPair{
 				Request:  0,
 				Response: 0,
 			}
-			stream.clients = append(stream.clients, tcpReader{
-				msgQueue:   make(chan tcpReaderDataMsg),
-				progress:   &api.ReadProgress{},
-				superTimer: &api.SuperTimer{},
-				ident:      fmt.Sprintf("%s %s", net, transport),
-				tcpID: &api.TcpID{
+			stream.Clients = append(stream.Clients, api.TcpReader{
+				MsgQueue:   make(chan api.TcpReaderDataMsg),
+				Progress:   &api.ReadProgress{},
+				SuperTimer: &api.SuperTimer{},
+				Ident:      fmt.Sprintf("%s %s", net, transport),
+				TcpID: &api.TcpID{
 					SrcIP:   srcIp,
 					DstIP:   dstIp,
 					SrcPort: srcPort,
 					DstPort: dstPort,
 				},
-				parent:        stream,
-				isClient:      true,
-				isOutgoing:    props.isOutgoing,
-				extension:     extension,
-				emitter:       factory.Emitter,
-				counterPair:   counterPair,
-				reqResMatcher: reqResMatcher,
+				Parent:        stream,
+				IsClient:      true,
+				IsOutgoing:    props.isOutgoing,
+				Extension:     extension,
+				Emitter:       factory.Emitter,
+				CounterPair:   counterPair,
+				ReqResMatcher: reqResMatcher,
 			})
-			stream.servers = append(stream.servers, tcpReader{
-				msgQueue:   make(chan tcpReaderDataMsg),
-				progress:   &api.ReadProgress{},
-				superTimer: &api.SuperTimer{},
-				ident:      fmt.Sprintf("%s %s", net, transport),
-				tcpID: &api.TcpID{
+			stream.Servers = append(stream.Servers, api.TcpReader{
+				MsgQueue:   make(chan api.TcpReaderDataMsg),
+				Progress:   &api.ReadProgress{},
+				SuperTimer: &api.SuperTimer{},
+				Ident:      fmt.Sprintf("%s %s", net, transport),
+				TcpID: &api.TcpID{
 					SrcIP:   net.Dst().String(),
 					DstIP:   net.Src().String(),
 					SrcPort: transport.Dst().String(),
 					DstPort: transport.Src().String(),
 				},
-				parent:        stream,
-				isClient:      false,
-				isOutgoing:    props.isOutgoing,
-				extension:     extension,
-				emitter:       factory.Emitter,
-				counterPair:   counterPair,
-				reqResMatcher: reqResMatcher,
+				Parent:        stream,
+				IsClient:      false,
+				IsOutgoing:    props.isOutgoing,
+				Extension:     extension,
+				Emitter:       factory.Emitter,
+				CounterPair:   counterPair,
+				ReqResMatcher: reqResMatcher,
 			})
 
-			factory.streamsMap.Store(stream.id, stream)
+			factory.streamsMap.Store(stream.Id, stream)
 
 			factory.wg.Add(2)
 			// Start reading from channel stream.reader.bytes
-			go stream.clients[i].run(&factory.wg)
-			go stream.servers[i].run(&factory.wg)
+			go stream.Clients[i].Run(filteringOptions, &factory.wg)
+			go stream.Servers[i].Run(filteringOptions, &factory.wg)
 		}
 	}
 	return stream

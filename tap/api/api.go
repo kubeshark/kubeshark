@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/google/martian/har"
+	"github.com/up9inc/mizu/tap/api/diagnose"
 )
 
 const mizuTestEnvVar = "MIZU_TEST"
@@ -144,7 +145,7 @@ type RequestResponseMatcher interface {
 }
 
 type Emitting struct {
-	AppStats      *AppStats
+	AppStats      *diagnose.AppStats
 	OutputChannel chan *OutputChannelItem
 }
 

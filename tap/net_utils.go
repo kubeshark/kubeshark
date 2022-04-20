@@ -4,7 +4,7 @@ import (
 	"net"
 	"strings"
 
-	"github.com/up9inc/mizu/tap/diagnose"
+	"github.com/up9inc/mizu/tap/api/diagnose"
 )
 
 var privateIPBlocks []*net.IPNet

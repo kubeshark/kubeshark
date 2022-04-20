@@ -1,4 +1,4 @@
-package tap
+package api
 
 import (
 	"encoding/binary"
@@ -8,79 +8,57 @@ import (
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers" // pulls in all layers decoders
 	"github.com/google/gopacket/reassembly"
-	"github.com/up9inc/mizu/tap/api"
-	"github.com/up9inc/mizu/tap/diagnose"
+	"github.com/up9inc/mizu/tap/api/diagnose"
 )
 
 /* It's a connection (bidirectional)
  * Implements gopacket.reassembly.Stream interface (Accept, ReassembledSG, ReassemblyComplete)
  * ReassembledSG gets called when new reassembled data is ready (i.e. bytes in order, no duplicates, complete)
- * In our implementation, we pass information from ReassembledSG to the tcpReader through a shared channel.
+ * In our implementation, we pass information from ReassembledSG to the TcpReader through a shared channel.
  */
-type tcpStream struct {
-	id              int64
+type TcpStream struct {
+	Id              int64
 	isClosed        bool
-	superIdentifier *api.SuperIdentifier
-	tcpstate        *reassembly.TCPSimpleFSM
+	SuperIdentifier *SuperIdentifier
+	TcpState        *reassembly.TCPSimpleFSM
 	fsmerr          bool
-	optchecker      reassembly.TCPOptionCheck
-	net, transport  gopacket.Flow
-	isDNS           bool
-	isTapTarget     bool
-	clients         []tcpReader
-	servers         []tcpReader
-	ident           string
-	origin          api.Capture
-	reqResMatcher   api.RequestResponseMatcher
+	Optchecker      reassembly.TCPOptionCheck
+	Net, Transport  gopacket.Flow
+	IsDNS           bool
+	IsTapTarget     bool
+	Clients         []TcpReader
+	Servers         []TcpReader
+	Ident           string
+	Origin          Capture
+	ReqResMatcher   RequestResponseMatcher
 	createdAt       time.Time
+	StreamsMap      *TcpStreamMap
 	sync.Mutex
-	streamsMap *tcpStreamMap
 }
 
-func (t *tcpStream) Accept(tcp *layers.TCP, ci gopacket.CaptureInfo, dir reassembly.TCPFlowDirection, nextSeq reassembly.Sequence, start *bool, ac reassembly.AssemblerContext) bool {
+func (t *TcpStream) Accept(tcp *layers.TCP, ci gopacket.CaptureInfo, dir reassembly.TCPFlowDirection, nextSeq reassembly.Sequence, start *bool, ac reassembly.AssemblerContext) bool {
 	// FSM
-	if !t.tcpstate.CheckState(tcp, dir) {
-		diagnose.TapErrors.SilentError("FSM-rejection", "%s: Packet rejected by FSM (state:%s)", t.ident, t.tcpstate.String())
+	if !t.TcpState.CheckState(tcp, dir) {
+		diagnose.TapErrors.SilentError("FSM-rejection", "%s: Packet rejected by FSM (state:%s)", t.Ident, t.TcpState.String())
 		diagnose.InternalStats.RejectFsm++
 		if !t.fsmerr {
 			t.fsmerr = true
 			diagnose.InternalStats.RejectConnFsm++
 		}
-		if !*ignorefsmerr {
-			return false
-		}
 	}
 	// Options
-	err := t.optchecker.Accept(tcp, ci, dir, nextSeq, start)
+	err := t.Optchecker.Accept(tcp, ci, dir, nextSeq, start)
 	if err != nil {
-		diagnose.TapErrors.SilentError("OptionChecker-rejection", "%s: Packet rejected by OptionChecker: %s", t.ident, err)
-		diagnose.InternalStats.RejectOpt++
-		if !*nooptcheck {
-			return false
-		}
-	}
-	// Checksum
-	accept := true
-	if *checksum {
-		c, err := tcp.ComputeChecksum()
-		if err != nil {
-			diagnose.TapErrors.SilentError("ChecksumCompute", "%s: Got error computing checksum: %s", t.ident, err)
-			accept = false
-		} else if c != 0x0 {
-			diagnose.TapErrors.SilentError("Checksum", "%s: Invalid checksum: 0x%x", t.ident, c)
-			accept = false
-		}
-	}
-	if !accept {
+		diagnose.TapErrors.SilentError("OptionChecker-rejection", "%s: Packet rejected by OptionChecker: %s", t.Ident, err)
 		diagnose.InternalStats.RejectOpt++
 	}
 
 	*start = true
 
-	return accept
+	return true
 }
 
-func (t *tcpStream) ReassembledSG(sg reassembly.ScatterGather, ac reassembly.AssemblerContext) {
+func (t *TcpStream) ReassembledSG(sg reassembly.ScatterGather, ac reassembly.AssemblerContext) {
 	dir, _, _, skip := sg.Info()
 	length, saved := sg.Lengths()
 	// update stats
@@ -109,14 +87,12 @@ func (t *tcpStream) ReassembledSG(sg reassembly.ScatterGather, ac reassembly.Ass
 	diagnose.InternalStats.OverlapBytes += sgStats.OverlapBytes
 	diagnose.InternalStats.OverlapPackets += sgStats.OverlapPackets
 
-	if skip == -1 && *allowmissinginit {
-		// this is allowed
-	} else if skip != 0 {
+	if skip != -1 && skip != 0 {
 		// Missing bytes in stream: do not even try to parse it
 		return
 	}
 	data := sg.Fetch(length)
-	if t.isDNS {
+	if t.IsDNS {
 		dns := &layers.DNS{}
 		var decoded []gopacket.LayerType
 		if len(data) < 2 {
@@ -143,27 +119,27 @@ func (t *tcpStream) ReassembledSG(sg reassembly.ScatterGather, ac reassembly.Ass
 		if len(data) > 2+int(dnsSize) {
 			sg.KeepFrom(2 + int(dnsSize))
 		}
-	} else if t.isTapTarget {
+	} else if t.IsTapTarget {
 		if length > 0 {
 			// This is where we pass the reassembled information onwards
 			// This channel is read by an tcpReader object
-			diagnose.AppStats.IncReassembledTcpPayloadsCount()
+			diagnose.AppStatsInst.IncReassembledTcpPayloadsCount()
 			timestamp := ac.GetCaptureInfo().Timestamp
 			if dir == reassembly.TCPDirClientToServer {
-				for i := range t.clients {
-					reader := &t.clients[i]
+				for i := range t.Clients {
+					reader := &t.Clients[i]
 					reader.Lock()
 					if !reader.isClosed {
-						reader.msgQueue <- tcpReaderDataMsg{data, timestamp}
+						reader.MsgQueue <- TcpReaderDataMsg{data, timestamp}
 					}
 					reader.Unlock()
 				}
 			} else {
-				for i := range t.servers {
-					reader := &t.servers[i]
+				for i := range t.Servers {
+					reader := &t.Servers[i]
 					reader.Lock()
 					if !reader.isClosed {
-						reader.msgQueue <- tcpReaderDataMsg{data, timestamp}
+						reader.MsgQueue <- TcpReaderDataMsg{data, timestamp}
 					}
 					reader.Unlock()
 				}
@@ -172,15 +148,15 @@ func (t *tcpStream) ReassembledSG(sg reassembly.ScatterGather, ac reassembly.Ass
 	}
 }
 
-func (t *tcpStream) ReassemblyComplete(ac reassembly.AssemblerContext) bool {
-	if t.isTapTarget && !t.isClosed {
+func (t *TcpStream) ReassemblyComplete(ac reassembly.AssemblerContext) bool {
+	if t.IsTapTarget && !t.isClosed {
 		t.Close()
 	}
 	// do not remove the connection to allow last ACK
 	return false
 }
 
-func (t *tcpStream) Close() {
+func (t *TcpStream) Close() {
 	shouldReturn := false
 	t.Lock()
 	if t.isClosed {
@@ -192,14 +168,14 @@ func (t *tcpStream) Close() {
 	if shouldReturn {
 		return
 	}
-	t.streamsMap.Delete(t.id)
+	t.StreamsMap.Delete(t.Id)
 
-	for i := range t.clients {
-		reader := &t.clients[i]
+	for i := range t.Clients {
+		reader := &t.Clients[i]
 		reader.Close()
 	}
-	for i := range t.servers {
-		reader := &t.servers[i]
+	for i := range t.Servers {
+		reader := &t.Servers[i]
 		reader.Close()
 	}
 }
