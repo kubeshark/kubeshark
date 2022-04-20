@@ -2,6 +2,7 @@ package api
 
 import (
 	"runtime"
+	"runtime/debug"
 	"sync"
 	"time"
 
@@ -42,6 +43,7 @@ func (streamMap *TcpStreamMap) CloseTimedoutTcpStreamChannels() {
 	for {
 		<-ticker.C
 
+		debug.FreeOSMemory()
 		streamMap.Streams.Range(func(key interface{}, value interface{}) bool {
 			stream := value.(*TcpStream)
 			if stream.ProtoIdentifier.Protocol == nil {
